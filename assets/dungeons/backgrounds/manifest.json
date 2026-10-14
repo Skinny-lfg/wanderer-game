@@ -1,0 +1,76 @@
+{
+  "version": "0.9.0",
+  "resolution": [
+    1024,
+    576
+  ],
+  "format": "WebP",
+  "themes": [
+    {
+      "id": "temple",
+      "name": "Venomous Temple",
+      "image": "assets/dungeons/backgrounds/temple.webp"
+    },
+    {
+      "id": "forge",
+      "name": "Blood Forge",
+      "image": "assets/dungeons/backgrounds/forge.webp"
+    },
+    {
+      "id": "crypt",
+      "name": "Echo Crypt",
+      "image": "assets/dungeons/backgrounds/crypt.webp"
+    },
+    {
+      "id": "bastion",
+      "name": "Iron Bastion",
+      "image": "assets/dungeons/backgrounds/bastion.webp"
+    },
+    {
+      "id": "frost",
+      "name": "Frostbound Catacombs",
+      "image": "assets/dungeons/backgrounds/frost.webp"
+    },
+    {
+      "id": "ash",
+      "name": "Ashen Sanctum",
+      "image": "assets/dungeons/backgrounds/ash.webp"
+    },
+    {
+      "id": "void",
+      "name": "Umbral Reliquary",
+      "image": "assets/dungeons/backgrounds/void.webp"
+    },
+    {
+      "id": "ward",
+      "name": "Warded Catacombs",
+      "image": "assets/dungeons/backgrounds/ward.webp"
+    },
+    {
+      "id": "grove",
+      "name": "Serpent Grove",
+      "image": "assets/dungeons/backgrounds/grove.webp"
+    },
+    {
+      "id": "shrine",
+      "name": "Lost Sanctuary",
+      "image": "assets/dungeons/backgrounds/shrine.webp"
+    },
+    {
+      "id": "storm",
+      "name": "Stormglass Spire",
+      "image": "assets/dungeons/backgrounds/storm.webp"
+    },
+    {
+      "id": "drowned",
+      "name": "Drowned Vault",
+      "image": "assets/dungeons/backgrounds/drowned.webp"
+    },
+    {
+      "id": "quarry",
+      "name": "Obsidian Quarry",
+      "image": "assets/dungeons/backgrounds/quarry.webp"
+    }
+  ],
+  "notes": "New thematic concept backgrounds based on the original dungeon visual direction; four large-panel scenes and nine storyboard-panel crops enlarged and checked to exclude labels. Art assets stored in 02 - Assets, old images retained for rollback."
+}
