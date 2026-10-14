@@ -23,7 +23,33 @@ let state=null,view='tavern',selectedId=null,bulk=false,chosenItems=new Set(),sl
 const roll=(a,b)=>Math.floor(Math.random()*(b-a+1))+a, sample=xs=>xs[roll(0,xs.length-1)], makeId=()=>Date.now().toString(36)+'-'+(++uid).toString(36), clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function slotImg(slot){const key=slot==='weapon'?'sword':slot==='offhand'?'shield':slot;return ICONS[key]||ICONS.armor}
-function itemImg(o){if(!o)return ICONS.sword; let type=String(o.subtype||'').toLowerCase();if(type==='sword')return ICONS.sword; if(ICONS[type])return ICONS[type];return slotImg(o.slot)}
+
+const EQUIPMENT_ICON_FILES={"sword":["sword_01.png","sword_02.png","sword_03.png"],"mace":["mace_01.png","mace_02.png","mace_03.png"],"dagger":["dagger_01.png","dagger_02.png","dagger_03.png"],"two_handed":["two_handed_01.png","two_handed_02.png","two_handed_03.png","two_handed_04.png"],"shield":["shield_01.png","shield_02.png","shield_03.png"],"bow":["bow_01.png","bow_02.png","bow_03.png"],"staff":["staff_01.png","staff_02.png","staff_03.png"],"orb":["orb_01.png","orb_02.png","orb_03.png"],"wand":["wand_01.png","wand_02.png","wand_03.png","wand_04.png"],"tome":["tome_01.png","tome_02.png","tome_03.png","tome_04.png"],"charm":["charm_01.png","charm_02.png","charm_03.png","charm_04.png"]};
+const EQUIPMENT_ICON_ROOT='assets/equipment/';
+const LEGACY_ICON_TYPES=new Set(['sword','mace','bow','dagger','staff','shield','orb']);
+function equipmentArtType(subtype){
+  const type=String(subtype||'').toLowerCase().replace(/[\s_-]/g,'');
+  if(type==='daggers'||type==='dagger')return 'dagger';
+  if(type.startsWith('twohanded'))return 'two_handed';
+  return type;
+}
+function itemImg(o){
+  if(!o)return ICONS.sword;
+  const key=equipmentArtType(o.subtype);
+  const names=EQUIPMENT_ICON_FILES[key];
+  if(!names)return ICONS[String(o.subtype||'').toLowerCase()]||slotImg(o.slot);
+  const legacy=ICONS[key==='dagger'?'daggers':key];
+  const options=[
+    ...(LEGACY_ICON_TYPES.has(key)&&legacy?[legacy]:[]),
+    ...names.map(name=>EQUIPMENT_ICON_ROOT+name)
+  ];
+  // Stable per item ID. No save migration, no re-roll on every render.
+  if(o.name==='Training Sword'&&key==='sword'&&legacy)return legacy;
+  const seed=String(o.id||o.name||o.subtype||key);
+  let hash=2166136261;
+  for(let i=0;i<seed.length;i++)hash=Math.imul(hash^seed.charCodeAt(i),16777619);
+  return options[(hash>>>0)%options.length];
+}
 function makeSlots(){return Object.fromEntries(SLOTS.map(s=>[s,null]))}
 function starter(){return {id:makeId(),slot:'weapon',subtype:'Sword',name:'Training Sword',tier:1,rarity:'Common',effect:null,atk:5,str:1,obtainedAt:Date.now(),crafted:false}}
 function fresh(){state={maxDungeon:1,chosen:1,fragments:0,gold:0,stash:[starter()],equip:makeSlots(),valuables:[],offersByLevel:{},merchant:null,run:null};}
