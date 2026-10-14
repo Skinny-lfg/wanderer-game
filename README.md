@@ -1,1 +1,1 @@
-# wanderer-v0.1
+# wanderer
