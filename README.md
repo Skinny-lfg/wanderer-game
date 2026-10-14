@@ -1,4 +1,4 @@
-# Wanderer
+# wanderer
 
 Wanderer é um jogo de aventura e exploração de masmorras no navegador. Gere o equipamento e o inventário, visita a forja e o mercador e enfrenta inimigos em combate automático.
 
