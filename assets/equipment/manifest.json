@@ -1,6 +1,6 @@
 {
-  "name": "Wanderer Equipment Icons v0.8 — Phase 2A (Revised v2)",
-  "version": "1.1.0",
+  "name": "Wanderer Equipment Icons v0.8 \u2014 Phase 2A (Revised v2)",
+  "version": "1.2.0",
   "resolution": [
     256,
     256
@@ -66,6 +66,31 @@
       "charm_02.png",
       "charm_03.png",
       "charm_04.png"
+    ],
+    "helmet": [
+      "helmet_01.png",
+      "helmet_02.png",
+      "helmet_03.png"
+    ],
+    "chest": [
+      "chest_01.png",
+      "chest_02.png",
+      "chest_03.png"
+    ],
+    "gloves": [
+      "gloves_01.png",
+      "gloves_02.png",
+      "gloves_03.png"
+    ],
+    "boots": [
+      "boots_01.png",
+      "boots_02.png",
+      "boots_03.png"
+    ],
+    "ring": [
+      "ring_01.png",
+      "ring_02.png",
+      "ring_03.png"
     ]
   },
   "files": [

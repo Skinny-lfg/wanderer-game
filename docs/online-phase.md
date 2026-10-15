@@ -66,3 +66,12 @@ Profile loading now distinguishes loading, failed, confirmed missing and existin
 The account screen still has no Local backup section. Versioned module URLs refresh the account code when the new HTML is served; they do not publish development to main/Pages.
 
 Validation: production adapter tested with an in-memory SDK boundary for existing profiles, duplicate requests, cached absence, same-owner nickname recovery and other-owner rejection. Browser coverage includes a full page reload with persisted mock authentication/profile/cloud data, and permission-denied profile reads followed by Retry. Real Firebase service diagnosis remains unverified in this environment.
+
+
+## Equipment / combat VFX pack and account nickname
+
+Integrated the user-provided `Wanderer_Equipment_and_Combat_VFX_2026_10_15_v2.zip`: 15 equipment PNGs and 8 static transparent combat effect PNGs. Original PNG pixels are preserved. Armor, helmets, gloves, boots and both ring slots use three stable variants; rarity affects the frame, independently of artwork. Existing weapon and amulet artwork is preserved. No item data or saves are rewritten.
+
+Single-frame VFX are animated with CSS for sword, mace, both dagger paths, Two-Handed, bow, staff, wand and Block. Effects are absolute overlays, capped at eight, cleaned up after animation and respect reduced motion. Combat calculations and timing are unchanged. The account button displays the authenticated profile nickname and resets to Account & Character on sign-out.
+
+Tests: existing combat/save/model/profile suites; browser checks at 1440px and 390px for slot artwork, all rarity frames, image decoding, all effect entrypoints in the combat scene, reduced motion, nickname and layout stability. No real Firebase integration or deployment is implied by mocked browser tests.

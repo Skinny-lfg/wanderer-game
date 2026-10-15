@@ -8,7 +8,8 @@ const accountKey=()=>user?'wanderer_account_'+user.uid:null;
 function status(text){message=text;}
 function report(error){status(errorText(error));const el=document.getElementById('accountError');el.textContent=message;el.hidden=false;}
 function clearError(){document.getElementById('accountError').hidden=true;}
-function gate(){for(const id of ['screen','nav'])document.getElementById(id).inert=!ready||game.blocked();}
+function accountLabel(){document.querySelector('[data-online-action="account"]').textContent=profile?.nickname||'Account & Character';}
+function gate(){accountLabel();for(const id of ['screen','nav'])document.getElementById(id).inert=!ready||game.blocked();}
 function remember(){localStorage.setItem(accountKey()+'_synced',JSON.stringify(game.snapshot()));}
 async function publishResults(){
  if(!ready||revision===null||game.busy())return;
@@ -62,6 +63,7 @@ async function restoreProfile(token=epoch){
 function characterPicker(){return `<div class="characterPicker">${CHARACTERS.map(c=>`<button type="button" data-character="${c.id}" aria-pressed="${selectedCharacter===c.id}"><img src="${c.fullBody}" alt="${esc(c.name)}"><span>${esc(c.name)}</span></button>`).join('')}</div><p class="small muted">Cosmetic only. No classes or stat bonuses.</p>`;}
 function bindCharacters(){dialog.querySelectorAll('[data-character]').forEach(b=>b.onclick=()=>{selectedCharacter=b.dataset.character;dialog.querySelectorAll('[data-character]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));});}
 function showAccount(){
+ accountLabel();
  selectedCharacter=profile?.characterId||game.snapshot().characterId||'wanderer';
  const signedIn=!!user,needsProfile=signedIn&&profileState==='missing';
  const content=`<p>${signedIn?`Signed in${profile?' as <b>'+esc(profile.nickname)+'</b>':''}`:'Sign in with Google to play Wanderer.'}</p>

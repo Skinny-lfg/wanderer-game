@@ -6,7 +6,8 @@
     "build:firebase": "esbuild online/firebase-sdk-source.mjs --bundle --format=esm --minify --outfile=online/vendor/firebase-sdk.mjs",
     "test": "node tests/phase2-smoke.cjs && node tests/online-save-compat.cjs && node --test tests/online-model.test.mjs tests/profile-restore.test.mjs",
     "test:rules": "firebase emulators:exec --only firestore --project demo-wanderer 'node --test tests/firestore-rules.test.mjs'",
-    "test:browser": "node tests/online-browser.cjs"
+    "test:browser": "node tests/online-browser.cjs",
+    "test:assets": "node tests/equipment-vfx-browser.cjs"
   },
   "dependencies": {
     "firebase": "11.10.0"
