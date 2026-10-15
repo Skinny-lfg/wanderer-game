@@ -9,7 +9,15 @@ assert(html.indexOf('id="onlineBar"')<html.indexOf('id="nav"'),'profile/leaderbo
 assert(html.includes('class="panel dungeonSelector"')&&html.includes('.dungeonSelector .levelGrid'),'compact dungeon rail exists');
 assert(html.includes('const DUNGEON_CAP=200')&&html.includes('state.maxDungeon<DUNGEON_CAP'),'D200 limit and unlock');
 assert(html.includes('n>DUNGEON_CAP')&&html.includes('tier>DUNGEON_CAP'),'dungeon selector and rune caps');
-assert(html.includes('class="equipmentRight"')&&html.includes('class="panel equipmentRunes"'),'desktop runes under inventory');
+const equipmentMarkup=html.slice(html.indexOf('function renderStash(){'),html.indexOf('function renderForge(){'));
+const leftStart=equipmentMarkup.indexOf('class="equipmentLeft"');
+const bonusStart=equipmentMarkup.indexOf('class="panel equipmentBonuses"');
+const rightStart=equipmentMarkup.indexOf('class="equipmentRight"');
+const stashStart=equipmentMarkup.indexOf('class="panel equipmentInventory"');
+const runeStart=equipmentMarkup.indexOf('class="panel equipmentRunes"');
+assert(leftStart>=0&&bonusStart>leftStart&&rightStart>bonusStart,'desktop keeps set bonuses in the left column');
+assert(stashStart>rightStart&&runeStart>stashStart,'desktop keeps runes below stash on the right');
+assert(html.includes('.equipmentLeft,.equipmentRight{display:contents}')&&html.includes('.equipmentInventory{order:1}')&&html.includes('.equipmentRunes{order:2}')&&html.includes('.equipmentBonuses{order:3}'),'mobile orders stash, then runes, then tier bonuses');
 assert(html.includes('class="homeMetrics"')&&!html.includes('<div class="hub">'),'home dashboard has no duplicate menu');
 assert(html.includes('Number(count>=b)-Number(count>=a)||b-a'),'active high tier bonuses are sorted first');
 assert(model.includes('maxDungeon>200')&&model.includes('Math.min(200')&&model.includes('length:20'),'cloud saves, leaderboard, milestones support D200');
