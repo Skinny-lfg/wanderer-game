@@ -92,3 +92,12 @@ See [the PvP GDD addendum](pvp-stage.md). This adds exact nickname lookup, publi
 
 ## Mid-expedition restart recovery fix — 2026-10-15
 The old account restore called strict `validateSave()` on the account's persisted local snapshot even if it contained an unfinished dungeon `run`, trapping returning Guests and Google players behind Account & Character. The browser resume path now calls `recoverInterruptedSave()`: it validates a copy with `run:null`, first archiving the EXACT original JSON to local recovery backups. Existing equipped gear, stash loot previously extracted, Gold, Fragments, progression, character, and nickname remain intact; only the unfinished run and its unextracted rewards are abandoned. Browser startup of a legacy local save also backs up active runs before ending them. Standard `validateSave()`, active-run account-switch guards, cloud revision conflict checks, and Firestore saves remain strict. Unit + compatibility + Guest reload regression test coverage updated. Requires live/browser testing prior to publishing main.
+
+
+## Interrupted cloud expedition recovery
+
+Audited main `48b961b` and incorporated development `c9ae609` before applying this fix. The recent local-run recovery remains intact. The Firebase adapter still rejected a cloud save containing an old `run`, reproducing “Finish or extract from the expedition before switching saves.” A focused adapter test reproduced that failure before the fix.
+
+Cloud reads now validate that the interrupted save is recoverable without discarding its original payload. The account flow archives that original, strips only the interrupted run and writes the recovered save with the expected cloud revision. Conflicts still require a choice; both upload and download paths support recovery. Normal active-run writes and switching accounts during a live expedition remain prohibited. No account reset, nickname release, currency grant or unextracted loot grant occurs. Guest and Google use the same recovery path. Updated asset URLs prevent stale account code from masking the fix.
+
+Validation: 16 browser recovery cases (Guest/Google × local/cloud/both/conflict × 1440/390px) pass with mocked Firebase, preserving Gold, Fragments, gear, protection, progression and original backups. Core v0.8.1, balance, save, model and adapter suites pass. Fixed a pre-existing missing String.raw in the v0.8.1 test harness so its regex assertions execute correctly. No live Google/Firebase account was modified by tests.
