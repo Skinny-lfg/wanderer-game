@@ -1,0 +1,390 @@
+WANDERER — GAME DESIGN
+DOCUMENT
+Versão 0.1 · 14 outubro 2026 · Documento vivo / fonte de verdade
+
+1. VISÃO E IDENTIDADE
+Extraction roguelite RPG 3D de um aventureiro, combate automático, exploração por
+caminhos e progressão exclusivamente pelo equipamento. O jogador faz expedições, testa
+sinergias, extrai loot para a stash e tenta chegar às dungeons mais profundas. Inspiração
+estrutural: Slay the Spire (mapa ramificado) e Darkest Dungeon (ambiente e expedição). A
+experiência deve funcionar para quem quer relaxar, sem exigir cliques constantes.
+Pilares: (1) builds emergentes criadas por equipamento, (2) RNG com escolhas
+interessantes, (3) risco/recompensa de continuar ou extrair, (4) farming útil e progressão por
+profundidade, (5) apresentação 3D modular.
+
+
+2. DECISÕES CONFIRMADAS
+• Um único aventureiro; sem classes ou níveis de personagem que aumentem atributos
+permanentemente. A força vem dos itens e das sinergias.
+• Combate automático (auto-battler). A apresentação visual está em aberto; protótipo usa
+uma pequena arena 3D/2.5D provisória.
+• Exploração em nós/caminhos ramificados, com salas 3D para encontros, tesouros,
+eventos e saídas.
+• Equipamentos definem habilidades, estatísticas e efeitos: veneno, sangramento, escudo,
+velocidade, detonação etc.
+• Loot encontrado numa run só é conservado ao extrair com sucesso. Morte implica perder o
+equipamento levado e o loot da run; stash na base mantém-se.
+• Progressão por dungeons de dificuldade crescente. Dungeons avançadas oferecem loot
+potencialmente melhor, mas raridade/nível não garantem uma build superior.
+• Farming de níveis anteriores é uma opção central para reconstruir builds e melhorar
+equipamento antes de tentar níveis mais difíceis.
+• Grande boss a cada 10 níveis; os níveis intermédios servem para obter loot, ajustar
+sinergias e preparar o boss.
+• Bosses têm fraquezas, resistências e padrões próprios. Fraqueza é vantagem, não
+requisito rígido: devem existir várias soluções viáveis.
+• Estrutura pensada para seasons e leaderboard de profundidade/primeiras conquistas.
+Implementação online só numa fase posterior.
+3. LOOP PRINCIPAL
+BASE / STASH → escolher equipamento → escolher dungeon acessível → mapa de nós →
+combates automáticos, loot, eventos → escolher continuar ou extrair → sucesso: guardar
+itens e desbloquear nível; morte: perder carga → repetir, farmar e experimentar.
+A dungeon desbloqueada mantém-se acessível durante a season mesmo após perder uma
+build. É a capacidade de a vencer que muda com o equipamento atual.
+
+
+4. GEAR E SINERGIAS
+Protótipo: 4 slots — arma, armadura, anel e amuleto. Cada item tem ID estável, slot, nível
+de origem, raridade, atributos e efeitos/modificadores data-driven. Não programar um
+sistema exclusivo para cada item.
+Exemplo de evolução de veneno: espada da dungeon 3 aplica veneno; armas futuras
+podem aplicar doses maiores, espalhar veneno ou ter uma probabilidade de detonar o
+veneno restante. Detonar consome stacks e cria um trade-off em builds de sustain. Uma
+build de veneno deve continuar viável em níveis altos com outras variantes e sinergias.
+O nível da dungeon aumenta o potencial base dos drops e desbloqueia efeitos/combinações
+novos. Evitar que todo o gear de nível superior seja estritamente melhor em todos os
+contextos.
+Upgrade currency: proposta em avaliação. Ganhar fragmentos ao extrair e/ou desmontar
+itens; melhorar atributos de gear antigo até um limite, para permitir prolongar uma build.
+Evitar upgrades infinitos que tornem uma única build dominante. Possível recuperação
+parcial do investimento ao mudar de equipamento; valores e limites por testar.
+
+
+5. DUNGEONS E BOSSES
+Cada bloco de 10 níveis constitui um capítulo/bioma. Dungeons 1–9: encontros, elites
+ocasionais, recompensas e oportunidade de farm. Nível 10: grande boss e bloqueio de
+progressão até ser derrotado. Repetir por capítulos 11–20 etc. Os 10 níveis não devem
+exigir obrigatoriamente 10 sessões de farm.
+Bosses desafiam propriedades diferentes das builds (armadura, dano ao longo do tempo,
+velocidade, sobrevivência). Evitar imunidades absolutas generalizadas. Reutilizar famílias
+de bosses com variantes para controlar escopo de produção.
+A derrota pode exigir regressar a dungeons inferiores para recuperar equipamento. Deve
+existir equipamento inicial acessível para evitar soft-lock.
+
+
+6. EXTRAÇÃO, MORTE E ECONOMIA
+Inventários separados: Stash segura, equipamento levado, loot temporário da run. Pontos
+de extração antecipada criam decisões de risco. Moeda interna e mercado normal são a
+hipótese para protótipo.
+PvP, mercado de jogadores, NFTs, token próprio e eventual monetização estão por decidir e
+FORA do MVP. Riscos: desigualdade pay-to-win, custo de servidores, antifraude, equilíbrio
+económico e legislação. Avaliar só após diversão e retenção do loop single-player.
+7. SEASONS E RANKINGS (FUTURO)
+Objetivo competitivo: avançar rapidamente para a dungeon mais profunda, com leaderboard
+por season. Ideias de métricas: first clear, deepest cleared e tempo ativo até um marco.
+Política de reset, persistência fora das seasons, verificação anti-cheat e regras de
+competição por decidir.
+
+
+8. PROTÓTIPO TÉCNICO — UE 5.7.2
+Separar simulação e apresentação: stats, geração de itens, efeitos, combate e resultado
+não dependem de animações ou posicionamento 3D. Isso deixa experimentar combate
+estático, 2.5D ou movimento limitado sem reconstruir as regras.
+Marco 1 — arena provisória, aventureiro vs inimigo, ataques automáticos, vida, velocidade e
+vitória/derrota. Marco 2 — item equipado altera atributos e aplica um efeito (veneno). Marco
+3 — loot, stash, save/load e extração. Marco 4 — mapa ramificado simples. Marco 5 —
+primeiras 10 dungeons com boss e progressão por gear.
+Existe um ZIP inicial 'Wanderer_UE5_Prototype_v0_1.zip' gerado anteriormente nesta
+conversa, NÃO compilado nem testado em UE5; validar abertura e compilação antes de o
+considerar base estável do projeto.
+
+
+9. QUESTÕES EM ABERTO
+• Apresentação do combate: estático tipo Darkest Dungeon, 2.5D com deslocações curtas,
+ou alternativa? Mecânica automática está decidida; visual não.
+• Duração-alvo de run, número de nós, possibilidade e custo de extração antecipada.
+• Penalização exata por morte: equipamento levado, consumíveis, materiais de upgrade e
+proteções para recém-chegados.
+• Upgrades: caps, custo, fragmentos, desmontagem e transferência de investimento.
+• Qualidade dos drops por nível, RNG de affixes, farming direcionado, drop tables de
+bosses.
+• IA/regras de combate (prioridades, cooldowns, targeting) e interface de feedback.
+• Regras de reset da season, ranking verificável, modo permanente e eventual PvP
+assíncrono.
+
+
+10. REGRAS DE DECISÃO
+Cada ideia nova recebe um estado: DECIDIDO, EM TESTE, EM ABERTO ou FUTURO. Só
+decisões DECIDIDAS entram como requisito da próxima versão. Mudanças importantes
+ficam registadas com data, motivo e impacto. O protótipo pode contrariar hipóteses: testar
+antes de expandir escopo.
+11. REGISTO DE ALTERAÇÕES
+2026-10-14 — v0.1 — Consolidado o conceito discutido no ChatGPT: progressão por gear,
+auto-battler, extração, dungeons, boss a cada 10 níveis, seasons futuras e dúvidas sobre
+upgrades e economia.
+
+
+12. ATUALIZAÇÃO DO PROJETO — 14 OUTUBRO 2026 — ESTADO v0.8 / FASE 1
+ESTE CAPÍTULO ATUALIZA E PREVALECE SOBRE AS DESCRIÇÕES
+DESATUALIZADAS DO PROTÓTIPO v0.1 ACIMA. Não eliminar o histórico; interpretar o
+texto original como decisões iniciais. Idioma do jogo, da UI, dos itens e das mensagens:
+INGLÊS. Conversas de desenvolvimento podem ser em português europeu.
+
+12.1. FONTE DE VERDADE TÉCNICA E WORKFLOW [DECIDIDO]
+GitHub: https://github.com/Skinny-lfg/wanderer-v0.1
+Branch main: versão pública atualmente servida pelo GitHub Pages; NÃO alterar, fazer
+merge ou publicar sem autorização explícita do utilizador.
+Branch development: desenvolvimento e testes. Foi criada e publicada pelo Codex (commit
+inicial d64f1c4). A implementação v0.8 Fase 1 foi enviada exclusivamente para
+development, commit e8a9b27, segundo o relatório do Codex. Os resultados de testes
+foram reportados pelo Codex; não considerar inspeção independente neste documento.
+Fluxo obrigatório: planear por fases → desenvolver em development → testar mobile e
+desktop → commit/push em development → revisão → só depois, mediante autorização
+explícita, merge/publicação em main. Preferir trabalho direto no GitHub através do Codex;
+não obrigar o utilizador a substituir index.html manualmente. O jogo browser é um protótipo
+HTML/JS; futura migração/produção UE5.7.2 continua possível, mas não é a base atual.
+Google Drive (raiz):
+https://drive.google.com/drive/folders/1glhncSsAhQBM-pudj3gma86Dxd-wQjfr
+Estrutura existente: 01 - Game Builds (versões em subpastas); 02 - Assets (arte); 03 -
+Game Design; 04 - Game Data (JSON); 05 - Archive. Guardar novos ficheiros nas
+subpastas adequadas. O documento atual é o GDD vivo; atualizar após decisões e
+implementações relevantes. Não confundir packs de conceito com funcionalidades em
+produção.
+
+12.2. JOGABILIDADE E PROGRESSÃO [DECIDIDO / EM TESTE]
+Wanderer é um RPG idle/extraction browser auto-battler. O jogador entra a partir da Tavern,
+escolhe nível (pode regressar a anteriores), vê três dungeons temáticas aleatórias com
+vieses de drop, pode fazer reroll com Fragments, confirma o risco e só depois vê a arena.
+Não mostrar combate na homepage; stash/forge indisponíveis durante expedição. Três
+encontros por dungeon no protótipo; extrair para guardar loot. Morte: perde todos os itens
+equipados e loot/recompensas por extrair; stash segura. Destacar explicitamente este risco
+antes de entrar, com lista de equipamento que está em risco.
+Boss em todos os níveis múltiplos de 10 (D10, D20, ...). Seleção de nível deve mostrar sinal
+de boss e aviso de alto risco; níveis bloqueados a cinzento, desbloqueados/concluídos com
+visual distinto. Meta futura de até Dungeon 1000; ampliar com equilíbrio e variedade, não
+apenas números.
+Feedback observado: foi necessário farmar antes de vencer D10, o que parece aceitável;
+NÃO aumentar artificialmente a dificuldade dos bosses antes de mais testes. Outro tester
+atingiu D49/D50 com ATK 232, DEF 190, HP 1497 contra inimigos ~ATK 158/DEF 31/HP
+798: discrepância defensiva, regeneração e pouca ameaça. Investigar fórmula de mitigação,
+HP entre encontros, regen, resistências e ritmo. Não escalar inimigos automaticamente pelo
+Gear Score, pois isso anularia a sensação de melhorar a build. Recolher dados de
+D10/D20/D30 e níveis altos.
+Loot de equipamento NÃO garantido a cada combate; procurar taxa menor e maior valor
+percebido. Raridades Common, Uncommon, Rare, Epic, Legendary; proposta: 50% / 30% /
+15% / 4,5% / 0,5% CONDICIONAL À QUEDA DE UM ITEM. Legendary não sai de crafting
+normal. Raridade com cor correspondente no Expedition Log e no equipamento; nível de
+origem da dungeon bem destacado no item. Loot dirigido por afinidade da dungeon, sem
+garantia.
+
+12.3. ECONOMIA, FORGE E MERCHANT [DECIDIDO / EM TESTE]
+Duas moedas distintas: Fragments (Forge, rerolls etc.) e Gold (compra no Merchant).
+Introduzir valuables vendáveis por Gold como recompensa alternativa quando não cai
+equipamento. Loot escasso não deve equivaler a zero progresso.
+Forge: escolher nível do item (até ao máximo desbloqueado) e slot; custo base da
+experiência anterior: 10 + 10 × nível do item (D1=20, D5=60, D10=110). Revenda de itens
+criados limitada a ≤25% do custo original para evitar loop de fragmentos infinitos. Catch-up:
+crafting de tiers inferiores ao máximo atingido melhora a probabilidade de Rare/Epic,
+mantendo stats do tier criado; Legendary não craftável. Mostrar modal claro com item
+criado, imagem, rarity, atributos, comparação e acesso a Equipment. Afinar probabilidades
+com testes.
+Merchant: para cada item à venda mostrar comparação com o item equipado do mesmo
+slot: diferenças positivas/negativas de atributos e Gear Power, e mudanças de
+efeito/sinergia. Não mostrar apenas o preço. O Merchant deve ficar acessível na Tavern.
+
+12.4. EQUIPMENT, BUILDS E UI [DECIDIDO; PARTE IMPLEMENTADA EM v0.8 FASE 1]
+Fundir Character e Stash num único menu Equipment, para não alternar constantemente
+entre páginas. Desktop: personagem + slots, Stash compacta, painel de item selecionado;
+mobile: personagem compacta, stats/bónus resumidos, grelha de ícones, detalhes em
+painel sob seleção; reduzir scroll. Mostrar as estatísticas totais, atributos e set bonuses a
+atualizar imediatamente ao equipar. Slots vazios visualmente vazios/cinzentos. Slot
+equipado deve mostrar a ARTE DO ITEM (não ícone genérico de slot), contorno da cor de
+raridade; cada slot tem arte/icon apropriado (não botas com adaga). Stash em grelha de
+pequenos ícones, com filtros e ordenação por dungeon level, quando foi lootado e preço,
+ascendente/descendente; seleção múltipla, bulk sell, lock para evitar venda acidental. Setas
+de upgrade ▲/▼ relativas ao equipamento atual baseadas em poder estimado, sem
+esconder trade-offs de stats e efeitos. Descrição explicita tipo: Main Hand, Off-Hand,
+Two-Handed, Shield, Helmet, etc.
+Atributos estilo D&D derivados do equipamento, SEM níveis permanentes de personagem:
+Strength aumenta ataques básicos; Agility velocidade de ataque; Intelligence spell power e
+mana regeneration; Endurance vida/defesa; Charisma crit chance e probabilidade/qualidade
+de loot. Combat UI mostra stats, set bonuses ativos e ATK/DEF/HP/SPD de inimigos, para
+avaliar risco antes de entrar.
+Efeitos/sinergias ativam ao equipar pelo menos DOIS itens do mesmo efeito, em quaisquer
+slots; tiers maiores com 3+ itens possíveis. Famílias: Poison, Bleed, Crit, Shield,
+Regeneration, Sunder, Burn/Fire, Slow/Frost, Drain/Dark. Sunder SUBSTITUI
+Detonation/Burst como redução de armadura do alvo. Não utilizar burst legado como design
+atual sem migração.
+
+12.5. ARMAS, MAGIA, OFF-HAND E STATUS [REGRAS APROVADAS; IMPLEMENTAÇÃO
+COMPLETA PENDENTE]
+Main Hand: Sword (equilibrada), Mace (lenta, ataques mais fortes e pequeno bónus de
+Block em combinação com Shield), Bow (ataques rápidos/poderosos), Daggers (ataques
+rápidos/fracos e mais procs), Staff e Wand (únicas armas que lançam spells gastando
+Mana). Introduzir armas Two-Handed: ocupam Main Hand e Off-Hand, golpes mais fortes e
+lentos. Off-Hands: Shield (Block Chance / Endurance), Dagger física, e itens mágicos
+(Orbs/Tomes etc.) que conferem/modificam efeito à arma principal SEM custo de Mana
+adicional. Frost off-hand: Slow; Fire: Burn; Dark: Life Steal/Drain; Poison: Poison; se
+elemento coincidir com Staff/Wand main hand, amplifica o dano da magia desse elemento
+sem custo extra. Mace + Shield aumenta ligeiramente Block bonus. Equilibrar block chance
+e mitigação.
+Poison e outros DoT devem escalar como percentagem do dano da arma (não dano fixo).
+Two-Handed causa tick mais alto, mas aplica menos frequentemente; Daggers aplicam
+stacks mais frequentemente e cada stack é mais fraco. Exibir stacks/debuffs visíveis sobre
+inimigos (Poison ×N, Burn ×N, Bleed ×N, Slow). Staff/Wand elemental utiliza Mana: Poison
+staff aplica veneno, Fire Burn, Frost Slow, Dark Drain; não lançar spells de base com
+espada/escudo/anel sem fonte apropriada de spell. Animações pretendidas: Slash (sword),
+Smash (mace), Double Slash (daggers), projétil (bow) e magia elemental
+Fire/Frost/Dark/Poison. Integrar gradualmente e testar timings.
+
+12.6. VISUAL, PERSONAGENS E CONTEÚDO [ASSETS PREPARADOS / INTEGRAÇÃO
+PARCIAL]
+Tavern é homepage, com imagem de taberna interativa/menu sobreposto para Equipment,
+Forge, Merchant e Dungeons; no canto, painel compacto de stats/equipamento; novo
+logo/arte de botões/menu planeados. UI 100% inglesa, responsiva iPhone e PC.
+Cinco personagens cosméticas (a original + quatro novas): a escolha do avatar NÃO muda
+stats/skills; seleção no perfil antes de jogar. Cada uma com arte corpo inteiro e retrato
+quadrado de 256×256 para nome no leaderboard. Pack atualizado guardado em Drive → 02
+- Assets: Wanderer_v0_8_Assets_Pack.zip e Wanderer_Characters_and_Avatars.zip.
+Substituir imagens antigas correspondentes ao integrar, não confundir pack preparado com
+integração no jogo.
+Outros conteúdos planeados: variações de ícones por arma/item, +15 inimigos distintos com
+comportamentos, resistências e fraquezas, +3 bosses com mecânicas próprias, variações
+gráficas de dungeons, menus/botões novos e animações. Existe
+Wanderer_Content_v0_6.json em Drive → 04 - Game Data/conteúdo legado, que é
+CATÁLOGO DE DESIGN (não implementação completa), com propostas para
+dungeons/inimigos/gear; atenção: algumas entradas usam 'burst' anterior à decisão de
+trocar por Sunder e precisam revisão antes de integração.
+
+12.7. ONLINE/FIREBASE [CONFIGURADO PARCIALMENTE, AINDA NÃO INTEGRADO
+NO JOGO]
+Firebase Console: projeto Wanderer test, projectId wanderer-test-8f062, plano Spark. Web
+app Wanderer Web registada; Auth Google ativado segundo utilizador; domínio
+skinny-lfg.github.io autorizado segundo utilizador. Cloud Firestore criado. Rules publicadas
+(captura confirmada): apenas utilizador autenticado pode read/write de /players/{uid} se
+request.auth.uid == uid; resto negado. Essas regras impedem acesso a saves alheios mas
+NÃO garantem integridade contra cliente malicioso que altere os próprios scores. Nunca
+guardar chaves privadas/admin na aplicação web; config pública Firebase não é segredo.
+PRÓXIMA INTEGRAÇÃO (não efetuada na v0.8 Fase 1): Sign in with Google; perfil público
+nickname + avatar entre cinco; Cloud Save para stash, equip, gold, fragments, progresso e
+escolha cosmética; migração/reinício controlado de saves locais para testes (não apagar
+jogadores sem decisão/consentimento); admin/test controls restritos; leaderboard Deepest
+Dungeon, First to Clear e Fastest Progression, todos com definição precisa de tempo e
+validação SERVER-SIDE para classificações de confiança. Firestore rules são apenas
+primeira proteção; resultados enviados diretamente por JS podem ser falsificados.
+Seasons/reset não definidos; por enquanto ambiente de TESTES, preservar possibilidade
+de histórico e reset seletivo.
+
+12.8. ESTADO REAL DE IMPLEMENTAÇÃO / ROADMAP [2026-10-14]
+PRODUÇÃO PÚBLICA: branch main; versão jogável v0.7 referida nos testes; não assumir
+que main recebeu v0.8.
+v0.8 FASE 1 EM development, commit e8a9b27 (segundo Codex): Equipment unificado com
+stats, set bonuses, stash compacta e comparação; destaque de boss em múltiplos de 10;
+confirmação de risco antes da entrada; Merchant com comparação incluindo Gear Power;
+Forge com modal/resultados de craft. Relatório do Codex: testado Chromium 1440×1000,
+390×844, 320×740, navegação, Equipment, Forge, Merchant, confirmação, combate e
+extração sem erros JS/overflow horizontal. Main e GitHub Pages inalterados. TESTAR na
+branch development antes de publicação, incluindo Safari do iPhone.
+FASE 2 PRIORIDADES: aprofundar gear slots (Two-Handed/physical Off-Hand
+Dagger/Block/Shield+Mace), corrigir regras de mana/spells/off-hand, DoTs percentuais e
+stacks, status UI/anim, balancear defesa e regeneração com regressões em bosses. Avaliar
+escopo e subdividir em tarefas pequenas.
+FASE 3: novas ilustrações, modelos de inimigos e bosses e biomas, variações de armas,
+polish Tavern/ecrãs/iconografia/logo, progressão até D1000 de forma sustentável.
+FASE ONLINE DE TESTES: Firebase Auth/Cloud Save/perfil/avatares/leaderboard,
+validação de ranking e carga de progressão; sem regras finais de seasons. NÃO publicar
+scores competitivos como fiáveis sem backend que verifique conclusões.
+
+12.9. INSTRUÇÕES PARA QUALQUER NOVO CHAT/CODEX
+Ao começar: ler ESTE GDD, verificar estado GitHub actual e a branch development,
+confirmar quais alterações estão realmente em código antes de afirmar implementadas; não
+se basear apenas nas ideias deste documento. Propor fase pequena, implementar/testar,
+documentar commit e atualizar aqui. Nunca alterar main, fazer merge ou publicar sem
+autorização explícita. Distinguir [DECIDIDO], [EM TESTE], [PENDENTE] e [FUTURO]. Não
+reinterpretar as temporadas ainda em aberto. Priorizar feedback prático, qualidade mobile e
+preservação dos saves. Responder ao utilizador em PT-PT, mantendo textos do jogo em
+inglês.
+
+13. CHANGELOG DO DOCUMENTO
+2026-10-14 — Atualização substancial sobre protótipo v0.7, execução v0.8 Fase 1 em
+development (e8a9b27), sistema de equipamento, combate, economia, arte, Firebase e
+roadmap. Preservadas as secções originais v0.1 como histórico.
+
+2026-10-14 — v0.8 development QoL/Balance [EM TESTE], commit 3efa5f0: Equipment
+permite clicar em slot para filtrar Stash; removida segunda barra de slots, comparação
+simplificada sem tabela adicional de totais; slots vazios com imagem cinzenta a 50%;
+combate mostra stats/atributos/set bonuses sem expandir, e loot mostra affinity. Stash inicia
+com 40 slots, upgrades de +10 por Gold (60, +40 por upgrade, máximo 300); não permite
+nova dungeon, comprar ou fabricar se cheia. Extração nunca descarta loot: overflow é
+mantido e exige resolução antes de nova run. Legendary condicional à queda de gear: 1,5%
+(antes 0,5%); Forge mantém Legendary a 0%. Catch-up Forge: +1,2 pp/nível de diferença,
+máximo +24 pp redistribuídos de Common para Rare/Epic, sem melhorar tier base. Crit:
+chance efetiva dividida por sqrt(max(1, ataques/s/1,3)), teto 65%; dano crit ×1,5 (antes
+×1,7). Testes automatizados por runtime JS/mock passaram; validação visual
+desktop/mobile e balanceamento D10/D20/D30 pendentes. Main não alterada. Referência
+técnica: docs/phase-2-qol-balance.md na branch development.
+
+2026-10-14 — Fase 2 UI/Combate/Conteúdo [EM TESTE], commit e2045feb (development;
+main intocada): Ações Equip/Lock/Salvage/Unequip movidas para topo do painel de item;
+na Stash indicador ▲/▼/≈ calculado só com stats base ponderadas (ignora afinidades e
+sets, logo não prova superioridade da build); Merchant mostra efetivamente nome e imagem
+do item equipado e comparação lado a lado; slots do personagem/Tavern apresentam tier
+D#. Expedition Log passa a reportar cura Drain/Regen, ganho de Barrier, bloqueio
+absorvido, DoT e dano sofrido. HUD mostra Poison/Bleed/Burn ×stacks, Slow em segundos,
+Sunder -DEF; os counters são UI leve, sem alteração profunda às fórmulas de DoT. Em
+D10/D20/... boss drop garantido Rare 71% / Epic 25% / Legendary 4%, 35% hipótese de
+segundo item, bónus de Gold/Fragments e mais chance de valuables — proposta de
+balanceamento a testar. Expansão de 10 para 13 dungeons com Stormglass Spire (Crit),
+Drowned Vault (Drain), Obsidian Quarry (Sunder). Cada uma das 13 dungeons tem 2 mobs
+próprios (26 PNGs), sprites 256×256 e 3 backgrounds novos 1024×576 para as novas
+dungeons. Os mobs normais são sorteados apenas do bioma atual; comportamento
+individual exclusivo por espécie é FUTURO, a afinidade usada é a da dungeon. Boss
+mantém Abyssal Guardian. Manifesto: assets/dungeons/dungeon_mob_map.json. Testes
+mock JS e verificação dos assets passaram; TESTE VISUAL real em browser PC/iPhone e
+balanceamento pendentes. Nota técnica em docs/phase-2-dungeon-combat-ui.md.
+
+2026-10-15 — Ajuste de combate (development f15adb827, main intocada): os debuffs do
+mob passaram para um espaço fixo e posicionamento absoluto no painel de combate, sem
+fazer saltar o layout; só se atualiza o HTML quando o estado muda. Overlay do background
+no combate aplica saturação 38% e brilho 92%, mantendo o sprite e o HUD a cores. Mobs
+normais (encontros 1/2 e 3 fora de boss) têm 140% do HP, ATK e DEF anteriores (+40%),
+bosses D10/D20/... inalterados. Save reset intencional one-shot: SAVE_RESET_VERSION
+passa para 2026-10-15-combat-balance-reset-2; primeiro refresh na nova versão reinicia
+progresso local antigo, refreshes seguintes preservam o novo save. Testes JS e testes
+simulados de reset único/valores inimigos passaram; teste visual em browser e
+balanceamento real por validar. Nota técnica: docs/phase-2-combat-polish-reset.md.
+2026-10-15 — Backgrounds de dungeon / Combat UI (development 5d05ddde, main
+intocada): caixa inferior do combate mostra só Tier Bonuses (setDetails), sem grelha de
+stats/STR/AGI/INT/END/CHA duplicados; stats ao lado da personagem permanecem.
+Criadas 13 imagens temáticas únicas WEBP 1024×576, correspondentes a todos os 13 IDs
+de dungeon, referenciadas por assets/dungeons/backgrounds/<id>.webp tanto na escolha
+da dungeon como durante o combate. Pack e preview disponíveis em 02 - Assets /
+Wanderer_Dungeon_Backgrounds_v0_9 e ZIP na mesma pasta base. Direção visual
+original: ruínas de veneno verde, forja de lava vermelha e catacumbas/cristais azuis; quatro
+panoramas vieram de uma prancha 2×2 e nove de recortes ampliados de pranchas, ainda
+concept art para revisão de qualidade. Imagens antigas preservadas, 26 mobs/37
+equipamentos intactos; SAVE_RESET_VERSION inalterado. JS/simulações de 13 URLs e
+visualização de Tier Bonuses passaram; verificar desktop e mobile no browser real.
+
+2026-10-15 — Fase 2 Armas / DoTs / Boss Patterns [EM TESTE], commit f43e7a9
+(development; main inalterada). Two-Handed entra em geração de loot e Forge; ocupa
+Weapon + Off-Hand e devolve equipamento substituído à Stash sem perda, com UI
+reserved. Off-Hand Dagger é físico e aplica segundo ataque/procs; ícones existentes
+reutilizados. Shield ganha Block Chance 13% base + escala END/tier, até 48%; redução de
+dano 58%, ou 67% e +7pp de chance com Mace. Defesa mitigada de forma não linear, máx
+75%, e ataque do inimigo conserva pelo menos 24% do dano pré-Block/Barrier; barrier do
+jogador limitada a 30% Max HP para conter abuse com Speed. Staff/Wand continuam
+únicos a gastar Mana; Orb/Tome/Charm amplificam elemento correspondente ou fazem
+proc extra sem custo de Mana. Poison/Bleed/Burn em stacks de 3 segundos, até 12 por
+efeito, com potência calculada como proporção do dano real do golpe: 15% / 18% / 17% por
+tick base; Two-Handed tem procs mais raros e fortes, Daggers mais frequentes e fracos.
+Boss patterns em dezenas: D10 Guardian (barrier), D20 Rift Harbinger (life drain), D30
+Ember Sovereign (enrage <50% HP), repetindo por dezenas; usam sprites já disponíveis
+enquanto não há arte boss dedicada. Animações CSS de armas, projéteis de Bow/Spell e
+Block, com reduced-motion. Fichas e log de combate continuam separados, caixa inferior
+apenas Tier Bonuses. Preservados 13 backgrounds e 26 mobs. SAVE_RESET_VERSION
+mantém 2026-10-15-combat-balance-reset-2, portanto NÃO há novo reset. Sintaxe JS +
+smoke tests em runtime passaram; teste visual e balanceamento real em
+desktop/Safari/iPhone, bosses e builds high-defense ainda pendentes. Reproduzir testes
+com node tests/phase2-smoke.cjs. Regras técnicas: docs/phase2-weapons-and-bosses.md.
+Fase online Firebase/Auth/Leaderboards continua FUTURO, sem implementação.
+

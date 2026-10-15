@@ -1,0 +1,136 @@
+{
+  "name": "Wanderer Equipment Icons v0.8 \u2014 Phase 2A (Revised v2)",
+  "version": "1.2.0",
+  "resolution": [
+    256,
+    256
+  ],
+  "format": "PNG RGBA",
+  "transparent": true,
+  "gear_types": {
+    "sword": [
+      "sword_01.png",
+      "sword_02.png",
+      "sword_03.png"
+    ],
+    "mace": [
+      "mace_01.png",
+      "mace_02.png",
+      "mace_03.png"
+    ],
+    "dagger": [
+      "dagger_01.png",
+      "dagger_02.png",
+      "dagger_03.png"
+    ],
+    "two_handed": [
+      "two_handed_01.png",
+      "two_handed_02.png",
+      "two_handed_03.png",
+      "two_handed_04.png"
+    ],
+    "shield": [
+      "shield_01.png",
+      "shield_02.png",
+      "shield_03.png"
+    ],
+    "bow": [
+      "bow_01.png",
+      "bow_02.png",
+      "bow_03.png"
+    ],
+    "staff": [
+      "staff_01.png",
+      "staff_02.png",
+      "staff_03.png"
+    ],
+    "orb": [
+      "orb_01.png",
+      "orb_02.png",
+      "orb_03.png"
+    ],
+    "wand": [
+      "wand_01.png",
+      "wand_02.png",
+      "wand_03.png",
+      "wand_04.png"
+    ],
+    "tome": [
+      "tome_01.png",
+      "tome_02.png",
+      "tome_03.png",
+      "tome_04.png"
+    ],
+    "charm": [
+      "charm_01.png",
+      "charm_02.png",
+      "charm_03.png",
+      "charm_04.png"
+    ],
+    "helmet": [
+      "helmet_01.png",
+      "helmet_02.png",
+      "helmet_03.png"
+    ],
+    "chest": [
+      "chest_01.png",
+      "chest_02.png",
+      "chest_03.png"
+    ],
+    "gloves": [
+      "gloves_01.png",
+      "gloves_02.png",
+      "gloves_03.png"
+    ],
+    "boots": [
+      "boots_01.png",
+      "boots_02.png",
+      "boots_03.png"
+    ],
+    "ring": [
+      "ring_01.png",
+      "ring_02.png",
+      "ring_03.png"
+    ]
+  },
+  "files": [
+    "sword_01.png",
+    "sword_02.png",
+    "sword_03.png",
+    "mace_01.png",
+    "mace_02.png",
+    "mace_03.png",
+    "dagger_01.png",
+    "dagger_02.png",
+    "dagger_03.png",
+    "two_handed_01.png",
+    "two_handed_02.png",
+    "two_handed_03.png",
+    "two_handed_04.png",
+    "shield_01.png",
+    "shield_02.png",
+    "shield_03.png",
+    "bow_01.png",
+    "bow_02.png",
+    "bow_03.png",
+    "staff_01.png",
+    "staff_02.png",
+    "staff_03.png",
+    "orb_01.png",
+    "orb_02.png",
+    "orb_03.png",
+    "wand_01.png",
+    "wand_02.png",
+    "wand_03.png",
+    "wand_04.png",
+    "tome_01.png",
+    "tome_02.png",
+    "tome_03.png",
+    "tome_04.png",
+    "charm_01.png",
+    "charm_02.png",
+    "charm_03.png",
+    "charm_04.png"
+  ],
+  "note": "Original equipment icons retained for pre-existing types. Visual variation is deterministic per item ID; rarity remains a UI border."
+}

@@ -1,0 +1,2 @@
+# Firebase's generated SDK contains intentional whitespace inside template literals.
+online/vendor/*.mjs -whitespace

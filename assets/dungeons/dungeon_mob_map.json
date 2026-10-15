@@ -1,0 +1,407 @@
+{
+  "pack_version": "0.8-content-concept-1",
+  "project": "Wanderer",
+  "existing_dungeon_count": 10,
+  "proposed_dungeon_count": 3,
+  "total_dungeon_count": 13,
+  "mob_count": 26,
+  "sprite_px": [
+    256,
+    256
+  ],
+  "game_language": "en",
+  "status": "INTEGRATED in development (concept artwork pending final review)",
+  "reference": "Wanderer GDD; existing themes from development branch",
+  "dungeons": [
+    {
+      "id": "temple",
+      "name": "Venomous Temple",
+      "new_dungeon": false,
+      "primary_affinity": "poison",
+      "mob_pool": [
+        {
+          "id": "venom_cobra",
+          "name": "Venom Cobra",
+          "image": "mobs/temple/venom_cobra.png",
+          "primary_dungeon_id": "temple",
+          "primary_affinity": "poison",
+          "suggested_combat_role": "Poison DoT / stacks",
+          "art_source": "generated concept sprite sheet; cutout",
+          "asset_status": "concept_for_review"
+        },
+        {
+          "id": "venom_spider",
+          "name": "Venom Spider",
+          "image": "mobs/temple/venom_spider.png",
+          "primary_dungeon_id": "temple",
+          "primary_affinity": "poison",
+          "suggested_combat_role": "Poison DoT / stacks",
+          "art_source": "generated concept sprite sheet; cutout",
+          "asset_status": "concept_for_review"
+        }
+      ],
+      "background_image": null
+    },
+    {
+      "id": "forge",
+      "name": "Blood Forge",
+      "new_dungeon": false,
+      "primary_affinity": "bleed",
+      "mob_pool": [
+        {
+          "id": "bloodfang_ravager",
+          "name": "Bloodfang Ravager",
+          "image": "mobs/forge/bloodfang_ravager.png",
+          "primary_dungeon_id": "forge",
+          "primary_affinity": "bleed",
+          "suggested_combat_role": "Bleed DoT",
+          "art_source": "generated concept sprite sheet; cutout",
+          "asset_status": "concept_for_review"
+        },
+        {
+          "id": "sanguine_leech",
+          "name": "Sanguine Leech",
+          "image": "mobs/forge/sanguine_leech.png",
+          "primary_dungeon_id": "forge",
+          "primary_affinity": "bleed",
+          "suggested_combat_role": "Bleed DoT",
+          "art_source": "generated concept sprite sheet; cutout",
+          "asset_status": "concept_for_review"
+        }
+      ],
+      "background_image": null
+    },
+    {
+      "id": "crypt",
+      "name": "Echo Crypt",
+      "new_dungeon": false,
+      "primary_affinity": "crit",
+      "mob_pool": [
+        {
+          "id": "crypt_reaper",
+          "name": "Crypt Reaper",
+          "image": "mobs/crypt/crypt_reaper.png",
+          "primary_dungeon_id": "crypt",
+          "primary_affinity": "crit",
+          "suggested_combat_role": "high Crit pressure",
+          "art_source": "generated concept sprite sheet; cutout",
+          "asset_status": "concept_for_review"
+        },
+        {
+          "id": "echo_reaver",
+          "name": "Echo Reaver",
+          "image": "mobs/crypt/echo_reaver.png",
+          "primary_dungeon_id": "crypt",
+          "primary_affinity": "crit",
+          "suggested_combat_role": "high Crit pressure",
+          "art_source": "generated concept sprite sheet; cutout",
+          "asset_status": "concept_for_review"
+        }
+      ],
+      "background_image": null
+    },
+    {
+      "id": "bastion",
+      "name": "Iron Bastion",
+      "new_dungeon": false,
+      "primary_affinity": "sunder",
+      "mob_pool": [
+        {
+          "id": "stonebreaker_colossus",
+          "name": "Stonebreaker Colossus",
+          "image": "mobs/bastion/stonebreaker_colossus.png",
+          "primary_dungeon_id": "bastion",
+          "primary_affinity": "sunder",
+          "suggested_combat_role": "armor reduction",
+          "art_source": "generated concept sprite sheet; cutout",
+          "asset_status": "concept_for_review"
+        },
+        {
+          "id": "iron_vanguard",
+          "name": "Iron Vanguard",
+          "image": "mobs/bastion/iron_vanguard.png",
+          "primary_dungeon_id": "bastion",
+          "primary_affinity": "sunder",
+          "suggested_combat_role": "armor reduction",
+          "art_source": "generated concept sprite sheet; cutout",
+          "asset_status": "concept_for_review"
+        }
+      ],
+      "background_image": null
+    },
+    {
+      "id": "frost",
+      "name": "Frostbound Catacombs",
+      "new_dungeon": false,
+      "primary_affinity": "slow",
+      "mob_pool": [
+        {
+          "id": "glacial_guardian",
+          "name": "Glacial Guardian",
+          "image": "mobs/frost/glacial_guardian.png",
+          "primary_dungeon_id": "frost",
+          "primary_affinity": "slow",
+          "suggested_combat_role": "Slow / Frost",
+          "art_source": "generated concept sprite sheet; cutout",
+          "asset_status": "concept_for_review"
+        },
+        {
+          "id": "rimefang_wolf",
+          "name": "Rimefang Wolf",
+          "image": "mobs/frost/rimefang_wolf.png",
+          "primary_dungeon_id": "frost",
+          "primary_affinity": "slow",
+          "suggested_combat_role": "Slow / Frost",
+          "art_source": "generated concept sprite sheet; cutout",
+          "asset_status": "concept_for_review"
+        }
+      ],
+      "background_image": null
+    },
+    {
+      "id": "ash",
+      "name": "Ashen Sanctum",
+      "new_dungeon": false,
+      "primary_affinity": "burn",
+      "mob_pool": [
+        {
+          "id": "cinder_demon",
+          "name": "Cinder Demon",
+          "image": "mobs/ash/cinder_demon.png",
+          "primary_dungeon_id": "ash",
+          "primary_affinity": "burn",
+          "suggested_combat_role": "Burn DoT",
+          "art_source": "generated concept sprite sheet; cutout",
+          "asset_status": "concept_for_review"
+        },
+        {
+          "id": "ember_imp",
+          "name": "Ember Imp",
+          "image": "mobs/ash/ember_imp.png",
+          "primary_dungeon_id": "ash",
+          "primary_affinity": "burn",
+          "suggested_combat_role": "Burn DoT",
+          "art_source": "generated concept sprite sheet; cutout",
+          "asset_status": "concept_for_review"
+        }
+      ],
+      "background_image": null
+    },
+    {
+      "id": "void",
+      "name": "Umbral Reliquary",
+      "new_dungeon": false,
+      "primary_affinity": "drain",
+      "mob_pool": [
+        {
+          "id": "umbral_eye",
+          "name": "Umbral Eye",
+          "image": "mobs/void/umbral_eye.png",
+          "primary_dungeon_id": "void",
+          "primary_affinity": "drain",
+          "suggested_combat_role": "Drain / life steal",
+          "art_source": "generated concept sprite sheet; cutout",
+          "asset_status": "concept_for_review"
+        },
+        {
+          "id": "voidspawn",
+          "name": "Voidspawn",
+          "image": "mobs/void/voidspawn.png",
+          "primary_dungeon_id": "void",
+          "primary_affinity": "drain",
+          "suggested_combat_role": "Drain / life steal",
+          "art_source": "generated concept sprite sheet; cutout",
+          "asset_status": "concept_for_review"
+        }
+      ],
+      "background_image": null
+    },
+    {
+      "id": "ward",
+      "name": "Warded Catacombs",
+      "new_dungeon": false,
+      "primary_affinity": "shield",
+      "mob_pool": [
+        {
+          "id": "radiant_warden",
+          "name": "Radiant Warden",
+          "image": "mobs/ward/radiant_warden.png",
+          "primary_dungeon_id": "ward",
+          "primary_affinity": "shield",
+          "suggested_combat_role": "temporary shielding",
+          "art_source": "generated concept sprite sheet; cutout",
+          "asset_status": "concept_for_review"
+        },
+        {
+          "id": "warded_bulwark",
+          "name": "Warded Bulwark",
+          "image": "mobs/ward/warded_bulwark.png",
+          "primary_dungeon_id": "ward",
+          "primary_affinity": "shield",
+          "suggested_combat_role": "temporary shielding",
+          "art_source": "generated concept sprite sheet; cutout",
+          "asset_status": "concept_for_review"
+        }
+      ],
+      "background_image": null
+    },
+    {
+      "id": "grove",
+      "name": "Serpent Grove",
+      "new_dungeon": false,
+      "primary_affinity": "poison",
+      "mob_pool": [
+        {
+          "id": "thornheart_treant",
+          "name": "Thornheart Treant",
+          "image": "mobs/grove/thornheart_treant.png",
+          "primary_dungeon_id": "grove",
+          "primary_affinity": "poison",
+          "suggested_combat_role": "Poison DoT / stacks",
+          "art_source": "generated concept sprite sheet; cutout",
+          "asset_status": "concept_for_review"
+        },
+        {
+          "id": "emerald_viper",
+          "name": "Emerald Viper",
+          "image": "mobs/grove/emerald_viper.png",
+          "primary_dungeon_id": "grove",
+          "primary_affinity": "poison",
+          "suggested_combat_role": "Poison DoT / stacks",
+          "art_source": "generated concept sprite sheet; cutout",
+          "asset_status": "concept_for_review"
+        }
+      ],
+      "background_image": null
+    },
+    {
+      "id": "shrine",
+      "name": "Lost Sanctuary",
+      "new_dungeon": false,
+      "primary_affinity": "regen",
+      "mob_pool": [
+        {
+          "id": "luminous_remnant",
+          "name": "Luminous Remnant",
+          "image": "mobs/shrine/luminous_remnant.png",
+          "primary_dungeon_id": "shrine",
+          "primary_affinity": "regen",
+          "suggested_combat_role": "regeneration",
+          "art_source": "generated concept sprite sheet; cutout",
+          "asset_status": "concept_for_review"
+        },
+        {
+          "id": "ancient_rootkeeper",
+          "name": "Ancient Rootkeeper",
+          "image": "mobs/shrine/ancient_rootkeeper.png",
+          "primary_dungeon_id": "shrine",
+          "primary_affinity": "regen",
+          "suggested_combat_role": "regeneration",
+          "art_source": "generated concept sprite sheet; cutout",
+          "asset_status": "concept_for_review"
+        }
+      ],
+      "background_image": null
+    },
+    {
+      "id": "storm",
+      "name": "Stormglass Spire",
+      "new_dungeon": true,
+      "primary_affinity": "crit",
+      "mob_pool": [
+        {
+          "id": "stormglass_knight",
+          "name": "Stormglass Knight",
+          "image": "mobs/storm/stormglass_knight.png",
+          "primary_dungeon_id": "storm",
+          "primary_affinity": "crit",
+          "suggested_combat_role": "high Crit pressure",
+          "art_source": "generated concept sprite sheet; cutout",
+          "asset_status": "concept_for_review"
+        },
+        {
+          "id": "tempest_hawk",
+          "name": "Tempest Hawk",
+          "image": "mobs/storm/tempest_hawk.png",
+          "primary_dungeon_id": "storm",
+          "primary_affinity": "crit",
+          "suggested_combat_role": "high Crit pressure",
+          "art_source": "generated concept sprite sheet; cutout",
+          "asset_status": "concept_for_review"
+        }
+      ],
+      "background_image": "dungeons/storm.png"
+    },
+    {
+      "id": "drowned",
+      "name": "Drowned Vault",
+      "new_dungeon": true,
+      "primary_affinity": "drain",
+      "mob_pool": [
+        {
+          "id": "brine_toad",
+          "name": "Brine Toad",
+          "image": "mobs/drowned/brine_toad.png",
+          "primary_dungeon_id": "drowned",
+          "primary_affinity": "drain",
+          "suggested_combat_role": "Drain / life steal",
+          "art_source": "generated concept sprite sheet; cutout",
+          "asset_status": "concept_for_review"
+        },
+        {
+          "id": "drowned_oracle",
+          "name": "Drowned Oracle",
+          "image": "mobs/drowned/drowned_oracle.png",
+          "primary_dungeon_id": "drowned",
+          "primary_affinity": "drain",
+          "suggested_combat_role": "Drain / life steal",
+          "art_source": "generated concept sprite sheet; cutout",
+          "asset_status": "concept_for_review"
+        }
+      ],
+      "background_image": "dungeons/drowned.png"
+    },
+    {
+      "id": "quarry",
+      "name": "Obsidian Quarry",
+      "new_dungeon": true,
+      "primary_affinity": "sunder",
+      "mob_pool": [
+        {
+          "id": "basalt_guardian",
+          "name": "Basalt Guardian",
+          "image": "mobs/quarry/basalt_guardian.png",
+          "primary_dungeon_id": "quarry",
+          "primary_affinity": "sunder",
+          "suggested_combat_role": "armor reduction",
+          "art_source": "generated concept sprite sheet; cutout",
+          "asset_status": "concept_for_review"
+        },
+        {
+          "id": "obsidian_skitterer",
+          "name": "Obsidian Skitterer",
+          "image": "mobs/quarry/obsidian_skitterer.png",
+          "primary_dungeon_id": "quarry",
+          "primary_affinity": "sunder",
+          "suggested_combat_role": "armor reduction",
+          "art_source": "generated concept sprite sheet; cutout",
+          "asset_status": "concept_for_review"
+        }
+      ],
+      "background_image": "dungeons/quarry.png"
+    }
+  ],
+  "notes": [
+    "Only the 3 new dungeons have new background images; original 10 retain existing backgrounds.",
+    "All new mechanics or dungeon affinities are proposals requiring testing and approval.",
+    "Boss logic at dungeon multiples of 10 is unchanged.",
+    "Three new themes are additional choices inside the randomized pool for any accessible dungeon level, not literal levels D11, D12 and D13.",
+    "Do not replace main, and preserve old local saves."
+  ],
+  "original_art_status": "CONCEPT / not implemented",
+  "implementation_notes": [
+    "Live prototype selects 3 out of 13 dungeon themes; all 26 mobs are exclusive to their primary theme in normal encounters.",
+    "Boss D10/D20/etc remains Abyssal Guardian; boss loot now guaranteed Rare+ with a small chance for Legendary.",
+    "Primary affinity currently reuses existing combat effect family; proposed individual mob ability variations remain future scope."
+  ]
+}
