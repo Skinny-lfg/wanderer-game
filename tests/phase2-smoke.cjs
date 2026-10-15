@@ -24,7 +24,7 @@ const count=state.stash.length;equipItem(knife.id);
 assert(state.stash.length===count&&!state.equip.offhand,'reject offhand with two-hand weapon');
 equipItem(sword.id);equipItem(knife.id);
 assert(state.equip.offhand?.id===knife.id,'offhand dagger can equip');
-assert(itemImg(knife).includes('dagger'),'dagger icon mapped');
+assert(itemImg(knife)===ICONS.daggers||itemImg(knife).includes('dagger'),'dagger icon mapped (existing embedded or external artwork)');
 const mace=makeItem(10,'weapon',null,'loot','Mace');
 const equipment={...makeSlots(),weapon:mace,offhand:shield};
 const maceBlock=totalStats(equipment).blockChance;

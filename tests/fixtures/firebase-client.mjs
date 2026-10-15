@@ -3,7 +3,7 @@ export async function createBackend(){
  const f=globalThis.__firebaseTest={user:null,profile:null,cloud:null,writes:0,offline:false,shared:0};let callback;
  const copy=x=>x==null?x:structuredClone(x);
  return {
-  watchAuth(cb){callback=cb;cb(null);},
+  watchAuth(cb){callback=cb;f.restore=()=>callback(f.user);cb(null);},
   async signIn(){f.user={uid:'alice'};await callback(f.user);},
   async signOut(){f.user=null;await callback(null);},
   async profile(){return copy(f.profile);},

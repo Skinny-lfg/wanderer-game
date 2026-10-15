@@ -42,3 +42,18 @@ Source of truth: supplied GDD, archived verbatim in `design/gdd-source-2026-10-1
 - Firestore emulator Security Rules suite: **not executed**. The CLI could not download the official emulator JAR from `storage.googleapis.com` (403 Domain forbidden). Tests are committed for an environment with access; no substitute passing check is claimed.
 - Live Google OAuth / Firestore reads/writes / two real devices: **not executed**. `identitytoolkit.googleapis.com` and `firestore.googleapis.com` are blocked by this environment. Provider/domain settings require confirmation and reviewed Rules must be deployed before live tests.
 - No paid service, Firebase deployment, GitHub push, main change, or Pages publication performed in this phase.
+
+
+## Account UI simplification — follow-up
+
+This update supersedes the earlier Guest/manual-sync UI described above.
+
+- Google sign-in and a profile are now required to access gameplay. Signing out returns to the login screen; the legacy local slot remains available only for safe migration.
+- Account shows nickname, five cosmetic characters and sign-out. Removed routine sync information, manual sync/review actions, backup/import controls and Guest controls. Internal recovery snapshots and stale-tab protection remain.
+- Login automatically restores a known clean account save or uploads local progress when the cloud has not changed. Missing cloud data never replaces local progress. Divergent copies, unknown migration histories or regressed cloud dungeon progress still require a one-off choice.
+- New accounts on a shared device start fresh after the legacy slot has been claimed; another account's progress is never copied into them.
+- Saves automatically sync after expeditions, throttled to 30 seconds. Transient network errors retain local data and retry. Sign-out waits for pending progress to be saved; errors remain visible only when action is needed.
+- Rankings automatically submit changed progress after successful sync. Removed the sharing button, warning banner and per-row Unverified labels as requested for private testing. Storage still uses testSeasons and verified:false; server-authoritative competitive verification is still not implemented. No Rules or security boundary changed.
+- The existing smoke test assumed every dagger used an external filename. It now also accepts the existing embedded dagger art, eliminating the random false failure without changing artwork.
+
+Validation: game smoke, save compatibility and four model tests pass. Mocked Firebase browser flows cover required login, profile errors, all cosmetics, legacy migration, automatic sync/results, duplicate-score suppression, concurrent-save conflicts, offline retry, sign-out/return and desktop/mobile layout. Live Google/Firestore acceptance and emulator Rules tests remain separate pending checks; no deployment performed.

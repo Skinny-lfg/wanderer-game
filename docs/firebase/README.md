@@ -1,3 +1,5 @@
+> Current account flow: Google sign-in is required. Account saves restore and sync automatically; only conflicting saves request a choice. Recovery copies remain internal. Leaderboard submissions are automatic and still stored as `verified:false` in the test namespace, although the private-test UI no longer displays warnings. The earlier Guest/manual-review/export instructions below describe the previous interface and no longer apply. Server verification is still pending; this update does not make the rankings competitively trustworthy.
+
 # Firebase online test environment
 
 Status: **implemented locally on development; not deployed**. No Firebase rules, billing setting, Google provider setting, GitHub Pages configuration, or main branch was changed.
