@@ -31,3 +31,14 @@
  .onlineDialog .publicGearDetails summary::before{content:'+ ';margin-right:3px}
  .onlineDialog .publicGearDetails[open] summary::before{content:'− '}
 }
+
+/* Leaderboard: podium + dungeon always right-aligned */
+.rankingList .rankEntry{display:grid;grid-template-columns:32px 40px minmax(0,1fr) auto;gap:11px;align-items:center;min-width:0;padding:11px 6px;border-bottom:1px solid #344253}
+.rankingList .rankPlace{justify-self:center;text-align:center;font-weight:800;color:#d9e1ec}
+.rankingList .rankPodium{font-size:23px;line-height:1}
+.rankingList .rankPlayer{min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+.rankingList .rankPlayer .playerLink{padding:2px 0;text-align:left;border:0;background:none;color:var(--text);font-weight:800;min-width:0}
+.rankingList .rankPlayer .playerLink:hover{text-decoration:underline}
+.rankingList .rankInfo{max-width:100%;overflow-wrap:anywhere;font-size:11px}
+.rankingList .rankDungeon{margin-left:auto;text-align:right;white-space:nowrap;color:#f0ca7c;font-size:15px}
+@media(max-width:650px){.rankingList .rankEntry{grid-template-columns:25px 32px minmax(0,1fr) auto;gap:7px;padding:9px 1px}.rankingList .rankEntry img{width:32px;height:32px}.rankingList .rankDungeon{font-size:13px}.rankingList .rankPodium{font-size:20px}.rankingList .rankInfo{font-size:10px}}
