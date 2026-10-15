@@ -40,7 +40,7 @@ assert(enemy.poisonStacks===0,'DoTs expire after 3 ticks');
 for(let i=0;i<35;i++)applyAffinity('shield',enemy,state.run.stats,1,500);
 assert(state.run.barrier<=30,'player barrier has 30% HP limit');
 selectedPath='temple';
-const bosses=[10,20,30].map(level=>enemyFor(level,3).bossStyle);
+const bosses=[10,20,30].map(level=>enemyFor(level,5).bossStyle);
 assert(bosses.join(',')==='guardian,leech,berserker','3 distinct boss behaviours');
 assert(THEMES.length===13&&THEMES.every(t=>t.mobs.length===2),'13 dungeons and 26 mobs');
 assert(SAVE_RESET_VERSION==='2026-10-15-combat-balance-reset-2','existing save version preserved');
