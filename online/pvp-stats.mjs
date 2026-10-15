@@ -13,7 +13,16 @@ const RUNE_FAMILIES=[
  {id:'vitality',name:'Rune of Vitality',field:'hpFlat',icon:'❤️'}
 ];
 function runeValue(family,tier){const base=1+Math.floor(tier/10);return family==='fury'?base*3:family==='warding'?base*2:family==='vitality'?base*10:base}
-function setCounts(equipment= {}){const counts={};for(const k of Object.keys(ELEMENTS))counts[k]=0;for(const o of Object.values(equipment))if(o?.effect)counts[o.effect]++;return counts}
+function setCounts(equipment= {}){
+ const counts={};for(const k of Object.keys(ELEMENTS))counts[k]=0;
+ const twoHands=isTwoHanded(equipment?.weapon);
+ for(const [slot,item] of Object.entries(equipment||{})){
+  if(!item?.effect||!Object.prototype.hasOwnProperty.call(counts,item.effect))continue;
+  if(slot==='offhand'&&twoHands)continue;
+  counts[item.effect]+=(slot==='weapon'&&twoHands)?2:1;
+ }
+ return counts;
+}
 function setBonuses(counts){
  const list=[],values={};
  const defs=[
