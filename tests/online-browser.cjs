@@ -73,8 +73,30 @@ const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8010';
  await page.waitForFunction(()=>WandererGame.key()==='wanderer_account_guest-1'&&!document.querySelector('.onlineDialog'));
  assert.equal(await page.locator('[data-online-action="account"]').innerText(),'guesthero');
  await page.locator('[data-online-action="leaderboard"]').click();await page.locator('.rankingList').waitFor();
+
  assert.match(await page.locator('.rankingList').innerText(),/guesthero/);
- await close();await account();assert.match(await page.locator('.guestNotice').innerText(),/signing out/);
+ await close();
+ // Re-opening the browser must restore the SAME anonymous UID, profile and save.
+ // A saved in-flight run from a closed tab must never trap Account behind a busy error.
+ const beforeGuest=await snapshot();
+ await page.evaluate(()=>{
+  const key=WandererGame.key(),save=JSON.parse(localStorage.getItem(key));
+  save.run={tier:1,path:'grove',status:'fight',gold:0,fragments:0,loot:[],valuables:[]};
+  localStorage.setItem(key,JSON.stringify(save));
+  sessionStorage.setItem('firebaseRefreshSeed',JSON.stringify({
+   user:__firebaseTest.user,profile:__firebaseTest.profile,cloud:__firebaseTest.cloud
+  }));
+ });
+ await page.reload();
+ await page.waitForFunction(()=>WandererGame.key()==='wanderer_account_guest-1'&&!document.querySelector('.onlineDialog'));
+ assert.equal((await snapshot()).run,null,'interrupted run closed on reload');
+ assert.equal((await snapshot()).gold,beforeGuest.gold,'guest gold retained');
+ assert.equal((await snapshot()).maxDungeon,beforeGuest.maxDungeon,'guest progression retained');
+ assert.equal(await page.locator('[data-online-action="account"]').innerText(),'guesthero');
+ assert.ok(!(await page.locator('#screen').evaluate(e=>e.inert)),'guest game playable after reopen');
+ await page.evaluate(async()=>{await __firebaseTest.restore();});
+ assert.equal(await page.locator('.onlineDialog').count(),0,'duplicate guest auth event does not reopen account');
+ await account();assert.match(await page.locator('.guestNotice').innerText(),/signing out/);
  await page.locator('#googleSignOut').click();assert.match(await page.locator('.onlineDialog').innerText(),/cannot be recovered/);
  await page.locator('#keepGuest').click();assert.ok(await page.locator('#googleSignOut').isVisible());await close();
  assert.deepEqual(errors,[]);
