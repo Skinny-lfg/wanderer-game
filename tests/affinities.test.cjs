@@ -44,3 +44,7 @@ test('encounter reset clears temporary resources while cooldowns and expedition 
 test('extra damage respects remaining health and Barrier; combined weakening bounded; no unbounded event queue',()=>{
  const r=run({poison:5,slow:5});r.enemy.dots.poison=Array.from({length:100},dot);r.enemy.slowTime=3;assert.ok(A.incomingMultiplier(r)>=.85);r.enemy.hp=5;r.enemy.barrier=10;near(A.deal(r,1000),5);near(r.enemy.hp,0);for(let i=0;i<100;i++){r.stats.counts.drain=3;r.hp=1;A.heal(r,1,'drain');A.tick(r,1);}assert.ok(A.drainEvents(r).length<=40);
 });
+
+test('Heat counts each scheduled DOT tick despite 110ms simulation quantization',()=>{
+ const r=run({burn:5});let timer=0;for(let i=0;i<46;i++){A.tick(r,.11);timer+=.11;if(timer>=1){timer-=1;A.dotTick(r,10);}}assert.equal(A.state(r).heat,5);
+});

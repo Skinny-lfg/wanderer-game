@@ -209,7 +209,7 @@ function showPlayer(player){
  action('#practiceAttack',()=>{
   ensureSafeSwitch();if(!ready||!user||own||!equipment)throw Error('Sign in and choose another player.');
   const result=practiceDuel(game.snapshot().equip,equipment,crypto.getRandomValues(new Uint32Array(1))[0]);
-  modal(result.winner==='attacker'?'Victory':result.winner==='defender'?'Defeat':'Draw',`<p>Practice duel against <b>${esc(player.profile.nickname)}</b> · ${result.seconds}s</p><p>Your HP: ${result.remainingHp[0]} · Opponent HP: ${result.remainingHp[1]}</p><p>No Gold transferred. Equipment and saves are unchanged.</p><details><summary>Combat log</summary><ol class="duelLog">${result.events.map(e=>`<li>${e.time}s · ${e.side===0?'You':esc(player.profile.nickname)}: ${esc(e.text)}</li>`).join('')}</ol></details><button id="returnToPlayer">Back to player</button>`);
+  modal(result.winner==='attacker'?'Victory':result.winner==='defender'?'Defeat':'Draw',`<p>Practice duel against <b>${esc(player.profile.nickname)}</b> · ${result.seconds}s</p><p>Your HP: ${result.remainingHp[0]} · Opponent HP: ${result.remainingHp[1]}</p><p>No Gold transferred. Equipment and saves are unchanged. This simplified practice duel does not simulate dungeon set mechanics or signature powers.</p><details><summary>Combat log</summary><ol class="duelLog">${result.events.map(e=>`<li>${e.time}s · ${e.side===0?'You':esc(player.profile.nickname)}: ${esc(e.text)}</li>`).join('')}</ol></details><button id="returnToPlayer">Back to player</button>`);
   action('#returnToPlayer',()=>showPlayer(player));
  });
 }

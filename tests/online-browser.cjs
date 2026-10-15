@@ -1,6 +1,6 @@
 // Firebase boundary is mocked: these are browser flow tests, not live OAuth tests.
 const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs');
-const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8010';
+const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8012';
 (async()=>{const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox']});try{for(const width of [1440,390,320]){
  const page=await browser.newPage({viewport:{width,height:950}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.route('**/online/firebase-client.mjs*',route=>route.fulfill({contentType:'text/javascript',body:fs.readFileSync('tests/fixtures/firebase-client.mjs','utf8')}));
@@ -49,7 +49,8 @@ const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8010';
  await account();await page.locator('#googleSignOut').click();await page.locator('#googleSignIn').waitFor();assert.ok(await page.locator('#screen').evaluate(e=>e.inert));await page.keyboard.press('Escape');assert.ok(await page.locator('#googleSignIn').isVisible());
  await page.locator('#googleSignIn').click();await page.waitForFunction(()=>!document.querySelector('.onlineDialog'));assert.equal((await snapshot()).gold,999);
  // Failed profile reads must never offer registration for an existing account.
- await page.evaluate(async()=>{__firebaseTest.profileError='permission-denied';await __firebaseTest.restore();});
+ await page.evaluate(()=>sessionStorage.setItem('firebaseRefreshSeed',JSON.stringify({user:__firebaseTest.user,profile:__firebaseTest.profile,cloud:__firebaseTest.cloud,profileError:'permission-denied'})));
+ await page.reload();
  await page.locator('#retryProfile').waitFor();assert.equal(await page.locator('#nickname,#createProfile').count(),0);
  await page.evaluate(()=>__firebaseTest.profileError=null);await page.locator('#retryProfile').click();
  await page.waitForFunction(()=>!document.querySelector('.onlineDialog'));
@@ -63,7 +64,8 @@ const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8010';
  await page.waitForFunction(()=>WandererGame.key()==='wanderer_account_bob');assert.equal((await snapshot()).gold,0);
  assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('wanderer_account_alice')).gold),999);
  // An unchanged local copy restores newer cloud progress without a review dialog.
- await page.evaluate(async()=>{const s=JSON.parse(__firebaseTest.cloud.payload);s.gold=777;__firebaseTest.cloud={payload:JSON.stringify(s),revision:__firebaseTest.cloud.revision+1};await __firebaseTest.restore();});
+ await page.evaluate(()=>{const s=JSON.parse(__firebaseTest.cloud.payload);s.gold=777;sessionStorage.setItem('firebaseRefreshSeed',JSON.stringify({user:__firebaseTest.user,profile:__firebaseTest.profile,cloud:{payload:JSON.stringify(s),revision:__firebaseTest.cloud.revision+1}}));});
+ await page.reload();await page.waitForFunction(()=>WandererGame.key()==='wanderer_account_bob'&&!document.querySelector('.onlineDialog'));
  assert.equal((await snapshot()).gold,777);assert.equal(await page.locator('#uploadLocal').count(),0);
  
  assert.ok(await page.evaluate(()=>Object.keys(localStorage).some(k=>k.startsWith('wanderer_backup_'))));

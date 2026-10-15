@@ -1,7 +1,7 @@
 // v0.8.1 regression test: run with node tests/v081-smoke.cjs
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
-const script=html.match(/<script(?: [^>]*)?>([\s\S]*?)<\/script>/)?.[1];
+const script=html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
 assert(script,'Main game script not found');
 const boot="load();if(!state.merchant)rollShop();save();render();";
 assert(script.includes(boot),'Bootstrap not found');
@@ -11,9 +11,9 @@ function ensure(v,m){if(!v)throw new Error(m)}
 render=()=>{};
 const slots=['weapon','helm','armor','gloves','boots','amulet'];
 for(let i=0;i<6;i++)state.equip[slots[i]]={id:'gear-'+i,slot:slots[i],subtype:slots[i]==='weapon'?'Sword':'Armor',tier:22,rarity:'Rare',name:'Gear '+i,effect:'poison'};
-ensure(setBonuses(setCounts()).values.poisonBonus===9,'5-piece set bonus applies');
-ensure(setBonuses({...setCounts(),poison:3}).values.poisonBonus===5,'3-piece set unchanged');
-ensure(setBonuses({...setCounts(),poison:2}).values.poisonBonus===2,'2-piece set unchanged');
+ensure(setBonuses(setCounts()).values.poisonSignature===true,'5-piece signature applies');
+ensure(setBonuses({...setCounts(),poison:3}).values.poisonMechanic===true,'3-piece mechanic applies');
+ensure(setBonuses({...setCounts(),poison:2}).values.poisonMultiplier===.15,'2-piece damage bonus applies');
 ensure(setStage(4)===3&&setStage(5)===5,'5-piece synergy is displayed');
 ensure(setProgress(4)==='4/5','next set threshold visible');
 state.maxDungeon=23;state.chosen=22;state.offersByLevel['22']={ids:THEMES.slice(0,3).map(t=>t.id),rerolls:0};
@@ -108,6 +108,6 @@ globalThis.__v081Success=true;
 const nodes=new Map(),store=new Map();
 const mockNode=()=>({innerHTML:'',textContent:'',style:{},dataset:{},value:'',classList:{add(){},remove(){}},focus(){}});
 const sandbox={document:{getElementById(id){if(!nodes.has(id))nodes.set(id,mockNode());return nodes.get(id)},querySelectorAll:()=>[],createElement:()=>mockNode()},localStorage:{getItem:k=>store.get(k)??null,setItem:(k,v)=>store.set(k,v)},confirm:()=>true,alert:()=>{},console,setTimeout:()=>0,clearTimeout:()=>{},setInterval:()=>0,clearInterval:()=>{}};
-vm.runInNewContext(script.replace(boot,tests),sandbox,{timeout:4000,filename:'wanderer-v081.js'});
+vm.runInNewContext(require('node:fs').readFileSync('combat/affinities.js','utf8')+'\n'+script.replace(boot,tests),sandbox,{timeout:4000,filename:'wanderer-v081.js'});
 assert(sandbox.__v081Success,'v0.8.1 smoke assertions did not complete');
 console.log('PASS v0.8.1: rolling dungeon pages, auto-unlock, farming, D100 cap, protected gear, warning 0/1/2, CTAs above gear and sets');
