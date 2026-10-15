@@ -261,6 +261,80 @@ function dungeonOddsMarkup(stats){
  return '<section class="lootOdds panel"><h3>Wave Loot Odds · D'+state.chosen+'</h3><p class="small muted">Rarity percentages apply only when gear drops. CHA modifiers included. Extract after any completed wave.</p><div class="oddsScroll"><table><thead><tr><th>Wave</th><th>Gear</th><th>Common</th><th>Uncommon</th><th>Rare</th><th>Epic</th><th>Legendary</th></tr></thead><tbody>'+rows.join('')+'</tbody></table></div><p class="small muted">Selected path: '+esc(theme.name)+' · Favored gear: '+targets.map(x=>esc(x.kind)+' '+chanceText(x.prob)).join(' · ')+' (when gear drops)</p></section>';
 }
 
+
+/* Permanent chapter-boss runes. Separate inventory, not part of normal gear sets. */
+const RUNE_FAMILIES=[
+ {id:'might',name:'Rune of Might',field:'str',icon:'⚔️'},
+ {id:'swiftness',name:'Rune of Swiftness',field:'agi',icon:'💨'},
+ {id:'wisdom',name:'Rune of Wisdom',field:'int',icon:'✨'},
+ {id:'fortitude',name:'Rune of Fortitude',field:'end',icon:'🛡️'},
+ {id:'fortune',name:'Rune of Fortune',field:'cha',icon:'🍀'},
+ {id:'fury',name:'Rune of Fury',field:'atkFlat',icon:'🔥'},
+ {id:'warding',name:'Rune of Warding',field:'defFlat',icon:'🔰'},
+ {id:'vitality',name:'Rune of Vitality',field:'hpFlat',icon:'❤️'}
+];
+function runeValue(family,tier){const base=1+Math.floor(tier/10);return family==='fury'?base*3:family==='warding'?base*2:family==='vitality'?base*10:base}
+function makeRune(family,tier){const type=RUNE_FAMILIES.find(x=>x.id===family);return {id:makeId(),family,tier,value:runeValue(family,tier),name:type.name}}
+function validRune(r){return r&&typeof r==='object'&&RUNE_FAMILIES.some(x=>x.id===r.family)&&Number.isInteger(r.tier)&&r.tier>=10&&r.tier<=100&&r.tier%10===0&&typeof r.id==='string'&&r.id.length>0&&r.id.length<120}
+function safeRunes(raw){
+ const seen=new Set();
+ return (Array.isArray(raw)?raw:[]).filter(validRune).filter(r=>{if(seen.has(r.id))return false;seen.add(r.id);return true}).slice(0,300).map(r=>({id:r.id,family:r.family,tier:r.tier,value:runeValue(r.family,r.tier),name:RUNE_FAMILIES.find(x=>x.id===r.family).name}));
+}
+function safeRuneSlots(raw,runes){
+ const ids=new Set(runes.map(r=>r.id)),families=new Set(),picked=new Set();
+ return Array.from({length:3},(_,i)=>{
+  const id=Array.isArray(raw)?raw[i]:null,rune=runes.find(r=>r.id===id);
+  if(!ids.has(id)||!rune||families.has(rune.family)||picked.has(id))return null;
+  picked.add(id);families.add(rune.family);return id;
+ });
+}
+function safePendingRune(raw){
+ const tier=Number(raw?.tier),options=Array.isArray(raw?.options)?raw.options:[];
+ if(!Number.isInteger(tier)||tier<10||tier>100||tier%10!==0||options.length!==3)return null;
+ if(options.some(r=>!validRune(r)||r.tier!==tier)||new Set(options.map(r=>r.family)).size!==3)return null;
+ return {tier,options:safeRunes(options)};
+}
+function runeLine(r){
+ const type=RUNE_FAMILIES.find(x=>x.id===r.family);
+ return type.icon+' '+esc(type.name)+' · D'+r.tier+' · +'+runeValue(r.family,r.tier)+' '+({atkFlat:'Attack',defFlat:'Defense',hpFlat:'Health'}[type.field]||type.field.toUpperCase());
+}
+function runeSectionMarkup(){
+ const runes=state.runes||[],slots=state.runeSlots||[null,null,null];
+ return '<section class="runePanel"><h3>Permanent Runes · '+slots.filter(Boolean).length+'/3</h3><p class="small muted">Earn one of three runes from each D10/D20/... boss. Runes survive death, do not fill Stash, and do not count towards set bonuses.</p><div class="runeSlots">'+slots.map((id,i)=>{const r=runes.find(x=>x.id===id);return '<div class="runeSlot"><b>Rune '+(i+1)+'</b><span class="small">'+(r?runeLine(r):'Empty')+'</span>'+(r?'<button class="tiny ghost" data-rune-remove="'+i+'">Unequip</button>':'')+'</div>'}).join('')+'</div><label class="small">Equip to slot <select id="runeSlotTarget">'+slots.map((_,i)=>'<option value="'+i+'">Rune '+(i+1)+'</option>').join('')+'</select></label><div class="runeCollection">'+(runes.length?runes.map(r=>'<button class="runeCard '+(slots.includes(r.id)?'runeEquipped':'')+'" data-rune-equip="'+esc(r.id)+'">'+runeLine(r)+(slots.includes(r.id)?' ✓':'')+'</button>').join(''):'<p class="small muted">Defeat a chapter boss to unlock your first permanent rune.</p>')+'</div><p class="small muted">Only one rune from each family can be equipped at a time.</p></section>';
+}
+function equipRune(id,index){
+ if(state.run||index<0||index>2)return false;
+ const rune=state.runes.find(r=>r.id===id);if(!rune)return false;
+ const slots=state.runeSlots.slice();
+ for(let i=0;i<slots.length;i++)if(i!==index&&slots[i]===id)slots[i]=null;
+ if(slots.some((other,i)=>i!==index&&state.runes.some(r=>r.id===other&&r.family===rune.family)))return false;
+ slots[index]=id;state.runeSlots=slots;save();return true;
+}
+function offerBossRunes(tier){
+ if(state.pendingRuneReward)return;
+ const pool=RUNE_FAMILIES.map(x=>x.id),options=[];
+ for(let i=0;i<3;i++)options.push(makeRune(pool.splice(roll(0,pool.length-1),1)[0],tier));
+ state.pendingRuneReward={tier,options};
+}
+function showPendingRuneReward(){
+ if(!state.pendingRuneReward||document.querySelector('#runeRewardDialog'))return;
+ const pending=state.pendingRuneReward,dialog=document.createElement('dialog');
+ dialog.id='runeRewardDialog';dialog.className='itemDialog runeRewardDialog';
+ dialog.innerHTML='<h2>👑 D'+pending.tier+' Boss Defeated!</h2><p>Choose one permanent rune. Replay this boss to farm other runes.</p><div class="runeOffers">'+pending.options.map(r=>'<button class="runeCard" data-rune-choice="'+esc(r.id)+'">'+runeLine(r)+'</button>').join('')+'</div><p class="small muted">The chosen rune remains yours even after death.</p>';
+ dialog.addEventListener('cancel',e=>e.preventDefault());
+ document.body.appendChild(dialog);
+ dialog.querySelectorAll('[data-rune-choice]').forEach(b=>b.onclick=()=>{
+  const reward=state.pendingRuneReward;if(!reward)return;
+  const picked=reward.options.find(r=>r.id===b.dataset.runeChoice);if(!picked)return;
+  state.runes.push(picked);state.pendingRuneReward=null;
+  const free=state.runeSlots.indexOf(null);
+  if(free>=0&&!state.runeSlots.some(id=>state.runes.find(r=>r.id===id)?.family===picked.family))state.runeSlots[free]=picked.id;
+  save();dialog.close();dialog.remove();render();
+  bannerMessage('Permanent rune claimed: '+picked.name+' (D'+picked.tier+').');
+ });
+ dialog.showModal();
+}
+
 function rarityOdds(tier,isCraft){let a={Common:.49,Uncommon:.30,Rare:.15,Epic:.045,Legendary:.015};
 if(isCraft){const gap=Math.max(0,state.maxDungeon-tier),boost=Math.min(.24,gap*.012);a.Common-=boost;a.Rare+=boost*.35;a.Epic+=boost*.65;a.Epic+=a.Legendary;a.Legendary=0;}
 else{const cha=totalStats().cha,boost=Math.min(.040,Math.max(0,cha-5)*.0008);a.Common-=boost;a.Rare+=boost*.65;a.Epic+=boost*.35;}
