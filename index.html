@@ -744,7 +744,7 @@ function tickDots(enemy){
 function setRuntime(r){
  if(!r.setCooldowns)r.setCooldowns={};
  if(!r.setTemp)r.setTemp={focus:0,focusLast:-999,focusExpiry:0,heat:0,heatExpiry:0,soul:0,soulLast:-999,soulExpiry:0,
- haste:[],shieldCounter:0,shieldCounterUntil:0,lastBastionReady:false,chilledFor:0,delayImmuneUntil:0,regenBarrier:0,regenBarrierSecond:-1,regenBarrierSecondTotal:0};
+ haste:[],lastHaste:-999,shieldCounter:0,shieldCounterUntil:0,lastBastionReady:false,chilledFor:0,delayImmuneUntil:0,regenBarrier:0,regenBarrierSecond:-1,regenBarrierSecondTotal:0};
  return r.setTemp;
 }
 function setNow(r){return Number(r.combatSeconds)||0;}
@@ -792,7 +792,6 @@ function setOnAttack(r,base,critical,perfect){
   temp.haste=(temp.haste||[]).filter(expiry=>expiry>now).slice(-2);
   temp.haste.push(now+3);temp.lastHaste=now;
  }
- if(b.sunderExpose&&e.baseDef>0&&e.def<=e.baseDef*.5)bonus+=Math.round(base*.08);
  if(b.bloodHunt&&e.bleedStacks>0&&e.hp<=e.maxhp*.3&&setReady(r,'bloodHunt',12)){bonus+=Math.round(base*.4);addLog('🩸 Blood Hunt!','good');}
  if(b.armorShatter&&e.baseDef>0&&e.def<=e.baseDef*.5&&now>=temp.delayImmuneUntil&&setReady(r,'armorShatter',12)){
   const stripped=Math.min(e.barrier,Math.round(base));e.barrier-=stripped;
