@@ -7,14 +7,14 @@ const hooks=`globalThis.affinityTest={
  compare(){return setPreview({id:'replacement',name:'Replacement',slot:'helm',subtype:'Helm',effect:'crit',rarity:'Rare'});},
  details(){return setDetails(state.run.stats);}
 };`;
-(async()=>{const browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});try{for(const width of [1440,390]){
+(async()=>{const browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});try{for(const width of [320,390,768,1440]){
  const page=await browser.newPage({viewport:{width,height:950}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.route('**/online/firebase-client.mjs*',r=>r.fulfill({contentType:'text/javascript',body:fs.readFileSync('tests/fixtures/firebase-client.mjs','utf8')}));
  await page.route(URL+'/',r=>r.fulfill({contentType:'text/html',body:fs.readFileSync('index.html','utf8').replace('load();if(!state.merchant)rollShop();save();render();',hooks+'load();if(!state.merchant)rollShop();save();render();')}));
  await page.goto(URL+'/');await page.locator('#googleSignIn').click();await page.locator('#nickname').fill('AffinityTester');await page.locator('#createProfile').click();await page.waitForFunction(()=>!document.querySelector('.onlineDialog'));
  for(const effect of ['poison','bleed','sunder','crit','shield','regen','burn','slow','drain']){
   await page.evaluate(e=>affinityTest.setup(e),effect);
-  const details=await page.locator('.combatSetList').innerText();for(const t of [2,3,5])assert.ok(details.includes(t+' pieces · Active'));
+  const details=await page.locator('.combatSetList').innerText();for(const t of [2,3,5])assert.ok(details.includes(t+' pieces · Active'));assert.ok(details.indexOf('2 pieces')<details.indexOf('3 pieces')&&details.indexOf('3 pieces')<details.indexOf('5 pieces'));
   const before=await page.locator('#scene').boundingBox(),statusBefore=await page.locator('#affinityStatus').boundingBox();await page.evaluate(()=>affinityTest.prime());
   assert.deepEqual(await page.locator('#scene').boundingBox(),before);assert.deepEqual(await page.locator('#affinityStatus').boundingBox(),statusBefore);
   await page.evaluate(()=>affinityTest.step());

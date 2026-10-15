@@ -10,12 +10,19 @@ export function nicknameKey(name){const key=String(name).trim().toLowerCase();if
 export function validateSave(value){
   const s=typeof value==='string'?JSON.parse(value):structuredClone(value);
   if(!s||typeof s!=='object'||Array.isArray(s)||!Array.isArray(s.stash)||!s.equip||typeof s.equip!=='object'||Array.isArray(s.equip))throw new Error('This is not a valid Wanderer save.');
+ const record=x=>x&&typeof x==='object'&&!Array.isArray(x);
+ for(const key of ['onlineProgress','offersByLevel','merchant'])if(s[key]!=null&&!record(s[key]))throw Error('Invalid saved '+key+'.');
+ if(s.onlineProgress){const p=s.onlineProgress;if(p.milestones!=null&&!record(p.milestones))throw Error('Invalid saved milestones.');for(const k of ['activeMs','deepestCleared'])if(p[k]!=null&&(!Number.isFinite(Number(p[k]))||Number(p[k])<0))throw Error('Invalid saved progress.');}
+ if(s.valuables!=null&&(!Array.isArray(s.valuables)||s.valuables.some(v=>!record(v)||!Number.isFinite(Number(v.worth))||Number(v.worth)<0)))throw Error('Invalid saved valuables.');
   for(const field of ['gold','fragments'])if(!Number.isFinite(s[field])||s[field]<0)throw new Error(`Invalid ${field}.`);
   if(!Number.isInteger(s.maxDungeon)||s.maxDungeon<1||s.maxDungeon>100)throw new Error('Invalid dungeon progress.');
   if(s.run)throw new Error('Finish or extract from the expedition before switching saves.');
   if(s.stash.length>5000||Object.keys(s.equip).some(k=>!['helm','amulet','armor','gloves','weapon','offhand','ring1','ring2','boots','ring'].includes(k)))throw new Error('Invalid equipment.');
+  const itemIds=new Set();
   for(const item of [...s.stash,...Object.values(s.equip).filter(Boolean)]){
     if(!item||typeof item!=='object'||typeof item.name!=='string'||typeof item.slot!=='string'||!Number.isFinite(Number(item.tier)))throw new Error('Invalid item data.');
+    for(const key of ['atk','def','hp','spd','str','agi','int','end','cha','mana','spell'])if(item[key]!=null&&!Number.isFinite(Number(item[key])))throw new Error('Invalid item stats.');
+    if(item.id){if(itemIds.has(item.id))throw new Error('Duplicate item identity.');itemIds.add(item.id);}
   }
   if(s.characterId&&!CHARACTERS.some(c=>c.id===s.characterId))throw new Error('Unknown character.');
   if(JSON.stringify(s).length>700000)throw new Error('Save is too large for cloud storage. Export a backup.');

@@ -1,7 +1,7 @@
 const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs');
 const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8012';
 (async()=>{const browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});try{
- for(const width of [1440,390])for(const guest of [true,false])for(const source of ['local','cloud','both','conflict']){
+ for(const width of [320,390,768,1440])for(const guest of [true,false])for(const source of ['local','cloud','both','conflict']){
  const page=await browser.newPage({viewport:{width,height:950}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.route('**/online/firebase-client.mjs*',r=>r.fulfill({contentType:'text/javascript',body:fs.readFileSync('tests/fixtures/firebase-client.mjs','utf8')}));
  await page.addInitScript(({guest,source})=>{

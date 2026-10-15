@@ -44,7 +44,7 @@ const bosses=[10,20,30].map(level=>enemyFor(level,3).bossStyle);
 assert(bosses.join(',')==='guardian,leech,berserker','3 distinct boss behaviours');
 assert(THEMES.length===13&&THEMES.every(t=>t.mobs.length===2),'13 dungeons and 26 mobs');
 assert(SAVE_RESET_VERSION==='2026-10-15-combat-balance-reset-2','existing save version preserved');
-state.run=null;state.equip.weapon=heavy;state.equip.offhand=null;save();load();
+state.run=null;equipItem(heavy.id);save();load();
 assert(isTwoHanded(state.equip.weapon)&&!state.equip.offhand,'Two-Handed survives save migration');
 globalThis.__smokeSuccess=true;
 `;
