@@ -58,10 +58,10 @@ export async function createBackend(){
     !['not-sure','easy','balanced','hard'].includes(difficulty)||
     likes.length>500||problems.length>1500||ideas.length>1200||
     [likes,problems,ideas].join(' ').trim().length<10||
-    !Number.isInteger(maxDungeon)||maxDungeon<1||maxDungeon>100||
+    !Number.isInteger(maxDungeon)||maxDungeon<1||maxDungeon>200||
     character(characterId).id!==characterId)throw Error('Please review your feedback before sending.');
    const id=uid+'_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,12);
-   const record={uid,category,rating,combat,difficulty,likes,problems,ideas,maxDungeon,characterId,appVersion:'0.8.1',createdAt:sdk.serverTimestamp()};
+   const record={uid,category,rating,combat,difficulty,likes,problems,ideas,maxDungeon,characterId,appVersion:'0.9',createdAt:sdk.serverTimestamp()};
    await sdk.runTransaction(db,async tx=>{tx.set(sdk.doc(db,'feedbackInbox',id),record);});
    return id;
   },
