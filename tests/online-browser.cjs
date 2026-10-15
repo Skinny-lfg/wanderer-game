@@ -48,8 +48,13 @@ const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8010';
  await page.evaluate(()=>{__firebaseTest.offline=false;dispatchEvent(new Event('online'))});await page.clock.fastForward(31000);assert.ok(await page.locator('#accountError').isHidden());
  await account();await page.locator('#googleSignOut').click();await page.locator('#googleSignIn').waitFor();assert.ok(await page.locator('#screen').evaluate(e=>e.inert));await page.keyboard.press('Escape');assert.ok(await page.locator('#googleSignIn').isVisible());
  await page.locator('#googleSignIn').click();await page.waitForFunction(()=>!document.querySelector('.onlineDialog'));assert.equal((await snapshot()).gold,999);
- // Failed profile reads must never offer registration for an existing account.
- await page.evaluate(async()=>{__firebaseTest.profileError='permission-denied';await __firebaseTest.restore();});
+ // A duplicate auth event is intentionally ignored by the app. Reproduce an actual
+ // failed profile fetch during startup rather than asserting a discarded event runs.
+ await page.evaluate(()=>sessionStorage.setItem('firebaseRefreshSeed',JSON.stringify({
+  user:__firebaseTest.user,profile:__firebaseTest.profile,cloud:__firebaseTest.cloud,
+  profileError:'permission-denied'
+ })));
+ await page.reload();
  await page.locator('#retryProfile').waitFor();assert.equal(await page.locator('#nickname,#createProfile').count(),0);
  await page.evaluate(()=>__firebaseTest.profileError=null);await page.locator('#retryProfile').click();
  await page.waitForFunction(()=>!document.querySelector('.onlineDialog'));
