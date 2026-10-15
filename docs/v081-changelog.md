@@ -3,8 +3,8 @@
 Status: implemented on `development` only; not published to `main`.
 
 ## Dungeon selection
-- Extracting from a dungeon preserves that dungeon level and its chosen path, rather than automatically selecting the next level.
-- Clearing the highest unlocked dungeon still unlocks the next level, but does not switch selection.
+- Manually selecting an earlier dungeon preserves that dungeon level and its chosen path after wins or early extraction, so players can farm repeatedly.
+- Clearing the highest unlocked dungeon unlocks and **automatically selects the next level**, including opening fresh path choices for the new level.
 - Death also preserves dungeon level and path; selections survive saves, reloads, and account switching.
 - Level/path changes and path rerolls continue to behave normally.
 
