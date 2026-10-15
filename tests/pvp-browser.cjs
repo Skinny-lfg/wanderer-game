@@ -8,6 +8,7 @@ const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8012';
  assert.match(await page.locator('.publicGear').innerText(),/Opponent Sword/);assert.match(await page.locator('.onlineDialog').innerText(),/Poison Set/);assert.equal(await page.locator('.statsGrid').count(),1);
  const avatarBox=await page.locator('.playerHeading img').boundingBox();assert.equal(avatarBox.width,width<=650?36:42);assert.equal(avatarBox.height,width<=650?36:42);
  for(const icon of await page.locator('.publicGearItem img').all()){const box=await icon.boundingBox();assert.equal(box.width,width<=650?24:28);assert.equal(box.height,width<=650?24:28);}
+ if(width<=650){const cards=await page.locator('.publicGearItem').all();const first=await cards[0].boundingBox(),second=await cards[1].boundingBox();assert.equal(first.y,second.y);assert.ok(first.height<150);await cards[0].locator('summary').click();assert.ok(await cards[0].locator('details').evaluate(e=>e.open));assert.match(await cards[0].locator('details').innerText(),/Attack/);}
  const before=await page.evaluate(()=>({gold:WandererGame.snapshot().gold,equip:WandererGame.snapshot().equip,stash:WandererGame.snapshot().stash}));
  await page.locator('#practiceAttack').click();assert.match(await page.locator('.onlineDialog').innerText(),/No Gold transferred/);assert.ok(await page.locator('.duelLog li').count()>0);
  assert.deepEqual(await page.evaluate(()=>({gold:WandererGame.snapshot().gold,equip:WandererGame.snapshot().equip,stash:WandererGame.snapshot().stash})),before);
