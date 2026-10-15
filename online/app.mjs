@@ -28,6 +28,7 @@ function errorText(error){
  const code=String(error?.code||error?.message||'');
  if(code.includes('permission-denied'))return 'Firebase access denied. The project needs the supplied Firestore Rules. Your local save is safe.';
  if(code.includes('unauthorized-domain'))return 'This site is not an authorized Firebase sign-in domain. Ask the owner to authorize it.';
+ if(code.includes('operation-not-allowed'))return 'Guest sign-in is disabled. Enable Anonymous in Firebase Console → Authentication → Sign-in method.';
  if(code.includes('popup-blocked'))return 'The sign-in popup was blocked. Allow popups and try again.';
  if(code.includes('popup-closed')||code.includes('cancelled-popup'))return 'Sign-in was cancelled. Please try again.';
  if(code.includes('cloud-conflict'))return 'Another device changed the cloud save. Auto-sync is paused. Review both saves before choosing.';
@@ -71,18 +72,20 @@ function bindCharacters(){dialog.querySelectorAll('[data-character]').forEach(b=
 function showAccount(){
  accountLabel();
  selectedCharacter=profile?.characterId||game.snapshot().characterId||'wanderer';
- const signedIn=!!user,needsProfile=signedIn&&profileState==='missing';
- const content=`<p>${signedIn?`Signed in${profile?' as <b>'+esc(profile.nickname)+'</b>':''}`:'Sign in with Google to play Wanderer.'}</p>
- ${!signedIn?'<button id="googleSignIn" class="primary">Sign in with Google</button>':''}
+ const signedIn=!!user,isGuest=!!user?.isAnonymous,needsProfile=signedIn&&profileState==='missing';
+ const content=`<p>${signedIn?`${isGuest?'Guest account':'Signed in'}${profile?' · <b>'+esc(profile.nickname)+'</b>':''}`:'Sign in with Google or play as a guest.'}</p>
+ ${!signedIn?'<div class="buttonRow"><button id="googleSignIn" class="primary">Sign in with Google</button><button id="guestSignIn">Play as Guest</button></div><p class="small muted">Guest players can join the leaderboard after choosing a nickname. Keep this browser session to retain access to your guest account.</p>':''}
+ ${isGuest?'<p class="small muted guestNotice">Guest account: signing out or clearing browser data may permanently remove access to this nickname and cloud progress.</p>':''}
  ${needsProfile?'<label class="profileField">Unique nickname<input id="nickname" maxlength="20" minlength="3" pattern="[A-Za-z0-9_]{3,20}" autocomplete="username"></label>':''}
  ${signedIn&&profileState==='loading'?'<p role="status">Loading your profile…</p>':''}
  ${signedIn&&profileState==='error'?'<p>Your profile could not be loaded. Please retry; you do not need a new nickname.</p><button id="retryProfile">Retry</button>':''}
  ${profile||needsProfile?characterPicker():''}
  <div class="buttonRow">${needsProfile?'<button id="createProfile" class="primary">Create profile</button>':profile?'<button id="saveCharacter" class="primary">Save character</button>':''}
  ${signedIn&&profile&&!ready?'<button id="retryAccount">Continue</button>':''}
- ${signedIn?'<button id="googleSignOut">Sign out</button>':''}</div>`;
+ ${signedIn?`<button id="googleSignOut">${isGuest?'Leave guest account':'Sign out'}</button>`:''}</div>`;
  modal('Account & Character',content).dataset.account='true';dialog.addEventListener('cancel',e=>{if(!ready)e.preventDefault();});dialog.querySelector('[data-close]').hidden=!ready;bindCharacters();
  action('#googleSignIn',async()=>{ensureSafeSwitch();const b=await connect();await b.signIn();});
+ action('#guestSignIn',async()=>{ensureSafeSwitch();const b=await connect();await b.signInGuest();});
  action('#createProfile',async()=>{ensureSafeSwitch();const token=epoch;const name=dialog.querySelector('#nickname').value;const p=await backend.createProfile(name,selectedCharacter);sessionGuard(token);profile=p;profileState='found';await resumeAccount();});
  action('#saveCharacter',async()=>{
   if(game.busy())throw new Error('Change your character after the expedition.');
@@ -93,9 +96,23 @@ function showAccount(){
  });
  action('#retryProfile',()=>restoreProfile());
  action('#retryAccount',resumeAccount);
- action('#googleSignOut',async()=>{ensureSafeSwitch();if(ready&&revision!==null){await syncNow();await publishResults();}await backend.signOut();gate();});
+ action('#googleSignOut',async()=>{
+  ensureSafeSwitch();
+  if(user?.isAnonymous){
+   modal('Leave guest account?', '<p>Guest accounts cannot be recovered after signing out or clearing browser data. Your nickname and cloud save may become inaccessible.</p><div class="buttonRow"><button id="keepGuest">Keep playing</button><button id="confirmLeaveGuest">Leave guest account</button></div>');
+   action('#keepGuest',showAccount);
+   action('#confirmLeaveGuest',signOutAccount);
+   return;
+  }
+  await signOutAccount();
+ });
 }
 
+async function signOutAccount(){
+ ensureSafeSwitch();
+ if(ready&&revision!==null){await syncNow();await publishResults();}
+ await backend.signOut();gate();
+}
 function localCandidate(){
  const key=accountKey();if(game.key()===key)return validateSave(game.snapshot());
  const raw=localStorage.getItem(key)||localStorage.getItem(GUEST);

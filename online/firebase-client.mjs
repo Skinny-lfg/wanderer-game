@@ -11,6 +11,7 @@ export async function createBackend(){
  return {
   watchAuth:callback=>sdk.onAuthStateChanged(auth,callback),
   signIn:()=>sdk.signInWithPopup(auth,new sdk.GoogleAuthProvider()),
+  signInGuest:()=>sdk.signInAnonymously(auth),
   signOut:()=>sdk.signOut(auth),
   async profile(){const snap=await sdk.getDoc(profileRef(user()));if(!snap.exists()&&snap.metadata.fromCache)throw new Error('network-profile-unconfirmed');return snap.exists()?snap.data():null;},
   async createProfile(name,characterId){
@@ -19,7 +20,7 @@ export async function createBackend(){
    await sdk.runTransaction(db,async tx=>{
     const [claimed,existing]=await Promise.all([tx.get(nicknameRef),tx.get(ref)]);
     if(existing.exists())return; // Repeated setup must restore the original profile.
-    if(claimed.exists()&&claimed.data().uid!==uid)throw new Error('That nickname belongs to another Google account. Sign in with the account you used originally.');
+    if(claimed.exists()&&claimed.data().uid!==uid)throw new Error('That nickname is taken by another account. Choose a different nickname.');
     if(!claimed.exists())tx.set(nicknameRef,{uid});
     tx.set(ref,{nickname,characterId,createdAt:sdk.serverTimestamp(),updatedAt:sdk.serverTimestamp()});
    });

@@ -1,3 +1,5 @@
+> **Guest update (2026-10-15):** The development build offers Firebase Anonymous Authentication plus nicknames on the test leaderboard. Enable **Authentication → Sign-in method → Anonymous** in Firebase Console before a real test. Existing Firestore Rules use the authenticated UID and support anonymous accounts, but still require review/deployment. Signing out or clearing browser data may lose guest-account access; Google linking is not implemented. No Firebase console changes or deployment were made by this code change.
+
 > Current account flow: Google sign-in is required. Account saves restore and sync automatically; only conflicting saves request a choice. Recovery copies remain internal. Leaderboard submissions are automatic and still stored as `verified:false` in the test namespace, although the private-test UI no longer displays warnings. The earlier Guest/manual-review/export instructions below describe the previous interface and no longer apply. Server verification is still pending; this update does not make the rankings competitively trustworthy.
 
 # Firebase online test environment

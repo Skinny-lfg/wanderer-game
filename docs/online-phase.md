@@ -79,3 +79,11 @@ Tests: existing combat/save/model/profile suites; browser checks at 1440px and 3
 ## Player profiles and first practice PvP
 
 See [the PvP GDD addendum](pvp-stage.md). This adds exact nickname lookup, public equipment inspection and practice duels. The owner selected theft rewards but confirmed Spark; actual Gold transfers are deliberately not enabled without a trusted backend/economy. New public-loadout Firestore Rules are prepared, not deployed. No main changes or billing activation.
+
+## Guest nicknames and compact public profile icons — 2026-10-15
+
+- Account now offers **Sign in with Google** and **Play as Guest**. Guest uses Firebase Anonymous Authentication, receives an anonymous UID while browser auth persistence is retained, and reserves a unique 3–20 character nickname using the same atomic profile transaction. Anonymous users share private cloud saves, test leaderboards, player lookup and practice PvP with Google users; no fake local-only public rankings.
+- Guest sign-out warns that account access (nickname/cloud save) may be lost; guest-to-Google linking/recovery is not implemented. The existing Google account and legacy-save safeguards remain.
+- Firebase Console **Authentication → Sign-in method → Anonymous** must be enabled by the project administrator. No auth provider setting, live security rule or production Pages setting is deployed here.
+- Player profile avatars: 42px desktop / 36px mobile. Public equipment icons: 28px desktop / 24px mobile; inventory artwork unaffected. Page cache version updated.
+- Browser test double exercises anonymous nickname signup, leaderboard visibility, sign-out warning and icon sizing. Real Firebase Auth / Firestore integration remains pending. `online/firebase-sdk-source.mjs` exports the official `signInAnonymously` for future `npm run build:firebase`; the checked-in vendor currently exposes its SDK-internal equivalent.

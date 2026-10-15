@@ -54,6 +54,18 @@ const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8010';
  // An unchanged local copy restores newer cloud progress without a review dialog.
  await page.evaluate(async()=>{const s=JSON.parse(__firebaseTest.cloud.payload);s.gold=777;__firebaseTest.cloud={payload:JSON.stringify(s),revision:__firebaseTest.cloud.revision+1};await __firebaseTest.restore();});
  assert.equal((await snapshot()).gold,777);assert.equal(await page.locator('#uploadLocal').count(),0);
- assert.ok(await page.evaluate(()=>Object.keys(localStorage).some(k=>k.startsWith('wanderer_backup_'))));assert.deepEqual(errors,[]);
+ 
+ assert.ok(await page.evaluate(()=>Object.keys(localStorage).some(k=>k.startsWith('wanderer_backup_'))));
+ // Anonymous users share the leaderboard under their reserved nickname.
+ await account();await page.locator('#googleSignOut').click();
+ await page.locator('#guestSignIn').click();await page.locator('#nickname').fill('GuestHero');await page.locator('#createProfile').click();
+ await page.waitForFunction(()=>WandererGame.key()==='wanderer_account_guest-1'&&!document.querySelector('.onlineDialog'));
+ assert.equal(await page.locator('[data-online-action="account"]').innerText(),'guesthero');
+ await page.locator('[data-online-action="leaderboard"]').click();await page.locator('.rankingList').waitFor();
+ assert.match(await page.locator('.rankingList').innerText(),/guesthero/);
+ await close();await account();assert.match(await page.locator('.guestNotice').innerText(),/signing out/);
+ await page.locator('#googleSignOut').click();assert.match(await page.locator('.onlineDialog').innerText(),/cannot be recovered/);
+ await page.locator('#keepGuest').click();assert.ok(await page.locator('#googleSignOut').isVisible());await close();
+ assert.deepEqual(errors,[]);
  console.log(`PASS ${width}px: login required, migration, cosmetics, automatic sync/rankings, conflicts, offline retry, sign-out and return`);await page.close();
  }}finally{await browser.close()}})().catch(error=>{console.error(error);process.exitCode=1});

@@ -6,8 +6,8 @@ const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8012';
  await page.goto(URL);await page.locator('#googleSignIn').click();await page.locator('#nickname').fill('alice_1');await page.locator('#createProfile').click();await page.waitForFunction(()=>!document.querySelector('.onlineDialog'));
  const board=()=>page.locator('[data-online-action="leaderboard"]').click();await board();await page.locator('[data-player="test"]').click();await page.locator('#practiceAttack').waitFor();
  assert.match(await page.locator('.publicGear').innerText(),/Opponent Sword/);assert.match(await page.locator('.onlineDialog').innerText(),/Poison Set/);assert.equal(await page.locator('.statsGrid').count(),1);
- const avatarBox=await page.locator('.playerHeading img').boundingBox();assert.equal(avatarBox.width,width<=650?56:64);assert.equal(avatarBox.height,width<=650?56:64);
- for(const icon of await page.locator('.publicGearItem img').all()){const box=await icon.boundingBox();assert.equal(box.width,width<=650?40:48);assert.equal(box.height,width<=650?40:48);}
+ const avatarBox=await page.locator('.playerHeading img').boundingBox();assert.equal(avatarBox.width,width<=650?36:42);assert.equal(avatarBox.height,width<=650?36:42);
+ for(const icon of await page.locator('.publicGearItem img').all()){const box=await icon.boundingBox();assert.equal(box.width,width<=650?24:28);assert.equal(box.height,width<=650?24:28);}
  const before=await page.evaluate(()=>({gold:WandererGame.snapshot().gold,equip:WandererGame.snapshot().equip,stash:WandererGame.snapshot().stash}));
  await page.locator('#practiceAttack').click();assert.match(await page.locator('.onlineDialog').innerText(),/No Gold transferred/);assert.ok(await page.locator('.duelLog li').count()>0);
  assert.deepEqual(await page.evaluate(()=>({gold:WandererGame.snapshot().gold,equip:WandererGame.snapshot().equip,stash:WandererGame.snapshot().stash})),before);
