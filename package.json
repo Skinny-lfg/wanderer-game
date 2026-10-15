@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build:firebase": "esbuild online/firebase-sdk-source.mjs --bundle --format=esm --minify --outfile=online/vendor/firebase-sdk.mjs",
-    "test": "node scripts/build-pvp-stats.cjs --check && node tests/phase2-smoke.cjs && node tests/gear-balance-smoke.cjs && node tests/v081-smoke.cjs && node tests/dungeon-ui-smoke.cjs && node tests/online-save-compat.cjs && node --test tests/online-model.test.mjs tests/profile-restore.test.mjs tests/pvp.test.mjs",
+    "test": "node scripts/build-pvp-stats.cjs --check && node tests/phase2-smoke.cjs && node tests/gear-balance-smoke.cjs && node tests/v081-smoke.cjs && node tests/dungeon-ui-smoke.cjs && node tests/equipment-ux-smoke.cjs && node tests/online-save-compat.cjs && node --test tests/online-model.test.mjs tests/profile-restore.test.mjs tests/pvp.test.mjs",
     "test:rules": "firebase emulators:exec --only firestore --project demo-wanderer 'node --test tests/firestore-rules.test.mjs'",
     "test:browser": "node tests/online-browser.cjs",
     "test:assets": "node tests/equipment-vfx-browser.cjs",
