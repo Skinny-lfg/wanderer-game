@@ -1,0 +1,47 @@
+{
+  "version": "0.8-assets",
+  "cosmeticOnly": true,
+  "leaderboardAvatarSize": 256,
+  "characters": [
+    {
+      "id": "wanderer",
+      "name": "Original Wanderer",
+      "fullBody": "characters/full/wanderer.webp",
+      "avatar": "characters/avatars/wanderer.webp",
+      "gameplayModifiers": {},
+      "active": true
+    },
+    {
+      "id": "ranger",
+      "name": "Forest Wanderer",
+      "fullBody": "characters/full/ranger.webp",
+      "avatar": "characters/avatars/ranger.webp",
+      "gameplayModifiers": {},
+      "active": true
+    },
+    {
+      "id": "knight",
+      "name": "Iron Wanderer",
+      "fullBody": "characters/full/knight.webp",
+      "avatar": "characters/avatars/knight.webp",
+      "gameplayModifiers": {},
+      "active": true
+    },
+    {
+      "id": "spellblade",
+      "name": "Arcane Wanderer",
+      "fullBody": "characters/full/spellblade.webp",
+      "avatar": "characters/avatars/spellblade.webp",
+      "gameplayModifiers": {},
+      "active": true
+    },
+    {
+      "id": "duelist",
+      "name": "Desert Wanderer",
+      "fullBody": "characters/full/duelist.webp",
+      "avatar": "characters/avatars/duelist.webp",
+      "gameplayModifiers": {},
+      "active": true
+    }
+  ]
+}
