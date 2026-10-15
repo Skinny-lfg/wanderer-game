@@ -64,6 +64,30 @@ state.run={tier:100,path:THEMES[2].id,status:'win',gold:0,fragments:0,loot:[],va
 extract();
 ensure(state.maxDungeon===100&&state.chosen===100,'cap D100 does not advance beyond max');
 ensure(selectedPath===THEMES[2].id,'cap D100 keeps dungeon type');
+
+// Rolling dungeon pages must follow the newly unlocked dungeon; earlier pages stay accessible.
+ensure(dungeonWindow(22,null).levels.join(',')==='18,19,20,21,22,23,24,25,26','D22 centered');
+ensure(dungeonWindow(23,null).levels.join(',')==='19,20,21,22,23,24,25,26,27','D23 advances a single slot');
+ensure(dungeonWindow(1,null).levels[4]===1&&dungeonWindow(100,null).levels[4]===100,'D1/D100 remain centered');
+const oldWallet=wallet,oldHtml=html;wallet=()=>{};html=markup=>globalThis.__dungeonMarkup=markup;
+const visibleLevels=()=>[...((globalThis.__dungeonMarkup.match(/<div class="levelGrid">([\s\S]*?)<\/div>/)?.[1]||'').matchAll(/data-level="(\d+)"/g))].map(x=>Number(x[1]));
+state.maxDungeon=22;state.chosen=22;dungeonPage=null;renderDungeons();
+ensure(visibleLevels().join(',')==='18,19,20,21,22,23,24,25,26','view centers D22 with 4 levels each side');
+document.getElementById('previousLevels').onclick();
+ensure(visibleLevels().join(',')==='9,10,11,12,13,14,15,16,17','previous page shows older levels');
+document.getElementById('nextLevels').onclick();
+ensure(visibleLevels().join(',')==='18,19,20,21,22,23,24,25,26','next page returns to focus');
+state.maxDungeon=23;state.chosen=23;dungeonPage=null;renderDungeons();
+ensure(visibleLevels().join(',')==='19,20,21,22,23,24,25,26,27','unlocked D23 centered');
+state.maxDungeon=22;state.chosen=12;dungeonPage=null;renderDungeons();
+ensure(visibleLevels()[4]===12,'manually chosen lower dungeon centered when returning to farm');
+state.maxDungeon=1;state.chosen=1;dungeonPage=null;renderDungeons();
+ensure(visibleLevels().join(',')==='1,2,3,4,5','D1 shows levels without fake IDs');
+ensure((globalThis.__dungeonMarkup.match(/dungeonPlaceholder/g)||[]).length===4,'D1 has leading placeholders');
+state.maxDungeon=100;state.chosen=100;dungeonPage=null;renderDungeons();
+ensure(visibleLevels().join(',')==='96,97,98,99,100','D100 shows no levels over cap');
+ensure((globalThis.__dungeonMarkup.match(/dungeonPlaceholder/g)||[]).length===4,'D100 trailing placeholders');
+wallet=oldWallet;html=oldHtml;
 globalThis.__v081Success=true;
 `;
 const nodes=new Map(),store=new Map();
@@ -71,4 +95,4 @@ const mockNode=()=>({innerHTML:'',textContent:'',style:{},dataset:{},value:'',cl
 const sandbox={document:{getElementById(id){if(!nodes.has(id))nodes.set(id,mockNode());return nodes.get(id)},querySelectorAll:()=>[],createElement:()=>mockNode()},localStorage:{getItem:k=>store.get(k)??null,setItem:(k,v)=>store.set(k,v)},confirm:()=>true,alert:()=>{},console,setTimeout:()=>0,clearTimeout:()=>{},setInterval:()=>0,clearInterval:()=>{}};
 vm.runInNewContext(script.replace(boot,tests),sandbox,{timeout:4000,filename:'wanderer-v081.js'});
 assert(sandbox.__v081Success,'v0.8.1 smoke assertions did not complete');
-console.log('PASS v0.8.1: auto-advance on unlock, manual farming selection, extraction/death, D100 cap, 2 protected gear, 2/3/5 sets');
+console.log('PASS v0.8.1: rolling centered dungeon pages, auto-unlock, farming, D100 cap, protected gear and sets');

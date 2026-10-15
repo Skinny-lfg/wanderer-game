@@ -3,6 +3,9 @@
 Status: implemented on `development` only; not published to `main`.
 
 ## Dungeon selection
+- The Dungeons selector uses a rolling window of 9 levels with the selected dungeon centered. For example, D22 shows D18–D26 and unlocking D23 shifts to D19–D27. Newly appearing levels are locked; older ones slide out but remain reachable with Previous/Next pages.
+- On mobile the 9 levels are arranged in a 3×3 grid so the selected level is visually central; missing levels at the D1/D100 boundaries are empty placeholders.
+- Selecting an earlier dungeon for farming centers that level when reopening the Dungeons screen without changing progress or saved dungeon type.
 - Manually selecting an earlier dungeon preserves that dungeon level and its chosen path after wins or early extraction, so players can farm repeatedly.
 - Clearing the highest unlocked dungeon unlocks and **automatically selects the next level**, including opening fresh path choices for the new level.
 - Death also preserves dungeon level and path; selections survive saves, reloads, and account switching.
