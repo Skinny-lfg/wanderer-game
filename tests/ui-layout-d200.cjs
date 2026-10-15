@@ -20,6 +20,15 @@ assert(stashStart>rightStart&&runeStart>stashStart,'desktop keeps runes below st
 assert(html.includes('.equipmentLeft,.equipmentRight{display:contents}')&&html.includes('.equipmentInventory{order:1}')&&html.includes('.equipmentRunes{order:2}')&&html.includes('.equipmentBonuses{order:3}'),'mobile orders stash, then runes, then tier bonuses');
 assert(html.includes('class="homeMetrics"')&&!html.includes('<div class="hub">'),'home dashboard has no duplicate menu');
 assert(html.includes('Number(count>=b)-Number(count>=a)||b-a'),'active high tier bonuses are sorted first');
+const runeMarkup=html.slice(html.indexOf('function runeLine(r){'),html.indexOf('function runeSectionMarkup(){'));
+assert(runeMarkup.includes('<img class="runeIcon"')&&runeMarkup.includes('src="assets/runes/'),'rune markup embeds local PNG icons');
+for(const family of ['might','swiftness','wisdom','fortitude','fortune','fury','warding','vitality']){
+ const icon=fs.readFileSync(path.join(root,'assets','runes',family+'.png'));
+ assert(icon.subarray(0,8).equals(Buffer.from('89504e470d0a1a0a','hex')),family+' icon is valid PNG');
+ assert.equal(icon.readUInt32BE(16),256,family+' icon width');
+ assert.equal(icon.readUInt32BE(20),256,family+' icon height');
+ assert(html.includes("id:'"+family+"'"),family+' matches an existing rune family');
+}
 assert(model.includes('maxDungeon>200')&&model.includes('Math.min(200')&&model.includes('length:20'),'cloud saves, leaderboard, milestones support D200');
 assert(loadout.includes('item.tier>200')&&loadout.includes('r.tier<=200'),'public item/rune cap supports D200');
 assert(fb.includes("appVersion:'0.9'")&&fb.includes('maxDungeon>200'),'v0.9 feedback with D200');

@@ -82,6 +82,15 @@
 .runeSlot span{overflow-wrap:anywhere}.runeCollection,.runeOffers{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:7px;margin-top:10px}
 .runeCard{white-space:normal;text-align:left;padding:10px;border:1px solid #826baf;border-radius:9px;background:#251e36;color:#e8d6ff;line-height:1.5}
 .runeCard.runeEquipped{border-color:#b99aff;background:#382b50}
+.runeLine{display:inline-flex;align-items:center;gap:8px;min-width:0;text-align:left;vertical-align:middle}
+.runeIcon{display:block;width:40px;height:40px;object-fit:contain;flex:none}
+.runeText{min-width:0;overflow-wrap:anywhere;line-height:1.4}
+.runeSlot .runeIcon{width:32px;height:32px}
+.runeCard .runeLine{display:flex}
+.runeOffers .runeLine{flex-direction:column;align-items:center;text-align:center}
+.runeOffers .runeIcon{width:64px;height:64px}
+.combatRuneBadge .runeIcon{width:24px;height:24px}
+.combatRuneBadge .runeLine{gap:5px}
 .runeRewardDialog{max-width:640px}.runeRewardDialog .runeOffers{grid-template-columns:repeat(3,minmax(0,1fr))}
 @media(max-width:580px){.runeSlots,.runeRewardDialog .runeOffers{grid-template-columns:1fr}}
 
@@ -508,7 +517,7 @@ function safePendingRune(raw){
 }
 function runeLine(r){
  const type=RUNE_FAMILIES.find(x=>x.id===r.family);
- return type.icon+' '+esc(type.name)+' · D'+r.tier+' · +'+runeValue(r.family,r.tier)+' '+({atkFlat:'Attack',defFlat:'Defense',hpFlat:'Health'}[type.field]||type.field.toUpperCase());
+ return '<span class="runeLine"><img class="runeIcon" src="assets/runes/'+type.id+'.png" alt="" width="40" height="40" decoding="async"><span class="runeText">'+esc(type.name)+' · D'+r.tier+' · +'+runeValue(r.family,r.tier)+' '+({atkFlat:'Attack',defFlat:'Defense',hpFlat:'Health'}[type.field]||type.field.toUpperCase())+'</span></span>';
 }
 function runeSectionMarkup(){
  const runes=state.runes||[],slots=state.runeSlots||[null,null,null];
