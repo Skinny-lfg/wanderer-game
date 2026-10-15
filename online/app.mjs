@@ -66,7 +66,9 @@ async function restoreProfile(token=epoch){
   if(profile)await resumeAccount();else showAccount();
  }catch(error){
   if(token!==epoch)return;
-  if(!profile)profileState='error';
+  // A failed profile refresh must expose Retry even if a previous profile is cached.
+  // Never offer a new nickname merely because an existing profile read failed.
+  profileState='error';
   showAccount();dialog.querySelector('.onlineError').textContent=errorText(error);
  }
 }
