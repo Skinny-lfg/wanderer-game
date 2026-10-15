@@ -21,6 +21,8 @@ Status: implemented on `development` only; not published to `main`.
 - Existing Stash salvage-locks remain separate from expedition protection.
 - Normal dungeon entry confirmation may still be disabled: protection remains available directly in the Dungeons panel.
 
+- Protected Gear selection now displays each item's **D-level, rarity, and affinity name/icon**, including an explicit “No affinity” label, in both selection surfaces.
+
 ## Verification
 - JavaScript syntax checked before committing; dedicated regression smoke test added to `npm test`.
 - No hosting deployment, Firestore rule change, or main branch merge.
