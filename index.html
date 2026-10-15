@@ -302,6 +302,17 @@ function favoredGearMarkup(theme){
  }).join('')+'</div>';
 }
 function chanceText(value){return (value*100).toFixed(1).replace(/\.0$/,'')+'%'}
+/* Permanent chapter-boss runes. Separate inventory, not part of normal gear sets. */
+const RUNE_FAMILIES=[
+ {id:'might',name:'Rune of Might',field:'str',icon:'⚔️'},
+ {id:'swiftness',name:'Rune of Swiftness',field:'agi',icon:'💨'},
+ {id:'wisdom',name:'Rune of Wisdom',field:'int',icon:'✨'},
+ {id:'fortitude',name:'Rune of Fortitude',field:'end',icon:'🛡️'},
+ {id:'fortune',name:'Rune of Fortune',field:'cha',icon:'🍀'},
+ {id:'fury',name:'Rune of Fury',field:'atkFlat',icon:'🔥'},
+ {id:'warding',name:'Rune of Warding',field:'defFlat',icon:'🔰'},
+ {id:'vitality',name:'Rune of Vitality',field:'hpFlat',icon:'❤️'}
+];
 function runeValue(family,tier){const base=1+Math.floor(tier/10);return family==='fury'?base*3:family==='warding'?base*2:family==='vitality'?base*10:base}
 function makeRune(family,tier){const type=RUNE_FAMILIES.find(x=>x.id===family);return {id:makeId(),family,tier,value:runeValue(family,tier),name:type.name}}
 function validRune(r){return r&&typeof r==='object'&&RUNE_FAMILIES.some(x=>x.id===r.family)&&Number.isInteger(r.tier)&&r.tier>=10&&r.tier<=100&&r.tier%10===0&&typeof r.id==='string'&&r.id.length>0&&r.id.length<120}
