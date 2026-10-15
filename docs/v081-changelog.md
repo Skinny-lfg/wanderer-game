@@ -11,6 +11,13 @@ Status: implemented on `development` only; not published to `main`.
 - Death also preserves dungeon level and path; selections survive saves, reloads, and account switching.
 - Level/path changes and path rerolls continue to behave normally.
 
+## Loot distribution & two-handed weapons
+- Previous loot and Merchant slot selection was uniform among nine physical slots. With two Ring slots this meant Rings = 22.2% combined, Amulet = 11.1%, other slots = 11.1% each.
+- New category weights (applied to loot and Merchant, not directly chosen Forge slots): Helm 13%, Amulet 9%, Armor 13%, Gloves 13%, Weapon 15%, Off-Hand 13%, Rings 11% combined (5.5% each), Boots 13%. Overall equipment-drop frequency and rarity probabilities are unchanged.
+- Bow and Staff are now **two-handed weapons** alongside Two-Handed Greatsword, reserving Weapon + Off-Hand. Existing saves displace incompatible Off-Hand gear to the Stash; no items deleted. Public loadouts and PvP respect the same equipment restriction.
+- Bow: higher base attack and hit strength, fast attack speed, weaker damage per hit than Two-Handed. Staff: heavier magic spell damage than Wand even with a matching Orb, slower casting.
+- Existing saved weapon stats are not rerolled; new weapons receive new base values and all Bow/Staff receive the revised combat multipliers and hand rules.
+
 ## Tier Sets
 - Equipment affinity bonuses have thresholds at 2, 3, and now **5** matching items.
 - Values at 2 and 3 are unchanged; 5 items grant stronger effects.

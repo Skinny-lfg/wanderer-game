@@ -14,7 +14,7 @@ export function cleanEquipment(input){
   for(const field of FIELDS){const value=Number(item[field]||0);if(!Number.isFinite(value)||value < (field==='spd'?-10:0)||value>5000)throw Error('Invalid equipment stats.');next[field]=value;}
   result[slot]=next;
  }
- if(result.weapon?.subtype==='Two-Handed')result.offhand=null;
+ if(['Two-Handed','Bow','Staff'].includes(result.weapon?.subtype))result.offhand=null;
  return result;
 }
 export function publicLoadout(save){return {equipment:cleanEquipment(save.equip),maxDungeon:Math.max(1,Math.min(100,Number(save.maxDungeon)||1))};}

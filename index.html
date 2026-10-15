@@ -108,7 +108,7 @@ const NAMES={'Two-Handed':['Ancient Greatsword','Runic Greataxe','Colossus Blade
 const FIELDS=[['Attack','atk'],['Defense','def'],['Health','hp'],['Speed','spd'],['Strength','str'],['Agility','agi'],['Intelligence','int'],['Endurance','end'],['Charisma','cha'],['Mana','mana'],['Spell','spell']];
 const TYPES=['Sword','Mace','Bow','Daggers','Staff','Wand','Two-Handed'];
 const OFFHAND_TYPES=['Shield','Off-Hand Dagger','Orb','Tome','Charm'];
-const isTwoHanded=o=>o?.subtype==='Two-Handed';
+const isTwoHanded=o=>['Two-Handed','Bow','Staff'].includes(o?.subtype);
 const isMagicOffhand=o=>!!o&&['Orb','Tome','Charm'].includes(o.subtype);
 function comparisonEquip(item,target=item.slot){
  const equipment={...state.equip,[target]:item};
@@ -188,16 +188,19 @@ if(isCraft){const gap=Math.max(0,state.maxDungeon-tier),boost=Math.min(.24,gap*.
 else{const cha=totalStats().cha,boost=Math.min(.040,Math.max(0,cha-5)*.0008);a.Common-=boost;a.Rare+=boost*.65;a.Epic+=boost*.35;}
 return a;}
 function rarityRoll(tier,craft){let x=Math.random(),p=rarityOdds(tier,craft);for(let key of ['Common','Uncommon','Rare','Epic','Legendary']){x-=p[key];if(x<0)return key}return 'Common';}
-function makeItem(tier,slot=null,affinity=null,source='loot',subtype='random',forcedRarity=null){slot=slot||sample(SLOTS);subtype=chooseSubtype(slot,subtype);let rarity=forcedRarity&&RARITY[forcedRarity]?forcedRarity:rarityRoll(tier,source==='forge');if(source==='merchant'&&rarity==='Legendary')rarity='Epic';const magic=['Staff','Wand','Orb','Tome','Charm'].includes(subtype);let pool=elementPool(slot,subtype),effect=pool.includes(affinity)&&Math.random()<.7?affinity:sample(pool);
+// Weighted equipment categories remove the extra Ring roll caused by two ring slots.
+const EQUIPMENT_DROP_WEIGHTS=[['helm',13],['amulet',9],['armor',13],['gloves',13],['weapon',15],['offhand',13],['ring',11],['boots',13]];
+function rollEquipmentSlot(){let n=roll(1,100);for(const [slot,weight] of EQUIPMENT_DROP_WEIGHTS){n-=weight;if(n<=0)return slot==='ring'?sample(['ring1','ring2']):slot;}throw Error('Invalid drop weights');}
+function makeItem(tier,slot=null,affinity=null,source='loot',subtype='random',forcedRarity=null){slot=slot||rollEquipmentSlot();subtype=chooseSubtype(slot,subtype);let rarity=forcedRarity&&RARITY[forcedRarity]?forcedRarity:rarityRoll(tier,source==='forge');if(source==='merchant'&&rarity==='Legendary')rarity='Epic';const magic=['Staff','Wand','Orb','Tome','Charm'].includes(subtype);let pool=elementPool(slot,subtype),effect=pool.includes(affinity)&&Math.random()<.7?affinity:sample(pool);
 if(!magic&&rarity==='Common'&&Math.random()<.55)effect=null;
 let mult=RARITY[rarity][1],power=Math.round((2+tier*.91)*mult),o={id:makeId(),slot,subtype,name:sample(NAMES[subtype]||NAMES[slot]||['Ancient Gear']),rarity,tier,atk:0,def:0,hp:0,spd:0,str:0,agi:0,int:0,end:0,cha:0,mana:0,spell:0,effect,magic:magic?effect:null,crafted:source==='forge',craftPrice:source==='forge'?craftCost(tier):null,obtainedAt:Date.now(),locked:false,source};
 if(subtype==='Sword'){o.atk=power+3;o.str=1+Math.floor(tier*.20)}
 else if(subtype==='Mace'){o.atk=power+6;o.str=2+Math.floor(tier*.23);o.spd=-1}
-else if(subtype==='Bow'){o.atk=power+4;o.agi=2+Math.floor(tier*.21);o.spd=1}
+else if(subtype==='Bow'){o.atk=Math.round(power*1.4)+5;o.agi=2+Math.floor(tier*.21);o.spd=1}
 else if(subtype==='Daggers'){o.atk=power+1;o.agi=3+Math.floor(tier*.23);o.spd=2}
 else if(subtype==='Two-Handed'){o.atk=Math.round(power*2.1)+7;o.str=3+Math.floor(tier*.29);o.spd=-2}
 else if(subtype==='Off-Hand Dagger'){o.atk=Math.round(power*.50);o.agi=2+Math.floor(tier*.15);o.spd=1}
-else if(subtype==='Staff'){o.atk=1;o.int=3+Math.floor(tier*.28);o.spell=power+4;o.mana=power*2}
+else if(subtype==='Staff'){o.atk=1;o.int=4+Math.floor(tier*.34);o.spell=Math.round(power*1.8)+8;o.mana=Math.round(power*2.4)}
 else if(subtype==='Wand'){o.atk=1;o.int=2+Math.floor(tier*.22);o.spell=power+2;o.mana=power}
 else if(subtype==='Shield'){o.def=power+2;o.hp=power*3;o.end=2+Math.floor(tier*.22)}
 else if(slot==='offhand'){o.spell=power;o.int=1+Math.floor(tier*.2);o.mana=power}
@@ -212,7 +215,7 @@ if(rarity==='Legendary'){o.name=sample(['Soul Reaver','Runeforged Eclipse','The 
 return o;}
 function saleFragments(o){let raw=Math.max(2,Math.round((3+o.tier*2)*RARITY[o.rarity][2]));return o.crafted?Math.min(raw,Math.max(1,Math.floor((+o.craftPrice||craftCost(o.tier))*.25))):raw}
 function merchantCost(o){return Math.round((24+o.tier*12)*RARITY[o.rarity][2]);}
-function rollShop(){const level=Math.max(1,state.maxDungeon-1),stock=Array.from({length:4},()=>{let o=makeItem(level,sample(SLOTS),null,'merchant');o.goldPrice=merchantCost(o);return o});state.merchant={stock,refreshCost:16+level*4,refreshes:0};save();}
+function rollShop(){const level=Math.max(1,state.maxDungeon-1),stock=Array.from({length:4},()=>{let o=makeItem(level,rollEquipmentSlot(),null,'merchant');o.goldPrice=merchantCost(o);return o});state.merchant={stock,refreshCost:16+level*4,refreshes:0};save();}
 function currentTheme(){return THEMES.find(t=>t.id===selectedPath)||THEMES[0]}
 function getPaths(force=false){let k=String(state.chosen),old=state.offersByLevel[k];if(!force&&old&&Array.isArray(old.ids)&&old.ids.length===3&&old.ids.every(id=>THEMES.some(t=>t.id===id)))return old;const pool=[...THEMES],ids=[];for(let j=0;j<3;j++)ids.push(pool.splice(roll(0,pool.length-1),1)[0].id);state.offersByLevel[k]={ids,rerolls:force?(old?.rerolls||0)+1:0};save();return state.offersByLevel[k]}
 function rerollCost(){return Math.min(500,5*Math.pow(2,Math.min(6,getPaths().rerolls||0)))}
@@ -249,7 +252,7 @@ function totalStats(equipment=state.equip){
  }
  const main=equipped.weapon,off=equipped.offhand,caster=!!main&&['Staff','Wand'].includes(main.subtype);
  const counts=setCounts(equipped),sets=setBonuses(counts),speed=.78+s.agi*.032+s.spdFlat*.046;
- const weaponMult={Sword:1,Mace:.66,Bow:1.18,Daggers:1.48,'Two-Handed':.53,Staff:.72,Wand:1.20}[main?.subtype]||1;
+ const weaponMult={Sword:1,Mace:.66,Bow:1.26,Daggers:1.48,'Two-Handed':.53,Staff:.72,Wand:1.20}[main?.subtype]||1;
  s.caster=caster;s.main=main;s.off=off;s.sets=sets.list;s.bonus=sets.values;s.counts=counts;
  s.maxhp=Math.round(55+s.end*12+s.hpFlat);
  s.attack=Math.round(4+s.str*1.8+s.agi*.4+s.atkFlat);
@@ -353,7 +356,7 @@ function previewItem(o,source='stash'){
 if(!o)return `<div class="inspect"><h3>Choose an item</h3><p class="small muted">Tap an icon to inspect its attributes and compare it with your current equipment.</p></div>`;
 
 let buttons=source==='stash'?`<button class="primary" id="equipThis">Equip</button>${['ring1','ring2'].includes(o.slot)?'<button id="equipOtherRing">Equip Other Ring</button>':''}<button class="ghost" id="lockThis">${o.locked?'🔒 Unlock':'🔓 Lock'}</button><button class="danger" id="sellThis" ${o.locked?'disabled':''}>Salvage · ${saleFragments(o)} 💠</button>`:source==='equipped'?`<button class="ghost" id="unequipThis">Unequip</button>`:'';
-return `<div class="inspect" ${rarityFrame(o)}><div class="inspectHero"><img ${rarityFrame(o)} src="${itemImg(o)}" alt="${esc(o.subtype)}"><div><h3 style="color:${rarityColor(o)}">${esc(o.name)}</h3><div class="small">${itemSource(o)}</div><div class="small" style="color:${rarityColor(o)}">${o.rarity==='Legendary'?'✦ ':''}${esc(detailEffect(o))}</div></div></div><div class="buttonRow inspectActions">${buttons}</div><div class="rule"></div><div class="small">${esc(itemStats(o)||'No base stats')}</div>${isTwoHanded(o)?'<p class="small gold">⚔ Two-Handed · uses Weapon + Off-Hand</p>':''}${o.subtype==='Off-Hand Dagger'?'<p class="small gold">🗡 Physical off-hand · extra strikes</p>':''}${o.magic?`<p class="small gold" style="margin:6px 0">Magic: ${ELEMENTS[o.magic].name} · ${['Staff','Wand'].includes(o.subtype)?'Uses mana per spell':'Free passive off-hand effect'}</p>`:''}${o.legendaryPower?`<p class="small gold">✦ ${esc(o.legendaryPower)}</p>`:''}${source!=='equipped'?`${itemComparison(o)}${['ring1','ring2'].includes(o.slot)?`<details class="otherRingComparison"><summary>Compare with ${SNAME[o.slot==='ring1'?'ring2':'ring1']}</summary>${itemComparison(o,o.slot==='ring1'?'ring2':'ring1')}</details>`:''}`:''}</div>`;
+return `<div class="inspect" ${rarityFrame(o)}><div class="inspectHero"><img ${rarityFrame(o)} src="${itemImg(o)}" alt="${esc(o.subtype)}"><div><h3 style="color:${rarityColor(o)}">${esc(o.name)}</h3><div class="small">${itemSource(o)}</div><div class="small" style="color:${rarityColor(o)}">${o.rarity==='Legendary'?'✦ ':''}${esc(detailEffect(o))}</div></div></div><div class="buttonRow inspectActions">${buttons}</div><div class="rule"></div><div class="small">${esc(itemStats(o)||'No base stats')}</div>${isTwoHanded(o)?'<p class="small gold">⚔ Two-Handed · occupies Weapon + Off-Hand</p>':''}${o.subtype==='Off-Hand Dagger'?'<p class="small gold">🗡 Physical off-hand · extra strikes</p>':''}${o.magic?`<p class="small gold" style="margin:6px 0">Magic: ${ELEMENTS[o.magic].name} · ${['Staff','Wand'].includes(o.subtype)?'Uses mana per spell':'Free passive off-hand effect'}</p>`:''}${o.legendaryPower?`<p class="small gold">✦ ${esc(o.legendaryPower)}</p>`:''}${source!=='equipped'?`${itemComparison(o)}${['ring1','ring2'].includes(o.slot)?`<details class="otherRingComparison"><summary>Compare with ${SNAME[o.slot==='ring1'?'ring2':'ring1']}</summary>${itemComparison(o,o.slot==='ring1'?'ring2':'ring1')}</details>`:''}`:''}</div>`;
 }
 function setDetails(stats){return stats.sets.length?stats.sets.map(b=>`<div class="setItem"><b style="color:${ELEMENTS[b.effect].color}">${ELEMENTS[b.effect].icon} ${esc(b.title)} · ${setProgress(stats.counts[b.effect])}</b><div>${esc(b.desc)}</div></div>`).join(''):`<p class="small muted">Equip two items with the same affinity for a set bonus.</p>`}
 function statsWidget(s){let rows=[['⚔️ Attack',s.attack],['🛡 Defense',s.defense],['❤️ Health',s.maxhp],['💨 Hits / sec',s.attacksPerSec.toFixed(2)],['🎯 Critical',s.crit+'%'],['⚡ Gear Power',s.power]];if(s.blockChance)rows.push(['🛡 Block',s.blockChance+'%']);if(s.caster)rows.push(['💧 Mana',s.mana],['💠 Mana regen',s.manaRegen+'/s'],['✨ Spell Power',s.spellPower]);return `<div class="statsGrid">${rows.map(([name,num])=>`<div class="stat"><label>${name}</label><b>${num}</b></div>`).join('')}</div>`}
@@ -526,12 +529,12 @@ function weaponAttack(r){
  let damage=0,element=null,cast=false;
  if(caster&&r.mp>=cost){
   r.mp-=cost;cast=true;element=weapon.magic||weapon.effect||'burn';
-  const factor=kind==='Staff'?1.23:.77;
+  const factor=kind==='Staff'?1.45:.77;
   damage=Math.max(1,Math.round(s.spellPower*factor));
   if(isMagicOffhand(off)&&off.magic===element)damage=Math.round(damage*1.30);
   addLog((ELEMENTS[element]?.icon||'✨')+' '+kind+' casts '+(ELEMENTS[element]?.name||'Magic')+' ('+damage+' magic).','spell');
  }else{
-  const factor=kind==='Two-Handed'?1.85:kind==='Mace'?1.4:kind==='Bow'?1.18:kind==='Daggers'?.72:caster?.55:1;
+  const factor=kind==='Two-Handed'?1.85:kind==='Mace'?1.4:kind==='Bow'?1.30:kind==='Daggers'?.72:caster?.55:1;
   damage=Math.max(1,Math.round(s.attack*factor)-e.def);
  }
  const critical=Math.random()<s.crit/100;

@@ -27,8 +27,8 @@ export function practiceDuel(leftEquipment,rightEquipment,seed=1){
  const attack=(source,target,time,side)=>{
   const s=source.s,kind=s.main?.subtype||'Unarmed',cost=kind==='Staff'?13:kind==='Wand'?9:0,spell=s.caster&&source.mana>=cost;
   let damage;
-  if(spell){source.mana-=cost;damage=s.spellPower*(kind==='Staff'?1.23:.77);if(s.off?.magic&&(s.main.magic||s.main.effect)===s.off.magic)damage*=1.3;}
-  else{const factor={'Two-Handed':1.85,Mace:1.4,Bow:1.18,Daggers:.72}[kind]||(s.caster?.55:1);damage=Math.max(1,s.attack*factor-target.defense);}
+  if(spell){source.mana-=cost;damage=s.spellPower*(kind==='Staff'?1.45:.77);if(s.off?.magic&&(s.main.magic||s.main.effect)===s.off.magic)damage*=1.3;}
+  else{const factor={'Two-Handed':1.85,Mace:1.4,Bow:1.30,Daggers:.72}[kind]||(s.caster?.55:1);damage=Math.max(1,s.attack*factor-target.defense);}
   const crit=random()<s.crit/100;if(crit)damage*=1.5;
   if(s.main?.rarity==='Legendary'&&!source.legendary){damage*=1.32;source.legendary=true;}
   const blocked=random()<target.s.blockChance/100;if(blocked)damage*=1-target.s.blockReduction;
