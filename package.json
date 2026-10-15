@@ -9,7 +9,8 @@
     "test:browser": "node tests/online-browser.cjs",
     "test:assets": "node tests/equipment-vfx-browser.cjs",
     "test:pvp": "node tests/pvp-browser.cjs",
-    "build:pvp": "node scripts/build-pvp-stats.cjs"
+    "build:pvp": "node scripts/build-pvp-stats.cjs",
+    "test:recovery": "node tests/interrupted-save-browser.cjs"
   },
   "dependencies": {
     "firebase": "11.10.0"

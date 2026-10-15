@@ -45,7 +45,7 @@ function action(selector,fn){const element=dialog?.querySelector(selector);if(!e
 function ensureSafeSwitch(allowProtected=false){if(writing)throw new Error('Saving your progress. Please try again in a moment.');if(game.busy())throw new Error('Finish or extract from your expedition before changing accounts or saves.');if(game.blocked()&&!allowProtected)throw new Error('The local save is protected. Reload before switching. Your recovery copies are retained.');}
 function sessionGuard(token){if(token!==epoch)throw new Error('The signed-in account changed. Reopen Account before continuing.');}
 async function connect(){
- if(!backendPromise)backendPromise=import('./firebase-client.mjs?v=guest-return-8').then(m=>m.createBackend()).then(b=>{
+ if(!backendPromise)backendPromise=import('./firebase-client.mjs?v=cloud-recovery-11').then(m=>m.createBackend()).then(b=>{
   backend=b;b.watchAuth(async next=>{
    // Do not reopen Account or gate an in-progress game for a duplicate auth event
    // for the already restored user. Login recovery itself still runs on startup.
@@ -124,8 +124,14 @@ function localCandidate(){
  if(interrupted)game.backup(typeof raw==='string'?raw:JSON.stringify(raw),'interrupted-run-before-recovery');
  return save;
 }
+async function readRecoverableCloud(){
+ const token=epoch,record=await backend.readSave();sessionGuard(token);if(!record)return null;
+ const {save,interrupted}=recoverInterruptedSave(record.payload);
+ if(interrupted)game.backup(record.payload,'interrupted-cloud-run-before-recovery');
+ return {...record,payload:JSON.stringify(save),originalPayload:record.payload,interrupted};
+}
 async function resumeAccount(){
- ensureSafeSwitch();const token=epoch,remote=await backend.readSave();sessionGuard(token);
+ ensureSafeSwitch();const token=epoch,remote=await readRecoverableCloud();sessionGuard(token);
  const own=localStorage.getItem(accountKey()),claimed=localStorage.getItem(GUEST+'_claimed');
  let local=localCandidate();const baseline=localStorage.getItem(accountKey()+'_synced');
  const remoteRaw=remote?JSON.stringify(validateSave(remote.payload)):null;
@@ -140,31 +146,32 @@ async function resumeAccount(){
  }
  payload={...payload,characterId:profile.characterId};
  let record=remote;
- if(!remote||localDirty){game.backup(JSON.stringify(payload),'before-account-migration');record=await backend.writeSave(payload,remote?.revision||0);sessionGuard(token);}
+ if(!remote||localDirty||remote.interrupted){game.backup(JSON.stringify(payload),'before-account-migration');record=await backend.writeSave(payload,remote?.revision||0);sessionGuard(token);}
  suppress=true;try{game.switchSave(accountKey(),payload);}finally{suppress=false;}
  revision=record.revision;synced=JSON.stringify(game.snapshot());remember();localStorage.setItem(GUEST+'_claimed',user.uid);ready=true;gate();clearError();close();
  publishResults().catch(report);
 }
 async function reviewCloud(){
  ensureSafeSwitch();if(!profile)throw new Error('Create a profile first.');const token=epoch;
- status('Checking cloud save…');const remote=await backend.readSave();sessionGuard(token);
+ status('Checking cloud save…');const remote=await readRecoverableCloud();sessionGuard(token);
  const local=localCandidate(),cloud=remote?validateSave(remote.payload):null;
  modal('Choose your save',`<p>Nothing is replaced until you choose. A recovery backup is saved on this device before switching.</p><div class="saveChoices"><section><h3>This device</h3><p>${esc(summary(local))}</p><button id="uploadLocal">Use this device save</button></section><section><h3>Cloud</h3><p>${esc(summary(cloud))}</p><button id="downloadCloud" ${remote?'':'disabled'}>Use cloud save</button></section></div><p class="small muted">${remote?'Choosing this device will replace cloud revision '+remote.revision+'.':'There is no cloud save. Signing in has not erased your local progress.'}</p>`);
  action('#uploadLocal',async()=>{
   ensureSafeSwitch();sessionGuard(token);
   // Re-read in-memory local state: progress can change while the choice dialog is open.
   const payload={...localCandidate(),characterId:profile.characterId};
-  game.backup(JSON.stringify(payload),'before-first-upload');if(remote)game.backup(remote.payload,'cloud-before-replace');
+  game.backup(JSON.stringify(payload),'before-first-upload');if(remote)game.backup(remote.originalPayload||remote.payload,'cloud-before-replace');
   const record=await backend.writeSave(payload,remote?.revision||0);sessionGuard(token);
   suppress=true;try{game.switchSave(accountKey(),payload);}finally{suppress=false;}
   revision=record.revision;synced=JSON.stringify(game.snapshot());remember();localStorage.setItem(GUEST+'_claimed',user.uid);ready=true;gate();clearError();close();publishResults().catch(report);
  });
  action('#downloadCloud',async()=>{
-  ensureSafeSwitch();sessionGuard(token);const latest=await backend.readSave();sessionGuard(token);
+  ensureSafeSwitch();sessionGuard(token);const latest=await readRecoverableCloud();sessionGuard(token);
   if(!latest||latest.revision!==remote.revision)throw new Error('cloud-conflict');
   const payload={...validateSave(latest.payload),characterId:profile.characterId};
+  const record=latest.interrupted?await backend.writeSave(payload,latest.revision):latest;sessionGuard(token);
   suppress=true;try{game.switchSave(accountKey(),payload);}finally{suppress=false;}
-  revision=latest.revision;synced=JSON.stringify(game.snapshot());remember();localStorage.setItem(GUEST+'_claimed',user.uid);ready=true;gate();clearError();close();publishResults().catch(report);
+  revision=record.revision;synced=JSON.stringify(game.snapshot());remember();localStorage.setItem(GUEST+'_claimed',user.uid);ready=true;gate();clearError();close();publishResults().catch(report);
  });
 }
 async function syncNow(){

@@ -5,7 +5,7 @@ const script=html.match(/<script(?: [^>]*)?>([\s\S]*?)<\/script>/)?.[1];
 assert(script,'Main game script not found');
 const boot="load();if(!state.merchant)rollShop();save();render();";
 assert(script.includes(boot),'Bootstrap not found');
-const tests=`
+const tests=String.raw`
 fresh();
 function ensure(v,m){if(!v)throw new Error(m)}
 render=()=>{};
