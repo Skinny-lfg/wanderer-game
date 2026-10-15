@@ -17,4 +17,24 @@ export function cleanEquipment(input){
  if(['Two-Handed','Bow','Staff'].includes(result.weapon?.subtype))result.offhand=null;
  return result;
 }
-export function publicLoadout(save){return {equipment:cleanEquipment(save.equip),maxDungeon:Math.max(1,Math.min(100,Number(save.maxDungeon)||1))};}
+
+const RUNE_IDS=['might','swiftness','wisdom','fortitude','fortune','fury','warding','vitality'];
+export function cleanPublicRunes(input){
+ const seen=new Set();
+ return (Array.isArray(input)?input:[]).filter(r=>r&&typeof r.id==='string'&&r.id.length>0&&r.id.length<120&&RUNE_IDS.includes(r.family)&&Number.isInteger(r.tier)&&r.tier>=10&&r.tier<=100&&r.tier%10===0)
+ .filter(r=>{if(seen.has(r.id))return false;seen.add(r.id);return true})
+ .slice(0,3).map(r=>({id:r.id,family:r.family,tier:r.tier}));
+}
+export function cleanPublicRuneSlots(raw,runes){
+ const used=new Set(),families=new Set();
+ return Array.from({length:3},(_,i)=>{
+  const id=Array.isArray(raw)?raw[i]:null,r=runes.find(x=>x.id===id);
+  if(!r||used.has(id)||families.has(r.family))return null;
+  used.add(id);families.add(r.family);return id;
+ });
+}
+export function publicLoadout(save){
+ const equippedIds=Array.isArray(save.runeSlots)?save.runeSlots.filter(Boolean):[];
+ const runes=cleanPublicRunes((Array.isArray(save.runes)?save.runes:[]).filter(r=>equippedIds.includes(r.id)));
+ return {equipment:cleanEquipment(save.equip),runes,runeSlots:cleanPublicRuneSlots(save.runeSlots,runes),maxDungeon:Math.max(1,Math.min(100,Number(save.maxDungeon)||1))};
+}
