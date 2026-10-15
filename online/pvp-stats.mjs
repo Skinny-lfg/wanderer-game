@@ -51,7 +51,7 @@ function totalStats(equipment= {},ownedRunes=null,equippedRuneIds=null){
  for(const id of runeSlots){const rune=runeItems.find(r=>r.id===id),type=RUNE_FAMILIES.find(x=>x.id===rune?.family);if(!rune||!type||usedFamilies.has(type.id))continue;usedFamilies.add(type.id);s[type.field]+=runeValue(type.id,rune.tier);}
  const main=equipped.weapon,off=equipped.offhand,caster=!!main&&['Staff','Wand'].includes(main.subtype);
  const counts=setCounts(equipped),sets=setBonuses(counts),speed=.78+s.agi*.032+s.spdFlat*.046;
- const weaponMult={Sword:1,Mace:.66,Bow:1.26,Daggers:1.48,'Two-Handed':.53,Staff:.72,Wand:1.20}[main?.subtype]||1;
+ const weaponMult={Sword:1,Mace:.66,Bow:1.15,Daggers:1.48,'Two-Handed':.50,Staff:.69,Wand:1.20}[main?.subtype]||1;
  s.caster=caster;s.main=main;s.off=off;s.sets=sets.list;s.bonus=sets.values;s.counts=counts;
  s.maxhp=Math.round(55+s.end*12+s.hpFlat);
  s.attack=Math.round(4+s.str*1.8+s.agi*.4+s.atkFlat);
