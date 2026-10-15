@@ -75,3 +75,7 @@ Integrated the user-provided `Wanderer_Equipment_and_Combat_VFX_2026_10_15_v2.zi
 Single-frame VFX are animated with CSS for sword, mace, both dagger paths, Two-Handed, bow, staff, wand and Block. Effects are absolute overlays, capped at eight, cleaned up after animation and respect reduced motion. Combat calculations and timing are unchanged. The account button displays the authenticated profile nickname and resets to Account & Character on sign-out.
 
 Tests: existing combat/save/model/profile suites; browser checks at 1440px and 390px for slot artwork, all rarity frames, image decoding, all effect entrypoints in the combat scene, reduced motion, nickname and layout stability. No real Firebase integration or deployment is implied by mocked browser tests.
+
+## Player profiles and first practice PvP
+
+See [the PvP GDD addendum](pvp-stage.md). This adds exact nickname lookup, public equipment inspection and practice duels. The owner selected theft rewards but confirmed Spark; actual Gold transfers are deliberately not enabled without a trusted backend/economy. New public-loadout Firestore Rules are prepared, not deployed. No main changes or billing activation.

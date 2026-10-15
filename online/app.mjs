@@ -1,7 +1,9 @@
+import {publicLoadout,cleanEquipment} from './public-loadout.mjs';
+import {practiceDuel} from './pvp.mjs';
 import {CHARACTERS,character,validateSave,summary,safeProgress,MILESTONES} from './model.mjs';
 const game=globalThis.WandererGame,GUEST='wanderer_browser_proto_v01';
 let backendPromise,backend,user=null,profile=null,revision=null,synced='',epoch=0,writing=false,suppress=false,timer=null,dialog=null;
-let ready=false,lastPublished='',profileState='loading';
+let ready=false,lastPublished='',lastLoadout='',profileState='loading';
 let message='Sign in to play',selectedCharacter=game.snapshot().characterId||'wanderer';
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const accountKey=()=>user?'wanderer_account_'+user.uid:null;
@@ -13,6 +15,10 @@ function gate(){accountLabel();for(const id of ['screen','nav'])document.getElem
 function remember(){localStorage.setItem(accountKey()+'_synced',JSON.stringify(game.snapshot()));}
 async function publishResults(){
  if(!ready||revision===null||game.busy())return;
+ const publishingEpoch=epoch;
+ try{const loadoutSignature=JSON.stringify(publicLoadout(game.snapshot()));
+ if(loadoutSignature!==lastLoadout){const token=epoch;await backend.publishLoadout(game.snapshot());sessionGuard(token);lastLoadout=loadoutSignature;}}catch(error){if(publishingEpoch!==epoch)return;report(error);}
+ if(publishingEpoch!==epoch||!ready||game.key()!==accountKey())return;
  const progress=safeProgress(game.snapshot()),signature=JSON.stringify([progress.deepestCleared,progress.milestones]);
  if(signature===lastPublished)return;
  const token=epoch;await backend.publishTestResults(game.snapshot());sessionGuard(token);lastPublished=signature;
@@ -38,9 +44,9 @@ function action(selector,fn){const element=dialog?.querySelector(selector);if(!e
 function ensureSafeSwitch(allowProtected=false){if(writing)throw new Error('Saving your progress. Please try again in a moment.');if(game.busy())throw new Error('Finish or extract from your expedition before changing accounts or saves.');if(game.blocked()&&!allowProtected)throw new Error('The local save is protected. Reload before switching. Your recovery copies are retained.');}
 function sessionGuard(token){if(token!==epoch)throw new Error('The signed-in account changed. Reopen Account before continuing.');}
 async function connect(){
- if(!backendPromise)backendPromise=import('./firebase-client.mjs?v=profile-restore-2').then(m=>m.createBackend()).then(b=>{
+ if(!backendPromise)backendPromise=import('./firebase-client.mjs?v=players-pvp-4').then(m=>m.createBackend()).then(b=>{
   backend=b;b.watchAuth(async next=>{
-   const previous=user?.uid,token=++epoch;ready=false;gate();clearError();lastPublished='';user=next;profile=null;profileState='loading';revision=null;synced='';clearTimeout(timer);timer=null;
+   const previous=user?.uid,token=++epoch;ready=false;gate();clearError();lastPublished='';lastLoadout='';user=next;profile=null;profileState='loading';revision=null;synced='';clearTimeout(timer);timer=null;
    if(previous&&previous!==next?.uid&&!game.busy()&&!game.blocked()){suppress=true;try{game.switchSave(GUEST);}finally{suppress=false;gate();}}
    if(!next){gate();status('Sign in to play');showAccount();return;}
    await restoreProfile(token);
@@ -155,14 +161,27 @@ function queueSync(){
  if(timer)return;timer=setTimeout(()=>{timer=null;syncNow().then(publishResults).catch(error=>{report(error);if(revision===null)reviewCloud().catch(report);});},30000);
 }
 async function showLeaderboard(metric='deepest',milestone=10){
- modal('Leaderboard',`<div class="filterBar"><label>Ranking<select id="ranking"><option value="deepest">Deepest Dungeon</option><option value="first">First to Clear</option><option value="fastest">Fastest Progression</option></select></label><label>Milestone<select id="milestone">${MILESTONES.map(n=>`<option value="${n}">D${n}</option>`).join('')}</select></label></div><p id="metricDescription" class="small muted"></p><div id="rankingRows" aria-live="polite">Loading…</div>`);
- const current=dialog;current.querySelector('#ranking').value=metric;current.querySelector('#milestone').value=String(milestone);current.querySelector('#milestone').disabled=metric==='deepest';
+ modal('Leaderboard',`<form id="playerSearch" class="playerSearch"><label for="playerNickname">Find player by full nickname</label><div class="buttonRow"><input id="playerNickname" placeholder="Nickname" minlength="3" maxlength="20" required autocomplete="off"><button type="submit">Search</button></div></form><div class="filterBar"><label>Ranking<select id="ranking"><option value="deepest">Deepest Dungeon</option><option value="first">First to Clear</option><option value="fastest">Fastest Progression</option></select></label><label>Milestone<select id="milestone">${MILESTONES.map(n=>`<option value="${n}">D${n}</option>`).join('')}</select></label></div><p id="metricDescription" class="small muted"></p><div id="rankingRows" aria-live="polite">Loading…</div>`);
+ const current=dialog;current.querySelector('#playerSearch').onsubmit=async event=>{event.preventDefault();const button=current.querySelector('[type=submit]');button.disabled=true;try{if(!user)throw Error('Sign in to find players.');const result=await backend.findPlayer(current.querySelector('#playerNickname').value);if(current.isConnected)showPlayer(result);}catch(error){if(current.isConnected)current.querySelector('.onlineError').textContent=errorText(error);}finally{button.disabled=false;}};current.querySelector('#ranking').value=metric;current.querySelector('#milestone').value=String(milestone);current.querySelector('#milestone').disabled=metric==='deepest';
  current.querySelector('#metricDescription').textContent=metric==='deepest'?'Highest dungeon completed and extracted.':metric==='first'?'First recorded milestone completion.':'Active play time to reach a milestone.';
  current.querySelector('#ranking').onchange=e=>showLeaderboard(e.target.value,Number(current.querySelector('#milestone').value));current.querySelector('#milestone').onchange=e=>showLeaderboard(metric,Number(e.target.value));
 
  try{const b=await connect();const rows=await b.leaderboard(metric,milestone);if(!current.isConnected)return;
- current.querySelector('#rankingRows').innerHTML=rows.length?`<ol class="rankingList">${rows.map((row,i)=>{const c=character(row.profile.characterId);const detail=metric==='deepest'?`D${row.deepest}`:metric==='first'?`D${milestone} · received ${row.receivedAt?.toDate?row.receivedAt.toDate().toLocaleString():'pending'}`:`D${milestone} · ${Math.floor(row.activeMs/60000)}m ${Math.floor(row.activeMs/1000)%60}s`;return `<li><span>${i+1}</span><img src="${c.avatar}" alt="${esc(c.name)}"><b>${esc(row.profile.nickname)}</b><span>${esc(detail)}</span></li>`}).join('')}</ol>`:'<p>No results yet.</p>';
+ current.querySelector('#rankingRows').innerHTML=rows.length?`<ol class="rankingList">${rows.map((row,i)=>{const c=character(row.profile.characterId);const detail=metric==='deepest'?`D${row.deepest}`:metric==='first'?`D${milestone} · received ${row.receivedAt?.toDate?row.receivedAt.toDate().toLocaleString():'pending'}`:`D${milestone} · ${Math.floor(row.activeMs/60000)}m ${Math.floor(row.activeMs/1000)%60}s`;return `<li><span>${i+1}</span><img src="${c.avatar}" alt="${esc(c.name)}"><button class="playerLink" data-player="${esc(row.uid)}">${esc(row.profile.nickname)}</button><span>${esc(detail)}</span></li>`}).join('')}</ol>`:'<p>No results yet.</p>';
+ current.querySelectorAll('[data-player]').forEach(button=>button.onclick=async()=>{button.disabled=true;try{const result=await b.player(button.dataset.player);if(current.isConnected)showPlayer(result);}catch(error){if(current.isConnected)current.querySelector('.onlineError').textContent=errorText(error);}finally{button.disabled=false;}});
  }catch(error){if(current.isConnected){current.querySelector('#rankingRows').textContent='Leaderboard unavailable.';current.querySelector('.onlineError').textContent=errorText(error);}}
+}
+function showPlayer(player){
+ const c=character(player.profile.characterId),own=player.uid===user?.uid;
+ const equipment=player.loadout?cleanEquipment(player.loadout.equipment):null;
+ modal(player.profile.nickname,`<div class="playerHeading"><img src="${c.avatar}" alt="${esc(c.name)}"><p>${esc(c.name)}${player.loadout?' · D'+esc(player.loadout.maxDungeon)+' unlocked':''}</p></div>${equipment?game.inspectLoadout(equipment):'<p>This player has not shared their equipment yet. Their profile updates when they next sign in and sync.</p>'}<section class="arenaPanel"><h3>Practice Arena</h3><p>Fight their last shared equipment. No equipment loss or Gold transfer.</p><p class="small muted">Gold raids are not available yet.</p><button id="practiceAttack" class="primary" ${own||!equipment||!ready?'disabled':''}>${own?'Your profile':'Attack · Practice'}</button></section><button id="backToLeaderboard">Back to leaderboard</button>`);
+ action('#backToLeaderboard',()=>showLeaderboard());
+ action('#practiceAttack',()=>{
+  ensureSafeSwitch();if(!ready||!user||own||!equipment)throw Error('Sign in and choose another player.');
+  const result=practiceDuel(game.snapshot().equip,equipment,crypto.getRandomValues(new Uint32Array(1))[0]);
+  modal(result.winner==='attacker'?'Victory':result.winner==='defender'?'Defeat':'Draw',`<p>Practice duel against <b>${esc(player.profile.nickname)}</b> · ${result.seconds}s</p><p>Your HP: ${result.remainingHp[0]} · Opponent HP: ${result.remainingHp[1]}</p><p>No Gold transferred. Equipment and saves are unchanged.</p><details><summary>Combat log</summary><ol class="duelLog">${result.events.map(e=>`<li>${e.time}s · ${e.side===0?'You':esc(player.profile.nickname)}: ${esc(e.text)}</li>`).join('')}</ol></details><button id="returnToPlayer">Back to player</button>`);
+  action('#returnToPlayer',()=>showPlayer(player));
+ });
 }
 document.querySelector('[data-online-action="account"]').onclick=showAccount;
 document.querySelector('[data-online-action="leaderboard"]').onclick=()=>showLeaderboard();

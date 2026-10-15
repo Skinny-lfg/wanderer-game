@@ -5,7 +5,7 @@ const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8010';
  const page=await browser.newPage({viewport:{width,height:950}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.route('**/online/firebase-client.mjs*',route=>route.fulfill({contentType:'text/javascript',body:fs.readFileSync('tests/fixtures/firebase-client.mjs','utf8')}));
  await page.addInitScript(()=>{
-  const slots={helm:null,amulet:null,armor:null,gloves:null,weapon:{id:'heavy',slot:'weapon',subtype:'Two-Handed',name:'Legacy heavy',tier:10,rarity:'Epic',atk:99999,agi:9999,def:1000},offhand:null,ring1:null,ring2:null,boots:null};
+  const slots={helm:null,amulet:null,armor:null,gloves:null,weapon:{id:'heavy',slot:'weapon',subtype:'Two-Handed',name:'Legacy heavy',tier:10,rarity:'Epic',atk:999,agi:99,def:1000},offhand:null,ring1:null,ring2:null,boots:null};
   localStorage.setItem('wanderer_browser_proto_v01',JSON.stringify({resetVersion:'older-main-version',maxDungeon:12,chosen:1,stashCapacity:80,gold:111,fragments:222,stash:[],equip:slots,valuables:[],offersByLevel:{},merchant:null,run:null}));
  });
  await page.goto(URL);await page.waitForFunction(()=>!!globalThis.__firebaseTest);

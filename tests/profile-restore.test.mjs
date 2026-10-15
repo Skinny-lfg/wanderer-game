@@ -10,7 +10,7 @@ test('profile reads and duplicate registration preserve account ownership',async
  };
  let source=await readFile(new URL('../online/firebase-client.mjs',import.meta.url),'utf8');
  source=source.replace("import * as sdk from './vendor/firebase-sdk.mjs';",'const sdk=globalThis.__profileSdkTest;');
- for(const name of ['firebase-config','model'])source=source.replace(`'./${name}.mjs'`,JSON.stringify(new URL(`../online/${name}.mjs`,import.meta.url).href));
+ for(const name of ['firebase-config','model','public-loadout'])source=source.replace(`'./${name}.mjs'`,JSON.stringify(new URL(`../online/${name}.mjs`,import.meta.url).href));
  try{
  const {createBackend}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));const backend=await createBackend();
  const original={nickname:'skinny',characterId:'knight',createdAt:1,updatedAt:1};

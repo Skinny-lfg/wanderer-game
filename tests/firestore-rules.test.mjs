@@ -35,3 +35,14 @@ test('rankings reject verified claims, forged timestamps, arbitrary values and o
  await assertSucceeds(getDoc(doc(env.unauthenticatedContext().firestore(),'testSeasons/test-open-1/deepest/alice')));
  assert.equal((await getDoc(ref)).data().verified,false);
 });
+
+test('public equipment is readable by signed-in players but never writable by opponents',async()=>{
+ const data={equipment:'{}',maxDungeon:10,updatedAt:serverTimestamp()};
+ await assertSucceeds(setDoc(doc(alice,'publicLoadouts/alice'),data));
+ await assertSucceeds(getDoc(doc(bob,'publicLoadouts/alice')));
+ await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(),'publicLoadouts/alice')));
+ await assertFails(setDoc(doc(bob,'publicLoadouts/alice'),data));
+ await assertFails(setDoc(doc(alice,'publicLoadouts/alice'),{...data,gold:999}));
+ await assertFails(setDoc(doc(alice,'publicLoadouts/alice'),{...data,equipment:'x'.repeat(30001)}));
+ await assertFails(setDoc(doc(alice,'pvpTransfers/fake'),{attacker:'alice',defender:'bob',gold:20}));
+});

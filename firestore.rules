@@ -27,6 +27,16 @@ service cloud.firestore {
    allow update: if owner(uid) && hasProfile(uid) && validSave() && request.resource.data.revision == resource.data.revision + 1;
    allow delete: if false;
   }
+  match /publicLoadouts/{uid} {
+   allow get: if request.auth != null;
+   allow list: if false;
+   allow create, update: if owner(uid) && hasProfile(uid)
+    && request.resource.data.keys().hasOnly(['equipment','maxDungeon','updatedAt'])
+    && request.resource.data.equipment is string && request.resource.data.equipment.size() <= 30000
+    && request.resource.data.maxDungeon is int && request.resource.data.maxDungeon >= 1 && request.resource.data.maxDungeon <= 100
+    && request.resource.data.updatedAt == request.time;
+   allow delete: if false;
+  }
   // Client-owned test claims only. These documents are NEVER verified rankings.
   match /testSeasons/test-open-1/deepest/{uid} {
    function validClaim() { let d=request.resource.data; return d.keys().hasOnly(['deepest','verified','updatedAt']) && d.deepest is int && d.deepest >= 0 && d.deepest <= 100 && d.verified == false && d.updatedAt == request.time; }
