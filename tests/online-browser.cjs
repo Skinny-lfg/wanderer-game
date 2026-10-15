@@ -67,8 +67,13 @@ const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8010';
  await page.evaluate(async()=>{__firebaseTest.user={uid:'bob'};__firebaseTest.profile={nickname:'bob',characterId:'ranger'};__firebaseTest.cloud=null;await __firebaseTest.restore();});
  await page.waitForFunction(()=>WandererGame.key()==='wanderer_account_bob');assert.equal((await snapshot()).gold,0);
  assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('wanderer_account_alice')).gold),999);
- // An unchanged local copy restores newer cloud progress without a review dialog.
- await page.evaluate(async()=>{const s=JSON.parse(__firebaseTest.cloud.payload);s.gold=777;__firebaseTest.cloud={payload:JSON.stringify(s),revision:__firebaseTest.cloud.revision+1};await __firebaseTest.restore();});
+ // A new session (not an ignored duplicate auth event) should restore newer
+ // cloud progress when the local copy is unchanged.
+ await page.evaluate(()=>{const s=JSON.parse(__firebaseTest.cloud.payload);s.gold=777;__firebaseTest.cloud={payload:JSON.stringify(s),revision:__firebaseTest.cloud.revision+1};
+  sessionStorage.setItem('firebaseRefreshSeed',JSON.stringify({user:__firebaseTest.user,profile:__firebaseTest.profile,cloud:__firebaseTest.cloud}));
+ });
+ await page.reload();
+ await page.waitForFunction(()=>WandererGame.key()==='wanderer_account_bob'&&WandererGame.snapshot().gold===777&&!document.querySelector('.onlineDialog'));
  assert.equal((await snapshot()).gold,777);assert.equal(await page.locator('#uploadLocal').count(),0);
  
  assert.ok(await page.evaluate(()=>Object.keys(localStorage).some(k=>k.startsWith('wanderer_backup_'))));
