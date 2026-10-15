@@ -698,8 +698,8 @@ function enemyFor(level,enc){
  attackEvery:role==='skirmisher'?1.42:role==='bruiser'?1.72:miniboss?1.52:1.62,boss,effect:theme.effect,poison:0,burn:0,bleed:0,
  poisonStacks:0,burnStacks:0,bleedStacks:0,dots:{poison:[],bleed:[],burn:[]},slowTime:0,enraged:false};
 }
-function startDungeon(){if(state.run)return;if(state.pendingRuneReward){showPendingRuneReward();return;}if(!stashHasRoom()){bannerMessage('Stash full. Upgrade or salvage gear before another expedition.');return;}let theme=currentTheme(),stats=totalStats();state.run={tier:state.chosen,path:theme.id,enc:0,status:'ready',hp:stats.maxhp,maxhp:stats.maxhp,mp:stats.mana,maxmp:stats.mana,barrier:0,stats,enemy:null,tPlayer:0,tEnemy:0,tDot:0,loot:[],valuables:[],gold:0,fragments:0,protectedItemIds:chosenProtectionIds()};view='combat';logEntries=[];addLog(`Entering ${theme.name} — Dungeon ${state.chosen}.`,'good');save();renderCombat()}
-function nextEncounter(){const r=state.run;if(!r||r.status!=='ready'||r.enc>=wavesForDungeon(r.tier))return;r.enc++;selectedPath=r.path;r.enemy=enemyFor(r.tier,r.enc);r.tPlayer=r.tEnemy=r.tDot=0;r.status='fight';addLog(waveTitle(r.enc)+' '+r.enc+'/'+wavesForDungeon(r.tier)+': '+r.enemy.name);save();renderCombat();clearInterval(clock);clock=setInterval(updateFight,110/clockSpeed)}
+function startDungeon(){if(state.run)return;if(state.pendingRuneReward){showPendingRuneReward();return;}if(!stashHasRoom()){bannerMessage('Stash full. Upgrade or salvage gear before another expedition.');return;}let theme=currentTheme(),stats=totalStats();state.run={tier:state.chosen,path:theme.id,enc:0,status:'ready',hp:stats.maxhp,maxhp:stats.maxhp,mp:stats.mana,maxmp:stats.mana,barrier:0,stats,enemy:null,tPlayer:0,tEnemy:0,tDot:0,loot:[],valuables:[],gold:0,fragments:0,protectedItemIds:chosenProtectionIds(),combatSeconds:0,setCooldowns:{},secondWindUsed:false};view='combat';logEntries=[];addLog(`Entering ${theme.name} — Dungeon ${state.chosen}.`,'good');save();renderCombat()}
+function nextEncounter(){const r=state.run;if(!r||r.status!=='ready'||r.enc>=wavesForDungeon(r.tier))return;r.enc++;selectedPath=r.path;r.enemy=enemyFor(r.tier,r.enc);r.tPlayer=r.tEnemy=r.tDot=0;r.setTemp=null;setRuntime(r);r.status='fight';addLog(waveTitle(r.enc)+' '+r.enc+'/'+wavesForDungeon(r.tier)+': '+r.enemy.name);save();renderCombat();clearInterval(clock);clock=setInterval(updateFight,110/clockSpeed)}
 const COMBAT_VFX={Sword:'slash_main_hand',Mace:'smash_main_hand',Daggers:'double_slash_daggers','Off-Hand Dagger':'double_slash_daggers','Two-Handed':'big_slash_two_hand',Bow:'arrow_bow',Staff:'big_spell_projectile_staff',Wand:'spell_projectile_wand',Block:'block'};
 function combatEffect(kind){
  const scene=$('scene'),asset=COMBAT_VFX[kind];if(!scene||!asset)return;
@@ -740,39 +740,148 @@ function tickDots(enemy){
  synchronizeDots(enemy);
  return total;
 }
+/* Runtime-only set effects. No save schema changes; time always advances in combat seconds. */
+function setRuntime(r){
+ if(!r.setCooldowns)r.setCooldowns={};
+ if(!r.setTemp)r.setTemp={focus:0,focusLast:-999,focusExpiry:0,heat:0,heatExpiry:0,soul:0,soulLast:-999,soulExpiry:0,
+ haste:[],shieldCounter:0,shieldCounterUntil:0,lastBastionReady:false,chilledFor:0,delayImmuneUntil:0,regenBarrier:0,regenBarrierSecond:-1,regenBarrierSecondTotal:0};
+ return r.setTemp;
+}
+function setNow(r){return Number(r.combatSeconds)||0;}
+function setReady(r,name,seconds){
+ const timers=r.setCooldowns||(r.setCooldowns={}),now=setNow(r);
+ if(now<(timers[name]||0))return false;
+ timers[name]=now+seconds;return true;
+}
+function setBarrier(r,amount){
+ const before=r.barrier;
+ r.barrier=Math.min(Math.max(8,Math.round(r.maxhp*.3)),r.barrier+Math.max(0,amount));
+ return Math.max(0,r.barrier-before);
+}
+function setHeal(r,amount){
+ const heal=Math.max(0,Number(amount)||0),before=r.hp;
+ r.hp=Math.min(r.maxhp,r.hp+heal);
+ const actual=r.hp-before,overheal=heal-actual;
+ if(overheal>0&&r.stats.bonus.regenOverflow){
+  const temp=setRuntime(r),second=Math.floor(setNow(r));
+  if(temp.regenBarrierSecond!==second){temp.regenBarrierSecond=second;temp.regenBarrierSecondTotal=0;}
+  const allowed=Math.max(0,Math.min(overheal*.25,r.maxhp*.01-temp.regenBarrierSecondTotal,r.maxhp*.1-temp.regenBarrier));
+  if(allowed>0){const gained=setBarrier(r,allowed);temp.regenBarrier+=gained;temp.regenBarrierSecondTotal+=gained;}
+ }
+ return actual;
+}
+function setDelayEnemy(r,seconds){
+ const temp=setRuntime(r),now=setNow(r);
+ if(now<temp.delayImmuneUntil)return false;
+ r.tEnemy-=seconds;temp.delayImmuneUntil=now+4;
+ addLog('⏳ Enemy attack delayed by '+seconds+'s','good');return true;
+}
+function setDirectEnemyDamage(r,amount,label){
+ const enemy=r.enemy;let damage=Math.max(0,Math.round(amount));
+ if(enemy.barrier>0){const absorbed=Math.min(enemy.barrier,damage);enemy.barrier-=absorbed;damage-=absorbed;}
+ enemy.hp-=damage;if(damage>0){addLog(label+' '+damage+' bonus damage','good');floatText(damage,'enemy');}
+ return damage;
+}
+function setOnAttack(r,base,critical,perfect){
+ const s=r.stats,e=r.enemy,b=s.bonus,temp=setRuntime(r),now=setNow(r);
+ let bonus=0;
+ if(b.criticalFocus&&critical&&!perfect&&now-temp.focusLast>=1){
+  temp.focus=Math.min(3,temp.focus+1);temp.focusLast=now;temp.focusExpiry=now+6;
+ }
+ if(b.bleedHaste&&e.bleedStacks>0&&now-(temp.lastHaste||-999)>=1){
+  temp.haste=(temp.haste||[]).filter(expiry=>expiry>now).slice(-2);
+  temp.haste.push(now+3);temp.lastHaste=now;
+ }
+ if(b.sunderExpose&&e.baseDef>0&&e.def<=e.baseDef*.5)bonus+=Math.round(base*.08);
+ if(b.bloodHunt&&e.bleedStacks>0&&e.hp<=e.maxhp*.3&&setReady(r,'bloodHunt',12)){bonus+=Math.round(base*.4);addLog('🩸 Blood Hunt!','good');}
+ if(b.armorShatter&&e.baseDef>0&&e.def<=e.baseDef*.5&&now>=temp.delayImmuneUntil&&setReady(r,'armorShatter',12)){
+  const stripped=Math.min(e.barrier,Math.round(base));e.barrier-=stripped;
+  setDelayEnemy(r,e.boss?.2:.5);addLog('🔨 Armor Shatter! '+stripped+' Barrier removed','good');
+ }
+ if(b.shieldRiposte&&temp.shieldCounter>0){
+  if(now<=temp.shieldCounterUntil)bonus+=Math.round(Math.min(base*.25,temp.shieldCounter));
+  temp.shieldCounter=0;
+ }
+ if(b.lastBastion&&temp.lastBastionReady){
+  bonus+=Math.round(Math.min(base*.5,r.barrier*.5));r.barrier=Math.max(0,r.barrier*.5);temp.lastBastionReady=false;
+ }
+ if(b.flashover&&temp.heat>=5&&setReady(r,'flashover',10)){
+  temp.heat=0;bonus+=Math.round(base*.5);addLog('🔥 Flashover!','good');
+ }
+ if(b.soulPact&&temp.soul>=3&&r.hp>r.maxhp*.4&&setReady(r,'soulPact',12)){
+  temp.soul=0;r.hp=Math.max(1,r.hp-r.maxhp*.03);temp.soulPactBonus=Math.round(base*.4);
+  bonus+=temp.soulPactBonus;addLog('🌑 Soul Pact sacrifices HP for damage','spell');
+ }else temp.soulPactBonus=0;
+ return bonus;
+}
+function setPoisonBurst(r,enemy){
+ const s=r.stats,temp=setRuntime(r);
+ if(!s.bonus.venomBurst||!enemy.dots?.poison||enemy.dots.poison.length<6||!setReady(r,'venomBurst',10))return;
+ const removed=enemy.dots.poison.splice(0,6);
+ const remaining=removed.reduce((sum,stack)=>sum+stack.damage*stack.remaining,0);
+ const damage=Math.min((r.lastBaseHit||s.attack||1),remaining*.6);
+ synchronizeDots(enemy);setDirectEnemyDamage(r,damage,'☠️ Venom Burst:');
+}
+function setCombatExpire(r,dt){
+ const s=r.stats,t=setRuntime(r),now=setNow(r),e=r.enemy;
+ if(now>=t.focusExpiry)t.focus=0;
+ if(now>=t.heatExpiry)t.heat=0;
+ if(now>=t.soulExpiry)t.soul=0;
+ t.haste=(t.haste||[]).filter(expiry=>expiry>now);
+ if(s.bonus.deepFreeze){
+  if(e.slowTime>0){
+   t.chilledFor+=dt;
+   if(t.chilledFor>=3&&now>=t.delayImmuneUntil&&setReady(r,'deepFreeze',12)){
+    setDelayEnemy(r,e.boss?.25:.75);addLog('❄️ Deep Freeze!','spell');
+   }
+  }else t.chilledFor=0;
+ }
+}
+function setHeatTick(r){
+ const temp=setRuntime(r),now=setNow(r);
+ if(r.stats.bonus.fireHeat&&r.enemy.burnStacks>0){temp.heat=Math.min(5,temp.heat+1);temp.heatExpiry=now+5;}
+}
+function setSoulHeal(r,effectiveBonusDamage){
+ const temp=setRuntime(r);
+ if(temp.soulPactBonus>0){
+  const heal=Math.min(r.maxhp*.04,Math.max(0,effectiveBonusDamage)*.25);
+  setHeal(r,heal);temp.soulPactBonus=0;
+ }
+}
+
 function applyAffinity(effect,enemy,s,mult=1,baseDamage=0){
  if(!effect)return;
- const bonus=s.bonus||{};
- const ratios={poison:.15,bleed:.18,burn:.17};
+ const bonus=s.bonus||{},ratios={poison:.15,bleed:.18,burn:.17};
+ const r=state.run;
  if(ratios[effect]){
   if(!enemy.dots)enemy.dots={poison:[],bleed:[],burn:[]};
   const src=enemy.dots[effect]||[];
-  const potency=Math.max(1,Math.round((baseDamage||s.spellPower||s.attack||5)*ratios[effect]*mult+(bonus[effect+'Bonus']||0)*.6));
-  const stack={damage:potency,remaining:3};
+  const potency=Math.max(1,Math.round((baseDamage||s.spellPower||s.attack||5)*ratios[effect]*mult*(1+(bonus[effect+'Bonus']||0))));
   if(src.length>=12)src.shift();
-  src.push(stack);enemy.dots[effect]=src;synchronizeDots(enemy);
+  src.push({damage:potency,remaining:3});enemy.dots[effect]=src;synchronizeDots(enemy);
+  if(effect==='poison'&&r)setPoisonBurst(r,enemy);
   return;
  }
  if(effect==='slow')enemy.slowTime=Math.max(enemy.slowTime,2.9);
  if(effect==='sunder')enemy.def=Math.max(Math.round(enemy.baseDef*.25),enemy.def-Math.max(1,1+(bonus.sunderBonus||0)));
- const r=state.run;
  if(!r)return;
  if(effect==='drain'){
-  const before=r.hp;
-  r.hp=Math.min(r.maxhp,r.hp+Math.max(1,Math.round((baseDamage||s.spellPower||s.attack||5)*.16*mult*(1+(bonus.drainBonus||0)))));
-  if(r.hp>before)addLog('🌑 Drain heals +'+Math.round(r.hp-before)+' HP','good');
+  const healed=setHeal(r,Math.max(1,Math.round((baseDamage||s.spellPower||s.attack||5)*.16*mult*(1+(bonus.drainBonus||0)))));
+  if(healed>0){addLog('🌑 Drain heals +'+Math.round(healed)+' HP','good');
+   if(bonus.soulCharge){const t=setRuntime(r),now=setNow(r);if(now-t.soulLast>=1){t.soul=Math.min(3,t.soul+1);t.soulLast=now;t.soulExpiry=now+6;}}
+  }
  }
  if(effect==='shield'){
-  const gained=Math.max(1,Math.round(2+(bonus.shieldBonus||0)+(baseDamage||0)*.07));
-  const before=r.barrier;r.barrier=Math.min(Math.max(8,Math.round(r.maxhp*.3)),r.barrier+gained);if(r.barrier>before)addLog('🛡 Shield grants +'+Math.round(r.barrier-before)+' Barrier','good');
+  const gained=setBarrier(r,Math.max(1,Math.round(2+(bonus.shieldBonus||0)+(baseDamage||0)*.07)));
+  if(gained>0)addLog('🛡 Shield grants +'+Math.round(gained)+' Barrier','good');
  }
  if(effect==='regen'){
-  const before=r.hp;r.hp=Math.min(r.maxhp,r.hp+Math.max(2,Math.round((baseDamage||s.attack||5)*.1))+(bonus.regenBonus||0));
-  if(r.hp>before)addLog('💚 Healing +'+Math.round(r.hp-before)+' HP','good');
+  const gained=setHeal(r,Math.max(2,Math.round((baseDamage||s.attack||5)*.1)));
+  if(gained>0)addLog('💚 Healing +'+Math.round(gained)+' HP','good');
  }
 }
 function weaponAttack(r){
- const s=r.stats,e=r.enemy,weapon=s.main,off=s.off,caster=s.caster;
+ const s=r.stats,e=r.enemy,weapon=s.main,off=s.off,caster=s.caster,now=setNow(r),temp=setRuntime(r);
  const kind=weapon?.subtype||'Unarmed',cost=kind==='Staff'?13:kind==='Wand'?9:0;
  let damage=0,element=null,cast=false;
  if(caster&&r.mp>=cost){
@@ -785,13 +894,21 @@ function weaponAttack(r){
   const factor=kind==='Two-Handed'?1.85:kind==='Mace'?1.4:kind==='Bow'?1.30:kind==='Daggers'?.72:caster?.55:1;
   damage=Math.max(1,Math.round(s.attack*factor)-e.def);
  }
- const critical=Math.random()<s.crit/100;
- if(critical){damage=Math.max(1,Math.round(damage*1.5));addLog('CRITICAL! '+damage+' damage','critical');}
+ const base=damage;r.lastBaseHit=base;
+ const perfect=s.bonus.perfectStrike&&temp.focus>=3&&now>=(r.setCooldowns?.perfectStrike||0);
+ if(perfect){setReady(r,'perfectStrike',10);temp.focus=0;}
+ const critical=perfect||Math.random()<s.crit/100;
+ if(critical){damage=Math.max(1,Math.round(damage*(perfect?1.75:1.5)));addLog((perfect?'✨ PERFECT STRIKE! ':'CRITICAL! ')+damage+' damage','critical');}
  if(weapon?.rarity==='Legendary'&&r.enc!==r.lastLegendaryEncounter){damage=Math.round(damage*1.32);r.lastLegendaryEncounter=r.enc;}
+ const added=setOnAttack(r,base,critical,perfect);
+ if(s.bonus.sunderExpose&&e.baseDef>0&&e.def<=e.baseDef*.5)damage=Math.round(damage*1.08);
+ damage+=added;
+ const hpBefore=e.hp;
  animateStrike(kind,cast);
- // Boss barrier absorbs damage before the health pool is hit.
  if(e.barrier>0){const absorbed=Math.min(e.barrier,damage);e.barrier-=absorbed;damage-=absorbed;if(absorbed)addLog('🛡 '+e.name+' absorbs '+absorbed+' damage','spell');}
+ const real=Math.max(0,Math.min(e.hp,damage));
  e.hp-=damage;floatText(damage,'enemy',critical);
+ if(temp.soulPactBonus>0)setSoulHeal(r,Math.min(temp.soulPactBonus,real));
  if(cast){
   if(damage>0&&Math.random()<.9)applyAffinity(element,e,s,kind==='Staff'?1.2:.85,damage);
   if(damage>0&&isMagicOffhand(off)&&off.magic!==element&&Math.random()<.25)applyAffinity(off.magic,e,s,.5,damage);
@@ -802,36 +919,67 @@ function weaponAttack(r){
    let extra=Math.max(1,Math.round(s.attack*.13+(off.atk||0)*.45-e.def*.16));
    if(e.barrier>0){const shield=Math.min(e.barrier,extra);e.barrier-=shield;extra-=shield;}
    e.hp-=extra;addLog('🗡 Off-Hand Dagger strikes for '+extra+' damage','good');animateStrike('Daggers');floatText(extra,'enemy');
-   if(off.effect&&Math.random()<.34)applyAffinity(off.effect,e,s,.65,extra);
+   if(extra>0&&off.effect&&Math.random()<.34)applyAffinity(off.effect,e,s,.65,extra);
   }else if(damage>0&&isMagicOffhand(off)&&off.magic&&Math.random()<.45){
    applyAffinity(off.magic,e,s,.85,damage);
    addLog((ELEMENTS[off.magic]?.icon||'✨')+' Off-Hand imbues attack (0 mana)','spell');
   }
  }
- if(s.counts.shield>=2){const gained=Math.max(1,s.bonus.shieldBonus||2);const before=r.barrier;r.barrier=Math.min(Math.max(8,Math.round(r.maxhp*.3)),r.barrier+gained);if(r.barrier>before)addLog('🛡 Shield set: +'+Math.round(r.barrier-before)+' Barrier','good');}
+ if(s.counts.shield>=2){const gained=setBarrier(r,Math.max(1,s.bonus.shieldBonus||2));if(gained>0)addLog('🛡 Shield set: +'+Math.round(gained)+' Barrier','good');}
  return damage;
 }
-function updateFight(){const r=state.run;if(!r||r.status!=='fight'){clearInterval(clock);return;}const dt=.11,s=r.stats,e=r.enemy;
-r.tPlayer+=dt;r.tEnemy+=dt;r.tDot+=dt;if(s.caster)r.mp=Math.min(r.maxmp,r.mp+dt*s.manaRegen);
-if(r.tPlayer>=1/s.attacksPerSec){r.tPlayer=0;weaponAttack(r);if(e.hp<=0){winEncounter();return}}
-if(r.tDot>=1){r.tDot-=1;let dot=e.poison+e.bleed+e.burn;if(dot){const applied=tickDots(e);e.hp-=applied;addLog(`☠️ Damage over time: ${applied} damage`,'spell');}if(s.bonus.regenBonus){const prev=r.hp;r.hp=Math.min(r.maxhp,r.hp+s.bonus.regenBonus);if(r.hp>prev)addLog(`💚 Regeneration +${Math.round(r.hp-prev)} HP`,'good');}if(e.slowTime>0)e.slowTime=Math.max(0,e.slowTime-1);if(e.hp<=0){winEncounter();return}}
-const slowed=e.slowTime>0?1+(s.bonus.slowBonus||.22):1;if(r.tEnemy>=e.attackEvery*slowed){r.tEnemy=0;let raw=Math.max(Math.ceil(e.atk*.24),Math.round(e.atk*(1-Math.min(.75,s.defense/(s.defense+e.atk*1.35)))));
- if(e.effect==='burn')raw+=Math.round(r.tier*.3);
- if(e.effect==='sunder')raw+=Math.round(r.tier*.2);
- if(e.bossStyle==='berserker'&&e.hp<e.maxhp*.5){
-  raw=Math.round(raw*1.35);
-  if(!e.enraged){e.enraged=true;addLog('🔥 Ember Sovereign enrages below half HP!','critical');}
+function updateFight(){
+ const r=state.run;if(!r||r.status!=='fight'){clearInterval(clock);return;}
+ const dt=.11,s=r.stats,e=r.enemy,t=setRuntime(r);
+ r.combatSeconds=(r.combatSeconds||0)+dt;
+ setCombatExpire(r,dt);
+ r.tPlayer+=dt;r.tEnemy+=dt;r.tDot+=dt;
+ if(s.caster)r.mp=Math.min(r.maxmp,r.mp+dt*s.manaRegen);
+ const haste=s.bonus.bleedHaste?1+Math.min(3,t.haste.length)*.05:1;
+ if(r.tPlayer>=1/(s.attacksPerSec*haste)){r.tPlayer=0;weaponAttack(r);if(e.hp<=0){winEncounter();return;}}
+ if(r.tDot>=1){
+  r.tDot-=1;
+  const hasBurn=e.burnStacks>0,hasDots=e.poisonStacks+e.bleedStacks+e.burnStacks>0;
+  if(hasDots){const applied=tickDots(e);e.hp-=applied;addLog('☠️ Damage over time: '+applied+' damage','spell');}
+  if(hasBurn)setHeatTick(r);
+  if(s.bonus.regenBonus){const healed=setHeal(r,s.bonus.regenBonus);if(healed>0)addLog('💚 Regeneration +'+Math.round(healed)+' HP','good');}
+  if(e.slowTime>0)e.slowTime=Math.max(0,e.slowTime-1);
+  if(e.hp<=0){winEncounter();return;}
  }
- if(e.miniboss&&e.hp<e.maxhp*.5)raw=Math.round(raw*1.17);const block=s.blockChance&&Math.random()<s.blockChance/100;
- if(block){const blockedByShield=Math.max(1,Math.round(raw*s.blockReduction));raw-=blockedByShield;addLog('🛡 BLOCK! Shield prevents '+blockedByShield+' damage','good');animateDefense();}
- const blocked=Math.min(r.barrier,raw);r.barrier-=blocked;
- const hit=Math.max(0,raw-blocked);
- if(blocked>0)addLog('🛡 Barrier absorbs '+blocked+' damage','good');
- if(hit>0){r.hp-=hit;addLog('🩸 '+e.name+' hits for '+hit+' HP','bleed');floatText(hit,'hero');}
- if(e.bossStyle==='leech'&&hit>0){const heal=Math.min(e.maxhp-e.hp,Math.round(hit*.28));e.hp+=heal;if(heal)addLog('🌑 Rift Harbinger drains '+heal+' HP','spell');}
- if(e.bossStyle==='guardian'&&!e.barrier){e.barrier=Math.max(2,Math.round(r.tier*.45));addLog('🛡 Abyssal Guardian restores '+e.barrier+' Barrier','spell');}
- animateEnemyStrike();}
-if(r.hp<=0){die();return}updateBars()}
+ const slowed=e.slowTime>0?1+(s.bonus.slowBonus||.22):1;
+ if(r.tEnemy>=e.attackEvery*slowed){
+  r.tEnemy=0;
+  let raw=Math.max(Math.ceil(e.atk*.24),Math.round(e.atk*(1-Math.min(.75,s.defense/(s.defense+e.atk*1.35)))));
+  if(e.effect==='burn')raw+=Math.round(r.tier*.3);
+  if(e.effect==='sunder')raw+=Math.round(r.tier*.2);
+  if(e.bossStyle==='berserker'&&e.hp<e.maxhp*.5){
+   raw=Math.round(raw*1.35);
+   if(!e.enraged){e.enraged=true;addLog('🔥 Ember Sovereign enrages below half HP!','critical');}
+  }
+  if(e.miniboss&&e.hp<e.maxhp*.5)raw=Math.round(raw*1.17);
+  const weaker=Math.min(.15,(s.bonus.poisonWeaken?Math.min(6,e.poisonStacks||0)*.01:0)+(s.bonus.frostWeaken&&e.slowTime>0?.08:0));
+  if(weaker)raw=Math.max(1,Math.round(raw*(1-weaker)));
+  const block=s.blockChance&&Math.random()<s.blockChance/100;
+  if(block){
+   const damageBlocked=Math.max(1,Math.round(raw*s.blockReduction));raw-=damageBlocked;
+   addLog('🛡 BLOCK! Shield prevents '+damageBlocked+' damage','good');animateDefense();
+   if(s.bonus.shieldRiposte&&setReady(r,'shieldRiposte',3)){t.shieldCounter=damageBlocked*.25;t.shieldCounterUntil=setNow(r)+4;}
+  }
+  const blocked=Math.min(r.barrier,raw);r.barrier-=blocked;
+  const hit=Math.max(0,raw-blocked);
+  if(blocked>0)addLog('🛡 Barrier absorbs '+blocked+' damage','good');
+  if(hit>0){r.hp-=hit;addLog('🩸 '+e.name+' hits for '+hit+' HP','bleed');floatText(hit,'hero');}
+  if(e.bossStyle==='leech'&&hit>0){const heal=Math.min(e.maxhp-e.hp,Math.round(hit*.28));e.hp+=heal;if(heal)addLog('🌑 Rift Harbinger drains '+heal+' HP','spell');}
+  if(e.bossStyle==='guardian'&&!e.barrier){e.barrier=Math.max(2,Math.round(r.tier*.45));addLog('🛡 Abyssal Guardian restores '+e.barrier+' Barrier','spell');}
+  if(s.bonus.lastBastion&&r.barrier>=r.maxhp*.1&&setReady(r,'lastBastion',12))t.lastBastionReady=true;
+  animateEnemyStrike();
+ }
+ if(r.hp<=0){
+  if(s.bonus.secondWind&&!r.secondWindUsed){r.secondWindUsed=true;r.hp=1;setBarrier(r,r.maxhp*.08);addLog('💚 Second Wind! Survived lethal damage (once per expedition)','good');}
+  else {die();return;}
+ }
+ updateBars();
+}
 function rarityInCombat(r){return Math.random()<waveLootOdds(r.enc,r.stats.cha).drop}
 function winEncounter(){
  clearInterval(clock);const r=state.run;if(!r)return;
