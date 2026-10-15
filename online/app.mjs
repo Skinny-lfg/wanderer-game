@@ -1,6 +1,6 @@
 import {publicLoadout,cleanEquipment} from './public-loadout.mjs';
 import {practiceDuel} from './pvp.mjs';
-import {CHARACTERS,character,validateSave,summary,safeProgress,MILESTONES} from './model.mjs';
+import {CHARACTERS,character,validateSave,recoverInterruptedSave,summary,safeProgress,MILESTONES} from './model.mjs?v=guest-recovery-9';
 const game=globalThis.WandererGame,GUEST='wanderer_browser_proto_v01';
 let backendPromise,backend,user=null,profile=null,revision=null,synced='',epoch=0,writing=false,suppress=false,timer=null,dialog=null;
 let ready=false,lastPublished='',lastLoadout='',profileState='loading';
@@ -117,9 +117,12 @@ async function signOutAccount(){
  await backend.signOut();gate();
 }
 function localCandidate(){
- const key=accountKey();if(game.key()===key)return validateSave(game.snapshot());
- const raw=localStorage.getItem(key)||localStorage.getItem(GUEST);
- return validateSave(raw||game.snapshot());
+ const key=accountKey();
+ const raw=game.key()===key?game.snapshot():localStorage.getItem(key)||localStorage.getItem(GUEST)||game.snapshot();
+ // Preserve the original unsynced save; only the unfinished expedition is abandoned.
+ const {save,interrupted}=recoverInterruptedSave(raw);
+ if(interrupted)game.backup(typeof raw==='string'?raw:JSON.stringify(raw),'interrupted-run-before-recovery');
+ return save;
 }
 async function resumeAccount(){
  ensureSafeSwitch();const token=epoch,remote=await backend.readSave();sessionGuard(token);

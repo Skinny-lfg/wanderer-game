@@ -10,6 +10,14 @@ if(state.gold!==321||state.maxDungeon!==25||state.characterId!=='ranger'||!isTwo
 const raw=localStorage.getItem(KEY);state.characterId='duelist';save();load();if(state.characterId!=='duelist')throw Error('Character persistence');
 WandererGame.switchSave('wanderer_account_test',{...JSON.parse(raw),gold:999});if(state.gold!==999)throw Error('Account slot');
 WandererGame.switchSave('wanderer_browser_proto_v01');if(state.gold!==321)throw Error('Guest isolation');
+const interrupted=JSON.stringify({...state,run:{tier:12,status:'fight',loot:[{id:'not-extracted'}],gold:200}});
+const originals=[];const archiveOriginal=archiveLocalSave;
+archiveLocalSave=(raw,label)=>{originals.push({raw,label});archiveOriginal(raw,label);};
+localStorage.setItem(KEY,interrupted);load();save();
+if(state.run!==null||state.gold!==321||!Object.values(state.equip).some(Boolean))throw Error('Interrupted run recovery lost owned gear or progress');
+if(!originals.some(x=>x.label==='interrupted-run-before-recovery'&&x.raw===interrupted))throw Error('Original interrupted save not preserved');
+if(JSON.parse(localStorage.getItem(KEY)).run!==null)throw Error('Unfinished run not cleared');
+archiveLocalSave=archiveOriginal;
 localStorage.setItem(KEY,'{broken');load();save();if(localStorage.getItem(KEY)!=='{broken')throw Error('Corrupt save overwritten');
 saveBlocked=false;localStorage.setItem(KEY,raw);load();localStorage.setItem(KEY,JSON.stringify({...state,gold:77}));state.gold=10;save();if(JSON.parse(localStorage.getItem(KEY)).gold!==77||!saveBlocked)throw Error('Concurrent tab overwritten');
 `;

@@ -21,6 +21,12 @@ export function validateSave(value){
   if(JSON.stringify(s).length>700000)throw new Error('Save is too large for cloud storage. Export a backup.');
   return s;
 }
+// Applied only when reloading a browser with a saved, unfinished expedition.
+export function recoverInterruptedSave(value){
+ const original=typeof value==='string'?JSON.parse(value):structuredClone(value);
+ const interrupted=!!original?.run&&typeof original.run==='object'&&!Array.isArray(original.run);
+ return {save:validateSave(interrupted?{...original,run:null}:original),interrupted};
+}
 export function summary(s){if(!s)return 'No save';return `D${s.maxDungeon} unlocked · ${s.stash.length} stored items · ${s.gold} Gold · ${s.fragments} Fragments`;}
 export function syncDecision(local,remote){
   if(!remote)return 'choose-upload';

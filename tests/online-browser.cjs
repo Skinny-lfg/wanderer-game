@@ -92,6 +92,10 @@ const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8010';
  assert.equal((await snapshot()).run,null,'interrupted run closed on reload');
  assert.equal((await snapshot()).gold,beforeGuest.gold,'guest gold retained');
  assert.equal((await snapshot()).maxDungeon,beforeGuest.maxDungeon,'guest progression retained');
+ const originalRunBackups=await page.evaluate(()=>Object.keys(localStorage)
+  .filter(k=>k.startsWith('wanderer_backup_')).map(k=>JSON.parse(localStorage.getItem(k)))
+  .filter(x=>x.label==='interrupted-run-before-recovery'));
+ assert.ok(originalRunBackups.some(x=>JSON.parse(x.raw).run?.status==='fight'),'raw interrupted guest save backed up');
  assert.equal(await page.locator('[data-online-action="account"]').innerText(),'guesthero');
  assert.ok(!(await page.locator('#screen').evaluate(e=>e.inert)),'guest game playable after reopen');
  await page.evaluate(async()=>{await __firebaseTest.restore();});
