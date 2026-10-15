@@ -20,6 +20,7 @@ assert(stashStart>rightStart&&runeStart>stashStart,'desktop keeps runes below st
 assert(html.includes('.equipmentLeft,.equipmentRight{display:contents}')&&html.includes('.equipmentInventory{order:1}')&&html.includes('.equipmentRunes{order:2}')&&html.includes('.equipmentBonuses{order:3}'),'mobile orders stash, then runes, then tier bonuses');
 assert(html.includes('class="homeMetrics"')&&!html.includes('<div class="hub">'),'home dashboard has no duplicate menu');
 assert(html.includes('Number(count>=b)-Number(count>=a)||b-a'),'active high tier bonuses are sorted first');
+assert(html.includes('.merchantEquipped{display:flex;align-items:center;flex-wrap:wrap;min-width:0;'),'merchant equipped name can wrap at mobile widths');
 const runeMarkup=html.slice(html.indexOf('function runeLine(r){'),html.indexOf('function runeSectionMarkup(){'));
 assert(runeMarkup.includes('<img class="runeIcon"')&&runeMarkup.includes('src="assets/runes/'),'rune markup embeds local PNG icons');
 for(const family of ['might','swiftness','wisdom','fortitude','fortune','fury','warding','vitality']){

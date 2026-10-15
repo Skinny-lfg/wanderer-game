@@ -17,6 +17,19 @@ export function validateSave(value){
   for(const item of [...s.stash,...Object.values(s.equip).filter(Boolean)]){
     if(!item||typeof item!=='object'||typeof item.name!=='string'||typeof item.slot!=='string'||!Number.isFinite(Number(item.tier)))throw new Error('Invalid item data.');
   }
+  const seen=new Set();
+  for(const item of [...s.stash,...Object.values(s.equip).filter(Boolean)]){
+    if(item.id!==undefined){if(typeof item.id!=='string'||!item.id.trim()||seen.has(item.id))throw new Error('Duplicate or invalid item ID.');seen.add(item.id);}
+    for(const field of ['atk','def','hp','spd','str','agi','int','end','cha','mana','spell']){
+      if(item[field]!==undefined&&(item[field]===null||item[field]===''||!Number.isFinite(Number(item[field]))))throw new Error('Invalid item '+field+'.');
+    }
+  }
+  if(s.valuables!==undefined&&(!Array.isArray(s.valuables)||s.valuables.some(x=>!x||typeof x!=='object'||(x.worth!==undefined&&!Number.isFinite(Number(x.worth))))))throw new Error('Invalid valuables.');
+  if(s.onlineProgress!==undefined){
+    const p=s.onlineProgress;
+    if(!p||typeof p!=='object'||Array.isArray(p)||p.deepestCleared!==undefined&&(!Number.isInteger(p.deepestCleared)||p.deepestCleared<0||p.deepestCleared>200)||p.activeMs!==undefined&&(!Number.isFinite(p.activeMs)||p.activeMs<0)||p.milestones!==undefined&&(!p.milestones||typeof p.milestones!=='object'||Array.isArray(p.milestones)))throw new Error('Invalid online progress.');
+  }
+  if(s.offersByLevel!==undefined&&(!s.offersByLevel||typeof s.offersByLevel!=='object'||Array.isArray(s.offersByLevel)))throw new Error('Invalid dungeon offers.');
   if(s.characterId&&!CHARACTERS.some(c=>c.id===s.characterId))throw new Error('Unknown character.');
   if(JSON.stringify(s).length>700000)throw new Error('Save is too large for cloud storage. Export a backup.');
   return s;

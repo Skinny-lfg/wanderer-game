@@ -10,6 +10,32 @@ if(state.gold!==321||state.maxDungeon!==25||state.characterId!=='ranger'||!isTwo
 const raw=localStorage.getItem(KEY);state.characterId='duelist';save();load();if(state.characterId!=='duelist')throw Error('Character persistence');
 WandererGame.switchSave('wanderer_account_test',{...JSON.parse(raw),gold:999});if(state.gold!==999)throw Error('Account slot');
 WandererGame.switchSave('wanderer_browser_proto_v01');if(state.gold!==321)throw Error('Guest isolation');
+// Save migration must not discard extra fields and must preserve D200.
+state.maxDungeon=200;state.chosen=200;state.preferences={contrast:'high',music:false};
+save();load();
+if(state.maxDungeon!==200||state.chosen!==200||state.preferences?.contrast!=='high')throw Error('D200 or extra save preferences lost');
+const compatible=localStorage.getItem(KEY);
+for(const [label,damage] of [
+ ['scalar','42'],
+ ['overflow',JSON.stringify({...JSON.parse(compatible),maxDungeon:201})],
+ ['duplicate',JSON.stringify({...JSON.parse(compatible),stash:[{...state.equip.weapon}]})],
+ ['nan-stats',JSON.stringify({...JSON.parse(compatible),stash:[{id:'inf',slot:'helm',tier:1,atk:'Infinity'}]})],
+ ['invalid-money',JSON.stringify({...JSON.parse(compatible),gold:'Infinity'})],
+ ['invalid-offers',JSON.stringify({...JSON.parse(compatible),offersByLevel:{'20':{ids:'not an array'}}})]
+]){
+ localStorage.setItem(KEY,damage);saveBlocked=false;load();save();
+ if(!saveBlocked||localStorage.getItem(KEY)!==damage)throw Error('Corrupt save changed: '+label);
+}
+// Restore last valid save and prove invalid destination payload never replaces it.
+localStorage.setItem(KEY,compatible);saveBlocked=false;load();
+const dest='wanderer_account_safety',destination=JSON.stringify({...state,gold:777});
+localStorage.setItem(dest,destination);
+let rejected=false;
+try{WandererGame.switchSave(dest,{...state,stash:[{...state.equip.weapon}]})}catch(e){rejected=true}
+if(!rejected||localStorage.getItem(dest)!==destination||WandererGame.key()!==KEY)throw Error('Invalid account replacement overwrote destination');
+// Fresh replacement swords must not generate Fragments on repeated salvage/reload.
+fresh();for(let i=0;i<20;i++){const replacement=starter();if(saleFragments(replacement)!==0)throw Error('Infinite starter salvage');}
+
 const interrupted=JSON.stringify({...state,run:{tier:12,status:'fight',loot:[{id:'not-extracted'}],gold:200}});
 const originals=[];const archiveOriginal=archiveLocalSave;
 archiveLocalSave=(raw,label)=>{originals.push({raw,label});archiveOriginal(raw,label);};

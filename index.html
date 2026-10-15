@@ -30,7 +30,7 @@
 .slotTile .slotDLevel,.miniSlot .miniDLevel{position:absolute;top:2px;left:2px;font-size:9px!important;font-weight:800;color:#e6d19f;background:#111a23e8;border-radius:3px;padding:1px 3px;pointer-events:none}
 .invItem .gearTrend{position:absolute;bottom:2px;right:2px;z-index:3;padding:1px 4px;background:#101a23dd;border-radius:4px;font-size:14px;font-weight:900}
 .gearTrend.up{color:#7cdd9f}.gearTrend.down{color:#fc8e8e}.gearTrend.same{color:#b0b8c1}
-.merchantEquipped{display:flex;align-items:center;gap:5px;font-size:11px;color:#c2d0de;border-top:1px solid #374151;padding-top:6px;margin-top:7px}
+.merchantEquipped{display:flex;align-items:center;flex-wrap:wrap;min-width:0;gap:5px;font-size:11px;color:#c2d0de;border-top:1px solid #374151;padding-top:6px;margin-top:7px;overflow-wrap:anywhere}
 .merchantEquipped img{height:30px;width:30px;object-fit:contain}
 .scene .combatant{padding-bottom:76px}
 .enemyDebuffs{position:absolute;left:0;right:0;bottom:0;height:72px;box-sizing:border-box;display:flex;gap:4px;flex-wrap:wrap;justify-content:center;align-content:center;align-items:center;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
@@ -395,10 +395,75 @@ function itemImg(o){
 }
 
 function makeSlots(){return Object.fromEntries(SLOTS.map(s=>[s,null]))}
-function starter(){return {id:makeId(),slot:'weapon',subtype:'Sword',name:'Training Sword',tier:1,rarity:'Common',effect:null,atk:5,str:1,obtainedAt:Date.now(),crafted:false}}
+function starter(){return {id:makeId(),slot:'weapon',subtype:'Sword',name:'Training Sword',tier:1,rarity:'Common',effect:null,atk:5,str:1,obtainedAt:Date.now(),crafted:false,recoveryStarter:true}}
 function fresh(){state={characterId:'wanderer',onlineProgress:{deepestCleared:0,activeMs:0,timingEligible:true,milestones:{}},stashCapacity:STASH_BASE_CAPACITY,confirmNormalDungeons:true,maxDungeon:1,chosen:1,selectedPath:null,protectedItemIds:[],runes:[],runeSlots:[null,null,null],pendingRuneReward:null,fragments:0,gold:0,stash:[starter()],equip:makeSlots(),valuables:[],offersByLevel:{},merchant:null,run:null};}
 function migrateItem(o){if(!o)return null;const v={...o};if(v.slot==='ring')v.slot='ring1';if(!SLOTS.includes(v.slot))v.slot='weapon';v.id=v.id||makeId();v.tier=clamp(Number(v.tier)||1,1,200);v.rarity={Comum:'Common',Incomum:'Uncommon',Raro:'Rare','Épico':'Epic','Lendário':'Legendary'}[v.rarity]||v.rarity||'Common';if(!RARITY[v.rarity])v.rarity='Common';if(v.effect==='burst')v.effect='sunder';if(!ELEMENTS[v.effect])v.effect=null;v.subtype=v.subtype||({weapon:'Sword',offhand:'Shield',ring1:'Ring',ring2:'Ring'}[v.slot]||SNAME[v.slot]);if(['Staff','Wand'].includes(v.subtype)){v.magic=v.magic||(['poison','burn','slow','drain'].includes(v.effect)?v.effect:'burn');v.effect=v.magic;}if(['Orb','Tome','Charm'].includes(v.subtype)&&['poison','burn','slow','drain'].includes(v.effect))v.magic=v.effect;v.obtainedAt=Number(v.obtainedAt)||Date.now();v.name=String(v.name||'Equipment');for(const [,field]of FIELDS)v[field]=Number(v[field])||0;if(v.magic&&!ELEMENTS[v.magic])v.magic=null;v.crafted=!!v.crafted;v.locked=!!v.locked;return v;}
-function load(){try{lastStoredValue=localStorage.getItem(KEY);let o=JSON.parse(lastStoredValue);if(!o)return fresh();if(!Array.isArray(o.stash)||!o.equip)throw new Error('Invalid save; original data retained.');state={characterId:['wanderer','ranger','knight','spellblade','duelist'].includes(o.characterId)?o.characterId:'wanderer',onlineProgress:o.onlineProgress||{deepestCleared:Math.max(0,(+o.maxDungeon||1)-1),activeMs:0,timingEligible:false,milestones:{}},stashCapacity:Math.max(STASH_BASE_CAPACITY,Math.min(STASH_MAX_CAPACITY,Number(o.stashCapacity)||STASH_BASE_CAPACITY)),confirmNormalDungeons:o.confirmNormalDungeons!==false,maxDungeon:clamp(+o.maxDungeon||1,1,DUNGEON_CAP),chosen:clamp(+o.chosen||1,1,DUNGEON_CAP),selectedPath:THEMES.some(t=>t.id===o.selectedPath)?o.selectedPath:null,protectedItemIds:Array.isArray(o.protectedItemIds)?o.protectedItemIds.slice(0,2):[],runes:safeRunes(o.runes),runeSlots:safeRuneSlots(o.runeSlots,safeRunes(o.runes)),pendingRuneReward:safePendingRune(o.pendingRuneReward),fragments:Math.max(0,+o.fragments||+o.shards||0),gold:Math.max(0,+o.gold||0),stash:o.stash.map(migrateItem).filter(Boolean),equip:makeSlots(),valuables:Array.isArray(o.valuables)?o.valuables:[],offersByLevel:o.offersByLevel||{},merchant:o.merchant||null,run:null};for(const [k,item]of Object.entries(o.equip||{})){let slot=k==='ring'?'ring1':k;if(SLOTS.includes(slot))state.equip[slot]=migrateItem(item)}if(isTwoHanded(state.equip.weapon)&&state.equip.offhand){state.stash.push(state.equip.offhand);state.equip.offhand=null;}state.chosen=Math.min(state.chosen,state.maxDungeon);selectedPath=state.selectedPath;state.protectedItemIds=chosenProtectionIds();if(o.run){archiveLocalSave(lastStoredValue,'interrupted-run-before-recovery');sessionMessage='Previous active expedition closed safely. Unextracted rewards were not retained.';}if(!state.stash.length&&!Object.values(state.equip).some(Boolean))state.stash.push(starter());}catch(e){console.warn('Save migration issue',e);saveBlocked=true;sessionMessage='Your saved data could not be loaded. It has been preserved. Export a backup from Account before continuing.';fresh()}}
+// Inspect legacy saves before migration: never silently sanitize corrupted progress.
+function checkedStoredSave(raw){
+ const o=typeof raw==='string'?JSON.parse(raw):raw;
+ const plain=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
+ const invalid=what=>{throw new Error('Invalid save '+what+'; original data retained.');};
+ const finite=(value,what,min=-Infinity,max=Infinity,integer=false)=>{
+  if(value===null||typeof value==='boolean'||typeof value==='object'||(typeof value==='string'&&!value.trim())||!Number.isFinite(Number(value))||Number(value)<min||Number(value)>max||(integer&&!Number.isInteger(Number(value))))invalid(what);
+ };
+ if(!plain(o)||!Array.isArray(o.stash)||!plain(o.equip))invalid('structure');
+ if(o.maxDungeon!==undefined)finite(o.maxDungeon,'dungeon progress',1,DUNGEON_CAP,true);
+ if(o.chosen!==undefined)finite(o.chosen,'selected dungeon',1,DUNGEON_CAP,true);
+ if(o.stashCapacity!==undefined)finite(o.stashCapacity,'stash capacity',1,5000,true);
+ for(const field of ['gold','fragments','shards'])if(o[field]!==undefined)finite(o[field],field,0);
+ const seen=new Set();
+ const checkItem=(item,label)=>{
+  if(!plain(item))invalid(label);
+  if(item.id!==undefined){if(typeof item.id!=='string'||!item.id.trim()||seen.has(item.id))invalid('duplicate or invalid item ID');seen.add(item.id);}
+  if(item.slot!==undefined&&(typeof item.slot!=='string'||!SLOTS.includes(item.slot)&&item.slot!=='ring'))invalid('equipment slot');
+  if(item.tier!==undefined)finite(item.tier,'equipment tier',1,DUNGEON_CAP,true);
+  if(item.name!==undefined&&typeof item.name!=='string')invalid('equipment name');
+  if(item.rarity!==undefined&&typeof item.rarity!=='string')invalid('equipment rarity');
+  for(const [,field]of FIELDS)if(item[field]!==undefined)finite(item[field],'equipment '+field);
+ };
+ if(o.stash.length>5000)invalid('stash size');
+ for(const item of o.stash)checkItem(item,'stash item');
+ for(const [slot,item]of Object.entries(o.equip)){
+  if(!SLOTS.includes(slot)&&slot!=='ring')invalid('equipment key');
+  if(item!==null)checkItem(item,'equipped item');
+ }
+ if(o.valuables!==undefined){
+  if(!Array.isArray(o.valuables))invalid('valuables');
+  for(const v of o.valuables){if(!plain(v))invalid('valuable');if(v.worth!==undefined)finite(v.worth,'valuable worth',0);}
+ }
+ if(o.offersByLevel!==undefined){
+  if(!plain(o.offersByLevel))invalid('dungeon offers');
+  for(const [tier,offer]of Object.entries(o.offersByLevel)){
+   finite(tier,'offer level',1,DUNGEON_CAP,true);
+   if(!plain(offer)||!Array.isArray(offer.ids)||offer.ids.some(id=>typeof id!=='string')||(offer.rerolls!==undefined&&(!Number.isInteger(offer.rerolls)||offer.rerolls<0)))invalid('offer record');
+  }
+ }
+ if(o.onlineProgress!==undefined){
+  const p=o.onlineProgress;
+  if(!plain(p))invalid('online progress');
+  if(p.deepestCleared!==undefined)finite(p.deepestCleared,'deepest cleared',0,DUNGEON_CAP,true);
+  if(p.activeMs!==undefined)finite(p.activeMs,'active time',0);
+  if(p.milestones!==undefined){
+   if(!plain(p.milestones))invalid('milestones');
+   for(const [tier,entry]of Object.entries(p.milestones)){
+    finite(tier,'milestone tier',10,DUNGEON_CAP,true);
+    if(!plain(entry)||(entry.activeMs!==null&&entry.activeMs!==undefined&&(!Number.isFinite(entry.activeMs)||entry.activeMs<0)))invalid('milestone timing');
+   }
+  }
+ }
+ if(o.runes!==undefined){
+  if(!Array.isArray(o.runes)||o.runes.some(r=>!validRune(r))||new Set(o.runes.map(r=>r.id)).size!==o.runes.length)invalid('runes');
+ }
+ if(o.runeSlots!==undefined){
+  if(!Array.isArray(o.runeSlots)||o.runeSlots.length!==3||o.runeSlots.some(id=>id!==null&&typeof id!=='string'))invalid('rune slots');
+  const runeIds=new Set((o.runes||[]).map(r=>r.id)),used=new Set(),families=new Set();
+  for(const id of o.runeSlots){if(id===null)continue;const rune=(o.runes||[]).find(r=>r.id===id);if(!runeIds.has(id)||used.has(id)||families.has(rune.family))invalid('rune slot ownership');used.add(id);families.add(rune.family);}
+ }
+ if(o.pendingRuneReward!==undefined&&o.pendingRuneReward!==null&&!safePendingRune(o.pendingRuneReward))invalid('pending rune reward');
+ if(o.run!==undefined&&o.run!==null&&!plain(o.run))invalid('active expedition');
+ return o;
+}
+function load(){try{lastStoredValue=localStorage.getItem(KEY);if(lastStoredValue===null)return fresh();let o=checkedStoredSave(lastStoredValue);state={...o,characterId:['wanderer','ranger','knight','spellblade','duelist'].includes(o.characterId)?o.characterId:'wanderer',onlineProgress:o.onlineProgress||{deepestCleared:Math.max(0,(+o.maxDungeon||1)-1),activeMs:0,timingEligible:false,milestones:{}},stashCapacity:Math.max(STASH_BASE_CAPACITY,Math.min(STASH_MAX_CAPACITY,Number(o.stashCapacity)||STASH_BASE_CAPACITY)),confirmNormalDungeons:o.confirmNormalDungeons!==false,maxDungeon:clamp(+o.maxDungeon||1,1,DUNGEON_CAP),chosen:clamp(+o.chosen||1,1,DUNGEON_CAP),selectedPath:THEMES.some(t=>t.id===o.selectedPath)?o.selectedPath:null,protectedItemIds:Array.isArray(o.protectedItemIds)?o.protectedItemIds.slice(0,2):[],runes:safeRunes(o.runes),runeSlots:safeRuneSlots(o.runeSlots,safeRunes(o.runes)),pendingRuneReward:safePendingRune(o.pendingRuneReward),fragments:Math.max(0,+o.fragments||+o.shards||0),gold:Math.max(0,+o.gold||0),stash:o.stash.map(migrateItem).filter(Boolean),equip:makeSlots(),valuables:Array.isArray(o.valuables)?o.valuables:[],offersByLevel:o.offersByLevel||{},merchant:o.merchant||null,run:null};for(const [k,item]of Object.entries(o.equip||{})){let slot=k==='ring'?'ring1':k;if(SLOTS.includes(slot))state.equip[slot]=migrateItem(item)}if(isTwoHanded(state.equip.weapon)&&state.equip.offhand){state.stash.push(state.equip.offhand);state.equip.offhand=null;}state.chosen=Math.min(state.chosen,state.maxDungeon);selectedPath=state.selectedPath;state.protectedItemIds=chosenProtectionIds();if(o.run){archiveLocalSave(lastStoredValue,'interrupted-run-before-recovery');sessionMessage='Previous active expedition closed safely. Unextracted rewards were not retained.';}if(!state.stash.length&&!Object.values(state.equip).some(Boolean))state.stash.push(starter());}catch(e){console.warn('Save migration issue',e);saveBlocked=true;sessionMessage='Your saved data could not be loaded. It has been preserved. Export a backup from Account before continuing.';fresh()}}
 let sessionMessage='';
 function save(){
 if(saveBlocked)return;
@@ -586,7 +651,7 @@ else if(['ring1','ring2'].includes(slot)){o.cha=1+Math.floor(tier*.25);o.atk=Mat
 if(!magic){if(effect==='poison')o.agi++;if(effect==='bleed')o.str++;if(effect==='sunder')o.str++;if(effect==='crit')o.cha++;if(effect==='shield')o.end++;if(effect==='regen')o.hp+=tier+2;}
 if(rarity==='Legendary'){o.name=slot==='weapon'?sample(Object.keys(LEGENDARY_ART_BY_NAME)):'Legendary '+o.name;o.legendaryPower='Powerful strike once per encounter';o.atk+=subtype==='Sword'?tier+4:0;}
 return o;}
-function saleFragments(o){let raw=Math.max(2,Math.round((3+o.tier*2)*RARITY[o.rarity][2]));return o.crafted?Math.min(raw,Math.max(1,Math.floor((+o.craftPrice||craftCost(o.tier))*.25))):raw}
+function saleFragments(o){if(o?.recoveryStarter===true)return 0;let raw=Math.max(2,Math.round((3+o.tier*2)*RARITY[o.rarity][2]));return o.crafted?Math.min(raw,Math.max(1,Math.floor((+o.craftPrice||craftCost(o.tier))*.25))):raw}
 function merchantCost(o){return Math.round((24+o.tier*12)*RARITY[o.rarity][2]);}
 function rollShop(){const level=Math.max(1,state.maxDungeon-1),stock=Array.from({length:4},()=>{let o=makeItem(level,rollEquipmentSlot(),null,'merchant');o.goldPrice=merchantCost(o);return o});state.merchant={stock,refreshCost:16+level*4,refreshes:0};save();}
 function currentTheme(){return THEMES.find(t=>t.id===selectedPath)||THEMES[0]}
@@ -1353,7 +1418,7 @@ globalThis.WandererGame={
  key:()=>KEY, blocked:()=>saveBlocked, busy:()=>!!state.run,
  setCharacter(id){if(!['wanderer','ranger','knight','spellblade','duelist'].includes(id))throw new Error('Unknown character');state.characterId=id;save();render();},
  recordActive(ms){if(saveBlocked)return;state.onlineProgress.activeMs+=Math.max(0,Math.min(10000,ms));save();},
- switchSave(key,payload){if(state.run)throw new Error('Finish your expedition first.');if(!/^wanderer_(browser_proto_v01|account_[A-Za-z0-9_-]+)$/.test(key))throw new Error('Invalid save slot');archiveLocalSave(localStorage.getItem(KEY),'before-switch');if(payload){archiveLocalSave(localStorage.getItem(key),'before-replace');localStorage.setItem(key,JSON.stringify(payload));}KEY=key;saveBlocked=false;load();document.getElementById('screen').inert=saveBlocked;view='tavern';selectedId=null;selectedPath=state.selectedPath;dungeonPage=null;if(!saveBlocked){if(!state.merchant)rollShop();save();}render();},
+ switchSave(key,payload){if(state.run)throw new Error('Finish your expedition first.');if(!/^wanderer_(browser_proto_v01|account_[A-Za-z0-9_-]+)$/.test(key))throw new Error('Invalid save slot');archiveLocalSave(localStorage.getItem(KEY),'before-switch');if(payload){checkedStoredSave(payload);archiveLocalSave(localStorage.getItem(key),'before-replace');localStorage.setItem(key,JSON.stringify(payload));}KEY=key;saveBlocked=false;load();document.getElementById('screen').inert=saveBlocked;view='tavern';selectedId=null;selectedPath=state.selectedPath;dungeonPage=null;if(!saveBlocked){if(!state.merchant)rollShop();save();}render();},
  backup(raw,label){archiveLocalSave(raw,label);},
  raw:()=>localStorage.getItem(KEY)
 };
