@@ -25,3 +25,20 @@ Source of truth: supplied GDD, archived verbatim in `design/gdd-source-2026-10-1
 - Pure-model validation/conflict tests: passed.
 - Browser tests at 1440×950, 390×950, 320×950: passed with a mocked Firebase boundary. Covered all five characters, nickname collision errors, explicit first upload, conflicting cloud revision, explicit download, offline handling, sign-out, preserved Two-Handed gear, character art in Tavern/Equipment/Combat, early extraction, and test ranking screens.
 - These browser tests do **not** claim successful real Google OAuth, live Firestore integration, or Security Rules validation. Production Firebase API requests and official emulator downloads are blocked by this environment's network policy (403 Domain forbidden).
+
+## Stage 3 — experimental rankings and security boundary
+- Added three explicitly **UNVERIFIED** test boards: completed/extracted dungeon depth; first server receipt of each milestone; foreground time to milestone (legacy imports excluded from historical timing).
+- Results are shared only by an explicit player action after choosing/syncing an account save. The test namespace never accepts `verified:true`. Production UI has no verified-results endpoint.
+- Proposed owner-only private save Rules, immutable nickname reservation, server timestamps, monotonic revision updates and bounded public test claims are in `firestore.rules`. No live rules were deployed.
+- Future server-authoritative inventory/run validation and cost gates are documented in `firebase/server-validation.md`. This is a strategy, not a claim that secure competitive validation is implemented.
+- Setup, quota/billing boundaries and pending real-service acceptance tests: `firebase/README.md`.
+
+### Final local test report
+- Game smoke suite: passed (Two-Handed, Off-Hand Dagger, Mace/Shield Block, DoT, boss styles, theme count, save compatibility).
+- Save compatibility/recovery suite: passed (old version preserved; invalid original retained; Guest/account slots; stale-tab write rejected).
+- Model suite: 4 tests passed.
+- Chromium browser matrix: 1440×950, 390×950, 320×950 passed with mocked Firebase boundary. Includes imports only after confirmation, protected-save recovery, backups, conflict/offline preservation, five characters, combat, profile errors, three board views. No JavaScript errors or document horizontal overflow.
+- Real bundled Firebase SDK Guest startup: passed; five supplied character images decode. This check performs no login or cloud write.
+- Firestore emulator Security Rules suite: **not executed**. The CLI could not download the official emulator JAR from `storage.googleapis.com` (403 Domain forbidden). Tests are committed for an environment with access; no substitute passing check is claimed.
+- Live Google OAuth / Firestore reads/writes / two real devices: **not executed**. `identitytoolkit.googleapis.com` and `firestore.googleapis.com` are blocked by this environment. Provider/domain settings require confirmation and reviewed Rules must be deployed before live tests.
+- No paid service, Firebase deployment, GitHub push, main change, or Pages publication performed in this phase.

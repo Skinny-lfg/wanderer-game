@@ -36,7 +36,13 @@ const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8010';
  // Offline write fails safely; retries must explicitly review both saves.
  await page.evaluate(()=>{__firebaseTest.offline=true;WandererGame.recordActive(1000)});await account();await page.locator('#syncNow').click();assert.match(await page.locator('.onlineError').innerText(),/unavailable/);assert.ok((await snapshot()).gold>=999);
  await page.evaluate(()=>__firebaseTest.offline=false);await page.locator('#reviewCloud').click();await page.locator('#uploadLocal').click();await page.waitForFunction(()=>!document.querySelector('.onlineDialog'));
- assert.equal((await snapshot()).equip.weapon.id,'heavy');assert.deepEqual(errors,[]);
+ assert.equal((await snapshot()).equip.weapon.id,'heavy');
+ // Explicit import and recovery of a protected stale-tab save.
+ const importPayload={...(await snapshot()),gold:77};const cloudBefore=await page.evaluate(()=>__firebaseTest.cloud.payload);
+ await account();await page.locator('#importSave').setInputFiles({name:'backup.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(importPayload))});await page.locator('#confirmImport').waitFor();assert.notEqual((await snapshot()).gold,77);await page.locator('#confirmImport').click();assert.equal((await snapshot()).gold,77);assert.equal(await page.evaluate(()=>__firebaseTest.cloud.payload),cloudBefore);
+ await page.evaluate(()=>{const key=WandererGame.key(),value=JSON.parse(localStorage.getItem(key));value.gold=88;localStorage.setItem(key,JSON.stringify(value));WandererGame.recordActive(1000)});assert.ok(await page.evaluate(()=>WandererGame.blocked()));
+ await account();await page.locator('#importSave').setInputFiles({name:'recovery.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(importPayload))});await page.locator('#confirmImport').click();assert.equal((await snapshot()).gold,77);assert.ok(!(await page.evaluate(()=>WandererGame.blocked())));assert.ok(!(await page.locator('#screen').evaluate(el=>el.inert)));assert.equal(await page.evaluate(()=>__firebaseTest.cloud.payload),cloudBefore);
+ assert.ok(await page.evaluate(()=>Object.keys(localStorage).some(k=>k.startsWith('wanderer_backup_'))));assert.deepEqual(errors,[]);
  console.log(`PASS ${width}px: legacy saves, five cosmetics, profile collision, explicit migration, stale revision, offline, guest/account isolation, combat, character rendering and three unverified boards`);
  await page.close();
  }}finally{await browser.close()}})().catch(error=>{console.error(error);process.exitCode=1});

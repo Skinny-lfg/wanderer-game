@@ -1,0 +1,51 @@
+rules_version = '2';
+service cloud.firestore {
+ match /databases/{database}/documents {
+  function owner(uid) { return request.auth != null && request.auth.uid == uid; }
+  function character(id) { return id in ['wanderer','ranger','knight','spellblade','duelist']; }
+  function validProfile(d) { return d.keys().hasOnly(['nickname','characterId','createdAt','updatedAt']) && d.nickname is string && d.nickname.matches('^[a-z0-9_]{3,20}$') && character(d.characterId) && d.createdAt is timestamp && d.updatedAt == request.time; }
+  function hasProfile(uid) { return exists(/databases/$(database)/documents/publicProfiles/$(uid)); }
+  match /nicknames/{nickname} {
+   allow get: if request.auth != null;
+   allow list: if false;
+   allow create: if request.auth != null && nickname.matches('^[a-z0-9_]{3,20}$') && request.resource.data.keys().hasOnly(['uid']) && request.resource.data.uid == request.auth.uid
+    && getAfter(/databases/$(database)/documents/publicProfiles/$(request.auth.uid)).data.nickname == nickname;
+   allow update, delete: if false;
+  }
+  match /publicProfiles/{uid} {
+   allow get: if true;
+   allow list: if false;
+   allow create: if owner(uid) && validProfile(request.resource.data) && request.resource.data.createdAt == request.time
+    && getAfter(/databases/$(database)/documents/nicknames/$(request.resource.data.nickname)).data.uid == uid;
+   allow update: if owner(uid) && validProfile(request.resource.data) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['characterId','updatedAt']);
+   allow delete: if false;
+  }
+  match /players/{uid}/saves/current {
+   function validSave() { let d=request.resource.data; return d.keys().hasOnly(['payload','revision','schemaVersion','updatedAt']) && d.payload is string && d.payload.size() <= 700000 && d.revision is int && d.schemaVersion == 1 && d.updatedAt == request.time; }
+   allow read: if owner(uid);
+   allow create: if owner(uid) && hasProfile(uid) && validSave() && request.resource.data.revision == 1;
+   allow update: if owner(uid) && hasProfile(uid) && validSave() && request.resource.data.revision == resource.data.revision + 1;
+   allow delete: if false;
+  }
+  // Client-owned test claims only. These documents are NEVER verified rankings.
+  match /testSeasons/test-open-1/deepest/{uid} {
+   function validClaim() { let d=request.resource.data; return d.keys().hasOnly(['deepest','verified','updatedAt']) && d.deepest is int && d.deepest >= 0 && d.deepest <= 100 && d.verified == false && d.updatedAt == request.time; }
+   allow read: if true;
+   allow create: if owner(uid) && hasProfile(uid) && validClaim();
+   allow update: if owner(uid) && hasProfile(uid) && validClaim() && request.resource.data.deepest >= resource.data.deepest;
+   allow delete: if false;
+  }
+  match /testSeasons/test-open-1/milestones/{milestone}/entries/{uid} {
+   allow read: if true;
+   allow create: if owner(uid) && hasProfile(uid) && milestone in ['10','20','30','40','50','60','70','80','90','100']
+    && request.resource.data.keys().hasOnly(['milestone','activeMs','verified','receivedAt'])
+    && request.resource.data.milestone == int(milestone)
+    && (request.resource.data.activeMs == null || (request.resource.data.activeMs is int && request.resource.data.activeMs >= 0 && request.resource.data.activeMs <= 315360000000))
+    && request.resource.data.verified == false && request.resource.data.receivedAt == request.time;
+   allow update, delete: if false;
+  }
+  // Only a future trusted backend using Admin SDK may write this separate namespace.
+  match /verifiedSeasons/{document=**} { allow read, write: if false; }
+  match /{document=**} { allow read, write: if false; }
+ }
+}

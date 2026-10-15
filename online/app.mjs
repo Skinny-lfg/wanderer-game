@@ -108,7 +108,7 @@ async function syncNow(){
  const token=epoch;writing=true;status('Saving to cloud…');
  try{const record=await backend.writeSave(payload,revision);sessionGuard(token);revision=record.revision;synced=raw;status('Cloud synced · '+profile.nickname);}
  catch(error){if(token===epoch){revision=null;status(errorText(error));}throw error;}
- finally{writing=false;}
+ finally{writing=false;if(token===epoch&&revision!==null&&JSON.stringify(game.snapshot())!==synced)queueSync();}
 }
 function queueSync(){
  if(suppress||!user||!profile||revision===null||game.key()!==accountKey()||game.blocked())return;
