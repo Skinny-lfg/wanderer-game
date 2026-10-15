@@ -11,9 +11,9 @@ function ensure(v,m){if(!v)throw new Error(m)}
 render=()=>{};
 const slots=['weapon','helm','armor','gloves','boots','amulet'];
 for(let i=0;i<6;i++)state.equip[slots[i]]={id:'gear-'+i,slot:slots[i],subtype:slots[i]==='weapon'?'Sword':'Armor',tier:22,rarity:'Rare',name:'Gear '+i,effect:'poison'};
-ensure(setBonuses(setCounts()).values.poisonBonus===9,'5-piece set bonus applies');
-ensure(setBonuses({...setCounts(),poison:3}).values.poisonBonus===5,'3-piece set unchanged');
-ensure(setBonuses({...setCounts(),poison:2}).values.poisonBonus===2,'2-piece set unchanged');
+ensure(setBonuses(setCounts()).values.poisonBonus===.15&&setBonuses(setCounts()).values.poisonWeaken&&setBonuses(setCounts()).values.venomBurst,'5-piece set accumulates tiers 2/3/5');
+ensure(setBonuses({...setCounts(),poison:3}).values.poisonBonus===.15&&setBonuses({...setCounts(),poison:3}).values.poisonWeaken&&!setBonuses({...setCounts(),poison:3}).values.venomBurst,'3-piece retains 2-piece bonus');
+ensure(setBonuses({...setCounts(),poison:2}).values.poisonBonus===.15&&!setBonuses({...setCounts(),poison:2}).values.poisonWeaken,'2-piece uses +15% DoT');
 ensure(setStage(4)===3&&setStage(5)===5,'5-piece synergy is displayed');
 ensure(setProgress(4)==='4/5','next set threshold visible');
 state.maxDungeon=23;state.chosen=22;state.offersByLevel['22']={ids:THEMES.slice(0,3).map(t=>t.id),rerolls:0};

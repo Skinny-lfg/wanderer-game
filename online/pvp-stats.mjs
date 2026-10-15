@@ -15,25 +15,28 @@ const RUNE_FAMILIES=[
 function runeValue(family,tier){const base=1+Math.floor(tier/10);return family==='fury'?base*3:family==='warding'?base*2:family==='vitality'?base*10:base}
 function setCounts(equipment= {}){const counts={};for(const k of Object.keys(ELEMENTS))counts[k]=0;for(const o of Object.values(equipment))if(o?.effect)counts[o.effect]++;return counts}
 function setBonuses(counts){
-  const list=[],values={};
-  const definitions=[
-    ['poison','Poison Set','poisonBonus',2,5,9],
-    ['bleed','Bleed Set','bleedBonus',2,5,9],
-    ['sunder','Sunder Set','sunderBonus',2,4,7],
-    ['crit','Critical Set','critBonus',8,14,21],
-    ['shield','Shield Set','shieldBonus',3,5,9],
-    ['regen','Regen Set','regenBonus',2,4,7],
-    ['burn','Fire Set','burnBonus',2,4,7],
-    ['slow','Frost Set','slowBonus',.18,.32,.48],
-    ['drain','Dark Set','drainBonus',.15,.30,.45]
-  ];
-  for(const [effect,title,key,two,three,five] of definitions){
-    if((counts[effect]||0)<2)continue;
-    const value=counts[effect]>=5?five:counts[effect]>=3?three:two;
-    values[key]=value;
-    list.push({effect,title,desc:setDescription(effect,{[key]:value})});
-  }
-  return {list,values};
+ const list=[],values={};
+ const defs=[
+  ['poison','Poison Set','poisonBonus',.15,'poisonWeaken','venomBurst'],
+  ['bleed','Bleed Set','bleedBonus',.15,'bleedHaste','bloodHunt'],
+  ['sunder','Sunder Set','sunderBonus',2,'sunderExpose','armorShatter'],
+  ['crit','Critical Set','critBonus',8,'criticalFocus','perfectStrike'],
+  ['shield','Shield Set','shieldBonus',3,'shieldRiposte','lastBastion'],
+  ['regen','Regen Set','regenBonus',2,'regenOverflow','secondWind'],
+  ['burn','Fire Set','burnBonus',.15,'fireHeat','flashover'],
+  ['slow','Frost Set','slowBonus',.25,'frostWeaken','deepFreeze'],
+  ['drain','Dark Set','drainBonus',.15,'soulCharge','soulPact']
+ ];
+ for(const [effect,title,baseKey,base,threeKey,fiveKey]of defs){
+  const n=Math.max(0,counts[effect]||0);
+  if(n<2)continue;
+  values[baseKey]=base;
+  if(n>=3)values[threeKey]=true;
+  if(n>=5)values[fiveKey]=true;
+  const desc=setDescription(effect,values);
+  list.push({effect,title,desc});
+ }
+ return {list,values};
 }
 function totalStats(equipment= {},ownedRunes=null,equippedRuneIds=null){
  const equipped=isTwoHanded(equipment.weapon)?{...equipment,offhand:null}:equipment;
@@ -65,7 +68,17 @@ function totalStats(equipment= {},ownedRunes=null,equippedRuneIds=null){
  return s;
 }
 function setDescription(effect,values){
-const descriptions={poison:`+${values.poisonBonus} poison potency per tick after weapon scaling`,bleed:`+${values.bleedBonus} bleed potency per tick after weapon scaling`,sunder:`+${values.sunderBonus} armor reduction per Sunder application`,crit:`+${values.critBonus} percentage points of critical chance`,shield:`+${values.shieldBonus} barrier per attack; also boosts Shield effects`,regen:`+${values.regenBonus} health per second`,burn:`+${values.burnBonus} burn potency per tick after weapon scaling`,slow:`Enemy attack interval +${Math.round((values.slowBonus||0)*100)}% while slowed`,drain:`+${Math.round((values.drainBonus||0)*100)}% healing from Dark effects`};
-return descriptions[effect]||'No active bonus';
+ const b=values||{},parts=[];
+ const push=(key,text)=>{if(b[key])parts.push(text);};
+ if(effect==='poison'){push('poisonBonus','Poison DoTs +15%');push('poisonWeaken','Stacks weaken enemy direct damage by 1% each (max 6%)');push('venomBurst','Venom Burst: at 6 stacks spend 6 for 60% remaining DoT (max 100% base hit), 10s cooldown');}
+ if(effect==='bleed'){push('bleedBonus','Bleed DoTs +15%');push('bleedHaste','Bleeding target grants +5% speed for 3s per charge, max 3 (1/s)');push('bloodHunt','Blood Hunt: +40% base hit when target ≤30% HP, 12s cooldown');}
+ if(effect==='sunder'){push('sunderBonus','Armor reduction +2 per Sunder proc (minimum 25% initial Armor)');push('sunderExpose','At ≤50% initial Armor enemy takes +8% direct damage');push('armorShatter','Armor Shatter: remove up to one base hit of Barrier and delay next enemy strike (0.5s; boss 0.2s), 12s cooldown');}
+ if(effect==='crit'){push('critBonus','+8 raw Critical points (speed penalty and 65% cap apply)');push('criticalFocus','Main-hand Criticals gain Focus (max 3, 1/s, expire 6s)');push('perfectStrike','Perfect Strike: spend 3 Focus for a ×1.75 Critical instead of ×1.5, 10s cooldown');}
+ if(effect==='shield'){push('shieldBonus','+3 Barrier per main attack (max 30% max HP)');push('shieldRiposte','Block primes +25% blocked damage on next main attack (max 25% base hit, 4s duration, 3s cooldown)');push('lastBastion','Last Bastion: after a hit, ≥10% max HP in Barrier primes a counter consuming half remaining Barrier (max 50% base hit), 12s cooldown');}
+ if(effect==='regen'){push('regenBonus','+2 HP per second');push('regenOverflow','25% overheal becomes Barrier (max 1% max HP/s and 10%/encounter)');push('secondWind','Second Wind: survive one lethal hit with 1 HP and 8% max HP Barrier, once per expedition');}
+ if(effect==='burn'){push('burnBonus','Burn DoTs +15%');push('fireHeat','Each second Burn ticks grants 1 Heat (max 5, expires after 5s)');push('flashover','Flashover: at 5 Heat, next main attack adds 50% base hit, 10s cooldown');}
+ if(effect==='slow'){push('slowBonus','Slow increases enemy attack interval 25%');push('frostWeaken','Chilled enemy deals 8% less direct damage');push('deepFreeze','Deep Freeze: 3 seconds continuously Chilled delays enemy next attack (0.75s; boss 0.25s), 12s cooldown');}
+ if(effect==='drain'){push('drainBonus','Drain healing +15%');push('soulCharge','Successful Drain healing grants Soul Charge (max 3, 1/s, expire 6s)');push('soulPact','Soul Pact: at 3 charges and >40% HP, sacrifice 3% max HP for +40% base hit and heal 25% actual damage (max 4% HP), 12s cooldown');}
+ return parts.join(' · ')||'No active bonus';
 }
 export {totalStats};
