@@ -27,6 +27,9 @@ for(const text of ['D200','permanent runes','Tank, Berserker, Vampire and Caster
 assert(html.includes('.homeChanges{list-style:none;display:grid')&&html.includes('@media(max-width:650px){.homeChanges{grid-template-columns:1fr'),'compact mobile changelog layout');
 
 assert(html.includes('Number(count>=b)-Number(count>=a)||b-a'),'active high tier bonuses are sorted first');
+assert(html.includes('.combatDecisionPanel{display:none}')&&html.includes('.combatDecisionPanel{display:block;margin:8px'),'critical briefing appears at mobile widths only');
+assert(html.includes('.combatExpeditionDetails .nextWaveOdds,.combatExpeditionDetails .runLootHeading,.combatExpeditionDetails .combatLoot{display:none}'),'mobile removes redundant lower odds and loot');
+
 assert(html.includes('.merchantEquipped{display:flex;align-items:center;flex-wrap:wrap;min-width:0;'),'merchant equipped name can wrap at mobile widths');
 const runeMarkup=html.slice(html.indexOf('function runeLine(r){'),html.indexOf('function runeSectionMarkup(){'));
 assert(runeMarkup.includes('<img class="runeIcon"')&&runeMarkup.includes('src="assets/runes/'),'rune markup embeds local PNG icons');
