@@ -1,4 +1,4 @@
-import {publicLoadout,cleanEquipment} from './public-loadout.mjs';
+import {publicLoadout,cleanEquipment,cleanPublicRunes,cleanPublicRuneSlots} from './public-loadout.mjs';
 import * as sdk from './vendor/firebase-sdk.mjs';
 import {firebaseConfig} from './firebase-config.mjs';
 import {nicknameKey,character,cloudRecord,compareRevision,validateSave,recoverInterruptedSave,SEASON,MILESTONES,safeProgress} from './model.mjs';
@@ -58,22 +58,22 @@ export async function createBackend(){
     !['not-sure','easy','balanced','hard'].includes(difficulty)||
     likes.length>500||problems.length>1500||ideas.length>1200||
     [likes,problems,ideas].join(' ').trim().length<10||
-    !Number.isInteger(maxDungeon)||maxDungeon<1||maxDungeon>100||
+    !Number.isInteger(maxDungeon)||maxDungeon<1||maxDungeon>200||
     character(characterId).id!==characterId)throw Error('Please review your feedback before sending.');
    const id=uid+'_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,12);
-   const record={uid,category,rating,combat,difficulty,likes,problems,ideas,maxDungeon,characterId,appVersion:'0.8.1',createdAt:sdk.serverTimestamp()};
+   const record={uid,category,rating,combat,difficulty,likes,problems,ideas,maxDungeon,characterId,appVersion:'0.9',createdAt:sdk.serverTimestamp()};
    await sdk.runTransaction(db,async tx=>{tx.set(sdk.doc(db,'feedbackInbox',id),record);});
    return id;
   },
   async publishLoadout(save){
-   const loadout=publicLoadout(save),payload=JSON.stringify(loadout.equipment),ref=sdk.doc(db,'publicLoadouts',user());
+   const loadout=publicLoadout(save),payload=JSON.stringify({...loadout.equipment,__runes:loadout.runes,__runeSlots:loadout.runeSlots}),ref=sdk.doc(db,'publicLoadouts',user());
    await sdk.runTransaction(db,async tx=>{const old=await tx.get(ref);if(old.exists()&&old.data().equipment===payload&&old.data().maxDungeon===loadout.maxDungeon)return;tx.set(ref,{equipment:payload,maxDungeon:loadout.maxDungeon,updatedAt:sdk.serverTimestamp()});});
   },
   async player(uid){
    if(typeof uid!=='string'||!uid||uid.includes('/')||uid.length>128)throw Error('Invalid player.');
    const p=await sdk.getDoc(profileRef(uid));if(!p.exists())throw Error('Player not found.');
    const snapshot=await sdk.getDoc(sdk.doc(db,'publicLoadouts',uid));
-   return {uid,profile:p.data(),loadout:snapshot.exists()?{equipment:cleanEquipment(JSON.parse(snapshot.data().equipment)),maxDungeon:snapshot.data().maxDungeon}:null};
+   const published=snapshot.exists()?JSON.parse(snapshot.data().equipment):null;const runes=cleanPublicRunes(published?.__runes);return {uid,profile:p.data(),loadout:published?{equipment:cleanEquipment(published),runes,runeSlots:cleanPublicRuneSlots(published.__runeSlots,runes),maxDungeon:snapshot.data().maxDungeon}:null};
   },
   async findPlayer(name){
    const key=nicknameKey(name),claim=await sdk.getDoc(sdk.doc(db,'nicknames',key));

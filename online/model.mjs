@@ -1,6 +1,6 @@
 // Shared validation and conflict policy. No Firebase or DOM dependencies.
 export const SEASON = 'test-open-1'; // Namespace only: no resets or scheduled seasons.
-export const MILESTONES = [10,20,30,40,50,60,70,80,90,100];
+export const MILESTONES = Array.from({length:20},(_,i)=>(i+1)*10);
 export const CHARACTERS = [
   ['wanderer','Original Wanderer'],['ranger','Forest Wanderer'],['knight','Iron Wanderer'],
   ['spellblade','Arcane Wanderer'],['duelist','Desert Wanderer']
@@ -11,12 +11,25 @@ export function validateSave(value){
   const s=typeof value==='string'?JSON.parse(value):structuredClone(value);
   if(!s||typeof s!=='object'||Array.isArray(s)||!Array.isArray(s.stash)||!s.equip||typeof s.equip!=='object'||Array.isArray(s.equip))throw new Error('This is not a valid Wanderer save.');
   for(const field of ['gold','fragments'])if(!Number.isFinite(s[field])||s[field]<0)throw new Error(`Invalid ${field}.`);
-  if(!Number.isInteger(s.maxDungeon)||s.maxDungeon<1||s.maxDungeon>100)throw new Error('Invalid dungeon progress.');
+  if(!Number.isInteger(s.maxDungeon)||s.maxDungeon<1||s.maxDungeon>200)throw new Error('Invalid dungeon progress.');
   if(s.run)throw new Error('Finish or extract from the expedition before switching saves.');
   if(s.stash.length>5000||Object.keys(s.equip).some(k=>!['helm','amulet','armor','gloves','weapon','offhand','ring1','ring2','boots','ring'].includes(k)))throw new Error('Invalid equipment.');
   for(const item of [...s.stash,...Object.values(s.equip).filter(Boolean)]){
     if(!item||typeof item!=='object'||typeof item.name!=='string'||typeof item.slot!=='string'||!Number.isFinite(Number(item.tier)))throw new Error('Invalid item data.');
   }
+  const seen=new Set();
+  for(const item of [...s.stash,...Object.values(s.equip).filter(Boolean)]){
+    if(item.id!==undefined){if(typeof item.id!=='string'||!item.id.trim()||seen.has(item.id))throw new Error('Duplicate or invalid item ID.');seen.add(item.id);}
+    for(const field of ['atk','def','hp','spd','str','agi','int','end','cha','mana','spell']){
+      if(item[field]!==undefined&&(item[field]===null||item[field]===''||!Number.isFinite(Number(item[field]))))throw new Error('Invalid item '+field+'.');
+    }
+  }
+  if(s.valuables!==undefined&&(!Array.isArray(s.valuables)||s.valuables.some(x=>!x||typeof x!=='object'||(x.worth!==undefined&&!Number.isFinite(Number(x.worth))))))throw new Error('Invalid valuables.');
+  if(s.onlineProgress!==undefined){
+    const p=s.onlineProgress;
+    if(!p||typeof p!=='object'||Array.isArray(p)||p.deepestCleared!==undefined&&(!Number.isInteger(p.deepestCleared)||p.deepestCleared<0||p.deepestCleared>200)||p.activeMs!==undefined&&(!Number.isFinite(p.activeMs)||p.activeMs<0)||p.milestones!==undefined&&(!p.milestones||typeof p.milestones!=='object'||Array.isArray(p.milestones)))throw new Error('Invalid online progress.');
+  }
+  if(s.offersByLevel!==undefined&&(!s.offersByLevel||typeof s.offersByLevel!=='object'||Array.isArray(s.offersByLevel)))throw new Error('Invalid dungeon offers.');
   if(s.characterId&&!CHARACTERS.some(c=>c.id===s.characterId))throw new Error('Unknown character.');
   if(JSON.stringify(s).length>700000)throw new Error('Save is too large for cloud storage. Export a backup.');
   return s;
@@ -35,4 +48,4 @@ export function syncDecision(local,remote){
 }
 export function cloudRecord(payload,revision){validateSave(payload);if(!Number.isInteger(revision)||revision<0)throw new Error('Invalid cloud revision.');return {payload:JSON.stringify(payload),revision:revision+1,schemaVersion:1};}
 export function compareRevision(remote,expected){if((remote?.revision||0)!==expected)throw new Error('cloud-conflict');}
-export function safeProgress(s){const p=s?.onlineProgress||{};return {deepestCleared:Math.max(0,Math.min(100,Number(p.deepestCleared)||Math.max(0,(s?.maxDungeon||1)-1))),activeMs:Math.max(0,Number(p.activeMs)||0),timingEligible:p.timingEligible===true,milestones:p.milestones&&typeof p.milestones==='object'?p.milestones:{}};}
+export function safeProgress(s){const p=s?.onlineProgress||{};return {deepestCleared:Math.max(0,Math.min(200,Number(p.deepestCleared)||Math.max(0,(s?.maxDungeon||1)-1))),activeMs:Math.max(0,Number(p.activeMs)||0),timingEligible:p.timingEligible===true,milestones:p.milestones&&typeof p.milestones==='object'?p.milestones:{}};}
