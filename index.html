@@ -183,6 +183,78 @@ function detailEffect(o){return o.effect?(ELEMENTS[o.effect]?.icon+' '+ELEMENTS[
 function elementPool(slot,subtype){if(subtype==='Staff'||subtype==='Wand')return ['poison','burn','slow','drain'];if(subtype==='Shield')return ['shield','regen','sunder'];if(subtype==='Off-Hand Dagger')return ['poison','bleed','crit'];if(subtype==='Two-Handed')return ['bleed','sunder','poison','burn'];if(slot==='offhand')return ['poison','burn','slow','drain','shield'];if(subtype==='Mace')return ['sunder','bleed','shield'];if(subtype==='Bow')return ['crit','poison','slow'];if(subtype==='Daggers')return ['poison','bleed','crit'];if(slot==='weapon')return ['poison','bleed','sunder','crit'];return Object.keys(ELEMENTS)}
 function chooseSubtype(slot,requested='random'){if(requested!=='random')return requested;if(slot==='weapon')return sample(TYPES);if(slot==='offhand')return sample(OFFHAND_TYPES);return ['ring1','ring2'].includes(slot)?'Ring':SNAME[slot];}
 function craftCost(tier){return 10+10*tier}
+
+/* v0.9: risk/reward wave tables and targeted gear, separate from Forge and Merchant. */
+const DUNGEON_FAVORED={
+ temple:['Sword','Helm','Amulet'],forge:['Mace','Armor','Gloves'],crypt:['Daggers','Ring','Boots'],
+ bastion:['Shield','Armor','Helm'],frost:['Staff','Tome','Boots'],ash:['Two-Handed','Gloves','Amulet'],
+ void:['Wand','Orb','Ring'],ward:['Shield','Helm','Amulet'],grove:['Bow','Daggers','Boots'],
+ shrine:['Charm','Amulet','Armor'],storm:['Daggers','Gloves','Ring'],drowned:['Orb','Wand','Armor'],
+ quarry:['Mace','Two-Handed','Shield']
+};
+const WAVE_TABLE=[
+ {drop:.18,rarities:{Common:.68,Uncommon:.25,Rare:.06,Epic:.009,Legendary:.001}},
+ {drop:.28,rarities:{Common:.55,Uncommon:.30,Rare:.125,Epic:.02,Legendary:.005}},
+ {drop:.42,rarities:{Common:.38,Uncommon:.33,Rare:.22,Epic:.06,Legendary:.01}},
+ {drop:.80,rarities:{Common:.10,Uncommon:.25,Rare:.45,Epic:.17,Legendary:.03}},
+ {drop:1,rarities:{Common:0,Uncommon:0,Rare:.71,Epic:.25,Legendary:.04}}
+];
+function wavesForDungeon(tier){return tier%10===0?5:4}
+function waveTitle(wave){return wave===5?'Main Boss':wave===4?'Miniboss':'Wave '+wave}
+function waveLootOdds(wave,cha=5){
+ const base=WAVE_TABLE[Math.max(0,Math.min(4,(Number(wave)||1)-1))];
+ const rarities={...base.rarities},boost=Math.min(.04,Math.max(0,(Number(cha)||5)-5)*.0008);
+ if(wave===5){rarities.Rare-=boost;rarities.Epic+=boost*.65;rarities.Legendary+=boost*.35;}
+ else{rarities.Common-=boost;rarities.Rare+=boost*.65;rarities.Epic+=boost*.35;}
+ const drop=Math.min(1,base.drop+Math.min(.06,Math.max(0,(Number(cha)||5)-5)*.002));
+ return {drop,rarities};
+}
+function randomFromOdds(odds){
+ let remaining=Math.random();
+ for(const [key,probability]of Object.entries(odds)){remaining-=probability;if(remaining<0)return key;}
+ return Object.keys(odds).at(-1);
+}
+function dungeonEquipmentOdds(theme){
+ const favored=DUNGEON_FAVORED[theme?.id]||DUNGEON_FAVORED.temple;
+ const categories=[
+ ...TYPES.map(kind=>({kind,slot:'weapon',subtype:kind,weight:15/TYPES.length})),
+ ...OFFHAND_TYPES.map(kind=>({kind,slot:'offhand',subtype:kind,weight:13/OFFHAND_TYPES.length})),
+ {kind:'Helm',slot:'helm',subtype:'Helm',weight:13},
+ {kind:'Amulet',slot:'amulet',subtype:'Amulet',weight:9},
+ {kind:'Armor',slot:'armor',subtype:'Armor',weight:13},
+ {kind:'Gloves',slot:'gloves',subtype:'Gloves',weight:13},
+ {kind:'Ring',slot:'ring',subtype:'Ring',weight:11},
+ {kind:'Boots',slot:'boots',subtype:'Boots',weight:13}
+ ];
+ const other=categories.filter(x=>!favored.includes(x.kind)),sum=other.reduce((n,x)=>n+x.weight,0);
+ return categories.map(item=>({...item,prob:favored.includes(item.kind)?[.25,.20,.15][favored.indexOf(item.kind)]:item.weight/sum*.40}));
+}
+function dungeonEquipmentPick(theme){
+ const options=dungeonEquipmentOdds(theme);
+ let rand=Math.random(),found=options[options.length-1];
+ for(const option of options){rand-=option.prob;if(rand<0){found=option;break;}}
+ return {slot:found.slot==='ring'?sample(['ring1','ring2']):found.slot,subtype:found.subtype};
+}
+function favoredMissing(theme){
+ return (DUNGEON_FAVORED[theme?.id]||[]).filter(kind=>{
+  const entry=dungeonEquipmentOdds(theme).find(x=>x.kind===kind);
+  if(!entry)return false;
+  if(entry.slot==='ring')return !state.equip.ring1||!state.equip.ring2;
+  if(entry.slot==='offhand'&&isTwoHanded(state.equip.weapon))return false;
+  return !state.equip[entry.slot];
+ }).length;
+}
+function chanceText(value){return (value*100).toFixed(1).replace(/\.0$/,'')+'%'}
+function dungeonOddsMarkup(stats){
+ const max=wavesForDungeon(state.chosen);
+ const rows=Array.from({length:max},(_,i)=>{
+  const n=i+1,o=waveLootOdds(n,stats.cha);
+  return '<tr><td>'+waveTitle(n)+'</td><td>'+chanceText(o.drop)+'</td>'+['Common','Uncommon','Rare','Epic','Legendary'].map(k=>'<td style="color:'+RARITY[k][0]+'">'+chanceText(o.rarities[k])+'</td>').join('')+'</tr>';
+ });
+ const theme=currentTheme(),targets=dungeonEquipmentOdds(theme).filter(x=>DUNGEON_FAVORED[theme.id].includes(x.kind)).sort((a,b)=>b.prob-a.prob);
+ return '<section class="lootOdds panel"><h3>Wave Loot Odds · D'+state.chosen+'</h3><p class="small muted">Rarity percentages apply only when gear drops. CHA modifiers included. Extract after any completed wave.</p><div class="oddsScroll"><table><thead><tr><th>Wave</th><th>Gear</th><th>Common</th><th>Uncommon</th><th>Rare</th><th>Epic</th><th>Legendary</th></tr></thead><tbody>'+rows.join('')+'</tbody></table></div><p class="small muted">Selected path: '+esc(theme.name)+' · Favored gear: '+targets.map(x=>esc(x.kind)+' '+chanceText(x.prob)).join(' · ')+' (when gear drops)</p></section>';
+}
+
 function rarityOdds(tier,isCraft){let a={Common:.49,Uncommon:.30,Rare:.15,Epic:.045,Legendary:.015};
 if(isCraft){const gap=Math.max(0,state.maxDungeon-tier),boost=Math.min(.24,gap*.012);a.Common-=boost;a.Rare+=boost*.35;a.Epic+=boost*.65;a.Epic+=a.Legendary;a.Legendary=0;}
 else{const cha=totalStats().cha,boost=Math.min(.040,Math.max(0,cha-5)*.0008);a.Common-=boost;a.Rare+=boost*.65;a.Epic+=boost*.35;}
