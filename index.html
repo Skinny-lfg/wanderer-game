@@ -836,6 +836,7 @@ function setCombatExpire(r,dt){
   }else t.chilledFor=0;
  }
 }
+function setEnemyWeaken(r){const e=r.enemy,b=r.stats.bonus||{};return Math.min(.15,(b.poisonWeaken?Math.min(6,e.poisonStacks||0)*.01:0)+(b.frostWeaken&&e.slowTime>0?.08:0))}
 function setHeatTick(r){
  const temp=setRuntime(r),now=setNow(r);
  if(r.stats.bonus.fireHeat&&r.enemy.burnStacks>0){temp.heat=Math.min(5,temp.heat+1);temp.heatExpiry=now+5;}
@@ -956,7 +957,7 @@ function updateFight(){
    if(!e.enraged){e.enraged=true;addLog('🔥 Ember Sovereign enrages below half HP!','critical');}
   }
   if(e.miniboss&&e.hp<e.maxhp*.5)raw=Math.round(raw*1.17);
-  const weaker=Math.min(.15,(s.bonus.poisonWeaken?Math.min(6,e.poisonStacks||0)*.01:0)+(s.bonus.frostWeaken&&e.slowTime>0?.08:0));
+  const weaker=setEnemyWeaken(r);
   if(weaker)raw=Math.max(1,Math.round(raw*(1-weaker)));
   const block=s.blockChance&&Math.random()<s.blockChance/100;
   if(block){
