@@ -1,0 +1,48 @@
+// v0.8.1 regression test: run with node tests/v081-smoke.cjs
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
+const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+const script=html.match(/<script(?: [^>]*)?>([\s\S]*?)<\/script>/)?.[1];
+assert(script,'Main game script not found');
+const boot="load();if(!state.merchant)rollShop();save();render();";
+assert(script.includes(boot),'Bootstrap not found');
+const tests=`
+fresh();
+function ensure(v,m){if(!v)throw new Error(m)}
+render=()=>{};
+const slots=['weapon','helm','armor','gloves','boots','amulet'];
+for(let i=0;i<6;i++)state.equip[slots[i]]={id:'gear-'+i,slot:slots[i],subtype:slots[i]==='weapon'?'Sword':'Armor',tier:22,rarity:'Rare',name:'Gear '+i,effect:'poison'};
+ensure(setBonuses(setCounts()).values.poisonBonus===9,'5-piece set bonus applies');
+ensure(setBonuses({...setCounts(),poison:3}).values.poisonBonus===5,'3-piece set unchanged');
+ensure(setBonuses({...setCounts(),poison:2}).values.poisonBonus===2,'2-piece set unchanged');
+ensure(setStage(4)===3&&setStage(5)===5,'5-piece synergy is displayed');
+ensure(setProgress(4)==='4/5','next set threshold visible');
+state.maxDungeon=23;state.chosen=22;state.offersByLevel['22']={ids:THEMES.slice(0,3).map(t=>t.id),rerolls:0};
+selectedPath=THEMES[1].id;state.selectedPath=selectedPath;
+ensure(chooseProtectedItem('gear-0'),'first item protected');
+ensure(chooseProtectedItem('gear-1'),'second item protected');
+ensure(!chooseProtectedItem('gear-2'),'third item rejected');
+ensure(chosenProtectionIds().join(',')==='gear-0,gear-1','only 2 protected');
+save();load();
+ensure(selectedPath===THEMES[1].id&&state.chosen===22,'selected path and dungeon persist after reload');
+ensure(chosenProtectionIds().length===2,'protection persists after reload');
+state.run={tier:22,path:THEMES[1].id,protectedItemIds:chosenProtectionIds()};
+die();
+ensure(state.equip.weapon?.id==='gear-0'&&state.equip.helm?.id==='gear-1','protected gear survives death');
+ensure(!state.equip.armor&&!state.equip.gloves&&!state.equip.boots&&!state.equip.amulet,'unprotected gear lost');
+ensure(state.chosen===22&&selectedPath===THEMES[1].id,'dungeon and type preserved after death');
+const old=state.maxDungeon;
+state.run={tier:22,path:THEMES[1].id,status:'win',gold:0,fragments:0,loot:[],valuables:[]};
+extract();
+ensure(state.chosen===22&&selectedPath===THEMES[1].id,'dungeon and type preserved on extraction');
+ensure(state.maxDungeon===old,'replaying cleared dungeon never reduces progress');
+state.run={tier:23,path:THEMES[1].id,status:'win',gold:0,fragments:0,loot:[],valuables:[]};
+extract();
+ensure(state.chosen===23&&state.maxDungeon===24,'new dungeon unlocked without auto-selecting');
+globalThis.__v081Success=true;
+`;
+const nodes=new Map(),store=new Map();
+const mockNode=()=>({innerHTML:'',textContent:'',style:{},dataset:{},value:'',classList:{add(){},remove(){}},focus(){}});
+const sandbox={document:{getElementById(id){if(!nodes.has(id))nodes.set(id,mockNode());return nodes.get(id)},querySelectorAll:()=>[],createElement:()=>mockNode()},localStorage:{getItem:k=>store.get(k)??null,setItem:(k,v)=>store.set(k,v)},confirm:()=>true,alert:()=>{},console,setTimeout:()=>0,clearTimeout:()=>{},setInterval:()=>0,clearInterval:()=>{}};
+vm.runInNewContext(script.replace(boot,tests),sandbox,{timeout:4000,filename:'wanderer-v081.js'});
+assert(sandbox.__v081Success,'v0.8.1 smoke assertions did not complete');
+console.log('PASS v0.8.1: dungeon selection, path persistence, 2 protected gear, death/recovery, 2/3/5 sets');
