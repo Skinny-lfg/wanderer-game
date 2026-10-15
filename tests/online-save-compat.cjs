@@ -35,6 +35,7 @@ try{WandererGame.switchSave(dest,{...state,stash:[{...state.equip.weapon}]})}cat
 if(!rejected||localStorage.getItem(dest)!==destination||WandererGame.key()!==KEY)throw Error('Invalid account replacement overwrote destination');
 // Fresh replacement swords must not generate Fragments on repeated salvage/reload.
 fresh();for(let i=0;i<20;i++){const replacement=starter();if(saleFragments(replacement)!==0)throw Error('Infinite starter salvage');}
+localStorage.setItem(KEY,compatible);saveBlocked=false;load();
 
 const interrupted=JSON.stringify({...state,run:{tier:12,status:'fight',loot:[{id:'not-extracted'}],gold:200}});
 const originals=[];const archiveOriginal=archiveLocalSave;
