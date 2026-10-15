@@ -87,6 +87,21 @@ ensure((globalThis.__dungeonMarkup.match(/dungeonPlaceholder/g)||[]).length===4,
 state.maxDungeon=100;state.chosen=100;dungeonPage=null;renderDungeons();
 ensure(visibleLevels().join(',')==='96,97,98,99,100','D100 shows no levels over cap');
 ensure((globalThis.__dungeonMarkup.match(/dungeonPlaceholder/g)||[]).length===4,'D100 trailing placeholders');
+
+// v0.8.1: dungeon action buttons must appear BEFORE protection settings,
+// with a red warning next to the controls if fewer than two items are protected.
+state.protectedItemIds=[];
+renderDungeons();
+ensure(globalThis.__dungeonMarkup.indexOf('id="rerollPath"')<globalThis.__dungeonMarkup.indexOf('class="protectionPanel"'),'reroll button appears before protection section');
+ensure(globalThis.__dungeonMarkup.indexOf('id="enter"')<globalThis.__dungeonMarkup.indexOf('class="protectionPanel"'),'enter button appears before protection section');
+ensure(globalThis.__dungeonMarkup.includes('class="protectionWarning"')&&globalThis.__dungeonMarkup.includes('No equipment protected'),'0 protected displays warning near action buttons');
+ensure(globalThis.__dungeonMarkup.indexOf('id="enter"')<globalThis.__dungeonMarkup.indexOf('class="protectionWarning"'),'red protection warning is beside enter action');
+state.protectedItemIds=['gear-0'];
+renderDungeons();
+ensure(globalThis.__dungeonMarkup.includes('Only 1 of 2 items protected'),'1 protected displays warning');
+state.protectedItemIds=['gear-0','gear-1'];
+renderDungeons();
+ensure(!globalThis.__dungeonMarkup.includes('class="protectionWarning"'),'2 protected removes warning');
 wallet=oldWallet;html=oldHtml;
 globalThis.__v081Success=true;
 `;
@@ -95,4 +110,4 @@ const mockNode=()=>({innerHTML:'',textContent:'',style:{},dataset:{},value:'',cl
 const sandbox={document:{getElementById(id){if(!nodes.has(id))nodes.set(id,mockNode());return nodes.get(id)},querySelectorAll:()=>[],createElement:()=>mockNode()},localStorage:{getItem:k=>store.get(k)??null,setItem:(k,v)=>store.set(k,v)},confirm:()=>true,alert:()=>{},console,setTimeout:()=>0,clearTimeout:()=>{},setInterval:()=>0,clearInterval:()=>{}};
 vm.runInNewContext(script.replace(boot,tests),sandbox,{timeout:4000,filename:'wanderer-v081.js'});
 assert(sandbox.__v081Success,'v0.8.1 smoke assertions did not complete');
-console.log('PASS v0.8.1: rolling centered dungeon pages, auto-unlock, farming, D100 cap, protected gear and sets');
+console.log('PASS v0.8.1: rolling dungeon pages, auto-unlock, farming, D100 cap, protected gear, warning 0/1/2, CTAs above gear and sets');

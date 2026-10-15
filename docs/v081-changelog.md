@@ -18,6 +18,8 @@ Status: implemented on `development` only; not published to `main`.
 - Set displays and equipment comparison correctly show the next threshold, including 4/5 -> 5/5.
 
 ## Protected Equipment
+- On the Dungeons screen, **Enter Dungeon** and **Reroll** buttons, together with the normal-dungeon entry preference, appear **above** Protected Equipment to minimize scrolling.
+- A prominent red warning next to the entry controls appears with **0/2 or 1/2 items protected** and disappears when **2/2** are protected. This is a warning, not an entry blocker; counts update when a protected item is toggled.
 - Before each expedition, select **up to two equipped items** for protection in the Dungeons panel. The entry confirmation also permits toggling protection.
 - The selection is free; protected equipment stays equipped after death. All unprotected equipped gear and unextracted run rewards are lost as before.
 - Choices are saved and restored, and automatically pruned if equipment is changed or removed. Each run snapshots its protected item IDs.
