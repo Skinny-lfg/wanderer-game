@@ -67,17 +67,17 @@ ensure(state.offersByLevel['20'].ids.every(id=>!previousD20Offers.includes(id)),
 save();load();
 ensure(state.chosen===20&&selectedPath===null,'new expedition offers and empty path persist across reload');
 ensure(state.offersByLevel['20'].ids.length===3&&state.offersByLevel['20'].ids.every(id=>!previousD20Offers.includes(id)),'rotated options survive reload');
-state.maxDungeon=100;state.chosen=100;selectedPath=THEMES[2].id;state.selectedPath=selectedPath;
-state.run={tier:100,path:THEMES[2].id,status:'win',gold:0,fragments:0,loot:[],valuables:[]};
+state.maxDungeon=200;state.chosen=200;selectedPath=THEMES[2].id;state.selectedPath=selectedPath;
+state.run={tier:200,path:THEMES[2].id,status:'win',gold:0,fragments:0,loot:[],valuables:[]};
 extract();
-ensure(state.maxDungeon===100&&state.chosen===100,'cap D100 does not advance beyond max');
-ensure(selectedPath===null&&state.selectedPath===null,'cap D100 resets selected type for another farming run');
-ensure(state.offersByLevel['100'].ids.length===3&&!state.offersByLevel['100'].ids.includes(THEMES[2].id),'cap D100 also rotates dungeon options');
+ensure(state.maxDungeon===200&&state.chosen===200,'cap D200 does not advance beyond max');
+ensure(selectedPath===null&&state.selectedPath===null,'cap D200 resets selected type for another farming run');
+ensure(state.offersByLevel['200'].ids.length===3&&!state.offersByLevel['200'].ids.includes(THEMES[2].id),'cap D200 also rotates dungeon options');
 
 // Rolling dungeon pages must follow the newly unlocked dungeon; earlier pages stay accessible.
 ensure(dungeonWindow(22,null).levels.join(',')==='18,19,20,21,22,23,24,25,26','D22 centered');
 ensure(dungeonWindow(23,null).levels.join(',')==='19,20,21,22,23,24,25,26,27','D23 advances a single slot');
-ensure(dungeonWindow(1,null).levels[4]===1&&dungeonWindow(100,null).levels[4]===100,'D1/D100 remain centered');
+ensure(dungeonWindow(1,null).levels[4]===1&&dungeonWindow(200,null).levels[4]===200,'D1/D200 remain centered');
 const oldWallet=wallet,oldHtml=html;wallet=()=>{};html=markup=>globalThis.__dungeonMarkup=markup;
 const visibleLevels=()=>[...((globalThis.__dungeonMarkup.match(/<div class="levelGrid">([\s\S]*?)<\/div>/)?.[1]||'').matchAll(/data-level="(\d+)"/g))].map(x=>Number(x[1]));
 state.maxDungeon=22;state.chosen=22;dungeonPage=null;renderDungeons();
@@ -93,9 +93,9 @@ ensure(visibleLevels()[4]===12,'manually chosen lower dungeon centered when retu
 state.maxDungeon=1;state.chosen=1;dungeonPage=null;renderDungeons();
 ensure(visibleLevels().join(',')==='1,2,3,4,5','D1 shows levels without fake IDs');
 ensure((globalThis.__dungeonMarkup.match(/dungeonPlaceholder/g)||[]).length===4,'D1 has leading placeholders');
-state.maxDungeon=100;state.chosen=100;dungeonPage=null;renderDungeons();
-ensure(visibleLevels().join(',')==='96,97,98,99,100','D100 shows no levels over cap');
-ensure((globalThis.__dungeonMarkup.match(/dungeonPlaceholder/g)||[]).length===4,'D100 trailing placeholders');
+state.maxDungeon=200;state.chosen=200;dungeonPage=null;renderDungeons();
+ensure(visibleLevels().join(',')==='196,197,198,199,200','D200 shows no levels over cap');
+ensure((globalThis.__dungeonMarkup.match(/dungeonPlaceholder/g)||[]).length===4,'D200 trailing placeholders');
 
 // v0.8.1: dungeon action buttons must appear BEFORE protection settings,
 // with a red warning next to the controls if fewer than two items are protected.

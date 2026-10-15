@@ -875,8 +875,8 @@ function estimateEnemy(level,n=1){
  return {hp:Math.round(Math.round(base.hp*1.4)*1.4*hpFactor),atk:Math.round(Math.round(base.atk*1.25)*1.4*atkFactor),def:Math.round(Math.round(base.def*1.2)*1.4*defFactor)};
 }
 function dungeonWindow(focus=state.chosen,start=dungeonPage){
- const firstLevel=clamp(start??focus-4,1,DUNGEON_CAP-8);
- return {firstLevel,levels:Array.from({length:9},(_,i)=>firstLevel+i),canPrevious:firstLevel>1,canNext:firstLevel<Math.max(1,state.maxDungeon-4)};
+ const firstLevel=start??focus-4;
+ return {firstLevel,levels:Array.from({length:9},(_,i)=>firstLevel+i),canPrevious:firstLevel>1,canNext:firstLevel<state.maxDungeon-4};
 }
 function protectionEntryWarning(){
  const count=chosenProtectionIds().length;
