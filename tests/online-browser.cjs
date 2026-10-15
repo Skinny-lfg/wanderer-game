@@ -21,6 +21,17 @@ const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8010';
  for(const id of ['wanderer','ranger','knight','spellblade','duelist']){await page.locator(`[data-character="${id}"]`).click();await page.locator('#saveCharacter').click();assert.equal((await snapshot()).characterId,id);}
  assert.equal(await page.locator('#reviewCloud,#syncNow,#importSave,#exportSave,#backups,#onlineStatus').count(),0);
  await close();
+ await page.locator('[data-online-action="feedback"]').click();
+ await page.locator('#feedbackForm').waitFor();
+ await page.locator('[name="category"]').selectOption('bug');
+ await page.locator('[name="rating"]').selectOption('4');
+ await page.locator('[name="combat"]').selectOption('repetitive');
+ await page.locator('[name="problems"]').fill('Repeated dungeon clicks feel excessive.');
+ await page.locator('#sendFeedback').click();
+ await page.locator('.feedbackThanks').waitFor();
+ assert.equal(await page.evaluate(()=>__firebaseTest.feedback.length),1);
+ assert.equal(await page.evaluate(()=>__firebaseTest.feedback[0].category),'bug');
+ await page.locator('#feedbackDone').click();
  await page.locator('[data-online-action="leaderboard"]').click();await page.locator('.rankingList').waitFor();assert.equal(await page.locator('#publishResults,.experimental').count(),0);assert.ok(!(await page.locator('.onlineDialog').innerText()).includes('Unverified'));
  for(const mode of ['first','fastest','deepest']){await page.locator('#ranking').selectOption(mode);await page.locator('.rankingList').waitFor();}
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await close();

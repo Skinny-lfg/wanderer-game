@@ -54,6 +54,29 @@ service cloud.firestore {
     && request.resource.data.verified == false && request.resource.data.receivedAt == request.time;
    allow update, delete: if false;
   }
+  // Signed-in playtesters may create feedback; only a trusted administrator may read/export it.
+  match /feedbackInbox/{feedbackId} {
+   function validFeedback(d) {
+    return d.keys().hasOnly(['uid','category','rating','combat','difficulty','likes','problems','ideas','maxDungeon','characterId','appVersion','createdAt'])
+     && d.keys().hasAll(['uid','category','rating','combat','difficulty','likes','problems','ideas','maxDungeon','characterId','appVersion','createdAt'])
+     && d.uid == request.auth.uid
+     && d.category in ['general','bug','idea','balance']
+     && d.rating is int && d.rating >= 0 && d.rating <= 5
+     && d.combat in ['not-sure','great','okay','repetitive','confusing']
+     && d.difficulty in ['not-sure','easy','balanced','hard']
+     && d.likes is string && d.likes.size() <= 500
+     && d.problems is string && d.problems.size() <= 1500
+     && d.ideas is string && d.ideas.size() <= 1200
+     && (d.likes.size() + d.problems.size() + d.ideas.size()) >= 10
+     && d.maxDungeon is int && d.maxDungeon >= 1 && d.maxDungeon <= 100
+     && character(d.characterId)
+     && d.appVersion == '0.8.1'
+     && d.createdAt == request.time;
+   }
+   allow create: if request.auth != null && hasProfile(request.auth.uid)
+    && feedbackId.size() <= 170 && validFeedback(request.resource.data);
+   allow get, list, update, delete: if false;
+  }
   // Only a future trusted backend using Admin SDK may write this separate namespace.
   match /verifiedSeasons/{document=**} { allow read, write: if false; }
   match /{document=**} { allow read, write: if false; }

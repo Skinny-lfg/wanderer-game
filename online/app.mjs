@@ -200,6 +200,52 @@ function showPlayer(player){
   action('#returnToPlayer',()=>showPlayer(player));
  });
 }
+
+function showFeedback(){
+ if(!ready||!user||!profile){alert('Sign in before sending playtest feedback.');return;}
+ if(game.busy()){alert('Finish or extract from your expedition before opening Feedback.');return;}
+ const current=modal('Playtest Feedback',`
+ <p class="small muted">Your feedback helps improve Wanderer. Bug reports, ideas and criticism are welcome. Your nickname and dungeon progress will be attached. Please do not include personal information.</p>
+ <form id="feedbackForm" class="feedbackForm">
+ <div class="feedbackPair">
+  <label>Type<select name="category" required><option value="general">General feedback</option><option value="bug">Bug / technical issue</option><option value="idea">Idea / suggestion</option><option value="balance">Balance / gameplay</option></select></label>
+  <label>Fun rating<select name="rating"><option value="0">Prefer not to rate</option><option value="5">5 — Very fun</option><option value="4">4 — Fun</option><option value="3">3 — Okay</option><option value="2">2 — Not much fun</option><option value="1">1 — Not fun</option></select></label>
+ </div>
+ <div class="feedbackPair">
+  <label>Combat<select name="combat"><option value="not-sure">Not sure yet</option><option value="great">Enjoyable</option><option value="okay">Okay</option><option value="repetitive">Too repetitive</option><option value="confusing">Confusing</option></select></label>
+  <label>Difficulty<select name="difficulty"><option value="not-sure">Not sure yet</option><option value="easy">Too easy</option><option value="balanced">Balanced</option><option value="hard">Too difficult</option></select></label>
+ </div>
+ <label>What did you enjoy?<textarea name="likes" maxlength="500" rows="2" placeholder="Loot, builds, bosses, progression…"></textarea></label>
+ <label>What bothered you or did not work?<textarea name="problems" maxlength="1500" rows="3" placeholder="Bugs, frustration, balance, confusing UI…"></textarea></label>
+ <label>Ideas or improvements<textarea name="ideas" maxlength="1200" rows="3" placeholder="What would make you want to play again?"></textarea></label>
+ <p class="small muted">Please write at least 10 characters across the text fields. No screenshots or email address required.</p>
+ <div class="buttonRow"><button type="submit" class="primary" id="sendFeedback">Send Feedback</button></div>
+ </form>`);
+ const form=current.querySelector('#feedbackForm'),send=current.querySelector('#sendFeedback');
+ form.onsubmit=async event=>{
+  event.preventDefault();if(!current.isConnected)return;
+  const values=new FormData(form),snapshot=game.snapshot();
+  const payload={category:String(values.get('category')||'general'),rating:Number(values.get('rating')||0),
+   combat:String(values.get('combat')||'not-sure'),difficulty:String(values.get('difficulty')||'not-sure'),
+   likes:String(values.get('likes')||'').trim(),problems:String(values.get('problems')||'').trim(),
+   ideas:String(values.get('ideas')||'').trim(),maxDungeon:snapshot.maxDungeon,characterId:snapshot.characterId};
+  const errorBox=current.querySelector('.onlineError');
+  if([payload.likes,payload.problems,payload.ideas].join(' ').trim().length<10){
+   errorBox.textContent='Please tell us a little more (at least 10 characters).';return;
+  }
+  if(game.busy()){errorBox.textContent='Finish the current expedition before sending feedback.';return;}
+  send.disabled=true;errorBox.textContent='';
+  try{
+   const b=await connect();await b.submitFeedback(payload);
+   if(!current.isConnected)return;
+   form.replaceWith(document.createRange().createContextualFragment('<div class="feedbackThanks"><h3>Thank you for helping Wanderer!</h3><p>Your feedback was received. You can close this window and continue playing.</p><button type="button" id="feedbackDone" class="primary">Done</button></div>'));
+   current.querySelector('#feedbackDone').onclick=close;
+  }catch(error){if(current.isConnected)errorBox.textContent=errorText(error);}
+  finally{if(send.isConnected)send.disabled=false;}
+ };
+}
+
+document.querySelector('[data-online-action="feedback"]').onclick=showFeedback;
 document.querySelector('[data-online-action="account"]').onclick=showAccount;
 document.querySelector('[data-online-action="leaderboard"]').onclick=()=>showLeaderboard();
 globalThis.addEventListener('wanderer:saved',queueSync);

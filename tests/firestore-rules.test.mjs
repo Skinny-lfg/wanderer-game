@@ -46,3 +46,21 @@ test('public equipment is readable by signed-in players but never writable by op
  await assertFails(setDoc(doc(alice,'publicLoadouts/alice'),{...data,equipment:'x'.repeat(30001)}));
  await assertFails(setDoc(doc(alice,'pvpTransfers/fake'),{attacker:'alice',defender:'bob',gold:20}));
 });
+
+test('feedback inbox accepts a bounded playtest report and forbids reading or spoofing',async()=>{
+ const good={uid:'alice',category:'bug',rating:4,combat:'repetitive',difficulty:'balanced',
+   likes:'',problems:'Repeated dungeon clicks are tedious.',ideas:'',maxDungeon:22,
+   characterId:'wanderer',appVersion:'0.8.1',createdAt:serverTimestamp()};
+ const item=doc(alice,'feedbackInbox/alice_bug_report_1');
+ await assertSucceeds(setDoc(item,good));
+ await assertFails(getDoc(item));
+ await assertFails(getDoc(doc(bob,'feedbackInbox/alice_bug_report_1')));
+ await assertFails(setDoc(doc(bob,'feedbackInbox/bob_fake'),{...good,uid:'alice'}));
+ await assertFails(setDoc(doc(alice,'feedbackInbox/alice_fake_time'),{...good,createdAt:new Date(0)}));
+ await assertFails(setDoc(doc(alice,'feedbackInbox/alice_extra'),{...good,isAdmin:true}));
+ await assertFails(setDoc(doc(alice,'feedbackInbox/alice_huge'),{...good,problems:'x'.repeat(1501)}));
+ await assertFails(setDoc(doc(alice,'feedbackInbox/alice_empty'),{...good,problems:'no'}));
+ await assertFails(setDoc(item,good));
+ await assertFails(deleteDoc(item));
+ await assertFails(setDoc(doc(env.unauthenticatedContext().firestore(),'feedbackInbox/anon_1'),good));
+});

@@ -47,6 +47,24 @@ export async function createBackend(){
     await sdk.runTransaction(db,async tx=>{const old=await tx.get(ref);if(old.exists())return;tx.set(ref,{milestone,activeMs:progress.timingEligible&&Number.isFinite(clear.activeMs)?Math.floor(clear.activeMs):null,verified:false,receivedAt:sdk.serverTimestamp()});});
    }
   },
+
+  async submitFeedback(form){
+   const uid=user(),category=String(form.category||'general'),rating=Number(form.rating||0),
+    combat=String(form.combat||'not-sure'),difficulty=String(form.difficulty||'not-sure'),
+    likes=String(form.likes||'').trim(),problems=String(form.problems||'').trim(),ideas=String(form.ideas||'').trim(),
+    maxDungeon=Number(form.maxDungeon),characterId=String(form.characterId||'wanderer');
+   if(!['general','bug','idea','balance'].includes(category)||!Number.isInteger(rating)||rating<0||rating>5||
+    !['not-sure','great','okay','repetitive','confusing'].includes(combat)||
+    !['not-sure','easy','balanced','hard'].includes(difficulty)||
+    likes.length>500||problems.length>1500||ideas.length>1200||
+    [likes,problems,ideas].join(' ').trim().length<10||
+    !Number.isInteger(maxDungeon)||maxDungeon<1||maxDungeon>100||
+    character(characterId).id!==characterId)throw Error('Please review your feedback before sending.');
+   const id=uid+'_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,12);
+   const record={uid,category,rating,combat,difficulty,likes,problems,ideas,maxDungeon,characterId,appVersion:'0.8.1',createdAt:sdk.serverTimestamp()};
+   await sdk.runTransaction(db,async tx=>{tx.set(sdk.doc(db,'feedbackInbox',id),record);});
+   return id;
+  },
   async publishLoadout(save){
    const loadout=publicLoadout(save),payload=JSON.stringify(loadout.equipment),ref=sdk.doc(db,'publicLoadouts',user());
    await sdk.runTransaction(db,async tx=>{const old=await tx.get(ref);if(old.exists()&&old.data().equipment===payload&&old.data().maxDungeon===loadout.maxDungeon)return;tx.set(ref,{equipment:payload,maxDungeon:loadout.maxDungeon,updatedAt:sdk.serverTimestamp()});});
