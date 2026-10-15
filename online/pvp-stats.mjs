@@ -2,6 +2,17 @@
 const ELEMENTS={poison:{name:'Poison',icon:'☠️',color:'#80cf8a'},bleed:{name:'Bleed',icon:'🩸',color:'#ed8590'},crit:{name:'Critical',icon:'🎯',color:'#e9c480'},sunder:{name:'Sunder',icon:'🔨',color:'#d5ab81'},shield:{name:'Shield',icon:'🛡️',color:'#90bdeb'},regen:{name:'Regen',icon:'💚',color:'#89d1ac'},burn:{name:'Fire',icon:'🔥',color:'#ffa16a'},slow:{name:'Frost',icon:'❄️',color:'#8de7ff'},drain:{name:'Dark',icon:'🌑',color:'#c8a1fd'}};
 const FIELDS=[['Attack','atk'],['Defense','def'],['Health','hp'],['Speed','spd'],['Strength','str'],['Agility','agi'],['Intelligence','int'],['Endurance','end'],['Charisma','cha'],['Mana','mana'],['Spell','spell']];
 const isTwoHanded=o=>['Two-Handed','Bow','Staff'].includes(o?.subtype);
+const RUNE_FAMILIES=[
+ {id:'might',name:'Rune of Might',field:'str',icon:'⚔️'},
+ {id:'swiftness',name:'Rune of Swiftness',field:'agi',icon:'💨'},
+ {id:'wisdom',name:'Rune of Wisdom',field:'int',icon:'✨'},
+ {id:'fortitude',name:'Rune of Fortitude',field:'end',icon:'🛡️'},
+ {id:'fortune',name:'Rune of Fortune',field:'cha',icon:'🍀'},
+ {id:'fury',name:'Rune of Fury',field:'atkFlat',icon:'🔥'},
+ {id:'warding',name:'Rune of Warding',field:'defFlat',icon:'🔰'},
+ {id:'vitality',name:'Rune of Vitality',field:'hpFlat',icon:'❤️'}
+];
+function runeValue(family,tier){const base=1+Math.floor(tier/10);return family==='fury'?base*3:family==='warding'?base*2:family==='vitality'?base*10:base}
 function setCounts(equipment= {}){const counts={};for(const k of Object.keys(ELEMENTS))counts[k]=0;for(const o of Object.values(equipment))if(o?.effect)counts[o.effect]++;return counts}
 function setBonuses(counts){
   const list=[],values={};
@@ -24,13 +35,17 @@ function setBonuses(counts){
   }
   return {list,values};
 }
-function totalStats(equipment= {}){
+function totalStats(equipment= {},ownedRunes=null,equippedRuneIds=null){
  const equipped=isTwoHanded(equipment.weapon)?{...equipment,offhand:null}:equipment;
  const s={str:5,agi:5,int:5,end:5,cha:5,atkFlat:0,defFlat:0,hpFlat:0,spdFlat:0,manaFlat:0,spellFlat:0};
  for(const item of Object.values(equipped))if(item)for(const [,key]of FIELDS){
  const dest={atk:'atkFlat',def:'defFlat',hp:'hpFlat',spd:'spdFlat',mana:'manaFlat',spell:'spellFlat'}[key]||key;
  s[dest]+=Number(item[key])||0;
  }
+ const runeItems=ownedRunes===null?(typeof state==='undefined'?[]:state.runes||[]):ownedRunes;
+ const runeSlots=equippedRuneIds===null?(typeof state==='undefined'?[]:state.runeSlots||[]):equippedRuneIds;
+ const usedFamilies=new Set();
+ for(const id of runeSlots){const rune=runeItems.find(r=>r.id===id),type=RUNE_FAMILIES.find(x=>x.id===rune?.family);if(!rune||!type||usedFamilies.has(type.id))continue;usedFamilies.add(type.id);s[type.field]+=runeValue(type.id,rune.tier);}
  const main=equipped.weapon,off=equipped.offhand,caster=!!main&&['Staff','Wand'].includes(main.subtype);
  const counts=setCounts(equipped),sets=setBonuses(counts),speed=.78+s.agi*.032+s.spdFlat*.046;
  const weaponMult={Sword:1,Mace:.66,Bow:1.26,Daggers:1.48,'Two-Handed':.53,Staff:.72,Wand:1.20}[main?.subtype]||1;
