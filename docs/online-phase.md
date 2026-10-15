@@ -57,3 +57,12 @@ This update supersedes the earlier Guest/manual-sync UI described above.
 - The existing smoke test assumed every dagger used an external filename. It now also accepts the existing embedded dagger art, eliminating the random false failure without changing artwork.
 
 Validation: game smoke, save compatibility and four model tests pass. Mocked Firebase browser flows cover required login, profile errors, all cosmetics, legacy migration, automatic sync/results, duplicate-score suppression, concurrent-save conflicts, offline retry, sign-out/return and desktop/mobile layout. Live Google/Firestore acceptance and emulator Rules tests remain separate pending checks; no deployment performed.
+
+
+## Profile restoration fix
+
+Profile loading now distinguishes loading, failed, confirmed missing and existing profiles. A read error never opens nickname registration; Retry reloads the existing profile. Cached missing documents are not treated as proof that a profile is absent. Repeated profile creation restores the account's original nickname and character without writes; an orphan nickname reservation can only be reused by its owning UID, never another Google account. No rules or saves are reset.
+
+The account screen still has no Local backup section. Versioned module URLs refresh the account code when the new HTML is served; they do not publish development to main/Pages.
+
+Validation: production adapter tested with an in-memory SDK boundary for existing profiles, duplicate requests, cached absence, same-owner nickname recovery and other-owner rejection. Browser coverage includes a full page reload with persisted mock authentication/profile/cloud data, and permission-denied profile reads followed by Retry. Real Firebase service diagnosis remains unverified in this environment.

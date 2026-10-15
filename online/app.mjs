@@ -1,7 +1,7 @@
 import {CHARACTERS,character,validateSave,summary,safeProgress,MILESTONES} from './model.mjs';
 const game=globalThis.WandererGame,GUEST='wanderer_browser_proto_v01';
 let backendPromise,backend,user=null,profile=null,revision=null,synced='',epoch=0,writing=false,suppress=false,timer=null,dialog=null;
-let ready=false,lastPublished='';
+let ready=false,lastPublished='',profileState='loading';
 let message='Sign in to play',selectedCharacter=game.snapshot().characterId||'wanderer';
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const accountKey=()=>user?'wanderer_account_'+user.uid:null;
@@ -37,32 +37,45 @@ function action(selector,fn){const element=dialog?.querySelector(selector);if(!e
 function ensureSafeSwitch(allowProtected=false){if(writing)throw new Error('Saving your progress. Please try again in a moment.');if(game.busy())throw new Error('Finish or extract from your expedition before changing accounts or saves.');if(game.blocked()&&!allowProtected)throw new Error('The local save is protected. Reload before switching. Your recovery copies are retained.');}
 function sessionGuard(token){if(token!==epoch)throw new Error('The signed-in account changed. Reopen Account before continuing.');}
 async function connect(){
- if(!backendPromise)backendPromise=import('./firebase-client.mjs').then(m=>m.createBackend()).then(b=>{
+ if(!backendPromise)backendPromise=import('./firebase-client.mjs?v=profile-restore-2').then(m=>m.createBackend()).then(b=>{
   backend=b;b.watchAuth(async next=>{
-   const previous=user?.uid,token=++epoch;ready=false;gate();clearError();lastPublished='';user=next;profile=null;revision=null;synced='';clearTimeout(timer);timer=null;
+   const previous=user?.uid,token=++epoch;ready=false;gate();clearError();lastPublished='';user=next;profile=null;profileState='loading';revision=null;synced='';clearTimeout(timer);timer=null;
    if(previous&&previous!==next?.uid&&!game.busy()&&!game.blocked()){suppress=true;try{game.switchSave(GUEST);}finally{suppress=false;gate();}}
    if(!next){gate();status('Sign in to play');showAccount();return;}
-   status('Signed in · Cloud sync paused until you choose a save');
-   try{const p=await b.profile();sessionGuard(token);profile=p;selectedCharacter=p?.characterId||game.snapshot().characterId||'wanderer';if(profile)await resumeAccount();else showAccount();}catch(e){if(token===epoch){status(errorText(e));showAccount();dialog.querySelector('.onlineError').textContent=errorText(e);}}
+   await restoreProfile(token);
   });return b;
  }).catch(error=>{backendPromise=null;throw error;});
  return backendPromise;
+}
+async function restoreProfile(token=epoch){
+ profileState='loading';showAccount();
+ try{
+  const p=await backend.profile();sessionGuard(token);profile=p;profileState=p?'found':'missing';
+  selectedCharacter=p?.characterId||game.snapshot().characterId||'wanderer';
+  if(profile)await resumeAccount();else showAccount();
+ }catch(error){
+  if(token!==epoch)return;
+  if(!profile)profileState='error';
+  showAccount();dialog.querySelector('.onlineError').textContent=errorText(error);
+ }
 }
 function characterPicker(){return `<div class="characterPicker">${CHARACTERS.map(c=>`<button type="button" data-character="${c.id}" aria-pressed="${selectedCharacter===c.id}"><img src="${c.fullBody}" alt="${esc(c.name)}"><span>${esc(c.name)}</span></button>`).join('')}</div><p class="small muted">Cosmetic only. No classes or stat bonuses.</p>`;}
 function bindCharacters(){dialog.querySelectorAll('[data-character]').forEach(b=>b.onclick=()=>{selectedCharacter=b.dataset.character;dialog.querySelectorAll('[data-character]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));});}
 function showAccount(){
  selectedCharacter=profile?.characterId||game.snapshot().characterId||'wanderer';
- const signedIn=!!user;
+ const signedIn=!!user,needsProfile=signedIn&&profileState==='missing';
  const content=`<p>${signedIn?`Signed in${profile?' as <b>'+esc(profile.nickname)+'</b>':''}`:'Sign in with Google to play Wanderer.'}</p>
  ${!signedIn?'<button id="googleSignIn" class="primary">Sign in with Google</button>':''}
- ${signedIn&&!profile?'<label class="profileField">Unique nickname<input id="nickname" maxlength="20" minlength="3" pattern="[A-Za-z0-9_]{3,20}" autocomplete="username"></label>':''}
- ${signedIn?characterPicker():''}
- <div class="buttonRow">${signedIn&&!profile?'<button id="createProfile" class="primary">Create profile</button>':signedIn?'<button id="saveCharacter" class="primary">Save character</button>':''}
+ ${needsProfile?'<label class="profileField">Unique nickname<input id="nickname" maxlength="20" minlength="3" pattern="[A-Za-z0-9_]{3,20}" autocomplete="username"></label>':''}
+ ${signedIn&&profileState==='loading'?'<p role="status">Loading your profile…</p>':''}
+ ${signedIn&&profileState==='error'?'<p>Your profile could not be loaded. Please retry; you do not need a new nickname.</p><button id="retryProfile">Retry</button>':''}
+ ${profile||needsProfile?characterPicker():''}
+ <div class="buttonRow">${needsProfile?'<button id="createProfile" class="primary">Create profile</button>':profile?'<button id="saveCharacter" class="primary">Save character</button>':''}
  ${signedIn&&profile&&!ready?'<button id="retryAccount">Continue</button>':''}
  ${signedIn?'<button id="googleSignOut">Sign out</button>':''}</div>`;
  modal('Account & Character',content).dataset.account='true';dialog.addEventListener('cancel',e=>{if(!ready)e.preventDefault();});dialog.querySelector('[data-close]').hidden=!ready;bindCharacters();
  action('#googleSignIn',async()=>{ensureSafeSwitch();const b=await connect();await b.signIn();});
- action('#createProfile',async()=>{ensureSafeSwitch();const token=epoch;const name=dialog.querySelector('#nickname').value;const p=await backend.createProfile(name,selectedCharacter);sessionGuard(token);profile=p;await resumeAccount();});
+ action('#createProfile',async()=>{ensureSafeSwitch();const token=epoch;const name=dialog.querySelector('#nickname').value;const p=await backend.createProfile(name,selectedCharacter);sessionGuard(token);profile=p;profileState='found';await resumeAccount();});
  action('#saveCharacter',async()=>{
   if(game.busy())throw new Error('Change your character after the expedition.');
   const token=epoch;
@@ -70,6 +83,7 @@ function showAccount(){
   else game.setCharacter(selectedCharacter);
   status(profile?'Character saved to your profile':'Character saved on this device');showAccount();
  });
+ action('#retryProfile',()=>restoreProfile());
  action('#retryAccount',resumeAccount);
  action('#googleSignOut',async()=>{ensureSafeSwitch();if(ready&&revision!==null){await syncNow();await publishResults();}await backend.signOut();gate();});
 }

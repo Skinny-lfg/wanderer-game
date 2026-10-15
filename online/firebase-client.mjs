@@ -11,15 +11,15 @@ export async function createBackend(){
   watchAuth:callback=>sdk.onAuthStateChanged(auth,callback),
   signIn:()=>sdk.signInWithPopup(auth,new sdk.GoogleAuthProvider()),
   signOut:()=>sdk.signOut(auth),
-  async profile(){const snap=await sdk.getDoc(profileRef(user()));return snap.exists()?snap.data():null;},
+  async profile(){const snap=await sdk.getDoc(profileRef(user()));if(!snap.exists()&&snap.metadata.fromCache)throw new Error('network-profile-unconfirmed');return snap.exists()?snap.data():null;},
   async createProfile(name,characterId){
    const uid=user(),nickname=nicknameKey(name),nicknameRef=sdk.doc(db,'nicknames',nickname),ref=profileRef(uid);
    if(character(characterId).id!==characterId)throw new Error('Unknown character.');
    await sdk.runTransaction(db,async tx=>{
     const [claimed,existing]=await Promise.all([tx.get(nicknameRef),tx.get(ref)]);
-    if(existing.exists())throw new Error('This account already has a profile. Reopen Account.');
-    if(claimed.exists())throw new Error('That nickname is already taken.');
-    tx.set(nicknameRef,{uid});
+    if(existing.exists())return; // Repeated setup must restore the original profile.
+    if(claimed.exists()&&claimed.data().uid!==uid)throw new Error('That nickname belongs to another Google account. Sign in with the account you used originally.');
+    if(!claimed.exists())tx.set(nicknameRef,{uid});
     tx.set(ref,{nickname,characterId,createdAt:sdk.serverTimestamp(),updatedAt:sdk.serverTimestamp()});
    });
    return this.profile();

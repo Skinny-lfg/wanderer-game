@@ -3,7 +3,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
 const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8010';
 (async()=>{const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox']});try{for(const width of [1440,390,320]){
  const page=await browser.newPage({viewport:{width,height:950}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.route('**/online/firebase-client.mjs',route=>route.fulfill({contentType:'text/javascript',body:fs.readFileSync('tests/fixtures/firebase-client.mjs','utf8')}));
+ await page.route('**/online/firebase-client.mjs*',route=>route.fulfill({contentType:'text/javascript',body:fs.readFileSync('tests/fixtures/firebase-client.mjs','utf8')}));
  await page.addInitScript(()=>{
   const slots={helm:null,amulet:null,armor:null,gloves:null,weapon:{id:'heavy',slot:'weapon',subtype:'Two-Handed',name:'Legacy heavy',tier:10,rarity:'Epic',atk:99999,agi:9999,def:1000},offhand:null,ring1:null,ring2:null,boots:null};
   localStorage.setItem('wanderer_browser_proto_v01',JSON.stringify({resetVersion:'older-main-version',maxDungeon:12,chosen:1,stashCapacity:80,gold:111,fragments:222,stash:[],equip:slots,valuables:[],offersByLevel:{},merchant:null,run:null}));
@@ -37,6 +37,15 @@ const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8010';
  await page.evaluate(()=>{__firebaseTest.offline=false;dispatchEvent(new Event('online'))});await page.clock.fastForward(31000);assert.ok(await page.locator('#accountError').isHidden());
  await account();await page.locator('#googleSignOut').click();await page.locator('#googleSignIn').waitFor();assert.ok(await page.locator('#screen').evaluate(e=>e.inert));await page.keyboard.press('Escape');assert.ok(await page.locator('#googleSignIn').isVisible());
  await page.locator('#googleSignIn').click();await page.waitForFunction(()=>!document.querySelector('.onlineDialog'));assert.equal((await snapshot()).gold,999);
+ // Failed profile reads must never offer registration for an existing account.
+ await page.evaluate(async()=>{__firebaseTest.profileError='permission-denied';await __firebaseTest.restore();});
+ await page.locator('#retryProfile').waitFor();assert.equal(await page.locator('#nickname,#createProfile').count(),0);
+ await page.evaluate(()=>__firebaseTest.profileError=null);await page.locator('#retryProfile').click();
+ await page.waitForFunction(()=>!document.querySelector('.onlineDialog'));
+ // Full browser refresh restores the same Google user/profile and keeps its save.
+ await page.evaluate(()=>sessionStorage.setItem('firebaseRefreshSeed',JSON.stringify({user:__firebaseTest.user,profile:__firebaseTest.profile,cloud:__firebaseTest.cloud})));
+ await page.reload();await page.waitForFunction(()=>WandererGame.key()==='wanderer_account_alice'&&!document.querySelector('.onlineDialog'));
+ await account();assert.match(await page.locator('.onlineDialog').innerText(),/alice_1/);assert.equal(await page.locator('#nickname,#createProfile,#backups,#exportSave').count(),0);assert.equal((await snapshot()).gold,999);await close();
  // A second account starts fresh, without copying the first account or legacy slot.
  await account();await page.locator('#googleSignOut').click();
  await page.evaluate(async()=>{__firebaseTest.user={uid:'bob'};__firebaseTest.profile={nickname:'bob',characterId:'ranger'};__firebaseTest.cloud=null;await __firebaseTest.restore();});
