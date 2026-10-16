@@ -1,5 +1,8 @@
 // Shared validation and conflict policy. No Firebase or DOM dependencies.
-export const SEASON = 'test-open-1'; // Namespace only: no resets or scheduled seasons.
+// Global v0.9.2 fresh start: old season and saves remain inaccessible to new clients.
+export const SEASON = 'v092-launch-1';
+export const SAVE_NAMESPACE = 'v092';
+export const PUBLIC_LOADOUTS = 'publicLoadoutsV092';
 export const MILESTONES = Array.from({length:20},(_,i)=>(i+1)*10);
 export const CHARACTERS = [
   ['wanderer','Original Wanderer'],['ranger','Forest Wanderer'],['knight','Iron Wanderer'],
