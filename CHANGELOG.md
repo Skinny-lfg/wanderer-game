@@ -3,7 +3,7 @@
 ## v0.9.2 — 2026-10-16 (mobile UI)
 
 - Display all five main navigation tabs in a 3+2 grid on phones; larger tap targets remove the need to scroll sideways to Dungeons.
-- Hide the redundant equipped-gear strip on the mobile Tavern homepage.
+- Remove the equipped-gear strip from the Tavern homepage **on all screen sizes** (desktop and mobile). Equipment management remains in Equipment.
 - Put a compact 3×3 equipped-item grid next to character statistics on mobile, bringing Inventory higher into view. Keep desktop's character illustration and layout.
 - Render permanent rune choices as smaller three-column tiles; maintain all rune equip/unequip behavior.
 - Show affinity sets in two columns, with progress steps and expandable full tier descriptions.
