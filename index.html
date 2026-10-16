@@ -591,6 +591,9 @@ function checkedStoredSave(raw){
   for(const [tier,offer]of Object.entries(o.offersByLevel)){
    finite(tier,'offer level',1,DUNGEON_CAP,true);
    if(!plain(offer)||!Array.isArray(offer.ids)||offer.ids.some(id=>typeof id!=='string')||(offer.rerolls!==undefined&&(!Number.isInteger(offer.rerolls)||offer.rerolls<0)))invalid('offer record');
+   if(offer.favored!==undefined){
+    if(!plain(offer.favored)||Object.entries(offer.favored).some(([id,kinds])=>!offer.ids.includes(id)||!validFavoredGear(kinds)))invalid('favored equipment');
+   }
   }
  }
  if(o.onlineProgress!==undefined){
@@ -639,13 +642,23 @@ function chooseSubtype(slot,requested='random'){if(requested!=='random')return r
 function craftCost(tier){return 10+10*tier}
 
 /* v0.9: risk/reward wave tables and targeted gear, separate from Forge and Merchant. */
-const DUNGEON_FAVORED={
- temple:['Sword','Helm','Amulet'],forge:['Mace','Armor','Gloves'],crypt:['Daggers','Ring','Boots'],
- bastion:['Shield','Armor','Helm'],frost:['Staff','Tome','Boots'],ash:['Two-Handed','Gloves','Amulet'],
- void:['Wand','Orb','Ring'],ward:['Shield','Helm','Amulet'],grove:['Bow','Daggers','Boots'],
- shrine:['Charm','Amulet','Armor'],storm:['Daggers','Gloves','Ring'],drowned:['Orb','Wand','Armor'],
- quarry:['Mace','Two-Handed','Shield']
-};
+const FAVORED_EQUIPMENT_TYPES=[...TYPES,...OFFHAND_TYPES,'Helm','Amulet','Armor','Gloves','Ring','Boots'];
+function validFavoredGear(kinds){
+ return Array.isArray(kinds)&&kinds.length===3&&new Set(kinds).size===3&&kinds.every(kind=>FAVORED_EQUIPMENT_TYPES.includes(kind));
+}
+function rollFavoredGear(){
+ const pool=[...FAVORED_EQUIPMENT_TYPES],chosen=[];
+ for(let i=0;i<3;i++)chosen.push(pool.splice(roll(0,pool.length-1),1)[0]);
+ return chosen;
+}
+function makeDungeonOffers(ids,rerolls=0){
+ return {ids,rerolls,favored:Object.fromEntries(ids.map(id=>[id,rollFavoredGear()]))};
+}
+function offeredFavoredGear(theme){
+ const offer=state?.offersByLevel?.[String(state?.chosen)];
+ const kinds=offer?.favored?.[theme?.id];
+ return validFavoredGear(kinds)?kinds:[];
+}
 const WAVE_TABLE=[
  {drop:.18,rarities:{Common:.68,Uncommon:.25,Rare:.06,Epic:.009,Legendary:.001}},
  {drop:.28,rarities:{Common:.55,Uncommon:.30,Rare:.125,Epic:.02,Legendary:.005}},
@@ -668,8 +681,7 @@ function randomFromOdds(odds){
  for(const [key,probability]of Object.entries(odds)){remaining-=probability;if(remaining<0)return key;}
  return Object.keys(odds).at(-1);
 }
-function dungeonEquipmentOdds(theme){
- const favored=DUNGEON_FAVORED[theme?.id]||DUNGEON_FAVORED.temple;
+function dungeonEquipmentOdds(theme,favored=offeredFavoredGear(theme)){
  const categories=[
  ...TYPES.map(kind=>({kind,slot:'weapon',subtype:kind,weight:15/TYPES.length})),
  ...OFFHAND_TYPES.map(kind=>({kind,slot:'offhand',subtype:kind,weight:13/OFFHAND_TYPES.length})),
@@ -680,27 +692,27 @@ function dungeonEquipmentOdds(theme){
  {kind:'Ring',slot:'ring',subtype:'Ring',weight:11},
  {kind:'Boots',slot:'boots',subtype:'Boots',weight:13}
  ];
- // Weapon types have a fixed, uniform 15% share in EVERY dungeon.
- // The remaining 85% keeps each dungeon's non-weapon preferences.
- const weaponChance=.15/TYPES.length;
- const preferredOther=categories.filter(x=>x.slot!=='weapon'&&favored.includes(x.kind));
- const preferredShare=preferredOther.reduce((sum,x)=>sum+[.25,.20,.15][favored.indexOf(x.kind)],0);
- const other=categories.filter(x=>x.slot!=='weapon'&&!favored.includes(x.kind));
- const otherWeight=other.reduce((sum,x)=>sum+x.weight,0);
- return categories.map(item=>({...item,prob:item.slot==='weapon'?weaponChance:
-  favored.includes(item.kind)?[.25,.20,.15][favored.indexOf(item.kind)]:
-  (item.weight/otherWeight)*(.85-preferredShare)}));
+ // Each offer has three independently rolled preferred types (including weapons).
+ // Boost selected types within their gear group, without changing the total
+ // 15% weapon / 85% non-weapon split or any wave/rarity drop rate.
+ const weighted=categories.map(item=>{
+  const index=favored.indexOf(item.kind);
+  return {...item,weight:item.weight*(index<0?1:[3,2.5,2][index])};
+ });
+ const weaponTotal=weighted.filter(x=>x.slot==='weapon').reduce((sum,x)=>sum+x.weight,0);
+ const otherTotal=weighted.filter(x=>x.slot!=='weapon').reduce((sum,x)=>sum+x.weight,0);
+ return weighted.map(item=>({...item,prob:item.weight/(item.slot==='weapon'?weaponTotal:otherTotal)*(item.slot==='weapon'?.15:.85)}));
 }
-function dungeonEquipmentPick(theme){
- const options=dungeonEquipmentOdds(theme);
+function dungeonEquipmentPick(theme,favored=offeredFavoredGear(theme)){
+ const options=dungeonEquipmentOdds(theme,favored);
  let rand=Math.random(),found=options[options.length-1];
  for(const option of options){rand-=option.prob;if(rand<0){found=option;break;}}
  return {slot:found.slot==='ring'?sample(['ring1','ring2']):found.slot,subtype:found.subtype};
 }
 
-function favoredGearMarkup(theme){
- const entries=dungeonEquipmentOdds(theme),favored=(DUNGEON_FAVORED[theme.id]||[]).filter(kind=>!TYPES.includes(kind));
- return '<div class="equipmentAffinity"><div class="small muted equipmentAffinityHeading">Favored gear (weapons random)</div><div class="favoredGear" aria-label="Favored equipment">'+favored.map(kind=>{
+function favoredGearMarkup(theme,favored=offeredFavoredGear(theme)){
+ const entries=dungeonEquipmentOdds(theme,favored);
+ return '<div class="equipmentAffinity"><div class="small muted equipmentAffinityHeading">Equipment Affinity</div><div class="favoredGear" aria-label="Favored equipment">'+favored.map(kind=>{
   const entry=entries.find(x=>x.kind===kind);
   if(!entry)return '';
   const slot=entry.slot==='ring'?'ring1':entry.slot;
@@ -891,10 +903,25 @@ function rotateDungeonOffers(tier,playedPath=null){
  const ids=[];
  for(let i=0;i<3;i++)ids.push(pool.splice(roll(0,pool.length-1),1)[0].id);
  // Paid rerolls have a per-offer cost progression; a new expedition resets it.
- state.offersByLevel[key]={ids,rerolls:0};
+ state.offersByLevel[key]=makeDungeonOffers(ids);
  return ids;
 }
-function getPaths(force=false){let k=String(state.chosen),old=state.offersByLevel[k];if(!force&&old&&Array.isArray(old.ids)&&old.ids.length===3&&old.ids.every(id=>THEMES.some(t=>t.id===id)))return old;const pool=[...THEMES],ids=[];for(let j=0;j<3;j++)ids.push(pool.splice(roll(0,pool.length-1),1)[0].id);state.offersByLevel[k]={ids,rerolls:force?(old?.rerolls||0)+1:0};save();return state.offersByLevel[k]}
+function getPaths(force=false){
+ const k=String(state.chosen),old=state.offersByLevel[k];
+ if(!force&&old&&Array.isArray(old.ids)&&old.ids.length===3&&old.ids.every(id=>THEMES.some(t=>t.id===id))){
+  // Migrate old saves without rerolling the offered dungeon themes or charging fragments.
+  if(old.ids.some(id=>!validFavoredGear(old.favored?.[id]))){
+   old.favored=Object.fromEntries(old.ids.map(id=>[id,validFavoredGear(old.favored?.[id])?old.favored[id]:rollFavoredGear()]));
+   save();
+  }
+  return old;
+ }
+ const pool=[...THEMES],ids=[];
+ for(let j=0;j<3;j++)ids.push(pool.splice(roll(0,pool.length-1),1)[0].id);
+ state.offersByLevel[k]=makeDungeonOffers(ids,force?(old?.rerolls||0)+1:0);
+ save();
+ return state.offersByLevel[k];
+}
 function rerollCost(){return Math.min(500,5*Math.pow(2,Math.min(6,getPaths().rerolls||0)))}
 function setCounts(equipment=state.equip){
  const counts={};for(const k of Object.keys(ELEMENTS))counts[k]=0;
@@ -1199,16 +1226,16 @@ function dungeonWindow(focus=state.chosen,start=dungeonPage){
  return {firstLevel,levels:Array.from({length:9},(_,i)=>firstLevel+i),canPrevious:firstLevel>1,canNext:firstLevel<state.maxDungeon-4};
 }
 // A Legendary Hunt is an information-only target: it never changes drop odds.
-function legendaryHuntChance(theme,id){
+function legendaryHuntChance(theme,id,favored=offeredFavoredGear(theme)){
  const target=LEGENDARY_BY_ID[id];if(!target)return 0;
- const categories=dungeonEquipmentOdds(theme);
+ const categories=dungeonEquipmentOdds(theme,favored);
  const category=categories.find(x=>x.subtype===target.subtype&&(x.slot===target.slot||(target.slot==='ring'&&x.slot==='ring')));
  const siblings=LEGENDARY_CATALOG.filter(x=>x.slot===target.slot&&x.subtype===target.subtype).length;
  return category&&siblings?category.prob/siblings:0;
 }
 function legendaryHuntMarkup(paths){
  const target=LEGENDARY_BY_ID[state.legendaryHuntId];
- const variants=paths.ids.map(id=>({theme:THEMES.find(t=>t.id===id),chance:legendaryHuntChance(THEMES.find(t=>t.id===id),target?.id)}));
+ const variants=paths.ids.map(id=>({theme:THEMES.find(t=>t.id===id),chance:legendaryHuntChance(THEMES.find(t=>t.id===id),target?.id,paths.favored?.[id])}));
  const top=Math.max(...variants.map(x=>x.chance));
  return '<section class="legendaryHunt" aria-label="Legendary Hunt guide"><h3>🎯 Legendary Hunt</h3><p class="small muted">Choose a Legendary to see which offered path favors its equipment type. This guide does not change drop rates or guarantee a drop.</p><label class="small">Hunt target <select id="legendaryHuntTarget"><option value="">No target</option>'+
   LEGENDARY_CATALOG.map(e=>'<option value="'+e.id+'" '+(e.id===target?.id?'selected':'')+'>'+esc(e.name)+' · '+esc(e.subtype)+'</option>').join('')+'</select></label>'+
@@ -1222,7 +1249,7 @@ function protectionEntryWarning(){
  return `<p class="protectionWarning" role="status">⚠️ ${message} Select protected gear below.</p>`;
 }
 function renderDungeons(){wallet();const window=dungeonWindow();dungeonPage=window.firstLevel;const {firstLevel,levels,canPrevious,canNext}=window;let paths=getPaths();if(!paths.ids.includes(selectedPath))selectedPath=paths.ids[0];if(state.selectedPath!==selectedPath){state.selectedPath=selectedPath;save();}let enemy=estimateEnemy(state.chosen),s=totalStats(),risk=s.attack>enemy.def+enemy.atk*.9?'Favorable':s.attack>enemy.def+enemy.atk*.55?'Challenging':'Dangerous';
-html(`<section class="panel dungeonSelector"><div class="topline"><div><h2>Dungeons</h2><p class="small muted">👑 Every 10th dungeon is a boss</p></div><span class="token">Selected D${state.chosen}</span></div><div class="dungeonLevelRow"><button class="ghost tiny dungeonStep" id="previousLevels" aria-label="Previous dungeon levels" ${canPrevious?'':'disabled'}>‹</button><div class="levelGrid">${levels.map(n=>{if(n<1||n>DUNGEON_CAP)return '<span class="lvbtn dungeonPlaceholder" aria-hidden="true"></span>';let locked=n>state.maxDungeon,cls=locked?'locked':n===state.chosen?'chosen':n<state.maxDungeon?'cleared':'open';return `<button class="lvbtn ${cls} ${n%10===0?'bossDungeon':''}" aria-label="Dungeon ${n}${n%10===0?' — Boss Dungeon':''}${locked?' — Locked':''}" aria-pressed="${n===state.chosen}" title="${locked?'Locked':n===state.chosen?'Selected':n<state.maxDungeon?'Completed':'Unlocked'}" data-level="${n}" ${locked?'disabled':''}>${String(n).padStart(2,'0')}<small>${n%10===0?'👑':locked?'🔒':n===state.chosen?'●':n<state.maxDungeon?'✓':'⚔'}</small></button>`}).join('')}</div><button class="ghost tiny dungeonStep" id="nextLevels" aria-label="Next dungeon levels" ${canNext?'':'disabled'}>›</button></div></section><div class="gap"></div><section class="panel"><div class="topline"><div><h2>Choose Your Path</h2><p class="small muted">Choose one of three paths. Reroll affinities using Fragments.</p></div><span class="token">💠 ${state.fragments}</span></div><div class="dungeonGrid">${paths.ids.map(id=>{let t=THEMES.find(t=>t.id===id);return `<button class="dungeonCard ${selectedPath===id?'active':''}" data-path="${id}"><img src="${dungeonImage(t)}" alt="${t.name}"><div class="blurb"><strong>${esc(t.name)}</strong><span class="elementAffinity"><span class="elementIcon" aria-hidden="true">${ELEMENTS[t.effect].icon}</span>${esc(ELEMENTS[t.effect].name)} affinity</span>${favoredGearMarkup(t)}<span>${state.chosen%10===0?'👑 Boss Dungeon · ':''}D${state.chosen} · ${selectedPath===id?'Selected':'Choose'}</span></div></button>`}).join('')}</div><div class="previewStats"><span class="tag">Enemy ATK ${enemy.atk}</span><span class="tag">DEF ${enemy.def}</span><span class="tag">HP ${enemy.hp}</span><span class="tag gold">${risk}</span></div><div class="dungeonActionArea"><div class="buttonRow"><button class="ghost" id="rerollPath" ${state.fragments<rerollCost()?'disabled':''}>↻ Reroll all three · ${rerollCost()} 💠</button><button class="primary" id="enter">Enter Dungeon →</button></div>${protectionEntryWarning()}</div><div class="entryPreference"><label><input type="checkbox" id="confirmNormalDungeons" ${state.confirmNormalDungeons?'checked':''}> Confirm normal dungeon entry</label><span class="small muted">Boss dungeons always require confirmation.</span></div><section class="protectionPanel"><h3>Protected Equipment · ${chosenProtectionIds().length}/2</h3><p class="small muted">Protect up to two equipped items from death. All other equipment will be lost if you die. If your health is low after a wave, choose Extract to bank rewards; only finishing every wave unlocks the next dungeon.</p><div class="riskGear">${protectionMarkup()}</div></section>${legendaryHuntMarkup(paths)}</section>`);
+html(`<section class="panel dungeonSelector"><div class="topline"><div><h2>Dungeons</h2><p class="small muted">👑 Every 10th dungeon is a boss</p></div><span class="token">Selected D${state.chosen}</span></div><div class="dungeonLevelRow"><button class="ghost tiny dungeonStep" id="previousLevels" aria-label="Previous dungeon levels" ${canPrevious?'':'disabled'}>‹</button><div class="levelGrid">${levels.map(n=>{if(n<1||n>DUNGEON_CAP)return '<span class="lvbtn dungeonPlaceholder" aria-hidden="true"></span>';let locked=n>state.maxDungeon,cls=locked?'locked':n===state.chosen?'chosen':n<state.maxDungeon?'cleared':'open';return `<button class="lvbtn ${cls} ${n%10===0?'bossDungeon':''}" aria-label="Dungeon ${n}${n%10===0?' — Boss Dungeon':''}${locked?' — Locked':''}" aria-pressed="${n===state.chosen}" title="${locked?'Locked':n===state.chosen?'Selected':n<state.maxDungeon?'Completed':'Unlocked'}" data-level="${n}" ${locked?'disabled':''}>${String(n).padStart(2,'0')}<small>${n%10===0?'👑':locked?'🔒':n===state.chosen?'●':n<state.maxDungeon?'✓':'⚔'}</small></button>`}).join('')}</div><button class="ghost tiny dungeonStep" id="nextLevels" aria-label="Next dungeon levels" ${canNext?'':'disabled'}>›</button></div></section><div class="gap"></div><section class="panel"><div class="topline"><div><h2>Choose Your Path</h2><p class="small muted">Choose one of three paths. Reroll affinities using Fragments.</p></div><span class="token">💠 ${state.fragments}</span></div><div class="dungeonGrid">${paths.ids.map(id=>{let t=THEMES.find(t=>t.id===id);return `<button class="dungeonCard ${selectedPath===id?'active':''}" data-path="${id}"><img src="${dungeonImage(t)}" alt="${t.name}"><div class="blurb"><strong>${esc(t.name)}</strong><span class="elementAffinity"><span class="elementIcon" aria-hidden="true">${ELEMENTS[t.effect].icon}</span>${esc(ELEMENTS[t.effect].name)} affinity</span>${favoredGearMarkup(t,paths.favored?.[id])}<span>${state.chosen%10===0?'👑 Boss Dungeon · ':''}D${state.chosen} · ${selectedPath===id?'Selected':'Choose'}</span></div></button>`}).join('')}</div><div class="previewStats"><span class="tag">Enemy ATK ${enemy.atk}</span><span class="tag">DEF ${enemy.def}</span><span class="tag">HP ${enemy.hp}</span><span class="tag gold">${risk}</span></div><div class="dungeonActionArea"><div class="buttonRow"><button class="ghost" id="rerollPath" ${state.fragments<rerollCost()?'disabled':''}>↻ Reroll all three · ${rerollCost()} 💠</button><button class="primary" id="enter">Enter Dungeon →</button></div>${protectionEntryWarning()}</div><div class="entryPreference"><label><input type="checkbox" id="confirmNormalDungeons" ${state.confirmNormalDungeons?'checked':''}> Confirm normal dungeon entry</label><span class="small muted">Boss dungeons always require confirmation.</span></div><section class="protectionPanel"><h3>Protected Equipment · ${chosenProtectionIds().length}/2</h3><p class="small muted">Protect up to two equipped items from death. All other equipment will be lost if you die. If your health is low after a wave, choose Extract to bank rewards; only finishing every wave unlocks the next dungeon.</p><div class="riskGear">${protectionMarkup()}</div></section>${legendaryHuntMarkup(paths)}</section>`);
 const levelsRail=$('screen').querySelector?.('.levelGrid'),selectedLevel=levelsRail?.querySelector?.('.lvbtn.chosen');if(levelsRail&&selectedLevel&&levelsRail.scrollWidth>levelsRail.clientWidth)levelsRail.scrollLeft=Math.max(0,selectedLevel.offsetLeft-levelsRail.offsetLeft-(levelsRail.clientWidth-selectedLevel.offsetWidth)/2);
 $('previousLevels').onclick=()=>{if(!canPrevious)return;dungeonPage=Math.max(1,firstLevel-9);renderDungeons();$('previousLevels').focus()};$('nextLevels').onclick=()=>{if(!canNext)return;dungeonPage=Math.min(Math.max(1,state.maxDungeon-4),firstLevel+9);renderDungeons();$('nextLevels').focus()};
 Q('[data-level]').forEach(b=>b.onclick=()=>{state.chosen=Number(b.dataset.level);selectedPath=null;state.selectedPath=null;getPaths();save();renderDungeons()});Q('[data-path]').forEach(b=>b.onclick=()=>{selectedPath=b.dataset.path;state.selectedPath=selectedPath;save();renderDungeons()});$('rerollPath').onclick=()=>{let cost=rerollCost();if(state.fragments<cost)return;state.fragments-=cost;getPaths(true);selectedPath=null;state.selectedPath=null;save();renderDungeons()};$('confirmNormalDungeons').onchange=e=>{state.confirmNormalDungeons=e.target.checked;save()};Q('[data-protect]').forEach(b=>b.onclick=()=>{if(chooseProtectedItem(b.dataset.protect))renderDungeons();else bannerMessage('Protect up to two items. Unprotect one first.');});const huntSelect=$('legendaryHuntTarget');if(huntSelect)huntSelect.onchange=e=>{state.legendaryHuntId=LEGENDARY_BY_ID[e.target.value]?e.target.value:null;save();renderDungeons();};$('enter').onclick=confirmDungeon;}
@@ -1258,7 +1285,7 @@ function enemyFor(level,enc){
  attackEvery:elite?elite.interval:role==='skirmisher'?1.42:role==='bruiser'?1.72:1.62,boss,effect:theme.effect,poison:0,burn:0,bleed:0,
  poisonStacks:0,burnStacks:0,bleedStacks:0,dots:{poison:[],bleed:[],burn:[]},slowTime:0,enraged:false};
 }
-function startDungeon(){if(state.run)return;if(state.pendingRuneReward){showPendingRuneReward();return;}if(!stashHasRoom()){bannerMessage('Stash full. Upgrade or salvage gear before another expedition.');return;}let theme=currentTheme(),stats=totalStats();state.run={tier:state.chosen,path:theme.id,enc:0,status:'ready',hp:stats.maxhp,maxhp:stats.maxhp,mp:stats.mana,maxmp:stats.mana,barrier:0,stats,enemy:null,tPlayer:0,tEnemy:0,tDot:0,loot:[],valuables:[],gold:0,fragments:0,protectedItemIds:chosenProtectionIds(),eliteType:rollEliteArchetype(),combatSeconds:0,setCooldowns:{},secondWindUsed:false};view='combat';logEntries=[];addLog(`Entering ${theme.name} — Dungeon ${state.chosen}.`,'good');save();renderCombat()}
+function startDungeon(){if(state.run)return;if(state.pendingRuneReward){showPendingRuneReward();return;}if(!stashHasRoom()){bannerMessage('Stash full. Upgrade or salvage gear before another expedition.');return;}let theme=currentTheme(),stats=totalStats();state.run={tier:state.chosen,path:theme.id,favoredGear:[...offeredFavoredGear(theme)],enc:0,status:'ready',hp:stats.maxhp,maxhp:stats.maxhp,mp:stats.mana,maxmp:stats.mana,barrier:0,stats,enemy:null,tPlayer:0,tEnemy:0,tDot:0,loot:[],valuables:[],gold:0,fragments:0,protectedItemIds:chosenProtectionIds(),eliteType:rollEliteArchetype(),combatSeconds:0,setCooldowns:{},secondWindUsed:false};view='combat';logEntries=[];addLog(`Entering ${theme.name} — Dungeon ${state.chosen}.`,'good');save();renderCombat()}
 function nextEncounter(){const r=state.run;if(!r||r.status!=='ready'||r.enc>=wavesForDungeon(r.tier))return;r.enc++;selectedPath=r.path;r.enemy=enemyFor(r.tier,r.enc);r.tPlayer=r.tEnemy=r.tDot=0;r.setTemp=null;r.playerDebuffUntil=0;r.nextCasterHexAt=0;setRuntime(r);r.status='fight';addLog(waveTitle(r.enc)+' '+r.enc+'/'+wavesForDungeon(r.tier)+': '+r.enemy.name);save();renderCombat();clearInterval(clock);clock=setInterval(()=>{if(document.visibilityState!=='hidden')updateFight();},110/clockSpeed)}
 const COMBAT_VFX={Sword:'slash_main_hand',Mace:'smash_main_hand',Daggers:'double_slash_daggers','Off-Hand Dagger':'double_slash_daggers','Two-Handed':'big_slash_two_hand',Bow:'arrow_bow',Staff:'big_spell_projectile_staff',Wand:'spell_projectile_wand',Block:'block'};
 function combatEffect(kind){
@@ -1598,7 +1625,7 @@ function winEncounter(){
  f=roll(1,3)+Math.floor(r.tier*.24)+(boss?5+Math.floor(r.tier*.25):miniboss?3:0);
  r.gold+=g;r.fragments+=f;addLog(r.enemy.name+' defeated. +'+g+' Gold, +'+f+' Fragments.','good');
  const logDrop=item=>{r.loot.push(item);addLog('✦ '+item.rarity.toUpperCase()+' DROP: '+item.name+' [D'+item.tier+'] '+(ELEMENTS[item.effect]?.icon||''),item.rarity);};
- const makeDrop=()=>{const p=dungeonEquipmentPick(t),rarity=randomFromOdds(waveLootOdds(r.enc,r.stats.cha).rarities);return makeItem(r.tier,p.slot,t.effect,'loot',p.subtype,rarity);};
+ const makeDrop=()=>{const p=dungeonEquipmentPick(t,r.favoredGear),rarity=randomFromOdds(waveLootOdds(r.enc,r.stats.cha).rarities);return makeItem(r.tier,p.slot,t.effect,'loot',p.subtype,rarity);};
  if(rarityInCombat(r))logDrop(makeDrop());
  else addLog('No equipment this wave. Gold and Fragments are secured on extraction.');
  if(boss&&Math.random()<.35)logDrop(makeDrop());
