@@ -1092,6 +1092,7 @@ function totalStats(equipment=state.equip,ownedRunes=null,equippedRuneIds=null){
  s.lootQuality=Math.min(10,Math.round(Math.max(0,s.cha-5)*.09*10)/10);
  return s;
 }
+function nav(to){if(state.run&&to!=='combat')return;if(to==='dungeons')dungeonPage=null;if(to==='equipment')slotFilter='all';view=to;chosenItems.clear();bulk=false;selectedId=null;render()}
 // Keep UI location only in this tab, scoped to the active account/save.
 // Never write this to the game save or sync it to Firebase.
 let hasRestoredInitialView=false;
@@ -1106,7 +1107,6 @@ function restoreView(){
  try{remembered=sessionStorage.getItem(viewStorageKey());}catch(e){/* Use Tavern fallback. */}
  view=!state?.run&&RESTORABLE_VIEWS.has(remembered)?remembered:'tavern';
 }
-function nav(to){if(state.run&&to!=='combat')return;if(to==='dungeons')dungeonPage=null;if(to==='equipment')slotFilter='all';view=to;chosenItems.clear();bulk=false;selectedId=null;render()}
 function wallet(){let el=$('wallet');el.innerHTML=`<span class="token">🪙 <b>${state.gold}</b> Gold</span><span class="token">💠 <b>${state.fragments}</b> Fragments</span><span class="token">🏰 <b>D${state.maxDungeon}</b></span>`;let elNav=$('nav');elNav.innerHTML=state.run?`<span class="token">⚔ Expedition active · Equipment locked</span>`:[['tavern','🏠 Tavern'],['equipment','🛡 Equipment'],['forge','⚒ Forge'],['merchant','🪙 Merchant'],['dungeons','🏰 Dungeons']].map(([k,v])=>`<button data-nav="${k}" class="${view===k?'active':''}">${v}</button>`).join('');Q('[data-nav]').forEach(b=>b.onclick=()=>nav(b.dataset.nav))}
 function render(){if(!hasRestoredInitialView){hasRestoredInitialView=true;restoreView();}rememberView();wallet();if(view==='tavern')renderTavern();else if(view==='equipment')renderStash();else if(view==='forge')renderForge();else if(view==='merchant')renderMerchant();else if(view==='dungeons')renderDungeons();else if(view==='combat')renderCombat();if(state.pendingRuneReward)showPendingRuneReward();}
 function html(s){$('screen').innerHTML=s}
