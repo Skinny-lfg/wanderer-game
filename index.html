@@ -473,7 +473,7 @@ button.extractComplete:hover{background:#2d9a55}
 .forgeTrend .merchantPowerTrend{display:inline-flex}
 .scene:before{background:linear-gradient(180deg,#000c 0%,#000d 65%,#000e 100%);backdrop-filter:saturate(.28) brightness(.62);-webkit-backdrop-filter:saturate(.28) brightness(.62)}
 /* No opaque full-width boxes when poison, bleed, frost, etc. are applied. */
-.scene .combatStatuses{top:5px;left:5px;right:5px;height:auto;min-height:0;max-height:52px;width:auto;overflow-y:auto;overflow-x:hidden;background:none;border:0;border-radius:0;padding:2px;gap:3px;align-content:flex-start;scrollbar-width:thin}
+.scene .combatStatuses{background:transparent;top:5px;left:5px;right:5px;height:auto;min-height:0;max-height:52px;width:auto;overflow-y:auto;overflow-x:hidden;background:none;border:0;border-radius:0;padding:2px;gap:3px;align-content:flex-start;scrollbar-width:thin}
 .scene .combatStatuses:empty{visibility:hidden}
 .scene .combatStatuses .debuff{display:inline-flex;align-items:center;max-width:100%;border-radius:999px;padding:2px 6px;background:#0b1825c9;border:1px solid #627087aa;box-shadow:0 1px 4px #0006}
 .scene .combatStatuses .playerDebuff{background:#402551d9;border-color:#bb70dd}
@@ -1112,6 +1112,12 @@ dialog.innerHTML=`<h2 id="modalTitle">${esc(title)}</h2>${content}<div class="bu
 document.body.appendChild(dialog);dialog.addEventListener('close',()=>{dialog.remove();if(previous?.isConnected)previous.focus()});dialog.querySelector('[data-close]').onclick=()=>dialog.close();if(onConfirm)dialog.querySelector('[data-confirm]').onclick=()=>{dialog.close();onConfirm()};dialog.showModal();dialog.querySelector('[data-close]').focus();return dialog;
 }
 function showConfirm(title,message,onConfirm,actionLabel='Confirm'){
+ // Old browsers and the deterministic Node test harness have no <dialog>.
+ // Real browsers with dialog support always show Wanderer's themed confirmation.
+ if(typeof HTMLDialogElement==='undefined'){
+  if(confirm(message))onConfirm();
+  return null;
+ }
  return showModal(title,'<p class="dialogQuestion">'+esc(message)+'</p>',onConfirm,actionLabel);
 }
 function chosenProtectionIds(){
