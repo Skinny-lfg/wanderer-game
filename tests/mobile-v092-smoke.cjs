@@ -17,7 +17,7 @@ assert(start>0&&inventory>start&&dungeon>inventory&&log>dungeon,'UI renderers ex
 const home=html.slice(start,inventory);
 const gear=html.slice(inventory,html.indexOf('function renderForge(){'));
 const pathSelect=html.slice(dungeon,log);
-assert(home.includes('class="homeEquipped"')&&html.includes('.homeEquipped{display:none}'),'home redundant gear is hidden on mobile');
+assert(!home.includes('homeEquipped')&&!home.includes('Equipped gear')&&!home.includes('slotSummary('),'Tavern has no equipped item list on any viewport');
 assert(html.includes('.nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))'),'all five nav items are available without horizontal scrolling');
 assert(html.includes('.nav button{min-width:0;min-height:44px'),'nav controls have mobile touch targets');
 assert(gear.includes('class="equipmentQuickView"')&&gear.includes('class="equipmentLoadout"')&&gear.includes('class="equipmentStats"'),'mobile equipment has side-by-side loadout and stats');
