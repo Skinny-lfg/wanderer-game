@@ -13,10 +13,10 @@ if(!original.includes(speed)||!original.includes(raw))throw Error('Expected comb
 const candidates={
  baseline:original,
  permanentSpeed:original.replace(speed,speed.replace("'Two-Handed':.50,Staff:.69","'Two-Handed':.70,Staff:.91")),
- earlySpeed:original.replace(raw,"let rawSpeed=Math.max(.25,speed*weaponMult);if(main?.subtype==='Staff'||main?.subtype==='Two-Handed'){const bonus=Math.max(0,1-Math.max(0,(main?.tier||1)-10)/90);rawSpeed+=(main.subtype==='Staff'?.62:.45)*bonus;}s.rawAttackSpeed=rawSpeed;")
+ earlySpeed:original.replace(raw,"let rawSpeed=Math.max(.25,speed*weaponMult);if(main?.subtype==='Staff'||main?.subtype==='Two-Handed'){rawSpeed+=Math.max(0,(main.subtype==='Staff'?.56:.43)-.25*rawSpeed);}s.rawAttackSpeed=rawSpeed;")
 };
 const dir=fs.mkdtempSync(path.join(os.tmpdir(),'wanderer-final-v091-'));
-const NUM=60,levels=[10,30,50,100,200],weapons=['Staff','Two-Handed'],profiles=['epic-3','mixed-high'];
+const NUM=100,levels=[10,30,50,100,200],weapons=['Staff','Two-Handed'],profiles=['epic-3','mixed-high'];
 const output=[];
 function sample(c,gearPlan,level,weapon,seed){
  return c.trial({level,weapon,seed,elite:['tank','berserker','vampire','caster'][seed%4],gearPlan});
@@ -28,7 +28,7 @@ try{
   for(const level of levels)for(const weapon of weapons)for(const profile of profiles){
    let wins=0,hp=0,seconds=0;
    for(let i=0;i<NUM;i++){
-    const r=sample(c,plan(c.inspect,level,weapon,profile,i%3),level,weapon,8111+i);
+    const r=sample(c,plan(c.inspect,level,weapon,profile,i%3),level,weapon,7001+i);
     wins+=Number(r.win);hp+=r.hp;seconds+=r.seconds;
    }
    const row={candidate,level,weapon,profile,win:+(100*wins/NUM).toFixed(1),hp:+(hp/NUM).toFixed(1),seconds:+(seconds/NUM).toFixed(1)};
@@ -49,7 +49,7 @@ try{
      });
      if(n!==2)throw Error('Could not form legal 3+2');
     }
-    const r=sample(c,gearPlan,level,weapon,9111+i);
+    const r=sample(c,gearPlan,level,weapon,7001+i);
     wins+=Number(r.win);hp+=r.hp;
    }
    output.push({candidate,level,weapon,profile:mix,win:+(100*wins/NUM).toFixed(1),hp:+(hp/NUM).toFixed(1)});
