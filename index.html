@@ -87,10 +87,11 @@
 .runeCollection .runeCard [data-rune-equip]:focus-visible{outline:2px solid #d6b4fb;outline-offset:2px}
 .runeCollection .runeCard [data-rune-sell]{align-self:flex-end;white-space:normal}
 .runeCollection .runeCard [data-rune-sell]:disabled{opacity:.45}
-.runeSlotChoices{display:grid;gap:8px;margin:12px 0}
-.runeSlotChoices [data-rune-slot-choice]{width:100%;text-align:left;white-space:normal}
-.runeSlotChoices [data-rune-slot-choice]:disabled{opacity:.45;cursor:not-allowed}
-.runeSlotChoices .runeSlotOccupied{display:block;font-size:.85em;opacity:.8;margin-top:3px}
+.runeInlineChoices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin:5px 0}
+.runeInlineChoices [data-rune-slot-choice]{font-size:12px;white-space:normal;min-width:0;padding:6px}
+.runeInlineChoices [data-rune-slot-choice]:disabled{opacity:.4;cursor:not-allowed}
+.runeInlineChoices .runeSlotOccupied{display:block;font-size:10px;overflow-wrap:anywhere}
+.slotTile:not(.filled) img{opacity:.5}
 .legendaryHunt{margin-top:12px;padding:12px;border:1px solid #465678;border-radius:10px;background:#111b2a}
 .legendaryHunt h3{margin:0 0 6px}.legendaryHunt label{display:block;margin:8px 0}
 .legendaryHunt select{max-width:100%;min-width:0;width:100%;margin-top:5px}
@@ -503,8 +504,8 @@ function comparisonEquip(item,target=item.slot){
  return equipment;
 }
 function forgePreviewImage(slot,subtype){
- if(subtype==='random')return slotImg(slot);
- return itemImg({id:'forge-'+slot+'-'+subtype,slot,subtype});
+ // A Forge selection represents an equipment type, not an actual rolled item.
+ return placeholderIcon(subtype==='random'?slot:subtype);
 }
 const DUNGEON_CAP=200;
 const STASH_BASE_CAPACITY=40,STASH_UPGRADE_STEP=10,STASH_MAX_CAPACITY=300;
@@ -514,12 +515,14 @@ function stashHasRoom(){return state.stash.length<stashCapacity()}
 function slotFilterFor(slot){return ['ring1','ring2'].includes(slot)?'rings':slot}
 function upgradeStash(){if(state.run||stashCapacity()>=STASH_MAX_CAPACITY||state.gold<stashUpgradeCost())return;const cost=stashUpgradeCost();state.gold-=cost;state.stashCapacity=Math.min(STASH_MAX_CAPACITY,stashCapacity()+STASH_UPGRADE_STEP);save();renderStash();bannerMessage('Stash expanded by '+STASH_UPGRADE_STEP+' slots for '+cost+' Gold.');}
 let dungeonPage=null;
-let state=null,view='tavern',selectedId=null,bulk=false,chosenItems=new Set(),slotFilter='all',sort='level',direction='desc',forgeSlot='weapon',forgeTier=1,forgeSubtype='random',selectedPath=null,clock=null,clockSpeed=1,logEntries=[],uid=0;
+let state=null,view='tavern',selectedId=null,selectedRuneId=null,bulk=false,chosenItems=new Set(),slotFilter='all',sort='level',direction='desc',forgeSlot='weapon',forgeTier=1,forgeSubtype='random',selectedPath=null,clock=null,clockSpeed=1,logEntries=[],uid=0;
 const roll=(a,b)=>Math.floor(Math.random()*(b-a+1))+a, sample=xs=>xs[roll(0,xs.length-1)], makeId=()=>Date.now().toString(36)+'-'+(++uid).toString(36), clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function rarityColor(item){return RARITY[item?.rarity]?.[0]||RARITY.Common[0]}
 function rarityFrame(item){return item?`style="--item-rarity:${rarityColor(item)};border-color:var(--item-rarity)" data-rarity="${esc(item.rarity)}"`:''}
-function slotImg(slot){const key=slot==='weapon'?'sword':slot==='offhand'?'shield':slot;return ICONS[key]||ICONS.armor}
+const PLACEHOLDER_ART={Sword:'sword',Mace:'mace',Daggers:'daggers',Bow:'bow',Staff:'staff',Wand:'wand','Two-Handed':'two_handed',Shield:'shield','Off-Hand Dagger':'off_hand_dagger',Orb:'orb',Tome:'tome',Charm:'charm',Helm:'helmet',Armor:'chest',Gloves:'gloves',Boots:'boots',Ring:'ring',Amulet:'amulet',weapon:'sword',offhand:'shield',helm:'helmet',armor:'chest',gloves:'gloves',boots:'boots',ring1:'ring',ring2:'ring',amulet:'amulet'};
+function placeholderIcon(type){return 'assets/placeholders/'+(PLACEHOLDER_ART[type]||'sword')+'.svg';}
+function slotImg(slot){return placeholderIcon(slot);}
 const EQUIPMENT_ICON_FILES={"sword":["sword_01.png","sword_02.png","sword_03.png"],"mace":["mace_01.png","mace_02.png","mace_03.png"],"dagger":["dagger_01.png","dagger_02.png","dagger_03.png"],"two_handed":["two_handed_01.png","two_handed_02.png","two_handed_03.png","two_handed_04.png"],"shield":["shield_01.png","shield_02.png","shield_03.png"],"bow":["bow_01.png","bow_02.png","bow_03.png"],"staff":["staff_01.png","staff_02.png","staff_03.png"],"orb":["orb_01.png","orb_02.png","orb_03.png"],"wand":["wand_01.png","wand_02.png","wand_03.png","wand_04.png"],"tome":["tome_01.png","tome_02.png","tome_03.png","tome_04.png"],"charm":["charm_01.png","charm_02.png","charm_03.png","charm_04.png"],"helmet":["helmet_01.png","helmet_02.png","helmet_03.png"],"chest":["chest_01.png","chest_02.png","chest_03.png"],"gloves":["gloves_01.png","gloves_02.png","gloves_03.png"],"boots":["boots_01.png","boots_02.png","boots_03.png"],"ring":["ring_01.png","ring_02.png","ring_03.png"]};
 const EQUIPMENT_ICON_ROOT='assets/equipment/';
 const LEGACY_ICON_TYPES=new Set(['sword','mace','bow','dagger','staff','shield','orb']);
@@ -536,6 +539,7 @@ function legendaryMatches(entry,item){return !!entry&&entry.subtype===item.subty
 function legendaryFor(item){const eligible=LEGENDARY_CATALOG.filter(entry=>legendaryMatches(entry,item));return eligible.length?sample(eligible):null;}
 function itemImg(o){
   if(!o)return ICONS.sword;
+  if((o.name==='Training Sword'||o.name==='Old Sword')&&o.subtype==='Sword'&&o.rarity==='Common')return placeholderIcon('Sword');
   if(o.rarity==='Legendary'){const entry=LEGENDARY_BY_ID[o.legendaryId]||LEGENDARY_BY_NAME[o.name];if(legendaryMatches(entry,o))return 'assets/legendary/'+entry.image;}
   const key=({helm:'helmet',armor:'chest',gloves:'gloves',boots:'boots',ring:'ring',ring1:'ring',ring2:'ring'})[o.slot]||equipmentArtType(o.subtype);
   const names=EQUIPMENT_ICON_FILES[key];
@@ -546,7 +550,7 @@ function itemImg(o){
     ...names.map(name=>EQUIPMENT_ICON_ROOT+name)
   ];
   // Stable per item ID. No save migration, no re-roll on every render.
-  if(o.name==='Training Sword'&&key==='sword'&&legacy)return legacy;
+  if(o.name==='Training Sword'&&key==='sword'&&legacy)return placeholderIcon('Sword');
   const seed=String(o.id||o.name||o.subtype||key);
   let hash=2166136261;
   for(let i=0;i<seed.length;i++)hash=Math.imul(hash^seed.charCodeAt(i),16777619);
@@ -554,9 +558,9 @@ function itemImg(o){
 }
 
 function makeSlots(){return Object.fromEntries(SLOTS.map(s=>[s,null]))}
-function starter(){return {id:makeId(),slot:'weapon',subtype:'Sword',name:'Training Sword',tier:1,rarity:'Common',effect:null,atk:5,str:1,obtainedAt:Date.now(),crafted:false,recoveryStarter:true}}
+function starter(){return {id:makeId(),slot:'weapon',subtype:'Sword',name:'Old Sword',tier:1,rarity:'Common',effect:null,atk:5,str:1,obtainedAt:Date.now(),crafted:false,recoveryStarter:true}}
 function fresh(){state={characterId:'wanderer',onlineProgress:{attemptId:makeId(),deepestCleared:0,activeMs:0,timerMetric:'combat-v1',timingEligible:true,milestones:{}},stashCapacity:STASH_BASE_CAPACITY,confirmNormalDungeons:true,maxDungeon:1,chosen:1,selectedPath:null,legendaryHuntId:null,protectedItemIds:[],runes:[],runeSlots:[null,null,null],pendingRuneReward:null,fragments:0,gold:0,stash:[starter()],equip:makeSlots(),valuables:[],offersByLevel:{},merchant:null,run:null};}
-function migrateItem(o){if(!o)return null;const v={...o};if(v.slot==='ring')v.slot='ring1';if(!SLOTS.includes(v.slot))v.slot='weapon';v.id=v.id||makeId();v.tier=clamp(Number(v.tier)||1,1,200);v.rarity={Comum:'Common',Incomum:'Uncommon',Raro:'Rare','Épico':'Epic','Lendário':'Legendary'}[v.rarity]||v.rarity||'Common';if(!RARITY[v.rarity])v.rarity='Common';if(v.effect==='burst')v.effect='sunder';if(!ELEMENTS[v.effect])v.effect=null;v.subtype=v.subtype||({weapon:'Sword',offhand:'Shield',ring1:'Ring',ring2:'Ring'}[v.slot]||SNAME[v.slot]);if(['Staff','Wand'].includes(v.subtype)){v.magic=v.magic||(['poison','burn','slow','drain','nature','shock','tide'].includes(v.effect)?v.effect:'burn');v.effect=v.magic;}if(['Orb','Tome','Charm'].includes(v.subtype)&&['poison','burn','slow','drain','nature','shock','tide'].includes(v.effect))v.magic=v.effect;v.obtainedAt=Number(v.obtainedAt)||Date.now();v.name=String(v.name||'Equipment');if(v.rarity==='Legendary'){const identity=LEGENDARY_BY_ID[v.legendaryId]||LEGENDARY_BY_NAME[v.name];if(legendaryMatches(identity,v))v.legendaryId=identity.id;else delete v.legendaryId;}for(const [,field]of FIELDS)v[field]=Number(v[field])||0;if(v.magic&&!ELEMENTS[v.magic])v.magic=null;v.crafted=!!v.crafted;v.locked=!!v.locked;return v;}
+function migrateItem(o){if(!o)return null;const v={...o};if(v.slot==='ring')v.slot='ring1';if(!SLOTS.includes(v.slot))v.slot='weapon';v.id=v.id||makeId();v.tier=clamp(Number(v.tier)||1,1,200);v.rarity={Comum:'Common',Incomum:'Uncommon',Raro:'Rare','Épico':'Epic','Lendário':'Legendary'}[v.rarity]||v.rarity||'Common';if(!RARITY[v.rarity])v.rarity='Common';if(v.effect==='burst')v.effect='sunder';if(!ELEMENTS[v.effect])v.effect=null;v.subtype=v.subtype||({weapon:'Sword',offhand:'Shield',ring1:'Ring',ring2:'Ring'}[v.slot]||SNAME[v.slot]);if(['Staff','Wand'].includes(v.subtype)){v.magic=v.magic||(['poison','burn','slow','drain','nature','shock','tide'].includes(v.effect)?v.effect:'burn');v.effect=v.magic;}if(['Orb','Tome','Charm'].includes(v.subtype)&&['poison','burn','slow','drain','nature','shock','tide'].includes(v.effect))v.magic=v.effect;v.obtainedAt=Number(v.obtainedAt)||Date.now();v.name=String(v.name||'Equipment');if(v.recoveryStarter===true&&v.name==='Training Sword')v.name='Old Sword';if(v.rarity==='Legendary'){const identity=LEGENDARY_BY_ID[v.legendaryId]||LEGENDARY_BY_NAME[v.name];if(legendaryMatches(identity,v))v.legendaryId=identity.id;else delete v.legendaryId;}for(const [,field]of FIELDS)v[field]=Number(v[field])||0;if(v.magic&&!ELEMENTS[v.magic])v.magic=null;v.crafted=!!v.crafted;v.locked=!!v.locked;return v;}
 // Inspect legacy saves before migration: never silently sanitize corrupted progress.
 function checkedStoredSave(raw){
  const o=typeof raw==='string'?JSON.parse(raw):raw;
@@ -664,10 +668,10 @@ function offeredFavoredGear(theme){
  return validFavoredGear(kinds)?kinds:[];
 }
 const WAVE_TABLE=[
- {drop:.18,rarities:{Common:.68,Uncommon:.25,Rare:.06,Epic:.009,Legendary:.001}},
- {drop:.28,rarities:{Common:.55,Uncommon:.30,Rare:.125,Epic:.02,Legendary:.005}},
- {drop:.42,rarities:{Common:.38,Uncommon:.33,Rare:.22,Epic:.06,Legendary:.01}},
- {drop:.80,rarities:{Common:.10,Uncommon:.25,Rare:.45,Epic:.17,Legendary:.03}},
+ {drop:.22,rarities:{Common:.68,Uncommon:.25,Rare:.06,Epic:.009,Legendary:.001}},
+ {drop:.32,rarities:{Common:.55,Uncommon:.30,Rare:.125,Epic:.02,Legendary:.005}},
+ {drop:.47,rarities:{Common:.38,Uncommon:.33,Rare:.22,Epic:.06,Legendary:.01}},
+ {drop:.84,rarities:{Common:.10,Uncommon:.25,Rare:.45,Epic:.17,Legendary:.03}},
  {drop:1,rarities:{Common:0,Uncommon:0,Rare:.71,Epic:.25,Legendary:.04}}
 ];
 function wavesForDungeon(tier){return tier%10===0?5:4}
@@ -722,7 +726,7 @@ function favoredGearMarkup(theme,favored=offeredFavoredGear(theme)){
   const slot=entry.slot==='ring'?'ring1':entry.slot;
   const item={id:'favored-'+theme.id+'-'+kind,slot,subtype:entry.subtype,name:kind};
   return '<span class="favoredGearItem" title="'+esc(kind)+' — favored equipment type">'+
-   '<span class="favoredGearIcon"><img src="'+itemImg(item)+'" alt="'+esc(kind)+'"></span>'+
+   '<span class="favoredGearIcon"><img src="'+placeholderIcon(kind)+'" alt="'+esc(kind)+'"></span>'+
    '<span class="favoredGearName">'+esc(kind)+'</span></span>';
  }).join('')+'</div></div>';
 }
@@ -763,9 +767,17 @@ function runeLine(r){
  const type=RUNE_FAMILIES.find(x=>x.id===r.family);
  return '<span class="runeLine"><img class="runeIcon" src="assets/runes/'+type.id+'.png" alt="" width="40" height="40" decoding="async"><span class="runeText">'+esc(type.name)+' · D'+r.tier+' · +'+runeValue(r.family,r.tier)+' '+({atkFlat:'Attack',defFlat:'Defense',hpFlat:'Health'}[type.field]||type.field.toUpperCase())+'</span></span>';
 }
+function runeSlotChoicesMarkup(rune,slots){
+ if(!rune)return '';
+ return '<div class="runeInlineChoices" role="group" aria-label="Choose slot for '+esc(rune.name)+'">'+slots.map((equippedId,i)=>{
+  const equipped=state.runes.find(x=>x.id===equippedId),isSame=equippedId===rune.id;
+  const detail=isSame?'Equipped':equipped?'D'+equipped.tier+' '+equipped.name:'Empty';
+  return '<button type="button" class="tiny ghost" data-rune-slot-choice="'+i+'" '+(isSame||state.run?'disabled':'')+'><strong>Slot '+(i+1)+'</strong><span class="runeSlotOccupied">'+esc(detail)+'</span></button>';
+ }).join('')+'</div><p class="micro muted">Lower-tier runes can replace higher-tier runes. Only one rune of each family stays equipped.</p>';
+}
 function runeSectionMarkup(){
  const runes=state.runes||[],slots=state.runeSlots||[null,null,null];
- return '<section class="runePanel"><h3>Permanent Runes · '+slots.filter(Boolean).length+'/3 · '+runes.length+' owned</h3><p class="small muted">Earn one of three runes from each D10/D20/... boss. Runes survive death, do not fill Stash, and do not count towards set bonuses. Unneeded runes can be recycled for Fragments, but equipped runes are protected.</p><div class="runeSlots">'+slots.map((id,i)=>{const r=runes.find(x=>x.id===id);return '<div class="runeSlot"><b>Rune '+(i+1)+'</b><span class="small">'+(r?runeLine(r):'Empty')+'</span>'+(r?'<button class="tiny ghost" data-rune-remove="'+i+'">Unequip</button>':'')+'</div>'}).join('')+'</div><p class="small muted">Select a rune to choose Slot 1, 2 or 3.</p><div class="runeCollection">'+(runes.length?runes.map(r=>'<div class="runeCard"><button class="tiny ghost" data-rune-equip="'+esc(r.id)+'" aria-label="Choose slot for '+esc(r.name)+'">'+runeLine(r)+(slots.includes(r.id)?' ✓ Equipped':' · Choose slot')+'</button><button class="tiny ghost" data-rune-sell="'+esc(r.id)+'" '+(slots.includes(r.id)?'disabled title="Unequip before recycling"':'')+' aria-label="Recycle '+esc(r.name)+' for '+runeSalvageValue(r)+' Fragments">Recycle · '+runeSalvageValue(r)+' 💠</button></div>').join(''):'<p class="small muted">Defeat a chapter boss to unlock your first permanent rune.</p>')+'</div><div class="buttonRow"><button class="tiny ghost" id="recycleDuplicateRunes" '+(duplicateRuneCandidates().length?'':'disabled')+'>Recycle spare duplicates · +'+duplicateRuneCandidates().reduce((sum,r)=>sum+runeSalvageValue(r),0)+' 💠</button></div><p class="small muted">Duplicates: keeps the highest-tier rune of each family and every equipped rune. Only one rune from each family can be equipped at a time.</p></section>';
+ return '<section class="runePanel"><h3>Permanent Runes · '+slots.filter(Boolean).length+'/3 · '+runes.length+' owned</h3><p class="small muted">Earn one of three runes from each D10/D20/... boss. Runes survive death, do not fill Stash, and do not count towards set bonuses. Unneeded runes can be recycled for Fragments, but equipped runes are protected.</p><div class="runeSlots">'+slots.map((id,i)=>{const r=runes.find(x=>x.id===id);return '<div class="runeSlot"><b>Rune '+(i+1)+'</b><span class="small">'+(r?runeLine(r):'Empty')+'</span>'+(r?'<button class="tiny ghost" data-rune-remove="'+i+'">Unequip</button>':'')+'</div>'}).join('')+'</div><p class="small muted">Click a rune below, then choose its slot here.</p><div class="runeCollection">'+(runes.length?runes.map(r=>'<div class="runeCard '+(slots.includes(r.id)?'runeEquipped':'')+'"><button type="button" class="tiny ghost" data-rune-equip="'+esc(r.id)+'" aria-expanded="'+(selectedRuneId===r.id)+'" aria-label="Choose slot for '+esc(r.name)+'">'+runeLine(r)+(slots.includes(r.id)?' ✓ Equipped':' · Choose slot')+'</button>'+(selectedRuneId===r.id?runeSlotChoicesMarkup(r,slots):'')+'<button class="tiny ghost" data-rune-sell="'+esc(r.id)+'" '+(slots.includes(r.id)?'disabled title="Unequip before recycling"':'')+' aria-label="Recycle '+esc(r.name)+' for '+runeSalvageValue(r)+' Fragments">Recycle · '+runeSalvageValue(r)+' 💠</button></div>').join(''):'<p class="small muted">Defeat a chapter boss to unlock your first permanent rune.</p>')+'</div><div class="buttonRow"><button class="tiny ghost" id="recycleDuplicateRunes" '+(duplicateRuneCandidates().length?'':'disabled')+'>Recycle spare duplicates · +'+duplicateRuneCandidates().reduce((sum,r)=>sum+runeSalvageValue(r),0)+' 💠</button></div><p class="small muted">Duplicates: keeps the highest-tier rune of each family and every equipped rune. Only one rune from each family can be equipped at a time.</p></section>';
 }
 // Rune recycling is intentionally separate from equipment salvage. Equipped runes are never sold.
 function runeSalvageValue(r){
@@ -803,34 +815,22 @@ function salvageDuplicateRunes(){
  return true;
 }
 function equipRune(id,index){
- if(state.run||index<0||index>2)return false;
+ if(state.run||!Number.isInteger(index)||index<0||index>2)return false;
  const rune=state.runes.find(r=>r.id===id);if(!rune)return false;
  const slots=state.runeSlots.slice();
- for(let i=0;i<slots.length;i++)if(i!==index&&slots[i]===id)slots[i]=null;
- if(slots.some((other,i)=>i!==index&&state.runes.some(r=>r.id===other&&r.family===rune.family)))return false;
+ // Swap freely regardless of rune tier. Clear the rune's old slot and any other
+ // rune with the same family; neither rune is destroyed or salvaged.
+ for(let i=0;i<slots.length;i++){
+  const other=state.runes.find(r=>r.id===slots[i]);
+  if(i!==index&&(slots[i]===id||other?.family===rune.family))slots[i]=null;
+ }
  slots[index]=id;state.runeSlots=slots;save();return true;
 }
 function openRuneSlotPicker(id){
- if(state.run){bannerMessage('Finish the expedition before changing runes.');return null;}
- const rune=state.runes.find(r=>r.id===id);
- if(!rune)return null;
- const slots=state.runeSlots||[null,null,null];
- const familyConflict=slots.some(other=>other!==id&&state.runes.some(r=>r.id===other&&r.family===rune.family));
- const choices=slots.map((equippedId,index)=>{
-  const equipped=state.runes.find(r=>r.id===equippedId);
-  const conflict=slots.some((other,i)=>i!==index&&state.runes.some(r=>r.id===other&&r.family===rune.family));
-  const same=equippedId===id;
-  const detail=same?'Already equipped':equipped?equipped.name+' · D'+equipped.tier:'Empty';
-  return '<button type="button" class="ghost" data-rune-slot-choice="'+index+'" '+(conflict||same?'disabled':'')+'><strong>Slot '+(index+1)+'</strong><span class="runeSlotOccupied">'+esc(detail)+'</span></button>';
- }).join('');
- const note=familyConflict?'<p class="small muted">Only one rune per family is allowed. Choose the slot containing that family to replace it, or unequip it first.</p>':'';
- const dialog=showModal('Equip '+rune.name,'<div class="runePickerItem">'+runeLine(rune)+'</div><p class="small muted">Choose a slot to equip this rune. Equipping replaces any rune in that slot.</p>'+note+'<div class="runeSlotChoices" role="group" aria-label="Choose rune slot">'+choices+'</div>');
- dialog.querySelectorAll('[data-rune-slot-choice]').forEach(button=>button.onclick=()=>{
-  const index=Number(button.dataset.runeSlotChoice);
-  if(equipRune(id,index)){dialog.close();renderStash();}
-  else bannerMessage('Cannot equip: only one rune per family, and runes cannot be changed during an expedition.');
- });
- return dialog;
+ if(state.run){bannerMessage('Finish the expedition before changing runes.');return false;}
+ if(!state.runes.some(r=>r.id===id))return false;
+ selectedRuneId=selectedRuneId===id?null:id;
+ renderStash();return true;
 }
 function offerBossRunes(tier){
  if(state.pendingRuneReward)return;
@@ -893,7 +893,7 @@ const EQUIPMENT_DROP_WEIGHTS=[['helm',13],['amulet',9],['armor',13],['gloves',13
 function rollEquipmentSlot(){let n=roll(1,100);for(const [slot,weight] of EQUIPMENT_DROP_WEIGHTS){n-=weight;if(n<=0)return slot==='ring'?sample(['ring1','ring2']):slot;}throw Error('Invalid drop weights');}
 function makeItem(tier,slot=null,affinity=null,source='loot',subtype='random',forcedRarity=null){slot=slot||rollEquipmentSlot();subtype=chooseSubtype(slot,subtype);let rarity=forcedRarity&&RARITY[forcedRarity]?forcedRarity:rarityRoll(tier,source==='forge');if(source==='merchant'&&rarity==='Legendary')rarity='Epic';const magic=['Staff','Wand','Orb','Tome','Charm'].includes(subtype);let pool=elementPool(slot,subtype);if(affinity==='crystal'&&!pool.includes('crystal'))pool=[...pool,'crystal'];let effect=pool.includes(affinity)&&Math.random()<.7?affinity:sample(pool);
 if(!magic&&rarity==='Common'&&Math.random()<.55)effect=null;
-let mult=RARITY[rarity][1],power=Math.round((2+tier*.91)*mult),o={id:makeId(),slot,subtype,name:sample(NAMES[subtype]||NAMES[slot]||['Ancient Gear']),rarity,tier,atk:0,def:0,hp:0,spd:0,str:0,agi:0,int:0,end:0,cha:0,mana:0,spell:0,effect,magic:magic?effect:null,crafted:source==='forge',craftPrice:source==='forge'?craftCost(tier):null,obtainedAt:Date.now(),locked:false,source};
+let mult=RARITY[rarity][1],power=Math.round((2+tier*.91)*mult),o={id:makeId(),slot,subtype,name:(source==='loot'&&subtype==='Sword'&&rarity==='Common'&&Math.random()<.25?'Old Sword':sample(NAMES[subtype]||NAMES[slot]||['Ancient Gear'])),rarity,tier,atk:0,def:0,hp:0,spd:0,str:0,agi:0,int:0,end:0,cha:0,mana:0,spell:0,effect,magic:magic?effect:null,crafted:source==='forge',craftPrice:source==='forge'?craftCost(tier):null,obtainedAt:Date.now(),locked:false,source};
 if(subtype==='Sword'){o.atk=power+3;o.str=1+Math.floor(tier*.20)}
 else if(subtype==='Mace'){o.atk=power+6;o.str=2+Math.floor(tier*.23);o.spd=-1}
 else if(subtype==='Bow'){o.atk=Math.round(power*1.4)+5;o.agi=2+Math.floor(tier*.21);o.spd=1}
@@ -1147,7 +1147,7 @@ function statsWidget(s){const uncapped=Math.round((4+s.cha*.95+(s.counts.crit||0
 function renderTavern(){
  wallet();
  const s=totalStats(),nextBoss=Math.min(DUNGEON_CAP,Math.ceil(state.maxDungeon/10)*10);
- html(`<section class="tavernArt" style="background-image:url('${ART.tavern}')"><div class="tavernCopy"><div class="eyebrow">Safe haven</div><h1>The Wanderer's Tavern</h1><div class="row"><img class="tavernAvatar" src="assets/characters/avatars/${state.characterId||'wanderer'}.webp" alt="Selected character"><div class="small">Prepare for your next expedition.</div></div></div></section><section class="panel homeOverview"><div class="topline"><div><h2>Expedition Readiness</h2><p class="small muted">${state.maxDungeon===DUNGEON_CAP?'All 200 dungeons unlocked':`Next chapter boss: D${nextBoss}`} · ${s.caster?'Magic build':'Physical build'}</p></div><button class="primary" data-go="dungeons">Explore →</button></div><div class="homeMetrics"><div><span>Highest unlocked</span><b>D${state.maxDungeon}</b></div><div><span>Gear Power</span><b>${s.power}</b></div><div><span>Max HP</span><b>${s.maxhp}</b></div><div><span>Stash</span><b>${state.stash.length}/${stashCapacity()}</b></div></div>${sessionMessage?`<p class="small gold">${esc(sessionMessage)}</p>`:''}</section><details class="panel homeChangelog" open><summary><span>What&apos;s new in v0.9.2</span><small>v0.9.1 → v0.9.2 · tap to collapse</small></summary><ul class="homeChanges"><li><strong>Global fresh start:</strong> Everyone starts again at D1 with no old gear, runes, Gold, Fragments or records. Nicknames and sign-in identities stay the same.</li><li><strong>v0.9.2:</strong> Combat-only Fastest D200 leaderboard (start a fresh speedrun to qualify), replayable speedruns via Account Reset, and current-attempt dungeon ranking. First-to-clear removed. Equipped-item list removed from the Tavern on all screens; improved mobile layouts and dungeon entry.</li><li><strong>3 new dungeon affinities:</strong> 🌿 Nature (Serpent Grove), ⚡ Storm (Stormglass Spire), and 🌊 Tide (Drowned Vault), each with unique 2/3/5-piece Tier Bonuses.</li><li>Dungeon choices now stay the same when leaving before Wave 1; rerolls cost Fragments.</li><li>v0.9.1: stronger Staff and Two-Handed hits; diminishing returns above 2.5 attacks per second.</li><li>💎 Obsidian Quarry has Crystal set bonuses; gear now includes 21 uniquely named Legendary items.</li><li>Recycle unused runes for Fragments, track a Legendary hunt, and see clearer extraction warnings. Staff and Two-Handed have new defensive weapon traits.</li><li>Dungeons expanded from D100 to <strong>D200</strong>.</li><li>Eight permanent runes earned from chapter bosses.</li><li>Four wave-4 elites: Tank, Berserker, Vampire and Caster.</li><li>Reworked equipment tier bonuses and new Legendary artwork.</li><li>Clearer combat, extraction and responsive Equipment layouts.</li></ul></details>`);
+ html(`<section class="tavernArt" style="background-image:url('${ART.tavern}')"><div class="tavernCopy"><div class="eyebrow">Safe haven</div><h1>The Wanderer's Tavern</h1><div class="row"><img class="tavernAvatar" src="assets/characters/avatars/${state.characterId||'wanderer'}.webp" alt="Selected character"><div class="small">Prepare for your next expedition.</div></div></div></section><section class="panel homeOverview"><div class="topline"><div><h2>Expedition Readiness</h2><p class="small muted">${state.maxDungeon===DUNGEON_CAP?'All 200 dungeons unlocked':`Next chapter boss: D${nextBoss}`} · ${s.caster?'Magic build':'Physical build'}</p></div><button class="primary" data-go="dungeons">Explore →</button></div><div class="homeMetrics"><div><span>Highest unlocked</span><b>D${state.maxDungeon}</b></div><div><span>Gear Power</span><b>${s.power}</b></div><div><span>Max HP</span><b>${s.maxhp}</b></div><div><span>Stash</span><b>${state.stash.length}/${stashCapacity()}</b></div></div>${sessionMessage?`<p class="small gold">${esc(sessionMessage)}</p>`:''}</section><details class="panel homeChangelog" open><summary><span>What&apos;s new in v0.9.2</span><small>v0.9.1 → v0.9.2 · tap to collapse</small></summary><ul class="homeChanges"><li><strong>Balance hotfix:</strong> Berserker Elite hits harder but cannot one-shot full-health players; Tank Elite reduces healing by 40% for 5s; gear drops increased moderately on Waves 1–4. Inline rune slots, 18 consistent equipment placeholders and the Common Old Sword are now available.</li><li><strong>Global fresh start:</strong> Everyone starts again at D1 with no old gear, runes, Gold, Fragments or records. Nicknames and sign-in identities stay the same.</li><li><strong>v0.9.2:</strong> Combat-only Fastest D200 leaderboard (start a fresh speedrun to qualify), replayable speedruns via Account Reset, and current-attempt dungeon ranking. First-to-clear removed. Equipped-item list removed from the Tavern on all screens; improved mobile layouts and dungeon entry.</li><li><strong>3 new dungeon affinities:</strong> 🌿 Nature (Serpent Grove), ⚡ Storm (Stormglass Spire), and 🌊 Tide (Drowned Vault), each with unique 2/3/5-piece Tier Bonuses.</li><li>Dungeon choices now stay the same when leaving before Wave 1; rerolls cost Fragments.</li><li>v0.9.1: stronger Staff and Two-Handed hits; diminishing returns above 2.5 attacks per second.</li><li>💎 Obsidian Quarry has Crystal set bonuses; gear now includes 21 uniquely named Legendary items.</li><li>Recycle unused runes for Fragments, track a Legendary hunt, and see clearer extraction warnings. Staff and Two-Handed have new defensive weapon traits.</li><li>Dungeons expanded from D100 to <strong>D200</strong>.</li><li>Eight permanent runes earned from chapter bosses.</li><li>Four wave-4 elites: Tank, Berserker, Vampire and Caster.</li><li>Reworked equipment tier bonuses and new Legendary artwork.</li><li>Clearer combat, extraction and responsive Equipment layouts.</li></ul></details>`);
  Q('[data-go]').forEach(b=>b.onclick=()=>nav(b.dataset.go));
 }
 function equipItem(itemId,target=null){
@@ -1181,13 +1181,18 @@ function baseStatScore(o){if(!o)return 0;return [['atk',3],['def',3],['hp',.18],
 function gearTrend(o){const old=state.equip[o.slot];const d=baseStatScore(o)-baseStatScore(old);const status=!old||d>.01?'up':d<-.01?'down':'same';const symbol=status==='up'?'▲':status==='down'?'▼':'≈';return `<span class="gearTrend ${status}" title="Base stats ${d>0?'+':''}${d.toFixed(1)} vs equipped (excludes effects and sets)" aria-label="${status==='up'?'Better':status==='down'?'Lower':'Same'} base stats">${symbol}</span>`}
 function stashVisible(){let arr=state.stash.filter(o=>slotFilter==='all'||(slotFilter==='rings'?['ring1','ring2'].includes(o.slot):o.slot===slotFilter));let rev=direction==='desc'?-1:1;return arr.sort((a,b)=>{let n=sort==='price'?saleFragments(a)-saleFragments(b):sort==='date'?a.obtainedAt-b.obtainedAt:a.tier-b.tier;return n*rev||a.name.localeCompare(b.name)})}
 function renderStash(){wallet();let items=stashVisible(),focus=state.stash.find(x=>x.id===selectedId),equipped=Object.values(state.equip).find(x=>x?.id===selectedId),stats=totalStats(),value=[...chosenItems].map(id=>state.stash.find(o=>o.id===id)).filter(o=>o&&!o.locked).reduce((a,o)=>a+saleFragments(o),0),count=[...chosenItems].filter(id=>state.stash.some(o=>o.id===id&&!o.locked)).length;
-html(`<div class="equipmentLayout"><div class="equipmentLeft"><section class="panel equipmentOverview"><h2>Equipment</h2><p class="small muted">Prepare your gear and compare items before an expedition.</p><div class="equipmentQuickView"><div class="equipmentLoadout"><div class="paper"><img class="model" src="${heroImage()}" alt="Wanderer">${SLOTS.map(sl=>{const o=state.equip[sl],reserved=sl==='offhand'&&isTwoHanded(state.equip.weapon);return `<button class="slotTile ${o?'filled':''} ${reserved?'reserved':''} ${slotFilter===sl||(slotFilter==='rings'&&['ring1','ring2'].includes(sl))?'filterSelected':''} ${o?.id===selectedId?'active':''}" ${rarityFrame(o)} data-slot="${sl}" data-eqslot="${sl}" aria-pressed="${slotFilter===sl||(slotFilter==='rings'&&['ring1','ring2'].includes(sl))}" title="${esc(o?.name||SNAME[sl])}"><img src="${o?itemImg(o):slotImg(sl)}" alt="${SNAME[sl]}"><span>${reserved?'2H occupied':SNAME[sl]}</span>${o?`<span class="slotDLevel">D${o.tier}</span>`:''}${affinityBadge(o)}</button>`}).join('')}</div></div><div class="equipmentStats"><h3>Stats & Attributes</h3>${statsWidget(stats)}<div class="statStrip">${['str','agi','int','end','cha'].map(k=>`<div class="metric"><span>${k.toUpperCase()}</span><strong>${stats[k]}</strong></div>`).join('')}</div><details><summary>Attribute explanations</summary><p class="small muted">STR: physical attack · AGI: attack speed · INT: spell power and mana regeneration · END: health and defense · CHA: critical chance and loot quality.</p><p class="small muted">Two-Handed, Bow and Staff occupy both hands and count as two affinity points, but remain one item. Staff casts generate Arcane Guard Barrier; Two-Handed strikes generate Heavy Guard Barrier, each on a 6-second cooldown.</p></details></div></div></section><section class="panel equipmentBonuses"><h3 class="setHeading">Set Bonus Progress</h3>${inventorySetProgress(stats)}</section></div><div class="equipmentRight"><section class="panel equipmentInventory"><div class="topline"><div><h2>Inventory <span class="small muted">${state.stash.length}/${stashCapacity()} slots</span></h2><p class="small muted">Tap an equipment slot to filter matching Stash items.</p></div><span class="token">💠 ${state.fragments}</span></div><div class="stashCapacityBar"><span class="small ${state.stash.length>=stashCapacity()?'red':'muted'}">${state.stash.length>stashCapacity()?'Overflow: ':'Stash: '}${state.stash.length} / ${stashCapacity()} · upgrade +${STASH_UPGRADE_STEP} slots</span><button class="tiny ghost" id="upgradeStash" ${stashCapacity()>=STASH_MAX_CAPACITY||state.gold<stashUpgradeCost()?'disabled':''}>${stashCapacity()>=STASH_MAX_CAPACITY?'Max capacity':`Expand · ${stashUpgradeCost()} Gold`}</button></div><div class="filterBar"><label>Slot<select id="slotFilter"><option value="all">All slots</option><option value="rings">Ring</option>${SLOTS.filter(s=>!["ring1","ring2"].includes(s)).map(s=>`<option value="${s}">${SNAME[s]}</option>`).join('')}</select></label><label>Sort<select id="sortBy"><option value="level">Item level</option><option value="date">Date looted</option><option value="price">Fragment value</option></select></label><label>Order<select id="orderBy"><option value="desc">High / newest</option><option value="asc">Low / oldest</option></select></label><button id="bulkToggle" class="${bulk?'primary':'ghost'} tiny">${bulk?'✓ Selecting':'Select Multiple'}</button></div><div class="bulkBar" ${bulk?'':'style="display:none"'}><button id="selectAll" class="tiny ghost">Select visible</button><button id="clearAll" class="tiny ghost">Clear</button><span class="small muted">${count} selected · ${value} 💠</span><button id="sellSelected" class="tiny danger" ${count?'':'disabled'}>Salvage selected</button></div><div class="stashLayout"><div class="stashGrid">${items.length?items.map(o=>`<button class="invItem ${chosenItems.has(o.id)||selectedId===o.id?'selected':''}" ${rarityFrame(o)} data-item="${o.id}" title="${esc(o.name)} · ${itemSource(o)}"><img src="${itemImg(o)}" alt="${esc(o.subtype)}">${affinityBadge(o)}${gearTrend(o)}<span class="lv">D${o.tier}</span><span class="rar" style="color:${rarityColor(o)}">◆</span>${o.locked?'<span class="lock">🔒</span>':''}${chosenItems.has(o.id)?'<span class="chk">✓</span>':''}</button>`).join(''):'<div class="small muted">No items in this slot. Choose another slot or All slots.</div>'}</div><div id="itemInspect">${previewItem(focus||equipped,equipped?'equipped':'stash')}</div></div></section><section class="panel equipmentRunes">${runeSectionMarkup()}</section></div></div>`);
+html(`<div class="equipmentLayout"><div class="equipmentLeft"><section class="panel equipmentOverview"><h2>Equipment</h2><p class="small muted">Prepare your gear and compare items before an expedition.</p><div class="equipmentQuickView"><div class="equipmentLoadout"><div class="paper"><img class="model" src="${heroImage()}" alt="Wanderer">${SLOTS.map(sl=>{const o=state.equip[sl],reserved=sl==='offhand'&&isTwoHanded(state.equip.weapon);return `<button class="slotTile ${o?'filled':''} ${reserved?'reserved':''} ${slotFilter===sl||(slotFilter==='rings'&&['ring1','ring2'].includes(sl))?'filterSelected':''} ${o?.id===selectedId?'active':''}" ${rarityFrame(o)} data-slot="${sl}" data-eqslot="${sl}" aria-pressed="${slotFilter===sl||(slotFilter==='rings'&&['ring1','ring2'].includes(sl))}" title="${esc(o?.name||SNAME[sl])}"><img src="${o?itemImg(o):placeholderIcon(sl)}" alt="${SNAME[sl]}"><span>${reserved?'2H occupied':SNAME[sl]}</span>${o?`<span class="slotDLevel">D${o.tier}</span>`:''}${affinityBadge(o)}</button>`}).join('')}</div></div><div class="equipmentStats"><h3>Stats & Attributes</h3>${statsWidget(stats)}<div class="statStrip">${['str','agi','int','end','cha'].map(k=>`<div class="metric"><span>${k.toUpperCase()}</span><strong>${stats[k]}</strong></div>`).join('')}</div><details><summary>Attribute explanations</summary><p class="small muted">STR: physical attack · AGI: attack speed · INT: spell power and mana regeneration · END: health and defense · CHA: critical chance and loot quality.</p><p class="small muted">Two-Handed, Bow and Staff occupy both hands and count as two affinity points, but remain one item. Staff casts generate Arcane Guard Barrier; Two-Handed strikes generate Heavy Guard Barrier, each on a 6-second cooldown.</p></details></div></div></section><section class="panel equipmentBonuses"><h3 class="setHeading">Set Bonus Progress</h3>${inventorySetProgress(stats)}</section></div><div class="equipmentRight"><section class="panel equipmentInventory"><div class="topline"><div><h2>Inventory <span class="small muted">${state.stash.length}/${stashCapacity()} slots</span></h2><p class="small muted">Tap an equipment slot to filter matching Stash items.</p></div><span class="token">💠 ${state.fragments}</span></div><div class="stashCapacityBar"><span class="small ${state.stash.length>=stashCapacity()?'red':'muted'}">${state.stash.length>stashCapacity()?'Overflow: ':'Stash: '}${state.stash.length} / ${stashCapacity()} · upgrade +${STASH_UPGRADE_STEP} slots</span><button class="tiny ghost" id="upgradeStash" ${stashCapacity()>=STASH_MAX_CAPACITY||state.gold<stashUpgradeCost()?'disabled':''}>${stashCapacity()>=STASH_MAX_CAPACITY?'Max capacity':`Expand · ${stashUpgradeCost()} Gold`}</button></div><div class="filterBar"><label>Slot<select id="slotFilter"><option value="all">All slots</option><option value="rings">Ring</option>${SLOTS.filter(s=>!["ring1","ring2"].includes(s)).map(s=>`<option value="${s}">${SNAME[s]}</option>`).join('')}</select></label><label>Sort<select id="sortBy"><option value="level">Item level</option><option value="date">Date looted</option><option value="price">Fragment value</option></select></label><label>Order<select id="orderBy"><option value="desc">High / newest</option><option value="asc">Low / oldest</option></select></label><button id="bulkToggle" class="${bulk?'primary':'ghost'} tiny">${bulk?'✓ Selecting':'Select Multiple'}</button></div><div class="bulkBar" ${bulk?'':'style="display:none"'}><button id="selectAll" class="tiny ghost">Select visible</button><button id="clearAll" class="tiny ghost">Clear</button><span class="small muted">${count} selected · ${value} 💠</span><button id="sellSelected" class="tiny danger" ${count?'':'disabled'}>Salvage selected</button></div><div class="stashLayout"><div class="stashGrid">${items.length?items.map(o=>`<button class="invItem ${chosenItems.has(o.id)||selectedId===o.id?'selected':''}" ${rarityFrame(o)} data-item="${o.id}" title="${esc(o.name)} · ${itemSource(o)}"><img src="${itemImg(o)}" alt="${esc(o.subtype)}">${affinityBadge(o)}${gearTrend(o)}<span class="lv">D${o.tier}</span><span class="rar" style="color:${rarityColor(o)}">◆</span>${o.locked?'<span class="lock">🔒</span>':''}${chosenItems.has(o.id)?'<span class="chk">✓</span>':''}</button>`).join(''):'<div class="small muted">No items in this slot. Choose another slot or All slots.</div>'}</div><div id="itemInspect">${previewItem(focus||equipped,equipped?'equipped':'stash')}</div></div></section><section class="panel equipmentRunes">${runeSectionMarkup()}</section></div></div>`);
 $('slotFilter').value=slotFilter;$('sortBy').value=sort;$('orderBy').value=direction;
 $('slotFilter').onchange=e=>{slotFilter=e.target.value;selectedId=null;chosenItems.clear();renderStash()};$('upgradeStash').onclick=upgradeStash;$('sortBy').onchange=e=>{sort=e.target.value;renderStash()};$('orderBy').onchange=e=>{direction=e.target.value;renderStash()};$('bulkToggle').onclick=()=>{bulk=!bulk;chosenItems.clear();renderStash()};
 if(bulk){$('selectAll').onclick=()=>{items.filter(o=>!o.locked).forEach(o=>chosenItems.add(o.id));renderStash()};$('clearAll').onclick=()=>{chosenItems.clear();renderStash()};$('sellSelected').onclick=bulkSell;}
 Q('[data-item]').forEach(b=>b.onclick=()=>{if(bulk){if(chosenItems.has(b.dataset.item))chosenItems.delete(b.dataset.item);else if(!state.stash.find(o=>o.id===b.dataset.item)?.locked)chosenItems.add(b.dataset.item);}else selectedId=b.dataset.item;renderStash()});
 Q('[data-eqslot]').forEach(b=>b.onclick=()=>{const sl=b.dataset.eqslot,filter=slotFilterFor(sl);if(slotFilter===filter){slotFilter='all';selectedId=null}else{slotFilter=filter;selectedId=state.equip[sl]?.id||null;}chosenItems.clear();renderStash();});
 Q('[data-rune-equip]').forEach(b=>b.onclick=()=>openRuneSlotPicker(b.dataset.runeEquip));
+Q('[data-rune-slot-choice]').forEach(b=>b.onclick=()=>{
+ const slot=Number(b.dataset.runeSlotChoice);
+ if(selectedRuneId&&equipRune(selectedRuneId,slot)){selectedRuneId=null;renderStash();}
+ else bannerMessage('Finish the expedition before changing runes.');
+});
 Q('[data-rune-remove]').forEach(b=>b.onclick=()=>{const i=Number(b.dataset.runeRemove);if(!state.run&&i>=0&&i<3){state.runeSlots[i]=null;save();renderStash();}});
 Q('[data-rune-sell]').forEach(b=>b.onclick=()=>salvageRune(b.dataset.runeSell));
 const recycleDuplicates=$('recycleDuplicateRunes');if(recycleDuplicates)recycleDuplicates.onclick=salvageDuplicateRunes;
@@ -1283,8 +1288,8 @@ function addLog(text,kind=''){logEntries.unshift({text,kind});logEntries=logEntr
 
 /* Four clear wave-4 elite identities, rolled once per expedition. */
 const ELITE_ARCHETYPES={
- tank:{id:'tank',icon:'🛡️',name:'Tank',risk:'High health, low direct damage. A long fight can wear down your HP.',hp:1.75,atk:.65,def:1.22,interval:1.93},
- berserker:{id:'berserker',icon:'⚔️',name:'Berserker',risk:'Low health, very high attack damage and faster strikes. Survive the burst.',hp:.72,atk:1.53,def:.86,interval:1.23},
+ tank:{id:'tank',icon:'🛡️',name:'Tank',risk:'High health, low damage. HP hits reduce your healing by 40% for 5s (refreshes on each hit).',hp:1.75,atk:.65,def:1.22,interval:1.93},
+ berserker:{id:'berserker',icon:'⚔️',name:'Berserker',risk:'Low health, high attack damage and quick strikes. Each hit is capped at 35% of your max HP.',hp:.72,atk:1.20,def:.86,interval:1.46},
  vampire:{id:'vampire',icon:'🩸',name:'Vampire',risk:'Recovers HP when its attacks damage your health. Barrier and burst are useful.',hp:1.10,atk:1.02,def:1.00,interval:1.56},
  caster:{id:'caster',icon:'🔮',name:'Caster',risk:'Successful hits weaken your direct damage by 20% for 3 combat seconds (7s between casts).',hp:.91,atk:.93,def:.90,interval:1.64}
 };
@@ -1311,8 +1316,8 @@ function enemyFor(level,enc){
  attackEvery:elite?elite.interval:role==='skirmisher'?1.42:role==='bruiser'?1.72:1.62,boss,effect:theme.effect,poison:0,burn:0,bleed:0,
  poisonStacks:0,burnStacks:0,bleedStacks:0,dots:{poison:[],bleed:[],burn:[]},slowTime:0,enraged:false};
 }
-function startDungeon(){if(state.run)return;if(state.pendingRuneReward){showPendingRuneReward();return;}if(!stashHasRoom()){bannerMessage('Stash full. Upgrade or salvage gear before another expedition.');return;}let theme=currentTheme(),stats=totalStats();state.run={tier:state.chosen,path:theme.id,favoredGear:[...offeredFavoredGear(theme)],enc:0,status:'ready',hp:stats.maxhp,maxhp:stats.maxhp,mp:stats.mana,maxmp:stats.mana,barrier:0,stats,enemy:null,tPlayer:0,tEnemy:0,tDot:0,loot:[],valuables:[],gold:0,fragments:0,protectedItemIds:chosenProtectionIds(),eliteType:rollEliteArchetype(),combatSeconds:0,setCooldowns:{},secondWindUsed:false};view='combat';logEntries=[];addLog(`Entering ${theme.name} — Dungeon ${state.chosen}.`,'good');save();renderCombat()}
-function nextEncounter(){const r=state.run;if(!r||r.status!=='ready'||r.enc>=wavesForDungeon(r.tier))return;r.enc++;selectedPath=r.path;r.enemy=enemyFor(r.tier,r.enc);r.tPlayer=r.tEnemy=r.tDot=0;r.setTemp=null;r.playerDebuffUntil=0;r.nextCasterHexAt=0;setRuntime(r);r.status='fight';addLog(waveTitle(r.enc)+' '+r.enc+'/'+wavesForDungeon(r.tier)+': '+r.enemy.name);save();renderCombat();clearInterval(clock);clock=setInterval(()=>{if(document.visibilityState!=='hidden')updateFight();},110/clockSpeed)}
+function startDungeon(){if(state.run)return;if(state.pendingRuneReward){showPendingRuneReward();return;}if(!stashHasRoom()){bannerMessage('Stash full. Upgrade or salvage gear before another expedition.');return;}let theme=currentTheme(),stats=totalStats();state.run={tier:state.chosen,path:theme.id,favoredGear:[...offeredFavoredGear(theme)],enc:0,status:'ready',hp:stats.maxhp,maxhp:stats.maxhp,mp:stats.mana,maxmp:stats.mana,barrier:0,stats,enemy:null,tPlayer:0,tEnemy:0,tDot:0,loot:[],valuables:[],gold:0,fragments:0,protectedItemIds:chosenProtectionIds(),eliteType:rollEliteArchetype(),playerHealingDebuffUntil:0,combatSeconds:0,setCooldowns:{},secondWindUsed:false};view='combat';logEntries=[];addLog(`Entering ${theme.name} — Dungeon ${state.chosen}.`,'good');save();renderCombat()}
+function nextEncounter(){const r=state.run;if(!r||r.status!=='ready'||r.enc>=wavesForDungeon(r.tier))return;r.enc++;selectedPath=r.path;r.enemy=enemyFor(r.tier,r.enc);r.tPlayer=r.tEnemy=r.tDot=0;r.setTemp=null;r.playerDebuffUntil=0;r.playerHealingDebuffUntil=0;r.nextCasterHexAt=0;setRuntime(r);r.status='fight';addLog(waveTitle(r.enc)+' '+r.enc+'/'+wavesForDungeon(r.tier)+': '+r.enemy.name);save();renderCombat();clearInterval(clock);clock=setInterval(()=>{if(document.visibilityState!=='hidden')updateFight();},110/clockSpeed)}
 const COMBAT_VFX={Sword:'slash_main_hand',Mace:'smash_main_hand',Daggers:'double_slash_daggers','Off-Hand Dagger':'double_slash_daggers','Two-Handed':'big_slash_two_hand',Bow:'arrow_bow',Staff:'big_spell_projectile_staff',Wand:'spell_projectile_wand',Block:'block'};
 function combatEffect(kind){
  const scene=$('scene'),asset=COMBAT_VFX[kind];if(!scene||!asset)return;
@@ -1372,7 +1377,10 @@ function setBarrier(r,amount){
  return Math.max(0,r.barrier-before);
 }
 function setHeal(r,amount){
- const heal=Math.max(0,Number(amount)||0),before=r.hp;
+ // Tank's healing wound affects all player healing: regeneration, Drain,
+ // Nature, Soul Pact and heal-on-hit, but does not reduce Barrier generation.
+ const healingReduced=(r.playerHealingDebuffUntil||0)>setNow(r);
+ const heal=Math.max(0,Number(amount)||0)*(healingReduced ? 0.60 : 1),before=r.hp;
  r.hp=Math.min(r.maxhp,r.hp+heal);
  const actual=r.hp-before,overheal=heal-actual;
  if(overheal>0&&r.stats.bonus.regenOverflow){
@@ -1607,9 +1615,12 @@ function updateFight(){
    raw=Math.round(raw*1.35);
    if(!e.enraged){e.enraged=true;addLog('🔥 Ember Sovereign enrages below half HP!','critical');}
   }
-  if(e.eliteType==='berserker'&&e.hp<e.maxhp*.5)raw=Math.round(raw*1.16);
+  if(e.eliteType==='berserker'&&e.hp<e.maxhp*.5)raw=Math.round(raw*1.08);
   const weaker=setEnemyWeaken(r);
   if(weaker)raw=Math.max(1,Math.round(raw*(1-weaker)));
+  // Elite Berserker cannot one-shot a full-health player with one direct hit.
+  // Cap before Block/Barrier so defensive investment still matters.
+  if(e.eliteType==='berserker')raw=Math.min(raw,Math.max(1,Math.floor(r.maxhp*.35)));
   const block=s.blockChance&&Math.random()<s.blockChance/100;
   if(block){
    const damageBlocked=Math.max(1,Math.round(raw*s.blockReduction));raw-=damageBlocked;
@@ -1621,6 +1632,10 @@ function updateFight(){
   if(blocked>0)addLog('🛡 Barrier absorbs '+blocked+' damage','good');
   if(hit>0){
    r.hp-=hit;addLog('🩸 '+e.name+' hits for '+hit+' HP','bleed');floatText(hit,'hero');
+   if(e.eliteType==='tank'){
+    r.playerHealingDebuffUntil=r.combatSeconds+5;
+    addLog('🛡️ Tank applies Healing Reduction: −40% healing for 5s!','critical');
+   }
    if(e.eliteType==='vampire'){
     const heal=Math.min(Math.max(0,e.maxhp-e.hp),Math.max(1,Math.round(hit*.38)),Math.max(1,Math.round(e.maxhp*.06)));
     if(heal>0){e.hp+=heal;addLog('🩸 Vampire drains '+heal+' HP','spell');}
@@ -1733,6 +1748,7 @@ function playerStatusMarkup(r){
  if(buffs.lastBastionReady)items.push('<span class="debuff">🛡 Counter ready</span>');
  if(r.secondWindUsed)items.push('<span class="debuff muted">💚 Second Wind used</span>');
  if((r.playerDebuffUntil||0)>now)items.push('<span class="debuff playerDebuff">🔮 Weakened −20% damage · '+Math.ceil(r.playerDebuffUntil-now)+'s</span>');
+ if((r.playerHealingDebuffUntil||0)>now)items.push('<span class="debuff playerDebuff">🛡️ Healing −40% · '+Math.ceil(r.playerHealingDebuffUntil-now)+'s</span>');
  // Future negative effects can be rendered here without changing combat layout.
  return items.join('');
 }
