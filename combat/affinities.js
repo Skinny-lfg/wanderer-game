@@ -13,7 +13,10 @@
     regen: { name: "Regen", base: { regenBonus: 2 }, tiers: { 2: "Recover 2 HP per second during combat.", 3: "25% of overhealing becomes Barrier; max 1% max HP per second and 10% per encounter. Total Barrier remains capped at 30%.", 5: "Second Wind: survive one lethal hit at 1 HP and gain 8% max HP as Barrier. Once per expedition, not per encounter; no invulnerability." }, signature: "Second Wind", cooldown: 0 },
     burn: { name: "Fire", base: { burnMultiplier: 0.15 }, tiers: { 2: "+15% Burn damage.", 3: "A damaging Burn tick grants 1 Heat per second regardless of stacks, max 5. Heat expires after 5s without a damaging Burn tick.", 5: "Flashover: consume 5 Heat on the next main hit for +50% of a normal hit. 10s cooldown; the explosion cannot create Burn or Heat." }, signature: "Flashover", cooldown: 10 },
     slow: { name: "Frost", base: { slowBonus: 0.25 }, tiers: { 2: "Slow increases the enemy attack interval by 25%; each application lasts 2.9s.", 3: "Chilled enemies deal 8% less direct damage. Combined set damage reduction is capped at 15%.", 5: "Deep Freeze: after 3s of continuous Chill, delay the next attack by 0.75s (boss: 0.25s). 12s cooldown; shared 4s delay immunity." }, signature: "Deep Freeze", cooldown: 12 },
-    drain: { name: "Dark", base: { drainBonus: 0.15 }, tiers: { 2: "+15% life recovered by Drain.", 3: "Drain that restores HP grants a Soul Charge, max 3; one charge per second. Charges expire after 6s without a gain.", 5: "Soul Pact: with 3 charges and more than 40% HP, the next main hit spends 3% max HP to deal +40% of a normal hit. Recover 25% of its actual damage, capped at 4% max HP. 12s cooldown; cannot generate charges." }, signature: "Soul Pact", cooldown: 12 }
+    drain: { name: "Dark", base: { drainBonus: 0.15 }, tiers: { 2: "+15% life recovered by Drain.", 3: "Drain that restores HP grants a Soul Charge, max 3; one charge per second. Charges expire after 6s without a gain.", 5: "Soul Pact: with 3 charges and more than 40% HP, the next main hit spends 3% max HP to deal +40% of a normal hit. Recover 25% of its actual damage, capped at 4% max HP. 12s cooldown; cannot generate charges." }, signature: "Soul Pact", cooldown: 12 },
+    nature: { name: "Nature", base: { natureBonus: 0.25 }, tiers: { 2: "+25% Nature healing proc.", 3: "Nature healing is 50% stronger below half HP.", 5: "Verdant Renewal: after surviving a hit at or below 35% HP, heal 8% max HP once per encounter." }, signature: "Verdant Renewal", cooldown: 0 },
+    shock: { name: "Storm", base: { shockBonus: 0.25 }, tiers: { 2: "+25% Storm direct damage proc.", 3: "Every third main attack adds 15% base damage.", 5: "Thunderclap: every sixth main attack adds 35% base damage, 10s cooldown." }, signature: "Thunderclap", cooldown: 10 },
+    tide: { name: "Tide", base: { tideBonus: 0.25 }, tiers: { 2: "+25% Tide Barrier proc.", 3: "While Barrier remains, enemy direct damage is reduced by 5% (15% combined cap).", 5: "High Tide: after surviving a hit with under 5% HP in Barrier, gain 8% max HP Barrier once per encounter." }, signature: "High Tide", cooldown: 0 }
   };
   const has = (r, e, tier) => Number(r.stats?.counts?.[e] || 0) >= tier;
   function bonuses(counts) {
@@ -35,7 +38,7 @@
     return active ? [d.tiers[2], values[effect + "Mechanic"] ? "3 pieces: " + d.tiers[3] : "", values[effect + "Signature"] ? "5 pieces: " + d.tiers[5] : ""].filter(Boolean).join(" ") : "No active bonus";
   }
   function state(r) {
-    return r.affinityState || (r.affinityState = { time: 0, cooldowns: {}, secondWindUsed: false, focus: 0, focusUntil: 0, heat: 0, heatUntil: 0, souls: 0, soulsUntil: 0, speed: [], counter: 0, counterUntil: 0, bastionUntil: 0, chillHeld: 0, delayImmuneUntil: 0, regenGenerated: 0, regenWindow: -1, regenInWindow: 0, lastFocus: -1e9, lastSoul: -1e9, lastBleed: -1e9, lastHeat: -1e9, events: [] });
+    return r.affinityState || (r.affinityState = { time: 0, cooldowns: {}, secondWindUsed: false, natureRenewalUsed: false, tideSurgeUsed: false, shockHits: 0, focus: 0, focusUntil: 0, heat: 0, heatUntil: 0, souls: 0, soulsUntil: 0, speed: [], counter: 0, counterUntil: 0, bastionUntil: 0, chillHeld: 0, delayImmuneUntil: 0, regenGenerated: 0, regenWindow: -1, regenInWindow: 0, lastFocus: -1e9, lastSoul: -1e9, lastBleed: -1e9, lastHeat: -1e9, events: [] });
   }
   function emit(r, text, effect) {
     const a = state(r);
@@ -53,7 +56,7 @@
   }
   function beginEncounter(r) {
     const a = state(r);
-    Object.assign(a, { focus: 0, heat: 0, souls: 0, speed: [], counter: 0, counterUntil: 0, bastionUntil: 0, chillHeld: 0, delayImmuneUntil: 0, regenGenerated: 0, regenWindow: -1, regenInWindow: 0, lastFocus: -1e9, lastSoul: -1e9, lastBleed: -1e9, lastHeat: -1e9 });
+    Object.assign(a, { shockHits: 0, natureRenewalUsed: false, tideSurgeUsed: false, focus: 0, heat: 0, souls: 0, speed: [], counter: 0, counterUntil: 0, bastionUntil: 0, chillHeld: 0, delayImmuneUntil: 0, regenGenerated: 0, regenWindow: -1, regenInWindow: 0, lastFocus: -1e9, lastSoul: -1e9, lastBleed: -1e9, lastHeat: -1e9 });
   }
   function barrier(r, amount) {
     const before = r.barrier || 0;
@@ -86,8 +89,8 @@
     return has(r, "sunder", 3) && r.enemy.baseDef > 0 && r.enemy.def <= r.enemy.baseDef * 0.5;
   }
   function incomingMultiplier(r) {
-    const e = r.enemy, poison = has(r, "poison", 3) ? Math.min(6, e.dots?.poison?.length || 0) * 0.01 : 0, frost = has(r, "slow", 3) && e.slowTime > 0 ? 0.08 : 0;
-    return 1 - Math.min(0.15, poison + frost);
+    const e = r.enemy, poison = has(r, "poison", 3) ? Math.min(6, e.dots?.poison?.length || 0) * 0.01 : 0, frost = has(r, "slow", 3) && e.slowTime > 0 ? 0.08 : 0, tide = has(r, "tide", 3) && r.barrier > 0 ? 0.05 : 0;
+    return 1 - Math.min(0.15, poison + frost + tide);
   }
   function delay(r, normal, boss) {
     const a = state(r);
@@ -135,6 +138,14 @@
   }
   function beforeAttack(r, base) {
     const a = state(r), e = r.enemy, out = { perfect: false, extra: [] };
+    if (has(r, "shock", 3)) {
+      a.shockHits++;
+      if (a.shockHits % 3 === 0) out.extra.push({ effect: "shock", name: "Storm Rhythm", damage: base * 0.15 });
+      if (has(r, "shock", 5) && a.shockHits % 6 === 0 && ready(r, "shock")) {
+        activate(r, "shock");
+        out.extra.push({ effect: "shock", name: "Thunderclap", damage: base * 0.35 });
+      }
+    }
     if (has(r, "sunder", 5) && vulnerable(r) && ready(r, "sunder")) {
       const broken = Math.min(e.barrier || 0, base);
       e.barrier = (e.barrier || 0) - broken;
@@ -233,6 +244,16 @@
   function afterIncoming(r) {
     const a = state(r);
     survive(r);
+    if (r.hp > 0 && has(r, "nature", 5) && !a.natureRenewalUsed && r.hp <= r.maxhp * 0.35) {
+      a.natureRenewalUsed = true;
+      const restored = heal(r, r.maxhp * 0.08);
+      emit(r, "Verdant Renewal: +" + restored.toFixed(1) + " HP", "nature");
+    }
+    if (r.hp > 0 && has(r, "tide", 5) && !a.tideSurgeUsed && r.barrier < r.maxhp * 0.05) {
+      a.tideSurgeUsed = true;
+      const gained = barrier(r, r.maxhp * 0.08);
+      emit(r, "High Tide: +" + gained.toFixed(1) + " Barrier", "tide");
+    }
     if (r.hp > 0 && has(r, "shield", 5) && (r.barrier || 0) >= r.maxhp * 0.1 && ready(r, "shield")) {
       a.bastionUntil = a.time + 4;
       activate(r, "shield");
