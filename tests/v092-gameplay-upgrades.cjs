@@ -43,7 +43,7 @@ startDungeon();nextEncounter();const heavy=state.run;
 weaponAttack(heavy);ck(heavy.barrier>0,'Two-Handed strike generates Heavy Guard');
 const heavyBarrier=heavy.barrier;weaponAttack(heavy);ck(heavy.barrier===heavyBarrier,'Two-Handed guard is cooldown-limited');
 fresh();state.stash=[];state.equip=makeSlots();state.run=null;
-die();ck(state.stash.length===1&&state.stash[0].name==='Training Sword','no-gear death restores starter immediately');
+die();ck(state.stash.length===1&&state.stash[0].name==='Old Sword','no-gear death restores starter immediately');
 die();ck(state.stash.length===1,'repeated death cannot mint starter items');
 globalThis.__upgradesPass=true;
 `;
