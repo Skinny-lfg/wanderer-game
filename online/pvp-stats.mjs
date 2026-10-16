@@ -88,7 +88,7 @@ function totalStats(equipment= {},ownedRunes=null,equippedRuneIds=null){
 function setDescription(effect,values){
  const b=values||{},parts=[];
  const push=(key,text)=>{if(b[key])parts.push(text);};
- if(effect==='crystal'){push('crystalBonus','Crystal resonance: +8% direct main-hand damage');push('crystalCharge','Each main attack builds a Crystal charge (max 3); at 3 charges the next strike gains +15% base damage and consumes the charges');push('crystalBurst','Crystal Burst: every third charged strike releases +35% base damage (10s cooldown)');}
+ if(effect==='crystal'){push('crystalBonus','Crystal resonance: +8% direct main-hand damage');push('crystalCharge','Every third main attack gains +15% base damage (hit counter resets each wave)');push('crystalBurst','Every third main attack can also trigger Crystal Burst for +35% base damage (10s expedition cooldown)');}
  if(effect==='poison'){push('poisonBonus','Poison DoTs +15%');push('poisonWeaken','Stacks weaken enemy direct damage by 1% each (max 6%)');push('venomBurst','Venom Burst: at 6 stacks spend 6 for 60% remaining DoT (max 100% base hit), 10s cooldown');}
  if(effect==='bleed'){push('bleedBonus','Bleed DoTs +15%');push('bleedHaste','Bleeding target grants +5% speed for 3s per charge, max 3 (1/s)');push('bloodHunt','Blood Hunt: +40% base hit when target ≤30% HP, 12s cooldown');}
  if(effect==='sunder'){push('sunderBonus','Armor reduction +2 per Sunder proc (minimum 25% initial Armor)');push('sunderExpose','At ≤50% initial Armor enemy takes +8% direct damage');push('armorShatter','Armor Shatter: remove up to one base hit of Barrier and delay next enemy strike (0.5s; boss 0.2s), 12s cooldown');}
