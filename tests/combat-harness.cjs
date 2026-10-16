@@ -20,7 +20,7 @@ module.exports=function harness(html=fs.readFileSync('index.html','utf8')){
   for(let enc=1;enc<=3;enc++){r.enc=enc;r.enemy=enemyFor(level,enc);r.tPlayer=r.tEnemy=r.tDot=0;r.status='fight';if(globalThis.WandererAffinities&&typeof Affinity!=='undefined')Affinity.beginEncounter(r);let n=0;while(r.status==='fight'&&n<2728){updateFight();n++;}steps+=n;durations.push(+(n*.11).toFixed(2));if(r.status!=='ready')break;}
   return {won:r.status==='ready'&&r.enc===3,hp:+Math.max(0,r.hp).toFixed(3),seconds:+(steps*.11).toFixed(2),durations,power:stats.power,events:battleEvents,counts:stats.counts,equipment,affinityState:r.affinityState};
  };
- globalThis.combatAccess={totalStats,weaponAttack,setCounts,setPreview,makeSlots,makeItem,state,getState:()=>state};
+ globalThis.combatAccess={totalStats,weaponAttack,setCounts,setPreview,makeSlots,makeItem,legendarySignature,legendaryAttackBonus,legendaryDefensiveEffects,state,getState:()=>state};
  `;
- vm.runInNewContext(fs.readFileSync('combat/affinities.js','utf8')+'\n'+script.replace(boot,injected),ctx,{timeout:10000});return ctx;
+ vm.runInNewContext(fs.readFileSync('combat/affinities.js','utf8')+'\n'+fs.readFileSync('combat/legendary.js','utf8')+'\n'+script.replace(boot,injected),ctx,{timeout:10000});return ctx;
 };
