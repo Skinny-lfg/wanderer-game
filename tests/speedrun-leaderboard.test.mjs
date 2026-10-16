@@ -37,7 +37,7 @@ test('D200 best survives reset and only improves on a faster complete attempt',a
    gold:0,fragments:0,maxDungeon:Math.max(1,deepest),stash:[],equip:{},run:null,
    onlineProgress:{attemptId:id,deepestCleared:deepest,timingEligible:true,activeMs:time??0,milestones:time==null?{}:{200:{activeMs:time}}}
   });
-  const depth='testSeasons/test-open-1/deepest/alice',best='testSeasons/test-open-1/speedruns/alice';
+  const depth='testSeasons/v092-launch-1/deepest/alice',best='testSeasons/v092-launch-1/speedruns/alice';
   await backend.publishTestResults(make('attempt-a',100,null));
   assert.equal(records.get(depth).deepest,100);
   assert.equal(records.has(best),false,'no D200 record without completion');
