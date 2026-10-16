@@ -1,7 +1,7 @@
 // Equipment placeholder pack and Common-only Old Sword checks. Node built-ins only.
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const root=path.join(__dirname,'..'),html=fs.readFileSync(path.join(root,'index.html'),'utf8');
-const assets=['sword','mace','daggers','two_handed','bow','staff','wand','shield','orb','tome','charm','helmet','chest'];
+const assets=['sword','mace','daggers','two_handed','bow','staff','wand','shield','orb','tome','charm','helmet','chest','amulet','ring','boots','gloves','off_hand_dagger'];
 for(const key of assets){
  const data=fs.readFileSync(path.join(root,'assets','placeholders',key+'.svg'),'utf8');
  const match=data.match(/href="data:image\/png;base64,([A-Za-z0-9+/=]+)"/);
@@ -36,9 +36,25 @@ for(const rarity of ['Uncommon','Rare','Epic','Legendary']){
 const fav=THEMES[0],gear=favoredGearMarkup(fav,['Sword','Ring','Boots']);
 check((gear.match(/assets\/placeholders\//g)||[]).length===3,'all three dungeon affinity images are placeholders');
 check(!gear.includes('assets/equipment/'),'favored previews have no ordinary randomized item art');
+check(gear.includes(placeholderIcon('Ring'))&&gear.includes(placeholderIcon('Boots')),'dungeon affinities use new Ring and Boots icons');
+const added={
+  'Amulet':'amulet','Ring':'ring','Boots':'boots','Gloves':'gloves','Off-Hand Dagger':'off_hand_dagger',
+  amulet:'amulet',ring1:'ring',ring2:'ring',boots:'boots',gloves:'gloves'
+};
+for(const [kind,icon] of Object.entries(added)){
+ check(placeholderIcon(kind)==='assets/placeholders/'+icon+'.svg',kind+' maps to its dedicated placeholder');
+}
+for(const kind of [...TYPES,...OFFHAND_TYPES]){
+ check(forgePreviewImage('weapon',kind)===placeholderIcon(kind),'Forge preview uses dedicated '+kind+' placeholder');
+}
+for(const slot of SLOTS){
+ check(forgePreviewImage(slot,'random')===placeholderIcon(slot),'Forge random subtype preview uses '+slot+' placeholder');
+}
+check(forgePreviewImage('offhand','Off-Hand Dagger')===placeholderIcon('Off-Hand Dagger'),'Forge off-hand dagger uses its unique placeholder');
+check(forgePreviewImage('weapon','Sword')===placeholderIcon('Sword'),'Forge Sword preview never uses random gear art');
 globalThis.__placeholderPassed=true;
 `;
 const sandbox={localStorage:{getItem:()=>null,setItem(){}},document:{getElementById:()=>null,querySelectorAll:()=>[],createElement:()=>({})},console,setInterval:()=>0,clearInterval:()=>{},setTimeout:()=>0,clearTimeout:()=>{}};
 vm.runInNewContext(src.replace(boot,testCode),sandbox,{timeout:6000});
 assert(sandbox.__placeholderPassed,'placeholder gear regression');
-console.log('PASS: 13 images, empty-slot opacity, dungeon affinity imagery, Common-only Old Sword');
+console.log('PASS: 18 images, Forge preview, empty slots, dungeon affinity imagery, Common-only Old Sword');
