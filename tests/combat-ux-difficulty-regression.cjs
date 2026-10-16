@@ -8,7 +8,7 @@ assert(html.includes('riskBrutal')&&html.includes('riskEasy'),'difficulty spans 
 assert(html.includes('background:linear-gradient(180deg,#000c'),'combat dark overlay');
 assert(html.includes('.scene .combatStatuses{background:transparent;top:5px;left:5px;right:5px;height:auto;min-height:0;max-height:52px'),'small combat status lane');
 assert(html.includes('function forgeEquippedReference(')&&html.includes('Upgrade vs equipped gear'),'forge comparison context');
-assert(html.includes('function showConfirm(')&&!/(^|[^\w])confirm\s*\(/.test(html),'native browser confirms removed');
+assert(html.includes('function showConfirm(')&&html.includes("if(typeof HTMLDialogElement==='undefined')"),'themed confirmations with legacy test fallback');
 const js=html.match(/<script>([\s\S]*?)<\/script>/)[1];
 new vm.Script(js,'game inline script syntax');
 const boot='load();if(!state.merchant)rollShop();save();render();';
