@@ -1316,8 +1316,8 @@ function enemyFor(level,enc){
  attackEvery:elite?elite.interval:role==='skirmisher'?1.42:role==='bruiser'?1.72:1.62,boss,effect:theme.effect,poison:0,burn:0,bleed:0,
  poisonStacks:0,burnStacks:0,bleedStacks:0,dots:{poison:[],bleed:[],burn:[]},slowTime:0,enraged:false};
 }
-function startDungeon(){if(state.run)return;if(state.pendingRuneReward){showPendingRuneReward();return;}if(!stashHasRoom()){bannerMessage('Stash full. Upgrade or salvage gear before another expedition.');return;}let theme=currentTheme(),stats=totalStats();state.run={tier:state.chosen,path:theme.id,favoredGear:[...offeredFavoredGear(theme)],enc:0,status:'ready',hp:stats.maxhp,maxhp:stats.maxhp,mp:stats.mana,maxmp:stats.mana,barrier:0,stats,enemy:null,tPlayer:0,tEnemy:0,tDot:0,loot:[],valuables:[],gold:0,fragments:0,protectedItemIds:chosenProtectionIds(),eliteType:rollEliteArchetype(),combatSeconds:0,setCooldowns:{},secondWindUsed:false};view='combat';logEntries=[];addLog(`Entering ${theme.name} — Dungeon ${state.chosen}.`,'good');save();renderCombat()}
-function nextEncounter(){const r=state.run;if(!r||r.status!=='ready'||r.enc>=wavesForDungeon(r.tier))return;r.enc++;selectedPath=r.path;r.enemy=enemyFor(r.tier,r.enc);r.tPlayer=r.tEnemy=r.tDot=0;r.setTemp=null;r.playerDebuffUntil=0;r.nextCasterHexAt=0;setRuntime(r);r.status='fight';addLog(waveTitle(r.enc)+' '+r.enc+'/'+wavesForDungeon(r.tier)+': '+r.enemy.name);save();renderCombat();clearInterval(clock);clock=setInterval(()=>{if(document.visibilityState!=='hidden')updateFight();},110/clockSpeed)}
+function startDungeon(){if(state.run)return;if(state.pendingRuneReward){showPendingRuneReward();return;}if(!stashHasRoom()){bannerMessage('Stash full. Upgrade or salvage gear before another expedition.');return;}let theme=currentTheme(),stats=totalStats();state.run={tier:state.chosen,path:theme.id,favoredGear:[...offeredFavoredGear(theme)],enc:0,status:'ready',hp:stats.maxhp,maxhp:stats.maxhp,mp:stats.mana,maxmp:stats.mana,barrier:0,stats,enemy:null,tPlayer:0,tEnemy:0,tDot:0,loot:[],valuables:[],gold:0,fragments:0,protectedItemIds:chosenProtectionIds(),eliteType:rollEliteArchetype(),playerHealingDebuffUntil:0,combatSeconds:0,setCooldowns:{},secondWindUsed:false};view='combat';logEntries=[];addLog(`Entering ${theme.name} — Dungeon ${state.chosen}.`,'good');save();renderCombat()}
+function nextEncounter(){const r=state.run;if(!r||r.status!=='ready'||r.enc>=wavesForDungeon(r.tier))return;r.enc++;selectedPath=r.path;r.enemy=enemyFor(r.tier,r.enc);r.tPlayer=r.tEnemy=r.tDot=0;r.setTemp=null;r.playerDebuffUntil=0;r.playerHealingDebuffUntil=0;r.nextCasterHexAt=0;setRuntime(r);r.status='fight';addLog(waveTitle(r.enc)+' '+r.enc+'/'+wavesForDungeon(r.tier)+': '+r.enemy.name);save();renderCombat();clearInterval(clock);clock=setInterval(()=>{if(document.visibilityState!=='hidden')updateFight();},110/clockSpeed)}
 const COMBAT_VFX={Sword:'slash_main_hand',Mace:'smash_main_hand',Daggers:'double_slash_daggers','Off-Hand Dagger':'double_slash_daggers','Two-Handed':'big_slash_two_hand',Bow:'arrow_bow',Staff:'big_spell_projectile_staff',Wand:'spell_projectile_wand',Block:'block'};
 function combatEffect(kind){
  const scene=$('scene'),asset=COMBAT_VFX[kind];if(!scene||!asset)return;
@@ -1380,7 +1380,7 @@ function setHeal(r,amount){
  // Tank's healing wound affects all player healing: regeneration, Drain,
  // Nature, Soul Pact and heal-on-hit, but does not reduce Barrier generation.
  const healingReduced=(r.playerHealingDebuffUntil||0)>setNow(r);
- const heal=Math.max(0,Number(amount)||0)*(healingReduced?.60:1),before=r.hp;
+ const heal=Math.max(0,Number(amount)||0)*(healingReduced ? 0.60 : 1),before=r.hp;
  r.hp=Math.min(r.maxhp,r.hp+heal);
  const actual=r.hp-before,overheal=heal-actual;
  if(overheal>0&&r.stats.bonus.regenOverflow){
