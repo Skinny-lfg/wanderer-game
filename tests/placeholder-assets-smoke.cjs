@@ -22,6 +22,8 @@ function check(ok,msg){if(!ok)throw Error(msg);}
 check(starter().name==='Old Sword'&&starter().rarity==='Common','new starter is Common Old Sword');
 check(itemImg(starter())===placeholderIcon('Sword'),'starter image is supplied old sword art');
 check(itemImg({name:'Training Sword',subtype:'Sword',rarity:'Common',slot:'weapon'})===placeholderIcon('Sword'),'legacy Training Sword artwork still works');
+const legacyStarter={...starter(),name:'Training Sword'},migrated=migrateItem(legacyStarter);
+check(migrated.name==='Old Sword'&&migrated.atk===legacyStarter.atk&&migrated.id===legacyStarter.id,'legacy starter save renamed without item loss');
 let foundOld=0;
 for(let i=0;i<500;i++){
  const item=makeItem(5,'weapon',null,'loot','Sword','Common');
