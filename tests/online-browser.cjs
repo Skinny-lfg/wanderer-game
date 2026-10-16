@@ -33,7 +33,8 @@ const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8010';
  assert.equal(await page.evaluate(()=>__firebaseTest.feedback[0].category),'bug');
  await page.locator('#feedbackDone').click();
  await page.locator('[data-online-action="leaderboard"]').click();await page.locator('.rankingList').waitFor();assert.equal(await page.locator('#publishResults,.experimental').count(),0);assert.ok(!(await page.locator('.onlineDialog').innerText()).includes('Unverified'));
- for(const mode of ['first','fastest','deepest']){await page.locator('#ranking').selectOption(mode);await page.locator('.rankingList').waitFor();}
+ assert.equal(await page.locator('#ranking').inputValue(),'fastest');assert.equal(await page.locator('#milestone,#ranking option[value="first"]').count(),0);
+ for(const mode of ['deepest','fastest']){await page.locator('#ranking').selectOption(mode);await page.locator('.rankingList').waitFor();}
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await close();
  // Timed autosync automatically publishes changed progress, but does not repeat unchanged scores.
  await page.clock.install();await page.evaluate(()=>{const s=WandererGame.snapshot();s.onlineProgress.deepestCleared=20;s.onlineProgress.milestones[20]={activeMs:60000};WandererGame.switchSave(WandererGame.key(),s);});
@@ -113,6 +114,34 @@ const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8010';
  await account();assert.match(await page.locator('.guestNotice').innerText(),/signing out/);
  await page.locator('#googleSignOut').click();assert.match(await page.locator('.onlineDialog').innerText(),/cannot be recovered/);
  await page.locator('#keepGuest').click();assert.ok(await page.locator('#googleSignOut').isVisible());await close();
+ // Fresh speedrun resets account progress but not identity; failed cloud writes leave local data untouched.
+ const previousAttempt=(await snapshot()).onlineProgress.attemptId||'legacy';
+ await page.evaluate(()=>{
+  const s=WandererGame.snapshot();
+  s.gold=733;s.fragments=111;s.maxDungeon=18;s.chosen=18;s.onlineProgress.deepestCleared=17;
+  WandererGame.switchSave(WandererGame.key(),s);
+ });
+ await account();await page.locator('#resetProgress').click();
+ assert.match(await page.locator('.onlineDialog').innerText(),/All playable progress/);
+ await page.locator('#cancelReset').click();assert.equal((await snapshot()).gold,733);
+ await page.locator('#resetProgress').click();await page.locator('#resetConfirmation').fill('WRONG');await page.locator('#confirmReset').click();
+ assert.match(await page.locator('.onlineDialog .onlineError').innerText(),/Type RESET/);
+ assert.equal((await snapshot()).gold,733);
+ await page.locator('#resetConfirmation').fill('RESET');
+ await page.evaluate(()=>{__firebaseTest.offline=true});
+ await page.locator('#confirmReset').click();
+ assert.match(await page.locator('.onlineDialog .onlineError').innerText(),/unavailable/);
+ assert.equal((await snapshot()).gold,733,'cloud error must not destroy progress');
+ await page.evaluate(()=>{__firebaseTest.offline=false});
+ await page.locator('#confirmReset').click();
+ await page.waitForFunction(()=>!document.querySelector('.onlineDialog')&&WandererGame.snapshot().gold===0);
+ const reset=await snapshot();
+ assert.equal(reset.maxDungeon,1);assert.equal(reset.fragments,0);assert.equal(reset.runes.length,0);
+ assert.equal(reset.onlineProgress.deepestCleared,0);assert.equal(reset.onlineProgress.activeMs,0);
+ assert.notEqual(reset.onlineProgress.attemptId,previousAttempt);
+ assert.equal(await page.evaluate(()=>JSON.parse(__firebaseTest.cloud.payload).gold),0,'cloud reset committed');
+ assert.equal(await page.locator('[data-online-action="account"]').innerText(),'guesthero','nickname preserved');
+
  assert.deepEqual(errors,[]);
  console.log(`PASS ${width}px: login required, migration, cosmetics, automatic sync/rankings, conflicts, offline retry, sign-out and return`);await page.close();
  }}finally{await browser.close()}})().catch(error=>{console.error(error);process.exitCode=1});
