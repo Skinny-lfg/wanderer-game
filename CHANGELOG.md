@@ -2,6 +2,7 @@
 
 ## v0.9.2 — 2026-10-16 (mobile UI + D200 speedruns)
 
+- Display locked and unlocked Tier Bonus milestones in fixed **2 → 3 → 5** order rather than bringing inactive five-piece tiers to the top; no bonus values changed.
 - Display all five main navigation tabs in a 3+2 grid on phones; larger tap targets remove the need to scroll sideways to Dungeons.
 - Remove the equipped-gear strip from the Tavern homepage **on all screen sizes** (desktop and mobile). Equipment management remains in Equipment.
 - Put a compact 3×3 equipped-item grid next to character statistics on mobile, bringing Inventory higher into view. Keep desktop's character illustration and layout.
