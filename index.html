@@ -343,15 +343,15 @@ let KEY='wanderer_browser_proto_v01',lastStoredValue=null,saveBlocked=false;
 const $=id=>document.getElementById(id), Q=sel=>document.querySelectorAll(sel);
 const SLOTS=['helm','amulet','armor','gloves','weapon','offhand','ring1','ring2','boots'];
 const SNAME={helm:'Helm',amulet:'Amulet',armor:'Armor',gloves:'Gloves',weapon:'Weapon',offhand:'Off-Hand',ring1:'Ring I',ring2:'Ring II',boots:'Boots'};
-const ELEMENTS={poison:{name:'Poison',icon:'☠️',color:'#80cf8a'},bleed:{name:'Bleed',icon:'🩸',color:'#ed8590'},crit:{name:'Critical',icon:'🎯',color:'#e9c480'},sunder:{name:'Sunder',icon:'🔨',color:'#d5ab81'},shield:{name:'Shield',icon:'🛡️',color:'#90bdeb'},regen:{name:'Regen',icon:'💚',color:'#89d1ac'},burn:{name:'Fire',icon:'🔥',color:'#ffa16a'},slow:{name:'Frost',icon:'❄️',color:'#8de7ff'},drain:{name:'Dark',icon:'🌑',color:'#c8a1fd'}};
+const ELEMENTS={poison:{name:'Poison',icon:'☠️',color:'#80cf8a'},bleed:{name:'Bleed',icon:'🩸',color:'#ed8590'},crit:{name:'Critical',icon:'🎯',color:'#e9c480'},sunder:{name:'Sunder',icon:'🔨',color:'#d5ab81'},shield:{name:'Shield',icon:'🛡️',color:'#90bdeb'},regen:{name:'Regen',icon:'💚',color:'#89d1ac'},burn:{name:'Fire',icon:'🔥',color:'#ffa16a'},slow:{name:'Frost',icon:'❄️',color:'#8de7ff'},drain:{name:'Dark',icon:'🌑',color:'#c8a1fd'},nature:{name:'Nature',icon:'🌿',color:'#8acb75'},shock:{name:'Storm',icon:'⚡',color:'#e5c66a'},tide:{name:'Tide',icon:'🌊',color:'#78c8df'}};
 const RARITY={Common:['#aab2bc',1,1],Uncommon:['#76d69b',1.25,1.5],Rare:['#77baff',1.57,2.4],Epic:['#d0a2fa',2.1,3.9],Legendary:['#ffc36a',2.6,6]};
 const THEMES=[
  ['temple','Venomous Temple','poison','assets/dungeons/backgrounds/temple.webp','Venom Acolyte'],['forge','Blood Forge','bleed','assets/dungeons/backgrounds/forge.webp','Forge Raider'],
  ['crypt','Echo Crypt','crit','assets/dungeons/backgrounds/crypt.webp','Crypt Wraith'],['bastion','Iron Bastion','sunder','assets/dungeons/backgrounds/bastion.webp','Iron Sentinel'],
  ['frost','Frostbound Catacombs','slow','assets/dungeons/backgrounds/frost.webp','Frozen Revenant'],['ash','Ashen Sanctum','burn','assets/dungeons/backgrounds/ash.webp','Ash Zealot'],
  ['void','Umbral Reliquary','drain','assets/dungeons/backgrounds/void.webp','Soul Drinker'],['ward','Warded Catacombs','shield','assets/dungeons/backgrounds/ward.webp','Warded Guardian'],
- ['grove','Serpent Grove','poison','assets/dungeons/backgrounds/grove.webp','Serpent Guard'],['shrine','Lost Sanctuary','regen','assets/dungeons/backgrounds/shrine.webp','Fallen Acolyte'],
- ['storm','Stormglass Spire','crit','assets/dungeons/backgrounds/storm.webp','Stormglass Knight'],['drowned','Drowned Vault','drain','assets/dungeons/backgrounds/drowned.webp','Drowned Oracle'],['quarry','Obsidian Quarry','sunder','assets/dungeons/backgrounds/quarry.webp','Basalt Guardian']
+ ['grove','Serpent Grove','nature','assets/dungeons/backgrounds/grove.webp','Serpent Guard'],['shrine','Lost Sanctuary','regen','assets/dungeons/backgrounds/shrine.webp','Fallen Acolyte'],
+ ['storm','Stormglass Spire','shock','assets/dungeons/backgrounds/storm.webp','Stormglass Knight'],['drowned','Drowned Vault','tide','assets/dungeons/backgrounds/drowned.webp','Drowned Oracle'],['quarry','Obsidian Quarry','sunder','assets/dungeons/backgrounds/quarry.webp','Basalt Guardian']
 ].map(([id,name,effect,image,enemy])=>({id,name,effect,image,enemy}));
 const MOB_POOLS={
  temple:[['Venom Cobra','assets/mobs/temple/venom_cobra.png'],['Venom Spider','assets/mobs/temple/venom_spider.png']],
@@ -433,7 +433,7 @@ function itemImg(o){
 function makeSlots(){return Object.fromEntries(SLOTS.map(s=>[s,null]))}
 function starter(){return {id:makeId(),slot:'weapon',subtype:'Sword',name:'Training Sword',tier:1,rarity:'Common',effect:null,atk:5,str:1,obtainedAt:Date.now(),crafted:false,recoveryStarter:true}}
 function fresh(){state={characterId:'wanderer',onlineProgress:{deepestCleared:0,activeMs:0,timingEligible:true,milestones:{}},stashCapacity:STASH_BASE_CAPACITY,confirmNormalDungeons:true,maxDungeon:1,chosen:1,selectedPath:null,protectedItemIds:[],runes:[],runeSlots:[null,null,null],pendingRuneReward:null,fragments:0,gold:0,stash:[starter()],equip:makeSlots(),valuables:[],offersByLevel:{},merchant:null,run:null};}
-function migrateItem(o){if(!o)return null;const v={...o};if(v.slot==='ring')v.slot='ring1';if(!SLOTS.includes(v.slot))v.slot='weapon';v.id=v.id||makeId();v.tier=clamp(Number(v.tier)||1,1,200);v.rarity={Comum:'Common',Incomum:'Uncommon',Raro:'Rare','Épico':'Epic','Lendário':'Legendary'}[v.rarity]||v.rarity||'Common';if(!RARITY[v.rarity])v.rarity='Common';if(v.effect==='burst')v.effect='sunder';if(!ELEMENTS[v.effect])v.effect=null;v.subtype=v.subtype||({weapon:'Sword',offhand:'Shield',ring1:'Ring',ring2:'Ring'}[v.slot]||SNAME[v.slot]);if(['Staff','Wand'].includes(v.subtype)){v.magic=v.magic||(['poison','burn','slow','drain'].includes(v.effect)?v.effect:'burn');v.effect=v.magic;}if(['Orb','Tome','Charm'].includes(v.subtype)&&['poison','burn','slow','drain'].includes(v.effect))v.magic=v.effect;v.obtainedAt=Number(v.obtainedAt)||Date.now();v.name=String(v.name||'Equipment');for(const [,field]of FIELDS)v[field]=Number(v[field])||0;if(v.magic&&!ELEMENTS[v.magic])v.magic=null;v.crafted=!!v.crafted;v.locked=!!v.locked;return v;}
+function migrateItem(o){if(!o)return null;const v={...o};if(v.slot==='ring')v.slot='ring1';if(!SLOTS.includes(v.slot))v.slot='weapon';v.id=v.id||makeId();v.tier=clamp(Number(v.tier)||1,1,200);v.rarity={Comum:'Common',Incomum:'Uncommon',Raro:'Rare','Épico':'Epic','Lendário':'Legendary'}[v.rarity]||v.rarity||'Common';if(!RARITY[v.rarity])v.rarity='Common';if(v.effect==='burst')v.effect='sunder';if(!ELEMENTS[v.effect])v.effect=null;v.subtype=v.subtype||({weapon:'Sword',offhand:'Shield',ring1:'Ring',ring2:'Ring'}[v.slot]||SNAME[v.slot]);if(['Staff','Wand'].includes(v.subtype)){v.magic=v.magic||(['poison','burn','slow','drain','nature','shock','tide'].includes(v.effect)?v.effect:'burn');v.effect=v.magic;}if(['Orb','Tome','Charm'].includes(v.subtype)&&['poison','burn','slow','drain','nature','shock','tide'].includes(v.effect))v.magic=v.effect;v.obtainedAt=Number(v.obtainedAt)||Date.now();v.name=String(v.name||'Equipment');for(const [,field]of FIELDS)v[field]=Number(v[field])||0;if(v.magic&&!ELEMENTS[v.magic])v.magic=null;v.crafted=!!v.crafted;v.locked=!!v.locked;return v;}
 // Inspect legacy saves before migration: never silently sanitize corrupted progress.
 function checkedStoredSave(raw){
  const o=typeof raw==='string'?JSON.parse(raw):raw;
@@ -515,7 +515,7 @@ function heroImage(){return 'assets/characters/full/'+(state.characterId||'wande
 
 function bannerMessage(text){let t=$('toast');t.textContent=text;t.classList.remove('hidden');clearTimeout(bannerMessage.timer);bannerMessage.timer=setTimeout(()=>t.classList.add('hidden'),2800)}
 function detailEffect(o){return o.effect?(ELEMENTS[o.effect]?.icon+' '+ELEMENTS[o.effect]?.name):'No affinity'}
-function elementPool(slot,subtype){if(subtype==='Staff'||subtype==='Wand')return ['poison','burn','slow','drain'];if(subtype==='Shield')return ['shield','regen','sunder'];if(subtype==='Off-Hand Dagger')return ['poison','bleed','crit'];if(subtype==='Two-Handed')return ['bleed','sunder','poison','burn'];if(slot==='offhand')return ['poison','burn','slow','drain','shield'];if(subtype==='Mace')return ['sunder','bleed','shield'];if(subtype==='Bow')return ['crit','poison','slow'];if(subtype==='Daggers')return ['poison','bleed','crit'];if(slot==='weapon')return ['poison','bleed','sunder','crit'];return Object.keys(ELEMENTS)}
+function elementPool(slot,subtype){if(subtype==='Staff'||subtype==='Wand')return ['poison','burn','slow','drain','nature','shock','tide'];if(subtype==='Shield')return ['shield','regen','sunder','tide'];if(subtype==='Off-Hand Dagger')return ['poison','bleed','crit','shock'];if(subtype==='Two-Handed')return ['bleed','sunder','poison','burn','nature','shock'];if(slot==='offhand')return ['poison','burn','slow','drain','shield','nature','shock','tide'];if(subtype==='Mace')return ['sunder','bleed','shield','shock'];if(subtype==='Bow')return ['crit','poison','slow','nature','shock'];if(subtype==='Daggers')return ['poison','bleed','crit','nature','shock'];if(slot==='weapon')return ['poison','bleed','sunder','crit','nature','shock','tide'];return Object.keys(ELEMENTS)}
 function chooseSubtype(slot,requested='random'){if(requested!=='random')return requested;if(slot==='weapon')return sample(TYPES);if(slot==='offhand')return sample(OFFHAND_TYPES);return ['ring1','ring2'].includes(slot)?'Ring':SNAME[slot];}
 function craftCost(tier){return 10+10*tier}
 
@@ -731,7 +731,10 @@ function setBonuses(counts){
   ['regen','Regen Set','regenBonus',2,'regenOverflow','secondWind'],
   ['burn','Fire Set','burnBonus',.15,'fireHeat','flashover'],
   ['slow','Frost Set','slowBonus',.25,'frostWeaken','deepFreeze'],
-  ['drain','Dark Set','drainBonus',.15,'soulCharge','soulPact']
+  ['drain','Dark Set','drainBonus',.15,'soulCharge','soulPact'],
+   ['nature','Nature Set','natureBonus',.25,'natureVitality','natureRenewal'],
+   ['shock','Storm Set','shockBonus',.25,'shockRhythm','thunderclap'],
+   ['tide','Tide Set','tideBonus',.25,'tideGuard','tideSurge']
  ];
  for(const [effect,title,baseKey,base,threeKey,fiveKey]of defs){
   const n=Math.max(0,counts[effect]||0);
@@ -848,6 +851,9 @@ function setDescription(effect,values){
  if(effect==='burn'){push('burnBonus','Burn DoTs +15%');push('fireHeat','Each second Burn ticks grants 1 Heat (max 5, expires after 5s)');push('flashover','Flashover: at 5 Heat, next main attack adds 50% base hit, 10s cooldown');}
  if(effect==='slow'){push('slowBonus','Slow increases enemy attack interval 25%');push('frostWeaken','Chilled enemy deals 8% less direct damage');push('deepFreeze','Deep Freeze: 3 seconds continuously Chilled delays enemy next attack (0.75s; boss 0.25s), 12s cooldown');}
  if(effect==='drain'){push('drainBonus','Drain healing +15%');push('soulCharge','Successful Drain healing grants Soul Charge (max 3, 1/s, expire 6s)');push('soulPact','Soul Pact: at 3 charges and >40% HP, sacrifice 3% max HP for +40% base hit and heal 25% actual damage (max 4% HP), 12s cooldown');}
+ if(effect==='nature'){push('natureBonus','Nature healing procs +25%');push('natureVitality','Nature heals 50% more below half HP');push('natureRenewal','Verdant Renewal: once per encounter, heal 8% max HP after surviving an enemy hit at or below 35% HP');}
+ if(effect==='shock'){push('shockBonus','Storm damage procs +25%');push('shockRhythm','Every third main attack adds 15% base damage');push('thunderclap','Thunderclap: every sixth main attack adds 35% base damage, 10s cooldown');}
+ if(effect==='tide'){push('tideBonus','Tide Barrier procs +25%');push('tideGuard','While Barrier remains, enemy direct damage −5% (15% combined set cap)');push('tideSurge','High Tide: once per encounter, after surviving a hit with less than 5% max HP in Barrier, gain 8% max HP Barrier');}
  return parts.join(' · ')||'No active bonus';
 }
 function setPreview(item,target=item.slot){
