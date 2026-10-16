@@ -8,12 +8,14 @@ const {plan,affinities}=require('./validate-v091-builds.cjs');
 const original=fs.readFileSync('index.html','utf8');
 const speed="const weaponMult={Sword:1,Mace:.66,Bow:1.15,Daggers:1.48,'Two-Handed':.50,Staff:.69,Wand:1.20}[main?.subtype]||1;";
 const raw="const rawSpeed=Math.max(.25,speed*weaponMult);s.rawAttackSpeed=rawSpeed;";
-if(!original.includes(speed)||!original.includes(raw))throw Error('Expected combat formulas have changed');
+const tuned="const baseSpeed=Math.max(.25,speed*weaponMult);\n // Low-speed catch-up for Staff and Two-Handed; naturally tapers as base speed grows.\n const catchUp=main?.subtype==='Staff'?Math.max(0,.56-.25*baseSpeed):main?.subtype==='Two-Handed'?Math.max(0,.43-.25*baseSpeed):0;\n const rawSpeed=baseSpeed+catchUp;s.rawAttackSpeed=rawSpeed;";
+if(!original.includes(speed)||!original.includes(tuned))throw Error('Expected tuned combat formulas have changed');
+const baseline=original.replace(tuned,raw);
 
 const candidates={
- baseline:original,
- permanentSpeed:original.replace(speed,speed.replace("'Two-Handed':.50,Staff:.69","'Two-Handed':.70,Staff:.91")),
- earlySpeed:original.replace(raw,"let rawSpeed=Math.max(.25,speed*weaponMult);if(main?.subtype==='Staff'||main?.subtype==='Two-Handed'){rawSpeed+=Math.max(0,(main.subtype==='Staff'?.56:.43)-.25*rawSpeed);}s.rawAttackSpeed=rawSpeed;")
+ baseline,
+ permanentSpeed:baseline.replace(speed,speed.replace("'Two-Handed':.50,Staff:.69","'Two-Handed':.70,Staff:.91")),
+ earlySpeed:original
 };
 const dir=fs.mkdtempSync(path.join(os.tmpdir(),'wanderer-final-v091-'));
 const NUM=100,levels=[10,30,50,100,200],weapons=['Staff','Two-Handed'],profiles=['epic-3','mixed-high'];

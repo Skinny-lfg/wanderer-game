@@ -8,8 +8,13 @@ for(const kind of ['Sword','Mace','Daggers','Bow','Staff','Wand','Two-Handed']){
   const gear={...a.makeSlots(),weapon:{id:'legacy',slot:'weapon',subtype:kind,rarity:'Legendary',tier:200,agi,atk:123,spell:234}};
   const before=JSON.stringify(gear),s=a.totalStats(gear,[],[]);
   assert.equal(JSON.stringify(gear),before);assert(s.attacksPerSec>previous);previous=s.attacksPerSec;
-  const raw=(.78+s.agi*.032+s.spdFlat*.046)*({Sword:1,Mace:.66,Daggers:1.48,Bow:1.15,Staff:.69,Wand:1.2,'Two-Handed':.5}[kind]);
-  assert(s.attacksPerSec<=raw);if(raw<=2.5)assert.equal(s.attacksPerSec,raw);
+  const base=Math.max(.25,(.78+s.agi*.032+s.spdFlat*.046)*({Sword:1,Mace:.66,Daggers:1.48,Bow:1.15,Staff:.69,Wand:1.2,'Two-Handed':.5}[kind]));
+  const catchUp=kind==='Staff'?Math.max(0,.56-.25*base):kind==='Two-Handed'?Math.max(0,.43-.25*base):0;
+  const raw=base+catchUp,expected=raw<=2.5?raw:2.5+(raw-2.5)/(1+.2*(raw-2.5));
+  assert(Math.abs(s.rawAttackSpeed-raw)<1e-8,'raw speed must use targeted slow-weapon catch-up');
+  assert(Math.abs(s.attacksPerSec-expected)<1e-8,'attack speed must respect soft cap');
+  if(catchUp>0)assert(raw>base,'low-speed catch-up is positive');
+  if((base>=2.24&&kind==='Staff')||(base>=1.72&&kind==='Two-Handed'))assert.equal(catchUp,0,'late-game bonus must vanish');
   assert(s.attacksPerSec<7.5,'bounded speed with continued investment benefit');
   const crit=Math.min(65,Math.round((4+s.cha*.95)/Math.sqrt(Math.max(1,raw/1.3))));
   assert.equal(s.crit,crit,'speed soft cap must not grant compensating critical chance');

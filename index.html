@@ -762,7 +762,10 @@ function totalStats(equipment=state.equip,ownedRunes=null,equippedRuneIds=null){
  s.maxhp=Math.round(55+s.end*12+s.hpFlat);
  s.attack=Math.round(4+s.str*1.8+s.agi*.4+s.atkFlat);
  s.defense=Math.round(1+s.end*.8+s.str*.3+s.defFlat);
- const rawSpeed=Math.max(.25,speed*weaponMult);s.rawAttackSpeed=rawSpeed;
+ const baseSpeed=Math.max(.25,speed*weaponMult);
+ // Low-speed catch-up for Staff and Two-Handed; naturally tapers as base speed grows.
+ const catchUp=main?.subtype==='Staff'?Math.max(0,.56-.25*baseSpeed):main?.subtype==='Two-Handed'?Math.max(0,.43-.25*baseSpeed):0;
+ const rawSpeed=baseSpeed+catchUp;s.rawAttackSpeed=rawSpeed;
  // Diminishing returns above 2.5 attacks/sec; preserve early weapon timing.
  s.attacksPerSec=rawSpeed<=2.5?rawSpeed:2.5+(rawSpeed-2.5)/(1+(rawSpeed-2.5)*.2);
  s.crit=Math.min(65,Math.round((4+s.cha*.95+counts.crit*2+(sets.values.critBonus||0))/Math.sqrt(Math.max(1,s.rawAttackSpeed/1.3))));
