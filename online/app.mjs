@@ -221,7 +221,7 @@ async function showLeaderboard(metric='fastest'){
  const current=dialog;
  current.querySelector('#playerSearch').onsubmit=async event=>{event.preventDefault();const button=current.querySelector('[type=submit]');button.disabled=true;try{if(!user)throw Error('Sign in to find players.');const result=await backend.findPlayer(current.querySelector('#playerNickname').value);if(current.isConnected)showPlayer(result);}catch(error){if(current.isConnected)current.querySelector('.onlineError').textContent=errorText(error);}finally{button.disabled=false;}};
  current.querySelector('#ranking').value=mode;
- current.querySelector('#metricDescription').textContent=mode==='fastest'?'Fastest cumulative dungeon combat time to D200 (1×/2×/4× playback affects the clock). Time outside combat and in background tabs is excluded. New timer: reset to start an eligible fresh attempt. Older browser-time records do not count. Personal best survives resets. Community times are not server-verified.':'Highest dungeon completed in each player’s current attempt. Starting a new speedrun resets this to D0.';
+ current.querySelector('#metricDescription').textContent=mode==='fastest'?'Fastest cumulative dungeon combat time to D200 (1×/2×/4× playback affects the clock). Time outside combat and in background tabs is excluded.':'Highest dungeon completed in each player’s current attempt. Starting a new speedrun resets this to D0.';
  current.querySelector('#ranking').onchange=e=>showLeaderboard(e.target.value);
  try{
   const b=await connect(),rows=await b.leaderboard(mode);
