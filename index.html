@@ -668,10 +668,10 @@ function offeredFavoredGear(theme){
  return validFavoredGear(kinds)?kinds:[];
 }
 const WAVE_TABLE=[
- {drop:.18,rarities:{Common:.68,Uncommon:.25,Rare:.06,Epic:.009,Legendary:.001}},
- {drop:.28,rarities:{Common:.55,Uncommon:.30,Rare:.125,Epic:.02,Legendary:.005}},
- {drop:.42,rarities:{Common:.38,Uncommon:.33,Rare:.22,Epic:.06,Legendary:.01}},
- {drop:.80,rarities:{Common:.10,Uncommon:.25,Rare:.45,Epic:.17,Legendary:.03}},
+ {drop:.22,rarities:{Common:.68,Uncommon:.25,Rare:.06,Epic:.009,Legendary:.001}},
+ {drop:.32,rarities:{Common:.55,Uncommon:.30,Rare:.125,Epic:.02,Legendary:.005}},
+ {drop:.47,rarities:{Common:.38,Uncommon:.33,Rare:.22,Epic:.06,Legendary:.01}},
+ {drop:.84,rarities:{Common:.10,Uncommon:.25,Rare:.45,Epic:.17,Legendary:.03}},
  {drop:1,rarities:{Common:0,Uncommon:0,Rare:.71,Epic:.25,Legendary:.04}}
 ];
 function wavesForDungeon(tier){return tier%10===0?5:4}
@@ -1288,8 +1288,8 @@ function addLog(text,kind=''){logEntries.unshift({text,kind});logEntries=logEntr
 
 /* Four clear wave-4 elite identities, rolled once per expedition. */
 const ELITE_ARCHETYPES={
- tank:{id:'tank',icon:'🛡️',name:'Tank',risk:'High health, low direct damage. A long fight can wear down your HP.',hp:1.75,atk:.65,def:1.22,interval:1.93},
- berserker:{id:'berserker',icon:'⚔️',name:'Berserker',risk:'Low health, very high attack damage and faster strikes. Survive the burst.',hp:.72,atk:1.53,def:.86,interval:1.23},
+ tank:{id:'tank',icon:'🛡️',name:'Tank',risk:'High health, low damage. HP hits reduce your healing by 40% for 5s (refreshes on each hit).',hp:1.75,atk:.65,def:1.22,interval:1.93},
+ berserker:{id:'berserker',icon:'⚔️',name:'Berserker',risk:'Low health, high attack damage and quick strikes. Each hit is capped at 35% of your max HP.',hp:.72,atk:1.20,def:.86,interval:1.46},
  vampire:{id:'vampire',icon:'🩸',name:'Vampire',risk:'Recovers HP when its attacks damage your health. Barrier and burst are useful.',hp:1.10,atk:1.02,def:1.00,interval:1.56},
  caster:{id:'caster',icon:'🔮',name:'Caster',risk:'Successful hits weaken your direct damage by 20% for 3 combat seconds (7s between casts).',hp:.91,atk:.93,def:.90,interval:1.64}
 };
@@ -1377,7 +1377,10 @@ function setBarrier(r,amount){
  return Math.max(0,r.barrier-before);
 }
 function setHeal(r,amount){
- const heal=Math.max(0,Number(amount)||0),before=r.hp;
+ // Tank's healing wound affects all player healing: regeneration, Drain,
+ // Nature, Soul Pact and heal-on-hit, but does not reduce Barrier generation.
+ const healingReduced=(r.playerHealingDebuffUntil||0)>setNow(r);
+ const heal=Math.max(0,Number(amount)||0)*(healingReduced?.60:1),before=r.hp;
  r.hp=Math.min(r.maxhp,r.hp+heal);
  const actual=r.hp-before,overheal=heal-actual;
  if(overheal>0&&r.stats.bonus.regenOverflow){
@@ -1612,9 +1615,12 @@ function updateFight(){
    raw=Math.round(raw*1.35);
    if(!e.enraged){e.enraged=true;addLog('🔥 Ember Sovereign enrages below half HP!','critical');}
   }
-  if(e.eliteType==='berserker'&&e.hp<e.maxhp*.5)raw=Math.round(raw*1.16);
+  if(e.eliteType==='berserker'&&e.hp<e.maxhp*.5)raw=Math.round(raw*1.08);
   const weaker=setEnemyWeaken(r);
   if(weaker)raw=Math.max(1,Math.round(raw*(1-weaker)));
+  // Elite Berserker cannot one-shot a full-health player with one direct hit.
+  // Cap before Block/Barrier so defensive investment still matters.
+  if(e.eliteType==='berserker')raw=Math.min(raw,Math.max(1,Math.floor(r.maxhp*.35)));
   const block=s.blockChance&&Math.random()<s.blockChance/100;
   if(block){
    const damageBlocked=Math.max(1,Math.round(raw*s.blockReduction));raw-=damageBlocked;
@@ -1626,6 +1632,10 @@ function updateFight(){
   if(blocked>0)addLog('🛡 Barrier absorbs '+blocked+' damage','good');
   if(hit>0){
    r.hp-=hit;addLog('🩸 '+e.name+' hits for '+hit+' HP','bleed');floatText(hit,'hero');
+   if(e.eliteType==='tank'){
+    r.playerHealingDebuffUntil=r.combatSeconds+5;
+    addLog('🛡️ Tank applies Healing Reduction: −40% healing for 5s!','critical');
+   }
    if(e.eliteType==='vampire'){
     const heal=Math.min(Math.max(0,e.maxhp-e.hp),Math.max(1,Math.round(hit*.38)),Math.max(1,Math.round(e.maxhp*.06)));
     if(heal>0){e.hp+=heal;addLog('🩸 Vampire drains '+heal+' HP','spell');}
@@ -1738,6 +1748,7 @@ function playerStatusMarkup(r){
  if(buffs.lastBastionReady)items.push('<span class="debuff">🛡 Counter ready</span>');
  if(r.secondWindUsed)items.push('<span class="debuff muted">💚 Second Wind used</span>');
  if((r.playerDebuffUntil||0)>now)items.push('<span class="debuff playerDebuff">🔮 Weakened −20% damage · '+Math.ceil(r.playerDebuffUntil-now)+'s</span>');
+ if((r.playerHealingDebuffUntil||0)>now)items.push('<span class="debuff playerDebuff">🛡️ Healing −40% · '+Math.ceil(r.playerHealingDebuffUntil-now)+'s</span>');
  // Future negative effects can be rendered here without changing combat layout.
  return items.join('');
 }
