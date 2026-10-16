@@ -1,7 +1,7 @@
 import {publicLoadout,cleanEquipment,cleanPublicRunes,cleanPublicRuneSlots} from './public-loadout.mjs';
 import * as sdk from './vendor/firebase-sdk.mjs';
 import {firebaseConfig} from './firebase-config.mjs';
-import {nicknameKey,character,cloudRecord,compareRevision,validateSave,recoverInterruptedSave,SEASON,MILESTONES,safeProgress} from './model.mjs';
+import {nicknameKey,character,cloudRecord,compareRevision,validateSave,recoverInterruptedSave,SEASON,safeProgress,completedD200Time} from './model.mjs';
 export async function createBackend(){
  const app=sdk.initializeApp(firebaseConfig),auth=sdk.getAuth(app),db=sdk.getFirestore(app);
  await sdk.setPersistence(auth,sdk.browserLocalPersistence);
@@ -37,15 +37,24 @@ export async function createBackend(){
    await sdk.runTransaction(db,async tx=>{const snap=await tx.get(ref);compareRevision(snap.exists()?snap.data():null,expectedRevision);tx.set(ref,{...record,updatedAt:sdk.serverTimestamp()});});
    return record;
   },
+  // Client-submitted playtest records: current depth resets per attempt; personal best is permanent.
   async publishTestResults(snapshot){
-   const uid=user(),progress=safeProgress(validateSave(snapshot));
+   const uid=user(),valid=validateSave(snapshot),progress=safeProgress(valid);
    const entry=sdk.doc(db,'testSeasons',SEASON,'deepest',uid);
-   await sdk.runTransaction(db,async tx=>{const old=await tx.get(entry);tx.set(entry,{deepest:Math.max(old.data()?.deepest||0,progress.deepestCleared),verified:false,updatedAt:sdk.serverTimestamp()});});
-   for(const milestone of MILESTONES){
-    const clear=progress.milestones[milestone];if(!clear)continue;
-    const ref=sdk.doc(db,'testSeasons',SEASON,'milestones',String(milestone),'entries',uid);
-    await sdk.runTransaction(db,async tx=>{const old=await tx.get(ref);if(old.exists())return;tx.set(ref,{milestone,activeMs:progress.timingEligible&&Number.isFinite(clear.activeMs)?Math.floor(clear.activeMs):null,verified:false,receivedAt:sdk.serverTimestamp()});});
-   }
+   await sdk.runTransaction(db,async tx=>{
+    const old=await tx.get(entry),previous=old.exists()?old.data():null;
+    const sameAttempt=(previous?.attemptId||'legacy')===progress.attemptId;
+    const deepest=sameAttempt?Math.max(previous?.deepest||0,progress.deepestCleared):progress.deepestCleared;
+    tx.set(entry,{deepest,attemptId:progress.attemptId,verified:false,updatedAt:sdk.serverTimestamp()});
+   });
+   const ms=completedD200Time(valid);
+   if(ms===null)return;
+   const record=sdk.doc(db,'testSeasons',SEASON,'speedruns',uid);
+   await sdk.runTransaction(db,async tx=>{
+    const old=await tx.get(record);
+    if(old.exists()&&old.data().bestMs<=ms)return;
+    tx.set(record,{bestMs:ms,verified:false,updatedAt:sdk.serverTimestamp()});
+   });
   },
 
   async submitFeedback(form){
@@ -80,13 +89,15 @@ export async function createBackend(){
    if(!claim.exists())throw Error('Player not found. Enter their full nickname.');
    return this.player(claim.data().uid);
   },
-  async leaderboard(metric,milestone=10){
-   const col=metric==='deepest'?sdk.collection(db,'testSeasons',SEASON,'deepest'):sdk.collection(db,'testSeasons',SEASON,'milestones',String(milestone),'entries');
-   const field=metric==='deepest'?'deepest':metric==='first'?'receivedAt':'activeMs';
-   const constraints=[sdk.orderBy(field,metric==='deepest'?'desc':'asc'),sdk.limit(50)];if(metric==='fastest')constraints.unshift(sdk.where('activeMs','>=',0));
-   const rows=await sdk.getDocs(sdk.query(col,...constraints));
-   const result=await Promise.all(rows.docs.map(async row=>{const p=await sdk.getDoc(profileRef(row.id));return p.exists()?{uid:row.id,...row.data(),profile:p.data()}:null;}));
-   return result.filter(row=>row&&(metric!=='fastest'||row.activeMs!==null));
+  async leaderboard(metric){
+   if(!['fastest','deepest'].includes(metric))throw new Error('Unknown leaderboard category.');
+   const col=sdk.collection(db,'testSeasons',SEASON,metric==='fastest'?'speedruns':'deepest');
+   const field=metric==='fastest'?'bestMs':'deepest';
+   const rows=await sdk.getDocs(sdk.query(col,sdk.orderBy(field,metric==='fastest'?'asc':'desc'),sdk.limit(50)));
+   const result=await Promise.all(rows.docs.map(async row=>{
+    const p=await sdk.getDoc(profileRef(row.id));
+    return p.exists()?{uid:row.id,...row.data(),profile:p.data()}:null;
+   }));
+   return result.filter(Boolean);
   }
- };
-}
+};
