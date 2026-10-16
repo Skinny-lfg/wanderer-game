@@ -13,9 +13,11 @@ const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8010';
  assert.equal((await snapshot()).gold,111);assert.ok(await page.locator('#screen').evaluate(e=>e.inert));
  await page.keyboard.press('Escape');assert.ok(await page.locator('#googleSignIn').isVisible());
  await page.locator('#googleSignIn').click();await page.locator('#nickname').fill('taken');await page.locator('#createProfile').click();assert.match(await page.locator('.onlineDialog .onlineError').innerText(),/taken/);
- await page.locator('#nickname').fill('Alice_1');await page.locator('#createProfile').click();await page.waitForFunction(()=>WandererGame.key()==='wanderer_account_alice'&&!document.querySelector('.onlineDialog'));
- assert.equal((await snapshot()).gold,111);assert.equal(await page.evaluate(()=>JSON.parse(__firebaseTest.cloud.payload).gold),111);await page.waitForFunction(()=>__firebaseTest.shared===1);
+ await page.locator('#nickname').fill('Alice_1');await page.locator('#createProfile').click();await page.waitForFunction(()=>WandererGame.key()==='wanderer_account_alice_v092'&&!document.querySelector('.onlineDialog'));
+ assert.equal((await snapshot()).gold,0,'legacy Guest Gold must not transfer after global reset');assert.equal(await page.evaluate(()=>JSON.parse(__firebaseTest.cloud.payload).gold),0);await page.waitForFunction(()=>__firebaseTest.shared===1);
  assert.ok(!(await page.locator('#screen').evaluate(e=>e.inert)));
+ assert.equal((await snapshot()).maxDungeon,1,'all accounts begin the new season in D1');
+ assert.equal((await snapshot()).equip.weapon?.id||null,null,'old Two-Handed weapon must not be imported');
  const account=()=>page.locator('[data-online-action="account"]').click(),close=()=>page.locator('.onlineDialog [data-close]').click();
  await account();assert.equal(await page.locator('[data-character]').count(),5);
  for(const id of ['wanderer','ranger','knight','spellblade','duelist']){await page.locator(`[data-character="${id}"]`).click();await page.locator('#saveCharacter').click();assert.equal((await snapshot()).characterId,id);}
@@ -42,7 +44,7 @@ const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8010';
  await page.clock.fastForward(31000);assert.equal(await page.evaluate(()=>__firebaseTest.shared),2);
  // Concurrent remote changes preserve both copies and request a choice only on conflict.
  await page.evaluate(()=>{const s=JSON.parse(__firebaseTest.cloud.payload);s.gold=999;__firebaseTest.cloud={payload:JSON.stringify(s),revision:__firebaseTest.cloud.revision+1};WandererGame.recordActive(1000);});
- await page.clock.fastForward(31000);await page.locator('#downloadCloud').waitFor();assert.equal((await snapshot()).gold,111);assert.equal(await page.evaluate(()=>JSON.parse(__firebaseTest.cloud.payload).gold),999);
+ await page.clock.fastForward(31000);await page.locator('#downloadCloud').waitFor();assert.equal((await snapshot()).gold,0);assert.equal(await page.evaluate(()=>JSON.parse(__firebaseTest.cloud.payload).gold),999);
  await page.locator('#downloadCloud').click();assert.equal((await snapshot()).gold,999);
  // Transient failures preserve local state; reconnect retries automatically.
  await page.evaluate(()=>{__firebaseTest.offline=true;WandererGame.recordActive(1000)});await page.clock.fastForward(31000);assert.match(await page.locator('#accountError').innerText(),/unavailable/);assert.equal((await snapshot()).gold,999);
@@ -61,27 +63,27 @@ const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8010';
  await page.waitForFunction(()=>!document.querySelector('.onlineDialog'));
  // Full browser refresh restores the same Google user/profile and keeps its save.
  await page.evaluate(()=>sessionStorage.setItem('firebaseRefreshSeed',JSON.stringify({user:__firebaseTest.user,profile:__firebaseTest.profile,cloud:__firebaseTest.cloud})));
- await page.reload();await page.waitForFunction(()=>WandererGame.key()==='wanderer_account_alice'&&!document.querySelector('.onlineDialog'));
+ await page.reload();await page.waitForFunction(()=>WandererGame.key()==='wanderer_account_alice_v092'&&!document.querySelector('.onlineDialog'));
  await account();assert.match(await page.locator('.onlineDialog').innerText(),/alice_1/);assert.equal(await page.locator('#nickname,#createProfile,#backups,#exportSave').count(),0);assert.equal((await snapshot()).gold,999);await close();
  // A second account starts fresh, without copying the first account or legacy slot.
  await account();await page.locator('#googleSignOut').click();
  await page.evaluate(async()=>{__firebaseTest.user={uid:'bob'};__firebaseTest.profile={nickname:'bob',characterId:'ranger'};__firebaseTest.cloud=null;await __firebaseTest.restore();});
- await page.waitForFunction(()=>WandererGame.key()==='wanderer_account_bob');assert.equal((await snapshot()).gold,0);
- assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('wanderer_account_alice')).gold),999);
+ await page.waitForFunction(()=>WandererGame.key()==='wanderer_account_bob_v092');assert.equal((await snapshot()).gold,0);
+ assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('wanderer_account_alice_v092')).gold),999);
  // A new session (not an ignored duplicate auth event) should restore newer
  // cloud progress when the local copy is unchanged.
  await page.evaluate(()=>{const s=JSON.parse(__firebaseTest.cloud.payload);s.gold=777;__firebaseTest.cloud={payload:JSON.stringify(s),revision:__firebaseTest.cloud.revision+1};
   sessionStorage.setItem('firebaseRefreshSeed',JSON.stringify({user:__firebaseTest.user,profile:__firebaseTest.profile,cloud:__firebaseTest.cloud}));
  });
  await page.reload();
- await page.waitForFunction(()=>WandererGame.key()==='wanderer_account_bob'&&WandererGame.snapshot().gold===777&&!document.querySelector('.onlineDialog'));
+ await page.waitForFunction(()=>WandererGame.key()==='wanderer_account_bob_v092'&&WandererGame.snapshot().gold===777&&!document.querySelector('.onlineDialog'));
  assert.equal((await snapshot()).gold,777);assert.equal(await page.locator('#uploadLocal').count(),0);
  
  assert.ok(await page.evaluate(()=>Object.keys(localStorage).some(k=>k.startsWith('wanderer_backup_'))));
  // Anonymous users share the leaderboard under their reserved nickname.
  await account();await page.locator('#googleSignOut').click();
  await page.locator('#guestSignIn').click();await page.locator('#nickname').fill('GuestHero');await page.locator('#createProfile').click();
- await page.waitForFunction(()=>WandererGame.key()==='wanderer_account_guest-1'&&!document.querySelector('.onlineDialog'));
+ await page.waitForFunction(()=>WandererGame.key()==='wanderer_account_guest-1_v092'&&!document.querySelector('.onlineDialog'));
  assert.equal(await page.locator('[data-online-action="account"]').innerText(),'guesthero');
  await page.locator('[data-online-action="leaderboard"]').click();await page.locator('.rankingList').waitFor();
 
@@ -99,7 +101,7 @@ const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8010';
   }));
  });
  await page.reload();
- await page.waitForFunction(()=>WandererGame.key()==='wanderer_account_guest-1'&&!document.querySelector('.onlineDialog'));
+ await page.waitForFunction(()=>WandererGame.key()==='wanderer_account_guest-1_v092'&&!document.querySelector('.onlineDialog'));
  assert.equal((await snapshot()).run,null,'interrupted run closed on reload');
  assert.equal((await snapshot()).gold,beforeGuest.gold,'guest gold retained');
  assert.equal((await snapshot()).maxDungeon,beforeGuest.maxDungeon,'guest progression retained');
