@@ -5,7 +5,7 @@ const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8012';
  const page=await browser.newPage({viewport:{width,height:950}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.route('**/online/firebase-client.mjs*',r=>r.fulfill({contentType:'text/javascript',body:fs.readFileSync('tests/fixtures/firebase-client.mjs','utf8')}));
  await page.addInitScript(({guest,source})=>{
-  const uid=guest?'guest-1':'alice',key='wanderer_account_'+uid;
+  const uid=guest?'guest-1':'alice',key='wanderer_account_'+uid+'_v092';
   const base={characterId:'knight',gold:124,fragments:40,maxDungeon:13,chosen:12,stashCapacity:80,stash:[{id:'stored',name:'Stored Helm',slot:'helm',subtype:'Helm',tier:8,rarity:'Rare'}],equip:{weapon:{id:'safe-sword',name:'Saved Sword',slot:'weapon',subtype:'Sword',tier:10,rarity:'Rare',atk:30}},run:null,protectedItemIds:['safe-sword']};
   const run={tier:12,path:'grove',status:'fight',gold:500,fragments:500,loot:[{id:'unextracted'}]};
   const local={...base,run:source==='cloud'?null:run};

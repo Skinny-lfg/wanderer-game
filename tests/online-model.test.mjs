@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {CHARACTERS,nicknameKey,validateSave,recoverInterruptedSave,syncDecision,cloudRecord,compareRevision,safeProgress} from '../online/model.mjs';
+import {CHARACTERS,nicknameKey,validateSave,recoverInterruptedSave,syncDecision,cloudRecord,compareRevision,safeProgress,completedD200Time} from '../online/model.mjs';
 const save={gold:8,fragments:3,maxDungeon:10,stash:[],equip:{},run:null};
 test('five cosmetic characters and normalized unique nickname keys',()=>{assert.equal(CHARACTERS.length,5);assert.equal(nicknameKey(' Tester_1 '),'tester_1');assert.throws(()=>nicknameKey('a/b'));});
 test('no empty cloud or signed-in account silently replaces local progress',()=>{assert.equal(syncDecision(save,null),'choose-upload');assert.equal(syncDecision(save,{payload:JSON.stringify({...save,gold:0})}),'choose-conflict');assert.equal(syncDecision(save,{payload:JSON.stringify(save)}),'identical');});
@@ -24,4 +24,16 @@ test('cloud validation rejects nonfinite item stats and duplicate identities wit
  const item={id:'same',name:'Sword',slot:'weapon',tier:1,atk:5};
  const duplicate={...save,stash:[item],equip:{weapon:{...item}}};const original=JSON.stringify(duplicate);assert.throws(()=>validateSave(duplicate),/Duplicate/);assert.equal(JSON.stringify(duplicate),original);
  for(const atk of ['Infinity','NaN',Infinity])assert.throws(()=>validateSave({...save,stash:[{...item,atk}]}),/Invalid item atk/);
+});
+
+test('D200 speedrun time requires an eligible completed D200 milestone',()=>{
+ const base={...save,maxDungeon:200,onlineProgress:{attemptId:'run-a',deepestCleared:200,activeMs:7200000,timingEligible:true,milestones:{200:{activeMs:6660000}}}};
+ assert.equal(completedD200Time(base),6660000);
+ assert.equal(safeProgress(base).attemptId,'run-a');
+ assert.equal(completedD200Time({...base,onlineProgress:{...base.onlineProgress,deepestCleared:199}}),null);
+ assert.equal(completedD200Time({...base,onlineProgress:{...base.onlineProgress,timingEligible:false}}),null);
+ assert.equal(completedD200Time({...base,onlineProgress:{...base.onlineProgress,milestones:{}}}),null);
+ assert.equal(completedD200Time({...save,maxDungeon:200}),null,'legacy saves must not invent a completion time');
+ assert.equal(safeProgress(save).attemptId,'legacy','old saves remain readable');
+ assert.throws(()=>validateSave({...base,onlineProgress:{...base.onlineProgress,attemptId:'a/b'}}),/attempt ID/);
 });

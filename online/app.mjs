@@ -1,12 +1,12 @@
 import {publicLoadout,cleanEquipment} from './public-loadout.mjs';
 import {practiceDuel} from './pvp.mjs';
-import {CHARACTERS,character,validateSave,recoverInterruptedSave,summary,safeProgress,MILESTONES} from './model.mjs?v=guest-recovery-9';
+import {CHARACTERS,character,validateSave,recoverInterruptedSave,summary,safeProgress,SAVE_NAMESPACE} from './model.mjs?v=v092-global-reset-1';
 const game=globalThis.WandererGame,GUEST='wanderer_browser_proto_v01';
 let backendPromise,backend,user=null,profile=null,revision=null,synced='',epoch=0,writing=false,suppress=false,timer=null,dialog=null;
 let ready=false,lastPublished='',lastLoadout='',profileState='loading';
 let message='Sign in to play',selectedCharacter=game.snapshot().characterId||'wanderer';
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const accountKey=()=>user?'wanderer_account_'+user.uid:null;
+const accountKey=()=>user?'wanderer_account_'+user.uid+'_'+SAVE_NAMESPACE:null;
 function status(text){message=text;}
 function report(error){status(errorText(error));const el=document.getElementById('accountError');el.textContent=message;el.hidden=false;}
 function clearError(){document.getElementById('accountError').hidden=true;}
@@ -19,7 +19,7 @@ async function publishResults(){
  try{const loadoutSignature=JSON.stringify(publicLoadout(game.snapshot()));
  if(loadoutSignature!==lastLoadout){const token=epoch;await backend.publishLoadout(game.snapshot());sessionGuard(token);lastLoadout=loadoutSignature;}}catch(error){if(publishingEpoch!==epoch)return;report(error);}
  if(publishingEpoch!==epoch||!ready||game.key()!==accountKey())return;
- const progress=safeProgress(game.snapshot()),signature=JSON.stringify([progress.deepestCleared,progress.milestones]);
+ const progress=safeProgress(game.snapshot()),signature=JSON.stringify([progress.attemptId,progress.deepestCleared,progress.milestones[200]||null]);
  if(signature===lastPublished)return;
  const token=epoch;await backend.publishTestResults(game.snapshot());sessionGuard(token);lastPublished=signature;
 }
@@ -45,7 +45,7 @@ function action(selector,fn){const element=dialog?.querySelector(selector);if(!e
 function ensureSafeSwitch(allowProtected=false){if(writing)throw new Error('Saving your progress. Please try again in a moment.');if(game.busy())throw new Error('Finish or extract from your expedition before changing accounts or saves.');if(game.blocked()&&!allowProtected)throw new Error('The local save is protected. Reload before switching. Your recovery copies are retained.');}
 function sessionGuard(token){if(token!==epoch)throw new Error('The signed-in account changed. Reopen Account before continuing.');}
 async function connect(){
- if(!backendPromise)backendPromise=import('./firebase-client.mjs?v=cloud-recovery-11').then(m=>m.createBackend()).then(b=>{
+ if(!backendPromise)backendPromise=import('./firebase-client.mjs?v=v092-global-reset-1').then(m=>m.createBackend()).then(b=>{
   backend=b;b.watchAuth(async next=>{
    // Do not reopen Account or gate an in-progress game for a duplicate auth event
    // for the already restored user. Login recovery itself still runs on startup.
@@ -87,6 +87,7 @@ function showAccount(){
  ${profile||needsProfile?characterPicker():''}
  <div class="buttonRow">${needsProfile?'<button id="createProfile" class="primary">Create profile</button>':profile?'<button id="saveCharacter" class="primary">Save character</button>':''}
  ${signedIn&&profile&&!ready?'<button id="retryAccount">Continue</button>':''}
+ ${signedIn&&profile&&ready?'<button id="resetProgress" class="danger" type="button">Reset Progress · New Speedrun</button>':''}
  ${signedIn?`<button id="googleSignOut">${isGuest?'Leave guest account':'Sign out'}</button>`:''}</div>`;
  modal('Account & Character',content).dataset.account='true';dialog.addEventListener('cancel',e=>{if(!ready)e.preventDefault();});dialog.querySelector('[data-close]').hidden=!ready;bindCharacters();
  action('#googleSignIn',async()=>{ensureSafeSwitch();const b=await connect();await b.signIn();});
@@ -98,6 +99,27 @@ function showAccount(){
   if(profile){const updated=await backend.updateCharacter(selectedCharacter);sessionGuard(token);profile=updated;if(game.key()===accountKey())game.setCharacter(selectedCharacter);}
   else game.setCharacter(selectedCharacter);
   status(profile?'Character saved to your profile':'Character saved on this device');showAccount();
+ });
+ action('#resetProgress',()=>{
+  ensureSafeSwitch();
+  if(!ready||!profile||revision===null||game.key()!==accountKey())throw Error('Your account save must be synced before resetting.');
+  modal('Start a new D200 speedrun?',`<p><b>All playable progress will be reset:</b> dungeons, equipment, inventory, runes, Gold, Fragments and upgrades.</p><p>Your nickname, cosmetic character and existing Fastest D200 personal best will remain.</p><p class="small muted">Your cloud save will be replaced. Type <b>RESET</b> to confirm. You cannot undo the reset from Account.</p><label>Confirmation<input id="resetConfirmation" autocomplete="off" placeholder="RESET"></label><div class="buttonRow"><button id="cancelReset" class="ghost" type="button">Cancel</button><button id="confirmReset" class="danger" type="button">Reset everything</button></div>`);
+  action('#cancelReset',showAccount);
+  action('#confirmReset',async()=>{
+   if(dialog.querySelector('#resetConfirmation').value.trim()!=='RESET')throw Error('Type RESET exactly to confirm.');
+   ensureSafeSwitch();
+   const token=epoch,previous=game.snapshot();
+   const next={...game.newSave(),characterId:profile.characterId,resetVersion:previous.resetVersion};
+   game.backup(JSON.stringify(previous),'before-speedrun-reset');
+   const record=await backend.writeSave(next,revision);sessionGuard(token);
+   clearTimeout(timer);timer=null;
+   suppress=true;
+   try{game.switchSave(accountKey(),next);}finally{suppress=false;}
+   revision=record.revision;synced=JSON.stringify(game.snapshot());remember();
+   lastPublished='';lastLoadout='';ready=true;gate();clearError();close();
+   status('New D200 speedrun started · D1');
+   publishResults().catch(report);
+  });
  });
  action('#retryProfile',()=>restoreProfile());
  action('#retryAccount',resumeAccount);
@@ -120,7 +142,8 @@ async function signOutAccount(){
 }
 function localCandidate(){
  const key=accountKey();
- const raw=game.key()===key?game.snapshot():localStorage.getItem(key)||localStorage.getItem(GUEST)||game.snapshot();
+ const raw=game.key()===key?game.snapshot():localStorage.getItem(key)||game.newSave();
+ // Old Guest and account saves never migrate into the v0.9.2 global reset.
  // Preserve the original unsynced save; only the unfinished expedition is abandoned.
  const {save,interrupted}=recoverInterruptedSave(raw);
  if(interrupted)game.backup(typeof raw==='string'?raw:JSON.stringify(raw),'interrupted-run-before-recovery');
@@ -134,23 +157,18 @@ async function readRecoverableCloud(){
 }
 async function resumeAccount(){
  ensureSafeSwitch();const token=epoch,remote=await readRecoverableCloud();sessionGuard(token);
- const own=localStorage.getItem(accountKey()),claimed=localStorage.getItem(GUEST+'_claimed');
+ const own=localStorage.getItem(accountKey());
  let local=localCandidate();const baseline=localStorage.getItem(accountKey()+'_synced');
  const remoteRaw=remote?JSON.stringify(validateSave(remote.payload)):null;
  const localDirty=own&&baseline!==JSON.stringify(local);
  if(remote&&validateSave(remote.payload).maxDungeon<local.maxDungeon)return reviewCloud();
  if(remote&&localDirty&&remoteRaw!==JSON.stringify(local)&&remoteRaw!==baseline)return reviewCloud();
- if(remote&&!own&&!claimed)return reviewCloud();
  let payload=remote&&!localDirty?validateSave(remote.payload):local;
- if(!remote&&!own&&claimed&&claimed!==user.uid){
-  // A different account must never inherit the previous player's Guest progress.
-  payload=game.newSave();
- }
  payload={...payload,characterId:profile.characterId};
  let record=remote;
  if(!remote||localDirty||remote.interrupted){game.backup(JSON.stringify(payload),'before-account-migration');record=await backend.writeSave(payload,remote?.revision||0);sessionGuard(token);}
  suppress=true;try{game.switchSave(accountKey(),payload);}finally{suppress=false;}
- revision=record.revision;synced=JSON.stringify(game.snapshot());remember();localStorage.setItem(GUEST+'_claimed',user.uid);ready=true;gate();clearError();close();
+ revision=record.revision;synced=JSON.stringify(game.snapshot());remember();ready=true;gate();clearError();close();
  publishResults().catch(report);
 }
 async function reviewCloud(){
@@ -165,7 +183,7 @@ async function reviewCloud(){
   game.backup(JSON.stringify(payload),'before-first-upload');if(remote)game.backup(remote.originalPayload||remote.payload,'cloud-before-replace');
   const record=await backend.writeSave(payload,remote?.revision||0);sessionGuard(token);
   suppress=true;try{game.switchSave(accountKey(),payload);}finally{suppress=false;}
-  revision=record.revision;synced=JSON.stringify(game.snapshot());remember();localStorage.setItem(GUEST+'_claimed',user.uid);ready=true;gate();clearError();close();publishResults().catch(report);
+  revision=record.revision;synced=JSON.stringify(game.snapshot());remember();ready=true;gate();clearError();close();publishResults().catch(report);
  });
  action('#downloadCloud',async()=>{
   ensureSafeSwitch();sessionGuard(token);const latest=await readRecoverableCloud();sessionGuard(token);
@@ -173,7 +191,7 @@ async function reviewCloud(){
   const payload={...validateSave(latest.payload),characterId:profile.characterId};
   const record=latest.interrupted?await backend.writeSave(payload,latest.revision):latest;sessionGuard(token);
   suppress=true;try{game.switchSave(accountKey(),payload);}finally{suppress=false;}
-  revision=record.revision;synced=JSON.stringify(game.snapshot());remember();localStorage.setItem(GUEST+'_claimed',user.uid);ready=true;gate();clearError();close();publishResults().catch(report);
+  revision=record.revision;synced=JSON.stringify(game.snapshot());remember();ready=true;gate();clearError();close();publishResults().catch(report);
  });
 }
 async function syncNow(){
@@ -192,15 +210,29 @@ function queueSync(){
  status(game.busy()?'Local save · Cloud sync after expedition':'Local save · Cloud sync pending');
  if(timer)return;timer=setTimeout(()=>{timer=null;syncNow().then(publishResults).catch(error=>{report(error);if(revision===null)reviewCloud().catch(report);});},30000);
 }
-async function showLeaderboard(metric='deepest',milestone=10){
- modal('Leaderboard',`<form id="playerSearch" class="playerSearch"><label for="playerNickname">Find player by full nickname</label><div class="buttonRow"><input id="playerNickname" placeholder="Nickname" minlength="3" maxlength="20" required autocomplete="off"><button type="submit">Search</button></div></form><div class="filterBar"><label>Ranking<select id="ranking"><option value="deepest">Deepest Dungeon</option><option value="first">First to Clear</option><option value="fastest">Fastest Progression</option></select></label><label>Milestone<select id="milestone">${MILESTONES.map(n=>`<option value="${n}">D${n}</option>`).join('')}</select></label></div><p id="metricDescription" class="small muted"></p><div id="rankingRows" aria-live="polite">Loading…</div>`);
- const current=dialog;current.querySelector('#playerSearch').onsubmit=async event=>{event.preventDefault();const button=current.querySelector('[type=submit]');button.disabled=true;try{if(!user)throw Error('Sign in to find players.');const result=await backend.findPlayer(current.querySelector('#playerNickname').value);if(current.isConnected)showPlayer(result);}catch(error){if(current.isConnected)current.querySelector('.onlineError').textContent=errorText(error);}finally{button.disabled=false;}};current.querySelector('#ranking').value=metric;current.querySelector('#milestone').value=String(milestone);current.querySelector('#milestone').disabled=metric==='deepest';
- current.querySelector('#metricDescription').textContent=metric==='deepest'?'Highest dungeon completed and extracted.':metric==='first'?'First recorded milestone completion.':'Active play time to reach a milestone.';
- current.querySelector('#ranking').onchange=e=>showLeaderboard(e.target.value,Number(current.querySelector('#milestone').value));current.querySelector('#milestone').onchange=e=>showLeaderboard(metric,Number(e.target.value));
-
- try{const b=await connect();const rows=await b.leaderboard(metric,milestone);if(!current.isConnected)return;
- current.querySelector('#rankingRows').innerHTML=rows.length?`<ol class="rankingList">${rows.map((row,i)=>{const c=character(row.profile.characterId),level=metric==='deepest'?row.deepest:milestone;const detail=metric==='first'?`Cleared ${row.receivedAt?.toDate?row.receivedAt.toDate().toLocaleString():'pending'}`:metric==='fastest'?`${Math.floor(row.activeMs/60000)}m ${Math.floor(row.activeMs/1000)%60}s`:'Deepest cleared';const place=['🥇','🥈','🥉'][i]||String(i+1);return `<li class="rankEntry"><span class="rankPlace ${i<3?'rankPodium':''}" aria-label="Rank ${i+1}">${place}</span><img src="${c.avatar}" alt="${esc(c.name)}"><div class="rankPlayer"><button class="playerLink" data-player="${esc(row.uid)}">${esc(row.profile.nickname)}</button><span class="small muted rankInfo">${esc(detail)}</span></div><strong class="rankDungeon" aria-label="Dungeon ${level}">D${level}</strong></li>`}).join('')}</ol>`:'<p>No results yet.</p>';
- current.querySelectorAll('[data-player]').forEach(button=>button.onclick=async()=>{button.disabled=true;try{const result=await b.player(button.dataset.player);if(current.isConnected)showPlayer(result);}catch(error){if(current.isConnected)current.querySelector('.onlineError').textContent=errorText(error);}finally{button.disabled=false;}});
+function formatDuration(ms){
+ const seconds=Math.floor(Math.max(0,Number(ms)||0)/1000);
+ const h=Math.floor(seconds/3600),m=Math.floor(seconds%3600/60),sec=seconds%60;
+ return h?h+'h '+String(m).padStart(2,'0')+'m '+String(sec).padStart(2,'0')+'s':m+'m '+String(sec).padStart(2,'0')+'s';
+}
+async function showLeaderboard(metric='fastest'){
+ const mode=['fastest','deepest'].includes(metric)?metric:'fastest';
+ modal('Leaderboard',`<form id="playerSearch" class="playerSearch"><label for="playerNickname">Find player by full nickname</label><div class="buttonRow"><input id="playerNickname" placeholder="Nickname" minlength="3" maxlength="20" required autocomplete="off"><button type="submit">Search</button></div></form><div class="filterBar"><label>Ranking<select id="ranking"><option value="fastest">🏁 Fastest D200</option><option value="deepest">Current Progress</option></select></label></div><p id="metricDescription" class="small muted"></p><div id="rankingRows" aria-live="polite">Loading…</div>`);
+ const current=dialog;
+ current.querySelector('#playerSearch').onsubmit=async event=>{event.preventDefault();const button=current.querySelector('[type=submit]');button.disabled=true;try{if(!user)throw Error('Sign in to find players.');const result=await backend.findPlayer(current.querySelector('#playerNickname').value);if(current.isConnected)showPlayer(result);}catch(error){if(current.isConnected)current.querySelector('.onlineError').textContent=errorText(error);}finally{button.disabled=false;}};
+ current.querySelector('#ranking').value=mode;
+ current.querySelector('#metricDescription').textContent=mode==='fastest'?'Fastest active play time from a fresh attempt to clearing D200. Your personal best survives progress resets. Community times are not server-verified.':'Highest dungeon completed in each player’s current attempt. Starting a new speedrun resets this to D0.';
+ current.querySelector('#ranking').onchange=e=>showLeaderboard(e.target.value);
+ try{
+  const b=await connect(),rows=await b.leaderboard(mode);
+  if(!current.isConnected)return;
+  current.querySelector('#rankingRows').innerHTML=rows.length?`<ol class="rankingList">${rows.map((row,i)=>{
+   const c=character(row.profile.characterId),level=mode==='fastest'?200:row.deepest;
+   const detail=mode==='fastest'?'Personal best · '+formatDuration(row.bestMs):'Current attempt · '+(row.deepest||0)+' cleared';
+   const place=['🥇','🥈','🥉'][i]||String(i+1);
+   return `<li class="rankEntry"><span class="rankPlace ${i<3?'rankPodium':''}" aria-label="Rank ${i+1}">${place}</span><img src="${c.avatar}" alt="${esc(c.name)}"><div class="rankPlayer"><button class="playerLink" data-player="${esc(row.uid)}">${esc(row.profile.nickname)}</button><span class="small muted rankInfo">${esc(detail)}</span></div><strong class="rankDungeon" aria-label="Dungeon ${level}">D${level}</strong></li>`;
+  }).join('')}</ol>`:'<p>No results yet.</p>';
+  current.querySelectorAll('[data-player]').forEach(button=>button.onclick=async()=>{button.disabled=true;try{const result=await b.player(button.dataset.player);if(current.isConnected)showPlayer(result);}catch(error){if(current.isConnected)current.querySelector('.onlineError').textContent=errorText(error);}finally{button.disabled=false;}});
  }catch(error){if(current.isConnected){current.querySelector('#rankingRows').textContent='Leaderboard unavailable.';current.querySelector('.onlineError').textContent=errorText(error);}}
 }
 function showPlayer(player){

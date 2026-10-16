@@ -1,7 +1,10 @@
 // Offline harness: production gear, stats, encounters, rewards and fixed-step combat.
 const fs=require('node:fs'),vm=require('node:vm');
 function harness(file='index.html'){
- const source=fs.readFileSync(file,'utf8').match(/<script>([\s\S]*?)<\/script>/)[1];
+ const match=fs.readFileSync(file,'utf8').match(/<script>([\s\S]*?)<\/script>/);
+ const boot='load();if(!state.merchant)rollShop();save();render();';
+ if(!match||match[1].split(boot).length!==2)throw Error('Simulation bootstrap changed; review the production harness before running.');
+ const source=match[1];
  const node=()=>({innerHTML:'',textContent:'',style:{},dataset:{},classList:{add(){},remove(){}},focus(){}});
  const ctx={document:{getElementById:node,querySelectorAll:()=>[],createElement:node},localStorage:{getItem:()=>null,setItem(){}},setInterval:()=>0,clearInterval(){},setTimeout:()=>0,clearTimeout(){},console,alert(){}};
  const injected=`
@@ -35,7 +38,14 @@ function harness(file='index.html'){
  weaponAttack=productionAttack;
  return {...(diagnostics?{equipment:state.equip,counts:r.stats.counts,stats:{attack:r.stats.attack,spell:r.stats.spellPower,aps:r.stats.attacksPerSec,crit:r.stats.crit,maxhp:r.maxhp,defense:r.stats.defense,mana:r.maxmp,manaRegen:r.stats.manaRegen},attacks,casts,fallbacks,encounters}:{}),win:r.status==='win',alive:r.hp>0,timeout:ticks>=18000,hp:Math.max(0,r.hp)/r.maxhp*100,seconds:ticks*.11,damageIn,damageOut,gold:r.status==='win'?r.gold:0,fragments:r.status==='win'?r.fragments:0,loot:r.status==='win'?r.loot.length:0,power:r.stats.power};
  };
- globalThis.inspect={weaponAttack,applyAffinity,totalStats,makeItem,makeSlots,elementPool,SLOTS,isTwoHanded,setCounts,getState:()=>state};
+ // Reward-only sampling runs the real victory handler; it does not simulate combat or extraction.
+ globalThis.sampleRewards=({level,wave,theme,cha,seed:inputSeed})=>{
+  fresh();seed=inputSeed>>>0;const path=THEMES.find(t=>t.id===theme)?.id;
+  if(!path||wave<1||wave>wavesForDungeon(level))throw Error('Invalid reward sample');
+  const r=state.run={tier:level,path,enc:wave,stats:{cha},enemy:{name:'Reward sample',boss:wave===5,miniboss:wave===4},gold:0,fragments:0,loot:[],valuables:[]};
+  winEncounter();return {loot:r.loot,gold:r.gold,fragments:r.fragments};
+ };
+ globalThis.inspect={weaponAttack,applyAffinity,totalStats,makeItem,makeSlots,elementPool,SLOTS,isTwoHanded,setCounts,setBonuses,setOnAttack,comparisonEquip,THEMES,waveLootOdds,rarityOdds,dungeonEquipmentOdds,estimateEnemy,wavesForDungeon,legendaryMatches,LEGENDARY_CATALOG,craftCost,saleFragments,getState:()=>state};
  `;
  vm.runInNewContext(source.replace('load();if(!state.merchant)rollShop();save();render();',injected),ctx);return ctx;
 }

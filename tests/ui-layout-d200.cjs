@@ -20,13 +20,18 @@ assert(stashStart>rightStart&&runeStart>stashStart,'desktop keeps runes below st
 assert(html.includes('.equipmentLeft,.equipmentRight{display:contents}')&&html.includes('.equipmentInventory{order:1}')&&html.includes('.equipmentRunes{order:2}')&&html.includes('.equipmentBonuses{order:3}'),'mobile orders stash, then runes, then tier bonuses');
 assert(html.includes('class="homeMetrics"')&&!html.includes('<div class="hub">'),'home dashboard has no duplicate menu');
 const homeMarkup=html.slice(html.indexOf('function renderTavern(){'),html.indexOf('function equipItem('));
-assert(homeMarkup.includes('<details class="panel homeChangelog" open>')&&homeMarkup.includes('v0.8 → v0.9'),'homepage release notes visible');
+assert(homeMarkup.includes('<details class="panel homeChangelog" open>')&&homeMarkup.includes('v0.9.1 → v0.9.2')&&homeMarkup.includes('Fastest D200 leaderboard')&&homeMarkup.includes('all screens'),'homepage release notes visible');
 for(const text of ['D200','permanent runes','Tank, Berserker, Vampire and Caster','tier bonuses','responsive Equipment']){
  assert(homeMarkup.includes(text),'v0.9 changelog contains '+text);
 }
 assert(html.includes('.homeChanges{list-style:none;display:grid')&&html.includes('@media(max-width:650px){.homeChanges{grid-template-columns:1fr'),'compact mobile changelog layout');
 
-assert(html.includes('Number(count>=b)-Number(count>=a)||b-a'),'active high tier bonuses are sorted first');
+assert(html.includes('const milestones=[2,3,5].map(tier=>{')&&!html.includes('Number(count>=b)-Number(count>=a)||b-a'),'set tiers always show 2, 3, then 5 (including greyed out)');
+assert(html.includes("'Obsidian Quarry','crystal'")&&html.includes("'Iron Bastion','sunder'"),'quarry uses unique Crystal affinity; bastion retains Sunder');
+assert(html.includes("['crystal','Crystal Set','crystalBonus',.08,'crystalCharge','crystalBurst']"),'Crystal 2/3/5 tiers registered');
+assert(html.includes("if(b.crystalCharge)")&&html.includes("if(b.crystalBonus)"),'Crystal tier effects wired to combat');
+assert(html.includes("const LEGENDARY_CATALOG=")&&html.includes("function legendaryMatches("),'Legendary identity catalogue is centralized and type-safe');
+assert(!html.includes("sample(Object.keys(LEGENDARY_ART_BY_NAME))"),'Legendary name is never rolled without subtype');
 assert(html.includes('.combatDecisionPanel{display:none}')&&html.includes('.combatDecisionPanel{display:block;margin:8px'),'critical briefing appears at mobile widths only');
 assert(html.includes('.combatExpeditionDetails .nextWaveOdds,.combatExpeditionDetails .runLootHeading,.combatExpeditionDetails .combatLoot{display:none}'),'mobile removes redundant lower odds and loot');
 
@@ -42,8 +47,8 @@ for(const family of ['might','swiftness','wisdom','fortitude','fortune','fury','
 }
 assert(model.includes('maxDungeon>200')&&model.includes('Math.min(200')&&model.includes('length:20'),'cloud saves, leaderboard, milestones support D200');
 assert(loadout.includes('item.tier>200')&&loadout.includes('r.tier<=200'),'public item/rune cap supports D200');
-assert(fb.includes("appVersion:'0.9'")&&fb.includes('maxDungeon>200'),'v0.9 feedback with D200');
-assert(rules.includes('d.deepest <= 200')&&rules.includes("'200'")&&rules.includes("d.appVersion in ['0.8.1','0.9']"),'Firebase rules support progress, milestones and legacy feedback');
+assert(fb.includes("appVersion:'0.9.2'")&&fb.includes('maxDungeon>200'),'v0.9 feedback with D200');
+assert(rules.includes('d.deepest <= 200')&&rules.includes('match /testSeasons/v092-launch-1/speedruns/{uid}')&&rules.includes('bestMs <= resource.data.bestMs')&&rules.includes("d.appVersion in ['0.8.1','0.9','0.9.2']"),'Firebase rules support current attempts, best D200 and legacy feedback');
 (async()=>{
  const {validateSave,safeProgress,MILESTONES}=await import('../online/model.mjs');
  const {publicLoadout}=await import('../online/public-loadout.mjs');

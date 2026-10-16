@@ -17,6 +17,11 @@ export async function createBackend(){
   async player(uid){return {uid,profile:uid==='alice'?copy(f.profile):{nickname:uid==='outsider'?'outsider':'test_player',characterId:'knight'},loadout:uid==='missing'?null:{equipment:{weapon:{id:'opponent-sword',slot:'weapon',subtype:'Sword',name:'Opponent Sword',tier:10,rarity:'Rare',atk:30,str:5,effect:'poison'},ring1:{id:'ring',slot:'ring1',subtype:'Ring',name:'Poison Ring',tier:10,rarity:'Rare',effect:'poison'}},maxDungeon:20}};},
   async findPlayer(name){if(name.trim().toLowerCase()==='outsider')return this.player('outsider');if(name.trim().toLowerCase()==='alice_1')return this.player('alice');throw Error('Player not found. Enter their full nickname.');},
   async publishTestResults(){f.shared++;},
-  async leaderboard(metric,milestone){if(f.offline)throw Error('offline');return [{uid:'test',deepest:30,activeMs:60000,receivedAt:{toDate:()=>new Date('2026-10-15T00:00:00Z')},profile:{nickname:'test_player',characterId:'duelist'}},...(f.user?.isAnonymous&&f.profile?[{uid:f.user.uid,deepest:5,activeMs:60000,profile:copy(f.profile)}]:[])];}
+  async leaderboard(metric){
+   if(f.offline)throw Error('offline');
+   const first={uid:'test',deepest:30,bestMs:7200000,profile:{nickname:'test_player',characterId:'duelist'}};
+   const own=f.user?.isAnonymous&&f.profile?[{uid:f.user.uid,deepest:5,bestMs:6600000,profile:copy(f.profile)}]:[];
+   return [first,...own].map(row=>metric==='fastest'?row:{...row,bestMs:undefined});
+  }
  };
 }

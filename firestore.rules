@@ -20,14 +20,16 @@ service cloud.firestore {
    allow update: if owner(uid) && validProfile(request.resource.data) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['characterId','updatedAt']);
    allow delete: if false;
   }
-  match /players/{uid}/saves/current {
+  // Fresh v0.9.2 saves. Old /saves/current is rejected by default.
+  match /players/{uid}/saves/v092 {
    function validSave() { let d=request.resource.data; return d.keys().hasOnly(['payload','revision','schemaVersion','updatedAt']) && d.payload is string && d.payload.size() <= 700000 && d.revision is int && d.schemaVersion == 1 && d.updatedAt == request.time; }
    allow read: if owner(uid);
    allow create: if owner(uid) && hasProfile(uid) && validSave() && request.resource.data.revision == 1;
    allow update: if owner(uid) && hasProfile(uid) && validSave() && request.resource.data.revision == resource.data.revision + 1;
    allow delete: if false;
   }
-  match /publicLoadouts/{uid} {
+  // Old public equipment is no longer readable; a fresh collection is used.
+  match /publicLoadoutsV092/{uid} {
    allow get: if request.auth != null;
    allow list: if false;
    allow create, update: if owner(uid) && hasProfile(uid)
@@ -37,22 +39,41 @@ service cloud.firestore {
     && request.resource.data.updatedAt == request.time;
    allow delete: if false;
   }
-  // Client-owned test claims only. These documents are NEVER verified rankings.
-  match /testSeasons/test-open-1/deepest/{uid} {
-   function validClaim() { let d=request.resource.data; return d.keys().hasOnly(['deepest','verified','updatedAt']) && d.deepest is int && d.deepest >= 0 && d.deepest <= 200 && d.verified == false && d.updatedAt == request.time; }
+  // Community scores remain client-submitted (UNVERIFIED). Server-verified runs need a trusted backend.
+  match /testSeasons/v092-launch-1/deepest/{uid} {
+   function validClaim() {
+    let d=request.resource.data;
+    return d.keys().hasOnly(['deepest','attemptId','verified','updatedAt'])
+     && d.keys().hasAll(['deepest','attemptId','verified','updatedAt'])
+     && d.deepest is int && d.deepest >= 0 && d.deepest <= 200
+     && d.attemptId is string && d.attemptId.size() >= 1 && d.attemptId.size() <= 100
+     && d.attemptId.matches('^[A-Za-z0-9_-]+$')
+     && d.verified == false && d.updatedAt == request.time;
+   }
    allow read: if true;
    allow create: if owner(uid) && hasProfile(uid) && validClaim();
-   allow update: if owner(uid) && hasProfile(uid) && validClaim() && request.resource.data.deepest >= resource.data.deepest;
+   allow update: if owner(uid) && hasProfile(uid) && validClaim()
+    && (request.resource.data.attemptId != resource.data.get('attemptId','legacy')
+     || request.resource.data.deepest >= resource.data.deepest);
    allow delete: if false;
   }
-  match /testSeasons/test-open-1/milestones/{milestone}/entries/{uid} {
+  match /testSeasons/v092-launch-1/speedruns/{uid} {
+   function validSpeedrun() {
+    let d=request.resource.data;
+    return d.keys().hasOnly(['bestMs','verified','updatedAt'])
+     && d.keys().hasAll(['bestMs','verified','updatedAt'])
+     && d.bestMs is int && d.bestMs >= 0 && d.bestMs <= 315360000000
+     && d.verified == false && d.updatedAt == request.time;
+   }
    allow read: if true;
-   allow create: if owner(uid) && hasProfile(uid) && milestone in ['10','20','30','40','50','60','70','80','90','100','110','120','130','140','150','160','170','180','190','200']
-    && request.resource.data.keys().hasOnly(['milestone','activeMs','verified','receivedAt'])
-    && request.resource.data.milestone == int(milestone)
-    && (request.resource.data.activeMs == null || (request.resource.data.activeMs is int && request.resource.data.activeMs >= 0 && request.resource.data.activeMs <= 315360000000))
-    && request.resource.data.verified == false && request.resource.data.receivedAt == request.time;
-   allow update, delete: if false;
+   allow create: if owner(uid) && hasProfile(uid) && validSpeedrun();
+   allow update: if owner(uid) && hasProfile(uid) && validSpeedrun()
+    && request.resource.data.bestMs <= resource.data.bestMs;
+   allow delete: if false;
+  }
+  // Retired milestones and old seasons cannot be read or written by the app.
+  match /testSeasons/v092-launch-1/milestones/{milestone}/entries/{uid} {
+   allow read, write: if false;
   }
   // Signed-in playtesters may create feedback; only a trusted administrator may read/export it.
   match /feedbackInbox/{feedbackId} {
@@ -70,7 +91,7 @@ service cloud.firestore {
      && (d.likes.size() + d.problems.size() + d.ideas.size()) >= 10
      && d.maxDungeon is int && d.maxDungeon >= 1 && d.maxDungeon <= 200
      && character(d.characterId)
-     && d.appVersion in ['0.8.1','0.9']
+     && d.appVersion in ['0.8.1','0.9','0.9.2']
      && d.createdAt == request.time;
    }
    allow create: if request.auth != null && hasProfile(request.auth.uid)

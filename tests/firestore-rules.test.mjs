@@ -17,33 +17,55 @@ test('nickname + profile are atomic, immutable, unique; no impersonation',async(
  await assertSucceeds(updateDoc(doc(alice,'publicProfiles/alice'),{characterId:'ranger',updatedAt:serverTimestamp()}));
 });
 test('private saves require owner + profile, monotonic revision and bounded payload',async()=>{
- const path='players/alice/saves/current';await assertSucceeds(setDoc(doc(alice,path),save(1)));
+ const path='players/alice/saves/v092';await assertSucceeds(setDoc(doc(alice,path),save(1)));
  await assertFails(getDoc(doc(bob,path)));await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(),path)));
  await assertSucceeds(getDoc(doc(alice,path)));await assertFails(setDoc(doc(alice,path),save(1)));await assertFails(setDoc(doc(alice,path),save(3)));
  await assertSucceeds(setDoc(doc(alice,path),save(2)));await assertFails(setDoc(doc(alice,path),{...save(3),payload:'x'.repeat(700001)}));
  await assertFails(deleteDoc(doc(alice,path)));await assertFails(setDoc(doc(bob,path),save(3)));
+ await assertFails(getDoc(doc(alice,'players/alice/saves/current')));
+ await assertFails(setDoc(doc(alice,'players/alice/saves/current'),save(1)));
 });
-test('rankings reject verified claims, forged timestamps, arbitrary values and other users',async()=>{
- const ref=doc(alice,'testSeasons/test-open-1/deepest/alice');const claim={deepest:20,verified:false,updatedAt:serverTimestamp()};
- await assertSucceeds(setDoc(ref,claim));await assertFails(setDoc(ref,{...claim,verified:true}));await assertSucceeds(setDoc(ref,{...claim,deepest:200}));await assertFails(setDoc(ref,{...claim,deepest:201}));
- await assertFails(setDoc(doc(bob,'testSeasons/test-open-1/deepest/alice'),claim));
+test('current depth resets per attempt, D200 personal best never increases, client claims stay unverified',async()=>{
+ const ref=doc(alice,'testSeasons/v092-launch-1/deepest/alice');
+ const claim={deepest:20,attemptId:'run-1',verified:false,updatedAt:serverTimestamp()};
+ await assertSucceeds(setDoc(ref,claim));
+ await assertFails(setDoc(ref,{...claim,verified:true}));
+ await assertSucceeds(setDoc(ref,{...claim,deepest:200}));
+ await assertFails(setDoc(ref,{...claim,deepest:0}));
+ await assertSucceeds(setDoc(ref,{...claim,attemptId:'run-2',deepest:0}));
+ await assertSucceeds(setDoc(ref,{...claim,attemptId:'run-2',deepest:17}));
+ await assertFails(setDoc(ref,{...claim,attemptId:'run-2',deepest:1}));
+ await assertFails(setDoc(ref,{...claim,deepest:201}));
+ await assertFails(setDoc(doc(bob,'testSeasons/v092-launch-1/deepest/alice'),claim));
+ const record=doc(alice,'testSeasons/v092-launch-1/speedruns/alice');
+ const best={bestMs:500000,verified:false,updatedAt:serverTimestamp()};
+ await assertSucceeds(setDoc(record,best));
+ await assertSucceeds(setDoc(record,{...best,bestMs:450000}));
+ await assertFails(setDoc(record,{...best,bestMs:999999}));
+ await assertFails(setDoc(record,{...best,verified:true}));
+ await assertFails(setDoc(record,{...best,bestMs:-1}));
+ await assertFails(setDoc(doc(bob,'testSeasons/v092-launch-1/speedruns/alice'),best));
  await assertFails(setDoc(doc(alice,'verifiedSeasons/test-open-1/entries/alice'),{score:100}));
- const milestone=doc(alice,'testSeasons/test-open-1/milestones/20/entries/alice');const data={milestone:20,activeMs:60000,verified:false,receivedAt:serverTimestamp()};
- await assertSucceeds(setDoc(milestone,data));await assertFails(setDoc(milestone,{...data,activeMs:0}));
- await assertFails(setDoc(doc(alice,'testSeasons/test-open-1/milestones/30/entries/alice'),{...data,milestone:30,receivedAt:new Date(0)}));
- await assertFails(setDoc(doc(alice,'testSeasons/test-open-1/milestones/40/entries/alice'),{...data,milestone:40,activeMs:-1}));
- await assertSucceeds(getDoc(doc(env.unauthenticatedContext().firestore(),'testSeasons/test-open-1/deepest/alice')));
- assert.equal((await getDoc(ref)).data().verified,false);
+ const milestone=doc(alice,'testSeasons/v092-launch-1/milestones/20/entries/alice');
+ await assertFails(setDoc(milestone,{milestone:20,activeMs:60000,verified:false,receivedAt:serverTimestamp()}));
+ await assertFails(getDoc(milestone));
+ await assertSucceeds(getDoc(doc(env.unauthenticatedContext().firestore(),'testSeasons/v092-launch-1/deepest/alice')));
+ await assertSucceeds(getDoc(doc(env.unauthenticatedContext().firestore(),'testSeasons/v092-launch-1/speedruns/alice')));
+ await assertFails(getDoc(doc(alice,'testSeasons/test-open-1/deepest/alice')));
+ await assertFails(setDoc(doc(alice,'testSeasons/test-open-1/deepest/alice'),claim));
+ assert.equal((await getDoc(ref)).data().deepest,17);
 });
 
 test('public equipment is readable by signed-in players but never writable by opponents',async()=>{
  const data={equipment:'{}',maxDungeon:10,updatedAt:serverTimestamp()};
- await assertSucceeds(setDoc(doc(alice,'publicLoadouts/alice'),data));
- await assertSucceeds(getDoc(doc(bob,'publicLoadouts/alice')));
- await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(),'publicLoadouts/alice')));
- await assertFails(setDoc(doc(bob,'publicLoadouts/alice'),data));
- await assertFails(setDoc(doc(alice,'publicLoadouts/alice'),{...data,gold:999}));
- await assertFails(setDoc(doc(alice,'publicLoadouts/alice'),{...data,equipment:'x'.repeat(30001)}));
+ await assertSucceeds(setDoc(doc(alice,'publicLoadoutsV092/alice'),data));
+ await assertSucceeds(getDoc(doc(bob,'publicLoadoutsV092/alice')));
+ await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(),'publicLoadoutsV092/alice')));
+ await assertFails(getDoc(doc(alice,'publicLoadouts/alice')));
+ await assertFails(setDoc(doc(alice,'publicLoadouts/alice'),data));
+ await assertFails(setDoc(doc(bob,'publicLoadoutsV092/alice'),data));
+ await assertFails(setDoc(doc(alice,'publicLoadoutsV092/alice'),{...data,gold:999}));
+ await assertFails(setDoc(doc(alice,'publicLoadoutsV092/alice'),{...data,equipment:'x'.repeat(30001)}));
  await assertFails(setDoc(doc(alice,'pvpTransfers/fake'),{attacker:'alice',defender:'bob',gold:20}));
 });
 

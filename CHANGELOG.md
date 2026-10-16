@@ -1,5 +1,38 @@
 # Changelog
 
+## v0.9.2 — 2026-10-16 (mobile UI + D200 speedruns)
+
+- **GLOBAL FRESH START:** all players begin at D1, with zero saved equipment, inventory, runes, Gold, Fragments, upgrades, dungeon progress and prior leaderboard records. Old progress is never migrated into v0.9.2 accounts. Authentication identities, nicknames and cosmetic character selections are preserved.
+- **Season isolation:** live saves use `players/{uid}/saves/v092`; leaderboards use `testSeasons/v092-launch-1/{deepest|speedruns}/{uid}`; public equipment uses `publicLoadoutsV092/{uid}`. Old local browser saves, former cloud save `current`, prior leaderboard and previous public loadouts are inaccessible from the new client. Existing historical Firestore documents are **not physically deleted by a GitHub merge**.
+- **Required manual Firebase step:** publish `firestore.rules` from this release in the Firebase Console before making the new build available. Do not delete Authentication accounts, nicknames or profiles. Live service/rules deployment is not done by GitHub.
+
+- **Rune Recycling:** sell any unequipped owned rune for Fragments (7 at D10 up to 45 at D200); a confirm dialog protects against accidental sales. Bulk-recycle duplicates keeps the highest-tier rune of each family and always preserves equipped runes. Rewards that have not been claimed cannot be sold.
+- **Legendary Hunt guide:** select a desired Legendary and compare conditional item-identity odds across the three available dungeon paths. This is targeting advice using existing favored-equipment rules; it deliberately does not change any drop roll.
+- **Extraction clarity:** contextual HP/reward risk warning between waves and explicit instructions in dungeon entry/protection confirmation; clearing all waves remains required to unlock the next dungeon.
+- **Crystal tooltips:** corrected to match the implemented third-main-attack counter and per-expedition 10-second Burst cooldown (no numerical changes).
+- **Midgame weapon sustain:** Staff magical casts grant Arcane Guard (3.5% max HP Barrier, 6-second cooldown); Two-Handed strikes grant Heavy Guard (2.5%, 6-second cooldown). Paired D30/D40/D50/D60 PvE trial results and limitations are documented in `docs/design/v092-gameplay-improvements.md`. No other weapon damage or enemy scaling formula changed.
+- **Death recovery:** if both equipment and Stash are empty, grant the existing Training Sword immediately after death, matching the former reload-time recovery rule.
+- Added a dedicated regression for rune recycling, hunt probability, Crystal text, weapon guards and complete-gear-loss recovery. All changes remain on `development`, without touching player saves, Firebase or `main`.
+- Introduce **21 fixed-identity Legendary** equipment definitions with subtype-matched names and exclusive PNG art (5 original + 16 new). Legacy items retain their IDs, stats, effects and original names; mismatched old identities fall back to subtype-specific art.
+- **Obsidian Quarry → Crystal** (💎), with independent 2/3/5-piece set effects (resonance, charges, Crystal Burst) and Crystal proc damage. Iron Bastion remains Sunder.
+- Preserve the global Legendary rarity roll and existing equipment slot/subtype roll; only names and images are selected from the matching catalogue pool.
+- Display locked and unlocked Tier Bonus milestones in fixed **2 → 3 → 5** order rather than bringing inactive five-piece tiers to the top; no bonus values changed.
+- Display all five main navigation tabs in a 3+2 grid on phones; larger tap targets remove the need to scroll sideways to Dungeons.
+- Remove the equipped-gear strip from the Tavern homepage **on all screen sizes** (desktop and mobile). Equipment management remains in Equipment.
+- Put a compact 3×3 equipped-item grid next to character statistics on mobile, bringing Inventory higher into view. Keep desktop's character illustration and layout.
+- Render permanent rune choices as smaller three-column tiles; maintain all rune equip/unequip behavior.
+- Show affinity sets in two columns, with progress steps and expandable full tier descriptions.
+- Mark Merchant items as higher, lower or equal **Gear Power** versus current equipment, while keeping the detailed Compare flow for effects and affinity synergies.
+- Replace the separate dungeon Previous / Next row with arrows aligned to the numbered dungeon selector, and move **Enter Dungeon** above secondary entry preferences.
+- Preserve combat, item generation, saving, dungeon reroll rules and progression; add mobile UI regression assertions.
+- Make **Fastest D200** (lowest eligible accumulated active play time from a fresh attempt through D200 clear) the default ranking, storing one personal best per account across resets.
+- Keep **Current Progress** by account and restart its cleared dungeon depth at D0 on each new attempt. Remove **First to Clear** and intermediary milestone rankings; old milestone documents remain stored but are no longer published or readable.
+- Add Account **Reset Progress · New Speedrun** with explicit RESET confirmation and cloud-first revision-protected save replacement. Reset dungeon progress, Gold, Fragments, runes, equipment, inventory and upgrades; preserve nickname, cosmetic character and D200 personal best.
+- Each fresh attempt gets a new attempt ID; old saves remain compatible but untimed legacy runs cannot claim a historical D200 time.
+- Community timings are **unverified client claims** until a trusted speedrun validation backend exists.
+- **Release prerequisite:** deploy the updated Firestore rules before publishing this build; they authorize the new speedrun records and per-attempt depth resets.
+- Status: **development only**; not merged into main.
+
 ## v0.9.1 — 2026-10-16
 
 - **Three new dungeon affinities:** 🌿 **Nature** for Serpent Grove, ⚡ **Storm** for Stormglass Spire, and 🌊 **Tide** for Drowned Vault, each with its own cumulative **2/3/5-piece Tier Bonuses**.

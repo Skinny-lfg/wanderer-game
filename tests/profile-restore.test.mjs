@@ -10,13 +10,15 @@ test('profile reads and duplicate registration preserve account ownership',async
  };
  let source=await readFile(new URL('../online/firebase-client.mjs',import.meta.url),'utf8');
  source=source.replace("import * as sdk from './vendor/firebase-sdk.mjs';",'const sdk=globalThis.__profileSdkTest;');
- for(const name of ['firebase-config','model','public-loadout'])source=source.replace(`'./${name}.mjs'`,JSON.stringify(new URL(`../online/${name}.mjs`,import.meta.url).href));
+ for(const name of ['firebase-config','model','public-loadout'])source=source.replace(new RegExp(`'\\./${name}\\.mjs(?:\\?v=[^']+)?'`),JSON.stringify(new URL(`../online/${name}.mjs`,import.meta.url).href));
  try{
  const {createBackend}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));const backend=await createBackend();
  assert.equal((await backend.signInGuest()).user.isAnonymous,true);
  const interrupted={payload:JSON.stringify({gold:124,fragments:40,maxDungeon:10,stash:[],equip:{},run:{status:'fight',gold:500}}),revision:4};
  records.set('players/alice/saves/current',interrupted);
- assert.deepEqual(await backend.readSave(),interrupted,'legacy cloud run must be available for backed-up recovery');
+ assert.equal(await backend.readSave(),null,'old cloud save must NOT restore into a fresh season');
+ records.set('players/alice/saves/v092',interrupted);
+ assert.deepEqual(await backend.readSave(),interrupted,'in-season interrupted cloud run remains recoverable');
  await assert.rejects(backend.writeSave(JSON.parse(interrupted.payload),4),/Finish or extract/,'new active-run writes stay prohibited');
 
  const original={nickname:'skinny',characterId:'knight',createdAt:1,updatedAt:1};
