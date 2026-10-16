@@ -447,7 +447,7 @@ let KEY='wanderer_browser_proto_v01',lastStoredValue=null,saveBlocked=false;
 const $=id=>document.getElementById(id), Q=sel=>document.querySelectorAll(sel);
 const SLOTS=['helm','amulet','armor','gloves','weapon','offhand','ring1','ring2','boots'];
 const SNAME={helm:'Helm',amulet:'Amulet',armor:'Armor',gloves:'Gloves',weapon:'Weapon',offhand:'Off-Hand',ring1:'Ring I',ring2:'Ring II',boots:'Boots'};
-const ELEMENTS={poison:{name:'Poison',icon:'☠️',color:'#80cf8a'},bleed:{name:'Bleed',icon:'🩸',color:'#ed8590'},crit:{name:'Critical',icon:'🎯',color:'#e9c480'},sunder:{name:'Sunder',icon:'🔨',color:'#d5ab81'},shield:{name:'Shield',icon:'🛡️',color:'#90bdeb'},regen:{name:'Regen',icon:'💚',color:'#89d1ac'},burn:{name:'Fire',icon:'🔥',color:'#ffa16a'},slow:{name:'Frost',icon:'❄️',color:'#8de7ff'},drain:{name:'Dark',icon:'🌑',color:'#c8a1fd'},nature:{name:'Nature',icon:'🌿',color:'#8acb75'},shock:{name:'Storm',icon:'⚡',color:'#e5c66a'},tide:{name:'Tide',icon:'🌊',color:'#78c8df'}};
+const ELEMENTS={poison:{name:'Poison',icon:'☠️',color:'#80cf8a'},bleed:{name:'Bleed',icon:'🩸',color:'#ed8590'},crit:{name:'Critical',icon:'🎯',color:'#e9c480'},sunder:{name:'Sunder',icon:'🔨',color:'#d5ab81'},shield:{name:'Shield',icon:'🛡️',color:'#90bdeb'},regen:{name:'Regen',icon:'💚',color:'#89d1ac'},burn:{name:'Fire',icon:'🔥',color:'#ffa16a'},slow:{name:'Frost',icon:'❄️',color:'#8de7ff'},drain:{name:'Dark',icon:'🌑',color:'#c8a1fd'},nature:{name:'Nature',icon:'🌿',color:'#8acb75'},shock:{name:'Storm',icon:'⚡',color:'#e5c66a'},tide:{name:'Tide',icon:'🌊',color:'#78c8df'},crystal:{name:'Crystal',icon:'💎',color:'#a9b7ff'}};
 const RARITY={Common:['#aab2bc',1,1],Uncommon:['#76d69b',1.25,1.5],Rare:['#77baff',1.57,2.4],Epic:['#d0a2fa',2.1,3.9],Legendary:['#ffc36a',2.6,6]};
 const THEMES=[
  ['temple','Venomous Temple','poison','assets/dungeons/backgrounds/temple.webp','Venom Acolyte'],['forge','Blood Forge','bleed','assets/dungeons/backgrounds/forge.webp','Forge Raider'],
@@ -455,7 +455,7 @@ const THEMES=[
  ['frost','Frostbound Catacombs','slow','assets/dungeons/backgrounds/frost.webp','Frozen Revenant'],['ash','Ashen Sanctum','burn','assets/dungeons/backgrounds/ash.webp','Ash Zealot'],
  ['void','Umbral Reliquary','drain','assets/dungeons/backgrounds/void.webp','Soul Drinker'],['ward','Warded Catacombs','shield','assets/dungeons/backgrounds/ward.webp','Warded Guardian'],
  ['grove','Serpent Grove','nature','assets/dungeons/backgrounds/grove.webp','Serpent Guard'],['shrine','Lost Sanctuary','regen','assets/dungeons/backgrounds/shrine.webp','Fallen Acolyte'],
- ['storm','Stormglass Spire','shock','assets/dungeons/backgrounds/storm.webp','Stormglass Knight'],['drowned','Drowned Vault','tide','assets/dungeons/backgrounds/drowned.webp','Drowned Oracle'],['quarry','Obsidian Quarry','sunder','assets/dungeons/backgrounds/quarry.webp','Basalt Guardian']
+ ['storm','Stormglass Spire','shock','assets/dungeons/backgrounds/storm.webp','Stormglass Knight'],['drowned','Drowned Vault','tide','assets/dungeons/backgrounds/drowned.webp','Drowned Oracle'],['quarry','Obsidian Quarry','crystal','assets/dungeons/backgrounds/quarry.webp','Basalt Guardian']
 ].map(([id,name,effect,image,enemy])=>({id,name,effect,image,enemy}));
 const MOB_POOLS={
  temple:[['Venom Cobra','assets/mobs/temple/venom_cobra.png'],['Venom Spider','assets/mobs/temple/venom_spider.png']],
@@ -842,7 +842,8 @@ function setBonuses(counts){
   ['drain','Dark Set','drainBonus',.15,'soulCharge','soulPact'],
    ['nature','Nature Set','natureBonus',.25,'natureVitality','natureRenewal'],
    ['shock','Storm Set','shockBonus',.25,'shockRhythm','thunderclap'],
-   ['tide','Tide Set','tideBonus',.25,'tideGuard','tideSurge']
+   ['tide','Tide Set','tideBonus',.25,'tideGuard','tideSurge'],
+   ['crystal','Crystal Set','crystalBonus',.08,'crystalCharge','crystalBurst']
  ];
  for(const [effect,title,baseKey,base,threeKey,fiveKey]of defs){
   const n=Math.max(0,counts[effect]||0);
@@ -949,6 +950,7 @@ function affinityBadge(item){const affinity=ELEMENTS[item?.effect];return affini
 function setDescription(effect,values){
  const b=values||{},parts=[];
  const push=(key,text)=>{if(b[key])parts.push(text);};
+ if(effect==='crystal'){push('crystalBonus','Crystal resonance: +8% direct main-hand damage');push('crystalCharge','Each main attack builds a Crystal charge (max 3); at 3 charges the next strike gains +15% base damage and consumes the charges');push('crystalBurst','Crystal Burst: every third charged strike releases +35% base damage (10s cooldown)');}
  if(effect==='poison'){push('poisonBonus','Poison DoTs +15%');push('poisonWeaken','Stacks weaken enemy direct damage by 1% each (max 6%)');push('venomBurst','Venom Burst: at 6 stacks spend 6 for 60% remaining DoT (max 100% base hit), 10s cooldown');}
  if(effect==='bleed'){push('bleedBonus','Bleed DoTs +15%');push('bleedHaste','Bleeding target grants +5% speed for 3s per charge, max 3 (1/s)');push('bloodHunt','Blood Hunt: +40% base hit when target ≤30% HP, 12s cooldown');}
  if(effect==='sunder'){push('sunderBonus','Armor reduction +2 per Sunder proc (minimum 25% initial Armor)');push('sunderExpose','At ≤50% initial Armor enemy takes +8% direct damage');push('armorShatter','Armor Shatter: remove up to one base hit of Barrier and delay next enemy strike (0.5s; boss 0.2s), 12s cooldown');}
@@ -1269,6 +1271,11 @@ function setOnAttack(r,base,critical,perfect){
   temp.soul=0;r.hp=Math.max(1,r.hp-r.maxhp*.03);temp.soulPactBonus=Math.round(base*.4);
   bonus+=temp.soulPactBonus;addLog('🌑 Soul Pact sacrifices HP for damage','spell');
  }else temp.soulPactBonus=0;
+ if(b.crystalBonus)bonus+=Math.round(base*b.crystalBonus);
+ if(b.crystalCharge){
+  temp.crystalHits=(temp.crystalHits||0)+1;
+  if(temp.crystalHits%3===0){bonus+=Math.round(base*.15);if(b.crystalBurst&&setReady(r,'crystalBurst',10)){bonus+=Math.round(base*.35);addLog('💎 Crystal Burst!','spell');}}
+ }
  if(b.shockRhythm){
   temp.shockHits=(temp.shockHits||0)+1;
   if(temp.shockHits%3===0)bonus+=Math.round(base*.15);
