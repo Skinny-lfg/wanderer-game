@@ -1388,16 +1388,16 @@ function extract(){
     state.onlineProgress.deepestCleared=Math.max(state.onlineProgress.deepestCleared,r.tier);
     if(r.tier%10===0&&!state.onlineProgress.milestones[r.tier])state.onlineProgress.milestones[r.tier]={activeMs:state.onlineProgress.timingEligible?state.onlineProgress.activeMs:null};
   }
-  // Rotate the three paths after a complete clear or an early extraction.
-  // Keep the played dungeon tier available for farming, with fresh affinities.
-  rotateDungeonOffers(r.tier,r.path);
+  // Leaving before Wave 1 must never refresh dungeon choices for free.
+  const fought=(r.enc||0)>0;
+  if(fought)rotateDungeonOffers(r.tier,r.path);
   const unlockedNext=r.status==='win'&&r.tier===state.maxDungeon&&state.maxDungeon<DUNGEON_CAP;
   if(unlockedNext)state.maxDungeon++;
   state.chosen=unlockedNext?state.maxDungeon:Math.min(state.maxDungeon,r.tier);
-  selectedPath=null;state.selectedPath=null;
+  selectedPath=fought?null:r.path;state.selectedPath=selectedPath;
   state.run=null;view='dungeons';dungeonPage=null;selectedId=null;
   save();render();
-  bannerMessage(`Extracted +${r.gold} Gold · +${r.fragments} Fragments · ${r.loot.length} gear${state.stash.length>=stashCapacity()?' · Stash at capacity: upgrade or salvage before the next run':''}`);
+  bannerMessage(fought?`Extracted +${r.gold} Gold · +${r.fragments} Fragments · ${r.loot.length} gear${state.stash.length>=stashCapacity()?' · Stash at capacity: upgrade or salvage before the next run':''}`:'Returned without combat — dungeon choices unchanged.');
 }
 function renderLog(){const el=$('expeditionLog');if(!el)return;el.innerHTML=logEntries.map(v=>`<div class="logLine" style="color:${RARITY[v.kind]?.[0]||((v.kind==='good')?'#8acda8':(v.kind==='treasure'?'#e3ba71':v.kind==='spell'?'#b7d3ff':'#d3d7d9'))}">${esc(v.text)}</div>`).join('')}
 function enemyDebuffMarkup(e){
