@@ -1,12 +1,12 @@
 import {publicLoadout,cleanEquipment} from './public-loadout.mjs';
 import {practiceDuel} from './pvp.mjs';
-import {CHARACTERS,character,validateSave,recoverInterruptedSave,summary,safeProgress} from './model.mjs?v=speedrun-d200-12';
+import {CHARACTERS,character,validateSave,recoverInterruptedSave,summary,safeProgress,SAVE_NAMESPACE} from './model.mjs?v=v092-global-reset-1';
 const game=globalThis.WandererGame,GUEST='wanderer_browser_proto_v01';
 let backendPromise,backend,user=null,profile=null,revision=null,synced='',epoch=0,writing=false,suppress=false,timer=null,dialog=null;
 let ready=false,lastPublished='',lastLoadout='',profileState='loading';
 let message='Sign in to play',selectedCharacter=game.snapshot().characterId||'wanderer';
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const accountKey=()=>user?'wanderer_account_'+user.uid:null;
+const accountKey=()=>user?'wanderer_account_'+user.uid+'_'+SAVE_NAMESPACE:null;
 function status(text){message=text;}
 function report(error){status(errorText(error));const el=document.getElementById('accountError');el.textContent=message;el.hidden=false;}
 function clearError(){document.getElementById('accountError').hidden=true;}
@@ -45,7 +45,7 @@ function action(selector,fn){const element=dialog?.querySelector(selector);if(!e
 function ensureSafeSwitch(allowProtected=false){if(writing)throw new Error('Saving your progress. Please try again in a moment.');if(game.busy())throw new Error('Finish or extract from your expedition before changing accounts or saves.');if(game.blocked()&&!allowProtected)throw new Error('The local save is protected. Reload before switching. Your recovery copies are retained.');}
 function sessionGuard(token){if(token!==epoch)throw new Error('The signed-in account changed. Reopen Account before continuing.');}
 async function connect(){
- if(!backendPromise)backendPromise=import('./firebase-client.mjs?v=speedrun-d200-12').then(m=>m.createBackend()).then(b=>{
+ if(!backendPromise)backendPromise=import('./firebase-client.mjs?v=v092-global-reset-1').then(m=>m.createBackend()).then(b=>{
   backend=b;b.watchAuth(async next=>{
    // Do not reopen Account or gate an in-progress game for a duplicate auth event
    // for the already restored user. Login recovery itself still runs on startup.
@@ -142,7 +142,8 @@ async function signOutAccount(){
 }
 function localCandidate(){
  const key=accountKey();
- const raw=game.key()===key?game.snapshot():localStorage.getItem(key)||localStorage.getItem(GUEST)||game.snapshot();
+ const raw=game.key()===key?game.snapshot():localStorage.getItem(key)||game.newSave();
+ // Old Guest and account saves never migrate into the v0.9.2 global reset.
  // Preserve the original unsynced save; only the unfinished expedition is abandoned.
  const {save,interrupted}=recoverInterruptedSave(raw);
  if(interrupted)game.backup(typeof raw==='string'?raw:JSON.stringify(raw),'interrupted-run-before-recovery');
@@ -156,23 +157,18 @@ async function readRecoverableCloud(){
 }
 async function resumeAccount(){
  ensureSafeSwitch();const token=epoch,remote=await readRecoverableCloud();sessionGuard(token);
- const own=localStorage.getItem(accountKey()),claimed=localStorage.getItem(GUEST+'_claimed');
+ const own=localStorage.getItem(accountKey());
  let local=localCandidate();const baseline=localStorage.getItem(accountKey()+'_synced');
  const remoteRaw=remote?JSON.stringify(validateSave(remote.payload)):null;
  const localDirty=own&&baseline!==JSON.stringify(local);
  if(remote&&validateSave(remote.payload).maxDungeon<local.maxDungeon)return reviewCloud();
  if(remote&&localDirty&&remoteRaw!==JSON.stringify(local)&&remoteRaw!==baseline)return reviewCloud();
- if(remote&&!own&&!claimed)return reviewCloud();
  let payload=remote&&!localDirty?validateSave(remote.payload):local;
- if(!remote&&!own&&claimed&&claimed!==user.uid){
-  // A different account must never inherit the previous player's Guest progress.
-  payload=game.newSave();
- }
  payload={...payload,characterId:profile.characterId};
  let record=remote;
  if(!remote||localDirty||remote.interrupted){game.backup(JSON.stringify(payload),'before-account-migration');record=await backend.writeSave(payload,remote?.revision||0);sessionGuard(token);}
  suppress=true;try{game.switchSave(accountKey(),payload);}finally{suppress=false;}
- revision=record.revision;synced=JSON.stringify(game.snapshot());remember();localStorage.setItem(GUEST+'_claimed',user.uid);ready=true;gate();clearError();close();
+ revision=record.revision;synced=JSON.stringify(game.snapshot());remember();ready=true;gate();clearError();close();
  publishResults().catch(report);
 }
 async function reviewCloud(){
@@ -187,7 +183,7 @@ async function reviewCloud(){
   game.backup(JSON.stringify(payload),'before-first-upload');if(remote)game.backup(remote.originalPayload||remote.payload,'cloud-before-replace');
   const record=await backend.writeSave(payload,remote?.revision||0);sessionGuard(token);
   suppress=true;try{game.switchSave(accountKey(),payload);}finally{suppress=false;}
-  revision=record.revision;synced=JSON.stringify(game.snapshot());remember();localStorage.setItem(GUEST+'_claimed',user.uid);ready=true;gate();clearError();close();publishResults().catch(report);
+  revision=record.revision;synced=JSON.stringify(game.snapshot());remember();ready=true;gate();clearError();close();publishResults().catch(report);
  });
  action('#downloadCloud',async()=>{
   ensureSafeSwitch();sessionGuard(token);const latest=await readRecoverableCloud();sessionGuard(token);
@@ -195,7 +191,7 @@ async function reviewCloud(){
   const payload={...validateSave(latest.payload),characterId:profile.characterId};
   const record=latest.interrupted?await backend.writeSave(payload,latest.revision):latest;sessionGuard(token);
   suppress=true;try{game.switchSave(accountKey(),payload);}finally{suppress=false;}
-  revision=record.revision;synced=JSON.stringify(game.snapshot());remember();localStorage.setItem(GUEST+'_claimed',user.uid);ready=true;gate();clearError();close();publishResults().catch(report);
+  revision=record.revision;synced=JSON.stringify(game.snapshot());remember();ready=true;gate();clearError();close();publishResults().catch(report);
  });
 }
 async function syncNow(){
