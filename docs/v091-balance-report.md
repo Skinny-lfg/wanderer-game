@@ -1,5 +1,7 @@
 # Wanderer v0.9.1 balance report
 
+> Follow-up: the original forced-affinity fixtures included unobtainable combinations. Use [the legal-build validation](v091-additional-validation.md) for conclusions about obtainable gear, mixed tiers/rarities and incomplete sets.
+
 Branch: development. Baseline: `db3d5b0`, integrating remote `f457130` plus existing save guards. Before delivery, integrated remote `3f34bc1` through `284eede` (new save validation/account retries/mobile tests); combat and reward formulas were unchanged by that integration. No main merge, game publication, Firebase deployment or player-data access.
 
 ## Method and scope

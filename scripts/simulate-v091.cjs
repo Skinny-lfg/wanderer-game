@@ -10,18 +10,32 @@ function harness(file='index.html'){
  let damageIn=0,damageOut=0;const productionDots=tickDots;tickDots=e=>{const n=productionDots(e);damageOut+=n;return n;};
  floatText=(n,target)=>{if(typeof n==='number'&&n>0){if(target==='hero')damageIn+=n;else if(target==='enemy')damageOut+=n;}};
  let seed=1;Math.random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};
- globalThis.trial=({level,weapon,affinity,rarity='Rare',scale=1,seed:inputSeed=1,elite='tank',speed=1})=>{
+ globalThis.trial=({level,weapon,affinity,rarity='Rare',scale=1,seed:inputSeed=1,elite='tank',speed=1,gearPlan=null,diagnostics=false})=>{
  fresh();seed=inputSeed;damageIn=damageOut=0;clockSpeed=speed;
  const tier=Math.max(1,Math.round(level*scale));
- for(const slot of SLOTS){if(slot==='offhand'&&['Staff','Bow','Two-Handed'].includes(weapon))continue;
+ if(gearPlan){
+ const used=new Set();
+ for(const spec of gearPlan){
+  if(!SLOTS.includes(spec.slot)||used.has(spec.slot)||!elementPool(spec.slot,spec.subtype).includes(spec.effect))throw Error('Invalid gear plan');
+  used.add(spec.slot);let item;
+  for(let attempts=0;attempts<1000;attempts++){item=makeItem(spec.tier,spec.slot,spec.effect,'loot',spec.subtype,spec.rarity);if(item.effect===spec.effect)break;}
+  if(item.effect!==spec.effect||item.subtype!==spec.subtype)throw Error('Gear plan not generated');state.equip[spec.slot]=item;
+ }
+ if(isTwoHanded(state.equip.weapon)&&state.equip.offhand)throw Error('Two-handed offhand conflict');
+ }
+ // Legacy synthetic mode is retained for reproducibility, not legal-build validation.
+ else for(const slot of SLOTS){if(slot==='offhand'&&['Staff','Bow','Two-Handed'].includes(weapon))continue;
  const subtype=slot==='weapon'?weapon:slot==='offhand'?(weapon==='Wand'?'Orb':weapon==='Daggers'?'Off-Hand Dagger':'Shield'):'random';
  const item=makeItem(tier,slot,null,'loot',subtype,rarity);item.effect=affinity;item.magic=['Staff','Wand','Orb'].includes(subtype)?affinity:null;state.equip[slot]=item;}
  state.chosen=state.maxDungeon=level;selectedPath=state.selectedPath=THEMES[0].id;startDungeon();
- const r=state.run;r.eliteType=elite;let ticks=0;
- while(ticks<18000&&['ready','fight'].includes(r.status)){if(r.status==='ready')nextEncounter();updateFight();ticks++;}
- return {win:r.status==='win',alive:r.hp>0,timeout:ticks>=18000,hp:Math.max(0,r.hp)/r.maxhp*100,seconds:ticks*.11,damageIn,damageOut,gold:r.status==='win'?r.gold:0,fragments:r.status==='win'?r.fragments:0,loot:r.status==='win'?r.loot.length:0,power:r.stats.power};
+ const r=state.run;r.eliteType=elite;if(gearPlan)seed=(inputSeed^0x9e3779b9)>>>0;let ticks=0;const encounters=[];
+ const productionAttack=weaponAttack;let attacks=0,casts=0,fallbacks=0;
+ weaponAttack=run=>{attacks++;if(run.stats.caster){if(run.mp>=(run.stats.main.subtype==='Staff'?13:9))casts++;else fallbacks++;}return productionAttack(run);};
+ while(ticks<18000&&['ready','fight'].includes(r.status)){if(r.status==='ready'){nextEncounter();encounters.push({wave:r.enc,hp:r.enemy.hp,atk:r.enemy.atk,def:r.enemy.def,interval:r.enemy.attackEvery});}updateFight();ticks++;}
+ weaponAttack=productionAttack;
+ return {...(diagnostics?{equipment:state.equip,counts:r.stats.counts,stats:{attack:r.stats.attack,spell:r.stats.spellPower,aps:r.stats.attacksPerSec,crit:r.stats.crit,maxhp:r.maxhp,defense:r.stats.defense,mana:r.maxmp,manaRegen:r.stats.manaRegen},attacks,casts,fallbacks,encounters}:{}),win:r.status==='win',alive:r.hp>0,timeout:ticks>=18000,hp:Math.max(0,r.hp)/r.maxhp*100,seconds:ticks*.11,damageIn,damageOut,gold:r.status==='win'?r.gold:0,fragments:r.status==='win'?r.fragments:0,loot:r.status==='win'?r.loot.length:0,power:r.stats.power};
  };
- globalThis.inspect={weaponAttack,applyAffinity,totalStats,makeItem,makeSlots,getState:()=>state};
+ globalThis.inspect={weaponAttack,applyAffinity,totalStats,makeItem,makeSlots,elementPool,SLOTS,isTwoHanded,setCounts,getState:()=>state};
  `;
  vm.runInNewContext(source.replace('load();if(!state.merchant)rollShop();save();render();',injected),ctx);return ctx;
 }
