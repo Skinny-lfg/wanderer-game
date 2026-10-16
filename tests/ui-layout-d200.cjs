@@ -20,7 +20,7 @@ assert(stashStart>rightStart&&runeStart>stashStart,'desktop keeps runes below st
 assert(html.includes('.equipmentLeft,.equipmentRight{display:contents}')&&html.includes('.equipmentInventory{order:1}')&&html.includes('.equipmentRunes{order:2}')&&html.includes('.equipmentBonuses{order:3}'),'mobile orders stash, then runes, then tier bonuses');
 assert(html.includes('class="homeMetrics"')&&!html.includes('<div class="hub">'),'home dashboard has no duplicate menu');
 const homeMarkup=html.slice(html.indexOf('function renderTavern(){'),html.indexOf('function equipItem('));
-assert(homeMarkup.includes('<details class="panel homeChangelog" open>')&&homeMarkup.includes('v0.9.1 → v0.9.2')&&homeMarkup.includes('Fastest D200 leaderboard')&&homeMarkup.includes('all screens'),'homepage release notes visible');
+assert(homeMarkup.includes('<details class="panel homeChangelog" open>')&&homeMarkup.includes('<details class="olderChangelog">')&&homeMarkup.includes('Fastest D200 leaderboard')&&homeMarkup.includes('all screens'),'latest changelog visible and older releases collapsed');
 for(const text of ['D200','permanent runes','Tank, Berserker, Vampire and Caster','tier bonuses','responsive Equipment']){
  assert(homeMarkup.includes(text),'v0.9 changelog contains '+text);
 }
