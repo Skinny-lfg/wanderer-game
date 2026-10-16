@@ -504,8 +504,8 @@ function comparisonEquip(item,target=item.slot){
  return equipment;
 }
 function forgePreviewImage(slot,subtype){
- if(subtype==='random')return slotImg(slot);
- return itemImg({id:'forge-'+slot+'-'+subtype,slot,subtype});
+ // A Forge selection represents an equipment type, not an actual rolled item.
+ return placeholderIcon(subtype==='random'?slot:subtype);
 }
 const DUNGEON_CAP=200;
 const STASH_BASE_CAPACITY=40,STASH_UPGRADE_STEP=10,STASH_MAX_CAPACITY=300;
@@ -520,7 +520,7 @@ const roll=(a,b)=>Math.floor(Math.random()*(b-a+1))+a, sample=xs=>xs[roll(0,xs.l
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function rarityColor(item){return RARITY[item?.rarity]?.[0]||RARITY.Common[0]}
 function rarityFrame(item){return item?`style="--item-rarity:${rarityColor(item)};border-color:var(--item-rarity)" data-rarity="${esc(item.rarity)}"`:''}
-const PLACEHOLDER_ART={Sword:'sword',Mace:'mace',Daggers:'daggers',Bow:'bow',Staff:'staff',Wand:'wand','Two-Handed':'two_handed',Shield:'shield','Off-Hand Dagger':'daggers',Orb:'orb',Tome:'tome',Charm:'charm',Helm:'helmet',Armor:'chest',Gloves:'chest',Boots:'chest',Ring:'charm',Amulet:'charm',weapon:'sword',offhand:'shield',helm:'helmet',armor:'chest',gloves:'chest',boots:'chest',ring1:'charm',ring2:'charm',amulet:'charm'};
+const PLACEHOLDER_ART={Sword:'sword',Mace:'mace',Daggers:'daggers',Bow:'bow',Staff:'staff',Wand:'wand','Two-Handed':'two_handed',Shield:'shield','Off-Hand Dagger':'off_hand_dagger',Orb:'orb',Tome:'tome',Charm:'charm',Helm:'helmet',Armor:'chest',Gloves:'gloves',Boots:'boots',Ring:'ring',Amulet:'amulet',weapon:'sword',offhand:'shield',helm:'helmet',armor:'chest',gloves:'gloves',boots:'boots',ring1:'ring',ring2:'ring',amulet:'amulet'};
 function placeholderIcon(type){return 'assets/placeholders/'+(PLACEHOLDER_ART[type]||'sword')+'.svg';}
 function slotImg(slot){return placeholderIcon(slot);}
 const EQUIPMENT_ICON_FILES={"sword":["sword_01.png","sword_02.png","sword_03.png"],"mace":["mace_01.png","mace_02.png","mace_03.png"],"dagger":["dagger_01.png","dagger_02.png","dagger_03.png"],"two_handed":["two_handed_01.png","two_handed_02.png","two_handed_03.png","two_handed_04.png"],"shield":["shield_01.png","shield_02.png","shield_03.png"],"bow":["bow_01.png","bow_02.png","bow_03.png"],"staff":["staff_01.png","staff_02.png","staff_03.png"],"orb":["orb_01.png","orb_02.png","orb_03.png"],"wand":["wand_01.png","wand_02.png","wand_03.png","wand_04.png"],"tome":["tome_01.png","tome_02.png","tome_03.png","tome_04.png"],"charm":["charm_01.png","charm_02.png","charm_03.png","charm_04.png"],"helmet":["helmet_01.png","helmet_02.png","helmet_03.png"],"chest":["chest_01.png","chest_02.png","chest_03.png"],"gloves":["gloves_01.png","gloves_02.png","gloves_03.png"],"boots":["boots_01.png","boots_02.png","boots_03.png"],"ring":["ring_01.png","ring_02.png","ring_03.png"]};
