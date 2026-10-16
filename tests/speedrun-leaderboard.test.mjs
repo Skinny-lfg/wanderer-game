@@ -35,9 +35,12 @@ test('D200 best survives reset and only improves on a faster complete attempt',a
   records.set('publicProfiles/alice',{nickname:'alice',characterId:'wanderer'});
   const make=(id,deepest,time)=>({
    gold:0,fragments:0,maxDungeon:Math.max(1,deepest),stash:[],equip:{},run:null,
-   onlineProgress:{attemptId:id,deepestCleared:deepest,timingEligible:true,activeMs:time??0,milestones:time==null?{}:{200:{activeMs:time}}}
+   onlineProgress:{attemptId:id,deepestCleared:deepest,timerMetric:'combat-v1',timingEligible:true,activeMs:time??0,milestones:time==null?{}:{200:{activeMs:time}}}
   });
-  const depth='testSeasons/v092-launch-1/deepest/alice',best='testSeasons/v092-launch-1/speedruns/alice';
+  const depth='testSeasons/v092-launch-1/deepest/alice',best='testSeasons/v092-launch-1/combatSpeedruns/alice';
+  records.set('testSeasons/v092-launch-1/speedruns/alice',{bestMs:1,verified:false},'legacy browser best must never count');
+  await backend.publishTestResults({...make('old-browser',200,5000),onlineProgress:{...make('old-browser',200,5000).onlineProgress,timerMetric:'legacy-active'}});
+  assert.equal(records.has(best),false,'old browser-time D200 is ineligible for combat board');
   await backend.publishTestResults(make('attempt-a',100,null));
   assert.equal(records.get(depth).deepest,100);
   assert.equal(records.has(best),false,'no D200 record without completion');
@@ -51,6 +54,7 @@ test('D200 best survives reset and only improves on a faster complete attempt',a
   await backend.publishTestResults(make('attempt-c',200,480000));
   assert.equal(records.get(best).bestMs,480000,'faster clear becomes the record');
   assert.equal((await backend.leaderboard('fastest'))[0].bestMs,480000);
+  assert.equal((await backend.leaderboard('fastest')).length,1,'old browser-time leaderboard never appears');
   assert.equal((await backend.leaderboard('deepest'))[0].deepest,200);
   await backend.publishTestResults(make('attempt-d',0,null));
   assert.equal((await backend.leaderboard('deepest'))[0].deepest,0);
