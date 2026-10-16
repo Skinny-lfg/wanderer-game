@@ -8,6 +8,6 @@ const testCode="\nfresh();\nconst assertGear=(c,m)=>{if(!c)throw Error(m)};\nass
 const nodes=new Map(),store=new Map();
 const element=()=>({innerHTML:'',textContent:'',style:{},dataset:{},value:'',classList:{add(){},remove(){}},focus(){}});
 const sandbox={document:{getElementById(id){if(!nodes.has(id))nodes.set(id,element());return nodes.get(id)},querySelectorAll:()=>[],createElement:element},localStorage:{getItem:k=>store.get(k)??null,setItem:(k,v)=>store.set(k,v)},confirm:()=>true,alert:()=>{},console,setTimeout:()=>0,clearTimeout:()=>{},setInterval:()=>0,clearInterval:()=>{}};
-vm.runInNewContext(script.replace(boot,testCode),sandbox,{timeout:5000,filename:'gear-balance.js'});
+vm.runInNewContext(require('node:fs').readFileSync('combat/affinities.js','utf8')+'\n'+script.replace(boot,testCode),sandbox,{timeout:5000,filename:'gear-balance.js'});
 assert(sandbox.__balanceTest,'All balance checks completed');
 console.log('PASS equipment drop odds, Bow and Staff two-handed, damage, and legacy migration',sandbox.__balanceTest);

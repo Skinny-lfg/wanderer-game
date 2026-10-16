@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
-const found = html.match(/<script(?: [^>]*)?>([\s\S]*?)<\/script>/);
+const found = html.match(/<script>([\s\S]*?)<\/script>/);
 assert(found, 'Main game script exists');
 const boot = "load();if(!state.merchant)rollShop();save();render();";
 assert(found[1].includes(boot), 'Expected unchanged bootstrap');
@@ -62,6 +62,6 @@ const sandbox = {
   confirm:()=>true,alert:()=>{},console,
   setTimeout:()=>0,clearTimeout:()=>{},setInterval:()=>0,clearInterval:()=>{}
 };
-vm.runInNewContext(script,sandbox,{timeout:3000,filename:'wanderer-game.js'});
+vm.runInNewContext(require('node:fs').readFileSync('combat/affinities.js','utf8')+'\n'+script,sandbox,{timeout:3000,filename:'wanderer-game.js'});
 assert(sandbox.__smokeSuccess,'Smoke test completed');
 console.log('PASS: equipment, crafting types, DoT, shield balance, boss variants, dungeon themes and save compatibility');

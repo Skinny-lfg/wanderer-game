@@ -17,7 +17,7 @@ export function practiceDuel(leftEquipment,rightEquipment,seed=1,leftRunes=[],le
   const b=source.s.bonus;
   if(['poison','bleed','burn'].includes(kind)){
    const base={poison:.12,bleed:.14,burn:.16}[kind];
-   const amount=Math.max(1,Math.round((damage*base+(b[kind+'Bonus']||0))*mult));
+   const amount=Math.max(1,Math.round(damage*base*(1+(b[kind+'Multiplier']||0))*mult));
    if(target.dots.length<12)target.dots.push({amount,remaining:3});
   }else if(kind==='sunder')target.defense=Math.max(target.s.defense*.25,target.defense-(2+(b.sunderBonus||0))*mult);
   else if(kind==='slow')target.slow=Math.max(target.slow,time+3);

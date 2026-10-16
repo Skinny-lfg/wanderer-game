@@ -1,6 +1,6 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const html=fs.readFileSync('index.html','utf8'),boot='load();if(!state.merchant)rollShop();save();render();';
-const script=html.match(/<script(?: [^>]*)?>([\s\S]*?)<\/script>/)[1];
+const script=html.match(/<script>([\s\S]*?)<\/script>/)[1];
 const store=new Map(),nodes=new Map();
 function node(){return {innerHTML:'',textContent:'',style:{},dataset:{},value:'',classList:{add(){},remove(){}},focus(){}}}
 const test=`
@@ -48,5 +48,5 @@ archiveLocalSave=archiveOriginal;
 localStorage.setItem(KEY,'{broken');load();save();if(localStorage.getItem(KEY)!=='{broken')throw Error('Corrupt save overwritten');
 saveBlocked=false;localStorage.setItem(KEY,raw);load();localStorage.setItem(KEY,JSON.stringify({...state,gold:77}));state.gold=10;save();if(JSON.parse(localStorage.getItem(KEY)).gold!==77||!saveBlocked)throw Error('Concurrent tab overwritten');
 `;
-vm.runInNewContext(script.replace(boot,test),{document:{getElementById:id=>{if(!nodes.has(id))nodes.set(id,node());return nodes.get(id)},querySelectorAll:()=>[],createElement:node},localStorage:{getItem:k=>store.get(k)||null,setItem:(k,v)=>store.set(k,v)},setTimeout:()=>0,clearTimeout(){},setInterval:()=>0,clearInterval(){},confirm:()=>true,alert(){},console:{warn(){}},Event,dispatchEvent(){}},{timeout:5000});
+vm.runInNewContext(require('node:fs').readFileSync('combat/affinities.js','utf8')+'\n'+script.replace(boot,test),{document:{getElementById:id=>{if(!nodes.has(id))nodes.set(id,node());return nodes.get(id)},querySelectorAll:()=>[],createElement:node},localStorage:{getItem:k=>store.get(k)||null,setItem:(k,v)=>store.set(k,v)},setTimeout:()=>0,clearTimeout(){},setInterval:()=>0,clearInterval(){},confirm:()=>true,alert(){},console:{warn(){}},Event,dispatchEvent(){}},{timeout:5000});
 assert.ok([...store.keys()].some(k=>k.startsWith('wanderer_backup_')));console.log('PASS legacy/corrupt save preservation, characters, guest/account isolation and stale-tab protection');
