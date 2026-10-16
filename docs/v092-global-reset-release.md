@@ -28,3 +28,7 @@ The GitHub repository cannot delete documents in the live Firebase project. A ba
 ## Operational caution
 
 Publishing `main` before the Firebase rules are updated may result in temporary permission-denied errors when accounts attempt to create new-season saves or leaderboard entries. After updating the rules, ask players to reload. The new leaderboard still contains unverified client-reported elapsed active-play-time claims, not trusted server timestamps for anti-cheat.
+
+## Pre-release gate
+
+The release is approved by the owner for a complete **gameplay** reset and main integration, conditional on passing the automated pre-release suite. Production Firebase data deletion and Security Rules publishing are distinct owner-admin operations.
