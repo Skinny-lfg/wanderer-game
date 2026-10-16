@@ -1,6 +1,6 @@
 # v0.9.2 Legendary catalogue — audit and implementation decision
 
-**Status:** AUDITED / BLOCKED ON GENERATION DESIGN. No Legendary catalogue, name, drop probability, saved item, or artwork files have been changed by this audit. Branch: `development`.
+**Status:** IMPLEMENTED on `development` (Option C). Historical audit below documents the former design and compatibility constraints; see implementation notes at the end.
 
 ## Current implementation
 
@@ -71,3 +71,13 @@ The Tier Bonus progression renders its milestone list in fixed **2 → 3 → 5**
 ## Release and test requirements
 
 After design choice: install seven new PNG assets with `assets/legendary/` paths; introduce centralized static catalogue; make `itemImg()`, `makeItem()`, any new item/catalogue mapping use it; ensure old saves migrate non-destructively; test all slots, source categories, file bytes, generated name/type compatibility, saved-item persistence, rarity/slot/subtype statistical regressions, and desktop/mobile rendering. Keep changes on `development`; do not merge to `main`.
+
+## Implementation update — Option C
+
+- Added sixteen new PNGs from the Drive folder to `assets/legendary/`, keeping five original files intact (21 distinct images total).
+- Centralized `LEGENDARY_CATALOG` with stable catalogue IDs and slot/subtype/image associations in `index.html`. Both ring slots share the Ring identity.
+- Legendary name assignment now happens after subtype selection, with a compatible catalogue choice; global rarity roll, item attribute formulas, drop slot weights, equipment subtype rolls, and legendaryPower effect are unchanged. Individual original-name frequencies necessarily differ from the old indiscriminate five-name weapon pool.
+- Legacy saves keep instance ID, name, stats, effects and subtype. A matching old name+subtype acquires `legendaryId`; mismatched combinations retain their existing item data and display a subtype-appropriate fallback image rather than an incorrect Legendary identity.
+- Obsidian Quarry now uses Crystal, with independent Crystal set tiers (2/3/5) and Crystal proc damage; Iron Bastion stays Sunder. This introduces a new affinity's combat effects by explicit user request, but does not rebalance existing affinity values.
+- Test suite checks 21 PNG signatures and dimensions, Legendary image/type matching, unique dungeon affinities and normal smoke/balance regressions.
+- No merge or release to `main`.
