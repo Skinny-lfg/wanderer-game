@@ -64,3 +64,5 @@ The phase 3 audit could not credibly estimate real D200 completion-time distribu
 Dedicated test: `node tests/v092-gameplay-upgrades.cjs`. Smoke CI includes this via `npm test`. Also review `tests/phase2-smoke.cjs`, `tests/cumulative-set-combat.cjs`, `tests/online-save-compat.cjs` and browser/emulator suites before release. None of the checks use real player saves or deploy Firebase rules.
 
 **Do not merge to main until manual mobile/desktop testing and release authorization.**
+
+A full isolated pre-release GitHub Actions audit is requested for this commit. Its pass/fail status must be inspected separately; this document alone does not imply approval for release.
