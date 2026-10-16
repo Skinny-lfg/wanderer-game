@@ -25,7 +25,7 @@ test('private saves require owner + profile, monotonic revision and bounded payl
 });
 test('rankings reject verified claims, forged timestamps, arbitrary values and other users',async()=>{
  const ref=doc(alice,'testSeasons/test-open-1/deepest/alice');const claim={deepest:20,verified:false,updatedAt:serverTimestamp()};
- await assertSucceeds(setDoc(ref,claim));await assertFails(setDoc(ref,{...claim,verified:true}));await assertFails(setDoc(ref,{...claim,deepest:101}));
+ await assertSucceeds(setDoc(ref,claim));await assertFails(setDoc(ref,{...claim,verified:true}));await assertSucceeds(setDoc(ref,{...claim,deepest:200}));await assertFails(setDoc(ref,{...claim,deepest:201}));
  await assertFails(setDoc(doc(bob,'testSeasons/test-open-1/deepest/alice'),claim));
  await assertFails(setDoc(doc(alice,'verifiedSeasons/test-open-1/entries/alice'),{score:100}));
  const milestone=doc(alice,'testSeasons/test-open-1/milestones/20/entries/alice');const data={milestone:20,activeMs:60000,verified:false,receivedAt:serverTimestamp()};

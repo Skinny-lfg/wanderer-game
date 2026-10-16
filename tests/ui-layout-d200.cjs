@@ -19,7 +19,18 @@ assert(leftStart>=0&&bonusStart>leftStart&&rightStart>bonusStart,'desktop keeps 
 assert(stashStart>rightStart&&runeStart>stashStart,'desktop keeps runes below stash on the right');
 assert(html.includes('.equipmentLeft,.equipmentRight{display:contents}')&&html.includes('.equipmentInventory{order:1}')&&html.includes('.equipmentRunes{order:2}')&&html.includes('.equipmentBonuses{order:3}'),'mobile orders stash, then runes, then tier bonuses');
 assert(html.includes('class="homeMetrics"')&&!html.includes('<div class="hub">'),'home dashboard has no duplicate menu');
+const homeMarkup=html.slice(html.indexOf('function renderTavern(){'),html.indexOf('function equipItem('));
+assert(homeMarkup.includes('<details class="panel homeChangelog" open>')&&homeMarkup.includes('v0.8 → v0.9'),'homepage release notes visible');
+for(const text of ['D200','permanent runes','Tank, Berserker, Vampire and Caster','tier bonuses','responsive Equipment']){
+ assert(homeMarkup.includes(text),'v0.9 changelog contains '+text);
+}
+assert(html.includes('.homeChanges{list-style:none;display:grid')&&html.includes('@media(max-width:650px){.homeChanges{grid-template-columns:1fr'),'compact mobile changelog layout');
+
 assert(html.includes('Number(count>=b)-Number(count>=a)||b-a'),'active high tier bonuses are sorted first');
+assert(html.includes('.combatDecisionPanel{display:none}')&&html.includes('.combatDecisionPanel{display:block;margin:8px'),'critical briefing appears at mobile widths only');
+assert(html.includes('.combatExpeditionDetails .nextWaveOdds,.combatExpeditionDetails .runLootHeading,.combatExpeditionDetails .combatLoot{display:none}'),'mobile removes redundant lower odds and loot');
+
+assert(html.includes('.merchantEquipped{display:flex;align-items:center;flex-wrap:wrap;min-width:0;'),'merchant equipped name can wrap at mobile widths');
 const runeMarkup=html.slice(html.indexOf('function runeLine(r){'),html.indexOf('function runeSectionMarkup(){'));
 assert(runeMarkup.includes('<img class="runeIcon"')&&runeMarkup.includes('src="assets/runes/'),'rune markup embeds local PNG icons');
 for(const family of ['might','swiftness','wisdom','fortitude','fortune','fury','warding','vitality']){
