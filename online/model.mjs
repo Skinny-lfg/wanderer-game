@@ -27,6 +27,7 @@ export function validateSave(value){
   if(s.valuables!==undefined&&(!Array.isArray(s.valuables)||s.valuables.some(x=>!x||typeof x!=='object'||(x.worth!==undefined&&!Number.isFinite(Number(x.worth))))))throw new Error('Invalid valuables.');
   if(s.onlineProgress!==undefined){
     const p=s.onlineProgress;
+    if(p?.attemptId!==undefined&&(typeof p.attemptId!=='string'||p.attemptId.length<1||p.attemptId.length>100||!/^[A-Za-z0-9_-]+$/.test(p.attemptId)))throw new Error('Invalid speedrun attempt ID.');
     if(!p||typeof p!=='object'||Array.isArray(p)||p.deepestCleared!==undefined&&(!Number.isInteger(p.deepestCleared)||p.deepestCleared<0||p.deepestCleared>200)||p.activeMs!==undefined&&(!Number.isFinite(p.activeMs)||p.activeMs<0)||p.milestones!==undefined&&(!p.milestones||typeof p.milestones!=='object'||Array.isArray(p.milestones)))throw new Error('Invalid online progress.');
   }
   if(s.offersByLevel!==undefined&&(!s.offersByLevel||typeof s.offersByLevel!=='object'||Array.isArray(s.offersByLevel)))throw new Error('Invalid dungeon offers.');
@@ -48,4 +49,19 @@ export function syncDecision(local,remote){
 }
 export function cloudRecord(payload,revision){validateSave(payload);if(!Number.isInteger(revision)||revision<0)throw new Error('Invalid cloud revision.');return {payload:JSON.stringify(payload),revision:revision+1,schemaVersion:1};}
 export function compareRevision(remote,expected){if((remote?.revision||0)!==expected)throw new Error('cloud-conflict');}
-export function safeProgress(s){const p=s?.onlineProgress||{};return {deepestCleared:Math.max(0,Math.min(200,Number(p.deepestCleared)||Math.max(0,(s?.maxDungeon||1)-1))),activeMs:Math.max(0,Number(p.activeMs)||0),timingEligible:p.timingEligible===true,milestones:p.milestones&&typeof p.milestones==='object'?p.milestones:{}};}
+export function safeProgress(s){
+ const p=s?.onlineProgress||{};
+ return {
+  attemptId:typeof p.attemptId==='string'&&/^[A-Za-z0-9_-]{1,100}$/.test(p.attemptId)?p.attemptId:'legacy',
+  deepestCleared:Math.max(0,Math.min(200,Number(p.deepestCleared)||Math.max(0,(s?.maxDungeon||1)-1))),
+  activeMs:Math.max(0,Number(p.activeMs)||0),
+  timingEligible:p.timingEligible===true,
+  milestones:p.milestones&&typeof p.milestones==='object'&&!Array.isArray(p.milestones)?p.milestones:{}
+ };
+}
+// Only timed D200 clears are eligible. Untimed imports and incomplete attempts have no score.
+export function completedD200Time(save){
+ const p=safeProgress(save),clear=p.milestones[200];
+ if(p.deepestCleared!==200||!p.timingEligible||!clear||!Number.isFinite(clear.activeMs)||clear.activeMs<0)return null;
+ return Math.floor(clear.activeMs);
+}
