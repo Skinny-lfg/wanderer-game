@@ -618,7 +618,7 @@ function checkedStoredSave(raw){
  if(o.run!==undefined&&o.run!==null&&!plain(o.run))invalid('active expedition');
  return o;
 }
-function load(){try{lastStoredValue=localStorage.getItem(KEY);if(lastStoredValue===null)return fresh();let o=checkedStoredSave(lastStoredValue);state={...o,characterId:['wanderer','ranger','knight','spellblade','duelist'].includes(o.characterId)?o.characterId:'wanderer',onlineProgress:o.onlineProgress||{deepestCleared:Math.max(0,(+o.maxDungeon||1)-1),activeMs:0,timingEligible:false,milestones:{}},stashCapacity:Math.max(STASH_BASE_CAPACITY,Math.min(STASH_MAX_CAPACITY,Number(o.stashCapacity)||STASH_BASE_CAPACITY)),confirmNormalDungeons:o.confirmNormalDungeons!==false,maxDungeon:clamp(+o.maxDungeon||1,1,DUNGEON_CAP),chosen:clamp(+o.chosen||1,1,DUNGEON_CAP),selectedPath:THEMES.some(t=>t.id===o.selectedPath)?o.selectedPath:null,legendaryHuntId:LEGENDARY_BY_ID[o.legendaryHuntId]?o.legendaryHuntId:null,protectedItemIds:Array.isArray(o.protectedItemIds)?o.protectedItemIds.slice(0,2):[],runes:safeRunes(o.runes),runeSlots:safeRuneSlots(o.runeSlots,safeRunes(o.runes)),pendingRuneReward:safePendingRune(o.pendingRuneReward),fragments:Math.max(0,+o.fragments||+o.shards||0),gold:Math.max(0,+o.gold||0),stash:o.stash.map(migrateItem).filter(Boolean),equip:makeSlots(),valuables:Array.isArray(o.valuables)?o.valuables:[],offersByLevel:o.offersByLevel||{},merchant:o.merchant||null,run:null};for(const [k,item]of Object.entries(o.equip||{})){let slot=k==='ring'?'ring1':k;if(SLOTS.includes(slot))state.equip[slot]=migrateItem(item)}if(isTwoHanded(state.equip.weapon)&&state.equip.offhand){state.stash.push(state.equip.offhand);state.equip.offhand=null;}state.chosen=Math.min(state.chosen,state.maxDungeon);selectedPath=state.selectedPath;state.protectedItemIds=chosenProtectionIds();if(o.run){archiveLocalSave(lastStoredValue,'interrupted-run-before-recovery');sessionMessage='Previous active expedition closed safely. Unextracted rewards were not retained.';}if(!state.stash.length&&!Object.values(state.equip).some(Boolean))state.stash.push(starter());}catch(e){console.warn('Save migration issue',e);saveBlocked=true;sessionMessage='Your saved data could not be loaded. It has been preserved. Export a backup from Account before continuing.';fresh()}}
+function load(){try{lastStoredValue=localStorage.getItem(KEY);if(lastStoredValue===null)return fresh();let o=checkedStoredSave(lastStoredValue);state={...o,characterId:['wanderer','ranger','knight','spellblade','duelist'].includes(o.characterId)?o.characterId:'wanderer',onlineProgress:o.onlineProgress||{deepestCleared:Math.max(0,(+o.maxDungeon||1)-1),activeMs:0,timingEligible:false,milestones:{}},stashCapacity:Math.max(STASH_BASE_CAPACITY,Math.min(STASH_MAX_CAPACITY,Number(o.stashCapacity)||STASH_BASE_CAPACITY)),confirmNormalDungeons:o.confirmNormalDungeons!==false,maxDungeon:clamp(+o.maxDungeon||1,1,DUNGEON_CAP),chosen:clamp(+o.chosen||1,1,DUNGEON_CAP),selectedPath:THEMES.some(t=>t.id===o.selectedPath)?o.selectedPath:null,legendaryHuntId:LEGENDARY_BY_ID[o.legendaryHuntId]?o.legendaryHuntId:null,protectedItemIds:Array.isArray(o.protectedItemIds)?o.protectedItemIds.slice(0,2):[],runes:safeRunes(o.runes),runeSlots:safeRuneSlots(o.runeSlots,safeRunes(o.runes)),pendingRuneReward:safePendingRune(o.pendingRuneReward),fragments:Math.max(0,+o.fragments||+o.shards||0),gold:Math.max(0,+o.gold||0),stash:o.stash.map(migrateItem).filter(Boolean),equip:makeSlots(),valuables:Array.isArray(o.valuables)?o.valuables:[],offersByLevel:o.offersByLevel||{},merchant:o.merchant||null,run:null};for(const [k,item]of Object.entries(o.equip||{})){let slot=k==='ring'?'ring1':k;if(SLOTS.includes(slot))state.equip[slot]=migrateItem(item)}if(isTwoHanded(state.equip.weapon)&&state.equip.offhand){state.stash.push(state.equip.offhand);state.equip.offhand=null;}state.chosen=Math.min(state.chosen,state.maxDungeon);if(recoverBossUnlockFromRunes())sessionMessage='Chapter boss victory recovered from your permanent Rune. The next dungeon is unlocked.';selectedPath=state.selectedPath;state.protectedItemIds=chosenProtectionIds();if(o.run){archiveLocalSave(lastStoredValue,'interrupted-run-before-recovery');sessionMessage='Previous active expedition closed safely. Unextracted rewards were not retained.';}if(!state.stash.length&&!Object.values(state.equip).some(Boolean))state.stash.push(starter());}catch(e){console.warn('Save migration issue',e);saveBlocked=true;sessionMessage='Your saved data could not be loaded. It has been preserved. Export a backup from Account before continuing.';fresh()}}
 let sessionMessage='';
 function save(){
 if(saveBlocked)return;
@@ -792,6 +792,36 @@ function offerBossRunes(tier){
  for(let i=0;i<3;i++)options.push(makeRune(pool.splice(roll(0,pool.length-1),1)[0],tier));
  state.pendingRuneReward={tier,options};
 }
+// A claimed chapter-boss Rune proves victory even if the browser closed
+// before the extra Extract click required in older game versions.
+function recoverBossUnlockFromRunes(){
+ const tier=state.maxDungeon;
+ if(!Number.isInteger(tier)||tier<10||tier>=DUNGEON_CAP||tier%10!==0||!(state.runes||[]).some(r=>r.tier===tier))return false;
+ const p=state.onlineProgress;
+ p.deepestCleared=Math.max(Number(p.deepestCleared)||0,tier);
+ if(!p.milestones||typeof p.milestones!=='object')p.milestones={};
+ if(!p.milestones[tier])p.milestones[tier]={activeMs:p.timingEligible&&p.timerMetric==='combat-v1'?p.activeMs:null};
+ state.maxDungeon=tier+1;
+ state.chosen=state.maxDungeon;
+ dungeonPage=null;
+ return true;
+}
+function claimPendingRuneChoice(id){
+ const reward=state.pendingRuneReward;
+ const picked=reward?.options.find(r=>r.id===id);
+ if(!picked)return false;
+ state.runes.push(picked);state.pendingRuneReward=null;
+ const free=state.runeSlots.indexOf(null);
+ if(free>=0&&!state.runeSlots.some(other=>state.runes.find(r=>r.id===other)?.family===picked.family))state.runeSlots[free]=picked.id;
+ // A chapter boss is complete when its Rune is claimed; no second click.
+ if(state.run?.status==='win'&&state.run.tier===reward.tier&&state.run.enc===wavesForDungeon(reward.tier))extract();
+ else{
+  if(!state.run&&recoverBossUnlockFromRunes())view='dungeons';
+  save();render();
+ }
+ bannerMessage('Permanent rune claimed: '+picked.name+' (D'+picked.tier+').');
+ return true;
+}
 function showPendingRuneReward(){
  if(!state.pendingRuneReward||document.querySelector('#runeRewardDialog'))return;
  const pending=state.pendingRuneReward,dialog=document.createElement('dialog');
@@ -800,13 +830,9 @@ function showPendingRuneReward(){
  dialog.addEventListener('cancel',e=>e.preventDefault());
  document.body.appendChild(dialog);
  dialog.querySelectorAll('[data-rune-choice]').forEach(b=>b.onclick=()=>{
-  const reward=state.pendingRuneReward;if(!reward)return;
-  const picked=reward.options.find(r=>r.id===b.dataset.runeChoice);if(!picked)return;
-  state.runes.push(picked);state.pendingRuneReward=null;
-  const free=state.runeSlots.indexOf(null);
-  if(free>=0&&!state.runeSlots.some(id=>state.runes.find(r=>r.id===id)?.family===picked.family))state.runeSlots[free]=picked.id;
-  save();dialog.close();dialog.remove();render();
-  bannerMessage('Permanent rune claimed: '+picked.name+' (D'+picked.tier+').');
+  if(!state.pendingRuneReward?.options.some(r=>r.id===b.dataset.runeChoice))return;
+  dialog.close();dialog.remove();
+  claimPendingRuneChoice(b.dataset.runeChoice);
  });
  dialog.showModal();
 }
