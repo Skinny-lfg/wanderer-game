@@ -1,5 +1,5 @@
 {
-  "version": "0.8-assets",
+  "version": "0.9.3-character-refresh",
   "cosmeticOnly": true,
   "leaderboardAvatarSize": 256,
   "characters": [
@@ -7,41 +7,46 @@
       "id": "wanderer",
       "name": "Original Wanderer",
       "fullBody": "characters/full/wanderer.webp",
-      "avatar": "characters/avatars/wanderer.webp",
+      "avatar": "characters/avatars/wanderer.png",
       "gameplayModifiers": {},
-      "active": true
+      "active": true,
+      "artSource": "Drive Wanderer_Character_Face_Icons_256 / warrior.png"
     },
     {
       "id": "ranger",
       "name": "Forest Wanderer",
       "fullBody": "characters/full/ranger.webp",
-      "avatar": "characters/avatars/ranger.webp",
+      "avatar": "characters/avatars/ranger.png",
       "gameplayModifiers": {},
-      "active": true
+      "active": true,
+      "artSource": "Drive Wanderer_Character_Face_Icons_256 / archer.png"
     },
     {
       "id": "knight",
       "name": "Iron Wanderer",
       "fullBody": "characters/full/knight.webp",
-      "avatar": "characters/avatars/knight.webp",
+      "avatar": "characters/avatars/knight.png",
       "gameplayModifiers": {},
-      "active": true
+      "active": true,
+      "artSource": "Drive Wanderer_Character_Face_Icons_256 / dark_warrior.png"
     },
     {
       "id": "spellblade",
       "name": "Arcane Wanderer",
       "fullBody": "characters/full/spellblade.webp",
-      "avatar": "characters/avatars/spellblade.webp",
+      "avatar": "characters/avatars/spellblade.png",
       "gameplayModifiers": {},
-      "active": true
+      "active": true,
+      "artSource": "Drive Wanderer_Character_Face_Icons_256 / old_mage.png"
     },
     {
       "id": "duelist",
       "name": "Desert Wanderer",
       "fullBody": "characters/full/duelist.webp",
-      "avatar": "characters/avatars/duelist.webp",
+      "avatar": "characters/avatars/duelist.png",
       "gameplayModifiers": {},
-      "active": true
+      "active": true,
+      "artSource": "Drive Wanderer_Character_Face_Icons_256 / rogue.png"
     }
   ]
 }
