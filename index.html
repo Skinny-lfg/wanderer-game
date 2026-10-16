@@ -1163,6 +1163,11 @@ function setOnAttack(r,base,critical,perfect){
   temp.soul=0;r.hp=Math.max(1,r.hp-r.maxhp*.03);temp.soulPactBonus=Math.round(base*.4);
   bonus+=temp.soulPactBonus;addLog('🌑 Soul Pact sacrifices HP for damage','spell');
  }else temp.soulPactBonus=0;
+ if(b.shockRhythm){
+  temp.shockHits=(temp.shockHits||0)+1;
+  if(temp.shockHits%3===0)bonus+=Math.round(base*.15);
+  if(b.thunderclap&&temp.shockHits%6===0&&setReady(r,'thunderclap',10)){bonus+=Math.round(base*.35);addLog('⚡ Thunderclap!','spell');}
+ }
  return bonus;
 }
 function setPoisonBurst(r,enemy){
