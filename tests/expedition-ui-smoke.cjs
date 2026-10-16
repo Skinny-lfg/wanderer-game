@@ -1,7 +1,7 @@
 // Regression for visible extraction/death decisions, status position, runes and dual-hand affinity.
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
-const main=html.match(/<script(?: [^>]*)?>([\s\S]*?)<\/script>/)?.[1];
+const main=html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
 assert(main,'main game script missing');
 const boot="load();if(!state.merchant)rollShop();save();render();";
 assert(main.includes(boot),'bootstrap missing');

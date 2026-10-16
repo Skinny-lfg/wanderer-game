@@ -1,3 +1,10 @@
+## v0.9.3 Legendary revision — development only
+
+- Replaced simple Legendary signatures with event-driven build interactions; 19 unique signatures across 22 identities.
+- Added Winterheart Spire, a Frost Staff using supplied transparent 256px artwork, without changing global rarity/subtype odds.
+- Grasp, Scepter and Eternal Oath retain their identity/art as random-affinity traditional Legendary items; saved stats/affinities remain compatible.
+- Added combat/save/UI/playback regressions and corrected Block damage scope. Large balance simulations remain pending; no release/deploy.
+
 ## v0.9.3 — Balance & Buildcraft (development)
 
 - Critical 3, Fire 3 and Dark 3 now add modest main-hit damage from held charges; tier 5 signatures retain their mechanics and cooldowns.

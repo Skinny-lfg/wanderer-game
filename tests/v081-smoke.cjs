@@ -1,7 +1,7 @@
 // v0.8.1 regression test: run with node tests/v081-smoke.cjs
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
-const script=html.match(/<script(?: [^>]*)?>([\s\S]*?)<\/script>/)?.[1];
+const script=html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
 assert(script,'Main game script not found');
 const boot="load();if(!state.merchant)rollShop();save();render();";
 assert(script.includes(boot),'Bootstrap not found');

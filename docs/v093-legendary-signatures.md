@@ -1,51 +1,66 @@
-# Wanderer v0.9.3 — Legendary identity abilities (development only)
+# v0.9.3 — Final Legendary revision (development only)
 
-This is an experimental combat extension to the v0.9.3 Buildcraft update, brought forward from the v0.10 ideas so Legendary effects and reworked 2/3/5-piece tiers can be simulated together.
+Supersedes the first simple-signature implementation. The existing v0.9.3 buildcraft changes remain in place. There are 22 identities: 19 creative signatures and 3 traditional Legendary items.
 
-**Safety:** Development branch only. No merge to main, deployment, Firebase rules, player save access, probability-table edits or new identities. The existing 21 Legendary image/name/slot/subtype catalogue is unchanged.
+## Confirmed generic choices
 
-## Catalogue and triggers
+The user confirmed that “2 de jogo” meant two Fire items. **Grasp of the Sunbound**, **Scepter of the Emberstar**, and **The Eternal Oath** become traditional Legendary items. Sunbound/Emberstar are less literally tied to Fire than First Flame/Eternal Flame; Eternal Oath is less explicitly tied to Shield than Dawnwarden/Aegis. All three keep their IDs, names, slots, subtypes, rarity and artwork. New drops use their normal random affinity pools. Existing saved affinities/stats are preserved. Their old special abilities are removed, including from the displayed descriptions of saved items.
 
-The following are deterministic combat abilities, **not additional affinity proc rolls**. Numbers are deliberately conservative starting points; the extensive combat simulation gate is pending.
+Traditional items grant the pre-existing +32% first-main-attack damage bonus once per encounter, shared across equipped traditional items. This also lets generic gloves/shields deliver the requested traditional damage benefit; it never stacks three times. An off-hand reserved by a two-handed weapon cannot grant this bonus or any signature.
 
-| Existing Legendary | Slot/subtype | Fixed affinity on **new** drops | Signature | Effect and cooldown |
+## Final catalog
+
+Internal affinity keys: drain = Dark, shock = Storm, slow = Frost, burn = Fire, crit = Critical.
+
+| Item | Slot / subtype | New affinity | Ability | Effect |
 |---|---|---|---|---|
-| Soul Reaver | Two-Handed | Dark | Soul Harvest | Hit foe <50% HP: heal 3% max HP. 10s |
-| Runeforged Eclipse | Two-Handed | Crystal | Eclipse Breaker | Strip enemy Barrier equal to 35% ordinary hit. Requires Barrier. 12s |
-| The Eternal Oath | Shield | Shield | Oathbound Riposte | Block: retaliate for 18% ordinary main hit. 10s |
-| Heart of Shadows | Amulet | Dark | Umbral Refuge | Survive HP damage while at ≤50% HP: heal 4% max HP. 14s |
-| Starweaver Relic | Wand | Storm | Starfall | Every third mana-funded cast: +20% ordinary-hit damage. 9s |
-| Helm of the Dawnwarden | Helm | Shield | Dawnward | Survive HP hit with no Barrier: gain 5% max HP Barrier. 14s |
-| Cuirass of the Last Sunrise | Armor | Regen | Last Sunrise | Survive HP hit ≥12% max HP: gain 6% max HP Barrier. 15s |
-| Grasp of the Sunbound | Gloves | Fire | Searing Grip | Critical main hit vs Burning: +16% ordinary-hit damage. 8s |
-| Sunstride Sabatons | Boots | Storm | Thunderstep | Every fourth main attack: +14% ordinary-hit damage. 8s |
-| Pendant of the First Flame | Amulet | Fire | Kindled Heart | Main attack vs Burning: +16% damage and heal 1% max HP. 10s |
-| Signet of the Dawnforged | Ring | Critical | Golden Focus | Critical main attack: gain 2.5% max HP Barrier. 10s |
-| Aegis of the Dawnstar | Shield | Shield | Dawnstar Bulwark | Block while below 10% max HP Barrier: gain 7% max HP Barrier. 12s |
-| Blade of the First Dawn | Sword | Critical | First Light | Main hit vs foe above 70% HP: +18% ordinary-hit damage. 10s |
-| Hammer of the Sunforge | Mace | Sunder | Forgebreaker | Main hit vs reduced enemy Armor: +22% ordinary-hit damage. 10s |
-| Sunpiercer Longbow | Bow | Nature | Wildroot Volley | Main hit vs foe below 50% HP: +18% damage and heal 1% max HP. 12s |
-| Fang of the Sunbreaker | Daggers | Poison | Toxic Fang | Main hit vs 3+ Poison stacks: +22% damage. 8s |
-| Scepter of the Emberstar | Staff | Fire | Emberstar Flare | Mana-funded cast vs Burning: +20% damage. 10s |
-| Crescent of the Emberveil | Off-Hand Dagger | Bleed | Crimson Crescent | Main hit vs Bleeding: +14% damage. 7s |
-| Orb of the Solar Heart | Orb | Tide | Solar Current | Main hit with active Barrier: +12% damage and gain 1.5% max HP Barrier. 8s |
-| Tome of the Eternal Flame | Tome | Fire | Infernal Script | Main hit vs 3+ Burn stacks: +24% damage. 12s |
-| Charm of the Dawnstar | Charm | Nature | Dawnstar Bloom | Main hit while below 75% HP: heal 2.5% max HP. 10s |
+| Soul Reaver | weapon / Two-Handed | drain | Soul Harvest | Applying Drain primes the next main attack to ignore 20% Armor. 10s cooldown. |
+| Runeforged Eclipse | weapon / Two-Handed | crystal | Eclipse Breaker | Strip Barrier equal to 35% of a normal hit; gain 30% of Barrier removed. 12s cooldown. |
+| The Eternal Oath | offhand / Shield | Random on new drops | Traditional | +32% first main attack per encounter; shared, does not stack with other generic Legendary items. |
+| Heart of Shadows | amulet / Amulet | drain | Umbral Refuge | Survive an attack below 35% HP: prime the next main attack to heal 3% max HP. 14s cooldown. |
+| Starweaver Relic | weapon / Wand | shock | Spell Echo | Every third funded spell refunds 40% of mana cost and echoes 20% normal damage. 10s cooldown; no extra procs. |
+| Helm of the Dawnwarden | helm / Helm | shield | Dawnward | Barrier breaking primes 12% mitigation for the next enemy attack. 14s cooldown. |
+| Cuirass of the Last Sunrise | armor / Armor | regen | Last Sunrise | Survive a hit exceeding 12% max HP: recover 30% of HP damage over 3s. 15s cooldown. |
+| Grasp of the Sunbound | gloves / Gloves | Random on new drops | Traditional | +32% first main attack per encounter; shared, does not stack with other generic Legendary items. |
+| Sunstride Sabatons | boots / Boots | shock | Thunderstep | Every fourth main attack grants 12% attack speed for 3s. 10s cooldown; does not stack. |
+| Pendant of the First Flame | amulet / Amulet | burn | Kindled Heart | Kill an enemy with active Burn to heal 3% max HP. Once per encounter. |
+| Signet of the Dawnforged | ring / Ring | crit | Golden Focus | Critical hit primes +15 percentage points of weapon affinity proc chance for the next main attack, capped at 100%. 12s cooldown. |
+| Aegis of the Dawnstar | offhand / Shield | shield | Dawnstar Bulwark | When incoming damage breaks Barrier, restore 7% max HP Barrier. 12s cooldown. |
+| Blade of the First Dawn | weapon / Sword | crit | Dawn Mark | First attack marks for 6s. First critical consumes the mark for +25% normal damage. 12s cooldown. |
+| Hammer of the Sunforge | weapon / Mace | sunder | Armor Crusher | Applying Sunder weakens the next enemy attack by 15%. 10s cooldown. |
+| Sunpiercer Longbow | weapon / Bow | nature | Wildroot Volley | Effective Nature healing grants 10% attack speed for 3s. 10s cooldown; does not stack. |
+| Fang of the Sunbreaker | weapon / Daggers | poison | Toxic Fang | Main attack against 3+ Poison stacks adds one Poison stack. Respects stack cap and Venom Burst. 12s cooldown. |
+| Scepter of the Emberstar | weapon / Staff | Random on new drops | Traditional | +32% first main attack per encounter; shared, does not stack with other generic Legendary items. |
+| Crescent of the Emberveil | offhand / Off-Hand Dagger | bleed | Crimson Crescent | Damaging off-hand strike extends one Bleed stack by one tick, max 6 remaining ticks. 9s cooldown. |
+| Orb of the Solar Heart | offhand / Orb | tide | Solar Current | Barrier absorbing damage heals 1.5% max HP. 12s cooldown. |
+| Tome of the Eternal Flame | offhand / Tome | burn | Ashen Seal | At 3+ Burn stacks, consume one to weaken the next enemy attack by 15%. 12s cooldown. |
+| Charm of the Dawnstar | offhand / Charm | nature | Dawnstar Bloom | Store up to 4% max HP from a heal (including overheal); release after the next surviving HP hit. 12s cooldown; cannot refill itself. |
+| Winterheart Spire | weapon / Staff | slow | Winterheart | Funded spell against a Chilled enemy extends Chill by 1s (max 4s) and delays its attack by 0.5s (boss 0.2s). Shares delay immunity. 12s cooldown. |
 
-## Technical rules and compatibility
+## Boundaries and integration
 
-- Definitions and pure predicates: `combat/legendary.js`. Browser integration: `index.html`. Combat harness loads both modules.
-- Only **new** Legendary rolls receive the identity's fixed `effect` (and matching `magic` on magical subtypes); roll rarity, slot/subtype odds, base attributes and Legendary distribution remain unchanged. An identity with a special allowed Legendary-only element does **not** widen ordinary gear's affinity pool.
-- Existing save instances retain saved ID, stats, `effect`, `magic`, name, and power fields. A name/ID matching its legal slot/subtype can use the new signature without rewriting save data. Inspection explains an old saved affinity that differs from its identity's new fixed affinity.
-- Invalid historic combinations (e.g. legacy name on an incompatible subtype) retain the old generic first-hit bonus; they never silently gain another identity's ability.
-- A canonical named Legendary uses its unique signature **instead** of the generic +32% first hit per encounter. No recursive Legendary procs, no additional crit/affinity application roll, no extra main attack. Signature damage contributes to the ordinary hit. Max HP healing remains subject to Tank's healing-reduction debuff, Barrier to the existing 30% cap.
-- Cooldowns are keyed by Legendary identity in `setCooldowns`, measured in combat seconds, and persist across encounters within an expedition. Duplicate copies of a single identity share that cooldown. Attack counters continue within the expedition (third cast/fourth attack). Two-Handed weapons reserve Off-Hand, and no Legendary Off-Hand signature fires while the slot is reserved.
-- The interface displays ability names, exact activation conditions and cooldowns; logs show actual procs. Missing or malformed historical `legendaryId` requires a matching legal name and subtype before a signature is enabled.
+- All cooldowns use combat seconds and persist across waves in one expedition. Attack/cast counters are expedition-local. Enemy marks, weaken and once-per-kill bookkeeping reset on enemy change. Prepared player buffs/reserves may carry between waves; none survive a new expedition.
+- Dawn Mark starts on the first attack, can be consumed by that attack if critical, expires after 6s and is not repeatedly reapplied within one encounter.
+- Drain primes Soul Harvest after affinity application; the following physical main attack ignores 20% current Armor. Golden Focus is snapshotted before the hit, so a critical cannot improve its own affinity roll. It adds 15 percentage points to the next main-weapon roll, capped at 100%; off-hand chances are unchanged.
+- Eclipse converts only Barrier actually stripped. All generated Barrier respects the existing 30% max-HP cap.
+- Toxic Fang uses the normal Poison stack cap (12) and existing Venom Burst consumption/cooldown; it does not call the Legendary attack handler recursively. Crimson Crescent only runs on damaging off-hand dagger strikes and extends one existing Bleed stack, capped at 6 remaining ticks.
+- Barrier break is measured from positive Barrier before incoming absorption to zero after absorption. Ordinary Block and starting with zero Barrier are not break events. Dawnward protects the following attack. Solar Current requires actual Barrier absorption. The existing Block variable scope bug was repaired.
+- Armor Crusher/Ashen Seal share a non-stacking 15% next-attack weaken. Dawnward and weaken use the strongest charge (not their sum), alongside existing capped tier mitigation. Charges are consumed by one enemy attack even if fully blocked/absorbed.
+- Last Sunrise returns 30% of HP damage over 3 combat seconds after a surviving hit exceeding 12% max HP. Healing respects Tank's healing wound. Umbral Refuge requires a surviving hit below 35% HP. Bloom copies the healing amount (including overheal), capped at 4% max HP, into a reserve; it releases only after a surviving HP hit, cannot refill itself, and cannot revive. Healing reduction applies when storing and when releasing the reserve.
+- Haste does not stack with itself. Wildroot and Thunderstep can coexist as +22% speed; Bleed's existing haste remains separate. No extra attack loops are created.
+- No save migration rerolls existing affinities/stats or removes items. Signature descriptions resolve from current definitions rather than stale saved legendaryPower strings. New items with signatures use fixed affinities; generic items use normal affinity generation.
 
-## Validation / simulation gate
+## Winterheart Spire asset and loot
 
-Added `tests/legendary-signatures.cjs` to `npm test`, checking catalogue coverage (21), duplicate names, legal drop identities, fixed new-drop affinity, cooldown behavior, Two-Handed blocking, and legacy mismatch safety. These tests are authored but their complete Node test suite and browser smoke need execution in the Codex environment before release.
+The supplied image(8).png was recovered from the referenced conversation attachment. It is already a transparent 1254×1254 RGBA image. The artwork was inspected, resized proportionally to 248×248 and centered on a transparent 256×256 RGBA canvas, without generative alteration. Final asset: assets/legendary/winterheart_spire.png.
 
-A static evaluation of the module validated all 21 reachable signature predicates and exact correspondence with the current catalogue. The browser inline JavaScript was syntax-parsed after integration. These checks are **not** a substitute for full automated/unit/browser regression.
+Winterheart Spire is a weapon/Staff and remains two-handed. It uses slow (Frost) for effect and magic on new drops. Winterheart extends existing Chill by 1s, capped at 4s, and requests a 0.5s attack delay (0.2s for bosses), respecting the existing shared 4s delay immunity. It does not increase global Legendary odds or Staff subtype odds. The existing Staff identity selection now chooses between Scepter and Winterheart; each receives half of the unchanged Staff conditional probability. Legendary Hunt calculates this sibling split from the catalog automatically.
 
-**Before main:** run `npm test` and mobile/desktop smoke. Simulate Raw Gear vs 5/5 vs 3/2 builds, with and without Legendary, at D20/D60/D120/D200. Stratify by weapon (including Two-Handed), matchup (Tank/Berserker/Vampire/Caster), favored affinity, and 1×/2×/4× playback. Compare win rate, remaining HP, damage per combat second, signature activation counts, tier 3/5 contribution, and dangerous outlier combos. Balance changes should be evidence-led rather than broad power buffs.
+## Validation and limits
+
+- Full package test command passed, including all online model/save checks, v0.9.3 buildcraft and Legendary regressions.
+- Added production-combat tests for all 22 obtainable identities, fixed/random new affinities, saved affinity/stat preservation, stale text replacement, signature cooldowns, marks, haste, stack addition/extension/consumption, real Barrier breaks, next-hit mitigation, reserve healing, no revive, asset dimensions/alpha, and UI status text.
+- Deterministic playback smoke compares 1× and 4× for each of 13 affinity builds and all 22 Legendary identities. These are small regression fixtures, not balance simulations.
+- Updated older test harnesses to select the inline game script rather than the first external script tag introduced by the previous Legendary implementation.
+- An additional Chromium UI run was attempted but could not proceed: localhost server permission was declined. No browser visual-pass claim is made. The PNG was visually inspected directly.
+- Large balance simulations remain pending. No main changes, deployment, rules changes or real player-data access.

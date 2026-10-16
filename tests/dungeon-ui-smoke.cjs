@@ -1,7 +1,7 @@
 // Dungeon affinity UI and deliberate per-wave start/continue smoke regression.
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const content=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
-const script=content.match(/<script(?: [^>]*)?>([\s\S]*?)<\/script>/)?.[1];
+const script=content.match(/<script>([\s\S]*?)<\/script>/)?.[1];
 assert(script,'Game script exists');
 const boot="load();if(!state.merchant)rollShop();save();render();";
 assert(script.includes(boot),'Game bootstrap exists');

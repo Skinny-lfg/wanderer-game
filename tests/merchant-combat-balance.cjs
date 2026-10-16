@@ -1,7 +1,7 @@
 // Compact merchant, dual status lanes and persisted-equipment balance audit.
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
-const source=html.match(/<script(?: [^>]*)?>([\s\S]*?)<\/script>/)?.[1];
+const source=html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
 assert(source,'browser game exists');
 const boot="load();if(!state.merchant)rollShop();save();render();";
 assert(source.includes(boot),'bootstrap not found');
