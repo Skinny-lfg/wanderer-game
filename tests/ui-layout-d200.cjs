@@ -43,7 +43,7 @@ for(const family of ['might','swiftness','wisdom','fortitude','fortune','fury','
 assert(model.includes('maxDungeon>200')&&model.includes('Math.min(200')&&model.includes('length:20'),'cloud saves, leaderboard, milestones support D200');
 assert(loadout.includes('item.tier>200')&&loadout.includes('r.tier<=200'),'public item/rune cap supports D200');
 assert(fb.includes("appVersion:'0.9'")&&fb.includes('maxDungeon>200'),'v0.9 feedback with D200');
-assert(rules.includes('d.deepest <= 200')&&rules.includes("'200'")&&rules.includes("d.appVersion in ['0.8.1','0.9']"),'Firebase rules support progress, milestones and legacy feedback');
+assert(rules.includes('d.deepest <= 200')&&rules.includes('match /testSeasons/test-open-1/speedruns/{uid}')&&rules.includes('bestMs <= resource.data.bestMs')&&rules.includes("d.appVersion in ['0.8.1','0.9']"),'Firebase rules support current attempts, best D200 and legacy feedback');
 (async()=>{
  const {validateSave,safeProgress,MILESTONES}=await import('../online/model.mjs');
  const {publicLoadout}=await import('../online/public-loadout.mjs');
