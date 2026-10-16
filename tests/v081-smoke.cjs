@@ -74,6 +74,8 @@ ensure(state.maxDungeon===200&&state.chosen===200,'cap D200 does not advance bey
 ensure(selectedPath===null&&state.selectedPath===null,'cap D200 resets selected type for another farming run');
 ensure(state.offersByLevel['200'].ids.length===3&&!state.offersByLevel['200'].ids.includes(THEMES[2].id),'cap D200 also rotates dungeon options');
 
+// D200 now ends an attempt; reset only this test fixture before checking earlier dungeon navigation.
+state.attemptCompleted=false;
 // Rolling dungeon pages must follow the newly unlocked dungeon; earlier pages stay accessible.
 ensure(dungeonWindow(22,null).levels.join(',')==='18,19,20,21,22,23,24,25,26','D22 centered');
 ensure(dungeonWindow(23,null).levels.join(',')==='19,20,21,22,23,24,25,26,27','D23 advances a single slot');
