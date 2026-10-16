@@ -1,6 +1,6 @@
 // Shared validation and conflict policy. No Firebase or DOM dependencies.
 export const SEASON = 'test-open-1'; // Namespace only: no resets or scheduled seasons.
-export const MILESTONES = [10,20,30,40,50,60,70,80,90,100];
+export const MILESTONES = Array.from({length:20},(_,i)=>(i+1)*10);
 export const CHARACTERS = [
   ['wanderer','Original Wanderer'],['ranger','Forest Wanderer'],['knight','Iron Wanderer'],
   ['spellblade','Arcane Wanderer'],['duelist','Desert Wanderer']
@@ -15,7 +15,7 @@ export function validateSave(value){
  if(s.onlineProgress){const p=s.onlineProgress;if(p.milestones!=null&&!record(p.milestones))throw Error('Invalid saved milestones.');for(const k of ['activeMs','deepestCleared'])if(p[k]!=null&&(!Number.isFinite(Number(p[k]))||Number(p[k])<0))throw Error('Invalid saved progress.');}
  if(s.valuables!=null&&(!Array.isArray(s.valuables)||s.valuables.some(v=>!record(v)||!Number.isFinite(Number(v.worth))||Number(v.worth)<0)))throw Error('Invalid saved valuables.');
   for(const field of ['gold','fragments'])if(!Number.isFinite(s[field])||s[field]<0)throw new Error(`Invalid ${field}.`);
-  if(!Number.isInteger(s.maxDungeon)||s.maxDungeon<1||s.maxDungeon>100)throw new Error('Invalid dungeon progress.');
+  if(!Number.isInteger(s.maxDungeon)||s.maxDungeon<1||s.maxDungeon>200)throw new Error('Invalid dungeon progress.');
   if(s.run)throw new Error('Finish or extract from the expedition before switching saves.');
   if(s.stash.length>5000||Object.keys(s.equip).some(k=>!['helm','amulet','armor','gloves','weapon','offhand','ring1','ring2','boots','ring'].includes(k)))throw new Error('Invalid equipment.');
   const itemIds=new Set();
@@ -42,4 +42,4 @@ export function syncDecision(local,remote){
 }
 export function cloudRecord(payload,revision){validateSave(payload);if(!Number.isInteger(revision)||revision<0)throw new Error('Invalid cloud revision.');return {payload:JSON.stringify(payload),revision:revision+1,schemaVersion:1};}
 export function compareRevision(remote,expected){if((remote?.revision||0)!==expected)throw new Error('cloud-conflict');}
-export function safeProgress(s){const p=s?.onlineProgress||{};return {deepestCleared:Math.max(0,Math.min(100,Number(p.deepestCleared)||Math.max(0,(s?.maxDungeon||1)-1))),activeMs:Math.max(0,Number(p.activeMs)||0),timingEligible:p.timingEligible===true,milestones:p.milestones&&typeof p.milestones==='object'?p.milestones:{}};}
+export function safeProgress(s){const p=s?.onlineProgress||{};return {deepestCleared:Math.max(0,Math.min(200,Number(p.deepestCleared)||Math.max(0,(s?.maxDungeon||1)-1))),activeMs:Math.max(0,Number(p.activeMs)||0),timingEligible:p.timingEligible===true,milestones:p.milestones&&typeof p.milestones==='object'?p.milestones:{}};}

@@ -1,7 +1,7 @@
 // v0.8.1 regression test: run with node tests/v081-smoke.cjs
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
-const script=html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
+const script=html.match(/<script(?: [^>]*)?>([\s\S]*?)<\/script>/)?.[1];
 assert(script,'Main game script not found');
 const boot="load();if(!state.merchant)rollShop();save();render();";
 assert(script.includes(boot),'Bootstrap not found');
@@ -11,9 +11,9 @@ function ensure(v,m){if(!v)throw new Error(m)}
 render=()=>{};
 const slots=['weapon','helm','armor','gloves','boots','amulet'];
 for(let i=0;i<6;i++)state.equip[slots[i]]={id:'gear-'+i,slot:slots[i],subtype:slots[i]==='weapon'?'Sword':'Armor',tier:22,rarity:'Rare',name:'Gear '+i,effect:'poison'};
-ensure(setBonuses(setCounts()).values.poisonSignature===true,'5-piece signature applies');
-ensure(setBonuses({...setCounts(),poison:3}).values.poisonMechanic===true,'3-piece mechanic applies');
-ensure(setBonuses({...setCounts(),poison:2}).values.poisonMultiplier===.15,'2-piece damage bonus applies');
+ensure(setBonuses(setCounts()).values.poisonBonus===.15&&setBonuses(setCounts()).values.poisonWeaken&&setBonuses(setCounts()).values.venomBurst,'5-piece set accumulates tiers 2/3/5');
+ensure(setBonuses({...setCounts(),poison:3}).values.poisonBonus===.15&&setBonuses({...setCounts(),poison:3}).values.poisonWeaken&&!setBonuses({...setCounts(),poison:3}).values.venomBurst,'3-piece retains 2-piece bonus');
+ensure(setBonuses({...setCounts(),poison:2}).values.poisonBonus===.15&&!setBonuses({...setCounts(),poison:2}).values.poisonWeaken,'2-piece uses +15% DoT');
 ensure(setStage(4)===3&&setStage(5)===5,'5-piece synergy is displayed');
 ensure(setProgress(4)==='4/5','next set threshold visible');
 state.maxDungeon=23;state.chosen=22;state.offersByLevel['22']={ids:THEMES.slice(0,3).map(t=>t.id),rerolls:0};
@@ -35,15 +35,19 @@ state.equip.helm.effect='poison';
 state.equip.helm.name='<Test & Danger>';
 ensure(protectionMarkup().includes('&lt;Test &amp; Danger&gt;'),'protection picker escapes names');
 state.equip.helm.name='Gear 1';
+const initialD22Offers=[...state.offersByLevel['22'].ids];
 state.run={tier:22,path:THEMES[1].id,protectedItemIds:chosenProtectionIds()};
 die();
 ensure(state.equip.weapon?.id==='gear-0'&&state.equip.helm?.id==='gear-1','protected gear survives death');
 ensure(!state.equip.armor&&!state.equip.gloves&&!state.equip.boots&&!state.equip.amulet,'unprotected gear lost');
-ensure(state.chosen===22&&selectedPath===THEMES[1].id,'dungeon and type preserved after death');
-const old=state.maxDungeon;
+ensure(state.chosen===22&&selectedPath===null&&state.selectedPath===null,'death keeps dungeon level but clears the used path');
+ensure(state.offersByLevel['22'].ids.length===3&&state.offersByLevel['22'].ids.every(id=>!initialD22Offers.includes(id)),'death refreshes all three offered paths');
+ensure(state.offersByLevel['22'].rerolls===0,'death refresh resets paid reroll cost');
+const old=state.maxDungeon,previousD22Offers=[...state.offersByLevel['22'].ids];
 state.run={tier:22,path:THEMES[1].id,status:'win',gold:0,fragments:0,loot:[],valuables:[]};
 extract();
-ensure(state.chosen===22&&selectedPath===THEMES[1].id,'dungeon and type preserved on extraction');
+ensure(state.chosen===22&&selectedPath===null,'extraction keeps dungeon level and clears the used path');
+ensure(state.offersByLevel['22'].ids.every(id=>!previousD22Offers.includes(id)&&id!==THEMES[1].id),'victory refreshes the path offers with different affinities');
 ensure(state.maxDungeon===old,'replaying cleared dungeon never reduces progress');
 state.run={tier:23,path:THEMES[1].id,status:'win',gold:0,fragments:0,loot:[],valuables:[]};
 extract();
@@ -53,22 +57,27 @@ state.chosen=20;selectedPath=THEMES[0].id;state.selectedPath=selectedPath;
 state.run={tier:20,path:THEMES[0].id,status:'win',gold:0,fragments:0,loot:[],valuables:[]};
 extract();
 ensure(state.chosen===20&&state.maxDungeon===24,'clearing an older dungeon preserves manually selected level');
-ensure(selectedPath===THEMES[0].id&&state.selectedPath===THEMES[0].id,'farming retains the chosen dungeon type');
+ensure(selectedPath===null&&state.selectedPath===null,'farming a cleared tier rotates the dungeon type');
+ensure(state.offersByLevel['20'].ids.length===3&&!state.offersByLevel['20'].ids.includes(THEMES[0].id),'first completion with no cached offers excludes the played path');
+const previousD20Offers=[...state.offersByLevel['20'].ids];
 state.run={tier:20,path:THEMES[0].id,status:'ready',gold:0,fragments:0,loot:[],valuables:[]};
 extract();
-ensure(state.chosen===20&&selectedPath===THEMES[0].id,'early extraction keeps manually chosen farm dungeon');
+ensure(state.chosen===20&&selectedPath===null,'early extraction preserves farming level but changes path');
+ensure(state.offersByLevel['20'].ids.every(id=>!previousD20Offers.includes(id)),'early extraction changes all three options');
 save();load();
-ensure(state.chosen===20&&selectedPath===THEMES[0].id,'manual farm selection persists across reload');
-state.maxDungeon=100;state.chosen=100;selectedPath=THEMES[2].id;state.selectedPath=selectedPath;
-state.run={tier:100,path:THEMES[2].id,status:'win',gold:0,fragments:0,loot:[],valuables:[]};
+ensure(state.chosen===20&&selectedPath===null,'new expedition offers and empty path persist across reload');
+ensure(state.offersByLevel['20'].ids.length===3&&state.offersByLevel['20'].ids.every(id=>!previousD20Offers.includes(id)),'rotated options survive reload');
+state.maxDungeon=200;state.chosen=200;selectedPath=THEMES[2].id;state.selectedPath=selectedPath;
+state.run={tier:200,path:THEMES[2].id,status:'win',gold:0,fragments:0,loot:[],valuables:[]};
 extract();
-ensure(state.maxDungeon===100&&state.chosen===100,'cap D100 does not advance beyond max');
-ensure(selectedPath===THEMES[2].id,'cap D100 keeps dungeon type');
+ensure(state.maxDungeon===200&&state.chosen===200,'cap D200 does not advance beyond max');
+ensure(selectedPath===null&&state.selectedPath===null,'cap D200 resets selected type for another farming run');
+ensure(state.offersByLevel['200'].ids.length===3&&!state.offersByLevel['200'].ids.includes(THEMES[2].id),'cap D200 also rotates dungeon options');
 
 // Rolling dungeon pages must follow the newly unlocked dungeon; earlier pages stay accessible.
 ensure(dungeonWindow(22,null).levels.join(',')==='18,19,20,21,22,23,24,25,26','D22 centered');
 ensure(dungeonWindow(23,null).levels.join(',')==='19,20,21,22,23,24,25,26,27','D23 advances a single slot');
-ensure(dungeonWindow(1,null).levels[4]===1&&dungeonWindow(100,null).levels[4]===100,'D1/D100 remain centered');
+ensure(dungeonWindow(1,null).levels[4]===1&&dungeonWindow(200,null).levels[4]===200,'D1/D200 remain centered');
 const oldWallet=wallet,oldHtml=html;wallet=()=>{};html=markup=>globalThis.__dungeonMarkup=markup;
 const visibleLevels=()=>[...((globalThis.__dungeonMarkup.match(/<div class="levelGrid">([\s\S]*?)<\/div>/)?.[1]||'').matchAll(/data-level="(\d+)"/g))].map(x=>Number(x[1]));
 state.maxDungeon=22;state.chosen=22;dungeonPage=null;renderDungeons();
@@ -84,9 +93,9 @@ ensure(visibleLevels()[4]===12,'manually chosen lower dungeon centered when retu
 state.maxDungeon=1;state.chosen=1;dungeonPage=null;renderDungeons();
 ensure(visibleLevels().join(',')==='1,2,3,4,5','D1 shows levels without fake IDs');
 ensure((globalThis.__dungeonMarkup.match(/dungeonPlaceholder/g)||[]).length===4,'D1 has leading placeholders');
-state.maxDungeon=100;state.chosen=100;dungeonPage=null;renderDungeons();
-ensure(visibleLevels().join(',')==='96,97,98,99,100','D100 shows no levels over cap');
-ensure((globalThis.__dungeonMarkup.match(/dungeonPlaceholder/g)||[]).length===4,'D100 trailing placeholders');
+state.maxDungeon=200;state.chosen=200;dungeonPage=null;renderDungeons();
+ensure(visibleLevels().join(',')==='196,197,198,199,200','D200 shows no levels over cap');
+ensure((globalThis.__dungeonMarkup.match(/dungeonPlaceholder/g)||[]).length===4,'D200 trailing placeholders');
 
 // v0.8.1: dungeon action buttons must appear BEFORE protection settings,
 // with a red warning next to the controls if fewer than two items are protected.
@@ -102,12 +111,19 @@ ensure(globalThis.__dungeonMarkup.includes('Only 1 of 2 items protected'),'1 pro
 state.protectedItemIds=['gear-0','gear-1'];
 renderDungeons();
 ensure(!globalThis.__dungeonMarkup.includes('class="protectionWarning"'),'2 protected removes warning');
+// The free post-expedition refresh must not consume Fragments; paid reroll is unchanged.
+state.chosen=20;state.fragments=50;const paidBefore=state.fragments;
+renderDungeons();const paidCost=rerollCost();
+ensure(paidCost===5,'new expedition starts with the base manual reroll price');
+document.getElementById('rerollPath').onclick();
+ensure(state.fragments===paidBefore-paidCost,'manual reroll still charges Fragments');
+ensure(state.offersByLevel['20'].rerolls===1,'manual reroll increments its cost level');
 wallet=oldWallet;html=oldHtml;
 globalThis.__v081Success=true;
 `;
 const nodes=new Map(),store=new Map();
 const mockNode=()=>({innerHTML:'',textContent:'',style:{},dataset:{},value:'',classList:{add(){},remove(){}},focus(){}});
 const sandbox={document:{getElementById(id){if(!nodes.has(id))nodes.set(id,mockNode());return nodes.get(id)},querySelectorAll:()=>[],createElement:()=>mockNode()},localStorage:{getItem:k=>store.get(k)??null,setItem:(k,v)=>store.set(k,v)},confirm:()=>true,alert:()=>{},console,setTimeout:()=>0,clearTimeout:()=>{},setInterval:()=>0,clearInterval:()=>{}};
-vm.runInNewContext(require('node:fs').readFileSync('combat/affinities.js','utf8')+'\n'+script.replace(boot,tests),sandbox,{timeout:4000,filename:'wanderer-v081.js'});
+vm.runInNewContext(script.replace(boot,tests),sandbox,{timeout:4000,filename:'wanderer-v081.js'});
 assert(sandbox.__v081Success,'v0.8.1 smoke assertions did not complete');
-console.log('PASS v0.8.1: rolling dungeon pages, auto-unlock, farming, D100 cap, protected gear, warning 0/1/2, CTAs above gear and sets');
+console.log('PASS: dungeon offer refresh after death/clear/early extract, reroll cost, reload, rolling pages, protection and sets');

@@ -5,8 +5,8 @@ import {totalStats} from '../online/pvp-stats.mjs';
 const item=(subtype,slot='weapon',effect=null)=>({id:subtype,slot,subtype,name:subtype,tier:10,rarity:'Rare',atk:25,str:5,int:5,end:5,def:10,spd:1,effect,magic:['Staff','Wand','Orb'].includes(subtype)?effect:null});
 test('public equipment strips private data, normalizes both hands, and keeps synergy identity',()=>{
  const equip={weapon:item('Two-Handed','weapon','poison'),offhand:item('Shield','offhand','poison')};
- const shared=publicLoadout({equip,gold:999,stash:[{}],maxDungeon:20});assert.equal(shared.equipment.offhand,null);assert.equal(shared.gold,undefined);assert.equal(shared.stash,undefined);assert.equal(totalStats(shared.equipment).counts.poison,1);
- for(const kind of ['Two-Handed','Bow','Staff']){const cleaned=cleanEquipment({weapon:item(kind,'weapon','poison'),offhand:item('Shield','offhand','poison')});assert.equal(cleaned.offhand,null,kind+' must reserve Off-Hand');assert.equal(totalStats(cleaned).counts.poison,1);}
+ const shared=publicLoadout({equip,gold:999,stash:[{}],maxDungeon:20});assert.equal(shared.equipment.offhand,null);assert.equal(shared.gold,undefined);assert.equal(shared.stash,undefined);assert.equal(totalStats(shared.equipment).counts.poison,2);
+ for(const kind of ['Two-Handed','Bow','Staff']){const cleaned=cleanEquipment({weapon:item(kind,'weapon','poison'),offhand:item('Shield','offhand','poison')});assert.equal(cleaned.offhand,null,kind+' must reserve Off-Hand');assert.equal(totalStats(cleaned).counts.poison,2);}
  assert.throws(()=>cleanEquipment({weapon:{...item('Sword'),atk:Infinity}}),/stats/);
 });
 test('practice supports every requested weapon pairing, is deterministic, and cannot mutate saves',()=>{

@@ -33,13 +33,13 @@ service cloud.firestore {
    allow create, update: if owner(uid) && hasProfile(uid)
     && request.resource.data.keys().hasOnly(['equipment','maxDungeon','updatedAt'])
     && request.resource.data.equipment is string && request.resource.data.equipment.size() <= 30000
-    && request.resource.data.maxDungeon is int && request.resource.data.maxDungeon >= 1 && request.resource.data.maxDungeon <= 100
+    && request.resource.data.maxDungeon is int && request.resource.data.maxDungeon >= 1 && request.resource.data.maxDungeon <= 200
     && request.resource.data.updatedAt == request.time;
    allow delete: if false;
   }
   // Client-owned test claims only. These documents are NEVER verified rankings.
   match /testSeasons/test-open-1/deepest/{uid} {
-   function validClaim() { let d=request.resource.data; return d.keys().hasOnly(['deepest','verified','updatedAt']) && d.deepest is int && d.deepest >= 0 && d.deepest <= 100 && d.verified == false && d.updatedAt == request.time; }
+   function validClaim() { let d=request.resource.data; return d.keys().hasOnly(['deepest','verified','updatedAt']) && d.deepest is int && d.deepest >= 0 && d.deepest <= 200 && d.verified == false && d.updatedAt == request.time; }
    allow read: if true;
    allow create: if owner(uid) && hasProfile(uid) && validClaim();
    allow update: if owner(uid) && hasProfile(uid) && validClaim() && request.resource.data.deepest >= resource.data.deepest;
@@ -47,7 +47,7 @@ service cloud.firestore {
   }
   match /testSeasons/test-open-1/milestones/{milestone}/entries/{uid} {
    allow read: if true;
-   allow create: if owner(uid) && hasProfile(uid) && milestone in ['10','20','30','40','50','60','70','80','90','100']
+   allow create: if owner(uid) && hasProfile(uid) && milestone in ['10','20','30','40','50','60','70','80','90','100','110','120','130','140','150','160','170','180','190','200']
     && request.resource.data.keys().hasOnly(['milestone','activeMs','verified','receivedAt'])
     && request.resource.data.milestone == int(milestone)
     && (request.resource.data.activeMs == null || (request.resource.data.activeMs is int && request.resource.data.activeMs >= 0 && request.resource.data.activeMs <= 315360000000))
@@ -68,9 +68,9 @@ service cloud.firestore {
      && d.problems is string && d.problems.size() <= 1500
      && d.ideas is string && d.ideas.size() <= 1200
      && (d.likes.size() + d.problems.size() + d.ideas.size()) >= 10
-     && d.maxDungeon is int && d.maxDungeon >= 1 && d.maxDungeon <= 100
+     && d.maxDungeon is int && d.maxDungeon >= 1 && d.maxDungeon <= 200
      && character(d.characterId)
-     && d.appVersion == '0.8.1'
+     && d.appVersion in ['0.8.1','0.9']
      && d.createdAt == request.time;
    }
    allow create: if request.auth != null && hasProfile(request.auth.uid)

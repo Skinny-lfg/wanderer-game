@@ -8,10 +8,10 @@ export function theftPreview(defenderGold,dailyGain=0,dailyLoss=0){
 }
 // Deterministic casual practice arena. Inputs are public, unverified loadouts.
 // This function MUST NOT award currency or update competitive results.
-export function practiceDuel(leftEquipment,rightEquipment,seed=1){
+export function practiceDuel(leftEquipment,rightEquipment,seed=1,leftRunes=[],leftRuneSlots=[],rightRunes=[],rightRuneSlots=[]){
  let randomState=seed>>>0;const random=()=>{randomState=(Math.imul(1664525,randomState)+1013904223)>>>0;return randomState/4294967296;};
- const create=equipment=>{const s=totalStats(cleanEquipment(equipment));return {s,hp:s.maxhp,mana:s.mana,barrier:0,defense:s.defense,slow:0,next:0,dots:[],legendary:false};};
- const fighters=[create(leftEquipment),create(rightEquipment)],events=[],log=(time,side,text)=>{if(events.length<160)events.push({time:+time.toFixed(1),side,text});};
+ const create=(equipment,runes,slots)=>{const s=totalStats(cleanEquipment(equipment),runes,slots);return {s,hp:s.maxhp,mana:s.mana,barrier:0,defense:s.defense,slow:0,next:0,dots:[],legendary:false};};
+ const fighters=[create(leftEquipment,leftRunes,leftRuneSlots),create(rightEquipment,rightRunes,rightRuneSlots)],events=[],log=(time,side,text)=>{if(events.length<160)events.push({time:+time.toFixed(1),side,text});};
  const hit=(target,damage)=>{const absorb=Math.min(target.barrier,damage);target.barrier-=absorb;damage-=absorb;target.hp=Math.max(0,target.hp-damage);return damage;};
  const effect=(source,target,kind,damage,time,mult=1)=>{
   const b=source.s.bonus;

@@ -1,3 +1,5 @@
+> Historical audit of the earlier local revision. Remote development subsequently added D200, runes and elites; missing-feature conclusions below do not describe current development. See v091-balance-report.md for the current balance audit.
+
 # Wanderer v0.9 pre-release stress report
 
 Date: 2026-10-15 (Europe/Lisbon). Branch: `development`. Starting revision: `5fd920f`. Fix/test revision: `3dd8a7b`.
