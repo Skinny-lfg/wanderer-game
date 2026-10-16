@@ -57,7 +57,7 @@
 #heroPortrait.fxBlock{animation:fxBlock .48s ease-out}
 #enemyPortrait.fxEnemyAttack{animation:fxEnemyAttack .36s ease-out}
 @media(prefers-reduced-motion:reduce){#heroPortrait[class*="fx"],#enemyPortrait.fxEnemyAttack{animation:none!important}}
-.onlineBar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:12px;font-size:12px;color:var(--muted)}.tavernAvatar{width:46px;height:46px;object-fit:contain;border:1px solid var(--gold);border-radius:50%}
+.onlineBar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:12px;font-size:12px;color:var(--muted)}.tavernAvatar{width:46px;height:46px;object-fit:contain;border:1px solid var(--gold);border-radius:50%;background:radial-gradient(circle at 48% 30%,#4b5360 0%,#2b3847 55%,#111d2b 100%);box-shadow:inset 0 0 0 2px #10192399,0 0 10px #0008;padding:2px}
 
 .combatVfx{position:absolute;z-index:4;top:28%;left:72%;width:clamp(72px,22%,160px);aspect-ratio:1;pointer-events:none;transform:translate(-50%,-50%);animation:vfxImpact .48s ease-out both}
 .combatVfx img{display:block;width:100%;height:100%;object-fit:contain}
@@ -1167,7 +1167,7 @@ return `<section class="itemComparison"><div class="topline"><h3>Quick Compare �
 }
 function previewItem(o,source='stash'){
 if(!o)return `<div class="inspect"><h3>Choose an item</h3><p class="small muted">Tap an icon to inspect its attributes and compare it with your current equipment.</p></div>`;
-if(source==='forge')markItemSeen(o.id);
+// New forged items keep their NEW marker until opened in Stash or marked as seen.
 
 let buttons=source==='stash'?`${['ring1','ring2'].includes(o.slot)?'<button class="primary" id="equipRing1">Equip Ring 1</button><button class="primary" id="equipRing2">Equip Ring 2</button>':`<button class="primary" id="equipThis" ${offhandLocked(o)?'disabled':''}>Equip</button>`}<button class="ghost" id="lockThis">${o.locked?'🔒 Unlock':'🔓 Lock'}</button><button class="danger" id="sellThis" ${o.locked?'disabled':''}>Salvage · ${saleFragments(o)} 💠</button>`:source==='equipped'?`<button class="ghost" id="unequipThis">Unequip</button>`:'';
 return `<div class="inspect" ${rarityFrame(o)}><div class="inspectHero"><img ${rarityFrame(o)} src="${itemImg(o)}" alt="${esc(o.subtype)}"><div><h3 style="color:${rarityColor(o)}">${esc(o.name)}</h3><div class="small">${itemSource(o)}</div><div class="small" style="color:${rarityColor(o)}">${o.rarity==='Legendary'?'✦ ':''}${esc(detailEffect(o))}</div></div></div><div class="buttonRow inspectActions">${buttons}</div><div class="rule"></div><div class="small">${esc(itemStats(o)||'No base stats')}</div>${isTwoHanded(o)?'<p class="small gold">⚔ Two-Handed · occupies Weapon + Off-Hand</p>':''}${o.subtype==='Off-Hand Dagger'?'<p class="small gold">🗡 Physical off-hand · extra strikes</p>':''}${o.magic?`<p class="small gold" style="margin:6px 0">Magic: ${ELEMENTS[o.magic].name} · ${['Staff','Wand'].includes(o.subtype)?'Uses mana per spell':'Free passive off-hand effect'}</p>`:''}${legendaryDescription(o)?`<p class="small gold">✦ ${esc(legendaryDescription(o))}</p>`:''}${source!=='equipped'?`${['ring1','ring2'].includes(o.slot)?`<details class="ringComparison"><summary>Compare if equipped in Ring 1</summary>${itemComparison(o,'ring1')}</details><details class="ringComparison"><summary>Compare if equipped in Ring 2</summary>${itemComparison(o,'ring2')}</details>`:itemComparison(o)}`:''}</div>`;
@@ -1305,7 +1305,7 @@ function renderMerchant(){
   state.gold-=item.goldPrice;item.isNew=true;state.stash.push(item);const replacement=makeItem(Math.max(1,state.maxDungeon-1),rollEquipmentSlot(),null,'merchant');replacement.goldPrice=merchantCost(replacement);m.stock[i]=replacement;
   save();renderMerchant();bannerMessage('Bought '+item.name+' — check Stash');
  });
- $('refreshShop').onclick=()=>{if(state.gold<m.refreshCost)return;if(!confirm('Pay '+m.refreshCost+' Gold to refresh the merchant stock?'))return;state.gold-=m.refreshCost;rollShop();save();renderMerchant();};
+ $('refreshShop').onclick=()=>{if(state.gold<m.refreshCost)return;/* Merchant rerolls are one-click; the displayed Gold cost remains visible. */state.gold-=m.refreshCost;rollShop();save();renderMerchant();};
  $('sellTreasure').onclick=()=>{if(!state.valuables.length)return;state.gold+=treasureValue;state.valuables=[];save();renderMerchant();bannerMessage('Sold valuables for '+treasureValue+' Gold');};
 }
 function estimateEnemy(level,n=1){

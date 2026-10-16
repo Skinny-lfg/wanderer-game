@@ -10,7 +10,8 @@
       "avatar": "characters/avatars/wanderer.png",
       "gameplayModifiers": {},
       "active": true,
-      "artSource": "Drive Wanderer_Character_Face_Icons_256 / warrior.png"
+      "artSource": "Drive Wanderer_Character_Face_Icons_256 / warrior.png",
+      "artSourceFullBody": "User-supplied full-body artwork, Wanderer_FullBody_Characters_v093"
     },
     {
       "id": "ranger",
@@ -19,7 +20,8 @@
       "avatar": "characters/avatars/ranger.png",
       "gameplayModifiers": {},
       "active": true,
-      "artSource": "Drive Wanderer_Character_Face_Icons_256 / archer.png"
+      "artSource": "Drive Wanderer_Character_Face_Icons_256 / archer.png",
+      "artSourceFullBody": "User-supplied full-body artwork, Wanderer_FullBody_Characters_v093"
     },
     {
       "id": "knight",
@@ -28,7 +30,8 @@
       "avatar": "characters/avatars/knight.png",
       "gameplayModifiers": {},
       "active": true,
-      "artSource": "Drive Wanderer_Character_Face_Icons_256 / dark_warrior.png"
+      "artSource": "Drive Wanderer_Character_Face_Icons_256 / dark_warrior.png",
+      "artSourceFullBody": "User-supplied full-body artwork, Wanderer_FullBody_Characters_v093"
     },
     {
       "id": "spellblade",
@@ -37,7 +40,8 @@
       "avatar": "characters/avatars/spellblade.png",
       "gameplayModifiers": {},
       "active": true,
-      "artSource": "Drive Wanderer_Character_Face_Icons_256 / old_mage.png"
+      "artSource": "Drive Wanderer_Character_Face_Icons_256 / old_mage.png",
+      "artSourceFullBody": "User-supplied full-body artwork, Wanderer_FullBody_Characters_v093"
     },
     {
       "id": "duelist",
@@ -46,7 +50,8 @@
       "avatar": "characters/avatars/duelist.png",
       "gameplayModifiers": {},
       "active": true,
-      "artSource": "Drive Wanderer_Character_Face_Icons_256 / rogue.png"
+      "artSource": "Drive Wanderer_Character_Face_Icons_256 / rogue.png",
+      "artSourceFullBody": "User-supplied full-body artwork, Wanderer_FullBody_Characters_v093"
     }
   ]
 }
