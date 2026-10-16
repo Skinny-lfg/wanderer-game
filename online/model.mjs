@@ -3,6 +3,9 @@
 export const SEASON = 'v092-launch-1';
 export const SAVE_NAMESPACE = 'v092';
 export const PUBLIC_LOADOUTS = 'publicLoadoutsV092';
+// Hotfix v0.9.2: combat-only timing uses a new leaderboard collection.
+export const SPEEDRUN_METRIC = 'combat-v1';
+export const SPEEDRUN_BOARD = 'combatSpeedruns';
 export const MILESTONES = Array.from({length:20},(_,i)=>(i+1)*10);
 export const CHARACTERS = [
   ['wanderer','Original Wanderer'],['ranger','Forest Wanderer'],['knight','Iron Wanderer'],
@@ -59,12 +62,13 @@ export function safeProgress(s){
   deepestCleared:Math.max(0,Math.min(200,Number(p.deepestCleared)||Math.max(0,(s?.maxDungeon||1)-1))),
   activeMs:Math.max(0,Number(p.activeMs)||0),
   timingEligible:p.timingEligible===true,
+  timerMetric:p.timerMetric==='combat-v1'?'combat-v1':'legacy-active',
   milestones:p.milestones&&typeof p.milestones==='object'&&!Array.isArray(p.milestones)?p.milestones:{}
  };
 }
 // Only timed D200 clears are eligible. Untimed imports and incomplete attempts have no score.
 export function completedD200Time(save){
  const p=safeProgress(save),clear=p.milestones[200];
- if(p.deepestCleared!==200||!p.timingEligible||!clear||!Number.isFinite(clear.activeMs)||clear.activeMs<0)return null;
+ if(p.deepestCleared!==200||!p.timingEligible||p.timerMetric!==SPEEDRUN_METRIC||!clear||!Number.isFinite(clear.activeMs)||clear.activeMs<0)return null;
  return Math.floor(clear.activeMs);
 }

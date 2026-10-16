@@ -27,8 +27,9 @@ test('cloud validation rejects nonfinite item stats and duplicate identities wit
 });
 
 test('D200 speedrun time requires an eligible completed D200 milestone',()=>{
- const base={...save,maxDungeon:200,onlineProgress:{attemptId:'run-a',deepestCleared:200,activeMs:7200000,timingEligible:true,milestones:{200:{activeMs:6660000}}}};
+ const base={...save,maxDungeon:200,onlineProgress:{attemptId:'run-a',deepestCleared:200,activeMs:7200000,timerMetric:'combat-v1',timingEligible:true,milestones:{200:{activeMs:6660000}}}};
  assert.equal(completedD200Time(base),6660000);
+ assert.equal(completedD200Time({...base,onlineProgress:{...base.onlineProgress,timerMetric:'legacy-active'}}),null,'old timed browser runs cannot enter combat leaderboard');
  assert.equal(safeProgress(base).attemptId,'run-a');
  assert.equal(completedD200Time({...base,onlineProgress:{...base.onlineProgress,deepestCleared:199}}),null);
  assert.equal(completedD200Time({...base,onlineProgress:{...base.onlineProgress,timingEligible:false}}),null);

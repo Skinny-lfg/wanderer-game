@@ -1,7 +1,7 @@
 import {publicLoadout,cleanEquipment,cleanPublicRunes,cleanPublicRuneSlots} from './public-loadout.mjs';
 import * as sdk from './vendor/firebase-sdk.mjs';
 import {firebaseConfig} from './firebase-config.mjs';
-import {nicknameKey,character,cloudRecord,compareRevision,validateSave,recoverInterruptedSave,SEASON,SAVE_NAMESPACE,PUBLIC_LOADOUTS,safeProgress,completedD200Time} from './model.mjs?v=v092-global-reset-1';
+import {nicknameKey,character,cloudRecord,compareRevision,validateSave,recoverInterruptedSave,SEASON,SAVE_NAMESPACE,PUBLIC_LOADOUTS,SPEEDRUN_BOARD,safeProgress,completedD200Time} from './model.mjs?v=v092-combat-hotfix-1';
 export async function createBackend(){
  const app=sdk.initializeApp(firebaseConfig),auth=sdk.getAuth(app),db=sdk.getFirestore(app);
  await sdk.setPersistence(auth,sdk.browserLocalPersistence);
@@ -49,7 +49,7 @@ export async function createBackend(){
    });
    const ms=completedD200Time(valid);
    if(ms===null)return;
-   const record=sdk.doc(db,'testSeasons',SEASON,'speedruns',uid);
+   const record=sdk.doc(db,'testSeasons',SEASON,SPEEDRUN_BOARD,uid);
    await sdk.runTransaction(db,async tx=>{
     const old=await tx.get(record);
     if(old.exists()&&old.data().bestMs<=ms)return;
@@ -91,7 +91,7 @@ export async function createBackend(){
   },
   async leaderboard(metric){
    if(!['fastest','deepest'].includes(metric))throw new Error('Unknown leaderboard category.');
-   const col=sdk.collection(db,'testSeasons',SEASON,metric==='fastest'?'speedruns':'deepest');
+   const col=sdk.collection(db,'testSeasons',SEASON,metric==='fastest'?SPEEDRUN_BOARD:'deepest');
    const field=metric==='fastest'?'bestMs':'deepest';
    const rows=await sdk.getDocs(sdk.query(col,sdk.orderBy(field,metric==='fastest'?'asc':'desc'),sdk.limit(50)));
    const result=await Promise.all(rows.docs.map(async row=>{
