@@ -71,6 +71,16 @@ jobs:
         continue-on-error: true
         timeout-minutes: 5
         run: npm run test:recovery
+      - name: Deterministic combat and save stress
+        id: stress
+        continue-on-error: true
+        timeout-minutes: 7
+        run: node tests/stress-combat.cjs && node tests/stress-save-gameplay.cjs
+      - name: Browser gameplay and mobile stress
+        id: stressbrowser
+        continue-on-error: true
+        timeout-minutes: 8
+        run: node tests/stress-browser.cjs
       - name: PvP browser regressions
         id: pvp
         continue-on-error: true
@@ -88,8 +98,10 @@ jobs:
           echo "Browser:  ${{ steps.browser.outcome }}"
           echo "Assets:   ${{ steps.assets.outcome }}"
           echo "Recovery: ${{ steps.recovery.outcome }}"
+          echo "Stress:   ${{ steps.stress.outcome }}"
+          echo "Stress UI:${{ steps.stressbrowser.outcome }}"
           echo "PvP:      ${{ steps.pvp.outcome }}"
           echo "Rules:    ${{ steps.rules.outcome }}"
-          for result in "${{ steps.unit.outcome }}" "${{ steps.browser.outcome }}" "${{ steps.assets.outcome }}" "${{ steps.recovery.outcome }}" "${{ steps.pvp.outcome }}" "${{ steps.rules.outcome }}"; do
+          for result in "${{ steps.unit.outcome }}" "${{ steps.browser.outcome }}" "${{ steps.assets.outcome }}" "${{ steps.recovery.outcome }}" "${{ steps.stress.outcome }}" "${{ steps.stressbrowser.outcome }}" "${{ steps.pvp.outcome }}" "${{ steps.rules.outcome }}"; do
             test "$result" = success || exit 1
           done
