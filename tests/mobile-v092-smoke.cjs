@@ -1,0 +1,35 @@
+// Mobile v0.9.2 UI regression: information hierarchy, visible navigation and compact cards.
+// No gameplay formulas, saves or progression are changed in this release.
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const vm=require('node:vm');
+const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+const game=html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
+assert(game,'Inline game script exists');
+new vm.Script(game,{filename:'wanderer-game-v092.js'});
+assert(html.includes('BROWSER PROTOTYPE V0.9.2'),'mobile release version visible');
+const start=html.indexOf('function renderTavern(){');
+const inventory=html.indexOf('function renderStash(){');
+const dungeon=html.indexOf('function renderDungeons(){');
+const log=html.indexOf('function addLog(',dungeon);
+assert(start>0&&inventory>start&&dungeon>inventory&&log>dungeon,'UI renderers exist');
+const home=html.slice(start,inventory);
+const gear=html.slice(inventory,html.indexOf('function renderForge(){'));
+const pathSelect=html.slice(dungeon,log);
+assert(home.includes('class="homeEquipped"')&&html.includes('.homeEquipped{display:none}'),'home redundant gear is hidden on mobile');
+assert(html.includes('.nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))'),'all five nav items are available without horizontal scrolling');
+assert(html.includes('.nav button{min-width:0;min-height:44px'),'nav controls have mobile touch targets');
+assert(gear.includes('class="equipmentQuickView"')&&gear.includes('class="equipmentLoadout"')&&gear.includes('class="equipmentStats"'),'mobile equipment has side-by-side loadout and stats');
+assert(html.includes('.equipmentQuickView{display:grid;grid-template-columns:')&&html.includes('.equipmentLoadout .paper{display:grid;grid-template-columns:repeat(3'),'gear grid is compact at mobile width');
+assert(html.includes('.equipmentRunes .runeCollection{grid-template-columns:repeat(3'),'rune collection uses three compact columns');
+assert(html.includes('.equipmentBonuses .setTracks{display:grid;grid-template-columns:repeat(2'),'tier sets use two columns');
+assert(html.includes('class="setTierMobileDetails"')&&html.includes('<summary>View full bonuses</summary>'),'full set bonus descriptions remain accessible');
+assert(html.includes('merchantPowerTrend')&&html.includes('Gear Power</span>'),'merchant cards include delta power labels');
+assert(html.includes('.merchantPowerTrend.up')&&html.includes('.merchantPowerTrend.down'),'merchant gain/loss visuals present');
+assert(pathSelect.includes('class="dungeonLevelRow"')&&!pathSelect.includes('class="dungeonPager"'),'arrows are integrated with dungeon number rail');
+assert(pathSelect.indexOf('id="previousLevels"')<pathSelect.indexOf('class="levelGrid"')&&pathSelect.indexOf('class="levelGrid"')<pathSelect.indexOf('id="nextLevels"'),'dungeon side arrows flank the numbers');
+assert(pathSelect.indexOf('class="dungeonActionArea"')<pathSelect.indexOf('class="entryPreference"'),'enter button precedes secondary preferences');
+assert(pathSelect.includes('id="rerollPath"')&&pathSelect.includes('id="enter"')&&pathSelect.includes('protectionEntryWarning()'),'reroll, entry and protection warnings remain intact');
+assert(html.includes('.dungeonActionArea #enter{font-size:13px;font-weight:750}'),'enter action remains emphasized');
+console.log('PASS: v0.9.2 mobile navigation, equipment, runes, sets, merchant and dungeon entry');
