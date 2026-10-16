@@ -2,6 +2,9 @@
 
 ## v0.9.2 — 2026-10-16 (mobile UI + D200 speedruns)
 
+- Introduce **21 fixed-identity Legendary** equipment definitions with subtype-matched names and exclusive PNG art (5 original + 16 new). Legacy items retain their IDs, stats, effects and original names; mismatched old identities fall back to subtype-specific art.
+- **Obsidian Quarry → Crystal** (💎), with independent 2/3/5-piece set effects (resonance, charges, Crystal Burst) and Crystal proc damage. Iron Bastion remains Sunder.
+- Preserve the global Legendary rarity roll and existing equipment slot/subtype roll; only names and images are selected from the matching catalogue pool.
 - Display locked and unlocked Tier Bonus milestones in fixed **2 → 3 → 5** order rather than bringing inactive five-piece tiers to the top; no bonus values changed.
 - Display all five main navigation tabs in a 3+2 grid on phones; larger tap targets remove the need to scroll sideways to Dungeons.
 - Remove the equipped-gear strip from the Tavern homepage **on all screen sizes** (desktop and mobile). Equipment management remains in Equipment.
