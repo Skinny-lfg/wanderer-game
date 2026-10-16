@@ -57,7 +57,8 @@ service cloud.firestore {
      || request.resource.data.deepest >= resource.data.deepest);
    allow delete: if false;
   }
-  match /testSeasons/v092-launch-1/speedruns/{uid} {
+  // Combat-only fastest D200 records; old speedruns are denied by fallback.
+  match /testSeasons/v092-launch-1/combatSpeedruns/{uid} {
    function validSpeedrun() {
     let d=request.resource.data;
     return d.keys().hasOnly(['bestMs','verified','updatedAt'])
