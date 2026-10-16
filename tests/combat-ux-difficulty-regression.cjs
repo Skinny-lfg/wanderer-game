@@ -6,7 +6,7 @@ assert(html.includes("function heroImage(){return 'assets/characters/avatars/'")
 assert(online.includes('<img src="${c.avatar}"'),'character selection keeps face art');
 assert(html.includes('riskBrutal')&&html.includes('riskEasy'),'difficulty spans green to red');
 assert(html.includes('background:linear-gradient(180deg,#000c'),'combat dark overlay');
-assert(html.includes('.scene .combatStatuses{top:5px;left:5px;right:5px;height:auto;min-height:0;max-height:52px'),'small combat status lane');
+assert(html.includes('.scene .combatStatuses{background:transparent;top:5px;left:5px;right:5px;height:auto;min-height:0;max-height:52px'),'small combat status lane');
 assert(html.includes('function forgeEquippedReference(')&&html.includes('Upgrade vs equipped gear'),'forge comparison context');
 assert(html.includes('function showConfirm(')&&!/(^|[^\w])confirm\s*\(/.test(html),'native browser confirms removed');
 const js=html.match(/<script>([\s\S]*?)<\/script>/)[1];
