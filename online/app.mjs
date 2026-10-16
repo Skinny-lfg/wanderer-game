@@ -1,6 +1,6 @@
 import {publicLoadout,cleanEquipment} from './public-loadout.mjs';
 import {practiceDuel} from './pvp.mjs';
-import {CHARACTERS,character,validateSave,recoverInterruptedSave,summary,safeProgress,SAVE_NAMESPACE} from './model.mjs?v=v092-global-reset-1';
+import {CHARACTERS,character,validateSave,recoverInterruptedSave,summary,safeProgress,SAVE_NAMESPACE} from './model.mjs?v=v092-combat-hotfix-1';
 const game=globalThis.WandererGame,GUEST='wanderer_browser_proto_v01';
 let backendPromise,backend,user=null,profile=null,revision=null,synced='',epoch=0,writing=false,suppress=false,timer=null,dialog=null;
 let ready=false,lastPublished='',lastLoadout='',profileState='loading';
@@ -45,7 +45,7 @@ function action(selector,fn){const element=dialog?.querySelector(selector);if(!e
 function ensureSafeSwitch(allowProtected=false){if(writing)throw new Error('Saving your progress. Please try again in a moment.');if(game.busy())throw new Error('Finish or extract from your expedition before changing accounts or saves.');if(game.blocked()&&!allowProtected)throw new Error('The local save is protected. Reload before switching. Your recovery copies are retained.');}
 function sessionGuard(token){if(token!==epoch)throw new Error('The signed-in account changed. Reopen Account before continuing.');}
 async function connect(){
- if(!backendPromise)backendPromise=import('./firebase-client.mjs?v=v092-global-reset-1').then(m=>m.createBackend()).then(b=>{
+ if(!backendPromise)backendPromise=import('./firebase-client.mjs?v=v092-combat-hotfix-1').then(m=>m.createBackend()).then(b=>{
   backend=b;b.watchAuth(async next=>{
    // Do not reopen Account or gate an in-progress game for a duplicate auth event
    // for the already restored user. Login recovery itself still runs on startup.
@@ -103,7 +103,7 @@ function showAccount(){
  action('#resetProgress',()=>{
   ensureSafeSwitch();
   if(!ready||!profile||revision===null||game.key()!==accountKey())throw Error('Your account save must be synced before resetting.');
-  modal('Start a new D200 speedrun?',`<p><b>All playable progress will be reset:</b> dungeons, equipment, inventory, runes, Gold, Fragments and upgrades.</p><p>Your nickname, cosmetic character and existing Fastest D200 personal best will remain.</p><p class="small muted">Your cloud save will be replaced. Type <b>RESET</b> to confirm. You cannot undo the reset from Account.</p><label>Confirmation<input id="resetConfirmation" autocomplete="off" placeholder="RESET"></label><div class="buttonRow"><button id="cancelReset" class="ghost" type="button">Cancel</button><button id="confirmReset" class="danger" type="button">Reset everything</button></div>`);
+  modal('Start a new D200 speedrun?',`<p><b>All playable progress will be reset:</b> dungeons, equipment, inventory, runes, Gold, Fragments and upgrades.</p><p>Your nickname, cosmetic character and existing combat-time Fastest D200 personal best will remain.</p><p class="small muted">Your cloud save will be replaced. Type <b>RESET</b> to confirm. You cannot undo the reset from Account.</p><label>Confirmation<input id="resetConfirmation" autocomplete="off" placeholder="RESET"></label><div class="buttonRow"><button id="cancelReset" class="ghost" type="button">Cancel</button><button id="confirmReset" class="danger" type="button">Reset everything</button></div>`);
   action('#cancelReset',showAccount);
   action('#confirmReset',async()=>{
    if(dialog.querySelector('#resetConfirmation').value.trim()!=='RESET')throw Error('Type RESET exactly to confirm.');
@@ -221,7 +221,7 @@ async function showLeaderboard(metric='fastest'){
  const current=dialog;
  current.querySelector('#playerSearch').onsubmit=async event=>{event.preventDefault();const button=current.querySelector('[type=submit]');button.disabled=true;try{if(!user)throw Error('Sign in to find players.');const result=await backend.findPlayer(current.querySelector('#playerNickname').value);if(current.isConnected)showPlayer(result);}catch(error){if(current.isConnected)current.querySelector('.onlineError').textContent=errorText(error);}finally{button.disabled=false;}};
  current.querySelector('#ranking').value=mode;
- current.querySelector('#metricDescription').textContent=mode==='fastest'?'Fastest active play time from a fresh attempt to clearing D200. Your personal best survives progress resets. Community times are not server-verified.':'Highest dungeon completed in each player’s current attempt. Starting a new speedrun resets this to D0.';
+ current.querySelector('#metricDescription').textContent=mode==='fastest'?'Fastest cumulative dungeon combat time to D200 (1×/2×/4× playback affects the clock). Time outside combat and in background tabs is excluded. New timer: reset to start an eligible fresh attempt. Older browser-time records do not count. Personal best survives resets. Community times are not server-verified.':'Highest dungeon completed in each player’s current attempt. Starting a new speedrun resets this to D0.';
  current.querySelector('#ranking').onchange=e=>showLeaderboard(e.target.value);
  try{
   const b=await connect(),rows=await b.leaderboard(mode);
@@ -298,7 +298,6 @@ document.querySelector('[data-online-action="leaderboard"]').onclick=()=>showLea
 globalThis.addEventListener('wanderer:saved',queueSync);
 globalThis.addEventListener('wanderer:conflict',()=>{revision=null;gate();report(new Error('Another tab changed your save. Reload to continue. Your progress has been backed up.'));});
 globalThis.addEventListener('online',()=>{if(revision!==null)queueSync();else if(user&&profile)resumeAccount().catch(report);});
-let lastTick=performance.now();setInterval(()=>{const now=performance.now(),delta=now-lastTick;lastTick=now;if(ready&&document.visibilityState==='visible'&&document.hasFocus())game.recordActive(delta);},5000);
-document.addEventListener('visibilitychange',()=>{lastTick=performance.now();});
+// Hotfix: speedrun timing lives in the combat simulation only; never tick while idle in town.
 // Restore the account automatically; only divergent saves require a choice.
 gate();showAccount();connect().catch(error=>{status(errorText(error));dialog.querySelector('.onlineError').textContent=errorText(error);});
