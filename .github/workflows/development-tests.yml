@@ -21,7 +21,7 @@ jobs:
   # Intentionally opt-in: normal development pushes keep the fast smoke check.
   # Add [audit] to a development commit message to run the full pre-release suite.
   prerelease-audit:
-    if: contains(github.event.head_commit.message, '[audit]') || github.event_name == 'workflow_dispatch'
+    if: contains(github.event.head_commit.message, '[audit]') || github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && contains(github.event.pull_request.title, '[audit]'))
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
