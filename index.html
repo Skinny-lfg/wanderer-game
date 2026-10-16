@@ -680,8 +680,16 @@ function dungeonEquipmentOdds(theme){
  {kind:'Ring',slot:'ring',subtype:'Ring',weight:11},
  {kind:'Boots',slot:'boots',subtype:'Boots',weight:13}
  ];
- const other=categories.filter(x=>!favored.includes(x.kind)),sum=other.reduce((n,x)=>n+x.weight,0);
- return categories.map(item=>({...item,prob:favored.includes(item.kind)?[.25,.20,.15][favored.indexOf(item.kind)]:item.weight/sum*.40}));
+ // Weapon types have a fixed, uniform 15% share in EVERY dungeon.
+ // The remaining 85% keeps each dungeon's non-weapon preferences.
+ const weaponChance=.15/TYPES.length;
+ const preferredOther=categories.filter(x=>x.slot!=='weapon'&&favored.includes(x.kind));
+ const preferredShare=preferredOther.reduce((sum,x)=>sum+[.25,.20,.15][favored.indexOf(x.kind)],0);
+ const other=categories.filter(x=>x.slot!=='weapon'&&!favored.includes(x.kind));
+ const otherWeight=other.reduce((sum,x)=>sum+x.weight,0);
+ return categories.map(item=>({...item,prob:item.slot==='weapon'?weaponChance:
+  favored.includes(item.kind)?[.25,.20,.15][favored.indexOf(item.kind)]:
+  (item.weight/otherWeight)*(.85-preferredShare)}));
 }
 function dungeonEquipmentPick(theme){
  const options=dungeonEquipmentOdds(theme);
@@ -691,8 +699,8 @@ function dungeonEquipmentPick(theme){
 }
 
 function favoredGearMarkup(theme){
- const entries=dungeonEquipmentOdds(theme),favored=DUNGEON_FAVORED[theme.id]||[];
- return '<div class="equipmentAffinity"><div class="small muted equipmentAffinityHeading">Equipment Affinity</div><div class="favoredGear" aria-label="Favored equipment">'+favored.map(kind=>{
+ const entries=dungeonEquipmentOdds(theme),favored=(DUNGEON_FAVORED[theme.id]||[]).filter(kind=>!TYPES.includes(kind));
+ return '<div class="equipmentAffinity"><div class="small muted equipmentAffinityHeading">Favored gear (weapons random)</div><div class="favoredGear" aria-label="Favored equipment">'+favored.map(kind=>{
   const entry=entries.find(x=>x.kind===kind);
   if(!entry)return '';
   const slot=entry.slot==='ring'?'ring1':entry.slot;
