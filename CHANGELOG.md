@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.9.2 — 2026-10-16 (mobile UI)
+## v0.9.2 — 2026-10-16 (mobile UI + D200 speedruns)
 
 - Display all five main navigation tabs in a 3+2 grid on phones; larger tap targets remove the need to scroll sideways to Dungeons.
 - Remove the equipped-gear strip from the Tavern homepage **on all screen sizes** (desktop and mobile). Equipment management remains in Equipment.
@@ -10,6 +10,12 @@
 - Mark Merchant items as higher, lower or equal **Gear Power** versus current equipment, while keeping the detailed Compare flow for effects and affinity synergies.
 - Replace the separate dungeon Previous / Next row with arrows aligned to the numbered dungeon selector, and move **Enter Dungeon** above secondary entry preferences.
 - Preserve combat, item generation, saving, dungeon reroll rules and progression; add mobile UI regression assertions.
+- Make **Fastest D200** (lowest eligible accumulated active play time from a fresh attempt through D200 clear) the default ranking, storing one personal best per account across resets.
+- Keep **Current Progress** by account and restart its cleared dungeon depth at D0 on each new attempt. Remove **First to Clear** and intermediary milestone rankings; old milestone documents remain stored but are no longer published or readable.
+- Add Account **Reset Progress · New Speedrun** with explicit RESET confirmation and cloud-first revision-protected save replacement. Reset dungeon progress, Gold, Fragments, runes, equipment, inventory and upgrades; preserve nickname, cosmetic character and D200 personal best.
+- Each fresh attempt gets a new attempt ID; old saves remain compatible but untimed legacy runs cannot claim a historical D200 time.
+- Community timings are **unverified client claims** until a trusted speedrun validation backend exists.
+- **Release prerequisite:** deploy the updated Firestore rules before publishing this build; they authorize the new speedrun records and per-attempt depth resets.
 - Status: **development only**; not merged into main.
 
 ## v0.9.1 — 2026-10-16
