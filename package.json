@@ -13,7 +13,8 @@
     "test:recovery": "node tests/interrupted-save-browser.cjs",
     "simulate:balance": "node scripts/simulate-v091.cjs",
     "validate:balance": "node scripts/validate-v091-builds.cjs",
-    "compare:balance": "node scripts/v091-final-eval.cjs"
+    "compare:balance": "node scripts/v091-final-eval.cjs",
+    "test:stress:phase1": "node tests/v092-simulation-smoke.cjs"
   },
   "dependencies": {
     "firebase": "11.10.0"
