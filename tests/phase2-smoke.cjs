@@ -25,7 +25,7 @@ assert(state.stash.length===count&&state.equip.weapon?.id===heavy.id&&!state.equ
 assert(state.stash.some(x=>x.id===knife.id),'blocked offhand remains in Stash');
 equipItem(sword.id);equipItem(knife.id);
 assert(state.equip.weapon?.id===sword.id&&state.equip.offhand?.id===knife.id,'offhand dagger works with a one-handed weapon');
-assert(itemImg(knife)===ICONS.dagger||itemImg(knife)===ICONS.daggers||itemImg(knife).includes('dagger'),'dagger icon mapped (existing embedded or external artwork)');
+assert(itemImg(knife)===ICONS.dagger||itemImg(knife)===ICONS.daggers||itemImg(knife).includes('dagger')||(knife.rarity==='Legendary'&&itemImg(knife).startsWith('assets/legendary/')),'dagger icon mapped (normal or its valid Legendary identity artwork)');
 const mace=makeItem(10,'weapon',null,'loot','Mace');
 const equipment={...makeSlots(),weapon:mace,offhand:shield};
 const maceBlock=totalStats(equipment).blockChance;
