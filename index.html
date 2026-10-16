@@ -979,7 +979,7 @@ function inventorySetProgress(stats){
  if(!types.length)return '<p class="small muted">Collect two items with the same affinity to activate a set bonus.</p>';
  return '<div class="setTracks">'+types.map(effect=>{
   const count=stats.counts[effect],next=[2,3,5].find(t=>count<t);
-  const milestones=[2,3,5].sort((a,b)=>Number(count>=b)-Number(count>=a)||b-a).map(tier=>{
+  const milestones=[2,3,5].map(tier=>{
    const unlocked=count>=tier;
    return '<div class="setTierStep '+(unlocked?'unlocked':'locked')+(next===tier?' nextTier':'')+'"><b>'+(unlocked?'✓ ':'◇ ')+tier+' pieces</b><span>'+esc(setMilestoneDescription(effect,tier))+'</span></div>';
   }).join('');
