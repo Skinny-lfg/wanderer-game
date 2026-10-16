@@ -773,7 +773,7 @@ function rarityRoll(tier,craft){let x=Math.random(),p=rarityOdds(tier,craft);for
 // Weighted equipment categories remove the extra Ring roll caused by two ring slots.
 const EQUIPMENT_DROP_WEIGHTS=[['helm',13],['amulet',9],['armor',13],['gloves',13],['weapon',15],['offhand',13],['ring',11],['boots',13]];
 function rollEquipmentSlot(){let n=roll(1,100);for(const [slot,weight] of EQUIPMENT_DROP_WEIGHTS){n-=weight;if(n<=0)return slot==='ring'?sample(['ring1','ring2']):slot;}throw Error('Invalid drop weights');}
-function makeItem(tier,slot=null,affinity=null,source='loot',subtype='random',forcedRarity=null){slot=slot||rollEquipmentSlot();subtype=chooseSubtype(slot,subtype);let rarity=forcedRarity&&RARITY[forcedRarity]?forcedRarity:rarityRoll(tier,source==='forge');if(source==='merchant'&&rarity==='Legendary')rarity='Epic';const magic=['Staff','Wand','Orb','Tome','Charm'].includes(subtype);let pool=elementPool(slot,subtype),effect=pool.includes(affinity)&&Math.random()<.7?affinity:sample(pool);
+function makeItem(tier,slot=null,affinity=null,source='loot',subtype='random',forcedRarity=null){slot=slot||rollEquipmentSlot();subtype=chooseSubtype(slot,subtype);let rarity=forcedRarity&&RARITY[forcedRarity]?forcedRarity:rarityRoll(tier,source==='forge');if(source==='merchant'&&rarity==='Legendary')rarity='Epic';const magic=['Staff','Wand','Orb','Tome','Charm'].includes(subtype);let pool=elementPool(slot,subtype);if(affinity==='crystal'&&!pool.includes('crystal'))pool=[...pool,'crystal'];let effect=pool.includes(affinity)&&Math.random()<.7?affinity:sample(pool);
 if(!magic&&rarity==='Common'&&Math.random()<.55)effect=null;
 let mult=RARITY[rarity][1],power=Math.round((2+tier*.91)*mult),o={id:makeId(),slot,subtype,name:sample(NAMES[subtype]||NAMES[slot]||['Ancient Gear']),rarity,tier,atk:0,def:0,hp:0,spd:0,str:0,agi:0,int:0,end:0,cha:0,mana:0,spell:0,effect,magic:magic?effect:null,crafted:source==='forge',craftPrice:source==='forge'?craftCost(tier):null,obtainedAt:Date.now(),locked:false,source};
 if(subtype==='Sword'){o.atk=power+3;o.str=1+Math.floor(tier*.20)}
@@ -1353,6 +1353,7 @@ function applyAffinity(effect,enemy,s,mult=1,baseDamage=0){
   const heal=Math.max(1,Math.round((baseDamage||s.spellPower||s.attack||5)*.08*mult*(1+(bonus.natureBonus||0))*(bonus.natureVitality&&r.hp<r.maxhp*.5?1.5:1)));
   const gained=setHeal(r,heal);if(gained>0)addLog('🌿 Nature heals +'+Math.round(gained)+' HP','good');
  }
+ if(effect==='crystal')setDirectEnemyDamage(r,(baseDamage||s.spellPower||s.attack||5)*.06*mult,'💎 Crystal:');
  if(effect==='shock')setDirectEnemyDamage(r,(baseDamage||s.spellPower||s.attack||5)*.08*mult*(1+(bonus.shockBonus||0)),'⚡ Storm:');
  if(effect==='tide'){
   const gained=setBarrier(r,Math.max(1,Math.round((baseDamage||s.spellPower||s.attack||5)*.07*mult*(1+(bonus.tideBonus||0)))));
