@@ -12,7 +12,7 @@ for(const grade of ['Easy','Favorable','Challenging','Hard','Extreme']){
 assert(html.includes('trends}${previewItem(o,\'forge\')}'),'forged item shows merchant-style trend in popup');
 assert(html.includes('mix-blend-mode:screen'),'combat VFX no longer have opaque dark squares');
 assert(html.includes('.scene .combatStatuses{background:transparent'),'debuffs no longer produce opaque status panels');
-const script=html.match(/<script>([\\s\\S]*?)<\\/script>/)?.[1];
+const script=html.slice(html.indexOf('<script>')+8,html.indexOf('</script>',html.indexOf('<script>')));
 assert(script,'game script was not found');
 new vm.Script(script,{filename:'wanderer-game'});
 const boot='load();if(!state.merchant)rollShop();save();render();';
