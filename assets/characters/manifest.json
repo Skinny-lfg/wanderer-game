@@ -5,7 +5,7 @@
   "characters": [
     {
       "id": "wanderer",
-      "name": "Original Wanderer",
+      "name": "Warrior",
       "fullBody": "characters/full/wanderer.webp",
       "avatar": "characters/avatars/wanderer.png",
       "gameplayModifiers": {},
@@ -14,7 +14,7 @@
     },
     {
       "id": "ranger",
-      "name": "Forest Wanderer",
+      "name": "Archer",
       "fullBody": "characters/full/ranger.webp",
       "avatar": "characters/avatars/ranger.png",
       "gameplayModifiers": {},
@@ -23,7 +23,7 @@
     },
     {
       "id": "knight",
-      "name": "Iron Wanderer",
+      "name": "Dark Warrior",
       "fullBody": "characters/full/knight.webp",
       "avatar": "characters/avatars/knight.png",
       "gameplayModifiers": {},
@@ -32,7 +32,7 @@
     },
     {
       "id": "spellblade",
-      "name": "Arcane Wanderer",
+      "name": "Old Mage",
       "fullBody": "characters/full/spellblade.webp",
       "avatar": "characters/avatars/spellblade.png",
       "gameplayModifiers": {},
@@ -41,7 +41,7 @@
     },
     {
       "id": "duelist",
-      "name": "Desert Wanderer",
+      "name": "Rogue",
       "fullBody": "characters/full/duelist.webp",
       "avatar": "characters/avatars/duelist.png",
       "gameplayModifiers": {},
