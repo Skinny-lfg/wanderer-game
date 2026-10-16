@@ -27,6 +27,11 @@ for(const text of ['D200','permanent runes','Tank, Berserker, Vampire and Caster
 assert(html.includes('.homeChanges{list-style:none;display:grid')&&html.includes('@media(max-width:650px){.homeChanges{grid-template-columns:1fr'),'compact mobile changelog layout');
 
 assert(html.includes('const milestones=[2,3,5].map(tier=>{')&&!html.includes('Number(count>=b)-Number(count>=a)||b-a'),'set tiers always show 2, 3, then 5 (including greyed out)');
+assert(html.includes("'Obsidian Quarry','crystal'")&&html.includes("'Iron Bastion','sunder'"),'quarry uses unique Crystal affinity; bastion retains Sunder');
+assert(html.includes("['crystal','Crystal Set','crystalBonus',.08,'crystalCharge','crystalBurst']"),'Crystal 2/3/5 tiers registered');
+assert(html.includes("if(b.crystalCharge)")&&html.includes("if(b.crystalBonus)"),'Crystal tier effects wired to combat');
+assert(html.includes("const LEGENDARY_CATALOG=")&&html.includes("function legendaryMatches("),'Legendary identity catalogue is centralized and type-safe');
+assert(!html.includes("sample(Object.keys(LEGENDARY_ART_BY_NAME))"),'Legendary name is never rolled without subtype');
 assert(html.includes('.combatDecisionPanel{display:none}')&&html.includes('.combatDecisionPanel{display:block;margin:8px'),'critical briefing appears at mobile widths only');
 assert(html.includes('.combatExpeditionDetails .nextWaveOdds,.combatExpeditionDetails .runLootHeading,.combatExpeditionDetails .combatLoot{display:none}'),'mobile removes redundant lower odds and loot');
 
