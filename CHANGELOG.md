@@ -2,6 +2,10 @@
 
 ## v0.9.2 — 2026-10-16 (mobile UI + D200 speedruns)
 
+- **GLOBAL FRESH START:** all players begin at D1, with zero saved equipment, inventory, runes, Gold, Fragments, upgrades, dungeon progress and prior leaderboard records. Old progress is never migrated into v0.9.2 accounts. Authentication identities, nicknames and cosmetic character selections are preserved.
+- **Season isolation:** live saves use `players/{uid}/saves/v092`; leaderboards use `testSeasons/v092-launch-1/{deepest|speedruns}/{uid}`; public equipment uses `publicLoadoutsV092/{uid}`. Old local browser saves, former cloud save `current`, prior leaderboard and previous public loadouts are inaccessible from the new client. Existing historical Firestore documents are **not physically deleted by a GitHub merge**.
+- **Required manual Firebase step:** publish `firestore.rules` from this release in the Firebase Console before making the new build available. Do not delete Authentication accounts, nicknames or profiles. Live service/rules deployment is not done by GitHub.
+
 - **Rune Recycling:** sell any unequipped owned rune for Fragments (7 at D10 up to 45 at D200); a confirm dialog protects against accidental sales. Bulk-recycle duplicates keeps the highest-tier rune of each family and always preserves equipped runes. Rewards that have not been claimed cannot be sold.
 - **Legendary Hunt guide:** select a desired Legendary and compare conditional item-identity odds across the three available dungeon paths. This is targeting advice using existing favored-equipment rules; it deliberately does not change any drop roll.
 - **Extraction clarity:** contextual HP/reward risk warning between waves and explicit instructions in dungeon entry/protection confirmation; clearing all waves remains required to unlock the next dungeon.
