@@ -1193,7 +1193,7 @@ function setCombatExpire(r,dt){
   }else t.chilledFor=0;
  }
 }
-function setEnemyWeaken(r){const e=r.enemy,b=r.stats.bonus||{};return Math.min(.15,(b.poisonWeaken?Math.min(6,e.poisonStacks||0)*.01:0)+(b.frostWeaken&&e.slowTime>0?.08:0))}
+function setEnemyWeaken(r){const e=r.enemy,b=r.stats.bonus||{};return Math.min(.15,(b.poisonWeaken?Math.min(6,e.poisonStacks||0)*.01:0)+(b.frostWeaken&&e.slowTime>0?.08:0)+(b.tideGuard&&r.barrier>0?.05:0))}
 function setHeatTick(r,hadBurnTick=false){
  const temp=setRuntime(r),now=setNow(r);
  if(r.stats.bonus.fireHeat&&hadBurnTick){temp.heat=Math.min(5,temp.heat+1);temp.heatExpiry=now+5;}
@@ -1235,6 +1235,15 @@ function applyAffinity(effect,enemy,s,mult=1,baseDamage=0){
  if(effect==='regen'){
   const gained=setHeal(r,Math.max(2,Math.round((baseDamage||s.attack||5)*.1)));
   if(gained>0)addLog('💚 Healing +'+Math.round(gained)+' HP','good');
+ }
+ if(effect==='nature'){
+  const heal=Math.max(1,Math.round((baseDamage||s.spellPower||s.attack||5)*.08*mult*(1+(bonus.natureBonus||0))*(bonus.natureVitality&&r.hp<r.maxhp*.5?1.5:1)));
+  const gained=setHeal(r,heal);if(gained>0)addLog('🌿 Nature heals +'+Math.round(gained)+' HP','good');
+ }
+ if(effect==='shock')setDirectEnemyDamage(r,(baseDamage||s.spellPower||s.attack||5)*.08*mult*(1+(bonus.shockBonus||0)),'⚡ Storm:');
+ if(effect==='tide'){
+  const gained=setBarrier(r,Math.max(1,Math.round((baseDamage||s.spellPower||s.attack||5)*.07*mult*(1+(bonus.tideBonus||0)))));
+  if(gained>0)addLog('🌊 Tide grants +'+Math.round(gained)+' Barrier','good');
  }
 }
 function weaponAttack(r){
@@ -1341,6 +1350,8 @@ function updateFight(){
   if(e.bossStyle==='leech'&&hit>0){const heal=Math.min(e.maxhp-e.hp,Math.round(hit*.28));e.hp+=heal;if(heal)addLog('🌑 Rift Harbinger drains '+heal+' HP','spell');}
   if(e.bossStyle==='guardian'&&!e.barrier){e.barrier=Math.max(2,Math.round(r.tier*.45));addLog('🛡 Abyssal Guardian restores '+e.barrier+' Barrier','spell');}
   if(s.bonus.lastBastion&&r.barrier>=r.maxhp*.1&&setReady(r,'lastBastion',12))t.lastBastionReady=true;
+  if(r.hp>0&&s.bonus.natureRenewal&&!t.natureRenewalUsed&&r.hp<=r.maxhp*.35){t.natureRenewalUsed=true;const gained=setHeal(r,r.maxhp*.08);addLog('🌿 Verdant Renewal: +'+Math.round(gained)+' HP','good');}
+  if(r.hp>0&&s.bonus.tideSurge&&!t.tideSurgeUsed&&r.barrier<r.maxhp*.05){t.tideSurgeUsed=true;const gained=setBarrier(r,r.maxhp*.08);addLog('🌊 High Tide: +'+Math.round(gained)+' Barrier','good');}
   animateEnemyStrike();
  }
  if(r.hp<=0){
