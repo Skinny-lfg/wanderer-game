@@ -1,6 +1,6 @@
 // Generate the practice arena module from the exact browser formulas; never edit the generated file.
 const fs=require('node:fs');const html=fs.readFileSync('index.html','utf8');
-const functions=['setCounts','setBonuses','totalStats','setDescription'];
+const functions=['setStage','setCounts','setBonuses','totalStats','setDescription'];
 const pieces=functions.map(name=>{const start=html.indexOf('function '+name+'('),end=html.indexOf('\nfunction ',start+1);if(start<0||end<0)throw Error(name);return html.slice(start,end).replaceAll('=state.equip','= {}');});
 const elements=html.match(/const ELEMENTS=.*?;\n/)[0],fields=html.match(/const FIELDS=.*?;\n/)[0];
 const runeFamilies=html.match(/const RUNE_FAMILIES=\[[\s\S]*?\n\];/)[0];

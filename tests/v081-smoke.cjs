@@ -41,7 +41,7 @@ die();
 ensure(state.equip.weapon?.id==='gear-0'&&state.equip.helm?.id==='gear-1','protected gear survives death');
 ensure(!state.equip.armor&&!state.equip.gloves&&!state.equip.boots&&!state.equip.amulet,'unprotected gear lost');
 ensure(state.chosen===22&&selectedPath===null&&state.selectedPath===null,'death keeps dungeon level but clears the used path');
-ensure(state.offersByLevel['22'].ids.length===3&&state.offersByLevel['22'].ids.every(id=>!initialD22Offers.includes(id)),'death refreshes all three offered paths');
+ensure(state.offersByLevel['22'].ids.length===3&&state.offersByLevel['22'].ids.every(id=>initialD22Offers.includes(id)),'death preserves offered paths');
 ensure(state.offersByLevel['22'].rerolls===0,'death refresh resets paid reroll cost');
 const old=state.maxDungeon,previousD22Offers=[...state.offersByLevel['22'].ids];
 state.run={tier:22,path:THEMES[1].id,status:'win',enc:4,gold:0,fragments:0,loot:[],valuables:[]};
@@ -60,7 +60,7 @@ ensure(state.chosen===20&&state.maxDungeon===24,'clearing an older dungeon prese
 ensure(selectedPath===null&&state.selectedPath===null,'farming a cleared tier rotates the dungeon type');
 ensure(state.offersByLevel['20'].ids.length===3&&!state.offersByLevel['20'].ids.includes(THEMES[0].id),'first completion with no cached offers excludes the played path');
 const previousD20Offers=[...state.offersByLevel['20'].ids];
-state.run={tier:20,path:THEMES[0].id,status:'ready',enc:1,gold:0,fragments:0,loot:[],valuables:[]};
+state.run={tier:20,path:THEMES[0].id,status:'ready',enc:2,gold:0,fragments:0,loot:[],valuables:[]};
 extract();
 ensure(state.chosen===20&&selectedPath===null,'early extraction preserves farming level but changes path');
 ensure(state.offersByLevel['20'].ids.every(id=>!previousD20Offers.includes(id)),'early extraction changes all three options');
@@ -114,7 +114,7 @@ ensure(!globalThis.__dungeonMarkup.includes('class="protectionWarning"'),'2 prot
 // The free post-expedition refresh must not consume Fragments; paid reroll is unchanged.
 state.chosen=20;state.fragments=50;const paidBefore=state.fragments;
 renderDungeons();const paidCost=rerollCost();
-ensure(paidCost===5,'new expedition starts with the base manual reroll price');
+ensure(paidCost===10,'D20 uses a fixed bracket price');
 document.getElementById('rerollPath').onclick();
 ensure(state.fragments===paidBefore-paidCost,'manual reroll still charges Fragments');
 ensure(state.offersByLevel['20'].rerolls===1,'manual reroll increments its cost level');

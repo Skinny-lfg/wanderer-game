@@ -1,3 +1,13 @@
+## v0.9.3 — Balance & Buildcraft (development)
+
+- Critical 3, Fire 3 and Dark 3 now add modest main-hit damage from held charges; tier 5 signatures retain their mechanics and cooldowns.
+- Regen 2 scales at 2 + 0.2% max HP per combat second, capped at 10 HP/s. Existing overheal, Barrier and Second Wind limits remain.
+- Gear Power accounts for cumulative set tiers; inventory recommendations compare full loadouts. Off-Hand stays locked while Bow, Staff or Two-Handed is equipped.
+- Dungeon rerolls cost 5 Fragments per ten-level bracket (D1–10: 5, D11–20: 10, …, D191–200: 100), independent of reroll count. Free offer rotation requires extracting after 2+ completed waves; death and interrupted runs preserve offers.
+- Persistent NEW badges for acquired gear and runes, individual inspection and a shared Mark All as Seen control. Missing flags on old saves mean seen.
+- Equipment and combat explain actual weapon proc rates and active set synergies. Proc rates are unchanged.
+- Regression coverage includes browser interactions at desktop/mobile sizes. Extensive balance simulations are deferred.
+
 # Changelog
 
 ## v0.9.2 — Combat Timer Hotfix (2026-10-16)

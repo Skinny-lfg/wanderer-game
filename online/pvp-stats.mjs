@@ -13,6 +13,7 @@ const RUNE_FAMILIES=[
  {id:'vitality',name:'Rune of Vitality',field:'hpFlat',icon:'❤️'}
 ];
 function runeValue(family,tier){const base=1+Math.floor(tier/10);return family==='fury'?base*3:family==='warding'?base*2:family==='vitality'?base*10:base}
+function setStage(n){return n>=5?5:n>=3?3:n>=2?2:0}
 function setCounts(equipment= {}){
  const counts={};for(const k of Object.keys(ELEMENTS))counts[k]=0;
  const twoHands=isTwoHanded(equipment?.weapon);
@@ -81,7 +82,9 @@ function totalStats(equipment= {},ownedRunes=null,equippedRuneIds=null){
  s.spellPower=caster?Math.round(3+s.int*1.9+s.spellFlat):0;
  s.blockChance=off?.subtype==='Shield'?Math.min(48,Math.round(13+s.end*.27+Math.max(0,off.tier||1)*.25+(main?.subtype==='Mace'?7:0))):0;
  s.blockReduction=off?.subtype==='Shield'?(main?.subtype==='Mace'?.67:.58):0;
- s.power=Math.round(s.attack*2+s.defense*4+s.maxhp*.15+s.attacksPerSec*35+s.crit*1.2+s.blockChance*2+(caster?s.spellPower*1.7:0)+sets.list.length*12);
+ // Cumulative tier estimates: 2 pieces = 12, 3 = 30, 5 = 54.
+ s.synergyPower=sets.list.reduce((sum,set)=>sum+({2:12,3:30,5:54}[setStage(counts[set.effect])]||0),0);
+ s.power=Math.round(s.attack*2+s.defense*4+s.maxhp*.15+s.attacksPerSec*35+s.crit*1.2+s.blockChance*2+(caster?s.spellPower*1.7:0)+s.synergyPower);
  s.lootQuality=Math.min(10,Math.round(Math.max(0,s.cha-5)*.09*10)/10);
  return s;
 }
@@ -92,12 +95,12 @@ function setDescription(effect,values){
  if(effect==='poison'){push('poisonBonus','Poison DoTs +15%');push('poisonWeaken','Stacks weaken enemy direct damage by 1% each (max 6%)');push('venomBurst','Venom Burst: at 6 stacks spend 6 for 60% remaining DoT (max 100% base hit), 10s cooldown');}
  if(effect==='bleed'){push('bleedBonus','Bleed DoTs +15%');push('bleedHaste','Bleeding target grants +5% speed for 3s per charge, max 3 (1/s)');push('bloodHunt','Blood Hunt: +40% base hit when target ≤30% HP, 12s cooldown');}
  if(effect==='sunder'){push('sunderBonus','Armor reduction +2 per Sunder proc (minimum 25% initial Armor)');push('sunderExpose','At ≤50% initial Armor enemy takes +8% direct damage');push('armorShatter','Armor Shatter: remove up to one base hit of Barrier and delay next enemy strike (0.5s; boss 0.2s), 12s cooldown');}
- if(effect==='crit'){push('critBonus','+8 raw Critical points (speed penalty and 65% cap apply)');push('criticalFocus','Main-hand Criticals gain Focus (max 3, 1/s, expire 6s)');push('perfectStrike','Perfect Strike: spend 3 Focus for a ×1.75 Critical instead of ×1.5, 10s cooldown');}
+ if(effect==='crit'){push('critBonus','+8 raw Critical points (speed penalty and 65% cap apply)');push('criticalFocus','Main-hand Criticals gain Focus (max 3, 1/s, expire 6s); each held Focus adds 2% base main-hit damage');push('perfectStrike','Perfect Strike: spend 3 Focus for a ×1.75 Critical instead of ×1.5, 10s cooldown');}
  if(effect==='shield'){push('shieldBonus','+3 Barrier per main attack (max 30% max HP)');push('shieldRiposte','Block primes +25% blocked damage on next main attack (max 25% base hit, 4s duration, 3s cooldown)');push('lastBastion','Last Bastion: after a hit, ≥10% max HP in Barrier primes a counter consuming half remaining Barrier (max 50% base hit), 12s cooldown');}
- if(effect==='regen'){push('regenBonus','+2 HP per second');push('regenOverflow','25% overheal becomes Barrier (max 1% max HP/s and 10%/encounter)');push('secondWind','Second Wind: survive one lethal hit with 1 HP and 8% max HP Barrier, once per expedition');}
- if(effect==='burn'){push('burnBonus','Burn DoTs +15%');push('fireHeat','Each second Burn ticks grants 1 Heat (max 5, expires after 5s)');push('flashover','Flashover: at 5 Heat, next main attack adds 50% base hit, 10s cooldown');}
+ if(effect==='regen'){push('regenBonus','Recover 2 + 0.2% max HP per second (maximum 10 HP/s)');push('regenOverflow','25% overheal becomes Barrier (max 1% max HP/s and 10%/encounter)');push('secondWind','Second Wind: survive one lethal hit with 1 HP and 8% max HP Barrier, once per expedition');}
+ if(effect==='burn'){push('burnBonus','Burn DoTs +15%');push('fireHeat','Each second Burn ticks grants 1 Heat (max 5, expires after 5s); each held Heat adds 1.5% base main-hit damage');push('flashover','Flashover: at 5 Heat, next main attack adds 50% base hit, 10s cooldown');}
  if(effect==='slow'){push('slowBonus','Slow increases enemy attack interval 25%');push('frostWeaken','Chilled enemy deals 8% less direct damage');push('deepFreeze','Deep Freeze: 3 seconds continuously Chilled delays enemy next attack (0.75s; boss 0.25s), 12s cooldown');}
- if(effect==='drain'){push('drainBonus','Drain healing +15%');push('soulCharge','Successful Drain healing grants Soul Charge (max 3, 1/s, expire 6s)');push('soulPact','Soul Pact: at 3 charges and >40% HP, sacrifice 3% max HP for +40% base hit and heal 25% actual damage (max 4% HP), 12s cooldown');}
+ if(effect==='drain'){push('drainBonus','Drain healing +15%');push('soulCharge','Successful Drain healing grants Soul Charge (max 3, 1/s, expire 6s); each held charge adds 2% base main-hit damage');push('soulPact','Soul Pact: at 3 charges and >40% HP, sacrifice 3% max HP for +40% base hit and heal 25% actual damage (max 4% HP), 12s cooldown');}
  if(effect==='nature'){push('natureBonus','Nature healing procs +25%');push('natureVitality','Nature heals 50% more below half HP');push('natureRenewal','Verdant Renewal: once per encounter, heal 8% max HP after surviving an enemy hit at or below 35% HP');}
  if(effect==='shock'){push('shockBonus','Storm damage procs +25%');push('shockRhythm','Every third main attack adds 15% base damage');push('thunderclap','Thunderclap: every sixth main attack adds 35% base damage, 10s cooldown');}
  if(effect==='tide'){push('tideBonus','Tide Barrier procs +25%');push('tideGuard','While Barrier remains, enemy direct damage −5% (15% combined set cap)');push('tideSurge','High Tide: once per encounter, after surviving a hit with less than 5% max HP in Barrier, gain 8% max HP Barrier');}

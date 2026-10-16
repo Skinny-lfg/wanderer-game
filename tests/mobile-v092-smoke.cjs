@@ -8,7 +8,7 @@ const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
 const game=html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
 assert(game,'Inline game script exists');
 new vm.Script(game,{filename:'wanderer-game-v092.js'});
-assert(html.includes('BROWSER PROTOTYPE V0.9.2'),'mobile release version visible');
+assert(html.includes('BROWSER PROTOTYPE V0.9.3'),'mobile release version visible');
 const start=html.indexOf('function renderTavern(){');
 const inventory=html.indexOf('function renderStash(){');
 const dungeon=html.indexOf('function renderDungeons(){');
