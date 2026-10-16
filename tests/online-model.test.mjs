@@ -23,5 +23,5 @@ test('resume interrupted run preserves existing progress and rejects active run 
 test('cloud validation rejects nonfinite item stats and duplicate identities without mutating input',()=>{
  const item={id:'same',name:'Sword',slot:'weapon',tier:1,atk:5};
  const duplicate={...save,stash:[item],equip:{weapon:{...item}}};const original=JSON.stringify(duplicate);assert.throws(()=>validateSave(duplicate),/Duplicate/);assert.equal(JSON.stringify(duplicate),original);
- for(const atk of ['Infinity','NaN',Infinity])assert.throws(()=>validateSave({...save,stash:[{...item,atk}]}),/stats/);
+ for(const atk of ['Infinity','NaN',Infinity])assert.throws(()=>validateSave({...save,stash:[{...item,atk}]}),/Invalid item atk/);
 });

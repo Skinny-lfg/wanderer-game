@@ -8,7 +8,7 @@ Date: 2026-10-15 (Europe/Lisbon). Branch: `development`. Starting revision: `5fd
 
 ## Tested scope and provenance
 
-Native Git fetch confirmed remote `development` remains at `735830e`; this checkout includes the three local Phase 1 commits ending at `5fd920f`. No main commits were imported. No new gameplay systems were implemented during this task.
+Correction: this audit used the stale local tracking reference `735830e` plus local Phase 1 commits ending at `5fd920f`. The remote fetch configuration tracked only main; fetching development did not update origin/development. An explicit refspec subsequently revealed 50 remote development commits through `f457130`. The current checkout integrates those commits. The results below apply only to the earlier tested revision.
 
 Browser tests use disposable Chromium contexts, isolated synthetic localStorage and the repository's mocked Firebase boundary. Security-rule tests target `demo-wanderer` only. No live Firebase credentials or live OAuth sessions were used.
 

@@ -65,8 +65,10 @@ function totalStats(equipment= {},ownedRunes=null,equippedRuneIds=null){
  s.maxhp=Math.round(55+s.end*12+s.hpFlat);
  s.attack=Math.round(4+s.str*1.8+s.agi*.4+s.atkFlat);
  s.defense=Math.round(1+s.end*.8+s.str*.3+s.defFlat);
- s.attacksPerSec=Math.max(.25,speed*weaponMult);
- s.crit=Math.min(65,Math.round((4+s.cha*.95+counts.crit*2+(sets.values.critBonus||0))/Math.sqrt(Math.max(1,s.attacksPerSec/1.3))));
+ const rawSpeed=Math.max(.25,speed*weaponMult);s.rawAttackSpeed=rawSpeed;
+ // Diminishing returns above 2.5 attacks/sec; preserve early weapon timing.
+ s.attacksPerSec=rawSpeed<=2.5?rawSpeed:2.5+(rawSpeed-2.5)/(1+(rawSpeed-2.5)*.2);
+ s.crit=Math.min(65,Math.round((4+s.cha*.95+counts.crit*2+(sets.values.critBonus||0))/Math.sqrt(Math.max(1,s.rawAttackSpeed/1.3))));
  s.mana=caster?Math.round(20+s.int*7+s.manaFlat):0;
  s.manaRegen=caster?+(1.5+s.int*.23).toFixed(1):0;
  s.spellPower=caster?Math.round(3+s.int*1.9+s.spellFlat):0;
