@@ -1,7 +1,7 @@
 import {publicLoadout,cleanEquipment,cleanPublicRunes,cleanPublicRuneSlots} from './public-loadout.mjs';
 import * as sdk from './vendor/firebase-sdk.mjs';
 import {firebaseConfig} from './firebase-config.mjs';
-import {nicknameKey,character,cloudRecord,compareRevision,validateSave,recoverInterruptedSave,SEASON,SAVE_NAMESPACE,PUBLIC_LOADOUTS,safeProgress,completedD200Time} from './model.mjs';
+import {nicknameKey,character,cloudRecord,compareRevision,validateSave,recoverInterruptedSave,SEASON,SAVE_NAMESPACE,PUBLIC_LOADOUTS,safeProgress,completedD200Time} from './model.mjs?v=v092-global-reset-1';
 export async function createBackend(){
  const app=sdk.initializeApp(firebaseConfig),auth=sdk.getAuth(app),db=sdk.getFirestore(app);
  await sdk.setPersistence(auth,sdk.browserLocalPersistence);
