@@ -69,7 +69,7 @@ openRuneSlotPicker(runeId);ck(!newBadge(state.runes[0]),'individual rune consult
 state.stash[0].isNew=true;state.runes[0].isNew=true;state.equip.weapon=makeItem(10,'weapon','poison','loot','Sword','Rare');state.equip.weapon.isNew=true;
 markAllAsSeen();save();load();ck(!newBadge(state.stash[0])&&!newBadge(state.runes[0])&&!newBadge(state.equip.weapon),'mark all covers stash, equipped gear and runes persistently');
 state.chosen=state.maxDungeon=20;getPaths();const drop=makeItem(10,'boots','burn','loot','random','Rare');state.run={...fakeRun(1),loot:[drop]};extract();ck(state.stash.find(o=>o.id===drop.id).isNew===true,'extracted loot becomes NEW');
-const forged=makeItem(10,'helm','burn','forge','random','Rare');forged.isNew=true;state.stash.push(forged);previewItem(forged,'forge');ck(!forged.isNew,'forge result consultation marks seen');
+const forged=makeItem(10,'helm','burn','forge','random','Rare');forged.isNew=true;state.stash.push(forged);previewItem(forged,'forge');ck(forged.isNew===true,'forge popup preserves NEW until item inspection in Stash');
 const reward=makeRune('wisdom',10);state.pendingRuneReward={tier:10,options:[reward]};claimPendingRuneChoice(reward.id);ck(state.runes.find(r=>r.id===reward.id).isNew===true,'claimed rune is NEW');
 globalThis.pass=true;
 `;
