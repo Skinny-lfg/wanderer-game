@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.9.2 — Combat Timer Hotfix (2026-10-16)
+
+- **Fastest D200 measures combat time only.** The timer advances only while auto-combat processes a wave; 1×/2×/4× playback changes the time counted per combat tick accordingly. Waiting in Tavern, Forge, Merchant, equipment, choosing the next wave, or leaving the browser tab in the background adds no race time.
+- **Old browser-time results retired:** new public D200 times are kept only in `testSeasons/v092-launch-1/combatSpeedruns/{uid}`. Former `speedruns` records are not counted and are denied access by updated rules; historical records are not physically erased.
+- **Existing players keep all saved progress, equipment, Gold, Fragments, runes, nicknames and accounts.** Ongoing attempts started with the old timer are **not eligible** for a new combat-time D200 record. Use Account → Reset Progress · New Speedrun to start a fair eligible run; this intentionally resets the individual's progress but does not reset other players.
+- **Crash/reload protection:** combat progress is checkpointed periodically during fights, so interrupted attempts retain most of their elapsed combat time. Dying counts fought combat time. Personal-best protection within the new timing metric remains.
+- **Owner action required:** publish the updated `firestore.rules` in Firebase Console to enable `combatSpeedruns` writes. Changes to the GitHub main branch do not deploy Firestore Rules. Other game balancing and Firebase Authentication settings remain unchanged.
+- Regression coverage: timing ticks at 1× and 4×, idle/background pause, legacy time ineligibility, new scoreboard and Firestore security rules.
+
 ## v0.9.2 — 2026-10-16 (mobile UI + D200 speedruns)
 
 - **GLOBAL FRESH START:** all players begin at D1, with zero saved equipment, inventory, runes, Gold, Fragments, upgrades, dungeon progress and prior leaderboard records. Old progress is never migrated into v0.9.2 accounts. Authentication identities, nicknames and cosmetic character selections are preserved.
