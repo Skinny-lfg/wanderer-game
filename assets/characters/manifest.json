@@ -5,7 +5,7 @@
   "characters": [
     {
       "id": "wanderer",
-      "name": "Warrior",
+      "name": "Paladin",
       "fullBody": "characters/full/wanderer.webp",
       "avatar": "characters/avatars/wanderer.png",
       "gameplayModifiers": {},
@@ -15,7 +15,7 @@
     },
     {
       "id": "ranger",
-      "name": "Archer",
+      "name": "Ranger",
       "fullBody": "characters/full/ranger.webp",
       "avatar": "characters/avatars/ranger.png",
       "gameplayModifiers": {},
@@ -25,7 +25,7 @@
     },
     {
       "id": "knight",
-      "name": "Dark Warrior",
+      "name": "Warrior",
       "fullBody": "characters/full/knight.webp",
       "avatar": "characters/avatars/knight.png",
       "gameplayModifiers": {},
@@ -35,7 +35,7 @@
     },
     {
       "id": "spellblade",
-      "name": "Old Mage",
+      "name": "Wizard",
       "fullBody": "characters/full/spellblade.webp",
       "avatar": "characters/avatars/spellblade.png",
       "gameplayModifiers": {},

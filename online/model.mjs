@@ -8,8 +8,8 @@ export const SPEEDRUN_METRIC = 'combat-v1';
 export const SPEEDRUN_BOARD = 'combatSpeedruns';
 export const MILESTONES = Array.from({length:20},(_,i)=>(i+1)*10);
 export const CHARACTERS = [
-  ['wanderer','Warrior'],['ranger','Archer'],['knight','Dark Warrior'],
-  ['spellblade','Old Mage'],['duelist','Rogue']
+  ['wanderer','Paladin'],['ranger','Ranger'],['knight','Warrior'],
+  ['spellblade','Wizard'],['duelist','Rogue']
 ].map(([id,name])=>({id,name,fullBody:`assets/characters/full/${id}.webp`,avatar:`assets/characters/avatars/${id}.png`}));
 export const character = id => CHARACTERS.find(c=>c.id===id)||CHARACTERS[0];
 export function nicknameKey(name){const key=String(name).trim().toLowerCase();if(!/^[a-z0-9_]{3,20}$/.test(key))throw new Error('Use 3–20 letters, numbers or underscores.');return key;}
