@@ -48,4 +48,6 @@ assert(html.includes('.scene .combatStatuses:empty{display:flex;visibility:hidde
 assert(html.includes('.scene .combatStatuses .debuff{flex:0 0 auto;max-width:none;min-width:0;white-space:nowrap'),'status badges never wrap into new vertical rows');
 assert(html.includes('aria-label="Player effects; swipe sideways to view more"'),'player status carousel accessible');
 assert(html.includes('aria-label="Enemy effects; swipe sideways to view more"'),'enemy status carousel accessible');
-console.log('PASS mobile: fixed controls, compact normal wave, risk/loot/odds and elite/boss warnings');
+assert(html.includes('.scene .combatStatuses .debuff{font-size:8px;line-height:1.15;padding:1px 4px'),'buff badges smaller on mobile');
+assert(html.includes('.scene #enemyPortrait{width:min(125px,100%);height:112px;max-height:112px'),'enemy portrait scaled larger than before');
+console.log('PASS mobile: fixed controls, compact waves, smaller buffs, enlarged enemies and danger warnings');
