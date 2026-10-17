@@ -59,13 +59,21 @@ const server=http.createServer((req,res)=>{
    const variant=desktop?'desktop':'mobile';
    // The new image must cover the whole page, not just the combat scene.
    const pageBg=await page.evaluate(()=>{
-    const computed=getComputedStyle(document.body);
-    return {image:computed.backgroundImage,size:computed.backgroundSize,attachment:computed.backgroundAttachment};
+    const computed=getComputedStyle(document.body,'::before');
+    const body=getComputedStyle(document.body);
+    return {image:computed.backgroundImage,size:computed.backgroundSize,position:computed.position,
+      inset:computed.inset,pointerEvents:computed.pointerEvents,bodyBg:body.backgroundImage,isolation:body.isolation};
    });
    assert(pageBg.image.includes('assets/backgrounds/dungeon-'+variant+'.webp'),
-     'whole website must show responsive Dungeon Background: '+pageBg.image);
-   assert(pageBg.size.includes('cover'),'site-wide image must cover viewport');
-   assert.equal(pageBg.attachment,desktop?'fixed, fixed':'scroll, scroll','background scroll mode');
+     'fixed viewport backdrop must use responsive Dungeon Background: '+pageBg.image);
+   assert(pageBg.size.includes('cover'),'fixed image must cover viewport');
+   assert.equal(pageBg.position,'fixed','background does not scroll with inventory or page');
+   assert.equal(pageBg.pointerEvents,'none','background does not block inventory input');
+   assert.equal(pageBg.bodyBg,'none','background is not bound to scrolling body');
+   assert.equal(pageBg.isolation,'isolate','fixed backdrop layers behind every tab');
+   // Simulate both document scroll and wheel scrolling in the inventory.
+   // The image is a fixed layer regardless of how much content scrolls.
+
 
    const tavernImage=await page.locator('.tavernArt').evaluate(node=>getComputedStyle(node).backgroundImage);
    assert(tavernImage.includes('assets/backgrounds/tavern-'+variant+'.webp'),'Tavern uses correct '+variant+' background: '+tavernImage);
