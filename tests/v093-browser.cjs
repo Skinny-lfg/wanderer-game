@@ -37,6 +37,11 @@ const server=http.createServer((req,res)=>{if(req.url==='/'){res.setHeader('Cont
  assert((await page.locator('.equipmentBonuses').innerText()).includes('14%'),'shared armor affinity proc is presented');
  assert((await page.locator('.equipmentBonuses').innerText()).includes('More pieces widen the affinity pool'),'no per-piece proc inflation');
  assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'equipment fits viewport');
+ if(viewport.width<=650){
+  assert(await page.locator('#menuToggle').isVisible(),'hamburger visible on mobile');
+  await page.locator('#menuToggle').click();
+  assert.equal(await page.locator('#menuToggle').getAttribute('aria-expanded'),'true','mobile navigation menu opens');
+ }
  const chrome=await page.evaluate(()=>{
    const root=getComputedStyle(document.documentElement);
    const account=document.querySelector('[data-online-action="account"]');
@@ -52,6 +57,10 @@ const server=http.createServer((req,res)=>{if(req.url==='/'){res.setHeader('Cont
  assert.ok(parseFloat(chrome.accountIcon)>=14,'account control has a meaningful icon');
  assert.ok(chrome.accountHeight>=38,'account action remains tappable');
  assert.ok(parseFloat(chrome.feedbackIcon)>=14,'feedback control matches account and leaderboard');
+ if(viewport.width<=650){
+  await page.locator('#menuToggle').click();
+  assert.equal(await page.locator('#menuToggle').getAttribute('aria-expanded'),'false','mobile menu closes');
+ }
 
  const neutrals=await page.evaluate(()=>{
   const board=document.createElement('div');

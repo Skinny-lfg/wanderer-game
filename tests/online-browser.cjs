@@ -24,12 +24,19 @@ const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8010';
  assert.ok(!(await page.locator('#screen').evaluate(e=>e.inert)));
  assert.equal((await snapshot()).maxDungeon,1,'all accounts begin the new season in D1');
  assert.equal((await snapshot()).equip.weapon?.id||null,null,'old Two-Handed weapon must not be imported');
- const account=()=>page.locator('[data-online-action="account"]').click(),close=()=>page.locator('.onlineDialog [data-close]').click();
+ const menuAction=async action=>{
+  if(width<=650){
+   const toggle=page.locator('#menuToggle');
+   if(await toggle.getAttribute('aria-expanded')!=='true')await toggle.click();
+  }
+  await page.locator('[data-online-action="'+action+'"]').click();
+ };
+ const account=()=>menuAction('account'),close=()=>page.locator('.onlineDialog [data-close]').click();
  await account();assert.equal(await page.locator('[data-character]').count(),5);assert.equal(await page.locator('.characterPicker img').first().evaluate(el=>getComputedStyle(el).borderRadius),'0px','character portraits should not be circular');
  for(const id of ['wanderer','ranger','knight','spellblade','duelist']){await page.locator(`[data-character="${id}"]`).click();await page.locator('#saveCharacter').click();assert.equal((await snapshot()).characterId,id);}
  assert.equal(await page.locator('#reviewCloud,#syncNow,#importSave,#exportSave,#backups,#onlineStatus').count(),0);
  await close();
- await page.locator('[data-online-action="feedback"]').click();
+ await menuAction('feedback');
  await page.locator('#feedbackForm').waitFor();
  await page.locator('[name="category"]').selectOption('bug');
  await page.locator('[name="rating"]').selectOption('4');
@@ -40,7 +47,7 @@ const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8010';
  assert.equal(await page.evaluate(()=>__firebaseTest.feedback.length),1);
  assert.equal(await page.evaluate(()=>__firebaseTest.feedback[0].category),'bug');
  await page.locator('#feedbackDone').click();
- await page.locator('[data-online-action="leaderboard"]').click();await page.locator('.rankingList').waitFor();assert.equal(await page.locator('#publishResults,.experimental').count(),0);assert.ok(!(await page.locator('.onlineDialog').innerText()).includes('Unverified'));
+ await menuAction('leaderboard');await page.locator('.rankingList').waitFor();assert.equal(await page.locator('#publishResults,.experimental').count(),0);assert.ok(!(await page.locator('.onlineDialog').innerText()).includes('Unverified'));
  assert.equal(await page.locator('#ranking').inputValue(),'fastest');assert.equal(await page.locator('#milestone,#ranking option[value="first"]').count(),0);
  for(const mode of ['deepest','fastest']){await page.locator('#ranking').selectOption(mode);await page.locator('.rankingList').waitFor();}
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await close();
@@ -95,7 +102,7 @@ const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8010';
  await page.locator('#guestSignIn').click();await page.locator('#nickname').fill('GuestHero');await page.locator('#createProfile').click();
  await page.waitForFunction(()=>WandererGame.key()==='wanderer_account_guest-1_v092'&&!document.querySelector('.onlineDialog'));
  assert.equal(await page.locator('[data-online-action="account"]').innerText(),'guesthero');
- await page.locator('[data-online-action="leaderboard"]').click();await page.locator('.rankingList').waitFor();
+ await menuAction('leaderboard');await page.locator('.rankingList').waitFor();
 
  assert.match(await page.locator('.rankingList').innerText(),/guesthero/);
  await close();

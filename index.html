@@ -1256,7 +1256,15 @@ function restoreView(){
  try{remembered=sessionStorage.getItem(viewStorageKey());}catch(e){/* Use Tavern fallback. */}
  view=!state?.run&&RESTORABLE_VIEWS.has(remembered)?remembered:'tavern';
 }
-function wallet(){let el=$('wallet');el.innerHTML=`<span class="token">🪙 <b>${state.gold}</b> Gold</span><span class="token">💠 <b>${state.fragments}</b> Fragments</span><span class="token">🏰 <b>D${state.maxDungeon}</b></span>`;let elNav=$('nav');elNav.innerHTML=state.run?`<span class="token">⚔ Expedition active · Equipment locked</span>`:[['tavern','🏠 Tavern'],['equipment','🛡 Equipment'],['forge','⚒ Forge'],['merchant','🪙 Merchant'],['dungeons','🏰 Dungeons']].map(([k,v])=>`<button data-nav="${k}" class="${view===k?'active':''}">${v}</button>`).join('');Q('[data-nav]').forEach(b=>b.onclick=()=>nav(b.dataset.nav));const menu=$('onlineBar'),toggle=$('menuToggle');if(menu&&toggle){toggle.onclick=()=>{const open=menu.classList.toggle('menuOpen');toggle.setAttribute('aria-expanded',String(open));};Q('[data-online-action]').forEach(b=>b.onclick=()=>{menu.classList.remove('menuOpen');toggle.setAttribute('aria-expanded','false');});}}
+function wallet(){let el=$('wallet');el.innerHTML=`<span class="token">🪙 <b>${state.gold}</b> Gold</span><span class="token">💠 <b>${state.fragments}</b> Fragments</span><span class="token">🏰 <b>D${state.maxDungeon}</b></span>`;let elNav=$('nav');elNav.innerHTML=state.run?`<span class="token">⚔ Expedition active · Equipment locked</span>`:[['tavern','🏠 Tavern'],['equipment','🛡 Equipment'],['forge','⚒ Forge'],['merchant','🪙 Merchant'],['dungeons','🏰 Dungeons']].map(([k,v])=>`<button data-nav="${k}" class="${view===k?'active':''}">${v}</button>`).join('');Q('[data-nav]').forEach(b=>b.onclick=()=>nav(b.dataset.nav));const menu=$('onlineBar'),toggle=$('menuToggle');if(menu&&toggle){toggle.onclick=()=>{const open=menu.classList.toggle('menuOpen');toggle.setAttribute('aria-expanded',String(open));};// Do not overwrite Account/Leaderboard/Feedback onclick handlers registered by online/app.mjs.
+ if(menu.addEventListener&&!menu.dataset.menuCloseBound){
+  menu.dataset.menuCloseBound='1';
+  menu.addEventListener('click',event=>{
+   if(!event.target.closest?.('[data-online-action]'))return;
+   menu.classList.remove('menuOpen');
+   toggle.setAttribute('aria-expanded','false');
+  });
+ }}}
 function render(){if(!hasRestoredInitialView){hasRestoredInitialView=true;restoreView();}rememberView();wallet();if(view==='tavern')renderTavern();else if(view==='equipment')renderStash();else if(view==='forge')renderForge();else if(view==='merchant')renderMerchant();else if(view==='dungeons')renderDungeons();else if(view==='combat')renderCombat();if(state.pendingRuneReward)showPendingRuneReward();}
 function html(s){$('screen').innerHTML=s}
 function itemStats(o){return FIELDS.filter(([,f])=>o?.[f]).map(([k,f])=>`${o[f]>0?'+':''}${o[f]} ${k}`).join(' · ')}
