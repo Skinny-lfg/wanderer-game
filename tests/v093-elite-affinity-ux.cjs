@@ -3,7 +3,13 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('nod
 const html=fs.readFileSync('index.html','utf8');
 const app=fs.readFileSync('online/app.mjs','utf8');
 assert(html.includes('id="brandLogo"'),'brand has logo hook');
-assert(html.includes('--bg:#100a0e')&&html.includes('background:radial-gradient(ellipse 110% 85% at 50% -22%,#422832'),'garnet backdrop replaces blue');
+assert(html.includes('html{background:#1b0b13}')&&html.includes('body{min-height:100vh;background:radial-gradient(ellipse 115% 82%'),'site canvas must be dark red from top to bottom');
+assert(html.includes('.nextGearOdds{background:#432532')&&html.includes('.nextRarityItem,.decisionRarities span{background:#291821'),'next-wave chance panels are garnet, not navy');
+assert(html.includes('.dungeonCard .favoredGearItem,.dungeonCard .favoredGearIcon,.dungeonCard .elementIcon{background:#321d27'),'dungeon affinity gear tiles are garnet');
+assert(html.includes('.valuable{border-color:#694854}'),'Merchant valuables have burgundy borders');
+assert(html.includes('.statStrip .metric,.stat,.combatAttributes span,.setTrack{background:#2f1b25'),'equipment stats and set cards have burgundy surfaces');
+assert(html.includes('.combatRuneReadout,.nextWaveOdds,.protectionPanel,.combatDecisionPanel{background:#2a1821'),'combat runes and wave odds have burgundy surfaces');
+assert(html.includes('.dungeonRisk.riskEasy')&&html.includes('.dungeonRisk.riskBrutal'),'semantic difficulty colors preserved');
 assert(html.includes('.onlineBar .buttonRow button[data-online-action]::before'),'utility actions have decorative icons');
 assert(html.includes('.onlineBar .buttonRow button[data-online-action="leaderboard"]'),'Leaderboard has its own gold accent');
 assert(html.includes('<button class="tiny" data-online-action="feedback">Feedback</button>'),'Feedback button uses unified visual labeling');

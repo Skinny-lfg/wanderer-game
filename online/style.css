@@ -52,3 +52,19 @@
 .onlineDialog .characterPicker button:hover{background:#4b2d3b;border-color:#a87677}
 .onlineDialog .characterPicker [aria-pressed="true"]{background:#533e30;border-color:#e0b677}
 .onlineDialog .feedbackForm select:focus-visible,.onlineDialog .feedbackForm textarea:focus-visible,.onlineDialog .profileField input:focus-visible{outline:2px solid #e8c38c;outline-offset:2px}
+
+/* Account / leaderboard / feedback: match the final burgundy page palette. */
+.onlineDialog.itemDialog{background:linear-gradient(158deg,#41242f,#21131a);border-color:#ae8169;color:#f3e7e9}
+.onlineDialog .playerSearch input,.onlineDialog .profileField input,
+.onlineDialog .feedbackForm select,.onlineDialog .feedbackForm textarea,
+.onlineDialog .filterBar select{background:#281720;border:1px solid #835762;color:#f2e5e9}
+.onlineDialog .saveChoices section,.onlineDialog .publicGearItem,.onlineDialog .arenaPanel,
+.onlineDialog .characterPicker button{background:#2c1922;border-color:#79515c}
+.onlineDialog .saveChoices section:hover,.onlineDialog .publicGearItem:hover,
+.onlineDialog .characterPicker button:hover{background:#38202b;border-color:#aa7181}
+.onlineDialog .characterPicker [aria-pressed="true"]{background:#55402c;border-color:#e0b677}
+.onlineDialog .rankingList li,.onlineDialog hr{border-color:#67444f}
+.onlineDialog .feedbackThanks{background:#241820;border-color:#607761} /* success outline retained */
+.onlineDialog .feedbackForm label{color:#f1e0e4}
+.onlineDialog .playerHeading,.onlineDialog .playerSearch{color:#f1e0e4}
+.onlineDialog .feedbackForm select:focus-visible,.onlineDialog .feedbackForm textarea:focus-visible{outline:2px solid #e5b983;outline-offset:2px}
