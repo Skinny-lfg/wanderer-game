@@ -11,3 +11,13 @@
 - `npm test` includes `tests/v0100-ui-regression.cjs` as a lightweight source regression. Automated full browser/mobile audit remains the release gate; human visual approval is still required before main publication.
 
 No further backlog features or combat balance changes are part of this update.
+
+## Final automated verification — 17 October 2026
+
+- **Full pre-release audit: PASS** on gameplay commit `3d31bc1398addc17efdc4a032463369ae20725a3`. [GitHub Actions result](https://github.com/Skinny-lfg/wanderer-game/actions/runs/39023602470).
+- **Smoke / `npm test`: PASS**, including Shatter + Double Strike isolated A/B and the v0.10.0 UI regression.
+- **Real Chromium browser:** mobile/desktop gameplay stress, account sign-in and save restoration, wallet + 3-line menu, boss warnings, mana bar, three boss PNGs and VFX **PASS** in isolated test fixtures.
+- **Recovery, deterministic combat/save stress, practice PvP and Firestore rules in demo emulator:** **PASS**. The emulator is not the player's Firebase project.
+- The previous browser test failure was a fixture-scope issue (trying to access script-local `state` from outside its scope); the fixture now exposes its own `setMana` helper. A separate bug was fixed to avoid overwriting connected Account/Leaderboard/Feedback click handlers on game re-renders.
+- **Release remains held:** the owner can still review aesthetics and artwork in person. No merge to `main`, no live Firebase rules, account or save changes, and no deployment were performed.
+
