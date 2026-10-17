@@ -762,7 +762,6 @@ body::before{
  .decisionRarities{gap:4px;margin:5px 0 7px}
  .decisionRarities span{font-size:10px;padding:2px 5px}
  .decisionRisk{margin:5px 0;font-size:12px}
- .decisionLowHp{color:#ff9a9a;font-size:12px;font-weight:700;margin:6px 0;line-height:1.35}
  .decisionExtractWarning{font-size:11px;line-height:1.35;color:#f2c2a9;margin:5px 0 9px}
  .decisionLoot{padding-top:5px}
  .decisionLoot>strong{margin-bottom:3px}
@@ -2591,24 +2590,23 @@ function combatDecisionMarkup(r){
  const next=upcoming?r.enc+1:r.enc,elite=next===4?eliteArchetype(r):null,boss=next===5&&r.tier%10===0;
  const danger=!!(elite||boss),regular=!danger&&!finished;
  const heading=finished?'🏆 Dungeon cleared':boss?'👑 '+bossForTier(r.tier).name:elite?elite.icon+' '+elite.name+' · '+elite.role+' Elite':'Wave '+next;
- const risk=finished?'Extract to secure your collected rewards.':boss?bossForTier(r.tier).risk+' Guaranteed gear and a rune choice on victory.':elite?elite.risk:'Choose whether to continue or extract with your current loot.';
- const lowHP=upcoming&&r.enc>0&&r.hp/r.maxhp<.45;
- const safeExtract=upcoming&&r.enc>0?'Extract now to save the loot, Gold and Fragments collected so far; this does not unlock the next dungeon. Continue risks unprotected equipment on death.':'';
+ const risk=finished?'Extract to keep rewards.':boss?bossForTier(r.tier).risk+' Guaranteed gear and a rune choice on victory.':elite?elite.risk:'';
+ const extractReminder=upcoming&&r.enc>0?'Extract saves loot · Death loses unprotected gear.':'';
  const odds=finished?null:waveLootOdds(next,r.stats.cha),rarities=['Common','Uncommon','Rare','Epic','Legendary'];
  const rarityMarkup=odds?'<div class="decisionRarities">'+rarities.map(type=>'<span style="--rarity:'+RARITY[type][0]+'"><b>'+type+'</b> '+chanceText(odds.rarities[type])+'</span>').join('')+'</div>':'';
- const visibleLoot=regular?r.loot.slice(-3):r.loot,moreLoot=regular?Math.max(0,r.loot.length-visibleLoot.length):0;
+ const visibleLoot=finished?r.loot:r.loot.slice(-3),moreLoot=finished?0:Math.max(0,r.loot.length-visibleLoot.length);
  const lootMarkup=visibleLoot.map(o=>'<div class="decisionLootItem" title="'+esc(o.name)+'"><img src="'+itemImg(o)+'" alt="'+esc(o.name)+'"><span style="color:'+rarityColor(o)+'">D'+o.tier+' '+esc(o.rarity)+'</span></div>').join('');
  return '<section class="combatDecisionPanel'+(danger?' dangerous':' standardEncounter')+(boss?' bossEncounter':elite?' eliteEncounter':'')+'" aria-label="Risk, loot and drop odds before choosing Continue or Extract">'+
   '<div class="decisionHeading"><strong>'+(finished?'Expedition complete':upcoming?'Next encounter':'Current encounter')+': '+esc(heading)+'</strong><span>Wave '+next+'/'+wavesForDungeon(r.tier)+'</span></div>'+
-  (regular?'':('<p class="decisionRisk">'+esc(risk)+'</p>'))+
-  (lowHP?'<p class="decisionLowHp">⚠ Low HP — continuing risks unprotected equipment.</p>':'')+
-  (danger&&safeExtract?'<p class="decisionExtractWarning">'+esc(safeExtract)+'</p>':'')+
-  (odds?'<div class="decisionDrop"><b>Gear drop '+chanceText(odds.drop)+'</b>'+(regular?'':'<span>Rarity odds if gear drops · CHA included</span>')+'</div>':'')+
-  (regular?'':rarityMarkup)+
+  (risk?'<p class="decisionRisk">'+esc(risk)+'</p>':'')+
+  (danger&&extractReminder?'<p class="decisionExtractWarning">'+esc(extractReminder)+'</p>':'')+
+  (regular&&odds?'<div class="decisionDrop"><b>Gear drop '+chanceText(odds.drop)+'</b></div>':'')+
   '<div class="decisionLoot"><strong>Run Loot · '+r.loot.length+' gear · '+r.valuables.length+' valuables</strong>'+
   '<div class="decisionLootGrid">'+(lootMarkup||'<span class="small muted">No equipment collected yet.</span>')+(moreLoot?'<span class="decisionMoreLoot">+'+moreLoot+' more</span>':'')+'</div></div>'+
-  (regular?'<details class="decisionExtraDetails"><summary>Rarity odds &amp; extraction rules</summary>'+rarityMarkup+
-    (safeExtract?'<p>'+esc(safeExtract)+'</p>':'')+
+  (odds?'<details class="decisionExtraDetails"><summary>'+(danger?'Drop odds &amp; loot':'Rarity odds &amp; extraction rules')+'</summary>'+
+    (danger?'<div class="decisionDrop"><b>Gear drop '+chanceText(odds.drop)+'</b><span>CHA included</span></div>':'')+
+    rarityMarkup+
+    (regular&&extractReminder?'<p>'+esc(extractReminder)+'</p>':'')+
     (moreLoot?'<p>Other loot: '+r.loot.slice(0,-3).map(o=>esc(o.name)+' (D'+o.tier+' '+esc(o.rarity)+')').join(', ')+'</p>':'')+
     '</details>':'')+
  '</section>';
