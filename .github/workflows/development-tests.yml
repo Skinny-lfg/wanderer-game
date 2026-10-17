@@ -16,6 +16,8 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+      - name: Shatter and Double Strike isolated A/B
+        run: node tests/v093-shatter-double-strike.cjs
       - run: npm test
 
   # Intentionally opt-in: normal development pushes keep the fast smoke check.
