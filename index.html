@@ -1957,6 +1957,8 @@ function affinityProcMarkup(s){
  if(effect==='crit')lines.push('Critical chance: '+s.crit+'% per main attack (part of the Critical formula, not an extra status roll).');
  else if(effect&&ELEMENTS[effect])lines.push(ELEMENTS[effect].icon+' '+esc(ELEMENTS[effect].name)+': '+chanceText(affinityProcChance(kind,s.caster))+' on a damaging '+(s.caster?'mana-funded cast':'main hit')+'.');
  if(s.caster)lines.push('Without enough mana, normal weapon hit: '+chanceText(affinityProcChance(kind))+' affinity chance.');
+ if(s.caster&&effect==='slow')lines.push('Shatter: after three successful mana-funded Frost spell hits against a Chilled enemy, deal 30% Spell Power bonus damage (6-second expedition cooldown). No extra Chill or enemy delay.');
+ if(kind==='Daggers')lines.push('Double Strike: 25% chance after a damaging main-hand strike to land one extra hit for 55% of normal pre-critical damage. No Critical, affinity procs, Legendary or Off-Hand triggers.');
  if(s.off?.subtype==='Off-Hand Dagger')lines.push('Off-Hand Dagger: 34% on a damaging off-hand hit (separate from your main weapon).');
  else if(isMagicOffhand(s.off))lines.push('Magic Off-Hand: '+(s.caster?'25% per damaging cast when the affinity differs; otherwise +30% matching spell damage.':'45% on a damaging fallback attack.'));
  const dmg=s.caster?s.spellPower:s.attack;
@@ -1980,6 +1982,7 @@ function tryPassiveGearAffinity(r,damage){
  addLog((ELEMENTS[item.effect]?.icon||'✨')+' '+SNAME[item.slot]+' invokes '+ELEMENTS[item.effect].name+' (gear affinity)','spell');
  return true;
 }
+const WANDERER_SHATTER_ENABLED=true,WANDERER_DOUBLE_STRIKE_ENABLED=true;
 function weaponAttack(r){
  const s=r.stats,e=r.enemy,weapon=s.main,off=s.off,caster=s.caster,now=setNow(r),temp=setRuntime(r);
  const lt=legendaryRuntime(r),focus=!!lt.focusReady,armorReady=!!lt.armorReady;lt.focusReady=false;lt.armorReady=false;
@@ -2021,6 +2024,13 @@ function weaponAttack(r){
  const real=Math.max(0,Math.min(e.hp,damage));
  e.hp-=damage;floatText(damage,'enemy',critical);
  if(temp.soulPactBonus>0){const withoutBonus=Math.min(hpBefore,Math.max(0,damage+Math.max(0,barrierBefore-e.barrier)-temp.soulPactBonus-barrierBefore));setSoulHeal(r,Math.max(0,real-withoutBonus));}
+ if(WANDERER_SHATTER_ENABLED&&cast&&element==='slow'&&damage>0&&e.hp>0&&e.slowTime>0){
+  temp.shatterHits=(temp.shatterHits||0)+1;
+  if(temp.shatterHits>=3&&setReady(r,'frostShatter',6)){
+   temp.shatterHits=0;
+   setDirectEnemyDamage(r,s.spellPower*.30,'❄️ Shatter!');
+  }
+ }
  if(cast){
   if(damage>0&&Math.random()<Math.min(1,affinityProcChance(kind,true)+(focus?.15:0)))applyAffinity(element,e,s,kind==='Staff'?1.2:.85,damage);
   if(damage>0&&isMagicOffhand(off)&&off.magic!==element&&Math.random()<.25)applyAffinity(off.magic,e,s,.5,damage);
@@ -2038,6 +2048,10 @@ function weaponAttack(r){
    applyAffinity(off.magic,e,s,.85,damage);
    addLog((ELEMENTS[off.magic]?.icon||'✨')+' Off-Hand imbues attack (0 mana)','spell');
   }
+ }
+ if(WANDERER_DOUBLE_STRIKE_ENABLED&&kind==='Daggers'&&damage>0&&e.hp>0&&Math.random()<.25){
+  // One ordinary pre-critical main-hand hit, with no further rolls or recursive triggers.
+  setDirectEnemyDamage(r,Math.max(1,Math.round(base*.55)),'🗡 Double Strike!');
  }
  if(real>0)tryPassiveGearAffinity(r,real);
  if(s.counts.shield>=2){const gained=setBarrier(r,Math.max(1,s.bonus.shieldBonus||2));if(gained>0)addLog('🛡 Shield set: +'+Math.round(gained)+' Barrier','good');}
