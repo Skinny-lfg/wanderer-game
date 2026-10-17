@@ -40,5 +40,12 @@ assert(html.includes('env(safe-area-inset-bottom,0px)'),'iOS safe area accounted
 assert(html.includes('body:has(.combatLayout) .toast'),'toast avoids fixed bar');
 assert(html.includes('.combatLayout .combatActions:not(:has(#nextFight))'),'combat speed still accessible during fights');
 assert(html.includes('id="nextFight"')&&html.includes('id="leave"')&&html.includes('id="combatSpeed"'),'original button ids and handlers preserved');
-assert(html.includes('.scene .combatStatuses,.scene .combatant .combatStatuses{position:static'),'prior multi-buff fix preserved');
+assert(html.includes('.scene .combatStatuses,.scene .combatant .combatStatuses{position:static'),'buff lane above the portraits is kept in normal flow');
+assert(html.includes('flex:0 0 42px;flex-wrap:nowrap'),'status chips cannot add new rows');
+assert(html.includes('flex-basis:34px;height:34px;min-height:34px;max-height:34px'),'mobile effects have constant 34px height');
+assert(html.includes('overflow-x:auto;overflow-y:hidden')&&html.includes('overscroll-behavior-x:contain'),'every status remains reachable by horizontal swipe');
+assert(html.includes('.scene .combatStatuses:empty{display:flex;visibility:hidden}'),'empty lanes reserve the same height');
+assert(html.includes('.scene .combatStatuses .debuff{flex:0 0 auto;max-width:none;min-width:0;white-space:nowrap'),'status badges never wrap into new vertical rows');
+assert(html.includes('aria-label="Player effects; swipe sideways to view more"'),'player status carousel accessible');
+assert(html.includes('aria-label="Enemy effects; swipe sideways to view more"'),'enemy status carousel accessible');
 console.log('PASS mobile: fixed controls, compact normal wave, risk/loot/odds and elite/boss warnings');
