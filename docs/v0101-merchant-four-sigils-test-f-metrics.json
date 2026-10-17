@@ -1,0 +1,269 @@
+{
+  "study": "Wanderer v0.10.1 Test F — Merchant 4 Affinity Sigils + Gold refresh",
+  "date": "2026-10-17",
+  "source": {
+    "description": "User supplied v0.10.0 main ZIP, offline production-combat harness",
+    "index_html_sha256": "a69bef5e2f1d0842f79b692839012ab9e621a6b07cda0ba4a2fedef858b36126",
+    "current_main_validated": false,
+    "gameplay_modified": false,
+    "firebase_modified": false,
+    "saves_modified": false,
+    "github_branch_written": "development (docs only)"
+  },
+  "scope": {
+    "main": {
+      "seeds": "932100–932111",
+      "seed_groups": 12,
+      "policies": [
+        "casual",
+        "experienced",
+        "speed"
+      ],
+      "players_per_arm": 36,
+      "arms": 8
+    },
+    "holdout": {
+      "seeds": "932300–932314",
+      "seed_groups": 15,
+      "policies": [
+        "casual",
+        "experienced",
+        "speed"
+      ],
+      "players_per_arm": 45,
+      "arms": 5
+    },
+    "campaigns": 513,
+    "expeditions": 288032,
+    "max_expeditions_per_campaign": 600,
+    "market_randomized_searches_per_mode": 100000
+  },
+  "merchant": {
+    "affinities_total": 13,
+    "market_sigil_slots": 4,
+    "distinct_on_each_page": true,
+    "refresh": "Production Merchant refresh. Gold price = 16 + 4*frontier tier, simultaneously rerolls regular gear stock.",
+    "sigil_purchase_gold": "100+9*frontierTier",
+    "stock_persists_without_paid_refresh": true,
+    "purchased_slot_empty_until_refresh": true,
+    "transfer_fragment_cost": "35% chance/0.5 x craft; 50% chance/1 x craft; 65% chance/1.5 x craft",
+    "transfer_failure": "Sigil and Fragments spent; item original affinity unchanged",
+    "legendary_allowed": false,
+    "target_must_be_in_slot_pool": true,
+    "sigil_inventory_persistence_implemented": false
+  },
+  "agent_policy": {
+    "eligibility": "Rare/Epic equipped, tier >=72% of frontier, valuable set gain",
+    "search_frequency_expeditions": 12,
+    "max_sigils": 10,
+    "max_extra_refreshes_per_market_visit": 3,
+    "limit_purpose": "simulation agent resource budgeting only, not proposed gameplay caps",
+    "heavy_arm": "every 4 expeditions; no fixed purchase cap; up to 10 additional refreshes"
+  },
+  "offer_odds": {
+    "theoretical_single_page": 0.3076923076923077,
+    "theoretical_four_pages_independent": 0.7702811526207066,
+    "empirical_single_page": 0.30774,
+    "empirical_four_pages_independent": 0.76902,
+    "empirical_four_pages_no_immediate_repeat": 0.88231,
+    "theoretical_unlimited_expected_paid_refreshes": 2.25,
+    "simulations_per_offer_method": 100000,
+    "initial_biased_shuffle_runs_excluded": true
+  },
+  "tiers": {
+    "D100": {
+      "refresh_gold": 416,
+      "sigil_gold": 1000,
+      "forge_base_fragments": 1010,
+      "transfer_fragments_for35": 505,
+      "transfer_fragments_for50": 1010,
+      "transfer_fragments_for65": 1515
+    },
+    "D200": {
+      "refresh_gold": 816,
+      "sigil_gold": 1900,
+      "forge_base_fragments": 2010
+    }
+  },
+  "main": {
+    "qualityLegendary": {
+      "d200": 21,
+      "n": 36,
+      "median_depth": 200,
+      "market_buys": 0,
+      "successes": 0,
+      "refreshes": 0
+    },
+    "marketBase35": {
+      "d200": 14,
+      "n": 36,
+      "median_depth": 161.5,
+      "market_buys": 295,
+      "successes": 103,
+      "refreshes": 520
+    },
+    "marketNoRefresh": {
+      "d200": 18,
+      "n": 36,
+      "median_depth": 195.5,
+      "market_buys": 17,
+      "successes": 6,
+      "refreshes": 0
+    },
+    "marketFixed": {
+      "d200": 16,
+      "n": 36,
+      "median_depth": 181,
+      "market_buys": 50,
+      "successes": 19,
+      "refreshes": 90
+    },
+    "marketCheap": {
+      "d200": 18,
+      "n": 36,
+      "median_depth": 191.5,
+      "market_buys": 42,
+      "successes": 22,
+      "refreshes": 81
+    },
+    "marketBoost": {
+      "d200": 18,
+      "n": 36,
+      "median_depth": 199,
+      "market_buys": 34,
+      "successes": 18,
+      "refreshes": 76
+    },
+    "marketNoRepeat": {
+      "d200": 17,
+      "n": 36,
+      "median_depth": 188,
+      "market_buys": 54,
+      "successes": 22,
+      "refreshes": 62
+    },
+    "marketHeavy": {
+      "d200": 18,
+      "n": 36,
+      "median_depth": 198.5,
+      "market_buys": 111,
+      "successes": 48,
+      "refreshes": 295
+    }
+  },
+  "holdout": {
+    "qualityLegendary": {
+      "d200": 20,
+      "n": 45,
+      "median_depth": 193
+    },
+    "marketBase35": {
+      "d200": 21,
+      "n": 45,
+      "median_depth": 165
+    },
+    "marketFixed": {
+      "d200": 22,
+      "n": 45,
+      "median_depth": 193
+    },
+    "marketBoost": {
+      "d200": 20,
+      "n": 45,
+      "median_depth": 191
+    },
+    "marketNoRepeat": {
+      "d200": 19,
+      "n": 45,
+      "median_depth": 190
+    }
+  },
+  "pooled": {
+    "qualityLegendary": {
+      "d200": 41,
+      "n": 81
+    },
+    "marketBase35": {
+      "d200": 35,
+      "n": 81,
+      "buys": 663,
+      "successes": 228,
+      "refreshes": 1261,
+      "gold_spent": 504463,
+      "fragments_spent": 131270,
+      "paired_delta_d200_pp": -7.407,
+      "paired_bootstrap95_pp": [
+        -24.691,
+        9.877
+      ]
+    },
+    "marketFixed": {
+      "d200": 38,
+      "n": 81,
+      "buys": 119,
+      "successes": 57,
+      "refreshes": 193,
+      "gold_spent": 141796,
+      "fragments_spent": 87150,
+      "paired_delta_d200_pp": -3.704,
+      "paired_bootstrap95_pp": [
+        -11.111,
+        3.704
+      ]
+    },
+    "marketBoost": {
+      "d200": 38,
+      "n": 81,
+      "buys": 77,
+      "successes": 39,
+      "refreshes": 139,
+      "gold_spent": 134627,
+      "fragments_spent": 113460,
+      "paired_delta_d200_pp": -3.704,
+      "paired_bootstrap95_pp": [
+        -9.877,
+        2.469
+      ]
+    },
+    "marketNoRepeat": {
+      "d200": 36,
+      "n": 81,
+      "buys": 142,
+      "successes": 72,
+      "refreshes": 165,
+      "gold_spent": 139994,
+      "fragments_spent": 92320,
+      "paired_delta_d200_pp": -6.173,
+      "paired_bootstrap95_pp": [
+        -13.58,
+        1.235
+      ]
+    }
+  },
+  "verification": {
+    "market_random_generator": "PASS after correcting biased preliminary shuffle; uniform sampling",
+    "four_distinct_slots": "PASS",
+    "no_immediate_repeat_arm": "PASS",
+    "scaling": "PASS",
+    "shatter_double_strike": "PASS",
+    "legendary_signatures": "PASS",
+    "progression_abilities": "6/6 PASS",
+    "run_errors": 0,
+    "negative_gold_or_fragments": 0,
+    "source_index_html_unchanged": true
+  },
+  "limitations": [
+    "Agent behavior rather than human player choices",
+    "Capped campaign at 600 expeditions",
+    "Same seed initial conditions, but later loot paths diverge",
+    "Sigils are spent immediately after purchase; persistent inventory and save migration not tested",
+    "Four Sigil slots are additional to the four standard merchant gear slots; shared paid refresh",
+    "Sigils only considered for equipped Rare/Epic items with valuable estimated synergy",
+    "Exploratory 95% CIs uncorrected for multiple comparisons"
+  ],
+  "decision": "Mechanic viable as buildcraft, but no tested variant demonstrated stronger D200 completion. 35% transfer caused excessive purchases; treat 50% as a prototype, not approved numeric tuning. Validate real player UX and exact stall layout. Do not implement automatically.",
+  "artifacts": {
+    "report": "docs/v0101-merchant-four-sigils-test-f.md",
+    "local_reproduction_archive": "Wanderer_v0101_Teste_F_Merchant4Sigils_Dados_e_Scripts.zip"
+  }
+}
