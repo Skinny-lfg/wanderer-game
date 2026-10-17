@@ -24,7 +24,7 @@ globalThis.combatUITest=(enc,status='ready')=>{
    await page.goto(URL+'/');
    // Offline browser fixture must unlock the UI as the mocked auth would.
    await page.evaluate(()=>{document.getElementById('screen').inert=false;document.getElementById('nav').inert=false;});
-   for(const [enc,expectRisk] of [[3,'Berserker Elite'],[4,'Main Boss']]){
+   for(const [enc,expectRisk] of [[3,'Berserker Elite'],[4,'The Abyssal Guardian']]){
     await page.evaluate(enc=>combatUITest(enc),enc);
     const mobile=width<=650;
     const decision=page.locator('.combatDecisionPanel');
