@@ -37,7 +37,24 @@ const server=http.createServer((req,res)=>{if(req.url==='/'){res.setHeader('Cont
  assert((await page.locator('.equipmentBonuses').innerText()).includes('32%'));
  assert((await page.locator('.equipmentBonuses').innerText()).includes('5 pieces alone do not increase it'));
  assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'equipment fits viewport');
- await page.evaluate(()=>fixture.dungeons());const cards=await page.locator('[data-path]').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('data-path')));
+ const chrome=await page.evaluate(()=>{
+   const root=getComputedStyle(document.documentElement);
+   const account=document.querySelector('[data-online-action="account"]');
+   const leaderboard=document.querySelector('[data-online-action="leaderboard"]');
+   const feedback=document.querySelector('[data-online-action="feedback"]');
+   return {bg:root.getPropertyValue('--bg').trim(),panel:getComputedStyle(document.querySelector('.panel')).backgroundImage,
+    accountIcon:getComputedStyle(account,'::before').width,accountHeight:account.getBoundingClientRect().height,
+    leaderboardBorder:getComputedStyle(leaderboard).borderColor,feedbackIcon:getComputedStyle(feedback,'::before').width,
+    buttonsWidth:document.querySelector('.onlineBar').getBoundingClientRect().width};
+ });
+ assert.equal(chrome.bg,'#100a0e','background palette should be dark garnet');
+ assert.ok(chrome.panel.includes('linear-gradient'),'panels retain dark-red layered depth');
+ assert.ok(parseFloat(chrome.accountIcon)>=14,'account control has a meaningful icon');
+ assert.ok(chrome.accountHeight>=38,'account action remains tappable');
+ assert.ok(parseFloat(chrome.feedbackIcon)>=14,'feedback control matches account and leaderboard');
+ await page.evaluate(()=>fixture.dungeons());
+ assert.equal(await page.locator('.legendaryHunt').count(),0,'Legendary Hunt hidden pending its next phase');
+ const cards=await page.locator('[data-path]').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('data-path')));
  assert((await page.locator('#rerollPath').innerText()).includes('10'));
  await page.reload();await page.evaluate(()=>fixture.dungeons());assert.deepEqual(await page.locator('[data-path]').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('data-path'))),cards);
  const visuals=await page.evaluate(()=>{
