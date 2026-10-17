@@ -9,7 +9,11 @@ const tests="\nfresh();\nfunction check(x,msg){if(!x)throw new Error(msg)}\nlet 
 const nodes=new Map(),storage=new Map();
 const fakeNode=()=>({innerHTML:'',textContent:'',style:{},dataset:{},value:'',classList:{remove(){},add(){}},focus(){},isConnected:true,setAttribute(){},getAttribute(){return null;}});
 const doc={getElementById(id){if(!nodes.has(id))nodes.set(id,fakeNode());return nodes.get(id);},querySelectorAll:()=>[],querySelector:()=>null,createElement:fakeNode,body:{appendChild(){}}};
-const env={document:doc,localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v)},confirm:()=>true,alert:()=>{},console,setTimeout:()=>0,clearTimeout:()=>{},setInterval:()=>1,clearInterval:()=>{}};
+const scrollCalls=[],scrollRoot={scrollTop:600};
+doc.scrollingElement=scrollRoot;
+const env={document:doc,localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v)},confirm:()=>true,alert:()=>{},console,setTimeout:()=>0,clearTimeout:()=>{},setInterval:()=>1,clearInterval:()=>{},scrollTo:(x,y)=>scrollCalls.push([x,y]),requestAnimationFrame:fn=>{fn();return 1;}};
 vm.runInNewContext(script.replace(boot,tests),env,{timeout:7000,filename:'wanderer-dungeon-ui.js'});
 assert(env.__dungeonUiSuccess,'Dungeon UI assertions completed');
+assert(scrollCalls.length>=2&&scrollCalls.every(([x,y])=>x===0&&y===0),'entering a dungeon scrolls viewport to top immediately and after paint');
+assert.equal(scrollRoot.scrollTop,0,'scroll root resets to top on dungeon entry');
 console.log('PASS: compact affinities, gear icons, deliberate wave start and contextual loot odds, extraction and bosses');
