@@ -1,7 +1,7 @@
 // Full nine-affinity cumulative combat, cooldown, critical and DoT audit.
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
-const script=html.match(/<script(?: [^>]*)?>([\s\S]*?)<\/script>/)?.[1];
+const script=html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
 assert(script,'Game main script missing');
 const boot="load();if(!state.merchant)rollShop();save();render();";
 assert(script.includes(boot),'Game bootstrap missing');

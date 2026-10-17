@@ -20,10 +20,12 @@ assert(stashStart>rightStart&&runeStart>stashStart,'desktop keeps runes below st
 assert(html.includes('.equipmentLeft,.equipmentRight{display:contents}')&&html.includes('.equipmentInventory{order:1}')&&html.includes('.equipmentRunes{order:2}')&&html.includes('.equipmentBonuses{order:3}'),'mobile orders stash, then runes, then tier bonuses');
 assert(html.includes('class="homeMetrics"')&&!html.includes('<div class="hub">'),'home dashboard has no duplicate menu');
 const homeMarkup=html.slice(html.indexOf('function renderTavern(){'),html.indexOf('function equipItem('));
-assert(homeMarkup.includes('<details class="panel homeChangelog" open>')&&homeMarkup.includes('v0.9.1 → v0.9.2')&&homeMarkup.includes('Fastest D200 leaderboard')&&homeMarkup.includes('all screens'),'homepage release notes visible');
-for(const text of ['D200','permanent runes','Tank, Berserker, Vampire and Caster','tier bonuses','responsive Equipment']){
- assert(homeMarkup.includes(text),'v0.9 changelog contains '+text);
+assert(homeMarkup.includes('<details class="panel homeChangelog" open>')&&!homeMarkup.includes('<details class="olderChangelog">'),'latest changelog visible without older release history');
+for(const text of ['Legendary gear reworked','Sunder, Shield and Regen','double strikes','bosses','responsive website','equipment and inventory']){
+ assert(homeMarkup.includes(text),'v0.10.0 release changelog contains '+text);
 }
+assert(!homeMarkup.includes('Legendary Hunt'),'deferred Legendary Hunt no longer advertised');
+assert(!html.includes('${legendaryHuntMarkup(paths)}'),'Legendary Hunt removed from Dungeons for this phase');
 assert(html.includes('.homeChanges{list-style:none;display:grid')&&html.includes('@media(max-width:650px){.homeChanges{grid-template-columns:1fr'),'compact mobile changelog layout');
 
 assert(html.includes('const milestones=[2,3,5].map(tier=>{')&&!html.includes('Number(count>=b)-Number(count>=a)||b-a'),'set tiers always show 2, 3, then 5 (including greyed out)');

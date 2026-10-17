@@ -4,7 +4,7 @@ const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8012';
  const page=await browser.newPage({viewport:{width,height:950}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.route('**/online/firebase-client.mjs*',r=>r.fulfill({contentType:'text/javascript',body:fs.readFileSync('tests/fixtures/firebase-client.mjs','utf8')}));
  await page.goto(URL);await page.locator('#googleSignIn').click();await page.locator('#nickname').fill('alice_1');await page.locator('#createProfile').click();await page.waitForFunction(()=>!document.querySelector('.onlineDialog'));
- const board=()=>page.locator('[data-online-action="leaderboard"]').click();await board();await page.locator('[data-player="test"]').click();await page.locator('#practiceAttack').waitFor();
+ const board=async()=>{if(width<=650){const toggle=page.locator('#menuToggle');if(await toggle.getAttribute('aria-expanded')!=='true')await toggle.click();}await page.locator('[data-online-action="leaderboard"]').click();};await board();await page.locator('[data-player="test"]').click();await page.locator('#practiceAttack').waitFor();
  assert.match(await page.locator('.publicGear').innerText(),/Opponent Sword/);assert.match(await page.locator('.onlineDialog').innerText(),/Poison Set/);assert.equal(await page.locator('.statsGrid').count(),1);
  const avatarBox=await page.locator('.playerHeading img').boundingBox();assert.equal(avatarBox.width,width<=650?36:42);assert.equal(avatarBox.height,width<=650?36:42);
  for(const icon of await page.locator('.publicGearItem img').all()){const box=await icon.boundingBox();assert.equal(box.width,width<=650?24:28);assert.equal(box.height,width<=650?24:28);}

@@ -1,0 +1,10 @@
+const assert=require('node:assert/strict');
+const {simulate,variants}=require('../scripts/v010-balance-ab.cjs');
+const a=simulate('baseline','bow',100,'mid',8,8123);
+const b=simulate('baseline','bow',100,'mid',8,8123);
+assert.deepEqual(a,b,'same source, equipment and seeds must replay exactly');
+assert.equal(a.n,8);
+assert(variants.bowBarrier12.length&&variants.speedDiminish30.length);
+const changed=simulate('bowBarrier12','bow',100,'mid',8,8123);
+assert.equal(changed.n,a.n);
+console.log('PASS v0.10 offline A/B replay and variant smoke');

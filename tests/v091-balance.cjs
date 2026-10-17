@@ -34,6 +34,11 @@ for(const level of [1,10,50,100,200])for(const weapon of ['Daggers','Mace','Staf
  const opts={level,weapon,affinity:'shield',rarity:'Epic',seed:77,elite:'berserker'};
  const one=c.trial(opts),four=c.trial({...opts,speed:4});
  assert.equal(JSON.stringify(one),JSON.stringify(four),'simulation-time mechanics identical at 1x and 4x');
- assert(!one.timeout);for(const value of Object.values(one))assert(typeof value==='boolean'||Number.isFinite(value));
+ assert(!one.timeout);
+ for(const [key,value] of Object.entries(one)){
+  // No death means that deathWave is intentionally null.
+  if(key==='deathWave'&&value===null)continue;
+  assert(typeof value==='boolean'||Number.isFinite(value),'Invalid '+key+' at D'+level+' with '+weapon);
+ }
 }
 console.log('PASS v0.9.1 speed limits, critical preservation, legacy items, weapon damage, mana, deterministic 1x/4x');

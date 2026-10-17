@@ -1,7 +1,7 @@
 // v0.8.1 regression test: run with node tests/v081-smoke.cjs
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
-const script=html.match(/<script(?: [^>]*)?>([\s\S]*?)<\/script>/)?.[1];
+const script=html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
 assert(script,'Main game script not found');
 const boot="load();if(!state.merchant)rollShop();save();render();";
 assert(script.includes(boot),'Bootstrap not found');
@@ -41,7 +41,7 @@ die();
 ensure(state.equip.weapon?.id==='gear-0'&&state.equip.helm?.id==='gear-1','protected gear survives death');
 ensure(!state.equip.armor&&!state.equip.gloves&&!state.equip.boots&&!state.equip.amulet,'unprotected gear lost');
 ensure(state.chosen===22&&selectedPath===null&&state.selectedPath===null,'death keeps dungeon level but clears the used path');
-ensure(state.offersByLevel['22'].ids.length===3&&state.offersByLevel['22'].ids.every(id=>!initialD22Offers.includes(id)),'death refreshes all three offered paths');
+ensure(state.offersByLevel['22'].ids.length===3&&state.offersByLevel['22'].ids.every(id=>initialD22Offers.includes(id)),'death preserves offered paths');
 ensure(state.offersByLevel['22'].rerolls===0,'death refresh resets paid reroll cost');
 const old=state.maxDungeon,previousD22Offers=[...state.offersByLevel['22'].ids];
 state.run={tier:22,path:THEMES[1].id,status:'win',enc:4,gold:0,fragments:0,loot:[],valuables:[]};
@@ -60,7 +60,7 @@ ensure(state.chosen===20&&state.maxDungeon===24,'clearing an older dungeon prese
 ensure(selectedPath===null&&state.selectedPath===null,'farming a cleared tier rotates the dungeon type');
 ensure(state.offersByLevel['20'].ids.length===3&&!state.offersByLevel['20'].ids.includes(THEMES[0].id),'first completion with no cached offers excludes the played path');
 const previousD20Offers=[...state.offersByLevel['20'].ids];
-state.run={tier:20,path:THEMES[0].id,status:'ready',enc:1,gold:0,fragments:0,loot:[],valuables:[]};
+state.run={tier:20,path:THEMES[0].id,status:'ready',enc:2,gold:0,fragments:0,loot:[],valuables:[]};
 extract();
 ensure(state.chosen===20&&selectedPath===null,'early extraction preserves farming level but changes path');
 ensure(state.offersByLevel['20'].ids.every(id=>!previousD20Offers.includes(id)),'early extraction changes all three options');
@@ -74,6 +74,8 @@ ensure(state.maxDungeon===200&&state.chosen===200,'cap D200 does not advance bey
 ensure(selectedPath===null&&state.selectedPath===null,'cap D200 resets selected type for another farming run');
 ensure(state.offersByLevel['200'].ids.length===3&&!state.offersByLevel['200'].ids.includes(THEMES[2].id),'cap D200 also rotates dungeon options');
 
+// D200 now ends an attempt; reset only this test fixture before checking earlier dungeon navigation.
+state.attemptCompleted=false;
 // Rolling dungeon pages must follow the newly unlocked dungeon; earlier pages stay accessible.
 ensure(dungeonWindow(22,null).levels.join(',')==='18,19,20,21,22,23,24,25,26','D22 centered');
 ensure(dungeonWindow(23,null).levels.join(',')==='19,20,21,22,23,24,25,26,27','D23 advances a single slot');
@@ -114,7 +116,7 @@ ensure(!globalThis.__dungeonMarkup.includes('class="protectionWarning"'),'2 prot
 // The free post-expedition refresh must not consume Fragments; paid reroll is unchanged.
 state.chosen=20;state.fragments=50;const paidBefore=state.fragments;
 renderDungeons();const paidCost=rerollCost();
-ensure(paidCost===5,'new expedition starts with the base manual reroll price');
+ensure(paidCost===10,'D20 uses a fixed bracket price');
 document.getElementById('rerollPath').onclick();
 ensure(state.fragments===paidBefore-paidCost,'manual reroll still charges Fragments');
 ensure(state.offersByLevel['20'].rerolls===1,'manual reroll increments its cost level');

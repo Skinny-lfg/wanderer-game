@@ -1,6 +1,6 @@
 import {publicLoadout,cleanEquipment} from './public-loadout.mjs';
 import {practiceDuel} from './pvp.mjs';
-import {CHARACTERS,character,validateSave,recoverInterruptedSave,summary,safeProgress,SAVE_NAMESPACE} from './model.mjs?v=v092-combat-hotfix-1';
+import {CHARACTERS,character,validateSave,recoverInterruptedSave,summary,safeProgress,SAVE_NAMESPACE} from './model.mjs?v=v0100-character-labels-1';
 const game=globalThis.WandererGame,GUEST='wanderer_browser_proto_v01';
 let backendPromise,backend,user=null,profile=null,revision=null,synced='',epoch=0,writing=false,suppress=false,timer=null,dialog=null;
 let ready=false,lastPublished='',lastLoadout='',profileState='loading';
@@ -10,7 +10,13 @@ const accountKey=()=>user?'wanderer_account_'+user.uid+'_'+SAVE_NAMESPACE:null;
 function status(text){message=text;}
 function report(error){status(errorText(error));const el=document.getElementById('accountError');el.textContent=message;el.hidden=false;}
 function clearError(){document.getElementById('accountError').hidden=true;}
-function accountLabel(){document.querySelector('[data-online-action="account"]').textContent=profile?.nickname||'Account & Character';}
+function accountLabel(){
+ document.querySelector('[data-online-action="account"]').textContent=profile?.nickname||'Account & Character';
+ // Nickname belongs to the authenticated profile, not the public game save.
+ globalThis.WandererNickname=ready&&user&&profile?.nickname?profile.nickname:null;
+ const combatName=document.getElementById('heroName');
+ if(combatName)combatName.textContent=globalThis.WandererNickname||'Wanderer';
+}
 function gate(){accountLabel();for(const id of ['screen','nav'])document.getElementById(id).inert=!ready||game.blocked();}
 function remember(){localStorage.setItem(accountKey()+'_synced',JSON.stringify(game.snapshot()));}
 async function publishResults(){
@@ -59,7 +65,9 @@ async function connect(){
  return backendPromise;
 }
 async function restoreProfile(token=epoch){
- profileState='loading';showAccount();
+ // Keep restored sessions unobstructed while Firebase checks profile/save.
+ // A missing profile, an auth failure or a cloud conflict still opens Account.
+ profileState='loading';
  try{
   const p=await backend.profile();sessionGuard(token);profile=p;profileState=p?'found':'missing';
   selectedCharacter=p?.characterId||game.snapshot().characterId||'wanderer';
@@ -72,7 +80,7 @@ async function restoreProfile(token=epoch){
   showAccount();dialog.querySelector('.onlineError').textContent=errorText(error);
  }
 }
-function characterPicker(){return `<div class="characterPicker">${CHARACTERS.map(c=>`<button type="button" data-character="${c.id}" aria-pressed="${selectedCharacter===c.id}"><img src="${c.fullBody}" alt="${esc(c.name)}"><span>${esc(c.name)}</span></button>`).join('')}</div><p class="small muted">Cosmetic only. No classes or stat bonuses.</p>`;}
+function characterPicker(){return `<div class="characterPicker">${CHARACTERS.map(c=>`<button type="button" data-character="${c.id}" aria-pressed="${selectedCharacter===c.id}"><img src="${c.avatar}" alt="${esc(c.name)}"><span>${esc(c.name)}</span></button>`).join('')}</div><p class="small muted">Cosmetic only. No classes or stat bonuses.</p>`;}
 function bindCharacters(){dialog.querySelectorAll('[data-character]').forEach(b=>b.onclick=()=>{selectedCharacter=b.dataset.character;dialog.querySelectorAll('[data-character]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));});}
 function showAccount(){
  accountLabel();
@@ -300,4 +308,4 @@ globalThis.addEventListener('wanderer:conflict',()=>{revision=null;gate();report
 globalThis.addEventListener('online',()=>{if(revision!==null)queueSync();else if(user&&profile)resumeAccount().catch(report);});
 // Hotfix: speedrun timing lives in the combat simulation only; never tick while idle in town.
 // Restore the account automatically; only divergent saves require a choice.
-gate();showAccount();connect().catch(error=>{status(errorText(error));dialog.querySelector('.onlineError').textContent=errorText(error);});
+gate();connect().catch(error=>{status(errorText(error));showAccount();if(dialog)dialog.querySelector('.onlineError').textContent=errorText(error);});

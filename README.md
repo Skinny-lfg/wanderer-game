@@ -10,6 +10,8 @@ O jogo suporta login com Google e contas Guest com nickname. Os perfis e saves d
 
 O código do site está na branch `main`. Desenvolvimento e testes continuam na `development`.
 
+Roadmap de ideias adiadas e trabalhos ainda sem publicação: [Em desenvolvimento — futuras versões a avaliar](docs/roadmap-em-desenvolvimento.md).
+
 ## Como funcionam os saves
 
 - Guarda-se o progresso localmente no browser; contas autenticadas podem sincronizá-lo para o Firestore.

@@ -1,3 +1,31 @@
+## v0.10.0 — 2026-10-17
+
+- Reworked Legendary equipment with unique event-driven abilities, fixed signature affinities for selected items, and the new Frost Staff Winterheart Spire.
+- Expanded buildcraft: stronger Critical, Fire and Dark charge interactions; Shatter and Double Strike mechanics; refined set descriptions and equipment comparison.
+- Rebalanced Sunder, Shield and Regen 2-piece bonuses to scale proportionally with initial enemy Armor or player maximum HP.
+- Added three illustrated boss portraits, refreshed elite art and names, improved boss warnings, and clarified combat information including caster Mana.
+- Refreshed website and Tavern backgrounds, character art and names, desktop equipment placement, mobile navigation and inventory interface.
+- Improved gear management, dungeon choices, progression information and assorted quality-of-life fixes; existing player saves and Firebase collections remain unchanged.
+- Regen tier description simplified without changing its 0.6% maximum-HP-per-second effect.
+- Validated the latest development build with the automated regression suite; publication does not reset accounts, saves or leaderboard scores.
+
+## v0.9.3 Legendary revision — development only
+
+- Replaced simple Legendary signatures with event-driven build interactions; 19 unique signatures across 22 identities.
+- Added Winterheart Spire, a Frost Staff using supplied transparent 256px artwork, without changing global rarity/subtype odds.
+- Grasp, Scepter and Eternal Oath retain their identity/art as random-affinity traditional Legendary items; saved stats/affinities remain compatible.
+- Added combat/save/UI/playback regressions and corrected Block damage scope. Large balance simulations remain pending; no release/deploy.
+
+## v0.9.3 — Balance & Buildcraft (development)
+
+- Critical 3, Fire 3 and Dark 3 now add modest main-hit damage from held charges; tier 5 signatures retain their mechanics and cooldowns.
+- Regen 2 scales at 2 + 0.2% max HP per combat second, capped at 10 HP/s. Existing overheal, Barrier and Second Wind limits remain.
+- Gear Power accounts for cumulative set tiers; inventory recommendations compare full loadouts. Off-Hand stays locked while Bow, Staff or Two-Handed is equipped.
+- Dungeon rerolls cost 5 Fragments per ten-level bracket (D1–10: 5, D11–20: 10, …, D191–200: 100), independent of reroll count. Free offer rotation requires extracting after 2+ completed waves; death and interrupted runs preserve offers.
+- Persistent NEW badges for acquired gear and runes, individual inspection and a shared Mark All as Seen control. Missing flags on old saves mean seen.
+- Equipment and combat explain actual weapon proc rates and active set synergies. Proc rates are unchanged.
+- Regression coverage includes browser interactions at desktop/mobile sizes. Extensive balance simulations are deferred.
+
 # Changelog
 
 ## v0.9.2 — Combat Timer Hotfix (2026-10-16)
