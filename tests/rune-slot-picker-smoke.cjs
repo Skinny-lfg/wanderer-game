@@ -11,5 +11,5 @@ const sandbox={document:dom,localStorage:{getItem:()=>null,setItem(){}},console,
 vm.runInNewContext(script.replace(boot,testCode),sandbox,{timeout:6000});
 assert(sandbox.__runeSlotPickerPass,'rune slot picker validated');
 assert(html.includes('.runeCollection .runeSlotPicker{grid-column:1/-1'),'picker occupies a full-width row');
-assert(html.includes('max-height:none;min-height:0;overflow:visible'),'combat buffs expand with content');
+assert(html.includes('flex:0 0 42px;flex-wrap:nowrap')&&html.includes('overflow-x:auto;overflow-y:hidden'),'combat status lanes remain fixed-height while effects can be swiped');
 console.log('PASS: full-width rune picker and unclipped combat status lanes');
