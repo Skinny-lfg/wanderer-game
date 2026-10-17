@@ -1515,7 +1515,7 @@ function legendaryHuntMarkup(paths){
  const variants=paths.ids.map(id=>({theme:THEMES.find(t=>t.id===id),chance:legendaryHuntChance(THEMES.find(t=>t.id===id),target?.id,paths.favored?.[id])}));
  const top=Math.max(...variants.map(x=>x.chance));
  return '<section class="legendaryHunt" aria-label="Legendary Hunt guide"><h3>🎯 Legendary Hunt</h3>'+
-  '<p class="small muted">Select the Legendary you want to farm. Your chosen path can favor its equipment type, but this does not increase overall Legendary drop rates.</p>'+
+  '<p class="small muted">Select the Legendary you want to farm. Your chosen path can favor its equipment type, but this guide does not change drop rates or guarantee a drop.</p>'+
   '<div class="huntTargets" role="group" aria-label="Choose Legendary target">'+
     '<button type="button" class="huntTarget '+(!target?'selected':'')+'" data-hunt="" aria-pressed="'+(!target)+'">No target</button>'+
     LEGENDARY_CATALOG.map(e=>'<button type="button" class="huntTarget '+(target?.id===e.id?'selected':'')+'" data-hunt="'+e.id+'" aria-pressed="'+(target?.id===e.id)+'">'+
