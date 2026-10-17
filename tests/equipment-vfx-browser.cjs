@@ -3,7 +3,7 @@ const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8012';
 (async()=>{const browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});try{for(const width of [1440,390]){
  const page=await browser.newPage({viewport:{width,height:950}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.route('**/online/firebase-client.mjs*',r=>r.fulfill({contentType:'text/javascript',body:fs.readFileSync('tests/fixtures/firebase-client.mjs','utf8')}));
- await page.route(URL+'/',r=>r.fulfill({contentType:'text/html',body:fs.readFileSync('index.html','utf8').replace('load();if(!state.merchant)rollShop();save();render();','globalThis.assetTest={itemImg,animateStrike,animateDefense,rarityFrame};load();if(!state.merchant)rollShop();save();render();')}));
+ await page.route(URL+'/',r=>r.fulfill({contentType:'text/html',body:fs.readFileSync('index.html','utf8').replace('load();if(!state.merchant)rollShop();save();render();','globalThis.assetTest={itemImg,animateStrike,animateDefense,animateEnemyStrike,floatText,rarityFrame};load();if(!state.merchant)rollShop();save();render();')}));
  await page.goto(URL+'/');await page.locator('#googleSignIn').click();await page.locator('#nickname').fill('Skinny');await page.locator('#createProfile').click();await page.waitForFunction(()=>!document.querySelector('.onlineDialog'));
  assert.equal(await page.locator('[data-online-action="account"]').innerText(),'skinny');
  const results=await page.evaluate(async()=>{
@@ -23,9 +23,26 @@ const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8012';
    const scene=document.getElementById('scene'),before=scene.getBoundingClientRect().height;
    if(kind==='Block')assetTest.animateDefense();else assetTest.animateStrike(kind,['Staff','Wand'].includes(kind));
    const effects=[...scene.querySelectorAll('.combatVfx')],fx=effects.findLast(x=>x.dataset.kind===kind);if(!fx)throw Error('Missing effect '+kind);
-   await fx.querySelector('img').decode();return {src:fx.querySelector('img').getAttribute('src'),stable:scene.getBoundingClientRect().height===before};
+   const visible=getComputedStyle(fx).display!=='none',
+    animation=getComputedStyle(fx).animationName,
+    actorAnimation=getComputedStyle(document.getElementById('heroPortrait')).animationName;
+    await fx.querySelector('img').decode();
+    return {src:fx.querySelector('img').getAttribute('src'),stable:scene.getBoundingClientRect().height===before,visible,animation,actorAnimation};
   },kind);assert.ok(result.stable);assert.match(result.src,/assets\/combat-vfx\/.+\.png/);
+  assert.equal(result.visible,true,kind+' overlay must be visible');
+  assert.notEqual(result.animation,'none',kind+' effect must animate');
+  assert.notEqual(result.actorAnimation,'none',kind+' player must animate');
  }
+ const restored=await page.evaluate(()=>{
+  assetTest.floatText(24);assetTest.animateEnemyStrike();
+  const dmg=document.querySelector('.scene .float');
+  const enemy=document.getElementById('enemyPortrait');
+  return {damageVisible:getComputedStyle(dmg).display!=='none',damageAnimation:getComputedStyle(dmg).animationName,
+   enemyAnimation:getComputedStyle(enemy).animationName};
+ });
+ assert(restored.damageVisible,'floating combat damage must be visible');
+ assert.equal(restored.damageAnimation,'rise','floating damage animation restored');
+ assert.equal(restored.enemyAnimation,'fxEnemyAttack','enemy attack movement restored');
  await page.emulateMedia({reducedMotion:'reduce'});await page.evaluate(()=>assetTest.animateStrike('Bow'));assert.equal(await page.locator('.combatVfx[data-kind="Bow"]').last().evaluate(e=>getComputedStyle(e).animationName),'vfxFade');
  await page.evaluate(()=>{for(let i=0;i<20;i++)assetTest.animateStrike('Sword');if(document.querySelectorAll('.combatVfx').length>8)throw Error('Too many effects');});
  await page.waitForTimeout(800);assert.equal(await page.locator('.combatVfx').count(),0);
