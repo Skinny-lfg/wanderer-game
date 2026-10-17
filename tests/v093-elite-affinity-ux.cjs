@@ -25,7 +25,7 @@ assert(!html.includes('Enemy ATK ${enemy.atk}'),'fixed enemy estimate removed');
 assert((html.match(/Healing −40% · /g)||[]).length===1,'healing status only rendered once');
 assert(!html.includes('Threat estimate changes with your equipment.'),'outdated difficulty helper removed');
 assert(!html.includes('.scene .combatVfx,.scene .float{display:none!important}'),'combat effect overlays must not be hidden');
-assert(!html.includes('#enemyPortrait.fxEnemyAttack{animation:none!important}'),'enemy strike animation must not be globally suppressed');
+assert(html.includes('#enemyPortrait.fxEnemyAttack{animation:fxEnemyAttack .36s ease-out}'),'enemy strike animation remains enabled by default');
 assert(html.includes('@media(prefers-reduced-motion:reduce){#heroPortrait[class*="fx"],#enemyPortrait.fxEnemyAttack{animation:none!important}}'),'reduced-motion accessibility remains');
 assert(html.includes('backdrop-filter:saturate(.5) brightness(.90)'),'combat background saturation remains at 50%');
 const script=html.match(/<script>([\s\S]*?)<\/script>/)[1];
