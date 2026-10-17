@@ -47,11 +47,36 @@ const server=http.createServer((req,res)=>{if(req.url==='/'){res.setHeader('Cont
     leaderboardBorder:getComputedStyle(leaderboard).borderColor,feedbackIcon:getComputedStyle(feedback,'::before').width,
     buttonsWidth:document.querySelector('.onlineBar').getBoundingClientRect().width};
  });
- assert.equal(chrome.bg,'#100a0e','background palette should be dark garnet');
+ assert.equal(chrome.bg,'#1b0b13','whole-page canvas should use dark red');
  assert.ok(chrome.panel.includes('linear-gradient'),'panels retain dark-red layered depth');
  assert.ok(parseFloat(chrome.accountIcon)>=14,'account control has a meaningful icon');
  assert.ok(chrome.accountHeight>=38,'account action remains tappable');
  assert.ok(parseFloat(chrome.feedbackIcon)>=14,'feedback control matches account and leaderboard');
+
+ const neutrals=await page.evaluate(()=>{
+  const board=document.createElement('div');
+  board.style.cssText='position:absolute;left:-2000px;top:-2000px;width:800px;pointer-events:none';
+  board.innerHTML='<div class="nextWaveOdds"></div><div class="nextGearOdds"></div><div class="nextRarityItem"></div>'+
+   '<div class="combatRuneReadout"></div><div class="setTrack"></div><div class="runeSlot"></div>'+
+   '<div class="valuable"></div><div class="stashGrid"></div><div class="log"></div>'+
+   '<div class="protectionPanel"></div><div class="stat"></div>'+
+   '<div class="dungeonCard"><div class="favoredGearItem"><span class="favoredGearIcon"></span></div></div>'+
+   '<div class="equipmentLoadout"><div class="paper"></div></div>';
+  document.body.appendChild(board);
+  const selectors=['.nextWaveOdds','.nextGearOdds','.nextRarityItem','.combatRuneReadout',
+   '.setTrack','.runeSlot','.valuable','.stashGrid','.log','.protectionPanel','.stat',
+   '.dungeonCard .favoredGearItem','.dungeonCard .favoredGearIcon','.equipmentLoadout .paper'];
+  const colors=selectors.map(selector=>({selector,color:getComputedStyle(board.querySelector(selector)).backgroundColor}));
+  board.remove();
+  return {canvas:getComputedStyle(document.documentElement).backgroundColor,body:getComputedStyle(document.body).backgroundImage,colors};
+ });
+ assert.match(neutrals.canvas,/rgb\\(27, 11, 19\\)/,'the base canvas is dark red, including outside cards');
+ assert(neutrals.body.includes('radial-gradient'),'whole-page backdrop should have burgundy gradients');
+ for(const {selector,color} of neutrals.colors){
+  const rgb=color.match(/rgba?\\((\\d+), (\\d+), (\\d+)/);
+  assert(rgb,'expected solid surface color for '+selector+': '+color);
+  assert(+rgb[1]>+rgb[3],'neutral UI surface should lean red, not blue: '+selector+' = '+color);
+ }
  await page.evaluate(()=>fixture.dungeons());
  assert.equal(await page.locator('.legendaryHunt').count(),0,'Legendary Hunt hidden pending its next phase');
  const cards=await page.locator('[data-path]').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('data-path')));
