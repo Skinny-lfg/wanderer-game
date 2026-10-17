@@ -1,20 +1,27 @@
 // Offline harness: production gear, stats, encounters, rewards and fixed-step combat.
 const fs=require('node:fs'),vm=require('node:vm');
-function harness(file='index.html'){
+function harness(file='index.html',options={}){
  const match=fs.readFileSync(file,'utf8').match(/<script>([\s\S]*?)<\/script>/);
  const boot='load();if(!state.merchant)rollShop();save();render();';
  if(!match||match[1].split(boot).length!==2)throw Error('Simulation bootstrap changed; review the production harness before running.');
- const source=match[1];
+ const source=options.transform?options.transform(match[1]):match[1];
  const node=()=>({innerHTML:'',textContent:'',style:{},dataset:{},classList:{add(){},remove(){}},focus(){}});
  const ctx={document:{getElementById:node,querySelectorAll:()=>[],createElement:node},localStorage:{getItem:()=>null,setItem(){}},setInterval:()=>0,clearInterval(){},setTimeout:()=>0,clearTimeout(){},console,alert(){}};
+ if(options.transform&&typeof source!=='string')throw Error('Invalid simulation transform');
+ if(options.legendary){const legendary=fs.readFileSync(options.legendary===true?'combat/legendary.js':options.legendary,'utf8');vm.runInNewContext(legendary,ctx);}
  const injected=`
  fresh();animateStrike=animateDefense=animateEnemyStrike=updateBars=render=renderCombat=save=showPendingRuneReward=addLog=()=>{};
  die=()=>{state.run.status='dead'};
+ let healing=0,barrierGained=0,blockedDamage=0;
+ const productionHeal=setHeal,productionBarrier=setBarrier;
+ setHeal=(...args)=>{const n=productionHeal(...args);healing+=n;return n;};
+ setBarrier=(...args)=>{const n=productionBarrier(...args);barrierGained+=n;return n;};
+ addLog=(line)=>{let hit=String(line).match(/(?:Shield prevents|Barrier absorbs) (\\d+) damage/);if(hit)blockedDamage+=Number(hit[1]);};
  let damageIn=0,damageOut=0;const productionDots=tickDots;tickDots=e=>{const n=productionDots(e);damageOut+=n;return n;};
  floatText=(n,target)=>{if(typeof n==='number'&&n>0){if(target==='hero')damageIn+=n;else if(target==='enemy')damageOut+=n;}};
  let seed=1;Math.random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};
- globalThis.trial=({level,weapon,affinity,rarity='Rare',scale=1,seed:inputSeed=1,elite='tank',speed=1,gearPlan=null,diagnostics=false})=>{
- fresh();seed=inputSeed;damageIn=damageOut=0;clockSpeed=speed;
+ globalThis.trial=({level,weapon,affinity,rarity='Rare',scale=1,seed:inputSeed=1,elite='tank',theme='temple',speed=1,gearPlan=null,diagnostics=false})=>{
+ fresh();seed=inputSeed;damageIn=damageOut=healing=barrierGained=blockedDamage=0;clockSpeed=speed;
  const tier=Math.max(1,Math.round(level*scale));
  if(gearPlan){
  const used=new Set();
@@ -30,13 +37,14 @@ function harness(file='index.html'){
  else for(const slot of SLOTS){if(slot==='offhand'&&['Staff','Bow','Two-Handed'].includes(weapon))continue;
  const subtype=slot==='weapon'?weapon:slot==='offhand'?(weapon==='Wand'?'Orb':weapon==='Daggers'?'Off-Hand Dagger':'Shield'):'random';
  const item=makeItem(tier,slot,null,'loot',subtype,rarity);item.effect=affinity;item.magic=['Staff','Wand','Orb'].includes(subtype)?affinity:null;state.equip[slot]=item;}
- state.chosen=state.maxDungeon=level;selectedPath=state.selectedPath=THEMES[0].id;startDungeon();
+ const path=THEMES.find(t=>t.id===theme);if(!path)throw Error('Unknown simulation theme');
+ state.chosen=state.maxDungeon=level;selectedPath=state.selectedPath=path.id;startDungeon();
  const r=state.run;r.eliteType=elite;if(gearPlan)seed=(inputSeed^0x9e3779b9)>>>0;let ticks=0;const encounters=[];
  const productionAttack=weaponAttack;let attacks=0,casts=0,fallbacks=0;
  weaponAttack=run=>{attacks++;if(run.stats.caster){if(run.mp>=(run.stats.main.subtype==='Staff'?13:9))casts++;else fallbacks++;}return productionAttack(run);};
  while(ticks<18000&&['ready','fight'].includes(r.status)){if(r.status==='ready'){nextEncounter();encounters.push({wave:r.enc,hp:r.enemy.hp,atk:r.enemy.atk,def:r.enemy.def,interval:r.enemy.attackEvery});}updateFight();ticks++;}
  weaponAttack=productionAttack;
- return {...(diagnostics?{equipment:state.equip,counts:r.stats.counts,stats:{attack:r.stats.attack,spell:r.stats.spellPower,aps:r.stats.attacksPerSec,crit:r.stats.crit,maxhp:r.maxhp,defense:r.stats.defense,mana:r.maxmp,manaRegen:r.stats.manaRegen},attacks,casts,fallbacks,encounters}:{}),win:r.status==='win',alive:r.hp>0,timeout:ticks>=18000,hp:Math.max(0,r.hp)/r.maxhp*100,seconds:ticks*.11,damageIn,damageOut,gold:r.status==='win'?r.gold:0,fragments:r.status==='win'?r.fragments:0,loot:r.status==='win'?r.loot.length:0,power:r.stats.power};
+ return {...(diagnostics?{equipment:state.equip,counts:r.stats.counts,stats:{attack:r.stats.attack,spell:r.stats.spellPower,aps:r.stats.attacksPerSec,crit:r.stats.crit,maxhp:r.maxhp,defense:r.stats.defense,mana:r.maxmp,manaRegen:r.stats.manaRegen},attacks,casts,fallbacks,encounters}:{}),win:r.status==='win',alive:r.hp>0,timeout:ticks>=18000,deathWave:r.status==='dead'?r.enc:null,hp:Math.max(0,r.hp)/r.maxhp*100,seconds:ticks*.11,damageIn,damageOut,healing,barrierGained,blockedDamage,gold:r.status==='win'?r.gold:0,fragments:r.status==='win'?r.fragments:0,loot:r.status==='win'?r.loot.length:0,power:r.stats.power};
  };
  // Reward-only sampling runs the real victory handler; it does not simulate combat or extraction.
  globalThis.sampleRewards=({level,wave,theme,cha,seed:inputSeed})=>{
