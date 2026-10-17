@@ -5,6 +5,8 @@ assert(script,'game JS exists');new vm.Script(script);
 const order=['amulet','helm','weapon','gloves','armor','offhand','ring1','boots','ring2'];
 for(let i=0;i<order.length;i++)
  assert(html.includes('.equipmentLoadout .paper .slotTile[data-slot="'+order[i]+'"]{order:'+(i+1)+'}'),order[i]+' mobile grid position');
+assert(html.includes('.equipmentOverview .equipmentQuickView{\n  display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);gap:6px;align-items:start;'),'gear stays left and stats right on mobile');
+assert(html.includes('.equipmentOverview .equipmentStats .statsGrid{grid-template-columns:repeat(2,minmax(0,1fr))}'),'mobile stats use readable two-column grid');
 assert(html.includes('.dungeonLevelRow .levelGrid{')&&html.includes('overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain'),'rail scrolls horizontally');
 assert(!html.includes('id="previousLevels"')&&!html.includes('id="nextLevels"'),'dungeon page arrows removed');
 assert(html.includes("levelsRail.addEventListener?.('wheel'"),'desktop wheel moves through the level rail');
