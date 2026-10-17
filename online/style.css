@@ -42,3 +42,13 @@
 .rankingList .rankInfo{max-width:100%;overflow-wrap:anywhere;font-size:11px}
 .rankingList .rankDungeon{margin-left:auto;text-align:right;white-space:nowrap;color:#f0ca7c;font-size:15px}
 @media(max-width:650px){.rankingList .rankEntry{grid-template-columns:25px 32px minmax(0,1fr) auto;gap:7px;padding:9px 1px}.rankingList .rankEntry img{width:32px;height:32px}.rankingList .rankDungeon{font-size:13px}.rankingList .rankPodium{font-size:20px}.rankingList .rankInfo{font-size:10px}}
+
+/* Wine-red account, leaderboard and feedback panels: preserve rarity/affinity semantics. */
+.onlineDialog.itemDialog{background:linear-gradient(160deg,#39252e 0%,#1b1117 100%);border-color:#b28a65;box-shadow:0 22px 75px #070306e0, inset 0 1px 0 #ffdddd14}
+.onlineDialog .profileField input,.onlineDialog .playerSearch input,.onlineDialog .feedbackForm select,.onlineDialog .feedbackForm textarea,.onlineDialog .filterBar select{background:#25161e;border-color:#78535e;color:#f2e6e9}
+.onlineDialog .saveChoices section,.onlineDialog .publicGearItem,.onlineDialog .arenaPanel{background:#2c1c24;border-color:#78545f}
+.onlineDialog .rankingList li,.onlineDialog hr{border-color:#694b53}
+.onlineDialog .characterPicker button{background:#2d1c25;border-color:#6d4b55}
+.onlineDialog .characterPicker button:hover{background:#4b2d3b;border-color:#a87677}
+.onlineDialog .characterPicker [aria-pressed="true"]{background:#533e30;border-color:#e0b677}
+.onlineDialog .feedbackForm select:focus-visible,.onlineDialog .feedbackForm textarea:focus-visible,.onlineDialog .profileField input:focus-visible{outline:2px solid #e8c38c;outline-offset:2px}
