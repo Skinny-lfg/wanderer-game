@@ -8,7 +8,7 @@ for(const name of ['Warrior','Archer','Dark Warrior','Old Mage','Rogue']){
  assert(model.includes("'"+name+"'"),name+' online character name');
  assert(manifest.characters.some(c=>c.name===name),name+' character manifest');
 }
-assert(html.includes('class="olderChangelog"'),'old changelog is collapsed');
+assert(!html.includes('class="olderChangelog"'),'old changelog removed');
 assert(html.includes('object-fit:contain;object-position:center bottom'),'character no longer cropped into face');
 const overview=html.indexOf('<h2>Equipment</h2>'),inventory=html.indexOf('<h2>Inventory ');
 assert(html.indexOf('id="markAllSeen"')>inventory,'Mark All Seen belongs to Inventory, not Equipment');

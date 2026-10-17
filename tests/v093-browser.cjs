@@ -20,7 +20,13 @@ const server=http.createServer((req,res)=>{if(req.url==='/'){res.setHeader('Cont
  try{for(const viewport of [{width:1280,height:900},{width:390,height:844}]){
  const context=await browser.newContext({viewport}),page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.route('**/*',route=>route.request().url().startsWith(origin)?route.continue():route.abort());
- await page.goto(origin);await page.evaluate(()=>fixture.seed());
+ await page.goto(origin);
+ const missing=await page.evaluate(async()=>{
+  const assets=['assets/branding/wanderer-logo.webp',...['tank','caster','vampire','berserker'].map(id=>'assets/elites/'+id+'.png')];
+  return (await Promise.all(assets.map(src=>new Promise(resolve=>{const img=new Image();img.onload=()=>resolve(null);img.onerror=()=>resolve(src);img.src=src;})))).filter(Boolean);
+ });
+ assert.deepEqual(missing,[],'the logo and all elite artworks load on desktop/mobile');
+ await page.evaluate(()=>fixture.seed());
  assert.equal(await page.locator('.newBadge').count(),3);
  await page.locator('[data-item]').filter({has:page.locator('img[alt="Shield"]')}).click();
  assert(await page.locator('#equipThis').isDisabled());assert.equal(await page.locator('.newBadge').count(),2);

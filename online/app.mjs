@@ -10,7 +10,13 @@ const accountKey=()=>user?'wanderer_account_'+user.uid+'_'+SAVE_NAMESPACE:null;
 function status(text){message=text;}
 function report(error){status(errorText(error));const el=document.getElementById('accountError');el.textContent=message;el.hidden=false;}
 function clearError(){document.getElementById('accountError').hidden=true;}
-function accountLabel(){document.querySelector('[data-online-action="account"]').textContent=profile?.nickname||'Account & Character';}
+function accountLabel(){
+ document.querySelector('[data-online-action="account"]').textContent=profile?.nickname||'Account & Character';
+ // Nickname belongs to the authenticated profile, not the public game save.
+ globalThis.WandererNickname=ready&&user&&profile?.nickname?profile.nickname:null;
+ const combatName=document.getElementById('heroName');
+ if(combatName)combatName.textContent=globalThis.WandererNickname||'Wanderer';
+}
 function gate(){accountLabel();for(const id of ['screen','nav'])document.getElementById(id).inert=!ready||game.blocked();}
 function remember(){localStorage.setItem(accountKey()+'_synced',JSON.stringify(game.snapshot()));}
 async function publishResults(){
