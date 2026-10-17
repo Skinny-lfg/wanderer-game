@@ -1,3 +1,14 @@
+## v0.10.0 — 2026-10-17
+
+- Reworked Legendary equipment with unique event-driven abilities, fixed signature affinities for selected items, and the new Frost Staff Winterheart Spire.
+- Expanded buildcraft: stronger Critical, Fire and Dark charge interactions; Shatter and Double Strike mechanics; refined set descriptions and equipment comparison.
+- Rebalanced Sunder, Shield and Regen 2-piece bonuses to scale proportionally with initial enemy Armor or player maximum HP.
+- Added three illustrated boss portraits, refreshed elite art and names, improved boss warnings, and clarified combat information including caster Mana.
+- Refreshed website and Tavern backgrounds, character art and names, desktop equipment placement, mobile navigation and inventory interface.
+- Improved gear management, dungeon choices, progression information and assorted quality-of-life fixes; existing player saves and Firebase collections remain unchanged.
+- Regen tier description simplified without changing its 0.6% maximum-HP-per-second effect.
+- Validated the latest development build with the automated regression suite; publication does not reset accounts, saves or leaderboard scores.
+
 ## v0.9.3 Legendary revision — development only
 
 - Replaced simple Legendary signatures with event-driven build interactions; 19 unique signatures across 22 identities.
