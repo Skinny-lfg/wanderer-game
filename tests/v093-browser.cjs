@@ -16,7 +16,7 @@ const html=fs.readFileSync(path.join(root,'index.html'),'utf8').replace(boot,fix
 const server=http.createServer((req,res)=>{if(req.url==='/'){res.setHeader('Content-Type','text/html');return res.end(html);}const file=path.resolve(root,'.'+decodeURIComponent(req.url.split('?')[0]));if(!file.startsWith(root+path.sep)){res.writeHead(403);return res.end();}fs.readFile(file,(e,data)=>{res.writeHead(e?404:200);res.end(e?'':data);});});
 (async()=>{
  await new Promise(r=>server.listen(0,'127.0.0.1',r));const origin='http://127.0.0.1:'+server.address().port;
- const browser=await chromium.launch({headless:true,...(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{})});
+ const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_PATH||'/usr/bin/chromium',args:['--no-sandbox']});
  try{for(const viewport of [{width:1280,height:900},{width:390,height:844}]){
  const context=await browser.newContext({viewport}),page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.route('**/*',route=>route.request().url().startsWith(origin)?route.continue():route.abort());
@@ -34,10 +34,27 @@ const server=http.createServer((req,res)=>{if(req.url==='/'){res.setHeader('Cont
  await page.locator('[data-rune-equip]').click();assert.equal(await page.locator('.newBadge').count(),1);
  await page.locator('#markAllSeen').click();assert.equal(await page.locator('.newBadge').count(),0);
  await page.reload();await page.evaluate(()=>fixture.equipment());assert.equal(await page.locator('.newBadge').count(),0);
- assert((await page.locator('.equipmentBonuses').innerText()).includes('32%'));
- assert((await page.locator('.equipmentBonuses').innerText()).includes('5 pieces alone do not increase it'));
+ assert((await page.locator('.equipmentBonuses').innerText()).includes('14%'),'shared armor affinity proc is presented');
+ assert((await page.locator('.equipmentBonuses').innerText()).includes('More pieces widen the affinity pool'),'no per-piece proc inflation');
  assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'equipment fits viewport');
- await page.evaluate(()=>fixture.dungeons());const cards=await page.locator('[data-path]').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('data-path')));
+ const chrome=await page.evaluate(()=>{
+   const root=getComputedStyle(document.documentElement);
+   const account=document.querySelector('[data-online-action="account"]');
+   const leaderboard=document.querySelector('[data-online-action="leaderboard"]');
+   const feedback=document.querySelector('[data-online-action="feedback"]');
+   return {bg:root.getPropertyValue('--bg').trim(),panel:getComputedStyle(document.querySelector('.panel')).backgroundImage,
+    accountIcon:getComputedStyle(account,'::before').width,accountHeight:account.getBoundingClientRect().height,
+    leaderboardBorder:getComputedStyle(leaderboard).borderColor,feedbackIcon:getComputedStyle(feedback,'::before').width,
+    buttonsWidth:document.querySelector('.onlineBar').getBoundingClientRect().width};
+ });
+ assert.equal(chrome.bg,'#100a0e','background palette should be dark garnet');
+ assert.ok(chrome.panel.includes('linear-gradient'),'panels retain dark-red layered depth');
+ assert.ok(parseFloat(chrome.accountIcon)>=14,'account control has a meaningful icon');
+ assert.ok(chrome.accountHeight>=38,'account action remains tappable');
+ assert.ok(parseFloat(chrome.feedbackIcon)>=14,'feedback control matches account and leaderboard');
+ await page.evaluate(()=>fixture.dungeons());
+ assert.equal(await page.locator('.legendaryHunt').count(),0,'Legendary Hunt hidden pending its next phase');
+ const cards=await page.locator('[data-path]').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('data-path')));
  assert((await page.locator('#rerollPath').innerText()).includes('10'));
  await page.reload();await page.evaluate(()=>fixture.dungeons());assert.deepEqual(await page.locator('[data-path]').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('data-path'))),cards);
  const visuals=await page.evaluate(()=>{

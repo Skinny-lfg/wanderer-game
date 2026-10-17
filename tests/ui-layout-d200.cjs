@@ -21,9 +21,11 @@ assert(html.includes('.equipmentLeft,.equipmentRight{display:contents}')&&html.i
 assert(html.includes('class="homeMetrics"')&&!html.includes('<div class="hub">'),'home dashboard has no duplicate menu');
 const homeMarkup=html.slice(html.indexOf('function renderTavern(){'),html.indexOf('function equipItem('));
 assert(homeMarkup.includes('<details class="panel homeChangelog" open>')&&!homeMarkup.includes('<details class="olderChangelog">'),'latest changelog visible without older release history');
-for(const text of ['Elite portraits','Legendary Hunt','affinities','difficulty','Forge and Merchant']){
+for(const text of ['Elite portraits','dark garnet','affinities','difficulty','Forge and Merchant']){
  assert(homeMarkup.includes(text),'current release changelog contains '+text);
 }
+assert(!homeMarkup.includes('Legendary Hunt'),'deferred Legendary Hunt no longer advertised');
+assert(!html.includes('${legendaryHuntMarkup(paths)}'),'Legendary Hunt removed from Dungeons for this phase');
 assert(html.includes('.homeChanges{list-style:none;display:grid')&&html.includes('@media(max-width:650px){.homeChanges{grid-template-columns:1fr'),'compact mobile changelog layout');
 
 assert(html.includes('const milestones=[2,3,5].map(tier=>{')&&!html.includes('Number(count>=b)-Number(count>=a)||b-a'),'set tiers always show 2, 3, then 5 (including greyed out)');

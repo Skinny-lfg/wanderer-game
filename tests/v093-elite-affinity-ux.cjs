@@ -3,6 +3,13 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('nod
 const html=fs.readFileSync('index.html','utf8');
 const app=fs.readFileSync('online/app.mjs','utf8');
 assert(html.includes('id="brandLogo"'),'brand has logo hook');
+assert(html.includes('--bg:#100a0e')&&html.includes('background:radial-gradient(ellipse 110% 85% at 50% -22%,#422832'),'garnet backdrop replaces blue');
+assert(html.includes('.onlineBar .buttonRow button[data-online-action]::before'),'utility actions have decorative icons');
+assert(html.includes('.onlineBar .buttonRow button[data-online-action="leaderboard"]'),'Leaderboard has its own gold accent');
+assert(html.includes('<button class="tiny" data-online-action="feedback">Feedback</button>'),'Feedback button uses unified visual labeling');
+assert(!html.includes('${legendaryHuntMarkup(paths)}'),'Legendary Hunt is temporarily hidden from dungeon UI');
+assert(!html.includes("Q('[data-hunt]').forEach"),'hidden Legendary Hunt has no active UI handlers');
+
 assert(fs.readFileSync('assets/branding/wanderer-logo.webp').toString('ascii',0,4)==='RIFF','real logo artwork committed');
 for(const id of ['tank','caster','vampire','berserker']){
  const buffer=fs.readFileSync('assets/elites/'+id+'.png');
