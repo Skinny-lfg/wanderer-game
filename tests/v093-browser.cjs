@@ -34,8 +34,8 @@ const server=http.createServer((req,res)=>{if(req.url==='/'){res.setHeader('Cont
  await page.locator('[data-rune-equip]').click();assert.equal(await page.locator('.newBadge').count(),1);
  await page.locator('#markAllSeen').click();assert.equal(await page.locator('.newBadge').count(),0);
  await page.reload();await page.evaluate(()=>fixture.equipment());assert.equal(await page.locator('.newBadge').count(),0);
- assert((await page.locator('.equipmentBonuses').innerText()).includes('32%'));
- assert((await page.locator('.equipmentBonuses').innerText()).includes('5 pieces alone do not increase it'));
+ assert((await page.locator('.equipmentBonuses').innerText()).includes('14%'),'shared armor affinity proc is presented');
+ assert((await page.locator('.equipmentBonuses').innerText()).includes('More pieces widen the affinity pool'),'no per-piece proc inflation');
  assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'equipment fits viewport');
  const chrome=await page.evaluate(()=>{
    const root=getComputedStyle(document.documentElement);
