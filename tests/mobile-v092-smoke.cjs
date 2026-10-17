@@ -27,8 +27,8 @@ assert(html.includes('.equipmentBonuses .setTracks{display:grid;grid-template-co
 assert(html.includes('class="setTierMobileDetails"')&&html.includes('<summary>View full bonuses</summary>'),'full set bonus descriptions remain accessible');
 assert(html.includes('merchantPowerTrend')&&html.includes('Gear Power</span>'),'merchant cards include delta power labels');
 assert(html.includes('.merchantPowerTrend.up')&&html.includes('.merchantPowerTrend.down'),'merchant gain/loss visuals present');
-assert(pathSelect.includes('class="dungeonLevelRow"')&&!pathSelect.includes('class="dungeonPager"'),'arrows are integrated with dungeon number rail');
-assert(pathSelect.indexOf('id="previousLevels"')<pathSelect.indexOf('class="levelGrid"')&&pathSelect.indexOf('class="levelGrid"')<pathSelect.indexOf('id="nextLevels"'),'dungeon side arrows flank the numbers');
+assert(pathSelect.includes('class="dungeonLevelRow"')&&!pathSelect.includes('class="dungeonPager"'),'scrollable dungeon number rail retained');
+assert(!pathSelect.includes('id="previousLevels"')&&!pathSelect.includes('id="nextLevels"')&&pathSelect.includes('scroll horizontally to browse'),'dungeon selector is one continuous swipe rail without arrow buttons');
 assert(pathSelect.indexOf('class="dungeonActionArea"')<pathSelect.indexOf('class="entryPreference"'),'enter button precedes secondary preferences');
 assert(pathSelect.includes('id="rerollPath"')&&pathSelect.includes('id="enter"')&&pathSelect.includes('protectionEntryWarning()'),'reroll, entry and protection warnings remain intact');
 assert(html.includes('.dungeonActionArea #enter{font-size:13px;font-weight:750}'),'enter action remains emphasized');
