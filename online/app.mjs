@@ -18,7 +18,14 @@ function accountLabel(){
  if(combatName)combatName.textContent=globalThis.WandererNickname||'Wanderer';
 }
 function gate(){accountLabel();for(const id of ['screen','nav'])document.getElementById(id).inert=!ready||game.blocked();}
-function remember(){localStorage.setItem(accountKey()+'_synced',JSON.stringify(game.snapshot()));}
+function remember(){
+ try{game.cacheSync(accountKey()+'_synced',JSON.stringify(game.snapshot()));return true;}
+ catch(error){
+  if(!/storage quota|quota.*exceed/i.test(String(error.message||'')))throw error;
+  status('Cloud save restored, but phone storage is full. Sync cache could not be refreshed.');
+  return false;
+ }
+}
 async function publishResults(){
  if(!ready||revision===null||game.busy())return;
  const publishingEpoch=epoch;
@@ -38,6 +45,7 @@ function errorText(error){
  if(code.includes('popup-blocked'))return 'The sign-in popup was blocked. Allow popups and try again.';
  if(code.includes('popup-closed')||code.includes('cancelled-popup'))return 'Sign-in was cancelled. Please try again.';
  if(code.includes('cloud-conflict'))return 'Another device changed the cloud save. Auto-sync is paused. Review both saves before choosing.';
+  if(code.includes('quota')||code.includes('QuotaExceeded')||code.includes('storage full'))return 'Device storage is full. Your saves have not been erased. Do not clear Wanderer website data; free space elsewhere or export a backup before retrying.';
  if(code.includes('unavailable')||code.includes('network')||code.includes('offline'))return 'Cloud connection unavailable. Progress stays on this device; retry when online.';
  return error?.message||'The operation failed. Your local save has been kept.';
 }
@@ -209,7 +217,7 @@ async function syncNow(){
  if(writing)return;
  const payload=validateSave(game.snapshot()),raw=JSON.stringify(payload);if(raw===synced){status('Cloud synced · '+profile.nickname);return;}
  const token=epoch;writing=true;status('Saving to cloud…');
- try{const record=await backend.writeSave(payload,revision);sessionGuard(token);revision=record.revision;synced=raw;localStorage.setItem(accountKey()+'_synced',raw);status('Cloud synced · '+profile.nickname);clearError();}
+ try{const record=await backend.writeSave(payload,revision);sessionGuard(token);revision=record.revision;synced=raw;try{game.cacheSync(accountKey()+'_synced',raw);status('Cloud synced · '+profile.nickname);}catch(cacheError){if(!/storage quota|quota.*exceed/i.test(String(cacheError.message||'')))throw cacheError;status('Cloud synced · local cache full on this device');}clearError();}
  catch(error){if(token===epoch){if(String(error?.message||error?.code).includes('cloud-conflict'))revision=null;report(error);}throw error;}
  finally{writing=false;if(token===epoch&&revision!==null&&JSON.stringify(game.snapshot())!==synced)queueSync();}
 }
