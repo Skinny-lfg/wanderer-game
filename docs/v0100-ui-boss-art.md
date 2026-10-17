@@ -21,3 +21,11 @@ No further backlog features or combat balance changes are part of this update.
 - The previous browser test failure was a fixture-scope issue (trying to access script-local `state` from outside its scope); the fixture now exposes its own `setMana` helper. A separate bug was fixed to avoid overwriting connected Account/Leaderboard/Feedback click handlers on game re-renders.
 - **Release remains held:** the owner can still review aesthetics and artwork in person. No merge to `main`, no live Firebase rules, account or save changes, and no deployment were performed.
 
+
+## Post-audit visual fixes — 17 October 2026
+
+- **Equipment desktop:** no-overlap slot layout with slightly taller compact portrait paper. Armor/Boots and all side equipment slots have separated vertical zones. Nine-slot collision checks added to Chromium regression.
+- **Character picker labels:** Paladin, Ranger, Warrior, Wizard, Rogue. Character IDs, saved character choice, cosmetics and gameplay modifiers are unchanged. Both browser module URL and `online/model.mjs` import URL were refreshed to avoid stale cached character labels.
+- **Elite portrait pack:** original optimized WebPs from Drive `Wanderer/02 - Assets/Packs/Wanderer_Elites_4_Optimized`, mapped to tank, vampire, berserker and caster. Original PNG files remain as archival copies; runtime uses the WebPs. Existing elite abilities and names are unchanged.
+- **Targeted regression:** verify new names inside the actual Account & Character browser dialog and verify nine equipment slots have no bounding-box overlap at desktop viewport.
+- Keep v0.10.0 in `development` until owner visually approves. No Firebase production changes or save resets.
