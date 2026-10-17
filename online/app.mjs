@@ -59,7 +59,9 @@ async function connect(){
  return backendPromise;
 }
 async function restoreProfile(token=epoch){
- profileState='loading';showAccount();
+ // Keep restored sessions unobstructed while Firebase checks profile/save.
+ // A missing profile, an auth failure or a cloud conflict still opens Account.
+ profileState='loading';
  try{
   const p=await backend.profile();sessionGuard(token);profile=p;profileState=p?'found':'missing';
   selectedCharacter=p?.characterId||game.snapshot().characterId||'wanderer';
@@ -300,4 +302,4 @@ globalThis.addEventListener('wanderer:conflict',()=>{revision=null;gate();report
 globalThis.addEventListener('online',()=>{if(revision!==null)queueSync();else if(user&&profile)resumeAccount().catch(report);});
 // Hotfix: speedrun timing lives in the combat simulation only; never tick while idle in town.
 // Restore the account automatically; only divergent saves require a choice.
-gate();showAccount();connect().catch(error=>{status(errorText(error));dialog.querySelector('.onlineError').textContent=errorText(error);});
+gate();connect().catch(error=>{status(errorText(error));showAccount();if(dialog)dialog.querySelector('.onlineError').textContent=errorText(error);});

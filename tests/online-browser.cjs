@@ -5,6 +5,12 @@ const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8010';
  const page=await browser.newPage({viewport:{width,height:950}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.route('**/online/firebase-client.mjs*',route=>route.fulfill({contentType:'text/javascript',body:fs.readFileSync('tests/fixtures/firebase-client.mjs','utf8')}));
  await page.addInitScript(()=>{
+  window.__accountDialogOpens=0;
+  const original=HTMLDialogElement.prototype.showModal;
+  HTMLDialogElement.prototype.showModal=function(...args){
+   if(this.classList.contains('onlineDialog')&&this.querySelector('#onlineDialogTitle')?.textContent==='Account & Character')window.__accountDialogOpens++;
+   return original.apply(this,args);
+  };
   const slots={helm:null,amulet:null,armor:null,gloves:null,weapon:{id:'heavy',slot:'weapon',subtype:'Two-Handed',name:'Legacy heavy',tier:10,rarity:'Epic',atk:999,agi:99,def:1000},offhand:null,ring1:null,ring2:null,boots:null};
   localStorage.setItem('wanderer_browser_proto_v01',JSON.stringify({resetVersion:'older-main-version',maxDungeon:12,chosen:1,stashCapacity:80,gold:111,fragments:222,stash:[],equip:slots,valuables:[],offersByLevel:{},merchant:null,run:null}));
  });
@@ -19,7 +25,7 @@ const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8010';
  assert.equal((await snapshot()).maxDungeon,1,'all accounts begin the new season in D1');
  assert.equal((await snapshot()).equip.weapon?.id||null,null,'old Two-Handed weapon must not be imported');
  const account=()=>page.locator('[data-online-action="account"]').click(),close=()=>page.locator('.onlineDialog [data-close]').click();
- await account();assert.equal(await page.locator('[data-character]').count(),5);
+ await account();assert.equal(await page.locator('[data-character]').count(),5);assert.equal(await page.locator('.characterPicker img').first().evaluate(el=>getComputedStyle(el).borderRadius),'0px','character portraits should not be circular');
  for(const id of ['wanderer','ranger','knight','spellblade','duelist']){await page.locator(`[data-character="${id}"]`).click();await page.locator('#saveCharacter').click();assert.equal((await snapshot()).characterId,id);}
  assert.equal(await page.locator('#reviewCloud,#syncNow,#importSave,#exportSave,#backups,#onlineStatus').count(),0);
  await close();
@@ -61,9 +67,13 @@ const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8010';
  await page.locator('#retryProfile').waitFor();assert.equal(await page.locator('#nickname,#createProfile').count(),0);
  await page.evaluate(()=>__firebaseTest.profileError=null);await page.locator('#retryProfile').click();
  await page.waitForFunction(()=>!document.querySelector('.onlineDialog'));
- // Full browser refresh restores the same Google user/profile and keeps its save.
+ // A normal refresh restores the same account without an Account dialog and preserves its current tab.
+ await page.locator('[data-nav="forge"]').click();
+ assert.equal(await page.locator('[data-nav="forge"]').getAttribute('class'),'active');
  await page.evaluate(()=>sessionStorage.setItem('firebaseRefreshSeed',JSON.stringify({user:__firebaseTest.user,profile:__firebaseTest.profile,cloud:__firebaseTest.cloud})));
- await page.reload();await page.waitForFunction(()=>WandererGame.key()==='wanderer_account_alice_v092'&&!document.querySelector('.onlineDialog'));
+ await page.reload();await page.waitForFunction(()=>WandererGame.key()==='wanderer_account_alice_v092'&&!document.querySelector('.onlineDialog')&&!document.querySelector('#screen').inert);
+ assert.equal(await page.evaluate(()=>__accountDialogOpens),0,'authenticated refresh should not show login dialog');
+ assert.ok(await page.locator('[data-nav="forge"]').evaluate(el=>el.classList.contains('active')),'remember Forge after refresh');
  await account();assert.match(await page.locator('.onlineDialog').innerText(),/alice_1/);assert.equal(await page.locator('#nickname,#createProfile,#backups,#exportSave').count(),0);assert.equal((await snapshot()).gold,999);await close();
  // A second account starts fresh, without copying the first account or legacy slot.
  await account();await page.locator('#googleSignOut').click();

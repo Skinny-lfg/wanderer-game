@@ -21,7 +21,7 @@ jobs:
   # Intentionally opt-in: normal development pushes keep the fast smoke check.
   # Add [audit] to a development commit message to run the full pre-release suite.
   prerelease-audit:
-    if: contains(github.event.head_commit.message, '[audit]') || github.event_name == 'workflow_dispatch'
+    if: contains(github.event.head_commit.message, '[audit]') || github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && contains(github.event.pull_request.title, '[audit]'))
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
@@ -58,6 +58,11 @@ jobs:
         id: unit
         continue-on-error: true
         run: npm test
+      - name: Browser gameplay and mobile stress
+        id: stressbrowser
+        continue-on-error: true
+        timeout-minutes: 8
+        run: node tests/stress-browser.cjs
       - name: Browser account and save flows
         id: browser
         continue-on-error: true
@@ -78,11 +83,6 @@ jobs:
         continue-on-error: true
         timeout-minutes: 7
         run: node tests/stress-combat.cjs && node tests/stress-save-gameplay.cjs
-      - name: Browser gameplay and mobile stress
-        id: stressbrowser
-        continue-on-error: true
-        timeout-minutes: 8
-        run: node tests/stress-browser.cjs
       - name: PvP browser regressions
         id: pvp
         continue-on-error: true
