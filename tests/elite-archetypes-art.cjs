@@ -1,7 +1,7 @@
 // Verify v0.9 wave 4 elite risk preview, real combat effects and legendary artwork.
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
-assert(html.includes('BROWSER PROTOTYPE V0.9'),'site version is V0.9');
+assert(html.includes('class="version">v0.9.3</div>'),'site shows current version only');
 const script=html.match(/<script>([\s\S]*?)<\/script>/)?.[1];assert(script,'game script exists');
 const boot="load();if(!state.merchant)rollShop();save();render();";assert(script.includes(boot),'game bootstrap found');
 const nodes=new Map(),store=new Map(),el=()=>({innerHTML:'',textContent:'',style:{},dataset:{},classList:{add(){},remove(){}},focus(){}});
