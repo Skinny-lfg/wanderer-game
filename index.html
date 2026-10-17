@@ -1669,30 +1669,39 @@ function addLog(text,kind=''){logEntries.unshift({text,kind});logEntries=logEntr
 
 /* Four clear wave-4 elite identities, rolled once per expedition. */
 const ELITE_ARCHETYPES={
- tank:{id:'tank',icon:'🛡️',name:'Tank',risk:'High health, low damage. HP hits reduce your healing by 40% for 5s (refreshes on each hit).',hp:1.75,atk:.65,def:1.22,interval:1.93},
- berserker:{id:'berserker',icon:'⚔️',name:'Berserker',risk:'Low health, high attack damage and quick strikes. Each hit is capped at 35% of your max HP.',hp:.72,atk:1.20,def:.86,interval:1.46},
- vampire:{id:'vampire',icon:'🩸',name:'Vampire',risk:'Recovers HP when its attacks damage your health. Barrier and burst are useful.',hp:1.10,atk:1.02,def:1.00,interval:1.56},
- caster:{id:'caster',icon:'🔮',name:'Caster',risk:'Successful hits weaken your direct damage by 20% for 3 combat seconds (7s between casts).',hp:.91,atk:.93,def:.90,interval:1.64}
+ tank:{id:'tank',icon:'🛡️',name:'Gravebound Bulwark',role:'Tank',risk:'High health, low damage. HP hits reduce your healing by 40% for 5s (refreshes on each hit).',hp:1.75,atk:.65,def:1.22,interval:1.93},
+ berserker:{id:'berserker',icon:'⚔️',name:'Bloodscar Ravager',role:'Berserker',risk:'Low health, high attack damage and quick strikes. Each hit is capped at 35% of your max HP.',hp:.72,atk:1.20,def:.86,interval:1.46},
+ vampire:{id:'vampire',icon:'🩸',name:'Sanguine Wraith',role:'Vampire',risk:'Recovers HP when its attacks damage your health. Barrier and burst are useful.',hp:1.10,atk:1.02,def:1.00,interval:1.56},
+ caster:{id:'caster',icon:'🔮',name:'Voidborne Hexer',role:'Caster',risk:'Successful hits weaken your direct damage by 20% for 3 combat seconds (7s between casts).',hp:.91,atk:.93,def:.90,interval:1.64}
 };
+const BOSS_ARCHETYPES=[
+ {name:'The Abyssal Guardian',style:'guardian',image:ART.boss,risk:'Restores its protective Barrier whenever it is depleted. Sustained damage helps break through its defenses.'},
+ {name:'Rift Harbinger',style:'leech',image:'assets/bosses/rift-harbinger.png',risk:'Heals for 28% of damage that reaches your HP. Barrier and blocking reduce its recovery.'},
+ {name:'Ember Sovereign',style:'berserker',image:'assets/bosses/ember-sovereign.png',risk:'Enrages below 50% HP, increasing its attack damage by 35%. Prepare for the final phase.'}
+];
+function bossForTier(tier){return BOSS_ARCHETYPES[(Math.floor(tier/10)-1+BOSS_ARCHETYPES.length)%BOSS_ARCHETYPES.length]}
+function bossPreviewMarkup(tier,upcoming){
+ const boss=bossForTier(tier);
+ return '<div class="elitePreview bossPreview" aria-label="Chapter boss abilities"><img class="eliteFace" src="'+boss.image+'" alt="'+esc(boss.name)+'"><strong>👑 '+esc(boss.name)+(upcoming?' · Ahead':'')+'</strong><p>'+esc(boss.risk)+'</p><small>Chapter boss rewards: guaranteed gear and a choice of permanent rune.</small></div>';
+}
 function eliteArchetype(run){return ELITE_ARCHETYPES[run?.eliteType]||ELITE_ARCHETYPES.tank}
 function rollEliteArchetype(){return sample(Object.keys(ELITE_ARCHETYPES))}
 function elitePreviewMarkup(run,upcoming){
  const type=eliteArchetype(run);
- return '<div class="elitePreview" aria-label="Wave 4 elite type"><img class="eliteFace" src="'+eliteArt(type.id,ART.enemy)+'" alt="'+esc(type.name)+' Elite"><strong>'+type.icon+' '+type.name+' Elite'+(upcoming?' Ahead':'')+'</strong><p>'+esc(type.risk)+'</p>'+
+ return '<div class="elitePreview" aria-label="Wave 4 elite type"><img class="eliteFace" src="'+eliteArt(type.id,ART.enemy)+'" alt="'+esc(type.name)+' Elite"><strong>'+type.icon+' '+type.name+' · '+type.role+' Elite'+(upcoming?' Ahead':'')+'</strong><p>'+esc(type.risk)+'</p>'+
  (upcoming?'<small>Decide whether your build can handle this elite before you continue — or extract now.</small>':'')+'</div>';
 }
 function enemyFor(level,enc){
  const theme=currentTheme(),boss=enc===5&&level%10===0,miniboss=enc===4,v=estimateEnemy(level,enc),mult=boss?2:1;
- const variants=[{name:'The Abyssal Guardian',style:'guardian'},{name:'Rift Harbinger',style:'leech'},{name:'Ember Sovereign',style:'berserker'}];
- const variant=boss?variants[(Math.floor(level/10)-1)%3]:null;
- const mob=boss?{name:variant.name,image:variant.style==='guardian'?ART.boss:theme.mobs[variant.style==='leech'?0:1].image}:sample(theme.mobs);
+ const variant=boss?bossForTier(level):null;
+ const mob=boss?{name:variant.name,image:variant.image}:sample(theme.mobs);
  const role=boss?'boss':miniboss?'miniboss':theme.mobs[0].name===mob.name?'bruiser':'skirmisher';
  const elite=miniboss?eliteArchetype(state.run):null;
  const hp=Math.max(1,Math.round(v.hp*mult*(elite?elite.hp:role==='bruiser'?1.08:role==='skirmisher'?.92:1)));
  const atk=Math.max(1,Math.round(v.atk*mult*(elite?elite.atk:role==='skirmisher'?1.08:1)));
  const defense=Math.max(0,Math.round(v.def*mult*(elite?elite.def:1)));
  const barrier=variant?.style==='guardian'?Math.max(3,Math.round(level*.9)):elite?.id==='tank'?Math.max(1,Math.round(1+level*.3)):0;
- return {name:miniboss?elite.icon+' '+elite.name+' Elite · '+mob.name:mob.name,image:elite?eliteArt(elite.id,mob.image):mob.image,role,bossStyle:variant?.style||null,
+ return {name:miniboss?elite.icon+' '+elite.name:mob.name,image:elite?eliteArt(elite.id,mob.image):mob.image,role,bossStyle:variant?.style||null,
  miniboss,eliteType:elite?.id||null,archetypeName:elite?.name||null,hp,maxhp:hp,atk,def:defense,baseDef:defense,barrier,
  attackEvery:elite?elite.interval:role==='skirmisher'?1.42:role==='bruiser'?1.72:1.62,boss,effect:theme.effect,poison:0,burn:0,bleed:0,
  poisonStacks:0,burnStacks:0,bleedStacks:0,dots:{poison:[],bleed:[],burn:[]},slowTime:0,enraged:false};
@@ -2245,7 +2254,7 @@ function enemyDebuffMarkup(e){
  if(e.def<e.baseDef)items.push('<span class="debuff">🔨 Sunder −'+(e.baseDef-e.def)+' DEF</span>');
  if(e.boss&&e.barrier>0)items.push('<span class="debuff">🛡 Boss Barrier '+Math.round(e.barrier)+'</span>');
  if(e.enraged)items.push('<span class="debuff">🔥 Enraged</span>');
- if(e.miniboss&&e.eliteType){const elite=ELITE_ARCHETYPES[e.eliteType];if(elite)items.unshift('<span class="debuff eliteStatus">'+elite.icon+' '+elite.name+' Elite</span>');}
+ if(e.miniboss&&e.eliteType){const elite=ELITE_ARCHETYPES[e.eliteType];if(elite)items.unshift('<span class="debuff eliteStatus">'+elite.icon+' '+elite.name+'</span>');}
  return items.join('');
 }
 function playerStatusMarkup(r){
@@ -2281,7 +2290,7 @@ function nextWaveOddsMarkup(r){
  '<p class="small muted">If equipment drops, its rarity chance is:</p>'+
  '<div class="nextRarityOdds">'+types.map(type=>'<div class="nextRarityItem"><span class="rarityDot" style="background:'+RARITY[type][0]+'"></span><span>'+type+'</span><b style="color:'+RARITY[type][0]+'">'+chanceText(odds.rarities[type])+'</b></div>').join('')+'</div>'+
  '<p class="micro muted">Odds include your CHA bonus. Drop chance and rarity chance are separate.</p>'+
- (next===4?elitePreviewMarkup(r,upcoming):upcoming&&next===5?'<p class="small gold">👑 Chapter boss ahead — guaranteed gear and a rune choice.</p>':'')+
+ (next===4?elitePreviewMarkup(r,upcoming):next===5?bossPreviewMarkup(r.tier,upcoming):'')+
  '</section>';
 }
 
@@ -2289,8 +2298,8 @@ function nextWaveOddsMarkup(r){
 function combatDecisionMarkup(r){
  const upcoming=r.status==='ready',finished=r.status==='win';
  const next=upcoming?r.enc+1:r.enc,elite=next===4?eliteArchetype(r):null,boss=next===5&&r.tier%10===0;
- const heading=finished?'🏆 Dungeon cleared':boss?'👑 Main Boss':elite?elite.icon+' '+elite.name+' Elite':'Wave '+next;
- const risk=finished?'Extract to secure your collected rewards.':boss?'Chapter boss ahead — guaranteed equipment drop and a choice of rune.':elite?elite.risk:'Choose whether to continue or extract with your current loot.';
+ const heading=finished?'🏆 Dungeon cleared':boss?'👑 '+bossForTier(r.tier).name:elite?elite.icon+' '+elite.name+' · '+elite.role+' Elite':'Wave '+next;
+ const risk=finished?'Extract to secure your collected rewards.':boss?bossForTier(r.tier).risk+' Guaranteed gear and a rune choice on victory.':elite?elite.risk:'Choose whether to continue or extract with your current loot.';
  const lowHP=upcoming&&r.enc>0&&r.hp/r.maxhp<.45;
  const safeExtract=upcoming&&r.enc>0?'Extract now to save the loot, Gold and Fragments collected so far; this does not unlock the next dungeon. Continue risks unprotected equipment on death.':'';
  const odds=finished?null:waveLootOdds(next,r.stats.cha),rarities=['Common','Uncommon','Rare','Epic','Legendary'];
