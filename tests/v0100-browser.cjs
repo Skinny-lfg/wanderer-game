@@ -18,7 +18,8 @@ globalThis.v0100={
  boss(){
   this.setup('Staff');
   state.run.enc=4;state.run.status='ready';renderCombat();
- }
+ },
+ setMana(value){state.run.mp=value;updateBars();}
 };
 view='tavern';render();
 document.getElementById('screen').inert=false;document.getElementById('nav').inert=false;
@@ -68,7 +69,7 @@ const server=http.createServer((req,res)=>{
    assert.equal(await page.locator('#heroMpBar').count(),1,'caster displays mana bar below HP');
    const bar=await page.evaluate(()=>{const hp=document.querySelector('#heroHpFill'),mp=document.querySelector('#heroMpBar');return {hpBottom:hp.getBoundingClientRect().bottom,manaTop:mp.getBoundingClientRect().top}});
    assert(bar.manaTop>=bar.hpBottom-4,'caster mana bar must appear below HP');
-   await page.evaluate(()=>{state.run.mp=3;updateBars()});
+   await page.evaluate(()=>v0100.setMana(3));
    assert.equal(await page.locator('#heroMpBar').getAttribute('aria-valuenow'),'3','combat mana bar updates value');
    await page.evaluate(()=>v0100.setup('Sword'));
    assert.equal(await page.locator('#heroMpBar').count(),0,'no mana bar for non-caster');
