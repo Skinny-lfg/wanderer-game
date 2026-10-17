@@ -22,7 +22,7 @@ const server=http.createServer((req,res)=>{if(req.url==='/'){res.setHeader('Cont
  await page.route('**/*',route=>route.request().url().startsWith(origin)?route.continue():route.abort());
  await page.goto(origin);
  const missing=await page.evaluate(async()=>{
-  const assets=['assets/branding/wanderer-logo.webp',...['tank','caster','vampire','berserker'].map(id=>'assets/elites/'+id+'.png')];
+  const assets=['assets/branding/wanderer-logo.webp',...['tank','caster','vampire','berserker'].map(id=>'assets/elites/'+id+'.webp')];
   return (await Promise.all(assets.map(src=>new Promise(resolve=>{const img=new Image();img.onload=()=>resolve(null);img.onerror=()=>resolve(src);img.src=src;})))).filter(Boolean);
  });
  assert.deepEqual(missing,[],'the logo and all elite artworks load on desktop/mobile');

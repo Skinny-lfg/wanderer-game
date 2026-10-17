@@ -638,9 +638,16 @@ input,select,textarea,select:focus,input:focus{background-color:#26171f;border-c
 
 /* v0.10.0 inventory, boss milestones and compact desktop gear layout */
 @media(min-width:851px){
- .equipmentOverview .paper{max-width:310px;aspect-ratio:1 / .95}
- .equipmentOverview .paper .slotTile[data-slot='armor']{top:32%}
+ /* Nine slots in three separated rows: readable portraits without gear overlap. */
+ .equipmentOverview .paper{max-width:310px;aspect-ratio:1 / 1.02}
+ .equipmentOverview .paper .slotTile[data-slot='armor']{top:35%}
  .equipmentOverview .paper .slotTile[data-slot='boots']{bottom:12%}
+ .equipmentOverview .paper .slotTile[data-slot='gloves'],
+ .equipmentOverview .paper .slotTile[data-slot='amulet']{top:8%}
+ .equipmentOverview .paper .slotTile[data-slot='weapon'],
+ .equipmentOverview .paper .slotTile[data-slot='offhand']{top:35%}
+ .equipmentOverview .paper .slotTile[data-slot='ring1'],
+ .equipmentOverview .paper .slotTile[data-slot='ring2']{bottom:17%}
 }
 .equipmentInventory .filterBar .filterActions{display:inline-flex;align-items:center;gap:6px;flex:0 0 auto;white-space:nowrap}
 .equipmentInventory .filterBar .filterActions button{white-space:nowrap}
@@ -849,8 +856,8 @@ try{
 function archiveLocalSave(raw,label){if(!raw)return;localStorage.setItem('wanderer_backup_'+Date.now()+'_'+Math.random().toString(36).slice(2),JSON.stringify({label,raw,createdAt:new Date().toISOString()}));}
 function heroImage(){return 'assets/characters/avatars/'+(state.characterId||'wanderer')+'.png';}
 function heroFullImage(){return 'assets/characters/full/'+(state.characterId||'wanderer')+'.webp';}
-// Optional uploaded brand and elite artworks; the old assets remain as safe fallbacks.
-const ELITE_ART={tank:'assets/elites/tank.png',caster:'assets/elites/caster.png',vampire:'assets/elites/vampire.png',berserker:'assets/elites/berserker.png'};
+// Optimized transparent elite WebP portraits with fallback art if loading fails.
+const ELITE_ART={tank:'assets/elites/tank.webp',caster:'assets/elites/caster.webp',vampire:'assets/elites/vampire.webp',berserker:'assets/elites/berserker.webp'};
 const eliteArtReady={};
 if(typeof Image!=='undefined'){
  const brand=new Image();
@@ -2370,4 +2377,4 @@ globalThis.WandererGame={
 };
 load();if(!state.merchant)rollShop();save();render();
 })();
-</script><script type="module" src="online/app.mjs?v=v092-combat-hotfix-2"></script></body></html>
+</script><script type="module" src="online/app.mjs?v=v0100-character-labels-1"></script></body></html>

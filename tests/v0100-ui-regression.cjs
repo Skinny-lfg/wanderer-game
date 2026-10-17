@@ -16,4 +16,17 @@ for(const [slug,boss] of [['abyssal-guardian','The Abyssal Guardian'],['rift-har
 const {harness}=require('../scripts/simulate-v091.cjs');
 const sim=harness('index.html',{legendary:true});
 for(const level of [10,20,30])assert.equal(sim.inspect.wavesForDungeon(level),5);
+
+const model=fs.readFileSync('online/model.mjs','utf8'),online=fs.readFileSync('online/app.mjs','utf8'),manifest=JSON.parse(fs.readFileSync('assets/characters/manifest.json','utf8'));
+assert.deepEqual(manifest.characters.map(c=>c.name),['Paladin','Ranger','Warrior','Wizard','Rogue'],'new labels saved in character catalog');
+for(const name of ['Paladin','Ranger','Warrior','Wizard','Rogue'])assert(model.includes("'"+name+"'"),name+' must be exposed by model');
+assert(html.includes('online/app.mjs?v=v0100-character-labels-1'),'browser fetches current account module');
+assert(online.includes("./model.mjs?v=v0100-character-labels-1"),'account module fetches current character names');
+for(const kind of ['tank','caster','vampire','berserker']){
+ const file='assets/elites/'+kind+'.webp',bytes=fs.readFileSync(file);
+ assert.equal(bytes.toString('ascii',0,4),'RIFF',kind+' valid WebP header');
+ assert.equal(bytes.toString('ascii',8,12),'WEBP',kind+' valid image type');
+ assert(bytes.length>200000,kind+' actual optimized art');
+ assert(html.includes("'"+file+"'"),kind+' mapped to new portrait');
+}
 console.log('PASS v0.10.0 UI, mana, header, elite names, and boss preview.');
