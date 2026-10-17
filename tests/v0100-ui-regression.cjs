@@ -29,4 +29,23 @@ for(const kind of ['tank','caster','vampire','berserker']){
  assert(bytes.length>200000,kind+' actual optimized art');
  assert(html.includes("'"+file+"'"),kind+' mapped to new portrait');
 }
-console.log('PASS v0.10.0 UI, mana, header, elite names, and boss preview.');
+
+const backgrounds=[
+ ['dungeon-desktop.webp',1600,900],['dungeon-mobile.webp',960,540],
+ ['tavern-desktop.webp',1600,900],['tavern-mobile.webp',960,540]
+];
+for(const [file,w,h] of backgrounds){
+ const path='assets/backgrounds/'+file,webp=fs.readFileSync(path);
+ assert.equal(webp.toString('ascii',0,4),'RIFF',file+' RIFF WebP');
+ assert.equal(webp.toString('ascii',8,12),'WEBP',file+' WebP signature');
+ assert(webp.length>40000,file+' is a non-placeholder image');
+ const tag='url(\''+path+'\')';
+ assert(html.includes(tag),file+' referenced by responsive CSS');
+ if(file.includes('desktop'))assert(w===1600&&h===900);
+ else assert(w===960&&h===540);
+}
+assert(html.includes('<section class="tavernArt">'),'homepage background is stylesheet controlled');
+assert(html.includes('<div class="scene" id="scene">'),'combat background is stylesheet controlled');
+assert(!html.includes("background-image:url('${dungeonImage(t)}')"),'old theme-based combat backdrop retired, while dungeon cards retain artwork');
+
+console.log('PASS v0.10.0 UI, mana, header, elite names, boss preview and responsive backgrounds.');

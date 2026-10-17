@@ -56,6 +56,10 @@ const server=http.createServer((req,res)=>{
    await page.route('**/*',route=>route.request().url().startsWith(url)?route.continue():route.abort());
    await page.goto(url);
    const desktop=width>650;
+   const variant=desktop?'desktop':'mobile';
+   const tavernImage=await page.locator('.tavernArt').evaluate(node=>getComputedStyle(node).backgroundImage);
+   assert(tavernImage.includes('assets/backgrounds/tavern-'+variant+'.webp'),'Tavern uses correct '+variant+' background: '+tavernImage);
+
    const header=await page.evaluate(()=>{
     const rect=selector=>{const r=document.querySelector(selector).getBoundingClientRect();return {top:r.top,bottom:r.bottom,left:r.left,right:r.right};};
     return {nav:rect('#nav'),wallet:rect('#wallet'),width:document.documentElement.scrollWidth};
@@ -76,6 +80,17 @@ const server=http.createServer((req,res)=>{
     assert.equal(await page.locator('#onlineActions').isVisible(),false,'menu closes after selection');
    }
    await page.evaluate(()=>v0100.setup('Staff'));
+   const dungeonImage=await page.locator('#scene').evaluate(node=>getComputedStyle(node).backgroundImage);
+   assert(dungeonImage.includes('assets/backgrounds/dungeon-'+variant+'.webp'),'Combat uses correct '+variant+' background: '+dungeonImage);
+   const backgroundLoaded=await page.evaluate(async variant=>{
+    const paths=['tavern','dungeon'].map(name=>'assets/backgrounds/'+name+'-'+variant+'.webp');
+    return Promise.all(paths.map(src=>new Promise(resolve=>{
+     const img=new Image();img.onload=()=>resolve({src,w:img.naturalWidth,h:img.naturalHeight});img.onerror=()=>resolve({src,w:0,h:0});img.src=src;
+    })));
+   },variant);
+   const widthExpected=desktop?1600:960,heightExpected=desktop?900:540;
+   assert(backgroundLoaded.every(img=>img.w===widthExpected&&img.h===heightExpected),'website backgrounds load at expected dimensions: '+JSON.stringify(backgroundLoaded));
+
    assert.equal(await page.locator('#heroMpBar').count(),1,'caster displays mana bar below HP');
    const bar=await page.evaluate(()=>{const hp=document.querySelector('#heroHpFill'),mp=document.querySelector('#heroMpBar');return {hpBottom:hp.getBoundingClientRect().bottom,manaTop:mp.getBoundingClientRect().top}});
    assert(bar.manaTop>=bar.hpBottom-4,'caster mana bar must appear below HP');
