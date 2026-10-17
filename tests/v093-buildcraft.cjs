@@ -50,7 +50,7 @@ ck(setOnAttack(dark,100,false,false)>=40&&d.soul===0&&dark.hp===77,'Soul Pact pr
 const critical=combat('crit',5);critical.stats={...totalStats(),bonus:critical.stats.bonus,main:{subtype:'Sword'},off:null,crit:0,attack:100,counts:{}};
 critical.mp=0;critical.enc=1;setRuntime(critical).focus=3;state.run=critical;
 weaponAttack(critical);ck(critical.setCooldowns.perfectStrike===11&&setRuntime(critical).focus===0,'Perfect Strike still consumes Focus');state.run=null;
-ck(regenPerSecond(100)===2.2&&regenPerSecond(1000)===4&&regenPerSecond(100000)===10,'Regen scales with hard ceiling');
+ck(Math.abs(regenPerSecond(100)-.75)<.00001&&regenPerSecond(1000)===7.5&&regenPerSecond(100000)===750,'Regen scales proportionally without fixed HP ceiling');
 const regen=combat('regen',5);regen.hp=regen.maxhp;
 for(let i=0;i<20;i++){regen.combatSeconds=i;setHeal(regen,10000);}
 ck(regen.barrier<=10.00001,'overheal encounter cap retained');
