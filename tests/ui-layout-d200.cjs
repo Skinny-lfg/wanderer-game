@@ -21,8 +21,8 @@ assert(html.includes('.equipmentLeft,.equipmentRight{display:contents}')&&html.i
 assert(html.includes('class="homeMetrics"')&&!html.includes('<div class="hub">'),'home dashboard has no duplicate menu');
 const homeMarkup=html.slice(html.indexOf('function renderTavern(){'),html.indexOf('function equipItem('));
 assert(homeMarkup.includes('<details class="panel homeChangelog" open>')&&!homeMarkup.includes('<details class="olderChangelog">'),'latest changelog visible without older release history');
-for(const text of ['Elite portraits','dark garnet','affinities','difficulty','Forge and Merchant']){
- assert(homeMarkup.includes(text),'current release changelog contains '+text);
+for(const text of ['Legendary gear reworked','Sunder, Shield and Regen','double strikes','bosses','responsive website','equipment and inventory']){
+ assert(homeMarkup.includes(text),'v0.10.0 release changelog contains '+text);
 }
 assert(!homeMarkup.includes('Legendary Hunt'),'deferred Legendary Hunt no longer advertised');
 assert(!html.includes('${legendaryHuntMarkup(paths)}'),'Legendary Hunt removed from Dungeons for this phase');
