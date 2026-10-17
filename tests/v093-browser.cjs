@@ -70,12 +70,12 @@ const server=http.createServer((req,res)=>{if(req.url==='/'){res.setHeader('Cont
   board.remove();
   return {canvas:getComputedStyle(document.documentElement).backgroundColor,body:getComputedStyle(document.body).backgroundImage,colors};
  });
- assert.match(neutrals.canvas,/rgb\\(27, 11, 19\\)/,'the base canvas is dark red, including outside cards');
+  assert.equal(neutrals.canvas,'rgb(27, 11, 19)','the base canvas is dark red, including outside cards');
  assert(neutrals.body.includes('radial-gradient'),'whole-page backdrop should have burgundy gradients');
  for(const {selector,color} of neutrals.colors){
-  const rgb=color.match(/rgba?\\((\\d+), (\\d+), (\\d+)/);
-  assert(rgb,'expected solid surface color for '+selector+': '+color);
-  assert(+rgb[1]>+rgb[3],'neutral UI surface should lean red, not blue: '+selector+' = '+color);
+   const rgb=color.slice(color.indexOf('(')+1,color.indexOf(')')).split(',').map(part=>Number(part.trim()));
+   assert(rgb.length>=3&&rgb.slice(0,3).every(Number.isFinite),'expected solid surface color for '+selector+': '+color);
+   assert(rgb[0]>rgb[2],'neutral UI surface should lean red, not blue: '+selector+' = '+color);
  }
  await page.evaluate(()=>fixture.dungeons());
  assert.equal(await page.locator('.legendaryHunt').count(),0,'Legendary Hunt hidden pending its next phase');
