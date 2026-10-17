@@ -113,6 +113,16 @@ const server=http.createServer((req,res)=>{
       multi:get('#bulkToggle'),clear:get('#resetInventoryFilters'),action:get('.filterActions')};
     });
     assert(position.paper.height<325,'desktop gear panel is compact');
+    const slotRects=await page.locator('.equipmentLoadout .slotTile').evaluateAll(nodes=>nodes.map(n=>{
+     const r=n.getBoundingClientRect();
+     return {slot:n.dataset.slot,left:r.left,right:r.right,top:r.top,bottom:r.bottom};
+    }));
+    assert.equal(slotRects.length,9,'all nine equipment slots rendered');
+    for(let i=0;i<slotRects.length;i++)for(let j=i+1;j<slotRects.length;j++){
+     const a=slotRects[i],b=slotRects[j],w=Math.min(a.right,b.right)-Math.max(a.left,b.left),h=Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top);
+     assert(w<=1||h<=1,'desktop gear slots must not overlap: '+a.slot+' / '+b.slot+' ('+w+'×'+h+')');
+    }
+
     assert(position.boots.top-position.armor.bottom<70,'armor and boots are closer together');
     assert(Math.abs(position.multi.top-position.clear.top)<=2,'Select Multiple and Clear filters share a row');
     assert(position.action.right<=width+1,'filter buttons stay in viewport');

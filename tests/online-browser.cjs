@@ -32,7 +32,7 @@ const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8010';
   await page.locator('[data-online-action="'+action+'"]').click();
  };
  const account=()=>menuAction('account'),close=()=>page.locator('.onlineDialog [data-close]').click();
- await account();assert.equal(await page.locator('[data-character]').count(),5);assert.equal(await page.locator('.characterPicker img').first().evaluate(el=>getComputedStyle(el).borderRadius),'0px','character portraits should not be circular');
+ await account();assert.deepEqual(await page.locator('.characterPicker button span').allInnerTexts(),['Paladin','Ranger','Warrior','Wizard','Rogue'],'updated cosmetic names load after login');assert.equal(await page.locator('[data-character]').count(),5);assert.equal(await page.locator('.characterPicker img').first().evaluate(el=>getComputedStyle(el).borderRadius),'0px','character portraits should not be circular');
  for(const id of ['wanderer','ranger','knight','spellblade','duelist']){await page.locator(`[data-character="${id}"]`).click();await page.locator('#saveCharacter').click();assert.equal((await snapshot()).characterId,id);}
  assert.equal(await page.locator('#reviewCloud,#syncNow,#importSave,#exportSave,#backups,#onlineStatus').count(),0);
  await close();
