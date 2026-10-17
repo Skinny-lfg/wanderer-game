@@ -1,0 +1,197 @@
+{
+  "study": "Wanderer v0.10.0 Forge Fragment investment experimental simulation",
+  "date": "2026-10-17",
+  "source_index_sha256": "a69bef5e2f1d0842f79b692839012ab9e621a6b07cda0ba4a2fedef858b36126",
+  "status": "research-only; production gameplay, Firebase, saves and main untouched",
+  "methods": {
+    "cohort_seeds_start": 931200,
+    "cohort_seeds_end": 931211,
+    "policies": [
+      "casual",
+      "experienced",
+      "speed"
+    ],
+    "campaigns_per_arm": 36,
+    "arms": 5,
+    "campaigns_total": 180,
+    "max_expeditions": 600,
+    "item_draws": 375000,
+    "rarity_legendaries_in_forge": 0,
+    "rarity_probability_cases_validated": 144,
+    "baseline_replays_matched": 6,
+    "baseline_replays_total": 6,
+    "bootstrap_seed_groups": 12,
+    "bootstrap_resamples": 15000
+  },
+  "odds_at_tier100_frontier101": [
+    {
+      "mode": "control",
+      "fragment_cost": 1010,
+      "common": 0.478,
+      "uncommon": 0.3,
+      "rare": 0.1542,
+      "epic": 0.0678,
+      "legendary": 0
+    },
+    {
+      "mode": "forgePlus50",
+      "fragment_cost": 1515,
+      "common": 0.398,
+      "uncommon": 0.28,
+      "rare": 0.2242,
+      "epic": 0.0978,
+      "legendary": 0
+    },
+    {
+      "mode": "forgePlus100",
+      "fragment_cost": 2020,
+      "common": 0.308,
+      "uncommon": 0.27,
+      "rare": 0.2942,
+      "epic": 0.1278,
+      "legendary": 0
+    },
+    {
+      "mode": "forgeTargeted",
+      "fragment_cost": 2525,
+      "common": 0.218,
+      "uncommon": 0.26,
+      "rare": 0.3642,
+      "epic": 0.1578,
+      "legendary": 0
+    },
+    {
+      "mode": "forgeAggressive100",
+      "fragment_cost": 2020,
+      "common": 0.238,
+      "uncommon": 0.24,
+      "rare": 0.3542,
+      "epic": 0.1678,
+      "legendary": 0
+    }
+  ],
+  "arms": {
+    "combined": {
+      "campaigns": 36,
+      "expeditions": 20154,
+      "d200": 18,
+      "policy_wins": {
+        "casual": 5,
+        "experienced": 7,
+        "speed": 6
+      },
+      "median_depth": 191.5,
+      "median_crafts": 409.5,
+      "median_investment_fragments": 0,
+      "median_farm_runs": 284,
+      "epic_forge_share_percent": 6.95,
+      "epic_per_10000_forge_fragments": 1.28
+    },
+    "forgePlus50": {
+      "campaigns": 36,
+      "expeditions": 20365,
+      "d200": 14,
+      "policy_wins": {
+        "casual": 4,
+        "experienced": 6,
+        "speed": 4
+      },
+      "median_depth": 136.5,
+      "median_crafts": 298.5,
+      "median_investment_fragments": 64037.5,
+      "median_farm_runs": 317,
+      "epic_forge_share_percent": 8.26,
+      "epic_per_10000_forge_fragments": 1.25,
+      "delta_completion_pp": -11.1,
+      "bootstrap95_completion_pp": [
+        -38.9,
+        11.1
+      ],
+      "mean_delta_crafts": -84.9,
+      "bootstrap95_mean_crafts": [
+        -96.1,
+        -73.7
+      ]
+    },
+    "forgePlus100": {
+      "campaigns": 36,
+      "expeditions": 19735,
+      "d200": 20,
+      "policy_wins": {
+        "casual": 6,
+        "experienced": 6,
+        "speed": 8
+      },
+      "median_depth": 200,
+      "median_crafts": 309.5,
+      "median_investment_fragments": 74820,
+      "median_farm_runs": 255,
+      "epic_forge_share_percent": 8.97,
+      "epic_per_10000_forge_fragments": 1.14,
+      "delta_completion_pp": 5.6,
+      "bootstrap95_completion_pp": [
+        -11.1,
+        22.2
+      ],
+      "mean_delta_crafts": -74.8,
+      "bootstrap95_mean_crafts": [
+        -93.2,
+        -57.6
+      ]
+    },
+    "forgeAggressive100": {
+      "campaigns": 36,
+      "expeditions": 20100,
+      "d200": 16,
+      "policy_wins": {
+        "casual": 3,
+        "experienced": 5,
+        "speed": 8
+      },
+      "median_depth": 190.5,
+      "median_crafts": 315,
+      "median_investment_fragments": 74315,
+      "median_farm_runs": 285.5,
+      "epic_forge_share_percent": 10.38,
+      "epic_per_10000_forge_fragments": 1.36,
+      "delta_completion_pp": -5.6,
+      "bootstrap95_completion_pp": [
+        -30.6,
+        16.7
+      ],
+      "mean_delta_crafts": -71.5,
+      "bootstrap95_mean_crafts": [
+        -87.2,
+        -58.2
+      ]
+    },
+    "forgeTargeted": {
+      "campaigns": 36,
+      "expeditions": 20393,
+      "d200": 18,
+      "policy_wins": {
+        "casual": 5,
+        "experienced": 7,
+        "speed": 6
+      },
+      "median_depth": 189.5,
+      "median_crafts": 391.5,
+      "median_investment_fragments": 35002.5,
+      "median_farm_runs": 291.5,
+      "epic_forge_share_percent": 7.98,
+      "epic_per_10000_forge_fragments": 1.19,
+      "delta_completion_pp": 0,
+      "bootstrap95_completion_pp": [
+        -22.2,
+        19.4
+      ],
+      "mean_delta_crafts": -25.4,
+      "bootstrap95_mean_crafts": [
+        -42.2,
+        -10.9
+      ]
+    }
+  },
+  "interpretation": "A+100% moderate booster reduced median crafting actions by about 24% but did not have conclusive effect on D200 completion. Small sample and different RNG paths. Future Legendary upgrade and affinity-sigil systems NOT yet tested.",
+  "full_archive": "Wanderer_v010_Forge_Testes_e_Scripts.zip in this conversation"
+}
