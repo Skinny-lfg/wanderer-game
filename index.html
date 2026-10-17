@@ -1855,7 +1855,24 @@ function affinityProcMarkup(s){
  else if(isMagicOffhand(s.off))lines.push('Magic Off-Hand: '+(s.caster?'25% per damaging cast when the affinity differs; otherwise +30% matching spell damage.':'45% on a damaging fallback attack.'));
  const dmg=s.caster?s.spellPower:s.attack;
  const dot='When applied, one Poison stack deals about '+Math.max(1,Math.round(dmg*.15))+' damage per tick; Bleed about '+Math.max(1,Math.round(dmg*.18))+'; Burn about '+Math.max(1,Math.round(dmg*.17))+'. Each lasts 3 ticks before extensions and other modifiers. Actual damage depends on attack, spell, weapon multipliers, enemy and set effects.';
- return '<p class="small muted">A weapon or off-hand can apply its affinity when attacking. Set bonuses make those effects stronger, but equipping 5 matching pieces does <b>not</b> automatically increase their application chance.</p><details class="procDetails"><summary>Application chances &amp; estimated damage · show details</summary><p class="small">'+(lines.join('<br>')||'No affinity application available from the equipped main weapon.')+'</p><p class="small muted">'+dot+'</p><p class="micro muted">Armor and runes add set points but do not each roll an extra weapon proc. Critical damage and healing/barrier effects are calculated separately.</p></details>';
+ return '<p class="small muted">Weapon and Off-Hand affinities proc normally. Armor, rings, amulets, helms, gloves and boots also share a single <b>14%</b> chance per damaging hit (2-second internal cooldown), with reduced potency. More pieces widen the affinity pool rather than multiplying the proc chance. Critical gear affects Critical stats, not a separate status.</p><details class="procDetails"><summary>Application chances &amp; estimated damage · show details</summary><p class="small">'+(lines.join('<br>')||'No affinity application available from the equipped main weapon.')+'</p><p class="small muted">'+dot+'</p><p class="micro muted">All non-weapon gear affinities share one roll; each armor/jewelry slot does not roll separately. Rune and set bonuses still apply to the build.</p></details>';
+}
+// One shared, low-frequency proc for non-weapon equipment affinities.
+// Individual armor/jewelry slots never each roll their own status application.
+function tryPassiveGearAffinity(r,damage){
+ if(!r||!r.enemy||damage<=0)return false;
+ const temp=setRuntime(r),now=setNow(r);
+ if(now<(temp.lastGearAffinityAt??-999)+2)return false;
+ const pieces=Object.entries(state.equip||{})
+  .filter(([slot,item])=>slot!=='weapon'&&slot!=='offhand'&&item?.effect&&item.effect!=='crit'&&ELEMENTS[item.effect])
+  .map(([slot,item])=>({slot,effect:item.effect}));
+ if(!pieces.length||Math.random()>=.14)return false;
+ const item=pieces[Math.floor(Math.random()*pieces.length)];
+ // Shared 14% across all armor/jewelry, never 14% per item or per affinity.
+ temp.lastGearAffinityAt=now;
+ applyAffinity(item.effect,r.enemy,r.stats,.45,damage);
+ addLog((ELEMENTS[item.effect]?.icon||'✨')+' '+SNAME[item.slot]+' invokes '+ELEMENTS[item.effect].name+' (gear affinity)','spell');
+ return true;
 }
 function weaponAttack(r){
  const s=r.stats,e=r.enemy,weapon=s.main,off=s.off,caster=s.caster,now=setNow(r),temp=setRuntime(r);
@@ -1916,6 +1933,7 @@ function weaponAttack(r){
    addLog((ELEMENTS[off.magic]?.icon||'✨')+' Off-Hand imbues attack (0 mana)','spell');
   }
  }
+ if(real>0)tryPassiveGearAffinity(r,real);
  if(s.counts.shield>=2){const gained=setBarrier(r,Math.max(1,s.bonus.shieldBonus||2));if(gained>0)addLog('🛡 Shield set: +'+Math.round(gained)+' Barrier','good');}
  return damage;
 }
