@@ -44,6 +44,9 @@ for(const [file,w,h] of backgrounds){
  if(file.includes('desktop'))assert(w===1600&&h===900);
  else assert(w===960&&h===540);
 }
+assert(html.includes("body{\n background-color:#1b0b13"),'site-wide body background defined');
+assert(html.includes("url('assets/backgrounds/dungeon-desktop.webp')"),'global desktop image referenced');
+assert(html.includes("url('assets/backgrounds/dungeon-mobile.webp')"),'global mobile image referenced');
 assert(html.includes('<section class="tavernArt">'),'homepage background is stylesheet controlled');
 assert(html.includes('<div class="scene" id="scene">'),'combat background is stylesheet controlled');
 assert(!html.includes("background-image:url('${dungeonImage(t)}')"),'old theme-based combat backdrop retired, while dungeon cards retain artwork');

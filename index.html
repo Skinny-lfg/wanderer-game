@@ -657,6 +657,23 @@ input,select,textarea,select:focus,input:focus{background-color:#26171f;border-c
 .dungeonSelector .lvbtn.bossDungeon.chosen{outline:3px solid #ffe6a0;outline-offset:1px;box-shadow:0 0 18px #e0a85c66}
 
 /* Responsive site artwork v0.10.0: original optimized 16:9 WebP backgrounds. */
+/* Global game artwork: Dungeon Background covers the website, not just the combat scene.
+   Dark gradient preserves readability while leaving the image clearly visible. */
+body{
+ background-color:#1b0b13;
+ background-image:linear-gradient(180deg,rgba(20,8,14,.35),rgba(15,6,12,.63)),url('assets/backgrounds/dungeon-desktop.webp');
+ background-size:cover,cover;
+ background-position:center center,center center;
+ background-repeat:no-repeat,no-repeat;
+ background-attachment:fixed,fixed;
+}
+@media(max-width:650px){
+ body{
+  background-image:linear-gradient(180deg,rgba(20,8,14,.40),rgba(15,6,12,.67)),url('assets/backgrounds/dungeon-mobile.webp');
+  background-attachment:scroll,scroll;
+ }
+}
+
 .tavernArt{background-image:url('assets/backgrounds/tavern-desktop.webp');background-size:cover;background-position:center}
 .scene{background-image:url('assets/backgrounds/dungeon-desktop.webp');background-size:cover;background-position:center}
 @media(max-width:650px){

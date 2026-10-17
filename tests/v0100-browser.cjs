@@ -57,6 +57,16 @@ const server=http.createServer((req,res)=>{
    await page.goto(url);
    const desktop=width>650;
    const variant=desktop?'desktop':'mobile';
+   // The new image must cover the whole page, not just the combat scene.
+   const pageBg=await page.evaluate(()=>{
+    const computed=getComputedStyle(document.body);
+    return {image:computed.backgroundImage,size:computed.backgroundSize,attachment:computed.backgroundAttachment};
+   });
+   assert(pageBg.image.includes('assets/backgrounds/dungeon-'+variant+'.webp'),
+     'whole website must show responsive Dungeon Background: '+pageBg.image);
+   assert(pageBg.size.includes('cover'),'site-wide image must cover viewport');
+   assert.equal(pageBg.attachment,desktop?'fixed, fixed':'scroll, scroll','background scroll mode');
+
    const tavernImage=await page.locator('.tavernArt').evaluate(node=>getComputedStyle(node).backgroundImage);
    assert(tavernImage.includes('assets/backgrounds/tavern-'+variant+'.webp'),'Tavern uses correct '+variant+' background: '+tavernImage);
 
