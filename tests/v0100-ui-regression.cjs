@@ -54,4 +54,17 @@ assert(html.includes('<section class="tavernArt">'),'homepage background is styl
 assert(html.includes('<div class="scene" id="scene">'),'combat background is stylesheet controlled');
 assert(!html.includes("background-image:url('${dungeonImage(t)}')"),'old theme-based combat backdrop retired, while dungeon cards retain artwork');
 
+// Release banner and the visual rarity hierarchy must remain on development/main.
+const releaseBannerPath='assets/releases/v0100-update-banner.webp';
+const banner=fs.readFileSync(releaseBannerPath);
+assert.equal(banner.toString('ascii',0,4),'RIFF','v0.10 banner RIFF header');
+assert.equal(banner.toString('ascii',8,12),'WEBP','v0.10 banner is optimized WebP');
+assert(html.indexOf('<section class="releaseBanner"')>=0&&html.indexOf('<section class="releaseBanner"')<html.indexOf('<details class="panel homeChangelog" open>'),'release banner before homepage changelog');
+assert(html.includes('src="'+releaseBannerPath+'"'),'homepage loads v0.10 release art');
+assert(html.includes('var(--elite-name)')&&html.includes('var(--boss-name)'),'different Elite/Boss name colors');
+assert(html.includes('combatEnemyName')&&html.includes("e.miniboss?' eliteName'"),'Elite styling in live combat');
+assert(html.includes("e.boss?' bossName'"),'Boss styling in live combat');
+assert(html.includes('elitePreview:not(.bossPreview)>strong')&&html.includes('.bossPreview>strong'),'Elite/Boss name styling in wave previews');
+assert(html.includes('bossEncounter')&&html.includes('eliteEncounter'),'Elite/Boss name styling in mobile decision panel');
+
 console.log('PASS v0.10.0 UI, mana, header, elite names, boss preview and responsive backgrounds.');
