@@ -95,7 +95,7 @@ Esta sensibilidade é um **filtro das despesas das simulações completas**; nã
 - O Merchant experimental tem quatro espaços de Sigils *adicionais* aos espaços atuais de equipamentos. A mecânica não foi integrada nos saves reais; a compra e transferência acontecem na mesma simulação isolada.
 - 100 Monte Carlos por situação de equipamento e 6 combates por situação **não são independentes** no sentido de 33.400 jogadores diferentes. Os intervalos de combate foram estimados por bootstrap agrupando as seeds originais dos jogadores simulados; múltiplos cenários exploratórios e não há correção para múltiplas comparações.
 - **Testes:** 6/6 de abilities/progression; scaling v0.10.0, Shatter/Double Strike e 22 identidades Legendary passaram. Validação específica de 20.000 ofertas com quatro Sigils legais/distintos e sem repetir as quatro anteriores passou; nenhum saldo ficou negativo nas transações; 0 erros no runner; `index.html` manteve SHA-256 original.
-- Nenhum item Legendary foi alterado por Sigil. Nenhuma escrita em GitHub com gameplay, 9saves, Firebase, Rules ou `main` foi feita. Apenas **documentação na branch `development`**.
+- Nenhum item Legendary foi alterado por Sigil. Nenhuma escrita em GitHub com gameplay, saves, Firebase, Rules ou `main` foi feita. Apenas **documentação na branch `development`**.
 
 ## 7. Reprodutibilidade
 
