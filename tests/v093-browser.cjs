@@ -80,7 +80,10 @@ const server=http.createServer((req,res)=>{if(req.url==='/'){res.setHeader('Cont
   return {canvas:getComputedStyle(document.documentElement).backgroundColor,body:getComputedStyle(document.body).backgroundImage,colors};
  });
   assert.equal(neutrals.canvas,'rgb(27, 11, 19)','the base canvas is dark red, including outside cards');
- assert(neutrals.body.includes('radial-gradient'),'whole-page backdrop should have burgundy gradients');
+ const backgroundVariant=viewport.width<=650?'mobile':'desktop';
+ assert(neutrals.body.includes('assets/backgrounds/dungeon-'+backgroundVariant+'.webp'),
+  'whole-page backdrop uses the responsive Dungeon Background art');
+ assert(neutrals.body.includes('linear-gradient'),'dark overlay keeps readable text over the artwork');
  for(const {selector,color} of neutrals.colors){
    const rgb=color.slice(color.indexOf('(')+1,color.indexOf(')')).split(',').map(part=>Number(part.trim()));
    assert(rgb.length>=3&&rgb.slice(0,3).every(Number.isFinite),'expected solid surface color for '+selector+': '+color);
