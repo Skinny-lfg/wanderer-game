@@ -3,6 +3,14 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('nod
 const html=fs.readFileSync('index.html','utf8');
 const app=fs.readFileSync('online/app.mjs','utf8');
 assert(html.includes('id="brandLogo"'),'brand has logo hook');
+assert(fs.readFileSync('assets/branding/wanderer-logo.webp').toString('ascii',0,4)==='RIFF','real logo artwork committed');
+for(const id of ['tank','caster','vampire','berserker']){
+ const buffer=fs.readFileSync('assets/elites/'+id+'.png');
+ assert.equal(buffer.toString('ascii',1,4),'PNG',id+' is original PNG artwork');
+ assert.equal(buffer.readUInt32BE(16),256,id+' width');
+ assert.equal(buffer.readUInt32BE(20),256,id+' height');
+}
+
 assert(html.includes('assets/branding/wanderer-logo.webp'),'logo asset path documented');
 assert(html.includes('assets/elites/tank.png')&&html.includes('assets/elites/caster.png')&&html.includes('assets/elites/vampire.png')&&html.includes('assets/elites/berserker.png'),'all 4 elite asset references');
 assert(!html.includes('BROWSER PROTOTYPE V'),'old prototype label removed');
