@@ -1,0 +1,192 @@
+{
+  "study": "Wanderer v0.10.1 Test E — Repeatable Affinity Sigil reroll",
+  "date": "2026-10-17",
+  "source": {
+    "type": "User-supplied v0.10.0 main ZIP",
+    "index_html_sha256": "a69bef5e2f1d0842f79b692839012ab9e621a6b07cda0ba4a2fedef858b36126",
+    "current_github_main_tested": false
+  },
+  "scope": {
+    "campaigns": 738,
+    "expeditions": 416974,
+    "draw_sessions": 600000,
+    "gameplay_code_changed": false,
+    "firebase_touched": false,
+    "saves_touched": false,
+    "errors": 0
+  },
+  "design": {
+    "merchant_sigil_gold": "100+9*frontierTier",
+    "forge_roll_fragments": "20% of frontier craft cost",
+    "allowed": "Legal non-Legendary item affinity only",
+    "original_affinity_kept_until_success": true,
+    "persist_between_town_visits": true,
+    "lifetime_roll_cap": null,
+    "six_rolls_per_visit_is_agent_policy": true,
+    "pity_guaranteed_on_paid_roll": 7,
+    "progressive_cost_increase": 0.22,
+    "premium_target_weight": 2
+  },
+  "mathematical_trial": {
+    "n_per_pool_per_mode": 30000,
+    "simulation_fragment_budget": 5000,
+    "max_rolls": 12,
+    "cost_per_normal_roll_at_tier100": 202,
+    "success_percent": {
+      "4": {
+        "fixed": 99.2,
+        "rising": 97.3,
+        "pity": 100,
+        "premium": 100
+      },
+      "5": {
+        "fixed": 96.7,
+        "rising": 92.6,
+        "pity": 100,
+        "premium": 99.8
+      },
+      "6": {
+        "fixed": 93.2,
+        "rising": 86.2,
+        "pity": 100,
+        "premium": 99.2
+      },
+      "7": {
+        "fixed": 88.9,
+        "rising": 80.5,
+        "pity": 100,
+        "premium": 98.3
+      },
+      "13": {
+        "fixed": 64.8,
+        "rising": 54.1,
+        "pity": 100,
+        "premium": 86.5
+      }
+    }
+  },
+  "discard_session": {
+    "players_per_primary_arm": 36,
+    "players_per_holdout_arm": 30,
+    "control": {
+      "n": 66,
+      "d200": 27
+    },
+    "fixed": {
+      "n": 66,
+      "d200": 29,
+      "sigils": 1815,
+      "successes": 438,
+      "rolls": 4344
+    },
+    "pity": {
+      "n": 66,
+      "d200": 21,
+      "sigils": 1891,
+      "successes": 459,
+      "rolls": 4438
+    },
+    "premium": {
+      "n": 66,
+      "d200": 26,
+      "sigils": 1901,
+      "successes": 365,
+      "rolls": 1990
+    }
+  },
+  "persistent": {
+    "n_per_arm": 54,
+    "control": {
+      "d200": 26,
+      "median_depth": 189
+    },
+    "fixed": {
+      "d200": 17,
+      "median_depth": 140.5,
+      "sigils": 1066,
+      "successes": 743,
+      "rolls": 8075,
+      "gold_cost": 486184,
+      "fragment_cost": 641564,
+      "paired_diff_pp": -16.67,
+      "paired_ci95_pp": [
+        -33.33,
+        1.85
+      ]
+    },
+    "pity": {
+      "d200": 23,
+      "median_depth": 171,
+      "sigils": 1064,
+      "successes": 908,
+      "rolls": 5041,
+      "gold_cost": 512597,
+      "fragment_cost": 435216,
+      "paired_diff_pp": -5.56,
+      "paired_ci95_pp": [
+        -22.22,
+        11.11
+      ]
+    },
+    "premium": {
+      "d200": 18,
+      "median_depth": 129.5,
+      "sigils": 1030,
+      "successes": 654,
+      "rolls": 4025,
+      "gold_cost": 455152,
+      "fragment_cost": 600688,
+      "paired_diff_pp": -14.81,
+      "paired_ci95_pp": [
+        -25.93,
+        -3.7
+      ]
+    },
+    "budgeted_fixed": {
+      "d200": 26,
+      "median_depth": 195.5,
+      "sigils": 56,
+      "successes": 43,
+      "rolls": 461,
+      "gold_cost": 52175,
+      "fragment_cost": 77708,
+      "paired_diff_pp": 0,
+      "paired_ci95_pp": [
+        0,
+        0
+      ]
+    },
+    "budgeted_pity": {
+      "d200": 26,
+      "median_depth": 198,
+      "sigils": 44,
+      "successes": 41,
+      "rolls": 230,
+      "pity_hits": 17,
+      "gold_cost": 38798,
+      "fragment_cost": 41448,
+      "paired_diff_pp": 0,
+      "paired_ci95_pp": [
+        -7.41,
+        7.41
+      ]
+    }
+  },
+  "budgeted_agent_policy": {
+    "max_new_sigil_purchases": 10,
+    "check_every_expeditions": 12,
+    "gold_spend_cap_as_fraction_of_earned": 0.2,
+    "fragment_spend_cap_as_fraction_of_earned": 0.12,
+    "not_proposed_as_compulsory_game_rules": true
+  },
+  "verification": {
+    "scaling": "PASS",
+    "shatter_double_strike": "PASS",
+    "legendary_signatures": "PASS",
+    "ability_progression": "6/6 PASS",
+    "source_hash_unchanged": true,
+    "zero_negative_currency": true,
+    "zero_run_errors": true
+  },
+  "recommendation": "Prototype generic Sigil tied to item and desired affinity, resume reroll across Forge visits, fixed per-roll Fragment price, retain old affinity until accepted, preview set bonuses and budgets, reject automatic increasing roll fees, test pity and save persistence separately. Numerical tuning not yet approved."
+}
