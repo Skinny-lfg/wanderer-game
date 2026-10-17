@@ -4,9 +4,9 @@ const {harness}=require('../scripts/simulate-v091.cjs');
 const source=fs.readFileSync('index.html','utf8');
 const changes=[
  ["['sunder','Sunder Set','sunderBonus',.20","['sunder','Sunder Set','sunderBonus',2"],
- ["['shield','Shield Set','shieldBonus',.01","['shield','Shield Set','shieldBonus',3"],
- ["['regen','Regen Set','regenBonus',.0075","['regen','Regen Set','regenBonus',2"],
- ["function regenPerSecond(maxhp,rate=.0075){return Math.max(0,maxhp)*Math.max(0,rate)}","function regenPerSecond(maxhp){return 2+Math.min(8,Math.max(0,maxhp)*.002)}"],
+ ["['shield','Shield Set','shieldBonus',.006","['shield','Shield Set','shieldBonus',3"],
+ ["['regen','Regen Set','regenBonus',.006","['regen','Regen Set','regenBonus',2"],
+ ["function regenPerSecond(maxhp,rate=.006){return Math.max(0,maxhp)*Math.max(0,rate)}","function regenPerSecond(maxhp){return 2+Math.min(8,Math.max(0,maxhp)*.002)}"],
  ["if(effect==='sunder')enemy.def=Math.max(Math.round(enemy.baseDef*.25),enemy.def-Math.max(1,Math.round(enemy.baseDef*(bonus.sunderBonus||.1))));","if(effect==='sunder')enemy.def=Math.max(Math.round(enemy.baseDef*.25),enemy.def-Math.max(1,1+(bonus.sunderBonus||0)));"],
  ["const gained=setBarrier(r,Math.max(1,Math.round((baseDamage||s.spellPower||s.attack||5)*.07+r.maxhp*(bonus.shieldBonus||0))));","const gained=setBarrier(r,Math.max(1,Math.round(2+(bonus.shieldBonus||0)+(baseDamage||0)*.07)));"],
  ["const gained=setHeal(r,Math.max(1,Math.round((baseDamage||s.attack||5)*.1)));","const gained=setHeal(r,Math.max(2,Math.round((baseDamage||s.attack||5)*.1)));"],
@@ -18,7 +18,7 @@ const before=harness('index.html',{legendary:true,transform:s=>{
  for(const [newText,oldText] of changes){assert.equal(s.split(newText).length,2,'Missing baseline anchor '+newText.slice(0,35));s=s.replace(newText,oldText);}
  return s;
 }});
-for(const [kind,key,n] of [['sunder','sunderBonus',.2],['shield','shieldBonus',.01],['regen','regenBonus',.0075]])
+for(const [kind,key,n] of [['sunder','sunderBonus',.2],['shield','shieldBonus',.006],['regen','regenBonus',.006]])
  assert.equal(current.inspect.setBonuses({[kind]:2}).values[key],n,kind+' percent bonus');
 const api=current.inspect;
 for(const level of [10,40,100,200]){
@@ -32,10 +32,10 @@ for(const level of [10,40,100,200]){
  for(let n=0;n<10;n++)api.applyAffinity('sunder',enemy,stats,1,100);
  assert.equal(enemy.def,Math.round(base*.25),'Sunder 25% floor D'+level);
 }
-const regenText=source.match(/function regenPerSecond\(maxhp,rate=\.0075\)\{[^}]+\}/)?.[0];
+const regenText=source.match(/function regenPerSecond\(maxhp,rate=\.006\)\{[^}]+\}/)?.[0];
 assert(regenText,'Missing production percentage Regen helper');
 const regen=Function('return ('+regenText+')')();
-for(const hp of [150,400,1200,4000,12000])assert(Math.abs(regen(hp)/hp-.0075)<1e-10,'Regen stays percentage at '+hp);
+for(const hp of [150,400,1200,4000,12000])assert(Math.abs(regen(hp)/hp-.006)<1e-10,'Regen stays percentage at '+hp);
 for(const hp of [150,400,1200,4000,12000]){
  const state=api.getState(),weapon={subtype:'Sword',rarity:'Common',effect:null};
  const enemy={hp:100000,maxhp:100000,barrier:0,baseDef:20,def:20};
@@ -44,7 +44,7 @@ for(const hp of [150,400,1200,4000,12000]){
   attack:60,crit:0,counts:{shield:2},defense:10},
   enemy,hp,maxhp:hp,barrier:0,mp:0,combatSeconds:1,enc:1,setCooldowns:{}};
  state.run=r;api.weaponAttack(r);
- assert.equal(r.barrier,Math.max(1,Math.round(hp*.01)),'Shield scales per hit at '+hp);
+ assert.equal(r.barrier,Math.max(1,Math.round(hp*.006)),'Shield scales per hit at '+hp);
  assert(r.barrier<=hp*.30,'Shield retains 30% cap');
 }
 const slots=['weapon','offhand','armor','helm','amulet','gloves','ring1','ring2','boots'];
