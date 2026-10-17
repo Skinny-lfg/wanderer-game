@@ -9,7 +9,7 @@ globalThis.fixture={seed(){
  state.equip.weapon=makeItem(20,'weapon','poison','loot','Bow','Rare');
  for(const slot of ['offhand','armor']){const o=makeItem(20,slot,'shield','loot',slot==='offhand'?'Shield':'random','Rare');o.isNew=true;state.stash.push(o);}
  const r=makeRune('might',10);r.isNew=true;state.runes=[r];save();this.equipment();
-},equipment(){view='equipment';render();},dungeons(){view='dungeons';render();}};
+},equipment(){view='equipment';render();},dungeons(){view='dungeons';render();},vfx(){document.getElementById('screen').innerHTML='<div class="scene" id="scene"><img id="heroPortrait" src="assets/characters/avatars/wanderer.png" alt=""><img id="enemyPortrait" src="assets/elites/tank.png" alt=""></div>';animateStrike('Bow');floatText(24);animateEnemyStrike();}};
 fixture.equipment();document.getElementById('screen').inert=false;document.getElementById('nav').inert=false;
 `;
 const html=fs.readFileSync(path.join(root,'index.html'),'utf8').replace(boot,fixture).replace(/<script type="module"[^>]*><\/script>/g,'');
@@ -40,6 +40,19 @@ const server=http.createServer((req,res)=>{if(req.url==='/'){res.setHeader('Cont
  await page.evaluate(()=>fixture.dungeons());const cards=await page.locator('[data-path]').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('data-path')));
  assert((await page.locator('#rerollPath').innerText()).includes('10'));
  await page.reload();await page.evaluate(()=>fixture.dungeons());assert.deepEqual(await page.locator('[data-path]').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('data-path'))),cards);
+ const visuals=await page.evaluate(()=>{
+  fixture.vfx();
+  const display=selector=>getComputedStyle(document.querySelector(selector)).display;
+  const motion=selector=>getComputedStyle(document.querySelector(selector)).animationName;
+  return {effect:display('.combatVfx'),numbers:display('.float'),projectile:motion('.combatVfx'),
+   damageRise:motion('.float'),heroStrike:motion('#heroPortrait'),enemyStrike:motion('#enemyPortrait')};
+ });
+ assert.notEqual(visuals.effect,'none','weapon impact/projectile VFX must render');
+ assert.notEqual(visuals.numbers,'none','floating damage numbers must render');
+ assert.equal(visuals.projectile,'vfxTravel','Bow should animate projectile');
+ assert.equal(visuals.damageRise,'rise','damage numbers should animate upward');
+ assert.equal(visuals.heroStrike,'fxBow','player Bow attack animation restored');
+ assert.equal(visuals.enemyStrike,'fxEnemyAttack','enemy attack animation restored');
  assert.deepEqual(errors,[]);await context.close();
  }console.log('PASS v0.9.3 desktop/mobile clicks, NEW/reload, disabled Off-Hand, rates and persistent offers');}
  finally{await browser.close();}
