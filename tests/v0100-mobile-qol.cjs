@@ -13,7 +13,7 @@ const testCode=[
 'fresh();wallet=()=>{};save=()=>{};let markup="";html=(s)=>{markup=s};',
 'const check=(ok,msg)=>{if(!ok)throw Error(msg)};',
 'state.maxDungeon=40;state.chosen=20;dungeonRailScrollLeft=null;renderDungeons();',
-'check((markup.match(/data-level="/g)||[]).length===40,"all 40 unlocked levels rendered, no pages");',
+'check((markup.match(/data-level="/g)||[]).length===44,"40 unlocked and four upcoming levels rendered, no pages");',
 'check(!markup.includes("previousLevels")&&!markup.includes("nextLevels"),"no arrows in dungeon HTML");',
 'state.chosen=40;renderDungeons();check(markup.includes("data-level=\\"44\\" disabled"),"four upcoming dungeons visible but locked");',
 'state.stash=Array.from({length:stashCapacity()},(_,i)=>({id:"full"+i}));state.gold=999999;state.fragments=999999;',
