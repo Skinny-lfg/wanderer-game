@@ -6,6 +6,13 @@ assert(start>=0&&end>start);
 new Function(html.slice(start+8,end));
 for(const needle of ['<title>Wanderer v0.10.0</title>','class="version">v0.10.0','id="menuToggle"','id="onlineActions"','class="headerBottom"','id="heroMpFill"','bossPreviewMarkup(r.tier,upcoming)','Gravebound Bulwark','Bloodscar Ravager','Sanguine Wraith','Voidborne Hexer','The Abyssal Guardian','Rift Harbinger','Ember Sovereign'])assert(html.includes(needle),'Missing feature: '+needle);
 assert(html.includes("if(mpBar&&mpFill)"),'Mana bar updates every combat tick');
+for(const [slug,boss] of [['abyssal-guardian','The Abyssal Guardian'],['rift-harbinger','Rift Harbinger'],['ember-sovereign','Ember Sovereign']]){
+ const path='assets/bosses/'+slug+'.png',png=fs.readFileSync(path);
+ assert.equal(png.toString('hex',0,8),'89504e470d0a1a0a',boss+' valid PNG file');
+ assert(png.length>100000,boss+' must use real art, not placeholder');
+ assert(html.includes("image:'"+path+"'"),boss+' uses its specific portrait');
+}
+
 const {harness}=require('../scripts/simulate-v091.cjs');
 const sim=harness('index.html',{legendary:true});
 for(const level of [10,20,30])assert.equal(sim.inspect.wavesForDungeon(level),5);

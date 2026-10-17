@@ -6,8 +6,8 @@
 - Account, Leaderboard and Feedback move to the header where the wallet was. Desktop wallet now follows the Dungeons navigation; compact mobile currency appears above the tabs. The mobile three-line menu contains Account, Leaderboard and Feedback.
 - Elite enemy names are now unique to their existing portraits: Gravebound Bulwark (Tank), Bloodscar Ravager (Berserker), Sanguine Wraith (Vampire), Voidborne Hexer (Caster). Attack and status behavior remains unchanged.
 - Boss previews explain existing Guardian Barrier, Rift healing (28% damage reaching HP) and Ember Enrage (+35% attack below 50% HP) before wave 5, including mobile decision text.
-- **Boss art:** fade images supplied in Google Drive `Wanderer/02 - Assets/Packs/Wanderer_Bosses_3_Transparent_Fade`. Rift Harbinger and Ember Sovereign are imported as PNGs. Abyssal Guardian retains the previous visual until its original PNG has been committed; this is an outstanding asset-upload-only item, not a mechanics issue.
+- **Boss art:** all three original transparent-fade PNGs from Google Drive `Wanderer/02 - Assets/Packs/Wanderer_Bosses_3_Transparent_Fade` are imported into `assets/bosses`: Abyssal Guardian, Rift Harbinger and Ember Sovereign. Abyssal Guardian's PNG was reconstructed and verified byte-for-byte against the original SHA-256 (`692a9fa950a8880e3596941306d81b5acbac7dfaa2c68ec9c1bb4e2033b96a86`) before committing it. No boss mechanics were changed.
 - Visible version, document title and latest changelog title use v0.10.0; historic v0.9.3 simulation reports remain as history.
-- `npm test` includes `tests/v0100-ui-regression.cjs` as a lightweight source regression. Visual QA and full browser runs are still required before main publication.
+- `npm test` includes `tests/v0100-ui-regression.cjs` as a lightweight source regression. Automated full browser/mobile audit remains the release gate; human visual approval is still required before main publication.
 
 No further backlog features or combat balance changes are part of this update.
