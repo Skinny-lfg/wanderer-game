@@ -13,16 +13,16 @@ function harness(file='index.html',options={}){
  fresh();animateStrike=animateDefense=animateEnemyStrike=updateBars=render=renderCombat=renderStash=save=showPendingRuneReward=showDeathPopup=bannerMessage=addLog=()=>{};
  const productionDie=die;let campaignMode=false,campaignDeath=null;
  die=()=>{if(campaignMode){const run=state.run;campaignDeath={tier:run.tier,wave:run.enc,unprotected:Object.values(state.equip).filter(item=>item&&!new Set(run.protectedItemIds).has(item.id)).length};productionDie();}else state.run.status='dead'};
- let healing=0,barrierGained=0,blockedDamage=0;
+ let healing=0,barrierGained=0,blockedDamage=0,legendaryProcs={};
  const productionHeal=setHeal,productionBarrier=setBarrier;
  setHeal=(...args)=>{const n=productionHeal(...args);healing+=n;return n;};
  setBarrier=(...args)=>{const n=productionBarrier(...args);barrierGained+=n;return n;};
- addLog=(line)=>{let hit=String(line).match(/(?:Shield prevents|Barrier absorbs) (\\d+) damage/);if(hit)blockedDamage+=Number(hit[1]);};
- let damageIn=0,damageOut=0;const productionDots=tickDots;tickDots=e=>{const n=productionDots(e);damageOut+=n;return n;};
+ addLog=(line)=>{let hit=String(line).match(/(?:Shield prevents|Barrier absorbs) (\\d+) damage/);if(hit)blockedDamage+=Number(hit[1]);if(String(line).startsWith('✦ ')){const name=String(line).slice(2);if(Object.values(globalThis.WandererLegendary?.DEFINITIONS||{}).some(d=>d.name===name))legendaryProcs[name]=(legendaryProcs[name]||0)+1;}};
+ let damageIn=0,damageOut=0,dotDamage=0;const productionDots=tickDots;tickDots=e=>{const n=productionDots(e);damageOut+=n;dotDamage+=n;return n;};
  floatText=(n,target)=>{if(typeof n==='number'&&n>0){if(target==='hero')damageIn+=n;else if(target==='enemy')damageOut+=n;}};
  let seed=1;Math.random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};
  globalThis.trial=({level,weapon,affinity,rarity='Rare',scale=1,seed:inputSeed=1,elite='tank',theme='temple',speed=1,gearPlan=null,equipment=null,runes=null,runeSlots=null,diagnostics=false})=>{
- fresh();seed=inputSeed;damageIn=damageOut=healing=barrierGained=blockedDamage=0;clockSpeed=speed;
+ fresh();campaignMode=false;seed=inputSeed;damageIn=damageOut=dotDamage=healing=barrierGained=blockedDamage=0;legendaryProcs={};clockSpeed=speed;
  const tier=Math.max(1,Math.round(level*scale));
  if(equipment){
   if(gearPlan)throw Error('Cannot combine acquired equipment and generated plan');
@@ -50,7 +50,7 @@ function harness(file='index.html',options={}){
  weaponAttack=run=>{attacks++;if(run.stats.caster){if(run.mp>=(run.stats.main.subtype==='Staff'?13:9))casts++;else fallbacks++;}return productionAttack(run);};
  while(ticks<18000&&['ready','fight'].includes(r.status)){if(r.status==='ready'){nextEncounter();encounters.push({wave:r.enc,hp:r.enemy.hp,atk:r.enemy.atk,def:r.enemy.def,interval:r.enemy.attackEvery});}updateFight();ticks++;}
  weaponAttack=productionAttack;
- return {...(diagnostics?{equipment:state.equip,counts:r.stats.counts,stats:{attack:r.stats.attack,spell:r.stats.spellPower,aps:r.stats.attacksPerSec,crit:r.stats.crit,maxhp:r.maxhp,defense:r.stats.defense,mana:r.maxmp,manaRegen:r.stats.manaRegen},attacks,casts,fallbacks,encounters}:{}),win:r.status==='win',alive:r.hp>0,timeout:ticks>=18000,deathWave:r.status==='dead'?r.enc:null,hp:Math.max(0,r.hp)/r.maxhp*100,seconds:ticks*.11,damageIn,damageOut,healing,barrierGained,blockedDamage,gold:r.status==='win'?r.gold:0,fragments:r.status==='win'?r.fragments:0,loot:r.status==='win'?r.loot.length:0,power:r.stats.power};
+ return {...(diagnostics?{equipment:state.equip,counts:r.stats.counts,stats:{attack:r.stats.attack,spell:r.stats.spellPower,aps:r.stats.attacksPerSec,crit:r.stats.crit,maxhp:r.maxhp,defense:r.stats.defense,mana:r.maxmp,manaRegen:r.stats.manaRegen},attacks,casts,fallbacks,encounters,protoMetrics:r.protoMetrics||{},legendaryProcs}:{}),win:r.status==='win',alive:r.hp>0,timeout:ticks>=18000,deathWave:r.status==='dead'?r.enc:null,hp:Math.max(0,r.hp)/r.maxhp*100,seconds:ticks*.11,damageIn,damageOut,dotDamage,healing,barrierGained,blockedDamage,gold:r.status==='win'?r.gold:0,fragments:r.status==='win'?r.fragments:0,loot:r.status==='win'?r.loot.length:0,power:r.stats.power};
  };
  // Reward-only sampling runs the real victory handler; it does not simulate combat or extraction.
  globalThis.sampleRewards=({level,wave,theme,cha,seed:inputSeed})=>{

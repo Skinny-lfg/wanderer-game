@@ -16,6 +16,9 @@ const RULES={
 };
 const hash=n=>{n=Math.imul(n^(n>>>16),0x45d9f3b);n=Math.imul(n^(n>>>16),0x45d9f3b);return (n^(n>>>16))>>>0;};
 function harnessFor(name){
+ if(name==='newAbilities')return harness('index.html',{legendary:true,transform:require('./v010-abilities-sim.cjs').compose(['shatter30','ignition4','doubleB'])});
+ if(name==='newAbilitiesConservative')return harness('index.html',{legendary:true,transform:require('./v010-abilities-sim.cjs').compose(['shatter30','ignition4','doubleA'])});
+ if(name==='newAbilitiesNarrow')return harness('index.html',{legendary:true,transform:require('./v010-abilities-sim.cjs').compose(['shatter30','doubleB'])});
  const transforms=variants[name]||[];
  return harness('index.html',{legendary:true,transform:transforms.length?s=>transforms.reduce((v,f)=>f(v),s):undefined});
 }
@@ -135,7 +138,7 @@ function main(){const mode=process.argv[2]||'pilot';
   console.log(JSON.stringify(rows.map(({policy,style,attempts,deepestCleared,deaths,earlyExtracts,gold,fragments,crafts,completed})=>({policy,style,attempts,deepestCleared,deaths,earlyExtracts,gold,fragments,crafts,completed})),null,2));
   return;
  }
- if(['baseline','finalCandidate','finalBow8','finalFrost40'].includes(mode)){
+ if(['baseline','finalCandidate','finalBow8','finalFrost40','newAbilities','newAbilitiesConservative','newAbilitiesNarrow'].includes(mode)){
   const rows=[];for(const policy of Object.keys(RULES))for(let i=0;i<20;i++)rows.push(runPlayer({policy,seed:931000+i,style:STYLES[i%STYLES.length],variant:mode,snapshots:mode==='baseline'}));
   fs.writeFileSync('docs/v010-progression-'+mode+'.json',JSON.stringify({sourceCommit:require('node:child_process').execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),players:rows})+'\n');
   console.log(JSON.stringify(Object.fromEntries(Object.keys(RULES).map(p=>[p,{finish:rows.filter(x=>x.policy===p&&x.completed).length,max:Math.max(...rows.filter(x=>x.policy===p).map(x=>x.deepestCleared))}]))));
