@@ -19,7 +19,17 @@ globalThis.v0100={
   this.setup('Staff');
   state.run.enc=4;state.run.status='ready';renderCombat();
  },
- setMana(value){state.run.mp=value;updateBars();}
+
+ equipment(){
+  fresh();state.maxDungeon=30;
+  state.stash=Array.from({length:80},(_,i)=>makeItem(10+i%11,'weapon',null,'loot','Sword','Common'));
+  view='equipment';renderStash();
+  document.getElementById('screen').inert=false;document.getElementById('nav').inert=false;
+ },
+ dungeonSelector(){
+  fresh();state.maxDungeon=20;state.chosen=10;view='dungeons';renderDungeons();
+ },
+  setMana(value){state.run.mp=value;updateBars();}
 };
 view='tavern';render();
 document.getElementById('screen').inert=false;document.getElementById('nav').inert=false;
@@ -85,6 +95,40 @@ const server=http.createServer((req,res)=>{
     return Promise.all(paths.map(src=>new Promise(resolve=>{const img=new Image();img.onload=()=>resolve({src,width:img.naturalWidth});img.onerror=()=>resolve({src,width:0});img.src=src;})));
    });
    assert(images.every(x=>x.width>0),'all three boss artworks load correctly: '+JSON.stringify(images));
+
+   // v0.10.0 inventory ergonomics and boss wayfinding, tested in a real browser.
+   await page.evaluate(()=>v0100.dungeonSelector());
+   const milestone=page.locator('.lvbtn.bossDungeon[data-level="10"]');
+   assert.equal(await milestone.count(),1,'D10 has boss milestone styling');
+   assert.match(await milestone.innerText(),/BOSS/,'boss milestone is explicitly labelled');
+   const bossColor=await milestone.evaluate(el=>getComputedStyle(el).borderTopColor);
+   assert.notEqual(bossColor,'rgb(0, 0, 0)','boss milestone uses a visible border');
+   assert.equal(await page.locator('.dungeonGrid').locator('.token').count(),0,'no duplicate fragment balance in path picker');
+   await page.evaluate(()=>v0100.equipment());
+   assert.equal(await page.locator('.equipmentInventory .topline .token').count(),0,'header wallet is the only fragment balance');
+   if(desktop){
+    const position=await page.evaluate(()=>{
+     const get=s=>document.querySelector(s).getBoundingClientRect();
+     return {paper:get('.equipmentLoadout .paper'),armor:get('.equipmentLoadout [data-slot="armor"]'),boots:get('.equipmentLoadout [data-slot="boots"]'),
+      multi:get('#bulkToggle'),clear:get('#resetInventoryFilters'),action:get('.filterActions')};
+    });
+    assert(position.paper.height<325,'desktop gear panel is compact');
+    assert(position.boots.top-position.armor.bottom<70,'armor and boots are closer together');
+    assert(Math.abs(position.multi.top-position.clear.top)<=2,'Select Multiple and Clear filters share a row');
+    assert(position.action.right<=width+1,'filter buttons stay in viewport');
+    const grid=page.locator('.equipmentInventory .stashGrid');
+    await grid.hover();
+    await page.mouse.wheel(0,120);
+    await page.waitForTimeout(120);
+    const wheel=await grid.evaluate(el=>el.scrollTop);
+    assert(wheel>=170,'a discrete mouse wheel step scrolls faster, actual '+wheel);
+    const offset=await page.evaluate(()=>{
+     const grid=document.querySelector('.equipmentInventory .stashGrid');grid.scrollTop=175;
+     grid.querySelector('[data-item]').click();
+     return document.querySelector('.equipmentInventory .stashGrid').scrollTop;
+    });
+    assert(Math.abs(offset-175)<=5,'inventory preserves scroll offset on item selection: '+offset);
+   }
    assert.deepEqual(errors,[],'no browser JS errors');
    await page.screenshot({path:'/tmp/wanderer-v0100-'+width+'.png',fullPage:true});
    console.log('PASS v0.10.0 browser '+width+'px: header/menu, mana, boss telegraph, all three PNGs');

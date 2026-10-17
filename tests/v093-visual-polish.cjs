@@ -4,7 +4,7 @@ const fs=require('node:fs'),vm=require('node:vm');
 const html=fs.readFileSync('index.html','utf8');
 const model=fs.readFileSync('online/model.mjs','utf8');
 const manifest=JSON.parse(fs.readFileSync('assets/characters/manifest.json','utf8'));
-for(const name of ['Warrior','Archer','Dark Warrior','Old Mage','Rogue']){
+for(const name of ['Paladin','Ranger','Warrior','Wizard','Rogue']){
  assert(model.includes("'"+name+"'"),name+' online character name');
  assert(manifest.characters.some(c=>c.name===name),name+' character manifest');
 }
