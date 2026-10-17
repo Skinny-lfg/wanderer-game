@@ -22,6 +22,8 @@ globalThis.combatUITest=(enc,status='ready')=>{
    await page.route('**/online/app.mjs*',route=>route.fulfill({contentType:'text/javascript',body:'// Browser UI test does not require online auth.'}));
    await page.route(URL+'/',route=>route.fulfill({contentType:'text/html',body:fs.readFileSync('index.html','utf8').replace(boot,instrument+boot)}));
    await page.goto(URL+'/');
+   // Offline browser fixture must unlock the UI as the mocked auth would.
+   await page.evaluate(()=>{document.getElementById('screen').inert=false;document.getElementById('nav').inert=false;});
    for(const [enc,expectRisk] of [[3,'Berserker Elite'],[4,'Main Boss']]){
     await page.evaluate(enc=>combatUITest(enc),enc);
     const mobile=width<=650;
