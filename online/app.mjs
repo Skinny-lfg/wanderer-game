@@ -9,7 +9,13 @@ let message='Sign in to play',selectedCharacter=game.snapshot().characterId||'wa
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const accountKey=()=>user?'wanderer_account_'+firebaseConfig.projectId.replace(/[^A-Za-z0-9_-]/g,'_')+'_'+user.uid+'_'+SAVE_NAMESPACE:null;
 function status(text){message=text;}
-function needsEmailVerification(account){return !!account&&!account.emailVerified&&Array.isArray(account.providerData)&&account.providerData.some(p=>p.providerId==='password');}
+function needsEmailVerification(account){
+ if(!account||account.isAnonymous||account.emailVerified!==false)return false;
+ const providers=Array.isArray(account.providerData)?account.providerData.map(p=>p.providerId):[];
+ // Firebase can temporarily return an incomplete providerData array after registration.
+ // In that case, protect an unverified email account rather than allowing profile writes.
+ return providers.includes('password') || (!!account.email&&!providers.includes('google.com'));
+}
 function report(error){status(errorText(error));const el=document.getElementById('accountError');el.textContent=message;el.hidden=false;}
 function clearError(){document.getElementById('accountError').hidden=true;}
 function accountLabel(){
