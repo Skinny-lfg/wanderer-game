@@ -54,7 +54,14 @@ const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8010';
  await page.locator('#googleSignIn').waitFor();
  await page.evaluate(()=>{__firebaseTest.profile=null;__firebaseTest.cloud=null;});
  await page.locator('#googleSignIn').click();await page.locator('#nickname').fill('taken');await page.locator('#createProfile').click();assert.match(await page.locator('.onlineDialog .onlineError').innerText(),/taken/);
- await page.locator('#nickname').fill('Alice_1');await page.locator('#createProfile').click();await page.waitForFunction(()=>WandererGame.key()==='wanderer_account_demo-wanderer-dev_alice_v092'&&!document.querySelector('.onlineDialog'));
+ await page.locator('#nickname').fill('Alice_1');
+ await page.evaluate(()=>{__firebaseTest.failNextSave=true;});
+ await page.locator('#createProfile').click();
+ await page.locator('#retryAccount').waitFor();
+ assert.match(await page.locator('.onlineDialog .onlineError').innerText(),/Nickname saved.*Continue/,'failed first cloud save retains nickname and offers Continue');
+ assert.equal(await page.locator('#createProfile').count(),0,'a successfully saved nickname is not requested twice');
+ await page.locator('#retryAccount').click();
+ await page.waitForFunction(()=>WandererGame.key()==='wanderer_account_demo-wanderer-dev_alice_v092'&&!document.querySelector('.onlineDialog'));
  assert.equal((await snapshot()).gold,0,'legacy Guest Gold must not transfer after global reset');assert.equal(await page.evaluate(()=>JSON.parse(__firebaseTest.cloud.payload).gold),0);await page.waitForFunction(()=>__firebaseTest.shared===1);
  assert.ok(!(await page.locator('#screen').evaluate(e=>e.inert)));
  assert.equal((await snapshot()).maxDungeon,1,'all accounts begin the new season in D1');
@@ -68,7 +75,14 @@ const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8010';
  };
  const account=()=>menuAction('account'),close=()=>page.locator('.onlineDialog [data-close]').click();
  await account();assert.deepEqual(await page.locator('.characterPicker button span').allInnerTexts(),['Paladin','Ranger','Warrior','Wizard','Rogue'],'updated cosmetic names load after login');assert.equal(await page.locator('[data-character]').count(),5);assert.equal(await page.locator('.characterPicker img').first().evaluate(el=>getComputedStyle(el).borderRadius),'0px','character portraits should not be circular');
- for(const id of ['wanderer','ranger','knight','spellblade','duelist']){await page.locator(`[data-character="${id}"]`).click();await page.locator('#saveCharacter').click();assert.equal((await snapshot()).characterId,id);}
+ for(const [index,id] of ['wanderer','ranger','knight','spellblade','duelist'].entries()){
+  if(index>0)await account();
+  await page.locator(`[data-character="${id}"]`).click();
+  await page.locator('#saveCharacter').click();
+  await page.waitForFunction(()=>!document.querySelector('.onlineDialog'));
+  assert.equal((await snapshot()).characterId,id,'saving character returns to gameplay without a page refresh');
+ }
+ await account();
  assert.equal(await page.locator('#reviewCloud,#syncNow,#importSave,#exportSave,#backups,#onlineStatus').count(),0);
  await close();
  await menuAction('feedback');
