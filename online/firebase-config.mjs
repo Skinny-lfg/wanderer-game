@@ -12,13 +12,15 @@ export const firebaseConfig = {
 };
 export const firebaseEnvironment = 'development';
 const forbiddenProductionProject = 'wanderer-test-8f062';
+const forbiddenProductionApiKey = 'AIzaSyAo2cRMBYV08N3RVM7tccZeoum_wwcTJQk';
 export function assertDevFirebaseConfig(config = firebaseConfig){
  if(!config || !/^[a-z][a-z0-9-]{4,}$/.test(String(config.projectId)) ||
     Object.values(config).some(value => !value || String(value).includes('SET_DEVELOPMENT_'))){
   throw new Error('Development Firebase is not configured. Create a separate Firebase project and update online/firebase-config.mjs. Production accounts and saves will not be used.');
  }
  // Refuse reused production Web App values even if a new projectId is pasted.
- if(String(config.authDomain||'') === forbiddenProductionProject+'.firebaseapp.com' ||
+ if(String(config.apiKey||'') === forbiddenProductionApiKey ||
+    String(config.authDomain||'') === forbiddenProductionProject+'.firebaseapp.com' ||
     String(config.appId||'') === '1:180691461185:web:3a423d32244aad3e41d2c0' ||
     String(config.messagingSenderId||'') === '180691461185'){
   throw new Error('Development is using production Firebase Web App identifiers. Copy the complete config from the new development project.');
