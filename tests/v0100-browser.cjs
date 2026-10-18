@@ -86,7 +86,7 @@ const server=http.createServer((req,res)=>{
    if(desktop){
     assert.equal(await page.locator('#menuToggle').isVisible(),false,'desktop hamburger hidden');
     assert.equal(await page.locator('#onlineActions').isVisible(),true,'desktop utility actions visible');
-    assert(Math.abs(header.wallet.top-header.nav.top)<=12,'desktop wallet aligned to Dungeons/navigation');
+    assert(Math.abs((header.wallet.top+header.wallet.bottom)/2-(header.nav.top+header.nav.bottom)/2)<=12,'desktop wallet vertically centered with navigation');
    }else{
     assert.equal(await page.locator('#menuToggle').isVisible(),true,'mobile hamburger visible');
     assert.equal(await page.locator('#onlineActions').isVisible(),false,'mobile utility actions initially folded');
