@@ -1,6 +1,6 @@
 import {publicLoadout,cleanEquipment} from './public-loadout.mjs';
 import {practiceDuel} from './pvp.mjs';
-import {firebaseConfig} from './firebase-config.mjs?v=v0101-dev-config-2';
+import {firebaseConfig} from './firebase-config.mjs?v=v0110-production-1';
 import {CHARACTERS,character,nicknameKey,validateSave,recoverInterruptedSave,summary,safeProgress,SAVE_NAMESPACE} from './model.mjs?v=v0110-audit-save-1';
 const game=globalThis.WandererGame,SIGNED_OUT_SLOT='wanderer_account_auth_locked_dev';
 let backendPromise,backend,user=null,profile=null,revision=null,synced='',epoch=0,writing=false,suppress=false,timer=null,dialog=null;
