@@ -3,3 +3,4 @@ node_modules/
 .firebase/
 playwright-report/
 test-results/
+hosting-dist/
