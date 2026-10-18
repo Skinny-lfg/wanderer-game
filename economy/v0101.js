@@ -40,7 +40,7 @@
     const base=item.upgradeBase||Object.fromEntries(fields.filter(k=>finite(Number(item[k]))&&Number(item[k])>0).map(k=>[k,Number(item[k])]));
     for(const [key,v]of Object.entries(base)){
       if(!fields.includes(key)||!finite(v)||v<0)throw new Error('Invalid original stat');
-      item[key]=Math.round(v*(1+(current+1)*.02));
+      item[key]=Math.round(v*(1+(current+1)*.02)*100)/100;
     }
     item.upgradeBase={...base};
     item.upgradeRank=current+1;
