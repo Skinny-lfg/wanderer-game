@@ -279,9 +279,9 @@ async function showLeaderboard(metric='fastest'){
    const c=character(row.profile.characterId),level=mode==='fastest'?200:row.deepest;
    const detail=mode==='fastest'?'Personal best · '+formatDuration(row.bestMs):'Current attempt · '+(row.deepest||0)+' cleared';
    const place=['🥇','🥈','🥉'][i]||String(i+1);
-   return `<li class="rankEntry"><span class="rankPlace ${i<3?'rankPodium':''}" aria-label="Rank ${i+1}">${place}</span><img src="${c.avatar}" alt="${esc(c.name)}"><div class="rankPlayer"><button class="playerLink" data-player="${esc(row.uid)}">${esc(row.profile.nickname)}</button><span class="small muted rankInfo">${esc(detail)}</span></div><strong class="rankDungeon" aria-label="Dungeon ${level}">D${level}</strong></li>`;
+   return `<li class="rankEntry"><span class="rankPlace ${i<3?'rankPodium':''}" aria-label="Rank ${i+1}">${place}</span><img src="${c.avatar}" alt="${esc(c.name)}"><div class="rankPlayer"><button class="playerLink" data-player-index="${i}">${esc(row.profile.nickname)}</button><span class="small muted rankInfo">${esc(detail)}</span></div><strong class="rankDungeon" aria-label="Dungeon ${level}">D${level}</strong></li>`;
   }).join('')}</ol>`:'<p>No results yet.</p>';
-  current.querySelectorAll('[data-player]').forEach(button=>button.onclick=async()=>{button.disabled=true;try{const result=await b.player(button.dataset.player);if(current.isConnected)showPlayer(result);}catch(error){if(current.isConnected)current.querySelector('.onlineError').textContent=errorText(error);}finally{button.disabled=false;}});
+  current.querySelectorAll('[data-player-index]').forEach(button=>button.onclick=async()=>{button.disabled=true;try{const id=rows[Number(button.dataset.playerIndex)]?.uid;if(!id)throw Error('Player not found.');const result=await b.player(id);if(current.isConnected)showPlayer(result);}catch(error){if(current.isConnected)current.querySelector('.onlineError').textContent=errorText(error);}finally{button.disabled=false;}});
  }catch(error){if(current.isConnected){current.querySelector('#rankingRows').textContent='Leaderboard unavailable.';current.querySelector('.onlineError').textContent=errorText(error);}}
 }
 function showPlayer(player){
