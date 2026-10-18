@@ -63,11 +63,16 @@
 .combatVfx img{display:block;width:100%;height:100%;object-fit:contain}
 .combatVfx.vfxBlock{left:24%;animation:vfxImpact .55s ease-out both}
 .combatVfx.vfxProjectile{left:28%;animation:vfxTravel .5s ease-in both}
+.combatVfx.vfxEnemyImpact{left:24%;top:42%;animation:vfxImpact .5s ease-out both}
+.combatVfx.vfxEnemyProjectile{left:72%;top:42%;animation:vfxEnemyTravel .52s ease-in both}
+.combatVfx.vfxEnemyProjectile img{transform:scaleX(-1)}
+.combatVfx.vfxEnemyWard{left:72%;top:42%;width:clamp(96px,29%,210px);animation:vfxImpact .66s ease-out both}
 .combatVfx[data-kind="Bow"] img{transform:rotate(25deg)}
 .combatVfx[data-kind="Two-Handed"],.combatVfx[data-kind="Staff"]{width:clamp(95px,28%,200px)}
 @keyframes vfxImpact{0%{opacity:0;transform:translate(-50%,-50%) scale(.55) rotate(-18deg)}30%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1.2) rotate(10deg)}}
 @keyframes vfxTravel{0%{opacity:0;left:28%;transform:translate(-50%,-50%) scale(.65)}20%{opacity:1}80%{opacity:1}100%{opacity:0;left:72%;transform:translate(-50%,-50%) scale(1)}}
-@media(prefers-reduced-motion:reduce){.combatVfx{animation:vfxFade .3s linear both!important}.combatVfx.vfxProjectile{left:72%}@keyframes vfxFade{0%,70%{opacity:1}100%{opacity:0}}}
+@keyframes vfxEnemyTravel{0%{opacity:0;left:72%;transform:translate(-50%,-50%) scale(.65)}20%{opacity:1}80%{opacity:1}100%{opacity:0;left:24%;transform:translate(-50%,-50%) scale(1)}}
+@media(prefers-reduced-motion:reduce){.combatVfx{animation:vfxFade .3s linear both!important}.combatVfx.vfxProjectile{left:72%}.combatVfx.vfxEnemyProjectile{left:24%}@keyframes vfxFade{0%,70%{opacity:1}100%{opacity:0}}}
 
 /* v0.9 dungeon probabilities */
 .lootOdds{margin:12px 0}.lootOdds table{width:100%;border-collapse:collapse;font-size:12px;white-space:nowrap}
@@ -2637,26 +2642,55 @@ if(!allowUnprotectedLegendaryStart&&unprotected.length){
 }
 let theme=currentTheme(),stats=totalStats();state.run={tier:state.chosen,path:theme.id,favoredGear:[...offeredFavoredGear(theme)],enc:0,status:'ready',hp:stats.maxhp,maxhp:stats.maxhp,mp:stats.mana,maxmp:stats.mana,barrier:0,stats,enemy:null,tPlayer:0,tEnemy:0,tDot:0,loot:[],valuables:[],gold:0,fragments:0,protectedItemIds:chosenProtectionIds(),eliteType:rollEliteArchetype(),playerHealingDebuffUntil:0,combatSeconds:0,setCooldowns:{},secondWindUsed:false};view='combat';logEntries=[];addLog(`Entering ${theme.name} — Dungeon ${state.chosen}.`,'good');save();renderCombat();resetDungeonEntryScroll()}
 function nextEncounter(){const r=state.run;if(!r||r.status!=='ready'||r.enc>=wavesForDungeon(r.tier))return;r.enc++;selectedPath=r.path;r.enemy=enemyFor(r.tier,r.enc);r.tPlayer=r.tEnemy=r.tDot=0;r.setTemp=null;r.playerDebuffUntil=0;r.playerHealingDebuffUntil=0;r.nextCasterHexAt=0;setRuntime(r);r.status='fight';addLog(waveTitle(r.enc)+' '+r.enc+'/'+wavesForDungeon(r.tier)+': '+r.enemy.name);save();renderCombat();clearInterval(clock);clock=setInterval(()=>{if(document.visibilityState!=='hidden')updateFight();},110/clockSpeed)}
-const COMBAT_VFX={Sword:'slash_main_hand',Mace:'smash_main_hand',Daggers:'double_slash_daggers','Off-Hand Dagger':'double_slash_daggers','Two-Handed':'big_slash_two_hand',Bow:'arrow_bow',Staff:'big_spell_projectile_staff',Wand:'spell_projectile_wand',Block:'block'};
-function combatEffect(kind){
- const scene=$('scene'),asset=COMBAT_VFX[kind];if(!scene||!asset)return;
- // Effects are visual only; cap concurrent overlays on fast builds.
+const COMBAT_VFX={
+ Sword:'slash_main_hand',Mace:'smash_main_hand',Daggers:'double_slash_daggers','Off-Hand Dagger':'double_slash_daggers',
+ 'Two-Handed':'big_slash_two_hand',Bow:'arrow_bow',Staff:'big_spell_projectile_staff',Wand:'spell_projectile_wand',Block:'block',
+ EnemySkirmisher:'enemy_skirmisher_slash',EnemyBruiser:'enemy_bruiser_smash',
+ EliteTank:'elite_tank_crushing_blow',EliteBerserker:'elite_berserker_rend',
+ EliteVampire:'elite_vampire_blood_drain',EliteCaster:'elite_caster_hex',
+ BossAbyssal:'boss_abyssal_guardian_barrier',BossRift:'boss_rift_harbinger_soul_bolt',
+ BossEmber:'boss_ember_sovereign_enrage'
+};
+const MAGIC_COMBAT_AFFINITIES=new Set(['poison','burn','slow','drain','nature','shock','tide']);
+function combatVfxAsset(kind,affinity){
+ const base=COMBAT_VFX[kind];
+ if(!base)return null;
+ if((kind==='Staff'||kind==='Wand')&&MAGIC_COMBAT_AFFINITIES.has(affinity))return base+'_'+affinity;
+ return base;
+}
+function combatEffect(kind,affinity=null){
+ const scene=$('scene'),asset=combatVfxAsset(kind,affinity);
+ if(!scene||!asset)return;
+ // Purely cosmetic: keep the effect cap and cleanup even at 4x combat speed.
  const existing=scene.querySelectorAll('.combatVfx');if(existing.length>=8)existing[0].remove();
  const fx=document.createElement('span'),art=document.createElement('img');
- fx.className='combatVfx '+(kind==='Block'?'vfxBlock':['Bow','Staff','Wand'].includes(kind)?'vfxProjectile':'vfxImpact');
+ const ward=kind==='BossAbyssal'||kind==='BossEmber';
+ const enemy=kind.startsWith('Enemy')||kind.startsWith('Elite')||kind.startsWith('Boss');
+ const enemyProjectile=kind==='EliteCaster'||kind==='BossRift';
+ fx.className='combatVfx '+(ward?'vfxEnemyWard':enemy?(enemyProjectile?'vfxEnemyProjectile':'vfxEnemyImpact'):kind==='Block'?'vfxBlock':['Bow','Staff','Wand'].includes(kind)?'vfxProjectile':'vfxImpact');
  fx.dataset.kind=kind;fx.setAttribute('aria-hidden','true');
  art.src='assets/combat-vfx/'+asset+'.png';art.alt='';art.draggable=false;
  fx.appendChild(art);scene.appendChild(fx);
- fx.addEventListener('animationend',()=>fx.remove(),{once:true});setTimeout(()=>fx.remove(),700);
+ fx.addEventListener('animationend',()=>fx.remove(),{once:true});setTimeout(()=>fx.remove(),800);
 }
 function animateStrike(kind,spell=false){
- const img=$('heroPortrait'),scene=$('scene');if(!img||!scene)return;
+ const img=$('heroPortrait');if(!img)return;
  const fx=spell?'fxSpell':kind==='Two-Handed'?'fxHeavy':kind==='Mace'?'fxSmash':kind==='Daggers'?'fxDagger':kind==='Bow'?'fxBow':'fxSlash';
  img.classList.remove('fxSpell','fxHeavy','fxSmash','fxDagger','fxBow','fxSlash');void img.offsetWidth;img.classList.add(fx);
+ // Affinity changes the artwork, never the damage calculation or proc probability.
+ const main=state.run?.stats?.main;
+ combatEffect(kind,spell?(main?.magic||main?.effect):null);
+}
+function animateDefense(){
+ const img=$('heroPortrait');if(img){img.classList.remove('fxBlock');void img.offsetWidth;img.classList.add('fxBlock');combatEffect('Block');}
+}
+function animateEnemyStrike(abilityFx=null){
+ const img=$('enemyPortrait');if(!img)return;
+ img.classList.remove('fxEnemyAttack');void img.offsetWidth;img.classList.add('fxEnemyAttack');
+ const e=state.run?.enemy;
+ const kind=abilityFx||(e?.eliteType==='tank'?'EliteTank':e?.eliteType==='berserker'?'EliteBerserker':e?.role==='bruiser'||e?.boss?'EnemyBruiser':'EnemySkirmisher');
  combatEffect(kind);
 }
-function animateDefense(){const img=$('heroPortrait');if(img){img.classList.remove('fxBlock');void img.offsetWidth;img.classList.add('fxBlock');combatEffect('Block');}}
-function animateEnemyStrike(){const img=$('enemyPortrait');if(img){img.classList.remove('fxEnemyAttack');void img.offsetWidth;img.classList.add('fxEnemyAttack');}}
 function floatText(n,target='enemy',crit=false){const el=$('scene');if(!el)return;let x=document.createElement('span');x.className='float';x.textContent=(crit?'CRIT! ':'')+Math.round(n);x.style.color=crit?'#f4d18a':target==='enemy'?'#f5b5a8':'#a3e1ff';x.style.left=target==='enemy'?'70%':'22%';x.style.top='50%';el.appendChild(x);setTimeout(()=>x.remove(),870)}
 function synchronizeDots(enemy){
  if(!enemy.dots)return;
@@ -3049,12 +3083,13 @@ function updateFight(){
  const slowed=e.slowTime>0?1+(s.bonus.slowBonus||.22):1;
  if(r.tEnemy>=e.attackEvery*slowed){
   r.tEnemy=0;
+  let enemyAbilityVfx=null;
   let raw=Math.max(Math.ceil(e.atk*.24),Math.round(e.atk*(1-Math.min(.75,s.defense/(s.defense+e.atk*1.35)))));
   if(e.effect==='burn')raw+=Math.round(r.tier*.3);
   if(e.effect==='sunder')raw+=Math.round(r.tier*.2);
   if(e.bossStyle==='berserker'&&e.hp<e.maxhp*.5){
    raw=Math.round(raw*1.35);
-   if(!e.enraged){e.enraged=true;addLog('🔥 Ember Sovereign enrages below half HP!','critical');}
+   if(!e.enraged){e.enraged=true;addLog('🔥 Ember Sovereign enrages below half HP!','critical');combatEffect('BossEmber');}
   }
   if(e.eliteType==='berserker'&&e.hp<e.maxhp*.5)raw=Math.round(raw*1.08);
   const weaker=setEnemyWeaken(r);
@@ -3083,20 +3118,20 @@ function updateFight(){
    }
    if(e.eliteType==='vampire'){
     const heal=Math.min(Math.max(0,e.maxhp-e.hp),Math.max(1,Math.round(hit*.38)),Math.max(1,Math.round(e.maxhp*.06)));
-    if(heal>0){e.hp+=heal;addLog('🩸 Vampire drains '+heal+' HP','spell');}
+    if(heal>0){e.hp+=heal;addLog('🩸 Vampire drains '+heal+' HP','spell');enemyAbilityVfx='EliteVampire';}
    }
    if(e.eliteType==='caster'&&r.combatSeconds>=(r.nextCasterHexAt||0)){
     r.playerDebuffUntil=r.combatSeconds+3;r.nextCasterHexAt=r.combatSeconds+7;
-    addLog('🔮 Caster applies Weakened: -20% direct damage for 3s!','spell');
+    addLog('🔮 Caster applies Weakened: -20% direct damage for 3s!','spell');enemyAbilityVfx='EliteCaster';
    }
   }
-  if(e.bossStyle==='leech'&&hit>0){const heal=Math.min(e.maxhp-e.hp,Math.round(hit*.28));e.hp+=heal;if(heal)addLog('🌑 Rift Harbinger drains '+heal+' HP','spell');}
-  if(e.bossStyle==='guardian'&&!e.barrier){e.barrier=Math.max(2,Math.round(r.tier*.45));addLog('🛡 Abyssal Guardian restores '+e.barrier+' Barrier','spell');}
+  if(e.bossStyle==='leech'&&hit>0){const heal=Math.min(e.maxhp-e.hp,Math.round(hit*.28));e.hp+=heal;if(heal){addLog('🌑 Rift Harbinger drains '+heal+' HP','spell');enemyAbilityVfx='BossRift';}}
+  if(e.bossStyle==='guardian'&&!e.barrier){e.barrier=Math.max(2,Math.round(r.tier*.45));addLog('🛡 Abyssal Guardian restores '+e.barrier+' Barrier','spell');combatEffect('BossAbyssal');}
   legendaryDefensiveEffects(r,damageBlocked,hit,blocked,barrierBeforeHit>0&&r.barrier<=0);
   if(s.bonus.lastBastion&&r.barrier>=r.maxhp*.1&&setReady(r,'lastBastion',12))t.lastBastionReady=true;
   if(r.hp>0&&s.bonus.natureRenewal&&!t.natureRenewalUsed&&r.hp<=r.maxhp*.35){t.natureRenewalUsed=true;const gained=setHeal(r,r.maxhp*.08);addLog('🌿 Verdant Renewal: +'+Math.round(gained)+' HP','good');}
   if(r.hp>0&&s.bonus.tideSurge&&!t.tideSurgeUsed&&r.barrier<r.maxhp*.05){t.tideSurgeUsed=true;const gained=setBarrier(r,r.maxhp*.08);addLog('🌊 High Tide: +'+Math.round(gained)+' Barrier','good');}
-  animateEnemyStrike();
+  animateEnemyStrike(enemyAbilityVfx);
  }
  if(r.hp<=0){
   if(s.bonus.secondWind&&!r.secondWindUsed){r.secondWindUsed=true;r.hp=1;setBarrier(r,r.maxhp*.08);addLog('💚 Second Wind! Survived lethal damage (once per expedition)','good');}
