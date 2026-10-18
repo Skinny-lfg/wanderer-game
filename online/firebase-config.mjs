@@ -1,14 +1,14 @@
 // DEVELOPMENT ONLY. This branch must never connect to the production Firebase project.
-// Create a separate Firebase project and copy the Web App config here.
+// Dedicated Firebase development Web App config, supplied by the project owner.
 // Firebase Web App identifiers are public; do not paste service-account credentials.
 // Production remains configured separately on the main branch.
 export const firebaseConfig = {
- apiKey: 'SET_DEVELOPMENT_API_KEY',
- authDomain: 'SET_DEVELOPMENT_PROJECT.firebaseapp.com',
- projectId: 'SET_DEVELOPMENT_PROJECT_ID',
- storageBucket: 'SET_DEVELOPMENT_PROJECT.firebasestorage.app',
- messagingSenderId: 'SET_DEVELOPMENT_SENDER_ID',
- appId: 'SET_DEVELOPMENT_APP_ID'
+ apiKey: 'AIzaSyAjv8M57HnWiTOmK0tWTDDFSXTtSHKDmsg',
+ authDomain: 'wanderer-development-8e3ee.firebaseapp.com',
+ projectId: 'wanderer-development-8e3ee',
+ storageBucket: 'wanderer-development-8e3ee.firebasestorage.app',
+ messagingSenderId: '997393560763',
+ appId: '1:997393560763:web:4b81f022621e28b54a259e'
 };
 export const firebaseEnvironment = 'development';
 const forbiddenProductionProject = 'wanderer-test-8f062';
