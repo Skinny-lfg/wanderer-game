@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 // Exercise the production adapter with an in-memory SDK transaction boundary.
 test('profile reads and duplicate registration preserve account ownership',async()=>{
- const records=new Map(),writes=[];let fromCache=false;
+ const records=new Map(),writes=[];let fromCache=false,verificationMessages=0,passwordResetAddress='',forcedTokenRefreshes=0;
  const snapshot=ref=>({exists:()=>records.has(ref),data:()=>records.get(ref),metadata:{fromCache}});
- globalThis.__profileSdkTest={initializeApp:()=>({}),getAuth:()=>({currentUser:{uid:'alice',emailVerified:true}}),getFirestore:()=>({}),setPersistence:async()=>{},signInWithEmailAndPassword:async()=>({user:{uid:'alice'}}),createUserWithEmailAndPassword:async()=>({user:{uid:'alice'}}),sendPasswordResetEmail:async()=>{},sendEmailVerification:async()=>{},reload:async()=>{},getIdToken:async()=>"mock-token",doc:(_,...parts)=>parts.join('/'),getDoc:async ref=>snapshot(ref),serverTimestamp:()=>123,
+ globalThis.__profileSdkTest={initializeApp:()=>({}),getAuth:()=>({currentUser:{uid:'alice',emailVerified:true}}),getFirestore:()=>({}),setPersistence:async()=>{},signInWithEmailAndPassword:async()=>({user:{uid:'alice'}}),createUserWithEmailAndPassword:async()=>({user:{uid:'alice'}}),sendPasswordResetEmail:async(_auth,email)=>{passwordResetAddress=email;},sendEmailVerification:async()=>{verificationMessages++;},reload:async()=>{},getIdToken:async(_account,force)=>{if(force)forcedTokenRefreshes++;return "mock-token";},doc:(_,...parts)=>parts.join('/'),getDoc:async ref=>snapshot(ref),serverTimestamp:()=>123,
   runTransaction:async(_,fn)=>{const staged=[];await fn({get:async ref=>snapshot(ref),set:(ref,value)=>staged.push([ref,value])});for(const [ref,value]of staged){records.set(ref,value);writes.push(ref);}}
  };
  let source=await readFile(new URL('../online/firebase-client.mjs',import.meta.url),'utf8');
@@ -15,8 +15,13 @@ test('profile reads and duplicate registration preserve account ownership',async
  try{
  const {createBackend}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));const backend=await createBackend();
  assert.equal((await backend.signInWithEmail('example@example.com','password123')).user.uid,'alice');
- await backend.sendPasswordReset('example@example.com');
+ assert.equal((await backend.createEmailAccount(' example@example.com ','password123')).uid,'alice');
+ await backend.resendVerification();
+ assert.equal(verificationMessages,2,'registration and resend each send one verification email');
+ await backend.sendPasswordReset('  example@example.com  ');
+ assert.equal(passwordResetAddress,'example@example.com','password reset normalizes address');
  assert.equal((await backend.refreshVerification()).emailVerified,true);
+ assert.equal(forcedTokenRefreshes,1,'email verification refreshes Firestore ID token');
  const interrupted={payload:JSON.stringify({gold:124,fragments:40,maxDungeon:10,stash:[],equip:{},run:{status:'fight',gold:500}}),revision:4};
  records.set('players/alice/saves/current',interrupted);
  assert.equal(await backend.readSave(),null,'old cloud save must NOT restore into a fresh season');
