@@ -90,7 +90,11 @@ const server=http.createServer((req,res)=>{if(req.url==='/'){res.setHeader('Cont
  for(const {selector,color} of neutrals.colors){
    const rgb=color.slice(color.indexOf('(')+1,color.indexOf(')')).split(',').map(part=>Number(part.trim()));
    assert(rgb.length>=3&&rgb.slice(0,3).every(Number.isFinite),'expected solid surface color for '+selector+': '+color);
-   assert(rgb[0]>rgb[2],'neutral UI surface should lean red, not blue: '+selector+' = '+color);
+   if(selector==='.dungeonCard .favoredGearIcon'){
+    assert(rgb.slice(0,3).every(channel=>channel<=20),'affinity icon backing stays dark and unobtrusive: '+color);
+   }else{
+    assert(rgb[0]>rgb[2],'neutral UI surface should lean red, not blue: '+selector+' = '+color);
+   }
  }
  await page.evaluate(()=>fixture.dungeons());
  assert.equal(await page.locator('.legendaryHunt').count(),0,'Legendary Hunt hidden pending its next phase');
