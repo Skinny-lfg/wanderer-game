@@ -39,6 +39,8 @@ jobs:
           distribution: temurin
           java-version: '21'
       - run: npm ci
+      - name: Verify Firebase SDK build
+        run: npm run build:firebase
       - name: Prepare headless browser
         run: |
           if command -v google-chrome >/dev/null 2>&1; then

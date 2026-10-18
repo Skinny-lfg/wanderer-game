@@ -59,7 +59,7 @@ export async function createBackend(){
    const ref=profileRef(user());await sdk.runTransaction(db,async tx=>{const snap=await tx.get(ref);if(!snap.exists())throw new Error('Create a profile first.');tx.update(ref,{characterId,updatedAt:sdk.serverTimestamp()});});
    return this.profile();
   },
-  async readSave(){const snap=await sdk.getDoc(saveRef());if(!snap.exists())return null;const data=snap.data();recoverInterruptedSave(data.payload);return data;},
+  async readSave(){const snap=await sdk.getDoc(saveRef());if(snap.metadata?.fromCache)throw new Error('network-save-unconfirmed');if(!snap.exists())return null;const data=snap.data();recoverInterruptedSave(data.payload);return data;},
   async writeSave(payload,expectedRevision){
    const ref=saveRef(),record=cloudRecord(payload,expectedRevision);
    await sdk.runTransaction(db,async tx=>{const snap=await tx.get(ref);compareRevision(snap.exists()?snap.data():null,expectedRevision);tx.set(ref,{...record,updatedAt:sdk.serverTimestamp()});});

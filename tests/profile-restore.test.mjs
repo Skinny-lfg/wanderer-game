@@ -27,6 +27,15 @@ test('profile reads and duplicate registration preserve account ownership',async
  assert.equal(await backend.readSave(),null,'old cloud save must NOT restore into a fresh season');
  records.set('players/alice/saves/v092',interrupted);
  assert.deepEqual(await backend.readSave(),interrupted,'in-season interrupted cloud run remains recoverable');
+ const writesBeforeCache=writes.length;
+ fromCache=true;
+ await assert.rejects(backend.readSave(),/network-save-unconfirmed/,'cached save must not override a clean device save');
+ records.delete('players/alice/saves/v092');
+ await assert.rejects(backend.readSave(),/network-save-unconfirmed/,'cached absence must not trigger a new upload');
+ assert.equal(writes.length,writesBeforeCache,'cache-only reads must not write data');
+ fromCache=false;
+ assert.equal(await backend.readSave(),null,'confirmed server absence may be used');
+ records.set('players/alice/saves/v092',interrupted);
  await assert.rejects(backend.writeSave(JSON.parse(interrupted.payload),4),/Finish or extract/,'new active-run writes stay prohibited');
 
  const original={nickname:'skinny',characterId:'knight',createdAt:1,updatedAt:1};

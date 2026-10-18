@@ -59,7 +59,7 @@ export function safeProgress(s){
  const p=s?.onlineProgress||{};
  return {
   attemptId:typeof p.attemptId==='string'&&/^[A-Za-z0-9_-]{1,100}$/.test(p.attemptId)?p.attemptId:'legacy',
-  deepestCleared:Math.max(0,Math.min(200,Number(p.deepestCleared)||Math.max(0,(s?.maxDungeon||1)-1))),
+  deepestCleared:Math.max(0,Math.min(200,p.deepestCleared==null?Math.max(0,(s?.maxDungeon||1)-1):(Number(p.deepestCleared)||0))),
   activeMs:Math.max(0,Number(p.activeMs)||0),
   timingEligible:p.timingEligible===true,
   timerMetric:p.timerMetric==='combat-v1'?'combat-v1':'legacy-active',
