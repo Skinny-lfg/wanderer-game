@@ -69,7 +69,7 @@ assert(html.includes('class="panel forgeUnified"'),'Crafting and crafting odds m
 assert(html.includes('function legendaryRankBadge('),'Legendary rank must appear on item cards');
 assert(html.includes('v.upgradeRank*.02'),'Migrating an existing upgraded item should preserve precision');
 assert(html.includes('eliteCombatant'),'Elite portraits need their larger dedicated style');
-assert(html.includes('Wanderer v0.10.1</title>'),'Page title must show v0.10.1');
+assert(html.includes('Wanderer v0.11.0</title>'),'Page title must show v0.11.0');
 assert(!html.includes('merchant.sigils[idx]=null'),'A purchased Sigil must be replaced immediately');
 assert(!html.includes('not usable on Legendary'),'Merchant Sigils no longer repeat this label');
 assert(!html.includes('firebase deploy'),'Economy change must not deploy rules');
