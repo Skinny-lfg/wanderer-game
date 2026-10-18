@@ -209,7 +209,7 @@ function showAccount(){
  ${signedIn&&profile&&!ready?'<button id="retryAccount">Continue</button>':''}
  ${signedIn&&profile&&ready?'<button id="resetProgress" class="danger" type="button">Reset Progress · New Speedrun</button>':''}
  ${signedIn?'<button id="googleSignOut">Sign out</button>':''}</div>`;
- modal('Account & Character',content).dataset.account='true';dialog.addEventListener('cancel',e=>{if(!ready)e.preventDefault();});dialog.querySelector('[data-close]').hidden=!ready;bindCharacters();
+ modal('Account & Character',content).dataset.account='true';if(!signedIn)dialog.classList.add('authLoginDialog');dialog.addEventListener('cancel',e=>{if(!ready)e.preventDefault();});dialog.querySelector('[data-close]').hidden=!ready;bindCharacters();
  action('#googleSignIn',async()=>{ensureSafeSwitch();const b=await connect();await b.signIn();});
  const loginForm=dialog?.querySelector('#emailLoginForm');
  if(loginForm)loginForm.onsubmit=async event=>{
