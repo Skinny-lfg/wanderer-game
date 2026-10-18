@@ -1,0 +1,33 @@
+name: Wanderer release candidate checks
+
+on:
+  push:
+    branches: [release/v0110-wanderer-play]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm ci
+      - run: npm run build:firebase
+      - run: npm test
+      - name: Check Firestore rules in isolated emulator
+        run: npm run test:rules
+      - name: Verify distributable only points at new production
+        env:
+          FIREBASE_PROJECT_ID: wanderer-play
+        run: node scripts/prepare-hosting.mjs

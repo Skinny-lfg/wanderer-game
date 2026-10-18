@@ -4,7 +4,7 @@ const html=fs.readFileSync('index.html','utf8');
 const start=html.indexOf('<script>'),end=html.indexOf('</script>',start);
 assert(start>=0&&end>start);
 new Function(html.slice(start+8,end));
-for(const needle of ['<title>Wanderer v0.10.0</title>','class="version">v0.10.0','id="menuToggle"','id="onlineActions"','class="headerBottom"','id="heroMpFill"','bossPreviewMarkup(r.tier,upcoming)','Gravebound Bulwark','Bloodscar Ravager','Sanguine Wraith','Voidborne Hexer','The Abyssal Guardian','Rift Harbinger','Ember Sovereign'])assert(html.includes(needle),'Missing feature: '+needle);
+for(const needle of ['<title>Wanderer v0.11.0</title>','class="version">v0.11.0','id="menuToggle"','id="onlineActions"','class="headerBottom"','id="heroMpFill"','bossPreviewMarkup(r.tier,upcoming)','Gravebound Bulwark','Bloodscar Ravager','Sanguine Wraith','Voidborne Hexer','The Abyssal Guardian','Rift Harbinger','Ember Sovereign'])assert(html.includes(needle),'Missing feature: '+needle);
 assert(html.includes("if(mpBar&&mpFill)"),'Mana bar updates every combat tick');
 for(const [slug,boss] of [['abyssal-guardian','The Abyssal Guardian'],['rift-harbinger','Rift Harbinger'],['ember-sovereign','Ember Sovereign']]){
  const path='assets/bosses/'+slug+'.png',png=fs.readFileSync(path);
@@ -20,7 +20,7 @@ for(const level of [10,20,30])assert.equal(sim.inspect.wavesForDungeon(level),5)
 const model=fs.readFileSync('online/model.mjs','utf8'),online=fs.readFileSync('online/app.mjs','utf8'),manifest=JSON.parse(fs.readFileSync('assets/characters/manifest.json','utf8'));
 assert.deepEqual(manifest.characters.map(c=>c.name),['Paladin','Ranger','Warrior','Wizard','Rogue'],'new labels saved in character catalog');
 for(const name of ['Paladin','Ranger','Warrior','Wizard','Rogue'])assert(model.includes("'"+name+"'"),name+' must be exposed by model');
-assert(html.includes('online/app.mjs?v=v0100-character-labels-1'),'browser fetches current account module');
+assert(html.includes('online/app.mjs?v=v0101-password-reset-3'),'browser fetches current account module');
 assert(online.includes("./model.mjs?v=v0100-character-labels-1"),'account module fetches current character names');
 for(const kind of ['tank','caster','vampire','berserker']){
  const file='assets/elites/'+kind+'.webp',bytes=fs.readFileSync(file);
@@ -55,12 +55,12 @@ assert(html.includes('<div class="scene" id="scene">'),'combat background is sty
 assert(!html.includes("background-image:url('${dungeonImage(t)}')"),'old theme-based combat backdrop retired, while dungeon cards retain artwork');
 
 // Release banner and the visual rarity hierarchy must remain on development/main.
-const releaseBannerPath='assets/releases/v0100-update-banner.webp';
+const releaseBannerPath='assets/releases/v0110-home-banner.webp';
 const banner=fs.readFileSync(releaseBannerPath);
-assert.equal(banner.toString('ascii',0,4),'RIFF','v0.10 banner RIFF header');
-assert.equal(banner.toString('ascii',8,12),'WEBP','v0.10 banner is optimized WebP');
+assert.equal(banner.toString('ascii',0,4),'RIFF','v0.11 banner RIFF header');
+assert.equal(banner.toString('ascii',8,12),'WEBP','v0.11 banner is optimized WebP');
 assert(html.indexOf('<section class="releaseBanner"')>=0&&html.indexOf('<section class="releaseBanner"')<html.indexOf('<details class="panel homeChangelog" open>'),'release banner before homepage changelog');
-assert(html.includes('src="'+releaseBannerPath+'"'),'homepage loads v0.10 release art');
+assert(html.includes('src="'+releaseBannerPath+'"'),'homepage loads v0.11 release art');
 assert(html.includes('var(--elite-name)')&&html.includes('var(--boss-name)'),'different Elite/Boss name colors');
 assert(html.includes('combatEnemyName')&&html.includes("e.miniboss?' eliteName'"),'Elite styling in live combat');
 assert(html.includes("e.boss?' bossName'"),'Boss styling in live combat');

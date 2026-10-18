@@ -48,14 +48,12 @@ assert(html.includes('env(safe-area-inset-bottom,0px)'),'iOS safe area accounted
 assert(html.includes('body:has(.combatLayout) .toast'),'toast avoids fixed bar');
 assert(html.includes('.combatLayout .combatActions:not(:has(#nextFight))'),'combat speed still accessible during fights');
 assert(html.includes('id="nextFight"')&&html.includes('id="leave"')&&html.includes('id="combatSpeed"'),'original button ids and handlers preserved');
-assert(html.includes('.scene .combatStatuses,.scene .combatant .combatStatuses{position:static'),'buff lane above the portraits is kept in normal flow');
-assert(html.includes('flex:0 0 42px;flex-wrap:nowrap'),'status chips cannot add new rows');
-assert(html.includes('flex-basis:34px;height:34px;min-height:34px;max-height:34px'),'mobile effects have constant 34px height');
-assert(html.includes('overflow-x:auto;overflow-y:hidden')&&html.includes('overscroll-behavior-x:contain'),'every status remains reachable by horizontal swipe');
-assert(html.includes('.scene .combatStatuses:empty{display:flex;visibility:hidden}'),'empty lanes reserve the same height');
-assert(html.includes('.scene .combatStatuses .debuff{flex:0 0 auto;max-width:none;min-width:0;white-space:nowrap'),'status badges never wrap into new vertical rows');
-assert(html.includes('aria-label="Player effects; swipe sideways to view more"'),'player status carousel accessible');
-assert(html.includes('aria-label="Enemy effects; swipe sideways to view more"'),'enemy status carousel accessible');
-assert(html.includes('.scene .combatStatuses .debuff{font-size:8px;line-height:1.15;padding:1px 4px'),'buff badges smaller on mobile');
-assert(html.includes('.scene #enemyPortrait{width:min(125px,100%);height:112px;max-height:112px'),'enemy portrait scaled larger than before');
-console.log('PASS mobile: fixed controls, compact waves, smaller buffs, enlarged enemies and danger warnings');
+// v0.11 replaces the horizontal swipe carousel with vertical effect lanes at arena edges.
+assert(html.includes('.scene .combatant > .combatStatuses {'),'status lanes are anchored in the arena');
+assert(html.includes('flex-direction:column;')&&html.includes('overflow-y:auto;'),'buffs stack downward and remain scrollable');
+assert(html.includes('.scene .combatant > .combatStatuses.enemyDebuffs {'),'enemy effects stay on opposite side');
+assert(html.includes('aria-label="Player effects; scroll down to view more"'),'player status lane accessible');
+assert(html.includes('aria-label="Enemy effects; scroll down to view more"'),'enemy status lane accessible');
+assert(html.includes('.scene .combatStatuses .debuff{font-size:8px;line-height:1.15;padding:1px 4px'),'small mobile buff badges remain');
+assert(html.includes('.scene #enemyPortrait{width:min(125px,100%);height:112px;max-height:112px'),'enemy portrait remains enlarged');
+console.log('PASS mobile: fixed controls, compact waves, vertical effect lanes, enlarged enemies and danger warnings');

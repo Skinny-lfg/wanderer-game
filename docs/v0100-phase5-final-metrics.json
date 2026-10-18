@@ -1,0 +1,187 @@
+{
+  "study": "Wanderer v0.10.0 Phase 5 final independent validation",
+  "date": "2026-10-17",
+  "source": {
+    "description": "User-provided main ZIP, tested offline",
+    "index_html_sha256": "a69bef5e2f1d0842f79b692839012ab9e621a6b07cda0ba4a2fedef858b36126",
+    "target_branch": "development",
+    "main_gameplay_changes": false,
+    "firebase_changes": false,
+    "real_saves_accessed": false
+  },
+  "scope": {
+    "unique_seed_groups_600": 20,
+    "seeds_600": {
+      "start": 931050,
+      "end": 931069
+    },
+    "policies": [
+      "casual",
+      "experienced",
+      "speed"
+    ],
+    "max_expeditions": 600,
+    "arms": [
+      "control",
+      "one_refresh",
+      "forge_discount_25"
+    ],
+    "campaigns_600": 180,
+    "expeditions_600": 101944,
+    "unique_seed_groups_1200": 5,
+    "seeds_1200": {
+      "start": 931090,
+      "end": 931094
+    },
+    "campaigns_1200": 45,
+    "expeditions_1200": 29696,
+    "campaigns_total": 225,
+    "expeditions_total": 131640,
+    "run_errors": 0
+  },
+  "results_600": {
+    "control": {
+      "n": 60,
+      "d200": 21,
+      "policy_d200": {
+        "casual": 4,
+        "experienced": 8,
+        "speed": 9
+      },
+      "median_depth": 126,
+      "median_winner_expeditions": 531,
+      "median_refreshes": 211.5,
+      "median_crafts": 384,
+      "median_farm_runs": 345.5,
+      "median_gold": 5803,
+      "median_fragments": 2908.5,
+      "median_deaths": 15,
+      "median_merchant_purchases": 34.5
+    },
+    "one_refresh": {
+      "n": 60,
+      "d200": 19,
+      "policy_d200": {
+        "casual": 3,
+        "experienced": 9,
+        "speed": 7
+      },
+      "median_depth": 163.5,
+      "median_winner_expeditions": 503,
+      "median_refreshes": 161,
+      "median_crafts": 395,
+      "median_farm_runs": 313.5,
+      "median_gold": 9579.5,
+      "median_fragments": 2575,
+      "median_deaths": 13.5,
+      "median_merchant_purchases": 36
+    },
+    "forge_discount_25": {
+      "n": 60,
+      "d200": 26,
+      "policy_d200": {
+        "casual": 3,
+        "experienced": 12,
+        "speed": 11
+      },
+      "median_depth": 152.5,
+      "median_winner_expeditions": 509,
+      "median_refreshes": 207,
+      "median_crafts": 511.5,
+      "median_farm_runs": 316.5,
+      "median_gold": 5593,
+      "median_fragments": 17253,
+      "median_deaths": 10,
+      "median_merchant_purchases": 32
+    }
+  },
+  "paired_bootstrap": {
+    "method": "25000 seed-cluster bootstrap resamples, each of 20 seed groups spans 3 simulated policies; exploratory, unadjusted",
+    "one_refresh": {
+      "delta_d200_probability": -0.033333,
+      "ci95_d200_probability": [
+        -0.183,
+        0.117
+      ],
+      "delta_mean_depth": 14.283,
+      "ci95_depth": [
+        -5.533,
+        34.384
+      ],
+      "delta_mean_refreshes": -49.6,
+      "ci95_refreshes": [
+        -63.8,
+        -37.533
+      ],
+      "paired_winners": {
+        "both": 9,
+        "control_only": 12,
+        "candidate_only": 10,
+        "neither": 29
+      }
+    },
+    "forge_discount_25": {
+      "delta_d200_probability": 0.083333,
+      "ci95_d200_probability": [
+        -0.05,
+        0.217
+      ],
+      "delta_mean_depth": 10.633,
+      "ci95_depth": [
+        -8.917,
+        31.117
+      ],
+      "delta_mean_crafts": 102.683,
+      "ci95_crafts": [
+        90.3,
+        114.75
+      ],
+      "paired_winners": {
+        "both": 12,
+        "control_only": 9,
+        "candidate_only": 14,
+        "neither": 25
+      }
+    }
+  },
+  "results_1200": {
+    "control": {
+      "n": 15,
+      "d200_by_600": 5,
+      "d200_by_1200": 15,
+      "median_attempts": 657,
+      "median_refreshes": 257,
+      "median_crafts": 464
+    },
+    "one_refresh": {
+      "n": 15,
+      "d200_by_600": 5,
+      "d200_by_1200": 15,
+      "median_attempts": 613,
+      "median_refreshes": 196,
+      "median_crafts": 471
+    },
+    "forge_discount_25": {
+      "n": 15,
+      "d200_by_600": 8,
+      "d200_by_1200": 15,
+      "median_attempts": 589,
+      "median_refreshes": 231,
+      "median_crafts": 583
+    }
+  },
+  "regression_tests": {
+    "node_tests": "6/6 pass",
+    "affinity_scaling": "PASS",
+    "shatter_double_strike": "PASS",
+    "legendary_signatures": "PASS",
+    "negative_currency_balances": 0
+  },
+  "decision": {
+    "one_refresh": "Do not hard-cap Merchant in live gameplay; prototype an improved refresh UX only",
+    "forge_discount_25": "Reject global discount for now: uncertain D200 improvement and strong extra crafting load",
+    "global_numerical_balance": "No change approved",
+    "next": "Player-based UX validation, time per session, crafting friction, merchant freshness, optional upgrade suggestions"
+  },
+  "data_artifacts": "The full per-player JSON and research-only scripts are in Wanderer_v010_Fase5_Dados_e_Scripts.zip linked in the original ChatGPT analysis conversation. GitHub holds report and aggregates only."
+}

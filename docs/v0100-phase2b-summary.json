@@ -1,0 +1,299 @@
+{
+  "research": "Wanderer v0.10.0 Phase 2B",
+  "date": "2026-10-17",
+  "source": "user supplied main ZIP",
+  "source_index_sha256": "a69bef5e2f1d0842f79b692839012ab9e621a6b07cda0ba4a2fedef858b36126",
+  "status": "offline research only; gameplay untouched",
+  "trials": {
+    "generated_five_set": 5760,
+    "generated_three_set": 1344,
+    "acquired_historical": 1136,
+    "fifth_set_on_off": 2688,
+    "shatter_double_strike_on_off": 512,
+    "legendary_on_off": 480,
+    "total": 11920
+  },
+  "dungeons": [
+    39,
+    40,
+    99,
+    100,
+    159,
+    160,
+    199,
+    200
+  ],
+  "boss_dungeons": [
+    40,
+    100,
+    160,
+    200
+  ],
+  "elites": [
+    "tank",
+    "berserker",
+    "vampire",
+    "caster"
+  ],
+  "themes": [
+    "temple",
+    "ash",
+    "frost",
+    "drowned"
+  ],
+  "profiles": {
+    "mixed": {
+      "tier_factors": [
+        0.75,
+        0.85,
+        0.95
+      ],
+      "rarities": [
+        "Rare",
+        "Rare",
+        "Epic",
+        "Rare",
+        "Uncommon"
+      ]
+    },
+    "strong": {
+      "tier_factors": [
+        0.88,
+        0.95,
+        1
+      ],
+      "rarities": [
+        "Rare",
+        "Epic",
+        "Epic",
+        "Rare",
+        "Epic"
+      ]
+    }
+  },
+  "notes": "Each row has 96 boss trials/profile; generated baseline 5 legal affinity points; different affinities may alter generated item stats; not a pure weapon effect.",
+  "boss_wins_by_build": [
+    {
+      "weapon": "Mace",
+      "affinity": "shield",
+      "mixed_wins": 62,
+      "strong_wins": 93,
+      "n_per_profile": 96
+    },
+    {
+      "weapon": "Mace",
+      "affinity": "regen",
+      "mixed_wins": 66,
+      "strong_wins": 95,
+      "n_per_profile": 96
+    },
+    {
+      "weapon": "Sword",
+      "affinity": "poison",
+      "mixed_wins": 27,
+      "strong_wins": 74,
+      "n_per_profile": 96
+    },
+    {
+      "weapon": "Sword",
+      "affinity": "crit",
+      "mixed_wins": 21,
+      "strong_wins": 76,
+      "n_per_profile": 96
+    },
+    {
+      "weapon": "Bow",
+      "affinity": "crit",
+      "mixed_wins": 0,
+      "strong_wins": 60,
+      "n_per_profile": 96
+    },
+    {
+      "weapon": "Bow",
+      "affinity": "nature",
+      "mixed_wins": 15,
+      "strong_wins": 90,
+      "n_per_profile": 96
+    },
+    {
+      "weapon": "Two-Handed",
+      "affinity": "bleed",
+      "mixed_wins": 7,
+      "strong_wins": 75,
+      "n_per_profile": 96
+    },
+    {
+      "weapon": "Two-Handed",
+      "affinity": "sunder",
+      "mixed_wins": 4,
+      "strong_wins": 70,
+      "n_per_profile": 96
+    },
+    {
+      "weapon": "Staff",
+      "affinity": "slow",
+      "mixed_wins": 3,
+      "strong_wins": 75,
+      "n_per_profile": 96
+    },
+    {
+      "weapon": "Staff",
+      "affinity": "burn",
+      "mixed_wins": 0,
+      "strong_wins": 52,
+      "n_per_profile": 96
+    },
+    {
+      "weapon": "Staff",
+      "affinity": "shock",
+      "mixed_wins": 0,
+      "strong_wins": 37,
+      "n_per_profile": 96
+    },
+    {
+      "weapon": "Wand",
+      "affinity": "drain",
+      "mixed_wins": 60,
+      "strong_wins": 96,
+      "n_per_profile": 96
+    },
+    {
+      "weapon": "Wand",
+      "affinity": "burn",
+      "mixed_wins": 0,
+      "strong_wins": 56,
+      "n_per_profile": 96
+    },
+    {
+      "weapon": "Daggers",
+      "affinity": "crit",
+      "mixed_wins": 3,
+      "strong_wins": 69,
+      "n_per_profile": 96
+    },
+    {
+      "weapon": "Daggers",
+      "affinity": "poison",
+      "mixed_wins": 7,
+      "strong_wins": 80,
+      "n_per_profile": 96
+    }
+  ],
+  "fifth_ability_on_off": {
+    "pairs": 1344,
+    "wins_on": 704,
+    "wins_off": 695,
+    "flips_on_gain": 10,
+    "flips_on_loss": 1,
+    "by_primary_weapon": {
+      "Mace": [
+        155,
+        155
+      ],
+      "Sword": [
+        101,
+        101
+      ],
+      "Bow": [
+        60,
+        58
+      ],
+      "Two-Handed": [
+        82,
+        81
+      ],
+      "Staff": [
+        78,
+        72
+      ],
+      "Wand": [
+        156,
+        156
+      ],
+      "Daggers": [
+        72,
+        72
+      ]
+    }
+  },
+  "skills": {
+    "shatter": {
+      "pairs": 128,
+      "wins_on": 51,
+      "wins_off": 50
+    },
+    "double_strike": {
+      "pairs": 128,
+      "wins_on": 48,
+      "wins_off": 43
+    }
+  },
+  "legendary": {
+    "pairs_per_identity": 40,
+    "level": 100,
+    "on_off_wins": {
+      "winterheart-spire": [
+        25,
+        4
+      ],
+      "tome-of-the-eternal-flame": [
+        14,
+        14
+      ],
+      "pendant-of-the-first-flame": [
+        0,
+        0
+      ],
+      "starweaver-relic": [
+        0,
+        0
+      ],
+      "fang-of-the-sunbreaker": [
+        40,
+        40
+      ],
+      "crescent-of-the-emberveil": [
+        0,
+        0
+      ]
+    }
+  },
+  "acquired_historical": {
+    "inventories": 71,
+    "trials": 1136,
+    "by_weapon": {
+      "Two-Handed": [
+        31,
+        396,
+        496
+      ],
+      "Staff": [
+        18,
+        235,
+        288
+      ],
+      "Mace": [
+        8,
+        111,
+        128
+      ],
+      "Sword": [
+        4,
+        56,
+        64
+      ],
+      "Bow": [
+        5,
+        60,
+        80
+      ],
+      "Daggers": [
+        5,
+        56,
+        80
+      ]
+    }
+  },
+  "conclusion": "Strong sustain advantage at mixed power; affinity selection more important than many fifth-tier skills; assess current D1-D200 persistent progression next.",
+  "limitations": "No human decisions or new production player acquisition; historical snapshots from earlier progression policies; floor and ceiling effects; common starting seed not identical future random draws."
+}

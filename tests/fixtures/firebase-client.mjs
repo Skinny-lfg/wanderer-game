@@ -5,7 +5,19 @@ export async function createBackend(){
  return {
   watchAuth(cb){callback=cb;f.restore=()=>callback(f.user);cb(f.user);},
   async signIn(){f.user={uid:'alice'};await callback(f.user);},
-  async signInGuest(){f.user={uid:'guest-1',isAnonymous:true};f.profile=null;f.cloud=null;await callback(f.user);},
+  async signInWithEmail(email,password){
+   if(!email||!password)throw Error('auth/invalid-credential');
+   f.user={uid:'email-user',email,emailVerified:true,providerData:[{providerId:'password'}]};
+   f.profile=null;f.cloud=null;await callback(f.user);return {user:f.user};
+  },
+  async createEmailAccount(email,password){
+   if(password.length<8)throw Error('auth/weak-password');
+   f.user={uid:'email-user',email,emailVerified:false,providerData:[{providerId:'password'}]};
+   f.profile=null;f.cloud=null;await callback(f.user);return f.user;
+  },
+  async sendPasswordReset(email){f.resetEmail=email;},
+  async resendVerification(){f.verificationResends=(f.verificationResends||0)+1;},
+  async refreshVerification(){f.user.emailVerified=true;return f.user;},
   async signOut(){f.user=null;await callback(null);},
   async profile(){if(f.profileError)throw Error(f.profileError);return copy(f.profile);},
   async createProfile(nickname,characterId){if(nickname==='taken')throw Error('That nickname is already taken.');f.profile={nickname:nickname.trim().toLowerCase(),characterId};return copy(f.profile);},

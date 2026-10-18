@@ -6,9 +6,11 @@ Wanderer é um RPG de exploração de dungeons para browser, com combate automá
 
 Página pública: https://skinny-lfg.github.io/wanderer-game/
 
-O jogo suporta login com Google e contas Guest com nickname. Os perfis e saves da conta podem sincronizar com o Firebase. Uma conta Guest depende da autenticação anónima guardada no navegador: **não sair da conta nem limpar os dados do site** sem uma forma de recuperação. O jogo não oferece ainda associação da conta Guest ao Google.
+A **`development` v0.10.1** passa a usar login obrigatório com **Google ou email/password**, verificação de email e recuperação de password. A funcionalidade Guest foi removida do novo ecrã de login. Os jogadores escolhem um nickname público; o nome e email da conta Google não são mostrados publicamente. O sistema de saves online continua em Firebase, mas a branch `development` exige um **projeto Firebase de testes separado**, ainda por configurar. **A `main` pública mantém temporariamente o login antigo até uma publicação autorizada.**
 
 O código do site está na branch `main`. Desenvolvimento e testes continuam na `development`.
+
+Instruções completas para criar o Firebase de desenvolvimento, configurar login e email, testar as regras e planear o reset futuro: [Guia Firebase v0.10.1](docs/firebase/README.md). **Nenhum reset é feito ao atualizar o código.**
 
 Roadmap de ideias adiadas e trabalhos ainda sem publicação: [Em desenvolvimento — futuras versões a avaliar](docs/roadmap-em-desenvolvimento.md).
 

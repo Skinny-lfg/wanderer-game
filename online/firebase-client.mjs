@@ -1,8 +1,16 @@
 import {publicLoadout,cleanEquipment,cleanPublicRunes,cleanPublicRuneSlots} from './public-loadout.mjs';
-import * as sdk from './vendor/firebase-sdk.mjs';
-import {firebaseConfig} from './firebase-config.mjs';
+import * as bundledSdk from './vendor/firebase-sdk.mjs';
+import * as configModule from './firebase-config.mjs?v=v0110-production-1';
+const {firebaseConfig,assertProductionFirebaseConfig}=configModule;
 import {nicknameKey,character,cloudRecord,compareRevision,validateSave,recoverInterruptedSave,SEASON,SAVE_NAMESPACE,PUBLIC_LOADOUTS,SPEEDRUN_BOARD,safeProgress,completedD200Time} from './model.mjs?v=v092-combat-hotfix-1';
 export async function createBackend(){
+ if(typeof assertProductionFirebaseConfig!=='function')throw new Error('Firebase production configuration is outdated. Refresh the page.');
+ assertProductionFirebaseConfig(firebaseConfig);
+ // A rebuilt local bundle is preferred; the version-pinned official CDN supplies
+ // the complete modular SDK in development until that bundle is regenerated.
+ const sdk=typeof bundledSdk.createUserWithEmailAndPassword==='function' &&
+   typeof bundledSdk.sendPasswordResetEmail==='function'
+   ?bundledSdk:await import('./firebase-sdk-cdn.mjs');
  const app=sdk.initializeApp(firebaseConfig),auth=sdk.getAuth(app),db=sdk.getFirestore(app);
  await sdk.setPersistence(auth,sdk.browserLocalPersistence);
  const user=()=>{if(!auth.currentUser)throw new Error('Sign in first.');return auth.currentUser.uid;};
@@ -11,7 +19,27 @@ export async function createBackend(){
  return {
   watchAuth:callback=>sdk.onAuthStateChanged(auth,callback),
   signIn:()=>sdk.signInWithPopup(auth,new sdk.GoogleAuthProvider()),
-  signInGuest:()=>sdk.signInAnonymously(auth),
+  signInWithEmail:(email,password)=>sdk.signInWithEmailAndPassword(auth,String(email).trim(),String(password)),
+  async createEmailAccount(email,password){
+   const credential=await sdk.createUserWithEmailAndPassword(auth,String(email).trim(),String(password));
+   await sdk.sendEmailVerification(credential.user);
+   return credential.user;
+  },
+  async sendPasswordReset(email){
+   try{await sdk.sendPasswordResetEmail(auth,String(email).trim());}
+   catch(error){if(error?.code==='auth/user-not-found')return;throw error;}
+  },
+  async resendVerification(){
+   if(!auth.currentUser || auth.currentUser.isAnonymous)throw Error('Sign in with a registered account first.');
+   await sdk.sendEmailVerification(auth.currentUser);
+  },
+  async refreshVerification(){
+   if(!auth.currentUser)return null;
+   await sdk.reload(auth.currentUser);
+   // Force a fresh ID token so Firestore Rules receive email_verified=true.
+   await sdk.getIdToken(auth.currentUser,true);
+   return auth.currentUser;
+  },
   signOut:()=>sdk.signOut(auth),
   async profile(){const snap=await sdk.getDoc(profileRef(user()));if(!snap.exists()&&snap.metadata.fromCache)throw new Error('network-profile-unconfirmed');return snap.exists()?snap.data():null;},
   async createProfile(name,characterId){
@@ -70,7 +98,7 @@ export async function createBackend(){
     !Number.isInteger(maxDungeon)||maxDungeon<1||maxDungeon>200||
     character(characterId).id!==characterId)throw Error('Please review your feedback before sending.');
    const id=uid+'_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,12);
-   const record={uid,category,rating,combat,difficulty,likes,problems,ideas,maxDungeon,characterId,appVersion:'0.9.2',createdAt:sdk.serverTimestamp()};
+   const record={uid,category,rating,combat,difficulty,likes,problems,ideas,maxDungeon,characterId,appVersion:'0.11.0',createdAt:sdk.serverTimestamp()};
    await sdk.runTransaction(db,async tx=>{tx.set(sdk.doc(db,'feedbackInbox',id),record);});
    return id;
   },

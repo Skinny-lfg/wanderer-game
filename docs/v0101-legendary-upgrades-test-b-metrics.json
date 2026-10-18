@@ -1,0 +1,210 @@
+{
+  "study": "Wanderer v0.10.1 Test B — Legendary rank upgrades",
+  "date": "2026-10-17",
+  "status": "Research only; no gameplay, main, Firebase or player save changes",
+  "source": {
+    "index_html_sha256": "a69bef5e2f1d0842f79b692839012ab9e621a6b07cda0ba4a2fedef858b36126",
+    "description": "User-supplied v0.10.0 main ZIP, may differ from later main"
+  },
+  "model": {
+    "cost_per_rank_fragments": "round((25+4*item.tier)*(1.14**currentRank))",
+    "cost_total_rank_10": {
+      "D40": 3577,
+      "D100": 8217,
+      "D160": 12859,
+      "D200": 15951
+    },
+    "bonus": "positive original item stat values scale linearly by +2% per level through rank 10; beyond 10 softCap adds 0.5% each, uncapped adds 2% each; skills, tier, affinity and legendary identity unchanged",
+    "eligibility": "Only currently equipped Legendary with tier >= 68% of frontier; up to two rank upgrades per town visit, cash reserve held.",
+    "arms": [
+      "baseline",
+      "cap10",
+      "soft20",
+      "unlimited"
+    ]
+  },
+  "primary": {
+    "seeds": "931300–931311",
+    "n_per_arm": 36
+  },
+  "holdout": {
+    "seeds": "931320–931329",
+    "n_per_arm": 30
+  },
+  "total": {
+    "n_per_arm": 66,
+    "cohorts": 264,
+    "expeditions": 144195,
+    "errors": 0
+  },
+  "campaign_results": {
+    "baseline": {
+      "d200": 28,
+      "n": 66,
+      "policy_wins": {
+        "casual": 6,
+        "experienced": 9,
+        "speed": 13
+      },
+      "median_depth": 173,
+      "median_farming": 292,
+      "median_crafts": 392,
+      "median_upgrade_fragments": 0
+    },
+    "cap10": {
+      "d200": 36,
+      "n": 66,
+      "policy_wins": {
+        "casual": 15,
+        "experienced": 9,
+        "speed": 12
+      },
+      "median_depth": 200,
+      "median_farming": 246.5,
+      "median_crafts": 376.5,
+      "median_upgrade_fragments": 23305
+    },
+    "soft20": {
+      "d200": 37,
+      "n": 66,
+      "policy_wins": {
+        "casual": 16,
+        "experienced": 9,
+        "speed": 12
+      },
+      "median_depth": 200,
+      "median_farming": 246.5,
+      "median_crafts": 376,
+      "median_upgrade_fragments": 27128
+    },
+    "unlimited": {
+      "d200": 35,
+      "n": 66,
+      "policy_wins": {
+        "casual": 14,
+        "experienced": 9,
+        "speed": 12
+      },
+      "median_depth": 200,
+      "median_farming": 255.5,
+      "median_crafts": 376.5,
+      "median_upgrade_fragments": 26131
+    }
+  },
+  "holdout_results": {
+    "baseline": 12,
+    "cap10": 15,
+    "soft20": 15,
+    "unlimited": 15,
+    "n_per_arm": 30
+  },
+  "paired_bootstrap": {
+    "resamples": 30000,
+    "unit": "seed cluster of three policy agents",
+    "cap10": {
+      "delta_d200_pp": 12.12,
+      "ci95_pp": [
+        -1.52,
+        25.76
+      ],
+      "mean_farming_delta": -41.67
+    },
+    "soft20": {
+      "delta_d200_pp": 13.64,
+      "ci95_pp": [
+        0,
+        27.27
+      ],
+      "mean_farming_delta": -44.77
+    },
+    "unlimited": {
+      "delta_d200_pp": 10.61,
+      "ci95_pp": [
+        -3.03,
+        22.73
+      ],
+      "mean_farming_delta": -41.27
+    }
+  },
+  "historical_acquired_combat": {
+    "inventories": 48,
+    "trials": 3456,
+    "notes": "12 matched seeds each inventory; replay on current production combat with eligible historical Legendary gear. The all10 arm grants rank 10 to all equipped Legendary and is a stress ceiling, not an affordable campaign.",
+    "D40": {
+      "n": 25,
+      "win_base_pct": 85,
+      "win_one10_pct": 93.3,
+      "win_all10_pct": 95.7
+    },
+    "D100": {
+      "n": 10,
+      "win_base_pct": 92.5,
+      "win_one10_pct": 96.7,
+      "win_all10_pct": 96.7
+    },
+    "D160": {
+      "n": 8,
+      "win_base_pct": 99,
+      "win_one10_pct": 99,
+      "win_all10_pct": 99
+    },
+    "D200": {
+      "n": 5,
+      "win_base_pct": 100,
+      "win_one10_pct": 100,
+      "win_all10_pct": 100
+    }
+  },
+  "old_tier_comparison": {
+    "old_legendaries": 37,
+    "old_median_tier": 33,
+    "reference": "new Epic matching the old item's slot/subtype/affinity at target tier; stat score only, ignoring legendary signature",
+    "at_D100": {
+      "old_base_pct_of_epic": 43.4,
+      "old_rank10_pct": 52.1,
+      "old_rank30_pct": 69.6,
+      "rank10_beats_epic": 0
+    },
+    "at_D160": {
+      "old_base_pct_of_epic": 27.5,
+      "old_rank10_pct": 33,
+      "old_rank30_pct": 44.1,
+      "rank10_beats_epic": 0
+    },
+    "at_D200": {
+      "old_base_pct_of_epic": 22.2,
+      "old_rank10_pct": 26.6,
+      "old_rank30_pct": 35.5,
+      "rank10_beats_epic": 0
+    }
+  },
+  "death_loss_tracking": {
+    "additional_campaigns": 66,
+    "additional_expeditions": 37054,
+    "lost_equipped_upgraded_legendary_players": 37,
+    "lost_upgraded_legendary_items": 71,
+    "lost_upgrade_fragments": 96165,
+    "invested_fragments": 1194156,
+    "investment_lost_pct": 8.05,
+    "max_single_player_fragments_lost": 14116,
+    "protection_policy": "weapon and armor only"
+  },
+  "checks": {
+    "guard_tests": "PASS",
+    "legendary_identities_and_skills": "PASS",
+    "shatter_double_strike": "PASS",
+    "affinity_scaling": "PASS",
+    "negative_currency_balances": 0,
+    "completed_without_errors": true,
+    "production_source_unchanged": true
+  },
+  "recommendation": "Prototype rank+10, +2% of original positive stats per rank, deterministic costs, success guaranteed. Highlight invested Fragments at risk if unprotected; retain signature, tier, affinity and identity. Do not enable unlimited growth now. No implementation until Affinity Sigils Test C and save/UI review.",
+  "limitations": [
+    "Fixed simulated policy not human choices",
+    "Post-decision RNG divergence",
+    "Historical gear from older policy",
+    "Late acquired gear combats near win ceiling",
+    "Not a literal upgrade of item tier",
+    "Live save schema and Firebase rules not tested"
+  ]
+}
