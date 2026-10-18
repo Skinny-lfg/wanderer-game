@@ -68,3 +68,19 @@
 .onlineDialog .feedbackForm label{color:#f1e0e4}
 .onlineDialog .playerHeading,.onlineDialog .playerSearch{color:#f1e0e4}
 .onlineDialog .feedbackForm select:focus-visible,.onlineDialog .feedbackForm textarea:focus-visible{outline:2px solid #e5b983;outline-offset:2px}
+
+/* v0.10.1 — registered account sign-in */
+.authMethods{display:grid;gap:12px;padding:14px;margin:12px 0;border:1px solid #73535e;border-radius:11px;background:rgba(23,12,18,.7)}
+.authMethods>#googleSignIn{width:100%;min-height:43px}
+.loginDivider{text-align:center;color:var(--muted);font-size:12px;position:relative;margin:0}
+.loginInputs{display:grid;gap:12px}
+.loginInputs label{display:grid;gap:6px;color:var(--text);font-size:13px}
+.loginInputs input{width:100%;min-width:0;color:var(--text);background:#21131c;border:1px solid #896673;border-radius:8px;padding:11px}
+.loginInputs input:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.authMethods .buttonRow{display:flex;flex-wrap:wrap;gap:8px}
+.authMethods .buttonRow button{flex:1 1 auto}
+.emailVerification{padding:14px;border:1px solid #c29b62;border-radius:10px;background:#392719;margin:12px 0}
+.emailVerification h3{margin:0 0 8px;color:#f6d7a1}
+.emailVerification .buttonRow{display:flex;flex-wrap:wrap;gap:8px}
+.accountPrivacy{padding:8px 10px;background:rgba(17,28,30,.6);border-radius:7px}
+@media(max-width:620px){.authMethods{padding:10px}.authMethods .buttonRow button{width:100%}}
