@@ -1,0 +1,52 @@
+name: Publish Wanderer Firestore rules (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_project:
+        description: 'Type wanderer-play to deploy reviewed Firestore rules'
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wanderer-firebase-production-firestore-rules
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: ${{ github.ref == 'refs/heads/main' && inputs.confirm_project == 'wanderer-play' }}
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm ci
+
+      - name: Verify this release uses dedicated production Firebase
+        shell: bash
+        run: |
+          node --input-type=module -e "import {firebaseConfig,assertProductionFirebaseConfig} from './online/firebase-config.mjs';assertProductionFirebaseConfig(firebaseConfig);"
+          test -f firestore.rules
+          grep -F '"rules":"firestore.rules"' <(tr -d '[:space:]' < firebase.json)
+
+      - name: Validate Firestore rules on isolated emulator
+        run: npm run test:rules
+
+      - name: Authenticate deploy-only service account
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_WANDERER_PLAY }}
+
+      - name: Publish only Firestore security rules to new Wanderer database
+        run: npx firebase-tools deploy --only firestore:rules --project wanderer-play --non-interactive
