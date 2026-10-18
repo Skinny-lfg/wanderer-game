@@ -16,7 +16,7 @@ assert.equal(e.qualityOdds(base,true).Epic,odds[1].Epic,'High Quality legacy boo
 for(const fragment of ['Wanderer v0.11.0</title>','function dungeonEquippedSetSummary()','dungeonEquippedSets',
  'forgeCraftLayout','forgeCraftOdds','Masterwork · 3× Fragments',
  "equipItem(o.id,target);view='forge';renderForge()",'forgeAffinityDelta',
- 'forgeQualityToggle','data-forge-invest','width:min(245px,100%)'])
+ 'forgeQualityToggle','data-forge-invest','.scene .eliteCombatant #enemyPortrait{width:min(185px,100%);height:170px'])
  assert(html.includes(fragment),'Missing v0.11 UI: '+fragment);
 for(const fragment of ['mode','oobCode','verifyEmail','resetPassword','recoverEmail',
  'applyActionCode','verifyPasswordResetCode','confirmPasswordReset','assertDevFirebaseConfig'])
