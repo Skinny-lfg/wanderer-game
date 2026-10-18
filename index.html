@@ -2660,7 +2660,7 @@ function combatVfxAsset(kind,affinity){
 }
 function combatEffect(kind,affinity=null){
  const scene=$('scene'),asset=combatVfxAsset(kind,affinity);
- if(!scene||!asset)return;
+ if(!scene||!asset||typeof scene.querySelectorAll!=='function'||typeof scene.appendChild!=='function'||typeof document.createElement!=='function')return;
  // Purely cosmetic: keep the effect cap and cleanup even at 4x combat speed.
  const existing=scene.querySelectorAll('.combatVfx');if(existing.length>=8)existing[0].remove();
  const fx=document.createElement('span'),art=document.createElement('img');
@@ -2671,7 +2671,7 @@ function combatEffect(kind,affinity=null){
  fx.dataset.kind=kind;fx.setAttribute('aria-hidden','true');
  art.src='assets/combat-vfx/'+asset+'.png';art.alt='';art.draggable=false;
  fx.appendChild(art);scene.appendChild(fx);
- fx.addEventListener('animationend',()=>fx.remove(),{once:true});setTimeout(()=>fx.remove(),800);
+ fx.addEventListener?.('animationend',()=>fx.remove?.(),{once:true});setTimeout(()=>fx.remove?.(),800);
 }
 function animateStrike(kind,spell=false){
  const img=$('heroPortrait');if(!img)return;
