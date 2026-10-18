@@ -22,9 +22,16 @@ const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8010';
   // Email sign-up, account verification and password reset; no Guest mode.
   assert.equal(await page.locator('#guestSignIn').count(),0);
   await page.locator('#loginEmail').fill('tester@example.com');
-  await page.locator('#loginPassword').fill('secure-password-123');
   await page.locator('#passwordReset').click();
-  assert.match(await page.locator('#passwordResetStatus').innerText(),/password-reset/);
+  await page.locator('#passwordResetForm').waitFor();
+  assert.equal(await page.locator('#loginPassword').count(),0,'Reset password opens its own popup');
+  assert.equal(await page.locator('#resetPasswordEmail').inputValue(),'tester@example.com');
+  await page.locator('#sendPasswordReset').click();
+  await page.locator('#passwordResetSuccess').waitFor({state:'visible'});
+  assert.equal(await page.evaluate(()=>__firebaseTest.resetEmail),'tester@example.com');
+  await page.locator('#resetBackToLogin').click();
+  await page.locator('#emailLoginForm').waitFor();
+  await page.locator('#loginPassword').fill('secure-password-123');
   await page.locator('#emailRegister').click();
  await page.locator('#registrationForm').waitFor();
  assert.equal(await page.locator('#registerNickname,#registerEmail,#registerPassword,#registerPasswordConfirm').count(),4);
