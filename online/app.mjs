@@ -137,8 +137,33 @@ function loginMethodsMarkup(){return `<section class="authMethods" aria-label="S
   <button type="submit" id="emailSignIn" class="primary authWideButton">Sign in</button>
  </form>
  <p class="authCreatePrompt">New to Wanderer? <button type="button" id="emailRegister" class="authTextButton">Create an account</button></p>
- <p id="passwordResetStatus" role="status" class="small muted"></p>
  </section>`;}
+function showPasswordResetForm(initialEmail=''){
+ const content="\n<section class=\"authReset\">\n <p class=\"authResetIntro\">Enter the email address linked to your Wanderer account. We'll send you a secure link to choose a new password.</p>\n <form id=\"passwordResetForm\" class=\"authResetForm\">\n  <label for=\"resetPasswordEmail\">Email address</label>\n  <input id=\"resetPasswordEmail\" name=\"email\" type=\"email\" autocomplete=\"email\" maxlength=\"254\" placeholder=\"you@example.com\" required>\n  <button type=\"submit\" id=\"sendPasswordReset\" class=\"primary authWideButton\">Send reset link</button>\n </form>\n <div id=\"passwordResetSuccess\" class=\"authResetSuccess\" role=\"status\" hidden>\n  <h3>Check your inbox</h3>\n  <p>If an account exists for this address, Firebase will email you a password-reset link. Check Spam too.</p>\n  <p class=\"small muted\">Open the link to set a new password, then sign in to Wanderer.</p>\n </div>\n <button type=\"button\" id=\"resetBackToLogin\" class=\"authBackButton\">← Back to sign in</button>\n</section>";
+ const current=modal('Reset password',content);
+ current.classList.add('authResetDialog');current.dataset.account='true';
+ current.querySelector('[data-close]').hidden=true;
+ current.addEventListener('cancel',event=>{event.preventDefault();showAccount();});
+ current.querySelector('#resetBackToLogin').onclick=showAccount;
+ const input=current.querySelector('#resetPasswordEmail');
+ input.value=initialEmail;
+ current.querySelector('#passwordResetForm').onsubmit=async event=>{
+  event.preventDefault();
+  if(!current.isConnected||!input.checkValidity())return;
+  const send=current.querySelector('#sendPasswordReset'),error=current.querySelector('.onlineError');
+  try{
+   send.disabled=true;error.textContent='';
+   const b=await connect();
+   await b.sendPasswordReset(input.value.trim());
+   if(!current.isConnected)return;
+   current.querySelector('#passwordResetForm').hidden=true;
+   current.querySelector('#passwordResetSuccess').hidden=false;
+  }catch(cause){
+   if(current.isConnected)error.textContent=errorText(cause);
+  }finally{if(send.isConnected)send.disabled=false;}
+ };
+ input.focus();
+}
 function showRegistrationForm(){
  ensureSafeSwitch();
  const content=`<section class="authRegistration">
@@ -223,12 +248,7 @@ function showAccount(){
   finally{if(button.isConnected)button.disabled=false;}
  };
  action('#emailRegister',showRegistrationForm);
- action('#passwordReset',async()=>{
-  const {email}=loginCredentials(false),b=await connect();
-  await b.sendPasswordReset(email);
-  const el=dialog?.querySelector('#passwordResetStatus');
-  if(el)el.textContent='If the address belongs to an account, a password-reset email will arrive. Check Spam too.';
- });
+ action('#passwordReset',()=>showPasswordResetForm(dialog?.querySelector('#loginEmail')?.value?.trim()||''));
  action('#resendVerification',async()=>{
   await backend.resendVerification();status('Verification email sent.');
  });
