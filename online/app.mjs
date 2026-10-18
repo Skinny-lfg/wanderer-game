@@ -1,6 +1,6 @@
 import {publicLoadout,cleanEquipment} from './public-loadout.mjs';
 import {practiceDuel} from './pvp.mjs';
-import {firebaseConfig} from './firebase-config.mjs?v=v0110-production-1';
+import {firebaseConfig} from './firebase-config.mjs?v=v0101-dev-config-2';
 import {CHARACTERS,character,nicknameKey,validateSave,recoverInterruptedSave,summary,safeProgress,SAVE_NAMESPACE} from './model.mjs?v=v0100-character-labels-1';
 const game=globalThis.WandererGame,SIGNED_OUT_SLOT='wanderer_account_auth_locked_dev';
 let backendPromise,backend,user=null,profile=null,revision=null,synced='',epoch=0,writing=false,suppress=false,timer=null,dialog=null;
@@ -257,13 +257,27 @@ function showAccount(){
   if(needsEmailVerification(account))throw Error('Email not verified yet. Open the link and try again.');
   user=account;await restoreProfile(token);
  });
- action('#createProfile',async()=>{ensureSafeSwitch();if(!user||user.isAnonymous||needsEmailVerification(user))throw Error('Verify your email before creating a profile.');const token=epoch;const name=dialog.querySelector('#nickname').value;const p=await backend.createProfile(name,selectedCharacter);sessionGuard(token);profile=p;profileState='found';clearNickname(user.uid);pendingRegistrationName='';await resumeAccount();});
+ action('#createProfile',async()=>{
+   ensureSafeSwitch();
+   if(!user||user.isAnonymous||needsEmailVerification(user))throw Error('Verify your email before creating a profile.');
+   const token=epoch,name=dialog.querySelector('#nickname').value;
+   const p=await backend.createProfile(name,selectedCharacter);sessionGuard(token);
+   profile=p;profileState='found';clearNickname(user.uid);pendingRegistrationName='';
+   try{await resumeAccount();}
+   catch(error){
+    if(token!==epoch)throw error;
+    // The nickname is already saved. Offer a one-click retry of the cloud-save
+    // setup instead of leaving the old Create profile dialog stuck.
+    showAccount();
+    dialog.querySelector('.onlineError').textContent='Nickname saved. '+errorText(error)+' Press Continue to enter the game.';
+   }
+  });
  action('#saveCharacter',async()=>{
   if(game.busy())throw new Error('Change your character after the expedition.');
   const token=epoch;
   if(profile){const updated=await backend.updateCharacter(selectedCharacter);sessionGuard(token);profile=updated;if(game.key()===accountKey())game.setCharacter(selectedCharacter);}
   else game.setCharacter(selectedCharacter);
-  status(profile?'Character saved to your profile':'Character saved on this device');showAccount();
+  status(profile?'Character saved to your profile':'Character saved on this device');if(ready){close();}else{showAccount();}
  });
  action('#resetProgress',()=>{
   ensureSafeSwitch();
