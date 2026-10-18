@@ -1,7 +1,7 @@
 import {publicLoadout,cleanEquipment} from './public-loadout.mjs';
 import {practiceDuel} from './pvp.mjs';
 import {firebaseConfig} from './firebase-config.mjs?v=v0101-dev-config-2';
-import {CHARACTERS,character,nicknameKey,validateSave,recoverInterruptedSave,summary,safeProgress,SAVE_NAMESPACE} from './model.mjs?v=v0100-character-labels-1';
+import {CHARACTERS,character,nicknameKey,validateSave,recoverInterruptedSave,summary,safeProgress,SAVE_NAMESPACE} from './model.mjs?v=v0110-audit-save-1';
 const game=globalThis.WandererGame,SIGNED_OUT_SLOT='wanderer_account_auth_locked_dev';
 let backendPromise,backend,user=null,profile=null,revision=null,synced='',epoch=0,writing=false,suppress=false,timer=null,dialog=null;
 let ready=false,lastPublished='',lastLoadout='',profileState='loading',pendingRegistrationName='';
@@ -76,7 +76,7 @@ function action(selector,fn){const element=dialog?.querySelector(selector);if(!e
 function ensureSafeSwitch(allowProtected=false){if(writing)throw new Error('Saving your progress. Please try again in a moment.');if(game.busy())throw new Error('Finish or extract from your expedition before changing accounts or saves.');if(game.blocked()&&!allowProtected)throw new Error('The local save is protected. Reload before switching. Your recovery copies are retained.');}
 function sessionGuard(token){if(token!==epoch)throw new Error('The signed-in account changed. Reopen Account before continuing.');}
 async function connect(){
- if(!backendPromise)backendPromise=import('./firebase-client.mjs?v=v0101-register-modal-2').then(m=>m.createBackend()).then(b=>{
+ if(!backendPromise)backendPromise=import('./firebase-client.mjs?v=v0110-audit-save-1').then(m=>m.createBackend()).then(b=>{
   backend=b;b.watchAuth(async next=>{
    // Do not reopen Account or gate an in-progress game for a duplicate auth event
    // for the already restored user. Login recovery itself still runs on startup.

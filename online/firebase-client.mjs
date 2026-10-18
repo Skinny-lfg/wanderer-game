@@ -2,7 +2,7 @@ import {publicLoadout,cleanEquipment,cleanPublicRunes,cleanPublicRuneSlots} from
 import * as bundledSdk from './vendor/firebase-sdk.mjs';
 import * as configModule from './firebase-config.mjs?v=v0110-production-1';
 const {firebaseConfig,assertProductionFirebaseConfig}=configModule;
-import {nicknameKey,character,cloudRecord,compareRevision,validateSave,recoverInterruptedSave,SEASON,SAVE_NAMESPACE,PUBLIC_LOADOUTS,SPEEDRUN_BOARD,safeProgress,completedD200Time} from './model.mjs?v=v092-combat-hotfix-1';
+import {nicknameKey,character,cloudRecord,compareRevision,validateSave,recoverInterruptedSave,SEASON,SAVE_NAMESPACE,PUBLIC_LOADOUTS,SPEEDRUN_BOARD,safeProgress,completedD200Time} from './model.mjs?v=v0110-audit-save-1';
 export async function createBackend(){
  if(typeof assertProductionFirebaseConfig!=='function')throw new Error('Firebase production configuration is outdated. Refresh the page.');
  assertProductionFirebaseConfig(firebaseConfig);
@@ -59,7 +59,7 @@ export async function createBackend(){
    const ref=profileRef(user());await sdk.runTransaction(db,async tx=>{const snap=await tx.get(ref);if(!snap.exists())throw new Error('Create a profile first.');tx.update(ref,{characterId,updatedAt:sdk.serverTimestamp()});});
    return this.profile();
   },
-  async readSave(){const snap=await sdk.getDoc(saveRef());if(!snap.exists())return null;const data=snap.data();recoverInterruptedSave(data.payload);return data;},
+  async readSave(){const snap=await sdk.getDoc(saveRef());if(snap.metadata?.fromCache)throw new Error('network-save-unconfirmed');if(!snap.exists())return null;const data=snap.data();recoverInterruptedSave(data.payload);return data;},
   async writeSave(payload,expectedRevision){
    const ref=saveRef(),record=cloudRecord(payload,expectedRevision);
    await sdk.runTransaction(db,async tx=>{const snap=await tx.get(ref);compareRevision(snap.exists()?snap.data():null,expectedRevision);tx.set(ref,{...record,updatedAt:sdk.serverTimestamp()});});

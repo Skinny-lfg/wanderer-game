@@ -47,7 +47,7 @@ test('D200 best survives reset and only improves on a faster complete attempt',a
   assert.equal(records.has(best),false,'no D200 record without completion');
   await backend.publishTestResults(make('attempt-a',200,650000));
   assert.equal(records.get(best).bestMs,650000);
-  await backend.publishTestResults(make('attempt-b',0,null));
+  await backend.publishTestResults({...make('attempt-b',0,null),maxDungeon:100});
   assert.equal(records.get(depth).deepest,0,'new attempt resets current depth');
   assert.equal(records.get(best).bestMs,650000,'reset keeps prior best');
   await backend.publishTestResults(make('attempt-b',200,760000));
