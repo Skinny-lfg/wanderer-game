@@ -12,6 +12,13 @@ const base={Common:.478,Uncommon:.3,Rare:.1542,Epic:.0678,Legendary:0};
 const boosted=e.qualityOdds(base,true);
 close(boosted.Common,.308);close(boosted.Uncommon,.27);close(boosted.Rare,.2942);close(boosted.Epic,.1278);close(boosted.Legendary,0);
 close(Object.values(boosted).reduce((a,b)=>a+b,0),1);
+const masterwork=e.qualityOdds(base,2);
+close(masterwork.Common,.228);close(masterwork.Uncommon,.25);
+close(masterwork.Rare,.3642);close(masterwork.Epic,.1578);
+close(Object.values(masterwork).reduce((a,b)=>a+b,0),1);
+assert(masterwork.Epic>boosted.Epic,'Masterwork should beat High Quality Epic odds');
+assert.equal(e.qualityOdds(base,0).Common,base.Common);
+assert.equal(e.qualityOdds(base,true).Epic,boosted.Epic);
 assert.equal(e.rarityFromOdds(boosted,()=>.999999),'Epic');
 assert.throws(()=>e.qualityOdds({...base,Legendary:.01},true),/Legendary/);
 for(const rng of [()=>0,()=>.1,()=>.5,()=>.999999]){
@@ -65,7 +72,7 @@ assert(html.includes("if(kind==='sigils')merchant.sigils="),'Sigil refresh must 
 assert(html.includes('merchant.stock=Array.from({length:4}'),'Equipment refresh must separately replace gear');
 assert(html.includes("refreshMerchantStock('sigils')"),'Sigil reroll handler must be independent');
 assert(html.includes("refreshMerchantStock('gear')"),'Equipment reroll handler must be independent');
-assert(html.includes('class="panel forgeUnified"'),'Crafting and crafting odds must share one Forge panel');
+assert(html.includes('class="forgeCraftLayout"')&&html.includes('class="panel forgeUnified"'),'Craft and odds must be side-by-side on desktop');
 assert(html.includes('function legendaryRankBadge('),'Legendary rank must appear on item cards');
 assert(html.includes('v.upgradeRank*.02'),'Migrating an existing upgraded item should preserve precision');
 assert(html.includes('eliteCombatant'),'Elite portraits need their larger dedicated style');
