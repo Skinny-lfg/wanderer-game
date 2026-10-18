@@ -1,87 +1,61 @@
-> **Guest update (2026-10-15):** The development build offers Firebase Anonymous Authentication plus nicknames on the test leaderboard. Enable **Authentication → Sign-in method → Anonymous** in Firebase Console before a real test. Existing Firestore Rules use the authenticated UID and support anonymous accounts, but still require review/deployment. Signing out or clearing browser data may lose guest-account access; Google linking is not implemented. No Firebase console changes or deployment were made by this code change.
+# Wanderer — Firebase deployment and login (v0.10.1)
 
-> Current account flow: Google sign-in is required. Account saves restore and sync automatically; only conflicting saves request a choice. Recovery copies remain internal. Leaderboard submissions are automatic and still stored as `verified:false` in the test namespace, although the private-test UI no longer displays warnings. The earlier Guest/manual-review/export instructions below describe the previous interface and no longer apply. Server verification is still pending; this update does not make the rankings competitively trustworthy.
+**Development branch only.** Nothing described here automatically deploys rules, resets data, or modifies the `main` branch. Production currently uses Firebase project `wanderer-test-8f062`. The **development** branch intentionally refuses to connect to that project and contains placeholder Web App configuration until a new project is created.
 
-# Firebase online test environment
+## Two independent projects
 
-Status: **implemented locally on development; not deployed**. No Firebase rules, billing setting, Google provider setting, GitHub Pages configuration, or main branch was changed.
+| Environment | App branch | Firebase Auth | Firestore saves / rankings |
+| --- | --- | --- | --- |
+| Production | `main` | Existing production project | Existing players, unchanged until launch |
+| Development | `development` | **New** Firebase project that you create | Independent development players and test saves |
 
-## Project and prerequisites
+You can use the same Google account or email address in both projects. These are **separate Firebase Authentication users**, normally with different UIDs. Signing in on development does not grant access to your production account's profile, rankings or saves. Account email is not used as a cross-project database key.
 
-Public config: `online/firebase-config.mjs`, project `wanderer-test-8f062`, app Wanderer Web. This object is public, not an Admin SDK credential. No Analytics, Cloud Storage, Functions or Hosting SDK is initialized.
+For local tests, each browser account slot is namespaced by `projectId` and `uid`, so an accidental UID collision also cannot select a production browser save. Legacy anonymous/browser saves are never automatically imported.
 
-The supplied GDD reports Google Auth and Firestore already enabled on Spark. These settings could not be independently checked from this environment. Before an authorized live test:
+### Required Firebase Console setup (development only)
 
-1. Confirm Authentication → Sign-in method → Google is enabled and the support email is configured.
-2. Confirm the actual test hostname is under Authentication → Settings → Authorized domains. GitHub Pages uses `skinny-lfg.github.io`. For local testing add `localhost` or `127.0.0.1` as appropriate; new Firebase projects may not authorize localhost by default.
-3. Test the proposed `firestore.rules` with the emulator. After approval, deploy **only the reviewed rules**, explicitly targeting `wanderer-test-8f062`. Existing GDD rules for `/players/{uid}` are insufficient for the new profile/nickname/save paths. Do not temporarily open the database to make a test work.
-4. Review browser tests and deployment separately. Publishing the app or rules is not performed by `npm run build:firebase` or any test script.
+1. Firebase Console → **Add project**: e.g. `wanderer-development`. **Do not select** production project `wanderer-test-8f062`.
+2. Register a **Web App** in this new project. In **Project settings → Your apps**, copy the Web App config into **`online/firebase-config.mjs` on `development` only**. The file has placeholder `SET_DEVELOPMENT_...` values and throws an explicit error rather than falling back to production. Firebase Web identifiers are public, but **never commit service-account secrets, private keys or admin credentials**.
+3. Authentication → **Sign-in method**: enable **Google** (choose a support email) and **Email/Password**. Do **not** enable Anonymous; the v0.10.1 app has removed Guest sign-in.
+4. Authentication → **Settings → Authorized domains**: authorize the actual preview domain and `localhost` or `127.0.0.1` for local testing, when the Console allows it. Firebase does not automatically authorize localhost on all new projects. For GitHub Pages, use the relevant `*.github.io` hostname; do not confuse a path with a hostname.
+5. Authentication → **Templates / Email action links**: customize and test **Verify email** and **Reset password** emails. Set the appropriate action URL/authorized domain; do not send players from the dev email into the production site. Configure an email sender/branding if available.
+6. Firestore Database → create a new database in this **development** project. Use production-like restrictions; do not temporarily grant `allow read, write: if true`.
+7. Run **rules emulator tests**, review `firestore.rules` and deploy rules **only to the NEW development project**, with its explicit project ID. Example: `npx firebase deploy --only firestore:rules --project YOUR_NEW_DEV_PROJECT_ID`. **Never deploy rules to the production project from this branch.**
+8. Test sign-up, verify-email gate, password recovery, Google sign-in, profile creation with a **chosen public nickname**, save sync, logging out/in, cross-device sync and isolation from the existing production project.
 
-An operator with project permission can deploy reviewed rules later using:
+### SDK build
 
-```sh
-npx firebase deploy --only firestore:rules --project wanderer-test-8f062
-```
+The game keeps the pinned Firebase 11.10.0 build under `online/vendor/firebase-sdk.mjs`. The source entry now includes Email/Password, verification and password-reset methods. Until you regenerate the bundle with `npm ci && npm run build:firebase` and commit the new vendor asset, the development adapter loads **the matching official Firebase CDN ES modules** as an explicit fallback. The CDN fallback is online-only and must be tested on the deployed development hostname. Rebuilding the local pinned bundle is recommended for final release and to avoid an extra external asset dependency.
 
-Do not commit Firebase CLI login files, service account keys or other private credentials.
+### Rules and verification
 
-## Build and local validation
+Development rules reject anonymous identities for player writes and require verified email for Email/Password accounts. Google accounts use their normal Firebase provider identity. Client-side verification alone is not sufficient; deploy the reviewed development rules before real testing. Public nickname entries do not contain an email or Google display name.
 
-Node 22 LTS is recommended for the Firebase CLI dependency tree; the application/unit/browser checks here also passed on Node 24.19.0. Java 21 is available for the Firestore emulator.
+### Privacy and profile identity
+
+- **Players choose a unique public nickname** (3–20 lowercase ASCII letters/numbers/underscores), independently of their Google account name. Their name or email is not copied into public profile documents, leaderboard text or public equipment.
+- Internal Firebase user IDs remain identifiers in Firestore record paths and may be visible to technically skilled viewers or network inspectors. This is **not** perfect identity anonymity; do not store personal data in publicly readable documents.
+- Nicknames are **not editable** under the current Firestore Rules because ownership/uniqueness would require an atomic rename flow. Do not promise nickname changing until it has been designed and tested.
+- Email/passwords are managed by Firebase Authentication and are not saved in game documents. Password-reset emails are only for email-password accounts; Google sign-in is managed by the Google account provider.
+- Firestore saves are writable by their owner and are protected by revision checks and size limits, but **player-owned save files and leaderboard results are not server-verified or cheat-proof**. A secure public competition would need a trusted backend.
+
+## Production launch / reset is intentionally deferred
+
+**DO NOT RESET ANYTHING NOW.** Before v0.10.1 goes to `main`, decide with the owner exactly what resets: all existing season progress, leaderboard, profiles, account identities, or only player saves. The safest approach often resets the season/save namespace while **preserving recoverable account identities**, but the owner must approve this explicitly.
+
+Before launch: export backups of production Firestore and required authentication records; verify the preview with independent test users; confirm account migration/registration policy, Google/Auth providers, authorized domains, new rules and a recovery/rollback plan; announce any progress reset to existing players; then perform the approved reset in a controlled release. Simply merging the branch or changing the Web App config does **not** reset the production database.
+
+## Local checks
 
 ```sh
 npm ci
 npm run build:firebase
 npm test
-python3 -m http.server 8010 --bind 127.0.0.1
-# In another terminal:
+python3 -m http.server 8000 --bind 127.0.0.1
+# In a second terminal, with Chromium installed:
 npm run test:browser
 npm run test:rules
 ```
 
-Browser tests use Chromium at `/usr/bin/chromium`; set `CHROMIUM_PATH` if different. `WANDERER_TEST_URL` can override the local URL. Firebase interactions are mocked in browser tests via Playwright routes; no test hook exists in the production application. Rules tests use **demo-wanderer**, never the live project.
-
-The minified Firebase bundle is generated from pinned npm dependencies; no external CDN is required to load Guest mode. `package-lock.json` pins dependency integrity. Regenerate the bundle when upgrading Firebase. The game remains a static application; a runtime Node server is not required.
-
-## Data model and access
-
-- `publicProfiles/{uid}`: immutable normalized nickname, cosmetic character, server-created/updated timestamps. Public `get`, no email, no Google profile data, no direct collection listing. Only owner may change character.
-- `nicknames/{normalized}`: immutable UID reservation, atomically paired with profile creation through `getAfter` rules. Three to twenty lowercase ASCII letters/digits/underscores. Case variants cannot claim a second spelling.
-- `players/{uid}/saves/current`: private JSON snapshot, schemaVersion, revision, server timestamp. Owner only, requires profile. Creates start at revision 1; updates increment exactly once. This does not overwrite an existing root `players/{uid}` document.
-- `testSeasons/test-open-1/deepest/{uid}` and `testSeasons/test-open-1/milestones/{milestone}/entries/{uid}`: public **unverified** claims. Owner-only bounded writes; server receipt timestamps; milestone receipts immutable. The client cannot set `verified:true` or write another user's row.
-- `verifiedSeasons/**`: denied to all browser clients. Not used by the UI or this release.
-
-Rules protect account boundaries and basic shape. They do **not** make client-owned saves or test progression cheat-proof. A player can manipulate their own browser; every displayed result is labeled unverified.
-
-## Sync and recovery policy
-
-Sign-in never replaces a save automatically. On each authentication restoration the player reviews local/cloud snapshots before enabling sync. The account's local slot takes priority over Guest when preparing the comparison; Guest remains untouched in its original key. A missing or empty cloud save never wins automatically. No item/currency merge occurs.
-
-Uploads compare the expected cloud revision inside a Firestore transaction. If another device has written, sync pauses and requires a new choice. Before replacing either version, the browser retains recovery backups, exportable under Account. Explicit cloud downloads recheck the selected revision. Network errors preserve local play; there is no blind offline write queue.
-
-Sync waits during active expeditions and resumes after extraction/death. A crash mid-expedition retains the game's previous local recovery behavior; this phase does not promise cross-device resume of a live fight. Autosync is throttled to one write attempt per 30 seconds; manual Sync now is available. Check the status before moving devices. Backups are local, so export before clearing browser storage. Concurrent local-tab writes are detected by comparing stored content; stale tabs are blocked and a recovery snapshot is retained.
-
-## Live acceptance checklist — pending
-
-- Real Google sign-in, cancellation, popup blocking, expired auth and unauthorized-domain handling.
-- Two Google accounts cannot read/write each other's private saves, or claim the same nickname.
-- Two real devices editing the same account trigger a revision conflict with no silent overwrite.
-- Existing non-empty Guest → new account preserves currencies, Stash upgrades, equipment, affinities, Two-Handed/Off-Hand, settings and progress.
-- Empty cloud never silently replaces a non-empty local save; explicit import/export/recovery works.
-- Character changes persist in profile and render in Tavern, Equipment and Combat.
-- Run all rules tests before deploying rules. Verify production rules deployment matches the reviewed file.
-
-## Costs and billing boundaries
-
-- Google Sign-In and Cloud Firestore can support this test feature set on **Spark within the applicable quotas**. Quota exhaustion still causes errors; there is no guarantee of unlimited free usage.
-- Auto-sync, profile reads and top-50 leaderboard reads consume Firestore quotas. No real-time listeners or polling leaderboard are used; each opening/metric switch performs a bounded query plus public profile reads.
-- Deploying **Cloud Functions for Firebase requires Blaze**. Cloud Run also requires a billing-enabled Google Cloud project. Neither is created, enabled or deployed here.
-- The current test scoreboard does not require Functions. Trusted competition needs an authoritative backend described in `server-validation.md`; do not substitute browser validation for it.
-- Character images are served as static repository assets. Cloud Storage is not used; review its current billing requirements before adopting it.
-- Budgets/alerts are not hard spending caps. Before enabling a paid backend, approve its region, quotas, concurrency, max instances and zero minimum instances; measure execution/read/write costs first.
-
-Official references (network access to these pages was blocked during implementation):
-- https://firebase.google.com/pricing
-- https://firebase.google.com/docs/functions/get-started
-- https://firebase.google.com/docs/auth/web/google-signin
-- https://firebase.google.com/docs/rules/unit-tests
+For rules tests, the scripts use an emulator demo project and do not write to production. Test that the dev app fails closed when its Web App config is missing or still points to the production Firebase project.
