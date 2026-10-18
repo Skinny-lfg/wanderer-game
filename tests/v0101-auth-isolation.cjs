@@ -12,7 +12,11 @@ for(const method of ['signInWithEmail','createEmailAccount','sendPasswordReset',
 for(const sdkExport of ['createUserWithEmailAndPassword','signInWithEmailAndPassword','sendPasswordResetEmail','sendEmailVerification','getIdToken'])
  assert(source.includes(sdkExport),'Firebase source missing: '+sdkExport);
 assert(config.includes('assertDevFirebaseConfig')&&config.includes('Refusing to connect development'));
-assert(!/apiKey:\s*'AIza/.test(config),'Development config may not contain the production key');
+const webAppBlock=config.match(/export const firebaseConfig = \\{([\\s\\S]*?)\\};/)?.[1];
+assert(webAppBlock,'A development Web App configuration must exist');
+assert(webAppBlock.includes("projectId: 'wanderer-development-8e3ee'"),'Expected separate development Firebase project');
+assert(!webAppBlock.includes('SET_DEVELOPMENT_'),'Development Web App cannot use placeholder identifiers');
+assert(!webAppBlock.includes('wanderer-test-8f062'),'Do not point the development Web App to production');
 assert(rules.includes("provider == 'google.com'"),'Google sign-in must be permitted');
 assert(rules.includes("provider == 'password'"),'Registered email/password must be permitted');
 assert(!rules.includes("provider != 'anonymous'"),'Never accept unknown sign-in providers by default');
