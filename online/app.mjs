@@ -99,25 +99,58 @@ async function restoreProfile(token=epoch){
 }
 function characterPicker(){return `<div class="characterPicker">${CHARACTERS.map(c=>`<button type="button" data-character="${c.id}" aria-pressed="${selectedCharacter===c.id}"><img src="${c.avatar}" alt="${esc(c.name)}"><span>${esc(c.name)}</span></button>`).join('')}</div><p class="small muted">Cosmetic only. No classes or stat bonuses.</p>`;}
 function bindCharacters(){dialog.querySelectorAll('[data-character]').forEach(b=>b.onclick=()=>{selectedCharacter=b.dataset.character;dialog.querySelectorAll('[data-character]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));});}
+function loginMethodsMarkup(){return `<section class="authMethods"><button type="button" id="googleSignIn" class="primary">Continue with Google</button><div class="loginDivider">or use email</div><div class="loginInputs"><label>Email<input id="loginEmail" type="email" autocomplete="email" maxlength="254" placeholder="you@example.com" required></label><label>Password<input id="loginPassword" type="password" autocomplete="current-password" minlength="8" maxlength="128" placeholder="At least 8 characters"></label></div><div class="buttonRow"><button type="button" id="emailSignIn" class="primary">Sign in</button><button type="button" id="emailRegister">Create account</button><button type="button" id="passwordReset" class="ghost">Forgot password?</button></div><p id="passwordResetStatus" role="status" class="small muted"></p></section>`;}
+function emailVerificationMarkup(){return `<section class="emailVerification"><h3>Verify your email to continue</h3><p>Open the verification link in your inbox, then return here.</p><div class="buttonRow"><button id="refreshVerification" class="primary">I verified my email</button><button id="resendVerification">Resend verification</button></div><p class="small muted">Check Spam if the message does not arrive.</p></section>`;}
+function loginCredentials(requirePassword=true){
+ const input=dialog?.querySelector('#loginEmail'),email=input?.value?.trim()||'';
+ const password=dialog?.querySelector('#loginPassword')?.value||'';
+ if(!email||!input?.checkValidity())throw Error('Enter a valid email address.');
+ if(requirePassword&&!password)throw Error('Enter your password.');
+ return {email,password};
+}
 function showAccount(){
  accountLabel();
  selectedCharacter=profile?.characterId||game.snapshot().characterId||'wanderer';
- const signedIn=!!user,isGuest=!!user?.isAnonymous,needsProfile=signedIn&&profileState==='missing';
- const content=`<p>${signedIn?`${isGuest?'Guest account':'Signed in'}${profile?' · <b>'+esc(profile.nickname)+'</b>':''}`:'Sign in with Google or play as a guest.'}</p>
- ${!signedIn?'<div class="buttonRow"><button id="googleSignIn" class="primary">Sign in with Google</button><button id="guestSignIn">Play as Guest</button></div><p class="small muted">Guest players can join the leaderboard after choosing a nickname. Keep this browser session to retain access to your guest account.</p>':''}
- ${isGuest?'<p class="small muted guestNotice">Guest account: signing out or clearing browser data may permanently remove access to this nickname and cloud progress.</p>':''}
- ${needsProfile?'<label class="profileField">Unique nickname<input id="nickname" maxlength="20" minlength="3" pattern="[A-Za-z0-9_]{3,20}" autocomplete="username"></label>':''}
+ const signedIn=!!user,unverified=needsEmailVerification(user),needsProfile=signedIn&&!unverified&&profileState==='missing';
+ const content=`<p>${signedIn?(unverified?'Email verification required':'Signed in')+(profile?' · <b>'+esc(profile.nickname)+'</b>':''):'Sign in to play Wanderer with an account.'}</p>
+ ${!signedIn?loginMethodsMarkup():''}
+ ${unverified?emailVerificationMarkup():''}
+ <p class="small muted accountPrivacy">Public profiles and leaderboards display only your chosen nickname, never your email or Google account name.</p>
+ ${needsProfile?'<label class="profileField">Choose a public nickname<input id="nickname" maxlength="20" minlength="3" pattern="[A-Za-z0-9_]{3,20}" autocomplete="username"></label>':''}
  ${signedIn&&profileState==='loading'?'<p role="status">Loading your profile…</p>':''}
  ${signedIn&&profileState==='error'?'<p>Your profile could not be loaded. Please retry; you do not need a new nickname.</p><button id="retryProfile">Retry</button>':''}
  ${profile||needsProfile?characterPicker():''}
  <div class="buttonRow">${needsProfile?'<button id="createProfile" class="primary">Create profile</button>':profile?'<button id="saveCharacter" class="primary">Save character</button>':''}
  ${signedIn&&profile&&!ready?'<button id="retryAccount">Continue</button>':''}
  ${signedIn&&profile&&ready?'<button id="resetProgress" class="danger" type="button">Reset Progress · New Speedrun</button>':''}
- ${signedIn?`<button id="googleSignOut">${isGuest?'Leave guest account':'Sign out'}</button>`:''}</div>`;
+ ${signedIn?'<button id="googleSignOut">Sign out</button>':''}</div>`;
  modal('Account & Character',content).dataset.account='true';dialog.addEventListener('cancel',e=>{if(!ready)e.preventDefault();});dialog.querySelector('[data-close]').hidden=!ready;bindCharacters();
  action('#googleSignIn',async()=>{ensureSafeSwitch();const b=await connect();await b.signIn();});
- action('#guestSignIn',async()=>{ensureSafeSwitch();const b=await connect();await b.signInGuest();});
- action('#createProfile',async()=>{ensureSafeSwitch();const token=epoch;const name=dialog.querySelector('#nickname').value;const p=await backend.createProfile(name,selectedCharacter);sessionGuard(token);profile=p;profileState='found';await resumeAccount();});
+ action('#emailSignIn',async()=>{
+  ensureSafeSwitch();const {email,password}=loginCredentials();const b=await connect();
+  await b.signInWithEmail(email,password);
+ });
+ action('#emailRegister',async()=>{
+  ensureSafeSwitch();const {email,password}=loginCredentials();
+  if(password.length<8)throw Error('Choose a password with at least 8 characters.');
+  const b=await connect();await b.createEmailAccount(email,password);
+  status('Verification email sent. Open it before signing in.');
+ });
+ action('#passwordReset',async()=>{
+  const {email}=loginCredentials(false),b=await connect();
+  await b.sendPasswordReset(email);
+  const el=dialog?.querySelector('#passwordResetStatus');
+  if(el)el.textContent='If the address belongs to an account, a password-reset email will arrive. Check Spam too.';
+ });
+ action('#resendVerification',async()=>{
+  await backend.resendVerification();status('Verification email sent.');
+ });
+ action('#refreshVerification',async()=>{
+  const token=epoch,account=await backend.refreshVerification();sessionGuard(token);
+  if(needsEmailVerification(account))throw Error('Email not verified yet. Open the link and try again.');
+  user=account;await restoreProfile(token);
+ });
+ action('#createProfile',async()=>{ensureSafeSwitch();if(!user||user.isAnonymous||needsEmailVerification(user))throw Error('Verify your email before creating a profile.');const token=epoch;const name=dialog.querySelector('#nickname').value;const p=await backend.createProfile(name,selectedCharacter);sessionGuard(token);profile=p;profileState='found';await resumeAccount();});
  action('#saveCharacter',async()=>{
   if(game.busy())throw new Error('Change your character after the expedition.');
   const token=epoch;
@@ -148,16 +181,7 @@ function showAccount(){
  });
  action('#retryProfile',()=>restoreProfile());
  action('#retryAccount',resumeAccount);
- action('#googleSignOut',async()=>{
-  ensureSafeSwitch();
-  if(user?.isAnonymous){
-   modal('Leave guest account?', '<p>Guest accounts cannot be recovered after signing out or clearing browser data. Your nickname and cloud save may become inaccessible.</p><div class="buttonRow"><button id="keepGuest">Keep playing</button><button id="confirmLeaveGuest">Leave guest account</button></div>');
-   action('#keepGuest',showAccount);
-   action('#confirmLeaveGuest',signOutAccount);
-   return;
-  }
-  await signOutAccount();
- });
+ action('#googleSignOut',signOutAccount);
 }
 
 async function signOutAccount(){
@@ -168,8 +192,8 @@ async function signOutAccount(){
 function localCandidate(){
  const key=accountKey();
  const raw=game.key()===key?game.snapshot():localStorage.getItem(key)||game.newSave();
- // Old Guest and account saves never migrate into the v0.9.2 global reset.
- // Preserve the original unsynced save; only the unfinished expedition is abandoned.
+ // Legacy anonymous and browser saves are not migrated or uploaded to new accounts.
+ // Only this authenticated account's own local slot is compared against its cloud save.
  const {save,interrupted}=recoverInterruptedSave(raw);
  if(interrupted)game.backup(typeof raw==='string'?raw:JSON.stringify(raw),'interrupted-run-before-recovery');
  return save;
