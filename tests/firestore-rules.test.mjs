@@ -94,7 +94,7 @@ test('public equipment is readable by signed-in players but never writable by op
 test('feedback inbox accepts a bounded playtest report and forbids reading or spoofing',async()=>{
  const good={uid:'alice',category:'bug',rating:4,combat:'repetitive',difficulty:'balanced',
    likes:'',problems:'Repeated dungeon clicks are tedious.',ideas:'',maxDungeon:22,
-   characterId:'wanderer',appVersion:'0.10.1',createdAt:serverTimestamp()};
+   characterId:'wanderer',appVersion:'0.11.0',createdAt:serverTimestamp()};
  const item=doc(alice,'feedbackInbox/alice_bug_report_1');
  await assertSucceeds(setDoc(item,good));
  await assertFails(getDoc(item));
