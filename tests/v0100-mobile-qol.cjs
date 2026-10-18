@@ -29,7 +29,7 @@ const testCode=[
 'renderMerchant();check(!markup.includes("Inventory full"),"merchant warning disappears after freeing space");',
 'globalThis.__qolPassed=true;'
 ].join('\n');
-const elements=new Map(),node=()=>({innerHTML:'',textContent:'',dataset:{},style:{},value:'',onclick:null,onchange:null,addEventListener(){},querySelector(){return null},scrollLeft:0,scrollWidth:0,clientWidth:0});
+const elements=new Map(),node=()=>({innerHTML:'',textContent:'',dataset:{},style:{},value:'',onclick:null,onchange:null,addEventListener(){},querySelector(){return null},querySelectorAll(){return []},scrollLeft:0,scrollWidth:0,clientWidth:0});
 const context={document:{getElementById:id=>{if(!elements.has(id))elements.set(id,node());return elements.get(id)},querySelectorAll:()=>[],createElement:node},
 localStorage:{getItem:()=>null,setItem(){}},setTimeout(){},clearTimeout(){},setInterval(){},clearInterval(){},console};
 vm.runInNewContext(script.replace(boot,testCode),context,{timeout:12000});
