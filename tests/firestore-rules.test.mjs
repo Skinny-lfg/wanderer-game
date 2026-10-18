@@ -2,10 +2,30 @@ import {before,after,test} from 'node:test';import assert from 'node:assert/stri
 import {initializeTestEnvironment,assertSucceeds,assertFails} from '@firebase/rules-unit-testing';
 import {doc,getDoc,setDoc,updateDoc,deleteDoc,writeBatch,serverTimestamp} from 'firebase/firestore';
 let env,alice,bob;
-before(async()=>{env=await initializeTestEnvironment({projectId:'demo-wanderer',firestore:{host:'127.0.0.1',port:8085,rules:readFileSync('firestore.rules','utf8')}});alice=env.authenticatedContext('alice').firestore();bob=env.authenticatedContext('bob').firestore();});
+before(async()=>{env=await initializeTestEnvironment({projectId:'demo-wanderer',firestore:{host:'127.0.0.1',port:8085,rules:readFileSync('firestore.rules','utf8')}});alice=env.authenticatedContext('alice',{firebase:{sign_in_provider:'google.com'}}).firestore();bob=env.authenticatedContext('bob',{firebase:{sign_in_provider:'google.com'}}).firestore();});
 after(async()=>env?.cleanup());
 async function profile(db,uid,name){const batch=writeBatch(db);batch.set(doc(db,'nicknames',name),{uid});batch.set(doc(db,'publicProfiles',uid),{nickname:name,characterId:'wanderer',createdAt:serverTimestamp(),updatedAt:serverTimestamp()});return batch.commit();}
 const save=rev=>({payload:'{"gold":123}',revision:rev,schemaVersion:1,updatedAt:serverTimestamp()});
+
+test('v0.10.1 refuses Guest, unverified email and unknown providers, accepts verified registered accounts',async()=>{
+ const anonymous=env.authenticatedContext('anon',{firebase:{sign_in_provider:'anonymous'}}).firestore();
+ const unverified=env.authenticatedContext('email_bad',{firebase:{sign_in_provider:'password'},email_verified:false}).firestore();
+ const verified=env.authenticatedContext('email_ok',{firebase:{sign_in_provider:'password'},email_verified:true}).firestore();
+ const missingProvider=env.authenticatedContext('no_provider').firestore();
+ const custom=env.authenticatedContext('custom',{firebase:{sign_in_provider:'custom'}}).firestore();
+ await assertFails(profile(anonymous,'anon','anonymous'));
+ await assertFails(profile(unverified,'email_bad','unverified'));
+ await assertFails(profile(missingProvider,'no_provider','missingprovider'));
+ await assertFails(profile(custom,'custom','custom'));
+ await assertSucceeds(profile(verified,'email_ok','verified_email'));
+ await assertSucceeds(setDoc(doc(verified,'players/email_ok/saves/v092'),save(1)));
+ await assertFails(setDoc(doc(anonymous,'players/email_ok/saves/v092'),save(2)));
+ await assertFails(setDoc(doc(unverified,'players/email_ok/saves/v092'),save(2)));
+ await assertFails(getDoc(doc(anonymous,'nicknames/verified_email')));
+ await assertSucceeds(getDoc(doc(verified,'nicknames/verified_email')));
+});
+
+
 test('nickname + profile are atomic, immutable, unique; no impersonation',async()=>{
  await assertFails(setDoc(doc(alice,'publicProfiles/alice'),{nickname:'alice',characterId:'wanderer',createdAt:serverTimestamp(),updatedAt:serverTimestamp()}));
  await assertSucceeds(profile(alice,'alice','alice'));
@@ -74,7 +94,7 @@ test('public equipment is readable by signed-in players but never writable by op
 test('feedback inbox accepts a bounded playtest report and forbids reading or spoofing',async()=>{
  const good={uid:'alice',category:'bug',rating:4,combat:'repetitive',difficulty:'balanced',
    likes:'',problems:'Repeated dungeon clicks are tedious.',ideas:'',maxDungeon:22,
-   characterId:'wanderer',appVersion:'0.8.1',createdAt:serverTimestamp()};
+   characterId:'wanderer',appVersion:'0.10.1',createdAt:serverTimestamp()};
  const item=doc(alice,'feedbackInbox/alice_bug_report_1');
  await assertSucceeds(setDoc(item,good));
  await assertFails(getDoc(item));
