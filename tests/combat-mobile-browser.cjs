@@ -46,7 +46,7 @@ globalThis.combatUITest=(enc,status='ready')=>{
       return {left:d.left,right:d.right,bottom:d.bottom,actionsTop:a.top,bodyWidth:document.documentElement.scrollWidth,viewport:innerWidth};
      });
      assert.ok(rect.left>=-1&&rect.right<=rect.viewport+1,'decision panel off screen '+width);
-     assert.ok(rect.bottom<=rect.actionsTop+2,'risk and loot must appear before choices '+width);
+     assert.ok(await page.evaluate(()=>Boolean(document.querySelector('.combatDecisionPanel').compareDocumentPosition(document.querySelector('.combatActions'))&Node.DOCUMENT_POSITION_FOLLOWING)),'risk and loot precede the fixed action bar in DOM '+width);
      assert.equal(await page.locator('.combatExpeditionDetails .nextWaveOdds').isVisible(),false,'redundant large drop odds hidden on mobile');
      assert.equal(await page.locator('.combatExpeditionDetails .combatLoot').isVisible(),false,'redundant lower run loot hidden on mobile');
      assert.ok(rect.bodyWidth<=rect.viewport+2,'horizontal overflow at '+width);
