@@ -49,6 +49,10 @@ const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8010';
  await page.locator('#refreshVerification').click();
  await page.waitForFunction(()=>WandererGame.key()==='wanderer_account_demo-wanderer-dev_email-user_v092'&&!document.querySelector('.onlineDialog'));
  assert.equal(await page.locator('[data-online-action="account"]').innerText(),'test_email','nickname chosen during registration');
+ if(width<=650){
+  const toggle=page.locator('#menuToggle');
+  if(await toggle.getAttribute('aria-expanded')!=='true')await toggle.click();
+ }
  await page.locator('[data-online-action="account"]').click();
  await page.locator('#googleSignOut').click();
  await page.locator('#googleSignIn').waitFor();
