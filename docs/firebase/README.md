@@ -1,4 +1,4 @@
-# Wanderer — Firebase deployment and login (v0.10.1)
+# Wanderer — Firebase deployment and login (v0.11.0)
 
 **Development branch only.** Nothing described here automatically deploys rules, resets data, or modifies the `main` branch. Production currently uses Firebase project `wanderer-test-8f062`. The **development** branch is configured with its own Firebase Web App under project `wanderer-development-8e3ee` and refuses to connect to the production project. Creating/configuring Authentication and Firestore in the new Firebase Console is still required.
 
@@ -61,10 +61,37 @@ npm run test:rules
 For rules tests, the scripts use an emulator demo project and do not write to production. Test that the dev app fails closed when its Web App config is missing or still points to the production Firebase project.
 
 
-### Development setup status (2026-10-18)
+### Development setup status (v0.11.0)
 
 - Firebase Web config: **completed** for `wanderer-development-8e3ee`.
 - Authentication provider activation (Google + Email/Password): **not verified / Console action required**.
 - Firestore database creation and dev-only rules deployment: **not verified / Console action required**.
 - Local SDK bundle rebuild, browser verification and emulator tests: **pending**.
 - Production release/reset: **not performed**.
+
+## Branded Firebase emails and branded verification/password page (v0.11.0)
+
+**Email sender name / “thanks your project 998484”:** this is set **in Firebase Console**, not in the website source.
+With `wanderer-development-8e3ee` selected, open **Authentication → Settings** and set the public-facing app name to **Wanderer** (where shown). Next go to **Authentication → Templates**: edit both **Email address verification** and **Password reset**. Set the subject to e.g. **Verify your Wanderer account** / **Reset your Wanderer password**, replace the default template with clear copy, and keep the built-in **%LINK%** placeholder so buttons actually work. Do not paste a raw verification token into any visible website.
+
+Suggested verification email:
+- Subject: **Verify your Wanderer account**
+- Message: **Welcome to Wanderer! Confirm your email using the link below to unlock your account and start your journey. If you did not register, you can safely ignore this message.**
+- Link label: **Verify my email** (using Firebase's original `%LINK%` link).
+
+Suggested password email:
+- Subject: **Reset your Wanderer password**
+- Message: **We received a request to reset your Wanderer password. Use the link below to choose a new one. If you did not request this change, you can ignore this email.**
+- Link label: **Reset password** (using the Firebase-generated `%LINK%` link).
+
+The **custom branded action page is implemented but NOT YET LIVE** in `auth-action.html` and `online/auth-action.mjs`. It handles Firebase `verifyEmail`, `resetPassword` and `recoverEmail` actions with official Firebase 11.10.0 ES modules. It uses the **development** Firebase config, checks the action belongs to the correct Firebase project and never displays or logs reset tokens. The verification action is completed with `applyActionCode` and the password reset with `verifyPasswordResetCode`/`confirmPasswordReset`. A password is never saved by Wanderer.
+
+**To activate it without risking production:**
+1. Publish the dev webpage and `online/` files on a separate HTTPS **development preview hostname** that serves `https://<your-dev-host>/auth-action.html`. A URL on `localhost` cannot be opened from another device's email app; a GitHub Pages site attached to `main` would not serve the development files automatically.
+2. In the **development** Firebase project only, go to **Authentication → Settings → Authorized domains** and authorize the exact preview hostname (without the path).
+3. Go to **Authentication → Templates**, edit an email template and use **Customize action URL** to set `https://<your-dev-host>/auth-action.html`. Firebase will append secure `mode` and `oobCode` parameters. This customization may apply to all templates in that dev project.
+4. Send fresh email verification and password-reset messages and test real links, including expired/used code errors and the Return to Wanderer link. Old emails that were already sent still use their original handler URL.
+
+**Do not configure this custom action URL in the production Firebase until its own production-hosted page and rules have been separately reviewed.** The normal Firebase action pages remain functional until a custom URL is configured.
+
+For a branded sender-domain/email address such as `noreply@yourdomain`, Firebase may require verified ownership of a custom domain and DNS records; changing the app's public-facing name does not by itself change the sender's domain. See [Firebase custom email action handler](https://firebase.google.com/docs/auth/custom-email-handler) and [Firebase email template settings](https://support.google.com/firebase/answer/7000714).
