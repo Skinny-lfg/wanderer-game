@@ -1,11 +1,13 @@
 const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs');
 const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8012';
 (async()=>{const browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});try{
- for(const width of [320,390,768,1440])for(const guest of [true,false])for(const source of ['local','cloud','both','conflict']){
+ // Guest login is disabled in v0.11.0; validate recovery with a registered Google account.
+ for(const width of [320,390,768,1440])for(const guest of [false])for(const source of ['local','cloud','both','conflict']){
  const page=await browser.newPage({viewport:{width,height:950}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.route('**/online/firebase-client.mjs*',r=>r.fulfill({contentType:'text/javascript',body:fs.readFileSync('tests/fixtures/firebase-client.mjs','utf8')}));
+ await page.route('**/online/firebase-config.mjs*',r=>r.fulfill({contentType:'text/javascript',body:"export const firebaseConfig={projectId:'demo-wanderer-dev'};"}));
  await page.addInitScript(({guest,source})=>{
-  const uid=guest?'guest-1':'alice',key='wanderer_account_'+uid+'_v092';
+  const uid=guest?'guest-1':'alice',key='wanderer_account_demo-wanderer-dev_'+uid+'_v092';
   const base={characterId:'knight',gold:124,fragments:40,maxDungeon:13,chosen:12,stashCapacity:80,stash:[{id:'stored',name:'Stored Helm',slot:'helm',subtype:'Helm',tier:8,rarity:'Rare'}],equip:{weapon:{id:'safe-sword',name:'Saved Sword',slot:'weapon',subtype:'Sword',tier:10,rarity:'Rare',atk:30}},run:null,protectedItemIds:['safe-sword']};
   const run={tier:12,path:'grove',status:'fight',gold:500,fragments:500,loot:[{id:'unextracted'}]};
   const local={...base,run:source==='cloud'?null:run};

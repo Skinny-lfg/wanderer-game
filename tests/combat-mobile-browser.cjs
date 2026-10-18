@@ -32,8 +32,12 @@ globalThis.combatUITest=(enc,status='ready')=>{
     if(mobile){
      const info=await decision.innerText();
      assert.match(info,new RegExp(expectRisk),'wave '+enc+' risk on '+width);
-     assert.match(info,/Gear drop/,'drop chance present');
-     for(const rarity of ['Common','Uncommon','Rare','Epic','Legendary'])assert.ok(info.includes(rarity),rarity+' chance missing');
+     const odds=decision.locator('.decisionExtraDetails');
+     assert.equal(await odds.count(),1,'drop chances available in expandable details');
+     await odds.locator('summary').click();
+     const expanded=await decision.innerText();
+     assert.match(expanded,/Gear drop/,'drop chance present after expanding odds');
+     for(const rarity of ['Common','Uncommon','Rare','Epic','Legendary'])assert.ok(expanded.includes(rarity),rarity+' chance missing');
      assert.match(info,/Run Loot · 1 gear · 1 valuables/,'run loot count present');
      assert.equal(await decision.locator('img').count(),1,'run loot thumbnail present');
      const rect=await page.evaluate(()=>{
