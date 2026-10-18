@@ -1,6 +1,6 @@
 # Wanderer — Firebase deployment and login (v0.10.1)
 
-**Development branch only.** Nothing described here automatically deploys rules, resets data, or modifies the `main` branch. Production currently uses Firebase project `wanderer-test-8f062`. The **development** branch intentionally refuses to connect to that project and contains placeholder Web App configuration until a new project is created.
+**Development branch only.** Nothing described here automatically deploys rules, resets data, or modifies the `main` branch. Production currently uses Firebase project `wanderer-test-8f062`. The **development** branch is configured with its own Firebase Web App under project `wanderer-development-8e3ee` and refuses to connect to the production project. Creating/configuring Authentication and Firestore in the new Firebase Console is still required.
 
 ## Two independent projects
 
@@ -15,8 +15,8 @@ For local tests, each browser account slot is namespaced by `projectId` and `uid
 
 ### Required Firebase Console setup (development only)
 
-1. Firebase Console → **Add project**: e.g. `wanderer-development`. **Do not select** production project `wanderer-test-8f062`.
-2. Register a **Web App** in this new project. In **Project settings → Your apps**, copy the Web App config into **`online/firebase-config.mjs` on `development` only**. The file has placeholder `SET_DEVELOPMENT_...` values and throws an explicit error rather than falling back to production. Firebase Web identifiers are public, but **never commit service-account secrets, private keys or admin credentials**.
+1. **DONE:** Independent Firebase project **`wanderer-development-8e3ee`** created by the owner. Ensure you have selected **this** project in the Console.
+2. **DONE:** Its Web App settings have been copied into **`online/firebase-config.mjs` on `development` only**; production's config remains on `main`. The optional `measurementId` is intentionally omitted because Analytics is not initialized. This Web config is not a private key. **Never commit service-account secrets, private keys or admin credentials**.
 3. Authentication → **Sign-in method**: enable **Google** (choose a support email) and **Email/Password**. Do **not** enable Anonymous; the v0.10.1 app has removed Guest sign-in.
 4. Authentication → **Settings → Authorized domains**: authorize the actual preview domain and `localhost` or `127.0.0.1` for local testing, when the Console allows it. Firebase does not automatically authorize localhost on all new projects. For GitHub Pages, use the relevant `*.github.io` hostname; do not confuse a path with a hostname.
 5. Authentication → **Templates / Email action links**: customize and test **Verify email** and **Reset password** emails. Set the appropriate action URL/authorized domain; do not send players from the dev email into the production site. Configure an email sender/branding if available.
@@ -26,7 +26,7 @@ For local tests, each browser account slot is namespaced by `projectId` and `uid
 
 ### SDK build
 
-The game keeps the pinned Firebase 11.10.0 build under `online/vendor/firebase-sdk.mjs`. The source entry now includes Email/Password, verification and password-reset methods. Until you regenerate the bundle with `npm ci && npm run build:firebase` and commit the new vendor asset, the development adapter loads **the matching official Firebase CDN ES modules** as an explicit fallback. The CDN fallback is online-only and must be tested on the deployed development hostname. Rebuilding the local pinned bundle is recommended for final release and to avoid an extra external asset dependency.
+The game keeps the pinned Firebase 11.10.0 build under `online/vendor/firebase-sdk.mjs` (the Firebase Console's SDK 13.0.0 setup snippet is not needed by Wanderer). The source entry now includes Email/Password, verification and password-reset methods. Until you regenerate the bundle with `npm ci && npm run build:firebase` and commit the new vendor asset, the development adapter loads **the matching official Firebase CDN ES modules** as an explicit fallback. The CDN fallback is online-only and must be tested on the deployed development hostname. Rebuilding the local pinned bundle is recommended for final release and to avoid an extra external asset dependency.
 
 ### Rules and verification
 
@@ -59,3 +59,12 @@ npm run test:rules
 ```
 
 For rules tests, the scripts use an emulator demo project and do not write to production. Test that the dev app fails closed when its Web App config is missing or still points to the production Firebase project.
+
+
+### Development setup status (2026-10-18)
+
+- Firebase Web config: **completed** for `wanderer-development-8e3ee`.
+- Authentication provider activation (Google + Email/Password): **not verified / Console action required**.
+- Firestore database creation and dev-only rules deployment: **not verified / Console action required**.
+- Local SDK bundle rebuild, browser verification and emulator tests: **pending**.
+- Production release/reset: **not performed**.
