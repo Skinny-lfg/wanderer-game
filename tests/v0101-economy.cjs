@@ -45,9 +45,15 @@ assert.throws(()=>e.transfer(wand,'sunder',['burn','slow'],'balanced',()=>0),/Il
 const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
 for(const anchor of [
  'function renderForgeEconomyExtras()','function renderMerchantSigils()',
- 'forgeQualityToggle','legendaryUpgradeTarget','forgeTransferMode',
+ 'forgeQualityToggle','upgradeLegendaryBtn','forgeInvestmentButton',
+ 'forgeItemPicker','forgeSigilPicker','forgeLegendaryPicker',
+ 'data-forge-item','data-forge-sigil','data-forge-invest',
+ 'refreshSigilStock','merchantSigilHost','merchantSecondaryGrid',
+ 'affinityArt(a)','state.merchant.sigils[idx]=next',
  'Upgraded Legendary at risk','sigils:Array.isArray(o.sigils)',
- 'merchant.sigils[idx]=null','save();renderMerchant()'
+ 'uiIcon(\'fragments\')','save();renderMerchant()'
 ])assert(html.includes(anchor),'Missing live integration: '+anchor);
+assert(!html.includes('merchant.sigils[idx]=null'),'A purchased Sigil must be replaced immediately');
+assert(!html.includes('not usable on Legendary'),'Merchant Sigils no longer repeat this label');
 assert(!html.includes('firebase deploy'),'Economy change must not deploy rules');
 console.log('v0.10.1 economy test PASS — quality odds, item ranks, save serialization, merchant offers, legal transfers and UI integration');
