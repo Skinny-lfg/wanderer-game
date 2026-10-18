@@ -52,7 +52,7 @@ const URL=process.env.WANDERER_TEST_URL||'http://127.0.0.1:8010';
  await page.locator('[data-online-action="account"]').click();
  await page.locator('#googleSignOut').click();
  await page.locator('#googleSignIn').waitFor();
- await page.evaluate(()=>{__firebaseTest.profile=null;__firebaseTest.cloud=null;});
+ await page.evaluate(()=>{__firebaseTest.profile=null;__firebaseTest.cloud=null;__firebaseTest.shared=0;});
  await page.locator('#googleSignIn').click();await page.locator('#nickname').fill('taken');await page.locator('#createProfile').click();assert.match(await page.locator('.onlineDialog .onlineError').innerText(),/taken/);
  await page.locator('#nickname').fill('Alice_1');
  await page.evaluate(()=>{__firebaseTest.failNextSave=true;});
