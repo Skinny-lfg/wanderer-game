@@ -13,7 +13,9 @@ for(const sdkExport of ['createUserWithEmailAndPassword','signInWithEmailAndPass
  assert(source.includes(sdkExport),'Firebase source missing: '+sdkExport);
 assert(config.includes('assertDevFirebaseConfig')&&config.includes('Refusing to connect development'));
 assert(!/apiKey:\s*'AIza/.test(config),'Development config may not contain the production key');
-assert(rules.includes(".get('sign_in_provider', '') != 'anonymous'"),'Anonymous account must be denied by dev rules');
+assert(rules.includes("provider == 'google.com'"),'Google sign-in must be permitted');
+assert(rules.includes("provider == 'password'"),'Registered email/password must be permitted');
+assert(!rules.includes("provider != 'anonymous'"),'Never accept unknown sign-in providers by default');
 assert(rules.includes(".get('email_verified', false) == true"),'Email verification must be enforced');
 assert(html.includes('v0101-email-auth-1'),'Main HTML must load updated login module');
 console.log('PASS v0.10.1 development auth/guest removal, isolation, verified-email rules and privacy guards');
