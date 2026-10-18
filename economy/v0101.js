@@ -8,12 +8,15 @@
     secure:{chance:.65,costFactor:1.5}
   });
   const finite=(x)=>typeof x==='number'&&Number.isFinite(x);
-  function qualityOdds(base,enhanced=false){
+  // Forge investments: 0 = Standard (1x), 1 = High Quality (2x), 2 = Masterwork (3x).
+  // The boolean overload is retained for older v0.10.1 tests and save-independent callers.
+  function qualityOdds(base,investment=0){
+    const mode=investment===true?1:investment===false?0:Math.max(0,Math.min(2,Math.floor(Number(investment)||0)));
     const odds={...base};
-    if(enhanced){
+    if(mode){
       if((odds.Legendary||0)!==0)throw new Error('Forge cannot make Legendary');
-      const shift=Math.min(.17,Math.max(0,odds.Common));
-      const uncommon=Math.min(.03,Math.max(0,odds.Uncommon));
+      const shift=Math.min(mode===2?.25:.17,Math.max(0,odds.Common));
+      const uncommon=Math.min(mode===2?.05:.03,Math.max(0,odds.Uncommon));
       odds.Common-=shift;odds.Uncommon-=uncommon;
       odds.Rare+=shift*.7+uncommon*.7;
       odds.Epic+=shift*.3+uncommon*.3;
