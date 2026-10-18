@@ -23,7 +23,10 @@ export async function createBackend(){
    await sdk.sendEmailVerification(credential.user);
    return credential.user;
   },
-  sendPasswordReset:email=>sdk.sendPasswordResetEmail(auth,String(email).trim()),
+  async sendPasswordReset(email){
+   try{await sdk.sendPasswordResetEmail(auth,String(email).trim());}
+   catch(error){if(error?.code==='auth/user-not-found')return;throw error;}
+  },
   async resendVerification(){
    if(!auth.currentUser || auth.currentUser.isAnonymous)throw Error('Sign in with a registered account first.');
    await sdk.sendEmailVerification(auth.currentUser);
@@ -31,6 +34,8 @@ export async function createBackend(){
   async refreshVerification(){
    if(!auth.currentUser)return null;
    await sdk.reload(auth.currentUser);
+   // Force a fresh ID token so Firestore Rules receive email_verified=true.
+   await sdk.getIdToken(auth.currentUser,true);
    return auth.currentUser;
   },
   signOut:()=>sdk.signOut(auth),
