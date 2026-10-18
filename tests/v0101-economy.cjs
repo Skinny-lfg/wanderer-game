@@ -31,6 +31,14 @@ assert.equal(spend,8217);
 assert.throws(()=>e.upgradeLegendary(item),/Not eligible|max rank/);
 const save=structuredClone(item);assert.equal(save.upgradeRank,10);
 assert.equal(save.upgradeBase.atk,100);
+// Low-level Legendary stats must retain fractional gains, rather than silently rounding to zero.
+const oldSword={rarity:'Legendary',tier:1,subtype:'Sword',effect:'burn',atk:3,def:1};
+for(let rank=0;rank<7;rank++)e.upgradeLegendary(oldSword);
+assert.equal(oldSword.upgradeRank,7);
+assert.equal(oldSword.atk,3.42);
+assert.equal(oldSword.def,1.14);
+assert.equal(oldSword.upgradeBase.atk,3);
+
 assert.equal(e.sigilPrice(100),1000);
 assert.equal(e.transferCost(100,'economy'),505);
 assert.equal(e.transferCost(100,'balanced'),1010);
@@ -53,7 +61,16 @@ for(const anchor of [
  'Upgraded Legendary at risk','sigils:Array.isArray(o.sigils)',
  'uiIcon(\'fragments\')','save();renderMerchant()'
 ])assert(html.includes(anchor),'Missing live integration: '+anchor);
+assert(html.includes("if(kind==='sigils')merchant.sigils="),'Sigil refresh must only replace Sigil offers');
+assert(html.includes('merchant.stock=Array.from({length:4}'),'Equipment refresh must separately replace gear');
+assert(html.includes("refreshMerchantStock('sigils')"),'Sigil reroll handler must be independent');
+assert(html.includes("refreshMerchantStock('gear')"),'Equipment reroll handler must be independent');
+assert(html.includes('class="panel forgeUnified"'),'Crafting and crafting odds must share one Forge panel');
+assert(html.includes('function legendaryRankBadge('),'Legendary rank must appear on item cards');
+assert(html.includes('v.upgradeRank*.02'),'Migrating an existing upgraded item should preserve precision');
+assert(html.includes('eliteCombatant'),'Elite portraits need their larger dedicated style');
+assert(html.includes('Wanderer v0.10.1</title>'),'Page title must show v0.10.1');
 assert(!html.includes('merchant.sigils[idx]=null'),'A purchased Sigil must be replaced immediately');
 assert(!html.includes('not usable on Legendary'),'Merchant Sigils no longer repeat this label');
 assert(!html.includes('firebase deploy'),'Economy change must not deploy rules');
-console.log('v0.10.1 economy test PASS — quality odds, item ranks, save serialization, merchant offers, legal transfers and UI integration');
+console.log('v0.10.1 economy test PASS — precise Legendary ranks, independent Merchant refreshes, save migration anchors, Forge UI and economics');
