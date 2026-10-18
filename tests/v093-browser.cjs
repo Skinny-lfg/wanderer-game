@@ -110,7 +110,7 @@ const server=http.createServer((req,res)=>{if(req.url==='/'){res.setHeader('Cont
  });
  assert.notEqual(visuals.effect,'none','weapon impact/projectile VFX must render');
  assert.notEqual(visuals.numbers,'none','floating damage numbers must render');
- assert.equal(visuals.projectile,'vfxTravel','Bow should animate projectile');
+ assert.equal(visuals.projectile,'vfxCenteredTravel','Bow projectile should travel between combatants');
  assert.equal(visuals.damageRise,'rise','damage numbers should animate upward');
  assert.equal(visuals.heroStrike,'fxBow','player Bow attack animation restored');
  assert.equal(visuals.enemyStrike,'fxEnemyAttack','enemy attack animation restored');

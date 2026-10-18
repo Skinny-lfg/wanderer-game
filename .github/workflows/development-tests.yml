@@ -58,6 +58,11 @@ jobs:
           echo $! >/tmp/wanderer-audit-http.pid
           sleep 2
           curl --fail http://127.0.0.1:8012/ >/dev/null
+      - name: Browser asset and VFX checks
+        id: assets
+        continue-on-error: true
+        timeout-minutes: 4
+        run: npm run test:assets
       - name: Unit and smoke regression
         id: unit
         continue-on-error: true
@@ -72,11 +77,6 @@ jobs:
         continue-on-error: true
         timeout-minutes: 6
         run: npm run test:browser
-      - name: Browser asset and VFX checks
-        id: assets
-        continue-on-error: true
-        timeout-minutes: 4
-        run: npm run test:assets
       - name: Interrupted save and conflict recovery
         id: recovery
         continue-on-error: true
