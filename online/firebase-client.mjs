@@ -98,7 +98,7 @@ export async function createBackend(){
     !Number.isInteger(maxDungeon)||maxDungeon<1||maxDungeon>200||
     character(characterId).id!==characterId)throw Error('Please review your feedback before sending.');
    const id=uid+'_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,12);
-   const record={uid,category,rating,combat,difficulty,likes,problems,ideas,maxDungeon,characterId,appVersion:'0.10.1',createdAt:sdk.serverTimestamp()};
+   const record={uid,category,rating,combat,difficulty,likes,problems,ideas,maxDungeon,characterId,appVersion:'0.11.0',createdAt:sdk.serverTimestamp()};
    await sdk.runTransaction(db,async tx=>{tx.set(sdk.doc(db,'feedbackInbox',id),record);});
    return id;
   },
