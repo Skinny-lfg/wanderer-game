@@ -1562,6 +1562,119 @@ return o;}
 function saleFragments(o){if(o?.recoveryStarter===true)return 0;let raw=Math.max(2,Math.round((3+o.tier*2)*RARITY[o.rarity][2]));return o.crafted?Math.min(raw,Math.max(1,Math.floor((+o.craftPrice||craftCost(o.tier))*.25))):raw}
 function merchantCost(o){return Math.round((24+o.tier*12)*RARITY[o.rarity][2]);}
 function rollShop(){const level=Math.max(1,state.maxDungeon-1),stock=Array.from({length:4},()=>{let o=makeItem(level,rollEquipmentSlot(),null,'merchant');o.goldPrice=merchantCost(o);return o});state.merchant={stock,sigils:WandererEconomyV0101.rollOffer(Object.keys(ELEMENTS)),refreshCost:16+level*4,refreshes:0};save();}
+// v0.10.1 experimental economy UI: all purchases and upgrades use the existing save/conflict guard.
+function economyOwnedGear(){return [...Object.values(state.equip).filter(Boolean),...state.stash];}
+function economyOwnedItem(id){return economyOwnedGear().find(item=>item.id===id)||null;}
+function economyCanAct(){return !!state&&!state.run&&!saveBlocked;}
+function economySigilEffect(sigil){const a=ELEMENTS[sigil?.affinity];return a?(a.icon+' '+a.name):'Unknown';}
+function economySigilAllowed(item,affinity){
+ return !!item&&item.rarity!=='Legendary'&&item.effect!==affinity&&elementPool(item.slot,item.subtype).includes(affinity);
+}
+function renderMerchantSigils(){
+ const host=$('screen'),m=state.merchant;
+ if(!host||typeof host.insertAdjacentHTML!=='function'||!m||!Array.isArray(m.sigils))return;
+ const level=Math.max(1,state.maxDungeon-1),cost=WandererEconomyV0101.sigilPrice(level),owned=(state.sigils||[]).length;
+ const cards=m.sigils.map((a,i)=>a?'<article class="merchantCompactCard"><div style="font-size:28px">'+ELEMENTS[a].icon+'</div>'+
+  '<div class="merchantCardInfo"><b>'+esc(ELEMENTS[a].name)+' Sigil</b><span class="small muted">Affinity transfer at the Forge · not usable on Legendary</span></div>'+
+  '<div class="merchantCardActions"><b class="gold">'+cost+' Gold</b><button class="tiny primary" data-buy-sigil="'+i+'" '+
+  (state.gold<cost||owned>=100?'disabled':'')+'>Buy</button></div></article>':
+  '<article class="merchantCompactCard"><span class="small muted">Purchased — refresh Merchant for a new offer.</span></article>').join('');
+ host.insertAdjacentHTML('beforeend','<section class="panel" style="margin-top:12px"><div class="topline"><div><h2>Affinity Sigils · 4 offers</h2>'+
+  '<p class="small muted">Four random affinities per stock. The existing paid Merchant refresh rerolls both equipment and all four Sigils.</p></div>'+
+  '<span class="token">Owned '+owned+'</span></div><div class="merchantList">'+cards+'</div>'+
+  '<p class="small muted">A Sigil keeps its affinity until used at the Forge. The transfer can fail; Legendary items are excluded.</p></section>');
+ host.querySelectorAll('[data-buy-sigil]').forEach(button=>button.onclick=()=>{
+  if(!economyCanAct())return;
+  const idx=Number(button.dataset.buySigil),affinity=state.merchant?.sigils?.[idx],level=Math.max(1,state.maxDungeon-1),price=WandererEconomyV0101.sigilPrice(level);
+  if(!affinity||!Object.prototype.hasOwnProperty.call(ELEMENTS,affinity)||state.gold<price||state.sigils.length>=100)return;
+  showConfirm('Purchase Affinity Sigil','Buy '+ELEMENTS[affinity].name+' Sigil for '+price+' Gold?',()=>{
+   if(!economyCanAct()||state.merchant?.sigils?.[idx]!==affinity||state.gold<price||state.sigils.length>=100)return;
+   state.gold-=price;state.sigils.push({id:makeId(),affinity});state.merchant.sigils[idx]=null;
+   save();renderMerchant();bannerMessage(ELEMENTS[affinity].name+' Sigil added to your Forge.');
+  },'Buy Sigil');
+ });
+}
+function renderForgeEconomyExtras(){
+ const host=$('screen');if(!host||typeof host.insertAdjacentHTML!=='function')return;
+ const v=WandererEconomyV0101,owned=economyOwnedGear();
+ const legendary=owned.filter(item=>item.rarity==='Legendary');
+ if(!legendary.some(item=>item.id===forgeLegendaryId))forgeLegendaryId=legendary[0]?.id||null;
+ const target=legendary.find(item=>item.id===forgeLegendaryId),rank=target?.upgradeRank||0;
+ const rankCost=target&&rank<10?v.upgradeCost(target.tier,rank):0;
+ const atRisk=target&&Object.values(state.equip).some(x=>x?.id===target.id)&&!chosenProtectionIds().includes(target.id);
+ const legendaryPanel='<section class="panel"><h2>Legendary Reinforcement</h2>'+
+  '<p class="small muted">Spend Fragments to upgrade a Legendary by +2% of its original positive stats per rank. Max +10 (+20%). Skills, tier and affinity stay unchanged. Success guaranteed.</p>'+
+  '<label>Legendary<select id="legendaryUpgradeTarget">'+legendary.map(item=>'<option value="'+esc(item.id)+'" '+(item.id===forgeLegendaryId?'selected':'')+'>'+esc(item.name)+' · D'+item.tier+' · +'+(item.upgradeRank||0)+'</option>').join('')+'</select></label>'+
+  (target?'<p class="small">Current rank: <b>+'+rank+'/10</b> · Stat bonus: <b>+'+(rank*2)+'%</b></p>'+
+   (atRisk?'<p class="small" style="color:#e5a28b">⚠ Equipped but not protected: death can destroy this upgrade.</p>':'')+
+   '<button class="primary" id="upgradeLegendaryBtn" '+(rank>=10||state.fragments<rankCost?'disabled':'')+'>'+
+   (rank>=10?'Maximum +10 reached':'Reinforce · '+rankCost+' Fragments')+'</button>':
+   '<p class="small muted">No Legendary owned. Find one in a dungeon first.</p>')+'</section>';
+ const ownedSigils=Array.isArray(state.sigils)?state.sigils:[];
+ if(!ownedSigils.some(x=>x.id===forgeSigilId))forgeSigilId=ownedSigils[0]?.id||null;
+ const sigil=ownedSigils.find(x=>x.id===forgeSigilId);
+ const eligible=sigil?owned.filter(item=>economySigilAllowed(item,sigil.affinity)):[];
+ if(!eligible.some(item=>item.id===forgeItemId))forgeItemId=eligible[0]?.id||null;
+ const item=eligible.find(o=>o.id===forgeItemId);
+ const mode=v.levels[forgeTransferMode]?forgeTransferMode:'balanced';
+ const fee=item?v.transferCost(item.tier,mode):0;
+ let preview='';
+ if(item){
+  const currentCounts=setCounts(),after={...currentCounts};
+  const amount=isTwoHanded(item)&&item.slot==='weapon'?2:1;
+  if(Object.values(state.equip).some(o=>o?.id===item.id)){
+   if(item.effect)after[item.effect]=Math.max(0,(after[item.effect]||0)-amount);
+   after[sigil.affinity]=(after[sigil.affinity]||0)+amount;
+   preview='<p class="small muted">Equipped set counts: '+esc(ELEMENTS[item.effect]?.name||'None')+' '+(currentCounts[item.effect]||0)+'→'+(after[item.effect]||0)+
+    ' · '+esc(ELEMENTS[sigil.affinity].name)+' '+(currentCounts[sigil.affinity]||0)+'→'+after[sigil.affinity]+'. Compare 2/3/5-piece synergies before spending.</p>';
+  }else preview='<p class="small muted">Stash item: set bonuses only change after equipping.</p>';
+ }
+ const sigilPanel='<section class="panel"><h2>Affinity Transfer</h2>'+
+ '<p class="small muted">Select an owned Sigil and a non-Legendary item. On failure the item keeps its current affinity, but the Sigil and Fragments are consumed.</p>'+
+ '<label>Owned Sigil<select id="forgeSigilTarget">'+ownedSigils.map(o=>'<option value="'+esc(o.id)+'" '+(o.id===forgeSigilId?'selected':'')+'>'+esc(economySigilEffect(o))+'</option>').join('')+'</select></label>'+
+ (sigil?'<label>Equipment<select id="forgeAffinityItem">'+eligible.map(o=>'<option value="'+esc(o.id)+'" '+(o.id===forgeItemId?'selected':'')+'>'+esc(o.name)+' · D'+o.tier+' · '+esc(ELEMENTS[o.effect]?.name||'None')+'</option>').join('')+'</select></label>':
+ '<p class="small muted">Buy an Affinity Sigil in the Merchant first.</p>')+
+ (item?'<label>Fragments investment<select id="forgeTransferMode">'+
+  [['economy','Economy · 35% · half cost'],['balanced','Balanced · 50% · normal cost'],['secure','Secure · 65% · +50% cost']].map(([key,label])=>'<option value="'+key+'" '+(key===mode?'selected':'')+'>'+label+'</option>').join('')+'</select></label>'+
+  preview+'<button class="primary" id="forgeTransferBtn" '+(state.fragments<fee?'disabled':'')+'>Attempt transfer · '+fee+' Fragments · '+Math.round(v.levels[mode].chance*100)+'%</button>':
+  '<p class="small muted">No eligible item for this Sigil. Legendary gear cannot be changed.</p>')+'</section>';
+ host.insertAdjacentHTML('beforeend','<div class="twocol" style="margin-top:12px">'+legendaryPanel+sigilPanel+'</div>');
+ const upgradeBtn=$('upgradeLegendaryBtn'),legendarySelect=$('legendaryUpgradeTarget');
+ if(legendarySelect)legendarySelect.onchange=e=>{forgeLegendaryId=e.target.value;renderForge()};
+ if(upgradeBtn)upgradeBtn.onclick=()=>{
+  const item=economyOwnedItem(forgeLegendaryId);
+  if(!economyCanAct()||!item||item.rarity!=='Legendary'||(item.upgradeRank||0)>=10)return;
+  const cost=v.upgradeCost(item.tier,item.upgradeRank||0);
+  if(state.fragments<cost)return;
+  showConfirm('Reinforce Legendary','Spend '+cost+' Fragments to improve '+item.name+' to +'+((item.upgradeRank||0)+1)+'? This investment is lost if the item is destroyed.',()=>{
+   const latest=economyOwnedItem(item.id);
+   if(!economyCanAct()||latest!==item||item.rarity!=='Legendary'||(item.upgradeRank||0)>=10)return;
+   const price=v.upgradeCost(item.tier,item.upgradeRank||0);if(state.fragments<price)return;
+   v.upgradeLegendary(item);state.fragments-=price;save();renderForge();bannerMessage(item.name+' reinforced to +'+item.upgradeRank+'.');
+  },'Reinforce');
+ };
+ const sigilSelect=$('forgeSigilTarget'),itemSelect=$('forgeAffinityItem'),modeSelect=$('forgeTransferMode'),transferBtn=$('forgeTransferBtn');
+ if(sigilSelect)sigilSelect.onchange=e=>{forgeSigilId=e.target.value;forgeItemId=null;renderForge()};
+ if(itemSelect)itemSelect.onchange=e=>{forgeItemId=e.target.value;renderForge()};
+ if(modeSelect)modeSelect.onchange=e=>{forgeTransferMode=e.target.value;renderForge()};
+ if(transferBtn)transferBtn.onclick=()=>{
+  if(!economyCanAct())return;
+  const chosenSigil=state.sigils.find(o=>o.id===forgeSigilId),chosenItem=economyOwnedItem(forgeItemId),investment=forgeTransferMode;
+  if(!chosenSigil||!economySigilAllowed(chosenItem,chosenSigil.affinity)||!v.levels[investment])return;
+  const price=v.transferCost(chosenItem.tier,investment);
+  if(state.fragments<price)return;
+  showConfirm('Transfer Affinity','Spend '+price+' Fragments and consume the '+ELEMENTS[chosenSigil.affinity].name+' Sigil? Chance: '+Math.round(v.levels[investment].chance*100)+'%. Failure preserves the current affinity.',()=>{
+   const latestSigil=state.sigils.find(o=>o.id===chosenSigil.id),latestItem=economyOwnedItem(chosenItem.id);
+   if(!economyCanAct()||latestSigil!==chosenSigil||latestItem!==chosenItem||!economySigilAllowed(chosenItem,chosenSigil.affinity))return;
+   const realCost=v.transferCost(chosenItem.tier,investment);if(state.fragments<realCost)return;
+   state.fragments-=realCost;state.sigils=state.sigils.filter(o=>o.id!==chosenSigil.id);
+   const succeeded=v.transfer(chosenItem,chosenSigil.affinity,elementPool(chosenItem.slot,chosenItem.subtype),investment);
+   save();forgeSigilId=null;renderForge();
+   bannerMessage(succeeded?'Affinity transferred to '+ELEMENTS[chosenSigil.affinity].name+'.':'Transfer failed. Your item kept its original affinity.');
+  },'Attempt transfer');
+ };
+}
+
 function currentTheme(){return THEMES.find(t=>t.id===selectedPath)||THEMES[0]}
 // Refresh offers only after an eligible extraction, for the played level only.
 // A new trio excludes the previous three offers (and the path actually played),
