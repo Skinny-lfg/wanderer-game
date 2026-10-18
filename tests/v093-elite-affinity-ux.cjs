@@ -27,7 +27,7 @@ for(const id of ['tank','caster','vampire','berserker']){
 assert(html.includes('assets/branding/wanderer-logo.webp'),'logo asset path documented');
 assert(['tank','caster','vampire','berserker'].every(id=>html.includes('assets/elites/'+id+'.webp')),'all 4 optimized elite runtime artwork references');
 assert(!html.includes('BROWSER PROTOTYPE V'),'old prototype label removed');
-assert(html.includes('class="version">v0.10.0'),'current version only');
+assert(html.includes('class="version">v0.11.0'),'current version only');
 assert(html.includes('class="huntTargets"'),'Legendary Hunt is directly selectable');
 assert(!html.includes('id="legendaryHuntTarget"'),'old hunt dropdown removed');
 assert(html.includes('backdrop-filter:saturate(.5)'),'background saturation at 50%');
