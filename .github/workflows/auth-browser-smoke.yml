@@ -1,0 +1,49 @@
+name: Browser auth and Account dialog regression
+
+on:
+  push:
+    branches: [development]
+    paths:
+      - online/app.mjs
+      - tests/online-browser.cjs
+      - tests/fixtures/firebase-client.mjs
+      - .github/workflows/auth-browser-smoke.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  auth-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      WANDERER_TEST_URL: http://127.0.0.1:8010
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Prepare Chromium
+        shell: bash
+        run: |
+          if command -v chromium >/dev/null 2>&1; then
+            echo "CHROMIUM_PATH=$(command -v chromium)" >> "$GITHUB_ENV"
+          elif command -v google-chrome >/dev/null 2>&1; then
+            echo "CHROMIUM_PATH=$(command -v google-chrome)" >> "$GITHUB_ENV"
+          else
+            npx playwright install --with-deps chromium
+            CHROME="$(find "$HOME/.cache/ms-playwright" -type f \( -path '*/chrome-linux64/chrome' -o -path '*/chrome-linux/chrome' \) | head -1)"
+            test -n "$CHROME"
+            echo "CHROMIUM_PATH=$CHROME" >> "$GITHUB_ENV"
+          fi
+      - name: Start static test server
+        shell: bash
+        run: |
+          python3 -m http.server 8010 --bind 127.0.0.1 >/tmp/wanderer-auth-browser.log 2>&1 &
+          sleep 2
+          curl --fail http://127.0.0.1:8010/ >/dev/null
+      - name: Google nickname, cloud recovery and Save Character browser tests
+        run: npm run test:browser
