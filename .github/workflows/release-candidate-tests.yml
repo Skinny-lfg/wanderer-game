@@ -30,4 +30,5 @@ jobs:
       - name: Verify distributable only points at new production
         env:
           FIREBASE_PROJECT_ID: wanderer-play
+          RELEASE_VALIDATION: 'true'
         run: node scripts/prepare-hosting.mjs
