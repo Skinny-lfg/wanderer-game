@@ -21,8 +21,8 @@ assert(html.includes('.equipmentLeft,.equipmentRight{display:contents}')&&html.i
 assert(html.includes('class="homeMetrics"')&&!html.includes('<div class="hub">'),'home dashboard has no duplicate menu');
 const homeMarkup=html.slice(html.indexOf('function renderTavern(){'),html.indexOf('function equipItem('));
 assert(homeMarkup.includes('<details class="panel homeChangelog" open>')&&!homeMarkup.includes('<details class="olderChangelog">'),'latest changelog visible without older release history');
-for(const text of ['Legendary gear reworked','Sunder, Shield and Regen','double strikes','bosses','responsive website','equipment and inventory']){
- assert(homeMarkup.includes(text),'v0.10.0 release changelog contains '+text);
+for(const text of ['What&apos;s new · v0.11.0','New Affinity Sigils','Affinity Transfer','Legendary reinforcement','dungeon item readability','Registered accounts with Google or email']){
+ assert(homeMarkup.includes(text),'v0.11.0 release changelog contains '+text);
 }
 assert(!homeMarkup.includes('Legendary Hunt'),'deferred Legendary Hunt no longer advertised');
 assert(!html.includes('${legendaryHuntMarkup(paths)}'),'Legendary Hunt removed from Dungeons for this phase');
@@ -49,8 +49,8 @@ for(const family of ['might','swiftness','wisdom','fortitude','fortune','fury','
 }
 assert(model.includes('maxDungeon>200')&&model.includes('Math.min(200')&&model.includes('length:20'),'cloud saves, leaderboard, milestones support D200');
 assert(loadout.includes('item.tier>200')&&loadout.includes('r.tier<=200'),'public item/rune cap supports D200');
-assert(fb.includes("appVersion:'0.9.2'")&&fb.includes('maxDungeon>200'),'v0.9 feedback with D200');
-assert(rules.includes('d.deepest <= 200')&&rules.includes('match /testSeasons/v092-launch-1/combatSpeedruns/{uid}')&&rules.includes('bestMs <= resource.data.bestMs')&&rules.includes("d.appVersion in ['0.8.1','0.9','0.9.2']"),'Firebase rules support current attempts, best D200 and legacy feedback');
+assert(fb.includes("appVersion:'0.11.0'")&&fb.includes('maxDungeon>200'),'v0.11 feedback with D200');
+assert(rules.includes('d.deepest <= 200')&&rules.includes('match /testSeasons/v092-launch-1/combatSpeedruns/{uid}')&&rules.includes('bestMs <= resource.data.bestMs')&&rules.includes("d.appVersion in ['0.8.1','0.9','0.9.2','0.10.1','0.11.0']"),'Firebase rules support current attempts, best D200 and v0.11 feedback');
 (async()=>{
  const {validateSave,safeProgress,MILESTONES}=await import('../online/model.mjs');
  const {publicLoadout}=await import('../online/public-loadout.mjs');
