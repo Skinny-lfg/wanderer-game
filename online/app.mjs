@@ -1,10 +1,14 @@
 import {publicLoadout,cleanEquipment} from './public-loadout.mjs';
 import {practiceDuel} from './pvp.mjs';
 import {firebaseConfig} from './firebase-config.mjs';
-import {CHARACTERS,character,validateSave,recoverInterruptedSave,summary,safeProgress,SAVE_NAMESPACE} from './model.mjs?v=v0100-character-labels-1';
+import {CHARACTERS,character,nicknameKey,validateSave,recoverInterruptedSave,summary,safeProgress,SAVE_NAMESPACE} from './model.mjs?v=v0100-character-labels-1';
 const game=globalThis.WandererGame,SIGNED_OUT_SLOT='wanderer_account_auth_locked_dev';
 let backendPromise,backend,user=null,profile=null,revision=null,synced='',epoch=0,writing=false,suppress=false,timer=null,dialog=null;
-let ready=false,lastPublished='',lastLoadout='',profileState='loading';
+let ready=false,lastPublished='',lastLoadout='',profileState='loading',pendingRegistrationName='';
+const nicknameDraftKey=uid=>'wanderer_dev_registration_nickname_'+firebaseConfig.projectId+'_'+uid;
+function draftNickname(uid){try{return (sessionStorage.getItem(nicknameDraftKey(uid))||'').slice(0,20);}catch{return '';}}
+function stashNickname(uid,nickname){try{sessionStorage.setItem(nicknameDraftKey(uid),nickname);}catch{/* Session storage may be disabled. */}}
+function clearNickname(uid){try{sessionStorage.removeItem(nicknameDraftKey(uid));}catch{/* Session storage may be disabled. */}}
 let message='Sign in to play',selectedCharacter=game.snapshot().characterId||'wanderer';
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const accountKey=()=>user?'wanderer_account_'+firebaseConfig.projectId.replace(/[^A-Za-z0-9_-]/g,'_')+'_'+user.uid+'_'+SAVE_NAMESPACE:null;
@@ -72,7 +76,7 @@ function action(selector,fn){const element=dialog?.querySelector(selector);if(!e
 function ensureSafeSwitch(allowProtected=false){if(writing)throw new Error('Saving your progress. Please try again in a moment.');if(game.busy())throw new Error('Finish or extract from your expedition before changing accounts or saves.');if(game.blocked()&&!allowProtected)throw new Error('The local save is protected. Reload before switching. Your recovery copies are retained.');}
 function sessionGuard(token){if(token!==epoch)throw new Error('The signed-in account changed. Reopen Account before continuing.');}
 async function connect(){
- if(!backendPromise)backendPromise=import('./firebase-client.mjs?v=v0101-email-auth-1').then(m=>m.createBackend()).then(b=>{
+ if(!backendPromise)backendPromise=import('./firebase-client.mjs?v=v0101-register-modal-2').then(m=>m.createBackend()).then(b=>{
   backend=b;b.watchAuth(async next=>{
    // Do not reopen Account or gate an in-progress game for a duplicate auth event
    // for the already restored user. Login recovery itself still runs on startup.
@@ -94,7 +98,22 @@ async function restoreProfile(token=epoch){
  try{
   const p=await backend.profile();sessionGuard(token);profile=p;profileState=p?'found':'missing';
   selectedCharacter=p?.characterId||game.snapshot().characterId||'wanderer';
-  if(profile)await resumeAccount();else showAccount();
+  if(profile){clearNickname(user.uid);await resumeAccount();return;}
+  // Finish a verified email registration with the nickname entered during sign-up.
+  // Nicknames are not reserved before verification; collisions require a new choice.
+  const draft=draftNickname(user.uid)||pendingRegistrationName;
+  if(draft){
+   try{
+    const created=await backend.createProfile(draft,selectedCharacter);sessionGuard(token);
+    profile=created;profileState='found';pendingRegistrationName='';clearNickname(user.uid);
+    await resumeAccount();return;
+   }catch(error){
+    sessionGuard(token);
+    profileState='missing';status('Choose an available nickname to complete your profile.');
+    showAccount();dialog.querySelector('.onlineError').textContent=errorText(error);return;
+   }
+  }
+  showAccount();
  }catch(error){
   if(token!==epoch)return;
   // A failed profile refresh must expose Retry even if a previous profile is cached.
@@ -156,7 +175,7 @@ function showAccount(){
   if(needsEmailVerification(account))throw Error('Email not verified yet. Open the link and try again.');
   user=account;await restoreProfile(token);
  });
- action('#createProfile',async()=>{ensureSafeSwitch();if(!user||user.isAnonymous||needsEmailVerification(user))throw Error('Verify your email before creating a profile.');const token=epoch;const name=dialog.querySelector('#nickname').value;const p=await backend.createProfile(name,selectedCharacter);sessionGuard(token);profile=p;profileState='found';await resumeAccount();});
+ action('#createProfile',async()=>{ensureSafeSwitch();if(!user||user.isAnonymous||needsEmailVerification(user))throw Error('Verify your email before creating a profile.');const token=epoch;const name=dialog.querySelector('#nickname').value;const p=await backend.createProfile(name,selectedCharacter);sessionGuard(token);profile=p;profileState='found';clearNickname(user.uid);pendingRegistrationName='';await resumeAccount();});
  action('#saveCharacter',async()=>{
   if(game.busy())throw new Error('Change your character after the expedition.');
   const token=epoch;
