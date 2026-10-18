@@ -2559,7 +2559,7 @@ function protectionEntryWarning(){
 function dungeonEquippedSetSummary(){
  const counts=setCounts(),active=Object.entries(counts).filter(([,n])=>n>=2).sort((a,b)=>b[1]-a[1]);
  return '<div class="dungeonEquippedSets" aria-label="Your active equipment set bonuses"><b>Equipped sets</b>'+
- (active.length?active.map(([effect,count])=>'<span class="dungeonSetChip" title="'+esc(ELEMENTS[effect].name)+' · '+setStage(count)+'-piece tier">'+affinityArt(effect)+esc(ELEMENTS[effect].name)+' '+count+'/5</span>').join(''):
+ (active.length?active.map(([effect,count])=>'<span class="dungeonSetChip" title="'+esc(ELEMENTS[effect].name)+' · '+setStage(count)+'-piece tier">'+affinityArt(effect)+esc(ELEMENTS[effect].name)+' '+Math.min(count,5)+'/5</span>').join(''):
  '<span class="small muted">No set bonus active yet</span>')+'</div>';
 }
 function renderDungeons(){wallet();if(completedAttempt()){html('<section class="panel"><h2>🏆 D200 completed!</h2><p>This attempt is finished. Return to the Tavern and choose Start New Attempt to play from D1 again.</p><button id="endGameHome" class="primary">Return to Tavern</button></section>');$('endGameHome').onclick=()=>nav('tavern');return;}const levels=Array.from({length:Math.min(DUNGEON_CAP,state.maxDungeon+4)},(_,i)=>i+1);dungeonPage=null;let paths=getPaths();if(!paths.ids.includes(selectedPath))selectedPath=paths.ids[0];if(state.selectedPath!==selectedPath){state.selectedPath=selectedPath;save();}let s=totalStats(),risk=dungeonDifficulty(state.chosen,s);
