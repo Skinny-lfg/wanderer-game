@@ -21,5 +21,11 @@ assert(rules.includes("provider == 'google.com'"),'Google sign-in must be permit
 assert(rules.includes("provider == 'password'"),'Registered email/password must be permitted');
 assert(!rules.includes("provider != 'anonymous'"),'Never accept unknown sign-in providers by default');
 assert(rules.includes(".get('email_verified', false) == true"),'Email verification must be enforced');
-assert(html.includes('v0101-email-auth-1'),'Main HTML must load updated login module');
+for(const fragment of ['id="registerNickname"','id="registerEmail"','id="registerPassword"','id="registerPasswordConfirm"',
+ 'function showRegistrationForm()','Passwords do not match.','backend.createProfile(draft,selectedCharacter)',
+ "nicknameDraftKey=uid"])
+ assert(app.includes(fragment),'Registration modal or nickname restoration missing: '+fragment);
+assert(app.includes('firebase-config.mjs?v=v0101-dev-config-2'),'App must request versioned development config');
+assert(adapter.includes('firebase-config.mjs?v=v0101-dev-config-2'),'Backend must request versioned development config');
+assert(html.includes('v0101-register-modal-2'),'Main HTML must load updated signup UI');
 console.log('PASS v0.10.1 development auth/guest removal, isolation, verified-email rules and privacy guards');
