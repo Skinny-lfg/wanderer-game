@@ -28,7 +28,7 @@ for(let rank=0;rank<10;rank++){
 assert.equal(item.atk,120);assert.equal(item.def,24);assert.equal(item.hp,48);
 assert.equal(item.effect,baseAffinity);assert.equal(item.legendaryId,skillIdentity);
 assert.equal(spend,8217);
-assert.throws(()=>e.upgradeLegendary(item),/max rank/);
+assert.throws(()=>e.upgradeLegendary(item),/Not eligible|max rank/);
 const save=structuredClone(item);assert.equal(save.upgradeRank,10);
 assert.equal(save.upgradeBase.atk,100);
 assert.equal(e.sigilPrice(100),1000);
