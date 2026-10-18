@@ -1,8 +1,10 @@
 import {publicLoadout,cleanEquipment,cleanPublicRunes,cleanPublicRuneSlots} from './public-loadout.mjs';
 import * as bundledSdk from './vendor/firebase-sdk.mjs';
-import {firebaseConfig,assertDevFirebaseConfig} from './firebase-config.mjs';
+import * as configModule from './firebase-config.mjs?v=v0101-dev-config-2';
+const {firebaseConfig,assertDevFirebaseConfig}=configModule;
 import {nicknameKey,character,cloudRecord,compareRevision,validateSave,recoverInterruptedSave,SEASON,SAVE_NAMESPACE,PUBLIC_LOADOUTS,SPEEDRUN_BOARD,safeProgress,completedD200Time} from './model.mjs?v=v092-combat-hotfix-1';
 export async function createBackend(){
+ if(typeof assertDevFirebaseConfig!=='function')throw new Error('Firebase dev config module is outdated. Refresh the page and update development branch.');
  assertDevFirebaseConfig(firebaseConfig);
  // A rebuilt local bundle is preferred; the version-pinned official CDN supplies
  // the complete modular SDK in development until that bundle is regenerated.
