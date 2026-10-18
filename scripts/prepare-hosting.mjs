@@ -37,7 +37,7 @@ assert(!/wanderer-development-8e3ee|wanderer-test-8f062/.test(config),
 const index = await readFile('index.html', 'utf8');
 assert(/<title>\s*Wanderer v0\.11\.0\s*<\/title>/.test(index),
   'main must contain the reviewed v0.11.0 release before publication');
-assert(/auth-action\.html|email verification/i.test(await readFile('auth-action.html', 'utf8')),
+assert(/online\/auth-action\.mjs/i.test(await readFile('auth-action.html', 'utf8')),
   'custom email handler must exist');
 
 await rm(output, {recursive: true, force: true});
