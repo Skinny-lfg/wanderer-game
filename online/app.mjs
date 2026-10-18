@@ -1,13 +1,15 @@
 import {publicLoadout,cleanEquipment} from './public-loadout.mjs';
 import {practiceDuel} from './pvp.mjs';
+import {firebaseConfig} from './firebase-config.mjs';
 import {CHARACTERS,character,validateSave,recoverInterruptedSave,summary,safeProgress,SAVE_NAMESPACE} from './model.mjs?v=v0100-character-labels-1';
-const game=globalThis.WandererGame,GUEST='wanderer_browser_proto_v01';
+const game=globalThis.WandererGame,SIGNED_OUT_SLOT='wanderer_browser_proto_v01';
 let backendPromise,backend,user=null,profile=null,revision=null,synced='',epoch=0,writing=false,suppress=false,timer=null,dialog=null;
 let ready=false,lastPublished='',lastLoadout='',profileState='loading';
 let message='Sign in to play',selectedCharacter=game.snapshot().characterId||'wanderer';
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const accountKey=()=>user?'wanderer_account_'+user.uid+'_'+SAVE_NAMESPACE:null;
+const accountKey=()=>user?'wanderer_account_'+firebaseConfig.projectId.replace(/[^A-Za-z0-9_-]/g,'_')+'_'+user.uid+'_'+SAVE_NAMESPACE:null;
 function status(text){message=text;}
+function needsEmailVerification(account){return !!account&&!account.emailVerified&&Array.isArray(account.providerData)&&account.providerData.some(p=>p.providerId==='password');}
 function report(error){status(errorText(error));const el=document.getElementById('accountError');el.textContent=message;el.hidden=false;}
 function clearError(){document.getElementById('accountError').hidden=true;}
 function accountLabel(){
@@ -41,7 +43,12 @@ function errorText(error){
  const code=String(error?.code||error?.message||'');
  if(code.includes('permission-denied'))return 'Firebase access denied. The project needs the supplied Firestore Rules. Your local save is safe.';
  if(code.includes('unauthorized-domain'))return 'This site is not an authorized Firebase sign-in domain. Ask the owner to authorize it.';
- if(code.includes('operation-not-allowed'))return 'Guest sign-in is disabled. Enable Anonymous in Firebase Console → Authentication → Sign-in method.';
+ if(code.includes('operation-not-allowed'))return 'This sign-in method is not enabled. Enable Google or Email/Password in the development Firebase project.';
+ if(code.includes('email-already-in-use'))return 'Email already registered. Sign in or reset your password.';
+ if(code.includes('invalid-email'))return 'Enter a valid email address.';
+ if(code.includes('weak-password'))return 'Choose a stronger password of at least 8 characters.';
+ if(code.includes('invalid-credential')||code.includes('wrong-password')||code.includes('user-not-found'))return 'Email or password is incorrect.';
+ if(code.includes('too-many-requests'))return 'Too many attempts. Wait a while before retrying.';
  if(code.includes('popup-blocked'))return 'The sign-in popup was blocked. Allow popups and try again.';
  if(code.includes('popup-closed')||code.includes('cancelled-popup'))return 'Sign-in was cancelled. Please try again.';
  if(code.includes('cloud-conflict'))return 'Another device changed the cloud save. Auto-sync is paused. Review both saves before choosing.';
@@ -65,8 +72,10 @@ async function connect(){
    // for the already restored user. Login recovery itself still runs on startup.
    if(next?.uid&&next.uid===user?.uid&&ready&&game.key()===accountKey())return;
    const previous=user?.uid,token=++epoch;ready=false;gate();clearError();lastPublished='';lastLoadout='';user=next;profile=null;profileState='loading';revision=null;synced='';clearTimeout(timer);timer=null;
-   if(previous&&previous!==next?.uid&&!game.busy()&&!game.blocked()){suppress=true;try{game.switchSave(GUEST);}finally{suppress=false;gate();}}
+   if(previous&&previous!==next?.uid&&!game.busy()&&!game.blocked()){suppress=true;try{game.switchSave(SIGNED_OUT_SLOT);}finally{suppress=false;gate();}}
    if(!next){gate();status('Sign in to play');showAccount();return;}
+   if(next.isAnonymous){status('Anonymous sign-in is no longer supported.');await b.signOut();return;}
+   if(needsEmailVerification(next)){profileState='unverified';status('Verify your email before playing.');showAccount();return;}
    await restoreProfile(token);
   });return b;
  }).catch(error=>{backendPromise=null;throw error;});
