@@ -124,7 +124,67 @@ async function restoreProfile(token=epoch){
 }
 function characterPicker(){return `<div class="characterPicker">${CHARACTERS.map(c=>`<button type="button" data-character="${c.id}" aria-pressed="${selectedCharacter===c.id}"><img src="${c.avatar}" alt="${esc(c.name)}"><span>${esc(c.name)}</span></button>`).join('')}</div><p class="small muted">Cosmetic only. No classes or stat bonuses.</p>`;}
 function bindCharacters(){dialog.querySelectorAll('[data-character]').forEach(b=>b.onclick=()=>{selectedCharacter=b.dataset.character;dialog.querySelectorAll('[data-character]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));});}
-function loginMethodsMarkup(){return `<section class="authMethods"><button type="button" id="googleSignIn" class="primary">Continue with Google</button><div class="loginDivider">or use email</div><div class="loginInputs"><label>Email<input id="loginEmail" type="email" autocomplete="email" maxlength="254" placeholder="you@example.com" required></label><label>Password<input id="loginPassword" type="password" autocomplete="current-password" minlength="8" maxlength="128" placeholder="At least 8 characters"></label></div><div class="buttonRow"><button type="button" id="emailSignIn" class="primary">Sign in</button><button type="button" id="emailRegister">Create account</button><button type="button" id="passwordReset" class="ghost">Forgot password?</button></div><p id="passwordResetStatus" role="status" class="small muted"></p></section>`;}
+function loginMethodsMarkup(){return `<section class="authMethods" aria-label="Sign in to Wanderer">
+ <p class="authIntro">Continue your journey</p>
+ <button type="button" id="googleSignIn" class="authGoogleButton"><span aria-hidden="true" class="authGoogleMark">G</span>Continue with Google</button>
+ <div class="loginDivider"><span>or sign in with email</span></div>
+ <form id="emailLoginForm" class="authLoginForm">
+  <label for="loginEmail">Email address</label>
+  <input id="loginEmail" type="email" autocomplete="email" maxlength="254" placeholder="you@example.com" required>
+  <label for="loginPassword">Password</label>
+  <input id="loginPassword" type="password" autocomplete="current-password" maxlength="128" placeholder="Enter your password" required>
+  <div class="authLoginFooter"><button type="button" id="passwordReset" class="authTextButton">Forgot password?</button></div>
+  <button type="submit" id="emailSignIn" class="primary authWideButton">Sign in</button>
+ </form>
+ <p class="authCreatePrompt">New to Wanderer? <button type="button" id="emailRegister" class="authTextButton">Create an account</button></p>
+ <p id="passwordResetStatus" role="status" class="small muted"></p>
+ </section>`;}
+function showRegistrationForm(){
+ ensureSafeSwitch();
+ const content=`<section class="authRegistration">
+ <p class="small muted">Choose a public identity for Wanderer. Your email and Google name remain private.</p>
+ <form id="registrationForm" class="authRegisterForm">
+  <label for="registerNickname">Public nickname</label>
+  <input id="registerNickname" name="nickname" type="text" minlength="3" maxlength="20" pattern="[A-Za-z0-9_]{3,20}" autocomplete="nickname" spellcheck="false" placeholder="3–20 letters, numbers or _" required>
+  <label for="registerEmail">Email address</label>
+  <input id="registerEmail" name="email" type="email" autocomplete="email" maxlength="254" placeholder="you@example.com" required>
+  <label for="registerPassword">Password</label>
+  <input id="registerPassword" name="password" type="password" autocomplete="new-password" minlength="8" maxlength="128" placeholder="At least 8 characters" required>
+  <label for="registerPasswordConfirm">Confirm password</label>
+  <input id="registerPasswordConfirm" name="confirmPassword" type="password" autocomplete="new-password" minlength="8" maxlength="128" placeholder="Repeat your password" required>
+  <p class="small muted">We'll email you a verification link. Your nickname is assigned after verification, provided it's still available.</p>
+  <div class="authRegisterActions"><button type="button" id="backToLogin" class="ghost">Back to sign in</button><button type="submit" id="submitRegistration" class="primary">Create account</button></div>
+ </form></section>`;
+ const current=modal('Create your account',content);
+ current.classList.add('authRegistrationDialog');current.dataset.account='true';
+ current.querySelector('[data-close]').hidden=true;
+ current.addEventListener('cancel',e=>{e.preventDefault();showAccount();});
+ current.querySelector('#registerNickname').value=pendingRegistrationName;
+ current.querySelector('#backToLogin').onclick=showAccount;
+ current.querySelector('#registrationForm').onsubmit=async event=>{
+  event.preventDefault();
+  if(!current.isConnected)return;
+  const form=current.querySelector('#registrationForm');
+  if(!form.reportValidity())return;
+  const submit=current.querySelector('#submitRegistration'),message=current.querySelector('.onlineError');
+  try{
+   submit.disabled=true;message.textContent='';
+   const name=nicknameKey(current.querySelector('#registerNickname').value);
+   const email=current.querySelector('#registerEmail').value.trim();
+   const password=current.querySelector('#registerPassword').value;
+   if(password.length<8)throw Error('Choose a password with at least 8 characters.');
+   if(password!==current.querySelector('#registerPasswordConfirm').value)throw Error('Passwords do not match.');
+   if(!current.querySelector('#registerEmail').checkValidity())throw Error('Enter a valid email address.');
+   pendingRegistrationName=name;
+   const b=await connect(),account=await b.createEmailAccount(email,password);
+   if(account?.uid)stashNickname(account.uid,name);
+   status('Verification email sent. Check your inbox to activate your account.');
+   if(dialog===current)showAccount();
+  }catch(error){pendingRegistrationName='';if(current.isConnected)message.textContent=errorText(error);}
+  finally{if(submit.isConnected)submit.disabled=false;}
+ };
+ current.querySelector('#registerNickname').focus();
+}
 function emailVerificationMarkup(){return `<section class="emailVerification"><h3>Verify your email to continue</h3><p>Open the verification link in your inbox, then return here.</p><div class="buttonRow"><button id="refreshVerification" class="primary">I verified my email</button><button id="resendVerification">Resend verification</button></div><p class="small muted">Check Spam if the message does not arrive.</p></section>`;}
 function loginCredentials(requirePassword=true){
  const input=dialog?.querySelector('#loginEmail'),email=input?.value?.trim()||'';
@@ -137,11 +197,11 @@ function showAccount(){
  accountLabel();
  selectedCharacter=profile?.characterId||game.snapshot().characterId||'wanderer';
  const signedIn=!!user,unverified=needsEmailVerification(user),needsProfile=signedIn&&!unverified&&profileState==='missing';
- const content=`<p>${signedIn?(unverified?'Email verification required':'Signed in')+(profile?' · <b>'+esc(profile.nickname)+'</b>':''):'Sign in to play Wanderer with an account.'}</p>
+ const content=`<p>${signedIn?(unverified?'Email verification required':'Signed in')+(profile?' · <b>'+esc(profile.nickname)+'</b>':''):'Your journey continues here.'}</p>
  ${!signedIn?loginMethodsMarkup():''}
  ${unverified?emailVerificationMarkup():''}
  <p class="small muted accountPrivacy">Public profiles and leaderboards display only your chosen nickname, never your email or Google account name.</p>
- ${needsProfile?'<label class="profileField">Choose a public nickname<input id="nickname" maxlength="20" minlength="3" pattern="[A-Za-z0-9_]{3,20}" autocomplete="username"></label>':''}
+ ${needsProfile?'<label class="profileField">Choose a public nickname<input id="nickname" maxlength="20" minlength="3" pattern="[A-Za-z0-9_]{3,20}" autocomplete="nickname" value="'+esc(draftNickname(user.uid)||pendingRegistrationName)+'"></label>':''}
  ${signedIn&&profileState==='loading'?'<p role="status">Loading your profile…</p>':''}
  ${signedIn&&profileState==='error'?'<p>Your profile could not be loaded. Please retry; you do not need a new nickname.</p><button id="retryProfile">Retry</button>':''}
  ${profile||needsProfile?characterPicker():''}
@@ -151,16 +211,18 @@ function showAccount(){
  ${signedIn?'<button id="googleSignOut">Sign out</button>':''}</div>`;
  modal('Account & Character',content).dataset.account='true';dialog.addEventListener('cancel',e=>{if(!ready)e.preventDefault();});dialog.querySelector('[data-close]').hidden=!ready;bindCharacters();
  action('#googleSignIn',async()=>{ensureSafeSwitch();const b=await connect();await b.signIn();});
- action('#emailSignIn',async()=>{
-  ensureSafeSwitch();const {email,password}=loginCredentials();const b=await connect();
-  await b.signInWithEmail(email,password);
- });
- action('#emailRegister',async()=>{
-  ensureSafeSwitch();const {email,password}=loginCredentials();
-  if(password.length<8)throw Error('Choose a password with at least 8 characters.');
-  const b=await connect();await b.createEmailAccount(email,password);
-  status('Verification email sent. Open it before signing in.');
- });
+ const loginForm=dialog?.querySelector('#emailLoginForm');
+ if(loginForm)loginForm.onsubmit=async event=>{
+  event.preventDefault();if(!loginForm.reportValidity())return;
+  const current=dialog,button=current.querySelector('#emailSignIn');
+  try{
+   button.disabled=true;current.querySelector('.onlineError').textContent='';
+   ensureSafeSwitch();const {email,password}=loginCredentials();
+   const b=await connect();await b.signInWithEmail(email,password);
+  }catch(error){if(current.isConnected)current.querySelector('.onlineError').textContent=errorText(error);}
+  finally{if(button.isConnected)button.disabled=false;}
+ };
+ action('#emailRegister',showRegistrationForm);
  action('#passwordReset',async()=>{
   const {email}=loginCredentials(false),b=await connect();
   await b.sendPasswordReset(email);
