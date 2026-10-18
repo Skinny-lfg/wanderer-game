@@ -12,7 +12,7 @@ for(const method of ['signInWithEmail','createEmailAccount','sendPasswordReset',
 for(const sdkExport of ['createUserWithEmailAndPassword','signInWithEmailAndPassword','sendPasswordResetEmail','sendEmailVerification','getIdToken'])
  assert(source.includes(sdkExport),'Firebase source missing: '+sdkExport);
 assert(config.includes('assertDevFirebaseConfig')&&config.includes('Refusing to connect development'));
-const webAppBlock=config.match(/export const firebaseConfig = \\{([\\s\\S]*?)\\};/)?.[1];
+const webAppBlock=config.split('export const firebaseConfig = {')[1]?.split('};')[0];
 assert(webAppBlock,'A development Web App configuration must exist');
 assert(webAppBlock.includes("projectId: 'wanderer-development-8e3ee'"),'Expected separate development Firebase project');
 assert(!webAppBlock.includes('SET_DEVELOPMENT_'),'Development Web App cannot use placeholder identifiers');
