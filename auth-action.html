@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+ <meta name="theme-color" content="#170d12">
+ <title>Wanderer · Account verification</title>
+ <style>
+ :root{color-scheme:dark;--bg:#100a0e;--panel:#281921;--muted:#c6b0ba;--gold:#dfb76f;--text:#f1e7e5}
+ *{box-sizing:border-box}
+ body{min-height:100svh;margin:0;display:grid;place-items:center;padding:20px;background:linear-gradient(180deg,#170d12bd,#100a0ef2),url('assets/backgrounds/tavern-desktop.webp') center/cover fixed;font:16px system-ui,-apple-system,sans-serif;color:var(--text)}
+ main{width:min(480px,100%);background:linear-gradient(150deg,#422630,#20131b);border:1px solid #977060;border-radius:16px;padding:clamp(22px,5vw,36px);box-shadow:0 20px 80px #000c}
+ .brand{color:var(--gold);font-family:Georgia,serif;letter-spacing:.2em;font-size:16px;text-transform:uppercase;margin:0 0 20px}
+ h1{font-family:Georgia,serif;color:#f5e8e8;font-size:clamp(27px,6vw,35px);margin:0 0 16px}
+ p{line-height:1.55;margin:0 0 17px;color:var(--muted)}
+ .small{font-size:12px}
+ form{display:grid;gap:10px;margin:18px 0}
+ label{font-size:13px;font-weight:700}
+ input{height:46px;min-width:0;border:1px solid #896271;background:#20131c;color:#f7eded;padding:10px;border-radius:9px;font:inherit}
+ input:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid #e8c485;outline-offset:3px}
+ button,.link{display:inline-flex;align-items:center;justify-content:center;padding:12px 18px;min-height:45px;border-radius:9px;font-weight:700;cursor:pointer;font:inherit;text-decoration:none}
+ button{background:#bc9662;color:#21150f;border:1px solid #f3d59a}
+ button:hover{background:#d4ad74}
+ button:disabled{opacity:.5;cursor:wait}
+ .link{border:1px solid #8b6a70;color:#f0d3ab;background:#302029}
+ #status.error{color:#ffadb2}
+ #status.success{color:#a4dfb8}
+ [hidden]{display:none!important}
+ @media(max-width:600px){body{background-image:linear-gradient(180deg,#170d12dd,#100a0ef7),url('assets/backgrounds/tavern-mobile.webp')}}
+ </style>
+</head>
+<body>
+ <main>
+  <p class="brand">Wanderer</p>
+  <h1 id="heading">Secure account action</h1>
+  <p id="status" role="status" aria-live="polite">Checking your secure link…</p>
+  <form id="resetForm" hidden>
+   <label for="newPassword">New password</label>
+   <input id="newPassword" type="password" autocomplete="new-password" minlength="8" maxlength="128" required placeholder="At least 8 characters">
+   <label for="confirmPassword">Confirm password</label>
+   <input id="confirmPassword" type="password" autocomplete="new-password" minlength="8" maxlength="128" required placeholder="Repeat your new password">
+   <button id="submitReset" type="submit">Update password</button>
+  </form>
+  <a class="link" id="returnLink" href="./index.html">Return to Wanderer</a>
+  <p class="small" style="margin-top:15px">For your security, expired or used links cannot be reopened. Request a new email if needed.</p>
+ </main>
+ <script type="module" src="online/auth-action.mjs?v=v0110-1"></script>
+</body>
+</html>
