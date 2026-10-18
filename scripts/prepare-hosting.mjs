@@ -22,7 +22,9 @@ function assert(condition, reason) {
   if (!condition) throw new Error('Refusing Firebase Hosting release: ' + reason);
 }
 if (process.env.GITHUB_ACTIONS) {
-  assert(process.env.GITHUB_REF === 'refs/heads/main' ||\n    (process.env.GITHUB_REF === 'refs/heads/release/v0110-wanderer-play' && process.env.RELEASE_VALIDATION === 'true'),\n    'only main may publish; release branch can validate without deploying');
+  assert(process.env.GITHUB_REF === 'refs/heads/main' ||
+    (process.env.GITHUB_REF === 'refs/heads/release/v0110-wanderer-play' && process.env.RELEASE_VALIDATION === 'true'),
+    'only main may publish; release branch can validate without deploying');
 }
 assert(!process.env.FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID === 'wanderer-play',
   'wrong target Firebase project');
