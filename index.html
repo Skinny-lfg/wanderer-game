@@ -2626,11 +2626,11 @@ function enemyDebuffMarkup(e){
  if(!e)return '';
  const items=[];
  for(const [effect,field] of [['poison','poisonStacks'],['bleed','bleedStacks'],['burn','burnStacks']]){
-  const n=e[field]||0;if(n>0)items.push('<span class="debuff">'+affinityArt(effect)+' '+(effect==='burn'?'Burn':ELEMENTS[effect].name)+' ×'+n+'</span>');
+  const n=e[field]||0;if(n>0)items.push('<span class="debuff">'+affinityArt(effect,true)+' '+(effect==='burn'?'Burn':ELEMENTS[effect].name)+' ×'+n+'</span>');
  }
  const lt=state.run?.legendaryState;if(lt?.enemy===e){if(lt.markUntil>setNow(state.run))items.push('<span class="debuff">✦ Dawn Mark</span>');if(lt.weaken)items.push('<span class="debuff">✦ Next attack weakened</span>');}
- if(e.slowTime>0)items.push('<span class="debuff" title="Frost reduces the enemy attack speed">❄️ Frost · Chilled '+Math.ceil(e.slowTime)+'s</span>');
- if(e.def<e.baseDef)items.push('<span class="debuff">🔨 Sunder −'+(e.baseDef-e.def)+' DEF</span>');
+ if(e.slowTime>0)items.push('<span class="debuff" title="Frost reduces the enemy attack speed">'+affinityArt('slow',true)+' Frost · Chilled '+Math.ceil(e.slowTime)+'s</span>');
+ if(e.def<e.baseDef)items.push('<span class="debuff">'+affinityArt('sunder',true)+' Sunder −'+(e.baseDef-e.def)+' DEF</span>');
  if(e.boss&&e.barrier>0)items.push('<span class="debuff">🛡 Boss Barrier '+Math.round(e.barrier)+'</span>');
  if(e.enraged)items.push('<span class="debuff">🔥 Enraged</span>');
  if(e.miniboss&&e.eliteType){const elite=ELITE_ARCHETYPES[e.eliteType];if(elite)items.unshift('<span class="debuff eliteStatus">'+elite.icon+' '+elite.name+'</span>');}
