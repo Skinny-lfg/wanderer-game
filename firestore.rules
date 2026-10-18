@@ -4,9 +4,9 @@ service cloud.firestore {
   // Development v0.10.1: only registered, verified player identities are writable.
   function verifiedPlayer() {
    return request.auth != null
-    && request.auth.token.firebase.sign_in_provider != 'anonymous'
-    && (request.auth.token.firebase.sign_in_provider != 'password'
-     || request.auth.token.email_verified == true);
+    && request.auth.token.get('firebase', {}).get('sign_in_provider', '') != 'anonymous'
+    && (request.auth.token.get('firebase', {}).get('sign_in_provider', '') != 'password'
+     || request.auth.token.get('email_verified', false) == true);
   }
   function owner(uid) { return verifiedPlayer() && request.auth.uid == uid; }
   function character(id) { return id in ['wanderer','ranger','knight','spellblade','duelist']; }
