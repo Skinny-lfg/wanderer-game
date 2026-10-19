@@ -118,3 +118,13 @@ test('gear can be equipped at camp, but changes are blocked during active combat
  begin(p,'arcane');choosePassive(p,p.run.passiveOffers[0]);choosePath(p,p.run.pathOffers[0]);
  assert.throws(()=>equip(p,1),/during combat/);
 });
+
+test('difficulty picker can replay lower unlocked tiers without skipping progression',()=>{
+ const p=newProfile(902);p.unlocked=4;
+ assert.throws(()=>begin(p,'fury',2,5),/Difficulty not unlocked/);
+ begin(p,'fury',2,2);
+ assert.equal(p.run.level,2);
+ assert.equal(p.unlocked,4);
+ assert.equal(p.run.rooms[0],'combat');
+ assert.equal(p.run.rooms[14],'boss');
+});
