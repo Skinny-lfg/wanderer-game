@@ -15,7 +15,7 @@ const LIMIT=12;
 const MIME={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.webp':'image/webp','.gif':'image/gif','.ico':'image/x-icon','.json':'application/json','.woff':'font/woff','.woff2':'font/woff2','.mp3':'audio/mpeg','.ogg':'audio/ogg'};
 const digest=v=>createHash('sha256').update(String(v)).digest();
 const same=(a,b)=>timingSafeEqual(digest(a),digest(b));
-const loginHTML=(error='')=>`<!doctype html><html lang="pt"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Wanderer — Private Playtest</title><style>
+const loginHTML=(error='',csrf='')=>`<!doctype html><html lang="pt"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Wanderer — Private Playtest</title><style>
 html{font-family:system-ui,sans-serif;background:#0d0e15;color:#eee;color-scheme:dark}
 body{min-height:100svh;display:grid;place-items:center;margin:0;padding:20px;box-sizing:border-box;background:radial-gradient(ellipse at 50% 0,#352639,#101119 66%)}
 main{max-width:390px;width:100%;box-sizing:border-box;padding:30px;border:1px solid #5b4e65;background:#1b1a26;border-radius:15px;box-shadow:0 12px 50px #0008}
@@ -25,7 +25,7 @@ label{display:block;font-size:13px;margin:15px 0 7px;color:#dfd4e1}
 input{box-sizing:border-box;width:100%;border-radius:9px;border:1px solid #766484;background:#11121c;color:#fff;padding:13px;font:inherit}
 button{width:100%;border-radius:9px;border:1px solid #aa8fbb;background:#695478;color:#fff;padding:13px;font:700 15px system-ui,sans-serif;margin-top:22px;cursor:pointer}
 strong{display:block;color:#f2a7a7;margin-top:16px;font-size:13px;text-align:center}
-</style></head><body><main><h1>WANDERER</h1><p>Private v0.12 Playtest<br>Access restricted to the tester.</p><form method="post" action="/__preview/login" autocomplete="off"><label for="user">Username</label><input id="user" name="username" required maxlength="128" autocomplete="username" spellcheck="false"><label for="pass">Password</label><input id="pass" name="password" type="password" required maxlength="256" autocomplete="current-password"><button type="submit">Enter Playtest</button></form>${error?'<strong>Invalid credentials or too many attempts.</strong>':''}<p><small>This prototype does not use production player saves.</small></p></main></body></html>`;
+</style></head><body><main><h1>WANDERER</h1><p>Private v0.12 Playtest<br>Access restricted to the tester.</p><form method="post" action="/__preview/login" autocomplete="off"><input type="hidden" name="_csrf" value="${csrf}"><label for="user">Username</label><input id="user" name="username" required maxlength="128" autocomplete="username" spellcheck="false"><label for="pass">Password</label><input id="pass" name="password" type="password" required maxlength="256" autocomplete="current-password"><button type="submit">Enter Playtest</button></form>${error?'<strong>Invalid credentials, expired form, or too many attempts. Retry or reload.</strong>':''}<p><small>This prototype does not use production player saves.</small></p></main></body></html>`;
 const playtestHTML=`<!doctype html><html lang="pt"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Wanderer v0.12 — Private Playtest</title><link rel="stylesheet" href="/online/v012-prototype.css"></head><body style="margin:0;background:#10101a;color:#eee;font-family:system-ui,sans-serif"><div class="container" style="padding:20px;max-width:800px;margin:auto;text-align:center"><h1 style="font-family:Georgia,serif;color:#ebcaa6">WANDERER — v0.12</h1><p>Protected playtest. No Firebase login or production saves are loaded on this site.</p><p>The prototype opens automatically. If you close it, use the Playtest button below to reopen.</p></div><script type="module" src="/online/v012-prototype.mjs"></script></body></html>`;
 function securityHeaders(res){
  res.setHeader('Cache-Control','no-store, private');
@@ -60,8 +60,16 @@ export function createPrivatePreviewServer({
  if(typeof username!=='string'||!username||username.length>128)throw Error('Set PREVIEW_USERNAME in hosting secret environment variables');
  if(typeof password!=='string'||password.length<12||password.length>256)throw Error('Set a strong PREVIEW_PASSWORD (12–256 characters) in hosting secret environment variables');
  root=path.resolve(root);
- const sessions=new Map(), attempts=new Map();
+ const sessions=new Map(), attempts=new Map(), formTokens=new Map();
  const authHash=digest(password),userHash=digest(username);
+ function showLogin(res,status=200,error='',method='GET'){
+  const now=Date.now();
+  for(const [key,expiry] of formTokens)if(expiry<=now)formTokens.delete(key);
+  while(formTokens.size>=1024)formTokens.delete(formTokens.keys().next().value);
+  const token=randomBytes(24).toString('hex');
+  formTokens.set(digest(token).toString('hex'),now+10*60*1000);
+  return send(res,status,'text/html; charset=utf-8',loginHTML(error,token),method);
+ }
  function validSession(req){
   const token=parseCookies(req.headers.cookie)[COOKIE];
   if(!token||!(/^[a-f0-9]{64}$/.test(token)))return false;
@@ -86,17 +94,24 @@ export function createPrivatePreviewServer({
   const encrypted=req.socket.encrypted||String(req.headers['x-forwarded-proto']||'').split(',')[0].trim()==='https';
   if(!encrypted&&!allowLocalHttp)return serveGuardError(res,403,'HTTPS required',method);
   if(isLogin){
-   if(method==='GET')return send(res,200,'text/html; charset=utf-8',loginHTML(),method);
+   if(method==='GET')return showLogin(res,200,'',method);
    if(method!=='POST')return serveGuardError(res,405,'Method not allowed',method);
    const bucket=rateLimit(req);
-   if(bucket.count>=LIMIT)return send(res,429,'text/html; charset=utf-8',loginHTML('rate'),method);
+   if(bucket.count>=LIMIT)return showLogin(res,429,'rate',method);
    try{
-    const origin=req.headers.origin;
-    if(origin){const expected=process.env.PREVIEW_PUBLIC_ORIGIN||((encrypted?'https://':'http://')+req.headers.host);if(origin!==expected)return serveGuardError(res,403,'Origin mismatch',method);}
+    // A one-use form token protects this endpoint without relying on browser
+    // Origin headers, which can be rewritten or sent as "null" in embedded browsers.
     const form=await formBody(req);
+    const csrf=String(form.get('_csrf')||'');
+    const csrfHash=digest(csrf).toString('hex');
+    const expiry=formTokens.get(csrfHash);
+    formTokens.delete(csrfHash);
+    if(!/^[a-f0-9]{48}$/.test(csrf)||!expiry||expiry<Date.now()){
+     return showLogin(res,403,'form',method);
+    }
     const sentUser=digest(form.get('username')||''),sentPassword=digest(form.get('password')||'');
     if(!timingSafeEqual(sentUser,userHash)||!timingSafeEqual(sentPassword,authHash)){
-     bucket.count++;return send(res,401,'text/html; charset=utf-8',loginHTML('wrong'),method);
+     bucket.count++;return showLogin(res,401,'wrong',method);
     }
     bucket.count=0;
     const token=randomBytes(32).toString('hex');
