@@ -57,7 +57,8 @@ function errorText(error){
  if(code.includes('email-already-in-use'))return 'Email already registered. Sign in or reset your password.';
  if(code.includes('invalid-email'))return 'Enter a valid email address.';
  if(code.includes('weak-password'))return 'Choose a stronger password of at least 8 characters.';
- if(code.includes('invalid-credential')||code.includes('wrong-password')||code.includes('user-not-found'))return 'Email or password is incorrect.';
+ if(code.includes('functions/unauthenticated')||code.includes('invalid-credential')||code.includes('wrong-password')||code.includes('user-not-found'))return 'Email/nickname or password is incorrect.';
+ if(code.includes('functions/not-found')||code.includes('nickname-login-unavailable'))return 'Nickname login is not available yet. Use your email or Google until the server function is deployed.';
  if(code.includes('too-many-requests'))return 'Too many attempts. Wait a while before retrying.';
  if(code.includes('popup-blocked'))return 'The sign-in popup was blocked. Allow popups and try again.';
  if(code.includes('popup-closed')||code.includes('cancelled-popup'))return 'Sign-in was cancelled. Please try again.';
@@ -127,10 +128,10 @@ function bindCharacters(){dialog.querySelectorAll('[data-character]').forEach(b=
 function loginMethodsMarkup(){return `<section class="authMethods" aria-label="Sign in to Wanderer">
  <p class="authIntro">Continue your journey</p>
  <button type="button" id="googleSignIn" class="authGoogleButton"><span aria-hidden="true" class="authGoogleMark">G</span>Continue with Google</button>
- <div class="loginDivider"><span>or sign in with email</span></div>
+ <div class="loginDivider"><span>or sign in with email or nickname</span></div>
  <form id="emailLoginForm" class="authLoginForm">
-  <label for="loginEmail">Email address</label>
-  <input id="loginEmail" type="email" autocomplete="email" maxlength="254" placeholder="you@example.com" required>
+  <label for="loginEmail">Email address or nickname</label>
+  <input id="loginEmail" type="text" autocomplete="username" maxlength="254" autocapitalize="none" spellcheck="false" placeholder="Email or nickname" required>
   <label for="loginPassword">Password</label>
   <input id="loginPassword" type="password" autocomplete="current-password" maxlength="128" placeholder="Enter your password" required>
   <div class="authLoginFooter"><button type="button" id="passwordReset" class="authTextButton">Forgot password?</button></div>
@@ -212,11 +213,15 @@ function showRegistrationForm(){
 }
 function emailVerificationMarkup(){return `<section class="emailVerification"><h3>Verify your email to continue</h3><p>Open the verification link in your inbox, then return here.</p><div class="buttonRow"><button id="refreshVerification" class="primary">I verified my email</button><button id="resendVerification">Resend verification</button></div><p class="small muted">Check Spam if the message does not arrive.</p></section>`;}
 function loginCredentials(requirePassword=true){
- const input=dialog?.querySelector('#loginEmail'),email=input?.value?.trim()||'';
+ const input=dialog?.querySelector('#loginEmail'),identifier=input?.value?.trim()||'';
  const password=dialog?.querySelector('#loginPassword')?.value||'';
- if(!email||!input?.checkValidity())throw Error('Enter a valid email address.');
+ if(!identifier||!input?.checkValidity())throw Error('Enter your email address or nickname.');
+ if(identifier.includes('@')){
+  const validator=document.createElement('input');validator.type='email';validator.value=identifier;
+  if(!validator.checkValidity())throw Error('Enter a valid email address.');
+ }else nicknameKey(identifier);
  if(requirePassword&&!password)throw Error('Enter your password.');
- return {email,password};
+ return {identifier,password};
 }
 function showAccount(){
  accountLabel();
@@ -242,13 +247,15 @@ function showAccount(){
   const current=dialog,button=current.querySelector('#emailSignIn');
   try{
    button.disabled=true;current.querySelector('.onlineError').textContent='';
-   ensureSafeSwitch();const {email,password}=loginCredentials();
-   const b=await connect();await b.signInWithEmail(email,password);
+   ensureSafeSwitch();const {identifier,password}=loginCredentials();
+   const b=await connect();
+   if(identifier.includes('@'))await b.signInWithEmail(identifier,password);
+   else await b.signInWithNickname(identifier,password);
   }catch(error){if(current.isConnected)current.querySelector('.onlineError').textContent=errorText(error);}
   finally{if(button.isConnected)button.disabled=false;}
  };
  action('#emailRegister',showRegistrationForm);
- action('#passwordReset',()=>showPasswordResetForm(dialog?.querySelector('#loginEmail')?.value?.trim()||''));
+ action('#passwordReset',()=>{const hint=dialog?.querySelector('#loginEmail')?.value?.trim()||'';showPasswordResetForm(hint.includes('@')?hint:'');});
  action('#resendVerification',async()=>{
   await backend.resendVerification();status('Verification email sent.');
  });
