@@ -4,7 +4,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
 const root=path.resolve(__dirname,'..'),html=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const boot='if(PHASE1_PREVIEW){phase1Init();render();}else{load();if(!state.merchant)rollShop();save();render();}';
 assert(html.includes(boot),'isolated game bootstrap');
-const fixture=String.raw\`if(PHASE1_PREVIEW){
+const fixture=String.raw`if(PHASE1_PREVIEW){
  phase1Init();
  // Synthetic test-only loadout: exercises the original 15-Plane battle progression quickly,
  // without altering the game's actual enemy HP, rewards, attack code or balancing.
@@ -33,7 +33,7 @@ const fixture=String.raw\`if(PHASE1_PREVIEW){
   illegalPotion:()=>phase3UsePotion('health')
  };
  render();
-}else{load();if(!state.merchant)rollShop();save();render();}\`;
+}else{load();if(!state.merchant)rollShop();save();render();}`
 assert(fixture.includes('__phase3Audit'));
 const pageHtml=html.replace(boot,fixture);
 const types={'.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.webp':'image/webp','.png':'image/png','.svg':'image/svg+xml','.html':'text/html'};
