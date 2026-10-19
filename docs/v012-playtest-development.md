@@ -4,7 +4,7 @@
 **Safety:** intentionally uses \`wanderer_v012_prototype_local_v1\`, not the existing browser/account keys. No production/cloud/Firebase save schema is migrated or overwritten. Main branch remains unchanged.
 
 ## Access
-Open development's index.html through an HTTP server (do not open as file:// because ES modules need HTTP). A **⚗ v0.12 Playtest** floating button appears in the lower-right corner. Use the button to enter a self-contained 15-room experimental adventure. Closing it returns to the classic Wanderer. The playtest state resumes if reopened, while permanent prototype gear is retained after victory/defeat.
+Open development's index.html through an HTTP server (do not open as file:// because ES modules need HTTP). A **⚗ v0.12 Playtest** button appears below the classic game content; alternatively append ?playtest=v012 to the local URL. Use the button to enter a self-contained 15-room experimental adventure. Closing it returns to the classic Wanderer. The playtest state resumes if reopened, while permanent prototype gear is retained after victory/defeat.
 
 ## Implemented
 - Fifteen rooms: **seven normal, two elite, two chest, two events, one altar, one boss**. The first room is always normal combat and the fifteenth is always a boss. Nonfinal positions are seeded and randomized.
