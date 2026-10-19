@@ -65,3 +65,26 @@ test('reject mismatched login origins and rate-limit wrong passwords',async()=>{
   assert.equal(last.status,429);
  }finally{await env.close();}
 });
+
+test('Railway proxy origin uses configured public origin but still blocks foreign origins',async()=>{
+ const env=await start(),previous=process.env.PREVIEW_PUBLIC_ORIGIN;
+ process.env.PREVIEW_PUBLIC_ORIGIN='https://preview.example.test';
+ try{
+  const credentials=new URLSearchParams({username:'private_owner',password:'test-only-long-password-unique'});
+  const good=await request(env.base,'/__preview/login',{
+   method:'POST',
+   headers:{Origin:'https://preview.example.test','Content-Type':'application/x-www-form-urlencoded','X-Forwarded-Proto':'https'},
+   body:credentials
+  });
+  assert.equal(good.status,303,'must accept public Origin even if upstream Host is localhost');
+  const bad=await request(env.base,'/__preview/login',{
+   method:'POST',
+   headers:{Origin:'https://unknown.example.test','Content-Type':'application/x-www-form-urlencoded','X-Forwarded-Proto':'https'},
+   body:credentials
+  });
+  assert.equal(bad.status,403,'must still reject cross-origin login attempts');
+ }finally{
+  if(previous===undefined)delete process.env.PREVIEW_PUBLIC_ORIGIN;else process.env.PREVIEW_PUBLIC_ORIGIN=previous;
+  await env.close();
+ }
+});
