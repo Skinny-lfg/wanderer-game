@@ -79,6 +79,7 @@ async function run(){
    });
    await page.goto(base+'/?expeditionPhase1=1',{waitUntil:'domcontentloaded'});
    await page.locator('[data-phase1-expedition="1"]').waitFor({timeout:12000});
+   assert.equal(await page.locator('body').evaluate(el=>el.classList.contains('phase3IntegratedPreview')),true,'Phase 3 preview-specific responsive CSS is enabled');
    assert.equal(await page.locator('.phase3GearTile').count(),9,'nine original equipment slots');
    assert.equal(await page.locator('[data-phase3-potion]').count(),0,'no Camp potion buttons');
    assert.equal(await page.evaluate(()=>__phase3Audit.illegalPotion()),false,'API blocks Camp potions');
@@ -127,8 +128,11 @@ async function run(){
     assert((await page.locator('#enemyPortrait').getAttribute('src')).startsWith('assets/'),'classic original mob, Elite or Boss art');
     assert.equal(await page.locator('[data-phase3-potion]').count(),0,'no combat potions');
     const initialHeight=await page.locator('#scene').evaluate(n=>n.getBoundingClientRect().height);
+    assert(initialHeight>=260,'scene remains legible at '+width+'px; height was '+initialHeight);
     for(let tries=0;tries<180;tries++){
      const data=await page.evaluate(()=>__phase3Audit.tick());
+     const liveHeight=await page.evaluate(()=>document.querySelector('#scene')?.getBoundingClientRect().height??null);
+     if(liveHeight!==null)assert(Math.abs(liveHeight-initialHeight)<2,'combat arena must not jump in size between Waves at '+width+'px: '+initialHeight+' → '+liveHeight);
      if(data.stage==='finished'||data.stage==='failed'||(data.stage==='choice'&&data.index===plane+1))break;
      await page.waitForTimeout(8);
      if(tries===179)throw Error('Plane '+plane+' failed to finish: '+JSON.stringify(data));
@@ -137,7 +141,7 @@ async function run(){
     const next=await page.evaluate(()=>__phase3Audit.snapshot());
     assert.notEqual(next.stage,'failed','no player death '+plane);
     assert.equal(next.index,plane===15?15:plane+1,'progresses exactly one Plane');
-    assert(initialHeight>300,'combat scene has stable size');
+    assert(initialHeight>=260,'combat scene has stable size');
     assert((await page.evaluate(()=>document.documentElement.scrollWidth))<=width+8,'no horizontal overflow '+width);
    }
    assert.equal(await page.evaluate(()=>__phase3Audit.snapshot().stage),'finished');
