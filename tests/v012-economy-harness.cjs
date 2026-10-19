@@ -27,7 +27,8 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
  phase1Init();
  globalThis.audit={
   state:()=>state,controller:()=>phase1Controller,build:()=>phase1Build,draft:()=>phase1Draft,
-  start:phase1Begin,select:phase1Choose,passive:phase2ChoosePassive,element:phase2ChooseElement,
+  start:phase1Begin,initial:phase2ChooseInitial,select:phase1Choose,enter:phase1Enter,passive:phase2ChoosePassive,element:phase2ChooseElement,
+  passiveIcons:phase2PassiveIcons,initialPassive:WandererV012Buildcraft.initial,
   tick:updateFight,potion:phase3UsePotion,reroll:phase3Reroll,win:phase1WaveWon,death:phase1Death,abandon:phase1Abandon,
   now:setNow,ready:setReady,heal:setHeal,
   stats:phase2Stats,baseStats:totalStats,makeItem,

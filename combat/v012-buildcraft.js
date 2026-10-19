@@ -56,11 +56,11 @@ const P=[
 ].map(([family,id,name,description,requires=[],element=null])=>Object.freeze({family,id,name,description,requires,element,max:element||requires.length?1:2}));
 const BY_ID=Object.fromEntries(P.map(p=>[p.id,p]));
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
-function create(){return {element:null,picks:[],cooldowns:Object.create(null),runtime:{frenzyUntil:0,counterBlock:0,counterBarrier:0,spellblade:false,magicHits:0,lastStand:false,lastSpellAt:-999}};}
+function create(){return {element:null,initialFamily:null,initialPassive:null,picks:[],cooldowns:Object.create(null),runtime:{frenzyUntil:0,counterBlock:0,counterBarrier:0,spellblade:false,magicHits:0,lastStand:false,lastSpellAt:-999}};}
 function rank(b,id){return b?.picks?.filter(x=>x===id).length||0;}
 function hasFamily(b,family){return Array.isArray(b?.families)&&b.families.includes(family);}
 function eligible(b,family){
- if(!FAMILIES.includes(family)||!hasFamily(b,family))return [];
+ if(!FAMILIES.includes(family)||!hasFamily(b,family)||family==='magic'&&!b.element)return [];
  return P.filter(p=>p.family===family&&p.requires.every(f=>hasFamily(b,f))&&(!p.element||p.element===b.element)&&rank(b,p.id)<p.max);
 }
 function options(b,family,rng=Math.random){
@@ -80,6 +80,14 @@ function choose(b,family,id,offers){
  b.picks.push(id);return p;
 }
 function element(b,id){if(!hasFamily(b,'magic')||!elements.includes(id)||b.element!==null)throw Error('Magic element already chosen or ineligible');b.element=id;return id;}
+// Existing effects only; grant exactly one starter after the initial affinity (and Magic element) is chosen.
+function initial(b,family){
+ if(b.initialFamily||!hasFamily(b,family)||family==='magic'&&!b.element)throw Error('Initial passive unavailable');
+ const id=family==='magic'?({fire:'kindling',frost:'deep_winter',lightning:'overcharge'})[b.element]:
+  ({blood:'bleeding_edge',decay:'toxic_touch',vitality:'strong_heart',aegis:'iron_skin',fury:'quick_hands'})[family];
+ if(!BY_ID[id])throw Error('Unknown initial affinity');
+ b.initialFamily=family;b.initialPassive=id;b.picks.push(id);return BY_ID[id];
+}
 function ready(b,id,now,seconds){if((b.cooldowns[id]??-1e10)>now)return false;b.cooldowns[id]=now+seconds;return true;}
 function mods(b,base){
  const s={...base},h=rank(b,'strong_heart'),a=rank(b,'iron_skin'),q=rank(b,'quick_hands'),p=rank(b,'precision');
@@ -182,6 +190,6 @@ function speed(b,now){return b?.runtime?.frenzyUntil>now?1.10:1;}
 function enemyHealMultiplier(b,e){return 1-(e.v012Rot?.length ? Math.min(.7,.35*rank(b,'wither')) : 0);}
 function nextCost(b){return Math.max(4,Math.round(8*(1-.12*rank(b,'efficient_cast'))));}
 function resetWave(b,e){e.v012Rot=[];e.v012Shock=0;}
-function clear(b){if(!b)return;b.picks.length=0;b.element=null;b.families=[];b.cooldowns=Object.create(null);b.runtime={frenzyUntil:0,counterBlock:0,counterBarrier:0,spellblade:false,magicHits:0,lastStand:false,lastSpellAt:-999};}
-root.WandererV012Buildcraft=Object.freeze({CATALOG:P,FAMILIES,ELEMENTS:elements,create,rank,eligible,options,choose,element,mods,onAttack,onCast,onSecond,incoming,onDefend,onKill,survive,speed,enemyHealMultiplier,nextCost,resetWave,clear});
+function clear(b){if(!b)return;b.picks.length=0;b.element=null;b.initialFamily=null;b.initialPassive=null;b.families=[];b.cooldowns=Object.create(null);b.runtime={frenzyUntil:0,counterBlock:0,counterBarrier:0,spellblade:false,magicHits:0,lastStand:false,lastSpellAt:-999};}
+root.WandererV012Buildcraft=Object.freeze({CATALOG:P,FAMILIES,ELEMENTS:elements,create,initial,rank,eligible,options,choose,element,mods,onAttack,onCast,onSecond,incoming,onDefend,onKill,survive,speed,enemyHealMultiplier,nextCost,resetWave,clear});
 })(globalThis);

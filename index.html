@@ -1392,7 +1392,7 @@ const LEGENDARY_GEAR_DEPENDENCIES={
  'soul-reaver':'Drain application; no current Expedition source',
  'hammer-of-the-sunforge':'Sunder application; no current Expedition source',
  'sunpiercer-longbow':'Nature healing; no current Expedition source',
- 'fang-of-the-sunbreaker':'Poison stacks; Decay Rot is a different status',
+ 'fang-of-the-sunbreaker':'Poison from Expedition Decay; Rot alone does not count',
  'signet-of-the-dawnforged':'weapon affinity procs; inactive after their removal',
  'pendant-of-the-first-flame':'Burn from Expedition Magic',
  'crescent-of-the-emberveil':'Bleed from Expedition Blood',
@@ -2096,7 +2096,7 @@ function wallet(){if(PHASE1_PREVIEW){$('wallet').innerHTML='<span class="token">
 function render(){if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked)){phase5RenderBlocked();return;}if(PHASE1_PREVIEW){wallet();if(view==='combat')renderCombat();else if(view==='equipment')renderStash();else if(view==='forge')renderForge();else if(view==='merchant')renderMerchant();else renderPhase1();return;}if(!hasRestoredInitialView){hasRestoredInitialView=true;restoreView();}rememberView();wallet();if(view==='tavern')renderTavern();else if(view==='equipment')renderStash();else if(view==='forge')renderForge();else if(view==='merchant')renderMerchant();else if(view==='dungeons')renderDungeons();else if(view==='combat')renderCombat();if(state.pendingRuneReward)showPendingRuneReward();}
 function html(s){
  const previewReturn=PHASE1_PREVIEW&&['equipment','forge','merchant'].includes(view);
- $('screen').innerHTML=(previewReturn?'<div class="phase3ReturnBar"><button id="phase3Return" class="ghost" type="button">← Back to '+(phase1Controller?.state.stage==='choice'?'Planes':'Camp')+'</button><span class="small muted">Preview equipment and vendors · no cloud saves</span></div>':'')+s;
+ $('screen').innerHTML=(previewReturn?'<div class="phase3ReturnBar"><button id="phase3Return" class="ghost" type="button">← Back to '+(phase1Controller?.state.stage==='choice'?'Realms':'Camp')+'</button><span class="small muted">Preview equipment and vendors · no cloud saves</span></div>':'')+s;
  if(previewReturn){const back=$('phase3Return');if(back)back.onclick=()=>phase3Go('phase1');}
 }
 function formatItemStat(n){const x=Number(n)||0;return Number(x.toFixed(2)).toString()}
@@ -3316,26 +3316,47 @@ function phase2MagicTick(r){
  WandererV012Buildcraft.onCast(b,ctx);
  combatEffect('Wand',({fire:'burn',frost:'slow',lightning:'shock'})[b.element]);
 }
+function phase2ChooseInitial(family){
+ if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked))return false;
+ const g=phase1Controller.state;
+ if(g.stage!=='choice'||g.initialFamily||phase1Draft||!phase1Build)return false;
+ phase1Controller.chooseInitial(family);phase1Build.families=g.families;
+ if(family==='magic')phase1Draft={kind:'initial',family,step:'element'};
+ else WandererV012Buildcraft.initial(phase1Build,family);
+ phase5Persist();render();return true;
+}
 function phase2ChooseElement(id){
  if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked))return false;
- if(!phase1Draft||phase1Draft.step!=='element')return;
- WandererV012Buildcraft.element(phase1Build,id);phase1Draft.step='passive';
- phase1Draft.options=WandererV012Buildcraft.options(phase1Build,phase1Draft.plane.family);renderPhase1();
+ const draft=phase1Draft;if(!draft||draft.step!=='element')return false;
+ WandererV012Buildcraft.element(phase1Build,id);phase1Draft=null;
+ if(draft.kind==='initial')WandererV012Buildcraft.initial(phase1Build,'magic');
+ if(!phase5Persist())return false;
+ if(draft.kind==='entry')phase2Launch(draft.plane);else render();
+ return true;
 }
 function phase2ChoosePassive(id){
  if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked))return false;
- const draft=phase1Draft;if(!draft||draft.step!=='passive')return;
+ const draft=phase1Draft,g=phase1Controller.state;
+ if(!draft||draft.kind!=='reward'||draft.step!=='passive'||!g.rewardPending||state.run)return false;
  WandererV012Buildcraft.choose(phase1Build,draft.plane.family,id,draft.options);
- phase1Draft=null;phase2Launch(draft.plane);
+ phase1Controller.claimReward();phase1Draft=null;
+ phase3ClampVitals();phase5Persist();render();return true;
 }
 function phase1Choose(id){
  if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked))return false;
- if(phase1Draft||!phase1Build)return;
- const plane=phase1Controller.select(id);phase1Build.families=phase1Controller.state.families;
- phase1Draft={plane,step:plane.family==='magic'&&!phase1Build.element?'element':'passive',options:[]};
- if(phase1Draft.step==='passive')phase1Draft.options=WandererV012Buildcraft.options(phase1Build,plane.family);
- view='phase1';phase5Persist();render();
+ if(phase1Draft||!phase1Build)return false;
+ phase1Controller.select(id);view='phase1';phase5Persist();render();return true;
 }
+function phase1Enter(){
+ if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked))return false;
+ if(phase1Draft||!phase1Build||state.run)return false;
+ const plane=phase1Controller.enter();phase1Build.families=phase1Controller.state.families;
+ if(plane.family==='magic'&&!phase1Build.element){
+  phase1Draft={kind:'entry',plane,family:'magic',step:'element'};phase5Persist();render();
+ }else if(phase5Persist())phase2Launch(plane);
+ return true;
+}
+
 function phase2Launch(plane){
  const stats=phase2Stats();
  const hp=phase1Vitals?Math.min(stats.maxhp,Math.max(1,phase1Vitals.hp)):stats.maxhp;
@@ -3345,7 +3366,7 @@ function phase2Launch(plane){
  loot:[],valuables:[],gold:0,fragments:0,eliteType:rollEliteArchetype(),
  playerHealingDebuffUntil:0,combatSeconds:0,setCooldowns:{...(phase1Continuity?.setCooldowns||{})},secondWindUsed:phase1Continuity?.secondWindUsed||false,
  legendaryState:phase1Continuity?.legendaryState||null,legendaryCastCount:phase1Continuity?.legendaryCastCount||0,legendaryAttackCount:phase1Continuity?.legendaryAttackCount||0};
- view='combat';logEntries=[];addLog('Expedition '+state.run.tier+' · Plane '+phase1Controller.state.planeIndex+' · '+plane.name,'good');phase1StartWave();
+ view='combat';logEntries=[];addLog('Expedition '+state.run.tier+' · Realm '+phase1Controller.state.planeIndex+' · '+plane.name,'good');phase1StartWave();
 }
 function phase1StartWave(){
  if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked))return false;
@@ -3405,8 +3426,12 @@ function phase1WaveWon(){
   // Existing stock is retained; new progression does not grant free vendor rerolls.
   if(state.merchant)state.merchant.refreshCost=16+merchantTier()*4;
  }
+ if(!result.expeditionComplete){
+  const plane=phase1Controller.state.rewardPending;
+  phase1Draft={kind:'reward',plane,step:'passive',options:WandererV012Buildcraft.options(phase1Build,plane.family)};
+ }
  if(!phase5Persist())return;
- addLog(result.expeditionComplete?'Expedition boss defeated!':'Plane cleared. Select your next Plane.','good');
+ addLog(result.expeditionComplete?'Expedition boss defeated!':'Realm cleared. Select your next Realm.','good');
  renderCombat();
  setTimeout(()=>{if(state.run===r){state.run=null;view='phase1';render();}},650);
 }
@@ -3425,9 +3450,9 @@ function phase1DecorateCombat(){
  const classicTheme=THEMES.find(t=>t.id===g.selected?.id);
  const arena=$('scene');if(arena&&classicTheme)arena.style.backgroundImage='url("'+dungeonImage(classicTheme)+'")';
  const heading=document.querySelector('.combatDungeonHeading');
- if(heading)heading.textContent='Expedition '+g.expedition+' · Plane '+r.phase1Plane+' / 15';
+ if(heading)heading.textContent='Expedition '+g.expedition+' · Realm '+r.phase1Plane+' / 15';
  const header=heading?.parentElement?.querySelector('p');
- if(header)header.textContent=r.status==='fight'?'Wave '+g.wave+'/'+r.planeWaves+' · '+r.planeName+' · '+WandererV012Expedition.FAMILY_NAMES[r.planeFamily]:'Plane '+r.phase1Plane+' cleared · Rewards secured';
+ if(header)header.textContent=r.status==='fight'?'Wave '+g.wave+'/'+r.planeWaves+' · '+r.planeName+' · '+WandererV012Expedition.FAMILY_NAMES[r.planeFamily]:'Realm '+r.phase1Plane+' cleared · Rewards secured';
  document.querySelectorAll('.combatDecisionPanel,.nextWaveOdds').forEach(el=>el.remove());
  const leave=$('leave'),next=$('nextFight');if(leave)leave.remove();if(next)next.remove();
  const actions=document.querySelector('.combatActions');
@@ -3442,14 +3467,14 @@ function phase1DecorateCombat(){
   if(region){const box=document.createElement('div');box.className='phase2PassiveBar';box.textContent='Temporary build: '+phase1Build.picks.map(id=>WandererV012Buildcraft.CATALOG.find(p=>p.id===id)?.name).filter(Boolean).join(' · ')+(phase1Build.element?' · Magic: '+phase1Build.element:'');region.prepend(box);}
  }
  const title=document.querySelector('.combatExpeditionDetails h2');
- if(title)title.textContent='Plane Rewards · Preview';
+ if(title)title.textContent='Realm Rewards · Preview';
  const loot=document.querySelector('.combatExpeditionDetails .runLootHeading');
  if(loot)loot.textContent='Equipment awarded immediately';
 }
 // Phase 3 preview navigator. Classic item, comparison, Rune and vendor handlers are reused;
 // only the normal Account, save and dungeon navigation stay disconnected from this memory-only run.
 function phase3CanPrepare(){
- return PHASE1_PREVIEW&&phase1Controller?.state.stage==='choice'&&!phase1Draft&&!state.run;
+ return PHASE1_PREVIEW&&phase1Controller?.state.stage==='choice'&&!!phase1Controller.state.initialFamily&&!phase1Controller.state.rewardPending&&!phase1Draft&&!state.run;
 }
 function phase3IsBetweenPlanes(){return phase3CanPrepare()&&phase1Controller.state.planeIndex>1;}
 function phase3Go(to){
@@ -3465,7 +3490,7 @@ function phase3RenderNav(){
  if(state.run){el.innerHTML='<span class="small muted">⚔ Expedition combat · Gear and potions locked</span>';return;}
  const stage=phase1Controller?.state.stage||'camp';
  if(phase1Draft){el.innerHTML='<span class="small muted">Choose your temporary passive before entering combat</span>';return;}
- const destinations=[['phase1',stage==='choice'?'Planes':'Camp'],['equipment','Equipment / Runes']];
+ const destinations=[['phase1',stage==='choice'?'Realms':'Camp'],['equipment','Equipment / Runes']];
  if(['camp','finished','failed'].includes(stage))destinations.push(['forge','Forge'],['merchant','Merchant']);
  el.innerHTML='<div class="phase3Nav">'+destinations.map(([id,label])=>'<button type="button" class="tiny '+(view===id?'primary':'ghost')+'" data-phase3-nav="'+id+'">'+label+'</button>').join('')+'</div>';
  Q('[data-phase3-nav]').forEach(button=>button.onclick=()=>phase3Go(button.dataset.phase3Nav));
@@ -3478,7 +3503,7 @@ function phase3Vitals(){
 }
 function phase3UsePotion(kind){
  if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked))return false;
- // Only the safe interval AFTER a Plane, not Camp, first Plane, passives or combat.
+ // Only the safe interval AFTER a Realm, not Camp, first Realm, passives or combat.
  if(!phase3IsBetweenPlanes()||!['health','mana'].includes(kind)||!phase3Supplies?.[kind])return false;
  const vitals=phase3Vitals(),key=kind==='health'?'hp':'mp',max=kind==='health'?'maxhp':'maxmp';
  if(vitals[max]<=0||vitals[key]>=vitals[max]-0.0001)return false;
@@ -3487,17 +3512,26 @@ function phase3UsePotion(kind){
  phase1Vitals.maxmp=vitals.maxmp;
  phase3Supplies[kind]--;view='phase1';phase5Persist();render();return true;
 }
-function phase3Reroll(){
+function phase3Reroll(index){
  if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked))return false;
- if(!phase3CanPrepare()||phase1Controller.state.rerollsLeft<1)return false;
- phase1Controller.reroll();view='phase1';phase5Persist();render();return true;
+ if(!phase3CanPrepare()||!phase1Controller.state.initialFamily||!Number.isInteger(index)||index<0||index>2||phase1Controller.state.rerollsByRealm[phase1Controller.state.planeIndex-1][index]<1)return false;
+ phase1Controller.reroll(index);view='phase1';phase5Persist();render();return true;
 }
+const PHASE2_FAMILY_GLYPHS={blood:'bleed',decay:'poison',vitality:'regen',aegis:'shield',fury:'crit',magic:'shock'};
+function phase2FamilyIcon(family){
+ const glyph=PHASE2_FAMILY_GLYPHS[family];if(!glyph)return '';
+ return affinityArt(glyph,true).replace('aria-label="'+esc(ELEMENTS[glyph].name)+' affinity"','aria-label="'+WandererV012Expedition.FAMILY_NAMES[family]+' affinity"');
+}
+function phase2PassiveIcons(passive){
+ return '<span class="phase2PassiveIcons">'+(passive.requires.length?passive.requires:[passive.family]).map(phase2FamilyIcon).join('')+'</span>';
+}
+
 function phase3PassivesMarkup(){
  const picks=phase1Build?.picks||[],counts=new Map();
  for(const id of picks)counts.set(id,(counts.get(id)||0)+1);
  const rows=[...counts].map(([id,rank])=>{
   const p=WandererV012Buildcraft.CATALOG.find(x=>x.id===id);if(!p)return '';
-  return '<li><b>'+esc(p.name)+' · Rank '+rank+'/'+p.max+'</b><small>'+esc(p.description)+'</small></li>';
+  return '<li>'+phase2PassiveIcons(p)+'<b>'+esc(p.name)+' · Rank '+rank+'/'+p.max+'</b><small>'+esc(p.description)+'</small></li>';
  });
  return '<details class="phase3Passives"><summary>Active Expedition Passives ('+picks.length+')</summary>'+
  '<p class="small muted">Temporary effects disappear on victory or defeat; equipment and Legendary abilities remain independent.</p>'+
@@ -3511,30 +3545,34 @@ function renderPhase1(){
  if(phase4ClaimOverflow())phase5Persist();
  if(state.pendingRuneReward&&!state.run)showPendingRuneReward();
  const g=phase1Controller.state,stats=phase3Vitals();
- const familyGlyph={blood:'bleed',decay:'poison',vitality:'regen',aegis:'shield',fury:'crit',magic:'shock'};
- const familyLabel=f=>affinityArt(familyGlyph[f])+' '+WandererV012Expedition.FAMILY_NAMES[f];
+ const familyLabel=f=>phase2FamilyIcon(f)+' '+WandererV012Expedition.FAMILY_NAMES[f];
+ if(g.stage==='choice'&&!g.initialFamily){
+  html('<section class="panel"><span class="eyebrow">Expedition '+g.expedition+'</span><h2>Choose your initial affinity</h2><p class="small muted">Receive one initial passive. The first offers always include your affinity. Select a Realm, then use Enter Realm.</p><div class="phase1DraftCards">'+
+   WandererV012Expedition.FAMILIES.map(f=>'<button type="button" class="phase1DraftCard" data-phase2-initial="'+f+'">'+phase2FamilyIcon(f)+'<strong>'+WandererV012Expedition.FAMILY_NAMES[f]+'</strong></button>').join('')+'</div></section>');
+  Q('[data-phase2-initial]').forEach(b=>b.onclick=()=>phase2ChooseInitial(b.dataset.phase2Initial));return;
+ }
  if(phase1Draft){
-  const d=phase1Draft,plane=d.plane;
+  const d=phase1Draft,plane=d.plane||{family:d.family,name:'Initial affinity',plane:1};
   const chosen=(phase1Build?.picks||[]).map(id=>WandererV012Buildcraft.CATALOG.find(x=>x.id===id)?.name).filter(Boolean);
-  const header='<section class="panel"><span class="eyebrow">Wanderer v0.12 · Buildcraft</span><h2>Plane '+g.planeIndex+' · '+esc(plane.name)+'</h2><p class="small muted">'+familyLabel(plane.family)+' · Choose '+(d.step==='element'?'your Magic element':'one temporary passive')+' before combat.</p><div class="phase1FamilyRow">'+g.families.map(f=>'<span>'+familyLabel(f)+'</span>').join('')+'</div><p class="small muted">Your build: '+esc(chosen.join(' · ')||'No passives selected yet')+'</p><div class="phase1DraftCards">';
+  const header='<section class="panel"><span class="eyebrow">Wanderer v0.12 · Buildcraft</span><h2>'+(d.kind==='reward'?'Realm '+plane.plane+' cleared · choose a passive':d.kind==='initial'?'Choose your Magic element':'Realm '+g.planeIndex+' · choose your Magic element')+'</h2><p class="small muted">'+familyLabel(plane.family)+' · '+(d.kind==='reward'?'One reward for this completed Realm.':'Element stays fixed for this Expedition.')+'</p><div class="phase1FamilyRow">'+g.families.map(f=>'<span>'+familyLabel(f)+'</span>').join('')+'</div><p class="small muted">Your build: '+esc(chosen.join(' · ')||'No passives selected yet')+'</p><div class="phase1DraftCards">';
   if(d.step==='element'){
    const cards=[['fire','Fire','Burn · lasting damage','burn'],['frost','Frost','Chill · slower enemy attacks','slow'],['lightning','Lightning','Shock · 4 charges trigger a burst','shock']];
    html(header+cards.map(([id,name,desc,glyph])=>'<button class="phase1DraftCard" data-phase2-element="'+id+'"><span>'+affinityArt(glyph)+'</span><strong>'+name+'</strong><small>'+desc+'</small></button>').join('')+'</div><p class="small muted">Element stays fixed for this Expedition. Staff and Wand amplify it.</p></section>');
    Q('[data-phase2-element]').forEach(b=>b.onclick=()=>phase2ChooseElement(b.dataset.phase2Element));
   }else{
-   html(header+d.options.map(p=>'<button class="phase1DraftCard" data-phase2-passive="'+p.id+'"><strong>'+esc(p.name)+'</strong><small>'+esc(p.description)+'</small><span class="micro muted">'+(p.requires.length?'HYBRID · ':'')+(p.max===1?'Unique':'Rank '+(WandererV012Buildcraft.rank(phase1Build,p.id)+1)+'/'+p.max)+'</span></button>').join('')+'</div><p class="small muted">Only implemented effects are offered. Rank limits prevent infinite stacks.</p></section>');
+   html(header+d.options.map(p=>'<button class="phase1DraftCard" data-phase2-passive="'+p.id+'">'+phase2PassiveIcons(p)+'<strong>'+esc(p.name)+'</strong><small>'+esc(p.description)+'</small><span class="micro muted">'+(p.requires.length?'HYBRID · ':'')+(p.max===1?'Unique':'Rank '+(WandererV012Buildcraft.rank(phase1Build,p.id)+1)+'/'+p.max)+'</span></button>').join('')+'</div><p class="small muted">Only implemented effects are offered. Rank limits prevent infinite stacks.</p></section>');
    Q('[data-phase2-passive]').forEach(b=>b.onclick=()=>phase2ChoosePassive(b.dataset.phase2Passive));
   }
   return;
  }
  if(['camp','finished','failed'].includes(g.stage)){
-  const announcement=g.stage==='finished'?'👑 Expedition cleared! Expedition '+g.unlocked+' unlocked.':g.stage==='failed'?'☠ Expedition failed · all equipped gear and rewards kept.':'15 Planes · three possible routes before each fight.';
+  const announcement=g.stage==='finished'?'👑 Expedition cleared! Expedition '+g.unlocked+' unlocked.':g.stage==='failed'?'☠ Expedition failed · all equipped gear and rewards kept.':'15 Realms · three possible routes before each fight.';
   const loadout=SLOTS.map(slot=>{
    const o=state.equip[slot],reserved=slot==='offhand'&&isTwoHanded(state.equip.weapon);
    const info=o?o.name+' · '+itemSource(o)+' · '+itemStats(o):reserved?'Reserved by Two-Handed':'Empty';
    return '<div class="phase3GearTile" '+rarityFrame(o)+' title="'+esc(info)+'"><img src="'+(o?itemImg(o):placeholderIcon(slot))+'" alt="'+esc(SNAME[slot])+'"><span>'+esc(SNAME[slot])+'</span>'+(o?'<span class="small">E'+o.tier+'</span>':'')+legendaryRankBadge(o)+'</div>';
   }).join('');
-  html('<section class="panel phase3Camp"><div class="phase1Intro"><div><span class="eyebrow">Wanderer v0.12 · Development Preview</span><h1>Expedition Camp</h1><p class="phase1Info">'+esc(announcement)+'</p><p class="phase1Experimental">'+(PHASE5_VALIDATION?'Isolated validation save enabled. Interrupted Expeditions end safely on reopen; secured gear and currencies remain. No Firebase connection or real-save import.':'Isolated from real accounts and saves. Equipment, Forge, Merchant and Runes reuse the classic Wanderer systems. Preview progress is memory-only.')+'</p><div class="phase3Vitals"><span>❤️ '+Math.ceil(stats.hp)+' / '+stats.maxhp+' HP</span><span>💧 '+Math.floor(stats.mp)+' / '+stats.maxmp+' Mana</span></div><p class="small muted">Potions can only be consumed after completing a Plane, never in Camp or during combat.</p></div><img src="'+heroFullImage()+'" alt="Selected Wanderer full-body character"></div><div class="phase3Loadout">'+loadout+'</div><div class="phase3Actions"><button class="ghost" data-phase3-nav="equipment">Equipment &amp; Runes</button><button class="ghost" data-phase3-nav="forge">Forge</button><button class="ghost" data-phase3-nav="merchant">Merchant</button></div><h3>Choose your character</h3><div class="phase1HeroPicker">'+['wanderer','knight','ranger','spellblade','duelist'].map(id=>'<button type="button" data-phase1-hero="'+id+'" class="'+(state.characterId===id?'active':'')+'"><img src="assets/characters/avatars/'+id+'.png" alt="">'+esc(id)+'</button>').join('')+'</div><p class="small muted">'+state.stash.length+'/'+stashCapacity()+' Stash slots · '+state.expeditionOverflow.length+' secured items awaiting space. Merchant gear and Forge tiers follow your highest unlocked Expedition. Runes: every tenth Expedition boss.</p><h3>Prepare an Expedition</h3><div class="phase3Actions">'+Array.from({length:g.unlocked},(_,i)=>'<button class="primary" data-phase1-expedition="'+(i+1)+'">Expedition '+(i+1)+' →</button>').join('')+'</div></section>');
+  html('<section class="panel phase3Camp"><div class="phase1Intro"><div><span class="eyebrow">Wanderer v0.12 · Development Preview</span><h1>Expedition Camp</h1><p class="phase1Info">'+esc(announcement)+'</p><p class="phase1Experimental">'+(PHASE5_VALIDATION?'Isolated validation save enabled. Interrupted Expeditions end safely on reopen; secured gear and currencies remain. No Firebase connection or real-save import.':'Isolated from real accounts and saves. Equipment, Forge, Merchant and Runes reuse the classic Wanderer systems. Preview progress is memory-only.')+'</p><div class="phase3Vitals"><span>❤️ '+Math.ceil(stats.hp)+' / '+stats.maxhp+' HP</span><span>💧 '+Math.floor(stats.mp)+' / '+stats.maxmp+' Mana</span></div><p class="small muted">Potions can only be consumed after completing a Realm, never in Camp or during combat.</p></div><img src="'+heroFullImage()+'" alt="Selected Wanderer full-body character"></div><div class="phase3Loadout">'+loadout+'</div><div class="phase3Actions"><button class="ghost" data-phase3-nav="equipment">Equipment &amp; Runes</button><button class="ghost" data-phase3-nav="forge">Forge</button><button class="ghost" data-phase3-nav="merchant">Merchant</button></div><h3>Choose your character</h3><div class="phase1HeroPicker">'+['wanderer','knight','ranger','spellblade','duelist'].map(id=>'<button type="button" data-phase1-hero="'+id+'" class="'+(state.characterId===id?'active':'')+'"><img src="assets/characters/avatars/'+id+'.png" alt="">'+esc(id)+'</button>').join('')+'</div><p class="small muted">'+state.stash.length+'/'+stashCapacity()+' Stash slots · '+state.expeditionOverflow.length+' secured items awaiting space. Merchant gear and Forge tiers follow your highest unlocked Expedition. Runes: every tenth Expedition boss.</p><h3>Prepare an Expedition</h3><div class="phase3Actions">'+Array.from({length:g.unlocked},(_,i)=>'<button class="primary" data-phase1-expedition="'+(i+1)+'">Expedition '+(i+1)+' →</button>').join('')+'</div></section>');
   Q('[data-phase1-hero]').forEach(b=>b.onclick=()=>{if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked))return;state.characterId=b.dataset.phase1Hero;save();renderPhase1()});
   Q('[data-phase1-expedition]').forEach(b=>b.onclick=()=>phase1Begin(Number(b.dataset.phase1Expedition)));
   Q('[data-phase3-nav]').forEach(b=>b.onclick=()=>phase3Go(b.dataset.phase3Nav));
@@ -3545,19 +3583,21 @@ function renderPhase1(){
  const supplies=phase3Supplies||{health:0,mana:0};
  const canHeal=between&&stats.hp<stats.maxhp&&supplies.health>0;
  const canMana=between&&stats.maxmp>0&&stats.mp<stats.maxmp&&supplies.mana>0;
- const prep=between?'<div class="phase3Preparation"><div><h3>Between Planes · Safe Preparation</h3><p class="small muted">Equipment swaps and Runes use the original inventory. '+state.expeditionOverflow.length+' secured items await Stash space. Potions restore 35% HP or 40% Mana, up to the current maximum; unused charges carry through this Expedition.</p><div class="phase3Actions"><button class="ghost" data-phase3-nav="equipment">Open Equipment / Runes</button><button class="ghost" data-phase3-potion="health" '+(canHeal?'':'disabled')+'>❤️ Health Potion · '+supplies.health+' left</button><button class="ghost" data-phase3-potion="mana" '+(canMana?'':'disabled')+'>💧 Mana Potion · '+supplies.mana+' left</button></div></div></div>':
- '<p class="small muted">First Plane: no potion use. Equipment may be inspected before committing to a route.</p>';
- html('<section class="panel"><span class="eyebrow">Wanderer v0.12 · Expeditions</span><div class="topline"><div><h2>Expedition '+g.expedition+' · Plane '+g.planeIndex+' / 15</h2><p class="small muted">Three routes · Choose Waves, affinity and Elite risk before entering original auto-combat.</p></div><span class="token">'+state.gold+' Gold · '+state.fragments+' Fragments</span></div>'+
+ const prep=between?'<div class="phase3Preparation"><div><h3>Between Realms · Safe Preparation</h3><p class="small muted">Equipment swaps and Runes use the original inventory. '+state.expeditionOverflow.length+' secured items await Stash space. Potions restore 35% HP or 40% Mana, up to the current maximum; unused charges carry through this Expedition.</p><div class="phase3Actions"><button class="ghost" data-phase3-nav="equipment">Open Equipment / Runes</button><button class="ghost" data-phase3-potion="health" '+(canHeal?'':'disabled')+'>❤️ Health Potion · '+supplies.health+' left</button><button class="ghost" data-phase3-potion="mana" '+(canMana?'':'disabled')+'>💧 Mana Potion · '+supplies.mana+' left</button></div></div></div>':
+ '<p class="small muted">First Realm: no potion use. Equipment may be inspected before committing to a route.</p>';
+ html('<section class="panel"><span class="eyebrow">Wanderer v0.12 · Expeditions</span><div class="topline"><div><h2>Expedition '+g.expedition+' · Realm '+g.planeIndex+' / 15</h2><p class="small muted">Three routes · Choose Waves, affinity and Elite risk before entering original auto-combat.</p></div><span class="token">'+state.gold+' Gold · '+state.fragments+' Fragments</span></div>'+
  '<div class="phase1FamilyRow">'+(g.families.length?g.families.map(f=>'<span>'+familyLabel(f)+'</span>').join(''):'<span>No temporary affinity selected yet</span>')+'</div>'+
  '<div class="phase1FamilyRow"><span>❤️ '+Math.ceil(stats.hp)+' / '+stats.maxhp+' HP</span><span>💧 '+Math.floor(stats.mp)+' / '+stats.maxmp+' Mana</span></div>'+
  prep+phase3PassivesMarkup()+
- '<div class="phase3RouteHeading"><h3>Select the next Plane</h3><button id="phase3Reroll" class="tiny ghost" '+(g.rerollsLeft?'':'disabled')+'>↻ Reroll routes · '+g.rerollsLeft+' remaining</button></div>'+
- '<div class="phase1Offers">'+g.offers.map(p=>'<button type="button" class="phase1Offer" data-phase1-plane="'+p.id+'"><img src="'+dungeonImage(p)+'" alt="'+esc(p.name)+' landscape"><div class="phase1OfferBody"><strong>'+esc(p.name)+'</strong><div class="phase1OfferMeta"><span>'+familyLabel(p.family)+'</span><span>'+p.waves+' Waves</span><span>'+(p.boss?'👑 Boss':p.elite?'⚔ Elite present':'No Elite')+'</span>'+(p.event?'<span>'+esc(p.event)+' event (preview)</span>':'')+'</div><span class="small muted">Risk: '+(p.boss?'Boss':p.elite?'Elite':'Normal')+' · '+p.waves+' possible loot rolls</span><span class="small muted">Choose this Plane →</span></div></button>').join('')+'</div>'+
- '<p class="micro muted">More Waves mean more loot opportunities, not guaranteed items. Events are currently informational; no event reward is promised. Temporary buildcraft never changes permanent item affinities.</p></section>');
+ '<div class="phase3RouteHeading"><h3>Select the next Realm</h3></div>'+
+ '<div class="phase1Offers">'+g.offers.map((p,index)=>'<article class="phase2RealmOffer"><button type="button" class="phase1Offer '+(g.selected===p?'phase2Selected':'')+'" aria-pressed="'+(g.selected===p)+'" data-phase1-plane="'+p.id+'"><img src="'+dungeonImage(p)+'" alt="'+esc(p.name)+' landscape"><div class="phase1OfferBody"><strong>'+esc(p.name)+'</strong><div class="phase1OfferMeta"><span>'+familyLabel(p.family)+'</span><span>'+p.waves+' Waves</span><span>'+(p.boss?'👑 Boss':p.elite?'⚔ Elite present':'No Elite')+'</span>'+(p.event?'<span>'+esc(p.event)+' event (preview)</span>':'')+'</div><span class="small muted">Risk: '+(p.boss?'Boss':p.elite?'Elite':'Normal')+' · '+p.waves+' possible loot rolls</span><span class="small muted">'+(g.selected===p?'Selected':'Select Realm')+'</span></div></button><button type="button" class="tiny ghost" data-phase2-reroll="'+index+'" '+(g.rerollsByRealm[g.planeIndex-1][index]>0?'':'disabled')+'>↻ Reroll · '+g.rerollsByRealm[g.planeIndex-1][index]+' remaining</button></article>').join('')+'</div>'+
+ '<button type="button" class="primary" id="phase2EnterRealm" '+(g.selected?'':'disabled')+'>Enter Realm</button>'+
+ '<p class="micro muted">More Waves mean more loot opportunities, not guaranteed items. Events are currently informational; no event reward is promised. Temporary buildcraft never changes permanent equipment.</p></section>');
  Q('[data-phase1-plane]').forEach(b=>b.onclick=()=>phase1Choose(b.dataset.phase1Plane));
  Q('[data-phase3-nav]').forEach(b=>b.onclick=()=>phase3Go(b.dataset.phase3Nav));
  Q('[data-phase3-potion]').forEach(b=>b.onclick=()=>phase3UsePotion(b.dataset.phase3Potion));
- const reroll=$('phase3Reroll');if(reroll)reroll.onclick=phase3Reroll;
+ Q('[data-phase2-reroll]').forEach(b=>b.onclick=()=>phase3Reroll(Number(b.dataset.phase2Reroll)));
+ const enter=$('phase2EnterRealm');if(enter)enter.onclick=phase1Enter;
  const abandon=document.createElement('button');abandon.id='phase5Abandon';abandon.className='ghost';abandon.textContent='Abandon Expedition';abandon.onclick=()=>showConfirm('Abandon Expedition','Keep secured gear and currencies; temporary passives end. No difficulty is unlocked.',phase1Abandon,'Abandon');$('screen').appendChild(abandon);
 }
 

@@ -102,3 +102,10 @@
 .phase3ReturnBar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin:0 0 12px;padding:10px 12px;background:#2d202b;border:1px solid #74536b;border-radius:9px;position:sticky;top:4px;z-index:12}
 .phase3ReturnBar button{min-height:42px;flex-shrink:0}
 @media(max-width:580px){.phase3ReturnBar{top:0;padding:8px}.phase3ReturnBar button{width:100%}.phase3ReturnBar span{display:none}}
+
+.phase2RealmOffer{display:flex;flex-direction:column;gap:6px;min-width:0}
+.phase2RealmOffer>.phase1Offer{width:100%;height:100%}
+.phase2RealmOffer .phase2Selected{outline:2px solid var(--gold)}
+.phase2PassiveIcons{display:inline-flex;align-items:center;gap:4px}
+.phase2PassiveIcons .affinityGlyph,.phase1DraftCard>.affinityGlyph{width:28px;height:28px;flex:none}
+#phase2EnterRealm{margin-top:12px;min-height:44px;width:100%}

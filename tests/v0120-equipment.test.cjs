@@ -1,7 +1,8 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const create=require('./v012-economy-harness.cjs');
 const plain=x=>JSON.parse(JSON.stringify(x));
-function enter(a){a.start(1);a.select(a.controller().state.offers[0].id);if(a.draft().step==='element')a.element('frost');a.passive(a.draft().options[0].id);}
+function enter(a){a.start(1);a.initial('blood');a.select(a.controller().state.offers[0].id);a.enter();if(a.draft()?.step==='element')a.element('frost');}
+
 test('armor categories reuse the primary stat budget, rarity and tier; weapons remain untyped',()=>{
  const a=create(42),slots=['helm','armor','gloves','boots','belt'];
  for(const slot of slots)for(const type of ['Cloth','Leather','Plate']){

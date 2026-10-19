@@ -26,7 +26,8 @@
     "simulate:v012:economy": "node scripts/v012-economy-sim.cjs",
     "test:v012:economy": "node tests/v012-economy.test.cjs && node tests/v012-economy-browser.cjs",
     "test:v012:integration": "node --test tests/v012-save.test.mjs tests/v012-lifecycle.test.cjs && node tests/v012-economy.test.cjs && node tests/v012-buildcraft.test.cjs && node tests/v012-classic-combat.cjs && node tests/v012-expedition-controller.test.cjs && node tests/v012-expedition-browser.cjs && node tests/v012-phase3-browser.cjs && node tests/v012-economy-browser.cjs && node tests/v012-save-browser.cjs",
-    "test:v0120:equipment": "node --test tests/v0120-equipment.test.cjs tests/v012-save.test.mjs tests/online-model.test.mjs && node tests/v0120-equipment-browser.cjs"
+    "test:v0120:equipment": "node --test tests/v0120-equipment.test.cjs tests/v012-save.test.mjs tests/online-model.test.mjs && node tests/v0120-equipment-browser.cjs",
+    "test:v0120:realms": "node --test tests/v012-expedition-controller.test.cjs tests/v012-buildcraft.test.cjs tests/v0120-realms.test.cjs tests/v0120-equipment.test.cjs && node tests/v0120-realms-browser.cjs"
   },
   "dependencies": {
     "firebase": "11.10.0"
