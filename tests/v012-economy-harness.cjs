@@ -28,7 +28,8 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
  globalThis.audit={
   state:()=>state,controller:()=>phase1Controller,build:()=>phase1Build,draft:()=>phase1Draft,
   start:phase1Begin,select:phase1Choose,passive:phase2ChoosePassive,element:phase2ChooseElement,
-  tick:updateFight,potion:phase3UsePotion,reroll:phase3Reroll,win:phase1WaveWon,death:phase1Death,
+  tick:updateFight,potion:phase3UsePotion,reroll:phase3Reroll,win:phase1WaveWon,death:phase1Death,abandon:phase1Abandon,
+  now:setNow,ready:setReady,heal:setHeal,
   stats:phase2Stats,baseStats:totalStats,makeItem,slots:SLOTS,types:TYPES,offhandTypes:OFFHAND_TYPES,
   gearFamily:typeof gearFamily==='function'?gearFamily:()=>null,
   equip:equipItem,unequip:unequipItem,sale:saleFragments,craftCost,merchantCost,

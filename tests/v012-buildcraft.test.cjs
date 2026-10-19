@@ -123,7 +123,9 @@ test('integration gates original weapons, Legendary and permanent save mechanics
  assert(source.includes("caster=!!main&&['Staff','Wand'].includes(main.subtype)"));
  assert(source.includes('legendaryAttackBonus(r,base,critical,cast)'));
  assert(source.includes('legendaryDefensiveEffects(r,damageBlocked,hit,blocked'));
- assert(source.includes("state.run={phase1:true,phase1Magic:!!phase1Build.element"));
+ const launch=source.slice(source.indexOf('function phase2Launch('),source.indexOf('function phase1StartWave('));
+ assert.match(launch,/state.run=\{phase1:true,/);
+ assert.match(launch,/phase1Magic:!!phase1Build\.element/);
 });
 
 test('independent Aegis retaliation sources both resolve without recursive new hits',()=>{

@@ -1,7 +1,7 @@
 // Representative full 15-Plane runs using original combat, loot and vendor primitives.
 const fs=require('node:fs'),create=require('../tests/v012-economy-harness.cjs');
 const output=process.argv[2]||'/tmp/v012-economy.json';
-const source=process.argv[3]?fs.readFileSync(process.argv[3],'utf8'):undefined;
+const source=require.main===module&&process.argv[3]?fs.readFileSync(process.argv[3],'utf8'):undefined;
 const priorities={
  sustain:{families:['vitality','aegis','blood'],picks:['renewal','second_breath','blood_drinker','strong_heart','fortified','sanctuary','hemovore'],route:'safe'},
  offense:{families:['fury','blood','decay'],picks:['quick_hands','bleeding_edge','toxic_touch','deep_cuts','executioner','double_strike','precision'],route:'waves'},
@@ -20,28 +20,32 @@ function play(a,{level,strategy,seed,weapon,adaptive=false}){
  const existing=new Set([...s.stash,...Object.values(s.equip).filter(Boolean)].map(i=>i.id));
  const goldBefore=s.gold,fragmentsBefore=s.fragments;
  const startPower=a.baseStats().power;
- let ticks=0,waves=0,elites=0,bosses=0,bossReached=false,lastHp=0,minHp=1,initialPicks=[],timeouts=0;
+ let ticks=0,waves=0,lateWaves=0,elites=0,bosses=0,bossReached=false,lastHp=0,minHp=1,initialPicks=[],timeouts=0;
  a.start(level);
  for(let step=0;step<150000;step++){
   if(['finished','failed'].includes(g.stage)&&!s.run)break;
   if(a.draft()){
    const d=a.draft();
-   if(d.step==='element')a.element(['fire','frost','lightning'][seed%3]);
-   else{const sorted=[...d.options].sort((x,y)=>{const ix=p.picks.indexOf(x.id),iy=p.picks.indexOf(y.id);return (ix<0?99:ix)-(iy<0?99:iy);});initialPicks.push(sorted[0].id);a.passive(sorted[0].id);}
+   if(d.step==='element')a.element(p.element||['fire','frost','lightning'][seed%3]);
+   else{
+    const weight=passive=>{if(p.hybridFirst&&passive.requires.length)return -1;const index=p.picks.indexOf(passive.id);return index<0?99:index;};
+    const sorted=[...d.options].sort((x,y)=>weight(x)-weight(y));initialPicks.push(sorted[0].id);a.passive(sorted[0].id);
+   }
   }else if(g.stage==='choice'&&!s.run){
    if(adaptive)equipBest(a,weapon);
    if(p.route==='safe'){a.potion('health');a.potion('mana');}
    const offers=[...g.offers].sort((x,y)=>{
     const ix=p.families.indexOf(x.family),iy=p.families.indexOf(y.family);
-    const family=(ix<0?9:ix)-(iy<0?9:iy);
+    const ranks=f=>a.build().picks.filter(id=>a.catalog.find(p=>p.id===id)?.family===f).length;
+    const family=p.split?((ix<0?99:ranks(x.family))-(iy<0?99:ranks(y.family))||(ix<0?9:ix)-(iy<0?9:iy)):(ix<0?9:ix)-(iy<0?9:iy);
     return family||(p.route==='waves'?y.waves-x.waves:Number(x.elite)-Number(y.elite)||x.waves-y.waves);
    });
    a.select(offers[0].id);
   }else if(s.run?.status==='fight'){
-   const r=s.run,enemy=r.enemy;bossReached=bossReached||!!enemy.boss;let n=0;
+   const r=s.run,enemy=r.enemy,plane=g.planeIndex;bossReached=bossReached||!!enemy.boss;let n=0;
    while(s.run===r&&r.status==='fight'&&r.enemy===enemy&&n<4000){a.tick();ticks++;n++;}
    if(n===4000){timeouts++;break;}
-   if(enemy.hp<=0){waves++;elites+=Number(!!enemy.miniboss);bosses+=Number(!!enemy.boss);}
+   if(enemy.hp<=0){waves++;if(plane>=12)lateWaves++;elites+=Number(!!enemy.miniboss);bosses+=Number(!!enemy.boss);}
    lastHp=r.hp;minHp=Math.min(minHp,Math.max(0,r.hp/r.maxhp));a.flush();
   }else a.flush();
  }
@@ -50,16 +54,16 @@ function play(a,{level,strategy,seed,weapon,adaptive=false}){
  const salvage=loot.reduce((n,i)=>n+a.sale(i),0),cost=a.craftCost(Math.min(200,level));
  if(!s.merchant)a.rollShop();
  const prices=s.merchant.stock.map(i=>i.goldPrice);
- return {level,weapon,strategy,seed,adaptive,won:g.stage==='finished',planes:g.history.length,waves,elites,bosses,bossReached,timeouts,
+ return {level,weapon,strategy,seed,adaptive,won:g.stage==='finished',planes:g.history.length,planeReached:g.planeIndex,waves,lateWaves,elites,bosses,bossReached,timeouts,
   seconds:+(ticks*.11).toFixed(2),gold,fragments,loot:loot.length,legendary:loot.filter(i=>i.rarity==='Legendary').length,
   salvage,standardCrafts:+((fragments+salvage)/cost).toFixed(2),craftCost:cost,
   merchantTier:s.merchant.stock[0].tier,merchantMeanPrice:+(prices.reduce((a,b)=>a+b,0)/prices.length).toFixed(1),
   finalPower:a.baseStats().power,startPower,minHp:+minHp.toFixed(3),lastHp:+lastHp.toFixed(1),runes:s.runes.length,pendingRunes:s.pendingRuneReward?.options.length||0,
-  selectedPassives:initialPicks};
+  hybridPicks:initialPicks.filter(id=>a.catalog.find(p=>p.id===id)?.requires.length).length,rarities:Object.fromEntries(['Common','Uncommon','Rare','Epic','Legendary'].map(r=>[r,loot.filter(i=>i.rarity===r).length])),selectedPassives:initialPicks};
 }
 function run(options){
  const a=create(options.seed,source),gearTier=Math.max(1,Math.min(200,Math.round(options.level*options.ratio)));
- a.setup(gearTier,options.weapon);a.controller().state.unlocked=options.level;
+ a.setup(gearTier,options.weapon,options.rarity||'Rare');a.controller().state.unlocked=options.level;
  if(options.permanentBuild){
   const s=a.state(),item=a.makeItem(gearTier,'weapon',null,'loot',options.weapon,'Legendary');
   for(let rank=0;rank<10;rank++)a.economy.upgradeLegendary(item);
@@ -107,6 +111,8 @@ function campaign(policy,seed){
  }
  return {policy,seed,unlocked:g.unlocked,wins,crafts,purchases,spentGold,spentFragments,salvaged,earnedGold,earnedFragments,loot,gold:s.gold,fragments:s.fragments,power:a.baseStats().power,runes:s.runes.length,attempts};
 }
+module.exports={run,campaign,priorities};
+if(require.main===module){
 const cases=[];
 for(const level of [1,20,80,200])for(const ratio of [.25,.75,1,1.5])for(const strategy of Object.keys(priorities))for(let seed=1;seed<=6;seed++){
  const weapon=['Sword','Mace','Bow','Daggers','Two-Handed','Staff','Wand'][(seed-1+level)%7];
@@ -126,3 +132,5 @@ const crypto=require('node:crypto');
 const sourceHash=crypto.createHash('sha256').update(source||fs.readFileSync('index.html','utf8')).digest('hex');
 const result={sourceHtmlSha256:sourceHash,node:process.version,engine:'integrated index.html updateFight + phase1WaveWon + native Forge/Merchant handlers; no prototype tick',seedCount:6,cases:cases.length,timeouts:cases.reduce((n,r)=>n+r.timeouts,0),groups,runs:cases,campaigns};
 fs.writeFileSync(output,JSON.stringify(result,null,2)+'\n');console.log(JSON.stringify({cases:result.cases,timeouts:result.timeouts,groups,campaigns:campaigns.map(({attempts,...r})=>r)},null,2));
+
+}

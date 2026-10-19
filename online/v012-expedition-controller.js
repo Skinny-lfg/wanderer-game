@@ -81,7 +81,11 @@ function create(themes,rng=Math.random){
   if(game.stage!=='combat')throw Error('No active combat');
   game.stage='failed';game.selected=null;game.offers=[];game.wave=0;game.families=[];game.lastFamily=null;
  }
- return Object.freeze({state:game,start,select,reroll,waveWon,defeat,offerPlanes,allowed});
+ function abandon(){
+  if(!['choice','combat'].includes(game.stage))throw Error('No active Expedition');
+  game.stage='failed';game.selected=null;game.offers=[];game.wave=0;game.families=[];game.lastFamily=null;
+ }
+ return Object.freeze({state:game,start,select,reroll,waveWon,defeat,abandon,offerPlanes,allowed});
 }
 root.WandererV012Expedition=Object.freeze({create,FAMILIES,FAMILY_NAMES,THEME_FAMILIES});
 })(globalThis);
