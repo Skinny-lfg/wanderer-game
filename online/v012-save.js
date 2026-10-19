@@ -95,8 +95,21 @@ function normalizedLegacy(input){
  if(p.equip.ring){requireValue(!p.equip.ring1,'ambiguous legacy rings');p.equip.ring1=p.equip.ring;delete p.equip.ring;}
  return profileCheck(p);
 }
+function presentationCheck(p){
+ requireValue(plain(p)&&p.version===1&&[null,'realm','summary'].includes(p.review),'result version/review');
+ const item=i=>plain(i)&&typeof i.id==='string'&&typeof i.name==='string'&&integer(i.tier,1,200)&&SLOTS.includes(i.slot)&&['Common','Uncommon','Rare','Epic','Legendary'].includes(i.rarity);
+ requireValue(Array.isArray(p.earned)&&p.earned.length<=45&&p.earned.every(item)&&new Set(p.earned.map(i=>i.id)).size===p.earned.length&&integer(p.gold,0,Number.MAX_SAFE_INTEGER)&&integer(p.fragments,0,Number.MAX_SAFE_INTEGER),'result loot/currencies');
+ const seconds=x=>typeof x==='number'&&Number.isFinite(x)&&x>=0;
+ if(p.realm!==null){const r=p.realm;requireValue(plain(r)&&integer(r.level,1,200)&&integer(r.plane,1,15)&&['cleared','defeat'].includes(r.outcome)&&typeof r.name==='string'&&typeof r.family==='string'&&typeof r.enemy==='string'&&seconds(r.seconds)&&integer(r.gold,0,Number.MAX_SAFE_INTEGER)&&integer(r.fragments,0,Number.MAX_SAFE_INTEGER)&&Array.isArray(r.log)&&r.log.every(l=>plain(l)&&typeof l.text==='string'&&typeof l.kind==='string')&&r.log.reduce((n,l)=>n+l.text.length+l.kind.length,0)<=180000,'Realm result');}
+ if(p.realm?.loot!==undefined)requireValue(Array.isArray(p.realm.loot)&&p.realm.loot.length<=3&&p.realm.loot.every(item),'Realm loot result');
+ if(p.summary!==null){const r=p.summary;requireValue(plain(r)&&integer(r.level,1,200)&&integer(r.realms,0,15)&&['victory','defeat','extracted','abandoned'].includes(r.outcome)&&seconds(r.seconds)&&integer(r.gold,0,Number.MAX_SAFE_INTEGER)&&integer(r.fragments,0,Number.MAX_SAFE_INTEGER)&&Array.isArray(r.families)&&r.families.length<=3&&r.families.every(f=>['blood','decay','vitality','aegis','fury','magic'].includes(f))&&Array.isArray(r.picks)&&r.picks.length<=16&&r.picks.every(id=>typeof id==='string')&&['kept','lost','discarded'].every(k=>Array.isArray(r[k])&&r[k].length<=45&&r[k].every(item))&&(r.runeTier===null||integer(r.runeTier,10,200)&&r.runeTier%10===0),'Expedition summary');
+  requireValue(r.outcome!=='victory'||r.realms===15,'victory result');requireValue((r.runeTier===null||r.outcome==='victory')&&(r.runeName===undefined||r.runeTier!==null&&typeof r.runeName==='string'),'Rune result');
+ }
+ requireValue(p.review!=='realm'||p.realm!==null,'missing Realm result');requireValue(p.review!=='summary'||p.summary!==null,'missing Expedition summary');
+}
 function sessionCheck(s,p,e){
  requireValue(plain(s)&&s.version===1&&typeof s.entry==='boolean'&&plain(s.controller),'checkpoint version');
+ if(s.results!==undefined)presentationCheck(s.results);
  const g=s.controller;
  requireValue(integer(g.expedition,1,e.unlocked)&&g.unlocked===e.unlocked&&integer(g.planeIndex,1,15)&&['choice','combat','failed','finished'].includes(g.stage),'checkpoint progress');
  requireValue(integer(s.seed,0,4294967295)&&typeof s.prefix==='string'&&/^[a-z0-9]+$/.test(s.prefix)&&integer(s.idCounter,0,Number.MAX_SAFE_INTEGER)&&typeof s.clock==='number'&&Number.isFinite(s.clock)&&s.clock>=0,'checkpoint RNG/counter');
@@ -129,6 +142,7 @@ function validate(input,binding){
  if(e.attempts===0)requireValue(e.awardKeys.length===0,'rewards before entry');
  if(e.active!==null){const a=e.active;requireValue(e.attempts>0,'entry checkpoint');requireValue(plain(a)&&a.attempt===e.attempts&&integer(a.level,1,e.unlocked)&&integer(a.plane,1,15)&&integer(a.wave,0,3)&&['choice','combat'].includes(a.stage),'checkpoint');requireValue(e.lastOutcome==='active','active outcome');}
  if(e.session!==undefined&&e.session!==null)sessionCheck(e.session,s.profile,e);
+ if(e.presentation!==undefined)presentationCheck(e.presentation);
  requireValue(plain(s.legacyHistory)&&integer(s.legacyHistory.maxDungeon,1,200),'legacy history');
  return s;
 }

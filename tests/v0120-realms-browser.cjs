@@ -37,7 +37,7 @@ const server=http.createServer((req,res)=>{
   await page.locator('#phase2EnterRealm').click();s=await snap();assert.equal(s.active,true);assert.equal(s.picks.length,1);
   const waves=s.game.selected.waves;
   for(let wave=0;wave<waves;wave++){await page.waitForFunction(()=>__realmTest.snapshot().status==='fight');await page.evaluate(()=>__realmTest.win());}
-  await page.waitForSelector('[data-phase2-passive]');s=await snap();assert.equal(s.active,false);assert.equal(s.picks.length,1);assert.equal(s.draft,'reward');
+  await page.locator('#phase5ExitResult').click();await page.waitForSelector('[data-phase2-passive]');s=await snap();assert.equal(s.active,false);assert.equal(s.picks.length,1);assert.equal(s.draft,'reward');
   const reward=page.locator('[data-phase2-passive]').first(),id=await reward.getAttribute('data-phase2-passive');
   assert.equal(await reward.locator('.itemAffinityGlyph').count(),1);await reward.click();s=await snap();assert.equal(s.picks.length,2);assert.equal(s.game.planeIndex,2);
   assert(s.game.offers.every(o=>o.family!=='magic'),'initial affinity needs a second distinct acquisition after first Realm');
