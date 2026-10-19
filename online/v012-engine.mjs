@@ -113,7 +113,7 @@ export function choosePassive(profile,id){
  const p=PASSIVES.find(x=>x.id===id);if(!p)throw Error('Unknown passive');
  if(r.affinities.length>=MAX_AFFINITIES&&!r.affinities.includes(p.affinity))throw Error('Maximum three affinities reached');
  if(count(r,p.id)>=MAX_PASSIVE_RANK)throw Error('Passive rank already at maximum');
- if(p.requires.some(f=>!r.affinities.includes(f)))throw Error('Hybrid affinity requirements missing');
+ if(p.requires.some(f=>f!==p.affinity&&!r.affinities.includes(f)))throw Error('Hybrid affinity requirements missing');
  const old=stats(profile);
  if(!r.affinities.includes(p.affinity))r.affinities.push(p.affinity);
  r.passives.push(id);const fresh=stats(profile);
