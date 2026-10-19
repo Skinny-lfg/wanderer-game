@@ -37,6 +37,7 @@ const server=http.createServer((req,res)=>{
    assert.equal(await page.locator('#v012-overlay button[data-action="camp-heal"]').count(),0,'Health potions cannot be consumed in the main Camp');
    assert.equal(await page.locator('#v012-overlay button[data-action="camp-mana"]').count(),0,'Mana potions cannot be consumed in the main Camp');
    assert.equal(await page.locator('#v012-overlay button[data-action="potion"]').count(),0,'Potion use is available only between Planes');
+   assert.equal(await page.locator('#v012-overlay .v12-rest .v12-bar-label').count(),2,'The hub Camp shows both full Health and Mana');
    await page.locator('#v012-overlay button[data-action="begin"][data-id="blood"]').click();
    assert.equal(await page.locator('#v012-overlay .v12-passive').count(),3);
    await page.locator('#v012-overlay .v12-passive').first().click();
