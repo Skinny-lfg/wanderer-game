@@ -2171,7 +2171,11 @@ function wallet(){if(PHASE1_PREVIEW){$('wallet').innerHTML='<span class="token">
   });
  }}}
 function render(){if(PHASE1_PREVIEW){wallet();if(view==='combat')renderCombat();else if(view==='equipment')renderStash();else if(view==='forge')renderForge();else if(view==='merchant')renderMerchant();else renderPhase1();return;}if(!hasRestoredInitialView){hasRestoredInitialView=true;restoreView();}rememberView();wallet();if(view==='tavern')renderTavern();else if(view==='equipment')renderStash();else if(view==='forge')renderForge();else if(view==='merchant')renderMerchant();else if(view==='dungeons')renderDungeons();else if(view==='combat')renderCombat();if(state.pendingRuneReward)showPendingRuneReward();}
-function html(s){$('screen').innerHTML=s}
+function html(s){
+ const previewReturn=PHASE1_PREVIEW&&['equipment','forge','merchant'].includes(view);
+ $('screen').innerHTML=(previewReturn?'<div class="phase3ReturnBar"><button id="phase3Return" class="ghost" type="button">← Back to '+(phase1Controller?.state.stage==='choice'?'Planes':'Camp')+'</button><span class="small muted">Preview equipment and vendors · no cloud saves</span></div>':'')+s;
+ if(previewReturn){const back=$('phase3Return');if(back)back.onclick=()=>phase3Go('phase1');}
+}
 function formatItemStat(n){const x=Number(n)||0;return Number(x.toFixed(2)).toString()}
 function itemStats(o){return FIELDS.filter(([,f])=>o?.[f]).map(([k,f])=>`${o[f]>0?'+':''}${formatItemStat(o[f])} ${k}`).join(' · ')}
 function legendaryRankBadge(o){return o?.rarity==='Legendary'&&(o.upgradeRank||0)>0?'<span class="legendaryRankBadge" title="Legendary reinforcement rank '+o.upgradeRank+' of 10">+'+o.upgradeRank+'/10</span>':''}
