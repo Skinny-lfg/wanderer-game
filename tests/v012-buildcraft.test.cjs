@@ -9,7 +9,7 @@ function ctx(f=0){
  const enemy={hp:400,maxhp:2000,bleedStacks:2,poisonStacks:1,burnStacks:0,
  v012Rot:[{damage:3,remaining:4}],v012Shock:0,dots:{bleed:[],burn:[],poison:[]},slowTime:0};
  const history=[];
- const c={player,enemy,now:0,base:45,power:38,amp:1.2,critical:true,magical:false,
+ const c={player,enemy,now:0,base:100,power:55,amp:1.2,critical:true,magical:false,
  random:()=>f,
  dot(kind,potency){const damage=Math.max(1,Math.round(potency));enemy.dots[kind].push({damage,remaining:3});history.push(['dot',kind,damage]);},
  dotDamage(n){enemy.hp-=Math.round(n);history.push(['dotDamage',Math.round(n)]);},
