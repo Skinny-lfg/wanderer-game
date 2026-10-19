@@ -183,7 +183,7 @@ function award(profile,guarantee=false,suppressRandomDrop=false){
  const gold=Math.round(8+r.level*4+r.room*.65+(t==='boss'?35:t==='elite'?14:0)),frag=Math.round(2+r.level*.9+(t==='boss'?12:0));
  profile.gold+=gold;profile.fragments+=frag;
  const odds=t==='boss'?1:t==='chest'?.68:t==='elite'?.38:t==='combat'?.06:t==='event'?.16:0;
- if(!suppressRandomDrop&&(guarantee||rand(r)<odds))loot(profile,t==='boss');
+ if(!suppressRandomDrop&&(guarantee||rand(r)<odds))loot(profile,t==='boss',false);
  r.log=['+'+gold+' Gold, +'+frag+' Fragments.',...r.log].slice(0,14);
 }
 function completeRoom(profile,suppressRandomDrop=false){
