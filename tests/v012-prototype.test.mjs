@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {FAMILIES,PATHS,PASSIVES,STORAGE_KEY,newProfile,begin,choosePassive,choosePath,rerollPath,resolveRoom,usePotion,tick,stats,equip,abandon,leaveFinished} from '../online/v012-engine.mjs';
+import {FAMILIES,PATHS,PASSIVES,MAX_AFFINITIES,STORAGE_KEY,newProfile,begin,choosePassive,choosePath,rerollPath,resolveRoom,usePotion,useCampHealthPotion,tick,stats,equip,abandon,leaveFinished} from '../online/v012-engine.mjs';
 
 test('v0.12 prototype does not use classic save key and has five families and 13 paths',()=>{
  assert.match(STORAGE_KEY,/v012/);
@@ -12,7 +12,7 @@ test('v0.12 prototype does not use classic save key and has five families and 13
 
 test('initial chosen affinity guaranteed in first path offers, and 3 reward choices',()=>{
  const p=newProfile(1234);begin(p,'blood',2);
- assert.equal(p.run.stage,'startReward');assert.equal(p.run.potions.hp,2);assert.equal(p.run.potions.mana,1);
+ assert.equal(p.run.stage,'startReward');assert.equal(p.run.potions.hp,0);assert.equal(p.run.potions.mana,2);
  assert.equal(p.run.passiveOffers.length,3);
  assert.ok(p.run.passiveOffers.every(id=>PASSIVES.find(x=>x.id===id).affinity==='blood'));
  choosePassive(p,p.run.passiveOffers[0]);
@@ -40,15 +40,29 @@ test('lock applies to previous picked affinity only, reroll does not bypass lock
  assert.equal(new Set(p.run.pathOffers.map(id=>PATHS.find(x=>x.id===id).affinity)).size,3);
 });
 
-test('all five affinity families can be acquired; no arbitrary active affinity cap',()=>{
+test('three affinities maximum; further path offers and rerolls remain inside those families',()=>{
  const p=newProfile(65);begin(p,'blood');choosePassive(p,p.run.passiveOffers[0]);
  const r=p.run;
- for(const fam of ['vitality','aegis','fury','arcane']){
-   r.stage='reward';
-   r.passiveOffers=PASSIVES.filter(x=>x.affinity===fam&&!x.requires.length).slice(0,3).map(x=>x.id);
-   choosePassive(p,r.passiveOffers[0]);
+ for(const fam of ['vitality','aegis']){
+  r.stage='reward';
+  r.passiveOffers=PASSIVES.filter(x=>x.affinity===fam&&!x.requires.length).slice(0,3).map(x=>x.id);
+  choosePassive(p,r.passiveOffers[0]);
  }
- assert.equal(r.affinities.length,5);
+ assert.equal(r.affinities.length,MAX_AFFINITIES);
+ assert.ok(r.pathOffers.every(id=>r.affinities.includes(PATHS.find(x=>x.id===id).affinity)));
+ assert.equal(r.pathOffers.length,3,'must still show three plans with repeated affinity families');
+ assert.equal(new Set(r.pathOffers).size,3);
+ for(let i=0;i<3;i++){
+  const index=r.pathOffers.findIndex(id=>PATHS.find(x=>x.id===id).affinity!==r.lastPathAffinity);
+  if(index>=0&&r.rerolls>0){
+   rerollPath(p,index);
+   assert.ok(r.pathOffers.every(id=>r.affinities.includes(PATHS.find(x=>x.id===id).affinity)));
+  }
+ }
+ r.stage='reward';
+ r.passiveOffers=PASSIVES.filter(x=>x.affinity==='arcane').slice(0,3).map(x=>x.id);
+ assert.throws(()=>choosePassive(p,r.passiveOffers[0]),/Maximum three affinities/);
+ assert.equal(r.affinities.length,3);
 });
 
 test('combat uses sequential waves, no multi-enemy targeting',()=>{
@@ -65,14 +79,22 @@ test('combat uses sequential waves, no multi-enemy targeting',()=>{
  }
 });
 
-test('potion capacity is 3 across HP and Mana; do not refill between waves',()=>{
- const p=newProfile(513);assert.throws(()=>begin(p,'fury',4),/Three potion/);
+test('Health potions are usable only between runs; Mana potions work during adventures',()=>{
+ const p=newProfile(513);assert.throws(()=>begin(p,'fury',4),/Mana potions/);
  begin(p,'fury',2);
  const r=p.run;r.hp=stats(p).hp*.5;
- assert.equal(usePotion(p,'hp'),true);
- assert.equal(r.potions.hp,1);
+ assert.throws(()=>usePotion(p,'hp'),/only.*camp/i);
+ assert.throws(()=>useCampHealthPotion(p),/at camp/i);
+ assert.equal(r.potions.hp,0);
  assert.equal(usePotion(p,'mana'),false);
- assert.equal(r.potions.mana,1);
+ assert.equal(r.potions.mana,2);
+ abandon(p);leaveFinished(p);
+ assert.equal(p.restHpRatio,.4);
+ assert.equal(useCampHealthPotion(p),true);
+ assert.ok(p.restHpRatio>.69);
+ assert.equal(p.healthPotionStock,2);
+ const hpRatio=p.restHpRatio;begin(p,'fury',2);
+ assert.equal(p.run.hp,Math.round(stats(p).hp*hpRatio));
 });
 
 test('permanent loot and unlocked difficulty survive defeat',()=>{
