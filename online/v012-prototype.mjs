@@ -1,8 +1,9 @@
 import {STORAGE_KEY,FAMILIES,PATHS,PASSIVES,SLOTS,newProfile,stats,begin,choosePassive,choosePath,rerollPath,resolveRoom,usePotion,tick,abandon,leaveFinished,equip,inventoryScore} from './v012-engine.mjs';
-let profile,open=false,healthPots=2,paused=false,speed=2,error='',autosave=0;
+let profile,open=false,healthPots=2,selectedLevel=1,paused=false,speed=2,error='',autosave=0;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const $=(sel)=>document.querySelector(sel);
 try{const raw=localStorage.getItem(STORAGE_KEY);const loaded=raw?JSON.parse(raw):null;profile=loaded&&loaded.version===1&&Array.isArray(loaded.inventory)&&loaded.equipped&&Number.isFinite(loaded.unlocked)?loaded:newProfile();}catch{profile=newProfile();error='The isolated prototype save could not be read. Started a new test profile.';}
+selectedLevel=profile.unlocked;
 function persist(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(profile));}catch{error='Prototype local save unavailable. Real Wanderer saves have not been changed.';}}
 function idFromButton(b){return b.dataset.id;}
 function passiveCard(id){
@@ -24,9 +25,10 @@ function gearPanel(){
 }
 function camp(){
  const status='<div class="v12-metrics"><span><b>D'+profile.unlocked+'</b><small>Highest unlocked</small></span><span><b>'+profile.gold+'</b><small>Gold</small></span><span><b>'+profile.fragments+'</b><small>Fragments</small></span><span><b>'+profile.record.length+'</b><small>Runs</small></span></div>';
+ const levelSelector='<label class="v12-level-selector">Choose difficulty <select data-difficulty aria-label="Choose difficulty">'+Array.from({length:profile.unlocked},(_,i)=>i+1).map(n=>'<option value="'+n+'"'+(n===selectedLevel?' selected':'')+'>Dungeon '+n+'</option>').join('')+'</select></label>';
  const potionSelector='<div class="v12-pot-grid"><strong>Health Potions</strong><div>'+[0,1,2,3].map(n=>'<button data-action="pots" data-count="'+n+'" class="'+(n===healthPots?'active':'')+'">'+n+'</button>').join('')+'</div><span>'+healthPots+' HP / '+(3-healthPots)+' Mana · three slots total</span></div>';
  const families=Object.entries(FAMILIES).map(([id,a])=>'<button class="v12-family" data-action="begin" data-id="'+id+'" style="--accent:'+a.color+'"><span>'+a.icon+'</span><strong>'+esc(a.name)+'</strong><small>'+esc(a.kind)+'</small></button>').join('');
- return '<div class="v12-stack"><section class="v12-panel"><h2>Choose an initial affinity</h2><p class="v12-muted">Start at D'+profile.unlocked+' with your permanent gear. The first path offer is guaranteed to include your chosen affinity. Only one enemy fights at a time; no manual targeting.</p>'+status+potionSelector+'<div class="v12-family-grid">'+families+'</div></section>'+gearPanel()+'</div>';
+ return '<div class="v12-stack"><section class="v12-panel"><h2>Choose an initial affinity</h2><p class="v12-muted">Start at D'+profile.unlocked+' with your permanent gear. The first path offer is guaranteed to include your chosen affinity. Only one enemy fights at a time; no manual targeting.</p>'+status+levelSelector+potionSelector+'<div class="v12-family-grid">'+families+'</div></section>'+gearPanel()+'</div>';
 }
 function startReward(r){
  return '<section class="v12-panel"><span class="v12-eyebrow">Start of adventure</span><h2>Choose one initial '+esc(FAMILIES[r.initial].name)+' passive</h2><p class="v12-muted">Your base affinity activates immediately. These three passives are drawn from the selected family.</p><div class="v12-rewards">'+r.passiveOffers.map(passiveCard).join('')+'</div></section>';
@@ -76,7 +78,7 @@ function dispatch(action,b){
  switch(action){
   case 'close':open=false;paused=true;$('#v012-overlay').remove();document.body.classList.remove('v12-open');return;
   case 'pots':healthPots=+b.dataset.count;break;
-  case 'begin':begin(profile,idFromButton(b),healthPots);paused=false;break;
+  case 'begin':begin(profile,idFromButton(b),healthPots,selectedLevel);paused=false;break;
   case 'passive':choosePassive(profile,idFromButton(b));break;
   case 'path':choosePath(profile,idFromButton(b));paused=false;break;
   case 'reroll':rerollPath(profile,+b.dataset.index);break;
@@ -84,7 +86,7 @@ function dispatch(action,b){
   case 'potion':usePotion(profile,b.dataset.kind);break;
   case 'pause':paused=!paused;break;
   case 'abandon':if(!confirm('End this prototype run? Permanent loot will remain.'))return;abandon(profile);break;
-  case 'leave':leaveFinished(profile);break;
+  case 'leave':leaveFinished(profile);selectedLevel=profile.unlocked;break;
   default:return;
  }
  persist();render();
@@ -93,7 +95,7 @@ function show(){
  if(open)return;open=true;paused=false;
  const el=document.createElement('div');el.id='v012-overlay';el.setAttribute('role','dialog');el.setAttribute('aria-label','Wanderer v0.12 prototype');document.body.appendChild(el);document.body.classList.add('v12-open');
  el.addEventListener('click',evt=>{const b=evt.target.closest('button[data-action]');if(!b)return;try{dispatch(b.dataset.action,b);}catch(e){error=e.message;render();}});
- el.addEventListener('change',evt=>{const select=evt.target.closest('select[data-slot]');if(!select)return;try{equip(profile,+select.value);persist();render();}catch(e){error=e.message;render();}});
+ el.addEventListener('change',evt=>{const level=evt.target.closest('select[data-difficulty]');if(level){selectedLevel=+level.value;render();return;}const select=evt.target.closest('select[data-slot]');if(!select)return;try{equip(profile,+select.value);persist();render();}catch(e){error=e.message;render();}});
  render();
 }
 function addLauncher(){
