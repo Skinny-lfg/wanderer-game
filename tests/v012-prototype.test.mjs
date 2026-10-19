@@ -1,13 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {FAMILIES,PATHS,PASSIVES,MAX_AFFINITIES,STORAGE_KEY,newProfile,begin,choosePassive,choosePath,rerollPath,resolveRoom,usePotion,useCampHealthPotion,useCampManaPotion,ensurePlaneOffers,tick,stats,equip,abandon,leaveFinished} from '../online/v012-engine.mjs';
+import {FAMILIES,MAGIC_ELEMENTS,PATHS,PASSIVES,MAX_AFFINITIES,STORAGE_KEY,newProfile,begin,choosePassive,chooseMagicElement,migrateMagicProfile,ensureMagicElementChoice,choosePath,rerollPath,resolveRoom,usePotion,useCampHealthPotion,useCampManaPotion,ensurePlaneOffers,tick,stats,equip,abandon,leaveFinished} from '../online/v012-engine.mjs';
 
 test('v0.12 prototype does not use classic save key and has five families and 13 paths',()=>{
  assert.match(STORAGE_KEY,/v012/);
  assert.equal(Object.keys(FAMILIES).length,5);
  assert.equal(new Set(PATHS.map(x=>x.id)).size,13);
  for(const a of Object.keys(FAMILIES))assert.ok(PATHS.some(x=>x.affinity===a));
- assert.equal(PASSIVES.length,40);
+ assert.equal(PASSIVES.length,49);
+ assert.deepEqual(Object.keys(MAGIC_ELEMENTS),['fire','poison','frost']);
+ assert.equal(FAMILIES.magic.name,'Magic');
 });
 
 test('initial chosen affinity guaranteed in first path offers, and 3 reward choices',()=>{
@@ -62,7 +64,7 @@ test('three affinities maximum; further path offers and rerolls remain inside th
   }
  }
  r.stage='reward';
- r.passiveOffers=PASSIVES.filter(x=>x.affinity==='arcane').slice(0,3).map(x=>x.id);
+ r.passiveOffers=PASSIVES.filter(x=>x.affinity==='magic').slice(0,3).map(x=>x.id);
  assert.throws(()=>choosePassive(p,r.passiveOffers[0]),/Maximum three affinities/);
  assert.equal(r.affinities.length,3);
 });
@@ -169,7 +171,7 @@ test('boss victory alone unlocks next difficulty and keeps permanent items',()=>
 test('gear can be equipped at camp, but changes are blocked during active combat',()=>{
  const p=newProfile(77);p.inventory.push({id:9,slot:'weapon',name:'Rare Staff',rarity:'Rare',level:1,atk:21,armor:0,hp:0,mana:20,material:null});
  equip(p,9);assert.equal(p.equipped.weapon,9);
- begin(p,'arcane');choosePassive(p,p.run.passiveOffers[0]);choosePath(p,p.run.pathOffers[0]);
+ begin(p,'magic');chooseMagicElement(p,'fire');choosePassive(p,p.run.passiveOffers[0]);choosePath(p,p.run.pathOffers[0]);
  assert.throws(()=>equip(p,1),/during combat/);
 });
 
@@ -203,7 +205,7 @@ test('offered Plane wave count matches combat, wave rewards, and bonus Elite vis
 });
 
 test('gear can be changed between Planes but not during waves; resource caps change accordingly',()=>{
- const p=newProfile(219);begin(p,'arcane');choosePassive(p,p.run.passiveOffers[0]);
+ const p=newProfile(219);begin(p,'magic');chooseMagicElement(p,'poison');choosePassive(p,p.run.passiveOffers[0]);
  const r=p.run;
  p.inventory.push({id:91,slot:'armor',name:'Test Cloth Armor',rarity:'Epic',level:1,atk:0,armor:6,hp:32,mana:25,material:'Cloth',affinity:null});
  const old=stats(p);r.hp=old.hp*.7;r.mp=old.mana*.45;
@@ -233,4 +235,96 @@ test('legacy Plane offers are hydrated without overwriting an ongoing test inven
  assert.ok(p.run.planeOffers.every(x=>p.run.pathOffers.includes(x.id)&&x.waves>=1&&x.waves<=3));
  assert.equal(p.inventory.length,gearCount);
  assert.equal(ensurePlaneOffers(p),false);
+});
+
+
+test('Magic requires Fire, Poison or Frost before mana/spell/element passives',()=>{
+ for(const element of ['fire','poison','frost']){
+  const p=newProfile(1300+['fire','poison','frost'].indexOf(element));
+  begin(p,'magic');
+  assert.equal(p.run.stage,'element');
+  assert.equal(p.run.passiveOffers.length,0,'Mana and Spell Power are not offered before choosing element');
+  assert.throws(()=>choosePassive(p,'spell_focus'),/Passive not offered/);
+  assert.throws(()=>chooseMagicElement(p,'lightning'),/unavailable/);
+  chooseMagicElement(p,element);
+  assert.equal(p.run.stage,'startReward');assert.equal(p.run.magicElement,element);
+  assert.equal(p.run.passiveOffers.length,3);
+  assert.ok(p.run.passiveOffers.some(id=>PASSIVES.find(x=>x.id===id).element===element),'first choice must include a matching elemental passive');
+  assert.ok(p.run.passiveOffers.every(id=>{let e=PASSIVES.find(x=>x.id===id).element;return !e||e===element;}));
+  assert.throws(()=>chooseMagicElement(p,'fire'),/unavailable/,'cannot change elements mid-run');
+ }
+});
+test('Magic unlocked by a Plane chooses element after combat, as one of at most 3 affinities',()=>{
+ const p=newProfile(1419);begin(p,'blood');choosePassive(p,p.run.passiveOffers[0]);
+ const r=p.run;
+ const magicPlane=r.pathOffers.find(id=>PATHS.find(x=>x.id===id).affinity==='magic');
+ if(!magicPlane){
+  // The synthetic bot opens a valid Magic plane even if the random three initially omit it.
+  const path=PATHS.find(x=>x.affinity==='magic');
+  r.pathOffers[0]=path.id;
+  r.planeOffers[0]={id:path.id,waves:1,elite:false,bonus:null};
+ }
+ choosePath(p,magicPlane||r.pathOffers[0]);
+ while(r.stage==='combat'){
+  r.fight.enemy.hp=1;r.fight.enemy.attack=0;
+  for(let i=0;i<20&&r.stage==='combat';i++)tick(p,.2);
+ }
+ assert.equal(r.stage,'element');
+ assert.equal(r.affinities.includes('magic'),false);
+ chooseMagicElement(p,'frost');
+ assert.equal(r.stage,'reward');
+ assert.ok(r.affinities.includes('magic'));
+ assert.equal(r.affinities.length,2);
+ assert.equal(r.magicElement,'frost');
+ assert.ok(r.passiveOffers.some(id=>PASSIVES.find(x=>x.id===id).element==='frost'));
+ choosePassive(p,r.passiveOffers[0]);
+ assert.equal(r.stage,'path');
+});
+test('Magic elemental spells operate with Sword and Staff Wand increase elemental output',()=>{
+ function simulate(weapon){
+  const p=newProfile(4422);
+  if(weapon!=='Sword'){
+   p.inventory.push({id:4,slot:'weapon',name:'Test '+weapon,rarity:'Common',level:1,atk:7,armor:0,hp:0,mana:0,material:null,affinity:null});
+   p.equipped.weapon=4;
+  }
+  begin(p,'magic');chooseMagicElement(p,'fire');
+  choosePassive(p,p.run.passiveOffers[0]);
+  const r=p.run,plane=r.pathOffers[0];
+  choosePath(p,plane);
+  r.fight.enemy.attack=0;
+  r.fight.enemy.maxhp=9999;
+  r.fight.enemy.hp=9999;
+  const manaBefore=r.mp;
+  for(let i=0;i<10;i++)tick(p,.2);
+  return {damage:9999-r.fight.enemy.hp,manaUsed:manaBefore-r.mp,burn:r.fight.enemy.burn};
+ }
+ const sword=simulate('Sword'),wand=simulate('Wand'),staff=simulate('Staff');
+ assert.ok(sword.manaUsed>0&&sword.burn>0,'Magic spells should use mana and burn with a Sword');
+ assert.ok(wand.damage>sword.damage,'Wand improves elemental magic damage');
+ assert.ok(staff.damage>wand.damage,'Staff has a larger elemental bonus');
+});
+test('Poison stacks and Frost Chill are separate from Blood Bleed',()=>{
+ for(const element of ['poison','frost']){
+  const p=newProfile(774);begin(p,'magic');chooseMagicElement(p,element);choosePassive(p,p.run.passiveOffers[0]);
+  choosePath(p,p.run.pathOffers[0]);
+  const r=p.run;r.fight.enemy.attack=0;r.fight.enemy.hp=9999;r.fight.enemy.maxhp=9999;
+  for(let i=0;i<11;i++)tick(p,.2);
+  const e=r.fight.enemy;
+  if(element==='poison')assert.ok(e.toxic>0&&e.bleed===0,'Poison does not silently become Blood Bleed');
+  else assert.ok(e.chill>0&&e.toxic===0,'Frost applies chill instead of Poison');
+ }
+});
+test('old Arcane local test runs are migrated to Magic and prompted at a safe stage',()=>{
+ const p=newProfile(23);begin(p,'fury');choosePassive(p,p.run.passiveOffers[0]);
+ p.run.affinities.push('arcane');p.run.initial='arcane';p.run.lastPathAffinity='arcane';
+ p.inventory[0].affinity='arcane';
+ assert.equal(migrateMagicProfile(p),true);
+ assert.equal(p.run.initial,'magic');assert.equal(p.run.affinities.includes('magic'),true);
+ assert.equal(p.run.lastPathAffinity,'magic');assert.equal(p.inventory[0].affinity,'magic');
+ assert.equal(ensureMagicElementChoice(p),true);
+ assert.equal(p.run.stage,'element');
+ chooseMagicElement(p,'poison');
+ assert.equal(p.run.stage,'path');
+ assert.equal(p.run.magicElement,'poison');
+ assert.equal(migrateMagicProfile(p),false);
 });
