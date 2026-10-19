@@ -42,7 +42,14 @@ const P=[
  ['aegis','runic_shield','Runic Shield','Spell casts may create Barrier.',['aegis','magic']],
  ['fury','spellblade','Spellblade','Spell casts empower your next physical attack.',['fury','magic']]
 ];
-export const PASSIVES=P.map(([affinity,id,name,description,requires,element])=>({affinity,id,name,description,requires:requires||[],element:element||null}));
+const SPECIALIZATION_MASTERY=Object.keys(FAMILIES).flatMap(affinity=>[
+ {affinity,id:affinity+'_mastery_power',name:'Power Mastery',description:'Gain +1% direct damage per rank (overall mastery bonus capped at 8%).',requires:[],element:null,mastery:true},
+ {affinity,id:affinity+'_mastery_guard',name:'Guard Mastery',description:'Gain +1% max HP per rank (overall mastery bonus capped at 8%).',requires:[],element:null,mastery:true},
+ {affinity,id:affinity+'_mastery_focus',name:'Focus Mastery',description:'Gain +1% mana regeneration per rank (overall mastery bonus capped at 10%).',requires:[],element:null,mastery:true}
+]);
+export const PASSIVES=[...P.map(([affinity,id,name,description,requires,element])=>({affinity,id,name,description,requires:requires||[],element:element||null,mastery:false})),...SPECIALIZATION_MASTERY];
+const MAX_MASTERY_RANK=5;
+const masteryTotal=(run,suffix)=>Object.keys(FAMILIES).reduce((n,f)=>n+count(run,f+'_mastery_'+suffix),0);
 const RARITY=['Common','Uncommon','Rare','Epic','Legendary'];
 const BONUS={Common:1,Uncommon:1.26,Rare:1.58,Epic:2.12,Legendary:2.64};
 export const SLOTS=['weapon','armor','helm','gloves','boots','amulet','ring','offhand'];
@@ -79,7 +86,8 @@ export function stats(profile){
  if(f.includes('vitality'))hp*=1.1;
  if(f.includes('fury'))attack*=1.10;
  if(f.includes('aegis'))armor*=1.12;
- hp*=1+.12*count(run,'strong_heart')+.08*count(run,'vital_flow');
+ hp*=1+.12*count(run,'strong_heart')+.08*count(run,'vital_flow')+Math.min(.08,.01*masteryTotal(run,'guard'));
+ attack*=1+Math.min(.08,.01*masteryTotal(run,'power'));
  mana*=1+.12*count(run,'arcane_reservoir');
  armor*=1+.12*count(run,'iron_skin');
  const speed=(material==='Leather'?.90:1)*Math.pow(.94,count(run,'momentum'));
@@ -87,13 +95,19 @@ export function stats(profile){
 }
 function passiveOptions(run,family){
  const unlocked=new Set(run.affinities.concat(family));
- const pool=PASSIVES.filter(p=>p.affinity===family&&p.requires.every(a=>unlocked.has(a))&&(p.element===null||(family==='magic'&&p.element===run.magicElement)));
+ const pool=PASSIVES.filter(p=>!p.mastery&&p.affinity===family&&p.requires.every(a=>unlocked.has(a))&&(p.element===null||(family==='magic'&&p.element===run.magicElement)));
  const eligible=pool.filter(p=>count(run,p.id)<MAX_PASSIVE_RANK);
  const fresh=eligible.filter(p=>count(run,p.id)===0);
  const elemental=fresh.filter(p=>p.element===run.magicElement&&p.element!==null);
  const selected=family==='magic'&&elemental.length?[choice(run,elemental)]:[];
  selected.push(...shuffle(run,fresh.filter(p=>!selected.includes(p))).slice(0,3-selected.length));
  if(selected.length<3)selected.push(...shuffle(run,eligible.filter(p=>!selected.includes(p))).slice(0,3-selected.length));
+ if(selected.length<3){
+  // Repeating a single family for an entire run must never soft-lock progression.
+  // Masteries enter only after its regular passive pool is nearly exhausted.
+  const mastery=PASSIVES.filter(p=>p.mastery&&p.affinity===family&&count(run,p.id)<MAX_MASTERY_RANK);
+  selected.push(...shuffle(run,mastery).slice(0,3-selected.length));
+ }
  return selected.map(x=>x.id);
 }
 export function begin(profile,affinity,manaPots=2,level=profile.unlocked){
@@ -197,7 +211,7 @@ export function choosePassive(profile,id){
  const p=PASSIVES.find(x=>x.id===id);if(!p)throw Error('Unknown passive');
  if(r.affinities.length>=MAX_AFFINITIES&&!r.affinities.includes(p.affinity))throw Error('Maximum three affinities reached');
  if(p.affinity==='magic'&&!r.magicElement)throw Error('Choose a Magic element first');
- if(count(r,p.id)>=MAX_PASSIVE_RANK)throw Error('Passive rank already at maximum');
+ if(count(r,p.id)>=(p.mastery?MAX_MASTERY_RANK:MAX_PASSIVE_RANK))throw Error('Passive rank already at maximum');
  if(p.requires.some(f=>f!==p.affinity&&!r.affinities.includes(f)))throw Error('Hybrid affinity requirements missing');
  const old=stats(profile);
  if(!r.affinities.includes(p.affinity))r.affinities.push(p.affinity);
@@ -396,7 +410,7 @@ export function tick(profile,dt=.2){
   const regen=Math.min(s.hp*.006,.2*count(r,'renewal')+ (s.material==='Cloth'?0:0));
   r.hp=Math.min(s.hp,r.hp+regen);
  }
- r.mp=Math.min(s.mana,r.mp+dt*(s.material==='Cloth'?1.45:0.65)+dt*.65*count(r,'mana_spring'));
+ r.mp=Math.min(s.mana,r.mp+dt*(s.material==='Cloth'?1.45:0.65)*(1+Math.min(.10,.01*masteryTotal(r,'focus')))+dt*.65*count(r,'mana_spring'));
  if(e.hp<=0){
   awardWave(profile,e);
   const carry=has(r,'contagion')?Math.floor(e.bleed*.5):0;
