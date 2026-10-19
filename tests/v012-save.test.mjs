@@ -115,3 +115,11 @@ test('Phase 1 Belt and armor categories round-trip without requiring a Belt in o
  const invalid=structuredClone(committed);invalid.profile.equip.belt.armorType='Hybrid';assert.throws(()=>S.validate(invalid),/armor type/);
  invalid.profile.equip.belt.armorType='Plate';invalid.profile.equip.weapon.armorType='Plate';assert.throws(()=>S.validate(invalid),/armor type/);
 });
+test('Evasion Rating is optional for old Leather and round-trips with strict validation',()=>{
+ const old=legacy();old.stash[0].armorType='Leather';const before=JSON.stringify(old);
+ const migrated=S.migrateLegacy(old);assert.equal(JSON.stringify(old),before);assert.equal(migrated.save.profile.stash[0].evasionRating,undefined);
+ migrated.save.profile.stash[0].evasionRating=12.5;
+ assert.equal(S.validate(migrated.save).profile.stash[0].evasionRating,12.5);
+ migrated.save.profile.stash[0].evasionRating=-1;assert.throws(()=>S.validate(migrated.save),/Evasion/);
+ migrated.save.profile.stash[0].evasionRating=12;migrated.save.profile.stash[0].armorType='Plate';assert.throws(()=>S.validate(migrated.save),/Evasion/);
+});

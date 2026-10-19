@@ -1228,7 +1228,7 @@ const SNAME={helm:'Helm',amulet:'Amulet',armor:'Armor',gloves:'Gloves',weapon:'W
 /* Wanderer v0.10.1 — economy primitives. Pure, browser/Node compatible. */
 (function(root){
   'use strict';
-  const fields=['atk','def','hp','spd','str','agi','int','end','cha','mana','spell'];
+  const fields=['atk','def','hp','spd','str','agi','int','end','cha','mana','spell','evasionRating'];
   const levels=Object.freeze({
     economy:{chance:.35,costFactor:.5},
     balanced:{chance:.50,costFactor:1},
@@ -1332,7 +1332,34 @@ function dungeonImage(t){return ART[t.image]||t.image}
 const VALUABLES=[{name:'Antique Coins',worth:8,icon:'🪙'},{name:'Golden Chalice',worth:18,icon:'🏆'},{name:'Runic Gem',worth:27,icon:'💎'},{name:'Ancient Idol',worth:40,icon:'🗿'},{name:'Jeweled Crown',worth:55,icon:'👑'}];
 const NAMES={'Two-Handed':['Ancient Greatsword','Runic Greataxe','Colossus Blade'],'Off-Hand Dagger':['Parrying Dagger','Silent Blade','Venom Fang'],Sword:['Wanderer Sword','Steel Longsword','Runeblade'],Mace:['Iron Mace','War Hammer','Breaker Mace'],Bow:['Hunter Bow','Windstriker Bow','Longbow'],Daggers:['Twin Daggers','Serpent Blades','Assassin Knives'],Staff:['Mystic Staff','Runed Staff','Elder Staff'],Wand:['Enchanted Wand','Moon Wand','Arcane Wand'],Shield:['Guardian Shield','Warden Shield','Tower Shield'],Orb:['Runic Orb','Frost Orb','Arcane Orb'],Tome:['Mage Tome','Grimoire','Cursed Tome'],Charm:['Talisman','Spell Charm','Eldritch Focus'],Helm:['War Helm','Scout Hood','Wizard Circlet'],Armor:['Knight Cuirass','Shadow Robe','Leather Vest'],Gloves:['Warrior Gauntlets','Mystic Gloves','Quick Wraps'],Boots:['Traveler Boots','Iron Greaves','Swift Treads'],Ring:['Silver Ring','Ruby Ring','Azure Ring'],Belt:['Traveler Belt','Woven Belt','War Belt'],Amulet:['Mystic Pendant','Ashen Medallion','Amulet of Dawn']};
 const ARMOR_SLOTS=['helm','armor','gloves','boots','belt'],ARMOR_TYPES=['Cloth','Leather','Plate'];
-const FIELDS=[['Attack','atk'],['Defense','def'],['Health','hp'],['Speed','spd'],['Strength','str'],['Agility','agi'],['Intelligence','int'],['Endurance','end'],['Charisma','cha'],['Mana','mana'],['Spell','spell']];
+const FIELDS=[['Attack','atk'],['Defense','def'],['Health','hp'],['Speed','spd'],['Strength','str'],['Agility','agi'],['Intelligence','int'],['Endurance','end'],['Charisma','cha'],['Mana','mana'],['Spell','spell'],['Evasion Rating','evasionRating']];
+// Provisional E#-relative evasion. Rating is independent of Agility.
+const EVASION_CAP=.30,EVASION_SCALE=20;
+function gearEvasionRating(item){
+ if(!item||item.armorType!=='Leather'||!ARMOR_SLOTS.includes(item.slot))return 0;
+ if(item.evasionRating!==undefined)return Number.isFinite(Number(item.evasionRating))?Math.max(0,Number(item.evasionRating)):0;
+ // Read-only compatibility for pre-hotfix Leather, including reinforced Legendaries.
+ const tier=clamp(Number(item.tier)||1,1,200),base=Math.round((2+tier*.91)*(RARITY[item.rarity]?.[1]||1));
+ const rank=item.rarity==='Legendary'?clamp(Number(item.upgradeRank)||0,0,10):0;
+ return Math.round(base*(1+rank*.02)*100)/100;
+}
+function itemStatValue(item,key){return key==='evasionRating'?gearEvasionRating(item):Number(item?.[key])||0;}
+function evasionChance(rating,tier){
+ if(!Number.isFinite(rating)||rating<=0)return 0;
+ const scale=EVASION_SCALE*(2+Math.max(1,Number(tier)||1)*.91);
+ return Math.min(EVASION_CAP,1/(1+scale/rating));
+}
+function enemyAttackType(enemy){
+ if(enemy.attackType)return enemy.attackType;
+ return enemy.eliteType==='caster'||enemy.bossStyle==='leech'?'spell':'physical';
+}
+function tryDodge(run,type){
+ const chance=type==='physical'?evasionChance(run.stats.evasionRating||0,run.tier):0;
+ if(!chance||Math.random()>=chance)return false;
+ addLog('DODGE · '+run.enemy.name+' physical attack avoided (0 damage)','good');
+ floatText('DODGE','hero');return true;
+}
+
 const TYPES=['Sword','Mace','Bow','Daggers','Staff','Wand','Two-Handed'];
 const OFFHAND_TYPES=['Shield','Off-Hand Dagger','Orb','Tome','Charm'];
 const isTwoHanded=o=>['Two-Handed','Bow','Staff'].includes(o?.subtype);
@@ -1430,7 +1457,7 @@ function makeSlots(){return Object.fromEntries(SLOTS.map(s=>[s,null]))}
 function starter(){return {id:makeId(),slot:'weapon',subtype:'Sword',name:'Old Sword',tier:1,rarity:'Common',effect:null,atk:5,str:1,obtainedAt:Date.now(),crafted:false,recoveryStarter:true}}
 function completedAttempt(){return state?.attemptCompleted===true}
 function fresh(){state={attemptCompleted:false,characterId:'wanderer',onlineProgress:{attemptId:makeId(),deepestCleared:0,activeMs:0,timerMetric:'combat-v1',timingEligible:true,milestones:{}},stashCapacity:STASH_BASE_CAPACITY,confirmNormalDungeons:true,maxDungeon:1,chosen:1,selectedPath:null,legendaryHuntId:null,protectedItemIds:[],runes:[],runeSlots:[null,null,null],pendingRuneReward:null,fragments:0,gold:0,stash:[starter()],equip:makeSlots(),valuables:[],offersByLevel:{},merchant:null,sigils:[],run:null};}
-function migrateItem(o){if(!o)return null;const v={...o};if(v.slot==='ring')v.slot='ring1';if(!SLOTS.includes(v.slot))v.slot='weapon';v.id=v.id||makeId();v.tier=clamp(Number(v.tier)||1,1,200);v.rarity={Comum:'Common',Incomum:'Uncommon',Raro:'Rare','Épico':'Epic','Lendário':'Legendary'}[v.rarity]||v.rarity||'Common';if(!RARITY[v.rarity])v.rarity='Common';if(v.effect==='burst')v.effect='sunder';if(!ELEMENTS[v.effect])v.effect=null;v.subtype=v.subtype||({weapon:'Sword',offhand:'Shield',ring1:'Ring',ring2:'Ring'}[v.slot]||SNAME[v.slot]);if(['Staff','Wand'].includes(v.subtype)){v.magic=v.magic||(['poison','burn','slow','drain','nature','shock','tide'].includes(v.effect)?v.effect:'burn');v.effect=v.magic;}if(['Orb','Tome','Charm'].includes(v.subtype)&&['poison','burn','slow','drain','nature','shock','tide'].includes(v.effect))v.magic=v.effect;v.obtainedAt=Number(v.obtainedAt)||Date.now();v.name=String(v.name||'Equipment');if(v.recoveryStarter===true&&v.name==='Training Sword')v.name='Old Sword';if(v.rarity==='Legendary'){const identity=LEGENDARY_BY_ID[v.legendaryId]||LEGENDARY_BY_NAME[v.name];if(legendaryMatches(identity,v))v.legendaryId=identity.id;else delete v.legendaryId;}for(const [,field]of FIELDS)v[field]=Number(v[field])||0;if(v.magic&&!ELEMENTS[v.magic])v.magic=null;v.crafted=!!v.crafted;v.locked=!!v.locked;
+function migrateItem(o){if(!o)return null;const v={...o};if(v.slot==='ring')v.slot='ring1';if(!SLOTS.includes(v.slot))v.slot='weapon';v.id=v.id||makeId();v.tier=clamp(Number(v.tier)||1,1,200);v.rarity={Comum:'Common',Incomum:'Uncommon',Raro:'Rare','Épico':'Epic','Lendário':'Legendary'}[v.rarity]||v.rarity||'Common';if(!RARITY[v.rarity])v.rarity='Common';if(v.effect==='burst')v.effect='sunder';if(!ELEMENTS[v.effect])v.effect=null;v.subtype=v.subtype||({weapon:'Sword',offhand:'Shield',ring1:'Ring',ring2:'Ring'}[v.slot]||SNAME[v.slot]);if(['Staff','Wand'].includes(v.subtype)){v.magic=v.magic||(['poison','burn','slow','drain','nature','shock','tide'].includes(v.effect)?v.effect:'burn');v.effect=v.magic;}if(['Orb','Tome','Charm'].includes(v.subtype)&&['poison','burn','slow','drain','nature','shock','tide'].includes(v.effect))v.magic=v.effect;v.obtainedAt=Number(v.obtainedAt)||Date.now();v.name=String(v.name||'Equipment');if(v.recoveryStarter===true&&v.name==='Training Sword')v.name='Old Sword';if(v.rarity==='Legendary'){const identity=LEGENDARY_BY_ID[v.legendaryId]||LEGENDARY_BY_NAME[v.name];if(legendaryMatches(identity,v))v.legendaryId=identity.id;else delete v.legendaryId;}for(const [,field]of FIELDS)if(field!=='evasionRating'||v[field]!==undefined)v[field]=Number(v[field])||0;if(v.magic&&!ELEMENTS[v.magic])v.magic=null;v.crafted=!!v.crafted;v.locked=!!v.locked;
 if(v.rarity==='Legendary'){
  v.upgradeRank=Number(v.upgradeRank)||0;
  // Earlier v0.10.1 saves rounded each reinforcement to integers, obscuring low-tier upgrades.
@@ -1462,6 +1489,7 @@ function checkedStoredSave(raw){
   if(!plain(item))invalid(label);
   if(item.id!==undefined){if(typeof item.id!=='string'||!item.id.trim()||seen.has(item.id))invalid('duplicate or invalid item ID');seen.add(item.id);}
   if(item.slot!==undefined&&(typeof item.slot!=='string'||!SLOTS.includes(item.slot)&&item.slot!=='ring'))invalid('equipment slot');
+  if(item.evasionRating!==undefined&&(Number(item.evasionRating)<0||Number(item.evasionRating)>0&&(item.armorType!=='Leather'||!ARMOR_SLOTS.includes(item.slot))))invalid('Evasion Rating');
   if(item.armorType!==undefined&&(!ARMOR_SLOTS.includes(item.slot)||!ARMOR_TYPES.includes(item.armorType)))invalid('armor type');
   if(item.tier!==undefined)finite(item.tier,'equipment tier',1,DUNGEON_CAP,true);
   if(item.name!==undefined&&typeof item.name!=='string')invalid('equipment name');
@@ -1915,6 +1943,7 @@ if(armorType){
  o.str=o.agi=o.int=o.end=0;
  o[{Cloth:'int',Leather:'agi',Plate:'str'}[armorType]]=budget;
  o.armorType=armorType;
+ if(armorType==='Leather')o.evasionRating=power;
 }
 if(rarity==='Legendary'){const identity=legendaryIdentity;if(identity){o.legendaryId=identity.id;o.name=identity.name;}o.legendaryPower=legendaryDefinition?legendaryDefinition.name+': '+legendaryDefinition.description:'Powerful strike once per encounter';o.atk+=subtype==='Sword'?tier+4:0;}
 return o;}
@@ -2032,11 +2061,12 @@ function setProgress(n){return `${Math.min(n,5)}/${n>=3?5:n>=2?3:2}`}
 function setBonuses(counts){return {list:[],values:{}};}
 function totalStats(equipment=state.equip,ownedRunes=null,equippedRuneIds=null){
  const equipped=isTwoHanded(equipment.weapon)?{...equipment,offhand:null}:equipment;
- const s={str:5,agi:5,int:5,end:5,cha:5,atkFlat:0,defFlat:0,hpFlat:0,spdFlat:0,manaFlat:0,spellFlat:0};
+ const s={str:5,agi:5,int:5,end:5,cha:5,atkFlat:0,defFlat:0,hpFlat:0,spdFlat:0,manaFlat:0,spellFlat:0,evasionRating:0};
  for(const item of Object.values(equipped))if(item)for(const [,key]of FIELDS){
  const dest={atk:'atkFlat',def:'defFlat',hp:'hpFlat',spd:'spdFlat',mana:'manaFlat',spell:'spellFlat'}[key]||key;
- s[dest]+=Number(item[key])||0;
+ s[dest]+=itemStatValue(item,key);
  }
+ s.evasionRating=Math.min(Number.MAX_SAFE_INTEGER,s.evasionRating);
  const runeItems=ownedRunes===null?(typeof state==='undefined'?[]:state.runes||[]):ownedRunes;
  const runeSlots=equippedRuneIds===null?(typeof state==='undefined'?[]:state.runeSlots||[]):equippedRuneIds;
  const usedFamilies=new Set();
@@ -2100,7 +2130,7 @@ function html(s){
  if(previewReturn){const back=$('phase3Return');if(back)back.onclick=()=>phase3Go('phase1');}
 }
 function formatItemStat(n){const x=Number(n)||0;return Number(x.toFixed(2)).toString()}
-function itemStats(o){return FIELDS.filter(([,f])=>o?.[f]).map(([k,f])=>`${o[f]>0?'+':''}${formatItemStat(o[f])} ${k}`).join(' · ')}
+function itemStats(o){return FIELDS.filter(([,f])=>itemStatValue(o,f)).map(([k,f])=>`${itemStatValue(o,f)>0?'+':''}${formatItemStat(itemStatValue(o,f))} ${k}`).join(' · ')}
 function legendaryRankBadge(o){return o?.rarity==='Legendary'&&(o.upgradeRank||0)>0?'<span class="legendaryRankBadge" title="Legendary reinforcement rank '+o.upgradeRank+' of 10">+'+o.upgradeRank+'/10</span>':''}
 
 function newBadge(o){return o?.isNew===true?'<span class="newBadge">NEW</span>':''}
@@ -2189,8 +2219,8 @@ function itemComparison(item,target=item.slot){
 const equipped=state.equip[target],next=totalStats(comparisonEquip(item,target)),current=totalStats();
 const powerDiff=next.power-current.power,sign=n=>n>0?'+'+n:String(n);
 const card=(o,label)=>`<div class="compareCard" ${rarityFrame(o)}><span class="eyebrow">${label}</span>${o?`<img src="${itemImg(o)}" alt="${esc(o.subtype)}"><b style="color:${rarityColor(o)}">${esc(o.name)}</b><span>${itemSource(o)}</span><span>${detailEffectHtml(o)}</span>`:'<b>Empty slot</b>'}</div>`;
-const rows=FIELDS.filter(([,key])=>(Number(item[key])||0)!==(Number(equipped?.[key])||0)).map(([label,key])=>{
-const a=Number(equipped?.[key])||0,b=Number(item[key])||0,d=b-a;
+const rows=FIELDS.filter(([,key])=>itemStatValue(item,key)!==itemStatValue(equipped,key)).map(([label,key])=>{
+const a=itemStatValue(equipped,key),b=itemStatValue(item,key),d=b-a;
 return `<tr><th scope="row">${label}</th><td>${a}</td><td>${b}</td><td class="${d>0?'green':d<0?'red':'muted'}">${sign(d)}</td></tr>`;
 }).join('');
 return `<section class="itemComparison"><div class="topline"><h3>Quick Compare · ${esc(SNAME[target])}</h3><span class="tag">Estimated Power ${current.power} → ${next.power} <b class="${lostSetTiers(item,target).length?'gold':powerDiff>0?'green':powerDiff<0?'red':'muted'}">(${sign(powerDiff)})</b></span></div>${comparisonWarning(item,target)}<div class="comparisonCards">${card(equipped,'Equipped')}${card(item,'Selected')}</div><div class="comparisonTable"><table><thead><tr><th>Attribute</th><th>Current</th><th>Selected</th><th>Δ</th></tr></thead><tbody>${rows||'<tr><td colspan="4">Same base attributes</td></tr>'}</tbody></table></div>${target==='offhand'&&isTwoHanded(state.equip.weapon)?'<p class="small gold">Off-Hand locked. Unequip your two-handed weapon before equipping an Off-Hand.</p>':''}${setPreview(item,target)}</section>`;
@@ -2203,7 +2233,7 @@ let buttons=source==='stash'?`${['ring1','ring2'].includes(o.slot)?'<button clas
 return `<div class="inspect" ${rarityFrame(o)}><div class="inspectHero"><img ${rarityFrame(o)} src="${itemImg(o)}" alt="${esc(o.subtype)}"><div><h3 style="color:${rarityColor(o)}">${esc(o.name)}</h3>${legendaryRankBadge(o)}<div class="small">${itemSource(o)}</div><div class="small" style="color:${rarityColor(o)}">${o.rarity==='Legendary'?'✦ ':''}${detailEffectHtml(o)}</div></div></div><div class="buttonRow inspectActions">${buttons}</div><div class="rule"></div><div class="small">${esc(itemStats(o)||'No base stats')}</div>${isTwoHanded(o)?'<p class="small gold">⚔ Two-Handed · occupies Weapon + Off-Hand</p>':''}${o.subtype==='Off-Hand Dagger'?'<p class="small gold">🗡 Physical off-hand · extra strikes</p>':''}${legendaryDescription(o)?`<p class="small gold">✦ ${esc(legendaryDescription(o))}</p>`:''}${source!=='equipped'?`${['ring1','ring2'].includes(o.slot)?`<details class="ringComparison"><summary>Compare if equipped in Ring 1</summary>${itemComparison(o,'ring1')}</details><details class="ringComparison"><summary>Compare if equipped in Ring 2</summary>${itemComparison(o,'ring2')}</details>`:itemComparison(o)}`:''}</div>`;
 }
 function setDetails(stats){return stats.sets.length?[...stats.sets].sort((a,b)=>setStage(stats.counts[b.effect]||0)-setStage(stats.counts[a.effect]||0)||(stats.counts[b.effect]||0)-(stats.counts[a.effect]||0)).map(b=>`<div class="setItem"><b style="color:${ELEMENTS[b.effect].color}">${affinityArt(b.effect)} ${esc(b.title)} · ${setProgress(stats.counts[b.effect])}</b><div>${esc(b.desc)}</div></div>`).join(''):`<p class="small muted">Equip two items with the same affinity for a set bonus.</p>`}
-function statsWidget(s){const uncapped=Math.round((4+s.cha*.95+(s.counts.crit||0)*2+(s.bonus.critBonus||0))/Math.sqrt(Math.max(1,s.rawAttackSpeed/1.3)));let rows=[['⚔️ Attack',s.attack],['🛡 Defense',s.defense],['❤️ Health',s.maxhp],['💨 Hits / sec',s.attacksPerSec.toFixed(2)],['🎯 Critical',s.crit+'%'+(s.crit>=65?' · CAP'+(uncapped>65?' ('+uncapped+'% raw)':''):'')],['⚡ Gear Power',s.power]];if(s.blockChance)rows.push(['🛡 Block',s.blockChance+'%']);if(s.caster)rows.push(['💧 Mana',s.mana],['💠 Mana regen',s.manaRegen+'/s'],['✨ Spell Power',s.spellPower]);return `<div class="statsGrid">${rows.map(([name,num])=>`<div class="stat"><label>${name}</label><b>${num}</b></div>`).join('')}</div>`}
+function statsWidget(s){const evasionTier=state?.run?.tier||(PHASE1_PREVIEW?(phase1Controller?.state.expedition||phase1Controller?.state.unlocked||1):state?.chosen||1);const uncapped=Math.round((4+s.cha*.95+(s.counts.crit||0)*2+(s.bonus.critBonus||0))/Math.sqrt(Math.max(1,s.rawAttackSpeed/1.3)));let rows=[['⚔️ Attack',s.attack],['🛡 Defense',s.defense],['❤️ Health',s.maxhp],['💨 Hits / sec',s.attacksPerSec.toFixed(2)],['🎯 Critical',s.crit+'%'+(s.crit>=65?' · CAP'+(uncapped>65?' ('+uncapped+'% raw)':''):'')],['⚡ Gear Power',s.power],['Evasion',formatItemStat(s.evasionRating||0)+' rating · '+(100*evasionChance(s.evasionRating||0,evasionTier)).toFixed(1)+'% vs E'+evasionTier]];if(s.blockChance)rows.push(['🛡 Block',s.blockChance+'%']);if(s.caster)rows.push(['💧 Mana',s.mana],['💠 Mana regen',s.manaRegen+'/s'],['✨ Spell Power',s.spellPower]);return `<div class="statsGrid">${rows.map(([name,num])=>`<div class="stat"><label>${name}</label><b>${num}</b></div>`).join('')}</div>`}
 function renderTavern(){
  wallet();
  const s=totalStats(),nextBoss=Math.min(DUNGEON_CAP,Math.ceil(state.maxDungeon/10)*10);
@@ -2554,7 +2584,7 @@ function enemyFor(level,enc,override=null){
  const atk=Math.max(1,Math.round(v.atk*mult*(elite?elite.atk:role==='skirmisher'?1.08:1)));
  const defense=Math.max(0,Math.round(v.def*mult*(elite?elite.def:1)));
  const barrier=variant?.style==='guardian'?Math.max(3,Math.round(level*.9)):elite?.id==='tank'?Math.max(1,Math.round(1+level*.3)):0;
- return {name:miniboss?elite.icon+' '+elite.name:mob.name,image:elite?eliteArt(elite.id,mob.image):mob.image,role,bossStyle:variant?.style||null,
+ return {name:miniboss?elite.icon+' '+elite.name:mob.name,image:elite?eliteArt(elite.id,mob.image):mob.image,role,bossStyle:variant?.style||null,attackType:elite?.id==='caster'||variant?.style==='leech'?'spell':'physical',
  miniboss,eliteType:elite?.id||null,archetypeName:elite?.name||null,hp,maxhp:hp,atk,def:defense,baseDef:defense,barrier,
  attackEvery:elite?elite.interval:role==='skirmisher'?1.42:role==='bruiser'?1.72:1.62,boss,effect:theme.effect,poison:0,burn:0,bleed:0,
  poisonStacks:0,burnStacks:0,bleedStacks:0,dots:{poison:[],bleed:[],burn:[]},slowTime:0,enraged:false};
@@ -2649,7 +2679,7 @@ function animateEnemyStrike(abilityFx=null){
  const kind=abilityFx||(e?.eliteType==='tank'?'EliteTank':e?.eliteType==='berserker'?'EliteBerserker':e?.role==='bruiser'||e?.boss?'EnemyBruiser':'EnemySkirmisher');
  combatEffect(kind);
 }
-function floatText(n,target='enemy',crit=false){const el=$('scene');if(!el)return;let x=document.createElement('span');x.className='float';x.textContent=(crit?'CRIT! ':'')+Math.round(n);x.style.color=crit?'#f4d18a':target==='enemy'?'#f5b5a8':'#a3e1ff';x.style.left=target==='enemy'?'70%':'22%';x.style.top='50%';el.appendChild(x);setTimeout(()=>x.remove(),870)}
+function floatText(n,target='enemy',crit=false){const el=$('scene');if(!el)return;let x=document.createElement('span');x.className='float';x.textContent=typeof n==='string'?n:(crit?'CRIT! ':'')+Math.round(n);x.style.color=crit?'#f4d18a':target==='enemy'?'#f5b5a8':'#a3e1ff';x.style.left=target==='enemy'?'70%':'22%';x.style.top='50%';el.appendChild(x);setTimeout(()=>x.remove(),870)}
 function synchronizeDots(enemy){
  if(!enemy.dots)return;
  for(const key of ['poison','bleed','burn']){
@@ -3032,6 +3062,8 @@ function updateFight(){
   // Elite Berserker cannot one-shot a full-health player with one direct hit.
   // Cap before Block/Barrier so defensive investment still matters.
   if(e.eliteType==='berserker')raw=Math.min(raw,Math.max(1,Math.floor(r.maxhp*.35)));
+  if(tryDodge(r,enemyAttackType(e))){animateEnemyStrike();}
+  else{
   const mitigation=Math.max(lt.guard||0,lt.weaken||0);lt.guard=0;lt.weaken=0;
   if(mitigation)raw=Math.max(1,Math.round(raw*(1-mitigation)));
   if(isPhase1Run()&&phase1Build)raw=WandererV012Buildcraft.incoming(phase1Build,phase2Context(r),raw);
@@ -3070,6 +3102,7 @@ function updateFight(){
   if(r.hp>0&&s.bonus.natureRenewal&&!t.natureRenewalUsed&&r.hp<=r.maxhp*.35){t.natureRenewalUsed=true;const gained=setHeal(r,r.maxhp*.08);addLog('🌿 Verdant Renewal: +'+Math.round(gained)+' HP','good');}
   if(r.hp>0&&s.bonus.tideSurge&&!t.tideSurgeUsed&&r.barrier<r.maxhp*.05){t.tideSurgeUsed=true;const gained=setBarrier(r,r.maxhp*.08);addLog('🌊 High Tide: +'+Math.round(gained)+' Barrier','good');}
   animateEnemyStrike(enemyAbilityVfx);
+  }
  }
  if(r.hp<=0){
   if(s.bonus.secondWind&&!r.secondWindUsed){r.secondWindUsed=true;r.hp=1;setBarrier(r,r.maxhp*.08);addLog('💚 Second Wind! Survived lethal damage (once per expedition)','good');}

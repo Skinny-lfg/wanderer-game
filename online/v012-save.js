@@ -3,7 +3,7 @@
 'use strict';
 const FORMAT='wanderer-expedition',VERSION=12,PREFIX='wanderer_v012_validation_v1_';
 const SLOTS=['helm','amulet','armor','gloves','weapon','offhand','ring1','ring2','boots','belt'];
-const STATS=['atk','def','hp','spd','str','agi','int','end','cha','mana','spell'];
+const STATS=['atk','def','hp','spd','str','agi','int','end','cha','mana','spell','evasionRating'];
 const EFFECTS=['poison','bleed','crit','sunder','shield','regen','burn','slow','drain','nature','shock','tide','crystal'];
 const RUNES=['might','swiftness','wisdom','fortitude','fortune','fury','warding','vitality'];
 const plain=x=>x!==null&&Object.prototype.toString.call(x)==='[object Object]';
@@ -37,6 +37,7 @@ function profileCheck(p){
  const ids=new Set();
  function itemCheck(item){
   requireValue(plain(item)&&typeof item.id==='string'&&item.id.length>0&&!ids.has(item.id),'duplicate/missing item ID');ids.add(item.id);
+  if(item.evasionRating!==undefined)requireValue(typeof item.evasionRating==='number'&&Number.isFinite(item.evasionRating)&&item.evasionRating>=0&&(item.evasionRating===0||item.armorType==='Leather'&&['helm','armor','gloves','boots','belt'].includes(item.slot)),'Evasion Rating');
   if(item.armorType!==undefined)requireValue(['helm','armor','gloves','boots','belt'].includes(item.slot)&&['Cloth','Leather','Plate'].includes(item.armorType),'armor type');
   requireValue(SLOTS.includes(item.slot)&&integer(item.tier,1,200)&&typeof item.name==='string','item identity');
   requireValue(['Common','Uncommon','Rare','Epic','Legendary'].includes(item.rarity),'item rarity');

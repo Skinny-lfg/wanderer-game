@@ -26,8 +26,9 @@ export function validateSave(value){
   const seen=new Set();
   for(const item of [...s.stash,...Object.values(s.equip).filter(Boolean)]){
     if(item.id!==undefined){if(typeof item.id!=='string'||!item.id.trim()||seen.has(item.id))throw new Error('Duplicate or invalid item ID.');seen.add(item.id);}
+    if(item.evasionRating!==undefined&&(typeof item.evasionRating!=='number'||!Number.isFinite(Number(item.evasionRating))||Number(item.evasionRating)<0||Number(item.evasionRating)>0&&(item.armorType!=='Leather'||!['helm','armor','gloves','boots','belt'].includes(item.slot))))throw new Error('Invalid Evasion Rating.');
     if(item.armorType!==undefined&&(!['helm','armor','gloves','boots','belt'].includes(item.slot)||!['Cloth','Leather','Plate'].includes(item.armorType)))throw new Error('Invalid armor type.');
-    for(const field of ['atk','def','hp','spd','str','agi','int','end','cha','mana','spell']){
+    for(const field of ['atk','def','hp','spd','str','agi','int','end','cha','mana','spell','evasionRating']){
       if(item[field]!==undefined&&(item[field]===null||item[field]===''||!Number.isFinite(Number(item[field]))))throw new Error('Invalid item '+field+'.');
     }
   }

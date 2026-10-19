@@ -21,9 +21,10 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
   setTimeout:fn=>{callbacks.push(fn);return callbacks.length;},clearTimeout(){},setInterval:()=>0,clearInterval(){}};
  const inject=String.raw`
  const auditForge=renderForge,auditMerchant=renderMerchant;
- let auditConfirmation=null;
+ let auditConfirmation=null,auditFeedback=null;
  showConfirm=(title,body,fn)=>{auditConfirmation=fn;};showModal=()=>document.createElement('dialog');showPendingRuneReward=()=>{};
- render=renderCombat=renderPhase1=renderForge=renderMerchant=wallet=addLog=bannerMessage=animateStrike=animateDefense=animateEnemyStrike=updateBars=floatText=resetDungeonEntryScroll=()=>{};
+ render=renderCombat=renderPhase1=renderForge=renderMerchant=wallet=bannerMessage=animateStrike=animateDefense=animateEnemyStrike=updateBars=resetDungeonEntryScroll=()=>{};
+ addLog=(text,type)=>{if(auditFeedback)auditFeedback.logs.push({text,type});};floatText=(value,target)=>{if(auditFeedback)auditFeedback.floats.push({value,target});};
  phase1Init();
  globalThis.audit={
   state:()=>state,controller:()=>phase1Controller,build:()=>phase1Build,draft:()=>phase1Draft,
@@ -31,8 +32,9 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
   passiveIcons:phase2PassiveIcons,initialPassive:WandererV012Buildcraft.initial,
   tick:updateFight,potion:phase3UsePotion,reroll:phase3Reroll,win:phase1WaveWon,death:phase1Death,abandon:phase1Abandon,
   now:setNow,ready:setReady,heal:setHeal,
+  feedback:()=>auditFeedback={logs:[],floats:[]},rng:value=>{Math.random=()=>value;},
   stats:phase2Stats,baseStats:totalStats,makeItem,
-  gear:{setCounts,setBonuses,itemSource,itemImg,detailEffectHtml,affinityBadge,legendaryDescription,migrateItem,checkedStoredSave,
+  gear:{evasionChance,gearEvasionRating,tryDodge,enemyAttackType,statsWidget,itemComparison,setCounts,setBonuses,itemSource,itemImg,detailEffectHtml,affinityBadge,legendaryDescription,migrateItem,checkedStoredSave,
    weaponAttack,legendaryReady,legendaryAttackBonus,dungeonEquipmentOdds,placeholderIcon,renderStash,
    renderForge:()=>auditForge(),renderMerchant:()=>auditMerchant(),
    screen:()=>document.getElementById('screen').innerHTML},slots:SLOTS,types:TYPES,offhandTypes:OFFHAND_TYPES,

@@ -1,7 +1,7 @@
 /* Wanderer v0.10.1 — economy primitives. Pure, browser/Node compatible. */
 (function(root){
   'use strict';
-  const fields=['atk','def','hp','spd','str','agi','int','end','cha','mana','spell'];
+  const fields=['atk','def','hp','spd','str','agi','int','end','cha','mana','spell','evasionRating'];
   const levels=Object.freeze({
     economy:{chance:.35,costFactor:.5},
     balanced:{chance:.50,costFactor:1},

@@ -50,3 +50,9 @@ test('Belt and armor category validation stays compatible with legacy saves',()=
  assert.throws(()=>validateSave({...save,equip:{belt:{...belt,armorType:'Hybrid'}}}),/armor type/);
  assert.throws(()=>validateSave({...save,stash:[{...belt,slot:'weapon'}]}),/armor type/);
 });
+test('optional Leather Evasion Rating accepts old saves and rejects invalid new values',()=>{
+ const item={id:'leather',name:'Leather Vest',slot:'armor',armorType:'Leather',tier:5,rarity:'Rare',evasionRating:10};
+ assert.equal(validateSave({...save,stash:[item]}).stash[0].evasionRating,10);
+ for(const evasionRating of [-1,Infinity,NaN,false])assert.throws(()=>validateSave({...save,stash:[{...item,evasionRating}]}),/Evasion/);
+ assert.throws(()=>validateSave({...save,stash:[{...item,armorType:'Cloth'}]}),/Evasion/);
+});
