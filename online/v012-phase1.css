@@ -96,3 +96,7 @@
  .phase3IntegratedPreview .scene .combatant>img{max-height:105px}
  .phase3Nav button{font-size:11px}
 }
+
+.phase3ReturnBar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin:0 0 12px;padding:10px 12px;background:#2d202b;border:1px solid #74536b;border-radius:9px;position:sticky;top:4px;z-index:12}
+.phase3ReturnBar button{min-height:42px;flex-shrink:0}
+@media(max-width:580px){.phase3ReturnBar{top:0;padding:8px}.phase3ReturnBar button{width:100%}.phase3ReturnBar span{display:none}}
