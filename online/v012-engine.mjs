@@ -103,7 +103,7 @@ export function begin(profile,affinity,manaPots=2,level=profile.unlocked){
  if(!Number.isInteger(level)||level<1||level>profile.unlocked)throw Error('Expedition level not unlocked');
  const seed=(profile.seed+0x9e3779b9+profile.record.length*31337)|0;profile.seed=seed;
  const run={level,room:1,seed,initial:affinity,affinities:[affinity],magicElement:null,elementReturnStage:null,passives:[],potions:{hp:Math.min(3-manaPots,profile.healthPotionStock??3),mana:Math.min(manaPots,profile.manaPotionStock??3)},rerolls:3,stage:'startReward',lastPathAffinity:null,selectedPath:null,pathOffers:[],passiveOffers:[],rooms:['combat',...shuffle({seed:seed^7312},ROOM_TYPES.slice(1)),'boss'],history:[],hp:0,mp:0,barrier:0,fight:null,loot:[],result:null,log:['Expedition started.']};
- profile.run=run;profile.restHpRatio=1;const s=stats(profile);run.hp=s.hp;run.mp=Math.max(0,Math.round(s.mana*clamp(profile.restMpRatio??1,.3,1)));
+ profile.run=run;profile.restHpRatio=1;profile.restMpRatio=1;const s=stats(profile);run.hp=s.hp;run.mp=s.mana;
  if(affinity==='magic'){run.stage='element';run.elementReturnStage='startReward';run.passiveOffers=[];}else run.passiveOffers=passiveOptions(run,affinity);
  return profile;
 }
@@ -157,7 +157,7 @@ export function chooseMagicElement(profile,element){
  return profile;
 }
 function allowedPathFamilies(run){
- return AFFINITY_IDS.filter(f=>(run.affinities.length<MAX_AFFINITIES||run.affinities.includes(f))&&(run.room===1||f!==run.lastPathAffinity));
+ return AFFINITY_IDS.filter(f=>(run.affinities.length<MAX_AFFINITIES||run.affinities.includes(f))&&(run.room===1||run.affinities.length>=2||f!==run.lastPathAffinity));
 }
 function rollPlane(run,id){
  const kind=run.rooms[run.room-1];
@@ -231,7 +231,7 @@ function startCombat(profile){
 }
 export function choosePath(profile,id){
  const r=profile.run;if(!r||r.stage!=='path'||!r.pathOffers.includes(id))throw Error('Path unavailable');
- const path=PATHS.find(p=>p.id===id);if(r.room>1&&path.affinity===r.lastPathAffinity)throw Error('Chosen affinity locked for one room');
+ const path=PATHS.find(p=>p.id===id);if(r.room>1&&r.affinities.length<2&&path.affinity===r.lastPathAffinity)throw Error('Choose another affinity before repeating the first');
  if(r.affinities.length>=MAX_AFFINITIES&&!r.affinities.includes(path.affinity))throw Error('Maximum three affinities reached');
  r.selectedPath=id;r.lastPathAffinity=path.affinity;r.history.push({room:r.room,path:id,affinity:path.affinity,type:r.rooms[r.room-1]});
  r.selectedPlane=r.planeOffers?.find(p=>p.id===id)||rollPlane(r,id);
@@ -296,10 +296,10 @@ export function usePotion(profile,kind){
 }
 function finishRecovery(profile){
  const r=profile.run;
- // Each finished expedition restores Health to full before the next attempt.
- // Mana retains its existing cross-expedition recovery rules.
+ // Every completed expedition restores both Health and Mana for the next attempt.
+ // Within an expedition, both still persist between Planes.
  profile.restHpRatio=1;
- profile.restMpRatio=clamp(r.mp/Math.max(1,stats(profile).mana),.3,1);
+ profile.restMpRatio=1;
  profile.healthPotionStock=Math.min(3,(profile.healthPotionStock??3)+1);
  profile.manaPotionStock=Math.min(3,(profile.manaPotionStock??3)+1);
 }
@@ -422,7 +422,7 @@ export function tick(profile,dt=.2){
  return profile;
 }
 export function abandon(profile){if(!profile.run||profile.run.stage==='finished')throw Error('No active expedition');finishDeath(profile);return profile;}
-export function leaveFinished(profile){if(!profile.run||profile.run.stage!=='finished')throw Error('Expedition still running');profile.run=null;profile.restHpRatio=1;return profile;}
+export function leaveFinished(profile){if(!profile.run||profile.run.stage!=='finished')throw Error('Expedition still running');profile.run=null;profile.restHpRatio=1;profile.restMpRatio=1;return profile;}
 export function equip(profile,id){
  if(profile.run&&profile.run.stage==='combat')throw Error('Cannot change gear during combat');
  const item=profile.inventory.find(x=>x.id===id);if(!item)throw Error('Missing equipment');
