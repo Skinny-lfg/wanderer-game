@@ -1,4 +1,4 @@
-import {STORAGE_KEY,FAMILIES,PATHS,PASSIVES,SLOTS,MAX_AFFINITIES,newProfile,stats,begin,choosePassive,choosePath,rerollPath,resolveRoom,usePotion,useCampHealthPotion,tick,abandon,leaveFinished,equip,inventoryScore} from './v012-engine.mjs';
+import {STORAGE_KEY,FAMILIES,PATHS,PASSIVES,SLOTS,MAX_AFFINITIES,newProfile,stats,begin,choosePassive,choosePath,rerollPath,resolveRoom,usePotion,useCampHealthPotion,useCampManaPotion,tick,abandon,leaveFinished,equip,inventoryScore} from './v012-engine.mjs';
 let profile,open=false,manaPots=2,selectedLevel=1,paused=false,speed=2,error='',autosave=0;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const $=(sel)=>document.querySelector(sel);
@@ -29,6 +29,32 @@ function gearPanel(){
  return '<div class="v12-gear-row"><span class="v12-gear-slot">'+esc(slot)+'</span><div><strong>'+esc(equipped?.name||'Empty')+'</strong><small>'+esc(equipped?'ATK '+equipped.atk+' · ARM '+equipped.armor+' · HP '+equipped.hp+(equipped.affinity?' · '+FAMILIES[equipped.affinity].name+' trait':''):'No equipment')+'</small></div><select data-slot="'+esc(slot)+'" aria-label="Equip '+esc(slot)+'">'+options.map(x=>'<option value="'+x.id+'"'+(x.id===profile.equipped[slot]?' selected':'')+'>'+esc(x.name)+' (ATK '+x.atk+', ARM '+x.armor+')</option>').join('')+'</select></div>';
  }).join('');
  return '<section class="v12-panel"><div class="v12-section-head"><h3>Permanent Equipment</h3><span>'+profile.inventory.length+' items · Gear score '+Math.round(inventoryScore(profile))+'</span></div><div class="v12-gear-list">'+rows+'</div><p class="v12-muted">Gear survives wins and defeats. This prototype stores it separately from the live game. Merchant and Forge remain unchanged in the classic mode.</p></section>';
+}
+function resourceCamp(run,stat){
+ const hp=run?run.hp:stat.hp*(profile.restHpRatio??1);
+ const mp=run?run.mp:stat.mana*(profile.restMpRatio??1);
+ const available=run&&['startReward','path','reward','chest','event','altar'].includes(run.stage);
+ const hStock=run?run.potions.hp:(profile.healthPotionStock??3);
+ const mStock=run?run.potions.mana:(profile.manaPotionStock??3);
+ return '<section class="v12-panel v12-rest"><h3>Camp · Health & Mana</h3>'+
+  statsBar('❤️ Health',hp,stat.hp)+statsBar('💧 Mana',mp,stat.mana)+
+  '<div class="v12-pot-actions">'+
+  '<button data-action="'+(run?'potion':'camp-heal')+'" '+(run?'data-kind="hp" ':'')+(hStock<1||hp>=stat.hp?'disabled':'')+'>❤️ Health potion ('+hStock+')</button>'+
+  '<button data-action="'+(run?'potion':'camp-mana')+'" '+(run?'data-kind="mana" ':'')+(mStock<1||mp>=stat.mana?'disabled':'')+'>💧 Mana potion ('+mStock+')</button>'+
+  '</div><p class="v12-muted">Use potions here, between combats. Never during a wave.</p></section>';
+}
+function activePassives(run){
+ const uniq=[...new Set(run.passives)];
+ return '<section class="v12-panel"><h3>Active passives ('+run.passives.length+')</h3>'+
+ (uniq.length?'<div class="v12-passive-list">'+uniq.map(id=>{
+  const p=PASSIVES.find(x=>x.id===id);if(!p)return '';
+  const a=FAMILIES[p.affinity],rank=run.passives.filter(x=>x===id).length;
+  return '<div class="v12-passive-entry"><span class="v12-tag" style="--accent:'+a.color+'">'+esc(a.icon+' '+a.name)+'</span><strong>'+esc(p.name)+' · Rank '+rank+'</strong><small>'+esc(p.description)+'</small></div>';
+ }).join('')+'</div>':'<p class="v12-muted">No passives chosen.</p>')+'</section>';
+}
+function betweenCombats(run,stat){
+ return '<div class="v12-rest-stack">'+resourceCamp(run,stat)+
+ '<details class="v12-inventory"><summary>🎒 Inventory & Equipment · change gear before the next Plane</summary>'+gearPanel()+'</details></div>';
 }
 function camp(){
  const status='<div class="v12-metrics"><span><b>D'+profile.unlocked+'</b><small>Highest unlocked</small></span><span><b>'+profile.gold+'</b><small>Gold</small></span><span><b>'+profile.fragments+'</b><small>Fragments</small></span><span><b>'+profile.record.length+'</b><small>Runs</small></span></div>';
