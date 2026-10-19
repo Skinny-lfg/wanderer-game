@@ -7,7 +7,7 @@ test('v0.12 prototype does not use classic save key and has five families and 13
  assert.equal(Object.keys(FAMILIES).length,5);
  assert.equal(new Set(PATHS.map(x=>x.id)).size,13);
  for(const a of Object.keys(FAMILIES))assert.ok(PATHS.some(x=>x.affinity===a));
- assert.equal(PASSIVES.length,49);
+ assert.equal(PASSIVES.length,64);
  assert.deepEqual(Object.keys(MAGIC_ELEMENTS),['fire','poison','frost']);
  assert.equal(FAMILIES.magic.name,'Magic');
 });
@@ -85,6 +85,28 @@ test('three-affinity late rooms always offer three usable path IDs with no fourt
  assert.ok(r.pathOffers.some(id=>PATHS.find(x=>x.id===id).affinity==='blood'),'Blood should be offered again after two affinities when all three are acquired');
  const first=r.pathOffers.find(id=>PATHS.find(x=>x.id===id).affinity==='blood');choosePath(p,first);
  assert.ok(['combat','event','altar','chest','elite','boss'].includes(r.stage));
+});
+
+test('unlimited Blood focus never soft-locks its reward pool near room 15',()=>{
+ const p=newProfile(912);begin(p,'blood');choosePassive(p,p.run.passiveOffers[0]);
+ const r=p.run;
+ // Force all six basic Blood passives to rank two, as can happen when repeatedly choosing Blood.
+ for(const id of PASSIVES.filter(x=>x.affinity==='blood'&&!x.mastery&&!x.requires.length).map(x=>x.id)){
+  while(r.passives.filter(x=>x===id).length<2)r.passives.push(id);
+ }
+ r.stage='path';r.room=13;r.affinities=['blood','fury'];r.lastPathAffinity='blood';
+ const plane=PATHS.find(x=>x.affinity==='blood').id;
+ r.pathOffers=[plane];r.planeOffers=[{id:plane,waves:1,elite:false,bonus:null}];
+ choosePath(p,plane);
+ while(r.stage==='combat'){
+  r.fight.enemy.hp=1;r.fight.enemy.attack=0;
+  for(let i=0;i<20&&r.stage==='combat';i++)tick(p,.2);
+ }
+ assert.equal(r.stage,'reward');
+ assert.equal(r.passiveOffers.length,3,'Specialization still offers three choices');
+ assert.ok(r.passiveOffers.every(id=>id.includes('mastery')));
+ choosePassive(p,r.passiveOffers[0]);
+ assert.ok(r.passives.some(id=>id.includes('mastery')));
 });
 
 test('affinities are only restricted until the second distinct family is acquired',()=>{
