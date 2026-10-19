@@ -27,7 +27,7 @@ const server=http.createServer((req,res)=>{
    await page.locator('#v012-launch').waitFor({timeout:10000});
    await page.evaluate(()=>localStorage.setItem('wanderer-test-untouched','preserved'));
    await page.locator('#v012-launch').click();
-   await page.locator('#v012-overlay .v12-family').waitFor();
+   await page.locator('#v012-overlay .v12-family').first().waitFor();
    assert.equal(await page.locator('#v012-overlay .v12-family').count(),5);
    await page.locator('#v012-overlay button[data-action="begin"][data-id="blood"]').click();
    assert.equal(await page.locator('#v012-overlay .v12-passive').count(),3);
