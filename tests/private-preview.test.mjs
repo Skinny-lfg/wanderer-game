@@ -20,6 +20,13 @@ async function start(){
  return {server,root,base:'http://127.0.0.1:'+server.address().port,async close(){await new Promise(resolve=>server.close(resolve));await rm(root,{recursive:true,force:true});}};
 }
 const request=(base,route,opts={})=>fetch(base+route,{redirect:'manual',...opts});
+async function formWithCsrf(base,username,password){
+ const response=await request(base,'/__preview/login');
+ const html=await response.text();
+ const csrf=html.match(/name="_csrf" value="([a-f0-9]{48})"/)?.[1];
+ assert.ok(csrf,'login form must have a one-use CSRF token');
+ return new URLSearchParams({username,password,_csrf:csrf});
+}
 
 test('private preview protects HTML, assets, JS and prevents access to repo internals',async()=>{
  const env=await start();try{
@@ -33,9 +40,9 @@ test('private preview protects HTML, assets, JS and prevents access to repo inte
   assert.match(html,/Username/);
   assert.match(html,/Password/);
   assert.ok(!html.includes('test-only-long-password-unique'),'never send configured secret to browser');
-  const bad=await request(env.base,'/__preview/login',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded','Origin':env.base},body:new URLSearchParams({username:'private_owner',password:'incorrect'})});
+  const bad=await request(env.base,'/__preview/login',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded','Origin':env.base},body:await formWithCsrf(env.base,'private_owner','incorrect')});
   assert.equal(bad.status,401);
-  const post=await request(env.base,'/__preview/login',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded','Origin':env.base},body:new URLSearchParams({username:'private_owner',password:'test-only-long-password-unique'})});
+  const post=await request(env.base,'/__preview/login',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded','Origin':env.base},body:await formWithCsrf(env.base,'private_owner','test-only-long-password-unique')});
   assert.equal(post.status,303);assert.equal(post.headers.get('location'),'/?playtest=v012');
   const cookie=post.headers.get('set-cookie').split(';')[0];assert.match(cookie,/^wanderer_preview_session=[a-f0-9]{64}$/);
   assert.match(post.headers.get('set-cookie'),/HttpOnly/);
@@ -56,12 +63,12 @@ test('private preview protects HTML, assets, JS and prevents access to repo inte
  }finally{await env.close();}
 });
 
-test('reject mismatched login origins and rate-limit wrong passwords',async()=>{
+test('login CSRF works with varying Origins and rate-limits bad passwords',async()=>{
  const env=await start();try{
-  const badOrigin=await request(env.base,'/__preview/login',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded',Origin:'http://evil.example'},body:new URLSearchParams({username:'private_owner',password:'test-only-long-password-unique'})});
-  assert.equal(badOrigin.status,403);
+  const badOrigin=await request(env.base,'/__preview/login',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded',Origin:'http://evil.example'},body:await formWithCsrf(env.base,'private_owner','test-only-long-password-unique')});
+  assert.equal(badOrigin.status,303,'valid CSRF works regardless of forwarded Origin');
   let last;
-  for(let i=0;i<13;i++)last=await request(env.base,'/__preview/login',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({username:'private_owner',password:'wrong'})});
+  for(let i=0;i<13;i++)last=await request(env.base,'/__preview/login',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:await formWithCsrf(env.base,'private_owner','wrong')});
   assert.equal(last.status,429);
  }finally{await env.close();}
 });
@@ -70,7 +77,7 @@ test('Railway proxy origin uses configured public origin but still blocks foreig
  const env=await start(),previous=process.env.PREVIEW_PUBLIC_ORIGIN;
  process.env.PREVIEW_PUBLIC_ORIGIN='https://preview.example.test';
  try{
-  const credentials=new URLSearchParams({username:'private_owner',password:'test-only-long-password-unique'});
+  const credentials=await formWithCsrf(env.base,'private_owner','test-only-long-password-unique');
   const good=await request(env.base,'/__preview/login',{
    method:'POST',
    headers:{Origin:'https://preview.example.test','Content-Type':'application/x-www-form-urlencoded','X-Forwarded-Proto':'https'},
@@ -80,11 +87,23 @@ test('Railway proxy origin uses configured public origin but still blocks foreig
   const bad=await request(env.base,'/__preview/login',{
    method:'POST',
    headers:{Origin:'https://unknown.example.test','Content-Type':'application/x-www-form-urlencoded','X-Forwarded-Proto':'https'},
-   body:credentials
+   body:await formWithCsrf(env.base,'private_owner','test-only-long-password-unique')
   });
-  assert.equal(bad.status,403,'must still reject cross-origin login attempts');
+  assert.equal(bad.status,303,'valid token permits nonstandard browser Origin');
  }finally{
   if(previous===undefined)delete process.env.PREVIEW_PUBLIC_ORIGIN;else process.env.PREVIEW_PUBLIC_ORIGIN=previous;
   await env.close();
  }
+});
+
+test('login requires a fresh one-use token even if Origin is null',async()=>{
+ const env=await start();try{
+  const noToken=await request(env.base,'/__preview/login',{method:'POST',body:new URLSearchParams({username:'private_owner',password:'test-only-long-password-unique'})});
+  assert.equal(noToken.status,403,'blind form post cannot authenticate');
+  const credentials=await formWithCsrf(env.base,'private_owner','test-only-long-password-unique');
+  const success=await request(env.base,'/__preview/login',{method:'POST',headers:{Origin:'null','X-Forwarded-Proto':'https'},body:credentials});
+  assert.equal(success.status,303,'browser Origin null must not block valid token');
+  const replay=await request(env.base,'/__preview/login',{method:'POST',body:credentials});
+  assert.equal(replay.status,403,'one-use tokens cannot be replayed');
+ }finally{await env.close();}
 });
