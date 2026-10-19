@@ -11,10 +11,12 @@ Open development's index.html through an HTTP server (do not open as file:// bec
 - One active enemy at a time. Normal encounters have one or two consecutive waves, elites have two, and the boss has two phases. No target selection. Attack and enemy timers are independent.
 - Five new temporary affinity families: Blood, Vitality, Aegis, Fury, Arcane. Thirteen old dungeon themes retained as *plans*, each mapped to one of the five reward families.
 - Start by selecting any one affinity and choosing one of three starting passives. The initial affinity is guaranteed among the first room's three plans. After completing a room choose one of three passives linked to the chosen plan. Ten hybrid passives require the relevant affinity pair.
-- A family's plan is locked **only for the next room after selection**. Three free (zero Gold) rerolls per run, changing an offered plan to the remaining allowed family; the guaranteed starting-affinity slot is pinned on room one. No cap on the number of affinity families or passives acquired.
-- Three potion slots shared by Health and Mana. HP and Mana persist between waves and rooms. Healing opportunities through altars and events.
+- A family's plan is locked **only for the next room after selection**. Three free (zero Gold) rerolls per run, changing an offered plan to another permitted path; the guaranteed starting-affinity slot is pinned on room one. **At most three active affinity families** may be acquired per expedition. Later path offers stay within the unlocked families; when only two families can be offered, distinct dungeon paths fill the three choices. Passives have a maximum of two ranks in this playtest.
+- **Health potions can be used only at camp between complete expeditions**, never in an encounter or while choosing rooms. Remaining HP carries back to camp (with a 40% floor after defeat), Health potions there restore 30% max HP, and one potion is replenished after finishing an expedition (maximum stock three). Players may choose 0–3 Mana potions for a run, and Mana potions still work inside combat. HP/Mana persist across waves and rooms. Healing within an expedition comes from altars, events, chests or limited passive effects.
 - Permanent gear is stored immediately when received, even during failed expeditions; the experimental inventory offers simple equip/auto-equip controls. The next difficulty unlocks only after the final boss wins.
 - Blood spread effect *Contagion* carries Bleed stacks from a killed enemy to the next **wave**, instead of targeting multiple simultaneous enemies.
+- Later rooms have a steeper enemy-power curve. Bleed stacks are capped at six, repeatable passive ranks at two, Second Wind at once per full expedition, and combat lifegain at a small capped amount. Chests and risk events no longer accidentally award a second gear drop after their guaranteed one.
+- Existing v0.12 local test runs with four or five affinities are retired when reopened, while keeping experimental permanent gear and currencies. This does not touch actual Wanderer accounts or saves.
 - Completely separate gear/economy/combat rules from the old mode, for controlled experimental playtest only.
 
 ## Intentional limitations before replacing classic gameplay
@@ -22,13 +24,13 @@ Open development's index.html through an HTTP server (do not open as file:// bec
 - Classic Merchant, Forge, PvP, Firebase/cloud login, leaderboard, runes and class-specific animations have **not** been converted. Their existing behavior is unchanged in classic mode.
 - This prototype currently uses one shared local prototype profile per browser, independent of Google login, to avoid cross-account/save conflicts.
 - Some passive descriptions are design candidates; the code implements selected representative interactions, **not every full passive effect**. The gear's Epic/Legendary affinity fields are currently illustrative and require actual combat integration.
-- No production release or dev hosting deploy was performed; testing can be done via local HTTP checkout of development.
+- Private playtest deployment is separate from production at https://wanderer-private-v012-production.up.railway.app/ behind a server-side login. Its source is deliberately pinned to a tested development commit. No deploy to production Wanderer/main has been performed.
 - The initial development implementation uses a simplified separate simulator for combat, not the classic production battle mechanics. Its results should not be used for final tuning.
 
 ## Quality checks
 - \`npm run test:v012\`: deterministic state-machine tests (affinities/paths, one-step lock, gear survival, waves, potions, final-boss unlock).
 - \`npm run test:v012:browser\`: Playwright desktop 1280 px and mobile 390 px checks (launcher, path rerolls, single active enemy, isolation from real localStorage keys).
-- Existing \`npm test\` includes \`test:v012\`. Opt-in pre-release \`test:assets\` includes browser playtest smoke.
+- Existing \`npm test\` includes \`test:v012\`, \`test:preview\`, and \`test:v012:balance\`. The balance script executes 1,920 fixed-seed expeditions on the isolated engine, with deliberately simplified level-1 test gear; do not treat its win rates as production game estimates. Opt-in pre-release \`test:assets\` includes browser playtest smoke.
 - Validate overall development Actions status at https://github.com/Skinny-lfg/wanderer-game/actions
 
 ## Next steps
