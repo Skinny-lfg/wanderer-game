@@ -9,7 +9,11 @@ service cloud.firestore {
      ? request.auth.token.get('firebase', {}).get('sign_in_provider', '') : '';
    return request.auth != null && (
      provider == 'google.com' ||
-     (provider == 'password' && request.auth.token.get('email_verified', false) == true)
+     (provider == 'password' && request.auth.token.get('email_verified', false) == true) ||
+     // Only our password-checked nickname Cloud Function may issue this claim.
+     (provider == 'custom' &&
+      request.auth.token.get('wandererNicknameLogin', false) == true &&
+      request.auth.token.get('email_verified', false) == true)
    );
   }
   function owner(uid) { return verifiedPlayer() && request.auth.uid == uid; }
