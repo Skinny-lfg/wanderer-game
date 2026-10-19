@@ -120,7 +120,7 @@ test('integration gates original weapons, Legendary and permanent save mechanics
  assert(source.includes('WandererV012Buildcraft.onSecond(phase1Build,phase2Context(r))'));
  assert(source.includes('WandererV012Buildcraft.survive(phase1Build,phase2Context(r))'));
  assert(source.includes("if(PHASE1_PREVIEW||saveBlocked)return;"));
- assert(source.includes("const caster=!!main&&['Staff','Wand'].includes(main.subtype)"));
+ assert(source.includes("caster=!!main&&['Staff','Wand'].includes(main.subtype)"));
  assert(source.includes('legendaryAttackBonus(r,base,critical,cast)'));
  assert(source.includes('legendaryDefensiveEffects(r,damageBlocked,hit,blocked'));
  assert(source.includes("state.run={phase1:true,phase1Magic:!!phase1Build.element"));
