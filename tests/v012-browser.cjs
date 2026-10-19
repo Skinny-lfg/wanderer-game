@@ -74,20 +74,25 @@ const server=http.createServer((req,res)=>{
    assert.equal(await page.locator('#v012-overlay .v12-family').count(),0,'expedition should persist across reopen');
    await page.goto(base+'/?playtest=v012',{waitUntil:'domcontentloaded'});
    await page.locator('#v012-overlay').waitFor();
-   // New Magic affinity must require a Fire/Poison/Frost school before passive options.
-   await page.evaluate(()=>localStorage.removeItem('wanderer_v012_prototype_local_v1'));
-   await page.reload({waitUntil:'domcontentloaded'});
-   await page.locator('#v012-overlay button[data-action="begin"][data-id="magic"]').waitFor();
-   await page.locator('#v012-overlay button[data-action="begin"][data-id="magic"]').click();
-   assert.equal(await page.locator('#v012-overlay button[data-action="element"]').count(),3);
-   assert.equal(await page.locator('#v012-overlay .v12-passive').count(),3);
-   assert((await page.locator('#v012-overlay').innerText()).includes('Spell Power'),'the Magic school choice should explain Spell Power');
-   await page.locator('#v012-overlay button[data-action="element"][data-id="frost"]').click();
-   assert.equal(await page.locator('#v012-overlay button[data-action="element"]').count(),0);
-   assert.equal(await page.locator('#v012-overlay button[data-action="passive"]').count(),3);
-   assert((await page.locator('#v012-overlay').innerText()).includes('Magic · Frost'));
-   await page.locator('#v012-overlay button[data-action="passive"]').first().click();
-   assert.equal(await page.locator('#v012-overlay .v12-path').count(),3);
+   // Use a separate browser context for a fresh Magic account. Clearing storage
+   // mid-combat in the same page gets legitimately undone by pagehide autosave.
+   const fresh=await browser.newContext({viewport:{width,height:850}});
+   const magicPage=await fresh.newPage();
+   magicPage.on('pageerror',err=>errors.push(err.message));
+   await magicPage.route('**/*',route=>route.request().url().startsWith(base)?route.continue():route.abort());
+   await magicPage.goto(base+'/?playtest=v012',{waitUntil:'domcontentloaded'});
+   await magicPage.locator('#v012-overlay button[data-action="begin"][data-id="magic"]').waitFor();
+   await magicPage.locator('#v012-overlay button[data-action="begin"][data-id="magic"]').click();
+   assert.equal(await magicPage.locator('#v012-overlay button[data-action="element"]').count(),3);
+   assert.equal(await magicPage.locator('#v012-overlay .v12-passive').count(),3);
+   assert((await magicPage.locator('#v012-overlay').innerText()).includes('Spell Power'),'the Magic school choice should explain Spell Power');
+   await magicPage.locator('#v012-overlay button[data-action="element"][data-id="frost"]').click();
+   assert.equal(await magicPage.locator('#v012-overlay button[data-action="element"]').count(),0);
+   assert.equal(await magicPage.locator('#v012-overlay button[data-action="passive"]').count(),3);
+   assert((await magicPage.locator('#v012-overlay').innerText()).includes('Magic · Frost'));
+   await magicPage.locator('#v012-overlay button[data-action="passive"]').first().click();
+   assert.equal(await magicPage.locator('#v012-overlay .v12-path').count(),3);
+   await fresh.close();
    assert.deepEqual(errors,[],'browser uncaught errors at '+width);
    await context.close();
   }
