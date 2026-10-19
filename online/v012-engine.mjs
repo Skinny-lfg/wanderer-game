@@ -7,34 +7,42 @@ export const FAMILIES={
  vitality:{name:'Vitality',icon:'💚',kind:'Health',color:'#6fd49b'},
  aegis:{name:'Aegis',icon:'🛡️',kind:'Defense',color:'#89b8e8'},
  fury:{name:'Fury',icon:'⚔️',kind:'Attack',color:'#ecad69'},
- arcane:{name:'Arcane',icon:'✦',kind:'Magic',color:'#bd9de9'}
+ magic:{name:'Magic',icon:'✦',kind:'Elemental spells',color:'#bd9de9'}
+};
+export const MAGIC_ELEMENTS={
+ fire:{name:'Fire',icon:'🔥',description:'Spells ignite enemies and apply Burn damage over time.',color:'#e69d65'},
+ poison:{name:'Poison',icon:'☠️',description:'Spells apply Toxic stacks, separate from Blood Bleed.',color:'#91cc7c'},
+ frost:{name:'Frost',icon:'❄️',description:'Spells Chill enemies, delaying their attacks.',color:'#8abddd'}
 };
 export const PATHS=[
  ['temple','Venomous Temple','blood'],['forge','Blood Forge','blood'],
  ['grove','Serpent Grove','vitality'],['shrine','Lost Sanctuary','vitality'],
  ['ward','Warded Catacombs','aegis'],['drowned','Drowned Vault','aegis'],['quarry','Obsidian Quarry','aegis'],
  ['crypt','Echo Crypt','fury'],['bastion','Iron Bastion','fury'],
- ['frost','Frostbound Catacombs','arcane'],['ash','Ashen Sanctum','arcane'],
- ['void','Umbral Reliquary','arcane'],['storm','Stormglass Spire','arcane']
+ ['frost','Frostbound Catacombs','magic'],['ash','Ashen Sanctum','magic'],
+ ['void','Umbral Reliquary','magic'],['storm','Stormglass Spire','magic']
 ].map(([id,name,affinity])=>({id,name,affinity,background:'assets/dungeons/backgrounds/'+id+'.webp'}));
 const P=[
  ['blood','open_wound','Open Wound','Bleed deals 20% more damage.'],['blood','deep_cuts','Deep Cuts','Deal 7% more direct damage to bleeding enemies.'],['blood','hemorrhage','Hemorrhage','Bleed builds up more reliably.'],['blood','rupture','Rupture','Bleeding enemies under 35% HP take extra damage.'],['blood','contagion','Contagion','On kill, carry half the Bleed stacks to the next wave.'],['blood','blood_pressure','Blood Pressure','Bleeding enemies deal slightly less damage.'],
  ['vitality','strong_heart','Strong Heart','Increase maximum HP by 12%.'],['vitality','renewal','Renewal','Regenerate limited HP during combat.'],['vitality','second_wind','Second Wind','Once per combat, survive a lethal blow at 15% HP.'],['vitality','vital_flow','Vital Flow','Gain 8% maximum HP.'],['vitality','herbalist','Herbalist','Health potions are 20% more effective.'],['vitality','endurance','Endurance','Take 6% less damage.'],
  ['aegis','iron_skin','Iron Skin','Increase armor by 12%.'],['aegis','first_guard','First Guard','Begin each fight with a small Barrier.'],['aegis','reactive_ward','Reactive Ward','Some damage taken creates Barrier.'],['aegis','shield_wall','Shield Wall','Reduce elite and boss damage by 9%.'],['aegis','deflect','Deflect','Chance to prevent some incoming damage.'],['aegis','riposte','Riposte','Taking damage improves your next strike.'],
  ['fury','precision','Precision','Increase critical strike chance.'],['fury','keen_edge','Keen Edge','Critical strikes deal more damage.'],['fury','momentum','Momentum','Increase attack speed.'],['fury','twin_strike','Twin Strike','Chance for a smaller extra hit.'],['fury','executioner','Executioner','Deal more damage to weakened enemies.'],['fury','battle_focus','Battle Focus','Repeated hits gradually increase damage.'],
- ['arcane','spell_focus','Spell Focus','Increase spell damage.'],['arcane','mana_spring','Mana Spring','Regenerate Mana during battle.'],['arcane','efficient_casting','Efficient Casting','Spend less Mana per cast.'],['arcane','arcane_echo','Arcane Echo','Chance to echo a spell.'],['arcane','runic_pressure','Runic Pressure','Casting strengthens your next attack.'],['arcane','arcane_reservoir','Arcane Reservoir','Increase maximum Mana.'],
+ ['magic','spell_focus','Spell Focus','Increase spell damage.'],['magic','mana_spring','Mana Spring','Regenerate Mana during battle.'],['magic','efficient_casting','Efficient Casting','Spend less Mana per cast.'],['magic','arcane_echo','Arcane Echo','Chance to echo a spell.'],['magic','runic_pressure','Runic Pressure','Casting strengthens your next attack.'],['magic','arcane_reservoir','Arcane Reservoir','Increase maximum Mana.'],
+ ['magic','fire_kindling','Kindling','Burn stacks deal 18% more damage.',null,'fire'],['magic','fire_barrage','Fire Barrage','Elemental Fire spell hits deal 15% more damage.',null,'fire'],['magic','fire_embers','Lingering Embers','Burn stacks persist into the next wave at reduced strength.',null,'fire'],
+ ['magic','poison_venom','Potent Venom','Poison stacks deal 18% more damage.',null,'poison'],['magic','poison_fangs','Toxic Focus','Elemental Poison spell hits build an extra stack sometimes.',null,'poison'],['magic','poison_spores','Lingering Spores','Poison stacks persist into the next wave at reduced strength.',null,'poison'],
+ ['magic','frost_bite','Frostbite','Chilled enemies receive 10% more direct damage.',null,'frost'],['magic','frost_winter','Deep Winter','Chill lasts longer and slows more.',null,'frost'],['magic','frost_shatter','Shatter','Repeated Frost spell hits deal bonus damage.',null,'frost'],
  ['blood','crimson_recovery','Crimson Recovery','A portion of Bleed damage heals you.',['blood','vitality']],
  ['blood','sanguine_ward','Sanguine Ward','Bleed damage occasionally grants Barrier.',['blood','aegis']],
  ['blood','razorstorm','Razorstorm','Critical hits add an extra Bleed stack.',['blood','fury']],
- ['blood','hex_plague','Hex Plague','Spell hits extend Bleed.',['blood','arcane']],
+ ['blood','hex_plague','Hex Plague','Spell hits extend Bleed.',['blood','magic']],
  ['vitality','sanctuary','Sanctuary','Excess healing can become Barrier.',['vitality','aegis']],
  ['vitality','adrenal_recovery','Adrenal Recovery','Critical strikes heal a small amount.',['vitality','fury']],
- ['vitality','life_conduit','Life Conduit','Recover a little Mana when healed.',['vitality','arcane']],
+ ['vitality','life_conduit','Life Conduit','Recover a little Mana when healed.',['vitality','magic']],
  ['aegis','counterstrike','Counterstrike','Barrier absorbs damage and empowers attacks.',['aegis','fury']],
- ['aegis','runic_shield','Runic Shield','Spell casts may create Barrier.',['aegis','arcane']],
- ['fury','spellblade','Spellblade','Spell casts empower your next physical attack.',['fury','arcane']]
+ ['aegis','runic_shield','Runic Shield','Spell casts may create Barrier.',['aegis','magic']],
+ ['fury','spellblade','Spellblade','Spell casts empower your next physical attack.',['fury','magic']]
 ];
-export const PASSIVES=P.map(([affinity,id,name,description,requires])=>({affinity,id,name,description,requires:requires||[]}));
+export const PASSIVES=P.map(([affinity,id,name,description,requires,element])=>({affinity,id,name,description,requires:requires||[],element:element||null}));
 const RARITY=['Common','Uncommon','Rare','Epic','Legendary'];
 const BONUS={Common:1,Uncommon:1.26,Rare:1.58,Epic:2.12,Legendary:2.64};
 export const SLOTS=['weapon','armor','helm','gloves','boots','amulet','ring','offhand'];
