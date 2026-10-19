@@ -64,7 +64,9 @@ function eligible(b,family){
  return P.filter(p=>p.family===family&&p.requires.every(f=>hasFamily(b,f))&&(!p.element||p.element===b.element)&&rank(b,p.id)<p.max);
 }
 function options(b,family,rng=Math.random){
- const pool=eligible(b,family);if(pool.length<3)throw Error('No three implemented passives available for '+family);
+ const primary=eligible(b,family);
+ const pool=primary.length>=3?primary:[...primary,...b.families.filter(f=>f!==family).flatMap(f=>eligible(b,f))];
+ if(pool.length<3)throw Error('No three implemented passives available');
  const unowned=pool.filter(p=>!rank(b,p.id)),weighted=unowned.length>=3?unowned:pool;
  const chosen=[],specific=weighted.filter(p=>p.element===b.element&&p.element);
  if(family==='magic'&&specific.length)chosen.push(specific[Math.floor(rng()*specific.length)]);
@@ -74,7 +76,7 @@ function options(b,family,rng=Math.random){
 }
 function choose(b,family,id,offers){
  const p=BY_ID[id];
- if(!p||p.family!==family||!Array.isArray(offers)||!offers.some(x=>x.id===id)||!eligible(b,family).some(x=>x.id===id))throw Error('Passive unavailable');
+ if(!p||!b.families.includes(p.family)||!Array.isArray(offers)||!offers.some(x=>x.id===id)||!eligible(b,p.family).some(x=>x.id===id))throw Error('Passive unavailable');
  b.picks.push(id);return p;
 }
 function element(b,id){if(!hasFamily(b,'magic')||!elements.includes(id)||b.element!==null)throw Error('Magic element already chosen or ineligible');b.element=id;return id;}
@@ -157,7 +159,7 @@ function onSecond(b,c){
   c.dotDamage(damage,'☠ Rot');
   if(rank(b,'rot_ward')&&ready(b,'rotWard',c.now,5))c.barrier(c.player.maxhp*.015);
  }
- if(rank(b,'renewal'))heal(b,c,c.player.maxhp*.0055*rank(b,'renewal'));
+ if(hasFamily(b,'vitality'))heal(b,c,c.player.maxhp*(.002+.0055*rank(b,'renewal')));
  if(rank(b,'life_bloom'))c.mana(1.5*rank(b,'life_bloom'));
  if(rank(b,'barrier_pulse')&&ready(b,'barrierPulse',c.now,6))c.barrier(c.player.maxhp*.02);
  if(rank(b,'blood_ward')&&e.bleedStacks>0&&ready(b,'bloodWard',c.now,5))c.barrier(c.player.maxhp*.018);
