@@ -102,7 +102,7 @@ async function run(){
      await page.locator('[data-phase3-potion="health"]').click();
      const recovered=await page.evaluate(()=>__phase3Audit.snapshot());
      assert(recovered.vitals.hp>before.vitals.hp&&recovered.potions.health===1,'between-Plane Health use');
-     await page.locator('[data-phase3-nav="equipment"]').first().click();
+     await page.locator('[data-phase3-nav="equipment"]').last().click();
      assert(await page.locator('.equipmentInventory').count(),'original inventory between Planes');
      await page.locator('[data-item]').first().click();
      await page.locator('#equipThis').click();
