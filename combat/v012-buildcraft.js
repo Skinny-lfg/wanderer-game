@@ -110,13 +110,13 @@ function heal(b,c,amount){const healed=c.heal(Math.max(0,amount))||0;
 }
 function onAttack(b,c){
  const e=c.enemy,base=Math.max(1,c.base||1),crit=!!c.critical;
- if(hasFamily(b,'blood')&&rank(b,'bleeding_edge')&&ready(b,'bleedEdge',c.now,.9)&&c.random()<.25) c.dot('bleed',base*.16*(1+.20*rank(b,'deep_cuts')));
+ if(hasFamily(b,'blood')&&ready(b,'bleedEdge',c.now,rank(b,'bleeding_edge')?.9:1.8)&&c.random()<(.22+.12*rank(b,'bleeding_edge'))) c.dot('bleed',base*.16*(1+.20*rank(b,'deep_cuts')));
  if(rank(b,'sanguine_fury')&&crit&&ready(b,'sanguineFury',c.now,2.5)){
   c.dot('bleed',base*.14*(1+.20*rank(b,'deep_cuts')));b.runtime.frenzyUntil=Math.max(b.runtime.frenzyUntil,c.now+3);
  }
  if(rank(b,'executioner')&&e.bleedStacks>0&&e.hp<=e.maxhp*.30&&ready(b,'execute',c.now,6))c.damage(Math.min(base*.32,e.maxhp*.025),'🩸 Execute');
  if(rank(b,'blood_drinker')&&e.bleedStacks>0&&ready(b,'bloodHeal',c.now,4))heal(b,c,Math.min(c.player.maxhp*.015,base*.10));
- if(rank(b,'toxic_touch')&&ready(b,'toxicTouch',c.now,1.3)&&c.random()<.32){c.dot('poison',base*.12);applyRot(b,c,base*.065);}
+ if(hasFamily(b,'decay')&&ready(b,'toxicTouch',c.now,rank(b,'toxic_touch')?1.3:2)&&c.random()<(.28+.14*rank(b,'toxic_touch'))){c.dot('poison',base*.12);applyRot(b,c,base*.065);}
  if(rank(b,'blight')&&e.v012Rot?.length&&ready(b,'blight',c.now,7))c.damage(Math.min(base*.38,e.maxhp*.025),'☠ Blight');
  if(rank(b,'toxic_precision')&&crit&&ready(b,'toxicPrecision',c.now,2)){c.dot('poison',base*.11);applyRot(b,c,base*.06);}
  if(rank(b,'plague_rupture')&&crit&&e.bleedStacks>0&&e.v012Rot?.length&&ready(b,'plagueRupture',c.now,8))c.damage(Math.min(base*.45,e.maxhp*.03),'🩸 Plague Rupture');
@@ -127,7 +127,7 @@ function onAttack(b,c){
  if(rank(b,'adrenaline')&&crit&&ready(b,'adrenaline',c.now,3))b.runtime.frenzyUntil=Math.max(b.runtime.frenzyUntil,c.now+3);
  if(rank(b,'counterstrike')&&b.runtime.counter){b.runtime.counter=0;c.damage(base*.18,'🛡 Counterstrike');}
  if(rank(b,'retaliation')&&b.runtime.counter){b.runtime.counter=0;c.damage(base*.15,'🛡 Retaliation');}
- if(rank(b,'spellblade')&&b.runtime.spellblade){b.runtime.spellblade=false;c.damage(base*.15,'✨ Spellblade');}
+ if(rank(b,'spellblade')&&!c.magical&&b.runtime.spellblade){b.runtime.spellblade=false;c.damage(base*.15,'✨ Spellblade');}
 }
 function onCast(b,c){
  if(!hasFamily(b,'magic')||!elements.includes(b.element))return;
@@ -176,7 +176,7 @@ function onKill(b,c){
 }
 function survive(b,c){if(!rank(b,'last_stand')||b.runtime.lastStand)return false;b.runtime.lastStand=true;c.player.hp=Math.max(1,c.player.maxhp*.06);c.log('💚 Last Stand (once per Expedition)');return true;}
 function speed(b,now){return b?.runtime?.frenzyUntil>now?1.10:1;}
-function enemyHealMultiplier(b,e){return 1-(e.v012Rot?.length?.35*rank(b,'wither'):0);}
+function enemyHealMultiplier(b,e){return 1-(e.v012Rot?.length ? Math.min(.7,.35*rank(b,'wither')) : 0);}
 function nextCost(b){return Math.max(4,Math.round(8*(1-.12*rank(b,'efficient_cast'))));}
 function resetWave(b,e){e.v012Rot=[];e.v012Shock=0;}
 function clear(b){if(!b)return;b.picks.length=0;b.element=null;b.families=[];b.cooldowns=Object.create(null);b.runtime={frenzyUntil:0,counter:0,spellblade:false,magicHits:0,lastStand:false,lastSpellAt:-999};}
