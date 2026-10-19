@@ -29,6 +29,10 @@ const server=http.createServer((req,res)=>{
    await page.locator('#v012-launch').click();
    await page.locator('#v012-overlay .v12-family').first().waitFor();
    assert.equal(await page.locator('#v012-overlay .v12-family').count(),5);
+   assert.equal(await page.locator('#v012-overlay select[data-difficulty] option').first().innerText(),'Expedition 1','old Dungeon name should be replaced');
+   assert((await page.locator('#v012-overlay').innerText()).includes('Health resets to full after every Expedition'));
+   assert(!(await page.locator('#v012-overlay select[data-difficulty]').innerText()).includes('Dungeon'));
+
    assert.equal(await page.locator('#v012-overlay button[data-action="camp-heal"]').count(),1,'Health potions must appear at camp');
    assert.equal(await page.locator('#v012-overlay button[data-action="camp-mana"]').count(),1,'Mana potions must appear at camp');
    assert.equal(await page.locator('#v012-overlay button[data-action="camp-heal"]').isDisabled(),true,'full HP cannot waste a potion');
