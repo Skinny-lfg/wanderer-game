@@ -108,7 +108,7 @@ test('both potions work between combat Planes, never during waves',()=>{
  assert.equal(usePotion(p,'mana'),true);
  assert.equal(r.potions.hp,0);assert.equal(r.potions.mana,1);
  assert.throws(()=>useCampHealthPotion(p),/at camp/i);
- assert.throws(()=>useCampManaPotion(p),/at camp/i);
+ assert.throws(()=>useCampManaPotion(p),/to camp/i);
  choosePassive(p,r.passiveOffers[0]);choosePath(p,r.pathOffers[0]);
  assert.throws(()=>usePotion(p,'mana'),/between combats/i);
  assert.throws(()=>usePotion(p,'hp'),/between combats/i);
