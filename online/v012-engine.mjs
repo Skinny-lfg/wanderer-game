@@ -104,7 +104,7 @@ function makePathOffers(run){
  const chosen=families.map(f=>choice(run,PATHS.filter(p=>p.affinity===f)).id);
  if(chosen.length<3){
   const pool=shuffle(run,PATHS.filter(p=>allowed.includes(p.affinity)&&!chosen.includes(p.id)));
-  chosen.push(...pool.slice(0,3-chosen.length));
+  chosen.push(...pool.slice(0,3-chosen.length).map(p=>p.id));
  }
  run.pathOffers=chosen;
 }
