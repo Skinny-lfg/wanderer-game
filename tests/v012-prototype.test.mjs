@@ -115,14 +115,43 @@ test('both potions work between combat Planes, never during waves',()=>{
  assert.throws(()=>usePotion(p,'mana'),/between combats/i);
  assert.throws(()=>usePotion(p,'hp'),/between combats/i);
  abandon(p);leaveFinished(p);
- assert.ok(p.restHpRatio>=.4&&p.restHpRatio<1);
+ assert.equal(p.restHpRatio,1,'Health resets to full when the Expedition ends');
  assert.ok(p.restMpRatio>=.3&&p.restMpRatio<1);
- assert.equal(useCampHealthPotion(p),true);
+ assert.equal(useCampHealthPotion(p),false,'Health potion cannot be wasted when already at full HP');
  assert.equal(useCampManaPotion(p),true);
  const hp=p.restHpRatio,mp=p.restMpRatio;
  begin(p,'fury',1);
  assert.equal(p.run.hp,Math.round(stats(p).hp*hp));
  assert.equal(p.run.mp,Math.round(stats(p).mana*mp));
+});
+
+test('Expedition victory, defeat and manual exit restore full Health without resetting Mana',()=>{
+ const defeated=newProfile(181);begin(defeated,'blood');choosePassive(defeated,defeated.run.passiveOffers[0]);
+ defeated.run.hp=0;defeated.run.mp=3;
+ abandon(defeated);
+ assert.equal(defeated.restHpRatio,1,'Defeat immediately restores next-adventure HP');
+ assert.ok(defeated.restMpRatio<1,'Mana still persists between Expeditions');
+ leaveFinished(defeated);
+ assert.equal(defeated.restHpRatio,1,'Leaving a finished run keeps HP full');
+ begin(defeated,'fury');
+ assert.equal(defeated.run.hp,stats(defeated).hp,'Next Expedition starts with full HP');
+ assert.ok(defeated.run.mp<stats(defeated).mana,'Mana remains a managed resource');
+
+ const old=newProfile(727);old.restHpRatio=.4;
+ begin(old,'blood');
+ assert.equal(old.run.hp,stats(old).hp,'Legacy profiles with partial HP still start full');
+
+ const winner=newProfile(811);begin(winner,'blood');choosePassive(winner,winner.run.passiveOffers[0]);
+ const r=winner.run;
+ r.room=15;r.rooms[14]='boss';r.stage='path';
+ const chosen=r.pathOffers[0];choosePath(winner,chosen);
+ while(r.stage==='combat'){
+  r.hp=1;r.fight.enemy.hp=1;r.fight.enemy.attack=0;
+  for(let i=0;i<15&&r.stage==='combat';i++)tick(winner,.2);
+ }
+ assert.equal(r.stage,'finished');
+ assert.equal(winner.restHpRatio,1,'Victory restores HP for the next Expedition');
+ assert.match(r.result,/Expedition 2 unlocked/);
 });
 
 test('permanent loot and unlocked difficulty survive defeat',()=>{
@@ -177,7 +206,7 @@ test('gear can be equipped at camp, but changes are blocked during active combat
 
 test('difficulty picker can replay lower unlocked tiers without skipping progression',()=>{
  const p=newProfile(902);p.unlocked=4;
- assert.throws(()=>begin(p,'fury',2,5),/Difficulty not unlocked/);
+ assert.throws(()=>begin(p,'fury',2,5),/Expedition level not unlocked/);
  begin(p,'fury',2,2);
  assert.equal(p.run.level,2);
  assert.equal(p.unlocked,4);
