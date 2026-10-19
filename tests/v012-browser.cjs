@@ -41,7 +41,7 @@ const server=http.createServer((req,res)=>{
    await page.locator('#v012-overlay button[data-action="path"]').first().click();
    assert.equal(await page.locator('#v012-overlay .v12-path').count(),0);
    const enemyCount=await page.locator('#v012-overlay .v12-enemy').count();
-   assert(enemyCount<=1,'combat must have at most one enemy active');
+   assert.equal(enemyCount,1,'first room is a combat with one active enemy');
    if(enemyCount===1){
     assert.equal(await page.locator('#v012-overlay button[data-action="target"]').count(),0,'no manual targeting');
     await page.locator('#v012-overlay button[data-action="pause"]').click();
@@ -54,6 +54,8 @@ const server=http.createServer((req,res)=>{
    assert.equal(await page.locator('#v012-overlay').count(),0);
    await page.locator('#v012-launch').click();
    assert.equal(await page.locator('#v012-overlay .v12-family').count(),0,'expedition should persist across reopen');
+   await page.goto(base+'/?playtest=v012',{waitUntil:'domcontentloaded'});
+   await page.locator('#v012-overlay').waitFor();
    assert.deepEqual(errors,[],'browser uncaught errors at '+width);
    await context.close();
   }
