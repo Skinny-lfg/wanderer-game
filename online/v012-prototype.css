@@ -115,3 +115,8 @@ body.v12-open{overflow:hidden}
 #v012-overlay .v12-passive-entry{display:grid;gap:4px;padding:8px;border-radius:8px;background:#1e1e2c;border:1px solid #3b3648}
 #v012-overlay .v12-passive-entry strong{font-size:13px;color:#eddfc9}
 #v012-overlay .v12-passive-entry small{font-size:11px;line-height:1.4}
+
+#v012-overlay .v12-element{border-color:var(--accent);background:linear-gradient(155deg,#27263d,#151722);min-height:190px;align-items:center;text-align:center;gap:10px}
+#v012-overlay .v12-element-icon{font-size:44px;display:block;margin:6px auto;color:var(--accent)}
+#v012-overlay .v12-element strong{color:#eee5da}
+#v012-overlay .v12-element .v12-tag{margin-top:auto}
