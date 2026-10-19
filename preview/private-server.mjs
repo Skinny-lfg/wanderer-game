@@ -92,7 +92,7 @@ export function createPrivatePreviewServer({
    if(bucket.count>=LIMIT)return send(res,429,'text/html; charset=utf-8',loginHTML('rate'),method);
    try{
     const origin=req.headers.origin;
-    if(origin){const expected=(encrypted?'https://':'http://')+req.headers.host;if(origin!==expected)return serveGuardError(res,403,'Origin mismatch',method);}
+    if(origin){const expected=process.env.PREVIEW_PUBLIC_ORIGIN||((encrypted?'https://':'http://')+req.headers.host);if(origin!==expected)return serveGuardError(res,403,'Origin mismatch',method);}
     const form=await formBody(req);
     const sentUser=digest(form.get('username')||''),sentPassword=digest(form.get('password')||'');
     if(!timingSafeEqual(sentUser,userHash)||!timingSafeEqual(sentPassword,authHash)){
