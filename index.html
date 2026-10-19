@@ -3108,6 +3108,7 @@ function weaponAttack(r){
   setDirectEnemyDamage(r,Math.max(1,Math.round(base*.55)),'🗡 Double Strike!');
  }
  if(real>0)tryPassiveGearAffinity(r,real);
+ if(isPhase1Run())phase2WeaponAttack(r,base,critical,cast);
  if(s.counts.shield>=2){const gained=setBarrier(r,Math.max(1,Math.round(r.maxhp*(s.bonus.shieldBonus||0))));if(gained>0)addLog('🛡 Shield set: +'+Math.round(gained)+' Barrier','good');}
  return damage;
 }
@@ -3123,8 +3124,10 @@ function updateFight(){
  if(state.onlineProgress?.timerMetric==='combat-v1'&&r.combatSeconds-(r.lastCombatCheckpoint||0)>=3){r.lastCombatCheckpoint=r.combatSeconds;save();}
  setCombatExpire(r,dt);legendaryTick(r,dt);
  r.tPlayer+=dt;r.tEnemy+=dt;r.tDot+=dt;
- if(s.caster)r.mp=Math.min(r.maxmp,r.mp+dt*s.manaRegen);
- const lt=legendaryRuntime(r),haste=(s.bonus.bleedHaste?1+Math.min(3,t.haste.length)*.05:1)*(1+((lt.natureHasteUntil||0)>setNow(r)?.10:0)+((lt.thunderHasteUntil||0)>setNow(r)?.12:0));
+ if(s.caster||r.phase1Magic)r.mp=Math.min(r.maxmp,r.mp+dt*s.manaRegen);
+ if(isPhase1Run())phase2MagicTick(r);
+ if(e.hp<=0){winEncounter(true);return;}
+ const lt=legendaryRuntime(r),haste=(isPhase1Run()&&phase1Build?WandererV012Buildcraft.speed(phase1Build,phase1Clock+r.combatSeconds):1)*(s.bonus.bleedHaste?1+Math.min(3,t.haste.length)*.05:1)*(1+((lt.natureHasteUntil||0)>setNow(r)?.10:0)+((lt.thunderHasteUntil||0)>setNow(r)?.12:0));
  if(r.tPlayer>=1/(s.attacksPerSec*haste)){r.tPlayer=0;weaponAttack(r);if(e.hp<=0){winEncounter(true);return;}}
  if(r.tDot>=1){
   r.tDot-=1;
@@ -3132,6 +3135,7 @@ function updateFight(){
   if(hasDots){const applied=tickDots(e);e.hp-=applied;addLog('☠️ Damage over time: '+applied+' damage','spell');}
   if(hasBurn)setHeatTick(r,true);
   if(s.bonus.regenBonus){const healed=setHeal(r,regenPerSecond(r.maxhp,s.bonus.regenBonus));if(healed>0)addLog('💚 Regeneration +'+Math.round(healed)+' HP','good');}
+  if(isPhase1Run()&&phase1Build)WandererV012Buildcraft.onSecond(phase1Build,phase2Context(r));
   if(e.slowTime>0)e.slowTime=Math.max(0,e.slowTime-1);
   if(e.hp<=0){winEncounter();return;}
  }
@@ -3154,6 +3158,7 @@ function updateFight(){
   if(e.eliteType==='berserker')raw=Math.min(raw,Math.max(1,Math.floor(r.maxhp*.35)));
   const mitigation=Math.max(lt.guard||0,lt.weaken||0);lt.guard=0;lt.weaken=0;
   if(mitigation)raw=Math.max(1,Math.round(raw*(1-mitigation)));
+  if(isPhase1Run()&&phase1Build)raw=WandererV012Buildcraft.incoming(phase1Build,phase2Context(r),raw);
   let damageBlocked=0;
   const block=s.blockChance&&Math.random()<s.blockChance/100;
   if(block){
@@ -3172,7 +3177,8 @@ function updateFight(){
     if(newWound)addLog('🛡️ Tank applies Healing Reduction: −40% healing for 5s!','critical');
    }
    if(e.eliteType==='vampire'){
-    const heal=Math.min(Math.max(0,e.maxhp-e.hp),Math.max(1,Math.round(hit*.38)),Math.max(1,Math.round(e.maxhp*.06)));
+    const multiplier=isPhase1Run()&&phase1Build?WandererV012Buildcraft.enemyHealMultiplier(phase1Build,e):1;
+    const heal=Math.floor(Math.min(Math.max(0,e.maxhp-e.hp),Math.max(1,Math.round(hit*.38)),Math.max(1,Math.round(e.maxhp*.06)))*multiplier);
     if(heal>0){e.hp+=heal;addLog('🩸 Vampire drains '+heal+' HP','spell');enemyAbilityVfx='EliteVampire';}
    }
    if(e.eliteType==='caster'&&r.combatSeconds>=(r.nextCasterHexAt||0)){
@@ -3180,9 +3186,10 @@ function updateFight(){
     addLog('🔮 Caster applies Weakened: -20% direct damage for 3s!','spell');enemyAbilityVfx='EliteCaster';
    }
   }
-  if(e.bossStyle==='leech'&&hit>0){const heal=Math.min(e.maxhp-e.hp,Math.round(hit*.28));e.hp+=heal;if(heal){addLog('🌑 Rift Harbinger drains '+heal+' HP','spell');enemyAbilityVfx='BossRift';}}
+  if(e.bossStyle==='leech'&&hit>0){const multiplier=isPhase1Run()&&phase1Build?WandererV012Buildcraft.enemyHealMultiplier(phase1Build,e):1;const heal=Math.floor(Math.min(e.maxhp-e.hp,Math.round(hit*.28))*multiplier);e.hp+=heal;if(heal){addLog('🌑 Rift Harbinger drains '+heal+' HP','spell');enemyAbilityVfx='BossRift';}}
   if(e.bossStyle==='guardian'&&!e.barrier){e.barrier=Math.max(2,Math.round(r.tier*.45));addLog('🛡 Abyssal Guardian restores '+e.barrier+' Barrier','spell');combatEffect('BossAbyssal');}
   legendaryDefensiveEffects(r,damageBlocked,hit,blocked,barrierBeforeHit>0&&r.barrier<=0);
+  if(isPhase1Run()&&phase1Build)WandererV012Buildcraft.onDefend(phase1Build,phase2Context(r),damageBlocked,blocked);
   if(s.bonus.lastBastion&&r.barrier>=r.maxhp*.1&&setReady(r,'lastBastion',12))t.lastBastionReady=true;
   if(r.hp>0&&s.bonus.natureRenewal&&!t.natureRenewalUsed&&r.hp<=r.maxhp*.35){t.natureRenewalUsed=true;const gained=setHeal(r,r.maxhp*.08);addLog('🌿 Verdant Renewal: +'+Math.round(gained)+' HP','good');}
   if(r.hp>0&&s.bonus.tideSurge&&!t.tideSurgeUsed&&r.barrier<r.maxhp*.05){t.tideSurgeUsed=true;const gained=setBarrier(r,r.maxhp*.08);addLog('🌊 High Tide: +'+Math.round(gained)+' Barrier','good');}
@@ -3190,6 +3197,7 @@ function updateFight(){
  }
  if(r.hp<=0){
   if(s.bonus.secondWind&&!r.secondWindUsed){r.secondWindUsed=true;r.hp=1;setBarrier(r,r.maxhp*.08);addLog('💚 Second Wind! Survived lethal damage (once per expedition)','good');}
+  else if(isPhase1Run()&&phase1Build&&WandererV012Buildcraft.survive(phase1Build,phase2Context(r))){}
   else {die();return;}
  }
  if(e.hp<=0){winEncounter();return;}
@@ -3448,6 +3456,7 @@ function phase1StartWave(){
  r.enemy=enemyFor(r.tier,r.enc,{theme,boss:last&&g.selected.boss,elite:last&&g.selected.elite&&!g.selected.boss});
  r.tPlayer=r.tEnemy=r.tDot=0;r.setTemp=null;r.playerDebuffUntil=0;
  r.playerHealingDebuffUntil=0;r.nextCasterHexAt=0;setRuntime(r);r.status='fight';lastPlayerVfx=null;
+ if(phase1Build)WandererV012Buildcraft.resetWave(phase1Build,r.enemy);
  addLog('Wave '+g.wave+'/'+g.selected.waves+': '+r.enemy.name);
  renderCombat();resetDungeonEntryScroll();clearInterval(clock);
  clock=setInterval(()=>{if(document.visibilityState!=='hidden')updateFight();},110/clockSpeed);
@@ -3456,6 +3465,7 @@ function phase1WaveWon(){
  clearInterval(clock);const r=state.run,g=phase1Controller.state;
  if(!isPhase1Run()||r.status!=='fight')return;
  legendaryKill(r);
+ if(phase1Build)WandererV012Buildcraft.onKill(phase1Build,phase2Context(r));
  const enemy=r.enemy,boss=!!enemy.boss,elite=!!enemy.miniboss;
  const gold=roll(3,6)+Math.floor(r.tier*.5)+(boss?8:elite?4:0);
  const fragments=roll(1,3)+Math.floor(r.tier*.24)+(boss?5:elite?3:0);
@@ -3477,7 +3487,9 @@ function phase1WaveWon(){
   setTimeout(()=>{if(state.run===r&&r.status==='ready')phase1StartWave();},650);
   return;
  }
+ phase1Clock+=r.combatSeconds||0;
  phase1Vitals=result.expeditionComplete?null:{hp:Math.max(1,r.hp),mp:Math.max(0,r.mp)};
+ if(result.expeditionComplete){WandererV012Buildcraft.clear(phase1Build);phase1Build=null;}
  addLog(result.expeditionComplete?'Expedition boss defeated!':'Plane cleared. Select your next Plane.','good');
  renderCombat();
  setTimeout(()=>{if(state.run===r){state.run=null;view='phase1';render();}},650);
@@ -3485,7 +3497,9 @@ function phase1WaveWon(){
 function phase1Death(){
  clearInterval(clock);
  if(!isPhase1Run())return;
- phase1Controller.defeat();phase1Vitals=null;state.run=null;view='phase1';render();
+ phase1Controller.defeat();phase1Vitals=null;
+ if(phase1Build)WandererV012Buildcraft.clear(phase1Build);
+ phase1Build=null;phase1Draft=null;state.run=null;view='phase1';render();
  bannerMessage('Expedition failed · Equipped and collected gear retained in this preview.');
 }
 function phase1DecorateCombat(){
