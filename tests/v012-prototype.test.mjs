@@ -89,7 +89,7 @@ test('Health potions are usable only between runs; Mana potions work during adve
  assert.equal(usePotion(p,'mana'),false);
  assert.equal(r.potions.mana,2);
  abandon(p);leaveFinished(p);
- assert.equal(p.restHpRatio,.4);
+ assert.equal(p.restHpRatio,.5,'abandon preserves remaining HP above the 40% safety floor');
  assert.equal(useCampHealthPotion(p),true);
  assert.ok(p.restHpRatio>.69);
  assert.equal(p.healthPotionStock,2);
