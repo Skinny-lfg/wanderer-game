@@ -111,7 +111,8 @@ test('preview bridge stays opt-in, imports production enemies/art/VFX, and canno
  }
  assert(html.includes('if(isPhase1Run()){phase1WaveWon();return;}'));
  assert(html.includes('if(isPhase1Run()){phase1Death();return;}'));
- assert(html.includes('await import("./online/app.mjs'));
- assert(html.includes('get("expeditionPhase1")!=="1"'));
+ assert(html.includes('phase1ModulesBlocked'),'standalone preview skips the two classic account/playtest module scripts');
+ assert(html.includes('<script type="module" src="online/app.mjs'),'normal mode retains parser-inserted cloud module timing');
+ assert(html.includes('<script type="module" src="online/v012-prototype.mjs'),'normal mode retains prototype launcher');
  assert.equal(fs.existsSync(path.join(root,'online/v012-phase1.css')),true);
 });
