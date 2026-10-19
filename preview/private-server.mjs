@@ -25,8 +25,8 @@ label{display:block;font-size:13px;margin:15px 0 7px;color:#dfd4e1}
 input{box-sizing:border-box;width:100%;border-radius:9px;border:1px solid #766484;background:#11121c;color:#fff;padding:13px;font:inherit}
 button{width:100%;border-radius:9px;border:1px solid #aa8fbb;background:#695478;color:#fff;padding:13px;font:700 15px system-ui,sans-serif;margin-top:22px;cursor:pointer}
 strong{display:block;color:#f2a7a7;margin-top:16px;font-size:13px;text-align:center}
-</style></head><body><main><h1>WANDERER</h1><p>Private v0.12 Playtest<br>Access restricted to the tester.</p><form method="post" action="/__preview/login" autocomplete="off"><input type="hidden" name="_csrf" value="${csrf}"><label for="user">Username</label><input id="user" name="username" required maxlength="128" autocomplete="username" spellcheck="false"><label for="pass">Password</label><input id="pass" name="password" type="password" required maxlength="256" autocomplete="current-password"><button type="submit">Enter Playtest</button></form>${error?'<strong>Invalid credentials, expired form, or too many attempts. Retry or reload.</strong>':''}<p><small>This prototype does not use production player saves.</small></p></main></body></html>`;
-const playtestHTML=`<!doctype html><html lang="pt"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Wanderer v0.12 — Private Playtest</title><link rel="stylesheet" href="/online/v012-prototype.css"></head><body style="margin:0;background:#10101a;color:#eee;font-family:system-ui,sans-serif"><div class="container" style="padding:20px;max-width:800px;margin:auto;text-align:center"><h1 style="font-family:Georgia,serif;color:#ebcaa6">WANDERER — v0.12</h1><p>Protected playtest. No Firebase login or production saves are loaded on this site.</p><p>The prototype opens automatically. If you close it, use the Playtest button below to reopen.</p></div><script type="module" src="/online/v012-prototype.mjs"></script></body></html>`;
+</style></head><body><main><h1>WANDERER</h1><p>Private v0.12 Playtest<br>Access restricted to the tester.</p><form method="post" action="/__preview/login" autocomplete="off"><input type="hidden" name="_csrf" value="${csrf}"><label for="user">Username</label><input id="user" name="username" required maxlength="128" autocomplete="username" spellcheck="false"><label for="pass">Password</label><input id="pass" name="password" type="password" required maxlength="256" autocomplete="current-password"><button type="submit">Enter Playtest</button></form>${error?'<strong>Invalid credentials, expired form, or too many attempts. Retry or reload.</strong>':''}<p><small>This playtest uses isolated local saves.</small></p></main></body></html>`;
+const PLAYTEST_URL='/?expeditionPhase1=1&expeditionSave=1';
 function securityHeaders(res){
  res.setHeader('Cache-Control','no-store, private');
  res.setHeader('X-Content-Type-Options','nosniff');
@@ -118,7 +118,7 @@ export function createPrivatePreviewServer({
     sessions.set(digest(token).toString('hex'),Date.now()+SESSION_MS);
     if(sessions.size>4096)for(const [key,expiry] of sessions)if(expiry<Date.now())sessions.delete(key);
     res.setHeader('Set-Cookie',`${COOKIE}=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=43200${allowLocalHttp?'':'; Secure'}`);
-    return redirect(res,'/?playtest=v012');
+    return redirect(res,PLAYTEST_URL);
    }catch{return serveGuardError(res,400,'Invalid login request',method);}
   }
   if(!validSession(req))return redirect(res,'/__preview/login');
@@ -140,7 +140,14 @@ export function createPrivatePreviewServer({
    const ext=path.extname(file);
    const type=MIME[ext];if(!type)return serveGuardError(res,404,'Not found',method);
    let body=await readFile(file);
-   if(relative==='index.html')body=Buffer.from(playtestHTML,'utf8');
+   if(relative==='index.html'){
+    const query=new URL(sourceUrl,'http://preview.local').searchParams;
+    if(query.get('expeditionPhase1')!=='1'||query.get('expeditionSave')!=='1')return redirect(res,PLAYTEST_URL);
+    // Defense in depth: the private preview never loads the account or prototype bootstraps.
+    body=Buffer.from(body.toString('utf8')
+     .replace(/<script\b[^>]*id=["'](?:onlineAccountLoader|v012PrototypeLoader)["'][^>]*>[\s\S]*?<\/script>/gi,'')
+     .replace(/<script\b[^>]*src=["'][^"']*online\/(?:app|v012-prototype)\.mjs[^"']*["'][^>]*>[\s\S]*?<\/script>/gi,''),'utf8');
+   }
    send(res,200,type,body,method);
   }catch{return serveGuardError(res,404,'Not found',method);}
  });

@@ -11,7 +11,7 @@ async function start(){
  await mkdir(path.join(root,'online'));
  await mkdir(path.join(root,'assets'));
  await mkdir(path.join(root,'preview'));
- await writeFile(path.join(root,'index.html'),'<html>Wanderer<script type="module" src="online/app.mjs?v=demo"></script><script type="module" src="online/v012-prototype.mjs"></script></html>');
+ await writeFile(path.join(root,'index.html'),'<html>Wanderer<script id="onlineAccountLoader">loadAccount()</script><script id="v012PrototypeLoader">loadPrototype()</script><script id="integratedGame">startExpedition()</script><script type="module" src="online/app.mjs?v=demo"></script><script type="module" src="online/v012-prototype.mjs"></script></html>');
  await writeFile(path.join(root,'online','v012-prototype.mjs'),'export const testMode = true;');
  await writeFile(path.join(root,'assets','sample.svg'),'<svg xmlns="http://www.w3.org/2000/svg"></svg>');
  await writeFile(path.join(root,'preview','do-not-leak.mjs'),'private internals');
@@ -43,13 +43,20 @@ test('private preview protects HTML, assets, JS and prevents access to repo inte
   const bad=await request(env.base,'/__preview/login',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded','Origin':env.base},body:await formWithCsrf(env.base,'private_owner','incorrect')});
   assert.equal(bad.status,401);
   const post=await request(env.base,'/__preview/login',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded','Origin':env.base},body:await formWithCsrf(env.base,'private_owner','test-only-long-password-unique')});
-  assert.equal(post.status,303);assert.equal(post.headers.get('location'),'/?playtest=v012');
+  assert.equal(post.status,303);assert.equal(post.headers.get('location'),'/?expeditionPhase1=1&expeditionSave=1');
   const cookie=post.headers.get('set-cookie').split(';')[0];assert.match(cookie,/^wanderer_preview_session=[a-f0-9]{64}$/);
   assert.match(post.headers.get('set-cookie'),/HttpOnly/);
   assert.match(post.headers.get('set-cookie'),/SameSite=Strict/);
   const headers={Cookie:cookie};
-  const index=await request(env.base,'/?playtest=v012',{headers});
-  assert.equal(index.status,200);const source=await index.text();assert.ok(source.includes('v012-prototype.mjs'));
+  const index=await request(env.base,'/?expeditionPhase1=1&expeditionSave=1',{headers});
+  assert.equal(index.status,200);const source=await index.text();assert.ok(source.includes('Wanderer'));
+  assert.ok(!source.includes('v012-prototype.mjs'));
+  assert.ok(!source.includes('loadAccount()'));assert.ok(!source.includes('loadPrototype()'));
+  assert.ok(source.includes('startExpedition()'),'preserve integrated game runtime');
+  for(const route of ['/','/index.html','/?playtest=v012','/?expeditionPhase1=1']){
+   const redirect=await request(env.base,route,{headers});
+   assert.equal(redirect.status,303);assert.equal(redirect.headers.get('location'),'/?expeditionPhase1=1&expeditionSave=1');
+  }
   assert.ok(!source.includes('online/app.mjs'),'no classic production cloud login on private preview');
   assert.equal((await request(env.base,'/online/v012-prototype.mjs',{headers})).status,200);
   assert.equal((await request(env.base,'/assets/sample.svg',{headers})).status,200);
