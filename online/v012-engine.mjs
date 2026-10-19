@@ -136,7 +136,9 @@ export function rerollPath(profile,index){
  const used=new Set(r.pathOffers);
  const available=PATHS.filter(p=>allowedPathFamilies(r).includes(p.affinity)&&!used.has(p.id));
  if(!available.length)throw Error('No other permitted plan available');
- r.pathOffers[index]=choice(r,available).id;r.planeOffers??=[];r.planeOffers[index]=rollPlane(r,r.pathOffers[index]);r.rerolls--;
+ const taken=new Set(r.pathOffers.map(id=>PATHS.find(p=>p.id===id)?.affinity));
+ const freshFamily=available.filter(p=>!taken.has(p.affinity));
+ r.pathOffers[index]=choice(r,freshFamily.length?freshFamily:available).id;r.planeOffers??=[];r.planeOffers[index]=rollPlane(r,r.pathOffers[index]);r.rerolls--;
  return profile;
 }
 function enemyFor(r,wave,total){
