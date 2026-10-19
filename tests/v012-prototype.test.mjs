@@ -65,6 +65,24 @@ test('three affinities maximum; further path offers and rerolls remain inside th
  assert.equal(r.affinities.length,3);
 });
 
+test('three-affinity late rooms always offer three usable path IDs with no fourth family',()=>{
+ const p=newProfile(463);begin(p,'blood');choosePassive(p,p.run.passiveOffers[0]);
+ const r=p.run;
+ for(const fam of ['aegis','vitality']){
+  r.stage='reward';r.passiveOffers=PASSIVES.filter(x=>x.affinity===fam&&!x.requires.length).slice(0,3).map(x=>x.id);
+  choosePassive(p,r.passiveOffers[0]);
+ }
+ r.room=7;r.lastPathAffinity='blood';r.stage='reward';
+ r.passiveOffers=PASSIVES.filter(x=>x.affinity==='aegis'&&!x.requires.length&&!r.passives.includes(x.id)).slice(0,3).map(x=>x.id);
+ choosePassive(p,r.passiveOffers[0]);
+ assert.equal(r.pathOffers.length,3);
+ assert.equal(new Set(r.pathOffers).size,3);
+ assert.ok(r.pathOffers.every(id=>typeof id==='string'&&PATHS.some(x=>x.id===id&&r.affinities.includes(x.affinity))));
+ assert.ok(r.pathOffers.every(id=>PATHS.find(x=>x.id===id).affinity!=='blood'));
+ const first=r.pathOffers[0];choosePath(p,first);
+ assert.ok(['combat','event','altar','chest','elite','boss'].includes(r.stage));
+});
+
 test('combat uses sequential waves, no multi-enemy targeting',()=>{
  const p=newProfile(166);begin(p,'blood');choosePassive(p,p.run.passiveOffers[0]);
  choosePath(p,p.run.pathOffers[0]);
