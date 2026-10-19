@@ -3444,7 +3444,7 @@ function phase1Choose(id){
 function phase2Launch(plane){
  const stats=phase2Stats();
  const hp=phase1Vitals?Math.min(stats.maxhp,Math.max(1,phase1Vitals.hp)):stats.maxhp;
- const mp=phase1Vitals?Math.min(stats.mana,Math.max(0,phase1Vitals.mp)):stats.mana;
+ const mp=phase1Vitals?(phase1Vitals.maxmp===0&&stats.mana>0?stats.mana:Math.min(stats.mana,Math.max(0,phase1Vitals.mp))):stats.mana;
  state.run={phase1:true,phase1Magic:!!phase1Build.element,tier:phase1Controller.state.expedition,path:plane.id,enc:0,status:'ready',
  hp,maxhp:stats.maxhp,mp,maxmp:stats.mana,barrier:0,stats,enemy:null,tPlayer:0,tEnemy:0,tDot:0,
  loot:[],valuables:[],gold:0,fragments:0,eliteType:rollEliteArchetype(),
@@ -3491,7 +3491,7 @@ function phase1WaveWon(){
   return;
  }
  phase1Clock+=r.combatSeconds||0;
- phase1Vitals=result.expeditionComplete?null:{hp:Math.max(1,r.hp),mp:Math.max(0,r.mp)};
+ phase1Vitals=result.expeditionComplete?null:{hp:Math.max(1,r.hp),mp:Math.max(0,r.mp),maxmp:r.maxmp};
  if(result.expeditionComplete){WandererV012Buildcraft.clear(phase1Build);phase1Build=null;}
  addLog(result.expeditionComplete?'Expedition boss defeated!':'Plane cleared. Select your next Plane.','good');
  renderCombat();
