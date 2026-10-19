@@ -4,7 +4,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http');
 const root=path.resolve(__dirname,'..');
 let html=fs.readFileSync(path.join(root,'index.html'),'utf8');
-html=html.replace(/<script type="module" src="online\/app\.mjs[^"]*"><\/script>/,'');
+html=html.replace(/<script id="onlineAccountLoader">[\s\S]*?<\/script>/,'');
 const server=http.createServer((req,res)=>{
  const pathname=decodeURIComponent(req.url.split('?')[0]);
  if(pathname==='/'){res.writeHead(200,{'Content-Type':'text/html'});res.end(html);return;}
