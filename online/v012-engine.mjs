@@ -103,7 +103,7 @@ export function begin(profile,affinity,manaPots=2,level=profile.unlocked){
  if(!Number.isInteger(level)||level<1||level>profile.unlocked)throw Error('Expedition level not unlocked');
  const seed=(profile.seed+0x9e3779b9+profile.record.length*31337)|0;profile.seed=seed;
  const run={level,room:1,seed,initial:affinity,affinities:[affinity],magicElement:null,elementReturnStage:null,passives:[],potions:{hp:Math.min(3-manaPots,profile.healthPotionStock??3),mana:Math.min(manaPots,profile.manaPotionStock??3)},rerolls:3,stage:'startReward',lastPathAffinity:null,selectedPath:null,pathOffers:[],passiveOffers:[],rooms:['combat',...shuffle({seed:seed^7312},ROOM_TYPES.slice(1)),'boss'],history:[],hp:0,mp:0,barrier:0,fight:null,loot:[],result:null,log:['Expedition started.']};
- profile.run=run;const s=stats(profile);run.hp=Math.max(1,Math.round(s.hp*clamp(profile.restHpRatio??1,.4,1)));run.mp=Math.max(0,Math.round(s.mana*clamp(profile.restMpRatio??1,.3,1)));
+ profile.run=run;profile.restHpRatio=1;const s=stats(profile);run.hp=s.hp;run.mp=Math.max(0,Math.round(s.mana*clamp(profile.restMpRatio??1,.3,1)));
  if(affinity==='magic'){run.stage='element';run.elementReturnStage='startReward';run.passiveOffers=[];}else run.passiveOffers=passiveOptions(run,affinity);
  return profile;
 }
