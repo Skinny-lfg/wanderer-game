@@ -1,4 +1,4 @@
-import {STORAGE_KEY,FAMILIES,MAGIC_ELEMENTS,PATHS,PASSIVES,SLOTS,MAX_AFFINITIES,newProfile,stats,begin,choosePassive,chooseMagicElement,migrateMagicProfile,ensureMagicElementChoice,choosePath,ensurePlaneOffers,rerollPath,resolveRoom,usePotion,useCampHealthPotion,useCampManaPotion,tick,abandon,leaveFinished,equip,inventoryScore} from './v012-engine.mjs';
+import {STORAGE_KEY,FAMILIES,MAGIC_ELEMENTS,PATHS,PASSIVES,SLOTS,MAX_AFFINITIES,newProfile,stats,begin,choosePassive,chooseMagicElement,migrateMagicProfile,ensureMagicElementChoice,choosePath,ensurePlaneOffers,rerollPath,resolveRoom,usePotion,tick,abandon,leaveFinished,equip,inventoryScore} from './v012-engine.mjs';
 let profile,open=false,manaPots=2,selectedLevel=1,paused=false,speed=2,error='',autosave=0;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const $=(sel)=>document.querySelector(sel);
@@ -10,6 +10,7 @@ if(profile.run&&profile.run.affinities?.length>MAX_AFFINITIES){
 }
 if(migrateMagicProfile(profile)){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(profile));}catch{}}
 profile.restHpRatio=profile.run&&profile.run.stage!=='finished'?(profile.restHpRatio??1):1;
+profile.restMpRatio=profile.run&&profile.run.stage!=='finished'?(profile.restMpRatio??1):1;
 profile.healthPotionStock=profile.healthPotionStock??3;
 selectedLevel=profile.unlocked;
 function persist(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(profile));}catch{error='Prototype local save unavailable. Real Wanderer saves have not been changed.';}}
@@ -32,17 +33,16 @@ function gearPanel(){
  return '<section class="v12-panel"><div class="v12-section-head"><h3>Permanent Equipment</h3><span>'+profile.inventory.length+' items · Gear score '+Math.round(inventoryScore(profile))+'</span></div><div class="v12-gear-list">'+rows+'</div><p class="v12-muted">Gear survives wins and defeats. This prototype stores it separately from the live game. Merchant and Forge remain unchanged in the classic mode.</p></section>';
 }
 function resourceCamp(run,stat){
- const hp=run?run.hp:stat.hp*(profile.restHpRatio??1);
- const mp=run?run.mp:stat.mana*(profile.restMpRatio??1);
- const available=run&&['startReward','path','reward','chest','event','altar'].includes(run.stage);
- const hStock=run?run.potions.hp:(profile.healthPotionStock??3);
- const mStock=run?run.potions.mana:(profile.manaPotionStock??3);
- return '<section class="v12-panel v12-rest"><h3>Camp · Health & Mana</h3>'+
-  statsBar('❤️ Health',hp,stat.hp)+statsBar('💧 Mana',mp,stat.mana)+
-  '<div class="v12-pot-actions">'+
-  '<button data-action="'+(run?'potion':'camp-heal')+'" '+(run?'data-kind="hp" ':'')+(hStock<1||hp>=stat.hp?'disabled':'')+'>❤️ Health potion ('+hStock+')</button>'+
-  '<button data-action="'+(run?'potion':'camp-mana')+'" '+(run?'data-kind="mana" ':'')+(mStock<1||mp>=stat.mana?'disabled':'')+'>💧 Mana potion ('+mStock+')</button>'+
-  '</div><p class="v12-muted">Use potions here, between combats. Never during a wave.</p></section>';
+ const hp=run?run.hp:stat.hp;
+ const mp=run?run.mp:stat.mana;
+ const hStock=run?.potions?.hp??0,mStock=run?.potions?.mana??0;
+ const actions=run?'<div class="v12-pot-actions">'+
+  '<button data-action="potion" data-kind="hp" '+(hStock<1||hp>=stat.hp?'disabled':'')+'>❤️ Health potion ('+hStock+')</button>'+
+  '<button data-action="potion" data-kind="mana" '+(mStock<1||mp>=stat.mana?'disabled':'')+'>💧 Mana potion ('+mStock+')</button>'+
+  '</div><p class="v12-muted">Potions can be used between Planes, never during waves.</p>':
+  '<p class="v12-muted">Both resources begin at 100% each Expedition. Potion use is available only during preparation between Planes.</p>';
+ return '<section class="v12-panel v12-rest"><h3>'+(run?'Between Planes · Health & Mana':'Camp · Health & Mana')+'</h3>'+
+  statsBar('❤️ Health',hp,stat.hp)+statsBar('💧 Mana',mp,stat.mana)+actions+'</section>';
 }
 function activePassives(run){
  const uniq=[...new Set(run.passives)];
@@ -62,7 +62,7 @@ function camp(){
  const levelSelector='<label class="v12-level-selector">Choose Expedition <select data-difficulty aria-label="Choose Expedition">'+Array.from({length:profile.unlocked},(_,i)=>i+1).map(n=>'<option value="'+n+'"'+(n===selectedLevel?' selected':'')+'>Expedition '+n+'</option>').join('')+'</select></label>';
  const potionSelector='<div class="v12-pot-grid"><strong>Potion loadout · 3 slots</strong><div>'+[0,1,2,3].map(n=>'<button data-action="pots" data-count="'+n+'" class="'+(n===manaPots?'active':'')+'">'+n+' Mana</button>').join('')+'</div><span>'+Math.min(3-manaPots,profile.healthPotionStock??3)+' Health + '+Math.min(manaPots,profile.manaPotionStock??3)+' Mana · usable only between combats</span></div>';
  const families=Object.entries(FAMILIES).map(([id,a])=>'<button class="v12-family" data-action="begin" data-id="'+id+'" style="--accent:'+a.color+'"><span>'+a.icon+'</span><strong>'+esc(a.name)+'</strong><small>'+esc(a.kind)+'</small></button>').join('');
- return '<div class="v12-stack"><section class="v12-panel"><h2>Camp · Prepare Expedition</h2><p class="v12-muted">Health resets to full after every Expedition. Review your Mana and gear, then choose up to three affinities and recover between Planes.</p>'+status+resourceCamp(null,stats(profile))+levelSelector+potionSelector+'<h3>Choose initial affinity</h3><div class="v12-family-grid">'+families+'</div></section>'+gearPanel()+'</div>';
+ return '<div class="v12-stack"><section class="v12-panel"><h2>Camp · Prepare Expedition</h2><p class="v12-muted">Health and Mana reset to full after every Expedition. Prepare your gear, choose up to three affinities and use potions only between Planes, not at the main Camp.</p>'+status+resourceCamp(null,stats(profile))+levelSelector+potionSelector+'<h3>Choose initial affinity</h3><div class="v12-family-grid">'+families+'</div></section>'+gearPanel()+'</div>';
 }
 function elementSelect(r){
  const cards=Object.entries(MAGIC_ELEMENTS).map(([id,element])=>
@@ -74,7 +74,7 @@ function startReward(r){
  return '<section class="v12-panel"><span class="v12-eyebrow">Start of adventure</span><h2>Choose one initial '+esc(FAMILIES[r.initial].name)+' passive</h2><p class="v12-muted">Your base affinity activates immediately. These three passives are drawn from the selected family.</p><div class="v12-rewards">'+r.passiveOffers.map(passiveCard).join('')+'</div></section>';
 }
 function pathSelect(r){
- const locked=r.lastPathAffinity&&r.room>1?FAMILIES[r.lastPathAffinity]:null;
+ const locked=r.lastPathAffinity&&r.room>1&&r.affinities.length<2?FAMILIES[r.lastPathAffinity]:null;
  const cards=r.pathOffers.map((id,index)=>{
   const p=PATHS.find(x=>x.id===id),a=FAMILIES[p.affinity];
   const plane=r.planeOffers?.find(x=>x.id===id)||{waves:1,elite:false,bonus:null};
@@ -103,7 +103,7 @@ function nonCombat(r,s){
 }
 function finished(r){
  const won=r.result.startsWith('Victory');
- return '<section class="v12-panel v12-finish"><span class="v12-big-icon">'+(won?'🏆':'☠️')+'</span><h2>'+esc(r.result)+'</h2><p>Your gear, Gold and Fragments persist. Up to three affinity families per run. Health is fully restored after every Expedition, whether you win, lose or abandon. Health Potions remain useful between Planes.</p><div class="v12-metrics"><span><b>'+r.loot.length+'</b><small>Gear items found</small></span><span><b>'+r.passives.length+'</b><small>Passives learned</small></span><span><b>'+r.affinities.length+'</b><small>Affinities explored</small></span></div><button class="v12-primary" data-action="leave">Return to camp</button></section>';
+ return '<section class="v12-panel v12-finish"><span class="v12-big-icon">'+(won?'🏆':'☠️')+'</span><h2>'+esc(r.result)+'</h2><p>Your gear, Gold and Fragments persist. Up to three affinity families per run. Health and Mana are fully restored after every Expedition, whether you win, lose or abandon. Potions remain useful between Planes.</p><div class="v12-metrics"><span><b>'+r.loot.length+'</b><small>Gear items found</small></span><span><b>'+r.passives.length+'</b><small>Passives learned</small></span><span><b>'+r.affinities.length+'</b><small>Affinities explored</small></span></div><button class="v12-primary" data-action="leave">Return to camp</button></section>';
 }
 function render(){
  if(!open)return;
@@ -123,8 +123,6 @@ function dispatch(action,b){
  switch(action){
   case 'close':open=false;paused=true;$('#v012-overlay').remove();document.body.classList.remove('v12-open');return;
   case 'pots':manaPots=+b.dataset.count;break;
-  case 'camp-heal':useCampHealthPotion(profile);break;
-  case 'camp-mana':useCampManaPotion(profile);break;
   case 'begin':begin(profile,idFromButton(b),manaPots,selectedLevel);paused=false;break;
   case 'passive':choosePassive(profile,idFromButton(b));break;
   case 'element':chooseMagicElement(profile,idFromButton(b));break;
