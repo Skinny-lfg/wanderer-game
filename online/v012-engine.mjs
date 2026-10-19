@@ -85,7 +85,7 @@ export function begin(profile,affinity,healthPots=2){
  if(!FAMILIES[affinity])throw Error('Invalid affinity');
  if(!Number.isInteger(healthPots)||healthPots<0||healthPots>3)throw Error('Three potion slots available');
  const seed=(profile.seed+0x9e3779b9+profile.record.length*31337)|0;profile.seed=seed;
- const run={level:profile.unlocked,room:1,seed,initial:affinity,affinities:[affinity],passives:[],potions:{hp:healthPots,mana:3-healthPots},rerolls:3,stage:'startReward',lastPathAffinity:null,selectedPath:null,pathOffers:[],passiveOffers:[],rooms:shuffle({seed:seed^7312},ROOM_TYPES).concat('boss'),history:[],hp:0,mp:0,barrier:0,fight:null,loot:[],result:null,log:['Expedition started.']};
+ const run={level:profile.unlocked,room:1,seed,initial:affinity,affinities:[affinity],passives:[],potions:{hp:healthPots,mana:3-healthPots},rerolls:3,stage:'startReward',lastPathAffinity:null,selectedPath:null,pathOffers:[],passiveOffers:[],rooms:['combat',...shuffle({seed:seed^7312},ROOM_TYPES.slice(1)),'boss'],history:[],hp:0,mp:0,barrier:0,fight:null,loot:[],result:null,log:['Expedition started.']};
  profile.run=run;const s=stats(profile);run.hp=s.hp;run.mp=s.mana;run.passiveOffers=passiveOptions(run,affinity);return profile;
 }
 function makePathOffers(run){
