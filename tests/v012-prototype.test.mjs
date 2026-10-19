@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {FAMILIES,PATHS,PASSIVES,MAX_AFFINITIES,STORAGE_KEY,newProfile,begin,choosePassive,choosePath,rerollPath,resolveRoom,usePotion,useCampHealthPotion,tick,stats,equip,abandon,leaveFinished} from '../online/v012-engine.mjs';
+import {FAMILIES,PATHS,PASSIVES,MAX_AFFINITIES,STORAGE_KEY,newProfile,begin,choosePassive,choosePath,rerollPath,resolveRoom,usePotion,useCampHealthPotion,useCampManaPotion,tick,stats,equip,abandon,leaveFinished} from '../online/v012-engine.mjs';
 
 test('v0.12 prototype does not use classic save key and has five families and 13 paths',()=>{
  assert.match(STORAGE_KEY,/v012/);
@@ -12,7 +12,7 @@ test('v0.12 prototype does not use classic save key and has five families and 13
 
 test('initial chosen affinity guaranteed in first path offers, and 3 reward choices',()=>{
  const p=newProfile(1234);begin(p,'blood',2);
- assert.equal(p.run.stage,'startReward');assert.equal(p.run.potions.hp,0);assert.equal(p.run.potions.mana,2);
+ assert.equal(p.run.stage,'startReward');assert.equal(p.run.potions.hp,1);assert.equal(p.run.potions.mana,2);
  assert.equal(p.run.passiveOffers.length,3);
  assert.ok(p.run.passiveOffers.every(id=>PASSIVES.find(x=>x.id===id).affinity==='blood'));
  choosePassive(p,p.run.passiveOffers[0]);
@@ -20,6 +20,8 @@ test('initial chosen affinity guaranteed in first path offers, and 3 reward choi
  assert.ok(p.run.pathOffers.map(id=>PATHS.find(x=>x.id===id).affinity).includes('blood'));
  assert.throws(()=>rerollPath(p,p.run.pathOffers.findIndex(id=>PATHS.find(x=>x.id===id).affinity==='blood')),/guaranteed/);
  assert.equal(new Set(p.run.pathOffers.map(id=>PATHS.find(x=>x.id===id).affinity)).size,3);
+ assert.equal(p.run.planeOffers.length,3);
+ assert.ok(p.run.planeOffers.every(x=>x.waves>=1&&x.waves<=3&&typeof x.elite==='boolean'));
 });
 
 test('lock applies to previous picked affinity only, reroll does not bypass lock',()=>{
@@ -97,29 +99,40 @@ test('combat uses sequential waves, no multi-enemy targeting',()=>{
  }
 });
 
-test('Health potions are usable only between runs; Mana potions work during adventures',()=>{
+test('both potions work between combat Planes, never during waves',()=>{
  const p=newProfile(513);assert.throws(()=>begin(p,'fury',4),/Mana potions/);
  begin(p,'fury',2);
- const r=p.run;r.hp=stats(p).hp*.5;
- assert.throws(()=>usePotion(p,'hp'),/only.*camp/i);
+ const r=p.run;
+ r.hp=stats(p).hp*.5;r.mp=stats(p).mana*.4;
+ assert.equal(usePotion(p,'hp'),true);
+ assert.equal(usePotion(p,'mana'),true);
+ assert.equal(r.potions.hp,0);assert.equal(r.potions.mana,1);
  assert.throws(()=>useCampHealthPotion(p),/at camp/i);
- assert.equal(r.potions.hp,0);
- assert.equal(usePotion(p,'mana'),false);
- assert.equal(r.potions.mana,2);
+ assert.throws(()=>useCampManaPotion(p),/at camp/i);
+ choosePassive(p,r.passiveOffers[0]);choosePath(p,r.pathOffers[0]);
+ assert.throws(()=>usePotion(p,'mana'),/between combats/i);
+ assert.throws(()=>usePotion(p,'hp'),/between combats/i);
  abandon(p);leaveFinished(p);
- assert.equal(p.restHpRatio,.5,'abandon preserves remaining HP above the 40% safety floor');
+ assert.ok(p.restHpRatio>=.4&&p.restHpRatio<1);
+ assert.ok(p.restMpRatio>=.3&&p.restMpRatio<1);
  assert.equal(useCampHealthPotion(p),true);
- assert.ok(p.restHpRatio>.69);
- assert.equal(p.healthPotionStock,2);
- const hpRatio=p.restHpRatio;begin(p,'fury',2);
- assert.equal(p.run.hp,Math.round(stats(p).hp*hpRatio));
+ assert.equal(useCampManaPotion(p),true);
+ const hp=p.restHpRatio,mp=p.restMpRatio;
+ begin(p,'fury',1);
+ assert.equal(p.run.hp,Math.round(stats(p).hp*hp));
+ assert.equal(p.run.mp,Math.round(stats(p).mana*mp));
 });
 
 test('permanent loot and unlocked difficulty survive defeat',()=>{
  const p=newProfile(72);const count=p.inventory.length;
  begin(p,'aegis');choosePassive(p,p.run.passiveOffers[0]);
- // Force a chest selection via a deterministic test room assignment.
+ // A chest Plane now has waves before the reward.
  p.run.rooms[0]='chest';const path=p.run.pathOffers[0];choosePath(p,path);
+ while(p.run.stage==='combat'){
+  p.run.fight.enemy.hp=1;p.run.fight.enemy.attack=0;
+  for(let i=0;i<20&&p.run.stage==='combat';i++)tick(p,.2);
+ }
+ assert.equal(p.run.stage,'chest');
  resolveRoom(p,'treasure');
  assert.ok(p.inventory.length>count);
  abandon(p);
