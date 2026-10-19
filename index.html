@@ -3040,7 +3040,8 @@ const WANDERER_SHATTER_ENABLED=true,WANDERER_DOUBLE_STRIKE_ENABLED=true;
 function weaponAttack(r){
  const s=r.stats,e=r.enemy,weapon=s.main,off=s.off,caster=s.caster,now=setNow(r),temp=setRuntime(r);
  const lt=legendaryRuntime(r),focus=!!lt.focusReady,armorReady=!!lt.armorReady;lt.focusReady=false;lt.armorReady=false;
- const kind=weapon?.subtype||'Unarmed',cost=kind==='Staff'?13:kind==='Wand'?9:0;
+ const kind=weapon?.subtype||'Unarmed',baseCost=kind==='Staff'?13:kind==='Wand'?9:0;
+ const cost=baseCost&&isPhase1Run()&&phase1Build?.element?Math.max(4,Math.round(baseCost*(1-.12*WandererV012Buildcraft.rank(phase1Build,'efficient_cast')))):baseCost;
  let damage=0,element=null,cast=false;
  if(caster&&r.mp>=cost){
   r.mp-=cost;cast=true;element=weapon.magic||weapon.effect||'burn';
