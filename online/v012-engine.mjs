@@ -161,9 +161,8 @@ export function choosePath(profile,id){
  const path=PATHS.find(p=>p.id===id);if(r.room>1&&path.affinity===r.lastPathAffinity)throw Error('Chosen affinity locked for one room');
  if(r.affinities.length>=MAX_AFFINITIES&&!r.affinities.includes(path.affinity))throw Error('Maximum three affinities reached');
  r.selectedPath=id;r.lastPathAffinity=path.affinity;r.history.push({room:r.room,path:id,affinity:path.affinity,type:r.rooms[r.room-1]});
- const type=r.rooms[r.room-1];
- if(['combat','elite','boss'].includes(type))startCombat(profile);
- else r.stage=type;
+ r.selectedPlane=r.planeOffers?.find(p=>p.id===id)||rollPlane(r,id);
+ startCombat(profile);
  return profile;
 }
 function loot(profile,guarantee=false){
