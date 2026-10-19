@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {FAMILIES,PATHS,PASSIVES,MAX_AFFINITIES,STORAGE_KEY,newProfile,begin,choosePassive,choosePath,rerollPath,resolveRoom,usePotion,useCampHealthPotion,useCampManaPotion,tick,stats,equip,abandon,leaveFinished} from '../online/v012-engine.mjs';
+import {FAMILIES,PATHS,PASSIVES,MAX_AFFINITIES,STORAGE_KEY,newProfile,begin,choosePassive,choosePath,rerollPath,resolveRoom,usePotion,useCampHealthPotion,useCampManaPotion,ensurePlaneOffers,tick,stats,equip,abandon,leaveFinished} from '../online/v012-engine.mjs';
 
 test('v0.12 prototype does not use classic save key and has five families and 13 paths',()=>{
  assert.match(STORAGE_KEY,/v012/);
@@ -181,4 +181,56 @@ test('difficulty picker can replay lower unlocked tiers without skipping progres
  assert.equal(p.unlocked,4);
  assert.equal(p.run.rooms[0],'combat');
  assert.equal(p.run.rooms[14],'boss');
+});
+
+
+test('offered Plane wave count matches combat, wave rewards, and bonus Elite visibility',()=>{
+ const p=newProfile(878);begin(p,'blood');choosePassive(p,p.run.passiveOffers[0]);
+ const r=p.run;
+ for(const offer of r.planeOffers){assert.ok(offer.waves>=1&&offer.waves<=3);assert.equal(typeof offer.elite,'boolean');}
+ const option=r.planeOffers.find(x=>x.waves>=2)||r.planeOffers[0];
+ const beforeGold=p.gold;
+ choosePath(p,option.id);
+ assert.equal(r.fight.waves,option.waves,'player sees actual incoming wave count');
+ for(let wave=0;wave<option.waves&&r.stage==='combat';wave++){
+  const e=r.fight.enemy;
+  assert.equal(e.elite,!!option.elite&&wave===option.waves-1);
+  e.hp=1;e.attack=0;
+  for(let i=0;i<20&&r.stage==='combat'&&r.fight?.enemy===e;i++)tick(p,.2);
+ }
+ assert.ok(p.gold>beforeGold,'wave kills must award currency');
+ assert.equal(r.stage,'reward');
+});
+
+test('gear can be changed between Planes but not during waves; resource caps change accordingly',()=>{
+ const p=newProfile(219);begin(p,'arcane');choosePassive(p,p.run.passiveOffers[0]);
+ const r=p.run;
+ p.inventory.push({id:91,slot:'armor',name:'Test Cloth Armor',rarity:'Epic',level:1,atk:0,armor:6,hp:32,mana:25,material:'Cloth',affinity:null});
+ const old=stats(p);r.hp=old.hp*.7;r.mp=old.mana*.45;
+ equip(p,91);
+ const fresh=stats(p);
+ assert.ok(fresh.hp>old.hp&&fresh.mana>old.mana);
+ assert.ok(r.hp>old.hp*.7&&r.mp>old.mana*.45);
+ const previous=ensurePlaneOffers(p);
+ assert.equal(previous,false,'current Plane choices already include previews');
+ choosePath(p,r.pathOffers[0]);assert.throws(()=>equip(p,1),/during combat/);
+ r.fight.enemy.hp=1;r.fight.enemy.attack=0;
+ while(r.stage==='combat'){
+  r.fight.enemy.hp=1;r.fight.enemy.attack=0;
+  for(let i=0;i<20&&r.stage==='combat';i++)tick(p,.2);
+ }
+ assert.equal(r.stage,'reward');
+ equip(p,1);
+ assert.equal(p.equipped.weapon,1);
+});
+
+test('legacy Plane offers are hydrated without overwriting an ongoing test inventory',()=>{
+ const p=newProfile(346);begin(p,'fury');choosePassive(p,p.run.passiveOffers[0]);
+ p.run.planeOffers=undefined;
+ const gearCount=p.inventory.length;
+ assert.equal(ensurePlaneOffers(p),true);
+ assert.equal(p.run.planeOffers.length,3);
+ assert.ok(p.run.planeOffers.every(x=>p.run.pathOffers.includes(x.id)&&x.waves>=1&&x.waves<=3));
+ assert.equal(p.inventory.length,gearCount);
+ assert.equal(ensurePlaneOffers(p),false);
 });
