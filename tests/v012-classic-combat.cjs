@@ -55,7 +55,7 @@ const store=new Map();const node=()=>({innerHTML:'',textContent:'',style:{},data
 const sandbox={document:{getElementById:()=>node(),querySelectorAll:()=>[],querySelector:()=>null,createElement:node},
  localStorage:{getItem:k=>store.get(k)||null,setItem:(k,v)=>store.set(k,v)},URLSearchParams,
  location:{search:'?expeditionPhase1=1'},setTimeout:()=>0,setInterval:()=>0,clearTimeout:()=>{},clearInterval:()=>{},console};
-const source=[fs.readFileSync('combat/legendary.js','utf8'),fs.readFileSync('combat/v012-buildcraft.js','utf8'),main.replace(boot,seed)].join('\n');
+const source=[fs.readFileSync('combat/legendary.js','utf8'),fs.readFileSync('combat/v012-buildcraft.js','utf8'),main.replace('if(PHASE1_PREVIEW){phase1Init();render();}else{'+boot+'}',seed)].join('\n');
 vm.runInNewContext(source,sandbox,{filename:'v012-classic-combat.js',timeout:20000});
 const result=sandbox.__phase2Combat;assert(result?.signature,'Legendary identity survives original battle');
 assert.equal(result.results.length,56,'seven weapon types by eight family/element combinations');
