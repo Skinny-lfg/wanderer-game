@@ -20,7 +20,7 @@ function create(themes,rng=Math.random){
  if(typeof rng!=='function')throw Error('Invalid RNG');
  const byFamily=Object.fromEntries(FAMILIES.map(f=>[f,themes.filter(t=>THEME_FAMILIES[t.id]===f)]));
  if(FAMILIES.some(f=>!byFamily[f].length))throw Error('Missing classic themes for affinity '+FAMILIES.find(f=>!byFamily[f].length));
- const game={unlocked:1,expedition:0,planeIndex:0,stage:'camp',families:[],lastFamily:null,rooms:[],offers:[],selected:null,wave:0,history:[]};
+ const game={unlocked:1,expedition:0,planeIndex:0,stage:'camp',families:[],lastFamily:null,rooms:[],offers:[],selected:null,wave:0,history:[],rerollsLeft:0};
  function allowed(){
   return FAMILIES.filter(f=>(game.families.length<3||game.families.includes(f))&&(game.families.length===0||game.families.length>=2||f!==game.lastFamily));
  }
@@ -44,7 +44,15 @@ function create(themes,rng=Math.random){
   if(!['camp','finished','failed'].includes(game.stage))throw Error('Expedition already active');
   game.expedition=level;game.planeIndex=1;game.families=[];game.lastFamily=null;
   game.rooms=['combat',...shuffle(ROOMS.slice(1),rng),'boss'];
-  game.offers=[];game.selected=null;game.wave=0;game.history=[];game.stage='choice';offerPlanes();return game;
+  game.offers=[];game.selected=null;game.wave=0;game.history=[];game.rerollsLeft=2;game.stage='choice';offerPlanes();return game;
+ }
+ function reroll(){
+  if(game.stage!=='choice'||game.rerollsLeft<=0)throw Error('No Plane rerolls remaining');
+  const previous=game.offers.map(o=>o.id+':'+o.family).join('|');
+  game.rerollsLeft--;
+  // Keep the event/Elite/Boss template for the current Plane. Reroll only the available routes.
+  for(let tries=0;tries<4;tries++){offerPlanes();if(game.offers.map(o=>o.id+':'+o.family).join('|')!==previous)break;}
+  return game.offers;
  }
  function select(id){
   if(game.stage!=='choice')throw Error('Plane not available');
@@ -73,7 +81,7 @@ function create(themes,rng=Math.random){
   if(game.stage!=='combat')throw Error('No active combat');
   game.stage='failed';game.selected=null;game.offers=[];game.wave=0;game.families=[];game.lastFamily=null;
  }
- return Object.freeze({state:game,start,select,waveWon,defeat,offerPlanes,allowed});
+ return Object.freeze({state:game,start,select,reroll,waveWon,defeat,offerPlanes,allowed});
 }
 root.WandererV012Expedition=Object.freeze({create,FAMILIES,FAMILY_NAMES,THEME_FAMILIES});
 })(globalThis);
