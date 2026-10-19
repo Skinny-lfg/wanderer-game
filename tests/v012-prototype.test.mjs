@@ -115,42 +115,45 @@ test('both potions work between combat Planes, never during waves',()=>{
  assert.throws(()=>usePotion(p,'mana'),/between combats/i);
  assert.throws(()=>usePotion(p,'hp'),/between combats/i);
  abandon(p);leaveFinished(p);
- assert.equal(p.restHpRatio,1,'Health resets to full when the Expedition ends');
- assert.ok(p.restMpRatio>=.3&&p.restMpRatio<1);
- assert.equal(useCampHealthPotion(p),false,'Health potion cannot be wasted when already at full HP');
- assert.equal(useCampManaPotion(p),true);
- const hp=p.restHpRatio,mp=p.restMpRatio;
+ assert.equal(p.restHpRatio,1,'Health resets to full when Expedition ends');
+ assert.equal(p.restMpRatio,1,'Mana resets to full when Expedition ends');
+ assert.equal(useCampHealthPotion(p),false,'Health potion cannot be wasted at full HP');
+ assert.equal(useCampManaPotion(p),false,'Mana potion cannot be wasted at full Mana');
+ p.restHpRatio=.4;p.restMpRatio=.3; // Legacy local profile from an older test build.
  begin(p,'fury',1);
- assert.equal(p.run.hp,Math.round(stats(p).hp*hp));
- assert.equal(p.run.mp,Math.round(stats(p).mana*mp));
+ assert.equal(p.run.hp,stats(p).hp);
+ assert.equal(p.run.mp,stats(p).mana);
 });
 
-test('Expedition victory, defeat and manual exit restore full Health without resetting Mana',()=>{
+test('Expedition victory, defeat and abandonment restore Health and Mana',()=>{
  const defeated=newProfile(181);begin(defeated,'blood');choosePassive(defeated,defeated.run.passiveOffers[0]);
  defeated.run.hp=0;defeated.run.mp=3;
  abandon(defeated);
  assert.equal(defeated.restHpRatio,1,'Defeat immediately restores next-adventure HP');
- assert.ok(defeated.restMpRatio<1,'Mana still persists between Expeditions');
+ assert.equal(defeated.restMpRatio,1,'Defeat immediately restores next-adventure Mana');
  leaveFinished(defeated);
- assert.equal(defeated.restHpRatio,1,'Leaving a finished run keeps HP full');
+ assert.equal(defeated.restHpRatio,1);
+ assert.equal(defeated.restMpRatio,1);
  begin(defeated,'fury');
- assert.equal(defeated.run.hp,stats(defeated).hp,'Next Expedition starts with full HP');
- assert.ok(defeated.run.mp<stats(defeated).mana,'Mana remains a managed resource');
+ assert.equal(defeated.run.hp,stats(defeated).hp);
+ assert.equal(defeated.run.mp,stats(defeated).mana);
 
- const old=newProfile(727);old.restHpRatio=.4;
+ const old=newProfile(727);old.restHpRatio=.4;old.restMpRatio=.3;
  begin(old,'blood');
  assert.equal(old.run.hp,stats(old).hp,'Legacy profiles with partial HP still start full');
+ assert.equal(old.run.mp,stats(old).mana,'Legacy profiles with partial Mana still start full');
 
  const winner=newProfile(811);begin(winner,'blood');choosePassive(winner,winner.run.passiveOffers[0]);
  const r=winner.run;
  r.room=15;r.rooms[14]='boss';r.stage='path';
- const chosen=r.pathOffers[0];choosePath(winner,chosen);
+ choosePath(winner,r.pathOffers[0]);
  while(r.stage==='combat'){
-  r.hp=1;r.fight.enemy.hp=1;r.fight.enemy.attack=0;
+  r.hp=1;r.mp=0;r.fight.enemy.hp=1;r.fight.enemy.attack=0;
   for(let i=0;i<15&&r.stage==='combat';i++)tick(winner,.2);
  }
  assert.equal(r.stage,'finished');
  assert.equal(winner.restHpRatio,1,'Victory restores HP for the next Expedition');
+ assert.equal(winner.restMpRatio,1,'Victory restores Mana for the next Expedition');
  assert.match(r.result,/Expedition 2 unlocked/);
 });
 
