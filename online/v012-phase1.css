@@ -1,0 +1,23 @@
+/* Isolated v0.12 integration preview. Scoped so the classic game is unchanged. */
+.phase1Intro{display:grid;grid-template-columns:minmax(0,1fr) minmax(150px,.46fr);gap:16px;align-items:center}
+.phase1Intro img{max-width:100%;max-height:260px;object-fit:contain;filter:drop-shadow(0 0 16px #000a)}
+.phase1Intro .eyebrow{color:#e8c687}
+.phase1Info{margin:12px 0;color:#d2bbc1;line-height:1.6}
+.phase1HeroPicker{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 17px}
+.phase1HeroPicker button{display:flex;align-items:center;gap:6px;font-size:12px}
+.phase1HeroPicker img{height:40px;width:36px;object-fit:contain}
+.phase1HeroPicker .active{border-color:#edc783;box-shadow:0 0 0 1px #edc783}
+.phase1Offers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px}
+.phase1Offer{padding:0;text-align:left;overflow:hidden;background:#1b1720;border:1px solid #735a66;border-radius:12px}
+.phase1Offer img{width:100%;height:144px;object-fit:cover;display:block}
+.phase1OfferBody{display:grid;gap:7px;padding:13px}
+.phase1Offer strong{color:#f2ddb7;font:700 17px Georgia,serif}
+.phase1OfferMeta{display:flex;flex-wrap:wrap;gap:5px}
+.phase1OfferMeta span{font-size:11px;color:#efdac1;background:#342933;border:1px solid #695264;border-radius:5px;padding:3px 6px}
+.phase1Offer:hover,.phase1Offer:focus-visible{border-color:#f2cd7c;outline:2px solid #a78056;outline-offset:1px}
+.phase1FamilyRow{display:flex;flex-wrap:wrap;gap:6px;margin:9px 0 14px}
+.phase1FamilyRow span{padding:4px 9px;border:1px solid #8a6472;border-radius:999px;color:#ebc6ad;background:#37242d;font-size:12px}
+.phase1Experimental{border-left:3px solid #d9a75c;padding:9px 12px;background:#30232c;font-size:12px;color:#f1d9b7;margin:12px 0}
+.phase1CombatHeader{margin:0 0 9px;color:#f3d5a8;font-weight:700;font-family:Georgia,serif}
+@media(max-width:750px){.phase1Offers{grid-template-columns:1fr}.phase1Offer{display:grid;grid-template-columns:minmax(110px,38%) 1fr}.phase1Offer img{height:100%;min-height:130px}.phase1OfferBody{padding:10px}.phase1Intro{grid-template-columns:minmax(0,1fr) 120px}}
+@media(max-width:390px){.phase1Intro{grid-template-columns:1fr}.phase1Intro img{display:none}.phase1Offer{grid-template-columns:110px minmax(0,1fr)}.phase1Offer strong{font-size:14px}.phase1OfferMeta span{font-size:10px}}
