@@ -100,7 +100,7 @@ export function begin(profile,affinity,manaPots=2,level=profile.unlocked){
  if(profile.run&&!['finished'].includes(profile.run.stage))throw Error('Finish current expedition first');
  if(!FAMILIES[affinity])throw Error('Invalid affinity');
  if(!Number.isInteger(manaPots)||manaPots<0||manaPots>3)throw Error('Up to three Mana potions available');
- if(!Number.isInteger(level)||level<1||level>profile.unlocked)throw Error('Difficulty not unlocked');
+ if(!Number.isInteger(level)||level<1||level>profile.unlocked)throw Error('Expedition level not unlocked');
  const seed=(profile.seed+0x9e3779b9+profile.record.length*31337)|0;profile.seed=seed;
  const run={level,room:1,seed,initial:affinity,affinities:[affinity],magicElement:null,elementReturnStage:null,passives:[],potions:{hp:Math.min(3-manaPots,profile.healthPotionStock??3),mana:Math.min(manaPots,profile.manaPotionStock??3)},rerolls:3,stage:'startReward',lastPathAffinity:null,selectedPath:null,pathOffers:[],passiveOffers:[],rooms:['combat',...shuffle({seed:seed^7312},ROOM_TYPES.slice(1)),'boss'],history:[],hp:0,mp:0,barrier:0,fight:null,loot:[],result:null,log:['Expedition started.']};
  profile.run=run;const s=stats(profile);run.hp=Math.max(1,Math.round(s.hp*clamp(profile.restHpRatio??1,.4,1)));run.mp=Math.max(0,Math.round(s.mana*clamp(profile.restMpRatio??1,.3,1)));
@@ -267,7 +267,7 @@ function completeRoom(profile,suppressRandomDrop=false){
   const before=profile.unlocked;profile.unlocked=Math.max(before,r.level+1);
   finishRecovery(profile);
   profile.record.push({level:r.level,won:true,affinities:[...r.affinities],passives:[...r.passives],gear:gear(profile).length});
-  r.result='Victory! Difficulty '+profile.unlocked+' unlocked.';r.stage='finished';r.fight=null;return;
+  r.result='Victory! Expedition '+profile.unlocked+' unlocked.';r.stage='finished';r.fight=null;return;
  }
  const family=PATHS.find(p=>p.id===r.selectedPath).affinity;
  r.stage=family==='magic'&&!r.magicElement?'element':'reward';
@@ -296,8 +296,9 @@ export function usePotion(profile,kind){
 }
 function finishRecovery(profile){
  const r=profile.run;
- const maximum=stats(profile).hp;
- profile.restHpRatio=clamp(r.hp/maximum,.4,1);
+ // Each finished expedition restores Health to full before the next attempt.
+ // Mana retains its existing cross-expedition recovery rules.
+ profile.restHpRatio=1;
  profile.restMpRatio=clamp(r.mp/Math.max(1,stats(profile).mana),.3,1);
  profile.healthPotionStock=Math.min(3,(profile.healthPotionStock??3)+1);
  profile.manaPotionStock=Math.min(3,(profile.manaPotionStock??3)+1);
@@ -421,7 +422,7 @@ export function tick(profile,dt=.2){
  return profile;
 }
 export function abandon(profile){if(!profile.run||profile.run.stage==='finished')throw Error('No active expedition');finishDeath(profile);return profile;}
-export function leaveFinished(profile){if(!profile.run||profile.run.stage!=='finished')throw Error('Expedition still running');profile.run=null;return profile;}
+export function leaveFinished(profile){if(!profile.run||profile.run.stage!=='finished')throw Error('Expedition still running');profile.run=null;profile.restHpRatio=1;return profile;}
 export function equip(profile,id){
  if(profile.run&&profile.run.stage==='combat')throw Error('Cannot change gear during combat');
  const item=profile.inventory.find(x=>x.id===id);if(!item)throw Error('Missing equipment');
