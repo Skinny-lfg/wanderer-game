@@ -3437,6 +3437,8 @@ function phase1Death(){
 function phase1DecorateCombat(){
  if(!isPhase1Run()||typeof document.querySelector!=='function')return;
  const g=phase1Controller.state,r=state.run;
+ const classicTheme=THEMES.find(t=>t.id===g.selected?.id);
+ const arena=$('scene');if(arena&&classicTheme)arena.style.backgroundImage='url("'+dungeonImage(classicTheme)+'")';
  const heading=document.querySelector('.combatDungeonHeading');
  if(heading)heading.innerHTML='Expedition '+g.expedition+' · Plane '+g.planeIndex+' / 15';
  const header=heading?.parentElement?.querySelector('p');
