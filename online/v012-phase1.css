@@ -23,3 +23,17 @@
 @media(max-width:390px){.phase1Intro{grid-template-columns:1fr}.phase1Intro img{display:none}.phase1Offer{grid-template-columns:110px minmax(0,1fr)}.phase1Offer strong{font-size:14px}.phase1OfferMeta span{font-size:10px}}
 
 .phase1FamilyRow .affinityGlyph,.phase1OfferMeta .affinityGlyph{display:inline-block;vertical-align:middle;width:20px;height:20px;margin-right:3px;flex:none}
+
+/* Phase 2 — temporary passive draft uses existing palette, never global styles. */
+.phase1DraftCards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0}
+.phase1DraftCard{display:flex;flex-direction:column;align-items:flex-start;gap:10px;text-align:left;min-height:150px;padding:17px 15px;
+ background:linear-gradient(150deg,#39232e,#1c1720);color:#f3e5d4;border:1px solid #795262;border-radius:12px}
+.phase1DraftCard strong{font:700 20px Georgia,serif;color:#f1d4a3}
+.phase1DraftCard small{font-size:13px;line-height:1.55;color:#d8c3c1}
+.phase1DraftCard:hover,.phase1DraftCard:focus-visible{border-color:#edc785;outline:2px solid #c39967;outline-offset:2px}
+.phase1DraftCard .affinityGlyph{width:42px;height:42px;display:inline-block}
+.phase1BuildSummary{margin:12px 0;padding:9px 12px;border:1px solid #715063;background:#2b1b27;border-radius:8px}
+.phase1BuildSummary summary{cursor:pointer;color:#edcfa7;font-weight:700}
+.phase1BuildSummary p{margin:8px 0 2px;line-height:1.6}
+.phase2PassiveBar{margin:10px 0;padding:8px 12px;background:#291d2c;border:1px solid #654859;border-radius:9px;color:#e9cfb5;line-height:1.5;font-size:12px}
+@media(max-width:700px){.phase1DraftCards{grid-template-columns:1fr}.phase1DraftCard{min-height:unset;padding:13px}.phase1DraftCard strong{font-size:17px}}
