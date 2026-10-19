@@ -105,7 +105,8 @@ function render(){
  const rbar=r&&r.stage!=='finished'?'<div class="v12-progress"><span>Difficulty '+r.level+' · Room '+r.room+'/15</span><span>'+r.passives.length+' passives · '+r.rerolls+' rerolls</span></div>':'';
  const affinities=r?r.affinities.map(affChip).join(''):'';
  let body=!r?camp():r.stage==='startReward'?startReward(r):r.stage==='path'?pathSelect(r):r.stage==='reward'?reward(r):r.stage==='combat'?combat(r,s):r.stage==='finished'?finished(r):nonCombat(r,s);
- let gearStrip=r&&r.stage!=='finished'?'<div class="v12-side"><section class="v12-panel"><div class="v12-section-head"><h3>Active affinities</h3><span>'+r.affinities.length+'/'+MAX_AFFINITIES+'</span></div><div class="v12-chips">'+affinities+'</div><p class="v12-muted">'+r.passives.length+' temporary passives · '+profile.inventory.length+' permanent items</p><div class="v12-pot-actions"><button data-action="potion" data-kind="mana" '+(!r.potions.mana?'disabled':'')+'>💧 Mana '+r.potions.mana+'</button></div></section><section class="v12-panel"><h3>Expedition log</h3><div class="v12-log">'+r.log.slice(0,8).map(x=>'<div>'+esc(x)+'</div>').join('')+'</div></section><button class="v12-danger" data-action="abandon">Abandon expedition</button></div>':'';
+ if(r&&['startReward','reward','path','chest','event','altar'].includes(r.stage))body=betweenCombats(r,s)+body;
+ let gearStrip=r&&r.stage!=='finished'?'<div class="v12-side"><section class="v12-panel"><div class="v12-section-head"><h3>Active affinities</h3><span>'+r.affinities.length+'/'+MAX_AFFINITIES+'</span></div><div class="v12-chips">'+affinities+'</div><p class="v12-muted">'+r.passives.length+' temporary passives · '+profile.inventory.length+' permanent items</p></section>'+activePassives(r)+'<section class="v12-panel"><h3>Expedition log</h3><div class="v12-log">'+r.log.slice(0,8).map(x=>'<div>'+esc(x)+'</div>').join('')+'</div></section><button class="v12-danger" data-action="abandon">Abandon expedition</button></div>':'';
  host.innerHTML='<div class="v12-shell"><header class="v12-header"><div><span class="v12-eyebrow">DEVELOPMENT ONLY · ISOLATED SAVE</span><h1>WANDERER <small>v0.12 prototype</small></h1></div><button data-action="close" class="v12-close" aria-label="Close prototype">✕ Close</button></header>'+rbar+(error?'<div class="v12-error">'+esc(error)+'</div>':'')+'<div class="v12-layout"><div class="v12-main">'+body+'</div>'+gearStrip+'</div><footer class="v12-footer">Experimental battle balance. Original D1–D200 gameplay, accounts and cloud saves are unchanged. Local prototype save key: '+STORAGE_KEY+'</footer></div>';
 }
 function dispatch(action,b){
@@ -114,6 +115,7 @@ function dispatch(action,b){
   case 'close':open=false;paused=true;$('#v012-overlay').remove();document.body.classList.remove('v12-open');return;
   case 'pots':manaPots=+b.dataset.count;break;
   case 'camp-heal':useCampHealthPotion(profile);break;
+  case 'camp-mana':useCampManaPotion(profile);break;
   case 'begin':begin(profile,idFromButton(b),manaPots,selectedLevel);paused=false;break;
   case 'passive':choosePassive(profile,idFromButton(b));break;
   case 'path':choosePath(profile,idFromButton(b));paused=false;break;
