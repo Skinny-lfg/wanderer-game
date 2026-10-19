@@ -4,7 +4,7 @@ const html=fs.readFileSync('index.html','utf8');
 const main=html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
 const boot='load();if(!state.merchant)rollShop();save();render();';
 assert(main?.includes(boot),'unchanged classic bootstrap');
-const seed=String.raw\`
+const seed=String.raw`
  fresh();
  animateStrike=animateDefense=animateEnemyStrike=floatText=updateBars=render=renderCombat=save=()=>{};
  addLog=()=>{};winEncounter=()=>{state.run.status='ready';};die=()=>{state.run.status='dead';};
@@ -41,7 +41,8 @@ const seed=String.raw\`
  phase1Build=WandererV012Buildcraft.create();phase1Build.families=['magic'];phase1Build.element='fire';
  const signature=LEGENDARY_CATALOG.find(x=>x.slot==='weapon'&&x.subtype==='Sword');
  if(!signature)throw Error('Classic Legendary catalog must include a Sword');
- let item;for(let k=0;k<220;k++){item=makeItem(30,'weapon',null,'loot','Sword','Legendary');if(item.legendaryId===signature.id)break;}
+ let item,legendSeed=39;Math.random=()=>{legendSeed=(Math.imul(legendSeed,1664525)+1013904223)>>>0;return legendSeed/4294967296;};
+ for(let k=0;k<500;k++){item=makeItem(30,'weapon',null,'loot','Sword','Legendary');if(item.legendaryId===signature.id)break;}
  if(item.legendaryId!==signature.id||!legendarySignature(item))throw Error('Legendary fixture unavailable');
  state.equip=makeSlots();state.equip.weapon=item;
  const s=phase2Stats();state.run={phase1:true,phase1Magic:true,tier:15,path:'temple',enc:1,status:'fight',
@@ -49,7 +50,7 @@ const seed=String.raw\`
  state.run.enemy=enemyFor(15,1,{theme:THEMES[0],boss:false,elite:false});
  state.run.enemy.hp=100000;weaponAttack(state.run);
  globalThis.__phase2Combat={results,legendaryId:item.legendaryId,signature:!!legendarySignature(item)};
-\`;
+`;
 const store=new Map();const node=()=>({innerHTML:'',textContent:'',style:{},dataset:{},classList:{remove(){},add(){}},focus(){}});
 const sandbox={document:{getElementById:()=>node(),querySelectorAll:()=>[],querySelector:()=>null,createElement:node},
  localStorage:{getItem:k=>store.get(k)||null,setItem:(k,v)=>store.set(k,v)},URLSearchParams,
