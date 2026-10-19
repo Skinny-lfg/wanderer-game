@@ -267,11 +267,13 @@ export function tick(profile,dt=.2){
  }
  r.mp=Math.min(s.mana,r.mp+dt*(s.material==='Cloth'?1.45:0.65)+dt*.65*count(r,'mana_spring'));
  if(e.hp<=0){
+  awardWave(profile,e);
   const carry=has(r,'contagion')?Math.floor(e.bleed*.5):0;
   if(f.wave+1<f.waves){
    f.wave++;f.enemy=enemyFor(r,f.wave,f.waves);f.enemy.bleed=carry;f.pt=0;f.et=0;f.dt=0;
    r.log=['Wave '+(f.wave+1)+'/'+f.waves+' begins.',...r.log].slice(0,14);
-  }else completeRoom(profile);
+  }else if(['chest','event','altar'].includes(r.rooms[r.room-1])){r.stage=r.rooms[r.room-1];r.fight=null;}
+  else completeRoom(profile);
   return profile;
  }
  if(f.et>=e.interval){
