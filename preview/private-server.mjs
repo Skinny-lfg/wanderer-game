@@ -15,7 +15,7 @@ const LIMIT=12;
 const MIME={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.webp':'image/webp','.gif':'image/gif','.ico':'image/x-icon','.json':'application/json','.woff':'font/woff','.woff2':'font/woff2','.mp3':'audio/mpeg','.ogg':'audio/ogg'};
 const digest=v=>createHash('sha256').update(String(v)).digest();
 const same=(a,b)=>timingSafeEqual(digest(a),digest(b));
-const loginHTML=(error='')=>\`<!doctype html><html lang="pt"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Wanderer — Private Playtest</title><style>
+const loginHTML=(error='')=>`<!doctype html><html lang="pt"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Wanderer — Private Playtest</title><style>
 html{font-family:system-ui,sans-serif;background:#0d0e15;color:#eee;color-scheme:dark}
 body{min-height:100svh;display:grid;place-items:center;margin:0;padding:20px;box-sizing:border-box;background:radial-gradient(ellipse at 50% 0,#352639,#101119 66%)}
 main{max-width:390px;width:100%;box-sizing:border-box;padding:30px;border:1px solid #5b4e65;background:#1b1a26;border-radius:15px;box-shadow:0 12px 50px #0008}
@@ -25,7 +25,7 @@ label{display:block;font-size:13px;margin:15px 0 7px;color:#dfd4e1}
 input{box-sizing:border-box;width:100%;border-radius:9px;border:1px solid #766484;background:#11121c;color:#fff;padding:13px;font:inherit}
 button{width:100%;border-radius:9px;border:1px solid #aa8fbb;background:#695478;color:#fff;padding:13px;font:700 15px system-ui,sans-serif;margin-top:22px;cursor:pointer}
 strong{display:block;color:#f2a7a7;margin-top:16px;font-size:13px;text-align:center}
-</style></head><body><main><h1>WANDERER</h1><p>Private v0.12 Playtest<br>Access restricted to the tester.</p><form method="post" action="/__preview/login" autocomplete="off"><label for="user">Username</label><input id="user" name="username" required maxlength="128" autocomplete="username" spellcheck="false"><label for="pass">Password</label><input id="pass" name="password" type="password" required maxlength="256" autocomplete="current-password"><button type="submit">Enter Playtest</button></form>\${error?'<strong>Invalid credentials or too many attempts.</strong>':''}<p><small>This prototype does not use production player saves.</small></p></main></body></html>\`;
+</style></head><body><main><h1>WANDERER</h1><p>Private v0.12 Playtest<br>Access restricted to the tester.</p><form method="post" action="/__preview/login" autocomplete="off"><label for="user">Username</label><input id="user" name="username" required maxlength="128" autocomplete="username" spellcheck="false"><label for="pass">Password</label><input id="pass" name="password" type="password" required maxlength="256" autocomplete="current-password"><button type="submit">Enter Playtest</button></form>${error?'<strong>Invalid credentials or too many attempts.</strong>':''}<p><small>This prototype does not use production player saves.</small></p></main></body></html>`;
 function securityHeaders(res){
  res.setHeader('Cache-Control','no-store, private');
  res.setHeader('X-Content-Type-Options','nosniff');
@@ -101,7 +101,7 @@ export function createPrivatePreviewServer({
     const token=randomBytes(32).toString('hex');
     sessions.set(digest(token).toString('hex'),Date.now()+SESSION_MS);
     if(sessions.size>4096)for(const [key,expiry] of sessions)if(expiry<Date.now())sessions.delete(key);
-    res.setHeader('Set-Cookie',\`\${COOKIE}=\${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=43200\${allowLocalHttp?'':'; Secure'}\`);
+    res.setHeader('Set-Cookie',`${COOKIE}=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=43200${allowLocalHttp?'':'; Secure'}`);
     return redirect(res,'/?playtest=v012');
    }catch{return serveGuardError(res,400,'Invalid login request',method);}
   }
@@ -109,7 +109,7 @@ export function createPrivatePreviewServer({
   if(pathname==='/__preview/logout'){
    if(method!=='POST')return serveGuardError(res,405,'Method not allowed',method);
    const token=parseCookies(req.headers.cookie)[COOKIE];if(token)sessions.delete(digest(token).toString('hex'));
-   res.setHeader('Set-Cookie',\`\${COOKIE}=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0\${allowLocalHttp?'':'; Secure'}\`);
+   res.setHeader('Set-Cookie',`${COOKIE}=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0${allowLocalHttp?'':'; Secure'}`);
    return redirect(res,'/__preview/login');
   }
   if(!['GET','HEAD'].includes(method))return serveGuardError(res,405,'Method not allowed',method);
