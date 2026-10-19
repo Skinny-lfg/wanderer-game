@@ -40,7 +40,7 @@ function create(themes,rng=Math.random){
   return game.offers;
  }
  function start(level=1){
-  if(!Number.isInteger(level)||level<1||level>game.unlocked)throw Error('Expedition locked');
+  if(!Number.isInteger(level)||level<1||level>game.unlocked||level>200)throw Error('Expedition locked');
   if(!['camp','finished','failed'].includes(game.stage))throw Error('Expedition already active');
   game.expedition=level;game.planeIndex=1;game.families=[];game.lastFamily=null;
   game.rooms=['combat',...shuffle(ROOMS.slice(1),rng),'boss'];
@@ -70,7 +70,7 @@ function create(themes,rng=Math.random){
   game.history.push({plane:game.planeIndex,...game.selected});
   if(game.planeIndex===15){
    if(!game.selected.boss)throw Error('Plane 15 must contain the Expedition boss');
-   game.unlocked=Math.max(game.unlocked,game.expedition+1);
+   game.unlocked=Math.min(200,Math.max(game.unlocked,game.expedition+1));
    game.stage='finished';game.selected=null;game.offers=[];game.wave=0;game.families=[];game.lastFamily=null;
    return {planeComplete:true,expeditionComplete:true};
   }

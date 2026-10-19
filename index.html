@@ -1220,12 +1220,13 @@ const SNAME={helm:'Helm',amulet:'Amulet',armor:'Armor',gloves:'Gloves',weapon:'W
     secure:{chance:.65,costFactor:1.5}
   });
   const finite=(x)=>typeof x==='number'&&Number.isFinite(x);
-  function qualityOdds(base,enhanced=false){
+  function qualityOdds(base,investment=0){
+    const mode=investment===true?1:investment===false?0:Math.max(0,Math.min(2,Math.floor(Number(investment)||0)));
     const odds={...base};
-    if(enhanced){
+    if(mode){
       if((odds.Legendary||0)!==0)throw new Error('Forge cannot make Legendary');
-      const shift=Math.min(.17,Math.max(0,odds.Common));
-      const uncommon=Math.min(.03,Math.max(0,odds.Uncommon));
+      const shift=Math.min(mode===2?.25:.17,Math.max(0,odds.Common));
+      const uncommon=Math.min(mode===2?.05:.03,Math.max(0,odds.Uncommon));
       odds.Common-=shift;odds.Uncommon-=uncommon;
       odds.Rare+=shift*.7+uncommon*.7;
       odds.Epic+=shift*.3+uncommon*.3;
@@ -1583,6 +1584,9 @@ function detailEffect(o){return o.effect?(ELEMENTS[o.effect]?.icon+' '+ELEMENTS[
 function detailEffectHtml(o){return o.effect&&ELEMENTS[o.effect]?affinityArt(o.effect,true)+' '+esc(ELEMENTS[o.effect].name):'No affinity'}
 function elementPool(slot,subtype){if(subtype==='Staff'||subtype==='Wand')return ['poison','burn','slow','drain','nature','shock','tide'];if(subtype==='Shield')return ['shield','regen','sunder','tide'];if(subtype==='Off-Hand Dagger')return ['poison','bleed','crit','shock'];if(subtype==='Two-Handed')return ['bleed','sunder','poison','burn','nature','shock'];if(slot==='offhand')return ['poison','burn','slow','drain','shield','nature','shock','tide'];if(subtype==='Mace')return ['sunder','bleed','shield','shock'];if(subtype==='Bow')return ['crit','poison','slow','nature','shock'];if(subtype==='Daggers')return ['poison','bleed','crit','nature','shock'];if(slot==='weapon')return ['poison','bleed','sunder','crit','nature','shock','tide'];return Object.keys(ELEMENTS)}
 function chooseSubtype(slot,requested='random'){if(requested!=='random')return requested;if(slot==='weapon')return sample(TYPES);if(slot==='offhand')return sample(OFFHAND_TYPES);return ['ring1','ring2'].includes(slot)?'Ring':SNAME[slot];}
+function economyTier(){return PHASE1_PREVIEW?Math.min(DUNGEON_CAP,phase1Controller?.state.unlocked||1):state.maxDungeon;}
+function merchantTier(){return PHASE1_PREVIEW?economyTier():Math.max(1,state.maxDungeon-1);}
+function gearFamily(effect){return ({bleed:'Blood',poison:'Decay',drain:'Decay',nature:'Vitality',regen:'Vitality',shield:'Aegis',tide:'Aegis',crystal:'Aegis',crit:'Fury',sunder:'Fury',burn:'Magic',slow:'Magic',shock:'Magic'})[effect]||'';}
 function craftCost(tier){return 10+10*tier}
 
 /* v0.9: risk/reward wave tables and targeted gear, separate from Forge and Merchant. */
@@ -1773,7 +1777,7 @@ function equipRune(id,index){
   const other=state.runes.find(r=>r.id===slots[i]);
   if(i!==index&&(slots[i]===id||other?.family===rune.family))slots[i]=null;
  }
- slots[index]=id;state.runeSlots=slots;save();return true;
+ slots[index]=id;state.runeSlots=slots;phase3ClampVitals();save();return true;
 }
 function openRuneSlotPicker(id){
  if(state.run){bannerMessage('Finish the expedition before changing runes.');return false;}
@@ -1813,7 +1817,7 @@ function claimPendingRuneChoice(id){
  // A chapter boss is complete when its Rune is claimed; no second click.
  if(state.run?.status==='win'&&state.run.tier===reward.tier&&state.run.enc===wavesForDungeon(reward.tier))extract();
  else{
-  if(!state.run&&recoverBossUnlockFromRunes())view='dungeons';
+  if(!PHASE1_PREVIEW&&!state.run&&recoverBossUnlockFromRunes())view='dungeons';
   save();render();
  }
  bannerMessage('Permanent rune claimed: '+picked.name+' (D'+picked.tier+').');
@@ -1823,7 +1827,7 @@ function showPendingRuneReward(){
  if(!state.pendingRuneReward||document.querySelector('#runeRewardDialog'))return;
  const pending=state.pendingRuneReward,dialog=document.createElement('dialog');
  dialog.id='runeRewardDialog';dialog.className='itemDialog runeRewardDialog';
- dialog.innerHTML='<h2>👑 D'+pending.tier+' Boss Defeated!</h2><p>Choose one permanent rune. Replay this boss to farm other runes.</p><div class="runeOffers">'+pending.options.map(r=>'<button class="runeCard" data-rune-choice="'+esc(r.id)+'">'+runeLine(r)+'</button>').join('')+'</div><p class="small muted">The chosen rune remains yours even after death.</p>';
+ dialog.innerHTML='<h2>👑 '+(PHASE1_PREVIEW?'Expedition ':'D')+pending.tier+' Boss Defeated!</h2><p>Choose one permanent rune. Replay this boss to farm other runes.</p><div class="runeOffers">'+pending.options.map(r=>'<button class="runeCard" data-rune-choice="'+esc(r.id)+'">'+runeLine(r)+'</button>').join('')+'</div><p class="small muted">The chosen rune remains yours even after death.</p>';
  dialog.addEventListener('cancel',e=>e.preventDefault());
  document.body.appendChild(dialog);
  dialog.querySelectorAll('[data-rune-choice]').forEach(b=>b.onclick=()=>{
@@ -1835,7 +1839,7 @@ function showPendingRuneReward(){
 }
 
 function rarityOdds(tier,isCraft){let a={Common:.49,Uncommon:.30,Rare:.15,Epic:.045,Legendary:.015};
-if(isCraft){const gap=Math.max(0,state.maxDungeon-tier),boost=Math.min(.24,gap*.012);a.Common-=boost;a.Rare+=boost*.35;a.Epic+=boost*.65;a.Epic+=a.Legendary;a.Legendary=0;}
+if(isCraft){const gap=Math.max(0,economyTier()-tier),boost=Math.min(.24,gap*.012);a.Common-=boost;a.Rare+=boost*.35;a.Epic+=boost*.65;a.Epic+=a.Legendary;a.Legendary=0;}
 else{const cha=totalStats().cha,boost=Math.min(.040,Math.max(0,cha-5)*.0008);a.Common-=boost;a.Rare+=boost*.65;a.Epic+=boost*.35;}
 return a;}
 function rarityRoll(tier,craft){let x=Math.random(),p=rarityOdds(tier,craft);for(let key of ['Common','Uncommon','Rare','Epic','Legendary']){x-=p[key];if(x<0)return key}return 'Common';}
@@ -1869,22 +1873,22 @@ if(rarity==='Legendary'){const identity=legendaryIdentity;if(identity){o.legenda
 return o;}
 function saleFragments(o){if(o?.recoveryStarter===true)return 0;let raw=Math.max(2,Math.round((3+o.tier*2)*RARITY[o.rarity][2]));return o.crafted?Math.min(raw,Math.max(1,Math.floor((+o.craftPrice||craftCost(o.tier))*.25))):raw}
 function merchantCost(o){return Math.round((24+o.tier*12)*RARITY[o.rarity][2]);}
-function rollShop(){const level=Math.max(1,state.maxDungeon-1),stock=Array.from({length:4},()=>{let o=makeItem(level,rollEquipmentSlot(),null,'merchant');o.goldPrice=merchantCost(o);return o});state.merchant={stock,sigils:WandererEconomyV0101.rollOffer(Object.keys(ELEMENTS)),refreshCost:16+level*4,refreshes:0};save();}
+function rollShop(){const level=merchantTier(),stock=Array.from({length:4},()=>{let o=makeItem(level,rollEquipmentSlot(),null,'merchant');o.goldPrice=merchantCost(o);return o});state.merchant={stock,sigils:WandererEconomyV0101.rollOffer(Object.keys(ELEMENTS)),refreshCost:16+level*4,refreshes:0};save();}
 // v0.10.1 experimental economy UI: all purchases and upgrades use the existing save/conflict guard.
 function economyOwnedGear(){return [...Object.values(state.equip).filter(Boolean),...state.stash];}
 function economyOwnedItem(id){return economyOwnedGear().find(item=>item.id===id)||null;}
-function economyCanAct(){return !!state&&!state.run&&!saveBlocked;}
+function economyCanAct(){return !!state&&!state.run&&!saveBlocked&&(!PHASE1_PREVIEW||(!phase1Draft&&['camp','finished','failed'].includes(phase1Controller?.state.stage)));}
 function economySigilEffect(sigil){const a=ELEMENTS[sigil?.affinity];return a?(a.icon+' '+a.name):'Unknown';}
 function economySigilAllowed(item,affinity){
  return !!item&&item.rarity!=='Legendary'&&item.effect!==affinity&&elementPool(item.slot,item.subtype).includes(affinity);
 }
 function refreshMerchantStock(kind='gear'){
- if(!economyCanAct()||!state.merchant||state.gold<state.merchant.refreshCost)return;
+ if(!['gear','sigils'].includes(kind)||!economyCanAct()||!state.merchant||state.gold<state.merchant.refreshCost)return;
  const merchant=state.merchant;
  state.gold-=merchant.refreshCost;
  if(kind==='sigils')merchant.sigils=WandererEconomyV0101.rollOffer(Object.keys(ELEMENTS));
  else{
-  const level=Math.max(1,state.maxDungeon-1);
+  const level=merchantTier();
   merchant.stock=Array.from({length:4},()=>{const item=makeItem(level,rollEquipmentSlot(),null,'merchant');item.goldPrice=merchantCost(item);return item;});
  }
  merchant.refreshes=(Number(merchant.refreshes)||0)+1;
@@ -1899,10 +1903,10 @@ function renderMerchantSigils(){
   m.sigils=m.sigils.map(a=>{if(a!==null)return a;const next=sample(Object.keys(ELEMENTS).filter(k=>!used.has(k)));used.add(next);return next;});
   save();
  }
- const price=WandererEconomyV0101.sigilPrice(Math.max(1,state.maxDungeon-1)),owned=state.sigils.length;
+ const price=WandererEconomyV0101.sigilPrice(merchantTier()),owned=state.sigils.length;
  const cards=m.sigils.map((a,i)=>'<article class="sigilOfferCard">'+
   '<span class="merchantSigilArt">'+affinityArt(a)+'</span>'+
-  '<div class="sigilOfferInfo"><b>'+esc(ELEMENTS[a].name)+' Sigil</b><small class="muted">Affinity transfer at the Forge</small></div>'+
+  '<div class="sigilOfferInfo"><b>'+esc((PHASE1_PREVIEW?gearFamily(a)+' · ':'')+ELEMENTS[a].name)+' Sigil</b><small class="muted">'+(PHASE1_PREVIEW?'Permanent gear effect · not a Plane reroll or temporary passive':'Affinity transfer at the Forge')+'</small></div>'+
   '<div class="sigilOfferActions"><b class="gold">'+price+' '+uiIcon('gold')+' Gold</b><button type="button" class="tiny primary" data-buy-sigil="'+i+'" '+
   (state.gold<price||owned>=100?'disabled':'')+'>Buy</button></div></article>').join('');
  host.innerHTML='<section class="panel merchantSigilsPanel"><div class="topline"><div><h2>Affinity Sigils · 4 offers</h2>'+
@@ -1912,7 +1916,7 @@ function renderMerchantSigils(){
   '>New Sigil stock · '+m.refreshCost+' '+uiIcon('gold')+' Gold</button><span class="small muted">Sigils only. Equipment stock stays unchanged.</span></div></section>';
  host.querySelectorAll('[data-buy-sigil]').forEach(button=>button.onclick=()=>{
   if(!economyCanAct())return;
-  const idx=Number(button.dataset.buySigil),affinity=state.merchant?.sigils?.[idx],cost=WandererEconomyV0101.sigilPrice(Math.max(1,state.maxDungeon-1));
+  const idx=Number(button.dataset.buySigil),affinity=state.merchant?.sigils?.[idx],cost=WandererEconomyV0101.sigilPrice(merchantTier());
   if(!affinity||!ELEMENTS[affinity]||state.gold<cost||state.sigils.length>=100)return;
   showConfirm('Purchase Affinity Sigil','Buy '+ELEMENTS[affinity].name+' Sigil for '+cost+' Gold?',()=>{
    if(!economyCanAct()||state.merchant?.sigils?.[idx]!==affinity||state.gold<cost||state.sigils.length>=100)return;
@@ -2012,7 +2016,7 @@ function renderForgeEconomyExtras(){
   const selected=economyOwnedItem(forgeLegendaryId);
   if(!economyCanAct()||!selected||selected.rarity!=='Legendary'||(selected.upgradeRank||0)>=10)return;
   const cost=e.upgradeCost(selected.tier,selected.upgradeRank||0);if(state.fragments<cost)return;
-  showConfirm('Reinforce Legendary','Spend '+cost+' Fragments to improve '+selected.name+' to +'+((selected.upgradeRank||0)+1)+'? You may lose the invested Fragments on death.',()=>{
+  showConfirm('Reinforce Legendary','Spend '+cost+' Fragments to improve '+selected.name+' to +'+((selected.upgradeRank||0)+1)+'?'+(PHASE1_PREVIEW?' Permanent equipment is retained on defeat.':' You may lose the invested Fragments on death.'),()=>{
    if(!economyCanAct()||economyOwnedItem(selected.id)!==selected||selected.rarity!=='Legendary'||(selected.upgradeRank||0)>=10)return;
    const price=e.upgradeCost(selected.tier,selected.upgradeRank||0);if(state.fragments<price)return;
    e.upgradeLegendary(selected);state.fragments-=price;save();renderForge();bannerMessage(selected.name+' reinforced to +'+selected.upgradeRank+'.');
@@ -2161,7 +2165,7 @@ function restoreView(){
 }
 function uiIcon(kind){const file={gold:'currency-gold.svg',fragments:'currency-fragments.svg',dungeon:'dungeon-progress.svg'}[kind];return file?'<img class="uiStatusIcon" src="assets/ui/'+file+'" alt="" aria-hidden="true">':'';}
 function navigationIcon(kind){if(!['tavern','equipment','forge','merchant','dungeons'].includes(kind))return '';return '<img class="navArtIcon" src="assets/ui/navigation/'+kind+'.svg" alt="" aria-hidden="true">';}
-function wallet(){if(PHASE1_PREVIEW){$('wallet').innerHTML='<span class="token">⚗ v0.12 Phase 3 · local-only</span><span class="token">'+uiIcon('gold')+' '+state.gold+' Gold</span><span class="token">'+uiIcon('fragments')+' '+state.fragments+' Fragments</span>';phase3RenderNav();return;}let el=$('wallet');el.innerHTML=`<span class="token">${uiIcon('gold')} <b>${state.gold}</b> Gold</span><span class="token">${uiIcon('fragments')} <b>${state.fragments}</b> Fragments</span><span class="token">${uiIcon('dungeon')} <b>D${state.maxDungeon}</b></span>`;let elNav=$('nav');elNav.innerHTML=state.run?`<span class="token">⚔ Expedition active · Equipment locked</span>`:[['tavern','Tavern'],['equipment','Equipment'],['forge','Forge'],['merchant','Merchant'],['dungeons','Dungeons']].map(([k,label])=>[k,navigationIcon(k)+' '+label]).map(([k,v])=>`<button data-nav="${k}" class="${view===k?'active':''}">${v}</button>`).join('');Q('[data-nav]').forEach(b=>b.onclick=()=>nav(b.dataset.nav));const menu=$('onlineBar'),toggle=$('menuToggle');if(menu&&toggle){toggle.onclick=()=>{const open=menu.classList.toggle('menuOpen');toggle.setAttribute('aria-expanded',String(open));};// Do not overwrite Account/Leaderboard/Feedback onclick handlers registered by online/app.mjs.
+function wallet(){if(PHASE1_PREVIEW){$('wallet').innerHTML='<span class="token">⚗ v0.12 Phase 4 · local-only</span><span class="token">'+uiIcon('gold')+' '+state.gold+' Gold</span><span class="token">'+uiIcon('fragments')+' '+state.fragments+' Fragments</span>';phase3RenderNav();return;}let el=$('wallet');el.innerHTML=`<span class="token">${uiIcon('gold')} <b>${state.gold}</b> Gold</span><span class="token">${uiIcon('fragments')} <b>${state.fragments}</b> Fragments</span><span class="token">${uiIcon('dungeon')} <b>D${state.maxDungeon}</b></span>`;let elNav=$('nav');elNav.innerHTML=state.run?`<span class="token">⚔ Expedition active · Equipment locked</span>`:[['tavern','Tavern'],['equipment','Equipment'],['forge','Forge'],['merchant','Merchant'],['dungeons','Dungeons']].map(([k,label])=>[k,navigationIcon(k)+' '+label]).map(([k,v])=>`<button data-nav="${k}" class="${view===k?'active':''}">${v}</button>`).join('');Q('[data-nav]').forEach(b=>b.onclick=()=>nav(b.dataset.nav));const menu=$('onlineBar'),toggle=$('menuToggle');if(menu&&toggle){toggle.onclick=()=>{const open=menu.classList.toggle('menuOpen');toggle.setAttribute('aria-expanded',String(open));};// Do not overwrite Account/Leaderboard/Feedback onclick handlers registered by online/app.mjs.
  if(menu.addEventListener&&!menu.dataset.menuCloseBound){
   menu.dataset.menuCloseBound='1';
   menu.addEventListener('click',event=>{
@@ -2338,14 +2342,14 @@ function equipItem(itemId,target=null){
  state.stash.splice(i,1);
  if(ring)item.slot=slot;
  state.equip[slot]=item;state.stash.push(...displaced);
- selectedId=null;state.protectedItemIds=chosenProtectionIds();save();renderStash();
+ selectedId=null;state.protectedItemIds=chosenProtectionIds();phase3ClampVitals();save();renderStash();
  bannerMessage('Equipped '+item.name+(isTwoHanded(item)?' · Both hands occupied':displaced.some(x=>isTwoHanded(x))?' · Two-Handed weapon returned to Stash':''));
 }
 function unequipItem(slot){
  if(state.run||(PHASE1_PREVIEW&&phase1Draft)||!state.equip[slot])return;
  const item=state.equip[slot];
  state.equip[slot]=null;
- state.stash.push(item);selectedId=null;state.protectedItemIds=chosenProtectionIds();save();render();
+ state.stash.push(item);selectedId=null;state.protectedItemIds=chosenProtectionIds();phase3ClampVitals();save();render();
 }
 function bulkSell(){
  const items=state.stash.filter(o=>chosenItems.has(o.id)&&!o.locked);
@@ -2405,7 +2409,7 @@ function stashVisible(){
  const values=new Map(arr.map(o=>[o.id,score(o)])),rev=direction==='asc'?-1:1;
  return arr.sort((a,b)=>(values.get(b.id)-values.get(a.id))*rev||a.name.localeCompare(b.name));
 }
-function renderStash(){
+function phase3ClampVitals(){
  // A lower max-HP/Mana item or Rune permanently clamps current resources in this
  // Expedition. Re-equipping stronger gear must never restore clipped HP/Mana.
  if(PHASE1_PREVIEW&&phase1Controller?.state.stage==='choice'&&!phase1Draft&&phase1Vitals){
@@ -2414,6 +2418,9 @@ function renderStash(){
   phase1Vitals.mp=Math.max(0,Math.min(next.mana,phase1Vitals.mp));
   phase1Vitals.maxmp=next.mana;
  }
+}
+function renderStash(){
+ phase3ClampVitals();
  const previousScrollTop=$('screen')?.querySelector?.('.equipmentInventory .stashGrid')?.scrollTop||0;wallet();let items=stashVisible(),focus=state.stash.find(x=>x.id===selectedId),equipped=Object.values(state.equip).find(x=>x?.id===selectedId),stats=totalStats(),value=[...chosenItems].map(id=>state.stash.find(o=>o.id===id)).filter(o=>o&&!o.locked).reduce((a,o)=>a+saleFragments(o),0),count=[...chosenItems].filter(id=>state.stash.some(o=>o.id===id&&!o.locked)).length;
 html(`<div class="equipmentLayout"><div class="equipmentLeft"><section class="panel equipmentOverview"><h2>Equipment</h2><p class="small muted">Prepare your gear and compare items before an expedition.</p><div class="equipmentQuickView"><div class="equipmentLoadout"><div class="paper"><img class="model" src="${heroFullImage()}" alt="Wanderer full-body equipment portrait">${SLOTS.map(sl=>{const o=state.equip[sl],reserved=sl==='offhand'&&isTwoHanded(state.equip.weapon);return `<button class="slotTile ${o?'filled':''} ${reserved?'reserved':''} ${slotFilter===sl||(slotFilter==='rings'&&['ring1','ring2'].includes(sl))?'filterSelected':''} ${o?.id===selectedId?'active':''}" ${rarityFrame(o)} data-slot="${sl}" data-eqslot="${sl}" aria-pressed="${slotFilter===sl||(slotFilter==='rings'&&['ring1','ring2'].includes(sl))}" title="${esc(o?.name||SNAME[sl])}"><img src="${o?itemImg(o):placeholderIcon(sl)}" alt="${SNAME[sl]}"><span>${reserved?'2H occupied':SNAME[sl]}</span>${o?`<span class="slotDLevel">D${o.tier}</span>`:''}${affinityBadge(o)}${newBadge(o)}${legendaryRankBadge(o)}</button>`}).join('')}</div></div><div class="equipmentStats"><h3>Stats & Attributes</h3>${statsWidget(stats)}<div class="statStrip">${['str','agi','int','end','cha'].map(k=>`<div class="metric"><span>${k.toUpperCase()}</span><strong>${stats[k]}</strong></div>`).join('')}</div><details><summary>Attribute explanations</summary><p class="small muted">STR: physical attack · AGI: attack speed · INT: spell power and mana regeneration · END: health and defense · CHA: critical chance and loot quality.</p><p class="small muted">Two-Handed, Bow and Staff occupy both hands and count as two affinity points, but remain one item. Staff casts generate Arcane Guard Barrier; Two-Handed strikes generate Heavy Guard Barrier, each on a 6-second cooldown.</p></details></div></div></section><section class="panel equipmentBonuses"><h3 class="setHeading">Set Bonus Progress</h3>${affinityProcMarkup(stats)}<p class="micro muted">Gear Power estimates attributes and active tiers; combat matchups and cooldowns can change the best build.</p>${inventorySetProgress(stats)}</section></div><div class="equipmentRight"><section class="panel equipmentInventory"><div class="topline"><div><h2>Inventory <span class="small muted">${state.stash.length}/${stashCapacity()} slots</span></h2><p class="small muted">Tap an equipment slot to filter matching Stash items.</p></div><div class="buttonRow"><button class="tiny ghost" id="markAllSeen">Mark All as Seen</button></div></div><div class="stashCapacityBar"><span class="small ${state.stash.length>=stashCapacity()?'red':'muted'}">${state.stash.length>stashCapacity()?'Overflow: ':'Stash: '}${state.stash.length} / ${stashCapacity()} · upgrade +${STASH_UPGRADE_STEP} slots</span><button class="tiny ghost" id="upgradeStash" ${stashCapacity()>=STASH_MAX_CAPACITY||state.gold<stashUpgradeCost()?'disabled':''}>${stashCapacity()>=STASH_MAX_CAPACITY?'Max capacity':`Expand · ${stashUpgradeCost()} Gold`}</button></div><div class="filterBar"><label>Slot<select id="slotFilter"><option value="all">All slots</option><option value="rings">Ring</option>${SLOTS.filter(s=>!["ring1","ring2"].includes(s)).map(s=>`<option value="${s}">${SNAME[s]}</option>`).join('')}</select></label><label>Affinity<select id="affinityFilter"><option value="all">All affinities</option><option value="none">No affinity</option>${Object.entries(ELEMENTS).map(([id,aff])=>`<option value="${id}">${esc(aff.name)}</option>`).join('')}</select></label><label>Sort<select id="sortBy"><option value="level">Item level</option><option value="date">Date looted</option><option value="price">Fragment value</option><option value="power">Item power (stats)</option><option value="recommended">Recommended for current build</option></select></label><label>Order<select id="orderBy"><option value="desc">High / newest</option><option value="asc">Low / oldest</option><option value="recommended">Recommended</option><option value="powerLevel">Power level</option></select></label><div class="filterActions"><button id="bulkToggle" class="${bulk?'primary':'ghost'} tiny">${bulk?'✓ Selecting':'Select Multiple'}</button><button id="resetInventoryFilters" class="tiny ghost">Clear filters</button></div></div><div class="bulkBar" ${bulk?'':'style="display:none"'}><button id="selectAll" class="tiny ghost">Select visible</button><button id="clearAll" class="tiny ghost">Clear</button><span class="small muted">${count} selected · ${value} ${uiIcon('fragments')}</span><button id="sellSelected" class="tiny danger" ${count?'':'disabled'}>Salvage selected</button></div><div class="stashLayout"><div class="stashGrid">${items.length?items.map(o=>`<button class="invItem ${chosenItems.has(o.id)||selectedId===o.id?'selected':''}" ${rarityFrame(o)} data-item="${o.id}" title="${esc(o.name)} · ${itemSource(o)}"><img src="${itemImg(o)}" alt="${esc(o.subtype)}">${affinityBadge(o)}${newBadge(o)}${legendaryRankBadge(o)}${gearTrend(o)}<span class="lv">D${o.tier}</span><span class="rar" style="color:${rarityColor(o)}">◆</span>${o.locked?'<span class="lock">🔒</span>':''}${chosenItems.has(o.id)?'<span class="chk">✓</span>':''}</button>`).join(''):'<div class="small muted">No items match these filters. Try All slots or All affinities.</div>'}</div><div id="itemInspect">${previewItem(focus||equipped,equipped?'equipped':'stash')}</div></div></section><section class="panel equipmentRunes">${runeSectionMarkup()}</section></div></div>`);
 const stashScroll=$('screen')?.querySelector?.('.equipmentInventory .stashGrid');
@@ -2461,10 +2468,10 @@ function forgeEquippedReference(slot){
  return '<div class="forgeEquippedReference"><p class="small muted">Currently equipped · actual upgrade is calculated after crafting</p>'+
   targets.map(target=>{const gear=state.equip[target];return '<span class="tag">'+esc(SNAME[target])+': '+(gear?esc(gear.name)+' · D'+gear.tier:'Empty')+'</span>';}).join(' ')+'</div>';
 }
-function renderForge(){wallet();forgeTier=clamp(forgeTier,1,state.maxDungeon);const odds=WandererEconomyV0101.qualityOdds(rarityOdds(forgeTier,true),forgeQuality),forgeCraftPrice=craftCost(forgeTier)*(1+forgeQuality),subtypes=forgeSlot==='weapon'?TYPES:forgeSlot==='offhand'?OFFHAND_TYPES:[];
-html(`<section class="forgeCraftLayout"><div class="panel forgeUnified"><div class="topline"><div><h2>Forge</h2><p class="small muted">Create equipment from Fragments. Crafting a lower dungeon tier increases Epic odds after you have progressed further.</p></div></div>${inventoryFullNotice('craft')}<div class="filterBar"><label>Slot<select id="forgeSlot">${SLOTS.filter(x=>x!=='ring2').map(x=>`<option value="${x}">${x==='ring1'?'Ring':SNAME[x]}</option>`).join('')}</select></label><label>Dungeon Tier<select id="forgeTier">${Array.from({length:state.maxDungeon},(_,i)=>`<option value="${i+1}">D${i+1}</option>`).join('')}</select></label><label>Weapon / Off-Hand<select id="forgeSubtype"><option value="random">Random subtype</option>${subtypes.map(t=>`<option value="${t}">${t}</option>`).join('')}</select></label></div><div class="forgeGrid"><img class="craftHero" src="${forgePreviewImage(forgeSlot,forgeSubtype)}" alt="Forge selection"><div><div class="eyebrow">Craft preview</div><h3>${forgeSlot==='ring1'?'Ring':SNAME[forgeSlot]} · D${forgeTier}</h3><p class="small">Cost: <b class="gold">${forgeCraftPrice} Fragments</b></p>${forgeEquippedReference(forgeSlot)}<p class="small muted">${forgeSlot==='ring1'?'Craft Ring once; choose Ring 1 or Ring 2 when equipping.':''}</p><p class="small muted">${state.maxDungeon>forgeTier?`Catch-up bonus: ${state.maxDungeon-forgeTier} levels below your highest unlocked dungeon.`:'Standard crafting odds at your current progression.'}</p></div></div><div class="gap"></div><div class="forgeQualityControl"><label for="forgeQualityToggle"><b>Invest Fragments to improve your odds</b><small>Legendary items remain dungeon-exclusive.</small></label><select id="forgeQualityToggle"><option value="0">Standard · 1× Fragments</option><option value="1">High Quality · 2× Fragments</option><option value="2">Masterwork · 3× Fragments</option></select></div><div class="gap"></div><button id="craft" class="primary" style="width:100%" ${state.fragments<forgeCraftPrice||!stashHasRoom()?'disabled':''}>Craft · ${forgeCraftPrice} ${uiIcon('fragments')} Fragments</button></div><aside class="panel forgeCraftOdds"><h2>Crafting Odds</h2><p class="small muted">Exact chances for your selected tier and investment.</p><div class="statsGrid">${Object.entries(odds).map(([name,v])=>`<div class="stat"><label style="color:${RARITY[name][0]}">${name}</label><b>${(v*100).toFixed(1)}%</b></div>`).join('')}</div><div class="rule"></div><p class="small muted">Legendary items only drop from dungeon enemies. Forged items salvage for no more than 25% of their original Fragment cost. Merchant equipment uses Gold instead.</p></aside></section>`);
+function renderForge(){wallet();forgeTier=clamp(forgeTier,1,economyTier());const odds=WandererEconomyV0101.qualityOdds(rarityOdds(forgeTier,true),forgeQuality),forgeCraftPrice=craftCost(forgeTier)*(1+forgeQuality),subtypes=forgeSlot==='weapon'?TYPES:forgeSlot==='offhand'?OFFHAND_TYPES:[];
+html(`<section class="forgeCraftLayout"><div class="panel forgeUnified"><div class="topline"><div><h2>Forge</h2><p class="small muted">Create equipment from Fragments. Crafting a lower dungeon tier increases Epic odds after you have progressed further.</p></div></div>${inventoryFullNotice('craft')}<div class="filterBar"><label>Slot<select id="forgeSlot">${SLOTS.filter(x=>x!=='ring2').map(x=>`<option value="${x}">${x==='ring1'?'Ring':SNAME[x]}</option>`).join('')}</select></label><label>${PHASE1_PREVIEW?'Expedition':'Dungeon'} Tier<select id="forgeTier">${Array.from({length:economyTier()},(_,i)=>`<option value="${i+1}">D${i+1}</option>`).join('')}</select></label><label>Weapon / Off-Hand<select id="forgeSubtype"><option value="random">Random subtype</option>${subtypes.map(t=>`<option value="${t}">${t}</option>`).join('')}</select></label></div><div class="forgeGrid"><img class="craftHero" src="${forgePreviewImage(forgeSlot,forgeSubtype)}" alt="Forge selection"><div><div class="eyebrow">Craft preview</div><h3>${forgeSlot==='ring1'?'Ring':SNAME[forgeSlot]} · D${forgeTier}</h3><p class="small">Cost: <b class="gold">${forgeCraftPrice} Fragments</b></p>${forgeEquippedReference(forgeSlot)}<p class="small muted">${forgeSlot==='ring1'?'Craft Ring once; choose Ring 1 or Ring 2 when equipping.':''}</p><p class="small muted">${economyTier()>forgeTier?`Catch-up bonus: ${economyTier()-forgeTier} levels below your highest unlocked dungeon.`:'Standard crafting odds at your current progression.'}</p></div></div><div class="gap"></div><div class="forgeQualityControl"><label for="forgeQualityToggle"><b>Invest Fragments to improve your odds</b><small>Legendary items remain dungeon-exclusive.</small></label><select id="forgeQualityToggle"><option value="0">Standard · 1× Fragments</option><option value="1">High Quality · 2× Fragments</option><option value="2">Masterwork · 3× Fragments</option></select></div><div class="gap"></div><button id="craft" class="primary" style="width:100%" ${state.fragments<forgeCraftPrice||!stashHasRoom()?'disabled':''}>Craft · ${forgeCraftPrice} ${uiIcon('fragments')} Fragments</button></div><aside class="panel forgeCraftOdds"><h2>Crafting Odds</h2><p class="small muted">Exact chances for your selected tier and investment.</p><div class="statsGrid">${Object.entries(odds).map(([name,v])=>`<div class="stat"><label style="color:${RARITY[name][0]}">${name}</label><b>${(v*100).toFixed(1)}%</b></div>`).join('')}</div><div class="rule"></div><p class="small muted">Legendary items only drop from dungeon enemies. Forged items salvage for no more than 25% of their original Fragment cost. Merchant equipment uses Gold instead.</p></aside></section>`);
 $('forgeSlot').value=forgeSlot;$('forgeTier').value=String(forgeTier);$('forgeSubtype').value=forgeSubtype;$('forgeQualityToggle').value=String(forgeQuality);
-$('forgeSlot').onchange=e=>{forgeSlot=e.target.value;forgeSubtype='random';renderForge()};$('forgeTier').onchange=e=>{forgeTier=Number(e.target.value);renderForge()};$('forgeSubtype').onchange=e=>{forgeSubtype=e.target.value;renderForge()};$('forgeQualityToggle').onchange=e=>{forgeQuality=Number(e.target.value);renderForge()};renderForgeEconomyExtras();$('craft').onclick=()=>{if(state.run||saveBlocked)return;const cost=forgeCraftPrice;if(state.fragments<cost)return;if(!stashHasRoom()){bannerMessage('Stash full. Upgrade or salvage gear first.');return;}state.fragments-=cost;let o=makeItem(forgeTier,forgeSlot,null,'forge',forgeSubtype,forgeQuality>0?WandererEconomyV0101.rarityFromOdds(odds):null);o.craftPrice=cost;o.isNew=true;state.stash.push(o);save();renderForge();const choices=['ring1','ring2'].includes(o.slot)?[['ring1','Equip Ring 1'],['ring2','Equip Ring 2']]:[[o.slot,'Equip Now']];
+$('forgeSlot').onchange=e=>{forgeSlot=e.target.value;forgeSubtype='random';renderForge()};$('forgeTier').onchange=e=>{forgeTier=Number(e.target.value);renderForge()};$('forgeSubtype').onchange=e=>{forgeSubtype=e.target.value;renderForge()};$('forgeQualityToggle').onchange=e=>{forgeQuality=Number(e.target.value);renderForge()};renderForgeEconomyExtras();$('craft').onclick=()=>{if(!economyCanAct()||forgeTier>economyTier())return;const cost=forgeCraftPrice;if(state.fragments<cost)return;if(!stashHasRoom()){bannerMessage('Stash full. Upgrade or salvage gear first.');return;}state.fragments-=cost;let o=makeItem(forgeTier,forgeSlot,null,'forge',forgeSubtype,forgeQuality>0?WandererEconomyV0101.rarityFromOdds(odds):null);o.craftPrice=cost;o.isNew=true;state.stash.push(o);save();renderForge();const choices=['ring1','ring2'].includes(o.slot)?[['ring1','Equip Ring 1'],['ring2','Equip Ring 2']]:[[o.slot,'Equip Now']];
  const buttons=choices.map(([slot,label])=>'<button class="primary" data-equip-crafted="'+slot+'" '+(slot==='offhand'&&isTwoHanded(state.equip.weapon)?'disabled title="Off-Hand is locked by two-handed weapon"':'')+'>'+label+'</button>').join('');
  const trends='<h3>Upgrade vs equipped gear</h3>'+(['ring1','ring2'].includes(o.slot)?'<p class="small muted">Against each equipped ring:</p>'+forgeComparisonTrend(o,'ring1')+forgeComparisonTrend(o,'ring2'):forgeComparisonTrend(o));
   const dialog=showModal('Item Forged',`<p class="small muted">Added to your inventory. Equip now or close to keep it in your Stash.</p>${trends}${previewItem(o,'forge')}<div class="buttonRow">${buttons}</div>`);
@@ -2504,20 +2511,20 @@ function renderMerchant(){
  Q('[data-buy]').forEach(button=>button.onclick=()=>{
   const i=m.stock.findIndex(o=>o.id===button.dataset.buy);
   if(i<0)return;
-  const item=m.stock[i];if(state.gold<item.goldPrice)return;
+  const item=m.stock[i];if(!economyCanAct()||state.gold<item.goldPrice)return;
   if(!stashHasRoom()){bannerMessage('Stash full. Upgrade or salvage gear first.');return;}
   showConfirm('Purchase Equipment','Buy '+item.name+' for '+item.goldPrice+' Gold?',()=>{
    // Do not buy stale stock or charge after another action changed the shop.
-   if(m.stock[i]?.id!==item.id||state.gold<item.goldPrice)return;
+   if(!economyCanAct()||state.merchant!==m||m.stock[i]?.id!==item.id||state.gold<item.goldPrice)return;
    if(!stashHasRoom()){bannerMessage('Stash full. Upgrade or salvage gear first.');return;}
    state.gold-=item.goldPrice;item.isNew=true;state.stash.push(item);
-   const replacement=makeItem(Math.max(1,state.maxDungeon-1),rollEquipmentSlot(),null,'merchant');
+   const replacement=makeItem(merchantTier(),rollEquipmentSlot(),null,'merchant');
    replacement.goldPrice=merchantCost(replacement);m.stock[i]=replacement;
    save();renderMerchant();bannerMessage('Bought '+item.name+' — check Stash');
   },'Buy for '+item.goldPrice+' Gold');
  });
  $('refreshShop').onclick=()=>refreshMerchantStock('gear');
- $('sellTreasure').onclick=()=>{if(!state.valuables.length)return;state.gold+=treasureValue;state.valuables=[];save();renderMerchant();bannerMessage('Sold valuables for '+treasureValue+' Gold');};
+ $('sellTreasure').onclick=()=>{if(!economyCanAct()||!state.valuables.length)return;const securedValue=state.valuables.reduce((n,o)=>n+(Number(o.worth)||0),0);state.gold+=securedValue;state.valuables=[];save();renderMerchant();bannerMessage('Sold valuables for '+treasureValue+' Gold');};
 }
 function estimateEnemy(level,n=1){
  const boss=n===5&&level%10===0;
@@ -3391,13 +3398,24 @@ function phase1Init(){
  document.body?.classList?.add('phase3IntegratedPreview');
  $('screen').inert=false; // No online/app.mjs in preview: explicitly reveal the standalone UI.
  fresh();
+ state.expeditionOverflow=[];
  state.equip.weapon=state.stash.shift();
  state.equip.armor=makeItem(1,'armor',null,'loot','Armor','Uncommon');
  state.equip.helm=makeItem(1,'helm',null,'loot','Helm','Uncommon');
  phase1Controller=WandererV012Expedition.create(THEMES);
  view='phase1';
 }
+function phase4ClaimOverflow(){
+ if(!PHASE1_PREVIEW||state.run||phase1Draft)return 0;
+ let count=0;
+ while(state.expeditionOverflow?.length&&stashHasRoom()){state.stash.push(state.expeditionOverflow.shift());count++;}
+ return count;
+}
 function phase1Begin(level){
+ if(!PHASE1_PREVIEW)return;
+ phase4ClaimOverflow();
+ if(state.pendingRuneReward){showPendingRuneReward();return;}
+ if(state.expeditionOverflow.length||!stashHasRoom()){bannerMessage('Claim secured loot and free Stash space before starting another Expedition.');return;}
  phase1Controller.start(level);phase1Vitals=null;phase1Clock=0;phase3Supplies={health:2,mana:2};phase1Build=WandererV012Buildcraft.create();phase1Build.families=phase1Controller.state.families;phase1Draft=null;state.run=null;view='phase1';render();
 }
 
@@ -3479,8 +3497,10 @@ function phase1StartWave(){
  clock=setInterval(()=>{if(document.visibilityState!=='hidden')updateFight();},110/clockSpeed);
 }
 function phase1WaveWon(){
- clearInterval(clock);const r=state.run,g=phase1Controller.state;
- if(!isPhase1Run()||r.status!=='fight')return;
+ const r=state.run,g=phase1Controller.state;
+ if(!isPhase1Run()||r.status!=='fight'||!r.enemy||r.enemy.hp>0||g.stage!=='combat'||!g.selected||r.enc!==g.wave||r.phase4AwardedWave===r.enc)return;
+ clearInterval(clock);
+ r.phase4AwardedWave=r.enc;
  legendaryKill(r);
  if(phase1Build)WandererV012Buildcraft.onKill(phase1Build,phase2Context(r));
  const enemy=r.enemy,boss=!!enemy.boss,elite=!!enemy.miniboss;
@@ -3494,7 +3514,9 @@ function phase1WaveWon(){
   const rarity=randomFromOdds(odds.rarities);
   const item=makeItem(r.tier,pick.slot,theme.effect,'loot',pick.subtype,rarity);
   // Preview only: loot is awarded immediately, not held behind classic extraction.
-  state.stash.push({...item,isNew:true});r.loot.push(item);
+  if(stashHasRoom())state.stash.push({...item,isNew:true});
+  else state.expeditionOverflow.push({...item,isNew:true});
+  r.loot.push(item);
   addLog('✦ '+item.rarity+' '+item.name+' secured in Inventory.',item.rarity);
  }
  r.status='ready';
@@ -3506,7 +3528,13 @@ function phase1WaveWon(){
  }
  phase1Clock+=r.combatSeconds||0;
  phase1Vitals=result.expeditionComplete?null:{hp:Math.max(1,r.hp),mp:Math.max(0,r.mp),maxmp:r.maxmp};
- if(result.expeditionComplete){WandererV012Buildcraft.clear(phase1Build);phase1Build=null;}
+ if(result.expeditionComplete){
+  WandererV012Buildcraft.clear(phase1Build);phase1Build=null;
+  // Keep classic Rune tiers and three-choice UI: only complete milestone bosses, never Elites.
+  if(r.tier%10===0&&r.tier<=DUNGEON_CAP)offerBossRunes(r.tier);
+  // Existing stock is retained; new progression does not grant free vendor rerolls.
+  if(state.merchant)state.merchant.refreshCost=16+merchantTier()*4;
+ }
  addLog(result.expeditionComplete?'Expedition boss defeated!':'Plane cleared. Select your next Plane.','good');
  renderCombat();
  setTimeout(()=>{if(state.run===r){state.run=null;view='phase1';render();}},650);
@@ -3604,6 +3632,8 @@ function phase3PassivesMarkup(){
 }
 
 function renderPhase1(){
+ phase4ClaimOverflow();
+ if(state.pendingRuneReward&&!state.run)showPendingRuneReward();
  const g=phase1Controller.state,stats=phase3Vitals();
  const familyGlyph={blood:'bleed',decay:'poison',vitality:'regen',aegis:'shield',fury:'crit',magic:'shock'};
  const familyLabel=f=>affinityArt(familyGlyph[f])+' '+WandererV012Expedition.FAMILY_NAMES[f];
@@ -3628,7 +3658,7 @@ function renderPhase1(){
    const info=o?o.name+' · '+itemStats(o):reserved?'Reserved by Two-Handed':'Empty';
    return '<div class="phase3GearTile" '+rarityFrame(o)+' title="'+esc(info)+'"><img src="'+(o?itemImg(o):placeholderIcon(slot))+'" alt="'+esc(SNAME[slot])+'"><span>'+esc(SNAME[slot])+'</span>'+affinityBadge(o)+legendaryRankBadge(o)+'</div>';
   }).join('');
-  html('<section class="panel phase3Camp"><div class="phase1Intro"><div><span class="eyebrow">Wanderer v0.12 · Development Preview</span><h1>Expedition Camp</h1><p class="phase1Info">'+esc(announcement)+'</p><p class="phase1Experimental">Isolated from real accounts and saves. Equipment, Forge, Merchant and Runes reuse the classic Wanderer systems. Preview progress is memory-only.</p><div class="phase3Vitals"><span>❤️ '+Math.ceil(stats.hp)+' / '+stats.maxhp+' HP</span><span>💧 '+Math.floor(stats.mp)+' / '+stats.maxmp+' Mana</span></div><p class="small muted">Potions can only be consumed after completing a Plane, never in Camp or during combat.</p></div><img src="'+heroFullImage()+'" alt="Selected Wanderer full-body character"></div><div class="phase3Loadout">'+loadout+'</div><div class="phase3Actions"><button class="ghost" data-phase3-nav="equipment">Equipment &amp; Runes</button><button class="ghost" data-phase3-nav="forge">Forge</button><button class="ghost" data-phase3-nav="merchant">Merchant</button></div><h3>Choose your character</h3><div class="phase1HeroPicker">'+['wanderer','knight','ranger','spellblade','duelist'].map(id=>'<button type="button" data-phase1-hero="'+id+'" class="'+(state.characterId===id?'active':'')+'"><img src="assets/characters/avatars/'+id+'.png" alt="">'+esc(id)+'</button>').join('')+'</div><h3>Prepare an Expedition</h3><div class="phase3Actions">'+Array.from({length:g.unlocked},(_,i)=>'<button class="primary" data-phase1-expedition="'+(i+1)+'">Expedition '+(i+1)+' →</button>').join('')+'</div></section>');
+  html('<section class="panel phase3Camp"><div class="phase1Intro"><div><span class="eyebrow">Wanderer v0.12 · Development Preview</span><h1>Expedition Camp</h1><p class="phase1Info">'+esc(announcement)+'</p><p class="phase1Experimental">Isolated from real accounts and saves. Equipment, Forge, Merchant and Runes reuse the classic Wanderer systems. Preview progress is memory-only.</p><div class="phase3Vitals"><span>❤️ '+Math.ceil(stats.hp)+' / '+stats.maxhp+' HP</span><span>💧 '+Math.floor(stats.mp)+' / '+stats.maxmp+' Mana</span></div><p class="small muted">Potions can only be consumed after completing a Plane, never in Camp or during combat.</p></div><img src="'+heroFullImage()+'" alt="Selected Wanderer full-body character"></div><div class="phase3Loadout">'+loadout+'</div><div class="phase3Actions"><button class="ghost" data-phase3-nav="equipment">Equipment &amp; Runes</button><button class="ghost" data-phase3-nav="forge">Forge</button><button class="ghost" data-phase3-nav="merchant">Merchant</button></div><h3>Choose your character</h3><div class="phase1HeroPicker">'+['wanderer','knight','ranger','spellblade','duelist'].map(id=>'<button type="button" data-phase1-hero="'+id+'" class="'+(state.characterId===id?'active':'')+'"><img src="assets/characters/avatars/'+id+'.png" alt="">'+esc(id)+'</button>').join('')+'</div><p class="small muted">'+state.stash.length+'/'+stashCapacity()+' Stash slots · '+state.expeditionOverflow.length+' secured items awaiting space. Merchant gear and Forge tiers follow your highest unlocked Expedition. Permanent gear Sigils never spend Plane rerolls. Runes: every tenth Expedition boss.</p><h3>Prepare an Expedition</h3><div class="phase3Actions">'+Array.from({length:g.unlocked},(_,i)=>'<button class="primary" data-phase1-expedition="'+(i+1)+'">Expedition '+(i+1)+' →</button>').join('')+'</div></section>');
   Q('[data-phase1-hero]').forEach(b=>b.onclick=()=>{state.characterId=b.dataset.phase1Hero;renderPhase1()});
   Q('[data-phase1-expedition]').forEach(b=>b.onclick=()=>phase1Begin(Number(b.dataset.phase1Expedition)));
   Q('[data-phase3-nav]').forEach(b=>b.onclick=()=>phase3Go(b.dataset.phase3Nav));
@@ -3639,7 +3669,7 @@ function renderPhase1(){
  const supplies=phase3Supplies||{health:0,mana:0};
  const canHeal=between&&stats.hp<stats.maxhp&&supplies.health>0;
  const canMana=between&&stats.maxmp>0&&stats.mp<stats.maxmp&&supplies.mana>0;
- const prep=between?'<div class="phase3Preparation"><div><h3>Between Planes · Safe Preparation</h3><p class="small muted">Equipment swaps and Runes use the original inventory. Potions restore 35% HP or 40% Mana, up to the current maximum; unused charges carry through this Expedition.</p><div class="phase3Actions"><button class="ghost" data-phase3-nav="equipment">Open Equipment / Runes</button><button class="ghost" data-phase3-potion="health" '+(canHeal?'':'disabled')+'>❤️ Health Potion · '+supplies.health+' left</button><button class="ghost" data-phase3-potion="mana" '+(canMana?'':'disabled')+'>💧 Mana Potion · '+supplies.mana+' left</button></div></div></div>':
+ const prep=between?'<div class="phase3Preparation"><div><h3>Between Planes · Safe Preparation</h3><p class="small muted">Equipment swaps and Runes use the original inventory. '+state.expeditionOverflow.length+' secured items await Stash space. Potions restore 35% HP or 40% Mana, up to the current maximum; unused charges carry through this Expedition.</p><div class="phase3Actions"><button class="ghost" data-phase3-nav="equipment">Open Equipment / Runes</button><button class="ghost" data-phase3-potion="health" '+(canHeal?'':'disabled')+'>❤️ Health Potion · '+supplies.health+' left</button><button class="ghost" data-phase3-potion="mana" '+(canMana?'':'disabled')+'>💧 Mana Potion · '+supplies.mana+' left</button></div></div></div>':
  '<p class="small muted">First Plane: no potion use. Equipment may be inspected before committing to a route.</p>';
  html('<section class="panel"><span class="eyebrow">Wanderer v0.12 · Expeditions</span><div class="topline"><div><h2>Expedition '+g.expedition+' · Plane '+g.planeIndex+' / 15</h2><p class="small muted">Three routes · Choose Waves, affinity and Elite risk before entering original auto-combat.</p></div><span class="token">'+state.gold+' Gold · '+state.fragments+' Fragments</span></div>'+
  '<div class="phase1FamilyRow">'+(g.families.length?g.families.map(f=>'<span>'+familyLabel(f)+'</span>').join(''):'<span>No temporary affinity selected yet</span>')+'</div>'+
