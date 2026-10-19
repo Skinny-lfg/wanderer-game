@@ -165,10 +165,18 @@ export function choosePath(profile,id){
  startCombat(profile);
  return profile;
 }
-function loot(profile,guarantee=false){
+function loot(profile,guarantee=false,autoEquip=true){
  const r=profile.run,item=itemRoll(profile,r,guarantee);profile.inventory.push(item);r.loot.push(item);r.log=['Found '+item.name+'.',...r.log].slice(0,14);
- if(!profile.equipped[item.slot] || (item.atk+item.armor+item.hp*.1+item.mana*.1)>(()=>{let old=profile.inventory.find(x=>x.id===profile.equipped[item.slot]);return old?old.atk+old.armor+old.hp*.1+old.mana*.1:0})()*1.12)profile.equipped[item.slot]=item.id;
+ if(autoEquip&&(!profile.equipped[item.slot] || (item.atk+item.armor+item.hp*.1+item.mana*.1)>(()=>{let old=profile.inventory.find(x=>x.id===profile.equipped[item.slot]);return old?old.atk+old.armor+old.hp*.1+old.mana*.1:0})()*1.12))equip(profile,item.id);
  return item;
+}
+function awardWave(profile,enemy){
+ const run=profile.run;
+ const gold=Math.round(3+run.level*2+(enemy.elite?6:0));
+ const fragments=enemy.elite?2:1;
+ profile.gold+=gold;profile.fragments+=fragments;
+ if(!enemy.boss&&rand(run)<(enemy.elite?.28:.07))loot(profile,false,false);
+ run.log=['Wave: +'+gold+' Gold, +'+fragments+' Fragments.',...run.log].slice(0,14);
 }
 function award(profile,guarantee=false,suppressRandomDrop=false){
  const r=profile.run,t=r.rooms[r.room-1];
