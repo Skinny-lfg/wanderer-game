@@ -30,11 +30,15 @@ const server=http.createServer((req,res)=>{
    await page.locator('#v012-overlay .v12-family').first().waitFor();
    assert.equal(await page.locator('#v012-overlay .v12-family').count(),5);
    assert.equal(await page.locator('#v012-overlay button[data-action="camp-heal"]').count(),1,'Health potions must appear at camp');
+   assert.equal(await page.locator('#v012-overlay button[data-action="camp-mana"]').count(),1,'Mana potions must appear at camp');
    assert.equal(await page.locator('#v012-overlay button[data-action="camp-heal"]').isDisabled(),true,'full HP cannot waste a potion');
    await page.locator('#v012-overlay button[data-action="begin"][data-id="blood"]').click();
    assert.equal(await page.locator('#v012-overlay .v12-passive').count(),3);
    await page.locator('#v012-overlay .v12-passive').first().click();
    assert.equal(await page.locator('#v012-overlay .v12-path').count(),3);
+   assert.equal(await page.locator('#v012-overlay .v12-plane-badges').count(),3,'Three offered Planes show their Waves and Elite status');
+   assert.equal(await page.locator('#v012-overlay .v12-inventory summary').count(),1,'Inventory is accessible between Planes');
+   assert.equal(await page.locator('#v012-overlay .v12-passive-entry').count(),1,'Current passives should be visible');
    const familyLabels=await page.locator('#v012-overlay .v12-path .v12-tag').allTextContents();
    assert(familyLabels.some(x=>x.includes('Blood')),'initial affinity should be guaranteed');
    assert.equal(await page.locator('#v012-overlay button[data-action="reroll"]:disabled').count(),1);
@@ -45,7 +49,7 @@ const server=http.createServer((req,res)=>{
    const enemyCount=await page.locator('#v012-overlay .v12-enemy').count();
    assert.equal(enemyCount,1,'first room is a combat with one active enemy');
    assert.equal(await page.locator('#v012-overlay button[data-kind="hp"]').count(),0,'Health potions must never be usable in combat');
-   assert.equal(await page.locator('#v012-overlay button[data-kind="mana"]').count(),2,'Mana potions remain accessible');
+   assert.equal(await page.locator('#v012-overlay button[data-kind="mana"]').count(),0,'Mana potions cannot be used in combat');
    if(enemyCount===1){
     assert.equal(await page.locator('#v012-overlay button[data-action="target"]').count(),0,'no manual targeting');
     await page.locator('#v012-overlay button[data-action="pause"]').click();
@@ -63,6 +67,6 @@ const server=http.createServer((req,res)=>{
    assert.deepEqual(errors,[],'browser uncaught errors at '+width);
    await context.close();
   }
-  console.log('PASS v0.12 desktop/mobile browser: 3 affinity cap, camp-only Health, reroll, isolated save, reopen');
+  console.log('PASS v0.12 desktop/mobile browser: visible Planes/Waves/Elites, camp-only HP/MP, inventory and passive UI');
  } finally {await browser.close();server.close();}
 })().catch(err=>{console.error(err);process.exitCode=1;server.close();});
