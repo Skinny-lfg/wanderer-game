@@ -85,7 +85,7 @@ async function run(){
    await page.locator('[data-phase3-nav="equipment"]').last().click();
    assert(await page.locator('.equipmentInventory').count(),'classic inventory retained in Camp');
    assert(await page.locator('.equipmentLoadout .slotTile').count()===9,'classic nine-slot loadout');
-   await page.locator('[data-phase3-nav="phase1"]').first().click();
+   await page.locator('#phase3Return').click();
    await page.locator('[data-phase1-expedition="1"]').click();
    assert.equal(await page.locator('.phase1Offer').count(),3);
    assert.equal(await page.locator('[data-phase3-potion]').count(),0,'no first-Plane potions');
@@ -109,7 +109,7 @@ async function run(){
      const swapped=await page.evaluate(()=>__phase3Audit.snapshot());
      assert.equal(swapped.weapon,'Mace','actual classic equipItem changes weapon');
      assert(swapped.vitals.hp<=swapped.vitals.maxhp,'equipment swap cannot heal above stat cap');
-     await page.locator('[data-phase3-nav="phase1"]').first().click();
+     await page.locator('#phase3Return').click();
      await page.locator('#phase3Reroll').click();
      await page.locator('#phase3Reroll').click();
      assert.equal(await page.evaluate(()=>__phase3Audit.snapshot().rerolls),0);
