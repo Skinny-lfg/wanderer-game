@@ -26,13 +26,14 @@ input{box-sizing:border-box;width:100%;border-radius:9px;border:1px solid #76648
 button{width:100%;border-radius:9px;border:1px solid #aa8fbb;background:#695478;color:#fff;padding:13px;font:700 15px system-ui,sans-serif;margin-top:22px;cursor:pointer}
 strong{display:block;color:#f2a7a7;margin-top:16px;font-size:13px;text-align:center}
 </style></head><body><main><h1>WANDERER</h1><p>Private v0.12 Playtest<br>Access restricted to the tester.</p><form method="post" action="/__preview/login" autocomplete="off"><label for="user">Username</label><input id="user" name="username" required maxlength="128" autocomplete="username" spellcheck="false"><label for="pass">Password</label><input id="pass" name="password" type="password" required maxlength="256" autocomplete="current-password"><button type="submit">Enter Playtest</button></form>${error?'<strong>Invalid credentials or too many attempts.</strong>':''}<p><small>This prototype does not use production player saves.</small></p></main></body></html>`;
+const playtestHTML=\`<!doctype html><html lang="pt"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Wanderer v0.12 — Private Playtest</title><link rel="stylesheet" href="/online/v012-prototype.css"></head><body style="margin:0;background:#10101a;color:#eee;font-family:system-ui,sans-serif"><div class="container" style="padding:20px;max-width:800px;margin:auto;text-align:center"><h1 style="font-family:Georgia,serif;color:#ebcaa6">WANDERER — v0.12</h1><p>Protected playtest. No Firebase login or production saves are loaded on this site.</p><p>The prototype opens automatically. If you close it, use the Playtest button below to reopen.</p></div><script type="module" src="/online/v012-prototype.mjs"></script></body></html>\`;
 function securityHeaders(res){
  res.setHeader('Cache-Control','no-store, private');
  res.setHeader('X-Content-Type-Options','nosniff');
  res.setHeader('X-Frame-Options','DENY');
  res.setHeader('Referrer-Policy','no-referrer');
  res.setHeader('Permissions-Policy','camera=(),microphone=(),geolocation=()');
- res.setHeader('Content-Security-Policy',"default-src 'self' data: blob:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'none'; form-action 'self'");
+ res.setHeader('Content-Security-Policy',"default-src 'self' data: blob:; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'none'; form-action 'self'");
 }
 function send(res,status,type,body,method='GET'){
  res.statusCode=status;res.setHeader('Content-Type',type);
@@ -124,12 +125,7 @@ export function createPrivatePreviewServer({
    const ext=path.extname(file);
    const type=MIME[ext];if(!type)return serveGuardError(res,404,'Not found',method);
    let body=await readFile(file);
-   if(relative==='index.html'){
-    let html=body.toString('utf8');
-    // Disable classic Firebase authentication on this domain entirely; start the isolated playtest.
-    html=html.replace(/<script type="module" src="online\/app\.mjs[^"]*"><\/script>/,'');
-    body=Buffer.from(html,'utf8');
-   }
+   if(relative==='index.html')body=Buffer.from(playtestHTML,'utf8');
    send(res,200,type,body,method);
   }catch{return serveGuardError(res,404,'Not found',method);}
  });
