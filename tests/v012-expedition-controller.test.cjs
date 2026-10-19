@@ -115,3 +115,25 @@ test('preview bridge stays opt-in, imports production enemies/art/VFX, and canno
  assert(html.includes('document.write('),'classic modules retain parser-inserted timing');
  assert.equal(fs.existsSync(path.join(root,'online/v012-phase1.css')),true);
 });
+
+test('Phase 3 rerolls are capped per Expedition and preserve the original Plane risk contract',()=>{
+ const ctrl=engine.create(THEMES,rng(212));
+ ctrl.start(1);
+ assert.equal(ctrl.state.rerollsLeft,2);
+ const firstKind=ctrl.state.rooms[0];
+ const offer=ctrl.state.offers[0];
+ const firstId=ctrl.state.offers.map(x=>x.id).join(',');
+ assert.equal(ctrl.reroll().length,3);
+ assert.equal(ctrl.state.rerollsLeft,1);
+ assert.equal(ctrl.state.rooms[0],firstKind);
+ assert.equal(ctrl.state.offers.every(x=>x.boss===offer.boss),true);
+ assert.notEqual(ctrl.state.offers.map(x=>x.id).join(','),firstId,'reroll offers a new route selection');
+ ctrl.reroll();
+ assert.equal(ctrl.state.rerollsLeft,0);
+ assert.throws(()=>ctrl.reroll(),/No Plane rerolls/);
+ const chosen=ctrl.state.offers[0];ctrl.select(chosen.id);
+ assert.throws(()=>ctrl.reroll(),/No Plane rerolls/);
+ for(let n=0;n<chosen.waves;n++)ctrl.waveWon();
+ assert.equal(ctrl.state.rerollsLeft,0,'new Plane does not refill rerolls');
+ assert.equal(ctrl.state.stage,'choice');
+});
