@@ -177,10 +177,17 @@ function makePathOffers(run){
  }
  run.pathOffers=chosen;
  run.planeOffers=chosen.map(id=>rollPlane(run,id));
+ run.planeAffinityRulesVersion=2;
 }
 export function ensurePlaneOffers(profile){
  const run=profile?.run;
  if(!run||run.stage!=='path'||!Array.isArray(run.pathOffers))return false;
+ if(run.planeAffinityRulesVersion!==2){
+  // Re-roll only an old, not-yet-selected Plane offer after the second affinity.
+  // Never change a committed Plane, gear or currency from an existing test save.
+  if(run.room>1&&run.affinities.length>=2){makePathOffers(run);return true;}
+  run.planeAffinityRulesVersion=2;
+ }
  if(run.planeOffers?.length===run.pathOffers.length&&run.planeOffers.every((p,i)=>p?.id===run.pathOffers[i]))return false;
  run.planeOffers=run.pathOffers.map(id=>rollPlane(run,id));
  return true;
