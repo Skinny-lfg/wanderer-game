@@ -104,8 +104,8 @@ test('unlimited Blood focus never soft-locks its reward pool near room 15',()=>{
  }
  assert.equal(r.stage,'reward');
  assert.equal(r.passiveOffers.length,3,'Specialization still offers three choices');
- assert.ok(r.passiveOffers.every(id=>id.includes('mastery')));
- choosePassive(p,r.passiveOffers[0]);
+ assert.ok(r.passiveOffers.some(id=>id.includes('mastery')),'Specialization supplies mastery even alongside unlocked hybrid passives');
+ choosePassive(p,r.passiveOffers.find(id=>id.includes('mastery')));
  assert.ok(r.passives.some(id=>id.includes('mastery')));
 });
 
