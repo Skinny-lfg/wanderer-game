@@ -141,7 +141,7 @@ test('independent Aegis retaliation sources both resolve without recursive new h
 test('Staff/Wand amplify all Magic schools without consuming extra status rolls',()=>{
  for(const school of api.ELEMENTS){
   const b=api.create();b.families=['magic'];b.element=school;
-  function cast(amp){const {c,history}=ctx(1);c.enemy.v012Shock=3;c.power=110;c.amp=amp;
+  function cast(amp){const {c,history}=ctx(1);c.enemy.v012Shock=3;c.enemy.maxhp=100000;c.power=110;c.amp=amp;
    api.onCast(b,c);return {history,enemy:c.enemy};}
   b.runtime.magicHits=0;
   const basic=cast(1);
@@ -157,7 +157,7 @@ test('Staff/Wand amplify all Magic schools without consuming extra status rolls'
    assert(hp(staff)<hp(wand)&&hp(wand)<hp(basic),'Lightning burst scales with magical weapon');
   }else{
    const chill=run=>run.enemy.slowTime;
-   assert(chill(staff)>0&&chill(wand)===chill(basic),'Frost amplifies damage, not control duration, without specialized passive');
+   assert(chill(staff)>chill(wand)&&chill(wand)>chill(basic),'Frost control scales with Staff and Wand amplification');
   }
  }
 });
