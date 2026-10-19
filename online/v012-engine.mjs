@@ -3,7 +3,7 @@ export const STORAGE_KEY='wanderer_v012_prototype_local_v1';
 export const MAX_AFFINITIES=3;
 const MAX_PASSIVE_RANK=2;
 export const FAMILIES={
- blood:{name:'Blood',icon:'🩸',kind:'DoT',color:'#dc777d'},
+ blood:{name:'Blood',icon:'🩸',kind:'Bleed DoT',color:'#dc777d'},
  vitality:{name:'Vitality',icon:'💚',kind:'Health',color:'#6fd49b'},
  aegis:{name:'Aegis',icon:'🛡️',kind:'Defense',color:'#89b8e8'},
  fury:{name:'Fury',icon:'⚔️',kind:'Attack',color:'#ecad69'},
@@ -102,7 +102,7 @@ export function begin(profile,affinity,manaPots=2,level=profile.unlocked){
  if(!Number.isInteger(manaPots)||manaPots<0||manaPots>3)throw Error('Up to three Mana potions available');
  if(!Number.isInteger(level)||level<1||level>profile.unlocked)throw Error('Difficulty not unlocked');
  const seed=(profile.seed+0x9e3779b9+profile.record.length*31337)|0;profile.seed=seed;
- const run={level,room:1,seed,initial:affinity,affinities:[affinity],passives:[],potions:{hp:Math.min(3-manaPots,profile.healthPotionStock??3),mana:Math.min(manaPots,profile.manaPotionStock??3)},rerolls:3,stage:'startReward',lastPathAffinity:null,selectedPath:null,pathOffers:[],passiveOffers:[],rooms:['combat',...shuffle({seed:seed^7312},ROOM_TYPES.slice(1)),'boss'],history:[],hp:0,mp:0,barrier:0,fight:null,loot:[],result:null,log:['Expedition started.']};
+ const run={level,room:1,seed,initial:affinity,affinities:[affinity],magicElement:null,elementReturnStage:null,passives:[],potions:{hp:Math.min(3-manaPots,profile.healthPotionStock??3),mana:Math.min(manaPots,profile.manaPotionStock??3)},rerolls:3,stage:'startReward',lastPathAffinity:null,selectedPath:null,pathOffers:[],passiveOffers:[],rooms:['combat',...shuffle({seed:seed^7312},ROOM_TYPES.slice(1)),'boss'],history:[],hp:0,mp:0,barrier:0,fight:null,loot:[],result:null,log:['Expedition started.']};
  profile.run=run;const s=stats(profile);run.hp=Math.max(1,Math.round(s.hp*clamp(profile.restHpRatio??1,.4,1)));run.mp=Math.max(0,Math.round(s.mana*clamp(profile.restMpRatio??1,.3,1)));
  if(affinity==='magic'){run.stage='element';run.elementReturnStage='startReward';run.passiveOffers=[];}else run.passiveOffers=passiveOptions(run,affinity);
  return profile;
@@ -284,7 +284,7 @@ export function resolveRoom(profile,action='safe'){
 }
 export function usePotion(profile,kind){
  const run=profile.run;
- if(!run||!['startReward','reward','path','chest','event','altar'].includes(run.stage))throw Error('Potions only at camp between combats');
+ if(!run||!['element','startReward','reward','path','chest','event','altar'].includes(run.stage))throw Error('Potions only at camp between combats');
  if(!['hp','mana'].includes(kind)||!run.potions||run.potions[kind]<1)throw Error('Potion unavailable');
  const stat=stats(profile),max=kind==='hp'?stat.hp:stat.mana,field=kind==='hp'?'hp':'mp';
  if(run[field]>=max)return false;
