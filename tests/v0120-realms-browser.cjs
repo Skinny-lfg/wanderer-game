@@ -27,22 +27,16 @@ const server=http.createServer((req,res)=>{
   await page.locator('[data-phase2-initial="magic"]').click();assert.equal((await snap()).picks.length,0);
   for(const id of ['fire','frost','lightning'])assert.equal(await page.locator('[data-phase2-element="'+id+'"]').count(),1);
   await page.locator('[data-phase2-element="frost"]').click();let s=await snap();assert.deepEqual(s.picks,['deep_winter']);assert.equal(s.element,'frost');
-  const magicIndex=s.game.offers.findIndex(o=>o.family==='magic'),otherIndex=(magicIndex+1)%3;
-  await page.locator('[data-phase1-plane="'+s.game.offers[otherIndex].id+'"]').click();const selected=(await snap()).game.selected.id;
-  const unchanged=JSON.stringify((await snap()).game.offers[otherIndex]);
-  for(let n=0;n<3;n++)await page.locator('[data-phase2-reroll="'+magicIndex+'"]').click();
-  s=await snap();assert.equal(s.game.selected.id,selected);assert.equal(JSON.stringify(s.game.offers[otherIndex]),unchanged);assert.equal(s.game.offers[magicIndex].family,'magic');
-  assert.equal(await page.locator('[data-phase2-reroll="'+magicIndex+'"]').isDisabled(),true);
-  await page.locator('[data-phase1-plane="'+s.game.offers[magicIndex].id+'"]').click();assert.equal((await snap()).active,false);assert.equal((await snap()).picks.length,1);
-  await page.locator('#phase2EnterRealm').click();s=await snap();assert.equal(s.active,true);assert.equal(s.picks.length,1);
+  assert.equal(s.active,true);assert.equal(s.game.selected.family,'magic');assert.equal(s.status,'fight');
   const waves=s.game.selected.waves;
   for(let wave=0;wave<waves;wave++){await page.waitForFunction(()=>__realmTest.snapshot().status==='fight');await page.evaluate(()=>__realmTest.win());}
   await page.locator('#phase5ExitResult').click();await page.waitForSelector('[data-phase2-passive]');s=await snap();assert.equal(s.active,false);assert.equal(s.picks.length,1);assert.equal(s.draft,'reward');
   const reward=page.locator('[data-phase2-passive]').first(),id=await reward.getAttribute('data-phase2-passive');
   assert.equal(await reward.locator('.itemAffinityGlyph').count(),1);await reward.click();s=await snap();assert.equal(s.picks.length,2);assert.equal(s.game.planeIndex,2);
   assert(s.game.offers.every(o=>o.family!=='magic'),'initial affinity needs a second distinct acquisition after first Realm');
-  assert.deepEqual(s.game.rerollsByRealm[1],[3,3,3]);assert.equal(s.game.rerollsByRealm[0][magicIndex],0);
-  assert.equal(await page.evaluate(id=>__realmTest.passive(id),id),false);assert.equal((await snap()).picks.length,2);
+  await page.locator('[data-phase1-plane="'+s.game.offers[0].id+'"]').click();const selected=(await snap()).game.selected.id,unchanged=JSON.stringify((await snap()).game.offers[0]);
+  for(let n=0;n<3;n++)await page.locator('[data-phase2-reroll="1"]').click();s=await snap();assert.equal(s.game.selected.id,selected);assert.equal(JSON.stringify(s.game.offers[0]),unchanged);assert.equal(await page.locator('[data-phase2-reroll="1"]').isDisabled(),true);assert.deepEqual(s.game.rerollsByRealm[1],[3,0,3]);
+  assert.equal(await page.evaluate(id=>__realmTest.passive(id),id),false);assert.equal((await snap()).picks.length,2);assert.equal((await snap()).active,false);await page.locator('#phase2EnterRealm').click();assert.equal((await snap()).status,'fight');
   assert.equal(await page.evaluate(()=>localStorage.getItem('wanderer_browser_proto_v01')),'UNTOUCHED');
   assert.deepEqual(errors,[]);assert.deepEqual(external,[]);assert(await page.locator('body').evaluate(n=>n.scrollWidth<=innerWidth+1));
   console.log('PASS v0.12.0 Realms '+width+'px: six affinities, Magic element, one starter, independent rerolls, explicit entry, one post-Realm passive');

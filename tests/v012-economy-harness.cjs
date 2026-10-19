@@ -47,6 +47,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
   gearFamily:typeof gearFamily==='function'?gearFamily:()=>null,
   equip:equipItem,unequip:unequipItem,sale:saleFragments,craftCost,merchantCost,
   rollShop,refresh:refreshMerchantStock,economyCanAct,offerBossRunes,claimRune:claimPendingRuneChoice,
+  runes:{unequip:unequipRune,salvage:salvageRune,recycle:salvageDuplicateRunes,equip:equipRune,confirm(){const fn=auditConfirmation;auditConfirmation=null;fn?.();}},
   runeValue,makeRune,validRune,qualityOdds:WandererEconomyV0101.qualityOdds,rarityOdds,
   economy:WandererEconomyV0101,renderForge,renderMerchant,
   vitals:phase3Vitals,setVitals:v=>{phase1Vitals=v;},setView:v=>{view=v;},

@@ -10,7 +10,7 @@ const fixture=`if(PHASE1_PREVIEW){phase1Init();
   phase1Begin(1);phase2ChooseInitial('blood');phase1Choose(phase1Controller.state.offers.find(o=>o.family==='blood').id);phase1Enter();
   const r=state.run;r.hp=r.maxhp/2;r.barrier=10;r.stats.attacksPerSec=0;r.stats.blockChance=0;
   Object.assign(r.enemy,{hp:500,maxhp:1000,atk:100,attackType:'physical',eliteType:'tank',bossStyle:null});
-  r.tPlayer=r.tDot=0;r.tEnemy=100;const before={hp:r.hp,barrier:r.barrier};Math.random=()=>0;updateFight();
+  r.tPlayer=r.tDot=0;r.tEnemy=100;const before={hp:r.hp,barrier:r.barrier};phase4Seed=12345;updateFight();
   return {before,after:{hp:r.hp,barrier:r.barrier},debuff:r.playerHealingDebuffUntil};
  }};render();
 }else{load();if(!state.merchant)rollShop();save();render();}`;

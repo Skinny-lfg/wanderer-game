@@ -1791,7 +1791,7 @@ function runeSlotChoicesMarkup(rune,slots){
 }
 function runeSectionMarkup(){
  const runes=state.runes||[],slots=state.runeSlots||[null,null,null];
- return '<section class="runePanel"><h3>Permanent Runes · '+slots.filter(Boolean).length+'/3 · '+runes.length+' owned</h3><p class="small muted">Earn one of three runes from each D10/D20/... boss. Runes survive death and do not fill Stash. Unneeded runes can be recycled for Fragments, but equipped runes are protected.</p><div class="runeSlots">'+slots.map((id,i)=>{const r=runes.find(x=>x.id===id);return '<div class="runeSlot"><b>Rune '+(i+1)+'</b><span class="small">'+(r?runeLine(r):'Empty')+'</span>'+(r?'<button class="tiny ghost" data-rune-remove="'+i+'">Unequip</button>':'')+'</div>'}).join('')+'</div><p class="small muted">Click a rune below, then choose its slot here.</p><div class="runeCollection">'+(runes.length?runes.map(r=>'<div class="runeCard '+(slots.includes(r.id)?'runeEquipped':'')+(selectedRuneId===r.id?' runeSelected':'')+'"><button type="button" class="tiny ghost" data-rune-equip="'+esc(r.id)+'" aria-expanded="'+(selectedRuneId===r.id)+'" aria-label="Choose slot for '+esc(r.name)+'">'+newBadge(r)+runeLine(r)+(slots.includes(r.id)?' ✓ Equipped':' · Choose slot')+'</button><button class="tiny ghost" data-rune-sell="'+esc(r.id)+'" '+(slots.includes(r.id)?'disabled title="Unequip before recycling"':'')+' aria-label="Recycle '+esc(r.name)+' for '+runeSalvageValue(r)+' Fragments">Recycle · '+runeSalvageValue(r)+' '+uiIcon('fragments')+'</button></div>'+(selectedRuneId===r.id?runeSlotChoicesMarkup(r,slots):'')).join(''):'<p class="small muted">Defeat a chapter boss to unlock your first permanent rune.</p>')+'</div><div class="buttonRow"><button class="tiny ghost" id="recycleDuplicateRunes" '+(duplicateRuneCandidates().length?'':'disabled')+'>Recycle spare duplicates · +'+duplicateRuneCandidates().reduce((sum,r)=>sum+runeSalvageValue(r),0)+' '+uiIcon('fragments')+'</button></div><p class="small muted">Duplicates: keeps the highest-tier rune of each family and every equipped rune. Only one rune from each family can be equipped at a time.</p></section>';
+ return '<section class="runePanel"><h3>Permanent Runes · '+slots.filter(Boolean).length+'/3 · '+runes.length+' owned</h3><p class="small muted">Earn one of three runes from each D10/D20/... boss. Runes survive death and do not fill Stash. Unneeded runes can be recycled for Fragments, but equipped runes are protected.</p><div class="runeSlots">'+slots.map((id,i)=>{const r=runes.find(x=>x.id===id);return '<div class="runeSlot"><b>Rune '+(i+1)+'</b><span class="small">'+(r?runeLine(r):'Empty')+'</span>'+(r?'<button class="tiny ghost" data-rune-remove="'+i+'" '+(runeCheckpointLocked()?'disabled':'')+'>Unequip</button>':'')+'</div>'}).join('')+'</div><p class="small muted">Click a rune below, then choose its slot here.</p><div class="runeCollection">'+(runes.length?runes.map(r=>'<div class="runeCard '+(slots.includes(r.id)?'runeEquipped':'')+(selectedRuneId===r.id?' runeSelected':'')+'"><button type="button" class="tiny ghost" data-rune-equip="'+esc(r.id)+'" aria-expanded="'+(selectedRuneId===r.id)+'" aria-label="Choose slot for '+esc(r.name)+'">'+newBadge(r)+runeLine(r)+(slots.includes(r.id)?' ✓ Equipped':' · Choose slot')+'</button><button class="tiny ghost" data-rune-sell="'+esc(r.id)+'" '+(runeCheckpointLocked()||slots.includes(r.id)?'disabled title="Rune changes unavailable"':'')+' aria-label="Recycle '+esc(r.name)+' for '+runeSalvageValue(r)+' Fragments">Recycle · '+runeSalvageValue(r)+' '+uiIcon('fragments')+'</button></div>'+(selectedRuneId===r.id?runeSlotChoicesMarkup(r,slots):'')).join(''):'<p class="small muted">Defeat a chapter boss to unlock your first permanent rune.</p>')+'</div><div class="buttonRow"><button class="tiny ghost" id="recycleDuplicateRunes" '+(!runeCheckpointLocked()&&duplicateRuneCandidates().length?'':'disabled')+'>Recycle spare duplicates · +'+duplicateRuneCandidates().reduce((sum,r)=>sum+runeSalvageValue(r),0)+' '+uiIcon('fragments')+'</button></div><p class="small muted">Duplicates: keeps the highest-tier rune of each family and every equipped rune. Only one rune from each family can be equipped at a time.</p></section>';
 }
 // Rune recycling is intentionally separate from equipment salvage. Equipped runes are never sold.
 function runeSalvageValue(r){
@@ -1808,13 +1808,19 @@ function duplicateRuneCandidates(){
  }
  return (state.runes||[]).filter(r=>!equipped.has(r.id)&&strongest.get(r.family)?.id!==r.id&&runeSalvageValue(r)>0);
 }
+function runeCheckpointLocked(){return PHASE1_PREVIEW&&phase4Resume;}
+function unequipRune(index){
+ if(runeCheckpointLocked()||PHASE1_PREVIEW&&phase1Draft||PHASE5_VALIDATION&&(!phase5Ready||saveBlocked)||state.run||!Number.isInteger(index)||index<0||index>2)return false;
+ state.runeSlots[index]=null;save();renderStash();return true;
+}
 function salvageRune(id){
+ if(runeCheckpointLocked())return false;
  if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked))return false;
  if(state.run||state.pendingRuneReward||state.runeSlots.includes(id))return false;
  const rune=state.runes.find(r=>r.id===id),value=rune&&runeSalvageValue(rune);
  if(!value)return false;
  showConfirm('Recycle Rune','Recycle '+rune.name+' (D'+rune.tier+') for '+value+' Fragments? This cannot be undone.',()=>{
-  if(state.run||state.pendingRuneReward||state.runeSlots.includes(id))return;
+  if(runeCheckpointLocked()||state.run||state.pendingRuneReward||state.runeSlots.includes(id))return;
   const index=state.runes.findIndex(r=>r.id===id);if(index<0)return;
   const current=state.runes[index],reward=runeSalvageValue(current);if(!reward)return;
   state.runes.splice(index,1);state.fragments+=reward;
@@ -1823,12 +1829,13 @@ function salvageRune(id){
  return true;
 }
 function salvageDuplicateRunes(){
+ if(runeCheckpointLocked())return false;
  if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked))return false;
  if(state.run||state.pendingRuneReward)return false;
  const candidates=duplicateRuneCandidates();if(!candidates.length)return false;
  const ids=new Set(candidates.map(r=>r.id)),amount=candidates.reduce((sum,r)=>sum+runeSalvageValue(r),0);
  showConfirm('Recycle Spare Runes','Recycle '+candidates.length+' spare rune(s) for '+amount+' Fragments? The strongest rune in each family and equipped runes remain safe.',()=>{
-  if(state.run||state.pendingRuneReward)return;
+  if(runeCheckpointLocked()||state.run||state.pendingRuneReward)return;
   const safe=new Set(duplicateRuneCandidates().map(r=>r.id));
   const toRecycle=state.runes.filter(r=>ids.has(r.id)&&safe.has(r.id));
   if(!toRecycle.length)return;
@@ -1840,7 +1847,7 @@ function salvageDuplicateRunes(){
  return true;
 }
 function equipRune(id,index){
- if(PHASE1_PREVIEW&&phase4Resume)return false;
+ if(runeCheckpointLocked())return false;
  if(PHASE1_PREVIEW&&phase1Draft)return false;
  if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked))return false;
  if(state.run||!Number.isInteger(index)||index<0||index>2)return false;
@@ -1855,6 +1862,7 @@ function equipRune(id,index){
  slots[index]=id;state.runeSlots=slots;phase3ClampVitals();save();return true;
 }
 function openRuneSlotPicker(id){
+ if(runeCheckpointLocked())return false;
  if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked))return false;
  if(state.run){bannerMessage('Finish the expedition before changing runes.');return false;}
  if(!state.runes.some(r=>r.id===id))return false;
@@ -2390,7 +2398,7 @@ Q('[data-rune-slot-choice]').forEach(b=>b.onclick=()=>{
  if(selectedRuneId&&equipRune(selectedRuneId,slot)){selectedRuneId=null;renderStash();}
  else bannerMessage('Finish the expedition before changing runes.');
 });
-Q('[data-rune-remove]').forEach(b=>b.onclick=()=>{const i=Number(b.dataset.runeRemove);if(!state.run&&i>=0&&i<3){state.runeSlots[i]=null;save();renderStash();}});
+Q('[data-rune-remove]').forEach(b=>b.onclick=()=>unequipRune(Number(b.dataset.runeRemove)));
 Q('[data-rune-sell]').forEach(b=>b.onclick=()=>salvageRune(b.dataset.runeSell));
 const recycleDuplicates=$('recycleDuplicateRunes');if(recycleDuplicates)recycleDuplicates.onclick=salvageDuplicateRunes;
 if(equipped){$('unequipThis').onclick=()=>{selectedId=null;unequipItem(equipped.slot)}}
@@ -3380,6 +3388,13 @@ function phase2MagicTick(r){
  WandererV012Buildcraft.onCast(b,ctx);
  combatEffect('Wand',({fire:'burn',frost:'slow',lightning:'shock'})[b.element]);
 }
+function phase2EnterInitialRealm(){
+ const g=phase1Controller.state;
+ if(g.stage!=='choice'||g.planeIndex!==1||g.history.length||!g.initialFamily||!phase1Build?.initialPassive||phase1Draft||state.run||phase4Resume||phase5Results.review)return false;
+ const plane=g.offers.find(p=>p.family===g.initialFamily);if(!plane)return false;
+ if(!phase1Choose(plane.id))return false;
+ return phase1Enter();
+}
 function phase2ChooseInitial(family){
  if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked))return false;
  const g=phase1Controller.state;
@@ -3695,9 +3710,9 @@ function renderPhase1(){
  const g=phase1Controller.state,stats=phase3Vitals();
  const familyLabel=f=>phase2FamilyIcon(f)+' '+WandererV012Expedition.FAMILY_NAMES[f];
  if(g.stage==='choice'&&!g.initialFamily){
-  html('<section class="panel"><span class="eyebrow">Expedition '+g.expedition+'</span><h2>Choose your initial affinity</h2><p class="small muted">Receive one initial passive. The first offers always include your affinity. Select a Realm, then use Enter Realm.</p><div class="phase1DraftCards">'+
+  html('<section class="panel"><span class="eyebrow">Expedition '+g.expedition+'</span><h2>Choose your initial affinity</h2><p class="small muted">Receive one initial passive and enter the first Realm of your affinity. Magic first requires an element choice.</p><div class="phase1DraftCards">'+
    WandererV012Expedition.FAMILIES.map(f=>'<button type="button" class="phase1DraftCard" data-phase2-initial="'+f+'">'+phase2FamilyIcon(f)+'<strong>'+WandererV012Expedition.FAMILY_NAMES[f]+'</strong></button>').join('')+'</div></section>');
-  Q('[data-phase2-initial]').forEach(b=>b.onclick=()=>phase2ChooseInitial(b.dataset.phase2Initial));return;
+  Q('[data-phase2-initial]').forEach(b=>b.onclick=()=>{if(phase2ChooseInitial(b.dataset.phase2Initial))phase2EnterInitialRealm();});return;
  }
  if(phase1Draft){
   const d=phase1Draft,plane=d.plane||{family:d.family,name:'Initial affinity',plane:1};
@@ -3706,7 +3721,7 @@ function renderPhase1(){
   if(d.step==='element'){
    const cards=[['fire','Fire','Burn · lasting damage','burn'],['frost','Frost','Chill · slower enemy attacks','slow'],['lightning','Lightning','Shock · 4 charges trigger a burst','shock']];
    html(header+cards.map(([id,name,desc,glyph])=>'<button class="phase1DraftCard" data-phase2-element="'+id+'"><span>'+affinityArt(glyph)+'</span><strong>'+name+'</strong><small>'+desc+'</small></button>').join('')+'</div><p class="small muted">Element stays fixed for this Expedition. Staff and Wand amplify it.</p></section>');
-   Q('[data-phase2-element]').forEach(b=>b.onclick=()=>phase2ChooseElement(b.dataset.phase2Element));
+   Q('[data-phase2-element]').forEach(b=>b.onclick=()=>{if(phase2ChooseElement(b.dataset.phase2Element))phase2EnterInitialRealm();});
   }else{
    html(header+d.options.map(p=>'<button class="phase1DraftCard" data-phase2-passive="'+p.id+'">'+phase2PassiveIcons(p)+'<strong>'+esc(p.name)+'</strong><small>'+esc(p.description)+'</small><span class="micro muted">'+(p.requires.length?'HYBRID · ':'')+(p.max===1?'Unique':'Rank '+(WandererV012Buildcraft.rank(phase1Build,p.id)+1)+'/'+p.max)+'</span></button>').join('')+'</div><p class="small muted">Only implemented effects are offered. Rank limits prevent infinite stacks.</p></section>');
    Q('[data-phase2-passive]').forEach(b=>b.onclick=()=>phase2ChoosePassive(b.dataset.phase2Passive));
@@ -3895,7 +3910,7 @@ function phase5Init(){
      if(phase5Snapshot.expedition.session)phase4Restore(phase5Snapshot.expedition.session);
     }else phase5Snapshot=WandererV012Save.create({...state,run:null},{binding});
     phase5Ready=true;saveBlocked=false;
-    if(phase5Persist())render();
+    if(phase5Persist()){if(!phase2EnterInitialRealm())render();}
    }catch(error){phase5Fail(error);}
    await new Promise(resolve=>globalThis.addEventListener('pagehide',()=>{
     if(phase5Ready)phase5Persist();phase5Ready=false;resolve();
