@@ -3,7 +3,3 @@ node_modules/
 .firebase/
 playwright-report/
 test-results/
-
-# Firebase Functions environment files may contain deploy-specific settings.
-functions/.env*
-!functions/.env.example

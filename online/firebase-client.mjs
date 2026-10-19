@@ -9,10 +9,7 @@ export async function createBackend(){
  // A rebuilt local bundle is preferred; the version-pinned official CDN supplies
  // the complete modular SDK in development until that bundle is regenerated.
  const sdk=typeof bundledSdk.createUserWithEmailAndPassword==='function' &&
-   typeof bundledSdk.sendPasswordResetEmail==='function' &&
-   typeof bundledSdk.getFunctions==='function' &&
-   typeof bundledSdk.httpsCallable==='function' &&
-   typeof bundledSdk.signInWithCustomToken==='function'
+   typeof bundledSdk.sendPasswordResetEmail==='function'
    ?bundledSdk:await import('./firebase-sdk-cdn.mjs');
  const app=sdk.initializeApp(firebaseConfig),auth=sdk.getAuth(app),db=sdk.getFirestore(app);
  await sdk.setPersistence(auth,sdk.browserLocalPersistence);
@@ -23,14 +20,6 @@ export async function createBackend(){
   watchAuth:callback=>sdk.onAuthStateChanged(auth,callback),
   signIn:()=>sdk.signInWithPopup(auth,new sdk.GoogleAuthProvider()),
   signInWithEmail:(email,password)=>sdk.signInWithEmailAndPassword(auth,String(email).trim(),String(password)),
-  async signInWithNickname(nickname,password){
-   const key=nicknameKey(nickname),secret=String(password);
-   if(!secret||secret.length>128)throw Error('Enter a valid password.');
-   const callable=sdk.httpsCallable(sdk.getFunctions(app,'europe-west1'),'signInWithNickname');
-   const response=await callable({nickname:key,password:secret});
-   if(!response.data||typeof response.data.customToken!=='string')throw Error('nickname-login-unavailable');
-   return sdk.signInWithCustomToken(auth,response.data.customToken);
-  },
   async createEmailAccount(email,password){
    const credential=await sdk.createUserWithEmailAndPassword(auth,String(email).trim(),String(password));
    await sdk.sendEmailVerification(credential.user);

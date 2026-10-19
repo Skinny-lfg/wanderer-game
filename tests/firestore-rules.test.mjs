@@ -13,14 +13,10 @@ test('v0.10.1 refuses Guest, unverified email and unknown providers, accepts ver
  const verified=env.authenticatedContext('email_ok',{firebase:{sign_in_provider:'password'},email_verified:true}).firestore();
  const missingProvider=env.authenticatedContext('no_provider').firestore();
  const custom=env.authenticatedContext('custom',{firebase:{sign_in_provider:'custom'}}).firestore();
- const customNickname=env.authenticatedContext('nickname_ok',{firebase:{sign_in_provider:'custom'},wandererNicknameLogin:true,email_verified:true}).firestore();
- const customUnverified=env.authenticatedContext('nickname_unverified',{firebase:{sign_in_provider:'custom'},wandererNicknameLogin:true,email_verified:false}).firestore();
  await assertFails(profile(anonymous,'anon','anonymous'));
  await assertFails(profile(unverified,'email_bad','unverified'));
  await assertFails(profile(missingProvider,'no_provider','missingprovider'));
  await assertFails(profile(custom,'custom','custom'));
- await assertFails(profile(customUnverified,'nickname_unverified','nicknameunverified'));
- await assertSucceeds(profile(customNickname,'nickname_ok','nickname_verified'));
  await assertSucceeds(profile(verified,'email_ok','verified_email'));
  await assertSucceeds(setDoc(doc(verified,'players/email_ok/saves/v092'),save(1)));
  await assertFails(setDoc(doc(anonymous,'players/email_ok/saves/v092'),save(2)));
