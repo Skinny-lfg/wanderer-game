@@ -1,4 +1,4 @@
-import {STORAGE_KEY,FAMILIES,PATHS,PASSIVES,SLOTS,MAX_AFFINITIES,newProfile,stats,begin,choosePassive,choosePath,rerollPath,resolveRoom,usePotion,useCampHealthPotion,useCampManaPotion,tick,abandon,leaveFinished,equip,inventoryScore} from './v012-engine.mjs';
+import {STORAGE_KEY,FAMILIES,PATHS,PASSIVES,SLOTS,MAX_AFFINITIES,newProfile,stats,begin,choosePassive,choosePath,ensurePlaneOffers,rerollPath,resolveRoom,usePotion,useCampHealthPotion,useCampManaPotion,tick,abandon,leaveFinished,equip,inventoryScore} from './v012-engine.mjs';
 let profile,open=false,manaPots=2,selectedLevel=1,paused=false,speed=2,error='',autosave=0;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const $=(sel)=>document.querySelector(sel);
@@ -101,6 +101,7 @@ function finished(r){
 function render(){
  if(!open)return;
  const host=$('#v012-overlay');if(!host)return;
+ if(ensurePlaneOffers(profile))persist();
  const r=profile.run,s=stats(profile);
  const rbar=r&&r.stage!=='finished'?'<div class="v12-progress"><span>Difficulty '+r.level+' · Room '+r.room+'/15</span><span>'+r.passives.length+' passives · '+r.rerolls+' rerolls</span></div>':'';
  const affinities=r?r.affinities.map(affChip).join(''):'';
