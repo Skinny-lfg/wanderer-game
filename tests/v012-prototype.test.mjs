@@ -18,6 +18,7 @@ test('initial chosen affinity guaranteed in first path offers, and 3 reward choi
  choosePassive(p,p.run.passiveOffers[0]);
  assert.equal(p.run.stage,'path');
  assert.ok(p.run.pathOffers.map(id=>PATHS.find(x=>x.id===id).affinity).includes('blood'));
+ assert.throws(()=>rerollPath(p,p.run.pathOffers.findIndex(id=>PATHS.find(x=>x.id===id).affinity==='blood')),/guaranteed/);
  assert.equal(new Set(p.run.pathOffers.map(id=>PATHS.find(x=>x.id===id).affinity)).size,3);
 });
 
