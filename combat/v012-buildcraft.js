@@ -136,7 +136,7 @@ function onCast(b,c){
  const power=Math.max(1,c.power)*(1+.15*rank(b,'elemental_force'))*c.amp;
  const e=c.enemy; b.runtime.magicHits++;
  if(b.element==='fire')c.dot('burn',power*.15*(1+.20*rank(b,'kindling')));
- else if(b.element==='frost')c.chill(2.5+.45*rank(b,'deep_winter'));
+ else if(b.element==='frost')c.chill((2.5+.45*rank(b,'deep_winter'))*(1+.15*rank(b,'elemental_force')));
  else {
   e.v012Shock=Math.min(4,(e.v012Shock||0)+1);
   if(e.v012Shock>=4&&ready(b,'shockBurst',c.now,2)){
