@@ -85,10 +85,12 @@ export function stats(profile){
 }
 function passiveOptions(run,family){
  const unlocked=new Set(run.affinities.concat(family));
- const pool=PASSIVES.filter(p=>p.affinity===family&&p.requires.every(a=>unlocked.has(a)));
+ const pool=PASSIVES.filter(p=>p.affinity===family&&p.requires.every(a=>unlocked.has(a))&&(p.element===null||(family==='magic'&&p.element===run.magicElement)));
  const eligible=pool.filter(p=>count(run,p.id)<MAX_PASSIVE_RANK);
  const fresh=eligible.filter(p=>count(run,p.id)===0);
- const selected=shuffle(run,fresh).slice(0,3);
+ const elemental=fresh.filter(p=>p.element===run.magicElement&&p.element!==null);
+ const selected=family==='magic'&&elemental.length?[choice(run,elemental)]:[];
+ selected.push(...shuffle(run,fresh.filter(p=>!selected.includes(p))).slice(0,3-selected.length));
  if(selected.length<3)selected.push(...shuffle(run,eligible.filter(p=>!selected.includes(p))).slice(0,3-selected.length));
  return selected.map(x=>x.id);
 }
@@ -99,7 +101,58 @@ export function begin(profile,affinity,manaPots=2,level=profile.unlocked){
  if(!Number.isInteger(level)||level<1||level>profile.unlocked)throw Error('Difficulty not unlocked');
  const seed=(profile.seed+0x9e3779b9+profile.record.length*31337)|0;profile.seed=seed;
  const run={level,room:1,seed,initial:affinity,affinities:[affinity],passives:[],potions:{hp:Math.min(3-manaPots,profile.healthPotionStock??3),mana:Math.min(manaPots,profile.manaPotionStock??3)},rerolls:3,stage:'startReward',lastPathAffinity:null,selectedPath:null,pathOffers:[],passiveOffers:[],rooms:['combat',...shuffle({seed:seed^7312},ROOM_TYPES.slice(1)),'boss'],history:[],hp:0,mp:0,barrier:0,fight:null,loot:[],result:null,log:['Expedition started.']};
- profile.run=run;const s=stats(profile);run.hp=Math.max(1,Math.round(s.hp*clamp(profile.restHpRatio??1,.4,1)));run.mp=Math.max(0,Math.round(s.mana*clamp(profile.restMpRatio??1,.3,1)));run.passiveOffers=passiveOptions(run,affinity);return profile;
+ profile.run=run;const s=stats(profile);run.hp=Math.max(1,Math.round(s.hp*clamp(profile.restHpRatio??1,.4,1)));run.mp=Math.max(0,Math.round(s.mana*clamp(profile.restMpRatio??1,.3,1)));
+ if(affinity==='magic'){run.stage='element';run.elementReturnStage='startReward';run.passiveOffers=[];}else run.passiveOffers=passiveOptions(run,affinity);
+ return profile;
+}
+export function migrateMagicProfile(profile){
+ let changed=false;
+ const map=x=>x==='arcane'?'magic':x;
+ if(Array.isArray(profile.inventory))for(const item of profile.inventory){
+  if(item.affinity==='arcane'){item.affinity='magic';changed=true;}
+ }
+ const run=profile.run;
+ if(run){
+  for(const field of ['initial','lastPathAffinity']){
+   if(run[field]==='arcane'){run[field]='magic';changed=true;}
+  }
+  if(Array.isArray(run.affinities)&&run.affinities.includes('arcane')){
+   run.affinities=[...new Set(run.affinities.map(map))];changed=true;
+  }
+  if(Array.isArray(run.history))for(const record of run.history){
+   if(record.affinity==='arcane'){record.affinity='magic';changed=true;}
+  }
+ }
+ return changed;
+}
+export function ensureMagicElementChoice(profile){
+ const run=profile?.run;
+ if(!run||run.stage==='element'||run.stage==='combat'||run.stage==='finished'||run.magicElement||!run.affinities.includes('magic'))return false;
+ run.elementReturnStage=run.stage;
+ run.stage='element';
+ return true;
+}
+export function chooseMagicElement(profile,element){
+ const run=profile?.run;
+ if(!run||run.stage!=='element'||!MAGIC_ELEMENTS[element])throw Error('Magic element choice unavailable');
+ if(run.magicElement)throw Error('Magic element already selected for this adventure');
+ const nextStage=run.elementReturnStage||'startReward';
+ const old=stats(profile);
+ run.magicElement=element;
+ if(!run.affinities.includes('magic')){
+  if(run.affinities.length>=MAX_AFFINITIES)throw Error('Maximum three affinities reached');
+  run.affinities.push('magic');
+ }
+ const fresh=stats(profile);
+ run.hp=clamp(run.hp+fresh.hp-old.hp,1,fresh.hp);
+ run.mp=clamp(run.mp+fresh.mana-old.mana,0,fresh.mana);
+ run.stage=nextStage;run.elementReturnStage=null;
+ if(nextStage==='reward'||nextStage==='startReward'){
+  const family=nextStage==='startReward'?run.initial:PATHS.find(p=>p.id===run.selectedPath)?.affinity||'magic';
+  run.passiveOffers=passiveOptions(run,family);
+ }
+ run.log=['Element chosen: '+MAGIC_ELEMENTS[element].name+'.',...run.log].slice(0,14);
+ return profile;
 }
 function allowedPathFamilies(run){
  return AFFINITY_IDS.filter(f=>(run.affinities.length<MAX_AFFINITIES||run.affinities.includes(f))&&(run.room===1||f!==run.lastPathAffinity));
@@ -133,6 +186,7 @@ export function ensurePlaneOffers(profile){
 export function choosePassive(profile,id){
  const r=profile.run;if(!r||!['reward','startReward'].includes(r.stage)||!r.passiveOffers.includes(id))throw Error('Passive not offered');
  const p=PASSIVES.find(x=>x.id===id);if(!p)throw Error('Unknown passive');
+ if(p.affinity==='magic'&&!r.magicElement)throw Error('Choose a Magic element first');
  if(r.affinities.length>=MAX_AFFINITIES&&!r.affinities.includes(p.affinity))throw Error('Maximum three affinities reached');
  if(count(r,p.id)>=MAX_PASSIVE_RANK)throw Error('Passive rank already at maximum');
  if(p.requires.some(f=>f!==p.affinity&&!r.affinities.includes(f)))throw Error('Hybrid affinity requirements missing');
@@ -213,7 +267,10 @@ function completeRoom(profile,suppressRandomDrop=false){
   profile.record.push({level:r.level,won:true,affinities:[...r.affinities],passives:[...r.passives],gear:gear(profile).length});
   r.result='Victory! Difficulty '+profile.unlocked+' unlocked.';r.stage='finished';r.fight=null;return;
  }
- r.stage='reward';r.fight=null;r.passiveOffers=passiveOptions(r,PATHS.find(p=>p.id===r.selectedPath).affinity);
+ const family=PATHS.find(p=>p.id===r.selectedPath).affinity;
+ r.stage=family==='magic'&&!r.magicElement?'element':'reward';
+ r.elementReturnStage=r.stage==='element'?'reward':null;
+ r.fight=null;r.passiveOffers=r.stage==='element'?[]:passiveOptions(r,family);
 }
 export function resolveRoom(profile,action='safe'){
  const r=profile.run;if(!r||!['chest','event','altar'].includes(r.stage))throw Error('Room action unavailable');
