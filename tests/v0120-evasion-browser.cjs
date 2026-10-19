@@ -27,7 +27,7 @@ const server=http.createServer((req,res)=>{
   const context=await browser.newContext({viewport:{width,height:900}}),page=await context.newPage(),errors=[],external=[];
   page.setDefaultTimeout(5000);page.on('pageerror',e=>errors.push(e.message));await context.addInitScript(()=>{window.setInterval=()=>0;localStorage.setItem('wanderer_browser_proto_v01','UNTOUCHED');});
   await page.route('**/*',route=>{if(route.request().url().startsWith(base))return route.continue();external.push(route.request().url());return route.abort();});
-  await page.goto(base+'/?expeditionPhase1=1');await page.locator('.phase3Camp [data-phase3-nav="equipment"]').click();
+  await page.goto(base+'/?expeditionPhase1=1');await page.locator('[data-phase3-nav="equipment"]').click();
   assert.match(await page.locator('.equipmentStats').innerText(),/Evasion[\s\S]*rating.*% vs E1/);
   await page.selectOption('#slotFilter','belt');const id=await page.evaluate(()=>__evasion.beltId);await page.locator('[data-item="'+id+'"]').click();
   assert.match(await page.locator('.itemComparison').innerText(),/Evasion Rating/);

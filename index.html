@@ -1781,7 +1781,7 @@ function runeSlotChoicesMarkup(rune,slots){
 }
 function runeSectionMarkup(){
  const runes=state.runes||[],slots=state.runeSlots||[null,null,null];
- return '<section class="runePanel"><h3>Permanent Runes · '+slots.filter(Boolean).length+'/3 · '+runes.length+' owned</h3><p class="small muted">Earn one of three runes from each D10/D20/... boss. Runes survive death, do not fill Stash, and do not count towards set bonuses. Unneeded runes can be recycled for Fragments, but equipped runes are protected.</p><div class="runeSlots">'+slots.map((id,i)=>{const r=runes.find(x=>x.id===id);return '<div class="runeSlot"><b>Rune '+(i+1)+'</b><span class="small">'+(r?runeLine(r):'Empty')+'</span>'+(r?'<button class="tiny ghost" data-rune-remove="'+i+'">Unequip</button>':'')+'</div>'}).join('')+'</div><p class="small muted">Click a rune below, then choose its slot here.</p><div class="runeCollection">'+(runes.length?runes.map(r=>'<div class="runeCard '+(slots.includes(r.id)?'runeEquipped':'')+(selectedRuneId===r.id?' runeSelected':'')+'"><button type="button" class="tiny ghost" data-rune-equip="'+esc(r.id)+'" aria-expanded="'+(selectedRuneId===r.id)+'" aria-label="Choose slot for '+esc(r.name)+'">'+newBadge(r)+runeLine(r)+(slots.includes(r.id)?' ✓ Equipped':' · Choose slot')+'</button><button class="tiny ghost" data-rune-sell="'+esc(r.id)+'" '+(slots.includes(r.id)?'disabled title="Unequip before recycling"':'')+' aria-label="Recycle '+esc(r.name)+' for '+runeSalvageValue(r)+' Fragments">Recycle · '+runeSalvageValue(r)+' '+uiIcon('fragments')+'</button></div>'+(selectedRuneId===r.id?runeSlotChoicesMarkup(r,slots):'')).join(''):'<p class="small muted">Defeat a chapter boss to unlock your first permanent rune.</p>')+'</div><div class="buttonRow"><button class="tiny ghost" id="recycleDuplicateRunes" '+(duplicateRuneCandidates().length?'':'disabled')+'>Recycle spare duplicates · +'+duplicateRuneCandidates().reduce((sum,r)=>sum+runeSalvageValue(r),0)+' '+uiIcon('fragments')+'</button></div><p class="small muted">Duplicates: keeps the highest-tier rune of each family and every equipped rune. Only one rune from each family can be equipped at a time.</p></section>';
+ return '<section class="runePanel"><h3>Permanent Runes · '+slots.filter(Boolean).length+'/3 · '+runes.length+' owned</h3><p class="small muted">Earn one of three runes from each D10/D20/... boss. Runes survive death and do not fill Stash. Unneeded runes can be recycled for Fragments, but equipped runes are protected.</p><div class="runeSlots">'+slots.map((id,i)=>{const r=runes.find(x=>x.id===id);return '<div class="runeSlot"><b>Rune '+(i+1)+'</b><span class="small">'+(r?runeLine(r):'Empty')+'</span>'+(r?'<button class="tiny ghost" data-rune-remove="'+i+'">Unequip</button>':'')+'</div>'}).join('')+'</div><p class="small muted">Click a rune below, then choose its slot here.</p><div class="runeCollection">'+(runes.length?runes.map(r=>'<div class="runeCard '+(slots.includes(r.id)?'runeEquipped':'')+(selectedRuneId===r.id?' runeSelected':'')+'"><button type="button" class="tiny ghost" data-rune-equip="'+esc(r.id)+'" aria-expanded="'+(selectedRuneId===r.id)+'" aria-label="Choose slot for '+esc(r.name)+'">'+newBadge(r)+runeLine(r)+(slots.includes(r.id)?' ✓ Equipped':' · Choose slot')+'</button><button class="tiny ghost" data-rune-sell="'+esc(r.id)+'" '+(slots.includes(r.id)?'disabled title="Unequip before recycling"':'')+' aria-label="Recycle '+esc(r.name)+' for '+runeSalvageValue(r)+' Fragments">Recycle · '+runeSalvageValue(r)+' '+uiIcon('fragments')+'</button></div>'+(selectedRuneId===r.id?runeSlotChoicesMarkup(r,slots):'')).join(''):'<p class="small muted">Defeat a chapter boss to unlock your first permanent rune.</p>')+'</div><div class="buttonRow"><button class="tiny ghost" id="recycleDuplicateRunes" '+(duplicateRuneCandidates().length?'':'disabled')+'>Recycle spare duplicates · +'+duplicateRuneCandidates().reduce((sum,r)=>sum+runeSalvageValue(r),0)+' '+uiIcon('fragments')+'</button></div><p class="small muted">Duplicates: keeps the highest-tier rune of each family and every equipped rune. Only one rune from each family can be equipped at a time.</p></section>';
 }
 // Rune recycling is intentionally separate from equipment salvage. Equipped runes are never sold.
 function runeSalvageValue(r){
@@ -1953,7 +1953,7 @@ function rollShop(){const level=merchantTier(),stock=Array.from({length:4},()=>{
 // v0.10.1 experimental economy UI: all purchases and upgrades use the existing save/conflict guard.
 function economyOwnedGear(){return [...Object.values(state.equip).filter(Boolean),...state.stash];}
 function economyOwnedItem(id){return economyOwnedGear().find(item=>item.id===id)||null;}
-function economyCanAct(){return !!state&&!state.run&&!saveBlocked&&(!PHASE1_PREVIEW||(!phase1Draft&&['camp','finished','failed'].includes(phase1Controller?.state.stage)));}
+function economyCanAct(){return !phase3NeedsBagResolution()&&!!state&&!state.run&&!saveBlocked&&(!PHASE1_PREVIEW||(!phase1Draft&&['camp','finished','failed'].includes(phase1Controller?.state.stage)));}
 function economySigilEffect(sigil){const a=ELEMENTS[sigil?.affinity];return a?(a.icon+' '+a.name):'Unknown';}
 function economySigilAllowed(item,affinity){return false;}
 function refreshMerchantStock(kind='gear'){
@@ -2114,7 +2114,7 @@ function restoreView(){
 }
 function uiIcon(kind){const file={gold:'currency-gold.svg',fragments:'currency-fragments.svg',dungeon:'dungeon-progress.svg'}[kind];return file?'<img class="uiStatusIcon" src="assets/ui/'+file+'" alt="" aria-hidden="true">':'';}
 function navigationIcon(kind){if(!['tavern','equipment','forge','merchant','dungeons'].includes(kind))return '';return '<img class="navArtIcon" src="assets/ui/navigation/'+kind+'.svg" alt="" aria-hidden="true">';}
-function wallet(){if(PHASE1_PREVIEW){$('wallet').innerHTML='<span class="token">⚗ v0.12 Phase 4 · local-only</span><span class="token">'+uiIcon('gold')+' '+state.gold+' Gold</span><span class="token">'+uiIcon('fragments')+' '+state.fragments+' Fragments</span>';phase3RenderNav();return;}let el=$('wallet');el.innerHTML=`<span class="token">${uiIcon('gold')} <b>${state.gold}</b> Gold</span><span class="token">${uiIcon('fragments')} <b>${state.fragments}</b> Fragments</span><span class="token">${uiIcon('dungeon')} <b>D${state.maxDungeon}</b></span>`;let elNav=$('nav');elNav.innerHTML=state.run?`<span class="token">⚔ Expedition active · Equipment locked</span>`:[['tavern','Tavern'],['equipment','Equipment'],['forge','Forge'],['merchant','Merchant'],['dungeons','Dungeons']].map(([k,label])=>[k,navigationIcon(k)+' '+label]).map(([k,v])=>`<button data-nav="${k}" class="${view===k?'active':''}">${v}</button>`).join('');Q('[data-nav]').forEach(b=>b.onclick=()=>nav(b.dataset.nav));const menu=$('onlineBar'),toggle=$('menuToggle');if(menu&&toggle){toggle.onclick=()=>{const open=menu.classList.toggle('menuOpen');toggle.setAttribute('aria-expanded',String(open));};// Do not overwrite Account/Leaderboard/Feedback onclick handlers registered by online/app.mjs.
+function wallet(){if(PHASE1_PREVIEW){$('wallet').innerHTML='<span class="token">v0.12.0 · Local playtest</span><span class="token">'+uiIcon('gold')+' '+state.gold+' Gold</span><span class="token">'+uiIcon('fragments')+' '+state.fragments+' Fragments</span>';phase3RenderNav();phase3BindHeader();return;}let el=$('wallet');el.innerHTML=`<span class="token">${uiIcon('gold')} <b>${state.gold}</b> Gold</span><span class="token">${uiIcon('fragments')} <b>${state.fragments}</b> Fragments</span><span class="token">${uiIcon('dungeon')} <b>D${state.maxDungeon}</b></span>`;let elNav=$('nav');elNav.innerHTML=state.run?`<span class="token">⚔ Expedition active · Equipment locked</span>`:[['tavern','Tavern'],['equipment','Equipment'],['forge','Forge'],['merchant','Merchant'],['dungeons','Dungeons']].map(([k,label])=>[k,navigationIcon(k)+' '+label]).map(([k,v])=>`<button data-nav="${k}" class="${view===k?'active':''}">${v}</button>`).join('');Q('[data-nav]').forEach(b=>b.onclick=()=>nav(b.dataset.nav));const menu=$('onlineBar'),toggle=$('menuToggle');if(menu&&toggle){toggle.onclick=()=>{const open=menu.classList.toggle('menuOpen');toggle.setAttribute('aria-expanded',String(open));};// Do not overwrite Account/Leaderboard/Feedback onclick handlers registered by online/app.mjs.
  if(menu.addEventListener&&!menu.dataset.menuCloseBound){
   menu.dataset.menuCloseBound='1';
   menu.addEventListener('click',event=>{
@@ -2123,9 +2123,9 @@ function wallet(){if(PHASE1_PREVIEW){$('wallet').innerHTML='<span class="token">
    toggle.setAttribute('aria-expanded','false');
   });
  }}}
-function render(){if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked)){phase5RenderBlocked();return;}if(PHASE1_PREVIEW){wallet();if(view==='combat')renderCombat();else if(view==='equipment')renderStash();else if(view==='forge')renderForge();else if(view==='merchant')renderMerchant();else renderPhase1();return;}if(!hasRestoredInitialView){hasRestoredInitialView=true;restoreView();}rememberView();wallet();if(view==='tavern')renderTavern();else if(view==='equipment')renderStash();else if(view==='forge')renderForge();else if(view==='merchant')renderMerchant();else if(view==='dungeons')renderDungeons();else if(view==='combat')renderCombat();if(state.pendingRuneReward)showPendingRuneReward();}
+function render(){if(PHASE1_PREVIEW)document.body.classList.toggle?.('phase3RunesView',view==='runes');if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked)){phase5RenderBlocked();return;}if(PHASE1_PREVIEW){wallet();if(view==='combat')renderCombat();else if(view==='equipment'||view==='runes')renderStash();else if(view==='forge')renderForge();else if(view==='merchant')renderMerchant();else renderPhase1();return;}if(!hasRestoredInitialView){hasRestoredInitialView=true;restoreView();}rememberView();wallet();if(view==='tavern')renderTavern();else if(view==='equipment')renderStash();else if(view==='forge')renderForge();else if(view==='merchant')renderMerchant();else if(view==='dungeons')renderDungeons();else if(view==='combat')renderCombat();if(state.pendingRuneReward)showPendingRuneReward();}
 function html(s){
- const previewReturn=PHASE1_PREVIEW&&['equipment','forge','merchant'].includes(view);
+ const previewReturn=PHASE1_PREVIEW&&['equipment','forge','merchant','runes'].includes(view);
  $('screen').innerHTML=(previewReturn?'<div class="phase3ReturnBar"><button id="phase3Return" class="ghost" type="button">← Back to '+(phase1Controller?.state.stage==='choice'?'Realms':'Camp')+'</button><span class="small muted">Preview equipment and vendors · no cloud saves</span></div>':'')+s;
  if(previewReturn){const back=$('phase3Return');if(back)back.onclick=()=>phase3Go('phase1');}
 }
@@ -2242,38 +2242,48 @@ function renderTavern(){
  const restart=$('newAttempt');if(restart)restart.onclick=()=>{document.querySelector('[data-online-action="account"]')?.click();const reset=$('resetProgress');if(reset)reset.click();else bannerMessage('Sign in and sync your account to start a new attempt.');};
 }
 function equipItem(itemId,target=null){
+ if(phase3NeedsBagResolution())return false;
  if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked))return false;
  if(state.run||(PHASE1_PREVIEW&&phase1Draft))return;
- const i=state.stash.findIndex(o=>o.id===itemId);if(i<0)return;
- const item=state.stash[i],ring=['ring1','ring2'].includes(item.slot),slot=target||item.slot;
+ if(phase3ExpeditionActive()&&(!phase3CanPrepare()||!phase3LootIds.has(itemId)))return false;
+ const source=phase3ExpeditionActive()&&state.expeditionOverflow.some(o=>o.id===itemId)?state.expeditionOverflow:state.stash;
+ const i=source.findIndex(o=>o.id===itemId);if(i<0)return;
+ const item=source[i],ring=['ring1','ring2'].includes(item.slot),slot=target||item.slot;
  if(!SLOTS.includes(slot)||ring&&!['ring1','ring2'].includes(slot)||!ring&&target&&target!==item.slot)return;
  if(isTwoHanded(item)&&slot!=='weapon'){bannerMessage('Two-Handed weapons use the Weapon slot.');return;}
  const displaced=[];
+ const displacedCount=Number(!!state.equip[slot])+Number(isTwoHanded(item)&&!!state.equip.offhand);
+ if(state.stash.length-(source===state.stash?1:0)+displacedCount>stashCapacity()){bannerMessage('Stash full. Free space before swapping equipment.');return false;}
  if(slot==='offhand'&&isTwoHanded(state.equip.weapon)){
   bannerMessage('Off-Hand locked: unequip your two-handed weapon first.');return;
  }
  if(state.equip[slot])displaced.push(state.equip[slot]);
  if(isTwoHanded(item)&&state.equip.offhand){displaced.push(state.equip.offhand);state.equip.offhand=null;}
- state.stash.splice(i,1);
+ source.splice(i,1);
  if(ring)item.slot=slot;
  state.equip[slot]=item;state.stash.push(...displaced);
  selectedId=null;state.protectedItemIds=chosenProtectionIds();phase3ClampVitals();save();renderStash();
  bannerMessage('Equipped '+item.name+(isTwoHanded(item)?' · Both hands occupied':displaced.some(x=>isTwoHanded(x))?' · Two-Handed weapon returned to Stash':''));
 }
 function unequipItem(slot){
+ if(phase3NeedsBagResolution())return false;
  if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked))return false;
  if(state.run||(PHASE1_PREVIEW&&phase1Draft)||!state.equip[slot])return;
  const item=state.equip[slot];
+ if(phase3ExpeditionActive()&&(!phase3CanPrepare()||!phase3LootIds.has(item.id)||phase3BagItems().length>=PHASE3_BAG_CAPACITY))return false;
+ if(!stashHasRoom()){bannerMessage('Stash full. Free space before unequipping.');return false;}
  state.equip[slot]=null;
  state.stash.push(item);selectedId=null;state.protectedItemIds=chosenProtectionIds();phase3ClampVitals();save();render();
 }
 function bulkSell(){
+ if(phase3ExpeditionActive()||phase3NeedsBagResolution())return false;
  if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked))return false;
  const items=state.stash.filter(o=>chosenItems.has(o.id)&&!o.locked);
  if(!items.length)return;
  const total=items.reduce((n,o)=>n+saleFragments(o),0);
  const ids=new Set(items.map(o=>o.id));
  showConfirm('Salvage Equipment','Salvage '+items.length+' items for '+total+' Fragments? This cannot be undone.',()=>{
+  if(phase3ExpeditionActive()||phase3NeedsBagResolution())return;
   const selling=state.stash.filter(o=>ids.has(o.id)&&!o.locked);
   if(!selling.length)return;
   const value=selling.reduce((n,o)=>n+saleFragments(o),0);
@@ -2283,10 +2293,12 @@ function bulkSell(){
  },'Salvage Items');
 }
 function salvageOne(id){
+ if(phase3ExpeditionActive()||phase3NeedsBagResolution())return false;
  const o=state.stash.find(o=>o.id===id);
  if(!o||o.locked)return;
  const n=saleFragments(o);
  showConfirm('Salvage Equipment','Salvage '+o.name+' for '+n+' Fragments? This cannot be undone.',()=>{
+  if(phase3ExpeditionActive()||phase3NeedsBagResolution())return;
   const current=state.stash.find(x=>x.id===id);if(!current||current.locked)return;
   const value=saleFragments(current);
   state.stash=state.stash.filter(x=>x.id!==id);state.fragments+=value;selectedId=null;
@@ -2333,9 +2345,12 @@ function phase3ClampVitals(){
  }
 }
 function renderStash(){
+ if(phase3NeedsBagResolution()){view='phase1';renderPhase1();return;}
+ if(phase3ExpeditionActive()&&view!=='runes'){phase3RenderBagInventory();return;}
+ if(PHASE1_PREVIEW)document.body.classList.toggle?.('phase3RunesView',view==='runes');
  phase3ClampVitals();
  const previousScrollTop=$('screen')?.querySelector?.('.equipmentInventory .stashGrid')?.scrollTop||0;wallet();let items=stashVisible(),focus=state.stash.find(x=>x.id===selectedId),equipped=Object.values(state.equip).find(x=>x?.id===selectedId),stats=totalStats(),value=[...chosenItems].map(id=>state.stash.find(o=>o.id===id)).filter(o=>o&&!o.locked).reduce((a,o)=>a+saleFragments(o),0),count=[...chosenItems].filter(id=>state.stash.some(o=>o.id===id&&!o.locked)).length;
-html(`<div class="equipmentLayout"><div class="equipmentLeft"><section class="panel equipmentOverview"><h2>Equipment</h2><p class="small muted">Prepare your gear and compare items before an expedition.</p><div class="equipmentQuickView"><div class="equipmentLoadout"><div class="paper"><img class="model" src="${heroFullImage()}" alt="Wanderer full-body equipment portrait">${SLOTS.map(sl=>{const o=state.equip[sl],reserved=sl==='offhand'&&isTwoHanded(state.equip.weapon);return `<button class="slotTile ${o?'filled':''} ${reserved?'reserved':''} ${slotFilter===sl||(slotFilter==='rings'&&['ring1','ring2'].includes(sl))?'filterSelected':''} ${o?.id===selectedId?'active':''}" ${rarityFrame(o)} data-slot="${sl}" data-eqslot="${sl}" aria-pressed="${slotFilter===sl||(slotFilter==='rings'&&['ring1','ring2'].includes(sl))}" title="${esc(o?.name||SNAME[sl])}"><img src="${o?itemImg(o):placeholderIcon(sl)}" alt="${SNAME[sl]}"><span>${reserved?'2H occupied':SNAME[sl]}</span>${o?`<span class="slotDLevel">E${o.tier}</span>`:''}${affinityBadge(o)}${newBadge(o)}${legendaryRankBadge(o)}</button>`}).join('')}</div></div><div class="equipmentStats"><h3>Stats & Attributes</h3>${statsWidget(stats)}<div class="statStrip">${['str','agi','int','end','cha'].map(k=>`<div class="metric"><span>${k.toUpperCase()}</span><strong>${stats[k]}</strong></div>`).join('')}</div><details><summary>Attribute explanations</summary><p class="small muted">STR: physical attack · AGI: attack speed · INT: spell power and mana regeneration · END: health and defense · CHA: critical chance and loot quality.</p><p class="small muted">Two-Handed, Bow and Staff occupy both hands, but remain one item. Staff casts generate Arcane Guard Barrier; Two-Handed strikes generate Heavy Guard Barrier, each on a 6-second cooldown.</p></details></div></div></section></div><div class="equipmentRight"><section class="panel equipmentInventory"><div class="topline"><div><h2>Inventory <span class="small muted">${state.stash.length}/${stashCapacity()} slots</span></h2><p class="small muted">Tap an equipment slot to filter matching Stash items.</p></div><div class="buttonRow"><button class="tiny ghost" id="markAllSeen">Mark All as Seen</button></div></div><div class="stashCapacityBar"><span class="small ${state.stash.length>=stashCapacity()?'red':'muted'}">${state.stash.length>stashCapacity()?'Overflow: ':'Stash: '}${state.stash.length} / ${stashCapacity()} · upgrade +${STASH_UPGRADE_STEP} slots</span><button class="tiny ghost" id="upgradeStash" ${stashCapacity()>=STASH_MAX_CAPACITY||state.gold<stashUpgradeCost()?'disabled':''}>${stashCapacity()>=STASH_MAX_CAPACITY?'Max capacity':`Expand · ${stashUpgradeCost()} Gold`}</button></div><div class="filterBar"><label>Slot<select id="slotFilter"><option value="all">All slots</option><option value="rings">Ring</option>${SLOTS.filter(s=>!["ring1","ring2"].includes(s)).map(s=>`<option value="${s}">${SNAME[s]}</option>`).join('')}</select></label><label>Sort<select id="sortBy"><option value="level">Expedition tier</option><option value="date">Date looted</option><option value="price">Fragment value</option><option value="power">Item power (stats)</option><option value="recommended">Recommended for current build</option></select></label><label>Order<select id="orderBy"><option value="desc">High / newest</option><option value="asc">Low / oldest</option><option value="recommended">Recommended</option><option value="powerLevel">Power level</option></select></label><div class="filterActions"><button id="bulkToggle" class="${bulk?'primary':'ghost'} tiny">${bulk?'✓ Selecting':'Select Multiple'}</button><button id="resetInventoryFilters" class="tiny ghost">Clear filters</button></div></div><div class="bulkBar" ${bulk?'':'style="display:none"'}><button id="selectAll" class="tiny ghost">Select visible</button><button id="clearAll" class="tiny ghost">Clear</button><span class="small muted">${count} selected · ${value} ${uiIcon('fragments')}</span><button id="sellSelected" class="tiny danger" ${count?'':'disabled'}>Salvage selected</button></div><div class="stashLayout"><div class="stashGrid">${items.length?items.map(o=>`<button class="invItem ${chosenItems.has(o.id)||selectedId===o.id?'selected':''}" ${rarityFrame(o)} data-item="${o.id}" title="${esc(o.name)} · ${itemSource(o)}"><img src="${itemImg(o)}" alt="${esc(o.subtype)}">${affinityBadge(o)}${newBadge(o)}${legendaryRankBadge(o)}${gearTrend(o)}<span class="lv">E${o.tier}</span><span class="rar" style="color:${rarityColor(o)}">◆</span>${o.locked?'<span class="lock">🔒</span>':''}${chosenItems.has(o.id)?'<span class="chk">✓</span>':''}</button>`).join(''):'<div class="small muted">No items match these filters. Try All slots.</div>'}</div><div id="itemInspect">${previewItem(focus||equipped,equipped?'equipped':'stash')}</div></div></section><section class="panel equipmentRunes">${runeSectionMarkup()}</section></div></div>`);
+html(`<div class="equipmentLayout"><div class="equipmentLeft"><section class="panel equipmentOverview"><h2>Equipment</h2><p class="small muted">Prepare your gear and compare items before an expedition.</p><div class="equipmentQuickView"><div class="equipmentLoadout">${phase3PaperMarkup()}</div><div class="equipmentStats"><h3>Stats & Attributes</h3>${statsWidget(stats)}<div class="statStrip">${['str','agi','int','end','cha'].map(k=>`<div class="metric"><span>${k.toUpperCase()}</span><strong>${stats[k]}</strong></div>`).join('')}</div><details><summary>Attribute explanations</summary><p class="small muted">STR: physical attack · AGI: attack speed · INT: spell power and mana regeneration · END: health and defense · CHA: critical chance and loot quality.</p><p class="small muted">Two-Handed, Bow and Staff occupy both hands, but remain one item. Staff casts generate Arcane Guard Barrier; Two-Handed strikes generate Heavy Guard Barrier, each on a 6-second cooldown.</p></details></div></div></section></div><div class="equipmentRight"><section class="panel equipmentInventory"><div class="topline"><div><h2>Inventory <span class="small muted">${state.stash.length}/${stashCapacity()} slots</span></h2><p class="small muted">Tap an equipment slot to filter matching Stash items.</p></div><div class="buttonRow"><button class="tiny ghost" id="markAllSeen">Mark All as Seen</button></div></div><div class="stashCapacityBar"><span class="small ${state.stash.length>=stashCapacity()?'red':'muted'}">${state.stash.length>stashCapacity()?'Overflow: ':'Stash: '}${state.stash.length} / ${stashCapacity()} · upgrade +${STASH_UPGRADE_STEP} slots</span><button class="tiny ghost" id="upgradeStash" ${stashCapacity()>=STASH_MAX_CAPACITY||state.gold<stashUpgradeCost()?'disabled':''}>${stashCapacity()>=STASH_MAX_CAPACITY?'Max capacity':`Expand · ${stashUpgradeCost()} Gold`}</button></div><div class="filterBar"><label>Slot<select id="slotFilter"><option value="all">All slots</option><option value="rings">Ring</option>${SLOTS.filter(s=>!["ring1","ring2"].includes(s)).map(s=>`<option value="${s}">${SNAME[s]}</option>`).join('')}</select></label><label>Sort<select id="sortBy"><option value="level">Expedition tier</option><option value="date">Date looted</option><option value="price">Fragment value</option><option value="power">Item power (stats)</option><option value="recommended">Recommended for current build</option></select></label><label>Order<select id="orderBy"><option value="desc">High / newest</option><option value="asc">Low / oldest</option><option value="recommended">Recommended</option><option value="powerLevel">Power level</option></select></label><div class="filterActions"><button id="bulkToggle" class="${bulk?'primary':'ghost'} tiny">${bulk?'✓ Selecting':'Select Multiple'}</button><button id="resetInventoryFilters" class="tiny ghost">Clear filters</button></div></div><div class="bulkBar" ${bulk?'':'style="display:none"'}><button id="selectAll" class="tiny ghost">Select visible</button><button id="clearAll" class="tiny ghost">Clear</button><span class="small muted">${count} selected · ${value} ${uiIcon('fragments')}</span><button id="sellSelected" class="tiny danger" ${count?'':'disabled'}>Salvage selected</button></div><div class="stashLayout"><div class="stashGrid">${items.length?items.map(o=>`<button class="invItem ${chosenItems.has(o.id)||selectedId===o.id?'selected':''}" ${rarityFrame(o)} data-item="${o.id}" title="${esc(o.name)} · ${itemSource(o)}"><img src="${itemImg(o)}" alt="${esc(o.subtype)}">${affinityBadge(o)}${newBadge(o)}${legendaryRankBadge(o)}${gearTrend(o)}<span class="lv">E${o.tier}</span><span class="rar" style="color:${rarityColor(o)}">◆</span>${o.locked?'<span class="lock">🔒</span>':''}${chosenItems.has(o.id)?'<span class="chk">✓</span>':''}</button>`).join(''):'<div class="small muted">No items match these filters. Try All slots.</div>'}</div><div id="itemInspect">${previewItem(focus||equipped,equipped?'equipped':'stash')}</div></div></section><section class="panel equipmentRunes">${runeSectionMarkup()}</section></div></div>`);
 const stashScroll=$('screen')?.querySelector?.('.equipmentInventory .stashGrid');
 if(stashScroll){
  stashScroll.scrollTop=previousScrollTop;
@@ -3283,7 +3298,7 @@ function renderCombat(){wallet();const r=state.run;if(!r){view='tavern';render()
 let phase1Controller=null,phase1Vitals=null,phase1Build=null,phase1Draft=null,phase1Clock=0,phase3Supplies=null,phase1Continuity=null;
 const isPhase1Run=()=>PHASE1_PREVIEW&&state.run?.phase1===true;
 function phase1Init(){
- phase1Continuity=null;
+ phase1Continuity=null;phase3LootIds=new Set();phase3PotionCooldowns={health:0,mana:0};
  document.body?.classList?.add('phase3IntegratedPreview');
  $('screen').inert=false; // No online/app.mjs in preview: explicitly reveal the standalone UI.
  fresh();
@@ -3304,10 +3319,11 @@ function phase4ClaimOverflow(){
 function phase1Begin(level){
  if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked))return false;
  if(!PHASE1_PREVIEW)return;
+ if(phase3NeedsBagResolution()){bannerMessage('Discard overflow loot before starting another Expedition.');return false;}
  phase4ClaimOverflow();
  if(state.pendingRuneReward){showPendingRuneReward();return;}
  if(state.expeditionOverflow.length||!stashHasRoom()){bannerMessage('Claim secured loot and free Stash space before starting another Expedition.');return;}
- phase1Controller.start(level);phase1Vitals=null;phase1Clock=0;phase1Continuity=null;phase3Supplies={health:2,mana:2};phase1Build=WandererV012Buildcraft.create();phase1Build.families=phase1Controller.state.families;phase1Draft=null;state.run=null;view='phase1';
+ phase1Controller.start(level);phase3LootIds=new Set();phase3PotionCooldowns={health:0,mana:0};phase1Vitals=null;phase1Clock=0;phase1Continuity=null;phase3Supplies={health:2,mana:2};phase1Build=WandererV012Buildcraft.create();phase1Build.families=phase1Controller.state.families;phase1Draft=null;state.run=null;view='phase1';
  if(PHASE5_VALIDATION){phase5Snapshot.expedition.attempts++;phase5Snapshot.expedition.awardKeys=[];phase5Snapshot.expedition.lastOutcome='active';phase5Persist();}
  render();
 }
@@ -3383,6 +3399,7 @@ function phase1Choose(id){
 function phase1Enter(){
  if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked))return false;
  if(phase1Draft||!phase1Build||state.run)return false;
+ if(phase3BagOverflow()){bannerMessage('Bag full. Discard overflow loot before entering another Realm.');return false;}
  const plane=phase1Controller.enter();phase1Build.families=phase1Controller.state.families;
  if(plane.family==='magic'&&!phase1Build.element){
   phase1Draft={kind:'entry',plane,family:'magic',step:'element'};phase5Persist();render();
@@ -3437,8 +3454,8 @@ function phase1WaveWon(){
   // Preview only: loot is awarded immediately, not held behind classic extraction.
   if(stashHasRoom())state.stash.push({...item,isNew:true});
   else state.expeditionOverflow.push({...item,isNew:true});
-  r.loot.push(item);
-  addLog('✦ '+item.rarity+' '+item.name+' secured in Inventory.',item.rarity);
+  phase3LootIds.add(item.id);r.loot.push(item);
+  addLog('✦ '+item.rarity+' '+item.name+' added to Expedition bag.',item.rarity);
  }
  r.status='ready';
  const result=phase1Controller.waveWon();
@@ -3499,6 +3516,7 @@ function phase1DecorateCombat(){
   const region=document.querySelector('.combatReadout');
   if(region){const box=document.createElement('div');box.className='phase2PassiveBar';box.textContent='Temporary build: '+phase1Build.picks.map(id=>WandererV012Buildcraft.CATALOG.find(p=>p.id===id)?.name).filter(Boolean).join(' · ')+(phase1Build.element?' · Magic: '+phase1Build.element:'');region.prepend(box);}
  }
+ if(arena&&typeof arena.insertAdjacentHTML==='function'){arena.insertAdjacentHTML('afterend','<div id="phase3CombatBag">'+phase3BagMarkup()+'</div>');phase3BindBag();}
  const title=document.querySelector('.combatExpeditionDetails h2');
  if(title)title.textContent='Realm Rewards · Preview';
  const loot=document.querySelector('.combatExpeditionDetails .runLootHeading');
@@ -3506,14 +3524,86 @@ function phase1DecorateCombat(){
 }
 // Phase 3 preview navigator. Classic item, comparison, Rune and vendor handlers are reused;
 // only the normal Account, save and dungeon navigation stay disconnected from this memory-only run.
+const PHASE3_BAG_CAPACITY=9;
+let phase3LootIds=new Set(),phase3PotionCooldowns={health:0,mana:0};
+function phase3ExpeditionActive(){return PHASE1_PREVIEW&&['choice','combat'].includes(phase1Controller?.state.stage);}
+function phase3BagItems(){return [...state.stash,...(state.expeditionOverflow||[])].filter(item=>phase3LootIds.has(item.id));}
+function phase3BagOverflow(){return Math.max(0,phase3BagItems().length-PHASE3_BAG_CAPACITY);}
+function phase3NeedsBagResolution(){return PHASE1_PREVIEW&&['finished','failed'].includes(phase1Controller?.state.stage)&&phase3BagOverflow()>0;}
+function phase3BagMarkup(){
+ const items=phase3BagItems(),overflow=Math.max(0,items.length-PHASE3_BAG_CAPACITY);
+ const tile=item=>'<button type="button" class="phase3BagItem" '+rarityFrame(item)+' data-phase3-loot="'+esc(item.id)+'" title="'+esc(item.name+' · '+itemSource(item))+'"><img src="'+itemImg(item)+'" alt="'+esc(item.subtype)+'"><span>E'+item.tier+'</span></button>';
+ return '<section class="phase3Bag"><h3>Expedition bag <small>'+Math.min(items.length,9)+'/9</small></h3><p class="micro muted">Only loot from this Expedition. Global Stash is unavailable.</p><div class="phase3BagGrid">'+items.slice(0,9).map(tile).join('')+Array.from({length:Math.max(0,9-items.length)},()=>'<span class="phase3BagEmpty" aria-hidden="true"></span>').join('')+'</div>'+(overflow?'<div class="phase3BagOverflow" role="status"><b>'+overflow+' overflow item'+(overflow===1?'':'s')+'</b><p>Discard unwanted loot before entering the next Realm. Items are not discarded automatically.</p><div class="phase3BagGrid">'+items.slice(9).map(tile).join('')+'</div></div>':'')+'</section>';
+}
+function phase3DiscardLoot(id){
+ if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked)||!phase3CanPrepare()&&!(phase3NeedsBagResolution()&&!state.run&&!phase1Draft))return false;
+ const item=phase3BagItems().find(o=>o.id===id);if(!item)return false;
+ state.stash=state.stash.filter(o=>o.id!==id);state.expeditionOverflow=state.expeditionOverflow.filter(o=>o.id!==id);phase3LootIds.delete(id);
+ save();render();return true;
+}
+function phase3BindBag(){
+ Q('[data-phase3-loot]').forEach(button=>button.onclick=()=>{
+  const item=phase3BagItems().find(o=>o.id===button.dataset.phase3Loot);if(!item)return;
+  const safe=phase3CanPrepare(),canDiscard=safe||phase3NeedsBagResolution()&&!state.run&&!phase1Draft,ring=['ring1','ring2'].includes(item.slot);
+  const equips=(ring?[['ring1','Equip Ring I'],['ring2','Equip Ring II']]:[[item.slot,'Equip']]).map(([slot,label])=>'<button type="button" class="primary" data-phase3-equip="'+slot+'" '+(!safe||slot==='offhand'&&isTwoHanded(state.equip.weapon)?'disabled':'')+'>'+label+'</button>').join('');
+  const dialog=showModal('Expedition loot',previewItem(item,'bag')+'<div class="buttonRow">'+equips+'<button type="button" class="danger" data-phase3-discard '+(canDiscard?'':'disabled')+'>Discard</button></div>');
+  if(!dialog)return;
+  dialog.querySelectorAll('[data-phase3-equip]').forEach(b=>b.onclick=()=>{dialog.close();equipItem(item.id,b.dataset.phase3Equip);});
+  dialog.querySelector('[data-phase3-discard]').onclick=()=>{
+   dialog.close();showConfirm('Discard Expedition loot','Discard '+item.name+' permanently? No Gold or Fragments are gained.',()=>phase3DiscardLoot(item.id),'Discard');
+  };
+ });
+}
+function phase3RenderBagInventory(){
+ wallet();html('<section class="panel"><h2>Expedition Inventory</h2><p class="small muted">Your equipped gear stays with you. Only loot from this Expedition can be equipped.</p><div class="phase3BagInventory"><div class="equipmentLoadout">'+phase3PaperMarkup()+'</div><div>'+phase3BagMarkup()+statsWidget(phase2Stats())+'</div></div></section>');phase3BindBag();phase3BindPaper();
+}
+let phase3SelectedExpedition=null;
+function phase3PaperMarkup(){return `<div class="paper"><img class="model" src="${heroFullImage()}" alt="Wanderer full-body equipment portrait">${SLOTS.map(sl=>{const o=state.equip[sl],reserved=sl==='offhand'&&isTwoHanded(state.equip.weapon);return `<button class="slotTile ${o?'filled':''} ${reserved?'reserved':''} ${slotFilter===sl||(slotFilter==='rings'&&['ring1','ring2'].includes(sl))?'filterSelected':''} ${o?.id===selectedId?'active':''}" ${rarityFrame(o)} data-slot="${sl}" data-eqslot="${sl}" aria-pressed="${slotFilter===sl||(slotFilter==='rings'&&['ring1','ring2'].includes(sl))}" title="${esc(o?.name||SNAME[sl])}"><img src="${o?itemImg(o):placeholderIcon(sl)}" alt="${SNAME[sl]}"><span>${reserved?'2H occupied':SNAME[sl]}</span>${o?`<span class="slotDLevel">E${o.tier}</span>`:''}${affinityBadge(o)}${newBadge(o)}${legendaryRankBadge(o)}</button>`}).join('')}</div>`;}
+function phase3VitalsMarkup(stats){
+ return '<div class="phase3ResourcePanel">'+[['hp','maxhp','Health','health'],['mp','maxmp','Mana','mana']].map(([key,max,label,kind])=>{
+  const value=Math.ceil(stats[key]),limit=Math.ceil(stats[max]),percent=limit?Math.min(100,value/limit*100):0;
+  return '<div class="phase3Resource '+kind+'"><span>'+label+'</span><div class="phase3ResourceTrack" role="progressbar" aria-label="'+label+'" aria-valuenow="'+value+'" aria-valuemax="'+Math.max(1,limit)+'" aria-valuemin="0"><i style="width:'+percent+'%"></i><b>'+value+' / '+limit+'</b></div></div>';
+ }).join('')+'</div>';
+}
+function phase3SaveStatus(){return PHASE5_VALIDATION?'Saved locally in an isolated test slot. No account or cloud save is loaded. Interrupted Expeditions currently end on reopen.':'Session-only playtest. Progress is lost when this page is closed or refreshed. No account or cloud save is loaded.';}
+function phase3BindHeader(){
+ const version=document.querySelector('.version');if(version)version.textContent='v0.12.0';
+ if(typeof document.title==='string')document.title='Wanderer v0.12.0';
+ const nav=$('nav');if(nav)nav.inert=false;
+ Q('[data-online-action="account"]').forEach(b=>{b.textContent='Account';b.onclick=phase3Account;});
+ Q('[data-online-action="leaderboard"]').forEach(b=>b.onclick=()=>showModal('Leaderboard','<p>The Expedition leaderboard is unavailable in this local playtest.</p>'));
+}
+function phase3Account(){
+ if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked))return;
+ const editable=['camp','finished','failed'].includes(phase1Controller.state.stage);
+ const dialog=showModal('Account & Character','<p class="small muted">'+phase3SaveStatus()+'</p><h3>Character</h3><div class="characterPicker">'+['wanderer','knight','ranger','spellblade','duelist'].map(id=>'<button type="button" data-phase1-hero="'+id+'" '+(editable?'':'disabled')+' aria-pressed="'+(state.characterId===id)+'"><img src="assets/characters/avatars/'+id+'.png" alt=""><span>'+esc(id)+'</span></button>').join('')+'</div>'+(editable?'':'<p>Finish this Expedition before changing character.</p>'));
+ if(dialog)dialog.querySelectorAll('[data-phase1-hero]').forEach(button=>button.onclick=()=>{
+  if(!['camp','finished','failed'].includes(phase1Controller.state.stage)||PHASE5_VALIDATION&&(!phase5Ready||saveBlocked))return;
+  state.characterId=button.dataset.phase1Hero;save();dialog.close();render();
+ });
+}
+function phase3BindPaper(){
+ Q('[data-eqslot]').forEach(button=>button.onclick=()=>{
+  const slot=button.dataset.eqslot;
+  if(!state.equip[slot])return;
+  if(phase3ExpeditionActive()){showModal('Equipped gear',previewItem(state.equip[slot],'camp'));return;}
+  phase3Go('equipment');slotFilter=slotFilterFor(slot);selectedId=state.equip[slot]?.id||null;renderStash();
+ });
+}
+function phase3CampMarkup(g,stats){
+ const selected=clamp(phase3SelectedExpedition??g.unlocked,1,g.unlocked);
+ const progress=phase5Snapshot?.expedition;
+ const journey='<details class="phase3Journey"><summary>Your Journey</summary><dl><div><dt>Highest Expedition cleared</dt><dd>'+(progress?(progress.completed?'E'+progress.completed:'None yet'):'Not tracked')+'</dd></div><div><dt>Expeditions completed</dt><dd>Not tracked</dd></div><div><dt>Expeditions started</dt><dd>'+(progress?progress.attempts:'Not tracked')+'</dd></div><div><dt>Runes owned</dt><dd>'+state.runes.length+'</dd></div></dl></details>';
+ return '<section class="panel phase3Camp"><div class="phase3CampGrid"><aside class="phase3CampStatus"><span class="eyebrow">Wanderer v0.12.0</span><h1>Expedition Camp</h1><p class="muted">Gear up. Choose your path. Survive.</p>'+phase3VitalsMarkup(stats)+'<p class="small muted">Potions are available only between completed Realms.</p>'+journey+'</aside><div class="equipmentLoadout phase3HeroColumn">'+phase3PaperMarkup()+'</div><aside class="phase3ExpeditionPanel"><img class="phase3Portal" src="assets/dungeons/backgrounds/ward.webp" alt="An entrance to the Realms"><span class="eyebrow">Prepare for the next</span><h2>Expedition '+selected+'</h2><p class="small muted">No active Expedition</p><label class="phase3Difficulty">Expedition<select id="phase3Difficulty">'+Array.from({length:g.unlocked},(_,i)=>'<option value="'+(i+1)+'" '+(selected===i+1?'selected':'')+'>Expedition '+(i+1)+'</option>').join('')+'</select></label><ul><li>15 Realms and a final boss</li><li>Equipment, Gold and Fragments</li><li>Defeat the boss to unlock the next Expedition</li></ul><button class="primary phase3Start" data-phase1-expedition="'+selected+'">Start Expedition →</button></aside></div><details class="phase3SaveInfo"><summary>'+(PHASE5_VALIDATION?'Local playtest · saved locally':'Local playtest · session only')+'</summary><p>'+phase3SaveStatus()+'</p><p>'+state.stash.length+'/'+stashCapacity()+' Stash slots · '+state.expeditionOverflow.length+' secured items awaiting space.</p></details></section>';
+}
 function phase3CanPrepare(){
  return PHASE1_PREVIEW&&phase1Controller?.state.stage==='choice'&&!!phase1Controller.state.initialFamily&&!phase1Controller.state.rewardPending&&!phase1Draft&&!state.run;
 }
 function phase3IsBetweenPlanes(){return phase3CanPrepare()&&phase1Controller.state.planeIndex>1;}
 function phase3Go(to){
  const stage=phase1Controller?.state.stage;
- if(state.run||phase1Draft)return;
- const legal=['phase1','equipment'];
+ if(state.run||phase1Draft||phase3NeedsBagResolution())return;
+ const legal=['phase1','equipment','runes'];
  if(['camp','finished','failed'].includes(stage))legal.push('forge','merchant');
  if(!legal.includes(to))return;
  view=to;selectedId=null;chosenItems.clear();render();
@@ -3523,9 +3613,9 @@ function phase3RenderNav(){
  if(state.run){el.innerHTML='<span class="small muted">⚔ Expedition combat · Gear and potions locked</span>';return;}
  const stage=phase1Controller?.state.stage||'camp';
  if(phase1Draft){el.innerHTML='<span class="small muted">Choose your temporary passive before entering combat</span>';return;}
- const destinations=[['phase1',stage==='choice'?'Realms':'Camp'],['equipment','Equipment / Runes']];
- if(['camp','finished','failed'].includes(stage))destinations.push(['forge','Forge'],['merchant','Merchant']);
- el.innerHTML='<div class="phase3Nav">'+destinations.map(([id,label])=>'<button type="button" class="tiny '+(view===id?'primary':'ghost')+'" data-phase3-nav="'+id+'">'+label+'</button>').join('')+'</div>';
+ const outside=['camp','finished','failed'].includes(stage)&&!phase3NeedsBagResolution();
+ const destinations=[['phase1','Camp'],['equipment','Inventory'],['forge','Forge'],['merchant','Merchant'],['runes','Runes']];
+ el.innerHTML='<div class="phase3Nav">'+destinations.map(([id,label])=>'<button type="button" class="tiny '+(view===id?'primary':'ghost')+'" data-phase3-nav="'+id+'" '+(!outside&&['forge','merchant'].includes(id)?'disabled title="Available outside an Expedition"':'')+'>'+label+'</button>').join('')+'</div>';
  Q('[data-phase3-nav]').forEach(button=>button.onclick=()=>phase3Go(button.dataset.phase3Nav));
 }
 function phase3Vitals(){
@@ -3538,12 +3628,13 @@ function phase3UsePotion(kind){
  if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked))return false;
  // Only the safe interval AFTER a Realm, not Camp, first Realm, passives or combat.
  if(!phase3IsBetweenPlanes()||!['health','mana'].includes(kind)||!phase3Supplies?.[kind])return false;
+ if(Date.now()<phase3PotionCooldowns[kind])return false;
  const vitals=phase3Vitals(),key=kind==='health'?'hp':'mp',max=kind==='health'?'maxhp':'maxmp';
  if(vitals[max]<=0||vitals[key]>=vitals[max]-0.0001)return false;
  if(!phase1Vitals)phase1Vitals={hp:vitals.hp,mp:vitals.mp,maxmp:vitals.maxmp};
  phase1Vitals[key]=Math.min(vitals[max],vitals[key]+Math.ceil(vitals[max]*(kind==='health'?.35:.4)));
  phase1Vitals.maxmp=vitals.maxmp;
- phase3Supplies[kind]--;view='phase1';phase5Persist();render();return true;
+ phase3Supplies[kind]--;phase3PotionCooldowns[kind]=Date.now()+350;view='phase1';phase5Persist();render();return true;
 }
 function phase3Reroll(index){
  if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked))return false;
@@ -3560,17 +3651,12 @@ function phase2PassiveIcons(passive){
 }
 
 function phase3PassivesMarkup(){
- const picks=phase1Build?.picks||[],counts=new Map();
- for(const id of picks)counts.set(id,(counts.get(id)||0)+1);
- const rows=[...counts].map(([id,rank])=>{
+ const counts=new Map();for(const id of phase1Build?.picks||[])counts.set(id,(counts.get(id)||0)+1);
+ return '<section class="phase3CompactPassives" aria-label="Active Expedition passives"><h3>Active passives</h3><div class="phase3PassiveGrid">'+[...counts].map(([id,rank])=>{
   const p=WandererV012Buildcraft.CATALOG.find(x=>x.id===id);if(!p)return '';
-  return '<li>'+phase2PassiveIcons(p)+'<b>'+esc(p.name)+' · Rank '+rank+'/'+p.max+'</b><small>'+esc(p.description)+'</small></li>';
- });
- return '<details class="phase3Passives"><summary>Active Expedition Passives ('+picks.length+')</summary>'+
- '<p class="small muted">Temporary effects disappear on victory or defeat; equipment and Legendary abilities remain independent.</p>'+
- (rows.length?'<ul>'+rows.join('')+'</ul>':'<p class="small muted">No passives selected yet.</p>')+
- (phase1Build?.element?'<p>Magic element: <b>'+esc(phase1Build.element)+'</b></p>':'')+
- '</details>';
+  const label=p.name+' · Rank '+rank+'/'+p.max+(id===phase1Build.initialPassive?' · Initial passive':'');
+  return '<details class="phase3PassiveSlot"><summary aria-label="'+esc(label)+'" title="'+esc(label+' · '+p.description)+'">'+phase2PassiveIcons(p)+'<small>'+rank+(id===phase1Build.initialPassive?' ★':'')+'</small></summary><div class="phase3PassiveTooltip"><b>'+esc(label)+'</b><p>'+esc(p.description)+'</p></div></details>';
+ }).join('')+'</div></section>';
 }
 
 function renderPhase1(){
@@ -3598,34 +3684,31 @@ function renderPhase1(){
   }
   return;
  }
+ if(phase3NeedsBagResolution()){
+  html('<section class="panel"><h2>Resolve Expedition loot</h2><p>Your bag holds 9 items. Discard overflow before returning to Camp; no loot is discarded automatically.</p>'+phase3BagMarkup()+'</section>');phase3BindBag();return;
+ }
  if(['camp','finished','failed'].includes(g.stage)){
-  const announcement=g.stage==='finished'?'👑 Expedition cleared! Expedition '+g.unlocked+' unlocked.':g.stage==='failed'?'☠ Expedition failed · all equipped gear and rewards kept.':'15 Realms · three possible routes before each fight.';
-  const loadout=SLOTS.map(slot=>{
-   const o=state.equip[slot],reserved=slot==='offhand'&&isTwoHanded(state.equip.weapon);
-   const info=o?o.name+' · '+itemSource(o)+' · '+itemStats(o):reserved?'Reserved by Two-Handed':'Empty';
-   return '<div class="phase3GearTile" '+rarityFrame(o)+' title="'+esc(info)+'"><img src="'+(o?itemImg(o):placeholderIcon(slot))+'" alt="'+esc(SNAME[slot])+'"><span>'+esc(SNAME[slot])+'</span>'+(o?'<span class="small">E'+o.tier+'</span>':'')+legendaryRankBadge(o)+'</div>';
-  }).join('');
-  html('<section class="panel phase3Camp"><div class="phase1Intro"><div><span class="eyebrow">Wanderer v0.12 · Development Preview</span><h1>Expedition Camp</h1><p class="phase1Info">'+esc(announcement)+'</p><p class="phase1Experimental">'+(PHASE5_VALIDATION?'Isolated validation save enabled. Interrupted Expeditions end safely on reopen; secured gear and currencies remain. No Firebase connection or real-save import.':'Isolated from real accounts and saves. Equipment, Forge, Merchant and Runes reuse the classic Wanderer systems. Preview progress is memory-only.')+'</p><div class="phase3Vitals"><span>❤️ '+Math.ceil(stats.hp)+' / '+stats.maxhp+' HP</span><span>💧 '+Math.floor(stats.mp)+' / '+stats.maxmp+' Mana</span></div><p class="small muted">Potions can only be consumed after completing a Realm, never in Camp or during combat.</p></div><img src="'+heroFullImage()+'" alt="Selected Wanderer full-body character"></div><div class="phase3Loadout">'+loadout+'</div><div class="phase3Actions"><button class="ghost" data-phase3-nav="equipment">Equipment &amp; Runes</button><button class="ghost" data-phase3-nav="forge">Forge</button><button class="ghost" data-phase3-nav="merchant">Merchant</button></div><h3>Choose your character</h3><div class="phase1HeroPicker">'+['wanderer','knight','ranger','spellblade','duelist'].map(id=>'<button type="button" data-phase1-hero="'+id+'" class="'+(state.characterId===id?'active':'')+'"><img src="assets/characters/avatars/'+id+'.png" alt="">'+esc(id)+'</button>').join('')+'</div><p class="small muted">'+state.stash.length+'/'+stashCapacity()+' Stash slots · '+state.expeditionOverflow.length+' secured items awaiting space. Merchant gear and Forge tiers follow your highest unlocked Expedition. Runes: every tenth Expedition boss.</p><h3>Prepare an Expedition</h3><div class="phase3Actions">'+Array.from({length:g.unlocked},(_,i)=>'<button class="primary" data-phase1-expedition="'+(i+1)+'">Expedition '+(i+1)+' →</button>').join('')+'</div></section>');
-  Q('[data-phase1-hero]').forEach(b=>b.onclick=()=>{if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked))return;state.characterId=b.dataset.phase1Hero;save();renderPhase1()});
+  html(phase3CampMarkup(g,stats));
+  const difficulty=$('phase3Difficulty');if(difficulty)difficulty.onchange=e=>{phase3SelectedExpedition=Number(e.target.value);renderPhase1();};
   Q('[data-phase1-expedition]').forEach(b=>b.onclick=()=>phase1Begin(Number(b.dataset.phase1Expedition)));
-  Q('[data-phase3-nav]').forEach(b=>b.onclick=()=>phase3Go(b.dataset.phase3Nav));
-  return;
+  phase3BindPaper();return;
  }
  if(g.stage!=='choice')return;
  const between=phase3IsBetweenPlanes();
  const supplies=phase3Supplies||{health:0,mana:0};
  const canHeal=between&&stats.hp<stats.maxhp&&supplies.health>0;
  const canMana=between&&stats.maxmp>0&&stats.mp<stats.maxmp&&supplies.mana>0;
- const prep=between?'<div class="phase3Preparation"><div><h3>Between Realms · Safe Preparation</h3><p class="small muted">Equipment swaps and Runes use the original inventory. '+state.expeditionOverflow.length+' secured items await Stash space. Potions restore 35% HP or 40% Mana, up to the current maximum; unused charges carry through this Expedition.</p><div class="phase3Actions"><button class="ghost" data-phase3-nav="equipment">Open Equipment / Runes</button><button class="ghost" data-phase3-potion="health" '+(canHeal?'':'disabled')+'>❤️ Health Potion · '+supplies.health+' left</button><button class="ghost" data-phase3-potion="mana" '+(canMana?'':'disabled')+'>💧 Mana Potion · '+supplies.mana+' left</button></div></div></div>':
- '<p class="small muted">First Realm: no potion use. Equipment may be inspected before committing to a route.</p>';
+ const potionSlot=(kind,name,enabled,count)=>'<button type="button" class="phase3Potion '+kind+'" data-phase3-potion="'+kind+'" '+(enabled?'':'disabled')+' aria-label="Use '+name+'" title="'+name+' · '+(kind==='health'?'35% Health':'40% Mana')+' · '+count+' doses"><span aria-hidden="true">⚗</span><strong>'+count+'</strong><small>'+name+'</small></button>';
+ const prep=between?'<div class="phase3Preparation"><h3>Between Realms</h3><div class="phase3PotionSlots">'+potionSlot('health','Health Potion',canHeal,supplies.health)+potionSlot('mana','Mana Potion',canMana,supplies.mana)+'</div></div>':'<p class="small muted">Potions unlock after completing the first Realm.</p>';
  html('<section class="panel"><span class="eyebrow">Wanderer v0.12 · Expeditions</span><div class="topline"><div><h2>Expedition '+g.expedition+' · Realm '+g.planeIndex+' / 15</h2><p class="small muted">Three routes · Choose Waves, affinity and Elite risk before entering original auto-combat.</p></div><span class="token">'+state.gold+' Gold · '+state.fragments+' Fragments</span></div>'+
  '<div class="phase1FamilyRow">'+(g.families.length?g.families.map(f=>'<span>'+familyLabel(f)+'</span>').join(''):'<span>No temporary affinity selected yet</span>')+'</div>'+
  '<div class="phase1FamilyRow"><span>❤️ '+Math.ceil(stats.hp)+' / '+stats.maxhp+' HP</span><span>💧 '+Math.floor(stats.mp)+' / '+stats.maxmp+' Mana</span></div>'+
- prep+phase3PassivesMarkup()+
+ '<div class="phase3PreparationLayout"><aside>'+phase3VitalsMarkup(stats)+phase3PassivesMarkup()+prep+'</aside><div class="equipmentLoadout phase3HeroColumn">'+phase3PaperMarkup()+phase3BagMarkup()+'</div><div class="phase3Routes">'+
  '<div class="phase3RouteHeading"><h3>Select the next Realm</h3></div>'+
  '<div class="phase1Offers">'+g.offers.map((p,index)=>'<article class="phase2RealmOffer"><button type="button" class="phase1Offer '+(g.selected===p?'phase2Selected':'')+'" aria-pressed="'+(g.selected===p)+'" data-phase1-plane="'+p.id+'"><img src="'+dungeonImage(p)+'" alt="'+esc(p.name)+' landscape"><div class="phase1OfferBody"><strong>'+esc(p.name)+'</strong><div class="phase1OfferMeta"><span>'+familyLabel(p.family)+'</span><span>'+p.waves+' Waves</span><span>'+(p.boss?'👑 Boss':p.elite?'⚔ Elite present':'No Elite')+'</span>'+(p.event?'<span>'+esc(p.event)+' event (preview)</span>':'')+'</div><span class="small muted">Risk: '+(p.boss?'Boss':p.elite?'Elite':'Normal')+' · '+p.waves+' possible loot rolls</span><span class="small muted">'+(g.selected===p?'Selected':'Select Realm')+'</span></div></button><button type="button" class="tiny ghost" data-phase2-reroll="'+index+'" '+(g.rerollsByRealm[g.planeIndex-1][index]>0?'':'disabled')+'>↻ Reroll · '+g.rerollsByRealm[g.planeIndex-1][index]+' remaining</button></article>').join('')+'</div>'+
- '<button type="button" class="primary" id="phase2EnterRealm" '+(g.selected?'':'disabled')+'>Enter Realm</button>'+
- '<p class="micro muted">More Waves mean more loot opportunities, not guaranteed items. Events are currently informational; no event reward is promised. Temporary buildcraft never changes permanent equipment.</p></section>');
+ '<button type="button" class="primary" id="phase2EnterRealm" '+(g.selected&&!phase3BagOverflow()?'':'disabled')+'>Enter Realm</button>'+
+ '<p class="micro muted">More Waves mean more loot opportunities, not guaranteed items. Events are currently informational; no event reward is promised. Temporary buildcraft never changes permanent equipment.</p></div></div></section>');
+ phase3BindPaper();phase3BindBag();
  Q('[data-phase1-plane]').forEach(b=>b.onclick=()=>phase1Choose(b.dataset.phase1Plane));
  Q('[data-phase3-nav]').forEach(b=>b.onclick=()=>phase3Go(b.dataset.phase3Nav));
  Q('[data-phase3-potion]').forEach(b=>b.onclick=()=>phase3UsePotion(b.dataset.phase3Potion));
