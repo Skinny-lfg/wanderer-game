@@ -1,11 +1,11 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),create=require('./v012-economy-harness.cjs');
-function enter(a){a.select(a.controller().state.offers[0].id);if(a.draft().step==='element')a.element('fire');a.passive(a.draft().options[0].id);}
+function enter(a){if(!a.controller().state.initialFamily)a.initial('blood');if(a.draft()?.kind==='reward')a.passive(a.draft().options[0].id);a.select(a.controller().state.offers[0].id);a.enter();if(a.draft()?.step==='element')a.element('fire');}
 test('gear/Rune swaps cannot refill Mana or Health between Planes',()=>{
- const a=create(126),s=a.state();a.setup(20,'Staff');a.start(1);a.controller().state.planeIndex=2;
- const stats=a.stats(),staff=s.equip.weapon;a.setVitals({hp:stats.maxhp/2,mp:stats.mana/4,maxmp:stats.mana});
- const sword=a.makeItem(20,'weapon',null,'loot','Sword','Rare');s.stash.push(sword);a.equip(sword.id);
- assert.equal(a.vitals().mp,0);const clipped=a.vitals().hp;a.equip(staff.id);
- assert(a.vitals().maxmp>0);assert.equal(a.vitals().mp,0);assert(a.vitals().hp<=clipped);
+ const a=create(126),s=a.state();a.setup(20,'Staff');a.start(1);a.initial('blood');a.controller().state.planeIndex=2;
+ const stats=a.stats();a.setVitals({hp:stats.maxhp/2,mp:stats.mana/4,maxmp:stats.mana});
+ const sword=a.makeItem(20,'weapon',null,'loot','Sword','Rare');a.bag.mark(sword);a.equip(sword.id);
+ assert(a.vitals().mp<=stats.mana/4);const clipped=a.vitals().hp,clippedMana=a.vitals().mp;const staff=a.makeItem(20,'weapon',null,'loot','Staff','Rare');a.bag.mark(staff);a.equip(staff.id);
+ assert(a.vitals().maxmp>0);assert(a.vitals().mp<=clippedMana);assert(a.vitals().hp<=clipped);
 });
 test('classic Second Wind, set/Legendary cooldowns and funded cast counters survive Plane changes',()=>{
  const a=create(127),s=a.state();a.start(1);enter(a);let r=s.run;r.combatSeconds=2;

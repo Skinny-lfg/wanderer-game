@@ -34,7 +34,7 @@ test('Forge, Merchant, salvage and stale inventory paths cannot spend or convert
 test('native Wave award populates the bag once; prior Expedition loot never enters the next bag',()=>{
  const a=create(12);a.start(1);a.initial('blood');a.select(a.controller().state.offers.find(o=>o.family==='blood').id);a.enter();a.rng(0);
  a.state().run.enemy.hp=0;a.win();const ids=a.bag.ids();assert.equal(ids.length,1);a.win();assert.deepEqual(a.bag.ids(),ids);
- a.abandon();a.start(1);assert.equal(a.bag.items().length,0);assert.equal(a.bag.ids().length,0);assert(a.state().stash.some(o=>o.id===ids[0]));
+ a.abandon();a.start(1);assert.equal(a.bag.items().length,0);assert.equal(a.bag.ids().length,0);assert(!a.state().stash.some(o=>o.id===ids[0]),'forfeited Expedition loot is lost');
 });
 test('potion slots retain existing recovery and dose rules, with a per-potion double-click guard',()=>{
  const a=create(13);a.setup(5,'Staff');assert.equal(a.potion('health'),false);a.start(1);a.initial('blood');assert.equal(a.potion('health'),false);
@@ -44,7 +44,7 @@ test('potion slots retain existing recovery and dose rules, with a per-potion do
  assert.match(a.bag.passives(),/Initial passive/);assert.match(a.bag.passives(),/phase3PassiveSlot/);
 });
 test('overflow at Expedition end cannot be bypassed by starting a new attempt or opening vendors',()=>{
- const a=create(14);preparation(a);const items=Array.from({length:10},()=>loot(a));a.abandon();
+ const a=create(14);preparation(a);const items=Array.from({length:10},()=>loot(a));a.controller().state.stage='finished';
  assert.equal(a.start(1),false);assert.equal(a.economyCanAct(),false);
  const fragments=a.state().fragments;a.salvage([items[0].id]);assert.equal(a.state().fragments,fragments);assert.equal(a.bag.items().length,10);
  assert.equal(a.equip(items[0].id),false);assert.equal(a.bag.discard(items[9].id),true);

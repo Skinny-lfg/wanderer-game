@@ -1220,6 +1220,13 @@ const ICONS={"sword": "data:image/webp;base64,UklGRr4kAABXRUJQVlA4WAoAAAAQAAAAlQ
 (()=>{'use strict';
 const PHASE1_PREVIEW=typeof URLSearchParams!=='undefined'&&new URLSearchParams(globalThis.location?.search||'').get('expeditionPhase1')==='1';
 const PHASE5_VALIDATION=PHASE1_PREVIEW&&new URLSearchParams(globalThis.location?.search||'').get('expeditionSave')==='1';
+// Expedition-only transaction state. Classic accounts never use this RNG or checkpoint.
+let phase4Seed=null,phase4Prefix=null,phase4Stamp=null,phase4Home=null,phase4Entry=null,phase4Resume=false,phase4WaveKeys=[];
+const phase4Clone=value=>JSON.parse(JSON.stringify(value));
+function gameRandom(){
+ if(!PHASE1_PREVIEW||phase4Seed===null)return Math.random();
+ phase4Seed=(Math.imul(phase4Seed,1664525)+1013904223)>>>0;return phase4Seed/4294967296;
+}
 const SAVE_RESET_VERSION='2026-10-15-combat-balance-reset-2';
 let KEY='wanderer_browser_proto_v01',lastStoredValue=null,saveBlocked=false;
 const $=id=>document.getElementById(id), Q=sel=>document.querySelectorAll(sel);
@@ -1355,7 +1362,7 @@ function enemyAttackType(enemy){
 }
 function tryDodge(run,type){
  const chance=type==='physical'?evasionChance(run.stats.evasionRating||0,run.tier):0;
- if(!chance||Math.random()>=chance)return false;
+ if(!chance||gameRandom()>=chance)return false;
  addLog('DODGE · '+run.enemy.name+' physical attack avoided (0 damage)','good');
  floatText('DODGE','hero');return true;
 }
@@ -1387,7 +1394,7 @@ function slotFilterFor(slot){return ['ring1','ring2'].includes(slot)?'rings':slo
 function upgradeStash(){if(state.run||stashCapacity()>=STASH_MAX_CAPACITY||state.gold<stashUpgradeCost())return;const cost=stashUpgradeCost();state.gold-=cost;state.stashCapacity=Math.min(STASH_MAX_CAPACITY,stashCapacity()+STASH_UPGRADE_STEP);save();renderStash();bannerMessage('Stash expanded by '+STASH_UPGRADE_STEP+' slots for '+cost+' Gold.');}
 let dungeonPage=null,dungeonRailScrollLeft=null;
 let state=null,view='tavern',selectedId=null,selectedRuneId=null,bulk=false,chosenItems=new Set(),slotFilter='all',affinityFilter='all',sort='level',direction='desc',forgeSlot='weapon',forgeTier=1,forgeSubtype='random',forgeQuality=0,forgeLegendaryId=null,forgeItemId=null,forgeSigilId=null,forgeTransferMode='balanced',selectedPath=null,clock=null,clockSpeed=1,logEntries=[],uid=0;
-const roll=(a,b)=>Math.floor(Math.random()*(b-a+1))+a, sample=xs=>xs[roll(0,xs.length-1)], makeId=()=>Date.now().toString(36)+'-'+(++uid).toString(36), clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
+const roll=(a,b)=>Math.floor(gameRandom()*(b-a+1))+a, sample=xs=>xs[roll(0,xs.length-1)], makeId=()=>(PHASE1_PREVIEW&&phase4Prefix?phase4Prefix:Date.now().toString(36))+'-'+(++uid).toString(36), clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function rarityColor(item){return RARITY[item?.rarity]?.[0]||RARITY.Common[0]}
 function rarityFrame(item){return item?`style="--item-rarity:${rarityColor(item)};border-color:var(--item-rarity)" data-rarity="${esc(item.rarity)}"`:''}
@@ -1684,7 +1691,7 @@ function waveLootOdds(wave,cha=5){
  return {drop,rarities};
 }
 function randomFromOdds(odds){
- let remaining=Math.random();
+ let remaining=gameRandom();
  for(const [key,probability]of Object.entries(odds)){remaining-=probability;if(remaining<0)return key;}
  return Object.keys(odds).at(-1);
 }
@@ -1713,7 +1720,7 @@ function dungeonEquipmentOdds(theme,favored=offeredFavoredGear(theme)){
 }
 function dungeonEquipmentPick(theme,favored=offeredFavoredGear(theme)){
  const options=dungeonEquipmentOdds(theme,favored);
- let rand=Math.random(),found=options[options.length-1];
+ let rand=gameRandom(),found=options[options.length-1];
  for(const option of options){rand-=option.prob;if(rand<0){found=option;break;}}
  return {slot:found.slot==='ring'?sample(['ring1','ring2']):found.slot,subtype:found.subtype};
 }
@@ -1830,6 +1837,7 @@ function salvageDuplicateRunes(){
  return true;
 }
 function equipRune(id,index){
+ if(PHASE1_PREVIEW&&phase4Resume)return false;
  if(PHASE1_PREVIEW&&phase1Draft)return false;
  if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked))return false;
  if(state.run||!Number.isInteger(index)||index<0||index>2)return false;
@@ -1907,7 +1915,7 @@ function rarityOdds(tier,isCraft){let a={Common:.49,Uncommon:.30,Rare:.15,Epic:.
 if(isCraft){const gap=Math.max(0,economyTier()-tier),boost=Math.min(.24,gap*.012);a.Common-=boost;a.Rare+=boost*.35;a.Epic+=boost*.65;a.Epic+=a.Legendary;a.Legendary=0;}
 else{const cha=totalStats().cha,boost=Math.min(.040,Math.max(0,cha-5)*.0008);a.Common-=boost;a.Rare+=boost*.65;a.Epic+=boost*.35;}
 return a;}
-function rarityRoll(tier,craft){let x=Math.random(),p=rarityOdds(tier,craft);for(let key of ['Common','Uncommon','Rare','Epic','Legendary']){x-=p[key];if(x<0)return key}return 'Common';}
+function rarityRoll(tier,craft){let x=gameRandom(),p=rarityOdds(tier,craft);for(let key of ['Common','Uncommon','Rare','Epic','Legendary']){x-=p[key];if(x<0)return key}return 'Common';}
 // Weighted equipment categories remove the extra Ring roll caused by two ring slots.
 const EQUIPMENT_DROP_WEIGHTS=[['helm',13],['amulet',9],['armor',13],['gloves',13],['weapon',15],['offhand',13],['ring',11],['boots',13],['belt',13]];
 function rollEquipmentSlot(){let n=roll(1,EQUIPMENT_DROP_WEIGHTS.reduce((sum,[,weight])=>sum+weight,0));for(const [slot,weight] of EQUIPMENT_DROP_WEIGHTS){n-=weight;if(n<=0)return slot==='ring'?sample(['ring1','ring2']):slot;}throw Error('Invalid drop weights');}
@@ -1920,7 +1928,7 @@ if(source==='merchant'&&rarity==='Legendary')rarity='Epic';
 const effect=null,magic=false;
 const legendaryIdentity=rarity==='Legendary'?legendaryFor({slot,subtype}):null;
 const legendaryDefinition=legendaryIdentity&&globalThis.WandererLegendary?.DEFINITIONS?.[legendaryIdentity.id];
-let mult=RARITY[rarity][1],power=Math.round((2+tier*.91)*mult),o={id:makeId(),slot,subtype,name:(source==='loot'&&subtype==='Sword'&&rarity==='Common'&&Math.random()<.25?'Old Sword':sample(NAMES[subtype]||NAMES[slot]||['Ancient Gear'])),rarity,tier,atk:0,def:0,hp:0,spd:0,str:0,agi:0,int:0,end:0,cha:0,mana:0,spell:0,effect,magic:magic?effect:null,crafted:source==='forge',craftPrice:source==='forge'?craftCost(tier):null,obtainedAt:Date.now(),locked:false,source};
+let mult=RARITY[rarity][1],power=Math.round((2+tier*.91)*mult),o={id:makeId(),slot,subtype,name:(source==='loot'&&subtype==='Sword'&&rarity==='Common'&&gameRandom()<.25?'Old Sword':sample(NAMES[subtype]||NAMES[slot]||['Ancient Gear'])),rarity,tier,atk:0,def:0,hp:0,spd:0,str:0,agi:0,int:0,end:0,cha:0,mana:0,spell:0,effect,magic:magic?effect:null,crafted:source==='forge',craftPrice:source==='forge'?craftCost(tier):null,obtainedAt:PHASE1_PREVIEW&&phase4Stamp?phase4Stamp:Date.now(),locked:false,source};
 if(subtype==='Sword'){o.atk=power+3;o.str=1+Math.floor(tier*.20)}
 else if(subtype==='Mace'){o.atk=power+6;o.str=2+Math.floor(tier*.23);o.spd=-1}
 else if(subtype==='Bow'){o.atk=Math.round(power*1.4)+5;o.agi=2+Math.floor(tier*.21);o.spd=1}
@@ -2975,7 +2983,7 @@ function weaponAttack(r){
  const base=damage;r.lastBaseHit=base;
  const perfect=s.bonus.perfectStrike&&temp.focus>=3&&now>=(r.setCooldowns?.perfectStrike||0);
  if(perfect){setReady(r,'perfectStrike',10);temp.focus=0;}
- const critical=perfect||Math.random()<s.crit/100;
+ const critical=perfect||gameRandom()<s.crit/100;
  if(critical){damage=Math.max(1,Math.round(damage*(perfect?1.75:1.5)));addLog((perfect?'✨ PERFECT STRIKE! ':'CRITICAL! ')+damage+' damage','critical');}
  if(Object.entries(state.equip||{}).some(([slot,item])=>item?.rarity==='Legendary'&&!legendarySignature(item)&&!(slot==='offhand'&&isTwoHanded(weapon)))&&r.enc!==r.lastLegendaryEncounter){damage=Math.round(damage*1.32);r.lastLegendaryEncounter=r.enc;}
  const added=setOnAttack(r,base,critical,perfect)+legendaryAttackBonus(r,base,critical,cast);
@@ -3006,24 +3014,24 @@ function weaponAttack(r){
   }
  }
  if(cast){
-  if(element&&damage>0&&Math.random()<Math.min(1,affinityProcChance(kind,true)+(focus?.15:0)))applyAffinity(element,e,s,kind==='Staff'?1.2:.85,damage);
-  if(off?.magic&&damage>0&&isMagicOffhand(off)&&off.magic!==element&&Math.random()<.25)applyAffinity(off.magic,e,s,.5,damage);
+  if(element&&damage>0&&gameRandom()<Math.min(1,affinityProcChance(kind,true)+(focus?.15:0)))applyAffinity(element,e,s,kind==='Staff'?1.2:.85,damage);
+  if(off?.magic&&damage>0&&isMagicOffhand(off)&&off.magic!==element&&gameRandom()<.25)applyAffinity(off.magic,e,s,.5,damage);
  }else{
   const chance=Math.min(1,affinityProcChance(kind)+(focus?.15:0));
-  if(damage>0&&weapon?.effect&&Math.random()<chance)applyAffinity(weapon.effect,e,s,kind==='Two-Handed'?1.7:kind==='Daggers'?.7:1,damage);
+  if(damage>0&&weapon?.effect&&gameRandom()<chance)applyAffinity(weapon.effect,e,s,kind==='Two-Handed'?1.7:kind==='Daggers'?.7:1,damage);
   if(off?.subtype==='Off-Hand Dagger'){
    let extra=Math.max(1,Math.round(s.attack*.13+(off.atk||0)*.45-e.def*.16));
    if(r.playerDebuffUntil>now)extra=Math.max(1,Math.round(extra*.8));
    if(e.barrier>0){const shield=Math.min(e.barrier,extra);e.barrier-=shield;extra-=shield;}
    e.hp-=extra;addLog('🗡 Off-Hand Dagger strikes for '+extra+' damage','good');animateStrike('Daggers');floatText(extra,'enemy');
    legendaryOffhand(r,extra);
-   if(extra>0&&off.effect&&Math.random()<.34)applyAffinity(off.effect,e,s,.65,extra);
-  }else if(damage>0&&isMagicOffhand(off)&&off.magic&&Math.random()<.45){
+   if(extra>0&&off.effect&&gameRandom()<.34)applyAffinity(off.effect,e,s,.65,extra);
+  }else if(damage>0&&isMagicOffhand(off)&&off.magic&&gameRandom()<.45){
    applyAffinity(off.magic,e,s,.85,damage);
    addLog((ELEMENTS[off.magic]?.icon||'✨')+' Off-Hand imbues attack (0 mana)','spell');
   }
  }
- if(WANDERER_DOUBLE_STRIKE_ENABLED&&kind==='Daggers'&&damage>0&&e.hp>0&&Math.random()<.25){
+ if(WANDERER_DOUBLE_STRIKE_ENABLED&&kind==='Daggers'&&damage>0&&e.hp>0&&gameRandom()<.25){
   // One ordinary pre-critical main-hand hit, with no further rolls or recursive triggers.
   setDirectEnemyDamage(r,Math.max(1,Math.round(base*.55)),'🗡 Double Strike!');
  }
@@ -3083,7 +3091,7 @@ function updateFight(){
   if(mitigation)raw=Math.max(1,Math.round(raw*(1-mitigation)));
   if(isPhase1Run()&&phase1Build)raw=WandererV012Buildcraft.incoming(phase1Build,phase2Context(r),raw);
   let damageBlocked=0;
-  const block=s.blockChance&&Math.random()<s.blockChance/100;
+  const block=s.blockChance&&gameRandom()<s.blockChance/100;
   if(block){
    damageBlocked=Math.max(1,Math.round(raw*s.blockReduction));raw-=damageBlocked;
    addLog('🛡 BLOCK! Shield prevents '+damageBlocked+' damage','good');animateDefense();
@@ -3127,7 +3135,7 @@ function updateFight(){
  if(e.hp<=0){winEncounter();return;}
  updateBars();
 }
-function rarityInCombat(r){return Math.random()<waveLootOdds(r.enc,r.stats.cha).drop}
+function rarityInCombat(r){return gameRandom()<waveLootOdds(r.enc,r.stats.cha).drop}
 function winEncounter(finalHit=false){
  if(isPhase1Run()){phase1WaveWon();return;}
  clearInterval(clock);const r=state.run;if(!r)return;
@@ -3140,8 +3148,8 @@ function winEncounter(finalHit=false){
  const makeDrop=()=>{const p=dungeonEquipmentPick(t,r.favoredGear),rarity=randomFromOdds(waveLootOdds(r.enc,r.stats.cha).rarities);return makeItem(r.tier,p.slot,t.effect,'loot',p.subtype,rarity);};
  if(rarityInCombat(r))logDrop(makeDrop());
  else addLog('No equipment this wave. Gold and Fragments are secured on extraction.');
- if(boss&&Math.random()<.35)logDrop(makeDrop());
- if(Math.random()<(boss?.60:miniboss?.43:.29)){const pool=VALUABLES.filter(x=>x.worth<=15+r.tier*5),p=sample(pool.length?pool:VALUABLES.slice(0,1)),v={...p,id:makeId()};r.valuables.push(v);addLog('💰 Valuable found: '+v.name+' ('+v.worth+' Gold)','treasure');}
+ if(boss&&gameRandom()<.35)logDrop(makeDrop());
+ if(gameRandom()<(boss?.60:miniboss?.43:.29)){const pool=VALUABLES.filter(x=>x.worth<=15+r.tier*5),p=sample(pool.length?pool:VALUABLES.slice(0,1)),v={...p,id:makeId()};r.valuables.push(v);addLog('💰 Valuable found: '+v.name+' ('+v.worth+' Gold)','treasure');}
  if(boss){offerBossRunes(r.tier);addLog('👑 Choose one permanent rune from three boss rewards!','good');}
  if(r.enc===wavesForDungeon(r.tier)){r.status='win';addLog('Dungeon '+r.tier+' completed! Extract to secure your rewards.','good');}
  else{r.status='ready';addLog('Continue deeper for better loot or extract with your rewards.','good');}
@@ -3306,7 +3314,7 @@ function phase1Init(){
  state.equip.weapon=state.stash.shift();
  state.equip.armor=makeItem(1,'armor',null,'loot','Armor','Uncommon');
  state.equip.helm=makeItem(1,'helm',null,'loot','Helm','Uncommon');
- phase1Controller=WandererV012Expedition.create(THEMES);
+ phase1Controller=WandererV012Expedition.create(THEMES,gameRandom);
  view='phase1';
  phase5Init();
 }
@@ -3316,13 +3324,15 @@ function phase4ClaimOverflow(){
  while(state.expeditionOverflow?.length&&stashHasRoom()){state.stash.push(state.expeditionOverflow.shift());count++;}
  return count;
 }
-function phase1Begin(level){
+function phase1Begin(level=1){
  if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked))return false;
  if(!PHASE1_PREVIEW)return;
  if(phase3NeedsBagResolution()){bannerMessage('Discard overflow loot before starting another Expedition.');return false;}
  phase4ClaimOverflow();
  if(state.pendingRuneReward){showPendingRuneReward();return;}
  if(state.expeditionOverflow.length||!stashHasRoom()){bannerMessage('Claim secured loot and free Stash space before starting another Expedition.');return;}
+ if(!['camp','finished','failed'].includes(phase1Controller.state.stage)||!Number.isInteger(level)||level<1||level>phase1Controller.state.unlocked)return false;
+ phase4Seed=Math.floor(Math.random()*4294967296)>>>0;phase4Prefix=Date.now().toString(36);phase4Stamp=null;phase4Home=phase4Clone(state.equip);phase4Entry=null;phase4Resume=false;phase4WaveKeys=[];
  phase1Controller.start(level);phase3LootIds=new Set();phase3PotionCooldowns={health:0,mana:0};phase1Vitals=null;phase1Clock=0;phase1Continuity=null;phase3Supplies={health:2,mana:2};phase1Build=WandererV012Buildcraft.create();phase1Build.families=phase1Controller.state.families;phase1Draft=null;state.run=null;view='phase1';
  if(PHASE5_VALIDATION){phase5Snapshot.expedition.attempts++;phase5Snapshot.expedition.awardKeys=[];phase5Snapshot.expedition.lastOutcome='active';phase5Persist();}
  render();
@@ -3330,7 +3340,7 @@ function phase1Begin(level){
 
 function phase2Context(r){
  const e=r.enemy,now=setNow(r);
- return {player:r,enemy:e,now,random:Math.random,base:r.lastBaseHit||r.stats.attack,
+ return {player:r,enemy:e,now,random:gameRandom,base:r.lastBaseHit||r.stats.attack,
  dot(kind,potency){
   if(!['bleed','poison','burn'].includes(kind))return;
   const values=e.dots[kind]||(e.dots[kind]=[]);
@@ -3408,6 +3418,8 @@ function phase1Enter(){
 }
 
 function phase2Launch(plane){
+ if(!phase4Entry){phase4Stamp=Date.now();phase4Entry={profile:phase4Clone({...state,run:null}),session:phase4Session(true),ledger:[...(phase5Snapshot?.expedition.awardKeys||[])]};}
+ if(!phase5Persist())return;
  const stats=phase2Stats();
  const hp=phase1Vitals?Math.min(stats.maxhp,Math.max(1,phase1Vitals.hp)):stats.maxhp;
  const mp=phase1Vitals?(phase1Vitals.maxmp===0&&stats.mana>0?stats.mana:Math.min(stats.mana,Math.max(0,phase1Vitals.mp))):stats.mana;
@@ -3437,7 +3449,7 @@ function phase1WaveWon(){
  const r=state.run,g=phase1Controller.state;
  if(!isPhase1Run()||r.status!=='fight'||!r.enemy||r.enemy.hp>0||g.stage!=='combat'||!g.selected||r.enc!==g.wave||r.phase4AwardedWave===r.enc)return;
  clearInterval(clock);
- if(PHASE5_VALIDATION){const token=phase5Snapshot.expedition.attempts+':'+r.phase1Plane+':'+r.enc;if(phase5Snapshot.expedition.awardKeys.includes(token)){phase5Fail(Error('Duplicate Wave reward rejected'));return;}phase5Snapshot.expedition.awardKeys.push(token);}
+ if(PHASE5_VALIDATION){const token=phase5Snapshot.expedition.attempts+':'+r.phase1Plane+':'+r.enc;if(phase5Snapshot.expedition.awardKeys.includes(token)||phase4WaveKeys.includes(token)){phase5Fail(Error('Duplicate Wave reward rejected'));return;}phase4WaveKeys.push(token);}
  r.phase4AwardedWave=r.enc;
  legendaryKill(r);
  if(phase1Build)WandererV012Buildcraft.onKill(phase1Build,phase2Context(r));
@@ -3445,13 +3457,13 @@ function phase1WaveWon(){
  const gold=roll(3,6)+Math.floor(r.tier*.5)+(boss?8:elite?4:0);
  const fragments=roll(1,3)+Math.floor(r.tier*.24)+(boss?5:elite?3:0);
  state.gold+=gold;state.fragments+=fragments;r.gold+=gold;r.fragments+=fragments;
- addLog('Wave secured: +'+gold+' Gold · +'+fragments+' Fragments.','good');
+ addLog('Realm rewards pending: +'+gold+' Gold · +'+fragments+' Fragments.','good');
  const odds=waveLootOdds(boss?5:elite?4:r.enc,r.stats.cha);
- if(boss||Math.random()<odds.drop){
+ if(boss||gameRandom()<odds.drop){
   const theme=THEMES.find(t=>t.id===r.path),pick=dungeonEquipmentPick(theme,[]);
   const rarity=randomFromOdds(odds.rarities);
   const item=makeItem(r.tier,pick.slot,theme.effect,'loot',pick.subtype,rarity);
-  // Preview only: loot is awarded immediately, not held behind classic extraction.
+  // Held in the Realm transaction until completion; all Expedition equipment remains at risk.
   if(stashHasRoom())state.stash.push({...item,isNew:true});
   else state.expeditionOverflow.push({...item,isNew:true});
   phase3LootIds.add(item.id);r.loot.push(item);
@@ -3465,6 +3477,7 @@ function phase1WaveWon(){
   setTimeout(()=>{if(state.run===r&&r.status==='ready')phase1StartWave();},650);
   return;
  }
+ phase4CommitRealm();
  phase1Clock+=r.combatSeconds||0;
  phase1Continuity=result.expeditionComplete?null:{setCooldowns:r.setCooldowns,secondWindUsed:r.secondWindUsed,legendaryState:r.legendaryState,legendaryCastCount:r.legendaryCastCount,legendaryAttackCount:r.legendaryAttackCount};
  phase1Vitals=result.expeditionComplete?null:{hp:Math.max(1,r.hp),mp:Math.max(0,r.mp),maxmp:r.maxmp};
@@ -3478,7 +3491,7 @@ function phase1WaveWon(){
  }
  if(!result.expeditionComplete){
   const plane=phase1Controller.state.rewardPending;
-  phase1Draft={kind:'reward',plane,step:'passive',options:WandererV012Buildcraft.options(phase1Build,plane.family)};
+  phase1Draft={kind:'reward',plane,step:'passive',options:WandererV012Buildcraft.options(phase1Build,plane.family,gameRandom)};
  }
  if(!phase5Persist())return;
  addLog(result.expeditionComplete?'Expedition boss defeated!':'Realm cleared. Select your next Realm.','good');
@@ -3488,11 +3501,11 @@ function phase1WaveWon(){
 function phase1Death(){
  clearInterval(clock);
  if(!isPhase1Run())return;
- phase1Controller.defeat();phase1Vitals=null;phase1Continuity=null;
+ phase4CommitRealm();phase4LoseLoot();phase1Controller.defeat();phase1Vitals=null;phase1Continuity=null;
  if(phase1Build)WandererV012Buildcraft.clear(phase1Build);
  phase1Build=null;phase1Draft=null;state.run=null;view='phase1';
  if(PHASE5_VALIDATION)phase5Snapshot.expedition.lastOutcome='defeat';phase5Persist();render();
- bannerMessage('Expedition failed · Equipped and collected gear retained in this preview.');
+ bannerMessage('You died. Expedition loot lost; your original equipment, Gold and Fragments are safe.');
 }
 function phase1DecorateCombat(){
  if(!isPhase1Run()||typeof document.querySelector!=='function')return;
@@ -3507,7 +3520,7 @@ function phase1DecorateCombat(){
  const leave=$('leave'),next=$('nextFight');if(leave)leave.remove();if(next)next.remove();
  const actions=document.querySelector('.combatActions');
  if(actions){
-  if(['choice','combat'].includes(g.stage)){const abandon=document.createElement('button');abandon.className='tiny ghost';abandon.textContent='Abandon Expedition';abandon.onclick=()=>showConfirm('Abandon Expedition','Keep secured gear and currencies; temporary passives end. No difficulty is unlocked.',phase1Abandon,'Abandon');actions.appendChild(abandon);}
+
   const note=document.createElement('span');note.className='small muted';
   note.textContent=r.status==='fight'?'Automatic combat · one enemy at a time':'Wave cleared · advancing automatically';
   actions.prepend(note);
@@ -3520,7 +3533,7 @@ function phase1DecorateCombat(){
  const title=document.querySelector('.combatExpeditionDetails h2');
  if(title)title.textContent='Realm Rewards · Preview';
  const loot=document.querySelector('.combatExpeditionDetails .runLootHeading');
- if(loot)loot.textContent='Equipment awarded immediately';
+ if(loot)loot.textContent='Expedition equipment · at risk until extraction or victory';
 }
 // Phase 3 preview navigator. Classic item, comparison, Rune and vendor handlers are reused;
 // only the normal Account, save and dungeon navigation stay disconnected from this memory-only run.
@@ -3565,7 +3578,7 @@ function phase3VitalsMarkup(stats){
   return '<div class="phase3Resource '+kind+'"><span>'+label+'</span><div class="phase3ResourceTrack" role="progressbar" aria-label="'+label+'" aria-valuenow="'+value+'" aria-valuemax="'+Math.max(1,limit)+'" aria-valuemin="0"><i style="width:'+percent+'%"></i><b>'+value+' / '+limit+'</b></div></div>';
  }).join('')+'</div>';
 }
-function phase3SaveStatus(){return PHASE5_VALIDATION?'Saved locally in an isolated test slot. No account or cloud save is loaded. Interrupted Expeditions currently end on reopen.':'Session-only playtest. Progress is lost when this page is closed or refreshed. No account or cloud save is loaded.';}
+function phase3SaveStatus(){return PHASE5_VALIDATION?'Saved locally in an isolated test slot. No account or cloud save is loaded. Refresh preserves your Expedition. An unfinished Realm resumes from its fixed entry checkpoint.':'Session-only playtest. Progress is lost when this page is closed or refreshed. No account or cloud save is loaded.';}
 function phase3BindHeader(){
  const version=document.querySelector('.version');if(version)version.textContent='v0.12.0';
  if(typeof document.title==='string')document.title='Wanderer v0.12.0';
@@ -3597,6 +3610,7 @@ function phase3CampMarkup(g,stats){
  return '<section class="panel phase3Camp"><div class="phase3CampGrid"><aside class="phase3CampStatus"><span class="eyebrow">Wanderer v0.12.0</span><h1>Expedition Camp</h1><p class="muted">Gear up. Choose your path. Survive.</p>'+phase3VitalsMarkup(stats)+'<p class="small muted">Potions are available only between completed Realms.</p>'+journey+'</aside><div class="equipmentLoadout phase3HeroColumn">'+phase3PaperMarkup()+'</div><aside class="phase3ExpeditionPanel"><img class="phase3Portal" src="assets/dungeons/backgrounds/ward.webp" alt="An entrance to the Realms"><span class="eyebrow">Prepare for the next</span><h2>Expedition '+selected+'</h2><p class="small muted">No active Expedition</p><label class="phase3Difficulty">Expedition<select id="phase3Difficulty">'+Array.from({length:g.unlocked},(_,i)=>'<option value="'+(i+1)+'" '+(selected===i+1?'selected':'')+'>Expedition '+(i+1)+'</option>').join('')+'</select></label><ul><li>15 Realms and a final boss</li><li>Equipment, Gold and Fragments</li><li>Defeat the boss to unlock the next Expedition</li></ul><button class="primary phase3Start" data-phase1-expedition="'+selected+'">Start Expedition →</button></aside></div><details class="phase3SaveInfo"><summary>'+(PHASE5_VALIDATION?'Local playtest · saved locally':'Local playtest · session only')+'</summary><p>'+phase3SaveStatus()+'</p><p>'+state.stash.length+'/'+stashCapacity()+' Stash slots · '+state.expeditionOverflow.length+' secured items awaiting space.</p></details></section>';
 }
 function phase3CanPrepare(){
+ if(phase4Resume)return false;
  return PHASE1_PREVIEW&&phase1Controller?.state.stage==='choice'&&!!phase1Controller.state.initialFamily&&!phase1Controller.state.rewardPending&&!phase1Draft&&!state.run;
 }
 function phase3IsBetweenPlanes(){return phase3CanPrepare()&&phase1Controller.state.planeIndex>1;}
@@ -3663,6 +3677,8 @@ function renderPhase1(){
  if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked)){phase5RenderBlocked();return;}
  if(phase4ClaimOverflow())phase5Persist();
  if(state.pendingRuneReward&&!state.run)showPendingRuneReward();
+ if(phase4Resume){html('<section class="panel"><h2>Resume Realm</h2><p>This Realm restarts from its entry checkpoint with the same encounters and rolls. Partial rewards are not duplicated. Gear and choices remain locked until it is resolved.</p><button class="primary" id="phase4Resume">Resume Realm</button></section>');$('phase4Resume').onclick=phase4ResumeRealm;return;}
+
  const g=phase1Controller.state,stats=phase3Vitals();
  const familyLabel=f=>phase2FamilyIcon(f)+' '+WandererV012Expedition.FAMILY_NAMES[f];
  if(g.stage==='choice'&&!g.initialFamily){
@@ -3714,10 +3730,57 @@ function renderPhase1(){
  Q('[data-phase3-potion]').forEach(b=>b.onclick=()=>phase3UsePotion(b.dataset.phase3Potion));
  Q('[data-phase2-reroll]').forEach(b=>b.onclick=()=>phase3Reroll(Number(b.dataset.phase2Reroll)));
  const enter=$('phase2EnterRealm');if(enter)enter.onclick=phase1Enter;
- const abandon=document.createElement('button');abandon.id='phase5Abandon';abandon.className='ghost';abandon.textContent='Abandon Expedition';abandon.onclick=()=>showConfirm('Abandon Expedition','Keep secured gear and currencies; temporary passives end. No difficulty is unlocked.',phase1Abandon,'Abandon');$('screen').appendChild(abandon);
+ if(between){const extract=document.createElement('button');extract.id='phase4Extract';extract.className='ghost';extract.textContent='Extract & Leave';extract.disabled=!!phase3BagOverflow();extract.onclick=()=>showConfirm('Extract & Leave','End this Expedition and keep collected equipment, Gold and Fragments? This does not unlock a difficulty or grant a boss Rune.',phase4Extract,'Extract & Leave');$('screen').appendChild(extract);}
+
 }
 
 
+function phase4Session(entry=false){
+ const continuity=phase1Continuity?phase4Clone(phase1Continuity):null;
+ if(continuity?.legendaryState)delete continuity.legendaryState.enemy;
+ return phase4Clone({version:1,entry,controller:phase1Controller.state,build:phase1Build,vitals:phase1Vitals,
+  clock:phase1Clock,supplies:phase3Supplies,lootIds:[...phase3LootIds],home:phase4Home,
+  seed:phase4Seed,prefix:phase4Prefix,stamp:phase4Stamp,idCounter:uid,continuity,draft:phase1Draft});
+}
+function phase4CommitRealm(){
+ if(PHASE5_VALIDATION)phase5Snapshot.expedition.awardKeys=[...new Set([...phase5Snapshot.expedition.awardKeys,...phase4WaveKeys])];
+ phase4WaveKeys=[];phase4Entry=null;phase4Resume=false;
+}
+function phase4LoseLoot(){
+ const lost=phase3LootIds;
+ const homeIds=new Set(Object.values(phase4Home||{}).filter(Boolean).map(item=>item.id));
+ state.stash=state.stash.filter(item=>!lost.has(item.id)&&!homeIds.has(item.id));
+ state.expeditionOverflow=state.expeditionOverflow.filter(item=>!lost.has(item.id)&&!homeIds.has(item.id));
+ if(phase4Home)state.equip=phase4Clone(phase4Home);
+ phase3LootIds=new Set();phase4Home=null;
+}
+function phase4Extract(){
+ if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked)||!phase3IsBetweenPlanes()||phase3BagOverflow()||phase4Resume)return false;
+ phase1Controller.abandon();if(phase1Build)WandererV012Buildcraft.clear(phase1Build);
+ phase1Build=null;phase1Draft=null;phase1Vitals=null;phase1Continuity=null;phase3LootIds=new Set();phase4Home=null;phase4Seed=null;phase4Prefix=null;phase4Entry=null;phase4WaveKeys=[];
+ if(PHASE5_VALIDATION)phase5Snapshot.expedition.lastOutcome='extracted';
+ view='phase1';if(!phase5Persist())return false;render();
+ bannerMessage(state.expeditionOverflow.length?'Extracted. Free Stash space to claim '+state.expeditionOverflow.length+' secured items.':'Extraction complete. Loot kept; next difficulty remains locked.');return true;
+}
+function phase4Restore(session){
+ phase1Controller.restore(session.controller);
+ if(session.build)WandererV012Buildcraft.validate(session.build);
+ phase1Build=session.build;phase1Draft=session.draft;phase1Vitals=session.vitals;phase1Clock=session.clock;phase3Supplies=session.supplies;
+ phase3LootIds=new Set(session.lootIds);phase4Home=session.home;phase4Seed=session.seed;phase4Prefix=session.prefix;phase4Stamp=session.stamp;uid=session.idCounter;phase1Continuity=session.continuity;
+ if(phase1Build){phase1Build.families=phase1Controller.state.families;if(phase1Draft?.kind==='reward'){
+  const eligible=WandererV012Buildcraft.eligible;
+  if(!phase1Controller.state.rewardPending||!Array.isArray(phase1Draft.options)||phase1Draft.options.length!==3||new Set(phase1Draft.options.map(p=>p.id)).size!==3||!phase1Draft.options.every(p=>eligible(phase1Build,p.family).some(v=>v.id===p.id)))throw Error('Invalid saved passive choice');
+  phase1Draft.plane=phase1Controller.state.rewardPending;
+  phase1Draft.options=phase1Draft.options.map(p=>WandererV012Buildcraft.CATALOG.find(v=>v.id===p.id));
+ }}
+ state.run=null;phase4WaveKeys=[];phase4Resume=session.entry;
+ phase4Entry=session.entry?{profile:phase4Clone({...state,run:null}),session:phase4Clone(session),ledger:[...(phase5Snapshot?.expedition.awardKeys||[])]}:null;
+ view='phase1';
+}
+function phase4ResumeRealm(){
+ if(!phase4Resume||!phase4Entry||state.run||PHASE5_VALIDATION&&(!phase5Ready||saveBlocked))return false;
+ phase4Resume=false;phase2Launch(phase1Controller.state.selected);return true;
+}
 // Phase 5 is deliberately opt-in and local-only. It never reads any classic/account slot.
 let phase5Ready=false,phase5Store=null,phase5Snapshot=null,phase5Pending=null,phase5Message='',phase5Raw=null;
 function phase5Fail(error){
@@ -3738,10 +3801,13 @@ function phase5RenderBlocked(){
  };
 }
 function phase5Capture(){
- const g=phase1Controller.state,active=['choice','combat'].includes(g.stage);
- return {...phase5Snapshot,idCounter:uid,profile:{...state,run:null},expedition:{...phase5Snapshot.expedition,
+ const g=phase1Controller.state,active=['choice','combat'].includes(g.stage),entry=phase4Entry;
+ const session=entry?entry.session:active||phase3NeedsBagResolution()?phase4Session():null;
+ return {...phase5Snapshot,idCounter:entry?entry.session.idCounter:uid,profile:entry?entry.profile:{...state,run:null},expedition:{...phase5Snapshot.expedition,
+  awardKeys:entry?entry.ledger:phase5Snapshot.expedition.awardKeys,session,
   unlocked:g.unlocked,active:active?{attempt:phase5Snapshot.expedition.attempts,level:g.expedition,plane:g.planeIndex,wave:g.wave,stage:g.stage}:null}};
 }
+
 function phase5Persist(){
  if(!PHASE5_VALIDATION)return true;
  if(!phase5Ready||saveBlocked)return false;
@@ -3770,6 +3836,7 @@ function phase5Init(){
      }
      phase1Controller.state.unlocked=phase5Snapshot.expedition.unlocked;
      phase1Vitals=null;phase1Build=null;phase1Draft=null;
+     if(phase5Snapshot.expedition.session)phase4Restore(phase5Snapshot.expedition.session);
     }else phase5Snapshot=WandererV012Save.create({...state,run:null},{binding});
     phase5Ready=true;saveBlocked=false;
     if(phase5Persist())render();
@@ -3784,7 +3851,7 @@ function phase5Init(){
 }
 function phase1Abandon(){
  if(!PHASE1_PREVIEW||(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked))||!['choice','combat'].includes(phase1Controller?.state.stage))return false;
- clearInterval(clock);phase1Controller.abandon();
+ clearInterval(clock);phase4CommitRealm();phase4LoseLoot();phase1Controller.abandon();
  if(phase1Build)WandererV012Buildcraft.clear(phase1Build);
  phase1Build=null;phase1Draft=null;phase1Vitals=null;phase1Continuity=null;state.run=null;view='phase1';
  if(PHASE5_VALIDATION)phase5Snapshot.expedition.lastOutcome='abandoned';

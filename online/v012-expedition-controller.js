@@ -103,7 +103,40 @@ function create(themes,rng=Math.random){
   if(!['choice','combat'].includes(game.stage))throw Error('No active Expedition');
   game.stage='failed';game.selected=null;game.offers=[];game.wave=0;game.families=[];game.lastFamily=null;game.rewardPending=null;
  }
- return Object.freeze({state:game,start,chooseInitial,select,enter,claimReward,reroll,waveWon,defeat,abandon,allowed});
+ function restore(input){
+  const g=JSON.parse(JSON.stringify(input));
+  const integer=(v,min,max)=>Number.isInteger(v)&&v>=min&&v<=max;
+  if(!g||!integer(g.unlocked,1,200)||!integer(g.expedition,1,g.unlocked)||!integer(g.planeIndex,1,15)||!['choice','combat','finished','failed'].includes(g.stage)||!Array.isArray(g.rooms)||g.rooms.length!==15||g.rooms[0]!=='combat'||g.rooms[14]!=='boss'||g.rooms.slice(0,14).some(k=>!ROOMS.includes(k)))throw Error('Invalid Realm checkpoint');
+  if(JSON.stringify([...g.rooms.slice(0,14)].sort())!==JSON.stringify([...ROOMS].sort()))throw Error('Invalid Realm schedule');
+  if(!Array.isArray(g.families)||g.families.length>3||new Set(g.families).size!==g.families.length||!g.families.every(f=>FAMILIES.includes(f))||g.initialFamily!==null&&!FAMILIES.includes(g.initialFamily))throw Error('Invalid saved affinities');
+  if(!Array.isArray(g.rerollsByRealm)||g.rerollsByRealm.length!==15||!g.rerollsByRealm.every(row=>Array.isArray(row)&&row.length===3&&row.every(n=>integer(n,0,3))))throw Error('Invalid Realm rerolls');
+  function realm(p,index){
+   const theme=themes.find(t=>t.id===p?.id),kind=g.rooms[index-1];
+   if(!theme||THEME_FAMILIES[p.id]!==p.family||!integer(p.waves,1,3)||typeof p.elite!=='boolean'||p.boss!==(index===15)||p.event!==(['chest','event','altar'].includes(kind)?kind:null)||p.boss&&p.waves!==3)throw Error('Invalid saved Realm');
+   return {...p,name:theme.name,image:theme.image};
+  }
+  if(!Array.isArray(g.offers)||![0,3].includes(g.offers.length)||new Set(g.offers.map(p=>p.id)).size!==g.offers.length||new Set(g.offers.map(p=>p.family)).size!==g.offers.length)throw Error('Invalid Realm offers');
+  g.offers=g.offers.map(p=>realm(p,g.planeIndex));
+  if(!Array.isArray(g.history)||g.history.length>15)throw Error('Invalid Realm history');
+  g.history=g.history.map((p,i)=>{if(p.plane!==i+1)throw Error('Invalid Realm history');return realm(p,i+1);});
+  if(g.stage==='choice'||g.stage==='combat'){
+   if(g.history.length!==g.planeIndex-1||g.initialFamily&&!g.families.includes(g.initialFamily))throw Error('Invalid Realm progress');
+   if(g.rewardPending)g.rewardPending=realm(g.rewardPending,g.planeIndex-1);
+   if(g.stage==='combat'){
+    const selected=g.offers.find(p=>p.id===g.selected?.id);if(!selected||!g.families.includes(selected.family)||!integer(g.wave,1,selected.waves))throw Error('Invalid combat checkpoint');g.selected=selected;
+   }else{
+    if(g.wave!==0||g.rewardPending&&(g.offers.length||g.selected)||!g.initialFamily&&g.offers.length)throw Error('Invalid choice checkpoint');
+    if(g.selected){const selected=g.offers.find(p=>p.id===g.selected.id);if(!selected)throw Error('Invalid selected Realm');g.selected=selected;}
+   }
+  }
+  if(['choice','combat'].includes(g.stage)){
+   const acquired=new Set([g.initialFamily,...g.history.map(p=>p.family),...(g.stage==='combat'?[g.selected.family]:[])].filter(Boolean));
+   if(acquired.size!==g.families.length||!g.families.every(f=>acquired.has(f)))throw Error('Invalid affinity provenance');
+   if(g.stage==='choice'&&g.offers.some(p=>(g.families.length===3&&!g.families.includes(p.family))||(g.history.length>0&&g.families.length===1&&p.family===g.initialFamily)))throw Error('Invalid affinity offer');
+  }
+  Object.assign(game,g);return game;
+ }
+ return Object.freeze({state:game,start,chooseInitial,select,enter,claimReward,restore,reroll,waveWon,defeat,abandon,allowed});
 }
 root.WandererV012Expedition=Object.freeze({create,FAMILIES,FAMILY_NAMES,THEME_FAMILIES});
 })(globalThis);

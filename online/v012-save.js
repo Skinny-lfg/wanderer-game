@@ -95,6 +95,25 @@ function normalizedLegacy(input){
  if(p.equip.ring){requireValue(!p.equip.ring1,'ambiguous legacy rings');p.equip.ring1=p.equip.ring;delete p.equip.ring;}
  return profileCheck(p);
 }
+function sessionCheck(s,p,e){
+ requireValue(plain(s)&&s.version===1&&typeof s.entry==='boolean'&&plain(s.controller),'checkpoint version');
+ const g=s.controller;
+ requireValue(integer(g.expedition,1,e.unlocked)&&g.unlocked===e.unlocked&&integer(g.planeIndex,1,15)&&['choice','combat','failed','finished'].includes(g.stage),'checkpoint progress');
+ requireValue(integer(s.seed,0,4294967295)&&typeof s.prefix==='string'&&/^[a-z0-9]+$/.test(s.prefix)&&integer(s.idCounter,0,Number.MAX_SAFE_INTEGER)&&typeof s.clock==='number'&&Number.isFinite(s.clock)&&s.clock>=0,'checkpoint RNG/counter');
+ requireValue(s.stamp===null||integer(s.stamp,1,Number.MAX_SAFE_INTEGER),'checkpoint timestamp');
+ requireValue(plain(s.home)&&Array.isArray(s.lootIds)&&s.lootIds.length<=45&&new Set(s.lootIds).size===s.lootIds.length,'loot provenance');
+ profileCheck({...p,stash:[],equip:s.home,expeditionOverflow:[],merchant:null});
+ const items=[...p.stash,...Object.values(p.equip).filter(Boolean),...p.expeditionOverflow],ids=new Set(items.map(i=>i.id)),homeIds=new Set(Object.values(s.home).filter(Boolean).map(i=>i.id));
+ requireValue([...homeIds].every(id=>ids.has(id))&&s.lootIds.every(id=>typeof id==='string'&&ids.has(id)&&!homeIds.has(id)),'loot ownership');
+ requireValue(plain(s.supplies)&&integer(s.supplies.health,0,2)&&integer(s.supplies.mana,0,2),'potion checkpoint');
+ requireValue(s.vitals===null||plain(s.vitals)&&['hp','mp','maxmp'].every(k=>typeof s.vitals[k]==='number'&&Number.isFinite(s.vitals[k])&&s.vitals[k]>=0),'resource checkpoint');
+ requireValue(s.build===null||plain(s.build)&&Array.isArray(s.build.picks)&&s.build.picks.length<=16,'build checkpoint');
+ requireValue(s.draft===null||plain(s.draft)&&['initial','entry','reward'].includes(s.draft.kind)&&['element','passive'].includes(s.draft.step),'draft checkpoint');
+ if(e.active){requireValue(g.expedition===e.active.level&&g.planeIndex===e.active.plane&&g.stage===e.active.stage,'checkpoint identity');}
+ else requireValue(!s.entry&&['failed','finished'].includes(g.stage),'ended checkpoint');
+ if(s.entry)requireValue(g.stage==='combat'&&g.wave===1&&s.draft===null&&e.active!==null,'Realm entry checkpoint');
+ return s;
+}
 function validate(input,binding){
  const s=json(input);requireValue(s.format===FORMAT&&s.schemaVersion===VERSION,'unsupported schema');
  bindingName(s.binding);if(binding!==undefined)requireValue(s.binding===binding,'foreign account/validation slot');
@@ -102,13 +121,14 @@ function validate(input,binding){
  requireValue(s.identity===null||(plain(s.identity)&&typeof s.identity.uid==='string'&&s.identity.uid.length>0&&typeof s.identity.projectId==='string'&&s.identity.projectId.length>0&&typeof s.identity.nickname==='string'&&/^[A-Za-z0-9_]{3,20}$/.test(s.identity.nickname)),'identity');
  if(s.migration!==null)requireValue(plain(s.migration)&&s.migration.source==='classic-v092'&&s.migration.requiresApproval===true&&(s.migration.sourceRevision===null||integer(s.migration.sourceRevision,1,Number.MAX_SAFE_INTEGER)),'migration approval metadata');
  const e=s.expedition;requireValue(plain(e)&&integer(e.completed,0,200)&&e.unlocked===Math.min(200,e.completed+1)&&integer(e.attempts,0,1000000),'Expedition progress');
- requireValue(['new','active','victory','defeat','abandoned','interrupted'].includes(e.lastOutcome)&&e.completed<=e.attempts,'outcome/attempt count');
+ requireValue(['new','active','victory','defeat','abandoned','interrupted','extracted'].includes(e.lastOutcome)&&e.completed<=e.attempts,'outcome/attempt count');
  if(e.lastOutcome==='new')requireValue(e.attempts===0&&e.completed===0,'new profile progress');
  requireValue(Array.isArray(e.awardKeys)&&e.awardKeys.length<=45&&new Set(e.awardKeys).size===e.awardKeys.length,'award ledger');
  for(const token of e.awardKeys){const m=typeof token==='string'&&token.match(/^(\d+):(\d+):(\d+)$/);requireValue(m&&Number(m[1])===e.attempts&&integer(Number(m[2]),1,15)&&integer(Number(m[3]),1,3),'award token');}
  requireValue((e.active!==null)===(e.lastOutcome==='active'),'active checkpoint outcome');
  if(e.attempts===0)requireValue(e.awardKeys.length===0,'rewards before entry');
  if(e.active!==null){const a=e.active;requireValue(e.attempts>0,'entry checkpoint');requireValue(plain(a)&&a.attempt===e.attempts&&integer(a.level,1,e.unlocked)&&integer(a.plane,1,15)&&integer(a.wave,0,3)&&['choice','combat'].includes(a.stage),'checkpoint');requireValue(e.lastOutcome==='active','active outcome');}
+ if(e.session!==undefined&&e.session!==null)sessionCheck(e.session,s.profile,e);
  requireValue(plain(s.legacyHistory)&&integer(s.legacyHistory.maxDungeon,1,200),'legacy history');
  return s;
 }
@@ -131,8 +151,8 @@ function migrateLegacy(input,{binding='local',identity=null,expectedRevision}={}
 }
 function recover(input,binding){
  const save=validate(input,binding),interrupted=!!save.expedition.active;
- if(interrupted){save.expedition.active=null;save.expedition.lastOutcome='interrupted';}
- // All temporary passives, HP/Mana, offers, RNG and enemy runtime are deliberately absent.
+ if(interrupted&&!save.expedition.session){save.expedition.active=null;save.expedition.lastOutcome='interrupted';}
+ // Old checkpoints keep their safe interruption policy. Versioned sessions resume without enemy runtime.
  return {save,interrupted};
 }
 function createStore(storage,binding='local'){
@@ -150,6 +170,12 @@ function createStore(storage,binding='local'){
    requireValue(next.completed>=old.completed&&next.completed<=old.completed+1&&next.attempts>=old.attempts&&next.attempts<=old.attempts+1,'progress regression/jump');
    if(next.attempts===old.attempts)requireValue(old.awardKeys.every(k=>next.awardKeys.includes(k)),'reward ledger rollback');
    else requireValue(old.active===null&&next.active!==null&&next.awardKeys.length===0,'invalid new attempt');
+   if(next.attempts===old.attempts&&old.session&&next.session){
+    requireValue(JSON.stringify(old.session.home)===JSON.stringify(next.session.home),'home equipment changed');
+    const before=old.session.controller.rerollsByRealm,after=next.session.controller.rerollsByRealm;
+    requireValue(Array.isArray(before)&&Array.isArray(after)&&before.length===15&&after.length===15&&after.every((row,i)=>Array.isArray(row)&&row.length===3&&row.every((n,j)=>integer(n,0,before[i][j]))),'reroll rollback');
+   }
+   if(next.lastOutcome==='extracted'&&old.lastOutcome!=='extracted')requireValue(old.active?.stage==='choice'&&old.active.plane>1&&old.session&&!old.session.entry&&!old.session.controller.rewardPending&&next.completed===old.completed&&JSON.stringify(s.profile.pendingRuneReward)===JSON.stringify(previous.profile.pendingRuneReward)&&JSON.stringify(s.profile.runes)===JSON.stringify(previous.profile.runes),'invalid extraction');
    if(next.completed>old.completed)requireValue(old.active?.plane===15&&old.active.wave===3&&old.active.level===next.completed&&next.lastOutcome==='victory'&&next.awardKeys.includes(next.attempts+':15:3'),'boss checkpoint required');
   }
   if(archive!==null){const old=storage.getItem(source);requireValue(old===null||old===archive,'source archive already exists');if(old===null)storage.setItem(source,archive);}

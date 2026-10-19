@@ -80,12 +80,11 @@ function choose(b,family,id,offers){
  b.picks.push(id);return p;
 }
 function element(b,id){if(!hasFamily(b,'magic')||!elements.includes(id)||b.element!==null)throw Error('Magic element already chosen or ineligible');b.element=id;return id;}
-// Existing effects only; grant exactly one starter after the initial affinity (and Magic element) is chosen.
+function initialId(family,element){return family==='magic'?({fire:'kindling',frost:'deep_winter',lightning:'overcharge'})[element]:({blood:'bleeding_edge',decay:'toxic_touch',vitality:'strong_heart',aegis:'iron_skin',fury:'quick_hands'})[family];}
+// Existing effects only; one starter after affinity and Magic element selection.
 function initial(b,family){
  if(b.initialFamily||!hasFamily(b,family)||family==='magic'&&!b.element)throw Error('Initial passive unavailable');
- const id=family==='magic'?({fire:'kindling',frost:'deep_winter',lightning:'overcharge'})[b.element]:
-  ({blood:'bleeding_edge',decay:'toxic_touch',vitality:'strong_heart',aegis:'iron_skin',fury:'quick_hands'})[family];
- if(!BY_ID[id])throw Error('Unknown initial affinity');
+ const id=initialId(family,b.element);if(!BY_ID[id])throw Error('Unknown initial affinity');
  b.initialFamily=family;b.initialPassive=id;b.picks.push(id);return BY_ID[id];
 }
 function ready(b,id,now,seconds){if((b.cooldowns[id]??-1e10)>now)return false;b.cooldowns[id]=now+seconds;return true;}
@@ -190,6 +189,13 @@ function speed(b,now){return b?.runtime?.frenzyUntil>now?1.10:1;}
 function enemyHealMultiplier(b,e){return 1-(e.v012Rot?.length ? Math.min(.7,.35*rank(b,'wither')) : 0);}
 function nextCost(b){return Math.max(4,Math.round(8*(1-.12*rank(b,'efficient_cast'))));}
 function resetWave(b,e){e.v012Rot=[];e.v012Shock=0;}
+function validate(b){
+ if(!b||!Array.isArray(b.families)||b.families.length>3||new Set(b.families).size!==b.families.length||!b.families.every(f=>FAMILIES.includes(f))||b.element!==null&&(!elements.includes(b.element)||!hasFamily(b,'magic'))||!Array.isArray(b.picks)||b.picks.length>16)throw Error('Invalid saved build');
+ for(const id of b.picks){const p=BY_ID[id];if(!p||!hasFamily(b,p.family)||p.requires.some(f=>!hasFamily(b,f))||p.element&&p.element!==b.element||rank(b,id)>p.max)throw Error('Invalid saved passive');}
+ if(b.initialPassive!==null&&(b.initialPassive!==initialId(b.initialFamily,b.element)||!b.picks.includes(b.initialPassive)||!hasFamily(b,b.initialFamily)))throw Error('Invalid initial passive');
+ if(!b.cooldowns||typeof b.cooldowns!=='object'||!Object.values(b.cooldowns).every(n=>typeof n==='number'&&Number.isFinite(n)&&n>=0)||!b.runtime||typeof b.runtime!=='object'||!['frenzyUntil','magicHits','lastSpellAt'].every(k=>typeof b.runtime[k]==='number'&&Number.isFinite(b.runtime[k]))||typeof b.runtime.lastStand!=='boolean')throw Error('Invalid saved cooldowns');
+ return b;
+}
 function clear(b){if(!b)return;b.picks.length=0;b.element=null;b.initialFamily=null;b.initialPassive=null;b.families=[];b.cooldowns=Object.create(null);b.runtime={frenzyUntil:0,counterBlock:0,counterBarrier:0,spellblade:false,magicHits:0,lastStand:false,lastSpellAt:-999};}
-root.WandererV012Buildcraft=Object.freeze({CATALOG:P,FAMILIES,ELEMENTS:elements,create,initial,rank,eligible,options,choose,element,mods,onAttack,onCast,onSecond,incoming,onDefend,onKill,survive,speed,enemyHealMultiplier,nextCost,resetWave,clear});
+root.WandererV012Buildcraft=Object.freeze({CATALOG:P,FAMILIES,ELEMENTS:elements,create,initial,rank,eligible,options,choose,element,mods,onAttack,onCast,onSecond,incoming,onDefend,onKill,survive,speed,enemyHealMultiplier,nextCost,resetWave,validate,clear});
 })(globalThis);
