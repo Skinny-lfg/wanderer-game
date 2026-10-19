@@ -54,8 +54,8 @@ test('private preview protects HTML, assets, JS and prevents access to repo inte
   assert.ok(!source.includes('v012-prototype.mjs'));
   assert.ok(!source.includes('loadAccount()'));assert.ok(!source.includes('loadPrototype()'));
   assert.ok(source.includes('startExpedition()'),'preserve integrated game runtime');
-  const inlineGame=[...source.matchAll(/<script\\b([^>]*)>([\\s\\S]*?)<\\/script>/gi)]
-   .find(([,attributes,code])=>!/\\bsrc\\s*=/.test(attributes)&&code.includes('startExpedition()'));
+  const inlineGame=[...source.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
+   .find(([,attributes,code])=>!/\bsrc\s*=/.test(attributes)&&code.includes('startExpedition()'));
   assert.ok(inlineGame,'integrated runtime must remain in the served page');
   const hash=createHash('sha256').update(inlineGame[2],'utf8').digest('base64');
   const csp=index.headers.get('content-security-policy')||'';
