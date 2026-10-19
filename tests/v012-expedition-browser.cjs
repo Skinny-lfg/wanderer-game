@@ -59,7 +59,9 @@ const server=http.createServer((req,res)=>{
       save:globalThis.WandererGame?.snapshot?.().run?.status,
       hp:globalThis.WandererGame?.snapshot?.().run?.hp})));throw e;}
    assert((await page.locator('h2').first().innerText()).includes('Plane 2 / 15'),'first Plane cleared');
-   assert((await page.locator('.phase1FamilyRow').innerText()).length>0,'family retained between Planes');
+   assert((await page.locator('.phase1FamilyRow').first().innerText()).length>0,'family retained between Planes');
+   const vitals=await page.locator('.phase1FamilyRow').nth(1).innerText();
+   assert(vitals.includes('HP')&&vitals.includes('Mana'),'display carried HP and temporary Magic Mana');
    assert.equal(await page.evaluate(()=>localStorage.getItem('wanderer_browser_proto_v01')),'DO_NOT_TOUCH_CLASSIC_SAVE');
    assert.equal(await page.evaluate(()=>localStorage.getItem('wanderer_account_browser_fixture')),'DO_NOT_TOUCH_ACCOUNT_SAVE');
    assert(requested.some(u=>u.includes('/assets/mobs/')),'existing enemy asset loaded');
