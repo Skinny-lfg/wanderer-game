@@ -19,7 +19,7 @@ const P=[
  ['vitality','renewal','Renewal','Recover 0.55% maximum Health per combat second per rank.'],
  ['vitality','last_stand','Last Stand','Survive one lethal hit per Expedition, recovering 6% HP.'],
  ['vitality','second_breath','Second Breath','Recover 2.5% maximum HP after each completed Wave per rank.'],
- ['vitality','life_bloom','Life Bloom','Periodic healing also restores 1.5 Mana per rank.'],
+ ['vitality','life_bloom','Life Bloom','Every combat second restores 0.25% HP and up to 1.5 Mana per rank.'],
  ['aegis','iron_skin','Iron Skin','Increase Defense by 12% per rank.'],
  ['aegis','fortified','Fortified','Reduce incoming damage by 6% per rank.'],
  ['aegis','guarded_block','Guarded Block','Gain 6% Block chance and partial block protection per rank.'],
@@ -160,7 +160,7 @@ function onSecond(b,c){
   if(rank(b,'rot_ward')&&ready(b,'rotWard',c.now,5))c.barrier(c.player.maxhp*.015);
  }
  if(hasFamily(b,'vitality'))heal(b,c,c.player.maxhp*(.002+.0055*rank(b,'renewal')));
- if(rank(b,'life_bloom'))c.mana(1.5*rank(b,'life_bloom'));
+ if(rank(b,'life_bloom')){heal(b,c,c.player.maxhp*.0025*rank(b,'life_bloom'));c.mana(1.5*rank(b,'life_bloom'));}
  if(rank(b,'barrier_pulse')&&ready(b,'barrierPulse',c.now,6))c.barrier(c.player.maxhp*.02);
  if(rank(b,'blood_ward')&&e.bleedStacks>0&&ready(b,'bloodWard',c.now,5))c.barrier(c.player.maxhp*.018);
 }
