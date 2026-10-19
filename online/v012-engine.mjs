@@ -109,6 +109,7 @@ export function choosePassive(profile,id){
 }
 export function rerollPath(profile,index){
  const r=profile.run;if(!r||r.stage!=='path'||r.rerolls<=0||index<0||index>=3)throw Error('Reroll unavailable');
+ if(r.room===1&&PATHS.find(p=>p.id===r.pathOffers[index]).affinity===r.initial)throw Error('Initial affinity option is guaranteed and cannot be rerolled');
  const used=new Set(r.pathOffers.map(id=>PATHS.find(p=>p.id===id).affinity));
  const available=AFFINITY_IDS.filter(f=>!used.has(f)&&(r.room===1||f!==r.lastPathAffinity));
  if(!available.length)throw Error('No other affinity available');
