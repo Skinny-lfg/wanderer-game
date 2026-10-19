@@ -30,16 +30,18 @@ const server=http.createServer((req,res)=>{
    await page.locator('#v012-overlay .v12-family').first().waitFor();
    assert.equal(await page.locator('#v012-overlay .v12-family').count(),5);
    assert.equal(await page.locator('#v012-overlay select[data-difficulty] option').first().innerText(),'Expedition 1','old Dungeon name should be replaced');
-   assert((await page.locator('#v012-overlay').innerText()).includes('Health resets to full after every Expedition'));
+   assert((await page.locator('#v012-overlay').innerText()).includes('Health and Mana reset to full after every Expedition'));
+   assert.equal(await page.locator('#v012-overlay button[data-action="pots"]').count(),4,'Potion loadout may still be chosen at camp');
    assert(!(await page.locator('#v012-overlay select[data-difficulty]').innerText()).includes('Dungeon'));
 
-   assert.equal(await page.locator('#v012-overlay button[data-action="camp-heal"]').count(),1,'Health potions must appear at camp');
-   assert.equal(await page.locator('#v012-overlay button[data-action="camp-mana"]').count(),1,'Mana potions must appear at camp');
-   assert.equal(await page.locator('#v012-overlay button[data-action="camp-heal"]').isDisabled(),true,'full HP cannot waste a potion');
+   assert.equal(await page.locator('#v012-overlay button[data-action="camp-heal"]').count(),0,'Health potions cannot be consumed in the main Camp');
+   assert.equal(await page.locator('#v012-overlay button[data-action="camp-mana"]').count(),0,'Mana potions cannot be consumed in the main Camp');
+   assert.equal(await page.locator('#v012-overlay button[data-action="potion"]').count(),0,'Potion use is available only between Planes');
    await page.locator('#v012-overlay button[data-action="begin"][data-id="blood"]').click();
    assert.equal(await page.locator('#v012-overlay .v12-passive').count(),3);
    await page.locator('#v012-overlay .v12-passive').first().click();
    assert.equal(await page.locator('#v012-overlay .v12-path').count(),3);
+   assert.equal(await page.locator('#v012-overlay button[data-action="potion"]').count(),2,'Potions remain available between Planes');
    assert.equal(await page.locator('#v012-overlay .v12-plane-badges').count(),3,'Three offered Planes show their Waves and Elite status');
    assert.equal(await page.locator('#v012-overlay .v12-inventory summary').count(),1,'Inventory is accessible between Planes');
    await page.locator('#v012-overlay .v12-inventory summary').click();
