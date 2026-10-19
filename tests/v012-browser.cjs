@@ -38,6 +38,9 @@ const server=http.createServer((req,res)=>{
    assert.equal(await page.locator('#v012-overlay .v12-path').count(),3);
    assert.equal(await page.locator('#v012-overlay .v12-plane-badges').count(),3,'Three offered Planes show their Waves and Elite status');
    assert.equal(await page.locator('#v012-overlay .v12-inventory summary').count(),1,'Inventory is accessible between Planes');
+   await page.locator('#v012-overlay .v12-inventory summary').click();
+   assert((await page.locator('#v012-overlay .v12-inventory select[data-slot]').count())>=1,'Equipment selector must work during Plane preparation');
+   assert((await page.locator('#v012-overlay .v12-plane-badges').first().innerText()).includes('Wave'),'Wave count must be visible');
    assert.equal(await page.locator('#v012-overlay .v12-passive-entry').count(),1,'Current passives should be visible');
    const familyLabels=await page.locator('#v012-overlay .v12-path .v12-tag').allTextContents();
    assert(familyLabels.some(x=>x.includes('Blood')),'initial affinity should be guaranteed');
