@@ -29,6 +29,8 @@ const server=http.createServer((req,res)=>{
    await page.locator('#v012-launch').click();
    await page.locator('#v012-overlay .v12-family').first().waitFor();
    assert.equal(await page.locator('#v012-overlay .v12-family').count(),5);
+   assert.equal(await page.locator('#v012-overlay button[data-action="camp-heal"]').count(),1,'Health potions must appear at camp');
+   assert.equal(await page.locator('#v012-overlay button[data-action="camp-heal"]').isDisabled(),true,'full HP cannot waste a potion');
    await page.locator('#v012-overlay button[data-action="begin"][data-id="blood"]').click();
    assert.equal(await page.locator('#v012-overlay .v12-passive').count(),3);
    await page.locator('#v012-overlay .v12-passive').first().click();
@@ -42,6 +44,8 @@ const server=http.createServer((req,res)=>{
    assert.equal(await page.locator('#v012-overlay .v12-path').count(),0);
    const enemyCount=await page.locator('#v012-overlay .v12-enemy').count();
    assert.equal(enemyCount,1,'first room is a combat with one active enemy');
+   assert.equal(await page.locator('#v012-overlay button[data-kind="hp"]').count(),0,'Health potions must never be usable in combat');
+   assert.equal(await page.locator('#v012-overlay button[data-kind="mana"]').count(),2,'Mana potions remain accessible');
    if(enemyCount===1){
     assert.equal(await page.locator('#v012-overlay button[data-action="target"]').count(),0,'no manual targeting');
     await page.locator('#v012-overlay button[data-action="pause"]').click();
@@ -59,6 +63,6 @@ const server=http.createServer((req,res)=>{
    assert.deepEqual(errors,[],'browser uncaught errors at '+width);
    await context.close();
   }
-  console.log('PASS v0.12 desktop/mobile browser: launcher, choices, reroll, single target, isolated local save, reopen');
+  console.log('PASS v0.12 desktop/mobile browser: 3 affinity cap, camp-only Health, reroll, isolated save, reopen');
  } finally {await browser.close();server.close();}
 })().catch(err=>{console.error(err);process.exitCode=1;server.close();});
