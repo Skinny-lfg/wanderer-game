@@ -153,8 +153,8 @@ export function createPrivatePreviewServer({
     // 'self' alone blocks that script on Safari (blank app after login).
     // Allow only the actual served script by its SHA-256, not unsafe-inline.
     const html=body.toString('utf8');
-    const hashes=[...html.matchAll(/<script\\b([^>]*)>([\\s\\S]*?)<\\/script>/gi)]
-     .filter(([,attributes,code])=>!/\\bsrc\\s*=/.test(attributes)&&code.trim())
+    const hashes=[...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
+     .filter(([,attributes,code])=>!/\bsrc\s*=/.test(attributes)&&code.trim())
      .map(([, ,code])=>"'sha256-"+createHash('sha256').update(code,'utf8').digest('base64')+"'");
     if(hashes.length){
      const policy=String(res.getHeader('Content-Security-Policy')||'');
