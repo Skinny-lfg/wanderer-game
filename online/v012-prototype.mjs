@@ -1,4 +1,4 @@
-import {STORAGE_KEY,FAMILIES,PATHS,PASSIVES,SLOTS,MAX_AFFINITIES,newProfile,stats,begin,choosePassive,choosePath,ensurePlaneOffers,rerollPath,resolveRoom,usePotion,useCampHealthPotion,useCampManaPotion,tick,abandon,leaveFinished,equip,inventoryScore} from './v012-engine.mjs';
+import {STORAGE_KEY,FAMILIES,MAGIC_ELEMENTS,PATHS,PASSIVES,SLOTS,MAX_AFFINITIES,newProfile,stats,begin,choosePassive,chooseMagicElement,migrateMagicProfile,ensureMagicElementChoice,choosePath,ensurePlaneOffers,rerollPath,resolveRoom,usePotion,useCampHealthPotion,useCampManaPotion,tick,abandon,leaveFinished,equip,inventoryScore} from './v012-engine.mjs';
 let profile,open=false,manaPots=2,selectedLevel=1,paused=false,speed=2,error='',autosave=0;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const $=(sel)=>document.querySelector(sel);
@@ -8,6 +8,7 @@ if(profile.run&&profile.run.affinities?.length>MAX_AFFINITIES){
  error='Previous experimental run was ended because it used more than three affinities. Permanent loot is preserved.';
  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(profile));}catch{}
 }
+if(migrateMagicProfile(profile)){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(profile));}catch{}}
 profile.restHpRatio=profile.restHpRatio??1;
 profile.healthPotionStock=profile.healthPotionStock??3;
 selectedLevel=profile.unlocked;
@@ -15,9 +16,9 @@ function persist(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(profile))
 function idFromButton(b){return b.dataset.id;}
 function passiveCard(id){
  const p=PASSIVES.find(x=>x.id===id),a=FAMILIES[p.affinity],hybrid=p.requires.length>0;
- return '<button class="v12-passive" data-action="passive" data-id="'+esc(id)+'"><span class="v12-tag" style="--accent:'+a.color+'">'+esc(a.icon+' '+a.name)+(hybrid?' + hybrid':'')+'</span><strong>'+esc(p.name)+'</strong><small>'+esc(p.description)+'</small></button>';
+ return '<button class="v12-passive" data-action="passive" data-id="'+esc(id)+'"><span class="v12-tag" style="--accent:'+a.color+'">'+esc(a.icon+' '+a.name)+(hybrid?' + hybrid':'')+(p.element?' · '+MAGIC_ELEMENTS[p.element].name:'')+'</span><strong>'+esc(p.name)+'</strong><small>'+esc(p.description)+'</small></button>';
 }
-function affChip(f){return '<span class="v12-chip" style="--accent:'+FAMILIES[f].color+'">'+esc(FAMILIES[f].icon+' '+FAMILIES[f].name)+'</span>';}
+function affChip(f){const element=f==='magic'&&profile.run?.magicElement?MAGIC_ELEMENTS[profile.run.magicElement]:null;return '<span class="v12-chip" style="--accent:'+FAMILIES[f].color+'">'+esc(FAMILIES[f].icon+' '+FAMILIES[f].name+(element?' · '+element.name:''))+'</span>';}
 function statsBar(label,current,total){
  const pct=total?Math.max(0,Math.min(100,100*current/total)):0;
  return '<div class="v12-bar-label"><span>'+esc(label)+'</span><b>'+Math.ceil(Math.max(0,current))+' / '+Math.round(total)+'</b></div><div class="v12-bar"><span style="width:'+pct+'%"></span></div>';
@@ -63,6 +64,12 @@ function camp(){
  const families=Object.entries(FAMILIES).map(([id,a])=>'<button class="v12-family" data-action="begin" data-id="'+id+'" style="--accent:'+a.color+'"><span>'+a.icon+'</span><strong>'+esc(a.name)+'</strong><small>'+esc(a.kind)+'</small></button>').join('');
  return '<div class="v12-stack"><section class="v12-panel"><h2>Camp · Prepare Expedition</h2><p class="v12-muted">Review your HP, Mana and inventory before entering. Choose up to three affinity families per expedition, and rest between Planes.</p>'+status+resourceCamp(null,stats(profile))+levelSelector+potionSelector+'<h3>Choose initial affinity</h3><div class="v12-family-grid">'+families+'</div></section>'+gearPanel()+'</div>';
 }
+function elementSelect(r){
+ const cards=Object.entries(MAGIC_ELEMENTS).map(([id,element])=>
+  '<button class="v12-passive v12-element" data-action="element" data-id="'+id+'" style="--accent:'+element.color+'"><span class="v12-element-icon">'+element.icon+'</span><strong>'+esc(element.name)+'</strong><small>'+esc(element.description)+'</small><span class="v12-tag" style="--accent:'+element.color+'">Choose '+esc(element.name)+'</span></button>'
+ ).join('');
+ return '<section class="v12-panel"><span class="v12-eyebrow">Magic · choose your spell school</span><h2>Choose a Magic element</h2><p class="v12-muted">Choose Fire, Poison or Frost once per expedition. Elemental spells work with every weapon; Staff and Wand amplify their effects. Afterwards you can unlock Mana Regeneration, Spell Power and elemental upgrades. This is still only one affinity.</p><div class="v12-rewards">'+cards+'</div></section>';
+}
 function startReward(r){
  return '<section class="v12-panel"><span class="v12-eyebrow">Start of adventure</span><h2>Choose one initial '+esc(FAMILIES[r.initial].name)+' passive</h2><p class="v12-muted">Your base affinity activates immediately. These three passives are drawn from the selected family.</p><div class="v12-rewards">'+r.passiveOffers.map(passiveCard).join('')+'</div></section>';
 }
@@ -101,13 +108,14 @@ function finished(r){
 function render(){
  if(!open)return;
  const host=$('#v012-overlay');if(!host)return;
+ if(ensureMagicElementChoice(profile))persist();
  if(ensurePlaneOffers(profile))persist();
  const r=profile.run,s=stats(profile);
  const rbar=r&&r.stage!=='finished'?'<div class="v12-progress"><span>Difficulty '+r.level+' · Room '+r.room+'/15</span><span>'+r.passives.length+' passives · '+r.rerolls+' rerolls</span></div>':'';
  const affinities=r?r.affinities.map(affChip).join(''):'';
- let body=!r?camp():r.stage==='startReward'?startReward(r):r.stage==='path'?pathSelect(r):r.stage==='reward'?reward(r):r.stage==='combat'?combat(r,s):r.stage==='finished'?finished(r):nonCombat(r,s);
- if(r&&['startReward','reward','path','chest','event','altar'].includes(r.stage))body=betweenCombats(r,s)+body;
- let gearStrip=r&&r.stage!=='finished'?'<div class="v12-side"><section class="v12-panel"><div class="v12-section-head"><h3>Active affinities</h3><span>'+r.affinities.length+'/'+MAX_AFFINITIES+'</span></div><div class="v12-chips">'+affinities+'</div><p class="v12-muted">'+r.passives.length+' temporary passives · '+profile.inventory.length+' permanent items</p></section>'+activePassives(r)+'<section class="v12-panel"><h3>Expedition log</h3><div class="v12-log">'+r.log.slice(0,8).map(x=>'<div>'+esc(x)+'</div>').join('')+'</div></section><button class="v12-danger" data-action="abandon">Abandon expedition</button></div>':'';
+ let body=!r?camp():r.stage==='element'?elementSelect(r):r.stage==='startReward'?startReward(r):r.stage==='path'?pathSelect(r):r.stage==='reward'?reward(r):r.stage==='combat'?combat(r,s):r.stage==='finished'?finished(r):nonCombat(r,s);
+ if(r&&['element','startReward','reward','path','chest','event','altar'].includes(r.stage))body=betweenCombats(r,s)+body;
+ let gearStrip=r&&r.stage!=='finished'?'<div class="v12-side"><section class="v12-panel"><div class="v12-section-head"><h3>Active affinities</h3><span>'+r.affinities.length+'/'+MAX_AFFINITIES+'</span></div><div class="v12-chips">'+affinities+'</div>'+(r.magicElement?'<p class="v12-muted">Active Magic: '+MAGIC_ELEMENTS[r.magicElement].icon+' '+MAGIC_ELEMENTS[r.magicElement].name+' · usable with any weapon</p>':'')<p class="v12-muted">'+r.passives.length+' temporary passives · '+profile.inventory.length+' permanent items</p></section>'+activePassives(r)+'<section class="v12-panel"><h3>Expedition log</h3><div class="v12-log">'+r.log.slice(0,8).map(x=>'<div>'+esc(x)+'</div>').join('')+'</div></section><button class="v12-danger" data-action="abandon">Abandon expedition</button></div>':'';
  host.innerHTML='<div class="v12-shell"><header class="v12-header"><div><span class="v12-eyebrow">DEVELOPMENT ONLY · ISOLATED SAVE</span><h1>WANDERER <small>v0.12 prototype</small></h1></div><button data-action="close" class="v12-close" aria-label="Close prototype">✕ Close</button></header>'+rbar+(error?'<div class="v12-error">'+esc(error)+'</div>':'')+'<div class="v12-layout"><div class="v12-main">'+body+'</div>'+gearStrip+'</div><footer class="v12-footer">Experimental battle balance. Original D1–D200 gameplay, accounts and cloud saves are unchanged. Local prototype save key: '+STORAGE_KEY+'</footer></div>';
 }
 function dispatch(action,b){
@@ -119,6 +127,7 @@ function dispatch(action,b){
   case 'camp-mana':useCampManaPotion(profile);break;
   case 'begin':begin(profile,idFromButton(b),manaPots,selectedLevel);paused=false;break;
   case 'passive':choosePassive(profile,idFromButton(b));break;
+  case 'element':chooseMagicElement(profile,idFromButton(b));break;
   case 'path':choosePath(profile,idFromButton(b));paused=false;break;
   case 'reroll':rerollPath(profile,+b.dataset.index);break;
   case 'resolve':resolveRoom(profile,idFromButton(b));break;
