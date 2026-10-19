@@ -41,6 +41,9 @@ const server=http.createServer((req,res)=>{
    assert((await page.locator('.phase1Offers').innerText()).includes('Waves'),'show wave count');
    assert((await page.locator('.phase1Offers').innerText()).includes('Elite')||(await page.locator('.phase1Offers').innerText()).includes('Regular'),'show Elite state');
    await page.locator('.phase1Offer').first().click();
+   if(await page.locator('[data-phase2-element]').count())await page.locator('[data-phase2-element="lightning"]').click();
+   assert.equal(await page.locator('[data-phase2-passive]').count(),3,'exactly three implemented temporary passive choices');
+   await page.locator('[data-phase2-passive]').first().click();
    await page.locator('#heroPortrait').waitFor({timeout:10000});
    await page.locator('#enemyPortrait').waitFor();
    assert((await page.locator('#heroPortrait').getAttribute('src')).startsWith('assets/characters/avatars/'),'original character sprite');
@@ -50,7 +53,11 @@ const server=http.createServer((req,res)=>{
    assert.equal(await page.locator('.combatVfx').count()>=0,true);
    // Combat engine auto-advances every Wave, and returns to path selection.
    await page.locator('#combatSpeed').click();await page.locator('#combatSpeed').click();
-   await page.locator('.phase1Offer').first().waitFor({timeout:55000});
+   try{await page.locator('.phase1Offer').first().waitFor({timeout:35000});}
+   catch(e){console.error('PHASE2 BROWSER DIAGNOSTICS',width,
+      await page.evaluate(()=>({scene:document.querySelector('#screen')?.innerText?.slice(0,2300),
+      save:globalThis.WandererGame?.snapshot?.().run?.status,
+      hp:globalThis.WandererGame?.snapshot?.().run?.hp})));throw e;}
    assert((await page.locator('h2').first().innerText()).includes('Plane 2 / 15'),'first Plane cleared');
    assert((await page.locator('.phase1FamilyRow').innerText()).length>0,'family retained between Planes');
    assert.equal(await page.evaluate(()=>localStorage.getItem('wanderer_browser_proto_v01')),'DO_NOT_TOUCH_CLASSIC_SAVE');
