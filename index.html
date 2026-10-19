@@ -3364,6 +3364,7 @@ function renderCombat(){wallet();const r=state.run;if(!r){view='tavern';render()
 let phase1Controller=null,phase1Vitals=null;
 const isPhase1Run=()=>PHASE1_PREVIEW&&state.run?.phase1===true;
 function phase1Init(){
+ $('screen').inert=false; // No online/app.mjs in preview: explicitly reveal the standalone UI.
  fresh();
  state.equip.weapon=state.stash.shift();
  state.equip.armor=makeItem(1,'armor',null,'loot','Armor','Uncommon');
