@@ -3445,7 +3445,7 @@ function phase2Launch(plane){
  const stats=phase2Stats();
  const hp=phase1Vitals?Math.min(stats.maxhp,Math.max(1,phase1Vitals.hp)):stats.maxhp;
  const mp=phase1Vitals?(phase1Vitals.maxmp===0&&stats.mana>0?stats.mana:Math.min(stats.mana,Math.max(0,phase1Vitals.mp))):stats.mana;
- state.run={phase1:true,phase1Magic:!!phase1Build.element,tier:phase1Controller.state.expedition,path:plane.id,enc:0,status:'ready',
+ state.run={phase1:true,phase1Magic:!!phase1Build.element,phase1Plane:phase1Controller.state.planeIndex,planeWaves:plane.waves,planeName:plane.name,planeFamily:plane.family,tier:phase1Controller.state.expedition,path:plane.id,enc:0,status:'ready',
  hp,maxhp:stats.maxhp,mp,maxmp:stats.mana,barrier:0,stats,enemy:null,tPlayer:0,tEnemy:0,tDot:0,
  loot:[],valuables:[],gold:0,fragments:0,eliteType:rollEliteArchetype(),
  playerHealingDebuffUntil:0,combatSeconds:0,setCooldowns:{},secondWindUsed:false};
@@ -3511,9 +3511,9 @@ function phase1DecorateCombat(){
  const classicTheme=THEMES.find(t=>t.id===g.selected?.id);
  const arena=$('scene');if(arena&&classicTheme)arena.style.backgroundImage='url("'+dungeonImage(classicTheme)+'")';
  const heading=document.querySelector('.combatDungeonHeading');
- if(heading)heading.innerHTML='Expedition '+g.expedition+' · Plane '+g.planeIndex+' / 15';
+ if(heading)heading.textContent='Expedition '+g.expedition+' · Plane '+r.phase1Plane+' / 15';
  const header=heading?.parentElement?.querySelector('p');
- if(header)header.textContent='Wave '+g.wave+'/'+g.selected.waves+' · '+g.selected.name+' · '+WandererV012Expedition.FAMILY_NAMES[g.selected.family];
+ if(header)header.textContent=r.status==='fight'?'Wave '+g.wave+'/'+r.planeWaves+' · '+r.planeName+' · '+WandererV012Expedition.FAMILY_NAMES[r.planeFamily]:'Plane '+r.phase1Plane+' cleared · Rewards secured';
  document.querySelectorAll('.combatDecisionPanel,.nextWaveOdds').forEach(el=>el.remove());
  const leave=$('leave'),next=$('nextFight');if(leave)leave.remove();if(next)next.remove();
  const actions=document.querySelector('.combatActions');
