@@ -125,3 +125,39 @@ test('integration gates original weapons, Legendary and permanent save mechanics
  assert(source.includes('legendaryDefensiveEffects(r,damageBlocked,hit,blocked'));
  assert(source.includes("state.run={phase1:true,phase1Magic:!!phase1Build.element"));
 });
+
+test('independent Aegis retaliation sources both resolve without recursive new hits',()=>{
+ const b=api.create();b.families=['aegis','fury'];b.picks=['retaliation','counterstrike'];
+ const {c,history}=ctx(.99);c.enemy.v012Rot=[];
+ api.onDefend(b,c,19,11);
+ assert.equal(b.runtime.counterBlock,1);
+ assert.equal(b.runtime.counterBarrier,1);
+ api.onAttack(b,c);
+ const hits=history.filter(x=>x[0]==='damage').map(x=>x[2]);
+ assert(hits.includes('🛡 Counterstrike')&&hits.includes('🛡 Retaliation'),'both effects proc');
+ const prev=history.length;api.onAttack(b,c);
+ assert.equal(history.slice(prev).filter(x=>x[0]==='damage').length,0,'no extra hits from already spent charges');
+});
+test('Staff/Wand amplify all Magic schools without consuming extra status rolls',()=>{
+ for(const school of api.ELEMENTS){
+  const b=api.create();b.families=['magic'];b.element=school;
+  function cast(amp){const {c,history}=ctx(1);c.enemy.v012Shock=3;c.power=110;c.amp=amp;
+   api.onCast(b,c);return {history,enemy:c.enemy};}
+  b.runtime.magicHits=0;
+  const basic=cast(1);
+  b.runtime.magicHits=0;b.cooldowns=Object.create(null);
+  const wand=cast(1.12);
+  b.runtime.magicHits=0;b.cooldowns=Object.create(null);
+  const staff=cast(1.25);
+  if(school==='fire'){
+   const potency=run=>run.enemy.dots.burn[0].damage;
+   assert(staff&&potency(staff)>potency(wand)&&potency(wand)>potency(basic),'Fire scales with magical weapon');
+  }else if(school==='lightning'){
+   const hp=run=>run.enemy.hp;
+   assert(hp(staff)<hp(wand)&&hp(wand)<hp(basic),'Lightning burst scales with magical weapon');
+  }else{
+   const chill=run=>run.enemy.slowTime;
+   assert(chill(staff)>0&&chill(wand)===chill(basic),'Frost amplifies damage, not control duration, without specialized passive');
+  }
+ }
+});
