@@ -101,3 +101,17 @@ body.v12-open{overflow:hidden}
  #v012-overlay .v12-gear-row{grid-template-columns:64px minmax(0,1fr)}
  #v012-overlay .v12-gear-row select{grid-column:2}
 }
+
+
+#v012-overlay .v12-rest-stack{display:grid;gap:12px;margin-bottom:14px}
+#v012-overlay .v12-rest{border-color:#665676;background:linear-gradient(140deg,#252438,#171b26)}
+#v012-overlay .v12-inventory{border:1px solid #5e5570;border-radius:12px;background:#1d1f2d;overflow:hidden}
+#v012-overlay .v12-inventory summary{cursor:pointer;padding:12px 16px;color:#ecd7b0;font-weight:650}
+#v012-overlay .v12-inventory>.v12-panel{border:0;border-top:1px solid #4b425c;border-radius:0}
+#v012-overlay .v12-plane-badges{display:flex;flex-wrap:wrap;gap:6px;margin:0}
+#v012-overlay .v12-plane-badges span{font-size:12px;padding:4px 7px;border-radius:7px;background:#283246;border:1px solid #50627a;white-space:nowrap}
+#v012-overlay .v12-plane-badges .v12-elite{color:#ffb0a0;background:#462329;border-color:#9e5956}
+#v012-overlay .v12-passive-list{display:grid;gap:7px;max-height:380px;overflow:auto}
+#v012-overlay .v12-passive-entry{display:grid;gap:4px;padding:8px;border-radius:8px;background:#1e1e2c;border:1px solid #3b3648}
+#v012-overlay .v12-passive-entry strong{font-size:13px;color:#eddfc9}
+#v012-overlay .v12-passive-entry small{font-size:11px;line-height:1.4}
