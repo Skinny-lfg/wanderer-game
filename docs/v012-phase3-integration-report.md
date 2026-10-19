@@ -36,9 +36,15 @@ The original HTML closure remains the owner of `renderCombat`, `renderStash`, `r
 - Main regression suite: **PASS** on development commits through the current Phase 3 changes, including original two-handed/Legendary/affinity/economy tests.
 - Original Phase 1 and 2 Expedition browser checks: **PASS**.
 - Full 15-Plane test (two widths, accelerated with *test-only synthetic loadout*): **PASS** in Phase 3 `Browser asset and VFX checks` after mobile return-navigation fix. Verifies three routes per Plane, completed boss unlock, original art and VFX, two-reroll limit, potion stage restrictions, original inventory/weapon equip, HP cap-swap exploit guard, zero external account module requests, untouched sentinel localStorage saves, no JS exceptions and no viewport overflow.
-- Full pre-release audit: [development audit workflow](https://github.com/Skinny-lfg/wanderer-game/actions?query=branch%3Adevelopment). **Do not mark all suites passed until the final GitHub Actions gate is green.**
+- Full pre-release audit: **PASS** on commit [`236209eedc55`](https://github.com/Skinny-lfg/wanderer-game/commit/236209eedc552fb4b8a2a997d31f8a638a1b0b18), [GitHub Actions run 39302624342](https://github.com/Skinny-lfg/wanderer-game/actions/runs/39302624342). All eight checks passed: original asset/VFX browser tests (including both Phase 3 fifteen-Plane runs), unit/smoke, mobile/gameplay browser stress, online/account flows, interrupted-save/concurrent conflict recovery, deterministic stress, PvP, and Firestore rules in the demo emulator **only**. No production changes.
 
 **Important:** This 15-Plane run validates transitions, UI and compatibility. It does **not** establish real-player survivability, fair progression pace or drop/economy balance, because its fixture equips deliberately strong synthetic gear.
+
+## Phase 3 mobile arena regression fixed
+
+The full audit at commit `6891d8c9` uncovered a **real** layout regression in original inline CSS: `.scene:has(.eliteCombatant)` forces 190px on mobile (and 355px on desktop), overriding the previous Expedition-specific height. After an Elite encounter, the scene jumped from 360px to 190px. This was corrected via the more specific, preview-only `.phase3IntegratedPreview #scene` rule in `online/v012-phase1.css` at commit `236209ee`. The end-to-end browser test now checks actual live combat arena height across Waves, rather than only a nominal minimum.
+
+The completed `39302624342` audit log explicitly confirms **PASS full integrated Expedition on 390px** and **on 1280px**. Both use the original game attack/loot functions and synthetic test-only high-stat equipment. Existing legacy 320px mobile smoke suites also passed, but the *full fifteen-Plane* run covers 390px and 1280px only.
 
 ## Known limitations and Phase 4 boundary
 
@@ -51,4 +57,4 @@ The original HTML closure remains the owner of `renderCombat`, `renderStash`, `r
 
 ## Gate
 
-Phase 3 is fit for **isolated development playtesting**, provided the full GitHub audit stays green. This is not a production release or authorization to modify `main`, Firebase, real accounts or cloud saves.
+**Phase 3 PASSED** the full audit and is fit for **isolated development playtesting**. This is not a production release or authorization to modify `main`, Firebase, real accounts or cloud saves.
