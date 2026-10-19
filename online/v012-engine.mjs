@@ -115,6 +115,13 @@ function makePathOffers(run){
  run.pathOffers=chosen;
  run.planeOffers=chosen.map(id=>rollPlane(run,id));
 }
+export function ensurePlaneOffers(profile){
+ const run=profile?.run;
+ if(!run||run.stage!=='path'||!Array.isArray(run.pathOffers))return false;
+ if(run.planeOffers?.length===run.pathOffers.length&&run.planeOffers.every((p,i)=>p?.id===run.pathOffers[i]))return false;
+ run.planeOffers=run.pathOffers.map(id=>rollPlane(run,id));
+ return true;
+}
 export function choosePassive(profile,id){
  const r=profile.run;if(!r||!['reward','startReward'].includes(r.stage)||!r.passiveOffers.includes(id))throw Error('Passive not offered');
  const p=PASSIVES.find(x=>x.id===id);if(!p)throw Error('Unknown passive');
