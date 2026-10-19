@@ -35,6 +35,8 @@ function runSim(seed,gearCount,level,family){
  for(let guard=0;guard<500&&r.stage!=='finished';guard++){
   if(r.stage==='startReward'||r.stage==='reward'){choosePassive(p,chooseReward(r));continue;}
   if(r.stage==='path'){
+   if(r.potions.mana>0&&r.mp<stats(p).mana*.4)usePotion(p,'mana');
+   if(r.potions.hp>0&&r.hp<stats(p).hp*.55)usePotion(p,'hp');
    // Prefer a focus on the initial family when offered, then an active family.
    const options=r.pathOffers.map(id=>PATHS.find(x=>x.id===id));
    const active=options.find(x=>x.affinity===r.initial)||options.find(x=>r.affinities.includes(x.affinity));
@@ -42,7 +44,6 @@ function runSim(seed,gearCount,level,family){
   }
   if(r.stage==='combat'){
    for(let i=0;i<1500&&r.stage==='combat';i++){
-    if(r.potions.mana>0&&r.mp<stats(p).mana*.18)usePotion(p,'mana');
     tick(p,.2);ticks++;
    }
    if(r.stage==='combat')throw Error('Stuck in combat '+r.room);
