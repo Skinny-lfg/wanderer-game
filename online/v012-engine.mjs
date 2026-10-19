@@ -207,16 +207,24 @@ export function resolveRoom(profile,action='safe'){
  completeRoom(profile,(stage==='chest'&&action==='treasure')||(stage==='event'&&action==='risk'));return profile;
 }
 export function usePotion(profile,kind){
- const r=profile.run;if(!r||r.stage==='finished'||kind!=='mana'||r.potions.mana<1)throw Error('Health potions can only be used at camp between runs');
- const s=stats(profile);if(r.mp>=s.mana)return false;
- r.mp=Math.min(s.mana,r.mp+s.mana*.35);
- r.potions.mana--;return true;
+ const run=profile.run;
+ if(!run||!['startReward','reward','path','chest','event','altar'].includes(run.stage))throw Error('Potions only at camp between combats');
+ if(!['hp','mana'].includes(kind)||!run.potions||run.potions[kind]<1)throw Error('Potion unavailable');
+ const stat=stats(profile),max=kind==='hp'?stat.hp:stat.mana,field=kind==='hp'?'hp':'mp';
+ if(run[field]>=max)return false;
+ const stock=kind==='hp'?'healthPotionStock':'manaPotionStock';
+ if((profile[stock]??3)<1)throw Error('Out of potions');
+ run[field]=Math.min(max,run[field]+max*(kind==='hp'?.30+.06*count(run,'herbalist'):.35));
+ run.potions[kind]--;profile[stock]=(profile[stock]??3)-1;
+ return true;
 }
 function finishRecovery(profile){
  const r=profile.run;
  const maximum=stats(profile).hp;
  profile.restHpRatio=clamp(r.hp/maximum,.4,1);
+ profile.restMpRatio=clamp(r.mp/Math.max(1,stats(profile).mana),.3,1);
  profile.healthPotionStock=Math.min(3,(profile.healthPotionStock??3)+1);
+ profile.manaPotionStock=Math.min(3,(profile.manaPotionStock??3)+1);
 }
 export function useCampHealthPotion(profile){
  if(profile.run&&profile.run.stage!=='finished')throw Error('Health potions are usable only at camp between runs');
@@ -225,6 +233,14 @@ export function useCampHealthPotion(profile){
  if((profile.restHpRatio??1)>=.999)return false;
  profile.restHpRatio=Math.min(1,(profile.restHpRatio??1)+.30);
  profile.healthPotionStock--;
+ return true;
+}
+export function useCampManaPotion(profile){
+ if(profile.run)throw Error('Return to camp before using Mana potion');
+ if((profile.manaPotionStock??3)<1)throw Error('No Mana potions left');
+ if((profile.restMpRatio??1)>=.999)return false;
+ profile.restMpRatio=Math.min(1,(profile.restMpRatio??1)+.35);
+ profile.manaPotionStock--;
  return true;
 }
 function finishDeath(profile){
