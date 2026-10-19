@@ -43,3 +43,10 @@ test('D200 speedrun time requires an eligible completed D200 milestone',()=>{
  assert.equal(safeProgress(save).attemptId,'legacy','old saves remain readable');
  assert.throws(()=>validateSave({...base,onlineProgress:{...base.onlineProgress,attemptId:'a/b'}}),/attempt ID/);
 });
+test('Belt and armor category validation stays compatible with legacy saves',()=>{
+ const belt={id:'belt',name:'Woven Belt',slot:'belt',subtype:'Belt',armorType:'Leather',tier:5,rarity:'Rare',agi:1,def:11,hp:20};
+ const profile={...save,equip:{belt}};
+ assert.deepEqual(validateSave(profile),profile);assert.deepEqual(validateSave(save),save);
+ assert.throws(()=>validateSave({...save,equip:{belt:{...belt,armorType:'Hybrid'}}}),/armor type/);
+ assert.throws(()=>validateSave({...save,stash:[{...belt,slot:'weapon'}]}),/armor type/);
+});

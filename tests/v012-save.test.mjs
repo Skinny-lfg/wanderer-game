@@ -102,3 +102,16 @@ test('exhausted revision counters fail before modifying the durable record',()=>
  io.data.set(S.key('local'),JSON.stringify(save));const store=S.createStore(io),loaded=store.load();
  assert.throws(()=>store.commit(loaded),/revision exhausted/);assert.equal(store.load().revision,Number.MAX_SAFE_INTEGER);
 });
+test('Phase 1 Belt and armor categories round-trip without requiring a Belt in old saves',()=>{
+ const old=legacy(),raw=JSON.stringify(old),m=S.migrateLegacy(old);
+ assert.equal(JSON.stringify(old),raw);assert.equal(m.save.profile.equip.belt,undefined);
+ const belt={id:'belt',name:'Woven Belt',slot:'belt',subtype:'Belt',tier:5,rarity:'Rare',armorType:'Cloth',int:1,def:11,hp:20,effect:null,magic:null};
+ m.save.profile.equip.belt=belt;
+ const olderBelt=structuredClone(old);olderBelt.equip.belt={...belt};delete olderBelt.equip.belt.subtype;
+ assert.equal(S.migrateLegacy(olderBelt).save.profile.equip.belt.subtype,'Belt');
+ const storage=memory(),store=S.createStore(storage,'local');store.load();const committed=store.commit(m.save);
+ assert.deepEqual(S.createStore(storage,'local').load().profile.equip.belt,belt);
+ assert.equal(committed.profile.equip.weapon.effect,'crit','legacy data remains archived in gear');
+ const invalid=structuredClone(committed);invalid.profile.equip.belt.armorType='Hybrid';assert.throws(()=>S.validate(invalid),/armor type/);
+ invalid.profile.equip.belt.armorType='Plate';invalid.profile.equip.weapon.armorType='Plate';assert.throws(()=>S.validate(invalid),/armor type/);
+});

@@ -2,7 +2,7 @@
 (function(root){
 'use strict';
 const FORMAT='wanderer-expedition',VERSION=12,PREFIX='wanderer_v012_validation_v1_';
-const SLOTS=['helm','amulet','armor','gloves','weapon','offhand','ring1','ring2','boots'];
+const SLOTS=['helm','amulet','armor','gloves','weapon','offhand','ring1','ring2','boots','belt'];
 const STATS=['atk','def','hp','spd','str','agi','int','end','cha','mana','spell'];
 const EFFECTS=['poison','bleed','crit','sunder','shield','regen','burn','slow','drain','nature','shock','tide','crystal'];
 const RUNES=['might','swiftness','wisdom','fortitude','fortune','fury','warding','vitality'];
@@ -37,6 +37,7 @@ function profileCheck(p){
  const ids=new Set();
  function itemCheck(item){
   requireValue(plain(item)&&typeof item.id==='string'&&item.id.length>0&&!ids.has(item.id),'duplicate/missing item ID');ids.add(item.id);
+  if(item.armorType!==undefined)requireValue(['helm','armor','gloves','boots','belt'].includes(item.slot)&&['Cloth','Leather','Plate'].includes(item.armorType),'armor type');
   requireValue(SLOTS.includes(item.slot)&&integer(item.tier,1,200)&&typeof item.name==='string','item identity');
   requireValue(['Common','Uncommon','Rare','Epic','Legendary'].includes(item.rarity),'item rarity');
   for(const f of STATS)if(item[f]!==undefined)requireValue(typeof item[f]==='number'&&Number.isFinite(item[f]),'item '+f);
@@ -87,7 +88,7 @@ function normalizedLegacy(input){
   if(!item.id){let candidate;do{candidate='legacy-item-'+serial++;}while(used.has(candidate));item.id=candidate;used.add(candidate);}
   if(item.effect==='burst')item.effect='sunder';
   item.rarity=({Comum:'Common',Incomum:'Uncommon',Raro:'Rare','Épico':'Epic',Lendário:'Legendary'})[item.rarity]||item.rarity||'Common';
-  item.subtype=item.subtype??({weapon:'Sword',offhand:'Shield',ring1:'Ring',ring2:'Ring',helm:'Helm',armor:'Armor',gloves:'Gloves',boots:'Boots',amulet:'Amulet'})[item.slot];
+  item.subtype=item.subtype??({weapon:'Sword',offhand:'Shield',ring1:'Ring',ring2:'Ring',helm:'Helm',armor:'Armor',gloves:'Gloves',boots:'Boots',belt:'Belt',amulet:'Amulet'})[item.slot];
   for(const f of STATS)if(item[f]!==undefined&&typeof item[f]==='string'&&item[f].trim()&&Number.isFinite(Number(item[f])))item[f]=Number(item[f]);
  }
  if(p.equip.ring){requireValue(!p.equip.ring1,'ambiguous legacy rings');p.equip.ring1=p.equip.ring;delete p.equip.ring;}

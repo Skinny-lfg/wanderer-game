@@ -19,13 +19,14 @@ export function validateSave(value){
   for(const field of ['gold','fragments'])if(!Number.isFinite(s[field])||s[field]<0)throw new Error(`Invalid ${field}.`);
   if(!Number.isInteger(s.maxDungeon)||s.maxDungeon<1||s.maxDungeon>200)throw new Error('Invalid dungeon progress.');
   if(s.run)throw new Error('Finish or extract from the expedition before switching saves.');
-  if(s.stash.length>5000||Object.keys(s.equip).some(k=>!['helm','amulet','armor','gloves','weapon','offhand','ring1','ring2','boots','ring'].includes(k)))throw new Error('Invalid equipment.');
+  if(s.stash.length>5000||Object.keys(s.equip).some(k=>!['helm','amulet','armor','gloves','weapon','offhand','ring1','ring2','boots','belt','ring'].includes(k)))throw new Error('Invalid equipment.');
   for(const item of [...s.stash,...Object.values(s.equip).filter(Boolean)]){
     if(!item||typeof item!=='object'||typeof item.name!=='string'||typeof item.slot!=='string'||!Number.isFinite(Number(item.tier)))throw new Error('Invalid item data.');
   }
   const seen=new Set();
   for(const item of [...s.stash,...Object.values(s.equip).filter(Boolean)]){
     if(item.id!==undefined){if(typeof item.id!=='string'||!item.id.trim()||seen.has(item.id))throw new Error('Duplicate or invalid item ID.');seen.add(item.id);}
+    if(item.armorType!==undefined&&(!['helm','armor','gloves','boots','belt'].includes(item.slot)||!['Cloth','Leather','Plate'].includes(item.armorType)))throw new Error('Invalid armor type.');
     for(const field of ['atk','def','hp','spd','str','agi','int','end','cha','mana','spell']){
       if(item[field]!==undefined&&(item[field]===null||item[field]===''||!Number.isFinite(Number(item[field]))))throw new Error('Invalid item '+field+'.');
     }
