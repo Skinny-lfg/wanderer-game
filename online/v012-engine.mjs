@@ -72,6 +72,8 @@ export function stats(profile){
  const run=profile.run,items=gear(profile);
  const armorItem=items.find(x=>x.slot==='armor');
  const material=armorItem?.material;
+ const weapon=items.find(x=>x.slot==='weapon');
+ const weaponType=weapon&&/Staff/i.test(weapon.name)?'staff':weapon&&/Wand/i.test(weapon.name)?'wand':'other';
  let hp=68+items.reduce((a,x)=>a+x.hp,0),mana=34+items.reduce((a,x)=>a+x.mana,0),attack=5+items.reduce((a,x)=>a+x.atk,0),armor=2+items.reduce((a,x)=>a+x.armor,0);
  const f=run?.affinities||[];
  if(f.includes('vitality'))hp*=1.1;
@@ -81,7 +83,7 @@ export function stats(profile){
  mana*=1+.12*count(run,'arcane_reservoir');
  armor*=1+.12*count(run,'iron_skin');
  const speed=(material==='Leather'?.90:1)*Math.pow(.94,count(run,'momentum'));
- return {hp:Math.round(hp),mana:Math.round(mana),attack,armor,speed,material,magical:!!items.some(x=>x.slot==='weapon'&&/Wand|Staff/.test(x.name))};
+ return {hp:Math.round(hp),mana:Math.round(mana),attack,armor,speed,material,weaponType,spellAmp:weaponType==='staff'?1.35:weaponType==='wand'?1.20:1,magical:weaponType!=='other'};
 }
 function passiveOptions(run,family){
  const unlocked=new Set(run.affinities.concat(family));
@@ -218,7 +220,7 @@ function enemyFor(r,wave,total){
  const scale=boss?2.4:elite?1.55:1;
  return {name:boss?'The Wanderer Warden':elite?'Elite '+FAMILIES[path.affinity].name+' Guardian':FAMILIES[path.affinity].name+' Marauder',
  maxhp:Math.round((28+strength*23)*scale),hp:Math.round((28+strength*23)*scale),
- attack:Math.round((5+strength*3.3)*(boss?1.35:elite?1.25:1)*(1+depth*.12)),armor:Math.round((1+strength*1.4)*(boss?1.5:1)),interval:boss?2.3:elite?2.5:2.8,bleed:0,boss,elite};
+ attack:Math.round((5+strength*3.3)*(boss?1.35:elite?1.25:1)*(1+depth*.12)),armor:Math.round((1+strength*1.4)*(boss?1.5:1)),interval:boss?2.3:elite?2.5:2.8,bleed:0,burn:0,toxic:0,chill:0,frostHits:0,boss,elite};
 }
 function startCombat(profile){
  const r=profile.run,type=r.rooms[r.room-1],waves=r.selectedPlane?.waves??(type==='boss'?2:type==='elite'?2:1);
@@ -321,12 +323,29 @@ function finishDeath(profile){
  const r=profile.run;r.stage='finished';r.result='Defeat. Permanent equipment is safe; Sigils and passives expire.';
  finishRecovery(profile);profile.record.push({level:r.level,won:false,affinities:[...r.affinities],passives:[...r.passives],gear:gear(profile).length});r.fight=null;
 }
+function applyElementalSpell(run,stat,enemy){
+ const amp=stat.spellAmp;
+ const spell=stat.attack*.24*amp*(1+.12*count(run,'spell_focus'));
+ if(run.magicElement==='fire'){
+  enemy.hp-=spell*(1+.15*count(run,'fire_barrage'));
+  enemy.burn=Math.min(4,enemy.burn+1);
+ }else if(run.magicElement==='poison'){
+  enemy.hp-=spell*.85;
+  enemy.toxic=Math.min(5,enemy.toxic+1+(rand(run)<.20*count(run,'poison_fangs')?1:0));
+ }else if(run.magicElement==='frost'){
+  enemy.hp-=spell*(enemy.chill>0?1+.1*count(run,'frost_bite'):1);
+  enemy.chill=Math.max(enemy.chill,4+count(run,'frost_winter')*1.5);
+  enemy.frostHits=(enemy.frostHits||0)+1;
+  if(has(run,'frost_shatter')&&enemy.frostHits%3===0)enemy.hp-=spell*.5*count(run,'frost_shatter');
+ }
+}
 export function tick(profile,dt=.2){
  const r=profile.run;if(!r||r.stage!=='combat')return profile;
  if(!Number.isFinite(dt)||dt<=0||dt>1)throw Error('Invalid tick');
  const f=r.fight,s=stats(profile),e=f.enemy;
  f.pt+=dt;f.et+=dt;f.dt+=dt;
- const cast=s.magical&&r.mp>=4;
+ const magicActive=r.affinities.includes('magic')&&!!r.magicElement;
+ const cast=(s.magical||magicActive)&&r.mp>=4;
  const haste=s.speed;
  const attackInterval=1.8*haste;
  if(f.pt>=attackInterval){
@@ -340,6 +359,7 @@ export function tick(profile,dt=.2){
   if(cast){wasSpell=true;r.mp=Math.max(0,r.mp-4/(1+.15*count(r,'efficient_casting')));hit*=1+.12*count(r,'spell_focus');if(rand(r)<.10+.07*count(r,'arcane_echo'))hit*=1.35;}
   if(r.affinities.includes('blood')&&rand(r)<.27+.07*count(r,'hemorrhage'))e.bleed=Math.min(6,e.bleed+1+(crit&&has(r,'razorstorm')?1:0));
   hit=Math.max(1,hit-e.armor*.35);e.hp-=hit;
+  if(wasSpell&&magicActive)applyElementalSpell(r,s,e);
   if(crit&&has(r,'adrenal_recovery')){
    const heal=Math.min(s.hp*.006,Math.max(0,s.hp*.07-(f.sustain?.healed??0)));
    r.hp=Math.min(s.hp,r.hp+heal);
@@ -360,6 +380,11 @@ export function tick(profile,dt=.2){
    }
    if(has(r,'sanguine_ward'))r.barrier=Math.min(s.hp*.3,r.barrier+Math.min(s.hp*.01,dot*.08));
   }
+  if(magicActive){
+   if(e.burn>0)e.hp-=Math.max(.4,s.attack*.048*e.burn*(1+.18*count(r,'fire_kindling')));
+   if(e.toxic>0)e.hp-=Math.max(.4,s.attack*.042*e.toxic*(1+.18*count(r,'poison_venom')));
+   if(e.chill>0)e.chill=Math.max(0,e.chill-1);
+  }
   const regen=Math.min(s.hp*.006,.2*count(r,'renewal')+ (s.material==='Cloth'?0:0));
   r.hp=Math.min(s.hp,r.hp+regen);
  }
@@ -367,15 +392,18 @@ export function tick(profile,dt=.2){
  if(e.hp<=0){
   awardWave(profile,e);
   const carry=has(r,'contagion')?Math.floor(e.bleed*.5):0;
+  const burnCarry=has(r,'fire_embers')?Math.floor(e.burn/2):0;
+  const toxicCarry=has(r,'poison_spores')?Math.floor(e.toxic/2):0;
   if(f.wave+1<f.waves){
-   f.wave++;f.enemy=enemyFor(r,f.wave,f.waves);f.enemy.bleed=carry;f.pt=0;f.et=0;f.dt=0;
+   f.wave++;f.enemy=enemyFor(r,f.wave,f.waves);f.enemy.bleed=carry;f.enemy.burn=burnCarry;f.enemy.toxic=toxicCarry;f.pt=0;f.et=0;f.dt=0;
    r.log=['Wave '+(f.wave+1)+'/'+f.waves+' begins.',...r.log].slice(0,14);
   }else if(['chest','event','altar'].includes(r.rooms[r.room-1])){r.stage=r.rooms[r.room-1];r.fight=null;}
   else completeRoom(profile);
   return profile;
  }
- if(f.et>=e.interval){
-  f.et-=e.interval;
+ const enemyInterval=e.interval*(e.chill>0?1.25+.10*count(r,'frost_winter'):1);
+ if(f.et>=enemyInterval){
+  f.et-=enemyInterval;
   let dmg=Math.max(1,e.attack-s.armor*.43);
   if(has(r,'endurance'))dmg*=.94;
   if(has(r,'blood_pressure')&&e.bleed>0)dmg*=.92;
