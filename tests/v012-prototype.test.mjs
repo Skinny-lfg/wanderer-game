@@ -82,9 +82,48 @@ test('three-affinity late rooms always offer three usable path IDs with no fourt
  assert.equal(r.pathOffers.length,3);
  assert.equal(new Set(r.pathOffers).size,3);
  assert.ok(r.pathOffers.every(id=>typeof id==='string'&&PATHS.some(x=>x.id===id&&r.affinities.includes(x.affinity))));
- assert.ok(r.pathOffers.every(id=>PATHS.find(x=>x.id===id).affinity!=='blood'));
- const first=r.pathOffers[0];choosePath(p,first);
+ assert.ok(r.pathOffers.some(id=>PATHS.find(x=>x.id===id).affinity==='blood'),'Blood should be offered again after two affinities when all three are acquired');
+ const first=r.pathOffers.find(id=>PATHS.find(x=>x.id===id).affinity==='blood');choosePath(p,first);
  assert.ok(['combat','event','altar','chest','elite','boss'].includes(r.stage));
+});
+
+test('affinities are only restricted until the second distinct family is acquired',()=>{
+ // Before diversification, the previous selected family is blocked for one offer.
+ // Once two distinct families have been chosen, the last family may appear again immediately.
+ let foundBlood=false;
+ for(let seed=1;seed<=30;seed++){
+  const p=newProfile(seed);
+  begin(p,'blood');choosePassive(p,p.run.passiveOffers[0]);
+  const run=p.run;
+  run.stage='reward';run.lastPathAffinity='blood';run.room=2;
+  run.passiveOffers=PASSIVES.filter(x=>x.affinity==='fury'&&!x.requires.length).slice(0,3).map(x=>x.id);
+  choosePassive(p,run.passiveOffers[0]);
+  assert.equal(run.affinities.length,2);
+  const offered=run.pathOffers.map(id=>PATHS.find(x=>x.id===id).affinity);
+  if(offered.includes('blood')){
+   foundBlood=true;
+   choosePath(p,run.pathOffers.find(id=>PATHS.find(x=>x.id===id).affinity==='blood'));
+   assert.equal(run.stage,'combat','repeating Blood is allowed after picking the second family');
+   break;
+  }
+ }
+ assert.equal(foundBlood,true,'Blood must be eligible after two affinities, without another-room exclusion');
+});
+
+test('old unselected Plane offers refresh under repeat-affinity rules, without losing loot or rerolls',()=>{
+ const p=newProfile(991);begin(p,'blood');choosePassive(p,p.run.passiveOffers[0]);
+ const run=p.run;run.room=3;run.lastPathAffinity='blood';run.affinities.push('fury');
+ run.pathOffers=PATHS.filter(x=>x.affinity!=='blood').slice(0,3).map(x=>x.id);
+ run.planeOffers=run.pathOffers.map(id=>({id,waves:1,elite:false,bonus:null}));
+ delete run.planeAffinityRulesVersion;
+ const oldGear=p.inventory.length,oldGold=p.gold,oldRerolls=run.rerolls;
+ assert.equal(ensurePlaneOffers(p),true);
+ assert.equal(run.planeAffinityRulesVersion,2);
+ assert.equal(run.pathOffers.length,3);
+ assert.equal(run.rerolls,oldRerolls);
+ assert.equal(p.inventory.length,oldGear);
+ assert.equal(p.gold,oldGold);
+ assert.equal(ensurePlaneOffers(p),false);
 });
 
 test('combat uses sequential waves, no multi-enemy targeting',()=>{
