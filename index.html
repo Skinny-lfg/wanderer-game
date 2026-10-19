@@ -3590,35 +3590,54 @@ function phase3PassivesMarkup(){
 }
 
 function renderPhase1(){
- const g=phase1Controller.state;
+ const g=phase1Controller.state,stats=phase3Vitals();
  const familyGlyph={blood:'bleed',decay:'poison',vitality:'regen',aegis:'shield',fury:'crit',magic:'shock'};
  const familyLabel=f=>affinityArt(familyGlyph[f])+' '+WandererV012Expedition.FAMILY_NAMES[f];
-
  if(phase1Draft){
   const d=phase1Draft,plane=d.plane;
   const chosen=(phase1Build?.picks||[]).map(id=>WandererV012Buildcraft.CATALOG.find(x=>x.id===id)?.name).filter(Boolean);
-  const header='<section class="panel"><span class="eyebrow">Wanderer v0.12 · Buildcraft</span><h2>Plane '+g.planeIndex+' · '+esc(plane.name)+'</h2><p class="small muted">'+familyLabel(plane.family)+' · Choose '+(d.step==='element'?'your Magic element':'one temporary passive')+' before entering combat.</p><div class="phase1FamilyRow">'+g.families.map(f=>'<span>'+familyLabel(f)+'</span>').join('')+'</div><p class="small muted">Your build: '+esc(chosen.join(' · ')||'No passives selected yet')+'</p><div class="phase1DraftCards">';
+  const header='<section class="panel"><span class="eyebrow">Wanderer v0.12 · Buildcraft</span><h2>Plane '+g.planeIndex+' · '+esc(plane.name)+'</h2><p class="small muted">'+familyLabel(plane.family)+' · Choose '+(d.step==='element'?'your Magic element':'one temporary passive')+' before combat.</p><div class="phase1FamilyRow">'+g.families.map(f=>'<span>'+familyLabel(f)+'</span>').join('')+'</div><p class="small muted">Your build: '+esc(chosen.join(' · ')||'No passives selected yet')+'</p><div class="phase1DraftCards">';
   if(d.step==='element'){
    const cards=[['fire','Fire','Burn · lasting damage','burn'],['frost','Frost','Chill · slower enemy attacks','slow'],['lightning','Lightning','Shock · 4 charges trigger a burst','shock']];
-   html(header+cards.map(([id,name,desc,glyph])=>'<button class="phase1DraftCard" data-phase2-element="'+id+'"><span>'+affinityArt(glyph)+'</span><strong>'+name+'</strong><small>'+desc+'</small></button>').join('')+'</div><p class="small muted">The element stays fixed until the Expedition ends. Staff and Wand amplify the chosen effect.</p></section>');
+   html(header+cards.map(([id,name,desc,glyph])=>'<button class="phase1DraftCard" data-phase2-element="'+id+'"><span>'+affinityArt(glyph)+'</span><strong>'+name+'</strong><small>'+desc+'</small></button>').join('')+'</div><p class="small muted">Element stays fixed for this Expedition. Staff and Wand amplify it.</p></section>');
    Q('[data-phase2-element]').forEach(b=>b.onclick=()=>phase2ChooseElement(b.dataset.phase2Element));
   }else{
-   html(header+d.options.map(p=>'<button class="phase1DraftCard" data-phase2-passive="'+p.id+'"><strong>'+esc(p.name)+'</strong><small>'+esc(p.description)+'</small><span class="micro muted">'+(p.requires.length?'HYBRID · ':'')+(p.max===1?'Unique':'Rank '+(WandererV012Buildcraft.rank(phase1Build,p.id)+1)+'/'+p.max)+'</span></button>').join('')+'</div><p class="small muted">Passives stack only up to their listed rank cap and disappear after victory or defeat.</p></section>');
+   html(header+d.options.map(p=>'<button class="phase1DraftCard" data-phase2-passive="'+p.id+'"><strong>'+esc(p.name)+'</strong><small>'+esc(p.description)+'</small><span class="micro muted">'+(p.requires.length?'HYBRID · ':'')+(p.max===1?'Unique':'Rank '+(WandererV012Buildcraft.rank(phase1Build,p.id)+1)+'/'+p.max)+'</span></button>').join('')+'</div><p class="small muted">Only implemented effects are offered. Rank limits prevent infinite stacks.</p></section>');
    Q('[data-phase2-passive]').forEach(b=>b.onclick=()=>phase2ChoosePassive(b.dataset.phase2Passive));
   }
   return;
  }
-
- if(g.stage==='camp'||g.stage==='finished'||g.stage==='failed'){
-  const announcement=g.stage==='finished'?'👑 Expedition cleared! Expedition '+g.unlocked+' unlocked.':g.stage==='failed'?'☠ Expedition failed. Your preview equipment and currency are retained.':'15 Planes · three choices before every encounter.';
-  html('<section class="panel"><div class="phase1Intro"><div><span class="eyebrow">Wanderer v0.12 · Integrated Phase 2</span><h1>Expeditions</h1><p class="phase1Info">'+esc(announcement)+'</p><p class="phase1Experimental">Isolated development preview: original combat, art and VFX. No account, cloud sync or real save access. Rewards remain in this browser tab only.</p></div><img src="'+heroFullImage()+'" alt="Wanderer"></div><h3>Preview character</h3><div class="phase1HeroPicker">'+['wanderer','knight','ranger','spellblade','duelist'].map(id=>'<button type="button" data-phase1-hero="'+id+'" class="'+(state.characterId===id?'active':'')+'"><img src="assets/characters/avatars/'+id+'.png" alt="">'+esc(id)+'</button>').join('')+'</div><h3>Choose an Expedition</h3><div class="buttonRow">'+Array.from({length:g.unlocked},(_,i)=>'<button class="primary" data-phase1-expedition="'+(i+1)+'">Expedition '+(i+1)+' →</button>').join('')+'</div></section>');
+ if(['camp','finished','failed'].includes(g.stage)){
+  const announcement=g.stage==='finished'?'👑 Expedition cleared! Expedition '+g.unlocked+' unlocked.':g.stage==='failed'?'☠ Expedition failed · all equipped gear and rewards kept.':'15 Planes · three possible routes before each fight.';
+  const loadout=SLOTS.map(slot=>{
+   const o=state.equip[slot],reserved=slot==='offhand'&&isTwoHanded(state.equip.weapon);
+   const info=o?o.name+' · '+itemStats(o):reserved?'Reserved by Two-Handed':'Empty';
+   return '<div class="phase3GearTile" '+rarityFrame(o)+' title="'+esc(info)+'"><img src="'+(o?itemImg(o):placeholderIcon(slot))+'" alt="'+esc(SNAME[slot])+'"><span>'+esc(SNAME[slot])+'</span>'+affinityBadge(o)+legendaryRankBadge(o)+'</div>';
+  }).join('');
+  html('<section class="panel phase3Camp"><div class="phase1Intro"><div><span class="eyebrow">Wanderer v0.12 · Development Preview</span><h1>Expedition Camp</h1><p class="phase1Info">'+esc(announcement)+'</p><p class="phase1Experimental">Isolated from real accounts and saves. Equipment, Forge, Merchant and Runes reuse the classic Wanderer systems. Preview progress is memory-only.</p><div class="phase3Vitals"><span>❤️ '+Math.ceil(stats.hp)+' / '+stats.maxhp+' HP</span><span>💧 '+Math.floor(stats.mp)+' / '+stats.maxmp+' Mana</span></div><p class="small muted">Potions can only be consumed after completing a Plane, never in Camp or during combat.</p></div><img src="'+heroFullImage()+'" alt="Selected Wanderer full-body character"></div><div class="phase3Loadout">'+loadout+'</div><div class="phase3Actions"><button class="ghost" data-phase3-nav="equipment">Equipment &amp; Runes</button><button class="ghost" data-phase3-nav="forge">Forge</button><button class="ghost" data-phase3-nav="merchant">Merchant</button></div><h3>Choose your character</h3><div class="phase1HeroPicker">'+['wanderer','knight','ranger','spellblade','duelist'].map(id=>'<button type="button" data-phase1-hero="'+id+'" class="'+(state.characterId===id?'active':'')+'"><img src="assets/characters/avatars/'+id+'.png" alt="">'+esc(id)+'</button>').join('')+'</div><h3>Prepare an Expedition</h3><div class="phase3Actions">'+Array.from({length:g.unlocked},(_,i)=>'<button class="primary" data-phase1-expedition="'+(i+1)+'">Expedition '+(i+1)+' →</button>').join('')+'</div></section>');
   Q('[data-phase1-hero]').forEach(b=>b.onclick=()=>{state.characterId=b.dataset.phase1Hero;renderPhase1()});
   Q('[data-phase1-expedition]').forEach(b=>b.onclick=()=>phase1Begin(Number(b.dataset.phase1Expedition)));
+  Q('[data-phase3-nav]').forEach(b=>b.onclick=()=>phase3Go(b.dataset.phase3Nav));
   return;
  }
  if(g.stage!=='choice')return;
- html('<section class="panel"><span class="eyebrow">Wanderer v0.12 · Integrated Phase 2</span><div class="topline"><div><h2>Expedition '+g.expedition+' · Plane '+g.planeIndex+' / 15</h2><p class="small muted">Choose one of three routes. Waves resolve sequentially using original combat.</p></div><span class="token">'+state.gold+' Gold · '+state.fragments+' Fragments</span></div><div class="phase1FamilyRow">'+(g.families.length?g.families.map(f=>'<span>'+familyLabel(f)+'</span>').join(''):'<span>No temporary affinity selected yet</span>')+'</div><div class="phase1FamilyRow"><span>❤️ '+Math.ceil(phase1Vitals?.hp??phase2Stats().maxhp)+' / '+phase2Stats().maxhp+' HP</span><span>💧 '+Math.floor(phase1Vitals?.mp??phase2Stats().mana)+' / '+phase2Stats().mana+' Mana</span></div><div class="phase1Experimental">Preview rules: maximum three different affinities. Repeat becomes eligible once two are acquired. Temporary passives and Magic work during combat. Events, potions and account saves remain outside this isolated preview.</div><div class="phase1Offers">'+g.offers.map(p=>'<button type="button" class="phase1Offer" data-phase1-plane="'+p.id+'"><img src="'+dungeonImage(p)+'" alt=""><div class="phase1OfferBody"><strong>'+esc(p.name)+'</strong><div class="phase1OfferMeta"><span>'+familyLabel(p.family)+'</span><span>'+p.waves+' Waves</span><span>'+(p.boss?'👑 Boss':p.elite?'⚔ Elite':'Regular')+'</span>'+(p.event?'<span>'+esc(p.event)+' event (Phase 2)</span>':'')+'</div><span class="small muted">Enter Plane →</span></div></button>').join('')+'</div><p class="small muted">Health and Mana carry between Planes. Both reset at Expedition end. No permanent records are written in this preview.</p></section>');
+ const between=phase3IsBetweenPlanes();
+ const supplies=phase3Supplies||{health:0,mana:0};
+ const canHeal=between&&stats.hp<stats.maxhp&&supplies.health>0;
+ const canMana=between&&stats.maxmp>0&&stats.mp<stats.maxmp&&supplies.mana>0;
+ const prep=between?'<div class="phase3Preparation"><div><h3>Between Planes · Safe Preparation</h3><p class="small muted">Equipment swaps and Runes use the original inventory. Potions restore 35% HP or 40% Mana, up to the current maximum; unused charges carry through this Expedition.</p><div class="phase3Actions"><button class="ghost" data-phase3-nav="equipment">Open Equipment / Runes</button><button class="ghost" data-phase3-potion="health" '+(canHeal?'':'disabled')+'>❤️ Health Potion · '+supplies.health+' left</button><button class="ghost" data-phase3-potion="mana" '+(canMana?'':'disabled')+'>💧 Mana Potion · '+supplies.mana+' left</button></div></div></div>':
+ '<p class="small muted">First Plane: no potion use. Equipment may be inspected before committing to a route.</p>';
+ html('<section class="panel"><span class="eyebrow">Wanderer v0.12 · Expeditions</span><div class="topline"><div><h2>Expedition '+g.expedition+' · Plane '+g.planeIndex+' / 15</h2><p class="small muted">Three routes · Choose Waves, affinity and Elite risk before entering original auto-combat.</p></div><span class="token">'+state.gold+' Gold · '+state.fragments+' Fragments</span></div>'+
+ '<div class="phase1FamilyRow">'+(g.families.length?g.families.map(f=>'<span>'+familyLabel(f)+'</span>').join(''):'<span>No temporary affinity selected yet</span>')+'</div>'+
+ '<div class="phase1FamilyRow"><span>❤️ '+Math.ceil(stats.hp)+' / '+stats.maxhp+' HP</span><span>💧 '+Math.floor(stats.mp)+' / '+stats.maxmp+' Mana</span></div>'+
+ prep+phase3PassivesMarkup()+
+ '<div class="phase3RouteHeading"><h3>Select the next Plane</h3><button id="phase3Reroll" class="tiny ghost" '+(g.rerollsLeft?'':'disabled')+'>↻ Reroll routes · '+g.rerollsLeft+' remaining</button></div>'+
+ '<div class="phase1Offers">'+g.offers.map(p=>'<button type="button" class="phase1Offer" data-phase1-plane="'+p.id+'"><img src="'+dungeonImage(p)+'" alt="'+esc(p.name)+' landscape"><div class="phase1OfferBody"><strong>'+esc(p.name)+'</strong><div class="phase1OfferMeta"><span>'+familyLabel(p.family)+'</span><span>'+p.waves+' Waves</span><span>'+(p.boss?'👑 Boss':p.elite?'⚔ Elite present':'No Elite')+'</span>'+(p.event?'<span>'+esc(p.event)+' event (preview)</span>':'')+'</div><span class="small muted">Risk: '+(p.boss?'Boss':p.elite?'Elite':'Normal')+' · '+p.waves+' possible loot rolls</span><span class="small muted">Choose this Plane →</span></div></button>').join('')+'</div>'+
+ '<p class="micro muted">More Waves mean more loot opportunities, not guaranteed items. Events are currently informational; no event reward is promised. Temporary buildcraft never changes permanent item affinities.</p></section>');
  Q('[data-phase1-plane]').forEach(b=>b.onclick=()=>phase1Choose(b.dataset.phase1Plane));
+ Q('[data-phase3-nav]').forEach(b=>b.onclick=()=>phase3Go(b.dataset.phase3Nav));
+ Q('[data-phase3-potion]').forEach(b=>b.onclick=()=>phase3UsePotion(b.dataset.phase3Potion));
+ const reroll=$('phase3Reroll');if(reroll)reroll.onclick=phase3Reroll;
 }
 
 globalThis.WandererGame={
