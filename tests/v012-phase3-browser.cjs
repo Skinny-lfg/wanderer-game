@@ -124,7 +124,7 @@ async function run(){
     await page.locator('[data-phase2-passive]').first().click();
     await page.locator('#heroPortrait').waitFor({timeout:10000});
     assert((await page.locator('#heroPortrait').getAttribute('src')).startsWith('assets/characters/avatars/'));
-    assert((await page.locator('#enemyPortrait').getAttribute('src')).startsWith('assets/mobs/')||plane===15,'classic enemies or final boss');
+    assert((await page.locator('#enemyPortrait').getAttribute('src')).startsWith('assets/'),'classic original mob, Elite or Boss art');
     assert.equal(await page.locator('[data-phase3-potion]').count(),0,'no combat potions');
     const initialHeight=await page.locator('#scene').evaluate(n=>n.getBoundingClientRect().height);
     for(let tries=0;tries<180;tries++){
