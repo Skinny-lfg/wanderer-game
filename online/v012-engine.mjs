@@ -47,7 +47,7 @@ function shuffle(s,a){const b=[...a];for(let i=b.length-1;i>0;i--){let j=Math.fl
 function count(run,id){return run?.passives.filter(p=>p===id).length||0;}
 const has=(run,id)=>count(run,id)>0;
 const names={weapon:'Weapon',armor:'Armor',helm:'Helm',gloves:'Gloves',boots:'Boots',amulet:'Amulet',ring:'Ring',offhand:'Off-hand'};
-export function newProfile(seed=0x12345){return {version:1,seed:seed|0,unlocked:1,gold:0,fragments:0,restHpRatio:1,healthPotionStock:3,nextId:2,inventory:[{id:1,slot:'weapon',name:'Training Sword',rarity:'Common',level:1,atk:7,armor:0,hp:0,mana:0,material:null,affinity:null}],equipped:{weapon:1},record:[],run:null};}
+export function newProfile(seed=0x12345){return {version:1,seed:seed|0,unlocked:1,gold:0,fragments:0,restHpRatio:1,restMpRatio:1,healthPotionStock:3,manaPotionStock:3,nextId:2,inventory:[{id:1,slot:'weapon',name:'Training Sword',rarity:'Common',level:1,atk:7,armor:0,hp:0,mana:0,material:null,affinity:null}],equipped:{weapon:1},record:[],run:null};}
 function itemRoll(profile,run,guarantee=false){
  const r=rand(run),rarity=r<(guarantee?.0:.43)?'Common':r<(guarantee?.14:.76)?'Uncommon':r<(guarantee?.61:.945)?'Rare':r<(guarantee?.92:.992)?'Epic':'Legendary';
  const slot=choice(run,SLOTS),power=BONUS[rarity]*(4+run.level*2.5),material=slot==='armor'?choice(run,['Cloth','Leather','Plate']):null;
@@ -90,8 +90,8 @@ export function begin(profile,affinity,manaPots=2,level=profile.unlocked){
  if(!Number.isInteger(manaPots)||manaPots<0||manaPots>3)throw Error('Up to three Mana potions available');
  if(!Number.isInteger(level)||level<1||level>profile.unlocked)throw Error('Difficulty not unlocked');
  const seed=(profile.seed+0x9e3779b9+profile.record.length*31337)|0;profile.seed=seed;
- const run={level,room:1,seed,initial:affinity,affinities:[affinity],passives:[],potions:{hp:0,mana:manaPots},rerolls:3,stage:'startReward',lastPathAffinity:null,selectedPath:null,pathOffers:[],passiveOffers:[],rooms:['combat',...shuffle({seed:seed^7312},ROOM_TYPES.slice(1)),'boss'],history:[],hp:0,mp:0,barrier:0,fight:null,loot:[],result:null,log:['Expedition started.']};
- profile.run=run;const s=stats(profile);run.hp=Math.max(1,Math.round(s.hp*clamp(profile.restHpRatio??1,.4,1)));run.mp=s.mana;run.passiveOffers=passiveOptions(run,affinity);return profile;
+ const run={level,room:1,seed,initial:affinity,affinities:[affinity],passives:[],potions:{hp:Math.min(3-manaPots,profile.healthPotionStock??3),mana:Math.min(manaPots,profile.manaPotionStock??3)},rerolls:3,stage:'startReward',lastPathAffinity:null,selectedPath:null,pathOffers:[],passiveOffers:[],rooms:['combat',...shuffle({seed:seed^7312},ROOM_TYPES.slice(1)),'boss'],history:[],hp:0,mp:0,barrier:0,fight:null,loot:[],result:null,log:['Expedition started.']};
+ profile.run=run;const s=stats(profile);run.hp=Math.max(1,Math.round(s.hp*clamp(profile.restHpRatio??1,.4,1)));run.mp=Math.max(0,Math.round(s.mana*clamp(profile.restMpRatio??1,.3,1)));run.passiveOffers=passiveOptions(run,affinity);return profile;
 }
 function allowedPathFamilies(run){
  return AFFINITY_IDS.filter(f=>(run.affinities.length<MAX_AFFINITIES||run.affinities.includes(f))&&(run.room===1||f!==run.lastPathAffinity));
