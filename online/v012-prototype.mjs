@@ -101,7 +101,7 @@ function show(){
 function addLauncher(){
  if($('#v012-launch'))return;
  const b=document.createElement('button');b.id='v012-launch';b.type='button';b.textContent='⚗ v0.12 Playtest';b.title='Opens a separate experimental prototype. Live saves remain unchanged.';b.addEventListener('click',show);
- document.body.appendChild(b);
+ (document.querySelector('.container')||document.body).appendChild(b);if(new URLSearchParams(location.search).get('playtest')==='v012')show();
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',addLauncher,{once:true});else addLauncher();
 setInterval(()=>{if(!open||paused||profile.run?.stage!=='combat'||document.hidden)return;
