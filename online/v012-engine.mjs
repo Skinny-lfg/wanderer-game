@@ -1,5 +1,7 @@
 // Wanderer v0.12 isolated gameplay prototype. No imports from production save/auth modules.
 export const STORAGE_KEY='wanderer_v012_prototype_local_v1';
+export const MAX_AFFINITIES=3;
+const MAX_PASSIVE_RANK=2;
 export const FAMILIES={
  blood:{name:'Blood',icon:'🩸',kind:'DoT',color:'#dc777d'},
  vitality:{name:'Vitality',icon:'💚',kind:'Health',color:'#6fd49b'},
@@ -45,7 +47,7 @@ function shuffle(s,a){const b=[...a];for(let i=b.length-1;i>0;i--){let j=Math.fl
 function count(run,id){return run?.passives.filter(p=>p===id).length||0;}
 const has=(run,id)=>count(run,id)>0;
 const names={weapon:'Weapon',armor:'Armor',helm:'Helm',gloves:'Gloves',boots:'Boots',amulet:'Amulet',ring:'Ring',offhand:'Off-hand'};
-export function newProfile(seed=0x12345){return {version:1,seed:seed|0,unlocked:1,gold:0,fragments:0,nextId:2,inventory:[{id:1,slot:'weapon',name:'Training Sword',rarity:'Common',level:1,atk:7,armor:0,hp:0,mana:0,material:null,affinity:null}],equipped:{weapon:1},record:[],run:null};}
+export function newProfile(seed=0x12345){return {version:1,seed:seed|0,unlocked:1,gold:0,fragments:0,restHpRatio:1,healthPotionStock:3,nextId:2,inventory:[{id:1,slot:'weapon',name:'Training Sword',rarity:'Common',level:1,atk:7,armor:0,hp:0,mana:0,material:null,affinity:null}],equipped:{weapon:1},record:[],run:null};}
 function itemRoll(profile,run,guarantee=false){
  const r=rand(run),rarity=r<(guarantee?.0:.43)?'Common':r<(guarantee?.14:.76)?'Uncommon':r<(guarantee?.61:.945)?'Rare':r<(guarantee?.92:.992)?'Epic':'Legendary';
  const slot=choice(run,SLOTS),power=BONUS[rarity]*(4+run.level*2.5),material=slot==='armor'?choice(run,['Cloth','Leather','Plate']):null;
@@ -76,29 +78,42 @@ export function stats(profile){
 function passiveOptions(run,family){
  const unlocked=new Set(run.affinities.concat(family));
  const pool=PASSIVES.filter(p=>p.affinity===family&&p.requires.every(a=>unlocked.has(a)));
- const unseen=pool.filter(p=>!run.passives.includes(p.id));
- const selected=shuffle(run,unseen.length>=3?unseen:pool).slice(0,3);
+ const eligible=pool.filter(p=>count(run,p.id)<MAX_PASSIVE_RANK);
+ const fresh=eligible.filter(p=>count(run,p.id)===0);
+ const selected=shuffle(run,fresh).slice(0,3);
+ if(selected.length<3)selected.push(...shuffle(run,eligible.filter(p=>!selected.includes(p))).slice(0,3-selected.length));
  return selected.map(x=>x.id);
 }
-export function begin(profile,affinity,healthPots=2,level=profile.unlocked){
+export function begin(profile,affinity,manaPots=2,level=profile.unlocked){
  if(profile.run&&!['finished'].includes(profile.run.stage))throw Error('Finish current expedition first');
  if(!FAMILIES[affinity])throw Error('Invalid affinity');
- if(!Number.isInteger(healthPots)||healthPots<0||healthPots>3)throw Error('Three potion slots available');
+ if(!Number.isInteger(manaPots)||manaPots<0||manaPots>3)throw Error('Up to three Mana potions available');
  if(!Number.isInteger(level)||level<1||level>profile.unlocked)throw Error('Difficulty not unlocked');
  const seed=(profile.seed+0x9e3779b9+profile.record.length*31337)|0;profile.seed=seed;
- const run={level,room:1,seed,initial:affinity,affinities:[affinity],passives:[],potions:{hp:healthPots,mana:3-healthPots},rerolls:3,stage:'startReward',lastPathAffinity:null,selectedPath:null,pathOffers:[],passiveOffers:[],rooms:['combat',...shuffle({seed:seed^7312},ROOM_TYPES.slice(1)),'boss'],history:[],hp:0,mp:0,barrier:0,fight:null,loot:[],result:null,log:['Expedition started.']};
- profile.run=run;const s=stats(profile);run.hp=s.hp;run.mp=s.mana;run.passiveOffers=passiveOptions(run,affinity);return profile;
+ const run={level,room:1,seed,initial:affinity,affinities:[affinity],passives:[],potions:{hp:0,mana:manaPots},rerolls:3,stage:'startReward',lastPathAffinity:null,selectedPath:null,pathOffers:[],passiveOffers:[],rooms:['combat',...shuffle({seed:seed^7312},ROOM_TYPES.slice(1)),'boss'],history:[],hp:0,mp:0,barrier:0,fight:null,loot:[],result:null,log:['Expedition started.']};
+ profile.run=run;const s=stats(profile);run.hp=Math.max(1,Math.round(s.hp*clamp(profile.restHpRatio??1,.4,1)));run.mp=s.mana;run.passiveOffers=passiveOptions(run,affinity);return profile;
+}
+function allowedPathFamilies(run){
+ return AFFINITY_IDS.filter(f=>(run.affinities.length<MAX_AFFINITIES||run.affinities.includes(f))&&(run.room===1||f!==run.lastPathAffinity));
 }
 function makePathOffers(run){
- const allowed=AFFINITY_IDS.filter(f=>run.room===1||f!==run.lastPathAffinity);
+ const allowed=allowedPathFamilies(run);
  let families;
- if(run.room===1){families=[run.initial,...shuffle(run,allowed.filter(x=>x!==run.initial)).slice(0,2)];}
+ if(run.room===1)families=[run.initial,...shuffle(run,allowed.filter(x=>x!==run.initial)).slice(0,2)];
  else families=shuffle(run,allowed).slice(0,3);
- run.pathOffers=families.map(f=>choice(run,PATHS.filter(p=>p.affinity===f)).id);
+ const chosen=families.map(f=>choice(run,PATHS.filter(p=>p.affinity===f)).id);
+ if(chosen.length<3){
+  const pool=shuffle(run,PATHS.filter(p=>allowed.includes(p.affinity)&&!chosen.includes(p.id)));
+  chosen.push(...pool.slice(0,3-chosen.length));
+ }
+ run.pathOffers=chosen;
 }
 export function choosePassive(profile,id){
  const r=profile.run;if(!r||!['reward','startReward'].includes(r.stage)||!r.passiveOffers.includes(id))throw Error('Passive not offered');
  const p=PASSIVES.find(x=>x.id===id);if(!p)throw Error('Unknown passive');
+ if(r.affinities.length>=MAX_AFFINITIES&&!r.affinities.includes(p.affinity))throw Error('Maximum three affinities reached');
+ if(count(r,p.id)>=MAX_PASSIVE_RANK)throw Error('Passive rank already at maximum');
+ if(p.requires.some(f=>!r.affinities.includes(f)))throw Error('Hybrid affinity requirements missing');
  const old=stats(profile);
  if(!r.affinities.includes(p.affinity))r.affinities.push(p.affinity);
  r.passives.push(id);const fresh=stats(profile);
@@ -111,31 +126,33 @@ export function choosePassive(profile,id){
 export function rerollPath(profile,index){
  const r=profile.run;if(!r||r.stage!=='path'||r.rerolls<=0||index<0||index>=3)throw Error('Reroll unavailable');
  if(r.room===1&&PATHS.find(p=>p.id===r.pathOffers[index]).affinity===r.initial)throw Error('Initial affinity option is guaranteed and cannot be rerolled');
- const used=new Set(r.pathOffers.map(id=>PATHS.find(p=>p.id===id).affinity));
- const available=AFFINITY_IDS.filter(f=>!used.has(f)&&(r.room===1||f!==r.lastPathAffinity));
- if(!available.length)throw Error('No other affinity available');
- const family=choice(r,available);r.pathOffers[index]=choice(r,PATHS.filter(p=>p.affinity===family)).id;r.rerolls--;
+ const used=new Set(r.pathOffers);
+ const available=PATHS.filter(p=>allowedPathFamilies(r).includes(p.affinity)&&!used.has(p.id));
+ if(!available.length)throw Error('No other permitted plan available');
+ r.pathOffers[index]=choice(r,available).id;r.rerolls--;
  return profile;
 }
 function enemyFor(r,wave,total){
  const path=PATHS.find(p=>p.id===r.selectedPath);
  const type=r.rooms[r.room-1],boss=type==='boss'&&wave===total-1,elite=type==='elite'||type==='boss';
- const strength=r.level+(r.room/15)*.95;
- const scale=boss?2.25:elite?1.55:1;
+ const depth=(r.room-1)/14;
+ const strength=r.level+depth*2.35;
+ const scale=boss?2.4:elite?1.55:1;
  return {name:boss?'The Wanderer Warden':elite?'Elite '+FAMILIES[path.affinity].name+' Guardian':FAMILIES[path.affinity].name+' Marauder',
  maxhp:Math.round((28+strength*23)*scale),hp:Math.round((28+strength*23)*scale),
- attack:Math.round((5+strength*3.3)*(boss?1.35:elite?1.25:1)),armor:Math.round((1+strength*1.4)*(boss?1.5:1)),interval:boss?2.3:elite?2.5:2.8,bleed:0,boss,elite};
+ attack:Math.round((5+strength*3.3)*(boss?1.35:elite?1.25:1)*(1+depth*.12)),armor:Math.round((1+strength*1.4)*(boss?1.5:1)),interval:boss?2.3:elite?2.5:2.8,bleed:0,boss,elite};
 }
 function startCombat(profile){
  const r=profile.run,type=r.rooms[r.room-1],waves=type==='boss'?2:(type==='elite'?2:(rand(r)<.34?2:1));
  r.stage='combat';r.barrier=r.affinities.includes('aegis')?stats(profile).hp*.07:0;
  if(has(r,'first_guard'))r.barrier+=stats(profile).hp*.05;
- r.fight={wave:0,waves,enemy:enemyFor(r,0,waves),pt:0,et:0,dt:0,hits:0,secondWindUsed:false,counters:{bleedCarry:0},log:[]};
+ r.fight={wave:0,waves,enemy:enemyFor(r,0,waves),pt:0,et:0,dt:0,hits:0,secondWindUsed:!!r.secondWindUsed,sustain:{healed:0},counters:{bleedCarry:0},log:[]};
  r.log=['Entered '+type+' encounter.',...r.log].slice(0,14);
 }
 export function choosePath(profile,id){
  const r=profile.run;if(!r||r.stage!=='path'||!r.pathOffers.includes(id))throw Error('Path unavailable');
  const path=PATHS.find(p=>p.id===id);if(r.room>1&&path.affinity===r.lastPathAffinity)throw Error('Chosen affinity locked for one room');
+ if(r.affinities.length>=MAX_AFFINITIES&&!r.affinities.includes(path.affinity))throw Error('Maximum three affinities reached');
  r.selectedPath=id;r.lastPathAffinity=path.affinity;r.history.push({room:r.room,path:id,affinity:path.affinity,type:r.rooms[r.room-1]});
  const type=r.rooms[r.room-1];
  if(['combat','elite','boss'].includes(type))startCombat(profile);
@@ -161,6 +178,7 @@ function completeRoom(profile){
  award(profile);
  if(r.room===15){
   const before=profile.unlocked;profile.unlocked=Math.max(before,r.level+1);
+  finishRecovery(profile);
   profile.record.push({level:r.level,won:true,affinities:[...r.affinities],passives:[...r.passives],gear:gear(profile).length});
   r.result='Victory! Difficulty '+profile.unlocked+' unlocked.';r.stage='finished';r.fight=null;return;
  }
@@ -175,13 +193,29 @@ export function resolveRoom(profile,action='safe'){
  completeRoom(profile);return profile;
 }
 export function usePotion(profile,kind){
- const r=profile.run;if(!r||r.stage==='finished'||!['hp','mana'].includes(kind)||r.potions[kind]<1)throw Error('Potion unavailable');
- const s=stats(profile);if(kind==='hp'){if(r.hp>=s.hp)return false;r.hp=Math.min(s.hp,r.hp+s.hp*(.30+.06*count(r,'herbalist')));}else{if(r.mp>=s.mana)return false;r.mp=Math.min(s.mana,r.mp+s.mana*.35);}
- r.potions[kind]--;return true;
+ const r=profile.run;if(!r||r.stage==='finished'||kind!=='mana'||r.potions.mana<1)throw Error('Health potions can only be used at camp between runs');
+ const s=stats(profile);if(r.mp>=s.mana)return false;
+ r.mp=Math.min(s.mana,r.mp+s.mana*.35);
+ r.potions.mana--;return true;
+}
+function finishRecovery(profile){
+ const r=profile.run;
+ const maximum=stats(profile).hp;
+ profile.restHpRatio=clamp(r.hp/maximum,.4,1);
+ profile.healthPotionStock=Math.min(3,(profile.healthPotionStock??3)+1);
+}
+export function useCampHealthPotion(profile){
+ if(profile.run&&profile.run.stage!=='finished')throw Error('Health potions are usable only at camp between runs');
+ if(profile.run)throw Error('Return to camp before healing');
+ if((profile.healthPotionStock??3)<1)throw Error('No Health potions left');
+ if((profile.restHpRatio??1)>=.999)return false;
+ profile.restHpRatio=Math.min(1,(profile.restHpRatio??1)+.30);
+ profile.healthPotionStock--;
+ return true;
 }
 function finishDeath(profile){
  const r=profile.run;r.stage='finished';r.result='Defeat. Permanent equipment is safe; Sigils and passives expire.';
- profile.record.push({level:r.level,won:false,affinities:[...r.affinities],passives:[...r.passives],gear:gear(profile).length});r.fight=null;
+ finishRecovery(profile);profile.record.push({level:r.level,won:false,affinities:[...r.affinities],passives:[...r.passives],gear:gear(profile).length});r.fight=null;
 }
 export function tick(profile,dt=.2){
  const r=profile.run;if(!r||r.stage!=='combat')return profile;
@@ -200,9 +234,13 @@ export function tick(profile,dt=.2){
   if(e.hp/e.maxhp<.35)hit*=1+.13*count(r,'executioner')+.10*count(r,'rupture')*(e.bleed>0?1:0);
   let wasSpell=false;
   if(cast){wasSpell=true;r.mp=Math.max(0,r.mp-4/(1+.15*count(r,'efficient_casting')));hit*=1+.12*count(r,'spell_focus');if(rand(r)<.10+.07*count(r,'arcane_echo'))hit*=1.35;}
-  if(r.affinities.includes('blood')&&rand(r)<.28+.09*count(r,'hemorrhage'))e.bleed=Math.min(9,e.bleed+1+(crit&&has(r,'razorstorm')?1:0));
+  if(r.affinities.includes('blood')&&rand(r)<.27+.07*count(r,'hemorrhage'))e.bleed=Math.min(6,e.bleed+1+(crit&&has(r,'razorstorm')?1:0));
   hit=Math.max(1,hit-e.armor*.35);e.hp-=hit;
-  if(crit&&has(r,'adrenal_recovery'))r.hp=Math.min(s.hp,r.hp+s.hp*.012);
+  if(crit&&has(r,'adrenal_recovery')){
+   const heal=Math.min(s.hp*.006,Math.max(0,s.hp*.07-(f.sustain?.healed??0)));
+   r.hp=Math.min(s.hp,r.hp+heal);
+   if(f.sustain)f.sustain.healed+=heal;
+  }
   if(wasSpell&&has(r,'runic_shield'))r.barrier=Math.min(s.hp*.35,r.barrier+s.hp*.014);
   if(rand(r)<.07*count(r,'twin_strike'))e.hp-=hit*.45;
  }
@@ -211,7 +249,11 @@ export function tick(profile,dt=.2){
   if(e.bleed>0){
    const dot=Math.max(1,s.attack*.085*e.bleed*(1+.20*count(r,'open_wound')));
    e.hp-=dot;
-   if(has(r,'crimson_recovery'))r.hp=Math.min(s.hp,r.hp+Math.min(s.hp*.012,dot*.12));
+   if(has(r,'crimson_recovery')){
+    const heal=Math.min(s.hp*.006,dot*.09,Math.max(0,s.hp*.07-(f.sustain?.healed??0)));
+    r.hp=Math.min(s.hp,r.hp+heal);
+    if(f.sustain)f.sustain.healed+=heal;
+   }
    if(has(r,'sanguine_ward'))r.barrier=Math.min(s.hp*.3,r.barrier+Math.min(s.hp*.01,dot*.08));
   }
   const regen=Math.min(s.hp*.006,.2*count(r,'renewal')+ (s.material==='Cloth'?0:0));
@@ -238,7 +280,7 @@ export function tick(profile,dt=.2){
   if(absorbed>0&&has(r,'counterstrike'))e.hp-=Math.min(s.attack*.35,absorbed*.18);
   if(has(r,'reactive_ward'))r.barrier=Math.min(s.hp*.25,r.barrier+dmg*.08);
   if(r.hp<=0){
-   if(has(r,'second_wind')&&!f.secondWindUsed){f.secondWindUsed=true;r.hp=s.hp*.15;}
+   if(has(r,'second_wind')&&!r.secondWindUsed){r.secondWindUsed=true;f.secondWindUsed=true;r.hp=s.hp*.15;}
    else finishDeath(profile);
   }
  }
