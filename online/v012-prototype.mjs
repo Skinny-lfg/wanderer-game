@@ -1,8 +1,15 @@
-import {STORAGE_KEY,FAMILIES,PATHS,PASSIVES,SLOTS,newProfile,stats,begin,choosePassive,choosePath,rerollPath,resolveRoom,usePotion,tick,abandon,leaveFinished,equip,inventoryScore} from './v012-engine.mjs';
-let profile,open=false,healthPots=2,selectedLevel=1,paused=false,speed=2,error='',autosave=0;
+import {STORAGE_KEY,FAMILIES,PATHS,PASSIVES,SLOTS,MAX_AFFINITIES,newProfile,stats,begin,choosePassive,choosePath,rerollPath,resolveRoom,usePotion,useCampHealthPotion,tick,abandon,leaveFinished,equip,inventoryScore} from './v012-engine.mjs';
+let profile,open=false,manaPots=2,selectedLevel=1,paused=false,speed=2,error='',autosave=0;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const $=(sel)=>document.querySelector(sel);
 try{const raw=localStorage.getItem(STORAGE_KEY);const loaded=raw?JSON.parse(raw):null;profile=loaded&&loaded.version===1&&Array.isArray(loaded.inventory)&&loaded.equipped&&Number.isFinite(loaded.unlocked)?loaded:newProfile();}catch{profile=newProfile();error='The isolated prototype save could not be read. Started a new test profile.';}
+if(profile.run&&profile.run.affinities?.length>MAX_AFFINITIES){
+ profile.run=null;
+ error='Previous experimental run was ended because it used more than three affinities. Permanent loot is preserved.';
+ try{localStorage.setItem(STORAGE_KEY,JSON.stringify(profile));}catch{}
+}
+profile.restHpRatio=profile.restHpRatio??1;
+profile.healthPotionStock=profile.healthPotionStock??3;
 selectedLevel=profile.unlocked;
 function persist(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(profile));}catch{error='Prototype local save unavailable. Real Wanderer saves have not been changed.';}}
 function idFromButton(b){return b.dataset.id;}
@@ -26,9 +33,9 @@ function gearPanel(){
 function camp(){
  const status='<div class="v12-metrics"><span><b>D'+profile.unlocked+'</b><small>Highest unlocked</small></span><span><b>'+profile.gold+'</b><small>Gold</small></span><span><b>'+profile.fragments+'</b><small>Fragments</small></span><span><b>'+profile.record.length+'</b><small>Runs</small></span></div>';
  const levelSelector='<label class="v12-level-selector">Choose difficulty <select data-difficulty aria-label="Choose difficulty">'+Array.from({length:profile.unlocked},(_,i)=>i+1).map(n=>'<option value="'+n+'"'+(n===selectedLevel?' selected':'')+'>Dungeon '+n+'</option>').join('')+'</select></label>';
- const potionSelector='<div class="v12-pot-grid"><strong>Health Potions</strong><div>'+[0,1,2,3].map(n=>'<button data-action="pots" data-count="'+n+'" class="'+(n===healthPots?'active':'')+'">'+n+'</button>').join('')+'</div><span>'+healthPots+' HP / '+(3-healthPots)+' Mana · three slots total</span></div>';
+ const potionSelector='<div class="v12-pot-grid"><strong>Camp Health · '+Math.round((profile.restHpRatio??1)*100)+'%</strong><span>Health potions remaining: '+profile.healthPotionStock+'/3</span><button data-action="camp-heal" '+(profile.healthPotionStock<1||profile.restHpRatio>=.999?'disabled':'')+'>❤️ Restore 30% HP between runs</button></div><div class="v12-pot-grid"><strong>Mana Potions for expedition</strong><div>'+[0,1,2,3].map(n=>'<button data-action="pots" data-count="'+n+'" class="'+(n===manaPots?'active':'')+'">'+n+'</button>').join('')+'</div><span>'+manaPots+' Mana · usable during fights</span></div>';
  const families=Object.entries(FAMILIES).map(([id,a])=>'<button class="v12-family" data-action="begin" data-id="'+id+'" style="--accent:'+a.color+'"><span>'+a.icon+'</span><strong>'+esc(a.name)+'</strong><small>'+esc(a.kind)+'</small></button>').join('');
- return '<div class="v12-stack"><section class="v12-panel"><h2>Choose an initial affinity</h2><p class="v12-muted">Start at D'+profile.unlocked+' with your permanent gear. The first path offer is guaranteed to include your chosen affinity. Only one enemy fights at a time; no manual targeting.</p>'+status+levelSelector+potionSelector+'<div class="v12-family-grid">'+families+'</div></section>'+gearPanel()+'</div>';
+ return '<div class="v12-stack"><section class="v12-panel"><h2>Choose an initial affinity</h2><p class="v12-muted">Start at D'+profile.unlocked+' with permanent gear and your current camp Health. Up to three affinities per run. Health potions work only between runs, at camp. No manual enemy targeting.</p>'+status+levelSelector+potionSelector+'<div class="v12-family-grid">'+families+'</div></section>'+gearPanel()+'</div>';
 }
 function startReward(r){
  return '<section class="v12-panel"><span class="v12-eyebrow">Start of adventure</span><h2>Choose one initial '+esc(FAMILIES[r.initial].name)+' passive</h2><p class="v12-muted">Your base affinity activates immediately. These three passives are drawn from the selected family.</p><div class="v12-rewards">'+r.passiveOffers.map(passiveCard).join('')+'</div></section>';
@@ -40,7 +47,7 @@ function pathSelect(r){
  return '<div class="v12-path"><div class="v12-path-image" style="background-image:linear-gradient(0deg,#13121b 0%,transparent 80%),url('+esc(p.background)+')"></div><div class="v12-path-body"><span class="v12-tag" style="--accent:'+a.color+'">'+esc(a.icon+' '+a.name)+'</span><strong>'+esc(p.name)+'</strong><small>Earn 1 of 3 '+esc(a.name)+' passives after completing this room.</small><button data-action="path" data-id="'+esc(id)+'" class="v12-primary">Enter plan</button><button data-action="reroll" data-index="'+index+'" '+(r.rerolls<1||(r.room===1&&p.affinity===r.initial)?'disabled':'')+'>↻ Reroll plan ('+r.rerolls+' left)</button></div></div>';
  }).join('');
  const upcoming=r.rooms[r.room-1];
- return '<section class="v12-panel"><span class="v12-eyebrow">Room '+r.room+'/15 · '+esc(upcoming.toUpperCase())+'</span><h2>Choose a plan</h2><p class="v12-muted">'+(locked?'Affinity locked for this choice: '+esc(locked.name)+'. ':'')+'Select the environment and affinity of the passive reward. You can collect all five families in one run.</p><div class="v12-path-grid">'+cards+'</div></section>';
+ return '<section class="v12-panel"><span class="v12-eyebrow">Room '+r.room+'/15 · '+esc(upcoming.toUpperCase())+'</span><h2>Choose a plan</h2><p class="v12-muted">'+(locked?'Affinity locked for this choice: '+esc(locked.name)+'. ':'')+'Select the environment and passive family. You can unlock up to three affinities; after that, plans only improve the families you already have.</p><div class="v12-path-grid">'+cards+'</div></section>';
 }
 function reward(r){
  const p=PATHS.find(x=>x.id===r.selectedPath),a=FAMILIES[p.affinity];
@@ -49,7 +56,7 @@ function reward(r){
 function combat(r,s){
  const f=r.fight,e=f.enemy;
  const health=statsBar('Health',r.hp,s.hp),mana=statsBar('Mana',r.mp,s.mana);
- return '<section class="v12-panel v12-combat"><div class="v12-section-head"><div><span class="v12-eyebrow">Room '+r.room+'/15 · '+esc(r.rooms[r.room-1])+'</span><h2>Wave '+(f.wave+1)+' / '+f.waves+'</h2></div><button data-action="pause">'+(paused?'Resume':'Pause')+'</button></div><div class="v12-combat-scene"><div class="v12-player"><div class="v12-portrait">🛡️</div><strong>Your Wanderer</strong>'+health+mana+'<small>ATK '+s.attack.toFixed(1)+' · DEF '+s.armor.toFixed(1)+' · Speed '+s.speed.toFixed(2)+'</small></div><div class="v12-versus">VS</div><div class="v12-enemy"><div class="v12-portrait">'+(e.boss?'👑':e.elite?'💀':'⚔️')+'</div><strong>'+esc(e.name)+'</strong>'+statsBar('Enemy HP',e.hp,e.maxhp)+'<small>Bleed stacks: '+e.bleed+' · Attack: '+e.attack+'</small></div></div><div class="v12-pot-actions"><button data-action="potion" data-kind="hp" '+(r.potions.hp<1?'disabled':'')+'>❤️ Health potion ('+r.potions.hp+')</button><button data-action="potion" data-kind="mana" '+(r.potions.mana<1?'disabled':'')+'>💧 Mana potion ('+r.potions.mana+')</button></div><p class="v12-muted">Attacks and enemies are automatic. One enemy is active per wave. Potion timing is the combat decision; enemies attack on their own cooldown.</p></section>';
+ return '<section class="v12-panel v12-combat"><div class="v12-section-head"><div><span class="v12-eyebrow">Room '+r.room+'/15 · '+esc(r.rooms[r.room-1])+'</span><h2>Wave '+(f.wave+1)+' / '+f.waves+'</h2></div><button data-action="pause">'+(paused?'Resume':'Pause')+'</button></div><div class="v12-combat-scene"><div class="v12-player"><div class="v12-portrait">🛡️</div><strong>Your Wanderer</strong>'+health+mana+'<small>ATK '+s.attack.toFixed(1)+' · DEF '+s.armor.toFixed(1)+' · Speed '+s.speed.toFixed(2)+'</small></div><div class="v12-versus">VS</div><div class="v12-enemy"><div class="v12-portrait">'+(e.boss?'👑':e.elite?'💀':'⚔️')+'</div><strong>'+esc(e.name)+'</strong>'+statsBar('Enemy HP',e.hp,e.maxhp)+'<small>Bleed stacks: '+e.bleed+' · Attack: '+e.attack+'</small></div></div><div class="v12-pot-actions"><button data-action="potion" data-kind="mana" '+(r.potions.mana<1?'disabled':'')+'>💧 Mana potion ('+r.potions.mana+')</button></div><p class="v12-muted">Combat is automatic, one enemy per wave. Health potions cannot be used during the expedition; recover through events, altars and passive effects.</p></section>';
 }
 function nonCombat(r,s){
  const type=r.stage;
@@ -61,7 +68,7 @@ function nonCombat(r,s){
 }
 function finished(r){
  const won=r.result.startsWith('Victory');
- return '<section class="v12-panel v12-finish"><span class="v12-big-icon">'+(won?'🏆':'☠️')+'</span><h2>'+esc(r.result)+'</h2><p>Your gear, Gold and Fragments persist. Your temporary affinities and passives will be reset before the next adventure.</p><div class="v12-metrics"><span><b>'+r.loot.length+'</b><small>Gear items found</small></span><span><b>'+r.passives.length+'</b><small>Passives learned</small></span><span><b>'+r.affinities.length+'</b><small>Affinities explored</small></span></div><button class="v12-primary" data-action="leave">Return to camp</button></section>';
+ return '<section class="v12-panel v12-finish"><span class="v12-big-icon">'+(won?'🏆':'☠️')+'</span><h2>'+esc(r.result)+'</h2><p>Your gear, Gold and Fragments persist. Up to three affinity families per run. Health carries over to camp (minimum 40% on defeat), where Health Potions can be used between runs.</p><div class="v12-metrics"><span><b>'+r.loot.length+'</b><small>Gear items found</small></span><span><b>'+r.passives.length+'</b><small>Passives learned</small></span><span><b>'+r.affinities.length+'</b><small>Affinities explored</small></span></div><button class="v12-primary" data-action="leave">Return to camp</button></section>';
 }
 function render(){
  if(!open)return;
@@ -70,15 +77,16 @@ function render(){
  const rbar=r&&r.stage!=='finished'?'<div class="v12-progress"><span>Difficulty '+r.level+' · Room '+r.room+'/15</span><span>'+r.passives.length+' passives · '+r.rerolls+' rerolls</span></div>':'';
  const affinities=r?r.affinities.map(affChip).join(''):'';
  let body=!r?camp():r.stage==='startReward'?startReward(r):r.stage==='path'?pathSelect(r):r.stage==='reward'?reward(r):r.stage==='combat'?combat(r,s):r.stage==='finished'?finished(r):nonCombat(r,s);
- let gearStrip=r&&r.stage!=='finished'?'<div class="v12-side"><section class="v12-panel"><div class="v12-section-head"><h3>Active affinities</h3><span>'+r.affinities.length+'/5</span></div><div class="v12-chips">'+affinities+'</div><p class="v12-muted">'+r.passives.length+' temporary passives · '+profile.inventory.length+' permanent items</p><div class="v12-pot-actions"><button data-action="potion" data-kind="hp" '+(!r.potions.hp?'disabled':'')+'>❤️ '+r.potions.hp+'</button><button data-action="potion" data-kind="mana" '+(!r.potions.mana?'disabled':'')+'>💧 '+r.potions.mana+'</button></div></section><section class="v12-panel"><h3>Expedition log</h3><div class="v12-log">'+r.log.slice(0,8).map(x=>'<div>'+esc(x)+'</div>').join('')+'</div></section><button class="v12-danger" data-action="abandon">Abandon expedition</button></div>':'';
+ let gearStrip=r&&r.stage!=='finished'?'<div class="v12-side"><section class="v12-panel"><div class="v12-section-head"><h3>Active affinities</h3><span>'+r.affinities.length+'/'+MAX_AFFINITIES+'</span></div><div class="v12-chips">'+affinities+'</div><p class="v12-muted">'+r.passives.length+' temporary passives · '+profile.inventory.length+' permanent items</p><div class="v12-pot-actions"><button data-action="potion" data-kind="mana" '+(!r.potions.mana?'disabled':'')+'>💧 Mana '+r.potions.mana+'</button></div></section><section class="v12-panel"><h3>Expedition log</h3><div class="v12-log">'+r.log.slice(0,8).map(x=>'<div>'+esc(x)+'</div>').join('')+'</div></section><button class="v12-danger" data-action="abandon">Abandon expedition</button></div>':'';
  host.innerHTML='<div class="v12-shell"><header class="v12-header"><div><span class="v12-eyebrow">DEVELOPMENT ONLY · ISOLATED SAVE</span><h1>WANDERER <small>v0.12 prototype</small></h1></div><button data-action="close" class="v12-close" aria-label="Close prototype">✕ Close</button></header>'+rbar+(error?'<div class="v12-error">'+esc(error)+'</div>':'')+'<div class="v12-layout"><div class="v12-main">'+body+'</div>'+gearStrip+'</div><footer class="v12-footer">Experimental battle balance. Original D1–D200 gameplay, accounts and cloud saves are unchanged. Local prototype save key: '+STORAGE_KEY+'</footer></div>';
 }
 function dispatch(action,b){
  error='';
  switch(action){
   case 'close':open=false;paused=true;$('#v012-overlay').remove();document.body.classList.remove('v12-open');return;
-  case 'pots':healthPots=+b.dataset.count;break;
-  case 'begin':begin(profile,idFromButton(b),healthPots,selectedLevel);paused=false;break;
+  case 'pots':manaPots=+b.dataset.count;break;
+  case 'camp-heal':useCampHealthPotion(profile);break;
+  case 'begin':begin(profile,idFromButton(b),manaPots,selectedLevel);paused=false;break;
   case 'passive':choosePassive(profile,idFromButton(b));break;
   case 'path':choosePath(profile,idFromButton(b));paused=false;break;
   case 'reroll':rerollPath(profile,+b.dataset.index);break;
