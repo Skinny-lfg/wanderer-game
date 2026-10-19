@@ -4,14 +4,14 @@
 **Safety:** intentionally uses \`wanderer_v012_prototype_local_v1\`, not the existing browser/account keys. No production/cloud/Firebase save schema is migrated or overwritten. Main branch remains unchanged.
 
 ## Access
-Open development's index.html through an HTTP server (do not open as file:// because ES modules need HTTP). A **⚗ v0.12 Playtest** button appears in the game header. Use the button to enter a self-contained 15-room experimental adventure. Closing it returns to the classic Wanderer. The playtest state resumes if reopened, while permanent prototype gear is retained after victory/defeat.
+Open development's index.html through an HTTP server (do not open as file:// because ES modules need HTTP). A **⚗ v0.12 Playtest** floating button appears in the lower-right corner. Use the button to enter a self-contained 15-room experimental adventure. Closing it returns to the classic Wanderer. The playtest state resumes if reopened, while permanent prototype gear is retained after victory/defeat.
 
 ## Implemented
 - Fifteen rooms: **seven normal, two elite, two chest, two events, one altar, one boss**. The first room is always normal combat and the fifteenth is always a boss. Nonfinal positions are seeded and randomized.
 - One active enemy at a time. Normal encounters have one or two consecutive waves, elites have two, and the boss has two phases. No target selection. Attack and enemy timers are independent.
 - Five new temporary affinity families: Blood, Vitality, Aegis, Fury, Arcane. Thirteen old dungeon themes retained as *plans*, each mapped to one of the five reward families.
 - Start by selecting any one affinity and choosing one of three starting passives. The initial affinity is guaranteed among the first room's three plans. After completing a room choose one of three passives linked to the chosen plan. Ten hybrid passives require the relevant affinity pair.
-- A family's plan is locked **only for the next room after selection**. Three paid-free (zero Gold) rerolls per run, changing an offered plan to the remaining allowed family; the guaranteed starting-affinity slot is pinned on room one. No cap on the number of affinity families or passives acquired.
+- A family's plan is locked **only for the next room after selection**. Three free (zero Gold) rerolls per run, changing an offered plan to the remaining allowed family; the guaranteed starting-affinity slot is pinned on room one. No cap on the number of affinity families or passives acquired.
 - Three potion slots shared by Health and Mana. HP and Mana persist between waves and rooms. Healing opportunities through altars and events.
 - Permanent gear is stored immediately when received, even during failed expeditions; the experimental inventory offers simple equip/auto-equip controls. The next difficulty unlocks only after the final boss wins.
 - Blood spread effect *Contagion* carries Bleed stacks from a killed enemy to the next **wave**, instead of targeting multiple simultaneous enemies.
@@ -23,6 +23,7 @@ Open development's index.html through an HTTP server (do not open as file:// bec
 - This prototype currently uses one shared local prototype profile per browser, independent of Google login, to avoid cross-account/save conflicts.
 - Some passive descriptions are design candidates; the code implements selected representative interactions, **not every full passive effect**. The gear's Epic/Legendary affinity fields are currently illustrative and require actual combat integration.
 - No production release or dev hosting deploy was performed; testing can be done via local HTTP checkout of development.
+- The initial development implementation uses a simplified separate simulator for combat, not the classic production battle mechanics. Its results should not be used for final tuning.
 
 ## Quality checks
 - \`npm run test:v012\`: deterministic state-machine tests (affinities/paths, one-step lock, gear survival, waves, potions, final-boss unlock).
