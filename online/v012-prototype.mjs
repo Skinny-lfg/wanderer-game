@@ -9,7 +9,7 @@ if(profile.run&&profile.run.affinities?.length>MAX_AFFINITIES){
  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(profile));}catch{}
 }
 if(migrateMagicProfile(profile)){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(profile));}catch{}}
-profile.restHpRatio=profile.restHpRatio??1;
+profile.restHpRatio=profile.run&&profile.run.stage!=='finished'?(profile.restHpRatio??1):1;
 profile.healthPotionStock=profile.healthPotionStock??3;
 selectedLevel=profile.unlocked;
 function persist(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(profile));}catch{error='Prototype local save unavailable. Real Wanderer saves have not been changed.';}}
@@ -58,11 +58,11 @@ function betweenCombats(run,stat){
  '<details class="v12-inventory"><summary>🎒 Inventory & Equipment · change gear before the next Plane</summary>'+gearPanel()+'</details></div>';
 }
 function camp(){
- const status='<div class="v12-metrics"><span><b>D'+profile.unlocked+'</b><small>Highest unlocked</small></span><span><b>'+profile.gold+'</b><small>Gold</small></span><span><b>'+profile.fragments+'</b><small>Fragments</small></span><span><b>'+profile.record.length+'</b><small>Runs</small></span></div>';
- const levelSelector='<label class="v12-level-selector">Choose difficulty <select data-difficulty aria-label="Choose difficulty">'+Array.from({length:profile.unlocked},(_,i)=>i+1).map(n=>'<option value="'+n+'"'+(n===selectedLevel?' selected':'')+'>Dungeon '+n+'</option>').join('')+'</select></label>';
+ const status='<div class="v12-metrics"><span><b>Exp '+profile.unlocked+'</b><small>Highest unlocked</small></span><span><b>'+profile.gold+'</b><small>Gold</small></span><span><b>'+profile.fragments+'</b><small>Fragments</small></span><span><b>'+profile.record.length+'</b><small>Runs</small></span></div>';
+ const levelSelector='<label class="v12-level-selector">Choose Expedition <select data-difficulty aria-label="Choose Expedition">'+Array.from({length:profile.unlocked},(_,i)=>i+1).map(n=>'<option value="'+n+'"'+(n===selectedLevel?' selected':'')+'>Expedition '+n+'</option>').join('')+'</select></label>';
  const potionSelector='<div class="v12-pot-grid"><strong>Potion loadout · 3 slots</strong><div>'+[0,1,2,3].map(n=>'<button data-action="pots" data-count="'+n+'" class="'+(n===manaPots?'active':'')+'">'+n+' Mana</button>').join('')+'</div><span>'+Math.min(3-manaPots,profile.healthPotionStock??3)+' Health + '+Math.min(manaPots,profile.manaPotionStock??3)+' Mana · usable only between combats</span></div>';
  const families=Object.entries(FAMILIES).map(([id,a])=>'<button class="v12-family" data-action="begin" data-id="'+id+'" style="--accent:'+a.color+'"><span>'+a.icon+'</span><strong>'+esc(a.name)+'</strong><small>'+esc(a.kind)+'</small></button>').join('');
- return '<div class="v12-stack"><section class="v12-panel"><h2>Camp · Prepare Expedition</h2><p class="v12-muted">Review your HP, Mana and inventory before entering. Choose up to three affinity families per expedition, and rest between Planes.</p>'+status+resourceCamp(null,stats(profile))+levelSelector+potionSelector+'<h3>Choose initial affinity</h3><div class="v12-family-grid">'+families+'</div></section>'+gearPanel()+'</div>';
+ return '<div class="v12-stack"><section class="v12-panel"><h2>Camp · Prepare Expedition</h2><p class="v12-muted">Health resets to full after every Expedition. Review your Mana and gear, then choose up to three affinities and recover between Planes.</p>'+status+resourceCamp(null,stats(profile))+levelSelector+potionSelector+'<h3>Choose initial affinity</h3><div class="v12-family-grid">'+families+'</div></section>'+gearPanel()+'</div>';
 }
 function elementSelect(r){
  const cards=Object.entries(MAGIC_ELEMENTS).map(([id,element])=>
@@ -103,7 +103,7 @@ function nonCombat(r,s){
 }
 function finished(r){
  const won=r.result.startsWith('Victory');
- return '<section class="v12-panel v12-finish"><span class="v12-big-icon">'+(won?'🏆':'☠️')+'</span><h2>'+esc(r.result)+'</h2><p>Your gear, Gold and Fragments persist. Up to three affinity families per run. Health carries over to camp (minimum 40% on defeat), where Health Potions can be used between runs.</p><div class="v12-metrics"><span><b>'+r.loot.length+'</b><small>Gear items found</small></span><span><b>'+r.passives.length+'</b><small>Passives learned</small></span><span><b>'+r.affinities.length+'</b><small>Affinities explored</small></span></div><button class="v12-primary" data-action="leave">Return to camp</button></section>';
+ return '<section class="v12-panel v12-finish"><span class="v12-big-icon">'+(won?'🏆':'☠️')+'</span><h2>'+esc(r.result)+'</h2><p>Your gear, Gold and Fragments persist. Up to three affinity families per run. Health is fully restored after every Expedition, whether you win, lose or abandon. Health Potions remain useful between Planes.</p><div class="v12-metrics"><span><b>'+r.loot.length+'</b><small>Gear items found</small></span><span><b>'+r.passives.length+'</b><small>Passives learned</small></span><span><b>'+r.affinities.length+'</b><small>Affinities explored</small></span></div><button class="v12-primary" data-action="leave">Return to camp</button></section>';
 }
 function render(){
  if(!open)return;
@@ -111,11 +111,11 @@ function render(){
  if(ensureMagicElementChoice(profile))persist();
  if(ensurePlaneOffers(profile))persist();
  const r=profile.run,s=stats(profile);
- const rbar=r&&r.stage!=='finished'?'<div class="v12-progress"><span>Difficulty '+r.level+' · Room '+r.room+'/15</span><span>'+r.passives.length+' passives · '+r.rerolls+' rerolls</span></div>':'';
+ const rbar=r&&r.stage!=='finished'?'<div class="v12-progress"><span>Expedition '+r.level+' · Plane '+r.room+'/15</span><span>'+r.passives.length+' passives · '+r.rerolls+' rerolls</span></div>':'';
  const affinities=r?r.affinities.map(affChip).join(''):'';
  let body=!r?camp():r.stage==='element'?elementSelect(r):r.stage==='startReward'?startReward(r):r.stage==='path'?pathSelect(r):r.stage==='reward'?reward(r):r.stage==='combat'?combat(r,s):r.stage==='finished'?finished(r):nonCombat(r,s);
  if(r&&['element','startReward','reward','path','chest','event','altar'].includes(r.stage))body=betweenCombats(r,s)+body;
- let gearStrip=r&&r.stage!=='finished'?'<div class="v12-side"><section class="v12-panel"><div class="v12-section-head"><h3>Active affinities</h3><span>'+r.affinities.length+'/'+MAX_AFFINITIES+'</span></div><div class="v12-chips">'+affinities+'</div>'+(r.magicElement?'<p class="v12-muted">Active Magic: '+MAGIC_ELEMENTS[r.magicElement].icon+' '+MAGIC_ELEMENTS[r.magicElement].name+' · usable with any weapon</p>':'')<p class="v12-muted">'+r.passives.length+' temporary passives · '+profile.inventory.length+' permanent items</p></section>'+activePassives(r)+'<section class="v12-panel"><h3>Expedition log</h3><div class="v12-log">'+r.log.slice(0,8).map(x=>'<div>'+esc(x)+'</div>').join('')+'</div></section><button class="v12-danger" data-action="abandon">Abandon expedition</button></div>':'';
+ let gearStrip=r&&r.stage!=='finished'?'<div class="v12-side"><section class="v12-panel"><div class="v12-section-head"><h3>Active affinities</h3><span>'+r.affinities.length+'/'+MAX_AFFINITIES+'</span></div><div class="v12-chips">'+affinities+'</div>'+(r.magicElement?'<p class="v12-muted">Active Magic: '+MAGIC_ELEMENTS[r.magicElement].icon+' '+MAGIC_ELEMENTS[r.magicElement].name+' · usable with any weapon</p>':'')+'<p class="v12-muted">'+r.passives.length+' temporary passives · '+profile.inventory.length+' permanent items</p></section>'+activePassives(r)+'<section class="v12-panel"><h3>Expedition log</h3><div class="v12-log">'+r.log.slice(0,8).map(x=>'<div>'+esc(x)+'</div>').join('')+'</div></section><button class="v12-danger" data-action="abandon">Abandon expedition</button></div>':'';
  host.innerHTML='<div class="v12-shell"><header class="v12-header"><div><span class="v12-eyebrow">DEVELOPMENT ONLY · ISOLATED SAVE</span><h1>WANDERER <small>v0.12 prototype</small></h1></div><button data-action="close" class="v12-close" aria-label="Close prototype">✕ Close</button></header>'+rbar+(error?'<div class="v12-error">'+esc(error)+'</div>':'')+'<div class="v12-layout"><div class="v12-main">'+body+'</div>'+gearStrip+'</div><footer class="v12-footer">Experimental battle balance. Original D1–D200 gameplay, accounts and cloud saves are unchanged. Local prototype save key: '+STORAGE_KEY+'</footer></div>';
 }
 function dispatch(action,b){
