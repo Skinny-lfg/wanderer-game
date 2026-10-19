@@ -30,7 +30,19 @@ const fixture=String.raw`if(PHASE1_PREVIEW){
   injury:()=>{if(!phase3IsBetweenPlanes())return false;
    const p=phase3Vitals();phase1Vitals={hp:Math.max(1,p.hp-75),mp:Math.max(0,p.mp-15),maxmp:p.maxmp};
    renderPhase1();return true;},
-  illegalPotion:()=>phase3UsePotion('health')
+  illegalPotion:()=>phase3UsePotion('health'),
+  verifyHpSwapCap:()=>{
+   if(!phase3IsBetweenPlanes())return null;
+   const original=state.equip.armor,high=phase2Stats().maxhp;
+   phase1Vitals.hp=high;
+   const low=makeItem(1,'armor',null,'loot','Armor','Common');
+   state.stash.push(low);equipItem(low.id);
+   const clipped=phase1Vitals.hp;
+   equipItem(original.id);
+   const restored=phase1Vitals.hp;
+   phase3Go('phase1');
+   return {high,clipped,restored};
+  }
  };
  render();
 }else{load();if(!state.merchant)rollShop();save();render();}`
@@ -81,6 +93,9 @@ async function run(){
    for(let plane=1;plane<=15;plane++){
     assert.equal(await page.locator('.phase1Offer').count(),3,'three offers at Plane '+plane);
     if(plane===2){
+     const swap=await page.evaluate(()=>__phase3Audit.verifyHpSwapCap());
+     assert(swap.clipped<swap.high,'lower HP equipment must reduce current HP cap');
+     assert.equal(swap.restored,swap.clipped,'stronger gear must not heal lost HP from prior cap');
      assert.equal(await page.evaluate(()=>__phase3Audit.injury()),true,'testing after-wave resource deficit');
      let before=await page.evaluate(()=>__phase3Audit.snapshot());
      assert(before.potions.health===2);
