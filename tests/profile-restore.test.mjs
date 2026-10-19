@@ -5,7 +5,7 @@ import {readFile} from 'node:fs/promises';
 test('profile reads and duplicate registration preserve account ownership',async()=>{
  const records=new Map(),writes=[];let fromCache=false,verificationMessages=0,passwordResetAddress='',forcedTokenRefreshes=0;
  const snapshot=ref=>({exists:()=>records.has(ref),data:()=>records.get(ref),metadata:{fromCache}});
- globalThis.__profileSdkTest={initializeApp:()=>({}),getAuth:()=>({currentUser:{uid:'alice',emailVerified:true}}),getFirestore:()=>({}),setPersistence:async()=>{},signInWithEmailAndPassword:async()=>({user:{uid:'alice'}}),createUserWithEmailAndPassword:async()=>({user:{uid:'alice'}}),sendPasswordResetEmail:async(_auth,email)=>{passwordResetAddress=email;},sendEmailVerification:async()=>{verificationMessages++;},reload:async()=>{},getIdToken:async(_account,force)=>{if(force)forcedTokenRefreshes++;return "mock-token";},doc:(_,...parts)=>parts.join('/'),getDoc:async ref=>snapshot(ref),serverTimestamp:()=>123,
+ globalThis.__profileSdkTest={initializeApp:()=>({}),getAuth:()=>({currentUser:{uid:'alice',emailVerified:true}}),getFirestore:()=>({}),setPersistence:async()=>{},getFunctions:(_app,region)=>{assert.equal(region,'europe-west1');return {};},httpsCallable:(_functions,name)=>{assert.equal(name,'signInWithNickname');return async({nickname,password})=>{assert.equal(nickname,'skinny');assert.equal(password,'password123');return {data:{customToken:'verified-alice'}};};},signInWithCustomToken:async(_auth,token)=>{assert.equal(token,'verified-alice');return {user:{uid:'alice'}};},signInWithEmailAndPassword:async()=>({user:{uid:'alice'}}),createUserWithEmailAndPassword:async()=>({user:{uid:'alice'}}),sendPasswordResetEmail:async(_auth,email)=>{passwordResetAddress=email;},sendEmailVerification:async()=>{verificationMessages++;},reload:async()=>{},getIdToken:async(_account,force)=>{if(force)forcedTokenRefreshes++;return "mock-token";},doc:(_,...parts)=>parts.join('/'),getDoc:async ref=>snapshot(ref),serverTimestamp:()=>123,
   runTransaction:async(_,fn)=>{const staged=[];await fn({get:async ref=>snapshot(ref),set:(ref,value)=>staged.push([ref,value])});for(const [ref,value]of staged){records.set(ref,value);writes.push(ref);}}
  };
  let source=await readFile(new URL('../online/firebase-client.mjs',import.meta.url),'utf8');
@@ -15,6 +15,8 @@ test('profile reads and duplicate registration preserve account ownership',async
  try{
  const {createBackend}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));const backend=await createBackend();
  assert.equal((await backend.signInWithEmail('example@example.com','password123')).user.uid,'alice');
+ assert.equal((await backend.signInWithNickname('  Skinny  ','password123')).user.uid,'alice');
+ await assert.rejects(backend.signInWithNickname('invalid nickname','password123'),/3–20 letters/);
  assert.equal((await backend.createEmailAccount(' example@example.com ','password123')).uid,'alice');
  await backend.resendVerification();
  assert.equal(verificationMessages,2,'registration and resend each send one verification email');
