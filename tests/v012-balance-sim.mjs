@@ -62,6 +62,6 @@ for(const gearCount of [1,3,5,8]){
   const values=[];
   for(let i=0;i<160;i++)values.push(runSim(10001+level*100000+gearCount*1000+i,gearCount,level,['blood','vitality','aegis','fury','arcane'][i%5]));
   const wins=values.filter(x=>x.win);
-  console.log(JSON.stringify({gearCount,level,runs:values.length,wins:wins.length,winPct:Math.round(wins.length/values.length*1000)/10,meanLastRoom:Math.round(values.reduce((a,x)=>a+x.room,0)/values.length*10)/10,avgLoot:Math.round(values.reduce((a,x)=>a+x.loot.length,0)/values.length*10)/10,avgAffinities:Math.round(values.reduce((a,x)=>a+x.affinities,0)/values.length*10)/10}));
+  console.log(JSON.stringify({gearCount,level,runs:values.length,wins:wins.length,winPct:Math.round(wins.length/values.length*1000)/10,meanLastRoom:Math.round(values.reduce((a,x)=>a+x.room,0)/values.length*10)/10,avgLoot:Math.round(values.reduce((a,x)=>a+x.loot,0)/values.length*10)/10,avgAffinities:Math.round(values.reduce((a,x)=>a+x.affinities,0)/values.length*10)/10}));
  }
 }
