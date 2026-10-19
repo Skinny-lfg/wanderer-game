@@ -34,7 +34,7 @@ The classic `index.html` remains authoritative for `totalStats`, `weaponAttack`,
 ## Validation and release gates
 
 - **Main smoke regression:** passing at `e1b4d14d` (GitHub Actions run `39290274960`), including new passive tests, real classic combat matrix and legacy suite.
-- **Full [audit] browser/stress suite:** triggered by this report commit; record the final result below after completion. Until then this implementation is a **development-only feature**, not a release candidate.
+- **Full [audit] browser/stress suite:** **PASS** at commit `55756f1d1a2c1b14621f310aeed41e0bcb165f4b`, GitHub Actions run [39291346378](https://github.com/Skinny-lfg/wanderer-game/actions/runs/39291346378). Unit/smoke, mobile and desktop asset/VFX, original gameplay and save stress, account/browser, interrupted-save and multi-tab conflict recovery, PvP and Firestore **demo-emulator-only** rules tests all passed. No production Firebase deployment was performed.
 - **Not validated yet:** long-run 15-Plane real combat balance and 48-passive meta convergence under randomized player gear; live account persistence and recovery are out of scope and disabled.
 
 ## Known limitations / balancing follow-ups
@@ -49,3 +49,7 @@ The classic `index.html` remains authoritative for `totalStats`, `weaponAttack`,
 ## Safety and next gate
 
 Do not modify `main`, deploy Firebase, change security rules, or write/migrate saves as part of Phase 2. Keep opt-in preview on `development`. Phase 3 must be gated on browser integration, save/conflict isolation and survival/playtesting checks.
+
+## Phase 2 gate outcome
+
+**Accepted for isolated `development` playtesting; not approved for `main` or persistent accounts.** Core mechanics and regressions pass. The initial full audit exposed a cleared-Plane rendering bug, which was corrected, plus one stale browser locator, corrected without gameplay changes. The final full audit is green. Phase 3 can begin separately, maintaining all backup/cloud safety rules.
