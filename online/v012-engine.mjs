@@ -164,18 +164,18 @@ function loot(profile,guarantee=false){
  if(!profile.equipped[item.slot] || (item.atk+item.armor+item.hp*.1+item.mana*.1)>(()=>{let old=profile.inventory.find(x=>x.id===profile.equipped[item.slot]);return old?old.atk+old.armor+old.hp*.1+old.mana*.1:0})()*1.12)profile.equipped[item.slot]=item.id;
  return item;
 }
-function award(profile,guarantee=false){
+function award(profile,guarantee=false,suppressRandomDrop=false){
  const r=profile.run,t=r.rooms[r.room-1];
  const gold=Math.round(8+r.level*4+r.room*.65+(t==='boss'?35:t==='elite'?14:0)),frag=Math.round(2+r.level*.9+(t==='boss'?12:0));
  profile.gold+=gold;profile.fragments+=frag;
  const odds=t==='boss'?1:t==='chest'?.68:t==='elite'?.38:t==='combat'?.06:t==='event'?.16:0;
- if(guarantee||rand(r)<odds)loot(profile,t==='boss');
+ if(!suppressRandomDrop&&(guarantee||rand(r)<odds))loot(profile,t==='boss');
  r.log=['+'+gold+' Gold, +'+frag+' Fragments.',...r.log].slice(0,14);
 }
-function completeRoom(profile){
+function completeRoom(profile,suppressRandomDrop=false){
  const r=profile.run;
  if(r.stage==='reward'||r.stage==='finished')return;
- award(profile);
+ award(profile,false,suppressRandomDrop);
  if(r.room===15){
   const before=profile.unlocked;profile.unlocked=Math.max(before,r.level+1);
   finishRecovery(profile);
@@ -190,7 +190,7 @@ export function resolveRoom(profile,action='safe'){
  if(stage==='chest'){if(action==='treasure')loot(profile,true);else if(action==='heal')r.hp=Math.min(s.hp,r.hp+s.hp*.25);else throw Error('Invalid chest choice');}
  if(stage==='event'){if(action==='risk'){r.hp=Math.max(1,r.hp-s.hp*.17);loot(profile,true);}else if(action==='safe')r.hp=Math.min(s.hp,r.hp+s.hp*.12);else throw Error('Invalid event choice');}
  if(stage==='altar'){if(action==='heal')r.hp=Math.min(s.hp,r.hp+s.hp*.35);else if(action==='mana')r.mp=Math.min(s.mana,r.mp+s.mana*.65);else throw Error('Invalid altar choice');}
- completeRoom(profile);return profile;
+ completeRoom(profile,(stage==='chest'&&action==='treasure')||(stage==='event'&&action==='risk'));return profile;
 }
 export function usePotion(profile,kind){
  const r=profile.run;if(!r||r.stage==='finished'||kind!=='mana'||r.potions.mana<1)throw Error('Health potions can only be used at camp between runs');
