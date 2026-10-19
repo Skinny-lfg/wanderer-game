@@ -3375,6 +3375,7 @@ function renderCombat(){wallet();const r=state.run;if(!r){view='tavern';render()
 let phase1Controller=null,phase1Vitals=null,phase1Build=null,phase1Draft=null,phase1Clock=0,phase3Supplies=null;
 const isPhase1Run=()=>PHASE1_PREVIEW&&state.run?.phase1===true;
 function phase1Init(){
+ document.body?.classList?.add('phase3IntegratedPreview');
  $('screen').inert=false; // No online/app.mjs in preview: explicitly reveal the standalone UI.
  fresh();
  state.equip.weapon=state.stash.shift();
