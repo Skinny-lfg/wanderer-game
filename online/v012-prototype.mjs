@@ -69,11 +69,13 @@ function startReward(r){
 function pathSelect(r){
  const locked=r.lastPathAffinity&&r.room>1?FAMILIES[r.lastPathAffinity]:null;
  const cards=r.pathOffers.map((id,index)=>{
- const p=PATHS.find(x=>x.id===id),a=FAMILIES[p.affinity];
- return '<div class="v12-path"><div class="v12-path-image" style="background-image:linear-gradient(0deg,#13121b 0%,transparent 80%),url('+esc(p.background)+')"></div><div class="v12-path-body"><span class="v12-tag" style="--accent:'+a.color+'">'+esc(a.icon+' '+a.name)+'</span><strong>'+esc(p.name)+'</strong><small>Earn 1 of 3 '+esc(a.name)+' passives after completing this room.</small><button data-action="path" data-id="'+esc(id)+'" class="v12-primary">Enter plan</button><button data-action="reroll" data-index="'+index+'" '+(r.rerolls<1||(r.room===1&&p.affinity===r.initial)?'disabled':'')+'>↻ Reroll plan ('+r.rerolls+' left)</button></div></div>';
+  const p=PATHS.find(x=>x.id===id),a=FAMILIES[p.affinity];
+  const plane=r.planeOffers?.find(x=>x.id===id)||{waves:1,elite:false,bonus:null};
+  const title=plane.bonus==='chest'?'🎁 Chest after combat':plane.bonus==='event'?'✦ Random event after combat':plane.bonus==='altar'?'✚ Altar after combat':'';
+  return '<div class="v12-path"><div class="v12-path-image" style="background-image:linear-gradient(0deg,#13121b 0%,transparent 80%),url('+esc(p.background)+')"></div><div class="v12-path-body"><span class="v12-tag" style="--accent:'+a.color+'">'+esc(a.icon+' '+a.name)+'</span><strong>'+esc(p.name)+'</strong><div class="v12-plane-badges"><span>⚔️ '+plane.waves+' '+(plane.waves===1?'Wave':'Waves')+'</span><span class="'+(plane.elite?'v12-elite':'')+'">'+(plane.elite?'💀 Elite':'✓ No Elite')+'</span></div>'+(title?'<small>'+title+'</small>':'')+'<small>More waves = more independent loot chances, but higher danger. Reward: '+esc(a.name)+' passive.</small><button data-action="path" data-id="'+esc(id)+'" class="v12-primary">Enter Plane</button><button data-action="reroll" data-index="'+index+'" '+(r.rerolls<1||(r.room===1&&p.affinity===r.initial)?'disabled':'')+'>↻ Reroll Plane ('+r.rerolls+' left)</button></div></div>';
  }).join('');
  const upcoming=r.rooms[r.room-1];
- return '<section class="v12-panel"><span class="v12-eyebrow">Room '+r.room+'/15 · '+esc(upcoming.toUpperCase())+'</span><h2>Choose a plan</h2><p class="v12-muted">'+(locked?'Affinity locked for this choice: '+esc(locked.name)+'. ':'')+'Select the environment and passive family. You can unlock up to three affinities; after that, plans only improve the families you already have.</p><div class="v12-path-grid">'+cards+'</div></section>';
+ return '<section class="v12-panel"><span class="v12-eyebrow">Room '+r.room+'/15 · '+esc(upcoming.toUpperCase())+'</span><h2>Choose a Plane</h2><p class="v12-muted">'+(locked?'Affinity locked for this choice: '+esc(locked.name)+'. ':'')+'Compare Waves, Elite presence and optional events before committing. Three affinity families maximum.</p><div class="v12-path-grid">'+cards+'</div></section>';
 }
 function reward(r){
  const p=PATHS.find(x=>x.id===r.selectedPath),a=FAMILIES[p.affinity];
