@@ -2161,7 +2161,7 @@ function restoreView(){
 }
 function uiIcon(kind){const file={gold:'currency-gold.svg',fragments:'currency-fragments.svg',dungeon:'dungeon-progress.svg'}[kind];return file?'<img class="uiStatusIcon" src="assets/ui/'+file+'" alt="" aria-hidden="true">':'';}
 function navigationIcon(kind){if(!['tavern','equipment','forge','merchant','dungeons'].includes(kind))return '';return '<img class="navArtIcon" src="assets/ui/navigation/'+kind+'.svg" alt="" aria-hidden="true">';}
-function wallet(){if(PHASE1_PREVIEW){$('wallet').innerHTML='<span class="token">⚗ v0.12 Phase 1 · unsaved preview</span>';$('nav').innerHTML='<span class="small muted">Standalone Expedition integration test · no account connection</span>';return;}let el=$('wallet');el.innerHTML=`<span class="token">${uiIcon('gold')} <b>${state.gold}</b> Gold</span><span class="token">${uiIcon('fragments')} <b>${state.fragments}</b> Fragments</span><span class="token">${uiIcon('dungeon')} <b>D${state.maxDungeon}</b></span>`;let elNav=$('nav');elNav.innerHTML=state.run?`<span class="token">⚔ Expedition active · Equipment locked</span>`:[['tavern','Tavern'],['equipment','Equipment'],['forge','Forge'],['merchant','Merchant'],['dungeons','Dungeons']].map(([k,label])=>[k,navigationIcon(k)+' '+label]).map(([k,v])=>`<button data-nav="${k}" class="${view===k?'active':''}">${v}</button>`).join('');Q('[data-nav]').forEach(b=>b.onclick=()=>nav(b.dataset.nav));const menu=$('onlineBar'),toggle=$('menuToggle');if(menu&&toggle){toggle.onclick=()=>{const open=menu.classList.toggle('menuOpen');toggle.setAttribute('aria-expanded',String(open));};// Do not overwrite Account/Leaderboard/Feedback onclick handlers registered by online/app.mjs.
+function wallet(){if(PHASE1_PREVIEW){$('wallet').innerHTML='<span class="token">⚗ v0.12 Phase 3 · local-only</span><span class="token">'+uiIcon('gold')+' '+state.gold+' Gold</span><span class="token">'+uiIcon('fragments')+' '+state.fragments+' Fragments</span>';phase3RenderNav();return;}let el=$('wallet');el.innerHTML=`<span class="token">${uiIcon('gold')} <b>${state.gold}</b> Gold</span><span class="token">${uiIcon('fragments')} <b>${state.fragments}</b> Fragments</span><span class="token">${uiIcon('dungeon')} <b>D${state.maxDungeon}</b></span>`;let elNav=$('nav');elNav.innerHTML=state.run?`<span class="token">⚔ Expedition active · Equipment locked</span>`:[['tavern','Tavern'],['equipment','Equipment'],['forge','Forge'],['merchant','Merchant'],['dungeons','Dungeons']].map(([k,label])=>[k,navigationIcon(k)+' '+label]).map(([k,v])=>`<button data-nav="${k}" class="${view===k?'active':''}">${v}</button>`).join('');Q('[data-nav]').forEach(b=>b.onclick=()=>nav(b.dataset.nav));const menu=$('onlineBar'),toggle=$('menuToggle');if(menu&&toggle){toggle.onclick=()=>{const open=menu.classList.toggle('menuOpen');toggle.setAttribute('aria-expanded',String(open));};// Do not overwrite Account/Leaderboard/Feedback onclick handlers registered by online/app.mjs.
  if(menu.addEventListener&&!menu.dataset.menuCloseBound){
   menu.dataset.menuCloseBound='1';
   menu.addEventListener('click',event=>{
@@ -2170,7 +2170,7 @@ function wallet(){if(PHASE1_PREVIEW){$('wallet').innerHTML='<span class="token">
    toggle.setAttribute('aria-expanded','false');
   });
  }}}
-function render(){if(PHASE1_PREVIEW){wallet();if(view==='combat')renderCombat();else renderPhase1();return;}if(!hasRestoredInitialView){hasRestoredInitialView=true;restoreView();}rememberView();wallet();if(view==='tavern')renderTavern();else if(view==='equipment')renderStash();else if(view==='forge')renderForge();else if(view==='merchant')renderMerchant();else if(view==='dungeons')renderDungeons();else if(view==='combat')renderCombat();if(state.pendingRuneReward)showPendingRuneReward();}
+function render(){if(PHASE1_PREVIEW){wallet();if(view==='combat')renderCombat();else if(view==='equipment')renderStash();else if(view==='forge')renderForge();else if(view==='merchant')renderMerchant();else renderPhase1();return;}if(!hasRestoredInitialView){hasRestoredInitialView=true;restoreView();}rememberView();wallet();if(view==='tavern')renderTavern();else if(view==='equipment')renderStash();else if(view==='forge')renderForge();else if(view==='merchant')renderMerchant();else if(view==='dungeons')renderDungeons();else if(view==='combat')renderCombat();if(state.pendingRuneReward)showPendingRuneReward();}
 function html(s){$('screen').innerHTML=s}
 function formatItemStat(n){const x=Number(n)||0;return Number(x.toFixed(2)).toString()}
 function itemStats(o){return FIELDS.filter(([,f])=>o?.[f]).map(([k,f])=>`${o[f]>0?'+':''}${formatItemStat(o[f])} ${k}`).join(' · ')}
@@ -3372,7 +3372,7 @@ function renderCombat(){wallet();const r=state.run;if(!r){view='tavern';render()
 
 /* v0.12 Phase 1 bridge — only active with ?expeditionPhase1=1.
    Runs on fresh in-memory classic state. No player-save reads, writes or Firebase. */
-let phase1Controller=null,phase1Vitals=null,phase1Build=null,phase1Draft=null,phase1Clock=0;
+let phase1Controller=null,phase1Vitals=null,phase1Build=null,phase1Draft=null,phase1Clock=0,phase3Supplies=null;
 const isPhase1Run=()=>PHASE1_PREVIEW&&state.run?.phase1===true;
 function phase1Init(){
  $('screen').inert=false; // No online/app.mjs in preview: explicitly reveal the standalone UI.
@@ -3384,7 +3384,7 @@ function phase1Init(){
  view='phase1';
 }
 function phase1Begin(level){
- phase1Controller.start(level);phase1Vitals=null;phase1Clock=0;phase1Build=WandererV012Buildcraft.create();phase1Build.families=phase1Controller.state.families;phase1Draft=null;state.run=null;view='phase1';render();
+ phase1Controller.start(level);phase1Vitals=null;phase1Clock=0;phase3Supplies={health:2,mana:2};phase1Build=WandererV012Buildcraft.create();phase1Build.families=phase1Controller.state.families;phase1Draft=null;state.run=null;view='phase1';render();
 }
 
 function phase2Context(r){
@@ -3531,6 +3531,64 @@ function phase1DecorateCombat(){
  const loot=document.querySelector('.combatExpeditionDetails .runLootHeading');
  if(loot)loot.textContent='Equipment awarded immediately';
 }
+// Phase 3 preview navigator. Classic item, comparison, Rune and vendor handlers are reused;
+// only the normal Account, save and dungeon navigation stay disconnected from this memory-only run.
+function phase3CanPrepare(){
+ return PHASE1_PREVIEW&&phase1Controller?.state.stage==='choice'&&!phase1Draft&&!state.run;
+}
+function phase3IsBetweenPlanes(){return phase3CanPrepare()&&phase1Controller.state.planeIndex>1;}
+function phase3Go(to){
+ const stage=phase1Controller?.state.stage;
+ if(state.run||phase1Draft)return;
+ const legal=['phase1','equipment'];
+ if(['camp','finished','failed'].includes(stage))legal.push('forge','merchant');
+ if(!legal.includes(to))return;
+ view=to;selectedId=null;chosenItems.clear();render();
+}
+function phase3RenderNav(){
+ const el=$('nav');if(!el)return;
+ if(state.run){el.innerHTML='<span class="small muted">⚔ Expedition combat · Gear and potions locked</span>';return;}
+ const stage=phase1Controller?.state.stage||'camp';
+ if(phase1Draft){el.innerHTML='<span class="small muted">Choose your temporary passive before entering combat</span>';return;}
+ const destinations=[['phase1',stage==='choice'?'Planes':'Camp'],['equipment','Equipment / Runes']];
+ if(['camp','finished','failed'].includes(stage))destinations.push(['forge','Forge'],['merchant','Merchant']);
+ el.innerHTML='<div class="phase3Nav">'+destinations.map(([id,label])=>'<button type="button" class="tiny '+(view===id?'primary':'ghost')+'" data-phase3-nav="'+id+'">'+label+'</button>').join('')+'</div>';
+ Q('[data-phase3-nav]').forEach(button=>button.onclick=()=>phase3Go(button.dataset.phase3Nav));
+}
+function phase3Vitals(){
+ const stats=phase1Build?phase2Stats():totalStats();
+ const hp=Math.max(1,Math.min(stats.maxhp,phase1Vitals?.hp??stats.maxhp));
+ const magicAvailable=stats.mana>0,mp=Math.max(0,Math.min(stats.mana,phase1Vitals?.maxmp===0&&magicAvailable?stats.mana:phase1Vitals?.mp??stats.mana));
+ return {hp,maxhp:stats.maxhp,mp,maxmp:stats.mana};
+}
+function phase3UsePotion(kind){
+ // Only the safe interval AFTER a Plane, not Camp, first Plane, passives or combat.
+ if(!phase3IsBetweenPlanes()||!['health','mana'].includes(kind)||!phase3Supplies?.[kind])return false;
+ const vitals=phase3Vitals(),key=kind==='health'?'hp':'mp',max=kind==='health'?'maxhp':'maxmp';
+ if(vitals[max]<=0||vitals[key]>=vitals[max]-0.0001)return false;
+ if(!phase1Vitals)phase1Vitals={hp:vitals.hp,mp:vitals.mp,maxmp:vitals.maxmp};
+ phase1Vitals[key]=Math.min(vitals[max],vitals[key]+Math.ceil(vitals[max]*(kind==='health'?.35:.4)));
+ phase1Vitals.maxmp=vitals.maxmp;
+ phase3Supplies[kind]--;view='phase1';render();return true;
+}
+function phase3Reroll(){
+ if(!phase3CanPrepare()||phase1Controller.state.rerollsLeft<1)return false;
+ phase1Controller.reroll();view='phase1';render();return true;
+}
+function phase3PassivesMarkup(){
+ const picks=phase1Build?.picks||[],counts=new Map();
+ for(const id of picks)counts.set(id,(counts.get(id)||0)+1);
+ const rows=[...counts].map(([id,rank])=>{
+  const p=WandererV012Buildcraft.CATALOG.find(x=>x.id===id);if(!p)return '';
+  return '<li><b>'+esc(p.name)+' · Rank '+rank+'/'+p.max+'</b><small>'+esc(p.description)+'</small></li>';
+ });
+ return '<details class="phase3Passives"><summary>Active Expedition Passives ('+picks.length+')</summary>'+
+ '<p class="small muted">Temporary effects disappear on victory or defeat; equipment and Legendary abilities remain independent.</p>'+
+ (rows.length?'<ul>'+rows.join('')+'</ul>':'<p class="small muted">No passives selected yet.</p>')+
+ (phase1Build?.element?'<p>Magic element: <b>'+esc(phase1Build.element)+'</b></p>':'')+
+ '</details>';
+}
+
 function renderPhase1(){
  const g=phase1Controller.state;
  const familyGlyph={blood:'bleed',decay:'poison',vitality:'regen',aegis:'shield',fury:'crit',magic:'shock'};
