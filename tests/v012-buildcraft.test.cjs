@@ -26,7 +26,7 @@ function replay(id,family,element='lightning'){
  for(const f of pass?.requires||[])if(!b.families.includes(f))b.families.push(f);
  if(b.families.includes('magic'))b.element=pass?.element||element;
  if(id)b.picks.push(id);
- const {c,history}=ctx(.31);
+ const {c,history}=ctx(0);
  const mods=api.mods(b,base);
  const cost=api.nextCost(b);
  const healed=api.enemyHealMultiplier(b,c.enemy);
@@ -34,6 +34,7 @@ function replay(id,family,element='lightning'){
  const speedBefore=api.speed(b,0);
  api.onDefend(b,c,20,12);
  api.onAttack(b,c);
+ c.now+=1.5;api.onAttack(b,c);
  api.onCast(b,c);
  for(let i=0;i<4;i++){c.now+=1;api.onCast(b,c);}
  api.onSecond(b,c);
