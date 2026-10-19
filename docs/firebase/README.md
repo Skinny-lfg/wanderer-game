@@ -95,3 +95,10 @@ The **custom branded action page is implemented but NOT YET LIVE** in `auth-acti
 **Do not configure this custom action URL in the production Firebase until its own production-hosted page and rules have been separately reviewed.** The normal Firebase action pages remain functional until a custom URL is configured.
 
 For a branded sender-domain/email address such as `noreply@yourdomain`, Firebase may require verified ownership of a custom domain and DNS records; changing the app's public-facing name does not by itself change the sender's domain. See [Firebase custom email action handler](https://firebase.google.com/docs/auth/custom-email-handler) and [Firebase email template settings](https://support.google.com/firebase/answer/7000714).
+
+## Nickname sign-in (development-only implementation)
+
+Nickname + password sign-in is implemented in `development`, but it requires a
+server-side Firebase callable and an explicitly reviewed rules deployment. It is
+**not active** until deployed and verified. It never reveals email addresses in
+public nickname lookups. See [setup, security and rollout steps](nickname-login.md).
