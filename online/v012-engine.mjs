@@ -188,8 +188,8 @@ export function ensurePlaneOffers(profile){
 export function choosePassive(profile,id){
  const r=profile.run;if(!r||!['reward','startReward'].includes(r.stage)||!r.passiveOffers.includes(id))throw Error('Passive not offered');
  const p=PASSIVES.find(x=>x.id===id);if(!p)throw Error('Unknown passive');
- if(p.affinity==='magic'&&!r.magicElement)throw Error('Choose a Magic element first');
  if(r.affinities.length>=MAX_AFFINITIES&&!r.affinities.includes(p.affinity))throw Error('Maximum three affinities reached');
+ if(p.affinity==='magic'&&!r.magicElement)throw Error('Choose a Magic element first');
  if(count(r,p.id)>=MAX_PASSIVE_RANK)throw Error('Passive rank already at maximum');
  if(p.requires.some(f=>f!==p.affinity&&!r.affinities.includes(f)))throw Error('Hybrid affinity requirements missing');
  const old=stats(profile);
