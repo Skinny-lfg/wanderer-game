@@ -141,7 +141,7 @@ export function rerollPath(profile,index){
 }
 function enemyFor(r,wave,total){
  const path=PATHS.find(p=>p.id===r.selectedPath);
- const type=r.rooms[r.room-1],boss=type==='boss'&&wave===total-1,elite=type==='elite'||type==='boss';
+ const type=r.rooms[r.room-1],boss=type==='boss'&&wave===total-1,elite=boss||(!!r.selectedPlane?.elite&&wave===total-1);
  const depth=(r.room-1)/14;
  const strength=r.level+depth*2.35;
  const scale=boss?2.4:elite?1.55:1;
@@ -150,7 +150,7 @@ function enemyFor(r,wave,total){
  attack:Math.round((5+strength*3.3)*(boss?1.35:elite?1.25:1)*(1+depth*.12)),armor:Math.round((1+strength*1.4)*(boss?1.5:1)),interval:boss?2.3:elite?2.5:2.8,bleed:0,boss,elite};
 }
 function startCombat(profile){
- const r=profile.run,type=r.rooms[r.room-1],waves=type==='boss'?2:(type==='elite'?2:(rand(r)<.34?2:1));
+ const r=profile.run,type=r.rooms[r.room-1],waves=r.selectedPlane?.waves??(type==='boss'?2:type==='elite'?2:1);
  r.stage='combat';r.barrier=r.affinities.includes('aegis')?stats(profile).hp*.07:0;
  if(has(r,'first_guard'))r.barrier+=stats(profile).hp*.05;
  r.fight={wave:0,waves,enemy:enemyFor(r,0,waves),pt:0,et:0,dt:0,hits:0,secondWindUsed:!!r.secondWindUsed,sustain:{healed:0},counters:{bleedCarry:0},log:[]};
