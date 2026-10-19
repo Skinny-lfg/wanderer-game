@@ -323,7 +323,14 @@ export function leaveFinished(profile){if(!profile.run||profile.run.stage!=='fin
 export function equip(profile,id){
  if(profile.run&&profile.run.stage==='combat')throw Error('Cannot change gear during combat');
  const item=profile.inventory.find(x=>x.id===id);if(!item)throw Error('Missing equipment');
- profile.equipped[item.slot]=id;return profile;
+ const old=stats(profile);
+ profile.equipped[item.slot]=id;
+ if(profile.run&&profile.run.stage!=='finished'){
+  const fresh=stats(profile);
+  profile.run.hp=clamp(profile.run.hp+(fresh.hp-old.hp),1,fresh.hp);
+  profile.run.mp=clamp(profile.run.mp+(fresh.mana-old.mana),0,fresh.mana);
+ }
+ return profile;
 }
 export function inventoryScore(profile){return gear(profile).reduce((n,x)=>n+x.atk*.85+x.armor*.8+x.hp*.1+x.mana*.1,0);}
 export function stageName(profile){const r=profile.run;return !r?'Camp':r.stage;}
