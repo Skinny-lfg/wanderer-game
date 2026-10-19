@@ -96,6 +96,12 @@ export function begin(profile,affinity,manaPots=2,level=profile.unlocked){
 function allowedPathFamilies(run){
  return AFFINITY_IDS.filter(f=>(run.affinities.length<MAX_AFFINITIES||run.affinities.includes(f))&&(run.room===1||f!==run.lastPathAffinity));
 }
+function rollPlane(run,id){
+ const kind=run.rooms[run.room-1];
+ const waves=kind==='boss'?3:kind==='elite'?2+Math.floor(rand(run)*2):1+Math.floor(rand(run)*3);
+ const elite=kind==='boss'||kind==='elite'||rand(run)<(kind==='combat'?.22:.1);
+ return {id,waves,elite,bonus:['chest','event','altar'].includes(kind)?kind:null};
+}
 function makePathOffers(run){
  const allowed=allowedPathFamilies(run);
  let families;
@@ -107,6 +113,7 @@ function makePathOffers(run){
   chosen.push(...pool.slice(0,3-chosen.length).map(p=>p.id));
  }
  run.pathOffers=chosen;
+ run.planeOffers=chosen.map(id=>rollPlane(run,id));
 }
 export function choosePassive(profile,id){
  const r=profile.run;if(!r||!['reward','startReward'].includes(r.stage)||!r.passiveOffers.includes(id))throw Error('Passive not offered');
@@ -129,7 +136,7 @@ export function rerollPath(profile,index){
  const used=new Set(r.pathOffers);
  const available=PATHS.filter(p=>allowedPathFamilies(r).includes(p.affinity)&&!used.has(p.id));
  if(!available.length)throw Error('No other permitted plan available');
- r.pathOffers[index]=choice(r,available).id;r.rerolls--;
+ r.pathOffers[index]=choice(r,available).id;r.planeOffers??=[];r.planeOffers[index]=rollPlane(r,r.pathOffers[index]);r.rerolls--;
  return profile;
 }
 function enemyFor(r,wave,total){
