@@ -1,6 +1,6 @@
 // Non-production exploratory Monte Carlo of the isolated v0.12 combat engine.
 // Uses the game engine directly. The choices are an illustrative bot, NOT a player model.
-import {newProfile,begin,choosePassive,choosePath,resolveRoom,usePotion,tick,PATHS,PASSIVES,stats} from '../online/v012-engine.mjs';
+import {newProfile,begin,choosePassive,chooseMagicElement,choosePath,resolveRoom,usePotion,tick,PATHS,PASSIVES,stats} from '../online/v012-engine.mjs';
 const priorities={
  strong_heart:8,iron_skin:7,renewal:6,first_guard:7,second_wind:5,
  open_wound:7,hemorrhage:8,deep_cuts:6,crimson_recovery:5,
@@ -33,6 +33,7 @@ function runSim(seed,gearCount,level,family){
  const r=p.run;
  let ticks=0;
  for(let guard=0;guard<500&&r.stage!=='finished';guard++){
+  if(r.stage==='element'){chooseMagicElement(p,['fire','poison','frost'][Math.abs(seed)%3]);continue;}
   if(r.stage==='startReward'||r.stage==='reward'){choosePassive(p,chooseReward(r));continue;}
   if(r.stage==='path'){
    if(r.potions.mana>0&&r.mp<stats(p).mana*.4)usePotion(p,'mana');
@@ -61,7 +62,7 @@ function runSim(seed,gearCount,level,family){
 for(const gearCount of [1,3,5,8]){
  for(const level of [1,2,3]){
   const values=[];
-  for(let i=0;i<160;i++)values.push(runSim(10001+level*100000+gearCount*1000+i,gearCount,level,['blood','vitality','aegis','fury','arcane'][i%5]));
+  for(let i=0;i<160;i++)values.push(runSim(10001+level*100000+gearCount*1000+i,gearCount,level,['blood','vitality','aegis','fury','magic'][i%5]));
   const wins=values.filter(x=>x.win);
   console.log(JSON.stringify({gearCount,level,runs:values.length,wins:wins.length,winPct:Math.round(wins.length/values.length*1000)/10,meanLastRoom:Math.round(values.reduce((a,x)=>a+x.room,0)/values.length*10)/10,avgLoot:Math.round(values.reduce((a,x)=>a+x.loot,0)/values.length*10)/10,avgAffinities:Math.round(values.reduce((a,x)=>a+x.affinities,0)/values.length*10)/10}));
  }
