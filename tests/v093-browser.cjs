@@ -12,7 +12,7 @@ globalThis.fixture={seed(){
 },equipment(){view='equipment';render();},dungeons(){view='dungeons';render();},vfx(){document.getElementById('screen').innerHTML='<div class="scene" id="scene"><img id="heroPortrait" src="assets/characters/avatars/wanderer.png" alt=""><img id="enemyPortrait" src="assets/elites/tank.png" alt=""></div>';animateStrike('Bow');floatText(24);animateEnemyStrike();}};
 fixture.equipment();document.getElementById('screen').inert=false;document.getElementById('nav').inert=false;
 `;
-const html=fs.readFileSync(path.join(root,'index.html'),'utf8').replace(boot,fixture).replace(/<script type="module"[^>]*><\/script>/g,'');
+const html=fs.readFileSync(path.join(root,'index.html'),'utf8').replace(boot,fixture).replace(/<script id="(?:v012PrototypeLoader|onlineAccountLoader)">[\s\S]*?<\/script>/g,'');
 const server=http.createServer((req,res)=>{if(req.url==='/'){res.setHeader('Content-Type','text/html');return res.end(html);}const file=path.resolve(root,'.'+decodeURIComponent(req.url.split('?')[0]));if(!file.startsWith(root+path.sep)){res.writeHead(403);return res.end();}fs.readFile(file,(e,data)=>{res.writeHead(e?404:200);res.end(e?'':data);});});
 (async()=>{
  await new Promise(r=>server.listen(0,'127.0.0.1',r));const origin='http://127.0.0.1:'+server.address().port;
