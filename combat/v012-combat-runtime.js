@@ -330,12 +330,12 @@ function weaponAttack(r){
  let damage=0,element=null,cast=false;
  if(caster&&r.mp>=cost){
   ports.phase6Metric(r,'manaSpent',cost);ports.phase6Metric(r,'fundedCasts',1);r.mp-=cost;cast=true;element=null;
-  const factor=kind==='Staff'?1.32:.95;
+  const factor=kind==='Staff'?1.32:1.05;
   damage=Math.max(1,Math.round((ports.phase1Build?.element?WandererV012Buildcraft.elementalPower(ports.phase1Build,s.spellPower):s.spellPower)*factor));
   if(element&&ports.isMagicOffhand(off)&&off.magic===element)damage=Math.round(damage*1.30);
   ports.addLog((ports.ELEMENTS[element]?.icon||'✨')+' '+kind+' casts '+(ports.ELEMENTS[element]?.name||'Magic')+' ('+damage+' magic).','spell');
  }else{
-  const factor=kind==='Two-Handed'?1.70:kind==='Mace'?1.4:kind==='Bow'?1.08:kind==='Daggers'?.72:caster?.55:1;
+  const factor=kind==='Two-Handed'?1.70:kind==='Mace'?1.4:kind==='Bow'?1.08:kind==='Daggers'?.80:kind==='Sword'?1.12:caster?.55:1;
   damage=Math.max(1,Math.round(s.attack*factor)-Math.round(e.def*(armorReady?.8:1)));
  }
  const base=damage;r.lastBaseHit=base;
@@ -350,6 +350,10 @@ function weaponAttack(r){
  if(weapon?.subtype==='Staff'&&cast&&ports.setReady(r,'arcaneGuard',6)){
   const gained=ports.setBarrier(r,r.maxhp*.035);
   if(gained>0)ports.addLog('✨ Arcane Guard +'+Math.round(gained)+' Barrier','good');
+ }
+ if(weapon?.subtype==='Wand'&&off?.subtype==='Orb'&&cast&&ports.setReady(r,'wandOrbBarrier',6)){
+  const gained=ports.setBarrier(r,r.maxhp*.025);
+  if(gained>0)ports.addLog('🔮 Orb Ward +'+Math.round(gained)+' Barrier','good');
  }
  if(weapon?.subtype==='Two-Handed'&&ports.setReady(r,'heavyGuard',6)){
   const gained=ports.setBarrier(r,r.maxhp*.025);

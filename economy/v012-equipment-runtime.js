@@ -96,11 +96,11 @@ const legendaryDefinition=legendaryIdentity&&globalThis.WandererLegendary?.DEFIN
 let mult=ports.RARITY[rarity][1],power=Math.round((2+tier*.91)*mult),o={id:ports.makeId(),slot,subtype,name:(source==='loot'&&subtype==='Sword'&&rarity==='Common'&&ports.gameRandom()<.25?'Old Sword':ports.sample(ports.NAMES[subtype]||ports.NAMES[slot]||['Ancient Gear'])),rarity,tier,atk:0,def:0,hp:0,spd:0,str:0,agi:0,int:0,end:0,cha:0,mana:0,spell:0,effect,magic:magic?effect:null,crafted:source==='forge',craftPrice:source==='forge'?ports.craftCost(tier):null,obtainedAt:ports.PHASE1_PREVIEW&&ports.phase4Stamp?ports.phase4Stamp:Date.now(),locked:false,source};
 if(subtype==='Sword'){o.atk=power+3;o.str=1+Math.floor(tier*.20)}
 else if(subtype==='Mace'){o.atk=power+6;o.str=2+Math.floor(tier*.23);o.spd=-1}
-else if(subtype==='Bow'){o.atk=Math.round(power*1.4)+5;o.agi=2+Math.floor(tier*.21);o.spd=1}
+else if(subtype==='Bow'){o.atk=Math.round(power*1.18)+5;o.agi=2+Math.floor(tier*.21);o.spd=1}
 else if(subtype==='Daggers'){o.atk=power+1;o.agi=3+Math.floor(tier*.23);o.spd=2}
-else if(subtype==='Two-Handed'){o.atk=Math.round(power*2.1)+7;o.str=3+Math.floor(tier*.29);o.spd=-2}
+else if(subtype==='Two-Handed'){o.atk=Math.round(power*1.75)+7;o.str=3+Math.floor(tier*.29);o.spd=-2}
 else if(subtype==='Staff'){o.atk=1;o.int=4+Math.floor(tier*.34);o.spell=Math.round(power*1.8)+8;o.mana=Math.round(power*2.4)}
-else if(subtype==='Wand'){o.atk=1;o.int=2+Math.floor(tier*.22);o.spell=power+2;o.mana=power}
+else if(subtype==='Wand'){o.atk=1;o.int=2+Math.floor(tier*.22);o.spell=Math.round(power*1.15)+2;o.mana=power}
 else if(subtype==='Shield'){o.def=power+2;o.hp=power*3;o.end=2+Math.floor(tier*.22)}
 else if(slot==='offhand'){o.spell=power;o.int=1+Math.floor(tier*.2);o.mana=power}
 else if(slot==='armor'){o.def=power+3;o.hp=power*4;o.end=1+Math.floor(tier*.23)}
