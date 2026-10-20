@@ -9,7 +9,7 @@
     "test:browser": "node tests/v012-complete-browser.cjs && node tests/v0120-evasion-browser.cjs && node tests/private-preview-browser.cjs",
     "test:preview": "node --test tests/private-preview.test.mjs",
     "test:rules": "firebase emulators:exec --only firestore --project demo-wanderer 'node --test tests/firestore-rules.test.mjs'",
-    "test:assets": "node tests/equipment-vfx-browser.cjs",
+    "test:assets": "node tests/vfx-affinity-enemy-smoke.cjs",
     "simulate:v012": "node scripts/v012-complete-sim.cjs /tmp/wanderer-v012-sim.json",
     "build:pvp": "node scripts/build-pvp-stats.cjs"
   },
