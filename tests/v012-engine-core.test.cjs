@@ -55,7 +55,7 @@ test('character stats use one source, retain two-hand restrictions and Rune bonu
 test('Rune values, Expedition tiers, pending choices and recycling use the canonical module',()=>{
  const R=sandbox.WandererV012Runes;
  assert.equal(R.FAMILIES.length,8);
- assert.equal(R.runeValue('fury',1),3.3);
+ assert(Math.abs(R.runeValue('fury',1)-3.3)<1e-12);
  assert.equal(R.runeValue('warding',10),4);
  assert.equal(R.runeValue('vitality',20),30);
  const e1=R.makeRune('might',1,()=>'e1');
