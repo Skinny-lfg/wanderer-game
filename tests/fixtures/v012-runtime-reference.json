@@ -1,5 +1,5 @@
 {
-  "reference": "affinity-rework-rot-only",
+  "reference": "shared-daggers-dual-slot-v012",
   "cases": [
     {
       "scenario": {
@@ -9,7 +9,7 @@
         "family": "blood"
       },
       "steps": 76,
-      "digest": "647c74ff6746b15e85db962a307ad0c88d65d3c485237ef28ac6eab8729d6941"
+      "digest": "7d795b61d8101e8e19c27ee78544fb26b0d716db737d08eae9de41d8fd3e213f"
     },
     {
       "scenario": {
@@ -19,7 +19,7 @@
         "family": "decay"
       },
       "steps": 73,
-      "digest": "f67cdee908f72fac2924b656b92fb7d3b9003ea60c4d52dc45824aea674a5cc9"
+      "digest": "017c5c48fb4e885c90e74c0fcbdb871ceeb1ae4e4e5b0bc308cad339ee7a8af6"
     },
     {
       "scenario": {
@@ -30,7 +30,7 @@
         "element": "lightning"
       },
       "steps": 76,
-      "digest": "4fe99176c500e2b3e42f149dbe44bf8b993ef78a13646b7c57fb297cbf228271"
+      "digest": "9881c39ec606165e72caaf751a72279311c7a44e3e9a02d79d2d972bf49ff86f"
     },
     {
       "scenario": {
@@ -81,7 +81,7 @@
         "family": "blood"
       },
       "steps": 75,
-      "digest": "d4dd9e2386531a4fffcea7a81edb63c17b7d3575b54629deea5ceef806b53e0d"
+      "digest": "a7c16c6c57e28910af1c566a1d1302c0208f4b1585774f1d6f495c1d65cc5821"
     },
     {
       "scenario": {
@@ -91,7 +91,7 @@
         "family": "decay"
       },
       "steps": 68,
-      "digest": "a9e1d57d6d7eb2e91352433a9ddf216a7e02663161bdb768647fa2ff5871ac4a"
+      "digest": "b144d9be23bfdb0ebddbe2be1cc938d53184c335078db5f0db581a28731c1912"
     },
     {
       "scenario": {
@@ -133,7 +133,7 @@
         "family": "aegis"
       },
       "steps": 72,
-      "digest": "9023737cd9662a60c38f15c28946cb2dc1234ce51cb23a2546a5f5b57e19f298"
+      "digest": "196480205a84dd98ee965544ac8bb6c6471e5f2872005fb8ad701cb3bc6810c2"
     },
     {
       "scenario": {
@@ -163,7 +163,7 @@
         "family": "decay"
       },
       "steps": 74,
-      "digest": "f35c774e2bbacbb34b28c512a76db15367cf01fb644147fb37627109195e5009"
+      "digest": "8431950cbfd4d1f788d75695eb5de9d3192ff0387c99c7e4b522262876946fd4"
     },
     {
       "scenario": {
@@ -174,7 +174,7 @@
         "element": "lightning"
       },
       "steps": 73,
-      "digest": "fea89f66174a387efdc792720e4bef6374b4ade1557e6c71d98dece9e7739ed5"
+      "digest": "f5fd86f8192c0b39add5108754e4cb6288ce6b77d021f72c12c6dcfbb8eaffef"
     },
     {
       "scenario": {
@@ -195,7 +195,7 @@
         "family": "fury"
       },
       "steps": 74,
-      "digest": "b5b9ef40ff366d49373b1206481c292b3415c02b08bfba7e4a9b10dc2f72b3ec"
+      "digest": "4766d4ab6d44b6fce3e87dcf8a91796de3e48c9d431084e366ea55391d026b5b"
     },
     {
       "scenario": {
@@ -205,7 +205,7 @@
         "family": "aegis"
       },
       "steps": 74,
-      "digest": "56b6ee7ef3a4d69b83a18a2ce22927bf8befc48aea46c8b70357c2da1156a67d"
+      "digest": "6da6c69e07ec5830aa5ce931b7fac09b81b5f67122f3f53d151b1be31ee5c42c"
     },
     {
       "scenario": {
@@ -215,7 +215,8 @@
         "family": "vitality"
       },
       "steps": 71,
-      "digest": "1fa9bb92778df6eba3ba9a7ad209890bd419be8ce6efd6a689bc9fab349301b9"
+      "digest": "6262f50b5e86e58860b7452b43f4534b7ee7f9ad7dc6c8dd0e49acbeede9f140"
     }
-  ]
+  ],
+  "baselineReason": "Updated deterministic traces after merging the Off-Hand Dagger category into Daggers and reweighting off-hand loot. Only the 11 changed digest cases were rebaselined; all 21 lifecycle step counts are preserved."
 }
