@@ -238,3 +238,20 @@
 .realmRisk.normal{color:#b9d6c4}.realmRisk.elite{color:#e5b86c}.realmRisk.boss{color:#f07f89}.realmRisk.event{color:#b7a4ee}
 .phase3IntegratedPreview .phase3BagGrid{grid-template-columns:repeat(3,minmax(0,1fr))}
 @media(max-width:600px){.phase3IntegratedPreview :is(.equipmentLayout,.phase3PreparationLayout) .equipmentLoadout .paper .slotTile{width:64px;height:78px}.phase3IntegratedPreview :is(.equipmentLayout,.phase3PreparationLayout) .equipmentLoadout .paper{height:520px;min-height:520px}}
+
+/* v0.12: five gear slots on either side of the full-height hero, Camp included. */
+.phase3IntegratedPreview :is(.phase3CampGrid,.phase3PreparationLayout,.phase3BagInventory,.equipmentLayout) .equipmentLoadout .paper{position:relative;display:block;min-height:560px;height:560px;width:100%;max-width:none;overflow:visible}
+.phase3IntegratedPreview :is(.phase3CampGrid,.phase3PreparationLayout,.phase3BagInventory,.equipmentLayout) .equipmentLoadout .paper .model{position:absolute;inset:2% 18% 2%;width:64%;height:96%;object-fit:contain;object-position:center;mask-image:none;opacity:1}
+.phase3IntegratedPreview :is(.phase3CampGrid,.phase3PreparationLayout,.phase3BagInventory,.equipmentLayout) .equipmentLoadout .paper .slotTile{position:absolute;width:72px;height:82px;left:auto;right:auto}
+.phase3IntegratedPreview :is(.phase3CampGrid,.phase3PreparationLayout,.phase3BagInventory,.equipmentLayout) .equipmentLoadout .paper .slotTile[data-slot="weapon"]{left:1%!important;right:auto!important;top:2%!important}
+.phase3IntegratedPreview :is(.phase3CampGrid,.phase3PreparationLayout,.phase3BagInventory,.equipmentLayout) .equipmentLoadout .paper .slotTile[data-slot="offhand"]{left:1%!important;right:auto!important;top:21%!important}
+.phase3IntegratedPreview :is(.phase3CampGrid,.phase3PreparationLayout,.phase3BagInventory,.equipmentLayout) .equipmentLoadout .paper .slotTile[data-slot="helm"]{left:1%!important;right:auto!important;top:40%!important}
+.phase3IntegratedPreview :is(.phase3CampGrid,.phase3PreparationLayout,.phase3BagInventory,.equipmentLayout) .equipmentLoadout .paper .slotTile[data-slot="armor"]{left:1%!important;right:auto!important;top:59%!important}
+.phase3IntegratedPreview :is(.phase3CampGrid,.phase3PreparationLayout,.phase3BagInventory,.equipmentLayout) .equipmentLoadout .paper .slotTile[data-slot="gloves"]{left:1%!important;right:auto!important;top:78%!important}
+.phase3IntegratedPreview :is(.phase3CampGrid,.phase3PreparationLayout,.phase3BagInventory,.equipmentLayout) .equipmentLoadout .paper .slotTile[data-slot="amulet"]{right:1%!important;left:auto!important;top:2%!important}
+.phase3IntegratedPreview :is(.phase3CampGrid,.phase3PreparationLayout,.phase3BagInventory,.equipmentLayout) .equipmentLoadout .paper .slotTile[data-slot="belt"]{right:1%!important;left:auto!important;top:21%!important}
+.phase3IntegratedPreview :is(.phase3CampGrid,.phase3PreparationLayout,.phase3BagInventory,.equipmentLayout) .equipmentLoadout .paper .slotTile[data-slot="ring1"]{right:1%!important;left:auto!important;top:40%!important}
+.phase3IntegratedPreview :is(.phase3CampGrid,.phase3PreparationLayout,.phase3BagInventory,.equipmentLayout) .equipmentLoadout .paper .slotTile[data-slot="ring2"]{right:1%!important;left:auto!important;top:59%!important}
+.phase3IntegratedPreview :is(.phase3CampGrid,.phase3PreparationLayout,.phase3BagInventory,.equipmentLayout) .equipmentLoadout .paper .slotTile[data-slot="boots"]{right:1%!important;left:auto!important;top:78%!important}
+.phase3Bag .phase3TreasureSymbol{display:block;font-size:26px;color:#dfba76;text-shadow:0 2px 8px #000}
+@media(max-width:600px){.phase3IntegratedPreview :is(.phase3CampGrid,.phase3PreparationLayout,.phase3BagInventory,.equipmentLayout) .equipmentLoadout .paper{height:500px;min-height:500px}.phase3IntegratedPreview :is(.phase3CampGrid,.phase3PreparationLayout,.phase3BagInventory,.equipmentLayout) .equipmentLoadout .paper .slotTile{width:56px;height:76px}}

@@ -1771,8 +1771,9 @@ function phase1DecorateCombat(){
  if(actions){
 
   const note=document.createElement('span');note.className='small muted';
-  note.textContent=r.status==='fight'?'Automatic combat · one enemy at a time':'Wave cleared · advancing automatically';
+  note.textContent=r.status==='fight'?'Automatic combat · one enemy at a time':r.status==='cleared'?'Realm completed · review your log before leaving':'Wave cleared · advancing automatically';
   actions.prepend(note);
+  if(r.status==='cleared'&&!phase1Draft){const exit=document.createElement('button');exit.id='phase5ExitRealm';exit.className='primary';exit.textContent='EXIT REALM';exit.onclick=phase5ExitResult;actions.append(exit);}
  }
 
  if(arena&&typeof arena.insertAdjacentHTML==='function'){document.querySelector('.combatExpeditionDetails')?.insertAdjacentHTML('beforeend','<div id="phase3CombatBag">'+phase3BagMarkup()+'</div>');phase3BindBag();}
@@ -1783,7 +1784,7 @@ function phase1DecorateCombat(){
  if(loot)loot.textContent='Expedition equipment · at risk until extraction or victory';
 }
 // Current Expedition inventory and preparation.
-const PHASE3_BAG_CAPACITY=6;
+const PHASE3_BAG_CAPACITY=12;
 let phase3LootIds=new Set(),phase3PotionCooldowns={health:0,mana:0};
 
 
@@ -1791,8 +1792,8 @@ let phase3LootIds=new Set(),phase3PotionCooldowns={health:0,mana:0};
 
 function phase3BagMarkup(){
  const items=phase3BagItems(),overflow=Math.max(0,items.length-PHASE3_BAG_CAPACITY);
- const tile=item=>'<button type="button" class="phase3BagItem" '+rarityFrame(item)+' data-phase3-loot="'+esc(item.id)+'" title="'+esc(item.name+' · '+itemSource(item))+'"><img src="'+itemImg(item)+'" alt="'+esc(item.subtype)+'"><span>E'+item.tier+'</span></button>';
- return '<section class="phase3Bag"><h3>Expedition bag <small>'+Math.min(items.length,PHASE3_BAG_CAPACITY)+'/6</small></h3><p class="micro muted">Only loot from this Expedition. Global Stash is unavailable.</p><div class="phase3BagGrid">'+items.slice(0,PHASE3_BAG_CAPACITY).map(tile).join('')+Array.from({length:Math.max(0,PHASE3_BAG_CAPACITY-items.length)},()=>'<span class="phase3BagEmpty" aria-hidden="true"></span>').join('')+'</div>'+(overflow?'<div class="phase3BagOverflow" role="status"><b>'+overflow+' overflow item'+(overflow===1?'':'s')+'</b><p>Discard unwanted loot before entering the next Realm. Items are not discarded automatically.</p><div class="phase3BagGrid">'+items.slice(PHASE3_BAG_CAPACITY).map(tile).join('')+'</div></div>':'')+'</section>';
+ const tile=item=>item.kind==='valuable'?'<button type="button" class="phase3BagItem" data-phase3-loot="'+esc(item.id)+'" title="Treasure worth '+item.worth+' Gold"><span class="phase3TreasureSymbol">◆</span><span>'+item.worth+' Gold</span></button>':'<button type="button" class="phase3BagItem" '+rarityFrame(item)+' data-phase3-loot="'+esc(item.id)+'" title="'+esc(item.name+' · '+itemSource(item)+'"><img src="'+itemImg(item)+'" alt="'+esc(item.subtype)+'"><span>E'+item.tier+'</span></button>';
+ return '<section class="phase3Bag"><h3>Expedition bag <small>'+Math.min(items.length,PHASE3_BAG_CAPACITY)+'/'+PHASE3_BAG_CAPACITY</small></h3><p class="micro muted">Only Bag items are lost on death. Treasures can be sold for Gold after extraction.</p><div class="phase3BagGrid">'+items.slice(0,PHASE3_BAG_CAPACITY).map(tile).join('')+Array.from({length:Math.max(0,PHASE3_BAG_CAPACITY-items.length)},()=>'<span class="phase3BagEmpty" aria-hidden="true"></span>').join('')+'</div>'+(overflow?'<div class="phase3BagOverflow" role="status"><b>'+overflow+' overflow item'+(overflow===1?'':'s')+'</b><p>Discard unwanted loot before entering the next Realm. Items are not discarded automatically.</p><div class="phase3BagGrid">'+items.slice(PHASE3_BAG_CAPACITY).map(tile).join('')+'</div></div>':'')+'</section>';
 }
 
 function phase3BindBag(){
@@ -1800,6 +1801,10 @@ function phase3BindBag(){
  Q('[data-phase3-loot]').forEach(button=>button.onclick=()=>{
   const item=phase3BagItems().find(o=>o.id===button.dataset.phase3Loot);if(!item)return;
   const safe=phase3CanPrepare(),canDiscard=safe||phase3NeedsBagResolution()&&!state.run&&!phase1Draft,ring=['ring1','ring2'].includes(item.slot);
+   if(item.kind==='valuable'){
+    const dialog=showModal('Expedition treasure','<p><b>'+esc(item.name)+'</b></p><p>Sell for '+item.worth+' Gold once outside the Expedition.</p><button type="button" class="danger" data-phase3-discard '+(canDiscard?'':'disabled')+'>Discard treasure</button>');
+    dialog?.querySelector('[data-phase3-discard]')?.addEventListener('click',()=>{dialog.close();showConfirm('Discard treasure','Permanently discard this treasure?',()=>phase3DiscardLoot(item.id),'Discard');});return;
+   }
   const equips=(ring?[['ring1','Equip Ring I'],['ring2','Equip Ring II']]:[[item.slot,'Equip']]).map(([slot,label])=>'<button type="button" class="primary" data-phase3-equip="'+slot+'" '+(!safe||slot==='offhand'&&isTwoHanded(state.equip.weapon)?'disabled':'')+'>'+label+'</button>').join('');
   const dialog=showModal('Expedition loot',gearComparison(item)+previewItem(item,'bag')+'<div class="buttonRow">'+equips+'<button type="button" class="danger" data-phase3-discard '+(canDiscard?'':'disabled')+'>Discard</button></div>');
   if(!dialog)return;
@@ -1810,7 +1815,7 @@ function phase3BindBag(){
  });
 }
 function phase3RenderBagInventory(){
- wallet();html('<section class="panel"><h2>Expedition Inventory</h2><p class="small muted">Your original equipment is protected. Only loot from this Expedition can be equipped.</p><div class="phase3BagInventory"><div class="equipmentLoadout">'+phase3PaperMarkup()+'</div><div>'+phase3BagMarkup()+statsWidget(phase2Stats())+'</div></div></section>');phase3BindBag();phase3BindPaper();
+ wallet();html('<section class="panel"><h2>Expedition Inventory</h2><p class="small muted">On death, only items in the Expedition Bag are lost. Equipped gear is protected.</p><div class="phase3BagInventory"><div class="equipmentLoadout">'+phase3PaperMarkup()+'</div><div>'+phase3BagMarkup()+statsWidget(phase2Stats())+'</div></div></section>');phase3BindBag();phase3BindPaper();
 }
 let phase3SelectedExpedition=null;
 function phase3PaperMarkup(){return `<div class="paper"><img class="model" src="${heroFullImage()}" alt="Wanderer full-body equipment portrait">${SLOTS.map(sl=>{const o=state.equip[sl],reserved=sl==='offhand'&&isTwoHanded(state.equip.weapon);return `<button class="slotTile ${o?'filled':''} ${o&&ARMOR_SLOTS.includes(sl)&&ARMOR_TYPES.includes(o.armorType)?'armorTyped':''} ${reserved?'reserved':''} ${slotFilter===sl||(slotFilter==='rings'&&['ring1','ring2'].includes(sl))?'filterSelected':''} ${o?.id===selectedId?'active':''}" ${rarityFrame(o)} data-slot="${sl}" data-eqslot="${sl}" aria-pressed="${slotFilter===sl||(slotFilter==='rings'&&['ring1','ring2'].includes(sl))}" title="${esc((o?.name||SNAME[sl])+(o?.armorType?' · '+o.armorType:''))}"><img src="${o?itemImg(o):placeholderIcon(sl)}" alt="${SNAME[sl]}"><span>${reserved?'2H occupied':SNAME[sl]}</span>${o&&ARMOR_SLOTS.includes(sl)&&ARMOR_TYPES.includes(o.armorType)?`<span class="slotArmorType">${esc(o.armorType)}</span>`:''}${o?`<span class="slotDLevel">E${o.tier}</span>`:''}${affinityBadge(o)}${newBadge(o)}${legendaryRankBadge(o)}</button>`}).join('')}</div>`;}
@@ -1841,7 +1846,11 @@ function phase3BindPaper(){
  Q('[data-eqslot]').forEach(button=>button.onclick=()=>{
   const slot=button.dataset.eqslot;
   if(!state.equip[slot])return;
-  if(phase3ExpeditionActive()){showModal('Equipped gear',previewItem(state.equip[slot],'camp'));return;}
+  if(phase3ExpeditionActive()){
+    const canMove=phase3CanPrepare()&&phase3BagItems().length<PHASE3_BAG_CAPACITY;
+    const dialog=showModal('Equipped gear',previewItem(state.equip[slot],'camp')+'<button type="button" class="ghost" id="moveEquippedToBag" '+(canMove?'':'disabled')+'>Move to Expedition Bag</button>');
+    dialog?.querySelector('#moveEquippedToBag')?.addEventListener('click',()=>{dialog.close();unequipItem(slot);});return;
+   }
   phase3Go('equipment');slotFilter=slotFilterFor(slot);selectedId=state.equip[slot]?.id||null;renderStash();
  });
 }
@@ -1887,7 +1896,7 @@ function phase3PassivesMarkup(){
  const counts=new Map();for(const id of phase1Build?.picks||[])counts.set(id,(counts.get(id)||0)+1);
  return '<section class="phase3CompactPassives" aria-label="Active Expedition passives"><h3>Active passives</h3><div class="phase3PassiveGrid">'+[...counts].map(([id,rank])=>{
   const p=WandererV012Buildcraft.CATALOG.find(x=>x.id===id);if(!p)return '';
-  const label=p.name+' · Rank '+rank+'/'+p.max+(id===phase1Build.initialPassive?' · Initial passive':'');
+  const label=p.name+' · Rank '+rank+(id===phase1Build.initialPassive?' · Initial passive':'');
   return '<details class="phase3PassiveSlot"><summary aria-label="'+esc(label)+'" title="'+esc(label+' · '+p.description)+'">'+phase2PassiveIcons(p)+'<small>'+rank+(id===phase1Build.initialPassive?' ★':'')+'</small></summary><div class="phase3PassiveTooltip"><b>'+esc(label)+'</b><p>'+esc(p.description)+'</p></div></details>';
  }).join('')+'</div></section>';
 }
@@ -1898,31 +1907,37 @@ function renderPhase1(){
  if(state.pendingRuneReward&&!state.run)showPendingRuneReward();
  if(phase6Run?.event&&!phase4Resume){phase6RenderEvent();return;}
  if(phase5Results.review){phase5RenderResult();if(phase1Controller.state.version===2&&phase1Draft?.kind==='reward')phase6PassivePopup();return;}
+  if(phase5Results.eventExitPending){
+   html('<section class="panel"><h2>Realm event completed</h2><p>The event is resolved. Choose your Realm passive before leaving.</p><button class="primary" id="phase5ExitEvent" '+(phase1Draft?'disabled':'')+'>EXIT REALM</button></section>');
+   $('phase5ExitEvent').onclick=phase5ExitResult;
+   if(phase1Draft?.kind==='reward')phase6PassivePopup();
+   return;
+  }
  if(phase4Resume){html('<section class="panel"><h2>Resume Realm</h2><p>This Realm restarts from its entry checkpoint with the same encounters and rolls. Partial rewards are not duplicated. Gear and choices remain locked until it is resolved.</p><button class="primary" id="phase4Resume">Resume Realm</button></section>');$('phase4Resume').onclick=phase4ResumeRealm;return;}
 
  const g=phase1Controller.state,stats=phase3Vitals();
  const familyLabel=f=>phase2FamilyIcon(f)+' '+WandererV012Expedition.FAMILY_NAMES[f];
  if(g.stage==='choice'&&!g.initialFamily){
-  html('<section class="panel"><span class="eyebrow">Expedition '+g.expedition+'</span><h2>Choose your initial affinity</h2><p class="small muted">Receive one initial passive and enter the first Realm of your affinity. Magic first requires an element choice.</p><div class="phase1DraftCards">'+
+  html('<section class="panel"><span class="eyebrow">Expedition '+g.expedition+'</span><h2>Choose your initial affinity</h2><p class="small muted">The first Realm of your affinity unlocks its base passive after victory, followed immediately by a choice of another passive. Magic first requires an element choice.</p><div class="phase1DraftCards">'+
    WandererV012Expedition.FAMILIES.map(f=>'<button type="button" class="phase1DraftCard" data-phase2-initial="'+f+'">'+phase2FamilyIcon(f)+'<strong>'+WandererV012Expedition.FAMILY_NAMES[f]+'</strong></button>').join('')+'</div></section>');
   Q('[data-phase2-initial]').forEach(b=>b.onclick=()=>{if(phase2ChooseInitial(b.dataset.phase2Initial))phase2EnterInitialRealm();});phase6BindBack();return;
  }
  if(phase1Draft){
   const d=phase1Draft,plane=d.plane||{family:d.family,name:'Initial affinity',plane:1};
   const chosen=(phase1Build?.picks||[]).map(id=>WandererV012Buildcraft.CATALOG.find(x=>x.id===id)?.name).filter(Boolean);
-  const header='<section class="panel"><span class="eyebrow">Wanderer v0.12 · Buildcraft</span><h2>'+(d.kind==='reward'?'Realm '+plane.plane+' cleared · choose a passive':d.kind==='initial'?'Choose your Magic element':'Realm '+g.planeIndex+' · choose your Magic element')+'</h2><p class="small muted">'+familyLabel(plane.family)+' · '+(d.kind==='reward'?'One reward for this completed Realm.':'Element stays fixed for this Expedition.')+'</p><div class="phase1FamilyRow">'+g.families.map(f=>'<span>'+familyLabel(f)+'</span>').join('')+'</div><p class="small muted">Your build: '+esc(chosen.join(' · ')||'No passives selected yet')+'</p><div class="phase1DraftCards">';
+  const header='<section class="panel"><span class="eyebrow">Wanderer v0.12 · Buildcraft</span><h2>'+(d.kind==='reward'?'Realm '+plane.plane+' cleared · choose a passive':d.kind==='initial'?'Choose your Magic element':'Realm '+g.planeIndex+' · choose your Magic element')+'</h2><p class="small muted">'+familyLabel(plane.family)+' · '+(d.kind==='reward'?'Enabling affinity abilities are unlocked first; choose one additional passive.':'Element stays fixed for this Expedition.')+'</p><div class="phase1FamilyRow">'+g.families.map(f=>'<span>'+familyLabel(f)+'</span>').join('')+'</div><p class="small muted">Your build: '+esc(chosen.join(' · ')||'No passives selected yet')+'</p><div class="phase1DraftCards">';
   if(d.step==='element'){
    const cards=[['fire','Fire','Burn · lasting damage','burn'],['frost','Frost','Chill · slower enemy attacks','slow'],['lightning','Lightning','Shock · 4 charges trigger a burst','shock']];
    html(header+cards.map(([id,name,desc,glyph])=>'<button class="phase1DraftCard" data-phase2-element="'+id+'"><span>'+affinityArt(glyph)+'</span><strong>'+name+'</strong><small>'+desc+'</small></button>').join('')+'</div><p class="small muted">Element stays fixed for this Expedition. Staff and Wand amplify it.</p></section>');
    Q('[data-phase2-element]').forEach(b=>b.onclick=()=>{if(phase2ChooseElement(b.dataset.phase2Element))phase2EnterInitialRealm();});
   }else{
-   html(header+d.options.map(p=>'<button class="phase1DraftCard" data-phase2-passive="'+p.id+'">'+phase2PassiveIcons(p)+'<strong>'+esc(p.name)+'</strong><small>'+esc(p.description)+'</small><span class="micro muted">'+(p.requires.length?'HYBRID · ':'')+(p.max===1?'Unique':'Rank '+(WandererV012Buildcraft.rank(phase1Build,p.id)+1)+'/'+p.max)+'</span></button>').join('')+'</div><p class="small muted">Only implemented effects are offered. Rank limits prevent infinite stacks.</p></section>');
+   html(header+d.options.map(p=>'<button class="phase1DraftCard" data-phase2-passive="'+p.id+'">'+phase2PassiveIcons(p)+'<strong>'+esc(p.name)+'</strong><small>'+esc(p.description)+'</small><span class="micro muted">'+(p.requires.length?'HYBRID · ':'')+('Rank '+(WandererV012Buildcraft.rank(phase1Build,p.id)+1))+'</span></button>').join('')+'</div><p class="small muted">Effects use diminishing returns; passives can be ranked repeatedly.</p></section>');
    Q('[data-phase2-passive]').forEach(b=>b.onclick=()=>phase2ChoosePassive(b.dataset.phase2Passive));
   }
   if(d.kind==='initial')phase6BindBack();return;
  }
  if(phase3NeedsBagResolution()){
-  html('<section class="panel"><h2>Resolve Expedition loot</h2><p>Your bag holds 6 items. Discard overflow before returning to Camp; no loot is discarded automatically.</p>'+phase3BagMarkup()+'</section>');phase3BindBag();return;
+  html('<section class="panel"><h2>Resolve Expedition loot</h2><p>Your bag holds 12 items. Discard overflow before returning to Camp; no loot is discarded automatically.</p>'+phase3BagMarkup()+'</section>');phase3BindBag();return;
  }
  if(['camp','finished','failed'].includes(g.stage)){
   html(phase3CampMarkup(g,stats));
@@ -1981,7 +1996,7 @@ function phase5RenderResult(){
  html('<section class="panel phase5Result"><span class="eyebrow">Expedition '+r.level+(isRealm?' · Realm '+r.plane:'')+'</span><h1>'+title+'</h1>'+
   (isRealm?'<p>'+esc(r.name)+' · '+esc(WandererV012Expedition.FAMILY_NAMES[r.family])+(r.outcome==='defeat'?' · Final enemy: '+esc(r.enemy):'')+'</p>':'<p>'+r.realms+'/15 Realms completed · '+esc(r.families.map(f=>WandererV012Expedition.FAMILY_NAMES[f]).join(' · '))+'</p>')+
   (phase5Results.complete?'':'<p class="small muted">Older checkpoint: only activity recorded since this update is included.</p>')+'<p>Combat time: '+r.seconds.toFixed(1)+'s · +'+r.gold+' Gold · +'+r.fragments+' Fragments</p><p class="small muted">Combat time excludes Camp and offline time.</p>'+
-  (r.metrics?'<p>HP damage dealt '+Math.round(r.metrics.damageDealt||0)+' · HP damage taken '+Math.round(r.metrics.damageTaken||0)+'</p>':'')+(isRealm?'<h3>Realm equipment '+(r.outcome==='defeat'?'lost':summary?.outcome==='victory'?'secured':'collected · still at risk')+'</h3><ul>'+items(r.loot||[])+'</ul>':('<h3>Temporary build'+(r.element?' · '+esc(r.element):'')+'</h3><p>'+esc(r.picks.map(id=>WandererV012Buildcraft.CATALOG.find(p=>p.id===id)?.name||id).join(' · '))+'</p><h3>Equipment kept</h3><ul>'+items(r.kept)+'</ul><h3>Equipment lost</h3><ul>'+items(r.lost)+'</ul><h3>Discarded</h3><ul>'+items(r.discarded)+'</ul>'+(r.runeTier?'<p>'+esc(r.runeName?'Rune obtained: '+r.runeName:'Boss Rune choice pending in Camp')+' · E'+r.runeTier+'</p>':'')+(r.outcome==='victory'?'<p>Highest Expedition Cleared: '+(phase5Snapshot?.expedition.completed||r.level)+'</p>':'<p>No next difficulty unlocked. Original equipment and earned currencies are safe.</p>')))+
+  (r.metrics?'<p>HP damage dealt '+Math.round(r.metrics.damageDealt||0)+' · HP damage taken '+Math.round(r.metrics.damageTaken||0)+'</p>':'')+(isRealm?'<h3>Realm equipment '+(r.outcome==='defeat'?'lost':summary?.outcome==='victory'?'secured':'collected · still at risk')+'</h3><ul>'+items(r.loot||[])+'</ul>':('<h3>Temporary build'+(r.element?' · '+esc(r.element):'')+'</h3><p>'+esc(r.picks.map(id=>WandererV012Buildcraft.CATALOG.find(p=>p.id===id)?.name||id).join(' · '))+'</p><h3>Equipment kept</h3><ul>'+items(r.kept)+'</ul><h3>Equipment lost</h3><ul>'+items(r.lost)+'</ul><h3>Discarded</h3><ul>'+items(r.discarded)+'</ul>'+(r.runeTier?'<p>'+esc(r.runeName?'Rune obtained: '+r.runeName:'Boss Rune choice pending in Camp')+' · E'+r.runeTier+'</p>':'')+(r.outcome==='victory'?'<p>Highest Expedition Cleared: '+(phase5Snapshot?.expedition.completed||r.level)+'</p>':'<p>No next difficulty unlocked. Equipped equipment and earned currencies are safe.</p>')))+
   (realm?'<details class="phase5LastLog"><summary>Last Realm Combat Log</summary>'+(realm.truncated?'<p>Older entries omitted: log storage safety limit reached.</p>':'')+'<div class="log" style="max-height:45vh;overflow:auto">'+realm.log.map(l=>'<div class="logLine">'+esc(l.text)+'</div>').join('')+'</div></details>':'')+
   '<button id="phase5ExitResult" class="primary" '+(phase1Controller.state.version===2&&phase1Draft?.kind==='reward'?'disabled':'')+'>'+(isRealm?'EXIT REALM':'RETURN TO CAMP')+'</button></section>');
  $('phase5ExitResult').onclick=phase5ExitResult;
@@ -2052,6 +2067,7 @@ const runtimeContext={
  get OFFHAND_TYPES(){return OFFHAND_TYPES;},
  get PHASE1_PREVIEW(){return PHASE1_PREVIEW;},
  get PHASE3_BAG_CAPACITY(){return PHASE3_BAG_CAPACITY;},
+  get phase6PassivePopup(){return phase6PassivePopup;},
  get PHASE5_VALIDATION(){return PHASE5_VALIDATION;},
  get RARITY(){return RARITY;},
  get RUNE_FAMILIES(){return RUNE_FAMILIES;},
