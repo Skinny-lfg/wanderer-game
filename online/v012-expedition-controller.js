@@ -21,7 +21,7 @@ function shuffle(values,rng){
 function create(themes,rng=Math.random){
  if(!Array.isArray(themes)||!themes.length||!themes.every(t=>typeof t?.id==='string'&&THEME_FAMILIES[t.id]))throw Error('Classic themes required');
  if(typeof rng!=='function')throw Error('Invalid RNG');
- const expeditionThemes=Object.entries(REALMS).map(([id,[family,name]])=>({...themes.find(t=>t.id===(id==='bloodscar'?'forge':id)),id,name,family}));
+ const expeditionThemes=Object.entries(REALMS).map(([id,[family,name]])=>({...(themes.find(t=>t.id===id)||themes.find(t=>t.id==='forge')),id,name,family}));
  const byFamily=Object.fromEntries(FAMILIES.map(f=>[f,themes.filter(t=>THEME_FAMILIES[t.id]===f)]));
  if(FAMILIES.some(f=>!byFamily[f].length))throw Error('Missing classic themes for affinity '+FAMILIES.find(f=>!byFamily[f].length));
  const game={unlocked:1,expedition:0,planeIndex:0,stage:'camp',families:[],lastFamily:null,rooms:[],offers:[],selected:null,wave:0,history:[],initialFamily:null,rewardPending:null,rerollsByRealm:[],eventIds:[]};
@@ -50,8 +50,10 @@ function create(themes,rng=Math.random){
   legacy=null;
   if(!Number.isInteger(level)||level<1||level>game.unlocked||level>200)throw Error('Expedition locked');
   if(!['camp','finished','failed'].includes(game.stage))throw Error('Expedition already active');
-  const count=3+Math.floor(rng()*2),rooms=['combat',...shuffle([...Array(11-count).fill('combat'),'elite','elite',...Array(count).fill('event')],rng),'boss'];
-  const events=shuffle(EVENT_GROUPS,rng).slice(0,count).map(group=>group[Math.floor(rng()*group.length)]);let eventIndex=0;
+  const count=3+Math.floor(rng()*2),events=shuffle(EVENT_GROUPS,rng).slice(0,count).map(group=>group[Math.floor(rng()*group.length)]);
+  const windows=count===4?[[3,4,5],[6,7,8],[9,10,11],[12,13,14]]:[[3,4,5],[7,8,9],[11,12,13]],rooms=Array(15).fill('combat');rooms[14]='boss';
+  for(const window of windows)rooms[window[Math.floor(rng()*window.length)]-1]='event';
+  const eliteSlots=shuffle(Array.from({length:13},(_,i)=>i+1).filter(i=>rooms[i]==='combat'),rng).slice(0,2);for(const i of eliteSlots)rooms[i]='elite';let eventIndex=0;
   Object.assign(game,{version:2,rerolls:3,bossId:BOSSES[Math.floor(rng()*3)].id,eventsByRealm:rooms.map(k=>k==='event'?events[eventIndex++]:null),expedition:level,planeIndex:1,families:[],lastFamily:null,initialFamily:null,
    rooms,offers:[],selected:null,wave:0,history:[],
    rewardPending:null,rerollsByRealm:Array.from({length:15},()=>[3,3,3]),stage:'choice'});

@@ -2,7 +2,7 @@
 // Never boots account modules, reads local saves, or substitutes combat/loot formulas.
 const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const root=path.resolve(__dirname,'..');
-module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(root,'index.html'),'utf8')){
+module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(root,'index.html'),'utf8'),moduleOverrides={}){
  const boot='if(PHASE1_PREVIEW){phase1Init();render();}else{load();if(!state.merchant)rollShop();save();render();}';
  if(!source.includes(boot))throw Error('Integrated bootstrap not found');
  let next=seed>>>0;const math=Object.create(Math);math.random=()=>{next=(Math.imul(next,1664525)+1013904223)>>>0;return next/4294967296;};
@@ -27,7 +27,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
  addLog=(text,type)=>{if(auditFeedback)auditFeedback.logs.push({text,type});};floatText=(value,target)=>{if(auditFeedback)auditFeedback.floats.push({value,target});};
  phase1Init();
  globalThis.audit={
-  potions:{supplies:()=>phase3Supplies,select:phase6SelectPotion,use:phase6UsePotion,inventory:phase6PotionInventory,start:phase6StartPotions,finish:phase6ReturnPotions,tick:phase6TickDurations,shop:()=>WandererV012Consumables.shop(1,gameRandom,makeId),buy:phase6BuyPotion,reroll:phase6RerollPotions},
+  potions:{supplies:()=>phase3Supplies,select:phase6SelectPotion,use:phase6UsePotion,inventory:phase6PotionInventory,start:phase6StartPotions,finish:phase6ReturnPotions,tick:phase6TickDurations,shop:(E=1,rng=gameRandom)=>WandererV012Consumables.shop(E,rng,makeId),buy:phase6BuyPotion,reroll:phase6RerollPotions},
   events:{open:phase6OpenEvent,choose:phase6EventChoice,run:()=>phase6Run},
   back:phase6BackToCamp,markAllSeen:markAllAsSeen,
   state:()=>state,results:()=>phase5Results,exitResult:phase5ExitResult,recordItem:item=>phase5Results.earned.push(phase5Item(item)),controller:()=>phase1Controller,build:()=>phase1Build,draft:()=>phase1Draft,
@@ -74,7 +74,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
  `;
  const main=source.match(/<script>([\s\S]*?)<\/script>/)?.[1];
  const files=['combat/legendary.js','combat/v012-buildcraft.js','online/v012-legacy-controller.js','online/v012-expedition-controller.js','online/v012-events.js','online/v012-expedition-events.js','online/v012-consumables.js'];
- vm.runInNewContext(files.map(f=>fs.readFileSync(path.join(root,f),'utf8')).join('\n')+'\n'+main.replace(boot,inject),sandbox,{timeout:20000});
+ vm.runInNewContext(files.map(f=>moduleOverrides[f]??fs.readFileSync(path.join(root,f),'utf8')).join('\n')+'\n'+main.replace(boot,inject),sandbox,{timeout:20000});
  sandbox.audit.flush=()=>{for(let i=0;callbacks.length;i++){if(i>10000)throw Error('Callback loop');callbacks.shift()();}};
  sandbox.audit.catalog=sandbox.WandererV012Buildcraft.CATALOG;
  return sandbox.audit;

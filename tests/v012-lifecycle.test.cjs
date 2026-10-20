@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),create=require('./v012-economy-harness.cjs');
-function enter(a){if(!a.controller().state.initialFamily)a.initial('blood');if(a.draft()?.kind==='reward')a.passive(a.draft().options[0].id);a.select(a.controller().state.offers[0].id);a.enter();if(a.draft()?.step==='element')a.element('fire');}
+function enter(a){if(!a.controller().state.initialFamily)a.initial('blood');if(a.draft()?.kind==='reward')a.passive(a.draft().options[0].id);if(a.results().review)a.exitResult();a.select(a.controller().state.offers[0].id);a.enter();if(a.draft()?.step==='element')a.element('fire');if(a.events.run()?.event){a.events.choose(2);return enter(a);}}
 test('gear/Rune swaps cannot refill Mana or Health between Planes',()=>{
  const a=create(126),s=a.state();a.setup(20,'Staff');a.start(1);a.initial('blood');a.controller().state.planeIndex=2;
  const stats=a.stats();a.setVitals({hp:stats.maxhp/2,mp:stats.mana/4,maxmp:stats.mana});

@@ -1,9 +1,9 @@
-// Deterministic scheduling tests only: no combat or balance simulation.
+// Compatibility fixtures for pre-v2 saved calendars. Fresh-run v2 rules live in v012-complete-schedule.test.cjs.
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const root=path.resolve(__dirname,'..'),env={};
-vm.runInNewContext(fs.readFileSync(path.join(root,'online/v012-expedition-controller.js'),'utf8'),env);
-const api=env.WandererV012Expedition;
+vm.runInNewContext(fs.readFileSync(path.join(root,'online/v012-legacy-controller.js'),'utf8'),env);
+const api=env.WandererV012ExpeditionLegacy;
 const themes=['temple','forge','bloodscar','crypt','bastion','frost','ash','void','ward','grove','shrine','storm','drowned','quarry'].map(id=>({id,name:id,image:id+'.webp'}));
 const rng=(seed=42)=>()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
 const create=()=>api.create(themes,rng());

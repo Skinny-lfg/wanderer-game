@@ -1331,7 +1331,7 @@ const THEMES=[
  // Classic mode and historical checkpoints keep their original themes.
  ['frost','Frostbound Catacombs','slow','assets/dungeons/backgrounds/frost.webp','Frozen Revenant'],
  ['quarry','Obsidian Quarry','crystal','assets/dungeons/backgrounds/quarry.webp','Basalt Guardian']
-].map(([id,name,effect,image,enemy])=>({id,name,effect,image,enemy}));
+].map(([id,name,effect,image,enemy])=>({id,name,effect,image,enemy})).filter(t=>PHASE1_PREVIEW||t.id!=='bloodscar');
 const MOB_POOLS={
  temple:[['Venom Cobra','assets/mobs/temple/venom_cobra.png'],['Venom Spider','assets/mobs/temple/venom_spider.png']],
  forge:[['Bloodfang Ravager','assets/mobs/forge/bloodfang_ravager.png'],['Sanguine Leech','assets/mobs/forge/sanguine_leech.png']],
@@ -1786,7 +1786,7 @@ function safePendingRune(raw){
 }
 function runeLine(r){
  const type=RUNE_FAMILIES.find(x=>x.id===r.family);
- return '<span class="runeLine"><img class="runeIcon" src="assets/runes/'+type.id+'.png" alt="" width="40" height="40" decoding="async"><span class="runeText">'+esc(type.name)+' · D'+r.tier+' · +'+runeValue(r.family,r.tier)+' '+({atkFlat:'Attack',defFlat:'Defense',hpFlat:'Health'}[type.field]||type.field.toUpperCase())+'</span></span>';
+ return '<span class="runeLine"><img class="runeIcon" src="assets/runes/'+type.id+'.png" alt="" width="40" height="40" decoding="async"><span class="runeText">'+esc(type.name)+' · '+(PHASE1_PREVIEW?'E':'D')+r.tier+' · +'+runeValue(r.family,r.tier)+' '+({atkFlat:'Attack',defFlat:'Defense',hpFlat:'Health'}[type.field]||type.field.toUpperCase())+'</span></span>';
 }
 function runeSlotChoicesMarkup(rune,slots){
  if(!rune)return '';
@@ -2193,7 +2193,7 @@ function wallet(){if(PHASE1_PREVIEW){$('wallet').innerHTML='<span class="token">
    toggle.setAttribute('aria-expanded','false');
   });
  }}}
-function render(){if(PHASE1_PREVIEW)document.body.classList.toggle?.('phase3RunesView',view==='runes');if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked)){phase5RenderBlocked();return;}if(PHASE1_PREVIEW){wallet();if(view==='combat')renderCombat();else if(view==='equipment'||view==='runes'){renderStash();if(view==='equipment')phase6AppendPotionStash();}else if(view==='apothecary')phase6RenderApothecary();else if(view==='forge')renderForge();else if(view==='merchant')renderMerchant();else renderPhase1();return;}if(!hasRestoredInitialView){hasRestoredInitialView=true;restoreView();}rememberView();wallet();if(view==='tavern')renderTavern();else if(view==='equipment')renderStash();else if(view==='forge')renderForge();else if(view==='merchant')renderMerchant();else if(view==='dungeons')renderDungeons();else if(view==='combat')renderCombat();if(state.pendingRuneReward)showPendingRuneReward();}
+function render(){if(PHASE1_PREVIEW)document.body.classList.toggle?.('phase3RunesView',view==='runes');if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked)){phase5RenderBlocked();return;}if(PHASE1_PREVIEW){wallet();if(view==='combat')renderCombat();else if(view==='equipment'||view==='runes'){renderStash();if(view==='equipment')phase6AppendPotionStash();}else if(view==='apothecary')phase6RenderApothecary();else if(view==='forge')renderForge();else if(view==='merchant'){renderMerchant();const heading=document.querySelector('#screen h2');if(heading)heading.textContent='Blacksmith';}else renderPhase1();return;}if(!hasRestoredInitialView){hasRestoredInitialView=true;restoreView();}rememberView();wallet();if(view==='tavern')renderTavern();else if(view==='equipment')renderStash();else if(view==='forge')renderForge();else if(view==='merchant')renderMerchant();else if(view==='dungeons')renderDungeons();else if(view==='combat')renderCombat();if(state.pendingRuneReward)showPendingRuneReward();}
 function html(s){
  const previewReturn=PHASE1_PREVIEW&&['equipment','forge','merchant','runes'].includes(view);
  $('screen').innerHTML=(previewReturn?'<div class="phase3ReturnBar"><button id="phase3Return" class="ghost" type="button">← Back to '+(phase1Controller?.state.stage==='choice'?'Realms':'Camp')+'</button><span class="small muted">Preview equipment and vendors · no cloud saves</span></div>':'')+s;
@@ -2275,9 +2275,33 @@ function confirmDungeon(){
   wireChoices();
 }
 function affinityBadge(item){return '';}
-function setDescription(effect,values){return '';}
-
-function setPreview(item,target=item.slot){return '';}
+function setDescription(effect,values){if(PHASE1_PREVIEW)return '';
+ const b=values||{},parts=[];
+ const push=(key,text)=>{if(b[key])parts.push(text);};
+ if(effect==='crystal'){push('crystalBonus','Crystal resonance: +8% direct main-hand damage');push('crystalCharge','Every third main attack gains +15% base damage (hit counter resets each wave)');push('crystalBurst','Every third main attack can also trigger Crystal Burst for +35% base damage (10s expedition cooldown)');}
+ if(effect==='poison'){push('poisonBonus','Poison DoTs +15%');push('poisonWeaken','Stacks weaken enemy direct damage by 1% each (max 6%)');push('venomBurst','Venom Burst: at 6 stacks spend 6 for 60% remaining DoT (max 100% base hit), 10s cooldown');}
+ if(effect==='bleed'){push('bleedBonus','Bleed DoTs +15%');push('bleedHaste','Bleeding target grants +5% speed for 3s per charge, max 3 (1/s)');push('bloodHunt','Blood Hunt: +40% base hit when target ≤30% HP, 12s cooldown');}
+ if(effect==='sunder'){push('sunderBonus','Each Sunder proc removes 20% of initial enemy Armor (cannot fall below 25%)');push('sunderExpose','At ≤50% initial Armor enemy takes +8% direct damage');push('armorShatter','Armor Shatter: remove up to one base hit of Barrier and delay next enemy strike (0.5s; boss 0.2s), 12s cooldown');}
+ if(effect==='crit'){push('critBonus','+8 raw Critical points (speed penalty and 65% cap apply)');push('criticalFocus','Main-hand Criticals gain Focus (max 3, 1/s, expire 6s); each held Focus adds 2% base main-hit damage');push('perfectStrike','Perfect Strike: spend 3 Focus for a ×1.75 Critical instead of ×1.5, 10s cooldown');}
+ if(effect==='shield'){push('shieldBonus','+0.6% max HP as Barrier per main attack (max total Barrier 30% max HP)');push('shieldRiposte','Block primes +25% blocked damage on next main attack (max 25% base hit, 4s duration, 3s cooldown)');push('lastBastion','Last Bastion: after a hit, ≥10% max HP in Barrier primes a counter consuming half remaining Barrier (max 50% base hit), 12s cooldown');}
+ if(effect==='regen'){push('regenBonus','Recover 0.6% max HP per combat second (scales with HP)');push('regenOverflow','25% overheal becomes Barrier (max 1% max HP/s and 10%/encounter)');push('secondWind','Second Wind: survive one lethal hit with 1 HP and 8% max HP Barrier, once per expedition');}
+ if(effect==='burn'){push('burnBonus','Burn DoTs +15%');push('fireHeat','Each second Burn ticks grants 1 Heat (max 5, expires after 5s); each held Heat adds 1.5% base main-hit damage');push('flashover','Flashover: at 5 Heat, next main attack adds 50% base hit, 10s cooldown');}
+ if(effect==='slow'){push('slowBonus','Slow increases enemy attack interval 25%');push('frostWeaken','Chilled enemy deals 8% less direct damage');push('deepFreeze','Deep Freeze: 3 seconds continuously Chilled delays enemy next attack (0.75s; boss 0.25s), 12s cooldown');}
+ if(effect==='drain'){push('drainBonus','Drain healing +15%');push('soulCharge','Successful Drain healing grants Soul Charge (max 3, 1/s, expire 6s); each held charge adds 2% base main-hit damage');push('soulPact','Soul Pact: at 3 charges and >40% HP, sacrifice 3% max HP for +40% base hit and heal 25% actual damage (max 4% HP), 12s cooldown');}
+ if(effect==='nature'){push('natureBonus','Nature healing procs +25%');push('natureVitality','Nature heals 50% more below half HP');push('natureRenewal','Verdant Renewal: once per encounter, heal 8% max HP after surviving an enemy hit at or below 35% HP');}
+ if(effect==='shock'){push('shockBonus','Storm damage procs +25%');push('shockRhythm','Every third main attack adds 15% base damage');push('thunderclap','Thunderclap: every sixth main attack adds 35% base damage, 10s cooldown');}
+ if(effect==='tide'){push('tideBonus','Tide Barrier procs +25%');push('tideGuard','While Barrier remains, enemy direct damage −5% (15% combined set cap)');push('tideSurge','High Tide: once per encounter, after surviving a hit with less than 5% max HP in Barrier, gain 8% max HP Barrier');}
+ return parts.join(' · ')||'No active bonus';
+}
+function setPreview(item,target=item.slot){if(PHASE1_PREVIEW)return '';
+ const current=setCounts(),after=setCounts(comparisonEquip(item,target));
+ const oldBonus=setBonuses(current),newBonus=setBonuses(after);
+ const rows=Object.keys(ELEMENTS).filter(effect=>setStage(current[effect])!==setStage(after[effect])).map(effect=>{
+  const oldCount=current[effect],newCount=after[effect],from=setStage(oldCount),to=setStage(newCount),improved=to>from;
+  return '<div class="setCompare" data-set-effect="'+effect+'"><div class="setCompareTitle"><b>'+affinityArt(effect)+' '+esc(ELEMENTS[effect].name)+'</b><span class="'+(improved?'green':'red')+'">'+(improved?'Tier bonus improved':'Tier bonus reduced')+'</span></div><div class="setCompareColumns"><div><span class="eyebrow">Before · '+oldCount+' pieces</span><b>'+(from?from+'-piece tier':'Inactive')+'</b><p>'+(from?esc(setDescription(effect,oldBonus.values)):'No active bonus')+'</p></div><div><span class="eyebrow">After · '+newCount+' pieces</span><b>'+(to?to+'-piece tier':'Inactive')+'</b><p>'+(to?esc(setDescription(effect,newBonus.values)):'No active bonus')+'</p></div></div></div>';
+ }).join('');
+ return '<section class="setPreview"><h3>Tier Bonus Changes</h3>'+(rows||'<p class="small muted">No tier bonuses change with this equipment.</p>')+'</section>';
+}
 function setMilestoneDescription(effect,tier){
  const full=setDescription(effect,setBonuses({[effect]:tier}).values);
  if(tier===2)return full;
@@ -2302,7 +2326,7 @@ if(!o)return `<div class="inspect"><h3>Choose an item</h3><p class="small muted"
 let buttons=source==='stash'?`${['ring1','ring2'].includes(o.slot)?'<button class="primary" id="equipRing1">Equip Ring 1</button><button class="primary" id="equipRing2">Equip Ring 2</button>':`<button class="primary" id="equipThis" ${offhandLocked(o)?'disabled':''}>Equip</button>`}<button class="ghost" id="lockThis">${o.locked?'🔒 Unlock':'🔓 Lock'}</button><button class="danger" id="sellThis" ${o.locked?'disabled':''}>Salvage · ${saleFragments(o)} ${uiIcon('fragments')}</button>`:source==='equipped'?`<button class="ghost" id="unequipThis">Unequip</button>`:'';
 return `<div class="inspect" ${rarityFrame(o)}><div class="inspectHero"><img ${rarityFrame(o)} src="${itemImg(o)}" alt="${esc(o.subtype)}"><div><h3 style="color:${rarityColor(o)}">${esc(o.name)}</h3>${legendaryRankBadge(o)}<div class="small">${itemSource(o)}</div><div class="small" style="color:${rarityColor(o)}">${o.rarity==='Legendary'?'✦ ':''}${detailEffectHtml(o)}</div></div></div><div class="buttonRow inspectActions">${buttons}</div><div class="rule"></div><div class="small">${esc(itemStats(o)||'No base stats')}</div>${isTwoHanded(o)?'<p class="small gold">⚔ Two-Handed · occupies Weapon + Off-Hand</p>':''}${o.subtype==='Off-Hand Dagger'?'<p class="small gold">🗡 Physical off-hand · extra strikes</p>':''}${legendaryDescription(o)?`<p class="small gold">✦ ${esc(legendaryDescription(o))}</p>`:''}${source!=='equipped'?`${['ring1','ring2'].includes(o.slot)?`<details class="ringComparison"><summary>Compare if equipped in Ring 1</summary>${itemComparison(o,'ring1')}</details><details class="ringComparison"><summary>Compare if equipped in Ring 2</summary>${itemComparison(o,'ring2')}</details>`:itemComparison(o)}`:''}</div>`;
 }
-function setDetails(stats){return stats.sets.length?[...stats.sets].sort((a,b)=>setStage(stats.counts[b.effect]||0)-setStage(stats.counts[a.effect]||0)||(stats.counts[b.effect]||0)-(stats.counts[a.effect]||0)).map(b=>`<div class="setItem"><b style="color:${ELEMENTS[b.effect].color}">${affinityArt(b.effect)} ${esc(b.title)} · ${setProgress(stats.counts[b.effect])}</b><div>${esc(b.desc)}</div></div>`).join(''):`<p class="small muted">Equip two items with the same affinity for a set bonus.</p>`}
+function setDetails(stats){if(PHASE1_PREVIEW)return '';return stats.sets.length?[...stats.sets].sort((a,b)=>setStage(stats.counts[b.effect]||0)-setStage(stats.counts[a.effect]||0)||(stats.counts[b.effect]||0)-(stats.counts[a.effect]||0)).map(b=>`<div class="setItem"><b style="color:${ELEMENTS[b.effect].color}">${affinityArt(b.effect)} ${esc(b.title)} · ${setProgress(stats.counts[b.effect])}</b><div>${esc(b.desc)}</div></div>`).join(''):`<p class="small muted">Equip two items with the same affinity for a set bonus.</p>`}
 function statsWidget(s){const evasionTier=state?.run?.tier||(PHASE1_PREVIEW?(phase1Controller?.state.expedition||phase1Controller?.state.unlocked||1):state?.chosen||1);const uncapped=Math.round((4+s.cha*.95+(s.counts.crit||0)*2+(s.bonus.critBonus||0))/Math.sqrt(Math.max(1,s.rawAttackSpeed/1.3)));let rows=[['⚔️ Attack',s.attack],['🛡 Defense',s.defense],['❤️ Health',s.maxhp],['💨 Hits / sec',s.attacksPerSec.toFixed(2)],['🎯 Critical',s.crit+'%'+(s.crit>=65?' · CAP'+(uncapped>65?' ('+uncapped+'% raw)':''):'')],['⚡ Gear Power',s.power],['Evasion',formatItemStat(s.evasionRating||0)+' rating · '+(100*evasionChance(s.evasionRating||0,evasionTier)).toFixed(1)+'% vs E'+evasionTier]];if(s.blockChance)rows.push(['🛡 Block',s.blockChance+'%']);if(s.caster)rows.push(['💧 Mana',s.mana],['💠 Mana regen',s.manaRegen+'/s'],['✨ Spell Power',s.spellPower]);return `<div class="statsGrid">${rows.map(([name,num])=>`<div class="stat"><label>${name}</label><b>${num}</b></div>`).join('')}</div>`}
 function renderTavern(){
  wallet();
@@ -2900,7 +2924,7 @@ function setDelayEnemy(r,seconds){
 function setDirectEnemyDamage(r,amount,label){
  const enemy=r.enemy;let damage=Math.max(0,Math.round(amount));
  if(enemy.barrier>0){const absorbed=Math.min(enemy.barrier,damage);enemy.barrier-=absorbed;damage-=absorbed;}
- enemy.hp-=damage;if(damage>0){addLog(label+' '+damage+' bonus damage','good');floatText(damage,'enemy');}
+ phase6Metric(r,'damageDealt',Math.min(Math.max(0,enemy.hp),damage));phase6Proc(r,label);enemy.hp-=damage;if(damage>0){addLog(label+' '+damage+' bonus damage','good');floatText(damage,'enemy');}
  return damage;
 }
 function setOnAttack(r,base,critical,perfect){
@@ -3034,7 +3058,7 @@ function weaponAttack(r){
  const cost=baseCost&&isPhase1Run()&&phase1Build?.element?Math.max(4,Math.round(baseCost*(1-.12*WandererV012Buildcraft.rank(phase1Build,'efficient_cast')))):baseCost;
  let damage=0,element=null,cast=false;
  if(caster&&r.mp>=cost){
-  r.mp-=cost;cast=true;element=null;
+  phase6Metric(r,'manaSpent',cost);phase6Metric(r,'fundedCasts',1);r.mp-=cost;cast=true;element=null;
   const factor=kind==='Staff'?1.32:.77;
   damage=Math.max(1,Math.round(s.spellPower*factor));
   if(element&&isMagicOffhand(off)&&off.magic===element)damage=Math.round(damage*1.30);
@@ -3067,7 +3091,7 @@ function weaponAttack(r){
  animateStrike(kind,cast);
  if(e.barrier>0){const absorbed=Math.min(e.barrier,damage);e.barrier-=absorbed;damage-=absorbed;if(absorbed)addLog('🛡 '+e.name+' absorbs '+absorbed+' damage','spell');}
  const real=Math.max(0,Math.min(e.hp,damage));
- e.hp-=damage;floatText(damage,'enemy',critical);
+ phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),damage));e.hp-=damage;floatText(damage,'enemy',critical);
  if(temp.soulPactBonus>0){const withoutBonus=Math.min(hpBefore,Math.max(0,damage+Math.max(0,barrierBefore-e.barrier)-temp.soulPactBonus-barrierBefore));setSoulHeal(r,Math.max(0,real-withoutBonus));}
  if(WANDERER_SHATTER_ENABLED&&cast&&element==='slow'&&damage>0&&e.hp>0&&e.slowTime>0){
   temp.shatterHits=(temp.shatterHits||0)+1;
@@ -3086,7 +3110,7 @@ function weaponAttack(r){
    let extra=Math.max(1,Math.round(s.attack*.13+(off.atk||0)*.45-e.def*.16));
    if(r.playerDebuffUntil>now)extra=Math.max(1,Math.round(extra*.8));
    if(e.barrier>0){const shield=Math.min(e.barrier,extra);e.barrier-=shield;extra-=shield;}
-   e.hp-=extra;addLog('🗡 Off-Hand Dagger strikes for '+extra+' damage','good');animateStrike('Daggers');floatText(extra,'enemy');
+   phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),extra));e.hp-=extra;addLog('🗡 Off-Hand Dagger strikes for '+extra+' damage','good');animateStrike('Daggers');floatText(extra,'enemy');
    legendaryOffhand(r,extra);
    if(extra>0&&off.effect&&gameRandom()<.34)applyAffinity(off.effect,e,s,.65,extra);
   }else if(damage>0&&isMagicOffhand(off)&&off.magic&&gameRandom()<.45){
@@ -3124,7 +3148,7 @@ function updateFight(){
  if(r.tDot>=1){
   r.tDot-=1;
   const hasBurn=e.burnStacks>0,hasDots=e.poisonStacks+e.bleedStacks+e.burnStacks>0;
-  if(hasDots){const applied=tickDots(e);e.hp-=applied;addLog('☠️ Damage over time: '+applied+' damage','spell');}
+  if(hasDots){const applied=tickDots(e);phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),applied));e.hp-=applied;addLog('☠️ Damage over time: '+applied+' damage','spell');}
   if(hasBurn)setHeatTick(r,true);
   if(s.bonus.regenBonus){const healed=setHeal(r,regenPerSecond(r.maxhp,s.bonus.regenBonus));if(healed>0)addLog('💚 Regeneration +'+Math.round(healed)+' HP','good');}
   if(isPhase1Run()&&phase1Build)WandererV012Buildcraft.onSecond(phase1Build,phase2Context(r));
@@ -3164,7 +3188,7 @@ function updateFight(){
   const hit=Math.max(0,raw-blocked);
   if(blocked>0)addLog('🛡 Barrier absorbs '+blocked+' damage','good');
   if(hit>0){
-   r.hp-=hit;addLog('🩸 '+e.name+' hits for '+hit+' HP','bleed');floatText(hit,'hero');
+   phase6Metric(r,'damageTaken',Math.min(Math.max(0,r.hp),hit));r.hp-=hit;addLog('🩸 '+e.name+' hits for '+hit+' HP','bleed');floatText(hit,'hero');
    if(e.eliteType==='tank'){
     const newWound=(r.playerHealingDebuffUntil||0)<=setNow(r);
     r.playerHealingDebuffUntil=setNow(r)+5;
@@ -3406,7 +3430,10 @@ function phase1Begin(level=1){
 
 // Versioned Expedition additions; all permanent mutations use the existing local transaction.
 let phase6Run=null;
-function phase2Theme(id){if(id==='bloodscar')return {...THEMES.find(t=>t.id==='forge'),id,name:'Bloodscar Wastes'};return THEMES.find(t=>t.id===id);}
+function phase2Theme(id){if(id==='bloodscar')return THEMES.find(t=>t.id==='bloodscar')||{...THEMES.find(t=>t.id==='forge'),id,name:'Bloodscar Wastes'};return THEMES.find(t=>t.id===id);}
+function phase6Metric(r,key,n){if(!r?.phase1||!Number.isFinite(n)||n<0)return;r.metrics??={};r.metrics[key]=(r.metrics[key]||0)+n;}
+function phase6Proc(r,label){if(!r?.phase1)return;r.metrics??={};r.metrics.procs??={};r.metrics.procs[label]=(r.metrics.procs[label]||0)+1;}
+function phase6CollectMetrics(r){if(!phase6Run||r.metricsCommitted)return;r.metricsCommitted=true;phase6Run.metrics??={};for(const [k,v]of Object.entries(r.metrics||{})){if(k==='procs'){phase6Run.metrics.procs??={};for(const [label,n]of Object.entries(v))phase6Run.metrics.procs[label]=(phase6Run.metrics.procs[label]||0)+n;}else phase6Run.metrics[k]=(phase6Run.metrics[k]||0)+v;}}
 function phase6Stats(stats){
  if(!phase6Run)return stats;const s={...stats},e=phase6Run.effects;
  for(const [key,field]of [['might','attack'],['arcane','spellPower'],['ironhide','defense'],['haste','attacksPerSec']])if(e[key]?.remaining>0)s[field]*=1+e[key].power;
@@ -3419,7 +3446,7 @@ function phase6AwardGear(){
 }
 function phase6Buff(key,power,remaining=3){phase6Run.effects[key]={power,remaining};}
 function phase6OpenEvent(plane){
- if(!phase6Run.event){const replacement=WandererV012Buildcraft.CATALOG.filter(p=>!p.requires.length&&phase1Build.families.includes(p.family)&&(!p.element||p.element===phase1Build.element)&&WandererV012Buildcraft.rank(phase1Build,p.id)<p.max);
+ if(!phase6Run.event){const replacement=WandererV012Buildcraft.CATALOG.filter(p=>!p.requires.length&&phase1Build.families.includes(p.family)&&(!p.element||p.element===phase1Build.element)&&phase1Build.picks.filter(id=>id===p.id).length<p.max);
   phase6Run.event={id:plane.event,roll:gameRandom(),alternative:replacement.length?replacement[Math.floor(gameRandom()*replacement.length)].id:null};}
  if(!phase4Entry){phase4Stamp=Date.now();phase4Entry={profile:phase4Clone({...state,run:null}),session:phase4Session(true),ledger:[...(phase5Snapshot?.expedition.awardKeys||[])]};}
  if(phase5Persist()){view='phase1';render();}
@@ -3434,9 +3461,9 @@ function phase6EventChoice(choice,itemId,passiveId,family,targetId){
  const heal=(hp=0,mp=0)=>{phase1Vitals={hp:Math.min(v.maxhp,v.hp+Math.ceil(v.maxhp*hp)),mp:Math.min(v.maxmp,v.mp+Math.ceil(v.maxmp*mp)),maxmp:v.maxmp};};
  const sacrifice=()=>{state.stash=state.stash.filter(i=>i.id!==itemId);state.expeditionOverflow=state.expeditionOverflow.filter(i=>i.id!==itemId);phase3LootIds.delete(itemId);};
  if(choice!==2){switch(ev.id){
- case 'traveling_merchant':if(!pay('gold',costGold))return false;if(choice===0)heal(.35);else phase6Buff('might',.10);break;
+ case 'traveling_merchant':if(choice===0&&v.hp>=v.maxhp)return false;if(!pay('gold',costGold))return false;if(choice===0)heal(.35);else phase6Buff('might',.10);break;
  case 'smugglers_caravan':if(!pay('fragments',costFragments))return false;if(choice===0)heal(0,.4);else phase6Buff('ironhide',.10);break;
- case 'relic_collector':if(!item)return false;sacrifice();state[choice===0?'gold':'fragments']+=choice===0?12+2*item.tier:5+item.tier;break;
+ case 'relic_collector':if(!item){state[choice===0?'gold':'fragments']+=choice===0?5+E:3+E;break;}sacrifice();state[choice===0?'gold':'fragments']+=choice===0?12+2*item.tier:5+item.tier;break;
  case 'cursed_artificer':if(!item||choice===0&&(!target||target.id===itemId))return false;sacrifice();if(choice===0)effects.item={id:target.id,remaining:3};else effects.barrier=Math.max(effects.barrier||0,.15);break;
  case 'cursed_altar':if(v.hp<=Math.ceil(v.maxhp*.2))return false;heal();phase1Vitals.hp-=Math.ceil(v.maxhp*.2);effects[choice===0?'attack':'defense']=.10;break;
  case 'soul_mirror':if(choice===0){if(!passive||passiveId===phase1Build.initialPassive||!ev.alternative)return false;const index=phase1Build.picks.indexOf(passiveId),old=phase1Build.picks.splice(index,1)[0];const available=WandererV012Buildcraft.eligible(phase1Build,WandererV012Buildcraft.CATALOG.find(p=>p.id===ev.alternative).family);if(!available.some(p=>p.id===ev.alternative)){phase1Build.picks.splice(index,0,old);return false;}phase1Build.picks.push(ev.alternative);}break;
@@ -3445,8 +3472,8 @@ function phase6EventChoice(choice,itemId,passiveId,family,targetId){
  case 'cursed_chest':if(choice===0)state.gold+=8+E;else if(ev.roll<.5)loot.push(phase6AwardGear());else{heal();phase1Vitals.hp=Math.max(1,v.hp-Math.ceil(v.maxhp*.15));}break;
  case 'forgotten_arsenal':if(choice===0)loot.push(phase6AwardGear());else state.fragments+=8+2*E;break;
  case 'runic_vault':if(choice===0){if(!state.runeSlots.some(Boolean))return false;phase6Buff('runeBoost',.20);}else state.fragments+=10+E;break;
- case 'bounty_writ':if(choice===0)effects.bounty=true;break;
- case 'restless_spring':choice===0?heal(.35):heal(0,.4);break;
+ case 'bounty_writ':if(choice===0){if(g.rooms.slice(g.planeIndex).includes('elite'))effects.bounty=true;else state.fragments+=5+E;}break;
+ case 'restless_spring':if(choice===0&&v.hp>=v.maxhp||choice===1&&(v.maxmp===0||v.mp>=v.maxmp))state.fragments+=3+E;else choice===0?heal(.35):heal(0,.4);break;
  case 'fallen_wanderer':if(choice===0){if(!pay('gold',10+E))return false;heal(.2);effects.barrier=Math.max(effects.barrier||0,.1);}else heal(.15,.15);break;
  case 'oracle_of_paths':if(choice===0){if(!phase1Controller.allowed().includes(family))return false;phase1Controller.influence(family);}else state.fragments+=5+E;break;
  case 'last_ember':if(!passive)return false;effects.echo={id:passiveId,power:-.5,remaining:3};phase1Build.runtime.echo=effects.echo;choice===0?heal(.35):heal(0,.4);break;
@@ -3467,7 +3494,7 @@ function phase6RenderEvent(){
  '<label>Passive<select id="eventPassive">'+[...new Set(phase1Build.picks)].map(id=>'<option value="'+id+'">'+esc(WandererV012Buildcraft.CATALOG.find(p=>p.id===id).name)+'</option>').join('')+'</select></label>'+
  '<label>Future affinity<select id="eventFamily">'+phase1Controller.allowed().map(f=>'<option value="'+f+'">'+f+'</option>').join('')+'</select></label>'+
  (ev.alternative?'<p>Mirror alternative: '+esc(WandererV012Buildcraft.CATALOG.find(p=>p.id===ev.alternative).name)+'</p>':'')+
- def[3].map((label,i)=>'<button data-event-choice="'+i+'">'+esc(label)+'</button>').join('')+'<button data-event-choice="2" class="ghost">Decline — no reward</button></section>');
+ def[3].map((original,i)=>{const E=phase1Controller.state.expedition,v=phase3Vitals();let label=original.replace(/(\d+) \+ (\d+)×E/g,(_,a,b)=>String(+a+ +b*E)).replace(/(\d+) \+ E/g,(_,a)=>String(+a+E));if(ev.id==='relic_collector'&&!bag.length)label='No bag gear: take '+(i===0?5+E+' Gold':3+E+' Fragments');if(ev.id==='bounty_writ'&&i===0&&!phase1Controller.state.rooms.slice(phase1Controller.state.planeIndex).includes('elite'))label='No guaranteed Elite remains: take '+(5+E)+' Fragments';if(ev.id==='restless_spring'&&(i===0&&v.hp>=v.maxhp||i===1&&(v.maxmp===0||v.mp>=v.maxmp)))label='Resource already full: take '+(3+E)+' Fragments';return '<button data-event-choice="'+i+'">'+esc(label)+'</button>';}).join('')+'<button data-event-choice="2" class="ghost">Decline — no reward</button></section>');
  Q('[data-event-choice]').forEach(b=>b.onclick=()=>{if(!phase6EventChoice(Number(b.dataset.eventChoice),$('eventItem').value,$('eventPassive').value,$('eventFamily').value,$('eventTarget').value))bannerMessage('Requirements not met. No resources spent.');});
 }
 
@@ -3491,11 +3518,11 @@ function phase6ReturnPotions(outcome){
 function phase6UsePotion(index){
  if(!phase3IsBetweenPlanes()||!phase6Run||PHASE5_VALIDATION&&(!phase5Ready||saveBlocked))return false;
  const potion=phase6Run.potions?.[index];if(!potion||potion.used||potion.kind==='fortune')return false;
- const v=phase3Vitals(),kind=potion.kind;if(kind==='health'&&v.hp>=v.maxhp||kind==='mana'&&v.mp>=v.maxmp)return false;
+ const v=phase3Vitals(),kind=potion.kind;if(kind==='barrier'&&(phase6Run.effects.barrier||0)>=.3||phase6Run.effects[kind]?.remaining===3)return false;if(kind==='health'&&v.hp>=v.maxhp||kind==='mana'&&v.mp>=v.maxmp)return false;
  if(!phase1Vitals)phase1Vitals={hp:v.hp,mp:v.mp,maxmp:v.maxmp};
  if(kind==='health')phase1Vitals.hp=Math.min(v.maxhp,v.hp+Math.ceil(v.maxhp*.35));
  else if(kind==='mana')phase1Vitals.mp=Math.min(v.maxmp,v.mp+Math.ceil(v.maxmp*.4));
- else if(kind==='barrier')phase6Run.effects.barrier=Math.max(phase6Run.effects.barrier||0,.15);
+ else if(kind==='barrier')phase6Run.effects.barrier=Math.min(.3,(phase6Run.effects.barrier||0)+.15);
  else phase6Buff(kind,kind==='haste'?.08:.10);
  potion.used=true;view='phase1';save();render();return true;
 }
@@ -3528,10 +3555,10 @@ function phase2Context(r){
  return {player:r,enemy:e,now,random:gameRandom,base:r.lastBaseHit||r.stats.attack,
  dot(kind,potency){
   if(!['bleed','poison','burn'].includes(kind))return;
-  const values=e.dots[kind]||(e.dots[kind]=[]);
+  phase6Proc(r,kind+' application');const values=e.dots[kind]||(e.dots[kind]=[]);
   if(values.length>=12)values.shift();values.push({damage:Math.max(1,Math.round(potency)),remaining:3});synchronizeDots(e);
  },
- dotDamage(amount,label){const n=Math.max(0,Math.round(amount));if(n){e.hp-=n;addLog(label+' '+n+' damage','spell');}},
+ dotDamage(amount,label){const n=Math.max(0,Math.round(amount));if(n){phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),n));e.hp-=n;addLog(label+' '+n+' damage','spell');}},
  damage(amount,label){return setDirectEnemyDamage(r,amount,label);},
  heal(amount){return setHeal(r,amount);},
  barrier(amount){return setBarrier(r,amount);},
@@ -3559,7 +3586,7 @@ function phase2MagicTick(r){
  const ctx=phase2Context(r),b=phase1Build;
  if(ctx.now-b.runtime.lastSpellAt<2.5)return;
  const cost=WandererV012Buildcraft.nextCost(b);if(r.mp<cost)return;
- b.runtime.lastSpellAt=ctx.now;r.mp-=cost;ctx.power=r.stats.spellPower;ctx.amp=1;ctx.funded=true;
+ b.runtime.lastSpellAt=ctx.now;phase6Metric(r,'manaSpent',cost);phase6Metric(r,'fundedCasts',1);r.mp-=cost;ctx.power=r.stats.spellPower;ctx.amp=1;ctx.funded=true;
  setDirectEnemyDamage(r,Math.max(1,Math.round(ctx.power*.70)),'✨ '+b.element);
  WandererV012Buildcraft.onCast(b,ctx);
  combatEffect('Wand',({fire:'burn',frost:'slow',lightning:'shock'})[b.element]);
@@ -3729,7 +3756,7 @@ function phase1WaveWon(){
   setTimeout(()=>{if(state.run===r&&r.status==='ready')phase1StartWave();},650);
   return;
  }
- phase4CommitRealm();phase6TickDurations();
+ phase4CommitRealm();phase6CollectMetrics(r);phase6TickDurations();
  addLog(result.expeditionComplete?'Expedition boss defeated!':'Realm cleared. Select your next Realm.','good');
  phase5RememberRealm(r,'cleared');
  phase1Clock+=r.combatSeconds||0;
@@ -3759,7 +3786,7 @@ function phase1Death(){
  clearInterval(clock);
  if(!isPhase1Run())return;
  addLog('YOU DIED · Expedition equipment lost; original equipment protected.','critical');
- phase6ReturnPotions('defeat');
+ phase6CollectMetrics(state.run);phase6ReturnPotions('defeat');
  phase5RememberRealm(state.run,'defeat');phase5MakeSummary('defeat');
  phase4CommitRealm();phase4LoseLoot();phase1Controller.defeat();phase1Vitals=null;phase1Continuity=null;
  if(phase1Build)WandererV012Buildcraft.clear(phase1Build);
@@ -4046,7 +4073,7 @@ function phase4Restore(session){
  phase1Controller.restore(session.controller);
  if(session.build)WandererV012Buildcraft.validate(session.build);
  phase6Run=session.integration||null;
- phase1Build=session.build;phase1Draft=session.draft;phase1Vitals=session.vitals;phase1Clock=session.clock;phase3Supplies=session.supplies;
+ phase1Build=session.build;if(phase1Build&&phase6Run?.effects.echo)phase1Build.runtime.echo=phase6Run.effects.echo;phase1Draft=session.draft;phase1Vitals=session.vitals;phase1Clock=session.clock;phase3Supplies=session.supplies;
  phase3LootIds=new Set(session.lootIds);phase4Home=session.home;phase4Seed=session.seed;phase4Prefix=session.prefix;phase4Stamp=session.stamp;uid=session.idCounter;phase1Continuity=session.continuity;
  if(phase1Build){phase1Build.families=phase1Controller.state.families;if(phase1Draft?.kind==='reward'){
   const eligible=WandererV012Buildcraft.eligible;
@@ -4067,14 +4094,14 @@ function phase4ResumeRealm(){
 function phase5Item(i){return {id:i.id,name:i.name,tier:i.tier,rarity:i.rarity,slot:i.slot};}
 function phase5RememberRealm(r,outcome){
  phase5Results.realm={level:r.tier,plane:r.phase1Plane,name:r.planeName,family:r.planeFamily,outcome,
-  enemy:r.enemy?.name||'Unknown',seconds:r.combatSeconds||0,gold:r.gold,fragments:r.fragments,
+  metrics:r.metrics||null,enemy:r.enemy?.name||'Unknown',seconds:r.combatSeconds||0,gold:r.gold,fragments:r.fragments,
   loot:r.loot.map(phase5Item),log:phase4Clone(r.realmLog||logEntries.slice().reverse()),truncated:!!r.realmLogTruncated};
  phase5Results.review='realm';
 }
 function phase5MakeSummary(outcome){
  const g=phase1Controller.state,owned=new Set([...state.stash,...state.expeditionOverflow,...Object.values(state.equip).filter(Boolean)].map(i=>i.id));
  const lost=outcome==='defeat'||outcome==='abandoned';
- phase5Results.summary={level:g.expedition,outcome,realms:g.history.length,
+ phase5Results.summary={passiveTelemetry:phase4Clone(phase1Build?.runtime.passiveTelemetry||{}),metrics:phase6Run?.metrics||null,level:g.expedition,outcome,realms:g.history.length,
   families:[...(phase1Build?.families||g.families)],picks:[...(phase1Build?.picks||[])],element:phase1Build?.element||null,
   seconds:phase1Clock+(outcome==='defeat'?(state.run?.combatSeconds||0):0),gold:phase5Results.gold,fragments:phase5Results.fragments,
   kept:phase5Results.earned.filter(i=>owned.has(i.id)&&!lost),lost:phase5Results.earned.filter(i=>owned.has(i.id)&&lost),
@@ -4098,8 +4125,8 @@ function phase5RenderResult(){
  const items=(list)=>list.map(i=>'<li>'+esc(i.name)+' · E'+i.tier+' · '+esc(i.rarity)+'</li>').join('')||'<li>None</li>';
  html('<section class="panel phase5Result"><span class="eyebrow">Expedition '+r.level+(isRealm?' · Realm '+r.plane:'')+'</span><h1>'+title+'</h1>'+
   (isRealm?'<p>'+esc(r.name)+' · '+esc(WandererV012Expedition.FAMILY_NAMES[r.family])+(r.outcome==='defeat'?' · Final enemy: '+esc(r.enemy):'')+'</p>':'<p>'+r.realms+'/15 Realms completed · '+esc(r.families.map(f=>WandererV012Expedition.FAMILY_NAMES[f]).join(' · '))+'</p>')+
-  (phase5Results.complete?'':'<p class="small muted">Older checkpoint: only activity recorded since this update is included.</p>')+'<p>Combat time: '+r.seconds.toFixed(1)+'s · +'+r.gold+' Gold · +'+r.fragments+' Fragments</p><p class="small muted">Damage totals and turn counts are unavailable. Combat time excludes Camp and offline time.</p>'+
-  (isRealm?'<h3>Realm equipment '+(r.outcome==='defeat'?'lost':summary?.outcome==='victory'?'secured':'collected · still at risk')+'</h3><ul>'+items(r.loot||[])+'</ul>':('<h3>Temporary build'+(r.element?' · '+esc(r.element):'')+'</h3><p>'+esc(r.picks.map(id=>WandererV012Buildcraft.CATALOG.find(p=>p.id===id)?.name||id).join(' · '))+'</p><h3>Equipment kept</h3><ul>'+items(r.kept)+'</ul><h3>Equipment lost</h3><ul>'+items(r.lost)+'</ul><h3>Discarded</h3><ul>'+items(r.discarded)+'</ul>'+(r.runeTier?'<p>'+esc(r.runeName?'Rune obtained: '+r.runeName:'Boss Rune choice pending in Camp')+' · E'+r.runeTier+'</p>':'')+(r.outcome==='victory'?'<p>Highest Expedition Cleared: '+(phase5Snapshot?.expedition.completed||r.level)+'</p>':'<p>No next difficulty unlocked. Original equipment and earned currencies are safe.</p>')))+
+  (phase5Results.complete?'':'<p class="small muted">Older checkpoint: only activity recorded since this update is included.</p>')+'<p>Combat time: '+r.seconds.toFixed(1)+'s · +'+r.gold+' Gold · +'+r.fragments+' Fragments</p><p class="small muted">Combat time excludes Camp and offline time.</p>'+
+  (r.metrics?'<p>HP damage dealt '+Math.round(r.metrics.damageDealt||0)+' · HP damage taken '+Math.round(r.metrics.damageTaken||0)+'</p>':'')+(isRealm?'<h3>Realm equipment '+(r.outcome==='defeat'?'lost':summary?.outcome==='victory'?'secured':'collected · still at risk')+'</h3><ul>'+items(r.loot||[])+'</ul>':('<h3>Temporary build'+(r.element?' · '+esc(r.element):'')+'</h3><p>'+esc(r.picks.map(id=>WandererV012Buildcraft.CATALOG.find(p=>p.id===id)?.name||id).join(' · '))+'</p><h3>Equipment kept</h3><ul>'+items(r.kept)+'</ul><h3>Equipment lost</h3><ul>'+items(r.lost)+'</ul><h3>Discarded</h3><ul>'+items(r.discarded)+'</ul>'+(r.runeTier?'<p>'+esc(r.runeName?'Rune obtained: '+r.runeName:'Boss Rune choice pending in Camp')+' · E'+r.runeTier+'</p>':'')+(r.outcome==='victory'?'<p>Highest Expedition Cleared: '+(phase5Snapshot?.expedition.completed||r.level)+'</p>':'<p>No next difficulty unlocked. Original equipment and earned currencies are safe.</p>')))+
   (realm?'<details class="phase5LastLog"><summary>Last Realm Combat Log</summary>'+(realm.truncated?'<p>Older entries omitted: log storage safety limit reached.</p>':'')+'<div class="log" style="max-height:45vh;overflow:auto">'+realm.log.map(l=>'<div class="logLine">'+esc(l.text)+'</div>').join('')+'</div></details>':'')+
   '<button id="phase5ExitResult" class="primary" '+(phase1Controller.state.version===2&&phase1Draft?.kind==='reward'?'disabled':'')+'>'+(isRealm?'EXIT REALM':'RETURN TO CAMP')+'</button></section>');
  $('phase5ExitResult').onclick=phase5ExitResult;

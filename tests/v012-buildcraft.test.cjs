@@ -43,7 +43,7 @@ function replay(id,family,element='lightning',prerequisites=[]){
  return {mods:JSON.stringify(mods),cost,healed,incoming,speedBefore,alive,history:JSON.stringify(history),
  hp:c.player.hp,mp:c.player.mp,barrier:c.player.barrier,enemyHp:c.enemy.hp,slow:c.enemy.slowTime,
  rot:JSON.stringify(c.enemy.v012Rot),bleed:JSON.stringify(c.enemy.dots.bleed),burn:JSON.stringify(c.enemy.dots.burn),
- runtime:JSON.stringify(b.runtime)};
+ runtime:JSON.stringify(b.runtime,(key,value)=>key==='passiveTelemetry'?undefined:value)};
 }
 test('every advertised passive is unique, finite, and changes at least one executed combat outcome',()=>{
  const ids=new Set();

@@ -1,14 +1,7 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const create=require('./v012-economy-harness.cjs');
-function enter(a){a.select(a.controller().state.offers[0].id);if(a.draft().step==='element')a.element('lightning');a.passive(a.draft().options[0].id);}
-function complete(a){
- for(let n=0;n<60&&a.controller().state.stage!=='finished';n++){
-  if(a.controller().state.stage==='choice')enter(a);
-  const r=a.state().run;if(!r)throw Error('Expected active Wave');
-  r.enemy.hp=0;a.win();a.flush();
- }
- assert.equal(a.controller().state.stage,'finished');
-}
+function enter(a){if(!a.controller().state.initialFamily)a.initial('blood');if(a.draft()?.kind==='reward')a.passive(a.draft().options[0].id);if(a.results().review)a.exitResult();while(a.bag.overflow()>0)a.bag.discard(a.bag.items().at(-1).id);a.select(a.controller().state.offers[0].id);a.enter();if(a.draft()?.step==='element')a.element('lightning');if(a.events.run()?.event){a.events.choose(2);return enter(a);}}
+function complete(a){for(let n=0;n<70&&a.controller().state.stage!=='finished';n++){if(!a.state().run)enter(a);const r=a.state().run;r.enemy.hp=0;a.win();a.flush();}assert.equal(a.controller().state.stage,'finished');}
 test('Forge, Merchant and Sigil prices use Expedition unlocks without touching legacy progress',()=>{
  const a=create(14),s=a.state();a.controller().state.unlocked=80;s.fragments=10000;s.gold=10000;
  a.craft(80,2,'armor','Armor');const crafted=s.stash.at(-1);
@@ -18,7 +11,7 @@ test('Forge, Merchant and Sigil prices use Expedition unlocks without touching l
  assert.equal(s.maxDungeon,1);assert.equal(s.onlineProgress.deepestCleared,0);
  assert.equal(a.economy.sigilPrice(80),820);
  const stock=s.merchant.stock.map(i=>i.id).join(),gold=s.gold;
- a.refresh('sigils');assert.equal(s.merchant.stock.map(i=>i.id).join(),stock);assert.equal(s.gold,gold-336);
+ a.refresh('sigils');assert.equal(s.merchant.stock.map(i=>i.id).join(),stock);assert.equal(s.gold,gold);
  const sigils=s.merchant.sigils.join();a.refresh('gear');assert.equal(s.merchant.sigils.join(),sigils);
  assert.equal(a.gearFamily('poison'),'Decay');assert.equal(a.gearFamily('shock'),'Magic');
  assert.equal(a.build(),null,'gear Sigils do not grant temporary families');
@@ -37,23 +30,22 @@ test('stale vendor/crafting actions are blocked during routes, draft and combat;
  assert.equal(JSON.stringify({gold:s.gold,fragments:s.fragments,stash:s.stash}),before);
  assert.equal(a.economyCanAct(),false);a.craft(1);a.buy(0);a.refresh();
  assert.equal(JSON.stringify({gold:s.gold,fragments:s.fragments,stash:s.stash}),before);
- a.select(a.controller().state.offers[0].id);assert.equal(a.economyCanAct(),false);
- if(a.draft().step==='element')a.element('fire');a.passive(a.draft().options[0].id);
+ a.initial('blood');a.select(a.controller().state.offers.find(p=>p.family==='blood').id);a.enter();assert.equal(a.economyCanAct(),false);
  a.craft(1);a.buy(0);a.refresh('sigils');a.win();
  assert.equal(JSON.stringify({gold:s.gold,fragments:s.fragments,stash:s.stash}),before,'live enemy grants no reward');
 });
-test('Wave awards are once-only and permanently retained after defeat',()=>{
+test('Wave cash awards are once-only; death loses Expedition equipment',()=>{
  const a=create(29),s=a.state();a.start(1);enter(a);
  s.run.enemy.hp=0;a.win();const gold=s.gold,fragments=s.fragments,stash=JSON.stringify(s.stash);
  a.win();assert.equal(s.gold,gold);assert.equal(s.fragments,fragments);assert.equal(JSON.stringify(s.stash),stash);
  a.flush();if(!s.run)enter(a);a.death();
- assert.equal(s.gold,gold);assert.equal(s.fragments,fragments);assert.equal(JSON.stringify(s.stash),stash);
+ assert.equal(s.gold,gold);assert.equal(s.fragments,fragments);assert.equal(a.bag.items().length,0);
  assert.equal(a.controller().state.unlocked,1);assert.equal(a.build(),null);
 });
 test('full Stash keeps guaranteed boss loot in overflow, claims exactly once, and blocks another entry',()=>{
  const a=create(37),s=a.state();a.start(1);complete(a);
  // Replay at a full Stash during combat: the guaranteed last boss drop must survive.
- a.start(1);
+ while(a.bag.overflow()>0)a.bag.discard(a.bag.items().at(-1).id);a.claimRune(s.pendingRuneReward.options[0].id);a.start(1);
  for(let n=0;n<60&&a.controller().state.stage!=='finished';n++){
   if(a.controller().state.stage==='choice')enter(a);
   if(s.run.enemy.boss)while(s.stash.length<40)s.stash.push(a.makeItem(1,'helm',null,'loot','Helm','Common'));
@@ -64,7 +56,7 @@ test('full Stash keeps guaranteed boss loot in overflow, claims exactly once, an
  a.start(1);assert.equal(a.controller().state.stage,'finished');assert.equal(s.gold,balance);
  s.stash.splice(0,1);assert.equal(a.claimOverflow(),1);assert(s.stash.some(i=>i.id===secured));assert.equal(a.claimOverflow(),0);
 });
-test('only complete tenth-Expedition bosses award classic Runes, without legacy unlock side effects',()=>{
+test('every completed Expedition boss awards real-tier Runes, without legacy unlock side effects',()=>{
  const a=create(42),s=a.state();a.controller().state.unlocked=10;a.start(10);complete(a);
  assert.equal(s.pendingRuneReward.tier,10);assert.equal(s.pendingRuneReward.options.length,3);
  assert(s.pendingRuneReward.options.every(a.validRune));const chosen=s.pendingRuneReward.options[0];
