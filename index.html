@@ -3717,7 +3717,7 @@ function phase3CanPrepare(){
 function phase3IsBetweenPlanes(){return phase3CanPrepare()&&phase1Controller.state.planeIndex>1;}
 function phase3Go(to){
  const stage=phase1Controller?.state.stage;
- if(state.run||phase1Draft||phase3NeedsBagResolution())return;
+ if(state.run||phase1Draft||phase3NeedsBagResolution()||stage==='combat')return;
  const legal=['phase1','equipment','runes'];
  if(['camp','finished','failed'].includes(stage))legal.push('forge','merchant');
  if(!legal.includes(to))return;
@@ -3725,7 +3725,7 @@ function phase3Go(to){
 }
 function phase3RenderNav(){
  const el=$('nav');if(!el)return;
- if(state.run){el.innerHTML='<span class="small muted">⚔ Expedition combat · Gear and potions locked</span>';return;}
+ if(state.run||phase1Controller?.state.stage==='combat'){el.innerHTML='<span class="small muted">⚔ Expedition encounter · Gear and potions locked</span>';return;}
  const stage=phase1Controller?.state.stage||'camp';
  if(phase1Draft){el.innerHTML='<span class="small muted">Choose your temporary passive before entering combat</span>';return;}
  const outside=['camp','finished','failed'].includes(stage)&&!phase3NeedsBagResolution();
