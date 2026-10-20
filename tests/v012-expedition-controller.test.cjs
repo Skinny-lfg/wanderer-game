@@ -4,10 +4,10 @@ const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const root=path.resolve(__dirname,'..'),env={};
 vm.runInNewContext(fs.readFileSync(path.join(root,'online/v012-expedition-controller.js'),'utf8'),env);
 const api=env.WandererV012Expedition;
-const themes=['temple','forge','crypt','bastion','frost','ash','void','ward','grove','shrine','storm','drowned','quarry'].map(id=>({id,name:id,image:id+'.webp'}));
+const themes=['temple','forge','bloodscar','crypt','bastion','frost','ash','void','ward','grove','shrine','storm','drowned','quarry'].map(id=>({id,name:id,image:id+'.webp'}));
 const rng=(seed=42)=>()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
 const create=()=>api.create(themes,rng());
-function clear(c){const count=c.state.selected.waves;for(let i=0;i<count;i++)c.waveWon();}
+function clear(c){const selected=c.state.selected;if(selected.eventId)c.eventWon();else for(let i=0;i<selected.waves;i++)c.waveWon();}
 test('initial affinity is explicit, guaranteed in first offers, and cannot be changed twice',()=>{
  for(const family of api.FAMILIES){
   const c=create();c.start();assert.equal(c.state.offers.length,0);
@@ -45,17 +45,58 @@ test('fifteen Realms, sequential Waves, a single passive gate per cleared Realm,
  assert.equal(c.state.rooms.length,15);assert.equal(c.state.rooms.at(-1),'boss');
  for(let realm=1;realm<=15;realm++){
   const offered=c.state.offers[0];c.select(offered.id);c.enter();assert.equal(offered.boss,realm===15);
-  for(let wave=1;wave<=offered.waves;wave++){assert.equal(c.state.wave,wave);c.waveWon();}
+  if(offered.eventId){assert.equal(offered.waves,1);assert.equal(c.state.wave,1);assert.throws(()=>c.waveWon(),/No active combat/);c.eventWon();}
+  else for(let wave=1;wave<=offered.waves;wave++){assert.equal(c.state.wave,wave);c.waveWon();}
   assert.throws(()=>c.waveWon(),/No active/);
   if(realm<15){assert.equal(c.state.unlocked,1);assert(c.state.rewardPending);assert.throws(()=>c.select(offered.id),/not available/);c.claimReward();assert.throws(()=>c.claimReward(),/No Realm passive/);}
  }
  assert.equal(c.state.unlocked,2);assert.equal(c.state.stage,'finished');assert.equal(c.state.history.length,15);assert.equal(c.state.families.length,0);
 });
 test('defeat and abandonment clear pending choices without unlocking; invalid content fails closed',()=>{
- assert.throws(()=>api.create([]),/themes/);assert.throws(()=>api.create(themes.filter(t=>t.id!=='forge')),/Missing/);
+ assert.throws(()=>api.create([]),/themes/);assert.throws(()=>api.create(themes.filter(t=>!['forge','bloodscar'].includes(t.id))),/Missing/);
  const c=create();c.start();c.chooseInitial('decay');c.select(c.state.offers[0].id);c.enter();c.defeat();
  assert.equal(c.state.stage,'failed');assert.equal(c.state.unlocked,1);assert.equal(c.state.families.length,0);
  c.start();c.abandon();assert.equal(c.state.stage,'failed');assert.equal(c.state.rewardPending,null);
+});
+
+
+test('exactly 3 or 4 distinct non-combat events; boss and guaranteed elites survive',()=>{
+ const count={3:0,4:0};
+ for(let seed=0;seed<500;seed++){
+  const c=api.create(themes,rng(Math.imul(seed+1,2654435761)>>>0));c.start();
+  const g=c.state,events=g.eventIds.filter(Boolean),groupNames=events.map(id=>api.EVENT_BY_ID[id].group);
+  assert([3,4].includes(events.length));count[events.length]++;
+  assert.equal(g.rooms.filter(x=>x==='event').length,events.length);
+  assert.equal(g.rooms.filter(x=>x==='elite').length,2);
+  assert.equal(g.rooms.at(0),'combat');assert.equal(g.rooms.at(-1),'boss');
+  assert.equal(new Set(events).size,events.length);
+  assert.equal(new Set(groupNames).size,events.length);
+  assert.equal(g.eventIds.at(0),null);assert.equal(g.eventIds.at(-1),null);
+ }
+ assert(count[3]>0&&count[4]>0,'both event counts must be attainable');
+});
+test('new Expedition routes contain precisely 2 live Realms per family and never archive classic themes',()=>{
+ const active=Object.keys(api.THEME_FAMILIES).filter(id=>!['frost','quarry'].includes(id));
+ for(const family of api.FAMILIES)assert.equal(active.filter(id=>api.THEME_FAMILIES[id]===family).length,2,family);
+ const c=api.create(themes,rng(70));c.start();c.chooseInitial('magic');
+ assert(c.state.offers.every(p=>p.id!=='frost'&&p.id!=='quarry'));
+});
+test('event is one-time, cannot masquerade as combat, and save restores next reward safely',()=>{
+ const c=api.create(themes,rng(5));c.start();c.chooseInitial('blood');
+ for(let i=1;i<=15;i++){
+  c.select(c.state.offers[0].id);c.enter();
+  if(c.state.selected.eventId){
+   const snapshot=JSON.parse(JSON.stringify(c.state)),replay=api.create(themes,rng(44));
+   replay.restore(snapshot);
+   assert.equal(replay.state.selected.eventId,c.state.selected.eventId);
+   assert.throws(()=>replay.waveWon(),/No active combat/);
+   replay.eventWon();assert.throws(()=>replay.eventWon(),/No active event/);
+   assert(replay.state.rewardPending&&replay.state.stage==='choice');
+   return;
+  }
+  clear(c);if(i<15)c.claimReward();
+ }
+ throw Error('At least three events must appear');
 });
 
 test('preview bridge stays opt-in, imports production enemies/art/VFX, and cannot save to account',()=>{

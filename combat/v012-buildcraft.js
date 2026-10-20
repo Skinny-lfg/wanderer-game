@@ -52,21 +52,39 @@ const P=[
  ['vitality','life_conduit','Life Conduit','Effective healing restores 4 Mana and empowers the next spell by 10% (3s cooldown).',['vitality','magic']],
  ['aegis','counterstrike','Counterstrike','Blocking grants one 18% base-hit counterstrike.',['aegis','fury']],
  ['aegis','runic_shield','Runic Shield','Funded elemental spells grant Barrier (3s cooldown).',['aegis','magic']],
- ['fury','spellblade','Spellblade','Each funded cast empowers the next weapon attack by 15%.',['fury','magic']]
+ ['fury','spellblade','Spellblade','Each funded cast empowers the next weapon hit, including Staff and Wand, by 15%.',['fury','magic']],
+ ['blood','carrion_detonation','Carrion Detonation','Consume Bleed and Rot for a bounded damage burst (8s cooldown).',['blood','decay']],
+ ['blood','crimson_pact','Crimson Pact','Pay 2% max HP to inflict an immediate empowered Bleed (8s cooldown; requires more than 20% HP).',['blood','vitality']],
+ ['blood','sanguine_reprisal','Sanguine Reprisal','Blocking or absorbing Barrier charges a counter-bleed.',['blood','aegis']],
+ ['blood','reapers_cadence',"Reaper's Cadence",'Critical hits on wounded bleeding enemies add a bounded finisher and restore 2 Mana (7s cooldown).',['blood','fury']],
+ ['blood','hemal_sigil','Hemal Sigil','Magic converts Bleed into elemental Fire, Frost or Lightning effects.',['blood','magic']],
+ ['decay','rot_symbiosis','Rot Symbiosis','Rot ticks recover a little HP (6s cooldown).',['decay','vitality']],
+ ['decay','rot_husk','Rot Husk','Breaking a Barrier while Rot is active grants a small new ward.',['decay','aegis']],
+ ['decay','venom_shatter','Venom Shatter','Critical hits consume Rot for a bounded burst (5s cooldown).',['decay','fury']],
+ ['decay','elemental_blight','Elemental Blight','Fire, Frost and Lightning manipulate accumulated Rot differently.',['decay','magic']],
+ ['vitality','guardians_oath',"Guardian's Oath",'After a Barrier shatters, heal once per Wave.',['vitality','aegis']],
+ ['vitality','redline','Redline','When wounded, deal a bounded burst but take increased damage briefly.',['vitality','fury']],
+ ['vitality','lifeweave','Lifeweave','Convert HP into Mana when nearly empty (8s cooldown).',['vitality','magic']],
+ ['aegis','iron_reversal','Iron Reversal','A successful Block charges a heavy counter at the cost of brief vulnerability.',['aegis','fury']],
+ ['aegis','prismatic_rebound','Prismatic Rebound','Damage absorbed by Barrier empowers your next Magic cast.',['aegis','magic']],
+ ['fury','spell_surge','Spell Surge','A critical strike charges your next elemental cast.',['fury','magic']]
 ].map(([family,id,name,description,requires=[],element=null])=>Object.freeze({family,id,name,description,requires,element,max:element||requires.length?1:2}));
 const BY_ID=Object.fromEntries(P.map(p=>[p.id,p]));
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
-function create(){return {element:null,initialFamily:null,initialPassive:null,picks:[],cooldowns:Object.create(null),runtime:{frenzyUntil:0,counterBlock:0,counterBarrier:0,spellblade:false,magicHits:0,staticCharges:0,adrenalineUntil:0,conduit:false,lastStand:false,lastSpellAt:-999}};}
+function create(){return {version:2,element:null,initialFamily:null,initialPassive:null,picks:[],cooldowns:Object.create(null),runtime:{frenzyUntil:0,counterBlock:0,counterBarrier:0,spellblade:false,magicHits:0,staticCharges:0,adrenalineUntil:0,conduit:false,lastStand:false,lastSpellAt:-999}};}
 function rank(b,id){const n=b?.picks?.filter(x=>x===id).length||0;return n&&b.runtime?.echo?.id===id&&b.runtime.echo.remaining>0?Math.max(0,n+b.runtime.echo.power):n;}
 function hasFamily(b,family){return Array.isArray(b?.families)&&b.families.includes(family);}
 function eligible(b,family){
  if(!FAMILIES.includes(family)||!hasFamily(b,family)||family==='magic'&&!b.element)return [];
  const hybrids=b.picks.map(id=>BY_ID[id]).filter(p=>p?.requires.length),pairs=new Set(hybrids.map(p=>[...p.requires].sort().join(':')));
- return P.filter(p=>p.family===family&&(!b.runtime.hybridRules||!p.requires.length||b.runtime.hybridWindow&&hybrids.length<3&&!pairs.has([...p.requires].sort().join(':')))&&p.requires.every(f=>hasFamily(b,f))&&(!p.element||p.element===b.element)&&rank(b,p.id)<p.max);
+ return P.filter(p=>p.family===family&&(!p.requires.length||(!b.runtime.hybridRules||b.runtime.hybridWindow)&&hybrids.length<3&&!pairs.has([...p.requires].sort().join(':')))&&p.requires.every(f=>hasFamily(b,f))&&(!p.element||p.element===b.element)&&rank(b,p.id)<p.max);
 }
 function options(b,family,rng=Math.random){
- const primary=eligible(b,family);
- const pool=primary.length>=3?primary:[...primary,...b.families.filter(f=>f!==family).flatMap(f=>eligible(b,f))];
+ const acquired=(b.picks||[]).map(id=>BY_ID[id]).filter(p=>p?.requires.length).length;
+ const gate=[6,8,10][acquired]??99;
+ const open=(p)=>!p.requires.length||(b.realmIndex||0)>=gate;
+ const primary=eligible(b,family).filter(open);
+ const pool=primary.length>=3?primary:[...primary,...b.families.filter(f=>f!==family).flatMap(f=>eligible(b,f).filter(open))];
  if(pool.length<3)throw Error('No three implemented passives available');
  const unowned=pool.filter(p=>!rank(b,p.id)),weighted=unowned.length>=3?unowned:pool;
  const chosen=[],hybrids=b.runtime.hybridRules&&b.runtime.hybridWindow?b.families.flatMap(f=>eligible(b,f)).filter(p=>p.requires.length):[];if(hybrids.length)chosen.push(hybrids[Math.floor(rng()*hybrids.length)]);
@@ -74,6 +92,8 @@ function options(b,family,rng=Math.random){
  if(family==='magic'&&specific.length&&chosen.length===0)chosen.push(specific[Math.floor(rng()*specific.length)]);
  const rest=weighted.filter(p=>!chosen.includes(p));
  while(chosen.length<3){let index=Math.floor(rng()*rest.length);chosen.push(rest.splice(index,1)[0]);}
+ const legacyHybrids=weighted.filter(p=>p.requires.length);
+ if(legacyHybrids.length&&!chosen.some(p=>p.requires.length))chosen[2]=legacyHybrids[Math.floor(rng()*legacyHybrids.length)];
  return chosen;
 }
 function choose(b,family,id,offers){
@@ -103,6 +123,10 @@ function mods(b,base){
   s.spellPower=Math.round((s.spellPower||3+s.int*1.9+s.spellFlat)*(1+.15*rank(b,'arcane_focus')));
   s.phase2Magic=true;
  }
+ const attackBuff=clamp(Number(b.runtime?.eventAttack)||0,-.15,.15),defenseBuff=clamp(Number(b.runtime?.eventDefense)||0,-.15,.15);
+ s.attack=Math.max(1,Math.round(s.attack*(1+attackBuff)));
+ s.defense=Math.max(1,Math.round(s.defense*(1+defenseBuff)));
+ if(hasFamily(b,'magic'))s.spellPower=Math.max(1,Math.round(s.spellPower*(1+attackBuff)));
  s.blockChance=Math.min(65,(s.blockChance||0)+rank(b,'guarded_block')*6);
  if(s.blockChance&&!s.blockReduction)s.blockReduction=.35;
  return s;
@@ -134,11 +158,34 @@ function onAttack(b,c){
  if(rank(b,'crimson_rush')&&crit&&e.bleedStacks>0)c.damage(base*.15,'🩸 Crimson Rush');
  if(rank(b,'brutal_crit')&&crit)c.damage(base*.12*rank(b,'brutal_crit'),'⚔ Brutal Critical');
  if(rank(b,'double_strike')&&c.random()<.10*rank(b,'double_strike'))c.damage(base*.30,'🗡 Extra Strike');
- if(rank(b,'fervent_life')&&crit&&ready(b,'ferventLife',c.now,4))heal(b,c,c.player.maxhp*.02);
+ if(rank(b,'fervent_life')&&crit&&ready(b,'ferventLife',c.now,4)){const amount=c.player.maxhp*.02,actual=heal(b,c,amount);if(actual<amount)c.barrier((amount-actual)*.5);}
  if(rank(b,'adrenaline')&&crit&&ready(b,'adrenaline',c.now,3))b.runtime.adrenalineUntil=c.now+3;
  if(rank(b,'counterstrike')&&b.runtime.counterBlock){b.runtime.counterBlock=0;c.damage(base*.18,'🛡 Counterstrike');}
  if(rank(b,'retaliation')&&b.runtime.counterBarrier){b.runtime.counterBarrier=0;c.damage(base*.15,'🛡 Retaliation');}
- if(rank(b,'spellblade')&&!c.magical&&b.runtime.spellblade){b.runtime.spellblade=false;c.damage(base*.15,'✨ Spellblade');}
+ if(rank(b,'spellblade')&&b.runtime.spellblade){b.runtime.spellblade=false;c.damage(base*.15,'✨ Spellblade');}
+ if(rank(b,'carrion_detonation')&&e.bleedStacks>0&&e.v012Rot?.length&&ready(b,'carrionDetonation',c.now,8)){
+  const bleed=e.dots?.bleed?.shift();e.bleedStacks=Math.max(0,e.bleedStacks-1);const rot=e.v012Rot.shift();const owed=(bleed?bleed.damage*bleed.remaining:0)+rot.damage*rot.remaining;c.damage(owed+Math.min(base*.25,e.maxhp*.02),'☠ Carrion Detonation');
+ }
+ if(rank(b,'crimson_pact')&&c.player.hp>c.player.maxhp*.20&&ready(b,'crimsonPact',c.now,8)){
+  c.player.hp=Math.max(1,c.player.hp-c.player.maxhp*.02);c.dot('bleed',base*.32);
+ }
+ if(rank(b,'sanguine_reprisal')&&b.runtime.reprisalReady){
+  b.runtime.reprisalReady=false;c.dot('bleed',base*.3);c.damage(base*.18,'🩸 Sanguine Reprisal');
+ }
+ if(rank(b,'reapers_cadence')&&crit&&e.bleedStacks>0&&e.hp<=e.maxhp*.5&&ready(b,'reapersCadence',c.now,7))
+  {c.damage(Math.min(base*.22,e.maxhp*.02),"🩸 Reaper's Cadence");c.mana(2);}
+ if(rank(b,'venom_shatter')&&crit&&e.v012Rot?.length&&ready(b,'venomShatter',c.now,5)){
+  const rot=e.v012Rot.shift();c.damage(rot.damage*rot.remaining+Math.min(base*.20,e.maxhp*.015),'☠ Venom Shatter');
+ }
+ if(rank(b,'redline')&&c.player.hp<=c.player.maxhp*.5&&ready(b,'redline',c.now,8)){
+  c.damage(base*.33,'🩸 Redline');b.runtime.redlineUntil=c.now+3;
+ }
+ if(rank(b,'iron_reversal')&&b.runtime.ironReady){
+  b.runtime.ironReady=false;c.damage(base*.35,'🛡 Iron Reversal');b.runtime.ironExposedUntil=c.now+3;
+ }
+ if(rank(b,'spell_surge')&&crit&&!b.runtime.spellSurge){
+  b.runtime.spellSurge=true;b.runtime.spellSurgeArmedAt=c.now;
+ }
 }
 function onCast(b,c){
  if(c.funded!==true||!hasFamily(b,'magic')||!elements.includes(b.element))return;
@@ -147,15 +194,32 @@ function onCast(b,c){
  if(b.element==='fire'&&rank(b,'kindling'))c.dot('burn',power*.15*(1+.20*rank(b,'kindling')));
  else if(b.element==='frost'&&rank(b,'deep_winter')){
   if(e.slowTime>0&&ready(b,'winterBurst',c.now,4))c.damage(Math.min(power*.18,e.maxhp*(e.boss?.015:.05)),'❄ Winter Fracture');
-  c.chill(e.boss?1.2:3.5);
+  c.chill(e.boss?1.2:Math.min(5,3.5*(c.amp||1)));
  }else if(b.element==='lightning'&&rank(b,'overcharge')){
   b.runtime.staticCharges=Math.min(4,(b.runtime.staticCharges||0)+1);
-  if(b.runtime.staticCharges===4){b.runtime.staticCharges=0;c.damage(power*.32*(1+.20*rank(b,'overcharge')),'⚡ Static Discharge');}
+  if(b.runtime.staticCharges===4){b.runtime.staticCharges=0;c.damage(Math.min(power*.32*(1+.20*rank(b,'overcharge')),e.maxhp*.035),'⚡ Static Discharge');}
  }
  if(rank(b,'arcane_echo')&&b.runtime.magicHits%4===0)c.damage(power*.25,'✨ Arcane Echo');
  if(rank(b,'hex_bleed')&&ready(b,'hexBleed',c.now,3))c.dot('bleed',power*.11);
  if(rank(b,'hex_bolt')&&e.v012Rot?.length&&ready(b,'hexBolt',c.now,3))c.damage(power*.25+c.enemy.v012Rot.reduce((n,r)=>n+r.damage,0),'☠ Hex Bolt');
  if(rank(b,'runic_shield')&&ready(b,'runicShield',c.now,3))c.barrier(c.player.maxhp*.02);
+ if(rank(b,'hemal_sigil')&&e.bleedStacks>0&&ready(b,'hemalSigil',c.now,6)){
+  const consumed=e.dots?.bleed?.shift();e.bleedStacks=Math.max(0,e.bleedStacks-1);if(consumed)c.damage(consumed.damage*consumed.remaining,'🩸 Hemal conversion');
+  if(b.element==='fire')c.dot('burn',power*.34);
+  else if(b.element==='frost')c.chill(2.5);
+  else c.damage(Math.min(power*.56,e.maxhp*.03),'🩸 Hemal Sigil');
+ }
+ if(rank(b,'elemental_blight')&&e.v012Rot?.length&&ready(b,'elementalBlight',c.now,7)){
+  if(b.element==='fire'){const rot=e.v012Rot.shift();c.damage(Math.min(power*.32+rot.damage*3,e.maxhp*.032),'🔥 Blight');}
+  else if(b.element==='frost')e.v012Rot[0].remaining=Math.min(6,e.v012Rot[0].remaining+2);
+  else {e.v012Rot.shift();c.damage(Math.min(power*.68,e.maxhp*.035),'⚡ Blight');}
+ }
+ if(rank(b,'prismatic_rebound')&&b.runtime.prismaticCharge>0){
+  c.damage(Math.min(power*.65,b.runtime.prismaticCharge),'💠 Prismatic Rebound');b.runtime.prismaticCharge=0;
+ }
+ if(rank(b,'spell_surge')&&b.runtime.spellSurge&&c.now>(b.runtime.spellSurgeArmedAt??-1e10)+.001){
+  b.runtime.spellSurge=false;c.damage(power*.3,'✨ Spell Surge');
+ }
  if(rank(b,'spellblade'))b.runtime.spellblade=true;
 }
 function onSecond(b,c){
@@ -166,19 +230,31 @@ function onSecond(b,c){
   e.v012Rot=rot.map(s=>({...s,remaining:s.remaining-1})).filter(s=>s.remaining>0);
   c.dotDamage(damage,'☠ Rot');
   if(rank(b,'rot_ward')&&ready(b,'rotWard',c.now,5))c.barrier(c.player.maxhp*.015);
+  if(rank(b,'rot_symbiosis')&&ready(b,'rotSymbiosis',c.now,6))heal(b,c,c.player.maxhp*.018);
  }
  if(rank(b,'renewal'))heal(b,c,c.player.maxhp*.0055*rank(b,'renewal'));
  if(rank(b,'life_bloom')){heal(b,c,c.player.maxhp*.0025*rank(b,'life_bloom'));c.mana(1.5*rank(b,'life_bloom'));}
  if(rank(b,'barrier_pulse')&&ready(b,'barrierPulse',c.now,6))c.barrier(c.player.maxhp*.02);
  if(rank(b,'blood_ward')&&e.bleedStacks>0&&ready(b,'bloodWard',c.now,5))c.barrier(c.player.maxhp*.018);
+ if(rank(b,'lifeweave')&&c.player.mp<c.player.maxmp*.30&&c.player.hp>c.player.maxhp*.20&&ready(b,'lifeweave',c.now,8)){
+  c.player.hp=Math.max(1,c.player.hp-c.player.maxhp*.03);c.mana(10);
+ }
 }
 function incoming(b,c,raw){
  let reduction=.06*rank(b,'fortified')+(.08*rank(b,'wasting_curse')+.03*rank(b,'wither'))*(c.enemy.v012Rot?.length?1:0);
- return Math.max(1,Math.round(raw*(1-clamp(reduction,0,.28))));
+ const vulnerability=b.runtime?.ironExposedUntil>c.now||b.runtime?.redlineUntil>c.now?1.10:1;return Math.max(1,Math.round(raw*(1-clamp(reduction,0,.28))*vulnerability));
 }
 function onDefend(b,c,blocked,barrierAbsorbed){
  if(blocked>0&&rank(b,'counterstrike'))b.runtime.counterBlock=1;
  if(barrierAbsorbed>0&&rank(b,'retaliation'))b.runtime.counterBarrier=1;
+ if(rank(b,'sanguine_reprisal')&&(blocked>0||barrierAbsorbed>0))b.runtime.reprisalReady=true;
+ if(rank(b,'iron_reversal')&&blocked>0)b.runtime.ironReady=true;
+ if(rank(b,'prismatic_rebound')&&barrierAbsorbed>0)
+  b.runtime.prismaticCharge=Math.min(c.player.maxhp*.06,(b.runtime.prismaticCharge||0)+barrierAbsorbed*.45);
+ if(rank(b,'rot_husk')&&barrierAbsorbed>0&&c.enemy?.v012Rot?.length&&c.player.barrier<=0&&ready(b,'rotHusk',c.now,9))c.barrier(c.player.maxhp*.035);
+ if(rank(b,'guardians_oath')&&barrierAbsorbed>0&&c.player.barrier<=0&&!b.runtime.guardianUsed){
+  b.runtime.guardianUsed=true;heal(b,c,c.player.maxhp*.045);
+ }
 }
 function onKill(b,c){
  if(rank(b,'hemovore')&&c.enemy.bleedStacks>0)heal(b,c,c.player.maxhp*.04);
@@ -189,12 +265,12 @@ function survive(b,c){if(!rank(b,'last_stand')||b.runtime.lastStand)return false
 function speed(b,now){return b?.runtime?.adrenalineUntil>now||b?.runtime?.frenzyUntil>now?1.10:1;}
 function enemyHealMultiplier(b,e){return 1-(e.v012Rot?.length ? Math.min(.7,.35*rank(b,'wither')) : 0);}
 function nextCost(b){return Math.max(4,Math.round(8*(1-.12*rank(b,'efficient_cast'))));}
-function resetWave(b,e){e.v012Rot=[];e.v012Shock=0;}
+function resetWave(b,e){e.v012Rot=[];e.v012Shock=0;b.runtime.guardianUsed=false;}
 function canCast(b){return !!b&&!!b.element&&['kindling','deep_winter','overcharge','arcane_focus'].some(id=>rank(b,id));}
 function validate(b){
  if(!b||!Array.isArray(b.families)||b.families.length>3||new Set(b.families).size!==b.families.length||!b.families.every(f=>FAMILIES.includes(f))||b.element!==null&&(!elements.includes(b.element)||!hasFamily(b,'magic'))||!Array.isArray(b.picks)||b.picks.length>16)throw Error('Invalid saved build');
  for(const id of b.picks){const p=BY_ID[id];if(!p||!hasFamily(b,p.family)||p.requires.some(f=>!hasFamily(b,f))||p.element&&p.element!==b.element||b.picks.filter(x=>x===id).length>p.max)throw Error('Invalid saved passive');}
- if(b.runtime.hybridRules){const h=[...new Set(b.picks)].map(id=>BY_ID[id]).filter(p=>p?.requires.length);if(h.length>3||new Set(h.map(p=>[...p.requires].sort().join(':'))).size!==h.length)throw Error('Invalid hybrid combinations');}
+ if(b.runtime.hybridRules||b.version===2){const h=[...new Set(b.picks)].map(id=>BY_ID[id]).filter(p=>p?.requires.length);if(h.length>3||new Set(h.map(p=>[...p.requires].sort().join(':'))).size!==h.length)throw Error('Invalid hybrid combinations');}
  if(b.initialPassive!==null&&(b.initialPassive!==initialId(b.initialFamily,b.element)||!b.picks.includes(b.initialPassive)||!hasFamily(b,b.initialFamily)))throw Error('Invalid initial passive');
  if(!b.cooldowns||typeof b.cooldowns!=='object'||!Object.values(b.cooldowns).every(n=>typeof n==='number'&&Number.isFinite(n)&&n>=0)||!b.runtime||typeof b.runtime!=='object'||!['frenzyUntil','magicHits','lastSpellAt'].every(k=>typeof b.runtime[k]==='number'&&Number.isFinite(b.runtime[k]))||typeof b.runtime.lastStand!=='boolean')throw Error('Invalid saved cooldowns');
  if(b.runtime.staticCharges===undefined)b.runtime.staticCharges=0;

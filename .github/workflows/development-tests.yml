@@ -16,9 +16,11 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+      - name: New Expedition buildcraft, events and controller
+        run: node tests/v012-buildcraft.test.cjs && node tests/v012-events.test.cjs && node tests/v012-expedition-controller.test.cjs
+      - run: npm test
       - name: Shatter and Double Strike isolated A/B
         run: node tests/v093-shatter-double-strike.cjs
-      - run: npm test
 
   # Intentionally opt-in: normal development pushes keep the fast smoke check.
   # Add [audit] to a development commit message to run the full pre-release suite.
@@ -58,6 +60,11 @@ jobs:
           echo $! >/tmp/wanderer-audit-http.pid
           sleep 2
           curl --fail http://127.0.0.1:8012/ >/dev/null
+      - name: Isolated v0.12 event Expedition browser
+        id: events
+        continue-on-error: true
+        timeout-minutes: 4
+        run: node tests/v012-events-browser.cjs
       - name: Browser asset and VFX checks
         id: assets
         continue-on-error: true
@@ -100,6 +107,7 @@ jobs:
       - name: Pre-release audit result gate
         if: always()
         run: |
+          echo "Events:   ${{ steps.events.outcome }}"
           echo "Unit:     ${{ steps.unit.outcome }}"
           echo "Browser:  ${{ steps.browser.outcome }}"
           echo "Assets:   ${{ steps.assets.outcome }}"
@@ -108,6 +116,6 @@ jobs:
           echo "Stress UI:${{ steps.stressbrowser.outcome }}"
           echo "PvP:      ${{ steps.pvp.outcome }}"
           echo "Rules:    ${{ steps.rules.outcome }}"
-          for result in "${{ steps.unit.outcome }}" "${{ steps.browser.outcome }}" "${{ steps.assets.outcome }}" "${{ steps.recovery.outcome }}" "${{ steps.stress.outcome }}" "${{ steps.stressbrowser.outcome }}" "${{ steps.pvp.outcome }}" "${{ steps.rules.outcome }}"; do
+          for result in "${{ steps.events.outcome }}" "${{ steps.unit.outcome }}" "${{ steps.browser.outcome }}" "${{ steps.assets.outcome }}" "${{ steps.recovery.outcome }}" "${{ steps.stress.outcome }}" "${{ steps.stressbrowser.outcome }}" "${{ steps.pvp.outcome }}" "${{ steps.rules.outcome }}"; do
             test "$result" = success || exit 1
           done

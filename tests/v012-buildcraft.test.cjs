@@ -9,7 +9,7 @@ function ctx(f=0){
  const enemy={hp:400,maxhp:2000,bleedStacks:2,poisonStacks:1,burnStacks:0,
  v012Rot:[{damage:3,remaining:4}],v012Shock:0,dots:{bleed:[],burn:[],poison:[]},slowTime:0};
  const history=[];
- const c={player,enemy,now:0,base:100,power:55,amp:1.2,critical:true,magical:false,
+ const c={funded:true,player,enemy,now:0,base:100,power:55,amp:1.2,critical:true,magical:false,
  random:()=>f,
  dot(kind,potency){const damage=Math.max(1,Math.round(potency));enemy.dots[kind].push({damage,remaining:3});history.push(['dot',kind,damage]);},
  dotDamage(n){enemy.hp-=Math.round(n);history.push(['dotDamage',Math.round(n)]);},
@@ -21,11 +21,11 @@ function ctx(f=0){
  log(msg){history.push(['log',msg]);}};
  return {c,history};
 }
-function replay(id,family,element='lightning'){
+function replay(id,family,element='lightning',prerequisites=[]){
  const b=api.create();b.families=[family];const pass=api.CATALOG.find(p=>p.id===id);
  for(const f of pass?.requires||[])if(!b.families.includes(f))b.families.push(f);
  if(b.families.includes('magic'))b.element=pass?.element||element;
- if(id)b.picks.push(id);
+ b.picks.push(...prerequisites);if(id)b.picks.push(id);
  const {c,history}=ctx(0);
  const mods=api.mods(b,base);
  const cost=api.nextCost(b);
@@ -53,8 +53,9 @@ test('every advertised passive is unique, finite, and changes at least one execu
   assert(p.description.length>15,'tooltip/behavior '+p.id);
   assert(p.requires.every(f=>api.FAMILIES.includes(f)),p.id+' valid hybrid');
   if(p.element)assert(api.ELEMENTS.includes(p.element),p.id+' valid element');
-  const baseline=replay(null,p.family,p.element||'lightning');
-  const withPassive=replay(p.id,p.family,p.element||'lightning');
+  const prerequisites=({sanctuary:['renewal'],life_conduit:['renewal'],deep_cuts:['bleeding_edge'],virulent_rot:['toxic_touch'],elemental_force:['overcharge']})[p.id]||[];
+  const baseline=replay(null,p.family,p.element||'lightning',prerequisites);
+  const withPassive=replay(p.id,p.family,p.element||'lightning',prerequisites);
   if(JSON.stringify(withPassive)===JSON.stringify(baseline)){
    // A player who does not have the required status should not be shown a placebo.
    throw Error('Displayed passive did not affect covered combat scenario: '+p.id);
@@ -142,8 +143,8 @@ test('independent Aegis retaliation sources both resolve without recursive new h
 });
 test('Staff/Wand amplify all Magic schools without consuming extra status rolls',()=>{
  for(const school of api.ELEMENTS){
-  const b=api.create();b.families=['magic'];b.element=school;
-  function cast(amp){const {c,history}=ctx(1);c.enemy.v012Shock=3;c.enemy.maxhp=100000;c.power=110;c.amp=amp;
+  const b=api.create();b.families=['magic'];api.element(b,school);api.initial(b,'magic');
+  function cast(amp){const {c,history}=ctx(1);b.runtime.staticCharges=3;c.enemy.v012Shock=0;c.enemy.maxhp=100000;c.power=110;c.amp=amp;
    api.onCast(b,c);return {history,enemy:c.enemy};}
   b.runtime.magicHits=0;
   const basic=cast(1);
@@ -162,4 +163,37 @@ test('Staff/Wand amplify all Magic schools without consuming extra status rolls'
    assert(chill(staff)>chill(wand)&&chill(wand)>chill(basic),'Frost control scales with Staff and Wand amplification');
   }
  }
+});
+
+
+test('alternative hybrids are exclusive per affinity pair, cap three, and unlock progressively',()=>{
+ const b=api.create();b.families=['blood','decay','magic'];b.element='fire';b.realmIndex=5;
+ assert(!api.options(b,'blood',()=>.4).some(p=>p.requires.length),'hybrids should not appear before Realm 6');
+ b.realmIndex=6;
+ const available=api.eligible(b,'blood');
+ const plague=available.find(x=>x.id==='plague_rupture');
+ assert(plague);
+ api.choose(b,'blood','plague_rupture',[plague]);
+ assert(!api.eligible(b,'blood').some(x=>x.id==='carrion_detonation'),'alternative of selected pair unavailable');
+ b.realmIndex=8;
+ assert(api.eligible(b,'blood').some(x=>x.id==='hex_bleed'));
+ const hex=api.eligible(b,'blood').find(x=>x.id==='hex_bleed');api.choose(b,'blood',hex.id,[hex]);
+ b.realmIndex=10;
+ const bolt=api.eligible(b,'decay').find(x=>x.id==='hex_bolt');api.choose(b,'decay',bolt.id,[bolt]);
+ assert(api.CATALOG.filter(x=>x.requires.length).length===30);
+ assert(api.FAMILIES.length===6);
+ for(const f of b.families)assert(api.eligible(b,f).every(x=>!x.requires.length),'fourth hybrid must be rejected');
+ assert.throws(()=>api.validate({...b,picks:[...b.picks,'carrion_detonation']}),/Invalid hybrid/);
+});
+test('Spellblade empowers the next magical Staff/Wand weapon hit, not the same cast',()=>{
+ const b=api.create();b.families=['magic','fury'];b.element='fire';b.picks=['spellblade'];
+ const {c,history}=ctx(.99);
+ c.magical=true;c.critical=false;
+ api.onAttack(b,c);
+ assert(!history.some(x=>x[2]==='✨ Spellblade'),'same cast must not double proc');
+ api.onCast(b,c);assert.equal(b.runtime.spellblade,true);
+ const start=history.length;c.now+=1;api.onAttack(b,c);
+ assert(history.slice(start).some(x=>x[2]==='✨ Spellblade'),'next funded magical attack consumes charge');
+ assert.equal(b.runtime.spellblade,false);
+ api.onCast(b,c);assert.equal(b.runtime.spellblade,true,'rearms for next hit');
 });

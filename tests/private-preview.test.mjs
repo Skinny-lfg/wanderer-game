@@ -4,6 +4,7 @@ import {mkdtemp,mkdir,writeFile,rm} from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import {once} from 'node:events';
+import {createHash} from 'node:crypto';
 import {createPrivatePreviewServer} from '../preview/private-server.mjs';
 
 async function start(){
@@ -53,6 +54,14 @@ test('private preview protects HTML, assets, JS and prevents access to repo inte
   assert.ok(!source.includes('v012-prototype.mjs'));
   assert.ok(!source.includes('loadAccount()'));assert.ok(!source.includes('loadPrototype()'));
   assert.ok(source.includes('startExpedition()'),'preserve integrated game runtime');
+  const inlineGame=[...source.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
+   .find(([,attributes,code])=>!/\bsrc\s*=/.test(attributes)&&code.includes('startExpedition()'));
+  assert.ok(inlineGame,'integrated runtime must remain in the served page');
+  const hash=createHash('sha256').update(inlineGame[2],'utf8').digest('base64');
+  const csp=index.headers.get('content-security-policy')||'';
+  const scriptDirective=csp.split(';').find(x=>x.trim().startsWith('script-src'))||'';
+  assert.ok(scriptDirective.includes("'sha256-"+hash+"'"),'CSP must allow the exact integrated inline game script');
+  assert.ok(!scriptDirective.includes("'unsafe-inline'"),'do not loosen script CSP globally');
   for(const route of ['/','/index.html','/?playtest=v012','/?expeditionPhase1=1']){
    const redirect=await request(env.base,route,{headers});
    assert.equal(redirect.status,303);assert.equal(redirect.headers.get('location'),'/?expeditionPhase1=1&expeditionSave=1');

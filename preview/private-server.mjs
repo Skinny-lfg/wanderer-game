@@ -148,6 +148,19 @@ export function createPrivatePreviewServer({
      .replace(/<script\b[^>]*id=["'](?:onlineAccountLoader|v012PrototypeLoader)["'][^>]*>[\s\S]*?<\/script>/gi,'')
      .replace(/<script\b[^>]*src=["'][^"']*online\/(?:app|v012-prototype)\.mjs[^"']*["'][^>]*>[\s\S]*?<\/script>/gi,''),'utf8');
    }
+   if(relative==='index.html'){
+    // The integrated game lives in a trusted inline script. CSP script-src
+    // 'self' alone blocks that script on Safari (blank app after login).
+    // Allow only the actual served script by its SHA-256, not unsafe-inline.
+    const html=body.toString('utf8');
+    const hashes=[...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
+     .filter(([,attributes,code])=>!/\bsrc\s*=/.test(attributes)&&code.trim())
+     .map(([, ,code])=>"'sha256-"+createHash('sha256').update(code,'utf8').digest('base64')+"'");
+    if(hashes.length){
+     const policy=String(res.getHeader('Content-Security-Policy')||'');
+     res.setHeader('Content-Security-Policy',policy.replace("script-src 'self'","script-src 'self' "+hashes.join(' ')));
+    }
+   }
    send(res,200,type,body,method);
   }catch{return serveGuardError(res,404,'Not found',method);}
  });

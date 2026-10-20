@@ -18,5 +18,5 @@ const rows=[
  ['oracle_of_paths','Oracle of Paths','survival',['Ensure the selected eligible affinity appears in the next non-boss offer','Take 5 + E Fragments instead']],
  ['last_ember','Last Ember','survival',['Recover 35% HP; selected passive loses half a rank for 3 combats','Recover 40% Mana with the same passive penalty']]
 ];
-root.WandererV012Events=Object.freeze({CATALOG:rows.map(([id,name,category,choices])=>Object.freeze({id,name,category,choices})),get:id=>rows.find(r=>r[0]===id)});
+root.WandererV012IntegratedEvents=Object.freeze({CATALOG:rows.map(([id,name,category,choices])=>Object.freeze({id,name,category,choices})),get:id=>rows.find(r=>r[0]===id)});
 })(globalThis);
