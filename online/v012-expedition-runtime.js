@@ -39,7 +39,7 @@ function phase6AwardGear(){
 function phase6Buff(key,power,remaining=3){ports.phase6Run.effects[key]={power,remaining};}
 
 function phase6OpenEvent(plane){
- if(!ports.phase6Run.event){const replacement=WandererV012Buildcraft.CATALOG.filter(p=>!p.requires.length&&ports.phase1Build.families.includes(p.family)&&(!p.element||p.element===ports.phase1Build.element)&&ports.phase1Build.picks.filter(id=>id===p.id).length<p.max);
+ if(!ports.phase6Run.event){const replacement=WandererV012Buildcraft.CATALOG.filter(p=>!p.requires.length&&ports.phase1Build.families.includes(p.family)&&(!p.element||p.element===ports.phase1Build.element)&&ports.phase1Build.unlockedFamilies?.includes(p.family));
   ports.phase6Run.event={id:plane.event,roll:ports.gameRandom(),alternative:replacement.length?replacement[Math.floor(ports.gameRandom()*replacement.length)].id:null};}
  if(!ports.phase4Entry){ports.phase4Stamp=Date.now();ports.phase4Entry={profile:ports.phase4Clone({...ports.state,run:null}),session:ports.phase4Session(true),ledger:[...(ports.phase5Snapshot?.expedition.awardKeys||[])]};}
  if(ports.phase5Persist()){ports.view='phase1';ports.render();}

@@ -36,7 +36,8 @@ function totalStats(equipment,ownedRunes,equippedRuneIds,{isTwoHanded,FIELDS,ite
  const rawSpeed=baseSpeed+catchUp;s.rawAttackSpeed=rawSpeed;
  // Diminishing returns above 2.5 attacks/sec; preserve early weapon timing.
  s.attacksPerSec=rawSpeed<=2.5?rawSpeed:2.5+(rawSpeed-2.5)/(1+(rawSpeed-2.5)*.2);
- s.crit=Math.min(65,Math.round((4+s.cha*.95+counts.crit*2+(sets.values.critBonus||0))/Math.sqrt(Math.max(1,s.rawAttackSpeed/1.3))));
+ const critRating=Math.max(0,s.cha-5)/Math.sqrt(Math.max(1,main?.tier||1));
+ s.crit=Math.min(55,Math.max(9,Math.round((9+41*(1-Math.exp(-critRating/25))+counts.crit*2+(sets.values.critBonus||0))/Math.sqrt(Math.max(1,s.rawAttackSpeed/1.3)))));
  s.mana=caster?Math.round(20+s.int*7+s.manaFlat):0;
  s.manaRegen=caster?+(1.5+s.int*.23).toFixed(1):0;
  s.spellPower=caster?Math.round(3+s.int*1.9+s.spellFlat):0;

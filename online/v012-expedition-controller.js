@@ -72,7 +72,7 @@ function create(themes,rng=Math.random){
   const other=game.offers.filter((_,i)=>i!==index),old=game.offers[index];
   // Keep all other cards and their counters intact. Guarantee the initial route even after rerolling it.
   const mustInitial=game.history.length===0&&!other.some(o=>o.family===game.initialFamily);
-  const used=other.map(o=>o.id);
+  const used=[...other.map(o=>o.id),old.id];
   const candidates=allowed().filter(f=>(!mustInitial||f===game.initialFamily)&&expeditionThemes.some(t=>t.family===f&&!used.includes(t.id)));
   if(!candidates.length)throw Error('No eligible replacement Realm');
   if(game.version===2)game.rerolls--;else game.rerollsByRealm[game.planeIndex-1][index]--;
