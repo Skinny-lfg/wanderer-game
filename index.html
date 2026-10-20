@@ -3438,7 +3438,7 @@ function phase2ChooseElement(id){
  WandererV012Buildcraft.element(phase1Build,id);phase1Draft=null;
  if(draft.kind==='initial')WandererV012Buildcraft.initial(phase1Build,'magic');
  if(!phase5Persist())return false;
- if(draft.kind==='entry')phase2Launch(draft.plane);else render();
+ if(draft.kind==='entry'&&!draft.plane.eventId)phase2Launch(draft.plane);else render();
  return true;
 }
 function phase2ChoosePassive(id){
@@ -3459,10 +3459,10 @@ function phase1Enter(){
  if(phase1Draft||!phase1Build||state.run)return false;
  if(phase3BagOverflow()){bannerMessage('Bag full. Discard overflow loot before entering another Realm.');return false;}
  const plane=phase1Controller.enter();phase1Build.families=phase1Controller.state.families;
- if(plane.eventId){if(phase5Persist())render();return true;}
  if(plane.family==='magic'&&!phase1Build.element){
   phase1Draft={kind:'entry',plane,family:'magic',step:'element'};phase5Persist();render();
- }else if(phase5Persist())phase2Launch(plane);
+ }else if(plane.eventId){if(phase5Persist())render();}
+ else if(phase5Persist())phase2Launch(plane);
  return true;
 }
 
