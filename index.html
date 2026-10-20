@@ -3456,9 +3456,53 @@ function phase1Enter(){
  if(phase1Draft||!phase1Build||state.run)return false;
  if(phase3BagOverflow()){bannerMessage('Bag full. Discard overflow loot before entering another Realm.');return false;}
  const plane=phase1Controller.enter();phase1Build.families=phase1Controller.state.families;
+ if(plane.eventId){if(phase5Persist())render();return true;}
  if(plane.family==='magic'&&!phase1Build.element){
   phase1Draft={kind:'entry',plane,family:'magic',step:'element'};phase5Persist();render();
  }else if(phase5Persist())phase2Launch(plane);
+ return true;
+}
+
+// Non-combat event rewards use the same in-memory validation slot and Expedition bag.
+function phase1ResolveEvent(choiceId){
+ const g=phase1Controller.state;
+ if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked)||g.stage!=='combat'||!g.selected?.eventId||state.run||phase1Draft||!phase1Build)return false;
+ const plane=g.selected,stats=phase3Vitals();
+ let reward;
+ try{
+  reward=choiceId==='leave'?{name:'The path ahead',label:'Continue',gold:0,fragments:0,hp:0,mp:0,attack:0,defense:0,loot:0}:
+   WandererV012Events.resolve(plane.eventId,choiceId,{level:g.expedition,gold:state.gold,fragments:state.fragments,...stats},gameRandom);
+ }catch(err){bannerMessage(err.message||'Event choice unavailable');return false;}
+ const gold=2*(roll(3,6)+Math.floor(g.expedition*.5));
+ const fragments=2*(roll(1,3)+Math.floor(g.expedition*.24));
+ state.gold=Math.max(0,state.gold+gold+reward.gold);
+ state.fragments=Math.max(0,state.fragments+fragments+reward.fragments);
+ phase5Results.gold+=gold+reward.gold;phase5Results.fragments+=fragments+reward.fragments;
+ phase1Vitals={hp:Math.max(1,Math.min(stats.maxhp,stats.hp+reward.hp)),
+  mp:Math.max(0,Math.min(stats.maxmp,stats.mp+reward.mp)),maxmp:stats.maxmp};
+ if(reward.attack||reward.defense){
+  const rt=phase1Build.runtime;
+  rt.eventAttack=Math.max(-.15,Math.min(.15,(rt.eventAttack||0)+reward.attack));
+  rt.eventDefense=Math.max(-.15,Math.min(.15,(rt.eventDefense||0)+reward.defense));
+ }
+ if(reward.loot){
+  const theme=THEMES.find(t=>t.id===plane.id)||THEMES[0],stats=phase2Stats();
+  const itemSpec=dungeonEquipmentPick(theme,[]),odds=waveLootOdds(2,stats.cha);
+  const item=makeItem(g.expedition,itemSpec.slot,theme.effect,'loot',itemSpec.subtype,randomFromOdds(odds.rarities));
+  if(stashHasRoom())state.stash.push({...item,isNew:true});
+  else state.expeditionOverflow.push({...item,isNew:true});
+  phase3LootIds.add(item.id);phase5Results.earned.push(phase5Item(item));
+ }
+ const outcome=phase1Controller.eventWon();
+ if(!outcome.planeComplete||outcome.expeditionComplete)throw Error('Invalid event completion');
+ phase4CommitRealm();
+ const completed=phase1Controller.state.rewardPending;
+ phase1Build.realmIndex=completed.plane;
+ phase1Draft={kind:'reward',plane:completed,step:'passive',
+  options:WandererV012Buildcraft.options(phase1Build,completed.family,gameRandom)};
+ phase3ClampVitals();view='phase1';
+ if(!phase5Persist())return false;
+ render();bannerMessage(reward.name+': '+reward.label+' · Realm cleared.');
  return true;
 }
 
@@ -3541,6 +3585,7 @@ function phase1WaveWon(){
  }
  if(!result.expeditionComplete){
   const plane=phase1Controller.state.rewardPending;
+  phase1Build.realmIndex=plane.plane;
   phase1Draft={kind:'reward',plane,step:'passive',options:WandererV012Buildcraft.options(phase1Build,plane.family,gameRandom)};
  }
  if(!phase5Persist())return;
@@ -3763,6 +3808,19 @@ function renderPhase1(){
   Q('[data-phase1-expedition]').forEach(b=>b.onclick=()=>phase1Begin(Number(b.dataset.phase1Expedition)));
   phase3BindPaper();return;
  }
+ if(g.stage==='combat'&&g.selected?.eventId&&!state.run){
+  const event=WandererV012Events.CATALOG.find(x=>x.id===g.selected.eventId);
+  const choices=WandererV012Events.options(g.selected.eventId);
+  html('<section class="panel phase3Event"><span class="eyebrow">Expedition '+g.expedition+' · Realm '+g.planeIndex+' / 15</span>'+
+   '<h2>'+esc(event.name)+'</h2><p>'+esc(event.description)+'</p><p class="small muted">'+familyLabel(g.selected.family)+
+   ' · Event (no combat) · Health '+Math.ceil(stats.hp)+'/'+stats.maxhp+' · Mana '+Math.floor(stats.mp)+'/'+stats.maxmp+
+   ' · '+state.gold+' Gold · '+state.fragments+' Fragments</p><div class="phase1DraftCards">'+
+   choices.map(option=>'<button class="phase1DraftCard" data-phase1-event-choice="'+esc(option.id)+'"><strong>'+esc(option.label)+'</strong></button>').join('')+
+   '<button class="phase1DraftCard" data-phase1-event-choice="leave"><strong>Refuse the offer</strong><small>Take ordinary Realm supplies instead.</small></button></div>'+
+   '<p class="micro muted">Each choice is final; the loot stays at risk until extraction or victory.</p></section>');
+  Q('[data-phase1-event-choice]').forEach(b=>b.onclick=()=>phase1ResolveEvent(b.dataset.phase1EventChoice));
+  return;
+ }
  if(g.stage!=='choice')return;
  const between=phase3IsBetweenPlanes();
  const supplies=phase3Supplies||{health:0,mana:0};
@@ -3775,9 +3833,9 @@ function renderPhase1(){
  '<div class="phase1FamilyRow"><span>❤️ '+Math.ceil(stats.hp)+' / '+stats.maxhp+' HP</span><span>💧 '+Math.floor(stats.mp)+' / '+stats.maxmp+' Mana</span></div>'+
  '<div class="phase3PreparationLayout"><aside>'+phase3VitalsMarkup(stats)+phase3PassivesMarkup()+prep+'</aside><div class="equipmentLoadout phase3HeroColumn">'+phase3PaperMarkup()+phase3BagMarkup()+'</div><div class="phase3Routes">'+
  '<div class="phase3RouteHeading"><h3>Select the next Realm</h3></div>'+
- '<div class="phase1Offers">'+g.offers.map((p,index)=>'<article class="phase2RealmOffer"><button type="button" class="phase1Offer '+(g.selected===p?'phase2Selected':'')+'" aria-pressed="'+(g.selected===p)+'" data-phase1-plane="'+p.id+'"><img src="'+dungeonImage(p)+'" alt="'+esc(p.name)+' landscape"><div class="phase1OfferBody"><strong>'+esc(p.name)+'</strong><div class="phase1OfferMeta"><span>'+familyLabel(p.family)+'</span><span>'+p.waves+' Waves</span><span>'+(p.boss?'👑 Boss':p.elite?'⚔ Elite present':'No Elite')+'</span>'+(p.event?'<span>'+esc(p.event)+' event (preview)</span>':'')+'</div><span class="small muted">Risk: '+(p.boss?'Boss':p.elite?'Elite':'Normal')+' · '+p.waves+' possible loot rolls</span><span class="small muted">'+(g.selected===p?'Selected':'Select Realm')+'</span></div></button><button type="button" class="tiny ghost" data-phase2-reroll="'+index+'" '+(g.rerollsByRealm[g.planeIndex-1][index]>0?'':'disabled')+'>↻ Reroll · '+g.rerollsByRealm[g.planeIndex-1][index]+' remaining</button></article>').join('')+'</div>'+
+ '<div class="phase1Offers">'+g.offers.map((p,index)=>'<article class="phase2RealmOffer"><button type="button" class="phase1Offer '+(g.selected===p?'phase2Selected':'')+'" aria-pressed="'+(g.selected===p)+'" data-phase1-plane="'+p.id+'"><img src="'+dungeonImage(p)+'" alt="'+esc(p.name)+' landscape"><div class="phase1OfferBody"><strong>'+esc(p.name)+'</strong><div class="phase1OfferMeta"><span>'+familyLabel(p.family)+'</span><span>'+(p.eventId?'☾ Event':p.waves+' Waves')+'</span><span>'+(p.eventId?'No combat':p.boss?'👑 Boss':p.elite?'⚔ Elite present':'No Elite')+'</span>'+'</div><span class="small muted">Risk: '+(p.boss?'Boss':p.elite?'Elite':'Normal')+' · '+(p.eventId?'A risk/reward decision':p.waves+' possible loot rolls')+'</span><span class="small muted">'+(g.selected===p?'Selected':'Select Realm')+'</span></div></button><button type="button" class="tiny ghost" data-phase2-reroll="'+index+'" '+(g.rerollsByRealm[g.planeIndex-1][index]>0?'':'disabled')+'>↻ Reroll · '+g.rerollsByRealm[g.planeIndex-1][index]+' remaining</button></article>').join('')+'</div>'+
  '<button type="button" class="primary" id="phase2EnterRealm" '+(g.selected&&!phase3BagOverflow()?'':'disabled')+'>Enter Realm</button>'+
- '<p class="micro muted">More Waves mean more loot opportunities, not guaranteed items. Events are currently informational; no event reward is promised. Temporary buildcraft never changes permanent equipment.</p></div></div></section>');
+ '<p class="micro muted">More Waves mean more loot opportunities, not guaranteed items. Events replace common fights with risk/reward decisions. Temporary buildcraft never changes permanent equipment.</p></div></div></section>');
  phase3BindPaper();phase3BindBag();
  Q('[data-phase1-plane]').forEach(b=>b.onclick=()=>phase1Choose(b.dataset.phase1Plane));
  Q('[data-phase3-nav]').forEach(b=>b.onclick=()=>phase3Go(b.dataset.phase3Nav));
