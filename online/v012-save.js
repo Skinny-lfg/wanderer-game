@@ -24,7 +24,21 @@ function json(value){
 }
 function bindingName(binding){requireValue(typeof binding==='string'&&/^[A-Za-z0-9_-]{1,100}$/.test(binding),'binding');return binding;}
 function key(binding){return PREFIX+bindingName(binding);}
+const POTIONS=['health','mana','might','arcane','ironhide','haste','fortune','barrier'];
+function consumablesCheck(p){
+ if(p.consumables!==undefined)requireValue(plain(p.consumables)&&Object.entries(p.consumables).every(([id,q])=>POTIONS.includes(id)&&integer(q,0,99999)),'consumable inventory');
+ if(p.potionSelection!==undefined){requireValue(Array.isArray(p.potionSelection)&&p.potionSelection.length<=3&&p.potionSelection.every(id=>POTIONS.includes(id))&&p.potionSelection.filter(id=>id==='fortune').length<=1,'potion selection');for(const id of p.potionSelection)requireValue((p.consumables?.[id]||0)>=p.potionSelection.filter(v=>v===id).length,'selected potion ownership');}
+ if(p.apothecary!==undefined&&p.apothecary!==null){const a=p.apothecary;requireValue(plain(a)&&integer(a.refreshCost,0,Number.MAX_SAFE_INTEGER)&&Array.isArray(a.stock)&&a.stock.length<=4&&new Set(a.stock.map(v=>v.id)).size===a.stock.length&&a.stock.every(v=>plain(v)&&typeof v.id==='string'&&POTIONS.includes(v.kind)&&integer(v.price,1,Number.MAX_SAFE_INTEGER)),'Apothecary stock');}
+}
+function integrationCheck(r){
+ requireValue(plain(r)&&r.version===1&&Array.isArray(r.events)&&r.events.length<=4&&r.events.every(i=>integer(i,2,14))&&new Set(r.events).size===r.events.length&&integer(r.combats,0,15)&&plain(r.effects),'integration checkpoint');
+ requireValue(r.event===null||plain(r.event)&&typeof r.event.id==='string'&&typeof r.event.roll==='number'&&r.event.roll>=0&&r.event.roll<1&&(r.event.alternative===null||typeof r.event.alternative==='string'),'event choice checkpoint');
+ for(const [k,e]of Object.entries(r.effects)){requireValue(['might','arcane','ironhide','haste','attack','defense','curse','echo','item','barrier','runeBoost','bounty','fortune'].includes(k),'temporary effect');requireValue(typeof e==='boolean'||typeof e==='number'&&Number.isFinite(e)&&e>=0&&e<=1||plain(e)&&(e.remaining===undefined||integer(e.remaining,0,3))&&(e.power===undefined||typeof e.power==='number'&&Number.isFinite(e.power)&&Math.abs(e.power)<=1)&&(e.id===undefined||typeof e.id==='string'),'temporary effect bounds');}
+ if(r.potions!==undefined)requireValue(Array.isArray(r.potions)&&r.potions.length<=3&&r.potions.every(p=>plain(p)&&POTIONS.includes(p.kind)&&typeof p.used==='boolean'),'selected potion checkpoint');
+ for(const k of ['started','returned'])if(r[k]!==undefined)requireValue(typeof r[k]==='boolean','consumable settlement');
+}
 function profileCheck(p){
+ consumablesCheck(p);
  requireValue(plain(p)&&Array.isArray(p.stash)&&plain(p.equip),'profile');
  requireValue(p.run===null,'runtime must not be in permanent profile');
  for(const f of ['gold','fragments'])requireValue(integer(p[f],0,Number.MAX_SAFE_INTEGER),f);
@@ -66,7 +80,7 @@ function profileCheck(p){
  for(const sigil of p.sigils){requireValue(plain(sigil)&&typeof sigil.id==='string'&&sigil.id.length>0&&!ids.has(sigil.id)&&!runeIds.has(sigil.id)&&!sigilIds.has(sigil.id)&&EFFECTS.includes(sigil.affinity),'Sigil');sigilIds.add(sigil.id);}
  requireValue(['wanderer','ranger','knight','spellblade','duelist'].includes(p.characterId),'character');
  if(p.merchant){
-  requireValue(plain(p.merchant)&&Array.isArray(p.merchant.stock)&&p.merchant.stock.length<=4&&Array.isArray(p.merchant.sigils)&&p.merchant.sigils.length===4,'Merchant');
+  requireValue(plain(p.merchant)&&Array.isArray(p.merchant.stock)&&p.merchant.stock.length<=4&&Array.isArray(p.merchant.sigils)&&[0,4].includes(p.merchant.sigils.length),'Merchant');
   for(const item of p.merchant.stock){requireValue(!runeIds.has(item?.id)&&!sigilIds.has(item?.id)&&integer(item?.goldPrice,0,Number.MAX_SAFE_INTEGER),'Merchant stock');itemCheck(item);}
   requireValue(p.merchant.sigils.every(e=>e===null||EFFECTS.includes(e)),'Merchant Sigils');
   requireValue(integer(p.merchant.refreshCost,0,Number.MAX_SAFE_INTEGER),'Merchant refresh');
@@ -110,6 +124,7 @@ function presentationCheck(p){
 function sessionCheck(s,p,e){
  requireValue(plain(s)&&s.version===1&&typeof s.entry==='boolean'&&plain(s.controller),'checkpoint version');
  if(s.results!==undefined)presentationCheck(s.results);
+ if(s.integration!==undefined&&s.integration!==null)integrationCheck(s.integration);
  const g=s.controller;
  requireValue(integer(g.expedition,1,e.unlocked)&&g.unlocked===e.unlocked&&integer(g.planeIndex,1,15)&&['choice','combat','failed','finished'].includes(g.stage),'checkpoint progress');
  requireValue(integer(s.seed,0,4294967295)&&typeof s.prefix==='string'&&/^[a-z0-9]+$/.test(s.prefix)&&integer(s.idCounter,0,Number.MAX_SAFE_INTEGER)&&typeof s.clock==='number'&&Number.isFinite(s.clock)&&s.clock>=0,'checkpoint RNG/counter');
@@ -134,7 +149,7 @@ function validate(input,binding){
  requireValue(s.identity===null||(plain(s.identity)&&typeof s.identity.uid==='string'&&s.identity.uid.length>0&&typeof s.identity.projectId==='string'&&s.identity.projectId.length>0&&typeof s.identity.nickname==='string'&&/^[A-Za-z0-9_]{3,20}$/.test(s.identity.nickname)),'identity');
  if(s.migration!==null)requireValue(plain(s.migration)&&s.migration.source==='classic-v092'&&s.migration.requiresApproval===true&&(s.migration.sourceRevision===null||integer(s.migration.sourceRevision,1,Number.MAX_SAFE_INTEGER)),'migration approval metadata');
  const e=s.expedition;requireValue(plain(e)&&integer(e.completed,0,200)&&e.unlocked===Math.min(200,e.completed+1)&&integer(e.attempts,0,1000000),'Expedition progress');
- requireValue(['new','active','victory','defeat','abandoned','interrupted','extracted'].includes(e.lastOutcome)&&e.completed<=e.attempts,'outcome/attempt count');
+ requireValue(['new','active','victory','defeat','abandoned','interrupted','extracted','cancelled'].includes(e.lastOutcome)&&e.completed<=e.attempts,'outcome/attempt count');
  if(e.lastOutcome==='new')requireValue(e.attempts===0&&e.completed===0,'new profile progress');
  requireValue(Array.isArray(e.awardKeys)&&e.awardKeys.length<=45&&new Set(e.awardKeys).size===e.awardKeys.length,'award ledger');
  for(const token of e.awardKeys){const m=typeof token==='string'&&token.match(/^(\d+):(\d+):(\d+)$/);requireValue(m&&Number(m[1])===e.attempts&&integer(Number(m[2]),1,15)&&integer(Number(m[3]),1,3),'award token');}
