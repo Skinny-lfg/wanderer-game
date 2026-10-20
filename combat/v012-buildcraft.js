@@ -185,7 +185,9 @@ function onAttack(b,c){
  if(rank(b,'iron_reversal')&&b.runtime.ironReady){
   b.runtime.ironReady=false;c.damage(base*.35,'🛡 Iron Reversal');b.runtime.ironExposedUntil=c.now+3;
  }
- if(rank(b,'spell_surge')&&crit)b.runtime.spellSurge=true;
+ if(rank(b,'spell_surge')&&crit&&!b.runtime.spellSurge){
+  b.runtime.spellSurge=true;b.runtime.spellSurgeArmedAt=c.now;
+ }
 }
 function onCast(b,c){
  if(!hasFamily(b,'magic')||!elements.includes(b.element))return;
@@ -218,7 +220,9 @@ function onCast(b,c){
  if(rank(b,'prismatic_rebound')&&b.runtime.prismaticCharge>0){
   c.damage(Math.min(power*.65,b.runtime.prismaticCharge),'💠 Prismatic Rebound');b.runtime.prismaticCharge=0;
  }
- if(rank(b,'spell_surge')&&b.runtime.spellSurge){b.runtime.spellSurge=false;c.damage(power*.3,'✨ Spell Surge');}
+ if(rank(b,'spell_surge')&&b.runtime.spellSurge&&c.now>(b.runtime.spellSurgeArmedAt??-1e10)+.001){
+  b.runtime.spellSurge=false;c.damage(power*.3,'✨ Spell Surge');
+ }
  if(rank(b,'spellblade'))b.runtime.spellblade=true;
 }
 function onSecond(b,c){
