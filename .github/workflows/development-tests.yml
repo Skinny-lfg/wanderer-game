@@ -16,6 +16,8 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+      - name: New Expedition buildcraft, events and controller
+        run: node tests/v012-buildcraft.test.cjs && node tests/v012-events.test.cjs && node tests/v012-expedition-controller.test.cjs
       - run: npm test
       - name: Shatter and Double Strike isolated A/B
         run: node tests/v093-shatter-double-strike.cjs
