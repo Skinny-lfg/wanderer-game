@@ -55,7 +55,7 @@ function phase4Restore(session){
 
  }}
  if(session.results)ports.phase5Results=ports.phase4Clone(session.results);
- ports.state.run=session.clearedRun||null;ports.phase4WaveKeys=[];ports.phase4Resume=session.entry&&!session.clearedRun;
+ ports.state.run=session.clearedRun||null;if(ports.state.run?.enemy)WandererV012Buildcraft.migrateEnemyDots(ports.state.run.enemy);ports.phase4WaveKeys=[];ports.phase4Resume=session.entry&&!session.clearedRun;
  ports.phase4Entry=session.entry?{profile:ports.phase4Clone({...ports.state,run:null}),session:ports.phase4Clone(session),ledger:[...(ports.phase5Snapshot?.expedition.awardKeys||[])]}:null;
  ports.view=session.clearedRun?'combat':'phase1';
 }

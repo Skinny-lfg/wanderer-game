@@ -10,7 +10,7 @@ const P=[
  ['blood','executioner','Executioner','Strike a bleeding foe below 30% HP for a bounded burst (6s cooldown).'],
  ['blood','blood_drinker','Blood Drinker','Hits on a bleeding foe heal up to 1.5% maximum HP (4s cooldown).'],
  ['blood','sanguine_fury','Sanguine Fury','Critical hits inflict Bleed; damage against bleeding foes increases by 8%.'],
- ['decay','toxic_touch','Toxic Touch','Hits may apply Poison and one Rot stack (1.3s cooldown).'],
+ ['decay','toxic_touch','Toxic Touch','Hits may apply one Rot stack (1.3s cooldown).'],
  ['decay','virulent_rot','Virulent Rot','Rot ticks deal 18% more damage per rank.'],
  ['decay','wasting_curse','Wasting Curse','Rotted enemies deal 8% less damage per rank.'],
  ['decay','wither','Withering Hex','Rot reduces healing by 35% and direct attack damage by 3% per rank (70% healing cap).'],
@@ -45,7 +45,7 @@ const P=[
  ['blood','hex_bleed','Hex Bleed','Funded Magic hits inflict Bleed (3s cooldown).',['blood','magic']],
  ['decay','rot_recovery','Rot Recovery','Defeating a rotted enemy heals 4% max HP.',['decay','vitality']],
  ['decay','rot_ward','Rot Ward','Rot ticks grant Barrier every 5s.',['decay','aegis']],
- ['decay','toxic_precision','Toxic Precision','Crits inflict Poison and Rot (2s cooldown).',['decay','fury']],
+ ['decay','toxic_precision','Toxic Precision','Crits inflict Rot (2s cooldown).',['decay','fury']],
  ['decay','hex_bolt','Hex Bolt','Funded spells against Rot deal 25% Spell Power plus one Rot tick (3s cooldown).',['decay','magic']],
  ['vitality','sanctuary','Sanctuary','Recovering Health grants Barrier equal to 20% of the heal.',['vitality','aegis']],
  ['vitality','fervent_life','Fervent Life','Critical strikes restore 2% maximum HP; overhealing grants Barrier (4s cooldown).',['vitality','fury']],
@@ -69,7 +69,7 @@ const P=[
  ['aegis','prismatic_rebound','Prismatic Rebound','Damage absorbed by Barrier empowers your next Magic cast.',['aegis','magic']],
  ['fury','spell_surge','Spell Surge','A critical strike charges your next elemental cast.',['fury','magic']]
 ].map(([family,id,name,description,requires=[],element=null])=>Object.freeze({family,id,name,description,requires,element,max:requires.length||['executioner','blight','last_stand','retaliation'].includes(id)?1:5}));
-const descriptions={bleeding_edge:'Hits: Bleed chance; 16% base per tick, ICD 0.9s.',deep_cuts:'All player Bleed +15% per rank, applied on creation.',executioner:'Bleeding foe at ≤30% HP: bounded burst, ICD 6s.',blood_drinker:'Hit bleeding foe: bounded heal, ICD 4s; healing reduction applies.',sanguine_fury:'Critical: Bleed 14% base + direct burst, ICD 2.5s.',toxic_touch:'Hit: Poison 12% and Rot 6.5% base; ICD 1.3s.',virulent_rot:'New Rot stacks +15% damage per rank.',wasting_curse:'Rotted enemy deals less damage; combined reduction cap 28%.',wither:'Rot reduces enemy healing and direct damage; player healing unaffected.',blight:'Hit rotted foe: bounded burst, ICD 7s.',strong_heart:'Maximum HP scales with square root of rank; no free healing.',renewal:'Continuous healing per second; healing reduction applies.',last_stand:'Survive one lethal hit per Expedition at 6% MaxHP.',second_breath:'Heal once per completed Wave.',life_bloom:'Restore HP and Mana each combat second.',iron_skin:'Defense scales with square root of rank.',fortified:'Incoming damage −4% per rank, within global 28% cap.',guarded_block:'Bonus block chance; total cap 65%, existing block reduction.',barrier_pulse:'Barrier every 6s; engine Barrier cap applies.',retaliation:'Real Barrier absorption empowers next hit by 15% base, once.',quick_hands:'Attack speed +8% per rank; total cap 5/s.',precision:'Extra critical chance, total cap 65%.',brutal_crit:'Real critical adds non-recursive base damage.',double_strike:'Chance of one 30% extra hit, no recursive procs.',adrenaline:'Real critical: 3s attack speed buff, ICD 3s.',arcane_focus:'Elemental spell power scales with square root of rank.',mana_spring:'Mana regeneration scales with square root of rank.',efficient_cast:'Funded elemental cast Mana cost: 7/6/5/4/3.',arcane_echo:'Every fourth funded elemental hit echoes without recursion.',elemental_force:'Elemental power +12% per rank, once per funded cast.',kindling:'Funded Fire cast applies Burn.',deep_winter:'Funded Frost: Chill, bounded burst vs chilled foe, ICD 4s; boss Chill ≤1.2s.',overcharge:'Four funded Lightning casts discharge Static; charges persist between Realms.'};
+const descriptions={bleeding_edge:'Hits: Bleed chance; 16% base per tick, ICD 0.9s.',deep_cuts:'All player Bleed +15% per rank, applied on creation.',executioner:'Bleeding foe at ≤30% HP: bounded burst, ICD 6s.',blood_drinker:'Hit bleeding foe: bounded heal, ICD 4s; healing reduction applies.',sanguine_fury:'Critical: Bleed 14% base + direct burst, ICD 2.5s.',toxic_touch:'Hit: Rot 6.5% base; ICD 1.3s.',virulent_rot:'New Rot stacks +15% damage per rank.',wasting_curse:'Rotted enemy deals less damage; combined reduction cap 28%.',wither:'Rot reduces enemy healing and direct damage; player healing unaffected.',blight:'Hit rotted foe: bounded burst, ICD 7s.',strong_heart:'Maximum HP scales with square root of rank; no free healing.',renewal:'Continuous healing per second; healing reduction applies.',last_stand:'Survive one lethal hit per Expedition at 6% MaxHP.',second_breath:'Heal once per completed Wave.',life_bloom:'Restore HP and Mana each combat second.',iron_skin:'Defense scales with square root of rank.',fortified:'Incoming damage −4% per rank, within global 28% cap.',guarded_block:'Bonus block chance; total cap 65%, existing block reduction.',barrier_pulse:'Barrier every 6s; engine Barrier cap applies.',retaliation:'Real Barrier absorption empowers next hit by 15% base, once.',quick_hands:'Attack speed +8% per rank; total cap 5/s.',precision:'Extra critical chance, total cap 65%.',brutal_crit:'Real critical adds non-recursive base damage.',double_strike:'Chance of one 30% extra hit, no recursive procs.',adrenaline:'Real critical: 3s attack speed buff, ICD 3s.',arcane_focus:'Elemental spell power scales with square root of rank.',mana_spring:'Mana regeneration scales with square root of rank.',efficient_cast:'Funded elemental cast Mana cost: 7/6/5/4/3.',arcane_echo:'Every fourth funded elemental hit echoes without recursion.',elemental_force:'Elemental power +12% per rank, once per funded cast.',kindling:'Funded Fire cast applies Burn.',deep_winter:'Funded Frost: Chill, bounded burst vs chilled foe, ICD 4s; boss Chill ≤1.2s.',overcharge:'Four funded Lightning casts discharge Static; charges persist between Realms.'};
 const TAGS={
  PRODUCE_BLEED:['bleeding_edge','sanguine_fury','hex_bleed','crimson_pact','sanguine_reprisal'],CONSUMES_BLEED:['deep_cuts','executioner','blood_drinker','blood_ward','hemovore','plague_rupture','carrion_detonation','crimson_rush','reapers_cadence','hemal_sigil'],
  PRODUCE_ROT:['toxic_touch','toxic_precision'],CONSUMES_ROT:['virulent_rot','wasting_curse','wither','blight','plague_rupture','carrion_detonation','rot_recovery','rot_symbiosis','rot_ward','rot_husk','venom_shatter','hex_bolt','elemental_blight'],
@@ -92,7 +92,7 @@ function rank(b,id){
 }
 function values(id,r){const t=Math.max(0,r-1),sqrt=Math.sqrt(r);return ({
  bleeding_edge:{chance:.42+.04*t,bleed:.16,icd:.9},deep_cuts:{bleedBonus:.15*r},executioner:{burst:.32,enemyCap:.025,threshold:.30,icd:6},blood_drinker:{hp:.008+.0025*t,base:.10+.025*t,icd:4},sanguine_fury:{bleed:.14,burst:.08+.02*t,icd:2.5},
- toxic_touch:{chance:.42+.04*t,poison:.12,rot:.065,icd:1.3},virulent_rot:{rotBonus:.15*r},wasting_curse:{reduction:.04*r},wither:{healingReduction:.20+.10*t,reduction:.02*r},blight:{burst:.38,enemyCap:.025,icd:7},
+ toxic_touch:{chance:.42+.04*t,rot:.065,icd:1.3},virulent_rot:{rotBonus:.15*r},wasting_curse:{reduction:.04*r},wither:{healingReduction:.20+.10*t,reduction:.02*r},blight:{burst:.38,enemyCap:.025,icd:7},
  strong_heart:{maxhp:.10*sqrt},renewal:{heal:Math.min(.0125,.0055*sqrt)},last_stand:{hp:.06,uses:1},second_breath:{heal:.015+.004*t},life_bloom:{heal:Math.min(.006,.0025*sqrt),mana:Math.min(3.4,1.5*sqrt)},
  iron_skin:{defense:.12*sqrt},fortified:{reduction:.04*r},guarded_block:{block:Math.round(24*(1-Math.exp(-r/4)))},barrier_pulse:{barrier:.02+.006*t,icd:6},retaliation:{burst:.15},
  quick_hands:{speed:.08*r},precision:{crit:Math.round(19*(1-Math.exp(-r/3)))},brutal_crit:{burst:Math.min(.65,.12*sqrt)},double_strike:{chance:Math.min(.60,.10*sqrt),burst:.30},adrenaline:{speed:.10+.025*t,duration:3,icd:3},
@@ -201,6 +201,15 @@ function mods(b,base){
  if(s.blockChance&&!s.blockReduction)s.blockReduction=.35;
  return s;
 }
+// Legacy in-memory checkpoint compatibility: consume the obsolete bucket once, without re-scaling damage.
+function migrateEnemyDots(enemy){
+ if(!enemy)return enemy;
+ const poison=enemy.dots?.poison;
+ if(Array.isArray(poison)&&poison.length){enemy.v012Rot=[...(enemy.v012Rot||[]),...poison.map(s=>({...s,ticks:s.ticks||0}))].slice(0,6);}
+ if(enemy.dots)delete enemy.dots.poison;
+ delete enemy.poison;delete enemy.poisonStacks;
+ return enemy;
+}
 function applyRot(b,c,power){
  const e=c.enemy;if(!e||e.hp<=0)return;
  const stacks=e.v012Rot||(e.v012Rot=[]);
@@ -223,9 +232,9 @@ function onAttack(b,c){
  }
  if(rank(b,'executioner')&&e.bleedStacks>0&&e.hp<=e.maxhp*.30&&ready(b,'execute',c.now,6)&&activated(b,'executioner'))c.damage(Math.min(base*.32,e.maxhp*.025),'🩸 Execute');
  if(rank(b,'blood_drinker')&&e.bleedStacks>0&&ready(b,'bloodHeal',c.now,4)&&activated(b,'blood_drinker'))heal(b,c,Math.min(c.player.maxhp*values('blood_drinker',rank(b,'blood_drinker')).hp,base*values('blood_drinker',rank(b,'blood_drinker')).base));
- if(rank(b,'toxic_touch')&&ready(b,'toxicTouch',c.now,1.3)&&c.random()<values('toxic_touch',rank(b,'toxic_touch')).chance&&activated(b,'toxic_touch')){c.dot('poison',base*.12);applyRot(b,c,base*.065);}
+ if(rank(b,'toxic_touch')&&ready(b,'toxicTouch',c.now,1.3)&&c.random()<values('toxic_touch',rank(b,'toxic_touch')).chance&&activated(b,'toxic_touch'))applyRot(b,c,base*.065);
  if(rank(b,'blight')&&e.v012Rot?.length&&ready(b,'blight',c.now,7)&&activated(b,'blight'))c.damage(Math.min(base*.38,e.maxhp*.025),'☠ Blight');
- if(rank(b,'toxic_precision')&&crit&&ready(b,'toxicPrecision',c.now,2)&&activated(b,'toxic_precision')){c.dot('poison',base*.11);applyRot(b,c,base*.06);}
+ if(rank(b,'toxic_precision')&&crit&&ready(b,'toxicPrecision',c.now,2)&&activated(b,'toxic_precision'))applyRot(b,c,base*.06);
  if(rank(b,'plague_rupture')&&crit&&e.bleedStacks>0&&e.v012Rot?.length&&ready(b,'plagueRupture',c.now,8)&&activated(b,'plague_rupture'))c.damage(Math.min(base*.55,e.maxhp*.032),'🩸 Plague Rupture');
  if(rank(b,'crimson_rush')&&crit&&e.bleedStacks>0&&activated(b,'crimson_rush'))c.damage(base*.15,'🩸 Crimson Rush');
  if(rank(b,'brutal_crit')&&crit&&activated(b,'brutal_crit'))c.damage(base*Math.min(.65,.12*Math.sqrt(rank(b,'brutal_crit'))),'⚔ Brutal Critical');
@@ -296,7 +305,7 @@ function onCast(b,c){
 }
 function onSecond(b,c){
  b.runtime.passiveTelemetry??={};for(const id of b.picks){const t=b.runtime.passiveTelemetry[id]??={activations:0,combatSeconds:0};t.combatSeconds+=1/b.picks.filter(p=>p===id).length;}
- const e=c.enemy;
+ const e=migrateEnemyDots(c.enemy);
  if(e.v012Rot?.length){
   const rot=e.v012Rot;
   const damage=rot.reduce((sum,s)=>sum+s.damage,0);
@@ -358,5 +367,5 @@ function validate(b){
  return b;
 }
 function clear(b){if(!b)return;b.picks.length=0;b.element=null;b.initialFamily=null;b.initialPassive=null;b.unlockedFamilies=[];b.families=[];b.cooldowns=Object.create(null);b.runtime={frenzyUntil:0,counterBlock:0,counterBarrier:0,spellblade:false,magicHits:0,staticCharges:0,adrenalineUntil:0,conduit:false,lastStand:false,lastSpellAt:-999};}
-root.WandererV012Buildcraft=Object.freeze({CATALOG,FAMILIES,ELEMENTS:elements,create,initial,initialId,ownedRank,rank,values,preview,canModify,capabilities,functional,synergy,bleedDamage,elementalPower,eligible,options,choose,element,mods,onHeal,onAttack,onCast,onSecond,incoming,onDefend,onKill,survive,speed,enemyHealMultiplier,nextCost,resetWave,canCast,validate,clear});
+root.WandererV012Buildcraft=Object.freeze({CATALOG,FAMILIES,ELEMENTS:elements,create,initial,initialId,ownedRank,rank,values,preview,canModify,capabilities,functional,synergy,bleedDamage,elementalPower,applyRot,migrateEnemyDots,eligible,options,choose,element,mods,onHeal,onAttack,onCast,onSecond,incoming,onDefend,onKill,survive,speed,enemyHealMultiplier,nextCost,resetWave,canCast,validate,clear});
 })(globalThis);

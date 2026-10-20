@@ -41,7 +41,7 @@ const DEFINITIONS={
   "affinity": "poison",
   "name": "Toxic Fang",
   "cooldown": 12,
-  "description": "Main attack against 3+ Poison stacks adds one Poison stack. Respects stack cap and Venom Burst. 12s cooldown."
+  "description": "Main attack against 3+ Rot stacks adds one Rot stack. Respects the six-stack cap. 12s cooldown."
  },
  "helm-of-the-dawnwarden": {
   "affinity": "shield",

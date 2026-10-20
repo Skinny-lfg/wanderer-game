@@ -2,6 +2,8 @@
 
 **Status:** especificação de implementação, sem alterações ao gameplay por este documento. **Fonte:** combat/v012-buildcraft.js na development, incluindo UI/persistência/testes. **Valores abaixo:** baseline inicial sujeita a simulação posterior.
 
+> Correção posterior aprovada: Decay usa exclusivamente Rot; Poison não é um segundo DoT do jogador. Ver relatório final para compatibilidade e testes.
+
 ## Regras gerais
 - Rank máximo **5** para efeitos numéricos que ganham valor real em cada rank; Rank **1** para talentos que só desbloqueiam uma habilidade única.
 - **29 normais Rank5 e 4 normais Rank1**. Starter de cada família conta como Rank1 e é garantido após **primeira Realm vencida dessa família**, seguido de draft de três opções na mesma Realm. Nada de efeitos grátis ao escolher affinity/entrar.
@@ -20,7 +22,7 @@
 ## Decay — cinco talentos
 | ID | Rank máx. | Efeito |
 | --- | ---: | --- |
-| toxic_touch | 5 | Starter. Hit tem 42/46/50/54/58% chance de aplicar Poison=12% base + Rot=6,5% base, ICD 1,3s. Continuar cap 6 Rot stacks × 4 ticks. |
+| toxic_touch | 5 | Starter. Hit tem 42/46/50/54/58% chance de aplicar apenas Rot=6,5% base, ICD 1,3s. Continuar cap 6 Rot stacks × 4 ticks. |
 | virulent_rot | 5 | Dano de Rot +15% por rank (R5 +75%), aplicado uma vez quando o stack é criado. |
 | wasting_curse | 5 | Enquanto Rot ativo, alvo causa 4% menos dano por rank (R5 −20%), sujeito ao cap conjunto de redução de dano. |
 | wither | 5 | Enquanto Rot ativo: healing inimigo −20/30/40/50/60% e dano direto do alvo −2% por rank, sujeito ao cap conjunto de DR. Não reduzir cura do jogador. |

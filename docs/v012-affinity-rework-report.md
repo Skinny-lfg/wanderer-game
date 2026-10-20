@@ -2,6 +2,18 @@
 
 Implementado em `development`, preservando os 63 IDs. Validação funcional: **PASS**. Aprovação de balanceamento: **PENDENTE**; nenhuma alteração automática aos valores da especificação. Sem main, deploy, Firebase, saves reais ou E∞.
 
+## Correção posterior — Decay exclusivamente Rot
+
+Toxic Touch passa a aplicar apenas Rot (6,5% base; chance R1–R5: 42/46/50/54/58%, ICD 1,3s). Toxic Precision aplica apenas Rot (6% base, crit real, ICD 2s). Virulent Rot, Wasting Curse, Wither e os restantes consumidores mantêm os seus valores e passam a depender apenas de Rot. O limite continua em seis stacks e quatro ticks na aplicação normal; a extensão Frost existente permanece.
+
+Toxic Fang foi ligada ao mesmo Rot canónico: três stacks como condição, uma stack adicional, potência existente de 15% base e ICD 12s. Usa a duração/cap de Rot e beneficia de Virulent Rot; não continua a produzir um segundo DoT. Removidos o status/contador/ticks independentes de Poison e os hooks inativos de Venom Burst/Poison Weaken. O atlas e IDs internos `poison` necessários a assets e validação de gear antigo permanecem como aliases; a UI mostra Rot, sem ícone Poison separado.
+
+Estados antigos de inimigos convertem o bucket Poison uma única vez para Rot, preservando dano/duração dos stacks admitidos, sem reaplicar Virulent Rot e respeitando o cap seis (Rot já existente tem prioridade). IDs de equipamento, histórico, moedas, picks e envelope de save permanecem válidos. Teste sintético verifica restore repetido sem duplicação; nenhum save real foi alterado.
+
+Validação atual: **209 testes PASS, 0 FAIL**, incluindo quatro regressões específicas de Decay; Expedition, Evasion e preview em Chromium 390px/1280px PASS. Assets e sincronização PvP PASS. Os 63 IDs permanecem.
+
+**As simulações e percentagens abaixo são o arquivo anterior à correção, do commit `d172c68`; não representam o balanceamento Rot-only.** Não foram repetidas nesta correção focada. A remoção de Poison reduz o dano de Decay e a adaptação de Toxic Fang muda o seu DoT; não houve compensação de valores nem alterações às outras affinities. Uma comparação pós-correção requer novas simulações com o motor atualizado.
+
 ## Commits e âmbito
 
 - `020cd0a` — Fase A: 33 normais, 29 Rank5/4 Unique, efeitos, custos e caps.
@@ -22,7 +34,7 @@ Starter apenas após primeira vitória da família, seguido de uma escolha norma
 
 | Check | Resultado |
 | --- | --- |
-| `npm test` | PASS — 205 testes, 0 FAIL |
+| `npm test` | PASS — 209 testes, 0 FAIL |
 | Normais | PASS — 33 IDs, ranks, ganho/condições, custo funded/free, caps, JSON e eventos |
 | Draft | PASS — 1.200 seeds × 14 drafts; três IDs legais, categorias, limite/pity, late unlock R12–R14, restore byte-idêntico e clique duplicado |
 | Híbridos | PASS — 30 positivos + 30 negativos, gating de 15 pares, ICD/charges/JSON, não recursão, conversão de DoT e caps normal/Elite/boss |
@@ -128,7 +140,7 @@ A = `tests/v012-affinity-phase-a.test.cjs`; C = `tests/v012-affinity-phase-c.tes
 | `executioner` | 1 | Bleeding foe at ≤30% HP: bounded burst, ICD 6s. | A | PASS |
 | `blood_drinker` | 5 | Hit bleeding foe: bounded heal, ICD 4s; healing reduction applies. | A | PASS |
 | `sanguine_fury` | 5 | Critical: Bleed 14% base + direct burst, ICD 2.5s. | A | PASS |
-| `toxic_touch` | 5 | Hit: Poison 12% and Rot 6.5% base; ICD 1.3s. | A | PASS |
+| `toxic_touch` | 5 | Hit: Rot 6.5% base; ICD 1.3s. | A | PASS |
 | `virulent_rot` | 5 | New Rot stacks +15% damage per rank. | A | PASS |
 | `wasting_curse` | 5 | Rotted enemy deals less damage; combined reduction cap 28%. | A | PASS |
 | `wither` | 5 | Rot reduces enemy healing and direct damage; player healing unaffected. | A | PASS |
@@ -163,7 +175,7 @@ A = `tests/v012-affinity-phase-a.test.cjs`; C = `tests/v012-affinity-phase-c.tes
 | `hex_bleed` | 1 | Funded Magic hits inflict Bleed (3s cooldown). | C +/− | PASS |
 | `rot_recovery` | 1 | Defeating a rotted enemy heals 4% max HP. | C +/− | PASS |
 | `rot_ward` | 1 | Rot ticks grant Barrier every 5s. | C +/− | PASS |
-| `toxic_precision` | 1 | Crits inflict Poison and Rot (2s cooldown). | C +/− | PASS |
+| `toxic_precision` | 1 | Crits inflict Rot (2s cooldown). | C +/− | PASS |
 | `hex_bolt` | 1 | Funded spells against Rot deal 25% Spell Power plus one Rot tick (3s cooldown). | C +/− | PASS |
 | `sanctuary` | 1 | Recovering Health grants Barrier equal to 20% of the heal. | C +/− | PASS |
 | `fervent_life` | 1 | Critical strikes restore 2% maximum HP; overhealing grants Barrier (4s cooldown). | C +/− | PASS |

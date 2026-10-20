@@ -57,7 +57,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
   feedback:()=>auditFeedback={logs:[],floats:[]},rng:value=>{Math.random=()=>value;gameRandom=()=>value;},
   stats:phase2Stats,baseStats:totalStats,makeItem,
   gear:{evasionChance,gearEvasionRating,tryDodge,enemyAttackType,statsWidget,itemComparison,setCounts,setBonuses,itemSource,itemImg,detailEffectHtml,affinityBadge,legendaryDescription,
-   weaponAttack,legendaryReady,legendaryAttackBonus,dungeonEquipmentOdds,placeholderIcon,renderStash,
+   weaponAttack,legendaryReady,legendaryAttackBonus,enemyDebuffMarkup,dungeonEquipmentOdds,placeholderIcon,renderStash,
    renderForge:()=>auditForge(),renderMerchant:()=>auditMerchant(),
    screen:()=>document.getElementById('screen').innerHTML},slots:SLOTS,types:TYPES,offhandTypes:OFFHAND_TYPES,
   equip:equipItem,unequip:unequipItem,sale:saleFragments,craftCost,merchantCost,

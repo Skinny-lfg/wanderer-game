@@ -41,7 +41,7 @@
 - **rot_husk — Rot Husk:** Barrier realmente quebrada por ataque, com Rot ativo no inimigo, gera uma nova Barrier de 3,5% MaxHP, ICD9s. Não dispara apenas quando Barrier estava em zero; requer gerador de Barrier.
 
 ### Par 08 — Decay + Fury
-- **toxic_precision — Toxic Precision:** Critical real aplica Poison=11% base e uma stack Rot=6% base (com Virulent Rot), ICD2s; não desencadear novo critical.
+- **toxic_precision — Toxic Precision:** Critical real aplica apenas uma stack Rot=6% base (com Virulent Rot), ICD2s; não desencadear novo critical.
 - **venom_shatter — Venom Shatter:** Critical em inimigo com Rot consome 1 stack e causa o seu dano restante + burst min(20% base, 1,5% MaxHP do alvo), ICD5s. Sem dupla contagem.
 
 ### Par 09 — Decay + Magic

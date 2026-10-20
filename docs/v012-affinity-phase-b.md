@@ -8,7 +8,7 @@ Hoje options() dá prioridade **a passivos ainda não possuídos** se há pelo m
 ## B1. Política de draft
 Após vencer cada Realm de 1 a 14 (combate ou evento), construir exatamente três opções **distintas, legais e úteis**, com RNG:
 1. **Upgrade:** pick aleatório entre passivos próprios de Rank <max e upgrade efetivo mensurável; preferir affinity da Realm. Starters Rank1 são candidatos a R2..R5. Se não existir, fallback para passivos desbloqueados de outras affinities.
-2. **Synergy:** pick aleatório que faça sentido com o que já existe (Bleed, Rot, Crit, Block, Barrier, Heal, Cast, Mana, Poison, Burn, Static). Se houver um híbrido legal, pode ocupar este slot sem garantir qual. Skills preparatórias só são apresentadas se tiverem função real desde já ou se houver uma evolução viável durante a Expedition. Se impossível, fallback legal.
+2. **Synergy:** pick aleatório que faça sentido com o que já existe (Bleed, Rot, Crit, Block, Barrier, Heal, Cast, Mana, Burn, Static). Se houver um híbrido legal, pode ocupar este slot sem garantir qual. Skills preparatórias só são apresentadas se tiverem função real desde já ou se houver uma evolução viável durante a Expedition. Se impossível, fallback legal.
 3. **Discovery:** passivo NOVO aleatório e elegível da affinity da Realm; se indisponível, de outra affinity já desbloqueada. Não forçar nova affinity; o máximo de 3 e a seleção de Realms continuam separados.
 
 A ordem das três cartas é embaralhada no ecrã para não ficar previsível. Etiquetas discretas “Upgrade”, “Synergy”, “Discovery” podem ajudar a compreender a oferta, sem revelar RNG nem ocupar muito espaço.

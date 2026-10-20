@@ -1,7 +1,7 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');require('../combat/v012-buildcraft.js');const B=globalThis.WandererV012Buildcraft;
 function ctx(){const effects=[];return {effects,c:{funded:true,base:100,power:100,amp:1,now:0,critical:false,enemy:{hp:10000,maxhp:10000,dots:{},slowTime:0},player:{maxhp:100,hp:50},random:()=>0,dot:(...a)=>effects.push(['dot',...a]),damage:(...a)=>effects.push(['damage',...a]),dotDamage:(...a)=>effects.push(['dotDamage',...a]),heal:n=>(effects.push(['heal',n]),n),mana:n=>effects.push(['mana',n]),barrier:n=>effects.push(['barrier',n]),chill:n=>effects.push(['chill',n]),log:()=>{}}};}
 test('six bare families grant no combat effects; explicit starters do',()=>{
- for(const family of B.FAMILIES){const b=B.create();b.families=[family];if(family==='magic')b.element='fire';const {c,effects}=ctx();B.onAttack(b,c);B.onSecond(b,c);B.onCast(b,c);assert.deepEqual(effects,[],family);B.initial(b,family);if(['blood','decay','magic'].includes(family)){B.onAttack(b,{...c,now:10});B.onCast(b,c);assert(effects.length,family);}}
+ for(const family of B.FAMILIES){const b=B.create();b.families=[family];if(family==='magic')b.element='fire';const {c,effects}=ctx();B.onAttack(b,c);B.onSecond(b,c);B.onCast(b,c);assert.deepEqual(effects,[],family);B.initial(b,family);if(['blood','decay','magic'].includes(family)){B.onAttack(b,{...c,now:10});B.onCast(b,c);assert(family==='decay'?c.enemy.v012Rot?.length:effects.length,family);}}
 });
 test('Static is player state, requires funded casts, survives Waves/JSON and clears at Expedition end',()=>{
  const b=B.create();b.families=['magic'];B.element(b,'lightning');B.initial(b,'magic');const {c,effects}=ctx();

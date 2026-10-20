@@ -2988,5 +2988,21 @@
     }
   },
   "errors": [],
-  "timeouts": []
+  "timeouts": [],
+  "archiveRevision": "d172c68",
+  "archiveNote": "Simulation results predate Rot-only correction; not post-correction balance results.",
+  "rotOnlyCorrection": {
+    "tests": {
+      "pass": 209,
+      "fail": 0
+    },
+    "browser": "PASS 390px/1280px",
+    "simulationsRerun": false,
+    "changes": [
+      "Toxic Touch only Rot",
+      "Toxic Precision only Rot",
+      "Toxic Fang uses canonical Rot",
+      "legacy enemy Poison converts once with six-stack cap"
+    ]
+  }
 }
