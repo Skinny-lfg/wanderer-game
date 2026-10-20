@@ -25,7 +25,7 @@ function run(E,model,seed,variant,rarity){
  const gearTier=Math.max(1,Math.round(gear*gearRatio));
  const patched=original.replace(anchor,
   'const __level=level===200?'+JSON.stringify(enemy)+':level;const base={hp:27+__level*14,atk:4+__level*3,def:1+__level*.62};');
- const a=create(seed+E*997+models.indexOf(model)*101,undefined,{'combat/v012-combat-core.js':patched});
+ const a=create(seed+E*997,undefined,{'combat/v012-combat-core.js':patched});
  const p=strategies[seed%2?'sustain':'offense'],weapon=arms[(seed+Math.floor(E/50))%arms.length];
  const family=initial[(seed+Math.floor(E/50))%initial.length],state=a.state(),g=a.controller().state;
  a.setup(gearTier,weapon,rarity);

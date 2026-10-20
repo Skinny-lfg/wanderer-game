@@ -255,3 +255,6 @@
 .phase3IntegratedPreview :is(.phase3CampGrid,.phase3PreparationLayout,.phase3BagInventory,.equipmentLayout) .equipmentLoadout .paper .slotTile[data-slot="boots"]{right:1%!important;left:auto!important;top:78%!important}
 .phase3Bag .phase3TreasureSymbol{display:block;font-size:26px;color:#dfba76;text-shadow:0 2px 8px #000}
 @media(max-width:600px){.phase3IntegratedPreview :is(.phase3CampGrid,.phase3PreparationLayout,.phase3BagInventory,.equipmentLayout) .equipmentLoadout .paper{height:500px;min-height:500px}.phase3IntegratedPreview :is(.phase3CampGrid,.phase3PreparationLayout,.phase3BagInventory,.equipmentLayout) .equipmentLoadout .paper .slotTile{width:56px;height:76px}}
+
+/* Local-only E25 milestone badges (derived from highest completed Expedition; no new save fields). */
+.phase5Milestones{margin:.6rem 0 .4rem}.phase5Milestones p{margin:.25rem 0}.phase5MilestoneChips{display:flex;flex-wrap:wrap;gap:.35rem;margin:.35rem 0}.phase5MilestoneChip{display:inline-flex;align-items:center;border:1px solid #a38257;border-radius:8px;padding:.3rem .55rem;background:#30251e;color:#f1c886;font-size:.75rem;font-weight:700}.phase5MilestoneWin{color:#f1c886;font-weight:700}
