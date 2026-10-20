@@ -279,7 +279,7 @@ function applyAffinity(effect,enemy,s,mult=1,baseDamage=0){
   const src=enemy.dots[effect]||[];
   const potency=Math.max(1,Math.round((baseDamage||s.spellPower||s.attack||5)*ratios[effect]*mult*(1+(bonus[effect+'Bonus']||0))));
   if(src.length>=12)src.shift();
-  src.push({damage:potency,remaining:3});enemy.dots[effect]=src;ports.synchronizeDots(enemy);
+  src.push({damage:effect==='bleed'&&ports.phase1Build?Math.max(1,Math.round(WandererV012Buildcraft.bleedDamage(ports.phase1Build,potency))):potency,remaining:3});enemy.dots[effect]=src;ports.synchronizeDots(enemy);
   if(effect==='poison'&&r)ports.setPoisonBurst(r,enemy);
   return;
  }
@@ -318,12 +318,12 @@ function weaponAttack(r){
  const s=r.stats,e=r.enemy,weapon=s.main,off=s.off,caster=s.caster,now=ports.setNow(r),temp=ports.setRuntime(r);
  const lt=ports.legendaryRuntime(r),focus=!!lt.focusReady,armorReady=!!lt.armorReady;lt.focusReady=false;lt.armorReady=false;
  const kind=weapon?.subtype||'Unarmed',baseCost=kind==='Staff'?13:kind==='Wand'?9:0;
- const cost=baseCost&&ports.isPhase1Run()&&ports.phase1Build?.element?Math.max(4,Math.round(baseCost*(1-.12*WandererV012Buildcraft.rank(ports.phase1Build,'efficient_cast')))):baseCost;
+ const cost=baseCost&&ports.isPhase1Run()&&ports.phase1Build?.element?WandererV012Buildcraft.nextCost(ports.phase1Build):baseCost;
  let damage=0,element=null,cast=false;
  if(caster&&r.mp>=cost){
   ports.phase6Metric(r,'manaSpent',cost);ports.phase6Metric(r,'fundedCasts',1);r.mp-=cost;cast=true;element=null;
   const factor=kind==='Staff'?1.32:.77;
-  damage=Math.max(1,Math.round(s.spellPower*factor));
+  damage=Math.max(1,Math.round((ports.phase1Build?.element?WandererV012Buildcraft.elementalPower(ports.phase1Build,s.spellPower):s.spellPower)*factor));
   if(element&&ports.isMagicOffhand(off)&&off.magic===element)damage=Math.round(damage*1.30);
   ports.addLog((ports.ELEMENTS[element]?.icon||'✨')+' '+kind+' casts '+(ports.ELEMENTS[element]?.name||'Magic')+' ('+damage+' magic).','spell');
  }else{
@@ -408,7 +408,7 @@ function updateFight(){
  if(ports.isPhase1Run())ports.phase2MagicTick(r);
  if(e.hp<=0){ports.winEncounter(true);return;}
  const lt=ports.legendaryRuntime(r),haste=(ports.isPhase1Run()&&ports.phase1Build?WandererV012Buildcraft.speed(ports.phase1Build,ports.phase1Clock+r.combatSeconds):1)*(s.bonus.bleedHaste?1+Math.min(3,t.haste.length)*.05:1)*(1+((lt.natureHasteUntil||0)>ports.setNow(r)?.10:0)+((lt.thunderHasteUntil||0)>ports.setNow(r)?.12:0));
- if(r.tPlayer>=1/(s.attacksPerSec*haste)){r.tPlayer=0;ports.weaponAttack(r);if(e.hp<=0){ports.winEncounter(true);return;}}
+ if(r.tPlayer>=1/(Math.min(5,s.attacksPerSec*haste))){r.tPlayer=0;ports.weaponAttack(r);if(e.hp<=0){ports.winEncounter(true);return;}}
  if(r.tDot>=1){
   r.tDot-=1;
   const hasBurn=e.burnStacks>0,hasDots=e.poisonStacks+e.bleedStacks+e.burnStacks>0;
@@ -489,18 +489,18 @@ function updateFight(){
 
 function phase2Context(r){
  const e=r.enemy,now=ports.setNow(r);
- return {player:r,enemy:e,now,random:ports.gameRandom,base:r.lastBaseHit||r.stats.attack,
+ return {player:r,enemy:e,now,random:ports.gameRandom,base:r.lastBaseHit||r.stats.attack,waveKey:r.phase1Plane+':'+r.enc,
  dot(kind,potency){
   if(!['bleed','poison','burn'].includes(kind))return;
   ports.phase6Proc(r,kind+' application');const values=e.dots[kind]||(e.dots[kind]=[]);
-  if(values.length>=12)values.shift();values.push({damage:Math.max(1,Math.round(potency)),remaining:3});ports.synchronizeDots(e);
+  if(values.length>=12)values.shift();values.push({damage:Math.max(1,Math.round(kind==='bleed'?WandererV012Buildcraft.bleedDamage(ports.phase1Build,potency):potency)),remaining:3});ports.synchronizeDots(e);
  },
  dotDamage(amount,label){const n=Math.max(0,Math.round(amount));if(n){ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),n));e.hp-=n;ports.addLog(label+' '+n+' damage','spell');}},
  damage(amount,label){return ports.setDirectEnemyDamage(r,amount,label);},
  heal(amount){return ports.setHeal(r,amount);},
  barrier(amount){return ports.setBarrier(r,amount);},
  mana(amount){r.mp=Math.min(r.maxmp,r.mp+Math.max(0,amount));},
- chill(duration){e.slowTime=Math.max(e.slowTime,duration);},
+ chill(duration){e.slowTime=Math.max(e.slowTime,e.boss?Math.min(1.2,duration):duration);},
  log(msg){ports.addLog(msg,'spell');}
  };
 }
@@ -527,7 +527,7 @@ function phase2MagicTick(r){
  if(ctx.now-b.runtime.lastSpellAt<2.5)return;
  const cost=WandererV012Buildcraft.nextCost(b);if(r.mp<cost)return;
  b.runtime.lastSpellAt=ctx.now;ports.phase6Metric(r,'manaSpent',cost);ports.phase6Metric(r,'fundedCasts',1);r.mp-=cost;ctx.power=r.stats.spellPower;ctx.amp=1;ctx.funded=true;
- ports.setDirectEnemyDamage(r,Math.max(1,Math.round(ctx.power*.70)),'✨ '+b.element);
+ ports.setDirectEnemyDamage(r,Math.max(1,Math.round(WandererV012Buildcraft.elementalPower(b,ctx.power)*.70)),'✨ '+b.element);
  WandererV012Buildcraft.onCast(b,ctx);
  ports.combatEffect('Wand',({fire:'burn',frost:'slow',lightning:'shock'})[b.element]);
 }

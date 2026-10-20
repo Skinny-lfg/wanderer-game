@@ -5,7 +5,7 @@ test('six bare families grant no combat effects; explicit starters do',()=>{
 });
 test('Static is player state, requires funded casts, survives Waves/JSON and clears at Expedition end',()=>{
  const b=B.create();b.families=['magic'];B.element(b,'lightning');B.initial(b,'magic');const {c,effects}=ctx();
- for(let i=0;i<3;i++)B.onCast(b,c);assert.equal(b.runtime.staticCharges,3);B.resetWave(b,c.enemy);assert.equal(b.runtime.staticCharges,3);const copy=B.validate(JSON.parse(JSON.stringify(b)));B.onCast(copy,{...c,funded:false});assert.equal(copy.runtime.staticCharges,3);B.onCast(copy,c);assert.equal(copy.runtime.staticCharges,0);assert(effects.some(e=>e[2]==='⚡ Static Discharge'&&Math.abs(e[1]-38.4)<.01));assert.equal(c.enemy.v012Shock,0);B.clear(copy);assert.equal(copy.runtime.staticCharges,0);
+ for(let i=0;i<3;i++)B.onCast(b,c);assert.equal(b.runtime.staticCharges,3);B.resetWave(b,c.enemy);assert.equal(b.runtime.staticCharges,3);const copy=B.validate(JSON.parse(JSON.stringify(b)));B.onCast(copy,{...c,funded:false});assert.equal(copy.runtime.staticCharges,3);B.onCast(copy,c);assert.equal(copy.runtime.staticCharges,0);assert(effects.some(e=>e[2]==='⚡ Static Discharge'&&Math.abs(e[1]-32)<.01));assert.equal(c.enemy.v012Shock,0);B.clear(copy);assert.equal(copy.runtime.staticCharges,0);
 });
 test('Deep Winter caps boss chill and Withering Hex reduces non-healer attacks',()=>{
  const b=B.create();b.families=['magic','decay'];b.element='frost';b.picks=['deep_winter','wither'];const {c,effects}=ctx();c.enemy.boss=true;c.enemy.v012Rot=[{damage:1,remaining:2}];B.onCast(b,c);assert(effects.some(e=>e[0]==='chill'&&e[1]===1.2));assert(B.incoming(b,c,100)<100);
