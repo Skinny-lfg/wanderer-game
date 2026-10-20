@@ -163,3 +163,36 @@ test('Staff/Wand amplify all Magic schools without consuming extra status rolls'
   }
  }
 });
+
+
+test('alternative hybrids are exclusive per affinity pair, cap three, and unlock progressively',()=>{
+ const b=api.create();b.families=['blood','decay','magic'];b.element='fire';b.realmIndex=5;
+ assert(!api.options(b,'blood',()=>.4).some(p=>p.requires.length),'hybrids should not appear before Realm 6');
+ b.realmIndex=6;
+ const available=api.eligible(b,'blood');
+ const plague=available.find(x=>x.id==='plague_rupture');
+ assert(plague);
+ api.choose(b,'blood','plague_rupture',[plague]);
+ assert(!api.eligible(b,'blood').some(x=>x.id==='carrion_detonation'),'alternative of selected pair unavailable');
+ b.realmIndex=8;
+ assert(api.eligible(b,'blood').some(x=>x.id==='hex_bleed'));
+ const hex=api.eligible(b,'blood').find(x=>x.id==='hex_bleed');api.choose(b,'blood',hex.id,[hex]);
+ b.realmIndex=10;
+ const bolt=api.eligible(b,'decay').find(x=>x.id==='hex_bolt');api.choose(b,'decay',bolt.id,[bolt]);
+ assert(api.CATALOG.filter(x=>x.requires.length).length===30);
+ assert(api.FAMILIES.length===6);
+ for(const f of b.families)assert(api.eligible(b,f).every(x=>!x.requires.length),'fourth hybrid must be rejected');
+ assert.throws(()=>api.validate({...b,picks:[...b.picks,'carrion_detonation']}),/Invalid hybrid/);
+});
+test('Spellblade empowers the next magical Staff/Wand weapon hit, not the same cast',()=>{
+ const b=api.create();b.families=['magic','fury'];b.element='fire';b.picks=['spellblade'];
+ const {c,history}=ctx(.99);
+ c.magical=true;c.critical=false;
+ api.onAttack(b,c);
+ assert(!history.some(x=>x[2]==='✨ Spellblade'),'same cast must not double proc');
+ api.onCast(b,c);assert.equal(b.runtime.spellblade,true);
+ const start=history.length;c.now+=1;api.onAttack(b,c);
+ assert(history.slice(start).some(x=>x[2]==='✨ Spellblade'),'next funded magical attack consumes charge');
+ assert.equal(b.runtime.spellblade,false);
+ api.onCast(b,c);assert.equal(b.runtime.spellblade,true,'rearms for next hit');
+});
