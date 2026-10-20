@@ -5,8 +5,8 @@
   "scripts": {
     "build:firebase": "esbuild online/firebase-sdk-source.mjs --bundle --format=esm --minify --outfile=online/vendor/firebase-sdk.mjs",
     "preview:private": "node preview/private-server.mjs",
-    "test": "node --test tests/v012-complete-*.test.cjs tests/v012-engine-core.test.cjs tests/v012-runtime-integration.test.cjs tests/v012-buildcraft.test.cjs tests/v012-affinity-phase-*.test.cjs tests/v012-affinity-decay.test.cjs tests/v012-save.test.mjs tests/v012-lifecycle.test.cjs tests/v012-economy.test.cjs tests/v0120-evasion.test.cjs tests/online-model.test.mjs tests/profile-restore.test.mjs tests/private-preview.test.mjs",
-    "test:browser": "node tests/v012-complete-browser.cjs && node tests/v0120-evasion-browser.cjs && node tests/private-preview-browser.cjs",
+    "test": "node --test tests/v012-complete-*.test.cjs tests/v012-engine-core.test.cjs tests/v012-runtime-integration.test.cjs tests/v012-buildcraft.test.cjs tests/v012-affinity-phase-*.test.cjs tests/v012-affinity-decay.test.cjs tests/v012-save.test.mjs tests/v012-lifecycle.test.cjs tests/v012-economy.test.cjs tests/v0120-evasion.test.cjs tests/v0120-equipment.test.cjs tests/online-model.test.mjs tests/profile-restore.test.mjs tests/private-preview.test.mjs",
+    "test:browser": "node tests/v012-complete-browser.cjs && node tests/v0120-evasion-browser.cjs && node tests/v0120-equipment-browser.cjs && node tests/private-preview-browser.cjs",
     "test:preview": "node --test tests/private-preview.test.mjs",
     "test:rules": "firebase emulators:exec --only firestore --project demo-wanderer 'node --test tests/firestore-rules.test.mjs'",
     "test:assets": "node tests/vfx-affinity-enemy-smoke.cjs",
