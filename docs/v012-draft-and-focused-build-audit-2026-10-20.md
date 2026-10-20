@@ -84,6 +84,18 @@ Likely areas to instrument before any balance change:
 
 **Do not auto-buff or nerf the live enemy curve from this evidence.** The next focused test should compare real damaging hits and recovery per Realm for selected representative seeds at E10/E50/E100 using same gear, then try targeted changes in test-only simulations.
 
+### Why the targeted dual builds still lose (E50, three Runas)
+
+This run directly measured healing and Barrier created per simulated combat-second, plus DPS. Same starting seed/gear protocol as above.
+
+| Pair | Random DPS → Dual DPS | Random Heal/s → Dual Heal/s | Random Barrier/s → Dual Barrier/s | Mean Realms Random → Dual |
+|---|---|---|---|---|
+| Blood + Decay | 451.82 → 452.99 | 1.544 → **0.052** | 2.075 → 1.940 | 5.76 → 6.19 |
+| Vitality + Aegis | 442.43 → 434.43 | 2.992 → **6.125** | 2.252 → **3.188** | 5.57 → **7.24** |
+| Fury + Magic | 481.48 → **504.55** | 0.474 → **0** | 2.072 → 1.957 | 5.83 → **6.90** |
+
+**Interpretation, not causal proof:** Blood+Decay sacrifices nearly all effective healing for similar DPS while its Bleed+Rot hybrid fires rarely. Vitality+Aegis improves sustain and gets farther, but pays a DPS cost and still seldom clears a late boss. Fury+Magic improves DPS but loses sustain. This points to a defensive/offensive coverage and acquisition-timing problem with the current synthetic draft policies, not simply weak hybrid numbers. Test a controlled defensive fallback for offensive pairs and an offensive fallback for Vitality+Aegis before changing raw skill multipliers.
+
 ## 4. CI interpretation
 
 The focused matrix itself completed 3,780/3,780 without errors/timeouts. The full GitHub Actions job subsequently failed in the **separate, old** `scripts/v012-complete-sim.cjs` runner because that script had not acknowledged a `cleared` Realm after its passive was chosen. The underlying code correctly requires EXIT REALM before entering the next room; this was a stale simulator assumption and was patched separately in development. Separate concurrent dagger changes also invalidated older parity fixtures; any final release audit must run on an explicit fixed commit after those changes settle.
