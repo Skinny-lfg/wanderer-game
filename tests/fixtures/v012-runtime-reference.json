@@ -1,0 +1,221 @@
+{
+  "reference": "0c8d2ae",
+  "cases": [
+    {
+      "scenario": {
+        "seed": 100,
+        "E": 1,
+        "weapon": "Sword",
+        "family": "blood"
+      },
+      "steps": 72,
+      "digest": "ae396e72e2d3ede2c39f6f5c54e494f48250b399ae1d944cf2551fde3fb8fbd1"
+    },
+    {
+      "scenario": {
+        "seed": 101,
+        "E": 1,
+        "weapon": "Daggers",
+        "family": "decay"
+      },
+      "steps": 71,
+      "digest": "26ca4ae33fdfc031afd1f5c1796ef60eec81eb070da17c71f366db92969bc831"
+    },
+    {
+      "scenario": {
+        "seed": 102,
+        "E": 1,
+        "weapon": "Staff",
+        "family": "magic",
+        "element": "lightning"
+      },
+      "steps": 71,
+      "digest": "9c05bc7ccdf7c768328059ae3bb89dd4548f1a6e2e4f4b44854fe068cdbf0094"
+    },
+    {
+      "scenario": {
+        "seed": 103,
+        "E": 1,
+        "weapon": "Wand",
+        "family": "magic",
+        "element": "frost"
+      },
+      "steps": 73,
+      "digest": "f781a3371ec358ed478f02393166034c85cae1aa7c1d9f1a72dd4f206bf4a4c3"
+    },
+    {
+      "scenario": {
+        "seed": 104,
+        "E": 1,
+        "weapon": "Bow",
+        "family": "fury"
+      },
+      "steps": 73,
+      "digest": "90cffa9a474fc5110aa15bc1eb498b605d13e49becacb843e0f8f4c1fcaa4da0"
+    },
+    {
+      "scenario": {
+        "seed": 105,
+        "E": 1,
+        "weapon": "Mace",
+        "family": "aegis"
+      },
+      "steps": 72,
+      "digest": "cbbca967a4d9fe7af46d9f0b087eb9fc89b24cb16aaf674685ca2656883c8253"
+    },
+    {
+      "scenario": {
+        "seed": 106,
+        "E": 1,
+        "weapon": "Two-Handed",
+        "family": "vitality"
+      },
+      "steps": 68,
+      "digest": "0038f313d8b7f01c8e21b4b2b18191d2c8c128e41db6a3fe3b7e07dcbee51a96"
+    },
+    {
+      "scenario": {
+        "seed": 107,
+        "E": 50,
+        "weapon": "Sword",
+        "family": "blood"
+      },
+      "steps": 78,
+      "digest": "2127218bd0a3758b90bf7362398358338ba3b9ad9aa0231de3b18cca03c2e58b"
+    },
+    {
+      "scenario": {
+        "seed": 108,
+        "E": 50,
+        "weapon": "Daggers",
+        "family": "decay"
+      },
+      "steps": 77,
+      "digest": "4ca0eae0c02f0c4bca97329bc8b261d8c51af5407d182d9e6e1ee34cf18c3728"
+    },
+    {
+      "scenario": {
+        "seed": 109,
+        "E": 50,
+        "weapon": "Staff",
+        "family": "magic",
+        "element": "lightning"
+      },
+      "steps": 71,
+      "digest": "74f2638efc3f309bfe8d60c22bc8996caba1451112e07ac60900728d99c4e5e9"
+    },
+    {
+      "scenario": {
+        "seed": 110,
+        "E": 50,
+        "weapon": "Wand",
+        "family": "magic",
+        "element": "frost"
+      },
+      "steps": 69,
+      "digest": "4238462114452f898b17bccc457a8455755ef4357468c83f791c1df0565c995a"
+    },
+    {
+      "scenario": {
+        "seed": 111,
+        "E": 50,
+        "weapon": "Bow",
+        "family": "fury"
+      },
+      "steps": 72,
+      "digest": "a018d4f26a338ea15510c32cd4e300bf3458115933b74e32bf14091930491de9"
+    },
+    {
+      "scenario": {
+        "seed": 112,
+        "E": 50,
+        "weapon": "Mace",
+        "family": "aegis"
+      },
+      "steps": 73,
+      "digest": "9a9a098400e61e70409d79cbbc4c7ba10fbdbbfb1a69d171caa9bf8848318afa"
+    },
+    {
+      "scenario": {
+        "seed": 113,
+        "E": 50,
+        "weapon": "Two-Handed",
+        "family": "vitality"
+      },
+      "steps": 74,
+      "digest": "50fb024ce730a20b034774893a9de8a8d8d3eaf0d18134549f032c31221de36e"
+    },
+    {
+      "scenario": {
+        "seed": 114,
+        "E": 200,
+        "weapon": "Sword",
+        "family": "blood"
+      },
+      "steps": 77,
+      "digest": "4159ec764ff4fb1c116e258df158617f56fcf404f1d5ab6a810b58455d68e395"
+    },
+    {
+      "scenario": {
+        "seed": 115,
+        "E": 200,
+        "weapon": "Daggers",
+        "family": "decay"
+      },
+      "steps": 72,
+      "digest": "f337dcd772d25241e993a36898e8b577d7b9fba4dec0c709206ec93e91485443"
+    },
+    {
+      "scenario": {
+        "seed": 116,
+        "E": 200,
+        "weapon": "Staff",
+        "family": "magic",
+        "element": "lightning"
+      },
+      "steps": 69,
+      "digest": "9e9fd806b2c59b58e5c5e9f963217fde2bc8d14cd9e226dc25d647f60ed4021e"
+    },
+    {
+      "scenario": {
+        "seed": 117,
+        "E": 200,
+        "weapon": "Wand",
+        "family": "magic",
+        "element": "frost"
+      },
+      "steps": 76,
+      "digest": "08b7d3105bec295966f6cbae6a01ab9db7c8bcb3bc1de380bf7db63c82f2820a"
+    },
+    {
+      "scenario": {
+        "seed": 118,
+        "E": 200,
+        "weapon": "Bow",
+        "family": "fury"
+      },
+      "steps": 79,
+      "digest": "ecfdbb6a48f257601c65eb85e929c626d80ca9e8fe5ca0d7d2bfe19d1c211694"
+    },
+    {
+      "scenario": {
+        "seed": 119,
+        "E": 200,
+        "weapon": "Mace",
+        "family": "aegis"
+      },
+      "steps": 76,
+      "digest": "a51a966e7a88ff7a142a8fb2c2973a18cadfc745057b7cc350f4ca2473db92f6"
+    },
+    {
+      "scenario": {
+        "seed": 120,
+        "E": 200,
+        "weapon": "Two-Handed",
+        "family": "vitality"
+      },
+      "steps": 76,
+      "digest": "0a61eac7a61c42f499c539c03d8610af9f815934f5f12933fa701666a0aea52d"
+    }
+  ]
+}

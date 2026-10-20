@@ -2,7 +2,7 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
-const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+const html=require('./v012-runtime-source.cjs')(fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8'));
 const root=path.join(__dirname,'..','assets','combat-vfx');
 const physical=['slash_main_hand','smash_main_hand','double_slash_daggers','big_slash_two_hand','arrow_bow','block'];
 const affinities=['burn','slow','poison','drain','nature','shock','tide'];

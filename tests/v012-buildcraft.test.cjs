@@ -115,7 +115,7 @@ test('hybrids require both families; simulated DOT, shock, healing, barrier, att
  }
 });
 test('integration gates original weapons, Legendary and permanent save mechanics unchanged',()=>{
- const source=readFileSync(path.join(root,'index.html'),'utf8');
+ const source=require('./v012-runtime-source.cjs')(readFileSync(path.join(root,'index.html'),'utf8'));
  assert(source.includes("if(isPhase1Run())phase2WeaponAttack(r,base,critical,cast);"));
  assert(source.includes('if(isPhase1Run())phase2MagicTick(r);'));
  assert(source.includes('WandererV012Buildcraft.onSecond(phase1Build,phase2Context(r))'));
