@@ -10,7 +10,7 @@ function phase4Session(entry=false){
  const continuity=ports.phase1Continuity?ports.phase4Clone(ports.phase1Continuity):null;
  if(continuity?.legendaryState)delete continuity.legendaryState.enemy;
  return ports.phase4Clone({version:1,entry,controller:ports.phase1Controller.state,build:ports.phase1Build,vitals:ports.phase1Vitals,
-  integration:ports.phase6Run,clock:ports.phase1Clock,supplies:ports.phase3Supplies,lootIds:[...ports.phase3LootIds],home:ports.phase4Home,
+  integration:ports.phase6Run,clock:ports.phase1Clock,supplies:{health:0,mana:0},lootIds:[...ports.phase3LootIds],home:ports.phase4Home,
   seed:ports.phase4Seed,prefix:ports.phase4Prefix,stamp:ports.phase4Stamp,idCounter:ports.uid,continuity,draft:ports.phase1Draft,results:ports.phase5Results,
   clearedRun:ports.state.run?.status==='cleared'?ports.phase4Clone(ports.state.run):null});
 }
@@ -44,7 +44,12 @@ function phase4Restore(session){
  ports.phase1Controller.restore(session.controller);
  if(session.build)WandererV012Buildcraft.validate(session.build);
  ports.phase6Run=session.integration||null;
- ports.phase1Build=session.build;if(ports.phase1Build&&ports.phase6Run?.effects.echo)ports.phase1Build.runtime.echo=ports.phase6Run.effects.echo;ports.phase1Draft=session.draft;ports.phase1Vitals=session.vitals;ports.phase1Clock=session.clock;ports.phase3Supplies=session.supplies;
+ ports.phase1Build=session.build;if(ports.phase1Build&&ports.phase6Run?.effects.echo)ports.phase1Build.runtime.echo=ports.phase6Run.effects.echo;ports.phase1Draft=session.draft;ports.phase1Vitals=session.vitals;ports.phase1Clock=session.clock;
+ // Older local checkpoints stored remaining Health/Mana doses separately.
+ // Move those doses into Stash once; new checkpoints persist only zeroes.
+ const legacySupplies=session.supplies||{health:0,mana:0};
+ for(const kind of ['health','mana'])if(Number.isInteger(legacySupplies[kind])&&legacySupplies[kind]>0){ports.state.consumables??={};ports.state.consumables[kind]=Math.min(99999,(ports.state.consumables[kind]||0)+legacySupplies[kind]);}
+ ports.phase3Supplies={health:0,mana:0};
  ports.phase3LootIds=new Set(session.lootIds);ports.phase4Home=session.home;ports.phase4Seed=session.seed;ports.phase4Prefix=session.prefix;ports.phase4Stamp=session.stamp;ports.uid=session.idCounter;ports.phase1Continuity=session.continuity;
  if(ports.phase1Build){ports.phase1Build.families=ports.phase1Controller.state.families;if(ports.phase1Draft?.kind==='reward'){
   const eligible=WandererV012Buildcraft.eligible,build=ports.phase1Build,draft=ports.phase1Draft;

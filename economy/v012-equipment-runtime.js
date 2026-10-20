@@ -58,9 +58,12 @@ function comparisonEquip(item,target=item.slot){
 
 function stashCapacity(){return Math.max(ports.STASH_BASE_CAPACITY,Math.min(ports.STASH_MAX_CAPACITY,Math.round(Number(ports.state.stashCapacity)||ports.STASH_BASE_CAPACITY)))}
 
+function potionStackCount(){return Object.values(ports.state.consumables||{}).reduce((total,quantity)=>total+Math.ceil(quantity/99),0)}
+function stashItemCount(){return ports.state.stash.length+potionStackCount()}
+
 function stashUpgradeCost(){return 60+40*Math.floor((ports.stashCapacity()-ports.STASH_BASE_CAPACITY)/ports.STASH_UPGRADE_STEP)}
 
-function stashHasRoom(){return ports.state.stash.length<ports.stashCapacity()}
+function stashHasRoom(){return stashItemCount()<ports.stashCapacity()}
 
 function upgradeStash(){if(ports.state.run||ports.stashCapacity()>=ports.STASH_MAX_CAPACITY||ports.state.gold<ports.stashUpgradeCost())return;const cost=ports.stashUpgradeCost();ports.state.gold-=cost;ports.state.stashCapacity=Math.min(ports.STASH_MAX_CAPACITY,ports.stashCapacity()+ports.STASH_UPGRADE_STEP);ports.save();ports.renderStash();ports.bannerMessage('Stash expanded by '+ports.STASH_UPGRADE_STEP+' slots for '+cost+' Gold.');}
 
@@ -163,7 +166,7 @@ function equipItem(itemId,target=null){
  if(slot==='offhand'&&ports.isTwoHanded(ports.state.equip.weapon)){ports.bannerMessage('Off-Hand locked by two-handed weapon.');return false;}
  const displaced=[ports.state.equip[slot],...(ports.isTwoHanded(item)&&slot==='weapon'?[ports.state.equip.offhand]:[])].filter(Boolean);
  if(active&&ports.phase3BagItems().length-1+displaced.length>ports.PHASE3_BAG_CAPACITY){ports.bannerMessage('Not enough Expedition Bag space for the previous equipment.');return false;}
- if(!active&&ports.state.stash.length-(source===ports.state.stash?1:0)+displaced.length>ports.stashCapacity()){ports.bannerMessage('Stash full.');return false;}
+ if(!active&&stashItemCount()-(source===ports.state.stash?1:0)+displaced.length>ports.stashCapacity()){ports.bannerMessage('Stash full.');return false;}
  source.splice(i,1);
  if(ports.isTwoHanded(item)&&slot==='weapon')ports.state.equip.offhand=null;
  if(ring||dagger)item.slot=slot;
@@ -276,7 +279,7 @@ function phase6UsePotion(index){
 }
 
 function phase6BuyPotion(id){
- if(!ports.economyCanAct())return false;const a=ports.state.apothecary,index=a?.stock.findIndex(p=>p.id===id);if(index===undefined||index<0)return false;const p=a.stock[index],stock=ports.phase6PotionInventory();if(ports.state.gold<p.price||(stock[p.kind]||0)>=99999)return false;
+ if(!ports.economyCanAct())return false;const a=ports.state.apothecary,index=a?.stock.findIndex(p=>p.id===id);if(index===undefined||index<0)return false;const p=a.stock[index],stock=ports.phase6PotionInventory(),quantity=stock[p.kind]||0;if(ports.state.gold<p.price||quantity>=99999||quantity%99===0&&!ports.stashHasRoom())return false;
  ports.state.gold-=p.price;stock[p.kind]=(stock[p.kind]||0)+1;a.stock.splice(index,1);ports.save();ports.render();return true;
 }
 
@@ -363,15 +366,9 @@ function runeCheckpointLocked(){return ports.PHASE1_PREVIEW&&(ports.phase4Resume
 
 function phase3UsePotion(kind){
  if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked))return false;
- // Only the safe interval AFTER a Realm, not Camp, first Realm, passives or combat.
- if(!ports.phase3IsBetweenPlanes()||!['health','mana'].includes(kind)||!ports.phase3Supplies?.[kind])return false;
- if(Date.now()<ports.phase3PotionCooldowns[kind])return false;
- const vitals=ports.phase3Vitals(),key=kind==='health'?'hp':'mp',max=kind==='health'?'maxhp':'maxmp';
- if(vitals[max]<=0||vitals[key]>=vitals[max]-0.0001)return false;
- if(!ports.phase1Vitals)ports.phase1Vitals={hp:vitals.hp,mp:vitals.mp,maxmp:vitals.maxmp};
- ports.phase1Vitals[key]=Math.min(vitals[max],vitals[key]+Math.ceil(vitals[max]*(kind==='health'?.35:.4)));
- ports.phase1Vitals.maxmp=vitals.maxmp;
- ports.phase3Supplies[kind]--;ports.phase3PotionCooldowns[kind]=Date.now()+350;ports.view='phase1';ports.phase5Persist();ports.render();return true;
+ // Compatibility alias: all consumption goes through the canonical Stash-backed loadout.
+ const index=(ports.phase6Run?.potions||[]).findIndex(p=>p.kind===kind&&!p.used);
+ return index>=0&&ports.phase6UsePotion(index);
 }
 
 function phase3ClampVitals(){

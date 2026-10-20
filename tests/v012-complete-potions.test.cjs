@@ -7,3 +7,13 @@ test('Apothecary and Blacksmith stocks/rerolls are independent; purchase cannot 
  const a=create(62),s=a.state();s.gold=1000;a.rollShop();const smith=JSON.stringify(s.merchant);s.apothecary=a.potions.shop();assert.equal(s.apothecary.stock.length,4);assert(s.apothecary.stock.some(p=>p.kind==='health'));assert(s.apothecary.stock.some(p=>p.kind==='mana'));const id=s.apothecary.stock[0].id;assert(a.potions.buy(id));assert.equal(a.potions.buy(id),false);assert(a.potions.reroll());assert.equal(JSON.stringify(s.merchant),smith);
 });
 test('death forfeits unused loaded potions while preparation has not consumed them',()=>{const a=create(63),s=a.state();s.consumables={mana:1};a.potions.select('mana');a.start();assert.equal(s.consumables.mana,1);a.potions.start();a.potions.finish('defeat');assert.equal(s.consumables.mana,0);});
+test('Stash stacks count each 99-dose group and reject purchases that exceed slots or the per-type save cap',()=>{
+ const a=create(64),s=a.state();s.gold=1000;s.stash=Array.from({length:39},(_,i)=>a.makeItem(1,'belt',null,'loot','Belt','Common'));s.consumables={health:98};s.apothecary={stock:[{id:'partial',kind:'health',price:1},{id:'new-stack',kind:'health',price:1}],refreshCost:1};
+ assert(a.potions.buy('partial'));assert.equal(s.consumables.health,99);const gold=s.gold;assert.equal(a.potions.buy('new-stack'),false);assert.equal(s.gold,gold);
+ s.stash.pop();assert(a.potions.buy('new-stack'));assert.equal(s.consumables.health,100);
+ s.stashCapacity=50;s.consumables.health=99999;s.apothecary.stock=[{id:'cap',kind:'health',price:1}];const cappedGold=s.gold;assert.equal(a.potions.buy('cap'),false);assert.equal(s.gold,cappedGold);
+});
+test('legacy separate health and mana supplies migrate once into Stash consumables',()=>{
+ const a=create(65);a.start();const checkpoint=a.checkpoint.capture();checkpoint.session.supplies={health:2,mana:1};a.checkpoint.restore(checkpoint);
+ assert.deepEqual(JSON.parse(JSON.stringify(a.state().consumables)),{health:2,mana:1});const migrated=a.checkpoint.capture();assert.deepEqual(JSON.parse(JSON.stringify(migrated.session.supplies)),{health:0,mana:0});a.checkpoint.restore(migrated);assert.deepEqual(JSON.parse(JSON.stringify(a.state().consumables)),{health:2,mana:1});
+});

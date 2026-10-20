@@ -1,0 +1,32 @@
+{
+  "sourceFolder": "Drive/02 - Assets/Packs/08 - Consumables & Loot/01 - Potions",
+  "sources": {
+    "potion_health_standard.png": "1uwlR2zXMAVIbRpetw4XoPehnASuXJtWb",
+    "potion_health_enhanced.png": "1DNrMvJplAHL-zaPwTcPdL_n62bzRY6aV",
+    "potion_mana_standard.png": "1hhBFyLL6W1ISlQLx9nuWvqRWPya1qbJb",
+    "potion_mana_enhanced.png": "1F_GpPn60yYOQN4uKOqXKTi9yA8WFZpyi",
+    "potion_decay_elixir.png": "1Jv-ZzgHyHAQa0SygdEOT3RjVe462uRPw",
+    "potion_amber_elixir.png": "1SGO3dfJqWES9jFIGQobb3RhHlR3ZtM1Z",
+    "potion_golden_elixir.png": "1OGJQ8XhdG1EvPoBaiyQ8p1HovoKI1RuP",
+    "potion_silver_ward.png": "1r6PCveTCXJP8Jz5n2Ex3okvAWUvPqUPo"
+  },
+  "idToImage": {
+    "health": "potion_health_standard.webp",
+    "mana": "potion_mana_standard.webp",
+    "might": null,
+    "arcane": null,
+    "ironhide": null,
+    "haste": null,
+    "fortune": null,
+    "barrier": null
+  },
+  "unmapped": [
+    "potion_health_enhanced.png",
+    "potion_mana_enhanced.png",
+    "potion_decay_elixir.png",
+    "potion_amber_elixir.png",
+    "potion_golden_elixir.png",
+    "potion_silver_ward.png"
+  ],
+  "mappingNote": "Only names with an unambiguous match to an existing catalog ID are mapped. Other mappings require confirmation; the UI uses its fallback art."
+}

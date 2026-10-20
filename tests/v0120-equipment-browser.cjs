@@ -8,7 +8,7 @@ const fixture=`if(PHASE1_PREVIEW){
  phase1Init();phase1Controller.state.unlocked=5;state.gold=state.fragments=10000;
  const belt=makeItem(5,'belt',null,'forge','Cloth','Rare');state.stash.push(belt);
  state.equip.weapon={...state.equip.weapon,effect:'poison',magic:'poison'};
- globalThis.__gearTest={beltId:belt.id,snapshot:()=>JSON.parse(JSON.stringify(state)),rollBelt:()=>{state.merchant.stock=[{...makeItem(5,'belt',null,'merchant','Plate','Rare'),goldPrice:10}];renderMerchant();}};
+ globalThis.__gearTest={beltId:belt.id,snapshot:()=>JSON.parse(JSON.stringify(state)),rollBelt:()=>{state.merchant.stock=[{...makeItem(5,'belt',null,'merchant','Plate','Rare'),goldPrice:10}];phase3ContentTarget=$('cityBlacksmith');renderMerchant();phase3ContentTarget=null;}};
  render();
 }else{load();if(!state.merchant)rollShop();save();render();}`;
 const server=http.createServer((req,res)=>{
@@ -36,12 +36,12 @@ const server=http.createServer((req,res)=>{
   await page.locator('#equipThis').click();assert.equal(await page.evaluate(()=>__gearTest.snapshot().equip.belt.id),id);
   await page.selectOption('#slotFilter','all');await page.locator('[data-eqslot="belt"]').click();await page.locator('#unequipThis').click();
   assert.equal(await page.evaluate(()=>__gearTest.snapshot().equip.belt),null);
-  await page.locator('#phase3Return').click();await page.locator('[data-phase3-nav="forge"]').click();
+  await page.locator('[data-phase3-nav="city-center"]').click();await page.locator('[data-city-tab="blacksmith"]').click();
   assert.equal(await page.getByRole('heading',{name:'Affinity Transfer',exact:true}).count(),0);
   await page.selectOption('#forgeSlot','belt');await page.selectOption('#forgeSubtype','Leather');await page.selectOption('#forgeTier','5');
   await page.locator('#craft').click();assert.deepEqual(errors,[]);await page.locator('dialog [data-close]').click();
   assert(await page.evaluate(()=>__gearTest.snapshot().stash.some(i=>i.slot==='belt'&&i.armorType==='Leather'&&i.tier===5)));
-  await page.locator('#phase3Return').click();await page.locator('[data-phase3-nav="merchant"]').click();await page.evaluate(()=>__gearTest.rollBelt());
+  await page.locator('[data-phase3-nav="city-center"]').click();await page.locator('[data-city-tab="blacksmith"]').click();await page.evaluate(()=>__gearTest.rollBelt());
   assert.equal(await page.getByRole('heading',{name:/Sigils/}).count(),0);await page.locator('[data-buy]').click();
   const confirm=page.locator('dialog [data-confirm]');if(await confirm.count())await confirm.click();
   assert(await page.evaluate(()=>__gearTest.snapshot().stash.some(i=>i.slot==='belt'&&i.armorType==='Plate'&&i.source==='merchant')));

@@ -37,7 +37,7 @@ test('Belt crafts, equips, compares, unequips, drops and sells through existing 
  assert(!s.stash.some(i=>i.id===belt.id));a.unequip('belt');assert.equal(s.equip.belt,null);assert(s.stash.some(i=>i.id===belt.id));
  const fragments=s.fragments;a.salvage([belt.id]);assert(s.fragments>fragments);assert(!s.stash.some(i=>i.id===belt.id));
  assert(a.gear.dungeonEquipmentOdds({}).some(x=>x.slot==='belt'&&x.prob>0));
- assert.equal(a.gear.placeholderIcon('belt'),'assets/placeholders/chest.svg');
+ assert.equal(a.gear.placeholderIcon('belt'),'assets/placeholders/belt.webp');
  assert.equal(a.gear.itemSource({...belt,tier:5}).startsWith('E5'),true);
 });
 test('Merchant sells a Belt; obsolete Sigil rerolls cannot spend Gold',()=>{
