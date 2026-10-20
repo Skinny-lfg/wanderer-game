@@ -74,12 +74,17 @@ function phase6EventChoice(choice,itemId,passiveId,family,targetId){
  default:return false;
  }}
  ports.phase6Run.events.push(g.planeIndex);ports.phase6Run.event=null;ports.phase4CommitRealm();ports.phase1Controller.waveWon();
+ phase6UnlockBase(p.family);
  ports.phase5Results.gold+=Math.max(0,ports.state.gold-beforeGold);ports.phase5Results.fragments+=Math.max(0,ports.state.fragments-beforeFragments);
  ports.phase5RememberRealm({tier:E,phase1Plane:g.planeIndex-1,planeName:p.name,planeFamily:p.family,combatSeconds:0,gold:Math.max(0,ports.state.gold-beforeGold),fragments:Math.max(0,ports.state.fragments-beforeFragments),loot,realmLog:[{text:choice===2?'Event declined. No reward.':WandererV012IntegratedEvents.get(ev.id)[3][choice],kind:'good'}]},'cleared');
  ports.phase1Draft={kind:'reward',plane:g.rewardPending,step:'passive',options:ports.phase6PassiveOptions(g.rewardPending)};
  if(!ports.phase5Persist())return false;ports.render();return true;
 }
 
+function phase6UnlockBase(family){
+ const p=ports.phase1Build;
+ if(!p.unlockedFamilies?.includes(family)){const starter=WandererV012Buildcraft.initial(p,family);if(starter)ports.addLog('Affinity unlocked: '+starter.name,'good');}
+}
 function phase6PassiveOptions(plane){ports.phase1Build.realmIndex=plane.plane;ports.phase1Build.runtime.hybridWindow=ports.phase1Controller.state.version===2&&[6,8,10].includes(plane.plane);return WandererV012Buildcraft.options(ports.phase1Build,plane.family,ports.gameRandom);}
 
 function phase6BackToCamp(){
@@ -92,7 +97,7 @@ function phase6BackToCamp(){
 
 function phase2EnterInitialRealm(){
  const g=ports.phase1Controller.state;
- if(g.stage!=='choice'||g.planeIndex!==1||g.history.length||!g.initialFamily||!ports.phase1Build?.initialPassive||ports.phase1Draft||ports.state.run||ports.phase4Resume||ports.phase5Results.review)return false;
+ if(g.stage!=='choice'||g.planeIndex!==1||g.history.length||!g.initialFamily||!ports.phase1Build||ports.phase1Draft||ports.state.run||ports.phase4Resume||ports.phase5Results.review)return false;
  const plane=g.offers.find(p=>p.family===g.initialFamily);if(!plane)return false;
  if(!ports.phase1Choose(plane.id))return false;
  return ports.phase1Enter();
@@ -104,7 +109,6 @@ function phase2ChooseInitial(family){
  if(g.stage!=='choice'||g.initialFamily||ports.phase1Draft||!ports.phase1Build)return false;
  ports.phase1Controller.chooseInitial(family);ports.phase1Build.families=g.families;
  if(family==='magic')ports.phase1Draft={kind:'initial',family,step:'element'};
- else WandererV012Buildcraft.initial(ports.phase1Build,family);
  ports.phase5Persist();ports.render();return true;
 }
 
@@ -112,7 +116,7 @@ function phase2ChooseElement(id){
  if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked))return false;
  const draft=ports.phase1Draft;if(!draft||draft.step!=='element')return false;
  WandererV012Buildcraft.element(ports.phase1Build,id);ports.phase1Draft=null;
- if(draft.kind==='initial')WandererV012Buildcraft.initial(ports.phase1Build,'magic');
+ // Element selection only. The enabling Magic passive is earned on first Realm clear.
  if(!ports.phase5Persist())return false;
  if(draft.kind==='entry'&&!draft.plane.eventId)ports.phase2Launch(draft.plane);else ports.render();
  return true;
@@ -231,6 +235,7 @@ function phase1WaveWon(){
  }
  if(!result.expeditionComplete){
   const plane=ports.phase1Controller.state.rewardPending;
+  phase6UnlockBase(plane.family);
   ports.phase1Draft={kind:'reward',plane,step:'passive',options:ports.phase6PassiveOptions(plane)};
  }
  if(!ports.phase5Persist())return;

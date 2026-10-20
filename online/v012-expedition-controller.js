@@ -26,11 +26,11 @@ function create(themes,rng=Math.random){
  if(FAMILIES.some(f=>!byFamily[f].length))throw Error('Missing classic themes for affinity '+FAMILIES.find(f=>!byFamily[f].length));
  const game={unlocked:1,expedition:0,planeIndex:0,stage:'camp',families:[],lastFamily:null,rooms:[],offers:[],selected:null,wave:0,history:[],initialFamily:null,rewardPending:null,rerollsByRealm:[],eventIds:[]};
  function allowed(){
-  return FAMILIES.filter(f=>(game.families.length<3||game.families.includes(f))&&
-   (game.history.length===0||game.families.length!==1||f!==game.initialFamily));
+  return FAMILIES.filter(f=>game.families.length<3||game.families.includes(f));
  }
- function makeOffer(family){
-  const kind=game.rooms[game.planeIndex-1],list=game.version===2?expeditionThemes.filter(t=>t.family===family):byFamily[family],theme=list[Math.floor(rng()*list.length)];
+ function makeOffer(family,excluded=[]){
+  const kind=game.rooms[game.planeIndex-1],list=(game.version===2?expeditionThemes:byFamily[family]).filter(t=>t.family===family&&!excluded.includes(t.id)),theme=list[Math.floor(rng()*list.length)];
+  if(!theme)throw Error('No distinct Realm available for '+family);
   return {id:theme.id,name:kind==='boss'&&game.version===2?BOSSES.find(b=>b.id===game.bossId).name:theme.name,image:theme.image,family,
    waves:game.version===2&&kind==='event'?0:kind==='boss'?3:kind==='elite'?2+Math.floor(rng()*2):1+Math.floor(rng()*3),
    elite:kind==='elite'||kind==='boss'||kind!=='event'&&rng()<.2,boss:kind==='boss',
@@ -39,11 +39,17 @@ function create(themes,rng=Math.random){
  function offerRealms(){
   if(game.stage!=='choice'||!game.initialFamily||game.rewardPending)throw Error('Realm selection unavailable');
   if(game.version===2&&game.planeIndex===15){game.offers=[makeOffer(game.families[Math.floor(rng()*game.families.length)])];return game.offers;}
-  const choices=shuffle(allowed(),rng).slice(0,3);
-  if(game.version===2&&game.pathInfluence&&allowed().includes(game.pathInfluence)&&!choices.includes(game.pathInfluence))choices[0]=game.pathInfluence;game.pathInfluence=null;
-  if(game.history.length===0&&!choices.includes(game.initialFamily))choices[0]=game.initialFamily;
-  if(choices.length!==3)throw Error('Cannot construct three eligible Realm offers');
-  game.offers=choices.map(makeOffer);return game.offers;
+  const offers=[],required=game.history.length===0?game.initialFamily:game.version===2&&allowed().includes(game.pathInfluence)?game.pathInfluence:null;
+  if(required)offers.push(makeOffer(required));
+  game.pathInfluence=null;
+  while(offers.length<3){
+   const used=offers.map(p=>p.id);
+   const candidates=allowed().filter(f=>expeditionThemes.some(t=>t.family===f&&!used.includes(t.id)));
+   if(!candidates.length)throw Error('Cannot construct three distinct Realm offers');
+   const family=candidates[Math.floor(rng()*candidates.length)];
+   offers.push(makeOffer(family,used));
+  }
+  game.offers=shuffle(offers,rng);return game.offers;
  }
   function start(level=1){
   if(!Number.isInteger(level)||level<1||level>game.unlocked||level>200)throw Error('Expedition locked');
@@ -66,10 +72,11 @@ function create(themes,rng=Math.random){
   const other=game.offers.filter((_,i)=>i!==index),old=game.offers[index];
   // Keep all other cards and their counters intact. Guarantee the initial route even after rerolling it.
   const mustInitial=game.history.length===0&&!other.some(o=>o.family===game.initialFamily);
-  const candidates=allowed().filter(f=>!other.some(o=>o.family===f)&&(!mustInitial||f===game.initialFamily));
+  const used=other.map(o=>o.id);
+  const candidates=allowed().filter(f=>(!mustInitial||f===game.initialFamily)&&expeditionThemes.some(t=>t.family===f&&!used.includes(t.id)));
   if(!candidates.length)throw Error('No eligible replacement Realm');
   if(game.version===2)game.rerolls--;else game.rerollsByRealm[game.planeIndex-1][index]--;
-  game.offers[index]=makeOffer(candidates[Math.floor(rng()*candidates.length)]);
+  game.offers[index]=makeOffer(candidates[Math.floor(rng()*candidates.length)],used);
   if(game.selected===old)game.selected=null;
   return game.offers[index];
  }
@@ -127,7 +134,7 @@ function create(themes,rng=Math.random){
    if(!theme||(g.version===2?REALMS[p.id]?.[0]:THEME_FAMILIES[p.id])!==p.family||!integer(p.waves,g.version===2&&kind==='event'?0:1,3)||typeof p.elite!=='boolean'||p.boss!==(index===15)||p.event!==(g.version===2?(kind==='event'?g.eventsByRealm[index-1]:null):(['chest','event','altar'].includes(kind)?kind:null))||p.boss&&p.waves!==3)throw Error('Invalid saved Realm');
    return {...p,name:p.boss&&g.version===2?BOSSES.find(b=>b.id===g.bossId).name:theme.name,image:theme.image};
   }
-  if(!Array.isArray(g.offers)||!(g.version===2&&g.planeIndex===15?[0,1]:[0,3]).includes(g.offers.length)||new Set(g.offers.map(p=>p.id)).size!==g.offers.length||new Set(g.offers.map(p=>p.family)).size!==g.offers.length)throw Error('Invalid Realm offers');
+  if(!Array.isArray(g.offers)||!(g.version===2&&g.planeIndex===15?[0,1]:[0,3]).includes(g.offers.length)||new Set(g.offers.map(p=>p.id)).size!==g.offers.length )throw Error('Invalid Realm offers');
   g.offers=g.offers.map(p=>realm(p,g.planeIndex));
   if(!Array.isArray(g.history)||g.history.length>15)throw Error('Invalid Realm history');
   g.history=g.history.map((p,i)=>{if(p.plane!==i+1)throw Error('Invalid Realm history');return realm(p,i+1);});
@@ -144,7 +151,7 @@ function create(themes,rng=Math.random){
   if(['choice','combat'].includes(g.stage)){
    const acquired=new Set([g.initialFamily,...g.history.map(p=>p.family),...(g.stage==='combat'?[g.selected.family]:[])].filter(Boolean));
    if(acquired.size!==g.families.length||!g.families.every(f=>acquired.has(f)))throw Error('Invalid affinity provenance');
-   if(g.stage==='choice'&&g.offers.some(p=>(g.families.length===3&&!g.families.includes(p.family))||(g.history.length>0&&g.families.length===1&&p.family===g.initialFamily)))throw Error('Invalid affinity offer');
+   if(g.stage==='choice'&&g.offers.some(p=>(g.families.length===3&&!g.families.includes(p.family)) ))throw Error('Invalid affinity offer');
   }
   Object.assign(game,g);return game;
  }
