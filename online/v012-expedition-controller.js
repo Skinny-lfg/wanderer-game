@@ -9,6 +9,9 @@ const THEME_FAMILIES=Object.freeze({
  void:'decay',ward:'aegis',grove:'vitality',shrine:'vitality',storm:'magic',
  drowned:'aegis',quarry:'aegis'
 });
+const REALMS=Object.freeze({forge:['blood','Crimson Dominion'],bloodscar:['blood','Bloodscar Wastes'],temple:['decay','Venomreach'],void:['decay','Umbral Hollow'],grove:['vitality','Verdant Wilds'],shrine:['vitality','Everroot Vale'],ward:['aegis','Warded Marches'],drowned:['aegis','Drowned Bastion'],crypt:['fury','Gravewind Barrens'],bastion:['fury','Ironbound Frontier'],ash:['magic','Ashen Aether'],storm:['magic','Stormglass Beyond']});
+const BOSSES=Object.freeze([{id:'guardian',name:"Abyssal Guardian’s Citadel",style:'guardian'},{id:'rift',name:"Harbinger’s Rift",style:'leech'},{id:'ember',name:"Ember Sovereign’s Throne",style:'berserker'}]);
+const EVENT_GROUPS=[['traveling_merchant','smugglers_caravan','relic_collector','cursed_artificer'],['cursed_altar','soul_mirror','whispering_idol','echo_shrine'],['cursed_chest','forgotten_arsenal','runic_vault','bounty_writ'],['restless_spring','fallen_wanderer','oracle_of_paths','last_ember']];
 const ROOMS=Object.freeze(['combat','combat','combat','combat','combat','combat','combat','elite','elite','chest','chest','event','event','altar']);
 function shuffle(values,rng){
  const arr=[...values];
@@ -18,6 +21,7 @@ function shuffle(values,rng){
 function create(themes,rng=Math.random){
  if(!Array.isArray(themes)||!themes.length||!themes.every(t=>typeof t?.id==='string'&&THEME_FAMILIES[t.id]))throw Error('Classic themes required');
  if(typeof rng!=='function')throw Error('Invalid RNG');
+ const expeditionThemes=Object.entries(REALMS).map(([id,[family,name]])=>({...themes.find(t=>t.id===(id==='bloodscar'?'forge':id)),id,name,family}));
  const byFamily=Object.fromEntries(FAMILIES.map(f=>[f,themes.filter(t=>THEME_FAMILIES[t.id]===f)]));
  if(FAMILIES.some(f=>!byFamily[f].length))throw Error('Missing classic themes for affinity '+FAMILIES.find(f=>!byFamily[f].length));
  const game={unlocked:1,expedition:0,planeIndex:0,stage:'camp',families:[],lastFamily:null,rooms:[],offers:[],selected:null,wave:0,history:[],initialFamily:null,rewardPending:null,rerollsByRealm:[]};
@@ -26,15 +30,17 @@ function create(themes,rng=Math.random){
    (game.history.length===0||game.families.length!==1||f!==game.initialFamily));
  }
  function makeOffer(family){
-  const kind=game.rooms[game.planeIndex-1],list=byFamily[family],theme=list[Math.floor(rng()*list.length)];
-  return {id:theme.id,name:theme.name,image:theme.image,family,
-   waves:kind==='boss'?3:kind==='elite'?2+Math.floor(rng()*2):1+Math.floor(rng()*3),
-   elite:kind==='elite'||kind==='boss'||rng()<.2,boss:kind==='boss',
-   event:['chest','event','altar'].includes(kind)?kind:null};
+  const kind=game.rooms[game.planeIndex-1],list=game.version===2?expeditionThemes.filter(t=>t.family===family):byFamily[family],theme=list[Math.floor(rng()*list.length)];
+  return {id:theme.id,name:kind==='boss'&&game.version===2?BOSSES.find(b=>b.id===game.bossId).name:theme.name,image:theme.image,family,
+   waves:game.version===2&&kind==='event'?0:kind==='boss'?3:kind==='elite'?2+Math.floor(rng()*2):1+Math.floor(rng()*3),
+   elite:kind==='elite'||kind==='boss'||kind!=='event'&&rng()<.2,boss:kind==='boss',
+   event:game.version===2?(kind==='event'?game.eventsByRealm[game.planeIndex-1]:null):(['chest','event','altar'].includes(kind)?kind:null)};
  }
  function offerRealms(){
   if(game.stage!=='choice'||!game.initialFamily||game.rewardPending)throw Error('Realm selection unavailable');
+  if(game.version===2&&game.planeIndex===15){game.offers=[makeOffer(game.families[Math.floor(rng()*game.families.length)])];return game.offers;}
   const choices=shuffle(allowed(),rng).slice(0,3);
+  if(game.version===2&&game.pathInfluence&&allowed().includes(game.pathInfluence)&&!choices.includes(game.pathInfluence))choices[0]=game.pathInfluence;game.pathInfluence=null;
   if(game.history.length===0&&!choices.includes(game.initialFamily))choices[0]=game.initialFamily;
   if(choices.length!==3)throw Error('Cannot construct three eligible Realm offers');
   game.offers=choices.map(makeOffer);return game.offers;
@@ -42,8 +48,10 @@ function create(themes,rng=Math.random){
  function start(level=1){
   if(!Number.isInteger(level)||level<1||level>game.unlocked||level>200)throw Error('Expedition locked');
   if(!['camp','finished','failed'].includes(game.stage))throw Error('Expedition already active');
-  Object.assign(game,{expedition:level,planeIndex:1,families:[],lastFamily:null,initialFamily:null,
-   rooms:['combat',...shuffle(ROOMS.slice(1),rng),'boss'],offers:[],selected:null,wave:0,history:[],
+  const count=3+Math.floor(rng()*2),rooms=['combat',...shuffle([...Array(11-count).fill('combat'),'elite','elite',...Array(count).fill('event')],rng),'boss'];
+  const events=shuffle(EVENT_GROUPS,rng).slice(0,count).map(group=>group[Math.floor(rng()*group.length)]);let eventIndex=0;
+  Object.assign(game,{version:2,rerolls:3,bossId:BOSSES[Math.floor(rng()*3)].id,eventsByRealm:rooms.map(k=>k==='event'?events[eventIndex++]:null),expedition:level,planeIndex:1,families:[],lastFamily:null,initialFamily:null,
+   rooms,offers:[],selected:null,wave:0,history:[],
    rewardPending:null,rerollsByRealm:Array.from({length:15},()=>[3,3,3]),stage:'choice'});
   return game;
  }
@@ -52,13 +60,13 @@ function create(themes,rng=Math.random){
   game.initialFamily=family;game.families.push(family);offerRealms();return family;
  }
  function reroll(index){
-  if(game.stage!=='choice'||!game.initialFamily||game.rewardPending||!Number.isInteger(index)||index<0||index>2||game.rerollsByRealm[game.planeIndex-1][index]<=0)throw Error('No Realm rerolls remaining');
+  if(game.stage!=='choice'||!game.initialFamily||game.rewardPending||!Number.isInteger(index)||index<0||index>2||(game.version===2?(game.rerolls<=0||game.planeIndex===15):game.rerollsByRealm[game.planeIndex-1][index]<=0))throw Error('No Realm rerolls remaining');
   const other=game.offers.filter((_,i)=>i!==index),old=game.offers[index];
   // Keep all other cards and their counters intact. Guarantee the initial route even after rerolling it.
   const mustInitial=game.history.length===0&&!other.some(o=>o.family===game.initialFamily);
   const candidates=allowed().filter(f=>!other.some(o=>o.family===f)&&(!mustInitial||f===game.initialFamily));
   if(!candidates.length)throw Error('No eligible replacement Realm');
-  game.rerollsByRealm[game.planeIndex-1][index]--;
+  if(game.version===2)game.rerolls--;else game.rerollsByRealm[game.planeIndex-1][index]--;
   game.offers[index]=makeOffer(candidates[Math.floor(rng()*candidates.length)]);
   if(game.selected===old)game.selected=null;
   return game.offers[index];
@@ -106,16 +114,17 @@ function create(themes,rng=Math.random){
  function restore(input){
   const g=JSON.parse(JSON.stringify(input));
   const integer=(v,min,max)=>Number.isInteger(v)&&v>=min&&v<=max;
-  if(!g||!integer(g.unlocked,1,200)||!integer(g.expedition,1,g.unlocked)||!integer(g.planeIndex,1,15)||!['choice','combat','finished','failed'].includes(g.stage)||!Array.isArray(g.rooms)||g.rooms.length!==15||g.rooms[0]!=='combat'||g.rooms[14]!=='boss'||g.rooms.slice(0,14).some(k=>!ROOMS.includes(k)))throw Error('Invalid Realm checkpoint');
-  if(JSON.stringify([...g.rooms.slice(0,14)].sort())!==JSON.stringify([...ROOMS].sort()))throw Error('Invalid Realm schedule');
+  if(!g||!integer(g.unlocked,1,200)||!integer(g.expedition,1,g.unlocked)||!integer(g.planeIndex,1,15)||!['choice','combat','finished','failed'].includes(g.stage)||!Array.isArray(g.rooms)||g.rooms.length!==15||g.rooms[0]!=='combat'||g.rooms[14]!=='boss'||g.rooms.slice(0,14).some(k=>!(g.version===2?['combat','elite','event']:ROOMS).includes(k)))throw Error('Invalid Realm checkpoint');
+  if(g.version===2){if(!integer(g.rerolls,0,3)||!BOSSES.some(b=>b.id===g.bossId)||!Array.isArray(g.eventsByRealm)||g.eventsByRealm.length!==15||g.rooms.filter(k=>k==='event').length<3||g.rooms.filter(k=>k==='event').length>4||g.rooms.filter(k=>k==='elite').length!==2)throw Error('Invalid integration schedule');const ids=g.eventsByRealm.filter(Boolean),groups=ids.map(id=>EVENT_GROUPS.findIndex(group=>group.includes(id)));if(new Set(ids).size!==ids.length||new Set(groups).size!==groups.length||groups.includes(-1)||g.eventsByRealm.some((id,i)=>(g.rooms[i]==='event')!==!!id))throw Error('Invalid event schedule');}
+  if(g.version!==2&&JSON.stringify([...g.rooms.slice(0,14)].sort())!==JSON.stringify([...ROOMS].sort()))throw Error('Invalid Realm schedule');
   if(!Array.isArray(g.families)||g.families.length>3||new Set(g.families).size!==g.families.length||!g.families.every(f=>FAMILIES.includes(f))||g.initialFamily!==null&&!FAMILIES.includes(g.initialFamily))throw Error('Invalid saved affinities');
   if(!Array.isArray(g.rerollsByRealm)||g.rerollsByRealm.length!==15||!g.rerollsByRealm.every(row=>Array.isArray(row)&&row.length===3&&row.every(n=>integer(n,0,3))))throw Error('Invalid Realm rerolls');
   function realm(p,index){
-   const theme=themes.find(t=>t.id===p?.id),kind=g.rooms[index-1];
-   if(!theme||THEME_FAMILIES[p.id]!==p.family||!integer(p.waves,1,3)||typeof p.elite!=='boolean'||p.boss!==(index===15)||p.event!==(['chest','event','altar'].includes(kind)?kind:null)||p.boss&&p.waves!==3)throw Error('Invalid saved Realm');
-   return {...p,name:theme.name,image:theme.image};
+   const theme=(g.version===2?expeditionThemes:themes).find(t=>t.id===p?.id),kind=g.rooms[index-1];
+   if(!theme||(g.version===2?REALMS[p.id]?.[0]:THEME_FAMILIES[p.id])!==p.family||!integer(p.waves,g.version===2&&kind==='event'?0:1,3)||typeof p.elite!=='boolean'||p.boss!==(index===15)||p.event!==(g.version===2?(kind==='event'?g.eventsByRealm[index-1]:null):(['chest','event','altar'].includes(kind)?kind:null))||p.boss&&p.waves!==3)throw Error('Invalid saved Realm');
+   return {...p,name:p.boss&&g.version===2?BOSSES.find(b=>b.id===g.bossId).name:theme.name,image:theme.image};
   }
-  if(!Array.isArray(g.offers)||![0,3].includes(g.offers.length)||new Set(g.offers.map(p=>p.id)).size!==g.offers.length||new Set(g.offers.map(p=>p.family)).size!==g.offers.length)throw Error('Invalid Realm offers');
+  if(!Array.isArray(g.offers)||!(g.version===2&&g.planeIndex===15?[0,1]:[0,3]).includes(g.offers.length)||new Set(g.offers.map(p=>p.id)).size!==g.offers.length||new Set(g.offers.map(p=>p.family)).size!==g.offers.length)throw Error('Invalid Realm offers');
   g.offers=g.offers.map(p=>realm(p,g.planeIndex));
   if(!Array.isArray(g.history)||g.history.length>15)throw Error('Invalid Realm history');
   g.history=g.history.map((p,i)=>{if(p.plane!==i+1)throw Error('Invalid Realm history');return realm(p,i+1);});
@@ -123,7 +132,7 @@ function create(themes,rng=Math.random){
    if(g.history.length!==g.planeIndex-1||g.initialFamily&&!g.families.includes(g.initialFamily))throw Error('Invalid Realm progress');
    if(g.rewardPending)g.rewardPending=realm(g.rewardPending,g.planeIndex-1);
    if(g.stage==='combat'){
-    const selected=g.offers.find(p=>p.id===g.selected?.id);if(!selected||!g.families.includes(selected.family)||!integer(g.wave,1,selected.waves))throw Error('Invalid combat checkpoint');g.selected=selected;
+    const selected=g.offers.find(p=>p.id===g.selected?.id);if(!selected||!g.families.includes(selected.family)||!integer(g.wave,1,Math.max(1,selected.waves)))throw Error('Invalid combat checkpoint');g.selected=selected;
    }else{
     if(g.wave!==0||g.rewardPending&&(g.offers.length||g.selected)||!g.initialFamily&&g.offers.length)throw Error('Invalid choice checkpoint');
     if(g.selected){const selected=g.offers.find(p=>p.id===g.selected.id);if(!selected)throw Error('Invalid selected Realm');g.selected=selected;}
@@ -136,7 +145,8 @@ function create(themes,rng=Math.random){
   }
   Object.assign(game,g);return game;
  }
- return Object.freeze({state:game,start,chooseInitial,select,enter,claimReward,restore,reroll,waveWon,defeat,abandon,allowed});
+ function influence(family){if(!allowed().includes(family))throw Error('Affinity influence unavailable');game.pathInfluence=family;}
+ return Object.freeze({influence,state:game,start,chooseInitial,select,enter,claimReward,restore,reroll,waveWon,defeat,abandon,allowed});
 }
-root.WandererV012Expedition=Object.freeze({create,FAMILIES,FAMILY_NAMES,THEME_FAMILIES});
+root.WandererV012Expedition=Object.freeze({create,FAMILIES,FAMILY_NAMES,THEME_FAMILIES,REALMS,BOSSES,EVENT_GROUPS});
 })(globalThis);

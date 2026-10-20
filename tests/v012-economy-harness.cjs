@@ -27,6 +27,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
  addLog=(text,type)=>{if(auditFeedback)auditFeedback.logs.push({text,type});};floatText=(value,target)=>{if(auditFeedback)auditFeedback.floats.push({value,target});};
  phase1Init();
  globalThis.audit={
+  events:{open:phase6OpenEvent,choose:phase6EventChoice,run:()=>phase6Run},
   state:()=>state,results:()=>phase5Results,exitResult:phase5ExitResult,recordItem:item=>phase5Results.earned.push(phase5Item(item)),controller:()=>phase1Controller,build:()=>phase1Build,draft:()=>phase1Draft,
   start:phase1Begin,initial:phase2ChooseInitial,select:phase1Choose,enter:phase1Enter,passive:phase2ChoosePassive,element:phase2ChooseElement,
   passiveIcons:phase2PassiveIcons,initialPassive:WandererV012Buildcraft.initial,
@@ -70,7 +71,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
  };
  `;
  const main=source.match(/<script>([\s\S]*?)<\/script>/)?.[1];
- const files=['combat/legendary.js','combat/v012-buildcraft.js','online/v012-expedition-controller.js'];
+ const files=['combat/legendary.js','combat/v012-buildcraft.js','online/v012-expedition-controller.js','online/v012-expedition-events.js'];
  vm.runInNewContext(files.map(f=>fs.readFileSync(path.join(root,f),'utf8')).join('\n')+'\n'+main.replace(boot,inject),sandbox,{timeout:20000});
  sandbox.audit.flush=()=>{for(let i=0;callbacks.length;i++){if(i>10000)throw Error('Callback loop');callbacks.shift()();}};
  sandbox.audit.catalog=sandbox.WandererV012Buildcraft.CATALOG;

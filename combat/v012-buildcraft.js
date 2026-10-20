@@ -57,7 +57,7 @@ const P=[
 const BY_ID=Object.fromEntries(P.map(p=>[p.id,p]));
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 function create(){return {element:null,initialFamily:null,initialPassive:null,picks:[],cooldowns:Object.create(null),runtime:{frenzyUntil:0,counterBlock:0,counterBarrier:0,spellblade:false,magicHits:0,staticCharges:0,adrenalineUntil:0,conduit:false,lastStand:false,lastSpellAt:-999}};}
-function rank(b,id){return b?.picks?.filter(x=>x===id).length||0;}
+function rank(b,id){const n=b?.picks?.filter(x=>x===id).length||0;return n&&b.runtime?.echo?.id===id&&b.runtime.echo.remaining>0?Math.max(0,n+b.runtime.echo.power):n;}
 function hasFamily(b,family){return Array.isArray(b?.families)&&b.families.includes(family);}
 function eligible(b,family){
  if(!FAMILIES.includes(family)||!hasFamily(b,family)||family==='magic'&&!b.element)return [];
@@ -191,7 +191,7 @@ function resetWave(b,e){e.v012Rot=[];e.v012Shock=0;}
 function canCast(b){return !!b&&!!b.element&&['kindling','deep_winter','overcharge','arcane_focus'].some(id=>rank(b,id));}
 function validate(b){
  if(!b||!Array.isArray(b.families)||b.families.length>3||new Set(b.families).size!==b.families.length||!b.families.every(f=>FAMILIES.includes(f))||b.element!==null&&(!elements.includes(b.element)||!hasFamily(b,'magic'))||!Array.isArray(b.picks)||b.picks.length>16)throw Error('Invalid saved build');
- for(const id of b.picks){const p=BY_ID[id];if(!p||!hasFamily(b,p.family)||p.requires.some(f=>!hasFamily(b,f))||p.element&&p.element!==b.element||rank(b,id)>p.max)throw Error('Invalid saved passive');}
+ for(const id of b.picks){const p=BY_ID[id];if(!p||!hasFamily(b,p.family)||p.requires.some(f=>!hasFamily(b,f))||p.element&&p.element!==b.element||b.picks.filter(x=>x===id).length>p.max)throw Error('Invalid saved passive');}
  if(b.initialPassive!==null&&(b.initialPassive!==initialId(b.initialFamily,b.element)||!b.picks.includes(b.initialPassive)||!hasFamily(b,b.initialFamily)))throw Error('Invalid initial passive');
  if(!b.cooldowns||typeof b.cooldowns!=='object'||!Object.values(b.cooldowns).every(n=>typeof n==='number'&&Number.isFinite(n)&&n>=0)||!b.runtime||typeof b.runtime!=='object'||!['frenzyUntil','magicHits','lastSpellAt'].every(k=>typeof b.runtime[k]==='number'&&Number.isFinite(b.runtime[k]))||typeof b.runtime.lastStand!=='boolean')throw Error('Invalid saved cooldowns');
  if(b.runtime.staticCharges===undefined)b.runtime.staticCharges=0;

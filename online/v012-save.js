@@ -186,6 +186,7 @@ function createStore(storage,binding='local'){
    else requireValue(old.active===null&&next.active!==null&&next.awardKeys.length===0,'invalid new attempt');
    if(next.attempts===old.attempts&&old.session&&next.session){
     requireValue(JSON.stringify(old.session.home)===JSON.stringify(next.session.home),'home equipment changed');
+    if(old.session.controller.version===2)requireValue(integer(next.session.controller.rerolls,0,old.session.controller.rerolls),'reroll rollback');
     const before=old.session.controller.rerollsByRealm,after=next.session.controller.rerollsByRealm;
     requireValue(Array.isArray(before)&&Array.isArray(after)&&before.length===15&&after.length===15&&after.every((row,i)=>Array.isArray(row)&&row.length===3&&row.every((n,j)=>integer(n,0,before[i][j]))),'reroll rollback');
    }
