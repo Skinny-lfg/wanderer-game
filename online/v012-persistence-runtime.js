@@ -48,7 +48,7 @@ function phase4Restore(session){
  ports.phase3LootIds=new Set(session.lootIds);ports.phase4Home=session.home;ports.phase4Seed=session.seed;ports.phase4Prefix=session.prefix;ports.phase4Stamp=session.stamp;ports.uid=session.idCounter;ports.phase1Continuity=session.continuity;
  if(ports.phase1Build){ports.phase1Build.families=ports.phase1Controller.state.families;if(ports.phase1Draft?.kind==='reward'){
   const eligible=WandererV012Buildcraft.eligible,build=ports.phase1Build,draft=ports.phase1Draft;
-  if(!ports.phase1Controller.state.rewardPending||!Array.isArray(draft.options)||draft.options.length!==3||new Set(draft.options.map(p=>p.id)).size!==3||!draft.options.every(p=>WandererV012Buildcraft.CATALOG.some(v=>v.id===p.id)))throw Error('Invalid saved passive choice');
+  if(!ports.phase1Controller.state.rewardPending||!Array.isArray(draft.options)||draft.options.length>3||new Set(draft.options.map(p=>p.id)).size!==draft.options.length||!draft.options.every(p=>WandererV012Buildcraft.CATALOG.some(v=>v.id===p.id)))throw Error('Invalid saved passive choice');
   draft.plane=ports.phase1Controller.state.rewardPending;
   if(draft.version!==3){build.realmIndex=draft.plane.plane;build.runtime.draftStats=ports.totalStats();draft.options=WandererV012Buildcraft.options(build,draft.plane.family,ports.gameRandom);draft.version=3;}
   else if(!draft.options.every(p=>eligible(build,p.family).some(v=>v.id===p.id)))throw Error('Invalid saved passive choice');
