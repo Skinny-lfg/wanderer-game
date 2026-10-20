@@ -127,7 +127,9 @@ function phase2ChoosePassive(id){
  if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked))return false;
  const draft=ports.phase1Draft,g=ports.phase1Controller.state;
  if(!draft||draft.kind!=='reward'||draft.step!=='passive'||!g.rewardPending||ports.state.run?.status==='fight')return false;
- WandererV012Buildcraft.choose(ports.phase1Build,draft.plane.family,id,draft.options);
+ // A fully exhausted legal pool has no selectable card; the player explicitly acknowledges it.
+ if(draft.options.length===0){if(id!==null)return false;}
+ else{if(typeof id!=='string')return false;WandererV012Buildcraft.choose(ports.phase1Build,draft.plane.family,id,draft.options);}
  ports.phase1Controller.claimReward();ports.phase1Draft=null;if(ports.phase1Controller.state.version===2)ports.phase1Build.runtime.hybridWindow=false;
  ports.phase3ClampVitals();if(!ports.phase5Persist())return false;
  if(ports.state.run?.status==='cleared'){ports.view='combat';ports.renderCombat();}else{ports.view='phase1';ports.render();}
