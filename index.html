@@ -1939,7 +1939,7 @@ function renderPhase1(){
    html(header+cards.map(([id,name,desc,glyph])=>'<button class="phase1DraftCard" data-phase2-element="'+id+'"><span>'+affinityArt(glyph)+'</span><strong>'+name+'</strong><small>'+desc+'</small></button>').join('')+'</div><p class="small muted">Element stays fixed for this Expedition. Staff and Wand amplify it.</p></section>');
    Q('[data-phase2-element]').forEach(b=>b.onclick=()=>{if(phase2ChooseElement(b.dataset.phase2Element))phase2EnterInitialRealm();});
   }else{
-   html(header+d.options.map(p=>'<button class="phase1DraftCard" data-phase2-passive="'+p.id+'">'+phase2PassiveIcons(p)+'<strong>'+esc(p.name)+'</strong><small>'+esc(p.description)+'</small><span class="micro muted">'+(p.requires.length?'HYBRID · ':'')+(p.max===1?'UNIQUE':'Rank '+WandererV012Buildcraft.ownedRank(phase1Build,p.id)+' → '+(WandererV012Buildcraft.ownedRank(phase1Build,p.id)+1)+' / '+p.max)+'</span></button>').join('')+'</div><p class="small muted">Numeric passives: Rank 5 maximum. Unique talents: Rank 1.</p></section>');
+   html(header+d.options.map(p=>'<button class="phase1DraftCard" data-phase2-passive="'+p.id+'">'+phase2PassiveIcons(p)+'<small>'+esc(p.category||'')+'</small><strong>'+esc(p.name)+'</strong><small>'+esc(p.description)+'</small><span class="micro muted">'+(p.requires.length?'HYBRID · ':'')+(p.max===1?'UNIQUE':'Rank '+WandererV012Buildcraft.ownedRank(phase1Build,p.id)+' → '+(WandererV012Buildcraft.ownedRank(phase1Build,p.id)+1)+' / '+p.max)+'</span></button>').join('')+'</div><p class="small muted">Numeric passives: Rank 5 maximum. Unique talents: Rank 1.</p></section>');
    Q('[data-phase2-passive]').forEach(b=>b.onclick=()=>phase2ChoosePassive(b.dataset.phase2Passive));
   }
   if(d.kind==='initial')phase6BindBack();return;
@@ -1991,7 +1991,7 @@ function renderPhase1(){
 
 function phase6PassivePopup(){
  if(document.querySelector('dialog[data-realm-passive]'))return;
- const draft=phase1Draft,dialog=showModal('Choose one Realm passive','<div class="phase1DraftCards">'+draft.options.map(p=>'<button data-popup-passive="'+p.id+'">'+phase2PassiveIcons(p)+'<b>'+esc(p.name)+'</b><p>'+esc(p.description)+'</p><small>'+esc(WandererV012Buildcraft.preview(phase1Build,p.id,phase2Stats()).description)+'</small><span>'+(p.max===1?'UNIQUE':'Rank '+WandererV012Buildcraft.ownedRank(phase1Build,p.id)+' → '+(WandererV012Buildcraft.ownedRank(phase1Build,p.id)+1)+' / '+p.max)+'</span></button>').join('')+'</div>');
+ const draft=phase1Draft,dialog=showModal('Choose one Realm passive','<div class="phase1DraftCards">'+draft.options.map(p=>'<button data-popup-passive="'+p.id+'">'+phase2PassiveIcons(p)+'<small>'+esc(p.category||'')+'</small><b>'+esc(p.name)+'</b><p>'+esc(p.description)+'</p><small>'+esc(WandererV012Buildcraft.preview(phase1Build,p.id,phase2Stats()).description)+'</small><span>'+(p.max===1?'UNIQUE':'Rank '+WandererV012Buildcraft.ownedRank(phase1Build,p.id)+' → '+(WandererV012Buildcraft.ownedRank(phase1Build,p.id)+1)+' / '+p.max)+'</span></button>').join('')+'</div>');
  if(!dialog||typeof dialog.querySelector!=='function'||typeof dialog.querySelectorAll!=='function')return;dialog.dataset.realmPassive='1';dialog.querySelector('[data-close]')?.remove();dialog.addEventListener('cancel',e=>e.preventDefault());
  dialog.querySelectorAll('[data-popup-passive]').forEach(button=>button.onclick=()=>{dialog.close();phase2ChoosePassive(button.dataset.popupPassive);});
 }

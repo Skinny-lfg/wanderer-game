@@ -47,10 +47,12 @@ function phase4Restore(session){
  ports.phase1Build=session.build;if(ports.phase1Build&&ports.phase6Run?.effects.echo)ports.phase1Build.runtime.echo=ports.phase6Run.effects.echo;ports.phase1Draft=session.draft;ports.phase1Vitals=session.vitals;ports.phase1Clock=session.clock;ports.phase3Supplies=session.supplies;
  ports.phase3LootIds=new Set(session.lootIds);ports.phase4Home=session.home;ports.phase4Seed=session.seed;ports.phase4Prefix=session.prefix;ports.phase4Stamp=session.stamp;ports.uid=session.idCounter;ports.phase1Continuity=session.continuity;
  if(ports.phase1Build){ports.phase1Build.families=ports.phase1Controller.state.families;if(ports.phase1Draft?.kind==='reward'){
-  const eligible=WandererV012Buildcraft.eligible;
-  if(!ports.phase1Controller.state.rewardPending||!Array.isArray(ports.phase1Draft.options)||ports.phase1Draft.options.length!==3||new Set(ports.phase1Draft.options.map(p=>p.id)).size!==3||!ports.phase1Draft.options.every(p=>eligible(ports.phase1Build,p.family).some(v=>v.id===p.id)))throw Error('Invalid saved passive choice');
-  ports.phase1Draft.plane=ports.phase1Controller.state.rewardPending;
-  ports.phase1Draft.options=ports.phase1Draft.options.map(p=>WandererV012Buildcraft.CATALOG.find(v=>v.id===p.id));
+  const eligible=WandererV012Buildcraft.eligible,build=ports.phase1Build,draft=ports.phase1Draft;
+  if(!ports.phase1Controller.state.rewardPending||!Array.isArray(draft.options)||draft.options.length!==3||new Set(draft.options.map(p=>p.id)).size!==3||!draft.options.every(p=>WandererV012Buildcraft.CATALOG.some(v=>v.id===p.id)))throw Error('Invalid saved passive choice');
+  draft.plane=ports.phase1Controller.state.rewardPending;
+  if(draft.version!==3){build.realmIndex=draft.plane.plane;build.runtime.draftStats=ports.totalStats();draft.options=WandererV012Buildcraft.options(build,draft.plane.family,ports.gameRandom);draft.version=3;}
+  else if(!draft.options.every(p=>eligible(build,p.family).some(v=>v.id===p.id)))throw Error('Invalid saved passive choice');
+
  }}
  if(session.results)ports.phase5Results=ports.phase4Clone(session.results);
  ports.state.run=session.clearedRun||null;ports.phase4WaveKeys=[];ports.phase4Resume=session.entry&&!session.clearedRun;

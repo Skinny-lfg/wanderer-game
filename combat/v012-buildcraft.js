@@ -70,7 +70,16 @@ const P=[
  ['fury','spell_surge','Spell Surge','A critical strike charges your next elemental cast.',['fury','magic']]
 ].map(([family,id,name,description,requires=[],element=null])=>Object.freeze({family,id,name,description,requires,element,max:requires.length||['executioner','blight','last_stand','retaliation'].includes(id)?1:5}));
 const descriptions={bleeding_edge:'Hits: Bleed chance; 16% base per tick, ICD 0.9s.',deep_cuts:'All player Bleed +15% per rank, applied on creation.',executioner:'Bleeding foe at ≤30% HP: bounded burst, ICD 6s.',blood_drinker:'Hit bleeding foe: bounded heal, ICD 4s; healing reduction applies.',sanguine_fury:'Critical: Bleed 14% base + direct burst, ICD 2.5s.',toxic_touch:'Hit: Poison 12% and Rot 6.5% base; ICD 1.3s.',virulent_rot:'New Rot stacks +15% damage per rank.',wasting_curse:'Rotted enemy deals less damage; combined reduction cap 28%.',wither:'Rot reduces enemy healing and direct damage; player healing unaffected.',blight:'Hit rotted foe: bounded burst, ICD 7s.',strong_heart:'Maximum HP scales with square root of rank; no free healing.',renewal:'Continuous healing per second; healing reduction applies.',last_stand:'Survive one lethal hit per Expedition at 6% MaxHP.',second_breath:'Heal once per completed Wave.',life_bloom:'Restore HP and Mana each combat second.',iron_skin:'Defense scales with square root of rank.',fortified:'Incoming damage −4% per rank, within global 28% cap.',guarded_block:'Bonus block chance; total cap 65%, existing block reduction.',barrier_pulse:'Barrier every 6s; engine Barrier cap applies.',retaliation:'Real Barrier absorption empowers next hit by 15% base, once.',quick_hands:'Attack speed +8% per rank; total cap 5/s.',precision:'Extra critical chance, total cap 65%.',brutal_crit:'Real critical adds non-recursive base damage.',double_strike:'Chance of one 30% extra hit, no recursive procs.',adrenaline:'Real critical: 3s attack speed buff, ICD 3s.',arcane_focus:'Elemental spell power scales with square root of rank.',mana_spring:'Mana regeneration scales with square root of rank.',efficient_cast:'Funded elemental cast Mana cost: 7/6/5/4/3.',arcane_echo:'Every fourth funded elemental hit echoes without recursion.',elemental_force:'Elemental power +12% per rank, once per funded cast.',kindling:'Funded Fire cast applies Burn.',deep_winter:'Funded Frost: Chill, bounded burst vs chilled foe, ICD 4s; boss Chill ≤1.2s.',overcharge:'Four funded Lightning casts discharge Static; charges persist between Realms.'};
-const CATALOG=P.map(p=>Object.freeze({...p,description:descriptions[p.id]||p.description}));
+const TAGS={
+ PRODUCE_BLEED:['bleeding_edge','sanguine_fury','hex_bleed','crimson_pact','sanguine_reprisal'],CONSUMES_BLEED:['deep_cuts','executioner','blood_drinker','blood_ward','hemovore','plague_rupture','carrion_detonation','crimson_rush','reapers_cadence','hemal_sigil'],
+ PRODUCE_ROT:['toxic_touch','toxic_precision'],CONSUMES_ROT:['virulent_rot','wasting_curse','wither','blight','plague_rupture','carrion_detonation','rot_recovery','rot_symbiosis','rot_ward','rot_husk','venom_shatter','hex_bolt','elemental_blight'],
+ CRIT_SOURCE:['precision'],CRIT_PAYOFF:['sanguine_fury','brutal_crit','adrenaline','crimson_rush','reapers_cadence','toxic_precision','venom_shatter','plague_rupture','fervent_life','spell_surge'],
+ BARRIER_SOURCE:['barrier_pulse','blood_ward','rot_ward','runic_shield','sanctuary','fervent_life'],BARRIER_PAYOFF:['retaliation','rot_husk','prismatic_rebound','guardians_oath','sanguine_reprisal'],
+ HEAL_SOURCE:['renewal','life_bloom','second_breath','blood_drinker','hemovore','rot_recovery','rot_symbiosis','fervent_life'],HEAL_PAYOFF:['sanctuary','life_conduit'],
+ FUNDED_CAST:['kindling','deep_winter','overcharge'],MAGIC_PAYOFF:['arcane_focus','mana_spring','efficient_cast','arcane_echo','elemental_force','hex_bleed','hemal_sigil','hex_bolt','elemental_blight','life_conduit','lifeweave','runic_shield','prismatic_rebound','spellblade','spell_surge'],
+ BLOCK_SOURCE:['guarded_block'],BLOCK_PAYOFF:['counterstrike','iron_reversal','sanguine_reprisal']
+};
+const CATALOG=P.map(p=>Object.freeze({...p,description:descriptions[p.id]||p.description,tags:Object.freeze(Object.keys(TAGS).filter(tag=>TAGS[tag].includes(p.id)))}));
 const BY_ID=Object.fromEntries(CATALOG.map(p=>[p.id,p]));
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 function create(){return {version:3,element:null,initialFamily:null,initialPassive:null,unlockedFamilies:[],picks:[],cooldowns:Object.create(null),runtime:{frenzyUntil:0,counterBlock:0,counterBarrier:0,spellblade:false,magicHits:0,staticCharges:0,adrenalineUntil:0,conduit:false,lastStand:false,lastSpellAt:-999}};}
@@ -102,36 +111,55 @@ function preview(b,id,base={}){
 function bleedDamage(b,amount){return amount*(1+.15*rank(b,'deep_cuts'));}
 function elementalPower(b,power){return power*(1+.12*rank(b,'elemental_force'))*(b.runtime.conduit?1.10:1);}
 function hasFamily(b,family){return Array.isArray(b?.families)&&b.families.includes(family);}
-function eligible(b,family){
- if(!FAMILIES.includes(family)||!hasFamily(b,family)||family==='magic'&&!b.element)return [];
- if(!Array.isArray(b.unlockedFamilies)||!b.unlockedFamilies.includes(family))return [];
- const hybrids=[...new Set(b.picks)].map(id=>BY_ID[id]).filter(p=>p?.requires.length),pairs=new Set(hybrids.map(p=>[...p.requires].sort().join(':')));
- const owns=id=>rank(b,id)>0;
- const barrier=['barrier_pulse','blood_ward','rot_ward','runic_shield'].some(owns),healing=['renewal','life_bloom','second_breath','blood_drinker','rot_recovery'].some(owns);
- const prerequisites=p=>{
-  if(['retaliation','rot_husk','prismatic_rebound','guardians_oath'].includes(p.id)&&!barrier)return false;
-  if(['counterstrike','iron_reversal'].includes(p.id)&&!owns('guarded_block'))return false;
-  if(['sanctuary','life_conduit'].includes(p.id)&&!healing)return false;
-  return true;
+function capabilities(b){
+ const owns=id=>rank(b,id)>0,tag=t=>(TAGS[t]||[]).some(owns),stats=b.runtime.draftStats||{};
+ const funded=b.unlockedFamilies?.includes('magic')&&elements.includes(b.element)&&b.runtime.fundedAvailable!==false;
+ const crit=stats.crit===undefined||stats.crit>0||owns('precision'),block=(stats.blockChance||0)>0||owns('guarded_block');
+ const bleed=owns('bleeding_edge')||owns('sanguine_fury')&&crit||owns('crimson_pact')||owns('hex_bleed')&&funded||owns('sanguine_reprisal')&&(block||tag('BARRIER_SOURCE'));
+ const rot=owns('toxic_touch')||owns('toxic_precision')&&crit;
+ const barrier=owns('barrier_pulse')||owns('blood_ward')&&bleed||owns('rot_ward')&&rot||owns('runic_shield')&&funded||owns('fervent_life')&&crit||owns('sanctuary')&&tag('HEAL_SOURCE')||stats.main?.subtype==='Two-Handed'||stats.main?.subtype==='Staff';
+ const heal=owns('renewal')||owns('life_bloom')||owns('second_breath')||owns('blood_drinker')&&bleed||owns('hemovore')&&bleed||owns('rot_recovery')&&rot||owns('rot_symbiosis')&&rot||owns('fervent_life')&&crit;
+ return {bleed:!!bleed,rot:!!rot,crit:!!crit,block:!!block,barrier:!!barrier,heal:!!heal,funded:!!funded};
+}
+function functional(b,p){
+ const c=capabilities(b),gates={
+ deep_cuts:c.bleed,executioner:c.bleed,blood_drinker:c.bleed,sanguine_fury:c.crit,virulent_rot:c.rot,wasting_curse:c.rot,wither:c.rot,blight:c.rot,retaliation:c.barrier,brutal_crit:c.crit,adrenaline:c.crit,
+ plague_rupture:c.bleed&&c.rot&&c.crit,carrion_detonation:c.bleed&&c.rot,blood_ward:c.bleed,sanguine_reprisal:c.block||c.barrier,hemovore:c.bleed,crimson_rush:c.crit&&c.bleed,reapers_cadence:c.crit&&c.bleed,hex_bleed:c.funded,hemal_sigil:c.funded&&c.bleed,
+ rot_recovery:c.rot,rot_symbiosis:c.rot,rot_ward:c.rot,rot_husk:c.rot&&c.barrier,toxic_precision:c.crit,venom_shatter:c.rot&&c.crit,hex_bolt:c.rot&&c.funded,elemental_blight:c.rot&&c.funded,
+ sanctuary:c.heal,guardians_oath:c.barrier,fervent_life:c.crit,life_conduit:c.heal&&c.funded,lifeweave:c.funded,counterstrike:c.block,iron_reversal:c.block,runic_shield:c.funded,prismatic_rebound:c.barrier&&c.funded,spellblade:c.funded,spell_surge:c.funded&&c.crit
  };
- return CATALOG.filter(p=>ownedRank(b,p.id)<p.max&&preview(b,p.id,b.runtime.draftStats||{}).useful&&prerequisites(p)&&p.family===family&&(!p.requires.length||(!b.runtime.hybridRules||b.runtime.hybridWindow)&&(!pairs.has([...p.requires].sort().join(':'))?hybrids.length<3:false))&&p.requires.every(f=>b.unlockedFamilies.includes(f))&&(!p.element||p.element===b.element));
+ if(p.family==='magic'&&!p.requires.length&&!c.funded)return false;
+ return gates[p.id]!==false;
+}
+function eligible(b,family){
+ if(!FAMILIES.includes(family)||!hasFamily(b,family)||family==='magic'&&!b.element||!b.unlockedFamilies?.includes(family))return [];
+ const hybrids=[...new Set(b.picks)].map(id=>BY_ID[id]).filter(p=>p?.requires.length),pairs=new Set(hybrids.map(p=>[...p.requires].sort().join(':')));
+ return CATALOG.filter(p=>p.family===family&&ownedRank(b,p.id)<p.max&&preview(b,p.id,b.runtime.draftStats||{}).useful&&functional(b,p)&&(!p.element||p.element===b.element)&&(!p.requires.length||(b.realmIndex||0)>=5&&hybrids.length<3&&!pairs.has([...p.requires].sort().join(':'))&&p.requires.every(f=>b.unlockedFamilies.includes(f))));
+}
+function synergy(b,p){
+ const c=capabilities(b),tags=p.tags;
+ return p.requires.length||tags.includes('CONSUMES_BLEED')&&c.bleed||tags.includes('CONSUMES_ROT')&&c.rot||tags.includes('CRIT_PAYOFF')&&c.crit||tags.includes('BARRIER_PAYOFF')&&c.barrier||tags.includes('HEAL_PAYOFF')&&c.heal||tags.includes('MAGIC_PAYOFF')&&c.funded||tags.includes('BLOCK_PAYOFF')&&c.block||ownedRank(b,p.id)>0;
 }
 function options(b,family,rng=Math.random){
- const acquired=[...new Set(b.picks||[])].map(id=>BY_ID[id]).filter(p=>p?.requires.length).length;
- const gate=[6,8,10][acquired]??99;
- const open=(p)=>!p.requires.length||(b.realmIndex||0)>=gate;
- const primary=eligible(b,family).filter(open);
- const pool=primary.length>=3?primary:[...primary,...b.families.filter(f=>f!==family).flatMap(f=>eligible(b,f).filter(open))];
- if(pool.length<3)throw Error('No three implemented passives available');
- const unowned=pool.filter(p=>!rank(b,p.id)),weighted=unowned.length>=3?unowned:pool;
- const chosen=[],hybrids=b.runtime.hybridRules&&b.runtime.hybridWindow?b.families.flatMap(f=>eligible(b,f)).filter(p=>p.requires.length):[];if(hybrids.length)chosen.push(hybrids[Math.floor(rng()*hybrids.length)]);
- const specific=weighted.filter(p=>p.element===b.element&&p.element);
- if(family==='magic'&&specific.length&&chosen.length===0)chosen.push(specific[Math.floor(rng()*specific.length)]);
- const rest=weighted.filter(p=>!chosen.includes(p));
- while(chosen.length<3){let index=Math.floor(rng()*rest.length);chosen.push(rest.splice(index,1)[0]);}
- const legacyHybrids=weighted.filter(p=>p.requires.length);
- if(legacyHybrids.length&&!chosen.some(p=>p.requires.length))chosen[2]=legacyHybrids[Math.floor(rng()*legacyHybrids.length)];
- return chosen;
+ const all=b.unlockedFamilies.flatMap(f=>eligible(b,f)),pool=[...new Map(all.map(p=>[p.id,p])).values()];
+ if(pool.length<3)throw Error('No three legal useful passives available; checkpoint retained');
+ const chosen=[],remaining=()=>pool.filter(p=>!chosen.some(o=>o.id===p.id)),pick=a=>a[Math.min(a.length-1,Math.floor(rng()*a.length))];
+ const prefer=a=>{const local=a.filter(p=>p.family===family||p.requires.includes(family));return local.length?local:a;};
+ const add=(p,category)=>{if(p)chosen.push({...p,category,preview:preview(b,p.id,b.runtime.draftStats||{})});};
+ const hybrids=pool.filter(p=>p.requires.length),pairs=[...new Set(hybrids.map(p=>[...p.requires].sort().join(':')))];
+ const pity={...(b.runtime.hybridPity||{})},due=pairs.filter(pair=>(pity[pair]||0)>=2);
+ let hybrid=null;if(due.length){const pair=pick(due);hybrid=pick(hybrids.filter(p=>[...p.requires].sort().join(':')===pair));}
+ else if(hybrids.length&&rng()<.35)hybrid=pick(prefer(hybrids));
+ // Reserve Synergy first internally so an Upgrade cannot consume the mandatory pity card.
+ const reserved=hybrid?.id;
+ add(pick(prefer(remaining().filter(p=>!p.requires.length&&ownedRank(b,p.id)>0&&p.id!==reserved))),'Upgrade');
+ add(hybrid||pick(prefer(remaining().filter(p=>!p.requires.length&&synergy(b,p)))),'Synergy');
+ add(pick(prefer(remaining().filter(p=>!p.requires.length&&!ownedRank(b,p.id)))),'Discovery');
+ while(chosen.length<3){let rest=remaining();const normal=rest.filter(p=>!p.requires.length);if(chosen.some(p=>p.requires.length)&&normal.length)rest=normal;const candidate=pick(prefer(rest));add(candidate,candidate.requires.length?'Synergy':ownedRank(b,candidate.id)?'Upgrade':'Discovery');}
+ for(const pair of pairs)pity[pair]=chosen.some(p=>p.requires.length&&[...p.requires].sort().join(':')===pair)?0:Math.min(3,(pity[pair]||0)+1);
+ for(let i=chosen.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[chosen[i],chosen[j]]=[chosen[j],chosen[i]];}
+ // Commit counters only once the complete legal draft exists; the caller persists cards and RNG together.
+ b.runtime.hybridPity=pity;return chosen;
 }
 function choose(b,family,id,offers){
  const p=BY_ID[id];
@@ -318,10 +346,11 @@ function validate(b){
  if(b.version>=3&&P.some(p=>ownedRank(b,p.id)>p.max))throw Error('Invalid passive rank');
  if(b.initialPassive!==null&&(b.initialPassive!==initialId(b.initialFamily,b.element)||!b.picks.includes(b.initialPassive)||!hasFamily(b,b.initialFamily)))throw Error('Invalid initial passive');
  if(!b.cooldowns||typeof b.cooldowns!=='object'||!Object.values(b.cooldowns).every(n=>typeof n==='number'&&Number.isFinite(n)&&n>=0)||!b.runtime||typeof b.runtime!=='object'||!['frenzyUntil','magicHits','lastSpellAt'].every(k=>typeof b.runtime[k]==='number'&&Number.isFinite(b.runtime[k]))||typeof b.runtime.lastStand!=='boolean')throw Error('Invalid saved cooldowns');
+ if(b.runtime.hybridPity!==undefined&&(!b.runtime.hybridPity||typeof b.runtime.hybridPity!=='object'||Object.entries(b.runtime.hybridPity).some(([key,n])=>!/^([a-z]+):([a-z]+)$/.test(key)||key!==key.split(':').sort().join(':')||!key.split(':').every(f=>FAMILIES.includes(f))||!Number.isInteger(n)||n<0||n>3)))throw Error('Invalid hybrid pity');
  if(b.runtime.staticCharges===undefined)b.runtime.staticCharges=0;
  if(!Number.isInteger(b.runtime.staticCharges)||b.runtime.staticCharges<0||b.runtime.staticCharges>3)throw Error('Invalid Static charges');
  return b;
 }
 function clear(b){if(!b)return;b.picks.length=0;b.element=null;b.initialFamily=null;b.initialPassive=null;b.unlockedFamilies=[];b.families=[];b.cooldowns=Object.create(null);b.runtime={frenzyUntil:0,counterBlock:0,counterBarrier:0,spellblade:false,magicHits:0,staticCharges:0,adrenalineUntil:0,conduit:false,lastStand:false,lastSpellAt:-999};}
-root.WandererV012Buildcraft=Object.freeze({CATALOG,FAMILIES,ELEMENTS:elements,create,initial,initialId,ownedRank,rank,values,preview,bleedDamage,elementalPower,eligible,options,choose,element,mods,onAttack,onCast,onSecond,incoming,onDefend,onKill,survive,speed,enemyHealMultiplier,nextCost,resetWave,canCast,validate,clear});
+root.WandererV012Buildcraft=Object.freeze({CATALOG,FAMILIES,ELEMENTS:elements,create,initial,initialId,ownedRank,rank,values,preview,capabilities,functional,synergy,bleedDamage,elementalPower,eligible,options,choose,element,mods,onAttack,onCast,onSecond,incoming,onDefend,onKill,survive,speed,enemyHealMultiplier,nextCost,resetWave,canCast,validate,clear});
 })(globalThis);

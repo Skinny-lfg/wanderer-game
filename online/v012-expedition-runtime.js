@@ -39,7 +39,7 @@ function phase6AwardGear(){
 function phase6Buff(key,power,remaining=3){ports.phase6Run.effects[key]={power,remaining};}
 
 function phase6OpenEvent(plane){
- if(!ports.phase6Run.event){const replacement=WandererV012Buildcraft.CATALOG.filter(p=>!p.requires.length&&ports.phase1Build.families.includes(p.family)&&(!p.element||p.element===ports.phase1Build.element)&&ports.phase1Build.unlockedFamilies?.includes(p.family));
+ if(!ports.phase6Run.event){const replacement=ports.phase1Build.unlockedFamilies.flatMap(f=>WandererV012Buildcraft.eligible(ports.phase1Build,f)).filter(p=>!p.requires.length);
   ports.phase6Run.event={id:plane.event,roll:ports.gameRandom(),alternative:replacement.length?replacement[Math.floor(ports.gameRandom()*replacement.length)].id:null};}
  if(!ports.phase4Entry){ports.phase4Stamp=Date.now();ports.phase4Entry={profile:ports.phase4Clone({...ports.state,run:null}),session:ports.phase4Session(true),ledger:[...(ports.phase5Snapshot?.expedition.awardKeys||[])]};}
  if(ports.phase5Persist()){ports.view='phase1';ports.render();}
@@ -62,7 +62,7 @@ function phase6EventChoice(choice,itemId,passiveId,family,targetId){
  case 'cursed_altar':if(v.hp<=Math.ceil(v.maxhp*.2))return false;heal();ports.phase1Vitals.hp-=Math.ceil(v.maxhp*.2);effects[choice===0?'attack':'defense']=.10;break;
  case 'soul_mirror':if(choice===0){if(!passive||ports.phase1Build.unlockedFamilies?.some(f=>WandererV012Buildcraft.initialId(f,ports.phase1Build.element)===passiveId)||!ev.alternative)return false;const index=ports.phase1Build.picks.indexOf(passiveId),old=ports.phase1Build.picks.splice(index,1)[0];const available=WandererV012Buildcraft.eligible(ports.phase1Build,WandererV012Buildcraft.CATALOG.find(p=>p.id===ev.alternative).family);if(!available.some(p=>p.id===ev.alternative)){ports.phase1Build.picks.splice(index,0,old);return false;}ports.phase1Build.picks.push(ev.alternative);}break;
  case 'whispering_idol':ports.phase6Buff('curse',.10);ports.state[choice===0?'gold':'fragments']+=choice===0?25+4*E:12+2*E;break;
- case 'echo_shrine':if(choice===0){if(!passive)return false;effects.echo={id:passiveId,power:.5,remaining:3};ports.phase1Build.runtime.echo=effects.echo;}else heal(0,.15);break;
+ case 'echo_shrine':if(choice===0){if(!passive||!WandererV012Buildcraft.preview(ports.phase1Build,passiveId,ports.totalStats()).useful)return false;effects.echo={id:passiveId,power:.5,remaining:3};ports.phase1Build.runtime.echo=effects.echo;}else heal(0,.15);break;
  case 'cursed_chest':if(choice===0)ports.state.gold+=8+E;else if(ev.roll<.5)loot.push(ports.phase6AwardGear());else{heal();ports.phase1Vitals.hp=Math.max(1,v.hp-Math.ceil(v.maxhp*.15));}break;
  case 'forgotten_arsenal':if(choice===0)loot.push(ports.phase6AwardGear());else ports.state.fragments+=8+2*E;break;
  case 'runic_vault':if(choice===0){if(!ports.state.runeSlots.some(Boolean))return false;ports.phase6Buff('runeBoost',.20);}else ports.state.fragments+=10+E;break;
@@ -78,7 +78,7 @@ function phase6EventChoice(choice,itemId,passiveId,family,targetId){
  ports.phase5Results.gold+=Math.max(0,ports.state.gold-beforeGold);ports.phase5Results.fragments+=Math.max(0,ports.state.fragments-beforeFragments);
  ports.phase5RememberRealm({tier:E,phase1Plane:g.planeIndex-1,planeName:p.name,planeFamily:p.family,combatSeconds:0,gold:Math.max(0,ports.state.gold-beforeGold),fragments:Math.max(0,ports.state.fragments-beforeFragments),loot,realmLog:[{text:choice===2?'Event declined. No reward.':WandererV012IntegratedEvents.get(ev.id)[3][choice],kind:'good'}]},'cleared');
  ports.phase5Results.review=null;ports.phase5Results.eventExitPending=true;
- ports.phase1Draft={kind:'reward',plane:g.rewardPending,step:'passive',options:ports.phase6PassiveOptions(g.rewardPending)};
+ ports.phase1Draft={version:3,kind:'reward',plane:g.rewardPending,step:'passive',options:ports.phase6PassiveOptions(g.rewardPending)};
  if(!ports.phase5Persist())return false;ports.render();return true;
 }
 
@@ -86,7 +86,7 @@ function phase6UnlockBase(family){
  const p=ports.phase1Build;
  if(!p.unlockedFamilies?.includes(family)){const starter=WandererV012Buildcraft.initial(p,family);if(starter)ports.addLog('Affinity unlocked: '+starter.name,'good');}
 }
-function phase6PassiveOptions(plane){ports.phase1Build.realmIndex=plane.plane;ports.phase1Build.runtime.hybridWindow=ports.phase1Controller.state.version===2&&[6,8,10].includes(plane.plane);return WandererV012Buildcraft.options(ports.phase1Build,plane.family,ports.gameRandom);}
+function phase6PassiveOptions(plane){ports.phase1Build.realmIndex=plane.plane;ports.phase1Build.runtime.draftStats=ports.totalStats();return WandererV012Buildcraft.options(ports.phase1Build,plane.family,ports.gameRandom);}
 
 function phase6BackToCamp(){
  const g=ports.phase1Controller.state;
@@ -250,7 +250,7 @@ function phase1WaveWon(){
   const plane=ports.phase1Controller.state.rewardPending;
   phase6UnlockBase(plane.family);
   ports.phase5Results.review=null;
-  ports.phase1Draft={kind:'reward',plane,step:'passive',options:ports.phase6PassiveOptions(plane)};
+  ports.phase1Draft={version:3,kind:'reward',plane,step:'passive',options:ports.phase6PassiveOptions(plane)};
   ports.view='combat';
  }else{ports.state.run=null;ports.view='phase1';}
  if(!ports.phase5Persist())return;
