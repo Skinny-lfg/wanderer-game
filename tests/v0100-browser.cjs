@@ -150,7 +150,7 @@ const server=http.createServer((req,res)=>{
      const r=n.getBoundingClientRect();
      return {slot:n.dataset.slot,left:r.left,right:r.right,top:r.top,bottom:r.bottom};
     }));
-    assert.equal(slotRects.length,9,'all nine equipment slots rendered');
+    assert.equal(slotRects.length,10,'all equipment slots including Belt rendered');
     for(let i=0;i<slotRects.length;i++)for(let j=i+1;j<slotRects.length;j++){
      const a=slotRects[i],b=slotRects[j],w=Math.min(a.right,b.right)-Math.max(a.left,b.left),h=Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top);
      assert(w<=1||h<=1,'desktop gear slots must not overlap: '+a.slot+' / '+b.slot+' ('+w+'×'+h+')');

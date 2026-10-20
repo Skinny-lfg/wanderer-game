@@ -29,7 +29,7 @@ assert(!html.includes('${legendaryHuntMarkup(paths)}'),'Legendary Hunt removed f
 assert(html.includes('.homeChanges{list-style:none;display:grid')&&html.includes('@media(max-width:650px){.homeChanges{grid-template-columns:1fr'),'compact mobile changelog layout');
 
 assert(html.includes('const milestones=[2,3,5].map(tier=>{')&&!html.includes('Number(count>=b)-Number(count>=a)||b-a'),'set tiers always show 2, 3, then 5 (including greyed out)');
-assert(html.includes("'Obsidian Quarry','crystal'")&&html.includes("'Iron Bastion','sunder'"),'quarry uses unique Crystal affinity; bastion retains Sunder');
+assert(require('./combat-harness.cjs')().combatAccess.THEMES.some(t=>t.id==='quarry'&&t.name==='Obsidian Quarry'&&t.effect==='crystal')&&require('./combat-harness.cjs')().combatAccess.THEMES.some(t=>t.id==='bastion'&&t.name==='Iron Bastion'&&t.effect==='sunder'),'quarry uses unique Crystal affinity; bastion retains Sunder');
 assert(html.includes("['crystal','Crystal Set','crystalBonus',.08,'crystalCharge','crystalBurst']"),'Crystal 2/3/5 tiers registered');
 assert(html.includes("if(b.crystalCharge)")&&html.includes("if(b.crystalBonus)"),'Crystal tier effects wired to combat');
 assert(html.includes("const LEGENDARY_CATALOG=")&&html.includes("function legendaryMatches("),'Legendary identity catalogue is centralized and type-safe');
