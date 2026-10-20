@@ -4,8 +4,8 @@ function begin(a){a.start();a.initial('blood');const p=a.controller().state.offe
 test('Realm result persists until exit; review never mints another reward or passive',()=>{
  const a=create(501);begin(a);const s=a.state();s.run.combatSeconds=7.5;s.run.enemy.hp=0;a.win();a.flush();
  const result=a.results();assert.equal(result.review,'realm');assert.equal(result.realm.outcome,'cleared');assert.equal(result.realm.seconds,7.5);assert.equal(a.draft().kind,'reward');
- const gold=s.gold,frags=s.fragments,items=s.stash.length;assert.equal(a.exitResult(),true);assert.equal(a.exitResult(),false);a.win();
- assert.equal(s.gold,gold);assert.equal(s.fragments,frags);assert.equal(s.stash.length,items);assert.equal(a.build().picks.length,1);
+ const gold=s.gold,frags=s.fragments,items=s.stash.length;assert.equal(a.exitResult(),false);a.passive(a.draft().options[0].id);assert.equal(a.exitResult(),true);assert.equal(a.exitResult(),false);a.win();
+ assert.equal(s.gold,gold);assert.equal(s.fragments,frags);assert.equal(s.stash.length,items);assert.equal(a.build().picks.length,2);
 });
 test('defeat recap distinguishes equipped new loot from discarded items and protects home',()=>{
  const a=create(502);a.start();a.initial('blood');const s=a.state(),home=s.equip.weapon.id;a.controller().state.planeIndex=2;
@@ -16,7 +16,7 @@ test('defeat recap distinguishes equipped new loot from discarded items and prot
  a.exitResult();assert.equal(a.results().review,'summary');a.exitResult();assert.equal(a.results().review,null);assert.equal(a.exitResult(),false);
 });
 test('extraction recap is a snapshot, with no boss Rune or progression credit',()=>{
- const a=create(503);begin(a);a.state().run.enemy.hp=0;a.win();a.flush();a.exitResult();a.passive(a.draft().options[0].id);
+ const a=create(503);begin(a);a.state().run.enemy.hp=0;a.win();a.flush();a.passive(a.draft().options[0].id);a.exitResult();
  assert.equal(a.checkpoint.extract(),true);const r=a.results();assert.equal(r.review,'summary');assert.equal(r.summary.realms,1);assert.equal(r.summary.outcome,'extracted');assert.equal(r.summary.runeTier,null);assert.equal(a.controller().state.unlocked,1);
  const gold=a.state().gold;a.exitResult();assert.equal(a.checkpoint.extract(),false);assert.equal(a.state().gold,gold);
 });

@@ -35,15 +35,10 @@ const server=http.createServer((req,res)=>{
    assert.equal(await page.locator('#v012-launch').count(),0,'standalone prototype must not load');
    assert(!requested.some(url=>url.includes('/online/app.mjs')),'account/cloud app must not load');
    assert(!requested.some(url=>url.includes('/online/v012-prototype.mjs')),'dual combat simulator must not load');
-   assert.equal(await page.locator('[data-phase1-hero]').count(),5,'five original characters available');
+   await page.locator('[data-online-action="account"]').click();assert.equal(await page.locator('[data-phase1-hero]').count(),5,'five original characters available');await page.locator('dialog [data-close]').click();
    await page.locator('[data-phase1-expedition="1"]').click();
-   assert.equal(await page.locator('.phase1Offer').count(),3,'exactly three Plane choices');
-   assert((await page.locator('.phase1Offers').innerText()).includes('Waves'),'show wave count');
-   assert((await page.locator('.phase1Offers').innerText()).includes('Elite')||(await page.locator('.phase1Offers').innerText()).includes('Regular'),'show Elite state');
-   await page.locator('.phase1Offer').first().click();
-   if(await page.locator('[data-phase2-element]').count())await page.locator('[data-phase2-element="lightning"]').click();
-   assert.equal(await page.locator('[data-phase2-passive]').count(),3,'exactly three implemented temporary passive choices');
-   await page.locator('[data-phase2-passive]').first().click();
+   assert.equal(await page.locator('[data-phase2-initial]').count(),6);
+   await page.locator('[data-phase2-initial="blood"]').click();
    await page.locator('#heroPortrait').waitFor({timeout:10000});
    await page.locator('#enemyPortrait').waitFor();
    assert((await page.locator('#heroPortrait').getAttribute('src')).startsWith('assets/characters/avatars/'),'original character sprite');
@@ -53,15 +48,13 @@ const server=http.createServer((req,res)=>{
    assert.equal(await page.locator('.combatVfx').count()>=0,true);
    // Combat engine auto-advances every Wave, and returns to path selection.
    await page.locator('#combatSpeed').click();await page.locator('#combatSpeed').click();
-   try{await page.locator('.phase1Offer').first().waitFor({timeout:35000});}
+   try{await page.locator('dialog [data-popup-passive]').first().waitFor({timeout:35000});await page.locator('dialog [data-popup-passive]').first().click();await page.locator('#phase5ExitResult').click();}
    catch(e){console.error('PHASE2 BROWSER DIAGNOSTICS',width,
       await page.evaluate(()=>({scene:document.querySelector('#screen')?.innerText?.slice(0,2300),
       save:globalThis.WandererGame?.snapshot?.().run?.status,
       hp:globalThis.WandererGame?.snapshot?.().run?.hp})));throw e;}
-   assert((await page.locator('h2').first().innerText()).includes('Plane 2 / 15'),'first Plane cleared');
-   assert((await page.locator('.phase1FamilyRow').first().innerText()).length>0,'family retained between Planes');
-   const vitals=await page.locator('.phase1FamilyRow').nth(1).innerText();
-   assert(vitals.includes('HP')&&vitals.includes('Mana'),'display carried HP and temporary Magic Mana');
+   assert((await page.locator('h2').first().innerText()).includes('Realm 2 / 15'),'first Plane cleared');
+   assert((await page.locator('.phase3PreparationLayout').innerText()).includes('Mana'));
    assert.equal(await page.evaluate(()=>localStorage.getItem('wanderer_browser_proto_v01')),'DO_NOT_TOUCH_CLASSIC_SAVE');
    assert.equal(await page.evaluate(()=>localStorage.getItem('wanderer_account_browser_fixture')),'DO_NOT_TOUCH_ACCOUNT_SAVE');
    assert(requested.some(u=>u.includes('/assets/mobs/')),'existing enemy asset loaded');

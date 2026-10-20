@@ -20,7 +20,7 @@ The native `index.html` combat/economy remains the foundation. Remote developmen
 
 Refresh coverage includes Static, passive review, saved event roll, fixed boss, Rune claim and unused-bottle settlement. Two simultaneous browser tabs sharing an isolated validation slot cannot both obtain its write lease. These are client integrity protections, **not server-authoritative anti-cheat**. Synthetic preview slots never access production/classic save keys; a sentinel classic key remained unchanged. Cloud-account migration and server validation were not exercised against real accounts. No irreversible migration was applied.
 
-## Verification
+## Verification — initial integration (superseded by regression follow-up below)
 
 - **PASS: 81 targeted tests**, zero failures: complete combat/schedule/events/potions/flow/Runes/compatibility, buildcraft, legacy controller/events, lifecycle/economy, save/model and private-preview checks.
 - **PASS: Chromium 390×900 and 1280×900**, complete 15-Realm UI cycle: purchases/loadout, affinity/Magic Back, Static/checkpoint, event refresh, popup/review/Exit, shared rerolls, overflow, saved single boss, E1 Rune selection, reload without duplicate Rune/Gold/bottles, five/five slot coordinates, second-tab exclusion and no uncaught JS errors. This functional fixture forces Wave completion; it is not a win-rate simulation.
@@ -78,3 +78,18 @@ Implementation: `index.html`; `combat/v012-buildcraft.js`; `online/v012-expediti
 ## Manual preview
 
 On development, run `python3 -m http.server 8080 --bind 127.0.0.1`, open `http://127.0.0.1:8080/?expeditionPhase1=1&expeditionSave=1&validationSlot=manual-complete` in an isolated browser profile. Use browser device emulation at 390 px and desktop at 1280 px. Buy/load bottles in Camp, verify Back, enter Magic/Lightning, complete a Realm, pick a passive, review logs then Exit. Confirm bag/gear/potions and shared rerolls Between Realms, event decisions after refresh, boss variant stability and single Rune settlement. Use a new validationSlot for independent synthetic sessions; do not import real saves. Nothing was deployed or published to main.
+
+
+## Regression follow-up — 2026-10-20
+
+The initial full-suite blocker and superseded v0120 fixtures above are resolved. This follow-up does not certify final balance or authorize production deployment.
+
+**Application fixes (`46b7138`):** restored classic-only Forge/Sigil UI and transactions, affinity inventory filters/descriptions, passive gear procs, funded weapon elements and Golden Focus; classic shop stock now satisfies the existing save validator, preserving D200/preferences and quota safeguards. The classic Realm names and compact equipment grid remain separate from the twelve v0.12 Realms and 5+5 layout. Belt no longer overlaps another classic slot. NEW clearing accepts old profiles without an overflow array. Expedition bag inspection now actually renders the existing Upgrade/Downgrade/Sidegrade comparison.
+
+**Regression fixtures and CI:** updated relative Belt drop-weight expectations, six-slot bag, owned potions, global rerolls, mandatory passive-before-Exit flow and version-2 event handling. Removed obsolete v0.12 Sigil-transfer expectations while retaining classic coverage. Pending Rune confirmation tests now open in Camp and verify rejection after entering/restoring a checkpoint. Save browser tests exercise fixed-entry resume rather than the retired interrupted-run reset. The checkpoint fixture explicitly uses a three-Wave Realm, avoiding a random one-Wave completion masquerading as a refresh failure.
+
+The workflow now runs `npm run test:v012:current` (58 tests) and gates the complete integration/Evasion/private-hosting browsers. Existing audit gates remain enabled; no failure is waived. A new browser test uses the real `preview/private-server.mjs`, synthetic credentials and isolated storage to verify the access gate, CSP boot, six affinities, Back and combat at 390/1280 px.
+
+**Final local checks: all PASS.** Full `npm test`; 58 current integration regressions; `npm run test:assets` (all nine constituent suites); complete Expedition/Evasion/private-hosting browsers; event browser; auth/account browser at 1440/390/320 px; mobile gameplay stress; interrupted-save recovery; deterministic combat/save stress; PvP browser; SDK build; all six Firestore-rule tests in the `demo-wanderer` emulator. The emulator used `/tmp` caches because the managed home directory is read-only. No deployed Firebase configuration or Rules changed. SDK generated output was restored after build verification to avoid unrelated generated churn.
+
+**Railway private:** ready for an isolated manual playtest once the remote audit for this follow-up is green. Keep `npm run preview:private`, HTTPS and the existing host-side secrets; do not point this service at classic/cloud accounts. No Railway deployment was performed. Balance/longitudinal economy and production cloud migration remain the release gates listed above. The `[audit]` follow-up commit triggers both smoke and the full GitHub pre-release audit; its remote result is reported in the delivery message.

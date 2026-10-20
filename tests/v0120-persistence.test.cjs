@@ -25,17 +25,17 @@ test('unfinished Realm restores exact entry, seed, IDs, loot rolls and resources
  a.checkpoint.restore(cp);assert.equal(a.state().run,null);assert.equal(JSON.stringify({...a.state(),run:null}),initial);assert.equal(a.potion('health'),false);assert.equal(a.checkpoint.extract(),false);
  assert.equal(a.checkpoint.resume(),true);assert.deepEqual(plain(a.state().run.enemy),firstEnemy);assert.deepEqual(plain(a.makeItem(5,'belt')),roll);assert.equal(a.checkpoint.resume(),false);
 });
-test('choice checkpoint retains initial passive, Magic element, per-card rerolls and fixed offers',()=>{
+test('choice checkpoint retains initial passive, Magic element, global rerolls and fixed offers',()=>{
  const a=create(304);a.start();a.initial('magic');a.element('frost');a.reroll(1);const cp=a.checkpoint.capture();
  const before=JSON.stringify(cp.session.controller.offers);a.reroll(2);a.checkpoint.restore(cp);
- assert.equal(JSON.stringify(a.controller().state.offers),before);assert.equal(a.controller().state.rerollsByRealm[0][1],2);assert.equal(a.controller().state.rerollsByRealm[0][2],3);assert.deepEqual(Array.from(a.build().picks),['deep_winter']);assert.equal(a.build().element,'frost');assert.equal(a.initial('magic'),false);
+ assert.equal(JSON.stringify(a.controller().state.offers),before);assert.equal(a.controller().state.rerolls,2);assert.deepEqual(Array.from(a.build().picks),['deep_winter']);assert.equal(a.build().element,'frost');assert.equal(a.initial('magic'),false);
 });
 test('versioned save sessions round-trip, old checkpoints remain compatible, corrupt provenance and reroll rollback fail',()=>{
  const a=create(305);begin(a);const cp=a.checkpoint.capture(),save=envelope(cp);assert.equal(S.recover(save).save.expedition.lastOutcome,'active');
  const storage={data:new Map(),getItem(k){return this.data.get(k)??null;},setItem(k,v){this.data.set(k,v);}},store=S.createStore(storage);store.load();let persisted=store.commit(save);
  const raw=JSON.stringify(persisted);assert.deepEqual(S.createStore(storage).load(),persisted);
  const bad=plain(persisted);bad.expedition.session.lootIds=[bad.profile.equip.weapon.id];assert.throws(()=>S.validate(bad),/loot ownership/);assert.equal(JSON.stringify(persisted),raw);
- persisted.expedition.session.controller.rerollsByRealm[0][0]=2;persisted=store.commit(persisted);persisted.expedition.session.controller.rerollsByRealm[0][0]=3;assert.throws(()=>store.commit(persisted),/reroll rollback/);
+ persisted.expedition.session.controller.rerolls=2;persisted=store.commit(persisted);persisted.expedition.session.controller.rerolls=3;assert.throws(()=>store.commit(persisted),/reroll rollback/);
  const legacy=plain(save);delete legacy.expedition.session;assert.equal(S.recover(legacy).save.expedition.lastOutcome,'interrupted');
  const future=plain(save);future.expedition.session.version=99;assert.throws(()=>S.validate(future),/checkpoint version/);
 });

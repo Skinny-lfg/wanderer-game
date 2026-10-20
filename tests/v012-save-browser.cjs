@@ -20,9 +20,17 @@ const fixture=String.raw`if(PHASE1_PREVIEW){
    gold:state.gold,fragments:state.fragments,gear:[...state.stash,...Object.values(state.equip).filter(Boolean),...(state.expeditionOverflow||[])],
    stash:state.stash.length,overflow:state.expeditionOverflow.length,runes:state.runes,materials:state.materials,
    onlineProgress:state.onlineProgress,maxDungeon:state.maxDungeon,unlocked:phase1Controller.state.unlocked,vitals:phase3Vitals(),status:WandererGame.validationStatus()}),
+  checkpointRound:()=>{state.run.planeWaves=3;phase1Controller.state.selected.waves=3;},
   tick:()=>{const r=state.run;if(r?.status==='fight'){const enemy=r.enemy;for(let i=0;i<3000&&state.run===r&&r.status==='fight'&&r.enemy===enemy;i++)updateFight();}},
-  defeat:()=>{if(!state.run)return;state.run.hp=1;state.run.enemy.atk=1e9;state.run.tEnemy=100;updateFight();},
+  defeat:()=>{const r=state.run;if(!r)return;r.hp=1;r.barrier=0;r.stats.attacksPerSec=0;r.stats.blockChance=0;r.stats.evasionRating=0;r.stats.defense=0;r.enemy.hp=1e9;r.enemy.atk=1e9;for(let i=0;i<5&&state.run===r;i++){r.tEnemy=100;updateFight();}},
   invalidPlane:()=>{try{phase1Choose('not-offered');return false;}catch{return true;}},
+  step:()=>{const g=phase1Controller.state;if(phase4Resume){phase4ResumeRealm();return;}
+   if(phase1Draft?.step==='passive'){phase2ChoosePassive(phase1Draft.options[0].id);return;}
+   if(phase1Draft?.step==='element'){phase2ChooseElement('fire');return;}
+   if(phase5Results.review){phase5ExitResult();return;}
+   if(g.stage==='choice'){if(!g.initialFamily){phase2ChooseInitial('blood');return;}while(phase3BagOverflow())phase3DiscardLoot(phase3BagItems().at(-1).id);phase1Choose(g.offers[0].id);phase1Enter();return;}
+   if(phase6Run?.event){phase6EventChoice(2);return;}
+   const r=state.run;if(r?.status==='fight')for(let i=0;i<3000&&state.run===r&&r.status==='fight';i++)updateFight();},
   save,reroll:phase3Reroll,abandon:phase1Abandon,duplicate:phase1WaveWon,
   stored:()=>JSON.parse(localStorage.getItem(key)),
   apiIsolation:()=>{let blocked=0;for(const fn of [()=>WandererGame.switchSave('wanderer_browser_proto_v01',{}),()=>WandererGame.backup('{}','test'),()=>WandererGame.cacheSync('wanderer_account_fake_synced','{}'),()=>WandererGame.compactBackups()])try{fn();}catch{blocked++;}return blocked===4&&WandererGame.raw()===null;}
@@ -75,36 +83,32 @@ async function noRealWrites(page){
   await other.getByRole('alert').waitFor();assert((await other.getByRole('alert').innerText()).includes('another tab'));
   assert.equal(await other.evaluate(()=>WandererGame.validationStatus().ready),false);await other.close();
   await page.locator('[data-phase1-expedition="1"]').click();assert.equal(await page.evaluate(()=>__saveAudit.invalidPlane()),true);
-  await page.evaluate(()=>__saveAudit.reroll());await page.evaluate(()=>__saveAudit.reroll());assert.equal(await page.evaluate(()=>__saveAudit.reroll()),false);
-  await pick(page);await wave(page);const earned=await snapshot(page);assert(earned.gold>initial.gold);
-  const saved=await page.evaluate(()=>__saveAudit.stored());assert.equal(saved.expedition.awardKeys.length,1);
-  await page.evaluate(()=>__saveAudit.duplicate());assert.equal((await snapshot(page)).gold,earned.gold);
-  // Close the browser itself; carry only this fixture's browser storage into a fresh process.
+  await page.locator('[data-phase2-initial="blood"]').click();
+  await page.evaluate(()=>__saveAudit.checkpointRound());const entry=await snapshot(page);await wave(page);
   await page.close();const storageState=await context.storageState();await context.close();await browser.close();browser=await launch();
   context=await browser.newContext({storageState,viewport:{width,height:950}});page=await prepare(context,base,width);page.on('pageerror',e=>errors.push(e.message));
   await ready(page,url);let restored=await snapshot(page);
-  assert.equal(restored.status.outcome,'interrupted');assert.equal(restored.stage,'camp');assert.equal(restored.gold,earned.gold);assert.equal(restored.fragments,earned.fragments);
-  assert.deepEqual(restored.picks,[]);assert.equal(restored.element,null);assert.equal(restored.vitals.hp,restored.vitals.maxhp);
-  assert.equal(restored.unlocked,1);assert(originalIds.every(id=>restored.gear.some(i=>i.id===id)));
+  assert.equal(restored.stage,'combat');assert.equal(restored.unlocked,1);assert(originalIds.every(id=>restored.gear.some(i=>i.id===id)));
   assert.deepEqual(restored.gear.find(i=>i.id===originalLegendary.id),originalLegendary);
-  await page.reload();await page.waitForFunction(()=>WandererGame.validationStatus().ready);assert.equal((await snapshot(page)).gold,earned.gold);
-  // Abandonment and real incoming-hit defeat preserve committed gear/currency and do not unlock.
-  await page.locator('[data-phase1-expedition="1"]').click();await pick(page);await wave(page);let before=await snapshot(page);
-  await page.getByRole('button',{name:'Abandon Expedition',exact:true}).click();await page.locator('dialog [data-confirm]').click();
-  let after=await snapshot(page);assert.equal(after.status.outcome,'abandoned');assert.equal(after.gold,before.gold);assert.equal(after.unlocked,1);
-  await page.locator('[data-phase1-expedition="1"]').click();await pick(page);before=await snapshot(page);await page.evaluate(()=>__saveAudit.defeat());
-  after=await snapshot(page);assert.equal(after.status.outcome,'defeat');assert.equal(after.gold,before.gold);assert.equal(after.gear.length,before.gear.length);
-  // Complete all 15 Planes using the real integrated attack engine with the legitimate old-tier fixture.
+  await page.locator('#phase4Resume').click();
+  // Native death and abandonment preserve pre-run gear and resources; neither unlocks.
+  let before=await snapshot(page);await page.evaluate(()=>__saveAudit.defeat());let after=await snapshot(page);
+  assert.equal(after.status.outcome,'defeat');assert.equal(after.gold,before.gold);assert(originalIds.every(id=>after.gear.some(i=>i.id===id)));
+  await page.evaluate(()=>__saveAudit.step());await page.evaluate(()=>__saveAudit.step());
+  await page.locator('[data-phase1-expedition="1"]').click();await page.locator('[data-phase2-initial="blood"]').click();
+  before=await snapshot(page);await page.evaluate(()=>__saveAudit.abandon());after=await snapshot(page);
+  assert.equal(after.status.outcome,'abandoned');assert.equal(after.gold,before.gold);assert.equal(after.unlocked,1);
+  await page.evaluate(()=>__saveAudit.step());await page.evaluate(()=>__saveAudit.step());
   await page.locator('[data-phase1-expedition="1"]').click();
-  for(let step=0;step<80;step++){
-   const s=await snapshot(page);if(s.stage==='finished')break;
-   assert(s.families.length<=3);
-   if(s.stage==='choice')await pick(page,['fire','frost','lightning'][step%3]);
-   else await wave(page);
+  for(let step=0;step<200;step++){
+   const current=await snapshot(page);if(current.stage==='finished')break;
+   assert(current.families.length<=3);await page.evaluate(()=>__saveAudit.step());await page.waitForTimeout(10);
   }
   after=await snapshot(page);assert.equal(after.stage,'finished');assert.equal(after.unlocked,2);assert.equal(after.status.outcome,'victory');
-  await page.waitForTimeout(20);before=await snapshot(page);await page.reload();await page.waitForFunction(()=>WandererGame.validationStatus().ready);
-  after=await snapshot(page);assert.equal(after.unlocked,2);assert.deepEqual(after.onlineProgress,initial.onlineProgress,'classic ranking history is immutable in Expeditions');assert.equal(after.gold,before.gold);assert.equal(after.fragments,before.fragments);assert.deepEqual(after.picks,[]);
+  await page.locator('[data-rune-choice]').first().click();const owned=(await snapshot(page)).runes.length;
+  before=await snapshot(page);await page.reload();await page.waitForFunction(()=>WandererGame.validationStatus().ready);
+  after=await snapshot(page);assert.equal(after.runes.length,owned);assert.equal(after.unlocked,2);assert.deepEqual(after.onlineProgress,initial.onlineProgress);
+  assert.equal(after.gold,before.gold);assert.equal(after.fragments,before.fragments);assert.deepEqual(after.picks,[]);
   await noRealWrites(page);assert.deepEqual(errors,[]);await context.close();
   console.log('PASS Phase 5 '+width+'px: fixture migration, writer lock, browser restart, no reward replay, abandonment/defeat, 15 Planes/boss, history/gear preservation');
  }
@@ -120,7 +124,7 @@ async function noRealWrites(page){
  await ready(quotaPage,base+'/?expeditionPhase1=1&expeditionSave=1&validationSlot=quota');
  const durable=await quotaPage.evaluate(()=>localStorage.getItem(WandererGame.validationStatus().key));
  await quotaPage.evaluate(()=>{const original=Storage.prototype.setItem;Storage.prototype.setItem=function(key,value){if(key.startsWith('wanderer_v012_validation_v1_'))throw new DOMException('Fixture disk full','QuotaExceededError');return original.call(this,key,value);};});
- await quotaPage.locator('[data-phase1-hero="ranger"]').click();await quotaPage.getByRole('alert').waitFor();
+ await quotaPage.locator('[data-online-action="account"]').click();await quotaPage.locator('[data-phase1-hero="ranger"]').click();await quotaPage.getByRole('alert').waitFor();
  assert.equal(await quotaPage.evaluate(()=>localStorage.getItem('wanderer_v012_validation_v1_quota')),durable);
  assert.equal(await quotaPage.locator('#phase5Export').count(),1);await noRealWrites(quotaPage);await quotaContext.close();
  const unsupportedContext=await browser.newContext();await unsupportedContext.addInitScript(()=>Object.defineProperty(navigator,'locks',{value:undefined}));

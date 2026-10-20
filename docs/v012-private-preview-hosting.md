@@ -17,7 +17,7 @@ This repository provides a server-side protected preview in \`preview/private-se
 
 **Important:** If a credential was pasted into a chat or message, use a different password for actual deployment. Do not commit it to GitHub. The password is validated against a host environment variable on the server using timing-safe hash comparisons. There is a 12-failure/15-minute limit per source address, a 12-hour HttpOnly SameSite session cookie, and no client-side password list.
 
-The authenticated preview is deliberately a **single-test-user service**. Integrated progression is stored only under the `wanderer_v012_validation_v1_` prefix; classic and prototype saves are not imported. Closing during an Expedition ends that attempt on recovery, retaining committed permanent rewards. The preview does not write cloud saves, Firebase rules or production profiles. Browser storage is per browser/device; this is **not** cross-device cloud sync.
+The authenticated preview is deliberately a **single-test-user service**. Integrated progression is stored only under the `wanderer_v012_validation_v1_` prefix; classic and prototype saves are not imported. Closing during an Expedition restores its saved checkpoint; an unfinished Realm resumes from its fixed entry. Completed rewards and passive choices are not awarded again. The preview does not write cloud saves, Firebase rules or production profiles. Browser storage is per browser/device; this is **not** cross-device cloud sync.
 
 ## Development-only local smoke
 

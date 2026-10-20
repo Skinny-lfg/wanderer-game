@@ -3,13 +3,13 @@ function preparation(a,weapon='Sword'){
  a.setup(5,weapon);a.rollShop();a.start(1);a.initial('blood');a.controller().state.planeIndex=2;
 }
 function loot(a,slot='belt',overflow=false){const item=a.makeItem(5,slot,null,'loot',slot==='weapon'?'Sword':'Leather','Rare');a.bag.mark(item,overflow);return item;}
-test('nine-slot bag has explicit overflow; next Realm waits for manual discard without currency rewards',()=>{
+test('six-slot bag has explicit overflow; next Realm waits for manual discard without currency rewards',()=>{
  const a=create(7);preparation(a);const s=a.state(),home=s.equip.weapon;
- const items=Array.from({length:11},()=>loot(a));assert.equal(a.bag.items().length,11);assert.equal(a.bag.overflow(),2);
+ const items=Array.from({length:8},()=>loot(a));assert.equal(a.bag.items().length,8);assert.equal(a.bag.overflow(),2);
  a.select(a.controller().state.offers[0].id);assert.equal(a.enter(),false);assert.equal(s.run,null);
  const gold=s.gold,fragments=s.fragments;assert.equal(a.bag.discard(home.id),false);
  assert.equal(a.bag.discard(items[0].id),true);assert.equal(a.bag.discard(items[0].id),false);assert.equal(a.bag.discard(items[1].id),true);
- assert.equal(a.bag.items().length,9);assert.equal(a.bag.overflow(),0);assert.equal(s.gold,gold);assert.equal(s.fragments,fragments);
+ assert.equal(a.bag.items().length,6);assert.equal(a.bag.overflow(),0);assert.equal(s.gold,gold);assert.equal(s.fragments,fragments);
  assert.equal(a.enter(),true);assert(s.run);assert.equal(a.bag.discard(items[2].id),false,'combat cannot discard loot');
 });
 test('active Expedition can equip only its loot; displaced home gear stays safe and cannot be re-equipped',()=>{
@@ -37,16 +37,16 @@ test('native Wave award populates the bag once; prior Expedition loot never ente
  a.abandon();a.start(1);assert.equal(a.bag.items().length,0);assert.equal(a.bag.ids().length,0);assert(!a.state().stash.some(o=>o.id===ids[0]),'forfeited Expedition loot is lost');
 });
 test('potion slots retain existing recovery and dose rules, with a per-potion double-click guard',()=>{
- const a=create(13);a.setup(5,'Staff');assert.equal(a.potion('health'),false);a.start(1);a.initial('blood');assert.equal(a.potion('health'),false);
- a.controller().state.planeIndex=2;const stats=a.stats();a.setVitals({hp:stats.maxhp*.5,mp:stats.mana*.25,maxmp:stats.mana});
- assert.equal(a.potion('health'),true);const hp=a.vitals().hp;assert.equal(a.potion('health'),false);assert.equal(a.vitals().hp,hp);
- assert.equal(a.potion('mana'),true);const mp=a.vitals().mp;assert.equal(a.potion('mana'),false);assert.equal(a.vitals().mp,mp);
+ const a=create(13);a.setup(5,'Staff');a.state().consumables={health:1,mana:1};a.state().potionSelection=['health','mana'];assert.equal(a.potion('health'),false);a.start(1);a.initial('blood');assert.equal(a.potion('health'),false);
+ a.potions.start();a.controller().state.planeIndex=2;const stats=a.stats();a.setVitals({hp:stats.maxhp*.5,mp:stats.mana*.25,maxmp:stats.mana});
+ assert.equal(a.potions.use(0),true);const hp=a.vitals().hp;assert.equal(a.potions.use(0),false);assert.equal(a.vitals().hp,hp);
+ assert.equal(a.potions.use(1),true);const mp=a.vitals().mp;assert.equal(a.potions.use(1),false);assert.equal(a.vitals().mp,mp);
  assert.match(a.bag.passives(),/Initial passive/);assert.match(a.bag.passives(),/phase3PassiveSlot/);
 });
 test('overflow at Expedition end cannot be bypassed by starting a new attempt or opening vendors',()=>{
- const a=create(14);preparation(a);const items=Array.from({length:10},()=>loot(a));a.controller().state.stage='finished';
+ const a=create(14);preparation(a);const items=Array.from({length:7},()=>loot(a));a.controller().state.stage='finished';
  assert.equal(a.start(1),false);assert.equal(a.economyCanAct(),false);
- const fragments=a.state().fragments;a.salvage([items[0].id]);assert.equal(a.state().fragments,fragments);assert.equal(a.bag.items().length,10);
- assert.equal(a.equip(items[0].id),false);assert.equal(a.bag.discard(items[9].id),true);
+ const fragments=a.state().fragments;a.salvage([items[0].id]);assert.equal(a.state().fragments,fragments);assert.equal(a.bag.items().length,7);
+ assert.equal(a.equip(items[0].id),false);assert.equal(a.bag.discard(items[6].id),true);
  assert.equal(a.bag.overflow(),0);assert.equal(a.economyCanAct(),true);a.start(1);assert.equal(a.bag.items().length,0);
 });

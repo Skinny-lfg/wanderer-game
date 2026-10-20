@@ -18,6 +18,7 @@ jobs:
       - run: npm ci
       - name: New Expedition buildcraft, events and controller
         run: node tests/v012-buildcraft.test.cjs && node tests/v012-events.test.cjs && node tests/v012-expedition-controller.test.cjs
+      - run: npm run test:v012:current
       - run: npm test
       - name: Shatter and Double Strike isolated A/B
         run: node tests/v093-shatter-double-strike.cjs
@@ -65,6 +66,11 @@ jobs:
         continue-on-error: true
         timeout-minutes: 4
         run: node tests/v012-events-browser.cjs
+      - name: Current v0.12 integration and Evasion browser
+        id: integrated
+        continue-on-error: true
+        timeout-minutes: 4
+        run: node tests/v012-complete-browser.cjs && node tests/v0120-evasion-browser.cjs && node tests/private-preview-browser.cjs
       - name: Browser asset and VFX checks
         id: assets
         continue-on-error: true
@@ -73,7 +79,7 @@ jobs:
       - name: Unit and smoke regression
         id: unit
         continue-on-error: true
-        run: npm test
+        run: npm run test:v012:current && npm test
       - name: Browser gameplay and mobile stress
         id: stressbrowser
         continue-on-error: true
@@ -107,6 +113,7 @@ jobs:
       - name: Pre-release audit result gate
         if: always()
         run: |
+          echo "Integrated: ${{ steps.integrated.outcome }}"
           echo "Events:   ${{ steps.events.outcome }}"
           echo "Unit:     ${{ steps.unit.outcome }}"
           echo "Browser:  ${{ steps.browser.outcome }}"
@@ -116,6 +123,6 @@ jobs:
           echo "Stress UI:${{ steps.stressbrowser.outcome }}"
           echo "PvP:      ${{ steps.pvp.outcome }}"
           echo "Rules:    ${{ steps.rules.outcome }}"
-          for result in "${{ steps.events.outcome }}" "${{ steps.unit.outcome }}" "${{ steps.browser.outcome }}" "${{ steps.assets.outcome }}" "${{ steps.recovery.outcome }}" "${{ steps.stress.outcome }}" "${{ steps.stressbrowser.outcome }}" "${{ steps.pvp.outcome }}" "${{ steps.rules.outcome }}"; do
+          for result in "${{ steps.integrated.outcome }}" "${{ steps.events.outcome }}" "${{ steps.unit.outcome }}" "${{ steps.browser.outcome }}" "${{ steps.assets.outcome }}" "${{ steps.recovery.outcome }}" "${{ steps.stress.outcome }}" "${{ steps.stressbrowser.outcome }}" "${{ steps.pvp.outcome }}" "${{ steps.rules.outcome }}"; do
             test "$result" = success || exit 1
           done
