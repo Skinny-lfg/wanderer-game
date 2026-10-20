@@ -20,7 +20,7 @@ const BY_ID=Object.fromEntries(EVENTS.map(e=>[e.id,e]));
 const choices={
  traveling_merchant:[['provisions','Buy healing supplies',{gold:-1,heal:.28}],['scroll','Buy a warding scroll',{gold:-1,defense:.035}]],
  smugglers_caravan:[['mana','Trade fragments for Mana',{fragments:-1,mana:.35}],['strength','Trade fragments for strength',{fragments:-1,attack:.035}]],
- relic_collector:[['materials','Sell an old relic for fragments',{gold:1,fragments:1}],['relic','Buy a mysterious equipment find',{gold:-2,loot:1}]],
+ relic_collector:[['materials','Trade an old map for resources',{gold:1,fragments:1}],['relic','Buy a mysterious equipment find',{gold:-2,loot:1}]],
  cursed_altar:[['blood','Sacrifice HP for offensive power',{hp:-.11,attack:.055}],['shelter','Sacrifice HP for protection',{hp:-.07,defense:.055}]],
  soul_mirror:[['edge','Gain strength but lose resilience',{attack:.07,defense:-.035}],['guard','Gain resilience but lose strength',{defense:.07,attack:-.035}]],
  whispering_idol:[['whisper','Take a cursed blessing',{hp:-.08,mana:1,attack:.025}],['resist','Resist the voice',{fragments:1}]],
@@ -32,9 +32,24 @@ const choices={
  oracle_of_paths:[['foresight','Follow the dangerous vision',{attack:.045,hp:-.05}],['safety','Take the safer path',{defense:.035,heal:.12}]]
 };
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
-function options(eventId){
+function options(eventId,state={}){
  if(!BY_ID[eventId])throw Error('Unknown Expedition event');
- return choices[eventId].map(([id,label])=>({id,label}));
+ const level=clamp(Math.floor(Number(state.level)||1),1,200),coin=Math.round(10+level*.55),fragment=Math.round(5+level*.18);
+ return choices[eventId].map(([id,label,spec])=>{
+  const note=[];
+  if(spec.gold<0)note.push('Pay '+Math.abs(spec.gold)*coin+' Gold');
+  if(spec.gold>0)note.push('Gain '+spec.gold*coin+' Gold');
+  if(spec.fragments<0)note.push('Pay '+Math.abs(spec.fragments)*fragment+' Fragments');
+  if(spec.fragments>0)note.push('Gain '+spec.fragments*fragment+' Fragments');
+  if(spec.hp<0)note.push('Spend '+Math.round(Math.abs(spec.hp)*100)+'% max HP');
+  if(spec.heal)note.push('Heal '+Math.round(spec.heal*100)+'% max HP');
+  if(spec.mana)note.push('Restore '+Math.round(spec.mana*100)+'% max Mana');
+  if(spec.attack)note.push('Attack '+(spec.attack>0?'+':'')+Math.round(spec.attack*100)+'% for this Expedition');
+  if(spec.defense)note.push('Defense '+(spec.defense>0?'+':'')+Math.round(spec.defense*100)+'% for this Expedition');
+  if(spec.loot)note.push('One equipment roll');
+  if(spec.gamble)note.push('48% chance of equipment and extra Fragments; failure costs 8% max HP');
+  return {id,label,detail:note.join(' · ')||'Continue'};
+ });
 }
 function resolve(eventId,id,state,rng=Math.random){
  if(!BY_ID[eventId]||!Array.isArray(choices[eventId]))throw Error('Unknown Expedition event');
