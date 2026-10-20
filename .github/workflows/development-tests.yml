@@ -71,6 +71,10 @@ jobs:
         with:
           node-version: '22'
       - name: Run isolated paired utility-coverage simulations
+        env:
+          WANDERER_COVERAGE_LEVELS: '50,200'
+          WANDERER_COVERAGE_REPETITIONS: '12'
+          WANDERER_COVERAGE_SEED_OFFSET: '17000000'
         run: node scripts/v012-coverage-ab-sim.cjs /tmp/wanderer-v012-coverage-ab.json
       - name: Archive coverage comparison and full trajectories
         if: always()
