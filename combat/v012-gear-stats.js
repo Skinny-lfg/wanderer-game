@@ -1,6 +1,15 @@
 // Wanderer v0.12 — one calculation for derived character/equipment/rune stats.
 // Explicit dependencies preserve the native formulas and allow isolated testing.
 (function(root){'use strict';
+function gearEvasionRating(item,{ARMOR_SLOTS,RARITY,clamp}){
+ if(!item||item.armorType!=='Leather'||!ARMOR_SLOTS.includes(item.slot))return 0;
+ if(item.evasionRating!==undefined)return Number.isFinite(Number(item.evasionRating))?Math.max(0,Number(item.evasionRating)):0;
+ // Read-only compatibility for pre-hotfix Leather, including reinforced Legendaries.
+ const tier=clamp(Number(item.tier)||1,1,200),base=Math.round((2+tier*.91)*(RARITY[item.rarity]?.[1]||1));
+ const rank=item.rarity==='Legendary'?clamp(Number(item.upgradeRank)||0,0,10):0;
+ return Math.round(base*(1+rank*.02)*100)/100;
+}
+function itemStatValue(item,key,context){return key==='evasionRating'?gearEvasionRating(item,context):Number(item?.[key])||0;}
 function totalStats(equipment,ownedRunes,equippedRuneIds,{isTwoHanded,FIELDS,itemStatValue,RUNE_FAMILIES,runeValue,setCounts,setBonuses,state,PHASE1_PREVIEW,phase6Run}){
  const equipped=isTwoHanded(equipment.weapon)?{...equipment,offhand:null}:equipment;
  const s={str:5,agi:5,int:5,end:5,cha:5,atkFlat:0,defFlat:0,hpFlat:0,spdFlat:0,manaFlat:0,spellFlat:0,evasionRating:0};
@@ -39,5 +48,5 @@ function totalStats(equipment,ownedRunes,equippedRuneIds,{isTwoHanded,FIELDS,ite
  s.lootQuality=Math.min(10,Math.round(Math.max(0,s.cha-5)*.09*10)/10);
  return s;
 }
-root.WandererV012GearStats=Object.freeze({totalStats});
+root.WandererV012GearStats=Object.freeze({gearEvasionRating,itemStatValue,totalStats});
 })(globalThis);

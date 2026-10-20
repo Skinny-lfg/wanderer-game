@@ -1,6 +1,14 @@
 // v0.12 combat runtime. Canonical state transitions; UI effects are injected.
 (function(root){'use strict';
 function create(ports){
+function addLog(text,kind=''){if(ports.isPhase1Run()){const r=ports.state.run;r.realmLog??=[];const line={text:String(text),kind:String(kind)};r.realmLogBytes=(r.realmLogBytes||0)+line.text.length+line.kind.length;r.realmLog.push(line);while(r.realmLogBytes>180000){const old=r.realmLog.shift();r.realmLogBytes-=old.text.length+old.kind.length;r.realmLogTruncated=true;}}ports.logEntries.unshift({text,kind});ports.logEntries=ports.logEntries.slice(0,75);if(ports.view==='combat')ports.renderLog()}
+
+function bossForTier(tier){return ports.BOSS_ARCHETYPES[(Math.floor(tier/10)-1+ports.BOSS_ARCHETYPES.length)%ports.BOSS_ARCHETYPES.length]}
+
+function eliteArchetype(run){return ports.ELITE_ARCHETYPES[run?.eliteType]||ports.ELITE_ARCHETYPES.tank}
+
+function rollEliteArchetype(){return ports.sample(Object.keys(ports.ELITE_ARCHETYPES))}
+
 function tryDodge(run,type){
  const chance=type==='physical'?ports.evasionChance(run.stats.evasionRating||0,run.tier):0;
  if(!chance||ports.gameRandom()>=chance)return false;
@@ -535,7 +543,7 @@ function phase6Stats(stats){return ports.phase6Run?WandererV012CombatCore.applyE
 function winEncounter(){ports.phase1WaveWon();}
 
 function die(){ports.phase1Death();}
-return {tryDodge,enemyFor,synchronizeDots,tickDots,setRuntime,setNow,activeLegendarySignatures,legendaryRuntime,legendaryHas,legendaryReady,legendaryExtend,legendaryAffinity,legendaryAttackBonus,legendaryOffhand,legendaryDefensiveEffects,legendaryTick,legendaryKill,setReady,setBarrier,regenPerSecond,setHeal,setDelayEnemy,setDirectEnemyDamage,setOnAttack,setPoisonBurst,setCombatExpire,setEnemyWeaken,setHeatTick,setSoulHeal,applyAffinity,weaponAttack,updateFight,phase2Context,phase2Stats,phase2WeaponAttack,phase2MagicTick,phase6Metric,phase6Proc,phase6CollectMetrics,phase6Stats,winEncounter,die};
+return {addLog,bossForTier,eliteArchetype,rollEliteArchetype,tryDodge,enemyFor,synchronizeDots,tickDots,setRuntime,setNow,activeLegendarySignatures,legendaryRuntime,legendaryHas,legendaryReady,legendaryExtend,legendaryAffinity,legendaryAttackBonus,legendaryOffhand,legendaryDefensiveEffects,legendaryTick,legendaryKill,setReady,setBarrier,regenPerSecond,setHeal,setDelayEnemy,setDirectEnemyDamage,setOnAttack,setPoisonBurst,setCombatExpire,setEnemyWeaken,setHeatTick,setSoulHeal,applyAffinity,weaponAttack,updateFight,phase2Context,phase2Stats,phase2WeaponAttack,phase2MagicTick,phase6Metric,phase6Proc,phase6CollectMetrics,phase6Stats,winEncounter,die};
 }
 root.WandererV012CombatRuntime=Object.freeze({create});
 })(globalThis);

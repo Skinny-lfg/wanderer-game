@@ -997,15 +997,8 @@ const ARMOR_SLOTS=['helm','armor','gloves','boots','belt'],ARMOR_TYPES=['Cloth',
 const FIELDS=[['Attack','atk'],['Defense','def'],['Health','hp'],['Speed','spd'],['Strength','str'],['Agility','agi'],['Intelligence','int'],['Endurance','end'],['Charisma','cha'],['Mana','mana'],['Spell','spell'],['Evasion Rating','evasionRating']];
 // Provisional E#-relative evasion. Rating is independent of Agility.
 const EVASION_CAP=.30,EVASION_SCALE=20;
-function gearEvasionRating(item){
- if(!item||item.armorType!=='Leather'||!ARMOR_SLOTS.includes(item.slot))return 0;
- if(item.evasionRating!==undefined)return Number.isFinite(Number(item.evasionRating))?Math.max(0,Number(item.evasionRating)):0;
- // Read-only compatibility for pre-hotfix Leather, including reinforced Legendaries.
- const tier=clamp(Number(item.tier)||1,1,200),base=Math.round((2+tier*.91)*(RARITY[item.rarity]?.[1]||1));
- const rank=item.rarity==='Legendary'?clamp(Number(item.upgradeRank)||0,0,10):0;
- return Math.round(base*(1+rank*.02)*100)/100;
-}
-function itemStatValue(item,key){return key==='evasionRating'?gearEvasionRating(item):Number(item?.[key])||0;}
+function gearEvasionRating(item){return WandererV012GearStats.gearEvasionRating(item,{ARMOR_SLOTS,RARITY,clamp});}
+function itemStatValue(item,key){return WandererV012GearStats.itemStatValue(item,key,{ARMOR_SLOTS,RARITY,clamp});}
 function evasionChance(rating,tier){return WandererV012CombatCore.evasionChance(rating,tier,EVASION_SCALE,EVASION_CAP);}
 function enemyAttackType(enemy){return WandererV012CombatCore.enemyAttackType(enemy);}
 
@@ -1120,9 +1113,9 @@ function bannerMessage(text){let t=$('toast');t.textContent=text;t.classList.rem
 function detailEffect(o){return o.armorType||'';}
 function detailEffectHtml(o){return esc(detailEffect(o));}
 
-function chooseSubtype(slot,requested='random'){if(requested!=='random')return requested;if(slot==='weapon')return sample(TYPES);if(slot==='offhand')return sample(OFFHAND_TYPES);return ['ring1','ring2'].includes(slot)?'Ring':SNAME[slot];}
-function economyTier(){return Math.min(DUNGEON_CAP,phase1Controller?.state.unlocked||1);}
-function merchantTier(){return economyTier();}
+
+
+
 function craftCost(tier){return WandererV012LootRules.craftCost(tier);}
 
 /* v0.9: risk/reward wave tables and targeted gear, separate from Forge and Merchant. */
@@ -1352,8 +1345,8 @@ function comparisonWarning(o,target=o?.slot){
  return lost.length?'<p class="small gold">⚠ Set bonus lost: '+lost.map(t=>esc(ELEMENTS[t.affinity].name)+' '+t.before+'/5 → '+(t.after||'inactive')).join('; ')+'. Gear Power is an estimate and does not prove this swap improves combat performance.</p>':
  '<p class="small muted">Gear Power estimates stats, not full combat performance.</p>';
 }
-function baseStatScore(o){if(!o)return 0;return [['atk',3],['def',3],['hp',.18],['spd',8],['str',2],['agi',2],['int',2],['end',2],['cha',2],['mana',.2],['spell',2]].reduce((sum,[k,w])=>sum+(Number(o[k])||0)*w,0)}
-function offhandLocked(o){return o?.slot==='offhand'&&isTwoHanded(state.equip.weapon)}
+
+
 function gearTrend(o){
  if(offhandLocked(o))return '<span class="gearTrend same" title="Off-Hand locked by two-handed weapon" aria-label="Off-Hand locked">🔒</span>';
  const diff=totalStats(comparisonEquip(o)).power-totalStats().power,loss=lostSetTiers(o);
@@ -1415,7 +1408,7 @@ Q('[data-rune-remove]').forEach(b=>b.onclick=()=>unequipRune(Number(b.dataset.ru
 Q('[data-rune-sell]').forEach(b=>b.onclick=()=>salvageRune(b.dataset.runeSell));
 const recycleDuplicates=$('recycleDuplicateRunes');if(recycleDuplicates)recycleDuplicates.onclick=salvageDuplicateRunes;
 if(equipped){$('unequipThis').onclick=()=>{selectedId=null;unequipItem(equipped.slot)}}
-if(focus&&!bulk){if(['ring1','ring2'].includes(focus.slot)){$('equipRing1').onclick=()=>equipItem(focus.id,'ring1');$('equipRing2').onclick=()=>equipItem(focus.id,'ring2');}else $('equipThis').onclick=()=>equipItem(focus.id);$('lockThis').onclick=()=>{focus.locked=!focus.locked;save();renderStash()};$('sellThis').onclick=()=>salvageOne(focus.id);}}
+if(focus&&!bulk){if(['ring1','ring2'].includes(focus.slot)){$('equipRing1').onclick=()=>equipItem(focus.id,'ring1');$('equipRing2').onclick=()=>equipItem(focus.id,'ring2');}else $('equipThis').onclick=()=>equipItem(focus.id);$('lockThis').onclick=()=>{toggleEquipmentLock(focus);renderStash()};$('sellThis').onclick=()=>salvageOne(focus.id);}}
 function forgeComparisonTrend(item,target=item.slot){
  const diff=totalStats(comparisonEquip(item,target)).power-totalStats().power;
  const loss=lostSetTiers(item,target).length;
@@ -1488,7 +1481,7 @@ function estimateEnemy(level,n=1){return WandererV012CombatCore.estimateEnemy(le
 
 // A Legendary Hunt is an information-only target: it never changes drop odds.
 
-function addLog(text,kind=''){if(isPhase1Run()){const r=state.run;r.realmLog??=[];const line={text:String(text),kind:String(kind)};r.realmLogBytes=(r.realmLogBytes||0)+line.text.length+line.kind.length;r.realmLog.push(line);while(r.realmLogBytes>180000){const old=r.realmLog.shift();r.realmLogBytes-=old.text.length+old.kind.length;r.realmLogTruncated=true;}}logEntries.unshift({text,kind});logEntries=logEntries.slice(0,75);if(view==='combat')renderLog()}
+
 
 /* Four clear wave-4 elite identities, rolled once per expedition. */
 const ELITE_ARCHETYPES={
@@ -1502,10 +1495,10 @@ const BOSS_ARCHETYPES=[
  {name:'Rift Harbinger',style:'leech',image:'assets/bosses/rift-harbinger.png',risk:'Heals for 28% of damage that reaches your HP. Barrier and blocking reduce its recovery.'},
  {name:'Ember Sovereign',style:'berserker',image:'assets/bosses/ember-sovereign.png',risk:'Enrages below 50% HP, increasing its attack damage by 35%. Prepare for the final phase.'}
 ];
-function bossForTier(tier){return BOSS_ARCHETYPES[(Math.floor(tier/10)-1+BOSS_ARCHETYPES.length)%BOSS_ARCHETYPES.length]}
 
-function eliteArchetype(run){return ELITE_ARCHETYPES[run?.eliteType]||ELITE_ARCHETYPES.tank}
-function rollEliteArchetype(){return sample(Object.keys(ELITE_ARCHETYPES))}
+
+
+
 
 
 // After dungeon selection, show the combat arena rather than preserving the selector's scroll position.
@@ -1996,7 +1989,7 @@ function phase5RenderResult(){
 function phase5Leaderboard(){
  const e=phase5Snapshot?.expedition;
  showModal('Expedition Leaderboard','<h3>Highest Expedition Cleared</h3><p>Personal best: '+(e?.completed??phase5PersonalBest)+'</p><p>The shared leaderboard is pending server validation and publication. No result is submitted from this playtest.</p><p class="small muted">Entering a difficulty, extracting or dying does not count as clearing it. Progression currently has a provisional E200 safety limit pending scaling validation.</p>'+(phase5Results.summary?'<button id="phase5Review">Review last Expedition</button>':''));
- const button=$('phase5Review');if(button)button.onclick=()=>{document.querySelectorAll('dialog').forEach(d=>d.close());phase5Results.review='summary';view='phase1';phase5Persist();render();};
+ const button=$('phase5Review');if(button)button.onclick=()=>{document.querySelectorAll('dialog').forEach(d=>d.close());phase5ReviewSummary();};
 }
 // Phase 5 is deliberately opt-in and local-only. It never reads any classic/account slot.
 let phase5Ready=false,phase5Store=null,phase5Snapshot=null,phase5Pending=null,phase5Message='',phase5Raw=null;
@@ -2049,22 +2042,26 @@ const runtimeContext={
  get BOSS_ARCHETYPES(){return BOSS_ARCHETYPES;},
  get DUNGEON_CAP(){return DUNGEON_CAP;},
  get ELEMENTS(){return ELEMENTS;},
+ get ELITE_ARCHETYPES(){return ELITE_ARCHETYPES;},
  get EQUIPMENT_DROP_WEIGHTS(){return EQUIPMENT_DROP_WEIGHTS;},
  get FIELDS(){return FIELDS;},
  get LEGENDARY_BY_ID(){return LEGENDARY_BY_ID;},
  get LEGENDARY_BY_NAME(){return LEGENDARY_BY_NAME;},
  get LEGENDARY_CATALOG(){return LEGENDARY_CATALOG;},
  get NAMES(){return NAMES;},
+ get OFFHAND_TYPES(){return OFFHAND_TYPES;},
  get PHASE1_PREVIEW(){return PHASE1_PREVIEW;},
  get PHASE3_BAG_CAPACITY(){return PHASE3_BAG_CAPACITY;},
  get PHASE5_VALIDATION(){return PHASE5_VALIDATION;},
  get RARITY(){return RARITY;},
  get RUNE_FAMILIES(){return RUNE_FAMILIES;},
  get SLOTS(){return SLOTS;},
+ get SNAME(){return SNAME;},
  get STASH_BASE_CAPACITY(){return STASH_BASE_CAPACITY;},
  get STASH_MAX_CAPACITY(){return STASH_MAX_CAPACITY;},
  get STASH_UPGRADE_STEP(){return STASH_UPGRADE_STEP;},
  get THEMES(){return THEMES;},
+ get TYPES(){return TYPES;},
  get WANDERER_DOUBLE_STRIKE_ENABLED(){return WANDERER_DOUBLE_STRIKE_ENABLED;},
  get WANDERER_SHATTER_ENABLED(){return WANDERER_SHATTER_ENABLED;},
  get activeLegendarySignatures(){return activeLegendarySignatures;},
@@ -2204,6 +2201,7 @@ const runtimeContext={
  get regenPerSecond(){return regenPerSecond;},
  get render(){return render;},
  get renderCombat(){return renderCombat;},
+ get renderLog(){return renderLog;},
  get renderMerchant(){return renderMerchant;},
  get renderStash(){return renderStash;},
  get resetDungeonEntryScroll(){return resetDungeonEntryScroll;},
@@ -2249,9 +2247,9 @@ const runtimeContext={
  get weaponAttack(){return weaponAttack;},
  get winEncounter(){return winEncounter;},
 };
-let {tryDodge,enemyFor,synchronizeDots,tickDots,setRuntime,setNow,activeLegendarySignatures,legendaryRuntime,legendaryHas,legendaryReady,legendaryExtend,legendaryAffinity,legendaryAttackBonus,legendaryOffhand,legendaryDefensiveEffects,legendaryTick,legendaryKill,setReady,setBarrier,regenPerSecond,setHeal,setDelayEnemy,setDirectEnemyDamage,setOnAttack,setPoisonBurst,setCombatExpire,setEnemyWeaken,setHeatTick,setSoulHeal,applyAffinity,weaponAttack,updateFight,phase2Context,phase2Stats,phase2WeaponAttack,phase2MagicTick,phase6Metric,phase6Proc,phase6CollectMetrics,phase6Stats,winEncounter,die}=WandererV012CombatRuntime.create(runtimeContext);
-let {phase1Init,phase1Begin,phase2Theme,phase6AwardGear,phase6Buff,phase6OpenEvent,phase6EventChoice,phase6PassiveOptions,phase6BackToCamp,phase2EnterInitialRealm,phase2ChooseInitial,phase2ChooseElement,phase2ChoosePassive,phase1Choose,phase1Enter,phase2Launch,phase1StartWave,phase1WaveWon,phase1Death,phase1Abandon,phase6TickDurations,phase3ExpeditionActive,phase3CanPrepare,phase3IsBetweenPlanes,phase3Vitals,phase3Reroll,phase5Item,phase5RememberRealm,phase5MakeSummary,phase5ExitResult}=WandererV012ExpeditionRuntime.create(runtimeContext);
-let {craftEquipment,reinforceEquipment,purchaseEquipment,sellValuables,markItemSeen,markAllAsSeen,comparisonEquip,stashCapacity,stashUpgradeCost,stashHasRoom,upgradeStash,fresh,makeSlots,starter,legendaryMatches,legendaryFor,legendarySignature,makeItem,rarityOdds,rarityRoll,rollEquipmentSlot,merchantCost,saleFragments,rollShop,economyOwnedGear,economyOwnedItem,economyCanAct,refreshMerchantStock,equipItem,unequipItem,bulkSell,salvageOne,phase3BagItems,phase3BagOverflow,phase3NeedsBagResolution,phase3DiscardLoot,phase4ClaimOverflow,phase6PotionInventory,phase6SelectPotion,phase6StartPotions,phase6ReturnPotions,phase6UsePotion,phase6BuyPotion,phase6RerollPotions,unequipRune,salvageRune,salvageDuplicateRunes,equipRune,offerBossRunes,claimPendingRuneChoice,runeCheckpointLocked,phase3UsePotion,phase3ClampVitals}=WandererV012EquipmentRuntime.create(runtimeContext);
+let {addLog,bossForTier,eliteArchetype,rollEliteArchetype,tryDodge,enemyFor,synchronizeDots,tickDots,setRuntime,setNow,activeLegendarySignatures,legendaryRuntime,legendaryHas,legendaryReady,legendaryExtend,legendaryAffinity,legendaryAttackBonus,legendaryOffhand,legendaryDefensiveEffects,legendaryTick,legendaryKill,setReady,setBarrier,regenPerSecond,setHeal,setDelayEnemy,setDirectEnemyDamage,setOnAttack,setPoisonBurst,setCombatExpire,setEnemyWeaken,setHeatTick,setSoulHeal,applyAffinity,weaponAttack,updateFight,phase2Context,phase2Stats,phase2WeaponAttack,phase2MagicTick,phase6Metric,phase6Proc,phase6CollectMetrics,phase6Stats,winEncounter,die}=WandererV012CombatRuntime.create(runtimeContext);
+let {phase5ReviewSummary,phase1Init,phase1Begin,phase2Theme,phase6AwardGear,phase6Buff,phase6OpenEvent,phase6EventChoice,phase6PassiveOptions,phase6BackToCamp,phase2EnterInitialRealm,phase2ChooseInitial,phase2ChooseElement,phase2ChoosePassive,phase1Choose,phase1Enter,phase2Launch,phase1StartWave,phase1WaveWon,phase1Death,phase1Abandon,phase6TickDurations,phase3ExpeditionActive,phase3CanPrepare,phase3IsBetweenPlanes,phase3Vitals,phase3Reroll,phase5Item,phase5RememberRealm,phase5MakeSummary,phase5ExitResult}=WandererV012ExpeditionRuntime.create(runtimeContext);
+let {toggleEquipmentLock,chooseSubtype,economyTier,merchantTier,baseStatScore,offhandLocked,craftEquipment,reinforceEquipment,purchaseEquipment,sellValuables,markItemSeen,markAllAsSeen,comparisonEquip,stashCapacity,stashUpgradeCost,stashHasRoom,upgradeStash,fresh,makeSlots,starter,legendaryMatches,legendaryFor,legendarySignature,makeItem,rarityOdds,rarityRoll,rollEquipmentSlot,merchantCost,saleFragments,rollShop,economyOwnedGear,economyOwnedItem,economyCanAct,refreshMerchantStock,equipItem,unequipItem,bulkSell,salvageOne,phase3BagItems,phase3BagOverflow,phase3NeedsBagResolution,phase3DiscardLoot,phase4ClaimOverflow,phase6PotionInventory,phase6SelectPotion,phase6StartPotions,phase6ReturnPotions,phase6UsePotion,phase6BuyPotion,phase6RerollPotions,unequipRune,salvageRune,salvageDuplicateRunes,equipRune,offerBossRunes,claimPendingRuneChoice,runeCheckpointLocked,phase3UsePotion,phase3ClampVitals}=WandererV012EquipmentRuntime.create(runtimeContext);
 let {gameRandom,phase4Session,phase4CommitRealm,phase4LoseLoot,phase4Extract,phase4Restore,phase4ResumeRealm,phase5Capture,phase5Persist,phase5Init,phase5Fail}=WandererV012PersistenceRuntime.create(runtimeContext);
 phase1Init();render();
 })();

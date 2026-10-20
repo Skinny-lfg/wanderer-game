@@ -1,6 +1,16 @@
 // v0.12 equipment runtime. Canonical state transitions; UI effects are injected.
 (function(root){'use strict';
 function create(ports){
+function chooseSubtype(slot,requested='random'){if(requested!=='random')return requested;if(slot==='weapon')return ports.sample(ports.TYPES);if(slot==='offhand')return ports.sample(ports.OFFHAND_TYPES);return ['ring1','ring2'].includes(slot)?'Ring':ports.SNAME[slot];}
+
+function economyTier(){return Math.min(ports.DUNGEON_CAP,ports.phase1Controller?.state.unlocked||1);}
+
+function merchantTier(){return ports.economyTier();}
+
+function baseStatScore(o){if(!o)return 0;return [['atk',3],['def',3],['hp',.18],['spd',8],['str',2],['agi',2],['int',2],['end',2],['cha',2],['mana',.2],['spell',2]].reduce((sum,[k,w])=>sum+(Number(o[k])||0)*w,0)}
+
+function offhandLocked(o){return o?.slot==='offhand'&&ports.isTwoHanded(ports.state.equip.weapon)}
+
 function craftEquipment(cost,odds){
  if(!ports.economyCanAct()||ports.forgeTier>ports.economyTier())return;
  if(ports.state.fragments<cost)return;
@@ -371,7 +381,8 @@ function phase3ClampVitals(){
   ports.phase1Vitals.maxmp=next.mana;
  }
 }
-return {craftEquipment,reinforceEquipment,purchaseEquipment,sellValuables,markItemSeen,markAllAsSeen,comparisonEquip,stashCapacity,stashUpgradeCost,stashHasRoom,upgradeStash,fresh,makeSlots,starter,legendaryMatches,legendaryFor,legendarySignature,makeItem,rarityOdds,rarityRoll,rollEquipmentSlot,merchantCost,saleFragments,rollShop,economyOwnedGear,economyOwnedItem,economyCanAct,refreshMerchantStock,equipItem,unequipItem,bulkSell,salvageOne,phase3BagItems,phase3BagOverflow,phase3NeedsBagResolution,phase3DiscardLoot,phase4ClaimOverflow,phase6PotionInventory,phase6SelectPotion,phase6StartPotions,phase6ReturnPotions,phase6UsePotion,phase6BuyPotion,phase6RerollPotions,unequipRune,salvageRune,salvageDuplicateRunes,equipRune,offerBossRunes,claimPendingRuneChoice,runeCheckpointLocked,phase3UsePotion,phase3ClampVitals};
+function toggleEquipmentLock(item){item.locked=!item.locked;ports.save();}
+return {toggleEquipmentLock,chooseSubtype,economyTier,merchantTier,baseStatScore,offhandLocked,craftEquipment,reinforceEquipment,purchaseEquipment,sellValuables,markItemSeen,markAllAsSeen,comparisonEquip,stashCapacity,stashUpgradeCost,stashHasRoom,upgradeStash,fresh,makeSlots,starter,legendaryMatches,legendaryFor,legendarySignature,makeItem,rarityOdds,rarityRoll,rollEquipmentSlot,merchantCost,saleFragments,rollShop,economyOwnedGear,economyOwnedItem,economyCanAct,refreshMerchantStock,equipItem,unequipItem,bulkSell,salvageOne,phase3BagItems,phase3BagOverflow,phase3NeedsBagResolution,phase3DiscardLoot,phase4ClaimOverflow,phase6PotionInventory,phase6SelectPotion,phase6StartPotions,phase6ReturnPotions,phase6UsePotion,phase6BuyPotion,phase6RerollPotions,unequipRune,salvageRune,salvageDuplicateRunes,equipRune,offerBossRunes,claimPendingRuneChoice,runeCheckpointLocked,phase3UsePotion,phase3ClampVitals};
 }
 root.WandererV012EquipmentRuntime=Object.freeze({create});
 })(globalThis);

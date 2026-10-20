@@ -311,7 +311,8 @@ function phase5ExitResult(){
  ports.phase5Results.review=ports.phase5Results.review==='realm'&&ports.phase5Results.summary?'summary':null;
  ports.state.run=null;ports.view='phase1';if(!ports.phase5Persist())return false;ports.render();return true;
 }
-return {phase1Init,phase1Begin,phase2Theme,phase6AwardGear,phase6Buff,phase6OpenEvent,phase6EventChoice,phase6PassiveOptions,phase6BackToCamp,phase2EnterInitialRealm,phase2ChooseInitial,phase2ChooseElement,phase2ChoosePassive,phase1Choose,phase1Enter,phase2Launch,phase1StartWave,phase1WaveWon,phase1Death,phase1Abandon,phase6TickDurations,phase3ExpeditionActive,phase3CanPrepare,phase3IsBetweenPlanes,phase3Vitals,phase3Reroll,phase5Item,phase5RememberRealm,phase5MakeSummary,phase5ExitResult};
+function phase5ReviewSummary(){ports.phase5Results.review='summary';ports.view='phase1';ports.phase5Persist();ports.render();}
+return {phase5ReviewSummary,phase1Init,phase1Begin,phase2Theme,phase6AwardGear,phase6Buff,phase6OpenEvent,phase6EventChoice,phase6PassiveOptions,phase6BackToCamp,phase2EnterInitialRealm,phase2ChooseInitial,phase2ChooseElement,phase2ChoosePassive,phase1Choose,phase1Enter,phase2Launch,phase1StartWave,phase1WaveWon,phase1Death,phase1Abandon,phase6TickDurations,phase3ExpeditionActive,phase3CanPrepare,phase3IsBetweenPlanes,phase3Vitals,phase3Reroll,phase5Item,phase5RememberRealm,phase5MakeSummary,phase5ExitResult};
 }
 root.WandererV012ExpeditionRuntime=Object.freeze({create});
 })(globalThis);
