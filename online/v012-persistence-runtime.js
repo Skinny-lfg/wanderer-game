@@ -20,11 +20,11 @@ function phase4CommitRealm(){
 }
 
 function phase4LoseLoot(){
- const lost=ports.phase3LootIds;
- const homeIds=new Set(Object.values(ports.phase4Home||{}).filter(Boolean).map(item=>item.id));
- ports.state.stash=ports.state.stash.filter(item=>!lost.has(item.id)&&!homeIds.has(item.id));
- ports.state.expeditionOverflow=ports.state.expeditionOverflow.filter(item=>!lost.has(item.id)&&!homeIds.has(item.id));
- if(ports.phase4Home)ports.state.equip=ports.phase4Clone(ports.phase4Home);
+ // Only physical Bag contents are lost. Currently equipped items are always protected.
+ const lost=new Set(ports.phase3BagItems().map(item=>item.id));
+ ports.state.stash=ports.state.stash.filter(item=>!lost.has(item.id));
+ ports.state.expeditionOverflow=ports.state.expeditionOverflow.filter(item=>!lost.has(item.id));
+ ports.state.valuables=(ports.state.valuables||[]).filter(item=>!lost.has(item.id));
  ports.phase3LootIds=new Set();ports.phase4Home=null;
 }
 

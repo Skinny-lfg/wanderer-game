@@ -152,39 +152,42 @@ function refreshMerchantStock(kind='gear'){
 }
 
 function equipItem(itemId,target=null){
- if(ports.phase3NeedsBagResolution())return false;
- if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked))return false;
- if(ports.state.run||(ports.PHASE1_PREVIEW&&ports.phase1Draft))return;
- if(ports.phase3ExpeditionActive()&&(!ports.phase3CanPrepare()||!ports.phase3LootIds.has(itemId)))return false;
- const source=ports.phase3ExpeditionActive()&&ports.state.expeditionOverflow.some(o=>o.id===itemId)?ports.state.expeditionOverflow:ports.state.stash;
- const i=source.findIndex(o=>o.id===itemId);if(i<0)return;
+ if(ports.phase3NeedsBagResolution()||ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked))return false;
+ if(ports.state.run||(ports.PHASE1_PREVIEW&&ports.phase1Draft))return false;
+ const active=ports.phase3ExpeditionActive();
+ if(active&&(!ports.phase3CanPrepare()||!ports.phase3BagItems().some(o=>o.id===itemId)))return false;
+ const source=active&&ports.state.expeditionOverflow.some(o=>o.id===itemId)?ports.state.expeditionOverflow:ports.state.stash;
+ const i=source.findIndex(o=>o.id===itemId);if(i<0)return false;
  const item=source[i],ring=['ring1','ring2'].includes(item.slot),slot=target||item.slot;
- if(!ports.SLOTS.includes(slot)||ring&&!['ring1','ring2'].includes(slot)||!ring&&target&&target!==item.slot)return;
- if(ports.isTwoHanded(item)&&slot!=='weapon'){ports.bannerMessage('Two-Handed weapons use the Weapon slot.');return;}
- const displaced=[];
- const displacedCount=Number(!!ports.state.equip[slot])+Number(ports.isTwoHanded(item)&&!!ports.state.equip.offhand);
- if(ports.state.stash.length-(source===ports.state.stash?1:0)+displacedCount>ports.stashCapacity()){ports.bannerMessage('Stash full. Free space before swapping equipment.');return false;}
- if(slot==='offhand'&&ports.isTwoHanded(ports.state.equip.weapon)){
-  ports.bannerMessage('Off-Hand locked: unequip your two-handed weapon first.');return;
- }
- if(ports.state.equip[slot])displaced.push(ports.state.equip[slot]);
- if(ports.isTwoHanded(item)&&ports.state.equip.offhand){displaced.push(ports.state.equip.offhand);ports.state.equip.offhand=null;}
+ if(!ports.SLOTS.includes(slot)||ring&&!['ring1','ring2'].includes(slot)||!ring&&target&&target!==item.slot)return false;
+ if(ports.isTwoHanded(item)&&slot!=='weapon')return false;
+ if(slot==='offhand'&&ports.isTwoHanded(ports.state.equip.weapon)){ports.bannerMessage('Off-Hand locked by two-handed weapon.');return false;}
+ const displaced=[ports.state.equip[slot],...(ports.isTwoHanded(item)&&slot==='weapon'?[ports.state.equip.offhand]:[])].filter(Boolean);
+ if(active&&ports.phase3BagItems().length-1+displaced.length>ports.PHASE3_BAG_CAPACITY){ports.bannerMessage('Not enough Expedition Bag space for the previous equipment.');return false;}
+ if(!active&&ports.state.stash.length-(source===ports.state.stash?1:0)+displaced.length>ports.stashCapacity()){ports.bannerMessage('Stash full.');return false;}
  source.splice(i,1);
+ if(ports.isTwoHanded(item)&&slot==='weapon')ports.state.equip.offhand=null;
  if(ring)item.slot=slot;
- ports.state.equip[slot]=item;ports.state.stash.push(...displaced);
- ports.selectedId=null;ports.phase3ClampVitals();ports.save();ports.renderStash();
- ports.bannerMessage('Equipped '+item.name+(ports.isTwoHanded(item)?' · Both hands occupied':displaced.some(x=>ports.isTwoHanded(x))?' · Two-Handed weapon returned to Stash':''));
+ ports.state.equip[slot]=item;
+ for(const old of displaced){
+  if(active)ports.phase3LootIds.add(old.id);
+  (ports.stashHasRoom()?ports.state.stash:ports.state.expeditionOverflow).push(old);
+ }
+ ports.selectedId=null;ports.phase3ClampVitals();ports.save();ports.render();
+ ports.bannerMessage('Equipped '+item.name+(active?' · Previous gear returned to Expedition Bag':''));
+ return true;
 }
 
 function unequipItem(slot){
- if(ports.phase3NeedsBagResolution())return false;
- if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked))return false;
- if(ports.state.run||(ports.PHASE1_PREVIEW&&ports.phase1Draft)||!ports.state.equip[slot])return;
- const item=ports.state.equip[slot];
- if(ports.phase3ExpeditionActive()&&(!ports.phase3CanPrepare()||!ports.phase3LootIds.has(item.id)||ports.phase3BagItems().length>=ports.PHASE3_BAG_CAPACITY))return false;
- if(!ports.stashHasRoom()){ports.bannerMessage('Stash full. Free space before unequipping.');return false;}
- ports.state.equip[slot]=null;
- ports.state.stash.push(item);ports.selectedId=null;ports.phase3ClampVitals();ports.save();ports.render();
+ if(ports.phase3NeedsBagResolution()||ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked))return false;
+ if(ports.state.run||(ports.PHASE1_PREVIEW&&ports.phase1Draft)||!ports.state.equip[slot])return false;
+ const active=ports.phase3ExpeditionActive();
+ if(active&&(!ports.phase3CanPrepare()||ports.phase3BagItems().length>=ports.PHASE3_BAG_CAPACITY))return false;
+ if(!active&&!ports.stashHasRoom())return false;
+ const item=ports.state.equip[slot];ports.state.equip[slot]=null;
+ if(active)ports.phase3LootIds.add(item.id);
+ (ports.stashHasRoom()?ports.state.stash:ports.state.expeditionOverflow).push(item);
+ ports.selectedId=null;ports.phase3ClampVitals();ports.save();ports.render();return true;
 }
 
 function bulkSell(){
@@ -219,7 +222,7 @@ function salvageOne(id){
  },'Salvage');
 }
 
-function phase3BagItems(){return [...ports.state.stash,...(ports.state.expeditionOverflow||[])].filter(item=>ports.phase3LootIds.has(item.id));}
+function phase3BagItems(){return [...ports.state.stash,...(ports.state.expeditionOverflow||[]),...(ports.state.valuables||[])].filter(item=>ports.phase3LootIds.has(item.id));}
 
 function phase3BagOverflow(){return Math.max(0,ports.phase3BagItems().length-ports.PHASE3_BAG_CAPACITY);}
 
@@ -228,7 +231,7 @@ function phase3NeedsBagResolution(){return ports.PHASE1_PREVIEW&&['finished','fa
 function phase3DiscardLoot(id){
  if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked)||!ports.phase3CanPrepare()&&!(ports.phase3NeedsBagResolution()&&!ports.state.run&&!ports.phase1Draft))return false;
  const item=ports.phase3BagItems().find(o=>o.id===id);if(!item)return false;
- ports.state.stash=ports.state.stash.filter(o=>o.id!==id);ports.state.expeditionOverflow=ports.state.expeditionOverflow.filter(o=>o.id!==id);ports.phase3LootIds.delete(id);
+ ports.state.stash=ports.state.stash.filter(o=>o.id!==id);ports.state.expeditionOverflow=ports.state.expeditionOverflow.filter(o=>o.id!==id);ports.state.valuables=(ports.state.valuables||[]).filter(o=>o.id!==id);ports.phase3LootIds.delete(id);
  ports.save();ports.render();return true;
 }
 

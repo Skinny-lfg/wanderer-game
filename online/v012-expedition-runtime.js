@@ -201,11 +201,19 @@ function phase1WaveWon(){
   const theme=ports.phase2Theme(r.path),pick=ports.dungeonEquipmentPick(theme,[]);
   const rarity=ports.randomFromOdds(odds.rarities);
   const item=ports.makeItem(r.tier,pick.slot,theme.effect,'loot',pick.subtype,rarity);
-  // Held in the Realm transaction until completion; all Expedition equipment remains at risk.
+  // Gear in the Bag is at risk; equipped gear survives failure.
   if(ports.stashHasRoom())ports.state.stash.push({...item,isNew:true});
   else ports.state.expeditionOverflow.push({...item,isNew:true});
   ports.phase3LootIds.add(item.id);r.loot.push(item);ports.phase5Results.earned.push(ports.phase5Item(item));
   ports.addLog('✦ '+item.rarity+' '+item.name+' added to Expedition bag.',item.rarity);
+ }
+ // Treasures share Bag capacity with equipment; they can only be sold outside the Expedition.
+ if(ports.gameRandom()<.23){
+  const worth=Math.max(2,Math.round(3+r.tier*.55+ports.gameRandom()*(4+r.tier*.30)));
+  const treasure={id:ports.makeId(),kind:'valuable',name:'Ancient Relic',tier:r.tier,worth,isNew:true};
+  ports.state.valuables??=[];ports.state.valuables.push(treasure);
+  ports.phase3LootIds.add(treasure.id);r.valuables.push(treasure);
+  ports.addLog('◆ Ancient Relic · '+worth+' Gold when extracted.','good');
  }
  r.status='ready';
  const result=ports.phase1Controller.waveWon();
@@ -246,14 +254,14 @@ function phase1WaveWon(){
 function phase1Death(){
  clearInterval(ports.clock);
  if(!ports.isPhase1Run())return;
- ports.addLog('YOU DIED · Expedition equipment lost; original equipment protected.','critical');
+ ports.addLog('YOU DIED · Expedition Bag lost; equipped gear is safe.','critical');
  ports.phase6CollectMetrics(ports.state.run);ports.phase6ReturnPotions('defeat');
  ports.phase5RememberRealm(ports.state.run,'defeat');ports.phase5MakeSummary('defeat');
  ports.phase4CommitRealm();ports.phase4LoseLoot();ports.phase1Controller.defeat();ports.phase1Vitals=null;ports.phase1Continuity=null;
  if(ports.phase1Build)WandererV012Buildcraft.clear(ports.phase1Build);
  ports.phase1Build=null;ports.phase1Draft=null;ports.state.run=null;ports.view='phase1';
  if(ports.PHASE5_VALIDATION)ports.phase5Snapshot.expedition.lastOutcome='defeat';ports.phase5Persist();ports.render();
- ports.bannerMessage('You died. Expedition loot lost; your original equipment, Gold and Fragments are safe.');
+ ports.bannerMessage('You died. Only Bag contents were lost; equipped gear and earned currency are safe.');
 }
 
 function phase1Abandon(){
@@ -303,11 +311,11 @@ function phase5RememberRealm(r,outcome){
 
 function phase5MakeSummary(outcome){
  const g=ports.phase1Controller.state,owned=new Set([...ports.state.stash,...(ports.state.expeditionOverflow||[]),...Object.values(ports.state.equip).filter(Boolean)].map(i=>i.id));
- const lost=outcome==='defeat'||outcome==='abandoned';
+ const lost=outcome==='defeat'||outcome==='abandoned',bagIds=new Set(ports.phase3BagItems().map(i=>i.id));
  ports.phase5Results.summary={passiveTelemetry:ports.phase4Clone(ports.phase1Build?.runtime.passiveTelemetry||{}),metrics:ports.phase6Run?.metrics||null,level:g.expedition,outcome,realms:g.history.length,
   families:[...(ports.phase1Build?.families||g.families)],picks:[...(ports.phase1Build?.picks||[])],element:ports.phase1Build?.element||null,
   seconds:ports.phase1Clock+(outcome==='defeat'?(ports.state.run?.combatSeconds||0):0),gold:ports.phase5Results.gold,fragments:ports.phase5Results.fragments,
-  kept:ports.phase5Results.earned.filter(i=>owned.has(i.id)&&!lost),lost:ports.phase5Results.earned.filter(i=>owned.has(i.id)&&lost),
+  kept:ports.phase5Results.earned.filter(i=>owned.has(i.id)&&(!lost||!bagIds.has(i.id))),lost:ports.phase5Results.earned.filter(i=>lost&&bagIds.has(i.id)),
   discarded:ports.phase5Results.earned.filter(i=>!owned.has(i.id)),runeTier:null};
 }
 
