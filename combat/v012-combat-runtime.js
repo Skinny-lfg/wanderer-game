@@ -62,6 +62,20 @@ function setRuntime(r){
  return r.setTemp;
 }
 
+function advancePlayerAttackClock(r,dt,attacksPerSecond){
+ // Keep cycle progress when haste changes, but keep it as a fraction of the
+ // current cycle so alternating buffs cannot manufacture elapsed time.
+ const rate=Math.max(0,Number(attacksPerSecond)||0),period=1/Math.max(0.000001,Math.min(4.2,rate));
+ const previousPeriod=Number(r.playerAttackPeriod)||period;
+ const progress=Number.isFinite(Number(r.tPlayer))?Math.max(0,Math.min(previousPeriod,Number(r.tPlayer))):0;
+ r.tPlayer=progress/previousPeriod*period;
+ r.playerAttackPeriod=period;
+ r.tPlayer+=Math.max(0,Number(dt)||0);
+ if(r.tPlayer<period)return false;
+ r.tPlayer-=period;
+ return true;
+}
+
 function setNow(r){return (Number(r.combatSeconds)||0)+(r.phase1?Number(r.phase1ClockBase??ports.phase1Clock)||0:0);}
 
 function activeLegendarySignatures(){
@@ -392,12 +406,12 @@ function updateFight(){
  r.combatSeconds=(r.combatSeconds||0)+dt;
  if(!ports.isPhase1Run()&&ports.state.onlineProgress?.timerMetric==='combat-v1'&&r.combatSeconds-(r.lastCombatCheckpoint||0)>=3){r.lastCombatCheckpoint=r.combatSeconds;ports.save();}
  ports.setCombatExpire(r,dt);ports.legendaryTick(r,dt);
- r.tPlayer+=dt;r.tEnemy+=dt;r.tDot+=dt;
+ r.tEnemy+=dt;r.tDot+=dt;
  if(s.caster||r.phase1Magic)r.mp=Math.min(r.maxmp,r.mp+dt*s.manaRegen);
  if(ports.isPhase1Run())ports.phase2MagicTick(r);
  if(e.hp<=0){ports.winEncounter(true);return;}
  const lt=ports.legendaryRuntime(r),haste=(ports.isPhase1Run()&&ports.phase1Build?WandererV012Buildcraft.speed(ports.phase1Build,ports.phase1Clock+r.combatSeconds):1)*(s.bonus.bleedHaste?1+Math.min(3,t.haste.length)*.05:1)*(1+((lt.natureHasteUntil||0)>ports.setNow(r)?.10:0)+((lt.thunderHasteUntil||0)>ports.setNow(r)?.12:0));
- if(r.tPlayer>=1/(Math.min(4.2,s.attacksPerSec*haste))){r.tPlayer=0;ports.weaponAttack(r);if(e.hp<=0){ports.winEncounter(true);return;}}
+ if(advancePlayerAttackClock(r,dt,s.attacksPerSec*haste)){ports.weaponAttack(r);if(e.hp<=0){ports.winEncounter(true);return;}}
  if(r.tDot>=1){
   r.tDot-=1;
   const hasBurn=e.burnStacks>0,hasDots=e.bleedStacks+e.burnStacks>0;
@@ -538,7 +552,7 @@ function phase6Stats(stats){return ports.phase6Run?WandererV012CombatCore.applyE
 function winEncounter(){ports.phase1WaveWon();}
 
 function die(){ports.phase1Death();}
-return {addLog,bossForTier,eliteArchetype,rollEliteArchetype,tryDodge,enemyFor,synchronizeDots,tickDots,setRuntime,setNow,activeLegendarySignatures,legendaryRuntime,legendaryHas,legendaryReady,legendaryExtend,legendaryAffinity,legendaryAttackBonus,legendaryOffhand,legendaryDefensiveEffects,legendaryTick,legendaryKill,setReady,setBarrier,regenPerSecond,setHeal,setDelayEnemy,setDirectEnemyDamage,setOnAttack,setCombatExpire,setEnemyWeaken,setHeatTick,setSoulHeal,applyAffinity,weaponAttack,updateFight,phase2Context,phase2Stats,phase2WeaponAttack,phase2MagicTick,phase6Metric,phase6Proc,phase6CollectMetrics,phase6Stats,winEncounter,die};
+return {addLog,bossForTier,eliteArchetype,rollEliteArchetype,tryDodge,enemyFor,synchronizeDots,tickDots,setRuntime,setNow,advancePlayerAttackClock,activeLegendarySignatures,legendaryRuntime,legendaryHas,legendaryReady,legendaryExtend,legendaryAffinity,legendaryAttackBonus,legendaryOffhand,legendaryDefensiveEffects,legendaryTick,legendaryKill,setReady,setBarrier,regenPerSecond,setHeal,setDelayEnemy,setDirectEnemyDamage,setOnAttack,setCombatExpire,setEnemyWeaken,setHeatTick,setSoulHeal,applyAffinity,weaponAttack,updateFight,phase2Context,phase2Stats,phase2WeaponAttack,phase2MagicTick,phase6Metric,phase6Proc,phase6CollectMetrics,phase6Stats,winEncounter,die};
 }
 root.WandererV012CombatRuntime=Object.freeze({create});
 })(globalThis);
