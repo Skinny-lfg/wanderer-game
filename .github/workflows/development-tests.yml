@@ -37,10 +37,15 @@ jobs:
       - run: npm ci
       - name: Prepare Chromium
         run: |
-          npx playwright install --with-deps chromium
-          CHROME="$(find "$HOME/.cache/ms-playwright" -type f -path '*/chrome-linux64/chrome' | head -n 1)"
-          test -n "$CHROME"
-          sudo ln -sf "$CHROME" /usr/bin/chromium
+          if command -v google-chrome >/dev/null 2>&1; then
+            sudo ln -sf "$(command -v google-chrome)" /usr/bin/chromium
+          else
+            npx playwright install --with-deps chromium
+            CHROME="$(find "$HOME/.cache/ms-playwright" -type f -path '*/chrome-linux64/chrome' -o -path '*/chrome-linux/chrome' | head -n 1)"
+            test -n "$CHROME"
+            sudo ln -sf "$CHROME" /usr/bin/chromium
+          fi
+          /usr/bin/chromium --version
       - name: Start isolated local web server
         run: |
           python3 -m http.server 8012 --bind 127.0.0.1 >/tmp/wanderer-v012-http.log 2>&1 &
