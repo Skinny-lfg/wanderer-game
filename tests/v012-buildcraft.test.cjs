@@ -142,6 +142,12 @@ test('independent Aegis retaliation sources both resolve without recursive new h
  const prev=history.length;api.onAttack(b,c);
  assert.equal(history.slice(prev).filter(x=>x[0]==='damage').length,0,'no extra hits from already spent charges');
 });
+test('Aegis balance uses the revised Barrier Pulse and Retaliation values',()=>{
+ assert.equal(api.values('barrier_pulse',1).barrier,.03);
+ assert.equal(api.values('barrier_pulse',5).barrier,.054);
+ assert.equal(api.values('retaliation',1).burst,.30);
+ assert.equal(api.values('retaliation',1).icd,4);
+});
 test('Staff/Wand amplify all Magic schools without consuming extra status rolls',()=>{
  for(const school of api.ELEMENTS){
   const b=api.create();b.families=['magic'];api.element(b,school);api.initial(b,'magic');

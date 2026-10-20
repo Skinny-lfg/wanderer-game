@@ -23,8 +23,8 @@ const P=[
  ['aegis','iron_skin','Iron Skin','Increase Defense by 12% per rank.'],
  ['aegis','fortified','Fortified','Reduce incoming damage by 6% per rank.'],
  ['aegis','guarded_block','Guarded Block','Gain 6% Block chance and partial block protection per rank.'],
- ['aegis','barrier_pulse','Barrier Pulse','Gain Barrier equal to 2% max HP every 6 combat seconds.'],
- ['aegis','retaliation','Retaliation','Absorbed Barrier empowers the next hit by up to 15%.'],
+ ['aegis','barrier_pulse','Barrier Pulse','Gain Barrier equal to 3% max HP every 6 combat seconds.'],
+ ['aegis','retaliation','Retaliation','Absorbed Barrier empowers the next hit by 30% base damage (4s cooldown).'],
  ['fury','quick_hands','Quick Hands','Increase attack speed by 8% per rank.'],
  ['fury','precision','Precision','Increase Critical chance by 6 percentage points per rank (65% cap).'],
  ['fury','brutal_crit','Brutal Critical','Critical strikes add 12% of base hit damage per rank.'],
@@ -94,18 +94,18 @@ function values(id,r){const t=Math.max(0,r-1),sqrt=Math.sqrt(r);return ({
  bleeding_edge:{chance:.42+.04*t,bleed:.16,icd:.9},deep_cuts:{bleedBonus:.15*r},executioner:{burst:.32,enemyCap:.025,threshold:.30,icd:6},blood_drinker:{hp:.008+.0025*t,base:.10+.025*t,icd:4},sanguine_fury:{bleed:.14,burst:.08+.02*t,icd:2.5},
  toxic_touch:{chance:.42+.04*t,rot:.065,icd:1.3},virulent_rot:{rotBonus:.15*r},wasting_curse:{reduction:.04*r},wither:{healingReduction:.20+.10*t,reduction:.02*r},blight:{burst:.38,enemyCap:.025,icd:7},
  strong_heart:{maxhp:.10*sqrt},renewal:{heal:Math.min(.0125,.0055*sqrt)},last_stand:{hp:.06,uses:1},second_breath:{heal:.015+.004*t},life_bloom:{heal:Math.min(.006,.0025*sqrt),mana:Math.min(3.4,1.5*sqrt)},
- iron_skin:{defense:.12*sqrt},fortified:{reduction:.04*r},guarded_block:{block:Math.round(24*(1-Math.exp(-r/4)))},barrier_pulse:{barrier:.02+.006*t,icd:6},retaliation:{burst:.15},
+ iron_skin:{defense:.12*sqrt},fortified:{reduction:.04*r},guarded_block:{block:Math.round(24*(1-Math.exp(-r/4)))},barrier_pulse:{barrier:.03+.006*t,icd:6},retaliation:{burst:.30,icd:4},
  quick_hands:{speed:.08*r},precision:{crit:Math.round(19*(1-Math.exp(-r/3)))},brutal_crit:{burst:Math.min(.65,.12*sqrt)},double_strike:{chance:Math.min(.60,.10*sqrt),burst:.30},adrenaline:{speed:.10+.025*t,duration:3,icd:3},
  arcane_focus:{power:.15*sqrt},mana_spring:{regen:.12*sqrt},efficient_cast:{cost:8-r},arcane_echo:{power:.25+.05*t,hits:4},elemental_force:{power:.12*r},kindling:{burn:.15*(1+.15*r)},deep_winter:{burst:.18+.03*t,bossCap:.015,normalCap:.05,icd:4},overcharge:{burst:.32+.06*t,enemyCap:.035,charges:4}
  })[id]||{};}
 function preview(b,id,base={}){
  const p=BY_ID[id],current=ownedRank(b,id),next=Math.min(p?.max||0,current+1),before=values(id,current),after=values(id,next);
  let useful=!!p&&current<p.max;
- if(id==='precision'&&(base.crit||0)>=65||id==='guarded_block'&&(base.blockChance||0)>=65||id==='quick_hands'&&(base.attacksPerSec||0)>=5)useful=false;
+ if(id==='precision'&&(base.crit||0)>=65||id==='guarded_block'&&(base.blockChance||0)>=65||id==='quick_hands'&&(base.attacksPerSec||0)>=4.2)useful=false;
  const reduction=.04*rank(b,'fortified')+.04*rank(b,'wasting_curse')+.02*rank(b,'wither');
  if(['fortified','wasting_curse','wither'].includes(id)&&reduction>=.28&&id!=='wither')useful=false;
  if(base.maxhp&&['strong_heart','iron_skin','quick_hands','precision','guarded_block','arcane_focus','mana_spring'].includes(id)){const field={strong_heart:'maxhp',iron_skin:'defense',quick_hands:'attacksPerSec',precision:'crit',guarded_block:'blockChance',arcane_focus:'spellPower',mana_spring:'manaRegen'}[id],up={...b,picks:[...(b.picks||[]),id]};if(!(mods(up,base)[field]>mods(b,base)[field]))useful=false;}
- if(id==='adrenaline'&&base.maxhp){const speed=mods(b,base).attacksPerSec;if(Math.min(5,speed*(1+after.speed))<=Math.min(5,speed*(1+(current?before.speed:0))))useful=false;}
+ if(id==='adrenaline'&&base.maxhp){const speed=mods(b,base).attacksPerSec;if(Math.min(4.2,speed*(1+after.speed))<=Math.min(4.2,speed*(1+(current?before.speed:0))))useful=false;}
  const text=Object.entries(after).map(([key,v])=>key+': '+(current?Number((before[key]||0).toFixed(4))+' → ':'')+(typeof v==='number'?Number(v.toFixed(4)):v)).join(' · ');
  return {current,next,max:p?.max,useful,before,after,description:text};
 }
@@ -185,7 +185,7 @@ function mods(b,base){
  const s={...base},h=rank(b,'strong_heart'),a=rank(b,'iron_skin'),q=rank(b,'quick_hands'),p=rank(b,'precision');
  s.maxhp=Math.round(s.maxhp*(1+.10*Math.sqrt(h)));
  s.defense=Math.round(s.defense*(1+.12*Math.sqrt(a)));
- s.attacksPerSec=Math.min(5,s.attacksPerSec*(1+.08*q));
+ s.attacksPerSec=Math.min(4.2,s.attacksPerSec*(1+.08*q));
  s.crit=Math.min(65,s.crit+Math.round(19*(1-Math.exp(-p/3))));
  if(b.unlockedFamilies?.includes('magic')){
   // Do not change s.caster: Staff/Wand keep their original funded-attack path.
@@ -243,7 +243,7 @@ function onAttack(b,c){
  if(rank(b,'fervent_life')&&crit&&ready(b,'ferventLife',c.now,4)&&activated(b,'fervent_life')){const amount=c.player.maxhp*.02,restorable=amount*(c.healingMultiplier??1),actual=heal(b,c,amount);if(actual<restorable)c.barrier((restorable-actual)*.5);}
  if(rank(b,'adrenaline')&&crit&&ready(b,'adrenaline',c.now,3)&&activated(b,'adrenaline'))b.runtime.adrenalineUntil=c.now+3;
  if(rank(b,'counterstrike')&&b.runtime.counterBlock&&activated(b,'counterstrike')){b.runtime.counterBlock=0;c.damage(base*.18,'🛡 Counterstrike');}
- if(rank(b,'retaliation')&&b.runtime.counterBarrier&&activated(b,'retaliation')){b.runtime.counterBarrier=0;c.damage(base*.15,'🛡 Retaliation');}
+ if(rank(b,'retaliation')&&b.runtime.counterBarrier&&activated(b,'retaliation')){b.runtime.counterBarrier=0;c.damage(base*.30,'🛡 Retaliation');}
  if(rank(b,'spellblade')&&b.runtime.spellblade&&activated(b,'spellblade')){b.runtime.spellblade=false;c.damage(base*.15,'✨ Spellblade');}
  if(rank(b,'carrion_detonation')&&e.bleedStacks>0&&e.v012Rot?.length&&ready(b,'carrionDetonation',c.now,8)&&activated(b,'carrion_detonation')){
   const bleed=e.dots?.bleed?.shift();e.bleedStacks=e.dots?.bleed?.length||0;e.bleed=(e.dots?.bleed||[]).reduce((n,d)=>n+d.damage,0);const rot=e.v012Rot.shift();const owed=(bleed?bleed.damage*bleed.remaining:0)+rot.damage*rot.remaining;c.damage(owed+Math.min(base*.25,e.maxhp*.02),'☠ Carrion Detonation');
@@ -331,7 +331,7 @@ function incoming(b,c,raw){
 function onDefend(b,c,blocked,barrierAbsorbed){
  const broken=c.barrierBroken??(barrierAbsorbed>0&&c.player.barrier<=0);
  if(blocked>0&&rank(b,'counterstrike'))b.runtime.counterBlock=1;
- if(barrierAbsorbed>0&&rank(b,'retaliation'))b.runtime.counterBarrier=1;
+ if(barrierAbsorbed>0&&rank(b,'retaliation')&&ready(b,'retaliation',c.now,4))b.runtime.counterBarrier=1;
  if(rank(b,'sanguine_reprisal')&&(blocked>0||barrierAbsorbed>0)&&activated(b,'sanguine_reprisal'))b.runtime.reprisalReady=true;
  if(rank(b,'iron_reversal')&&blocked>0&&activated(b,'iron_reversal'))b.runtime.ironReady=true;
  if(rank(b,'prismatic_rebound')&&barrierAbsorbed>0&&activated(b,'prismatic_rebound'))

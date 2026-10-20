@@ -19,7 +19,7 @@
         "family": "decay"
       },
       "steps": 73,
-      "digest": "017c5c48fb4e885c90e74c0fcbdb871ceeb1ae4e4e5b0bc308cad339ee7a8af6"
+      "digest": "1deab7cb646fff68598cf01fc979558a356a1e86bcf53e1c85ac9f8c8b370d8f"
     },
     {
       "scenario": {
@@ -30,7 +30,7 @@
         "element": "lightning"
       },
       "steps": 76,
-      "digest": "9881c39ec606165e72caaf751a72279311c7a44e3e9a02d79d2d972bf49ff86f"
+      "digest": "03c7ae34c3d350ca079f009edf7a1483490c413f3212c813d5997ab0a616372c"
     },
     {
       "scenario": {
@@ -41,7 +41,7 @@
         "element": "frost"
       },
       "steps": 72,
-      "digest": "ce8e0b08847ea641edf62a82ae30b6ffc175def2d1a253105412ba8b3a9f9e7d"
+      "digest": "6cf463005f224a3952fd4e4ddd33fa980f89d388e6959057398fb2e97507615b"
     },
     {
       "scenario": {
@@ -61,7 +61,7 @@
         "family": "aegis"
       },
       "steps": 75,
-      "digest": "36801aa99b6790b5ba61f5388ffe0dbe8c615a9bb5d496ac3d4155e8a33e69da"
+      "digest": "f04141f8ac088f416a8d4397957e4f2551b0424a8afed67c5029d39a73d214c6"
     },
     {
       "scenario": {
@@ -81,7 +81,7 @@
         "family": "blood"
       },
       "steps": 75,
-      "digest": "a7c16c6c57e28910af1c566a1d1302c0208f4b1585774f1d6f495c1d65cc5821"
+      "digest": "7d706a4fdfdf82e327fdfa44c83e4e3717940e525e2036c369671562eafb00a8"
     },
     {
       "scenario": {
@@ -102,7 +102,7 @@
         "element": "lightning"
       },
       "steps": 75,
-      "digest": "743552668cb9fbe0d7e5312eab19a6541fec2e7a46b40bdc5dfd225347c032b5"
+      "digest": "05a98862da850d456bdb30e9878986d29e10ec856f90dd6939078243ac63d4ad"
     },
     {
       "scenario": {
@@ -113,7 +113,7 @@
         "element": "frost"
       },
       "steps": 73,
-      "digest": "9888139ba365ab1bc9834dc2331432ea8dbfa03ab291b005e070f39c2c0a1816"
+      "digest": "b488e3278dd34654f46caabf14db0816ec74feb829bd7b87254c0810fee309ad"
     },
     {
       "scenario": {
@@ -133,7 +133,7 @@
         "family": "aegis"
       },
       "steps": 72,
-      "digest": "196480205a84dd98ee965544ac8bb6c6471e5f2872005fb8ad701cb3bc6810c2"
+      "digest": "ef0f8ea66bd66d7b71728319403719386740e56bcf27c74db6da74d68b3deab4"
     },
     {
       "scenario": {
@@ -153,7 +153,7 @@
         "family": "blood"
       },
       "steps": 75,
-      "digest": "279024c9552b342de11796bc4af6993dc03a501294e6d37978cda85c0e42760f"
+      "digest": "de149c2904b110fe9375c08f35b80c3b84755587d6269a46d11816cf7872bcba"
     },
     {
       "scenario": {
@@ -163,7 +163,7 @@
         "family": "decay"
       },
       "steps": 74,
-      "digest": "8431950cbfd4d1f788d75695eb5de9d3192ff0387c99c7e4b522262876946fd4"
+      "digest": "a9ee62d36df8b36ab8fec54ebddcc4a4a0b5eb1e3da3fb4faabc5eeeff03a08f"
     },
     {
       "scenario": {
@@ -174,7 +174,7 @@
         "element": "lightning"
       },
       "steps": 73,
-      "digest": "f5fd86f8192c0b39add5108754e4cb6288ce6b77d021f72c12c6dcfbb8eaffef"
+      "digest": "397dd00998d853a8a80fa8c8656ae597f5bb43e0521619590533a78ecd0be5ef"
     },
     {
       "scenario": {
@@ -184,8 +184,8 @@
         "family": "magic",
         "element": "frost"
       },
-      "steps": 72,
-      "digest": "8c906160a7cc7d08db188c3a6b90471dc1d707e5b8b39297a64d3255f30c9240"
+      "steps": 75,
+      "digest": "c2f1532fc0314accb12c78c357cbb12eeebd593ce632e242e581de37466f5976"
     },
     {
       "scenario": {
@@ -194,8 +194,8 @@
         "weapon": "Bow",
         "family": "fury"
       },
-      "steps": 74,
-      "digest": "4766d4ab6d44b6fce3e87dcf8a91796de3e48c9d431084e366ea55391d026b5b"
+      "steps": 69,
+      "digest": "325d8f5227dd94dc9e447b97d4cc0fda6ffd08ae946bfcc6a0d69b8c4b6e4985"
     },
     {
       "scenario": {
@@ -205,7 +205,7 @@
         "family": "aegis"
       },
       "steps": 74,
-      "digest": "6da6c69e07ec5830aa5ce931b7fac09b81b5f67122f3f53d151b1be31ee5c42c"
+      "digest": "71fab7f23b00adebc59e2cb7e309480239ba0d0bf447974bade12dca1edade51"
     },
     {
       "scenario": {
@@ -214,9 +214,9 @@
         "weapon": "Two-Handed",
         "family": "vitality"
       },
-      "steps": 71,
-      "digest": "6262f50b5e86e58860b7452b43f4534b7ee7f9ad7dc6c8dd0e49acbeede9f140"
+      "steps": 72,
+      "digest": "5de68e83a4098ae3bb792a335bd41a5ee31edac6698d5cfbad701ade0bb4f0ea"
     }
   ],
-  "baselineReason": "Updated deterministic traces after merging the Off-Hand Dagger category into Daggers and reweighting off-hand loot. Only the 11 changed digest cases were rebaselined; all 21 lifecycle step counts are preserved."
+  "baselineReason": "Updated deterministic traces for v0.13 Phase A balance calibration against the committed UX39 development baseline; preserves all scenario seeds and lifecycle checks."
 }

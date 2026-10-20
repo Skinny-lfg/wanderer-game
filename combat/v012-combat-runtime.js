@@ -316,7 +316,7 @@ function weaponAttack(r){
  let damage=0,element=null,cast=false;
  if(caster&&r.mp>=cost){
   ports.phase6Metric(r,'manaSpent',cost);ports.phase6Metric(r,'fundedCasts',1);r.mp-=cost;cast=true;element=null;
-  const factor=kind==='Staff'?1.32:.77;
+  const factor=kind==='Staff'?1.32:.95;
   damage=Math.max(1,Math.round((ports.phase1Build?.element?WandererV012Buildcraft.elementalPower(ports.phase1Build,s.spellPower):s.spellPower)*factor));
   if(element&&ports.isMagicOffhand(off)&&off.magic===element)damage=Math.round(damage*1.30);
   ports.addLog((ports.ELEMENTS[element]?.icon||'✨')+' '+kind+' casts '+(ports.ELEMENTS[element]?.name||'Magic')+' ('+damage+' magic).','spell');
@@ -397,7 +397,7 @@ function updateFight(){
  if(ports.isPhase1Run())ports.phase2MagicTick(r);
  if(e.hp<=0){ports.winEncounter(true);return;}
  const lt=ports.legendaryRuntime(r),haste=(ports.isPhase1Run()&&ports.phase1Build?WandererV012Buildcraft.speed(ports.phase1Build,ports.phase1Clock+r.combatSeconds):1)*(s.bonus.bleedHaste?1+Math.min(3,t.haste.length)*.05:1)*(1+((lt.natureHasteUntil||0)>ports.setNow(r)?.10:0)+((lt.thunderHasteUntil||0)>ports.setNow(r)?.12:0));
- if(r.tPlayer>=1/(Math.min(5,s.attacksPerSec*haste))){r.tPlayer=0;ports.weaponAttack(r);if(e.hp<=0){ports.winEncounter(true);return;}}
+ if(r.tPlayer>=1/(Math.min(4.2,s.attacksPerSec*haste))){r.tPlayer=0;ports.weaponAttack(r);if(e.hp<=0){ports.winEncounter(true);return;}}
  if(r.tDot>=1){
   r.tDot-=1;
   const hasBurn=e.burnStacks>0,hasDots=e.bleedStacks+e.burnStacks>0;
@@ -436,6 +436,12 @@ function updateFight(){
    damageBlocked=Math.max(1,Math.round(raw*s.blockReduction));raw-=damageBlocked;
    ports.addLog('🛡 BLOCK! Shield prevents '+damageBlocked+' damage','good');ports.animateDefense();
    if(s.bonus.shieldRiposte&&ports.setNow(r)>=t.shieldCounterUntil&&ports.setReady(r,'shieldRiposte',3)){t.shieldCounter=damageBlocked*.25;t.shieldCounterUntil=ports.setNow(r)+4;}
+   if(s.off?.subtype==='Shield'&&['Sword','Mace'].includes(s.main?.subtype)&&!ports.legendaryHas('oathwall')&&ports.setReady(r,'shieldBaseCounter',2.5)){
+    const baseFactor=s.main.subtype==='Mace'?1.4:1;
+    const base=Math.max(1,Math.round(s.attack*baseFactor-e.def));
+    ports.setDirectEnemyDamage(r,base*.45,'🛡 Shield Counterattack');
+    if(e.hp<=0){ports.winEncounter();return;}
+   }
   }
   const barrierBeforeHit=r.barrier,blocked=Math.min(r.barrier,raw);r.barrier-=blocked;
   const barrierBroken=barrierBeforeHit>0&&r.barrier<=0,hit=Math.max(0,raw-blocked);

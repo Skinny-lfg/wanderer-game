@@ -86,7 +86,8 @@ function totalStats(equipment,ownedRunes,equippedRuneIds,{isTwoHanded,FIELDS,ite
  for(const id of runeSlots){const rune=runeItems.find(r=>r.id===id),type=RUNE_FAMILIES.find(x=>x.id===rune?.family);if(!rune||!type||usedFamilies.has(type.id))continue;usedFamilies.add(type.id);s[type.field]+=runeValue(type.id,rune.tier)*(PHASE1_PREVIEW&&phase6Run?.effects.runeBoost?.remaining>0?1.20:1);}
  // Read-only combat projection: legacy effects remain in stored items, but are inactive.
  const main=equipped.weapon?{...equipped.weapon,effect:null,magic:null}:null,off=equipped.offhand?{...equipped.offhand,effect:null,magic:null}:null,caster=!!main&&['Staff','Wand'].includes(main.subtype);
- const counts=setCounts(equipped),sets=setBonuses(counts),speed=.78+s.agi*.032+s.spdFlat*.046;
+ const counts=setCounts(equipped),sets=setBonuses(counts),effectiveAgi=Math.min(s.agi,50)+Math.max(0,s.agi-50)*.25;
+ const speed=Math.min(3.8,.78+effectiveAgi*.032+s.spdFlat*.046);
  const weaponMult={Sword:1,Mace:.66,Bow:1.15,Daggers:1.48,'Two-Handed':.50,Staff:.69,Wand:1.20}[main?.subtype]||1;
  s.caster=caster;s.main=main;s.off=off;s.sets=sets.list;s.bonus=sets.values;s.counts=counts;
  s.maxhp=Math.round(55+s.end*12+s.hpFlat);
@@ -95,9 +96,12 @@ function totalStats(equipment,ownedRunes,equippedRuneIds,{isTwoHanded,FIELDS,ite
  const baseSpeed=Math.max(.25,speed*weaponMult);
  // Low-speed catch-up for Staff and Two-Handed; naturally tapers as base speed grows.
  const catchUp=main?.subtype==='Staff'?Math.max(0,.56-.25*baseSpeed):main?.subtype==='Two-Handed'?Math.max(0,.43-.25*baseSpeed):0;
- const rawSpeed=baseSpeed+catchUp;s.rawAttackSpeed=rawSpeed;
+ const shieldBonus=off?.subtype==='Shield'&&['Sword','Mace'].includes(main?.subtype)?Math.min(.65,Math.max(0,s.str-25)*.0028):0;
+ const rawSpeed=baseSpeed+catchUp+shieldBonus;s.rawAttackSpeed=rawSpeed;
  // Diminishing returns above 2.5 attacks/sec; preserve early weapon timing.
- s.attacksPerSec=rawSpeed<=2.5?rawSpeed:2.5+(rawSpeed-2.5)/(1+(rawSpeed-2.5)*.2);
+ const nativeSpeed=rawSpeed<=2.5?rawSpeed:2.5+(rawSpeed-2.5)/(1+(rawSpeed-2.5)*.2);
+ const intCastSpeed=caster?Math.min(1.85,.94+s.int*.004):0;
+ s.attacksPerSec=Math.min(4.2,caster?Math.max(nativeSpeed,intCastSpeed):nativeSpeed);
  const critRating=Math.max(0,s.cha-5)/Math.sqrt(Math.max(1,main?.tier||1));
  s.crit=Math.min(55,Math.max(9,Math.round((9+41*(1-Math.exp(-critRating/25))+counts.crit*2+(sets.values.critBonus||0))/Math.sqrt(Math.max(1,s.rawAttackSpeed/1.3)))));
  s.mana=caster?Math.round(20+s.int*7+s.manaFlat):0;

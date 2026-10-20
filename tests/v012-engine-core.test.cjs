@@ -52,6 +52,20 @@ test('character stats use one source, retain two-hand restrictions and Rune bonu
  assert(s.power>0);
 });
 
+test('balance v0.13 applies diminishing Agility, INT casting cadence, Shield strength speed, and global cap',()=>{
+ const deps={isTwoHanded:item=>['Two-Handed','Bow','Staff'].includes(item?.subtype),FIELDS:[['STR','str'],['AGI','agi'],['INT','int'],['SPD','spd']],itemStatValue:(it,key)=>Number(it?.[key])||0,
+  RUNE_FAMILIES:[],runeValue:()=>0,setCounts:()=>({crit:0}),setBonuses:()=>({list:[],values:{}}),state:{runes:[],runeSlots:[]},PHASE1_PREVIEW:false,phase6Run:null};
+ const calc=(weapon,offhand=null)=>G.totalStats({weapon,offhand},null,null,deps);
+ const leather=calc({subtype:'Sword',agi:95});
+ assert.equal(leather.rawAttackSpeed,.78+(50+.25*50)*.032);
+ const wand=calc({subtype:'Wand',int:95});
+ assert(Math.abs(wand.attacksPerSec-1.34)<1e-12);
+ const shielded=calc({subtype:'Sword',str:1000},{subtype:'Shield'});
+ const plain=calc({subtype:'Sword',str:1000});
+ assert.equal(shielded.rawAttackSpeed-plain.rawAttackSpeed,.65);
+ assert.equal(calc({subtype:'Daggers',agi:1000,spd:1000}).attacksPerSec,4.2);
+});
+
 test('Rune values, Expedition tiers, pending choices and recycling use the canonical module',()=>{
  const R=sandbox.WandererV012Runes;
  assert.equal(R.FAMILIES.length,8);
