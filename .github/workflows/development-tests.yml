@@ -106,3 +106,27 @@ jobs:
           name: wanderer-armor-archetypes-${{ github.sha }}
           path: /tmp/wanderer-v012-armor-archetypes.json
           if-no-files-found: ignore
+
+
+  legendary-prototype-audit:
+    if: contains(github.event.head_commit.message, '[legendary]') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Simulate all 12 prototype Legendaries in memory only
+        env:
+          WANDERER_LEGEND_REPS: '8'
+          WANDERER_LEGEND_SOLO_REPS: '4'
+          WANDERER_LEGEND_SEED_OFFSET: '35000000'
+        run: node scripts/v012-legendary-build-ab-sim.cjs /tmp/wanderer-v012-legendary-test.json
+      - name: Archive complete Legendary A/B trajectories
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wanderer-legendary-prototypes-${{ github.sha }}
+          path: /tmp/wanderer-v012-legendary-test.json
+          if-no-files-found: ignore
