@@ -9,7 +9,7 @@
         "family": "blood"
       },
       "steps": 76,
-      "digest": "251c638556d316a412e66608b631406f7db0c5b30c452c8b87ad5d897890d868"
+      "digest": "7a878fff0f08e0fe798b0b7fd7e673053a33945a08d25c2e7d690b6442ff38f3"
     },
     {
       "scenario": {
@@ -19,7 +19,7 @@
         "family": "decay"
       },
       "steps": 73,
-      "digest": "1cf6017696f3e907a607c162fd6ad146d6f3c73f2a4bbf9bcbe04707d7680fe0"
+      "digest": "a20da87fb05bad28cf3bb039012f0aaff8e11b525bc371a04df1d0bb0e6fe923"
     },
     {
       "scenario": {
@@ -30,7 +30,7 @@
         "element": "lightning"
       },
       "steps": 76,
-      "digest": "2ebb730b38a942c9dbee735f4de3a10022d2f24dc64b54321737e1e3b5cf2406"
+      "digest": "91cf41cea3816babfe15756be708b9f781f7b9432df8f31e7896508938afd0aa"
     },
     {
       "scenario": {
@@ -41,7 +41,7 @@
         "element": "frost"
       },
       "steps": 72,
-      "digest": "ac88cc1c087a438bf9158ec1c116c18a25adafcf7431ae41e692b3ce398be992"
+      "digest": "85489cf2982626fa21e350692db1115b14ddad56a7b3df25105f4a5a4d589847"
     },
     {
       "scenario": {
@@ -51,7 +51,7 @@
         "family": "fury"
       },
       "steps": 75,
-      "digest": "5380bb0da87d8e18a67054dd7cdfe7a5cf3912fefc9866434709444f47a7f27b"
+      "digest": "b7687f19cf081ceeddd7bb381bfc18ab2fd99a764e4289685ee38780af2aa3ab"
     },
     {
       "scenario": {
@@ -61,7 +61,7 @@
         "family": "aegis"
       },
       "steps": 75,
-      "digest": "0ef3e52a41d5022e10d12ec704748b9ec3f6c150a1accc87afd57415916d1a92"
+      "digest": "3f0956686d9306ff6c5ac1ea25485d72d6f5e7d6bf960ef41f1dd3b152ad6dd5"
     },
     {
       "scenario": {
@@ -71,7 +71,7 @@
         "family": "vitality"
       },
       "steps": 74,
-      "digest": "81598bbf995909bb5fbb17572344536c4f2751a28f92ceeb77b082f13060e3c4"
+      "digest": "7e0718f21bd55ad3da21141f948ddf7d90ce4d9049d289e8a2463a29a474ac8f"
     },
     {
       "scenario": {
@@ -81,7 +81,7 @@
         "family": "blood"
       },
       "steps": 75,
-      "digest": "56f3e5a725b105df70af3a0cb50b3040b88fdbc99ef082a35fa72aa1ec490a3a"
+      "digest": "1d3df26f5730543b56de3ea3fcc1e934b85ced71c9b1e8eaad32d95c13c071f0"
     },
     {
       "scenario": {
@@ -91,7 +91,7 @@
         "family": "decay"
       },
       "steps": 68,
-      "digest": "b671ca28822e6ce417da209bf622dcacde489b2f9d60ea7855fbb8e9333ccf25"
+      "digest": "08a074d524ab50ffc91be920f624e8c3890a6b361527d0b21d50f15e120f0c92"
     },
     {
       "scenario": {
@@ -102,7 +102,7 @@
         "element": "lightning"
       },
       "steps": 75,
-      "digest": "2289643084682bbe723974b28d73730220ef6afe887a9920cf131c827996b61f"
+      "digest": "bf5e45a3a0fe1a81b9d6e8483a6f85acc6c0a49914f7b07f543d519e66659dc9"
     },
     {
       "scenario": {
@@ -113,7 +113,7 @@
         "element": "frost"
       },
       "steps": 73,
-      "digest": "0bbd42f8ddb7ae53d8e97f79346531c82eac7027843e853212de3aa717a1a02d"
+      "digest": "eba227b6dae2977fb0d978ce0f3e7edc58a11bcf6be58ac03c24e4b853ff149e"
     },
     {
       "scenario": {
@@ -123,7 +123,7 @@
         "family": "fury"
       },
       "steps": 74,
-      "digest": "9e5eae0c48aa01dd20ad9304db6e7aadab0e653317ab5b28cdc4f020e3296660"
+      "digest": "0766fad95eb3652fe720be54f33740977e74e034a2b983712852b51fdcffc280"
     },
     {
       "scenario": {
@@ -133,7 +133,7 @@
         "family": "aegis"
       },
       "steps": 72,
-      "digest": "00103d32ae8d82df0a1a86aa9961c2a147362ff13a8e4964fd3419971e833bd4"
+      "digest": "a25bb0916da1b9955f15bd99a84c26018a010ca35833e23a85f29ff5ce0a39f3"
     },
     {
       "scenario": {
@@ -143,7 +143,7 @@
         "family": "vitality"
       },
       "steps": 71,
-      "digest": "3e8e4e59a54339a111262a6418d16b4bd01d5e5e25cecaaa5e9828c91d05c72d"
+      "digest": "4a2243759a226c5143750b61d5813b55caed0fea7ec1f1b09547169f9217f3d6"
     },
     {
       "scenario": {
@@ -153,7 +153,7 @@
         "family": "blood"
       },
       "steps": 75,
-      "digest": "4a3aaa76c231b1f3ce545386b0e8261103f8d0a89a09111e2f7bbc7066d2635a"
+      "digest": "f1b10f4201e532213d389dcb7d3a5d8eb84d2dbc8a281b1f8c21f5a4726e51b8"
     },
     {
       "scenario": {
@@ -163,7 +163,7 @@
         "family": "decay"
       },
       "steps": 74,
-      "digest": "e7893fb055576e9ed52ec95f3fc773aff061508924118aeee8ab300163b99c72"
+      "digest": "539eb1afbdaf3a7d36e7ccf4310cef5fd9d5cd4b4da5431675bf11b7f089e473"
     },
     {
       "scenario": {
@@ -174,7 +174,7 @@
         "element": "lightning"
       },
       "steps": 73,
-      "digest": "4c8a12d2aa25c0df57f6fc78a9f53978cd9ce7010fcaf9545bf0c18679742eba"
+      "digest": "c96c1c71b2377fe297a94f51cd5f027de48eae7ae406d4ae87bfeba7e99c3082"
     },
     {
       "scenario": {
@@ -185,7 +185,7 @@
         "element": "frost"
       },
       "steps": 75,
-      "digest": "d5dddd6746959fe8fac7d632c03b13a981190f1613834e1262fae4aa9a9aa3f0"
+      "digest": "b2822c04dddcb55c8ae66f9af474cd2e4d2577b3564cd681d4b19f80dcd27e79"
     },
     {
       "scenario": {
@@ -195,7 +195,7 @@
         "family": "fury"
       },
       "steps": 74,
-      "digest": "481b18ca6614caa5cf7144c20f91a08365a7675321b6548871f2162fb63cdf82"
+      "digest": "9402880dff25a98516bba95930d770d4d1ece71da71f6f70a18491176a3a9c98"
     },
     {
       "scenario": {
@@ -205,7 +205,7 @@
         "family": "aegis"
       },
       "steps": 74,
-      "digest": "d26e1fb69d1090ffc7b606f7538ca1b1d33dac5dbc6567a4c608eb795129dd1d"
+      "digest": "aecd5177c3a9deaa2f7f73a25fc0d62167cebf25f4eb93087850d378af779217"
     },
     {
       "scenario": {
@@ -215,7 +215,7 @@
         "family": "vitality"
       },
       "steps": 72,
-      "digest": "7e5baad0bf5d70e2b488e77a09280c70c47039b2f2f5ee49e55f25d9b73b1502"
+      "digest": "c72f88148e3c6ab2358ae900a9a1633d81646a12cca87df9a0627b60281f8fb4"
     }
   ],
   "baselineReason": "Updated deterministic traces for v0.13 Phase A balance calibration against the committed UX39 development baseline; preserves all scenario seeds and lifecycle checks."
