@@ -203,16 +203,17 @@ function applyRot(b,c,power){
  const e=c.enemy;if(!e||e.hp<=0)return;
  const stacks=e.v012Rot||(e.v012Rot=[]);
  if(stacks.length>=6)stacks.shift();
- stacks.push({damage:Math.max(1,Math.round(power*(1+.15*rank(b,'virulent_rot')))),remaining:4});
+ stacks.push({ticks:0,damage:Math.max(1,Math.round(power*(1+.15*rank(b,'virulent_rot')))),remaining:4});
  c.log('☠ Rot '+stacks.length+'/6');
 }
-function heal(b,c,amount){const healed=c.heal(Math.max(0,amount))||0;
- if(healed>0&&rank(b,'sanctuary')&&ready(b,'sanctuary',c.now,1))c.barrier(healed*.20);
- if(healed>0&&rank(b,'life_conduit')&&ready(b,'life_conduit',c.now,3)){c.mana(4);b.runtime.conduit=true;}
- return healed;
+function onHeal(b,c,healed){
+ if(healed>0&&rank(b,'sanctuary')&&ready(b,'sanctuary',c.now,1)){activated(b,'sanctuary');c.barrier(healed*.20);}
+ if(healed>0&&rank(b,'life_conduit')&&ready(b,'life_conduit',c.now,3)){activated(b,'life_conduit');c.mana(4);b.runtime.conduit=true;}
 }
+function heal(b,c,amount){const healed=c.heal(Math.max(0,amount))||0;if(!c.healTriggersPassives)onHeal(b,c,healed);return healed;}
 function activated(b,id){b.runtime.passiveTelemetry??={};const t=b.runtime.passiveTelemetry[id]??={activations:0,combatSeconds:0};t.activations++;return true;}
 function onAttack(b,c){
+ if(c.proc||c.extra||c.recursive)return;
  const e=c.enemy,base=Math.max(1,c.base||1),crit=!!c.critical;
  if(rank(b,'bleeding_edge')&&ready(b,'bleedEdge',c.now,.9)&&c.random()<values('bleeding_edge',rank(b,'bleeding_edge')).chance&&activated(b,'bleeding_edge')) c.dot('bleed',base*.16);
  if(rank(b,'sanguine_fury')&&crit&&ready(b,'sanguineFury',c.now,2.5)&&activated(b,'sanguine_fury')){
@@ -223,17 +224,17 @@ function onAttack(b,c){
  if(rank(b,'toxic_touch')&&ready(b,'toxicTouch',c.now,1.3)&&c.random()<values('toxic_touch',rank(b,'toxic_touch')).chance&&activated(b,'toxic_touch')){c.dot('poison',base*.12);applyRot(b,c,base*.065);}
  if(rank(b,'blight')&&e.v012Rot?.length&&ready(b,'blight',c.now,7)&&activated(b,'blight'))c.damage(Math.min(base*.38,e.maxhp*.025),'☠ Blight');
  if(rank(b,'toxic_precision')&&crit&&ready(b,'toxicPrecision',c.now,2)&&activated(b,'toxic_precision')){c.dot('poison',base*.11);applyRot(b,c,base*.06);}
- if(rank(b,'plague_rupture')&&crit&&e.bleedStacks>0&&e.v012Rot?.length&&ready(b,'plagueRupture',c.now,8)&&activated(b,'plague_rupture'))c.damage(Math.min(base*.45,e.maxhp*.03),'🩸 Plague Rupture');
+ if(rank(b,'plague_rupture')&&crit&&e.bleedStacks>0&&e.v012Rot?.length&&ready(b,'plagueRupture',c.now,8)&&activated(b,'plague_rupture'))c.damage(Math.min(base*.55,e.maxhp*.032),'🩸 Plague Rupture');
  if(rank(b,'crimson_rush')&&crit&&e.bleedStacks>0&&activated(b,'crimson_rush'))c.damage(base*.15,'🩸 Crimson Rush');
  if(rank(b,'brutal_crit')&&crit&&activated(b,'brutal_crit'))c.damage(base*Math.min(.65,.12*Math.sqrt(rank(b,'brutal_crit'))),'⚔ Brutal Critical');
  if(rank(b,'double_strike')&&c.random()<Math.min(.60,.10*Math.sqrt(rank(b,'double_strike')))&&activated(b,'double_strike'))c.damage(base*.30,'🗡 Extra Strike');
- if(rank(b,'fervent_life')&&crit&&ready(b,'ferventLife',c.now,4)&&activated(b,'fervent_life')){const amount=c.player.maxhp*.02,actual=heal(b,c,amount);if(actual<amount)c.barrier((amount-actual)*.5);}
+ if(rank(b,'fervent_life')&&crit&&ready(b,'ferventLife',c.now,4)&&activated(b,'fervent_life')){const amount=c.player.maxhp*.02,restorable=amount*(c.healingMultiplier??1),actual=heal(b,c,amount);if(actual<restorable)c.barrier((restorable-actual)*.5);}
  if(rank(b,'adrenaline')&&crit&&ready(b,'adrenaline',c.now,3)&&activated(b,'adrenaline'))b.runtime.adrenalineUntil=c.now+3;
  if(rank(b,'counterstrike')&&b.runtime.counterBlock&&activated(b,'counterstrike')){b.runtime.counterBlock=0;c.damage(base*.18,'🛡 Counterstrike');}
  if(rank(b,'retaliation')&&b.runtime.counterBarrier&&activated(b,'retaliation')){b.runtime.counterBarrier=0;c.damage(base*.15,'🛡 Retaliation');}
  if(rank(b,'spellblade')&&b.runtime.spellblade&&activated(b,'spellblade')){b.runtime.spellblade=false;c.damage(base*.15,'✨ Spellblade');}
  if(rank(b,'carrion_detonation')&&e.bleedStacks>0&&e.v012Rot?.length&&ready(b,'carrionDetonation',c.now,8)&&activated(b,'carrion_detonation')){
-  const bleed=e.dots?.bleed?.shift();e.bleedStacks=Math.max(0,e.bleedStacks-1);const rot=e.v012Rot.shift();const owed=(bleed?bleed.damage*bleed.remaining:0)+rot.damage*rot.remaining;c.damage(owed+Math.min(base*.25,e.maxhp*.02),'☠ Carrion Detonation');
+  const bleed=e.dots?.bleed?.shift();e.bleedStacks=e.dots?.bleed?.length||0;e.bleed=(e.dots?.bleed||[]).reduce((n,d)=>n+d.damage,0);const rot=e.v012Rot.shift();const owed=(bleed?bleed.damage*bleed.remaining:0)+rot.damage*rot.remaining;c.damage(owed+Math.min(base*.25,e.maxhp*.02),'☠ Carrion Detonation');
  }
  if(rank(b,'crimson_pact')&&c.player.hp>c.player.maxhp*.20&&ready(b,'crimsonPact',c.now,8)&&activated(b,'crimson_pact')){
   c.player.hp=Math.max(1,c.player.hp-c.player.maxhp*.02);c.dot('bleed',base*.32);
@@ -257,7 +258,7 @@ function onAttack(b,c){
  }
 }
 function onCast(b,c){
- if(c.funded!==true||!hasFamily(b,'magic')||!elements.includes(b.element))return;
+ if(c.proc||c.extra||c.recursive||c.funded!==true||!hasFamily(b,'magic')||!elements.includes(b.element))return;
  const power=elementalPower(b,Math.max(1,c.power))*(c.amp||1);b.runtime.conduit=false;
  const e=c.enemy; b.runtime.magicHits++;
  if(b.element==='fire'&&rank(b,'kindling')&&activated(b,'kindling'))c.dot('burn',power*values('kindling',rank(b,'kindling')).burn);
@@ -273,14 +274,14 @@ function onCast(b,c){
  if(rank(b,'hex_bolt')&&e.v012Rot?.length&&ready(b,'hexBolt',c.now,3)&&activated(b,'hex_bolt'))c.damage(power*.25+c.enemy.v012Rot.reduce((n,r)=>n+r.damage,0),'☠ Hex Bolt');
  if(rank(b,'runic_shield')&&ready(b,'runicShield',c.now,3)&&activated(b,'runic_shield'))c.barrier(c.player.maxhp*.02);
  if(rank(b,'hemal_sigil')&&e.bleedStacks>0&&ready(b,'hemalSigil',c.now,6)&&activated(b,'hemal_sigil')){
-  const consumed=e.dots?.bleed?.shift();e.bleedStacks=Math.max(0,e.bleedStacks-1);if(consumed)c.damage(consumed.damage*consumed.remaining,'🩸 Hemal conversion');
+  const consumed=e.dots?.bleed?.shift();e.bleedStacks=e.dots?.bleed?.length||0;e.bleed=(e.dots?.bleed||[]).reduce((n,d)=>n+d.damage,0);if(consumed)c.damage(consumed.damage*consumed.remaining,'🩸 Hemal conversion');
   if(b.element==='fire')c.dot('burn',power*.34);
   else if(b.element==='frost')c.chill(2.5);
   else c.damage(Math.min(power*.56,e.maxhp*.03),'🩸 Hemal Sigil');
  }
  if(rank(b,'elemental_blight')&&e.v012Rot?.length&&ready(b,'elementalBlight',c.now,7)&&activated(b,'elemental_blight')){
   if(b.element==='fire'){const rot=e.v012Rot.shift();c.damage(Math.min(power*.32+rot.damage*3,e.maxhp*.032),'🔥 Blight');}
-  else if(b.element==='frost')e.v012Rot[0].remaining=Math.min(6,e.v012Rot[0].remaining+2);
+  else if(b.element==='frost')e.v012Rot[0].remaining=Math.min(Math.max(0,6-(e.v012Rot[0].ticks||0)),e.v012Rot[0].remaining+2);
   else {e.v012Rot.shift();c.damage(Math.min(power*.68,e.maxhp*.035),'⚡ Blight');}
  }
  if(rank(b,'prismatic_rebound')&&b.runtime.prismaticCharge>0&&activated(b,'prismatic_rebound')){
@@ -297,15 +298,16 @@ function onSecond(b,c){
  if(e.v012Rot?.length){
   const rot=e.v012Rot;
   const damage=rot.reduce((sum,s)=>sum+s.damage,0);
-  e.v012Rot=rot.map(s=>({...s,remaining:s.remaining-1})).filter(s=>s.remaining>0);
+  e.v012Rot=rot.map(s=>({...s,remaining:s.remaining-1,ticks:(s.ticks||0)+1})).filter(s=>s.remaining>0);
+  if(c.enemy.hp>0&&damage>=c.enemy.hp)c.enemy.v012DeathRot=true;
   c.dotDamage(damage,'☠ Rot');
-  if(rank(b,'rot_ward')&&ready(b,'rotWard',c.now,5)&&activated(b,'rot_ward'))c.barrier(c.player.maxhp*.015);
+  if(rank(b,'rot_ward')&&ready(b,'rotWard',c.now,5)&&activated(b,'rot_ward'))c.barrier(c.player.maxhp*.018);
   if(rank(b,'rot_symbiosis')&&ready(b,'rotSymbiosis',c.now,6)&&activated(b,'rot_symbiosis'))heal(b,c,c.player.maxhp*.018);
  }
  if(rank(b,'renewal')&&activated(b,'renewal'))heal(b,c,c.player.maxhp*values('renewal',rank(b,'renewal')).heal);
  if(rank(b,'life_bloom')&&activated(b,'life_bloom')){heal(b,c,c.player.maxhp*values('life_bloom',rank(b,'life_bloom')).heal);c.mana(values('life_bloom',rank(b,'life_bloom')).mana);}
  if(rank(b,'barrier_pulse')&&ready(b,'barrierPulse',c.now,6)&&activated(b,'barrier_pulse'))c.barrier(c.player.maxhp*values('barrier_pulse',rank(b,'barrier_pulse')).barrier);
- if(rank(b,'blood_ward')&&e.bleedStacks>0&&ready(b,'bloodWard',c.now,5)&&activated(b,'blood_ward'))c.barrier(c.player.maxhp*.018);
+ if(rank(b,'blood_ward')&&e.bleedStacks>0&&ready(b,'bloodWard',c.now,5)&&activated(b,'blood_ward'))c.barrier(c.player.maxhp*.022);
  if(rank(b,'lifeweave')&&c.player.mp<c.player.maxmp*.30&&c.player.hp>c.player.maxhp*.20&&ready(b,'lifeweave',c.now,8)&&activated(b,'lifeweave')){
   c.player.hp=Math.max(1,c.player.hp-c.player.maxhp*.03);c.mana(10);
  }
@@ -315,27 +317,29 @@ function incoming(b,c,raw){
  const vulnerability=b.runtime?.ironExposedUntil>c.now||b.runtime?.redlineUntil>c.now?1.10:1;return Math.max(1,Math.round(raw*(1-clamp(reduction,0,.28))*vulnerability));
 }
 function onDefend(b,c,blocked,barrierAbsorbed){
+ const broken=c.barrierBroken??(barrierAbsorbed>0&&c.player.barrier<=0);
  if(blocked>0&&rank(b,'counterstrike'))b.runtime.counterBlock=1;
  if(barrierAbsorbed>0&&rank(b,'retaliation'))b.runtime.counterBarrier=1;
  if(rank(b,'sanguine_reprisal')&&(blocked>0||barrierAbsorbed>0)&&activated(b,'sanguine_reprisal'))b.runtime.reprisalReady=true;
  if(rank(b,'iron_reversal')&&blocked>0&&activated(b,'iron_reversal'))b.runtime.ironReady=true;
  if(rank(b,'prismatic_rebound')&&barrierAbsorbed>0&&activated(b,'prismatic_rebound'))
   b.runtime.prismaticCharge=Math.min(c.player.maxhp*.06,(b.runtime.prismaticCharge||0)+barrierAbsorbed*.45);
- if(rank(b,'rot_husk')&&barrierAbsorbed>0&&c.enemy?.v012Rot?.length&&c.player.barrier<=0&&ready(b,'rotHusk',c.now,9)&&activated(b,'rot_husk'))c.barrier(c.player.maxhp*.035);
- if(rank(b,'guardians_oath')&&barrierAbsorbed>0&&c.player.barrier<=0&&!b.runtime.guardianUsed&&activated(b,'guardians_oath')){
-  b.runtime.guardianUsed=true;heal(b,c,c.player.maxhp*.045);
+ if(rank(b,'rot_husk')&&barrierAbsorbed>0&&c.enemy?.v012Rot?.length&&broken&&ready(b,'rotHusk',c.now,9)&&activated(b,'rot_husk'))c.barrier(c.player.maxhp*.035);
+ if(rank(b,'guardians_oath')&&barrierAbsorbed>0&&broken&&b.runtime.guardianWave!==(c.waveKey??c.enemy)&&activated(b,'guardians_oath')){
+  b.runtime.guardianWave=c.waveKey??c.enemy;heal(b,c,c.player.maxhp*.045);
  }
 }
 function onKill(b,c){
- if(rank(b,'hemovore')&&c.enemy.bleedStacks>0&&activated(b,'hemovore'))heal(b,c,c.player.maxhp*.04);
- if(rank(b,'rot_recovery')&&c.enemy.v012Rot?.length&&activated(b,'rot_recovery'))heal(b,c,c.player.maxhp*.04);
+ const waveKey=c.waveKey??c.enemy;if(b.runtime.lastKillWave===waveKey)return;b.runtime.lastKillWave=waveKey;
+ if(rank(b,'hemovore')&&(c.enemy.bleedStacks>0||c.enemy.v012DeathBleed)&&activated(b,'hemovore'))heal(b,c,c.player.maxhp*.04);
+ if(rank(b,'rot_recovery')&&(c.enemy.v012Rot?.length||c.enemy.v012DeathRot)&&activated(b,'rot_recovery'))heal(b,c,c.player.maxhp*.04);
  const key=c.waveKey??c.enemy;if(rank(b,'second_breath')&&b.runtime.lastWaveHeal!==key){b.runtime.lastWaveHeal=key;activated(b,'second_breath');heal(b,c,c.player.maxhp*values('second_breath',rank(b,'second_breath')).heal);}
 }
 function survive(b,c){if(!rank(b,'last_stand')||b.runtime.lastStand)return false;activated(b,'last_stand');b.runtime.lastStand=true;c.player.hp=Math.max(1,c.player.maxhp*.06);c.log('💚 Last Stand (once per Expedition)');return true;}
 function speed(b,now){return b?.runtime?.adrenalineUntil>now?1+values('adrenaline',rank(b,'adrenaline')).speed:1;}
 function enemyHealMultiplier(b,e){return 1-(e.v012Rot?.length&&rank(b,'wither')?values('wither',rank(b,'wither')).healingReduction:0);}
 function nextCost(b){return 8-rank(b,'efficient_cast');}
-function resetWave(b,e){e.v012Rot=[];e.v012Shock=0;b.runtime.guardianUsed=false;}
+function resetWave(b,e){e.v012Rot=[];e.v012Shock=0;}
 function canCast(b){return !!b&&!!b.element&&['kindling','deep_winter','overcharge','arcane_focus','arcane_echo','spell_surge','spellblade','hex_bolt','hex_bleed','hemal_sigil','elemental_blight','prismatic_rebound','runic_shield'].some(id=>rank(b,id));}
 function validate(b){
  if(!b||!Array.isArray(b.families)||b.families.length>3||new Set(b.families).size!==b.families.length||!b.families.every(f=>FAMILIES.includes(f))||b.element!==null&&(!elements.includes(b.element)||!hasFamily(b,'magic'))||!Array.isArray(b.picks)||b.picks.length>20)throw Error('Invalid saved build');
@@ -352,5 +356,5 @@ function validate(b){
  return b;
 }
 function clear(b){if(!b)return;b.picks.length=0;b.element=null;b.initialFamily=null;b.initialPassive=null;b.unlockedFamilies=[];b.families=[];b.cooldowns=Object.create(null);b.runtime={frenzyUntil:0,counterBlock:0,counterBarrier:0,spellblade:false,magicHits:0,staticCharges:0,adrenalineUntil:0,conduit:false,lastStand:false,lastSpellAt:-999};}
-root.WandererV012Buildcraft=Object.freeze({CATALOG,FAMILIES,ELEMENTS:elements,create,initial,initialId,ownedRank,rank,values,preview,capabilities,functional,synergy,bleedDamage,elementalPower,eligible,options,choose,element,mods,onAttack,onCast,onSecond,incoming,onDefend,onKill,survive,speed,enemyHealMultiplier,nextCost,resetWave,canCast,validate,clear});
+root.WandererV012Buildcraft=Object.freeze({CATALOG,FAMILIES,ELEMENTS:elements,create,initial,initialId,ownedRank,rank,values,preview,capabilities,functional,synergy,bleedDamage,elementalPower,eligible,options,choose,element,mods,onHeal,onAttack,onCast,onSecond,incoming,onDefend,onKill,survive,speed,enemyHealMultiplier,nextCost,resetWave,canCast,validate,clear});
 })(globalThis);

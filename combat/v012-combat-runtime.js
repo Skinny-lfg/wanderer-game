@@ -171,6 +171,7 @@ function setHeal(r,amount,reserveRelease=false){
   const allowed=Math.max(0,Math.min(overheal*.25,r.maxhp*.01-temp.regenBarrierSecondTotal,r.maxhp*.1-temp.regenBarrier));
   if(allowed>0){const gained=ports.setBarrier(r,allowed);temp.regenBarrier+=gained;temp.regenBarrierSecondTotal+=gained;}
  }
+ if(actual>0&&ports.isPhase1Run()&&ports.phase1Build)WandererV012Buildcraft.onHeal(ports.phase1Build,ports.phase2Context(r),actual);
  return actual;
 }
 
@@ -412,7 +413,7 @@ function updateFight(){
  if(r.tDot>=1){
   r.tDot-=1;
   const hasBurn=e.burnStacks>0,hasDots=e.poisonStacks+e.bleedStacks+e.burnStacks>0;
-  if(hasDots){const applied=ports.tickDots(e);ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),applied));e.hp-=applied;ports.addLog('☠️ Damage over time: '+applied+' damage','spell');}
+  if(hasDots){const bleeding=e.bleedStacks>0,applied=ports.tickDots(e);if(bleeding&&applied>=e.hp)e.v012DeathBleed=true;ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),applied));e.hp-=applied;ports.addLog('☠️ Damage over time: '+applied+' damage','spell');}
   if(hasBurn)ports.setHeatTick(r,true);
   if(s.bonus.regenBonus){const healed=ports.setHeal(r,ports.regenPerSecond(r.maxhp,s.bonus.regenBonus));if(healed>0)ports.addLog('💚 Regeneration +'+Math.round(healed)+' HP','good');}
   if(ports.isPhase1Run()&&ports.phase1Build)WandererV012Buildcraft.onSecond(ports.phase1Build,ports.phase2Context(r));
@@ -449,7 +450,7 @@ function updateFight(){
    if(s.bonus.shieldRiposte&&ports.setNow(r)>=t.shieldCounterUntil&&ports.setReady(r,'shieldRiposte',3)){t.shieldCounter=damageBlocked*.25;t.shieldCounterUntil=ports.setNow(r)+4;}
   }
   const barrierBeforeHit=r.barrier,blocked=Math.min(r.barrier,raw);r.barrier-=blocked;
-  const hit=Math.max(0,raw-blocked);
+  const barrierBroken=barrierBeforeHit>0&&r.barrier<=0,hit=Math.max(0,raw-blocked);
   if(blocked>0)ports.addLog('🛡 Barrier absorbs '+blocked+' damage','good');
   if(hit>0){
    ports.phase6Metric(r,'damageTaken',Math.min(Math.max(0,r.hp),hit));r.hp-=hit;ports.addLog('🩸 '+e.name+' hits for '+hit+' HP','bleed');ports.floatText(hit,'hero');
@@ -471,7 +472,7 @@ function updateFight(){
   if(e.bossStyle==='leech'&&hit>0){const multiplier=ports.isPhase1Run()&&ports.phase1Build?WandererV012Buildcraft.enemyHealMultiplier(ports.phase1Build,e):1;const heal=Math.floor(Math.min(e.maxhp-e.hp,Math.round(hit*.28))*multiplier);e.hp+=heal;if(heal){ports.addLog('🌑 Rift Harbinger drains '+heal+' HP','spell');enemyAbilityVfx='BossRift';}}
   if(e.bossStyle==='guardian'&&!e.barrier){e.barrier=Math.max(2,Math.round(r.tier*.45));ports.addLog('🛡 Abyssal Guardian restores '+e.barrier+' Barrier','spell');ports.combatEffect('BossAbyssal');}
   ports.legendaryDefensiveEffects(r,damageBlocked,hit,blocked,barrierBeforeHit>0&&r.barrier<=0);
-  if(ports.isPhase1Run()&&ports.phase1Build)WandererV012Buildcraft.onDefend(ports.phase1Build,ports.phase2Context(r),damageBlocked,blocked);
+  if(ports.isPhase1Run()&&ports.phase1Build)WandererV012Buildcraft.onDefend(ports.phase1Build,{...ports.phase2Context(r),barrierBroken},damageBlocked,blocked);
   if(s.bonus.lastBastion&&r.barrier>=r.maxhp*.1&&ports.setReady(r,'lastBastion',12))t.lastBastionReady=true;
   if(r.hp>0&&s.bonus.natureRenewal&&!t.natureRenewalUsed&&r.hp<=r.maxhp*.35){t.natureRenewalUsed=true;const gained=ports.setHeal(r,r.maxhp*.08);ports.addLog('🌿 Verdant Renewal: +'+Math.round(gained)+' HP','good');}
   if(r.hp>0&&s.bonus.tideSurge&&!t.tideSurgeUsed&&r.barrier<r.maxhp*.05){t.tideSurgeUsed=true;const gained=ports.setBarrier(r,r.maxhp*.08);ports.addLog('🌊 High Tide: +'+Math.round(gained)+' Barrier','good');}
@@ -480,7 +481,7 @@ function updateFight(){
  }
  if(r.hp<=0){
   if(s.bonus.secondWind&&!r.secondWindUsed){r.secondWindUsed=true;r.hp=1;ports.setBarrier(r,r.maxhp*.08);ports.addLog('💚 Second Wind! Survived lethal damage (once per expedition)','good');}
-  else if(ports.isPhase1Run()&&ports.phase1Build&&WandererV012Buildcraft.survive(ports.phase1Build,ports.phase2Context(r))){}
+  else if(ports.isPhase1Run()&&ports.phase1Build&&WandererV012Buildcraft.survive(ports.phase1Build,ports.phase2Context(r))){if(ports.phase4Entry?.session.build){ports.phase4Entry.session.build.runtime.lastStand=true;ports.phase5Persist();}}
   else {ports.die();return;}
  }
  if(e.hp<=0){ports.winEncounter();return;}
@@ -489,7 +490,7 @@ function updateFight(){
 
 function phase2Context(r){
  const e=r.enemy,now=ports.setNow(r);
- return {player:r,enemy:e,now,random:ports.gameRandom,base:r.lastBaseHit||r.stats.attack,waveKey:r.phase1Plane+':'+r.enc,
+ return {player:r,enemy:e,now,random:ports.gameRandom,base:r.lastBaseHit||r.stats.attack,healTriggersPassives:true,healingMultiplier:(r.playerHealingDebuffUntil||0)>now?.6:1,waveKey:r.phase1Plane+':'+r.enc,
  dot(kind,potency){
   if(!['bleed','poison','burn'].includes(kind))return;
   ports.phase6Proc(r,kind+' application');const values=e.dots[kind]||(e.dots[kind]=[]);
