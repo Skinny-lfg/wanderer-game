@@ -16,9 +16,9 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+      - run: npm test
       - name: Shatter and Double Strike isolated A/B
         run: node tests/v093-shatter-double-strike.cjs
-      - run: npm test
 
   # Intentionally opt-in: normal development pushes keep the fast smoke check.
   # Add [audit] to a development commit message to run the full pre-release suite.
