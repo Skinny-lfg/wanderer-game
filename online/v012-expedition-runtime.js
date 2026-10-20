@@ -77,6 +77,7 @@ function phase6EventChoice(choice,itemId,passiveId,family,targetId){
  phase6UnlockBase(p.family);
  ports.phase5Results.gold+=Math.max(0,ports.state.gold-beforeGold);ports.phase5Results.fragments+=Math.max(0,ports.state.fragments-beforeFragments);
  ports.phase5RememberRealm({tier:E,phase1Plane:g.planeIndex-1,planeName:p.name,planeFamily:p.family,combatSeconds:0,gold:Math.max(0,ports.state.gold-beforeGold),fragments:Math.max(0,ports.state.fragments-beforeFragments),loot,realmLog:[{text:choice===2?'Event declined. No reward.':WandererV012IntegratedEvents.get(ev.id)[3][choice],kind:'good'}]},'cleared');
+ ports.phase5Results.review=null;ports.phase5Results.eventExitPending=true;
  ports.phase1Draft={kind:'reward',plane:g.rewardPending,step:'passive',options:ports.phase6PassiveOptions(g.rewardPending)};
  if(!ports.phase5Persist())return false;ports.render();return true;
 }
@@ -125,10 +126,12 @@ function phase2ChooseElement(id){
 function phase2ChoosePassive(id){
  if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked))return false;
  const draft=ports.phase1Draft,g=ports.phase1Controller.state;
- if(!draft||draft.kind!=='reward'||draft.step!=='passive'||!g.rewardPending||ports.state.run)return false;
+ if(!draft||draft.kind!=='reward'||draft.step!=='passive'||!g.rewardPending||ports.state.run?.status==='fight')return false;
  WandererV012Buildcraft.choose(ports.phase1Build,draft.plane.family,id,draft.options);
  ports.phase1Controller.claimReward();ports.phase1Draft=null;if(ports.phase1Controller.state.version===2)ports.phase1Build.runtime.hybridWindow=false;
- ports.phase3ClampVitals();ports.phase5Persist();ports.render();return true;
+ ports.phase3ClampVitals();if(!ports.phase5Persist())return false;
+ if(ports.state.run?.status==='cleared'){ports.view='combat';ports.renderCombat();}else{ports.view='phase1';ports.render();}
+ return true;
 }
 
 function phase1Choose(id){
@@ -224,12 +227,14 @@ function phase1WaveWon(){
   return;
  }
  ports.phase4CommitRealm();ports.phase6CollectMetrics(r);ports.phase6TickDurations();
+ r.status='cleared';
  ports.addLog(result.expeditionComplete?'Expedition boss defeated!':'Realm cleared. Select your next Realm.','good');
  ports.phase5RememberRealm(r,'cleared');
  ports.phase1Clock+=r.combatSeconds||0;
  ports.phase1Continuity=result.expeditionComplete?null:{setCooldowns:r.setCooldowns,secondWindUsed:r.secondWindUsed,legendaryState:r.legendaryState,legendaryCastCount:r.legendaryCastCount,legendaryAttackCount:r.legendaryAttackCount};
  ports.phase1Vitals=result.expeditionComplete?null:{hp:Math.max(1,r.hp),mp:Math.max(0,r.mp),maxmp:r.maxmp};
  if(result.expeditionComplete){
+  ports.phase5Results.review='summary';
   ports.phase5PersonalBest=Math.max(ports.phase5PersonalBest,r.tier);
   ports.phase6ReturnPotions('victory');
   ports.phase5MakeSummary('victory');
@@ -244,11 +249,13 @@ function phase1WaveWon(){
  if(!result.expeditionComplete){
   const plane=ports.phase1Controller.state.rewardPending;
   phase6UnlockBase(plane.family);
+  ports.phase5Results.review=null;
   ports.phase1Draft={kind:'reward',plane,step:'passive',options:ports.phase6PassiveOptions(plane)};
- }
+  ports.view='combat';
+ }else{ports.state.run=null;ports.view='phase1';}
  if(!ports.phase5Persist())return;
- ports.renderCombat();
- ports.state.run=null;ports.view='phase1';ports.render();
+ if(result.expeditionComplete)ports.render();
+ else{ports.renderCombat();ports.phase6PassivePopup();}
 }
 
 function phase1Death(){
@@ -320,7 +327,12 @@ function phase5MakeSummary(outcome){
 }
 
 function phase5ExitResult(){
- if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked)||!ports.phase5Results.review||ports.phase1Controller.state.version===2&&ports.phase1Draft?.kind==='reward')return false;
+ if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked)||ports.phase1Draft?.kind==='reward')return false;
+ if(ports.state.run?.status==='cleared'||ports.phase5Results.eventExitPending){
+  ports.phase5Results.eventExitPending=false;ports.phase5Results.review=null;
+  ports.state.run=null;ports.view='phase1';if(!ports.phase5Persist())return false;ports.render();return true;
+ }
+ if(!ports.phase5Results.review)return false;
  ports.phase5Results.review=ports.phase5Results.review==='realm'&&ports.phase5Results.summary?'summary':null;
  ports.state.run=null;ports.view='phase1';if(!ports.phase5Persist())return false;ports.render();return true;
 }

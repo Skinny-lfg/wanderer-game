@@ -11,7 +11,8 @@ function phase4Session(entry=false){
  if(continuity?.legendaryState)delete continuity.legendaryState.enemy;
  return ports.phase4Clone({version:1,entry,controller:ports.phase1Controller.state,build:ports.phase1Build,vitals:ports.phase1Vitals,
   integration:ports.phase6Run,clock:ports.phase1Clock,supplies:ports.phase3Supplies,lootIds:[...ports.phase3LootIds],home:ports.phase4Home,
-  seed:ports.phase4Seed,prefix:ports.phase4Prefix,stamp:ports.phase4Stamp,idCounter:ports.uid,continuity,draft:ports.phase1Draft,results:ports.phase5Results});
+  seed:ports.phase4Seed,prefix:ports.phase4Prefix,stamp:ports.phase4Stamp,idCounter:ports.uid,continuity,draft:ports.phase1Draft,results:ports.phase5Results,
+  clearedRun:ports.state.run?.status==='cleared'?ports.phase4Clone(ports.state.run):null});
 }
 
 function phase4CommitRealm(){
@@ -52,9 +53,9 @@ function phase4Restore(session){
   ports.phase1Draft.options=ports.phase1Draft.options.map(p=>WandererV012Buildcraft.CATALOG.find(v=>v.id===p.id));
  }}
  if(session.results)ports.phase5Results=ports.phase4Clone(session.results);
- ports.state.run=null;ports.phase4WaveKeys=[];ports.phase4Resume=session.entry;
+ ports.state.run=session.clearedRun||null;ports.phase4WaveKeys=[];ports.phase4Resume=session.entry&&!session.clearedRun;
  ports.phase4Entry=session.entry?{profile:ports.phase4Clone({...ports.state,run:null}),session:ports.phase4Clone(session),ledger:[...(ports.phase5Snapshot?.expedition.awardKeys||[])]}:null;
- ports.view='phase1';
+ ports.view=session.clearedRun?'combat':'phase1';
 }
 
 function phase4ResumeRealm(){
