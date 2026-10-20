@@ -29,6 +29,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
  globalThis.audit={
   potions:{supplies:()=>phase3Supplies,select:phase6SelectPotion,use:phase6UsePotion,inventory:phase6PotionInventory,start:phase6StartPotions,finish:phase6ReturnPotions,tick:phase6TickDurations,shop:()=>WandererV012Consumables.shop(1,gameRandom,makeId),buy:phase6BuyPotion,reroll:phase6RerollPotions},
   events:{open:phase6OpenEvent,choose:phase6EventChoice,run:()=>phase6Run},
+  back:phase6BackToCamp,markAllSeen:markAllAsSeen,
   state:()=>state,results:()=>phase5Results,exitResult:phase5ExitResult,recordItem:item=>phase5Results.earned.push(phase5Item(item)),controller:()=>phase1Controller,build:()=>phase1Build,draft:()=>phase1Draft,
   start:phase1Begin,initial:phase2ChooseInitial,select:phase1Choose,enter:phase1Enter,passive:phase2ChoosePassive,element:phase2ChooseElement,
   passiveIcons:phase2PassiveIcons,initialPassive:WandererV012Buildcraft.initial,

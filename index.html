@@ -3348,7 +3348,7 @@ function phase1Begin(level=1){
  if(!['camp','finished','failed'].includes(phase1Controller.state.stage)||!Number.isInteger(level)||level<1||level>phase1Controller.state.unlocked)return false;
  phase4Seed=Math.floor(Math.random()*4294967296)>>>0;phase4Prefix=Date.now().toString(36);phase4Stamp=null;phase4Home=phase4Clone(state.equip);phase4Entry=null;phase4Resume=false;phase4WaveKeys=[];
  phase5Results={version:1,complete:true,review:null,realm:null,summary:null,earned:[],gold:0,fragments:0};
- phase1Controller.start(level);phase6Run={version:1,event:null,events:[],effects:{},combats:0};phase3LootIds=new Set();phase3PotionCooldowns={health:0,mana:0};phase1Vitals=null;phase1Clock=0;phase1Continuity=null;phase3Supplies={health:0,mana:0};phase1Build=WandererV012Buildcraft.create();phase1Build.families=phase1Controller.state.families;phase1Draft=null;state.run=null;view='phase1';
+ phase1Controller.start(level);phase6Run={version:1,event:null,events:[],effects:{},combats:0};phase3LootIds=new Set();phase3PotionCooldowns={health:0,mana:0};phase1Vitals=null;phase1Clock=0;phase1Continuity=null;phase3Supplies={health:0,mana:0};phase1Build=WandererV012Buildcraft.create();phase1Build.runtime.hybridRules=true;phase1Build.families=phase1Controller.state.families;phase1Draft=null;state.run=null;view='phase1';
  if(PHASE5_VALIDATION){phase5Snapshot.expedition.attempts++;phase5Snapshot.expedition.awardKeys=[];phase5Snapshot.expedition.lastOutcome='active';phase5Persist();}
  render();
 }
@@ -3407,7 +3407,7 @@ function phase6EventChoice(choice,itemId,passiveId,family,targetId){
  phase1Draft={kind:'reward',plane:g.rewardPending,step:'passive',options:phase6PassiveOptions(g.rewardPending)};
  if(!phase5Persist())return false;render();return true;
 }
-function phase6PassiveOptions(plane){return WandererV012Buildcraft.options(phase1Build,plane.family,gameRandom);}
+function phase6PassiveOptions(plane){phase1Build.runtime.hybridWindow=phase1Controller.state.version===2&&[6,8,10].includes(plane.plane);return WandererV012Buildcraft.options(phase1Build,plane.family,gameRandom);}
 function phase6RenderEvent(){
  const ev=phase6Run.event,def=WandererV012Events.get(ev.id),bag=phase3BagItems(),items=[...Object.values(state.equip).filter(Boolean),...bag];
  html('<section class="panel"><h2>'+esc(def[1])+'</h2><p>'+esc(def[2])+' · Costs and consequences are final. Declining grants no reward.</p>'+
@@ -3551,7 +3551,7 @@ function phase2ChoosePassive(id){
  const draft=phase1Draft,g=phase1Controller.state;
  if(!draft||draft.kind!=='reward'||draft.step!=='passive'||!g.rewardPending||state.run)return false;
  WandererV012Buildcraft.choose(phase1Build,draft.plane.family,id,draft.options);
- phase1Controller.claimReward();phase1Draft=null;
+ phase1Controller.claimReward();phase1Draft=null;if(phase1Controller.state.version===2)phase1Build.runtime.hybridWindow=false;
  phase3ClampVitals();phase5Persist();render();return true;
 }
 function phase1Choose(id){
@@ -3693,7 +3693,8 @@ function phase1DecorateCombat(){
   const region=document.querySelector('.combatReadout');
   if(region){const box=document.createElement('div');box.className='phase2PassiveBar';box.textContent='Temporary build: '+phase1Build.picks.map(id=>WandererV012Buildcraft.CATALOG.find(p=>p.id===id)?.name).filter(Boolean).join(' · ')+(phase1Build.element?' · Magic: '+phase1Build.element:'');region.prepend(box);}
  }
- if(arena&&typeof arena.insertAdjacentHTML==='function'){arena.insertAdjacentHTML('afterend','<div id="phase3CombatBag">'+phase3BagMarkup()+'</div>');phase3BindBag();}
+ if(arena&&typeof arena.insertAdjacentHTML==='function'){document.querySelector('.combatExpeditionDetails')?.insertAdjacentHTML('beforeend','<div id="phase3CombatBag">'+phase3BagMarkup()+'</div>');phase3BindBag();}
+ document.querySelector('.combatReadout')?.remove();
  const title=document.querySelector('.combatExpeditionDetails h2');
  if(title)title.textContent='Realm Rewards · Preview';
  const loot=document.querySelector('.combatExpeditionDetails .runLootHeading');
@@ -3732,7 +3733,7 @@ function phase3BindBag(){
  });
 }
 function phase3RenderBagInventory(){
- wallet();html('<section class="panel"><h2>Expedition Inventory</h2><p class="small muted">Your equipped gear stays with you. Only loot from this Expedition can be equipped.</p><div class="phase3BagInventory"><div class="equipmentLoadout">'+phase3PaperMarkup()+'</div><div>'+phase3BagMarkup()+statsWidget(phase2Stats())+'</div></div></section>');phase3BindBag();phase3BindPaper();
+ wallet();html('<section class="panel"><h2>Expedition Inventory</h2><p class="small muted">Your original equipment is protected. Only loot from this Expedition can be equipped.</p><div class="phase3BagInventory"><div class="equipmentLoadout">'+phase3PaperMarkup()+'</div><div>'+phase3BagMarkup()+statsWidget(phase2Stats())+'</div></div></section>');phase3BindBag();phase3BindPaper();
 }
 let phase3SelectedExpedition=null;
 function phase3PaperMarkup(){return `<div class="paper"><img class="model" src="${heroFullImage()}" alt="Wanderer full-body equipment portrait">${SLOTS.map(sl=>{const o=state.equip[sl],reserved=sl==='offhand'&&isTwoHanded(state.equip.weapon);return `<button class="slotTile ${o?'filled':''} ${reserved?'reserved':''} ${slotFilter===sl||(slotFilter==='rings'&&['ring1','ring2'].includes(sl))?'filterSelected':''} ${o?.id===selectedId?'active':''}" ${rarityFrame(o)} data-slot="${sl}" data-eqslot="${sl}" aria-pressed="${slotFilter===sl||(slotFilter==='rings'&&['ring1','ring2'].includes(sl))}" title="${esc(o?.name||SNAME[sl])}"><img src="${o?itemImg(o):placeholderIcon(sl)}" alt="${SNAME[sl]}"><span>${reserved?'2H occupied':SNAME[sl]}</span>${o?`<span class="slotDLevel">E${o.tier}</span>`:''}${affinityBadge(o)}${newBadge(o)}${legendaryRankBadge(o)}</button>`}).join('')}</div>`;}
@@ -3843,7 +3844,7 @@ function renderPhase1(){
  if(phase4ClaimOverflow())phase5Persist();
  if(state.pendingRuneReward&&!state.run)showPendingRuneReward();
  if(phase6Run?.event&&!phase4Resume){phase6RenderEvent();return;}
- if(phase5Results.review){phase5RenderResult();return;}
+ if(phase5Results.review){phase5RenderResult();if(phase1Controller.state.version===2&&phase1Draft?.kind==='reward')phase6PassivePopup();return;}
  if(phase4Resume){html('<section class="panel"><h2>Resume Realm</h2><p>This Realm restarts from its entry checkpoint with the same encounters and rolls. Partial rewards are not duplicated. Gear and choices remain locked until it is resolved.</p><button class="primary" id="phase4Resume">Resume Realm</button></section>');$('phase4Resume').onclick=phase4ResumeRealm;return;}
 
  const g=phase1Controller.state,stats=phase3Vitals();
@@ -3888,10 +3889,10 @@ function renderPhase1(){
  '<div class="phase1FamilyRow"><span>❤️ '+Math.ceil(stats.hp)+' / '+stats.maxhp+' HP</span><span>💧 '+Math.floor(stats.mp)+' / '+stats.maxmp+' Mana</span></div>'+
  '<div class="phase3PreparationLayout"><aside>'+phase3VitalsMarkup(stats)+phase3PassivesMarkup()+prep+'</aside><div class="equipmentLoadout phase3HeroColumn">'+phase3PaperMarkup()+phase3BagMarkup()+'</div><div class="phase3Routes">'+
  '<div class="phase3RouteHeading"><h3>Select the next Realm</h3></div>'+
- '<div class="phase1Offers">'+g.offers.map((p,index)=>'<article class="phase2RealmOffer"><button type="button" class="phase1Offer '+(g.selected===p?'phase2Selected':'')+'" aria-pressed="'+(g.selected===p)+'" data-phase1-plane="'+p.id+'"><img src="'+dungeonImage(p)+'" alt="'+esc(p.name)+' landscape"><div class="phase1OfferBody"><strong>'+esc(p.name)+'</strong><div class="phase1OfferMeta"><span>'+familyLabel(p.family)+'</span><span>'+p.waves+' Waves</span><span>'+(p.boss?'👑 Boss':p.elite?'⚔ Elite present':'No Elite')+'</span>'+(p.event?'<span>'+esc(p.event)+' event (preview)</span>':'')+'</div><span class="small muted">Risk: '+(p.boss?'Boss':p.elite?'Elite':'Normal')+' · '+p.waves+' possible loot rolls</span><span class="small muted">'+(g.selected===p?'Selected':'Select Realm')+'</span></div></button><button type="button" class="tiny ghost" data-phase2-reroll="'+index+'" '+((g.version===2?g.rerolls>0&&g.planeIndex<15:g.rerollsByRealm[g.planeIndex-1][index]>0)?'':'disabled')+'>↻ Reroll · '+g.rerollsByRealm[g.planeIndex-1][index]+' remaining</button></article>').join('')+'</div>'+
+  '<div class="phase1Offers">'+g.offers.map((p,index)=>'<article class="phase2RealmOffer"><button type="button" class="phase1Offer '+(g.selected===p?'phase2Selected':'')+'" aria-pressed="'+(g.selected===p)+'" data-phase1-plane="'+p.id+'"><img src="'+dungeonImage(p)+'" alt="'+esc(p.name)+' landscape"><div class="phase1OfferBody"><strong>'+phase2FamilyIcon(p.family)+' '+esc(p.name)+'</strong><div class="phase1OfferMeta"><span class="realmRisk '+(p.boss?'boss':p.event?'event':p.elite?'elite':'normal')+'">'+(p.boss?'Boss':p.event?'Event':p.elite?'Elite':'Normal')+'</span>'+(!p.event?'<span>'+p.waves+' Waves</span>':'')+'</div><span class="small muted">'+(g.selected===p?'Selected':'Select Realm')+'</span></div></button>'+(p.boss&&g.version===2?'':'<button type="button" class="tiny ghost" data-phase2-reroll="'+index+'" '+((g.version===2?g.rerolls>0:g.rerollsByRealm[g.planeIndex-1][index]>0)?'':'disabled')+'>↻ Reroll · '+(g.version===2?g.rerolls:g.rerollsByRealm[g.planeIndex-1][index])+' remaining</button>')+'</article>').join('')+'</div>'+
  '<button type="button" class="primary" id="phase2EnterRealm" '+(g.selected&&!phase3BagOverflow()?'':'disabled')+'>Enter Realm</button>'+
- '<p class="micro muted">More Waves mean more loot opportunities, not guaranteed items. Events are currently informational; no event reward is promised. Temporary buildcraft never changes permanent equipment.</p></div></div></section>');
- phase3BindPaper();phase3BindBag();if(phase6Run){$('screen').insertAdjacentHTML('beforeend',phase6PotionMarkup()+phase6EffectMarkup());phase6BindPotions();}
+ '<p class="micro muted">More Waves mean more opportunities and risk. Event costs are shown before choosing. Temporary effects end with the Expedition.</p></div></div></section>');
+ phase3BindPaper();phase3BindBag();if(phase6Run){$('screen').insertAdjacentHTML('beforeend','<section class="panel"><h3>Between Realms</h3>'+statsWidget(phase2Stats())+'<p>Static '+(phase1Build?.runtime.staticCharges||0)+'/4</p>'+phase6PotionMarkup()+phase6EffectMarkup()+'</section>');phase6BindPotions();}
  Q('[data-phase1-plane]').forEach(b=>b.onclick=()=>phase1Choose(b.dataset.phase1Plane));
  Q('[data-phase3-nav]').forEach(b=>b.onclick=()=>phase3Go(b.dataset.phase3Nav));
  Q('[data-phase3-potion]').forEach(b=>b.onclick=()=>phase3UsePotion(b.dataset.phase3Potion));
@@ -3969,8 +3970,14 @@ function phase5MakeSummary(outcome){
   kept:phase5Results.earned.filter(i=>owned.has(i.id)&&!lost),lost:phase5Results.earned.filter(i=>owned.has(i.id)&&lost),
   discarded:phase5Results.earned.filter(i=>!owned.has(i.id)),runeTier:null};
 }
+function phase6PassivePopup(){
+ if(document.querySelector('dialog[data-realm-passive]'))return;
+ const draft=phase1Draft,dialog=showModal('Choose one Realm passive','<div class="phase1DraftCards">'+draft.options.map(p=>'<button data-popup-passive="'+p.id+'">'+phase2PassiveIcons(p)+'<b>'+esc(p.name)+'</b><p>'+esc(p.description)+'</p></button>').join('')+'</div>');
+ if(!dialog)return;dialog.dataset.realmPassive='1';dialog.querySelector('[data-close]')?.remove();dialog.addEventListener('cancel',e=>e.preventDefault());
+ dialog.querySelectorAll('[data-popup-passive]').forEach(button=>button.onclick=()=>{dialog.close();phase2ChoosePassive(button.dataset.popupPassive);});
+}
 function phase5ExitResult(){
- if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked)||!phase5Results.review)return false;
+ if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked)||!phase5Results.review||phase1Controller.state.version===2&&phase1Draft?.kind==='reward')return false;
  phase5Results.review=phase5Results.review==='realm'&&phase5Results.summary?'summary':null;
  state.run=null;view='phase1';if(!phase5Persist())return false;render();return true;
 }
@@ -3984,7 +3991,7 @@ function phase5RenderResult(){
   (phase5Results.complete?'':'<p class="small muted">Older checkpoint: only activity recorded since this update is included.</p>')+'<p>Combat time: '+r.seconds.toFixed(1)+'s · +'+r.gold+' Gold · +'+r.fragments+' Fragments</p><p class="small muted">Damage totals and turn counts are unavailable. Combat time excludes Camp and offline time.</p>'+
   (isRealm?'<h3>Realm equipment '+(r.outcome==='defeat'?'lost':summary?.outcome==='victory'?'secured':'collected · still at risk')+'</h3><ul>'+items(r.loot||[])+'</ul>':('<h3>Temporary build'+(r.element?' · '+esc(r.element):'')+'</h3><p>'+esc(r.picks.map(id=>WandererV012Buildcraft.CATALOG.find(p=>p.id===id)?.name||id).join(' · '))+'</p><h3>Equipment kept</h3><ul>'+items(r.kept)+'</ul><h3>Equipment lost</h3><ul>'+items(r.lost)+'</ul><h3>Discarded</h3><ul>'+items(r.discarded)+'</ul>'+(r.runeTier?'<p>'+esc(r.runeName?'Rune obtained: '+r.runeName:'Boss Rune choice pending in Camp')+' · E'+r.runeTier+'</p>':'')+(r.outcome==='victory'?'<p>Highest Expedition Cleared: '+(phase5Snapshot?.expedition.completed||r.level)+'</p>':'<p>No next difficulty unlocked. Original equipment and earned currencies are safe.</p>')))+
   (realm?'<details class="phase5LastLog"><summary>Last Realm Combat Log</summary>'+(realm.truncated?'<p>Older entries omitted: log storage safety limit reached.</p>':'')+'<div class="log" style="max-height:45vh;overflow:auto">'+realm.log.map(l=>'<div class="logLine">'+esc(l.text)+'</div>').join('')+'</div></details>':'')+
-  '<button id="phase5ExitResult" class="primary">'+(isRealm?'EXIT REALM':'RETURN TO CAMP')+'</button></section>');
+  '<button id="phase5ExitResult" class="primary" '+(phase1Controller.state.version===2&&phase1Draft?.kind==='reward'?'disabled':'')+'>'+(isRealm?'EXIT REALM':'RETURN TO CAMP')+'</button></section>');
  $('phase5ExitResult').onclick=phase5ExitResult;
 }
 function phase5Leaderboard(){

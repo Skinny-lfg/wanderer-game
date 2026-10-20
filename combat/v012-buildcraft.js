@@ -61,15 +61,17 @@ function rank(b,id){const n=b?.picks?.filter(x=>x===id).length||0;return n&&b.ru
 function hasFamily(b,family){return Array.isArray(b?.families)&&b.families.includes(family);}
 function eligible(b,family){
  if(!FAMILIES.includes(family)||!hasFamily(b,family)||family==='magic'&&!b.element)return [];
- return P.filter(p=>p.family===family&&p.requires.every(f=>hasFamily(b,f))&&(!p.element||p.element===b.element)&&rank(b,p.id)<p.max);
+ const hybrids=b.picks.map(id=>BY_ID[id]).filter(p=>p?.requires.length),pairs=new Set(hybrids.map(p=>[...p.requires].sort().join(':')));
+ return P.filter(p=>p.family===family&&(!b.runtime.hybridRules||!p.requires.length||b.runtime.hybridWindow&&hybrids.length<3&&!pairs.has([...p.requires].sort().join(':')))&&p.requires.every(f=>hasFamily(b,f))&&(!p.element||p.element===b.element)&&rank(b,p.id)<p.max);
 }
 function options(b,family,rng=Math.random){
  const primary=eligible(b,family);
  const pool=primary.length>=3?primary:[...primary,...b.families.filter(f=>f!==family).flatMap(f=>eligible(b,f))];
  if(pool.length<3)throw Error('No three implemented passives available');
  const unowned=pool.filter(p=>!rank(b,p.id)),weighted=unowned.length>=3?unowned:pool;
- const chosen=[],specific=weighted.filter(p=>p.element===b.element&&p.element);
- if(family==='magic'&&specific.length)chosen.push(specific[Math.floor(rng()*specific.length)]);
+ const chosen=[],hybrids=b.runtime.hybridRules&&b.runtime.hybridWindow?b.families.flatMap(f=>eligible(b,f)).filter(p=>p.requires.length):[];if(hybrids.length)chosen.push(hybrids[Math.floor(rng()*hybrids.length)]);
+ const specific=weighted.filter(p=>p.element===b.element&&p.element);
+ if(family==='magic'&&specific.length&&chosen.length===0)chosen.push(specific[Math.floor(rng()*specific.length)]);
  const rest=weighted.filter(p=>!chosen.includes(p));
  while(chosen.length<3){let index=Math.floor(rng()*rest.length);chosen.push(rest.splice(index,1)[0]);}
  return chosen;
@@ -192,6 +194,7 @@ function canCast(b){return !!b&&!!b.element&&['kindling','deep_winter','overchar
 function validate(b){
  if(!b||!Array.isArray(b.families)||b.families.length>3||new Set(b.families).size!==b.families.length||!b.families.every(f=>FAMILIES.includes(f))||b.element!==null&&(!elements.includes(b.element)||!hasFamily(b,'magic'))||!Array.isArray(b.picks)||b.picks.length>16)throw Error('Invalid saved build');
  for(const id of b.picks){const p=BY_ID[id];if(!p||!hasFamily(b,p.family)||p.requires.some(f=>!hasFamily(b,f))||p.element&&p.element!==b.element||b.picks.filter(x=>x===id).length>p.max)throw Error('Invalid saved passive');}
+ if(b.runtime.hybridRules){const h=[...new Set(b.picks)].map(id=>BY_ID[id]).filter(p=>p?.requires.length);if(h.length>3||new Set(h.map(p=>[...p.requires].sort().join(':'))).size!==h.length)throw Error('Invalid hybrid combinations');}
  if(b.initialPassive!==null&&(b.initialPassive!==initialId(b.initialFamily,b.element)||!b.picks.includes(b.initialPassive)||!hasFamily(b,b.initialFamily)))throw Error('Invalid initial passive');
  if(!b.cooldowns||typeof b.cooldowns!=='object'||!Object.values(b.cooldowns).every(n=>typeof n==='number'&&Number.isFinite(n)&&n>=0)||!b.runtime||typeof b.runtime!=='object'||!['frenzyUntil','magicHits','lastSpellAt'].every(k=>typeof b.runtime[k]==='number'&&Number.isFinite(b.runtime[k]))||typeof b.runtime.lastStand!=='boolean')throw Error('Invalid saved cooldowns');
  if(b.runtime.staticCharges===undefined)b.runtime.staticCharges=0;
