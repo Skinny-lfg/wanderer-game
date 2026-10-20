@@ -66,3 +66,21 @@ test('native Sword, Daggers and Staff attacks still damage enemies; old Poison g
   if(weapon==='Staff')assert.equal(r.mp,mana-13);
  }
 });
+
+test('between-Realm swaps return displaced gear to the Bag; death destroys only Bag items',()=>{
+ const a=create(81);a.setup(3,'Sword');const home=a.state().equip.weapon;
+ a.start();a.initial('blood');a.select(a.controller().state.offers.find(p=>p.family==='blood').id);a.enter();
+ let waves=a.state().run.planeWaves;
+ for(let i=0;i<waves;i++){a.state().run.enemy.hp=0;a.win();a.flush();}
+ assert.equal(a.draft().kind,'reward');assert.equal(a.passive(a.draft().options[0].id),true);assert.equal(a.exitResult(),true);
+ const found=a.makeItem(3,'weapon',null,'loot','Mace','Rare');
+ a.bag.mark(found);assert.equal(a.equip(found.id),true);
+ assert.equal(a.state().equip.weapon.id,found.id);
+ assert(a.bag.items().some(item=>item.id===home.id),'previous weapon returned to risk Bag');
+ assert(!a.bag.items().some(item=>item.id===found.id),'equipped find leaves the Bag');
+ a.select(a.controller().state.offers[0].id);a.enter();if(a.draft()?.step==='element')a.element('fire');
+ a.death();
+ assert.equal(a.state().equip.weapon.id,found.id,'equipped expedition gear survives death');
+ assert(!a.state().stash.some(item=>item.id===home.id),'displaced original weapon is lost from Bag');
+ assert(!a.bag.items().some(item=>item.id===home.id),'risk Bag is emptied on defeat');
+});
