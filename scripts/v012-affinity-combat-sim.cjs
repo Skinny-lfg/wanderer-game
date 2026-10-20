@@ -13,7 +13,7 @@ function run(config){
  }
  if(config.offhandType){
   if(['Bow','Staff','Two-Handed'].includes(weapon))throw Error('Two-handed weapon cannot carry offhand');
-  const type=config.offhandType==='Daggers'?'Off-Hand Dagger':config.offhandType;
+  const type=config.offhandType;
   s.equip.offhand=a.makeItem(E,'offhand',null,'loot',type,rarity);
  }
  if(runes){s.runes=['vitality','warding',['Staff','Wand'].includes(weapon)?'wisdom':'might'].map(f=>a.makeRune(f,E));s.runeSlots=s.runes.map(r=>r.id);}
