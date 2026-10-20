@@ -32,7 +32,7 @@ function run(E,ratio,family,seed,weapon,fortune=false,variant='current'){
   throw Error('Unresolved simulation state '+g.stage);
  }
  const summary=a.results().summary,metrics=summary?.metrics||a.events.run()?.metrics||{},seconds=+(ticks*.11).toFixed(2);
- if(!timeout&&!['failed','finished'].includes(g.stage))throw Error('Simulation did not reach an outcome');
+ if(!timeout&&!['failed','finished'].includes(g.stage))throw Error('Simulation did not reach an outcome: '+JSON.stringify({E,ratio,family,seed,weapon,stage:g.stage,realm:g.planeIndex,status:s.run?.status,draft:a.draft()?.step,review:a.results()?.review,event:!!a.events.run()?.event,history:g.history.length}));
  return {passiveTelemetry:summary?.passiveTelemetry||a.build()?.runtime.passiveTelemetry||{},variant,E,ratio,family,seed,weapon,armor,rarity:seed%3===0?'Epic':'Rare',legendary:seed%4===0,fortune,won:g.stage==='finished',realms:g.history.length,lastWave,lateWaves,events,seconds,timeout,goldNet:s.gold-initialGold,goldPotionCost:potionCost,fragments:s.fragments-initialFragments,gearFound:a.results().earned.length,gearKept:summary?.kept.length||0,runeOffered:!!s.pendingRuneReward,damageDealt:Math.round(metrics.damageDealt||0),damageTaken:Math.round(metrics.damageTaken||0),dps:seconds?+((metrics.damageDealt||0)/seconds).toFixed(2):0,fundedCasts:metrics.fundedCasts||0,manaSpent:metrics.manaSpent||0,staticDischarges:metrics.procs?.['⚡ Static Discharge']||0,procs:metrics.procs||{},picks};
 }
 const weapons=['Sword','Mace','Bow','Daggers','Two-Handed','Staff','Wand'];let seed=0;
