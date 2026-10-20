@@ -20,7 +20,7 @@ const variants=[
 const ids=[...new Set(variants.flatMap(v=>Object.values(v.legendary)))];
 const expected=['crimson-fang','chalice-hollow-king','gravewake','eye-of-morrow','verdant-oath','heartroot-carapace','oathwall','veil-thousand-seals','kingsbreaker','tempest-talon','astrafall','voidglass'];
 if(ids.length!==12||expected.some(id=>!ids.includes(id)))throw Error('Not all twelve proposed legendary effects covered');
-const levels=[10,50,100,200],rarities=['Rare','Epic'];
+const levels=process.env.WANDERER_LEGEND_LEVELS?process.env.WANDERER_LEGEND_LEVELS.split(',').map(Number).filter(n=>[10,50,100,200].includes(n)):[10,50,100,200],rarities=['Rare','Epic'];
 const reps=Math.max(1,Math.min(18,Number(process.env.WANDERER_LEGEND_REPS||8)));
 const soloReps=Math.max(1,Math.min(12,Number(process.env.WANDERER_LEGEND_SOLO_REPS||4)));
 const seedOffset=Number(process.env.WANDERER_LEGEND_SEED_OFFSET||0);
