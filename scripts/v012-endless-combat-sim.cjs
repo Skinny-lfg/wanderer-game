@@ -53,6 +53,8 @@ function run(E,model,seed,variant,rarity){
    a.flush();
   }else if(r?.status==='ready'){a.flush();}
   else if(g.stage==='choice'&&!r){
+   // Discard only at Between Realms, where the real UI permits bag decisions.
+   while(a.bag.overflow()>0){const last=a.bag.items().at(-1);if(!last||!a.bag.discard(last.id))throw Error('Could not resolve bag overflow at Between Realms');}
    // This is a playstyle hypothesis, not an optimal solver. No free rerolls.
    const offer=[...g.offers].sort((x,y)=>{
     const ix=p.families.indexOf(x.family),iy=p.families.indexOf(y.family);
@@ -62,7 +64,6 @@ function run(E,model,seed,variant,rarity){
    a.select(offer.id);a.enter();
   }else if(g.stage==='combat'&&!r){a.flush();}
   else {error='Unresolved state '+g.stage+' / '+(r?.status||'none');break;}
-  while(a.bag.overflow()>0){const last=a.bag.items().at(-1);if(!last||!a.bag.discard(last.id))throw Error('Could not resolve bag overflow');}
  }
  return {E,model,seed,variant,rarity,weapon,family,enemyEquivalent:+enemy.toFixed(1),gearEquivalent:gearTier,
   won:g.stage==='finished',plane:g.history.length,boss,waves,events,picks,seconds:+(ticks*.11).toFixed(1),timeout,error};
