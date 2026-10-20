@@ -72,7 +72,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
  };
  `;
  const main=source.match(/<script>([\s\S]*?)<\/script>/)?.[1];
- const files=['economy/v0101.js','combat/legendary.js','combat/v012-combat-core.js','combat/v012-gear-stats.js','economy/v012-loot-rules.js','combat/v012-buildcraft.js','online/v012-expedition-controller.js','online/v012-expedition-events.js','online/v012-consumables.js'];
+ const files=['economy/v0101.js','combat/legendary.js','combat/v012-combat-core.js','combat/v012-gear-stats.js','combat/v012-runes.js','economy/v012-loot-rules.js','combat/v012-buildcraft.js','online/v012-expedition-controller.js','online/v012-expedition-events.js','online/v012-consumables.js'];
  vm.runInNewContext(files.map(f=>moduleOverrides[f]??fs.readFileSync(path.join(root,f),'utf8')).join('\n')+'\n'+main.replace(boot,inject),sandbox,{timeout:20000});
  sandbox.audit.flush=()=>{for(let i=0;callbacks.length;i++){if(i>10000)throw Error('Callback loop');callbacks.shift()();}};
  sandbox.audit.catalog=sandbox.WandererV012Buildcraft.CATALOG;

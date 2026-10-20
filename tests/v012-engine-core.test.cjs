@@ -1,7 +1,7 @@
 // Pure v0.12 engine modules. No browser, Firebase or save state.
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const root=path.resolve(__dirname,'..'),sandbox={};
-for(const file of ['combat/v012-combat-core.js','combat/v012-gear-stats.js','economy/v012-loot-rules.js'])
+for(const file of ['combat/v012-combat-core.js','combat/v012-gear-stats.js','combat/v012-runes.js','economy/v012-loot-rules.js'])
  vm.runInNewContext(fs.readFileSync(path.join(root,file),'utf8'),sandbox,{filename:file});
 const C=sandbox.WandererV012CombatCore,G=sandbox.WandererV012GearStats,L=sandbox.WandererV012LootRules;
 test('combat rules use the original formulas and do not mutate player or enemy',()=>{
@@ -50,4 +50,27 @@ test('character stats use one source, retain two-hand restrictions and Rune bonu
  assert.equal(s.off,null);
  assert.equal(s.caster,false);
  assert(s.power>0);
+});
+
+test('Rune values, Expedition tiers, pending choices and recycling use the canonical module',()=>{
+ const R=sandbox.WandererV012Runes;
+ assert.equal(R.FAMILIES.length,8);
+ assert.equal(R.runeValue('fury',1),3.3);
+ assert.equal(R.runeValue('warding',10),4);
+ assert.equal(R.runeValue('vitality',20),30);
+ const e1=R.makeRune('might',1,()=>'e1');
+ assert.equal(e1.progression,'expedition');
+ assert.equal(R.validRune(e1,200,true),true);
+ assert.equal(R.validRune(e1,200,false),false);
+ const legacy=R.makeRune('might',10,()=>'legacy',false);
+ assert.equal(R.validRune(legacy,200,true),true);
+ assert.equal(R.runeSalvageValue(e1,200,true),5);
+ assert.equal(R.runeSalvageValue(legacy,200,false),7);
+ assert.equal(R.runeSalvageValue(e1,200,false),0);
+ const b=R.makeRune('fortune',1,()=>'b'),c=R.makeRune('wisdom',1,()=>'c');
+ const pending=R.safePendingRune({tier:1,options:[e1,b,c]});
+ assert.equal(pending.options.length,3);
+ assert.equal(R.safePendingRune({tier:1,options:[e1,e1,c]}),null);
+ assert.equal(R.safeRunes([e1,e1,b]).length,2);
+ assert.equal(R.safeRunes([e1,b],200,false).length,0);
 });
