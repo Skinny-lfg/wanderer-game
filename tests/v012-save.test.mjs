@@ -15,6 +15,23 @@ test('versioned migration preserves gear, Legendary ranks, materials, currencies
  assert.equal(save.expedition.completed,0);assert.equal(save.expedition.unlocked,1);assert.equal(save.legacyHistory.maxDungeon,200);
  const again=S.migrateLegacy(save,{binding:'alice'});assert.equal(again.migrated,false);assert.equal(again.archive,null);assert.deepEqual(again.save,save);
 });
+test('existing v0.12 Off-Hand Daggers normalize on a clone without changing IDs, rolls or stored save',()=>{
+ const old=legacy();old.stash.push({id:'off-dagger',name:'Parrying Dagger',slot:'offhand',subtype:'Off-Hand Dagger',tier:20,rarity:'Rare',atk:14,agi:3});
+ old.equip.offhand={id:'equip-dagger',name:'Crescent of the Emberveil',slot:'offhand',subtype:'Off-Hand Dagger',tier:28,rarity:'Legendary',atk:16,legendaryId:'crescent-of-the-emberveil'};
+ const created=S.create(old);
+ const stored=structuredClone(created);
+ stored.profile.stash.find(x=>x.id==='off-dagger').subtype='Off-Hand Dagger';
+ stored.profile.equip.offhand.subtype='Off-Hand Dagger';
+ const raw=JSON.stringify(stored),restored=S.validate(raw);
+ assert.equal(JSON.stringify(stored),raw,'save object remains unchanged');
+ assert.equal(restored.profile.stash.find(x=>x.id==='off-dagger').subtype,'Daggers');
+ assert.equal(restored.profile.stash.find(x=>x.id==='off-dagger').atk,14);
+ assert.equal(restored.profile.equip.offhand.subtype,'Daggers');
+ assert.equal(restored.profile.equip.offhand.legendaryId,'crescent-of-the-emberveil');
+ const io=memory();io.data.set(S.key('local'),raw);
+ const shop=S.createStore(io);assert.equal(shop.load().profile.equip.offhand.subtype,'Daggers');
+ assert.equal(io.getItem(shop.key),raw,'normalizing read must not write saved profile');
+});
 test('old cloud envelope is copied at an expected revision; foreign bindings and unknown versions fail closed',()=>{
  const envelope={payload:JSON.stringify(legacy()),revision:7,schemaVersion:1};
  const m=S.migrateLegacy(envelope,{binding:'alice',expectedRevision:7});assert.equal(m.save.migration.sourceRevision,7);assert.equal(m.save.migration.requiresApproval,true);
