@@ -106,7 +106,9 @@ function normalizedLegacy(input){
   item.subtype=item.subtype??({weapon:'Sword',offhand:'Shield',ring1:'Ring',ring2:'Ring',helm:'Helm',armor:'Armor',gloves:'Gloves',boots:'Boots',belt:'Belt',amulet:'Amulet'})[item.slot];
   for(const f of STATS)if(item[f]!==undefined&&typeof item[f]==='string'&&item[f].trim()&&Number.isFinite(Number(item[f])))item[f]=Number(item[f]);
  }
- if(p.equip.ring){requireValue(!p.equip.ring1,'ambiguous legacy rings');p.equip.ring1=p.equip.ring;delete p.equip.ring;}
+ // Preserve existing item IDs, rolls, slot and ownership while unifying daggers.
+  for(const item of [...items,...(p.merchant?.stock||[])])if(item?.subtype==='Off-Hand Dagger')item.subtype='Daggers';
+  if(p.equip.ring){requireValue(!p.equip.ring1,'ambiguous legacy rings');p.equip.ring1=p.equip.ring;delete p.equip.ring;}
  return profileCheck(p);
 }
 function presentationCheck(p){

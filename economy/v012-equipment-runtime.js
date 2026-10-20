@@ -50,7 +50,7 @@ function markAllAsSeen(){
 }
 
 function comparisonEquip(item,target=item.slot){
- const equipment={...ports.state.equip,[target]:item};
+ const equipment={...ports.state.equip,[target]:{...item,slot:target}};
  if(ports.isTwoHanded(item))equipment.offhand=null;
  if(target==='offhand'&&ports.isTwoHanded(ports.state.equip.weapon))return {...ports.state.equip};
  return equipment;
@@ -70,7 +70,7 @@ function makeSlots(){return Object.fromEntries(ports.SLOTS.map(s=>[s,null]))}
 
 function starter(){return {id:ports.makeId(),slot:'weapon',subtype:'Sword',name:'Old Sword',tier:1,rarity:'Common',effect:null,atk:5,str:1,obtainedAt:Date.now(),crafted:false,recoveryStarter:true}}
 
-function legendaryMatches(entry,item){return !!entry&&entry.subtype===item.subtype&&(entry.slot===item.slot||(entry.slot==='ring'&&['ring1','ring2'].includes(item.slot)));}
+function legendaryMatches(entry,item){return !!entry&&entry.subtype===item.subtype&&(entry.slot===item.slot||(entry.slot==='ring'&&['ring1','ring2'].includes(item.slot))||(entry.subtype==='Daggers'&&['weapon','offhand'].includes(entry.slot)&&['weapon','offhand'].includes(item.slot)));}
 
 function legendaryFor(item){const eligible=ports.LEGENDARY_CATALOG.filter(entry=>ports.legendaryMatches(entry,item));return eligible.length?ports.sample(eligible):null;}
 
@@ -96,7 +96,6 @@ else if(subtype==='Mace'){o.atk=power+6;o.str=2+Math.floor(tier*.23);o.spd=-1}
 else if(subtype==='Bow'){o.atk=Math.round(power*1.4)+5;o.agi=2+Math.floor(tier*.21);o.spd=1}
 else if(subtype==='Daggers'){o.atk=power+1;o.agi=3+Math.floor(tier*.23);o.spd=2}
 else if(subtype==='Two-Handed'){o.atk=Math.round(power*2.1)+7;o.str=3+Math.floor(tier*.29);o.spd=-2}
-else if(subtype==='Off-Hand Dagger'){o.atk=Math.round(power*.50);o.agi=2+Math.floor(tier*.15);o.spd=1}
 else if(subtype==='Staff'){o.atk=1;o.int=4+Math.floor(tier*.34);o.spell=Math.round(power*1.8)+8;o.mana=Math.round(power*2.4)}
 else if(subtype==='Wand'){o.atk=1;o.int=2+Math.floor(tier*.22);o.spell=power+2;o.mana=power}
 else if(subtype==='Shield'){o.def=power+2;o.hp=power*3;o.end=2+Math.floor(tier*.22)}
@@ -158,8 +157,8 @@ function equipItem(itemId,target=null){
  if(active&&(!ports.phase3CanPrepare()||!ports.phase3BagItems().some(o=>o.id===itemId)))return false;
  const source=active&&ports.state.expeditionOverflow.some(o=>o.id===itemId)?ports.state.expeditionOverflow:ports.state.stash;
  const i=source.findIndex(o=>o.id===itemId);if(i<0)return false;
- const item=source[i],ring=['ring1','ring2'].includes(item.slot),slot=target||item.slot;
- if(!ports.SLOTS.includes(slot)||ring&&!['ring1','ring2'].includes(slot)||!ring&&target&&target!==item.slot)return false;
+ const item=source[i],ring=['ring1','ring2'].includes(item.slot),dagger=['Daggers','Off-Hand Dagger'].includes(item.subtype),slot=target||item.slot;
+ if(!ports.SLOTS.includes(slot)||ring&&!['ring1','ring2'].includes(slot)||!ring&&target&&target!==item.slot&&!(dagger&&['weapon','offhand'].includes(target)))return false;
  if(ports.isTwoHanded(item)&&slot!=='weapon')return false;
  if(slot==='offhand'&&ports.isTwoHanded(ports.state.equip.weapon)){ports.bannerMessage('Off-Hand locked by two-handed weapon.');return false;}
  const displaced=[ports.state.equip[slot],...(ports.isTwoHanded(item)&&slot==='weapon'?[ports.state.equip.offhand]:[])].filter(Boolean);
@@ -167,7 +166,8 @@ function equipItem(itemId,target=null){
  if(!active&&ports.state.stash.length-(source===ports.state.stash?1:0)+displaced.length>ports.stashCapacity()){ports.bannerMessage('Stash full.');return false;}
  source.splice(i,1);
  if(ports.isTwoHanded(item)&&slot==='weapon')ports.state.equip.offhand=null;
- if(ring)item.slot=slot;
+ if(ring||dagger)item.slot=slot;
+ if(dagger&&item.subtype==='Off-Hand Dagger')item.subtype='Daggers';
  ports.state.equip[slot]=item;
  for(const old of displaced){
   if(active)ports.phase3LootIds.add(old.id);

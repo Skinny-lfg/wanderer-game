@@ -89,7 +89,7 @@ const DEFINITIONS={
   "affinity": "bleed",
   "name": "Crimson Crescent",
   "cooldown": 9,
-  "description": "Damaging off-hand strike extends one Bleed stack by one tick, max 6 remaining ticks. 9s cooldown."
+  "description": "A damaging main attack extends one Bleed stack by one tick while equipped in either hand, max 6 ticks. 9s cooldown."
  },
  "orb-of-the-solar-heart": {
   "affinity": "tide",

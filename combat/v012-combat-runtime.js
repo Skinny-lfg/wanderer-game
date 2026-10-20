@@ -363,18 +363,13 @@ function weaponAttack(r){
  }else{
   const chance=Math.min(1,ports.affinityProcChance(kind)+(focus?.15:0));
   if(damage>0&&weapon?.effect&&ports.gameRandom()<chance)ports.applyAffinity(weapon.effect,e,s,kind==='Two-Handed'?1.7:kind==='Daggers'?.7:1,damage);
-  if(off?.subtype==='Off-Hand Dagger'){
-   let extra=Math.max(1,Math.round(s.attack*.13+(off.atk||0)*.45-e.def*.16));
-   if(r.playerDebuffUntil>now)extra=Math.max(1,Math.round(extra*.8));
-   if(e.barrier>0){const shield=Math.min(e.barrier,extra);e.barrier-=shield;extra-=shield;}
-   ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),extra));e.hp-=extra;ports.addLog('🗡 Off-Hand Dagger strikes for '+extra+' damage','good');ports.animateStrike('Daggers');ports.floatText(extra,'enemy');
-   ports.legendaryOffhand(r,extra);
-   if(extra>0&&off.effect&&ports.gameRandom()<.34)ports.applyAffinity(off.effect,e,s,.65,extra);
-  }else if(damage>0&&ports.isMagicOffhand(off)&&off.magic&&ports.gameRandom()<.45){
+  if(damage>0&&ports.isMagicOffhand(off)&&off.magic&&ports.gameRandom()<.45){
    ports.applyAffinity(off.magic,e,s,.85,damage);
    ports.addLog((ports.ELEMENTS[off.magic]?.icon||'✨')+' Off-Hand imbues attack (0 mana)','spell');
   }
  }
+ // Crescent keeps its cooldown-limited Bleed extension without independent off-hand hits.
+ ports.legendaryOffhand(r,damage);
  if(ports.WANDERER_DOUBLE_STRIKE_ENABLED&&kind==='Daggers'&&damage>0&&e.hp>0&&ports.gameRandom()<.25){
   // One ordinary pre-critical main-hand hit, with no further rolls or recursive triggers.
   ports.setDirectEnemyDamage(r,Math.max(1,Math.round(base*.55)),'🗡 Double Strike!');

@@ -67,6 +67,29 @@ test('native Sword, Daggers and Staff attacks still damage enemies; old Poison g
  }
 });
 
+test('daggers equip in either hand with 50% offhand offense and retain 2H lock',()=>{
+ const a=create(27),s=a.state();
+ assert(a.types.includes('Daggers'));assert(!a.offhandTypes.includes('Off-Hand Dagger'));
+ assert(!a.gear.dungeonEquipmentOdds({}).some(x=>x.subtype==='Off-Hand Dagger'));
+ const item=a.makeItem(20,'weapon',null,'loot','Daggers','Rare');
+ const main=a.baseStats({weapon:item}),off=a.baseStats({offhand:item});
+ assert.equal(off.agi-5,(main.agi-5)/2);
+ assert.equal(off.atkFlat,main.atkFlat/2);assert.equal(off.spdFlat,main.spdFlat/2);
+ s.stash.push(item);assert.equal(a.equip(item.id,'offhand'),true);
+ assert.equal(s.equip.offhand.slot,'offhand');assert.equal(a.unequip('offhand'),true);
+ assert.equal(a.equip(item.id,'weapon'),true);assert.equal(s.equip.weapon.slot,'weapon');
+ assert.equal(a.unequip('weapon'),true);
+ s.equip.weapon=a.makeItem(20,'weapon',null,'loot','Bow','Rare');
+ assert.equal(a.equip(item.id,'offhand'),false);assert(s.stash.some(x=>x.id===item.id));
+});
+test('off-hand daggers never grant an independent strike or Double Strike',()=>{
+ const a=create(31);a.setup(5,'Sword');const s=a.state();
+ const item=a.makeItem(5,'weapon',null,'loot','Daggers','Rare');
+ s.stash.push(item);assert.equal(a.equip(item.id,'offhand'),true);
+ enter(a);const r=s.run;r.enemy.hp=r.enemy.maxhp=100000;r.enemy.barrier=0;
+ const feedback=a.feedback();a.rng(0);a.gear.weaponAttack(r);
+ assert(!feedback.logs.some(x=>/Off-Hand Dagger strikes|Double Strike/.test(x.text)));
+});
 test('between-Realm swaps return displaced gear to the Bag; death destroys only Bag items',()=>{
  const a=create(81);a.setup(3,'Sword');const home=a.state().equip.weapon;
  a.start();a.initial('blood');a.select(a.controller().state.offers.find(p=>p.family==='blood').id);a.enter();

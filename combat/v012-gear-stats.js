@@ -13,9 +13,12 @@ function itemStatValue(item,key,context){return key==='evasionRating'?gearEvasio
 function totalStats(equipment,ownedRunes,equippedRuneIds,{isTwoHanded,FIELDS,itemStatValue,RUNE_FAMILIES,runeValue,setCounts,setBonuses,state,PHASE1_PREVIEW,phase6Run}){
  const equipped=isTwoHanded(equipment.weapon)?{...equipment,offhand:null}:equipment;
  const s={str:5,agi:5,int:5,end:5,cha:5,atkFlat:0,defFlat:0,hpFlat:0,spdFlat:0,manaFlat:0,spellFlat:0,evasionRating:0};
- for(const item of Object.values(equipped))if(item)for(const [,key]of FIELDS){
+ for(const [slot,item] of Object.entries(equipped))if(item)for(const [,key]of FIELDS){
  const dest={atk:'atkFlat',def:'defFlat',hp:'hpFlat',spd:'spdFlat',mana:'manaFlat',spell:'spellFlat'}[key]||key;
- s[dest]+=itemStatValue(item,key);
+ // Off-Hand dagger: 50% offensive stats, without an independent hit or proc.
+ const offDagger=slot==='offhand'&&['Daggers','Off-Hand Dagger'].includes(item.subtype);
+ const factor=offDagger&&['atk','str','agi','int','cha','spd','spell'].includes(key)?.5:1;
+ s[dest]+=itemStatValue(item,key)*factor;
  }
  s.evasionRating=Math.min(Number.MAX_SAFE_INTEGER,s.evasionRating);
  const runeItems=ownedRunes===null?(typeof state==='undefined'?[]:state.runes||[]):ownedRunes;
