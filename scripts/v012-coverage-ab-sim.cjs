@@ -2,7 +2,7 @@
 // Both arms use the same gear, rune configuration, initial seed, weapon, family and rarity.
 const fs=require('node:fs'),{performance}=require('node:perf_hooks');
 const {run}=require('./v012-affinity-combat-sim.cjs');
-const levels=[10,50,100,200];
+const levels=process.env.WANDERER_COVERAGE_LEVELS?process.env.WANDERER_COVERAGE_LEVELS.split(',').map(Number).filter(n=>[1,10,50,100,200].includes(n)):[10,50,100,200];
 const plans=[
  {name:'Blood + Decay',family:'blood',hybrids:['plague_rupture','carrion_detonation'],utility:'Vitality'},
  {name:'Vitality + Aegis',family:'vitality',hybrids:['sanctuary','guardians_oath'],utility:'Fury'},
@@ -10,13 +10,14 @@ const plans=[
 ];
 const weapons=['Sword','Mace','Bow','Daggers','Two-Handed','Staff','Wand'];
 const rarities=['Rare','Epic'];
-const repeat=Math.max(1,Math.min(8,Number(process.env.WANDERER_COVERAGE_REPETITIONS||3)));
+const repeat=Math.max(1,Math.min(20,Number(process.env.WANDERER_COVERAGE_REPETITIONS||3)));
+const seedOffset=Number(process.env.WANDERER_COVERAGE_SEED_OFFSET||0);
 const limit=Number(process.env.WANDERER_COVERAGE_LIMIT||0);
 const rows=[],problems=[],started=performance.now();
 const round=(n,d=2)=>+n.toFixed(d),sum=(items,fn)=>items.reduce((s,x)=>s+(fn(x)||0),0),avg=(items,fn)=>items.length?round(sum(items,fn)/items.length):null;
 outer:for(const E of levels)for(const plan of plans)for(const weapon of weapons)for(const rarity of rarities)for(let rep=0;rep<repeat;rep++){
  // Same seeds for matched arms, with randomized world that does not depend on policy.
- const seed=(20261020+E*701+weapons.indexOf(weapon)*43+rarities.indexOf(rarity)*911+rep*100003)>>>0;
+ const seed=(20261020+seedOffset+E*701+weapons.indexOf(weapon)*43+rarities.indexOf(rarity)*911+rep*100003)>>>0;
  for(const coverage of ['baseline','utility']){
   try{
    const r=run({E,weapon,rarity,family:plan.family,strategy:'dual',runes:true,seed,coverage});
@@ -55,7 +56,7 @@ for(const E of levels)for(const plan of plans){
  }
  summary.push({E,plan:plan.name,utility:plan.utility,baseline:aggregate(b,plan),coverage:aggregate(u,plan),paired:{winGained:gained,winLost:lost,winSame:same,realmImproved:improvedRealm,realmWorse:lostRealm}});
 }
-const data={experiment:'existing-affinity-utility-only',notes:'No production balance modifications. Baseline dual-family priority vs same priority plus up to 2 selected utility passives after a permitted third-family route. Actual Realm offers/RNG and triggers apply. Full Rare/Epic same-tier gear and 3 runes. No potion use, event rewards, gear farming or mid-run equipment swaps. 15 Realms.',levels,plans:plans.map(x=>x.name),weapons,rarities,repetitions:repeat,cases:rows.length,problems:problems.length,wallSeconds:round((performance.now()-started)/1000),summary,problemSamples:problems.slice(0,10)};
+const data={experiment:'existing-affinity-utility-only',notes:'No production balance modifications. Baseline dual-family priority vs same priority plus up to 2 selected utility passives after a permitted third-family route. Actual Realm offers/RNG and triggers apply. Full Rare/Epic same-tier gear and 3 runes. No potion use, event rewards, gear farming or mid-run equipment swaps. 15 Realms.',levels,plans:plans.map(x=>x.name),weapons,rarities,repetitions:repeat,seedOffset,cases:rows.length,problems:problems.length,wallSeconds:round((performance.now()-started)/1000),summary,problemSamples:problems.slice(0,10)};
 const dest=process.argv[2]||'/tmp/wanderer-v012-coverage-ab.json';
 fs.writeFileSync(dest,JSON.stringify({data,rows})+'\n');
 console.log('COVERAGE_AB_SUMMARY_BEGIN');
