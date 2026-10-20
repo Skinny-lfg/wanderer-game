@@ -55,7 +55,7 @@ jobs:
         run: npm run test:browser
       - name: Current equipment VFX/asset tests
         run: npm run test:assets
-      - name: Native v0.12 combat/loot simulations
-        run: npm run simulate:v012
       - name: Focused E10/E50 and three affinity-pair native simulations
         run: node scripts/v012-focused-build-sim.cjs /tmp/wanderer-v012-focused-builds.json
+      - name: Native v0.12 combat/loot simulations
+        run: npm run simulate:v012
