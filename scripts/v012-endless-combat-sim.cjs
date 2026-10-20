@@ -12,12 +12,14 @@ const strategies={
 const arms=['Sword','Mace','Bow','Daggers','Two-Handed','Staff','Wand'];
 const initial=['blood','decay','vitality','aegis','fury','magic'];
 const levels=[200,250,300,500,1000];
-const models=['cap-200','linear-both','soft-both','linear-enemy-soft-gear'];
+const models=['cap-200','linear-both','soft-both','soft-enemy-125','soft-enemy-150','linear-enemy-soft-gear'];
 function curve(E,mode){const d=Math.max(0,E-200);return mode==='soft'?200+110*Math.log1p(d/110):E;}
 function pair(E,model){
  if(model==='cap-200')return {enemy:E,gear:200};
  if(model==='linear-both')return {enemy:E,gear:E};
  if(model==='soft-both')return {enemy:curve(E,'soft'),gear:curve(E,'soft')};
+ if(model==='soft-enemy-125')return {enemy:200+1.25*(curve(E,'soft')-200),gear:curve(E,'soft')};
+ if(model==='soft-enemy-150')return {enemy:200+1.50*(curve(E,'soft')-200),gear:curve(E,'soft')};
  return {enemy:E,gear:curve(E,'soft')};
 }
 function run(E,model,seed,variant,rarity){
