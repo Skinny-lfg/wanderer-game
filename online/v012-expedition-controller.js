@@ -45,9 +45,7 @@ function create(themes,rng=Math.random){
   if(choices.length!==3)throw Error('Cannot construct three eligible Realm offers');
   game.offers=choices.map(makeOffer);return game.offers;
  }
- let legacy=null;
- function start(level=1){
-  legacy=null;
+  function start(level=1){
   if(!Number.isInteger(level)||level<1||level>game.unlocked||level>200)throw Error('Expedition locked');
   if(!['camp','finished','failed'].includes(game.stage))throw Error('Expedition already active');
   const count=3+Math.floor(rng()*2),events=shuffle(EVENT_GROUPS,rng).slice(0,count).map(group=>group[Math.floor(rng()*group.length)]);
@@ -116,7 +114,7 @@ function create(themes,rng=Math.random){
   game.stage='failed';game.selected=null;game.offers=[];game.wave=0;game.families=[];game.lastFamily=null;game.rewardPending=null;
  }
  function restore(input){
-  if(input?.version!==2){if(!root.WandererV012ExpeditionLegacy)throw Error('Legacy checkpoint reader unavailable');legacy=root.WandererV012ExpeditionLegacy.create(themes,rng);const restored=legacy.restore(input);Object.assign(game,restored);return game;}
+  if(input?.version!==2)throw Error('Unsupported historical Expedition checkpoint (requires calendar version 2)');
   const g=JSON.parse(JSON.stringify(input));
   const integer=(v,min,max)=>Number.isInteger(v)&&v>=min&&v<=max;
   if(!g||!integer(g.unlocked,1,200)||!integer(g.expedition,1,g.unlocked)||!integer(g.planeIndex,1,15)||!['choice','combat','finished','failed'].includes(g.stage)||!Array.isArray(g.rooms)||g.rooms.length!==15||g.rooms[0]!=='combat'||g.rooms[14]!=='boss'||g.rooms.slice(0,14).some(k=>!(g.version===2?['combat','elite','event']:ROOMS).includes(k)))throw Error('Invalid Realm checkpoint');
@@ -151,8 +149,8 @@ function create(themes,rng=Math.random){
   Object.assign(game,g);return game;
  }
  function influence(family){if(!allowed().includes(family))throw Error('Affinity influence unavailable');game.pathInfluence=family;}
- function forward(name,fn){return (...args)=>{if(!legacy)return fn(...args);Object.assign(legacy.state,game);const result=legacy[name](...args);Object.assign(game,legacy.state);return result;};}
- return Object.freeze({influence,state:game,start,restore,chooseInitial:forward('chooseInitial',chooseInitial),select:forward('select',select),enter:forward('enter',enter),claimReward:forward('claimReward',claimReward),reroll:forward('reroll',reroll),waveWon:forward('waveWon',waveWon),eventWon:forward('eventWon',()=>{throw Error('Resolve the offered integrated event');}),defeat:forward('defeat',defeat),abandon:forward('abandon',abandon),allowed:forward('allowed',allowed)});
+ 
+ return Object.freeze({influence,state:game,start,restore,chooseInitial:chooseInitial,select:select,enter:enter,claimReward:claimReward,reroll:reroll,waveWon:waveWon,eventWon:()=>{throw Error('Resolve the offered integrated event');},defeat:defeat,abandon:abandon,allowed:allowed});
 }
 root.WandererV012Expedition=Object.freeze({create,FAMILIES,FAMILY_NAMES,THEME_FAMILIES,REALMS,BOSSES,EVENT_GROUPS});
 })(globalThis);

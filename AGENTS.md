@@ -1,23 +1,19 @@
-# Wanderer — Codex repository guidance
+# Wanderer — development v0.12 only
 
-**Project:** Wanderer browser game. **Current development focus:** v0.12 Expeditions.
+## Product
+Wanderer v0.12 Expedition. Keep **only current v0.12 behavior** in development. Main and historical backups are independent.
 
-## Read first for v0.12 tasks
-1. [Codex handoff](docs/v012-codex-handoff.md) — current priorities, requirement precedence, repository links, test plan and safety.
-2. [Complete post-integration backlog](docs/v012-post-integration-backlog.md) — mirrored from the owner's Google Doc; full list, including provisional proposals and superseded notes.
-3. [Integration audit](docs/v012-integration-audit.md), [v0.12 final validation report](docs/v012-final-validation.md), [Realms/events/bag implementation report](docs/v012-realms-events-bag-implementation.md).
-4. Inspect the real code and tests at the current `development` head. Do not treat old documentation as proof of current behavior.
+## Rules
+- Work on `development` only. Never modify/merge/publish `main`.
+- Do not deploy Railway/Firebase, change Firebase rules, read/write real saves, or migrate production accounts without explicit separate authorization.
+- No more classic/v0.8–v0.11 feature branches or tests maintained in `development`. Historical material stays in Git history and the owner's backup.
+- The current Expedition must retain the 15-Realm, 3–4 events, three shared rerolls, boss and guaranteed 1-of-3 Rune on each victory; Static, 63 passives, equipment and potions; protected isolated saves.
+- Do not delete shared native engine functions merely because they are named after old versions. First extract/repoint the current v0.12 callers, test, then remove unused source.
+- Retain tests for modern functionality, critical auth/security and save isolation; do not add legacy compatibility requirements back.
+- No new features during cleanup; report removed files/dependencies, passing current tests and remaining inline legacy coupling.
 
-**Latest requirement precedence:** backlog §28 > §27.08 (Rune guaranteed after *each* completed Expedition, plus no free affinity procs); §27.03 > UI-014 (3 shared rerolls *per Expedition*); §28 Character 5/5 layout applies to character equipment, not to approved homepage layout; §22 supersedes §21. Many experimental backlog ideas are **not** automatically approved for implementation.
+## Quality gates
+`npm test`, isolated Chromium v0.12 Expedition tests, Save/Reload, E1 boss Rune, bag 6, potion loadout 3, Classic never bootstrapped on the development entrypoint. Use synthetic saves only.
 
-## Safety and execution boundaries
-- Work only on `development`; **do not edit/merge/publish `main`** unless the owner explicitly requests it.
-- **No production deployment** (including Railway/Firebase), Firebase rules changes, or modifications/migrations to real players' cloud/local saves unless separately authorized.
-- Protect legacy data, real items and item IDs. Use synthetic/isolated QA profiles and test storage. Do not assume browser-local save data are production-safe.
-- A request to read, audit, mirror, plan or review documentation **is not permission to implement changes**. Implement only the scope expressly requested in the current Codex task.
-- Preserve classic gameplay where v0.12 changes are feature-gated; avoid re-enabling removed gear affinity/set bonuses just to satisfy outdated tests.
-- Before finishing an implementation task, run relevant focused tests, disclose existing test failures, report changed files/commits and unresolved risks. No automatic deployment.
-
-## UI/asset context
-- Reuse existing repo art and layout rather than reconstructing it. Approved homepage reference is *image A* embedded in the original Google Doc: **HP/Mana left; character centered; Expedition card right**. That external image is not embedded in the Markdown mirror; textual specification is in the handoff.
-- Final illustration and interface redesign will be supplied separately. Functional requirements first; avoid unapproved visual redesign.
+## References
+`docs/v012-complete-integration-report.md`, `docs/v012-complete-sim-results.json`, `docs/v012-post-integration-backlog.md`.
