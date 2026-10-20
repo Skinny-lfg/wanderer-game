@@ -46,7 +46,7 @@ function profileCheck(p){
  if(p.chosen!==undefined)requireValue(integer(p.chosen,1,p.maxDungeon),'legacy selected dungeon');
  if(p.valuables!==undefined){requireValue(Array.isArray(p.valuables),'valuables');for(const v of p.valuables)requireValue(plain(v)&&typeof v.worth==='number'&&Number.isFinite(v.worth)&&v.worth>=0,'valuable worth');}
  requireValue(integer(p.stashCapacity,1,5000)&&p.stash.length<=5000,'stash capacity');
- requireValue(Array.isArray(p.expeditionOverflow)&&p.expeditionOverflow.length<=45,'secured overflow');
+ requireValue(Array.isArray(p.expeditionOverflow)&&p.expeditionOverflow.length<=120,'secured overflow');
  requireValue(Object.keys(p.equip).every(k=>SLOTS.includes(k)),'equipment slot');
  const ids=new Set();
  function itemCheck(item){
@@ -116,7 +116,7 @@ function presentationCheck(p){
  const seconds=x=>typeof x==='number'&&Number.isFinite(x)&&x>=0;
  if(p.realm!==null){const r=p.realm;requireValue(plain(r)&&integer(r.level,1,200)&&integer(r.plane,1,15)&&['cleared','defeat'].includes(r.outcome)&&typeof r.name==='string'&&typeof r.family==='string'&&typeof r.enemy==='string'&&seconds(r.seconds)&&integer(r.gold,0,Number.MAX_SAFE_INTEGER)&&integer(r.fragments,0,Number.MAX_SAFE_INTEGER)&&Array.isArray(r.log)&&r.log.every(l=>plain(l)&&typeof l.text==='string'&&typeof l.kind==='string')&&r.log.reduce((n,l)=>n+l.text.length+l.kind.length,0)<=180000,'Realm result');}
  if(p.realm?.loot!==undefined)requireValue(Array.isArray(p.realm.loot)&&p.realm.loot.length<=3&&p.realm.loot.every(item),'Realm loot result');
- if(p.summary!==null){const r=p.summary;requireValue(plain(r)&&integer(r.level,1,200)&&integer(r.realms,0,15)&&['victory','defeat','extracted','abandoned'].includes(r.outcome)&&seconds(r.seconds)&&integer(r.gold,0,Number.MAX_SAFE_INTEGER)&&integer(r.fragments,0,Number.MAX_SAFE_INTEGER)&&Array.isArray(r.families)&&r.families.length<=3&&r.families.every(f=>['blood','decay','vitality','aegis','fury','magic'].includes(f))&&Array.isArray(r.picks)&&r.picks.length<=16&&r.picks.every(id=>typeof id==='string')&&['kept','lost','discarded'].every(k=>Array.isArray(r[k])&&r[k].length<=45&&r[k].every(item))&&(r.runeTier===null||integer(r.runeTier,1,200)),'Expedition summary');
+ if(p.summary!==null){const r=p.summary;requireValue(plain(r)&&integer(r.level,1,200)&&integer(r.realms,0,15)&&['victory','defeat','extracted','abandoned'].includes(r.outcome)&&seconds(r.seconds)&&integer(r.gold,0,Number.MAX_SAFE_INTEGER)&&integer(r.fragments,0,Number.MAX_SAFE_INTEGER)&&Array.isArray(r.families)&&r.families.length<=3&&r.families.every(f=>['blood','decay','vitality','aegis','fury','magic'].includes(f))&&Array.isArray(r.picks)&&r.picks.length<=20&&r.picks.every(id=>typeof id==='string')&&['kept','lost','discarded'].every(k=>Array.isArray(r[k])&&r[k].length<=45&&r[k].every(item))&&(r.runeTier===null||integer(r.runeTier,1,200)),'Expedition summary');
   requireValue(r.outcome!=='victory'||r.realms===15,'victory result');requireValue((r.runeTier===null||r.outcome==='victory')&&(r.runeName===undefined||r.runeTier!==null&&typeof r.runeName==='string'),'Rune result');
  }
  requireValue(p.review!=='realm'||p.realm!==null,'missing Realm result');requireValue(p.review!=='summary'||p.summary!==null,'missing Expedition summary');
@@ -129,13 +129,14 @@ function sessionCheck(s,p,e){
  requireValue(integer(g.expedition,1,e.unlocked)&&g.unlocked===e.unlocked&&integer(g.planeIndex,1,15)&&['choice','combat','failed','finished'].includes(g.stage),'checkpoint progress');
  requireValue(integer(s.seed,0,4294967295)&&typeof s.prefix==='string'&&/^[a-z0-9]+$/.test(s.prefix)&&integer(s.idCounter,0,Number.MAX_SAFE_INTEGER)&&typeof s.clock==='number'&&Number.isFinite(s.clock)&&s.clock>=0,'checkpoint RNG/counter');
  requireValue(s.stamp===null||integer(s.stamp,1,Number.MAX_SAFE_INTEGER),'checkpoint timestamp');
- requireValue(plain(s.home)&&Array.isArray(s.lootIds)&&s.lootIds.length<=45&&new Set(s.lootIds).size===s.lootIds.length,'loot provenance');
+ requireValue(plain(s.home)&&Array.isArray(s.lootIds)&&s.lootIds.length<=120&&new Set(s.lootIds).size===s.lootIds.length,'loot provenance');
  profileCheck({...p,stash:[],equip:s.home,expeditionOverflow:[],merchant:null});
- const items=[...p.stash,...Object.values(p.equip).filter(Boolean),...p.expeditionOverflow],ids=new Set(items.map(i=>i.id)),homeIds=new Set(Object.values(s.home).filter(Boolean).map(i=>i.id));
- requireValue([...homeIds].every(id=>ids.has(id))&&s.lootIds.every(id=>typeof id==='string'&&ids.has(id)&&!homeIds.has(id)),'loot ownership');
+ const items=[...p.stash,...Object.values(p.equip).filter(Boolean),...p.expeditionOverflow,...(p.valuables||[])],ids=new Set(items.map(i=>i.id));
+ // The player may move original gear into the risk bag, or replace original gear with earned gear.
+ requireValue(s.lootIds.every(id=>typeof id==='string'&&ids.has(id)),'loot ownership');
  requireValue(plain(s.supplies)&&integer(s.supplies.health,0,2)&&integer(s.supplies.mana,0,2),'potion checkpoint');
  requireValue(s.vitals===null||plain(s.vitals)&&['hp','mp','maxmp'].every(k=>typeof s.vitals[k]==='number'&&Number.isFinite(s.vitals[k])&&s.vitals[k]>=0),'resource checkpoint');
- requireValue(s.build===null||plain(s.build)&&Array.isArray(s.build.picks)&&s.build.picks.length<=16,'build checkpoint');
+ requireValue(s.build===null||plain(s.build)&&Array.isArray(s.build.picks)&&s.build.picks.length<=20,'build checkpoint');
  requireValue(s.draft===null||plain(s.draft)&&['initial','entry','reward'].includes(s.draft.kind)&&['element','passive'].includes(s.draft.step),'draft checkpoint');
  if(e.active){requireValue(g.expedition===e.active.level&&g.planeIndex===e.active.plane&&g.stage===e.active.stage,'checkpoint identity');}
  else requireValue(!s.entry&&['failed','finished'].includes(g.stage),'ended checkpoint');
