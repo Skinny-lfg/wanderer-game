@@ -78,7 +78,15 @@ function eligible(b,family){
  if(!FAMILIES.includes(family)||!hasFamily(b,family)||family==='magic'&&!b.element)return [];
  if(!Array.isArray(b.unlockedFamilies)||!b.unlockedFamilies.includes(family))return [];
  const hybrids=[...new Set(b.picks)].map(id=>BY_ID[id]).filter(p=>p?.requires.length),pairs=new Set(hybrids.map(p=>[...p.requires].sort().join(':')));
- return P.filter(p=>p.family===family&&(!p.requires.length||(!b.runtime.hybridRules||b.runtime.hybridWindow)&&(!pairs.has([...p.requires].sort().join(':'))?hybrids.length<3:hybrids.some(h=>h.id===p.id)))&&p.requires.every(f=>b.unlockedFamilies.includes(f))&&(!p.element||p.element===b.element));
+ const owns=id=>rank(b,id)>0;
+ const barrier=['barrier_pulse','blood_ward','rot_ward','runic_shield'].some(owns),healing=['renewal','life_bloom','second_breath','blood_drinker','rot_recovery'].some(owns);
+ const prerequisites=p=>{
+  if(['retaliation','rot_husk','prismatic_rebound','guardians_oath'].includes(p.id)&&!barrier)return false;
+  if(['counterstrike','iron_reversal'].includes(p.id)&&!owns('guarded_block'))return false;
+  if(['sanctuary','life_conduit'].includes(p.id)&&!healing)return false;
+  return true;
+ };
+ return P.filter(p=>prerequisites(p)&&p.family===family&&(!p.requires.length||(!b.runtime.hybridRules||b.runtime.hybridWindow)&&(!pairs.has([...p.requires].sort().join(':'))?hybrids.length<3:hybrids.some(h=>h.id===p.id)))&&p.requires.every(f=>b.unlockedFamilies.includes(f))&&(!p.element||p.element===b.element));
 }
 function options(b,family,rng=Math.random){
  const acquired=[...new Set(b.picks||[])].map(id=>BY_ID[id]).filter(p=>p?.requires.length).length;
@@ -267,8 +275,8 @@ function onKill(b,c){
  if(rank(b,'rot_recovery')&&c.enemy.v012Rot?.length&&activated(b,'rot_recovery'))heal(b,c,c.player.maxhp*.04);
  if(rank(b,'second_breath')&&activated(b,'second_breath'))heal(b,c,c.player.maxhp*.025*rank(b,'second_breath'));
 }
-function survive(b,c){if(!rank(b,'last_stand')||b.runtime.lastStand)return false;activated(b,'last_stand');b.runtime.lastStand=true;c.player.hp=Math.max(1,c.player.maxhp*.06);c.log('💚 Last Stand (once per Expedition)');return true;}
-function speed(b,now){return b?.runtime?.adrenalineUntil>now||b?.runtime?.frenzyUntil>now?1.10:1;}
+function survive(b,c){if(!rank(b,'last_stand')||b.runtime.lastStand)return false;activated(b,'last_stand');b.runtime.lastStand=true;c.player.hp=Math.max(1,c.player.maxhp*Math.min(.20,.06+.018*Math.sqrt(Math.max(0,rank(b,'last_stand')-1))));c.log('💚 Last Stand (once per Expedition)');return true;}
+function speed(b,now){return b?.runtime?.adrenalineUntil>now||b?.runtime?.frenzyUntil>now?Math.min(1.25,1.10+.035*Math.sqrt(Math.max(0,rank(b,'adrenaline')-1))):1;}
 function enemyHealMultiplier(b,e){return 1-(e.v012Rot?.length ? Math.min(.7,.35*rank(b,'wither')) : 0);}
 function nextCost(b){return Math.max(4,Math.round(8*(1-Math.min(.70,.12*Math.sqrt(rank(b,'efficient_cast'))))));}
 function resetWave(b,e){e.v012Rot=[];e.v012Shock=0;b.runtime.guardianUsed=false;}
@@ -286,5 +294,5 @@ function validate(b){
  return b;
 }
 function clear(b){if(!b)return;b.picks.length=0;b.element=null;b.initialFamily=null;b.initialPassive=null;b.unlockedFamilies=[];b.families=[];b.cooldowns=Object.create(null);b.runtime={frenzyUntil:0,counterBlock:0,counterBarrier:0,spellblade:false,magicHits:0,staticCharges:0,adrenalineUntil:0,conduit:false,lastStand:false,lastSpellAt:-999};}
-root.WandererV012Buildcraft=Object.freeze({CATALOG:P,FAMILIES,ELEMENTS:elements,create,initial,rank,eligible,options,choose,element,mods,onAttack,onCast,onSecond,incoming,onDefend,onKill,survive,speed,enemyHealMultiplier,nextCost,resetWave,canCast,validate,clear});
+root.WandererV012Buildcraft=Object.freeze({CATALOG:P,FAMILIES,ELEMENTS:elements,create,initial,initialId,rank,eligible,options,choose,element,mods,onAttack,onCast,onSecond,incoming,onDefend,onKill,survive,speed,enemyHealMultiplier,nextCost,resetWave,canCast,validate,clear});
 })(globalThis);
