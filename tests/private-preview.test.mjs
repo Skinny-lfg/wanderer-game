@@ -11,6 +11,8 @@ async function start(){
  const root=await mkdtemp(path.join(os.tmpdir(),'wanderer-preview-'));
  await mkdir(path.join(root,'online'));
  await mkdir(path.join(root,'assets'));
+ await mkdir(path.join(root,'economy'));
+ await writeFile(path.join(root,'economy','v0101.js'),'globalThis.fixtureEconomy=true;');
  await mkdir(path.join(root,'preview'));
  await writeFile(path.join(root,'index.html'),'<html>Wanderer<script id="onlineAccountLoader">loadAccount()</script><script id="v012PrototypeLoader">loadPrototype()</script><script id="integratedGame">startExpedition()</script><script type="module" src="online/app.mjs?v=demo"></script><script type="module" src="online/v012-prototype.mjs"></script></html>');
  await writeFile(path.join(root,'online','v012-prototype.mjs'),'export const testMode = true;');
@@ -31,7 +33,7 @@ async function formWithCsrf(base,username,password){
 
 test('private preview protects HTML, assets, JS and prevents access to repo internals',async()=>{
  const env=await start();try{
-  for(const name of ['/','/index.html','/online/v012-prototype.mjs','/assets/sample.svg','/preview/do-not-leak.mjs']){
+  for(const name of ['/','/index.html','/online/v012-prototype.mjs','/assets/sample.svg','/economy/v0101.js','/preview/do-not-leak.mjs']){
    const r=await request(env.base,name);assert.equal(r.status,303);
    assert.equal(r.headers.get('location'),'/__preview/login');
   }
@@ -49,6 +51,7 @@ test('private preview protects HTML, assets, JS and prevents access to repo inte
   assert.match(post.headers.get('set-cookie'),/HttpOnly/);
   assert.match(post.headers.get('set-cookie'),/SameSite=Strict/);
   const headers={Cookie:cookie};
+  const economy=await request(env.base,'/economy/v0101.js',{headers});assert.equal(economy.status,200);assert.match(await economy.text(),/fixtureEconomy/);
   const index=await request(env.base,'/?expeditionPhase1=1&expeditionSave=1',{headers});
   assert.equal(index.status,200);const source=await index.text();assert.ok(source.includes('Wanderer'));
   assert.ok(!source.includes('v012-prototype.mjs'));

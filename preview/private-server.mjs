@@ -50,7 +50,7 @@ async function formBody(req){
  for await(const c of req){bytes+=c.length;if(bytes>LOGIN_MAX_BYTES)throw Error('Form too large');parts.push(c);}
  return new URLSearchParams(Buffer.concat(parts).toString('utf8'));
 }
-const allowedFolders=['assets','online','combat'];
+const allowedFolders=['assets','online','combat','economy'];
 export function createPrivatePreviewServer({
  root=ROOT,
  username=process.env.PREVIEW_USERNAME,

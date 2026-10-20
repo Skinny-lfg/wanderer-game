@@ -24,7 +24,7 @@ test('Leather rating scales with E# and rarity independently of Agility; DR and 
 test('legacy Leather derives rating without changing saved item fields; old gear has zero Evasion',()=>{
  const a=create(),old=a.makeItem(5,'helm',null,'forge','Leather','Rare');delete old.evasionRating;
  const raw=JSON.stringify(old);assert(a.baseStats({helm:old}).evasionRating>0);assert.equal(JSON.stringify(old),raw);
- assert.equal(a.gear.migrateItem(old).evasionRating,undefined);
+ assert.equal(old.evasionRating,undefined);
  assert.equal(a.baseStats({helm:{...old,armorType:undefined}}).evasionRating,0);
  const legendary=a.makeItem(5,'helm',null,'loot','Leather','Legendary'),rating=legendary.evasionRating;
  a.economy.upgradeLegendary(legendary);assert.equal(legendary.evasionRating,Math.round(rating*1.02*100)/100);

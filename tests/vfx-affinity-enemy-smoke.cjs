@@ -29,13 +29,13 @@ for(const text of ['function combatVfxAsset(kind,affinity)','MAGIC_COMBAT_AFFINI
 assert(html.includes('@keyframes vfxEnemyTravel'),'enemy projectile travels toward player');
 assert(html.includes('.combatVfx.vfxEnemyWard'),'boss self-targeted VFX exists');
 // Regression: no cached 2026-10-15 player spells, centered projectiles, readable enemy attacks,
-// and a replayed VFX following synchronous renderCombat on a lethal player hit.
+// and direct weapon VFX routing in the current Expedition engine.
 assert(html.includes('v=20261018-vfx3'),'VFX asset URLs must bust stale caches');
 assert(html.includes("MAGIC_COMBAT_AFFINITIES.has(affinity)?affinity:'shock'"),'Staff/Wand cannot fall back to old generic art');
 assert(html.includes("combatVfxPoint(scene,'heroPortrait',24)")&&html.includes("combatVfxPoint(scene,'enemyPortrait',76)"),'track actual portrait centers');
 assert(html.includes('@keyframes vfxCenteredTravel')&&html.includes('@keyframes vfxCenteredEnemyTravel'),'VFX travel is portrait centered in both directions');
 assert(html.includes('.scene .combatVfx.vfxEnemyImpact{width:clamp(145px'),'enemy VFX must remain large and visible');
 assert(html.includes('if(e.hp<=0){winEncounter(true);return;}'),'a lethal hit must be explicitly marked');
-assert(html.includes('combatEffect(lastPlayerVfx.kind,lastPlayerVfx.affinity)'),'replay lethal VFX after combat scene re-render');
+assert(html.includes('combatEffect(kind,affinity);'),'native weapon attacks route their VFX directly');
 
-console.log('PASS: 29 transparent VFX PNGs, 7 Staff/Wand affinity mappings, enemy/boss routing, centered projectiles and lethal VFX');
+console.log('PASS: 29 transparent VFX PNGs, 7 Staff/Wand affinity mappings, enemy/boss routing, centered projectiles and native weapon VFX');

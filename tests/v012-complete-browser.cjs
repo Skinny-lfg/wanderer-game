@@ -2,7 +2,7 @@
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
 const {chromium}=require('playwright'),root=path.resolve(__dirname,'..');
 const source=fs.readFileSync(path.join(root,'index.html'),'utf8');
-const boot='if(PHASE1_PREVIEW){phase1Init();render();}else{load();if(!state.merchant)rollShop();save();render();}';assert(source.includes(boot));
+const boot='phase1Init();render();';assert(source.includes(boot));
 const fixture=`if(PHASE1_PREVIEW){phase1Init();globalThis.__complete={
  snapshot:()=>({game:phase1Controller.state,build:phase1Build,extra:phase6Run,bag:phase3BagItems(),overflow:phase3BagOverflow(),stock:state.consumables,selection:state.potionSelection,gold:state.gold,fragments:state.fragments,runes:state.runes,pending:state.pendingRuneReward,run:state.run?{status:state.run.status,enc:state.run.enc,waves:state.run.planeWaves,boss:state.run.enemy.boss,style:state.run.enemy.bossStyle}:null,result:phase5Results}),
  fund:()=>{state.gold=state.fragments=10000;phase5Persist();},

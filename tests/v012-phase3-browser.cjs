@@ -2,7 +2,7 @@
 // Firebase accounts, real player saves or production deployment.
 const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),http=require('node:http');
 const root=path.resolve(__dirname,'..'),html=fs.readFileSync(path.join(root,'index.html'),'utf8');
-const boot='if(PHASE1_PREVIEW){phase1Init();render();}else{load();if(!state.merchant)rollShop();save();render();}';
+const boot='phase1Init();render();';
 assert(html.includes(boot),'isolated game bootstrap');
 const fixture=String.raw`if(PHASE1_PREVIEW){
  phase1Init();state.equip.weapon=makeItem(100,'weapon',null,'loot','Sword','Rare');

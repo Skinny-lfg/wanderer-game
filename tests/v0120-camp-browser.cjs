@@ -2,7 +2,7 @@
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
 const {chromium}=require('playwright'),root=path.resolve(__dirname,'..');
 const source=fs.readFileSync(path.join(root,'index.html'),'utf8');
-const boot='if(PHASE1_PREVIEW){phase1Init();render();}else{load();if(!state.merchant)rollShop();save();render();}';assert(source.includes(boot));
+const boot='phase1Init();render();';assert(source.includes(boot));
 const fixture=`if(PHASE1_PREVIEW){phase1Init();phase1Controller.state.unlocked=5;state.gold=state.fragments=10000;
  const home=makeItem(5,'weapon',null,'loot','Sword','Rare');home.name='Home Spare';state.stash.push(home);state.runes.push(makeRune('might',10));
  globalThis.__camp={homeId:home.id,snapshot:()=>({gold:state.gold,fragments:state.fragments,character:state.characterId,stage:phase1Controller.state.stage,selected:phase1Controller.state.selected,bag:phase3BagItems(),overflow:phase3BagOverflow(),supplies:phase3Supplies,vitals:phase3Vitals(),equip:state.equip,stash:state.stash}),

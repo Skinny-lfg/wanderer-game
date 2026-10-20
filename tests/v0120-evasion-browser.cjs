@@ -2,7 +2,7 @@
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
 const {chromium}=require('playwright'),root=path.resolve(__dirname,'..');
 const source=fs.readFileSync(path.join(root,'index.html'),'utf8');
-const boot='if(PHASE1_PREVIEW){phase1Init();render();}else{load();if(!state.merchant)rollShop();save();render();}';assert(source.includes(boot));
+const boot='phase1Init();render();';assert(source.includes(boot));
 const fixture=`if(PHASE1_PREVIEW){phase1Init();
  state.equip.helm=makeItem(5,'helm',null,'loot','Leather','Rare');delete state.equip.helm.evasionRating;
  const belt=makeItem(5,'belt',null,'loot','Leather','Rare');state.stash.push(belt);

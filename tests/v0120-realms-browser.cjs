@@ -2,7 +2,7 @@
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
 const {chromium}=require('playwright'),root=path.resolve(__dirname,'..');
 const source=fs.readFileSync(path.join(root,'index.html'),'utf8');
-const boot='if(PHASE1_PREVIEW){phase1Init();render();}else{load();if(!state.merchant)rollShop();save();render();}';assert(source.includes(boot));
+const boot='phase1Init();render();';assert(source.includes(boot));
 const fixture=`if(PHASE1_PREVIEW){phase1Init();
  globalThis.__realmTest={snapshot:()=>({game:JSON.parse(JSON.stringify(phase1Controller.state)),picks:phase1Build?.picks||[],element:phase1Build?.element||null,draft:phase1Draft?.kind||null,active:!!state.run,status:state.run?.status||null}),
  win:()=>{if(state.run?.status!=='fight')throw Error('No active Wave');state.run.enemy.hp=0;phase1WaveWon();},passive:phase2ChoosePassive};render();

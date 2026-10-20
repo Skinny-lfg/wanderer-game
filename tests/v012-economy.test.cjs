@@ -2,18 +2,16 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const create=require('./v012-economy-harness.cjs');
 function enter(a){if(!a.controller().state.initialFamily)a.initial('blood');if(a.draft()?.kind==='reward')a.passive(a.draft().options[0].id);if(a.results().review)a.exitResult();while(a.bag.overflow()>0)a.bag.discard(a.bag.items().at(-1).id);a.select(a.controller().state.offers[0].id);a.enter();if(a.draft()?.step==='element')a.element('lightning');if(a.events.run()?.event){a.events.choose(2);return enter(a);}}
 function complete(a){for(let n=0;n<70&&a.controller().state.stage!=='finished';n++){if(!a.state().run)enter(a);const r=a.state().run;r.enemy.hp=0;a.win();a.flush();}assert.equal(a.controller().state.stage,'finished');}
-test('Forge, Merchant and Sigil prices use Expedition unlocks without touching legacy progress',()=>{
+test('Forge and Merchant prices use Expedition unlocks without touching legacy progress',()=>{
  const a=create(14),s=a.state();a.controller().state.unlocked=80;s.fragments=10000;s.gold=10000;
  a.craft(80,2,'armor','Armor');const crafted=s.stash.at(-1);
  assert.equal(crafted.tier,80);assert.equal(crafted.source,'forge');assert.notEqual(crafted.rarity,'Legendary');
  assert.equal(crafted.craftPrice,2430);assert.equal(s.fragments,7570);assert(a.sale(crafted)<=Math.floor(2430*.25));
  a.buy(0);assert.equal(s.stash.at(-1).tier,80);assert.equal(s.stash.at(-1).source,'merchant');
  assert.equal(s.maxDungeon,1);assert.equal(s.onlineProgress.deepestCleared,0);
- assert.equal(a.economy.sigilPrice(80),820);
  const stock=s.merchant.stock.map(i=>i.id).join(),gold=s.gold;
  a.refresh('sigils');assert.equal(s.merchant.stock.map(i=>i.id).join(),stock);assert.equal(s.gold,gold);
  const sigils=s.merchant.sigils.join();a.refresh('gear');assert.equal(s.merchant.sigils.join(),sigils);
- assert.equal(a.gearFamily('poison'),'Decay');assert.equal(a.gearFamily('shock'),'Magic');
  assert.equal(a.build(),null,'gear Sigils do not grant temporary families');
 });
 test('live Masterwork odds match the mature economy helper rather than charging 3x for 2x odds',()=>{

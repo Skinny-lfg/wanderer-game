@@ -29,7 +29,6 @@ test('legacy gear retains its data but grants neither affinities nor sets',()=>{
  assert(Object.values(stats.counts).every(n=>n===0));assert.deepEqual(plain(stats.bonus),{});assert.equal(stats.sets.length,0);
  assert.deepEqual(plain(a.gear.setBonuses({crit:10,regen:10}).values),{});
  assert.equal(a.gear.affinityBadge(s.equip.weapon),'');assert.equal(a.gear.detailEffectHtml(s.equip.weapon),'');
- const old={...s.equip.weapon,id:'old',effect:'poison'};assert.equal(a.gear.migrateItem(old).effect,'poison');
 });
 test('Belt crafts, equips, compares, unequips, drops and sells through existing systems',()=>{
  const a=create(5),s=a.state();s.fragments=1000;

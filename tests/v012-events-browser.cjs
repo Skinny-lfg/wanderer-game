@@ -3,7 +3,7 @@
 const assert=require('node:assert/strict'),{chromium}=require('playwright');
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http');
 const root=path.resolve(__dirname,'..'),html=fs.readFileSync(path.join(root,'index.html'),'utf8');
-const boot='if(PHASE1_PREVIEW){phase1Init();render();}else{load();if(!state.merchant)rollShop();save();render();}';
+const boot='phase1Init();render();';
 assert(html.includes(boot),'preview startup anchor');
 const fixture=[
  "if(PHASE1_PREVIEW){",
@@ -17,7 +17,7 @@ const fixture=[
  "if(g.stage==='choice'){if(!g.initialFamily){phase2ChooseInitial('blood');return 'initial';}",
  "if(phase3BagItems().length>=6){const item=phase3BagItems()[0];if(item&&phase3CanPrepare()){phase3DiscardLoot(item.id);return 'discard';}}",
  "if(g.offers.length){const choice=g.planeIndex===1?g.offers.find(p=>p.family==='blood'):g.offers[0];phase1Choose(choice.id);phase1Enter();return 'enter';}}",
- "if(g.stage==='combat'&&g.selected?.event&&!state.run){if(g.version===2)phase6EventChoice(2);else phase1ResolveEvent('leave');return 'event';}",
+ "if(g.stage==='combat'&&g.selected?.event&&!state.run){phase6EventChoice(2);return 'event';}",
  "const r=state.run;if(r?.status==='fight'){for(let i=0;i<2500&&state.run===r&&r.status==='fight';i++)updateFight();return 'fight';}",
  "return 'waiting';}};render();",
  "}else{load();if(!state.merchant)rollShop();save();render();}"
