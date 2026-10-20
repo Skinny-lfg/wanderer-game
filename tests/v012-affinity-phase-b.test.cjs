@@ -24,7 +24,10 @@ test('B new draft is stable after restore; first win gives starter plus one choi
 test('B triggers and caps, equipment block, one hybrid per pair, controlled exhausted pool',()=>{
  const b=build(['bleeding_edge','toxic_touch'],['blood','decay']);b.realmIndex=4;assert(!api.eligible(b,'blood').some(p=>p.requires.length));b.realmIndex=5;assert(api.eligible(b,'blood').some(p=>p.id==='carrion_detonation'));b.picks.push('carrion_detonation');assert(!api.eligible(b,'blood').some(p=>p.id==='plague_rupture'));
  const a=build(['iron_skin','quick_hands'],['aegis','fury']);assert(!api.eligible(a,'aegis').some(p=>p.id==='counterstrike'));a.runtime.draftStats={...base,blockChance:20};assert(api.eligible(a,'aegis').some(p=>p.id==='counterstrike'));
- const full=build([],['blood']);full.picks=api.CATALOG.filter(p=>p.family==='blood'&&!p.requires.length).flatMap(p=>Array(p.max).fill(p.id));const raw=JSON.stringify(full);assert.throws(()=>api.options(full,'blood'),/checkpoint retained/);assert.equal(JSON.stringify(full),raw);
+ const full=build([],['blood']);full.picks=api.CATALOG.filter(p=>p.family==='blood'&&!p.requires.length).flatMap(p=>Array(p.max).fill(p.id));const raw=JSON.stringify(full);assert.deepEqual(Array.from(api.options(full,'blood')),[]);assert.equal(JSON.stringify(full),raw);
+ const unlock=(ids)=>{const b=build([...full.picks],['blood']);for(const id of ids){const index=b.picks.lastIndexOf(id);assert(index>=0);b.picks.splice(index,1);}b.runtime.draftStats=base;return b;};
+ const one=unlock(['bleeding_edge']),two=unlock(['bleeding_edge','deep_cuts']);
+ for(const [b,count] of [[one,1],[two,2]]){const cards=api.options(b,'blood',seeded(31337));assert.equal(cards.length,count);assert.equal(new Set(cards.map(p=>p.id)).size,count);assert(cards.every(p=>api.eligible(b,p.family).some(q=>q.id===p.id)));const selected=cards[0];api.choose(b,'blood',selected.id,cards);assert(b.picks.includes(selected.id));}
 });
 test('B legacy overcap draft migrates deterministically without removing picks; modern draft remains byte-identical',()=>{
  const a=create(42);a.start();a.initial('blood');a.select(a.controller().state.offers.find(p=>p.family==='blood').id);a.enter();while(a.state().run?.status==='fight'){a.state().run.enemy.hp=0;a.win();a.flush();}
@@ -33,4 +36,21 @@ test('B legacy overcap draft migrates deterministically without removing picks; 
  a.checkpoint.restore(cp);assert.equal(JSON.stringify(a.draft()),cards);assert.equal(a.checkpoint.seed(),seed);
  const modern=a.checkpoint.capture();a.checkpoint.restore(modern);assert.equal(JSON.stringify(a.draft()),cards);
  const old=build(['plague_rupture','carrion_detonation'],['blood','decay']);old.version=2;api.validate(old);assert.equal(api.rank(old,'plague_rupture'),1);assert.equal(api.rank(old,'carrion_detonation'),0);assert.equal(old.picks.length,2);
+});
+
+test('B restored reward with 0, 1 or 2 legal offers continues without duplicate picks',()=>{
+ for(const count of [0,1,2]){
+  const a=create(4200+count);a.start(1);a.initial('blood');
+  a.select(a.controller().state.offers.find(p=>p.family==='blood').id);a.enter();
+  while(a.state().run?.status==='fight'){a.state().run.enemy.hp=0;a.win();a.flush();}
+  const cp=a.checkpoint.capture(),before=cp.session.build.picks.length;
+  cp.session.draft.options=cp.session.draft.options.slice(0,count);
+  a.checkpoint.restore(cp);assert.equal(a.draft().options.length,count);
+  const stable=JSON.stringify(a.draft()),seed=a.checkpoint.seed();
+  a.checkpoint.restore(cp);assert.equal(JSON.stringify(a.draft()),stable);assert.equal(a.checkpoint.seed(),seed);
+  assert.equal(a.passive(count?a.draft().options[0].id:null),true);assert.equal(a.draft(),null);
+  assert.equal(a.build().picks.length,before+(count?1:0));
+  assert.equal(a.controller().state.rewardPending,null);
+  assert.equal(a.passive(null),false);
+ }
 });
