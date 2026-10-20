@@ -1752,12 +1752,12 @@ const RUNE_FAMILIES=[
  {id:'warding',name:'Rune of Warding',field:'defFlat',icon:'🔰'},
  {id:'vitality',name:'Rune of Vitality',field:'hpFlat',icon:'❤️'}
 ];
-function runeValue(family,tier){const base=1+Math.floor(tier/10);return family==='fury'?base*3:family==='warding'?base*2:family==='vitality'?base*10:base}
-function makeRune(family,tier){const type=RUNE_FAMILIES.find(x=>x.id===family);return {id:makeId(),family,tier,value:runeValue(family,tier),name:type.name}}
-function validRune(r){return r&&typeof r==='object'&&RUNE_FAMILIES.some(x=>x.id===r.family)&&Number.isInteger(r.tier)&&r.tier>=10&&r.tier<=DUNGEON_CAP&&r.tier%10===0&&typeof r.id==='string'&&r.id.length>0&&r.id.length<120}
+function runeValue(family,tier){const base=PHASE1_PREVIEW?+(1+tier/10).toFixed(2):1+Math.floor(tier/10);return family==='fury'?base*3:family==='warding'?base*2:family==='vitality'?base*10:base}
+function makeRune(family,tier){const type=RUNE_FAMILIES.find(x=>x.id===family);return {id:makeId(),family,tier,...(PHASE1_PREVIEW?{progression:'expedition'}:{}),value:runeValue(family,tier),name:type.name}}
+function validRune(r){return r&&typeof r==='object'&&RUNE_FAMILIES.some(x=>x.id===r.family)&&Number.isInteger(r.tier)&&r.tier>=1&&r.tier<=DUNGEON_CAP&&(r.progression==='expedition'&&PHASE1_PREVIEW||r.tier>=10&&r.tier%10===0)&&typeof r.id==='string'&&r.id.length>0&&r.id.length<120}
 function safeRunes(raw){
  const seen=new Set();
- return (Array.isArray(raw)?raw:[]).filter(validRune).filter(r=>{if(seen.has(r.id))return false;seen.add(r.id);return true}).slice(0,300).map(r=>({id:r.id,family:r.family,tier:r.tier,value:runeValue(r.family,r.tier),name:RUNE_FAMILIES.find(x=>x.id===r.family).name,isNew:r.isNew===true}));
+ return (Array.isArray(raw)?raw:[]).filter(validRune).filter(r=>{if(seen.has(r.id))return false;seen.add(r.id);return true}).slice(0,300).map(r=>({id:r.id,family:r.family,tier:r.tier,...(r.progression==='expedition'?{progression:r.progression}:{}),value:runeValue(r.family,r.tier),name:RUNE_FAMILIES.find(x=>x.id===r.family).name,isNew:r.isNew===true}));
 }
 function safeRuneSlots(raw,runes){
  const ids=new Set(runes.map(r=>r.id)),families=new Set(),picked=new Set();
@@ -1769,7 +1769,7 @@ function safeRuneSlots(raw,runes){
 }
 function safePendingRune(raw){
  const tier=Number(raw?.tier),options=Array.isArray(raw?.options)?raw.options:[];
- if(!Number.isInteger(tier)||tier<10||tier>DUNGEON_CAP||tier%10!==0||options.length!==3)return null;
+ if(!Number.isInteger(tier)||tier<1||tier>DUNGEON_CAP||!PHASE1_PREVIEW&&(tier<10||tier%10!==0)||options.length!==3)return null;
  if(options.some(r=>!validRune(r)||r.tier!==tier)||new Set(options.map(r=>r.family)).size!==3)return null;
  return {tier,options:safeRunes(options)};
 }
@@ -1796,7 +1796,7 @@ function runeSectionMarkup(){
 // Rune recycling is intentionally separate from equipment salvage. Equipped runes are never sold.
 function runeSalvageValue(r){
  const tier=Number(r?.tier);
- if(!Number.isInteger(tier)||tier<10||tier>DUNGEON_CAP||tier%10!==0)return 0;
+ if(!Number.isInteger(tier)||tier<1||tier>DUNGEON_CAP||!PHASE1_PREVIEW&&(tier<10||tier%10!==0))return 0;
  return 5+2*Math.floor(tier/10);
 }
 function duplicateRuneCandidates(){
@@ -1816,11 +1816,11 @@ function unequipRune(index){
 function salvageRune(id){
  if(runeCheckpointLocked())return false;
  if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked))return false;
- if(state.run||state.pendingRuneReward||state.runeSlots.includes(id))return false;
+ if(state.run||state.pendingRuneReward&&!PHASE1_PREVIEW||state.runeSlots.includes(id))return false;
  const rune=state.runes.find(r=>r.id===id),value=rune&&runeSalvageValue(rune);
  if(!value)return false;
  showConfirm('Recycle Rune','Recycle '+rune.name+' (D'+rune.tier+') for '+value+' Fragments? This cannot be undone.',()=>{
-  if(runeCheckpointLocked()||state.run||state.pendingRuneReward||state.runeSlots.includes(id))return;
+  if(runeCheckpointLocked()||state.run||state.pendingRuneReward&&!PHASE1_PREVIEW||state.runeSlots.includes(id))return;
   const index=state.runes.findIndex(r=>r.id===id);if(index<0)return;
   const current=state.runes[index],reward=runeSalvageValue(current);if(!reward)return;
   state.runes.splice(index,1);state.fragments+=reward;
@@ -1831,11 +1831,11 @@ function salvageRune(id){
 function salvageDuplicateRunes(){
  if(runeCheckpointLocked())return false;
  if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked))return false;
- if(state.run||state.pendingRuneReward)return false;
+ if(state.run||state.pendingRuneReward&&!PHASE1_PREVIEW)return false;
  const candidates=duplicateRuneCandidates();if(!candidates.length)return false;
  const ids=new Set(candidates.map(r=>r.id)),amount=candidates.reduce((sum,r)=>sum+runeSalvageValue(r),0);
  showConfirm('Recycle Spare Runes','Recycle '+candidates.length+' spare rune(s) for '+amount+' Fragments? The strongest rune in each family and equipped runes remain safe.',()=>{
-  if(runeCheckpointLocked()||state.run||state.pendingRuneReward)return;
+  if(runeCheckpointLocked()||state.run||state.pendingRuneReward&&!PHASE1_PREVIEW)return;
   const safe=new Set(duplicateRuneCandidates().map(r=>r.id));
   const toRecycle=state.runes.filter(r=>ids.has(r.id)&&safe.has(r.id));
   if(!toRecycle.length)return;
@@ -1893,6 +1893,7 @@ function recoverBossUnlockFromRunes(){
 }
 function claimPendingRuneChoice(id){
  const reward=state.pendingRuneReward;
+ if(PHASE1_PREVIEW&&state.runes.length>=300){bannerMessage('Recycle a spare Rune before claiming; existing Runes are preserved.');return false;}
  const picked=reward?.options.find(r=>r.id===id);
  if(!picked)return false;
  picked.isNew=true;state.runes.push(picked);state.pendingRuneReward=null;
@@ -1933,13 +1934,13 @@ const EQUIPMENT_DROP_WEIGHTS=[['helm',13],['amulet',9],['armor',13],['gloves',13
 function rollEquipmentSlot(){let n=roll(1,EQUIPMENT_DROP_WEIGHTS.reduce((sum,[,weight])=>sum+weight,0));for(const [slot,weight] of EQUIPMENT_DROP_WEIGHTS){n-=weight;if(n<=0)return slot==='ring'?sample(['ring1','ring2']):slot;}throw Error('Invalid drop weights');}
 function makeItem(tier,slot=null,affinity=null,source='loot',subtype='random',forcedRarity=null){
 slot=slot||rollEquipmentSlot();
-const armorType=ARMOR_SLOTS.includes(slot)?(ARMOR_TYPES.includes(subtype)?subtype:sample(ARMOR_TYPES)):null;
+const armorType=PHASE1_PREVIEW&&ARMOR_SLOTS.includes(slot)?(ARMOR_TYPES.includes(subtype)?subtype:sample(ARMOR_TYPES)):null;
 subtype=chooseSubtype(slot,ARMOR_TYPES.includes(subtype)?'random':subtype);
 let rarity=forcedRarity&&RARITY[forcedRarity]?forcedRarity:rarityRoll(tier,source==='forge');
 if(source==='merchant'&&rarity==='Legendary')rarity='Epic';
-const effect=null,magic=false;
+const magic=!PHASE1_PREVIEW&&['Staff','Wand','Orb','Tome','Charm'].includes(subtype);let pool=elementPool(slot,subtype);if(affinity==='crystal'&&!pool.includes('crystal'))pool=[...pool,'crystal'];let effect=PHASE1_PREVIEW?null:(pool.includes(affinity)&&gameRandom()<.7?affinity:sample(pool));if(!PHASE1_PREVIEW&&!magic&&rarity==='Common'&&gameRandom()<.55)effect=null;
 const legendaryIdentity=rarity==='Legendary'?legendaryFor({slot,subtype}):null;
-const legendaryDefinition=legendaryIdentity&&globalThis.WandererLegendary?.DEFINITIONS?.[legendaryIdentity.id];
+const legendaryDefinition=legendaryIdentity&&globalThis.WandererLegendary?.DEFINITIONS?.[legendaryIdentity.id];if(!PHASE1_PREVIEW&&legendaryDefinition)effect=legendaryDefinition.affinity;
 let mult=RARITY[rarity][1],power=Math.round((2+tier*.91)*mult),o={id:makeId(),slot,subtype,name:(source==='loot'&&subtype==='Sword'&&rarity==='Common'&&gameRandom()<.25?'Old Sword':sample(NAMES[subtype]||NAMES[slot]||['Ancient Gear'])),rarity,tier,atk:0,def:0,hp:0,spd:0,str:0,agi:0,int:0,end:0,cha:0,mana:0,spell:0,effect,magic:magic?effect:null,crafted:source==='forge',craftPrice:source==='forge'?craftCost(tier):null,obtainedAt:PHASE1_PREVIEW&&phase4Stamp?phase4Stamp:Date.now(),locked:false,source};
 if(subtype==='Sword'){o.atk=power+3;o.str=1+Math.floor(tier*.20)}
 else if(subtype==='Mace'){o.atk=power+6;o.str=2+Math.floor(tier*.23);o.spd=-1}
@@ -2075,10 +2076,48 @@ function getPaths(force=false){
  return state.offersByLevel[k];
 }
 function rerollCost(){return 5*(1+Math.floor((clamp(Number(state.chosen)||1,1,DUNGEON_CAP)-1)/10))}
-function setCounts(equipment=state.equip){return Object.fromEntries(Object.keys(ELEMENTS).map(k=>[k,0]));}
+function setCounts(equipment=state.equip){
+ if(PHASE1_PREVIEW)return Object.fromEntries(Object.keys(ELEMENTS).map(k=>[k,0]));
+ const counts={};for(const k of Object.keys(ELEMENTS))counts[k]=0;
+ const twoHands=isTwoHanded(equipment?.weapon);
+ for(const [slot,item] of Object.entries(equipment||{})){
+  if(!item?.effect||!Object.prototype.hasOwnProperty.call(counts,item.effect))continue;
+  if(slot==='offhand'&&twoHands)continue;
+  counts[item.effect]+=(slot==='weapon'&&twoHands)?2:1;
+ }
+ return counts;
+}
 function setStage(n){return n>=5?5:n>=3?3:n>=2?2:0}
 function setProgress(n){return `${Math.min(n,5)}/${n>=3?5:n>=2?3:2}`}
-function setBonuses(counts){return {list:[],values:{}};}
+function setBonuses(counts){
+ if(PHASE1_PREVIEW)return {list:[],values:{}};
+ const list=[],values={};
+ const defs=[
+  ['poison','Poison Set','poisonBonus',.15,'poisonWeaken','venomBurst'],
+  ['bleed','Bleed Set','bleedBonus',.15,'bleedHaste','bloodHunt'],
+  ['sunder','Sunder Set','sunderBonus',.20,'sunderExpose','armorShatter'],
+  ['crit','Critical Set','critBonus',8,'criticalFocus','perfectStrike'],
+  ['shield','Shield Set','shieldBonus',.006,'shieldRiposte','lastBastion'],
+  ['regen','Regen Set','regenBonus',.006,'regenOverflow','secondWind'],
+  ['burn','Fire Set','burnBonus',.15,'fireHeat','flashover'],
+  ['slow','Frost Set','slowBonus',.25,'frostWeaken','deepFreeze'],
+  ['drain','Dark Set','drainBonus',.15,'soulCharge','soulPact'],
+   ['nature','Nature Set','natureBonus',.25,'natureVitality','natureRenewal'],
+   ['shock','Storm Set','shockBonus',.25,'shockRhythm','thunderclap'],
+   ['tide','Tide Set','tideBonus',.25,'tideGuard','tideSurge'],
+   ['crystal','Crystal Set','crystalBonus',.08,'crystalCharge','crystalBurst']
+ ];
+ for(const [effect,title,baseKey,base,threeKey,fiveKey]of defs){
+  const n=Math.max(0,counts[effect]||0);
+  if(n<2)continue;
+  values[baseKey]=base;
+  if(n>=3)values[threeKey]=true;
+  if(n>=5)values[fiveKey]=true;
+  const desc=setDescription(effect,values);
+  list.push({effect,title,desc});
+ }
+ return {list,values};
+}
 function totalStats(equipment=state.equip,ownedRunes=null,equippedRuneIds=null){
  const equipped=isTwoHanded(equipment.weapon)?{...equipment,offhand:null}:equipment;
  const s={str:5,agi:5,int:5,end:5,cha:5,atkFlat:0,defFlat:0,hpFlat:0,spdFlat:0,manaFlat:0,spellFlat:0,evasionRating:0};
@@ -2092,7 +2131,7 @@ function totalStats(equipment=state.equip,ownedRunes=null,equippedRuneIds=null){
  const usedFamilies=new Set();
  for(const id of runeSlots){const rune=runeItems.find(r=>r.id===id),type=RUNE_FAMILIES.find(x=>x.id===rune?.family);if(!rune||!type||usedFamilies.has(type.id))continue;usedFamilies.add(type.id);s[type.field]+=runeValue(type.id,rune.tier)*(PHASE1_PREVIEW&&phase6Run?.effects.runeBoost?.remaining>0?1.20:1);}
  // Read-only combat projection: legacy effects remain in stored items, but are inactive.
- const main=equipped.weapon?{...equipped.weapon,effect:null,magic:null}:null,off=equipped.offhand?{...equipped.offhand,effect:null,magic:null}:null,caster=!!main&&['Staff','Wand'].includes(main.subtype);
+ const main=equipped.weapon?(PHASE1_PREVIEW?{...equipped.weapon,effect:null,magic:null}:equipped.weapon):null,off=equipped.offhand?(PHASE1_PREVIEW?{...equipped.offhand,effect:null,magic:null}:equipped.offhand):null,caster=!!main&&['Staff','Wand'].includes(main.subtype);
  const counts=setCounts(equipped),sets=setBonuses(counts),speed=.78+s.agi*.032+s.spdFlat*.046;
  const weaponMult={Sword:1,Mace:.66,Bow:1.15,Daggers:1.48,'Two-Handed':.50,Staff:.69,Wand:1.20}[main?.subtype]||1;
  s.caster=caster;s.main=main;s.off=off;s.sets=sets.list;s.bonus=sets.values;s.counts=counts;
@@ -2166,7 +2205,7 @@ function itemSource(o){return `E${o.tier} · ${o.rarity}${o.rarity==='Legendary'
 function weaponTrait(o){return o?.subtype==='Staff'?'✨ Arcane Guard: casts grant 3.5% max HP Barrier every 6 combat seconds.':o?.subtype==='Two-Handed'?'⚔ Heavy Guard: strikes grant 2.5% max HP Barrier every 6 combat seconds.':'';}
 function gearComparison(item){
 const current=totalStats(),next=totalStats(comparisonEquip(item)),change=next.power-current.power;
-return `<div class="gearSummary"><b>Gear Power</b> ${current.power} → ${next.power} <span class="${change>0?'green':change<0?'red':'muted'}">(${change>0?'+':''}${change})</span></div>`;
+return `<div class="gearSummary"><b>${Math.abs(change)<Math.max(1,current.power*.03)?'≈ Sidegrade':change>0?'▲ Upgrade':'▼ Downgrade'}</b> · <b>Gear Power</b> ${current.power} → ${next.power} <span class="${change>0?'green':change<0?'red':'muted'}">(${change>0?'+':''}${change})</span></div>`;
 }
 function showModal(title,content,onConfirm=null,confirmLabel='Enter Dungeon'){
 const previous=document.activeElement,dialog=document.createElement('dialog');dialog.className='itemDialog';dialog.setAttribute('aria-labelledby','modalTitle');
@@ -2611,7 +2650,7 @@ function elitePreviewMarkup(run,upcoming){
 }
 function enemyFor(level,enc,override=null){
  const theme=override?.theme||currentTheme(),boss=override?!!override.boss:enc===5&&level%10===0,miniboss=override?!boss&&!!override.elite:enc===4,v=estimateEnemy(level,Math.min(5,enc)),mult=boss?2:1;
- const variant=boss?bossForTier(level):null;
+ const variant=boss?(override?.variant||bossForTier(level)):null;
  const mob=boss?{name:variant.name,image:variant.image}:sample(theme.mobs);
  const role=boss?'boss':miniboss?'miniboss':theme.mobs[0].name===mob.name?'bruiser':'skirmisher';
  const elite=miniboss?eliteArchetype(state.run):null;
@@ -3592,7 +3631,8 @@ function phase1StartWave(){
  if(!isPhase1Run()||!g.selected||r.status==='fight')return;
  r.enc=g.wave;const last=g.wave===g.selected.waves;
  const theme=phase2Theme(g.selected.id);
- r.enemy=enemyFor(r.tier,r.enc,{theme,boss:last&&g.selected.boss,elite:last&&g.selected.elite&&!g.selected.boss});
+ r.enemy=enemyFor(r.tier,r.enc,{theme,boss:last&&g.selected.boss,elite:last&&g.selected.elite&&!g.selected.boss,variant:g.version===2?BOSS_ARCHETYPES.find(b=>b.style===WandererV012Expedition.BOSSES.find(v=>v.id===g.bossId).style):null});
+ r.phase6Bounty=false;if(r.enemy.miniboss&&phase6Run?.effects.bounty){r.phase6Bounty=true;phase6Run.effects.bounty=false;r.enemy.hp=r.enemy.maxhp=Math.ceil(r.enemy.maxhp*1.25);r.enemy.atk=Math.ceil(r.enemy.atk*1.25);}
  r.tPlayer=r.tEnemy=r.tDot=0;r.setTemp=null;r.playerDebuffUntil=0;
  r.playerHealingDebuffUntil=0;r.nextCasterHexAt=0;setRuntime(r);r.status='fight';lastPlayerVfx=null;
  if(phase1Build)WandererV012Buildcraft.resetWave(phase1Build,r.enemy);
@@ -3610,12 +3650,12 @@ function phase1WaveWon(){
  legendaryKill(r);
  if(phase1Build)WandererV012Buildcraft.onKill(phase1Build,phase2Context(r));
  const enemy=r.enemy,boss=!!enemy.boss,elite=!!enemy.miniboss;
- const gold=roll(3,6)+Math.floor(r.tier*.5)+(boss?8:elite?4:0);
- const fragments=roll(1,3)+Math.floor(r.tier*.24)+(boss?5:elite?3:0);
+ const gold=Math.round((roll(3,6)+Math.floor(r.tier*.5)+(boss?8:elite?4:0))*(r.phase6Bounty?1.5:1));
+ const fragments=Math.round((roll(1,3)+Math.floor(r.tier*.24)+(boss?5:elite?3:0))*(r.phase6Bounty?1.5:1));
  state.gold+=gold;state.fragments+=fragments;r.gold+=gold;r.fragments+=fragments;phase5Results.gold+=gold;phase5Results.fragments+=fragments;
  addLog('Realm rewards pending: +'+gold+' Gold · +'+fragments+' Fragments.','good');
  const odds=waveLootOdds(boss?5:elite?4:r.enc,r.stats.cha);if(phase6Run?.effects.fortune)odds.drop=Math.min(1,odds.drop*1.25);
- if(boss||gameRandom()<odds.drop){
+ if(boss||r.phase6Bounty||gameRandom()<odds.drop){
   const theme=phase2Theme(r.path),pick=dungeonEquipmentPick(theme,[]);
   const rarity=randomFromOdds(odds.rarities);
   const item=makeItem(r.tier,pick.slot,theme.effect,'loot',pick.subtype,rarity);
@@ -3646,7 +3686,7 @@ function phase1WaveWon(){
   WandererV012Buildcraft.clear(phase1Build);phase1Build=null;
   if(PHASE5_VALIDATION){phase5Snapshot.expedition.completed=Math.max(phase5Snapshot.expedition.completed,r.tier);phase5Snapshot.expedition.lastOutcome='victory';}
   // Keep classic Rune tiers and three-choice UI: only complete milestone bosses, never Elites.
-  if(r.tier%10===0&&r.tier<=DUNGEON_CAP)offerBossRunes(r.tier);
+  if((g.version===2||r.tier%10===0)&&r.tier<=DUNGEON_CAP)offerBossRunes(r.tier);
   if(state.pendingRuneReward)phase5Results.summary.runeTier=state.pendingRuneReward.tier;
   // Existing stock is retained; new progression does not grant free vendor rerolls.
   if(state.merchant)state.merchant.refreshCost=16+merchantTier()*4;

@@ -220,3 +220,21 @@
  .phase3BagInventory>.equipmentLoadout{width:100%}
  .phase3BagInventory .paper{min-height:460px}
 }
+
+/* Functional 5 / character / 5 layout; classic paper doll keeps its own rules. */
+.phase3IntegratedPreview :is(.equipmentLayout,.phase3PreparationLayout) .equipmentLoadout .paper{height:560px;min-height:560px;position:relative;display:block}
+.phase3IntegratedPreview :is(.equipmentLayout,.phase3PreparationLayout) .equipmentLoadout .paper .model{position:absolute;inset:0 14%;width:72%;height:100%;object-fit:contain;object-position:center}
+.phase3IntegratedPreview :is(.equipmentLayout,.phase3PreparationLayout) .equipmentLoadout .paper .slotTile{position:absolute;width:76px;height:84px;left:auto;right:auto}
+.phase3IntegratedPreview :is(.equipmentLayout,.phase3PreparationLayout) .equipmentLoadout .paper .slotTile[data-slot="weapon"]{left:1%;right:auto;top:2%;}
+.phase3IntegratedPreview :is(.equipmentLayout,.phase3PreparationLayout) .equipmentLoadout .paper .slotTile[data-slot="offhand"]{left:1%;right:auto;top:21%;}
+.phase3IntegratedPreview :is(.equipmentLayout,.phase3PreparationLayout) .equipmentLoadout .paper .slotTile[data-slot="helm"]{left:1%;right:auto;top:40%;}
+.phase3IntegratedPreview :is(.equipmentLayout,.phase3PreparationLayout) .equipmentLoadout .paper .slotTile[data-slot="armor"]{left:1%;right:auto;top:59%;}
+.phase3IntegratedPreview :is(.equipmentLayout,.phase3PreparationLayout) .equipmentLoadout .paper .slotTile[data-slot="gloves"]{left:1%;right:auto;top:78%;}
+.phase3IntegratedPreview :is(.equipmentLayout,.phase3PreparationLayout) .equipmentLoadout .paper .slotTile[data-slot="amulet"]{right:1%;left:auto;top:2%;}
+.phase3IntegratedPreview :is(.equipmentLayout,.phase3PreparationLayout) .equipmentLoadout .paper .slotTile[data-slot="belt"]{right:1%;left:auto;top:21%;}
+.phase3IntegratedPreview :is(.equipmentLayout,.phase3PreparationLayout) .equipmentLoadout .paper .slotTile[data-slot="ring1"]{right:1%;left:auto;top:40%;}
+.phase3IntegratedPreview :is(.equipmentLayout,.phase3PreparationLayout) .equipmentLoadout .paper .slotTile[data-slot="ring2"]{right:1%;left:auto;top:59%;}
+.phase3IntegratedPreview :is(.equipmentLayout,.phase3PreparationLayout) .equipmentLoadout .paper .slotTile[data-slot="boots"]{right:1%;left:auto;top:78%;}
+.realmRisk.normal{color:#b9d6c4}.realmRisk.elite{color:#e5b86c}.realmRisk.boss{color:#f07f89}.realmRisk.event{color:#b7a4ee}
+.phase3IntegratedPreview .phase3BagGrid{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:600px){.phase3IntegratedPreview :is(.equipmentLayout,.phase3PreparationLayout) .equipmentLoadout .paper .slotTile{width:64px;height:78px}.phase3IntegratedPreview :is(.equipmentLayout,.phase3PreparationLayout) .equipmentLoadout .paper{height:520px;min-height:520px}}

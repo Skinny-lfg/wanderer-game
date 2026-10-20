@@ -68,12 +68,12 @@ function profileCheck(p){
  for(const [slot,item]of Object.entries(p.equip))if(item)requireValue(item.slot===slot,'equipped slot mismatch');
  requireValue(Array.isArray(p.runes)&&p.runes.length<=300&&Array.isArray(p.runeSlots)&&p.runeSlots.length===3,'Runes');
  const runeIds=new Set();
- function runeCheck(r){requireValue(plain(r)&&typeof r.id==='string'&&!ids.has(r.id)&&!runeIds.has(r.id)&&integer(r.tier,10,200)&&r.tier%10===0&&RUNES.includes(r.family),'Rune identity');runeIds.add(r.id);}
+ function runeCheck(r){requireValue(plain(r)&&typeof r.id==='string'&&!ids.has(r.id)&&!runeIds.has(r.id)&&integer(r.tier,1,200)&&(r.progression==='expedition'||r.tier>=10&&r.tier%10===0)&&RUNES.includes(r.family),'Rune identity');runeIds.add(r.id);}
  p.runes.forEach(runeCheck);
  const equippedFamilies=new Set(),equippedIds=new Set();
  for(const id of p.runeSlots){if(id===null)continue;const rune=p.runes.find(r=>r.id===id);requireValue(rune&&!equippedIds.has(id)&&!equippedFamilies.has(rune.family),'Rune slot ownership');equippedIds.add(id);equippedFamilies.add(rune.family);}
  if(p.pendingRuneReward){
-  const reward=p.pendingRuneReward;requireValue(integer(reward.tier,10,200)&&reward.tier%10===0&&Array.isArray(reward.options)&&reward.options.length===3,'Rune reward');
+  const reward=p.pendingRuneReward;requireValue(integer(reward.tier,1,200)&&Array.isArray(reward.options)&&reward.options.length===3,'Rune reward');
   reward.options.forEach(runeCheck);requireValue(reward.options.every(r=>r.tier===reward.tier)&&new Set(reward.options.map(r=>r.family)).size===3,'Rune offer');
  }
  requireValue(Array.isArray(p.sigils)&&p.sigils.length<=100,'Sigils');const sigilIds=new Set();
@@ -116,7 +116,7 @@ function presentationCheck(p){
  const seconds=x=>typeof x==='number'&&Number.isFinite(x)&&x>=0;
  if(p.realm!==null){const r=p.realm;requireValue(plain(r)&&integer(r.level,1,200)&&integer(r.plane,1,15)&&['cleared','defeat'].includes(r.outcome)&&typeof r.name==='string'&&typeof r.family==='string'&&typeof r.enemy==='string'&&seconds(r.seconds)&&integer(r.gold,0,Number.MAX_SAFE_INTEGER)&&integer(r.fragments,0,Number.MAX_SAFE_INTEGER)&&Array.isArray(r.log)&&r.log.every(l=>plain(l)&&typeof l.text==='string'&&typeof l.kind==='string')&&r.log.reduce((n,l)=>n+l.text.length+l.kind.length,0)<=180000,'Realm result');}
  if(p.realm?.loot!==undefined)requireValue(Array.isArray(p.realm.loot)&&p.realm.loot.length<=3&&p.realm.loot.every(item),'Realm loot result');
- if(p.summary!==null){const r=p.summary;requireValue(plain(r)&&integer(r.level,1,200)&&integer(r.realms,0,15)&&['victory','defeat','extracted','abandoned'].includes(r.outcome)&&seconds(r.seconds)&&integer(r.gold,0,Number.MAX_SAFE_INTEGER)&&integer(r.fragments,0,Number.MAX_SAFE_INTEGER)&&Array.isArray(r.families)&&r.families.length<=3&&r.families.every(f=>['blood','decay','vitality','aegis','fury','magic'].includes(f))&&Array.isArray(r.picks)&&r.picks.length<=16&&r.picks.every(id=>typeof id==='string')&&['kept','lost','discarded'].every(k=>Array.isArray(r[k])&&r[k].length<=45&&r[k].every(item))&&(r.runeTier===null||integer(r.runeTier,10,200)&&r.runeTier%10===0),'Expedition summary');
+ if(p.summary!==null){const r=p.summary;requireValue(plain(r)&&integer(r.level,1,200)&&integer(r.realms,0,15)&&['victory','defeat','extracted','abandoned'].includes(r.outcome)&&seconds(r.seconds)&&integer(r.gold,0,Number.MAX_SAFE_INTEGER)&&integer(r.fragments,0,Number.MAX_SAFE_INTEGER)&&Array.isArray(r.families)&&r.families.length<=3&&r.families.every(f=>['blood','decay','vitality','aegis','fury','magic'].includes(f))&&Array.isArray(r.picks)&&r.picks.length<=16&&r.picks.every(id=>typeof id==='string')&&['kept','lost','discarded'].every(k=>Array.isArray(r[k])&&r[k].length<=45&&r[k].every(item))&&(r.runeTier===null||integer(r.runeTier,1,200)),'Expedition summary');
   requireValue(r.outcome!=='victory'||r.realms===15,'victory result');requireValue((r.runeTier===null||r.outcome==='victory')&&(r.runeName===undefined||r.runeTier!==null&&typeof r.runeName==='string'),'Rune result');
  }
  requireValue(p.review!=='realm'||p.realm!==null,'missing Realm result');requireValue(p.review!=='summary'||p.summary!==null,'missing Expedition summary');
