@@ -22,7 +22,8 @@ function run(E,ratio,family,seed,weapon,fortune=false,variant='current'){
   if(a.events.run()?.event){const id=a.events.run().event.id,item=a.bag.items()[0],passive=a.build().picks.find(id=>id!==a.build().initialPassive),familyHint=a.controller().allowed()[0],target=Object.values(s.equip).find(Boolean);let ok=a.events.choose(0,item?.id,passive,familyHint,target?.id);if(!ok)ok=a.events.choose(1,item?.id,passive,familyHint,target?.id);if(!ok)a.events.choose(2);events++;continue;}
   if(a.draft()?.kind==='reward'){const order=[...priorities[family],'renewal','fortified','strong_heart'],options=a.draft().options;const pick=[...options].sort((x,y)=>(order.includes(x.id)?order.indexOf(x.id):99)-(order.includes(y.id)?order.indexOf(y.id):99))[0];picks.push(pick.id);a.passive(pick.id);continue;}
   if(a.draft()?.step==='element'){a.element(['fire','frost','lightning'][seed%3]);continue;}
-  if(a.results().review){a.exitResult();continue;}
+  // Current v0.12 keeps a cleared Realm active until EXIT REALM, even after its passive is chosen.
+  if(s.run?.status==='cleared'||a.results().eventExitPending||a.results().review){if(!a.exitResult())throw Error('Cannot exit resolved Realm');continue;}
   if(g.stage==='choice'){
    lootObserved=Math.max(lootObserved,a.results().earned.length);while(a.bag.overflow()>0)a.bag.discard(a.bag.items().at(-1).id);
    for(const item of [...a.bag.items()]){if(item.slot==='weapon'&&item.subtype!==weapon)continue;if(item.slot==='offhand'&&['Bow','Staff','Two-Handed'].includes(weapon))continue;const equip={...s.equip,[item.slot]:item};if(a.baseStats(equip).power>a.baseStats().power)a.equip(item.id);}
