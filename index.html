@@ -1984,7 +1984,7 @@ function renderPhase1(){
 function phase6PassivePopup(){
  if(document.querySelector('dialog[data-realm-passive]'))return;
  const draft=phase1Draft,dialog=showModal('Choose one Realm passive','<div class="phase1DraftCards">'+draft.options.map(p=>'<button data-popup-passive="'+p.id+'">'+phase2PassiveIcons(p)+'<b>'+esc(p.name)+'</b><p>'+esc(p.description)+'</p></button>').join('')+'</div>');
- if(!dialog)return;dialog.dataset.realmPassive='1';dialog.querySelector('[data-close]')?.remove();dialog.addEventListener('cancel',e=>e.preventDefault());
+ if(!dialog||typeof dialog.querySelector!=='function'||typeof dialog.querySelectorAll!=='function')return;dialog.dataset.realmPassive='1';dialog.querySelector('[data-close]')?.remove();dialog.addEventListener('cancel',e=>e.preventDefault());
  dialog.querySelectorAll('[data-popup-passive]').forEach(button=>button.onclick=()=>{dialog.close();phase2ChoosePassive(button.dataset.popupPassive);});
 }
 
