@@ -53,7 +53,7 @@ function phase6EventChoice(choice,itemId,passiveId,family,targetId){
  const passive=ports.phase1Build.picks.includes(passiveId),effects=ports.phase6Run.effects;
  const pay=(field,n)=>{if(ports.state[field]<n)return false;ports.state[field]-=n;return true;};
  const heal=(hp=0,mp=0)=>{ports.phase1Vitals={hp:Math.min(v.maxhp,v.hp+Math.ceil(v.maxhp*hp)),mp:Math.min(v.maxmp,v.mp+Math.ceil(v.maxmp*mp)),maxmp:v.maxmp};};
- const sacrifice=()=>{ports.state.stash=ports.state.stash.filter(i=>i.id!==itemId);ports.state.expeditionOverflow=ports.state.expeditionOverflow.filter(i=>i.id!==itemId);ports.phase3LootIds.delete(itemId);};
+ const sacrifice=()=>{ports.state.stash=ports.state.stash.filter(i=>i.id!==itemId);ports.state.expeditionOverflow=ports.state.expeditionOverflow.filter(i=>i.id!==itemId);ports.state.valuables=(ports.state.valuables||[]).filter(i=>i.id!==itemId);ports.phase3LootIds.delete(itemId);};
  if(choice!==2){switch(ev.id){
  case 'traveling_merchant':if(choice===0&&v.hp>=v.maxhp)return false;if(!pay('gold',costGold))return false;if(choice===0)heal(.35);else ports.phase6Buff('might',.10);break;
  case 'smugglers_caravan':if(!pay('fragments',costFragments))return false;if(choice===0)heal(0,.4);else ports.phase6Buff('ironhide',.10);break;
