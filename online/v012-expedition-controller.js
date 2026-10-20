@@ -56,9 +56,14 @@ function create(themes,rng=Math.random){
   if(!['camp','finished','failed'].includes(game.stage))throw Error('Expedition already active');
   const count=rng()<.5?3:4,groups=shuffle(Object.keys(EVENT_GROUPS),rng).slice(0,count);
   const picks=groups.map(group=>{const items=EVENT_GROUPS[group];return items[Math.floor(rng()*items.length)][0];});
-  const middle=shuffle([...Array(11-count).fill('combat'),'elite','elite',...Array(count).fill('event')],rng);
-  const eventIds=Array(15).fill(null);let eventIndex=0;
-  middle.forEach((kind,i)=>{if(kind==='event')eventIds[i+1]=picks[eventIndex++];});
+  // Place events across early, middle and late Expedition windows. Event positions
+  // are chosen BEFORE guaranteed or random Elite slots, so 3–4 events are reliable.
+  const windows=count===4?[[3,4,5],[6,7,8],[9,10,11],[12,13,14]]:[[3,4,5],[7,8,9],[11,12,13]];
+  const positions=windows.map(values=>values[Math.floor(rng()*values.length)]);
+  const middle=Array(13).fill('combat'),eventIds=Array(15).fill(null);
+  positions.forEach((plane,i)=>{middle[plane-2]='event';eventIds[plane-1]=picks[i];});
+  const eliteCandidates=shuffle(Array.from({length:13},(_,i)=>i).filter(i=>middle[i]==='combat'),rng);
+  eliteCandidates.slice(0,2).forEach(i=>{middle[i]='elite';});
   Object.assign(game,{expedition:level,planeIndex:1,families:[],lastFamily:null,initialFamily:null,
    rooms:['combat',...middle,'boss'],eventIds,offers:[],selected:null,wave:0,history:[],
    rewardPending:null,rerollsByRealm:Array.from({length:15},()=>[3,3,3]),stage:'choice'});
