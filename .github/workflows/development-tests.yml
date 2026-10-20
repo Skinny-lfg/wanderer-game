@@ -59,3 +59,23 @@ jobs:
         run: node scripts/v012-focused-build-sim.cjs /tmp/wanderer-v012-focused-builds.json
       - name: Native v0.12 combat/loot simulations
         run: npm run simulate:v012
+
+
+  utility-coverage-ab-audit:
+    if: contains(github.event.head_commit.message, '[coverage]') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run isolated paired utility-coverage simulations
+        run: node scripts/v012-coverage-ab-sim.cjs /tmp/wanderer-v012-coverage-ab.json
+      - name: Archive coverage comparison and full trajectories
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wanderer-coverage-ab-${{ github.sha }}
+          path: /tmp/wanderer-v012-coverage-ab.json
+          if-no-files-found: ignore
