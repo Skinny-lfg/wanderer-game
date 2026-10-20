@@ -69,7 +69,7 @@ function run(E,model,seed,variant,rarity){
   won:g.stage==='finished',plane:g.history.length,boss,waves,events,picks,seconds:+(ticks*.11).toFixed(1),timeout,error};
 }
 const result=[];const limit=Number(process.env.WANDERER_ENDLESS_CASE_LIMIT||0);
-outer:for(const E of levels)for(const model of models)for(const variant of ['under','equal','over'])for(let seed=1;seed<=4;seed++){
+outer:for(const E of levels)for(const model of models)for(const variant of ['under','equal','over'])for(let seed=1;seed<=16;seed++){
  result.push(run(E,model,seed,variant,seed%2?'Rare':'Epic'));
  if(limit&&result.length>=limit)break outer;
 }
