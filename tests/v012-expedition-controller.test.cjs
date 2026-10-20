@@ -53,7 +53,7 @@ test('fifteen Realms, sequential Waves, a single passive gate per cleared Realm,
  assert.equal(c.state.unlocked,2);assert.equal(c.state.stage,'finished');assert.equal(c.state.history.length,15);assert.equal(c.state.families.length,0);
 });
 test('defeat and abandonment clear pending choices without unlocking; invalid content fails closed',()=>{
- assert.throws(()=>api.create([]),/themes/);assert.throws(()=>api.create(themes.filter(t=>t.id!=='forge')),/Missing/);
+ assert.throws(()=>api.create([]),/themes/);assert.throws(()=>api.create(themes.filter(t=>!['forge','bloodscar'].includes(t.id))),/Missing/);
  const c=create();c.start();c.chooseInitial('decay');c.select(c.state.offers[0].id);c.enter();c.defeat();
  assert.equal(c.state.stage,'failed');assert.equal(c.state.unlocked,1);assert.equal(c.state.families.length,0);
  c.start();c.abandon();assert.equal(c.state.stage,'failed');assert.equal(c.state.rewardPending,null);
@@ -63,7 +63,7 @@ test('defeat and abandonment clear pending choices without unlocking; invalid co
 test('exactly 3 or 4 distinct non-combat events; boss and guaranteed elites survive',()=>{
  const count={3:0,4:0};
  for(let seed=0;seed<500;seed++){
-  const c=api.create(themes,rng(seed+1));c.start();
+  const c=api.create(themes,rng(Math.imul(seed+1,2654435761)>>>0));c.start();
   const g=c.state,events=g.eventIds.filter(Boolean),groupNames=events.map(id=>api.EVENT_BY_ID[id].group);
   assert([3,4].includes(events.length));count[events.length]++;
   assert.equal(g.rooms.filter(x=>x==='event').length,events.length);
