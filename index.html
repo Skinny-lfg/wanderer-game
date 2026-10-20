@@ -3245,6 +3245,7 @@ function playerStatusMarkup(r){
  if(!r)return '';
  const items=[];
  if(r.barrier>0)items.push('<span class="debuff statusPositive">'+statusArt('barrier')+' Barrier '+Math.floor(r.barrier)+'</span>');
+  if(r.phase1&&phase1Build?.element==='lightning')items.push('<span class="debuff statusPositive">⚡ Static '+(phase1Build.runtime.staticCharges||0)+'/4</span>');
   const buffs=r.setTemp||{},now=setNow(r);
  const legendary=r.legendaryState||{};
  for(const [field,label,icon] of [['armorReady','Soul Harvest ready','soul-harvest'],['focusReady','Golden Focus ready','golden-focus'],['refuge','Umbral Refuge ready','umbral-refuge'],['guard','Dawnward ready','dawnward'],['reserve','Dawnstar Bloom reserve','dawnstar-bloom'],['hotRemaining','Last Sunrise healing','last-sunrise']])if(legendary[field])items.push('<span class="debuff statusPositive statusLegendary">'+statusArt(icon)+' '+label+'</span>');
@@ -3371,7 +3372,7 @@ function phase2Context(r){
 function phase2Stats(){return phase1Build?WandererV012Buildcraft.mods(phase1Build,totalStats()):totalStats();}
 function phase2WeaponAttack(r,base,critical,cast){
  if(!isPhase1Run()||!phase1Build)return;
- const ctx=phase2Context(r);ctx.base=base;ctx.critical=critical;ctx.magical=cast;
+ const ctx=phase2Context(r);ctx.base=base;ctx.critical=critical;ctx.magical=cast;ctx.funded=!!cast;
  WandererV012Buildcraft.onAttack(phase1Build,ctx);
  if(cast&&phase1Build.element){
   ctx.power=r.stats.spellPower;ctx.amp=r.stats.main?.subtype==='Staff'?1.25:r.stats.main?.subtype==='Wand'?1.12:1;
@@ -3379,11 +3380,11 @@ function phase2WeaponAttack(r,base,critical,cast){
  }
 }
 function phase2MagicTick(r){
- if(!isPhase1Run()||!phase1Build?.element||r.stats.caster||r.status!=='fight')return;
+ if(!isPhase1Run()||!WandererV012Buildcraft.canCast(phase1Build)||r.stats.caster||r.status!=='fight')return;
  const ctx=phase2Context(r),b=phase1Build;
  if(ctx.now-b.runtime.lastSpellAt<2.5)return;
  const cost=WandererV012Buildcraft.nextCost(b);if(r.mp<cost)return;
- b.runtime.lastSpellAt=ctx.now;r.mp-=cost;ctx.power=r.stats.spellPower;ctx.amp=1;
+ b.runtime.lastSpellAt=ctx.now;r.mp-=cost;ctx.power=r.stats.spellPower;ctx.amp=1;ctx.funded=true;
  setDirectEnemyDamage(r,Math.max(1,Math.round(ctx.power*.70)),'✨ '+b.element);
  WandererV012Buildcraft.onCast(b,ctx);
  combatEffect('Wand',({fire:'burn',frost:'slow',lightning:'shock'})[b.element]);
