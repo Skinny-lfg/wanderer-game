@@ -35,5 +35,5 @@ test('Expedition HTML loads event decision module and guards older saves',()=>{
  assert(html.includes('phase1Controller.eventWon()'));
  assert(html.includes('phase3LootIds.add(item.id)'));
  assert(html.includes('PHASE3_BAG_CAPACITY=6'));
- assert(html.includes('if(plane.eventId){if(phase5Persist())render();return true;}'));
+ assert(html.includes('else if(plane.eventId){if(phase5Persist())render();}'));
 });
