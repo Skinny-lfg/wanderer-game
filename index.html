@@ -3813,12 +3813,12 @@ function renderPhase1(){
  }
  if(g.stage==='combat'&&g.selected?.eventId&&!state.run){
   const event=WandererV012Events.CATALOG.find(x=>x.id===g.selected.eventId);
-  const choices=WandererV012Events.options(g.selected.eventId);
+  const choices=WandererV012Events.options(g.selected.eventId,{level:g.expedition});
   html('<section class="panel phase3Event"><span class="eyebrow">Expedition '+g.expedition+' · Realm '+g.planeIndex+' / 15</span>'+
-   '<h2>'+esc(event.name)+'</h2><p>'+esc(event.description)+'</p><p class="small muted">'+familyLabel(g.selected.family)+
+   '<h2>'+esc(event.name)+'</h2><p>'+esc(event.description)+'</p>'+(event.id==='oracle_of_paths'?'<p class="small">The Oracle foresees '+esc(phase1Controller.state.rooms[g.planeIndex]||'unknown')+' ahead.</p>':'')+'<p class="small muted">'+familyLabel(g.selected.family)+
    ' · Event (no combat) · Health '+Math.ceil(stats.hp)+'/'+stats.maxhp+' · Mana '+Math.floor(stats.mp)+'/'+stats.maxmp+
    ' · '+state.gold+' Gold · '+state.fragments+' Fragments</p><div class="phase1DraftCards">'+
-   choices.map(option=>'<button class="phase1DraftCard" data-phase1-event-choice="'+esc(option.id)+'"><strong>'+esc(option.label)+'</strong></button>').join('')+
+   choices.map(option=>'<button class="phase1DraftCard" data-phase1-event-choice="'+esc(option.id)+'"><strong>'+esc(option.label)+'</strong><small>'+esc(option.detail)+'</small></button>').join('')+
    '<button class="phase1DraftCard" data-phase1-event-choice="leave"><strong>Refuse the offer</strong><small>Take ordinary Realm supplies instead.</small></button></div>'+
    '<p class="micro muted">Each choice is final; the loot stays at risk until extraction or victory.</p></section>');
   Q('[data-phase1-event-choice]').forEach(b=>b.onclick=()=>phase1ResolveEvent(b.dataset.phase1EventChoice));
