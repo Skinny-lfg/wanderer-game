@@ -6,9 +6,20 @@ const partners={blood:['decay','magic'],decay:['blood','magic'],vitality:['aegis
 function run(config){
  const {E,weapon,rarity,family,strategy,runes,seed}=config,coverage=config.coverage==='utility',start=performance.now(),a=create(seed,undefined,{}, {measure:true,now:1700000000000}),B=a.buildcraft;
  a.setup(E,weapon,rarity);const s=a.state(),g=a.controller().state;g.unlocked=E;
+ const selectedArmor=config.armorType||null;
+ if(selectedArmor){
+  if(!['Cloth','Leather','Plate'].includes(selectedArmor))throw Error('Unknown armor type');
+  for(const slot of ['helm','armor','gloves','belt','boots'])s.equip[slot]=a.makeItem(E,slot,null,'loot',selectedArmor,rarity);
+ }
+ if(config.offhandType){
+  if(['Bow','Staff','Two-Handed'].includes(weapon))throw Error('Two-handed weapon cannot carry offhand');
+  const type=config.offhandType==='Daggers'?'Off-Hand Dagger':config.offhandType;
+  s.equip.offhand=a.makeItem(E,'offhand',null,'loot',type,rarity);
+ }
  if(runes){s.runes=['vitality','warding',['Staff','Wand'].includes(weapon)?'wisdom':'might'].map(f=>a.makeRune(f,E));s.runeSlots=s.runes.map(r=>r.id);}
  let steering=seed;const random=()=>((steering=(Math.imul(steering,1664525)+1013904223)>>>0)/4294967296);
- const target=[family,...partners[family]].slice(0,strategy==='mono'?1:strategy==='dual'?2:3);
+ const target=(config.targetFamilies||[family,...partners[family]]).slice(0,strategy==='mono'?1:strategy==='dual'?2:3);
+ if(!target.length||target[0]!==family||target.some(f=>!families.includes(f))||new Set(target).size!==target.length)throw Error('Invalid affinity target');
  // Optional simulation-only policy: keep the intended pair, then pursue a third
  // utility family with existing abilities. Never grant talents or modify combat.
  const primary=target.slice(0,2);
@@ -44,7 +55,7 @@ function run(config){
   else if(r?.status==='cleared'||a.results().eventExitPending){if(!a.exitResult()){error='Realm exit rejected';break;}}
   else if(r?.status==='fight'){
    bossReached ||=r.enemy.boss;const enemy=r.enemy;
-   if(!firstFight){const st=r.stats||{},v=r.enemy;firstFight={playerHP:r.hp,playerMaxHP:r.maxhp,playerAttack:st.attack,playerDefense:st.defense,playerSpeed:st.attacksPerSec,playerCrit:st.crit,playerPower:st.power,enemyHP:v.maxhp,enemyAttack:v.atk,enemyDefense:v.def,enemyInterval:v.attackEvery,enemyElite:!!v.miniboss};}
+   if(!firstFight){const st=r.stats||{},v=r.enemy;firstFight={playerHP:r.hp,playerMaxHP:r.maxhp,playerAttack:st.attack,playerDefense:st.defense,playerSpeed:st.attacksPerSec,playerCrit:st.crit,playerPower:st.power,playerArmorType:selectedArmor,playerEvasionRating:st.evasionRating,playerBlockChance:st.blockChance,playerSpellPower:st.spellPower,playerMana:st.mana,enemyHP:v.maxhp,enemyAttack:v.atk,enemyDefense:v.def,enemyInterval:v.attackEvery,enemyElite:!!v.miniboss};}
    let inner=0;
    while(s.run===r&&r.status==='fight'&&r.enemy===enemy&&inner++<2200&&ticks<45000){last={hp:r.hp,mp:r.mp,maxhp:r.maxhp,crit:r.stats.crit,block:r.stats.blockChance};a.tick();ticks++;}
    if(inner>=2200||ticks>=45000){timeout=true;break;}if(enemy.hp<=0)waves++;a.flush();
@@ -65,7 +76,7 @@ function run(config){
  }
  win=g.stage==='finished';if(!win&&g.stage!=='failed'&&!timeout&&!error)error='Unterminated';
  const metrics=extra.metrics||{},seconds=ticks*.11,m=a.measured,hybrids=lastPick.filter(id=>B.CATALOG.find(p=>p.id===id)?.requires.length);
- return {...config,coverage:coverage?'utility':'baseline',utilityFamily,utilityPicks,utilityUnlocked:!!utilityFamily&&lastUnlockedFamilies.includes(utilityFamily),primaryUnlocked:primary.every(f=>lastUnlockedFamilies.includes(f)),firstFight,win,reached:Math.min(15,g.history.length+(g.stage==='failed'?1:0)),bossReached,waves,seconds:+seconds.toFixed(2),wallMs:Math.round(performance.now()-start),dps:+((metrics.damageDealt||0)/Math.max(1,seconds)).toFixed(2),damage:metrics.damageDealt||0,dot:Math.round(m.dot),peakProcBurst:m.burst,maxhp:last.maxhp,observedEhpBudget:Math.round(last.maxhp+m.healed+m.absorbed),hp:win?last.hp:0,mana:last.mp,critChance:last.crit,blockChance:last.block,criticalHits:m.crit,weaponAttacks:m.attacks,blocks:m.blocks,incomingAttacks:m.incoming,healPerSecond:+(m.healed/Math.max(1,seconds)).toFixed(3),barrierPerSecond:+(m.barrier/Math.max(1,seconds)).toFixed(3),telemetry:runtime.passiveTelemetry||{},hybrids,firstHybrid,hybridOffers,usefulUpgrades,synergyCards,cardCount,pityPresentations:pity,missing:target.filter(f=>!routes.includes(f)),routes,actualFamilies:[...new Set(routes)],targetFamilies:target,unplannedFamilies:[...new Set(routes)].filter(f=>!target.includes(f)),targetHybrids:hybrids.filter(id=>B.CATALOG.find(p=>p.id===id).requires.every(f=>target.includes(f))),rngEnd:a.checkpoint.seed(),error,timeout};
+ return {...config,coverage:coverage?'utility':'baseline',utilityFamily,utilityPicks,utilityUnlocked:!!utilityFamily&&lastUnlockedFamilies.includes(utilityFamily),primaryUnlocked:primary.every(f=>lastUnlockedFamilies.includes(f)),unlockedFamilies:lastUnlockedFamilies,allTargetsUnlocked:target.every(f=>lastUnlockedFamilies.includes(f)),firstFight,win,reached:Math.min(15,g.history.length+(g.stage==='failed'?1:0)),bossReached,waves,seconds:+seconds.toFixed(2),wallMs:Math.round(performance.now()-start),dps:+((metrics.damageDealt||0)/Math.max(1,seconds)).toFixed(2),damage:metrics.damageDealt||0,dot:Math.round(m.dot),peakProcBurst:m.burst,maxhp:last.maxhp,observedEhpBudget:Math.round(last.maxhp+m.healed+m.absorbed),hp:win?last.hp:0,mana:last.mp,critChance:last.crit,blockChance:last.block,criticalHits:m.crit,weaponAttacks:m.attacks,blocks:m.blocks,incomingAttacks:m.incoming,healPerSecond:+(m.healed/Math.max(1,seconds)).toFixed(3),barrierPerSecond:+(m.barrier/Math.max(1,seconds)).toFixed(3),telemetry:runtime.passiveTelemetry||{},hybrids,firstHybrid,hybridOffers,usefulUpgrades,synergyCards,cardCount,pityPresentations:pity,missing:target.filter(f=>!routes.includes(f)),routes,actualFamilies:[...new Set(routes)],targetFamilies:target,unplannedFamilies:[...new Set(routes)].filter(f=>!target.includes(f)),targetHybrids:hybrids.filter(id=>B.CATALOG.find(p=>p.id===id).requires.every(f=>target.includes(f))),rngEnd:a.checkpoint.seed(),error,timeout};
 }
 function aggregate(rows,keys){const buckets=new Map();for(const row of rows){const key=keys.map(k=>row[k]).join('/');if(!buckets.has(key))buckets.set(key,[]);buckets.get(key).push(row);}const q=(a,p)=>[...a].sort((x,y)=>x-y)[Math.floor((a.length-1)*p)];return [...buckets].map(([key,a])=>({key,n:a.length,wins:a.filter(r=>r.win).length,winPct:+(100*a.filter(r=>r.win).length/a.length).toFixed(1),medianRealm:q(a.map(r=>r.reached),.5),p90Realm:q(a.map(r=>r.reached),.9),medianSeconds:q(a.map(r=>r.seconds),.5),medianDps:q(a.map(r=>r.dps),.5),hybridRuns:a.filter(r=>r.hybrids.length).length,medianFirstHybrid:q(a.map(r=>r.firstHybrid).filter(x=>x!==null),.5)??null,missingFamilyRuns:a.filter(r=>r.missing.length).length,unplannedFamilyRuns:a.filter(r=>r.unplannedFamilies.length).length,targetHybridRuns:a.filter(r=>r.targetHybrids.length).length,timeouts:a.filter(r=>r.timeout).length,errors:a.filter(r=>r.error).length}));}
 if(require.main===module){
