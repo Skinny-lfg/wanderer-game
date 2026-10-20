@@ -26,7 +26,7 @@ function replay(id,family,element='lightning',prerequisites=[]){
  for(const f of pass?.requires||[])if(!b.families.includes(f))b.families.push(f);
  if(b.families.includes('magic'))b.element=pass?.element||element;
  b.unlockedFamilies=[...b.families];b.picks.push(...prerequisites);if(id)b.picks.push(id);
- const {c,history}=ctx(0);
+ const {c,history}=ctx(0);c.base=1000;c.power=550;c.enemy.hp=20000;c.enemy.maxhp=100000;const originalDot=c.dot;c.dot=(kind,n)=>originalDot(kind,kind==='bleed'?api.bleedDamage(b,n):n);
  const mods=api.mods(b,base);
  const cost=api.nextCost(b);
  const healed=api.enemyHealMultiplier(b,c.enemy);
@@ -49,7 +49,7 @@ test('every advertised passive is unique, finite, and changes at least one execu
  const ids=new Set();
  for(const p of api.CATALOG){
   assert(!ids.has(p.id),'duplicate '+p.id);ids.add(p.id);
-  assert(api.FAMILIES.includes(p.family)&&p.max===null,p.id+' allows unbounded ranks');
+  assert(api.FAMILIES.includes(p.family)&&[1,5].includes(p.max),p.id+' finite rank cap');
   assert(p.description.length>15,'tooltip/behavior '+p.id);
   assert(p.requires.every(f=>api.FAMILIES.includes(f)),p.id+' valid hybrid');
   if(p.element)assert(api.ELEMENTS.includes(p.element),p.id+' valid element');
@@ -63,7 +63,7 @@ test('every advertised passive is unique, finite, and changes at least one execu
  }
  assert(api.CATALOG.length>=45,'meaningful buildcraft catalog');
 });
-test('each first completed family unlocks its enabling passive; repeated picks have no artificial rank cap',()=>{
+test('each first completed family unlocks its enabling passive; repeated picks respect Rank5 and Unique caps',()=>{
  const fam=new Set(api.FAMILIES);assert.deepEqual([...fam].sort(),['aegis','blood','decay','fury','magic','vitality'].sort());
  for(const ele of api.ELEMENTS){
   const b=api.create();b.families=['magic','fury'];
@@ -71,7 +71,7 @@ test('each first completed family unlocks its enabling passive; repeated picks h
   assert.equal(api.eligible(b,'magic').length,0,'entering a Realm does not grant active passives');
   const starter=api.initial(b,'magic');assert.equal(starter.element,ele);
   const opts=api.options(b,'magic',()=>0.3);
-  assert.equal(opts.length,3);assert(opts.every(o=>api.eligible(b,o.family).includes(o)));
+  assert.equal(opts.length,3);assert(opts.every(o=>api.eligible(b,o.family).some(p=>p.id===o.id)));
   const chosen=opts[0],previous=api.rank(b,chosen.id);
   api.choose(b,'magic',chosen.id,opts);
   assert.equal(api.rank(b,chosen.id),previous+1);assert.equal(b.element,ele);
@@ -85,7 +85,7 @@ test('each first completed family unlocks its enabling passive; repeated picks h
  for(const family of b.families)api.initial(b,family);
  for(let i=0;i<15;i++){const opts=api.options(b,'blood',()=>.31);assert.equal(opts.length,3);api.choose(b,'blood',opts[0].id,opts);}
  assert.equal(b.picks.length,18,'starter rewards plus fifteen normal selections');
- assert(b.picks.some(id=>api.rank(b,id)>2),'ranks can exceed the old maximum of two');
+ assert(b.picks.some(id=>api.rank(b,id)>2),'scalable talents can reach meaningful ranks above two');
  api.clear(b);assert.equal(b.picks.length,0);assert.equal(b.element,null);
 });
 test('hybrids require both families; simulated DOT, shock, healing, barrier, attack limits remain finite',()=>{
@@ -94,7 +94,7 @@ test('hybrids require both families; simulated DOT, shock, healing, barrier, att
   const b=api.create();b.families=[p.family];b.element=p.element||null;
   assert(!api.eligible(b,p.family).some(x=>x.id===p.id),'locked hybrid '+p.id);
   b.families=[...new Set(p.requires)];b.unlockedFamilies=[...b.families];
-  if(b.families.includes('magic'))b.element='fire';
+  if(b.families.includes('magic'))b.element='fire';b.realmIndex=10;b.picks=b.families.map(f=>({blood:'bleeding_edge',decay:'toxic_touch',vitality:'renewal',aegis:'barrier_pulse',fury:'precision',magic:'kindling'})[f]);if(b.families.includes('aegis'))b.picks.push('guarded_block');
   assert(api.eligible(b,p.family).some(x=>x.id===p.id),'unlocked hybrid '+p.id);
  }
  for(const family of api.FAMILIES){
@@ -168,8 +168,8 @@ test('Staff/Wand amplify all Magic schools without consuming extra status rolls'
 
 
 test('alternative hybrids are exclusive per affinity pair, cap three, and unlock progressively',()=>{
- const b=api.create();b.families=['blood','decay','magic'];b.unlockedFamilies=[...b.families];b.element='fire';b.realmIndex=5;
- assert(!api.options(b,'blood',()=>.4).some(p=>p.requires.length),'hybrids should not appear before Realm 6');
+ const b=api.create();b.families=['blood','decay','magic'];b.unlockedFamilies=[...b.families];b.element='fire';b.realmIndex=4;b.picks=['bleeding_edge','toxic_touch','kindling'];
+ assert(!api.options(b,'blood',()=>.4).some(p=>p.requires.length),'hybrids should not appear before Realm 5');
  b.realmIndex=6;
  const available=api.eligible(b,'blood');
  const plague=available.find(x=>x.id==='plague_rupture');

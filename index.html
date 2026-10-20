@@ -1705,7 +1705,7 @@ function phase6RenderEvent(){
  html('<section class="panel"><h2>'+esc(def[1])+'</h2><p>'+esc(def[2])+' · Costs and consequences are final. Declining grants no reward.</p>'+
  '<label>Bag sacrifice<select id="eventItem"><option value="">Choose an item</option>'+bag.map(i=>'<option value="'+esc(i.id)+'">'+esc(i.name)+' · E'+i.tier+'</option>').join('')+'</select></label>'+
  '<label>Empowered item<select id="eventTarget">'+items.map(i=>'<option value="'+esc(i.id)+'">'+esc(i.name)+'</option>').join('')+'</select></label>'+
- '<label>Passive<select id="eventPassive">'+[...new Set(phase1Build.picks)].map(id=>'<option value="'+id+'">'+esc(WandererV012Buildcraft.CATALOG.find(p=>p.id===id).name)+'</option>').join('')+'</select></label>'+
+ '<label>Passive<select id="eventPassive">'+[...new Set(phase1Build.picks)].filter(id=>!['echo_shrine','last_ember'].includes(ev.id)||WandererV012Buildcraft.canModify(phase1Build,id,ev.id==='echo_shrine'?.5:-.5,totalStats())).map(id=>'<option value="'+id+'">'+esc(WandererV012Buildcraft.CATALOG.find(p=>p.id===id).name)+'</option>').join('')+'</select></label>'+
  '<label>Future affinity<select id="eventFamily">'+phase1Controller.allowed().map(f=>'<option value="'+f+'">'+f+'</option>').join('')+'</select></label>'+
  (ev.alternative?'<p>Mirror alternative: '+esc(WandererV012Buildcraft.CATALOG.find(p=>p.id===ev.alternative).name)+'</p>':'')+
  def[3].map((original,i)=>{const E=phase1Controller.state.expedition,v=phase3Vitals();let label=original.replace(/(\d+) \+ (\d+)×E/g,(_,a,b)=>String(+a+ +b*E)).replace(/(\d+) \+ E/g,(_,a)=>String(+a+E));if(ev.id==='relic_collector'&&!bag.length)label='No bag gear: take '+(i===0?5+E+' Gold':3+E+' Fragments');if(ev.id==='bounty_writ'&&i===0&&!phase1Controller.state.rooms.slice(phase1Controller.state.planeIndex).includes('elite'))label='No guaranteed Elite remains: take '+(5+E)+' Fragments';if(ev.id==='restless_spring'&&(i===0&&v.hp>=v.maxhp||i===1&&(v.maxmp===0||v.mp>=v.maxmp)))label='Resource already full: take '+(3+E)+' Fragments';return '<button data-event-choice="'+i+'">'+esc(label)+'</button>';}).join('')+'<button data-event-choice="2" class="ghost">Decline — no reward</button></section>');
@@ -1902,9 +1902,9 @@ function phase2PassiveIcons(passive){
 
 function phase3PassivesMarkup(){
  const counts=new Map();for(const id of phase1Build?.picks||[])counts.set(id,(counts.get(id)||0)+1);
- return '<section class="phase3CompactPassives" aria-label="Active Expedition passives"><h3>Active passives</h3><div class="phase3PassiveGrid">'+[...counts].map(([id,rank])=>{
+ return '<section class="phase3CompactPassives" aria-label="Active Expedition passives"><h3>Active passives · '+(phase1Build?.unlockedFamilies.length||0)+'/3 affinities · '+([...new Set(phase1Build?.picks||[])].filter(id=>WandererV012Buildcraft.CATALOG.find(p=>p.id===id)?.requires.length).length)+'/3 hybrids</h3><div class="phase3PassiveGrid">'+[...counts].map(([id,rank])=>{
   const p=WandererV012Buildcraft.CATALOG.find(x=>x.id===id);if(!p)return '';
-  const label=p.name+' · Rank '+rank+(id===phase1Build.initialPassive?' · Initial passive':'');
+  const effective=WandererV012Buildcraft.rank(phase1Build,id);if(!effective)return '';rank=effective;const label=p.name+' · '+(p.max===1?'UNIQUE':'Rank '+rank+' / '+p.max)+(id===phase1Build.initialPassive?' · Initial passive':'');
   return '<details class="phase3PassiveSlot"><summary aria-label="'+esc(label)+'" title="'+esc(label+' · '+p.description)+'">'+phase2PassiveIcons(p)+'<small>'+rank+(id===phase1Build.initialPassive?' ★':'')+'</small></summary><div class="phase3PassiveTooltip"><b>'+esc(label)+'</b><p>'+esc(p.description)+'</p></div></details>';
  }).join('')+'</div></section>';
 }

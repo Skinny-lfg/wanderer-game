@@ -62,7 +62,7 @@ function phase6EventChoice(choice,itemId,passiveId,family,targetId){
  case 'cursed_altar':if(v.hp<=Math.ceil(v.maxhp*.2))return false;heal();ports.phase1Vitals.hp-=Math.ceil(v.maxhp*.2);effects[choice===0?'attack':'defense']=.10;break;
  case 'soul_mirror':if(choice===0){if(!passive||ports.phase1Build.unlockedFamilies?.some(f=>WandererV012Buildcraft.initialId(f,ports.phase1Build.element)===passiveId)||!ev.alternative)return false;const index=ports.phase1Build.picks.indexOf(passiveId),old=ports.phase1Build.picks.splice(index,1)[0];const available=WandererV012Buildcraft.eligible(ports.phase1Build,WandererV012Buildcraft.CATALOG.find(p=>p.id===ev.alternative).family);if(!available.some(p=>p.id===ev.alternative)){ports.phase1Build.picks.splice(index,0,old);return false;}ports.phase1Build.picks.push(ev.alternative);}break;
  case 'whispering_idol':ports.phase6Buff('curse',.10);ports.state[choice===0?'gold':'fragments']+=choice===0?25+4*E:12+2*E;break;
- case 'echo_shrine':if(choice===0){if(!passive||!WandererV012Buildcraft.preview(ports.phase1Build,passiveId,ports.totalStats()).useful)return false;effects.echo={id:passiveId,power:.5,remaining:3};ports.phase1Build.runtime.echo=effects.echo;}else heal(0,.15);break;
+ case 'echo_shrine':if(choice===0){if(!passive||!WandererV012Buildcraft.canModify(ports.phase1Build,passiveId,.5,ports.totalStats()))return false;effects.echo={id:passiveId,power:.5,remaining:3};ports.phase1Build.runtime.echo=effects.echo;}else heal(0,.15);break;
  case 'cursed_chest':if(choice===0)ports.state.gold+=8+E;else if(ev.roll<.5)loot.push(ports.phase6AwardGear());else{heal();ports.phase1Vitals.hp=Math.max(1,v.hp-Math.ceil(v.maxhp*.15));}break;
  case 'forgotten_arsenal':if(choice===0)loot.push(ports.phase6AwardGear());else ports.state.fragments+=8+2*E;break;
  case 'runic_vault':if(choice===0){if(!ports.state.runeSlots.some(Boolean))return false;ports.phase6Buff('runeBoost',.20);}else ports.state.fragments+=10+E;break;
@@ -70,7 +70,7 @@ function phase6EventChoice(choice,itemId,passiveId,family,targetId){
  case 'restless_spring':if(choice===0&&v.hp>=v.maxhp||choice===1&&(v.maxmp===0||v.mp>=v.maxmp))ports.state.fragments+=3+E;else choice===0?heal(.35):heal(0,.4);break;
  case 'fallen_wanderer':if(choice===0){if(!pay('gold',10+E))return false;heal(.2);effects.barrier=Math.max(effects.barrier||0,.1);}else heal(.15,.15);break;
  case 'oracle_of_paths':if(choice===0){if(!ports.phase1Controller.allowed().includes(family))return false;ports.phase1Controller.influence(family);}else ports.state.fragments+=5+E;break;
- case 'last_ember':if(!passive)return false;effects.echo={id:passiveId,power:-.5,remaining:3};ports.phase1Build.runtime.echo=effects.echo;choice===0?heal(.35):heal(0,.4);break;
+ case 'last_ember':if(!passive||!WandererV012Buildcraft.canModify(ports.phase1Build,passiveId,-.5,ports.totalStats()))return false;effects.echo={id:passiveId,power:-.5,remaining:3};ports.phase1Build.runtime.echo=effects.echo;choice===0?heal(.35):heal(0,.4);break;
  default:return false;
  }}
  ports.phase6Run.events.push(g.planeIndex);ports.phase6Run.event=null;ports.phase4CommitRealm();ports.phase1Controller.waveWon();

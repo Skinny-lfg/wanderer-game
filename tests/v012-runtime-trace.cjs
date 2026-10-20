@@ -8,14 +8,14 @@ module.exports=function trace(scenario,source){
  let restored=false;
  for(let i=0;i<150&&!['finished','failed'].includes(a.controller().state.stage);i++){
   if(a.draft()?.step==='passive')a.passive(a.draft().options[0].id);
-  else if(a.results().review)a.exitResult();
+  else if(a.results().review||a.state().run?.status==='cleared'||a.results().eventExitPending)a.exitResult();
   else if(a.events.run()?.event)a.events.choose(2);
   else if(a.state().run){
    for(let tick=0;tick<5&&a.state().run?.status==='fight';tick++)a.tick();
    if(!restored&&a.state().run){const cp=a.checkpoint.capture();a.checkpoint.restore(cp);a.checkpoint.resume();restored=true;}
-   if(a.state().run){a.state().run.enemy.hp=0;a.win();a.flush();}
+   if(a.state().run?.status==='fight'){a.state().run.enemy.hp=0;a.win();a.flush();}
   }else if(a.controller().state.stage==='choice'){
-   while(a.bag.overflow())a.bag.discard(a.bag.items().at(-1).id);
+   for(let n=0;a.bag.overflow();n++){if(n>40||!a.bag.discard(a.bag.items().at(-1).id))throw Error('Cannot resolve bag overflow');}
    if(a.controller().state.planeIndex===2){a.reroll(0);a.potions.use(1);}
    a.select(a.controller().state.offers[0].id);a.enter();if(a.draft()?.step==='element')a.element('lightning');
   }

@@ -12,7 +12,8 @@ function exercise(b,c,negative=false){
 for(const p of api.CATALOG.filter(p=>p.requires.length)){
  test('C '+p.id+' positive trigger, unique gate and serializable cooldown',()=>{
   const {b,c}=fixture(p);if(p.id==='redline')c.player.hp=400;
-  exercise(b,c);assert((b.runtime.passiveTelemetry?.[p.id]?.activations||0)>0,'positive trigger must execute');assert.equal(p.max,1);const saved=api.validate(JSON.parse(JSON.stringify(b)));assert.equal(api.rank(saved,p.id),1);assert(!api.eligible(saved,p.family).some(q=>q.requires.length&&q.requires.every(f=>p.requires.includes(f))));
+  exercise(b,c);assert((b.runtime.passiveTelemetry?.[p.id]?.activations||0)>0,'positive trigger must execute');assert.equal(p.max,1);const saved=api.validate(JSON.parse(JSON.stringify(b)));assert.equal(api.rank(saved,p.id),1);assert.equal(JSON.stringify(saved.cooldowns),JSON.stringify(b.cooldowns));
+  if(Object.keys(b.cooldowns).length&&['plague_rupture','blood_ward','hex_bleed','rot_ward','toxic_precision','hex_bolt','sanctuary','fervent_life','life_conduit','runic_shield','carrion_detonation','crimson_pact','reapers_cadence','hemal_sigil','rot_symbiosis','rot_husk','venom_shatter','elemental_blight','redline','lifeweave'].includes(p.id)){const count=saved.runtime.passiveTelemetry[p.id].activations;exercise(saved,c);assert.equal(saved.runtime.passiveTelemetry[p.id].activations,count,'ICD blocks repeat after serialization');}assert(!api.eligible(saved,p.family).some(q=>q.requires.length&&q.requires.every(f=>p.requires.includes(f))));
   const free=fixture(p),before=JSON.stringify(free.b.runtime);api.onAttack(free.b,{...free.c,proc:true});api.onCast(free.b,{...free.c,proc:true});assert.equal(JSON.stringify(free.b.runtime),before,'extra hits cannot recurse');
  });
  test('C '+p.id+' missing trigger does not proc',()=>{
@@ -35,4 +36,10 @@ test('C real healing reduction, Barrier breaks, kill snapshots and once per Wave
  const b=build(['fervent_life'],['vitality','fury']),{c,calls}=context(b,{healingMultiplier:.6});c.player.hp=999;api.onAttack(b,c);assert.equal(calls.find(x=>x[0]==='barrier')[1],5.5);
  const g=build(['guardians_oath','rot_husk'],['vitality','aegis','decay']),f=context(g);f.c.barrierBroken=true;api.onDefend(g,f.c,0,10);const hp=f.c.player.hp;const saved=JSON.parse(JSON.stringify(g));api.resetWave(saved,f.c.enemy);api.onDefend(saved,f.c,0,10);assert.equal(f.c.player.hp,hp);f.c.waveKey='1:2';api.onDefend(saved,f.c,0,10);assert(f.c.player.hp>hp);
  const rot=build(['rot_recovery'],['decay','vitality']),r=context(rot);r.c.enemy.hp=1;r.c.enemy.v012Rot=[{damage:5,remaining:1}];api.onSecond(rot,r.c);assert.equal(r.c.enemy.v012Rot.length,0);api.onKill(rot,r.c);assert(r.c.player.hp>300);
+});
+test('C percentage burst bounds hold for normal, Elite and boss; explicit cooldowns survive JSON',()=>{
+ for(const kind of ['normal','elite','boss'])for(const [id,label,cap,cast]of [['plague_rupture','Plague Rupture',.032,false],['reapers_cadence',"Reaper's Cadence",.02,false],['hemal_sigil','Hemal Sigil',.03,true]]){
+  const p=api.CATALOG.find(p=>p.id===id),{b,c,calls}=fixture(p);b.picks=[id];c.enemy.maxhp=100;c.enemy.hp=20;c.enemy.boss=kind==='boss';c.enemy.miniboss=kind==='elite';c.base=c.power=1000;
+  cast?api.onCast(b,c):api.onAttack(b,c);const damage=calls.find(x=>x[0]==='damage'&&x[2].includes(label));assert(damage);assert(damage[1]<=100*cap);const saved=JSON.parse(JSON.stringify(b)),count=calls.length;cast?api.onCast(saved,c):api.onAttack(saved,c);assert.equal(calls.length,count,'ICD survives restore');
+ }
 });

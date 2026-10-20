@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),create=require('./v012-economy-harness.cjs');
-function enter(a){if(!a.controller().state.initialFamily)a.initial('blood');if(a.draft()?.kind==='reward')a.passive(a.draft().options[0].id);if(a.results().review)a.exitResult();a.select(a.controller().state.offers[0].id);a.enter();if(a.draft()?.step==='element')a.element('fire');if(a.events.run()?.event){a.events.choose(2);return enter(a);}}
+function enter(a){if(!a.controller().state.initialFamily)a.initial('blood');if(a.draft()?.kind==='reward')a.passive(a.draft().options[0].id);if(a.results().review||a.state().run?.status==='cleared'||a.results().eventExitPending)a.exitResult();a.select(a.controller().state.offers[0].id);a.enter();if(a.draft()?.step==='element')a.element('fire');if(a.events.run()?.event){a.events.choose(2);return enter(a);}}
 test('gear/Rune swaps cannot refill Mana or Health between Planes',()=>{
  const a=create(126),s=a.state();a.setup(20,'Staff');a.start(1);a.initial('blood');a.controller().state.planeIndex=2;
  const stats=a.stats();a.setVitals({hp:stats.maxhp/2,mp:stats.mana/4,maxmp:stats.mana});
@@ -11,8 +11,8 @@ test('classic Second Wind, set/Legendary cooldowns and funded cast counters surv
  const a=create(127),s=a.state();a.start(1);enter(a);let r=s.run;r.combatSeconds=2;
  r.secondWindUsed=true;r.legendaryCastCount=2;r.legendaryAttackCount=3;
  assert.equal(a.ready(r,'legendary:fixture',10),true);assert.equal(a.ready(r,'legendary:fixture',10),false);
- while(s.run){s.run.enemy.hp=0;a.win();a.flush();}
- assert.equal(a.controller().state.stage,'choice');enter(a);r=s.run;
+ while(s.run?.status==='fight'){s.run.enemy.hp=0;a.win();a.flush();}
+ assert(a.draft());a.passive(a.draft().options[0].id);assert(a.exitResult());assert.equal(a.controller().state.stage,'choice');enter(a);r=s.run;
  assert.equal(r.secondWindUsed,true,'once per Expedition, not once per Plane');
  assert.equal(r.legendaryCastCount,2);assert.equal(r.legendaryAttackCount,3);
  assert.equal(a.now(r),2);assert.equal(a.ready(r,'legendary:fixture',10),false,'Plane change must not reset a cooldown');

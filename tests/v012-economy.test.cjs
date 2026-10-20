@@ -1,7 +1,7 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const create=require('./v012-economy-harness.cjs');
-function enter(a){if(!a.controller().state.initialFamily)a.initial('blood');if(a.draft()?.kind==='reward')a.passive(a.draft().options[0].id);if(a.results().review)a.exitResult();while(a.bag.overflow()>0)a.bag.discard(a.bag.items().at(-1).id);a.select(a.controller().state.offers[0].id);a.enter();if(a.draft()?.step==='element')a.element('lightning');if(a.events.run()?.event){a.events.choose(2);return enter(a);}}
-function complete(a){for(let n=0;n<70&&a.controller().state.stage!=='finished';n++){if(!a.state().run)enter(a);const r=a.state().run;r.enemy.hp=0;a.win();a.flush();}assert.equal(a.controller().state.stage,'finished');}
+function enter(a){if(!a.controller().state.initialFamily)a.initial('blood');if(a.draft()?.kind==='reward')a.passive(a.draft().options[0].id);if(a.results().review||a.state().run?.status==='cleared'||a.results().eventExitPending)a.exitResult();while(a.bag.overflow()>0)a.bag.discard(a.bag.items().at(-1).id);a.select(a.controller().state.offers[0].id);a.enter();if(a.draft()?.step==='element')a.element('lightning');if(a.events.run()?.event){a.events.choose(2);return enter(a);}}
+function complete(a){for(let n=0;n<70&&a.controller().state.stage!=='finished';n++){if(!a.state().run||a.state().run.status==='cleared')enter(a);const r=a.state().run;r.enemy.hp=0;a.win();a.flush();}assert.equal(a.controller().state.stage,'finished');}
 test('Forge and Merchant prices use Expedition unlocks without touching legacy progress',()=>{
  const a=create(14),s=a.state();a.controller().state.unlocked=80;s.fragments=10000;s.gold=10000;
  a.craft(80,2,'armor','Armor');const crafted=s.stash.at(-1);
@@ -45,7 +45,7 @@ test('full Stash keeps guaranteed boss loot in overflow, claims exactly once, an
  // Replay at a full Stash during combat: the guaranteed last boss drop must survive.
  while(a.bag.overflow()>0)a.bag.discard(a.bag.items().at(-1).id);a.claimRune(s.pendingRuneReward.options[0].id);a.start(1);
  for(let n=0;n<60&&a.controller().state.stage!=='finished';n++){
-  if(a.controller().state.stage==='choice')enter(a);
+  if(a.controller().state.stage==='choice'||s.run?.status==='cleared')enter(a);
   if(s.run.enemy.boss)while(s.stash.length<40)s.stash.push(a.makeItem(1,'helm',null,'loot','Helm','Common'));
   s.run.enemy.hp=0;a.win();a.flush();
  }

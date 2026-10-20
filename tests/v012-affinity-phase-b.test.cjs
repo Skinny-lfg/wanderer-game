@@ -26,3 +26,11 @@ test('B triggers and caps, equipment block, one hybrid per pair, controlled exha
  const a=build(['iron_skin','quick_hands'],['aegis','fury']);assert(!api.eligible(a,'aegis').some(p=>p.id==='counterstrike'));a.runtime.draftStats={...base,blockChance:20};assert(api.eligible(a,'aegis').some(p=>p.id==='counterstrike'));
  const full=build([],['blood']);full.picks=api.CATALOG.filter(p=>p.family==='blood'&&!p.requires.length).flatMap(p=>Array(p.max).fill(p.id));const raw=JSON.stringify(full);assert.throws(()=>api.options(full,'blood'),/checkpoint retained/);assert.equal(JSON.stringify(full),raw);
 });
+test('B legacy overcap draft migrates deterministically without removing picks; modern draft remains byte-identical',()=>{
+ const a=create(42);a.start();a.initial('blood');a.select(a.controller().state.offers.find(p=>p.family==='blood').id);a.enter();while(a.state().run?.status==='fight'){a.state().run.enemy.hp=0;a.win();a.flush();}
+ const cp=a.checkpoint.capture();cp.session.build.version=2;cp.session.build.picks=Array(8).fill('bleeding_edge');delete cp.session.draft.version;cp.session.draft.options=['bleeding_edge','deep_cuts','executioner'].map(id=>api.CATALOG.find(p=>p.id===id));
+ a.checkpoint.restore(cp);const cards=JSON.stringify(a.draft()),seed=a.checkpoint.seed();assert.equal(a.build().picks.length,8);assert.equal(api.rank(a.build(),'bleeding_edge'),5);assert(!a.draft().options.some(p=>p.id==='bleeding_edge'));assert.equal(a.draft().version,3);
+ a.checkpoint.restore(cp);assert.equal(JSON.stringify(a.draft()),cards);assert.equal(a.checkpoint.seed(),seed);
+ const modern=a.checkpoint.capture();a.checkpoint.restore(modern);assert.equal(JSON.stringify(a.draft()),cards);
+ const old=build(['plague_rupture','carrion_detonation'],['blood','decay']);old.version=2;api.validate(old);assert.equal(api.rank(old,'plague_rupture'),1);assert.equal(api.rank(old,'carrion_detonation'),0);assert.equal(old.picks.length,2);
+});

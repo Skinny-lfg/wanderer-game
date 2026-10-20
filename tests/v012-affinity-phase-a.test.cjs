@@ -14,7 +14,7 @@ for(const p of api.CATALOG.filter(p=>!p.requires.length))test('A '+p.id+' ranks,
 });
 test('A catalog has exactly 29 scalable and four unique normals; caps and legacy ranks',()=>{
  const normal=api.CATALOG.filter(p=>!p.requires.length);assert.equal(normal.length,33);assert.equal(normal.filter(p=>p.max===5).length,29);
- for(const [id,stats]of [['precision',{crit:65}],['guarded_block',{blockChance:65}],['quick_hands',{attacksPerSec:5}]])assert.equal(api.preview(build(),id,stats).useful,false);
+ for(const [id,stats]of [['precision',{crit:65}],['guarded_block',{blockChance:65}],['quick_hands',{attacksPerSec:5}],['adrenaline',{...base,attacksPerSec:5}]])assert.equal(api.preview(build(),id,stats).useful,false);
  const b=build(Array(8).fill('bleeding_edge'),['blood']);b.version=2;assert.equal(api.rank(api.validate(b),'bleeding_edge'),5);assert.equal(b.picks.length,8);b.version=3;assert.throws(()=>api.validate(b),/rank/);
 });
 test('A paid-only Static, echo and cost ranks; unique Last Stand and once-only Wave healing',()=>{
@@ -23,4 +23,7 @@ test('A paid-only Static, echo and cost ranks; unique Last Stand and once-only W
  c.funded=true;for(let i=0;i<3;i++)api.onCast(b,c);const saved=api.validate(JSON.parse(JSON.stringify(b)));api.onCast(saved,c);assert.equal(saved.runtime.staticCharges,0);assert(calls.some(x=>x[2]?.includes('Static')));
  api.onKill(b,c);const hp=c.player.hp;api.onKill(b,c);assert.equal(c.player.hp,hp);assert(api.survive(b,c));assert(!api.survive(JSON.parse(JSON.stringify(b)),c));
  for(let r=1;r<=5;r++)assert.equal(api.nextCost(build(Array(r).fill('efficient_cast'))),8-r);
+});
+test('A event rank modifiers cannot amplify capped talents or weaken an unchanged Unique',()=>{
+ const b=build(['executioner',...Array(5).fill('bleeding_edge')],['blood']);assert.equal(api.canModify(b,'executioner',-.5,base),false);assert.equal(api.canModify(b,'executioner',.5,base),false);assert.equal(api.canModify(b,'bleeding_edge',.5,base),false);assert.equal(api.canModify(b,'bleeding_edge',-.5,base),true);
 });

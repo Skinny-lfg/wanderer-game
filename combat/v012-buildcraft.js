@@ -105,9 +105,11 @@ function preview(b,id,base={}){
  const reduction=.04*rank(b,'fortified')+.04*rank(b,'wasting_curse')+.02*rank(b,'wither');
  if(['fortified','wasting_curse','wither'].includes(id)&&reduction>=.28&&id!=='wither')useful=false;
  if(base.maxhp&&['strong_heart','iron_skin','quick_hands','precision','guarded_block','arcane_focus','mana_spring'].includes(id)){const field={strong_heart:'maxhp',iron_skin:'defense',quick_hands:'attacksPerSec',precision:'crit',guarded_block:'blockChance',arcane_focus:'spellPower',mana_spring:'manaRegen'}[id],up={...b,picks:[...(b.picks||[]),id]};if(!(mods(up,base)[field]>mods(b,base)[field]))useful=false;}
- const text=Object.entries(after).map(([key,v])=>key+': '+(typeof v==='number'?Number(v.toFixed(4)):v)).join(' · ');
+ if(id==='adrenaline'&&base.maxhp){const speed=mods(b,base).attacksPerSec;if(Math.min(5,speed*(1+after.speed))<=Math.min(5,speed*(1+(current?before.speed:0))))useful=false;}
+ const text=Object.entries(after).map(([key,v])=>key+': '+(current?Number((before[key]||0).toFixed(4))+' → ':'')+(typeof v==='number'?Number(v.toFixed(4)):v)).join(' · ');
  return {current,next,max:p?.max,useful,before,after,description:text};
 }
+function canModify(b,id,power,base={}){const p=BY_ID[id],n=ownedRank(b,id);return !!p&&p.max===5&&n>0&&clamp(n+power,0,p.max)!==rank(b,id)&&(power<0||preview(b,id,base).useful);}
 function bleedDamage(b,amount){return amount*(1+.15*rank(b,'deep_cuts'));}
 function elementalPower(b,power){return power*(1+.12*rank(b,'elemental_force'))*(b.runtime.conduit?1.10:1);}
 function hasFamily(b,family){return Array.isArray(b?.families)&&b.families.includes(family);}
@@ -145,7 +147,7 @@ function options(b,family,rng=Math.random){
  if(pool.length<3)throw Error('No three legal useful passives available; checkpoint retained');
  const chosen=[],remaining=()=>pool.filter(p=>!chosen.some(o=>o.id===p.id)),pick=a=>a[Math.min(a.length-1,Math.floor(rng()*a.length))];
  const prefer=a=>{const local=a.filter(p=>p.family===family||p.requires.includes(family));return local.length?local:a;};
- const add=(p,category)=>{if(p)chosen.push({...p,category,preview:preview(b,p.id,b.runtime.draftStats||{})});};
+ const add=(p,category)=>{if(p)chosen.push({...p,category,pity:p.requires.length?due.includes([...p.requires].sort().join(':')):false,preview:preview(b,p.id,b.runtime.draftStats||{})});};
  const hybrids=pool.filter(p=>p.requires.length),pairs=[...new Set(hybrids.map(p=>[...p.requires].sort().join(':')))];
  const pity={...(b.runtime.hybridPity||{})},due=pairs.filter(pair=>(pity[pair]||0)>=2);
  let hybrid=null;if(due.length){const pair=pick(due);hybrid=pick(hybrids.filter(p=>[...p.requires].sort().join(':')===pair));}
@@ -342,7 +344,7 @@ function nextCost(b){return 8-rank(b,'efficient_cast');}
 function resetWave(b,e){e.v012Rot=[];e.v012Shock=0;}
 function canCast(b){return !!b&&!!b.element&&['kindling','deep_winter','overcharge','arcane_focus','arcane_echo','spell_surge','spellblade','hex_bolt','hex_bleed','hemal_sigil','elemental_blight','prismatic_rebound','runic_shield'].some(id=>rank(b,id));}
 function validate(b){
- if(!b||!Array.isArray(b.families)||b.families.length>3||new Set(b.families).size!==b.families.length||!b.families.every(f=>FAMILIES.includes(f))||b.element!==null&&(!elements.includes(b.element)||!hasFamily(b,'magic'))||!Array.isArray(b.picks)||b.picks.length>20)throw Error('Invalid saved build');
+ if(!b||![undefined,1,2,3].includes(b.version)||!Array.isArray(b.families)||b.families.length>3||new Set(b.families).size!==b.families.length||!b.families.every(f=>FAMILIES.includes(f))||b.element!==null&&(!elements.includes(b.element)||!hasFamily(b,'magic'))||!Array.isArray(b.picks)||b.picks.length>20)throw Error('Invalid saved build');
  if(!Array.isArray(b.unlockedFamilies))b.unlockedFamilies=[...new Set(b.picks.map(id=>BY_ID[id]?.family).filter(Boolean))];
  if(new Set(b.unlockedFamilies).size!==b.unlockedFamilies.length||!b.unlockedFamilies.every(f=>hasFamily(b,f)))throw Error('Invalid unlocked affinity');
  for(const id of b.picks){const p=BY_ID[id];if(!p||!hasFamily(b,p.family)||!b.unlockedFamilies.includes(p.family)||p.requires.some(f=>!b.unlockedFamilies.includes(f))||p.element&&p.element!==b.element)throw Error('Invalid saved passive');}
@@ -356,5 +358,5 @@ function validate(b){
  return b;
 }
 function clear(b){if(!b)return;b.picks.length=0;b.element=null;b.initialFamily=null;b.initialPassive=null;b.unlockedFamilies=[];b.families=[];b.cooldowns=Object.create(null);b.runtime={frenzyUntil:0,counterBlock:0,counterBarrier:0,spellblade:false,magicHits:0,staticCharges:0,adrenalineUntil:0,conduit:false,lastStand:false,lastSpellAt:-999};}
-root.WandererV012Buildcraft=Object.freeze({CATALOG,FAMILIES,ELEMENTS:elements,create,initial,initialId,ownedRank,rank,values,preview,capabilities,functional,synergy,bleedDamage,elementalPower,eligible,options,choose,element,mods,onHeal,onAttack,onCast,onSecond,incoming,onDefend,onKill,survive,speed,enemyHealMultiplier,nextCost,resetWave,canCast,validate,clear});
+root.WandererV012Buildcraft=Object.freeze({CATALOG,FAMILIES,ELEMENTS:elements,create,initial,initialId,ownedRank,rank,values,preview,canModify,capabilities,functional,synergy,bleedDamage,elementalPower,eligible,options,choose,element,mods,onHeal,onAttack,onCast,onSecond,incoming,onDefend,onKill,survive,speed,enemyHealMultiplier,nextCost,resetWave,canCast,validate,clear});
 })(globalThis);
