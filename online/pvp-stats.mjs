@@ -42,7 +42,16 @@ function runeSalvageValue(r,maxTier=200,expedition=true){
  if(!Number.isInteger(tier)||tier<1||tier>maxTier||!expedition&&(tier<10||tier%10!==0))return 0;
  return 5+2*Math.floor(tier/10);
 }
-root.WandererV012Runes=Object.freeze({FAMILIES,runeValue,makeRune,validRune,safeRunes,safePendingRune,runeSalvageValue});
+function duplicateRuneCandidates(runes=[],runeSlots=[],maxTier=200,expedition=true){
+ const equipped=new Set(runeSlots||[]),strongest=new Map();
+ for(const r of runes||[]){
+  if(!runeSalvageValue(r,maxTier,expedition))continue;
+  const old=strongest.get(r.family);
+  if(!old||r.tier>old.tier)strongest.set(r.family,r);
+ }
+ return (runes||[]).filter(r=>!equipped.has(r.id)&&strongest.get(r.family)?.id!==r.id&&runeSalvageValue(r,maxTier,expedition)>0);
+}
+root.WandererV012Runes=Object.freeze({FAMILIES,runeValue,makeRune,validRune,safeRunes,safePendingRune,runeSalvageValue,duplicateRuneCandidates});
 })(statsRuneModule);
 
 const RUNE_FAMILIES=statsRuneModule.WandererV012Runes.FAMILIES;

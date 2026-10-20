@@ -67,6 +67,13 @@ test('Rune values, Expedition tiers, pending choices and recycling use the canon
  assert.equal(R.runeSalvageValue(e1,200,true),5);
  assert.equal(R.runeSalvageValue(legacy,200,false),7);
  assert.equal(R.runeSalvageValue(e1,200,false),0);
+ const all=[
+  R.makeRune('might',5,()=>'hi'),R.makeRune('might',2,()=>'low'),
+  R.makeRune('fortune',1,()=>'equipped'),R.makeRune('wisdom',1,()=>'w')];
+ assert.equal(R.duplicateRuneCandidates(all,['low']).length,0); // equipped lower tier is protected
+ const discard=R.duplicateRuneCandidates(all,[]);
+ assert.equal(discard.length,1);
+ assert.equal(discard[0].id,'low');
  const b=R.makeRune('fortune',1,()=>'b'),c=R.makeRune('wisdom',1,()=>'c');
  const pending=R.safePendingRune({tier:1,options:[e1,b,c]});
  assert.equal(pending.options.length,3);

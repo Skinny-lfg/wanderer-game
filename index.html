@@ -1182,15 +1182,7 @@ function runeSectionMarkup(){
 }
 // Rune recycling is intentionally separate from equipment salvage. Equipped runes are never sold.
 function runeSalvageValue(r){return WandererV012Runes.runeSalvageValue(r,DUNGEON_CAP,PHASE1_PREVIEW);}
-function duplicateRuneCandidates(){
- const equipped=new Set(state.runeSlots||[]),strongest=new Map();
- for(const r of state.runes||[]){
-  if(!runeSalvageValue(r))continue;
-  const old=strongest.get(r.family);
-  if(!old||r.tier>old.tier)strongest.set(r.family,r);
- }
- return (state.runes||[]).filter(r=>!equipped.has(r.id)&&strongest.get(r.family)?.id!==r.id&&runeSalvageValue(r)>0);
-}
+function duplicateRuneCandidates(){return WandererV012Runes.duplicateRuneCandidates(state.runes,state.runeSlots,DUNGEON_CAP,PHASE1_PREVIEW);}
 function runeCheckpointLocked(){return PHASE1_PREVIEW&&(phase4Resume||phase1Controller?.state.version===2&&phase3ExpeditionActive());}
 function unequipRune(index){
  if(runeCheckpointLocked()||PHASE1_PREVIEW&&phase1Draft||PHASE5_VALIDATION&&(!phase5Ready||saveBlocked)||state.run||!Number.isInteger(index)||index<0||index>2)return false;
