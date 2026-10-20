@@ -17,9 +17,10 @@ function run(config){
   const draft=a.draft(),r=s.run,event=extra.event;
   if(draft?.step==='element'){a.element(['fire','frost','lightning'][seed%3]);continue;}
   if(draft?.step==='passive'){
-   const cards=draft.options;cardCount+=3;usefulUpgrades+=cards.filter(p=>p.category==='Upgrade'&&p.preview.useful).length;synergyCards+=cards.filter(p=>p.category==='Synergy'&&B.functional(a.build(),p)).length;
+   const cards=draft.options;cardCount+=cards.length;
+   if(!cards.length){if(!a.passive(null)){error='Exhausted draft acknowledgement rejected';break;}continue;}usefulUpgrades+=cards.filter(p=>p.category==='Upgrade'&&p.preview.useful).length;synergyCards+=cards.filter(p=>p.category==='Synergy'&&B.functional(a.build(),p)).length;
    if(cards.some(p=>p.requires.length))hybridOffers++;if(cards.some(p=>p.pity))pity++;
-   let pick;if(strategy==='random')pick=cards[Math.floor(random()*3)];else{
+   let pick;if(strategy==='random')pick=cards[Math.floor(random()*cards.length)];else{
     const score=p=>{const own=B.ownedRank(a.build(),p.id),order=priorities[p.family]?.indexOf(p.id)??-1;
      if(strategy==='mono')return (p.family===family?300:0)+(own>0?100:0)+(order<0?0:60-order*8);
      const copy={...a.build(),picks:[...a.build().picks,p.id]},enables=B.CATALOG.filter(q=>q.requires.length&&q.requires.every(f=>target.includes(f))&&B.functional(copy,q)&&!B.functional(a.build(),q)).length;
