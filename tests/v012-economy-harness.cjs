@@ -25,8 +25,21 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
  showConfirm=(title,body,fn)=>{auditConfirmation=fn;};showModal=()=>document.createElement('dialog');showPendingRuneReward=()=>{};
  render=renderCombat=renderPhase1=renderForge=renderMerchant=wallet=bannerMessage=animateStrike=animateDefense=animateEnemyStrike=updateBars=resetDungeonEntryScroll=()=>{};
  addLog=(text,type)=>{if(auditFeedback)auditFeedback.logs.push({text,type});};floatText=(value,target)=>{if(auditFeedback)auditFeedback.floats.push({value,target});};
+ const measured={healed:0,barrier:0,absorbed:0,dot:0,burst:0,crit:0,attacks:0,blocks:0,incoming:0};
+ if(${!!options.measure}){
+  const healNative=setHeal,barrierNative=setBarrier,dotNative=tickDots,directNative=setDirectEnemyDamage,attackNative=weaponAttack,contextNative=phase2Context;
+  setHeal=(...args)=>{const n=healNative(...args);measured.healed+=n;return n;};
+  setBarrier=(...args)=>{const n=barrierNative(...args);measured.barrier+=n;return n;};
+  tickDots=(...args)=>{const n=dotNative(...args);measured.dot+=n;return n;};
+  setDirectEnemyDamage=(...args)=>{const n=directNative(...args);measured.burst=Math.max(measured.burst,n);return n;};
+  weaponAttack=(...args)=>{measured.attacks++;return attackNative(...args);};
+  phase2Context=(...args)=>{const c=contextNative(...args),native=c.dotDamage;c.dotDamage=(n,label)=>{measured.dot+=Math.min(Math.max(0,c.enemy.hp),Math.round(n));return native(n,label);};return c;};
+  floatText=(value,target,critical)=>{if(target==='enemy'&&critical)measured.crit++;};
+  animateEnemyStrike=()=>{measured.incoming++;};
+  addLog=text=>{if(text.includes('BLOCK!'))measured.blocks++;if(text.includes('Barrier absorbs '))measured.absorbed+=Number(text.match(/absorbs ([0-9.]+)/)?.[1]||0);};
+ }
  phase1Init();
- globalThis.audit={
+ globalThis.audit={measured,
   potions:{supplies:()=>phase3Supplies,select:phase6SelectPotion,use:phase6UsePotion,inventory:phase6PotionInventory,start:phase6StartPotions,finish:phase6ReturnPotions,tick:phase6TickDurations,shop:(E=1,rng=gameRandom)=>WandererV012Consumables.shop(E,rng,makeId),buy:phase6BuyPotion,reroll:phase6RerollPotions},
   events:{open:phase6OpenEvent,choose:phase6EventChoice,run:()=>phase6Run},
   back:phase6BackToCamp,markAllSeen:markAllAsSeen,
@@ -76,6 +89,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
  files.push(...[...source.matchAll(/<script[^>]+src="([^"]+-runtime\.js)"/g)].map(m=>m[1]));
  vm.runInNewContext(files.map(f=>moduleOverrides[f]??fs.readFileSync(path.join(root,f),'utf8')).join('\n')+'\n'+main.replace(boot,inject),sandbox,{timeout:20000});
  sandbox.audit.flush=()=>{for(let i=0;callbacks.length;i++){if(i>10000)throw Error('Callback loop');callbacks.shift()();}};
+ sandbox.audit.buildcraft=sandbox.WandererV012Buildcraft;
  sandbox.audit.catalog=sandbox.WandererV012Buildcraft.CATALOG;
  return sandbox.audit;
 };
