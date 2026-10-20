@@ -122,7 +122,8 @@ test('integration gates original weapons, Legendary and permanent save mechanics
  assert(source.includes('WandererV012Buildcraft.survive(phase1Build,phase2Context(r))'));
  assert(!source.includes('function load('),'classic storage entrypoint removed');
  assert(source.includes('WandererV012Save.createStore(localStorage,binding)'),'current persistence remains isolated');
- assert(source.includes("caster=!!main&&['Staff','Wand'].includes(main.subtype)"));
+ const gearRules=readFileSync(path.join(root,'combat/v012-gear-stats.js'),'utf8');
+ assert(gearRules.includes("caster=!!main&&['Staff','Wand'].includes(main.subtype)"),'caster rules are centralized in v0.12 gear stats');
  assert(source.includes('legendaryAttackBonus(r,base,critical,cast)'));
  assert(source.includes('legendaryDefensiveEffects(r,damageBlocked,hit,blocked'));
  const launch=source.slice(source.indexOf('function phase2Launch('),source.indexOf('function phase1StartWave('));
