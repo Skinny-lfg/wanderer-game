@@ -13,5 +13,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Native potion purchase and return assertions
+      - name: Native potion purchase victory/defeat settlement assertions
         run: node scripts/v012-phase-e24-apothecary-economy.cjs
