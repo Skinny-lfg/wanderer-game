@@ -22,3 +22,8 @@
 - Retained all 12 existing dungeon IDs, affinities, enemies, progression and loot.
 - Theme-to-image manifest at `assets/dungeons/c3/manifest.json`; browser selects mobile art at widths up to 650px.
 - Source PNGs remain preserved in Drive. Still no deployment.
+
+## C.3.2 — optimized armor assets
+- 30 WebP assets (Cloth: Astral and Bloodweave; Leather: Nightstalker and Wayfarer; Plate: Dawnward and Ironbound) are mapped for all five armor slots.
+- Typed gear selects one of two variants deterministically by existing item ID; no RNG consumption and no save migration. Items without valid armorType retain previous art or placeholder.
+- Legacy assets were not physically removed; no authoritative list of removed equipment IDs has been verified, so active item-generation IDs are unchanged for save safety.

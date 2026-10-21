@@ -54,3 +54,27 @@ test('C.3.3: all twelve stable dungeon IDs use optimized desktop and mobile WebP
  }
  assert.ok(html.includes("window.matchMedia('(max-width: 650px)')"));
 });
+
+test('C.3.2: Cloth/Leather/Plate artwork maps to the correct five slots',()=>{
+ const m=require('../assets/equipment/c3/manifest.json');
+ assert.equal(Object.keys(m.variants).length,3);
+ let count=0;
+ for(const [kind,slots] of Object.entries(m.variants)){
+  assert.ok(['Cloth','Leather','Plate'].includes(kind));
+  assert.deepEqual(Object.keys(slots).sort(),['helm','armor','gloves','boots','belt'].sort());
+  for(const [slot,paths] of Object.entries(slots)){
+   assert.equal(paths.length,2,kind+' '+slot);
+   for(const path of paths){
+    count++;
+    assert.ok(path.startsWith('assets/equipment/c3/armor_'+kind.toLowerCase()+'_'));
+    assert.ok(fs.existsSync(path),'missing '+path);
+    const b=fs.readFileSync(path);
+    assert.equal(b.toString('ascii',0,4),'RIFF');
+    assert.equal(b.toString('ascii',8,12),'WEBP');
+   }
+  }
+ }
+ assert.equal(count,30);
+ assert.ok(html.includes('function c3ArmorImage(o)'));
+ assert.ok(html.includes('const c3Armor=c3ArmorImage(o);if(c3Armor)return c3Armor;'));
+});

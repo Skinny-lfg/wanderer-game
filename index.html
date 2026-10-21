@@ -1045,6 +1045,15 @@ function placeholderIcon(type){if(type==='belt'||type==='Belt')return 'assets/pl
 function slotImg(slot){return placeholderIcon(slot);}
 const EQUIPMENT_ICON_FILES={"sword":["sword_01.png","sword_02.png","sword_03.png"],"mace":["mace_01.png","mace_02.png","mace_03.png"],"dagger":["dagger_01.png","dagger_02.png","dagger_03.png"],"two_handed":["two_handed_01.png","two_handed_02.png","two_handed_03.png","two_handed_04.png"],"shield":["shield_01.png","shield_02.png","shield_03.png"],"bow":["bow_01.png","bow_02.png","bow_03.png"],"staff":["staff_01.png","staff_02.png","staff_03.png"],"orb":["orb_01.png","orb_02.png","orb_03.png"],"wand":["wand_01.png","wand_02.png","wand_03.png","wand_04.png"],"tome":["tome_01.png","tome_02.png","tome_03.png","tome_04.png"],"charm":["charm_01.png","charm_02.png","charm_03.png","charm_04.png"],"helmet":["helmet_01.png","helmet_02.png","helmet_03.png"],"chest":["chest_01.png","chest_02.png","chest_03.png"],"gloves":["gloves_01.png","gloves_02.png","gloves_03.png"],"boots":["boots_01.png","boots_02.png","boots_03.png"],"ring":["ring_01.png","ring_02.png","ring_03.png"]};
 const EQUIPMENT_ICON_ROOT='assets/equipment/';
+const C3_ARMOR_ART={"Cloth":{"helm":["assets/equipment/c3/armor_cloth_astral_helmet.webp","assets/equipment/c3/armor_cloth_bloodweave_helmet.webp"],"armor":["assets/equipment/c3/armor_cloth_astral_chest.webp","assets/equipment/c3/armor_cloth_bloodweave_chest.webp"],"gloves":["assets/equipment/c3/armor_cloth_astral_gloves.webp","assets/equipment/c3/armor_cloth_bloodweave_gloves.webp"],"boots":["assets/equipment/c3/armor_cloth_astral_boots.webp","assets/equipment/c3/armor_cloth_bloodweave_boots.webp"],"belt":["assets/equipment/c3/armor_cloth_astral_belt.webp","assets/equipment/c3/armor_cloth_bloodweave_belt.webp"]},"Leather":{"helm":["assets/equipment/c3/armor_leather_nightstalker_helmet.webp","assets/equipment/c3/armor_leather_wayfarer_helmet.webp"],"armor":["assets/equipment/c3/armor_leather_nightstalker_chest.webp","assets/equipment/c3/armor_leather_wayfarer_chest.webp"],"gloves":["assets/equipment/c3/armor_leather_nightstalker_gloves.webp","assets/equipment/c3/armor_leather_wayfarer_gloves.webp"],"boots":["assets/equipment/c3/armor_leather_nightstalker_boots.webp","assets/equipment/c3/armor_leather_wayfarer_boots.webp"],"belt":["assets/equipment/c3/armor_leather_nightstalker_belt.webp","assets/equipment/c3/armor_leather_wayfarer_belt.webp"]},"Plate":{"helm":["assets/equipment/c3/armor_plate_dawnward_helmet.webp","assets/equipment/c3/armor_plate_ironbound_helmet.webp"],"armor":["assets/equipment/c3/armor_plate_dawnward_chest.webp","assets/equipment/c3/armor_plate_ironbound_chest.webp"],"gloves":["assets/equipment/c3/armor_plate_dawnward_gloves.webp","assets/equipment/c3/armor_plate_ironbound_gloves.webp"],"boots":["assets/equipment/c3/armor_plate_dawnward_boots.webp","assets/equipment/c3/armor_plate_ironbound_boots.webp"],"belt":["assets/equipment/c3/armor_plate_dawnward_belt.webp","assets/equipment/c3/armor_plate_ironbound_belt.webp"]}};
+function c3ArmorImage(o){
+ const variants=C3_ARMOR_ART[o?.armorType]?.[o?.slot];
+ if(!variants?.length)return null;
+ const seed=String(o.id||o.name||o.slot);
+ let hash=2166136261;
+ for(let i=0;i<seed.length;i++)hash=Math.imul(hash^seed.charCodeAt(i),16777619);
+ return variants[(hash>>>0)%variants.length];
+}
 const LEGACY_ICON_TYPES=new Set(['sword','mace','bow','dagger','staff','shield','orb']);
 function equipmentArtType(subtype){
   const type=String(subtype||'').toLowerCase().replace(/[\s_-]/g,'');
@@ -1082,6 +1091,7 @@ function itemImg(o){
   if(!o)return ICONS.sword;
   if((o.name==='Training Sword'||o.name==='Old Sword')&&o.subtype==='Sword'&&o.rarity==='Common')return placeholderIcon('Sword');
   if(o.rarity==='Legendary'){const entry=LEGENDARY_BY_ID[o.legendaryId]||LEGENDARY_BY_NAME[o.name];if(legendaryMatches(entry,o))return entry.image?'assets/legendary/'+entry.image:placeholderIcon(o.subtype);}
+  const c3Armor=c3ArmorImage(o);if(c3Armor)return c3Armor;
   const key=({helm:'helmet',armor:'chest',gloves:'gloves',boots:'boots',ring:'ring',ring1:'ring',ring2:'ring'})[o.slot]||equipmentArtType(o.subtype);
   const names=EQUIPMENT_ICON_FILES[key];
   if(!names)return ICONS[String(o.subtype||'').toLowerCase()]||slotImg(o.slot);
