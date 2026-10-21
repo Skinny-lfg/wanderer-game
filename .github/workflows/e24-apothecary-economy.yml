@@ -13,4 +13,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node scripts/v012-phase-e24-apothecary-economy.cjs
+      - name: Native potion purchase and return assertions
+        run: node scripts/v012-phase-e24-apothecary-economy.cjs
