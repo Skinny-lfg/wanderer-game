@@ -15,6 +15,8 @@ function setup(profile,seedIndex){const a=create(84100+seedIndex),s=a.state(),g=
  a.setup(200,'Bow','Epic');let slotIndex=0;
  for(const [slot,item]of Object.entries(s.equip))if(item){const tier=196+((slotIndex*3+seedIndex)%5),rarity=slotIndex%5===0?'Rare':'Epic';const armor=['helm','armor','gloves','belt','boots'].includes(slot);const subtype=slot==='weapon'?'Bow':armor?'Leather':item.subtype;s.equip[slot]=a.makeItem(tier,slot,null,'loot',subtype,rarity);slotIndex++;}
  s.runes=['vitality','warding','might'].map((f,i)=>a.makeRune(f,[190,195,199][i]));s.runeSlots=s.runes.map(r=>r.id);s.gold=4000;s.fragments=3000;g.unlocked=200;
+ const gear=Object.values(s.equip).filter(Boolean),armorSlots=['helm','armor','gloves','belt','boots'];
+ if(s.equip.weapon?.subtype!=='Bow'||s.equip.offhand||armorSlots.some(slot=>s.equip[slot]?.armorType!=='Leather')||gear.some(item=>item.tier<196||item.tier>200)||s.runeSlots.length!==3||s.runes.some((r,i)=>r.tier!==[190,195,199][i]))throw Error('E.1.3 invalid starting Bow/Leather E200 build');
  return {profile,seedIndex,a,attempt:0,losses:0,farmNext:false,repeats:0,wins:0,defeats:0,initial:snapshot(a),goldEarned:0,goldSpent:0,fragmentsEarned:0,fragmentsSpent:0,crafts:0,upgrades:0,merchantBuys:0,salvages:0,runeClaims:0,lootLost:0,combatSeconds:0,stopped:false};}
 for(const p of profiles)for(let i=0;i<3;i++)agents.push(setup(p,i));
 function clearOverflow(a){let n=0;while(a.bag.overflow()){const items=a.bag.items(),score=x=>x.kind==='valuable'?(x.worth||0):rank[x.rarity]*100+(x.tier||0)/10;const worst=[...items].sort((x,y)=>score(x)-score(y))[0];if(!worst||!a.bag.discard(worst.id))throw Error('Bag overflow could not be resolved');if(++n>30)throw Error('Unbounded bag overflow');}return n;}
