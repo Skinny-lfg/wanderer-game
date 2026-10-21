@@ -37,7 +37,7 @@ function run(config){
  const utilityFamily=coverage?({blood:'vitality',fury:'vitality',vitality:'fury'}[family]||null):null;
  const utilitySkills=coverage?({blood:['blood_drinker','renewal','strong_heart','life_bloom','second_breath'],fury:['renewal','strong_heart','life_bloom','second_breath'],vitality:['quick_hands','precision','double_strike','brutal_crit']}[family]||[]):[];
  const utilityPicks=[];
- if(config.potionKinds?.length){s.consumables??={};for(const kind of config.potionKinds)s.consumables[kind]=(s.consumables[kind]||0)+1;s.potionSelection=[...config.potionKinds];}
+ if(config.potionKinds?.length&&!config.potionsPreloaded){s.consumables??={};for(const kind of config.potionKinds)s.consumables[kind]=(s.consumables[kind]||0)+1;s.potionSelection=[...config.potionKinds];}
  if(config.controlSeed!==undefined)a.streams(config.controlSeed+1,config.controlSeed+2,config.controlSeed+3,config.controlSeed+4);
  if(config.routeMode==='planned')a.controller().planAffinities(target);
  a.start(E);a.initial(family);const runtime=a.build().runtime,extra=a.events.run();if(family==='magic')a.element(['fire','frost','lightning'][seed%3]);
