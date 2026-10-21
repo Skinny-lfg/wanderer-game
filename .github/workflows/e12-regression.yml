@@ -31,3 +31,23 @@ jobs:
         run: |
           node --check scripts/v012-affinity-combat-sim.cjs
           node --check scripts/v012-phase-e11-persistence-audit.cjs
+
+  e2-progression-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: E.2 synthetic nine-player progression
+        env:
+          WANDERER_E11_RUNS: '270'
+        run: node scripts/v012-phase-e11-persistence-audit.cjs /tmp/wanderer-e2-results.json
+      - name: Upload E.2 full results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wanderer-e2-progression
+          path: /tmp/wanderer-e2-results.json
+          if-no-files-found: error
