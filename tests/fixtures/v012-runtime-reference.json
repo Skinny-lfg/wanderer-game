@@ -30,7 +30,7 @@
         "element": "lightning"
       },
       "steps": 76,
-      "digest": "b18de6111d2e45083e794a05c1bc543e94f01607634522e7683536a62bb4ff17"
+      "digest": "56f8470d9aba77a238b39e02d9a60206dd41f61678ee822883905eb3129e84c8"
     },
     {
       "scenario": {
@@ -41,7 +41,7 @@
         "element": "frost"
       },
       "steps": 72,
-      "digest": "aca416f544ea744a14e8ea2be32890e0296092f0386a015e7dd8bcf39655bfe8"
+      "digest": "d2c2d10b89406dd6da17a8dbc0a02977361e8435366bd7380f154b806a6db207"
     },
     {
       "scenario": {
@@ -113,7 +113,7 @@
         "element": "frost"
       },
       "steps": 73,
-      "digest": "0c8243c4c75302ed9de7d7fde3a47312099668a58533ead6b254165754f68270"
+      "digest": "7d5279ac1e62d663831dc6d980f38c893b827c6d24936ffb3c80c577950e0c21"
     },
     {
       "scenario": {
@@ -123,7 +123,7 @@
         "family": "fury"
       },
       "steps": 74,
-      "digest": "5bb4923db6d88b092aad994125c2c30713dce6dbc7d356af859310bac5fd60b4"
+      "digest": "ecc8c834cc4c6f4f013365a2b461c63b6e84c8f1047fc81c0fea1b9d713be255"
     },
     {
       "scenario": {
@@ -133,7 +133,7 @@
         "family": "aegis"
       },
       "steps": 72,
-      "digest": "16090f1a9c3b2a5595c0c39460b219125f9dbd511f00d3e13871360b71a4a919"
+      "digest": "5ef55162e9e01b51e240cc94b2169b245d48be454c70040e6704177b7b853214"
     },
     {
       "scenario": {
@@ -143,7 +143,7 @@
         "family": "vitality"
       },
       "steps": 71,
-      "digest": "4bf16ff93a58caaf0f772b4f880cc76f5824946b64f64900f2b59169da1c632b"
+      "digest": "fc1e8a940c088d39b588e2bebf2b5fe4542f8ace57767b4835a64cd08d7cfe19"
     },
     {
       "scenario": {
@@ -163,7 +163,7 @@
         "family": "decay"
       },
       "steps": 74,
-      "digest": "92dcf4b225fd99a30952730cf2bb1cedcb128c002c13c1a95bc2400abe58e791"
+      "digest": "25d054bb73735b305ac13a08798c009d08de40034d27b2ff8aa880a61bcaa65f"
     },
     {
       "scenario": {
@@ -185,7 +185,7 @@
         "element": "frost"
       },
       "steps": 75,
-      "digest": "c2f6495c56b3b927327f9c069fdc68b154dc3ad5d7acfa1d41866eda80aaff41"
+      "digest": "7d0d3559fadee99a6f8a8d2c6d5a9cad696a8e7b8bf3b18be8ff7b07c793c47b"
     },
     {
       "scenario": {
@@ -195,7 +195,7 @@
         "family": "fury"
       },
       "steps": 74,
-      "digest": "29a90c2a984310f5eabc53e2c65086266c38d300eb55ac9e0542e0aba504ba18"
+      "digest": "fdfa75204ffbe7d77a5147efc0590d1b52c86d992ec9680e80dc05d24866312e"
     },
     {
       "scenario": {
@@ -205,7 +205,7 @@
         "family": "aegis"
       },
       "steps": 74,
-      "digest": "12745ab642d13d4d4b00bd6c03f2659cd0c38548d4366e97ae5e4d7a9d4b8711"
+      "digest": "b1b97c868be592a21f5f3d2c8ce6ecf803e70493f2a99cd53b2c88a7321c5cef"
     },
     {
       "scenario": {

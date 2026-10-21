@@ -443,7 +443,11 @@ function updateFight(){
   // Elite Berserker cannot one-shot a full-health player with one direct hit.
   // Cap before Block/Barrier so defensive investment still matters.
   if(e.eliteType==='berserker')raw=Math.min(raw,Math.max(1,Math.floor(r.maxhp*.35)));
-  if(ports.tryDodge(r,ports.enemyAttackType(e))){ports.animateEnemyStrike();}
+  const attackType=ports.enemyAttackType(e);
+  if(ports.tryDodge(r,attackType)){
+   if(attackType==='physical'&&s.main?.subtype==='Daggers'&&['Daggers','Off-Hand Dagger'].includes(s.off?.subtype)&&ports.setReady(r,'daggerEvasionBarrier',6))ports.setBarrier(r,r.maxhp*.03);
+   ports.animateEnemyStrike();
+  }
   else{
   const mitigation=Math.max(lt.guard||0,lt.weaken||0);lt.guard=0;lt.weaken=0;
   if(mitigation)raw=Math.max(1,Math.round(raw*(1-mitigation)));
@@ -457,7 +461,7 @@ function updateFight(){
    if(s.off?.subtype==='Shield'&&['Sword','Mace'].includes(s.main?.subtype)&&!ports.legendaryHas('oathwall')&&ports.setReady(r,'shieldBaseCounter',2.5)){
     const baseFactor=s.main.subtype==='Mace'?1.4:1;
     const base=Math.max(1,Math.round(s.attack*baseFactor-e.def));
-    ports.setDirectEnemyDamage(r,base*.45,'🛡 Shield Counterattack');
+    ports.setDirectEnemyDamage(r,base*(s.main.subtype==='Sword'?.65:.45),'🛡 Shield Counterattack');
     if(e.hp<=0){ports.winEncounter();return;}
    }
   }

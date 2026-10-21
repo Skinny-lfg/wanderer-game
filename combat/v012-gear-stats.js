@@ -9,7 +9,12 @@ function gearEvasionRating(item,{ARMOR_SLOTS,RARITY,clamp}){
  const rank=item.rarity==='Legendary'?clamp(Number(item.upgradeRank)||0,0,10):0;
  return Math.round(base*(1+rank*.02)*100)/100;
 }
-function itemStatValue(item,key,context){return key==='evasionRating'?gearEvasionRating(item,context):Number(item?.[key])||0;}
+function itemStatValue(item,key,context){
+ if(key==='evasionRating')return gearEvasionRating(item,context);
+ const value=Number(item?.[key])||0;
+ // Old Orbs retain their saved roll; new Orbs already store the B.4 value.
+ return key==='spell'&&item?.slot==='offhand'&&item.subtype==='Orb'&&item.orbSpellB4!==true?Math.round(value*1.12):value;
+}
 function totalStats(equipment,ownedRunes,equippedRuneIds,{isTwoHanded,FIELDS,itemStatValue,RUNE_FAMILIES,runeValue,setCounts,setBonuses,state,PHASE1_PREVIEW,phase6Run}){
  const equipped=isTwoHanded(equipment.weapon)?{...equipment,offhand:null}:equipment;
  const s={str:5,agi:5,int:5,end:5,cha:5,atkFlat:0,defFlat:0,hpFlat:0,spdFlat:0,manaFlat:0,spellFlat:0,evasionRating:0};
