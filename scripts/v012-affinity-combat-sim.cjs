@@ -30,12 +30,18 @@ function run(config){
  const utilityFamily=coverage?({blood:'vitality',fury:'vitality',vitality:'fury'}[family]||null):null;
  const utilitySkills=coverage?({blood:['blood_drinker','renewal','strong_heart','life_bloom','second_breath'],fury:['renewal','strong_heart','life_bloom','second_breath'],vitality:['quick_hands','precision','double_strike','brutal_crit']}[family]||[]):[];
  const utilityPicks=[];
+ if(config.controlSeed!==undefined)a.streams(config.controlSeed+1,config.controlSeed+2,config.controlSeed+3,config.controlSeed+4);
+ if(config.routeMode==='planned')a.controller().planAffinities(target);
  a.start(E);a.initial(family);const runtime=a.build().runtime,extra=a.events.run();if(family==='magic')a.element(['fire','frost','lightning'][seed%3]);
- let lastUnlockedFamilies=[];
- let firstFight=null;
+ let lastUnlockedFamilies=[],unlockedAt={};
+ let firstFight=null,allPicks=[];
  let ticks=0,error=null,timeout=false,firstHybrid=null,hybridOffers=0,usefulUpgrades=0,synergyCards=0,cardCount=0,pity=0,win=false,last={hp:0,mp:0,maxhp:0},lastPick=[],routes=[],waves=0,bossReached=false;
  for(let step=0;step<45000;step++){
-  if(a.build())lastUnlockedFamilies=[...(a.build().unlockedFamilies||[])];
+  if(a.build()){
+   lastUnlockedFamilies=[...(a.build().unlockedFamilies||[])];
+   const unlockRealm=g.rewardPending?.plane||g.history.length||g.planeIndex;
+   for(const f of lastUnlockedFamilies)if(unlockedAt[f]===undefined)unlockedAt[f]=unlockRealm;
+  }
   if(['finished','failed'].includes(g.stage))break;
   const draft=a.draft(),r=s.run,event=extra.event;
   if(draft?.step==='element'){a.element(['fire','frost','lightning'][seed%3]);continue;}
@@ -54,7 +60,7 @@ function run(config){
      return (p.requires.length?(p.requires.every(f=>target.includes(f))?1000:-1000):0)+enables*150+(target.includes(p.family)?80:0)+(own>0?15:0)+(order<0?0:60-order*6);
     };pick=[...cards].sort((x,y)=>score(y)-score(x))[0];
    }
-   if(!a.passive(pick.id)){error='Passive rejected';break;}if(coverage&&utilitySkills.includes(pick.id))utilityPicks.push(pick.id);if(pick.requires.length&&firstHybrid===null)firstHybrid=draft.plane.plane;lastPick=[...a.build().picks];
+   if(!a.passive(pick.id)){error='Passive rejected';break;}if(coverage&&utilitySkills.includes(pick.id))utilityPicks.push(pick.id);if(pick.requires.length&&firstHybrid===null)firstHybrid=draft.plane.plane;lastPick=[...a.build().picks];allPicks=[...lastPick];
   }else if(event){if(!a.events.choose(2)){error='Event refused';break;}}
   else if(r?.status==='cleared'||a.results().eventExitPending){if(!a.exitResult()){error='Realm exit rejected';break;}}
   else if(r?.status==='fight'){
@@ -79,8 +85,8 @@ function run(config){
   }else{error='Unhandled '+g.stage;break;}
  }
  win=g.stage==='finished';if(!win&&g.stage!=='failed'&&!timeout&&!error)error='Unterminated';
- const metrics=extra.metrics||{},seconds=ticks*.11,m=a.measured,hybrids=lastPick.filter(id=>B.CATALOG.find(p=>p.id===id)?.requires.length);
- return {...config,coverage:coverage?'utility':'baseline',utilityFamily,utilityPicks,utilityUnlocked:!!utilityFamily&&lastUnlockedFamilies.includes(utilityFamily),primaryUnlocked:primary.every(f=>lastUnlockedFamilies.includes(f)),unlockedFamilies:lastUnlockedFamilies,allTargetsUnlocked:target.every(f=>lastUnlockedFamilies.includes(f)),firstFight,win,reached:Math.min(15,g.history.length+(g.stage==='failed'?1:0)),bossReached,waves,seconds:+seconds.toFixed(2),wallMs:Math.round(performance.now()-start),dps:+((metrics.damageDealt||0)/Math.max(1,seconds)).toFixed(2),damage:metrics.damageDealt||0,dot:Math.round(m.dot),peakProcBurst:m.burst,maxhp:last.maxhp,observedEhpBudget:Math.round(last.maxhp+m.healed+m.absorbed),hp:win?last.hp:0,mana:last.mp,prototypeProcCounts:Object.fromEntries(Object.entries(metrics.procs||{}).filter(([k])=>k.startsWith('Legendary Prototype: '))),critChance:last.crit,blockChance:last.block,criticalHits:m.crit,weaponAttacks:m.attacks,blocks:m.blocks,incomingAttacks:m.incoming,healPerSecond:+(m.healed/Math.max(1,seconds)).toFixed(3),barrierPerSecond:+(m.barrier/Math.max(1,seconds)).toFixed(3),telemetry:runtime.passiveTelemetry||{},hybrids,firstHybrid,hybridOffers,usefulUpgrades,synergyCards,cardCount,pityPresentations:pity,missing:target.filter(f=>!routes.includes(f)),routes,actualFamilies:[...new Set(routes)],targetFamilies:target,unplannedFamilies:[...new Set(routes)].filter(f=>!target.includes(f)),targetHybrids:hybrids.filter(id=>B.CATALOG.find(p=>p.id===id).requires.every(f=>target.includes(f))),rngEnd:a.checkpoint.seed(),error,timeout};
+ const metrics=extra.metrics||{},seconds=ticks*.11,m=a.measured,hybrids=allPicks.filter(id=>B.CATALOG.find(p=>p.id===id)?.requires.length);
+ return {...config,coverage:coverage?'utility':'baseline',utilityFamily,utilityPicks,utilityUnlocked:!!utilityFamily&&lastUnlockedFamilies.includes(utilityFamily),primaryUnlocked:primary.every(f=>lastUnlockedFamilies.includes(f)),unlockedFamilies:lastUnlockedFamilies,unlockedAt,allTargetsUnlocked:target.every(f=>lastUnlockedFamilies.includes(f)),firstFight,win,reached:Math.min(15,g.history.length+(g.stage==='failed'?1:0)),bossReached,waves,seconds:+seconds.toFixed(2),wallMs:Math.round(performance.now()-start),dps:+((metrics.damageDealt||0)/Math.max(1,seconds)).toFixed(2),damage:metrics.damageDealt||0,dot:Math.round(m.dot),peakProcBurst:m.burst,maxhp:last.maxhp,observedEhpBudget:Math.round(last.maxhp+m.healed+m.absorbed),hp:win?last.hp:0,mana:last.mp,prototypeProcCounts:Object.fromEntries(Object.entries(metrics.procs||{}).filter(([k])=>k.startsWith('Legendary Prototype: '))),critChance:last.crit,blockChance:last.block,criticalHits:m.crit,weaponAttacks:m.attacks,blocks:m.blocks,incomingAttacks:m.incoming,healPerSecond:+(m.healed/Math.max(1,seconds)).toFixed(3),barrierPerSecond:+(m.barrier/Math.max(1,seconds)).toFixed(3),telemetry:runtime.passiveTelemetry||{},hybrids,firstHybrid,hybridOffers,usefulUpgrades,synergyCards,cardCount,pityPresentations:pity,missing:target.filter(f=>!routes.includes(f)),routes,actualFamilies:[...new Set(routes)],targetFamilies:target,unplannedFamilies:[...new Set(routes)].filter(f=>!target.includes(f)),targetHybrids:hybrids.filter(id=>B.CATALOG.find(p=>p.id===id).requires.every(f=>target.includes(f))),rngEnd:a.checkpoint.seed(),error,timeout};
 }
 function aggregate(rows,keys){const buckets=new Map();for(const row of rows){const key=keys.map(k=>row[k]).join('/');if(!buckets.has(key))buckets.set(key,[]);buckets.get(key).push(row);}const q=(a,p)=>[...a].sort((x,y)=>x-y)[Math.floor((a.length-1)*p)];return [...buckets].map(([key,a])=>({key,n:a.length,wins:a.filter(r=>r.win).length,winPct:+(100*a.filter(r=>r.win).length/a.length).toFixed(1),medianRealm:q(a.map(r=>r.reached),.5),p90Realm:q(a.map(r=>r.reached),.9),medianSeconds:q(a.map(r=>r.seconds),.5),medianDps:q(a.map(r=>r.dps),.5),hybridRuns:a.filter(r=>r.hybrids.length).length,medianFirstHybrid:q(a.map(r=>r.firstHybrid).filter(x=>x!==null),.5)??null,missingFamilyRuns:a.filter(r=>r.missing.length).length,unplannedFamilyRuns:a.filter(r=>r.unplannedFamilies.length).length,targetHybridRuns:a.filter(r=>r.targetHybrids.length).length,timeouts:a.filter(r=>r.timeout).length,errors:a.filter(r=>r.error).length}));}
 if(require.main===module){

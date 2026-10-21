@@ -86,7 +86,7 @@ function phase6UnlockBase(family){
  const p=ports.phase1Build;
  if(!p.unlockedFamilies?.includes(family)){const starter=WandererV012Buildcraft.initial(p,family);if(starter)ports.addLog('Affinity unlocked: '+starter.name,'good');}
 }
-function phase6PassiveOptions(plane){ports.phase1Build.realmIndex=plane.plane;ports.phase1Build.runtime.draftStats=ports.totalStats();return WandererV012Buildcraft.options(ports.phase1Build,plane.family,ports.gameRandom);}
+function phase6PassiveOptions(plane){ports.phase1Build.realmIndex=plane.plane;ports.phase1Build.runtime.draftStats=ports.totalStats();return WandererV012Buildcraft.options(ports.phase1Build,plane.family,ports.phase1Controller.passiveRandom?.()||ports.gameRandom);}
 
 function phase6BackToCamp(){
  const g=ports.phase1Controller.state;

@@ -39,6 +39,12 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
   addLog=text=>{if(text.includes('BLOCK!'))measured.blocks++;if(text.includes('Barrier absorbs '))measured.absorbed+=Number(text.match(/absorbs ([0-9.]+)/)?.[1]||0);};
  }
  phase1Init();
+ let harnessCombatActive=false,harnessControlRandom=gameRandom,harnessCombatRandom=null;
+ const harnessPrng=initial=>{let value=initial>>>0;return()=>((value=(Math.imul(value,1664525)+1013904223)>>>0)/4294967296);};
+ function harnessStreams(routeSeed,draftSeed,controlSeed,combatSeed){
+  const route=harnessPrng(routeSeed),draft=harnessPrng(draftSeed);harnessControlRandom=harnessPrng(controlSeed);harnessCombatRandom=harnessPrng(combatSeed);
+  phase1Controller.setSimulationRandomStreams(route,draft);gameRandom=()=>harnessCombatActive?harnessCombatRandom():harnessControlRandom();
+ }
  globalThis.audit={measured,
   potions:{supplies:()=>phase3Supplies,select:phase6SelectPotion,use:phase6UsePotion,inventory:phase6PotionInventory,start:phase6StartPotions,finish:phase6ReturnPotions,tick:phase6TickDurations,shop:(E=1,rng=gameRandom)=>WandererV012Consumables.shop(E,rng,makeId),buy:phase6BuyPotion,reroll:phase6RerollPotions},
   events:{open:phase6OpenEvent,choose:phase6EventChoice,run:()=>phase6Run},
@@ -46,7 +52,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
   state:()=>state,results:()=>phase5Results,exitResult:phase5ExitResult,recordItem:item=>phase5Results.earned.push(phase5Item(item)),controller:()=>phase1Controller,build:()=>phase1Build,draft:()=>phase1Draft,
   start:phase1Begin,initial:phase2ChooseInitial,select:phase1Choose,enter:phase1Enter,passive:phase2ChoosePassive,element:phase2ChooseElement,
   passiveIcons:phase2PassiveIcons,initialPassive:WandererV012Buildcraft.initial,
-  tick:updateFight,potion:phase3UsePotion,reroll:phase3Reroll,win:phase1WaveWon,death:phase1Death,abandon:phase1Abandon,
+  tick(...args){harnessCombatActive=true;try{return updateFight(...args);}finally{harnessCombatActive=false;}},streams:harnessStreams,potion:phase3UsePotion,reroll:phase3Reroll,win:phase1WaveWon,death:phase1Death,abandon:phase1Abandon,
   now:setNow,ready:setReady,heal:setHeal,
   bag:{items:phase3BagItems,overflow:phase3BagOverflow,discard:phase3DiscardLoot,active:phase3ExpeditionActive,
    mark(item,overflow=false){(overflow?state.expeditionOverflow:state.stash).push(item);phase3LootIds.add(item.id);},
