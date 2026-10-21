@@ -217,12 +217,10 @@ function phase1WaveWon(){
  if(ports.gameRandom()<.23){
   const worth=Math.max(2,Math.round(3+r.tier*.55+ports.gameRandom()*(4+r.tier*.30)));
   const treasureId=ports.makeId();
-  const treasure=typeof globalThis.WandererV012Treasures?.create==='function'
-    ?globalThis.WandererV012Treasures.create(treasureId,r.tier,worth)
-    :{id:treasureId,kind:'valuable',name:'Ancient Relic',tier:r.tier,worth,isNew:true};
+  const treasure=globalThis.WandererV012Treasures.create(treasureId,r.tier);
   ports.state.valuables??=[];ports.state.valuables.push(treasure);
   ports.phase3LootIds.add(treasure.id);r.valuables.push(treasure);
-  ports.addLog('◆ '+treasure.name+' · '+worth+' Gold when extracted.','good');
+  ports.addLog('◆ '+treasure.name+' · '+treasure.worth+' Gold when extracted.','good');
  }
  r.status='ready';
  const result=ports.phase1Controller.waveWon();

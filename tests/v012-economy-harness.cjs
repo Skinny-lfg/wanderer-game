@@ -20,7 +20,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
   localStorage:{getItem(){throw Error('Unexpected save read');},setItem(){throw Error('Unexpected save write');}},
   setTimeout:fn=>{callbacks.push(fn);return callbacks.length;},clearTimeout(){},setInterval:()=>0,clearInterval(){}};
  const inject=String.raw`
- const auditForge=renderForge,auditMerchant=renderMerchant;
+ const auditForge=renderForge,auditMerchant=renderMerchant,auditCombat=renderCombat;
  let auditConfirmation=null,auditFeedback=null;
  showConfirm=(title,body,fn)=>{auditConfirmation=fn;};showModal=()=>document.createElement('dialog');showPendingRuneReward=()=>{};
  render=renderCombat=renderPhase1=renderForge=renderMerchant=wallet=bannerMessage=animateStrike=animateDefense=animateEnemyStrike=updateBars=resetDungeonEntryScroll=()=>{};
@@ -50,6 +50,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
   events:{open:phase6OpenEvent,choose:phase6EventChoice,run:()=>phase6Run},
   back:phase6BackToCamp,markAllSeen:markAllAsSeen,
   state:()=>state,results:()=>phase5Results,exitResult:phase5ExitResult,recordItem:item=>phase5Results.earned.push(phase5Item(item)),controller:()=>phase1Controller,build:()=>phase1Build,draft:()=>phase1Draft,
+  treasures:{bag:phase3BagMarkup,stash:phase6ValuablesMarkup,result(){phase5RenderResult();return $('screen').innerHTML;},combat(){auditCombat();return $('screen').innerHTML;},sell:sellValuables},
   start:phase1Begin,initial:phase2ChooseInitial,select:phase1Choose,enter:phase1Enter,passive:phase2ChoosePassive,element:phase2ChooseElement,
   passiveIcons:phase2PassiveIcons,initialPassive:WandererV012Buildcraft.initial,
   tick(...args){harnessCombatActive=true;try{return updateFight(...args);}finally{harnessCombatActive=false;}},streams:harnessStreams,potion:phase3UsePotion,reroll:phase3Reroll,win:phase1WaveWon,death:phase1Death,abandon:phase1Abandon,
@@ -91,7 +92,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
  };
  `;
  const main=source.match(/<script>([\s\S]*?)<\/script>/)?.[1];
- const files=['economy/v0101.js','combat/legendary.js','combat/v012-combat-core.js','combat/v012-gear-stats.js','combat/v012-runes.js','economy/v012-loot-rules.js','combat/v012-buildcraft.js','online/v012-expedition-controller.js','online/v012-expedition-events.js','online/v012-consumables.js'];
+ const files=['online/v012-treasures.js','online/v012-save.js','economy/v0101.js','combat/legendary.js','combat/v012-combat-core.js','combat/v012-gear-stats.js','combat/v012-runes.js','economy/v012-loot-rules.js','combat/v012-buildcraft.js','online/v012-expedition-controller.js','online/v012-expedition-events.js','online/v012-consumables.js'];
  files.push(...[...source.matchAll(/<script[^>]+src="([^"]+-runtime\.js)"/g)].map(m=>m[1]));
  vm.runInNewContext(files.map(f=>moduleOverrides[f]??fs.readFileSync(path.join(root,f),'utf8')).join('\n')+'\n'+main.replace(boot,inject),sandbox,{timeout:20000});
  sandbox.audit.flush=()=>{for(let i=0;callbacks.length;i++){if(i>10000)throw Error('Callback loop');callbacks.shift()();}};

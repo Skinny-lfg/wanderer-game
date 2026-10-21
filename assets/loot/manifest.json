@@ -9,5 +9,5 @@
     "royal-crown": "assets/loot/treasure_royal_crown.webp",
     "ornate-chest": "assets/loot/treasure_ornate_chest.webp"
   },
-  "note": "Real expedition treasure visuals. Gold formula, 23% drop rate and saves preserved."
+  "note": "Expedition treasures use the six named catalog values. The 23% drop rate and legacy save worths are preserved."
 }
