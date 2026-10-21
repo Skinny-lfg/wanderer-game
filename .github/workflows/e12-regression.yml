@@ -1,0 +1,22 @@
+name: E.1.2 regression T1-T5 (isolated)
+on:
+  push:
+    branches: [development]
+    paths:
+      - .github/workflows/e12-regression.yml
+  workflow_dispatch:
+jobs:
+  e12-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: E.1.2 native harness T1-T5
+        run: node tests/v012-phase-e12-harness.test.cjs
+      - name: Validate audit harness syntax
+        run: |
+          node --check scripts/v012-affinity-combat-sim.cjs
+          node --check scripts/v012-phase-e11-persistence-audit.cjs
