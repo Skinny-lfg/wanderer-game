@@ -16,3 +16,9 @@
 - Passive images: waiting for artist; original placeholders remain.
 
 **Safety:** No rebalance, no drop-rate changes, no save schema migration, no `main` changes, no Firebase/Railway deploy. Source PNGs remain in Drive. The newly imported Legendary PNGs are around 0.4–0.9 MB each and should be replaced by optimized versions for performance before a public release.
+
+## C.3.3 — optimized Dungeon backgrounds
+- Integrated 12 desktop and 12 mobile WebP assets from Drive's 10 - Game Ready (WebP).
+- Retained all 12 existing dungeon IDs, affinities, enemies, progression and loot.
+- Theme-to-image manifest at `assets/dungeons/c3/manifest.json`; browser selects mobile art at widths up to 650px.
+- Source PNGs remain preserved in Drive. Still no deployment.

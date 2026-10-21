@@ -969,18 +969,18 @@ function affinityArt(effect,item=false){const i=AFFINITY_ART.indexOf(effect);if(
 const RARITY={Common:['#aab2bc',1,1],Uncommon:['#76d69b',1.25,1.5],Rare:['#77baff',1.57,2.4],Epic:['#d0a2fa',2.1,3.9],Legendary:['#ffc36a',2.6,6]};
 // Twelve active Realms; stable IDs preserve historical loot metadata.
 const THEMES=[
- ['temple','Venomreach','poison','assets/dungeons/backgrounds/temple.webp','Venom Acolyte'],
- ['forge','Crimson Dominion','bleed','assets/dungeons/backgrounds/forge.webp','Forge Raider'],
- ['bloodscar','Bloodscar Wastes','bleed','assets/dungeons/backgrounds/quarry.webp','Bloodscar Ravager'],
- ['crypt','Gravewind Barrens','crit','assets/dungeons/backgrounds/crypt.webp','Crypt Wraith'],
- ['bastion','Ironbound Frontier','sunder','assets/dungeons/backgrounds/bastion.webp','Iron Sentinel'],
- ['ash','Ashen Aether','burn','assets/dungeons/backgrounds/ash.webp','Ash Zealot'],
- ['void','Umbral Hollow','drain','assets/dungeons/backgrounds/void.webp','Soul Drinker'],
- ['ward','Warded Marches','shield','assets/dungeons/backgrounds/ward.webp','Warded Guardian'],
- ['grove','Verdant Wilds','nature','assets/dungeons/backgrounds/grove.webp','Serpent Guard'],
- ['shrine','Everroot Vale','regen','assets/dungeons/backgrounds/shrine.webp','Fallen Acolyte'],
- ['storm','Stormglass Beyond','shock','assets/dungeons/backgrounds/storm.webp','Stormglass Knight'],
- ['drowned','Drowned Bastion','tide','assets/dungeons/backgrounds/drowned.webp','Drowned Oracle'],
+ ['temple','Venomreach','poison','assets/dungeons/c3/decay_venomreach.webp','Venom Acolyte'],
+ ['forge','Crimson Dominion','bleed','assets/dungeons/c3/blood_crimson_dominion.webp','Forge Raider'],
+ ['bloodscar','Bloodscar Wastes','bleed','assets/dungeons/c3/blood_bloodscar_wastes.webp','Bloodscar Ravager'],
+ ['crypt','Gravewind Barrens','crit','assets/dungeons/c3/fury_gravewind_barrens.webp','Crypt Wraith'],
+ ['bastion','Ironbound Frontier','sunder','assets/dungeons/c3/fury_ironbound_frontier.webp','Iron Sentinel'],
+ ['ash','Ashen Aether','burn','assets/dungeons/c3/magic_ashen_aether.webp','Ash Zealot'],
+ ['void','Umbral Hollow','drain','assets/dungeons/c3/decay_umbral_hollow.webp','Soul Drinker'],
+ ['ward','Warded Marches','shield','assets/dungeons/c3/aegis_warded_marches.webp','Warded Guardian'],
+ ['grove','Verdant Wilds','nature','assets/dungeons/c3/vitality_verdant_wilds.webp','Serpent Guard'],
+ ['shrine','Everroot Vale','regen','assets/dungeons/c3/vitality_everroot_vale.webp','Fallen Acolyte'],
+ ['storm','Stormglass Beyond','shock','assets/dungeons/c3/magic_stormglass_beyond.webp','Stormglass Knight'],
+ ['drowned','Drowned Bastion','tide','assets/dungeons/c3/aegis_drowned_bastion.webp','Drowned Oracle'],
 ].map(([id,name,effect,image,enemy])=>({id,name,effect,image,enemy}));
 const MOB_POOLS={
  temple:[['Venom Cobra','assets/mobs/temple/venom_cobra.png'],['Venom Spider','assets/mobs/temple/venom_spider.png']],
@@ -997,7 +997,11 @@ const MOB_POOLS={
  drowned:[['Brine Toad','assets/mobs/drowned/brine_toad.png'],['Drowned Oracle','assets/mobs/drowned/drowned_oracle.png']],
 };
 THEMES.forEach(t=>t.mobs=(MOB_POOLS[t.id]||[]).map(([name,image])=>({name,image})));
-function dungeonImage(t){return ART[t.image]||t.image}
+function dungeonImage(t){
+ const desktop=ART[t.image]||t.image;
+ if(typeof window!=='undefined'&&typeof window.matchMedia==='function'&&window.matchMedia('(max-width: 650px)').matches&&desktop.startsWith('assets/dungeons/c3/'))return desktop.replace(/\.webp$/, '_mobile.webp');
+ return desktop;
+}
 const VALUABLES=[{name:'Antique Coins',worth:8,icon:'🪙'},{name:'Golden Chalice',worth:18,icon:'🏆'},{name:'Runic Gem',worth:27,icon:'💎'},{name:'Ancient Idol',worth:40,icon:'🗿'},{name:'Jeweled Crown',worth:55,icon:'👑'}];
 const NAMES={'Two-Handed':['Ancient Greatsword','Runic Greataxe','Colossus Blade'],Sword:['Wanderer Sword','Steel Longsword','Runeblade'],Mace:['Iron Mace','War Hammer','Breaker Mace'],Bow:['Hunter Bow','Windstriker Bow','Longbow'],Daggers:['Twin Daggers','Serpent Blades','Assassin Knives'],Staff:['Mystic Staff','Runed Staff','Elder Staff'],Wand:['Enchanted Wand','Moon Wand','Arcane Wand'],Shield:['Guardian Shield','Warden Shield','Tower Shield'],Orb:['Runic Orb','Frost Orb','Arcane Orb'],Tome:['Mage Tome','Grimoire','Cursed Tome'],Charm:['Talisman','Spell Charm','Eldritch Focus'],Helm:['War Helm','Scout Hood','Wizard Circlet'],Armor:['Knight Cuirass','Shadow Robe','Leather Vest'],Gloves:['Warrior Gauntlets','Mystic Gloves','Quick Wraps'],Boots:['Traveler Boots','Iron Greaves','Swift Treads'],Ring:['Silver Ring','Ruby Ring','Azure Ring'],Belt:['Traveler Belt','Woven Belt','War Belt'],Amulet:['Mystic Pendant','Ashen Medallion','Amulet of Dawn']};
 const ARMOR_SLOTS=['helm','armor','gloves','boots','belt'],ARMOR_TYPES=['Cloth','Leather','Plate'];

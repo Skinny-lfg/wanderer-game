@@ -35,3 +35,22 @@ test('C.3.1: preserves original gameplay configuration and legacy status glyphs'
   assert.ok(html.includes('const AFFINITY_ART=['));
   assert.ok(html.includes("item-icons-simplified.svg"));
 });
+
+test('C.3.3: all twelve stable dungeon IDs use optimized desktop and mobile WebP',()=>{
+ const d=require('../assets/dungeons/c3/manifest.json');
+ assert.equal(Object.keys(d.themeIds).length,12);
+ assert.equal(Object.keys(d.backgrounds).length,24);
+ for(const [id,slug] of Object.entries(d.themeIds)){
+  const desktop=d.backgrounds[slug],mobile=d.backgrounds[slug+'_mobile'];
+  assert.ok(desktop && mobile,id+' missing background pair');
+  for(const path of [desktop,mobile]){
+   assert.ok(fs.existsSync(path),'missing '+path);
+   const b=fs.readFileSync(path);
+   assert.equal(b.toString('ascii',0,4),'RIFF');
+   assert.equal(b.toString('ascii',8,12),'WEBP');
+  }
+  const row=html.split('\n').find(x=>x.includes("['"+id+"',"));
+  assert.ok(row?.includes(desktop),'Dungeon mapping '+id);
+ }
+ assert.ok(html.includes("window.matchMedia('(max-width: 650px)')"));
+});
