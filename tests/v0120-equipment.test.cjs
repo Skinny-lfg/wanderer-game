@@ -50,7 +50,7 @@ test('Merchant always stocks four Weapons, four Armor and four Accessories',()=>
 test('Merchant sells a Belt; obsolete Sigil rerolls cannot spend Gold',()=>{
  const a=create(9),s=a.state();s.gold=10000;a.rollShop();
  const belt=a.makeItem(1,'belt',null,'merchant','Leather','Rare');belt.goldPrice=a.merchantCost(belt);s.merchant.stock=[belt];
- const before=s.gold;a.buy(0);assert(s.stash.some(i=>i.id===belt.id));assert.equal(s.gold,before-belt.goldPrice);
+ const before=s.gold;assert.equal(a.purchaseNative(0),true);assert(s.stash.some(i=>i.id===belt.id));assert.equal(s.gold,before-belt.goldPrice);
  const after=s.gold;a.refresh('sigils');assert.equal(s.gold,after);assert.equal(s.merchant.sigils.length,0);
 });
 test('only current Legendary weapon ability is active, with no legacy abilities',()=>{
