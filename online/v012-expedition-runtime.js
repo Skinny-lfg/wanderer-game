@@ -216,10 +216,13 @@ function phase1WaveWon(){
  // Treasures share Bag capacity with equipment; they can only be sold outside the Expedition.
  if(ports.gameRandom()<.23){
   const worth=Math.max(2,Math.round(3+r.tier*.55+ports.gameRandom()*(4+r.tier*.30)));
-  const treasure={id:ports.makeId(),kind:'valuable',name:'Ancient Relic',tier:r.tier,worth,isNew:true};
+  const treasureId=ports.makeId();
+  const treasure=typeof globalThis.WandererV012Treasures?.create==='function'
+    ?globalThis.WandererV012Treasures.create(treasureId,r.tier,worth)
+    :{id:treasureId,kind:'valuable',name:'Ancient Relic',tier:r.tier,worth,isNew:true};
   ports.state.valuables??=[];ports.state.valuables.push(treasure);
   ports.phase3LootIds.add(treasure.id);r.valuables.push(treasure);
-  ports.addLog('◆ Ancient Relic · '+worth+' Gold when extracted.','good');
+  ports.addLog('◆ '+treasure.name+' · '+worth+' Gold when extracted.','good');
  }
  r.status='ready';
  const result=ports.phase1Controller.waveWon();
@@ -315,18 +318,20 @@ function phase5Item(i){return {id:i.id,name:i.name,tier:i.tier,rarity:i.rarity,s
 function phase5RememberRealm(r,outcome){
  ports.phase5Results.realm={level:r.tier,plane:r.phase1Plane,name:r.planeName,family:r.planeFamily,outcome,
   metrics:r.metrics||null,enemy:r.enemy?.name||'Unknown',seconds:r.combatSeconds||0,gold:r.gold,fragments:r.fragments,
-  loot:r.loot.map(ports.phase5Item),log:ports.phase4Clone(r.realmLog||ports.logEntries.slice().reverse()),truncated:!!r.realmLogTruncated};
+  loot:r.loot.map(ports.phase5Item),treasures:(r.valuables||[]).map(i=>({...i})),log:ports.phase4Clone(r.realmLog||ports.logEntries.slice().reverse()),truncated:!!r.realmLogTruncated};
  ports.phase5Results.review='realm';
 }
 
 function phase5MakeSummary(outcome){
  const g=ports.phase1Controller.state,owned=new Set([...ports.state.stash,...(ports.state.expeditionOverflow||[]),...Object.values(ports.state.equip).filter(Boolean)].map(i=>i.id));
  const lost=outcome==='defeat'||outcome==='abandoned',bagIds=new Set(ports.phase3BagItems().map(i=>i.id));
+ const expeditionTreasures=(ports.state.valuables||[]).filter(i=>bagIds.has(i.id)).map(i=>({...i}));
  ports.phase5Results.summary={passiveTelemetry:ports.phase4Clone(ports.phase1Build?.runtime.passiveTelemetry||{}),metrics:ports.phase6Run?.metrics||null,level:g.expedition,outcome,realms:g.history.length,
   families:[...(ports.phase1Build?.families||g.families)],picks:[...(ports.phase1Build?.picks||[])],element:ports.phase1Build?.element||null,
   seconds:ports.phase1Clock+(outcome==='defeat'?(ports.state.run?.combatSeconds||0):0),gold:ports.phase5Results.gold,fragments:ports.phase5Results.fragments,
   kept:ports.phase5Results.earned.filter(i=>owned.has(i.id)&&(!lost||!bagIds.has(i.id))),lost:ports.phase5Results.earned.filter(i=>lost&&bagIds.has(i.id)),
-  discarded:ports.phase5Results.earned.filter(i=>!owned.has(i.id)),runeTier:null};
+  discarded:ports.phase5Results.earned.filter(i=>!owned.has(i.id)),
+  treasuresKept:lost?[]:expeditionTreasures,treasuresLost:lost?expeditionTreasures:[],runeTier:null};
 }
 
 function phase5ExitResult(){

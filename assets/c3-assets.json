@@ -90,12 +90,14 @@
   },
   "pending": [
     "Passive images still being prepared",
-    "Full end-to-end browser QA and release approval"
+    "Full end-to-end browser QA and release approval",
+    "C.3.5 QA browser audit pending"
   ],
   "note": "No gameplay or saves changed; asset files can be replaced by smaller versions. Six treasures WebP copied into Packs/08 on Drive, not enabled as new drops.",
   "notes": "Only development; no gameplay/save changes; old artwork remains for legacy fallbacks. New source Drive: 10 - Game Ready (WebP).",
-  "status": "Integrated: Legendary, affinities, Magic choices, 30 typed armor, 47 weapon/offhand/jewelry WebP, 12 responsive dungeon backgrounds",
+  "status": "Integrated: Legendary, affinities, Magic choices, 30 typed armor, 47 weapon/offhand/jewelry WebP, 12 responsive dungeon backgrounds, six Expedition treasure WebP",
   "armorManifest": "assets/equipment/c3/manifest.json",
   "dungeonManifest": "assets/dungeons/c3/manifest.json",
-  "nonArmorManifest": "assets/equipment/c3/non-armor-manifest.json"
+  "nonArmorManifest": "assets/equipment/c3/non-armor-manifest.json",
+  "treasureManifest": "assets/loot/manifest.json"
 }
