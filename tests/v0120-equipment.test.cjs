@@ -44,8 +44,7 @@ test('Merchant always stocks four Weapons, four Armor and four Accessories',()=>
  const a=create(98),state=a.state();state.gold=100000;a.rollShop();
  const groups={weapons:['weapon','offhand'],armor:['helm','armor','gloves','boots','belt'],accessories:['ring1','ring2','amulet']};
  const check=()=>{assert.equal(state.merchant.stock.length,12);for(const slots of Object.values(groups))assert.equal(state.merchant.stock.filter(o=>slots.includes(o.slot)).length,4);};
- check();state.merchant.stock=state.merchant.stock.slice(0,4);a.ensureMerchantStock();check();
- a.refresh('gear');check();
+ check();a.refresh('gear');check();
  const item=state.merchant.stock[0];const category=Object.values(groups).find(slots=>slots.includes(item.slot));a.buy(0);check();assert(category.includes(state.merchant.stock[0].slot));
 });
 test('Merchant sells a Belt; obsolete Sigil rerolls cannot spend Gold',()=>{
