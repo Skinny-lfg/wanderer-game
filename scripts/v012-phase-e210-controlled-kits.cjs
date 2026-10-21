@@ -8,7 +8,7 @@ const builds=[['Archer','Bow','Leather',null,'fury'],['Mage','Staff','Cloth',nul
 for(const [buildName,weapon,armor,offhand,family]of builds)for(const scenario of ['base','adapted','fortune'])for(let seedIndex=0;seedIndex<30;seedIndex++){
  const kinds=scenario==='base'?[]:scenario==='fortune'?['fortune','health',family==='magic'?'arcane':'haste']:family==='magic'?['arcane','mana','barrier']:buildName==='Tank'?['barrier','ironhide','health']:buildName==='Assassin'?['might','haste','health']:['health','ironhide','barrier'];
  const a=create(84100+seedIndex),s=a.state(),g=a.controller().state;a.setup(200,weapon,'Epic');
- let j=0;for(const [slot,item]of Object.entries(s.equip))if(item){const tier=196+((j*3+seedIndex)%5),rarity=j%5===0?'Rare':'Epic',armor=['helm','armor','gloves','belt','boots'].includes(slot);s.equip[slot]=a.makeItem(tier,slot,null,'loot',slot==='weapon'?weapon:armorSlot?armor:item.subtype,rarity);j++;}
+ let j=0;for(const [slot,item]of Object.entries(s.equip))if(item){const tier=196+((j*3+seedIndex)%5),rarity=j%5===0?'Rare':'Epic',armorSlot=['helm','armor','gloves','belt','boots'].includes(slot);s.equip[slot]=a.makeItem(tier,slot,null,'loot',slot==='weapon'?weapon:armorSlot?armor:item.subtype,rarity);j++;}
  if(offhand)s.equip.offhand=a.makeItem(198,'offhand',null,'loot',offhand,'Epic');else s.equip.offhand=null;
  s.runes=['vitality','warding',family==='magic'?'wisdom':'might'].map((f,i)=>a.makeRune(f,[190,195,199][i]));s.runeSlots=s.runes.map(r=>r.id);s.gold=4000;s.fragments=3000;g.unlocked=200;
  const seed=851000+seedIndex*10007;
