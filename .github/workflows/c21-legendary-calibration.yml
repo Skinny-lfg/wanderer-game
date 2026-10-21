@@ -5,6 +5,7 @@ on:
     paths:
       - '.github/workflows/c21-legendary-calibration.yml'
       - 'scripts/v012-phase-c21-legendary-calibration.cjs'
+      - 'scripts/v012-phase-c21-report.cjs'
   workflow_dispatch:
 
 jobs:
@@ -12,21 +13,25 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     permissions:
-      contents: read
+      contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Syntax check (simulation script only)
-        run: node --check scripts/v012-phase-c21-legendary-calibration.cjs
-      - name: Paired C.2.1 Veil and Heartroot tests on native sandboxed runtime
-        run: node scripts/v012-phase-c21-legendary-calibration.cjs /tmp/wanderer-phase-c21-results.json > /tmp/wanderer-phase-c21-summary.log
-      - name: Print result summaries and confirm matrix complete
+      - name: Syntax check audit code
         run: |
-          tail -n 200 /tmp/wanderer-phase-c21-summary.log
-          grep '^C21_TOTAL ' /tmp/wanderer-phase-c21-summary.log
-      - name: Archive full paired C.2.1 result matrix
+          node --check scripts/v012-phase-c21-legendary-calibration.cjs
+          node --check scripts/v012-phase-c21-report.cjs
+      - name: Paired C.2.1 native runtime calibration
+        run: node scripts/v012-phase-c21-legendary-calibration.cjs /tmp/wanderer-phase-c21-results.json > /tmp/wanderer-phase-c21-summary.log
+      - name: Generate C.2.1 measured Markdown report
+        run: node scripts/v012-phase-c21-report.cjs /tmp/wanderer-phase-c21-results.json docs/v012-phase-c21-legendary-calibration-results.md
+      - name: Show total simulation results
+        run: grep '^C21_TOTAL ' /tmp/wanderer-phase-c21-summary.log
+      - name: Archive complete C.2.1 metrics and report
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -34,4 +39,14 @@ jobs:
           path: |
             /tmp/wanderer-phase-c21-results.json
             /tmp/wanderer-phase-c21-summary.log
+            docs/v012-phase-c21-legendary-calibration-results.md
           if-no-files-found: ignore
+      - name: Publish successful measured report to development only
+        if: success() && github.ref == 'refs/heads/development'
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/v012-phase-c21-legendary-calibration-results.md
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'docs(v0.12): publish measured C.2.1 calibration results'
+          git push origin HEAD:development
