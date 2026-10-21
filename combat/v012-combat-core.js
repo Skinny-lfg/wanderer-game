@@ -20,8 +20,7 @@ function endlessWeaponDamageBonus(level,main,off){
  const progress=Math.max(0,Math.min(1,(level-200)/100));
  if(!progress)return 0;
  const weapon=main?.subtype,offhand=off?.subtype;
- const maximum=weapon==='Daggers'&&['Daggers','Off-Hand Dagger'].includes(offhand)?.30:
-  weapon==='Sword'&&offhand==='Shield'?.20:
+ const maximum=weapon==='Sword'&&offhand==='Shield'?.20:
   weapon==='Mace'&&offhand==='Shield'?.30:
   weapon==='Wand'&&offhand==='Orb'?.15:0;
  return maximum*progress;

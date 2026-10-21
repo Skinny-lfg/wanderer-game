@@ -18,8 +18,8 @@
         "weapon": "Daggers",
         "family": "decay"
       },
-      "steps": 73,
-      "digest": "05796863d020df0ce131a305f39e7c3b074a42b73d2eae732fe70296d2ae5c40"
+      "steps": 71,
+      "digest": "d2e5d85c97f201313996d68bb301abf5948f55da4fccb86897f2ade2f3982b8c"
     },
     {
       "scenario": {
@@ -90,8 +90,8 @@
         "weapon": "Daggers",
         "family": "decay"
       },
-      "steps": 68,
-      "digest": "6af81befe07e205efe6bfdecf0109aeb381dbf589a06483a2897fc7ae1ca44a2"
+      "steps": 73,
+      "digest": "b400cf8c3104d74948d4d1e1bc012e59556c058f61fdd59d59c92c9c4bd16fcc"
     },
     {
       "scenario": {
@@ -162,8 +162,8 @@
         "weapon": "Daggers",
         "family": "decay"
       },
-      "steps": 74,
-      "digest": "38c4189def0cc9ea747923dd8bbc4288e5cd76a40f71ef4097803c3c1a1e73bf"
+      "steps": 73,
+      "digest": "eb12b823273223e554b659baf2a569b3a7b47f6cdd03cb8a7ab0c65ad8b6b696"
     },
     {
       "scenario": {

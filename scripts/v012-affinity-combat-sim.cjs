@@ -6,6 +6,7 @@ const partners={blood:['decay','magic'],decay:['blood','magic'],vitality:['aegis
 function run(config){
  const {E,weapon,rarity,family,strategy,runes,seed}=config,coverage=config.coverage==='utility',start=performance.now(),harnessFactory=config.harnessFactory||create,overrides={...(config.moduleOverrides||{}),...(config.prototypeItems?require('./v012-legendary-prototype-patch.cjs'):{})},a=harnessFactory(seed,config.sourceOverride,overrides, {measure:true,now:1700000000000}),B=a.buildcraft;
  a.setup(E,weapon,rarity);const s=a.state(),g=a.controller().state;g.unlocked=E;
+ if(config.offhandType===false)s.equip.offhand=null;
  const selectedArmor=config.armorType||null;
  if(selectedArmor){
   if(!['Cloth','Leather','Plate'].includes(selectedArmor))throw Error('Unknown armor type');

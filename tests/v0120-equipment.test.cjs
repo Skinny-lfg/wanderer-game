@@ -119,13 +119,15 @@ test('daggers equip in either hand with 50% offhand offense and retain 2H lock',
  s.equip.weapon=a.makeItem(20,'weapon',null,'loot','Bow','Rare');
  assert.equal(a.equip(item.id,'offhand'),false);assert(s.stash.some(x=>x.id===item.id));
 });
-test('off-hand daggers never grant an independent strike or Double Strike',()=>{
+test('off-hand daggers make a separate half-strength strike without a recursive Double Strike',()=>{
  const a=create(31);a.setup(5,'Sword');const s=a.state();
  const item=a.makeItem(5,'weapon',null,'loot','Daggers','Rare');
- s.stash.push(item);assert.equal(a.equip(item.id,'offhand'),true);
+ s.stash.push(item);assert.equal(a.equip(item.id,'offhand'),true);s.equip.weapon=a.makeItem(5,'weapon',null,'loot','Daggers','Rare');
  enter(a);const r=s.run;r.enemy.hp=r.enemy.maxhp=100000;r.enemy.barrier=0;
- const feedback=a.feedback();a.rng(0);a.gear.weaponAttack(r);
- assert(!feedback.logs.some(x=>/Off-Hand Dagger strikes|Double Strike/.test(x.text)));
+ const feedback=a.feedback();a.rng(1);a.gear.weaponAttack(r);
+ assert.equal(feedback.floats.filter(x=>x.target==='enemy').length,2,'one main-hand and one off-hand impact');
+ assert(feedback.floats[1].value>0&&feedback.floats[1].value<feedback.floats[0].value,'off-hand impact uses half strength');
+ assert(!feedback.logs.some(x=>/Double Strike/.test(x.text)),'off-hand hit must not roll Double Strike recursively');
 });
 test('between-Realm swaps return displaced gear to the Bag; death destroys only Bag items',()=>{
  const a=create(81);a.setup(3,'Sword');const home=a.state().equip.weapon;

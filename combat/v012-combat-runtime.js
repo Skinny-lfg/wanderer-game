@@ -322,8 +322,8 @@ function applyAffinity(effect,enemy,s,mult=1,baseDamage=0){
  }
 }
 
-function weaponAttack(r){
- const s=r.stats,e=r.enemy,weapon=s.main,off=s.off,caster=s.caster,now=ports.setNow(r),temp=ports.setRuntime(r);
+function weaponAttack(r,offhandStrike=false){
+ const s=r.stats,e=r.enemy,weapon=offhandStrike?s.off:s.main,off=s.off,caster=!offhandStrike&&s.caster,now=ports.setNow(r),temp=ports.setRuntime(r);
  const lt=ports.legendaryRuntime(r),focus=!!lt.focusReady,armorReady=!!lt.armorReady;lt.focusReady=false;lt.armorReady=false;
  const kind=weapon?.subtype||'Unarmed',baseCost=kind==='Staff'?13:kind==='Wand'?9:0;
  const cost=baseCost&&ports.isPhase1Run()&&ports.phase1Build?.element?WandererV012Buildcraft.nextCost(ports.phase1Build):baseCost;
@@ -339,6 +339,7 @@ function weaponAttack(r){
   const factor=kind==='Two-Handed'?1.70:kind==='Mace'?1.4:kind==='Bow'?1.08:kind==='Daggers'?.80:kind==='Sword'?1.12:caster?.55:1;
   damage=Math.max(1,Math.round(s.attack*factor)-Math.round(e.def*(armorReady?.8:1)));
  }
+ if(offhandStrike)damage=Math.max(1,Math.round(damage*.5));
  const base=damage;r.lastBaseHit=base;
  const perfect=s.bonus.perfectStrike&&temp.focus>=3&&now>=(r.setCooldowns?.perfectStrike||0);
  if(perfect){ports.setReady(r,'perfectStrike',10);temp.focus=0;}
@@ -360,7 +361,7 @@ function weaponAttack(r){
   if(gained>0)ports.addLog('⚔ Heavy Guard +'+Math.round(gained)+' Barrier','good');
  }
  if(s.bonus.sunderExpose&&e.baseDef>0&&e.def<=e.baseDef*.5)damage=Math.round(damage*1.08);
- const endlessBonus=WandererV012CombatCore.endlessWeaponDamageBonus(r.tier,weapon,off);
+ const endlessBonus=offhandStrike?0:WandererV012CombatCore.endlessWeaponDamageBonus(r.tier,weapon,off);
  if(endlessBonus)damage=Math.max(1,Math.round(damage*(1+endlessBonus)));
  damage+=added;
  if(r.playerDebuffUntil>now)damage=Math.max(1,Math.round(damage*.8));
@@ -391,13 +392,14 @@ function weaponAttack(r){
  }
  // Crescent keeps its cooldown-limited Bleed extension without independent off-hand hits.
  ports.legendaryOffhand(r,damage);
- if(ports.WANDERER_DOUBLE_STRIKE_ENABLED&&kind==='Daggers'&&damage>0&&e.hp>0&&ports.gameRandom()<.25){
+ if(!offhandStrike&&ports.WANDERER_DOUBLE_STRIKE_ENABLED&&kind==='Daggers'&&damage>0&&e.hp>0&&ports.gameRandom()<.25){
   // One ordinary pre-critical main-hand hit, with no further rolls or recursive triggers.
   ports.setDirectEnemyDamage(r,Math.max(1,Math.round(base*.55)),'🗡 Double Strike!');
  }
 
  if(ports.isPhase1Run())ports.phase2WeaponAttack(r,base,critical,cast);
  if(s.counts.shield>=2){const gained=ports.setBarrier(r,Math.max(1,Math.round(r.maxhp*(s.bonus.shieldBonus||0))));if(gained>0)ports.addLog('🛡 Shield set: +'+Math.round(gained)+' Barrier','good');}
+ if(!offhandStrike&&weapon?.subtype==='Daggers'&&['Daggers','Off-Hand Dagger'].includes(off?.subtype)&&e.hp>0)weaponAttack(r,true);
  return damage;
 }
 
