@@ -1762,7 +1762,7 @@ let phase6Run=null;
 
 
 
-const PHASE6_POTION_ART={health:'assets/potions/potion_health_standard.webp',mana:'assets/potions/potion_mana_standard.webp'};
+const PHASE6_POTION_ART={health:'assets/potions/potion_health_standard.webp',mana:'assets/potions/potion_mana_standard.webp',might:'assets/potions/potion_amber_elixir.webp',arcane:'assets/potions/potion_mana_enhanced.webp',ironhide:'assets/potions/potion_decay_elixir.webp',haste:'assets/potions/potion_health_enhanced.webp',fortune:'assets/potions/potion_golden_elixir.webp',barrier:'assets/potions/potion_silver_ward.webp'};
 function phase6PotionImage(id){return PHASE6_POTION_ART[id]||'assets/potions/potion-fallback.svg'}
 function phase6StackSlots(){return Object.values(state.consumables||{}).reduce((total,quantity)=>total+Math.ceil(quantity/99),0)}
 function phase6StashUsedSlots(){return state.stash.length+phase6StackSlots()}
@@ -1801,7 +1801,7 @@ function phase6RenderApothecary(){
  if(!economyCanAct()){view='phase1';render();return;}
  if(!state.apothecary){state.apothecary=WandererV012Consumables.shop(economyTier(),gameRandom,makeId);save();}
  const C=WandererV012Consumables.CATALOG,a=state.apothecary;
- html('<section class="panel apothecaryPanel"><h2>Apothecary</h2><p class="small muted">Four current offers · Health and Mana remain guaranteed.</p><div class="shopGrid">'+a.stock.map(p=>{const potion=C.find(c=>c.id===p.kind),quantity=state.consumables?.[p.kind]||0,canStack=quantity<99999&&(phase6StackSlots()<stashCapacity()||quantity%99!==0);return '<article class="shopCard potionOffer"><img src="'+phase6PotionImage(p.kind)+'" alt=""><b>'+esc(potion.name)+'</b><span class="small muted">'+esc(potion.rarity)+'</span><strong class="gold">'+p.price+' Gold</strong><button type="button" class="primary" data-potion-buy="'+p.id+'" '+(state.gold<p.price||!canStack?'disabled':'')+'>Buy</button></article>';}).join('')+'</div><button id="potionReroll" class="ghost" '+(state.gold<a.refreshCost?'disabled':'')+'>Reroll · '+a.refreshCost+' Gold</button></section>');
+ html('<section class="panel apothecaryPanel"><h2>Apothecary</h2><p class="small muted">Four randomized potion offers · Each visit refreshes the selection.</p><div class="shopGrid">'+a.stock.map(p=>{const potion=C.find(c=>c.id===p.kind),quantity=state.consumables?.[p.kind]||0,canStack=quantity<99999&&(phase6StackSlots()<stashCapacity()||quantity%99!==0);return '<article class="shopCard potionOffer"><img src="'+phase6PotionImage(p.kind)+'" alt=""><b>'+esc(potion.name)+'</b><span class="small muted">'+esc(potion.rarity)+'</span><strong class="gold">'+p.price+' Gold</strong><button type="button" class="primary" data-potion-buy="'+p.id+'" '+(state.gold<p.price||!canStack?'disabled':'')+'>Buy</button></article>';}).join('')+'</div><button id="potionReroll" class="ghost" '+(state.gold<a.refreshCost?'disabled':'')+'>Reroll · '+a.refreshCost+' Gold</button></section>');
  Q('[data-potion-buy]').forEach(b=>b.onclick=()=>phase6BuyPotion(b.dataset.potionBuy));$('potionReroll').onclick=phase6RerollPotions;
 }
 function phase6EligibleEventPassives(eventId){
@@ -2022,7 +2022,7 @@ function phase3RenderCityCenter(){
  if(!['camp','finished','failed'].includes(phase1Controller?.state.stage)||state.run){view='phase1';renderPhase1();return;}
  const showBlacksmith=phase3CityTab==='blacksmith';
  $('screen').innerHTML='<section class="panel phase3CityCenter"><div class="topline"><div><span class="eyebrow">Wanderer v0.12 · Local playtest</span><h1>City Center</h1></div><div class="cityCenterTabs" role="tablist" aria-label="City Center"><button type="button" role="tab" aria-selected="'+showBlacksmith+'" data-city-tab="blacksmith">Blacksmith</button><button type="button" role="tab" aria-selected="'+(!showBlacksmith)+'" data-city-tab="apothecary">Apothecary</button></div></div><div class="cityCenterBlacksmith" '+(showBlacksmith?'':'hidden')+'><div id="cityForge"></div><div id="cityBlacksmith"></div></div><div id="cityApothecary" '+(showBlacksmith?'hidden':'')+'></div></section>';
- Q('[data-city-tab]').forEach(button=>button.onclick=()=>{phase3CityTab=button.dataset.cityTab;phase3RenderCityCenter();});
+ Q('[data-city-tab]').forEach(button=>button.onclick=()=>{const next=button.dataset.cityTab;if(next==='apothecary'&&phase3CityTab!==next&&economyCanAct()){state.apothecary=WandererV012Consumables.shop(economyTier(),gameRandom,makeId);save();}phase3CityTab=next;phase3RenderCityCenter();});
  phase3ContentTarget=$('cityForge');renderForge();
  phase3ContentTarget=$('cityBlacksmith');renderMerchant();
  phase3ContentTarget=$('cityApothecary');phase6RenderApothecary();
