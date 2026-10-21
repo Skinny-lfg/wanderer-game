@@ -1,0 +1,97 @@
+{
+  "phase": "C.3.1",
+  "legendary": {
+    "crimson-fang": {
+      "path": "assets/legendary/crimson-fang.png",
+      "driveId": "1ef-kwzgqEoEmpG2h8UwTEPZobcKuB_SO"
+    },
+    "chalice-hollow-king": {
+      "path": "assets/legendary/chalice-hollow-king.png",
+      "driveId": "1La_Cy73Xg9RrvtQYzJyvCweJ16ANsZL9"
+    },
+    "gravewake": {
+      "path": "assets/legendary/gravewake.png",
+      "driveId": "1rZjj0TujsglBn1bmXYNE66GNbTUPMgKT"
+    },
+    "eye-of-morrow": {
+      "path": "assets/legendary/eye-of-morrow.png",
+      "driveId": "1J83fijObHK5ObkTc_vcaYqZB8t9pInL_"
+    },
+    "verdant-oath": {
+      "path": "assets/legendary/verdant-oath.png",
+      "driveId": "1zMp29IePVUYwq9zjIyF_SVJ8503PG_VQ"
+    },
+    "heartroot-carapace": {
+      "path": "assets/legendary/heartroot-carapace.png",
+      "driveId": "1xLDqsVh8omuHkf9hXHNCDK1ATVE1AMrO"
+    },
+    "oathwall": {
+      "path": "assets/legendary/oathwall.png",
+      "driveId": "1YpGavZjxfnISXei71N48xlIDLUFGjmsB"
+    },
+    "veil-thousand-seals": {
+      "path": "assets/legendary/veil-thousand-seals.png",
+      "driveId": "14qegajMfOSXZZDziuWnCmLWYEkSWr5Rn"
+    },
+    "kingsbreaker": {
+      "path": "assets/legendary/kingsbreaker.png",
+      "driveId": "1GyPVgTcts3-hx_SvSeF3Hmlki7R91vT9"
+    },
+    "tempest-talon": {
+      "path": "assets/legendary/tempest-talon.png",
+      "driveId": "15J-8gDO0HBdIS6R8bCgsQhlujTyZ3w3_"
+    },
+    "astrafall": {
+      "path": "assets/legendary/astrafall.png",
+      "driveId": "1ckHEUErVGr7a0LYRrqomuTjcVda1DuuK"
+    },
+    "voidglass": {
+      "path": "assets/legendary/voidglass.png",
+      "driveId": "1mlmJ7QfjJIXE_NhEmi7B2hrG8Urn8NPD"
+    }
+  },
+  "affinities": {
+    "families/blood": {
+      "path": "assets/affinities/families/blood.png",
+      "driveId": "1VXLSGru-6TMvHIIk-Zf52dIqaDmvYIOV"
+    },
+    "families/decay": {
+      "path": "assets/affinities/families/decay.png",
+      "driveId": "10Eeeq8upW8LstTj4aWTZw9M4SsPi6fH5"
+    },
+    "families/vitality": {
+      "path": "assets/affinities/families/vitality.png",
+      "driveId": "19hn8GweazoepdTwlpL5DgCJc4ajPoNqz"
+    },
+    "families/aegis": {
+      "path": "assets/affinities/families/aegis.png",
+      "driveId": "1CXzzSbm3K0Ho0GZVsoRp3ZTQjuHd1qfM"
+    },
+    "families/fury": {
+      "path": "assets/affinities/families/fury.png",
+      "driveId": "1s7KIdmH27TPHYI6uozrj7IUPfCAWIJK9"
+    },
+    "families/magic": {
+      "path": "assets/affinities/families/magic.png",
+      "driveId": "1IzH5HPHnYNh-HCHi7RUXsSHlNuUvG5l2"
+    },
+    "magic/fire": {
+      "path": "assets/affinities/magic/fire.png",
+      "driveId": "1iUbQMyrcePPAajqxQmRnkRFRGewKN7N2"
+    },
+    "magic/frost": {
+      "path": "assets/affinities/magic/frost.png",
+      "driveId": "1bMAPl2atS7nVbe5oYPhw5bswRgiT-4x2"
+    },
+    "magic/lightning": {
+      "path": "assets/affinities/magic/lightning.png",
+      "driveId": "1WVW5B4PDiRC2FePc9rcYqdAU4yDJv40q"
+    }
+  },
+  "pending": [
+    "30 equipment images Cloth/Leather/Plate, optimized",
+    "12 dungeon backgrounds, optimized",
+    "passives still in progress"
+  ],
+  "note": "No gameplay or saves changed; asset files can be replaced by smaller versions."
+}
