@@ -95,3 +95,17 @@ As seeds e políticas são iguais nos três braços, mas sobreviver mais Realms 
 Os 12 efeitos estão implementados e passaram os testes de comportamento, mas **nenhum é aprovado para drops ativos** antes de C.2. Heartroot e Veil exigem primeiro uma experiência isolada de sobrevivência: com três efeitos, a Barrier/s de Cloth Staff em E100 sobe de 18,49 para 61,90 e a de Plate Sword de 6,28 para 46,64, enquanto o DPS aumenta bem menos. Oathwall e os pacotes com Heartroot/Veil também devem ser isolados para medir a contribuição própria. Os efeitos de arma de um só item ativam e não mostram recursão, mas continuam sujeitos à comparação de balanceamento C.2; taxas de vitória isoladas oscilam entre seeds e builds. Conservar os números C.1 até essa avaliação.
 
 Os novos drops **não** são ativados nesta fase. O balanceamento-base B.4, as probabilidades de raridade, passivos, Runas, inimigos, Firebase, Railway, saves reais e `main` não foram alterados.
+
+
+## Encerramento pós-GitHub Actions — 2026-10-21
+
+**Estado técnico C.1: concluído, com drops novos DESATIVADOS e balanceamento pendente da C.2.** A continuação da auditoria confirmou o resultado do commit `d17f3b2212d2fd27f848aff06090e5e18f353182` no [GitHub Actions #39576656058](https://github.com/Skinny-lfg/wanderer-game/actions/runs/39576656058): conclusão **success**. Os jobs obrigatórios `current-expedition` e `full-playtest-audit` terminaram **success**. Neste segundo job passaram os testes de browser mobile/desktop, assets/VFX, simulações nativas focadas E10/E50 e simulações gerais. Os jobs opcionais `legendary-prototype-audit`, `armor-archetype-audit` e `utility-coverage-ab-audit` foram **skipped** pelos respetivos critérios de disparo, não falharam. A matriz C.1 de 10.752 corridas descrita acima foi executada antes do commit; este run do Actions confirmou a regressão e as simulações focadas, mas **não repetiu independentemente as 10.752 corridas**.
+
+### Decisão de segurança e balanceamento
+
+- A flag de produção `WANDERER_NEW_LEGENDARY_DROPS_ENABLED=false` foi confirmada em `index.html`: os novos 12 IDs estão implementados e testáveis, mas não são gerados para jogadores por defeito. Os 22 IDs anteriores permanecem no catálogo e os seus itens/saves não são migrados nem eliminados.
+- Com três efeitos novos equipados, os clears E200 passam de **403/896 (45,0%)** para **729/896 (81,4%)**; em E10, de **241/896 (26,9%)** para **762/896 (85,0%)**. São cenários sintéticos de poderes Epic-equivalentes, **não** taxas reais de jogadores. Não é seguro autorizar drops novos com os valores atuais sem testar as combinações.
+- Os maiores suspeitos de sobrepotência são **Veil of a Thousand Seals** e **Heartroot Carapace** (Barrier/cura e sobrevivência acumuladas). **Oathwall** deve entrar na mesma auditoria como controlo de interação defensiva/contra-ataque. O relatório não isola ainda a contribuição de cada item num pacote de três; evitar nerfs sem experiências isoladas.
+- Próxima etapa autorizável separadamente: **C.2**, testes pareados com 0, 1, 2 e 3 efeitos, separando Veil, Heartroot e Oathwall, e medindo clear rate, Realm média, absorção real, cura, DPS, procs e caps por Realm. Manter o balanceamento B.4, as odds de Legendary e a flag desativada enquanto não existir aprovação explícita.
+
+**Escopo deste encerramento:** somente atualização documental em `development`; sem alterações de combate, catálogo ativo, UX, `main`, Firebase, Railway, deploys ou saves reais.
