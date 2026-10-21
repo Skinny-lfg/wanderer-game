@@ -32,10 +32,10 @@ for(let seed=0;seed<24;seed++){
  assert.equal(run.potions.length,3);
  assert(run.potions.every(p=>p.used===false));
  for(const kind of Object.keys(bought))assert.equal(s.consumables[kind]||0,0);
- a.potions.finish('victory');
- for(const kind of Object.keys(bought))assert.equal(s.consumables[kind],1,'Unused potion not returned on victory');
+ const outcome=seed%2===0?'victory':'defeat';a.potions.finish(outcome);
+ for(const kind of Object.keys(bought))assert.equal(s.consumables[kind],outcome==='victory'?1:0,'Potion settlement incorrect for '+outcome);
  const afterVictory={...s.consumables};
- rows.push({seed,spent,rerolls,bought,selected:3,returned:3,inventoryBeforeRun:beforeStart,afterVictory});
+ rows.push({seed,spent,rerolls,bought,selected:3,returned:seed%2===0?3:0,lost:seed%2?3:0,inventoryBeforeRun:beforeStart,afterSettlement:afterVictory});
 }
-const summary={seeds:rows.length,bought:rows.length*3,returned:rows.length*3,rerolls:rows.reduce((n,x)=>n+x.rerolls,0),spent:rows.reduce((n,x)=>n+x.spent,0),kinds};
+const summary={seeds:rows.length,bought:rows.length*3,returned:rows.reduce((n,x)=>n+x.returned,0),lost:rows.reduce((n,x)=>n+x.lost,0),rerolls:rows.reduce((n,x)=>n+x.rerolls,0),spent:rows.reduce((n,x)=>n+x.spent,0),kinds};
 console.log('E24_APOTHECARY '+JSON.stringify(summary));
