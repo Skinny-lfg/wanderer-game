@@ -13,7 +13,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Regression: compare nerfed offhand and legacy coefficients
+      - name: Compare nerfed offhand and legacy coefficients
         run: node scripts/v012-phase-e35-offhand-sensitivity.cjs /tmp/e35.json
       - uses: actions/upload-artifact@v4
         if: always()
