@@ -26,7 +26,7 @@ test('legacy Leather derives rating without changing saved item fields; old gear
  const raw=JSON.stringify(old);assert(a.baseStats({helm:old}).evasionRating>0);assert.equal(JSON.stringify(old),raw);
  assert.equal(old.evasionRating,undefined);
  assert.equal(a.baseStats({helm:{...old,armorType:undefined}}).evasionRating,0);
- const legendary=a.makeItem(5,'helm',null,'loot','Leather','Legendary'),rating=legendary.evasionRating;
+ const legendary=a.makeItem(5,'armor',null,'loot','Leather','Legendary'),rating=legendary.evasionRating;
  a.economy.upgradeLegendary(legendary);assert.equal(legendary.evasionRating,Math.round(rating*1.02*100)/100);
  const legacy={...legendary};delete legacy.evasionRating;assert.equal(a.gear.gearEvasionRating(legacy),legendary.evasionRating);
 });

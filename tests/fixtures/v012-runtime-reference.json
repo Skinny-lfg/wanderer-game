@@ -1,5 +1,5 @@
 {
-  "reference": "shared-daggers-dual-slot-v012",
+  "reference": "legendary-clean-sheet-two-slot-v012",
   "cases": [
     {
       "scenario": {
@@ -9,7 +9,7 @@
         "family": "blood"
       },
       "steps": 76,
-      "digest": "ecf22de0d29cdb0dc5af11645387529e52614a81e5a51fdd192a6469efab9258"
+      "digest": "2856e49f7fa55e4f21294a9279bb232be3048406dc33e4322050150a7dfb66eb"
     },
     {
       "scenario": {
@@ -19,7 +19,7 @@
         "family": "decay"
       },
       "steps": 73,
-      "digest": "cc6f73dffe9c055a53dff30f647a213418f2c0d5f39dc66f0821199f0f2fcd77"
+      "digest": "62f5bf9b27a562622ee2116fb2add12b063d8a86c12dbaf58a0a09190990e90e"
     },
     {
       "scenario": {
@@ -30,7 +30,7 @@
         "element": "lightning"
       },
       "steps": 76,
-      "digest": "56f8470d9aba77a238b39e02d9a60206dd41f61678ee822883905eb3129e84c8"
+      "digest": "41f47f9bcaac7b0f8c36dd5b6cc66dee9b5b1f9f8b9fbccc602ccccbf7b6b0f3"
     },
     {
       "scenario": {
@@ -41,7 +41,7 @@
         "element": "frost"
       },
       "steps": 72,
-      "digest": "d2c2d10b89406dd6da17a8dbc0a02977361e8435366bd7380f154b806a6db207"
+      "digest": "002cfe3dfefae8612760142a2374ab93842d4a51eaa3b3bb6a4d3f53bf18b5e6"
     },
     {
       "scenario": {
@@ -51,7 +51,7 @@
         "family": "fury"
       },
       "steps": 75,
-      "digest": "65f277c5773a1a1fba16e293850b81bab66bf95a2670ed13cf67fd6bee5c8f09"
+      "digest": "b1646374d57c654a950e1a3a9387446d1a69d17bb049e2b8c6f609698601201f"
     },
     {
       "scenario": {
@@ -61,7 +61,7 @@
         "family": "aegis"
       },
       "steps": 75,
-      "digest": "ef34c51b9c455d2691c2a7048f3847b4eac5142dde737681ff09093dfcf3f164"
+      "digest": "80d128811d6114c3d7647814e9279965a1cfc040bdd6c616447a9cc6f58cdfc1"
     },
     {
       "scenario": {
@@ -71,7 +71,7 @@
         "family": "vitality"
       },
       "steps": 74,
-      "digest": "a4512b065784deb5e094c5edb077195323c586c3ecb35ec330a437089f5e88b0"
+      "digest": "337c888b7bc3b9a4f0c9d4b134f8377ed9e058433b85d5b69f618cf273e7acbf"
     },
     {
       "scenario": {
@@ -81,7 +81,7 @@
         "family": "blood"
       },
       "steps": 75,
-      "digest": "1e335bef2427b693d5b048ab2f8c5da3586fa517572db1eee442ee3481060e71"
+      "digest": "87db32a065452eebe6fe3ece82daf39426848f6a82d34db9aa4ed10eaa2c7dcc"
     },
     {
       "scenario": {
@@ -91,7 +91,7 @@
         "family": "decay"
       },
       "steps": 68,
-      "digest": "85dbedba94ea850fe2603a92279e1b895b45bc63dbfd6cf03458ffe22d76f5be"
+      "digest": "e8dedc666db9daf03f0441f994abd817b8531ebf3051a15fe8381a471bde9e6b"
     },
     {
       "scenario": {
@@ -102,7 +102,7 @@
         "element": "lightning"
       },
       "steps": 75,
-      "digest": "d5a5bb86cbf05a6f9a59f9916d314a7d2daee4335e32a7b1073df58e30f14a70"
+      "digest": "75458380705d2b0c4e90d6523abc368c8092de440e9657b783581c82f5971ef4"
     },
     {
       "scenario": {
@@ -113,7 +113,7 @@
         "element": "frost"
       },
       "steps": 73,
-      "digest": "7d5279ac1e62d663831dc6d980f38c893b827c6d24936ffb3c80c577950e0c21"
+      "digest": "27c0a409df23f6294edc66e79a47cc08eca57844407724da6d6a0310b78f3575"
     },
     {
       "scenario": {
@@ -123,7 +123,7 @@
         "family": "fury"
       },
       "steps": 74,
-      "digest": "ecc8c834cc4c6f4f013365a2b461c63b6e84c8f1047fc81c0fea1b9d713be255"
+      "digest": "cb98706e0b4d3a9c012f3c82b05481e807e867d914b19f8e380a03d31a25e564"
     },
     {
       "scenario": {
@@ -133,7 +133,7 @@
         "family": "aegis"
       },
       "steps": 72,
-      "digest": "5ef55162e9e01b51e240cc94b2169b245d48be454c70040e6704177b7b853214"
+      "digest": "d3d7ca2b4b58cace14ff7479cd167593a6426b06e2c1ece07b0122ba005a20f5"
     },
     {
       "scenario": {
@@ -143,7 +143,7 @@
         "family": "vitality"
       },
       "steps": 71,
-      "digest": "fc1e8a940c088d39b588e2bebf2b5fe4542f8ace57767b4835a64cd08d7cfe19"
+      "digest": "a812bc336c0b4c8a205bd868430a44451c1301dafc61f2799e4b92d0e2ca5303"
     },
     {
       "scenario": {
@@ -152,7 +152,7 @@
         "weapon": "Sword",
         "family": "blood"
       },
-      "steps": 75,
+      "steps": 76,
       "digest": "8f07463a1d0505eede98bd74c3086d72afdd377d203c98dd740e57b0082f8cb0"
     },
     {
@@ -163,7 +163,7 @@
         "family": "decay"
       },
       "steps": 74,
-      "digest": "25d054bb73735b305ac13a08798c009d08de40034d27b2ff8aa880a61bcaa65f"
+      "digest": "2934081d339270e6d9441ebb3ce1b715d03252ba5dc6a9c88100ae39af63be26"
     },
     {
       "scenario": {
@@ -174,7 +174,7 @@
         "element": "lightning"
       },
       "steps": 73,
-      "digest": "daac60f7c548b1961955964b916a7c292d841933382f7ca731d3a2690e3ea4a2"
+      "digest": "98c8816d70ca1e89e04ca95767f3b624d24782671824dd6e1fbe61a9b4776598"
     },
     {
       "scenario": {
@@ -185,7 +185,7 @@
         "element": "frost"
       },
       "steps": 75,
-      "digest": "7d0d3559fadee99a6f8a8d2c6d5a9cad696a8e7b8bf3b18be8ff7b07c793c47b"
+      "digest": "dc0c5cdecd958164caaa86e620e529a5048ee159a6c2018a8f99c2dab875691f"
     },
     {
       "scenario": {
@@ -195,7 +195,7 @@
         "family": "fury"
       },
       "steps": 74,
-      "digest": "fdfa75204ffbe7d77a5147efc0590d1b52c86d992ec9680e80dc05d24866312e"
+      "digest": "547c8059f955b0ab6db4dfb060e53a04c5e0b349e14f3683cf1394473b3af841"
     },
     {
       "scenario": {
@@ -205,7 +205,7 @@
         "family": "aegis"
       },
       "steps": 74,
-      "digest": "b1b97c868be592a21f5f3d2c8ce6ecf803e70493f2a99cd53b2c88a7321c5cef"
+      "digest": "1999f7af9db326fd2a057a7aefc8774f8fb0a0507cc1250b154cf01859514db4"
     },
     {
       "scenario": {
@@ -215,7 +215,7 @@
         "family": "vitality"
       },
       "steps": 72,
-      "digest": "bb687bd94761f49a87c437531bcf2eb138e4776e9bb3cfb03415037c4d27c5e1"
+      "digest": "19785ff0194b6b65658f28ecaa5a90ce68b78339b35be83f0de67544427664d1"
     }
   ],
   "baselineReason": "Updated deterministic traces for v0.12 Phase B.1 optional affinity-plan checkpoint fields; preserves all scenario seeds and lifecycle checks."
