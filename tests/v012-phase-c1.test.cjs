@@ -45,7 +45,7 @@ test('Heartroot calibrated healing rate and Realm cap apply with and without Vit
  }
 });
 test('new IDs roundtrip locally; removed Legendary abilities are not recognized',()=>{
- const a=create(3);a.setup(50,'Sword','Epic');const item=a.state().equip.weapon;item.rarity='Legendary';item.legendaryId='verdant-oath';item.name='Verdant Oath';assert.equal(a.gear.itemImg(item),'assets/placeholders/sword.svg');
+ const a=create(3);a.setup(50,'Sword','Epic');const item=a.state().equip.weapon;item.rarity='Legendary';item.legendaryId='verdant-oath';item.name='Verdant Oath';assert.equal(a.gear.itemImg(item),'assets/legendary/verdant-oath.png');
  const profile={characterId:'wanderer',maxDungeon:1,chosen:1,gold:0,fragments:0,stashCapacity:40,stash:[{...item,id:'stash-copy'}],equip:a.state().equip,run:null,runes:[],runeSlots:[null,null,null],sigils:[],merchant:null,valuables:[]};
  const saved=globalThis.WandererV012Save.create(profile),restored=globalThis.WandererV012Save.validate(JSON.stringify(saved));assert.equal(restored.profile.equip.weapon.legendaryId,'verdant-oath');assert.equal(restored.profile.stash[0].legendaryId,'verdant-oath');
  const old={...item,legendaryId:'blade-of-the-first-dawn',name:'Blade of the First Dawn'};assert.equal(a.gear.legendaryDescription(old),'');
