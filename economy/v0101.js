@@ -27,7 +27,7 @@
   }
   function upgradeCost(tier,rank){
     if(!Number.isInteger(rank)||rank<0||rank>=10)throw new Error('Legendary already at max rank');
-    const t=Math.max(1,Math.min(200,Math.floor(Number(tier)||1)));
+    const t=Math.max(1,Math.floor(Number(tier)||1));
     return Math.round((25+4*t)*Math.pow(1.14,rank));
   }
   function upgradeLegendary(item){

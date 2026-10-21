@@ -5,9 +5,10 @@ function gearEvasionRating(item,{ARMOR_SLOTS,RARITY,clamp}){
  if(!item||item.armorType!=='Leather'||!ARMOR_SLOTS.includes(item.slot))return 0;
  if(item.evasionRating!==undefined)return Number.isFinite(Number(item.evasionRating))?Math.max(0,Number(item.evasionRating)):0;
  // Read-only compatibility for pre-hotfix Leather, including reinforced Legendaries.
- const tier=clamp(Number(item.tier)||1,1,200),base=Math.round((2+tier*.91)*(RARITY[item.rarity]?.[1]||1));
+ const tier=clamp(Number(item.tier)||1,1,Number.MAX_SAFE_INTEGER),base=Math.round((2+Math.min(tier,200)*.91)*(RARITY[item.rarity]?.[1]||1));
+ const scaled=item.tier>200?WandererV012CombatCore.gearStat(item.tier,base):base;
  const rank=item.rarity==='Legendary'?clamp(Number(item.upgradeRank)||0,0,10):0;
- return Math.round(base*(1+rank*.02)*100)/100;
+ return Math.round(scaled*(1+rank*.02)*100)/100;
 }
 function itemStatValue(item,key,context){
  if(key==='evasionRating')return gearEvasionRating(item,context);

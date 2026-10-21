@@ -245,7 +245,7 @@ function phase1WaveWon(){
   WandererV012Buildcraft.clear(ports.phase1Build);ports.phase1Build=null;
   if(ports.PHASE5_VALIDATION){ports.phase5Snapshot.expedition.completed=Math.max(ports.phase5Snapshot.expedition.completed,r.tier);ports.phase5Snapshot.expedition.lastOutcome='victory';}
   // Keep classic Rune tiers and three-choice UI: only complete milestone bosses, never Elites.
-  if((g.version===2||r.tier%10===0)&&r.tier<=ports.DUNGEON_CAP)ports.offerBossRunes(r.tier);
+  if(g.version===2||r.tier%10===0)ports.offerBossRunes(r.tier);
   if(ports.state.pendingRuneReward)ports.phase5Results.summary.runeTier=ports.state.pendingRuneReward.tier;
   // Existing stock is retained; new progression does not grant free vendor rerolls.
   if(ports.state.merchant)ports.state.merchant.refreshCost=16+ports.merchantTier()*4;

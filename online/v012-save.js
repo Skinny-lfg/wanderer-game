@@ -1,7 +1,7 @@
 // Versioned, pure save policy and explicitly isolated validation storage. No Firebase/auth/DOM.
 (function(root){
 'use strict';
-const FORMAT='wanderer-expedition',VERSION=12,PREFIX='wanderer_v012_validation_v1_';
+const FORMAT='wanderer-expedition',VERSION=13,PREFIX='wanderer_v012_endless_v1_';
 const SLOTS=['helm','amulet','armor','gloves','weapon','offhand','ring1','ring2','boots','belt'];
 const STATS=['atk','def','hp','spd','str','agi','int','end','cha','mana','spell','evasionRating'];
 const EFFECTS=['poison','bleed','crit','sunder','shield','regen','burn','slow','drain','nature','shock','tide','crystal'];
@@ -71,7 +71,7 @@ function profileCheck(p){
   requireValue(plain(item)&&typeof item.id==='string'&&item.id.length>0&&!ids.has(item.id),'duplicate/missing item ID');ids.add(item.id);
   if(item.evasionRating!==undefined)requireValue(typeof item.evasionRating==='number'&&Number.isFinite(item.evasionRating)&&item.evasionRating>=0&&(item.evasionRating===0||item.armorType==='Leather'&&['helm','armor','gloves','boots','belt'].includes(item.slot)),'Evasion Rating');
   if(item.armorType!==undefined)requireValue(['helm','armor','gloves','boots','belt'].includes(item.slot)&&['Cloth','Leather','Plate'].includes(item.armorType),'armor type');
-  requireValue(SLOTS.includes(item.slot)&&integer(item.tier,1,200)&&typeof item.name==='string','item identity');
+  requireValue(SLOTS.includes(item.slot)&&integer(item.tier,1,Number.MAX_SAFE_INTEGER)&&typeof item.name==='string','item identity');
   requireValue(['Common','Uncommon','Rare','Epic','Legendary'].includes(item.rarity),'item rarity');
   for(const f of STATS)if(item[f]!==undefined)requireValue(typeof item[f]==='number'&&Number.isFinite(item[f]),'item '+f);
   if(item.effect!==undefined&&item.effect!==null)requireValue(EFFECTS.includes(item.effect),'item effect');
@@ -87,12 +87,12 @@ function profileCheck(p){
  for(const [slot,item]of Object.entries(p.equip))if(item)requireValue(item.slot===slot,'equipped slot mismatch');
  requireValue(Array.isArray(p.runes)&&p.runes.length<=300&&Array.isArray(p.runeSlots)&&p.runeSlots.length===3,'Runes');
  const runeIds=new Set();
- function runeCheck(r){requireValue(plain(r)&&typeof r.id==='string'&&!ids.has(r.id)&&!runeIds.has(r.id)&&integer(r.tier,1,200)&&(r.progression==='expedition'||r.tier>=10&&r.tier%10===0)&&RUNES.includes(r.family),'Rune identity');runeIds.add(r.id);}
+ function runeCheck(r){requireValue(plain(r)&&typeof r.id==='string'&&!ids.has(r.id)&&!runeIds.has(r.id)&&integer(r.tier,1,Number.MAX_SAFE_INTEGER)&&(r.progression==='expedition'||r.tier>=10&&r.tier%10===0)&&RUNES.includes(r.family),'Rune identity');runeIds.add(r.id);}
  p.runes.forEach(runeCheck);
  const equippedFamilies=new Set(),equippedIds=new Set();
  for(const id of p.runeSlots){if(id===null)continue;const rune=p.runes.find(r=>r.id===id);requireValue(rune&&!equippedIds.has(id)&&!equippedFamilies.has(rune.family),'Rune slot ownership');equippedIds.add(id);equippedFamilies.add(rune.family);}
  if(p.pendingRuneReward){
-  const reward=p.pendingRuneReward;requireValue(integer(reward.tier,1,200)&&Array.isArray(reward.options)&&reward.options.length===3,'Rune reward');
+  const reward=p.pendingRuneReward;requireValue(integer(reward.tier,1,Number.MAX_SAFE_INTEGER)&&Array.isArray(reward.options)&&reward.options.length===3,'Rune reward');
   reward.options.forEach(runeCheck);requireValue(reward.options.every(r=>r.tier===reward.tier)&&new Set(reward.options.map(r=>r.family)).size===3,'Rune offer');
  }
  requireValue(Array.isArray(p.sigils)&&p.sigils.length<=100,'Sigils');const sigilIds=new Set();
@@ -133,15 +133,15 @@ function normalizedLegacy(input){
 }
 function presentationCheck(p){
  requireValue(plain(p)&&p.version===1&&[null,'realm','summary'].includes(p.review),'result version/review');
- const item=i=>plain(i)&&typeof i.id==='string'&&typeof i.name==='string'&&integer(i.tier,1,200)&&SLOTS.includes(i.slot)&&['Common','Uncommon','Rare','Epic','Legendary'].includes(i.rarity);
+ const item=i=>plain(i)&&typeof i.id==='string'&&typeof i.name==='string'&&integer(i.tier,1,Number.MAX_SAFE_INTEGER)&&SLOTS.includes(i.slot)&&['Common','Uncommon','Rare','Epic','Legendary'].includes(i.rarity);
  const treasure=i=>plain(i)&&typeof i.id==='string'&&typeof i.name==='string'&&typeof i.worth==='number'&&Number.isFinite(i.worth)&&i.worth>=0&&treasures().CATALOG.some(t=>t.image===i.image);
  requireValue(Array.isArray(p.earned)&&p.earned.length<=45&&p.earned.every(item)&&new Set(p.earned.map(i=>i.id)).size===p.earned.length&&integer(p.gold,0,Number.MAX_SAFE_INTEGER)&&integer(p.fragments,0,Number.MAX_SAFE_INTEGER),'result loot/currencies');
  if(p.treasures!==undefined)requireValue(Array.isArray(p.treasures)&&p.treasures.length<=120&&p.treasures.every(treasure),'result treasures');
  const seconds=x=>typeof x==='number'&&Number.isFinite(x)&&x>=0;
- if(p.realm!==null){const r=p.realm;requireValue(plain(r)&&integer(r.level,1,200)&&integer(r.plane,1,15)&&['cleared','defeat'].includes(r.outcome)&&typeof r.name==='string'&&typeof r.family==='string'&&typeof r.enemy==='string'&&seconds(r.seconds)&&integer(r.gold,0,Number.MAX_SAFE_INTEGER)&&integer(r.fragments,0,Number.MAX_SAFE_INTEGER)&&Array.isArray(r.log)&&r.log.every(l=>plain(l)&&typeof l.text==='string'&&typeof l.kind==='string')&&r.log.reduce((n,l)=>n+l.text.length+l.kind.length,0)<=180000,'Realm result');}
+ if(p.realm!==null){const r=p.realm;requireValue(plain(r)&&integer(r.level,1,Number.MAX_SAFE_INTEGER)&&integer(r.plane,1,15)&&['cleared','defeat'].includes(r.outcome)&&typeof r.name==='string'&&typeof r.family==='string'&&typeof r.enemy==='string'&&seconds(r.seconds)&&integer(r.gold,0,Number.MAX_SAFE_INTEGER)&&integer(r.fragments,0,Number.MAX_SAFE_INTEGER)&&Array.isArray(r.log)&&r.log.every(l=>plain(l)&&typeof l.text==='string'&&typeof l.kind==='string')&&r.log.reduce((n,l)=>n+l.text.length+l.kind.length,0)<=180000,'Realm result');}
  if(p.realm?.loot!==undefined)requireValue(Array.isArray(p.realm.loot)&&p.realm.loot.length<=3&&p.realm.loot.every(item),'Realm loot result');
  if(p.realm?.treasures!==undefined)requireValue(Array.isArray(p.realm.treasures)&&p.realm.treasures.length<=3&&p.realm.treasures.every(treasure),'Realm treasures');
- if(p.summary!==null){const r=p.summary;requireValue(plain(r)&&integer(r.level,1,200)&&integer(r.realms,0,15)&&['victory','defeat','extracted','abandoned'].includes(r.outcome)&&seconds(r.seconds)&&integer(r.gold,0,Number.MAX_SAFE_INTEGER)&&integer(r.fragments,0,Number.MAX_SAFE_INTEGER)&&Array.isArray(r.families)&&r.families.length<=3&&r.families.every(f=>['blood','decay','vitality','aegis','fury','magic'].includes(f))&&Array.isArray(r.picks)&&r.picks.length<=20&&r.picks.every(id=>typeof id==='string')&&['kept','lost','discarded'].every(k=>Array.isArray(r[k])&&r[k].length<=45&&r[k].every(item))&&(r.runeTier===null||integer(r.runeTier,1,200)),'Expedition summary');
+ if(p.summary!==null){const r=p.summary;requireValue(plain(r)&&integer(r.level,1,Number.MAX_SAFE_INTEGER)&&integer(r.realms,0,15)&&['victory','defeat','extracted','abandoned'].includes(r.outcome)&&seconds(r.seconds)&&integer(r.gold,0,Number.MAX_SAFE_INTEGER)&&integer(r.fragments,0,Number.MAX_SAFE_INTEGER)&&Array.isArray(r.families)&&r.families.length<=3&&r.families.every(f=>['blood','decay','vitality','aegis','fury','magic'].includes(f))&&Array.isArray(r.picks)&&r.picks.length<=20&&r.picks.every(id=>typeof id==='string')&&['kept','lost','discarded'].every(k=>Array.isArray(r[k])&&r[k].length<=45&&r[k].every(item))&&(r.runeTier===null||integer(r.runeTier,1,Number.MAX_SAFE_INTEGER)),'Expedition summary');
   requireValue(r.outcome!=='victory'||r.realms===15,'victory result');requireValue((r.runeTier===null||r.outcome==='victory')&&(r.runeName===undefined||r.runeTier!==null&&typeof r.runeName==='string'),'Rune result');
   for(const key of ['treasuresKept','treasuresLost'])if(r[key]!==undefined)requireValue(Array.isArray(r[key])&&r[key].length<=120&&r[key].every(treasure),'Expedition treasures');
  }
@@ -180,7 +180,7 @@ function validate(input,binding){
  for(const item of [...s.profile.stash,...Object.values(s.profile.equip).filter(Boolean),...s.profile.expeditionOverflow,...(s.profile.merchant?.stock||[])])if(item?.subtype==='Off-Hand Dagger')item.subtype='Daggers';
  requireValue(s.identity===null||(plain(s.identity)&&typeof s.identity.uid==='string'&&s.identity.uid.length>0&&typeof s.identity.projectId==='string'&&s.identity.projectId.length>0&&typeof s.identity.nickname==='string'&&/^[A-Za-z0-9_]{3,20}$/.test(s.identity.nickname)),'identity');
  if(s.migration!==null)requireValue(plain(s.migration)&&s.migration.source==='classic-v092'&&s.migration.requiresApproval===true&&(s.migration.sourceRevision===null||integer(s.migration.sourceRevision,1,Number.MAX_SAFE_INTEGER)),'migration approval metadata');
- const e=s.expedition;requireValue(plain(e)&&integer(e.completed,0,200)&&e.unlocked===Math.min(200,e.completed+1)&&integer(e.attempts,0,1000000),'Expedition progress');
+ const e=s.expedition;requireValue(plain(e)&&integer(e.completed,0,Number.MAX_SAFE_INTEGER-1)&&e.unlocked===e.completed+1&&integer(e.attempts,0,Number.MAX_SAFE_INTEGER),'Expedition progress');
  requireValue(['new','active','victory','defeat','abandoned','interrupted','extracted','cancelled'].includes(e.lastOutcome)&&e.completed<=e.attempts,'outcome/attempt count');
  if(e.lastOutcome==='new')requireValue(e.attempts===0&&e.completed===0,'new profile progress');
  requireValue(Array.isArray(e.awardKeys)&&e.awardKeys.length<=45&&new Set(e.awardKeys).size===e.awardKeys.length,'award ledger');

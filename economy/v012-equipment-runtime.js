@@ -103,22 +103,22 @@ const armorType=ports.PHASE1_PREVIEW&&ports.ARMOR_SLOTS.includes(slot)?(requeste
 const magic=false,effect=null;
 const legendaryIdentity=rarity==='Legendary'?ports.legendaryFor({slot,subtype}):null;
 const legendaryDefinition=legendaryIdentity&&globalThis.WandererLegendary?.DEFINITIONS?.[legendaryIdentity.id];
-let mult=ports.RARITY[rarity][1],power=Math.round((2+tier*.91)*mult),o={id:ports.makeId(),slot,subtype,name:(source==='loot'&&subtype==='Sword'&&rarity==='Common'&&ports.gameRandom()<.25?'Old Sword':ports.sample(ports.NAMES[subtype]||ports.NAMES[slot]||['Ancient Gear'])),rarity,tier,atk:0,def:0,hp:0,spd:0,str:0,agi:0,int:0,end:0,cha:0,mana:0,spell:0,effect,magic:magic?effect:null,crafted:source==='forge',craftPrice:source==='forge'?ports.craftCost(tier):null,obtainedAt:ports.PHASE1_PREVIEW&&ports.phase4Stamp?ports.phase4Stamp:Date.now(),locked:false,source};
-if(subtype==='Sword'){o.atk=power+3;o.str=1+Math.floor(tier*.20)}
-else if(subtype==='Mace'){o.atk=power+6;o.str=2+Math.floor(tier*.23);o.spd=-1}
-else if(subtype==='Bow'){o.atk=Math.round(power*1.18)+5;o.agi=2+Math.floor(tier*.21);o.spd=1}
-else if(subtype==='Daggers'){o.atk=power+1;o.agi=3+Math.floor(tier*.23);o.spd=2}
-else if(subtype==='Two-Handed'){o.atk=Math.round(power*1.75)+7;o.str=3+Math.floor(tier*.29);o.spd=-2}
-else if(subtype==='Staff'){o.atk=1;o.int=4+Math.floor(tier*.34);o.spell=Math.round(power*1.8)+8;o.mana=Math.round(power*2.4)}
-else if(subtype==='Wand'){o.atk=1;o.int=2+Math.floor(tier*.22);o.spell=Math.round(power*1.15)+2;o.mana=power}
-else if(subtype==='Shield'){o.def=power+2;o.hp=power*3;o.end=2+Math.floor(tier*.22)}
-else if(slot==='offhand'){o.spell=subtype==='Orb'?Math.round(power*1.12):power;if(subtype==='Orb')o.orbSpellB4=true;o.int=1+Math.floor(tier*.2);o.mana=power}
-else if(slot==='armor'){o.def=power+3;o.hp=power*4;o.end=1+Math.floor(tier*.23)}
+let mult=ports.RARITY[rarity][1],progressTier=WandererV012CombatCore.referenceLevel(tier),power=Math.round((2+progressTier*.91)*mult),o={id:ports.makeId(),slot,subtype,name:(source==='loot'&&subtype==='Sword'&&rarity==='Common'&&ports.gameRandom()<.25?'Old Sword':ports.sample(ports.NAMES[subtype]||ports.NAMES[slot]||['Ancient Gear'])),rarity,tier,atk:0,def:0,hp:0,spd:0,str:0,agi:0,int:0,end:0,cha:0,mana:0,spell:0,effect,magic:magic?effect:null,crafted:source==='forge',craftPrice:source==='forge'?ports.craftCost(tier):null,obtainedAt:ports.PHASE1_PREVIEW&&ports.phase4Stamp?ports.phase4Stamp:Date.now(),locked:false,source};
+if(subtype==='Sword'){o.atk=power+3;o.str=1+Math.floor(progressTier*.20)}
+else if(subtype==='Mace'){o.atk=power+6;o.str=2+Math.floor(progressTier*.23);o.spd=-1}
+else if(subtype==='Bow'){o.atk=Math.round(power*1.18)+5;o.agi=2+Math.floor(progressTier*.21);o.spd=1}
+else if(subtype==='Daggers'){o.atk=power+1;o.agi=3+Math.floor(progressTier*.23);o.spd=2}
+else if(subtype==='Two-Handed'){o.atk=Math.round(power*1.75)+7;o.str=3+Math.floor(progressTier*.29);o.spd=-2}
+else if(subtype==='Staff'){o.atk=1;o.int=4+Math.floor(progressTier*.34);o.spell=Math.round(power*1.8)+8;o.mana=Math.round(power*2.4)}
+else if(subtype==='Wand'){o.atk=1;o.int=2+Math.floor(progressTier*.22);o.spell=Math.round(power*1.15)+2;o.mana=power}
+else if(subtype==='Shield'){o.def=power+2;o.hp=power*3;o.end=2+Math.floor(progressTier*.22)}
+else if(slot==='offhand'){o.spell=subtype==='Orb'?Math.round(power*1.12):power;if(subtype==='Orb')o.orbSpellB4=true;o.int=1+Math.floor(progressTier*.2);o.mana=power}
+else if(slot==='armor'){o.def=power+3;o.hp=power*4;o.end=1+Math.floor(progressTier*.23)}
 else if(slot==='helm'||slot==='belt'){o.def=power+1;o.hp=power*2;o.end=1}
-else if(slot==='gloves'){o.str=1+Math.floor(tier*.2);o.agi=1+Math.floor(tier*.2);o.atk=Math.round(power*.55)}
-else if(slot==='boots'){o.agi=2+Math.floor(tier*.23);o.spd=1;o.hp=power}
-else if(slot==='amulet'){o.int=1+Math.floor(tier*.22);o.cha=1+Math.floor(tier*.18);o.hp=power*2}
-else if(['ring1','ring2'].includes(slot)){o.cha=1+Math.floor(tier*.25);o.atk=Math.round(power*.45);o.hp=power}
+else if(slot==='gloves'){o.str=1+Math.floor(progressTier*.2);o.agi=1+Math.floor(progressTier*.2);o.atk=Math.round(power*.55)}
+else if(slot==='boots'){o.agi=2+Math.floor(progressTier*.23);o.spd=1;o.hp=power}
+else if(slot==='amulet'){o.int=1+Math.floor(progressTier*.22);o.cha=1+Math.floor(progressTier*.18);o.hp=power*2}
+else if(['ring1','ring2'].includes(slot)){o.cha=1+Math.floor(progressTier*.25);o.atk=Math.round(power*.45);o.hp=power}
 if(armorType){
  // Keep the existing primary-attribute budget; no new stat weights or scaling.
  const budget=o.str+o.agi+o.int+o.end;
@@ -127,7 +127,8 @@ if(armorType){
  o.armorType=armorType;
  if(armorType==='Leather')o.evasionRating=power;
 }
-if(rarity==='Legendary'){const identity=legendaryIdentity;if(identity){o.legendaryId=identity.id;o.name=identity.name;}o.legendaryPower=legendaryDefinition?legendaryDefinition.name+': '+legendaryDefinition.description:'';o.atk+=subtype==='Sword'?tier+4:0;}
+if(rarity==='Legendary'){const identity=legendaryIdentity;if(identity){o.legendaryId=identity.id;o.name=identity.name;}o.legendaryPower=legendaryDefinition?legendaryDefinition.name+': '+legendaryDefinition.description:'';o.atk+=subtype==='Sword'?progressTier+4:0;}
+if(tier>200)for(const field of ['atk','def','hp','str','agi','int','end','cha','mana','spell','evasionRating'])if(typeof o[field]==='number'&&!(field==='atk'&&['Staff','Wand'].includes(subtype)))o[field]=WandererV012CombatCore.gearStat(tier,o[field]);
 return o;}
 
 function rarityOdds(tier,isCraft){let a={Common:.49,Uncommon:.30,Rare:.15,Epic:.045,Legendary:.015};

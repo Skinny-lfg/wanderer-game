@@ -10,7 +10,7 @@ function memory(){const data=new Map();return {data,getItem:k=>data.get(k)??null
 test('versioned migration preserves gear, Legendary ranks, materials, currencies, Runes, identity and old progress as history',()=>{
  const old=legacy(),raw=JSON.stringify(old),identity={uid:'fixture-alice',projectId:'demo-wanderer',nickname:'alice_1'};
  const {save,archive}=S.migrateLegacy(raw,{binding:'alice',identity});
- assert.equal(JSON.stringify(old),raw);assert.equal(archive,raw);assert.equal(save.schemaVersion,12);
+ assert.equal(JSON.stringify(old),raw);assert.equal(archive,raw);assert.equal(save.schemaVersion,13);
  assert.deepEqual(save.profile,{...old,expeditionOverflow:[]});assert.deepEqual(save.identity,identity);
  assert.equal(save.expedition.completed,0);assert.equal(save.expedition.unlocked,1);assert.equal(save.legacyHistory.maxDungeon,200);
  const again=S.migrateLegacy(save,{binding:'alice'});assert.equal(again.migrated,false);assert.equal(again.archive,null);assert.deepEqual(again.save,save);
@@ -38,7 +38,7 @@ test('old cloud envelope is copied at an expected revision; foreign bindings and
  assert.throws(()=>S.migrateLegacy(envelope,{binding:'alice',expectedRevision:6}),/source cloud conflict/);
  assert.throws(()=>S.validate(m.save,'bob'),/foreign/);
  assert.throws(()=>S.migrateLegacy({...envelope,schemaVersion:99}),/legacy cloud envelope/);
- assert.throws(()=>S.validate({...m.save,schemaVersion:13}),/unsupported/);
+ assert.throws(()=>S.validate({...m.save,schemaVersion:12}),/unsupported/);
  assert.throws(()=>S.migrateLegacy({...legacy(),format:'unknown-game'}),/unsupported legacy format/);
  assert.throws(()=>S.migrateLegacy({...legacy(),version:99}),/unsupported legacy format/);
 });
