@@ -2,52 +2,52 @@
   "phase": "C.3.1",
   "legendary": {
     "crimson-fang": {
-      "path": "assets/legendary/crimson-fang.png",
-      "driveId": "1ef-kwzgqEoEmpG2h8UwTEPZobcKuB_SO"
+      "path": "assets/legendary/crimson-fang.webp",
+      "driveId": "1onZHCaPTR8b35fShwU2Jdvrec7gev4pz"
     },
     "chalice-hollow-king": {
-      "path": "assets/legendary/chalice-hollow-king.png",
-      "driveId": "1La_Cy73Xg9RrvtQYzJyvCweJ16ANsZL9"
+      "path": "assets/legendary/chalice-hollow-king.webp",
+      "driveId": "1VXyQ9A0XVbDGjRLYjnW6jV8PzLISqlRC"
     },
     "gravewake": {
-      "path": "assets/legendary/gravewake.png",
-      "driveId": "1rZjj0TujsglBn1bmXYNE66GNbTUPMgKT"
+      "path": "assets/legendary/gravewake.webp",
+      "driveId": "1ilbWGvpSC5YORBGaXCmY1GYJVhQtJ2j7"
     },
     "eye-of-morrow": {
-      "path": "assets/legendary/eye-of-morrow.png",
-      "driveId": "1J83fijObHK5ObkTc_vcaYqZB8t9pInL_"
+      "path": "assets/legendary/eye-of-morrow.webp",
+      "driveId": "1iRlvPVHstiuJYp_xNjydcjft8BXVXR7l"
     },
     "verdant-oath": {
-      "path": "assets/legendary/verdant-oath.png",
-      "driveId": "1zMp29IePVUYwq9zjIyF_SVJ8503PG_VQ"
+      "path": "assets/legendary/verdant-oath.webp",
+      "driveId": "1ENQ3vXbiAQptuKxZphI3PHW9GUuG8Gx4"
     },
     "heartroot-carapace": {
-      "path": "assets/legendary/heartroot-carapace.png",
-      "driveId": "1xLDqsVh8omuHkf9hXHNCDK1ATVE1AMrO"
+      "path": "assets/legendary/heartroot-carapace.webp",
+      "driveId": "1MdcvEXaeqUwFLKYHl4LIi55AU2Qur-f_"
     },
     "oathwall": {
-      "path": "assets/legendary/oathwall.png",
-      "driveId": "1YpGavZjxfnISXei71N48xlIDLUFGjmsB"
+      "path": "assets/legendary/oathwall.webp",
+      "driveId": "12gbvUtD2kKpPle1qDEUhCymqFG2Bx88o"
     },
     "veil-thousand-seals": {
-      "path": "assets/legendary/veil-thousand-seals.png",
-      "driveId": "14qegajMfOSXZZDziuWnCmLWYEkSWr5Rn"
+      "path": "assets/legendary/veil-thousand-seals.webp",
+      "driveId": "1ppGL_GXJUolstygedBVmlXwBxNsHBbgT"
     },
     "kingsbreaker": {
-      "path": "assets/legendary/kingsbreaker.png",
-      "driveId": "1GyPVgTcts3-hx_SvSeF3Hmlki7R91vT9"
+      "path": "assets/legendary/kingsbreaker.webp",
+      "driveId": "1-B3uNWah5ze5o9EZU86XZf7HNErwMEDc"
     },
     "tempest-talon": {
-      "path": "assets/legendary/tempest-talon.png",
-      "driveId": "15J-8gDO0HBdIS6R8bCgsQhlujTyZ3w3_"
+      "path": "assets/legendary/tempest-talon.webp",
+      "driveId": "1mx9wKBQU2HXJEGhetCmNbVvBcQ2Fif7H"
     },
     "astrafall": {
-      "path": "assets/legendary/astrafall.png",
-      "driveId": "1ckHEUErVGr7a0LYRrqomuTjcVda1DuuK"
+      "path": "assets/legendary/astrafall.webp",
+      "driveId": "1Pt1A5HqoUMiXfbVK20akuWMf49WE5D3i"
     },
     "voidglass": {
-      "path": "assets/legendary/voidglass.png",
-      "driveId": "1mlmJ7QfjJIXE_NhEmi7B2hrG8Urn8NPD"
+      "path": "assets/legendary/voidglass.webp",
+      "driveId": "1Qk6_0ia93nLAiflSq0f4WPEgReO71XZM"
     }
   },
   "affinities": {
@@ -93,5 +93,6 @@
     "12 dungeon backgrounds, optimized",
     "passives still in progress"
   ],
-  "note": "No gameplay or saves changed; asset files can be replaced by smaller versions."
+  "note": "No gameplay or saves changed; asset files can be replaced by smaller versions.",
+  "notes": "Game-ready WebP imported from 10 - Game Ready (WebP), original PNGs in Drive, other C3 stages in progress."
 }
