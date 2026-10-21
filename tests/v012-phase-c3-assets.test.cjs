@@ -49,8 +49,7 @@ test('C.3.3: all twelve stable dungeon IDs use optimized desktop and mobile WebP
    assert.equal(b.toString('ascii',0,4),'RIFF');
    assert.equal(b.toString('ascii',8,12),'WEBP');
   }
-  const row=html.split('\n').find(x=>x.includes("['"+id+"',"));
-  assert.ok(row?.includes(desktop),'Dungeon mapping '+id);
+  assert.ok(html.includes('"'+id+'":"'+desktop+'"'),'Dungeon UI mapping '+id);
  }
  assert.ok(html.includes("window.matchMedia('(max-width: 650px)')"));
 });
