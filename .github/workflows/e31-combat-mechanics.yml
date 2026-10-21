@@ -1,0 +1,23 @@
+name: E.3.1 Combat mechanics inspection
+on:
+  push:
+    branches: [development]
+    paths: [.github/workflows/e31-combat-mechanics.yml]
+  workflow_dispatch:
+jobs:
+  mechanics:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate combat mechanisms and 240 native cases
+        run: node scripts/v012-phase-e31-mechanics-audit.cjs /tmp/e31-combat.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e31-combat-results
+          path: /tmp/e31-combat.json
+          if-no-files-found: ignore
