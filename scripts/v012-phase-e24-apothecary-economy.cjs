@@ -28,7 +28,7 @@ for(let seed=0;seed<24;seed++){
  assert.equal(s.potionSelection.length,3);
  a.start(200);
  const beforeStart=JSON.stringify(s.consumables);
- const run=a.events.run();assert.equal(run.started,true);
+ assert.equal(a.potions.start(),true);const run=a.events.run();assert.equal(run.started,true);
  assert.equal(run.potions.length,3);
  assert(run.potions.every(p=>p.used===false));
  for(const kind of Object.keys(bought))assert.equal(s.consumables[kind]||0,0);
