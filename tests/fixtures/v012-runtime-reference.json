@@ -19,7 +19,7 @@
         "family": "decay"
       },
       "steps": 71,
-      "digest": "d2e5d85c97f201313996d68bb301abf5948f55da4fccb86897f2ade2f3982b8c"
+      "digest": "aa5628d0ea1b1cddcb1f1f23f47258e44636f13eac907844bcfc0fbb6e283701"
     },
     {
       "scenario": {
@@ -91,7 +91,7 @@
         "family": "decay"
       },
       "steps": 73,
-      "digest": "b400cf8c3104d74948d4d1e1bc012e59556c058f61fdd59d59c92c9c4bd16fcc"
+      "digest": "c10f3c86b5aab81f1b6e0771f55a4663035ec5d860e5124061f6c2374ae39ee3"
     },
     {
       "scenario": {
@@ -153,7 +153,7 @@
         "family": "blood"
       },
       "steps": 76,
-      "digest": "6f61f801f2cb30776730cdf1d1d33895cc904acf181985cc73af7466e18c9582"
+      "digest": "26b0f54ef0473a3ff062f37a326a93db4ed26e475e35a93b11ea9f9685a2bf06"
     },
     {
       "scenario": {
@@ -163,7 +163,7 @@
         "family": "decay"
       },
       "steps": 73,
-      "digest": "eb12b823273223e554b659baf2a569b3a7b47f6cdd03cb8a7ab0c65ad8b6b696"
+      "digest": "c04952229cca8d43a6e653e3e6d1b62bd42dee14a348cbffe4f21c3d97ec5540"
     },
     {
       "scenario": {
@@ -174,7 +174,7 @@
         "element": "lightning"
       },
       "steps": 73,
-      "digest": "d1562139bb6f2d5312d66c84365bf94c82125f9cda0b64c66ca3961941c4fd5e"
+      "digest": "361fb1cb02a03fc49f7371523ce594adebafeeda2dedb08af1bc04b2786de972"
     },
     {
       "scenario": {
@@ -185,7 +185,7 @@
         "element": "frost"
       },
       "steps": 75,
-      "digest": "0969842c791b0bb69fc8f38053e48cdeec73bbb536a0c9e7441e4b86ad3d378e"
+      "digest": "c56cdbb6a801b005ba107d6e77cb5f85b293885a69e1ba1cffbf85e571151242"
     },
     {
       "scenario": {
@@ -195,7 +195,7 @@
         "family": "fury"
       },
       "steps": 74,
-      "digest": "a39876e060363ab075090c6a989201ec40e0e94417f4d009b295649b408b07bb"
+      "digest": "72c8e781b60cd112bdbb9370d3ee4b48829c19f47a71f20dbfb48034bd0c3e7e"
     },
     {
       "scenario": {
@@ -205,7 +205,7 @@
         "family": "aegis"
       },
       "steps": 74,
-      "digest": "a8534200cfde9ffa5808799b4fa84ff07a3059cf77b832f807ee486a93255cd9"
+      "digest": "d5ff091677c24b166ccd78671efd41afa641a6c207151a4634ec0fc0aa785ab4"
     },
     {
       "scenario": {
@@ -215,8 +215,8 @@
         "family": "vitality"
       },
       "steps": 72,
-      "digest": "dfce9f300c8e563516fc73998d697637d3ab6dcda62ae932ee166f88dc5c31a9"
+      "digest": "9e1e9eeb656a4aee0a1e6dce175c2fd8f65245bf5f8b17065dd3cc01cd3c0aa6"
     }
   ],
-  "baselineReason": "Updated deterministic traces for v0.12 Phase B.1 optional affinity-plan checkpoint fields; preserves all scenario seeds and lifecycle checks."
+  "baselineReason": "Validated 2026-10-21 against Endless unlock and approved Off-Hand Dagger 35% nerf; each trace computed twice and steps retained."
 }
