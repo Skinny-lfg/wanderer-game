@@ -16,6 +16,17 @@ jobs:
           node-version: '22'
       - name: E.1.2 native harness T1-T5
         run: node tests/v012-phase-e12-harness.test.cjs
+      - name: E.1.3 nine genuine E200 attempts
+        env:
+          WANDERER_E11_RUNS: '9'
+        run: node scripts/v012-phase-e11-persistence-audit.cjs /tmp/wanderer-e13-results.json
+      - name: Upload E.1.3 trajectories
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wanderer-e13-nine-attempts
+          path: /tmp/wanderer-e13-results.json
+          if-no-files-found: ignore
       - name: Validate audit harness syntax
         run: |
           node --check scripts/v012-affinity-combat-sim.cjs
