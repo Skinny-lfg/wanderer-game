@@ -1,0 +1,37 @@
+name: Wanderer C.2.1 Legendary calibration audit
+on:
+  push:
+    branches: [development]
+    paths:
+      - '.github/workflows/c21-legendary-calibration.yml'
+      - 'scripts/v012-phase-c21-legendary-calibration.cjs'
+  workflow_dispatch:
+
+jobs:
+  c21-counterfactual-calibration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check (simulation script only)
+        run: node --check scripts/v012-phase-c21-legendary-calibration.cjs
+      - name: Paired C.2.1 Veil and Heartroot tests on native sandboxed runtime
+        run: node scripts/v012-phase-c21-legendary-calibration.cjs /tmp/wanderer-phase-c21-results.json > /tmp/wanderer-phase-c21-summary.log
+      - name: Print result summaries and confirm matrix complete
+        run: |
+          tail -n 200 /tmp/wanderer-phase-c21-summary.log
+          grep '^C21_TOTAL ' /tmp/wanderer-phase-c21-summary.log
+      - name: Archive full paired C.2.1 result matrix
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wanderer-c21-calibration-${{ github.sha }}
+          path: |
+            /tmp/wanderer-phase-c21-results.json
+            /tmp/wanderer-phase-c21-summary.log
+          if-no-files-found: ignore
