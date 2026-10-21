@@ -80,6 +80,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
    auditForge();$('craft').onclick();
   },
   buy(index){auditMerchant();const buttons=Q('[data-buy]');buttons[index]?.onclick();if(auditConfirmation){const fn=auditConfirmation;auditConfirmation=null;fn();}},
+  purchaseNative(index){const m=state.merchant,item=m?.stock?.[index];return !!item&&purchaseEquipment(m,index,item);},
   setupPreview(){phase1Init();},
   setup(tier,weapon,rarity='Rare'){
    state.stash=[];state.equip=makeSlots();state.gold=state.fragments=0;
