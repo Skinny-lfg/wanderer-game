@@ -44,6 +44,16 @@ jobs:
         env:
           WANDERER_E11_RUNS: '270'
         run: node scripts/v012-phase-e11-persistence-audit.cjs /tmp/wanderer-e2-results.json
+      - name: Aggregate E.2 resource metrics
+        run: |
+          node - <<'NODE'
+          const fs=require('fs'),d=JSON.parse(fs.readFileSync('/tmp/wanderer-e2-results.json','utf8'));
+          const sum=(xs,k)=>xs.reduce((s,x)=>s+(Number(x[k])||0),0);
+          for(const p of ['A','B','C']){
+            const a=d.agents.filter(x=>x.profile===p),r=d.rows.filter(x=>x.profile===p),losses=r.filter(x=>!x.win);
+            console.log('E2_METRICS '+JSON.stringify({profile:p,attempts:r.length,wins:sum(a,'wins'),defeats:sum(a,'defeats'),crafts:sum(a,'crafts'),upgrades:sum(a,'upgrades'),repeats:sum(a,'repeats'),runesClaimed:sum(a,'runeClaims'),goldEarned:sum(a,'goldEarned'),goldSpent:sum(a,'goldSpent'),fragmentsEarned:sum(a,'fragmentsEarned'),fragmentsSpent:sum(a,'fragmentsSpent'),startGold:sum(a.map(x=>x.initial),'gold'),endGold:sum(a.map(x=>x.final),'gold'),startFragments:sum(a.map(x=>x.initial),'fragments'),endFragments:sum(a.map(x=>x.final),'fragments'),finalUnlocks:a.map(x=>x.unlocked),fatalTelemetry:losses.filter(x=>x.fatalFight).length,defeatsLogged:losses.length,gearTierStart:a.map(x=>x.initial.meanGearTier),gearTierFinal:a.map(x=>x.final.meanGearTier)}));
+          }
+          NODE
       - name: Upload E.2 full results
         if: always()
         uses: actions/upload-artifact@v4
