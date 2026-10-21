@@ -15,7 +15,7 @@ Data: 2026-10-21 · Branch: `development` · Decisão do utilizador
 - A flag de novos drops é ativada **só em development**, para permitir testar o catálogo com o limite de 2; nenhum deploy de produção foi feito.
 - O fallback genérico de dano +32% de antigos Legendaries sem assinatura foi removido.
 - Não foram construídas migrações para saves antigos. A decisão de iniciar um novo ciclo de jogo não autoriza apagar automaticamente bases de dados ou perfis no Firebase.
-- Os assets antigos podem permanecer nos diretórios como ficheiros não referenciados, até uma limpeza de assets separada.
+- As 22 imagens antigas em `assets/legendary/` foram removidas do repositório. Os 12 novos Legendaries continuam com placeholders até a arte definitiva estar integrada.
 
 ## Balancing pendente (C.2)
 
