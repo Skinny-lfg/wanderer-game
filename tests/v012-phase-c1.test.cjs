@@ -27,16 +27,18 @@ for(const [id,weapon,slot,family]of entries){test(`${id} activates with and with
   const before=count(r,id);if(id==='heartroot-carapace')assert(r.hp>r.maxhp*.5);else if(id!=='veil-thousand-seals'){if(id==='oathwall')r.tEnemy=100;else if(id==='astrafall'||id==='voidglass')r.legendaryCastCount=1;else r.tPlayer=100;a.tick();assert.equal(count(r,id),before,`${id} cooldown`);}
  }
 });}
-test('new drop catalogue is off by default and on only in the test harness',()=>{
- const a=create(5);for(let i=0;i<50;i++)assert(!entries.some(([id])=>a.makeItem(50,'weapon',null,'loot','Sword','Legendary').legendaryId===id));
- const source=fs.readFileSync('index.html','utf8').replace('const WANDERER_NEW_LEGENDARY_DROPS_ENABLED=false;','const WANDERER_NEW_LEGENDARY_DROPS_ENABLED=true;');
- const b=create(5,source);for(const slot of b.slots)for(let i=0;i<5;i++){const item=b.makeItem(50,slot,null,'loot','random','Legendary');assert(entries.some(([id])=>id===item.legendaryId),`${slot}: ${item.slot}/${item.subtype}/${item.legendaryId}`);}
+test('only the twelve current Legendary identities drop in every slot',()=>{
+ const a=create(5);
+ for(const slot of a.slots)for(let i=0;i<8;i++){
+  const item=a.makeItem(50,slot,null,'loot','random','Legendary');
+  assert(entries.some(([id])=>id===item.legendaryId),slot+': '+item.legendaryId);
+ }
 });
-test('new IDs persist without migration; old signatures remain recognized',()=>{
+test('new IDs roundtrip locally; removed Legendary abilities are not recognized',()=>{
  const a=create(3);a.setup(50,'Sword','Epic');const item=a.state().equip.weapon;item.rarity='Legendary';item.legendaryId='verdant-oath';item.name='Verdant Oath';assert.equal(a.gear.itemImg(item),'assets/placeholders/sword.svg');
  const profile={characterId:'wanderer',maxDungeon:1,chosen:1,gold:0,fragments:0,stashCapacity:40,stash:[{...item,id:'stash-copy'}],equip:a.state().equip,run:null,runes:[],runeSlots:[null,null,null],sigils:[],merchant:null,valuables:[]};
  const saved=globalThis.WandererV012Save.create(profile),restored=globalThis.WandererV012Save.validate(JSON.stringify(saved));assert.equal(restored.profile.equip.weapon.legendaryId,'verdant-oath');assert.equal(restored.profile.stash[0].legendaryId,'verdant-oath');
- const old={...item,legendaryId:'blade-of-the-first-dawn',name:'Blade of the First Dawn'};assert(a.gear.legendaryDescription(old).includes('Dawn Mark'));
+ const old={...item,legendaryId:'blade-of-the-first-dawn',name:'Blade of the First Dawn'};assert.equal(a.gear.legendaryDescription(old),'');
 });
 test('Crimson Fang works in offhand without a second attack or duplicate proc',()=>{
  const {a,r}=fight('Daggers','weapon','crimson-fang',null);const off=a.state().equip.offhand;off.rarity='Legendary';off.legendaryId='crimson-fang';off.name='Crimson Fang';a.rng(.99);r.tPlayer=100;a.tick();assert.equal(count(r,'crimson-fang'),1);assert.equal(r.enemy.dots.bleed.length,1);assert.equal(r.legendaryAttackCount,1);assert.equal(r.lastLegendaryEncounter,undefined,'new ID must not activate generic +32% fallback');

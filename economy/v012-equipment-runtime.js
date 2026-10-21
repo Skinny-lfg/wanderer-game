@@ -80,7 +80,7 @@ function legendaryMatches(entry,item){
  return entry.subtype===item.subtype&&(entry.slot===item.slot||(entry.slot==='ring'&&['ring1','ring2'].includes(item.slot))||(entry.subtype==='Daggers'&&['weapon','offhand'].includes(entry.slot)&&['weapon','offhand'].includes(item.slot)));
 }
 
-function legendaryFor(item){const eligible=ports.LEGENDARY_CATALOG.filter(entry=>!!(entry.catalogueNew)===!!ports.WANDERER_NEW_LEGENDARY_DROPS_ENABLED&&ports.legendaryMatches(entry,item));return eligible.length?ports.sample(eligible):null;}
+function legendaryFor(item){const eligible=ports.LEGENDARY_CATALOG.filter(entry=>ports.legendaryMatches(entry,item));return eligible.length?ports.sample(eligible):null;}
 
 function legendarySignature(item){
  if(item?.rarity!=='Legendary')return null;
@@ -95,8 +95,8 @@ let requestedArmorType=ports.ARMOR_TYPES.includes(subtype)?subtype:null;
 subtype=ports.chooseSubtype(slot,ports.ARMOR_TYPES.includes(subtype)?'random':subtype);
 let rarity=forcedRarity&&ports.RARITY[forcedRarity]?forcedRarity:ports.rarityRoll(tier,source==='forge');
 if(source==='merchant'&&rarity==='Legendary')rarity='Epic';
-if(rarity==='Legendary'&&ports.WANDERER_NEW_LEGENDARY_DROPS_ENABLED&&!ports.LEGENDARY_CATALOG.some(entry=>entry.catalogueNew&&ports.legendaryMatches(entry,{slot,subtype}))){
- const entry=ports.sample(ports.LEGENDARY_CATALOG.filter(candidate=>candidate.catalogueNew));
+if(rarity==='Legendary'&&!ports.LEGENDARY_CATALOG.some(entry=>ports.legendaryMatches(entry,{slot,subtype}))){
+ const entry=ports.sample(ports.LEGENDARY_CATALOG);
  slot=entry.slot==='ring'?ports.sample(['ring1','ring2']):entry.slot;subtype=entry.subtype;requestedArmorType=null;
 }
 const armorType=ports.PHASE1_PREVIEW&&ports.ARMOR_SLOTS.includes(slot)?(requestedArmorType||ports.sample(ports.ARMOR_TYPES)):null;
@@ -127,7 +127,7 @@ if(armorType){
  o.armorType=armorType;
  if(armorType==='Leather')o.evasionRating=power;
 }
-if(rarity==='Legendary'){const identity=legendaryIdentity;if(identity){o.legendaryId=identity.id;o.name=identity.name;}o.legendaryPower=legendaryDefinition?legendaryDefinition.name+': '+legendaryDefinition.description:'Powerful strike once per encounter';o.atk+=subtype==='Sword'?tier+4:0;}
+if(rarity==='Legendary'){const identity=legendaryIdentity;if(identity){o.legendaryId=identity.id;o.name=identity.name;}o.legendaryPower=legendaryDefinition?legendaryDefinition.name+': '+legendaryDefinition.description:'';o.atk+=subtype==='Sword'?tier+4:0;}
 return o;}
 
 function rarityOdds(tier,isCraft){let a={Common:.49,Uncommon:.30,Rare:.15,Epic:.045,Legendary:.015};
@@ -175,6 +175,8 @@ function equipItem(itemId,target=null){
  if(ports.isTwoHanded(item)&&slot!=='weapon')return false;
  if(slot==='offhand'&&ports.isTwoHanded(ports.state.equip.weapon)){ports.bannerMessage('Off-Hand locked by two-handed weapon.');return false;}
  const displaced=[ports.state.equip[slot],...(ports.isTwoHanded(item)&&slot==='weapon'?[ports.state.equip.offhand]:[])].filter(Boolean);
+ const remainingLegendaries=Object.values(ports.state.equip).filter(equipped=>equipped?.rarity==='Legendary'&&!displaced.includes(equipped)).length;
+ if(remainingLegendaries+(item.rarity==='Legendary'?1:0)>2){ports.bannerMessage('Maximum 2 Legendaries equipped. Unequip one before equipping another.');return false;}
  if(active&&ports.phase3BagItems().length-1+displaced.length>ports.PHASE3_BAG_CAPACITY){ports.bannerMessage('Not enough Expedition Bag space for the previous equipment.');return false;}
  if(!active&&stashItemCount()-(source===ports.state.stash?1:0)+displaced.length>ports.stashCapacity()){ports.bannerMessage('Stash full.');return false;}
  source.splice(i,1);

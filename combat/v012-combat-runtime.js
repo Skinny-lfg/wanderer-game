@@ -112,27 +112,12 @@ function legendaryExtend(e,type){
  if(!stack)return false;stack.remaining++;ports.synchronizeDots(e);return true;
 }
 
-function legendaryAffinity(r,effect,effectiveHeal=0){
- const t=ports.legendaryRuntime(r),now=ports.setNow(r);
- if(effect==='drain'&&ports.legendaryReady(r,'soul-reaver'))t.armorReady=true;
- if(effect==='sunder'&&ports.legendaryReady(r,'hammer-of-the-sunforge'))t.weaken=Math.max(t.weaken||0,.15);
- if(effect==='nature'&&effectiveHeal>0&&ports.legendaryReady(r,'sunpiercer-longbow'))t.natureHasteUntil=now+3;
-}
+function legendaryAffinity(r,effect,effectiveHeal=0){}
 
 function legendaryAttackBonus(r,base,critical,cast){
  const t=ports.legendaryRuntime(r),e=r.enemy,now=ports.setNow(r);let added=0;
  r.legendaryAttackCount=(r.legendaryAttackCount||0)+1;
  if(cast)r.legendaryCastCount=(r.legendaryCastCount||0)+1;
- if(t.refuge){t.refuge=false;ports.setHeal(r,r.maxhp*.03);}
- if(e.barrier>0&&ports.legendaryReady(r,'runeforged-eclipse')){const removed=Math.min(e.barrier,Math.round(base*.35));e.barrier-=removed;ports.setBarrier(r,removed*.3);}
- if(cast&&r.legendaryCastCount%3===0&&ports.legendaryReady(r,'starweaver-relic')){r.mp=Math.min(r.maxmp,r.mp+(r.stats.main?.subtype==='Staff'?13:9)*.4);added+=Math.round(base*.2);}
- if(!t.marked){t.marked=true;if(ports.legendaryReady(r,'blade-of-the-first-dawn'))t.markUntil=now+6;}
- if(critical&&t.markUntil>now){t.markUntil=0;added+=Math.round(base*.25);}
- if(r.legendaryAttackCount%4===0&&ports.legendaryReady(r,'sunstride-sabatons'))t.thunderHasteUntil=now+3;
- if(e.v012Rot?.length>=3&&ports.legendaryReady(r,'fang-of-the-sunbreaker'))WandererV012Buildcraft.applyRot(ports.phase1Build,ports.phase2Context(r),base*.15);
- // Classic gear procs remain independent from Expedition passives.
- if(e.burnStacks>=3&&ports.legendaryReady(r,'tome-of-the-eternal-flame')){e.dots.burn.shift();ports.synchronizeDots(e);t.weaken=Math.max(t.weaken||0,.15);}
- if(cast&&e.slowTime>0&&ports.legendaryReady(r,'winterheart-spire')){e.slowTime=Math.min(4,e.slowTime+1);ports.setDelayEnemy(r,e.boss?.2:.5);}
  if(t.verdantReady){added+=Math.round(base*t.verdantReady);t.verdantReady=0;}
  if(t.veilReady){added+=Math.round(base*t.veilReady);t.veilReady=0;}
  if(ports.legendaryHas('verdant-oath')&&ports.legendaryProc(r,'verdant-oath')){ports.setHeal(r,r.maxhp*(ports.legendaryEmpowered(r,'verdant-oath')?.012:.008));t.verdantReady=ports.legendaryEmpowered(r,'verdant-oath')?.90:.60;}
@@ -152,20 +137,11 @@ function legendaryOnHit(r,base,real){
  if(ports.legendaryHas('gravewake')&&ports.legendaryProc(r,'gravewake'))WandererV012Buildcraft.applyRot(ports.phase1Build,ports.phase2Context(r),base*(ports.legendaryEmpowered(r,'gravewake')?.10:.07));
 }
 
-function legendaryOffhand(r,damage){
- if(damage>0&&r.enemy.bleedStacks>0&&r.enemy.dots?.bleed?.some(x=>x.remaining<6)&&ports.legendaryReady(r,'crescent-of-the-emberveil'))ports.legendaryExtend(r.enemy,'bleed');
-}
+function legendaryOffhand(r,damage){}
 
 function legendaryDefensiveEffects(r,blocked,hit,absorbed=0,broken=false){
  if(r.hp<=0)return;
  const t=ports.legendaryRuntime(r);
- // Existing charges are consumed before this hit can prime new ones.
- if(hit>0&&t.reserve){const amount=t.reserve;t.reserve=0;ports.setHeal(r,amount,true);ports.addLog('✦ Dawnstar Bloom reserve released','good');}
- if(broken&&ports.legendaryReady(r,'helm-of-the-dawnwarden'))t.guard=.12;
- if(broken&&ports.legendaryReady(r,'aegis-of-the-dawnstar'))ports.setBarrier(r,r.maxhp*.07);
- if(absorbed>0&&ports.legendaryReady(r,'orb-of-the-solar-heart'))ports.setHeal(r,r.maxhp*.015);
- if(hit>r.maxhp*.12&&ports.legendaryReady(r,'cuirass-of-the-last-sunrise')){t.hotRemaining=hit*.3;t.hotUntil=ports.setNow(r)+3;}
- if(hit>0&&r.hp<r.maxhp*.35&&ports.legendaryReady(r,'heart-of-shadows'))t.refuge=true;
  if(absorbed>0&&t.veilBarrier>0){const earlier=Math.min(absorbed,t.veilEarlierBarrier||0);t.veilEarlierBarrier-=earlier;const veilAbsorbed=Math.min(t.veilBarrier,absorbed-earlier);t.veilBarrier-=veilAbsorbed;if(veilAbsorbed>0&&ports.legendaryHas('veil-thousand-seals')&&ports.legendaryProc(r,'veil-thousand-seals'))t.veilReady=ports.legendaryEmpowered(r,'veil-thousand-seals')?.45:.30;}
 }
 
@@ -179,13 +155,9 @@ function legendaryTick(r,dt){
  const t=ports.legendaryRuntime(r);
  ports.legendaryRealmStart(r);
  if(ports.legendaryHas('heartroot-carapace')&&r.hp>0&&r.hp<r.maxhp*.7){const budget=Math.max(0,r.maxhp*.15-(t.heartrootHealed||0));if(budget>0){const healed=ports.setHeal(r,Math.min(budget,r.maxhp*(ports.legendaryEmpowered(r,'heartroot-carapace')?.0045:.003)*dt));if(healed>0){t.heartrootHealed=(t.heartrootHealed||0)+healed;ports.phase6Proc(r,'Legendary: heartroot-carapace');}}}
- if(t.hotRemaining>0&&r.hp>0){const left=Math.max(dt,t.hotUntil-ports.setNow(r)+dt),heal=Math.min(t.hotRemaining,t.hotRemaining*dt/left);t.hotRemaining-=heal;ports.setHeal(r,heal);}
 }
 
-function legendaryKill(r){
- const t=ports.legendaryRuntime(r);
- if(!t.killUsed&&r.enemy.burnStacks>0&&ports.legendaryReady(r,'pendant-of-the-first-flame')){t.killUsed=true;ports.setHeal(r,r.maxhp*.03);}
-}
+function legendaryKill(r){}
 
 function setReady(r,name,seconds){
  const timers=r.setCooldowns||(r.setCooldowns={}),now=ports.setNow(r);
@@ -372,7 +344,6 @@ function weaponAttack(r){
  if(perfect){ports.setReady(r,'perfectStrike',10);temp.focus=0;}
  const critical=perfect||ports.gameRandom()<s.crit/100;
  if(critical){damage=Math.max(1,Math.round(damage*(perfect?1.75:1.5)));ports.addLog((perfect?'✨ PERFECT STRIKE! ':'CRITICAL! ')+damage+' damage','critical');}
- if(Object.entries(ports.state.equip||{}).some(([slot,item])=>item?.rarity==='Legendary'&&!ports.legendarySignature(item)&&!(slot==='offhand'&&ports.isTwoHanded(weapon)))&&r.enc!==r.lastLegendaryEncounter){damage=Math.round(damage*1.32);r.lastLegendaryEncounter=r.enc;}
  const added=ports.setOnAttack(r,base,critical,perfect)+ports.legendaryAttackBonus(r,base,critical,cast);
  // Weapon identities: small sustain windows against burst without higher global damage.
  // Cooldowns run in combat seconds and persist across waves of one expedition.

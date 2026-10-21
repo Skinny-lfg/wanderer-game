@@ -46,15 +46,15 @@ test('Merchant sells a Belt; obsolete Sigil rerolls cannot spend Gold',()=>{
  const before=s.gold;a.buy(0);assert(s.stash.some(i=>i.id===belt.id));assert.equal(s.gold,before-belt.goldPrice);
  const after=s.gold;a.refresh('sigils');assert.equal(s.gold,after);assert.equal(s.merchant.sigils.length,0);
 });
-test('independent Legendary attacks survive; dependent abilities name the actual missing source',()=>{
+test('only current Legendary weapon ability is active, with no legacy abilities',()=>{
  const a=create(22);a.setup(20,'Sword');const sword=a.makeItem(20,'weapon',null,'loot','Sword','Legendary');a.state().equip.weapon=sword;
  enter(a);const r=a.state().run;r.enemy.barrier=0;
- assert.equal(a.gear.legendaryAttackBonus(r,100,true,false),25);
- assert(a.gear.legendaryDescription({...sword,legendaryId:'blade-of-the-first-dawn'}).includes('First attack marks'));
- const ring=a.makeItem(20,'ring1',null,'loot','Ring','Legendary');
- assert(a.gear.legendaryDescription(ring).includes('inactive after their removal'));
- const bow=a.makeItem(20,'weapon',null,'loot','Bow','Legendary');
- assert(a.gear.legendaryDescription(bow).includes('Nature healing; no current Expedition source'));
+ assert.equal(sword.legendaryId,'verdant-oath');
+ assert.equal(a.gear.legendaryAttackBonus(r,100,true,false),0);
+ assert.equal(a.gear.legendaryAttackBonus(r,100,true,false),60);
+ assert(a.gear.legendaryDescription(sword).includes('Verdant Oath'));
+ const old={...sword,legendaryId:'blade-of-the-first-dawn',name:'Blade of the First Dawn'};
+ assert.equal(a.gear.legendaryDescription(old),'');
 });
 test('native Sword, Daggers and Staff attacks still damage enemies; old Poison gear cannot apply statuses',()=>{
  for(const weapon of ['Sword','Daggers','Staff']){
