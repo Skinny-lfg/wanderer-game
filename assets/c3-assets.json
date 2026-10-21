@@ -89,13 +89,13 @@
     }
   },
   "pending": [
-    "Weapon and jewelry WebP catalog review; originals remain available",
     "Passive images still being prepared",
     "Full end-to-end browser QA and release approval"
   ],
-  "note": "No gameplay or saves changed; asset files can be replaced by smaller versions.",
+  "note": "No gameplay or saves changed; asset files can be replaced by smaller versions. Six treasures WebP copied into Packs/08 on Drive, not enabled as new drops.",
   "notes": "Only development; no gameplay/save changes; old artwork remains for legacy fallbacks. New source Drive: 10 - Game Ready (WebP).",
-  "status": "Integrated: Legendary WebP, six affinity icons, three Magic choices, 30 typed armor WebP and 12 responsive dungeon backgrounds",
+  "status": "Integrated: Legendary, affinities, Magic choices, 30 typed armor, 47 weapon/offhand/jewelry WebP, 12 responsive dungeon backgrounds",
   "armorManifest": "assets/equipment/c3/manifest.json",
-  "dungeonManifest": "assets/dungeons/c3/manifest.json"
+  "dungeonManifest": "assets/dungeons/c3/manifest.json",
+  "nonArmorManifest": "assets/equipment/c3/non-armor-manifest.json"
 }

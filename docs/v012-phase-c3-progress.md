@@ -7,7 +7,9 @@
 2. **6 affinities + 3 escolhas Magic:** Blood, Decay, Vitality, Aegis, Fury e Magic; Fire, Frost e Lightning continuam mapeados com ícones PNG pequenos. Sprites de estado/debuff não alterados.
 3. **30 equipamentos de armadura:** duas artes por tipo em `Cloth` (Astral/Bloodweave), `Leather` (Nightstalker/Wayfarer), `Plate` (Dawnward/Ironbound), nas cinco slots Helm/Chest/Gloves/Boots/Belt. `itemImg` usa `item.armorType` e `item.slot`, com escolha determinística por `item.id`; ausentes/legados continuam com fallback sem alteração ao save.
 4. **12 dungeons / 24 imagens:** artes desktop + mobile em `assets/dungeons/c3/`, mapeadas por ID estável. `THEMES` (ID, background histórico, loot, enemy, affinity) mantém-se idêntico para preservar testes de paridade/saves; `dungeonImage` aplica a nova imagem **só ao render**, selecionando mobile até 650px.
-5. **Testes de integridade:** `tests/v012-phase-c3-assets.test.cjs` agora cobre 12 Legendaries, 9 ícones, 30 armaduras, 12 pares de dungeon. Testes de C.1 atualizados para arte WebP.
+5. **47 armas e acessórios WebP (C.3.4):** 23 armas (Sword/Mace/Bow/Daggers/Staff/Wand/Two-Handed), 12 off-hands (Shield/Orb/Tome/Charm) e 12 joias (6 Ring/6 Amulet), mapeados só por slot e subtype existentes. Off-hand Daggers partilham a arte de Daggers. Variantes selecionadas de forma determinística por ID, sem tocar nos dados de saves, droprates ou tipos de equipamento.
+6. **Treasures na Drive:** seis versões WebP copiadas de `10 - Game Ready (WebP)/03 - Consumables/Treasures` para `Packs/08 - Consumables & Loot/02 - Treasures`; PNGs originais preservados. Arte ainda não atribuída aos drop IDs, para evitar alterar as recompensas.
+7. **Testes de integridade:** `tests/v012-phase-c3-assets.test.cjs` agora cobre 12 Legendaries, 9 ícones, 30 armaduras, 12 pares de dungeon e 47 equipamentos não-armadura. Testes de C.1 atualizados para arte WebP.
 
 ## Falhas identificadas e resoluções
 - O GitHub Actions de C.3.1 falhava porque o teste histórico exigia o placeholder de Verdant Oath. Corrigido: passa a esperar a imagem real.
@@ -15,7 +17,6 @@
 - Não declarar QA completo antes de obter GitHub Actions com sucesso no HEAD final e verificar browser mobile/desktop.
 
 ## Ainda pendente
-- Integrar/reconciliar **armas e acessórios WebP** da nova pasta (potencialmente 33 armas/offhands + 12 joias) sem reintroduzir imagens de categorias inexistentes. Auditar item IDs e subtypes contra o catálogo existente antes de substituir o pool visual.
 - Retirar apenas entradas verdadeiramente obsoletas do **catálogo de novos drops** depois de identificação exata; preservar compatibilidade de saves antigos. Nenhum item foi apagado.
 - Arte dos restantes passivos está a ser produzida; manter placeholders.
 - QA e otimização: testar apresentação em 390/320/1280px, slots equip/stash/forge, seleção Magic, fundos em mobile, ausência de 404, `npm test` e `test:browser` quando suportado. Sem deploy.

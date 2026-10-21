@@ -77,3 +77,27 @@ test('C.3.2: Cloth/Leather/Plate artwork maps to the correct five slots',()=>{
  assert.ok(html.includes('function c3ArmorImage(o)'));
  assert.ok(html.includes('const c3Armor=c3ArmorImage(o);if(c3Armor)return c3Armor;'));
 });
+
+
+test('C.3.4: all 47 weapons, off-hands and jewelry are valid WebP and mapped to known categories',()=>{
+ const m=require('../assets/equipment/c3/non-armor-manifest.json');
+ assert.equal(Object.keys(m.weapons).length,7);
+ assert.equal(Object.keys(m.offhands).length,4);
+ assert.deepEqual(Object.keys(m.jewelry).sort(),['amulet','ring']);
+ assert.deepEqual(Object.keys(m.weapons).sort(),['Bow','Daggers','Mace','Staff','Sword','Two-Handed','Wand'].sort());
+ assert.deepEqual(Object.keys(m.offhands).sort(),['Charm','Orb','Shield','Tome'].sort());
+ let count=0;
+ const paths=new Set();
+ for(const catalog of [m.weapons,m.offhands,m.jewelry]){
+  for(const list of Object.values(catalog)){
+   for(const p of list){checkImage(p);assert.ok(!paths.has(p),'duplicate path '+p);paths.add(p);count++;}
+  }
+ }
+ assert.equal(count,47);
+ assert.ok(html.includes('const C3_WEAPON_ART='));
+ assert.ok(html.includes('const C3_OFFHAND_ART='));
+ assert.ok(html.includes('const C3_JEWELRY_ART='));
+ assert.ok(html.includes('function c3EquipmentImage(o)'));
+ assert.ok(html.includes('const c3Other=c3EquipmentImage(o);if(c3Other)return c3Other;'));
+ assert.ok(html.includes("subtype==='Daggers'||subtype==='Off-Hand Dagger'"));
+});
