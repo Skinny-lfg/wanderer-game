@@ -4,7 +4,8 @@ test('three individual owned potions, duplicates except Fortune, no free supplie
  assert.throws(()=>P.selection({fortune:2},['fortune','fortune']));
 });
 test('Apothecary and Blacksmith stocks/rerolls are independent; purchase cannot repeat',()=>{
- const a=create(62),s=a.state();s.gold=1000;a.rollShop();const smith=JSON.stringify(s.merchant);s.apothecary=a.potions.shop();assert.equal(s.apothecary.stock.length,4);assert(s.apothecary.stock.some(p=>p.kind==='health'));assert(s.apothecary.stock.some(p=>p.kind==='mana'));const id=s.apothecary.stock[0].id;assert(a.potions.buy(id));assert.equal(a.potions.buy(id),false);assert(a.potions.reroll());assert.equal(JSON.stringify(s.merchant),smith);
+ const a=create(62),s=a.state();s.gold=1000;a.rollShop();const smith=JSON.stringify(s.merchant);s.apothecary=a.potions.shop();assert.equal(s.apothecary.stock.length,4);assert(s.apothecary.stock.every(p=>['health','mana','might','arcane','ironhide','haste','fortune','barrier'].includes(p.kind)));
+ const randomOnly=a.potions.shop(1,()=>.99,()=>String(Math.random()));assert(randomOnly.stock.every(p=>p.kind==='barrier'),'all offer slots may be random, including absence of Health/Mana');const id=s.apothecary.stock[0].id;assert(a.potions.buy(id));assert.equal(a.potions.buy(id),false);assert(a.potions.reroll());assert.equal(JSON.stringify(s.merchant),smith);
 });
 test('death forfeits unused loaded potions while preparation has not consumed them',()=>{const a=create(63),s=a.state();s.consumables={mana:1};a.potions.select('mana');a.start();assert.equal(s.consumables.mana,1);a.potions.start();a.potions.finish('defeat');assert.equal(s.consumables.mana,0);});
 test('Stash stacks count each 99-dose group and reject purchases that exceed slots or the per-type save cap',()=>{
