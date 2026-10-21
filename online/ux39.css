@@ -1,5 +1,6 @@
 /* UX39 presentation adjustments; all interactive content reuses the v0.12 components. */
 .phase3IntegratedPreview{min-width:0;overflow-x:hidden}
+.phase3IntegratedPreview .container{overflow-x:clip}
 .phase3IntegratedPreview #screen{min-width:0}
 .phase3IntegratedPreview.phase3CombatView{background:linear-gradient(#120d11c9,#100a0eea),url('../assets/backgrounds/between-realms.webp') center/cover fixed}
 .phase3IntegratedPreview.phase3CombatView .combatLayout{grid-template-columns:minmax(0,1fr)}
@@ -50,6 +51,26 @@
 .phase3IntegratedPreview .eventInputs select{width:100%}
 .phase3IntegratedPreview .eventActions{margin-top:12px}
 .phase3IntegratedPreview .cityCenterTabs{display:flex;gap:7px;margin-bottom:12px}
+.phase3IntegratedPreview .apothecaryPanel .shopGrid{align-items:stretch}
+.phase3IntegratedPreview .potionOffer{display:grid;grid-template-rows:76px minmax(2.6em,auto) auto minmax(2.8em,auto) auto 44px;align-items:center;justify-items:center;gap:5px;min-height:225px;overflow-wrap:anywhere}
+.phase3IntegratedPreview .potionOffer img{max-width:100%;height:72px;object-fit:contain}
+.phase3IntegratedPreview .potionOffer b,.phase3IntegratedPreview .potionOffer .potionEffect{line-height:1.25}
+.phase3IntegratedPreview .potionOffer .potionPrice{white-space:nowrap}
+.phase3IntegratedPreview .potionOffer button{min-height:44px;width:100%;align-self:end}
+.phase3IntegratedPreview .phase3RealmActions{position:sticky;top:0;z-index:8;display:flex;gap:8px;align-items:center;padding:8px;margin:8px 0;background:#150e15f2;border:1px solid #796044;border-radius:8px}
+.phase3IntegratedPreview .phase3RealmActions #phase2EnterRealm{margin:0;flex:1;width:auto}
+.phase3IntegratedPreview .phase3RealmActions .phase3Extract{min-height:44px;flex:1}
+.phase3IntegratedPreview .phase3Routes .phase1OfferBody,.phase3IntegratedPreview .phase3Routes .phase1OfferBody strong{min-width:0;overflow-wrap:anywhere}
+.phase3IntegratedPreview .phase3Routes .phase1OfferBody strong{display:flex;align-items:center;gap:5px;line-height:1.25}
+.phase3IntegratedPreview .phase3Routes .phase1OfferBody strong img{width:28px;height:28px;min-height:0;flex:none;object-fit:contain}
+.phase3IntegratedPreview .phase3Routes .phase1OfferMeta{display:flex;flex-wrap:wrap;gap:5px}
+.phase3IntegratedPreview .phase3PassiveChoice{min-width:0;min-height:0;gap:7px;overflow-wrap:anywhere}
+.phase3IntegratedPreview .phase3PassiveChoice strong{font-size:17px;line-height:1.25}
+.phase3IntegratedPreview .phase3PassiveType,.phase3IntegratedPreview .phase3PassiveRank{font-size:11px;font-weight:700;color:#efca91}
+.phase3IntegratedPreview .phase3PassiveDescription,.phase3IntegratedPreview .phase3PassivePreview{font-size:12px;line-height:1.4;color:#e2d4cd}
+.phase3IntegratedPreview .phase3PassivePreview{padding-top:6px;border-top:1px solid #745363;color:#bfe2cf}
+.phase3IntegratedPreview dialog[data-realm-passive]{width:min(820px,calc(100vw - 24px));max-height:min(85dvh,800px);overflow-y:auto}
+.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveChoices{grid-template-columns:repeat(3,minmax(0,1fr))}
 .phase3IntegratedPreview .phase3CombatView .combatExpeditionDetails .phase3Bag{max-width:none}
 .phase3IntegratedPreview .phase3CombatView .phase3BagGrid{grid-template-columns:repeat(6,minmax(0,1fr))}
 @media(max-width:1000px){
@@ -58,6 +79,14 @@
  .phase3IntegratedPreview .phase3BetweenLayout{grid-template-columns:1fr}
 }
 @media(max-width:600px){
+ .phase3IntegratedPreview .phase3CityCenter>.topline{display:block}
+ .phase3IntegratedPreview .cityCenterTabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%}
+ .phase3IntegratedPreview .cityCenterTabs button{font-size:11px;padding:9px 3px;min-height:44px;white-space:normal;overflow-wrap:anywhere}
+ .phase3IntegratedPreview .potionOffer{grid-template-rows:64px minmax(2.5em,auto) auto minmax(3em,auto) auto 44px;min-height:210px}
+ .phase3IntegratedPreview .potionOffer img{height:62px}
+ .phase3IntegratedPreview .phase3RealmActions{padding:6px;gap:6px}
+ .phase3IntegratedPreview .phase3RealmActions button{font-size:12px;padding:8px 5px}
+ .phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveChoices{grid-template-columns:1fr}
  .phase3IntegratedPreview .phase3Camp{background-image:linear-gradient(#120d10e8,#120d10d9),url('../assets/backgrounds/camp.webp');padding:12px}
  .phase3IntegratedPreview .phase3CampGrid{display:flex;flex-direction:column;gap:9px}
  .phase3IntegratedPreview .phase3CampStatus{padding:3px}
@@ -72,6 +101,7 @@
  .phase3IntegratedPreview .phase3Between{padding:10px}
  .phase3IntegratedPreview .phase3BetweenLayout{display:flex;flex-direction:column;gap:10px}
  .phase3IntegratedPreview .phase3BetweenLayout>*{width:100%;min-width:0}
+ .phase3IntegratedPreview .phase3BetweenLayout>.phase3Routes{order:-1}
  .phase3IntegratedPreview .phase3BetweenHero{padding:7px}
  .phase3IntegratedPreview .phase3BetweenHero .paper{height:340px;min-height:340px}
  .phase3IntegratedPreview .phase3BetweenHero .paper .slotTile{width:45px;height:51px}

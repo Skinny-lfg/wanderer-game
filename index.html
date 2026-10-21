@@ -1708,7 +1708,8 @@ const WANDERER_SHATTER_ENABLED=true,WANDERER_DOUBLE_STRIKE_ENABLED=true;
 
 
 
-function renderLog(){const el=$('expeditionLog');if(!el)return;const entries=state.run?.status==='cleared'&&phase5Results?.realm?.log?.length?phase5Results.realm.log:logEntries;el.innerHTML=entries.map(v=>`<div class="logLine" style="color:${RARITY[v.kind]?.[0]||((v.kind==='good')?'#8acda8':(v.kind==='treasure'?'#e3ba71':v.kind==='spell'?'#b7d3ff':'#d3d7d9'))}">${esc(v.text)}</div>`).join('')}
+function phase3LogText(value){return String(value).replace(/\b\d+\.\d{3,}(?=%|\b)/g,raw=>String(Number(Number(raw).toFixed(2))));}
+function renderLog(){const el=$('expeditionLog');if(!el)return;const entries=state.run?.status==='cleared'&&phase5Results?.realm?.log?.length?phase5Results.realm.log:logEntries;el.innerHTML=entries.map(v=>`<div class="logLine" style="color:${RARITY[v.kind]?.[0]||((v.kind==='good')?'#8acda8':(v.kind==='treasure'?'#e3ba71':v.kind==='spell'?'#b7d3ff':'#d3d7d9'))}">${esc(phase3LogText(v.text))}</div>`).join('')}
 /* Generated affinity/status art atlas: 21 compact combat-effect icons, 5 x 5 grid. */
 const STATUS_ICON_POSITIONS={"dawn-mark":[0,0],"next-attack-weakened":[1,0],"weakened":[2,0],"healing-reduction":[3,0],"barrier":[4,0],"haste":[0,1],"focus":[1,1],"heat":[2,1],"soul":[3,1],"counter-ready":[4,1],"wildroot-volley":[0,2],"thunderstep":[1,2],"soul-harvest":[2,2],"golden-focus":[3,2],"umbral-refuge":[4,2],"dawnward":[0,3],"dawnstar-bloom":[1,3],"last-sunrise":[2,3],"second-wind-used":[3,3],"boss-barrier":[4,3],"enraged":[0,4]};
 function statusArt(id){const pos=STATUS_ICON_POSITIONS[id];return pos?'<span class="statusIcon" aria-hidden="true" style="background-position:'+(pos[0]*25)+'% '+(pos[1]*25)+'%"></span>':'';}
@@ -1821,7 +1822,8 @@ function phase6RenderApothecary(){
  if(!economyCanAct()){view='phase1';render();return;}
  if(!state.apothecary){state.apothecary=WandererV012Consumables.shop(economyTier(),gameRandom,makeId);save();}
  const C=WandererV012Consumables.CATALOG,a=state.apothecary;
- html('<section class="panel apothecaryPanel"><h2>Apothecary</h2><p class="small muted">Four randomized potion offers · Restock for a new selection.</p><div class="shopGrid">'+a.stock.map(p=>{const potion=C.find(c=>c.id===p.kind),quantity=state.consumables?.[p.kind]||0,canStack=quantity<99999&&(phase6StackSlots()<stashCapacity()||quantity%99!==0);return '<article class="shopCard potionOffer"><img src="'+phase6PotionImage(p.kind)+'" alt=""><b>'+esc(potion.name)+'</b><span class="small muted">'+esc(potion.rarity)+'</span><strong class="gold">'+p.price+' Gold</strong><button type="button" class="primary" data-potion-buy="'+p.id+'" '+(state.gold<p.price||!canStack?'disabled':'')+'>Buy</button></article>';}).join('')+'</div><button id="potionReroll" class="ghost" '+(state.gold<a.refreshCost?'disabled':'')+'>Reroll · '+a.refreshCost+' Gold</button></section>');
+ const effect={health:'Restore 35% Max HP',mana:'Restore 40% Max Mana',might:'Might for 3 Realms',arcane:'Arcane for 3 Realms',ironhide:'Ironhide for 3 Realms',haste:'Haste for 3 Realms',fortune:'More equipment drops this Expedition',barrier:'Gain 15% Max HP Barrier'};
+ html('<section class="panel apothecaryPanel"><h2>Apothecary</h2><p class="small muted">Four randomized potion offers · Restock for a new selection.</p><div class="shopGrid">'+a.stock.map(p=>{const potion=C.find(c=>c.id===p.kind),quantity=state.consumables?.[p.kind]||0,canStack=quantity<99999&&(phase6StackSlots()<stashCapacity()||quantity%99!==0);return '<article class="shopCard potionOffer"><img src="'+phase6PotionImage(p.kind)+'" alt=""><b>'+esc(potion.name)+'</b><span class="small muted potionRarity">'+esc(potion.rarity)+'</span><span class="small muted potionEffect">'+esc(effect[p.kind]||'')+'</span><strong class="gold potionPrice">'+p.price+' Gold</strong><button type="button" class="primary" data-potion-buy="'+p.id+'" '+(state.gold<p.price||!canStack?'disabled':'')+'>Buy</button></article>';}).join('')+'</div><button id="potionReroll" class="ghost" '+(state.gold<a.refreshCost?'disabled':'')+'>Reroll · '+a.refreshCost+' Gold</button></section>');
  Q('[data-potion-buy]').forEach(b=>b.onclick=()=>phase6BuyPotion(b.dataset.potionBuy));$('potionReroll').onclick=phase6RerollPotions;
 }
 function phase6EligibleEventPassives(eventId){
@@ -2101,7 +2103,7 @@ function renderPhase1(){
    html(header+cards.map(([id,name,desc,glyph])=>'<button class="phase1DraftCard" data-phase2-element="'+id+'"><span>'+'<img class="magicChoiceIcon" src="assets/affinities/magic/'+id+'.png" alt="" loading="lazy" decoding="async">'+'</span><strong>'+name+'</strong><small>'+desc+'</small></button>').join('')+'</div><p class="small muted">Element stays fixed for this Expedition. Staff and Wand amplify it.</p></section>');
    Q('[data-phase2-element]').forEach(b=>b.onclick=()=>{if(phase2ChooseElement(b.dataset.phase2Element))phase2EnterInitialRealm();});
   }else{
-   html(header+(d.options.length?d.options.map(p=>'<button class="phase1DraftCard" data-phase2-passive="'+p.id+'">'+phase2PassiveIcons(p)+'<small>'+esc(p.category||'')+'</small><strong>'+esc(p.name)+'</strong><small>'+esc(p.description)+'</small><span class="micro muted">'+(p.requires.length?'HYBRID · ':'')+(p.max===1?'UNIQUE':'Rank '+WandererV012Buildcraft.ownedRank(phase1Build,p.id)+' → '+(WandererV012Buildcraft.ownedRank(phase1Build,p.id)+1)+' / '+p.max)+'</span></button>').join(''):'<button class="phase1DraftCard" data-passive-exhausted>No useful passive upgrades remain · CONTINUE EXPEDITION</button>')+'</div>'+(d.options.length>0&&d.options.length<3?'<p class="small muted">Only '+d.options.length+' eligible '+(d.options.length===1?'upgrade remains.':'upgrades remain.')+'</p>':'')+'<p class="small muted">Numeric passives: Rank 5 maximum. Unique talents: Rank 1.</p></section>');
+   html(header+(d.options.length?d.options.map(p=>phase6PassiveCard(p,'data-phase2-passive')).join(''):'<button class="phase1DraftCard" data-passive-exhausted>No useful passive upgrades remain · CONTINUE EXPEDITION</button>')+'</div>'+(d.options.length>0&&d.options.length<3?'<p class="small muted">Only '+d.options.length+' eligible '+(d.options.length===1?'upgrade remains.':'upgrades remain.')+'</p>':'')+'<p class="small muted">Numeric passives: Rank 5 maximum. Unique talents: Rank 1.</p></section>');
    Q('[data-phase2-passive]').forEach(b=>b.onclick=()=>phase2ChoosePassive(b.dataset.phase2Passive));
    Q('[data-passive-exhausted]').forEach(b=>b.onclick=()=>phase2ChoosePassive(null));
   }
@@ -2124,8 +2126,8 @@ function renderPhase1(){
  phase3BindPaper();phase3BindBag();phase6BindPotions();
  Q('[data-phase1-plane]').forEach(b=>b.onclick=()=>phase1Choose(b.dataset.phase1Plane));
  Q('[data-phase2-reroll]').forEach(b=>b.onclick=()=>phase3Reroll(Number(b.dataset.phase2Reroll)));
- const enter=$('phase2EnterRealm');if(enter)enter.onclick=phase1Enter;
- if(between){const extract=document.createElement('button');extract.id='phase4Extract';extract.className='ghost phase3Extract';extract.textContent='Extract & Leave';extract.disabled=!!phase3BagOverflow();extract.onclick=()=>showConfirm('Extract & Leave','End this Expedition and keep collected equipment, Gold and Fragments? This does not unlock a difficulty or grant a boss Rune.',phase4Extract,'Extract & Leave');$('screen').appendChild(extract);}
+ const enter=$('phase2EnterRealm');if(enter){enter.onclick=phase1Enter;const actions=document.createElement('div');actions.className='phase3RealmActions';const heading=$('screen').querySelector('.phase3RouteHeading');heading.parentNode.insertBefore(actions,heading.nextSibling);actions.appendChild(enter);}
+ if(between){const extract=document.createElement('button');extract.id='phase4Extract';extract.className='ghost phase3Extract';extract.textContent='Extract & Leave';extract.disabled=!!phase3BagOverflow();extract.onclick=()=>showConfirm('Extract & Leave','End this Expedition and keep collected equipment, Gold and Fragments? This does not unlock a difficulty or grant a boss Rune.',phase4Extract,'Extract & Leave');$('screen').querySelector('.phase3RealmActions').appendChild(extract);}
 
 }
 
@@ -2140,13 +2142,23 @@ function renderPhase1(){
 
 
 
+function phase6PassiveCard(p,attribute){
+ const rank=WandererV012Buildcraft.ownedRank(phase1Build,p.id),category=p.category||'Passive';
+ const preview=WandererV012Buildcraft.preview(phase1Build,p.id,phase2Stats());
+ const labels={chance:'Chance',bleed:'Bleed',bleedBonus:'Bleed bonus',burst:'Bonus damage',enemyCap:'Enemy HP cap',threshold:'Threshold',hp:'Max HP',base:'Base damage',rot:'Rot',rotBonus:'Rot bonus',reduction:'Damage reduction',healingReduction:'Healing reduction',maxhp:'Max HP',heal:'Healing',defense:'Defense',block:'Block',barrier:'Barrier',speed:'Attack speed',crit:'Critical chance',power:'Power',regen:'Regeneration',burn:'Burn',cost:'Mana cost',normalCap:'Normal enemy cap',bossCap:'Boss cap',mana:'Mana',duration:'Duration',icd:'Cooldown',uses:'Uses',hits:'Hits',charges:'Charges'};
+ const flat=new Set(['block','crit','cost','mana','duration','icd','uses','hits','charges']);
+ const value=(key,n)=>flat.has(key)?`${Number(n.toFixed(2))}${['duration','icd'].includes(key)?'s':''}`:`${Number((n*100).toFixed(2))}%`;
+ const changes=Object.entries(preview.after).filter(([key,n])=>Number.isFinite(n)&&n!==preview.before[key]).map(([key,n])=>`${labels[key]||'Effect'}: ${rank&&Number.isFinite(preview.before[key])?value(key,preview.before[key])+' → ':''}${value(key,n)}`);
+ const description=String(p.description).replace(/\bICD\b/gi,'cooldown').replace(/\bbounded\b/gi,'limited');
+ return '<button type="button" class="phase1DraftCard phase3PassiveChoice" '+attribute+'="'+esc(p.id)+'">'+phase2PassiveIcons(p)+'<strong>'+esc(p.name)+'</strong><span class="phase3PassiveType">'+esc(category)+'</span><span class="phase3PassiveDescription">'+esc(description)+'</span>'+(changes.length?'<span class="phase3PassivePreview">'+esc(changes.join(' · '))+'</span>':'')+'<span class="phase3PassiveRank">'+(p.max===1?'Unique':`Rank ${rank} → ${rank+1}/${p.max}`)+'</span></button>';
+}
 function phase6PassivePopup(){
  if(document.querySelector('dialog[data-realm-passive]'))return;
  const draft=phase1Draft;if(!draft||draft.kind!=='reward')return;
  const cards=draft.options||[];
- const contents=cards.length?cards.map(p=>'<button data-popup-passive="'+p.id+'">'+phase2PassiveIcons(p)+'<small>'+esc(p.category||'')+'</small><b>'+esc(p.name)+'</b><p>'+esc(p.description)+'</p><small>'+esc(WandererV012Buildcraft.preview(phase1Build,p.id,phase2Stats()).description)+'</small><span>'+(p.max===1?'UNIQUE':'Rank '+WandererV012Buildcraft.ownedRank(phase1Build,p.id)+' → '+(WandererV012Buildcraft.ownedRank(phase1Build,p.id)+1)+' / '+p.max)+'</span></button>').join(''):'<p>No useful passive upgrades remain. Your current build has reached its available limits.</p><button class="primary" data-popup-exhausted>CONTINUE EXPEDITION</button>';
+ const contents=cards.length?cards.map(p=>phase6PassiveCard(p,'data-popup-passive')).join(''):'<p>No useful passive upgrades remain. Your current build has reached its available limits.</p><button class="primary" data-popup-exhausted>CONTINUE EXPEDITION</button>';
  const note=cards.length>0&&cards.length<3?'<p class="small muted">Only '+cards.length+' eligible '+(cards.length===1?'upgrade remains.':'upgrades remain.')+'</p>':'';
- const dialog=showModal(cards.length?'Choose one Realm passive':'Passive upgrades exhausted',note+'<div class="phase1DraftCards">'+contents+'</div>');
+ const dialog=showModal(cards.length?'Choose one Realm passive':'Passive upgrades exhausted',note+'<div class="phase1DraftCards phase3PassiveChoices">'+contents+'</div>');
  if(!dialog||typeof dialog.querySelector!=='function'||typeof dialog.querySelectorAll!=='function')return;dialog.dataset.realmPassive='1';dialog.querySelector('[data-close]')?.remove();dialog.addEventListener('cancel',e=>e.preventDefault());
  dialog.querySelectorAll('[data-popup-passive]').forEach(button=>button.onclick=()=>{dialog.close();phase2ChoosePassive(button.dataset.popupPassive);});
  const exhausted=dialog.querySelector('[data-popup-exhausted]');if(exhausted)exhausted.onclick=()=>{dialog.close();phase2ChoosePassive(null);};
