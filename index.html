@@ -633,6 +633,11 @@ body::before{
 .phase1DraftCard>.affinityFamilyIcon{width:44px;height:44px}
 .magicChoiceIcon{width:44px;height:44px;object-fit:contain}
 .phase2PassiveIcons .affinityFamilyIcon{width:22px;height:22px}
+.phase2PassiveIcons{display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;flex:none}
+.phase2PassiveIcon{display:block;width:32px;height:32px;object-fit:contain}
+.phase1DraftCard .phase2PassiveIcon{width:52px;height:52px}
+.phase3PassiveSlot .phase2PassiveIcon{width:30px;height:30px}
+@media(max-width:650px){.phase1DraftCard .phase2PassiveIcon{width:44px;height:44px}}
 @media(max-width:650px){.phase1DraftCard>.affinityFamilyIcon,.magicChoiceIcon{width:38px;height:38px}}
 
 
@@ -2032,7 +2037,11 @@ function phase2FamilyIcon(family){
   return '<img class="affinityFamilyIcon" src="assets/affinities/families/'+family+'.png" alt="'+esc(WandererV012Expedition.FAMILY_NAMES[family])+' affinity" loading="lazy" decoding="async">';
 }
 function phase2PassiveIcons(passive){
- return '<span class="phase2PassiveIcons">'+(passive.requires.length?passive.requires:[passive.family]).map(phase2FamilyIcon).join('')+'</span>';
+ // Passive artwork is keyed by the existing buildcraft ID; hybrid art is already web-ready.
+ const id=String(passive.id||'');
+ if(!/^[a-z][a-z0-9_]*$/.test(id))return '<span class="phase2PassiveIcons">'+(passive.requires.length?passive.requires:[passive.family]).map(phase2FamilyIcon).join('')+'</span>';
+ const ext=passive.requires.length?'webp':'png';
+ return '<span class="phase2PassiveIcons"><img class="phase2PassiveIcon" src="assets/passives/'+id+'.'+ext+'" alt="" loading="lazy" decoding="async"></span>';
 }
 
 function phase3PassivesMarkup(){
