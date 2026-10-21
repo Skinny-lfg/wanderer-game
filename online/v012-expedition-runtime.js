@@ -168,6 +168,7 @@ function phase2Launch(plane){
  playerHealingDebuffUntil:0,combatSeconds:0,setCooldowns:{...(ports.phase1Continuity?.setCooldowns||{})},secondWindUsed:ports.phase1Continuity?.secondWindUsed||false,
  legendaryState:ports.phase1Continuity?.legendaryState||null,legendaryCastCount:ports.phase1Continuity?.legendaryCastCount||0,legendaryAttackCount:ports.phase1Continuity?.legendaryAttackCount||0};
  if(ports.phase6Run?.effects.barrier){ports.setBarrier(ports.state.run,ports.state.run.maxhp*ports.phase6Run.effects.barrier);ports.phase6Run.effects.barrier=0;}
+ ports.legendaryRealmStart(ports.state.run);
  ports.view='combat';ports.logEntries=[];ports.addLog('Expedition '+ports.state.run.tier+' · Realm '+ports.phase1Controller.state.planeIndex+' · '+plane.name,'good');ports.phase1StartWave();
 }
 

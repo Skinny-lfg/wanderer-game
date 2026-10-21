@@ -73,9 +73,14 @@ function makeSlots(){return Object.fromEntries(ports.SLOTS.map(s=>[s,null]))}
 
 function starter(){return {id:ports.makeId(),slot:'weapon',subtype:'Sword',name:'Old Sword',tier:1,rarity:'Common',effect:null,atk:5,str:1,obtainedAt:Date.now(),crafted:false,recoveryStarter:true}}
 
-function legendaryMatches(entry,item){return !!entry&&entry.subtype===item.subtype&&(entry.slot===item.slot||(entry.slot==='ring'&&['ring1','ring2'].includes(item.slot))||(entry.subtype==='Daggers'&&['weapon','offhand'].includes(entry.slot)&&['weapon','offhand'].includes(item.slot)));}
+function legendaryMatches(entry,item){
+ if(!entry||!item)return false;
+ if(entry.id==='crimson-fang')return ['Daggers','Off-Hand Dagger'].includes(item.subtype)&&['weapon','offhand'].includes(item.slot);
+ if(entry.id==='heartroot-carapace')return item.slot==='armor'&&['Armor','Cloth','Leather','Plate'].includes(item.subtype);
+ return entry.subtype===item.subtype&&(entry.slot===item.slot||(entry.slot==='ring'&&['ring1','ring2'].includes(item.slot))||(entry.subtype==='Daggers'&&['weapon','offhand'].includes(entry.slot)&&['weapon','offhand'].includes(item.slot)));
+}
 
-function legendaryFor(item){const eligible=ports.LEGENDARY_CATALOG.filter(entry=>ports.legendaryMatches(entry,item));return eligible.length?ports.sample(eligible):null;}
+function legendaryFor(item){const eligible=ports.LEGENDARY_CATALOG.filter(entry=>!!(entry.catalogueNew)===!!ports.WANDERER_NEW_LEGENDARY_DROPS_ENABLED&&ports.legendaryMatches(entry,item));return eligible.length?ports.sample(eligible):null;}
 
 function legendarySignature(item){
  if(item?.rarity!=='Legendary')return null;
@@ -86,10 +91,15 @@ function legendarySignature(item){
 
 function makeItem(tier,slot=null,affinity=null,source='loot',subtype='random',forcedRarity=null){
 slot=slot||ports.rollEquipmentSlot();
-const armorType=ports.PHASE1_PREVIEW&&ports.ARMOR_SLOTS.includes(slot)?(ports.ARMOR_TYPES.includes(subtype)?subtype:ports.sample(ports.ARMOR_TYPES)):null;
+let requestedArmorType=ports.ARMOR_TYPES.includes(subtype)?subtype:null;
 subtype=ports.chooseSubtype(slot,ports.ARMOR_TYPES.includes(subtype)?'random':subtype);
 let rarity=forcedRarity&&ports.RARITY[forcedRarity]?forcedRarity:ports.rarityRoll(tier,source==='forge');
 if(source==='merchant'&&rarity==='Legendary')rarity='Epic';
+if(rarity==='Legendary'&&ports.WANDERER_NEW_LEGENDARY_DROPS_ENABLED&&!ports.LEGENDARY_CATALOG.some(entry=>entry.catalogueNew&&ports.legendaryMatches(entry,{slot,subtype}))){
+ const entry=ports.sample(ports.LEGENDARY_CATALOG.filter(candidate=>candidate.catalogueNew));
+ slot=entry.slot==='ring'?ports.sample(['ring1','ring2']):entry.slot;subtype=entry.subtype;requestedArmorType=null;
+}
+const armorType=ports.PHASE1_PREVIEW&&ports.ARMOR_SLOTS.includes(slot)?(requestedArmorType||ports.sample(ports.ARMOR_TYPES)):null;
 const magic=false,effect=null;
 const legendaryIdentity=rarity==='Legendary'?ports.legendaryFor({slot,subtype}):null;
 const legendaryDefinition=legendaryIdentity&&globalThis.WandererLegendary?.DEFINITIONS?.[legendaryIdentity.id];

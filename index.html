@@ -1042,8 +1042,24 @@ function equipmentArtType(subtype){
   return type;
 }
 const LEGENDARY_CATALOG=[{"id":"soul-reaver","name":"Soul Reaver","slot":"weapon","subtype":"Two-Handed","image":"soul_reaver.png"},{"id":"runeforged-eclipse","name":"Runeforged Eclipse","slot":"weapon","subtype":"Two-Handed","image":"runeforged_eclipse.png"},{"id":"the-eternal-oath","name":"The Eternal Oath","slot":"offhand","subtype":"Shield","image":"the_eternal_oath.png"},{"id":"heart-of-shadows","name":"Heart of Shadows","slot":"amulet","subtype":"Amulet","image":"heart_of_shadows.png"},{"id":"starweaver-relic","name":"Starweaver Relic","slot":"weapon","subtype":"Wand","image":"starweaver_relic.png"},{"id":"helm-of-the-dawnwarden","name":"Helm of the Dawnwarden","slot":"helm","subtype":"Helm","image":"helm_of_the_dawnwarden.png"},{"id":"cuirass-of-the-last-sunrise","name":"Cuirass of the Last Sunrise","slot":"armor","subtype":"Armor","image":"cuirass_of_the_last_sunrise.png"},{"id":"grasp-of-the-sunbound","name":"Grasp of the Sunbound","slot":"gloves","subtype":"Gloves","image":"grasp_of_the_sunbound.png"},{"id":"sunstride-sabatons","name":"Sunstride Sabatons","slot":"boots","subtype":"Boots","image":"sunstride_sabatons.png"},{"id":"pendant-of-the-first-flame","name":"Pendant of the First Flame","slot":"amulet","subtype":"Amulet","image":"pendant_of_the_first_flame.png"},{"id":"signet-of-the-dawnforged","name":"Signet of the Dawnforged","slot":"ring","subtype":"Ring","image":"signet_of_the_dawnforged.png"},{"id":"aegis-of-the-dawnstar","name":"Aegis of the Dawnstar","slot":"offhand","subtype":"Shield","image":"aegis_of_the_dawnstar.png"},{"id":"blade-of-the-first-dawn","name":"Blade of the First Dawn","slot":"weapon","subtype":"Sword","image":"blade_of_the_first_dawn.png"},{"id":"hammer-of-the-sunforge","name":"Hammer of the Sunforge","slot":"weapon","subtype":"Mace","image":"hammer_of_the_sunforge.png"},{"id":"sunpiercer-longbow","name":"Sunpiercer Longbow","slot":"weapon","subtype":"Bow","image":"sunpiercer_longbow.png"},{"id":"fang-of-the-sunbreaker","name":"Fang of the Sunbreaker","slot":"weapon","subtype":"Daggers","image":"fang_of_the_sunbreaker.png"},{"id":"scepter-of-the-emberstar","name":"Scepter of the Emberstar","slot":"weapon","subtype":"Staff","image":"scepter_of_the_emberstar.png"},{"id":"crescent-of-the-emberveil","name":"Crescent of the Emberveil","slot":"offhand","subtype":"Daggers","image":"crescent_of_the_emberveil.png"},{"id":"orb-of-the-solar-heart","name":"Orb of the Solar Heart","slot":"offhand","subtype":"Orb","image":"orb_of_the_solar_heart.png"},{"id":"tome-of-the-eternal-flame","name":"Tome of the Eternal Flame","slot":"offhand","subtype":"Tome","image":"tome_of_the_eternal_flame.png"},{"id":"charm-of-the-dawnstar","name":"Charm of the Dawnstar","slot":"offhand","subtype":"Charm","image":"charm_of_the_dawnstar.png"},{"id":"winterheart-spire","name":"Winterheart Spire","slot":"weapon","subtype":"Staff","image":"winterheart_spire.png"}];
-const LEGENDARY_BY_ID=Object.fromEntries(LEGENDARY_CATALOG.map(entry=>[entry.id,entry]));
-const LEGENDARY_BY_NAME=Object.fromEntries(LEGENDARY_CATALOG.map(entry=>[entry.name,entry]));
+const WANDERER_NEW_LEGENDARY_DROPS_ENABLED=false;
+const NEW_LEGENDARY_CATALOG=[
+ {catalogueNew:true,id:'crimson-fang',name:'Crimson Fang',slot:'weapon',subtype:'Daggers'},
+ {catalogueNew:true,id:'chalice-hollow-king',name:'Chalice of the Hollow King',slot:'amulet',subtype:'Amulet'},
+ {catalogueNew:true,id:'gravewake',name:'Gravewake',slot:'weapon',subtype:'Two-Handed'},
+ {catalogueNew:true,id:'eye-of-morrow',name:'Eye of Morrow',slot:'ring',subtype:'Ring'},
+ {catalogueNew:true,id:'verdant-oath',name:'Verdant Oath',slot:'weapon',subtype:'Sword'},
+ {catalogueNew:true,id:'heartroot-carapace',name:'Heartroot Carapace',slot:'armor',subtype:'Armor'},
+ {catalogueNew:true,id:'oathwall',name:'Oathwall',slot:'offhand',subtype:'Shield'},
+ {catalogueNew:true,id:'veil-thousand-seals',name:'Veil of a Thousand Seals',slot:'belt',subtype:'Belt'},
+ {catalogueNew:true,id:'kingsbreaker',name:'Kingsbreaker',slot:'weapon',subtype:'Mace'},
+ {catalogueNew:true,id:'tempest-talon',name:'Tempest Talon',slot:'weapon',subtype:'Bow'},
+ {catalogueNew:true,id:'astrafall',name:'Astrafall',slot:'weapon',subtype:'Staff'},
+ {catalogueNew:true,id:'voidglass',name:'Voidglass',slot:'weapon',subtype:'Wand'}
+];
+const ALL_LEGENDARY_CATALOG=[...LEGENDARY_CATALOG,...NEW_LEGENDARY_CATALOG];
+const LEGENDARY_BY_ID=Object.fromEntries(ALL_LEGENDARY_CATALOG.map(entry=>[entry.id,entry]));
+const LEGENDARY_BY_NAME=Object.fromEntries(ALL_LEGENDARY_CATALOG.map(entry=>[entry.name,entry]));
 
 
 
@@ -1069,7 +1085,7 @@ function legendaryDescription(item){
 function itemImg(o){
   if(!o)return ICONS.sword;
   if((o.name==='Training Sword'||o.name==='Old Sword')&&o.subtype==='Sword'&&o.rarity==='Common')return placeholderIcon('Sword');
-  if(o.rarity==='Legendary'){const entry=LEGENDARY_BY_ID[o.legendaryId]||LEGENDARY_BY_NAME[o.name];if(legendaryMatches(entry,o))return 'assets/legendary/'+entry.image;}
+  if(o.rarity==='Legendary'){const entry=LEGENDARY_BY_ID[o.legendaryId]||LEGENDARY_BY_NAME[o.name];if(legendaryMatches(entry,o))return entry.image?'assets/legendary/'+entry.image:placeholderIcon(o.subtype);}
   const key=({helm:'helmet',armor:'chest',gloves:'gloves',boots:'boots',ring:'ring',ring1:'ring',ring2:'ring'})[o.slot]||equipmentArtType(o.subtype);
   const names=EQUIPMENT_ICON_FILES[key];
   if(!names)return ICONS[String(o.subtype||'').toLowerCase()]||slotImg(o.slot);
@@ -2148,7 +2164,8 @@ const runtimeContext={
  get FIELDS(){return FIELDS;},
  get LEGENDARY_BY_ID(){return LEGENDARY_BY_ID;},
  get LEGENDARY_BY_NAME(){return LEGENDARY_BY_NAME;},
- get LEGENDARY_CATALOG(){return LEGENDARY_CATALOG;},
+ get LEGENDARY_CATALOG(){return ALL_LEGENDARY_CATALOG;},
+ get WANDERER_NEW_LEGENDARY_DROPS_ENABLED(){return WANDERER_NEW_LEGENDARY_DROPS_ENABLED;},
  get NAMES(){return NAMES;},
  get OFFHAND_TYPES(){return OFFHAND_TYPES;},
  get PHASE1_PREVIEW(){return PHASE1_PREVIEW;},
@@ -2215,8 +2232,12 @@ const runtimeContext={
  get legendaryMatches(){return legendaryMatches;},
  get legendaryOffhand(){return legendaryOffhand;},
  get legendaryReady(){return legendaryReady;},
+ get legendaryEmpowered(){return legendaryEmpowered;},
+ get legendaryProc(){return legendaryProc;},
+ get legendaryOnHit(){return legendaryOnHit;},
  get legendaryRuntime(){return legendaryRuntime;},
  get legendarySignature(){return legendarySignature;},
+ get legendaryRealmStart(){return legendaryRealmStart;},
  get legendaryTick(){return legendaryTick;},
  get logEntries(){return logEntries;},set logEntries(value){logEntries=value;},
  get makeId(){return makeId;},
@@ -2348,7 +2369,7 @@ const runtimeContext={
  get weaponAttack(){return weaponAttack;},
  get winEncounter(){return winEncounter;},
 };
-let {addLog,bossForTier,eliteArchetype,rollEliteArchetype,tryDodge,enemyFor,synchronizeDots,tickDots,setRuntime,setNow,activeLegendarySignatures,legendaryRuntime,legendaryHas,legendaryReady,legendaryExtend,legendaryAffinity,legendaryAttackBonus,legendaryOffhand,legendaryDefensiveEffects,legendaryTick,legendaryKill,setReady,setBarrier,regenPerSecond,setHeal,setDelayEnemy,setDirectEnemyDamage,setOnAttack,setCombatExpire,setEnemyWeaken,setHeatTick,setSoulHeal,applyAffinity,weaponAttack,updateFight,phase2Context,phase2Stats,phase2WeaponAttack,phase2MagicTick,phase6Metric,phase6Proc,phase6CollectMetrics,phase6Stats,winEncounter,die}=WandererV012CombatRuntime.create(runtimeContext);
+let {addLog,bossForTier,eliteArchetype,rollEliteArchetype,tryDodge,enemyFor,synchronizeDots,tickDots,setRuntime,setNow,activeLegendarySignatures,legendaryRuntime,legendaryHas,legendaryReady,legendaryEmpowered,legendaryProc,legendaryOnHit,legendaryExtend,legendaryAffinity,legendaryAttackBonus,legendaryOffhand,legendaryDefensiveEffects,legendaryRealmStart,legendaryTick,legendaryKill,setReady,setBarrier,regenPerSecond,setHeal,setDelayEnemy,setDirectEnemyDamage,setOnAttack,setCombatExpire,setEnemyWeaken,setHeatTick,setSoulHeal,applyAffinity,weaponAttack,updateFight,phase2Context,phase2Stats,phase2WeaponAttack,phase2MagicTick,phase6Metric,phase6Proc,phase6CollectMetrics,phase6Stats,winEncounter,die}=WandererV012CombatRuntime.create(runtimeContext);
 let {phase5ReviewSummary,phase1Init,phase1Begin,phase2Theme,phase6AwardGear,phase6Buff,phase6OpenEvent,phase6EventChoice,phase6PassiveOptions,phase6BackToCamp,phase2EnterInitialRealm,phase2ChooseInitial,phase2ChooseElement,phase2ChoosePassive,phase1Choose,phase1Enter,phase2Launch,phase1StartWave,phase1WaveWon,phase1Death,phase1Abandon,phase6TickDurations,phase3ExpeditionActive,phase3CanPrepare,phase3IsBetweenPlanes,phase3Vitals,phase3Reroll,phase5Item,phase5RememberRealm,phase5MakeSummary,phase5ExitResult}=WandererV012ExpeditionRuntime.create(runtimeContext);
 let {toggleEquipmentLock,chooseSubtype,economyTier,merchantTier,baseStatScore,offhandLocked,craftEquipment,reinforceEquipment,purchaseEquipment,sellValuables,markItemSeen,markAllAsSeen,comparisonEquip,stashCapacity,stashUpgradeCost,stashHasRoom,upgradeStash,fresh,makeSlots,starter,legendaryMatches,legendaryFor,legendarySignature,makeItem,rarityOdds,rarityRoll,rollEquipmentSlot,merchantCost,saleFragments,rollShop,economyOwnedGear,economyOwnedItem,economyCanAct,refreshMerchantStock,equipItem,unequipItem,bulkSell,salvageOne,phase3BagItems,phase3BagOverflow,phase3NeedsBagResolution,phase3DiscardLoot,phase4ClaimOverflow,phase6PotionInventory,phase6SelectPotion,phase6StartPotions,phase6ReturnPotions,phase6UsePotion,phase6BuyPotion,phase6RerollPotions,unequipRune,salvageRune,salvageDuplicateRunes,equipRune,offerBossRunes,claimPendingRuneChoice,runeCheckpointLocked,phase3UsePotion,phase3ClampVitals}=WandererV012EquipmentRuntime.create(runtimeContext);
 let {gameRandom,phase4Session,phase4CommitRealm,phase4LoseLoot,phase4Extract,phase4Restore,phase4ResumeRealm,phase5Capture,phase5Persist,phase5Init,phase5Fail}=WandererV012PersistenceRuntime.create(runtimeContext);
