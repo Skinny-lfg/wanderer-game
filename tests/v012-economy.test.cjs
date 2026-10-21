@@ -65,7 +65,7 @@ test('every completed Expedition boss awards real-tier Runes, without legacy unl
 });
 test('endgame stays within existing gear/Rune tier cap and investment remains finite',()=>{
  const a=create(61),s=a.state();a.controller().state.unlocked=200;a.start(200);complete(a);
- assert.equal(a.controller().state.unlocked,200);assert.throws(()=>a.controller().start(201),/locked/);
+ assert.equal(a.controller().state.unlocked,201,'E200 victory unlocks Endless E201');assert.throws(()=>a.controller().start(202),/locked/);
  assert(s.pendingRuneReward.options.every(r=>r.tier===200&&a.validRune(r)));
  for(const tier of [1,20,80,200]){
   assert.equal(a.craftCost(tier),10+10*tier);
