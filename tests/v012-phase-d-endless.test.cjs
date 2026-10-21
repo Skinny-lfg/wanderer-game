@@ -28,7 +28,7 @@ test('D: gear and Runes scale once; costs continue; attack speed is not multipli
  const a=create(18),base=a.makeItem(200,'weapon',null,'loot','Sword','Epic');
  for(const level of LEVELS){
   const item=a.makeItem(level,'weapon',null,'loot','Sword','Epic');
-  const rune=a.makeRune('might',level),factor=1+.004*Math.max(0,level-200);
+  const rune=a.makeRune('might',level),factor=1+.0048*Math.max(0,level-200);
   if(level>200){assert.equal(item.atk,Math.round(base.atk*factor));assert.equal(item.str,Math.round(base.str*factor));assert.equal(rune.value,+(21*factor).toFixed(2));}
   if(level===200)assert.equal(item.atk,base.atk);
   assert.equal(item.spd,base.spd);assert.equal(a.craftCost(level),10+10*level);
@@ -36,8 +36,40 @@ test('D: gear and Runes scale once; costs continue; attack speed is not multipli
   assert.equal(item.tier,level);
  }
  const leather=a.makeItem(500,'armor',null,'loot','Leather','Epic');
- assert.equal(leather.evasionRating,Math.round(a.makeItem(200,'armor',null,'loot','Leather','Epic').evasionRating*2.2));
+ assert.equal(leather.evasionRating,Math.round(a.makeItem(200,'armor',null,'loot','Leather','Epic').evasionRating*2.44));
  assert.equal(a.makeItem(1000,'weapon',null,'loot','Staff','Epic').atk,1);
+});
+
+test('D.6: Endless weapon damage bonus ramps only with the complete loadout',()=>{
+ const context={};require('node:vm').runInNewContext(fs.readFileSync('combat/v012-combat-core.js','utf8'),context);
+ const bonus=context.WandererV012CombatCore.endlessWeaponDamageBonus;
+ const loadouts=[['Daggers','Off-Hand Dagger',.30],['Daggers','Daggers',.30],['Sword','Shield',.20],['Mace','Shield',.30],['Wand','Orb',.15]];
+ for(const [main,off,maximum] of loadouts)for(const [level,share] of [[199,0],[200,0],[201,.01],[250,.5],[300,1],[1000,1]]){
+  assert(Math.abs(bonus(level,{subtype:main},{subtype:off})-maximum*share)<1e-12,`${main}/${off} E${level}`);
+ }
+ for(const [main,off] of [['Daggers',null],['Daggers','Shield'],['Sword',null],['Sword','Orb'],['Mace','Orb'],['Wand',null],['Wand','Shield'],['Staff','Orb'],['Bow',null],['Two-Handed',null]]){
+  assert.equal(bonus(1000,{subtype:main},off&&{subtype:off}),0,`${main}/${off}`);
+ }
+});
+
+test('D.6: E200 combat matches the pre-balance audit and E300 matches the gradual audit',()=>{
+ const {run}=require('../scripts/v012-affinity-combat-sim.cjs');
+ const builds=[
+  {weapon:'Staff',armorType:'Cloth',old:[7202600,9,71033,41]},
+  {weapon:'Wand',armorType:'Cloth',offhandType:'Orb',old:[7202697,9,66578,37],endless:[7212731,7,96843,34]},
+  {weapon:'Sword',armorType:'Plate',offhandType:'Shield',old:[7202794,14,108248,73],endless:[7212862,13,160073,67]},
+  {weapon:'Mace',armorType:'Plate',offhandType:'Shield',old:[7202891,15,99667,53],endless:[7212993,15,171031,55]},
+  {weapon:'Daggers',armorType:'Leather',offhandType:'Off-Hand Dagger',old:[7202988,15,95097,128],endless:[7213124,15,198219,149]},
+  {weapon:'Bow',armorType:'Leather',old:[7203085,15,146802,144]},
+  {weapon:'Two-Handed',armorType:'Leather',old:[7203182,15,120397,58]}
+ ];
+ for(const build of builds)for(const [E,expected] of [[200,build.old],[300,build.endless]]){
+  if(!expected)continue;
+  const [seed,reached,damage,weaponAttacks]=expected;
+  const actual=run({E,weapon:build.weapon,armorType:build.armorType,offhandType:build.offhandType,rarity:'Epic',family:'blood',strategy:'triple',runes:true,seed,controlSeed:seed});
+  assert.equal(actual.error,null);assert.equal(actual.timeout,false);
+  assert.deepEqual([actual.reached,actual.damage,actual.weaponAttacks],[reached,damage,weaponAttacks],`${build.weapon} E${E}`);
+ }
 });
 
 test('D: every completed Expedition unlocks the next one, including E200 and E1000',()=>{

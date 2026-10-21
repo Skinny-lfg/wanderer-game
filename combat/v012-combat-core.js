@@ -15,7 +15,17 @@ function enemyAttackType(enemy){
 
 function referenceLevel(level){return Math.min(200,level);}
 function enemyStat(level,value){return level>200?Math.round(value*(1+.005*(level-200))):value;}
-function gearStat(level,value){return level>200?Math.round(value*(1+.004*(level-200))):value;}
+function gearStat(level,value){return level>200?Math.round(value*(1+.0048*(level-200))):value;}
+function endlessWeaponDamageBonus(level,main,off){
+ const progress=Math.max(0,Math.min(1,(level-200)/100));
+ if(!progress)return 0;
+ const weapon=main?.subtype,offhand=off?.subtype;
+ const maximum=weapon==='Daggers'&&['Daggers','Off-Hand Dagger'].includes(offhand)?.30:
+  weapon==='Sword'&&offhand==='Shield'?.20:
+  weapon==='Mace'&&offhand==='Shield'?.30:
+  weapon==='Wand'&&offhand==='Orb'?.15:0;
+ return maximum*progress;
+}
 function estimateEnemy(level,n=1){
  const boss=n===5&&level%10===0,reference=referenceLevel(level);
  const base={hp:27+reference*14,atk:4+reference*3,def:1+reference*.62};
@@ -33,5 +43,5 @@ function applyExpeditionModifiers(stats,e){
  if(e.attack)s.attack*=1+e.attack;if(e.defense)s.defense*=1+e.defense;
  return s;
 }
-root.WandererV012CombatCore=Object.freeze({evasionChance,enemyAttackType,referenceLevel,enemyStat,gearStat,estimateEnemy,affinityProcChance,applyExpeditionModifiers});
+root.WandererV012CombatCore=Object.freeze({evasionChance,enemyAttackType,referenceLevel,enemyStat,gearStat,endlessWeaponDamageBonus,estimateEnemy,affinityProcChance,applyExpeditionModifiers});
 })(globalThis);

@@ -360,6 +360,8 @@ function weaponAttack(r){
   if(gained>0)ports.addLog('⚔ Heavy Guard +'+Math.round(gained)+' Barrier','good');
  }
  if(s.bonus.sunderExpose&&e.baseDef>0&&e.def<=e.baseDef*.5)damage=Math.round(damage*1.08);
+ const endlessBonus=WandererV012CombatCore.endlessWeaponDamageBonus(r.tier,weapon,off);
+ if(endlessBonus)damage=Math.max(1,Math.round(damage*(1+endlessBonus)));
  damage+=added;
  if(r.playerDebuffUntil>now)damage=Math.max(1,Math.round(damage*.8));
  const hpBefore=e.hp,barrierBefore=e.barrier;
