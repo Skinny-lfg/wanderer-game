@@ -30,8 +30,8 @@ function purchaseEquipment(m,i,item){
  if(!ports.economyCanAct()||ports.state.merchant!==m||m.stock[i]?.id!==item.id||ports.state.gold<item.goldPrice)return false;
  if(!ports.stashHasRoom()){ports.bannerMessage('Stash full. Upgrade or salvage gear first.');return false;}
  ports.state.gold-=item.goldPrice;item.isNew=true;ports.state.stash.push(item);
- const replacement=ports.makeItem(ports.merchantTier(),ports.rollEquipmentSlot(),null,'merchant');
- replacement.goldPrice=ports.merchantCost(replacement);m.stock[i]=replacement;ports.save();return true;
+ const category=Object.keys(MERCHANT_CATEGORIES).find(k=>MERCHANT_CATEGORIES[k].includes(item.slot))||'weapons';
+ const replacement=merchantItem(ports.merchantTier(),category);m.stock[i]=replacement;ports.save();return true;
 }
 
 function sellValuables(){
@@ -144,7 +144,11 @@ function merchantCost(o){return Math.round((24+o.tier*12)*ports.RARITY[o.rarity]
 
 function saleFragments(o){if(o?.recoveryStarter===true)return 0;let raw=Math.max(2,Math.round((3+o.tier*2)*ports.RARITY[o.rarity][2]));return o.crafted?Math.min(raw,Math.max(1,Math.floor((+o.craftPrice||ports.craftCost(o.tier))*.25))):raw}
 
-function rollShop(){const level=ports.merchantTier(),stock=Array.from({length:4},()=>{let o=ports.makeItem(level,ports.rollEquipmentSlot(),null,'merchant');o.goldPrice=ports.merchantCost(o);return o});ports.state.merchant={stock,sigils:[],refreshCost:16+level*4,refreshes:0};ports.save();}
+const MERCHANT_CATEGORIES={weapons:['weapon','offhand'],armor:['helm','armor','gloves','boots','belt'],accessories:['ring1','ring2','amulet']};
+function merchantItem(level,category){const slots=MERCHANT_CATEGORIES[category];const slot=slots[Math.min(slots.length-1,Math.floor(ports.gameRandom()*slots.length))];const item=ports.makeItem(level,slot,null,'merchant');item.goldPrice=ports.merchantCost(item);return item;}
+function merchantStock(level){return Object.keys(MERCHANT_CATEGORIES).flatMap(category=>Array.from({length:4},()=>merchantItem(level,category)));}
+function ensureMerchantStock(){const m=ports.state.merchant;if(!m||!Array.isArray(m.stock))return false;const counts=Object.fromEntries(Object.keys(MERCHANT_CATEGORIES).map(k=>[k,m.stock.filter(o=>MERCHANT_CATEGORIES[k].includes(o.slot)).length]));let changed=false;for(const [category,n] of Object.entries(counts))for(let i=n;i<4;i++){m.stock.push(merchantItem(ports.merchantTier(),category));changed=true;}if(changed)ports.save();return changed;}
+function rollShop(){const level=ports.merchantTier(),stock=merchantStock(level);ports.state.merchant={stock,sigils:[],refreshCost:16+level*4,refreshes:0};ports.save();}
 
 function economyOwnedGear(){return [...Object.values(ports.state.equip).filter(Boolean),...ports.state.stash];}
 
@@ -158,7 +162,7 @@ function refreshMerchantStock(kind='gear'){
  ports.state.gold-=merchant.refreshCost;
  {
   const level=ports.merchantTier();
-  merchant.stock=Array.from({length:4},()=>{const item=ports.makeItem(level,ports.rollEquipmentSlot(),null,'merchant');item.goldPrice=ports.merchantCost(item);return item;});
+  merchant.stock=merchantStock(level);
  }
  merchant.refreshes=(Number(merchant.refreshes)||0)+1;
  ports.save();ports.renderMerchant();
@@ -395,7 +399,7 @@ function phase3ClampVitals(){
  }
 }
 function toggleEquipmentLock(item){item.locked=!item.locked;ports.save();}
-return {toggleEquipmentLock,chooseSubtype,economyTier,merchantTier,baseStatScore,offhandLocked,craftEquipment,reinforceEquipment,purchaseEquipment,sellValuables,markItemSeen,markAllAsSeen,comparisonEquip,stashCapacity,stashUpgradeCost,stashHasRoom,upgradeStash,fresh,makeSlots,starter,legendaryMatches,legendaryFor,legendarySignature,makeItem,rarityOdds,rarityRoll,rollEquipmentSlot,merchantCost,saleFragments,rollShop,economyOwnedGear,economyOwnedItem,economyCanAct,refreshMerchantStock,equipItem,unequipItem,bulkSell,salvageOne,phase3BagItems,phase3BagOverflow,phase3NeedsBagResolution,phase3DiscardLoot,phase4ClaimOverflow,phase6PotionInventory,phase6SelectPotion,phase6StartPotions,phase6ReturnPotions,phase6UsePotion,phase6BuyPotion,phase6RerollPotions,unequipRune,salvageRune,salvageDuplicateRunes,equipRune,offerBossRunes,claimPendingRuneChoice,runeCheckpointLocked,phase3UsePotion,phase3ClampVitals};
+return {toggleEquipmentLock,chooseSubtype,economyTier,merchantTier,baseStatScore,offhandLocked,craftEquipment,reinforceEquipment,purchaseEquipment,sellValuables,markItemSeen,markAllAsSeen,comparisonEquip,stashCapacity,stashUpgradeCost,stashHasRoom,upgradeStash,fresh,makeSlots,starter,legendaryMatches,legendaryFor,legendarySignature,makeItem,rarityOdds,rarityRoll,rollEquipmentSlot,merchantCost,saleFragments,rollShop,ensureMerchantStock,economyOwnedGear,economyOwnedItem,economyCanAct,refreshMerchantStock,equipItem,unequipItem,bulkSell,salvageOne,phase3BagItems,phase3BagOverflow,phase3NeedsBagResolution,phase3DiscardLoot,phase4ClaimOverflow,phase6PotionInventory,phase6SelectPotion,phase6StartPotions,phase6ReturnPotions,phase6UsePotion,phase6BuyPotion,phase6RerollPotions,unequipRune,salvageRune,salvageDuplicateRunes,equipRune,offerBossRunes,claimPendingRuneChoice,runeCheckpointLocked,phase3UsePotion,phase3ClampVitals};
 }
 root.WandererV012EquipmentRuntime=Object.freeze({create});
 })(globalThis);
