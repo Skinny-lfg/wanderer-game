@@ -1509,7 +1509,7 @@ function renderMerchant(){
 
  const m=state.merchant;
  const merchantKinds={weapons:o=>o.slot==='weapon'||o.slot==='offhand',armor:o=>['helm','armor','gloves','boots','belt'].includes(o.slot),accessories:o=>['ring1','ring2','amulet'].includes(o.slot)};
- const visibleStock=view==='city-center'?m.stock.filter(merchantKinds[phase3MerchantCategory]||merchantKinds.weapons):m.stock;
+ const visibleStock=view==='city-center'?m.stock.filter(merchantKinds[phase3MerchantCategory]||merchantKinds.weapons).slice(0,4):m.stock;
  html('<section class="panel merchantPanel"><div class="topline"><div><h2>Merchant</h2><p class="small muted">Buy equipment with Gold. Select Compare to inspect one item in detail.</p></div></div>'+inventoryFullNotice('buy')+'<div class="merchantCategoryTabs" role="tablist" aria-label="Merchant stock">'+[['weapons','Weapons'],['armor','Armor'],['accessories','Accessories']].map(([id,label])=>'<button type="button" role="tab" aria-selected="'+(phase3MerchantCategory===id)+'" data-merchant-category="'+id+'">'+label+'</button>').join('')+'</div><div class="merchantList">'+
  (visibleStock.length?visibleStock.map(o=>{
   const power=totalStats(comparisonEquip(o)).power-totalStats().power;
@@ -1544,7 +1544,7 @@ function renderMerchant(){
   if(!stashHasRoom()){bannerMessage('Stash full. Upgrade or salvage gear first.');return;}
   showConfirm('Purchase Equipment','Buy '+item.name+' for '+item.goldPrice+' Gold?',()=>{
    // Do not buy stale stock or charge after another action changed the shop.
-   if(!purchaseEquipment(m,i,item))return;renderMerchant();bannerMessage('Bought '+item.name+' — check Stash');
+   if(!purchaseEquipment(m,i,item))return;if(view==='city-center')phase3RenderCityCenter();else renderMerchant();bannerMessage('Bought '+item.name+' — check Stash');
   },'Buy for '+item.goldPrice+' Gold');
  });
  $('refreshShop').onclick=()=>refreshMerchantStock('gear');
