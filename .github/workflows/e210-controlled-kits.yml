@@ -14,7 +14,7 @@ jobs:
         with:
           node-version: '22'
       - run: node --check scripts/v012-phase-e210-controlled-kits.cjs
-      - name: Run 450 full-kit experiments
+      - name: Run 450 corrected full-kit experiments
         run: node scripts/v012-phase-e210-controlled-kits.cjs /tmp/e210.json
       - uses: actions/upload-artifact@v4
         if: always()
