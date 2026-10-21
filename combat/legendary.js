@@ -8,7 +8,7 @@ const DEFINITIONS={
  "verdant-oath":{affinity:"vitality",name:"Verdant Oath",cooldown:6,description:"Heal 0.8% Max HP and empower the next attack by 60% base damage (1.2% and 90% with Vitality)."},
  "heartroot-carapace":{affinity:"vitality",name:"Heartroot Carapace",cooldown:0,description:"Below 70% HP regenerate 0.20% Max HP/s (0.30% with Vitality), up to 10% per Realm."},
  "oathwall":{affinity:"aegis",name:"Oathwall",cooldown:3,description:"On real Block, counter for 75% base damage (110% with Aegis), replacing the base counter."},
- "veil-thousand-seals":{affinity:"aegis",name:"Veil of a Thousand Seals",cooldown:8,description:"Gain 4% Max HP Barrier at Realm start (6% with Aegis). Its absorption empowers the next attack by 30% base damage (45% with Aegis)."},
+ "veil-thousand-seals":{affinity:"aegis",name:"Veil of a Thousand Seals",cooldown:8,description:"Gain 4% Max HP Barrier at Realm start (6% with Aegis); with Sword + Shield, gain 2.5% (4% with Aegis). Its absorption empowers the next attack by 30% base damage (45% with Aegis)."},
  "kingsbreaker":{affinity:"fury",name:"Kingsbreaker",cooldown:4,description:"An eligible attack gains 80% base damage (110% with Fury)."},
  "tempest-talon":{affinity:"fury",name:"Tempest Talon",cooldown:6,description:"Critical hit deals 25% extra base damage (35% with Fury)."},
  "astrafall":{affinity:"magic",name:"Astrafall",cooldown:4,description:"Every 2 Mana-funded casts echo 75% Spell Power (100% with Magic)."},

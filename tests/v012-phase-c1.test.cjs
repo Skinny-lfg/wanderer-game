@@ -94,6 +94,14 @@ test('Mana cast counters require two funded casts and survive cooldown',()=>{
 test('Veil empowers only after its own Barrier absorbs and respects its offensive cooldown',()=>{
  for(const empowered of [false,true]){const {a,r}=fight('Sword','belt','veil-thousand-seals',empowered?'aegis':null);assert(r.legendaryState.veilBarrier>0);r.enemy.atk=1;r.tEnemy=100;a.tick();assert.equal(count(r,'veil-thousand-seals'),1);assert.equal(a.gear.legendaryAttackBonus(r,100,false,false),empowered?45:30);r.tEnemy=100;a.tick();assert.equal(count(r,'veil-thousand-seals'),1);assert.equal(a.gear.legendaryAttackBonus(r,100,false,false),0);}
 });
+test('Veil Realm Barrier uses the Sword + Shield rate only for that equipment',()=>{
+ for(const [affinity,swordRate,otherRate]of [[null,.025,.04],['aegis',.04,.06]]){
+  for(const [weapon,expected]of [['Sword',swordRate],['Mace',otherRate],['Staff',otherRate],['Wand',otherRate],['Daggers',otherRate]]){
+   const {r}=fight(weapon,'belt','veil-thousand-seals',affinity);
+   assert(Math.abs(r.legendaryState.veilBarrier/r.maxhp-expected)<1e-6,`${weapon} ${affinity||'no Aegis'}`);
+  }
+ }
+});
 test('Voidglass Mana refund and Chalice healing cannot exceed resource caps',()=>{
  const wand=fight('Wand','weapon','voidglass','magic');wand.r.legendaryState={voidCasts:1};wand.r.legendaryFundedCost=20;wand.r.mp=wand.r.maxmp-1;wand.a.gear.legendaryAttackBonus(wand.r,100,false,true);assert.equal(wand.r.mp,wand.r.maxmp);
  const chalice=fight('Daggers','amulet','chalice-hollow-king','blood');chalice.r.hp=chalice.r.maxhp;chalice.r.enemy.dots.bleed=[{damage:1,remaining:4}];chalice.r.enemy.bleedStacks=1;chalice.r.tPlayer=100;chalice.a.tick();assert.equal(chalice.r.hp,chalice.r.maxhp);

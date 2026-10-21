@@ -1,0 +1,5384 @@
+{
+  "phase": "C2.2",
+  "sourceSha": "bc80730f1d005b6db9eef7ec3abad03b90f9a3cc816f27fc225018327be96b11",
+  "triage": {
+    "rows": 5280,
+    "computed": 4704,
+    "reused": 576
+  },
+  "confirm": {
+    "rows": 10176,
+    "computed": 6240,
+    "reused": 3936
+  },
+  "gates": {
+    "errors": 0,
+    "timeouts": 0,
+    "negativePairs": 1344,
+    "negativeDifferences": 0,
+    "baselinePairs": 1536,
+    "baselineDifferences": 0
+  },
+  "groups": [
+    {
+      "E": 50,
+      "profile": "sword-none",
+      "arm": "base",
+      "policy": "triple",
+      "n": 64,
+      "wins": 2,
+      "realm": 13.23,
+      "dps": 474.55,
+      "heal": 11.15,
+      "barrier": 4.47,
+      "ehp": 3128.06,
+      "received": 2903.13,
+      "procs": {}
+    },
+    {
+      "E": 50,
+      "profile": "sword-none",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "wins": 1,
+      "realm": 14.44,
+      "dps": 482.76,
+      "heal": 10.59,
+      "barrier": 4.04,
+      "ehp": 3033.25,
+      "received": 2792.44,
+      "procs": {}
+    },
+    {
+      "E": 50,
+      "profile": "sword-none",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "wins": 1,
+      "realm": 14.44,
+      "dps": 482.76,
+      "heal": 10.59,
+      "barrier": 4.04,
+      "ehp": 3033.25,
+      "received": 2792.44,
+      "procs": {}
+    },
+    {
+      "E": 50,
+      "profile": "sword-none",
+      "arm": "base",
+      "policy": "random",
+      "n": 64,
+      "wins": 0,
+      "realm": 8.38,
+      "dps": 436.23,
+      "heal": 5.7,
+      "barrier": 0.68,
+      "ehp": 2534.48,
+      "received": 2356.92,
+      "procs": {}
+    },
+    {
+      "E": 50,
+      "profile": "sword-none",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "wins": 0,
+      "realm": 8.88,
+      "dps": 436.58,
+      "heal": 7.82,
+      "barrier": 0.28,
+      "ehp": 2578,
+      "received": 2410.31,
+      "procs": {}
+    },
+    {
+      "E": 50,
+      "profile": "sword-none",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "wins": 0,
+      "realm": 8.88,
+      "dps": 436.58,
+      "heal": 7.82,
+      "barrier": 0.28,
+      "ehp": 2578,
+      "received": 2410.31,
+      "procs": {}
+    },
+    {
+      "E": 50,
+      "profile": "sword-veil",
+      "arm": "base",
+      "policy": "triple",
+      "n": 64,
+      "wins": 45,
+      "realm": 14.92,
+      "dps": 492.99,
+      "heal": 12.98,
+      "barrier": 26.2,
+      "ehp": 4616.34,
+      "received": 3945.77,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 737,
+        "Legendary: veil-thousand-seals": 404
+      }
+    },
+    {
+      "E": 50,
+      "profile": "sword-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "wins": 32,
+      "realm": 14.89,
+      "dps": 491.5,
+      "heal": 13.67,
+      "barrier": 22.43,
+      "ehp": 4471.5,
+      "received": 3915.97,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 735,
+        "Legendary: veil-thousand-seals": 385
+      }
+    },
+    {
+      "E": 50,
+      "profile": "sword-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 64,
+      "wins": 28,
+      "realm": 14.8,
+      "dps": 491.08,
+      "heal": 13.99,
+      "barrier": 19.11,
+      "ehp": 4294.06,
+      "received": 3806.53,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 730,
+        "Legendary: veil-thousand-seals": 378
+      }
+    },
+    {
+      "E": 50,
+      "profile": "sword-veil",
+      "arm": "base",
+      "policy": "random",
+      "n": 64,
+      "wins": 8,
+      "realm": 12.66,
+      "dps": 450.82,
+      "heal": 8.88,
+      "barrier": 15.48,
+      "ehp": 4027.75,
+      "received": 3840.67,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 625,
+        "Legendary: veil-thousand-seals": 424
+      }
+    },
+    {
+      "E": 50,
+      "profile": "sword-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "wins": 4,
+      "realm": 11.55,
+      "dps": 449.66,
+      "heal": 8.24,
+      "barrier": 12.31,
+      "ehp": 3652.06,
+      "received": 3448.02,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 573,
+        "Legendary: veil-thousand-seals": 379
+      }
+    },
+    {
+      "E": 50,
+      "profile": "sword-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 64,
+      "wins": 4,
+      "realm": 10.91,
+      "dps": 448.6,
+      "heal": 7.61,
+      "barrier": 10.16,
+      "ehp": 3411.34,
+      "received": 3206.58,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 543,
+        "Legendary: veil-thousand-seals": 358
+      }
+    },
+    {
+      "E": 50,
+      "profile": "sword-oathwall",
+      "arm": "base",
+      "policy": "triple",
+      "n": 64,
+      "wins": 2,
+      "realm": 13.3,
+      "dps": 483.27,
+      "heal": 11.02,
+      "barrier": 4.4,
+      "ehp": 3086.55,
+      "received": 2881.64,
+      "procs": {
+        "Legendary: oathwall": 403
+      }
+    },
+    {
+      "E": 50,
+      "profile": "sword-oathwall",
+      "arm": "base",
+      "policy": "random",
+      "n": 64,
+      "wins": 1,
+      "realm": 8.67,
+      "dps": 440.37,
+      "heal": 6.06,
+      "barrier": 0.8,
+      "ehp": 2587.84,
+      "received": 2404,
+      "procs": {
+        "Legendary: oathwall": 355
+      }
+    },
+    {
+      "E": 50,
+      "profile": "sword-verdant",
+      "arm": "base",
+      "policy": "triple",
+      "n": 64,
+      "wins": 7,
+      "realm": 14.55,
+      "dps": 515.5,
+      "heal": 15.71,
+      "barrier": 5.03,
+      "ehp": 3443.56,
+      "received": 3211.19,
+      "procs": {
+        "Legendary: verdant-oath": 610
+      }
+    },
+    {
+      "E": 50,
+      "profile": "sword-verdant",
+      "arm": "base",
+      "policy": "random",
+      "n": 64,
+      "wins": 2,
+      "realm": 10.7,
+      "dps": 471.63,
+      "heal": 10.84,
+      "barrier": 1.19,
+      "ehp": 2948.13,
+      "received": 2744.3,
+      "procs": {
+        "Legendary: verdant-oath": 575
+      }
+    },
+    {
+      "E": 50,
+      "profile": "sword-oathwall-veil",
+      "arm": "base",
+      "policy": "triple",
+      "n": 64,
+      "wins": 46,
+      "realm": 14.92,
+      "dps": 501.15,
+      "heal": 13.04,
+      "barrier": 26.5,
+      "ehp": 4585,
+      "received": 3922.33,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 737,
+        "Legendary: veil-thousand-seals": 401,
+        "Legendary: oathwall": 467
+      }
+    },
+    {
+      "E": 50,
+      "profile": "sword-oathwall-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "wins": 35,
+      "realm": 14.86,
+      "dps": 499.43,
+      "heal": 13.78,
+      "barrier": 22.71,
+      "ehp": 4440.53,
+      "received": 3861.95,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 733,
+        "Legendary: veil-thousand-seals": 381,
+        "Legendary: oathwall": 461
+      }
+    },
+    {
+      "E": 50,
+      "profile": "sword-oathwall-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 64,
+      "wins": 27,
+      "realm": 14.81,
+      "dps": 499.09,
+      "heal": 14.2,
+      "barrier": 19.32,
+      "ehp": 4282.97,
+      "received": 3801.08,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 731,
+        "Legendary: veil-thousand-seals": 375,
+        "Legendary: oathwall": 447
+      }
+    },
+    {
+      "E": 50,
+      "profile": "sword-oathwall-veil",
+      "arm": "base",
+      "policy": "random",
+      "n": 64,
+      "wins": 8,
+      "realm": 12.64,
+      "dps": 456.41,
+      "heal": 9.02,
+      "barrier": 15.52,
+      "ehp": 4000.14,
+      "received": 3769.97,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 623,
+        "Legendary: veil-thousand-seals": 420,
+        "Legendary: oathwall": 534
+      }
+    },
+    {
+      "E": 50,
+      "profile": "sword-oathwall-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "wins": 7,
+      "realm": 11.84,
+      "dps": 455.66,
+      "heal": 8.49,
+      "barrier": 12.5,
+      "ehp": 3678.61,
+      "received": 3463.27,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 586,
+        "Legendary: veil-thousand-seals": 387,
+        "Legendary: oathwall": 498
+      }
+    },
+    {
+      "E": 50,
+      "profile": "sword-oathwall-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 64,
+      "wins": 3,
+      "realm": 11.16,
+      "dps": 453.69,
+      "heal": 8,
+      "barrier": 10.37,
+      "ehp": 3454.14,
+      "received": 3256.67,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 556,
+        "Legendary: veil-thousand-seals": 361,
+        "Legendary: oathwall": 477
+      }
+    },
+    {
+      "E": 50,
+      "profile": "sword-verdant-veil",
+      "arm": "base",
+      "policy": "triple",
+      "n": 64,
+      "wins": 58,
+      "realm": 15,
+      "dps": 528.33,
+      "heal": 16.46,
+      "barrier": 27.58,
+      "ehp": 4736.08,
+      "received": 3664.2,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 741,
+        "Legendary: verdant-oath": 662,
+        "Legendary: veil-thousand-seals": 393
+      }
+    },
+    {
+      "E": 50,
+      "profile": "sword-verdant-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "wins": 49,
+      "realm": 14.92,
+      "dps": 526.63,
+      "heal": 17.22,
+      "barrier": 23.5,
+      "ehp": 4607.61,
+      "received": 3684.55,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 737,
+        "Legendary: verdant-oath": 658,
+        "Legendary: veil-thousand-seals": 371
+      }
+    },
+    {
+      "E": 50,
+      "profile": "sword-verdant-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 64,
+      "wins": 47,
+      "realm": 14.91,
+      "dps": 526.58,
+      "heal": 17.73,
+      "barrier": 19.94,
+      "ehp": 4460.41,
+      "received": 3652.41,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 736,
+        "Legendary: verdant-oath": 654,
+        "Legendary: veil-thousand-seals": 365
+      }
+    },
+    {
+      "E": 50,
+      "profile": "sword-verdant-veil",
+      "arm": "base",
+      "policy": "random",
+      "n": 64,
+      "wins": 18,
+      "realm": 14.47,
+      "dps": 490.81,
+      "heal": 14.33,
+      "barrier": 16.63,
+      "ehp": 4607.77,
+      "received": 4295.97,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 714,
+        "Legendary: verdant-oath": 812,
+        "Legendary: veil-thousand-seals": 470
+      }
+    },
+    {
+      "E": 50,
+      "profile": "sword-verdant-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "wins": 13,
+      "realm": 13.97,
+      "dps": 487.87,
+      "heal": 14.06,
+      "barrier": 13.47,
+      "ehp": 4303.69,
+      "received": 4040.06,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 689,
+        "Legendary: verdant-oath": 774,
+        "Legendary: veil-thousand-seals": 439
+      }
+    },
+    {
+      "E": 50,
+      "profile": "sword-verdant-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 64,
+      "wins": 11,
+      "realm": 13.44,
+      "dps": 485.7,
+      "heal": 13.44,
+      "barrier": 11.3,
+      "ehp": 4026.61,
+      "received": 3780.7,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 662,
+        "Legendary: verdant-oath": 738,
+        "Legendary: veil-thousand-seals": 414
+      }
+    },
+    {
+      "E": 50,
+      "profile": "sword-verdant-oathwall",
+      "arm": "base",
+      "policy": "triple",
+      "n": 64,
+      "wins": 14,
+      "realm": 14.5,
+      "dps": 523.19,
+      "heal": 15.89,
+      "barrier": 5.03,
+      "ehp": 3431.64,
+      "received": 3134.8,
+      "procs": {
+        "Legendary: verdant-oath": 599,
+        "Legendary: oathwall": 406
+      }
+    },
+    {
+      "E": 50,
+      "profile": "sword-verdant-oathwall",
+      "arm": "base",
+      "policy": "random",
+      "n": 64,
+      "wins": 1,
+      "realm": 10.73,
+      "dps": 475.16,
+      "heal": 10.83,
+      "barrier": 1.09,
+      "ehp": 2915.83,
+      "received": 2719.36,
+      "procs": {
+        "Legendary: verdant-oath": 571,
+        "Legendary: oathwall": 376
+      }
+    },
+    {
+      "E": 50,
+      "profile": "wand-voidglass-veil",
+      "arm": "base",
+      "policy": "triple",
+      "n": 64,
+      "wins": 7,
+      "realm": 14.05,
+      "dps": 690.97,
+      "heal": 0,
+      "barrier": 33.36,
+      "ehp": 2619.8,
+      "received": 2771.3,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 693,
+        "Legendary: veil-thousand-seals": 265,
+        "Legendary: voidglass": 855
+      }
+    },
+    {
+      "E": 50,
+      "profile": "wand-voidglass-veil",
+      "arm": "veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "wins": 2,
+      "realm": 13.75,
+      "dps": 685.74,
+      "heal": 0,
+      "barrier": 29.58,
+      "ehp": 2440.53,
+      "received": 2575,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 677,
+        "Legendary: veil-thousand-seals": 254,
+        "Legendary: voidglass": 811
+      }
+    },
+    {
+      "E": 50,
+      "profile": "wand-voidglass-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "wins": 0,
+      "realm": 14.63,
+      "dps": 687.86,
+      "heal": 0,
+      "barrier": 30.68,
+      "ehp": 2520.88,
+      "received": 2699.69,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 171,
+        "Legendary: veil-thousand-seals": 65,
+        "Legendary: voidglass": 208
+      }
+    },
+    {
+      "E": 50,
+      "profile": "wand-voidglass-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "wins": 0,
+      "realm": 14.63,
+      "dps": 687.86,
+      "heal": 0,
+      "barrier": 30.68,
+      "ehp": 2520.88,
+      "received": 2699.69,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 171,
+        "Legendary: veil-thousand-seals": 65,
+        "Legendary: voidglass": 208
+      }
+    },
+    {
+      "E": 50,
+      "profile": "wand-voidglass-veil",
+      "arm": "base",
+      "policy": "random",
+      "n": 64,
+      "wins": 6,
+      "realm": 11.48,
+      "dps": 735.63,
+      "heal": 1.37,
+      "barrier": 23.69,
+      "ehp": 2396.08,
+      "received": 2408.09,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 573,
+        "Legendary: veil-thousand-seals": 245,
+        "Legendary: voidglass": 785
+      }
+    },
+    {
+      "E": 50,
+      "profile": "wand-voidglass-veil",
+      "arm": "veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "wins": 3,
+      "realm": 10.88,
+      "dps": 732.91,
+      "heal": 1.29,
+      "barrier": 20.21,
+      "ehp": 2231.98,
+      "received": 2245.64,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 543,
+        "Legendary: veil-thousand-seals": 235,
+        "Legendary: voidglass": 736
+      }
+    },
+    {
+      "E": 50,
+      "profile": "wand-voidglass-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "wins": 1,
+      "realm": 11.44,
+      "dps": 744.6,
+      "heal": 1.55,
+      "barrier": 21.89,
+      "ehp": 2295.69,
+      "received": 2323.13,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 138,
+        "Legendary: veil-thousand-seals": 59,
+        "Legendary: voidglass": 190
+      }
+    },
+    {
+      "E": 50,
+      "profile": "wand-voidglass-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "wins": 1,
+      "realm": 11.44,
+      "dps": 744.6,
+      "heal": 1.55,
+      "barrier": 21.89,
+      "ehp": 2295.69,
+      "received": 2323.13,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 138,
+        "Legendary: veil-thousand-seals": 59,
+        "Legendary: voidglass": 190
+      }
+    },
+    {
+      "E": 50,
+      "profile": "staff-veil-heartroot",
+      "arm": "base",
+      "policy": "triple",
+      "n": 64,
+      "wins": 1,
+      "realm": 13.95,
+      "dps": 652.29,
+      "heal": 2.15,
+      "barrier": 31.63,
+      "ehp": 2762.13,
+      "received": 2888,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 688,
+        "Legendary: veil-thousand-seals": 278,
+        "Legendary: heartroot-carapace": 18401
+      }
+    },
+    {
+      "E": 50,
+      "profile": "staff-veil-heartroot",
+      "arm": "veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "wins": 1,
+      "realm": 13.52,
+      "dps": 648.63,
+      "heal": 2.19,
+      "barrier": 27.96,
+      "ehp": 2562.06,
+      "received": 2678.5,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 665,
+        "Legendary: veil-thousand-seals": 269,
+        "Legendary: heartroot-carapace": 17749
+      }
+    },
+    {
+      "E": 50,
+      "profile": "staff-veil-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "wins": 0,
+      "realm": 14.25,
+      "dps": 647.94,
+      "heal": 2.2,
+      "barrier": 30.9,
+      "ehp": 2747.06,
+      "received": 2908.31,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 167,
+        "Legendary: veil-thousand-seals": 69,
+        "Legendary: heartroot-carapace": 4507
+      }
+    },
+    {
+      "E": 50,
+      "profile": "staff-veil-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "wins": 0,
+      "realm": 14.25,
+      "dps": 647.94,
+      "heal": 2.2,
+      "barrier": 30.9,
+      "ehp": 2747.06,
+      "received": 2908.31,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 167,
+        "Legendary: veil-thousand-seals": 69,
+        "Legendary: heartroot-carapace": 4507
+      }
+    },
+    {
+      "E": 50,
+      "profile": "staff-veil-heartroot",
+      "arm": "base",
+      "policy": "random",
+      "n": 64,
+      "wins": 7,
+      "realm": 11.19,
+      "dps": 703.33,
+      "heal": 4.15,
+      "barrier": 25.35,
+      "ehp": 2620.48,
+      "received": 2622.31,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 557,
+        "Legendary: veil-thousand-seals": 253,
+        "Legendary: heartroot-carapace": 17096
+      }
+    },
+    {
+      "E": 50,
+      "profile": "staff-veil-heartroot",
+      "arm": "veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "wins": 6,
+      "realm": 10.58,
+      "dps": 697.61,
+      "heal": 4.06,
+      "barrier": 21.91,
+      "ehp": 2443.67,
+      "received": 2445.02,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 531,
+        "Legendary: veil-thousand-seals": 238,
+        "Legendary: heartroot-carapace": 16378
+      }
+    },
+    {
+      "E": 50,
+      "profile": "staff-veil-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "wins": 1,
+      "realm": 11.63,
+      "dps": 701.76,
+      "heal": 3.76,
+      "barrier": 23.93,
+      "ehp": 2516.56,
+      "received": 2554.06,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 137,
+        "Legendary: veil-thousand-seals": 62,
+        "Legendary: heartroot-carapace": 4107
+      }
+    },
+    {
+      "E": 50,
+      "profile": "staff-veil-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "wins": 1,
+      "realm": 11.63,
+      "dps": 701.76,
+      "heal": 3.76,
+      "barrier": 23.93,
+      "ehp": 2516.56,
+      "received": 2554.06,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 137,
+        "Legendary: veil-thousand-seals": 62,
+        "Legendary: heartroot-carapace": 4107
+      }
+    },
+    {
+      "E": 50,
+      "profile": "mace-oathwall-heartroot",
+      "arm": "base",
+      "policy": "triple",
+      "n": 64,
+      "wins": 19,
+      "realm": 13.63,
+      "dps": 434.63,
+      "heal": 16.38,
+      "barrier": 4.24,
+      "ehp": 3596.27,
+      "received": 3289.92,
+      "procs": {
+        "Legendary: oathwall": 583,
+        "Legendary: heartroot-carapace": 31207
+      }
+    },
+    {
+      "E": 50,
+      "profile": "mace-oathwall-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "wins": 6,
+      "realm": 14.56,
+      "dps": 442.73,
+      "heal": 16.12,
+      "barrier": 3.75,
+      "ehp": 3494.38,
+      "received": 3141,
+      "procs": {
+        "Legendary: oathwall": 151,
+        "Legendary: heartroot-carapace": 7745
+      }
+    },
+    {
+      "E": 50,
+      "profile": "mace-oathwall-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "wins": 6,
+      "realm": 14.56,
+      "dps": 442.73,
+      "heal": 16.12,
+      "barrier": 3.75,
+      "ehp": 3494.38,
+      "received": 3141,
+      "procs": {
+        "Legendary: oathwall": 151,
+        "Legendary: heartroot-carapace": 7745
+      }
+    },
+    {
+      "E": 50,
+      "profile": "mace-oathwall-heartroot",
+      "arm": "base",
+      "policy": "random",
+      "n": 64,
+      "wins": 3,
+      "realm": 10.03,
+      "dps": 399.92,
+      "heal": 11.98,
+      "barrier": 1.01,
+      "ehp": 3104.38,
+      "received": 2895.25,
+      "procs": {
+        "Legendary: oathwall": 578,
+        "Legendary: heartroot-carapace": 29359
+      }
+    },
+    {
+      "E": 50,
+      "profile": "mace-oathwall-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "wins": 0,
+      "realm": 11.06,
+      "dps": 399.05,
+      "heal": 14.8,
+      "barrier": 0.6,
+      "ehp": 3259.88,
+      "received": 3102.31,
+      "procs": {
+        "Legendary: oathwall": 153,
+        "Legendary: heartroot-carapace": 7774
+      }
+    },
+    {
+      "E": 50,
+      "profile": "mace-oathwall-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "wins": 0,
+      "realm": 11.06,
+      "dps": 399.05,
+      "heal": 14.8,
+      "barrier": 0.6,
+      "ehp": 3259.88,
+      "received": 3102.31,
+      "procs": {
+        "Legendary: oathwall": 153,
+        "Legendary: heartroot-carapace": 7774
+      }
+    },
+    {
+      "E": 50,
+      "profile": "bow-veil-heartroot",
+      "arm": "base",
+      "policy": "triple",
+      "n": 64,
+      "wins": 55,
+      "realm": 15,
+      "dps": 944.24,
+      "heal": 1.17,
+      "barrier": 19.92,
+      "ehp": 1790.09,
+      "received": 1407.17,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 741,
+        "Legendary: veil-thousand-seals": 183,
+        "Legendary: heartroot-carapace": 8490
+      }
+    },
+    {
+      "E": 50,
+      "profile": "bow-veil-heartroot",
+      "arm": "veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "wins": 53,
+      "realm": 15,
+      "dps": 944.37,
+      "heal": 1.27,
+      "barrier": 14.99,
+      "ehp": 1726.55,
+      "received": 1407.17,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 741,
+        "Legendary: veil-thousand-seals": 183,
+        "Legendary: heartroot-carapace": 9138
+      }
+    },
+    {
+      "E": 50,
+      "profile": "bow-veil-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "wins": 15,
+      "realm": 15,
+      "dps": 953.35,
+      "heal": 1.05,
+      "barrier": 19.96,
+      "ehp": 1754.63,
+      "received": 1349.94,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 176,
+        "Legendary: veil-thousand-seals": 42,
+        "Legendary: heartroot-carapace": 1801
+      }
+    },
+    {
+      "E": 50,
+      "profile": "bow-veil-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "wins": 15,
+      "realm": 15,
+      "dps": 953.35,
+      "heal": 1.05,
+      "barrier": 19.96,
+      "ehp": 1754.63,
+      "received": 1349.94,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 176,
+        "Legendary: veil-thousand-seals": 42,
+        "Legendary: heartroot-carapace": 1801
+      }
+    },
+    {
+      "E": 50,
+      "profile": "bow-veil-heartroot",
+      "arm": "base",
+      "policy": "random",
+      "n": 64,
+      "wins": 29,
+      "realm": 14.88,
+      "dps": 854.13,
+      "heal": 6.57,
+      "barrier": 17.58,
+      "ehp": 2364.67,
+      "received": 2142.47,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 735,
+        "Legendary: veil-thousand-seals": 255,
+        "Legendary: heartroot-carapace": 16463
+      }
+    },
+    {
+      "E": 50,
+      "profile": "bow-veil-heartroot",
+      "arm": "veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "wins": 24,
+      "realm": 14.75,
+      "dps": 854.21,
+      "heal": 6.61,
+      "barrier": 13.83,
+      "ehp": 2249.23,
+      "received": 2063.3,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 727,
+        "Legendary: veil-thousand-seals": 251,
+        "Legendary: heartroot-carapace": 16667
+      }
+    },
+    {
+      "E": 50,
+      "profile": "bow-veil-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "wins": 8,
+      "realm": 15,
+      "dps": 843.74,
+      "heal": 7.2,
+      "barrier": 18.62,
+      "ehp": 2429.19,
+      "received": 2253.63,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 176,
+        "Legendary: veil-thousand-seals": 63,
+        "Legendary: heartroot-carapace": 4795
+      }
+    },
+    {
+      "E": 50,
+      "profile": "bow-veil-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "wins": 8,
+      "realm": 15,
+      "dps": 843.74,
+      "heal": 7.2,
+      "barrier": 18.62,
+      "ehp": 2429.19,
+      "received": 2253.63,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 176,
+        "Legendary: veil-thousand-seals": 63,
+        "Legendary: heartroot-carapace": 4795
+      }
+    },
+    {
+      "E": 50,
+      "profile": "twohand-gravewake-eye",
+      "arm": "base",
+      "policy": "triple",
+      "n": 64,
+      "wins": 40,
+      "realm": 14.84,
+      "dps": 911.71,
+      "heal": 0,
+      "barrier": 6.28,
+      "ehp": 1589.95,
+      "received": 1438.58,
+      "procs": {
+        "Legendary: gravewake": 506,
+        "Legendary: eye-of-morrow": 286
+      }
+    },
+    {
+      "E": 50,
+      "profile": "twohand-gravewake-eye",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "wins": 11,
+      "realm": 15,
+      "dps": 916.8,
+      "heal": 0,
+      "barrier": 6.3,
+      "ehp": 1581.25,
+      "received": 1312.38,
+      "procs": {
+        "Legendary: gravewake": 123,
+        "Legendary: eye-of-morrow": 67
+      }
+    },
+    {
+      "E": 50,
+      "profile": "twohand-gravewake-eye",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "wins": 11,
+      "realm": 15,
+      "dps": 916.8,
+      "heal": 0,
+      "barrier": 6.3,
+      "ehp": 1581.25,
+      "received": 1312.38,
+      "procs": {
+        "Legendary: gravewake": 123,
+        "Legendary: eye-of-morrow": 67
+      }
+    },
+    {
+      "E": 50,
+      "profile": "twohand-gravewake-eye",
+      "arm": "base",
+      "policy": "random",
+      "n": 64,
+      "wins": 13,
+      "realm": 13.13,
+      "dps": 803.74,
+      "heal": 3.69,
+      "barrier": 6.92,
+      "ehp": 1887.3,
+      "received": 1858.02,
+      "procs": {
+        "Legendary: gravewake": 580,
+        "Legendary: eye-of-morrow": 311
+      }
+    },
+    {
+      "E": 50,
+      "profile": "twohand-gravewake-eye",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "wins": 5,
+      "realm": 13.63,
+      "dps": 801.96,
+      "heal": 4.82,
+      "barrier": 7.58,
+      "ehp": 1981.13,
+      "received": 1949.5,
+      "procs": {
+        "Legendary: gravewake": 152,
+        "Legendary: eye-of-morrow": 80
+      }
+    },
+    {
+      "E": 50,
+      "profile": "twohand-gravewake-eye",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "wins": 5,
+      "realm": 13.63,
+      "dps": 801.96,
+      "heal": 4.82,
+      "barrier": 7.58,
+      "ehp": 1981.13,
+      "received": 1949.5,
+      "procs": {
+        "Legendary: gravewake": 152,
+        "Legendary: eye-of-morrow": 80
+      }
+    },
+    {
+      "E": 50,
+      "profile": "twohand-veil-heartroot",
+      "arm": "base",
+      "policy": "triple",
+      "n": 64,
+      "wins": 49,
+      "realm": 14.97,
+      "dps": 897.34,
+      "heal": 1.27,
+      "barrier": 25.26,
+      "ehp": 2031.55,
+      "received": 1671.83,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 739,
+        "Legendary: veil-thousand-seals": 221,
+        "Legendary: heartroot-carapace": 9561
+      }
+    },
+    {
+      "E": 50,
+      "profile": "twohand-veil-heartroot",
+      "arm": "veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "wins": 48,
+      "realm": 14.88,
+      "dps": 895.58,
+      "heal": 1.43,
+      "barrier": 20.58,
+      "ehp": 1942.16,
+      "received": 1639.97,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 735,
+        "Legendary: veil-thousand-seals": 219,
+        "Legendary: heartroot-carapace": 10621
+      }
+    },
+    {
+      "E": 50,
+      "profile": "twohand-veil-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "wins": 14,
+      "realm": 15,
+      "dps": 901.67,
+      "heal": 1.08,
+      "barrier": 25.19,
+      "ehp": 1974.81,
+      "received": 1508.75,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 176,
+        "Legendary: veil-thousand-seals": 48,
+        "Legendary: heartroot-carapace": 1850
+      }
+    },
+    {
+      "E": 50,
+      "profile": "twohand-veil-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "wins": 14,
+      "realm": 15,
+      "dps": 901.67,
+      "heal": 1.08,
+      "barrier": 25.19,
+      "ehp": 1974.81,
+      "received": 1508.75,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 176,
+        "Legendary: veil-thousand-seals": 48,
+        "Legendary: heartroot-carapace": 1850
+      }
+    },
+    {
+      "E": 50,
+      "profile": "twohand-veil-heartroot",
+      "arm": "base",
+      "policy": "random",
+      "n": 64,
+      "wins": 26,
+      "realm": 14.75,
+      "dps": 796.43,
+      "heal": 6.31,
+      "barrier": 22.81,
+      "ehp": 2627.38,
+      "received": 2484,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 727,
+        "Legendary: veil-thousand-seals": 286,
+        "Legendary: heartroot-carapace": 18263
+      }
+    },
+    {
+      "E": 50,
+      "profile": "twohand-veil-heartroot",
+      "arm": "veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "wins": 22,
+      "realm": 14.67,
+      "dps": 795.17,
+      "heal": 6.42,
+      "barrier": 19.31,
+      "ehp": 2501.86,
+      "received": 2412.36,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 723,
+        "Legendary: veil-thousand-seals": 284,
+        "Legendary: heartroot-carapace": 18714
+      }
+    },
+    {
+      "E": 50,
+      "profile": "twohand-veil-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "wins": 7,
+      "realm": 15,
+      "dps": 784.95,
+      "heal": 5.93,
+      "barrier": 23.56,
+      "ehp": 2674.44,
+      "received": 2532.31,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 176,
+        "Legendary: veil-thousand-seals": 70,
+        "Legendary: heartroot-carapace": 4652
+      }
+    },
+    {
+      "E": 50,
+      "profile": "twohand-veil-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "wins": 7,
+      "realm": 15,
+      "dps": 784.95,
+      "heal": 5.93,
+      "barrier": 23.56,
+      "ehp": 2674.44,
+      "received": 2532.31,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 176,
+        "Legendary: veil-thousand-seals": 70,
+        "Legendary: heartroot-carapace": 4652
+      }
+    },
+    {
+      "E": 100,
+      "profile": "sword-none",
+      "arm": "base",
+      "policy": "triple",
+      "n": 64,
+      "wins": 15,
+      "realm": 14.2,
+      "dps": 1029.95,
+      "heal": 21.87,
+      "barrier": 9.68,
+      "ehp": 5948.88,
+      "received": 5413.63,
+      "procs": {}
+    },
+    {
+      "E": 100,
+      "profile": "sword-none",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "wins": 6,
+      "realm": 14.38,
+      "dps": 988.51,
+      "heal": 22.6,
+      "barrier": 11.59,
+      "ehp": 6095.94,
+      "received": 5459.19,
+      "procs": {}
+    },
+    {
+      "E": 100,
+      "profile": "sword-none",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "wins": 6,
+      "realm": 14.38,
+      "dps": 988.51,
+      "heal": 22.6,
+      "barrier": 11.59,
+      "ehp": 6095.94,
+      "received": 5459.19,
+      "procs": {}
+    },
+    {
+      "E": 100,
+      "profile": "sword-none",
+      "arm": "base",
+      "policy": "random",
+      "n": 64,
+      "wins": 3,
+      "realm": 10.34,
+      "dps": 947.87,
+      "heal": 12.59,
+      "barrier": 2.87,
+      "ehp": 5112.42,
+      "received": 4721.95,
+      "procs": {}
+    },
+    {
+      "E": 100,
+      "profile": "sword-none",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "wins": 1,
+      "realm": 9.75,
+      "dps": 933.42,
+      "heal": 10.55,
+      "barrier": 4.6,
+      "ehp": 5059.94,
+      "received": 4653.56,
+      "procs": {}
+    },
+    {
+      "E": 100,
+      "profile": "sword-none",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "wins": 1,
+      "realm": 9.75,
+      "dps": 933.42,
+      "heal": 10.55,
+      "barrier": 4.6,
+      "ehp": 5059.94,
+      "received": 4653.56,
+      "procs": {}
+    },
+    {
+      "E": 100,
+      "profile": "sword-veil",
+      "arm": "base",
+      "policy": "triple",
+      "n": 64,
+      "wins": 57,
+      "realm": 15,
+      "dps": 1066.74,
+      "heal": 23.51,
+      "barrier": 52.91,
+      "ehp": 8252.39,
+      "received": 6162.2,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 744,
+        "Legendary: veil-thousand-seals": 379
+      }
+    },
+    {
+      "E": 100,
+      "profile": "sword-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "wins": 56,
+      "realm": 15,
+      "dps": 1066.99,
+      "heal": 24.85,
+      "barrier": 45.14,
+      "ehp": 8010.64,
+      "received": 6158.83,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 744,
+        "Legendary: veil-thousand-seals": 367
+      }
+    },
+    {
+      "E": 100,
+      "profile": "sword-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 64,
+      "wins": 48,
+      "realm": 15,
+      "dps": 1065.28,
+      "heal": 25.42,
+      "barrier": 38.37,
+      "ehp": 7754.11,
+      "received": 6154.58,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 744,
+        "Legendary: veil-thousand-seals": 366
+      }
+    },
+    {
+      "E": 100,
+      "profile": "sword-veil",
+      "arm": "base",
+      "policy": "random",
+      "n": 64,
+      "wins": 32,
+      "realm": 14,
+      "dps": 993.49,
+      "heal": 19.39,
+      "barrier": 34.02,
+      "ehp": 8066.02,
+      "received": 7145.23,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 694,
+        "Legendary: veil-thousand-seals": 441
+      }
+    },
+    {
+      "E": 100,
+      "profile": "sword-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "wins": 22,
+      "realm": 13.7,
+      "dps": 991.75,
+      "heal": 18.93,
+      "barrier": 28.06,
+      "ehp": 7597.56,
+      "received": 6866.05,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 683,
+        "Legendary: veil-thousand-seals": 422
+      }
+    },
+    {
+      "E": 100,
+      "profile": "sword-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 64,
+      "wins": 16,
+      "realm": 13.22,
+      "dps": 988.24,
+      "heal": 17.98,
+      "barrier": 23.39,
+      "ehp": 7151.8,
+      "received": 6540.8,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 658,
+        "Legendary: veil-thousand-seals": 408
+      }
+    },
+    {
+      "E": 100,
+      "profile": "sword-oathwall",
+      "arm": "base",
+      "policy": "triple",
+      "n": 64,
+      "wins": 15,
+      "realm": 14.47,
+      "dps": 1051.35,
+      "heal": 22.04,
+      "barrier": 9.54,
+      "ehp": 5961.05,
+      "received": 5428.91,
+      "procs": {
+        "Legendary: oathwall": 513
+      }
+    },
+    {
+      "E": 100,
+      "profile": "sword-oathwall",
+      "arm": "base",
+      "policy": "random",
+      "n": 64,
+      "wins": 1,
+      "realm": 10.77,
+      "dps": 964.21,
+      "heal": 13.14,
+      "barrier": 3.03,
+      "ehp": 5164.88,
+      "received": 4810.44,
+      "procs": {
+        "Legendary: oathwall": 543
+      }
+    },
+    {
+      "E": 100,
+      "profile": "sword-verdant",
+      "arm": "base",
+      "policy": "triple",
+      "n": 64,
+      "wins": 27,
+      "realm": 14.77,
+      "dps": 1109.31,
+      "heal": 29.47,
+      "barrier": 9.95,
+      "ehp": 6381.91,
+      "received": 5677.33,
+      "procs": {
+        "Legendary: verdant-oath": 592
+      }
+    },
+    {
+      "E": 100,
+      "profile": "sword-verdant",
+      "arm": "base",
+      "policy": "random",
+      "n": 64,
+      "wins": 9,
+      "realm": 12.78,
+      "dps": 1034.56,
+      "heal": 23.95,
+      "barrier": 3.79,
+      "ehp": 6039.14,
+      "received": 5592.38,
+      "procs": {
+        "Legendary: verdant-oath": 656
+      }
+    },
+    {
+      "E": 100,
+      "profile": "sword-oathwall-veil",
+      "arm": "base",
+      "policy": "triple",
+      "n": 64,
+      "wins": 59,
+      "realm": 15,
+      "dps": 1083.98,
+      "heal": 23.08,
+      "barrier": 53.52,
+      "ehp": 8243.48,
+      "received": 6248.34,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 744,
+        "Legendary: oathwall": 560,
+        "Legendary: veil-thousand-seals": 377
+      }
+    },
+    {
+      "E": 100,
+      "profile": "sword-oathwall-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "wins": 54,
+      "realm": 15,
+      "dps": 1084.58,
+      "heal": 24.83,
+      "barrier": 45.73,
+      "ehp": 8015.67,
+      "received": 6194.7,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 744,
+        "Legendary: oathwall": 564,
+        "Legendary: veil-thousand-seals": 360
+      }
+    },
+    {
+      "E": 100,
+      "profile": "sword-oathwall-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 64,
+      "wins": 49,
+      "realm": 14.91,
+      "dps": 1081.94,
+      "heal": 25.64,
+      "barrier": 38.79,
+      "ehp": 7747.64,
+      "received": 6136.34,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 739,
+        "Legendary: oathwall": 560,
+        "Legendary: veil-thousand-seals": 353
+      }
+    },
+    {
+      "E": 100,
+      "profile": "sword-oathwall-veil",
+      "arm": "base",
+      "policy": "random",
+      "n": 64,
+      "wins": 26,
+      "realm": 14.5,
+      "dps": 1009.45,
+      "heal": 19.81,
+      "barrier": 34.85,
+      "ehp": 8181.27,
+      "received": 7281.42,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 717,
+        "Legendary: oathwall": 742,
+        "Legendary: veil-thousand-seals": 451
+      }
+    },
+    {
+      "E": 100,
+      "profile": "sword-oathwall-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "wins": 20,
+      "realm": 13.92,
+      "dps": 1006.64,
+      "heal": 19.14,
+      "barrier": 28.88,
+      "ehp": 7648.23,
+      "received": 6900.52,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 694,
+        "Legendary: oathwall": 710,
+        "Legendary: veil-thousand-seals": 426
+      }
+    },
+    {
+      "E": 100,
+      "profile": "sword-oathwall-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 64,
+      "wins": 16,
+      "realm": 13.61,
+      "dps": 1004.77,
+      "heal": 18.59,
+      "barrier": 24.32,
+      "ehp": 7227.11,
+      "received": 6598.58,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 678,
+        "Legendary: oathwall": 691,
+        "Legendary: veil-thousand-seals": 410
+      }
+    },
+    {
+      "E": 100,
+      "profile": "sword-verdant-veil",
+      "arm": "base",
+      "policy": "triple",
+      "n": 64,
+      "wins": 62,
+      "realm": 15,
+      "dps": 1134.62,
+      "heal": 29.19,
+      "barrier": 55.72,
+      "ehp": 8475.78,
+      "received": 5915.88,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 744,
+        "Legendary: verdant-oath": 616,
+        "Legendary: veil-thousand-seals": 368
+      }
+    },
+    {
+      "E": 100,
+      "profile": "sword-verdant-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "wins": 62,
+      "realm": 15,
+      "dps": 1136.09,
+      "heal": 31.68,
+      "barrier": 47.55,
+      "ehp": 8305.61,
+      "received": 5886.14,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 744,
+        "Legendary: verdant-oath": 616,
+        "Legendary: veil-thousand-seals": 353
+      }
+    },
+    {
+      "E": 100,
+      "profile": "sword-verdant-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 64,
+      "wins": 59,
+      "realm": 15,
+      "dps": 1133.58,
+      "heal": 32.64,
+      "barrier": 40.21,
+      "ehp": 8073.75,
+      "received": 5927.72,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 744,
+        "Legendary: verdant-oath": 615,
+        "Legendary: veil-thousand-seals": 351
+      }
+    },
+    {
+      "E": 100,
+      "profile": "sword-verdant-veil",
+      "arm": "base",
+      "policy": "random",
+      "n": 64,
+      "wins": 48,
+      "realm": 14.69,
+      "dps": 1064.58,
+      "heal": 27.96,
+      "barrier": 36.18,
+      "ehp": 8700.84,
+      "received": 7401.91,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 729,
+        "Legendary: verdant-oath": 772,
+        "Legendary: veil-thousand-seals": 446
+      }
+    },
+    {
+      "E": 100,
+      "profile": "sword-verdant-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "wins": 40,
+      "realm": 14.55,
+      "dps": 1063.65,
+      "heal": 27.65,
+      "barrier": 29.87,
+      "ehp": 8268.89,
+      "received": 7190.89,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 721,
+        "Legendary: verdant-oath": 762,
+        "Legendary: veil-thousand-seals": 429
+      }
+    },
+    {
+      "E": 100,
+      "profile": "sword-verdant-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 64,
+      "wins": 32,
+      "realm": 14.52,
+      "dps": 1062.3,
+      "heal": 27.45,
+      "barrier": 25.22,
+      "ehp": 7948.31,
+      "received": 7040.31,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 720,
+        "Legendary: verdant-oath": 753,
+        "Legendary: veil-thousand-seals": 423
+      }
+    },
+    {
+      "E": 100,
+      "profile": "sword-verdant-oathwall",
+      "arm": "base",
+      "policy": "triple",
+      "n": 64,
+      "wins": 28,
+      "realm": 14.81,
+      "dps": 1129.87,
+      "heal": 29.65,
+      "barrier": 9.9,
+      "ehp": 6356.17,
+      "received": 5465.19,
+      "procs": {
+        "Legendary: verdant-oath": 590,
+        "Legendary: oathwall": 510
+      }
+    },
+    {
+      "E": 100,
+      "profile": "sword-verdant-oathwall",
+      "arm": "base",
+      "policy": "random",
+      "n": 64,
+      "wins": 12,
+      "realm": 12.91,
+      "dps": 1051.05,
+      "heal": 24.34,
+      "barrier": 3.92,
+      "ehp": 6074.13,
+      "received": 5638.34,
+      "procs": {
+        "Legendary: verdant-oath": 655,
+        "Legendary: oathwall": 608
+      }
+    },
+    {
+      "E": 100,
+      "profile": "wand-voidglass-veil",
+      "arm": "base",
+      "policy": "triple",
+      "n": 64,
+      "wins": 18,
+      "realm": 14.59,
+      "dps": 1574.99,
+      "heal": 0,
+      "barrier": 68.85,
+      "ehp": 4802.27,
+      "received": 4847.88,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 723,
+        "Legendary: voidglass": 797,
+        "Legendary: veil-thousand-seals": 249
+      }
+    },
+    {
+      "E": 100,
+      "profile": "wand-voidglass-veil",
+      "arm": "veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "wins": 14,
+      "realm": 14.2,
+      "dps": 1567.02,
+      "heal": 0,
+      "barrier": 60.46,
+      "ehp": 4497.45,
+      "received": 4569,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 704,
+        "Legendary: voidglass": 766,
+        "Legendary: veil-thousand-seals": 241
+      }
+    },
+    {
+      "E": 100,
+      "profile": "wand-voidglass-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "wins": 4,
+      "realm": 14.81,
+      "dps": 1585.96,
+      "heal": 0,
+      "barrier": 67.08,
+      "ehp": 4676.94,
+      "received": 4831.44,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 174,
+        "Legendary: voidglass": 191,
+        "Legendary: veil-thousand-seals": 62
+      }
+    },
+    {
+      "E": 100,
+      "profile": "wand-voidglass-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "wins": 4,
+      "realm": 14.81,
+      "dps": 1585.96,
+      "heal": 0,
+      "barrier": 67.08,
+      "ehp": 4676.94,
+      "received": 4831.44,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 174,
+        "Legendary: voidglass": 191,
+        "Legendary: veil-thousand-seals": 62
+      }
+    },
+    {
+      "E": 100,
+      "profile": "wand-voidglass-veil",
+      "arm": "base",
+      "policy": "random",
+      "n": 64,
+      "wins": 23,
+      "realm": 13.77,
+      "dps": 1724.43,
+      "heal": 2.38,
+      "barrier": 52.62,
+      "ehp": 4545.31,
+      "received": 4354.05,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 682,
+        "Legendary: voidglass": 823,
+        "Legendary: veil-thousand-seals": 250
+      }
+    },
+    {
+      "E": 100,
+      "profile": "wand-voidglass-veil",
+      "arm": "veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "wins": 18,
+      "realm": 13.06,
+      "dps": 1706.31,
+      "heal": 2.23,
+      "barrier": 44.78,
+      "ehp": 4249.03,
+      "received": 4093.38,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 648,
+        "Legendary: voidglass": 777,
+        "Legendary: veil-thousand-seals": 234
+      }
+    },
+    {
+      "E": 100,
+      "profile": "wand-voidglass-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "wins": 5,
+      "realm": 14,
+      "dps": 1716.87,
+      "heal": 1.69,
+      "barrier": 53.61,
+      "ehp": 4481.94,
+      "received": 4416.13,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 166,
+        "Legendary: voidglass": 202,
+        "Legendary: veil-thousand-seals": 65
+      }
+    },
+    {
+      "E": 100,
+      "profile": "wand-voidglass-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "wins": 5,
+      "realm": 14,
+      "dps": 1716.87,
+      "heal": 1.69,
+      "barrier": 53.61,
+      "ehp": 4481.94,
+      "received": 4416.13,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 166,
+        "Legendary: voidglass": 202,
+        "Legendary: veil-thousand-seals": 65
+      }
+    },
+    {
+      "E": 100,
+      "profile": "staff-veil-heartroot",
+      "arm": "base",
+      "policy": "triple",
+      "n": 64,
+      "wins": 6,
+      "realm": 13.69,
+      "dps": 1455.56,
+      "heal": 4.3,
+      "barrier": 64.41,
+      "ehp": 5001.41,
+      "received": 5131.36,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 679,
+        "Legendary: veil-thousand-seals": 244,
+        "Legendary: heartroot-carapace": 16283
+      }
+    },
+    {
+      "E": 100,
+      "profile": "staff-veil-heartroot",
+      "arm": "veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "wins": 5,
+      "realm": 13.02,
+      "dps": 1448.64,
+      "heal": 4.32,
+      "barrier": 55.87,
+      "ehp": 4615.63,
+      "received": 4718.73,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 644,
+        "Legendary: veil-thousand-seals": 236,
+        "Legendary: heartroot-carapace": 15343
+      }
+    },
+    {
+      "E": 100,
+      "profile": "staff-veil-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "wins": 2,
+      "realm": 13.5,
+      "dps": 1444.89,
+      "heal": 4.51,
+      "barrier": 62.43,
+      "ehp": 4902.94,
+      "received": 5037.75,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 159,
+        "Legendary: veil-thousand-seals": 61,
+        "Legendary: heartroot-carapace": 3972
+      }
+    },
+    {
+      "E": 100,
+      "profile": "staff-veil-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "wins": 2,
+      "realm": 13.5,
+      "dps": 1444.89,
+      "heal": 4.51,
+      "barrier": 62.43,
+      "ehp": 4902.94,
+      "received": 5037.75,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 159,
+        "Legendary: veil-thousand-seals": 61,
+        "Legendary: heartroot-carapace": 3972
+      }
+    },
+    {
+      "E": 100,
+      "profile": "staff-veil-heartroot",
+      "arm": "base",
+      "policy": "random",
+      "n": 64,
+      "wins": 14,
+      "realm": 12.31,
+      "dps": 1608.92,
+      "heal": 7.48,
+      "barrier": 53.38,
+      "ehp": 4805.47,
+      "received": 4620.14,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 615,
+        "Legendary: veil-thousand-seals": 242,
+        "Legendary: heartroot-carapace": 16873
+      }
+    },
+    {
+      "E": 100,
+      "profile": "staff-veil-heartroot",
+      "arm": "veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "wins": 11,
+      "realm": 11.53,
+      "dps": 1591.84,
+      "heal": 7.23,
+      "barrier": 45.84,
+      "ehp": 4451.23,
+      "received": 4323.67,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 579,
+        "Legendary: veil-thousand-seals": 223,
+        "Legendary: heartroot-carapace": 15831
+      }
+    },
+    {
+      "E": 100,
+      "profile": "staff-veil-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "wins": 3,
+      "realm": 11.94,
+      "dps": 1560.21,
+      "heal": 7.3,
+      "barrier": 52.45,
+      "ehp": 4739.13,
+      "received": 4681.56,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 143,
+        "Legendary: veil-thousand-seals": 61,
+        "Legendary: heartroot-carapace": 4247
+      }
+    },
+    {
+      "E": 100,
+      "profile": "staff-veil-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "wins": 3,
+      "realm": 11.94,
+      "dps": 1560.21,
+      "heal": 7.3,
+      "barrier": 52.45,
+      "ehp": 4739.13,
+      "received": 4681.56,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 143,
+        "Legendary: veil-thousand-seals": 61,
+        "Legendary: heartroot-carapace": 4247
+      }
+    },
+    {
+      "E": 100,
+      "profile": "mace-oathwall-heartroot",
+      "arm": "base",
+      "policy": "triple",
+      "n": 64,
+      "wins": 34,
+      "realm": 14.8,
+      "dps": 1020.61,
+      "heal": 31.9,
+      "barrier": 9.02,
+      "ehp": 6672.88,
+      "received": 5727.31,
+      "procs": {
+        "Legendary: oathwall": 630,
+        "Legendary: heartroot-carapace": 27759
+      }
+    },
+    {
+      "E": 100,
+      "profile": "mace-oathwall-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "wins": 7,
+      "realm": 15,
+      "dps": 980.93,
+      "heal": 33.07,
+      "barrier": 10.99,
+      "ehp": 6846.13,
+      "received": 5862.38,
+      "procs": {
+        "Legendary: oathwall": 155,
+        "Legendary: heartroot-carapace": 6780
+      }
+    },
+    {
+      "E": 100,
+      "profile": "mace-oathwall-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "wins": 7,
+      "realm": 15,
+      "dps": 980.93,
+      "heal": 33.07,
+      "barrier": 10.99,
+      "ehp": 6846.13,
+      "received": 5862.38,
+      "procs": {
+        "Legendary: oathwall": 155,
+        "Legendary: heartroot-carapace": 6780
+      }
+    },
+    {
+      "E": 100,
+      "profile": "mace-oathwall-heartroot",
+      "arm": "base",
+      "policy": "random",
+      "n": 64,
+      "wins": 16,
+      "realm": 11.88,
+      "dps": 931.85,
+      "heal": 25.3,
+      "barrier": 3.24,
+      "ehp": 6158.77,
+      "received": 5580.31,
+      "procs": {
+        "Legendary: oathwall": 672,
+        "Legendary: heartroot-carapace": 30737
+      }
+    },
+    {
+      "E": 100,
+      "profile": "mace-oathwall-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "wins": 3,
+      "realm": 11.69,
+      "dps": 924.33,
+      "heal": 22.76,
+      "barrier": 5.02,
+      "ehp": 6012.31,
+      "received": 5391.94,
+      "procs": {
+        "Legendary: oathwall": 162,
+        "Legendary: heartroot-carapace": 7176
+      }
+    },
+    {
+      "E": 100,
+      "profile": "mace-oathwall-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "wins": 3,
+      "realm": 11.69,
+      "dps": 924.33,
+      "heal": 22.76,
+      "barrier": 5.02,
+      "ehp": 6012.31,
+      "received": 5391.94,
+      "procs": {
+        "Legendary: oathwall": 162,
+        "Legendary: heartroot-carapace": 7176
+      }
+    },
+    {
+      "E": 100,
+      "profile": "bow-veil-heartroot",
+      "arm": "base",
+      "policy": "triple",
+      "n": 64,
+      "wins": 41,
+      "realm": 14.97,
+      "dps": 1913.22,
+      "heal": 2.44,
+      "barrier": 39.53,
+      "ehp": 3396.89,
+      "received": 2983.55,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 743,
+        "Legendary: veil-thousand-seals": 179,
+        "Legendary: heartroot-carapace": 8792
+      }
+    },
+    {
+      "E": 100,
+      "profile": "bow-veil-heartroot",
+      "arm": "veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "wins": 37,
+      "realm": 14.95,
+      "dps": 1913.18,
+      "heal": 2.62,
+      "barrier": 30.16,
+      "ehp": 3276.16,
+      "received": 2927.13,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 742,
+        "Legendary: veil-thousand-seals": 178,
+        "Legendary: heartroot-carapace": 9395
+      }
+    },
+    {
+      "E": 100,
+      "profile": "bow-veil-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "wins": 8,
+      "realm": 14.88,
+      "dps": 1887.06,
+      "heal": 2.9,
+      "barrier": 38.29,
+      "ehp": 3472.19,
+      "received": 3134,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 175,
+        "Legendary: veil-thousand-seals": 48,
+        "Legendary: heartroot-carapace": 2482
+      }
+    },
+    {
+      "E": 100,
+      "profile": "bow-veil-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "wins": 8,
+      "realm": 14.88,
+      "dps": 1887.06,
+      "heal": 2.9,
+      "barrier": 38.29,
+      "ehp": 3472.19,
+      "received": 3134,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 175,
+        "Legendary: veil-thousand-seals": 48,
+        "Legendary: heartroot-carapace": 2482
+      }
+    },
+    {
+      "E": 100,
+      "profile": "bow-veil-heartroot",
+      "arm": "base",
+      "policy": "random",
+      "n": 64,
+      "wins": 28,
+      "realm": 14.45,
+      "dps": 1781.77,
+      "heal": 10.63,
+      "barrier": 36.42,
+      "ehp": 4371.22,
+      "received": 4125.7,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 718,
+        "Legendary: veil-thousand-seals": 243,
+        "Legendary: heartroot-carapace": 15597
+      }
+    },
+    {
+      "E": 100,
+      "profile": "bow-veil-heartroot",
+      "arm": "veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "wins": 24,
+      "realm": 14.17,
+      "dps": 1781.45,
+      "heal": 10.64,
+      "barrier": 28.83,
+      "ehp": 4140.13,
+      "received": 3985.67,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 704,
+        "Legendary: veil-thousand-seals": 235,
+        "Legendary: heartroot-carapace": 15813
+      }
+    },
+    {
+      "E": 100,
+      "profile": "bow-veil-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "wins": 7,
+      "realm": 14.56,
+      "dps": 1759.23,
+      "heal": 7.49,
+      "barrier": 37.45,
+      "ehp": 4122.5,
+      "received": 3922.25,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 171,
+        "Legendary: veil-thousand-seals": 58,
+        "Legendary: heartroot-carapace": 3962
+      }
+    },
+    {
+      "E": 100,
+      "profile": "bow-veil-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "wins": 7,
+      "realm": 14.56,
+      "dps": 1759.23,
+      "heal": 7.49,
+      "barrier": 37.45,
+      "ehp": 4122.5,
+      "received": 3922.25,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 171,
+        "Legendary: veil-thousand-seals": 58,
+        "Legendary: heartroot-carapace": 3962
+      }
+    },
+    {
+      "E": 100,
+      "profile": "twohand-gravewake-eye",
+      "arm": "base",
+      "policy": "triple",
+      "n": 64,
+      "wins": 24,
+      "realm": 14.34,
+      "dps": 1790.76,
+      "heal": 0.13,
+      "barrier": 11.96,
+      "ehp": 2983.58,
+      "received": 2841.19,
+      "procs": {
+        "Legendary: gravewake": 509,
+        "Legendary: eye-of-morrow": 279
+      }
+    },
+    {
+      "E": 100,
+      "profile": "twohand-gravewake-eye",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "wins": 7,
+      "realm": 13.81,
+      "dps": 1749.43,
+      "heal": 0.22,
+      "barrier": 12.09,
+      "ehp": 2997.44,
+      "received": 2825.56,
+      "procs": {
+        "Legendary: gravewake": 124,
+        "Legendary: eye-of-morrow": 67
+      }
+    },
+    {
+      "E": 100,
+      "profile": "twohand-gravewake-eye",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "wins": 7,
+      "realm": 13.81,
+      "dps": 1749.43,
+      "heal": 0.22,
+      "barrier": 12.09,
+      "ehp": 2997.44,
+      "received": 2825.56,
+      "procs": {
+        "Legendary: gravewake": 124,
+        "Legendary: eye-of-morrow": 67
+      }
+    },
+    {
+      "E": 100,
+      "profile": "twohand-gravewake-eye",
+      "arm": "base",
+      "policy": "random",
+      "n": 64,
+      "wins": 12,
+      "realm": 12.73,
+      "dps": 1625.69,
+      "heal": 4.66,
+      "barrier": 13.45,
+      "ehp": 3425.94,
+      "received": 3334.16,
+      "procs": {
+        "Legendary: gravewake": 588,
+        "Legendary: eye-of-morrow": 324
+      }
+    },
+    {
+      "E": 100,
+      "profile": "twohand-gravewake-eye",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "wins": 2,
+      "realm": 13.56,
+      "dps": 1586.63,
+      "heal": 3.57,
+      "barrier": 13.08,
+      "ehp": 3348.13,
+      "received": 3500.81,
+      "procs": {
+        "Legendary: gravewake": 151,
+        "Legendary: eye-of-morrow": 82
+      }
+    },
+    {
+      "E": 100,
+      "profile": "twohand-gravewake-eye",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "wins": 2,
+      "realm": 13.56,
+      "dps": 1586.63,
+      "heal": 3.57,
+      "barrier": 13.08,
+      "ehp": 3348.13,
+      "received": 3500.81,
+      "procs": {
+        "Legendary: gravewake": 151,
+        "Legendary: eye-of-morrow": 82
+      }
+    },
+    {
+      "E": 100,
+      "profile": "twohand-veil-heartroot",
+      "arm": "base",
+      "policy": "triple",
+      "n": 64,
+      "wins": 48,
+      "realm": 14.84,
+      "dps": 1783.12,
+      "heal": 2.74,
+      "barrier": 48.56,
+      "ehp": 3872.83,
+      "received": 3313.16,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 737,
+        "Legendary: veil-thousand-seals": 219,
+        "Legendary: heartroot-carapace": 10039
+      }
+    },
+    {
+      "E": 100,
+      "profile": "twohand-veil-heartroot",
+      "arm": "veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "wins": 45,
+      "realm": 14.69,
+      "dps": 1778.53,
+      "heal": 3.03,
+      "barrier": 39.81,
+      "ehp": 3691.28,
+      "received": 3238.05,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 730,
+        "Legendary: veil-thousand-seals": 216,
+        "Legendary: heartroot-carapace": 10969
+      }
+    },
+    {
+      "E": 100,
+      "profile": "twohand-veil-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "wins": 11,
+      "realm": 15,
+      "dps": 1766.51,
+      "heal": 2.74,
+      "barrier": 47.29,
+      "ehp": 3895.63,
+      "received": 3441,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 176,
+        "Legendary: veil-thousand-seals": 55,
+        "Legendary: heartroot-carapace": 2482
+      }
+    },
+    {
+      "E": 100,
+      "profile": "twohand-veil-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "wins": 11,
+      "realm": 15,
+      "dps": 1766.51,
+      "heal": 2.74,
+      "barrier": 47.29,
+      "ehp": 3895.63,
+      "received": 3441,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 176,
+        "Legendary: veil-thousand-seals": 55,
+        "Legendary: heartroot-carapace": 2482
+      }
+    },
+    {
+      "E": 100,
+      "profile": "twohand-veil-heartroot",
+      "arm": "base",
+      "policy": "random",
+      "n": 64,
+      "wins": 27,
+      "realm": 14.63,
+      "dps": 1619.09,
+      "heal": 10.01,
+      "barrier": 45.56,
+      "ehp": 4954.2,
+      "received": 4645.53,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 725,
+        "Legendary: veil-thousand-seals": 284,
+        "Legendary: heartroot-carapace": 17318
+      }
+    },
+    {
+      "E": 100,
+      "profile": "twohand-veil-heartroot",
+      "arm": "veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "wins": 22,
+      "realm": 14.38,
+      "dps": 1613.39,
+      "heal": 10.14,
+      "barrier": 38.69,
+      "ehp": 4694.08,
+      "received": 4517.16,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 712,
+        "Legendary: veil-thousand-seals": 279,
+        "Legendary: heartroot-carapace": 17674
+      }
+    },
+    {
+      "E": 100,
+      "profile": "twohand-veil-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "wins": 5,
+      "realm": 15,
+      "dps": 1589.23,
+      "heal": 8.11,
+      "barrier": 45.66,
+      "ehp": 4753.44,
+      "received": 4679.63,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 176,
+        "Legendary: veil-thousand-seals": 72,
+        "Legendary: heartroot-carapace": 4563
+      }
+    },
+    {
+      "E": 100,
+      "profile": "twohand-veil-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "wins": 5,
+      "realm": 15,
+      "dps": 1589.23,
+      "heal": 8.11,
+      "barrier": 45.66,
+      "ehp": 4753.44,
+      "received": 4679.63,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 176,
+        "Legendary: veil-thousand-seals": 72,
+        "Legendary: heartroot-carapace": 4563
+      }
+    },
+    {
+      "E": 200,
+      "profile": "sword-none",
+      "arm": "base",
+      "policy": "triple",
+      "n": 64,
+      "wins": 21,
+      "realm": 14.75,
+      "dps": 2533.2,
+      "heal": 45.49,
+      "barrier": 13.07,
+      "ehp": 11158.25,
+      "received": 9844.95,
+      "procs": {}
+    },
+    {
+      "E": 200,
+      "profile": "sword-none",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "wins": 5,
+      "realm": 14.94,
+      "dps": 2529.36,
+      "heal": 46.35,
+      "barrier": 12.42,
+      "ehp": 10938.81,
+      "received": 9610.25,
+      "procs": {}
+    },
+    {
+      "E": 200,
+      "profile": "sword-none",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "wins": 5,
+      "realm": 14.94,
+      "dps": 2529.36,
+      "heal": 46.35,
+      "barrier": 12.42,
+      "ehp": 10938.81,
+      "received": 9610.25,
+      "procs": {}
+    },
+    {
+      "E": 200,
+      "profile": "sword-none",
+      "arm": "base",
+      "policy": "random",
+      "n": 64,
+      "wins": 8,
+      "realm": 13.23,
+      "dps": 2325.8,
+      "heal": 37,
+      "barrier": 5.94,
+      "ehp": 10810.02,
+      "received": 9928.41,
+      "procs": {}
+    },
+    {
+      "E": 200,
+      "profile": "sword-none",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "wins": 4,
+      "realm": 14,
+      "dps": 2331.25,
+      "heal": 51.78,
+      "barrier": 5.83,
+      "ehp": 11682.13,
+      "received": 10661.69,
+      "procs": {}
+    },
+    {
+      "E": 200,
+      "profile": "sword-none",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "wins": 4,
+      "realm": 14,
+      "dps": 2331.25,
+      "heal": 51.78,
+      "barrier": 5.83,
+      "ehp": 11682.13,
+      "received": 10661.69,
+      "procs": {}
+    },
+    {
+      "E": 200,
+      "profile": "sword-veil",
+      "arm": "base",
+      "policy": "triple",
+      "n": 64,
+      "wins": 60,
+      "realm": 15,
+      "dps": 2573.34,
+      "heal": 46.76,
+      "barrier": 112.48,
+      "ehp": 15274.02,
+      "received": 10729.81,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 750,
+        "Legendary: veil-thousand-seals": 325
+      }
+    },
+    {
+      "E": 200,
+      "profile": "sword-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "wins": 59,
+      "realm": 15,
+      "dps": 2573.71,
+      "heal": 48.66,
+      "barrier": 94.3,
+      "ehp": 14761.03,
+      "received": 10706.97,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 750,
+        "Legendary: veil-thousand-seals": 320
+      }
+    },
+    {
+      "E": 200,
+      "profile": "sword-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 64,
+      "wins": 57,
+      "realm": 15,
+      "dps": 2571.24,
+      "heal": 49.35,
+      "barrier": 78.64,
+      "ehp": 14249.27,
+      "received": 10671.34,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 750,
+        "Legendary: veil-thousand-seals": 313
+      }
+    },
+    {
+      "E": 200,
+      "profile": "sword-veil",
+      "arm": "base",
+      "policy": "random",
+      "n": 64,
+      "wins": 44,
+      "realm": 15,
+      "dps": 2387.05,
+      "heal": 44.9,
+      "barrier": 72.7,
+      "ehp": 15757.91,
+      "received": 13183.83,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 750,
+        "Legendary: veil-thousand-seals": 409
+      }
+    },
+    {
+      "E": 200,
+      "profile": "sword-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "wins": 38,
+      "realm": 14.81,
+      "dps": 2380.39,
+      "heal": 44.69,
+      "barrier": 59.22,
+      "ehp": 14904.34,
+      "received": 12728.44,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 741,
+        "Legendary: veil-thousand-seals": 396
+      }
+    },
+    {
+      "E": 200,
+      "profile": "sword-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 64,
+      "wins": 33,
+      "realm": 14.67,
+      "dps": 2379.29,
+      "heal": 44.67,
+      "barrier": 49.94,
+      "ehp": 14278.31,
+      "received": 12440.05,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 733,
+        "Legendary: veil-thousand-seals": 386
+      }
+    },
+    {
+      "E": 200,
+      "profile": "sword-oathwall",
+      "arm": "base",
+      "policy": "triple",
+      "n": 64,
+      "wins": 29,
+      "realm": 14.84,
+      "dps": 2577.91,
+      "heal": 46.15,
+      "barrier": 13.22,
+      "ehp": 11131.97,
+      "received": 9653,
+      "procs": {
+        "Legendary: oathwall": 477
+      }
+    },
+    {
+      "E": 200,
+      "profile": "sword-oathwall",
+      "arm": "base",
+      "policy": "random",
+      "n": 64,
+      "wins": 11,
+      "realm": 13.3,
+      "dps": 2349.63,
+      "heal": 36.72,
+      "barrier": 5.97,
+      "ehp": 10750.41,
+      "received": 9783.42,
+      "procs": {
+        "Legendary: oathwall": 549
+      }
+    },
+    {
+      "E": 200,
+      "profile": "sword-verdant",
+      "arm": "base",
+      "policy": "triple",
+      "n": 64,
+      "wins": 38,
+      "realm": 15,
+      "dps": 2665.59,
+      "heal": 60.92,
+      "barrier": 13.79,
+      "ehp": 11862.55,
+      "received": 9602.44,
+      "procs": {
+        "Legendary: verdant-oath": 536
+      }
+    },
+    {
+      "E": 200,
+      "profile": "sword-verdant",
+      "arm": "base",
+      "policy": "random",
+      "n": 64,
+      "wins": 20,
+      "realm": 14.47,
+      "dps": 2482.05,
+      "heal": 56.75,
+      "barrier": 7.33,
+      "ehp": 12157.56,
+      "received": 11056.81,
+      "procs": {
+        "Legendary: verdant-oath": 662
+      }
+    },
+    {
+      "E": 200,
+      "profile": "sword-oathwall-veil",
+      "arm": "base",
+      "policy": "triple",
+      "n": 64,
+      "wins": 61,
+      "realm": 15,
+      "dps": 2607.52,
+      "heal": 47.39,
+      "barrier": 114.17,
+      "ehp": 15201.06,
+      "received": 10474.8,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 750,
+        "Legendary: veil-thousand-seals": 320,
+        "Legendary: oathwall": 493
+      }
+    },
+    {
+      "E": 200,
+      "profile": "sword-oathwall-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "wins": 60,
+      "realm": 15,
+      "dps": 2607.84,
+      "heal": 49.43,
+      "barrier": 95.71,
+      "ehp": 14733.44,
+      "received": 10516.61,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 750,
+        "Legendary: veil-thousand-seals": 314,
+        "Legendary: oathwall": 492
+      }
+    },
+    {
+      "E": 200,
+      "profile": "sword-oathwall-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 64,
+      "wins": 57,
+      "realm": 15,
+      "dps": 2608.51,
+      "heal": 49.73,
+      "barrier": 80.04,
+      "ehp": 14169.92,
+      "received": 10411.09,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 750,
+        "Legendary: veil-thousand-seals": 310,
+        "Legendary: oathwall": 495
+      }
+    },
+    {
+      "E": 200,
+      "profile": "sword-oathwall-veil",
+      "arm": "base",
+      "policy": "random",
+      "n": 64,
+      "wins": 49,
+      "realm": 14.94,
+      "dps": 2413.8,
+      "heal": 44.55,
+      "barrier": 73.48,
+      "ehp": 15649.63,
+      "received": 12871.05,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 747,
+        "Legendary: veil-thousand-seals": 409,
+        "Legendary: oathwall": 656
+      }
+    },
+    {
+      "E": 200,
+      "profile": "sword-oathwall-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "wins": 43,
+      "realm": 14.84,
+      "dps": 2408.42,
+      "heal": 44.28,
+      "barrier": 59.89,
+      "ehp": 14812.8,
+      "received": 12598.78,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 742,
+        "Legendary: veil-thousand-seals": 399,
+        "Legendary: oathwall": 651
+      }
+    },
+    {
+      "E": 200,
+      "profile": "sword-oathwall-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 64,
+      "wins": 32,
+      "realm": 14.64,
+      "dps": 2407.69,
+      "heal": 44.07,
+      "barrier": 50.32,
+      "ehp": 14193.58,
+      "received": 12345.23,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 731,
+        "Legendary: veil-thousand-seals": 382,
+        "Legendary: oathwall": 640
+      }
+    },
+    {
+      "E": 200,
+      "profile": "sword-verdant-veil",
+      "arm": "base",
+      "policy": "triple",
+      "n": 64,
+      "wins": 64,
+      "realm": 15,
+      "dps": 2699.76,
+      "heal": 59.88,
+      "barrier": 117.63,
+      "ehp": 15641.83,
+      "received": 9876.94,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 750,
+        "Legendary: verdant-oath": 535,
+        "Legendary: veil-thousand-seals": 316
+      }
+    },
+    {
+      "E": 200,
+      "profile": "sword-verdant-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "wins": 64,
+      "realm": 15,
+      "dps": 2698.76,
+      "heal": 61.64,
+      "barrier": 98.48,
+      "ehp": 15151.39,
+      "received": 9855.73,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 750,
+        "Legendary: verdant-oath": 534,
+        "Legendary: veil-thousand-seals": 307
+      }
+    },
+    {
+      "E": 200,
+      "profile": "sword-verdant-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 64,
+      "wins": 61,
+      "realm": 15,
+      "dps": 2694.65,
+      "heal": 62.93,
+      "barrier": 82.11,
+      "ehp": 14698.34,
+      "received": 9975.64,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 750,
+        "Legendary: verdant-oath": 535,
+        "Legendary: veil-thousand-seals": 300
+      }
+    },
+    {
+      "E": 200,
+      "profile": "sword-verdant-veil",
+      "arm": "base",
+      "policy": "random",
+      "n": 64,
+      "wins": 57,
+      "realm": 15,
+      "dps": 2515.78,
+      "heal": 57.83,
+      "barrier": 75.96,
+      "ehp": 16359.73,
+      "received": 12682.45,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 750,
+        "Legendary: verdant-oath": 697,
+        "Legendary: veil-thousand-seals": 402
+      }
+    },
+    {
+      "E": 200,
+      "profile": "sword-verdant-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "wins": 53,
+      "realm": 14.98,
+      "dps": 2515.77,
+      "heal": 58.58,
+      "barrier": 61.81,
+      "ehp": 15651.16,
+      "received": 12647.06,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 749,
+        "Legendary: verdant-oath": 691,
+        "Legendary: veil-thousand-seals": 392
+      }
+    },
+    {
+      "E": 200,
+      "profile": "sword-verdant-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 64,
+      "wins": 49,
+      "realm": 14.98,
+      "dps": 2511.96,
+      "heal": 59.6,
+      "barrier": 51.88,
+      "ehp": 15165.72,
+      "received": 12569.47,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 749,
+        "Legendary: verdant-oath": 691,
+        "Legendary: veil-thousand-seals": 382
+      }
+    },
+    {
+      "E": 200,
+      "profile": "sword-verdant-oathwall",
+      "arm": "base",
+      "policy": "triple",
+      "n": 64,
+      "wins": 42,
+      "realm": 15,
+      "dps": 2701.98,
+      "heal": 60.23,
+      "barrier": 14.03,
+      "ehp": 11778.59,
+      "received": 9409.48,
+      "procs": {
+        "Legendary: verdant-oath": 528,
+        "Legendary: oathwall": 465
+      }
+    },
+    {
+      "E": 200,
+      "profile": "sword-verdant-oathwall",
+      "arm": "base",
+      "policy": "random",
+      "n": 64,
+      "wins": 21,
+      "realm": 14.25,
+      "dps": 2494.21,
+      "heal": 56.12,
+      "barrier": 7.22,
+      "ehp": 12067.88,
+      "received": 10965.91,
+      "procs": {
+        "Legendary: verdant-oath": 644,
+        "Legendary: oathwall": 570
+      }
+    },
+    {
+      "E": 200,
+      "profile": "wand-voidglass-veil",
+      "arm": "base",
+      "policy": "triple",
+      "n": 64,
+      "wins": 39,
+      "realm": 14.88,
+      "dps": 3483.88,
+      "heal": 0,
+      "barrier": 141.58,
+      "ehp": 8644.7,
+      "received": 7560.5,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 744,
+        "Legendary: voidglass": 742,
+        "Legendary: veil-thousand-seals": 226
+      }
+    },
+    {
+      "E": 200,
+      "profile": "wand-voidglass-veil",
+      "arm": "veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "wins": 36,
+      "realm": 14.77,
+      "dps": 3479.64,
+      "heal": 0,
+      "barrier": 124.87,
+      "ehp": 8249.89,
+      "received": 7387.44,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 739,
+        "Legendary: voidglass": 733,
+        "Legendary: veil-thousand-seals": 224
+      }
+    },
+    {
+      "E": 200,
+      "profile": "wand-voidglass-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "wins": 9,
+      "realm": 15,
+      "dps": 3495.76,
+      "heal": 0,
+      "barrier": 130.36,
+      "ehp": 8605.63,
+      "received": 7883.31,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 176,
+        "Legendary: voidglass": 189,
+        "Legendary: veil-thousand-seals": 60
+      }
+    },
+    {
+      "E": 200,
+      "profile": "wand-voidglass-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "wins": 9,
+      "realm": 15,
+      "dps": 3495.76,
+      "heal": 0,
+      "barrier": 130.36,
+      "ehp": 8605.63,
+      "received": 7883.31,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 176,
+        "Legendary: voidglass": 189,
+        "Legendary: veil-thousand-seals": 60
+      }
+    },
+    {
+      "E": 200,
+      "profile": "wand-voidglass-veil",
+      "arm": "base",
+      "policy": "random",
+      "n": 64,
+      "wins": 46,
+      "realm": 14.38,
+      "dps": 3880.79,
+      "heal": 7.31,
+      "barrier": 106.53,
+      "ehp": 8152.78,
+      "received": 6508.8,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 718,
+        "Legendary: voidglass": 787,
+        "Legendary: veil-thousand-seals": 210
+      }
+    },
+    {
+      "E": 200,
+      "profile": "wand-voidglass-veil",
+      "arm": "veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "wins": 44,
+      "realm": 14.17,
+      "dps": 3876.6,
+      "heal": 7.08,
+      "barrier": 90.5,
+      "ehp": 7795.98,
+      "received": 6395.69,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 711,
+        "Legendary: voidglass": 777,
+        "Legendary: veil-thousand-seals": 206
+      }
+    },
+    {
+      "E": 200,
+      "profile": "wand-voidglass-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "wins": 12,
+      "realm": 14.44,
+      "dps": 3871.28,
+      "heal": 8.46,
+      "barrier": 101.59,
+      "ehp": 7978,
+      "received": 6375.94,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 170,
+        "Legendary: voidglass": 188,
+        "Legendary: veil-thousand-seals": 49
+      }
+    },
+    {
+      "E": 200,
+      "profile": "wand-voidglass-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "wins": 12,
+      "realm": 14.44,
+      "dps": 3871.28,
+      "heal": 8.46,
+      "barrier": 101.59,
+      "ehp": 7978,
+      "received": 6375.94,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 170,
+        "Legendary: voidglass": 188,
+        "Legendary: veil-thousand-seals": 49
+      }
+    },
+    {
+      "E": 200,
+      "profile": "staff-veil-heartroot",
+      "arm": "base",
+      "policy": "triple",
+      "n": 64,
+      "wins": 37,
+      "realm": 14.69,
+      "dps": 3380.5,
+      "heal": 5.47,
+      "barrier": 135.44,
+      "ehp": 8522.09,
+      "received": 7507.69,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 734,
+        "Legendary: veil-thousand-seals": 225,
+        "Legendary: heartroot-carapace": 10785
+      }
+    },
+    {
+      "E": 200,
+      "profile": "staff-veil-heartroot",
+      "arm": "veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "wins": 32,
+      "realm": 14.42,
+      "dps": 3377.36,
+      "heal": 5.75,
+      "barrier": 118.99,
+      "ehp": 8112.48,
+      "received": 7292.39,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 722,
+        "Legendary: veil-thousand-seals": 223,
+        "Legendary: heartroot-carapace": 11013
+      }
+    },
+    {
+      "E": 200,
+      "profile": "staff-veil-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "wins": 8,
+      "realm": 14.88,
+      "dps": 3370.86,
+      "heal": 7.11,
+      "barrier": 124.72,
+      "ehp": 8688.88,
+      "received": 7784.19,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 175,
+        "Legendary: veil-thousand-seals": 59,
+        "Legendary: heartroot-carapace": 3552
+      }
+    },
+    {
+      "E": 200,
+      "profile": "staff-veil-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "wins": 8,
+      "realm": 14.88,
+      "dps": 3370.86,
+      "heal": 7.11,
+      "barrier": 124.72,
+      "ehp": 8688.88,
+      "received": 7784.19,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 175,
+        "Legendary: veil-thousand-seals": 59,
+        "Legendary: heartroot-carapace": 3552
+      }
+    },
+    {
+      "E": 200,
+      "profile": "staff-veil-heartroot",
+      "arm": "base",
+      "policy": "random",
+      "n": 64,
+      "wins": 43,
+      "realm": 14,
+      "dps": 3709.86,
+      "heal": 14.78,
+      "barrier": 111.15,
+      "ehp": 8640.53,
+      "received": 7097.41,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 702,
+        "Legendary: veil-thousand-seals": 219,
+        "Legendary: heartroot-carapace": 12386
+      }
+    },
+    {
+      "E": 200,
+      "profile": "staff-veil-heartroot",
+      "arm": "veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "wins": 37,
+      "realm": 13.83,
+      "dps": 3704.45,
+      "heal": 14.67,
+      "barrier": 96.25,
+      "ehp": 8252.34,
+      "received": 6890.95,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 694,
+        "Legendary: veil-thousand-seals": 213,
+        "Legendary: heartroot-carapace": 12197
+      }
+    },
+    {
+      "E": 200,
+      "profile": "staff-veil-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "wins": 10,
+      "realm": 14,
+      "dps": 3673.4,
+      "heal": 17.22,
+      "barrier": 105.75,
+      "ehp": 8534.56,
+      "received": 7166.5,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 165,
+        "Legendary: veil-thousand-seals": 52,
+        "Legendary: heartroot-carapace": 3182
+      }
+    },
+    {
+      "E": 200,
+      "profile": "staff-veil-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "wins": 10,
+      "realm": 14,
+      "dps": 3673.4,
+      "heal": 17.22,
+      "barrier": 105.75,
+      "ehp": 8534.56,
+      "received": 7166.5,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 165,
+        "Legendary: veil-thousand-seals": 52,
+        "Legendary: heartroot-carapace": 3182
+      }
+    },
+    {
+      "E": 200,
+      "profile": "mace-oathwall-heartroot",
+      "arm": "base",
+      "policy": "triple",
+      "n": 64,
+      "wins": 49,
+      "realm": 15,
+      "dps": 2660.81,
+      "heal": 62.84,
+      "barrier": 11.02,
+      "ehp": 11851.27,
+      "received": 9182.97,
+      "procs": {
+        "Legendary: oathwall": 485,
+        "Legendary: heartroot-carapace": 20935
+      }
+    },
+    {
+      "E": 200,
+      "profile": "mace-oathwall-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "wins": 13,
+      "realm": 15,
+      "dps": 2653.34,
+      "heal": 65.28,
+      "barrier": 9.97,
+      "ehp": 11673.88,
+      "received": 8393.69,
+      "procs": {
+        "Legendary: oathwall": 116,
+        "Legendary: heartroot-carapace": 4771
+      }
+    },
+    {
+      "E": 200,
+      "profile": "mace-oathwall-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "wins": 13,
+      "realm": 15,
+      "dps": 2653.34,
+      "heal": 65.28,
+      "barrier": 9.97,
+      "ehp": 11673.88,
+      "received": 8393.69,
+      "procs": {
+        "Legendary: oathwall": 116,
+        "Legendary: heartroot-carapace": 4771
+      }
+    },
+    {
+      "E": 200,
+      "profile": "mace-oathwall-heartroot",
+      "arm": "base",
+      "policy": "random",
+      "n": 64,
+      "wins": 33,
+      "realm": 14.45,
+      "dps": 2428.57,
+      "heal": 61.15,
+      "barrier": 7.1,
+      "ehp": 12527.91,
+      "received": 11004.63,
+      "procs": {
+        "Legendary: oathwall": 598,
+        "Legendary: heartroot-carapace": 30473
+      }
+    },
+    {
+      "E": 200,
+      "profile": "mace-oathwall-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "wins": 10,
+      "realm": 15,
+      "dps": 2430.26,
+      "heal": 74.79,
+      "barrier": 7.25,
+      "ehp": 13118.13,
+      "received": 11350.25,
+      "procs": {
+        "Legendary: oathwall": 150,
+        "Legendary: heartroot-carapace": 7380
+      }
+    },
+    {
+      "E": 200,
+      "profile": "mace-oathwall-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "wins": 10,
+      "realm": 15,
+      "dps": 2430.26,
+      "heal": 74.79,
+      "barrier": 7.25,
+      "ehp": 13118.13,
+      "received": 11350.25,
+      "procs": {
+        "Legendary: oathwall": 150,
+        "Legendary: heartroot-carapace": 7380
+      }
+    },
+    {
+      "E": 200,
+      "profile": "bow-veil-heartroot",
+      "arm": "base",
+      "policy": "triple",
+      "n": 64,
+      "wins": 59,
+      "realm": 15,
+      "dps": 4105.59,
+      "heal": 1.79,
+      "barrier": 81.64,
+      "ehp": 6080.75,
+      "received": 4288.67,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 750,
+        "Legendary: veil-thousand-seals": 147,
+        "Legendary: heartroot-carapace": 2564
+      }
+    },
+    {
+      "E": 200,
+      "profile": "bow-veil-heartroot",
+      "arm": "veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "wins": 56,
+      "realm": 15,
+      "dps": 4106.08,
+      "heal": 2.08,
+      "barrier": 61.49,
+      "ehp": 5932.66,
+      "received": 4288.67,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 750,
+        "Legendary: veil-thousand-seals": 147,
+        "Legendary: heartroot-carapace": 3058
+      }
+    },
+    {
+      "E": 200,
+      "profile": "bow-veil-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "wins": 14,
+      "realm": 15,
+      "dps": 4117.89,
+      "heal": 1.73,
+      "barrier": 82.9,
+      "ehp": 5951.94,
+      "received": 4205.69,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 176,
+        "Legendary: veil-thousand-seals": 32,
+        "Legendary: heartroot-carapace": 730
+      }
+    },
+    {
+      "E": 200,
+      "profile": "bow-veil-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "wins": 14,
+      "realm": 15,
+      "dps": 4117.89,
+      "heal": 1.73,
+      "barrier": 82.9,
+      "ehp": 5951.94,
+      "received": 4205.69,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 176,
+        "Legendary: veil-thousand-seals": 32,
+        "Legendary: heartroot-carapace": 730
+      }
+    },
+    {
+      "E": 200,
+      "profile": "bow-veil-heartroot",
+      "arm": "base",
+      "policy": "random",
+      "n": 64,
+      "wins": 54,
+      "realm": 15,
+      "dps": 3936.25,
+      "heal": 16.02,
+      "barrier": 75.88,
+      "ehp": 7475.97,
+      "received": 5653.61,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 750,
+        "Legendary: veil-thousand-seals": 192,
+        "Legendary: heartroot-carapace": 7579
+      }
+    },
+    {
+      "E": 200,
+      "profile": "bow-veil-heartroot",
+      "arm": "veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "wins": 52,
+      "realm": 15,
+      "dps": 3936.35,
+      "heal": 16.76,
+      "barrier": 59.91,
+      "ehp": 7258.31,
+      "received": 5626.78,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 750,
+        "Legendary: veil-thousand-seals": 191,
+        "Legendary: heartroot-carapace": 8704
+      }
+    },
+    {
+      "E": 200,
+      "profile": "bow-veil-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "wins": 13,
+      "realm": 15,
+      "dps": 3926.45,
+      "heal": 15.85,
+      "barrier": 82.44,
+      "ehp": 7420.06,
+      "received": 5615.94,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 176,
+        "Legendary: veil-thousand-seals": 44,
+        "Legendary: heartroot-carapace": 1863
+      }
+    },
+    {
+      "E": 200,
+      "profile": "bow-veil-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "wins": 13,
+      "realm": 15,
+      "dps": 3926.45,
+      "heal": 15.85,
+      "barrier": 82.44,
+      "ehp": 7420.06,
+      "received": 5615.94,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 176,
+        "Legendary: veil-thousand-seals": 44,
+        "Legendary: heartroot-carapace": 1863
+      }
+    },
+    {
+      "E": 200,
+      "profile": "twohand-gravewake-eye",
+      "arm": "base",
+      "policy": "triple",
+      "n": 64,
+      "wins": 60,
+      "realm": 15,
+      "dps": 4277.66,
+      "heal": 0.06,
+      "barrier": 23.48,
+      "ehp": 5610,
+      "received": 2921.91,
+      "procs": {
+        "Legendary: gravewake": 463,
+        "Legendary: eye-of-morrow": 257
+      }
+    },
+    {
+      "E": 200,
+      "profile": "twohand-gravewake-eye",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "wins": 16,
+      "realm": 15,
+      "dps": 4232.27,
+      "heal": 0,
+      "barrier": 23.71,
+      "ehp": 5594.5,
+      "received": 3094.19,
+      "procs": {
+        "Legendary: gravewake": 107,
+        "Legendary: eye-of-morrow": 56
+      }
+    },
+    {
+      "E": 200,
+      "profile": "twohand-gravewake-eye",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "wins": 16,
+      "realm": 15,
+      "dps": 4232.27,
+      "heal": 0,
+      "barrier": 23.71,
+      "ehp": 5594.5,
+      "received": 3094.19,
+      "procs": {
+        "Legendary: gravewake": 107,
+        "Legendary: eye-of-morrow": 56
+      }
+    },
+    {
+      "E": 200,
+      "profile": "twohand-gravewake-eye",
+      "arm": "base",
+      "policy": "random",
+      "n": 64,
+      "wins": 40,
+      "realm": 14.81,
+      "dps": 3896.52,
+      "heal": 12.17,
+      "barrier": 27.01,
+      "ehp": 6615.77,
+      "received": 5254.91,
+      "procs": {
+        "Legendary: gravewake": 618,
+        "Legendary: eye-of-morrow": 334
+      }
+    },
+    {
+      "E": 200,
+      "profile": "twohand-gravewake-eye",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "wins": 9,
+      "realm": 14.88,
+      "dps": 3846.38,
+      "heal": 10,
+      "barrier": 28.81,
+      "ehp": 6560.44,
+      "received": 5668.81,
+      "procs": {
+        "Legendary: gravewake": 142,
+        "Legendary: eye-of-morrow": 77
+      }
+    },
+    {
+      "E": 200,
+      "profile": "twohand-gravewake-eye",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "wins": 9,
+      "realm": 14.88,
+      "dps": 3846.38,
+      "heal": 10,
+      "barrier": 28.81,
+      "ehp": 6560.44,
+      "received": 5668.81,
+      "procs": {
+        "Legendary: gravewake": 142,
+        "Legendary: eye-of-morrow": 77
+      }
+    },
+    {
+      "E": 200,
+      "profile": "twohand-veil-heartroot",
+      "arm": "base",
+      "policy": "triple",
+      "n": 64,
+      "wins": 63,
+      "realm": 15,
+      "dps": 4243.04,
+      "heal": 1.25,
+      "barrier": 107.64,
+      "ehp": 6337.25,
+      "received": 3209.86,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 750,
+        "Legendary: veil-thousand-seals": 141,
+        "Legendary: heartroot-carapace": 1948
+      }
+    },
+    {
+      "E": 200,
+      "profile": "twohand-veil-heartroot",
+      "arm": "veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "wins": 62,
+      "realm": 15,
+      "dps": 4242.36,
+      "heal": 1.52,
+      "barrier": 86.82,
+      "ehp": 6182.25,
+      "received": 3209.86,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 750,
+        "Legendary: veil-thousand-seals": 141,
+        "Legendary: heartroot-carapace": 2439
+      }
+    },
+    {
+      "E": 200,
+      "profile": "twohand-veil-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "wins": 16,
+      "realm": 15,
+      "dps": 4201.9,
+      "heal": 0.75,
+      "barrier": 108.25,
+      "ehp": 6292.94,
+      "received": 3275,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 176,
+        "Legendary: veil-thousand-seals": 33,
+        "Legendary: heartroot-carapace": 281
+      }
+    },
+    {
+      "E": 200,
+      "profile": "twohand-veil-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "wins": 16,
+      "realm": 15,
+      "dps": 4201.9,
+      "heal": 0.75,
+      "barrier": 108.25,
+      "ehp": 6292.94,
+      "received": 3275,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 176,
+        "Legendary: veil-thousand-seals": 33,
+        "Legendary: heartroot-carapace": 281
+      }
+    },
+    {
+      "E": 200,
+      "profile": "twohand-veil-heartroot",
+      "arm": "base",
+      "policy": "random",
+      "n": 64,
+      "wins": 58,
+      "realm": 15,
+      "dps": 3874.45,
+      "heal": 15.7,
+      "barrier": 97.19,
+      "ehp": 8147.3,
+      "received": 5723.33,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 750,
+        "Legendary: veil-thousand-seals": 208,
+        "Legendary: heartroot-carapace": 7857
+      }
+    },
+    {
+      "E": 200,
+      "profile": "twohand-veil-heartroot",
+      "arm": "veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "wins": 57,
+      "realm": 15,
+      "dps": 3874.23,
+      "heal": 16.17,
+      "barrier": 81.36,
+      "ehp": 7876.83,
+      "received": 5708.14,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 750,
+        "Legendary: veil-thousand-seals": 208,
+        "Legendary: heartroot-carapace": 8629
+      }
+    },
+    {
+      "E": 200,
+      "profile": "twohand-veil-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "wins": 14,
+      "realm": 15,
+      "dps": 3854.63,
+      "heal": 15.68,
+      "barrier": 103.51,
+      "ehp": 8372.19,
+      "received": 6154.44,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 176,
+        "Legendary: veil-thousand-seals": 53,
+        "Legendary: heartroot-carapace": 2108
+      }
+    },
+    {
+      "E": 200,
+      "profile": "twohand-veil-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "wins": 14,
+      "realm": 15,
+      "dps": 3854.63,
+      "heal": 15.68,
+      "barrier": 103.51,
+      "ehp": 8372.19,
+      "received": 6154.44,
+      "procs": {
+        "Legendary: veil-thousand-seals: barrier": 176,
+        "Legendary: veil-thousand-seals": 53,
+        "Legendary: heartroot-carapace": 2108
+      }
+    }
+  ],
+  "paired": [
+    {
+      "E": 50,
+      "profile": "sword-none",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 50,
+      "profile": "sword-none",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 50,
+      "profile": "sword-none",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 50,
+      "profile": "sword-none",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 50,
+      "profile": "sword-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "gained": 0,
+      "lost": 13
+    },
+    {
+      "E": 50,
+      "profile": "sword-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 64,
+      "gained": 0,
+      "lost": 17
+    },
+    {
+      "E": 50,
+      "profile": "sword-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "gained": 0,
+      "lost": 4
+    },
+    {
+      "E": 50,
+      "profile": "sword-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 64,
+      "gained": 0,
+      "lost": 4
+    },
+    {
+      "E": 50,
+      "profile": "sword-oathwall-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "gained": 1,
+      "lost": 12
+    },
+    {
+      "E": 50,
+      "profile": "sword-oathwall-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 64,
+      "gained": 1,
+      "lost": 20
+    },
+    {
+      "E": 50,
+      "profile": "sword-oathwall-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "gained": 1,
+      "lost": 2
+    },
+    {
+      "E": 50,
+      "profile": "sword-oathwall-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 64,
+      "gained": 0,
+      "lost": 5
+    },
+    {
+      "E": 50,
+      "profile": "sword-verdant-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "gained": 0,
+      "lost": 9
+    },
+    {
+      "E": 50,
+      "profile": "sword-verdant-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 64,
+      "gained": 1,
+      "lost": 12
+    },
+    {
+      "E": 50,
+      "profile": "sword-verdant-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "gained": 0,
+      "lost": 5
+    },
+    {
+      "E": 50,
+      "profile": "sword-verdant-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 64,
+      "gained": 1,
+      "lost": 8
+    },
+    {
+      "E": 50,
+      "profile": "wand-voidglass-veil",
+      "arm": "veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "gained": 0,
+      "lost": 5
+    },
+    {
+      "E": 50,
+      "profile": "wand-voidglass-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 50,
+      "profile": "wand-voidglass-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 50,
+      "profile": "wand-voidglass-veil",
+      "arm": "veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "gained": 0,
+      "lost": 3
+    },
+    {
+      "E": 50,
+      "profile": "wand-voidglass-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 50,
+      "profile": "wand-voidglass-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 50,
+      "profile": "staff-veil-heartroot",
+      "arm": "veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 50,
+      "profile": "staff-veil-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 50,
+      "profile": "staff-veil-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 50,
+      "profile": "staff-veil-heartroot",
+      "arm": "veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "gained": 0,
+      "lost": 1
+    },
+    {
+      "E": 50,
+      "profile": "staff-veil-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 50,
+      "profile": "staff-veil-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 50,
+      "profile": "mace-oathwall-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 50,
+      "profile": "mace-oathwall-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 50,
+      "profile": "mace-oathwall-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 50,
+      "profile": "mace-oathwall-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 50,
+      "profile": "bow-veil-heartroot",
+      "arm": "veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "gained": 0,
+      "lost": 2
+    },
+    {
+      "E": 50,
+      "profile": "bow-veil-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 50,
+      "profile": "bow-veil-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 50,
+      "profile": "bow-veil-heartroot",
+      "arm": "veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "gained": 0,
+      "lost": 5
+    },
+    {
+      "E": 50,
+      "profile": "bow-veil-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 50,
+      "profile": "bow-veil-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 50,
+      "profile": "twohand-gravewake-eye",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 50,
+      "profile": "twohand-gravewake-eye",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 50,
+      "profile": "twohand-gravewake-eye",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 50,
+      "profile": "twohand-gravewake-eye",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 50,
+      "profile": "twohand-veil-heartroot",
+      "arm": "veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "gained": 0,
+      "lost": 1
+    },
+    {
+      "E": 50,
+      "profile": "twohand-veil-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 50,
+      "profile": "twohand-veil-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 50,
+      "profile": "twohand-veil-heartroot",
+      "arm": "veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "gained": 0,
+      "lost": 4
+    },
+    {
+      "E": 50,
+      "profile": "twohand-veil-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 50,
+      "profile": "twohand-veil-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 100,
+      "profile": "sword-none",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 100,
+      "profile": "sword-none",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 100,
+      "profile": "sword-none",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 100,
+      "profile": "sword-none",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 100,
+      "profile": "sword-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "gained": 1,
+      "lost": 2
+    },
+    {
+      "E": 100,
+      "profile": "sword-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 64,
+      "gained": 0,
+      "lost": 9
+    },
+    {
+      "E": 100,
+      "profile": "sword-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "gained": 0,
+      "lost": 10
+    },
+    {
+      "E": 100,
+      "profile": "sword-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 64,
+      "gained": 0,
+      "lost": 16
+    },
+    {
+      "E": 100,
+      "profile": "sword-oathwall-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "gained": 0,
+      "lost": 5
+    },
+    {
+      "E": 100,
+      "profile": "sword-oathwall-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 64,
+      "gained": 0,
+      "lost": 10
+    },
+    {
+      "E": 100,
+      "profile": "sword-oathwall-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "gained": 2,
+      "lost": 8
+    },
+    {
+      "E": 100,
+      "profile": "sword-oathwall-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 64,
+      "gained": 1,
+      "lost": 11
+    },
+    {
+      "E": 100,
+      "profile": "sword-verdant-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "gained": 1,
+      "lost": 1
+    },
+    {
+      "E": 100,
+      "profile": "sword-verdant-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 64,
+      "gained": 1,
+      "lost": 4
+    },
+    {
+      "E": 100,
+      "profile": "sword-verdant-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "gained": 0,
+      "lost": 8
+    },
+    {
+      "E": 100,
+      "profile": "sword-verdant-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 64,
+      "gained": 0,
+      "lost": 16
+    },
+    {
+      "E": 100,
+      "profile": "wand-voidglass-veil",
+      "arm": "veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "gained": 0,
+      "lost": 4
+    },
+    {
+      "E": 100,
+      "profile": "wand-voidglass-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 100,
+      "profile": "wand-voidglass-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 100,
+      "profile": "wand-voidglass-veil",
+      "arm": "veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "gained": 0,
+      "lost": 5
+    },
+    {
+      "E": 100,
+      "profile": "wand-voidglass-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 100,
+      "profile": "wand-voidglass-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 100,
+      "profile": "staff-veil-heartroot",
+      "arm": "veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "gained": 0,
+      "lost": 1
+    },
+    {
+      "E": 100,
+      "profile": "staff-veil-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 100,
+      "profile": "staff-veil-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 100,
+      "profile": "staff-veil-heartroot",
+      "arm": "veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "gained": 0,
+      "lost": 3
+    },
+    {
+      "E": 100,
+      "profile": "staff-veil-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 100,
+      "profile": "staff-veil-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 100,
+      "profile": "mace-oathwall-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 100,
+      "profile": "mace-oathwall-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 100,
+      "profile": "mace-oathwall-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 100,
+      "profile": "mace-oathwall-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 100,
+      "profile": "bow-veil-heartroot",
+      "arm": "veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "gained": 0,
+      "lost": 4
+    },
+    {
+      "E": 100,
+      "profile": "bow-veil-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 100,
+      "profile": "bow-veil-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 100,
+      "profile": "bow-veil-heartroot",
+      "arm": "veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "gained": 0,
+      "lost": 4
+    },
+    {
+      "E": 100,
+      "profile": "bow-veil-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 100,
+      "profile": "bow-veil-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 100,
+      "profile": "twohand-gravewake-eye",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 100,
+      "profile": "twohand-gravewake-eye",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 100,
+      "profile": "twohand-gravewake-eye",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 100,
+      "profile": "twohand-gravewake-eye",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 100,
+      "profile": "twohand-veil-heartroot",
+      "arm": "veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "gained": 0,
+      "lost": 3
+    },
+    {
+      "E": 100,
+      "profile": "twohand-veil-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 100,
+      "profile": "twohand-veil-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 100,
+      "profile": "twohand-veil-heartroot",
+      "arm": "veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "gained": 0,
+      "lost": 5
+    },
+    {
+      "E": 100,
+      "profile": "twohand-veil-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 100,
+      "profile": "twohand-veil-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 200,
+      "profile": "sword-none",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 200,
+      "profile": "sword-none",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 200,
+      "profile": "sword-none",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 200,
+      "profile": "sword-none",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 200,
+      "profile": "sword-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "gained": 0,
+      "lost": 1
+    },
+    {
+      "E": 200,
+      "profile": "sword-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 64,
+      "gained": 1,
+      "lost": 4
+    },
+    {
+      "E": 200,
+      "profile": "sword-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "gained": 1,
+      "lost": 7
+    },
+    {
+      "E": 200,
+      "profile": "sword-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 64,
+      "gained": 1,
+      "lost": 12
+    },
+    {
+      "E": 200,
+      "profile": "sword-oathwall-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "gained": 0,
+      "lost": 1
+    },
+    {
+      "E": 200,
+      "profile": "sword-oathwall-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 64,
+      "gained": 1,
+      "lost": 5
+    },
+    {
+      "E": 200,
+      "profile": "sword-oathwall-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "gained": 0,
+      "lost": 6
+    },
+    {
+      "E": 200,
+      "profile": "sword-oathwall-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 64,
+      "gained": 0,
+      "lost": 17
+    },
+    {
+      "E": 200,
+      "profile": "sword-verdant-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 200,
+      "profile": "sword-verdant-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 64,
+      "gained": 0,
+      "lost": 3
+    },
+    {
+      "E": 200,
+      "profile": "sword-verdant-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "gained": 0,
+      "lost": 4
+    },
+    {
+      "E": 200,
+      "profile": "sword-verdant-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 64,
+      "gained": 0,
+      "lost": 8
+    },
+    {
+      "E": 200,
+      "profile": "wand-voidglass-veil",
+      "arm": "veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "gained": 0,
+      "lost": 3
+    },
+    {
+      "E": 200,
+      "profile": "wand-voidglass-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 200,
+      "profile": "wand-voidglass-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 200,
+      "profile": "wand-voidglass-veil",
+      "arm": "veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "gained": 0,
+      "lost": 2
+    },
+    {
+      "E": 200,
+      "profile": "wand-voidglass-veil",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 200,
+      "profile": "wand-voidglass-veil",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 200,
+      "profile": "staff-veil-heartroot",
+      "arm": "veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "gained": 0,
+      "lost": 5
+    },
+    {
+      "E": 200,
+      "profile": "staff-veil-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 200,
+      "profile": "staff-veil-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 200,
+      "profile": "staff-veil-heartroot",
+      "arm": "veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "gained": 0,
+      "lost": 6
+    },
+    {
+      "E": 200,
+      "profile": "staff-veil-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 200,
+      "profile": "staff-veil-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 200,
+      "profile": "mace-oathwall-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 200,
+      "profile": "mace-oathwall-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 200,
+      "profile": "mace-oathwall-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 200,
+      "profile": "mace-oathwall-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 200,
+      "profile": "bow-veil-heartroot",
+      "arm": "veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "gained": 0,
+      "lost": 3
+    },
+    {
+      "E": 200,
+      "profile": "bow-veil-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 200,
+      "profile": "bow-veil-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 200,
+      "profile": "bow-veil-heartroot",
+      "arm": "veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "gained": 0,
+      "lost": 2
+    },
+    {
+      "E": 200,
+      "profile": "bow-veil-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 200,
+      "profile": "bow-veil-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 200,
+      "profile": "twohand-gravewake-eye",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 200,
+      "profile": "twohand-gravewake-eye",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 200,
+      "profile": "twohand-gravewake-eye",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 200,
+      "profile": "twohand-gravewake-eye",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 200,
+      "profile": "twohand-veil-heartroot",
+      "arm": "veil_barrier_moderate",
+      "policy": "triple",
+      "n": 64,
+      "gained": 0,
+      "lost": 1
+    },
+    {
+      "E": 200,
+      "profile": "twohand-veil-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 200,
+      "profile": "twohand-veil-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "triple",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 200,
+      "profile": "twohand-veil-heartroot",
+      "arm": "veil_barrier_moderate",
+      "policy": "random",
+      "n": 64,
+      "gained": 0,
+      "lost": 1
+    },
+    {
+      "E": 200,
+      "profile": "twohand-veil-heartroot",
+      "arm": "sword_veil_barrier_moderate",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "E": 200,
+      "profile": "twohand-veil-heartroot",
+      "arm": "sword_veil_barrier_strong",
+      "policy": "random",
+      "n": 16,
+      "gained": 0,
+      "lost": 0
+    }
+  ]
+}

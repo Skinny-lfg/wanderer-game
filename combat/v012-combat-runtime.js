@@ -148,7 +148,7 @@ function legendaryDefensiveEffects(r,blocked,hit,absorbed=0,broken=false){
 function legendaryRealmStart(r){
  if(!ports.legendaryHas('veil-thousand-seals'))return;
  const t=ports.legendaryRuntime(r);
- if(ports.legendaryHas('veil-thousand-seals')&&!t.veilGranted){t.veilGranted=true;t.veilEarlierBarrier=r.barrier;t.veilBarrier=ports.setBarrier(r,r.maxhp*(ports.legendaryEmpowered(r,'veil-thousand-seals')?.06:.04));if(t.veilBarrier>0)ports.phase6Proc(r,'Legendary: veil-thousand-seals: barrier');}
+ if(ports.legendaryHas('veil-thousand-seals')&&!t.veilGranted){t.veilGranted=true;t.veilEarlierBarrier=r.barrier;t.veilBarrier=ports.setBarrier(r,r.maxhp*((r.stats?.main?.subtype==='Sword'&&r.stats?.off?.subtype==='Shield')?(ports.legendaryEmpowered(r,'veil-thousand-seals')?.04:.025):(ports.legendaryEmpowered(r,'veil-thousand-seals')?.06:.04)));if(t.veilBarrier>0)ports.phase6Proc(r,'Legendary: veil-thousand-seals: barrier');}
 }
 
 function legendaryTick(r,dt){
