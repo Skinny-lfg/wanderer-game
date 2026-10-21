@@ -1,5 +1,5 @@
 {
-  "phase": "C.3.1",
+  "phase": "C.3 core visual assets integrated",
   "legendary": {
     "crimson-fang": {
       "path": "assets/legendary/crimson-fang.webp",
@@ -89,10 +89,13 @@
     }
   },
   "pending": [
-    "30 equipment images Cloth/Leather/Plate, optimized",
-    "12 dungeon backgrounds, optimized",
-    "passives still in progress"
+    "Weapon and jewelry WebP catalog review; originals remain available",
+    "Passive images still being prepared",
+    "Full end-to-end browser QA and release approval"
   ],
   "note": "No gameplay or saves changed; asset files can be replaced by smaller versions.",
-  "notes": "Game-ready WebP imported from 10 - Game Ready (WebP), original PNGs in Drive, other C3 stages in progress."
+  "notes": "Only development; no gameplay/save changes; old artwork remains for legacy fallbacks. New source Drive: 10 - Game Ready (WebP).",
+  "status": "Integrated: Legendary WebP, six affinity icons, three Magic choices, 30 typed armor WebP and 12 responsive dungeon backgrounds",
+  "armorManifest": "assets/equipment/c3/manifest.json",
+  "dungeonManifest": "assets/dungeons/c3/manifest.json"
 }
