@@ -24,3 +24,22 @@ Verificar no JSON as nove linhas iniciais: arma Bow, cinco armaduras Leather, ti
 A geração agora é coerente com um arquétipo Bow/Leather, mas continua **sintética**, sem saves históricos observados. A mesma preparação dos três perfis isola a política A/B/C; não testa a diversidade real de builds dos jogadores. Este ajuste não garante um conjunto de Affinities ideal, Legendaries ou potions. A auditoria E.2 permanece bloqueada até haver resultados reprodutíveis, telemetria conferida e critérios de representatividade aceites. D.7 deve ser validada com o seu próprio relatório; esta fase não modifica Dual Daggers.
 
 **Sem alterações de balanceamento recomendadas nesta fase.**
+
+## Execução efetiva: amostra E200 (21 de outubro de 2026)
+
+GitHub Actions: https://github.com/Skinny-lfg/wanderer-game/actions/runs/39665276384
+Commit testado: `23c85cf175c613105e72a2778c08375f9c18cc46`
+Artefacto JSON com as nove trajetórias: https://github.com/Skinny-lfg/wanderer-game/actions/runs/39665276384/artifacts/12375579442
+
+O workflow passou: E.1.2 T1–T5 (5/5), simulação E.1.3 (9/9 tentativas concluídas), zero erros, zero timeouts e ambos os scripts com sintaxe válida.
+
+| Perfil | Seed 0 | Seed 1 | Seed 2 | Vitórias |
+| --- | --- | --- | --- | --- |
+| A Normal | derrota E200 | vitória E200→201 | derrota E200 | 1/3 |
+| B Otimizado | vitória E200→201 | vitória E200→201 | vitória E200→201 | 3/3 |
+| C Recuperação | vitória E200→201 | vitória E200→201 | derrota E200 | 2/3 |
+
+**Total: seis vitórias em nove tentativas (66,7%); três derrotas; E201 desbloqueada em seis estados.** Estes valores foram confirmados no resumo do log. O artefacto contém estados completos e `fatalFight` para análise subsequente, mas os respetivos campos granulares não foram ainda verificados individualmente neste relatório.
+
+**Aviso metodológico:** há apenas uma tentativa por seed/perfil. As três políticas partem de uma mesma base Bow/Leather sintética, mas as sementes e os efeitos económicos diferem. As vitórias não estimam uma win rate global e a diferença para E.1.2 não permite concluir isoladamente que a composição de armadura foi a única causa. Não fazer ajustes de gameplay, dificuldade ou economia a partir desta pequena amostra. Antes de E.2, auditar o artefacto de telemetria fatal e a representatividade dos estados.
+
