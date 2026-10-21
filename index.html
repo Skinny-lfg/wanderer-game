@@ -628,6 +628,13 @@ body::before{
 }
 
 .affinityGlyph.itemAffinityGlyph{background-image:url('assets/affinities/item-icons-simplified.svg')}
+/* C.3 independently mapped affinity icons; combat effect sprites remain unchanged. */
+.affinityFamilyIcon{display:inline-block;width:26px;height:26px;object-fit:contain;vertical-align:middle;flex:none}
+.phase1DraftCard>.affinityFamilyIcon{width:44px;height:44px}
+.magicChoiceIcon{width:44px;height:44px;object-fit:contain}
+.phase2PassiveIcons .affinityFamilyIcon{width:22px;height:22px}
+@media(max-width:650px){.phase1DraftCard>.affinityFamilyIcon,.magicChoiceIcon{width:38px;height:38px}}
+
 
 /* Combat: the dungeon affinity belongs with the dungeon heading, not the enemy stat column. */
 .combatDungeonHeading{display:flex;align-items:center;gap:10px;min-width:0}
@@ -1043,18 +1050,18 @@ function equipmentArtType(subtype){
 }
 const WANDERER_NEW_LEGENDARY_DROPS_ENABLED=true;
 const NEW_LEGENDARY_CATALOG=[
- {catalogueNew:true,id:'crimson-fang',name:'Crimson Fang',slot:'weapon',subtype:'Daggers'},
- {catalogueNew:true,id:'chalice-hollow-king',name:'Chalice of the Hollow King',slot:'amulet',subtype:'Amulet'},
- {catalogueNew:true,id:'gravewake',name:'Gravewake',slot:'weapon',subtype:'Two-Handed'},
- {catalogueNew:true,id:'eye-of-morrow',name:'Eye of Morrow',slot:'ring',subtype:'Ring'},
- {catalogueNew:true,id:'verdant-oath',name:'Verdant Oath',slot:'weapon',subtype:'Sword'},
- {catalogueNew:true,id:'heartroot-carapace',name:'Heartroot Carapace',slot:'armor',subtype:'Armor'},
- {catalogueNew:true,id:'oathwall',name:'Oathwall',slot:'offhand',subtype:'Shield'},
- {catalogueNew:true,id:'veil-thousand-seals',name:'Veil of a Thousand Seals',slot:'belt',subtype:'Belt'},
- {catalogueNew:true,id:'kingsbreaker',name:'Kingsbreaker',slot:'weapon',subtype:'Mace'},
- {catalogueNew:true,id:'tempest-talon',name:'Tempest Talon',slot:'weapon',subtype:'Bow'},
- {catalogueNew:true,id:'astrafall',name:'Astrafall',slot:'weapon',subtype:'Staff'},
- {catalogueNew:true,id:'voidglass',name:'Voidglass',slot:'weapon',subtype:'Wand'}
+ {catalogueNew:true,id:'crimson-fang',name:'Crimson Fang',slot:'weapon',subtype:'Daggers',image:'crimson-fang.png'},
+ {catalogueNew:true,id:'chalice-hollow-king',name:'Chalice of the Hollow King',slot:'amulet',subtype:'Amulet',image:'chalice-hollow-king.png'},
+ {catalogueNew:true,id:'gravewake',name:'Gravewake',slot:'weapon',subtype:'Two-Handed',image:'gravewake.png'},
+ {catalogueNew:true,id:'eye-of-morrow',name:'Eye of Morrow',slot:'ring',subtype:'Ring',image:'eye-of-morrow.png'},
+ {catalogueNew:true,id:'verdant-oath',name:'Verdant Oath',slot:'weapon',subtype:'Sword',image:'verdant-oath.png'},
+ {catalogueNew:true,id:'heartroot-carapace',name:'Heartroot Carapace',slot:'armor',subtype:'Armor',image:'heartroot-carapace.png'},
+ {catalogueNew:true,id:'oathwall',name:'Oathwall',slot:'offhand',subtype:'Shield',image:'oathwall.png'},
+ {catalogueNew:true,id:'veil-thousand-seals',name:'Veil of a Thousand Seals',slot:'belt',subtype:'Belt',image:'veil-thousand-seals.png'},
+ {catalogueNew:true,id:'kingsbreaker',name:'Kingsbreaker',slot:'weapon',subtype:'Mace',image:'kingsbreaker.png'},
+ {catalogueNew:true,id:'tempest-talon',name:'Tempest Talon',slot:'weapon',subtype:'Bow',image:'tempest-talon.png'},
+ {catalogueNew:true,id:'astrafall',name:'Astrafall',slot:'weapon',subtype:'Staff',image:'astrafall.png'},
+ {catalogueNew:true,id:'voidglass',name:'Voidglass',slot:'weapon',subtype:'Wand',image:'voidglass.png'}
 ];
 const ALL_LEGENDARY_CATALOG=NEW_LEGENDARY_CATALOG;
 const LEGENDARY_BY_ID=Object.fromEntries(ALL_LEGENDARY_CATALOG.map(entry=>[entry.id,entry]));
@@ -1978,8 +1985,8 @@ function phase3RenderCityCenter(){
 
 const PHASE2_FAMILY_GLYPHS={blood:'bleed',decay:'poison',vitality:'regen',aegis:'shield',fury:'crit',magic:'shock'};
 function phase2FamilyIcon(family){
- const glyph=PHASE2_FAMILY_GLYPHS[family];if(!glyph)return '';
- return affinityArt(glyph,true).replace('aria-label="'+esc(ELEMENTS[glyph].name)+' affinity"','aria-label="'+WandererV012Expedition.FAMILY_NAMES[family]+' affinity"');
+  if(!Object.prototype.hasOwnProperty.call(PHASE2_FAMILY_GLYPHS,family))return '';
+  return '<img class="affinityFamilyIcon" src="assets/affinities/families/'+family+'.png" alt="'+esc(WandererV012Expedition.FAMILY_NAMES[family])+' affinity" loading="lazy" decoding="async">';
 }
 function phase2PassiveIcons(passive){
  return '<span class="phase2PassiveIcons">'+(passive.requires.length?passive.requires:[passive.family]).map(phase2FamilyIcon).join('')+'</span>';
@@ -2021,7 +2028,7 @@ function renderPhase1(){
   const header='<section class="panel"><span class="eyebrow">Wanderer v0.12 · Buildcraft</span><h2>'+(d.kind==='reward'?'Realm '+plane.plane+' cleared · choose a passive':d.kind==='initial'?'Choose your Magic element':'Realm '+g.planeIndex+' · choose your Magic element')+'</h2><p class="small muted">'+familyLabel(plane.family)+' · '+(d.kind==='reward'?'Enabling affinity abilities are unlocked first; choose one additional passive.':'Element stays fixed for this Expedition.')+'</p><div class="phase1FamilyRow">'+g.families.map(f=>'<span>'+familyLabel(f)+'</span>').join('')+'</div><p class="small muted">Your build: '+esc(chosen.join(' · ')||'No passives selected yet')+'</p><div class="phase1DraftCards">';
   if(d.step==='element'){
    const cards=[['fire','Fire','Burn · lasting damage','burn'],['frost','Frost','Chill · slower enemy attacks','slow'],['lightning','Lightning','Shock · 4 charges trigger a burst','shock']];
-   html(header+cards.map(([id,name,desc,glyph])=>'<button class="phase1DraftCard" data-phase2-element="'+id+'"><span>'+affinityArt(glyph)+'</span><strong>'+name+'</strong><small>'+desc+'</small></button>').join('')+'</div><p class="small muted">Element stays fixed for this Expedition. Staff and Wand amplify it.</p></section>');
+   html(header+cards.map(([id,name,desc,glyph])=>'<button class="phase1DraftCard" data-phase2-element="'+id+'"><span>'+'<img class="magicChoiceIcon" src="assets/affinities/magic/'+id+'.png" alt="" loading="lazy" decoding="async">'+'</span><strong>'+name+'</strong><small>'+desc+'</small></button>').join('')+'</div><p class="small muted">Element stays fixed for this Expedition. Staff and Wand amplify it.</p></section>');
    Q('[data-phase2-element]').forEach(b=>b.onclick=()=>{if(phase2ChooseElement(b.dataset.phase2Element))phase2EnterInitialRealm();});
   }else{
    html(header+(d.options.length?d.options.map(p=>'<button class="phase1DraftCard" data-phase2-passive="'+p.id+'">'+phase2PassiveIcons(p)+'<small>'+esc(p.category||'')+'</small><strong>'+esc(p.name)+'</strong><small>'+esc(p.description)+'</small><span class="micro muted">'+(p.requires.length?'HYBRID · ':'')+(p.max===1?'UNIQUE':'Rank '+WandererV012Buildcraft.ownedRank(phase1Build,p.id)+' → '+(WandererV012Buildcraft.ownedRank(phase1Build,p.id)+1)+' / '+p.max)+'</span></button>').join(''):'<button class="phase1DraftCard" data-passive-exhausted>No useful passive upgrades remain · CONTINUE EXPEDITION</button>')+'</div>'+(d.options.length>0&&d.options.length<3?'<p class="small muted">Only '+d.options.length+' eligible '+(d.options.length===1?'upgrade remains.':'upgrades remain.')+'</p>':'')+'<p class="small muted">Numeric passives: Rank 5 maximum. Unique talents: Rank 1.</p></section>');
