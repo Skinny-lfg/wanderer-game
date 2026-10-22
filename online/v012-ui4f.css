@@ -5,36 +5,16 @@
 .phase3IntegratedPreview{
   --wf-frame:url("../assets/ui-kit/seamless-minimal/00_full_frame_reference.png");
   --wf-panel-edge:clamp(9px,1.1vw,14px);
-  --wf-card-edge:7px;
-  --wf-item-edge:4px;
 }
-/* A real border-image REPLACES the former CSS border and pseudo-element frame.
-   No additional layers are placed over the existing rectangle. */
+/* The 9-slice trim belongs to screen-level windows only. Nested cards, HUDs,
+   equipment paper and popups keep their own simple surfaces and item frames. */
 .phase3IntegratedPreview :is(
-  .panel,.phase3ExpeditionPanel,.paper,.phase3PermanentStats,
-  .phase3ResourcePanel,.phase3CombatBuild,.phase3ActiveAffinities,
-  .phase3CombatAffinityGroup,.phase3PassiveCard,.phase3Journey,
-  .phase3BetweenBag,.phase5GearGroup,.inspect
+  #screen>.panel,
+  #screen>.combatLayout>.panel,
+  #screen>.equipmentLayout>.equipmentLeft>.panel,
+  #screen>.equipmentLayout>.equipmentRight>.panel
 ){
   --wf-edge:var(--wf-panel-edge);
-  border:var(--wf-edge) solid transparent!important;
-  border-image-source:var(--wf-frame)!important;
-  border-image-slice:96!important;
-  border-image-width:var(--wf-edge)!important;
-  border-image-repeat:repeat!important;
-  border-image-outset:0!important;
-  border-radius:0!important;
-  background-clip:padding-box;
-  box-sizing:border-box;
-}
-.phase3IntegratedPreview :is(
-  .merchantCompactCard,.runeSlot,.phase3PotionSlot,.potionOffer,
-  .phase3PassiveTooltip,.phase1Offer,.phase1DraftCard,.forgePickCard,
-  .phase5ResultMetric,.phase3StatCell,.phase3BagItem,.lootCard,
-  .shopCard,.compareCard,.phase3AffinityChoice,.runePanel,
-  .phase3AffinityStrip>span
-){
-  --wf-edge:var(--wf-card-edge);
   border:var(--wf-edge) solid transparent!important;
   border-image-source:var(--wf-frame)!important;
   border-image-slice:96!important;
@@ -61,11 +41,8 @@
   .phase3Camp,.phase3Between,.phase3CityCenter,
   .phase3AffinityShrine,.phase5VisualSummary
 )::before{content:none!important;display:none!important;background:none!important}
-/* Item art keeps exactly its previous square outer dimensions.
-   v3.5 rarity artwork remains the sole rarity layer, never stretched. */
-/* The only item frame is the existing 1:1 rarity sprite. Place a
-   rarity-tinted fill INSIDE its opening, never behind the outer slot.
-   15% internal safe area clears the ornate corners/edge motifs. */
+/* Item illustration remains proportional inside the square hit-target frame.
+   Keep rarity tint inside the image window, clear of the frame edges. */
 .phase3IntegratedPreview .rarityImageFrame{
   position:relative;
   isolation:isolate;
@@ -111,7 +88,7 @@
 }
 .phase3IntegratedPreview .rarityImageFrame::after{
   /* Square source, square output: no deformation or second frame. */
-  background-size:100% 100%!important;
+  background-size:contain!important;
   background-position:center!important;
   background-repeat:no-repeat!important;
 }
@@ -171,7 +148,7 @@
     background-image:
       linear-gradient(to bottom,rgba(21,13,20,.08) 0%,rgba(21,13,20,.06) 72%,#150d14 100%),
       url("../assets/backgrounds/camp.webp")!important;
-    background-size:100% 100%,auto 600px!important;
+    background-size:contain,auto 600px!important;
     background-position:center center,calc(50% - 56px) -40px!important;
     background-repeat:no-repeat!important;
   }
@@ -181,7 +158,7 @@
     --wf-panel-edge:9px;--wf-card-edge:6px;--wf-item-edge:4px;
   }
   .phase3IntegratedPreview .phase3CampGrid .equipmentLoadout.phase3HeroColumn .paper{
-    background-size:100% 100%,auto 510px!important;
+    background-size:contain,auto 510px!important;
     background-position:center center,calc(50% - 42px) -48px!important;
   }
 }

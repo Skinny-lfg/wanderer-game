@@ -116,18 +116,15 @@
 /* Potion stacks share the SAME stashGrid and rarity frame as equipment items.
    No independent Potion section/Inventory grid exists. */
 .phase3IntegratedPreview .equipmentInventory .stashGrid>.potionStackTile{
- display:flex!important;flex-direction:column!important;
- justify-content:center!important;align-items:center!important;
- position:relative!important;min-width:0!important;
- min-height:86px!important;max-height:none!important;
- padding:4px 2px!important;gap:2px!important;
- aspect-ratio:1/1.15;
+ display:block!important;position:relative!important;min-width:0!important;
+ min-height:0!important;height:auto!important;max-height:none!important;
+ padding:0!important;aspect-ratio:1/1!important;overflow:hidden;
  border:0!important;border-image:none!important;border-radius:0!important;
  background:transparent!important;box-shadow:none!important;
 }
 .phase3IntegratedPreview .equipmentInventory .stashGrid>.potionStackTile .rarityImageFrame--potion-stack{
- display:block;width:55px!important;height:55px!important;
- flex:0 0 55px!important;
+ display:block;position:absolute;left:50%;top:43%;width:min(60%,50px)!important;height:auto!important;
+ aspect-ratio:1/1;flex:none!important;transform:translate(-50%,-50%);
 }
 .phase3IntegratedPreview .equipmentInventory .stashGrid>.potionStackTile .rarityImageFrame>img{
  object-fit:contain!important;
@@ -139,9 +136,9 @@
  background:#160d14e8!important;color:#f1dfb1!important;
 }
 .phase3IntegratedPreview .equipmentInventory .stashGrid>.potionStackTile>.potionStackName{
- display:block!important;width:100%!important;
- color:#d8c6c5;font-size:9px!important;line-height:1.12!important;
- text-align:center;white-space:normal!important;overflow-wrap:anywhere;
+ display:block!important;position:absolute;left:2px;right:2px;bottom:3px;z-index:4;
+ width:auto!important;color:#d8c6c5;font-size:9px!important;line-height:1.12!important;
+ text-align:center;white-space:nowrap!important;overflow:hidden;text-overflow:ellipsis;
 }
 @media(max-width:700px){
  .phase3IntegratedPreview .equipmentOverview{
@@ -156,7 +153,7 @@
   font-size:9.5px!important;
  }
  .phase3IntegratedPreview .equipmentInventory .stashGrid>.potionStackTile{
-  min-height:78px!important;
+  min-height:0!important;
  }
  .phase3IntegratedPreview .equipmentInventory .stashGrid>.potionStackTile .rarityImageFrame--potion-stack{
   width:50px!important;height:50px!important;flex-basis:50px!important;

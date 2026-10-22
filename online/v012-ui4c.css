@@ -38,8 +38,8 @@
 .phase3IntegratedPreview .phase3PassiveCard{display:flex;flex-direction:column;min-width:0;height:100%;padding:8px;background:linear-gradient(150deg,#31222b,#211820);border:1px solid var(--ui4c-line);border-radius:9px}
 .phase3IntegratedPreview .phase3PassiveCard>.phase3PassiveChoice{display:flex;flex:1;flex-direction:column;align-items:center;justify-content:flex-start;gap:5px;width:100%;min-width:0;height:auto;min-height:0;padding:10px 8px;background:transparent;border:0;text-align:center}
 .phase3IntegratedPreview .phase3PassiveCard>.phase3PassiveChoice:hover{background:#392630}
-.phase3IntegratedPreview .phase3PassiveCard .phase2PassiveIcons{display:flex;align-items:center;justify-content:center;min-height:46px}
-.phase3IntegratedPreview .phase3PassiveCard .phase2PassiveIcon{width:42px;height:42px;object-fit:contain}
+.phase3IntegratedPreview .phase3PassiveCard .phase2PassiveIcons{display:flex;align-items:center;justify-content:center;min-height:76px}
+.phase3IntegratedPreview .phase3PassiveCard .phase2PassiveIcon{width:68px;height:68px;object-fit:contain}
 .phase3IntegratedPreview .phase3PassiveCard .phase3PassiveChoice>strong{font-size:16px;line-height:1.2}
 .phase3IntegratedPreview .phase3PassiveCard .phase3PassiveDescription{display:-webkit-box;max-width:100%;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:3;line-clamp:3;line-height:1.35}
 .phase3IntegratedPreview .phase3PassiveCard .phase3PassivePreview{margin-top:auto;font-size:11px;font-weight:700;text-align:center}
@@ -70,6 +70,6 @@
  .phase3IntegratedPreview .phase5VisualSummary{padding:9px}
 }
 @media(max-width:380px){.phase3IntegratedPreview .phase3StatGrid,.phase3IntegratedPreview .phase3BetweenHero .phase3StatGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:700px){.phase3IntegratedPreview .phase3PassiveCard{min-height:260px}}
+@media(max-width:700px){.phase3IntegratedPreview .phase3PassiveCard{min-height:220px}.phase3IntegratedPreview .phase3PassiveCard .phase2PassiveIcons{min-height:68px}.phase3IntegratedPreview .phase3PassiveCard .phase2PassiveIcon{width:60px;height:60px}}
 
 .phase3IntegratedPreview .phase3BetweenHeader .phase3CharacterSummary{display:block;padding:0;border:0}

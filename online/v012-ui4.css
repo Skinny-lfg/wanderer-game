@@ -89,11 +89,11 @@
  padding:clamp(20px,2.3vw,32px);
 }
 
-/* Four authentic primary button states; original images are used as scalable border images.
+/* Four primary states use the simplified Drive button set as a 9-slice border image.
    Exclude tiny navigation buttons and selectable item cards. */
 .phase3IntegratedPreview button.primary:not(.tiny):not(.slotTile):not(.phase1Offer):not(.phase1DraftCard) {
  border:12px solid transparent;
- border-image-source:url("../assets/ui-kit/original/buttons/01_primary_normal.png");
+ border-image-source:url("../assets/ui-kit/ui9/buttons/primary_normal.webp");
  border-image-slice:38% 24% fill;
  border-image-width:12px 24px;
  border-image-repeat:stretch;
@@ -105,15 +105,15 @@
  text-shadow:0 1px 3px #000;
 }
 .phase3IntegratedPreview button.primary:not(.tiny):not(.slotTile):not(.phase1Offer):not(.phase1DraftCard):hover:not(:disabled){
- border-image-source:url("../assets/ui-kit/original/buttons/02_primary_hover.png");
+ border-image-source:url("../assets/ui-kit/ui9/buttons/primary_hover.webp");
  background:transparent;
 }
 .phase3IntegratedPreview button.primary:not(.tiny):not(.slotTile):not(.phase1Offer):not(.phase1DraftCard):active:not(:disabled){
- border-image-source:url("../assets/ui-kit/original/buttons/03_primary_pressed.png");
+ border-image-source:url("../assets/ui-kit/ui9/buttons/primary_pressed.webp");
  transform:translateY(1px);
 }
 .phase3IntegratedPreview button.primary:not(.tiny):not(.slotTile):not(.phase1Offer):not(.phase1DraftCard):disabled{
- border-image-source:url("../assets/ui-kit/original/buttons/04_primary_disabled.png");
+ border-image-source:url("../assets/ui-kit/ui9/buttons/primary_disabled.webp");
  color:#c9bbb0;
  opacity:.85;
 }
@@ -135,7 +135,7 @@
 /* Authentic tab art, without changing navigation/selection handlers. */
 .phase3IntegratedPreview :is(.phase3Nav button,.cityCenterTabs button,.inventoryJumpNav button) {
  border:8px solid transparent!important;
- border-image-source:url("../assets/ui-kit/original/tabs/tab_normal.png")!important;
+ border-image-source:url("../assets/ui-kit/ui9/tabs/main_tab_normal.webp")!important;
  border-image-slice:32% 23% fill!important;
  border-image-width:8px 13px!important;
  background:transparent!important;
@@ -144,57 +144,46 @@
  min-height:42px;
 }
 .phase3IntegratedPreview :is(.phase3Nav button,.cityCenterTabs button,.inventoryJumpNav button):is(:hover,:focus-visible):not(:disabled) {
- border-image-source:url("../assets/ui-kit/original/tabs/tab_hover.png")!important;
+ border-image-source:url("../assets/ui-kit/ui9/tabs/main_tab_hover.webp")!important;
 }
 .phase3IntegratedPreview :is(.phase3Nav button.primary,.cityCenterTabs button[aria-selected="true"],.inventoryJumpNav button[aria-current="true"]){
- border-image-source:url("../assets/ui-kit/original/tabs/tab_pressed.png")!important;
+ border-image-source:url("../assets/ui-kit/ui9/tabs/main_tab_pressed.webp")!important;
  color:#fff1dd;
 }
 .phase3IntegratedPreview :is(.phase3Nav button,.cityCenterTabs button,.inventoryJumpNav button):disabled{
- border-image-source:url("../assets/ui-kit/original/tabs/tab_disabled.png")!important;
+ border-image-source:url("../assets/ui-kit/ui9/tabs/main_tab_disabled.webp")!important;
 }
+.phase3IntegratedPreview :is(.phase3Nav button,.cityCenterTabs button,.inventoryJumpNav button):active:not(:disabled){border-image-source:url("../assets/ui-kit/ui9/tabs/main_tab_pressed.webp")!important}
+.phase3IntegratedPreview :is(.phase3Nav button,.cityCenterTabs button,.inventoryJumpNav button){display:inline-flex;align-items:center;justify-content:center;gap:7px}
+.phase3IntegratedPreview .phase3NavIcon,.phase3IntegratedPreview .phase3TabIcon{width:25px;height:25px;flex:0 0 25px;object-fit:contain}
 
 /* Opt-in image assets for semantic icon-only controls: no replacement of text labels. */
 .phase3IntegratedPreview :is(.ui4b-close,.ui4b-arrow-up,.ui4b-arrow-down,.ui4b-arrow-left,.ui4b-arrow-right){
- display:inline-block;width:28px;height:28px;background-position:center;background-size:contain;background-repeat:no-repeat;
+ display:inline-block;width:36px;height:36px;background-position:center;background-size:contain;background-repeat:no-repeat;
 }
-.phase3IntegratedPreview .ui4b-close{background-image:url("../assets/ui-kit/original/tabs/close_normal.png")}
-.phase3IntegratedPreview .ui4b-close:hover{background-image:url("../assets/ui-kit/original/tabs/close_hover.png")}
-.phase3IntegratedPreview .ui4b-close:active{background-image:url("../assets/ui-kit/original/tabs/close_pressed.png")}
-.phase3IntegratedPreview .ui4b-close:disabled{background-image:url("../assets/ui-kit/original/tabs/close_disabled.png")}
-.phase3IntegratedPreview .ui4b-arrow-up{background-image:url("../assets/ui-kit/original/tabs/arrow_up_normal.png")}
-.phase3IntegratedPreview .ui4b-arrow-up:hover{background-image:url("../assets/ui-kit/original/tabs/arrow_up_hover.png")}
-.phase3IntegratedPreview .ui4b-arrow-up:active{background-image:url("../assets/ui-kit/original/tabs/arrow_up_pressed.png")}
-.phase3IntegratedPreview .ui4b-arrow-up:disabled{background-image:url("../assets/ui-kit/original/tabs/arrow_up_disabled.png")}
-.phase3IntegratedPreview .ui4b-arrow-down{background-image:url("../assets/ui-kit/original/tabs/arrow_down_normal.png")}
-.phase3IntegratedPreview .ui4b-arrow-down:hover{background-image:url("../assets/ui-kit/original/tabs/arrow_down_hover.png")}
-.phase3IntegratedPreview .ui4b-arrow-down:active{background-image:url("../assets/ui-kit/original/tabs/arrow_down_pressed.png")}
-.phase3IntegratedPreview .ui4b-arrow-down:disabled{background-image:url("../assets/ui-kit/original/tabs/arrow_down_disabled.png")}
-.phase3IntegratedPreview .ui4b-arrow-left{background-image:url("../assets/ui-kit/original/tabs/arrow_left_normal.png")}
-.phase3IntegratedPreview .ui4b-arrow-left:hover{background-image:url("../assets/ui-kit/original/tabs/arrow_left_hover.png")}
-.phase3IntegratedPreview .ui4b-arrow-left:active{background-image:url("../assets/ui-kit/original/tabs/arrow_left_pressed.png")}
-.phase3IntegratedPreview .ui4b-arrow-left:disabled{background-image:url("../assets/ui-kit/original/tabs/arrow_left_disabled.png")}
-.phase3IntegratedPreview .ui4b-arrow-right{background-image:url("../assets/ui-kit/original/tabs/arrow_right_normal.png")}
-.phase3IntegratedPreview .ui4b-arrow-right:hover{background-image:url("../assets/ui-kit/original/tabs/arrow_right_hover.png")}
-.phase3IntegratedPreview .ui4b-arrow-right:active{background-image:url("../assets/ui-kit/original/tabs/arrow_right_pressed.png")}
-.phase3IntegratedPreview .ui4b-arrow-right:disabled{background-image:url("../assets/ui-kit/original/tabs/arrow_right_disabled.png")}
+.phase3IntegratedPreview .ui4b-close{background-image:url("../assets/ui-kit/ui9/tabs/close_normal.webp")}
+.phase3IntegratedPreview .ui4b-close:hover{background-image:url("../assets/ui-kit/ui9/tabs/close_hover.webp")}
+.phase3IntegratedPreview .ui4b-close:active{background-image:url("../assets/ui-kit/ui9/tabs/close_pressed.webp")}
+.phase3IntegratedPreview .ui4b-close:disabled{background-image:url("../assets/ui-kit/ui9/tabs/close_disabled.webp")}
+.phase3IntegratedPreview .ui4b-arrow-up{background-image:url("../assets/ui-kit/ui9/tabs/arrow_up_normal.webp")}
+.phase3IntegratedPreview .ui4b-arrow-up:hover{background-image:url("../assets/ui-kit/ui9/tabs/arrow_up_hover.webp")}
+.phase3IntegratedPreview .ui4b-arrow-up:active{background-image:url("../assets/ui-kit/ui9/tabs/arrow_up_pressed.webp")}
+.phase3IntegratedPreview .ui4b-arrow-up:disabled{background-image:url("../assets/ui-kit/ui9/tabs/arrow_up_disabled.webp")}
+.phase3IntegratedPreview .ui4b-arrow-down{background-image:url("../assets/ui-kit/ui9/tabs/arrow_down_normal.webp")}
+.phase3IntegratedPreview .ui4b-arrow-down:hover{background-image:url("../assets/ui-kit/ui9/tabs/arrow_down_hover.webp")}
+.phase3IntegratedPreview .ui4b-arrow-down:active{background-image:url("../assets/ui-kit/ui9/tabs/arrow_down_pressed.webp")}
+.phase3IntegratedPreview .ui4b-arrow-down:disabled{background-image:url("../assets/ui-kit/ui9/tabs/arrow_down_disabled.webp")}
+.phase3IntegratedPreview .ui4b-arrow-left{background-image:url("../assets/ui-kit/ui9/tabs/arrow_left_normal.webp")}
+.phase3IntegratedPreview .ui4b-arrow-left:hover{background-image:url("../assets/ui-kit/ui9/tabs/arrow_left_hover.webp")}
+.phase3IntegratedPreview .ui4b-arrow-left:active{background-image:url("../assets/ui-kit/ui9/tabs/arrow_left_pressed.webp")}
+.phase3IntegratedPreview .ui4b-arrow-left:disabled{background-image:url("../assets/ui-kit/ui9/tabs/arrow_left_disabled.webp")}
+.phase3IntegratedPreview .ui4b-arrow-right{background-image:url("../assets/ui-kit/ui9/tabs/arrow_right_normal.webp")}
+.phase3IntegratedPreview .ui4b-arrow-right:hover{background-image:url("../assets/ui-kit/ui9/tabs/arrow_right_hover.webp")}
+.phase3IntegratedPreview .ui4b-arrow-right:active{background-image:url("../assets/ui-kit/ui9/tabs/arrow_right_pressed.webp")}
+.phase3IntegratedPreview .ui4b-arrow-right:disabled{background-image:url("../assets/ui-kit/ui9/tabs/arrow_right_disabled.webp")}
 
-/* Five separate rarity frames, preserving the original rarity data and badges. */
-.phase3IntegratedPreview [data-rarity="Common"]{--ui4b-rarity-frame:url("../assets/ui-kit/original/rarity/01_common.png");--ui4b-tooltip-frame:url("../assets/ui-kit/original/tooltips/01_common.png")}
-.phase3IntegratedPreview [data-rarity="Uncommon"]{--ui4b-rarity-frame:url("../assets/ui-kit/original/rarity/02_uncommon.png");--ui4b-tooltip-frame:url("../assets/ui-kit/original/tooltips/02_uncommon.png")}
-.phase3IntegratedPreview [data-rarity="Rare"]{--ui4b-rarity-frame:url("../assets/ui-kit/original/rarity/03_rare.png");--ui4b-tooltip-frame:url("../assets/ui-kit/original/tooltips/03_rare.png")}
-.phase3IntegratedPreview [data-rarity="Epic"]{--ui4b-rarity-frame:url("../assets/ui-kit/original/rarity/04_epic.png");--ui4b-tooltip-frame:url("../assets/ui-kit/original/tooltips/04_epic.png")}
-.phase3IntegratedPreview [data-rarity="Legendary"]{--ui4b-rarity-frame:url("../assets/ui-kit/original/rarity/05_legendary.png");--ui4b-tooltip-frame:url("../assets/ui-kit/original/tooltips/05_legendary.png")}
-.phase3IntegratedPreview :is(.slotTile,.invItem,.miniSlot,.compareCard)[data-rarity]::after{
- content:"";position:absolute;inset:0;z-index:3;pointer-events:none;
- background:var(--ui4b-rarity-frame) center/100% 100% no-repeat;
-}
-.phase3IntegratedPreview :is(.invItem,.miniSlot,.compareCard)[data-rarity]{position:relative}
+/* Square item art is framed by its rarityImageFrame, never by the card rectangle. */
 .phase3IntegratedPreview .inspect[data-rarity]{position:relative;isolation:isolate;padding:clamp(15px,2vw,24px)}
-.phase3IntegratedPreview .inspect[data-rarity]::before{
- content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
- background:var(--ui4b-tooltip-frame) center/100% 100% no-repeat;
-}
 
 /* Comparison icons and labels use original transparent PNGs, not new mechanics. */
 .phase3IntegratedPreview .itemComparison .compareCard:first-child .eyebrow,
@@ -237,18 +226,36 @@
 }
 
 /* Ornate HP/Mana frames: the progressbar's existing width remains authoritative. */
-.phase3IntegratedPreview .phase3ResourceTrack{position:relative;isolation:isolate;overflow:visible}
+.phase3IntegratedPreview .phase3ResourceTrack{position:relative;isolation:isolate;overflow:hidden;width:100%;height:auto!important;min-height:0}
 .phase3IntegratedPreview .phase3ResourceTrack::after{
  content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
  background-position:center;background-size:contain;background-repeat:no-repeat;
 }
 .phase3IntegratedPreview .phase3Resource.health .phase3ResourceTrack::after{
- background-image:url("../assets/ui-kit/original/hud/01_health_bar_empty.png");
+ background-image:url("../assets/ui-kit/ui9/hud/Wanderer_Green_Bar_Frame.webp");
 }
 .phase3IntegratedPreview .phase3Resource.mana .phase3ResourceTrack::after{
- background-image:url("../assets/ui-kit/original/hud/02_mana_bar_empty.png");
+ background-image:url("../assets/ui-kit/ui9/hud/Wanderer_Mana_Blue_Frame.webp");
 }
 .phase3IntegratedPreview .phase3ResourceTrack b{position:relative;z-index:3;text-shadow:0 1px 3px #000}
+.phase3IntegratedPreview .phase3ResourceTrack{overflow:hidden}
+.phase3IntegratedPreview .phase3Resource.health .phase3ResourceTrack{aspect-ratio:2170/433}
+.phase3IntegratedPreview .phase3Resource.mana .phase3ResourceTrack{aspect-ratio:2172/724}
+.phase3IntegratedPreview .phase3Resource.health .phase3ResourceTrack>i{top:34%;left:9%;right:auto;bottom:auto;width:82%;height:auto;aspect-ratio:2170/168;clip-path:inset(0 calc(100% - var(--resource-pct,100%)) 0 0);background:url("../assets/ui-kit/ui9/hud/Wanderer_Green_Bar_Liquid.webp") center/contain no-repeat}
+.phase3IntegratedPreview .phase3Resource.mana .phase3ResourceTrack>i{top:16%;left:16%;right:auto;bottom:auto;width:68%;height:auto;aspect-ratio:2172/724;clip-path:inset(0 calc(100% - var(--resource-pct,100%)) 0 0);background:url("../assets/ui-kit/ui9/hud/Wanderer_Mana_Blue_Liquid.webp") center/contain no-repeat}
+.phase3IntegratedPreview .phase3ResourceTrack>i{max-width:none;transition:clip-path .15s linear}
+.phase3IntegratedPreview .scene :is(.hpbar,.mpbar){position:relative;isolation:isolate;overflow:hidden;border:0;border-radius:0;background:none;box-shadow:none;height:auto;margin:5px auto;width:min(100%,240px)}
+.phase3IntegratedPreview .scene .hpbar.player{aspect-ratio:2170/433}
+.phase3IntegratedPreview .scene .hpbar.enemy{aspect-ratio:2172/724}
+.phase3IntegratedPreview .scene .mpbar{aspect-ratio:2172/724;width:min(100%,200px);height:auto;border:0;border-radius:0;background:none;margin:2px auto 6px}
+.phase3IntegratedPreview .scene :is(.hpbar,.mpbar)::before{content:"";position:absolute;inset:22% 13%;z-index:0;background:#151117;border-radius:4px}
+.phase3IntegratedPreview .scene :is(.hpbar,.mpbar)::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background-position:center;background-size:contain;background-repeat:no-repeat}
+.phase3IntegratedPreview .scene .hpbar.player::after{background-image:url("../assets/ui-kit/ui9/hud/Wanderer_Green_Bar_Frame.webp")}
+.phase3IntegratedPreview .scene .hpbar.enemy::after{background-image:url("../assets/ui-kit/ui9/hud/Wanderer_Health_Red_Frame.webp")}
+.phase3IntegratedPreview .scene .mpbar::after{background-image:url("../assets/ui-kit/ui9/hud/Wanderer_Mana_Blue_Frame.webp")}
+.phase3IntegratedPreview .scene .hpbar.player>i{position:absolute;top:34%;left:9%;right:auto;bottom:auto;width:82%;height:auto;aspect-ratio:2170/168;z-index:1;clip-path:inset(0 calc(100% - var(--resource-pct,100%)) 0 0);background:url("../assets/ui-kit/ui9/hud/Wanderer_Green_Bar_Liquid.webp") center/contain no-repeat;transition:clip-path .15s linear}
+.phase3IntegratedPreview .scene .hpbar.enemy>i{position:absolute;top:16%;left:16%;right:auto;bottom:auto;width:68%;height:auto;aspect-ratio:2172/724;z-index:1;clip-path:inset(0 calc(100% - var(--resource-pct,100%)) 0 0);background:url("../assets/ui-kit/ui9/hud/Wanderer_Health_Red_Liquid.webp") center/contain no-repeat;transition:clip-path .15s linear}
+.phase3IntegratedPreview .scene .mpbar>i{position:absolute;top:16%;left:16%;right:auto;bottom:auto;width:68%;height:auto;aspect-ratio:2172/724;z-index:1;clip-path:inset(0 calc(100% - var(--resource-pct,100%)) 0 0);background:url("../assets/ui-kit/ui9/hud/Wanderer_Mana_Blue_Liquid.webp") center/contain no-repeat;transition:clip-path .15s linear}
 @media(max-width:700px){
  .phase3IntegratedPreview{--ui4b-frame-corner:26px}
  .phase3IntegratedPreview :is(.phase3Camp,.phase3Between,.phase3CityCenter,.phase3AffinityShrine,.phase5VisualSummary){padding:18px 15px}
@@ -265,41 +272,41 @@
 
 /* Bind the original close/arrow art to controls already present in the runtime. */
 body.phase3IntegratedPreview dialog.itemDialog [data-close]{
- background-image:url("../assets/ui-kit/original/tabs/close_normal.png");
- background-repeat:no-repeat;background-position:8px center;background-size:20px 20px;
- padding-left:32px;
+ background-image:url("../assets/ui-kit/ui9/tabs/close_normal.webp");
+ background-repeat:no-repeat;background-position:8px center;background-size:24px 24px;
+ padding-left:36px;
 }
-body.phase3IntegratedPreview dialog.itemDialog [data-close]:hover{background-image:url("../assets/ui-kit/original/tabs/close_hover.png")}
-body.phase3IntegratedPreview dialog.itemDialog [data-close]:active{background-image:url("../assets/ui-kit/original/tabs/close_pressed.png")}
-body.phase3IntegratedPreview dialog.itemDialog [data-close]:disabled{background-image:url("../assets/ui-kit/original/tabs/close_disabled.png")}
+body.phase3IntegratedPreview dialog.itemDialog [data-close]:hover{background-image:url("../assets/ui-kit/ui9/tabs/close_hover.webp")}
+body.phase3IntegratedPreview dialog.itemDialog [data-close]:active{background-image:url("../assets/ui-kit/ui9/tabs/close_pressed.webp")}
+body.phase3IntegratedPreview dialog.itemDialog [data-close]:disabled{background-image:url("../assets/ui-kit/ui9/tabs/close_disabled.webp")}
 .phase3IntegratedPreview .inventoryJumpNav button[data-inventory-jump]::after,
 .phase3IntegratedPreview #phase2EnterRealm::after,
 .phase3IntegratedPreview #phase5ExitResult::before{
- content:"";display:inline-block;width:17px;height:17px;margin-inline:5px;
+ content:"";display:inline-block;width:25px;height:25px;margin-inline:5px;
  background-position:center;background-size:contain;background-repeat:no-repeat;vertical-align:middle;
 }
 .phase3IntegratedPreview .inventoryJumpNav [data-inventory-jump="equipment"]::after{
- background-image:url("../assets/ui-kit/original/tabs/arrow_up_normal.png");
+ background-image:url("../assets/ui-kit/ui9/tabs/arrow_up_normal.webp");
 }
 .phase3IntegratedPreview .inventoryJumpNav [data-inventory-jump="stash"]::after{
- background-image:url("../assets/ui-kit/original/tabs/arrow_down_normal.png");
+ background-image:url("../assets/ui-kit/ui9/tabs/arrow_down_normal.webp");
 }
 .phase3IntegratedPreview #phase2EnterRealm::after{
- background-image:url("../assets/ui-kit/original/tabs/arrow_right_normal.png");
+ background-image:url("../assets/ui-kit/ui9/tabs/arrow_right_normal.webp");
 }
 .phase3IntegratedPreview #phase5ExitResult::before{
- background-image:url("../assets/ui-kit/original/tabs/arrow_left_normal.png");
+ background-image:url("../assets/ui-kit/ui9/tabs/arrow_left_normal.webp");
 }
-.phase3IntegratedPreview #phase2EnterRealm:hover::after{background-image:url("../assets/ui-kit/original/tabs/arrow_right_hover.png")}
-.phase3IntegratedPreview #phase5ExitResult:hover::before{background-image:url("../assets/ui-kit/original/tabs/arrow_left_hover.png")}
+.phase3IntegratedPreview #phase2EnterRealm:hover::after{background-image:url("../assets/ui-kit/ui9/tabs/arrow_right_hover.webp")}
+.phase3IntegratedPreview #phase5ExitResult:hover::before{background-image:url("../assets/ui-kit/ui9/tabs/arrow_left_hover.webp")}
 .phase3IntegratedPreview select{
  appearance:none;
- background-image:url("../assets/ui-kit/original/tabs/arrow_down_normal.png");
- background-position:right 8px center;background-repeat:no-repeat;background-size:18px 18px;
+ background-image:url("../assets/ui-kit/ui9/tabs/arrow_down_normal.webp");
+ background-position:right 8px center;background-repeat:no-repeat;background-size:22px 22px;
  padding-right:32px;
 }
-.phase3IntegratedPreview select:disabled{background-image:url("../assets/ui-kit/original/tabs/arrow_down_disabled.png")}
-.phase3IntegratedPreview select:hover:not(:disabled){background-image:url("../assets/ui-kit/original/tabs/arrow_down_hover.png")}
+.phase3IntegratedPreview select:disabled{background-image:url("../assets/ui-kit/ui9/tabs/arrow_down_disabled.webp")}
+.phase3IntegratedPreview select:hover:not(:disabled){background-image:url("../assets/ui-kit/ui9/tabs/arrow_down_hover.webp")}
 /* Original header variants are decorative title underlays with transparent centers.
    Keep text as real HTML text and don't substitute raster text. */
 .phase3IntegratedPreview .phase3AffinityShrine > .topline h1{
