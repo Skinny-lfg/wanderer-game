@@ -22,11 +22,11 @@ test('Inventory has a single Stash grid for equipment and owned potions',()=>{
 test('Camp and Inventory keep three potion slots in the same portrait grid',()=>{
  assert.match(html,/function phase3PaperMarkup\(camp=false,stats=phase2Stats\(\),withPotions=camp\)/);
  assert.match(html,/phase3PaperMarkup\(true,stats\)/);
- assert.match(camp,/\.paper>\.phase3PotionSlots\s*\{[^}]*grid-column:1\/4!important/);
+ assert.match(camp,/\.paper>\.phase3PotionSlots\s*\{[^}]*grid-column:1\/4;[^}]*grid-row:6;/);
  assert.match(inventory,/\.paper>\.phase3PotionSlots\s*\{\s*display:contents!important/);
- assert.match(camp,/grid-row:6!important/);
+ assert.match(camp,/grid-row:6/);
  assert.match(inventory,/grid-row:6!important/);
- assert.match(camp,/grid-template-rows:repeat\(5,var\(--camp-slot-row\)\) minmax\(68px,auto\)/);
+ assert.match(camp,/grid-template-rows:repeat\(5,var\(--camp-slot-row\)\) minmax\(72px,auto\)/);
  assert.match(inventory,/grid-template-rows:repeat\(5,var\(--gear-row\)\) 78px/);
 });
 test('Potion selection reserves owned stacks visually without changing stored stock',()=>{

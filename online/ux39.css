@@ -4,9 +4,6 @@
 .phase3IntegratedPreview #screen{min-width:0}
 .phase3IntegratedPreview.phase3CombatView{background:linear-gradient(#120d11c9,#100a0eea),url('../assets/backgrounds/between-realms.webp') center/cover fixed}
 .phase3IntegratedPreview.phase3CombatView .combatLayout{grid-template-columns:minmax(0,1fr)}
-.phase3IntegratedPreview .phase3Camp{background:linear-gradient(90deg,#100b0bd9,#160e12a6,#100b0bd9),url('../assets/backgrounds/camp.webp') center/cover;border-color:#95784d}
-.phase3IntegratedPreview .phase3CampGrid{grid-template-columns:minmax(180px,.75fr) minmax(270px,1fr) minmax(240px,.9fr);gap:14px}
-.phase3IntegratedPreview .phase3CampStatus{padding:20px 4px}
 .phase3IntegratedPreview .phase3HeroColumn .paper{height:390px;min-height:390px;max-width:360px}
 .phase3IntegratedPreview .phase3HeroColumn .paper .slotTile{width:54px;height:60px}
 .phase3IntegratedPreview .phase3HeroColumn .paper .model{inset:1% 18% 1%;width:64%;height:98%}
@@ -74,8 +71,6 @@
 .phase3IntegratedPreview .phase3CombatView .combatExpeditionDetails .phase3Bag{max-width:none}
 .phase3IntegratedPreview .phase3CombatView .phase3BagGrid{grid-template-columns:repeat(6,minmax(0,1fr))}
 @media(max-width:1000px){
- .phase3IntegratedPreview .phase3CampGrid{grid-template-columns:minmax(0,1fr) minmax(250px,1fr)}
- .phase3IntegratedPreview .phase3CampGrid>.phase3HeroColumn{grid-column:1/-1;grid-row:2;max-width:440px}
  .phase3IntegratedPreview .phase3BetweenLayout{grid-template-columns:1fr}
 }
 @media(max-width:600px){
@@ -90,17 +85,11 @@
  .phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveChoices{grid-template-columns:1fr}
  .phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveCard .phase2PassiveIcons{min-height:68px}
  .phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveCard .phase2PassiveIcon{width:60px;height:60px}
- .phase3IntegratedPreview .phase3Camp{background-image:linear-gradient(#120d10e8,#120d10d9),url('../assets/backgrounds/camp.webp');padding:12px}
- .phase3IntegratedPreview .phase3CampGrid{display:flex;flex-direction:column;gap:9px}
- .phase3IntegratedPreview .phase3CampStatus{padding:3px}
- .phase3IntegratedPreview .phase3CampStatus h1{font-size:23px}
- .phase3IntegratedPreview .phase3CampGrid>.phase3HeroColumn{order:1;max-width:380px;align-self:center}
  .phase3IntegratedPreview .phase3HeroColumn .paper{height:330px;min-height:330px}
  .phase3IntegratedPreview .phase3HeroColumn .paper .slotTile{width:45px;height:51px}
  .phase3IntegratedPreview .phase3PotionSlots{gap:4px}
  .phase3IntegratedPreview .phase3PotionSlot{min-height:72px;font-size:10px}
  .phase3IntegratedPreview .phase3PotionSlot img{width:30px;height:30px}
- .phase3IntegratedPreview .phase3ExpeditionPanel{order:2;width:100%;margin:0}
  .phase3IntegratedPreview .phase3Between{padding:10px}
  .phase3IntegratedPreview .phase3BetweenLayout{display:flex;flex-direction:column;gap:10px}
  .phase3IntegratedPreview .phase3BetweenLayout>*{width:100%;min-width:0}
@@ -180,30 +169,7 @@
 @media(max-width:1100px){.phase3IntegratedPreview .phase3BetweenLayout{grid-template-columns:minmax(215px,30%) minmax(0,1fr)}.phase3IntegratedPreview .phase3Routes .phase1Offers{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:850px){.phase3IntegratedPreview.phase3CombatView .combatLayout,.phase3IntegratedPreview .phase3BetweenLayout{grid-template-columns:1fr}.phase3IntegratedPreview .phase3BetweenLayout{display:flex;flex-direction:column}.phase3IntegratedPreview .phase3BetweenLayout>.phase3Routes{order:-1;width:100%}.phase3IntegratedPreview .phase3BetweenLayout>.phase3BetweenHero{width:100%}}
 @media(max-width:600px){.phase3IntegratedPreview .combatHeaderControls{margin-left:0}.phase3IntegratedPreview .combatLayout>.panel>.topline{flex-wrap:wrap}.phase3IntegratedPreview .phase3Routes .phase1Offers{grid-template-columns:1fr}.phase3IntegratedPreview .phase3Routes .phase1Offer{display:grid;grid-template-columns:105px minmax(0,1fr)}.phase3IntegratedPreview .phase3Routes .phase1Offer>img{height:100%;min-height:100px}.phase3IntegratedPreview .phase3Routes .phase1OfferBody strong img{width:34px;height:34px}.phase3IntegratedPreview .phase3BetweenHero .phase3PotionSlot{min-height:60px}}
-/* UI.1: Camp status, character, and Expedition remain independent panels. */
-.phase3IntegratedPreview .phase3CampGrid{grid-template-columns:minmax(0,22fr) minmax(0,43fr) minmax(0,35fr);gap:12px}
-.phase3IntegratedPreview .phase3CampStatus{padding:7px 3px;min-width:0}
-.phase3IntegratedPreview .phase3CampStatus h1{margin:6px 0 7px;font-size:26px}
-.phase3IntegratedPreview .phase3CampStatus>p{margin:6px 0}
-.phase3IntegratedPreview .phase3CampVitals .phase3ResourcePanel{padding:10px;gap:9px;margin:11px 0 7px;background:#100b0bd9}
-.phase3IntegratedPreview .phase3CampStats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
-.phase3IntegratedPreview .phase3CampStats span{display:flex;justify-content:space-between;gap:4px;padding:7px;background:#111a25;border:1px solid #344253;border-radius:6px;font-size:11px}
-.phase3IntegratedPreview .phase3CampStats b{color:#efd2a0}
-.phase3IntegratedPreview .phase3SetSummary{margin:7px 0}
-.phase3IntegratedPreview .phase3Journey{padding:7px 0}
-.phase3IntegratedPreview .phase3CampGrid>.phase3HeroColumn{max-width:none;min-width:0}
-.phase3IntegratedPreview .phase3HeroColumn .paper{width:100%;max-width:430px;height:405px;min-height:405px;margin:0 auto;background:radial-gradient(ellipse at 50% 65%,#91603924,transparent 68%)}
-.phase3IntegratedPreview .phase3HeroColumn .paper .model{inset:0 15% 0;width:70%;height:100%;object-fit:contain}
-.phase3IntegratedPreview .phase3HeroColumn .phase3PotionSlots{max-width:430px;margin:6px auto 0}
-.phase3IntegratedPreview .phase3HeroColumn .phase3PotionSlot{min-height:70px}
-.phase3IntegratedPreview .phase3CampGrid .equipmentLoadout.phase3HeroColumn .paper{height:405px;min-height:405px;max-width:430px}
-.phase3IntegratedPreview .phase3CampGrid .equipmentLoadout.phase3HeroColumn .paper .model{inset:0 15%;width:70%;height:100%}
-.phase3IntegratedPreview .phase3CampGrid .equipmentLoadout.phase3HeroColumn .paper .slotTile{width:55px;height:62px}
-.phase3IntegratedPreview .phase3ExpeditionPanel{margin:0;padding:13px}
-.phase3IntegratedPreview .phase3Portal{height:130px;width:calc(100% + 26px);margin:-13px -13px 10px}
-.phase3IntegratedPreview .phase3ExpeditionPanel h2{font-size:23px;margin:5px 0}
-.phase3IntegratedPreview .phase3ExpeditionPanel ul{margin:9px 0;line-height:1.4;padding-left:18px}
-/* UI.1: Inventory reuses the equipped slots, stash tiles, and comparison details. */
+/* UI.1: Inventory stash tiles and comparison details. */
 .phase3IntegratedPreview .inventoryJumpNav{display:none}
 .phase3IntegratedPreview #screen:has(.inventoryJumpNav)>.phase3ReturnBar{position:relative;top:auto}
 .phase3IntegratedPreview .equipmentOverview .equipmentLoadout .phase3PotionSlots{margin:7px 0 0}
@@ -229,8 +195,7 @@
 .phase3IntegratedPreview .equipmentInventory .inventoryValuables:has(.valuables>p) .valuables{padding:0}
 .phase3IntegratedPreview .equipmentInventory .inventoryValuables:has(.valuables>p){padding:8px 12px}
 .phase3IntegratedPreview .equipmentInventory .inventoryValuables:has(.valuables>p) .valuables,.phase3IntegratedPreview .equipmentInventory .inventoryValuables:has(.valuables>p) button{display:none}
-@media(max-width:1100px){.phase3IntegratedPreview .phase3CampGrid{grid-template-columns:minmax(0,1fr) minmax(0,1.35fr)}.phase3IntegratedPreview .phase3CampGrid>.phase3HeroColumn{grid-column:2;grid-row:1/3;max-width:none}.phase3IntegratedPreview .phase3ExpeditionPanel{grid-column:1;grid-row:2}}
-@media(max-width:700px){.phase3IntegratedPreview .phase3CampGrid{display:flex;flex-direction:column;gap:9px}.phase3IntegratedPreview .phase3CampGrid>.phase3HeroColumn{order:1;width:100%;max-width:440px;align-self:center}.phase3IntegratedPreview .phase3CampStatus{order:0;width:100%}.phase3IntegratedPreview .phase3ExpeditionPanel{order:2;width:100%}.phase3IntegratedPreview .phase3CampGrid .equipmentLoadout.phase3HeroColumn .paper{height:335px;min-height:335px}.phase3IntegratedPreview .phase3CampGrid .equipmentLoadout.phase3HeroColumn .paper .model{inset:0 15%;width:70%}.phase3IntegratedPreview .phase3CampGrid .equipmentLoadout.phase3HeroColumn .paper .slotTile{width:46px;height:52px}.phase3IntegratedPreview .phase3Portal{height:100px}.phase3IntegratedPreview .inventoryJumpNav{display:flex;gap:7px;position:sticky;top:0;z-index:7;background:#150e15ed;padding:5px;margin-bottom:8px;border-radius:8px}.phase3IntegratedPreview .inventoryJumpNav button{flex:1;min-height:42px}.phase3IntegratedPreview .equipmentOverview .equipmentQuickView{display:block}.phase3IntegratedPreview .equipmentOverview .equipmentLoadout{max-width:420px;margin:auto}.phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper{height:400px;min-height:400px}.phase3IntegratedPreview .equipmentOverview .equipmentStats{margin-top:10px}.phase3IntegratedPreview .equipmentInventory .stashGrid{grid-template-columns:repeat(auto-fill,minmax(68px,86px))}}
+@media(max-width:700px){.phase3IntegratedPreview .inventoryJumpNav{display:flex;gap:7px;position:sticky;top:0;z-index:7;background:#150e15ed;padding:5px;margin-bottom:8px;border-radius:8px}.phase3IntegratedPreview .inventoryJumpNav button{flex:1;min-height:42px}.phase3IntegratedPreview .equipmentOverview .equipmentQuickView{display:block}.phase3IntegratedPreview .equipmentOverview .equipmentLoadout{max-width:420px;margin:auto}.phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper{height:400px;min-height:400px}.phase3IntegratedPreview .equipmentOverview .equipmentStats{margin-top:10px}.phase3IntegratedPreview .equipmentInventory .stashGrid{grid-template-columns:repeat(auto-fill,minmax(68px,86px))}}
 /* UI.3: City Center keeps the three existing vendors and their stock handlers. */
 .phase3IntegratedPreview .cityCenterLayout{grid-template-columns:minmax(170px,22%) minmax(0,1fr);gap:12px}
 .phase3IntegratedPreview .cityCenterSidebar{min-width:0}

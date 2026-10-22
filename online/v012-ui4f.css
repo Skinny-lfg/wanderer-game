@@ -68,46 +68,6 @@
 .phase3IntegratedPreview .rarityImageFrame.potionPlaceholder>i{background:#211e20}
 .phase3IntegratedPreview .rarityImageFrame.potionPlaceholder>img{filter:grayscale(1);opacity:.25}
 .phase3IntegratedPreview :is(.runeIcon,.phase2PassiveIcon,.phase3PassiveIcon,.affinityIcon){object-fit:contain}
-/* Camp character has no surrounding box: keep the slots, but remove
-   the paper outline and its own dark rectangle entirely. */
-.phase3IntegratedPreview .phase3CampGrid .equipmentLoadout.phase3HeroColumn .paper{
-  border:0;border-radius:0;box-shadow:none;
-  background:transparent;overflow:visible;
-}
-.phase3IntegratedPreview .phase3CampGrid .phase3HeroColumn .paper .model{
-  /* Scale from the feet: the baseline remains fixed at the paper bottom. */
-  transform:scale(1.26);
-  transform-origin:center bottom;
-  object-fit:contain;object-position:center bottom;
-  pointer-events:none;
-}
-.phase3IntegratedPreview .phase3CampGrid .phase3HeroColumn .paper .slotTile{
-  /* Keep the pre-existing slot footprint; only its border artwork changes. */
-  box-sizing:border-box;
-}
-/* Desktop camp backdrop: artwork is sized to its intrinsic aspect ratio
-   (1672x940), anchored -35px from the top, not resized with panel height.
-   The last 22% fades into the plain panel background on taller windows. */
-.phase3IntegratedPreview .phase3Camp{
-  position:relative;isolation:isolate;overflow:hidden;
-  background:#150d14;
-}
-.phase3IntegratedPreview .phase3Camp::after{
-  content:"";position:absolute;top:-70px;left:-124px;right:auto;
-  width:calc(100% + 124px);aspect-ratio:1672/940;height:auto;
-  /* Extended canvas fills the right edge while shifting its image left. */
-  background:url("../assets/backgrounds/camp.webp") center top/100% 100% no-repeat;
-  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 78%,transparent 100%);
-  mask-image:linear-gradient(to bottom,#000 0%,#000 78%,transparent 100%);
-  opacity:.9;z-index:0;pointer-events:none;
-}
-.phase3IntegratedPreview .phase3Camp>*{position:relative;z-index:1}
-/* On smaller screens the Camp status stacks above the hero. Anchor the
-   scenery to the PAPER instead of the growing Camp panel, so the circular
-   floor stays under the hero's fixed feet even when more content is added. */
-@media(max-width:1100px){
-  .phase3IntegratedPreview .phase3Camp::after{content:none;display:none}
-}
 /* Only touch the presentation layer; selected and focus-visible outlines
    remain visible for keyboard/touch accessibility. */
 

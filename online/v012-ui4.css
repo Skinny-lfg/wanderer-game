@@ -18,7 +18,7 @@
 .phase3IntegratedPreview :is(.merchantCompactCard,.potionOffer,.phase3AffinityChoice,.phase5GearGroup,.phase5ResultMetric){border-color:var(--ui4-edge)}
 .phase3IntegratedPreview :is(.merchantCompactCard,.potionOffer,.phase3AffinityChoice,.phase5ResultMetric){background:linear-gradient(155deg,var(--ui4-surface-raised),var(--ui4-surface))}
 .phase3IntegratedPreview :is(.phase3Camp,.phase3Between,.phase3CityCenter,.phase3AffinityShrine,.phase5VisualSummary){position:relative;border:1px solid #77545c;border-radius:12px}
-.phase3IntegratedPreview :is(.phase3Camp,.phase3Between,.phase3CityCenter,.phase3AffinityShrine,.phase5VisualSummary)::before{content:none}
+.phase3IntegratedPreview :is(.phase3Between,.phase3CityCenter,.phase3AffinityShrine,.phase5VisualSummary)::before{content:none}
 .phase3IntegratedPreview :is(.phase3CampStatus h1,.phase3CityCenter>.topline h1,.phase5ResultHeading h1,.phase3BetweenHeader h1,.phase3AffinityShrine>.topline h1){text-shadow:0 2px 12px #000}
 .phase3IntegratedPreview :is(.phase3CampStatus h1,.phase3CityCenter>.topline h1,.phase5ResultHeading h1,.phase3BetweenHeader h1,.phase3AffinityShrine>.topline h1)::after{content:"";display:block;width:min(100%,260px);height:2px;margin:8px auto 0;background:var(--ui4-line);opacity:.8}
 .phase3IntegratedPreview :is(button,select,input,textarea,summary,a):focus-visible{
