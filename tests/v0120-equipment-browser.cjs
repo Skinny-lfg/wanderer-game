@@ -32,9 +32,9 @@ const server=http.createServer((req,res)=>{
   const boxes=await page.locator('.paper [data-eqslot]').evaluateAll(nodes=>nodes.map(n=>{const r=n.getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height};}));
   for(let i=0;i<boxes.length;i++)for(let j=i+1;j<boxes.length;j++){const a=boxes[i],b=boxes[j];assert(!(a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y),'equipment slots must not overlap');}
   await page.selectOption('#slotFilter','belt');const id=await page.evaluate(()=>__gearTest.beltId);
-  await page.locator('[data-item="'+id+'"]').click();assert.match(await page.locator('#itemInspect').innerText(),/E5.*Rare/);assert.match(await page.locator('#itemInspect').innerText(),/Cloth/);
-  await page.locator('#equipThis').click();assert.equal(await page.evaluate(()=>__gearTest.snapshot().equip.belt.id),id);
-  await page.selectOption('#slotFilter','all');await page.locator('[data-eqslot="belt"]').click();await page.locator('#unequipThis').click();
+  await page.locator('[data-item="'+id+'"]').click();assert.match(await page.locator('dialog.equipmentItemDialog .inspect').innerText(),/E5.*Rare/);assert.match(await page.locator('dialog.equipmentItemDialog .inspect').innerText(),/Cloth/);
+  assert.equal(await page.locator('dialog.equipmentItemDialog').count(),1);await page.locator('dialog.equipmentItemDialog #equipThis').click();assert.equal(await page.evaluate(()=>__gearTest.snapshot().equip.belt.id),id);
+  await page.selectOption('#slotFilter','all');await page.locator('[data-eqslot="belt"]').click();await page.locator('dialog.equipmentItemDialog #unequipThis').click();
   assert.equal(await page.evaluate(()=>__gearTest.snapshot().equip.belt),null);
   await page.locator('[data-phase3-nav="city-center"]').click();await page.locator('[data-city-tab="blacksmith"]').click();
   assert.equal(await page.getByRole('heading',{name:'Affinity Transfer',exact:true}).count(),0);
