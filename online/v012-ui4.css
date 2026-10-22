@@ -1,0 +1,58 @@
+/* UI.4 visual layer. The approved UI Kit SVG is used only on major windows. */
+.phase3IntegratedPreview{
+ --ui4-ink:#e9dfd9;--ui4-muted:#c5b7b3;--ui4-surface:#251a20;--ui4-surface-raised:#33232a;
+ --ui4-edge:#785760;--ui4-iron:#66544d;--ui4-ember:#a65550;--ui4-accent:#d6b37c;
+ --ui4-focus:#f5d594;--ui4-space:8px;--ui4-radius:8px;
+ --ui4-head:Georgia,'Palatino Linotype',serif;
+ color:var(--ui4-ink);
+}
+.phase3IntegratedPreview :is(h1,h2,h3){font-family:var(--ui4-head)}
+.phase3IntegratedPreview :is(.panel,.merchantCompactCard,.potionOffer,.phase3AffinityChoice,.phase5GearGroup){border-color:var(--ui4-edge)}
+.phase3IntegratedPreview :is(.phase3CityCenter,.phase3AffinityShrine,.phase5VisualSummary){
+ border:16px solid transparent;border-image-source:url('../assets/ui-kit/gothic-frame.svg');
+ border-image-slice:72;border-image-width:16px;border-image-repeat:stretch;
+ background:linear-gradient(145deg,#30212a,#1c151d 90%);
+ box-shadow:0 18px 40px #08070bcc;
+}
+.phase3IntegratedPreview :is(.phase3Camp,.phase3Between){
+ border:12px solid transparent;border-image-source:url('../assets/ui-kit/gothic-frame.svg');
+ border-image-slice:72;border-image-width:12px;border-image-repeat:stretch;
+}
+.phase3IntegratedPreview :is(button,select,input,textarea,summary,a):focus-visible{
+ outline:2px solid var(--ui4-focus);outline-offset:2px;
+}
+.phase3IntegratedPreview button{border-radius:var(--ui4-radius);transition:background-color .16s,border-color .16s,box-shadow .16s,filter .16s}
+.phase3IntegratedPreview button:not(:disabled):hover{border-color:var(--ui4-accent);filter:brightness(1.12)}
+.phase3IntegratedPreview button:disabled{opacity:.55;cursor:not-allowed;filter:saturate(.55)}
+.phase3IntegratedPreview button.primary{background:linear-gradient(#a37652,#754735);border-color:#c99578;color:#fff0dd;box-shadow:inset 0 1px #f5d6af47,0 2px 8px #0008}
+.phase3IntegratedPreview button.primary:not(:disabled):hover{background:linear-gradient(#b9875e,#854d39)}
+.phase3IntegratedPreview button.ghost{background:linear-gradient(#30242b,#21191f);border-color:var(--ui4-iron)}
+.phase3IntegratedPreview button.danger{background:linear-gradient(#663735,#3a2228);border-color:var(--ui4-ember)}
+.phase3IntegratedPreview :is(.nav .active,.cityCenterTabs [aria-selected='true'],[role='tab'][aria-selected='true'],.filterSelected,.isSelected){border-color:var(--ui4-accent);box-shadow:inset 0 0 0 1px #d6b37c45}
+.phase3IntegratedPreview .cityCenterTabs [aria-selected='true']{background:linear-gradient(#65403b,#41252e);color:#ffe7c8}
+.phase3IntegratedPreview :is(select,input,textarea){min-height:40px;border:1px solid var(--ui4-edge);border-radius:6px;background-color:#211820;color:var(--ui4-ink)}
+.phase3IntegratedPreview select{padding-inline:8px}
+.phase3IntegratedPreview :is([title],summary){text-underline-offset:2px}
+.phase3IntegratedPreview dialog{border:2px solid var(--ui4-iron);border-radius:10px;box-shadow:0 20px 65px #000d,inset 0 0 0 1px #c4936852}
+.phase3IntegratedPreview dialog::backdrop{background:#09070cc7}
+.phase3IntegratedPreview :is(.slotTile,.miniSlot,.invItem,.runeSlot){border-radius:var(--ui4-radius)}
+.phase3IntegratedPreview :is(.slotTile,.miniSlot,.invItem)[data-rarity]{
+ border-color:var(--item-rarity);box-shadow:inset 0 0 0 1px #ffffff16,0 0 0 1px #09070a;
+ background:linear-gradient(150deg,color-mix(in srgb,var(--item-rarity) 16%,#251820),#1b151d 85%);
+}
+.phase3IntegratedPreview :is(.slotTile,.miniSlot,.invItem) img{object-fit:contain}
+.phase3IntegratedPreview :is(.slotTile,.invItem) .newBadge{top:2px;left:2px;padding:1px 4px;line-height:1.2;z-index:5}
+.phase3IntegratedPreview :is(.slotTile,.invItem) .affinityBadge{top:2px;right:2px;z-index:4}
+.phase3IntegratedPreview :is(.slotTile,.invItem) :is(.slotDLevel,.legendaryRankBadge){z-index:4}
+.phase3IntegratedPreview :is(.merchantCompactCard,.potionOffer){background:linear-gradient(155deg,var(--ui4-surface-raised),var(--ui4-surface));box-shadow:inset 0 1px #ffffff10,0 3px 9px #0005}
+.phase3IntegratedPreview .merchantCompactCard[data-rarity]{border-color:var(--item-rarity)}
+.phase3IntegratedPreview .merchantCardActions,.phase3IntegratedPreview .potionOffer{gap:var(--ui4-space)}
+.phase3IntegratedPreview .potionOffer button,.phase3IntegratedPreview .merchantCardActions button{min-height:42px}
+.phase3IntegratedPreview .phase3AffinityChoice{background:var(--ui4-surface)}
+.phase3IntegratedPreview .phase3AffinityChoice:hover{border-color:var(--ui4-accent)}
+.phase3IntegratedPreview .phase5ResultMetric{background:#211a23;border-color:var(--ui4-edge)}
+@media(max-width:700px){
+ .phase3IntegratedPreview :is(.phase3CityCenter,.phase3AffinityShrine,.phase5VisualSummary){border-width:10px;border-image-width:10px;padding:10px}
+ .phase3IntegratedPreview :is(.phase3Camp,.phase3Between){border-width:9px;border-image-width:9px}
+}
+@media(prefers-reduced-motion:reduce){.phase3IntegratedPreview button{transition:none}}
