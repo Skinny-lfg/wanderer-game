@@ -47,7 +47,7 @@
 .phase3IntegratedPreview .phase3CampGrid>.phase3CampCharacter{
   position:relative;isolation:isolate;
   padding:0!important;
-  border:0!important;border-image:none!important;
+  border:0!important;
   background:transparent!important;
   box-sizing:border-box;
 }
@@ -57,7 +57,7 @@
 .phase3IntegratedPreview .phase3CampCharacter .phase3CampHeroVitals .phase3ResourcePanel{
   display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px!important;
   padding:0!important;margin:0!important;
-  border:0!important;border-image:none!important;
+  border:0!important;
   border-radius:0!important;box-shadow:none!important;
   background:transparent!important;
 }
@@ -65,29 +65,8 @@
   display:block;font-size:8px!important;line-height:1;
   margin:0 0 1px!important;color:#f0dfdb;text-align:center;
 }
-.phase3IntegratedPreview .phase3CampCharacter .phase3CampHeroVitals .phase3ResourceTrack{
-  position:relative!important;isolation:isolate;overflow:hidden!important;
-  width:100%;height:20px!important;min-height:0!important;max-width:100%;aspect-ratio:auto!important;
-  border:2px solid #80615d!important;border-radius:3px 8px 3px 8px!important;
-  background:linear-gradient(180deg,#180d12,#302027 50%,#10090d)!important;box-shadow:inset 0 1px 3px #000!important;
-  box-sizing:border-box;
-}
-.phase3IntegratedPreview .phase3CampCharacter .phase3CampHeroVitals .phase3ResourceTrack>i{
-  position:absolute!important;top:32%!important;left:16%!important;bottom:auto!important;
-  height:36%!important;width:calc(68% * var(--resource-pct,1))!important;
-  max-width:68%!important;clip-path:inset(0 round 2px);
-  z-index:1;border:0!important;box-sizing:border-box;
-}
-.phase3IntegratedPreview .phase3CampCharacter .phase3CampHeroVitals .phase3Resource.health .phase3ResourceTrack{--resource-frame-ratio:auto}
-.phase3IntegratedPreview .phase3CampCharacter .phase3CampHeroVitals .phase3Resource.mana .phase3ResourceTrack{--resource-frame-ratio:auto}
-.phase3IntegratedPreview .phase3CampCharacter .phase3CampHeroVitals .phase3Resource.health .phase3ResourceTrack>i{
-  left:2px!important;right:auto!important;top:2px!important;bottom:2px!important;width:var(--resource-pct,100%)!important;height:auto!important;
-  background:linear-gradient(180deg,#77c777,#287744 58%,#174c35)!important;clip-path:none!important;
-}
-.phase3IntegratedPreview .phase3CampCharacter .phase3CampHeroVitals .phase3Resource.mana .phase3ResourceTrack>i{
-  left:2px!important;right:auto!important;top:2px!important;bottom:2px!important;width:var(--resource-pct,100%)!important;height:auto!important;
-  background:linear-gradient(180deg,#81bce9,#356bb0 58%,#243d72)!important;clip-path:none!important;
-}
+/* The shared UI.4 resource track supplies its CSS-only frame/fill geometry.
+   Camp keeps only the compact value-label treatment below. */
 .phase3IntegratedPreview .phase3CampCharacter .phase3CampHeroVitals .phase3ResourceTrack>b{
   position:absolute;inset:0;display:flex!important;align-items:center;justify-content:center;
   z-index:3;line-height:1!important;font:500 9px/1 var(--ui4-body)!important;
@@ -110,7 +89,7 @@
   height:auto!important;min-height:0!important;
   aspect-ratio:auto!important;
   margin:0 auto!important;padding:0!important;
-  border:0!important;border-image:none!important;
+  border:0!important;
   border-radius:0!important;background:transparent!important;
   box-shadow:none!important;overflow:visible!important;
   box-sizing:border-box!important;
@@ -139,7 +118,7 @@
   height:calc(var(--camp-slot-row) - 2px)!important;
   min-height:0!important;
   padding:0!important;margin:0!important;gap:0!important;
-  border:0!important;border-image:none!important;
+  border:0!important;
   border-radius:0!important;background:transparent!important;
   background-image:none!important;box-shadow:none!important;
   box-sizing:border-box!important;overflow:visible!important;
@@ -207,7 +186,7 @@
   z-index:2!important;display:flex!important;flex-direction:column!important;
   align-items:center!important;justify-content:flex-start!important;width:100%!important;
   min-width:0!important;min-height:60px!important;gap:2px!important;padding:1px 0!important;
-  margin:0!important;border:0!important;border-image:none!important;border-radius:0!important;
+  margin:0!important;border:0!important;border-radius:0!important;
   background:transparent!important;box-shadow:none!important;overflow:visible!important;
 }
 .phase3IntegratedPreview .phase3CampGrid .phase3CampCharacter .paper .phase3PotionSlot .rarityImageFrame--potion{
@@ -291,7 +270,6 @@
     width:calc(100% + 32px)!important;max-width:380px!important;
     justify-self:center!important;margin-inline:-16px!important;
     padding:4px 2px 5px!important;
-    border-width:7px!important;border-image-width:7px!important;
   }
   .phase3IntegratedPreview .phase3CampGrid .phase3CampCharacter .paper{
     width:100%!important;max-width:none!important;

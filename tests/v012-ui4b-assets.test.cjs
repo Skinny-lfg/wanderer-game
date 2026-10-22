@@ -1,5 +1,5 @@
 'use strict';
-/* UI.4b structural smoke test. No player state or Firebase is loaded. */
+/* CSS-only Gothic system smoke test. No player state or Firebase is loaded. */
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -8,24 +8,14 @@ const root = path.resolve(__dirname, '..');
 const cssPath = path.join(root, 'online/v012-ui4.css');
 const css = fs.readFileSync(cssPath, 'utf8');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
-const assetRoot = path.join(root, 'assets/ui-kit/original');
-const expected = {buttons:4,comparison:6,headers:7,hud:5,'nine-slice':8,rarity:5,tabs:24,tooltips:5};
-test('original UI.4b PNG packs are present with valid PNG signatures', () => {
-  for(const [folder,count] of Object.entries(expected)){
-    const files=fs.readdirSync(path.join(assetRoot,folder)).filter(n=>n.endsWith('.png'));
-    assert.equal(files.length,count,folder+' unexpected count');
-    for(const name of files){
-      const data=fs.readFileSync(path.join(assetRoot,folder,name));
-      assert.ok(data.length>100,folder+'/'+name+' is empty');
-      assert.equal(data.subarray(0,8).toString('hex'),'89504e470d0a1a0a',folder+'/'+name+' malformed PNG');
-    }
-  }
-});
-test('UI.4b CSS is active and all local URLs resolve', () => {
+test('shared Gothic CSS is active and free from decorative UI image packs', () => {
   assert.match(html,/href="online\/v012-ui4\.css"/);
-  assert.match(css,/UI\.4b \/ Original PNG Art Pack/);
-  const urls=[...css.matchAll(/url\((['"]?)([^)'"]+)\1\)/g)].map(m=>m[2]);
-  assert.ok(urls.length>=64);
+  assert.match(css,/Shared Gothic system/);
+  const urls=[...css.matchAll(/url\((['"]?)([^)'\"]+)\1\)/g)].map(m=>m[2]);
+  const uiImages=urls.filter(u=>u.includes('assets/ui-kit/')&&!u.includes('/fonts/'));
+  assert.ok(uiImages.length>0,'approved Start Expedition art is retained');
+  assert.ok(uiImages.every(u=>/original\/hud\/0[345]_expedition_(?:left|right|center_tile)\.png$/.test(u)),'only the approved Start Expedition artwork remains');
+  assert.ok(urls.some(u=>u.includes('expedition_left.png')),'approved Start Expedition end cap is retained');
   for(const u of urls){
     if(/^(data:|https?:)/.test(u))continue;
     assert.ok(fs.existsSync(path.resolve(path.dirname(cssPath),u)),u+' missing');

@@ -1,10 +1,12 @@
-/* UI.4 shared visual tokens and surfaces; UI.4b provides the active 9-slice trim. */
+/* Shared Gothic system: controls and surfaces are native HTML/CSS. */
 @font-face{font-family:"Grenze";src:url("../assets/ui-kit/fonts/Grenze-Variable.ttf") format("truetype");font-style:normal;font-weight:100 900;font-display:swap}
 @font-face{font-family:"Alegreya Sans";src:url("../assets/ui-kit/fonts/AlegreyaSans-Regular.ttf") format("truetype");font-style:normal;font-weight:400;font-display:swap}
 .phase3IntegratedPreview{
  --ui4-ink:#e9dfd9;--ui4-muted:#c5b7b3;--ui4-surface:#251a20;--ui4-surface-raised:#33232a;
  --ui4-edge:#785760;--ui4-iron:#66544d;--ui4-ember:#a65550;--ui4-accent:#d6b37c;
  --ui4-focus:#f5d594;--ui4-space:8px;--ui4-radius:8px;
+ --ui4-wine:#24151d;--ui4-wine-raised:#34212a;--ui4-metal:#80656a;--ui4-shadow:#08070bcc;
+ --ui4-line:linear-gradient(90deg,transparent,#80656a 14%,#c39b74 50%,#80656a 86%,transparent);
  --ui4-head:var(--font-head);--ui4-body:var(--font-body);
  font-family:var(--ui4-body);
  color:var(--ui4-ink);
@@ -12,19 +14,21 @@
 .phase3IntegratedPreview :is(h1,h2,h3){font-family:var(--ui4-head);font-weight:500}
 .phase3IntegratedPreview h1{font-family:var(--font-display);font-weight:500}
 .phase3IntegratedPreview button{font-family:var(--font-head)}
-.phase3IntegratedPreview :is(.panel,.merchantCompactCard,.potionOffer,.phase3AffinityChoice,.phase5GearGroup){border-color:var(--ui4-edge)}
-.phase3IntegratedPreview :is(.phase3CityCenter,.phase3AffinityShrine,.phase5VisualSummary){
- background:linear-gradient(145deg,#30212a,#1c151d 90%);
- box-shadow:0 18px 40px #08070bcc;
-}
+.phase3IntegratedPreview .panel{background:linear-gradient(145deg,var(--ui4-wine-raised),var(--ui4-wine) 90%);border-color:var(--ui4-edge);box-shadow:0 14px 32px color-mix(in srgb,var(--ui4-shadow) 60%,transparent)}
+.phase3IntegratedPreview :is(.merchantCompactCard,.potionOffer,.phase3AffinityChoice,.phase5GearGroup,.phase5ResultMetric){border-color:var(--ui4-edge)}
+.phase3IntegratedPreview :is(.merchantCompactCard,.potionOffer,.phase3AffinityChoice,.phase5ResultMetric){background:linear-gradient(155deg,var(--ui4-surface-raised),var(--ui4-surface))}
+.phase3IntegratedPreview :is(.phase3Camp,.phase3Between,.phase3CityCenter,.phase3AffinityShrine,.phase5VisualSummary){position:relative;border:1px solid #77545c;border-radius:12px}
+.phase3IntegratedPreview :is(.phase3Camp,.phase3Between,.phase3CityCenter,.phase3AffinityShrine,.phase5VisualSummary)::before{content:none}
+.phase3IntegratedPreview :is(.phase3CampStatus h1,.phase3CityCenter>.topline h1,.phase5ResultHeading h1,.phase3BetweenHeader h1,.phase3AffinityShrine>.topline h1){text-shadow:0 2px 12px #000}
+.phase3IntegratedPreview :is(.phase3CampStatus h1,.phase3CityCenter>.topline h1,.phase5ResultHeading h1,.phase3BetweenHeader h1,.phase3AffinityShrine>.topline h1)::after{content:"";display:block;width:min(100%,260px);height:2px;margin:8px auto 0;background:var(--ui4-line);opacity:.8}
 .phase3IntegratedPreview :is(button,select,input,textarea,summary,a):focus-visible{
  outline:2px solid var(--ui4-focus);outline-offset:2px;
 }
 .phase3IntegratedPreview button{border-radius:var(--ui4-radius);transition:background-color .16s,border-color .16s,box-shadow .16s,filter .16s}
 .phase3IntegratedPreview button:not(:disabled):hover{border-color:var(--ui4-accent);filter:brightness(1.12)}
 .phase3IntegratedPreview button:disabled{opacity:.55;cursor:not-allowed;filter:saturate(.55)}
-.phase3IntegratedPreview button.primary{background:linear-gradient(#a37652,#754735);border-color:#c99578;color:#fff0dd;box-shadow:inset 0 1px #f5d6af47,0 2px 8px #0008}
-.phase3IntegratedPreview button.primary:not(:disabled):hover{background:linear-gradient(#b9875e,#854d39)}
+.phase3IntegratedPreview button.primary:not(.phase3Start){background:linear-gradient(#a37652,#754735);border-color:#c99578;color:#fff0dd;box-shadow:inset 0 1px #f5d6af47,0 2px 8px #0008}
+.phase3IntegratedPreview button.primary:not(.phase3Start):not(:disabled):hover{background:linear-gradient(#b9875e,#854d39)}
 .phase3IntegratedPreview button.ghost{background:linear-gradient(#30242b,#21191f);border-color:var(--ui4-iron)}
 .phase3IntegratedPreview button.danger{background:linear-gradient(#663735,#3a2228);border-color:var(--ui4-ember)}
 .phase3IntegratedPreview :is(.nav .active,.cityCenterTabs [aria-selected='true'],[role='tab'][aria-selected='true'],.filterSelected,.isSelected){border-color:var(--ui4-accent);box-shadow:inset 0 0 0 1px #d6b37c45}
@@ -35,16 +39,12 @@
 .phase3IntegratedPreview dialog{border:2px solid var(--ui4-iron);border-radius:10px;box-shadow:0 20px 65px #000d,inset 0 0 0 1px #c4936852}
 .phase3IntegratedPreview dialog::backdrop{background:#09070cc7}
 .phase3IntegratedPreview :is(.slotTile,.miniSlot,.invItem,.runeSlot){border-radius:var(--ui4-radius)}
-.phase3IntegratedPreview :is(.slotTile,.miniSlot,.invItem)[data-rarity]{
- border-color:var(--item-rarity);box-shadow:inset 0 0 0 1px #ffffff16,0 0 0 1px #09070a;
- background:linear-gradient(150deg,color-mix(in srgb,var(--item-rarity) 16%,#251820),#1b151d 85%);
-}
 .phase3IntegratedPreview :is(.slotTile,.miniSlot,.invItem) img{object-fit:contain}
 .phase3IntegratedPreview :is(.slotTile,.invItem) .newBadge{top:2px;left:2px;padding:1px 4px;line-height:1.2;z-index:5}
 .phase3IntegratedPreview :is(.slotTile,.invItem) .affinityBadge{top:2px;right:2px;z-index:4}
 .phase3IntegratedPreview :is(.slotTile,.invItem) :is(.slotDLevel,.legendaryRankBadge){z-index:4}
-.phase3IntegratedPreview :is(.merchantCompactCard,.potionOffer){background:linear-gradient(155deg,var(--ui4-surface-raised),var(--ui4-surface));box-shadow:inset 0 1px #ffffff10,0 3px 9px #0005}
-.phase3IntegratedPreview .merchantCompactCard[data-rarity]{border-color:var(--item-rarity)}
+.phase3IntegratedPreview :is(.merchantCompactCard,.potionOffer){box-shadow:inset 0 1px #ffffff10,0 3px 9px #0005}
+.phase3IntegratedPreview .merchantCompactCard[data-rarity]{border-color:color-mix(in srgb,var(--item-rarity) 68%,var(--ui4-edge))}
 .phase3IntegratedPreview .merchantCardActions,.phase3IntegratedPreview .potionOffer{gap:var(--ui4-space)}
 .phase3IntegratedPreview .potionOffer button,.phase3IntegratedPreview .merchantCardActions button{min-height:42px}
 .phase3IntegratedPreview .phase3AffinityChoice{background:var(--ui4-surface)}
@@ -53,52 +53,19 @@
 @media(prefers-reduced-motion:reduce){.phase3IntegratedPreview button{transition:none}}
 
 
-/* UI.4b / Original PNG Art Pack — visual only, existing handlers unchanged.
-   Asset source: Wanderer_UI_Kit_* folders in Google Drive.
-   Intentionally scoped to v0.12; avoid excessive ornament on nested panels. */
-.phase3IntegratedPreview{
- --ui4b-art-root:"../assets/ui-kit/original/";
- --ui4b-frame-corner:clamp(30px,4.3vw,54px);
-}
-.phase3IntegratedPreview :is(.phase3Camp,.phase3Between,.phase3CityCenter,.phase3AffinityShrine,.phase5VisualSummary){
- position:relative;isolation:isolate;
- border:1px solid #76514f;
-}
-.phase3IntegratedPreview :is(.phase3Camp,.phase3Between,.phase3CityCenter,.phase3AffinityShrine,.phase5VisualSummary)::before{
- content:"";position:absolute;inset:0;pointer-events:none;z-index:3;
- --c:var(--ui4b-frame-corner);
- background-image:
- url("../assets/ui-kit/original/nine-slice/01_top_left.png"),
- url("../assets/ui-kit/original/nine-slice/03_top_right.png"),
- url("../assets/ui-kit/original/nine-slice/07_bottom_left.png"),
- url("../assets/ui-kit/original/nine-slice/09_bottom_right.png"),
- url("../assets/ui-kit/original/nine-slice/02_top_center.png"),
- url("../assets/ui-kit/original/nine-slice/08_bottom_center.png"),
- url("../assets/ui-kit/original/nine-slice/04_middle_left.png"),
- url("../assets/ui-kit/original/nine-slice/06_middle_right.png");
- background-position:
- left top,right top,left bottom,right bottom,
- center top,center bottom,left center,right center;
- background-size:
- var(--c) var(--c),var(--c) var(--c),var(--c) var(--c),var(--c) var(--c),
- calc(100% - var(--c) - var(--c)) var(--c),calc(100% - var(--c) - var(--c)) var(--c),
- var(--c) calc(100% - var(--c) - var(--c)),var(--c) calc(100% - var(--c) - var(--c));
- background-repeat:no-repeat;
-}
-.phase3IntegratedPreview :is(.phase3Camp,.phase3Between,.phase3CityCenter,.phase3AffinityShrine,.phase5VisualSummary) {
- padding:clamp(20px,2.3vw,32px);
-}
+/* The shared surfaces use CSS borders and restrained metal highlights; no UI artwork overlays. */
+.phase3IntegratedPreview :is(.phase3Camp,.phase3Between,.phase3CityCenter,.phase3AffinityShrine,.phase5VisualSummary){padding:clamp(16px,2vw,26px)}
 
 /* Expedition is the only button retaining its illustrated ends. The center tile is clipped to the interior. */
-.phase3IntegratedPreview .phase3Start{
+.phase3IntegratedPreview button.phase3Start{
  position:relative;isolation:isolate;overflow:hidden;
- border:0!important;border-image:none!important;border-radius:8px!important;
- background-color:#211319!important;
- background-image:url("../assets/ui-kit/original/hud/03_expedition_left.png"),url("../assets/ui-kit/original/hud/05_expedition_right.png"),linear-gradient(180deg,#45232b,#211319 55%,#382028)!important;
- background-position:left center,right center,center!important;
- background-size:auto 100%,auto 100%,100% 100%!important;
- background-repeat:no-repeat!important;
- min-height:58px;padding:8px 48px;box-shadow:0 5px 14px #0009,inset 0 1px #e9c6a32b!important;
+ border:0;border-radius:8px;
+ background-color:#211319;
+ background-image:url("../assets/ui-kit/original/hud/03_expedition_left.png"),url("../assets/ui-kit/original/hud/05_expedition_right.png"),linear-gradient(180deg,#45232b,#211319 55%,#382028);
+ background-position:left center,right center,center;
+ background-size:auto 100%,auto 100%,100% 100%;
+ background-repeat:no-repeat;
+ min-height:58px;padding:8px 48px;box-shadow:0 5px 14px #0009,inset 0 1px #e9c6a32b;
  color:#f5e7d5;text-shadow:0 2px 4px #000;font-family:var(--font-head);font-weight:700;
 }
 .phase3IntegratedPreview .phase3Start::before{
@@ -110,89 +77,44 @@
 .phase3IntegratedPreview .phase3Start:active:not(:disabled){transform:translateY(1px)}
 
 /* Gothic CSS controls: keep native HTML actions and states, without image skins. */
-.phase3IntegratedPreview button:not(.phase3Start):not(.slotTile):not(.invItem):not(.miniSlot):not(.phase3PotionSlot):not(.phase1Offer):not(.phase1DraftCard){
- border:1px solid #79575b;border-radius:3px 9px 3px 9px;
- background:linear-gradient(145deg,#3a252e,#21151d 58%,#34212a);color:#eee0d4;
+.phase3IntegratedPreview button:not(.phase3Start):not(.slotTile):not(.invItem):not(.miniSlot):not(.phase3PotionSlot){
+ min-height:40px;border:1px solid var(--ui4-edge);border-radius:3px 9px 3px 9px;
+ background:linear-gradient(145deg,var(--ui4-wine-raised),var(--ui4-wine) 58%,#34212a);color:var(--ui4-ink);
  box-shadow:inset 0 1px #f0d7b21c,inset 0 -2px #09070a55,0 3px 7px #0006;
  font-family:var(--font-head);text-shadow:0 1px 2px #0008;
 }
-.phase3IntegratedPreview button:not(.phase3Start):not(.slotTile):not(.invItem):not(.miniSlot):not(.phase3PotionSlot):not(.phase1Offer):not(.phase1DraftCard):hover:not(:disabled){
+.phase3IntegratedPreview button:not(.phase3Start):not(.slotTile):not(.invItem):not(.miniSlot):not(.phase3PotionSlot):hover:not(:disabled){
  border-color:#b98a72;background:linear-gradient(145deg,#513039,#2c1b24 60%,#46262e);filter:none;
 }
-.phase3IntegratedPreview button:not(.phase3Start):not(.slotTile):not(.invItem):not(.miniSlot):not(.phase3PotionSlot):not(.phase1Offer):not(.phase1DraftCard):active:not(:disabled){
+.phase3IntegratedPreview button:not(.phase3Start):not(.slotTile):not(.invItem):not(.miniSlot):not(.phase3PotionSlot):active:not(:disabled){
  transform:translateY(1px);box-shadow:inset 0 2px 4px #080509aa;
 }
 .phase3IntegratedPreview button:disabled{filter:grayscale(.35);opacity:.58}
 .phase3IntegratedPreview button:focus-visible{outline:2px solid #d7b47d;outline-offset:2px}
-.phase3IntegratedPreview .nav .active,.phase3IntegratedPreview .cityCenterTabs [aria-selected="true"],.phase3IntegratedPreview [role="tab"][aria-selected="true"],.phase3IntegratedPreview .filterSelected,.phase3IntegratedPreview .isSelected{
+.phase3IntegratedPreview :is(.phase3Nav button,.cityCenterTabs button,.inventoryJumpNav button){min-height:42px}
+.phase3IntegratedPreview .nav .active,.phase3IntegratedPreview .cityCenterTabs [aria-selected="true"],.phase3IntegratedPreview [role="tab"][aria-selected="true"],.phase3IntegratedPreview button[aria-pressed="true"],.phase3IntegratedPreview button.selected,.phase3IntegratedPreview .filterSelected,.phase3IntegratedPreview .isSelected{
  border-color:#bd9c6e;color:#fff0d8;box-shadow:inset 0 0 0 1px #bd9c6e66,0 0 10px #9c654133;
 }
 .phase3IntegratedPreview .phase3Start:focus-visible{outline:2px solid #ebc790;outline-offset:3px}
+.phase3IntegratedPreview button.phase3PotionSlot{min-height:44px;border:1px solid var(--ui4-edge);border-radius:3px 8px;background:linear-gradient(145deg,var(--ui4-wine-raised),var(--ui4-wine));box-shadow:inset 0 1px #ffffff10,0 2px 6px #0005}
+.phase3IntegratedPreview button.phase3PotionSlot.loaded{border-color:var(--item-rarity,var(--ui4-accent));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--item-rarity,var(--ui4-accent)) 45%,transparent),0 0 10px color-mix(in srgb,var(--item-rarity,var(--ui4-accent)) 24%,transparent)}
+.phase3IntegratedPreview button.phase3PotionSlot.empty{border-style:dashed}
+.phase3IntegratedPreview button.phase1DraftCard,.phase3IntegratedPreview button.phase1Offer{min-height:44px;border-radius:8px 3px;background:linear-gradient(145deg,var(--ui4-wine-raised),var(--ui4-wine))}
 
-/* Five separate rarity frames, preserving the original rarity data and badges. */
-.phase3IntegratedPreview [data-rarity="Common"]{--ui4b-rarity-frame:url("../assets/ui-kit/original/rarity/01_common.png");--ui4b-tooltip-frame:url("../assets/ui-kit/original/tooltips/01_common.png")}
-.phase3IntegratedPreview [data-rarity="Uncommon"]{--ui4b-rarity-frame:url("../assets/ui-kit/original/rarity/02_uncommon.png");--ui4b-tooltip-frame:url("../assets/ui-kit/original/tooltips/02_uncommon.png")}
-.phase3IntegratedPreview [data-rarity="Rare"]{--ui4b-rarity-frame:url("../assets/ui-kit/original/rarity/03_rare.png");--ui4b-tooltip-frame:url("../assets/ui-kit/original/tooltips/03_rare.png")}
-.phase3IntegratedPreview [data-rarity="Epic"]{--ui4b-rarity-frame:url("../assets/ui-kit/original/rarity/04_epic.png");--ui4b-tooltip-frame:url("../assets/ui-kit/original/tooltips/04_epic.png")}
-.phase3IntegratedPreview [data-rarity="Legendary"]{--ui4b-rarity-frame:url("../assets/ui-kit/original/rarity/05_legendary.png");--ui4b-tooltip-frame:url("../assets/ui-kit/original/tooltips/05_legendary.png")}
-.phase3IntegratedPreview :is(.slotTile,.invItem,.miniSlot,.compareCard)[data-rarity]::after{
- content:"";position:absolute;inset:0;z-index:3;pointer-events:none;
- background:var(--ui4b-rarity-frame) center/100% 100% no-repeat;
-}
-.phase3IntegratedPreview :is(.invItem,.miniSlot,.compareCard)[data-rarity]{position:relative}
-.phase3IntegratedPreview .inspect[data-rarity]{position:relative;isolation:isolate;padding:clamp(15px,2vw,24px)}
-.phase3IntegratedPreview .inspect[data-rarity]::before{
- content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
- background:var(--ui4b-tooltip-frame) center/100% 100% no-repeat;
-}
-
-/* Comparison icons and labels use original transparent PNGs, not new mechanics. */
-.phase3IntegratedPreview .itemComparison .compareCard:first-child .eyebrow,
-.phase3IntegratedPreview .itemComparison .compareCard:nth-child(2) .eyebrow{
- display:inline-flex;align-items:center;gap:6px;
-}
-.phase3IntegratedPreview .itemComparison .compareCard:first-child .eyebrow::before{
- content:"";width:22px;height:14px;flex:none;
- background:url("../assets/ui-kit/original/comparison/04_label_equipped.png") center/contain no-repeat;
-}
-.phase3IntegratedPreview .itemComparison .compareCard:nth-child(2) .eyebrow::before{
- content:"";width:22px;height:14px;flex:none;
- background:url("../assets/ui-kit/original/comparison/05_label_new_item.png") center/contain no-repeat;
-}
-.phase3IntegratedPreview .itemComparison .comparisonCards{position:relative}
-.phase3IntegratedPreview .itemComparison .comparisonCards::after{
- content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
- width:34px;height:12px;pointer-events:none;opacity:.85;
- background:url("../assets/ui-kit/original/comparison/06_compare_connector.png") center/contain no-repeat;
-}
-.phase3IntegratedPreview .itemComparison .comparisonTable td:is(.green,.red,.muted){
- background-repeat:no-repeat;background-position:5px center;background-size:12px auto;padding-left:20px;
-}
-.phase3IntegratedPreview .itemComparison .comparisonTable td.green{background-image:url("../assets/ui-kit/original/comparison/01_delta_increase.png")}
-.phase3IntegratedPreview .itemComparison .comparisonTable td.red{background-image:url("../assets/ui-kit/original/comparison/02_delta_decrease.png")}
-.phase3IntegratedPreview .itemComparison .comparisonTable td.muted{background-image:url("../assets/ui-kit/original/comparison/03_delta_unchanged.png")}
-
-/* Selective headers/dividers, not every nested panel. */
-.phase3IntegratedPreview :is(.phase3CampStatus h1,.phase3CityCenter > .topline h1,.phase5VisualSummary h1)::after{
- content:"";display:block;margin:8px auto 0;pointer-events:none;
- height:20px;width:min(100%,260px);
- background:url("../assets/ui-kit/original/headers/04_divider_long.png") center/contain no-repeat;
-}
-.phase3IntegratedPreview .phase3Routes .phase3RouteHeading h2::after{
- content:"";display:block;margin-top:4px;height:14px;width:150px;
- background:url("../assets/ui-kit/original/headers/05_divider_subtle.png") left center/contain no-repeat;
-}
-.phase3IntegratedPreview .phase5VisualSummary .phase5ResultHeading{
- background:url("../assets/ui-kit/original/headers/06_divider_ornate.png") bottom center/min(440px,90%) 17px no-repeat;padding-bottom:18px;
-}
+.phase3IntegratedPreview .inspect[data-rarity]{position:relative;padding:clamp(14px,1.7vw,22px);border-color:var(--item-rarity,#80656a);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--item-rarity,#80656a) 35%,transparent),0 12px 30px #0008}
+.phase3IntegratedPreview .compareCard{border-color:var(--item-rarity,#80656a);background:linear-gradient(150deg,#33232b,#1c151d)}
+.phase3IntegratedPreview .comparisonTable td.green{color:#a8d7a9}
+.phase3IntegratedPreview .comparisonTable td.red{color:#e99a94}
+.phase3IntegratedPreview .comparisonTable td.muted{color:var(--ui4-muted)}
+.phase3IntegratedPreview .phase3Routes .phase3RouteHeading h2::after{content:"";display:block;margin-top:5px;height:1px;width:min(150px,100%);background:var(--ui4-line)}
 
 /* Resource bars use CSS gradients and the existing live percentage values. */
 .phase3IntegratedPreview .phase3ResourceTrack{
- position:relative;isolation:isolate;overflow:hidden;width:100%;height:20px!important;min-height:0;
+ position:relative;isolation:isolate;overflow:hidden;width:100%;height:20px;min-height:0;
  border:2px solid #80615d;border-radius:3px 8px 3px 8px;
  background:linear-gradient(180deg,#180d12,#302027 50%,#10090d);box-shadow:inset 0 1px 3px #000;
 }
-.phase3IntegratedPreview .phase3ResourceTrack::after{content:none!important}
+.phase3IntegratedPreview .phase3ResourceTrack::after{content:none}
 .phase3IntegratedPreview .phase3ResourceTrack>i{
  position:absolute;left:2px;top:2px;bottom:2px;right:auto;height:auto;width:var(--resource-pct,100%);
  border:0;border-radius:1px 4px 1px 4px;clip-path:none;transition:width .15s linear;
@@ -201,14 +123,13 @@
 .phase3IntegratedPreview .phase3Resource.mana .phase3ResourceTrack>i{background:linear-gradient(180deg,#81bce9,#356bb0 58%,#243d72)}
 .phase3IntegratedPreview .phase3ResourceTrack b{position:absolute;inset:0;z-index:3;display:grid;place-items:center;font:600 10px/1 var(--font-body);text-shadow:0 1px 3px #000}
 .phase3IntegratedPreview .scene :is(.hpbar,.mpbar){position:relative;isolation:isolate;overflow:hidden;width:min(100%,220px);height:14px;margin:5px auto;border:1px solid #856564;border-radius:3px 7px 3px 7px;background:linear-gradient(180deg,#130b0f,#39252b);box-shadow:inset 0 1px 3px #000}
-.phase3IntegratedPreview .scene :is(.hpbar,.mpbar)::before,.phase3IntegratedPreview .scene :is(.hpbar,.mpbar)::after{content:none!important}
+.phase3IntegratedPreview .scene :is(.hpbar,.mpbar)::before,.phase3IntegratedPreview .scene :is(.hpbar,.mpbar)::after{content:none}
 .phase3IntegratedPreview .scene .hpbar>i,.phase3IntegratedPreview .scene .mpbar>i{position:absolute;left:1px;top:1px;bottom:1px;right:auto;height:auto;width:var(--resource-pct,100%);border:0;border-radius:2px 5px 2px 5px;clip-path:none;transition:width .15s linear}
 .phase3IntegratedPreview .scene .hpbar.player>i{background:linear-gradient(180deg,#77c777,#287744 58%,#174c35)}
 .phase3IntegratedPreview .scene .hpbar.enemy>i{background:linear-gradient(180deg,#fa7774,#a82938 58%,#641a2c)}
 .phase3IntegratedPreview .scene .mpbar>i{background:linear-gradient(180deg,#81bce9,#356bb0 58%,#243d72)}
 
 @media(max-width:700px){
- .phase3IntegratedPreview{--ui4b-frame-corner:26px}
  .phase3IntegratedPreview :is(.phase3Camp,.phase3Between,.phase3CityCenter,.phase3AffinityShrine,.phase5VisualSummary){padding:18px 15px}
  .phase3IntegratedPreview .phase3Start{padding:8px 24px}
  .phase3IntegratedPreview .phase3Start::before{left:22%;right:22%;background-size:30px 100%}
@@ -227,23 +148,4 @@ body.phase3IntegratedPreview dialog.itemDialog [data-close]::before{content:"×"
 .phase3IntegratedPreview #phase5ExitResult::before{content:"‹  ";font:700 1.2em var(--font-head);color:#e0ba7c}
 .phase3IntegratedPreview select{appearance:auto;background-image:none;padding-right:8px}
 
-/* Original header variants are decorative title underlays with transparent centers.
-   Keep text as real HTML text and don't substitute raster text. */
-.phase3IntegratedPreview .phase3AffinityShrine > .topline h1{
- background:url("../assets/ui-kit/original/headers/03_header_small.png") center/100% 100% no-repeat;
- padding:8px 32px;
-}
-.phase3IntegratedPreview .phase3BetweenHeader h1{
- background:url("../assets/ui-kit/original/headers/02_header_medium.png") center/100% 100% no-repeat;
- padding:8px 38px;
-}
-.phase3IntegratedPreview .phase5VisualSummary .phase5ResultHeading h1{
- background:url("../assets/ui-kit/original/headers/01_header_large_skull.png") center/100% 100% no-repeat;
- padding:8px 34px;
-}
 .phase3IntegratedPreview .phase3AffinityShrine h1{min-width:0;max-width:100%;overflow-wrap:anywhere}
-@media(max-width:700px){
- .phase3IntegratedPreview .phase3BetweenHeader h1,.phase3IntegratedPreview .phase5VisualSummary .phase5ResultHeading h1{
-  background-image:none;padding:0;
- }
-}

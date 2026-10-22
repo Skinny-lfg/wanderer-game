@@ -26,7 +26,7 @@
  height:auto!important;min-height:0!important;
  margin:0 auto!important;padding:0!important;
  aspect-ratio:auto!important;overflow:visible!important;
- border:0!important;border-image:none!important;
+ border:0!important;
  border-radius:0!important;background:transparent!important;
  box-shadow:none!important;
 }
@@ -48,7 +48,7 @@
  width:var(--gear-slot-width)!important;height:calc(var(--gear-row) - 1px)!important;
  min-height:0!important;min-width:0!important;
  margin:0!important;padding:1px 0 0!important;gap:0!important;
- border:0!important;border-image:none!important;
+ border:0!important;
  border-radius:0!important;background:transparent!important;
  background-image:none!important;box-shadow:none!important;
  box-sizing:border-box!important;overflow:visible!important;
@@ -95,7 +95,7 @@
  width:var(--gear-slot-width)!important;height:76px!important;
  min-height:0!important;min-width:0!important;
  margin:0!important;padding:1px 0 0!important;gap:2px!important;
- border:0!important;border-image:none!important;border-radius:0!important;
+ border:0!important;border-radius:0!important;
  background:transparent!important;box-shadow:none!important;overflow:visible!important;
 }
 .phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper>.phase3PotionSlots>.phase3PotionSlot:nth-child(1){grid-column:1!important}
@@ -122,7 +122,7 @@
  min-height:86px!important;max-height:none!important;
  padding:4px 2px!important;gap:2px!important;
  aspect-ratio:1/1.15;
- border:0!important;border-image:none!important;border-radius:0!important;
+ border:0!important;border-radius:0!important;
  background:transparent!important;box-shadow:none!important;
 }
 .phase3IntegratedPreview .equipmentInventory .stashGrid>.potionStackTile .rarityImageFrame--potion-stack{

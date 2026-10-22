@@ -1,69 +1,51 @@
-/* UI.4f — true 9-slice border replacement, never an overlay.
-   Source: Drive / 05 - UI & Navigation / Wanderer_UI_Kit_9Slice_Seamless_Minimal.
-   Reference atlas: 768x576, 96x96 corners, transparent centre.
-   All four corners scale equally; edge strips REPEAT rather than stretch. */
+/* UI.4f — responsive Camp geometry and CSS-only item frames. */
 .phase3IntegratedPreview{
-  --wf-frame:url("../assets/ui-kit/seamless-minimal/00_full_frame_reference.png");
-  --wf-panel-edge:clamp(9px,1.1vw,14px);
+  --wf-panel-edge:1px;
 }
-/* The 9-slice trim belongs to screen-level windows only. Nested cards, HUDs,
-   equipment paper and popups keep their own simple surfaces and item frames. */
+/* Screen-level surfaces share one restrained metal edge; nested cards stay light. */
 .phase3IntegratedPreview :is(
   #screen>.panel,
   #screen>.combatLayout>.panel,
   #screen>.equipmentLayout>.equipmentLeft>.panel,
   #screen>.equipmentLayout>.equipmentRight>.panel
 ){
-  --wf-edge:var(--wf-panel-edge);
-  border:var(--wf-edge) solid transparent!important;
-  border-image-source:var(--wf-frame)!important;
-  border-image-slice:96!important;
-  border-image-width:var(--wf-edge)!important;
-  border-image-repeat:repeat!important;
-  border-image-outset:0!important;
-  border-radius:0!important;
-  background-clip:padding-box;
+  border:var(--wf-panel-edge) solid #76535d;
+  border-radius:12px;
+  background:linear-gradient(145deg,#30212a,#1c151d 90%);
   box-sizing:border-box;
 }
-/* Item and potion-slot containers are hit targets, NOT second frames.
-   Keep their original footprint, click handlers and selection/focus states. */
+/* The square rarity frame is the only item frame. Hit targets retain a soft CSS surface. */
 .phase3IntegratedPreview :is(.slotTile,.miniSlot,.invItem,.phase3PotionSlot){
-  border:0!important;
-  border-image:none!important;
-  border-radius:0!important;
-  background:transparent!important;
-  background-image:none!important;
-  box-shadow:none!important;
+  border:1px solid transparent;
+  border-radius:8px;
+  background:linear-gradient(145deg,#20151b,#160f14);
+  box-shadow:inset 0 1px #ffffff0a;
   box-sizing:border-box;
 }
-/* The UI.4b eight-image ::before frame must not paint over the new real border. */
-.phase3IntegratedPreview :is(
-  .phase3Camp,.phase3Between,.phase3CityCenter,
-  .phase3AffinityShrine,.phase5VisualSummary
-)::before{content:none!important;display:none!important;background:none!important}
-/* Item illustration remains proportional inside the square hit-target frame.
-   Keep rarity tint inside the image window, clear of the frame edges. */
 .phase3IntegratedPreview .rarityImageFrame{
   position:relative;
   isolation:isolate;
-  aspect-ratio:1/1!important;
+  display:inline-grid;
+  place-items:center;
+  aspect-ratio:1/1;
   flex-shrink:0;
   box-sizing:border-box;
-  --wf-rarity-fill:#2a2322;
-  background:transparent!important;
-  border:0!important;
-  border-image:none!important;
-  box-shadow:none!important;
+  --ui-rarity-color:#8c8378;
+  --wf-rarity-fill:color-mix(in srgb,var(--ui-rarity-color) 20%,#171116);
+  border:2px solid var(--ui-rarity-color);
+  border-radius:8px 3px 8px 3px;
+  background:linear-gradient(145deg,color-mix(in srgb,var(--ui-rarity-color) 23%,#21171d),#100c10 72%);
+  box-shadow:inset 0 0 0 1px #080609,0 0 10px color-mix(in srgb,var(--ui-rarity-color) 24%,transparent);
   overflow:hidden;
 }
-.phase3IntegratedPreview .rarityImageFrame[data-rarity="Common"]{--wf-rarity-fill:#2a2322}
-.phase3IntegratedPreview .rarityImageFrame[data-rarity="Uncommon"]{--wf-rarity-fill:#1d2a20}
-.phase3IntegratedPreview .rarityImageFrame[data-rarity="Rare"]{--wf-rarity-fill:#1b2430}
-.phase3IntegratedPreview .rarityImageFrame[data-rarity="Epic"]{--wf-rarity-fill:#261f31}
-.phase3IntegratedPreview .rarityImageFrame[data-rarity="Legendary"]{--wf-rarity-fill:#312419}
+.phase3IntegratedPreview .rarityImageFrame[data-rarity="Common"]{--ui-rarity-color:#8c8378}
+.phase3IntegratedPreview .rarityImageFrame[data-rarity="Uncommon"]{--ui-rarity-color:#65956f}
+.phase3IntegratedPreview .rarityImageFrame[data-rarity="Rare"]{--ui-rarity-color:#5d8fb3}
+.phase3IntegratedPreview .rarityImageFrame[data-rarity="Epic"]{--ui-rarity-color:#9a72bc}
+.phase3IntegratedPreview .rarityImageFrame[data-rarity="Legendary"]{--ui-rarity-color:#c28b4c}
 .phase3IntegratedPreview .rarityImageFrame>i{
   position:absolute;
-  inset:15%;
+  inset:12%;
   z-index:0;
   display:block;
   pointer-events:none;
@@ -75,47 +57,28 @@
   position:relative;
   z-index:1;
   display:block;
-  width:100%!important;height:100%!important;
-  max-width:100%!important;max-height:100%!important;
-  min-width:0!important;min-height:0!important;
-  /* More of the illustration is visible inside the same 1:1 frame. */
-  padding:7%!important;
+  width:78%;height:78%;
+  max-width:100%;max-height:100%;min-width:0;min-height:0;
+  padding:0;
   box-sizing:border-box;
-  object-fit:contain!important;
-  background:none!important;
-  border:0!important;
-  border-radius:0!important;
-}
-.phase3IntegratedPreview .rarityImageFrame::after{
-  /* Square source, square output: no deformation or second frame. */
-  background-size:contain!important;
-  background-position:center!important;
-  background-repeat:no-repeat!important;
-}
-.phase3IntegratedPreview :is(.runeIcon,.phase2PassiveIcon,.phase3PassiveIcon,.affinityIcon,.ui4b-close,
- .ui4b-arrow-up,.ui4b-arrow-down,.ui4b-arrow-left,.ui4b-arrow-right){
   object-fit:contain;
-  background-size:contain;
+  background:none;border:0;border-radius:0;
 }
-/* The middle CTA HUD piece tiles at its natural aspect ratio. Its end caps
-   and all other symbolic/interactive sprites stay unwarped. */
-.phase3IntegratedPreview .phase3Start{
-  background-size:auto 100%,auto 100%,100% 100%!important;
-  background-position:left center,right center,center!important;
-  background-repeat:no-repeat!important;
-}
+.phase3IntegratedPreview .rarityImageFrame.potionPlaceholder{--ui-rarity-color:#8c8378;--wf-rarity-fill:#211e20}
+.phase3IntegratedPreview .rarityImageFrame.potionPlaceholder>i{background:#211e20}
+.phase3IntegratedPreview .rarityImageFrame.potionPlaceholder>img{filter:grayscale(1);opacity:.25}
+.phase3IntegratedPreview :is(.runeIcon,.phase2PassiveIcon,.phase3PassiveIcon,.affinityIcon){object-fit:contain}
 /* Camp character has no surrounding box: keep the slots, but remove
    the paper outline and its own dark rectangle entirely. */
 .phase3IntegratedPreview .phase3CampGrid .equipmentLoadout.phase3HeroColumn .paper{
-  border:0!important;border-image:none!important;
-  border-radius:0!important;box-shadow:none!important;
-  background:transparent!important;overflow:visible!important;
+  border:0;border-radius:0;box-shadow:none;
+  background:transparent;overflow:visible;
 }
 .phase3IntegratedPreview .phase3CampGrid .phase3HeroColumn .paper .model{
   /* Scale from the feet: the baseline remains fixed at the paper bottom. */
-  transform:scale(1.26)!important;
-  transform-origin:center bottom!important;
-  object-fit:contain!important;object-position:center bottom!important;
+  transform:scale(1.26);
+  transform-origin:center bottom;
+  object-fit:contain;object-position:center bottom;
   pointer-events:none;
 }
 .phase3IntegratedPreview .phase3CampGrid .phase3HeroColumn .paper .slotTile{
@@ -127,7 +90,7 @@
    The last 22% fades into the plain panel background on taller windows. */
 .phase3IntegratedPreview .phase3Camp{
   position:relative;isolation:isolate;overflow:hidden;
-  background:#150d14!important;
+  background:#150d14;
 }
 .phase3IntegratedPreview .phase3Camp::after{
   content:"";position:absolute;top:-70px;left:-124px;right:auto;
@@ -143,153 +106,26 @@
    scenery to the PAPER instead of the growing Camp panel, so the circular
    floor stays under the hero's fixed feet even when more content is added. */
 @media(max-width:1100px){
-  .phase3IntegratedPreview .phase3Camp::after{content:none!important;display:none!important}
-  .phase3IntegratedPreview .phase3CampGrid .equipmentLoadout.phase3HeroColumn .paper{
-    background-image:
-      linear-gradient(to bottom,rgba(21,13,20,.08) 0%,rgba(21,13,20,.06) 72%,#150d14 100%),
-      url("../assets/backgrounds/camp.webp")!important;
-    background-size:contain,auto 600px!important;
-    background-position:center center,calc(50% - 56px) -40px!important;
-    background-repeat:no-repeat!important;
-  }
-}
-@media(max-width:700px){
-  .phase3IntegratedPreview{
-    --wf-panel-edge:9px;--wf-card-edge:6px;--wf-item-edge:4px;
-  }
-  .phase3IntegratedPreview .phase3CampGrid .equipmentLoadout.phase3HeroColumn .paper{
-    background-size:contain,auto 510px!important;
-    background-position:center center,calc(50% - 42px) -48px!important;
-  }
+  .phase3IntegratedPreview .phase3Camp::after{content:none;display:none}
 }
 /* Only touch the presentation layer; selected and focus-visible outlines
    remain visible for keyboard/touch accessibility. */
 
-/* UI.4h: Empty potion placeholders stay neutral and subdued.
-   This affects only empty loadout slots, never real owned potions. */
-.phase3IntegratedPreview .rarityImageFrame.potionPlaceholder{
-  --wf-rarity-fill:#211e20;
-}
-.phase3IntegratedPreview .rarityImageFrame.potionPlaceholder>i{
-  background:#211e20!important;
-}
-.phase3IntegratedPreview .rarityImageFrame.potionPlaceholder>img{
-  filter:grayscale(1)!important;
-  opacity:.25!important;
-}
-.phase3IntegratedPreview .rarityImageFrame.potionPlaceholder::after{
-  /* Preserve the Common rarity frame; only the empty bottle is desaturated. */
-  filter:none!important;
-  opacity:1!important;
-}
-
-/* UI.4i — larger *frames*, unchanged equipment illustration dimensions.
-   Image sizes below match the previous UI.4h inner sizes (86% of old frame).
-   A slot remains the same hit target; badges sit inside the new art border. */
-.phase3IntegratedPreview .rarityImageFrame{
-  max-width:none!important;
-}
-.phase3IntegratedPreview .rarityImageFrame>img{
-  width:var(--wf-art-size,100%)!important;
-  height:var(--wf-art-size,100%)!important;
-  padding:0!important;
-  object-fit:contain!important;
-  place-self:center;
-}
-.phase3IntegratedPreview .rarityImageFrame--slot{width:58px;height:58px;--wf-art-size:38px}
-.phase3IntegratedPreview .rarityImageFrame--stash{width:66px;height:66px;--wf-art-size:45px}
-.phase3IntegratedPreview .rarityImageFrame--merchant{width:70px;height:70px;--wf-art-size:53px}
-.phase3IntegratedPreview .rarityImageFrame--forge{width:58px;height:58px;--wf-art-size:41px}
-.phase3IntegratedPreview .rarityImageFrame--compare{width:60px;height:60px;--wf-art-size:43px}
-.phase3IntegratedPreview .rarityImageFrame--inspect{width:84px;height:84px;--wf-art-size:62px}
-.phase3IntegratedPreview .rarityImageFrame--loot{width:66px;height:66px;--wf-art-size:48px}
-.phase3IntegratedPreview .rarityImageFrame--bag{width:56px;height:56px;--wf-art-size:40px}
-.phase3IntegratedPreview .rarityImageFrame--potion-stack{width:56px;height:56px;--wf-art-size:41px}
-.phase3IntegratedPreview .rarityImageFrame--potion{width:50px;height:50px;--wf-art-size:36px}
-.phase3IntegratedPreview .rarityImageFrame--public{width:36px;height:36px;--wf-art-size:26px}
-
-/* E-level stays within the enlarged visible frame, not on the slot edge. */
-.phase3IntegratedPreview .slotTile .slotDLevel,
-.phase3IntegratedPreview .miniSlot .miniDLevel{
-  top:9px!important;left:8px!important;z-index:4;
-}
-.phase3IntegratedPreview .invItem .lv{
-  top:10px!important;
-  bottom:auto!important;
-  left:max(10px,calc(50% - 27px))!important;
-  z-index:4;
-}
-/* Merchant grid makes room for the wider frame without overlapping copy. */
-@media(min-width:841px){
- .phase3IntegratedPreview .cityCenterLayout .merchantCompactCard{
-   grid-template-columns:72px minmax(0,1fr) minmax(84px,auto);
- }
-}
-@media(max-width:840px){
- .phase3IntegratedPreview .cityCenterLayout .merchantCompactCard{
-   grid-template-columns:70px minmax(0,1fr);
- }
-}
-@media(max-width:700px){
- .phase3IntegratedPreview .rarityImageFrame--slot{width:50px;height:50px;--wf-art-size:33px}
- .phase3IntegratedPreview .rarityImageFrame--stash{width:58px;height:58px;--wf-art-size:40px}
- .phase3IntegratedPreview .rarityImageFrame--merchant{width:56px;height:56px;--wf-art-size:41px}
- .phase3IntegratedPreview .rarityImageFrame--potion{width:46px;height:46px;--wf-art-size:33px}
- .phase3IntegratedPreview .invItem .lv{left:max(9px,calc(50% - 24px))!important}
- .phase3IntegratedPreview .slotTile .slotDLevel{top:8px!important;left:7px!important}
- .phase3IntegratedPreview .cityCenterLayout .merchantCompactCard{
-   grid-template-columns:58px minmax(0,1fr);
- }
-}
-/* The Common frame must keep its rarity color even if an empty slot
-   happens to be represented by a disabled button. */
-.phase3IntegratedPreview .phase3PotionSlot.empty:disabled{
-  opacity:1!important;
-}
-
-/* UI.4j — More breathing room around equipment without enlarging the art.
-   Tier badges are children of their respective rarity frames for all slots
-   except weapon (its already-approved position remains untouched). */
-.phase3IntegratedPreview .rarityImageFrame--slot{width:70px;height:70px}
-.phase3IntegratedPreview .rarityImageFrame--stash{width:76px;height:76px}
-.phase3IntegratedPreview .rarityImageFrame--merchant{width:78px;height:78px}
-.phase3IntegratedPreview .rarityImageFrame--forge{width:66px;height:66px}
-.phase3IntegratedPreview .rarityImageFrame--compare{width:68px;height:68px}
-.phase3IntegratedPreview .rarityImageFrame--inspect{width:94px;height:94px}
-.phase3IntegratedPreview .rarityImageFrame--loot{width:74px;height:74px}
-.phase3IntegratedPreview .rarityImageFrame--bag{width:62px;height:62px}
-.phase3IntegratedPreview .rarityImageFrame--potion-stack{width:64px;height:64px}
-.phase3IntegratedPreview .rarityImageFrame--potion{width:58px;height:58px}
-.phase3IntegratedPreview .rarityImageFrame--public{width:42px;height:42px}
-
-/* Relative to the actual square frame, not to the wider rectangular slot.
-   This prevents E1 from drifting outside helmets, armor, off-hand, etc. */
-.phase3IntegratedPreview .rarityImageFrame>.slotDLevel{
-  position:absolute;
-  top:12px!important;
-  left:11px!important;
-  right:auto!important;
-  bottom:auto!important;
-  z-index:5;
-  pointer-events:none;
-}
-@media(min-width:841px){
-  .phase3IntegratedPreview .cityCenterLayout .merchantCompactCard{
-    grid-template-columns:80px minmax(0,1fr) minmax(84px,auto);
-  }
-}
-@media(max-width:840px){
-  .phase3IntegratedPreview .cityCenterLayout .merchantCompactCard{
-    grid-template-columns:78px minmax(0,1fr);
-  }
-}
-@media(max-width:700px){
-  .phase3IntegratedPreview .rarityImageFrame--slot{width:60px;height:60px}
-  .phase3IntegratedPreview .rarityImageFrame--stash{width:66px;height:66px}
-  .phase3IntegratedPreview .rarityImageFrame--merchant{width:66px;height:66px}
-  .phase3IntegratedPreview .rarityImageFrame--potion{width:52px;height:52px}
-  .phase3IntegratedPreview .rarityImageFrame>.slotDLevel{top:10px!important;left:9px!important}
-  .phase3IntegratedPreview .cityCenterLayout .merchantCompactCard{
-    grid-template-columns:68px minmax(0,1fr);
-  }
-}
+/* One responsive size scale for every square rarity frame. */
+.phase3IntegratedPreview .rarityImageFrame{max-width:100%}
+.phase3IntegratedPreview .rarityImageFrame--slot{width:clamp(36px,4.2vw,60px)}
+.phase3IntegratedPreview .rarityImageFrame--stash{width:clamp(48px,5.2vw,74px)}
+.phase3IntegratedPreview .rarityImageFrame--merchant{width:clamp(48px,5.4vw,76px)}
+.phase3IntegratedPreview .rarityImageFrame--forge{width:clamp(44px,4.7vw,66px)}
+.phase3IntegratedPreview .rarityImageFrame--compare{width:clamp(46px,4.8vw,68px)}
+.phase3IntegratedPreview .rarityImageFrame--inspect{width:clamp(64px,6.6vw,92px)}
+.phase3IntegratedPreview .rarityImageFrame--loot{width:clamp(48px,5vw,72px)}
+.phase3IntegratedPreview .rarityImageFrame--bag{width:clamp(42px,4.2vw,60px)}
+.phase3IntegratedPreview .rarityImageFrame--potion-stack{width:clamp(46px,4.5vw,64px)}
+.phase3IntegratedPreview .rarityImageFrame--potion{width:clamp(38px,4.1vw,58px)}
+.phase3IntegratedPreview .rarityImageFrame--public{width:clamp(28px,3vw,42px)}
+.phase3IntegratedPreview .rarityImageFrame>:is(.slotDLevel,.legendaryRankBadge){position:absolute;top:3px;left:3px;right:auto;bottom:auto;z-index:5;pointer-events:none}
+.phase3IntegratedPreview .slotTile .slotDLevel,.phase3IntegratedPreview .miniSlot .miniDLevel,.phase3IntegratedPreview .invItem .lv{z-index:5}
+.phase3IntegratedPreview .cityCenterLayout .merchantCompactCard{grid-template-columns:clamp(56px,5.4vw,76px) minmax(0,1fr) minmax(84px,auto)}
+@media(max-width:840px){.phase3IntegratedPreview .cityCenterLayout .merchantCompactCard{grid-template-columns:clamp(52px,8vw,68px) minmax(0,1fr)}}
+@media(max-width:580px){.phase3IntegratedPreview .cityCenterLayout .merchantCompactCard{grid-template-columns:54px minmax(0,1fr)}}

@@ -1,13 +1,13 @@
-/* UI.4e: v3.5 rarity frames are attached to square artwork boxes only. */
-.phase3IntegratedPreview [data-rarity="Common"]{--ui4b-rarity-frame:url("../assets/ui-kit/rarity/v3_5/01_common.webp")}
-.phase3IntegratedPreview [data-rarity="Uncommon"]{--ui4b-rarity-frame:url("../assets/ui-kit/rarity/v3_5/02_uncommon.webp")}
-.phase3IntegratedPreview [data-rarity="Rare"]{--ui4b-rarity-frame:url("../assets/ui-kit/rarity/v3_5/03_rare.webp")}
-.phase3IntegratedPreview [data-rarity="Epic"]{--ui4b-rarity-frame:url("../assets/ui-kit/rarity/v3_5/04_epic.webp")}
-.phase3IntegratedPreview [data-rarity="Legendary"]{--ui4b-rarity-frame:url("../assets/ui-kit/rarity/v3_5/05_legendary.webp")}
-.phase3IntegratedPreview :is(.slotTile,.invItem,.miniSlot,.compareCard,.merchantCompactCard,.forgePickCard,.lootCard,.phase3BagItem)[data-rarity]::after{content:none!important;display:none!important}
+/* Rarity treatment uses CSS only; item art remains unchanged and proportional. */
+.phase3IntegratedPreview [data-rarity="Common"]{--ui-rarity-color:#8c8378;--ui-rarity-shine:#d3c7b0}
+.phase3IntegratedPreview [data-rarity="Uncommon"]{--ui-rarity-color:#65956f;--ui-rarity-shine:#a8d6aa}
+.phase3IntegratedPreview [data-rarity="Rare"]{--ui-rarity-color:#5d8fb3;--ui-rarity-shine:#a5d5ee}
+.phase3IntegratedPreview [data-rarity="Epic"]{--ui-rarity-color:#9a72bc;--ui-rarity-shine:#d7b3f1}
+.phase3IntegratedPreview [data-rarity="Legendary"]{--ui-rarity-color:#c28b4c;--ui-rarity-shine:#f1cf86}
+.phase3IntegratedPreview :is(.slotTile,.invItem,.miniSlot,.compareCard,.merchantCompactCard,.forgePickCard,.lootCard,.phase3BagItem)[data-rarity]::after{content:none;display:none}
 .phase3IntegratedPreview .rarityImageFrame{position:relative;isolation:isolate;display:inline-grid;place-items:center;flex:none;aspect-ratio:1/1;max-width:100%;vertical-align:middle}
-.phase3IntegratedPreview .rarityImageFrame>img{width:100%;height:100%;min-width:0;min-height:0;max-width:100%;max-height:100%;object-fit:contain;border-radius:0!important}
-.phase3IntegratedPreview .rarityImageFrame::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background:var(--ui4b-rarity-frame,url("../assets/ui-kit/rarity/v3_5/01_common.webp")) center/100% 100% no-repeat}
+.phase3IntegratedPreview .rarityImageFrame>img{width:100%;height:100%;min-width:0;min-height:0;max-width:100%;max-height:100%;object-fit:contain;border-radius:0}
+.phase3IntegratedPreview .rarityImageFrame::after{content:none;display:none}
 .phase3IntegratedPreview .rarityImageFrame--slot{width:44px;height:44px}
 .phase3IntegratedPreview .rarityImageFrame--stash{width:52px;height:52px}
 .phase3IntegratedPreview .rarityImageFrame--merchant{width:62px;height:62px}

@@ -7,9 +7,10 @@ const root=path.resolve(__dirname,'..');
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 test('UI typography uses display, heading and body families with a loading fallback',()=>{
  const entry=read('index.html'),core=read('online/v012-core.css'),ui4=read('online/v012-ui4.css');
- assert.match(entry,/fonts\.googleapis\.com\/css2\?family=Alegreya\+Sans/);
+ assert.doesNotMatch(entry,/fonts\.googleapis\.com/);
  assert.doesNotMatch(entry,/Grenze\+Gotisch/);
- assert.match(entry,/display=swap/);
+ assert.match(ui4,/@font-face\{font-family:"Grenze";[^}]*font-display:swap\}/);
+ assert.match(ui4,/@font-face\{font-family:"Alegreya Sans";[^}]*font-display:swap\}/);
  assert.match(core,/--font-display:'Grenze',Georgia,serif/);
  assert.match(core,/--font-head:'Grenze',Georgia,serif/);
  assert.match(core,/--font-body:'Alegreya Sans',system-ui/);
