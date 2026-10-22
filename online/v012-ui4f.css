@@ -1,0 +1,151 @@
+/* UI.4f — true 9-slice border replacement, never an overlay.
+   Source: Drive / 05 - UI & Navigation / Wanderer_UI_Kit_9Slice_Seamless_Minimal.
+   Reference atlas: 768x576, 96x96 corners, transparent centre.
+   All four corners scale equally; edge strips REPEAT rather than stretch. */
+.phase3IntegratedPreview{
+  --wf-frame:url("../assets/ui-kit/seamless-minimal/00_full_frame_reference.png");
+  --wf-panel-edge:clamp(9px,1.1vw,14px);
+  --wf-card-edge:7px;
+  --wf-item-edge:4px;
+}
+/* A real border-image REPLACES the former CSS border and pseudo-element frame.
+   No additional layers are placed over the existing rectangle. */
+.phase3IntegratedPreview :is(
+  .panel,.phase3ExpeditionPanel,.paper,.phase3PermanentStats,
+  .phase3ResourcePanel,.phase3CombatBuild,.phase3ActiveAffinities,
+  .phase3CombatAffinityGroup,.phase3PassiveCard,.phase3Journey,
+  .phase3BetweenBag,.phase5GearGroup,.inspect
+){
+  --wf-edge:var(--wf-panel-edge);
+  border:var(--wf-edge) solid transparent!important;
+  border-image-source:var(--wf-frame)!important;
+  border-image-slice:96!important;
+  border-image-width:var(--wf-edge)!important;
+  border-image-repeat:repeat!important;
+  border-image-outset:0!important;
+  border-radius:0!important;
+  background-clip:padding-box;
+  box-sizing:border-box;
+}
+.phase3IntegratedPreview :is(
+  .merchantCompactCard,.runeSlot,.phase3PotionSlot,.potionOffer,
+  .phase3PassiveTooltip,.phase1Offer,.phase1DraftCard,.forgePickCard,
+  .phase5ResultMetric,.phase3StatCell,.phase3BagItem,.lootCard,
+  .shopCard,.compareCard,.phase3AffinityChoice,.runePanel,
+  .phase3AffinityStrip>span
+){
+  --wf-edge:var(--wf-card-edge);
+  border:var(--wf-edge) solid transparent!important;
+  border-image-source:var(--wf-frame)!important;
+  border-image-slice:96!important;
+  border-image-width:var(--wf-edge)!important;
+  border-image-repeat:repeat!important;
+  border-image-outset:0!important;
+  border-radius:0!important;
+  background-clip:padding-box;
+  box-sizing:border-box;
+}
+.phase3IntegratedPreview :is(.slotTile,.miniSlot,.invItem){
+  --wf-edge:var(--wf-item-edge);
+  border:var(--wf-edge) solid transparent!important;
+  border-image-source:var(--wf-frame)!important;
+  border-image-slice:96!important;
+  border-image-width:var(--wf-edge)!important;
+  border-image-repeat:repeat!important;
+  border-image-outset:0!important;
+  border-radius:0!important;
+  background-clip:padding-box;
+  box-sizing:border-box;
+}
+/* The UI.4b eight-image ::before frame must not paint over the new real border. */
+.phase3IntegratedPreview :is(
+  .phase3Camp,.phase3Between,.phase3CityCenter,
+  .phase3AffinityShrine,.phase5VisualSummary
+)::before{content:none!important;display:none!important;background:none!important}
+/* Item art keeps exactly its previous square outer dimensions.
+   v3.5 rarity artwork remains the sole rarity layer, never stretched. */
+.phase3IntegratedPreview .rarityImageFrame{
+  aspect-ratio:1/1!important;
+  flex-shrink:0;
+  box-sizing:border-box;
+}
+.phase3IntegratedPreview .rarityImageFrame>img{
+  display:block;max-width:100%;max-height:100%;
+  width:100%;height:100%;object-fit:contain!important;
+}
+.phase3IntegratedPreview .rarityImageFrame::after{
+  background-size:contain!important;
+  background-position:center!important;
+  background-repeat:no-repeat!important;
+}
+.phase3IntegratedPreview :is(.runeIcon,.phase2PassiveIcon,.phase3PassiveIcon,.affinityIcon,.ui4b-close,
+ .ui4b-arrow-up,.ui4b-arrow-down,.ui4b-arrow-left,.ui4b-arrow-right){
+  object-fit:contain;
+  background-size:contain;
+}
+/* The middle CTA HUD piece tiles at its natural aspect ratio. Its end caps
+   and all other symbolic/interactive sprites stay unwarped. */
+.phase3IntegratedPreview .phase3Start{
+  background-size:auto 100%,auto 100%,auto 100%!important;
+  background-position:left center,right center,left 32px center!important;
+  background-repeat:no-repeat,no-repeat,repeat-x!important;
+}
+/* Camp character has no surrounding box: keep the slots, but remove
+   the paper outline and its own dark rectangle entirely. */
+.phase3IntegratedPreview .phase3CampGrid .equipmentLoadout.phase3HeroColumn .paper{
+  border:0!important;border-image:none!important;
+  border-radius:0!important;box-shadow:none!important;
+  background:transparent!important;overflow:visible!important;
+}
+.phase3IntegratedPreview .phase3CampGrid .phase3HeroColumn .paper .model{
+  /* Scale from the feet: the baseline remains fixed at the paper bottom. */
+  transform:scale(1.26)!important;
+  transform-origin:center bottom!important;
+  object-fit:contain!important;object-position:center bottom!important;
+  pointer-events:none;
+}
+.phase3IntegratedPreview .phase3CampGrid .phase3HeroColumn .paper .slotTile{
+  /* Keep the pre-existing slot footprint; only its border artwork changes. */
+  box-sizing:border-box;
+}
+/* Desktop camp backdrop: artwork is sized to its intrinsic aspect ratio
+   (1672x940), anchored -35px from the top, not resized with panel height.
+   The last 22% fades into the plain panel background on taller windows. */
+.phase3IntegratedPreview .phase3Camp{
+  position:relative;isolation:isolate;overflow:hidden;
+  background:#150d14!important;
+}
+.phase3IntegratedPreview .phase3Camp::after{
+  content:"";position:absolute;top:-35px;left:0;right:0;
+  width:100%;aspect-ratio:1672/940;height:auto;
+  background:url("../assets/backgrounds/camp.webp") center top/100% 100% no-repeat;
+  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 78%,transparent 100%);
+  mask-image:linear-gradient(to bottom,#000 0%,#000 78%,transparent 100%);
+  opacity:.9;z-index:0;pointer-events:none;
+}
+.phase3IntegratedPreview .phase3Camp>*{position:relative;z-index:1}
+/* On smaller screens the Camp status stacks above the hero. Anchor the
+   scenery to the PAPER instead of the growing Camp panel, so the circular
+   floor stays under the hero's fixed feet even when more content is added. */
+@media(max-width:1100px){
+  .phase3IntegratedPreview .phase3Camp::after{content:none!important;display:none!important}
+  .phase3IntegratedPreview .phase3CampGrid .equipmentLoadout.phase3HeroColumn .paper{
+    background-image:
+      linear-gradient(to bottom,rgba(21,13,20,.08) 0%,rgba(21,13,20,.06) 72%,#150d14 100%),
+      url("../assets/backgrounds/camp.webp")!important;
+    background-size:100% 100%,auto 600px!important;
+    background-position:center,center -10px!important;
+    background-repeat:no-repeat!important;
+  }
+}
+@media(max-width:700px){
+  .phase3IntegratedPreview{
+    --wf-panel-edge:9px;--wf-card-edge:6px;--wf-item-edge:4px;
+  }
+  .phase3IntegratedPreview .phase3CampGrid .equipmentLoadout.phase3HeroColumn .paper{
+    background-size:100% 100%,auto 510px!important;
+    background-position:center,center -18px!important;
+  }
+}
+/* Only touch the presentation layer; selected and focus-visible outlines
+   remain visible for keyboard/touch accessibility. */
