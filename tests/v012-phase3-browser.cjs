@@ -2,7 +2,7 @@
 // Firebase accounts, real player saves or production deployment.
 const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),http=require('node:http');
 const root=path.resolve(__dirname,'..'),html=fs.readFileSync(path.join(root,'index.html'),'utf8');
-const boot='phase1Init();render();';
+const boot='phase1Init();\nconst phase3RestoredScroll=phase3RestoreUILocation(phase3SavedUILocation);\nrender();';
 assert(html.includes(boot),'isolated game bootstrap');
 const fixture=String.raw`if(PHASE1_PREVIEW){
  phase1Init();state.equip.weapon=makeItem(100,'weapon',null,'loot','Sword','Rare');
@@ -16,7 +16,7 @@ const fixture=String.raw`if(PHASE1_PREVIEW){
  };render();
 }else{load();if(!state.merchant)rollShop();save();render();}`;
 assert(fixture.includes('__phase3Audit'));
-const pageHtml=html.replace(boot,fixture);
+const pageHtml=html.replace(boot,fixture+'const phase3RestoredScroll=null;');
 const types={'.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.webp':'image/webp','.png':'image/png','.svg':'image/svg+xml','.html':'text/html'};
 const server=http.createServer((req,res)=>{
  const pathname=decodeURIComponent(req.url.split('?')[0]||'/'),p=pathname==='/'?path.join(root,'index.html'):path.resolve(root,'.'+pathname);
@@ -47,12 +47,12 @@ async function run(){
     return route.continue();
    });
    await page.goto(base+'/?expeditionPhase1=1',{waitUntil:'domcontentloaded'});
-   await page.locator('[data-phase1-expedition="1"]').waitFor({timeout:12000});
+   await page.locator('[data-phase1-expedition="1"]').first().waitFor({timeout:12000});
    assert.equal(await page.locator('body').evaluate(el=>el.classList.contains('phase3IntegratedPreview')),true,'Phase 3 preview-specific responsive CSS is enabled');
    await page.locator('[data-phase3-nav="equipment"]').click();
    assert.equal(await page.locator('.equipmentLoadout .slotTile').count(),10,'ten slots including Belt');
    assert.equal(await page.locator('.equipmentBonuses').count(),0,'removed sets stay absent');
-   await page.locator('#phase3Return').click();await page.locator('[data-phase1-expedition="1"]').click();
+   await page.locator('#phase3Return').click();await page.locator('[data-phase1-expedition="1"]').first().click();
    await page.locator('[data-phase2-initial="blood"]').click();
    assert.equal(await page.locator('[data-potion-use]').count(),0,'no combat potions');
    await page.evaluate(()=>__phase3Audit.finish());await page.waitForTimeout(30);

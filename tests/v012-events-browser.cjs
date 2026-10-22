@@ -3,7 +3,7 @@
 const assert=require('node:assert/strict'),{chromium}=require('playwright');
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http');
 const root=path.resolve(__dirname,'..'),html=fs.readFileSync(path.join(root,'index.html'),'utf8');
-const boot='phase1Init();render();';
+const boot='phase1Init();\nconst phase3RestoredScroll=phase3RestoreUILocation(phase3SavedUILocation);\nrender();';
 assert(html.includes(boot),'preview startup anchor');
 const fixture=[
  "if(PHASE1_PREVIEW){",
@@ -23,7 +23,7 @@ const fixture=[
  "return 'waiting';}};render();",
  "}else{load();if(!state.merchant)rollShop();save();render();}"
 ].join('\n');
-const pageHtml=html.replace(boot,fixture);
+const pageHtml=html.replace(boot,fixture+'const phase3RestoredScroll=null;');
 const mime={'.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.webp':'image/webp','.png':'image/png','.svg':'image/svg+xml'};
 const server=http.createServer((req,res)=>{
  const url=new URL(req.url,'http://localhost'),p=url.pathname==='/'?path.join(root,'index.html'):path.resolve(root,'.'+url.pathname);
@@ -47,13 +47,13 @@ const server=http.createServer((req,res)=>{
    await page.route('**/*',route=>new URL(route.request().url()).origin===origin?route.continue():route.abort());
    await page.goto(origin+'/?expeditionPhase1=1',{waitUntil:'domcontentloaded'});
    await page.evaluate(()=>__audit.start());
-   let events=0,drafts=0,discard=0,index=0;
+   let events=0,drafts=0,discard=0,index=0,eventShot=false;
    for(index=0;index<1300;index++){
     const state=await page.evaluate(()=>__audit.state());
     assert.equal(state.capacity,12);
     if(state.stage==='finished')break;
     assert.notEqual(state.stage,'failed','synthetic hero died');
-    if(state.event)assert.equal(state.options,3,'two event offers plus refusal');
+    if(state.event){assert.equal(state.options,3,'two event offers plus refusal');if(!eventShot){const shotDir=path.join(root,'docs/v012-global-ui-screenshots/after');fs.mkdirSync(shotDir,{recursive:true});await page.screenshot({path:path.join(shotDir,'event-'+width+'.jpg'),fullPage:true,type:'jpeg',quality:88});eventShot=true;}}
     const action=await page.evaluate(()=>__audit.step());
     if(action==='event')events++;
     if(action==='passive')drafts++;

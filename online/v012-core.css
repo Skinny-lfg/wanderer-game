@@ -1,0 +1,979 @@
+/* v0.12 core UI extracted from the latest development markup; shared tokens and component layouts. */
+:root{color-scheme:dark;--bg:#1b0b13;--panel:#2c1a22;--panel2:#3b242d;--edge:#704a55;--text:#f0e5e5;--muted:#c7afb7;--gold:#dfb76f;--green:#79cfa0;--red:#ee897a;--blue:#82b5eb;--wine-base:#100a0e;--wine-deep:#1c1117;--wine-surface:#291a22;--wine-raised:#37232d;--wine-edge:#674853;--wine-hover:#4b2d3a;--elite-name:#ff9b9b;--boss-name:#ffd681;--space-3:12px;--space-4:16px;--radius-2:9px;}*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -25%,#3e2630 0%,#25151d 37%,#100a0e 80%);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--text)}button,input,select{font:inherit}button{cursor:pointer;border:1px solid #6b4c56;background:#38242e;color:var(--text);padding:9px 14px;border-radius:9px;transition:background .15s,border .15s,box-shadow .15s}button:hover{background:#50313e}button:disabled{cursor:default;opacity:.45}button.primary{background:linear-gradient(#b9975d,#8e6639);border-color:#d4ae6c;color:#150e0a;font-weight:800}button.primary:hover{background:#e1b879}button.ghost{background:#21151d}button.danger{border-color:#845354;background:#4c272b;color:#f0b4aa}button.tiny{font-size:12px;padding:5px 9px}.container{max-width:1260px;margin:auto;padding:15px 18px 40px}.brandLogo.hasArt{background:url('../assets/branding/wanderer-logo.webp') center left/contain no-repeat;width:240px;height:90px;max-width:45vw}.brandLogo.hasArt span{visibility:hidden}.brandRow{display:flex;align-items:center;gap:14px;justify-content:space-between;margin-bottom:12px}.logo{font:700 23px Georgia,serif;letter-spacing:.08em;color:#f5ddab}.version{font:10px system-ui;color:var(--muted);letter-spacing:.20em;margin-top:2px}.wallet{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}.token{font-size:12px;display:flex;align-items:center;gap:6px;padding:7px 9px;background:#1c2631;border:1px solid var(--edge);border-radius:9px;white-space:nowrap}.token b{color:#fff;font-size:13px}.nav{display:flex;gap:7px;overflow-x:auto;padding:0 0 11px;scrollbar-width:thin}.nav button{flex-shrink:0;min-width:84px;font-size:12px;white-space:nowrap}.nav .active{border-color:var(--gold);background:#453a2d;color:#f1d8a2}.panel{background:linear-gradient(145deg,#1c2630,#141d27);border:1px solid var(--edge);border-radius:13px;padding:17px;min-width:0}.panel + .panel{margin-top:12px}h1,h2,h3,p{margin-top:0}h1,h2,h3{font-family:Georgia,serif}h1{font-size:26px}h2{font-size:22px;margin-bottom:8px}h3{font-size:17px;margin-bottom:7px}.eyebrow{font-size:10px;letter-spacing:.21em;color:var(--gold);text-transform:uppercase;font-weight:700}.muted{color:var(--muted)}.small{font-size:12px}.micro{font-size:10px}.gold{color:var(--gold)}.green{color:var(--green)}.red{color:var(--red)}.topline{display:flex;justify-content:space-between;gap:12px;align-items:start}.row{display:flex;align-items:center;gap:8px}.wrap{flex-wrap:wrap}.spread{justify-content:space-between}.gap{height:12px}.buttonRow{display:flex;flex-wrap:wrap;gap:8px}.rule{border-top:1px solid #344253;margin:12px 0}.twocol{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1fr);gap:14px;align-items:start}.characterBody{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,.8fr);gap:14px}.paper{position:relative;margin:0 auto;max-width:490px;aspect-ratio:1/1.08;background:radial-gradient(ellipse at 50% 47%,#34322a,#101922 66%);border:1px solid #5d4b39;border-radius:14px;overflow:hidden}.paper .model{position:absolute;inset:9% 7% 10%;height:81%;width:86%;object-fit:contain;object-position:center bottom;mask-image:linear-gradient(black 68%,transparent 100%);opacity:.42;pointer-events:none}.slotTile{position:absolute;width:19%;aspect-ratio:1/1.09;border:1px solid #576272;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-direction:column;background:#121b23e8;box-shadow:0 1px 14px #0008;padding:4px}.slotTile img{width:68%;height:69%;object-fit:contain}.slotTile span{font-size:9px;color:#c4ced3;line-height:1.1}.slotTile.filled{border-color:#d5af74}.slotTile.active{outline:2px solid #d5af74}.slotTile[data-slot='helm']{top:2%;left:40.5%}.slotTile[data-slot='armor']{top:22%;left:40.5%}.slotTile[data-slot='weapon']{top:33%;left:2%}.slotTile[data-slot='offhand']{top:33%;right:2%}.slotTile[data-slot='gloves']{top:11%;left:6%}.slotTile[data-slot='amulet']{top:11%;right:6%}.slotTile[data-slot='ring1']{bottom:26%;left:3%}.slotTile[data-slot='ring2']{bottom:26%;right:3%}.slotTile[data-slot='boots']{bottom:3%;left:40.5%}.statStrip{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.statStrip .metric{padding:9px 4px;text-align:center;background:#111a25;border-radius:8px;border:1px solid #344253}.metric strong{display:block;font-size:19px;color:#ebd5ab}.metric span{font-size:10px;display:block;color:#b6bfca}.statsGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.stat{background:#111924;border:1px solid #2d3c4e;border-radius:8px;padding:8px}.stat label{font-size:11px;color:#aebccb;display:block}.stat b{font-size:15px;font-variant-numeric:tabular-nums}.gearSummary{padding:9px;border:1px solid #405164;background:#131f2b;border-radius:9px;margin-top:10px;font-size:12px}.iconStrip{display:flex;gap:6px;overflow-x:auto;padding:5px 0 9px}.miniSlot{position:relative;border:1px solid #354659;background:#101923;flex:0 0 51px;height:61px;border-radius:8px;padding:3px;text-align:center}.miniSlot img{width:39px;height:39px;object-fit:contain}.miniSlot span{font-size:9px;color:#aeb9c3;display:block}.miniSlot.filled{border-color:#c8a774}.miniSlot.active{outline:2px solid #88b9eb}.filterBar{display:flex;gap:6px;align-items:end;flex-wrap:wrap;margin:10px 0}select,input[type=text],input[type=number]{background:#111a24;color:#e4e9ef;border:1px solid #4d6175;border-radius:7px;padding:7px;min-width:0}.filterBar label{display:flex;flex-direction:column;gap:3px;font-size:10px;color:#afb9c4;min-width:93px}.filterBar select{font-size:12px}.stashLayout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:12px}.stashGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(68px,1fr));gap:6px;padding:7px;background:#101721;border:1px solid #304051;border-radius:10px;align-content:start;max-height:460px;overflow-y:auto;scrollbar-width:thin}.invItem{position:relative;aspect-ratio:1/1.15;min-height:74px;text-align:center;border:1px solid #52616c;border-radius:8px;background:#1e2731;padding:5px 2px}.invItem.selected{outline:2px solid #e8c880;z-index:1}.invItem img{width:82%;height:75%;object-fit:contain}.invItem .lv{position:absolute;bottom:3px;left:4px;font-size:10px;font-weight:800;background:#0b111be0;border-radius:4px;padding:0 4px}.invItem .rar{position:absolute;bottom:3px;right:3px;font-size:9px}.invItem .lock{position:absolute;top:0;right:2px;font-size:10px}.invItem .chk{position:absolute;top:3px;left:4px;font-size:12px;background:#161e29;border-radius:4px;padding:0 3px}.inspect{background:#131d27;border:1px solid #34485c;border-radius:10px;padding:13px}.inspectHero{display:flex;align-items:center;gap:10px}.inspectHero img{width:67px;height:67px;object-fit:contain;background:#0c1219;border:1px solid #43516b;border-radius:9px}.inspectHero h3{margin:0;font-size:16px}.tag{border-radius:5px;padding:2px 5px;font-size:10px;border:1px solid #566575}.deltaGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.delta{border:1px solid #324454;border-radius:7px;padding:6px;text-align:center}.delta span{display:block;font-size:10px;color:var(--muted)}.delta b{font-size:13px}.delta.plus b{color:var(--green)}.delta.minus b{color:var(--red)}.bulkBar{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:7px 0}.bulkBar .small{font-size:11px}.craftHero{width:120px;height:128px;object-fit:contain}.forgeGrid{display:grid;grid-template-columns:140px minmax(0,1fr);gap:12px}.shopGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.shopCard{text-align:center;background:#131d28;border:1px solid #435262;border-radius:10px;padding:11px;min-width:0}.shopCard img{width:76px;height:76px;object-fit:contain}.shopCard b{display:block;font-size:12px}.valuables{display:grid;gap:6px}.valuable{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;background:#111b25;border:1px solid #3b4b61;border-radius:8px;font-size:12px}.dungeonPlaceholder{visibility:hidden;pointer-events:none}.previewStats{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0}.previewStats .tag{font-size:12px;padding:6px 9px}.scene{position:relative;background-position:center;background-size:cover;border:1px solid #4a5d67;border-radius:12px;display:grid;grid-template-columns:1fr 40px 1fr;align-items:end;min-height:290px;overflow:hidden;padding:18px}.scene:before{content:'';position:absolute;inset:0;background:linear-gradient(#0008,#000a);backdrop-filter:saturate(.38) brightness(.92);-webkit-backdrop-filter:saturate(.38) brightness(.92);pointer-events:none}.combatant{position:relative;z-index:1;text-align:center;min-width:0}.combatant img{height:160px;max-width:100%;object-fit:contain;filter:drop-shadow(0 4px 9px #000)}.combatant strong{display:block;font-size:13px;text-shadow:0 2px 7px #000}.vs{position:relative;z-index:1;text-align:center;font:20px Georgia,serif;color:var(--gold);align-self:center}.hpbar{height:8px;background:#411d22;border:1px solid #786369;border-radius:8px;overflow:hidden;margin:7px 0}.hpbar>i{height:100%;display:block;background:linear-gradient(90deg,#a73a47,#f78686)}.hpbar.player>i{background:linear-gradient(90deg,#297652,#69d49c)}.combatant small{font-size:10px;display:block}.combatLayout{display:grid;grid-template-columns:1fr .75fr;gap:12px}.log{max-height:230px;overflow:auto;border-radius:9px;background:#0d131a;border:1px solid #344253;padding:8px;font-size:12px}.logLine{margin:0;padding:4px 3px;border-bottom:1px solid #26313f}.combatLoot{display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:6px}.combatLoot img{width:50px;height:52px;object-fit:contain}.float{position:absolute;z-index:5;font-weight:900;text-shadow:0 2px 4px #000;animation:rise .85s ease-out forwards;pointer-events:none}@keyframes rise{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-47px)}}details summary{cursor:pointer;color:#e2c695;font-weight:700;font-size:13px;padding:8px 0}.toast{position:fixed;z-index:20;left:50%;bottom:24px;transform:translateX(-50%);background:#30433b;border:1px solid #88cbb0;color:#fff;padding:11px 17px;border-radius:9px;max-width:95vw;text-align:center}.hidden{display:none!important}@media(max-width:960px){.characterBody{grid-template-columns:1fr}.stashLayout{grid-template-columns:minmax(0,1fr) 260px}.shopGrid{grid-template-columns:repeat(2,1fr)}}@media(max-width:650px){.container{padding:9px 10px 22px}.brandRow{gap:8px}.logo{font-size:20px}.version{font-size:9px}.token{padding:5px 7px;font-size:10px}.wallet{gap:3px}.token b{font-size:11px}.nav{gap:5px}.nav button{min-width:69px;padding:6px 8px;font-size:11px}.panel{padding:11px;border-radius:10px}.twocol,.combatLayout{grid-template-columns:1fr}.characterBody{grid-template-columns:1fr;gap:8px}.paper{width:min(100%,390px)}.slotTile{border-radius:6px}.statsGrid{grid-template-columns:repeat(3,1fr)}.statStrip .metric strong{font-size:16px}.statStrip .metric span{font-size:9px}.stashLayout{grid-template-columns:1fr}.stashGrid{grid-template-columns:repeat(auto-fill,minmax(48px,1fr));gap:5px;max-height:330px;padding:5px}.invItem{min-height:56px;aspect-ratio:1/1.13}.invItem img{width:93%;height:79%}.inspect{padding:8px}.inspectHero img{height:52px;width:52px}.inspectHero h3{font-size:14px}.deltaGrid{grid-template-columns:repeat(4,1fr)}.filterBar{flex-wrap:nowrap;overflow-x:auto;gap:5px}.filterBar label{min-width:90px}.filterBar select{max-width:130px;font-size:11px;padding:6px}.shopGrid{grid-template-columns:repeat(2,1fr);gap:7px}.shopCard{padding:8px}.shopCard img{width:62px;height:62px}.forgeGrid{grid-template-columns:85px 1fr}.craftHero{width:83px;height:100px}.scene{min-height:220px;padding:8px;grid-template-columns:1fr 30px 1fr}.combatant img{height:113px}.combatant strong{font-size:10px}.combatant small{font-size:9px}}@media(max-width:390px){.wallet .token{font-size:9px;padding:5px}.token b{font-size:10px}.statStrip{gap:3px}.slotTile span{font-size:7px}}.equipmentLayout{display:grid;grid-template-columns:minmax(280px,.8fr) minmax(0,1.3fr);gap:14px;align-items:start}.equipmentLayout>.panel{margin-top:0}.equipmentOverview .paper{max-width:340px;width:100%}.equipmentOverview .statStrip{margin-top:10px}.setHeading{margin-top:18px}.equipmentInventory .stashLayout{grid-template-columns:minmax(0,1fr)}.equipmentInventory .stashGrid{grid-template-columns:repeat(auto-fill,minmax(55px,1fr))}.itemDialog{width:min(580px,calc(100% - 24px));max-height:85dvh;overflow-y:auto;border:1px solid var(--gold);border-radius:14px;background:#151e28;color:var(--text);padding:20px}.itemDialog::backdrop{background:#05090ddd}.modalActions{margin-top:18px;justify-content:flex-end}.riskGear{display:grid;gap:6px}.riskItem{display:flex;align-items:center;gap:9px;font-size:12px}.riskItem img{width:40px;height:40px;object-fit:contain}.protectionWarning{margin:9px 0 0;padding:10px 12px;color:#ffabab;background:#3a1b22;border:1px solid #b85460;border-radius:8px;font-size:13px;font-weight:700;line-height:1.45}.protectionChoice{width:100%;background:#182332;border:1px solid #42526a;border-radius:8px;padding:7px;cursor:pointer;color:var(--text);text-align:left}.protectionChoice.protected{background:#142c26;border-color:#6cba99}.protectionChoice .protectionDetails{display:block;flex:1;min-width:0}.protectionChoice .protectionName{display:block;overflow-wrap:anywhere}.protectionChoice .protectionMeta{display:block;margin-top:4px;font-size:11px;line-height:1.45;color:#c4cfda}.protectionChoice .protectionTier{font-weight:700;color:#f1f4f8}.protectionChoice .protectionAffinity{font-weight:600;color:#d9c98a}.protectionChoice strong{white-space:nowrap;font-size:11px}.protectionChoice:focus-visible{outline:2px solid var(--gold);outline-offset:2px}.itemDialog .riskGear{grid-template-columns:repeat(2,minmax(0,1fr));max-height:285px;overflow-y:auto}.itemDialog .protectionChoice{font-size:11px}@media(max-width:650px){.itemDialog .riskGear{grid-template-columns:1fr}.protectionChoice{gap:6px;flex-wrap:wrap}}.shopCard .inspect{text-align:left}.shopCard .deltaGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.shopCard .gearSummary{font-size:11px}.shopCard details summary{font-size:12px}@media(max-width:850px){.equipmentLayout{grid-template-columns:1fr}.equipmentInventory .stashLayout{grid-template-columns:minmax(0,1fr) minmax(240px,1fr)}}@media(max-width:650px){.equipmentInventory .stashLayout{grid-template-columns:1fr}.itemDialog{padding:14px}.deltaGrid{grid-template-columns:repeat(3,minmax(0,1fr))}.brandRow{flex-wrap:wrap}.equipmentOverview .paper{max-width:300px}}
+.entryPreference{display:flex;flex-direction:column;gap:4px;margin:12px 0}.entryPreference label{display:flex;align-items:center;gap:8px;cursor:pointer;min-height:36px;font-size:12px}.entryPreference input{width:18px;height:18px;accent-color:var(--gold)}
+[data-rarity]{border-style:solid;border-width:1px}.slotTile.active,.miniSlot.active,.invItem.selected{outline:2px solid #f5f1e7;outline-offset:2px}.riskItem img,.combatLoot img{border-radius:6px}
+
+.affinityBadge{position:absolute;top:2px;right:2px;display:flex!important;align-items:center;justify-content:center;width:20px;height:20px;border-radius:5px;background:#0a111eef;border:1px solid #64748b;font-size:13px!important;line-height:1;pointer-events:none;z-index:2}.shopCard{position:relative}.invItem .lock{top:auto;bottom:15px;right:2px;z-index:3}.invItem .chk{z-index:3}.itemComparison{margin-top:16px;padding-top:14px;border-top:1px solid #526275}.comparisonCards,.setCompareColumns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.compareCard{border:1px solid #475569;border-radius:8px;background:#0d1721;padding:10px;display:flex;flex-direction:column;gap:5px;font-size:11px;min-width:0;overflow-wrap:anywhere}.compareCard img{width:48px;height:48px;object-fit:contain}.compareCard b{font-size:13px}.comparisonTable table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}.comparisonTable caption{text-align:left;color:var(--gold);font-weight:700;padding:14px 0 6px}.comparisonTable th,.comparisonTable td{padding:7px 4px;text-align:right;border-bottom:1px solid #334155;overflow-wrap:anywhere}.comparisonTable th:first-child{text-align:left;width:32%}.comparisonTable tbody th{font-weight:400}.comparisonTable thead{color:var(--muted);font-size:10px}.comparisonTable tbody tr:first-child{background:#1b2b39}.setPreview{margin-top:16px}.setCompare{border:1px solid #40556a;border-radius:8px;padding:10px;margin:8px 0;background:#101a25;font-size:12px}.setCompareTitle{display:flex;flex-wrap:wrap;justify-content:space-between;gap:5px;margin-bottom:10px}.setCompareColumns b{display:block;margin-top:5px}.setCompareColumns p{margin:5px 0 0;line-height:1.5}.setCompareColumns .eyebrow{font-size:8px;letter-spacing:.1em}.shopCard .comparisonCards,.shopCard .setCompareColumns{grid-template-columns:1fr}.shopCard .comparisonTable th,.shopCard .comparisonTable td{font-size:10px;padding:5px 1px}.shopCard .inspect{padding:6px}@media(max-width:390px){.comparisonTable th,.comparisonTable td{font-size:11px;padding:6px 2px}.compareCard{padding:7px}.setCompare{padding:7px}.affinityBadge{width:17px;height:17px;font-size:11px!important}}
+
+.slotTile.filterSelected{outline:2px solid var(--gold);outline-offset:2px;background:#293343}
+.slotTile:not(.filled) img,.miniSlot:not(.filled) img{filter:grayscale(1);opacity:.5}
+.slotTile:not(.filled),.miniSlot:not(.filled){background:#141923;border-color:#414853}
+.stashCapacityBar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:9px 0;border-bottom:1px solid var(--edge)}
+.itemComparison .comparisonTable{margin-top:8px}
+.combatAttributes{display:flex;flex-wrap:wrap;gap:7px;margin:9px 0;font-size:11px}
+.combatAttributes span{padding:3px 7px;background:#1c2936;border-radius:5px}
+.combatSetList{display:flex;flex-wrap:wrap;gap:5px}
+.combatSetList p{margin:0}
+.lootCard{position:relative;text-align:center;min-width:0}
+.lootCard img{width:56px;height:58px;object-fit:contain}
+.lootCard .affinityBadge{top:0;right:2px}
+
+.inspectActions{margin:9px 0 7px;display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+.inspectActions button{min-height:34px}
+.slotTile .slotDLevel,.miniSlot .miniDLevel{position:absolute;top:2px;left:2px;font-size:9px!important;font-weight:800;color:#e6d19f;background:#111a23e8;border-radius:3px;padding:1px 3px;pointer-events:none}
+.invItem .gearTrend{position:absolute;bottom:2px;right:2px;z-index:3;padding:1px 4px;background:#101a23dd;border-radius:4px;font-size:14px;font-weight:900}
+.gearTrend.up{color:#7cdd9f}.gearTrend.down{color:#fc8e8e}.gearTrend.same{color:#b0b8c1}
+.merchantEquipped{display:flex;align-items:center;flex-wrap:wrap;min-width:0;gap:5px;font-size:11px;color:#c2d0de;border-top:1px solid #374151;padding-top:6px;margin-top:7px;overflow-wrap:anywhere}
+.merchantEquipped img{height:30px;width:30px;object-fit:contain}
+.scene .combatant{padding-bottom:76px}
+.enemyDebuffs{position:absolute;left:0;right:0;bottom:0;height:72px;box-sizing:border-box;display:flex;gap:4px;flex-wrap:wrap;justify-content:center;align-content:center;align-items:center;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+.enemyDebuffs .debuff{padding:2px 4px;background:#1b2537cc;border:1px solid #627087;border-radius:5px;font-size:10px;white-space:nowrap}
+
+.slotTile.reserved,.miniSlot.reserved{border:1px dashed #e0ac6c;background:#352b22}
+.slotTile.reserved img,.miniSlot.reserved img{opacity:.3;filter:grayscale(1)}
+.slotTile.reserved span,.miniSlot.reserved span{color:#e6bb83}
+
+@keyframes fxSlash{0%,100%{transform:translateX(0)}45%{transform:translateX(12px) rotate(4deg)}}
+@keyframes fxSmash{0%,100%{transform:scale(1)}50%{transform:translateX(10px) scale(1.07)}}
+@keyframes fxHeavy{0%,100%{transform:translateX(0)}50%{transform:translateX(17px) rotate(-8deg) scale(1.1)}}
+@keyframes fxDagger{0%,100%{transform:translateX(0)}30%,70%{transform:translateX(11px)}}
+@keyframes fxBow{0%,100%{transform:translateX(0)}40%{transform:translateX(-6px)}}
+@keyframes fxSpell{0%,100%{filter:drop-shadow(0 4px 9px #000)}50%{filter:drop-shadow(0 0 19px #93bafc) brightness(1.2)}}
+@keyframes fxBlock{0%,100%{filter:drop-shadow(0 4px 9px #000)}50%{filter:drop-shadow(0 0 17px #91c5ff)}}
+@keyframes fxEnemyAttack{0%,100%{transform:translateX(0)}50%{transform:translateX(-11px)}}
+#heroPortrait.fxSlash{animation:fxSlash .38s ease-out}
+#heroPortrait.fxSmash{animation:fxSmash .47s ease-out}
+#heroPortrait.fxHeavy{animation:fxHeavy .52s ease-out}
+#heroPortrait.fxDagger{animation:fxDagger .43s ease-out}
+#heroPortrait.fxBow{animation:fxBow .40s ease-out}
+#heroPortrait.fxSpell{animation:fxSpell .46s ease-out}
+#heroPortrait.fxBlock{animation:fxBlock .48s ease-out}
+#enemyPortrait.fxEnemyAttack{animation:fxEnemyAttack .36s ease-out}
+@media(prefers-reduced-motion:reduce){#heroPortrait[class*="fx"],#enemyPortrait.fxEnemyAttack{animation:none!important}}
+.onlineBar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:12px;font-size:12px;color:var(--muted)}
+
+.combatVfx{position:absolute;z-index:4;top:28%;left:72%;width:clamp(72px,22%,160px);aspect-ratio:1;pointer-events:none;transform:translate(-50%,-50%);animation:vfxImpact .48s ease-out both}
+.combatVfx img{display:block;width:100%;height:100%;object-fit:contain}
+.combatVfx.vfxBlock{left:24%;animation:vfxImpact .55s ease-out both}
+.combatVfx.vfxProjectile{left:28%;animation:vfxTravel .5s ease-in both}
+.combatVfx.vfxEnemyImpact{left:24%;top:42%;animation:vfxImpact .5s ease-out both}
+.combatVfx.vfxEnemyProjectile{left:72%;top:42%;animation:vfxEnemyTravel .52s ease-in both}
+.combatVfx.vfxEnemyProjectile img{transform:scaleX(-1)}
+.combatVfx.vfxEnemyWard{left:72%;top:42%;width:clamp(96px,29%,210px);animation:vfxImpact .66s ease-out both}
+.combatVfx[data-kind="Bow"] img{transform:rotate(25deg)}
+.combatVfx[data-kind="Two-Handed"],.combatVfx[data-kind="Staff"]{width:clamp(95px,28%,200px)}
+@keyframes vfxImpact{0%{opacity:0;transform:translate(-50%,-50%) scale(.55) rotate(-18deg)}30%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1.2) rotate(10deg)}}
+@keyframes vfxTravel{0%{opacity:0;left:28%;transform:translate(-50%,-50%) scale(.65)}20%{opacity:1}80%{opacity:1}100%{opacity:0;left:72%;transform:translate(-50%,-50%) scale(1)}}
+@keyframes vfxEnemyTravel{0%{opacity:0;left:72%;transform:translate(-50%,-50%) scale(.65)}20%{opacity:1}80%{opacity:1}100%{opacity:0;left:24%;transform:translate(-50%,-50%) scale(1)}}
+@media(prefers-reduced-motion:reduce){.combatVfx{animation:vfxFade .3s linear both!important}.combatVfx.vfxProjectile{left:72%}.combatVfx.vfxEnemyProjectile{left:24%}@keyframes vfxFade{0%,70%{opacity:1}100%{opacity:0}}}
+
+/* v0.9 dungeon probabilities */
+.lootOdds{margin:12px 0}.lootOdds table{width:100%;border-collapse:collapse;font-size:12px;white-space:nowrap}
+.lootOdds td,.lootOdds th{padding:7px 9px;text-align:left;border-bottom:1px solid #334155}
+.oddsScroll{overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch}
+
+
+/* Permanent rune inventory and boss reward choice */
+.runePanel{margin-top:15px;padding-top:14px;border-top:1px solid #39495e}
+.runeSlots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:10px 0}
+.runeSlot{border:1px solid #53627a;border-radius:9px;min-width:0;padding:8px;display:flex;flex-direction:column;gap:7px}
+.runeSlot span{overflow-wrap:anywhere}.runeCollection,.runeOffers{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:7px;margin-top:10px}
+.runeCard{white-space:normal;text-align:left;padding:10px;border:1px solid #826baf;border-radius:9px;background:#251e36;color:#e8d6ff;line-height:1.5}
+.runeCard.runeEquipped{border-color:#b99aff;background:#382b50}
+.runeCollection .runeCard{display:flex;flex-direction:column;gap:7px;min-width:0;padding:8px}
+.runeCollection .runeCard [data-rune-equip]{display:block;width:100%;text-align:left;background:transparent;border:0;white-space:normal;color:inherit;padding:4px;cursor:pointer}
+.runeCollection .runeCard [data-rune-equip]:focus-visible{outline:2px solid #d6b4fb;outline-offset:2px}
+.runeCollection .runeCard [data-rune-sell]{align-self:flex-end;white-space:normal}
+.runeCollection .runeCard [data-rune-sell]:disabled{opacity:.45}
+.runeInlineChoices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin:5px 0}
+.runeInlineChoices [data-rune-slot-choice]{font-size:12px;white-space:normal;min-width:0;padding:6px}
+.runeInlineChoices [data-rune-slot-choice]:disabled{opacity:.4;cursor:not-allowed}
+.runeInlineChoices .runeSlotOccupied{display:block;font-size:10px;overflow-wrap:anywhere}
+.slotTile:not(.filled) img{opacity:.5}
+.legendaryHunt{margin-top:12px;padding:12px;border:1px solid #465678;border-radius:10px;background:#111b2a}
+.legendaryHunt h3{margin:0 0 6px}.legendaryHunt label{display:block;margin:8px 0}
+.legendaryHunt select{max-width:100%;min-width:0;width:100%;margin-top:5px}
+.legendaryHunt .statsGrid{margin-top:10px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.legendaryHunt .stat{min-width:0}.legendaryHunt .stat label{overflow-wrap:anywhere}
+@media(max-width:650px){.legendaryHunt{padding:9px}.legendaryHunt .statsGrid{grid-template-columns:1fr}}
+.runeLine{display:inline-flex;align-items:center;gap:8px;min-width:0;text-align:left;vertical-align:middle}
+.runeIcon{display:block;width:40px;height:40px;object-fit:contain;flex:none}
+.runeText{min-width:0;overflow-wrap:anywhere;line-height:1.4}
+.runeSlot .runeIcon{width:32px;height:32px}
+.runeCard .runeLine{display:flex}
+.runeOffers .runeLine{flex-direction:column;align-items:center;text-align:center}
+.runeOffers .runeIcon{width:64px;height:64px}
+.combatRuneBadge .runeIcon{width:24px;height:24px}
+.combatRuneBadge .runeLine{gap:5px}
+.runeRewardDialog{max-width:640px}.runeRewardDialog .runeOffers{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:580px){.runeSlots,.runeRewardDialog .runeOffers{grid-template-columns:1fr}}
+.enemyPreview img{opacity:.16;filter:grayscale(1) brightness(.9)}
+.enemyPreview .hpbar,.enemyPreview small,.enemyPreview .enemyDebuffs{visibility:hidden}
+.setTrackTitle{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:7px}
+.setTrackTitle small{color:#99a7b6}
+.setTierSteps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+.setTierStep{padding:7px;border:1px solid #47586e;border-radius:7px;min-width:0;font-size:10px}
+.setTierStep b{display:block;font-size:11px;margin-bottom:4px}
+.setTierStep span{display:block;overflow-wrap:anywhere;line-height:1.4}
+.setTierStep.unlocked{background:#273c35;border-color:#77a48b;color:#d0f2d8}
+.setTierStep.locked{background:#151c24;color:#8893a2;filter:grayscale(1);opacity:.62}
+.setTierStep.nextTier{border-style:dashed;opacity:.78}
+.ringComparison{margin-top:8px;padding:7px;border:1px solid #44536a;border-radius:8px}
+.ringComparison summary{font-size:12px}
+@media(max-width:410px){.setTierSteps{grid-template-columns:1fr}}
+
+.equipmentAffinityHeading{font-size:11px;font-weight:700;letter-spacing:.025em;margin-top:6px;color:#e0c18d}
+
+/* Compact merchant: comparison is lazy-loaded into a single dialog. */
+.merchantPanel .merchantList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}
+.merchantCompactCard{display:grid;grid-template-columns:70px minmax(0,1fr) auto;align-items:center;gap:10px;padding:11px;border:1px solid #4b6074;border-radius:10px;background:#101b27;min-width:0}
+.merchantCompactCard .merchantThumb{width:66px;height:70px;max-width:100%;object-fit:contain}
+.merchantCardInfo{display:flex;flex-direction:column;gap:5px;min-width:0}
+.merchantCardInfo b{font-size:13px;overflow-wrap:anywhere}
+.merchantCardInfo span{font-size:11px;overflow-wrap:anywhere}
+.merchantCardActions{display:flex;flex-direction:column;gap:6px;align-items:stretch;min-width:84px}
+.merchantCardActions b{font-size:12px;text-align:center;white-space:nowrap}
+.merchantCardActions button{margin:0;min-height:32px}
+.itemDialog .itemComparison{max-width:100%;overflow-x:auto}
+.itemDialog .comparisonCards{min-width:0}
+/* Both combatants own a fixed-height status lane above their character portrait. */
+.scene .combatant{display:flex;flex-direction:column;justify-content:flex-end;align-items:stretch;min-width:0}
+.scene .combatStatuses{min-height:30px;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px;margin-bottom:8px;max-width:100%}
+.scene .combatStatuses:empty{opacity:0}
+.scene .combatStatuses .debuff{white-space:normal;overflow-wrap:anywhere;font-size:10px;line-height:1.3;padding:3px 5px}
+.scene .combatant>img{align-self:center}
+.scene .combatant strong{margin:3px 0 5px}
+.enemyPreview .combatStatuses{visibility:hidden}
+@media(max-width:1020px){.merchantPanel .merchantList{grid-template-columns:1fr}}
+@media(max-width:580px){.merchantCompactCard{grid-template-columns:53px minmax(0,1fr);gap:8px;padding:9px}.merchantCompactCard .merchantThumb{width:51px;height:55px}.merchantCardActions{grid-column:2;display:flex;flex-direction:row;align-items:center;flex-wrap:wrap;justify-content:flex-start}.merchantCardActions b{margin-right:auto}.merchantCardActions button{min-width:66px}.scene .combatStatuses{min-height:26px}.scene .combatStatuses .debuff{font-size:9px}}
+
+
+/* End-of-expedition actions and top status layout */
+button.extractComplete{background:linear-gradient(#378d59,#176139);border:1px solid #8de4a6;color:#f0fff5;font-weight:800}
+button.extractComplete:hover{background:#2d9a55}
+.combatActions{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+.combatActions #leave{order:0}.combatActions #nextFight{order:1}.combatActions #combatSpeed{order:2;margin-left:auto}
+.scene{align-items:stretch;min-height:355px}
+.scene .combatant{position:relative;display:flex;flex-direction:column;justify-content:flex-end;align-self:stretch;padding-top:72px;min-height:0}
+.scene .combatStatuses{position:absolute;top:0;left:0;right:0;min-height:38px;max-height:62px;overflow-y:auto;margin:0;padding:3px 2px;display:flex;align-content:flex-start;align-items:center;justify-content:center;z-index:3;border-bottom:1px solid #72839a55;background:#0916238c;border-radius:7px}
+.scene .combatStatuses:empty{opacity:.2;visibility:visible}
+.scene .combatant>img{margin-top:auto;align-self:center;max-height:155px;object-fit:contain}
+.scene .combatant .hpbar{width:100%}.scene .vs{align-self:end;margin-bottom:75px}
+.deathDialog{max-width:460px}.deathSummary{text-align:center}.deathSymbol{font-size:60px;color:#e6aeb1;text-shadow:0 0 18px #9d263677}
+.deathNumbers{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:15px 0}.deathNumbers span{display:flex;flex-direction:column;gap:6px;padding:12px;background:#141d27;border:1px solid #516075;border-radius:9px}.deathNumbers b{font-size:25px;color:#eebdb9}
+@media(max-width:650px){.scene{min-height:280px}.scene .combatant{padding-top:65px}.scene .combatant>img{max-height:112px}.scene .combatStatuses{max-height:57px;font-size:9px}.scene .vs{margin-bottom:58px}.combatActions #combatSpeed{margin-left:0}}
+@media(max-width:390px){.scene{min-height:270px}.scene .combatant{padding-top:66px}.scene .combatStatuses{max-height:60px}.scene .combatant>img{max-height:97px}}
+
+.combatRuneReadout{margin-top:13px;padding:10px;border:1px solid #506078;border-radius:9px;background:#111c2a}.combatRuneReadout h3{margin:0 0 8px;font-size:14px}.combatRuneList{display:flex;flex-wrap:wrap;gap:7px}.combatRuneBadge{padding:5px 8px;border-radius:7px;border:1px solid #8068a4;color:#e4d3f7;font-size:11px;background:#29213b}
+
+/* v0.9: miniboss archetype warning and caster curse */
+.elitePreview{margin-top:11px;border:1px solid #bf9462;background:#3b2b23;border-radius:9px;padding:10px;line-height:1.4}
+.elitePreview strong{display:block;color:#ffd6a3;font-size:14px;margin-bottom:5px}
+.elitePreview p{font-size:12px;margin:4px 0;color:#f4e4d6}
+.elitePreview small{display:block;font-size:11px;color:#efc795}
+.scene .playerDebuff{border-color:#bb70dd;background:#402551;color:#f0d8ff}
+.scene .eliteStatus{border-color:#e2aa6d;background:#513823;color:#fff0d8}
+
+
+/* v0.9 usability: streamlined home, compact dungeons and inventory-first runes. */
+.onlineBar{justify-content:flex-end;margin-bottom:5px}
+.onlineBar .buttonRow{gap:6px}
+.onlineBar .buttonRow button{padding:5px 9px}
+.nav{margin:5px 0 0}
+.homeChanges{list-style:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 17px;margin:10px 0 0;padding:0}
+.homeChanges li{min-width:0;color:#cbd6df;font-size:12px;line-height:1.45;overflow-wrap:anywhere}
+.homeChanges li::before{content:'✦ ';color:#e9bb74}
+@media(max-width:650px){.homeChanges{grid-template-columns:1fr;gap:6px}}
+.equipmentLayout{grid-template-columns:minmax(260px,.8fr) minmax(0,1.3fr)}
+.equipmentLeft,.equipmentRight{display:flex;flex-direction:column;gap:12px;min-width:0}
+.equipmentLeft>.panel,.equipmentRight>.panel{margin-top:0}
+.equipmentRight>.panel{margin-top:0}
+.equipmentRunes .runePanel{margin:0;padding:0;border:0}
+@media(max-width:850px){
+ .equipmentLayout{display:flex;flex-direction:column;gap:9px}
+ .equipmentLeft,.equipmentRight{display:contents}
+ .equipmentOverview{order:0}
+ .equipmentInventory{order:1}
+ .equipmentRunes{order:2}
+}
+@media(max-width:650px){
+ .brandRow{margin-bottom:6px}
+ .onlineBar{margin-bottom:4px}
+ .onlineBar .buttonRow{width:100%;justify-content:flex-end;gap:4px}
+ .onlineBar .buttonRow button{padding:5px 7px;font-size:11px}
+ .equipmentOverview .paper{max-width:235px}
+ .equipmentOverview>p.small{margin-bottom:8px}
+ .equipmentOverview h3{font-size:14px}
+ .equipmentOverview .stat{padding:5px}
+ .equipmentOverview .stat b{font-size:13px}
+ .equipmentOverview .statStrip .metric{padding:5px 2px}
+ .equipmentInventory .topline p{display:none}
+ .equipmentInventory .stashCapacityBar{padding:5px 0}
+ .equipmentInventory .filterBar{margin:6px 0;gap:4px}
+ .equipmentInventory .filterBar label{min-width:76px}
+ .equipmentInventory .filterBar select{max-width:105px}
+ .equipmentInventory .stashGrid{max-height:270px;grid-template-columns:repeat(auto-fill,minmax(53px,1fr));gap:4px}
+ .equipmentInventory .invItem{min-height:60px}
+ .equipmentInventory .inspect{padding:8px}
+ .equipmentRunes .runeSlots{grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin:6px 0}
+ .equipmentRunes .runeSlot{padding:5px;gap:4px;font-size:10px}
+ .equipmentRunes .runeCollection{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+ .equipmentRunes .runeCard{padding:7px;font-size:10px}
+}
+@media(max-width:390px){
+ .equipmentRunes .runeSlots{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+
+
+/* The mobile decision panel contains all critical odds{display:none}
+@media(max-width:650px){.combatExpeditionDetails .runLootHeading,.combatExpeditionDetails .combatLoot{display:none}
+ .combatExpeditionDetails .rule{display:none}
+ .combatExpeditionDetails .topline{margin-bottom:6px}
+ .combatActions{margin-top:4px!important}
+}
+
+
+/* Pre-release stress fix: keep a populated Equipment inventory inside narrow viewports. */
+@media(max-width:650px){
+ .equipmentLayout{width:100%;min-width:0}
+ .equipmentInventory{width:100%;max-width:100%;min-width:0;box-sizing:border-box}
+ .equipmentInventory .stashLayout{grid-template-columns:minmax(0,1fr);min-width:0;max-width:100%}
+ .equipmentInventory .stashGrid{min-width:0;max-width:100%;box-sizing:border-box}
+ .equipmentInventory .filterBar,.equipmentInventory .stashCapacityBar,.equipmentInventory .topline{min-width:0;max-width:100%}
+}
+
+/* v0.9.2 mobile UI */
+.equipmentQuickView{min-width:0}
+.equipmentStats{margin-top:12px}
+.merchantPowerTrend{display:inline-flex!important;align-items:center;align-self:flex-start;max-width:100%;padding:3px 7px;border-radius:6px;font-size:11px!important;font-weight:750;overflow-wrap:anywhere}
+.merchantPowerTrend.up{background:#173e32;color:#9be1b0}
+.merchantPowerTrend.down{background:#432a2c;color:#f3a4a5}
+.merchantPowerTrend.same{background:#293541;color:#ced6df}
+@media(max-width:650px){
+ .nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;overflow:visible;padding:0;margin:7px 0 10px}
+ .nav button{min-width:0;min-height:44px;padding:8px 3px;font-size:11px;white-space:nowrap;text-align:center}
+ .equipmentOverview{padding:10px}
+ .equipmentOverview h2{font-size:22px;margin-bottom:3px}
+ .equipmentOverview>p.small{display:none}
+ .equipmentQuickView{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.07fr);gap:7px;align-items:start;margin-top:6px}
+ .equipmentLoadout,.equipmentStats{min-width:0}
+ .equipmentLoadout .paper{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px;padding:3px;box-sizing:border-box;max-width:none;width:100%;aspect-ratio:auto;background:#0d1722;border:1px solid #3f5062;border-radius:8px}
+ .equipmentLoadout .paper .model{display:none}
+ .equipmentLoadout .paper .slotTile{position:relative;inset:auto!important;top:auto!important;left:auto!important;right:auto!important;bottom:auto!important;width:100%;height:60px;min-height:60px;aspect-ratio:auto;min-width:0;box-sizing:border-box;padding:3px 1px 2px;border-radius:6px;box-shadow:none;gap:0}
+ .equipmentLoadout .paper .slotTile img{width:33px;height:33px;max-width:85%}
+ .equipmentLoadout .paper .slotTile span:not(.slotDLevel):not(.affinityBadge){font-size:9px;line-height:1.1;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ .equipmentLoadout .paper .slotTile .affinityBadge{width:17px;height:17px;font-size:10px!important}
+ .equipmentLoadout .paper .slotTile .slotDLevel{font-size:8px!important}
+ .equipmentStats{margin:0}
+ .equipmentStats>h3{font-size:12px;line-height:1.15;margin:1px 0 5px}
+ .equipmentStats .statsGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:3px}
+ .equipmentStats .stat{min-width:0;padding:4px 3px}
+ .equipmentStats .stat label{font-size:9px;line-height:1.15;overflow-wrap:anywhere}
+ .equipmentStats .stat b{font-size:13px}
+ .equipmentStats .statStrip{gap:2px;margin:5px 0;grid-template-columns:repeat(5,minmax(0,1fr))}
+ .equipmentStats .statStrip .metric{min-width:0;padding:3px 0}
+ .equipmentStats .statStrip .metric span{font-size:7px}
+ .equipmentStats .statStrip .metric strong{font-size:11px}
+ .equipmentStats details{font-size:10px}
+ .equipmentRunes .runeSlots{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+ .equipmentRunes .runeSlot{padding:5px 3px;gap:3px;min-width:0;text-align:center}
+ .equipmentRunes .runeSlot b{font-size:10px}
+ .equipmentRunes .runeSlot .runeLine{display:flex;flex-direction:column;align-items:center;gap:2px}
+ .equipmentRunes .runeSlot .runeIcon{width:27px;height:27px}
+ .equipmentRunes .runeSlot .runeText{font-size:9px;line-height:1.25}
+ .equipmentRunes .runeSlot button{min-height:32px;padding:4px 2px;font-size:10px;margin-top:auto}
+ .equipmentRunes .runeCollection{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+ .equipmentRunes .runeCard{display:flex;align-items:center;justify-content:center;aspect-ratio:1/1;min-height:0;padding:5px 3px}
+ .equipmentRunes .runeCard .runeLine{flex-direction:column;align-items:center;text-align:center;gap:4px}
+ .equipmentRunes .runeCard .runeIcon{width:28px;height:28px}
+ .equipmentRunes .runeCard .runeText{font-size:9px;line-height:1.22}
+ .merchantPanel .topline>div>p{font-size:11px}
+ .merchantCompactCard .merchantPowerTrend{font-size:10px!important}
+ .entryPreference{margin:7px 0;font-size:11px}
+ .entryPreference label{min-height:28px}
+ .entryPreference>span{font-size:10px}
+ .previewStats{margin:6px 0}
+}
+@media(max-width:350px){
+ .nav button{font-size:10px}
+ .equipmentLoadout .paper .slotTile{height:54px;min-height:54px}
+ .equipmentLoadout .paper .slotTile img{width:28px;height:28px}
+ .equipmentStats .stat b{font-size:12px}
+}
+.newBadge{display:inline-block;background:#e8ca79;color:#172126;font-size:9px;font-weight:800;border-radius:3px;padding:2px 4px}.invItem .newBadge,.slotTile .newBadge{position:absolute;top:1px;left:1px;z-index:3}
+
+/* v0.9.3: full-body art behind equipped gear, even in compact/mobile layout. */
+.equipmentLoadout .paper{position:relative;isolation:isolate;overflow:hidden}
+.equipmentLoadout .paper .model{display:block;position:absolute;z-index:0;inset:4% 8% 0;width:84%;height:96%;object-fit:contain;object-position:center bottom;opacity:.60;filter:drop-shadow(0 5px 10px #000a);mask-image:linear-gradient(#000 80%,transparent 100%);pointer-events:none}
+.equipmentLoadout .paper .slotTile{z-index:1;background:rgba(15,27,41,.66);border-color:#5a6b7caa}
+.equipmentLoadout .paper .slotTile:not(.filled){background:rgba(15,27,41,.48)}
+.equipmentLoadout .paper .slotTile:focus-visible{outline:2px solid #f4cc87;outline-offset:-2px}
+.forgeTrend{margin:7px 0}
+.forgeTrend .merchantPowerTrend{display:inline-flex}
+.scene:before{background:linear-gradient(180deg,#0007 0%,#0008 65%,#0009 100%);backdrop-filter:saturate(.5) brightness(.90);-webkit-backdrop-filter:saturate(.5) brightness(.90)}
+/* No opaque full-width boxes when Rot, Bleed, Frost, etc. are applied. */
+.scene .combatStatuses{background:transparent;top:5px;left:5px;right:5px;height:auto;min-height:0;max-height:52px;width:auto;overflow-y:auto;overflow-x:hidden;background:none;border:0;border-radius:0;padding:2px;gap:3px;align-content:flex-start;scrollbar-width:thin}
+.scene .combatStatuses:empty{visibility:hidden}
+.scene .combatStatuses .debuff{display:inline-flex;align-items:center;max-width:100%;border-radius:999px;padding:2px 6px;background:#0b1825c9;border:1px solid #627087aa;box-shadow:0 1px 4px #0006}
+.scene .combatStatuses .playerDebuff{background:#402551d9;border-color:#bb70dd}
+.scene .combatant{padding-top:60px;padding-bottom:10px}
+.scene #heroPortrait{width:min(160px,95%);height:160px;max-width:100%;border-radius:0;object-fit:contain;object-position:center;background:none;border:0;box-shadow:none}
+.scene .combatStatuses:empty{display:none}
+.itemDialog{background:linear-gradient(155deg,#1b2a38,#101820);border-color:#b9955e;box-shadow:0 18px 65px #000c,inset 0 1px 0 #f0cc8330}
+.itemDialog>h2{font-family:Georgia,serif;color:#efd09b;border-bottom:1px solid #836f504f;padding-bottom:10px}
+.dialogQuestion{line-height:1.6;color:#d7dfeb;overflow-wrap:anywhere}
+@media(max-width:650px){.scene #heroPortrait{width:min(118px,90%);height:118px}.scene .combatant{padding-top:56px;padding-bottom:7px}.scene .combatStatuses{max-height:48px}}
+.combatVfx{width:clamp(54px,13%,92px);mix-blend-mode:screen}
+.combatVfx[data-kind="Two-Handed"],.combatVfx[data-kind="Staff"]{width:clamp(66px,17%,110px)}
+@media(max-width:650px){
+ .equipmentLoadout .paper .model{opacity:.46}
+ .combatVfx{width:clamp(44px,13%,72px)}
+ .combatVfx[data-kind="Two-Handed"],.combatVfx[data-kind="Staff"]{width:clamp(50px,16%,82px)}
+}
+/* Hide guest/Tavern placeholder until the correct account is recovered; no fade or animation. */
+#screen[inert],#nav[inert]{visibility:hidden}
+@media(max-width:650px){.brandLogo.hasArt{height:56px;width:155px}}
+.elitePreview{position:relative}
+.elitePreview .eliteFace{width:56px;height:56px;object-fit:contain;float:left;margin-right:9px}
+
+/* v0.9.3 UI: dark garnet surfaces complement the crimson/gold Wanderer logo.
+   Meaningful rarity, affinity, health and danger colors are intentionally untouched. */
+
+body{background:radial-gradient(ellipse 110% 85% at 50% -22%,#422832 0%,#25151d 44%,#100a0e 84%);color:var(--text)}
+.brandRow{border-bottom:1px solid #66414b40;padding-bottom:3px}
+.nav button{background:linear-gradient(160deg,#3b2731,#291a22);border-color:#78525e;color:#eddfdf;box-shadow:inset 0 1px 0 #ffffff0b}
+.nav button:hover{background:linear-gradient(160deg,#53313f,#36212b);border-color:#a76b78}
+.nav .active{background:linear-gradient(155deg,#554132,#3c2925);border-color:#d9af72;color:#f6d9a1;box-shadow:inset 0 1px 0 #f7d9a82a,0 0 0 1px #dfa96b16}
+.panel{background:linear-gradient(145deg,#302027 0%,#21151c 100%);border-color:#624550;box-shadow:inset 0 1px 0 #ffffff09}
+.token,.wallet .token{background:linear-gradient(150deg,#3b2731,#251820);border-color:#73545c;color:#f0e3e5}
+.stat,.statStrip .metric,.merchantCompactCard,.stashCapacityBar,.combatRuneBadge{background:#24171f;border-color:#654751}
+.invItem,.slotTile,.miniSlot,.equipmentLoadout .paper,.runeSlot,.lootCard,.merchantCompactCard,.shopCard,.offerCard{background:#24171f;border-color:#674a54}
+.invItem:hover,.slotTile:hover,.miniSlot:hover,.merchantCompactCard:hover{background:#33202a;border-color:#95636e}
+.equipmentLoadout .paper .slotTile{background:#24171fce;border-color:#674953}
+.equipmentLoadout .paper .slotTile:not(.filled){background:#24171fa8}
+.previewStats .tag,.riskGear .tag{background:#332029;border-color:#6b4854}
+.itemDialog{background:linear-gradient(155deg,#35212c,#1c1118);border-color:#b99461;color:var(--text)}
+input,select,textarea{background-color:#24171f;color:var(--text);border-color:#74535c}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid #ebc58d;outline-offset:2px}
+.scene{border-color:#78535b}
+/* Account, leaderboard and feedback share a single clear, compact action system. */
+.onlineBar{margin:8px 0 12px}
+.onlineBar .buttonRow{display:flex;justify-content:flex-end;gap:9px;flex-wrap:wrap}
+.onlineBar .buttonRow button[data-online-action]{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:40px;padding:9px 14px;font-size:12px;font-weight:750;letter-spacing:.015em;color:#f2e6e6;background:linear-gradient(150deg,#46303a,#2a1b24);border:1px solid #8a5b67;border-radius:10px;box-shadow:inset 0 1px 0 #ffffff12,0 3px 10px #0003;white-space:nowrap}
+.onlineBar .buttonRow button[data-online-action]::before{content:"";width:17px;height:17px;display:inline-block;flex:0 0 17px;background:currentColor;opacity:.96;mask-size:contain;mask-repeat:no-repeat;mask-position:center;-webkit-mask-size:contain;-webkit-mask-repeat:no-repeat;-webkit-mask-position:center}
+.onlineBar [data-online-action="account"]::before{mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='7' r='4' fill='%23000'/%3E%3Cpath d='M4 21c0-5 3.5-8 8-8s8 3 8 8z' fill='%23000'/%3E%3C/svg%3E");-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='7' r='4' fill='%23000'/%3E%3Cpath d='M4 21c0-5 3.5-8 8-8s8 3 8 8z' fill='%23000'/%3E%3C/svg%3E")}
+.onlineBar [data-online-action="leaderboard"]::before{mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M6 2h12v3h4v2c0 3.5-2.2 5.4-5.4 6.3A7.2 7.2 0 0 1 13 16v3h4v3H7v-3h4v-3a7.2 7.2 0 0 1-3.6-2.7C4.2 12.4 2 10.5 2 7V5h4V2zm0 5H4c0 2 .8 3.3 2.5 4.1C6.2 10 6 8.6 6 7zm12 0c0 1.6-.2 3-.5 4.1C19.2 10.3 20 9 20 7h-2z'/%3E%3C/svg%3E");-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M6 2h12v3h4v2c0 3.5-2.2 5.4-5.4 6.3A7.2 7.2 0 0 1 13 16v3h4v3H7v-3h4v-3a7.2 7.2 0 0 1-3.6-2.7C4.2 12.4 2 10.5 2 7V5h4V2zm0 5H4c0 2 .8 3.3 2.5 4.1C6.2 10 6 8.6 6 7zm12 0c0 1.6-.2 3-.5 4.1C19.2 10.3 20 9 20 7h-2z'/%3E%3C/svg%3E")}
+.onlineBar [data-online-action="feedback"]::before{mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M4 3h16v13H9l-5 5V3zm4 4v2h8V7H8zm0 4v2h6v-2H8z'/%3E%3C/svg%3E");-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M4 3h16v13H9l-5 5V3zm4 4v2h8V7H8zm0 4v2h6v-2H8z'/%3E%3C/svg%3E")}
+.onlineBar .buttonRow button[data-online-action="leaderboard"]{color:#f1d7aa;border-color:#9a755a;background:linear-gradient(155deg,#49342e,#2d201f)}
+.onlineBar .buttonRow button[data-online-action="feedback"]{color:#f7dcdf}
+.onlineBar .buttonRow button[data-online-action]:hover{background:linear-gradient(150deg,#62414e,#3b2530);border-color:#d49a90;transform:translateY(-1px)}
+.onlineBar .buttonRow button[data-online-action="leaderboard"]:hover{background:linear-gradient(145deg,#604433,#3e2925);border-color:#e5bb7d}
+.onlineBar .buttonRow button[data-online-action]:active{transform:translateY(0)}
+@media(max-width:650px){.onlineBar{margin:5px 0 10px}.onlineBar .buttonRow{justify-content:flex-start;gap:6px}.onlineBar .buttonRow button[data-online-action]{font-size:11px;padding:8px 10px;min-height:38px;gap:6px}.onlineBar .buttonRow button[data-online-action]::before{width:14px;height:14px;flex-basis:14px}}
+
+/* Wanderer dark-crimson surface pass.
+   Neutral navy remnants only: rarity, elemental, danger, success and HP colors
+   deliberately keep their gameplay meaning. */
+html{background:#1b0b13}
+body{min-height:100vh;background:radial-gradient(ellipse 115% 82% at 48% -15%,#47212e 0%,#2d141f 43%,#1b0b13 85%) fixed}
+
+.panel{background:linear-gradient(145deg,#342027 0%,#25141d 85%);border-color:#6c4854}
+button:not(.primary):not(.danger):not(.extractComplete){border-color:#71505c}
+button:not(.primary):not(.danger):not(.extractComplete):hover{border-color:#ab6e79}
+.nav button{background:linear-gradient(160deg,#422934,#2b1822)}
+.nav button:hover{background:linear-gradient(160deg,#5a3644,#3a202c)}
+.nav .active{background:linear-gradient(155deg,#55412f,#40291f);border-color:#dfb477}
+.token{background:#311c26;border-color:#72515a}
+.paper{background:radial-gradient(ellipse at 50% 45%,#41302f,#211319 70%);border-color:#795a55}
+.equipmentLoadout .paper{background:#25151d;border-color:#75505a}
+.equipmentLoadout .paper .slotTile,
+.equipmentLoadout .paper .slotTile:not(.filled){background:#291820ce;border-color:#74505d}
+.equipmentLoadout .paper .slotTile:not(.filled){background:#24141bc2}
+.slotTile,.miniSlot,.slotTile:not(.filled),.miniSlot:not(.filled),.gearSummary,.inspect,.compareCard,.setCompare,
+.stat,.statStrip .metric,.combatAttributes span,.equipmentStats .stat,
+.shopCard,.merchantCompactCard,.valuable,.stashGrid,.invItem,.stashCapacityBar,.protectionChoice,.log,.deathNumbers span,
+.combatRuneReadout,.runeSlot,.runePanel,.combatLoot,.combatExpeditionDetails,.setTierStep.locked{
+ background:#281820;border-color:#6c4a55;
+}
+.statStrip .metric,.stat,.combatAttributes span{background:#2f1b25}
+.shopCard,.merchantCompactCard,.valuable,.invItem,.stashGrid,.runeSlot,.miniSlot,.compareCard,.inspect,.setCompare{background:#24151d}
+.valuable{border-color:#694854}
+.valuable:hover{background:#34202a;border-color:#9b6470}
+.log{background:#201219;border-color:#5d404b}
+.log>div,.log .entry{border-color:#624451}
+.combatRuneReadout{background:#2a1821;border-color:#79535e}
+.combatRuneBadge{background:#3c253e;border-color:#93759c} /* purple means rune */
+.scene .combatStatuses .debuff,.enemyDebuffs .debuff{background:#2a1924db;border-color:#886978}
+.setTierStep.locked{background:#26171f;border-color:#553943;color:#afa0a6;filter:grayscale(.55)}
+/* Completed tiers, confirmed protection, increased Gear Power and element identities stay green/blue as appropriate. */
+.merchantPowerTrend.same{background:#3d2930;color:#e5ced3}
+.comparisonTable tbody tr:first-child{background:#3d242e}
+.slotTile.filterSelected{background:#52303b}
+.runePanel,.runeCollection,.combatExpeditionDetails{border-color:#664751}
+.protectionChoice:not(.protected):hover{background:#39212e}
+input,select,textarea,select:focus,input:focus{background-color:#26171f;border-color:#85606c;color:#f3e7eb}
+.itemDialog{background:linear-gradient(155deg,#402630,#21131c);border-color:#b9955e}
+@media(max-width:650px){
+ .panel{background:linear-gradient(145deg,#332029,#25151d)}
+}
+
+/* v0.10.0 header/nav/currency hierarchy */
+.headerBottom{display:flex;align-items:center;gap:12px;margin-bottom:9px;min-width:0}
+.headerBottom .nav{flex:1 1 auto;min-width:0;margin:0}
+.headerBottom .wallet{flex:0 0 auto;margin:0}
+.brandRow{align-items:center}.brandRow .onlineBar{margin:0;position:relative;flex:0 0 auto}
+.mobileMenuToggle{display:none}
+.scene .mpbar{height:6px;width:100%;background:#14243e;border:1px solid #5a729d;border-radius:7px;overflow:hidden;margin:2px 0 6px}
+.scene .mpbar>i{display:block;height:100%;background:linear-gradient(90deg,#3569c9,#8cbcff);transition:width .11s linear}
+.bossPreview{min-height:74px;padding:8px 10px;margin:8px 0;border:1px solid #956880;background:#301e2b;border-radius:9px}
+.bossPreview .eliteFace{width:72px;height:75px;object-fit:contain}.bossPreview p{margin-bottom:5px}
+@media(max-width:650px){
+ .brandRow{flex-wrap:nowrap;align-items:center;justify-content:space-between;position:relative;z-index:12}
+ .brandRow .onlineBar{margin-left:auto;align-self:center}
+ .mobileMenuToggle{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:4px;min-width:42px;min-height:40px;padding:7px}
+ .mobileMenuToggle span{display:block;width:20px;height:2px;background:#f4d8c5;border-radius:2px}
+ .brandRow .onlineBar .buttonRow{display:none;position:absolute;right:0;top:calc(100% + 6px);width:min(235px,calc(100vw - 24px));padding:9px;border:1px solid #a0796d;background:#271923;box-shadow:0 12px 30px #000a;border-radius:10px;z-index:15;flex-direction:column;flex-wrap:nowrap;gap:6px}
+ .brandRow .onlineBar.menuOpen .buttonRow{display:flex}
+ .brandRow .onlineBar .buttonRow button[data-online-action]{width:100%;justify-content:flex-start;min-height:38px;white-space:normal}
+ .headerBottom{display:flex;flex-direction:column;align-items:stretch;gap:4px;margin-bottom:6px}
+ .headerBottom .wallet{order:-1;align-self:stretch;justify-content:flex-start;gap:4px}
+ .headerBottom .wallet .token{padding:3px 6px;font-size:10px;line-height:1.2}
+ .headerBottom .wallet .token b{font-size:10px}
+ .headerBottom .nav{order:0;flex:0 0 auto;width:100%}
+ .bossPreview .eliteFace{width:60px;height:65px}
+}
+
+/* v0.10.0 inventory, boss milestones and compact desktop gear layout */
+@media(min-width:851px){
+ /* Nine slots in three separated rows: readable portraits without gear overlap. */
+ .equipmentOverview .paper{max-width:310px;aspect-ratio:1 / 1.02}
+ .equipmentOverview .paper .slotTile[data-slot='armor']{top:35%}
+ .equipmentOverview .paper .slotTile[data-slot='boots']{bottom:12%}
+ .equipmentOverview .paper .slotTile[data-slot='gloves'],
+ .equipmentOverview .paper .slotTile[data-slot='amulet']{top:8%}
+ .equipmentOverview .paper .slotTile[data-slot='weapon'],
+ .equipmentOverview .paper .slotTile[data-slot='offhand']{top:35%}
+ .equipmentOverview .paper .slotTile[data-slot='ring1'],
+ .equipmentOverview .paper .slotTile[data-slot='ring2']{bottom:17%}
+}
+.equipmentInventory .filterBar .filterActions{display:inline-flex;align-items:center;gap:6px;flex:0 0 auto;white-space:nowrap}
+.equipmentInventory .filterBar .filterActions button{white-space:nowrap}
+
+/* Responsive site artwork v0.10.0: original optimized 16:9 WebP backgrounds. */
+/* Fixed viewport artwork for every tab (including inventory).
+   The viewport pseudo-layer stays motionless during document and stash scrolling,
+   unlike body backgrounds on tall pages or mobile browsers. */
+body{isolation:isolate;background:transparent}
+body::before{
+ content:'';
+ position:fixed;
+ inset:0;
+ z-index:-1;
+ pointer-events:none;
+ background-color:#1b0b13;
+ background-image:linear-gradient(180deg,rgba(20,8,14,.56),rgba(15,6,12,.78)),url('../assets/backgrounds/dungeon-desktop.webp');
+ background-size:cover,cover;
+ background-position:center,center;
+ background-repeat:no-repeat,no-repeat;
+}
+@media(max-width:650px){
+ body::before{
+  background-image:linear-gradient(180deg,rgba(20,8,14,.61),rgba(15,6,12,.82)),url('../assets/backgrounds/dungeon-mobile.webp');
+ }
+}
+.scene{background-image:url('../assets/backgrounds/dungeon-desktop.webp');background-size:cover;background-position:center}
+@media(max-width:650px){
+ .scene{background-image:url('../assets/backgrounds/dungeon-mobile.webp');background-position:center}
+}
+
+/* v0.11.0 homepage artwork above changelog. Keep the full image visible. */
+.releaseBanner{margin:12px 0 11px;}
+.releaseBanner a{display:block;border:1px solid #88555a;border-radius:9px;overflow:hidden;box-shadow:0 7px 22px #0008;line-height:0;}
+.releaseBanner img{display:block;width:100%;height:auto;max-width:100%;}
+.releaseBanner a:focus-visible{outline:3px solid #dfb76f;outline-offset:3px;}
+@media(max-width:650px){.releaseBanner{margin:10px 0 9px;}}
+
+/* Hierarchy for named dungeon enemies: Elite = crimson, Boss = gold. */
+
+.scene .combatant .combatEnemyName.eliteName,
+.elitePreview:not(.bossPreview)>strong{color:var(--elite-name);text-shadow:0 1px 7px #702039a8}
+.scene .combatant .combatEnemyName.bossName,
+.bossPreview>strong{color:var(--boss-name);text-shadow:0 1px 7px #98631f99}
+
+/* Mobile rune slot choices always fill the row below their selected card. */
+.runeCollection .runeCard.runeSelected{border-color:#e4c28c;outline:2px solid #e4c28c55;outline-offset:-2px}
+.runeCollection .runeSlotPicker{grid-column:1/-1;min-width:0;width:100%;max-width:100%;padding:12px;border:1px solid #8a699e;border-radius:10px;background:#291b30;box-sizing:border-box}
+.runePickerHeading{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:5px;margin-bottom:10px;line-height:1.35}
+.runePickerHeading strong{color:#f3d6ff;font-size:13px}
+.runeSlotPicker .runeInlineChoices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:0;min-width:0}
+.runeSlotPicker .runeInlineChoices [data-rune-slot-choice]{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-width:0;width:100%;min-height:62px;padding:8px 3px;line-height:1.25;text-align:center;white-space:normal;overflow-wrap:break-word}
+.runeSlotPicker .runeInlineChoices [data-rune-slot-choice] strong{font-size:12px}
+.runeSlotPicker .runeSlotOccupied{display:block;font-size:11px;line-height:1.25;overflow-wrap:anywhere}
+.runeSlotPicker>p{margin:9px 0 0;line-height:1.4}
+@media(max-width:650px){.runeCollection .runeSlotPicker{padding:9px}.runeSlotPicker .runeInlineChoices{gap:5px}.runeSlotPicker .runeInlineChoices [data-rune-slot-choice]{min-height:58px;padding:6px 2px}}
+
+/* Combat statuses reserve a fixed lane. Swipe horizontally to see additional effects without page jumps. */
+.scene{overflow-anchor:none}
+.scene .combatant{padding-top:10px}
+.scene .combatStatuses,.scene .combatant .combatStatuses{position:static;inset:auto;top:auto;left:auto;right:auto;bottom:auto;display:flex;flex:0 0 42px;flex-wrap:nowrap;justify-content:flex-start;align-content:center;align-items:center;gap:4px;width:100%;height:42px;min-height:42px;max-height:42px;overflow-x:auto;overflow-y:hidden;overflow-anchor:none;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin:0 0 8px;padding:0 2px;background:none;border:0;border-radius:0;box-sizing:border-box}
+.scene .combatStatuses::-webkit-scrollbar{display:none}
+.scene .combatStatuses:empty{display:flex;visibility:hidden}
+.scene .combatStatuses .debuff{flex:0 0 auto;max-width:none;min-width:0;white-space:nowrap;overflow-wrap:normal;text-align:center}
+.scene .combatant>img{margin-top:auto}
+@media(max-width:650px){.scene .combatant{padding-top:7px}.scene .combatStatuses,.scene .combatant .combatStatuses{flex-basis:34px;height:34px;min-height:34px;max-height:34px;gap:3px;margin-bottom:6px}.scene .combatStatuses .debuff{font-size:9px;line-height:1.3}}
+
+/* Mobile expedition: actionable without scrolling, while keeping all warnings accessible. */
+@media(max-width:650px){
+ .combatLayout{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))}
+ .combatLayout .combatActions{
+  position:fixed;inset:auto 0 0;z-index:18;
+  display:grid;grid-template-columns:minmax(0,.92fr) minmax(0,1.28fr) 48px;
+  align-items:stretch;gap:7px;
+  width:100%;margin:0!important;
+  padding:8px max(10px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px));
+  background:linear-gradient(180deg,#21151cf2,#190e16fa 45%);
+  border-top:1px solid #9c6975;
+  box-shadow:0 -6px 25px #0009;
+ }
+ .combatLayout .combatActions button{min-width:0;min-height:46px;padding:6px 4px;font-size:clamp(11px,3.5vw,14px);line-height:1.2;white-space:normal}
+ .combatLayout .combatActions #leave{grid-column:1;order:0}
+ .combatLayout .combatActions #nextFight{grid-column:2;order:1}
+ .combatLayout .combatActions #combatSpeed{grid-column:3;order:2;margin:0;font-size:12px;line-height:1.1}
+ .combatActions .combatSpeedWord{display:none}
+ .combatLayout .combatActions:not(:has(#nextFight)){grid-template-columns:minmax(0,1fr) 64px}
+ .combatLayout .combatActions:not(:has(#nextFight)) #combatSpeed{grid-column:2}
+ .combatLayout .combatActions:not(:has(#nextFight)) #leave{grid-column:1}
+ body:has(.combatLayout) .toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+ .scene{min-height:190px;padding:6px}
+ .scene .combatant{padding:4px 0 5px}
+ .scene #heroPortrait,.scene #enemyPortrait{width:min(96px,95%);height:96px;max-height:96px}
+ .scene .combatant>img{max-height:96px}
+ .scene .combatant strong{font-size:11px;line-height:1.2;margin:2px 0}
+ .scene .combatant small{font-size:9px;line-height:1.2}
+ .scene .hpbar{margin:4px 0}
+ .scene .vs{margin-bottom:34px}
+}
+@media(max-width:370px){
+ .combatLayout .combatActions{gap:5px}
+ .combatLayout .combatActions button{font-size:11px}
+ .scene #heroPortrait,.scene #enemyPortrait{height:82px;max-height:82px}
+}
+
+/* Mobile: small buffs, larger enemy art, and anatomical 3x3 equipment ordering. */
+@media(max-width:650px){
+ .scene .combatStatuses .debuff{font-size:8px;line-height:1.15;padding:1px 4px;border-radius:6px}
+ .scene #enemyPortrait{width:min(125px,100%);height:112px;max-height:112px;object-fit:contain}
+ .equipmentLoadout .paper .slotTile[data-slot="amulet"]{order:1}
+ .equipmentLoadout .paper .slotTile[data-slot="helm"]{order:2}
+ .equipmentLoadout .paper .slotTile[data-slot="weapon"]{order:3}
+ .equipmentLoadout .paper .slotTile[data-slot="gloves"]{order:4}
+ .equipmentLoadout .paper .slotTile[data-slot="armor"]{order:5}
+ .equipmentLoadout .paper .slotTile[data-slot="offhand"]{order:6}
+ .equipmentLoadout .paper .slotTile[data-slot="ring1"]{order:7}
+ .equipmentLoadout .paper .slotTile[data-slot="boots"]{order:8}
+ .equipmentLoadout .paper .slotTile[data-slot="ring2"]{order:9}
+}
+@media(max-width:370px){
+ .scene #enemyPortrait{width:min(112px,100%);height:99px;max-height:99px}
+}
+/* One continuous dungeon rail, usable by swipe{display:block;min-width:0;margin:7px 0 0}
+/* Always explain disabled crafting and purchase actions. */
+.stashFullNotice{
+ margin:11px 0;padding:10px 12px;border:1px solid #db7774;
+ border-radius:8px;background:#45212b;color:#ffd3c9;
+ font-size:12px;font-weight:700;line-height:1.45;
+}
+
+/* iPhone Equipment uses the same full-width panel as Inventory. */
+@media(max-width:650px){
+ .equipmentLayout .equipmentOverview,.equipmentLayout .equipmentInventory{
+  display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;align-self:stretch;
+ }
+ .equipmentOverview .equipmentQuickView{
+  display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);gap:6px;align-items:start;
+  width:100%;max-width:100%;min-width:0;
+ }
+ .equipmentOverview .equipmentLoadout,.equipmentOverview .equipmentStats{width:100%;max-width:100%;min-width:0}
+ .equipmentOverview .equipmentLoadout .paper{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  width:100%;max-width:none;min-width:0;box-sizing:border-box;
+ }
+ .equipmentOverview .equipmentStats .statsGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+/* v0.10.0 mobile inventory row sizing hotfix: keep cards inside their grid tracks. */
+@media(max-width:650px){
+ .equipmentInventory .stashGrid{grid-auto-rows:min-content}
+ .equipmentInventory .stashGrid .invItem{min-height:auto}
+}
+.affinityGlyph{display:inline-block;width:1.4em;height:1.4em;vertical-align:-.3em;flex:none;max-width:none;border-radius:22%;background-image:url('../assets/affinities/icons-sprite.svg');background-size:400% 400%;background-repeat:no-repeat}
+.affinityBadge .affinityGlyph,.elementIcon .affinityGlyph{width:100%;height:100%;vertical-align:0}
+.debuff .affinityGlyph{width:1.1em;height:1.1em}
+/* Affinity images already contain their own dark-fantasy frame. No outer badge box. */
+.affinityBadge{
+ width:23px;height:23px;padding:0!important;
+ border:0!important;background:transparent!important;box-shadow:none!important;
+ border-radius:0;overflow:visible;
+}
+.affinityGlyph{width:22px;height:22px;vertical-align:-5px;border-radius:0}
+.affinityBadge .affinityGlyph,.elementIcon .affinityGlyph{
+ display:block;width:100%;height:100%;vertical-align:0;
+}
+.debuff .affinityGlyph{width:16px;height:16px;vertical-align:-3px}
+@media(max-width:650px){
+ .affinityBadge{width:23px;height:23px}
+ .equipmentLoadout .paper .slotTile .affinityBadge{width:21px;height:21px}
+ .merchantCompactCard .affinityGlyph,.riskItem .affinityGlyph{
+  width:23px;height:23px;vertical-align:-5px;
+ }
+}
+
+.affinityGlyph.itemAffinityGlyph{background-image:url('../assets/affinities/item-icons-simplified.svg')}
+/* C.3 independently mapped affinity icons; combat effect sprites remain unchanged. */
+.affinityFamilyIcon{display:inline-block;width:26px;height:26px;object-fit:contain;vertical-align:middle;flex:none}
+.phase1DraftCard>.affinityFamilyIcon{width:44px;height:44px}
+.magicChoiceIcon{width:44px;height:44px;object-fit:contain}
+.phase2PassiveIcons .affinityFamilyIcon{width:22px;height:22px}
+.phase2PassiveIcons{display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;flex:none}
+.phase2PassiveIcon{display:block;width:32px;height:32px;object-fit:contain}
+.phase1DraftCard .phase2PassiveIcon{width:52px;height:52px}
+.phase3PassiveSlot .phase2PassiveIcon{width:30px;height:30px}
+@media(max-width:650px){.phase1DraftCard .phase2PassiveIcon{width:44px;height:44px}}
+@media(max-width:650px){.phase1DraftCard>.affinityFamilyIcon,.magicChoiceIcon{width:38px;height:38px}}
+
+
+/* Combat: the dungeon affinity belongs with the dungeon heading, not the enemy stat column. */
+.combatDungeonHeading{display:flex;align-items:center;gap:10px;min-width:0}
+.combatDungeonHeading .affinityGlyph{width:32px;height:32px;flex:none;vertical-align:0}
+.combatDungeonHeading .combatDungeonName{min-width:0;overflow-wrap:anywhere}
+@media(max-width:650px){
+ .combatDungeonHeading{gap:8px;align-items:flex-start}
+ .combatDungeonHeading .affinityGlyph{width:27px;height:27px;margin-top:5px}
+}
+
+/* Small transparent currency and dungeon-progress icons, without an outer badge. */
+.uiStatusIcon{display:inline-block;width:1.35em;height:1.35em;vertical-align:-.31em;object-fit:contain;flex-shrink:0}
+.wallet .uiStatusIcon{width:20px;height:20px;vertical-align:-4px}
+@media(max-width:650px){.wallet .uiStatusIcon{width:19px;height:19px}}
+
+/* High-contrast navigation art: bright on dark burgundy tab backgrounds. */
+.nav button[data-nav]{display:inline-flex;align-items:center;justify-content:center;gap:7px}
+.navArtIcon{display:block;flex:0 0 32px;width:32px;height:32px;object-fit:contain;filter:drop-shadow(0 0 3px rgba(255,215,142,.35));pointer-events:none}
+@media(max-width:650px){.nav button[data-nav]{gap:4px;padding:6px 4px}.navArtIcon{width:25px;height:25px;flex-basis:25px}}
+
+/* Combat status badges: category colour. The legacy .debuff class retains existing layout. */
+.scene .combatStatuses .debuff.statusPositive,
+.enemyDebuffs .debuff.statusPositive {
+  color:#c5f7d4;background:#123b2edf;border-color:#54c58a;
+}
+.scene .combatStatuses .debuff.statusNegative,
+.enemyDebuffs .debuff.statusNegative {
+  color:#ffd1d1;background:#4a202be8;border-color:#e06a76;
+}
+.scene .combatStatuses .debuff.statusLegendary,
+.enemyDebuffs .debuff.statusLegendary {
+  color:#ffe7b1;background:#453018e8;border-color:#dfb357;
+}
+.scene .combatStatuses .debuff.statusBoss,
+.enemyDebuffs .debuff.statusBoss {
+  color:#ffdab2;background:#47261de8;border-color:#dd914a;
+}
+.scene .combatStatuses .debuff.statusBossBarrier,
+.enemyDebuffs .debuff.statusBossBarrier {
+  color:#edceff;background:#352047e8;border-color:#b177e9;
+}
+.scene .combatStatuses .debuff.statusUsed,
+.enemyDebuffs .debuff.statusUsed {
+  color:#b5b6bd;background:#282832d9;border-color:#696a77;opacity:.8;
+}
+
+/* Status icons use one transparent 5x5 atlas for fast loading on mobile. */
+.scene .combatStatuses .statusIcon,.enemyDebuffs .statusIcon {
+ display:inline-block;width:19px;height:19px;flex:none;vertical-align:middle;
+ background-image:url('../assets/status/icons-atlas.png');background-repeat:no-repeat;background-size:500% 500%;
+ border-radius:4px;image-rendering:auto;
+}
+.scene .combatStatuses .debuff,.enemyDebuffs .debuff {gap:3px}
+@media(max-width:650px){
+ .scene .combatStatuses .statusIcon,.enemyDebuffs .statusIcon{width:17px;height:17px}
+}
+
+/* Combat effect lanes: stack vertically from the outside edges of the arena.
+   These overlays do not reserve a horizontal row or move the portraits/health bars.
+   When many effects coexist, each lane scrolls independently. */
+.scene .combatant > .combatStatuses {
+  position:absolute;
+  inset:auto;
+  top:clamp(56px,20%,145px);
+  left:0;
+  right:auto;
+  bottom:auto;
+  display:flex;
+  flex:none;
+  flex-direction:column;
+  flex-wrap:nowrap;
+  align-content:flex-start;
+  align-items:flex-start;
+  justify-content:flex-start;
+  gap:5px;
+  width:max-content;
+  min-width:0;
+  max-width:clamp(100px,48%,220px);
+  height:auto;
+  min-height:0;
+  max-height:55%;
+  margin:0;
+  padding:2px 4px;
+  overflow-x:hidden;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  scrollbar-width:thin;
+  z-index:4;
+  box-sizing:border-box;
+  background:transparent;
+  border:0;
+}
+.scene .combatant > .combatStatuses.enemyDebuffs {
+  left:auto;
+  right:0;
+  align-items:flex-end;
+}
+.scene .combatant > .combatStatuses:empty {display:none;visibility:hidden}
+.scene .combatant > .combatStatuses .debuff {
+  display:inline-flex;
+  flex:0 0 auto;
+  width:fit-content;
+  max-width:100%;
+  align-items:center;
+  text-align:left;
+  white-space:normal;
+  overflow-wrap:anywhere;
+  line-height:1.3;
+  padding:3px 6px;
+}
+.scene .combatant > .combatStatuses.enemyDebuffs .debuff {text-align:right}
+@media(max-width:650px) {
+  .scene .combatant > .combatStatuses {
+    top:8px;
+    max-width:min(100%,116px);
+    max-height:65%;
+    gap:3px;
+    padding:0 2px;
+  }
+  .scene .combatant > .combatStatuses .debuff {
+    font-size:9px;
+    line-height:1.15;
+    padding:2px 4px;
+  }
+  .scene .combatant > .combatStatuses .statusIcon {
+    width:15px;height:15px;
+  }
+}
+
+.merchantSecondaryGrid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(280px,.85fr);gap:14px;margin-top:14px;align-items:start}
+.merchantSecondaryGrid>*{min-width:0}.merchantSecondaryGrid .panel{margin:0}
+.merchantValuablesPanel .topline{gap:8px;flex-wrap:wrap}
+@media(max-width:1050px){.merchantSecondaryGrid{grid-template-columns:1fr}}
+
+/* v0.10.1 Sigil offers */
+.sigilOfferList{display:grid;gap:8px;margin-top:12px}
+.sigilOfferCard{display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:9px;align-items:center;padding:10px;border:1px solid #654751;border-radius:10px;background:#24171f;min-width:0}
+.merchantSigilArt{display:flex;align-items:center;justify-content:center}
+.merchantSigilArt .affinityGlyph{width:38px;height:38px;vertical-align:0}
+.sigilOfferInfo{display:grid;gap:3px;min-width:0}
+.sigilOfferInfo b{overflow-wrap:anywhere}.sigilOfferInfo small{font-size:11px}
+.sigilOfferActions{display:grid;gap:5px;justify-items:end;white-space:nowrap}
+.sigilOfferActions .uiStatusIcon{width:16px;height:16px}
+.merchantSigilFooter{margin-top:12px;display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+@media(max-width:560px){.sigilOfferCard{grid-template-columns:34px minmax(0,1fr) auto;gap:6px;padding:8px}.merchantSigilArt .affinityGlyph{width:30px;height:30px}.sigilOfferActions{font-size:12px}}
+
+/* v0.10.1 Forge interactive inventory */
+.forgeEconomyGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px;align-items:start}
+.forgeEconomyPanel{min-width:0}.forgeEconomyPanel>h2{margin-bottom:6px}
+.forgePicker{margin:12px 0;border:1px solid #654751;border-radius:11px;overflow:hidden;background:#20131b}
+.forgePicker>summary{padding:12px 13px;cursor:pointer;font-weight:700}
+.forgePicker>summary .small{font-weight:400;float:right}
+.forgePicker[open]>summary{border-bottom:1px solid #654751}
+.forgePickGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:10px;max-height:290px;overflow:auto}
+.forgePickGrid>.small{grid-column:1/-1;margin:7px}
+.forgePickCard{min-width:0;display:flex;align-items:center;gap:8px;text-align:left;border:1px solid #654751;background:#2b1b25;color:#f0e5e5;padding:8px;border-radius:10px;cursor:pointer;position:relative}
+.forgePickCard:hover{background:#3b2631;border-color:#bc8b87}
+.forgePickCard.isSelected{border-color:#dfb76f;background:#40302e;box-shadow:inset 0 0 0 1px #dfb76f}
+.forgePickImage{width:47px;height:51px;flex:none;object-fit:contain}
+.forgePickText{display:flex;flex-direction:column;gap:3px;min-width:0;line-height:1.25}
+.forgePickText b{font-size:13px;overflow-wrap:anywhere}
+.forgePickText small{font-size:11px;color:#c2adb4;overflow-wrap:anywhere}
+.forgePickText .affinityGlyph{width:16px;height:16px;vertical-align:-4px}
+.forgeEquippedFlag{position:absolute;right:4px;top:3px;background:#204636;color:#b0f0cb;border-radius:5px;padding:2px 4px;font-size:10px}
+.forgePickCard:has(.forgeEquippedFlag) .forgePickText{padding-top:9px}
+.forgePickAffinityArt{display:flex;width:47px;flex:none;justify-content:center}
+.forgePickAffinityArt .affinityGlyph{width:42px;height:42px;vertical-align:0}
+.forgeSelectionSummary{display:flex;gap:9px;align-items:center;padding:10px;border:1px solid #795c64;border-radius:10px;margin:11px 0;background:#2e2028;min-width:0}
+.forgeSelectionSummary img{width:55px;height:55px;object-fit:contain;flex:none}
+.forgeSelectionSummary span{display:flex;flex-direction:column;gap:5px;min-width:0}
+.forgeSelectionSummary span small{color:#c2adb4}
+.forgeSelectionSummary .affinityGlyph{width:18px;height:18px;vertical-align:-4px}
+.forgeRiskWarning{color:#e5a28b}
+.forgeActionButton{width:100%;margin-top:8px}
+.forgeActionButton .uiStatusIcon,.forgeInvestmentButton .uiStatusIcon{display:inline-block;width:18px;height:18px;vertical-align:-4px}
+.forgeAffinityPreview{display:flex;flex-direction:column;gap:6px;padding:10px;border:1px solid #6b535b;border-radius:9px;font-size:12px;margin-bottom:12px}
+.forgeInvestmentTitle{margin:14px 0 10px}
+.forgeInvestments{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.forgeInvestmentButton{border:1px solid #977362;border-radius:10px;background:#443027;color:#f0e5e5;cursor:pointer;padding:12px 5px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:9px;min-width:0;min-height:100px}
+.forgeInvestmentButton b{font-size:13px}.forgeInvestmentButton span{font-size:12px}
+.forgeInvestmentButton strong{font-size:12px;color:#f3d08a;overflow-wrap:anywhere;text-align:center}
+.forgeInvestmentButton:not(:disabled):hover{background:#634531;border-color:#e2b880}
+.forgeInvestmentButton:disabled{opacity:.42;cursor:not-allowed}
+@media(max-width:1050px){.forgeEconomyGrid{grid-template-columns:1fr}}
+@media(max-width:630px){.forgePickGrid{grid-template-columns:1fr}.forgeInvestments{grid-template-columns:1fr}.forgeInvestmentButton{flex-direction:row;min-height:58px;padding:10px}}
+
+/* v0.10.1: unified Forge crafting panel, independent Merchant refreshes. */
+.forgeUnified{width:100%;min-width:0}
+.forgeUnified .forgeCraftOdds{margin-top:20px;border-top:1px solid #6f4d57;padding-top:15px}
+.forgeUnified .forgeCraftOdds .statsGrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px}
+.forgeUnified .forgeCraftOdds .stat{min-width:0}
+@media(max-width:800px){.forgeUnified .forgeCraftOdds .statsGrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:480px){.forgeUnified .forgeCraftOdds .statsGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* Tint actual equipment by its known rarity; favored item types are previews and have no rarity yet. */
+.invItem[data-rarity],.slotTile[data-rarity],.merchantCompactCard[data-rarity],.forgePickCard[data-rarity],
+.compareCard[data-rarity],.inspect[data-rarity],.lootCard[data-rarity],.publicGearItem[data-rarity]{
+ background:color-mix(in srgb,var(--item-rarity) 13%,#21141c 87%);
+ border-color:color-mix(in srgb,var(--item-rarity) 65%,#503843 35%);
+}
+.invItem[data-rarity]:hover,.merchantCompactCard[data-rarity]:hover,.forgePickCard[data-rarity]:hover{background:color-mix(in srgb,var(--item-rarity) 20%,#24171f 80%)}
+.forgePickCard.isSelected[data-rarity]{outline:1px solid #dfb76f;outline-offset:-2px}
+.legendaryRankBadge{display:inline-flex;align-items:center;justify-content:center;background:#4b3218;border:1px solid #e4b767;color:#ffdc90;font-size:10px;font-weight:800;padding:2px 4px;border-radius:5px;line-height:1.2;white-space:nowrap;z-index:4}
+.invItem .legendaryRankBadge,.slotTile .legendaryRankBadge{position:absolute;bottom:2px;left:2px;pointer-events:none}
+.forgePickCard .legendaryRankBadge{position:absolute;right:4px;bottom:3px;pointer-events:none}
+.forgePickCard:has(.legendaryRankBadge) .forgePickText{padding-bottom:15px}
+.inspectHero .legendaryRankBadge{margin:4px 0 6px}
+.scene .eliteCombatant #enemyPortrait{width:min(185px,100%);height:170px;max-height:170px;object-fit:contain}
+.elitePreview:not(.bossPreview) .eliteFace{width:76px;height:76px}
+@media(max-width:650px){.scene .eliteCombatant #enemyPortrait{width:min(145px,100%);height:136px;max-height:136px}.elitePreview:not(.bossPreview) .eliteFace{width:65px;height:65px}}
+@media(max-width:370px){.scene .eliteCombatant #enemyPortrait{width:min(135px,100%);height:124px;max-height:124px}}
+
+.forgeRankPreview{padding:11px;border:1px solid #886b56;border-radius:9px;background:rgba(199,158,97,.08);margin:10px 0}
+.forgeRankPreview>b{display:block;margin-bottom:8px}
+.forgeRankAttributes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px 12px;margin-bottom:8px;font-size:12px}
+.forgeRankAttributes span{min-width:0}.forgeRankAttributes strong{color:#f0cc88}
+
+/* v0.11.0: stronger but still subdued rarity color and clearer dungeon previews. */
+.invItem[data-rarity],.slotTile[data-rarity],.merchantCompactCard[data-rarity],.forgePickCard[data-rarity],
+.compareCard[data-rarity],.inspect[data-rarity],.lootCard[data-rarity],.publicGearItem[data-rarity]{
+ background:color-mix(in srgb,var(--item-rarity) 22%,#21141c 78%);
+}
+.invItem[data-rarity]:hover,.merchantCompactCard[data-rarity]:hover,.forgePickCard[data-rarity]:hover{
+ background:color-mix(in srgb,var(--item-rarity) 30%,#24171f 70%);
+}
+.dungeonSetChip{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;background:#35232c;border:1px solid #74535f;border-radius:7px;font-size:11px;color:#f1e2e0;white-space:nowrap}
+.dungeonSetChip .affinityGlyph{width:21px;height:21px;flex:none}
+/* Forge: crafting controls left, rarity odds right. */
+.forgeCraftLayout{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(300px,.8fr);align-items:start;gap:14px}
+.forgeCraftLayout>.panel{min-width:0}
+.forgeCraftOdds{position:sticky;top:10px}
+.forgeCraftOdds .statsGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.forgeCraftOdds .stat{min-width:0}
+.forgeQualityControl{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin:12px 0}
+.forgeQualityControl label{display:grid;gap:4px;font-size:13px}
+.forgeQualityControl label small{font-size:11px;color:#c6afb6}
+.forgeQualityControl select{flex:1;min-width:185px;max-width:310px}
+.forgeUnified .forgeCraftOdds{margin:0}
+.forgeCraftLayout .filterBar select,.forgeQualityControl select{
+ appearance:none;-webkit-appearance:none;cursor:pointer;min-height:39px;max-width:100%;
+ border:1px solid #97717c;border-radius:8px;color:#f7e8e8;background-color:#2b1c27;
+ background-image:linear-gradient(45deg,transparent 50%,#e7b67d 50%),linear-gradient(135deg,#e7b67d 50%,transparent 50%);
+ background-position:calc(100% - 18px) 51%,calc(100% - 12px) 51%;
+ background-size:6px 6px,6px 6px;background-repeat:no-repeat;padding:8px 33px 8px 11px;
+}
+.forgeCraftLayout select:focus-visible{outline:2px solid #e9c88d;outline-offset:2px}
+.forgeCraftLayout select:hover{border-color:#d5a486;background-color:#402936}
+.forgeCraftLayout select option{background:#271721;color:#f6e7e9}
+.forgePicker{border-color:#8b6370;background:#251720}
+.forgePicker>summary{list-style:none;display:flex;gap:8px;align-items:center;justify-content:space-between;transition:background .15s}
+.forgePicker>summary::-webkit-details-marker{display:none}
+.forgePicker>summary:after{content:'▾';margin-left:auto;color:#e6c082;transition:transform .2s}
+.forgePicker[open]>summary:after{transform:rotate(180deg)}
+.forgePicker>summary:hover{background:#402832}
+.forgePicker>summary:focus-visible{outline:2px solid #e6c082;outline-offset:-3px}
+.forgeAffinityDelta{display:flex;flex-wrap:wrap;align-items:center;gap:9px;font-size:12px}
+.forgeAffinityDelta>span{display:inline-flex;gap:5px;align-items:center;padding:5px 8px;border-radius:7px;border:1px solid #795663;background:#2d1c26}
+.forgeAffinityDelta .affinityGlyph{width:23px;height:23px;flex:none}
+/* Keep elites imposing without stretching the combat arena: anchor the portrait lower
+   by fitting it into the same scene height used by regular enemies. */
+.scene:has(.eliteCombatant){height:355px;min-height:355px}
+.scene .eliteCombatant #enemyPortrait{width:min(210px,100%);height:190px;max-height:190px;object-fit:contain;object-position:center bottom;filter:drop-shadow(0 5px 13px #000c)}
+@media(max-width:1050px){.forgeCraftLayout{grid-template-columns:1fr}.forgeCraftOdds{position:static}.forgeCraftOdds .statsGrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:650px){.scene:has(.eliteCombatant){height:190px;min-height:190px}.scene .eliteCombatant #enemyPortrait{width:min(138px,100%);height:118px;max-height:118px}.forgeCraftOdds .statsGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:370px){.scene .eliteCombatant #enemyPortrait{width:min(120px,100%);height:105px;max-height:105px}}
+
+/* Oct 18 combat VFX pass: visible assets, dynamic portrait-centered effects. */
+.scene .combatVfx{left:var(--vfx-impact-x,76%);top:var(--vfx-impact-y,50%);width:clamp(112px,27%,185px);z-index:7;mix-blend-mode:normal;filter:brightness(1.12) saturate(1.18) drop-shadow(0 0 10px #ffedba88);animation:vfxCenteredImpact .58s ease-out both}
+.scene .combatVfx.vfxProjectile,.scene .combatVfx.vfxEnemyProjectile{
+ left:var(--vfx-start-x,24%);top:var(--vfx-start-y,50%);width:clamp(115px,27%,185px);
+ animation:vfxCenteredTravel .56s ease-in-out both
+}
+.scene .combatVfx.vfxEnemyProjectile{left:var(--vfx-start-x,76%);animation:vfxCenteredEnemyTravel .56s ease-in-out both}
+.scene .combatVfx.vfxEnemyImpact{width:clamp(145px,35%,230px);filter:brightness(1.32) saturate(1.35) drop-shadow(0 0 16px #ffe4bcaa);animation:vfxCenteredImpact .58s ease-out both}
+.scene .combatVfx.vfxEnemyProjectile{width:clamp(145px,35%,235px);filter:brightness(1.35) saturate(1.38) drop-shadow(0 0 15px #edc7ffbb)}
+.scene .combatVfx.vfxEnemyWard{left:var(--vfx-impact-x,76%);top:var(--vfx-impact-y,50%);width:clamp(155px,37%,245px);filter:brightness(1.25) saturate(1.3) drop-shadow(0 0 18px #a9d9ffbb);animation:vfxCenteredImpact .7s ease-out both}
+.scene .combatVfx.vfxBlock{left:var(--vfx-impact-x,24%);top:var(--vfx-impact-y,50%)}
+.scene .combatVfx[data-kind="Bow"] img{transform:none}
+.scene #enemyPortrait.fxDefeated{animation:vfxEnemyDefeat .56s ease-out both}
+@keyframes vfxCenteredImpact{0%{opacity:0;transform:translate(-50%,-50%) scale(.65)}22%,65%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1.12)}}
+@keyframes vfxCenteredTravel{0%{opacity:0;left:var(--vfx-start-x,24%);top:var(--vfx-start-y,50%);transform:translate(-50%,-50%) scale(.62)}
+ 18%,84%{opacity:1}100%{opacity:0;left:var(--vfx-end-x,76%);top:var(--vfx-end-y,50%);transform:translate(-50%,-50%) scale(1.05)}}
+@keyframes vfxCenteredEnemyTravel{0%{opacity:0;left:var(--vfx-start-x,76%);top:var(--vfx-start-y,50%);transform:translate(-50%,-50%) scale(.62)}
+ 18%,84%{opacity:1}100%{opacity:0;left:var(--vfx-end-x,24%);top:var(--vfx-end-y,50%);transform:translate(-50%,-50%) scale(1.05)}}
+@keyframes vfxEnemyDefeat{0%,52%{opacity:1}100%{opacity:.45}}
+@media(max-width:650px){
+ .scene .combatVfx{width:clamp(92px,35%,135px)}
+ .scene .combatVfx.vfxEnemyImpact,.scene .combatVfx.vfxEnemyProjectile,.scene .combatVfx.vfxEnemyWard{width:clamp(118px,41%,170px)}
+}
+@media(prefers-reduced-motion:reduce){
+ .scene .combatVfx{animation:vfxFade .32s linear both!important}
+ .scene .combatVfx.vfxProjectile,.scene .combatVfx.vfxEnemyProjectile{left:var(--vfx-end-x,76%);top:var(--vfx-end-y,50%)}
+ .scene #enemyPortrait.fxDefeated{animation:none;opacity:.55}
+}
+
+
+/* Ten-slot equipment layout; preserve hand reservations and readable touch targets. */
+.phase3IntegratedPreview .equipmentLoadout .paper{aspect-ratio:1/1.35}
+.phase3IntegratedPreview .equipmentLoadout .paper .slotTile{width:18%;height:11%;aspect-ratio:auto;left:auto;right:2%}
+.phase3IntegratedPreview .equipmentLoadout .paper .slotTile[data-slot="weapon"]{left:2%;right:auto;top:22%}
+.phase3IntegratedPreview .equipmentLoadout .paper .slotTile[data-slot="offhand"]{left:2%;right:auto;top:39%}
+.phase3IntegratedPreview .equipmentLoadout .paper .slotTile[data-slot="helm"]{left:auto;right:2%;top:2%}
+.phase3IntegratedPreview .equipmentLoadout .paper .slotTile[data-slot="amulet"]{left:auto;right:2%;top:14%}
+.phase3IntegratedPreview .equipmentLoadout .paper .slotTile[data-slot="armor"]{left:auto;right:2%;top:26%}
+.phase3IntegratedPreview .equipmentLoadout .paper .slotTile[data-slot="gloves"]{left:auto;right:2%;top:38%}
+.phase3IntegratedPreview .equipmentLoadout .paper .slotTile[data-slot="belt"]{left:auto;right:2%;top:50%}
+.phase3IntegratedPreview .equipmentLoadout .paper .slotTile[data-slot="ring1"]{left:auto;right:2%;top:62%}
+.phase3IntegratedPreview .equipmentLoadout .paper .slotTile[data-slot="ring2"]{left:auto;right:2%;top:74%}
+.phase3IntegratedPreview .equipmentLoadout .paper .slotTile[data-slot="boots"]{left:auto;right:2%;top:86%}
+.phase5Result{overflow-wrap:anywhere}.phase5Result #phase5ExitResult{position:sticky;bottom:12px;z-index:2;margin-top:16px}.phase5LastLog{margin:16px 0}.phase5LastLog .log{max-height:45vh;overflow:auto}
+
+.c3TreasureImg{display:block;object-fit:contain;max-width:100%}
+.phase3BagItem .c3TreasureImg{width:100%;height:48px;margin:auto}
+.valuable .c3TreasureLabel{display:flex;align-items:center;gap:9px;min-width:0}
+.valuable .c3TreasureImg{width:38px;height:38px;flex-shrink:0}
+.c3TreasureModalImage{width:105px;height:105px;object-fit:contain;display:block;margin:0 auto 12px}
+.c3TreasureResults{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:9px;margin:8px 0 14px}
+.c3TreasureResult{display:flex;align-items:center;gap:8px;padding:8px;border:1px solid #80634b;border-radius:8px;min-width:0}
+.c3TreasureResult .c3TreasureImg{width:44px;height:44px;flex-shrink:0}
+.c3TreasureResult span{font-size:12px;min-width:0;overflow-wrap:anywhere}
+
+/* City Center — dedicated vendors and reserved NPC portrait */
+.cityCenterLayout{display:grid;grid-template-columns:minmax(150px,28%) minmax(0,1fr);gap:16px;align-items:start;margin-top:14px}
+.cityCenterNpcArt{min-height:330px;border:1px solid #514350;background:linear-gradient(160deg,#211c28,#0d1018 85%);border-radius:10px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:12px;color:#b6a8a4;text-align:center;padding:12px}
+.cityCenterNpcSilhouette{font-size:72px;color:#6a424b;opacity:.8}
+.cityCenterNpcArt small{font-size:11px;color:#887b82}
+.cityCenterTabs,.merchantCategoryTabs{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0}
+.cityCenterTabs button[aria-selected=true],.merchantCategoryTabs button[aria-selected=true]{border-color:#a65c60;background:#3a252d;color:#f6e7dd}
+@media(max-width:690px){.cityCenterLayout{grid-template-columns:1fr}.cityCenterNpcArt{min-height:105px;flex-direction:row}.cityCenterNpcSilhouette{font-size:32px}}
+
+/* Merchant tab: a single bounded four-item list, never overlapping the NPC panel. */
+.cityCenterLayout #cityServiceContent{min-width:0;max-width:100%;overflow:hidden}
+.cityCenterLayout .merchantPanel{min-width:0;max-width:100%;box-sizing:border-box}
+.cityCenterLayout .merchantList{display:flex;flex-direction:column;gap:10px;min-width:0;width:100%}
+.cityCenterLayout .merchantCompactCard{width:100%;max-width:100%;box-sizing:border-box;grid-template-columns:62px minmax(0,1fr) minmax(84px,auto)}
+.cityCenterLayout .merchantCardInfo,.cityCenterLayout .merchantCardActions{min-width:0}
+@media(max-width:840px){.cityCenterLayout .merchantCompactCard{grid-template-columns:52px minmax(0,1fr)}.cityCenterLayout .merchantCardActions{grid-column:1/-1;flex-direction:row;flex-wrap:wrap;align-items:center}.cityCenterLayout .merchantCardActions b{margin-right:auto}}

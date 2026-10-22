@@ -1,4 +1,4 @@
-/* UI.4 visual layer. The approved UI Kit SVG is used only on major windows. */
+/* UI.4 shared visual tokens and surfaces; UI.4b provides the active 9-slice trim. */
 .phase3IntegratedPreview{
  --ui4-ink:#e9dfd9;--ui4-muted:#c5b7b3;--ui4-surface:#251a20;--ui4-surface-raised:#33232a;
  --ui4-edge:#785760;--ui4-iron:#66544d;--ui4-ember:#a65550;--ui4-accent:#d6b37c;
@@ -9,14 +9,8 @@
 .phase3IntegratedPreview :is(h1,h2,h3){font-family:var(--ui4-head)}
 .phase3IntegratedPreview :is(.panel,.merchantCompactCard,.potionOffer,.phase3AffinityChoice,.phase5GearGroup){border-color:var(--ui4-edge)}
 .phase3IntegratedPreview :is(.phase3CityCenter,.phase3AffinityShrine,.phase5VisualSummary){
- border:16px solid transparent;border-image-source:url('../assets/ui-kit/gothic-frame.svg');
- border-image-slice:72;border-image-width:16px;border-image-repeat:stretch;
  background:linear-gradient(145deg,#30212a,#1c151d 90%);
  box-shadow:0 18px 40px #08070bcc;
-}
-.phase3IntegratedPreview :is(.phase3Camp,.phase3Between){
- border:12px solid transparent;border-image-source:url('../assets/ui-kit/gothic-frame.svg');
- border-image-slice:72;border-image-width:12px;border-image-repeat:stretch;
 }
 .phase3IntegratedPreview :is(button,select,input,textarea,summary,a):focus-visible{
  outline:2px solid var(--ui4-focus);outline-offset:2px;
@@ -51,10 +45,6 @@
 .phase3IntegratedPreview .phase3AffinityChoice{background:var(--ui4-surface)}
 .phase3IntegratedPreview .phase3AffinityChoice:hover{border-color:var(--ui4-accent)}
 .phase3IntegratedPreview .phase5ResultMetric{background:#211a23;border-color:var(--ui4-edge)}
-@media(max-width:700px){
- .phase3IntegratedPreview :is(.phase3CityCenter,.phase3AffinityShrine,.phase5VisualSummary){border-width:10px;border-image-width:10px;padding:10px}
- .phase3IntegratedPreview :is(.phase3Camp,.phase3Between){border-width:9px;border-image-width:9px}
-}
 @media(prefers-reduced-motion:reduce){.phase3IntegratedPreview button{transition:none}}
 
 
@@ -67,7 +57,7 @@
 }
 .phase3IntegratedPreview :is(.phase3Camp,.phase3Between,.phase3CityCenter,.phase3AffinityShrine,.phase5VisualSummary){
  position:relative;isolation:isolate;
- border-image:none!important;border:1px solid #76514f!important;
+ border:1px solid #76514f;
 }
 .phase3IntegratedPreview :is(.phase3Camp,.phase3Between,.phase3CityCenter,.phase3AffinityShrine,.phase5VisualSummary)::before{
  content:"";position:absolute;inset:0;pointer-events:none;z-index:3;

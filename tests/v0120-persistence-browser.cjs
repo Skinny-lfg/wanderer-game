@@ -2,7 +2,7 @@
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
 const {chromium}=require('playwright'),root=path.resolve(__dirname,'..');
 const source=fs.readFileSync(path.join(root,'index.html'),'utf8');
-const boot='phase1Init();render();';assert(source.includes(boot));
+const boot='phase1Init();\nconst phase3RestoredScroll=phase3RestoreUILocation(phase3SavedUILocation);\nrender();';assert(source.includes(boot));
 const fixture=`if(PHASE1_PREVIEW){phase1Init();globalThis.__persist={
  snap:()=>({gold:state.gold,fragments:state.fragments,equip:state.equip,stash:state.stash,runes:state.runes,enemy:state.run?.enemy,enc:state.run?.enc,status:state.run?.status,g:phase1Controller.state,draft:phase1Draft,build:phase1Build,results:phase5Results}),
  begin:()=>{phase1Begin(1);phase2ChooseInitial('blood');},
@@ -14,7 +14,7 @@ const fixture=`if(PHASE1_PREVIEW){phase1Init();globalThis.__persist={
 }else{load();if(!state.merchant)rollShop();save();render();}`;
 const server=http.createServer((req,res)=>{
  const u=new URL(req.url,'http://fixture'),file=path.resolve(root,'.'+u.pathname);
- if(u.pathname==='/'){res.setHeader('Content-Type','text/html');return res.end(source.replace(boot,fixture));}
+ if(u.pathname==='/'){res.setHeader('Content-Type','text/html');return res.end(source.replace(boot,fixture+'const phase3RestoredScroll=null;'));}
  if(!file.startsWith(root+path.sep)){res.statusCode=403;return res.end();}
  fs.readFile(file,(e,body)=>{res.statusCode=e?404:200;res.setHeader('Content-Type',({'.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.webp':'image/webp','.png':'image/png'})[path.extname(file)]||'application/octet-stream');res.end(e?'Missing':body);});
 });
@@ -39,7 +39,7 @@ const server=http.createServer((req,res)=>{
  await page.reload();await page.waitForFunction(()=>WandererGame.validationStatus().ready);assert.deepEqual((await snap()).g.offers.map(p=>p.id),offers);assert.equal((await snap()).g.rerolls,2);
  await page.locator('#phase4Extract').click();await page.locator('dialog [data-confirm]').click();const end=await stored();assert.equal(end.expedition.lastOutcome,'extracted');assert.equal(end.expedition.unlocked,1);assert.equal(end.expedition.active,null);assert.equal(end.profile.gold,completed.gold);assert.deepEqual(end.profile.equip,home);
  await page.reload();await page.waitForFunction(()=>WandererGame.validationStatus().ready);assert.equal((await snap()).gold,completed.gold);assert.match(await page.locator('h1').textContent(),/EXTRACTION COMPLETE/);
- await page.locator('#phase5ExitResult').click();await page.locator('[data-online-action="leaderboard"]').click();assert.match(await page.locator('dialog').textContent(),/pending server validation/);await page.locator('dialog [data-close]').click();
+ await page.locator('#phase5ExitResult').click();if(width<=650)await page.locator('#menuToggle').click();await page.locator('[data-online-action="leaderboard"]').click();assert.match(await page.locator('dialog').textContent(),/pending server validation/);await page.locator('dialog [data-close]').click();
  await page.evaluate(()=>{__persist.begin();__persist.enter();__persist.log();__persist.death();});assert.match(await page.locator('h1').textContent(),/YOU DIED/);assert((await snap()).results.realm.log.length>=120);
  const deathSave=await stored();await page.reload();await page.waitForFunction(()=>WandererGame.validationStatus().ready);assert.match(await page.locator('h1').textContent(),/YOU DIED/);await page.locator('.phase5LastLog summary').click();assert(await page.locator('.phase5LastLog .log').isVisible());assert.equal((await stored()).profile.gold,deathSave.profile.gold);await page.locator('#phase5ExitResult').click();assert.match(await page.locator('h1').textContent(),/EXPEDITION LOST/);await page.locator('#phase5ExitResult').click();
  await page.evaluate(()=>{__persist.begin();__persist.enter();__persist.boss();__persist.win();});assert.match(await page.locator('h1').textContent(),/EXPEDITION COMPLETE/);assert.equal((await stored()).expedition.completed,1);assert.equal((await stored()).expedition.unlocked,2);assert.equal((await snap()).results.summary.realms,15);assert.equal((await snap()).results.summary.runeTier,1);

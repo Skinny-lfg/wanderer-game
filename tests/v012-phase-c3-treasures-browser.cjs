@@ -6,7 +6,7 @@ const assert=require('node:assert/strict');
 const {chromium}=require('playwright');
 const root=path.resolve(__dirname,'..');
 const mime={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.webp':'image/webp','.png':'image/png','.svg':'image/svg+xml','.json':'application/json'};
-const boot='phase1Init();render();';
+const boot='phase1Init();\nconst phase3RestoredScroll=phase3RestoreUILocation(phase3SavedUILocation);\nrender();';
 const fixture=`phase1Init();globalThis.__c3={
  setup(){state.valuables=WandererV012Treasures.CATALOG.map((t,i)=>({...t,id:'ui-'+i,kind:'valuable',treasureType:t.id,tier:1}));renderStash();},
  count(){return state.valuables.length;},gold(){return state.gold;},
@@ -23,7 +23,7 @@ const fixture=`phase1Init();globalThis.__c3={
     if(url.hostname!=='wanderer.test')return route.abort();
     const file=path.resolve(root,'.'+(url.pathname==='/'?'/index.html':url.pathname));
     if(!file.startsWith(root+path.sep))return route.fulfill({status:403});
-    try{const body=file.endsWith('/index.html')?fs.readFileSync(file,'utf8').replace(boot,fixture):fs.readFileSync(file);await route.fulfill({body,contentType:mime[path.extname(file)]||'application/octet-stream'});}catch{return route.fulfill({status:404});}
+    try{const body=file.endsWith('/index.html')?fs.readFileSync(file,'utf8').replace(boot,fixture+'const phase3RestoredScroll=null;'):fs.readFileSync(file);await route.fulfill({body,contentType:mime[path.extname(file)]||'application/octet-stream'});}catch{return route.fulfill({status:404});}
    });
    await page.goto('http://wanderer.test/?expeditionPhase1=1');
    if(errors.length)throw Error('App bootstrap: '+errors.join('; '));

@@ -115,8 +115,8 @@
 .phase3IntegratedPreview #nav{flex:1;min-width:0;overflow-x:auto}
 .phase3IntegratedPreview .phase3Nav{flex-wrap:nowrap}
 .phase3IntegratedPreview .phase3Nav button{flex:none;min-width:80px}
-.phase3IntegratedPreview #onlineActions{display:flex!important;gap:6px}
-.phase3IntegratedPreview #menuToggle,.phase3IntegratedPreview [data-online-action="feedback"]{display:none!important}
+.phase3IntegratedPreview #onlineActions{gap:6px}
+.phase3IntegratedPreview [data-online-action="feedback"]{display:none!important}
 .phase3Camp{background:linear-gradient(90deg,#130d13eb,#160d15a8,#130d13eb),url('../assets/backgrounds/tavern-desktop.webp') center/cover;border-color:#8b6b4b}
 .phase3CampGrid,.phase3PreparationLayout{display:grid;grid-template-columns:minmax(200px,.75fr) minmax(310px,1.2fr) minmax(280px,1fr);gap:20px;align-items:start}
 .phase3CampStatus{padding:28px 4px}

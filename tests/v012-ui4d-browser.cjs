@@ -2,7 +2,7 @@
 // Merchant/save hotfix regression. All writes use a fresh validationSlot in an isolated browser context.
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
 const {chromium}=require('playwright'),root=path.resolve(__dirname,'..'),source=fs.readFileSync(path.join(root,'index.html'),'utf8');
-const boot='phase1Init();render();';assert(source.includes(boot));
+const boot='phase1Init();\nconst phase3RestoredScroll=phase3RestoreUILocation(phase3SavedUILocation);\nrender();';assert(source.includes(boot));
 const fixture=`phase1Init();render();globalThis.__ui4d={
  payload:()=>JSON.parse(localStorage.getItem(WandererGame.validationStatus().key)),
  stock:()=>state.merchant?.stock.map(item=>({id:item.id,slot:item.slot,goldPrice:item.goldPrice}))||[],
@@ -11,7 +11,7 @@ const fixture=`phase1Init();render();globalThis.__ui4d={
  funds:()=>{state.gold=10000;save();render();}
 };`;
 const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css','.webp':'image/webp','.png':'image/png','.svg':'image/svg+xml'};
-const server=http.createServer((req,res)=>{const url=new URL(req.url,'http://127.0.0.1'),file=path.resolve(root,'.'+(url.pathname==='/'?'/index.html':url.pathname));if(!file.startsWith(root+path.sep)){res.writeHead(403);return res.end();}let body;try{body=fs.readFileSync(file);}catch{res.writeHead(404);return res.end('Not found');}if(url.pathname==='/')body=Buffer.from(source.replace(boot,fixture));res.writeHead(200,{'Content-Type':mime[path.extname(file)]||'application/octet-stream'});res.end(body);});
+const server=http.createServer((req,res)=>{const url=new URL(req.url,'http://127.0.0.1'),file=path.resolve(root,'.'+(url.pathname==='/'?'/index.html':url.pathname));if(!file.startsWith(root+path.sep)){res.writeHead(403);return res.end();}let body;try{body=fs.readFileSync(file);}catch{res.writeHead(404);return res.end('Not found');}if(url.pathname==='/')body=Buffer.from(source.replace(boot,fixture+'const phase3RestoredScroll=null;'));res.writeHead(200,{'Content-Type':mime[path.extname(file)]||'application/octet-stream'});res.end(body);});
 const categorySlots={weapons:['weapon','offhand'],armor:['helm','armor','gloves','boots','belt'],accessories:['ring1','ring2','amulet']};
 (async()=>{
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox']});

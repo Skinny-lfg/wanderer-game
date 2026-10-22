@@ -2,7 +2,7 @@
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
 const {chromium}=require('playwright'),root=path.resolve(__dirname,'..');
 const source=fs.readFileSync(path.join(root,'index.html'),'utf8');
-const boot='phase1Init();render();';
+const boot='phase1Init();\nconst phase3RestoredScroll=phase3RestoreUILocation(phase3SavedUILocation);\nrender();';
 assert(source.includes(boot));
 const fixture=`if(PHASE1_PREVIEW){
  phase1Init();phase1Controller.state.unlocked=5;state.gold=state.fragments=10000;
@@ -13,7 +13,7 @@ const fixture=`if(PHASE1_PREVIEW){
 }else{load();if(!state.merchant)rollShop();save();render();}`;
 const server=http.createServer((req,res)=>{
  const u=new URL(req.url,'http://fixture'),file=path.resolve(root,'.'+u.pathname);
- if(u.pathname==='/'){res.setHeader('Content-Type','text/html');return res.end(source.replace(boot,fixture));}
+ if(u.pathname==='/'){res.setHeader('Content-Type','text/html');return res.end(source.replace(boot,fixture+'const phase3RestoredScroll=null;'));}
  if(!file.startsWith(root+path.sep)){res.statusCode=403;return res.end();}
  fs.readFile(file,(e,body)=>{res.statusCode=e?404:200;const ext=path.extname(file);res.setHeader('Content-Type',({'.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.webp':'image/webp','.png':'image/png'})[ext]||'application/octet-stream');res.end(e?'Missing':body);});
 });

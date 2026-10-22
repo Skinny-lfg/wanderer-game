@@ -2,7 +2,7 @@
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
 const {chromium}=require('playwright'),root=path.resolve(__dirname,'..');
 const source=fs.readFileSync(path.join(root,'index.html'),'utf8');
-const boot='phase1Init();render();';
+const boot='phase1Init();\nconst phase3RestoredScroll=phase3RestoreUILocation(phase3SavedUILocation);\nrender();';
 assert(source.includes(boot));
 const fixture=`if(PHASE1_PREVIEW){
  phase1Init();phase1Controller.state.unlocked=20;state.gold=10000;state.fragments=10000;
@@ -17,7 +17,7 @@ const fixture=`if(PHASE1_PREVIEW){
 const mime={'.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.png':'image/png','.webp':'image/webp','.svg':'image/svg+xml'};
 const server=http.createServer((req,res)=>{
  const u=new URL(req.url,'http://localhost'),file=path.resolve(root,'.'+u.pathname);
- if(u.pathname==='/'){res.writeHead(200,{'Content-Type':'text/html'});res.end(source.replace(boot,fixture));return;}
+ if(u.pathname==='/'){res.writeHead(200,{'Content-Type':'text/html'});res.end(source.replace(boot,fixture+'const phase3RestoredScroll=null;'));return;}
  if(!file.startsWith(root+path.sep)){res.writeHead(403);res.end();return;}
  fs.readFile(file,(err,body)=>{res.writeHead(err?404:200,{'Content-Type':mime[path.extname(file)]||'application/octet-stream'});res.end(err?'Not found':body);});
 });

@@ -2,7 +2,7 @@
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
 const {chromium}=require('playwright'),root=path.resolve(__dirname,'..');
 const source=fs.readFileSync(path.join(root,'index.html'),'utf8');
-const boot='phase1Init();render();';assert(source.includes(boot));
+const boot='phase1Init();\nconst phase3RestoredScroll=phase3RestoreUILocation(phase3SavedUILocation);\nrender();';assert(source.includes(boot));
 const fixture=`if(PHASE1_PREVIEW){phase1Init();
  state.equip.helm=makeItem(5,'helm',null,'loot','Leather','Rare');delete state.equip.helm.evasionRating;
  const belt=makeItem(5,'belt',null,'loot','Leather','Rare');state.stash.push(belt);
@@ -16,7 +16,7 @@ const fixture=`if(PHASE1_PREVIEW){phase1Init();
 }else{load();if(!state.merchant)rollShop();save();render();}`;
 const server=http.createServer((req,res)=>{
  const u=new URL(req.url,'http://fixture'),file=path.resolve(root,'.'+u.pathname);
- if(u.pathname==='/'){res.setHeader('Content-Type','text/html');return res.end(source.replace(boot,fixture));}
+ if(u.pathname==='/'){res.setHeader('Content-Type','text/html');return res.end(source.replace(boot,fixture+'const phase3RestoredScroll=null;'));}
  if(!file.startsWith(root+path.sep)){res.statusCode=403;return res.end();}
  fs.readFile(file,(e,body)=>{res.statusCode=e?404:200;res.setHeader('Content-Type',({'.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.webp':'image/webp','.png':'image/png'})[path.extname(file)]||'application/octet-stream');res.end(e?'Missing':body);});
 });
@@ -28,6 +28,7 @@ const server=http.createServer((req,res)=>{
   page.setDefaultTimeout(5000);page.on('pageerror',e=>errors.push(e.message));await context.addInitScript(()=>{window.setInterval=()=>0;localStorage.setItem('wanderer_browser_proto_v01','UNTOUCHED');});
   await page.route('**/*',route=>{if(route.request().url().startsWith(base))return route.continue();external.push(route.request().url());return route.abort();});
   await page.goto(base+'/?expeditionPhase1=1');await page.locator('[data-phase3-nav="equipment"]').click();
+  await page.locator('.inventoryAdvancedStats summary').click();
   assert.match(await page.locator('.equipmentStats').innerText(),/Evasion[\s\S]*rating.*% vs E1/);
   await page.selectOption('#slotFilter','belt');const id=await page.evaluate(()=>__evasion.beltId);await page.locator('[data-item="'+id+'"]').click();
   assert.match(await page.locator('.itemComparison').innerText(),/Evasion Rating/);

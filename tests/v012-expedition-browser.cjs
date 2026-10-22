@@ -31,12 +31,12 @@ const server=http.createServer((req,res)=>{
     Math.random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
    });
    await page.goto(base+'/?expeditionPhase1=1',{waitUntil:'domcontentloaded'});
-   await page.locator('[data-phase1-expedition="1"]').waitFor({timeout:10000});
+   await page.locator('[data-phase1-expedition="1"]').first().waitFor({timeout:10000});
    assert.equal(await page.locator('#v012-launch').count(),0,'standalone prototype must not load');
    assert(!requested.some(url=>url.includes('/online/app.mjs')),'account/cloud app must not load');
    assert(!requested.some(url=>url.includes('/online/v012-prototype.mjs')),'dual combat simulator must not load');
-   await page.locator('[data-online-action="account"]').click();assert.equal(await page.locator('[data-phase1-hero]').count(),5,'five original characters available');await page.locator('dialog [data-close]').click();
-   await page.locator('[data-phase1-expedition="1"]').click();
+   if(width<=650)await page.locator('#menuToggle').click();await page.locator('[data-online-action="account"]').click();assert.equal(await page.locator('[data-phase1-hero]').count(),5,'five original characters available');await page.locator('dialog [data-close]').click();
+   await page.locator('[data-phase1-expedition="1"]').first().click();
    assert.equal(await page.locator('[data-phase2-initial]').count(),6);
    await page.locator('[data-phase2-initial="blood"]').click();
    await page.locator('#heroPortrait').waitFor({timeout:10000});
@@ -48,13 +48,13 @@ const server=http.createServer((req,res)=>{
    assert.equal(await page.locator('.combatVfx').count()>=0,true);
    // Combat engine auto-advances every Wave, and returns to path selection.
    await page.locator('#combatSpeed').click();await page.locator('#combatSpeed').click();
-   try{await page.locator('dialog [data-popup-passive]').first().waitFor({timeout:35000});await page.locator('dialog [data-popup-passive]').first().click();await page.locator('#phase5ExitResult').click();}
+   try{await page.locator('dialog [data-popup-passive]').first().waitFor({timeout:35000});await page.locator('dialog [data-popup-passive]').first().click();await page.locator('#phase5ExitRealm').click();}
    catch(e){console.error('PHASE2 BROWSER DIAGNOSTICS',width,
       await page.evaluate(()=>({scene:document.querySelector('#screen')?.innerText?.slice(0,2300),
       save:globalThis.WandererGame?.snapshot?.().run?.status,
       hp:globalThis.WandererGame?.snapshot?.().run?.hp})));throw e;}
-   assert((await page.locator('h2').first().innerText()).includes('Realm 2 / 15'),'first Plane cleared');
-   assert((await page.locator('.phase3PreparationLayout').innerText()).includes('Mana'));
+   assert((await page.locator('.phase3BetweenHeader').innerText()).toUpperCase().includes('REALM 2 / 15'),'first Realm cleared and Between Realms shown');
+   assert(!(await page.locator('.phase3BetweenHero').innerText()).includes('Mana'),'Mana 0/0 hidden on Between Realms');
    assert.equal(await page.evaluate(()=>localStorage.getItem('wanderer_browser_proto_v01')),'DO_NOT_TOUCH_CLASSIC_SAVE');
    assert.equal(await page.evaluate(()=>localStorage.getItem('wanderer_account_browser_fixture')),'DO_NOT_TOUCH_ACCOUNT_SAVE');
    assert(requested.some(u=>u.includes('/assets/mobs/')),'existing enemy asset loaded');

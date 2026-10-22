@@ -1,7 +1,7 @@
 // All accounts/saves below are fixtures. Only loopback HTTP and validation-prefixed storage.
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
 const {chromium}=require('playwright'),root=path.resolve(__dirname,'..'),source=fs.readFileSync(path.join(root,'index.html'),'utf8');
-const boot='phase1Init();render();';assert(source.includes(boot));
+const boot='phase1Init();\nconst phase3RestoredScroll=phase3RestoreUILocation(phase3SavedUILocation);\nrender();';assert(source.includes(boot));
 const fixture=String.raw`if(PHASE1_PREVIEW){
  const query=new URLSearchParams(location.search),binding=query.get('validationSlot')||'local',key=WandererV012Save.key(binding);
  if(query.get('fixture')==='old'&&!localStorage.getItem(key)){
@@ -39,7 +39,7 @@ const fixture=String.raw`if(PHASE1_PREVIEW){
 const mime={'.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.png':'image/png','.webp':'image/webp','.svg':'image/svg+xml'};
 const server=http.createServer((req,res)=>{
  const u=new URL(req.url,'http://localhost'),file=path.resolve(root,'.'+u.pathname);
- if(u.pathname==='/'){res.writeHead(200,{'Content-Type':'text/html'});res.end(source.replace(boot,fixture));return;}
+ if(u.pathname==='/'){res.writeHead(200,{'Content-Type':'text/html'});res.end(source.replace(boot,fixture+'const phase3RestoredScroll=null;'));return;}
  if(!file.startsWith(root+path.sep)){res.writeHead(403);res.end();return;}
  fs.readFile(file,(e,buf)=>{res.writeHead(e?404:200,{'Content-Type':mime[path.extname(file)]||'application/octet-stream'});res.end(e?'Not found':buf);});
 });
@@ -82,7 +82,7 @@ async function noRealWrites(page){
   const other=await context.newPage();await other.goto(url,{waitUntil:'domcontentloaded'});
   await other.getByRole('alert').waitFor();assert((await other.getByRole('alert').innerText()).includes('another tab'));
   assert.equal(await other.evaluate(()=>WandererGame.validationStatus().ready),false);await other.close();
-  await page.locator('[data-phase1-expedition="1"]').click();assert.equal(await page.evaluate(()=>__saveAudit.invalidPlane()),true);
+  await page.locator('[data-phase1-expedition="1"]').first().click();assert.equal(await page.evaluate(()=>__saveAudit.invalidPlane()),true);
   await page.locator('[data-phase2-initial="blood"]').click();
   await page.evaluate(()=>__saveAudit.checkpointRound());const entry=await snapshot(page);await wave(page);
   await page.close();const storageState=await context.storageState();await context.close();await browser.close();browser=await launch();
@@ -95,11 +95,11 @@ async function noRealWrites(page){
   let before=await snapshot(page);await page.evaluate(()=>__saveAudit.defeat());let after=await snapshot(page);
   assert.equal(after.status.outcome,'defeat');assert.equal(after.gold,before.gold);assert(originalIds.every(id=>after.gear.some(i=>i.id===id)));
   await page.evaluate(()=>__saveAudit.step());await page.evaluate(()=>__saveAudit.step());
-  await page.locator('[data-phase1-expedition="1"]').click();await page.locator('[data-phase2-initial="blood"]').click();
+  await page.locator('[data-phase1-expedition="1"]').first().click();await page.locator('[data-phase2-initial="blood"]').click();
   before=await snapshot(page);await page.evaluate(()=>__saveAudit.abandon());after=await snapshot(page);
   assert.equal(after.status.outcome,'abandoned');assert.equal(after.gold,before.gold);assert.equal(after.unlocked,1);
   await page.evaluate(()=>__saveAudit.step());await page.evaluate(()=>__saveAudit.step());
-  await page.locator('[data-phase1-expedition="1"]').click();
+  await page.locator('[data-phase1-expedition="1"]').first().click();
   for(let step=0;step<200;step++){
    const current=await snapshot(page);if(current.stage==='finished')break;
    assert(current.families.length<=3);await page.evaluate(()=>__saveAudit.step());await page.waitForTimeout(10);

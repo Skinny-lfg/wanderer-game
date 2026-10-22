@@ -4,6 +4,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const manifest=require('../assets/c3-assets.json');
 const html=fs.readFileSync('index.html','utf8');
+const coreCss=fs.readFileSync('online/v012-core.css','utf8');
 const ids=['crimson-fang','chalice-hollow-king','gravewake','eye-of-morrow','verdant-oath','heartroot-carapace','oathwall','veil-thousand-seals','kingsbreaker','tempest-talon','astrafall','voidglass'];
 function checkImage(path){
   assert.ok(fs.existsSync(path),'Missing '+path);
@@ -33,7 +34,7 @@ test('C.3.1: preserves original gameplay configuration and legacy status glyphs'
   assert.ok(html.includes('const WANDERER_NEW_LEGENDARY_DROPS_ENABLED=true;'));
   assert.ok(html.includes('const NEW_LEGENDARY_CATALOG=['));
   assert.ok(html.includes('const AFFINITY_ART=['));
-  assert.ok(html.includes("item-icons-simplified.svg"));
+  assert.ok(coreCss.includes("../assets/affinities/item-icons-simplified.svg"));
 });
 
 test('C.3.3: all twelve stable dungeon IDs use optimized desktop and mobile WebP',()=>{

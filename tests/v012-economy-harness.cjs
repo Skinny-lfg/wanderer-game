@@ -3,7 +3,7 @@
 const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const root=path.resolve(__dirname,'..');
 module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(root,'index.html'),'utf8'),moduleOverrides={},options={}){
- const boot='phase1Init();render();';
+ const boot='phase1Init();\nconst phase3RestoredScroll=phase3RestoreUILocation(phase3SavedUILocation);\nrender();';
  if(!source.includes(boot))throw Error('Integrated bootstrap not found');
  let next=seed>>>0;const math=Object.create(Math);math.random=()=>{next=(Math.imul(next,1664525)+1013904223)>>>0;return next/4294967296;};
  const callbacks=[],nodes=new Map();
@@ -16,10 +16,10 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
   });
  };
  const sandbox={Math:math,...(options.now===undefined?{}:{Date:class extends Date{static now(){return options.now;}}}),URLSearchParams,location:{search:'?expeditionPhase1=1'},console,
-  document:{body:node(),visibilityState:'visible',getElementById:getNode,querySelector:()=>null,querySelectorAll:queryAll,createElement:node},
+  document:{body:node(),visibilityState:'visible',getElementById:getNode,querySelector:()=>null,querySelectorAll:queryAll,createElement:node,addEventListener(){}},
   localStorage:{getItem(){throw Error('Unexpected save read');},setItem(){throw Error('Unexpected save write');}},
   setTimeout:fn=>{callbacks.push(fn);return callbacks.length;},clearTimeout(){},setInterval:()=>0,clearInterval(){}};
- sandbox.window=sandbox;
+ sandbox.window=sandbox;sandbox.addEventListener=()=>{};
  const inject=String.raw`
  const auditForge=renderForge,auditMerchant=renderMerchant,auditCombat=renderCombat;
  let auditConfirmation=null,auditFeedback=null;
@@ -96,7 +96,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
  const main=source.match(/<script>([\s\S]*?)<\/script>/)?.[1];
  const files=['online/v012-treasures.js','online/v012-save.js','economy/v0101.js','combat/legendary.js','combat/v012-combat-core.js','combat/v012-gear-stats.js','combat/v012-runes.js','economy/v012-loot-rules.js','combat/v012-buildcraft.js','online/v012-expedition-controller.js','online/v012-expedition-events.js','online/v012-consumables.js'];
  files.push(...[...source.matchAll(/<script[^>]+src="([^"]+-runtime\.js)"/g)].map(m=>m[1]));
- vm.runInNewContext(files.map(f=>moduleOverrides[f]??fs.readFileSync(path.join(root,f),'utf8')).join('\n')+'\n'+main.replace(boot,inject),sandbox,{timeout:20000});
+ vm.runInNewContext(files.map(f=>moduleOverrides[f]??fs.readFileSync(path.join(root,f),'utf8')).join('\n')+'\n'+main.replace(boot,inject+'\nconst phase3RestoredScroll=null;'),sandbox,{timeout:20000});
  sandbox.audit.flush=()=>{for(let i=0;callbacks.length;i++){if(i>10000)throw Error('Callback loop');callbacks.shift()();}};
  sandbox.audit.buildcraft=sandbox.WandererV012Buildcraft;
  sandbox.audit.catalog=sandbox.WandererV012Buildcraft.CATALOG;
