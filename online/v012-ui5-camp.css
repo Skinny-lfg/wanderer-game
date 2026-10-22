@@ -1,0 +1,256 @@
+/* UI.5 — Camp-only character window composition. All equipment/potion handlers
+   and game state remain in the existing v0.12 components. */
+.phase3IntegratedPreview .phase3CampGrid{
+ display:grid;
+ grid-template-columns:minmax(165px,.73fr) minmax(330px,1.52fr) minmax(235px,1fr);
+ gap:12px;align-items:start;
+}
+.phase3IntegratedPreview .phase3CampStatus{min-width:0;padding:7px 3px}
+.phase3IntegratedPreview .phase3CampCharacter{
+ position:relative;min-width:0;width:100%!important;max-width:none!important;
+ padding:12px 10px 14px;
+ border:12px solid transparent;
+ border-image-source:var(--wf-frame);
+ border-image-slice:96;
+ border-image-width:12px;
+ border-image-repeat:repeat;
+ box-sizing:border-box;
+ background:linear-gradient(180deg,#160e16c2,#120d13ae);
+ isolation:isolate;
+}
+/* Health & mana are now above the hero inside the SAME character window. */
+.phase3IntegratedPreview .phase3CampCharacter .phase3CampHeroVitals{
+ position:relative;z-index:2;margin:0 0 10px;
+}
+.phase3IntegratedPreview .phase3CampCharacter .phase3ResourcePanel{
+ margin:0!important;padding:9px 9px 11px!important;gap:9px;
+ background:#140e15d4;
+}
+.phase3IntegratedPreview .phase3CampCharacter .phase3Resource>span{
+ font-size:11px;margin:0 0 3px;
+}
+.phase3IntegratedPreview .phase3CampGrid .equipmentLoadout.phase3CampCharacter .paper{
+ position:relative;display:block;
+ width:100%;max-width:none!important;min-width:0;
+ height:500px!important;min-height:500px!important;
+ margin:0 auto;
+ padding:0!important;aspect-ratio:auto!important;
+ border:0!important;border-image:none!important;
+ box-shadow:none!important;border-radius:0!important;
+ background:transparent!important;
+ overflow:visible!important;
+}
+/* Keep the figure centred between the two columns of gear, grounded at its feet. */
+.phase3IntegratedPreview .phase3CampGrid .phase3CampCharacter .paper .model{
+ position:absolute;display:block;z-index:0;
+ inset:9% 19% 0!important;
+ width:62%!important;height:91%!important;
+ max-width:62%;object-fit:contain!important;
+ object-position:center bottom!important;
+ transform:scale(1.12)!important;transform-origin:center bottom!important;
+ filter:drop-shadow(0 8px 12px #000b);
+}
+/* Five fixed rows per side. The slot's frame takes the first 58px;
+   remaining space is reserved for a fully visible, wrapping label. */
+.phase3IntegratedPreview .phase3CampGrid .phase3CampCharacter .paper .slotTile{
+ position:absolute!important;z-index:2;
+ display:flex!important;flex-direction:column!important;
+ align-items:center!important;justify-content:flex-start!important;
+ gap:2px!important;
+ width:72px!important;height:93px!important;min-height:0!important;
+ padding:3px 1px 1px!important;margin:0!important;
+ border:0!important;border-image:none!important;
+ border-radius:0!important;background:transparent!important;
+ box-shadow:none!important;overflow:visible!important;
+ box-sizing:border-box!important;
+}
+.phase3IntegratedPreview .phase3CampGrid .phase3CampCharacter .paper .slotTile .rarityImageFrame--slot{
+ width:58px!important;height:58px!important;
+ max-width:none!important;min-width:0;
+ flex:0 0 58px;
+}
+.phase3IntegratedPreview .phase3CampGrid .phase3CampCharacter .paper .slotTile .rarityImageFrame>img{
+ --wf-art-size:38px;
+}
+/* Do not truncate Off-Hand, Ring II, etc. */
+.phase3IntegratedPreview .phase3CampGrid .phase3CampCharacter .paper .slotTile>span:not(.rarityImageFrame):not(.slotDLevel):not(.affinityBadge):not(.slotArmorType):not(.newBadge):not(.legendaryRankBadge){
+ display:block!important;
+ width:100%;max-width:100%;
+ height:auto;min-height:0;
+ font-size:10px!important;line-height:1.12!important;
+ text-align:center!important;
+ white-space:normal!important;overflow:visible!important;
+ text-overflow:clip!important;overflow-wrap:normal!important;
+ color:#eee1d6;
+}
+/* Original five-left / five-right arrangement: consistent row heights. */
+.phase3IntegratedPreview .phase3CampGrid .phase3CampCharacter .paper .slotTile[data-slot="weapon"],
+.phase3IntegratedPreview .phase3CampGrid .phase3CampCharacter .paper .slotTile[data-slot="amulet"]{top:0!important;bottom:auto!important}
+.phase3IntegratedPreview .phase3CampGrid .phase3CampCharacter .paper .slotTile[data-slot="offhand"],
+.phase3IntegratedPreview .phase3CampGrid .phase3CampCharacter .paper .slotTile[data-slot="belt"]{top:20%!important;bottom:auto!important}
+.phase3IntegratedPreview .phase3CampGrid .phase3CampCharacter .paper .slotTile[data-slot="helm"],
+.phase3IntegratedPreview .phase3CampGrid .phase3CampCharacter .paper .slotTile[data-slot="ring1"]{top:40%!important;bottom:auto!important}
+.phase3IntegratedPreview .phase3CampGrid .phase3CampCharacter .paper .slotTile[data-slot="armor"],
+.phase3IntegratedPreview .phase3CampGrid .phase3CampCharacter .paper .slotTile[data-slot="ring2"]{top:60%!important;bottom:auto!important}
+.phase3IntegratedPreview .phase3CampGrid .phase3CampCharacter .paper .slotTile[data-slot="gloves"],
+.phase3IntegratedPreview .phase3CampGrid .phase3CampCharacter .paper .slotTile[data-slot="boots"]{top:80%!important;bottom:auto!important}
+.phase3IntegratedPreview .phase3CampGrid .phase3CampCharacter .paper .slotTile[data-slot="weapon"],
+.phase3IntegratedPreview .phase3CampGrid .phase3CampCharacter .paper .slotTile[data-slot="offhand"],
+.phase3IntegratedPreview .phase3CampGrid .phase3CampCharacter .paper .slotTile[data-slot="helm"],
+.phase3IntegratedPreview .phase3CampGrid .phase3CampCharacter .paper .slotTile[data-slot="armor"],
+.phase3IntegratedPreview .phase3CampGrid .phase3CampCharacter .paper .slotTile[data-slot="gloves"]{left:0!important;right:auto!important}
+.phase3IntegratedPreview .phase3CampGrid .phase3CampCharacter .paper .slotTile[data-slot="amulet"],
+.phase3IntegratedPreview .phase3CampGrid .phase3CampCharacter .paper .slotTile[data-slot="belt"],
+.phase3IntegratedPreview .phase3CampGrid .phase3CampCharacter .paper .slotTile[data-slot="ring1"],
+.phase3IntegratedPreview .phase3CampGrid .phase3CampCharacter .paper .slotTile[data-slot="ring2"],
+.phase3IntegratedPreview .phase3CampGrid .phase3CampCharacter .paper .slotTile[data-slot="boots"]{right:0!important;left:auto!important}
+/* Potion loadout lives directly below equipment inside the same frame. */
+.phase3IntegratedPreview .phase3CampCharacter .phase3CampHeroPotions{
+ position:relative;z-index:2;margin:10px auto 14px;min-width:0;
+}
+.phase3IntegratedPreview .phase3CampCharacter .phase3PotionSlots{
+ display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;
+ width:100%!important;max-width:410px!important;
+ gap:7px!important;margin:0 auto!important;
+}
+.phase3IntegratedPreview .phase3CampCharacter .phase3PotionSlot{
+ min-width:0;min-height:90px!important;max-width:none;
+ padding:5px 4px!important;gap:4px!important;
+ border:0!important;border-image:none!important;
+ background:transparent!important;
+ box-shadow:none!important;
+}
+.phase3IntegratedPreview .phase3CampCharacter .phase3PotionSlot .rarityImageFrame{
+ flex:none;
+}
+.phase3IntegratedPreview .phase3CampCharacter .phase3PotionSlot b,
+.phase3IntegratedPreview .phase3CampCharacter .phase3PotionSlot small{
+ max-width:100%;font-size:10px;line-height:1.15;
+ white-space:normal;overflow-wrap:anywhere;text-align:center;
+}
+/* Attributes first; combat essentials below; rare/secondary stats collapsed. */
+.phase3IntegratedPreview .phase3CampCharacterStats{
+ position:relative;z-index:2;min-width:0;padding:9px 0 0;
+ border-top:1px solid #704f4a;
+}
+.phase3IntegratedPreview .phase3CampCharacterStats h3{
+ font:600 13px/1.2 Georgia,serif;color:#edd6ab;
+ margin:7px 0 6px;
+}
+.phase3IntegratedPreview .phase3CampStatRow{
+ display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
+ gap:5px;min-width:0;
+}
+.phase3IntegratedPreview .phase3CampStat{
+ display:flex;flex-direction:column;align-items:center;justify-content:center;
+ min-width:0;gap:4px;padding:7px 3px;
+ background:#20151bcf;border:1px solid #624950;border-radius:5px;
+ text-align:center;
+}
+.phase3IntegratedPreview .phase3CampStat span{
+ font-size:9px;line-height:1.15;color:#d4c0bd;
+ overflow-wrap:anywhere;
+}
+.phase3IntegratedPreview .phase3CampStat b{
+ color:#f1dab0;font-size:13px;font-variant-numeric:tabular-nums;
+}
+.phase3IntegratedPreview .phase3CampExtraStats{margin-top:10px}
+.phase3IntegratedPreview .phase3CampExtraStats summary{
+ cursor:pointer;color:#ead5b1;font-size:12px;padding:7px;
+}
+.phase3IntegratedPreview .phase3CampExtraStats .phase3CampStatRow{
+ grid-template-columns:repeat(3,minmax(0,1fr));
+}
+.phase3IntegratedPreview .phase3CampFooter{margin:13px 0 0}
+.phase3IntegratedPreview .phase3CampFooter .phase3Journey{
+ margin:0;display:block;
+}
+/* The second Start Expedition button is mobile-only; both share the existing handler. */
+.phase3IntegratedPreview .phase3CampStickyStart{display:none}
+@media(max-width:1150px){
+ .phase3IntegratedPreview .phase3CampGrid{
+  grid-template-columns:minmax(0,1fr) minmax(280px,1.2fr);
+ }
+ .phase3IntegratedPreview .phase3CampGrid>.phase3CampCharacter{
+  grid-column:2;grid-row:1/3;max-width:none;align-self:stretch;order:unset;
+ }
+ .phase3IntegratedPreview .phase3CampGrid>.phase3ExpeditionPanel{
+  grid-column:1;grid-row:2;
+ }
+ .phase3IntegratedPreview .phase3CampGrid>.phase3CampStatus{
+  grid-column:1;grid-row:1;
+ }
+}
+/* Stacked mobile: vitals, portrait/gear, potions, stats, Expedition, Journey. */
+@media(max-width:700px){
+ .phase3IntegratedPreview .phase3CampGrid{
+  display:flex!important;flex-direction:column!important;gap:11px!important;
+ }
+ .phase3IntegratedPreview .phase3CampGrid>.phase3CampStatus{order:0;width:100%}
+ .phase3IntegratedPreview .phase3CampGrid>.phase3CampCharacter{
+  order:1;width:100%!important;max-width:none!important;
+  padding:9px 5px 11px;
+ }
+ .phase3IntegratedPreview .phase3CampGrid>.phase3ExpeditionPanel{
+  order:2;width:100%;max-width:none;
+ }
+ .phase3IntegratedPreview .phase3CampGrid .equipmentLoadout.phase3CampCharacter .paper{
+  height:445px!important;min-height:445px!important;
+  width:100%!important;max-width:none!important;
+ }
+ .phase3IntegratedPreview .phase3CampGrid .phase3CampCharacter .paper .slotTile{
+  width:66px!important;height:83px!important;padding:2px 1px!important;
+  gap:2px!important;
+ }
+ .phase3IntegratedPreview .phase3CampGrid .phase3CampCharacter .paper .slotTile .rarityImageFrame--slot{
+  width:54px!important;height:54px!important;flex-basis:54px;
+ }
+ .phase3IntegratedPreview .phase3CampGrid .phase3CampCharacter .paper .slotTile .rarityImageFrame>img{
+  --wf-art-size:33px;
+ }
+ .phase3IntegratedPreview .phase3CampGrid .phase3CampCharacter .paper .slotTile>span:not(.rarityImageFrame):not(.slotDLevel):not(.affinityBadge):not(.slotArmorType):not(.newBadge):not(.legendaryRankBadge){
+  font-size:9.5px!important;line-height:1.12!important;
+ }
+ .phase3IntegratedPreview .phase3CampGrid .phase3CampCharacter .paper .model{
+  inset:13% 20% 0!important;width:60%!important;height:87%!important;
+  transform:scale(1.16)!important;
+ }
+ .phase3IntegratedPreview .phase3CampCharacter .phase3CampHeroVitals .phase3ResourcePanel{
+  margin:0!important;
+ }
+ .phase3IntegratedPreview .phase3CampCharacter .phase3PotionSlots{
+  max-width:100%!important;gap:4px!important;
+ }
+ .phase3IntegratedPreview .phase3CampCharacter .phase3PotionSlot{
+  min-height:78px!important;
+ }
+ .phase3IntegratedPreview .phase3CampCharacter .phase3CampStatRow{gap:3px}
+ .phase3IntegratedPreview .phase3CampCharacter .phase3CampStat{
+  padding:6px 2px;
+ }
+ .phase3IntegratedPreview .phase3CampCharacter .phase3CampStat span{font-size:9px}
+ .phase3IntegratedPreview .phase3CampFooter{margin:12px 0 0}
+ .phase3IntegratedPreview .phase3CampStickyStart{
+  display:block;position:fixed;
+  inset:auto 0 0;z-index:90;
+  padding:9px max(12px,env(safe-area-inset-left)) calc(9px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-right));
+  background:linear-gradient(180deg,transparent,#150d17 20%,#150d17 100%);
+  box-shadow:0 -7px 24px #0009;
+ }
+ .phase3IntegratedPreview .phase3CampStickyStart .phase3Start{
+  display:block;width:100%;max-width:560px;margin:0 auto;
+  min-height:53px;
+ }
+ .phase3IntegratedPreview:has(.phase3CampStickyStart) .container{
+  padding-bottom:calc(106px + env(safe-area-inset-bottom));
+ }
+}
+/* Compact phones: never squeeze 5 labels against the model or screen edge. */
+@media(max-width:380px){
+ .phase3IntegratedPreview .phase3CampGrid .phase3CampCharacter .paper .slotTile{width:60px!important}
+ .phase3IntegratedPreview .phase3CampGrid .phase3CampCharacter .paper .slotTile .rarityImageFrame--slot{
+  width:50px!important;height:50px!important;flex-basis:50px;
+ }
+ .phase3IntegratedPreview .phase3CampCharacter .phase3CampStatRow{gap:2px}
+ .phase3IntegratedPreview .phase3CampCharacter .phase3CampStat span{font-size:8px}
+}
