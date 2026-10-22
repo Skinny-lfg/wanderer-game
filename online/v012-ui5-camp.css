@@ -233,7 +233,7 @@
   background:transparent!important;
 }
 .phase3IntegratedPreview .phase3CampSideStats .phase3CampCharacterStats h3{
-  font:600 15px/1.2 Georgia,serif;color:#ecd5b0;margin:7px 0;
+  font:600 15px/1.2 var(--font-head);color:#ecd5b0;margin:7px 0;
 }
 .phase3IntegratedPreview .phase3CampSideStats .phase3CampStatRow{
   display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;

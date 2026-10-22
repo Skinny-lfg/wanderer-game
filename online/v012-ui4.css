@@ -3,10 +3,11 @@
  --ui4-ink:#e9dfd9;--ui4-muted:#c5b7b3;--ui4-surface:#251a20;--ui4-surface-raised:#33232a;
  --ui4-edge:#785760;--ui4-iron:#66544d;--ui4-ember:#a65550;--ui4-accent:#d6b37c;
  --ui4-focus:#f5d594;--ui4-space:8px;--ui4-radius:8px;
- --ui4-head:Georgia,'Palatino Linotype',serif;
+ --ui4-head:var(--font-head);
  color:var(--ui4-ink);
 }
 .phase3IntegratedPreview :is(h1,h2,h3){font-family:var(--ui4-head)}
+.phase3IntegratedPreview h1{font-family:var(--font-display)}
 .phase3IntegratedPreview :is(.panel,.merchantCompactCard,.potionOffer,.phase3AffinityChoice,.phase5GearGroup){border-color:var(--ui4-edge)}
 .phase3IntegratedPreview :is(.phase3CityCenter,.phase3AffinityShrine,.phase5VisualSummary){
  background:linear-gradient(145deg,#30212a,#1c151d 90%);

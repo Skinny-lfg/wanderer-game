@@ -11,14 +11,14 @@
 .phase1Offer{padding:0;text-align:left;overflow:hidden;background:#1b1720;border:1px solid #735a66;border-radius:12px}
 .phase1Offer img{width:100%;height:144px;object-fit:cover;display:block}
 .phase1OfferBody{display:grid;gap:7px;padding:13px}
-.phase1Offer strong{color:#f2ddb7;font:700 17px Georgia,serif}
+.phase1Offer strong{color:#f2ddb7;font:700 17px var(--font-head)}
 .phase1OfferMeta{display:flex;flex-wrap:wrap;gap:5px}
 .phase1OfferMeta > span{font-size:11px;color:#efdac1;background:#342933;border:1px solid #695264;border-radius:5px;padding:3px 6px}
 .phase1Offer:hover,.phase1Offer:focus-visible{border-color:#f2cd7c;outline:2px solid #a78056;outline-offset:1px}
 .phase1FamilyRow{display:flex;flex-wrap:wrap;gap:6px;margin:9px 0 14px}
 .phase1FamilyRow > span{padding:4px 9px;border:1px solid #8a6472;border-radius:999px;color:#ebc6ad;background:#37242d;font-size:12px}
 .phase1Experimental{border-left:3px solid #d9a75c;padding:9px 12px;background:#30232c;font-size:12px;color:#f1d9b7;margin:12px 0}
-.phase1CombatHeader{margin:0 0 9px;color:#f3d5a8;font-weight:700;font-family:Georgia,serif}
+.phase1CombatHeader{margin:0 0 9px;color:#f3d5a8;font-weight:700;font-family:var(--font-head)}
 @media(max-width:750px){.phase1Offers{grid-template-columns:1fr}.phase1Offer{display:grid;grid-template-columns:minmax(110px,38%) 1fr}.phase1Offer img{height:100%;min-height:130px}.phase1OfferBody{padding:10px}.phase1Intro{grid-template-columns:minmax(0,1fr) 120px}}
 @media(max-width:390px){.phase1Intro{grid-template-columns:1fr}.phase1Intro img{display:none}.phase1Offer{grid-template-columns:110px minmax(0,1fr)}.phase1Offer strong{font-size:14px}.phase1OfferMeta span{font-size:10px}}
 
@@ -28,7 +28,7 @@
 .phase1DraftCards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0}
 .phase1DraftCard{display:flex;flex-direction:column;align-items:flex-start;gap:10px;text-align:left;min-height:150px;padding:17px 15px;
  background:linear-gradient(150deg,#39232e,#1c1720);color:#f3e5d4;border:1px solid #795262;border-radius:12px}
-.phase1DraftCard strong{font:700 20px Georgia,serif;color:#f1d4a3}
+.phase1DraftCard strong{font:700 20px var(--font-head);color:#f1d4a3}
 .phase1DraftCard small{font-size:13px;line-height:1.55;color:#d8c3c1}
 .phase1DraftCard:hover,.phase1DraftCard:focus-visible{border-color:#edc785;outline:2px solid #c39967;outline-offset:2px}
 .phase1DraftCard .affinityGlyph{width:42px;height:42px;display:inline-block}
@@ -55,7 +55,7 @@
 .phase3RouteHeading h3{margin:0;color:#f0d8ac}
 .phase3RouteHeading button{min-height:40px}
 .phase3Preparation{padding:12px 14px;margin:12px 0 14px;background:linear-gradient(105deg,#30232e,#1b1b28);border:1px solid #846675;border-radius:11px}
-.phase3Preparation h3{font:700 17px Georgia,serif;color:#e9d0a2;margin:0 0 5px}
+.phase3Preparation h3{font:700 17px var(--font-head);color:#e9d0a2;margin:0 0 5px}
 .phase3Preparation p{line-height:1.45;margin:5px 0 12px}
 .phase3Preparation button:disabled{opacity:.44;cursor:default}
 .phase3Passives{background:#201c29;border:1px solid #655368;border-radius:9px;padding:11px 14px;margin:12px 0}
@@ -138,7 +138,7 @@
 .phase3ExpeditionPanel ul{padding-left:18px;color:#d9c9c5;font-size:13px;line-height:1.7;margin:18px 0}
 .phase3Difficulty{display:grid;gap:5px;color:#cfbca7;font-size:12px}
 .phase3Difficulty select{width:100%;max-width:100%;background:#251922;color:#f0d8b5;border:1px solid #795e49;border-radius:6px;padding:9px}
-.phase3Start{width:100%;min-height:52px;font:700 20px Georgia,serif}
+.phase3Start{width:100%;min-height:52px;font:700 20px var(--font-head)}
 .phase3SaveInfo,.phase3Journey{font-size:12px;color:#ccbabb;padding:12px 0}
 .phase3SaveInfo{border-top:1px solid #73553d}
 .phase3SaveInfo p{margin:8px 0 0;max-width:780px}

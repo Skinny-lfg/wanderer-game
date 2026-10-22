@@ -3,7 +3,7 @@
  --ui4c-space:8px;--ui4c-card:#221820;--ui4c-card-raised:#302128;--ui4c-line:#72545c;--ui4c-accent:#d4b17a;
 }
 .phase3IntegratedPreview .phase3PermanentStats{margin:12px 0 4px;padding:10px;background:#17121a;border:1px solid var(--ui4c-line);border-radius:8px}
-.phase3IntegratedPreview .phase3PermanentStats:before{content:'Character Stats';display:block;margin:0 0 8px;font:600 16px Georgia,serif;color:#ebd3a8}
+.phase3IntegratedPreview .phase3PermanentStats:before{content:'Character Stats';display:block;margin:0 0 8px;font:600 16px var(--font-head);color:#ebd3a8}
 .phase3IntegratedPreview .phase3StatGrid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px}
 .phase3IntegratedPreview .phase3StatCell{display:grid;gap:2px;min-width:0;padding:6px 8px;background:#211820;border:1px solid #563f4b;border-radius:6px}
 .phase3IntegratedPreview .phase3StatCell span{font-size:10px;color:#cbbac0}
