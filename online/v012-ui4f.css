@@ -4,7 +4,7 @@
 }
 /* Screen-level surfaces share one restrained metal edge; nested cards stay light. */
 .phase3IntegratedPreview :is(
-  #screen>.panel,
+  #screen>.panel:not(.phase3Camp),
   #screen>.combatLayout>.panel,
   #screen>.equipmentLayout>.equipmentLeft>.panel,
   #screen>.equipmentLayout>.equipmentRight>.panel
