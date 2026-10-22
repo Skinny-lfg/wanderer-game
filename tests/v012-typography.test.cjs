@@ -15,7 +15,7 @@ test('UI typography uses display, heading and body families with a loading fallb
  assert.match(core,/--font-body:'Alegreya Sans',system-ui/);
  assert.match(core,/body\{[^}]*font:14px\/1\.45 var\(--font-body\)/);
  assert.match(core,/button\{font-family:var\(--font-head\)\}/);
- assert.match(ui4,/\.phase3IntegratedPreview h1\{font-family:var\(--font-display\)\}/);
+ assert.match(ui4,/\.phase3IntegratedPreview h1\{font-family:var\(--font-display\);font-weight:500\}/);
  assert.match(core,/h1\{font-family:var\(--font-display\);font-weight:500;line-height:1\.14\}/);
  assert.match(entry,/class="logo brandLogo"/);
 });

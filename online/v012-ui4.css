@@ -1,13 +1,17 @@
 /* UI.4 shared visual tokens and surfaces; UI.4b provides the active 9-slice trim. */
+@font-face{font-family:"Grenze";src:url("../assets/ui-kit/fonts/Grenze-Variable.ttf") format("truetype");font-style:normal;font-weight:100 900;font-display:swap}
+@font-face{font-family:"Alegreya Sans";src:url("../assets/ui-kit/fonts/AlegreyaSans-Regular.ttf") format("truetype");font-style:normal;font-weight:400;font-display:swap}
 .phase3IntegratedPreview{
  --ui4-ink:#e9dfd9;--ui4-muted:#c5b7b3;--ui4-surface:#251a20;--ui4-surface-raised:#33232a;
  --ui4-edge:#785760;--ui4-iron:#66544d;--ui4-ember:#a65550;--ui4-accent:#d6b37c;
  --ui4-focus:#f5d594;--ui4-space:8px;--ui4-radius:8px;
- --ui4-head:var(--font-head);
+ --ui4-head:var(--font-head);--ui4-body:var(--font-body);
+ font-family:var(--ui4-body);
  color:var(--ui4-ink);
 }
-.phase3IntegratedPreview :is(h1,h2,h3){font-family:var(--ui4-head)}
-.phase3IntegratedPreview h1{font-family:var(--font-display)}
+.phase3IntegratedPreview :is(h1,h2,h3){font-family:var(--ui4-head);font-weight:500}
+.phase3IntegratedPreview h1{font-family:var(--font-display);font-weight:500}
+.phase3IntegratedPreview button{font-family:var(--font-head)}
 .phase3IntegratedPreview :is(.panel,.merchantCompactCard,.potionOffer,.phase3AffinityChoice,.phase5GearGroup){border-color:var(--ui4-edge)}
 .phase3IntegratedPreview :is(.phase3CityCenter,.phase3AffinityShrine,.phase5VisualSummary){
  background:linear-gradient(145deg,#30212a,#1c151d 90%);
@@ -235,8 +239,8 @@
 /* Ornate HP/Mana frames: the progressbar's existing width remains authoritative. */
 .phase3IntegratedPreview .phase3ResourceTrack{position:relative;isolation:isolate;overflow:visible}
 .phase3IntegratedPreview .phase3ResourceTrack::after{
- content:"";position:absolute;inset:-2px;z-index:2;pointer-events:none;
- background-position:center;background-size:100% 100%;background-repeat:no-repeat;
+ content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
+ background-position:center;background-size:contain;background-repeat:no-repeat;
 }
 .phase3IntegratedPreview .phase3Resource.health .phase3ResourceTrack::after{
  background-image:url("../assets/ui-kit/original/hud/01_health_bar_empty.png");

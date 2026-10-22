@@ -20,13 +20,13 @@ test('Inventory has a single Stash grid for equipment and owned potions',()=>{
  assert.match(inventory,/\.stashGrid>\.potionStackTile/);
 });
 test('Camp and Inventory keep three potion slots in the same portrait grid',()=>{
- assert.match(html,/function phase3PaperMarkup\(withPotions=false\)/);
- assert.match(html,/phase3PaperMarkup\(true\)/);
- assert.match(camp,/\.paper>\.phase3PotionSlots\s*\{\s*display:contents!important/);
+ assert.match(html,/function phase3PaperMarkup\(camp=false,stats=phase2Stats\(\),withPotions=camp\)/);
+ assert.match(html,/phase3PaperMarkup\(true,stats\)/);
+ assert.match(camp,/\.paper>\.phase3PotionSlots\s*\{[^}]*grid-column:1\/4!important/);
  assert.match(inventory,/\.paper>\.phase3PotionSlots\s*\{\s*display:contents!important/);
  assert.match(camp,/grid-row:6!important/);
  assert.match(inventory,/grid-row:6!important/);
- assert.match(camp,/grid-template-rows:repeat\(5,var\(--camp-slot-row\)\) 78px/);
+ assert.match(camp,/grid-template-rows:repeat\(5,var\(--camp-slot-row\)\) 68px/);
  assert.match(inventory,/grid-template-rows:repeat\(5,var\(--gear-row\)\) 78px/);
 });
 test('Potion selection reserves owned stacks visually without changing stored stock',()=>{
@@ -45,8 +45,8 @@ test('Potion selection reserves owned stacks visually without changing stored st
 test('Unified portrait still contains ten equipment and exactly three potion slots',()=>{
  const definition=functionSource('function phase3PaperMarkup(','function phase3VitalsMarkup(');
  const slots=['weapon','offhand','helm','armor','gloves','amulet','belt','ring1','ring2','boots'];
- const names=['SLOTS','SNAME','state','ARMOR_SLOTS','ARMOR_TYPES','isTwoHanded','slotFilter','selectedId','rarityFrame','esc','rarityArt','itemImg','placeholderIcon','affinityBadge','newBadge','legendaryRankBadge','phase6LoadoutMarkup','heroFullImage'];
- const values=[slots,{}, {equip:{}},[],[],()=>false,'all',null,()=>'',String,()=>'<i></i>',()=>'',()=>'',()=>'',()=>'',()=>'',()=>'<div class="phase3PotionSlots">'+Array(3).fill('<div class="phase3PotionSlot"></div>').join('')+'</div>',()=>'' ];
+ const names=['SLOTS','SNAME','state','ARMOR_SLOTS','ARMOR_TYPES','isTwoHanded','slotFilter','selectedId','rarityFrame','esc','rarityArt','itemImg','placeholderIcon','affinityBadge','newBadge','legendaryRankBadge','phase6LoadoutMarkup','heroFullImage','phase2Stats','phase3CampDisplayName','phase3VitalsMarkup'];
+ const values=[slots,{}, {equip:{}},[],[],()=>false,'all',null,()=>'',String,()=>'<i></i>',()=>'',()=>'',()=>'',()=>'',()=>'',()=>'<div class="phase3PotionSlots">'+Array(3).fill('<div class="phase3PotionSlot"></div>').join('')+'</div>',()=>'',()=>({}),()=> 'wanderer',()=>'<div class="phase3ResourcePanel"></div>'];
  const render=new Function(...names,definition+'return phase3PaperMarkup;')(...values);
  assert.equal((render(true).match(/data-eqslot=/g)||[]).length,10);
  assert.equal((render(true).match(/class="phase3PotionSlot"/g)||[]).length,3);
