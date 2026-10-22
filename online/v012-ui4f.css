@@ -101,7 +101,8 @@
   width:100%!important;height:100%!important;
   max-width:100%!important;max-height:100%!important;
   min-width:0!important;min-height:0!important;
-  padding:15%!important;
+  /* More of the illustration is visible inside the same 1:1 frame. */
+  padding:7%!important;
   box-sizing:border-box;
   object-fit:contain!important;
   background:none!important;
@@ -186,3 +187,19 @@
 }
 /* Only touch the presentation layer; selected and focus-visible outlines
    remain visible for keyboard/touch accessibility. */
+
+/* UI.4h: Empty potion placeholders stay neutral and subdued.
+   This affects only empty loadout slots, never real owned potions. */
+.phase3IntegratedPreview .rarityImageFrame.potionPlaceholder{
+  --wf-rarity-fill:#211e20;
+}
+.phase3IntegratedPreview .rarityImageFrame.potionPlaceholder>i{
+  background:#211e20!important;
+}
+.phase3IntegratedPreview .rarityImageFrame.potionPlaceholder>img{
+  filter:grayscale(1)!important;
+  opacity:.25!important;
+}
+.phase3IntegratedPreview .rarityImageFrame.potionPlaceholder::after{
+  filter:grayscale(1) brightness(.82)!important;
+}
