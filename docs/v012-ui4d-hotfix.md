@@ -18,3 +18,9 @@ The isolated browser fixture recorded the payload before Merchant entry (`profil
 - Safari/WebKit: **pending** — this Linux environment has neither Safari nor Playwright WebKit installed. Firefox is also unavailable here.
 
 No balance, gameplay, prices, stock generation, restock cost or save data outside the test's isolated `validationSlot` was changed.
+
+## Restock follow-up
+
+The `New <category> stock` action now replaces only the four offers in the selected tab. The existing restock price and refresh counter are unchanged; the other eight item IDs remain stable. A category refresh fails closed without charging if its four-slot pool is malformed. The no-category runtime API retains whole-shop restock behavior for existing callers.
+
+Follow-up checks: the new category-restock unit case **PASS**; UI.3 browser regression **PASS** at all six viewports and now asserts only the active category changes. `v012-economy.test.cjs` **PASS 7/7**. The broader legacy equipment test remains **PARTIAL (13/14)** due its existing `window is not defined` Belt harness failure. The legacy economy browser test times out on its obsolete `[data-phase3-nav="forge"]` selector before reaching Merchant; UI.3 covers the current City Center restock flow.

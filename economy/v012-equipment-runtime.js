@@ -156,12 +156,18 @@ function economyOwnedItem(id){return ports.economyOwnedGear().find(item=>item.id
 
 function economyCanAct(){return !ports.phase3NeedsBagResolution()&&!!ports.state&&!ports.state.run&&!ports.saveBlocked&&(!ports.PHASE1_PREVIEW||(!ports.phase1Draft&&['camp','finished','failed'].includes(ports.phase1Controller?.state.stage)));}
 
-function refreshMerchantStock(kind='gear'){
- if(kind!=='gear'||!ports.economyCanAct()||!ports.state.merchant||ports.state.gold<ports.state.merchant.refreshCost)return;
+function refreshMerchantStock(kind='gear',category=null){
+ if(kind!=='gear'||!ports.economyCanAct()||!ports.state.merchant||ports.state.gold<ports.state.merchant.refreshCost||category!==null&&!Object.prototype.hasOwnProperty.call(MERCHANT_CATEGORIES,category))return;
  const merchant=ports.state.merchant;
- ports.state.gold-=merchant.refreshCost;
- {
-  const level=ports.merchantTier();
+ const level=ports.merchantTier();
+ if(category){
+  const slots=MERCHANT_CATEGORIES[category],indices=merchant.stock.map((item,index)=>slots.includes(item?.slot)?index:-1).filter(index=>index>=0);
+  if(indices.length!==4)return;
+  const replacements=indices.map(()=>merchantItem(level,category));
+  ports.state.gold-=merchant.refreshCost;
+  indices.forEach((index,position)=>{merchant.stock[index]=replacements[position];});
+ }else{
+  ports.state.gold-=merchant.refreshCost;
   merchant.stock=merchantStock(level);
  }
  merchant.refreshes=(Number(merchant.refreshes)||0)+1;

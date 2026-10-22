@@ -1534,7 +1534,7 @@ function renderMerchant(){
    '<button class="tiny primary" data-buy="'+esc(o.id)+'" '+(state.gold<o.goldPrice||!stashHasRoom()?'disabled':'')+'>Buy</button></div>'+
    '</article>';
  }).join(''):'<p class="small muted">No items in this category. Refresh the merchant to see more items.</p>')+
- '</div><div class="merchantSigilFooter"><button class="ghost tiny" id="refreshShop" '+(state.gold<m.refreshCost?'disabled':'')+'>New equipment stock · '+m.refreshCost+' '+uiIcon('gold')+' Gold</button><span class="small muted">Only refreshes equipment.</span></div></section><div class="merchantSecondaryGrid"><div id="merchantSigilHost"></div></div>');
+ '</div><div class="merchantSigilFooter"><button class="ghost tiny" id="refreshShop" '+(state.gold<m.refreshCost?'disabled':'')+'>New '+({weapons:'Weapons',armor:'Armor',accessories:'Accessories'}[phase3MerchantCategory])+' stock · '+m.refreshCost+' '+uiIcon('gold')+' Gold</button><span class="small muted">Refreshes this category only.</span></div></section><div class="merchantSecondaryGrid"><div id="merchantSigilHost"></div></div>');
 
  Q('[data-merchant-category]').forEach(button=>button.onclick=()=>{const next=button.dataset.merchantCategory;if(!['weapons','armor','accessories'].includes(next)||next===phase3MerchantCategory)return;phase3MerchantCategory=next;if(view==='city-center'){const host=$('cityServiceContent');if(!host)return;phase3ContentTarget=host;try{renderMerchant();}finally{phase3ContentTarget=null;}}else renderMerchant();});
  Q('[data-compare]').forEach(button=>button.onclick=()=>{
@@ -1558,7 +1558,7 @@ function renderMerchant(){
    if(!purchaseEquipment(m,i,item))return;if(view==='city-center')phase3RenderCityCenter();else renderMerchant();bannerMessage('Bought '+item.name+' — check Stash');
   },'Buy for '+item.goldPrice+' Gold');
  });
- $('refreshShop').onclick=()=>refreshMerchantStock('gear');
+ $('refreshShop').onclick=()=>refreshMerchantStock('gear',phase3MerchantCategory);
 }
 function estimateEnemy(level,n=1){return WandererV012CombatCore.estimateEnemy(level,n);}
 // Predict the whole dungeon instead of comparing a single attack stat to wave one.

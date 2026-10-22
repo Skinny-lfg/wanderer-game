@@ -47,6 +47,16 @@ test('Merchant always stocks four Weapons, four Armor and four Accessories',()=>
  check();a.refresh('gear');check();
  const item=state.merchant.stock[0];const category=Object.values(groups).find(slots=>slots.includes(item.slot));a.buy(0);check();assert(category.includes(state.merchant.stock[0].slot));
 });
+test('Merchant category restock replaces only the active four offers at the existing full-restock price',()=>{
+ const a=create(912),state=a.state();state.gold=100000;a.rollShop();
+ const groups={weapons:['weapon','offhand'],armor:['helm','armor','gloves','boots','belt'],accessories:['ring1','ring2','amulet']};
+ const ids=category=>state.merchant.stock.filter(item=>groups[category].includes(item.slot)).map(item=>item.id),before=Object.fromEntries(Object.keys(groups).map(category=>[category,ids(category)]));
+ const gold=state.gold,cost=state.merchant.refreshCost,refreshes=state.merchant.refreshes;a.refresh('gear','armor');
+ assert.equal(state.gold,gold-cost);assert.equal(state.merchant.refreshes,refreshes+1);
+ assert.notDeepEqual(ids('armor'),before.armor);assert.deepEqual(ids('weapons'),before.weapons);assert.deepEqual(ids('accessories'),before.accessories);
+ for(const [category,slots]of Object.entries(groups))assert.equal(state.merchant.stock.filter(item=>slots.includes(item.slot)).length,4,category);
+ const unchanged=JSON.stringify(state.merchant.stock),remaining=state.gold;a.refresh('gear','unknown');assert.equal(JSON.stringify(state.merchant.stock),unchanged);assert.equal(state.gold,remaining);
+});
 test('Merchant sells a Belt; obsolete Sigil rerolls cannot spend Gold',()=>{
  const a=create(9),s=a.state();s.gold=10000;a.rollShop();
  const belt=a.makeItem(1,'belt',null,'merchant','Leather','Rare');belt.goldPrice=a.merchantCost(belt);s.merchant.stock=[belt];
