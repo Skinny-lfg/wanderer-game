@@ -27,7 +27,7 @@ const fixture=String.raw`if(PHASE1_PREVIEW){
   step:()=>{const g=phase1Controller.state;if(phase4Resume){phase4ResumeRealm();return;}
    if(phase1Draft?.step==='passive'){phase2ChoosePassive(phase1Draft.options[0].id);return;}
    if(phase1Draft?.step==='element'){phase2ChooseElement('fire');return;}
-   if(phase5Results.review){phase5ExitResult();return;}
+   if(phase5Results.review||state.run?.status==='cleared'&&!phase1Draft){phase5ExitResult();return;}
    if(g.stage==='choice'){if(!g.initialFamily){phase2ChooseInitial('blood');return;}while(phase3BagOverflow())phase3DiscardLoot(phase3BagItems().at(-1).id);phase1Choose(g.offers[0].id);phase1Enter();return;}
    if(phase6Run?.event){phase6EventChoice(2);return;}
    const r=state.run;if(r?.status==='fight')for(let i=0;i<3000&&state.run===r&&r.status==='fight';i++)updateFight();},
@@ -104,7 +104,7 @@ async function noRealWrites(page){
    const current=await snapshot(page);if(current.stage==='finished')break;
    assert(current.families.length<=3);await page.evaluate(()=>__saveAudit.step());await page.waitForTimeout(10);
   }
-  after=await snapshot(page);assert.equal(after.stage,'finished');assert.equal(after.unlocked,2);assert.equal(after.status.outcome,'victory');
+  after=await snapshot(page);assert.equal(after.stage,'finished',JSON.stringify({stage:after.stage,plane:after.plane,wave:after.wave,families:after.families,status:after.status}));assert.equal(after.unlocked,2);assert.equal(after.status.outcome,'victory');
   await page.locator('[data-rune-choice]').first().click();const owned=(await snapshot(page)).runes.length;
   before=await snapshot(page);await page.reload();await page.waitForFunction(()=>WandererGame.validationStatus().ready);
   after=await snapshot(page);assert.equal(after.runes.length,owned);assert.equal(after.unlocked,2);assert.deepEqual(after.onlineProgress,initial.onlineProgress);
@@ -118,19 +118,19 @@ async function noRealWrites(page){
  const fresh=await snapshot(page);assert.equal(fresh.gold,0);assert.equal(fresh.fragments,0);assert.equal(fresh.unlocked,1);assert.equal((await page.evaluate(()=>__saveAudit.stored())).migration,null);
  await page.evaluate(()=>{localStorage.setItem(WandererGame.validationStatus().key,'{CORRUPT');});await page.reload();
  await page.getByRole('alert').waitFor();assert.equal(await page.evaluate(()=>WandererGame.validationStatus().blocked),true);
- assert.equal(await page.evaluate(()=>localStorage.getItem('wanderer_v012_validation_v1_new')),'{CORRUPT');await noRealWrites(page);
+ assert.equal(await page.evaluate(()=>localStorage.getItem(WandererGame.validationStatus().key)),'{CORRUPT');await noRealWrites(page);
  await context.close();console.log('PASS Phase 5 new profile and corruption fail closed; real-save sentinels untouched');
  const quotaContext=await browser.newContext(),quotaPage=await prepare(quotaContext,base,1280);
  await ready(quotaPage,base+'/?expeditionPhase1=1&expeditionSave=1&validationSlot=quota');
  const durable=await quotaPage.evaluate(()=>localStorage.getItem(WandererGame.validationStatus().key));
- await quotaPage.evaluate(()=>{const original=Storage.prototype.setItem;Storage.prototype.setItem=function(key,value){if(key.startsWith('wanderer_v012_validation_v1_'))throw new DOMException('Fixture disk full','QuotaExceededError');return original.call(this,key,value);};});
+ await quotaPage.evaluate(()=>{const original=Storage.prototype.setItem;Storage.prototype.setItem=function(key,value){if(key.startsWith('wanderer_v012_endless_v1_'))throw new DOMException('Fixture disk full','QuotaExceededError');return original.call(this,key,value);};});
  await quotaPage.locator('[data-online-action="account"]').click();await quotaPage.locator('[data-phase1-hero="ranger"]').click();await quotaPage.getByRole('alert').waitFor();
- assert.equal(await quotaPage.evaluate(()=>localStorage.getItem('wanderer_v012_validation_v1_quota')),durable);
+ assert.equal(await quotaPage.evaluate(()=>localStorage.getItem(WandererGame.validationStatus().key)),durable);
  assert.equal(await quotaPage.locator('#phase5Export').count(),1);await noRealWrites(quotaPage);await quotaContext.close();
  const unsupportedContext=await browser.newContext();await unsupportedContext.addInitScript(()=>Object.defineProperty(navigator,'locks',{value:undefined}));
  const unsupported=await prepare(unsupportedContext,base,1280);await unsupported.goto(base+'/?expeditionPhase1=1&expeditionSave=1&validationSlot=unsupported');
  await unsupported.getByRole('alert').waitFor();assert((await unsupported.getByRole('alert').innerText()).includes('Web Locks'));
- assert.equal(await unsupported.evaluate(()=>localStorage.getItem('wanderer_v012_validation_v1_unsupported')),null);await noRealWrites(unsupported);await unsupportedContext.close();
+ assert.equal(await unsupported.evaluate(()=>localStorage.getItem(WandererGame.validationStatus().key)),null);await noRealWrites(unsupported);await unsupportedContext.close();
  console.log('PASS Phase 5 quota failure retains durable save and export; unsupported writer locking fails closed');
  }finally{await browser.close();await new Promise(resolve=>server.close(resolve));}
 })().catch(e=>{console.error(e);process.exitCode=1;server.close();});

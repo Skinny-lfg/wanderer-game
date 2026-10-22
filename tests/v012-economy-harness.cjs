@@ -7,7 +7,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
  if(!source.includes(boot))throw Error('Integrated bootstrap not found');
  let next=seed>>>0;const math=Object.create(Math);math.random=()=>{next=(Math.imul(next,1664525)+1013904223)>>>0;return next/4294967296;};
  const callbacks=[],nodes=new Map();
- const node=()=>({innerHTML:'',textContent:'',style:{},dataset:{},classList:{add(){},remove(){}},focus(){},querySelectorAll:()=>[],close(){}});
+ const node=()=>({innerHTML:'',textContent:'',style:{},dataset:{},classList:{add(){},remove(){}},focus(){},querySelectorAll:()=>[],before(){},close(){}});
  const getNode=id=>{if(!nodes.has(id))nodes.set(id,node());return nodes.get(id);};
  const queryAll=selector=>{
   if(selector!=='[data-buy]')return [];
@@ -19,6 +19,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
   document:{body:node(),visibilityState:'visible',getElementById:getNode,querySelector:()=>null,querySelectorAll:queryAll,createElement:node},
   localStorage:{getItem(){throw Error('Unexpected save read');},setItem(){throw Error('Unexpected save write');}},
   setTimeout:fn=>{callbacks.push(fn);return callbacks.length;},clearTimeout(){},setInterval:()=>0,clearInterval(){}};
+ sandbox.window=sandbox;
  const inject=String.raw`
  const auditForge=renderForge,auditMerchant=renderMerchant,auditCombat=renderCombat;
  let auditConfirmation=null,auditFeedback=null;

@@ -10,12 +10,13 @@ const fixture=[
  "phase1Init();state.equip.weapon=makeItem(200,'weapon',null,'loot','Sword','Rare');",
  "for(const slot of ['helm','armor','gloves','boots','amulet','ring1','ring2','belt'])state.equip[slot]=makeItem(200,slot,null,'loot','random','Rare');",
  "state.equip.offhand=makeItem(200,'offhand',null,'loot','Shield','Rare');state.gold=20000;state.fragments=20000;",
- "globalThis.__audit={start:()=>phase1Begin(1),state:()=>({stage:phase1Controller.state.stage,realm:phase1Controller.state.planeIndex,completed:phase1Controller.state.history.length,event:phase1Controller.state.selected?.event||null,active:!!state.run,bag:phase3BagItems().length,overflow:phase3BagOverflow(),capacity:PHASE3_BAG_CAPACITY,unlock:phase1Controller.state.unlocked,reserved:(phase1Controller.state.version===2?Object.values(phase1Controller.state.eventsByRealm):phase1Controller.state.eventIds).filter(Boolean).length,options:document.querySelectorAll('[data-event-choice], [data-phase1-event-choice]').length}),",
+ "globalThis.__audit={start:()=>phase1Begin(1),state:()=>({stage:phase1Controller.state.stage,realm:phase1Controller.state.planeIndex,completed:phase1Controller.state.history.length,event:phase1Controller.state.selected?.event||null,active:!!state.run,runStatus:state.run?.status||null,draft:phase1Draft?{kind:phase1Draft.kind,step:phase1Draft.step}:null,review:phase5Results.review,bag:phase3BagItems().length,overflow:phase3BagOverflow(),capacity:PHASE3_BAG_CAPACITY,unlock:phase1Controller.state.unlocked,offers:phase1Controller.state.offers?.length||0,families:phase1Controller.state.families,reserved:(phase1Controller.state.version===2?Object.values(phase1Controller.state.eventsByRealm):phase1Controller.state.eventIds).filter(Boolean).length,options:document.querySelectorAll('[data-event-select]').length+document.querySelectorAll('#eventDecline').length}),",
  "step:()=>{const g=phase1Controller.state;if(phase1Draft?.step==='element'){phase2ChooseElement('fire');return 'element';}",
  "if(phase1Draft?.step==='passive'){phase2ChoosePassive(phase1Draft.options[0].id);return 'passive';}",
  "if(phase5Results.review==='realm'&&!phase1Draft){phase5ExitResult();return 'exit';}",
+ "if(state.run?.status==='cleared'&&!phase1Draft){phase5ExitResult();return 'exit';}",
  "if(g.stage==='choice'){if(!g.initialFamily){phase2ChooseInitial('blood');return 'initial';}",
- "if(phase3BagItems().length>=6){const item=phase3BagItems()[0];if(item&&phase3CanPrepare()){phase3DiscardLoot(item.id);return 'discard';}}",
+ "if(phase3BagItems().length>=PHASE3_BAG_CAPACITY){const item=phase3BagItems()[0];if(item&&phase3CanPrepare()){phase3DiscardLoot(item.id);return 'discard';}}",
  "if(g.offers.length){const choice=g.planeIndex===1?g.offers.find(p=>p.family==='blood'):g.offers[0];phase1Choose(choice.id);phase1Enter();return 'enter';}}",
  "if(g.stage==='combat'&&g.selected?.event&&!state.run){phase6EventChoice(2);return 'event';}",
  "const r=state.run;if(r?.status==='fight'){for(let i=0;i<2500&&state.run===r&&r.status==='fight';i++)updateFight();return 'fight';}",
@@ -49,7 +50,7 @@ const server=http.createServer((req,res)=>{
    let events=0,drafts=0,discard=0,index=0;
    for(index=0;index<1300;index++){
     const state=await page.evaluate(()=>__audit.state());
-    assert.equal(state.capacity,6);
+    assert.equal(state.capacity,12);
     if(state.stage==='finished')break;
     assert.notEqual(state.stage,'failed','synthetic hero died');
     if(state.event)assert.equal(state.options,3,'two event offers plus refusal');

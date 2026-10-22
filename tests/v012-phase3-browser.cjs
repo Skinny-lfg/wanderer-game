@@ -8,7 +8,7 @@ const fixture=String.raw`if(PHASE1_PREVIEW){
  phase1Init();state.equip.weapon=makeItem(100,'weapon',null,'loot','Sword','Rare');
  state.consumables={health:1};state.potionSelection=['health'];
  globalThis.__phase3Audit={
- snapshot:()=>({stage:phase1Controller.state.stage,weapon:state.equip.weapon?.subtype,bag:phase3BagItems().length,overflow:phase3BagOverflow(),hp:phase3Vitals().hp}),
+ snapshot:()=>({stage:phase1Controller.state.stage,weapon:state.equip.weapon?.subtype,equippedWeaponId:state.equip.weapon?.id,bag:phase3BagItems().length,bagIds:phase3BagItems().map(item=>item.id),overflow:phase3BagOverflow(),hp:phase3Vitals().hp}),
  finish:()=>{if(state.run)weaponAttack(state.run);while(state.run){state.run.enemy.hp=0;phase1WaveWon();if(state.run&&state.run.status!=='fight')break;}},
  loot:()=>{const item=makeItem(100,'weapon',null,'loot','Mace','Epic');state.stash.push(item);phase3LootIds.add(item.id);renderPhase1();return item.id;},
  injure:()=>{phase1Vitals.hp=phase3Vitals().maxhp/2;renderPhase1();},
@@ -56,18 +56,18 @@ async function run(){
    await page.locator('[data-phase2-initial="blood"]').click();
    assert.equal(await page.locator('[data-potion-use]').count(),0,'no combat potions');
    await page.evaluate(()=>__phase3Audit.finish());await page.waitForTimeout(30);
-   await page.locator('dialog [data-popup-passive]').first().click();await page.locator('#phase5ExitResult').click();
-   assert.equal(await page.locator('.phase3PreparationLayout [data-eqslot]').count(),10);
+   await page.locator('dialog [data-popup-passive]').first().click();await page.locator('#phase5ExitRealm').click();
+   assert.equal(await page.locator('.phase3Between .phase3EquipmentDetails [data-eqslot]').count(),10);
    assert.equal(await page.evaluate(()=>__phase3Audit.illegal()),false,'global Stash item cannot equip during Expedition');
    const id=await page.evaluate(()=>__phase3Audit.loot());
-   const bagBefore=(await page.evaluate(()=>__phase3Audit.snapshot())).bag;await page.locator('[data-phase3-loot="'+id+'"]').click();
+   const bagBefore=await page.evaluate(()=>__phase3Audit.snapshot());await page.locator('.phase3BetweenBag').evaluate(node=>node.open=true);await page.locator('[data-phase3-loot="'+id+'"]').click();
    assert((await page.locator('dialog').innerText()).match(/Upgrade|Downgrade|Sidegrade/));
    await page.locator('[data-phase3-equip]').first().click();
    assert.equal((await page.evaluate(()=>__phase3Audit.snapshot())).weapon,'Mace');
-   assert.equal((await page.evaluate(()=>__phase3Audit.snapshot())).bag,bagBefore-1,'equipped loot is removed from bag');
+   const bagAfter=await page.evaluate(()=>__phase3Audit.snapshot());assert(!bagAfter.bagIds.includes(id),'equipped loot leaves the bag');assert(bagAfter.bagIds.includes(bagBefore.equippedWeaponId),'displaced equipment returns to the bag');assert.equal(bagAfter.weapon,'Mace');
    await page.evaluate(()=>__phase3Audit.injure());const hp=(await page.evaluate(()=>__phase3Audit.snapshot())).hp;
    await page.locator('[data-potion-use="0"]').click();assert((await page.evaluate(()=>__phase3Audit.snapshot())).hp>hp);
-   for(const nav of ['merchant','apothecary','forge'])assert(await page.locator('[data-phase3-nav="'+nav+'"]').isDisabled());
+   for(const nav of ['merchant','apothecary','forge'])assert.equal(await page.locator('[data-phase3-nav="'+nav+'"]').count(),0,'Camp navigation is unavailable inside the Expedition');
    assert.equal(await page.evaluate(()=>localStorage.getItem('wanderer_browser_proto_v01')),'SAVE_SENTINEL_KEEP');
    assert.equal(await page.evaluate(()=>localStorage.getItem('wanderer_account_browser_fixture')),'ACCOUNT_SENTINEL_KEEP');
    assert(!requests.some(url=>url.includes('/online/app.mjs')),'no cloud account module loaded');

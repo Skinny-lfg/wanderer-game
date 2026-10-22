@@ -2,77 +2,66 @@
 
 Data: 22 outubro 2026
 Branch: `development`
-UI.4 auditada: `4f7b12d0bb8cf603517fe8f2c32d8b0530437cb3`
-Estado: **PARTIAL — integração em `main` não recomendada até à revalidação dos fluxos de persistência e do teste de geometria mobile.**
+Estado: **PARTIAL — regressões Chromium resolvidas; integração em `main` fica NO-GO até validar Safari nos fluxos UI.4e e restantes ecrãs.**
 
 ## Estado das fases
 
-| Fase | Estado observado |
-|---|---|
-| UI.0 — correções críticas | Publicada; regressão Chromium 6/6 PASS |
-| UI.1 — Camp e Inventory | Publicada; regressão Chromium 6/6 PASS |
-| UI.2 — Combat e Between Realms | Publicada; regressão Chromium 5/5 PASS |
-| UI.3 — City Center, affinities e Extraction | Publicada; regressão Chromium 6/6 PASS |
-| UI.4 — UI Kit e polimento | Publicada; regressão Chromium 6/6 PASS; moldura 9-slice carregada |
-| C.3 — treasures | Browser regression em 390px e 1280px PASS |
-
-## Auditoria visual
-
-As capturas recentes mostram Camp, Inventory, Merchant, Extraction, Combat, Between Realms, Blacksmith, Apothecary, affinities, passivos e eventos. Os testes UI.0–UI.4 cobrem 1440×900, 1280×720, 1024×768, 768×1024, 390×844 e 360×800, conforme a fase. Não houve scroll horizontal nos fluxos cobertos. A UI.2 isolada usa cinco larguras e ainda não foi repetida em 1440px.
-
-| Ecrã | Capturas atuais |
-|---|---|
-| Camp / Inventory | [Camp 1280](ui4-screenshots/camp-after-1280.png), [Camp 390](ui4-screenshots/camp-after-390.png), [Inventory 1280](ui4-screenshots/inventory-after-1280.png), [Inventory 390](ui4-screenshots/inventory-after-390.png) |
-| City Center | [Blacksmith 1280](ui5-screenshots/wanderer-ui3-blacksmith-1280.png), [Merchant 1280](ui4-screenshots/merchant-after-1280.png), [Merchant 390](ui4-screenshots/merchant-after-390.png), [Apothecary 390](ui5-screenshots/wanderer-ui3-apothecary-390.png) |
-| Shrine / affinities | [Affinities 1280](ui5-screenshots/wanderer-ui3-affinities-1280.png), [Affinities 390](ui5-screenshots/wanderer-ui3-affinities-390.png) |
-| Combat / Between Realms | [Combat 1280](ui5-screenshots/wanderer-ui2-combat-1280.png), [Combat 390](ui5-screenshots/wanderer-ui2-combat-390.png), [Between 1280](ui5-screenshots/wanderer-ui2-between-1280.png), [Between 390](ui5-screenshots/wanderer-ui2-between-390.png) |
-| Passivos / eventos | [Passivos 390](ui5-screenshots/passives-390.png), [Evento 1280](ui5-screenshots/events-1280.png), [Evento 390](ui5-screenshots/events-390.png) |
-| Extraction | [Extraction 1280](ui4-screenshots/extraction-after-1280.png), [Extraction 390](ui4-screenshots/extraction-after-390.png) |
-
-As capturas foram feitas com Chromium e estado local sintético. Algumas capturas mobile incluem o menu de conta aberto pelo fixture; ele não bloqueou as verificações de layout, mas essas imagens não representam uma composição de menu fechado.
-
-## Funcionalidade e testes
-
-| Verificação | Resultado |
-|---|---|
-| Regressões browser UI.0, UI.1, UI.2, UI.3, UI.4 | PASS: 6/6, 6/6, 5/5, 6/6, 6/6 |
-| C.3 treasures: imagem, Stash, Sell All, resumo | PASS: 390px e 1280px |
-| Merchant: 4 ofertas/categoria, alternância sem stock novo, Compare, Buy, Restock | PASS em UI.3 browser regression |
-| Blacksmith Craft / Apothecary Buy e Reroll / afinidades Blood e Magic / extração e Return to Camp | PASS em regressões UI.3 |
-| Save unit tests e migração/serialização | PASS na suíte unitária |
-| `npm test` com rede permitida | 24/27 PASS; três falhas em harnesses DOM descritas abaixo |
-| Browser Save/Load | PARTIAL: `v012-save-browser.cjs` termina em `choice` em vez de `finished` após 200 passos; `v0120-persistence-browser.cjs` excede timeout ao aguardar a segunda vitória sintética |
-| Browser de equipamento | FAIL em 390px: as caixas de slots vizinhos cruzam-se por cerca de 0,375px vertical; em 1280px o teste não foi alcançado nesta execução |
-| Browser de eventos | FAIL no teste legado: espera capacidade 6, mas a Bag atual tem 12; com a expectativa atualizada, o harness pára em `choice` no Realm 2 |
-| Browser `v012-phase3` | FAIL: timeout à espera de `#phase5ExitResult` na corrida sintética |
-| Safari / WebKit | **Pendente**: WebKit do Playwright não está instalado neste ambiente Linux |
-
-Falhas da suíte Node (harness, sem evidência de regressão visual):
-
-- `v012-complete-flow.test.cjs`: `window is not defined` durante `markAllAsSeen` → `renderStash`.
-- `v012-phase-c3-treasures.test.cjs`: `arena.before is not a function` ao renderizar o combate simulado.
-- `v0120-equipment.test.cjs`: `window is not defined` no caminho de salvamento após `salvage`.
-
-O teste `private-preview.test.mjs` falhou quando executado sem permissão de loopback e passou quando repetido com rede local permitida. O teste de eventos existente espera a capacidade antiga da Bag; a capacidade atual de 12 é requisito do produto.
-
-## Diferenças face à especificação
-
-- A tab **Shrine** existente continua a ser o altar de Runas. A escolha inicial de affinity é apresentada após Start Expedition, onde o fluxo atual a cria; não foi criada uma segunda seleção.
-- O City Center mantém placeholders/silhuetas de NPC porque não há artwork de NPC aprovado nos assets disponíveis.
-- O Blacksmith usa os painéis e âncoras Forge/Reinforcement da UI.3; os dois blocos permanecem no mesmo documento.
-- As capturas antigas não cobrem todos os estados de modal em cada viewport. A inspeção visual completa em Safari não foi possível.
-
-## Problemas por prioridade
-
-| Prioridade | Problema | Impacto |
+| Fase | Estado | Evidência |
 |---|---|---|
-| P0 | Nenhum problema crítico de UI confirmado nesta auditoria | — |
-| P1 | Persistência em browser não ficou demonstrada pelos harnesses sintéticos; os fluxos de Save/Load falham por stalls/timeouts | Revalidar com fixture atualizado antes de integração em `main` |
-| P2 | Teste de geometria reporta interseções de cerca de 0,375px entre slots verticais no Equipment mobile | Não bloqueia interação visível, mas convém ajustar e repetir o teste |
-| P2 | Harness de eventos usa expectativa Bag 6 e não conclui o ciclo no Realm 2 com capacidade 12 | Atualizar harness; as regras/eventos unitários passam |
-| P2 | Três testes unitários dependem de `window`/`Element.before` sem DOM completo | Corrigir mocks ou executar em ambiente DOM/browser |
-| P2 | Safari não foi validado; artwork de NPC continua ausente | Validar em Mac e integrar asset aprovado quando existir |
+| UI.0–UI.3 | PASS anterior | Regressões e capturas de cada fase; sem novas falhas reproduzidas nesta auditoria. |
+| UI.4 | PASS Chromium anterior | UI Kit e regressões da fase aprovadas; sem falhas novas. |
+| UI.4d | PASS | Chromium UI.4d passou. O utilizador informa que validou UI.4d manualmente em Safari; registado como validação manual do utilizador, não como teste executado por esta auditoria. |
+| UI.4e | PASS Chromium; Safari pendente | Frames Common–Legendary, slots e poções, compra, uso e persistência passaram nos viewports suportados. |
+| C.3 | PASS | Browser C.3 passou em 390 e 1280 px; os seis treasures renderizam e Sell All preserva o total. |
+
+## Resultados por área
+
+| Área | Resultado | Observações |
+|---|---|---|
+| Camp, Equipment e Inventory | **PASS** | Sem colisão de slots em 360, 390, 768, 1280 e 1440 px; dez slots de equipamento e três slots de poções. |
+| Frames de raridade e poções | **PASS Chromium** | Cinco raridades, frames quadrados, slots vazios/parciais/completos, seleção, remoção, consumo, compra no Apothecary e save/reload. |
+| City Center / Merchant | **PASS** | Weapons, Armor e Accessories filtram o stock real; quatro ofertas por categoria; alternância, Compare, Buy e restock mantidos. |
+| Forge / Apothecary | **PASS** | Craft, compra e integração do stock de poções com o Stash passaram nos fluxos browser/unitários. |
+| Expedition / Between Realms / Bag | **PASS** | Ciclos completos, eventos, drafts, slots de equipamento, loot, troca de equipamento, retorno do item deslocado ao Bag e uso de poção passaram. |
+| Extraction / Save / Load | **PASS** | Round-trip e restauro de estado, extração, morte, vitória, Rune de boss, bloqueio de escrita concorrente, save corrompido e quota foram testados com armazenamento sintético isolado. |
+| Safari | **PENDENTE PARCIAL** | UI.4d foi validada manualmente pelo utilizador. UI.4e e os restantes fluxos não foram testados em Safari/WebKit neste ambiente. Não se declara Safari PASS. |
+
+### Testes executados
+
+- **PASS** — `tests/v0120-equipment-browser.cjs`: equipamento e City Center em 360, 390, 768, 1280 e 1440 px; nenhuma interseção geométrica entre slots.
+- **PASS** — `tests/v012-ui4d-browser.cjs`: quatro ofertas por categoria, alternância repetida, Compare/Buy, retorno ao Camp, reload e colisão de validation slot.
+- **PASS** — `tests/v012-ui4e-browser.cjs`: cinco raridades, slots de poção vazios/parciais/completos, compra, consumo e persistência em 360, 390, 768, 1280 e 1440 px.
+- **PASS** — `tests/v012-complete-browser.cjs`: ciclo Expedition em 390 e 1280 px, eventos, poções, preparação, combate, vitória/Rune e retorno.
+- **PASS** — `tests/v012-events-browser.cjs`: 15 Realms, quatro eventos, 14 escolhas de passive, descarte de loot e conclusão em 390 e 1280 px; capacidade Bag validada como 12.
+- **PASS** — `tests/v012-save-browser.cjs`: migração sintética, morte, abandono, vitória e Rune em 390/1280 px; escrita concorrente, corrupt save, quota e proteção de sentinelas locais.
+- **PASS** — `tests/v0120-persistence-browser.cjs`: checkpoint/reload, recompensas sem duplicação, extração, morte e boss Rune.
+- **PASS** — `tests/v012-phase3-browser.cjs` e `tests/v012-phase-c3-treasures-browser.cjs`: equipamento, loot, poção, tesouros, Stash e Sell All.
+- **PASS** — testes unitários direcionados: 7/7 ficheiros, incluindo eventos, poções, equipamentos, saves, persistência e C.3.
+
+Não foram executadas simulações de combate/balanceamento nem suítes completas. Os testes browser usam Chromium e fixtures locais sintéticas; não abrem contas nem escrevem em saves reais.
+
+## Falhas reproduzidas, causa e correção
+
+1. **Equipment mobile (regressão visual, P2):** em 390 px as caixas de slots vizinhos cruzavam-se por 0,375 px por causa da distância de 19% entre filas face à altura renderizada. As filas foram espaçadas em incrementos de 20%; a geometria foi repetida nos cinco viewports acima e passou. Nenhum slot ou mecânica foi alterado.
+2. **Mocks DOM obsoletos (testes, sem regressão de produto):** o harness inerte não disponibilizava `window` e `Element.before`. O mock agora expõe `window` e `before()` sem-op. Os testes de fluxo, equipamento e treasures passaram.
+3. **Harnesses de fluxo obsoletos (testes, sem regressão de produto):** os fixtures esperavam estado antigo após Realm clear, botões antigos, markup antigo de evento, stock Merchant único, chave de save anterior, passive inicial gratuito e comportamento de equipamento diferente do contrato atual. Foram atualizados para refletir os controlos/estado atuais: `EXIT REALM`, declínio como ação separada, categorias Merchant, chave de validação versionada, passives ganhos após vitória e equipamento atualmente equipado protegido na morte. Os verificadores de produto não foram enfraquecidos.
+
+## Pendências e diferenças da especificação
+
+- **P2 — Safari:** não há Safari nem Playwright WebKit disponível no ambiente Linux. Validar UI.4e, responsividade e os fluxos restantes num Safari real antes de integração. O estado manual da UI.4d é informação fornecida pelo utilizador e não cobre as restantes fases.
+- **P2 — arte de NPC:** o City Center ainda usa o placeholder documentado, pois não há artwork aprovado de NPC no projeto.
+- Os testes das seis fases anteriores não foram todos repetidos em cada viewport; esta auditoria reutilizou os relatórios existentes e executou novamente os testes direcionados às pendências. Não se repetiram testes de balanceamento.
+
+## Capturas atuais
+
+Chromium, estado local sintético:
+
+- [Camp mobile 390 px](ui4e-screenshots/camp-390.png)
+- [Camp desktop 1280 px](ui4e-screenshots/camp-1280.png)
+- [Equipment/Inventory mobile 390 px](ui4e-screenshots/inventory-390.png)
+- [Equipment/Inventory desktop 1280 px](ui4e-screenshots/inventory-1280.png)
+- Capturas anteriores de [Combat](ui5-screenshots/wanderer-ui2-combat-390.png), [Between Realms](ui5-screenshots/wanderer-ui2-between-390.png), [Merchant](ui4-screenshots/merchant-after-390.png), [Extraction](ui4-screenshots/extraction-after-390.png) e [eventos](ui5-screenshots/events-390.png).
 
 ## Prontidão para `main`
 
-**PARTIAL.** Regressões visuais e interações principais passam em Chromium. Recomendo revalidar Save/Load e a geometria dos slots em browser e executar Safari antes do merge. Nenhuma alteração foi feita em `main`, Firebase, saves reais ou deploys.
+**NO-GO por agora.** Os problemas Chromium reproduzidos foram resolvidos e os testes dirigidos passam. Falta validação manual Safari para UI.4e e restantes fluxos. Nenhuma alteração foi feita em `main`, Firebase, saves reais ou deploys.
