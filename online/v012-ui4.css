@@ -56,3 +56,272 @@
  .phase3IntegratedPreview :is(.phase3Camp,.phase3Between){border-width:9px;border-image-width:9px}
 }
 @media(prefers-reduced-motion:reduce){.phase3IntegratedPreview button{transition:none}}
+
+
+/* UI.4b / Original PNG Art Pack — visual only, existing handlers unchanged.
+   Asset source: Wanderer_UI_Kit_* folders in Google Drive.
+   Intentionally scoped to v0.12; avoid excessive ornament on nested panels. */
+.phase3IntegratedPreview{
+ --ui4b-art-root:"../assets/ui-kit/original/";
+ --ui4b-frame-corner:clamp(30px,4.3vw,54px);
+}
+.phase3IntegratedPreview :is(.phase3Camp,.phase3Between,.phase3CityCenter,.phase3AffinityShrine,.phase5VisualSummary){
+ position:relative;isolation:isolate;
+ border-image:none!important;border:1px solid #76514f!important;
+}
+.phase3IntegratedPreview :is(.phase3Camp,.phase3Between,.phase3CityCenter,.phase3AffinityShrine,.phase5VisualSummary)::before{
+ content:"";position:absolute;inset:0;pointer-events:none;z-index:3;
+ --c:var(--ui4b-frame-corner);
+ background-image:
+ url("../assets/ui-kit/original/nine-slice/01_top_left.png"),
+ url("../assets/ui-kit/original/nine-slice/03_top_right.png"),
+ url("../assets/ui-kit/original/nine-slice/07_bottom_left.png"),
+ url("../assets/ui-kit/original/nine-slice/09_bottom_right.png"),
+ url("../assets/ui-kit/original/nine-slice/02_top_center.png"),
+ url("../assets/ui-kit/original/nine-slice/08_bottom_center.png"),
+ url("../assets/ui-kit/original/nine-slice/04_middle_left.png"),
+ url("../assets/ui-kit/original/nine-slice/06_middle_right.png");
+ background-position:
+ left top,right top,left bottom,right bottom,
+ center top,center bottom,left center,right center;
+ background-size:
+ var(--c) var(--c),var(--c) var(--c),var(--c) var(--c),var(--c) var(--c),
+ calc(100% - var(--c) - var(--c)) var(--c),calc(100% - var(--c) - var(--c)) var(--c),
+ var(--c) calc(100% - var(--c) - var(--c)),var(--c) calc(100% - var(--c) - var(--c));
+ background-repeat:no-repeat;
+}
+.phase3IntegratedPreview :is(.phase3Camp,.phase3Between,.phase3CityCenter,.phase3AffinityShrine,.phase5VisualSummary) {
+ padding:clamp(20px,2.3vw,32px);
+}
+
+/* Four authentic primary button states; original images are used as scalable border images.
+   Exclude tiny navigation buttons and selectable item cards. */
+.phase3IntegratedPreview button.primary:not(.tiny):not(.slotTile):not(.phase1Offer):not(.phase1DraftCard) {
+ border:12px solid transparent;
+ border-image-source:url("../assets/ui-kit/original/buttons/01_primary_normal.png");
+ border-image-slice:38% 24% fill;
+ border-image-width:12px 24px;
+ border-image-repeat:stretch;
+ background:transparent;
+ box-shadow:none;
+ min-height:48px;
+ color:#f5e5d0;
+ font-weight:700;
+ text-shadow:0 1px 3px #000;
+}
+.phase3IntegratedPreview button.primary:not(.tiny):not(.slotTile):not(.phase1Offer):not(.phase1DraftCard):hover:not(:disabled){
+ border-image-source:url("../assets/ui-kit/original/buttons/02_primary_hover.png");
+ background:transparent;
+}
+.phase3IntegratedPreview button.primary:not(.tiny):not(.slotTile):not(.phase1Offer):not(.phase1DraftCard):active:not(:disabled){
+ border-image-source:url("../assets/ui-kit/original/buttons/03_primary_pressed.png");
+ transform:translateY(1px);
+}
+.phase3IntegratedPreview button.primary:not(.tiny):not(.slotTile):not(.phase1Offer):not(.phase1DraftCard):disabled{
+ border-image-source:url("../assets/ui-kit/original/buttons/04_primary_disabled.png");
+ color:#c9bbb0;
+ opacity:.85;
+}
+
+/* Three-piece, extensible Expedition CTA over the approved HUD artwork. */
+.phase3IntegratedPreview .phase3Start{
+ border:0!important;border-image:none!important;
+ background-image:url("../assets/ui-kit/original/hud/03_expedition_left.png"),
+ url("../assets/ui-kit/original/hud/05_expedition_right.png"),
+ url("../assets/ui-kit/original/hud/04_expedition_center_tile.png")!important;
+ background-position:left center,right center,center center!important;
+ background-size:auto 100%,auto 100%,calc(100% - 64px) 100%!important;
+ background-repeat:no-repeat,no-repeat,repeat-x!important;
+ min-height:58px;
+ padding:8px 48px;
+ box-shadow:none!important;
+}
+
+/* Authentic tab art, without changing navigation/selection handlers. */
+.phase3IntegratedPreview :is(.phase3Nav button,.cityCenterTabs button,.inventoryJumpNav button) {
+ border:8px solid transparent!important;
+ border-image-source:url("../assets/ui-kit/original/tabs/tab_normal.png")!important;
+ border-image-slice:32% 23% fill!important;
+ border-image-width:8px 13px!important;
+ background:transparent!important;
+ border-radius:0!important;
+ box-shadow:none;
+ min-height:42px;
+}
+.phase3IntegratedPreview :is(.phase3Nav button,.cityCenterTabs button,.inventoryJumpNav button):is(:hover,:focus-visible):not(:disabled) {
+ border-image-source:url("../assets/ui-kit/original/tabs/tab_hover.png")!important;
+}
+.phase3IntegratedPreview :is(.phase3Nav button.primary,.cityCenterTabs button[aria-selected="true"],.inventoryJumpNav button[aria-current="true"]){
+ border-image-source:url("../assets/ui-kit/original/tabs/tab_pressed.png")!important;
+ color:#fff1dd;
+}
+.phase3IntegratedPreview :is(.phase3Nav button,.cityCenterTabs button,.inventoryJumpNav button):disabled{
+ border-image-source:url("../assets/ui-kit/original/tabs/tab_disabled.png")!important;
+}
+
+/* Opt-in image assets for semantic icon-only controls: no replacement of text labels. */
+.phase3IntegratedPreview :is(.ui4b-close,.ui4b-arrow-up,.ui4b-arrow-down,.ui4b-arrow-left,.ui4b-arrow-right){
+ display:inline-block;width:28px;height:28px;background-position:center;background-size:contain;background-repeat:no-repeat;
+}
+.phase3IntegratedPreview .ui4b-close{background-image:url("../assets/ui-kit/original/tabs/close_normal.png")}
+.phase3IntegratedPreview .ui4b-close:hover{background-image:url("../assets/ui-kit/original/tabs/close_hover.png")}
+.phase3IntegratedPreview .ui4b-close:active{background-image:url("../assets/ui-kit/original/tabs/close_pressed.png")}
+.phase3IntegratedPreview .ui4b-close:disabled{background-image:url("../assets/ui-kit/original/tabs/close_disabled.png")}
+.phase3IntegratedPreview .ui4b-arrow-up{background-image:url("../assets/ui-kit/original/tabs/arrow_up_normal.png")}
+.phase3IntegratedPreview .ui4b-arrow-up:hover{background-image:url("../assets/ui-kit/original/tabs/arrow_up_hover.png")}
+.phase3IntegratedPreview .ui4b-arrow-up:active{background-image:url("../assets/ui-kit/original/tabs/arrow_up_pressed.png")}
+.phase3IntegratedPreview .ui4b-arrow-up:disabled{background-image:url("../assets/ui-kit/original/tabs/arrow_up_disabled.png")}
+.phase3IntegratedPreview .ui4b-arrow-down{background-image:url("../assets/ui-kit/original/tabs/arrow_down_normal.png")}
+.phase3IntegratedPreview .ui4b-arrow-down:hover{background-image:url("../assets/ui-kit/original/tabs/arrow_down_hover.png")}
+.phase3IntegratedPreview .ui4b-arrow-down:active{background-image:url("../assets/ui-kit/original/tabs/arrow_down_pressed.png")}
+.phase3IntegratedPreview .ui4b-arrow-down:disabled{background-image:url("../assets/ui-kit/original/tabs/arrow_down_disabled.png")}
+.phase3IntegratedPreview .ui4b-arrow-left{background-image:url("../assets/ui-kit/original/tabs/arrow_left_normal.png")}
+.phase3IntegratedPreview .ui4b-arrow-left:hover{background-image:url("../assets/ui-kit/original/tabs/arrow_left_hover.png")}
+.phase3IntegratedPreview .ui4b-arrow-left:active{background-image:url("../assets/ui-kit/original/tabs/arrow_left_pressed.png")}
+.phase3IntegratedPreview .ui4b-arrow-left:disabled{background-image:url("../assets/ui-kit/original/tabs/arrow_left_disabled.png")}
+.phase3IntegratedPreview .ui4b-arrow-right{background-image:url("../assets/ui-kit/original/tabs/arrow_right_normal.png")}
+.phase3IntegratedPreview .ui4b-arrow-right:hover{background-image:url("../assets/ui-kit/original/tabs/arrow_right_hover.png")}
+.phase3IntegratedPreview .ui4b-arrow-right:active{background-image:url("../assets/ui-kit/original/tabs/arrow_right_pressed.png")}
+.phase3IntegratedPreview .ui4b-arrow-right:disabled{background-image:url("../assets/ui-kit/original/tabs/arrow_right_disabled.png")}
+
+/* Five separate rarity frames, preserving the original rarity data and badges. */
+.phase3IntegratedPreview [data-rarity="Common"]{--ui4b-rarity-frame:url("../assets/ui-kit/original/rarity/01_common.png");--ui4b-tooltip-frame:url("../assets/ui-kit/original/tooltips/01_common.png")}
+.phase3IntegratedPreview [data-rarity="Uncommon"]{--ui4b-rarity-frame:url("../assets/ui-kit/original/rarity/02_uncommon.png");--ui4b-tooltip-frame:url("../assets/ui-kit/original/tooltips/02_uncommon.png")}
+.phase3IntegratedPreview [data-rarity="Rare"]{--ui4b-rarity-frame:url("../assets/ui-kit/original/rarity/03_rare.png");--ui4b-tooltip-frame:url("../assets/ui-kit/original/tooltips/03_rare.png")}
+.phase3IntegratedPreview [data-rarity="Epic"]{--ui4b-rarity-frame:url("../assets/ui-kit/original/rarity/04_epic.png");--ui4b-tooltip-frame:url("../assets/ui-kit/original/tooltips/04_epic.png")}
+.phase3IntegratedPreview [data-rarity="Legendary"]{--ui4b-rarity-frame:url("../assets/ui-kit/original/rarity/05_legendary.png");--ui4b-tooltip-frame:url("../assets/ui-kit/original/tooltips/05_legendary.png")}
+.phase3IntegratedPreview :is(.slotTile,.invItem,.miniSlot,.compareCard)[data-rarity]::after{
+ content:"";position:absolute;inset:0;z-index:3;pointer-events:none;
+ background:var(--ui4b-rarity-frame) center/100% 100% no-repeat;
+}
+.phase3IntegratedPreview :is(.invItem,.miniSlot,.compareCard)[data-rarity]{position:relative}
+.phase3IntegratedPreview .inspect[data-rarity]{position:relative;isolation:isolate;padding:clamp(15px,2vw,24px)}
+.phase3IntegratedPreview .inspect[data-rarity]::before{
+ content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+ background:var(--ui4b-tooltip-frame) center/100% 100% no-repeat;
+}
+
+/* Comparison icons and labels use original transparent PNGs, not new mechanics. */
+.phase3IntegratedPreview .itemComparison .compareCard:first-child .eyebrow,
+.phase3IntegratedPreview .itemComparison .compareCard:nth-child(2) .eyebrow{
+ display:inline-flex;align-items:center;gap:6px;
+}
+.phase3IntegratedPreview .itemComparison .compareCard:first-child .eyebrow::before{
+ content:"";width:22px;height:14px;flex:none;
+ background:url("../assets/ui-kit/original/comparison/04_label_equipped.png") center/contain no-repeat;
+}
+.phase3IntegratedPreview .itemComparison .compareCard:nth-child(2) .eyebrow::before{
+ content:"";width:22px;height:14px;flex:none;
+ background:url("../assets/ui-kit/original/comparison/05_label_new_item.png") center/contain no-repeat;
+}
+.phase3IntegratedPreview .itemComparison .comparisonCards{position:relative}
+.phase3IntegratedPreview .itemComparison .comparisonCards::after{
+ content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+ width:34px;height:12px;pointer-events:none;opacity:.85;
+ background:url("../assets/ui-kit/original/comparison/06_compare_connector.png") center/contain no-repeat;
+}
+.phase3IntegratedPreview .itemComparison .comparisonTable td:is(.green,.red,.muted){
+ background-repeat:no-repeat;background-position:5px center;background-size:12px auto;padding-left:20px;
+}
+.phase3IntegratedPreview .itemComparison .comparisonTable td.green{background-image:url("../assets/ui-kit/original/comparison/01_delta_increase.png")}
+.phase3IntegratedPreview .itemComparison .comparisonTable td.red{background-image:url("../assets/ui-kit/original/comparison/02_delta_decrease.png")}
+.phase3IntegratedPreview .itemComparison .comparisonTable td.muted{background-image:url("../assets/ui-kit/original/comparison/03_delta_unchanged.png")}
+
+/* Selective headers/dividers, not every nested panel. */
+.phase3IntegratedPreview :is(.phase3CampStatus h1,.phase3CityCenter > .topline h1,.phase5VisualSummary h1)::after{
+ content:"";display:block;margin:8px auto 0;pointer-events:none;
+ height:20px;width:min(100%,260px);
+ background:url("../assets/ui-kit/original/headers/04_divider_long.png") center/contain no-repeat;
+}
+.phase3IntegratedPreview .phase3Routes .phase3RouteHeading h2::after{
+ content:"";display:block;margin-top:4px;height:14px;width:150px;
+ background:url("../assets/ui-kit/original/headers/05_divider_subtle.png") left center/contain no-repeat;
+}
+.phase3IntegratedPreview .phase5VisualSummary .phase5ResultHeading{
+ background:url("../assets/ui-kit/original/headers/06_divider_ornate.png") bottom center/min(440px,90%) 17px no-repeat;padding-bottom:18px;
+}
+
+/* Ornate HP/Mana frames: the progressbar's existing width remains authoritative. */
+.phase3IntegratedPreview .phase3ResourceTrack{position:relative;isolation:isolate;overflow:visible}
+.phase3IntegratedPreview .phase3ResourceTrack::after{
+ content:"";position:absolute;inset:-2px;z-index:2;pointer-events:none;
+ background-position:center;background-size:100% 100%;background-repeat:no-repeat;
+}
+.phase3IntegratedPreview .phase3Resource.health .phase3ResourceTrack::after{
+ background-image:url("../assets/ui-kit/original/hud/01_health_bar_empty.png");
+}
+.phase3IntegratedPreview .phase3Resource.mana .phase3ResourceTrack::after{
+ background-image:url("../assets/ui-kit/original/hud/02_mana_bar_empty.png");
+}
+.phase3IntegratedPreview .phase3ResourceTrack b{position:relative;z-index:3;text-shadow:0 1px 3px #000}
+@media(max-width:700px){
+ .phase3IntegratedPreview{--ui4b-frame-corner:26px}
+ .phase3IntegratedPreview :is(.phase3Camp,.phase3Between,.phase3CityCenter,.phase3AffinityShrine,.phase5VisualSummary){padding:18px 15px}
+ .phase3IntegratedPreview .phase3Start{padding:8px 24px;background-size:auto 100%,auto 100%,calc(100% - 46px) 100%!important}
+ .phase3IntegratedPreview :is(.phase3Nav button,.cityCenterTabs button,.inventoryJumpNav button){
+  border-image-width:6px 8px!important;border-width:6px!important;
+ }
+ .phase3IntegratedPreview .itemComparison .comparisonCards::after{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+ .phase3IntegratedPreview button.primary:not(.tiny):active{transform:none}
+}
+
+
+/* Bind the original close/arrow art to controls already present in the runtime. */
+body.phase3IntegratedPreview dialog.itemDialog [data-close]{
+ background-image:url("../assets/ui-kit/original/tabs/close_normal.png");
+ background-repeat:no-repeat;background-position:8px center;background-size:20px 20px;
+ padding-left:32px;
+}
+body.phase3IntegratedPreview dialog.itemDialog [data-close]:hover{background-image:url("../assets/ui-kit/original/tabs/close_hover.png")}
+body.phase3IntegratedPreview dialog.itemDialog [data-close]:active{background-image:url("../assets/ui-kit/original/tabs/close_pressed.png")}
+body.phase3IntegratedPreview dialog.itemDialog [data-close]:disabled{background-image:url("../assets/ui-kit/original/tabs/close_disabled.png")}
+.phase3IntegratedPreview .inventoryJumpNav button[data-inventory-jump]::after,
+.phase3IntegratedPreview #phase2EnterRealm::after,
+.phase3IntegratedPreview #phase5ExitResult::before{
+ content:"";display:inline-block;width:17px;height:17px;margin-inline:5px;
+ background-position:center;background-size:contain;background-repeat:no-repeat;vertical-align:middle;
+}
+.phase3IntegratedPreview .inventoryJumpNav [data-inventory-jump="equipment"]::after{
+ background-image:url("../assets/ui-kit/original/tabs/arrow_up_normal.png");
+}
+.phase3IntegratedPreview .inventoryJumpNav [data-inventory-jump="stash"]::after{
+ background-image:url("../assets/ui-kit/original/tabs/arrow_down_normal.png");
+}
+.phase3IntegratedPreview #phase2EnterRealm::after{
+ background-image:url("../assets/ui-kit/original/tabs/arrow_right_normal.png");
+}
+.phase3IntegratedPreview #phase5ExitResult::before{
+ background-image:url("../assets/ui-kit/original/tabs/arrow_left_normal.png");
+}
+.phase3IntegratedPreview #phase2EnterRealm:hover::after{background-image:url("../assets/ui-kit/original/tabs/arrow_right_hover.png")}
+.phase3IntegratedPreview #phase5ExitResult:hover::before{background-image:url("../assets/ui-kit/original/tabs/arrow_left_hover.png")}
+.phase3IntegratedPreview select{
+ appearance:none;
+ background-image:url("../assets/ui-kit/original/tabs/arrow_down_normal.png");
+ background-position:right 8px center;background-repeat:no-repeat;background-size:18px 18px;
+ padding-right:32px;
+}
+.phase3IntegratedPreview select:disabled{background-image:url("../assets/ui-kit/original/tabs/arrow_down_disabled.png")}
+.phase3IntegratedPreview select:hover:not(:disabled){background-image:url("../assets/ui-kit/original/tabs/arrow_down_hover.png")}
+/* Original header variants are decorative title underlays with transparent centers.
+   Keep text as real HTML text and don't substitute raster text. */
+.phase3IntegratedPreview .phase3AffinityShrine > .topline h1{
+ background:url("../assets/ui-kit/original/headers/03_header_small.png") center/100% 100% no-repeat;
+ padding:8px 32px;
+}
+.phase3IntegratedPreview .phase3BetweenHeader h1{
+ background:url("../assets/ui-kit/original/headers/02_header_medium.png") center/100% 100% no-repeat;
+ padding:8px 38px;
+}
+.phase3IntegratedPreview .phase5VisualSummary .phase5ResultHeading h1{
+ background:url("../assets/ui-kit/original/headers/01_header_large_skull.png") center/100% 100% no-repeat;
+ padding:8px 34px;
+}
+.phase3IntegratedPreview .phase3AffinityShrine h1{min-width:0;max-width:100%;overflow-wrap:anywhere}
+@media(max-width:700px){
+ .phase3IntegratedPreview .phase3BetweenHeader h1,.phase3IntegratedPreview .phase5VisualSummary .phase5ResultHeading h1{
+  background-image:none;padding:0;
+ }
+}
