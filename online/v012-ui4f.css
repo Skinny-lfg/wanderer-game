@@ -269,3 +269,50 @@
 .phase3IntegratedPreview .phase3PotionSlot.empty:disabled{
   opacity:1!important;
 }
+
+/* UI.4j — More breathing room around equipment without enlarging the art.
+   Tier badges are children of their respective rarity frames for all slots
+   except weapon (its already-approved position remains untouched). */
+.phase3IntegratedPreview .rarityImageFrame--slot{width:70px;height:70px}
+.phase3IntegratedPreview .rarityImageFrame--stash{width:76px;height:76px}
+.phase3IntegratedPreview .rarityImageFrame--merchant{width:78px;height:78px}
+.phase3IntegratedPreview .rarityImageFrame--forge{width:66px;height:66px}
+.phase3IntegratedPreview .rarityImageFrame--compare{width:68px;height:68px}
+.phase3IntegratedPreview .rarityImageFrame--inspect{width:94px;height:94px}
+.phase3IntegratedPreview .rarityImageFrame--loot{width:74px;height:74px}
+.phase3IntegratedPreview .rarityImageFrame--bag{width:62px;height:62px}
+.phase3IntegratedPreview .rarityImageFrame--potion-stack{width:64px;height:64px}
+.phase3IntegratedPreview .rarityImageFrame--potion{width:58px;height:58px}
+.phase3IntegratedPreview .rarityImageFrame--public{width:42px;height:42px}
+
+/* Relative to the actual square frame, not to the wider rectangular slot.
+   This prevents E1 from drifting outside helmets, armor, off-hand, etc. */
+.phase3IntegratedPreview .rarityImageFrame>.slotDLevel{
+  position:absolute;
+  top:12px!important;
+  left:11px!important;
+  right:auto!important;
+  bottom:auto!important;
+  z-index:5;
+  pointer-events:none;
+}
+@media(min-width:841px){
+  .phase3IntegratedPreview .cityCenterLayout .merchantCompactCard{
+    grid-template-columns:80px minmax(0,1fr) minmax(84px,auto);
+  }
+}
+@media(max-width:840px){
+  .phase3IntegratedPreview .cityCenterLayout .merchantCompactCard{
+    grid-template-columns:78px minmax(0,1fr);
+  }
+}
+@media(max-width:700px){
+  .phase3IntegratedPreview .rarityImageFrame--slot{width:60px;height:60px}
+  .phase3IntegratedPreview .rarityImageFrame--stash{width:66px;height:66px}
+  .phase3IntegratedPreview .rarityImageFrame--merchant{width:66px;height:66px}
+  .phase3IntegratedPreview .rarityImageFrame--potion{width:52px;height:52px}
+  .phase3IntegratedPreview .rarityImageFrame>.slotDLevel{top:10px!important;left:9px!important}
+  .phase3IntegratedPreview .cityCenterLayout .merchantCompactCard{
+    grid-template-columns:68px minmax(0,1fr);
+  }
+}
