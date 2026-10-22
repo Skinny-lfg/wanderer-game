@@ -57,8 +57,8 @@ body.phase3IntegratedPreview:has(.phase3Camp) #wallet .token{
 
 /* GothicPanel / GothicFrame: CSS corners, trim and layered iron surfaces. */
 .phase3IntegratedPreview #screen>.phase3Camp{
-  --camp-slot-row:82px;
-  --camp-frame-size:44px;
+  --camp-slot-row:clamp(82px,10vh,110px);
+  --camp-frame-size:clamp(44px,4.5vh,50px);
   --camp-item-art-size:30px;
   --camp-column-gap:4px;
   position:relative;isolation:isolate;overflow:hidden;
@@ -89,7 +89,7 @@ body.phase3IntegratedPreview:has(.phase3Camp) #wallet .token{
     linear-gradient(var(--gothic-highlight-gold),var(--gothic-highlight-gold)) right bottom/1px 15px no-repeat;
   clip-path:polygon(0 12px,12px 0,calc(100% - 12px) 0,100% 12px,100% calc(100% - 12px),calc(100% - 12px) 100%,12px 100%,0 calc(100% - 12px));
 }
-.phase3IntegratedPreview .phase3CampGrid{position:relative;z-index:1;display:grid;min-width:0;align-items:start;gap:var(--gothic-gap);grid-template-columns:minmax(205px,.94fr) minmax(330px,1.38fr) minmax(245px,1fr);grid-template-areas:"intro hero expedition" "stats hero expedition" "journey journey expedition"}
+.phase3IntegratedPreview .phase3CampGrid{position:relative;z-index:1;display:grid;min-width:0;align-items:start;gap:var(--gothic-gap);grid-template-columns:minmax(205px,.94fr) minmax(330px,1.38fr) minmax(245px,1fr);grid-template-areas:"intro hero expedition" "stats hero expedition" "journey journey journey"}
 .phase3IntegratedPreview .phase3CampGrid>.phase3CampStatus{grid-area:intro;min-width:0;padding:6px 2px 9px;border-bottom:1px solid #9e7d444a}
 .phase3IntegratedPreview .phase3CampStatus .eyebrow{color:var(--gothic-highlight-gold);letter-spacing:.2em}
 .phase3IntegratedPreview .phase3CampStatus h1{margin:8px 0 10px;color:var(--gothic-ivory);font:500 clamp(25px,2.4vw,34px)/1.08 var(--font-display);letter-spacing:.035em;text-shadow:0 2px 9px #000}
@@ -121,7 +121,7 @@ body.phase3IntegratedPreview:has(.phase3Camp) #wallet .token{
 /* GothicFrame: the existing paper doll remains the only equipment renderer. */
 .phase3IntegratedPreview .phase3CampGrid>.phase3CampCharacter{grid-area:hero;position:relative;isolation:isolate;min-width:0;width:100%;max-width:none;align-self:start;margin:0;padding:0;border:0;background:transparent}
 .phase3IntegratedPreview .phase3CampCharacter .paper{position:relative;display:grid;width:100%;max-width:660px;height:auto;min-height:0;aspect-ratio:auto;grid-template-columns:minmax(62px,.9fr) minmax(0,3.5fr) minmax(62px,.9fr);grid-template-rows:repeat(5,var(--camp-slot-row)) minmax(72px,auto);column-gap:var(--camp-column-gap);row-gap:0;justify-items:center;align-items:start;overflow:visible;margin:0 auto;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none}
-.phase3IntegratedPreview .phase3CampCharacter .paper>.model{position:absolute;z-index:0;top:24px;right:auto;bottom:auto;left:50%;width:calc(100% - 116px);max-width:none;height:calc(5 * var(--camp-slot-row) - 24px);object-fit:contain;object-position:center bottom;transform:translateX(-50%);transform-origin:center bottom;filter:drop-shadow(0 7px 12px #000b);mask-image:none;opacity:1;pointer-events:none}
+.phase3IntegratedPreview .phase3CampCharacter .paper>.model{position:absolute;z-index:0;top:24px;right:auto;bottom:auto;left:50%;width:calc(100% - 92px);max-width:none;height:calc(5 * var(--camp-slot-row) - 24px);object-fit:contain;object-position:center bottom;transform:translateX(-50%);transform-origin:center bottom;filter:drop-shadow(0 7px 12px #000b);mask-image:none;opacity:1;pointer-events:none}
 .phase3IntegratedPreview .phase3CampIdentity{grid-column:2;grid-row:1;position:relative;z-index:3;display:flex;width:100%;min-width:0;flex-direction:column;align-items:center;gap:3px;padding:2px 0 0;pointer-events:none}
 .phase3IntegratedPreview .phase3CampAccountName{max-width:100%;overflow:hidden;color:#f0ddb6;font:500 13px/1.1 var(--font-head);text-align:center;text-overflow:ellipsis;text-shadow:0 2px 5px #000;white-space:nowrap}
 .phase3IntegratedPreview .phase3CampCharacter .phase3CampHeroVitals{position:relative;z-index:3;width:100%;max-width:240px;margin:0}
@@ -186,7 +186,8 @@ body.phase3IntegratedPreview:has(.phase3Camp) .phase3Camp [role="progressbar"]{f
 
 /* Medium landscape keeps stats/identity to the left and character centered. */
 @media(max-width:1150px) and (min-width:701px){
-  .phase3IntegratedPreview .phase3CampGrid{grid-template-columns:minmax(215px,.92fr) minmax(300px,1.18fr);grid-template-rows:auto auto auto auto;grid-template-areas:"intro hero" "stats hero" "journey hero" "expedition expedition"}
+  .phase3IntegratedPreview #screen>.phase3Camp{--camp-slot-row:clamp(82px,8.5vh,96px)}
+  .phase3IntegratedPreview .phase3CampGrid{grid-template-columns:minmax(215px,.92fr) minmax(300px,1.18fr);grid-template-rows:auto auto auto auto;grid-template-areas:"intro hero" "stats hero" "expedition expedition" "journey journey"}
   .phase3IntegratedPreview .phase3ExpeditionPanel .phase3Portal{height:130px}
 }
 
