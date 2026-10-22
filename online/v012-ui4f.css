@@ -100,9 +100,9 @@
 /* The middle CTA HUD piece tiles at its natural aspect ratio. Its end caps
    and all other symbolic/interactive sprites stay unwarped. */
 .phase3IntegratedPreview .phase3Start{
-  background-size:auto 100%,auto 100%,auto 100%!important;
-  background-position:left center,right center,left 32px center!important;
-  background-repeat:no-repeat,no-repeat,repeat-x!important;
+  background-size:auto 100%,auto 100%,100% 100%!important;
+  background-position:left center,right center,center!important;
+  background-repeat:no-repeat!important;
 }
 /* Camp character has no surrounding box: keep the slots, but remove
    the paper outline and its own dark rectangle entirely. */

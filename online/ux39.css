@@ -82,7 +82,6 @@
  .phase3IntegratedPreview .phase3CityCenter>.topline{display:block}
  .phase3IntegratedPreview .cityCenterSidebar .cityCenterTabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%;margin-bottom:8px}
  .phase3IntegratedPreview .cityCenterSidebar .cityCenterTabs button{font-size:11px;padding:7px 3px;min-height:48px;white-space:normal;overflow-wrap:anywhere;justify-content:center;text-align:center}
- .phase3IntegratedPreview .cityCenterSidebar .cityCenterTabs .phase3TabIcon{width:21px;height:21px;flex-basis:21px}
  .phase3IntegratedPreview .cityCenterSidebar{display:flex;flex-direction:column;gap:0}
  .phase3IntegratedPreview .potionOffer{grid-template-rows:64px minmax(2.5em,auto) auto minmax(3em,auto) auto auto;min-height:210px}
  .phase3IntegratedPreview .potionOffer img{height:62px}

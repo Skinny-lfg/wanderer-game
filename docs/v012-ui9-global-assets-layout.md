@@ -1,7 +1,7 @@
 # Wanderer v0.12 — UI.9 Global UI Assets & Layout Cleanup
 
 **Branch:** `development`
-**Result:** PASS (Safari/WebKit pending)
+**Original UI.9 result:** PASS (Safari/WebKit pending); the UI.9 image pack has since been withdrawn per user request.
 
 ## Changes
 
@@ -17,7 +17,7 @@
 
 - `index.html`
 - `online/ux39.css`, `online/v012-core.css`, `online/v012-ui4.css`, `online/v012-ui4c.css`, `online/v012-ui4e.css`, `online/v012-ui4f.css`, `online/v012-ui5-camp.css`, `online/v012-ui6-unified-inventory.css`
-- `assets/ui-kit/ui9/` (45 assets)
+- `assets/ui-kit/ui9/` (48 assets; removed from the current working tree in follow-up)
 - `tests/v012-ui9-global-browser.cjs`
 - `docs/v012-ui9-screenshots/` (before/after captures)
 - `docs/v012-ui9-global-assets-layout.md`
@@ -52,3 +52,7 @@ The before captures use the clean pre-UI.9 `development` tree; after captures us
 - Safari/WebKit could not be run: the WebKit Playwright executable is not installed in this environment. Safari compatibility remains unverified.
 
 No production gameplay, balance, Firebase, real saves, `main`, or deployments were changed.
+
+## Follow-up: UI.9 assets withdrawn
+
+On 2026-10-22 the user requested removal of the newly added UI.9 asset pack. The 48 files and their runtime references were removed. Only the existing Start Expedition button retains its original end-cap artwork; its center texture is now CSS-clipped between the ends and repeats less often. Other controls use CSS Gothic styling. The before/after screenshots above are historical records of the now-withdrawn UI.9 appearance, not the current UI.
