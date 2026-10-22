@@ -7,6 +7,9 @@ function legacy(){return {characterId:'knight',maxDungeon:200,chosen:200,attempt
  equip:{weapon:{id:'legend',name:'Blade of the First Dawn',legendaryId:'blade-of-the-first-dawn',slot:'weapon',subtype:'Sword',tier:200,rarity:'Legendary',effect:'crit',atk:122,upgradeRank:10,upgradeBase:{atk:101.6666666667}}},
  run:null,runes:[{id:'rune',name:'Rune of Fury',family:'fury',tier:200,value:63}],runeSlots:['rune',null,null],sigils:[{id:'sigil',affinity:'shock'}],merchant:null,valuables:[]};}
 function memory(){const data=new Map();return {data,getItem:k=>data.get(k)??null,setItem:(k,v)=>data.set(k,v)};}
+function merchantTwelve(){return ['weapon','offhand','weapon','offhand','helm','armor','gloves','boots','ring1','ring2','amulet','ring1'].map((slot,n)=>({
+ id:`ui4d-${n}`,name:`Offer ${slot} ${n}`,slot,tier:1,rarity:'Rare',goldPrice:24,...(slot==='weapon'?{subtype:'Sword',atk:2}:slot==='offhand'?{subtype:'Shield',def:2}:{subtype:slot==='ring1'||slot==='ring2'?'Ring':slot,def:2})
+}));}
 test('versioned migration preserves gear, Legendary ranks, materials, currencies, Runes, identity and old progress as history',()=>{
  const old=legacy(),raw=JSON.stringify(old),identity={uid:'fixture-alice',projectId:'demo-wanderer',nickname:'alice_1'};
  const {save,archive}=S.migrateLegacy(raw,{binding:'alice',identity});
@@ -113,6 +116,14 @@ test('legacy two-handed reservation retains the displaced offhand and older Merc
  const m=S.migrateLegacy(old);assert.equal(m.save.profile.equip.offhand,null);assert(m.save.profile.stash.some(i=>i.id==='shield'));
  assert.equal(m.save.profile.merchant.stock[0].id,'sale');assert.equal(m.save.profile.merchant.sigils.length,4);
  assert.deepEqual(JSON.parse(m.archive),old);
+});
+test('current Merchant save accepts exactly four categorized offers and rejects incomplete or unbalanced pools',()=>{
+ const base=S.create(legacy()),stock=merchantTwelve();base.profile.merchant={stock,sigils:[],refreshCost:20,refreshes:0};
+ const encoded=JSON.stringify(base),restored=S.validate(encoded);assert.equal(restored.profile.merchant.stock.length,12);
+ const counts=restored.profile.merchant.stock.reduce((result,item)=>{const category=item.slot==='weapon'||item.slot==='offhand'?'weapons':['helm','armor','gloves','boots','belt'].includes(item.slot)?'armor':'accessories';result[category]++;return result;},{weapons:0,armor:0,accessories:0});
+ assert.deepEqual(counts,{weapons:4,armor:4,accessories:4});
+ const incomplete=structuredClone(base);incomplete.profile.merchant.stock.pop();assert.throws(()=>S.validate(incomplete),/Merchant/);
+ const unbalanced=structuredClone(base);unbalanced.profile.merchant.stock[4].slot='weapon';assert.throws(()=>S.validate(unbalanced),/Merchant stock categories/);
 });
 test('exhausted revision counters fail before modifying the durable record',()=>{
  const io=memory(),save=S.create(legacy());save.revision=Number.MAX_SAFE_INTEGER;

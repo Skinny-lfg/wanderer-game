@@ -5,6 +5,7 @@ const FORMAT='wanderer-expedition',VERSION=13,PREFIX='wanderer_v012_endless_v1_'
 const SLOTS=['helm','amulet','armor','gloves','weapon','offhand','ring1','ring2','boots','belt'];
 const STATS=['atk','def','hp','spd','str','agi','int','end','cha','mana','spell','evasionRating'];
 const EFFECTS=['poison','bleed','crit','sunder','shield','regen','burn','slow','drain','nature','shock','tide','crystal'];
+const MERCHANT_CATEGORY_SLOTS={weapons:['weapon','offhand'],armor:['helm','armor','gloves','boots','belt'],accessories:['ring1','ring2','amulet']};
 const RUNES=['might','swiftness','wisdom','fortitude','fortune','fury','warding','vitality'];
 const treasures=()=>root.WandererV012Treasures;
 function normalizeValuables(profile){
@@ -99,7 +100,12 @@ function profileCheck(p){
  for(const sigil of p.sigils){requireValue(plain(sigil)&&typeof sigil.id==='string'&&sigil.id.length>0&&!ids.has(sigil.id)&&!runeIds.has(sigil.id)&&!sigilIds.has(sigil.id)&&EFFECTS.includes(sigil.affinity),'Sigil');sigilIds.add(sigil.id);}
  requireValue(['wanderer','ranger','knight','spellblade','duelist'].includes(p.characterId),'character');
  if(p.merchant){
-  requireValue(plain(p.merchant)&&Array.isArray(p.merchant.stock)&&p.merchant.stock.length<=4&&Array.isArray(p.merchant.sigils)&&[0,4].includes(p.merchant.sigils.length),'Merchant');
+  requireValue(plain(p.merchant)&&Array.isArray(p.merchant.stock)&&(p.merchant.stock.length<=4||p.merchant.stock.length===12)&&Array.isArray(p.merchant.sigils)&&[0,4].includes(p.merchant.sigils.length),'Merchant');
+  if(p.merchant.stock.length===12){
+   const counts=Object.fromEntries(Object.keys(MERCHANT_CATEGORY_SLOTS).map(category=>[category,0]));
+   for(const item of p.merchant.stock){const category=Object.keys(MERCHANT_CATEGORY_SLOTS).find(key=>MERCHANT_CATEGORY_SLOTS[key].includes(item?.slot));requireValue(category,'Merchant stock category');counts[category]++;}
+   requireValue(Object.values(counts).every(count=>count===4),'Merchant stock categories');
+  }
   for(const item of p.merchant.stock){requireValue(!runeIds.has(item?.id)&&!sigilIds.has(item?.id)&&integer(item?.goldPrice,0,Number.MAX_SAFE_INTEGER),'Merchant stock');itemCheck(item);}
   requireValue(p.merchant.sigils.every(e=>e===null||EFFECTS.includes(e)),'Merchant Sigils');
   requireValue(integer(p.merchant.refreshCost,0,Number.MAX_SAFE_INTEGER),'Merchant refresh');
