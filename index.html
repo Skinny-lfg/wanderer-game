@@ -408,7 +408,7 @@ return `<div class="gearSummary"><b>${Math.abs(change)<Math.max(1,current.power*
 function showModal(title,content,onConfirm=null,confirmLabel='Enter Dungeon'){
 const previous=document.activeElement,dialog=document.createElement('dialog');dialog.className='itemDialog';dialog.setAttribute('aria-labelledby','modalTitle');
 dialog.innerHTML=`<h2 id="modalTitle">${esc(title)}</h2>${content}<div class="buttonRow modalActions"><button data-close>${onConfirm?'Cancel':'Close'}</button>${onConfirm?'<button class="primary" data-confirm>'+esc(confirmLabel)+'</button>':''}</div>`;
-document.body.appendChild(dialog);dialog.addEventListener('close',()=>{dialog.remove();if(previous?.isConnected)previous.focus()});dialog.querySelector('[data-close]').onclick=()=>dialog.close();if(onConfirm)dialog.querySelector('[data-confirm]').onclick=()=>{dialog.close();onConfirm()};dialog.showModal();dialog.querySelector('[data-close]').focus();return dialog;
+ document.body.appendChild(dialog);dialog.addEventListener('close',()=>{dialog.remove();if(previous?.isConnected)previous.focus();phase3UpdateCampStickyStart?.()});dialog.querySelector('[data-close]').onclick=()=>dialog.close();if(onConfirm)dialog.querySelector('[data-confirm]').onclick=()=>{dialog.close();onConfirm()};dialog.showModal();dialog.querySelector('[data-close]').focus();phase3UpdateCampStickyStart?.();return dialog;
 }
 
 /* Item inspection: one native, focus-trapped modal for Camp and Inventory.
@@ -1087,9 +1087,9 @@ function phase3BindBag(){
 function phase3RenderBagInventory(){
  wallet();html('<section class="panel"><h2>Expedition Inventory</h2><p class="small muted">On death, only items in the Expedition Bag are lost. Equipped gear is protected.</p><div class="phase3BagInventory"><div class="equipmentLoadout">'+phase3PaperMarkup()+'</div><div>'+phase3BagMarkup()+statsWidget(phase2Stats())+'</div></div></section>');phase3BindBag();phase3BindPaper();
 }
-let phase3SelectedExpedition=null,phase3CampStickyBound=false;
-function phase3UpdateCampStickyStart(){const sticky=document.querySelector('.phase3CampStickyStart');if(!sticky)return;if(!matchMedia('(max-width:700px)').matches){sticky.classList.remove('phase3StickyOccluded');return;}const top=sticky.getBoundingClientRect().top,obscuresControls=[...document.querySelectorAll('.phase3CampCharacter,.phase3CampSideStats,.phase3ExpeditionPanel')].some(el=>{const r=el.getBoundingClientRect();return r.bottom>top+1&&r.top<innerHeight;});sticky.classList.toggle('phase3StickyOccluded',obscuresControls);}
-function phase3BindCampStickyStart(){if(!phase3CampStickyBound){window.addEventListener('scroll',phase3UpdateCampStickyStart,{passive:true});window.addEventListener('resize',phase3UpdateCampStickyStart);phase3CampStickyBound=true;}requestAnimationFrame(phase3UpdateCampStickyStart);}
+let phase3SelectedExpedition=null,phase3CampStickyBound=false,phase3CampStickyObserver=null,phase3CampStickyObserved=null;
+function phase3UpdateCampStickyStart(){const sticky=document.querySelector('.phase3CampStickyStart');if(!sticky)return;if(!matchMedia('(max-width:700px)').matches){sticky.classList.remove('phase3StickyOccluded');return;}const original=document.querySelector('.phase3ExpeditionPanel .phase3Start'),r=original?.getBoundingClientRect(),visible=!!r&&r.bottom>0&&r.top<innerHeight&&r.right>0&&r.left<innerWidth;sticky.classList.toggle('phase3StickyOccluded',visible||!!document.querySelector('dialog[open]'));}
+function phase3BindCampStickyStart(){if(!phase3CampStickyBound){if('IntersectionObserver'in window)phase3CampStickyObserver=new IntersectionObserver(entries=>{const sticky=document.querySelector('.phase3CampStickyStart');if(!sticky||!matchMedia('(max-width:700px)').matches)return;sticky.classList.toggle('phase3StickyOccluded',entries.some(entry=>entry.isIntersecting)||!!document.querySelector('dialog[open]'));},{threshold:0});window.addEventListener('scroll',phase3UpdateCampStickyStart,{passive:true});window.addEventListener('resize',phase3UpdateCampStickyStart);phase3CampStickyBound=true;}const original=document.querySelector('.phase3ExpeditionPanel .phase3Start');if(phase3CampStickyObserved!==original){phase3CampStickyObserver?.disconnect();phase3CampStickyObserved=original;if(original){document.querySelector('.phase3CampStickyStart')?.classList.add('phase3StickyOccluded');phase3CampStickyObserver?.observe(original);}}requestAnimationFrame(phase3UpdateCampStickyStart);}
 function phase3CampDisplayName(){return 'wanderer';}
 function phase3PaperMarkup(camp=false,stats=phase2Stats(),withPotions=camp){
  const identity=camp?'<div class="phase3CampIdentity" aria-label="Character identity and Health/Mana"><span class="phase3CampAccountName">'+esc(phase3CampDisplayName())+'</span><div class="phase3CampHeroVitals">'+phase3VitalsMarkup(stats,true)+'</div></div>':'';
@@ -1203,10 +1203,14 @@ function phase3CampStatsMarkup(s){
   '<details class="phase3CampExtraStats"><summary>More stats</summary>'+row(extras)+'</details></section>';
 }
 
+function phase3DifficultyMarkup(g,selected,id,labelClass='phase3Difficulty'){
+ const control=g.unlocked>200?'<input id="'+id+'" data-phase3-expedition-level type="number" min="1" max="'+g.unlocked+'" value="'+selected+'">':'<select id="'+id+'" data-phase3-expedition-level>'+Array.from({length:g.unlocked},(_,i)=>'<option value="'+(i+1)+'" '+(selected===i+1?'selected':'')+'>Expedition '+(i+1)+'</option>').join('')+'</select>';
+ return '<label class="'+labelClass+'">Expedition'+control+'</label>';
+}
 function phase3CampMarkup(g,stats){
  const selected=clamp(phase3SelectedExpedition??g.unlocked,1,g.unlocked),progress=phase5Snapshot?.expedition;
  const journey='<details class="phase3Journey"><summary>Your Journey</summary><dl><div><dt>Highest Expedition cleared</dt><dd>'+(progress?(progress.completed?'E'+progress.completed:'None yet'):'Not tracked')+'</dd></div><div><dt>Expeditions completed</dt><dd>Not tracked</dd></div><div><dt>Expeditions started</dt><dd>'+(progress?progress.attempts:'Not tracked')+'</dd></div><div><dt>Runes owned</dt><dd>'+state.runes.length+'</dd></div></dl>'+phase5MilestoneMarkup(progress?.completed||0)+'</details>';
- return '<section class="panel phase3Camp"><div class="phase3CampGrid"><aside class="phase3CampStatus"><span class="eyebrow">Wanderer v0.12.0</span><h1>Expedition Camp</h1><p class="muted">Gear up. Choose your path. Survive.</p><p class="small muted phase3SetSummary">Set bonuses: '+(setBonuses().list.length?setBonuses().list.map(x=>esc(x.name||x.affinity||'Active')).join(', '):'none active')+'</p>'+'</aside><div class="equipmentLoadout phase3HeroColumn phase3CampCharacter" aria-label="Character equipment, potions and stats">'+phase3PaperMarkup(true,stats)+'</div><section class="phase3CampSideStats" aria-label="Character attributes and combat stats">'+phase3CampStatsMarkup(phase2Stats())+'</section><aside class="phase3ExpeditionPanel"><img class="phase3Portal" src="assets/dungeons/backgrounds/ward.webp" alt="An entrance to the Realms"><span class="eyebrow">Prepare for the next</span><h2>Expedition '+selected+'</h2><p class="small muted">No active Expedition</p><label class="phase3Difficulty">Expedition'+(g.unlocked>200?'<input id="phase3Difficulty" type="number" min="1" max="'+g.unlocked+'" value="'+selected+'">':'<select id="phase3Difficulty">'+Array.from({length:g.unlocked},(_,i)=>'<option value="'+(i+1)+'" '+(selected===i+1?'selected':'')+'>Expedition '+(i+1)+'</option>').join('')+'</select>')+'</label><ul><li>15 Realms, 3–4 events and a final boss</li><li>Equipment, Gold and Fragments</li><li>Defeat the boss to unlock the next Expedition</li></ul><button class="primary phase3Start" data-phase1-expedition="'+selected+'">Start Expedition →</button></aside><div class="phase3CampSidebarJourney">'+journey+'</div></div>'+'<details class="phase3SaveInfo"><summary>'+(PHASE5_VALIDATION?'Local playtest · saved locally':'Local playtest · session only')+'</summary><p>'+phase3SaveStatus()+'</p><p>'+phase6StashUsedSlots()+'/'+stashCapacity()+' Stash slots · '+state.expeditionOverflow.length+' secured items awaiting space.</p></details></section><div class="phase3CampStickyStart"><button type="button" class="primary phase3Start" data-phase1-expedition="'+selected+'">Start Expedition →</button></div>';
+ return '<section class="panel phase3Camp"><div class="phase3CampGrid"><aside class="phase3CampStatus"><span class="eyebrow">Wanderer v0.12.0</span><h1>Expedition Camp</h1><p class="muted">Gear up. Choose your path. Survive.</p><p class="small muted phase3SetSummary">Set bonuses: '+(setBonuses().list.length?setBonuses().list.map(x=>esc(x.name||x.affinity||'Active')).join(', '):'none active')+'</p>'+'</aside><div class="equipmentLoadout phase3HeroColumn phase3CampCharacter" aria-label="Character equipment, potions and stats">'+phase3PaperMarkup(true,stats)+'</div><section class="phase3CampSideStats" aria-label="Character attributes and combat stats">'+phase3CampStatsMarkup(phase2Stats())+'</section><aside class="phase3ExpeditionPanel"><img class="phase3Portal" src="assets/dungeons/backgrounds/ward.webp" alt="An entrance to the Realms"><span class="eyebrow">Prepare for the next</span><h2>Expedition '+selected+'</h2><p class="small muted">No active Expedition</p>'+phase3DifficultyMarkup(g,selected,'phase3Difficulty')+'<ul><li>15 Realms, 3–4 events and a final boss</li><li>Equipment, Gold and Fragments</li><li>Defeat the boss to unlock the next Expedition</li></ul><button class="primary phase3Start" data-phase1-expedition="'+selected+'">Start Expedition →</button></aside><div class="phase3CampSidebarJourney">'+journey+'</div></div>'+'<details class="phase3SaveInfo"><summary>'+(PHASE5_VALIDATION?'Local playtest · saved locally':'Local playtest · session only')+'</summary><p>'+phase3SaveStatus()+'</p><p>'+phase6StashUsedSlots()+'/'+stashCapacity()+' Stash slots · '+state.expeditionOverflow.length+' secured items awaiting space.</p></details></section><div class="phase3CampStickyStart">'+phase3DifficultyMarkup(g,selected,'phase3DifficultySticky','phase3StickyDifficulty')+'<button type="button" class="primary phase3Start" data-phase1-expedition="'+selected+'">Start Expedition</button></div>';
 }
 
 function phase3Go(to){
@@ -1258,6 +1262,14 @@ function phase3AffinityChoiceMarkup(family){
  const identity={blood:'Bleed and recovery',decay:'Rot and attrition',vitality:'Health and endurance',aegis:'Defense and Barrier',fury:'Speed and critical hits',magic:'Elemental casts and Mana'}[family];
  return '<article class="phase3AffinityChoice"><button type="button" class="phase1DraftCard" data-phase2-initial="'+family+'">'+phase2FamilyIcon(family)+'<strong>'+esc(names[family])+'</strong><span class="small">'+identity+'</span><span class="small muted">'+(family==='magic'?'Choose Fire, Frost or Lightning next.':'Initial passive after the first '+esc(names[family])+' Realm: '+esc(passives[0]?.name||''))+'</span><b class="phase3AffinityAction">Choose '+esc(names[family])+'</b></button><details><summary>View passive details</summary>'+passives.map(p=>'<p><b>'+esc(p.name)+'</b> · '+esc(p.description.replace(/\bICD\b/gi,'cooldown'))+'</p>').join('')+'</details></article>';
 }
+function phase3OpenInitialAffinity(g){
+ const existing=document.querySelector('dialog[data-initial-affinity]');if(existing)return existing;
+ const choices=WandererV012Expedition.FAMILIES.map(phase3AffinityChoiceMarkup).join('');
+ const dialog=showModal('Choose your initial affinity','<p class="small muted">Expedition '+g.expedition+' · Choose one of the six affinities to begin. This choice uses the existing Expedition progression.</p><div class="phase1DraftCards phase3AffinityChoices phase3InitialAffinityChoices">'+choices+'</div>');
+ if(!dialog)return null;dialog.dataset.initialAffinity='1';dialog.classList.add('phase3InitialAffinityDialog');
+ dialog.querySelectorAll('[data-phase2-initial]').forEach(button=>button.onclick=()=>{if(phase2ChooseInitial(button.dataset.phase2Initial)){dialog.close();phase2EnterInitialRealm();}});
+ return dialog;
+}
 
 function phase3CombatBuildMarkup(){
  const families=phase1Build?.unlockedFamilies||[];
@@ -1290,8 +1302,8 @@ function renderPhase1(){
  const g=phase1Controller.state,stats=phase3Vitals();
  const familyLabel=f=>phase2FamilyIcon(f)+' '+WandererV012Expedition.FAMILY_NAMES[f];
  if(g.stage==='choice'&&!g.initialFamily){
-  html('<section class="panel phase3AffinityShrine"><div class="phase3ShrineLayout"><figure class="phase3ShrineArtPlaceholder"><img src="assets/dungeons/backgrounds/shrine.webp" alt="Shrine artwork"><figcaption>SHRINE</figcaption></figure><div class="phase3ShrineContent"><span class="eyebrow">Expedition '+g.expedition+'</span><h2>Choose your initial affinity</h2><p class="small muted">The first Realm of your affinity unlocks its base passive after victory, followed by another passive choice. Magic first requires an element choice.</p><div class="phase1DraftCards phase3AffinityChoices">'+WandererV012Expedition.FAMILIES.map(phase3AffinityChoiceMarkup).join('')+'</div></div></div></section>');
-  Q('[data-phase2-initial]').forEach(b=>b.onclick=()=>{if(phase2ChooseInitial(b.dataset.phase2Initial))phase2EnterInitialRealm();});phase6BindBack();return;
+  html('<section class="panel phase3AffinityPending"><span class="eyebrow">Expedition '+g.expedition+' prepared</span><h1>Choose your initial affinity</h1><p class="small muted">Select one affinity to enter the first Realm. You can close the selection and return here without choosing.</p><button type="button" class="primary" id="phase3OpenInitialAffinity">Choose Initial Affinity</button></section>');
+  $('phase3OpenInitialAffinity').onclick=()=>phase3OpenInitialAffinity(g);phase6BindBack();phase3OpenInitialAffinity(g);return;
  }
  if(phase1Draft){
   const d=phase1Draft,plane=d.plane||{family:d.family,name:'Initial affinity',plane:1};
@@ -1313,8 +1325,8 @@ function renderPhase1(){
  }
  if(['camp','finished','failed'].includes(g.stage)){
   html(phase3CampMarkup(g,stats));
-  const difficulty=$('phase3Difficulty');if(difficulty)difficulty.onchange=e=>{phase3SelectedExpedition=clamp(Math.floor(Number(e.target.value)||1),1,g.unlocked);renderPhase1();};
-  Q('[data-phase1-expedition]').forEach(b=>b.onclick=()=>phase1Begin(Number(b.dataset.phase1Expedition)));
+  Q('[data-phase3-expedition-level]').forEach(control=>control.onchange=e=>{phase3SelectedExpedition=clamp(Math.floor(Number(e.target.value)||1),1,g.unlocked);renderPhase1();});
+  const startSelected=button=>phase1Begin(Number(button.dataset.phase1Expedition));Q('[data-phase1-expedition]').forEach(button=>button.onclick=()=>startSelected(button));
   phase3BindPaper();phase6AppendPotionStash();return;
  }
  if(g.stage!=='choice')return;

@@ -207,8 +207,10 @@ body.phase3IntegratedPreview:has(.phase3Camp) .phase3Camp [role="progressbar"]{f
   .phase3IntegratedPreview .phase3ExpeditionPanel .phase3Portal{width:calc(100% + 30px);height:112px;margin:-15px -15px 10px}
   .phase3IntegratedPreview .phase3CampStickyStart{position:fixed;z-index:90;inset:auto 0 0;display:block;padding:9px max(12px,env(safe-area-inset-left)) calc(9px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-right));background:linear-gradient(180deg,transparent,#111014 28%,#111014 100%);box-shadow:0 -8px 24px #0009}
   .phase3IntegratedPreview .phase3CampStickyStart.phase3StickyOccluded{visibility:hidden;pointer-events:none;box-shadow:none}
+  .phase3IntegratedPreview .phase3CampStickyStart .phase3StickyDifficulty{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:9px;width:100%;max-width:560px;margin:0 auto 6px;color:var(--gothic-highlight-gold);font:500 12px var(--font-head)}
+  .phase3IntegratedPreview .phase3CampStickyStart .phase3StickyDifficulty :is(select,input){width:100%;min-width:0;min-height:38px;padding:6px 9px;border:1px solid var(--gothic-edge);border-radius:2px 8px 2px 8px;background:#171519;color:var(--gothic-ivory)}
   .phase3IntegratedPreview .phase3CampStickyStart .phase3Start{display:block;width:100%;max-width:560px;min-height:54px;margin:0 auto}
-  .phase3IntegratedPreview:has(.phase3CampStickyStart) .container{padding-bottom:calc(108px + env(safe-area-inset-bottom))}
+  .phase3IntegratedPreview:has(.phase3CampStickyStart) .container{padding-bottom:calc(142px + env(safe-area-inset-bottom))}
 }
 @media(max-width:390px){
   .phase3IntegratedPreview #screen>.phase3Camp{--camp-slot-row:72px;--camp-vitals-row:96px;--camp-frame-size:34px;--camp-item-art-size:23px}
