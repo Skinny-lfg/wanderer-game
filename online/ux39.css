@@ -125,8 +125,8 @@
 @media(max-width:600px){.phase3IntegratedPreview .phase3BetweenHero .paper .slotTile{width:45px;height:51px}}
 /* UI.2: combat arena and compact, accessible expedition details. */
 .phase3IntegratedPreview.phase3CombatView .combatLayout{grid-template-columns:minmax(0,2.2fr) minmax(280px,1fr);align-items:start}
-.phase3IntegratedPreview .combatHeaderControls{display:flex;align-items:center;gap:8px;margin-left:auto}
-.phase3IntegratedPreview .combatHeaderControls #combatSpeed{min-height:44px;white-space:nowrap}
+.phase3IntegratedPreview.phase3CombatView .combatActiveBuffs{margin:4px 0;padding:5px 8px}
+.phase3IntegratedPreview.phase3CombatView .combatActions{margin-top:5px}
 .phase3IntegratedPreview .combatBagDetails>summary,.phase3IntegratedPreview .phase3BetweenBag>summary,.phase3IntegratedPreview .phase3EquipmentDetails>summary{display:flex;justify-content:space-between;gap:8px;align-items:center;min-height:44px;padding:8px 10px;color:#efd7ae;background:var(--ui-section-bg);border:1px solid var(--ui-edge);border-radius:0;cursor:pointer;font-weight:700}
 .phase3IntegratedPreview .combatBagDetails>summary span,.phase3IntegratedPreview .phase3BetweenBag>summary span{color:#e6bd76}
 .phase3IntegratedPreview .combatBagDetails .phase3Bag,.phase3IntegratedPreview .phase3BetweenBag .phase3Bag{margin:8px 0;max-width:none}
@@ -168,7 +168,7 @@
 .phase3IntegratedPreview .phase3Routes>.micro{margin:8px 0 0}
 @media(max-width:1100px){.phase3IntegratedPreview .phase3BetweenLayout{grid-template-columns:minmax(215px,30%) minmax(0,1fr)}.phase3IntegratedPreview .phase3Routes .phase1Offers{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:850px){.phase3IntegratedPreview.phase3CombatView .combatLayout,.phase3IntegratedPreview .phase3BetweenLayout{grid-template-columns:1fr}.phase3IntegratedPreview .phase3BetweenLayout{display:flex;flex-direction:column}.phase3IntegratedPreview .phase3BetweenLayout>.phase3Routes{order:-1;width:100%}.phase3IntegratedPreview .phase3BetweenLayout>.phase3BetweenHero{width:100%}}
-@media(max-width:600px){.phase3IntegratedPreview .combatHeaderControls{margin-left:0}.phase3IntegratedPreview .combatLayout>.panel>.topline{flex-wrap:wrap}.phase3IntegratedPreview .phase3Routes .phase1Offers{grid-template-columns:1fr}.phase3IntegratedPreview .phase3Routes .phase1Offer{display:grid;grid-template-columns:105px minmax(0,1fr)}.phase3IntegratedPreview .phase3Routes .phase1Offer>img{height:100%;min-height:100px}.phase3IntegratedPreview .phase3Routes .phase1OfferBody strong img{width:34px;height:34px}.phase3IntegratedPreview .phase3BetweenHero .phase3PotionSlot{min-height:60px}}
+@media(max-width:600px){.phase3IntegratedPreview .combatLayout>.panel>.topline{flex-wrap:wrap}.phase3IntegratedPreview .phase3Routes .phase1Offers{grid-template-columns:1fr}.phase3IntegratedPreview .phase3Routes .phase1Offer{display:grid;grid-template-columns:105px minmax(0,1fr)}.phase3IntegratedPreview .phase3Routes .phase1Offer>img{height:100%;min-height:100px}.phase3IntegratedPreview .phase3Routes .phase1OfferBody strong img{width:34px;height:34px}.phase3IntegratedPreview .phase3BetweenHero .phase3PotionSlot{min-height:60px}}
 /* Between Realms workspace: keep essential expedition state visible while
    separating route choice, equipment, build details and bag management. */
 .phase3IntegratedPreview .phase3BetweenWorkspace{display:grid;gap:10px;min-width:0}

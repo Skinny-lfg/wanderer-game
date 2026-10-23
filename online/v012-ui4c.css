@@ -21,8 +21,8 @@
 .phase3IntegratedPreview .phase3BetweenBag:not([open])>summary{min-height:42px;padding:10px;cursor:pointer;list-style:none;color:#f0d4a0}
 .phase3IntegratedPreview .phase3BetweenBag:not([open])>summary::-webkit-details-marker{display:none}
 .phase3IntegratedPreview .phase3BetweenBag[open]{margin:7px 0}
-.phase3IntegratedPreview .phase3CombatBuild{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.45fr) minmax(0,1fr);gap:6px;align-items:start;margin:8px 0 10px;padding:7px;background:#17121a;border:1px solid #604955;border-radius:8px}
-.phase3IntegratedPreview .phase3CombatBuild .phase3CombatAffinityGroup,.phase3IntegratedPreview .phase3CombatBuild .phase3CompactPassives,.phase3IntegratedPreview .phase3CombatBuild .phase3ActiveBuffs{min-width:0;margin:0;padding:5px;background:transparent;border:0}
+.phase3IntegratedPreview .phase3CombatBuild{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.45fr);gap:4px;align-items:start;margin:4px 0 6px;padding:5px;background:#17121a;border:1px solid #604955;border-radius:8px}
+.phase3IntegratedPreview .phase3CombatBuild .phase3CombatAffinityGroup,.phase3IntegratedPreview .phase3CombatBuild .phase3CompactPassives{min-width:0;margin:0;padding:2px 4px;background:transparent;border:0}
 .phase3IntegratedPreview .phase3CombatBuild .phase3CompactPassives h3{font-size:12px;margin-bottom:5px}
 .phase3IntegratedPreview .phase3CombatBuild .phase3PassiveGrid{grid-template-columns:repeat(auto-fill,minmax(38px,1fr));gap:4px}
 .phase3IntegratedPreview .phase3CombatBuild .phase3PassiveSlot{position:relative;min-width:0}
@@ -62,7 +62,7 @@
 @media(max-width:700px){
  .phase3IntegratedPreview .phase3StatGrid{grid-template-columns:repeat(3,minmax(0,1fr))}
  .phase3IntegratedPreview .phase3BetweenHero .phase3StatGrid{grid-template-columns:repeat(3,minmax(0,1fr))}
- .phase3IntegratedPreview .phase3CombatBuild{grid-template-columns:minmax(0,1fr);gap:2px}
+ .phase3IntegratedPreview .phase3CombatBuild{grid-template-columns:minmax(0,.8fr) minmax(0,1.45fr);gap:4px}
  .phase3IntegratedPreview .phase3CombatBuild .phase3ActiveBuffs{grid-column:auto}
  .phase3IntegratedPreview .phase3CombatBuild .phase3PassiveGrid{grid-template-columns:repeat(auto-fill,minmax(42px,1fr))}
  .phase3IntegratedPreview .phase3PassiveChoices{grid-template-columns:1fr}
