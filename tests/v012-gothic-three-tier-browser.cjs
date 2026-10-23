@@ -88,6 +88,16 @@ async function runVisuals(browser,mode,width){
    const result=await panel.evaluate(e=>({overflow:getComputedStyle(e).overflow,corners:e.querySelectorAll(':scope > .gothic-corner-layer img').length}));
    assert.equal(result.overflow,'visible',`${selector} does not clip its ornament`);assert.equal(result.corners,4,`${selector} has four corners`);
   }
+  const inventorySurfaces=await page.evaluate(()=>{
+   const selectors=['.equipmentOverview','.equipmentInventory .stashGrid','.equipmentInventory .stashCapacityBar','.inventoryJumpNav'];
+   return Object.fromEntries(selectors.map(selector=>{const el=document.querySelector(selector),s=getComputedStyle(el);return[selector,{backgroundImage:s.backgroundImage,backgroundColor:s.backgroundColor,borderColor:s.borderTopColor}]}));
+  });
+  const reference=inventorySurfaces['.equipmentOverview'];
+  for(const selector of ['.equipmentInventory .stashGrid','.equipmentInventory .stashCapacityBar','.inventoryJumpNav']){
+   assert.equal(inventorySurfaces[selector].backgroundImage,reference.backgroundImage,`${selector} matches the Home panel fill`);
+  }
+  assert.equal(inventorySurfaces['.equipmentInventory .stashGrid'].borderColor,inventorySurfaces['.equipmentInventory .stashCapacityBar'].borderColor,'Inventory inner surfaces share the same restrained border');
+  assert.equal(inventorySurfaces['.equipmentInventory .stashGrid'].borderColor,inventorySurfaces['.inventoryJumpNav'].borderColor,'Inventory navigation matches its inner surface border');
  }
  await page.locator('[data-phase3-nav="city-center"]').click();
  const city=page.locator('.phase3CityCenter');await city.waitFor({state:'visible'});await waitForPanelScript(page);

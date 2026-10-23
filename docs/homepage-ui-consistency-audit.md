@@ -74,4 +74,10 @@ As capturas cobrem Camp, Inventory, Blacksmith, Merchant, Apothecary, Shrine/Run
 3. Fazer validação real em Safari, incluindo safe areas e `focus-visible`.
 4. Account/Leaderboard e todos os estados raros de modais não tiveram percursos browser dedicados nesta execução; não declarar auditoria visual integral concluída.
 
+## Ajuste posterior — superfícies do Inventory
+
+Foi identificado que `stashGrid`, `stashCapacityBar` e `inventoryJumpNav` ainda herdavam preenchimentos vinho de regras antigas do `v012-core.css`. Agora reutilizam o preenchimento e a borda discreta do sistema de painéis da Home; o aviso de stash vazio usa a superfície interna escura. Nenhuma cor de raridade ou estado semântico foi alterada.
+
+Verificação adicional: `v012-gothic-three-tier-browser.cjs` **PASS** em 390px e 1440px, comparando fundos/contornos computados; `v012-complete-browser.cjs` **PASS** em 390px e 1280px, com novas capturas do Inventory. Safari continua pendente.
+
 Nenhum teste foi usado como evidência sobre gameplay, economia ou balanceamento.
