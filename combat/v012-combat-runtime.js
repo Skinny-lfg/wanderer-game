@@ -475,7 +475,7 @@ function updateFight(){
   const barrierBroken=barrierBeforeHit>0&&r.barrier<=0,hit=Math.max(0,raw-blocked);
   if(blocked>0)ports.addLog('🛡 Barrier absorbs '+blocked+' damage','good');
   if(hit>0){
-   ports.phase6Metric(r,'damageTaken',Math.min(Math.max(0,r.hp),hit));r.hp-=hit;ports.addLog('🩸 '+e.name+' hits for '+hit+' HP','bleed');ports.floatText(hit,'hero');
+   ports.phase6Metric(r,'damageTaken',Math.min(Math.max(0,r.hp),hit));ports.phase3FlashPlayerDamage?.();r.hp-=hit;ports.addLog('🩸 '+e.name+' hits for '+hit+' HP','bleed');ports.floatText(hit,'hero');
    if(e.eliteType==='tank'){
     const newWound=(r.playerHealingDebuffUntil||0)<=ports.setNow(r);
     r.playerHealingDebuffUntil=ports.setNow(r)+5;

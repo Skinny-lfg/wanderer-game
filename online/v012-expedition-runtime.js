@@ -145,7 +145,7 @@ function phase1Choose(id){
 function phase1Enter(){
  if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked))return false;
  if(ports.phase1Draft||!ports.phase1Build||ports.state.run)return false;
- if(ports.phase3BagOverflow()){ports.bannerMessage('Bag full. Discard overflow loot before entering another Realm.');return false;}
+ if(ports.phase3BagItems().length>=ports.PHASE3_BAG_CAPACITY||ports.phase3BagOverflow()){ports.bannerMessage('Bag full. Discard an item before entering another Realm.');return false;}
  const plane=ports.phase1Controller.enter();ports.phase1Build.families=ports.phase1Controller.state.families;
  if(plane.family==='magic'&&!ports.phase1Build.element){
   ports.phase1Draft={kind:'entry',plane,family:'magic',step:'element'};ports.phase5Persist();ports.render();
@@ -210,7 +210,7 @@ function phase1WaveWon(){
   // Gear in the Bag is at risk; equipped gear survives failure.
   if(ports.stashHasRoom())ports.state.stash.push({...item,isNew:true});
   else ports.state.expeditionOverflow.push({...item,isNew:true});
-  ports.phase3LootIds.add(item.id);r.loot.push(item);ports.phase5Results.earned.push(ports.phase5Item(item));
+  ports.phase3LootIds.add(item.id);r.loot.push(item);ports.phase5Results.earned.push(ports.phase5Item(item));ports.phase3NotifyLoot?.(item);
   ports.addLog('✦ '+item.rarity+' '+item.name+' added to Expedition bag.',item.rarity);
  }
  // Treasures share Bag capacity with equipment; they can only be sold outside the Expedition.
@@ -219,7 +219,7 @@ function phase1WaveWon(){
   const treasureId=ports.makeId();
   const treasure=globalThis.WandererV012Treasures.create(treasureId,r.tier);
   ports.state.valuables??=[];ports.state.valuables.push(treasure);
-  ports.phase3LootIds.add(treasure.id);r.valuables.push(treasure);
+  ports.phase3LootIds.add(treasure.id);r.valuables.push(treasure);ports.phase3NotifyLoot?.(treasure);
   ports.addLog('◆ '+treasure.name+' · '+treasure.worth+' Gold when extracted.','good');
  }
  r.status='ready';

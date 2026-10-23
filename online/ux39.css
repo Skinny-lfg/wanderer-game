@@ -125,6 +125,7 @@
 @media(max-width:600px){.phase3IntegratedPreview .phase3BetweenHero .paper .slotTile{width:45px;height:51px}}
 /* UI.2: combat arena and compact, accessible expedition details. */
 .phase3IntegratedPreview.phase3CombatView .combatLayout{grid-template-columns:minmax(0,2.2fr) minmax(280px,1fr);align-items:start}
+.phase3IntegratedPreview .combatLayout>.panel+.panel{margin-top:0}
 .phase3IntegratedPreview.phase3CombatView .combatActiveBuffs{margin:4px 0;padding:5px 8px}
 .phase3IntegratedPreview.phase3CombatView .combatActions{margin-top:5px}
 .phase3IntegratedPreview .combatBagDetails>summary,.phase3IntegratedPreview .phase3BetweenBag>summary,.phase3IntegratedPreview .phase3EquipmentDetails>summary{display:flex;justify-content:space-between;gap:8px;align-items:center;min-height:44px;padding:8px 10px;color:#efd7ae;background:var(--ui-section-bg);border:1px solid var(--ui-edge);border-radius:0;cursor:pointer;font-weight:700}
