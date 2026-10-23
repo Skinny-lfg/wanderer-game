@@ -169,8 +169,8 @@ body.phase3IntegratedPreview #screen:has(.runesInventoryOnly)>#initialBack>.goth
 .phase3IntegratedPreview .phase3CampCharacter .phase3CampHeroVitals .phase3Resource>span{display:block;margin:0 0 3px;color:#eadcc7;font:500 10px/1 var(--font-head);text-align:center}
 
 /* GothicProgressBar: live width still comes from the existing HP/Mana values. */
-.phase3IntegratedPreview .phase3CampCharacter .phase3ResourceTrack{position:relative;isolation:isolate;width:100%;height:22px;min-height:0;overflow:hidden;border:1px solid var(--gothic-antique-gold);border-radius:2px 8px 2px 8px;background:linear-gradient(180deg,#110f11,#312a2b 55%,#110f11);box-shadow:inset 0 1px 4px #000,0 0 0 1px #080709}
-.phase3IntegratedPreview .phase3CampCharacter .phase3ResourceTrack>i{position:absolute;top:2px;bottom:2px;left:2px;right:auto;width:var(--resource-pct,100%);height:auto;border:0;border-radius:1px 4px 1px 4px;clip-path:none;transition:width .15s linear}
+.phase3IntegratedPreview .phase3CampCharacter .phase3ResourceTrack{position:relative;isolation:isolate;width:100%;height:22px;min-height:0;overflow:hidden;border:1px solid #51484a;border-radius:0;background:#141214;box-shadow:inset 0 1px 4px #000}
+.phase3IntegratedPreview .phase3CampCharacter .phase3ResourceTrack>i{position:absolute;top:2px;bottom:2px;left:2px;right:auto;width:var(--resource-pct,100%);height:auto;border:0;border-radius:0;clip-path:none;transition:width .15s linear}
 .phase3IntegratedPreview .phase3CampCharacter .phase3Resource.health .phase3ResourceTrack>i{background:linear-gradient(180deg,#b95458,#762c35 58%,#4e2028)}
 .phase3IntegratedPreview .phase3CampCharacter .phase3Resource.mana .phase3ResourceTrack>i{background:linear-gradient(180deg,#88b7d0,#416d8c 58%,#294456)}
 .phase3IntegratedPreview .phase3CampCharacter .phase3ResourceTrack>b{position:absolute;inset:0;z-index:3;display:grid;place-items:center;color:#fff4dd;font:600 10px/1 var(--font-body);text-shadow:0 1px 3px #000;white-space:nowrap}
@@ -236,6 +236,7 @@ body.phase3IntegratedPreview:has(.phase3Camp) .phase3Camp [role="progressbar"]{f
 
 /* Mobile order: character, stats, expedition and journey after the heading. */
 @media(max-width:700px){
+  .phase3IntegratedPreview:has(.phase3Camp) :is(.phase3Nav,.cityCenterTabs,.cityBlacksmithNav,.merchantCategoryTabs,.phase3BetweenTabs){padding-bottom:14px}
   .phase3IntegratedPreview #screen>.phase3Camp{--camp-slot-row:74px;--camp-vitals-row:96px;--camp-frame-size:36px;--camp-item-art-size:25px;--camp-column-gap:3px;padding:12px 12px 10px;background-position:center,center,center 50%}
   .phase3IntegratedPreview .phase3CampGrid{grid-template-columns:minmax(0,1fr);grid-template-rows:auto;grid-template-areas:"intro" "hero" "stats" "expedition" "journey";gap:10px}
   .phase3IntegratedPreview .phase3CampGrid>.phase3CampStatus{padding:3px 2px 8px}

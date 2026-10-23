@@ -24,6 +24,7 @@
     '.phase3CampSideStats',
     '.phase3AffinityShrine',
     '.phase3AffinityPending',
+    '.phase3CityCenter .cityCenterLayout .panel',
     'dialog.phase3InitialAffinityDialog',
     'dialog.phase3MagicElementDialog',
     '[data-gothic-size="medium"]',
