@@ -11,13 +11,16 @@ test('primary buttons use neutral dark fills and crimson pressed feedback',()=>{
  assert.match(ui,/button\.primary:not\(\.phase3Start\)[^{]*\{[^}]*background:linear-gradient\(145deg,#393436,#262326/);
  assert.match(ui,/button:not\(\.phase3Start\)[^{]*:active:not\(:disabled\)\{[^}]*#512a31/);
 });
-test('Gothic corner v2 uses square panels and separate proportional PNG corners',()=>{
+test('Gothic corner system exposes large, medium and small proportional PNG tiers',()=>{
  assert.match(html,/<script src="online\/v012-gothic-panels\.js"><\/script>/);
- assert.match(gothic,/\.gothic-panel--standard/);assert.match(gothic,/\.gothic-panel--ornate/);
+ assert.match(gothic,/\.gothic-panel--large/);assert.match(gothic,/\.gothic-panel--medium/);assert.match(gothic,/\.gothic-panel--small/);
  assert.match(gothic,/border-radius:\s*0/);assert.match(gothic,/clip-path:\s*none/);
- assert.match(gothic,/aspect-ratio:\s*1\s*\/\s*1/);assert.match(gothic,/object-fit:\s*contain/);
+ assert.match(gothic,/height:\s*auto/);
  assert.match(gothic,/pointer-events:\s*none/);assert.doesNotMatch(gothic,/clip-path:\s*polygon/);
- assert.match(gothicRuntime,/new MutationObserver/);assert.match(gothicRuntime,/gothic-corner--\$\{corner\}/);
+ assert.match(gothicRuntime,/new MutationObserver/);assert.match(gothicRuntime,/medium-gold-tr\.png/);assert.match(gothicRuntime,/small-silver-tr\.png/);
+ assert(fs.existsSync(path.join(root,'assets/ui-kit/gothic-corners/medium-gold-tr.png')));assert(fs.existsSync(path.join(root,'assets/ui-kit/gothic-corners/small-silver-tr.png')));
+ assert.match(gothic,/scaleX\(-1\)/);assert.match(gothic,/scaleY\(-1\)/);assert.match(gothic,/scale\(-1, -1\)/);
+ assert.doesNotMatch(frames,/::after\{\s*content:"";position:absolute;z-index:8/);
  assert.match(frames,/clip-path:none/);
  assert.match(ui,/phase3IntegratedPreview dialog\{[^}]*background:var\(--ui4-home-stats-bg\)/);
 });

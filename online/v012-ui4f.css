@@ -1,31 +1,3 @@
-/* UI.4f — shared, mask-free Gothic panel geometry. The same fixed bevel
-   is used by the clipped fill and the eight independent outline segments. */
-.phase3IntegratedPreview{--wf-panel-edge:1px;--wf-panel-chamfer:11px}
-
-.phase3IntegratedPreview :is(
-  #screen>.panel:not(.phase3Camp),#screen>.combatLayout>.panel,
-  #screen>.equipmentLayout>.equipmentLeft>.panel,#screen>.equipmentLayout>.equipmentRight>.panel,
-  .phase3CampSideStats,.phase3ExpeditionPanel,.phase3Between,.phase3CityCenter,
-  .phase3AffinityShrine,.phase5VisualSummary,dialog
-){
-  --wf-panel-fill:var(--ui4-home-stats-bg);
-  --wf-panel-stroke:var(--ui4-gold-edge,#9e7d44);
-  --wf-panel-chamfer:11px;
-  border-color:transparent;
-  border-radius:0;
-  clip-path:none;
-  position:relative;
-  isolation:isolate;
-  background:transparent;
-}
-
-/* Camp keeps its illustrated background; only its outline uses the shared geometry. */
-.phase3IntegratedPreview .phase3Camp{
-  --wf-panel-stroke:var(--ui4-gold-edge,#9e7d44);
-  --wf-panel-chamfer:11px;
-  border-color:transparent;border-radius:0;clip-path:none;
-}
-
 /* Sub-panels retain their own existing fills, with a continuous square Gothic edge.
    Avoid mask-composite, whose antialiasing caused the Safari corner seams. */
 .phase3IntegratedPreview :is(
@@ -50,45 +22,6 @@
 }
 .phase3IntegratedPreview .rarityImageFrame{--ui4-chamfer-color:var(--ui-rarity-color,#8c8378)}
 
-.phase3IntegratedPreview :is(
-  #screen>.panel:not(.phase3Camp),#screen>.combatLayout>.panel,
-  #screen>.equipmentLayout>.equipmentLeft>.panel,#screen>.equipmentLayout>.equipmentRight>.panel,
-  .phase3CampSideStats,.phase3ExpeditionPanel,.phase3Between,.phase3CityCenter,
-  .phase3AffinityShrine,.phase5VisualSummary,dialog
-)::before{
-  content:"";position:absolute;z-index:-1;inset:0;pointer-events:none;
-  background:var(--wf-panel-fill);
-  clip-path:polygon(0 var(--wf-panel-chamfer),var(--wf-panel-chamfer) 0,calc(100% - var(--wf-panel-chamfer)) 0,100% var(--wf-panel-chamfer),100% calc(100% - var(--wf-panel-chamfer)),calc(100% - var(--wf-panel-chamfer)) 100%,var(--wf-panel-chamfer) 100%,0 calc(100% - var(--wf-panel-chamfer)));
-}
-
-.phase3IntegratedPreview :is(
-  #screen>.panel:not(.phase3Camp),#screen>.combatLayout>.panel,
-  #screen>.equipmentLayout>.equipmentLeft>.panel,#screen>.equipmentLayout>.equipmentRight>.panel,
-  .phase3Camp,.phase3CampSideStats,.phase3ExpeditionPanel,.phase3Between,
-  .phase3CityCenter,.phase3AffinityShrine,.phase5VisualSummary,dialog
-)::after{
-  content:"";position:absolute;z-index:8;inset:0;pointer-events:none;
-  background:
-    linear-gradient(var(--wf-panel-stroke),var(--wf-panel-stroke)) var(--wf-panel-chamfer) 0 / calc(100% - var(--wf-panel-chamfer) - var(--wf-panel-chamfer)) var(--wf-panel-edge) no-repeat,
-    linear-gradient(var(--wf-panel-stroke),var(--wf-panel-stroke)) var(--wf-panel-chamfer) 100% / calc(100% - var(--wf-panel-chamfer) - var(--wf-panel-chamfer)) var(--wf-panel-edge) no-repeat,
-    linear-gradient(var(--wf-panel-stroke),var(--wf-panel-stroke)) 0 var(--wf-panel-chamfer) / var(--wf-panel-edge) calc(100% - var(--wf-panel-chamfer) - var(--wf-panel-chamfer)) no-repeat,
-    linear-gradient(var(--wf-panel-stroke),var(--wf-panel-stroke)) 100% var(--wf-panel-chamfer) / var(--wf-panel-edge) calc(100% - var(--wf-panel-chamfer) - var(--wf-panel-chamfer)) no-repeat,
-    linear-gradient(135deg,transparent calc(50% - .5px),var(--wf-panel-stroke) 50%,transparent calc(50% + .5px)) 0 0 / var(--wf-panel-chamfer) var(--wf-panel-chamfer) no-repeat,
-    linear-gradient(45deg,transparent calc(50% - .5px),var(--wf-panel-stroke) 50%,transparent calc(50% + .5px)) 100% 0 / var(--wf-panel-chamfer) var(--wf-panel-chamfer) no-repeat,
-    linear-gradient(45deg,transparent calc(50% - .5px),var(--wf-panel-stroke) 50%,transparent calc(50% + .5px)) 0 100% / var(--wf-panel-chamfer) var(--wf-panel-chamfer) no-repeat,
-    linear-gradient(135deg,transparent calc(50% - .5px),var(--wf-panel-stroke) 50%,transparent calc(50% + .5px)) 100% 100% / var(--wf-panel-chamfer) var(--wf-panel-chamfer) no-repeat;
-}
-
-/* Existing main surfaces use the exact Home Stats panel surface. */
-.phase3IntegratedPreview :is(
-  #screen>.panel:not(.phase3Camp),#screen>.combatLayout>.panel,
-  #screen>.equipmentLayout>.equipmentLeft>.panel,
-  #screen>.equipmentLayout>.equipmentRight>.panel,
-  .phase3Between,.phase3CityCenter,.phase3AffinityShrine,.phase5VisualSummary
-){
-  background:transparent;
-  box-sizing:border-box;
-}
 .phase3IntegratedPreview :is(.slotTile,.miniSlot,.invItem,.phase3PotionSlot){
   border:1px solid transparent;
   border-radius:0;
