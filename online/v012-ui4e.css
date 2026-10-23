@@ -18,7 +18,7 @@
 .phase3IntegratedPreview .rarityImageFrame--bag{width:46px;height:46px}
 .phase3IntegratedPreview .rarityImageFrame--potion-stack{width:48px;height:48px}
 .phase3IntegratedPreview .rarityImageFrame--potion{width:42px;height:42px}
-.phase3IntegratedPreview .potionOffer[data-rarity]{border-color:color-mix(in srgb,var(--item-rarity) 70%,var(--ui4-gold-edge));background:color-mix(in srgb,var(--item-rarity) 10%,var(--ui4-surface) 90%)}
+.phase3IntegratedPreview .potionOffer[data-rarity]{border-color:color-mix(in srgb,var(--item-rarity) 70%,var(--ui4-gold-edge));background:linear-gradient(155deg,var(--ui4-surface-raised),var(--ui4-surface))}
 .phase3IntegratedPreview .potionOffer>.rarityImageFrame--potion{grid-column:1/-1;justify-self:center;width:62px;height:62px}
 .phase3IntegratedPreview .rarityImageFrame--public{width:30px;height:30px}
 .phase3IntegratedPreview .phase3PotionSlots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;width:min(100%,300px);margin:7px auto 0}
