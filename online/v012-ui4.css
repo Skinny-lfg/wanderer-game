@@ -189,3 +189,5 @@ body.phase3IntegratedPreview dialog.itemDialog [data-close]::before{content:"×"
 .phase3IntegratedPreview select{appearance:auto;background-image:none;padding-right:8px}
 
 .phase3IntegratedPreview .phase3AffinityShrine h1{min-width:0;max-width:100%;overflow-wrap:anywhere}
+.phase3IntegratedPreview .phase5VisualSummary .phase5ResultActions{display:flex;justify-content:center;margin:18px 0 0;padding-top:12px;border-top:1px solid var(--ui4-line)}
+.phase3IntegratedPreview .phase5VisualSummary #phase5ExitResult{position:static;bottom:auto;z-index:auto;width:min(100%,360px);min-height:48px;margin:0}

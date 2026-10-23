@@ -1431,14 +1431,14 @@ function phase5SummaryMarkup(r,title,realm){
  const metric=(label,value)=>'<div class="phase5ResultMetric"><span>'+label+'</span><strong>'+value+'</strong></div>';
  return '<section class="panel phase5Result phase5VisualSummary"><div class="phase5ResultHeading"><span class="eyebrow">Expedition '+r.level+'</span><h1>'+title+'</h1><p>'+r.realms+'/15 Realms completed · '+esc((r.families||[]).map(f=>WandererV012Expedition.FAMILY_NAMES[f]||f).join(' · '))+'</p></div>'+
   '<div class="phase5ResultMetrics">'+metric('Realms',r.realms+'/15')+metric('Gold','+'+r.gold)+metric('Fragments','+'+r.fragments)+metric('Combat Time',Number(r.seconds).toFixed(1)+'s')+'</div><p class="micro muted">Combat time excludes Camp and offline time.</p>'+
-  '<div class="phase5ResultActions"><button id="phase5ExitResult" class="primary">RETURN TO CAMP</button></div>'+
   (phase5Results.complete?'':'<p class="small muted">Older checkpoint: only activity recorded since this update is included.</p>')+
   (r.metrics?'<section class="phase5DamageStats"><h2>Combat statistics</h2><div class="phase5ResultMetrics">'+metric('Damage Dealt',Math.round(r.metrics.damageDealt||0))+metric('Damage Taken',Math.round(r.metrics.damageTaken||0))+'</div></section>':'')+
   (gearGroups?'<div class="phase5RewardGrid">'+gearGroups+'</div>':'<p class="small muted phase5EmptyRewards">No equipment or treasures recorded for this Expedition.</p>')+
   (r.runeTier?'<p class="phase5RuneResult">'+esc(r.runeName?'Rune obtained: '+r.runeName:'Boss Rune choice pending in Camp')+' · E'+r.runeTier+'</p>':'')+
   (r.outcome==='victory'?'<p>Highest Expedition Cleared: '+(phase5Snapshot?.expedition.completed||r.level)+'</p>'+(r.level%25===0?'<p class="phase5MilestoneWin">✦ Milestone completed: E'+r.level+'</p>':''):'<p class="small muted">No next difficulty unlocked. Equipped equipment and earned currencies are safe.</p>')+
   '<section class="phase5TemporaryBuild"><h2>Temporary build'+(r.element?' · '+esc(r.element):'')+'</h2><div class="phase5PassiveChips">'+(build||'<span class="small muted">No passives recorded.</span>')+'</div></section>'+
-  (realm?'<details class="phase5LastLog"><summary>Last Realm Combat Log</summary>'+(realm.truncated?'<p>Older entries omitted: log storage safety limit reached.</p>':'')+'<div class="log">'+(realm.log||[]).map(l=>'<div class="logLine">'+esc(l.text)+'</div>').join('')+'</div></details>':'')+'</section>';
+  (realm?'<details class="phase5LastLog"><summary>Last Realm Combat Log</summary>'+(realm.truncated?'<p>Older entries omitted: log storage safety limit reached.</p>':'')+'<div class="log">'+(realm.log||[]).map(l=>'<div class="logLine">'+esc(l.text)+'</div>').join('')+'</div></details>':'')+
+  '<div class="phase5ResultActions"><button id="phase5ExitResult" class="primary">RETURN TO CAMP</button></div></section>';
 }
 function phase5RenderResult(){
  const realm=phase5Results.realm,summary=phase5Results.summary,isRealm=phase5Results.review==='realm',r=isRealm?realm:summary;
