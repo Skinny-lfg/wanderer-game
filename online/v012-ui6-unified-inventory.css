@@ -1,13 +1,13 @@
 /* UI.6 — Unified equipment & potion grid in Inventory.
    Camp's final geometry stays in v012-ui5-camp.css.
    This stylesheet ONLY affects Inventory's Equipment/Stash layout. */
-.phase3IntegratedPreview .equipmentOverview{
+.phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear){
  --gear-row:75px;
  --gear-slot-width:68px;
  --gear-frame:52px;
  --gear-art:38px;
 }
-.phase3IntegratedPreview :is(.equipmentLayout,.equipmentLeft,.equipmentRight,.equipmentOverview,.equipmentInventory,.equipmentQuickView,.equipmentLoadout,.equipmentStats,.stashLayout,.stashGrid){min-width:0;max-width:100%}
+.phase3IntegratedPreview :is(.equipmentLayout,.equipmentLeft,.equipmentRight,:is(.equipmentOverview,.phase3BetweenGear),.equipmentInventory,.equipmentQuickView,.equipmentLoadout,.equipmentStats,.stashLayout,.stashGrid){min-width:0;max-width:100%}
 .phase3IntegratedPreview .equipmentLayout{grid-template-columns:minmax(0,.8fr) minmax(0,1.3fr)}
 .phase3IntegratedPreview .inventoryActionBar{display:flex;flex:1 1 100%;flex-wrap:wrap;align-items:center;gap:6px;min-width:0;white-space:normal}
 .phase3IntegratedPreview .inventoryActionBar button{min-height:34px;white-space:normal}
@@ -15,15 +15,15 @@
 .phase3IntegratedPreview .phase3PrimaryAttributeStrip>div{display:grid;min-width:0;align-content:center;justify-items:center;gap:2px;padding:4px 1px;background:var(--ui-stat-bg,#11101466);border-bottom:1px solid var(--ui-stat-rule,#9e7d4433);text-align:center}
 .phase3IntegratedPreview .phase3PrimaryAttributeStrip span{color:var(--ui-muted,#c5b7b3);font-size:clamp(7px,2.2vw,10px);line-height:1.05;white-space:nowrap}
 .phase3IntegratedPreview .phase3PrimaryAttributeStrip b{color:var(--ui-ink,#e9dfd9);font-size:clamp(10px,2.8vw,14px);font-variant-numeric:tabular-nums}
-.phase3IntegratedPreview .equipmentOverview>h2{margin-bottom:4px}
-.phase3IntegratedPreview .equipmentOverview>p{margin-bottom:8px}
-.phase3IntegratedPreview .equipmentOverview .equipmentQuickView{
+.phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear)>h2{margin-bottom:4px}
+.phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear)>p{margin-bottom:8px}
+.phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentQuickView{
  min-width:0;
 }
-.phase3IntegratedPreview .equipmentOverview .equipmentLoadout{
+.phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout{
  min-width:0;width:100%;
 }
-.phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper{
+.phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper{
  position:relative!important;isolation:isolate;
  display:grid!important;
  grid-template-columns:var(--gear-slot-width) minmax(0,1fr) var(--gear-slot-width)!important;
@@ -38,7 +38,7 @@
  border-radius:0!important;background:transparent!important;
  box-shadow:none!important;
 }
-.phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper>.model{
+.phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper>.model{
  display:block!important;position:absolute!important;z-index:0!important;
  inset:0 13% auto!important;width:74%!important;max-width:74%!important;
  height:calc(5 * var(--gear-row))!important;
@@ -47,7 +47,7 @@
  transform:scale(1.08)!important;transform-origin:center bottom!important;
  filter:drop-shadow(0 6px 10px #000b)!important;pointer-events:none!important;
 }
-.phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper>.slotTile[data-slot]{
+.phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper>.slotTile[data-slot]{
  display:flex!important;flex-direction:column!important;
  align-items:center!important;justify-content:flex-start!important;
  position:relative!important;inset:auto!important;
@@ -61,29 +61,29 @@
  background-image:none!important;box-shadow:none!important;
  box-sizing:border-box!important;overflow:visible!important;
 }
-.phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper>.slotTile:is([data-slot="weapon"],[data-slot="offhand"],[data-slot="helm"],[data-slot="armor"],[data-slot="gloves"]){grid-column:1!important}
-.phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper>.slotTile:is([data-slot="amulet"],[data-slot="belt"],[data-slot="ring1"],[data-slot="ring2"],[data-slot="boots"]){grid-column:3!important}
-.phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper>.slotTile:is([data-slot="weapon"],[data-slot="amulet"]){grid-row:1!important}
-.phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper>.slotTile:is([data-slot="offhand"],[data-slot="belt"]){grid-row:2!important}
-.phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper>.slotTile:is([data-slot="helm"],[data-slot="ring1"]){grid-row:3!important}
-.phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper>.slotTile:is([data-slot="armor"],[data-slot="ring2"]){grid-row:4!important}
-.phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper>.slotTile:is([data-slot="gloves"],[data-slot="boots"]){grid-row:5!important}
-.phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper>.slotTile .rarityImageFrame--slot{
+.phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper>.slotTile:is([data-slot="weapon"],[data-slot="offhand"],[data-slot="helm"],[data-slot="armor"],[data-slot="gloves"]){grid-column:1!important}
+.phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper>.slotTile:is([data-slot="amulet"],[data-slot="belt"],[data-slot="ring1"],[data-slot="ring2"],[data-slot="boots"]){grid-column:3!important}
+.phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper>.slotTile:is([data-slot="weapon"],[data-slot="amulet"]){grid-row:1!important}
+.phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper>.slotTile:is([data-slot="offhand"],[data-slot="belt"]){grid-row:2!important}
+.phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper>.slotTile:is([data-slot="helm"],[data-slot="ring1"]){grid-row:3!important}
+.phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper>.slotTile:is([data-slot="armor"],[data-slot="ring2"]){grid-row:4!important}
+.phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper>.slotTile:is([data-slot="gloves"],[data-slot="boots"]){grid-row:5!important}
+.phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper>.slotTile .rarityImageFrame--slot{
  width:var(--gear-frame)!important;height:var(--gear-frame)!important;
  flex:0 0 var(--gear-frame)!important;aspect-ratio:1/1!important;
  min-width:0!important;max-width:none!important;
 }
-.phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper>.slotTile .rarityImageFrame>img{
+.phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper>.slotTile .rarityImageFrame>img{
  --wf-art-size:var(--gear-art);object-fit:contain!important;
 }
-.phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper>.slotTile>span:not(.rarityImageFrame):not(.slotDLevel):not(.affinityBadge):not(.slotArmorType):not(.newBadge):not(.legendaryRankBadge){
+.phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper>.slotTile>span:not(.rarityImageFrame):not(.slotDLevel):not(.affinityBadge):not(.slotArmorType):not(.newBadge):not(.legendaryRankBadge){
  display:block!important;width:100%!important;max-width:100%!important;
  font-size:10px!important;line-height:1.12!important;
  white-space:normal!important;overflow:visible!important;
  text-overflow:clip!important;overflow-wrap:anywhere!important;
  text-align:center!important;
 }
-.phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper>.slotTile>.slotArmorType{
+.phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper>.slotTile>.slotArmorType{
  display:block!important;position:static!important;
  width:100%!important;max-width:100%!important;
  font-size:9px!important;line-height:1.05!important;
@@ -92,10 +92,10 @@
 }
 /* Same sixth grid row: potion slots are direct visual peers of equipment.
    display:contents makes the loadout wrapper non-rendering. */
-.phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper>.phase3PotionSlots{
+.phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper>.phase3PotionSlots{
  display:contents!important;
 }
-.phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper>.phase3PotionSlots>.phase3PotionSlot{
+.phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper>.phase3PotionSlots>.phase3PotionSlot{
  display:flex!important;flex-direction:column!important;
  align-items:center!important;justify-content:flex-start!important;
  position:relative!important;z-index:2!important;
@@ -106,19 +106,19 @@
  border:0!important;border-radius:0!important;
  background:transparent!important;box-shadow:none!important;overflow:visible!important;
 }
-.phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper>.phase3PotionSlots>.phase3PotionSlot:nth-child(1){grid-column:1!important}
-.phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper>.phase3PotionSlots>.phase3PotionSlot:nth-child(2){grid-column:2!important}
-.phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper>.phase3PotionSlots>.phase3PotionSlot:nth-child(3){grid-column:3!important}
-.phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper .phase3PotionSlot .rarityImageFrame--potion{
+.phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper>.phase3PotionSlots>.phase3PotionSlot:nth-child(1){grid-column:1!important}
+.phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper>.phase3PotionSlots>.phase3PotionSlot:nth-child(2){grid-column:2!important}
+.phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper>.phase3PotionSlots>.phase3PotionSlot:nth-child(3){grid-column:3!important}
+.phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper .phase3PotionSlot .rarityImageFrame--potion{
  width:var(--gear-frame)!important;height:var(--gear-frame)!important;
  flex:0 0 var(--gear-frame)!important;max-width:100%!important;
 }
-.phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper .phase3PotionSlot b,
-.phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper .phase3PotionSlot small{
+.phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper .phase3PotionSlot b,
+.phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper .phase3PotionSlot small{
  font-size:9px!important;line-height:1.1!important;
  white-space:normal!important;overflow-wrap:anywhere;text-align:center;
 }
-.phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper .phase3PotionSlot .tiny{
+.phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper .phase3PotionSlot .tiny{
  font-size:9px!important;min-height:22px;padding:1px 5px!important;
 }
 /* Potion stacks share the SAME stashGrid and rarity frame as equipment items.
@@ -152,15 +152,15 @@
  text-align:center;white-space:normal!important;overflow-wrap:anywhere;
 }
 @media(max-width:700px){
- .phase3IntegratedPreview .equipmentOverview{
+ .phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear){
   --gear-row:72px;--gear-slot-width:60px;
   --gear-frame:48px;--gear-art:33px;
  }
- .phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper{
+ .phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper{
   max-width:300px!important;grid-template-rows:repeat(5,var(--gear-row)) 76px!important;
   column-gap:3px!important;
  }
- .phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper>.slotTile>span:not(.rarityImageFrame):not(.slotDLevel):not(.affinityBadge):not(.slotArmorType):not(.newBadge):not(.legendaryRankBadge){
+ .phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper>.slotTile>span:not(.rarityImageFrame):not(.slotDLevel):not(.affinityBadge):not(.slotArmorType):not(.newBadge):not(.legendaryRankBadge){
   font-size:9.5px!important;
  }
  .phase3IntegratedPreview .equipmentInventory .stashGrid>.potionStackTile{

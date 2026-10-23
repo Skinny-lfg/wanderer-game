@@ -211,7 +211,7 @@
 .phase3IntegratedPreview .phase3BetweenBuild .phase3PermanentStats{margin-top:8px}
 .phase3IntegratedPreview .phase3BetweenBagPane .phase3Bag{width:100%;max-width:none;margin:0}
 .phase3IntegratedPreview .phase3BetweenBagPane .phase3BagGrid{grid-template-columns:repeat(4,minmax(0,1fr))}
-.phase3IntegratedPreview .phase3BetweenActions{position:sticky;top:auto;bottom:0;z-index:9;display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center;margin:0;padding:9px;background:#150e15f5;border-color:#796044;box-shadow:0 -8px 20px #08060980}
+.phase3IntegratedPreview .phase3BetweenActions{position:static;z-index:auto;display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center;margin:0;padding:9px;background:var(--ui-stat-bg,#11101466);border-color:var(--ui-border-gold,#796044);box-shadow:none}
 .phase3IntegratedPreview .phase3BetweenActions .phase3SelectedRealm{min-width:0;flex:none;overflow-wrap:anywhere}
 .phase3IntegratedPreview .phase3BetweenActions #phase2EnterRealm,.phase3IntegratedPreview .phase3BetweenActions .phase3Extract{min-width:145px;min-height:44px;margin:0}
 @media(max-width:850px){.phase3IntegratedPreview .phase3BetweenQuickStatus{grid-template-columns:minmax(0,1fr) minmax(240px,.8fr)}.phase3IntegratedPreview .phase3BetweenEquipmentGrid{grid-template-columns:1fr}.phase3IntegratedPreview .phase3BetweenBagPane .phase3BagGrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
