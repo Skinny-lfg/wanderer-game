@@ -13,9 +13,10 @@ test('shared Gothic CSS is active and free from decorative UI image packs', () =
   assert.match(css,/Shared Gothic system/);
   const urls=[...css.matchAll(/url\((['"]?)([^)'\"]+)\1\)/g)].map(m=>m[2]);
   const uiImages=urls.filter(u=>u.includes('assets/ui-kit/')&&!u.includes('/fonts/'));
-  assert.ok(uiImages.length>0,'approved Start Expedition art is retained');
+  assert.ok(uiImages.length>0,'Start Expedition illustration is retained');
   assert.ok(uiImages.every(u=>/original\/hud\/0[345]_expedition_(?:left|right|center_tile)\.png$/.test(u)),'only the approved Start Expedition artwork remains');
-  assert.ok(urls.some(u=>u.includes('expedition_left.png')),'approved Start Expedition end cap is retained');
+  assert.ok(urls.some(u=>u.includes('expedition_left.png')),'Start Expedition end cap is retained');
+  assert.match(html,/Start Expedition<\/button>/,'Start Expedition label has no trailing arrow');
   for(const u of urls){
     if(/^(data:|https?:)/.test(u))continue;
     assert.ok(fs.existsSync(path.resolve(path.dirname(cssPath),u)),u+' missing');

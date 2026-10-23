@@ -80,14 +80,41 @@ function phase5Capture(){
 }
 
 function phase5Persist(){
- if(!ports.PHASE5_VALIDATION)return true;
+ if(!ports.PHASE5_VALIDATION){
+  if(!ports.PHASE1_PREVIEW||!ports.phase5Ready||!ports.phase5Snapshot)return true;
+  try{
+   const pending=WandererV012Save.validate(phase5Capture(),ports.phase5Snapshot.binding);
+   globalThis.sessionStorage.setItem('wanderer_v012_local_preview',JSON.stringify(pending));
+   ports.phase5Snapshot=pending;return true;
+  }catch(error){ports.phase5Fail(error);return false;}
+ }
  if(!ports.phase5Ready||ports.saveBlocked)return false;
  try{ports.phase5Pending=WandererV012Save.validate(ports.phase5Capture(),ports.phase5Snapshot.binding);ports.phase5Snapshot=ports.phase5Store.commit(ports.phase5Pending);ports.phase5Pending=null;return true;}
  catch(error){ports.phase5Fail(error);return false;}
 }
 
 function phase5Init(){
- if(!ports.PHASE5_VALIDATION)return;
+ if(!ports.PHASE5_VALIDATION){
+  if(!ports.PHASE1_PREVIEW)return;
+  try{
+   if(!globalThis.WandererV012Save)throw Error('Local playtest save module is unavailable');
+   const binding='local-playtest',raw=globalThis.sessionStorage.getItem('wanderer_v012_local_preview');
+   if(raw){
+    const recovered=WandererV012Save.recover(raw,binding);ports.phase5Snapshot=recovered.save;
+    ports.state=JSON.parse(JSON.stringify(recovered.save.profile));ports.uid=Math.max(ports.uid,recovered.save.idCounter);
+    for(const item of [...ports.state.stash,...Object.values(ports.state.equip).filter(Boolean),...ports.state.expeditionOverflow,...ports.state.runes,...ports.state.sigils,...(ports.state.merchant?.stock||[]),...(ports.state.pendingRuneReward?.options||[])]){
+     const match=String(item.id).match(/^[a-z0-9]+-([a-z0-9]+)$/),number=match?parseInt(match[1],36):0;
+     if(Number.isSafeInteger(number))ports.uid=Math.max(ports.uid,number);
+    }
+    ports.phase1Controller.state.unlocked=recovered.save.expedition.unlocked;ports.phase5PersonalBest=recovered.save.expedition.completed;
+    ports.phase1Vitals=null;ports.phase1Build=null;ports.phase1Draft=null;
+    if(recovered.save.expedition.presentation)ports.phase5Results=ports.phase4Clone(recovered.save.expedition.presentation);
+    if(recovered.save.expedition.session)ports.phase4Restore(recovered.save.expedition.session);
+   }else ports.phase5Snapshot=WandererV012Save.create({...ports.state,run:null},{binding});
+   ports.phase5Ready=true;ports.saveBlocked=false;phase5Persist();
+  }catch(error){ports.phase5Fail(error);}
+  return;
+ }
  ports.saveBlocked=true;
  try{
   if(!globalThis.WandererV012Save||!globalThis.navigator?.locks)throw Error('Save validation requires the save module and a browser with Web Locks');

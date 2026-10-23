@@ -222,6 +222,3 @@ body.phase3IntegratedPreview:has(.phase3Camp) .phase3Camp [role="progressbar"]{f
 @media(prefers-reduced-motion:reduce){
   .phase3IntegratedPreview .phase3CampCharacter .phase3ResourceTrack>i{transition:none}
 }
-
-/* Preserve the original Start Expedition illustration; lift it from the panel. */
-.phase3IntegratedPreview .phase3Camp .phase3Start{filter:drop-shadow(0 4px 7px #9e7d4440)}
