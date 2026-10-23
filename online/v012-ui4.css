@@ -2,12 +2,12 @@
 @font-face{font-family:"Grenze";src:url("../assets/ui-kit/fonts/Grenze-Variable.ttf") format("truetype");font-style:normal;font-weight:100 900;font-display:swap}
 @font-face{font-family:"Alegreya Sans";src:url("../assets/ui-kit/fonts/AlegreyaSans-Regular.ttf") format("truetype");font-style:normal;font-weight:400;font-display:swap}
 .phase3IntegratedPreview{
- --ui4-ink:#e9dfd9;--ui4-muted:#c5b7b3;--ui4-surface:#251a20;--ui4-surface-raised:#33232a;
+ --ui4-ink:#e9dfd9;--ui4-muted:#c5b7b3;--ui4-surface:#252326;--ui4-surface-raised:#302d30;
  --ui4-edge:#806b4a;--ui4-iron:#665a45;--ui4-ember:#a65550;--ui4-accent:#d6b37c;
  --ui4-gold-deep:#73572d;--ui4-gold-edge:#9e7d44;--ui4-gold-highlight:#d8bc7d;
  --ui4-focus:#f5d594;--ui4-space:8px;--ui4-radius:8px;--ui4-chamfer:10px;
  --ui4-home-stats-bg:linear-gradient(145deg,rgba(48,43,46,.94),rgba(23,21,25,.92));
- --ui4-wine:#24151d;--ui4-wine-raised:#34212a;--ui4-metal:#80656a;--ui4-shadow:#08070bcc;
+ --ui4-wine:#1b191c;--ui4-wine-raised:#272427;--ui4-metal:#80656a;--ui4-shadow:#08070bcc;
  --ui4-line:linear-gradient(90deg,transparent,#80656a 14%,#c39b74 50%,#80656a 86%,transparent);
  --ui4-head:var(--font-head);--ui4-body:var(--font-body);
  font-family:var(--ui4-body);
@@ -39,6 +39,7 @@
 .phase3IntegratedPreview select{padding-inline:8px}
 .phase3IntegratedPreview :is([title],summary){text-underline-offset:2px}
 .phase3IntegratedPreview dialog{border:1px solid var(--ui4-gold-edge);border-radius:0;clip-path:polygon(0 var(--ui4-chamfer),var(--ui4-chamfer) 0,calc(100% - var(--ui4-chamfer)) 0,100% var(--ui4-chamfer),100% calc(100% - var(--ui4-chamfer)),calc(100% - var(--ui4-chamfer)) 100%,var(--ui4-chamfer) 100%,0 calc(100% - var(--ui4-chamfer)));box-shadow:inset 0 0 0 1px #c4936822,0 20px 65px #000d}
+.phase3IntegratedPreview dialog{background:var(--ui4-home-stats-bg);}
 .phase3IntegratedPreview dialog::backdrop{background:#09070cc7}
 .phase3IntegratedPreview :is(.slotTile,.miniSlot,.invItem,.runeSlot){border-radius:0;clip-path:polygon(0 7px,7px 0,calc(100% - 7px) 0,100% 7px,100% calc(100% - 7px),calc(100% - 7px) 100%,7px 100%,0 calc(100% - 7px))}
 .phase3IntegratedPreview :is(.slotTile,.miniSlot,.invItem) img{object-fit:contain}
@@ -80,18 +81,18 @@
 
 /* Gothic CSS controls: keep native HTML actions and states, without image skins. */
 .phase3IntegratedPreview button:not(.phase3Start):not(.slotTile):not(.invItem):not(.miniSlot):not(.phase3PotionSlot){
- min-height:40px;border:1px solid var(--ui4-gold-deep);border-radius:0;clip-path:polygon(0 5px,5px 0,calc(100% - 5px) 0,100% 5px,100% calc(100% - 5px),calc(100% - 5px) 100%,5px 100%,0 calc(100% - 5px));
- background:linear-gradient(145deg,#3a3021,#241d16 58%,#30251a);color:var(--ui4-ink);
- box-shadow:inset 0 1px #d8bc7d18,inset 0 -2px #09070a55,0 3px 7px #0006;
+ min-height:40px;border:1px solid #625b52;border-radius:0;clip-path:polygon(0 5px,5px 0,calc(100% - 5px) 0,100% 5px,100% calc(100% - 5px),calc(100% - 5px) 100%,5px 100%,0 calc(100% - 5px));
+ background:linear-gradient(145deg,#302d30,#201e21 58%,#292629);color:var(--ui4-ink);
+ box-shadow:inset 0 1px #ffffff12,inset 0 -2px #09070a55,0 3px 7px #0006;
  font-family:var(--font-head);text-shadow:0 1px 2px #0008;
 }
 .phase3IntegratedPreview button:not(.phase3Start):not(.slotTile):not(.invItem):not(.miniSlot):not(.phase3PotionSlot):hover:not(:disabled){
- border-color:#b3945a;background:linear-gradient(145deg,#493b28,#2c2419 60%,#3d301f);filter:none;
+ border-color:#89785b;background:linear-gradient(145deg,#393538,#282528 60%,#302d30);filter:none;
 }
-.phase3IntegratedPreview button.primary:not(.phase3Start):not(.slotTile):not(.invItem):not(.miniSlot):not(.phase3PotionSlot){border-color:#9e7d44;background:linear-gradient(145deg,#73572d,#4f3b21 60%,#392b1b);color:#fff0d5;box-shadow:inset 0 1px #d8bc7d28,inset 0 -2px #09070a55,0 3px 7px #0006}
-.phase3IntegratedPreview button.primary:not(.phase3Start):not(:disabled):hover{border-color:#c0a068;background:linear-gradient(145deg,#846739,#604a29 60%,#49351f)}
+.phase3IntegratedPreview button.primary:not(.phase3Start):not(.slotTile):not(.invItem):not(.miniSlot):not(.phase3PotionSlot){border-color:#756b59;background:linear-gradient(145deg,#393436,#262326 60%,#302b2e);color:#f1e9df;box-shadow:inset 0 1px #d8bc7d18,inset 0 -2px #09070a55,0 3px 7px #0006}
+.phase3IntegratedPreview button.primary:not(.phase3Start):not(:disabled):hover{border-color:#9c8967;background:linear-gradient(145deg,#464043,#302b2e 60%,#393436)}
 .phase3IntegratedPreview button:not(.phase3Start):not(.slotTile):not(.invItem):not(.miniSlot):not(.phase3PotionSlot):active:not(:disabled){
- transform:translateY(1px);box-shadow:inset 0 2px 4px #080509aa;
+ transform:translateY(1px);border-color:#8d4a50;background:linear-gradient(145deg,#512a31,#351d23 60%,#28171c);box-shadow:inset 0 2px 4px #080509aa;
 }
 .phase3IntegratedPreview button:disabled{filter:grayscale(.35);opacity:.58}
 .phase3IntegratedPreview button:focus-visible{outline:2px solid #d7b47d;outline-offset:2px}
@@ -101,6 +102,15 @@
 }
 .phase3IntegratedPreview .phase3Start:focus-visible{outline:2px solid #ebc790;outline-offset:3px}
 .phase3IntegratedPreview :is(#phase2EnterRealm,#phase3OpenInitialAffinity,#phase5ExitResult,dialog button[data-confirm]){border:1px solid #977052;color:#fff0e6;background:linear-gradient(180deg,#692b35,#471a24 58%,#35131c);box-shadow:inset 0 1px #f2c5a22b,inset 0 -2px #190a0e88,0 4px 12px #0009}
+.phase3IntegratedPreview .potionOffer>img,.phase3IntegratedPreview .merchantCompactCard>img,.phase3IntegratedPreview .inspectHero>img,.phase3IntegratedPreview .itemDialog .inspectHero>img{display:block;width:clamp(48px,6vw,76px);height:auto;aspect-ratio:1/1;object-fit:contain;object-position:center;justify-self:center;align-self:center}
+.phase3IntegratedPreview .potionOffer>img{width:62px;height:62px}
+.phase3IntegratedPreview .phase3CampCharacter .phase3ResourcePanel{gap:5px;align-items:start}
+.phase3IntegratedPreview .phase3CampCharacter .phase3Resource{min-width:0}
+.phase3IntegratedPreview .phase3CampCharacter .phase3Resource>span{margin-bottom:4px;line-height:1.1}
+.phase3IntegratedPreview .phase3CampCharacter .phase3ResourceTrack{box-sizing:border-box;width:100%;height:24px;min-height:24px;padding:0;border:1px solid #8c744d;border-radius:2px 7px 2px 7px;background:linear-gradient(180deg,#151316,#282528 55%,#151316);box-shadow:inset 0 1px 4px #000a,0 0 0 1px #080709}
+.phase3IntegratedPreview .phase3CampCharacter .phase3ResourceTrack>i{top:2px;bottom:2px;left:2px;border-radius:1px 4px 1px 4px}
+.phase3IntegratedPreview .phase3CampCharacter .phase3Resource.health .phase3ResourceTrack>i{background:linear-gradient(180deg,#b95458,#762c35 58%,#4e2028)}
+.phase3IntegratedPreview .phase3CampCharacter .phase3ResourceTrack>b{inset:0;padding-inline:3px;line-height:1.1}
 .phase3IntegratedPreview button.phase3Start{border:0;color:#fff0e6;background-color:transparent;background-image:url("../assets/ui-kit/original/hud/03_expedition_left.png"),url("../assets/ui-kit/original/hud/05_expedition_right.png");box-shadow:none}
 .phase3IntegratedPreview :is(#phase2EnterRealm,#phase3OpenInitialAffinity,#phase5ExitResult,dialog button[data-confirm]):hover:not(:disabled){border-color:#bd9a6c;background:linear-gradient(180deg,#7a3440,#511d28 58%,#3e151f);filter:brightness(1.08)}
 .phase3IntegratedPreview button.phase3Start:hover:not(:disabled){border:0;background-color:transparent;background-image:url("../assets/ui-kit/original/hud/03_expedition_left.png"),url("../assets/ui-kit/original/hud/05_expedition_right.png");filter:brightness(1.08)}
