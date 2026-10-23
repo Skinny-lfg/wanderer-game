@@ -60,12 +60,12 @@
 .phase3IntegratedPreview button.phase3Start{
  position:relative;isolation:isolate;overflow:hidden;
  border:0;border-radius:8px;
- background-color:#211319;
- background-image:url("../assets/ui-kit/original/hud/03_expedition_left.png"),url("../assets/ui-kit/original/hud/05_expedition_right.png"),linear-gradient(180deg,#45232b,#211319 55%,#382028);
- background-position:left center,right center,center;
- background-size:auto 100%,auto 100%,100% 100%;
+ background-color:transparent;
+ background-image:url("../assets/ui-kit/original/hud/03_expedition_left.png"),url("../assets/ui-kit/original/hud/05_expedition_right.png");
+ background-position:left center,right center;
+ background-size:auto 100%,auto 100%;
  background-repeat:no-repeat;
- min-height:58px;padding:8px 48px;box-shadow:0 4px 12px #0009;
+ min-height:58px;padding:8px 48px;box-shadow:none;
  color:#f5e7d5;text-shadow:0 2px 4px #000;font-family:var(--font-head);font-weight:700;
 }
 .phase3IntegratedPreview .phase3Start::before{
@@ -97,9 +97,9 @@
 }
 .phase3IntegratedPreview .phase3Start:focus-visible{outline:2px solid #ebc790;outline-offset:3px}
 .phase3IntegratedPreview :is(#phase2EnterRealm,#phase3OpenInitialAffinity,#phase5ExitResult,dialog button[data-confirm]){border:1px solid #977052;color:#fff0e6;background:linear-gradient(180deg,#692b35,#471a24 58%,#35131c);box-shadow:inset 0 1px #f2c5a22b,inset 0 -2px #190a0e88,0 4px 12px #0009}
-.phase3IntegratedPreview button.phase3Start{border:0;color:#fff0e6;background-color:#471a24;background-image:url("../assets/ui-kit/original/hud/03_expedition_left.png"),url("../assets/ui-kit/original/hud/05_expedition_right.png"),linear-gradient(180deg,#692b35,#471a24 58%,#35131c);box-shadow:0 4px 12px #0009}
+.phase3IntegratedPreview button.phase3Start{border:0;color:#fff0e6;background-color:transparent;background-image:url("../assets/ui-kit/original/hud/03_expedition_left.png"),url("../assets/ui-kit/original/hud/05_expedition_right.png");box-shadow:none}
 .phase3IntegratedPreview :is(#phase2EnterRealm,#phase3OpenInitialAffinity,#phase5ExitResult,dialog button[data-confirm]):hover:not(:disabled){border-color:#bd9a6c;background:linear-gradient(180deg,#7a3440,#511d28 58%,#3e151f);filter:brightness(1.08)}
-.phase3IntegratedPreview button.phase3Start:hover:not(:disabled){border:0;background-color:#612630;background-image:url("../assets/ui-kit/original/hud/03_expedition_left.png"),url("../assets/ui-kit/original/hud/05_expedition_right.png"),linear-gradient(180deg,#7a3440,#511d28 58%,#3e151f);filter:brightness(1.08)}
+.phase3IntegratedPreview button.phase3Start:hover:not(:disabled){border:0;background-color:transparent;background-image:url("../assets/ui-kit/original/hud/03_expedition_left.png"),url("../assets/ui-kit/original/hud/05_expedition_right.png");filter:brightness(1.08)}
 .phase3IntegratedPreview :is(button.phase3Start,#phase2EnterRealm,#phase3OpenInitialAffinity,#phase5ExitResult,dialog button[data-confirm]):active:not(:disabled){filter:brightness(.92)}
 .phase3IntegratedPreview :is(button.phase3Start,#phase2EnterRealm,#phase3OpenInitialAffinity,#phase5ExitResult,dialog button[data-confirm]):focus-visible{outline:2px solid #ebc790;outline-offset:3px}
 .phase3IntegratedPreview dialog.phase3InitialAffinityDialog{width:min(1380px,calc(100vw - 24px));max-width:none;max-height:90dvh;overflow:auto;padding:clamp(14px,2vw,24px)}
@@ -157,6 +157,7 @@
  .phase3IntegratedPreview :is(.phase3Camp,.phase3Between,.phase3CityCenter,.phase3AffinityShrine,.phase5VisualSummary){padding:18px 15px}
  .phase3IntegratedPreview .phase3Start{padding:8px 24px}
  .phase3IntegratedPreview .phase3Start::before{left:22%;right:22%;background-size:30px 100%}
+ .phase3IntegratedPreview .phase3CampStickyStart .phase3Start::before{background-size:24px 100%}
  .phase3IntegratedPreview .itemComparison .comparisonCards::after{display:none}
 }
 @media(max-width:700px){
