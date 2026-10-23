@@ -86,12 +86,12 @@
 
 
 /* Permanent rune inventory and boss reward choice */
-.runePanel{margin-top:15px;padding-top:14px;border-top:1px solid #39495e}
+.runePanel{margin-top:15px;padding-top:14px;border-top:1px solid var(--ui-edge,#9e7d4433)}
 .runeSlots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:10px 0}
-.runeSlot{border:1px solid #53627a;border-radius:9px;min-width:0;padding:8px;display:flex;flex-direction:column;gap:7px}
+.runeSlot{border:1px solid var(--ui-edge,#9e7d4433);border-radius:0;min-width:0;padding:8px;display:flex;flex-direction:column;gap:7px;background:var(--ui-panel-bg,linear-gradient(145deg,rgba(48,43,46,.94),rgba(23,21,25,.92)))}
 .runeSlot span{overflow-wrap:anywhere}.runeCollection,.runeOffers{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:7px;margin-top:10px}
-.runeCard{white-space:normal;text-align:left;padding:10px;border:1px solid #826baf;border-radius:9px;background:#251e36;color:#e8d6ff;line-height:1.5}
-.runeCard.runeEquipped{border-color:#b99aff;background:#382b50}
+.runeCard{white-space:normal;text-align:left;padding:10px;border:1px solid var(--ui-edge,#9e7d4433);border-radius:0;background:var(--ui-section-bg,linear-gradient(145deg,#302b2e 0%,#211e22 48%,#171519 100%));color:#e8d6ff;line-height:1.5}
+.runeCard.runeEquipped{border-color:#b99aff;background:var(--ui-panel-bg,linear-gradient(145deg,rgba(48,43,46,.94),rgba(23,21,25,.92)))}
 .runeCollection .runeCard{display:flex;flex-direction:column;gap:7px;min-width:0;padding:8px}
 .runeCollection .runeCard [data-rune-equip]{display:block;width:100%;text-align:left;background:transparent;border:0;white-space:normal;color:inherit;padding:4px;cursor:pointer}
 .runeCollection .runeCard [data-rune-equip]:focus-visible{outline:2px solid #d6b4fb;outline-offset:2px}

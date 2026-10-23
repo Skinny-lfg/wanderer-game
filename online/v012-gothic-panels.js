@@ -125,7 +125,7 @@
       panel.classList.remove(...sizes.map(value => `gothic-panel--${value}`), 'gothic-panel--ornate', 'gothic-panel--standard');
       panel.classList.add('gothic-button-ornamented');
       const rect = panel.getBoundingClientRect();
-      const cornerSize = Math.max(9, Math.min(22, rect.height * .48, rect.width * .24));
+      const cornerSize = Math.max(8, Math.min(13, rect.height * .30, rect.width * .12));
       if (panel.style.getPropertyValue('--gothic-corner-size') !== `${cornerSize}px`) {
         panel.style.setProperty('--gothic-corner-size', `${cornerSize}px`);
       }

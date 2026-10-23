@@ -81,3 +81,9 @@ Foi identificado que `stashGrid`, `stashCapacityBar` e `inventoryJumpNav` ainda 
 Verificação adicional: `v012-gothic-three-tier-browser.cjs` **PASS** em 390px e 1440px, comparando fundos/contornos computados; `v012-complete-browser.cjs` **PASS** em 390px e 1280px, com novas capturas do Inventory. Safari continua pendente.
 
 Nenhum teste foi usado como evidência sobre gameplay, economia ou balanceamento.
+
+## Correções visuais adicionais — Shrine, Combat, Between Realms e poções
+
+A verificação das capturas mobile encontrou estilos antigos ainda aplicados aos cartões de Runas do Shrine, blocos de build/Runas de Combat, bag de Between Realms e tokens Gold/Fragments. Essas superfícies agora usam os tokens escuros da Home, mantendo ícones e cores semânticas. No Apothecary, a regra genérica `.potionOffer img` estava a impor 62 px de altura aos quatro PNGs decorativos dos botões; a camada de ornamentos agora preserva o tamanho SMALL calculado e a proporção original.
+
+Validação Chromium: `node tests/v012-complete-browser.cjs` **PASS** em 390px e 1280px. O harness confirma a superfície dos tokens, Shrine, Combat, Between Realms, quatro ornamentos pequenos contidos por botão de poção e os percursos funcionais existentes. Capturas atualizadas: [Shrine mobile](homepage-ui-consistency-screenshots/after/shrine-390.jpg), [Combat mobile](homepage-ui-consistency-screenshots/after/combat-390.jpg), [Between Realms mobile](homepage-ui-consistency-screenshots/after/between-equipment-390.jpg), [Apothecary mobile](homepage-ui-consistency-screenshots/after/city-apothecary-390.jpg). Safari continua pendente.

@@ -123,6 +123,34 @@
   border-color:var(--ui-edge);
   border-radius:0;
 }
+.phase3IntegratedPreview :is(
+  .runePanel,.runeSlot,.runeCollection .runeCard,
+  .combatLayout>.panel,.combatActiveBuffs,.combatExpeditionDetails,
+  .combatExpeditionDetails .log,.phase3BetweenPane,.phase3BetweenEquipment .paper,
+  .phase3BagItem,.phase3BagEmpty,.phase3CombatBuild,.phase3ActiveAffinities,
+  .phase3CombatAffinityGroup,.combatRuneReadout
+){
+  background:var(--ui-panel-bg);
+  border-color:var(--ui-edge);
+  border-radius:0;
+}
+.phase3IntegratedPreview .runePanel{border-top-color:var(--ui-edge)}
+.phase3IntegratedPreview .runeCollection .runeCard.runeEquipped{background:var(--ui-section-bg)}
+.phase3IntegratedPreview .phase3BagGrid{background:transparent;border:0;padding:0}
+.phase3IntegratedPreview .phase3BagEmpty{background:var(--ui-stat-bg);border-style:dashed}
+.phase3IntegratedPreview .phase3BagItem{background:var(--ui-section-bg)}
+.phase3IntegratedPreview .token{
+  background:var(--ui-panel-bg);
+  border-color:var(--ui-edge);
+  border-radius:0;
+  color:var(--ui-muted);
+}
+.phase3IntegratedPreview .token b{color:var(--ui-ink)}
+.phase3IntegratedPreview .combatActiveBuffs{background:var(--ui-section-bg)}
+.phase3IntegratedPreview .combatExpeditionDetails .log{background:var(--ui-section-bg)}
+.phase3IntegratedPreview .phase3BetweenEquipment .paper{background:var(--ui-panel-bg)}
+.phase3IntegratedPreview :is(.phase3CombatBuild,.phase3ActiveAffinities,.combatRuneReadout){background:var(--ui-panel-bg)}
+.phase3IntegratedPreview .phase3CombatAffinityGroup{background:var(--ui-section-bg)}
 .phase3IntegratedPreview .equipmentInventory :is(
   .stashCapacityBar,.stashGrid,.inventoryValuables,.potionStash
 ){

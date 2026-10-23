@@ -136,13 +136,13 @@
 .phase3IntegratedPreview.phase3RunesView .equipmentLeft,.phase3IntegratedPreview.phase3RunesView .equipmentInventory{display:none}
 .phase3RunesView .equipmentLayout{display:block}
 .phase3BagInventory{display:grid;grid-template-columns:minmax(260px,1fr) minmax(260px,1fr);gap:20px}
-.phase3Bag{max-width:330px;width:100%;margin:12px auto;padding:12px;background:#170f18e8;border:1px solid #846344;border-radius:10px}
+.phase3Bag{max-width:330px;width:100%;margin:12px auto;padding:12px;background:var(--ui-panel-bg,linear-gradient(145deg,rgba(48,43,46,.94),rgba(23,21,25,.92)));border:1px solid var(--ui-edge,#9e7d4433);border-radius:0}
 .phase3Bag h3{display:flex;justify-content:space-between;font-size:16px;color:#efd7ae}
 .phase3BagGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
-.phase3BagItem,.phase3BagEmpty{min-width:0;min-height:66px;position:relative;display:flex;align-items:center;justify-content:center;background:#201822;border:1px solid #665244;border-radius:6px;padding:5px}
+.phase3BagItem,.phase3BagEmpty{min-width:0;min-height:66px;position:relative;display:flex;align-items:center;justify-content:center;background:var(--ui-section-bg,linear-gradient(145deg,#302b2e 0%,#211e22 48%,#171519 100%));border:1px solid var(--ui-edge,#9e7d4433);border-radius:0;padding:5px}
 .phase3BagItem img{width:46px;height:46px;object-fit:contain;max-width:100%}
-.phase3BagItem>span{position:absolute;bottom:2px;right:4px;font-size:10px;background:#120d18dc;padding:1px 3px;border-radius:3px}
-.phase3BagEmpty{background:#120e1680;border-style:dashed}
+.phase3BagItem>span{position:absolute;bottom:2px;right:4px;font-size:10px;background:var(--ui-section-bg,#211e22);padding:1px 3px;border-radius:0}
+.phase3BagEmpty{background:var(--ui-stat-bg,#11101466);border-style:dashed}
 .phase3BagOverflow{border-top:1px solid #ad7356;margin-top:10px;padding-top:10px;font-size:12px;color:#edbe9c}
 .phase3BagOverflow>.phase3BagGrid{max-height:235px;overflow:auto}
 .phase3CompactPassives{position:relative;min-width:0;margin:12px 0}

@@ -124,6 +124,15 @@ body.phase3IntegratedPreview :is(
   user-select: none;
 }
 
+/* Component image rules (for example, Potion offer artwork) must not resize
+   the decorative PNGs nested in a button's corner layer. */
+body.phase3IntegratedPreview .gothic-corner-layer > .gothic-corner {
+  width: var(--gothic-corner-size);
+  height: auto;
+  max-width: none;
+  object-fit: contain;
+}
+
 /* Anchor each PNG's actual frame line to the CSS border. The source art has
    transparent/inset margins, so zero offsets place its lines inside the panel. */
 .gothic-corner--tr {

@@ -20,7 +20,7 @@
 .phase3IntegratedPreview .inventoryValuables{margin-top:12px}
 .phase3IntegratedPreview .phase3Between{background:linear-gradient(90deg,#100b0bd9,#130e12b0,#100b0bd9),url('../assets/backgrounds/between-realms.webp') center/cover;border-color:#91734a}
 .phase3IntegratedPreview .phase3BetweenLayout{display:grid;grid-template-columns:minmax(0,1fr) minmax(270px,.75fr);gap:18px;align-items:start}
-.phase3IntegratedPreview .phase3BetweenHero{min-width:0;padding:10px;background:#100b0bbd;border:1px solid #705a43;border-radius:10px}
+.phase3IntegratedPreview .phase3BetweenHero{min-width:0;padding:10px;background:var(--ui-panel-bg);border:1px solid var(--ui-edge);border-radius:0}
 .phase3IntegratedPreview .phase3BetweenHero .paper{width:100%;max-width:390px;height:430px;min-height:430px}
 .phase3IntegratedPreview .phase3BetweenHero .paper .slotTile{width:58px;height:66px}
 .phase3IntegratedPreview .phase3BetweenHero .phase3PotionSlots{margin:8px auto 12px;max-width:440px}
@@ -127,12 +127,12 @@
 .phase3IntegratedPreview.phase3CombatView .combatLayout{grid-template-columns:minmax(0,2.2fr) minmax(280px,1fr);align-items:start}
 .phase3IntegratedPreview .combatHeaderControls{display:flex;align-items:center;gap:8px;margin-left:auto}
 .phase3IntegratedPreview .combatHeaderControls #combatSpeed{min-height:44px;white-space:nowrap}
-.phase3IntegratedPreview .combatBagDetails>summary,.phase3IntegratedPreview .phase3BetweenBag>summary,.phase3IntegratedPreview .phase3EquipmentDetails>summary{display:flex;justify-content:space-between;gap:8px;align-items:center;min-height:44px;padding:8px 10px;color:#efd7ae;background:#211823;border:1px solid #735b43;border-radius:8px;cursor:pointer;font-weight:700}
+.phase3IntegratedPreview .combatBagDetails>summary,.phase3IntegratedPreview .phase3BetweenBag>summary,.phase3IntegratedPreview .phase3EquipmentDetails>summary{display:flex;justify-content:space-between;gap:8px;align-items:center;min-height:44px;padding:8px 10px;color:#efd7ae;background:var(--ui-section-bg);border:1px solid var(--ui-edge);border-radius:0;cursor:pointer;font-weight:700}
 .phase3IntegratedPreview .combatBagDetails>summary span,.phase3IntegratedPreview .phase3BetweenBag>summary span{color:#e6bd76}
 .phase3IntegratedPreview .combatBagDetails .phase3Bag,.phase3IntegratedPreview .phase3BetweenBag .phase3Bag{margin:8px 0;max-width:none}
 .phase3IntegratedPreview .combatBagDetails .phase3Bag h3,.phase3IntegratedPreview .phase3BetweenBag .phase3Bag h3{display:none}
 .phase3IntegratedPreview .combatExpeditionDetails .log{max-height:300px;overflow-y:auto;scrollbar-width:thin}
-.phase3IntegratedPreview .combatActiveBuffs{margin:8px 0;padding:6px 10px;background:#17121bdc;border:1px solid #69513f;border-radius:7px}
+.phase3IntegratedPreview .combatActiveBuffs{margin:8px 0;padding:6px 10px;background:var(--ui-section-bg);border:1px solid var(--ui-edge);border-radius:0}
 .phase3IntegratedPreview .combatActiveBuffs .phase3ActiveBuffs{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .phase3IntegratedPreview .combatActiveBuffs h3,.phase3IntegratedPreview .combatActiveBuffs p{margin:0}
 .phase3IntegratedPreview .combatExpeditionDetails>h3{margin:10px 0}
@@ -140,7 +140,7 @@
 .phase3IntegratedPreview .combatActions{align-items:center}
 /* UI.2: short summary alongside comparable Realm cards. */
 .phase3IntegratedPreview .phase3BetweenLayout{grid-template-columns:minmax(245px,29%) minmax(0,1fr);gap:14px}
-.phase3IntegratedPreview .phase3BetweenHero{background:#100b0bef}
+.phase3IntegratedPreview .phase3BetweenHero{background:var(--ui-panel-bg)}
 .phase3IntegratedPreview .phase3CharacterSummary{display:flex;gap:10px;align-items:center;padding:6px;border-bottom:1px solid #715a43}
 .phase3IntegratedPreview .phase3CharacterSummary img{width:64px;height:70px;object-fit:contain;flex:none}
 .phase3IntegratedPreview .phase3CharacterSummary div{display:grid;gap:4px;min-width:0}
@@ -196,7 +196,7 @@
 .phase3IntegratedPreview .phase3BetweenTabs [role="tab"]:focus-visible{outline:2px solid #e7bd71;outline-offset:2px}
 .phase3IntegratedPreview .phase3BetweenPane{min-width:0}
 .phase3IntegratedPreview .phase3BetweenPane>[data-between-panel][hidden]{display:none!important}
-.phase3IntegratedPreview .phase3BetweenPane .phase3BetweenHero{width:100%;max-width:none;margin:0;padding:12px;background:#100b0bd9}
+.phase3IntegratedPreview .phase3BetweenPane .phase3BetweenHero{width:100%;max-width:none;margin:0;padding:12px;background:var(--ui-panel-bg)}
 .phase3IntegratedPreview .phase3BetweenEquipmentGrid{display:grid;grid-template-columns:minmax(300px,.86fr) minmax(0,1.14fr);gap:14px;align-items:start}
 .phase3IntegratedPreview .phase3BetweenGear,.phase3IntegratedPreview .phase3BetweenBagPane{min-width:0}
 .phase3IntegratedPreview .phase3BetweenEquipment .equipmentLoadout{display:flex;justify-content:center;min-width:0}
