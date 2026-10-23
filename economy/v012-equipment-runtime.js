@@ -304,7 +304,7 @@ function phase6UsePotion(index){
 
 function phase6BuyPotion(id){
  if(!ports.economyCanAct())return false;const a=ports.state.apothecary,index=a?.stock.findIndex(p=>p.id===id);if(index===undefined||index<0)return false;const p=a.stock[index],stock=ports.phase6PotionInventory(),quantity=stock[p.kind]||0;if(ports.state.gold<p.price||quantity>=99999||quantity%99===0&&!ports.stashHasRoom())return false;
- ports.state.gold-=p.price;stock[p.kind]=(stock[p.kind]||0)+1;a.stock.splice(index,1);ports.save();ports.render();return true;
+ ports.state.gold-=p.price;stock[p.kind]=(stock[p.kind]||0)+1;const replacementKind=WandererV012Consumables.offer(ports.gameRandom),replacement=WandererV012Consumables.CATALOG.find(entry=>entry.id===replacementKind);a.stock[index]={id:ports.makeId(),kind:replacementKind,price:Math.ceil(replacement.base*(1+ports.economyTier()*.12))};ports.save();ports.render();return true;
 }
 
 function phase6RerollPotions(){if(!ports.economyCanAct()||!ports.state.apothecary||ports.state.gold<ports.state.apothecary.refreshCost)return false;ports.state.gold-=ports.state.apothecary.refreshCost;ports.state.apothecary=WandererV012Consumables.shop(ports.economyTier(),ports.gameRandom,ports.makeId);ports.save();ports.render();return true;}
