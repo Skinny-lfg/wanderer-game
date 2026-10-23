@@ -179,7 +179,7 @@ body.phase3IntegratedPreview #screen:has(.runesInventoryOnly)>#initialBack>.goth
 .phase3IntegratedPreview .phase3CampCharacter .phase3ResourceTrack>b{position:absolute;inset:0;z-index:3;display:grid;place-items:center;color:#fff4dd;font:600 10px/1 var(--font-body);text-shadow:0 1px 3px #000;white-space:nowrap}
 
 /* GothicItemSlot: keep the real item image, rarity frame, badge and click target. */
-.phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile[data-slot]{position:relative;inset:auto;display:flex;width:100%;height:calc(var(--camp-slot-row) - 2px);min-height:52px;flex-direction:column;align-items:center;justify-content:flex-start;gap:2px;margin:0;padding:3px 1px;border:1px solid #b08d505f;border-radius:0;background:transparent;box-shadow:none;box-sizing:border-box;overflow:visible;z-index:2;cursor:pointer}
+.phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile[data-slot]{position:relative;inset:auto;display:flex;width:100%;height:calc(var(--camp-slot-row) - 2px);min-height:52px;flex-direction:column;align-items:center;justify-content:flex-start;gap:1px;margin:0;padding:1px;border:0;border-radius:0;background:transparent;box-shadow:none;box-sizing:border-box;overflow:visible;z-index:2;cursor:pointer}
 .phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile[data-slot]:hover{border-color:var(--gothic-highlight-gold);background:transparent;box-shadow:0 0 12px #9e7d4425}
 .phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile[data-slot]:focus-visible{outline:2px solid var(--gothic-highlight-gold);outline-offset:2px;z-index:5}
 .phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile[data-slot].active,.phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile[data-slot].filterSelected{outline:2px solid var(--gothic-highlight-gold);outline-offset:1px;z-index:4}
@@ -192,19 +192,19 @@ body.phase3IntegratedPreview #screen:has(.runesInventoryOnly)>#initialBack>.goth
 .phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile:is([data-slot="armor"],[data-slot="ring2"]){grid-row:4}
 .phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile:is([data-slot="gloves"],[data-slot="boots"]){grid-row:5}
 .phase3IntegratedPreview .phase3CampCharacter .rarityImageFrame--slot{display:inline-grid;flex:0 0 max(var(--camp-frame-size),44px);width:max(var(--camp-frame-size),44px);height:max(var(--camp-frame-size),44px);min-width:0;max-width:none;aspect-ratio:1/1}
-.phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile .rarityImageFrame>img{width:78%;height:78%;object-fit:contain}
+.phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile .rarityImageFrame>img{width:94%;height:94%;object-fit:contain}
 .phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile>.slotDLevel{z-index:5;top:3px;left:3px}
 .phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile .slotCopy{display:flex;max-width:100%;min-width:0;flex:0 0 auto;flex-direction:column;justify-content:center;gap:2px;overflow:visible;text-align:center;line-height:1.05;white-space:normal}
-.phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile .slotName{display:block;overflow:hidden;color:var(--gothic-ivory);font:500 11px/1.05 var(--font-body);text-overflow:ellipsis;white-space:nowrap;overflow-wrap:normal;word-break:normal}
-.phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile .slotArmorType{position:static;display:block;max-width:100%;overflow:hidden;color:#c3b49b;font:400 9px/1 var(--font-body);text-overflow:ellipsis;white-space:nowrap;overflow-wrap:normal;word-break:normal}
+.phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile .slotName{display:block;overflow:hidden;color:var(--gothic-ivory);font:500 12px/1.05 var(--font-body);text-overflow:ellipsis;white-space:nowrap;overflow-wrap:normal;word-break:normal}
+.phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile .slotArmorType{position:static;display:block;max-width:100%;overflow:hidden;color:#c3b49b;font:400 10px/1 var(--font-body);text-overflow:ellipsis;white-space:nowrap;overflow-wrap:normal;word-break:normal}
 
 /* Three existing potion controls occupy the bottom row of the paper doll. */
 .phase3IntegratedPreview .phase3CampCharacter .paper>.phase3PotionSlots{grid-column:1/4;grid-row:6;position:relative;z-index:2;display:grid;width:min(100%,228px);min-width:0;grid-template-columns:repeat(3,minmax(0,1fr));justify-self:center;align-self:start;gap:5px;margin:0 auto;padding:2px 0}
-.phase3IntegratedPreview .phase3CampCharacter .paper>.phase3PotionSlots>.phase3PotionSlot{position:relative;z-index:2;display:flex;width:100%;min-width:0;min-height:66px;flex-direction:column;align-items:center;justify-content:flex-start;gap:3px;margin:0;padding:2px 1px;border:1px solid #9e7d4450;border-radius:0;background:linear-gradient(145deg,#262226d9,#151317d9);box-shadow:inset 0 1px #ffffff0b,0 3px 8px #0006;overflow:visible}
-.phase3IntegratedPreview .phase3CampCharacter .paper>.phase3PotionSlots>.phase3PotionSlot.loaded[data-rarity]{border-color:color-mix(in srgb,var(--ui-rarity-color,#8c8378) 72%,#9e7d44);background:linear-gradient(145deg,color-mix(in srgb,var(--ui-rarity-color,#8c8378) 25%,#262226),color-mix(in srgb,var(--ui-rarity-color,#8c8378) 16%,#151317));box-shadow:inset 0 1px #ffffff12,0 0 9px color-mix(in srgb,var(--ui-rarity-color,#8c8378) 22%,transparent),0 3px 8px #0006}
+.phase3IntegratedPreview .phase3CampCharacter .paper>.phase3PotionSlots>.phase3PotionSlot{position:relative;z-index:2;display:flex;width:100%;min-width:0;min-height:66px;flex-direction:column;align-items:center;justify-content:flex-start;gap:3px;margin:0;padding:2px 1px;border:0;border-radius:0;background:transparent;box-shadow:none;overflow:visible}
+.phase3IntegratedPreview .phase3CampCharacter .paper>.phase3PotionSlots>.phase3PotionSlot.loaded[data-rarity]{border-color:transparent;background:transparent;box-shadow:none}
 .phase3IntegratedPreview .phase3CampCharacter .paper .phase3PotionSlot.loaded[data-rarity] b{color:var(--ui-rarity-shine,var(--ui-rarity-color,#d3c7b0))}
 .phase3IntegratedPreview .phase3CampCharacter .phase3PotionSlot:hover:not(:disabled){border-color:var(--gothic-highlight-gold)}
-.phase3IntegratedPreview .phase3CampCharacter .paper .phase3PotionSlot .rarityImageFrame--potion{width:var(--camp-frame-size);height:var(--camp-frame-size);flex:0 0 var(--camp-frame-size)}
+.phase3IntegratedPreview .phase3CampCharacter .paper .phase3PotionSlot .rarityImageFrame--potion{width:max(var(--camp-frame-size),44px);height:max(var(--camp-frame-size),44px);flex:0 0 max(var(--camp-frame-size),44px)}
 .phase3IntegratedPreview .phase3CampCharacter .paper .phase3PotionSlot b,.phase3IntegratedPreview .phase3CampCharacter .paper .phase3PotionSlot small{max-width:100%;overflow-wrap:anywhere;color:var(--gothic-parchment);font-size:9px;line-height:1.1;text-align:center}
 .phase3IntegratedPreview .phase3CampCharacter .paper .phase3PotionSlot .tiny{min-height:25px;padding:2px 5px;font-size:9px}
 
@@ -247,7 +247,8 @@ body.phase3IntegratedPreview:has(.phase3Camp) .phase3Camp [role="progressbar"]{f
   .phase3IntegratedPreview .phase3CampCharacter .paper>.model{top:34px;width:calc(100% - 100px);height:calc(var(--camp-vitals-row) + 4 * var(--camp-slot-row) - 34px)}
   .phase3IntegratedPreview .phase3CampCharacter .phase3CampHeroVitals{max-width:210px}
   .phase3IntegratedPreview .phase3CampCharacter .rarityImageFrame--slot{flex-basis:max(var(--camp-frame-size),40px);width:max(var(--camp-frame-size),40px);height:max(var(--camp-frame-size),40px)}
-  .phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile .slotName{font-size:10px}
+  .phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile .slotName{font-size:11px}
+  .phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile .slotArmorType{font-size:9px}
   .phase3IntegratedPreview .phase3CampSideStats{padding:12px}
   .phase3IntegratedPreview .phase3CampStat{min-height:40px;padding:4px 6px}
   .phase3IntegratedPreview .phase3ExpeditionPanel{padding:15px}
@@ -262,8 +263,8 @@ body.phase3IntegratedPreview:has(.phase3Camp) .phase3Camp [role="progressbar"]{f
 @media(max-width:390px){
   .phase3IntegratedPreview #screen>.phase3Camp{--camp-slot-row:72px;--camp-vitals-row:96px;--camp-frame-size:34px;--camp-item-art-size:23px}
   .phase3IntegratedPreview .phase3CampCharacter .paper{grid-template-columns:minmax(52px,.82fr) minmax(0,3fr) minmax(52px,.82fr)}
-  .phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile .slotName{font-size:9px}
-  .phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile .slotArmorType{font-size:8px}
+  .phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile .slotName{font-size:10px}
+  .phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile .slotArmorType{font-size:9px}
   .phase3IntegratedPreview .phase3CampStat span{font-size:10px}
 }
 @media(prefers-reduced-motion:reduce){

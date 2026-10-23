@@ -11,7 +11,7 @@
   document.head.append(css);
 
   const largeSelector = [
-    '.phase3Camp', '.phase3ExpeditionPanel', '.phase3Between',
+    '.phase3Camp', '.phase3Between',
     '.phase3CityCenter', '.phase5VisualSummary',
     '.equipmentOverview', '.equipmentInventory',
     '#screen > .combatLayout > .panel',
@@ -24,6 +24,7 @@
     '.phase3CampSideStats',
     '.phase3AffinityShrine',
     '.phase3AffinityPending',
+    '.phase3ExpeditionPanel',
     '.phase3CityCenter .cityCenterLayout .panel',
     'dialog.phase3InitialAffinityDialog',
     'dialog.phase3MagicElementDialog',

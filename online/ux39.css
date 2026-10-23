@@ -24,7 +24,7 @@
 .phase3IntegratedPreview .phase3BetweenHero .paper{width:100%;max-width:390px;height:430px;min-height:430px}
 .phase3IntegratedPreview .phase3BetweenHero .paper .slotTile{width:58px;height:66px}
 .phase3IntegratedPreview .phase3BetweenHero .phase3PotionSlots{margin:8px auto 12px;max-width:440px}
-.phase3IntegratedPreview .phase3BetweenHero .phase3Bag{width:100%;max-width:none;margin:12px 0}
+.phase3IntegratedPreview .phase3BetweenHero .phase3Bag{width:100%;max-width:296px;margin:12px auto}
 .phase3IntegratedPreview .phase3BetweenHero .phase3BagGrid{grid-template-columns:repeat(6,minmax(0,1fr))}
 .phase3IntegratedPreview .phase3BagItem,.phase3IntegratedPreview .phase3BagEmpty{min-height:62px}
 .phase3IntegratedPreview .phase3BetweenStats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin:10px 0}
@@ -68,7 +68,7 @@
 .phase3IntegratedPreview .phase3PassivePreview{padding-top:6px;border-top:1px solid #745363;color:#bfe2cf}
 .phase3IntegratedPreview dialog[data-realm-passive]{width:min(820px,calc(100vw - 24px));max-height:min(85dvh,800px);overflow-y:auto}
 .phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveChoices{grid-template-columns:repeat(3,minmax(0,1fr))}
-.phase3IntegratedPreview .phase3CombatView .combatExpeditionDetails .phase3Bag{max-width:none}
+.phase3IntegratedPreview .phase3CombatView .combatExpeditionDetails .phase3Bag{width:100%;max-width:296px;margin-inline:auto}
 .phase3IntegratedPreview .phase3CombatView .phase3BagGrid{grid-template-columns:repeat(6,minmax(0,1fr))}
 @media(max-width:1000px){
  .phase3IntegratedPreview .phase3BetweenLayout{grid-template-columns:1fr}
@@ -130,7 +130,7 @@
 .phase3IntegratedPreview.phase3CombatView .combatActions{margin-top:5px}
 .phase3IntegratedPreview .combatBagDetails>summary,.phase3IntegratedPreview .phase3BetweenBag>summary,.phase3IntegratedPreview .phase3EquipmentDetails>summary{display:flex;justify-content:space-between;gap:8px;align-items:center;min-height:44px;padding:8px 10px;color:#efd7ae;background:var(--ui-section-bg);border:1px solid var(--ui-edge);border-radius:0;cursor:pointer;font-weight:700}
 .phase3IntegratedPreview .combatBagDetails>summary span,.phase3IntegratedPreview .phase3BetweenBag>summary span{color:#e6bd76}
-.phase3IntegratedPreview .combatBagDetails .phase3Bag,.phase3IntegratedPreview .phase3BetweenBag .phase3Bag{margin:8px 0;max-width:none}
+.phase3IntegratedPreview .combatBagDetails .phase3Bag,.phase3IntegratedPreview .phase3BetweenBag .phase3Bag{width:100%;max-width:296px;margin:8px auto}
 .phase3IntegratedPreview .combatBagDetails .phase3Bag h3,.phase3IntegratedPreview .phase3BetweenBag .phase3Bag h3{display:none}
 .phase3IntegratedPreview .combatExpeditionDetails .log{max-height:300px;overflow-y:auto;scrollbar-width:thin}
 .phase3IntegratedPreview .combatActiveBuffs{margin:8px 0;padding:6px 10px;background:var(--ui-section-bg);border:1px solid var(--ui-edge);border-radius:0}
@@ -210,7 +210,7 @@
 .phase3IntegratedPreview .phase3BetweenBuild .phase3PassiveInline>b{color:#f0d6aa}
 .phase3IntegratedPreview .phase3BetweenBuild .phase3PassiveInline>p{margin:0;font-size:12px;line-height:1.4;color:#ded2c9}
 .phase3IntegratedPreview .phase3BetweenBuild .phase3PermanentStats{margin-top:8px}
-.phase3IntegratedPreview .phase3BetweenBagPane .phase3Bag{width:100%;max-width:none;margin:0}
+.phase3IntegratedPreview .phase3BetweenBagPane .phase3Bag{width:100%;max-width:296px;margin:0 auto}
 .phase3IntegratedPreview .phase3BetweenBagPane .phase3BagGrid{grid-template-columns:repeat(4,minmax(0,1fr))}
 .phase3IntegratedPreview .phase3BetweenActions{position:static;z-index:auto;display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center;margin:0;padding:9px;background:var(--ui-stat-bg,#11101466);border-color:var(--ui-border-gold,#796044);box-shadow:none}
 .phase3IntegratedPreview .phase3BetweenActions .phase3SelectedRealm{min-width:0;flex:none;overflow-wrap:anywhere}

@@ -59,6 +59,12 @@
 .phase3Preparation button:disabled{opacity:.44;cursor:default}
 .phase3Passives{background:#201c29;border:1px solid #655368;border-radius:9px;padding:11px 14px;margin:12px 0}
 .phase3Passives summary{color:#ecd2a5;font-weight:700;cursor:pointer;min-height:25px}
+.phase3AffinityPassiveDetails{width:100%;margin-top:4px;border-top:1px solid #80656a;padding:5px 4px 0;text-align:left}
+.phase3AffinityPassiveDetails summary{min-height:30px;display:flex;align-items:center;cursor:pointer;color:#dfc49b;font:500 12px/1.2 var(--font-head);list-style:none}
+.phase3AffinityPassiveDetails summary::-webkit-details-marker{display:none}
+.phase3AffinityPassiveDetails[open]{max-height:150px;overflow:auto;overscroll-behavior:contain}
+.phase3AffinityPassiveDetails p{margin:5px 0;color:#d8c8c3;font:400 12px/1.35 var(--font-body)}
+.phase3AffinityPassiveDetails p b{color:#f1d4a3}
 .phase3Passives ul{list-style:none;padding:0;margin:10px 0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
 .phase3Passives li{background:#292232;border:1px solid #634e65;border-radius:8px;padding:9px;min-width:0}
 .phase3Passives li b{display:block;color:#f1d9bd;font-size:12px}
@@ -69,9 +75,13 @@
    A #scene selector is deliberate: Expedition Elites must NOT shrink the arena. */
 .phase3IntegratedPreview #scene{height:390px;min-height:390px;max-height:390px;box-sizing:border-box}
 .phase3IntegratedPreview .scene .combatant>img{max-height:165px;object-fit:contain}
-.phase3IntegratedPreview .combatLayout{min-width:0;grid-template-columns:minmax(0,1fr) minmax(280px,.75fr)}
+.phase3IntegratedPreview .combatLayout{min-width:0;padding-top:18px;grid-template-columns:minmax(0,1fr) minmax(280px,.75fr)}
 .phase3IntegratedPreview .combatEnemyName{overflow-wrap:anywhere}
 .phase3IntegratedPreview .enemyDebuffs{scrollbar-width:thin}
+.phase3IntegratedPreview #phase5ExitRealm{border:1px solid #8b4b4d;background:linear-gradient(180deg,#542b31,#32191f 72%);color:#f2ded8;box-shadow:inset 0 1px #eab8aa22,0 3px 8px #0008}
+.phase3IntegratedPreview #phase5ExitRealm:hover:not(:disabled){border-color:#b56d6b;background:linear-gradient(180deg,#69363b,#421f26 72%)}
+.phase3IntegratedPreview #phase5ExitRealm:active:not(:disabled){background:linear-gradient(180deg,#401c23,#281218);transform:translateY(1px)}
+.phase3IntegratedPreview #phase5ExitRealm:focus-visible{outline:2px solid #d69b88;outline-offset:2px}
 @media(max-width:1000px){
  .phase3Loadout{grid-template-columns:repeat(5,minmax(0,1fr))}
  .phase3IntegratedPreview .combatLayout{grid-template-columns:minmax(0,1fr)}
@@ -136,11 +146,11 @@
 .phase3IntegratedPreview.phase3RunesView .equipmentLeft,.phase3IntegratedPreview.phase3RunesView .equipmentInventory{display:none}
 .phase3RunesView .equipmentLayout{display:block}
 .phase3BagInventory{display:grid;grid-template-columns:minmax(260px,1fr) minmax(260px,1fr);gap:20px}
-.phase3Bag{max-width:330px;width:100%;margin:12px auto;padding:12px;background:var(--ui-panel-bg,linear-gradient(145deg,rgba(48,43,46,.94),rgba(23,21,25,.92)));border:1px solid var(--ui-edge,#9e7d4433);border-radius:0}
+.phase3Bag{max-width:296px;width:100%;margin:10px auto;padding:9px;background:var(--ui-panel-bg,linear-gradient(145deg,rgba(48,43,46,.94),rgba(23,21,25,.92)));border:1px solid var(--ui-edge,#9e7d4433);border-radius:0}
 .phase3Bag h3{display:flex;justify-content:space-between;font-size:16px;color:#efd7ae}
 .phase3BagGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
 .phase3BagItem,.phase3BagEmpty{min-width:0;min-height:0;aspect-ratio:1/1;position:relative;display:flex;align-items:center;justify-content:center;background:var(--ui-section-bg,linear-gradient(145deg,#302b2e 0%,#211e22 48%,#171519 100%));border:1px solid var(--ui-edge,#9e7d4433);border-radius:0;padding:5px;box-sizing:border-box}
-.phase3BagItem img{width:46px;height:46px;object-fit:contain;max-width:100%}
+.phase3BagItem img{width:44px;height:44px;object-fit:contain;max-width:100%}
 .phase3BagItem>span{position:absolute;bottom:2px;right:4px;font-size:10px;background:var(--ui-section-bg,#211e22);padding:1px 3px;border-radius:0}
 .phase3BagEmpty{background:var(--ui-stat-bg,#11101466);border-style:dashed}
 .phase3BagOverflow{border-top:1px solid #ad7356;margin-top:10px;padding-top:10px;font-size:12px;color:#edbe9c}
