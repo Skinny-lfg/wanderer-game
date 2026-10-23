@@ -1260,14 +1260,34 @@ function phase3AffinityChoiceMarkup(family){
  const names=WandererV012Expedition.FAMILY_NAMES,starter=family==='magic'?['kindling','deep_winter','overcharge']:[WandererV012Buildcraft.initialId(family)];
  const passives=starter.map(id=>WandererV012Buildcraft.CATALOG.find(p=>p.id===id)).filter(Boolean);
  const identity={blood:'Bleed and recovery',decay:'Rot and attrition',vitality:'Health and endurance',aegis:'Defense and Barrier',fury:'Speed and critical hits',magic:'Elemental casts and Mana'}[family];
- return '<article class="phase3AffinityChoice"><button type="button" class="phase1DraftCard" data-phase2-initial="'+family+'">'+phase2FamilyIcon(family)+'<strong>'+esc(names[family])+'</strong><span class="small">'+identity+'</span><span class="small muted">'+(family==='magic'?'Choose Fire, Frost or Lightning next.':'Initial passive after the first '+esc(names[family])+' Realm: '+esc(passives[0]?.name||''))+'</span><b class="phase3AffinityAction">Choose '+esc(names[family])+'</b></button><details><summary>View passive details</summary>'+passives.map(p=>'<p><b>'+esc(p.name)+'</b> · '+esc(p.description.replace(/\bICD\b/gi,'cooldown'))+'</p>').join('')+'</details></article>';
+ const passiveText=passives.map(p=>'<b>'+esc(p.name)+'</b> — '+esc(p.description.replace(/\bICD\b/gi,'cooldown'))).join(' · ');
+ return '<article class="phase3AffinityChoice"><button type="button" class="phase1DraftCard" data-phase2-initial="'+family+'">'+phase2FamilyIcon(family)+'<strong>'+esc(names[family])+'</strong><span class="phase3AffinityIdentity">'+identity+'</span><span class="phase3AffinityPassive">'+(family==='magic'?'Choose one of 3 elements after selecting Magic.':'Passive after first clear: '+passiveText)+'</span><b class="phase3AffinityAction">Choose '+esc(names[family])+'</b></button></article>';
+}
+function phase3OpenMagicElementDialog(onChoose){
+ const elements=[['fire','Fire','Burn · deals damage over time.'],['frost','Frost','Chill · slows enemy attacks.'],['lightning','Lightning','Shock · four charges trigger a burst.']];
+ const cards=elements.map(([id,name,description])=>'<button type="button" class="phase1DraftCard phase3MagicElementChoice" data-initial-magic-element="'+id+'"><img class="magicChoiceIcon" src="assets/affinities/magic/'+id+'.png" alt="" loading="lazy" decoding="async"><strong>'+name+'</strong><span>'+description+'</span></button>').join('');
+ const dialog=showModal('Choose a Magic element','<p class="small muted">Choose one of Fire, Frost or Lightning. Its element stays fixed for this Expedition.</p><div class="phase3MagicElementChoices">'+cards+'</div>');
+ if(!dialog)return null;dialog.dataset.initialMagicElement='1';dialog.classList.add('phase3MagicElementDialog');
+ dialog.querySelectorAll('[data-initial-magic-element]').forEach(button=>button.onclick=()=>onChoose?.(button.dataset.initialMagicElement,dialog));
+ return dialog;
 }
 function phase3OpenInitialAffinity(g){
  const existing=document.querySelector('dialog[data-initial-affinity]');if(existing)return existing;
  const choices=WandererV012Expedition.FAMILIES.map(phase3AffinityChoiceMarkup).join('');
  const dialog=showModal('Choose your initial affinity','<p class="small muted">Expedition '+g.expedition+' · Choose one of the six affinities to begin. This choice uses the existing Expedition progression.</p><div class="phase1DraftCards phase3AffinityChoices phase3InitialAffinityChoices">'+choices+'</div>');
  if(!dialog)return null;dialog.dataset.initialAffinity='1';dialog.classList.add('phase3InitialAffinityDialog');
- dialog.querySelectorAll('[data-phase2-initial]').forEach(button=>button.onclick=()=>{if(phase2ChooseInitial(button.dataset.phase2Initial)){dialog.close();phase2EnterInitialRealm();}});
+ dialog.querySelectorAll('[data-phase2-initial]').forEach(button=>button.onclick=()=>{
+  const family=button.dataset.phase2Initial;
+  if(family==='magic'){
+   phase3OpenMagicElementDialog((element,elementDialog)=>{
+    if(!phase2ChooseInitial('magic'))return;
+    if(!phase2ChooseElement(element))return;
+    elementDialog.close();dialog.close();phase2EnterInitialRealm();
+   });
+   return;
+  }
+  if(phase2ChooseInitial(family)){dialog.close();phase2EnterInitialRealm();}
+ });
  return dialog;
 }
 
