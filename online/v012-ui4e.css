@@ -22,6 +22,8 @@
 .phase3IntegratedPreview .phase3PotionSlots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;width:min(100%,300px);margin:7px auto 0}
 .phase3IntegratedPreview .phase3PotionSlot{min-width:0;min-height:78px;padding:5px 3px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;overflow:hidden;touch-action:manipulation}
 .phase3IntegratedPreview .phase3PotionSlot b{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px}
+.phase3IntegratedPreview .phase3PotionSlot.loaded[data-rarity]{border-color:color-mix(in srgb,var(--ui-rarity-color,#8c8378) 72%,#9e7d44);background:linear-gradient(145deg,color-mix(in srgb,var(--ui-rarity-color,#8c8378) 25%,#262226),color-mix(in srgb,var(--ui-rarity-color,#8c8378) 16%,#151317));box-shadow:inset 0 1px #ffffff12,0 0 9px color-mix(in srgb,var(--ui-rarity-color,#8c8378) 22%,transparent),0 3px 8px #0006}
+.phase3IntegratedPreview .phase3PotionSlot.loaded[data-rarity] b{color:var(--ui-rarity-shine,var(--ui-rarity-color,#d3c7b0))}
 .phase3IntegratedPreview .phase3PotionSlot .tiny{min-height:24px;padding:2px 6px;font-size:10px}
 .phase3IntegratedPreview .phase3PotionSlot .potionPlaceholder>img{opacity:.25}
 .phase3IntegratedPreview .phase3PotionSlot.empty{border-style:dashed}
