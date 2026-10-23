@@ -1115,6 +1115,7 @@ function phase3BindHeader(){
  const version=document.querySelector('.version');if(version)version.textContent='v0.12.0';
  if(typeof document.title==='string')document.title='Wanderer v0.12.0';
  const nav=$('nav');if(nav)nav.inert=false;
+ const logo=$('brandLogo');if(logo){logo.setAttribute('role','button');logo.setAttribute('tabindex','0');logo.setAttribute('aria-label','Return to Camp');logo.onclick=()=>phase3Go('phase1');logo.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();phase3Go('phase1');}};}
  const menu=document.getElementById('menuToggle'),bar=document.getElementById('onlineBar');
  if(menu&&bar)menu.onclick=()=>{const open=!bar.classList.contains('menuOpen');bar.classList.toggle('menuOpen',open);menu.setAttribute('aria-expanded',String(open));};
  Q('[data-online-action="account"]').forEach(b=>{b.textContent='Account';b.onclick=()=>{bar?.classList.remove('menuOpen');menu?.setAttribute('aria-expanded','false');phase3Account();};});
@@ -1130,6 +1131,8 @@ function phase3Account(){
  });
 }
 function phase3BindPaper(){
+ const character=document.querySelector('.phase3CampCharacter .paper>.model');
+ if(character){character.setAttribute('role','button');character.setAttribute('tabindex','0');character.setAttribute('aria-label','Change character');character.onclick=phase3Account;character.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();phase3Account();}};}
  Q('[data-eqslot]').forEach(button=>button.onclick=()=>{
   const slot=button.dataset.eqslot;
   if(!state.equip[slot]){

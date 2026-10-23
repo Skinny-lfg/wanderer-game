@@ -25,6 +25,8 @@ body.phase3IntegratedPreview:has(.phase3Camp){
   color:var(--gothic-ivory);
   background:var(--gothic-obsidian);
 }
+body.phase3IntegratedPreview #brandLogo[role="button"]{cursor:pointer}
+body.phase3IntegratedPreview #brandLogo[role="button"]:focus-visible{outline:2px solid var(--ui4-focus);outline-offset:3px}
 
 /* GothicTabs: existing native navigation and aria states. */
 body.phase3IntegratedPreview:has(.phase3Camp) .phase3Nav{gap:7px;align-items:center}
@@ -162,6 +164,7 @@ body.phase3IntegratedPreview #screen:has(.runesInventoryOnly)>#initialBack>.goth
 .phase3IntegratedPreview .phase3CampGrid>.phase3CampCharacter{grid-area:hero;position:relative;isolation:isolate;min-width:0;width:100%;max-width:none;align-self:start;margin:0;padding:0;border:0;background:transparent}
 .phase3IntegratedPreview .phase3CampCharacter .paper{position:relative;display:grid;width:100%;max-width:660px;height:auto;min-height:0;aspect-ratio:auto;grid-template-columns:minmax(62px,.9fr) minmax(0,3.5fr) minmax(62px,.9fr);grid-template-rows:var(--camp-vitals-row) repeat(4,var(--camp-slot-row)) minmax(72px,auto);column-gap:var(--camp-column-gap);row-gap:0;justify-items:center;align-items:start;overflow:visible;margin:0 auto;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none}
 .phase3IntegratedPreview .phase3CampCharacter .paper>.model{position:absolute;z-index:0;top:24px;right:auto;bottom:auto;left:50%;width:calc(100% - 92px);max-width:none;height:calc(var(--camp-vitals-row) + 4 * var(--camp-slot-row) - 24px);object-fit:contain;object-position:center bottom;transform:translateX(-50%) scale(.92);transform-origin:center bottom;filter:drop-shadow(0 7px 12px #000b);mask-image:none;opacity:1;pointer-events:none}
+.phase3IntegratedPreview .phase3CampCharacter .paper>.model[role="button"]{pointer-events:auto;cursor:pointer}
 .phase3IntegratedPreview .phase3CampIdentity{grid-column:2;grid-row:1;position:relative;z-index:3;display:flex;width:100%;min-width:0;flex-direction:column;align-items:center;gap:3px;padding:2px 0 0;pointer-events:none}
 .phase3IntegratedPreview .phase3CampAccountName{max-width:100%;overflow:hidden;color:#f0ddb6;font:500 clamp(16px,1.2vw,18px)/1.1 var(--font-head);text-align:center;text-overflow:ellipsis;text-shadow:0 2px 5px #000;white-space:nowrap}
 .phase3IntegratedPreview .phase3CampCharacter .phase3CampHeroVitals{position:relative;z-index:3;width:100%;max-width:240px;margin:0}
@@ -176,8 +179,8 @@ body.phase3IntegratedPreview #screen:has(.runesInventoryOnly)>#initialBack>.goth
 .phase3IntegratedPreview .phase3CampCharacter .phase3ResourceTrack>b{position:absolute;inset:0;z-index:3;display:grid;place-items:center;color:#fff4dd;font:600 10px/1 var(--font-body);text-shadow:0 1px 3px #000;white-space:nowrap}
 
 /* GothicItemSlot: keep the real item image, rarity frame, badge and click target. */
-.phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile[data-slot]{position:relative;inset:auto;display:flex;width:100%;height:calc(var(--camp-slot-row) - 2px);min-height:52px;flex-direction:column;align-items:center;justify-content:flex-start;gap:2px;margin:0;padding:3px 1px;border:1px solid #b08d505f;border-radius:0;background:linear-gradient(145deg,#262226e8,#151317e8);box-shadow:inset 0 0 0 1px #d8bc7d15,inset 0 1px #ffffff0b,0 4px 9px #0007;box-sizing:border-box;overflow:visible;z-index:2;cursor:pointer}
-.phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile[data-slot]:hover{border-color:var(--gothic-highlight-gold);background:linear-gradient(145deg,#3b3028,#211c1e);box-shadow:inset 0 0 0 1px #d8bc7d40,0 0 12px #9e7d4425}
+.phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile[data-slot]{position:relative;inset:auto;display:flex;width:100%;height:calc(var(--camp-slot-row) - 2px);min-height:52px;flex-direction:column;align-items:center;justify-content:flex-start;gap:2px;margin:0;padding:3px 1px;border:1px solid #b08d505f;border-radius:0;background:transparent;box-shadow:none;box-sizing:border-box;overflow:visible;z-index:2;cursor:pointer}
+.phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile[data-slot]:hover{border-color:var(--gothic-highlight-gold);background:transparent;box-shadow:0 0 12px #9e7d4425}
 .phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile[data-slot]:focus-visible{outline:2px solid var(--gothic-highlight-gold);outline-offset:2px;z-index:5}
 .phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile[data-slot].active,.phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile[data-slot].filterSelected{outline:2px solid var(--gothic-highlight-gold);outline-offset:1px;z-index:4}
 .phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile:is([data-slot="weapon"],[data-slot="offhand"],[data-slot="helm"],[data-slot="armor"],[data-slot="gloves"]){grid-column:1}
@@ -188,11 +191,11 @@ body.phase3IntegratedPreview #screen:has(.runesInventoryOnly)>#initialBack>.goth
 .phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile:is([data-slot="helm"],[data-slot="ring1"]){grid-row:3}
 .phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile:is([data-slot="armor"],[data-slot="ring2"]){grid-row:4}
 .phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile:is([data-slot="gloves"],[data-slot="boots"]){grid-row:5}
-.phase3IntegratedPreview .phase3CampCharacter .rarityImageFrame--slot{display:inline-grid;flex:0 0 var(--camp-frame-size);width:var(--camp-frame-size);height:var(--camp-frame-size);min-width:0;max-width:none;aspect-ratio:1/1}
+.phase3IntegratedPreview .phase3CampCharacter .rarityImageFrame--slot{display:inline-grid;flex:0 0 max(var(--camp-frame-size),44px);width:max(var(--camp-frame-size),44px);height:max(var(--camp-frame-size),44px);min-width:0;max-width:none;aspect-ratio:1/1}
 .phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile .rarityImageFrame>img{width:78%;height:78%;object-fit:contain}
 .phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile>.slotDLevel{z-index:5;top:3px;left:3px}
 .phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile .slotCopy{display:flex;max-width:100%;min-width:0;flex:0 0 auto;flex-direction:column;justify-content:center;gap:2px;overflow:visible;text-align:center;line-height:1.05;white-space:normal}
-.phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile .slotName{display:block;overflow:hidden;color:var(--gothic-ivory);font:500 10px/1.05 var(--font-body);text-overflow:ellipsis;white-space:nowrap;overflow-wrap:normal;word-break:normal}
+.phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile .slotName{display:block;overflow:hidden;color:var(--gothic-ivory);font:500 11px/1.05 var(--font-body);text-overflow:ellipsis;white-space:nowrap;overflow-wrap:normal;word-break:normal}
 .phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile .slotArmorType{position:static;display:block;max-width:100%;overflow:hidden;color:#c3b49b;font:400 9px/1 var(--font-body);text-overflow:ellipsis;white-space:nowrap;overflow-wrap:normal;word-break:normal}
 
 /* Three existing potion controls occupy the bottom row of the paper doll. */
@@ -243,6 +246,8 @@ body.phase3IntegratedPreview:has(.phase3Camp) .phase3Camp [role="progressbar"]{f
   .phase3IntegratedPreview .phase3CampCharacter .paper{max-width:470px;grid-template-columns:minmax(56px,.86fr) minmax(0,3fr) minmax(56px,.86fr);background-image:linear-gradient(to bottom,rgba(17,16,20,.08),rgba(17,16,20,.04) 68%,rgba(17,16,20,.3)),url('../assets/backgrounds/camp.webp');background-position:center,center 8%;background-size:100% 100%,auto 500px;background-repeat:no-repeat}
   .phase3IntegratedPreview .phase3CampCharacter .paper>.model{top:34px;width:calc(100% - 100px);height:calc(var(--camp-vitals-row) + 4 * var(--camp-slot-row) - 34px)}
   .phase3IntegratedPreview .phase3CampCharacter .phase3CampHeroVitals{max-width:210px}
+  .phase3IntegratedPreview .phase3CampCharacter .rarityImageFrame--slot{flex-basis:max(var(--camp-frame-size),40px);width:max(var(--camp-frame-size),40px);height:max(var(--camp-frame-size),40px)}
+  .phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile .slotName{font-size:10px}
   .phase3IntegratedPreview .phase3CampSideStats{padding:12px}
   .phase3IntegratedPreview .phase3CampStat{min-height:40px;padding:4px 6px}
   .phase3IntegratedPreview .phase3ExpeditionPanel{padding:15px}
