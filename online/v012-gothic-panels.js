@@ -55,6 +55,7 @@
     ':not(.phase3PotionSlot):not(.phase1DraftCard):not(.phase1Offer)',
     ':not(.lootCard):not(.phase3BagItem):not(.phase3MagicElementChoice)',
     ':not(.phase3PassiveChoice):not(.protectionChoice):not(.potionStackTile)',
+    ':not(.phase3CharacterPickerHitbox)',
   ].join('') + ',.cityBlacksmithNav a';
 
   const sizes = ['large', 'medium', 'small'];

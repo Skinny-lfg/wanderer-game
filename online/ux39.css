@@ -49,11 +49,10 @@
 .phase3IntegratedPreview .eventActions{margin-top:12px}
 .phase3IntegratedPreview .cityCenterSidebar .cityCenterTabs{display:flex;flex-direction:column;gap:7px;margin:0 0 12px}
 .phase3IntegratedPreview .apothecaryPanel .shopGrid{align-items:stretch}
-.phase3IntegratedPreview .potionOffer{display:grid;grid-template-rows:76px minmax(2.6em,auto) auto minmax(2.8em,auto) auto auto;align-items:center;justify-items:center;gap:5px;min-height:225px;overflow-wrap:anywhere}
-.phase3IntegratedPreview .potionOffer img{max-width:100%;height:72px;object-fit:contain}
-.phase3IntegratedPreview .potionOffer b,.phase3IntegratedPreview .potionOffer .potionEffect{line-height:1.25}
-.phase3IntegratedPreview .potionOffer .potionPrice{white-space:nowrap}
-.phase3IntegratedPreview .potionOffer button{min-height:44px;width:100%;align-self:end}
+.phase3IntegratedPreview .apothecaryPanel .potionOffer{min-width:0}
+.phase3IntegratedPreview .apothecaryPanel .potionEffect{line-height:1.3}
+.phase3IntegratedPreview .apothecaryPanel .potionPrice{white-space:nowrap}
+.phase3IntegratedPreview .apothecaryPanel .potionOffer button{min-height:38px}
 .phase3IntegratedPreview .phase3RealmActions{position:sticky;top:0;z-index:8;display:flex;gap:8px;align-items:center;padding:8px;margin:8px 0;background:#150e15f2;border:1px solid #796044;border-radius:8px}
 .phase3IntegratedPreview .phase3RealmActions #phase2EnterRealm{margin:0;flex:1;width:auto}
 .phase3IntegratedPreview .phase3RealmActions .phase3Extract{min-height:44px;flex:1}
@@ -78,8 +77,6 @@
  .phase3IntegratedPreview .cityCenterSidebar .cityCenterTabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%;margin-bottom:8px}
  .phase3IntegratedPreview .cityCenterSidebar .cityCenterTabs button{font-size:11px;padding:7px 3px;min-height:48px;white-space:normal;overflow-wrap:anywhere;justify-content:center;text-align:center}
  .phase3IntegratedPreview .cityCenterSidebar{display:flex;flex-direction:column;gap:0}
- .phase3IntegratedPreview .potionOffer{grid-template-rows:64px minmax(2.5em,auto) auto minmax(3em,auto) auto auto;min-height:210px}
- .phase3IntegratedPreview .potionOffer img{height:62px}
  .phase3IntegratedPreview .phase3RealmActions{padding:6px;gap:6px}
  .phase3IntegratedPreview .phase3RealmActions button{font-size:12px;padding:8px 5px}
  .phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveChoices{grid-template-columns:1fr}
@@ -268,8 +265,7 @@
 .phase3IntegratedPreview .cityCenterLayout .merchantCardActions button{min-height:38px}
 .phase3IntegratedPreview .cityCenterLayout .merchantCardInfo{gap:3px}
 .phase3IntegratedPreview .cityCenterLayout .merchantCardInfo>b{line-height:1.2}
-.phase3IntegratedPreview .cityCenterLayout .apothecaryPanel .shopGrid{grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
-.phase3IntegratedPreview .cityCenterLayout .potionOffer{min-width:0}
+.phase3IntegratedPreview .cityCenterLayout .apothecaryPanel .merchantCardActions{grid-template-columns:minmax(0,1fr) auto}
 /* The six initial choices use the live passive catalogue without changing selection. */
 .phase3IntegratedPreview .phase3AffinityChoices{grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}
 .phase3IntegratedPreview .phase3AffinityChoice{min-width:0;background:#211720;border:1px solid #795565;border-radius:10px;overflow:hidden}
@@ -277,8 +273,8 @@
 .phase3IntegratedPreview .phase3AffinityChoice .affinityFamilyIcon{width:64px;height:64px;object-fit:contain}
 .phase3IntegratedPreview .phase3AffinityChoice strong{font-size:19px}
 .phase3IntegratedPreview .phase3AffinityAction{color:#f1cf8f;font-size:12px;margin-top:auto}
-.phase3IntegratedPreview .phase3AffinityChoice details{padding:6px 11px 10px;border-top:1px solid #77535f}
-.phase3IntegratedPreview .phase3AffinityChoice summary{cursor:pointer;color:#eed3a5;min-height:33px;padding-top:6px}
+.phase3IntegratedPreview .phase3AffinityChoice details{padding:0 8px 5px;border-top:0}
+.phase3IntegratedPreview .phase3AffinityChoice summary{cursor:pointer;color:#eed3a5;min-height:33px;padding:4px 0}
 .phase3IntegratedPreview .phase3AffinityChoice details p{font-size:12px;line-height:1.4;margin:7px 0}
 /* Visual Expedition summary; every value comes from the existing result. */
 .phase3IntegratedPreview .phase5VisualSummary{max-width:none}

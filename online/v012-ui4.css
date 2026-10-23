@@ -80,19 +80,19 @@
 .phase3IntegratedPreview .phase3Start:active:not(:disabled){transform:translateY(1px)}
 
 /* Gothic CSS controls: keep native HTML actions and states, without image skins. */
-.phase3IntegratedPreview button:not(.phase3Start):not(.slotTile):not(.invItem):not(.miniSlot):not(.phase3PotionSlot){
+.phase3IntegratedPreview button:not(.phase3Start):not(.slotTile):not(.invItem):not(.miniSlot):not(.phase3PotionSlot):not(.phase3CharacterPickerHitbox){
  min-height:var(--ui-button-height,42px);padding:var(--ui-button-padding,8px 14px);
  border:1px solid var(--ui-edge,var(--ui4-edge,#625b52));border-radius:0;
  background:var(--ui-button-bg,linear-gradient(155deg,#302b2e,#1d1a1e 72%));color:var(--ui-muted,var(--ui4-ink));
  box-shadow:inset 0 1px #ffffff12,inset 0 -2px #09080a55;
  font:500 14px/1.15 var(--font-head);text-align:center;text-shadow:none;white-space:normal;
 }
-.phase3IntegratedPreview button:not(.phase3Start):not(.slotTile):not(.invItem):not(.miniSlot):not(.phase3PotionSlot):hover:not(:disabled){
+.phase3IntegratedPreview button:not(.phase3Start):not(.slotTile):not(.invItem):not(.miniSlot):not(.phase3PotionSlot):not(.phase3CharacterPickerHitbox):hover:not(:disabled){
  border-color:#d8bc7d;background:var(--ui-button-hover-bg,linear-gradient(155deg,#493b32,#292126 75%));color:var(--ui-ink,var(--ui4-ink));filter:none;
 }
-.phase3IntegratedPreview button.primary:not(.phase3Start):not(.slotTile):not(.invItem):not(.miniSlot):not(.phase3PotionSlot){border-color:#756b59;background:linear-gradient(145deg,#393436,#262326 60%,#302b2e);color:#f1e9df;box-shadow:inset 0 1px #d8bc7d18,inset 0 -2px #09070a55,0 3px 7px #0006}
+.phase3IntegratedPreview button.primary:not(.phase3Start):not(.slotTile):not(.invItem):not(.miniSlot):not(.phase3PotionSlot):not(.phase3CharacterPickerHitbox){border-color:#756b59;background:linear-gradient(145deg,#393436,#262326 60%,#302b2e);color:#f1e9df;box-shadow:inset 0 1px #d8bc7d18,inset 0 -2px #09070a55,0 3px 7px #0006}
 .phase3IntegratedPreview button.primary:not(.phase3Start):not(:disabled):hover{border-color:#9c8967;background:linear-gradient(145deg,#464043,#302b2e 60%,#393436)}
-.phase3IntegratedPreview button:not(.phase3Start):not(.slotTile):not(.invItem):not(.miniSlot):not(.phase3PotionSlot):active:not(:disabled){
+.phase3IntegratedPreview button:not(.phase3Start):not(.slotTile):not(.invItem):not(.miniSlot):not(.phase3PotionSlot):not(.phase3CharacterPickerHitbox):active:not(:disabled){
  transform:translateY(1px);border-color:#8d4a50;background:linear-gradient(145deg,#512a31,#351d23 60%,#28171c);box-shadow:inset 0 2px 4px #080509aa;
 }
 .phase3IntegratedPreview button:disabled{filter:grayscale(.35);opacity:.58}
@@ -120,12 +120,10 @@
 .phase3IntegratedPreview dialog.phase3InitialAffinityDialog{box-sizing:border-box;width:min(1380px,calc(100vw - 32px));max-width:calc(100vw - 32px);max-height:90dvh;overflow:auto;padding:clamp(14px,2vw,24px)}
 .phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityChoices{display:grid;box-sizing:border-box;width:100%;max-width:100%;min-width:0;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
 .phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityChoice{box-sizing:border-box;width:100%;max-width:100%;min-width:0;border:0;border-radius:0;background:transparent}
-.phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityChoice>.phase1DraftCard{display:flex;align-items:center;justify-content:flex-start;box-sizing:border-box;width:100%;max-width:100%;height:290px;min-width:0;padding:12px 10px;gap:9px;text-align:center}
+.phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityChoice>.phase1DraftCard{display:flex;align-items:center;justify-content:flex-start;box-sizing:border-box;width:100%;max-width:100%;height:auto;min-height:142px;min-width:0;padding:12px 10px;gap:9px;text-align:center}
 .phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityChoice .affinityFamilyIcon{width:min(82px,100%);height:82px;object-fit:contain;flex:none;filter:drop-shadow(0 4px 8px #0009)}
 .phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityChoice strong{font-size:clamp(17px,1.5vw,21px)}
 .phase3IntegratedPreview .phase3AffinityIdentity{font-size:15px;color:var(--ui4-muted);line-height:1.35}
-.phase3IntegratedPreview .phase3AffinityPassive{flex:1;min-height:0;max-height:100%;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;font-size:14px;line-height:1.45;color:#e7d5c2}
-.phase3IntegratedPreview .phase3AffinityPassive b{color:#f1d4a3;font-weight:700}
 .phase3IntegratedPreview dialog.phase3MagicElementDialog{width:min(760px,calc(100vw - 24px));max-width:none;padding:clamp(14px,2vw,24px)}
 .phase3IntegratedPreview .phase3MagicElementChoices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}
 .phase3IntegratedPreview .phase3MagicElementChoice{display:flex;align-items:center;box-sizing:border-box;width:100%;height:250px;min-width:0;padding:14px 10px;gap:10px;text-align:center}
@@ -178,11 +176,10 @@
 @media(max-width:700px){
  .phase3IntegratedPreview dialog.phase3InitialAffinityDialog{width:calc(100vw - 20px);max-width:calc(100vw - 20px);max-height:calc(100dvh - 20px);padding:10px}
  .phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityChoices{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
- .phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityChoice>.phase1DraftCard{height:264px;padding:8px 5px;gap:7px;font-size:12px}
+ .phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityChoice>.phase1DraftCard{height:auto;min-height:118px;padding:8px 5px;gap:7px;font-size:12px}
  .phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityChoice .affinityFamilyIcon{width:58px;height:58px}
  .phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityChoice strong{font-size:16px}
  .phase3IntegratedPreview .phase3AffinityIdentity{font-size:12px;line-height:1.3}
- .phase3IntegratedPreview .phase3AffinityPassive{font-size:12.5px;line-height:1.4}
  .phase3IntegratedPreview dialog.phase3MagicElementDialog{width:calc(100vw - 16px);max-height:calc(100dvh - 20px);padding:12px}
  .phase3IntegratedPreview .phase3MagicElementChoices{gap:6px;margin-top:10px}
  .phase3IntegratedPreview .phase3MagicElementChoice{height:260px;padding:8px 4px;gap:7px;font-size:11px}

@@ -59,12 +59,16 @@
 .phase3Preparation button:disabled{opacity:.44;cursor:default}
 .phase3Passives{background:#201c29;border:1px solid #655368;border-radius:9px;padding:11px 14px;margin:12px 0}
 .phase3Passives summary{color:#ecd2a5;font-weight:700;cursor:pointer;min-height:25px}
-.phase3AffinityPassiveDetails{width:100%;margin-top:4px;border-top:1px solid #80656a;padding:5px 4px 0;text-align:left}
-.phase3AffinityPassiveDetails summary{min-height:30px;display:flex;align-items:center;cursor:pointer;color:#dfc49b;font:500 12px/1.2 var(--font-head);list-style:none}
+.phase3AffinityPassiveDetails{width:100%;margin:0;padding:0;text-align:left}
+.phase3AffinityPassiveDetails summary{min-height:34px;display:flex;align-items:center;justify-content:space-between;gap:5px;cursor:pointer;color:#dfc49b;font:500 12px/1.25 var(--font-head);list-style:none}
 .phase3AffinityPassiveDetails summary::-webkit-details-marker{display:none}
+.phase3AffinityPassiveDetails summary::after{content:"▾";flex:none;color:#cda76e;font-size:14px}
+.phase3AffinityPassiveDetails[open] summary::after{content:"▴"}
+.phase3AffinityPassiveDetails summary b{color:#f1d4a3;font-weight:700}
 .phase3AffinityPassiveDetails[open]{max-height:150px;overflow:auto;overscroll-behavior:contain}
 .phase3AffinityPassiveDetails p{margin:5px 0;color:#d8c8c3;font:400 12px/1.35 var(--font-body)}
 .phase3AffinityPassiveDetails p b{color:#f1d4a3}
+.phase3AffinityPassiveDescriptions p:first-child{margin-top:0}
 .phase3Passives ul{list-style:none;padding:0;margin:10px 0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
 .phase3Passives li{background:#292232;border:1px solid #634e65;border-radius:8px;padding:9px;min-width:0}
 .phase3Passives li b{display:block;color:#f1d9bd;font-size:12px}

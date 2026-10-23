@@ -161,7 +161,7 @@
  }
  .phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper{
   max-width:300px!important;grid-template-rows:repeat(5,var(--gear-row)) 76px!important;
-  column-gap:3px!important;
+  column-gap:3px!important;position:relative!important;top:-10px;margin-bottom:-10px!important;
  }
  .phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper>.slotTile>span:not(.rarityImageFrame):not(.slotDLevel):not(.affinityBadge):not(.slotArmorType):not(.newBadge):not(.legendaryRankBadge){
   font-size:9.5px!important;
