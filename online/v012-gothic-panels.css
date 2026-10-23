@@ -98,6 +98,9 @@ body.phase3IntegratedPreview :is(
   --gothic-corner-offset-y: 0px;
   position: relative;
   isolation: isolate;
+  border-radius: 0;
+  clip-path: none;
+  -webkit-clip-path: none;
 }
 .gothic-corner-layer--button {
   z-index: 0;
