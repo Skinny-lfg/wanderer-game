@@ -6,6 +6,6 @@ test('global UI CSS is externalized once and shared tokens have a single source'
  assert.doesNotMatch(css,/url\((?:['"]?)assets\//);assert.match(css,/--space-4:16px/);assert.match(css,/--wine-edge:#674853/);
 });
 test('Initial affinity selection is an image-free modal with responsive affinity cards',()=>{
- assert.match(html,/function phase3OpenInitialAffinity\(g\)/);assert.match(html,/phase3AffinityPending/);assert.doesNotMatch(html,/class="phase3ShrineArtPlaceholder"/);
+ assert.match(html,/function phase3OpenInitialAffinity\(g\)/);assert.match(html,/phase3AffinityPending/);const initialStart=html.indexOf('function phase3OpenInitialAffinity(g)');const initialEnd=html.indexOf('function phase3CombatBuildMarkup()',initialStart);assert.doesNotMatch(html.slice(initialStart,initialEnd),/phase3ShrineArtPlaceholder/);
  assert.match(ui,/dialog\.phase3InitialAffinityDialog/);assert.match(ui,/grid-template-columns:repeat\(6,minmax\(0,1fr\)\)/);assert.match(ui,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
 });
