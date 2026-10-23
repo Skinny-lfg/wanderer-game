@@ -83,7 +83,7 @@ test('each first completed family unlocks its enabling passive; repeated picks r
  }
  const b=api.create();b.families=['blood','decay','magic'];b.element='lightning';
  for(const family of b.families)api.initial(b,family);
- for(let i=0;i<15;i++){const opts=api.options(b,'blood',()=>.31);assert.equal(opts.length,3);api.choose(b,'blood',opts[0].id,opts);}
+ for(let i=0;i<15;i++){const opts=api.options(b,'blood',()=>.31);assert.equal(opts.length,Math.min(3,api.eligible(b,'blood').length));api.choose(b,'blood',opts[0].id,opts);}
  assert.equal(b.picks.length,18,'starter rewards plus fifteen normal selections');
  assert(b.picks.some(id=>api.rank(b,id)>2),'scalable talents can reach meaningful ranks above two');
  api.clear(b);assert.equal(b.picks.length,0);assert.equal(b.element,null);
@@ -191,6 +191,43 @@ test('alternative hybrids are exclusive per affinity pair, cap three, and unlock
  assert(api.FAMILIES.length===6);
  for(const f of b.families)assert(api.eligible(b,f).every(x=>!x.requires.length),'fourth hybrid must be rejected');
  assert.throws(()=>api.validate({...b,picks:[...b.picks,'carrion_detonation']}),/Invalid hybrid/);
+});
+
+test('Realm passive drafts stay in the completed Realm affinity with upgrades, hybrids, and short or empty pools',()=>{
+ const b=api.create();b.families=[...api.FAMILIES];b.unlockedFamilies=[...api.FAMILIES];b.element='fire';
+ for(const family of api.FAMILIES)api.initial(b,family);
+ b.realmIndex=14;b.runtime.hybridPity={'blood:decay':2,'aegis:fury':1};
+ for(const family of api.FAMILIES){
+  const eligible=api.eligible(b,family),offers=api.options(b,family,()=>.17);
+  assert(offers.length<=3);assert.deepEqual(offers.map(p=>p.family),offers.map(()=>family));
+  assert(offers.every(p=>eligible.some(q=>q.id===p.id)),'only eligible '+family+' passives');
+  assert(offers.every(p=>['Upgrade','Synergy','Discovery'].includes(p.category)));
+ }
+ assert.equal(b.runtime.hybridPity['aegis:fury'],1,'unrelated hybrid pity is preserved');
+ const decay=api.options(b,'decay',()=>.5);
+ assert(decay.length<3,'short affinity pool is returned without foreign-family filler');
+ assert(decay.every(p=>p.family==='decay'));
+
+ const upgrade=api.create();upgrade.families=['blood'];upgrade.unlockedFamilies=['blood'];
+ for(const p of api.CATALOG.filter(p=>p.family==='blood'&&!p.requires.length)){
+  const copies=p.id==='bleeding_edge'?1:p.max;
+  for(let i=0;i<copies;i++)upgrade.picks.push(p.id);
+ }
+ const onlyUpgrade=api.options(upgrade,'blood',()=>0);
+ assert.equal(onlyUpgrade.length,1);assert.equal(onlyUpgrade[0].id,'bleeding_edge');assert.equal(onlyUpgrade[0].category,'Upgrade');
+
+ const hybrid=api.create();hybrid.families=['blood','decay'];hybrid.unlockedFamilies=['blood','decay'];hybrid.realmIndex=10;hybrid.picks=['bleeding_edge','toxic_touch'];hybrid.runtime.hybridPity={'blood:decay':2};
+ const bloodHybrids=api.eligible(hybrid,'blood').filter(p=>p.requires.length);
+ assert(bloodHybrids.length>0);
+ const forced=api.options(hybrid,'blood',()=>.99);
+ assert(forced.some(p=>p.requires.length&&p.family==='blood'),'pity hybrid has Realm affinity as its primary family');
+ assert.equal(hybrid.runtime.hybridPity['blood:decay'],0,'offered hybrid resets its pair pity');
+ api.validate(JSON.parse(JSON.stringify(hybrid)));
+
+ const exhausted=api.create();exhausted.families=['blood'];exhausted.unlockedFamilies=['blood'];
+ for(const p of api.CATALOG.filter(p=>p.family==='blood'))for(let i=0;i<p.max;i++)exhausted.picks.push(p.id);
+ assert.equal(api.options(exhausted,'blood',()=>0).length,0);
+ const oldSave={...api.create(),families:[]};assert.equal(api.validate(JSON.parse(JSON.stringify(oldSave))).picks.length,0,'existing build saves remain valid');
 });
 test('Spellblade empowers the next magical Staff/Wand weapon hit, not the same cast',()=>{
  const b=api.create();b.families=['magic','fury'];b.element='fire';b.picks=['spellblade'];

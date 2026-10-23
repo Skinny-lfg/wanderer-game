@@ -56,12 +56,14 @@ test('D.7: Dual Dagger E200/Endless combat matches the updated audit',()=>{
  const {run}=require('../scripts/v012-affinity-combat-sim.cjs');
  const builds=[
   {weapon:'Staff',armorType:'Cloth',old:[7202600,9,71033,41]},
-  {weapon:'Wand',armorType:'Cloth',offhandType:'Orb',old:[7202697,9,66578,37],endless:[7212731,7,96843,34]},
-  {weapon:'Sword',armorType:'Plate',offhandType:'Shield',old:[7202794,14,108248,73],endless:[7212862,13,160073,67]},
-  {weapon:'Mace',armorType:'Plate',offhandType:'Shield',old:[7202891,15,99667,53],endless:[7212993,15,171031,55]},
-  {weapon:'Daggers',armorType:'Leather',offhandType:'Off-Hand Dagger',old:[7202988,15,102570,104],endless:[7213124,15,200525,139]},
-  {weapon:'Bow',armorType:'Leather',old:[7203085,15,146802,144]},
-  {weapon:'Two-Handed',armorType:'Leather',old:[7203182,15,120397,58]}
+  // Realm-local passive rewards alter this deterministic draft route without
+  // changing the E200 weapon coefficients.
+  {weapon:'Wand',armorType:'Cloth',offhandType:'Orb',old:[7202697,9,66654,37],endless:[7212731,7,96843,34]},
+  {weapon:'Sword',armorType:'Plate',offhandType:'Shield',old:[7202794,14,115192,75],endless:[7212862,13,160073,67]},
+  {weapon:'Mace',armorType:'Plate',offhandType:'Shield',old:[7202891,15,99668,53],endless:[7212993,15,171032,55]},
+  {weapon:'Daggers',armorType:'Leather',offhandType:'Off-Hand Dagger',old:[7202988,15,102570,103],endless:[7213124,15,200525,137]},
+  {weapon:'Bow',armorType:'Leather',old:[7203085,15,145897,144]},
+  {weapon:'Two-Handed',armorType:'Leather',old:[7203182,15,112294,54]}
  ];
  for(const build of builds)for(const [E,expected] of [[200,build.old],[300,build.endless]]){
   if(!expected)continue;

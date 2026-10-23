@@ -143,22 +143,23 @@ function synergy(b,p){
  return p.requires.length||tags.includes('CONSUMES_BLEED')&&c.bleed||tags.includes('CONSUMES_ROT')&&c.rot||tags.includes('CRIT_PAYOFF')&&c.crit||tags.includes('BARRIER_PAYOFF')&&c.barrier||tags.includes('HEAL_PAYOFF')&&c.heal||tags.includes('MAGIC_PAYOFF')&&c.funded||tags.includes('BLOCK_PAYOFF')&&c.block||ownedRank(b,p.id)>0;
 }
 function options(b,family,rng=Math.random){
- const all=b.unlockedFamilies.flatMap(f=>eligible(b,f)),pool=[...new Map(all.map(p=>[p.id,p])).values()];
+ // Realm rewards are affinity-local. eligible() still admits hybrids whose
+ // primary family is this Realm, provided every hybrid requirement is met.
+ const pool=[...new Map(eligible(b,family).map(p=>[p.id,p])).values()];
  // An exhausted family cannot fabricate a useful pick. A zero-card reward is handled explicitly by the controller.
  if(pool.length===0)return [];
  const chosen=[],remaining=()=>pool.filter(p=>!chosen.some(o=>o.id===p.id)),pick=a=>a[Math.min(a.length-1,Math.floor(rng()*a.length))];
- const prefer=a=>{const local=a.filter(p=>p.family===family||p.requires.includes(family));return local.length?local:a;};
  const add=(p,category)=>{if(p)chosen.push({...p,category,pity:p.requires.length?due.includes([...p.requires].sort().join(':')):false,preview:preview(b,p.id,b.runtime.draftStats||{})});};
  const hybrids=pool.filter(p=>p.requires.length),pairs=[...new Set(hybrids.map(p=>[...p.requires].sort().join(':')))];
  const pity={...(b.runtime.hybridPity||{})},due=pairs.filter(pair=>(pity[pair]||0)>=2);
  let hybrid=null;if(due.length){const pair=pick(due);hybrid=pick(hybrids.filter(p=>[...p.requires].sort().join(':')===pair));}
- else if(hybrids.length&&rng()<.35)hybrid=pick(prefer(hybrids));
+ else if(hybrids.length&&rng()<.35)hybrid=pick(hybrids);
  // Reserve Synergy first internally so an Upgrade cannot consume the mandatory pity card.
  const reserved=hybrid?.id;
- add(pick(prefer(remaining().filter(p=>!p.requires.length&&ownedRank(b,p.id)>0&&p.id!==reserved))),'Upgrade');
- add(hybrid||pick(prefer(remaining().filter(p=>!p.requires.length&&synergy(b,p)))),'Synergy');
- add(pick(prefer(remaining().filter(p=>!p.requires.length&&!ownedRank(b,p.id)))),'Discovery');
- while(chosen.length<Math.min(3,pool.length)){let rest=remaining();const normal=rest.filter(p=>!p.requires.length);if(chosen.some(p=>p.requires.length)&&normal.length)rest=normal;const candidate=pick(prefer(rest));add(candidate,candidate.requires.length?'Synergy':ownedRank(b,candidate.id)?'Upgrade':'Discovery');}
+ add(pick(remaining().filter(p=>!p.requires.length&&ownedRank(b,p.id)>0&&p.id!==reserved)),'Upgrade');
+ add(hybrid||pick(remaining().filter(p=>!p.requires.length&&synergy(b,p))),'Synergy');
+ add(pick(remaining().filter(p=>!p.requires.length&&!ownedRank(b,p.id))),'Discovery');
+ while(chosen.length<Math.min(3,pool.length)){let rest=remaining();const normal=rest.filter(p=>!p.requires.length);if(chosen.some(p=>p.requires.length)&&normal.length)rest=normal;const candidate=pick(rest);add(candidate,candidate.requires.length?'Synergy':ownedRank(b,candidate.id)?'Upgrade':'Discovery');}
  for(const pair of pairs)pity[pair]=chosen.some(p=>p.requires.length&&[...p.requires].sort().join(':')===pair)?0:Math.min(3,(pity[pair]||0)+1);
  for(let i=chosen.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[chosen[i],chosen[j]]=[chosen[j],chosen[i]];}
  // Commit counters only once the complete legal draft exists; the caller persists cards and RNG together.

@@ -4,15 +4,15 @@ test('B 1200 seeded drafts: useful distinct cards, categories, caps, elements an
  for(let seed=1;seed<=1200;seed++){
   const families=[['blood','decay','magic'],['vitality','aegis','fury'],['magic','fury','blood']][seed%3],b=build([],families,['fire','frost','lightning'][seed%3]);b.unlockedFamilies=[];for(const f of families)api.initial(b,f);b.runtime.draftStats=base;const rng=seeded(seed);
   for(let realm=1;realm<15;realm++){
-   b.realmIndex=realm;const family=families[realm%3],cards=api.options(b,family,rng);assert.equal(cards.length,3);assert.equal(new Set(cards.map(p=>p.id)).size,3);assert(cards.filter(p=>p.requires.length).length<=1);
+   b.realmIndex=realm;const family=families[realm%3],cards=api.options(b,family,rng);assert(cards.length>0&&cards.length<=3);assert.equal(new Set(cards.map(p=>p.id)).size,cards.length);assert(cards.every(p=>p.family===family),'all Realm rewards are affinity-local');assert(cards.filter(p=>p.requires.length).length<=1);
    for(const p of cards){assert(api.eligible(b,p.family).some(q=>q.id===p.id));assert(['Upgrade','Synergy','Discovery'].includes(p.category));assert(p.preview.useful);if(p.element)assert.equal(p.element,b.element);}
-   api.choose(b,family,cards[Math.floor(rng()*3)].id,cards);api.validate(b);
+   api.choose(b,family,cards[Math.floor(rng()*cards.length)].id,cards);api.validate(b);
   }
  }
 });
-test('B late second affinity: third eligible draft presents pity hybrid, counters serialize',()=>{
+test('B late second affinity: third eligible draft presents affinity-local pity hybrid, counters serialize',()=>{
  const b=build(['bleeding_edge'],['blood','decay']);b.unlockedFamilies=['blood'];b.realmIndex=12;api.initial(b,'decay');
- for(let realm=12;realm<=14;realm++){b.realmIndex=realm;const cards=api.options(b,'decay',()=>.99);if(realm<14)assert(!cards.some(p=>p.requires.length));else assert(cards.some(p=>p.requires.length));api.validate(JSON.parse(JSON.stringify(b)));}
+ for(let realm=12;realm<=14;realm++){b.realmIndex=realm;const cards=api.options(b,'blood',()=>.99);assert(cards.every(p=>p.family==='blood'));if(realm<14)assert(!cards.some(p=>p.requires.length));else assert(cards.some(p=>p.requires.length));api.validate(JSON.parse(JSON.stringify(b)));}
  assert.equal(b.runtime.hybridPity['blood:decay'],0);
 });
 test('B new draft is stable after restore; first win gives starter plus one choice exactly once',()=>{
@@ -53,4 +53,16 @@ test('B restored reward with 0, 1 or 2 legal offers continues without duplicate 
   assert.equal(a.controller().state.rewardPending,null);
   assert.equal(a.passive(null),false);
  }
+});
+
+test('old reward checkpoint drops foreign-affinity offers without changing saved build',()=>{
+ const a=create(5800);a.start(1);a.initial('blood');a.select(a.controller().state.offers.find(p=>p.family==='blood').id);a.enter();
+ while(a.state().run?.status==='fight'){a.state().run.enemy.hp=0;a.win();a.flush();}
+ const cp=a.checkpoint.capture(),picks=JSON.stringify(cp.session.build.picks);
+ const foreign=api.CATALOG.find(p=>p.family==='decay'&&!p.requires.length);assert(foreign);
+ cp.session.draft.options[0]={...foreign,category:'Discovery'};
+ a.checkpoint.restore(cp);
+ assert(a.draft().options.every(p=>p.family===a.draft().plane.family));
+ assert.equal(JSON.stringify(a.build().picks),picks,'saved passives remain untouched');
+ assert.equal(a.draft().options.length,cp.session.draft.options.length-1,'only obsolete foreign offer is removed');
 });

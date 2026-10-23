@@ -1,139 +1,33 @@
-/* UI.4f — responsive rarity frames and complete CSS chamfer borders. */
-.phase3IntegratedPreview{
-  --wf-panel-edge:1px;
-}
+/* UI.4f — shared, mask-free Gothic panel geometry. The same fixed bevel
+   is used by the clipped fill and the eight independent outline segments. */
+.phase3IntegratedPreview{--wf-panel-edge:1px;--wf-panel-chamfer:11px}
 
-/* Keep the Gothic silhouette clipped on a decoration layer, not on the surface
-   itself. The masked edge stays continuous across all eight polygon segments,
-   while the host keeps its natural outer shadows and focus outlines. */
 .phase3IntegratedPreview :is(
-  #screen>.panel:not(.phase3Camp),
-  #screen>.combatLayout>.panel,
-  #screen>.equipmentLayout>.equipmentLeft>.panel,
-  #screen>.equipmentLayout>.equipmentRight>.panel,
-  .phase3Camp,
-  .phase3ExpeditionPanel,
-  .phase3CampSideStats,
-  .phase3Between,
-  .phase3CityCenter,
-  .phase3AffinityShrine,
-  .phase5VisualSummary,
-  .phase3Journey,
-  .phase1BuildSummary,
-  .phase2PassiveBar,
-  .phase3Preparation,
-  .phase3Passives,
-  .phase3ReturnBar,
-  .phase3ResourcePanel,
-  .phase3Bag,
-  .phase3PassiveTooltip,
-  .phase3PassiveSlot,
-  .phase3PassiveCard,
-  .phase3PassiveInline,
-  .phase3BetweenHero,
-  .phase3Routes,
-  .phase3BetweenStats .metric,
-  .phase3EventReadOnly,
-  .combatActiveBuffs,
-  .phase3BetweenQuick,
-  .phase3RealmActions,
-  .phase3BetweenAffinity,
-  .phase3BetweenBag,
-  .phase3PermanentStats,
-  .phase3StatCell,
-  .phase3ActiveAffinities,
-  .phase3CombatAffinityGroup,
-  .phase3CombatBuild,
-  .inspect,
-  .delta,
-  .gearSummary,
-  .setCompare,
-  .sigilOfferCard,
-  .forgePicker,
-  .forgeSelectionSummary,
-  .forgeAffinityPreview,
-  .forgeRankPreview,
-  .c3TreasureResult,
-  .cityCenterNpcArt,
-  .potionStash,
-  .log,
-  .combatBagDetails>summary,
-  .phase3BetweenBag>summary,
-  .phase3EquipmentDetails>summary,
-  .phase3EventCard,
-  .stat,
-  .token,
-  .shopCard,
-  .merchantCompactCard,
-  .potionOffer,
-  .forgePickCard,
-  .compareCard,
-  .lootCard,
-  .phase3BagItem,
-  .phase3BagEmpty,
-  .rarityImageFrame,
-  .slotTile,
-  .miniSlot,
-  .invItem,
-  .runeSlot,
-  dialog
+  #screen>.panel:not(.phase3Camp),#screen>.combatLayout>.panel,
+  #screen>.equipmentLayout>.equipmentLeft>.panel,#screen>.equipmentLayout>.equipmentRight>.panel,
+  .phase3CampSideStats,.phase3ExpeditionPanel,.phase3Between,.phase3CityCenter,
+  .phase3AffinityShrine,.phase5VisualSummary,dialog
 ){
-  --ui4-chamfer-color:var(--ui4-gold-edge,#9e7d44);
+  --wf-panel-fill:var(--ui4-home-stats-bg);
+  --wf-panel-stroke:var(--ui4-gold-edge,#9e7d44);
+  --wf-panel-chamfer:11px;
   border-color:transparent;
   border-radius:0;
   clip-path:none;
+  position:relative;
+  isolation:isolate;
+  background:transparent;
 }
-/* Establish local pseudo-element anchors only for surfaces that flow normally.
-   Equipment slots keep their original absolute/grid positioning. */
-.phase3IntegratedPreview :is(
-  #screen>.panel:not(.phase3Camp),#screen>.combatLayout>.panel,
-  #screen>.equipmentLayout>.equipmentLeft>.panel,
-  #screen>.equipmentLayout>.equipmentRight>.panel,
-  .phase3Camp,.phase3ExpeditionPanel,.phase3CampSideStats,.phase3Between,
-  .phase3CityCenter,.phase3AffinityShrine,.phase5VisualSummary,
-  .phase3Journey,.phase1BuildSummary,.phase2PassiveBar,.phase3Preparation,
-  .phase3Passives,.phase3ReturnBar,.phase3ResourcePanel,.phase3Bag,
-  .phase3PassiveTooltip,.phase3PassiveSlot,.phase3PassiveCard,.phase3PassiveInline,
-  .phase3BetweenHero,.phase3Routes,.phase3BetweenStats .metric,.phase3EventReadOnly,
-  .combatActiveBuffs,.phase3BetweenQuick,.phase3BetweenAffinity,.phase3BetweenBag,
-  .phase3PermanentStats,.phase3StatCell,.phase3ActiveAffinities,
-  .phase3CombatAffinityGroup,.phase3CombatBuild,.inspect,.delta,.gearSummary,
-  .setCompare,.sigilOfferCard,.forgePicker,.forgeSelectionSummary,
-  .forgeAffinityPreview,.forgeRankPreview,.c3TreasureResult,.cityCenterNpcArt,
-  .potionStash,.log,.combatBagDetails>summary,.phase3BetweenBag>summary,
-  .phase3EquipmentDetails>summary,.phase3EventCard,
-  .stat,.token,.shopCard,.merchantCompactCard,.potionOffer,.forgePickCard,
-  .compareCard,.lootCard,.phase3BagItem,.phase3BagEmpty,.rarityImageFrame,
-  .miniSlot,.invItem,.runeSlot
-){position:relative}
-.phase3IntegratedPreview .rarityImageFrame{isolation:isolate}
-.phase3IntegratedPreview :is(.merchantCompactCard[data-rarity],.compareCard[data-rarity],.lootCard[data-rarity],.phase3BagItem[data-rarity]){
-  --ui4-chamfer-color:var(--item-rarity,var(--ui4-gold-edge,#9e7d44));
+
+/* Camp keeps its illustrated background; only its outline uses the shared geometry. */
+.phase3IntegratedPreview .phase3Camp{
+  --wf-panel-stroke:var(--ui4-gold-edge,#9e7d44);
+  --wf-panel-chamfer:11px;
+  border-color:transparent;border-radius:0;clip-path:none;
 }
-.phase3IntegratedPreview .rarityImageFrame{
-  --ui4-chamfer-color:var(--ui-rarity-color,#8c8378);
-}
-.phase3IntegratedPreview :is(
-  #screen>.panel:not(.phase3Camp),#screen>.combatLayout>.panel,
-  #screen>.equipmentLayout>.equipmentLeft>.panel,
-  #screen>.equipmentLayout>.equipmentRight>.panel,.phase3Camp,.phase3ExpeditionPanel,.phase3CampSideStats,
-  .phase3Between,.phase3CityCenter,.phase3AffinityShrine,.phase5VisualSummary,dialog
-)::after{
-  content:"";
-  display:block;
-  position:absolute;
-  z-index:8;
-  inset:0;
-  box-sizing:border-box;
-  padding:1px;
-  pointer-events:none;
-  background:var(--ui4-chamfer-color);
-  clip-path:polygon(0 11px,11px 0,calc(100% - 11px) 0,100% 11px,100% calc(100% - 11px),calc(100% - 11px) 100%,11px 100%,0 calc(100% - 11px));
-  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
-  -webkit-mask-composite:xor;
-  mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
-  mask-composite:exclude;
-}
+
+/* Sub-panels retain their own existing fills, with a continuous square Gothic edge.
+   Avoid mask-composite, whose antialiasing caused the Safari corner seams. */
 .phase3IntegratedPreview :is(
   .phase3Journey,.phase1BuildSummary,.phase2PassiveBar,.phase3Preparation,
   .phase3Passives,.phase3ReturnBar,.phase3ResourcePanel,.phase3Bag,
@@ -145,25 +39,44 @@
   .setCompare,.sigilOfferCard,.forgePicker,.forgeSelectionSummary,
   .forgeAffinityPreview,.forgeRankPreview,.c3TreasureResult,.cityCenterNpcArt,
   .potionStash,.log,.combatBagDetails>summary,.phase3BetweenBag>summary,
-  .phase3EquipmentDetails>summary,.phase3EventCard,
-  .stat,.token,.shopCard,.merchantCompactCard,.potionOffer,.forgePickCard,
-  .compareCard,.lootCard,.phase3BagItem,.phase3BagEmpty,.rarityImageFrame,
-  .slotTile,.miniSlot,.invItem,.runeSlot
+  .phase3EquipmentDetails>summary,.phase3EventCard,.stat,.token,.shopCard,
+  .merchantCompactCard,.potionOffer,.forgePickCard,.compareCard,.lootCard,
+  .phase3BagItem,.phase3BagEmpty,.rarityImageFrame,.slotTile,.miniSlot,.invItem,.runeSlot
+){
+  border-radius:0;clip-path:none;border-color:var(--ui4-chamfer-color,var(--ui4-gold-edge,#9e7d44));
+}
+.phase3IntegratedPreview :is(.merchantCompactCard[data-rarity],.compareCard[data-rarity],.lootCard[data-rarity],.phase3BagItem[data-rarity]){
+  --ui4-chamfer-color:var(--item-rarity,var(--ui4-gold-edge,#9e7d44));
+}
+.phase3IntegratedPreview .rarityImageFrame{--ui4-chamfer-color:var(--ui-rarity-color,#8c8378)}
+
+.phase3IntegratedPreview :is(
+  #screen>.panel:not(.phase3Camp),#screen>.combatLayout>.panel,
+  #screen>.equipmentLayout>.equipmentLeft>.panel,#screen>.equipmentLayout>.equipmentRight>.panel,
+  .phase3CampSideStats,.phase3ExpeditionPanel,.phase3Between,.phase3CityCenter,
+  .phase3AffinityShrine,.phase5VisualSummary,dialog
+)::before{
+  content:"";position:absolute;z-index:-1;inset:0;pointer-events:none;
+  background:var(--wf-panel-fill);
+  clip-path:polygon(0 var(--wf-panel-chamfer),var(--wf-panel-chamfer) 0,calc(100% - var(--wf-panel-chamfer)) 0,100% var(--wf-panel-chamfer),100% calc(100% - var(--wf-panel-chamfer)),calc(100% - var(--wf-panel-chamfer)) 100%,var(--wf-panel-chamfer) 100%,0 calc(100% - var(--wf-panel-chamfer)));
+}
+
+.phase3IntegratedPreview :is(
+  #screen>.panel:not(.phase3Camp),#screen>.combatLayout>.panel,
+  #screen>.equipmentLayout>.equipmentLeft>.panel,#screen>.equipmentLayout>.equipmentRight>.panel,
+  .phase3Camp,.phase3CampSideStats,.phase3ExpeditionPanel,.phase3Between,
+  .phase3CityCenter,.phase3AffinityShrine,.phase5VisualSummary,dialog
 )::after{
-  content:"";
-  display:block;
-  position:absolute;
-  z-index:8;
-  inset:0;
-  box-sizing:border-box;
-  padding:1px;
-  pointer-events:none;
-  background:var(--ui4-chamfer-color);
-  clip-path:polygon(0 8px,8px 0,calc(100% - 8px) 0,100% 8px,100% calc(100% - 8px),calc(100% - 8px) 100%,8px 100%,0 calc(100% - 8px));
-  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
-  -webkit-mask-composite:xor;
-  mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
-  mask-composite:exclude;
+  content:"";position:absolute;z-index:8;inset:0;pointer-events:none;
+  background:
+    linear-gradient(var(--wf-panel-stroke),var(--wf-panel-stroke)) var(--wf-panel-chamfer) 0 / calc(100% - var(--wf-panel-chamfer) - var(--wf-panel-chamfer)) var(--wf-panel-edge) no-repeat,
+    linear-gradient(var(--wf-panel-stroke),var(--wf-panel-stroke)) var(--wf-panel-chamfer) 100% / calc(100% - var(--wf-panel-chamfer) - var(--wf-panel-chamfer)) var(--wf-panel-edge) no-repeat,
+    linear-gradient(var(--wf-panel-stroke),var(--wf-panel-stroke)) 0 var(--wf-panel-chamfer) / var(--wf-panel-edge) calc(100% - var(--wf-panel-chamfer) - var(--wf-panel-chamfer)) no-repeat,
+    linear-gradient(var(--wf-panel-stroke),var(--wf-panel-stroke)) 100% var(--wf-panel-chamfer) / var(--wf-panel-edge) calc(100% - var(--wf-panel-chamfer) - var(--wf-panel-chamfer)) no-repeat,
+    linear-gradient(135deg,transparent calc(50% - .5px),var(--wf-panel-stroke) 50%,transparent calc(50% + .5px)) 0 0 / var(--wf-panel-chamfer) var(--wf-panel-chamfer) no-repeat,
+    linear-gradient(45deg,transparent calc(50% - .5px),var(--wf-panel-stroke) 50%,transparent calc(50% + .5px)) 100% 0 / var(--wf-panel-chamfer) var(--wf-panel-chamfer) no-repeat,
+    linear-gradient(45deg,transparent calc(50% - .5px),var(--wf-panel-stroke) 50%,transparent calc(50% + .5px)) 0 100% / var(--wf-panel-chamfer) var(--wf-panel-chamfer) no-repeat,
+    linear-gradient(135deg,transparent calc(50% - .5px),var(--wf-panel-stroke) 50%,transparent calc(50% + .5px)) 100% 100% / var(--wf-panel-chamfer) var(--wf-panel-chamfer) no-repeat;
 }
 
 /* Existing main surfaces use the exact Home Stats panel surface. */
@@ -173,7 +86,7 @@
   #screen>.equipmentLayout>.equipmentRight>.panel,
   .phase3Between,.phase3CityCenter,.phase3AffinityShrine,.phase5VisualSummary
 ){
-  background:var(--ui4-home-stats-bg);
+  background:transparent;
   box-sizing:border-box;
 }
 .phase3IntegratedPreview :is(.slotTile,.miniSlot,.invItem,.phase3PotionSlot){

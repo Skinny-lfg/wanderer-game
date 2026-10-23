@@ -57,7 +57,12 @@ function phase4Restore(session){
   if(!ports.phase1Controller.state.rewardPending||!Array.isArray(draft.options)||draft.options.length>3||new Set(draft.options.map(p=>p.id)).size!==draft.options.length||!draft.options.every(p=>WandererV012Buildcraft.CATALOG.some(v=>v.id===p.id)))throw Error('Invalid saved passive choice');
   draft.plane=ports.phase1Controller.state.rewardPending;
   if(draft.version!==3){build.realmIndex=draft.plane.plane;build.runtime.draftStats=ports.totalStats();draft.options=WandererV012Buildcraft.options(build,draft.plane.family,ports.gameRandom);draft.version=3;}
-  else if(!draft.options.every(p=>eligible(build,p.family).some(v=>v.id===p.id)))throw Error('Invalid saved passive choice');
+  else{
+   // Old v3 checkpoints could contain cross-affinity fallback cards. Keep the
+   // checkpoint and its build intact, but do not offer those cards again.
+   draft.options=draft.options.filter(p=>p.family===draft.plane.family);
+   if(!draft.options.every(p=>eligible(build,draft.plane.family).some(v=>v.id===p.id)))throw Error('Invalid saved passive choice');
+  }
 
  }}
  if(session.results)ports.phase5Results=ports.phase4Clone(session.results);
