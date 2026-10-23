@@ -1,6 +1,7 @@
 /* Shared three-tier Gothic corner and panel system. */
 :root {
   --gothic-panel-gold: var(--ui4-gold-edge, #9e7d44);
+  --gothic-dialog-viewport-gap: 12px;
   --gothic-panel-small-size: clamp(18px, 2.4vw, 27px);
   --gothic-panel-medium-size: clamp(54px, 7vw, 84px);
   --gothic-panel-large-size: clamp(76px, 8.5vw, 128px);
@@ -8,6 +9,20 @@
   --gothic-panel-content-inset: clamp(14px, 1.8vw, 24px);
   --gothic-panel-heading-safe-inset: clamp(18px, 2.4vw, 32px);
   --gothic-panel-small-safe-inset: 8px;
+}
+
+/* All game popups use native <dialog>. Pin open dialogs to the viewport center
+   instead of relying on browser-specific default margins/positioning. Long
+   dialogs scroll inside their own frame while remaining centered. */
+body.phase3IntegratedPreview dialog[open] {
+  position: fixed;
+  inset: 50% auto auto 50%;
+  margin: 0;
+  transform: translate(-50%, -50%);
+  box-sizing: border-box;
+  max-width: calc(100vw - var(--gothic-dialog-viewport-gap) * 2);
+  max-height: calc(100dvh - var(--gothic-dialog-viewport-gap) * 2);
+  overflow: auto;
 }
 
 body.phase3IntegratedPreview :is(
