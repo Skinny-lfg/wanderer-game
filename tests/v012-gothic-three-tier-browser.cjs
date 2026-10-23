@@ -33,6 +33,18 @@ async function runVisuals(browser,mode,width){
  const page=await browser.newPage({viewport:{width,height:900}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(`http://127.0.0.1:${server.address().port}/?expeditionPhase1=1`);await waitForPanelScript(page);
  await screenshot(page,`camp-${width}.jpg`);
+ if(mode==='after'){
+  const sharedStats=await page.evaluate(()=>{
+   const camp=document.querySelector('.phase3CampStat');
+   const cell=document.createElement('div'),stat=document.createElement('div');cell.className='phase3StatCell';stat.className='stat';
+   document.body.append(cell,stat);
+   const props=['backgroundImage','borderBottomColor','borderBottomStyle','padding'];
+   const read=e=>Object.fromEntries(props.map(name=>[name,getComputedStyle(e)[name]]));
+   const result={camp:read(camp),cell:read(cell),stat:read(stat)};cell.remove();stat.remove();return result;
+  });
+  assert.deepEqual(sharedStats.cell,sharedStats.camp,'Between Realms stat cells reuse the Home stat field treatment');
+  assert.deepEqual(sharedStats.stat,sharedStats.camp,'Inventory stat fields reuse the Home stat field treatment');
+ }
  const stats=page.locator('.phase3CampSideStats'),affinityDialog=page.locator('dialog.phase3InitialAffinityDialog');
  if(mode==='after'){
   const camp=page.locator('.phase3Camp');
@@ -115,12 +127,17 @@ async function runVisuals(browser,mode,width){
   assert(corners.find(c=>c.corner.endsWith('--tl')).transform==='matrix(-1, 0, 0, 1, 0, 0)','top-left mirrors horizontally');
   assert(corners.find(c=>c.corner.endsWith('--br')).transform==='matrix(1, 0, 0, -1, 0, 0)','bottom-right mirrors vertically');
   assert(corners.find(c=>c.corner.endsWith('--bl')).transform==='matrix(-1, 0, 0, -1, 0, 0)','bottom-left mirrors both axes');
-  await page.evaluate(()=>{document.querySelectorAll('dialog[open]').forEach(e=>e.close());const nav=document.createElement('nav');nav.className='phase3BetweenTabs';nav.style.cssText='position:fixed;z-index:90;left:12px;bottom:12px;display:flex;gap:8px;padding:8px;background:#151318';nav.innerHTML='<button role="tab" style="min-height:40px;padding:8px 12px">Gear</button><button role="tab" style="min-height:40px;padding:8px 12px">Stats</button><button role="tab" style="min-height:40px;padding:8px 12px">Loot</button>';document.body.append(nav)});
+  await page.evaluate(()=>{document.querySelectorAll('dialog[open]').forEach(e=>e.close());const nav=document.createElement('nav');nav.className='phase3BetweenTabs';nav.style.cssText='position:fixed;z-index:90;left:12px;bottom:12px;display:flex;gap:8px;padding:8px;background:#151318';nav.innerHTML='<button role="tab">Gear</button><button role="tab">Stats</button><button role="tab">Loot</button>';document.body.append(nav)});
   const tab=page.locator('.phase3BetweenTabs [role="tab"]');await page.waitForFunction(()=>document.querySelector('.phase3BetweenTabs [role="tab"]')?.classList.contains('gothic-button-ornamented'));
   assert(await tab.first().evaluate(e=>!e.classList.contains('gothic-panel--small')),'SMALL ornament layer does not restyle the button as a panel');
-  const buttonStyle=await tab.first().evaluate(e=>{const props=['backgroundColor','backgroundImage','border','borderRadius','boxShadow','color','padding','minHeight','height','width','font','opacity','filter','transform','cursor','outline'];const read=n=>Object.fromEntries(props.map(k=>[k,getComputedStyle(n)[k]]));const current=read(e),clone=e.cloneNode(true);clone.classList.remove('gothic-button-ornamented');clone.querySelector(':scope > .gothic-corner-layer')?.remove();clone.style.removeProperty('--gothic-corner-size');e.after(clone);const baseline=read(clone);clone.remove();return{current,baseline};});
-  assert.deepEqual(buttonStyle.current,buttonStyle.baseline,'SMALL ornaments preserve existing button appearance');
+  const buttonStyle=await tab.first().evaluate(e=>{const s=getComputedStyle(e);return{clipPath:s.clipPath,webkitClipPath:s.webkitClipPath,borderRadius:s.borderRadius,minHeight:s.minHeight,layerZ:getComputedStyle(e.querySelector(':scope > .gothic-corner-layer')).zIndex}});
+  assert.equal(buttonStyle.clipPath,'none','ornamented buttons are rectangular and are not chamfer-clipped');
+  assert.equal(buttonStyle.webkitClipPath,'none','Safari does not clip ornamented buttons');
+  assert.equal(buttonStyle.borderRadius,'0px','ornamented buttons have square corners beneath the PNG overlay');
+  assert.equal(buttonStyle.minHeight,'42px','conventional buttons share the Home navigation height');
+  assert.equal(buttonStyle.layerZ,'0','the PNG corner overlay sits above the button fill');
   assert.equal(await tab.first().locator(':scope > .gothic-corner-layer img').count(),4,'SMALL button uses four corner overlays');
+  assert.equal(await tab.first().locator(':scope > .gothic-corner-layer').evaluate(e=>getComputedStyle(e).pointerEvents),'none','button ornaments never block clicks');
   const small=await tab.first().locator(':scope > .gothic-corner-layer img').first().evaluate(e=>({src:e.getAttribute('src'),ratio:e.naturalWidth/e.naturalHeight}));assert(small.src.includes('small-silver-tr.png')&&Math.abs(small.ratio-1)<.01,'SMALL uses undistorted silver asset');
   const smallGeometry=await tab.first().evaluate(e=>{const r=e.getBoundingClientRect();return[...e.querySelectorAll(':scope > .gothic-corner-layer img')].map(img=>{const b=img.getBoundingClientRect();return{classes:img.className,top:b.top,right:b.right,bottom:b.bottom,left:b.left,panel:{top:r.top,right:r.right,bottom:r.bottom,left:r.left}}})});
   for(const c of smallGeometry)assert(c.left>=c.panel.left&&c.right<=c.panel.right&&c.top>=c.panel.top&&c.bottom<=c.panel.bottom,'SMALL button ornaments stay within the existing control box');

@@ -9,10 +9,10 @@ body.phase3IntegratedPreview:has(.phase3Camp){
   --gothic-blood:#762c35;
   --gothic-ivory:#efe6d4;
   --gothic-parchment:#c9bda9;
-  --gothic-edge:color-mix(in srgb,var(--gothic-antique-gold) 58%,#393238);
-  --gothic-panel:linear-gradient(145deg,#302b2e 0%,#211e22 48%,#171519 100%);
+  --gothic-edge:var(--ui-edge);
+  --gothic-panel:var(--ui-section-bg);
   --gothic-panel-raised:linear-gradient(145deg,#393134,#242024 58%,#1b181c);
-  --gothic-gap:clamp(8px,1.2vw,16px);
+  --gothic-gap:var(--ui-card-gap);
   --gothic-corner:13px;
   --ui4-ink:var(--gothic-ivory);
   --ui4-muted:var(--gothic-parchment);
@@ -105,7 +105,7 @@ body.phase3IntegratedPreview:has(.phase3Camp) #wallet .token{
 .phase3IntegratedPreview .phase3CampCharacterStats h3:not(:first-child){margin-top:9px;padding-top:7px;border-top:1px solid #9e7d4440}
 .phase3IntegratedPreview .phase3CampCharacterStats h3:not(:first-child)::before{content:"✧";display:inline-block;margin-right:6px;color:var(--gothic-antique-gold);font-size:11px}
 .phase3IntegratedPreview .phase3CampStatRow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 8px;min-width:0}
-.phase3IntegratedPreview .phase3CampStat{display:flex;min-width:0;min-height:34px;flex-direction:row;align-items:center;justify-content:space-between;gap:5px;padding:4px 6px;border:0;border-bottom:1px solid #9e7d4433;border-radius:0;background:linear-gradient(90deg,#11101466,transparent);box-shadow:none}
+.phase3IntegratedPreview .phase3CampStat{display:flex;min-width:0;min-height:34px;flex-direction:row;align-items:center;justify-content:space-between;gap:5px;padding:4px 6px;border:0;border-bottom:1px solid var(--ui-stat-rule);border-radius:0;background:var(--ui-stat-bg);box-shadow:none}
 .phase3IntegratedPreview .phase3CampStat span{overflow-wrap:anywhere;color:#c8bda9;font-size:10px;line-height:1.1}
 .phase3IntegratedPreview .phase3CampStat b{color:var(--gothic-ivory);font-size:15px;font-variant-numeric:tabular-nums;line-height:1.05}
 .phase3IntegratedPreview .phase3CampExtraStats{margin-top:10px}

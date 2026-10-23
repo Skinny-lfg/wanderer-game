@@ -81,13 +81,14 @@
 
 /* Gothic CSS controls: keep native HTML actions and states, without image skins. */
 .phase3IntegratedPreview button:not(.phase3Start):not(.slotTile):not(.invItem):not(.miniSlot):not(.phase3PotionSlot){
- min-height:40px;border:1px solid #625b52;border-radius:0;clip-path:polygon(0 5px,5px 0,calc(100% - 5px) 0,100% 5px,100% calc(100% - 5px),calc(100% - 5px) 100%,5px 100%,0 calc(100% - 5px));
- background:linear-gradient(145deg,#302d30,#201e21 58%,#292629);color:var(--ui4-ink);
- box-shadow:inset 0 1px #ffffff12,inset 0 -2px #09070a55,0 3px 7px #0006;
- font-family:var(--font-head);text-shadow:0 1px 2px #0008;
+ min-height:var(--ui-button-height,42px);padding:var(--ui-button-padding,8px 14px);
+ border:1px solid var(--ui-edge,var(--ui4-edge,#625b52));border-radius:0;
+ background:var(--ui-button-bg,linear-gradient(155deg,#302b2e,#1d1a1e 72%));color:var(--ui-muted,var(--ui4-ink));
+ box-shadow:inset 0 1px #ffffff12,inset 0 -2px #09080a55;
+ font:500 14px/1.15 var(--font-head);text-align:center;text-shadow:none;white-space:normal;
 }
 .phase3IntegratedPreview button:not(.phase3Start):not(.slotTile):not(.invItem):not(.miniSlot):not(.phase3PotionSlot):hover:not(:disabled){
- border-color:#89785b;background:linear-gradient(145deg,#393538,#282528 60%,#302d30);filter:none;
+ border-color:#d8bc7d;background:var(--ui-button-hover-bg,linear-gradient(155deg,#493b32,#292126 75%));color:var(--ui-ink,var(--ui4-ink));filter:none;
 }
 .phase3IntegratedPreview button.primary:not(.phase3Start):not(.slotTile):not(.invItem):not(.miniSlot):not(.phase3PotionSlot){border-color:#756b59;background:linear-gradient(145deg,#393436,#262326 60%,#302b2e);color:#f1e9df;box-shadow:inset 0 1px #d8bc7d18,inset 0 -2px #09070a55,0 3px 7px #0006}
 .phase3IntegratedPreview button.primary:not(.phase3Start):not(:disabled):hover{border-color:#9c8967;background:linear-gradient(145deg,#464043,#302b2e 60%,#393436)}
