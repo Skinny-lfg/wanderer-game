@@ -87,7 +87,7 @@ body.phase3IntegratedPreview:has(.phase3Camp) #wallet .token b{color:var(--ui-in
 body.phase3IntegratedPreview #nav{overflow-y:hidden}
 body.phase3IntegratedPreview #screen:has(.equipmentLayout)>#initialBack,
 body.phase3IntegratedPreview #screen:has(.runesInventoryOnly)>#initialBack{
-  border:0;background:transparent;box-shadow:none;padding-inline:0;color:var(--ui-muted)
+  display:none;border:0;background:transparent;box-shadow:none;padding-inline:0;color:var(--ui-muted)
 }
 body.phase3IntegratedPreview #screen:has(.equipmentLayout)>#initialBack>.gothic-corner-layer,
 body.phase3IntegratedPreview #screen:has(.runesInventoryOnly)>#initialBack>.gothic-corner-layer{display:none}

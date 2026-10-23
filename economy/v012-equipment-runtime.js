@@ -194,6 +194,7 @@ function equipItem(itemId,target=null){
  if(ports.isTwoHanded(item)&&slot==='weapon')ports.state.equip.offhand=null;
  if(ring||dagger)item.slot=slot;
  if(dagger&&item.subtype==='Off-Hand Dagger')item.subtype='Daggers';
+ item.isNew=false;
  ports.state.equip[slot]=item;
  for(const old of displaced){
   if(active)ports.phase3LootIds.add(old.id);

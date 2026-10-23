@@ -40,6 +40,13 @@ test('Belt crafts, equips, compares, unequips, drops and sells through existing 
  assert.equal(a.gear.placeholderIcon('belt'),'assets/placeholders/belt.webp');
  assert.equal(a.gear.itemSource({...belt,tier:5}).startsWith('E5'),true);
 });
+test('equipping gear clears NEW only on the equipped item and persists it with the equip',()=>{
+ const a=create(441),s=a.state(),chosen=a.makeItem(2,'belt',null,'loot','Leather','Rare'),untouched=a.makeItem(2,'boots',null,'loot','Leather','Rare');
+ chosen.isNew=true;untouched.isNew=true;s.stash.push(chosen,untouched);
+ assert.equal(a.equip(chosen.id),true);
+ assert.equal(s.equip.belt.isNew,false);
+ assert.equal(s.stash.find(item=>item.id===untouched.id).isNew,true);
+});
 test('Merchant always stocks four Weapons, four Armor and four Accessories',()=>{
  const a=create(98),state=a.state();state.gold=100000;a.rollShop();
  const groups={weapons:['weapon','offhand'],armor:['helm','armor','gloves','boots','belt'],accessories:['ring1','ring2','amulet']};

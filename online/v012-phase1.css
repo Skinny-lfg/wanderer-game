@@ -139,7 +139,7 @@
 .phase3Bag{max-width:330px;width:100%;margin:12px auto;padding:12px;background:var(--ui-panel-bg,linear-gradient(145deg,rgba(48,43,46,.94),rgba(23,21,25,.92)));border:1px solid var(--ui-edge,#9e7d4433);border-radius:0}
 .phase3Bag h3{display:flex;justify-content:space-between;font-size:16px;color:#efd7ae}
 .phase3BagGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
-.phase3BagItem,.phase3BagEmpty{min-width:0;min-height:66px;position:relative;display:flex;align-items:center;justify-content:center;background:var(--ui-section-bg,linear-gradient(145deg,#302b2e 0%,#211e22 48%,#171519 100%));border:1px solid var(--ui-edge,#9e7d4433);border-radius:0;padding:5px}
+.phase3BagItem,.phase3BagEmpty{min-width:0;min-height:0;aspect-ratio:1/1;position:relative;display:flex;align-items:center;justify-content:center;background:var(--ui-section-bg,linear-gradient(145deg,#302b2e 0%,#211e22 48%,#171519 100%));border:1px solid var(--ui-edge,#9e7d4433);border-radius:0;padding:5px;box-sizing:border-box}
 .phase3BagItem img{width:46px;height:46px;object-fit:contain;max-width:100%}
 .phase3BagItem>span{position:absolute;bottom:2px;right:4px;font-size:10px;background:var(--ui-section-bg,#211e22);padding:1px 3px;border-radius:0}
 .phase3BagEmpty{background:var(--ui-stat-bg,#11101466);border-style:dashed}

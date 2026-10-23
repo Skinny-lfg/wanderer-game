@@ -7,6 +7,14 @@
  --gear-frame:52px;
  --gear-art:38px;
 }
+.phase3IntegratedPreview :is(.equipmentLayout,.equipmentLeft,.equipmentRight,.equipmentOverview,.equipmentInventory,.equipmentQuickView,.equipmentLoadout,.equipmentStats,.stashLayout,.stashGrid){min-width:0;max-width:100%}
+.phase3IntegratedPreview .equipmentLayout{grid-template-columns:minmax(0,.8fr) minmax(0,1.3fr)}
+.phase3IntegratedPreview .inventoryActionBar{display:flex;flex:1 1 100%;flex-wrap:wrap;align-items:center;gap:6px;min-width:0;white-space:normal}
+.phase3IntegratedPreview .inventoryActionBar button{min-height:34px;white-space:normal}
+.phase3IntegratedPreview .phase3PrimaryAttributeStrip{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:3px;margin:7px auto 0;width:min(100%,350px);min-width:0}
+.phase3IntegratedPreview .phase3PrimaryAttributeStrip>div{display:grid;min-width:0;align-content:center;justify-items:center;gap:2px;padding:4px 1px;background:var(--ui-stat-bg,#11101466);border-bottom:1px solid var(--ui-stat-rule,#9e7d4433);text-align:center}
+.phase3IntegratedPreview .phase3PrimaryAttributeStrip span{color:var(--ui-muted,#c5b7b3);font-size:clamp(7px,2.2vw,10px);line-height:1.05;white-space:nowrap}
+.phase3IntegratedPreview .phase3PrimaryAttributeStrip b{color:var(--ui-ink,#e9dfd9);font-size:clamp(10px,2.8vw,14px);font-variant-numeric:tabular-nums}
 .phase3IntegratedPreview .equipmentOverview>h2{margin-bottom:4px}
 .phase3IntegratedPreview .equipmentOverview>p{margin-bottom:8px}
 .phase3IntegratedPreview .equipmentOverview .equipmentQuickView{
@@ -162,3 +170,4 @@
   width:50px!important;height:50px!important;flex-basis:50px!important;
  }
 }
+@media(max-width:850px){.phase3IntegratedPreview .equipmentLayout{grid-template-columns:minmax(0,1fr)}}
