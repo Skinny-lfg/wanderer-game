@@ -15,6 +15,12 @@ module.exports=function trace(scenario,source){
    if(!restored&&a.state().run){const cp=a.checkpoint.capture();a.checkpoint.restore(cp);a.checkpoint.resume();restored=true;}
    if(a.state().run?.status==='fight'){a.state().run.enemy.hp=0;a.win();a.flush();}
   }else if(a.controller().state.stage==='choice'){
+   // A full Bag blocks realm entry in production. The deterministic trace
+   // discards loot here, as a player can, so it continues testing combat parity.
+   while(a.bag.items().length>=a.bag.capacity()){
+    const item=a.bag.items().at(-1);
+    if(!item||!a.bag.discard(item.id))throw Error('Cannot resolve full bag');
+   }
    for(let n=0;a.bag.overflow();n++){if(n>40||!a.bag.discard(a.bag.items().at(-1).id))throw Error('Cannot resolve bag overflow');}
    if(a.controller().state.planeIndex===2){a.reroll(0);a.potions.use(1);}
    a.select(a.controller().state.offers[0].id);a.enter();if(a.draft()?.step==='element')a.element('lightning');

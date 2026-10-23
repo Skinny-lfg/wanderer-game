@@ -60,7 +60,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
   passiveIcons:phase2PassiveIcons,initialPassive:WandererV012Buildcraft.initial,
   tick(...args){harnessCombatActive=true;try{return updateFight(...args);}finally{harnessCombatActive=false;}},streams:harnessStreams,potion:phase3UsePotion,reroll:phase3Reroll,win:phase1WaveWon,death:phase1Death,abandon:phase1Abandon,
   now:setNow,ready:setReady,heal:setHeal,
-  bag:{items:phase3BagItems,overflow:phase3BagOverflow,discard:phase3DiscardLoot,active:phase3ExpeditionActive,
+  bag:{items:phase3BagItems,overflow:phase3BagOverflow,capacity:()=>PHASE3_BAG_CAPACITY,discard:phase3DiscardLoot,active:phase3ExpeditionActive,
    mark(item,overflow=false){(overflow?state.expeditionOverflow:state.stash).push(item);phase3LootIds.add(item.id);},
    ids:()=>Array.from(phase3LootIds),markup:phase3BagMarkup,passives:phase3PassivesMarkup},
   checkpoint:{capture:()=>phase4Entry?phase4Clone(phase4Entry):{profile:phase4Clone({...state,run:null}),session:phase4Session(),ledger:[]},
@@ -87,6 +87,18 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
   buy(index){auditMerchant();const buttons=Q('[data-buy]');buttons[index]?.onclick();if(auditConfirmation){const fn=auditConfirmation;auditConfirmation=null;fn();}},
   purchaseNative(index){const m=state.merchant,item=m?.stock?.[index];return !!item&&purchaseEquipment(m,index,item);},
   setupPreview(){phase1Init();},
+  setUnlocked(level){
+   phase1Controller.state.unlocked=level;
+   if(phase5Snapshot?.expedition){
+    phase5Snapshot.expedition.completed=level-1;
+    phase5Snapshot.expedition.unlocked=level;
+    phase5Snapshot.expedition.attempts=level-1;
+    phase5Snapshot.expedition.active=null;
+    phase5Snapshot.expedition.awardKeys=[];
+    phase5Snapshot.expedition.lastOutcome=level>1?'victory':'new';
+   }
+   return level;
+  },
   setup(tier,weapon,rarity='Rare'){
    state.stash=[];state.equip=makeSlots();state.gold=state.fragments=0;
    for(const slot of SLOTS){

@@ -5,10 +5,9 @@ const source=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const boot='phase1Init();\nconst phase3RestoredScroll=phase3RestoreUILocation(phase3SavedUILocation);\nrender();';
 assert(source.includes(boot));
 const fixture=`if(PHASE1_PREVIEW){
- phase1Init();phase1Controller.state.unlocked=5;state.gold=state.fragments=10000;
+ phase1Init();phase1Controller.state.unlocked=5;phase5Snapshot.expedition.completed=4;phase5Snapshot.expedition.unlocked=5;phase5Snapshot.expedition.attempts=4;phase5Snapshot.expedition.lastOutcome='victory';state.gold=state.fragments=10000;
  const belt=makeItem(5,'belt',null,'forge','Cloth','Rare');state.stash.push(belt);
- state.equip.weapon={...state.equip.weapon,effect:'poison',magic:'poison'};
- globalThis.__gearTest={beltId:belt.id,snapshot:()=>JSON.parse(JSON.stringify(state)),rollBelt:()=>{if(!state.merchant)rollShop();state.merchant.stock=[{...makeItem(5,'belt',null,'merchant','Plate','Rare'),goldPrice:10}];phase3ContentTarget=$('cityServiceContent');try{renderMerchant();}finally{phase3ContentTarget=null;}}};
+ globalThis.__gearTest={beltId:belt.id,snapshot:()=>JSON.parse(JSON.stringify(state)),status:()=>({saveBlocked,phase5Ready,phase5Message,validation:PHASE5_VALIDATION,preview:PHASE1_PREVIEW,stage:phase1Controller.state.stage,view}),persisted:()=>{const raw=sessionStorage.getItem('wanderer_v012_local_preview');return raw?JSON.parse(raw):null;},rollBelt:()=>{if(!state.merchant)rollShop();state.merchant.stock=[{...makeItem(5,'belt',null,'merchant','Plate','Rare'),goldPrice:10}];phase3ContentTarget=$('cityServiceContent');try{renderMerchant();}finally{phase3ContentTarget=null;}}};
  render();
 }else{load();if(!state.merchant)rollShop();save();render();}`;
 const server=http.createServer((req,res)=>{
@@ -34,17 +33,21 @@ const server=http.createServer((req,res)=>{
   await page.selectOption('#slotFilter','belt');const id=await page.evaluate(()=>__gearTest.beltId);
   await page.locator('[data-item="'+id+'"]').click();assert.match(await page.locator('dialog.equipmentItemDialog .inspect').innerText(),/E5.*Rare/);assert.match(await page.locator('dialog.equipmentItemDialog .inspect').innerText(),/Cloth/);
   assert.equal(await page.locator('dialog.equipmentItemDialog').count(),1);await page.locator('dialog.equipmentItemDialog #equipThis').click();assert.equal(await page.evaluate(()=>__gearTest.snapshot().equip.belt.id),id);
+  // Equipping intentionally returns to Camp; re-enter Inventory before using its filter.
+  await page.locator('[data-phase3-nav="equipment"]').click();
   await page.selectOption('#slotFilter','all');await page.locator('[data-eqslot="belt"]').click();await page.locator('dialog.equipmentItemDialog #unequipThis').click();
   assert.equal(await page.evaluate(()=>__gearTest.snapshot().equip.belt),null);
+  const beforeMerchant=await page.evaluate(()=>__gearTest.persisted());assert(beforeMerchant,'isolated save missing before Merchant');assert.equal(beforeMerchant.expedition.unlocked,5);
   await page.locator('[data-phase3-nav="city-center"]').click();await page.locator('[data-city-tab="blacksmith"]').click();
   assert.equal(await page.getByRole('heading',{name:'Affinity Transfer',exact:true}).count(),0);
   await page.selectOption('#forgeSlot','belt');await page.selectOption('#forgeSubtype','Leather');await page.selectOption('#forgeTier','5');
-  await page.locator('#craft').click();assert.deepEqual(errors,[]);await page.locator('dialog [data-close]').click();
+  await page.locator('#craft').click();assert.deepEqual(errors,[]);assert.equal((await page.evaluate(()=>__gearTest.status())).saveBlocked,false,'valid isolated progression must not block saves');assert(await page.locator('dialog [data-close]').count(),'craft confirmation did not open');await page.locator('dialog [data-close]').click();
   assert(await page.evaluate(()=>__gearTest.snapshot().stash.some(i=>i.slot==='belt'&&i.armorType==='Leather'&&i.tier===5)));
   await page.locator('[data-phase3-nav="city-center"]').click();await page.locator('[data-city-tab="blacksmith"]').click();await page.evaluate(()=>__gearTest.rollBelt());
   assert.equal(await page.getByRole('heading',{name:/Sigils/}).count(),0);await page.locator('[data-merchant-category="armor"]').click();await page.locator('[data-buy]').first().click();
   const confirm=page.locator('dialog [data-confirm]');if(await confirm.count())await confirm.click();
   assert(await page.evaluate(()=>__gearTest.snapshot().stash.some(i=>i.slot==='belt'&&i.armorType==='Plate'&&i.source==='merchant')));
+  const afterMerchant=await page.evaluate(()=>({status:__gearTest.status(),save:__gearTest.persisted()}));assert.equal(afterMerchant.status.saveBlocked,false,'Merchant actions must not block the isolated save');assert(afterMerchant.save.profile.stash.some(i=>i.slot==='belt'&&i.armorType==='Plate'&&i.source==='merchant'),'bought Merchant item missing from persisted payload');assert(afterMerchant.save.profile.gold<beforeMerchant.profile.gold,'Merchant purchase was not persisted');
   assert.deepEqual(errors,[]);assert.deepEqual(external,[]);console.log('PASS v0.12.0 gear '+width+'px: ten slots, no gear affinities/sets, Belt equip/unequip/craft/buy, E# labels, isolated from cloud');
   await context.close();
  }}finally{await browser.close();await new Promise(r=>server.close(r));}

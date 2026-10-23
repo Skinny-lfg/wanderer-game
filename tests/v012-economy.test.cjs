@@ -1,9 +1,9 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const create=require('./v012-economy-harness.cjs');
-function enter(a){if(!a.controller().state.initialFamily)a.initial('blood');if(a.draft()?.kind==='reward')a.passive(a.draft().options[0].id);if(a.results().review||a.state().run?.status==='cleared'||a.results().eventExitPending)a.exitResult();while(a.bag.overflow()>0)a.bag.discard(a.bag.items().at(-1).id);a.select(a.controller().state.offers[0].id);a.enter();if(a.draft()?.step==='element')a.element('lightning');if(a.events.run()?.event){a.events.choose(2);return enter(a);}}
+function enter(a){if(!a.controller().state.initialFamily)a.initial('blood');if(a.draft()?.kind==='reward')a.passive(a.draft().options[0].id);if(a.results().review||a.state().run?.status==='cleared'||a.results().eventExitPending)a.exitResult();while(a.bag.items().length>=a.bag.capacity()){const item=a.bag.items().at(-1);assert(item&&a.bag.discard(item.id),'full Bag fixture must use the normal discard action');}while(a.bag.overflow()>0)a.bag.discard(a.bag.items().at(-1).id);a.select(a.controller().state.offers[0].id);a.enter();if(a.draft()?.step==='element')a.element('lightning');if(a.events.run()?.event){a.events.choose(2);return enter(a);}}
 function complete(a){for(let n=0;n<70&&a.controller().state.stage!=='finished';n++){if(!a.state().run||a.state().run.status==='cleared')enter(a);const r=a.state().run;r.enemy.hp=0;a.win();a.flush();}assert.equal(a.controller().state.stage,'finished');}
 test('Forge and Merchant prices use Expedition unlocks without touching legacy progress',()=>{
- const a=create(14),s=a.state();a.controller().state.unlocked=80;s.fragments=10000;s.gold=10000;
+ const a=create(14),s=a.state();a.setUnlocked(80);s.fragments=10000;s.gold=10000;
  a.craft(80,2,'armor','Armor');const crafted=s.stash.at(-1);
  assert.equal(crafted.tier,80);assert.equal(crafted.source,'forge');assert.notEqual(crafted.rarity,'Legendary');
  assert.equal(crafted.craftPrice,2430);assert.equal(s.fragments,7570);assert(a.sale(crafted)<=Math.floor(2430*.25));

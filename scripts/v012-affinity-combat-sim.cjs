@@ -95,7 +95,13 @@ function run(config){
       if(should&&a.potions.use(ix))potionUses.push({kind,realm:g.planeIndex,hpBefore:vit.hp,maxHP:vit.maxhp});
     }
    }
-   for(let n=0;a.bag.overflow();n++){if(n>40||!a.bag.discard(a.bag.items().at(-1).id)){error='Bag blocked';break;}}if(error)break;
+   // Loot does not affect this combat audit. Discard it when the gameplay Bag
+   // reaches capacity so the real entry guard does not terminate the route.
+   while(a.bag.items().length>=a.bag.capacity()){
+    const item=a.bag.items().at(-1);
+    if(!item||!a.bag.discard(item.id)){error='Bag blocked';break;}
+   }
+   for(let n=0;!error&&a.bag.overflow();n++){if(n>40||!a.bag.discard(a.bag.items().at(-1).id)){error='Bag blocked';break;}}if(error)break;
    let pick;if(!g.history.length)pick=g.offers.find(p=>p.family===family);else if(strategy==='random')pick=g.offers[Math.floor(random()*g.offers.length)];else pick=[...g.offers].sort((x,y)=>{
     const score=p=>{
      if(!coverage)return (target.includes(p.family)?100:0)+(!a.build().unlockedFamilies.includes(p.family)&&target.includes(p.family)?100:0)-p.waves;
