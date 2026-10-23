@@ -62,7 +62,7 @@ body.phase3IntegratedPreview:has(.phase3Camp) #wallet .token{
   --camp-frame-size:clamp(46px,5vh,54px);
   --camp-item-art-size:30px;
   --camp-column-gap:4px;
-  position:relative;isolation:isolate;overflow:hidden;
+  position:relative;isolation:isolate;overflow:visible;
   padding:clamp(14px,1.8vw,22px);
   border:1px solid transparent;
   border-radius:0;

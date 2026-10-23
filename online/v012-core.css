@@ -986,7 +986,7 @@ body::before{
 @media(max-width:690px){.cityCenterLayout{grid-template-columns:1fr}.cityCenterNpcArt{min-height:105px;flex-direction:row}.cityCenterNpcSilhouette{font-size:32px}}
 
 /* Merchant tab: a single bounded four-item list, never overlapping the NPC panel. */
-.cityCenterLayout #cityServiceContent{min-width:0;max-width:100%;overflow:hidden}
+.cityCenterLayout #cityServiceContent{min-width:0;max-width:100%;overflow:visible}
 .cityCenterLayout .merchantPanel{min-width:0;max-width:100%;box-sizing:border-box}
 .cityCenterLayout .merchantList{display:flex;flex-direction:column;gap:10px;min-width:0;width:100%}
 .cityCenterLayout .merchantCompactCard{width:100%;max-width:100%;box-sizing:border-box;grid-template-columns:62px minmax(0,1fr) minmax(84px,auto)}

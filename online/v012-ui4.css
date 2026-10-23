@@ -116,10 +116,10 @@
 .phase3IntegratedPreview button.phase3Start:hover:not(:disabled){border:0;background-color:transparent;background-image:url("../assets/ui-kit/original/hud/03_expedition_left.png"),url("../assets/ui-kit/original/hud/05_expedition_right.png");filter:brightness(1.08)}
 .phase3IntegratedPreview :is(button.phase3Start,#phase2EnterRealm,#phase3OpenInitialAffinity,#phase5ExitResult,dialog button[data-confirm]):active:not(:disabled){filter:brightness(.92)}
 .phase3IntegratedPreview :is(button.phase3Start,#phase2EnterRealm,#phase3OpenInitialAffinity,#phase5ExitResult,dialog button[data-confirm]):focus-visible{outline:2px solid #ebc790;outline-offset:3px}
-.phase3IntegratedPreview dialog.phase3InitialAffinityDialog{width:min(1380px,calc(100vw - 24px));max-width:none;max-height:90dvh;overflow:auto;padding:clamp(14px,2vw,24px)}
-.phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityChoices{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
-.phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityChoice{min-width:0;border:0;border-radius:0;background:transparent}
-.phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityChoice>.phase1DraftCard{display:flex;align-items:center;justify-content:flex-start;box-sizing:border-box;width:100%;height:290px;min-width:0;padding:12px 10px;gap:9px;text-align:center}
+.phase3IntegratedPreview dialog.phase3InitialAffinityDialog{box-sizing:border-box;width:min(1380px,calc(100vw - 32px));max-width:calc(100vw - 32px);max-height:90dvh;overflow:auto;padding:clamp(14px,2vw,24px)}
+.phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityChoices{display:grid;box-sizing:border-box;width:100%;max-width:100%;min-width:0;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityChoice{box-sizing:border-box;width:100%;max-width:100%;min-width:0;border:0;border-radius:0;background:transparent}
+.phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityChoice>.phase1DraftCard{display:flex;align-items:center;justify-content:flex-start;box-sizing:border-box;width:100%;max-width:100%;height:290px;min-width:0;padding:12px 10px;gap:9px;text-align:center}
 .phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityChoice .affinityFamilyIcon{width:min(82px,100%);height:82px;object-fit:contain;flex:none;filter:drop-shadow(0 4px 8px #0009)}
 .phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityChoice strong{font-size:clamp(17px,1.5vw,21px)}
 .phase3IntegratedPreview .phase3AffinityIdentity{font-size:15px;color:var(--ui4-muted);line-height:1.35}
@@ -175,7 +175,7 @@
  .phase3IntegratedPreview .itemComparison .comparisonCards::after{display:none}
 }
 @media(max-width:700px){
- .phase3IntegratedPreview dialog.phase3InitialAffinityDialog{width:calc(100vw - 16px);max-height:calc(100dvh - 20px);padding:12px}
+ .phase3IntegratedPreview dialog.phase3InitialAffinityDialog{width:calc(100vw - 20px);max-width:calc(100vw - 20px);max-height:calc(100dvh - 20px);padding:10px}
  .phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityChoices{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
  .phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityChoice>.phase1DraftCard{height:264px;padding:8px 5px;gap:7px;font-size:12px}
  .phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityChoice .affinityFamilyIcon{width:58px;height:58px}

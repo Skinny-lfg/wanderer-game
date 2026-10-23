@@ -31,10 +31,29 @@
 
   const smallSelector = [
     '.phase3BetweenTabs [role="tab"]',
+    '#nav button',
+    '.phase3Nav button',
+    '.cityCenterTabs button',
+    '.merchantCategoryTabs button',
     '.cityBlacksmithNav [role="tab"]',
     '.inventoryJumpNav button',
+    '.merchantCardActions button',
+    '.potionOffer button',
+    '.forgePicker button',
+    '.forgeCraftLayout button',
+    '.phase3RealmActions button',
+    '.cityBlacksmithNav a',
+    'dialog button[data-confirm]',
+    'dialog button[data-close]',
     '[data-gothic-size="small"]',
   ].join(',');
+
+  const conventionalButtonSelector = [
+    'button:not(.phase3Start):not(.slotTile):not(.miniSlot):not(.invItem)',
+    ':not(.phase3PotionSlot):not(.phase1DraftCard):not(.phase1Offer)',
+    ':not(.lootCard):not(.phase3BagItem):not(.phase3MagicElementChoice)',
+    ':not(.phase3PassiveChoice):not(.protectionChoice):not(.potionStackTile)',
+  ].join('') + ',.cityBlacksmithNav a';
 
   const sizes = ['large', 'medium', 'small'];
   const imageBySize = {
@@ -43,14 +62,15 @@
     small: 'assets/ui-kit/gothic-corners/small-silver-tr.png',
   };
 
-  const makeLayer = (panel, size) => {
+  const makeLayer = (panel, size, isButton = false) => {
     let layer = panel.querySelector(':scope > .gothic-corner-layer');
     if (!layer) {
       layer = document.createElement('span');
-      layer.className = 'gothic-corner-layer';
+      layer.className = 'gothic-corner-layer' + (isButton ? ' gothic-corner-layer--button' : '');
       layer.setAttribute('aria-hidden', 'true');
       panel.prepend(layer);
     }
+    layer.classList.toggle('gothic-corner-layer--button', isButton);
 
     const source = imageBySize[size];
     for (const corner of ['tl', 'tr', 'bl', 'br']) {
@@ -68,8 +88,19 @@
 
   const inferredSize = panel => {
     if (panel.matches(mediumSelector)) return 'medium';
-    if (panel.matches(smallSelector)) return 'small';
     if (panel.matches(largeSelector)) return 'large';
+    if (panel.matches(smallSelector)) {
+      if (panel.matches('button,a') && !panel.matches('[data-gothic-size="small"]')) {
+        const rect = panel.getBoundingClientRect();
+        if (rect.width < 34 || rect.height < 30) return null;
+      }
+      return 'small';
+    }
+    if (panel.matches(conventionalButtonSelector)) {
+      const rect = panel.getBoundingClientRect();
+      if (rect.width >= 68 && rect.height >= 34 && rect.height <= 100) return 'small';
+      return null;
+    }
     if (panel.matches('dialog')) {
       const rect = panel.getBoundingClientRect();
       if (rect.width >= 820 || rect.height >= 720) return 'large';
@@ -82,20 +113,57 @@
   const applyStyle = panel => {
     if (!(panel instanceof Element)) return;
     const size = inferredSize(panel);
-    if (!size) return;
+    const isButton = panel.matches('button,a') && panel.matches(conventionalButtonSelector);
+    if (!size) {
+      if (isButton && panel.classList.contains('gothic-button-ornamented')) {
+        panel.classList.remove('gothic-button-ornamented');
+        panel.querySelector(':scope > .gothic-corner-layer')?.remove();
+      }
+      return;
+    }
+    if (isButton) {
+      panel.classList.remove(...sizes.map(value => `gothic-panel--${value}`), 'gothic-panel--ornate', 'gothic-panel--standard');
+      panel.classList.add('gothic-button-ornamented');
+      const rect = panel.getBoundingClientRect();
+      const cornerSize = Math.max(9, Math.min(22, rect.height * .48, rect.width * .24));
+      if (panel.style.getPropertyValue('--gothic-corner-size') !== `${cornerSize}px`) {
+        panel.style.setProperty('--gothic-corner-size', `${cornerSize}px`);
+      }
+      makeLayer(panel, size, true);
+      if (dialogSizes && !panel.dataset.gothicButtonObserved) {
+        panel.dataset.gothicButtonObserved = 'true';
+        dialogSizes.observe(panel);
+      }
+      return;
+    }
     panel.classList.remove(...sizes.map(value => `gothic-panel--${value}`), 'gothic-panel--ornate', 'gothic-panel--standard');
+    panel.classList.remove('gothic-button-ornamented');
     panel.classList.add(`gothic-panel--${size}`);
     makeLayer(panel, size);
+    if (panel.matches('dialog') && panel.querySelector(':scope > .gothic-corner-layer')) {
+      panel.querySelector(':scope > .gothic-corner-layer').classList.add('gothic-corner-layer--viewport');
+      syncDialogLayer(panel);
+    }
     if (panel.matches('dialog') && dialogSizes && !panel.dataset.gothicCornerObserved) {
       panel.dataset.gothicCornerObserved = 'true';
       dialogSizes.observe(panel);
     }
   };
 
+  function syncDialogLayer(dialog) {
+    const layer = dialog.querySelector(':scope > .gothic-corner-layer');
+    if (!layer) return;
+    const rect = dialog.getBoundingClientRect();
+    layer.style.setProperty('--gothic-layer-top', `${rect.top}px`);
+    layer.style.setProperty('--gothic-layer-left', `${rect.left}px`);
+    layer.style.setProperty('--gothic-layer-width', `${rect.width}px`);
+    layer.style.setProperty('--gothic-layer-height', `${rect.height}px`);
+  }
+
   const scan = root => {
     if (!(root instanceof Element || root instanceof Document)) return;
-    if (root instanceof Element && root.matches(`${largeSelector},${mediumSelector},${smallSelector},dialog`)) applyStyle(root);
-    root.querySelectorAll(`${largeSelector},${mediumSelector},${smallSelector},dialog`).forEach(applyStyle);
+    if (root instanceof Element && root.matches(`${largeSelector},${mediumSelector},${smallSelector},${conventionalButtonSelector},dialog`)) applyStyle(root);
+    root.querySelectorAll(`${largeSelector},${mediumSelector},${smallSelector},${conventionalButtonSelector},dialog`).forEach(applyStyle);
   };
 
   const observer = new MutationObserver(records => {
@@ -107,7 +175,10 @@
   });
   const dialogSizes = typeof ResizeObserver === 'function' ? new ResizeObserver(entries => {
     entries.forEach(entry => {
-      if (entry.target instanceof HTMLDialogElement) applyStyle(entry.target);
+      if (entry.target instanceof HTMLDialogElement) {
+        applyStyle(entry.target);
+        syncDialogLayer(entry.target);
+      } else applyStyle(entry.target);
     });
   }) : null;
 
@@ -116,5 +187,6 @@
     if (event.target instanceof HTMLDialogElement) applyStyle(event.target);
   }, true);
   window.addEventListener('resize', () => document.querySelectorAll('dialog').forEach(applyStyle), { passive: true });
+  window.addEventListener('scroll', () => document.querySelectorAll('dialog.gothic-panel--medium,dialog.gothic-panel--large').forEach(syncDialogLayer), { passive: true, capture: true });
   scan(document);
 })();

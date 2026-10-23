@@ -72,8 +72,8 @@ body.phase3IntegratedPreview :is(
 }
 .gothic-panel--medium {
   --gothic-corner-size: var(--gothic-panel-medium-size);
-  --gothic-corner-offset-x: calc(var(--gothic-corner-size) * .09);
-  --gothic-corner-offset-y: calc(var(--gothic-corner-size) * .10);
+  --gothic-corner-offset-x: calc(var(--gothic-corner-size) * .12);
+  --gothic-corner-offset-y: calc(var(--gothic-corner-size) * .13);
 }
 .gothic-panel--small {
   --gothic-corner-size: var(--gothic-panel-small-size);
@@ -88,6 +88,27 @@ body.phase3IntegratedPreview :is(
   overflow: visible;
   pointer-events: none;
   user-select: none;
+}
+
+/* Conventional controls keep their existing CSS and receive only a separate
+   decorative layer. The PNGs stay inside the control's own box, so scrollable
+   navigation and narrow cards do not gain visual page overflow. */
+.gothic-button-ornamented {
+  --gothic-corner-offset-x: 0px;
+  --gothic-corner-offset-y: 0px;
+  position: relative;
+  isolation: isolate;
+}
+.gothic-corner-layer--button {
+  z-index: 0;
+}
+.gothic-corner-layer--viewport {
+  position: fixed;
+  inset: auto;
+  top: var(--gothic-layer-top);
+  left: var(--gothic-layer-left);
+  width: var(--gothic-layer-width);
+  height: var(--gothic-layer-height);
 }
 
 .gothic-corner {
