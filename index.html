@@ -1260,7 +1260,8 @@ function phase3AffinityChoiceMarkup(family){
  const names=WandererV012Expedition.FAMILY_NAMES,starter=family==='magic'?['kindling','deep_winter','overcharge']:[WandererV012Buildcraft.initialId(family)];
  const passives=starter.map(id=>WandererV012Buildcraft.CATALOG.find(p=>p.id===id)).filter(Boolean);
  const identity={blood:'Bleed and recovery',decay:'Rot and attrition',vitality:'Health and endurance',aegis:'Defense and Barrier',fury:'Speed and critical hits',magic:'Elemental casts and Mana'}[family];
- const passiveText=passives.map(p=>'<b>'+esc(p.name)+'</b> — '+esc(p.description.replace(/\bICD\b/gi,'cooldown'))).join(' · ');
+ const initialDescriptions={blood:'Hits may inflict Bleed, dealing 16% base damage per tick (0.9s cooldown).',decay:'Hits may apply Rot, dealing 6.5% base damage per tick (1.3s cooldown).',vitality:'Increase maximum Health by 10%.',aegis:'Increase Defense by 12%.',fury:'Increase attack speed by 8%.',magic:'Choose one element: Fire, Frost, or Lightning.'};
+ const passiveText=passives.map(p=>'<b>'+esc(p.name)+'</b> — '+esc(initialDescriptions[family]||p.description.replace(/\bICD\b/gi,'cooldown'))).join(' · ');
  return '<article class="phase3AffinityChoice"><button type="button" class="phase1DraftCard" data-phase2-initial="'+family+'">'+phase2FamilyIcon(family)+'<strong>'+esc(names[family])+'</strong><span class="phase3AffinityIdentity">'+identity+'</span><span class="phase3AffinityPassive">'+(family==='magic'?'Choose one of 3 elements after selecting Magic.':'Passive after first clear: '+passiveText)+'</span><b class="phase3AffinityAction">Choose '+esc(names[family])+'</b></button></article>';
 }
 function phase3OpenMagicElementDialog(onChoose){
