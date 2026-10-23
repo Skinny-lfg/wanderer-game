@@ -1,0 +1,105 @@
+/* Gothic Corner System v2: square panel geometry with transparent corner art. */
+:root {
+  --gothic-standard-corner-size: clamp(44px, 6vw, 76px);
+  --gothic-ornate-corner-size: clamp(72px, 8vw, 132px);
+  --gothic-panel-border: #756247;
+}
+
+body.phase3IntegratedPreview :is(.gothic-panel--standard, .gothic-panel--ornate) {
+  isolation: isolate;
+  border-radius: 0;
+  border: 1px solid var(--gothic-panel-border);
+  clip-path: none;
+}
+
+body.phase3IntegratedPreview :is(.gothic-panel--standard, .gothic-panel--ornate):not(dialog) {
+  position: relative;
+}
+
+body.phase3IntegratedPreview :is(
+  #screen > .panel.gothic-panel--ornate:not(.phase3Camp),
+  #screen > .combatLayout > .panel.gothic-panel--ornate,
+  #screen > .equipmentLayout > .equipmentLeft > .panel.gothic-panel--ornate,
+  #screen > .equipmentLayout > .equipmentRight > .panel.gothic-panel--ornate,
+  .phase3CampSideStats.gothic-panel--ornate,
+  .phase3ExpeditionPanel.gothic-panel--ornate,
+  .phase3Between.gothic-panel--ornate,
+  .phase3CityCenter.gothic-panel--ornate,
+  .phase3AffinityShrine.gothic-panel--ornate,
+  .phase5VisualSummary.gothic-panel--ornate
+) {
+  background: var(--ui4-home-stats-bg);
+}
+
+body.phase3IntegratedPreview :is(
+  #screen > .panel.gothic-panel--ornate:not(.phase3Camp),
+  #screen > .combatLayout > .panel.gothic-panel--ornate,
+  #screen > .equipmentLayout > .equipmentLeft > .panel.gothic-panel--ornate,
+  #screen > .equipmentLayout > .equipmentRight > .panel.gothic-panel--ornate,
+  .phase3Camp.gothic-panel--ornate,
+  .phase3CampSideStats.gothic-panel--ornate,
+  .phase3ExpeditionPanel.gothic-panel--ornate,
+  .phase3Between.gothic-panel--ornate,
+  .phase3CityCenter.gothic-panel--ornate,
+  .phase3AffinityShrine.gothic-panel--ornate,
+  .phase5VisualSummary.gothic-panel--ornate,
+  dialog.gothic-panel--standard,
+  dialog.gothic-panel--ornate
+)::before,
+body.phase3IntegratedPreview :is(
+  #screen > .panel.gothic-panel--ornate:not(.phase3Camp),
+  #screen > .combatLayout > .panel.gothic-panel--ornate,
+  #screen > .equipmentLayout > .equipmentLeft > .panel.gothic-panel--ornate,
+  #screen > .equipmentLayout > .equipmentRight > .panel.gothic-panel--ornate,
+  .phase3Camp.gothic-panel--ornate,
+  .phase3CampSideStats.gothic-panel--ornate,
+  .phase3ExpeditionPanel.gothic-panel--ornate,
+  .phase3Between.gothic-panel--ornate,
+  .phase3CityCenter.gothic-panel--ornate,
+  .phase3AffinityShrine.gothic-panel--ornate,
+  .phase5VisualSummary.gothic-panel--ornate,
+  dialog.gothic-panel--standard,
+  dialog.gothic-panel--ornate
+)::after {
+  content: none;
+  background: none;
+  clip-path: none;
+}
+
+body.phase3IntegratedPreview dialog:is(.gothic-panel--standard, .gothic-panel--ornate) {
+  background: var(--ui4-home-stats-bg);
+}
+
+.gothic-corner-layer {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+}
+
+.gothic-corner {
+  position: absolute;
+  display: block;
+  width: var(--gothic-corner-size);
+  height: var(--gothic-corner-size);
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
+.gothic-panel--standard { --gothic-corner-size: var(--gothic-standard-corner-size); }
+.gothic-panel--ornate { --gothic-corner-size: var(--gothic-ornate-corner-size); }
+
+.gothic-corner--tr { top: 0; right: 0; }
+.gothic-corner--tl { top: 0; left: 0; transform: scaleX(-1); }
+.gothic-corner--br { right: 0; bottom: 0; transform: scaleY(-1); }
+.gothic-corner--bl { left: 0; bottom: 0; transform: scale(-1, -1); }
+
+@media (max-width: 650px) {
+  :root { --gothic-standard-corner-size: 44px; --gothic-ornate-corner-size: 72px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gothic-corner { scroll-behavior: auto; }
+}
