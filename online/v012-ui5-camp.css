@@ -30,18 +30,18 @@ body.phase3IntegratedPreview:has(.phase3Camp){
 body.phase3IntegratedPreview:has(.phase3Camp) .phase3Nav{gap:7px;align-items:center}
 body.phase3IntegratedPreview:has(.phase3Camp) .phase3Nav button{
   min-height:42px;padding:8px 14px;border:1px solid var(--gothic-edge);
-  border-radius:0;clip-path:polygon(0 6px,6px 0,calc(100% - 6px) 0,100% 6px,100% calc(100% - 6px),calc(100% - 6px) 100%,6px 100%,0 calc(100% - 6px));
-  background:linear-gradient(155deg,#3a3021,#241d16 72%);
+  border-radius:3px 11px 3px 11px;
+  background:linear-gradient(155deg,#302b2e,#1d1a1e 72%);
   box-shadow:inset 0 1px #ffffff12,inset 0 -2px #09080a55;
   color:var(--gothic-parchment);font:500 14px/1.15 var(--font-head);
 }
 body.phase3IntegratedPreview:has(.phase3Camp) .phase3Nav button:hover:not(:disabled){
   border-color:var(--gothic-highlight-gold);color:var(--gothic-ivory);
-  background:linear-gradient(155deg,#493b28,#2c2419 75%);
+  background:linear-gradient(155deg,#493b32,#292126 75%);
 }
 body.phase3IntegratedPreview:has(.phase3Camp) .phase3Nav button.primary{
-  border-color:var(--gothic-antique-gold);color:#fff0cf;
-  background:linear-gradient(155deg,#73572d,#4f3b21 72%);
+  border-color:var(--gothic-highlight-gold);color:#fff0cf;
+  background:linear-gradient(155deg,#604a2e,#382a22 72%);
   box-shadow:inset 0 0 0 1px #d8bc7d35,0 0 12px #9e7d4424;
 }
 body.phase3IntegratedPreview:has(.phase3Camp) .phase3Nav button:disabled{
@@ -64,8 +64,8 @@ body.phase3IntegratedPreview:has(.phase3Camp) #wallet .token{
   --camp-column-gap:4px;
   position:relative;isolation:isolate;overflow:hidden;
   padding:clamp(14px,1.8vw,22px);
-  border:1px solid var(--gothic-antique-gold);
-  border-radius:3px 15px 3px 15px;
+  border:1px solid transparent;
+  border-radius:0;
   background-color:var(--gothic-obsidian);
   background-image:
     linear-gradient(90deg,rgba(17,16,20,.68),rgba(17,16,20,.34) 48%,rgba(17,16,20,.63)),
@@ -99,7 +99,7 @@ body.phase3IntegratedPreview:has(.phase3Camp) #wallet .token{
 .phase3IntegratedPreview .phase3SetSummary{font-size:11px;color:#b3a48c}
 
 /* GothicPanel: character stats and journey share the same iron-and-gold grammar. */
-.phase3IntegratedPreview .phase3CampGrid>.phase3CampSideStats{grid-area:stats;min-width:0;margin:0;padding:10px;border:1px solid var(--gothic-edge);border-radius:var(--gothic-corner) 3px var(--gothic-corner) 3px;background:linear-gradient(145deg,rgba(48,43,46,.94),rgba(23,21,25,.92));box-shadow:inset 0 1px #ffffff0d,0 8px 20px #0006}
+.phase3IntegratedPreview .phase3CampGrid>.phase3CampSideStats{grid-area:stats;min-width:0;margin:0;padding:10px;border:1px solid var(--gothic-edge);border-radius:0;background:var(--ui4-home-stats-bg);box-shadow:inset 0 1px #ffffff0d,0 8px 20px #0006}
 .phase3IntegratedPreview .phase3CampCharacterStats{padding:0;margin:0;border:0;background:transparent}
 .phase3IntegratedPreview .phase3CampCharacterStats h3{margin:1px 0 5px;color:var(--gothic-highlight-gold);font:500 16px/1.12 var(--font-head);letter-spacing:.03em}
 .phase3IntegratedPreview .phase3CampCharacterStats h3:not(:first-child){margin-top:9px;padding-top:7px;border-top:1px solid #9e7d4440}
@@ -112,7 +112,7 @@ body.phase3IntegratedPreview:has(.phase3Camp) #wallet .token{
 .phase3IntegratedPreview .phase3CampExtraStats summary{padding:8px 2px;color:var(--gothic-highlight-gold);cursor:pointer;font:500 13px var(--font-head)}
 .phase3IntegratedPreview .phase3CampExtraStats .phase3CampStatRow{grid-template-columns:repeat(2,minmax(0,1fr))}
 .phase3IntegratedPreview .phase3CampSidebarJourney{grid-area:journey;min-width:0;margin:0}
-.phase3IntegratedPreview .phase3CampSidebarJourney .phase3Journey{position:relative;margin:0;padding:7px 12px;border:1px solid var(--gothic-edge);border-radius:3px var(--gothic-corner) 3px var(--gothic-corner);background:linear-gradient(145deg,rgba(48,43,46,.9),rgba(23,21,25,.9));box-shadow:inset 0 1px #ffffff0d,0 8px 20px #0006;color:var(--gothic-parchment);font-size:12px}
+.phase3IntegratedPreview .phase3CampSidebarJourney .phase3Journey{position:relative;margin:0;padding:7px 12px;border:1px solid var(--gothic-edge);border-radius:0;background:var(--ui4-home-stats-bg);box-shadow:inset 0 1px #ffffff0d,0 8px 20px #0006;color:var(--gothic-parchment);font-size:12px}
 .phase3IntegratedPreview .phase3CampSidebarJourney .phase3Journey>summary{min-height:32px;display:flex;align-items:center;color:var(--gothic-highlight-gold);cursor:pointer;font:500 14px var(--font-head)}
 .phase3IntegratedPreview .phase3Journey dl{margin:8px 0;gap:5px}
 .phase3IntegratedPreview .phase3Journey dl>div{padding-top:5px;border-top:1px solid #9e7d442d}
@@ -137,7 +137,7 @@ body.phase3IntegratedPreview:has(.phase3Camp) #wallet .token{
 .phase3IntegratedPreview .phase3CampCharacter .phase3ResourceTrack>b{position:absolute;inset:0;z-index:3;display:grid;place-items:center;color:#fff4dd;font:600 10px/1 var(--font-body);text-shadow:0 1px 3px #000;white-space:nowrap}
 
 /* GothicItemSlot: keep the real item image, rarity frame, badge and click target. */
-.phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile[data-slot]{position:relative;inset:auto;display:flex;width:100%;height:calc(var(--camp-slot-row) - 2px);min-height:52px;flex-direction:column;align-items:center;justify-content:flex-start;gap:2px;margin:0;padding:3px 1px;border:1px solid #b08d505f;border-radius:2px 9px 2px 9px;background:linear-gradient(145deg,#262226e8,#151317e8);box-shadow:inset 0 0 0 1px #d8bc7d15,inset 0 1px #ffffff0b,0 4px 9px #0007;box-sizing:border-box;overflow:visible;z-index:2;cursor:pointer}
+.phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile[data-slot]{position:relative;inset:auto;display:flex;width:100%;height:calc(var(--camp-slot-row) - 2px);min-height:52px;flex-direction:column;align-items:center;justify-content:flex-start;gap:2px;margin:0;padding:3px 1px;border:1px solid #b08d505f;border-radius:0;background:linear-gradient(145deg,#262226e8,#151317e8);box-shadow:inset 0 0 0 1px #d8bc7d15,inset 0 1px #ffffff0b,0 4px 9px #0007;box-sizing:border-box;overflow:visible;z-index:2;cursor:pointer}
 .phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile[data-slot]:hover{border-color:var(--gothic-highlight-gold);background:linear-gradient(145deg,#3b3028,#211c1e);box-shadow:inset 0 0 0 1px #d8bc7d40,0 0 12px #9e7d4425}
 .phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile[data-slot]:focus-visible{outline:2px solid var(--gothic-highlight-gold);outline-offset:2px;z-index:5}
 .phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile[data-slot].active,.phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile[data-slot].filterSelected{outline:2px solid var(--gothic-highlight-gold);outline-offset:1px;z-index:4}
@@ -158,7 +158,7 @@ body.phase3IntegratedPreview:has(.phase3Camp) #wallet .token{
 
 /* Three existing potion controls occupy the bottom row of the paper doll. */
 .phase3IntegratedPreview .phase3CampCharacter .paper>.phase3PotionSlots{grid-column:1/4;grid-row:6;position:relative;z-index:2;display:grid;width:min(100%,228px);min-width:0;grid-template-columns:repeat(3,minmax(0,1fr));justify-self:center;align-self:start;gap:5px;margin:0 auto;padding:2px 0}
-.phase3IntegratedPreview .phase3CampCharacter .paper>.phase3PotionSlots>.phase3PotionSlot{position:relative;z-index:2;display:flex;width:100%;min-width:0;min-height:66px;flex-direction:column;align-items:center;justify-content:flex-start;gap:3px;margin:0;padding:2px 1px;border:1px solid #9e7d4450;border-radius:3px 8px 3px 8px;background:linear-gradient(145deg,#262226d9,#151317d9);box-shadow:inset 0 1px #ffffff0b,0 3px 8px #0006;overflow:visible}
+.phase3IntegratedPreview .phase3CampCharacter .paper>.phase3PotionSlots>.phase3PotionSlot{position:relative;z-index:2;display:flex;width:100%;min-width:0;min-height:66px;flex-direction:column;align-items:center;justify-content:flex-start;gap:3px;margin:0;padding:2px 1px;border:1px solid #9e7d4450;border-radius:0;background:linear-gradient(145deg,#262226d9,#151317d9);box-shadow:inset 0 1px #ffffff0b,0 3px 8px #0006;overflow:visible}
 .phase3IntegratedPreview .phase3CampCharacter .paper>.phase3PotionSlots>.phase3PotionSlot.loaded[data-rarity]{border-color:color-mix(in srgb,var(--ui-rarity-color,#8c8378) 72%,#9e7d44);background:linear-gradient(145deg,color-mix(in srgb,var(--ui-rarity-color,#8c8378) 25%,#262226),color-mix(in srgb,var(--ui-rarity-color,#8c8378) 16%,#151317));box-shadow:inset 0 1px #ffffff12,0 0 9px color-mix(in srgb,var(--ui-rarity-color,#8c8378) 22%,transparent),0 3px 8px #0006}
 .phase3IntegratedPreview .phase3CampCharacter .paper .phase3PotionSlot.loaded[data-rarity] b{color:var(--ui-rarity-shine,var(--ui-rarity-color,#d3c7b0))}
 .phase3IntegratedPreview .phase3CampCharacter .phase3PotionSlot:hover:not(:disabled){border-color:var(--gothic-highlight-gold)}
@@ -167,7 +167,7 @@ body.phase3IntegratedPreview:has(.phase3Camp) #wallet .token{
 .phase3IntegratedPreview .phase3CampCharacter .paper .phase3PotionSlot .tiny{min-height:25px;padding:2px 5px;font-size:9px}
 
 /* Expedition keeps its original artwork, choice control and start behavior. */
-.phase3IntegratedPreview .phase3CampGrid>.phase3ExpeditionPanel{grid-area:expedition;position:relative;min-width:0;margin:0;padding:clamp(13px,1.5vw,19px);overflow:hidden;border:1px solid var(--gothic-edge);border-radius:3px var(--gothic-corner) 3px var(--gothic-corner);background:linear-gradient(145deg,rgba(48,43,46,.95),rgba(23,21,25,.93));box-shadow:inset 0 1px #ffffff0d,0 10px 24px #0007}
+.phase3IntegratedPreview .phase3CampGrid>.phase3ExpeditionPanel{grid-area:expedition;position:relative;min-width:0;margin:0;padding:clamp(13px,1.5vw,19px);overflow:hidden;border:1px solid transparent;border-radius:0;background:var(--ui4-home-stats-bg);box-shadow:inset 0 1px #ffffff0d,0 10px 24px #0007}
 .phase3IntegratedPreview .phase3ExpeditionPanel .phase3Portal{display:block;width:calc(100% + 2 * clamp(13px,1.5vw,19px));height:clamp(105px,9vw,145px);object-fit:cover;object-position:center 42%;margin:calc(-1 * clamp(13px,1.5vw,19px)) calc(-1 * clamp(13px,1.5vw,19px)) 10px;mask-image:linear-gradient(#000 72%,transparent)}
 .phase3IntegratedPreview .phase3ExpeditionPanel .eyebrow{color:var(--gothic-highlight-gold)}
 .phase3IntegratedPreview .phase3ExpeditionPanel h2{margin:6px 0 8px;color:var(--gothic-ivory);font:500 clamp(22px,2vw,28px)/1.12 var(--font-head)}
@@ -184,7 +184,7 @@ body.phase3IntegratedPreview:has(.phase3Camp) #wallet .token{
 .phase3IntegratedPreview .phase3CampStickyStart{display:none}
 
 /* GothicModal / GothicTooltip: shared item popup appears while Camp is active. */
-body.phase3IntegratedPreview:has(.phase3Camp) dialog{border:1px solid var(--gothic-antique-gold);border-radius:3px 12px 3px 12px;background:var(--gothic-panel-raised);color:var(--gothic-ivory);box-shadow:inset 0 0 0 1px #d8bc7d29,0 18px 54px #000d}
+body.phase3IntegratedPreview:has(.phase3Camp) dialog{border:1px solid transparent;border-radius:0;background:var(--ui4-home-stats-bg);color:var(--gothic-ivory);box-shadow:inset 0 0 0 1px #d8bc7d29,0 18px 54px #000d}
 body.phase3IntegratedPreview:has(.phase3Camp) dialog::backdrop{background:#09080bd9}
 body.phase3IntegratedPreview:has(.phase3Camp) .phase3Camp [role="progressbar"]{font-variant-numeric:tabular-nums}
 

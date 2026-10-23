@@ -1,33 +1,187 @@
-/* UI.4f — responsive Camp geometry and CSS-only item frames. */
+/* UI.4f — responsive rarity frames and complete CSS chamfer borders. */
 .phase3IntegratedPreview{
   --wf-panel-edge:1px;
 }
-/* Screen-level surfaces share one restrained metal edge; nested cards stay light. */
+
+/* Keep the Gothic silhouette clipped on a decoration layer, not on the surface
+   itself. The masked edge stays continuous across all eight polygon segments,
+   while the host keeps its natural outer shadows and focus outlines. */
 .phase3IntegratedPreview :is(
   #screen>.panel:not(.phase3Camp),
   #screen>.combatLayout>.panel,
   #screen>.equipmentLayout>.equipmentLeft>.panel,
-  #screen>.equipmentLayout>.equipmentRight>.panel
+  #screen>.equipmentLayout>.equipmentRight>.panel,
+  .phase3Camp,
+  .phase3ExpeditionPanel,
+  .phase3CampSideStats,
+  .phase3Between,
+  .phase3CityCenter,
+  .phase3AffinityShrine,
+  .phase5VisualSummary,
+  .phase3Journey,
+  .phase1BuildSummary,
+  .phase2PassiveBar,
+  .phase3Preparation,
+  .phase3Passives,
+  .phase3ReturnBar,
+  .phase3ResourcePanel,
+  .phase3Bag,
+  .phase3PassiveTooltip,
+  .phase3PassiveSlot,
+  .phase3PassiveCard,
+  .phase3PassiveInline,
+  .phase3BetweenHero,
+  .phase3Routes,
+  .phase3BetweenStats .metric,
+  .phase3EventReadOnly,
+  .combatActiveBuffs,
+  .phase3BetweenQuick,
+  .phase3RealmActions,
+  .phase3BetweenAffinity,
+  .phase3BetweenBag,
+  .phase3PermanentStats,
+  .phase3StatCell,
+  .phase3ActiveAffinities,
+  .phase3CombatAffinityGroup,
+  .phase3CombatBuild,
+  .inspect,
+  .delta,
+  .gearSummary,
+  .setCompare,
+  .sigilOfferCard,
+  .forgePicker,
+  .forgeSelectionSummary,
+  .forgeAffinityPreview,
+  .forgeRankPreview,
+  .c3TreasureResult,
+  .cityCenterNpcArt,
+  .potionStash,
+  .log,
+  .combatBagDetails>summary,
+  .phase3BetweenBag>summary,
+  .phase3EquipmentDetails>summary,
+  .phase3EventCard,
+  .stat,
+  .token,
+  .shopCard,
+  .merchantCompactCard,
+  .potionOffer,
+  .forgePickCard,
+  .compareCard,
+  .lootCard,
+  .phase3BagItem,
+  .phase3BagEmpty,
+  .rarityImageFrame,
+  .slotTile,
+  .miniSlot,
+  .invItem,
+  .runeSlot,
+  dialog
 ){
-  border:var(--wf-panel-edge) solid #76535d;
+  --ui4-chamfer-color:var(--ui4-gold-edge,#9e7d44);
+  border-color:transparent;
   border-radius:0;
+  clip-path:none;
+}
+/* Establish local pseudo-element anchors only for surfaces that flow normally.
+   Equipment slots keep their original absolute/grid positioning. */
+.phase3IntegratedPreview :is(
+  #screen>.panel:not(.phase3Camp),#screen>.combatLayout>.panel,
+  #screen>.equipmentLayout>.equipmentLeft>.panel,
+  #screen>.equipmentLayout>.equipmentRight>.panel,
+  .phase3Camp,.phase3ExpeditionPanel,.phase3CampSideStats,.phase3Between,
+  .phase3CityCenter,.phase3AffinityShrine,.phase5VisualSummary,
+  .phase3Journey,.phase1BuildSummary,.phase2PassiveBar,.phase3Preparation,
+  .phase3Passives,.phase3ReturnBar,.phase3ResourcePanel,.phase3Bag,
+  .phase3PassiveTooltip,.phase3PassiveSlot,.phase3PassiveCard,.phase3PassiveInline,
+  .phase3BetweenHero,.phase3Routes,.phase3BetweenStats .metric,.phase3EventReadOnly,
+  .combatActiveBuffs,.phase3BetweenQuick,.phase3BetweenAffinity,.phase3BetweenBag,
+  .phase3PermanentStats,.phase3StatCell,.phase3ActiveAffinities,
+  .phase3CombatAffinityGroup,.phase3CombatBuild,.inspect,.delta,.gearSummary,
+  .setCompare,.sigilOfferCard,.forgePicker,.forgeSelectionSummary,
+  .forgeAffinityPreview,.forgeRankPreview,.c3TreasureResult,.cityCenterNpcArt,
+  .potionStash,.log,.combatBagDetails>summary,.phase3BetweenBag>summary,
+  .phase3EquipmentDetails>summary,.phase3EventCard,
+  .stat,.token,.shopCard,.merchantCompactCard,.potionOffer,.forgePickCard,
+  .compareCard,.lootCard,.phase3BagItem,.phase3BagEmpty,.rarityImageFrame,
+  .miniSlot,.invItem,.runeSlot
+){position:relative}
+.phase3IntegratedPreview .rarityImageFrame{isolation:isolate}
+.phase3IntegratedPreview :is(.merchantCompactCard[data-rarity],.compareCard[data-rarity],.lootCard[data-rarity],.phase3BagItem[data-rarity]){
+  --ui4-chamfer-color:var(--item-rarity,var(--ui4-gold-edge,#9e7d44));
+}
+.phase3IntegratedPreview .rarityImageFrame{
+  --ui4-chamfer-color:var(--ui-rarity-color,#8c8378);
+}
+.phase3IntegratedPreview :is(
+  #screen>.panel:not(.phase3Camp),#screen>.combatLayout>.panel,
+  #screen>.equipmentLayout>.equipmentLeft>.panel,
+  #screen>.equipmentLayout>.equipmentRight>.panel,.phase3Camp,.phase3ExpeditionPanel,.phase3CampSideStats,
+  .phase3Between,.phase3CityCenter,.phase3AffinityShrine,.phase5VisualSummary,dialog
+)::after{
+  content:"";
+  display:block;
+  position:absolute;
+  z-index:8;
+  inset:0;
+  padding:1px;
+  pointer-events:none;
+  background:var(--ui4-chamfer-color);
   clip-path:polygon(0 11px,11px 0,calc(100% - 11px) 0,100% 11px,100% calc(100% - 11px),calc(100% - 11px) 100%,11px 100%,0 calc(100% - 11px));
-  background:linear-gradient(145deg,#30212a,#1c151d 90%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  mask-composite:exclude;
+}
+.phase3IntegratedPreview :is(
+  .phase3Journey,.phase1BuildSummary,.phase2PassiveBar,.phase3Preparation,
+  .phase3Passives,.phase3ReturnBar,.phase3ResourcePanel,.phase3Bag,
+  .phase3PassiveTooltip,.phase3PassiveSlot,.phase3PassiveCard,.phase3PassiveInline,
+  .phase3BetweenHero,.phase3Routes,.phase3BetweenStats .metric,.phase3EventReadOnly,
+  .combatActiveBuffs,.phase3BetweenQuick,.phase3RealmActions,.phase3BetweenAffinity,
+  .phase3BetweenBag,.phase3PermanentStats,.phase3StatCell,.phase3ActiveAffinities,
+  .phase3CombatAffinityGroup,.phase3CombatBuild,.inspect,.delta,.gearSummary,
+  .setCompare,.sigilOfferCard,.forgePicker,.forgeSelectionSummary,
+  .forgeAffinityPreview,.forgeRankPreview,.c3TreasureResult,.cityCenterNpcArt,
+  .potionStash,.log,.combatBagDetails>summary,.phase3BetweenBag>summary,
+  .phase3EquipmentDetails>summary,.phase3EventCard,
+  .stat,.token,.shopCard,.merchantCompactCard,.potionOffer,.forgePickCard,
+  .compareCard,.lootCard,.phase3BagItem,.phase3BagEmpty,.rarityImageFrame,
+  .slotTile,.miniSlot,.invItem,.runeSlot
+)::after{
+  content:"";
+  display:block;
+  position:absolute;
+  z-index:8;
+  inset:0;
+  padding:1px;
+  pointer-events:none;
+  background:var(--ui4-chamfer-color);
+  clip-path:polygon(0 8px,8px 0,calc(100% - 8px) 0,100% 8px,100% calc(100% - 8px),calc(100% - 8px) 100%,8px 100%,0 calc(100% - 8px));
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  mask-composite:exclude;
+}
+
+/* Existing main surfaces use the exact Home Stats panel surface. */
+.phase3IntegratedPreview :is(
+  #screen>.panel:not(.phase3Camp),#screen>.combatLayout>.panel,
+  #screen>.equipmentLayout>.equipmentLeft>.panel,
+  #screen>.equipmentLayout>.equipmentRight>.panel,
+  .phase3Between,.phase3CityCenter,.phase3AffinityShrine,.phase5VisualSummary
+){
+  background:var(--ui4-home-stats-bg);
   box-sizing:border-box;
 }
-/* The square rarity frame is the only item frame. Hit targets retain a soft CSS surface. */
 .phase3IntegratedPreview :is(.slotTile,.miniSlot,.invItem,.phase3PotionSlot){
   border:1px solid transparent;
   border-radius:0;
-  clip-path:polygon(0 7px,7px 0,calc(100% - 7px) 0,100% 7px,100% calc(100% - 7px),calc(100% - 7px) 100%,7px 100%,0 calc(100% - 7px));
   background:linear-gradient(145deg,#20151b,#160f14);
   box-shadow:inset 0 1px #ffffff0a;
   box-sizing:border-box;
 }
-.phase3IntegratedPreview :is(.shopCard,.merchantCompactCard,.forgePickCard,.compareCard,.lootCard,.phase3BagItem,.phase3BagEmpty,.phase3AffinityChoice){border-radius:0;clip-path:polygon(0 8px,8px 0,calc(100% - 8px) 0,100% 8px,100% calc(100% - 8px),calc(100% - 8px) 100%,8px 100%,0 calc(100% - 8px))}
 .phase3IntegratedPreview .rarityImageFrame{
-  position:relative;
-  isolation:isolate;
   display:inline-grid;
   place-items:center;
   aspect-ratio:1/1;
@@ -35,20 +189,15 @@
   box-sizing:border-box;
   --ui-rarity-color:#8c8378;
   --wf-rarity-fill:color-mix(in srgb,var(--ui-rarity-color) 20%,#171116);
-  border:1px solid color-mix(in srgb,var(--ui-rarity-color) 76%,#171116);
-  border-radius:0;
-  clip-path:polygon(0 6px,6px 0,calc(100% - 6px) 0,100% 6px,100% calc(100% - 6px),calc(100% - 6px) 100%,6px 100%,0 calc(100% - 6px));
+  border:1px solid transparent;
   background:linear-gradient(145deg,color-mix(in srgb,var(--ui-rarity-color) 23%,#21171d),#100c10 72%);
   box-shadow:inset 0 0 0 1px #080609,0 0 5px color-mix(in srgb,var(--ui-rarity-color) 16%,transparent);
-  overflow:hidden;
 }
 .phase3IntegratedPreview .rarityImageFrame[data-rarity="Common"]{--ui-rarity-color:#8c8378}
 .phase3IntegratedPreview .rarityImageFrame[data-rarity="Uncommon"]{--ui-rarity-color:#65956f}
 .phase3IntegratedPreview .rarityImageFrame[data-rarity="Rare"]{--ui-rarity-color:#5d8fb3}
 .phase3IntegratedPreview .rarityImageFrame[data-rarity="Epic"]{--ui-rarity-color:#9a72bc}
 .phase3IntegratedPreview .rarityImageFrame[data-rarity="Legendary"]{--ui-rarity-color:#c28b4c}
-/* Window and item-card edges repeat the antique-gold trim used in the Home view. */
-.phase3IntegratedPreview :is(.phase1Offer,.phase1BuildSummary,.phase2PassiveBar,.phase3Preparation,.phase3Passives,.phase3ReturnBar,.phase3ResourcePanel,.phase3Bag,.phase3PassiveTooltip,.phase3PassiveSlot,.phase3Journey,.phase3PassiveCard,.phase3EventCard,.stat,.token,.shopCard,.merchantCompactCard,.forgePickCard,.compareCard,.lootCard,.phase3BagItem,.phase3BagEmpty){border-radius:0;clip-path:polygon(0 8px,8px 0,calc(100% - 8px) 0,100% 8px,100% calc(100% - 8px),calc(100% - 8px) 100%,8px 100%,0 calc(100% - 8px));border-color:color-mix(in srgb,var(--ui4-gold-edge,#9e7d44) 58%,#393238)}
 .phase3IntegratedPreview .rarityImageFrame>i{
   position:absolute;
   inset:12%;
@@ -74,8 +223,6 @@
 .phase3IntegratedPreview .rarityImageFrame.potionPlaceholder>i{background:#211e20}
 .phase3IntegratedPreview .rarityImageFrame.potionPlaceholder>img{filter:grayscale(1);opacity:.25}
 .phase3IntegratedPreview :is(.runeIcon,.phase2PassiveIcon,.phase3PassiveIcon,.affinityIcon){object-fit:contain}
-/* Only touch the presentation layer; selected and focus-visible outlines
-   remain visible for keyboard/touch accessibility. */
 
 /* One responsive size scale for every square rarity frame. */
 .phase3IntegratedPreview .rarityImageFrame{max-width:100%}
@@ -90,8 +237,8 @@
 .phase3IntegratedPreview .rarityImageFrame--potion-stack{width:clamp(46px,4.5vw,64px)}
 .phase3IntegratedPreview .rarityImageFrame--potion{width:clamp(38px,4.1vw,58px)}
 .phase3IntegratedPreview .rarityImageFrame--public{width:clamp(28px,3vw,42px)}
-.phase3IntegratedPreview .rarityImageFrame>:is(.slotDLevel,.legendaryRankBadge){position:absolute;top:3px;left:3px;right:auto;bottom:auto;z-index:5;pointer-events:none}
-.phase3IntegratedPreview .slotTile .slotDLevel,.phase3IntegratedPreview .miniSlot .miniDLevel,.phase3IntegratedPreview .invItem .lv{z-index:5}
+.phase3IntegratedPreview .rarityImageFrame>:is(.slotDLevel,.legendaryRankBadge){position:absolute;top:3px;left:3px;right:auto;bottom:auto;z-index:9;pointer-events:none}
+.phase3IntegratedPreview .slotTile .slotDLevel,.phase3IntegratedPreview .miniSlot .miniDLevel,.phase3IntegratedPreview .invItem .lv{z-index:9}
 .phase3IntegratedPreview .cityCenterLayout .merchantCompactCard{grid-template-columns:clamp(56px,5.4vw,76px) minmax(0,1fr) minmax(84px,auto)}
 @media(max-width:840px){.phase3IntegratedPreview .cityCenterLayout .merchantCompactCard{grid-template-columns:clamp(52px,8vw,68px) minmax(0,1fr)}}
 @media(max-width:580px){.phase3IntegratedPreview .cityCenterLayout .merchantCompactCard{grid-template-columns:54px minmax(0,1fr)}}
