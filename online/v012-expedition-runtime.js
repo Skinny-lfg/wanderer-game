@@ -323,11 +323,16 @@ function phase5RememberRealm(r,outcome){
 function phase5MakeSummary(outcome){
  const g=ports.phase1Controller.state,owned=new Set([...ports.state.stash,...(ports.state.expeditionOverflow||[]),...Object.values(ports.state.equip).filter(Boolean)].map(i=>i.id));
  const lost=outcome==='defeat'||outcome==='abandoned',bagIds=new Set(ports.phase3BagItems().map(i=>i.id));
+ const earnedIds=new Set(ports.phase5Results.earned.map(i=>i.id));
+ const lostGear=lost?[
+  ...ports.phase5Results.earned.filter(i=>bagIds.has(i.id)),
+  ...ports.phase3BagItems().filter(i=>i.kind!=='valuable'&&!earnedIds.has(i.id)).map(ports.phase5Item)
+ ]:[];
  const expeditionTreasures=(ports.state.valuables||[]).filter(i=>bagIds.has(i.id)).map(i=>({...i}));
  ports.phase5Results.summary={passiveTelemetry:ports.phase4Clone(ports.phase1Build?.runtime.passiveTelemetry||{}),metrics:ports.phase6Run?.metrics||null,level:g.expedition,outcome,realms:g.history.length,
   families:[...(ports.phase1Build?.families||g.families)],picks:[...(ports.phase1Build?.picks||[])],element:ports.phase1Build?.element||null,
   seconds:ports.phase1Clock+(outcome==='defeat'?(ports.state.run?.combatSeconds||0):0),gold:ports.phase5Results.gold,fragments:ports.phase5Results.fragments,
-  kept:ports.phase5Results.earned.filter(i=>owned.has(i.id)&&(!lost||!bagIds.has(i.id))),lost:ports.phase5Results.earned.filter(i=>lost&&bagIds.has(i.id)),
+  kept:ports.phase5Results.earned.filter(i=>owned.has(i.id)&&(!lost||!bagIds.has(i.id))),lost:lostGear,
   discarded:ports.phase5Results.earned.filter(i=>!owned.has(i.id)),
   treasuresKept:lost?[]:expeditionTreasures,treasuresLost:lost?expeditionTreasures:[],runeTier:null};
 }
