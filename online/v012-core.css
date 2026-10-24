@@ -1011,6 +1011,4 @@ body::before{
 @media(max-width:840px){.cityCenterLayout .merchantCompactCard{grid-template-columns:52px minmax(0,1fr)}.cityCenterLayout .merchantCardActions{grid-column:1/-1;flex-direction:row;flex-wrap:wrap;align-items:center}.cityCenterLayout .merchantCardActions b{margin-right:auto}}
 /* Animated mobs share a 768px source width; scale by width so wide and tall art
    retain the same visual scale without stretching or clipping. */
-.scene #enemyPortrait[data-attack-src$=".gif"]{width:min(125px,100%);height:auto;max-height:none;object-fit:contain}
-
-.scene #enemyPortrait.mobGifAttacking{transform:scaleX(-1)}
+.scene #enemyPortrait[data-attack-src$=".gif"]{width:min(250px,100%);height:auto;max-height:none;object-fit:contain;transform:scaleX(-1)}

@@ -767,9 +767,8 @@ function animateEnemyWindup(){
  const img=$('enemyPortrait');if(!img||!img.dataset.attackSrc)return;
  clearTimeout(img._mobIdleTimer);
  const attackSrc=img.dataset.attackSrc;
- img.classList.add('mobGifAttacking');
  img.src=attackSrc+(attackSrc.includes('?')?'&':'?')+'play='+Date.now();
- img._mobIdleTimer=setTimeout(()=>{if(img.isConnected){img.src=img.dataset.idleSrc||attackSrc;img.classList.remove('mobGifAttacking')}},1650);
+ img._mobIdleTimer=setTimeout(()=>{if(img.isConnected){img.src=img.dataset.idleSrc||attackSrc}},1650);
 }
 function animateEnemyStrike(abilityFx=null){
  const img=$('enemyPortrait');if(!img)return;
