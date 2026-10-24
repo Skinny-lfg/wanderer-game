@@ -143,3 +143,33 @@ As capturas anteriores estão em [Forge](screenshots/city-center/forge/), [Black
 - Comparação visual manual confirmou proporções dos PNGs preservadas e conteúdo dentro dos painéis. Esta fase não executou a suite completa `npm run test:browser` nem uma verificação em Safari/WebKit.
 
 Commit local desta fase criado depois da validação. Nenhum push, merge ou deploy foi feito. Alterações locais anteriores em `index.html` e as capturas fora de `phase2e-after` foram mantidas fora do commit.
+
+## Fase 2F — Merchant & Apothecary
+
+No Merchant, a instrução agora explica a sequência comparar → comprar. O bloco de preço identifica o défice de Gold junto da oferta quando Buy está indisponível. Compare mostra a oferta com nome, raridade, tier/subtipo e preço, mantém a comparação com o equipamento atual e explicita que a compra vai para o Stash sem equipar o item. A janela fica dimensionada para mobile e desktop. O modelo atual de equipamento não guarda Affinity; por isso, não inventei nem apresentei esse dado.
+
+Na Apothecary, o resumo deixa claro que Restock substitui as quatro ofertas e apresenta o custo real de `state.apothecary.refreshCost`; o botão agora diz “Restock” e tem uma área de ação mais evidente. Os cartões mostram preço mais legível e o Gold em falta. Se o bloqueio for capacidade do Stash/limite da pilha, a mensagem explica o motivo. Stock, preços, efeitos, custos, atualização individual após compra e reposição total continuam a usar o runtime existente.
+
+| Texto anterior | Texto novo | Justificação |
+|---|---|---|
+| “Buy equipment with Gold. Select Compare to inspect one item in detail.” | “Compare an offer with your equipped gear, then buy it with Gold.” | Põe a ordem das ações e o papel de Compare em linguagem direta. |
+| “Four randomized potion offers · Restock for a new selection.” | “Four random offers. Restock to replace them.” | Encurta a descrição e clarifica a ação. |
+| “Reroll · N Gold” | “Restock · N Gold” | Usa o mesmo termo do resumo e descreve a substituição das quatro ofertas. |
+| Sem indicação de Gold em falta | “Need N more Gold.” / “Need N more Gold to Restock.” | Explica o motivo do botão desativado usando os valores atuais do runtime. |
+| Sem resultado de compra visível no Compare | “Buying adds this item to your Stash; it does not equip it.” | Explicita o efeito real da compra. |
+
+### Comparação visual
+
+Capturas antes: [Merchant](screenshots/city-center/merchant/) e [Apothecary](screenshots/city-center/apothecary/), nas quatro resoluções da auditoria. Depois: [Merchant](phase2f-after/merchant-mobile-390x844.jpg), [Apothecary](phase2f-after/apothecary-mobile-390x844.jpg), [Merchant Compare mobile](phase2f-after/merchant-compare-mobile-390x844.jpg), [Merchant Compare desktop](phase2f-after/merchant-compare-desktop-1440x900.jpg) e [Stash cheio mobile](phase2f-after/apothecary-stash-full-mobile-390x844.jpg). As restantes capturas estão em [phase2f-after](phase2f-after/). Dados de overflow, imagens, erros e Axe: [phase2f-browser-checks.json](phase2f-after/phase2f-browser-checks.json). Fixtures de insuficiência, Stash cheio e compra/reposição: [mesmo registo](phase2f-after/phase2f-browser-checks.json).
+
+### Validação
+
+- Chromium/Playwright nos dois serviços — Merchant e Apothecary — em 390 × 844, 768 × 1024, 1440 × 900 e 1920 × 1080: **8 capturas**, 0 overflow horizontal, 0 imagens em falta e 0 erros de página.
+- Compare: abertura por Enter, fecho por Escape, oferta, item equipado, preço e resultado visíveis; o diálogo cabe em 390 × 844 e 1440 × 900. Compra testada com toque emulado no mobile e click no desktop: Gold deduzido pelo valor real, item adicionado ao Stash, slot do stock substituído e equipamento mantido.
+- Apothecary: quatro ofertas; falta de Gold desativa Buy/Restock e mostra o défice; Stash a 40/40 desativa Buy com “Stash full. Free a slot.”; compra substitui somente a oferta escolhida; Restock deduz exatamente o custo anunciado e troca as quatro ofertas. Compra/Restock também foram acionados com toque emulado a 390 px. O estado desativado agora conta os mesmos slots que a função runtime.
+- Axe: nenhuma violação no diálogo Compare (executado isoladamente em mobile e desktop), cartões ou resumo Restock. Na página completa persistem apenas `landmark-complementary-is-top-level` no `aside` do shell e `region` no `#wallet`, ambos fora das áreas alteradas.
+- Testes de browser adicionais executados individualmente: `v0120-evasion-browser`, `v0120-equipment-browser`, `private-preview-browser`, `v012-phase-c3-treasures-browser`, `v012-global-ui-audit-browser` e `v012-ui-polish-browser`: **6 PASS**. `npm run test:browser` para no primeiro script: o fluxo de 390 px passa, mas a assertion em `tests/v012-complete-browser.cjs:32` exige `backgroundColor` `rgb(58, 37, 45)` na tab selecionada em desktop; o valor atual é transparente. A expectativa não corresponde à implementação visual anterior desta fase e não foi modificada.
+- `npm test`: **273/294 PASS, 21 FAIL** com loopback permitido. Passam os quatro casos de `private-preview.test.mjs`; as 21 falhas são as mesmas já classificadas no diagnóstico anterior: 20 digests do `v012-runtime-integration.test.cjs` e uma expectativa antiga de geometria em `v012-unified-gear-potions.test.cjs`. São preexistentes no baseline `182508d`; não alterei testes, fixtures ou regras para os contornar.
+- Comparação manual das capturas confirmou layout dentro dos cartões e PNGs sem distorção. Zoom de navegador a 200% e Safari/WebKit não foram verificados.
+
+Ficheiros de runtime/estilo desta fase: `index.html` e `online/ux39.css`. Capturas e checks: `docs/ui-audit/phase2f-after/`. Não houve alteração de gameplay, economia ou saves.

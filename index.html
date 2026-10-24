@@ -619,7 +619,7 @@ function renderMerchant(){
  const merchantKinds={weapons:o=>o.slot==='weapon'||o.slot==='offhand',armor:o=>['helm','armor','gloves','boots','belt'].includes(o.slot),accessories:o=>['ring1','ring2','amulet'].includes(o.slot)};
  if(!Object.prototype.hasOwnProperty.call(merchantKinds,phase3MerchantCategory))phase3MerchantCategory='weapons';
  const visibleStock=m.stock.filter(merchantKinds[phase3MerchantCategory]).slice(0,4);
- html('<section class="panel merchantPanel"><div class="topline"><div><h2>Merchant</h2><p class="small muted">Buy equipment with Gold. Select Compare to inspect one item in detail.</p></div></div>'+inventoryFullNotice('buy')+'<div class="merchantCategoryTabs" role="tablist" aria-label="Merchant stock">'+[['weapons','Weapons'],['armor','Armor'],['accessories','Accessories']].map(([id,label])=>'<button type="button" role="tab" aria-selected="'+(phase3MerchantCategory===id)+'" data-merchant-category="'+id+'">'+label+'</button>').join('')+'</div><div class="merchantList">'+
+ html('<section class="panel merchantPanel"><div class="topline"><div><h2>Merchant</h2><p class="small muted">Compare an offer with your equipped gear, then buy it with Gold.</p></div></div>'+inventoryFullNotice('buy')+'<div class="merchantCategoryTabs" role="tablist" aria-label="Merchant stock">'+[['weapons','Weapons'],['armor','Armor'],['accessories','Accessories']].map(([id,label])=>'<button type="button" role="tab" aria-selected="'+(phase3MerchantCategory===id)+'" data-merchant-category="'+id+'">'+label+'</button>').join('')+'</div><div class="merchantList">'+
  (visibleStock.length?visibleStock.map(o=>{
   const power=totalStats(comparisonEquip(o)).power-totalStats().power;
   return '<article class="merchantCompactCard" '+rarityFrame(o)+'>'+
@@ -627,7 +627,7 @@ function renderMerchant(){
    '<div class="merchantCardInfo"><b style="color:'+rarityColor(o)+'">'+esc(o.name)+'</b>'+
    '<span class="small muted">E'+o.tier+' · '+esc(o.rarity)+' · '+esc(o.subtype)+'</span>'+
    '<span class="small">'+detailEffectHtml(o)+'</span><span class="merchantPowerTrend '+(lostSetTiers(o).length?'same':power>0?'up':power<0?'down':'same')+'">'+(offhandLocked(o)?'🔒 Off-Hand locked':lostSetTiers(o).length?'⚠ Loses set bonus':power>0?'▲ Higher estimate':power<0?'▼ Lower estimate':'≈ Similar')+' · '+(power>0?'+':'')+power+' estimated Gear Power</span></div>'+
-   '<div class="merchantCardActions"><b class="gold">'+o.goldPrice+' '+uiIcon('gold')+'</b>'+
+   '<div class="merchantCardActions"><div class="merchantPriceBlock"><b class="gold">'+o.goldPrice+' '+uiIcon('gold')+'</b>'+(state.gold<o.goldPrice?'<small class="merchantResourceNote" role="status">Need '+(o.goldPrice-state.gold)+' more Gold.</small>':'')+'</div>'+
    '<button class="tiny ghost" data-compare="'+esc(o.id)+'" aria-label="Compare '+esc(o.name)+'">Compare</button>'+
    '<button class="tiny primary" data-buy="'+esc(o.id)+'" '+(state.gold<o.goldPrice||!stashHasRoom()?'disabled':'')+'>Buy</button></div>'+
    '</article>';
@@ -638,13 +638,15 @@ function renderMerchant(){
  Q('[data-compare]').forEach(button=>button.onclick=()=>{
   const item=m.stock.find(o=>o.id===button.dataset.compare);
   if(!item)return;
-  const comparison=['ring1','ring2'].includes(item.slot)
+  let comparison=['ring1','ring2'].includes(item.slot)
    ?'<details open class="ringComparison"><summary>Ring 1</summary>'+itemComparison(item,'ring1')+'</details>'+
     '<details class="ringComparison"><summary>Ring 2</summary>'+itemComparison(item,'ring2')+'</details>'
    :itemComparison(item);
-  showModal('Compare · '+item.name,
-   '<p class="small muted">E'+item.tier+' · '+esc(item.rarity)+' · '+esc(item.subtype)+' · '+detailEffectHtml(item)+'</p>'+
+  comparison=comparison.replace('<span class="eyebrow">Selected</span>','<span class="eyebrow">Merchant offer</span>');
+  const dialog=showModal('Compare · '+item.name,
+   '<section class="merchantCompareSummary" aria-label="Offer and purchase result"><div><span>Offer</span><b style="color:'+rarityColor(item)+'">'+esc(item.name)+' · '+esc(item.rarity)+'</b><small>'+itemSource(item)+'</small></div><div><span>Price</span><b class="gold">'+item.goldPrice+' '+uiIcon('gold')+' Gold</b></div><p>Buying adds this item to your Stash; it does not equip it.</p></section>'+
    '<p class="small">'+esc(itemStats(item))+'</p>'+comparison);
+  if(dialog)dialog.classList.add('merchantCompareDialog');
  });
  Q('[data-buy]').forEach(button=>button.onclick=()=>{
   const i=m.stock.findIndex(o=>o.id===button.dataset.buy);
@@ -941,7 +943,9 @@ function phase6RenderApothecary(){
  if(!economyCanAct()){view='phase1';render();return;}
  if(!state.apothecary){state.apothecary=WandererV012Consumables.shop(economyTier(),gameRandom,makeId);save();}
  const C=WandererV012Consumables.CATALOG,a=state.apothecary;
- html('<section class="panel apothecaryPanel"><h2>Apothecary</h2><p class="small muted">Four randomized potion offers · Restock for a new selection.</p><div class="merchantList apothecaryOfferList">'+a.stock.map(p=>{const potion=C.find(c=>c.id===p.kind),quantity=state.consumables?.[p.kind]||0,canStack=quantity<99999&&(phase6StackSlots()<stashCapacity()||quantity%99!==0);return '<article class="merchantCompactCard potionOffer" '+rarityFrame(potion)+'>'+rarityArt(potion,phase6PotionImage(p.kind),potion.name,'merchant')+'<div class="merchantCardInfo"><b style="color:'+rarityColor(potion)+'">'+esc(potion.name)+'</b><span class="small muted potionRarity">'+esc(potion.rarity)+'</span><span class="small potionEffect">'+esc(phase6PotionDescription(p.kind))+'</span><span class="small muted">Owned: '+quantity+'</span></div><div class="merchantCardActions"><strong class="gold potionPrice">'+p.price+' Gold</strong><button type="button" class="tiny primary" data-potion-buy="'+p.id+'" '+(state.gold<p.price||!canStack?'disabled':'')+'>Buy</button></div></article>';}).join('')+'</div><button id="potionReroll" class="ghost" '+(state.gold<a.refreshCost?'disabled':'')+'>Reroll · '+a.refreshCost+' Gold</button></section>');
+ const restockShortfall=Math.max(0,a.refreshCost-state.gold);
+ const restockStatus=restockShortfall?'<small class="apothecaryResourceNote" role="status">Need '+restockShortfall+' more Gold to Restock.</small>':'';
+ html('<section class="panel apothecaryPanel"><h2>Apothecary</h2><p class="small muted">Four random offers. Restock to replace them.</p><div class="apothecaryRestockSummary"><span>Restock replaces all four offers.</span><strong>Cost · '+a.refreshCost+' Gold</strong>'+restockStatus+'</div><div class="merchantList apothecaryOfferList">'+a.stock.map(p=>{const potion=C.find(c=>c.id===p.kind),quantity=state.consumables?.[p.kind]||0,canStack=quantity<99999&&(phase6StashUsedSlots()<stashCapacity()||quantity%99!==0),shortfall=Math.max(0,p.price-state.gold),blockedStack=quantity>=99999||!canStack;return '<article class="merchantCompactCard potionOffer" '+rarityFrame(potion)+'>'+rarityArt(potion,phase6PotionImage(p.kind),potion.name,'merchant')+'<div class="merchantCardInfo"><b style="color:'+rarityColor(potion)+'">'+esc(potion.name)+'</b><span class="small muted potionRarity">'+esc(potion.rarity)+'</span><span class="small potionEffect">'+esc(phase6PotionDescription(p.kind))+'</span><span class="small muted">Owned: '+quantity+'</span></div><div class="merchantCardActions"><div class="potionPriceBlock"><strong class="gold potionPrice">'+p.price+' Gold</strong>'+(shortfall?'<small class="potionResourceNote" role="status">Need '+shortfall+' more Gold.</small>':blockedStack?'<small class="potionResourceNote" role="status">'+(quantity>=99999?'Potion stack limit reached.':'Stash full. Free a slot.')+'</small>':'')+'</div><button type="button" class="tiny primary" aria-label="Buy '+esc(potion.name)+' for '+p.price+' Gold" data-potion-buy="'+p.id+'" '+(shortfall||blockedStack?'disabled':'')+'>Buy</button></div></article>';}).join('')+'</div><button id="potionReroll" class="ghost" '+(state.gold<a.refreshCost?'disabled':'')+'>Restock · '+a.refreshCost+' Gold</button></section>');
  Q('[data-potion-buy]').forEach(b=>b.onclick=()=>phase6BuyPotion(b.dataset.potionBuy));$('potionReroll').onclick=phase6RerollPotions;
 }
 function phase6EligibleEventPassives(eventId){
