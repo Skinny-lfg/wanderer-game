@@ -403,7 +403,7 @@
   .phase3IntegratedPreview .phase3BetweenStatsRail .phase3PrimaryAttributeStrip span{font-size:10px!important}
   .phase3IntegratedPreview .phase3BetweenStatsRail .phase3PrimaryAttributeStrip b{font-size:15px!important}
 }
-/* Grave Lantern: reduce only display scale, never hitboxes or original animated GIF. */
+/* Grave Lantern: presentation-only scaling; original animated GIF unchanged. */
 .phase3IntegratedPreview .scene #enemyPortrait[data-attack-src*="grave_lantern_"]{
   width:min(185px,100%)!important;height:auto!important;max-height:none!important;
   object-fit:contain!important;object-position:center bottom;
