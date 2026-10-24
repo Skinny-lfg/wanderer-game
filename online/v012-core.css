@@ -992,17 +992,17 @@ body::before{
 .c3TreasureResult .c3TreasureImg{width:44px;height:44px;flex-shrink:0}
 .c3TreasureResult span{font-size:12px;min-width:0;overflow-wrap:anywhere}
 
-/* City Center — dedicated vendors and reserved NPC portrait */
+/* City Center — vendor illustrations retain their square source ratio */
 .cityCenterLayout{display:grid;grid-template-columns:minmax(170px,22%) minmax(0,1fr);gap:16px;align-items:start;margin-top:14px}
 .cityCenterSidebar{min-width:0}
-.cityCenterNpcArt{min-height:330px;border:1px solid #514350;background:linear-gradient(160deg,#211c28,#0d1018 85%);border-radius:10px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:12px;color:#b6a8a4;text-align:center;padding:12px}
-.cityCenterNpcSilhouette{font-size:72px;color:#6a424b;opacity:.8}
-.cityCenterNpcArt small{font-size:11px;color:#887b82}
+.cityCenterNpcArt{position:relative;min-height:330px;margin:0;overflow:hidden;border:1px solid #514350;background:linear-gradient(160deg,#211c28,#0d1018 85%);border-radius:10px;display:flex;flex-direction:column;justify-content:center;align-items:center;color:#b6a8a4;text-align:center;padding:12px}
+.cityCenterNpcArt img{display:block;width:min(100%,300px);height:auto;aspect-ratio:1/1;object-fit:contain;border-radius:6px}
+.cityCenterNpcArt figcaption{position:absolute;inset:auto 0 0;padding:28px 8px 10px;background:linear-gradient(transparent,#0d1018);color:#f0dfc0;font:600 18px var(--font-head)}
 .cityCenterTabs,.merchantCategoryTabs{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0}
 .cityCenterSidebar .cityCenterTabs{flex-direction:column;flex-wrap:nowrap;margin:0 0 12px}
 .cityCenterSidebar .cityCenterTabs button{width:100%;justify-content:flex-start;min-height:48px;text-align:left}
 .cityCenterTabs button[aria-selected=true],.merchantCategoryTabs button[aria-selected=true]{border-color:#a65c60;background:#3a252d;color:#f6e7dd}
-@media(max-width:690px){.cityCenterLayout{grid-template-columns:1fr}.cityCenterNpcArt{min-height:105px;flex-direction:row}.cityCenterNpcSilhouette{font-size:32px}}
+@media(max-width:690px){.cityCenterLayout{grid-template-columns:1fr}.cityCenterNpcArt{min-height:152px;flex-direction:row;justify-content:flex-start;gap:14px;padding:10px;text-align:left}.cityCenterNpcArt img{width:130px;height:130px;flex:0 0 130px}.cityCenterNpcArt figcaption{position:static;padding:0;background:none;font-size:18px}}
 
 /* Merchant tab: a single bounded four-item list, never overlapping the NPC panel. */
 .cityCenterLayout #cityServiceContent{min-width:0;max-width:100%;overflow:visible}
