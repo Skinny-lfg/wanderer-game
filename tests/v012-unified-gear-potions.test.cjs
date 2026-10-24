@@ -23,7 +23,7 @@ test('Camp and Inventory keep three potion slots in the same portrait grid',()=>
  assert.match(html,/function phase3PaperMarkup\(camp=false,stats=phase2Stats\(\),withPotions=camp\)/);
  assert.match(html,/phase3PaperMarkup\(true,stats\)/);
  assert.match(camp,/\.paper>\.phase3PotionSlots\s*\{[^}]*grid-column:1\/4;[^}]*grid-row:6;/);
- assert.match(inventory,/\.paper>\.phase3PotionSlots\s*\{\s*display:contents!important/);
+ assert.match(inventory,/\.paper>\.phase3PotionSlots\s*\{\s*display:flex!important/);
  assert.match(camp,/grid-row:6/);
  assert.match(inventory,/grid-row:6!important/);
  assert.match(camp,/grid-template-rows:var\(--camp-vitals-row\) repeat\(4,var\(--camp-slot-row\)\) minmax\(72px,auto\)/);

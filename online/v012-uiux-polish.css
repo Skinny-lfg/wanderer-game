@@ -1,0 +1,117 @@
+/* Wanderer v0.12: final UI/UX proportions and navigation-adjacent presentation.
+   Loaded last: narrow overrides to preserve earlier Gothic panels, rerolls and mechanics. */
+
+/* Inventory, expedition and loot bags: square interaction cells, contained original art. */
+.phase3IntegratedPreview .equipmentInventory .stashGrid{grid-auto-rows:auto!important}
+.phase3IntegratedPreview .equipmentInventory .invItem,
+.phase3IntegratedPreview .phase3BagGrid>.phase3BagItem,
+.phase3IntegratedPreview .phase3BagGrid>.phase3BagEmpty{
+  box-sizing:border-box!important;aspect-ratio:1/1!important;
+  height:auto!important;min-height:0!important;min-width:0!important;
+}
+.phase3IntegratedPreview .phase3BagGrid>.phase3BagItem img,
+.phase3IntegratedPreview .equipmentInventory .invItem img,
+.phase3IntegratedPreview .phase3BagGrid .c3TreasureImg{
+  max-width:100%!important;max-height:100%!important;object-fit:contain!important;
+}
+.phase3IntegratedPreview .phase3BagGrid{align-items:start}
+.phase3IntegratedPreview .phase3BagGrid>.phase3BagItem,
+.phase3IntegratedPreview .phase3BagGrid>.phase3BagEmpty{width:100%}
+
+/* Better primary stat legibility without turning each stat into a tall card. */
+.phase3IntegratedPreview .phase3PrimaryAttributeStrip{gap:5px;align-items:stretch}
+.phase3IntegratedPreview .phase3PrimaryAttributeStrip>div{padding:5px 3px}
+.phase3IntegratedPreview .phase3PrimaryAttributeStrip span{
+  font-size:clamp(10px,1.15vw,13px)!important;line-height:1.15!important;
+  color:#e4d3bc!important;overflow-wrap:normal;white-space:normal!important;
+}
+.phase3IntegratedPreview .phase3PrimaryAttributeStrip b{
+  font-size:clamp(15px,1.5vw,19px)!important;line-height:1.1!important;
+  color:#f5e6cd!important;
+}
+.phase3IntegratedPreview .inventoryPrimaryStats .stat label{font-size:clamp(11px,1.1vw,13px)!important}
+.phase3IntegratedPreview .inventoryPrimaryStats .stat b{font-size:clamp(15px,1.45vw,18px)!important}
+.phase3IntegratedPreview .phase3BetweenStats .metric strong{font-size:17px}
+
+/* Keep the passive painting and show the one/two affinity symbols below it. */
+.phase3IntegratedPreview .phase2PassiveIcons{
+  display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  max-width:100%;vertical-align:middle;
+}
+.phase3IntegratedPreview .phase3PassiveAffinities{
+  display:flex;justify-content:center;align-items:center;gap:3px;
+  min-height:14px;width:100%;pointer-events:none;
+}
+.phase3IntegratedPreview .phase3PassiveAffinities .affinityFamilyIcon{
+  display:block;width:15px!important;height:15px!important;max-width:15px!important;
+  object-fit:contain!important;flex:0 0 15px;
+}
+.phase3IntegratedPreview .phase3BetweenBuild .phase3PassiveAffinities .affinityFamilyIcon,
+.phase3IntegratedPreview .phase3CombatBuild .phase3PassiveAffinities .affinityFamilyIcon{
+  width:13px!important;height:13px!important;flex-basis:13px;
+}
+
+/* Expedition: shorter, translucent illustrated fill to keep portal visible. */
+.phase3IntegratedPreview .phase3ExpeditionPanel{
+  background:linear-gradient(180deg,rgba(25,15,21,.12) 0%,rgba(23,15,20,.24) 44%,rgba(12,9,14,.54) 100%)!important;
+}
+.phase3IntegratedPreview .phase3ExpeditionPanel .phase3Portal{
+  height:clamp(92px,7.5vw,122px)!important;
+  opacity:.94;mask-image:linear-gradient(to bottom,#000 0%,#000 77%,#0008 94%,transparent 100%)!important;
+}
+
+/* Creature-specific display only: leave the source PNG/GIF and combat data untouched. */
+.phase3IntegratedPreview .scene #enemyPortrait[data-attack-src*="bloom_wisp_"]{
+  width:min(170px,100%)!important;height:auto!important;max-height:none!important;
+  object-fit:contain!important;object-position:center bottom;
+}
+.phase3IntegratedPreview .scene #enemyPortrait[data-attack-src*="sanguine_leech_"]{
+  width:min(315px,100%)!important;height:auto!important;max-height:none!important;
+  object-fit:contain!important;object-position:center bottom;
+}
+
+/* Desktop: fill the allocated Between Realms columns, without growing the modal artificially. */
+@media(min-width:851px){
+  .phase3IntegratedPreview .phase3BetweenEquipmentGrid{
+    grid-template-columns:minmax(315px,1fr) minmax(340px,1.12fr);gap:12px;align-items:start;
+  }
+  .phase3IntegratedPreview .phase3BetweenGear{
+    --gear-row:84px;--gear-slot-width:75px;--gear-frame:60px;--gear-art:48px;
+  }
+  .phase3IntegratedPreview .phase3BetweenGear .equipmentLoadout .paper{
+    width:100%!important;max-width:450px!important;
+  }
+  .phase3IntegratedPreview .phase3BetweenBagPane .phase3Bag{
+    width:100%!important;max-width:465px!important;margin:0 auto!important;
+  }
+  .phase3IntegratedPreview .phase3BetweenBagPane .phase3BagGrid{
+    grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;
+  }
+  .phase3IntegratedPreview .phase3CombatView .combatExpeditionDetails .phase3Bag{
+    max-width:400px!important;
+  }
+  .phase3IntegratedPreview #screen>.phase3Camp{
+    --camp-frame-size:clamp(56px,5.4vw,68px);
+    --camp-item-art-size:clamp(38px,3.6vw,50px);
+  }
+  .phase3IntegratedPreview .phase3CampCharacter .paper{
+    grid-template-columns:minmax(74px,.94fr) minmax(0,3fr) minmax(74px,.94fr);
+  }
+}
+/* Tablet/mobile: no increased page width, keep usable text and square slots. */
+@media(max-width:850px){
+  .phase3IntegratedPreview .phase3BetweenBagPane .phase3Bag{
+    width:100%;max-width:min(100%,420px);margin:0 auto;
+  }
+  .phase3IntegratedPreview .phase3BetweenEquipmentGrid{grid-template-columns:minmax(0,1fr)}
+  .phase3IntegratedPreview .phase3PrimaryAttributeStrip span{font-size:11px!important}
+  .phase3IntegratedPreview .phase3PrimaryAttributeStrip b{font-size:16px!important}
+  .phase3IntegratedPreview .scene #enemyPortrait[data-attack-src*="bloom_wisp_"]{width:min(118px,100%)!important}
+  .phase3IntegratedPreview .scene #enemyPortrait[data-attack-src*="sanguine_leech_"]{width:min(194px,100%)!important}
+}
+@media(max-width:430px){
+  .phase3IntegratedPreview .phase3PrimaryAttributeStrip{gap:2px}
+  .phase3IntegratedPreview .phase3PrimaryAttributeStrip>div{padding:4px 1px}
+  .phase3IntegratedPreview .phase3PrimaryAttributeStrip span{font-size:10px!important}
+  .phase3IntegratedPreview .phase3PrimaryAttributeStrip b{font-size:15px!important}
+}

@@ -131,7 +131,11 @@ function phase2ChoosePassive(id){
  if(draft.options.length===0){if(id!==null)return false;}
  else{if(typeof id!=='string')return false;WandererV012Buildcraft.choose(ports.phase1Build,draft.plane.family,id,draft.options);}
  ports.phase1Controller.claimReward();ports.phase1Draft=null;if(ports.phase1Controller.state.version===2)ports.phase1Build.runtime.hybridWindow=false;
+ const eventExitPending=!!ports.phase5Results?.eventExitPending&&!ports.state.run;
  ports.phase3ClampVitals();if(!ports.phase5Persist())return false;
+ // Resolve the required passive first, then return directly to Between Realms.
+ // phase5ExitResult clears the event flag without awarding anything twice.
+ if(eventExitPending)return phase5ExitResult();
  if(ports.state.run?.status==='cleared'){ports.view='combat';ports.renderCombat();}else{ports.view='phase1';ports.render();}
  return true;
 }
