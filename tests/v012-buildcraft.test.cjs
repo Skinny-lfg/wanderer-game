@@ -245,3 +245,17 @@ test('Spellblade empowers the next magical Staff/Wand weapon hit, not the same c
  assert.equal(b.runtime.spellblade,false);
  api.onCast(b,c);assert.equal(b.runtime.spellblade,true,'rearms for next hit');
 });
+
+test('passive UX copy preserves runtime values and trigger conditions',()=>{
+ const description=id=>api.CATALOG.find(passive=>passive.id===id).description;
+ assert.equal(api.values('executioner',1).burst,.32);
+ assert.equal(api.values('executioner',1).enemyCap,.025);
+ assert.match(description('executioner'),/30% HP or less.*bleeding foes.*32% base hit damage.*2\.5%.*6s cooldown/i);
+ assert.equal(api.values('retaliation',1).burst,.30);
+ assert.equal(api.values('retaliation',1).icd,4);
+ assert.match(description('retaliation'),/Barrier absorbs damage.*next hit.*30%.*4s cooldown/i);
+ assert.deepEqual([1,2,3,4,5].map(rank=>api.values('efficient_cast',rank).cost),[7,6,5,4,3]);
+ assert.match(description('efficient_cast'),/7 Mana at rank 1.*minimum of 3/i);
+ assert.deepEqual([1,2,3,4,5].map(rank=>api.values('overcharge',rank).burst),[.32,.38,.44,.50,.56]);
+ assert.match(description('overcharge'),/Every 4 charges.*32% Spell Power at rank 1.*3\.5%.*persist between Realms/i);
+});

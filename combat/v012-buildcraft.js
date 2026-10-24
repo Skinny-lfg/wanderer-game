@@ -69,7 +69,41 @@ const P=[
  ['aegis','prismatic_rebound','Prismatic Rebound','Damage absorbed by Barrier empowers your next Magic cast.',['aegis','magic']],
  ['fury','spell_surge','Spell Surge','A critical strike charges your next elemental cast.',['fury','magic']]
 ].map(([family,id,name,description,requires=[],element=null])=>Object.freeze({family,id,name,description,requires,element,max:requires.length||['executioner','blight','last_stand','retaliation'].includes(id)?1:5}));
-const descriptions={bleeding_edge:'Hits: Bleed chance; 16% base per tick, ICD 0.9s.',deep_cuts:'All player Bleed +15% per rank, applied on creation.',executioner:'Bleeding foe at ≤30% HP: bounded burst, ICD 6s.',blood_drinker:'Hit bleeding foe: bounded heal, ICD 4s; healing reduction applies.',sanguine_fury:'Critical: Bleed 14% base + direct burst, ICD 2.5s.',toxic_touch:'Hit: Rot 6.5% base; ICD 1.3s.',virulent_rot:'New Rot stacks +15% damage per rank.',wasting_curse:'Rotted enemy deals less damage; combined reduction cap 28%.',wither:'Rot reduces enemy healing and direct damage; player healing unaffected.',blight:'Hit rotted foe: bounded burst, ICD 7s.',strong_heart:'Maximum Health increases with each rank.',renewal:'Continuous healing per second; healing reduction applies.',last_stand:'Survive one lethal hit per Expedition at 6% MaxHP.',second_breath:'Heal once per completed Wave.',life_bloom:'Restore HP and Mana each combat second.',iron_skin:'Defense increases with each rank.',fortified:'Incoming damage −4% per rank, within global 28% cap.',guarded_block:'Bonus block chance; total cap 65%, existing block reduction.',barrier_pulse:'Barrier every 6s; engine Barrier cap applies.',retaliation:'Real Barrier absorption empowers next hit by 15% base, once.',quick_hands:'Attack speed +8% per rank; total cap 5/s.',precision:'Extra critical chance, total cap 65%.',brutal_crit:'Real critical adds non-recursive base damage.',double_strike:'Chance of one 30% extra hit, no recursive procs.',adrenaline:'Real critical: 3s attack speed buff, ICD 3s.',arcane_focus:'Elemental Spell Power increases with each rank.',mana_spring:'Mana regeneration increases with each rank.',efficient_cast:'Funded elemental cast Mana cost: 7/6/5/4/3.',arcane_echo:'Every fourth funded elemental hit echoes without recursion.',elemental_force:'Elemental power +12% per rank, once per funded cast.',kindling:'Funded Fire cast applies Burn.',deep_winter:'Funded Frost: Chill, bounded burst vs chilled foe, ICD 4s; boss Chill ≤1.2s.',overcharge:'Four funded Lightning casts discharge Static; charges persist between Realms.'};
+const descriptions={
+ bleeding_edge:'Hits have a 42% base chance to inflict Bleed (+4 percentage points per rank). Bleed deals 16% of base hit damage per tick; 0.9s cooldown.',
+ deep_cuts:'Bleed you inflict deals 15% more damage per rank.',
+ executioner:'At 30% HP or less, bleeding foes take a burst of 32% base hit damage, capped at 2.5% of their Max HP (6s cooldown).',
+ blood_drinker:'Hits on bleeding foes heal up to 0.8% Max HP at rank 1 (+0.25 percentage points per rank; 4s cooldown). Healing reduction applies.',
+ sanguine_fury:'Critical hits inflict Bleed for 14% base hit damage per tick and deal 8% direct damage (+2 percentage points per rank; 2.5s cooldown).',
+ toxic_touch:'Hits have a 42% base chance to apply Rot (+4 percentage points per rank); each stack deals 6.5% base hit damage (1.3s cooldown).',
+ virulent_rot:'New Rot stacks deal 15% more damage per rank.',
+ wasting_curse:'Rotted enemies deal 4% less damage per rank. Combined damage reduction cannot exceed 28%.',
+ wither:'Rotted foes heal 20% less at rank 1 (+10% per rank) and deal 2% less attack damage per rank. Player healing is unaffected.',
+ blight:'Hit a rotted foe for a burst of 38% base hit damage, capped at 2.5% of its Max HP (7s cooldown).',
+ strong_heart:'Maximum Health increases by 10% × √rank.',
+ renewal:'Heal 0.55% Max HP × √rank each combat second; healing reduction applies.',
+ last_stand:'Once per Expedition, survive a lethal hit and recover 6% Max HP.',
+ second_breath:'Heal after each completed Wave: 1.5% Max HP at rank 1 (+0.4 percentage points per rank).',
+ life_bloom:'Each combat second, restore up to 0.6% Max HP and 3.4 Mana; both scale with √rank.',
+ iron_skin:'Defense increases by 12% × √rank.',
+ fortified:'Reduce incoming damage by 4% per rank, within the combined 28% cap.',
+ guarded_block:'Raises Block chance. Total Block chance cannot exceed 65%.',
+ barrier_pulse:'Gain Barrier every 6s: 3% Max HP at rank 1 (+0.6 percentage points per rank).',
+ retaliation:'When Barrier absorbs damage, your next hit deals 30% more base hit damage (4s cooldown).',
+ quick_hands:'Attack speed increases by 8% per rank.',
+ precision:'Raises Critical chance; total Critical chance cannot exceed 65%.',
+ brutal_crit:'Critical hits add 12% × √rank base hit damage. Bonus damage cannot trigger passives.',
+ double_strike:'Each hit has a 10% × √rank chance to deal one extra hit for 30% base damage. Extra hits cannot trigger passives.',
+ adrenaline:'Critical hits grant 10% attack speed at rank 1 (+2.5 percentage points per rank) for 3s (3s cooldown).',
+ arcane_focus:'Elemental Spell Power increases by 15% × √rank.',
+ mana_spring:'Mana regeneration increases by 12% × √rank.',
+ efficient_cast:'Funded elemental casts cost 7 Mana at rank 1, decreasing by 1 per rank to a minimum of 3.',
+ arcane_echo:'Every fourth funded elemental hit echoes for 25% Spell Power (+5 percentage points per rank; no recursive effects).',
+ elemental_force:'Funded elemental casts gain 12% power per rank.',
+ kindling:'Funded Fire casts apply Burn.',
+ deep_winter:'Funded Frost casts Chill. Chilled foes take a Spell Power burst every 4s (18% at rank 1, +3 percentage points per rank; capped at 5% of normal foes’ Max HP or 1.5% of bosses’). Boss Chill lasts at most 1.2s.',
+ overcharge:'Funded Lightning casts add Static. Every 4 charges deal 32% Spell Power at rank 1 (+6 percentage points per rank), capped at 3.5% of the foe’s Max HP. Charges persist between Realms.'
+};
 const TAGS={
  PRODUCE_BLEED:['bleeding_edge','sanguine_fury','hex_bleed','crimson_pact','sanguine_reprisal'],CONSUMES_BLEED:['deep_cuts','executioner','blood_drinker','blood_ward','hemovore','plague_rupture','carrion_detonation','crimson_rush','reapers_cadence','hemal_sigil'],
  PRODUCE_ROT:['toxic_touch','toxic_precision'],CONSUMES_ROT:['virulent_rot','wasting_curse','wither','blight','plague_rupture','carrion_detonation','rot_recovery','rot_symbiosis','rot_ward','rot_husk','venom_shatter','hex_bolt','elemental_blight'],

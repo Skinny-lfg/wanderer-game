@@ -308,3 +308,92 @@ Account, Leaderboard, confirmação e inspeção de equipamento: capturas antes/
 - `docs/ui-audit/uiux-implementation-report.md` e `docs/ui-audit/phase2i-after/`: relatório, capturas e registo da validação.
 
 Commit de implementação: `1233bfd` (`Improve expedition results and shared dialogs`). Nenhum push, merge ou deploy foi feito.
+
+## Fase 3A — Global UX Writing
+
+### Alterações
+
+- Revistos os textos visíveis de Camp/Inventory, City Center, Forge/Reinforcement, Merchant/Apothecary, Shrine, Affinity/Magic, Between Realms, combate/passivos, eventos, resultados e modais. Mantive as frases que já estavam claras ou tinham sido corrigidas em fases anteriores; não alterei placeholders NPC.
+- Forge agora explica diretamente que crafting abaixo da Expedition mais alta desbloqueada melhora as probabilidades Epic. O runtime calcula um bónus pela diferença entre o tier desbloqueado e o escolhido, até ao limite existente. A explicação de subtipo ficou mais curta e o texto das probabilidades nomeia Fragments.
+- O Leaderboard informa que rankings partilhados estão indisponíveis neste playtest e que resultados não são submetidos. Não sugere publicação ou envio ao servidor.
+- Reescritas descrições de passivos para remover abreviaturas internas (`ICD`), linguagem telegráfica e “bounded”. Valores e condições foram cotejados com `combat/v012-buildcraft.js`. A revisão detetou e corrigiu textos mecanicamente incorretos em Retaliation (30%, não 15%), Efficient Casting (custo de 7 a 3 Mana por rank) e Overcharge (32% Spell Power no rank 1, +6 pontos percentuais por rank, limitado a 3.5% da vida máxima do inimigo).
+- Atualizei assertions de browser para verificar os textos atuais do Magic e novos textos do Forge/Leaderboard. As novas assertions unitárias ligam números sensíveis da copy aos valores reais do catálogo.
+
+### Registo de textos
+
+| Interface | Texto anterior | Texto novo | Motivo |
+|---|---|---|---|
+| Forge | `Create equipment from Fragments. Crafting a lower Expedition tier increases Epic odds after you have progressed further.` | `Craft equipment with Fragments. Crafting below your highest unlocked Expedition improves Epic odds.` | Simplificação; confirmado pelo cálculo do bónus em função do tier desbloqueado. |
+| Forge | `Random subtype: artwork shows the slot only. The exact subtype is rolled when you Craft.` | `The preview shows the slot only; crafting selects a random subtype.` | Simplificação e inglês natural. |
+| Crafting Odds | `Exact chances for your selected tier and investment.` | `Exact odds for this tier and Fragment investment.` | Especifica a moeda relacionada com o investimento. |
+| Leaderboard | `The shared leaderboard is pending server validation and publication. No result is submitted from this playtest.` | `Shared rankings are unavailable in this playtest. Results are not submitted.` | Simplificação; mantém explícito que nada é submetido. |
+| Bleeding Edge | `Hits: Bleed chance; 16% base per tick, ICD 0.9s.` | `Hits have a 42% base chance to inflict Bleed (+4 percentage points per rank). Bleed deals 16% of base hit damage per tick; 0.9s cooldown.` | Separa chance, dano por tick e cooldown. |
+| Deep Cuts | `All player Bleed +15% per rank, applied on creation.` | `Bleed you inflict deals 15% more damage per rank.` | Simplificação gramatical; scaling confirmado em `bleedDamage`. |
+| Executioner | `Bleeding foe at ≤30% HP: bounded burst, ICD 6s.` | `At 30% HP or less, bleeding foes take a burst of 32% base hit damage, capped at 2.5% of their Max HP (6s cooldown).` | Explicita condição, limite e cooldown reais. |
+| Blood Drinker | `Hit bleeding foe: bounded heal, ICD 4s; healing reduction applies.` | `Hits on bleeding foes heal up to 0.8% Max HP at rank 1 (+0.25 percentage points per rank; 4s cooldown). Healing reduction applies.` | Preserva teto por rank e redução de cura. |
+| Sanguine Fury | `Critical: Bleed 14% base + direct burst, ICD 2.5s.` | `Critical hits inflict Bleed for 14% base hit damage per tick and deal 8% direct damage (+2 percentage points per rank; 2.5s cooldown).` | Explicita os dois efeitos e o scaling. |
+| Toxic Touch | `Hit: Rot 6.5% base; ICD 1.3s.` | `Hits have a 42% base chance to apply Rot (+4 percentage points per rank); each stack deals 6.5% base hit damage (1.3s cooldown).` | Explicita chance, aplicação, dano e cooldown. |
+| Virulent Rot | `New Rot stacks +15% damage per rank.` | `New Rot stacks deal 15% more damage per rank.` | Correção gramatical. |
+| Wasting Curse | `Rotted enemy deals less damage; combined reduction cap 28%.` | `Rotted enemies deal 4% less damage per rank. Combined damage reduction cannot exceed 28%.` | Explicita o valor e mantém o limite conjunto. |
+| Wither | `Rot reduces enemy healing and direct damage; player healing unaffected.` | `Rotted foes heal 20% less at rank 1 (+10% per rank) and deal 2% less attack damage per rank. Player healing is unaffected.` | Explicita efeitos/scaling confirmados no runtime. |
+| Blight | `Hit rotted foe: bounded burst, ICD 7s.` | `Hit a rotted foe for a burst of 38% base hit damage, capped at 2.5% of its Max HP (7s cooldown).` | Explicita dano, limite e cooldown. |
+| Strong Heart | `Maximum Health increases with each rank.` | `Maximum Health increases by 10% × √rank.` | Explicita o scaling não linear. |
+| Renewal | `Continuous healing per second; healing reduction applies.` | `Heal 0.55% Max HP × √rank each combat second; healing reduction applies.` | Explicita valor e scaling. |
+| Last Stand | `Survive one lethal hit per Expedition at 6% MaxHP.` | `Once per Expedition, survive a lethal hit and recover 6% Max HP.` | Inglês natural; explicita recuperação. |
+| Second Breath | `Heal once per completed Wave.` | `Heal after each completed Wave: 1.5% Max HP at rank 1 (+0.4 percentage points per rank).` | Explicita quantidade e scaling. |
+| Life Bloom | `Restore HP and Mana each combat second.` | `Each combat second, restore up to 0.6% Max HP and 3.4 Mana; both scale with √rank.` | Explicita recursos, limites e scaling. |
+| Iron Skin | `Defense increases with each rank.` | `Defense increases by 12% × √rank.` | Explicita o scaling não linear. |
+| Fortified | `Incoming damage −4% per rank, within global 28% cap.` | `Reduce incoming damage by 4% per rank, within the combined 28% cap.` | Inglês natural; mantém limite conjunto. |
+| Guarded Block | `Bonus block chance; total cap 65%, existing block reduction.` | `Raises Block chance. Total Block chance cannot exceed 65%.` | Remove jargão sem esconder o limite. |
+| Barrier Pulse | `Barrier every 6s; engine Barrier cap applies.` | `Gain Barrier every 6s: 3% Max HP at rank 1 (+0.6 percentage points per rank).` | Remove referência técnica e apresenta a escala real. |
+| Retaliation | `Real Barrier absorption empowers next hit by 15% base, once.` | `When Barrier absorbs damage, your next hit deals 30% more base hit damage (4s cooldown).` | Correção: runtime usa 30% e cooldown de 4s. |
+| Quick Hands | `Attack speed +8% per rank; total cap 5/s.` | `Attack speed increases by 8% per rank.` | Simplificação; remove um limite que não correspondia ao teto efetivo do sistema. |
+| Precision | `Extra critical chance, total cap 65%.` | `Raises Critical chance; total Critical chance cannot exceed 65%.` | Substitui a forma telegráfica por uma frase direta. |
+| Brutal Critical | `Real critical adds non-recursive base damage.` | `Critical hits add 12% × √rank base hit damage. Bonus damage cannot trigger passives.` | Especifica valor e regra anti-recursão. |
+| Double Strike | `Chance of one 30% extra hit, no recursive procs.` | `Each hit has a 10% × √rank chance to deal one extra hit for 30% base damage. Extra hits cannot trigger passives.` | Explicita probabilidade, dano e limite de procs. |
+| Adrenaline | `Real critical: 3s attack speed buff, ICD 3s.` | `Critical hits grant 10% attack speed at rank 1 (+2.5 percentage points per rank) for 3s (3s cooldown).` | Explicita gatilho, valor, duração, scaling e cooldown. |
+| Arcane Focus | `Elemental Spell Power increases with each rank.` | `Elemental Spell Power increases by 15% × √rank.` | Explicita o scaling não linear. |
+| Mana Spring | `Mana regeneration increases with each rank.` | `Mana regeneration increases by 12% × √rank.` | Explicita o scaling não linear. |
+| Efficient Casting | `Funded elemental cast Mana cost: 7/6/5/4/3.` | `Funded elemental casts cost 7 Mana at rank 1, decreasing by 1 per rank to a minimum of 3.` | Corrige forma telegráfica; preserva a sequência real. |
+| Arcane Echo | `Every fourth funded elemental hit echoes without recursion.` | `Every fourth funded elemental hit echoes for 25% Spell Power (+5 percentage points per rank; no recursive effects).` | Explicita valor, scaling e regra anti-recursão. |
+| Elemental Force | `Elemental power +12% per rank, once per funded cast.` | `Funded elemental casts gain 12% power per rank.` | Simplificação; descreve a potência do cast financiado. |
+| Kindling | `Funded Fire cast applies Burn.` | `Funded Fire casts apply Burn.` | Ajuste gramatical; mecânica preservada. |
+| Deep Winter | `Funded Frost: Chill, bounded burst vs chilled foe, ICD 4s; boss Chill ≤1.2s.` | `Funded Frost casts Chill. Chilled foes take a Spell Power burst every 4s (18% at rank 1, +3 percentage points per rank; capped at 5% of normal foes’ Max HP or 1.5% of bosses’). Boss Chill lasts at most 1.2s.` | Explicita gatilho, dano, cooldown e limites distintos de inimigos/bosses. |
+| Overcharge | `Four funded Lightning casts discharge Static; charges persist between Realms.` | `Funded Lightning casts add Static. Every 4 charges deal 32% Spell Power at rank 1 (+6 percentage points per rank), capped at 3.5% of the foe’s Max HP. Charges persist between Realms.` | Corrige valor/escalamento e explicita o limite. |
+
+### Glossário aplicado
+
+| Termo | Uso nesta revisão |
+|---|---|
+| Expedition | Uma incursão completa, distinta de Realm. |
+| Realm | Uma etapa dentro da Expedition. |
+| Affinity | Nome próprio das seis afinidades; Fire/Frost/Lightning são elementos de Magic. |
+| Passive | Habilidade da build; `rank` designa o nível acumulado. |
+| Rune | Recompensa persistente; manter a capitalização do sistema. |
+| Gold / Fragments | Moedas; manter como nomes próprios junto do respetivo custo. |
+| Craft / Reinforcement | Ações distintas do Blacksmith; não usar como sinónimos. |
+| Restock / Reroll | Restock substitui ofertas do Apothecary; Reroll mantém o nome das outras ações. |
+| Extraction | Saída que assegura loot conforme o resumo da Expedition; distinta de abandono ou derrota. |
+| Buff / Debuff | Efeitos ativos benéficos/adversos; conservar valores e condições. |
+| Mana-funded / funded | Cast elemental pago com Mana, conforme o gate `c.funded === true` no runtime. |
+
+### Precisão, cobertura e validação
+
+- **Runes/Shrine:** confirmei `online/v012-expedition-runtime.js`: a run v2 oferece Runes após cada boss final; o caminho legado usa `r.tier % 10 === 0`. O texto do Shrine já presente no working tree refere-se à run atual. Preservei esse hunk local sem o incluir no commit da Fase 3A; a diferença entre versões fica registada para revisão separada.
+- Os custos dinâmicos de eventos, recompensas/perdas e progressão foram mantidos. Os textos de eventos, resultados, Apothecary, Merchant, Account e outros pop-ups foram revistos e mantidos quando já concisos e coerentes. Nenhum gameplay, economia, probabilidade, save, regra Firebase, lore, placeholder NPC, layout ou label acessível foi alterado.
+- Capturas Chromium com fixtures locais e sem saves reais: Forge [antes 390](phase3a-before/forge-390.jpg) / [depois 390](phase3a-after/forge-390.png) e [antes 1440](phase3a-before/forge-1440.jpg) / [depois 1440](phase3a-after/forge-1440.png); Leaderboard [antes 390](phase3a-before/leaderboard-390.jpg) / [depois 390](phase3a-after/leaderboard-390.png) e [antes 1440](phase3a-before/leaderboard-1440.jpg) / [depois 1440](phase3a-after/leaderboard-1440.png). Capturas adicionais: [passivo na Affinity mobile](phase3a-after/affinity-passive-390.png), [Affinity desktop](phase3a-after/affinities-1280.png) e [escolha de passivo desktop](phase3a-after/passive-reward-1280.png). As capturas originais permanecem em `screenshots/`.
+- `node --test tests/v012-buildcraft.test.cjs`: **PASS**. Inclui assertions para Executioner, Retaliation, Efficient Casting e Overcharge contra os valores do catálogo.
+- `node tests/v0120-persistence-browser.cjs`: **PASS** em 390, 1280 e 1440 px; fixture sintética, persistência, copy do Leaderboard e screenshots.
+- `node tests/v012-ui3-browser.cjs`: verificações anteriores ao fluxo de Affinity passaram em 1440, 1280, 1024 e 768. **FAIL** na verificação mobile `closing the Magic popup returns to affinity choices` (`tests/v012-ui3-browser.cjs:27`); o modal fecha sem regressar à escolha de Affinity. A lógica modal não foi alterada nesta fase.
+- `npm test`: **28/31 PASS**. `private-preview`, `runtime-integration` e `unified-gear-potions` continuam a falhar, como já documentado no baseline `182508d` e nas fases anteriores; esta fase não altera os runtimes correspondentes.
+- `node --check` dos ficheiros JavaScript de runtime/teste e `git diff --check`: **PASS**. Axe não executado: `axe-core` não está instalado nesta workspace. Esta fase não alterou roles, nomes acessíveis ou estrutura de controlos.
+- Não há screenshot mobile da escolha de recompensa: o fluxo mobile para no bloqueio anterior. O screenshot desktop usa fixture sintética. Zoom nativo a 200% não validado; não foram alteradas regras de estilo.
+
+### Ficheiros desta fase
+
+- `combat/v012-buildcraft.js` — descrições de passivos.
+- `index.html` — Forge, Crafting Odds e Leaderboard. Os dois hunks locais anteriores de Shrine e semântica das slots de poções permanecem fora do commit.
+- `tests/v012-buildcraft.test.cjs`, `tests/v012-ui3-browser.cjs`, `tests/v0120-persistence-browser.cjs` — assertions mecânicas/textuais e capturas.
+- `docs/ui-audit/uiux-implementation-report.md`, `docs/ui-audit/phase3a-before/`, `docs/ui-audit/phase3a-after/` — registo e capturas.
+
+Sem push, merge ou deploy.
