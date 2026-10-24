@@ -252,4 +252,4 @@ Camp com slots vazios: [depois](phase2h-after/camp-empty-slots-mobile-390x844.jp
 
 Os dois hunks locais anteriores de `index.html` (texto do Shrine e `role="group"` nas poções), assim como capturas e documentos locais anteriores, foram preservados fora do commit. Nenhuma alteração a gameplay, saves, economia, Firebase Rules ou outras interfaces. Sem push, merge ou deploy.
 
-Commit local da Fase 2H: `1b85540` — `Improve Inventory and Camp readability` (branch `development`).
+Commit local da implementação Fase 2H: `fb16a20` — `Improve Inventory and Camp readability` (branch `development`).
