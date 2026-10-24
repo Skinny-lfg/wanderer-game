@@ -141,3 +141,35 @@ Os rácios cobrem os pares e amostras indicados, não texto sobre cada fotografi
 ## Decisão
 
 **READY WITH LIMITATIONS** — os bloqueios funcionais investigados foram resolvidos ou classificados como expectativas obsoletas com evidência de baseline, e as suites automatizadas atuais passam. Antes de publicação irreversível, guardar o ZIP fora do workspace e concluir a checklist de zoom real/contraste composto. Não houve publicação, push, merge nem deploy.
+
+## Final Release Safety Check — 2026-10-24
+
+### Candidato e working tree
+
+- Confirmado `development`, HEAD candidato `760da1c4d289353f521e09eebb19ee530e84054c` antes desta atualização documental.
+- As 233 entradas do manifesto foram revistas: 118 alterações tracked e 115 untracked. Todas estão sob `docs/`: 227 capturas JPG/PNG, 3 JSON de métricas/render, 2 relatórios Markdown e 1 ZIP de capturas. Não há alteração local de código ou teste.
+- Essas entradas são evidência de auditoria/capturas e não são necessárias para executar ou publicar o runtime. As correções de runtime e testes estão committed. Foram preservadas; nada foi eliminado.
+- Foi criado um worktree destacado limpo do HEAD candidato. O estado inicial não tinha alterações. Os testes browser reescreveram 59 imagens/artefactos `docs/` apenas nesse worktree temporário; não modificaram fontes nem o checkout principal.
+
+### Release gate em checkout limpo
+
+| Validação | Resultado |
+| --- | --- |
+| `npm test` | PASS — 305/305. A primeira execução sem permissão de rede local teve 1 falha por `listen EPERM` em `127.0.0.1` no teste privado; repetida com bind local autorizado, passou 305/305. |
+| `npm run test:browser` | PASS — 26 verificações de browser; incluindo combate/expedition, gear, private hosting, Shrine, Camp, Apothecary, popup, Inventory, Between Realms e affinity. |
+| Dependência de alterações não committed | Nenhuma para código/runtime/testes. O HEAD limpo reproduz o candidato. |
+| Regressões relevantes | Nenhuma observada nas suites executadas. |
+
+Os comandos foram executados em `/tmp/wanderer-v012-release-760da1c`, checkout destacado em `760da1c`. Os logs desta repetição estão em `/tmp/wanderer-release-clean-npm-test-network.log` e `/tmp/wanderer-release-clean-browser.log`, temporários do ambiente.
+
+### Backup da versão candidata
+
+Foi criado `/workspace/wanderer-backups/wanderer-v012-release-760da1c-20261024.zip`, incluindo os ficheiros do projeto, assets, documentação e alterações locais relevantes. O arquivo exclui `.git`, `node_modules`, caches, diretórios de saves reais e ficheiros com nomes de credenciais/secrets. A verificação ZIP terminou sem membro corrompido e sem caminhos proibidos.
+
+O arquivo encontra-se no workspace do Codex; não há confirmação de cópia externa persistente. O backup anterior `182508d` foi preservado. A localização e SHA-256 do ZIP candidato foram entregues na resposta desta verificação; ambos devem ser guardados junto da cópia transferida. Nenhum push de backup foi feito.
+
+### Zoom e decisão final
+
+O ambiente continua sem `DISPLAY`, Firefox, Xvfb ou outro browser gráfico. O Chromium disponível é headless; portanto, zoom real do browser a 200% **não foi validado**. Usar a checklist manual já incluída acima antes da publicação, especialmente para modais, sticky controls, conteúdo dos cartões e navegação/foco.
+
+**Decisão: READY WITH LIMITATIONS.** O código committed passa a validação funcional e browser no checkout limpo. Os bloqueios restantes são operacionais: validar zoom real a 200% e copiar o ZIP para armazenamento persistente externo. Não publicar automaticamente; é necessária autorização explícita para levar `development` a `main`.
