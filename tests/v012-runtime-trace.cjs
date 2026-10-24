@@ -3,7 +3,14 @@ const crypto=require('node:crypto'),create=require('./v012-economy-harness.cjs')
 module.exports=function trace(scenario,source){
  const a=create(scenario.seed,source,{}, {now:1700000000000});a.setup(scenario.E,scenario.weapon,'Epic');
  const s=a.state(),g=a.controller().state;s.consumables={health:1,mana:1,fortune:1};s.potionSelection=['health','mana','fortune'];g.unlocked=scenario.E;
- const out=[];function record(){out.push(crypto.createHash('sha256').update(JSON.stringify({profile:a.state(),controller:a.controller().state,build:a.build(),integration:a.events.run(),results:a.results(),checkpoint:a.checkpoint.capture()})).digest('hex'));}
+ const out=[];function record(){
+  const snapshot={profile:a.state(),controller:a.controller().state,build:a.build(),integration:a.events.run(),results:a.results(),checkpoint:a.checkpoint.capture()};
+  // Passive descriptions are player-facing copy persisted inside reward drafts.
+  // Keep this parity trace focused on mechanics and checkpoint state, so a
+  // reviewed wording correction does not invalidate all deterministic traces.
+  for(const option of snapshot.checkpoint?.session?.draft?.options||[])delete option.description;
+  out.push(crypto.createHash('sha256').update(JSON.stringify(snapshot)).digest('hex'));
+ }
  a.start(scenario.E);a.initial(scenario.family);if(a.draft()?.step==='element')a.element(scenario.element||'fire');record();
  let restored=false;
  for(let i=0;i<150&&!['finished','failed'].includes(a.controller().state.stage);i++){

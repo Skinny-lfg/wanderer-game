@@ -27,7 +27,7 @@ test('Camp and Inventory keep three potion slots in the same portrait grid',()=>
  assert.match(camp,/grid-row:6/);
  assert.match(inventory,/grid-row:6!important/);
  assert.match(camp,/grid-template-rows:var\(--camp-vitals-row\) repeat\(4,var\(--camp-slot-row\)\) minmax\(72px,auto\)/);
- assert.match(inventory,/grid-template-rows:repeat\(5,var\(--gear-row\)\) 78px/);
+ assert.match(inventory,/grid-template-rows:repeat\(5,var\(--gear-row\)\) var\(--gear-slot-width\)!important/);
 });
 test('Potion selection reserves owned stacks visually without changing stored stock',()=>{
  const definition=functionSource('function phase6PotionStacksMarkup(){','function phase6LoadoutMarkup(){');
