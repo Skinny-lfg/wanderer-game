@@ -79,6 +79,12 @@ Antes: [Magic mobile](screenshots/dialogs/magic-element/magic-element-mobile-390
 
 Validação funcional dirigida em Chromium: **11 fluxos PASS** — seis affinities, três elementos Magic, Escape, Back e Close. Também foi verificado que Magic usa um único diálogo e que o foco regressa ao botão Magic após Back/Escape. `npm test`: **273/294 PASS, 21 falhas preexistentes** (20 hashes e uma expectativa antiga de CSS), igual à etapa anterior. `v012-complete-browser.cjs` passa o fluxo de 390 px; a execução desktop continua bloqueada pela assertion preexistente que exige a cor sólida vinho da tab selecionada. `v012-ui-polish-browser.cjs` passou em Camp/Apothecary/Popup a 360, 390, 430 e 1280 px, Inventory/Between Realms a 360, 390 e 430 px, e no dropdown/seleção de affinity. Não se atribui PASS à suite global de browser.
 
+## Fase 2C — Passive Selection UI/UX
+
+Os cartões do popup de passivos agora mostram a affinity junto do tipo, mantêm a descrição e a comparação de rank disponíveis no próprio cartão, e usam descrições a 14 px. Em 390 px, a grelha apresenta duas opções lado a lado e a terceira em largura total para manter espaço de leitura e toque. Mantive os textos mecânicos existentes: esta fase não reescreveu efeitos, percentagens, cooldowns ou limites.
+
+Capturas antes: [mobile](screenshots/expedition/passive-choice/passive-choice-mobile-390x844.jpg), [tablet](screenshots/expedition/passive-choice/passive-choice-tablet-768x1024.jpg), [desktop](screenshots/expedition/passive-choice/passive-choice-desktop-1440x900.jpg), [wide](screenshots/expedition/passive-choice/passive-choice-wide-1920x1080.jpg). Depois: [passive-phase2c-after](passive-phase2c-after/); Axe/render checks em [JSON](passive-phase2c-after/render-checks.json). Os quatro viewports tiveram 0 overflow, 0 erros JS, 0 imagens em falta e nenhuma violação Axe no estado capturado. `v012-global-ui-audit.test.cjs` e `v012-complete-events.test.cjs`: **2 PASS**. Fixtures incluem escolhas novas de famílias distintas e um upgrade; estados sem upgrades não foram capturados nesta execução. Zoom real a 200% e navegação touch em aparelho real não foram testados.
+
 Commit local da Fase 2A: `Refine initial affinity and Magic selection flow` em `development`. As alterações anteriores do Shrine/slots de poções e as capturas locais anteriores continuam no working tree, fora deste commit.
 
 ## Fase 1 — Combat Readability (implementação global, primeiro grupo)

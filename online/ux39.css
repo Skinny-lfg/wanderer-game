@@ -79,7 +79,8 @@
  .phase3IntegratedPreview .cityCenterSidebar{display:flex;flex-direction:column;gap:0}
  .phase3IntegratedPreview .phase3RealmActions{padding:6px;gap:6px}
  .phase3IntegratedPreview .phase3RealmActions button{font-size:12px;padding:8px 5px}
- .phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveChoices{grid-template-columns:1fr}
+ .phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveChoices{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveCard:last-child{grid-column:1/-1}
  .phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveCard .phase2PassiveIcons{min-height:68px}
  .phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveCard .phase2PassiveIcon{width:60px;height:60px}
  .phase3IntegratedPreview .phase3HeroColumn .paper{height:330px;min-height:330px}
