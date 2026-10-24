@@ -13,7 +13,7 @@
 .phase3IntegratedPreview .inventoryActionBar button{min-height:34px;white-space:normal}
 .phase3IntegratedPreview .equipmentInventory .stashGrid{align-content:start;grid-auto-rows:86px}
 .phase3IntegratedPreview .phase3PrimaryAttributeStrip{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:3px;margin:7px auto 0;width:100%;min-width:0}
-.phase3IntegratedPreview .phase3PrimaryAttributeStrip>div{display:grid;min-width:0;align-content:center;justify-items:center;gap:2px;padding:4px 1px;background:var(--ui-stat-bg,#11101466);border-bottom:1px solid var(--ui-stat-rule,#9e7d4433);text-align:center}
+.phase3IntegratedPreview .phase3PrimaryAttributeStrip>div{display:grid;min-width:0;align-content:center;justify-items:start;gap:2px;padding:4px 4px;background:var(--ui-stat-bg,#11101466);border-bottom:1px solid var(--ui-stat-rule,#9e7d4433);text-align:left}
 .phase3IntegratedPreview .phase3PrimaryAttributeStrip span{color:var(--ui-muted,#c5b7b3);font-size:clamp(8px,2.2vw,10px);line-height:1.05;white-space:nowrap}
 .phase3IntegratedPreview .phase3PrimaryAttributeStrip b{color:var(--ui-ink,#e9dfd9);font-size:clamp(10px,2.8vw,14px);font-variant-numeric:tabular-nums}
 .phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear)>h2{margin-bottom:4px}

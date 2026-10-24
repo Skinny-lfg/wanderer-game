@@ -159,19 +159,15 @@
 }
 .phase3IntegratedPreview .phase3ResourceTrack>i{
  position:absolute;z-index:1;left:2px;top:2px;bottom:2px;right:auto;height:auto;width:var(--resource-pct,100%);
- overflow:hidden;border:0;border-radius:calc(var(--resource-radius,8px) - 3px);clip-path:none;transition:width .15s linear;
+ overflow:hidden;border:0;border-radius:calc(var(--resource-radius,8px) - 3px);clip-path:none;transition:none;
 }
 .phase3IntegratedPreview .phase3Resource.health .phase3ResourceTrack>i{background:var(--health-liquid,linear-gradient(180deg,#f47b70,#b53338 52%,#6e1e2b))}
 .phase3IntegratedPreview .phase3Resource.mana .phase3ResourceTrack>i{background:var(--mana-liquid,linear-gradient(180deg,#9ad8ff,#3474d4 52%,#18366e))}
-.phase3IntegratedPreview :is(.phase3ResourceTrack>i,.scene .hpbar>i,.scene .mpbar>i)::before{content:"";position:absolute;inset:-20% -100%;pointer-events:none;background:linear-gradient(108deg,transparent 37%,#ffffff08 45%,#ffffff48 51%,#ffffff0b 57%,transparent 65%);animation:resource-liquid-sheen 4.8s linear infinite}
-.phase3IntegratedPreview :is(.phase3ResourceTrack>i,.scene .hpbar>i,.scene .mpbar>i)::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.2;background:radial-gradient(ellipse at 20% 65%,#fff8 0 1px,transparent 2px),radial-gradient(ellipse at 66% 28%,#fff6 0 1px,transparent 2px);background-size:37px 100%,53px 100%;animation:resource-liquid-bubbles 7s linear infinite}
 .phase3IntegratedPreview .phase3ResourceTrack b{position:absolute;z-index:3;inset:auto;left:50%;top:50%;transform:translate(-50%,-50%);display:grid;place-items:center;width:max-content;max-width:calc(100% - 8px);padding:2px 4px;border-radius:2px;background:rgba(12,7,10,.82);color:#fff;font:600 10px/1 var(--font-body);text-shadow:0 1px 2px #000;white-space:nowrap}
 .phase3IntegratedPreview .scene :is(.hpbar,.mpbar){position:relative;isolation:isolate;overflow:hidden;box-sizing:border-box;width:min(100%,220px);height:22px;min-height:22px;margin:5px auto;border:1px solid var(--resource-border,#80615d);border-radius:var(--resource-radius,8px);background:var(--resource-track-bg,linear-gradient(180deg,#180d12,#302027 50%,#10090d));box-shadow:inset 0 1px 3px #000,0 0 0 1px #080709}
-.phase3IntegratedPreview .scene :is(.hpbar,.mpbar)>i{position:absolute;z-index:1;left:2px;top:2px;bottom:2px;right:auto;height:auto;width:var(--resource-pct,100%);overflow:hidden;border:0;border-radius:calc(var(--resource-radius,8px) - 3px);clip-path:none;transition:width .15s linear}
+.phase3IntegratedPreview .scene :is(.hpbar,.mpbar)>i{position:absolute;z-index:1;left:2px;top:2px;bottom:2px;right:auto;height:auto;width:var(--resource-pct,100%);overflow:hidden;border:0;border-radius:calc(var(--resource-radius,8px) - 3px);clip-path:none;transition:none}
 .phase3IntegratedPreview .scene :is(.hpbar.player,.hpbar.enemy)>i{background:var(--health-liquid,linear-gradient(180deg,#f47b70,#b53338 52%,#6e1e2b))}
 .phase3IntegratedPreview .scene .mpbar>i{background:var(--mana-liquid,linear-gradient(180deg,#9ad8ff,#3474d4 52%,#18366e))}
-@keyframes resource-liquid-sheen{from{transform:translateX(-35%)}to{transform:translateX(35%)}}
-@keyframes resource-liquid-bubbles{from{background-position:0 0,0 0}to{background-position:37px 0,-53px 0}}
 @media(prefers-reduced-motion:reduce){.phase3IntegratedPreview :is(.phase3ResourceTrack>i,.scene .hpbar>i,.scene .mpbar>i)::before,.phase3IntegratedPreview :is(.phase3ResourceTrack>i,.scene .hpbar>i,.scene .mpbar>i)::after{animation:none}}
 
 @media(max-width:700px){
