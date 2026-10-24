@@ -231,7 +231,7 @@
 .phase3IntegratedPreview .equipmentInventory .filterBar label{min-width:95px;flex:1 1 120px}
 .phase3IntegratedPreview .equipmentInventory .filterBar select{max-width:none;width:100%}
 .phase3IntegratedPreview .equipmentInventory .stashGrid{grid-template-columns:repeat(auto-fill,minmax(68px,86px));gap:7px;max-height:390px}
-.phase3IntegratedPreview .equipmentInventory .invItem{display:block;aspect-ratio:1/1;height:auto;min-height:0;padding:0;overflow:hidden}
+.phase3IntegratedPreview .equipmentInventory .invItem{display:block;aspect-ratio:1/1;height:auto;min-height:auto;padding:0;overflow:hidden}
 .phase3IntegratedPreview .equipmentInventory .invItem>img{width:56px;height:55px;max-width:80%;object-fit:contain}
 .phase3IntegratedPreview .equipmentInventory .stashLayout:not(:has(#itemInspect)){grid-template-columns:1fr}
 .phase3IntegratedPreview .equipmentInventory #itemInspect{min-width:0;scroll-margin-top:15px}

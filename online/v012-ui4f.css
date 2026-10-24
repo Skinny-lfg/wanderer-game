@@ -71,6 +71,11 @@
 /* Shared UI tokens are extracted from the mounted Camp/Home styles.  This is
    the single palette and scale used by equivalent controls across v0.12. */
 .phase3IntegratedPreview{
+  --resource-radius:8px;
+  --resource-border:#80615d;
+  --resource-track-bg:linear-gradient(180deg,#180d12,#302027 50%,#10090d);
+  --health-liquid:linear-gradient(180deg,#f47b70,#b53338 52%,#6e1e2b);
+  --mana-liquid:linear-gradient(180deg,#9ad8ff,#3474d4 52%,#18366e);
   --ui-panel-bg:var(--ui4-home-stats-bg,linear-gradient(145deg,rgba(48,43,46,.94),rgba(23,21,25,.92)));
   --ui-section-bg:linear-gradient(145deg,#302b2e 0%,#211e22 48%,#171519 100%);
   --ui-stat-bg:linear-gradient(90deg,#11101466,transparent);

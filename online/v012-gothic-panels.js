@@ -25,7 +25,7 @@
     '.phase3AffinityShrine',
     '.phase3AffinityPending',
     '.phase3ExpeditionPanel',
-    '.phase3CityCenter .cityCenterLayout .panel',
+    '.phase3CityCenter .cityCenterLayout .panel:not(.forgeUnified):not(.forgeCraftOdds)',
     'dialog.phase3InitialAffinityDialog',
     'dialog.phase3MagicElementDialog',
     '[data-gothic-size="medium"]',
