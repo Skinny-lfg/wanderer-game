@@ -307,4 +307,4 @@ Account, Leaderboard, confirmação e inspeção de equipamento: capturas antes/
 - `online/v012-ui4f.css`: apresentação de resultados e estilos partilhados dos modais.
 - `docs/ui-audit/uiux-implementation-report.md` e `docs/ui-audit/phase2i-after/`: relatório, capturas e registo da validação.
 
-Commit de implementação: a registar após o commit; o relatório final de hash será atualizado no commit documental seguinte. Nenhum push, merge ou deploy foi feito.
+Commit de implementação: `1233bfd` (`Improve expedition results and shared dialogs`). Nenhum push, merge ou deploy foi feito.
