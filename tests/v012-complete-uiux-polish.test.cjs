@@ -35,3 +35,6 @@ test('v0.12 creature overrides only scale the named animated portraits',()=>{
  assert.match(css,/enemyPortrait\[data-attack-src\*="sanguine_leech_"\]/);
  assert.doesNotMatch(css,/hitbox|damage|animation-duration/);
 });
+
+// Run the Oct 25 visual QA contract whenever the standard v0.12 suite runs.
+require('./v012-visual-feedback-oct25.test.cjs');
