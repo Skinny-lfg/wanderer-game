@@ -109,3 +109,16 @@
 }
 
 .phase3IntegratedPreview .phase3BetweenHeader .phase3CharacterSummary{display:block;padding:0;border:0}
+/* Between Realms: shared rerolls and the next action stay with the Realm cards. */
+.phase3IntegratedPreview .phase3Routes .phase3RouteHeading{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:4px 12px;margin-bottom:9px}
+.phase3IntegratedPreview .phase3Routes .phase3RouteHeading h2{margin:0}
+.phase3IntegratedPreview .phase3Routes .phase3RouteHeading>span{color:#ead5a5;font-size:13px}
+.phase3IntegratedPreview .phase2RealmOffer .phase1Offer.phase2Selected{border-color:#e4bb70;box-shadow:0 0 0 1px #e4bb7080,0 0 13px #e4bb7038}
+.phase3IntegratedPreview .phase2RealmOffer .phase1Offer.phase2Selected .phase1OfferBody>.small{color:#f5da9d;font-weight:700}
+.phase3IntegratedPreview .phase2RealmOffer .phase1OfferMeta{font-size:12px;line-height:1.25}
+.phase3IntegratedPreview .phase3BetweenQuick{padding-block:9px;margin-bottom:9px}
+.phase3IntegratedPreview .phase3BetweenQuickStatus{gap:10px}
+.phase3IntegratedPreview .phase3BetweenActions{margin-top:10px}
+.phase3IntegratedPreview .phase3BetweenActions #phase2EnterRealm{min-height:44px}
+.phase3IntegratedPreview .phase3BetweenActions .phase3Extract{opacity:.86}
+@media(max-width:650px){.phase3IntegratedPreview .phase3Routes .phase3RouteHeading{align-items:flex-start}.phase3IntegratedPreview .phase3Routes .phase3RouteHeading>span{font-size:12px}}
