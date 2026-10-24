@@ -32,6 +32,7 @@
   ].join(',');
 
   const smallSelector = [
+    '.eventOption',
     '.phase3BetweenTabs [role="tab"]',
     '#nav button',
     '.phase3Nav button',

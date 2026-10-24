@@ -173,3 +173,43 @@ Capturas antes: [Merchant](screenshots/city-center/merchant/) e [Apothecary](scr
 - Comparação manual das capturas confirmou layout dentro dos cartões e PNGs sem distorção. Zoom de navegador a 200% e Safari/WebKit não foram verificados.
 
 Ficheiros de runtime/estilo desta fase: `index.html` e `online/ux39.css`. Capturas e checks: `docs/ui-audit/phase2f-after/`. Não houve alteração de gameplay, economia ou saves.
+
+## Fase 2G — Event Decisions UI/UX
+
+As 16 opções de evento agora usam a mesma ordem visual: ação, benefício e, quando aplicável, custo, condição ou risco. A opção selecionada fica destacada e o estado de disponibilidade é explícito. Escolhas sem recursos continuam selecionáveis para que o jogador veja o motivo do bloqueio; a confirmação permanece desativada pelo motivo produzido no runtime. “Change choice” permite voltar à seleção; “Leave event — no reward” mantém a saída sem recompensa existente. Nenhum custo, efeito, recompensa ou regra de evento foi alterado.
+
+| Texto anterior | Texto novo | Justificação |
+|---|---|---|
+| “Choose an outcome. Decline gives no reward.” | “Choose an option, or leave without a reward.” | Instrução mais curta, alinhada com a ação Leave. |
+| “Buy healing: 25 + 3×E Gold for 35% HP” | Ação “Restore health”; benefício “+35% HP”; custo calculado à parte | Separa ação, benefício e custo; o custo continua dinâmico por Expedition. |
+| “Buy battle preparation: same Gold for +10% Attack for 3 combats” | “Prepare for battle”; “+10% Attack · 3 combats”; “Cost · N Gold” | Remove “same Gold”, mantendo o valor, o recurso e a duração. |
+| “Trade 10 + E Fragments for 40% Mana” | “Restore Mana”; “+40% Mana”; “Cost · N Fragments” | Torna benefício e preço comparáveis sem repetir o custo na ação. |
+| “Decline — no reward” / “Cancel” | “Leave event — no reward” / “Change choice” | Distingue sair do evento de alterar a decisão atual. |
+| Sem indicação explícita no cartão | “Unavailable” e “Cost · N Gold · Have N Gold” (ou Fragments) | Expõe custo e saldo junto à opção; o status da escolha informa o défice exato e bloqueia Confirm. |
+
+As demais opções apresentam benefícios e consequências compactos a partir dos valores existentes: por exemplo, duração de buffs, penalização de HP, risco de equipamento, passivo afetado e fallback quando o recurso já está cheio ou não existe. Os textos foram conferidos contra `online/v012-expedition-events.js` e `online/v012-expedition-runtime.js`; o código de runtime não foi alterado.
+
+### Capturas comparativas
+
+| Resolução | Antes | Depois |
+|---|---|---|
+| 390 × 844 | [antes](screenshots/expedition/event-decision/event-decision-mobile-390x844.jpg) | [depois](phase2g-after/event-decision-mobile-390x844.jpg) |
+| 768 × 1024 | [antes](screenshots/expedition/event-decision/event-decision-tablet-768x1024.jpg) | [depois](phase2g-after/event-decision-tablet-768x1024.jpg) |
+| 1440 × 900 | [antes](screenshots/expedition/event-decision/event-decision-desktop-1440x900.jpg) | [depois](phase2g-after/event-decision-desktop-1440x900.jpg) |
+| 1920 × 1080 | [antes](screenshots/expedition/event-decision/event-decision-wide-1920x1080.jpg) | [depois](phase2g-after/event-decision-wide-1920x1080.jpg) |
+
+Estado indisponível por falta de Gold: [depois — mobile](phase2g-after/event-insufficient-gold-mobile-390x844.jpg). Registos detalhados do browser/Axe: [phase2g-browser-checks.json](phase2g-after/phase2g-browser-checks.json).
+
+### Validação e ficheiros
+
+- Fixture Playwright isolada cobriu os **16 eventos** em quatro resoluções. Nas quatro capturas: 0 overflow horizontal, 0 imagens em falta e 0 erros de página. Zoom simulado a 200% em 390 px: cartões dentro do viewport e sem overflow horizontal.
+- Fluxos funcionais: estado disponível e insuficiente (Gold e Fragments), confirmação bloqueada por insuficiência, custo do Mercador debitado uma vez com buff de +10%, escolha grátis do Forgotten Arsenal, Leave sem recompensa, item dinâmico do Relic Collector, seleção/confirm por teclado e seleção por touch emulado. Axe no componente `.phase6Event`: **0 violações**. Axe na página completa manteve duas ocorrências globais alheias a esta interface: `page-has-heading-one` e `region` em `#wallet`.
+- `node --test tests/v012-complete-events.test.cjs tests/v012-complete-flow.test.cjs`: **2/2 PASS**.
+- `node tests/v012-events-browser.cjs`: **PASS** em 390 e 1280 px.
+- `npm test`: **273 PASS / 21 FAIL**, sem falhas novas identificadas. São preexistentes no baseline documentado: 20 digests `runtime parity c3-six-treasure-catalog-v012-realm-affinity-rewards` e 1 asserção de geometria antiga em `Camp and Inventory keep three potion slots in the same portrait grid`. O harness private-preview passou com permissão de loopback.
+- `npm run test:browser`: primeiro cenário de Expedition passou em 390 px; a suite parou na asserção desktop preexistente de cor da tab (`tests/v012-complete-browser.cjs:32`, actual `rgba(0, 0, 0, 0)`, expected `rgb(58, 37, 45)`). A cadeia não executou os scripts seguintes. O teste isolado de eventos passou, conforme acima.
+- `git diff --check`: PASS. Screenshots revistos visualmente nas quatro dimensões; molduras e PNGs mantêm proporção, cartões e ações não ficam cortados.
+
+Ficheiros desta fase: `index.html`, `online/ux39.css`, `online/v012-gothic-panels.js`, este relatório, `phase2g-after/event-decision-*.jpg`, `phase2g-after/event-insufficient-gold-mobile-390x844.jpg` e `phase2g-after/phase2g-browser-checks.json`. A alteração no observador de cantos restringe `.eventOption` ao tipo decorativo pequeno fixo, evitando alternância de tamanho que impedia toque estável; não afeta outras classes de botões.
+
+Sem alterações a gameplay, custos, recompensas, progressão, saves, Firebase Rules ou outras interfaces. Não foi feito push, merge ou deploy.
