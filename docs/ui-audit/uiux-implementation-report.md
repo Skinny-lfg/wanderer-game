@@ -397,3 +397,13 @@ Commit de implementação: `1233bfd` (`Improve expedition results and shared dia
 - `docs/ui-audit/uiux-implementation-report.md`, `docs/ui-audit/phase3a-before/`, `docs/ui-audit/phase3a-after/` — registo e capturas.
 
 Sem push, merge ou deploy.
+
+## Fase 3B — Acessibilidade e regressão global
+
+Na revisão global, foram corrigidos landmarks, títulos principais e hierarquia de headings, alts redundantes, nome acessível das slots de poções e navegação por setas/Home/End em tablists. A assertion UI.3 de Magic foi alinhada com o comportamento real: Back/Escape voltam a Affinity com foco em Magic; Close fecha a sequência e devolve o foco ao opener. O teste UI.3 atualizado passou em seis resoluções. Também foi corrigida a expectativa obsoleta do teste desktop, que esperava vermelho apesar de o estado dourado já estar definido no CSS.
+
+A auditoria Axe cobriu 12 estados em 390×844, 768×1024, 1440×900 e 1920×1080: 131 nós de violação antes, zero depois. Permanecem verificações manuais de contraste sobre imagens/gradientes e zoom real 200%, indisponível no Chromium headless usado. `npm run test:browser` passou. `npm test` ficou em 273/295, devido às fixtures SHA-256, geometria antiga de poções e suite agregadora, documentadas como baseline; `v0120-results.test.cjs` permaneceu 2/5 pelas falhas preexistentes descritas no relatório. Reflow 320/720 CSS px passou nas três vistas testadas.
+
+Relatório detalhado, matriz Axe, contraste, limitações, capturas antes/depois e pendências: [final-accessibility-report.md](final-accessibility-report.md). Capturas Axe/visuais: [accessibility/before](accessibility/before/) e [accessibility/after](accessibility/after/).
+
+Commits da Fase 3B: `19eea11` (acessibilidade) e `ffaa00c` (expectativas de testes e relatórios). O hunk local do texto do Shrine da Fase 3A permaneceu fora do commit; o ajuste de semântica ARIA das poções integrou o commit de acessibilidade.
