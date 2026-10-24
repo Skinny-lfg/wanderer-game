@@ -17,6 +17,7 @@
 .phase3IntegratedPreview .phase3PrimaryAttributeStrip b{color:var(--ui-ink,#e9dfd9);font-size:clamp(10px,2.8vw,14px);font-variant-numeric:tabular-nums}
 .phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear)>h2{margin-bottom:4px}
 .phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear)>p{margin-bottom:8px}
+.phase3IntegratedPreview .equipmentStats details>summary{color:var(--ui4-accent,#d6b37c)}
 .phase3IntegratedPreview :is(.phase3BetweenQuick,.phase3BetweenHero) .phase3HeroVitals{margin:0;padding:0;border:0;background:transparent;box-shadow:none}
 .phase3IntegratedPreview :is(.phase3BetweenQuick,.phase3BetweenHero) .phase3ResourcePanel{display:grid;gap:5px;margin:0;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none}
 .phase3IntegratedPreview :is(.phase3BetweenQuick,.phase3BetweenHero) .phase3ResourceTrack{border-radius:0}
@@ -172,5 +173,8 @@
  .phase3IntegratedPreview .equipmentInventory .stashGrid>.potionStackTile .rarityImageFrame--potion-stack{
   width:50px!important;height:50px!important;flex-basis:50px!important;
  }
+}
+@media(max-width:650px){
+ .phase3IntegratedPreview .equipmentLayout{row-gap:24px}
 }
 @media(max-width:850px){.phase3IntegratedPreview .equipmentLayout{grid-template-columns:minmax(0,1fr)}}

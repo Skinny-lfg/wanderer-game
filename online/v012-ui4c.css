@@ -28,7 +28,9 @@
 .phase3IntegratedPreview .phase3CombatPassives[open] .phase3CompactPassives{padding-top:6px}
 .phase3IntegratedPreview .phase3CombatPassives .phase3CompactPassives h3{display:none}
 .phase3IntegratedPreview .phase3CombatPassives .phase3PassiveGrid{grid-template-columns:repeat(auto-fill,minmax(42px,1fr))}
-.phase3IntegratedPreview .phase3LootToast{display:none}
+.phase3IntegratedPreview .scene{position:relative}
+.phase3IntegratedPreview .scene>.phase3LootToast{position:absolute;top:8px;left:50%;z-index:5;display:flex;align-items:center;justify-content:center;max-width:calc(100% - 16px);margin:0;padding:7px 12px;transform:translateX(-50%);background:#17121aee;border:1px solid #72545c;color:#e9dfd9;font-size:12px;line-height:1.25;text-align:center;box-shadow:0 3px 12px #0008;pointer-events:none}
+.phase3IntegratedPreview .phase3LootToast b{font-weight:800}
 .phase3IntegratedPreview .phase3BagItem--newLoot{animation:phase3BagArrival .65s ease-out 1}
 .phase3IntegratedPreview #heroPortrait.phase3DamageFlash{animation:phase3DamageFlash .42s ease-out 1}
 .phase3IntegratedPreview .phase3BagFullNotice{margin:8px 0;padding:8px 10px;color:#f2d6c4;background:#482528;border:1px solid #a75f5d;line-height:1.35}
@@ -53,12 +55,17 @@
 .phase3IntegratedPreview .phase3PassiveCard .phase2PassiveIcons{display:flex;align-items:center;justify-content:center;min-height:76px}
 .phase3IntegratedPreview .phase3PassiveCard .phase2PassiveIcon{width:68px;height:68px;object-fit:contain}
 .phase3IntegratedPreview .phase3PassiveCard .phase3PassiveChoice>strong{font-size:16px;line-height:1.2}
-.phase3IntegratedPreview .phase3PassiveCard .phase3PassiveDescription{display:-webkit-box;max-width:100%;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:3;line-clamp:3;line-height:1.35}
+.phase3IntegratedPreview .phase3PassiveCard .phase3PassiveDescription{max-width:100%;line-height:1.4}
+.phase3IntegratedPreview .phase3PassiveType{color:var(--ui4-muted);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
 .phase3IntegratedPreview .phase3PassiveCard .phase3PassivePreview{margin-top:auto;font-size:11px;font-weight:700;text-align:center}
 .phase3IntegratedPreview .phase3PassiveCard .phase3PassiveRank{font-weight:800;color:#f3d5a1}
-.phase3IntegratedPreview .phase3PassiveMore{border-top:1px solid #654a55;padding:5px 6px 2px}
-.phase3IntegratedPreview .phase3PassiveMore summary{cursor:pointer;font-size:11px;color:#dbc8c6}
-.phase3IntegratedPreview .phase3PassiveMore p{margin:6px 0 2px;font-size:11px;line-height:1.4;color:#d9cdd0}
+.phase3IntegratedPreview .phase3PassiveDraftHeader{padding:3px 2px 10px;border-bottom:1px solid #80656a}
+.phase3IntegratedPreview .phase3PassiveDraftHeader h2{margin:4px 0 7px;color:#f1d4a3;font-size:clamp(22px,2.4vw,30px);line-height:1.15}
+.phase3IntegratedPreview .phase3PassiveDraftContext{margin:0;color:var(--ui4-ink);line-height:1.45}
+.phase3IntegratedPreview .phase3PassiveDraftContext b,.phase3IntegratedPreview .phase3PassiveBuild b{color:#f1d4a3}
+.phase3IntegratedPreview .phase3PassiveDraftHeader .phase1FamilyRow{margin:9px 0 5px}
+.phase3IntegratedPreview .phase3PassiveBuild{display:flex;flex-wrap:wrap;gap:6px 10px;margin:7px 0 0;color:var(--ui4-muted);font-size:12px}
+.phase3IntegratedPreview .phase3PassiveBuild span{color:var(--ui4-ink)}
 .phase3IntegratedPreview .phase5VisualSummary{padding:13px}
 .phase3IntegratedPreview .phase5ResultHeading h1{margin:1px 0;font-size:24px;line-height:1.08}
 .phase3IntegratedPreview .phase5ResultHeading p{margin:3px 0 7px}
@@ -71,7 +78,7 @@
 .phase3IntegratedPreview .phase5GearGroup h3{margin-bottom:4px}
 .phase3IntegratedPreview .phase5GearGrid{gap:4px}
 @media(max-width:1000px){.phase3IntegratedPreview .phase3StatGrid{grid-template-columns:repeat(4,minmax(0,1fr))}.phase3IntegratedPreview .phase3CombatBuild{grid-template-columns:1fr 1.5fr}.phase3IntegratedPreview .phase3CombatBuild .phase3ActiveBuffs{grid-column:1/-1}}
-@media(max-width:700px){.phase3IntegratedPreview .phase3LootToast{position:sticky;top:6px;z-index:6;display:flex;align-items:center;gap:8px;max-width:100%;margin:0 0 6px;padding:6px 9px;background:#17121aee;border:1px solid #72545c;color:#e9dfd9;font-size:11px;line-height:1.25;box-shadow:0 3px 12px #0008}.phase3IntegratedPreview .phase3LootToast img{width:32px;height:32px;flex:0 0 32px;object-fit:contain}.phase3IntegratedPreview .phase3LootToast b{color:#efca91}}
+@media(max-width:700px){.phase3IntegratedPreview .scene>.phase3LootToast{top:5px;padding:5px 8px;font-size:10px}}
 @media(prefers-reduced-motion:reduce){.phase3IntegratedPreview .phase3BagItem--newLoot,.phase3IntegratedPreview #heroPortrait.phase3DamageFlash{animation:none}}
 @media(max-width:700px){
  .phase3IntegratedPreview .phase3StatGrid{grid-template-columns:repeat(3,minmax(0,1fr))}
@@ -84,6 +91,18 @@
  .phase3IntegratedPreview .phase5VisualSummary{padding:9px}
 }
 @media(max-width:380px){.phase3IntegratedPreview .phase3StatGrid,.phase3IntegratedPreview .phase3BetweenHero .phase3StatGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:700px){.phase3IntegratedPreview .phase3PassiveCard{min-height:220px}.phase3IntegratedPreview .phase3PassiveCard .phase2PassiveIcons{min-height:68px}.phase3IntegratedPreview .phase3PassiveCard .phase2PassiveIcon{width:60px;height:60px}}
+@media(max-width:700px){
+ .phase3IntegratedPreview .phase3PassiveCard{min-height:0}
+ .phase3IntegratedPreview .phase3PassiveCard .phase2PassiveIcons{min-height:44px}
+ .phase3IntegratedPreview .phase3PassiveCard .phase2PassiveIcon{width:44px;height:44px}
+ .phase3IntegratedPreview dialog[data-realm-passive]{padding:12px}
+ .phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveDraftHeader{padding-bottom:6px}
+ .phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveDraftHeader h2{margin:2px 0 5px}
+ .phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveChoices{gap:7px;margin:8px 0}
+ .phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveCard{padding:5px}
+ .phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveCard .phase2PassiveIcons{min-height:44px}
+ .phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveCard .phase2PassiveIcon{width:44px;height:44px}
+ .phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveCard>.phase3PassiveChoice{gap:3px;padding:6px 7px}
+}
 
 .phase3IntegratedPreview .phase3BetweenHeader .phase3CharacterSummary{display:block;padding:0;border:0}

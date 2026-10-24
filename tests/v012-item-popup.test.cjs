@@ -13,6 +13,9 @@ test('One native dialog handles Stash gear inspection and all equip actions',()=
  assert.match(popup,/showModal\(source==='equipped'/);
  for(const id of ['#equipThis','#equipDaggerMain','#equipDaggerOff','#equipRing1','#equipRing2','#lockThis','#sellThis','#unequipThis'])assert(popup.includes(id),'missing action '+id);
  assert.match(popup,/dialog\.close\(\);fn\(\)/);
+ assert.match(popup,/modalActions=dialog\.querySelector\('.modalActions'\)/);
+ assert.match(popup,/modalActions\.insertBefore\(action,closeButton\)/);
+ assert.match(css,/equipmentItemDialog \.modalActions\{display:flex;flex-wrap:wrap/);
  assert.doesNotMatch(between('function renderStash(){','function forgeComparisonTrend('),/id="itemInspect"/);
  assert.match(css,/\.itemDialog\.equipmentItemDialog/);
 });

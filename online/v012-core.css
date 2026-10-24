@@ -5,7 +5,8 @@
 .itemDialog.equipmentItemDialog .inspectHero{min-width:0;align-items:center}
 .itemDialog.equipmentItemDialog .inspectHero>div{min-width:0;overflow-wrap:anywhere}
 .itemDialog.equipmentItemDialog .inspectActions button{min-height:42px}
-.itemDialog.equipmentItemDialog .modalActions{border-top:1px solid #61434a;padding-top:12px}
+.itemDialog.equipmentItemDialog .modalActions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;border-top:1px solid #61434a;padding-top:12px}
+.itemDialog.equipmentItemDialog .modalActions [data-close]{margin-left:auto}
 .phase3PotionInspectButton{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:100%;max-width:100%;min-width:0;margin:0;padding:0;border:0;border-radius:0;background:transparent;color:inherit;box-shadow:none;cursor:pointer}
 .phase3PotionInspectButton .rarityImageFrame{flex-shrink:0}
 .phase3PotionInspectButton b{font:inherit;max-width:100%;overflow-wrap:anywhere}

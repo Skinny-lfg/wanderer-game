@@ -120,6 +120,15 @@ body.phase3IntegratedPreview :is(
   clip-path: none;
   -webkit-clip-path: none;
 }
+
+/* The Merchant city tab is a compact touch control on mobile; keep its
+   existing button styling, but omit the decorative PNG that crowds its label. */
+@media (max-width: 767px) {
+  body.phase3IntegratedPreview .cityCenterTabs [data-city-tab="merchant"] > .gothic-corner-layer {
+    display: none;
+  }
+}
+
 .gothic-corner-layer--button {
   z-index: 0;
 }

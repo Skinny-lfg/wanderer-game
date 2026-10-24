@@ -32,7 +32,7 @@ const server=http.createServer((req,res)=>{
   for(let i=0;i<boxes.length;i++)for(let j=i+1;j<boxes.length;j++){const a=boxes[i],b=boxes[j];assert(!(a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y),'equipment slots must not overlap');}
   await page.selectOption('#slotFilter','belt');const id=await page.evaluate(()=>__gearTest.beltId);
   await page.locator('[data-item="'+id+'"]').click();assert.match(await page.locator('dialog.equipmentItemDialog .inspect').innerText(),/E5.*Rare/);assert.match(await page.locator('dialog.equipmentItemDialog .inspect').innerText(),/Cloth/);
-  assert.equal(await page.locator('dialog.equipmentItemDialog').count(),1);await page.locator('dialog.equipmentItemDialog #equipThis').click();assert.equal(await page.evaluate(()=>__gearTest.snapshot().equip.belt.id),id);
+  assert.equal(await page.locator('dialog.equipmentItemDialog').count(),1);const popup=page.locator('dialog.equipmentItemDialog'),footer=popup.locator('.modalActions');assert.equal(await popup.locator('.inspectActions').count(),0,'item actions leave the detail body');for(const selector of ['#equipThis','#lockThis','#sellThis','[data-close]'])assert.equal(await footer.locator(selector).count(),1,selector+' stays in the popup footer');await page.locator('dialog.equipmentItemDialog #equipThis').click();assert.equal(await page.evaluate(()=>__gearTest.snapshot().equip.belt.id),id);
   // Equipping intentionally returns to Camp; re-enter Inventory before using its filter.
   await page.locator('[data-phase3-nav="equipment"]').click();
   await page.selectOption('#slotFilter','all');await page.locator('[data-eqslot="belt"]').click();await page.locator('dialog.equipmentItemDialog #unequipThis').click();

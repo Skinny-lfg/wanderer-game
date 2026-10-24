@@ -128,6 +128,10 @@ test('integration gates original weapons, Legendary and permanent save mechanics
  const launch=source.slice(source.indexOf('function phase2Launch('),source.indexOf('function phase1StartWave('));
  assert.match(launch,/state.run=\{phase1:true,/);
  assert.match(launch,/phase1Magic:!!phase1Build\.element/);
+ assert.match(launch,/phase1StartWave\(true\)/,'a new Realm enters combat at the top once');
+ const waves=source.slice(source.indexOf('function phase1StartWave('),source.indexOf('function phase1WaveWon('));
+ assert.match(waves,/function phase1StartWave\(resetScroll=false\)/);
+ assert.match(waves,/if\(resetScroll\)resetDungeonEntryScroll\(\)/,'subsequent waves must not reset scroll');
 });
 
 test('independent Aegis retaliation sources both resolve without recursive new hits',()=>{

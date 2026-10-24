@@ -169,10 +169,10 @@ function phase2Launch(plane){
  legendaryState:ports.phase1Continuity?.legendaryState||null,legendaryCastCount:ports.phase1Continuity?.legendaryCastCount||0,legendaryAttackCount:ports.phase1Continuity?.legendaryAttackCount||0};
  if(ports.phase6Run?.effects.barrier){ports.setBarrier(ports.state.run,ports.state.run.maxhp*ports.phase6Run.effects.barrier);ports.phase6Run.effects.barrier=0;}
  ports.legendaryRealmStart(ports.state.run);
- ports.view='combat';ports.logEntries=[];ports.addLog('Expedition '+ports.state.run.tier+' · Realm '+ports.phase1Controller.state.planeIndex+' · '+plane.name,'good');ports.phase1StartWave();
+ ports.view='combat';ports.logEntries=[];ports.addLog('Expedition '+ports.state.run.tier+' · Realm '+ports.phase1Controller.state.planeIndex+' · '+plane.name,'good');ports.phase1StartWave(true);
 }
 
-function phase1StartWave(){
+function phase1StartWave(resetScroll=false){
  if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked))return false;
  const r=ports.state.run,g=ports.phase1Controller.state;
  if(!ports.isPhase1Run()||!g.selected||r.status==='fight')return;
@@ -184,7 +184,7 @@ function phase1StartWave(){
  r.playerHealingDebuffUntil=0;r.nextCasterHexAt=0;ports.setRuntime(r);r.status='fight';
  if(ports.phase1Build)WandererV012Buildcraft.resetWave(ports.phase1Build,r.enemy);
  ports.addLog('Wave '+g.wave+'/'+g.selected.waves+': '+r.enemy.name);
- ports.renderCombat();ports.resetDungeonEntryScroll();clearInterval(ports.clock);
+ ports.renderCombat();if(resetScroll)ports.resetDungeonEntryScroll();clearInterval(ports.clock);
  ports.clock=setInterval(()=>{if(ports.isVisible())ports.updateFight();},110/ports.clockSpeed);
 }
 
