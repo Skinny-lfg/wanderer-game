@@ -213,3 +213,43 @@ Estado indisponível por falta de Gold: [depois — mobile](phase2g-after/event-
 Ficheiros desta fase: `index.html`, `online/ux39.css`, `online/v012-gothic-panels.js`, este relatório, `phase2g-after/event-decision-*.jpg`, `phase2g-after/event-insufficient-gold-mobile-390x844.jpg` e `phase2g-after/phase2g-browser-checks.json`. A alteração no observador de cantos restringe `.eventOption` ao tipo decorativo pequeno fixo, evitando alternância de tamanho que impedia toque estável; não afeta outras classes de botões.
 
 Sem alterações a gameplay, custos, recompensas, progressão, saves, Firebase Rules ou outras interfaces. Não foi feito push, merge ou deploy.
+
+## Fase 2H — Inventory e Camp
+
+### Alterações
+
+- **Inventory / slots:** rótulos e tiers ficaram mais legíveis sem mudar a personagem, a disposição dos slots ou os PNGs. Em 390 px, os nomes passaram de 9 para 10,5 px e os tiers de 8 para 10 px. Em tablet/desktop, os tiers passaram de 9 para 10 px; os rótulos do Inventory passaram a 10 px.
+- **Stash:** corrigi a altura dos trilhos da grelha. Com a capacidade cheia, os botões quadrados antes transbordavam para a linha seguinte e um cartão interceptava o toque no cartão acima. As linhas agora acompanham os cartões de 86 px; os 40 itens ficam separados e continuam dentro da área rolável.
+- **Controlos Inventory:** filtros e ações passam a ter 44 px de altura em mobile, preservando as dimensões exteriores dos itens e slots.
+- **Camp:** rótulos de equipamento sobem para 10,5 px em 390 px (12 px acima desse breakpoint); tipos de armadura passam a 9,5/10 px; tiers ficam em 10 px. As cinco stats principais mantêm-se numa só linha e os rótulos usam pelo menos 10 px.
+- **UX Writing:** “Gear up. Choose your path. Survive.” passou a “Prepare your gear. Choose your Expedition. Survive.” O controlo deste painel escolhe uma Expedition, não um Realm.
+- O botão Start Expedition sticky e o botão original foram preservados. Os dois seletores de Expedition continuam presentes e sincronizados. A composição central, o cenário, as proporções dos PNGs e as regras do jogo não mudaram.
+
+### Comparação de screenshots
+
+| Resolução | Camp antes → depois | Inventory antes → depois |
+|---|---|---|
+| 390 × 844 | [antes](phase2h-before/camp-mobile-390x844.jpg) · [depois](phase2h-after/camp-mobile-390x844.jpg) | [antes](phase2h-before/inventory-mobile-390x844.jpg) · [depois](phase2h-after/inventory-mobile-390x844.jpg) |
+| 768 × 1024 | [antes](phase2h-before/camp-tablet-768x1024.jpg) · [depois](phase2h-after/camp-tablet-768x1024.jpg) | [antes](phase2h-before/inventory-tablet-768x1024.jpg) · [depois](phase2h-after/inventory-tablet-768x1024.jpg) |
+| 1440 × 900 | [antes](phase2h-before/camp-desktop-1440x900.jpg) · [depois](phase2h-after/camp-desktop-1440x900.jpg) | [antes](phase2h-before/inventory-desktop-1440x900.jpg) · [depois](phase2h-after/inventory-desktop-1440x900.jpg) |
+| 1920 × 1080 | [antes](phase2h-before/camp-wide-1920x1080.jpg) · [depois](phase2h-after/camp-wide-1920x1080.jpg) | [antes](phase2h-before/inventory-wide-1920x1080.jpg) · [depois](phase2h-after/inventory-wide-1920x1080.jpg) |
+
+Camp com slots vazios: [depois](phase2h-after/camp-empty-slots-mobile-390x844.jpg). Stash mobile: [antes, 36/40 com cartões sobrepostos](phase2h-before/inventory-stash-mobile-390x844.jpg) · [depois, 40/40 sem sobreposição](phase2h-after/inventory-full-stash-mobile-390x844.jpg) · [vazio](phase2h-after/inventory-empty-stash-mobile-390x844.jpg). As capturas antes foram renderizadas em fixtures equivalentes sobre o commit `a060058`. Medições e Axe: [render-checks.json](phase2h-after/render-checks.json).
+
+### Validação
+
+- Fixture Playwright em Chromium, sem saves reais nem pedidos externos: **PASS** nos quatro viewports. Verificados 10 slots, raridades, tiers, NEW, Stash vazio/40 de 40, filtro por slot, inspeção por teclado e toque, sync dos dois seletores de Expedition e estados do sticky em viewport real. No Stash cheio: 0 pares de cartões sobrepostos.
+- Sticky mobile: visível no topo quando o botão original está fora do viewport; oculta-se quando o botão original entra no viewport. No fim da página, o botão original ainda cabe no viewport e o sticky permanece oculto. Nenhuma sobreposição ou conteúdo coberto foi observado.
+- Reflow equivalente a 200%: viewport CSS de 195 × 422 (metade de 390 × 844), **0 overflow horizontal**. Não foi possível controlar o zoom nativo do browser por atalho nesta execução.
+- Nas quatro resoluções: **0 overflow horizontal, 0 imagens em falta e 0 erros de página**. Axe no Inventory: **0 violações**. Axe no Camp: `heading-order` e `landmark-complementary-is-top-level`, presentes também nas auditorias anteriores; não foram introduzidos nesta fase.
+- `node --test tests/v0120-equipment.test.cjs`: **15/15 PASS**.
+- `node --test tests/v012-unified-gear-potions.test.cjs`: **FAIL preexistente**, uma assertion em `tests/v012-unified-gear-potions.test.cjs:30` espera a geometria antiga `grid-template-rows: repeat(5, var(--gear-row)) 78px`. A implementação em `a060058` já usava `var(--gear-slot-width)` para essa linha; o teste e essa geometria não foram alterados nesta fase. As outras assertions deste ficheiro não foram executadas separadamente pelo runner.
+- `git diff --check`: **PASS**. Os PNGs usam `object-fit: contain`; nenhuma imagem ou funcionalidade de Camp/Inventory foi removida.
+
+### Ficheiros desta fase
+
+`index.html` (apenas a frase de Camp neste commit), `online/v012-core.css`, `online/v012-ui5-camp.css`, `online/v012-ui6-unified-inventory.css`, este relatório e capturas em `phase2h-before/` e `phase2h-after/`.
+
+Os dois hunks locais anteriores de `index.html` (texto do Shrine e `role="group"` nas poções), assim como capturas e documentos locais anteriores, foram preservados fora do commit. Nenhuma alteração a gameplay, saves, economia, Firebase Rules ou outras interfaces. Sem push, merge ou deploy.
+
+Commit local da Fase 2H: `1b85540` — `Improve Inventory and Camp readability` (branch `development`).

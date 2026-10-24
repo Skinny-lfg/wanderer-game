@@ -11,6 +11,7 @@
 .phase3IntegratedPreview .equipmentLayout{grid-template-columns:minmax(0,.8fr) minmax(0,1.3fr)}
 .phase3IntegratedPreview .inventoryActionBar{display:flex;flex:1 1 100%;flex-wrap:wrap;align-items:center;gap:6px;min-width:0;white-space:normal}
 .phase3IntegratedPreview .inventoryActionBar button{min-height:34px;white-space:normal}
+.phase3IntegratedPreview .equipmentInventory .stashGrid{align-content:start;grid-auto-rows:86px}
 .phase3IntegratedPreview .phase3PrimaryAttributeStrip{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:3px;margin:7px auto 0;width:100%;min-width:0}
 .phase3IntegratedPreview .phase3PrimaryAttributeStrip>div{display:grid;min-width:0;align-content:center;justify-items:center;gap:2px;padding:4px 1px;background:var(--ui-stat-bg,#11101466);border-bottom:1px solid var(--ui-stat-rule,#9e7d4433);text-align:center}
 .phase3IntegratedPreview .phase3PrimaryAttributeStrip span{color:var(--ui-muted,#c5b7b3);font-size:clamp(8px,2.2vw,10px);line-height:1.05;white-space:nowrap}
@@ -94,6 +95,7 @@
  white-space:normal!important;overflow:visible!important;
  text-align:center!important;
 }
+.phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper>.slotTile .rarityImageFrame>.slotDLevel{font-size:10px!important}
 /* Same sixth grid row: potion slots are direct visual peers of equipment.
    display:contents makes the loadout wrapper non-rendering. */
 .phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper>.phase3PotionSlots{
@@ -177,6 +179,22 @@
  .phase3IntegratedPreview .equipmentInventory .stashGrid>.potionStackTile .rarityImageFrame--potion-stack{
   width:46px!important;height:46px!important;flex-basis:46px!important;
  }
+}
+/* Inventory labels and controls remain legible/tappable without changing the
+   paper-doll composition or the separate Between Realms presentation. */
+@media(max-width:650px){
+ .phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper>.slotTile>span:not(.rarityImageFrame):not(.slotDLevel):not(.affinityBadge):not(.slotArmorType):not(.newBadge):not(.legendaryRankBadge){
+  font-size:10.5px!important;line-height:1.15!important;
+ }
+ .phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper>.slotTile>.slotArmorType{
+  font-size:10px!important;line-height:1.1!important;
+ }
+ .phase3IntegratedPreview .equipmentInventory .filterBar select,
+ .phase3IntegratedPreview .equipmentInventory .filterActions button{
+  min-height:44px;
+ }
+ .phase3IntegratedPreview .equipmentInventory .filterBar select{padding-top:8px;padding-bottom:8px}
+ .phase3IntegratedPreview .equipmentInventory .filterActions button{padding:7px 9px}
 }
 @media(max-width:650px){
  .phase3IntegratedPreview .equipmentLayout{row-gap:24px}

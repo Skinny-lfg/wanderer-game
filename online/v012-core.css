@@ -225,6 +225,7 @@ button.extractComplete:hover{background:#2d9a55}
  .equipmentInventory .filterBar{margin:6px 0;gap:4px}
  .equipmentInventory .filterBar label{min-width:76px}
  .equipmentInventory .filterBar select{max-width:105px}
+ .equipmentInventory .filterBar .filterActions button{min-height:44px!important}
  .equipmentInventory .stashGrid{max-height:270px;grid-template-columns:repeat(auto-fill,minmax(53px,1fr));gap:4px}
  .equipmentInventory .invItem{min-height:60px}
  .equipmentInventory .inspect{padding:8px}
@@ -274,7 +275,7 @@ button.extractComplete:hover{background:#2d9a55}
  .equipmentLoadout .paper .model{display:none}
  .equipmentLoadout .paper .slotTile{position:relative;inset:auto!important;top:auto!important;left:auto!important;right:auto!important;bottom:auto!important;width:100%;height:60px;min-height:60px;aspect-ratio:auto;min-width:0;box-sizing:border-box;padding:3px 1px 2px;border-radius:6px;box-shadow:none;gap:0}
  .equipmentLoadout .paper .slotTile img{width:33px;height:33px;max-width:85%}
- .equipmentLoadout .paper .slotTile span:not(.slotDLevel):not(.affinityBadge){font-size:9px;line-height:1.1;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ .equipmentLoadout .paper .slotTile span:not(.slotDLevel):not(.affinityBadge):not(.slotName):not(.slotArmorType){font-size:9px;line-height:1.1;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
  .equipmentLoadout .paper .slotTile .affinityBadge{width:17px;height:17px;font-size:10px!important}
  .equipmentLoadout .paper .slotTile .slotDLevel{font-size:8px!important}
  .equipmentStats{margin:0}
