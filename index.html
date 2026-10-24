@@ -1494,21 +1494,27 @@ function phase5SummaryMarkup(r,title,realm){
   '<section class="phase5TemporaryBuild"><h2>Temporary build'+(r.element?' · '+esc(r.element):'')+'</h2><div class="phase5PassiveChips">'+(build||'<span class="small muted">No passives recorded.</span>')+'</div></section>'+
   '<div class="phase5ResultActions"><button id="phase5ExitResult" class="primary">RETURN TO CAMP</button></div></section>';
 }
+function phase5RealmResultMarkup(r,summary){
+ const itemCards=(items)=>items.length?'<div class="phase5GearGrid">'+items.map(item=>{const owned=[...state.stash,...(state.expeditionOverflow||[]),...Object.values(state.equip).filter(Boolean)].find(o=>o.id===item.id),image=owned?itemImg(owned):placeholderIcon(item.slot);return '<div class="phase5GearItem">'+rarityArt(item,image,item.subtype,'loot')+'<div><b>'+esc(item.name)+'</b><small>E'+item.tier+' · '+esc(item.rarity)+'</small></div></div>';}).join('')+'</div>':'<p class="small muted phase5EmptyRewards">No equipment recorded for this Realm.</p>';
+ const treasureCards=(items)=>items?.length?'<div class="phase5GearGrid">'+items.map(item=>'<div class="phase5GearItem c3TreasureResult"><img class="c3TreasureImg" src="'+WandererV012Treasures.image(item)+'" alt=""><div><b>'+esc(WandererV012Treasures.displayName(item))+'</b><small>'+(Number(item.worth)||0)+' Gold</small></div></div>').join('')+'</div>':'<p class="small muted phase5EmptyRewards">No treasures recorded for this Realm.</p>';
+ const outcome=r.outcome==='cleared',secured=outcome||summary?.outcome==='victory',lootState=outcome?'secured':secured?'secured':'lost';
+ const metrics=r.metrics||{},damage=[['Damage dealt',metrics.damageDealt],['Damage taken',metrics.damageTaken]].filter(([,value])=>Number.isFinite(value)&&value>0);
+ const metric=(label,value)=>'<div class="phase5ResultMetric"><span>'+label+'</span><strong>'+value+'</strong></div>';
+ return '<section class="panel phase5Result phase5VisualSummary phase5RealmResult"><div class="phase5ResultHeading"><span class="eyebrow">Expedition '+r.level+' · Realm '+r.plane+'</span><h1>'+(outcome?'REALM CLEARED':'YOU DIED')+'</h1><p>'+esc(r.name)+' · '+esc(WandererV012Expedition.FAMILY_NAMES[r.family]||r.family)+(outcome?' · Rewards secured':' · Final enemy: '+esc(r.enemy||'Unknown'))+'</p></div>'+
+  '<div class="phase5ResultMetrics">'+metric('Combat time',Number(r.seconds).toFixed(1)+'s')+metric('Gold','+'+(Number(r.gold)||0))+metric('Fragments','+'+(Number(r.fragments)||0))+'</div><p class="small muted">Combat time excludes Camp and offline time.</p>'+
+  (phase5Results.complete?'':'<p class="small muted">Older checkpoint: only activity recorded since this update is included.</p>')+
+  (damage.length?'<section class="phase5DamageStats"><h2>Realm statistics</h2><div class="phase5ResultMetrics">'+damage.map(([label,value])=>metric(label,Math.round(value))).join('')+'</div></section>':'')+
+  '<section class="phase5GearGroup phase5RealmGear phase5RealmGear--'+lootState+'"><h2>Realm equipment '+(lootState==='lost'?'lost':'secured')+'</h2>'+itemCards(r.loot||[])+'</section>'+
+  '<section class="phase5GearGroup phase5RealmGear"><h2>Realm treasures '+(outcome?'secured':'collected · still at risk')+'</h2>'+treasureCards(r.treasures||[])+'</section>'+
+  (r.log?.length?'<details class="phase5LastLog"><summary>Last Realm Combat Log</summary>'+(r.truncated?'<p>Older entries omitted: log storage safety limit reached.</p>':'')+'<div class="log">'+r.log.map(l=>'<div class="logLine">'+esc(l.text)+'</div>').join('')+'</div></details>':'')+
+  '<div class="phase5ResultActions"><button id="phase5ExitResult" class="primary" '+(phase1Controller.state.version===2&&phase1Draft?.kind==='reward'?'disabled':'')+'>EXIT REALM</button></div></section>';
+}
 function phase5RenderResult(){
  const realm=phase5Results.realm,summary=phase5Results.summary,isRealm=phase5Results.review==='realm',r=isRealm?realm:summary;
  if(!r){phase5Results.review=null;renderPhase1();return;}
  const title=isRealm?(r.outcome==='cleared'?'REALM CLEARED':'YOU DIED'):(r.outcome==='victory'?'EXPEDITION COMPLETE':r.outcome==='extracted'?'EXTRACTION COMPLETE':'EXPEDITION LOST');
  if(!isRealm){html(phase5SummaryMarkup(r,title,realm));$('phase5ExitResult').onclick=phase5ExitResult;return;}
- const items=(list)=>list.map(i=>'<li>'+esc(i.name)+' · E'+i.tier+' · '+esc(i.rarity)+'</li>').join('')||'<li>None</li>';
- const treasureItems=(list)=>list?.length?'<div class="c3TreasureResults">'+list.map(i=>'<div class="c3TreasureResult"><img class="c3TreasureImg" src="'+WandererV012Treasures.image(i)+'" alt=""><span>'+esc(WandererV012Treasures.displayName(i))+' · '+(Number(i.worth)||0)+' Gold</span></div>').join('')+'</div>':'<p class="small muted">None</p>';
- html('<section class="panel phase5Result"><span class="eyebrow">Expedition '+r.level+(isRealm?' · Realm '+r.plane:'')+'</span><h1>'+title+'</h1>'+
-  (isRealm?'<p>'+esc(r.name)+' · '+esc(WandererV012Expedition.FAMILY_NAMES[r.family])+(r.outcome==='defeat'?' · Final enemy: '+esc(r.enemy):'')+'</p>':'<p>'+r.realms+'/15 Realms completed · '+esc(r.families.map(f=>WandererV012Expedition.FAMILY_NAMES[f]).join(' · '))+'</p>')+
-  (phase5Results.complete?'':'<p class="small muted">Older checkpoint: only activity recorded since this update is included.</p>')+'<p>Combat time: '+r.seconds.toFixed(1)+'s · +'+r.gold+' Gold · +'+r.fragments+' Fragments</p><p class="small muted">Combat time excludes Camp and offline time.</p>'+
-  (r.metrics?'<p>HP damage dealt '+Math.round(r.metrics.damageDealt||0)+' · HP damage taken '+Math.round(r.metrics.damageTaken||0)+'</p>':'')+(isRealm?'<h3>Realm equipment '+(r.outcome==='defeat'?'lost':summary?.outcome==='victory'?'secured':'collected · still at risk')+'</h3><ul>'+items(r.loot||[])+'</ul>':('<h3>Temporary build'+(r.element?' · '+esc(r.element):'')+'</h3><p>'+esc(r.picks.map(id=>WandererV012Buildcraft.CATALOG.find(p=>p.id===id)?.name||id).join(' · '))+'</p><h3>Equipment kept</h3><ul>'+items(r.kept)+'</ul><h3>Equipment lost</h3><ul>'+items(r.lost)+'</ul><h3>Discarded</h3><ul>'+items(r.discarded)+'</ul>'+(r.runeTier?'<p>'+esc(r.runeName?'Rune obtained: '+r.runeName:'Boss Rune choice pending in Camp')+' · E'+r.runeTier+'</p>':'')+(r.outcome==='victory'?'<p>Highest Expedition Cleared: '+(phase5Snapshot?.expedition.completed||r.level)+'</p>'+(r.level%25===0?'<p class="phase5MilestoneWin">✦ Milestone completed: E'+r.level+'</p>':''):'<p>No next difficulty unlocked. Equipped equipment and earned currencies are safe.</p>')))+
-  (isRealm?'<h3>Realm treasures</h3>'+treasureItems(r.treasures||[]):'<h3>Treasures kept</h3>'+treasureItems(r.treasuresKept||[])+'<h3>Treasures lost</h3>'+treasureItems(r.treasuresLost||[]))+
-  (realm?'<details class="phase5LastLog"><summary>Last Realm Combat Log</summary>'+(realm.truncated?'<p>Older entries omitted: log storage safety limit reached.</p>':'')+'<div class="log" style="max-height:45vh;overflow:auto">'+realm.log.map(l=>'<div class="logLine">'+esc(l.text)+'</div>').join('')+'</div></details>':'')+
-  '<button id="phase5ExitResult" class="primary" '+(phase1Controller.state.version===2&&phase1Draft?.kind==='reward'?'disabled':'')+'>'+(isRealm?'EXIT REALM':'RETURN TO CAMP')+'</button></section>');
- $('phase5ExitResult').onclick=phase5ExitResult;
+ if(isRealm){html(phase5RealmResultMarkup(r,summary));$('phase5ExitResult').onclick=phase5ExitResult;return;}
 }
 function phase5Leaderboard(){
  const e=phase5Snapshot?.expedition;

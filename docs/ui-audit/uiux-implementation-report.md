@@ -253,3 +253,58 @@ Camp com slots vazios: [depois](phase2h-after/camp-empty-slots-mobile-390x844.jp
 Os dois hunks locais anteriores de `index.html` (texto do Shrine e `role="group"` nas poções), assim como capturas e documentos locais anteriores, foram preservados fora do commit. Nenhuma alteração a gameplay, saves, economia, Firebase Rules ou outras interfaces. Sem push, merge ou deploy.
 
 Commit local da implementação Fase 2H: `fb16a20` — `Improve Inventory and Camp readability` (branch `development`).
+
+## Fase 2I — Resultados e pop-ups
+
+### Alterações
+
+- O painel de resultado de cada Realm usa agora a mesma hierarquia visual dos resumos finais: desfecho em primeiro plano, métricas em cartões, equipamento e tesouros em grupos separados, log recolhível e ação final isolada no rodapé.
+- Em caso de derrota, equipamento perdido recebe tratamento carmesim e os tesouros continuam identificados como “collected · still at risk” até ao resumo final. Em Realm concluído, os itens aparecem como “secured”. A informação deriva dos mesmos campos de resultado; não foram mudadas recompensas, perdas nem progressão.
+- Listas vazias deixaram de mostrar “None”: indicam que não há equipamento ou tesouros registados naquele Realm.
+- O resumo de Expedition/Extraction ficou limitado a uma largura legível em ecrãs grandes. Os cartões de Gold, Fragments, duração, progresso, equipamento e tesouros mantêm todos os dados existentes; a ação de regressar ao Camp fica numa faixa visual própria.
+- Os modais partilhados ganharam títulos, texto e rodapé de ações com hierarquia consistente. Os botões têm 48 px de altura e largura mínima de 96 px. A área de conteúdo mantém scroll interno e o limite de altura mobile.
+- O modal nativo continua a usar `aria-labelledby`, foco inicial em Close/Cancel, Escape e retorno do foco ao elemento de abertura. Não foram empilhados novos modais.
+
+### UX Writing
+
+| Antes | Depois | Motivo |
+|---|---|---|
+| `Combat time: 42.8s · +19 Gold · +11 Fragments` numa frase corrida | Cartões separados `Combat time`, `Gold`, `Fragments` | Leitura rápida de duração e ganhos sem alterar valores. |
+| `Realm equipment …` seguido de lista simples | `Realm equipment secured/lost` com cartão de item, tier e raridade | Associação visual clara entre estado e equipamento. |
+| `Realm treasures` e lista sem estado | `Realm treasures secured` ou `collected · still at risk`, em cartões com valor | Distinguir recompensa assegurada do loot ainda em risco. |
+| `None` | `No equipment/treasures recorded for this Realm.` | Evitar a ambiguidade de um marcador vazio. |
+| Log imediatamente visível na página | `Last Realm Combat Log` recolhível | Mantém o detalhe disponível sem competir com o resultado. |
+
+Os textos de Leaderboard foram preservados, incluindo a indicação de que nenhum resultado é submetido durante o playtest. A explicação existente sobre equipamento equipado e moedas preservadas no resumo de derrota também foi mantida.
+
+### Capturas antes/depois
+
+As capturas antes e depois foram produzidas em Chromium com os mesmos dados de fixtures sintéticas: o baseline usa `d7a5dfd`; o depois usa esta implementação. Nenhuma captura altera saves. Os diretórios `phase2i-before/` e `phase2i-after/` contêm os pares comparáveis. Os estados vazios adicionais estão em `phase2i-after/death-empty-mobile-390x844.jpg` e `phase2i-after/extraction-empty-mobile-390x844.jpg`.
+
+| Interface | 390 × 844 | 768 × 1024 | 1440 × 900 | 1920 × 1080 |
+|---|---|---|---|---|
+| Realm Cleared | [antes](phase2i-before/realm-cleared-mobile-390x844.jpg) · [depois](phase2i-after/realm-cleared-mobile-390x844.jpg) | [antes](phase2i-before/realm-cleared-tablet-768x1024.jpg) · [depois](phase2i-after/realm-cleared-tablet-768x1024.jpg) | [antes](phase2i-before/realm-cleared-desktop-1440x900.jpg) · [depois](phase2i-after/realm-cleared-desktop-1440x900.jpg) | [antes](phase2i-before/realm-cleared-wide-1920x1080.jpg) · [depois](phase2i-after/realm-cleared-wide-1920x1080.jpg) |
+| Death | [antes](phase2i-before/death-mobile-390x844.jpg) · [depois](phase2i-after/death-mobile-390x844.jpg) | [antes](phase2i-before/death-tablet-768x1024.jpg) · [depois](phase2i-after/death-tablet-768x1024.jpg) | [antes](phase2i-before/death-desktop-1440x900.jpg) · [depois](phase2i-after/death-desktop-1440x900.jpg) | [antes](phase2i-before/death-wide-1920x1080.jpg) · [depois](phase2i-after/death-wide-1920x1080.jpg) |
+| Extraction Summary | [antes](phase2i-before/extraction-summary-mobile-390x844.jpg) · [depois](phase2i-after/extraction-summary-mobile-390x844.jpg) | [antes](phase2i-before/extraction-summary-tablet-768x1024.jpg) · [depois](phase2i-after/extraction-summary-tablet-768x1024.jpg) | [antes](phase2i-before/extraction-summary-desktop-1440x900.jpg) · [depois](phase2i-after/extraction-summary-desktop-1440x900.jpg) | [antes](phase2i-before/extraction-summary-wide-1920x1080.jpg) · [depois](phase2i-after/extraction-summary-wide-1920x1080.jpg) |
+| Expedition Completed | [antes](phase2i-before/expedition-completed-mobile-390x844.jpg) · [depois](phase2i-after/expedition-completed-mobile-390x844.jpg) | [antes](phase2i-before/expedition-completed-tablet-768x1024.jpg) · [depois](phase2i-after/expedition-completed-tablet-768x1024.jpg) | [antes](phase2i-before/expedition-completed-desktop-1440x900.jpg) · [depois](phase2i-after/expedition-completed-desktop-1440x900.jpg) | [antes](phase2i-before/expedition-completed-wide-1920x1080.jpg) · [depois](phase2i-after/expedition-completed-wide-1920x1080.jpg) |
+
+Account, Leaderboard, confirmação e inspeção de equipamento: capturas antes/depois em `phase2i-before/` e `phase2i-after/`, com o mesmo conteúdo sintético.
+
+### Validação
+
+- Fixture Playwright/Chromium, sem pedidos externos nem saves: **PASS** em 390 × 844, 768 × 1024, 1440 × 900 e 1920 × 1080. Cobriu Realm Cleared, Death com/sem equipamento e tesouro, Extraction Summary com/sem loot, Expedition Completed, Account, Leaderboard, confirmação e inspeção de equipamento.
+- Ações dos modais: **PASS** para foco inicial, retorno do foco a um opener visível, Escape, Cancel e Confirm (callback executado uma vez). Close/Cancel medido com 48 px de altura; somente um modal aberto em cada passo do fluxo testado.
+- Axe nos painéis de resultados e nos modais Account, Leaderboard, confirmação e inspeção: **0 violações** nos quatro viewports.
+- Resultados: **0 overflow horizontal, 0 imagens em falta e 0 erros de página** nos quatro viewports. As imagens foram aguardadas até ao fim do carregamento, incluindo as lazy.
+- `node tests/v012-dialog-centering-browser.cjs`: **PASS**, popup centrado em 390 × 844 e 1280 × 720.
+- `node --test tests/v012-item-popup.test.cjs tests/v012-global-ui-audit.test.cjs`: **PASS**, 5/5.
+- `node tests/v0120-results.test.cjs`: **FAIL**, 3 de 5 subtestes. Falham “Realm result persists until exit”, “defeat recap distinguishes equipped new loot from discarded items and protects home” e “eligible final boss recap preserves build and Rune choice”; os dois restantes passam. As assertions recebem `review: null` em vez de `realm` e arrays vazios para `lost`/`picks`. São falhas do runtime/harness já presentes no estado-base `d7a5dfd`: nesta fase não foram modificados `online/v012-expedition-runtime.js` nem `tests/v0120-results.test.cjs`; a confirmação de que não houve regressão é também sustentada pelo teste Playwright de apresentação, que injeta fixtures diretamente e não invoca geração nem persistência.
+- `git diff --check`: **PASS**. Não foram alterados gameplay, fórmulas, recompensas, saves, Firebase Rules ou o fluxo Affinity → Magic.
+
+### Ficheiros desta fase
+
+- `index.html`: somente o renderer de resultados de Realm nesta fase. Dois hunks locais anteriores (texto do Shrine e `role="group"` das poções) permanecem fora do commit desta fase.
+- `online/v012-ui4f.css`: apresentação de resultados e estilos partilhados dos modais.
+- `docs/ui-audit/uiux-implementation-report.md` e `docs/ui-audit/phase2i-after/`: relatório, capturas e registo da validação.
+
+Commit de implementação: a registar após o commit; o relatório final de hash será atualizado no commit documental seguinte. Nenhum push, merge ou deploy foi feito.

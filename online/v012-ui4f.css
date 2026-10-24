@@ -22,6 +22,52 @@
 }
 .phase3IntegratedPreview .rarityImageFrame{--ui4-chamfer-color:var(--ui-rarity-color,#8c8378)}
 
+/* Phase 2I: keep result summaries scannable while retaining the existing Gothic surfaces. */
+.phase3IntegratedPreview .phase5VisualSummary,
+.phase3IntegratedPreview .phase5Result.phase5RealmResult{width:min(100%,1040px);margin-inline:auto}
+.phase3IntegratedPreview .phase5VisualSummary .phase5ResultHeading,
+.phase3IntegratedPreview .phase5RealmResult .phase5ResultHeading{margin:0 0 12px;padding-bottom:10px;border-bottom:1px solid var(--ui4-line)}
+.phase3IntegratedPreview .phase5ResultHeading .eyebrow{display:block;color:var(--ui4-accent);font-size:13px;font-weight:700;letter-spacing:.12em}
+.phase3IntegratedPreview .phase5ResultHeading h1{margin:5px 0;color:#f4e5d2;font-size:clamp(26px,3vw,36px);line-height:1.08}
+.phase3IntegratedPreview .phase5VisualSummary .phase5ResultMetrics,
+.phase3IntegratedPreview .phase5RealmResult .phase5ResultMetrics{grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));margin:10px 0}
+.phase3IntegratedPreview .phase5ResultMetric span{font-size:14px;line-height:1.25}
+.phase3IntegratedPreview .phase5ResultMetric strong{font-variant-numeric:tabular-nums;line-height:1.15}
+.phase3IntegratedPreview .phase5RewardGrid{align-items:start}
+.phase3IntegratedPreview .phase5GearGroup{min-width:0;margin:10px 0;padding:10px;border:1px solid var(--ui4-edge);background:#171219a8}
+.phase3IntegratedPreview .phase5GearGroup h2,
+.phase3IntegratedPreview .phase5GearGroup h3{margin:0 0 8px;color:#f0d6a6;font-size:19px;line-height:1.2}
+.phase3IntegratedPreview .phase5GearGroup .phase5GearGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,215px),1fr));gap:7px}
+.phase3IntegratedPreview .phase5GearItem{min-width:0;min-height:60px;overflow-wrap:anywhere}
+.phase3IntegratedPreview .phase5GearItem small{font-size:13px;line-height:1.25}
+.phase3IntegratedPreview .phase5RealmGear--lost{border-color:#9b5458;background:linear-gradient(130deg,#321c23a8,#171219a8)}
+.phase3IntegratedPreview .phase5RealmGear--lost h2{color:#f1b0a7}
+.phase3IntegratedPreview .phase5EmptyRewards{margin:2px 0}
+.phase3IntegratedPreview .phase5ResultActions{display:flex;justify-content:center;margin:12px 0 0;padding-top:12px;border-top:1px solid var(--ui4-line)}
+.phase3IntegratedPreview .phase5ResultActions #phase5ExitResult{position:static;inset:auto;width:min(100%,360px);min-height:48px;margin:0}
+.phase3IntegratedPreview .phase5LastLog{margin:10px 0}
+.phase3IntegratedPreview .phase5LastLog .log{max-height:min(40dvh,360px);overflow:auto}
+
+/* Shared native dialogs: readable content, stable action order and touch-sized controls. */
+.phase3IntegratedPreview dialog.itemDialog{width:min(620px,calc(100vw - 24px));max-width:620px;max-height:min(86dvh,820px);padding:clamp(14px,3vw,22px);overscroll-behavior:contain;scrollbar-gutter:stable}
+.phase3IntegratedPreview dialog.itemDialog>h2{margin:0 0 12px;font-size:clamp(23px,3vw,30px);line-height:1.15}
+.phase3IntegratedPreview dialog.itemDialog :is(p,li,label){font-size:15px;line-height:1.45;overflow-wrap:anywhere}
+.phase3IntegratedPreview dialog.itemDialog .modalActions{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:12px;border-top:1px solid var(--ui4-line)}
+.phase3IntegratedPreview dialog.itemDialog .modalActions button{min-width:96px;min-height:48px;height:48px}
+.phase3IntegratedPreview dialog.itemDialog .modalActions [data-close]{margin-right:auto}
+@media(max-width:600px){
+ .phase3IntegratedPreview .phase5VisualSummary,
+ .phase3IntegratedPreview .phase5Result.phase5RealmResult{padding:11px}
+ .phase3IntegratedPreview .phase5VisualSummary .phase5ResultMetrics,
+ .phase3IntegratedPreview .phase5RealmResult .phase5ResultMetrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .phase3IntegratedPreview .phase5GearGroup{padding:8px}
+ .phase3IntegratedPreview .phase5GearGroup .phase5GearGrid{grid-template-columns:minmax(0,1fr)}
+ .phase3IntegratedPreview .phase5ResultActions #phase5ExitResult{width:100%}
+ .phase3IntegratedPreview dialog.itemDialog{width:calc(100vw - 20px);max-height:calc(100dvh - 24px);padding:14px}
+ .phase3IntegratedPreview dialog.itemDialog .modalActions button{flex:1 1 120px;min-height:48px;height:48px}
+ .phase3IntegratedPreview dialog.itemDialog .modalActions [data-close]{margin-right:0}
+}
+
 .phase3IntegratedPreview :is(.slotTile,.miniSlot,.invItem,.phase3PotionSlot){
   border:1px solid transparent;
   border-radius:0;
