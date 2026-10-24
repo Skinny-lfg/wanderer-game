@@ -96,17 +96,18 @@
  text-align:center!important;
 }
 .phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper>.slotTile .rarityImageFrame>.slotDLevel{font-size:10px!important}
-/* Same sixth grid row: potion slots are direct visual peers of equipment.
-   display:contents makes the loadout wrapper non-rendering. */
+/* Same sixth grid row: cluster potion slots at the center of the equipment layout. */
 .phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper>.phase3PotionSlots{
- display:contents!important;
+ display:flex!important;flex-direction:row!important;align-items:flex-start!important;justify-content:center!important;
+ grid-column:1/-1!important;grid-row:6!important;gap:6px!important;
+ width:max-content!important;max-width:100%!important;justify-self:center!important;
 }
 .phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper>.phase3PotionSlots>.phase3PotionSlot{
  display:flex!important;flex-direction:column!important;
  align-items:center!important;justify-content:flex-start!important;
  position:relative!important;z-index:2!important;
  grid-row:6!important;
- width:var(--gear-slot-width)!important;height:var(--gear-slot-width)!important;aspect-ratio:1/1!important;
+ width:56px!important;height:var(--gear-slot-width)!important;aspect-ratio:1/1!important;
  min-height:0!important;min-width:0!important;
  margin:0!important;padding:1px 0 0!important;gap:2px!important;
  border:0!important;border-radius:0!important;
@@ -118,12 +119,9 @@
  background:transparent!important;box-shadow:none!important;filter:none!important;
 }
 .phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper .phase3PotionInspectButton>.gothic-corner-layer{display:none!important}
-.phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper>.phase3PotionSlots>.phase3PotionSlot:nth-child(1){grid-column:1!important}
-.phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper>.phase3PotionSlots>.phase3PotionSlot:nth-child(2){grid-column:2!important}
-.phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper>.phase3PotionSlots>.phase3PotionSlot:nth-child(3){grid-column:3!important}
 .phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper .phase3PotionSlot .rarityImageFrame--potion{
- width:min(var(--gear-frame),calc(var(--gear-slot-width) - 22px))!important;height:min(var(--gear-frame),calc(var(--gear-slot-width) - 22px))!important;
- flex:0 0 min(var(--gear-frame),calc(var(--gear-slot-width) - 22px))!important;max-width:100%!important;aspect-ratio:1/1!important;
+ width:min(var(--gear-frame),46px)!important;height:min(var(--gear-frame),46px)!important;
+ flex:0 0 min(var(--gear-frame),46px)!important;max-width:100%!important;aspect-ratio:1/1!important;
 }
 .phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper .phase3PotionSlot b,
 .phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper .phase3PotionSlot small{

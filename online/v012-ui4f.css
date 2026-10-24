@@ -50,12 +50,14 @@
 
 /* Shared native dialogs: readable content, stable action order and touch-sized controls. */
 .phase3IntegratedPreview dialog.itemDialog{width:min(500px,calc(100vw - 24px));max-width:500px;max-height:min(78dvh,680px);padding:16px;overscroll-behavior:contain;scrollbar-gutter:stable}
+.phase3IntegratedPreview dialog.itemDialog.equipmentItemDialog{width:min(480px,calc(100vw - 24px));max-width:480px;max-height:min(72dvh,600px);padding:clamp(12px,2vw,16px)}
 .phase3IntegratedPreview dialog.itemDialog>h2{margin:0 0 12px;font-size:clamp(23px,3vw,30px);line-height:1.15}
 .phase3IntegratedPreview dialog.itemDialog :is(p,li,label){font-size:15px;line-height:1.45;overflow-wrap:anywhere}
 .phase3IntegratedPreview dialog.itemDialog .modalActions{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:12px;border-top:1px solid var(--ui4-line)}
 .phase3IntegratedPreview dialog.itemDialog .modalActions button{min-width:96px;min-height:48px;height:48px}
 .phase3IntegratedPreview dialog.itemDialog .modalActions [data-close]{margin-right:auto}
 @media(max-width:600px){
+ .phase3IntegratedPreview dialog.itemDialog.equipmentItemDialog{width:calc(100vw - 20px);max-height:min(82dvh,680px);padding:14px}
  .phase3IntegratedPreview .phase5VisualSummary,
  .phase3IntegratedPreview .phase5Result.phase5RealmResult{padding:11px}
  .phase3IntegratedPreview .phase5VisualSummary .phase5ResultMetrics,
