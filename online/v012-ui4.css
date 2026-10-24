@@ -129,11 +129,13 @@
 .phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityPassiveDetails summary::after{margin-left:4px}
 .phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityPassiveDetails[open]{max-height:120px}
 .phase3IntegratedPreview dialog.phase3MagicElementDialog{width:min(760px,calc(100vw - 24px));max-width:none;padding:clamp(14px,2vw,24px)}
+.phase3IntegratedPreview dialog.phase3InitialAffinityDialog.phase3MagicElementDialog{width:min(760px,calc(100vw - 24px))}
 .phase3IntegratedPreview .phase3MagicElementChoices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}
 .phase3IntegratedPreview .phase3MagicElementChoice{display:flex;align-items:center;box-sizing:border-box;width:100%;height:250px;min-width:0;padding:14px 10px;gap:10px;text-align:center}
 .phase3IntegratedPreview .phase3MagicElementChoice .magicChoiceIcon{width:76px;height:76px;filter:drop-shadow(0 4px 8px #0009)}
 .phase3IntegratedPreview .phase3MagicElementChoice strong{font-size:19px;color:#f1d4a3}
 .phase3IntegratedPreview .phase3MagicElementChoice span{font-size:14px;line-height:1.4;color:var(--ui4-muted)}
+.phase3IntegratedPreview .phase3InitialAffinityDialog [hidden]{display:none!important}
 .phase3IntegratedPreview .phase3AffinityPending{max-width:760px;margin:clamp(24px,8vh,100px) auto;text-align:center}
 .phase3IntegratedPreview .phase3AffinityPending h1{color:var(--gothic-ivory);font:500 clamp(26px,3vw,42px)/1.1 var(--font-display)}
 .phase3IntegratedPreview .phase3AffinityPending .primary{min-width:min(100%,280px)}
@@ -192,6 +194,12 @@
  .phase3IntegratedPreview .phase3MagicElementChoice .magicChoiceIcon{width:54px;height:54px}
  .phase3IntegratedPreview .phase3MagicElementChoice strong{font-size:16px}
  .phase3IntegratedPreview .phase3MagicElementChoice span{font-size:12px;line-height:1.35}
+}
+@media(max-width:580px){
+ .phase3IntegratedPreview .phase3MagicElementChoices{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .phase3IntegratedPreview .phase3MagicElementChoice{height:auto;min-height:184px;padding:12px 9px}
+ .phase3IntegratedPreview .phase3MagicElementChoice:last-child{grid-column:1/-1;min-height:140px}
+ .phase3IntegratedPreview .phase3MagicElementChoice span{font-size:14px;line-height:1.35}
 }
 @media(prefers-reduced-motion:reduce){
  .phase3IntegratedPreview button.primary:not(.tiny):active{transform:none}

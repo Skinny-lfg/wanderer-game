@@ -1,0 +1,107 @@
+{
+  "sizes": [
+    [
+      390,
+      844
+    ],
+    [
+      1440,
+      900
+    ]
+  ],
+  "screenshots": 4,
+  "findings": [
+    {
+      "screen": "initial-affinity",
+      "viewport": "390x844",
+      "horizontalOverflow": false,
+      "scrollWidth": 390,
+      "scrollHeight": 844,
+      "missingImages": [],
+      "errors": [],
+      "failedResponses": [],
+      "dialog": "Choose your initial affinity\n\nExpedition 1 · Choose one of the six affinities to begin.\n\nBlood\nBleed",
+      "axe": {
+        "violations": [],
+        "passes": 21,
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodes": 21
+          }
+        ]
+      },
+      "screenshot": "docs/ui-audit/phase2a-after/dialogs/initial-affinity/initial-affinity-mobile-390x844.jpg"
+    },
+    {
+      "screen": "magic-element",
+      "viewport": "390x844",
+      "horizontalOverflow": false,
+      "scrollWidth": 390,
+      "scrollHeight": 844,
+      "missingImages": [],
+      "errors": [],
+      "failedResponses": [],
+      "dialog": "Choose a Magic element\n\nChoose Fire, Frost, or Lightning. Your choice is fixed for this Expedition.\n",
+      "axe": {
+        "violations": [],
+        "passes": 21,
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodes": 10
+          }
+        ]
+      },
+      "screenshot": "docs/ui-audit/phase2a-after/dialogs/magic-element/magic-element-mobile-390x844.jpg"
+    },
+    {
+      "screen": "initial-affinity",
+      "viewport": "1440x900",
+      "horizontalOverflow": false,
+      "scrollWidth": 1440,
+      "scrollHeight": 900,
+      "missingImages": [],
+      "errors": [],
+      "failedResponses": [],
+      "dialog": "Choose your initial affinity\n\nExpedition 1 · Choose one of the six affinities to begin.\n\nBlood\nBleed",
+      "axe": {
+        "violations": [],
+        "passes": 21,
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodes": 21
+          }
+        ]
+      },
+      "screenshot": "docs/ui-audit/phase2a-after/dialogs/initial-affinity/initial-affinity-desktop-1440x900.jpg"
+    },
+    {
+      "screen": "magic-element",
+      "viewport": "1440x900",
+      "horizontalOverflow": false,
+      "scrollWidth": 1440,
+      "scrollHeight": 900,
+      "missingImages": [],
+      "errors": [],
+      "failedResponses": [],
+      "dialog": "Choose a Magic element\n\nChoose Fire, Frost, or Lightning. Your choice is fixed for this Expedition.\n",
+      "axe": {
+        "violations": [],
+        "passes": 21,
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodes": 10
+          }
+        ]
+      },
+      "screenshot": "docs/ui-audit/phase2a-after/dialogs/magic-element/magic-element-desktop-1440x900.jpg"
+    }
+  ]
+}

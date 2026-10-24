@@ -405,9 +405,10 @@ function gearComparison(item){
 const current=totalStats(),next=totalStats(comparisonEquip(item)),change=next.power-current.power;
 return `<div class="gearSummary"><b>${Math.abs(change)<Math.max(1,current.power*.03)?'≈ Sidegrade':change>0?'▲ Upgrade':'▼ Downgrade'}</b> · <b>Gear Power</b> ${current.power} → ${next.power} <span class="${change>0?'green':change<0?'red':'muted'}">(${change>0?'+':''}${change})</span></div>`;
 }
+let modalTitleSequence=0;
 function showModal(title,content,onConfirm=null,confirmLabel='Enter Dungeon'){
-const previous=document.activeElement,dialog=document.createElement('dialog');dialog.className='itemDialog';dialog.setAttribute('aria-labelledby','modalTitle');
-dialog.innerHTML=`<h2 id="modalTitle">${esc(title)}</h2>${content}<div class="buttonRow modalActions"><button data-close>${onConfirm?'Cancel':'Close'}</button>${onConfirm?'<button class="primary" data-confirm>'+esc(confirmLabel)+'</button>':''}</div>`;
+const previous=document.activeElement,dialog=document.createElement('dialog'),titleId='modalTitle-'+(++modalTitleSequence);dialog.className='itemDialog';dialog.setAttribute('aria-labelledby',titleId);
+dialog.innerHTML=`<h2 id="${titleId}">${esc(title)}</h2>${content}<div class="buttonRow modalActions"><button data-close>${onConfirm?'Cancel':'Close'}</button>${onConfirm?'<button class="primary" data-confirm>'+esc(confirmLabel)+'</button>':''}</div>`;
  document.body.appendChild(dialog);dialog.addEventListener('close',()=>{dialog.remove();if(previous?.isConnected)previous.focus();phase3UpdateCampStickyStart?.()});dialog.querySelector('[data-close]').onclick=()=>dialog.close();if(onConfirm)dialog.querySelector('[data-confirm]').onclick=()=>{dialog.close();onConfirm()};dialog.showModal();dialog.querySelector('[data-close]').focus();phase3UpdateCampStickyStart?.();return dialog;
 }
 
@@ -1278,27 +1279,35 @@ function phase3AffinityChoiceMarkup(family){
  const detail=family==='magic'?'<p>Choose one of three elements in the next window.</p>':passives.map(p=>'<p><b>'+esc(p.name)+'</b> — '+esc(p.description.replace(/\bICD\b/gi,'cooldown'))+'</p>').join('');
  return '<article class="phase3AffinityChoice"><button type="button" class="phase1DraftCard" data-phase2-initial="'+family+'">'+phase2FamilyIcon(family)+'<strong>'+esc(names[family])+'</strong><span class="phase3AffinityIdentity">'+identity+'</span></button><details class="phase3AffinityPassiveDetails"><summary><span>'+(family==='magic'?'Choose element':'View passive')+'</span></summary><div class="phase3AffinityPassiveDescriptions">'+detail+'</div></details></article>';
 }
-function phase3OpenMagicElementDialog(onChoose){
- const elements=[['fire','Fire','Funded Fire casts apply Burn damage over time.'],['frost','Frost','Funded Frost casts Chill foes. Chilled foes take a Spell Power burst every 4s.'],['lightning','Lightning','Funded Lightning casts add Static. Every 4 charges discharge bonus Spell Power damage.']];
+function phase3OpenMagicElementDialog(dialog,onChoose,onBack){
+ const elements=[['fire','Fire','Mana-funded Fire casts inflict Burn damage over time.'],['frost','Frost','Mana-funded Frost casts Chill foes. Chilled foes take a Spell Power burst every 4s.'],['lightning','Lightning','Mana-funded Lightning casts add Static. At 4 charges, Static deals bonus Spell Power damage.']];
  const cards=elements.map(([id,name,description])=>'<button type="button" class="phase1DraftCard phase3MagicElementChoice" data-initial-magic-element="'+id+'"><img class="magicChoiceIcon" src="assets/affinities/magic/'+id+'.png" alt="" loading="lazy" decoding="async"><strong>'+name+'</strong><span>'+description+'</span></button>').join('');
- const dialog=showModal('Choose a Magic element','<p class="small muted">Choose one of Fire, Frost or Lightning. Its element stays fixed for this Expedition.</p><div class="phase3MagicElementChoices">'+cards+'</div>');
- if(!dialog)return null;dialog.dataset.initialMagicElement='1';dialog.classList.add('phase3MagicElementDialog');
+ const content=dialog.querySelector('.phase3InitialAffinityChoices'),intro=dialog.querySelector('.phase3InitialAffinityIntro'),actions=dialog.querySelector('.modalActions');
+ content.hidden=true;intro.hidden=true;dialog.querySelector('[id^="modalTitle-"]').textContent='Choose a Magic element';
+ dialog.dataset.initialMagicElement='1';dialog.classList.add('phase3MagicElementDialog');
+ const step=document.createElement('div');step.className='phase3MagicStep';step.innerHTML='<p class="small muted">Choose Fire, Frost, or Lightning. Your choice is fixed for this Expedition.</p><div class="phase3MagicElementChoices">'+cards+'</div>';
+ actions.before(step);
+ const back=document.createElement('button');back.type='button';back.className='ghost';back.textContent='Back';back.dataset.magicBack='1';actions.prepend(back);
+ const restore=()=>{step.remove();back.remove();delete dialog.dataset.initialMagicElement;dialog.classList.remove('phase3MagicElementDialog');content.hidden=false;intro.hidden=false;dialog.querySelector('[id^="modalTitle-"]').textContent='Choose your initial affinity';dialog.removeEventListener('cancel',escapeBack);onBack?.();};
+ const escapeBack=event=>{event.preventDefault();restore();};
+ back.onclick=restore;dialog.addEventListener('cancel',escapeBack);
  dialog.querySelectorAll('[data-initial-magic-element]').forEach(button=>button.onclick=()=>onChoose?.(button.dataset.initialMagicElement,dialog));
+ dialog.querySelector('[data-initial-magic-element]')?.focus();
  return dialog;
 }
 function phase3OpenInitialAffinity(g){
  const existing=document.querySelector('dialog[data-initial-affinity]');if(existing)return existing;
  const choices=WandererV012Expedition.FAMILIES.map(phase3AffinityChoiceMarkup).join('');
- const dialog=showModal('Choose your initial affinity','<p class="small muted">Expedition '+g.expedition+' · Choose one of the six affinities to begin. This choice uses the existing Expedition progression.</p><div class="phase1DraftCards phase3AffinityChoices phase3InitialAffinityChoices">'+choices+'</div>');
+ const dialog=showModal('Choose your initial affinity','<p class="small muted phase3InitialAffinityIntro">Expedition '+g.expedition+' · Choose one of the six affinities to begin.</p><div class="phase1DraftCards phase3AffinityChoices phase3InitialAffinityChoices">'+choices+'</div>');
  if(!dialog)return null;dialog.dataset.initialAffinity='1';dialog.classList.add('phase3InitialAffinityDialog');
  dialog.querySelectorAll('[data-phase2-initial]').forEach(button=>button.onclick=()=>{
   const family=button.dataset.phase2Initial;
   if(family==='magic'){
-   phase3OpenMagicElementDialog((element,elementDialog)=>{
+   phase3OpenMagicElementDialog(dialog,(element,elementDialog)=>{
     if(!phase2ChooseInitial('magic'))return;
     if(!phase2ChooseElement(element))return;
-    elementDialog.close();dialog.close();phase2EnterInitialRealm();
-   });
+    elementDialog.close();phase2EnterInitialRealm();
+   },()=>button.focus());
    return;
   }
   if(phase2ChooseInitial(family)){dialog.close();phase2EnterInitialRealm();}
