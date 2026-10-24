@@ -272,6 +272,8 @@ function phase1Death(){
  ports.addLog('YOU DIED · Expedition Bag lost; equipped gear is safe.','critical');
  ports.phase6CollectMetrics(ports.state.run);ports.phase6ReturnPotions('defeat');
  ports.phase5RememberRealm(ports.state.run,'defeat');ports.phase5MakeSummary('defeat');
+ // Do not show the intermediary "YOU DIED" Realm page as well as the final loss summary.
+ ports.phase5Results.review='summary';
  ports.phase4CommitRealm();ports.phase4LoseLoot();ports.phase1Controller.defeat();ports.phase1Vitals=null;ports.phase1Continuity=null;
  if(ports.phase1Build)WandererV012Buildcraft.clear(ports.phase1Build);
  ports.phase1Build=null;ports.phase1Draft=null;ports.state.run=null;ports.view='phase1';

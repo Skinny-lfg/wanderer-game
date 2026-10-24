@@ -115,3 +115,37 @@
   .phase3IntegratedPreview .phase3PrimaryAttributeStrip span{font-size:10px!important}
   .phase3IntegratedPreview .phase3PrimaryAttributeStrip b{font-size:15px!important}
 }
+
+/* v0.12 post-combat exit and Realm artwork continuity */
+.phase3IntegratedPreview .combatActions.phase3CombatExitActions{
+  display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;
+  padding:10px 0;margin:2px 0 12px!important;
+}
+.phase3IntegratedPreview .combatActions.phase3CombatExitActions #phase5ExitRealm{
+  order:-2;min-width:min(225px,100%);min-height:48px;font-size:clamp(15px,1.5vw,19px);
+}
+.phase3IntegratedPreview .combatActions.phase3CombatExitActions #combatSpeed{display:none}
+.phase3IntegratedPreview .phase5VisualSummary{position:relative;isolation:isolate;overflow:hidden}
+.phase3IntegratedPreview .phase5VisualSummary[style*="--phase3-realm-image"]::before{
+  content:"";position:absolute;inset:0 0 auto;height:min(480px,60vh);
+  background-image:linear-gradient(to bottom,rgba(9,7,13,.16),rgba(9,7,13,.48) 52%,#160e17 100%),var(--phase3-realm-image);
+  background-size:cover,cover;background-position:center,center 38%;
+  background-repeat:no-repeat,no-repeat;pointer-events:none;z-index:0;
+}
+.phase3IntegratedPreview .phase5VisualSummary[style*="--phase3-realm-image"]>*{
+  position:relative;z-index:1;
+}
+.phase3IntegratedPreview .phase5ResultActions.phase5ResultActions--early{
+  display:flex;justify-content:flex-start;align-items:center;gap:8px;
+  position:relative;z-index:2;margin:12px 0 16px;
+}
+.phase3IntegratedPreview .phase5ResultActions--early #phase5ExitResult{
+  min-width:195px;min-height:46px;font-size:clamp(14px,1.5vw,18px);
+}
+@media(max-width:700px){
+  .phase3IntegratedPreview .combatActions.phase3CombatExitActions{display:flex;gap:5px}
+  .phase3IntegratedPreview .combatActions.phase3CombatExitActions #phase5ExitRealm{
+    width:100%;min-width:0;flex:1 0 100%;order:-2;min-height:48px;
+  }
+  .phase3IntegratedPreview .phase5ResultActions--early #phase5ExitResult{width:100%;min-width:0}
+}

@@ -1070,7 +1070,10 @@ function phase1DecorateCombat(){
  if(!isPhase1Run()||typeof document.querySelector!=='function')return;
  const g=phase1Controller.state,r=state.run;
  const classicTheme=phase2Theme(g.selected?.id);
- const arena=$('scene');if(arena&&classicTheme)arena.style.backgroundImage='url("'+dungeonImage(classicTheme)+'")';
+ const arena=$('scene');if(arena&&classicTheme){
+   arena.style.setProperty('--phase3-realm-image','url("'+dungeonImage(classicTheme)+'")');
+   arena.style.removeProperty('background-image');
+  }
  const heading=document.querySelector('.combatDungeonHeading');
  if(heading)heading.textContent='Expedition '+g.expedition+' · Realm '+r.phase1Plane+' / 15';
  const header=heading?.parentElement?.querySelector('p');
@@ -1085,7 +1088,11 @@ function phase1DecorateCombat(){
   const note=document.createElement('span');note.className='small muted';
   note.textContent=r.status==='fight'?'Automatic combat · one enemy at a time':r.status==='cleared'?'Realm completed · review your log before leaving':'Wave cleared · advancing automatically';
   actions.prepend(note);
-  if(r.status==='cleared'&&!phase1Draft){const exit=document.createElement('button');exit.id='phase5ExitRealm';exit.className='primary';exit.textContent='EXIT REALM';exit.onclick=phase5ExitResult;actions.append(exit);}
+  if(r.status==='cleared'&&!phase1Draft){
+    const exit=document.createElement('button');exit.id='phase5ExitRealm';exit.className='primary';exit.textContent='EXIT REALM';exit.onclick=phase5ExitResult;
+    actions.prepend(exit);actions.classList.add('phase3CombatExitActions');
+    if(arena)arena.before(actions);
+   }
  }
 
  const details=document.querySelector('.combatExpeditionDetails');
@@ -1510,14 +1517,15 @@ function phase5SummaryMarkup(r,title,realm){
  const procCount=metrics.procs&&typeof metrics.procs==='object'?Object.values(metrics.procs).reduce((sum,value)=>sum+(Number.isFinite(value)&&value>0?value:0),0):0;if(procCount>0)combatMetricValues.push(['Combat procs',procCount]);
  const combatMetrics=combatMetricValues.length?'<section class="phase5DamageStats"><h2>Combat statistics · Expedition totals</h2><div class="phase5ResultMetrics">'+combatMetricValues.map(([label,value])=>metric(label,Math.round(value))).join('')+'</div></section>':'';
  return '<section class="panel phase5Result phase5VisualSummary"><div class="phase5ResultHeading"><span class="eyebrow">Expedition '+r.level+'</span><h1>'+title+'</h1><p>'+r.realms+'/15 Realms completed · '+esc((r.families||[]).map(f=>WandererV012Expedition.FAMILY_NAMES[f]||f).join(' · '))+'</p></div>'+
-  '<div class="phase5ResultMetrics">'+metric('Realms',r.realms+'/15')+metric('Gold','+'+r.gold)+metric('Fragments','+'+r.fragments)+metric('Combat Time',Number(r.seconds).toFixed(1)+'s')+'</div><p class="micro muted">Combat time excludes Camp and offline time.</p>'+
+  '<div class="phase5ResultActions phase5ResultActions--early"><button id="phase5ExitResult" class="primary">RETURN TO CAMP</button></div>'+
+   '<div class="phase5ResultMetrics">'+metric('Realms',r.realms+'/15')+metric('Gold','+'+r.gold)+metric('Fragments','+'+r.fragments)+metric('Combat Time',Number(r.seconds).toFixed(1)+'s')+'</div><p class="micro muted">Combat time excludes Camp and offline time.</p>'+
   (phase5Results.complete?'':'<p class="small muted">Older checkpoint: only activity recorded since this update is included.</p>')+
   combatMetrics+
   (gearGroups?'<div class="phase5RewardGrid">'+gearGroups+'</div>':'<p class="small muted phase5EmptyRewards">No equipment or treasures recorded for this Expedition.</p>')+
   (r.runeTier?'<p class="phase5RuneResult">'+esc(r.runeName?'Rune obtained: '+r.runeName:'Boss Rune choice pending in Camp')+' · E'+r.runeTier+'</p>':'')+
   (r.outcome==='victory'?'<p>Highest Expedition Cleared: '+(phase5Snapshot?.expedition.completed||r.level)+'</p>'+(r.level%25===0?'<p class="phase5MilestoneWin">✦ Milestone completed: E'+r.level+'</p>':''):'<p class="small muted">No next difficulty unlocked. Equipped equipment and earned currencies are safe.</p>')+
   '<section class="phase5TemporaryBuild"><h2>Temporary build'+(r.element?' · '+esc(r.element):'')+'</h2><div class="phase5PassiveChips">'+(build||'<span class="small muted">No passives recorded.</span>')+'</div></section>'+
-  '<div class="phase5ResultActions"><button id="phase5ExitResult" class="primary">RETURN TO CAMP</button></div></section>';
+  '</section>';
 }
 function phase5RealmResultMarkup(r,summary){
  const itemCards=(items)=>items.length?'<div class="phase5GearGrid">'+items.map(item=>{const owned=[...state.stash,...(state.expeditionOverflow||[]),...Object.values(state.equip).filter(Boolean)].find(o=>o.id===item.id),image=owned?itemImg(owned):placeholderIcon(item.slot);return '<div class="phase5GearItem">'+rarityArt(item,image,item.subtype,'loot')+'<div><b>'+esc(item.name)+'</b><small>E'+item.tier+' · '+esc(item.rarity)+'</small></div></div>';}).join('')+'</div>':'<p class="small muted phase5EmptyRewards">No equipment recorded for this Realm.</p>';
@@ -1526,20 +1534,27 @@ function phase5RealmResultMarkup(r,summary){
  const metrics=r.metrics||{},damage=[['Damage dealt',metrics.damageDealt],['Damage taken',metrics.damageTaken]].filter(([,value])=>Number.isFinite(value)&&value>0);
  const metric=(label,value)=>'<div class="phase5ResultMetric"><span>'+label+'</span><strong>'+value+'</strong></div>';
  return '<section class="panel phase5Result phase5VisualSummary phase5RealmResult"><div class="phase5ResultHeading"><span class="eyebrow">Expedition '+r.level+' · Realm '+r.plane+'</span><h1>'+(outcome?'REALM CLEARED':'YOU DIED')+'</h1><p>'+esc(r.name)+' · '+esc(WandererV012Expedition.FAMILY_NAMES[r.family]||r.family)+(outcome?' · Rewards secured':' · Final enemy: '+esc(r.enemy||'Unknown'))+'</p></div>'+
-  '<div class="phase5ResultMetrics">'+metric('Combat time',Number(r.seconds).toFixed(1)+'s')+metric('Gold','+'+(Number(r.gold)||0))+metric('Fragments','+'+(Number(r.fragments)||0))+'</div><p class="small muted">Combat time excludes Camp and offline time.</p>'+
+  '<div class="phase5ResultActions phase5ResultActions--early"><button id="phase5ExitResult" class="primary" '+(phase1Controller.state.version===2&&phase1Draft?.kind==='reward'?'disabled':'')+'>EXIT REALM</button></div>'+
+   '<div class="phase5ResultMetrics">'+metric('Combat time',Number(r.seconds).toFixed(1)+'s')+metric('Gold','+'+(Number(r.gold)||0))+metric('Fragments','+'+(Number(r.fragments)||0))+'</div><p class="small muted">Combat time excludes Camp and offline time.</p>'+
   (phase5Results.complete?'':'<p class="small muted">Older checkpoint: only activity recorded since this update is included.</p>')+
   (damage.length?'<section class="phase5DamageStats"><h2>Realm statistics</h2><div class="phase5ResultMetrics">'+damage.map(([label,value])=>metric(label,Math.round(value))).join('')+'</div></section>':'')+
   '<section class="phase5GearGroup phase5RealmGear phase5RealmGear--'+lootState+'"><h2>Realm equipment '+(lootState==='lost'?'lost':'secured')+'</h2>'+itemCards(r.loot||[])+'</section>'+
   '<section class="phase5GearGroup phase5RealmGear"><h2>Realm treasures '+(outcome?'secured':'collected · still at risk')+'</h2>'+treasureCards(r.treasures||[])+'</section>'+
   (r.log?.length?'<details class="phase5LastLog"><summary>Last Realm Combat Log</summary>'+(r.truncated?'<p>Older entries omitted: log storage safety limit reached.</p>':'')+'<div class="log">'+r.log.map(l=>'<div class="logLine">'+esc(l.text)+'</div>').join('')+'</div></details>':'')+
-  '<div class="phase5ResultActions"><button id="phase5ExitResult" class="primary" '+(phase1Controller.state.version===2&&phase1Draft?.kind==='reward'?'disabled':'')+'>EXIT REALM</button></div></section>';
+  '</section>';
 }
 function phase5RenderResult(){
  const realm=phase5Results.realm,summary=phase5Results.summary,isRealm=phase5Results.review==='realm',r=isRealm?realm:summary;
  if(!r){phase5Results.review=null;renderPhase1();return;}
  const title=isRealm?(r.outcome==='cleared'?'REALM CLEARED':'YOU DIED'):(r.outcome==='victory'?'EXPEDITION COMPLETE':r.outcome==='extracted'?'EXTRACTION COMPLETE':'EXPEDITION LOST');
- if(!isRealm){html(phase5SummaryMarkup(r,title,realm));$('phase5ExitResult').onclick=phase5ExitResult;return;}
- if(isRealm){html(phase5RealmResultMarkup(r,summary));$('phase5ExitResult').onclick=phase5ExitResult;return;}
+ // Restore the last Realm's illustration on results without changing stored result data.
+ const showRealmBackdrop=()=>{
+  const theme=THEMES.find(t=>t.name===(isRealm?r.name:realm?.name));
+  const result=$('screen')?.querySelector('.phase5VisualSummary');
+  if(theme&&result)result.style.setProperty('--phase3-realm-image','url("'+dungeonImage(theme)+'")');
+ };
+ if(!isRealm){html(phase5SummaryMarkup(r,title,realm));showRealmBackdrop();$('phase5ExitResult').onclick=phase5ExitResult;return;}
+ if(isRealm){html(phase5RealmResultMarkup(r,summary));showRealmBackdrop();$('phase5ExitResult').onclick=phase5ExitResult;return;}
 }
 function phase5Leaderboard(){
  const e=phase5Snapshot?.expedition;
