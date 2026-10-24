@@ -106,3 +106,40 @@ Testes dirigidos `v012-global-ui-audit.test.cjs` e `v012-item-popup.test.cjs`: *
 Em `online/ux39.css`, aumentei a distinção entre Realm selecionado e não selecionado com `aria-pressed`, foco visível, destaque do cartão selecionado e maior legibilidade do nome/affinity. O resumo do Realm selecionado e `Enter Realm` receberam hierarquia e área de ação mais claras. Em Stats & Passives, mantive os stats visíveis e aumentei rótulos/valores e a área dos summaries dos passivos. Equipment mantém personagem, slots e proporções dos assets.
 
 Antes/depois em quatro viewports: [Realm antes](screenshots/between-realms/realm/) → [depois](phase2d-after/between-realms/realm/); [Equipment antes](screenshots/between-realms/equipment/) → [depois](phase2d-after/between-realms/equipment/); [Stats & Passives antes](screenshots/between-realms/stats-passives/) → [depois](phase2d-after/between-realms/stats-passives/). Resultados Axe/overflow/imagens: [JSON](phase2d-after/render-checks.json). Nas 12 capturas, 0 overflow horizontal, 0 erros de página e 0 imagens em falta. Axe manteve violações existentes: `region`, `image-redundant-alt` (Equipment) e `heading-order` (Stats & Passives); nenhuma regra nova surgiu. `v012-global-ui-audit.test.cjs` e `v012-complete-flow.test.cjs`: 2 PASS. Fixtures cobrem Realm, Equipment e Stats/Passives. Dispositivo físico, zoom 200% e todos os estados de Realm bloqueado não foram testados. Sem alteração de texto ou runtime.
+
+## Fase 2E — Forge, Blacksmith e Legendary Reinforcement
+
+A interface Forge agora segue uma leitura mais direta: configuração de slot/tier/subtype e preview ficam no primeiro painel; as odds completas e a ação Craft com o custo ficam juntas no painel seguinte. Em mobile, o campo Type ocupa a largura inteira e o preview mantém uma coluna estreita para o PNG, dimensionado com `object-fit: contain`. Percentagens, valores e textos de decisão receberam maior destaque e legibilidade. O painel de odds é agora uma secção nomeada dentro do conteúdo principal, sem landmark complementar aninhado.
+
+Se faltarem recursos, Forge mostra `Need N more Fragments to Craft.` junto do botão desativado. Legendary Reinforcement apresenta a mesma indicação junto da ação. Com recurso suficiente, ambos os botões permanecem ativos conforme o runtime. O estado sem Legendary mantém a instrução existente. A navegação contextual realça a operação selecionada e preserva foco visível. O placeholder `NPC artwork placeholder` foi preservado exatamente. Não alterei fórmulas, tiers, odds, custos, resultados, riscos, saves ou copy mecânica existente.
+
+| Texto | Estado nesta fase |
+|---|---|
+| Explicação de catch-up tier, subtype aleatório, exclusividade de Legendary, salvaging e uso de Gold pelo Merchant | Mantidos; descrevem condições mecânicas e limitações ainda necessárias para decidir. |
+| Estado disabled de Craft sem Fragments | Agora explica a diferença exata: `Need N more Fragments to Craft.` |
+| Estado disabled de Reinforcement sem Fragments | Agora explica a diferença exata: `Need N more Fragments to Reinforce.` |
+| Estado sem Legendary elegível | Mantido: `Find a Legendary in a dungeon to use this feature.` |
+
+Ficheiros de implementação: `index.html`, `online/v012-core.css` e `online/ux39.css`. O relatório e as capturas da fase estão neste diretório.
+
+### Comparação visual
+
+As capturas anteriores estão em [Forge](screenshots/city-center/forge/), [Blacksmith](screenshots/city-center/blacksmith/) e [Legendary Reinforcement](screenshots/city-center/legendary-reinforcement/). As capturas depois estão em [phase2e-after](phase2e-after/): cada interface foi capturada em 390 × 844, 768 × 1024, 1440 × 900 e 1920 × 1080. Forge também inclui [investimento 3× em mobile](phase2e-after/city-center/forge/forge-high-investment-mobile-390x844.jpg) e [recursos insuficientes em mobile](phase2e-after/city-center/forge/forge-shortage-mobile-390x844.jpg). Reinforcement inclui [estado sem Legendary elegível](phase2e-after/city-center/legendary-reinforcement/reinforcement-no-eligible-mobile-390x844.jpg) e estado com item selecionado nas quatro dimensões.
+
+| Viewport | Forge antes → depois | Blacksmith antes → depois | Reinforcement antes → depois |
+|---|---|---|---|
+| 390 × 844 | [antes](screenshots/city-center/forge/forge-mobile-390x844.jpg) · [depois](phase2e-after/city-center/forge/forge-mobile-390x844.jpg) | [antes](screenshots/city-center/blacksmith/blacksmith-mobile-390x844.jpg) · [depois](phase2e-after/city-center/blacksmith/blacksmith-mobile-390x844.jpg) | [antes](screenshots/city-center/legendary-reinforcement/reinforcement-mobile-390x844.jpg) · [depois](phase2e-after/city-center/legendary-reinforcement/reinforcement-mobile-390x844.jpg) |
+| 768 × 1024 | [antes](screenshots/city-center/forge/forge-tablet-768x1024.jpg) · [depois](phase2e-after/city-center/forge/forge-tablet-768x1024.jpg) | [antes](screenshots/city-center/blacksmith/blacksmith-tablet-768x1024.jpg) · [depois](phase2e-after/city-center/blacksmith/blacksmith-tablet-768x1024.jpg) | [antes](screenshots/city-center/legendary-reinforcement/reinforcement-tablet-768x1024.jpg) · [depois](phase2e-after/city-center/legendary-reinforcement/reinforcement-tablet-768x1024.jpg) |
+| 1440 × 900 | [antes](screenshots/city-center/forge/forge-desktop-1440x900.jpg) · [depois](phase2e-after/city-center/forge/forge-desktop-1440x900.jpg) | [antes](screenshots/city-center/blacksmith/blacksmith-desktop-1440x900.jpg) · [depois](phase2e-after/city-center/blacksmith/blacksmith-desktop-1440x900.jpg) | [antes](screenshots/city-center/legendary-reinforcement/reinforcement-desktop-1440x900.jpg) · [depois](phase2e-after/city-center/legendary-reinforcement/reinforcement-desktop-1440x900.jpg) |
+| 1920 × 1080 | [antes](screenshots/city-center/forge/forge-wide-1920x1080.jpg) · [depois](phase2e-after/city-center/forge/forge-wide-1920x1080.jpg) | [antes](screenshots/city-center/blacksmith/blacksmith-wide-1920x1080.jpg) · [depois](phase2e-after/city-center/blacksmith/blacksmith-wide-1920x1080.jpg) | [antes](screenshots/city-center/legendary-reinforcement/reinforcement-wide-1920x1080.jpg) · [depois](phase2e-after/city-center/legendary-reinforcement/reinforcement-wide-1920x1080.jpg) |
+
+### Validação
+
+- Fixture Playwright + Axe/Chromium: 12 estados principais (três operações × quatro viewports) e 3 capturas adicionais de estado; **15 screenshots**. Em todos os 12 estados: **0 overflow horizontal, 0 imagens em falta e 0 erros de página**.
+- Fluxos funcionais verificados: custo e odds mudam ao passar de 1× (20 Fragments) para 3× (60 Fragments); recursos suficientes ativam Craft e Reinforcement; insuficiência mostra o défice e desativa a ação; estado sem Legendary explica o requisito; tabs Blacksmith respondem a Enter e a touch emulado. Registos: [render-checks.json](phase2e-after/render-checks.json).
+- Axe encontrou em todas as capturas as duas violações globais já existentes fora dos componentes ajustados: `landmark-complementary-is-top-level` no sidebar do City Center e `region` no `#wallet`. Não há violações apontadas ao preview, probabilidades, controlos ou ações alterados.
+- Testes dirigidos `v012-buildcraft.test.cjs` e `v012-global-ui-audit.test.cjs`: **2 PASS**.
+- `npm test`: **28 PASS / 3 FAIL**. As falhas continuam nos harnesses `private-preview.test.mjs`, `v012-runtime-integration.test.cjs` e `v012-unified-gear-potions.test.cjs`; a comparação de baseline já documentada em 182508d as identifica como preexistentes. Não alterei testes nem as funcionalidades abrangidas por essas falhas.
+- Comparação visual manual confirmou proporções dos PNGs preservadas e conteúdo dentro dos painéis. Esta fase não executou a suite completa `npm run test:browser` nem uma verificação em Safari/WebKit.
+
+Commit local desta fase criado depois da validação. Nenhum push, merge ou deploy foi feito. Alterações locais anteriores em `index.html` e as capturas fora de `phase2e-after` foram mantidas fora do commit.
