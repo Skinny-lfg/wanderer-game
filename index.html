@@ -763,10 +763,16 @@ function animateDefense(){
  const img=$('heroPortrait');if(img){img.classList.remove('fxBlock');void img.offsetWidth;img.classList.add('fxBlock');combatEffect('Block');}
 }
 function phase3SetMobIdle(){const img=$('enemyPortrait');if(!img)return;const src=img.dataset.attackSrc;if(!src)return;img.dataset.idleSrc=src.replace(/\.gif(?:\?.*)?$/i,'.png');img.src=img.dataset.idleSrc}
+function animateEnemyWindup(){
+ const img=$('enemyPortrait');if(!img||!img.dataset.attackSrc)return;
+ clearTimeout(img._mobIdleTimer);
+ const attackSrc=img.dataset.attackSrc;
+ img.classList.add('mobGifAttacking');
+ img.src=attackSrc+(attackSrc.includes('?')?'&':'?')+'play='+Date.now();
+ img._mobIdleTimer=setTimeout(()=>{if(img.isConnected){img.src=img.dataset.idleSrc||attackSrc;img.classList.remove('mobGifAttacking')}},1650);
+}
 function animateEnemyStrike(abilityFx=null){
  const img=$('enemyPortrait');if(!img)return;
- const attackSrc=img.dataset.attackSrc;if(attackSrc){clearTimeout(img._mobIdleTimer);img.src=attackSrc+(attackSrc.includes('?')?'&':'?')+'play='+Date.now();img._mobIdleTimer=setTimeout(()=>{if(img.isConnected)img.src=img.dataset.idleSrc||attackSrc},1650)}
- img.classList.remove('fxEnemyAttack');void img.offsetWidth;img.classList.add('fxEnemyAttack');
  const e=state.run?.enemy;
  const kind=abilityFx||(e?.eliteType==='tank'?'EliteTank':e?.eliteType==='berserker'?'EliteBerserker':e?.role==='bruiser'||e?.boss?'EnemyBruiser':'EnemySkirmisher');
  combatEffect(kind);
@@ -1617,6 +1623,7 @@ const runtimeContext={
  get affinityProcChance(){return affinityProcChance;},
  get animateDefense(){return animateDefense;},
  get animateEnemyStrike(){return animateEnemyStrike;},
+ get animateEnemyWindup(){return animateEnemyWindup;},
  get animateStrike(){return animateStrike;},
  get applyAffinity(){return applyAffinity;},
  get bannerMessage(){return bannerMessage;},

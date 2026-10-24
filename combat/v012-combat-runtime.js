@@ -1,6 +1,7 @@
 // v0.12 combat runtime. Canonical state transitions; UI effects are injected.
 (function(root){'use strict';
 function create(ports){
+const mobWindups=new WeakSet;
 function addLog(text,kind=''){if(ports.isPhase1Run()){const r=ports.state.run;r.realmLog??=[];const line={text:String(text),kind:String(kind)};r.realmLogBytes=(r.realmLogBytes||0)+line.text.length+line.kind.length;r.realmLog.push(line);while(r.realmLogBytes>180000){const old=r.realmLog.shift();r.realmLogBytes-=old.text.length+old.kind.length;r.realmLogTruncated=true;}}ports.logEntries.unshift({text,kind});ports.logEntries=ports.logEntries.slice(0,75);if(ports.view==='combat')ports.renderLog()}
 
 function bossForTier(tier){return ports.BOSS_ARCHETYPES[(Math.floor(tier/10)-1+ports.BOSS_ARCHETYPES.length)%ports.BOSS_ARCHETYPES.length]}
@@ -416,6 +417,9 @@ function updateFight(){
  if(!ports.isPhase1Run()&&ports.state.onlineProgress?.timerMetric==='combat-v1'&&r.combatSeconds-(r.lastCombatCheckpoint||0)>=3){r.lastCombatCheckpoint=r.combatSeconds;ports.save();}
  ports.setCombatExpire(r,dt);ports.legendaryTick(r,dt);
  r.tEnemy+=dt;r.tDot+=dt;
+ // Start the artwork before the existing hit tick; damage timing stays unchanged.
+ const windupSlowed=e.slowTime>0?1+(s.bonus.slowBonus||.22):1;
+ if(!mobWindups.has(e)&&r.tEnemy>=Math.max(0,e.attackEvery*windupSlowed-.66)){mobWindups.add(e);ports.animateEnemyWindup?.();}
  if(s.caster||r.phase1Magic)r.mp=Math.min(r.maxmp,r.mp+dt*s.manaRegen);
  if(ports.isPhase1Run())ports.phase2MagicTick(r);
  if(e.hp<=0){ports.winEncounter(true);return;}
@@ -433,7 +437,7 @@ function updateFight(){
  }
  const slowed=e.slowTime>0?1+(s.bonus.slowBonus||.22):1;
  if(r.tEnemy>=e.attackEvery*slowed){
-  r.tEnemy=0;
+  r.tEnemy=0;mobWindups.delete(e);
   let enemyAbilityVfx=null;
   let raw=Math.max(Math.ceil(e.atk*.24),Math.round(e.atk*(1-Math.min(.75,s.defense/(s.defense+e.atk*1.35)))));
   if(e.effect==='burn')raw+=WandererV012CombatCore.enemyStat(r.tier,Math.round(WandererV012CombatCore.referenceLevel(r.tier)*.3));
