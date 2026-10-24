@@ -757,7 +757,32 @@ body::before{
   padding:3px 6px;
 }
 .scene .combatant > .combatStatuses.enemyDebuffs .debuff {text-align:right}
+/* Combat readout: keep the arena art intact while making resource numbers
+   and the current wave readable at a glance. */
+.scene .combatant > #heroHpText,
+.scene .combatant > #enemyHpText {
+  display:block;
+  margin:2px 0 4px;
+  color:#fff3e5;
+  font-size:15px;
+  font-weight:700;
+  line-height:1.2;
+  text-align:center;
+  font-variant-numeric:tabular-nums;
+  text-shadow:0 1px 3px #000,0 0 6px #000b;
+}
+.scene .combatant > .mpbar + #heroHpText {margin-top:1px}
+.scene .combatant > .mpbar {margin-top:2px;margin-bottom:2px}
+.combatLayout .topline .combatDungeonHeading + p,
+.combatLayout .topline > div > p {font-size:14px;line-height:1.3}
+.scene .combatant > .combatStatuses .debuff {font-size:11px;line-height:1.2}
+.scene .combatant > .combatStatuses .statusIcon {width:16px;height:16px;flex:none}
 @media(max-width:650px) {
+  .scene .combatant > #heroHpText,
+  .scene .combatant > #enemyHpText {font-size:14px;margin:2px 0 4px}
+  .scene .combatant > .combatStatuses .debuff {font-size:10px;line-height:1.2;padding:3px 5px}
+  .combatLayout .combatDungeonHeading + p,
+  .combatLayout .topline > div > p {font-size:14px}
   .scene .combatant > .combatStatuses {
     top:8px;
     max-width:min(100%,116px);
