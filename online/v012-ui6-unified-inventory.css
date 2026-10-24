@@ -164,6 +164,15 @@
   --gear-row:72px;--gear-slot-width:60px;
   --gear-frame:48px;--gear-art:33px;
  }
+ .phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper>.phase3PotionSlots{
+  gap:4px!important;
+ }
+ .phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper>.phase3PotionSlots>.phase3PotionSlot{
+  width:50px!important;height:50px!important;
+ }
+ .phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper .phase3PotionSlot .rarityImageFrame--potion{
+  width:42px!important;height:42px!important;flex-basis:42px!important;
+ }
  .phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper{
   max-width:300px!important;grid-template-rows:repeat(5,var(--gear-row)) var(--gear-slot-width)!important;
   column-gap:3px!important;position:relative!important;top:-10px;margin-bottom:-10px!important;

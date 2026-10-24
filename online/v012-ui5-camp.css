@@ -253,7 +253,8 @@ body.phase3IntegratedPreview:has(.phase3Camp) .phase3Camp [role="progressbar"]{f
   .phase3IntegratedPreview .phase3CampCharacter .paper{max-width:470px;grid-template-columns:minmax(54px,.84fr) minmax(0,3fr) minmax(54px,.84fr);background-image:linear-gradient(to bottom,rgba(17,16,20,.08),rgba(17,16,20,.04) 68%,rgba(17,16,20,.3)),url('../assets/backgrounds/camp.webp');background-position:center,center 8%;background-size:100% 100%,auto 500px;background-repeat:no-repeat}
   .phase3IntegratedPreview .phase3CampCharacter .paper>.model{top:34px;width:calc(100% - 92px);height:calc(var(--camp-vitals-row) + 4 * var(--camp-slot-row) - 34px);transform:translate(-50%,-18px) scale(.96)}
   .phase3IntegratedPreview .phase3CampCharacter .phase3CampHeroVitals{max-width:210px}
-  .phase3IntegratedPreview .phase3CampCharacter .paper .phase3PotionSlot .rarityImageFrame--potion{width:clamp(56px,17vw,72px);height:clamp(56px,17vw,72px);flex:0 0 clamp(56px,17vw,72px)}
+  .phase3IntegratedPreview .phase3CampCharacter .paper>.phase3PotionSlots{grid-template-columns:repeat(3,50px);gap:4px}
+  .phase3IntegratedPreview .phase3CampCharacter .paper .phase3PotionSlot .rarityImageFrame--potion{width:42px;height:42px;flex:0 0 42px}
   .phase3IntegratedPreview .phase3CampCharacter .rarityImageFrame--slot{flex-basis:max(var(--camp-frame-size),44px);width:max(var(--camp-frame-size),44px);height:max(var(--camp-frame-size),44px)}
   .phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile .slotName{font-size:11px}
   .phase3IntegratedPreview .phase3CampCharacter .paper>.slotTile .slotArmorType{font-size:10px}
