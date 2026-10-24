@@ -1550,7 +1550,7 @@ function phase5RenderResult(){
  // Restore the last Realm's illustration on results without changing stored result data.
  const showRealmBackdrop=()=>{
   const theme=THEMES.find(t=>t.name===(isRealm?r.name:realm?.name));
-  const result=$('screen')?.querySelector('.phase5VisualSummary');
+  const result=$('screen')?.querySelector?.('.phase5VisualSummary');
   if(theme&&result)result.style.setProperty('--phase3-realm-image','url("'+dungeonImage(theme)+'")');
  };
  if(!isRealm){html(phase5SummaryMarkup(r,title,realm));showRealmBackdrop();$('phase5ExitResult').onclick=phase5ExitResult;return;}

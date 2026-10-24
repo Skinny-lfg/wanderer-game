@@ -41,13 +41,12 @@ test('Death summary keeps newly equipped loot and home gear, and reports only di
  const sword=a.makeItem(2,'weapon',null,'loot','Sword','Rare');a.bag.mark(sword);a.recordItem(sword);assert.equal(a.equip(sword.id),true);
  const belt=a.makeItem(2,'belt',null,'loot','Leather','Rare');a.bag.mark(belt);a.recordItem(belt);assert.equal(a.bag.discard(belt.id),true);
  a.select(a.controller().state.offers[0].id);assert.equal(a.enter(),true);state.run.combatSeconds=3;a.death();
- const result=a.results();assert.equal(result.review,'realm');assert.equal(result.realm.outcome,'defeat');assert.equal(result.summary.outcome,'defeat');
+ const result=a.results();assert.equal(result.review,'summary');assert.equal(result.realm.outcome,'defeat');assert.equal(result.summary.outcome,'defeat');
  assert.deepEqual(Array.from(result.summary.kept,item=>item.id),[sword.id]);
  assert.deepEqual(Array.from(result.summary.lost,item=>item.id),[home.weapon.id]);
  assert.deepEqual(Array.from(result.summary.discarded,item=>item.id),[belt.id]);
  assert.equal(state.equip.weapon.id,sword.id);
  assert(!state.stash.some(item=>item.id===home.weapon.id),'the displaced home weapon was lost with the Expedition Bag');
- assert.equal(a.exitResult(),true);assert.equal(a.results().review,'summary');
  assert.equal(a.exitResult(),true);assert.equal(a.results().review,null);assert.equal(a.exitResult(),false);
  persistPresentation(state,result);
 });

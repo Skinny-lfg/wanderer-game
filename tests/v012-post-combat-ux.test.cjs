@@ -30,6 +30,7 @@ test('Realm and Expedition result screens show the prior Realm art, never an emp
  assert.match(source,/THEMES\.find\(t=>t\.name===\(isRealm\?r\.name:realm\?\.name\)\)/);
  assert.match(source,/result\.style\.setProperty\('--phase3-realm-image'/);
  assert.match(source,/showRealmBackdrop\(\)/);
+ assert.match(source,/querySelector\?\.\('\.phase5VisualSummary'\)/);
  assert.match(css,/\.phase5VisualSummary\[style\*="--phase3-realm-image"\]::before/);
 });
 test('exit buttons are early in result content but not duplicated',()=>{
