@@ -2,6 +2,7 @@
    Read-only gameplay context; Firebase feedbackInbox is separate from saves.
    Do not treat a local copy as a submitted report. */
 import {createBackend} from './firebase-client.mjs';
+import {buildCommit} from './v012-build-info.mjs';
 const button=document.querySelector('[data-online-action="feedback"]');
 const timeKey='wanderer-feedback-last-sent-v012';
 let backendPromise=null;
@@ -12,7 +13,7 @@ function context(){
 }
 function copyText(form,ctx){
  return ['WANDERER FEEDBACK','Type: '+form.elements.category.value,'Description: '+form.elements.description.value,
-   'Steps / suggestion: '+form.elements.steps.value,'Version: '+(ctx.appVersion||'0.12.0'),
+   'Steps / suggestion: '+form.elements.steps.value,'Version: '+(ctx.appVersion||'0.12.0'),'Commit: '+buildCommit,
    'Screen: '+(ctx.screen||'unknown'),'Dungeon: '+(ctx.maxDungeon||'unknown'),
    'Character: '+(ctx.characterId||'unknown'),form.elements.browser.checked?'Browser: '+navigator.userAgent:''].filter(Boolean).join('\n');
 }
@@ -44,7 +45,7 @@ function openFeedback(){
   <label>Nickname (only if you have not created a Firebase profile)
    <input type="text" name="nickname" autocomplete="nickname" minlength="3" maxlength="20" pattern="[A-Za-z0-9_]{3,20}" placeholder="3–20 letters, numbers or _"></label>
   <label class="feedbackPrivacy"><input type="checkbox" name="browser" checked>Include browser information to help diagnose bugs</label>
-  <p class="feedbackNotice">Sending requires Google sign-in and a player profile. If the service is not ready, use “Copy report”.</p>
+ <p class="feedbackNotice">Sending requires an authenticated account or Guest session. If the service is not ready, use “Copy report”.</p>
   <p class="feedbackNotice" id="wandererFeedbackStatus" role="status" aria-live="polite"></p>
   <div class="feedbackActions">
    <button type="button" class="ghost" data-copy-feedback>Copy report</button>
@@ -77,21 +78,12 @@ function openFeedback(){
     let unsubscribe=()=>{};
     unsubscribe=backend.watchAuth(user=>{unsubscribe();resolve(user);});
    });
-   if(!currentUser)await backend.signIn();
-   let profile=await backend.profile();
-   if(!profile){
-    const name=form.elements.nickname.value.trim();
-    if(!/^[a-zA-Z0-9_]{3,20}$/.test(name)){message('New account: enter a 3–20 character nickname, then send again.','error');return;}
-    profile=await backend.createProfile(name.toLowerCase(),context().characterId||'wanderer');
-   }
+   if(!currentUser)await backend.signInGuest();
    const ctx=context();
-   const browserDetails=form.elements.browser.checked?'Browser: '+navigator.userAgent.slice(0,260):'';
-   const info=['Version: '+(ctx.appVersion||'0.12.0'),'Screen: '+(ctx.screen||'unknown'),browserDetails].filter(Boolean).join(' | ').slice(0,500);
-   await backend.submitFeedback({
-    category:form.elements.category.value,rating:0,combat:'not-sure',difficulty:'not-sure',
-    likes:info,problems:desc,ideas:steps,
-    maxDungeon:Math.max(1,Math.min(200,Number(ctx.maxDungeon)||1)),
-    characterId:ctx.characterId||'wanderer'
+   await backend.submitV012Feedback({
+    category:form.elements.category.value,description:desc,steps,commit:buildCommit,
+    screen:ctx.screen||'unknown',viewport:innerWidth+'x'+innerHeight,
+    browser:form.elements.browser.checked?navigator.userAgent:'',technical:recentErrors.join(' | ')
    });
    try{localStorage.setItem(timeKey,String(Date.now()));}catch{}
    message('Report sent successfully. Thank you!','success');
@@ -100,6 +92,7 @@ function openFeedback(){
    const code=String(error?.code||'');
    const explain=code==='auth/popup-closed-by-user'?'Sign-in cancelled. Your report was not sent.':
     code.includes('permission-denied')?'Reports are not enabled in this Firebase environment yet. Copy the report for now.':
+    error?.message==='feedback-rate-limited'?'Please wait one minute between reports.':
     code.includes('auth/')?'Sign-in failed. Check your account or try again.':
     'Could not submit the report. Nothing was sent; you can copy it instead.';
    message(explain,'error');
@@ -109,3 +102,8 @@ function openFeedback(){
  form.elements.category.focus();
 }
 if(button)button.addEventListener('click',openFeedback);
+const recentErrors=[];
+function technicalError(value){const clean=String(value||'').replace(/https?:\/\/\S+/g,'[url]').replace(/[\r\n\t]+/g,' ').slice(0,240);if(clean&&recentErrors.at(-1)!==clean){recentErrors.push(clean);if(recentErrors.length>4)recentErrors.shift();}}
+addEventListener('error',event=>technicalError(event.error?.name||'JavaScript error'));
+addEventListener('unhandledrejection',event=>technicalError(event.reason?.name||'Unhandled promise rejection'));
+addEventListener('wanderer:save-status',event=>{if(event.detail?.state==='error')technicalError('Cloud save transaction failed or conflicted');});

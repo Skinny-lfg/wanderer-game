@@ -1,6 +1,6 @@
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js';
 import {getAuth,applyActionCode,verifyPasswordResetCode,confirmPasswordReset,checkActionCode} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js';
-import {firebaseConfig,assertDevFirebaseConfig} from './firebase-config.mjs?v=v0110-action-1';
+import {firebaseConfig,assertDevFirebaseConfig} from './firebase-config.mjs?v=v012-production-config-3';
 
 const heading=document.getElementById('heading');
 const status=document.getElementById('status');

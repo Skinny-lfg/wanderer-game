@@ -1,5 +1,5 @@
 // Prepare only the public v0.12 development website for isolated Firebase Hosting.
-import { readFile, mkdir, readdir, copyFile, lstat, rm, access } from 'node:fs/promises';
+import { readFile, mkdir, readdir, copyFile, lstat, rm, access, writeFile } from 'node:fs/promises';
 import { join, dirname, extname } from 'node:path';
 
 const PROJECT = 'wanderer-development-8e3ee';
@@ -47,9 +47,12 @@ for (const file of ['index.html', 'auth-action.html']) {
   await copyFile(file, join(OUTPUT, file));
   count++;
 }
+const commit = String(process.env.GITHUB_SHA || '');
+assert(/^[a-f0-9]{40}$/i.test(commit), 'GITHUB_SHA must identify the deployed source commit');
+await writeFile(join(OUTPUT, 'online/v012-build-info.mjs'), 'export const buildCommit=' + JSON.stringify(commit.slice(0, 20)) + ';\n');
 for (const required of [
   'index.html', 'auth-action.html', 'online/firebase-config.mjs',
-  'online/vendor/firebase-sdk.mjs', 'online/v012-ui4e.css'
+  'online/vendor/firebase-sdk.mjs', 'online/v012-ui4e.css', 'online/v012-build-info.mjs'
 ]) {
   await access(join(OUTPUT, required));
 }

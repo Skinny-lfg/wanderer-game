@@ -84,7 +84,24 @@ function phase5Capture(){
   unlocked:g.unlocked,active:active?{attempt:ports.phase5Snapshot.expedition.attempts,level:g.expedition,plane:g.planeIndex,wave:g.wave,stage:g.stage}:null}};
 }
 
+function attachCloudSave(coordinator){ports.cloudSave=coordinator;}
+function restoreCloudSave(save){
+ const recovered=WandererV012Save.recover(save,save.binding);ports.phase5Snapshot=recovered.save;
+ ports.state=JSON.parse(JSON.stringify(recovered.save.profile));ports.uid=Math.max(ports.uid,recovered.save.idCounter);
+ ports.phase1Controller.state.unlocked=recovered.save.expedition.unlocked;ports.phase5PersonalBest=recovered.save.expedition.completed;
+ ports.phase5Ready=true;ports.saveBlocked=false;ports.phase1Vitals=null;ports.phase1Build=null;ports.phase1Draft=null;
+ if(recovered.save.expedition.presentation)ports.phase5Results=ports.phase4Clone(recovered.save.expedition.presentation);
+ if(recovered.save.expedition.session)ports.phase4Restore(recovered.save.expedition.session);
+ else {const g=ports.phase1Controller.state;Object.assign(g,{stage:'camp',expedition:recovered.save.expedition.unlocked,unlocked:recovered.save.expedition.unlocked,planeIndex:0,families:[],lastFamily:null,rooms:[],offers:[],selected:null,wave:0,history:[],initialFamily:null,rewardPending:null,rerollsByRealm:[],eventIds:[],affinityPlan:null,affinityPlanSeen:[false,false,false]});ports.phase5Results={version:1,complete:false,review:null,realm:null,summary:null,earned:[],gold:0,fragments:0};ports.state.run=null;ports.phase4Entry=null;ports.phase4Resume=false;ports.phase4Home=null;ports.phase4Seed=null;ports.phase4Prefix=null;ports.phase4WaveKeys=[];ports.view='phase1';}
+ ports.render();
+}
+
 function phase5Persist(){
+ if(ports.cloudSave){
+  if(!ports.phase5Ready||!ports.phase5Snapshot)return false;
+  try{const pending=WandererV012Save.validate(phase5Capture(),ports.phase5Snapshot.binding);ports.phase5Snapshot=pending;ports.cloudSave.persist(pending).catch(ports.phase5Fail);return true;}
+  catch(error){ports.phase5Fail(error);return false;}
+ }
  if(!ports.PHASE5_VALIDATION){
   if(!ports.PHASE1_PREVIEW||!ports.phase5Ready||!ports.phase5Snapshot)return true;
   try{
@@ -161,7 +178,7 @@ function phase5Fail(error){
  ports.phase5Message='Validation save blocked: '+String(error?.message||error)+'. Existing saves are retained. Export before closing if a write failed.';
  ports.phase5RenderBlocked();
 }
-return {gameRandom,phase4Session,phase4CommitRealm,phase4LoseLoot,phase4Extract,phase4Restore,phase4ResumeRealm,phase5Capture,phase5Persist,phase5Init,phase5Fail};
+return {gameRandom,phase4Session,phase4CommitRealm,phase4LoseLoot,phase4Extract,phase4Restore,phase4ResumeRealm,phase5Capture,attachCloudSave,restoreCloudSave,phase5Persist,phase5Init,phase5Fail};
 }
 root.WandererV012PersistenceRuntime=Object.freeze({create});
 })(globalThis);

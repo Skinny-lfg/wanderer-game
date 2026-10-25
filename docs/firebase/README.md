@@ -1,6 +1,6 @@
 # Wanderer — Firebase deployment and login (v0.11.0)
 
-**Development branch only.** Nothing described here automatically deploys rules, resets data, or modifies the `main` branch. Production currently uses Firebase project `wanderer-test-8f062`. The **development** branch is configured with its own Firebase Web App under project `wanderer-development-8e3ee` and refuses to connect to the production project. Creating/configuring Authentication and Firestore in the new Firebase Console is still required.
+**Development branch only.** Nothing described here automatically deploys rules, resets data, or modifies the `main` branch. The current `main` Web App configuration identifies production as Firebase project `wanderer-play`. The **development** branch is configured with its own Firebase Web App under project `wanderer-development-8e3ee` and refuses to connect to known production project IDs. Creating/configuring Authentication and Firestore in the development project is still required.
 
 ## Two independent projects
 

@@ -11,7 +11,7 @@ export const firebaseConfig = {
  appId: '1:997393560763:web:4b81f022621e28b54a259e'
 };
 export const firebaseEnvironment = 'development';
-const forbiddenProductionProject = 'wanderer-test-8f062';
+const forbiddenProductionProjects = new Set(['wanderer-play','wanderer-test-8f062']);
 const forbiddenProductionApiKey = 'AIzaSyAo2cRMBYV08N3RVM7tccZeoum_wwcTJQk';
 export function assertDevFirebaseConfig(config = firebaseConfig){
  if(!config || !/^[a-z][a-z0-9-]{4,}$/.test(String(config.projectId)) ||
@@ -20,12 +20,13 @@ export function assertDevFirebaseConfig(config = firebaseConfig){
  }
  // Refuse reused production Web App values even if a new projectId is pasted.
  if(String(config.apiKey||'') === forbiddenProductionApiKey ||
-    String(config.authDomain||'') === forbiddenProductionProject+'.firebaseapp.com' ||
+    forbiddenProductionProjects.has(String(config.projectId||'')) ||
+    [...forbiddenProductionProjects].some(project=>String(config.authDomain||'')===project+'.firebaseapp.com') ||
     String(config.appId||'') === '1:180691461185:web:3a423d32244aad3e41d2c0' ||
     String(config.messagingSenderId||'') === '180691461185'){
   throw new Error('Development is using production Firebase Web App identifiers. Copy the complete config from the new development project.');
  }
- if(config.projectId === forbiddenProductionProject){
+ if(forbiddenProductionProjects.has(config.projectId)){
   throw new Error('Refusing to connect development to the production Firebase project. Use an isolated Firebase development project.');
  }
  if(!config.authDomain || !config.apiKey || !config.appId){
