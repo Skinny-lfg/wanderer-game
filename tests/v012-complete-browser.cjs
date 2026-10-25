@@ -8,6 +8,7 @@ const boot='phase1Init();\nconst phase3RestoredScroll=phase3RestoreUILocation(ph
 const fixture=`if(PHASE1_PREVIEW){phase1Init();globalThis.__complete={
  snapshot:()=>({game:phase1Controller.state,build:phase1Build,extra:phase6Run,bag:phase3BagItems(),overflow:phase3BagOverflow(),stock:state.consumables,selection:state.potionSelection,gold:state.gold,fragments:state.fragments,runes:state.runes,pending:state.pendingRuneReward,run:state.run?{status:state.run.status,enc:state.run.enc,waves:state.run.planeWaves,boss:state.run.enemy.boss,style:state.run.enemy.bossStyle}:null,result:phase5Results}),
  fund:()=>{state.gold=state.fragments=10000;phase5Persist();},
+ seedValuable:()=>{const valuable=WandererV012Treasures.create(makeId(),1);state.valuables.push(valuable);phase5Persist();return{id:valuable.id,worth:valuable.worth};},
  potionHealthOffers:()=>{if(state.apothecary?.stock?.length>=2){state.apothecary.stock[0].kind='health';state.apothecary.stock[1].kind='health';return state.apothecary.stock.slice(0,2).map(p=>p.id);}return [];},
  potionManaOffer:()=>{if(state.apothecary?.stock?.length)state.apothecary.stock[0].kind='mana';},
  casts:()=>{const r=state.run;r.mp=r.maxmp;for(let i=0;i<3;i++){r.combatSeconds+=3;phase1Build.runtime.lastSpellAt=-999;phase2MagicTick(r);}},
@@ -61,6 +62,21 @@ const server=http.createServer((req,res)=>{
   await resolveRealm();if(checkStatic){assert.equal((await snap()).build.runtime.staticCharges,3);await page.reload();await ready();assert.equal((await snap()).build.runtime.staticCharges,3);}if(realm<15&&await page.locator('#phase5ExitRealm, #phase5ExitEvent').count())await page.locator('#phase5ExitRealm, #phase5ExitEvent').click();
  }
  const s=await snap();assert(s.pending);assert.equal(s.pending.tier,1);assert.equal(s.pending.options.length,3);assert(s.pending.options.every(r=>r.progression==='expedition'));assert(eventIds.length===3||eventIds.length===4);assert.equal(new Set(eventIds).size,eventIds.length);
- await page.locator('[data-rune-choice]').first().click();assert.equal((await snap()).runes.length,1);await page.reload();await ready();assert.equal((await snap()).runes.length,1);assert.equal((await snap()).pending,null);assert.match(await page.locator('h1').textContent(),/EXPEDITION COMPLETE/);await screenshot(page,'extraction-'+width);const final=await snap();assert.equal(final.stock.health,2);assert.equal(final.stock.mana,0);await page.locator('#phase5ExitResult').click();await page.reload();await ready();assert.equal((await snap()).runes.length,1);assert.equal((await snap()).gold,final.gold);assert(await page.locator('body').evaluate(n=>n.scrollWidth<=innerWidth+1));assert.deepEqual(errors,[]);assert.equal(await page.evaluate(()=>localStorage.getItem('wanderer_browser_proto_v01')),'UNTOUCHED');await context.close();console.log('PASS complete Expedition '+width+'px: shops, three potions, Back, Static/checkpoint, events, passive popup, global rerolls and guaranteed E1 Rune');
+ await page.locator('[data-rune-choice]').first().click();assert.equal((await snap()).runes.length,1);await page.reload();await ready();assert.equal((await snap()).runes.length,1);assert.equal((await snap()).pending,null);assert.match(await page.locator('h1').textContent(),/EXPEDITION COMPLETE/);await screenshot(page,'extraction-'+width);const final=await snap();assert.equal(final.stock.health,2);assert.equal(final.stock.mana,0);await page.locator('#phase5ExitResult').click();await page.reload();await ready();assert.equal((await snap()).runes.length,1);assert.equal((await snap()).gold,final.gold);assert(await page.locator('body').evaluate(n=>n.scrollWidth<=innerWidth+1));assert.deepEqual(errors,[]);assert.equal(await page.evaluate(()=>localStorage.getItem('wanderer_browser_proto_v01')),'UNTOUCHED');
+// Regression: an Expedition finish must not break the City Center/Apothecary route.
+// Sell one valid fixture treasure exactly once through the same Merchant control as live play.
+await page.locator('[data-phase3-nav="city-center"]').click();
+await page.locator('[data-city-tab="apothecary"]').click();
+assert.equal(await page.locator('.apothecaryPanel').count(),1,'Apothecary remains inside City Center after Expedition');
+assert.equal(await page.locator('.phase3CityCenter').count(),1);
+await page.locator('[data-city-tab="merchant"]').click();
+const treasure=await page.evaluate(()=>__complete.seedValuable());
+await page.locator('[data-city-tab="merchant"]').click();
+const beforeSale=(await snap()).gold;
+await page.locator('#phase6SellAllValuables').click();
+await page.locator('dialog [data-confirm]').click();
+assert.equal((await snap()).gold,beforeSale+treasure.worth,'Treasure converts into Gold once');
+assert.equal(await page.locator('#phase6SellAllValuables').isDisabled(),true,'Sold valuables are removed from Merchant');
+assert.deepEqual(errors,[]);await context.close();console.log('PASS complete Expedition '+width+'px: shops, three potions, Back, Static/checkpoint, events, passive popup, global rerolls and guaranteed E1 Rune');
  }}finally{await browser.close();await new Promise(r=>server.close(r));}
 })().catch(e=>{console.error(e);process.exitCode=1;});
