@@ -58,6 +58,12 @@ test('native paired balance: E1 / E50 / E200; original roles vs 24 visual classe
    newTotalReceived:group.reduce((s,x)=>s+x.newDamage,0)});
  }
  console.log('MOB_ROLE_NATIVE_BALANCE '+JSON.stringify({summary:out,paired:cases}));
+ for(const row of out){
+  assert.ok(Math.abs(row.nextMeanRealm-row.priorMeanRealm)<=1,'realm progression changed >1 at E'+row.E);
+  assert.ok(Math.abs(row.newWins-row.oldWins)<=4,'sample wins changed >4/16 at E'+row.E);
+  const ratio=row.oldTotalReceived?row.newTotalReceived/row.oldTotalReceived:1;
+  assert.ok(ratio>=.75&&ratio<=1.25,'incoming damage outside ±25% at E'+row.E);
+ }
  assert.equal(cases.length,48);
 });
 

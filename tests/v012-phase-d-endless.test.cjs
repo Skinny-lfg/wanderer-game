@@ -55,15 +55,18 @@ test('D.7: Endless weapon damage bonus excludes dual daggers and preserves other
 test('D.7: Dual Dagger E200/Endless combat matches the updated audit',()=>{
  const {run}=require('../scripts/v012-affinity-combat-sim.cjs');
  const builds=[
-  {weapon:'Staff',armorType:'Cloth',old:[7202600,9,71033,41]},
-  // Realm-local passive rewards alter this deterministic draft route without
+  {weapon:'Staff',armorType:'Cloth',old:[7202600,8,53993,30]},
+  // The explicit 24-mob combat roles intentionally change native fight outcomes.
+ // Keep the previous E200/Endless snapshots in docs/v012-normal-mob-roles.md,
+ // and only refresh these checks after paired E1/E50/E200 balance comparisons.
+ // Realm-local passive rewards alter this deterministic draft route without
   // changing the E200 weapon coefficients.
-  {weapon:'Wand',armorType:'Cloth',offhandType:'Orb',old:[7202697,9,66654,37],endless:[7212731,7,96843,34]},
-  {weapon:'Sword',armorType:'Plate',offhandType:'Shield',old:[7202794,14,115192,75],endless:[7212862,13,160073,67]},
-  {weapon:'Mace',armorType:'Plate',offhandType:'Shield',old:[7202891,15,99668,53],endless:[7212993,15,171032,55]},
-  {weapon:'Daggers',armorType:'Leather',offhandType:'Off-Hand Dagger',old:[7202988,15,102570,103],endless:[7213124,15,200525,137]},
-  {weapon:'Bow',armorType:'Leather',old:[7203085,15,145897,144]},
-  {weapon:'Two-Handed',armorType:'Leather',old:[7203182,15,112294,54]}
+  {weapon:'Wand',armorType:'Cloth',offhandType:'Orb',old:[7202697,15,114864,59],endless:[7212731,10,135399,48]},
+  {weapon:'Sword',armorType:'Plate',offhandType:'Shield',old:[7202794,12,99545,68],endless:[7212862,15,187769,75]},
+  {weapon:'Mace',armorType:'Plate',offhandType:'Shield',old:[7202891,15,96198,50],endless:[7212993,15,170297,52]},
+  {weapon:'Daggers',armorType:'Leather',offhandType:'Off-Hand Dagger',old:[7202988,15,98532,95],endless:[7213124,15,191810,130]},
+  {weapon:'Bow',armorType:'Leather',old:[7203085,15,141937,138]},
+  {weapon:'Two-Handed',armorType:'Leather',old:[7203182,15,114490,52]}
  ];
  for(const build of builds)for(const [E,expected] of [[200,build.old],[300,build.endless]]){
   if(!expected)continue;

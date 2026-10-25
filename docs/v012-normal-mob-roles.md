@@ -29,3 +29,37 @@ All 24 normal-mob animation **preview PNGs** and attack file names were reviewed
 
 ## Balance guard
 A deterministic **aggregate proxy** benchmark compares mean HP and estimated outgoing damage per second against the prior 12 Bruiser + 12 Skirmisher mapping, for physical Dodge 0%, 20% and 30%. Differences must be within 3% for HP and 10% for threat. This is a **guardrail, not a complete 10k-run combat simulation**. Run the full suite + browser checks and actual E1/E50/E200 survivability comparisons before considering the game balanced or merging into main. The 21 historical runtime-parity checksum failures predate this change; don't update digests to disguise a behavioral change.
+
+## Native paired simulation audit (2026-10-25)
+
+Run with `node --test tests/v012-normal-mob-balance.test.cjs` (also included in the v0.12 checks). The tool reconstructs the previous role assignment in memory from the current sources; it does **not** edit or inspect actual player saves.
+
+**48 pairs:** four builds (Staff/Cloth, Sword/Plate, Bow/Leather, Daggers/Leather) × E1/E50/E200 × four deterministic seeds. Source engine, gear, runes, RNG seeds, rewards and passive algorithms are identical except for the explicitly changed normal-mob roles and spell attack tags.
+
+| Difficulty | Old mean Realm | Classified mean Realm | Wins old | Wins classified | Total damage taken old → classified |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| E1 | 15.00 | 15.00 | 16/16 | 16/16 | 480 → 398 |
+| E50 | 13.00 | 13.31 | 5/16 | 6/16 | 29,104 → 28,695 |
+| E200 | 15.00 | 15.00 | 8/16 | 11/16 | 94,393 → 78,917 |
+
+This shows modest **aggregate** progression differences but noticeable seed-level swings. It is not proof of general population balance. In particular the high-E200 group improved three wins; inspect larger cohorts before future tuning. Unit guardrails: difference of no more than one average Realm, four wins out of 16, or 25% total damage taken per sampled tier.
+
+### Controlled D.7 native simulation rebaseline
+
+The existing D.7 test was written for the old Bruiser/Skirmisher positional assignment; expected values changed because normal mobs now have explicit attack types. For traceability, these are original and updated deterministic triplets `[reached, damage dealt, weapon attacks]`:
+
+| Loadout / E | Previous | Classified |
+| --- | --- | --- |
+| Staff E200 | 9 / 71033 / 41 | 8 / 53993 / 30 |
+| Wand E200 | 9 / 66654 / 37 | 15 / 114864 / 59 |
+| Wand E300 | 7 / 96843 / 34 | 10 / 135399 / 48 |
+| Sword E200 | 14 / 115192 / 75 | 12 / 99545 / 68 |
+| Sword E300 | 13 / 160073 / 67 | 15 / 187769 / 75 |
+| Mace E200 | 15 / 99668 / 53 | 15 / 96198 / 50 |
+| Mace E300 | 15 / 171032 / 55 | 15 / 170297 / 52 |
+| Daggers E200 | 15 / 102570 / 103 | 15 / 98532 / 95 |
+| Daggers E300 | 15 / 200525 / 137 | 15 / 191810 / 130 |
+| Bow E200 | 15 / 145897 / 144 | 15 / 141937 / 138 |
+| Two-Handed E200 | 15 / 112294 / 54 | 15 / 114490 / 52 |
+
+Only the D.7 deterministic reference for this **intentional new combat version** was updated after reproducing every old reference with the prior role mapping and matching seed. The unrelated 21 pre-existing runtime-parity fixture mismatches remain unchanged and must not be disguised.
