@@ -1,7 +1,7 @@
 /* Player feedback / bug reports for the v0.12 preview.
    Read-only gameplay context; Firebase feedbackInbox is separate from saves.
    Do not treat a local copy as a submitted report. */
-import {createBackend} from './firebase-client.mjs?v=v012-production-auth-1';
+import {createBackend} from './firebase-client.mjs?v=v012-production-auth-hotfix-2';
 import {buildCommit} from './v012-build-info.mjs';
 const button=document.querySelector('[data-online-action="feedback"]');
 const timeKey='wanderer-feedback-last-sent-v012';
