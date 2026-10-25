@@ -4,7 +4,7 @@ const {chromium}=require('playwright');
 const root=path.resolve(__dirname,'..'),source=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const boot='phase1Init();\nconst phase3RestoredScroll=phase3RestoreUILocation(phase3SavedUILocation);\nrender();';
 assert(source.includes(boot),'app bootstrap must be stable for the visual fixture');
-const fixture='phase1Init();\nconst phase3RestoredScroll=null;\nrender();';
+const fixture='phase1Init();\nconst phase3RestoredScroll=null;\nrender();\nglobalThis.__visualPassive=phase3PassiveDescriptionHtml;';
 const types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.webp':'image/webp','.png':'image/png','.gif':'image/gif','.mjs':'text/javascript'};
 const server=http.createServer((req,res)=>{
  const url=new URL(req.url,'http://local'),rel=url.pathname==='/'?'index.html':decodeURIComponent(url.pathname.slice(1)),file=path.resolve(root,rel);
@@ -35,7 +35,7 @@ const server=http.createServer((req,res)=>{
     enemy.dataset.eliteType='vampire';
     const vampire=getComputedStyle(enemy),vampireWidth=enemy.getBoundingClientRect().width;
     const hpStyle=getComputedStyle(scene.querySelector('#enemyHpText'));
-    const passive=phase3PassiveDescriptionHtml('Deal 24% damage with a 3s cooldown on the next attack.');
+    const passive=__visualPassive('Deal 24% damage with a 3s cooldown on the next attack.');
     return {casterTransform,casterWidth,vampireWidth,
       backgroundOpacity:artStyle.opacity,backgroundFilter:artStyle.filter,
       hpFontSize:parseFloat(hpStyle.fontSize),hpColor:hpStyle.color,passive};
