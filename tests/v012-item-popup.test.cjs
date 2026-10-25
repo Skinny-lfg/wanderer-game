@@ -36,3 +36,22 @@ test('Potion Stash and loadout icons display a detail modal before equip or remo
  assert.match(html,/data-potion-inspect/);
  assert.match(css,/\.phase3PotionInspectButton/);
 });
+
+test('Between Realms equipment uses the same bounded native dialog as Inventory',()=>{
+ const stylePopup=between('function phase3StyleGearDialog(', 'function phase3ShowGearPopup(');
+ assert.match(stylePopup,/dialog\.classList\.add\('equipmentItemDialog'\)/);
+ assert.match(stylePopup,/\['ring1','ring2'\]/);
+ assert.match(stylePopup,/dialog\.classList\.add\('equipmentStandardDialog'\)/);
+ const bag=between('function phase3BindBag(){','function phase3RenderBagInventory(){');
+ assert.match(bag,/phase3StyleGearDialog\(dialog,item\)/);
+ assert.match(bag,/data-phase3-equip/);
+ assert.match(bag,/data-phase3-discard/);
+ const equipped=between('function phase3BindPaper(){','function phase5MilestoneMarkup(');
+ assert.match(equipped,/phase3StyleGearDialog\(dialog,state\.equip\[slot\]\)/);
+ assert.match(equipped,/moveEquippedToBag/);
+ const css=fs.readFileSync(path.join(root,'online/v012-uiux-tuning.css'),'utf8');
+ assert.match(css,/dialog\.itemDialog\.equipmentItemDialog\[open\]/);
+ assert.match(css,/max-height:min\(72dvh,600px\)!important/);
+ assert.match(css,/dialog\.itemDialog\.equipmentItemDialog\.equipmentStandardDialog\[open\]/);
+ assert.match(css,/max-height:min\(82dvh,680px\)!important/);
+});

@@ -191,10 +191,20 @@ body.phase3IntegratedPreview :is(.phase3Camp .phase3ExpeditionPanel,.phase3CampS
 body.phase3IntegratedPreview .scene .eliteCombatant #enemyPortrait[data-elite-type]{
   transform:scaleX(-1)!important;transform-origin:center bottom!important;object-fit:contain!important;
 }
-/* Ring picker remains untouched, other equipment uses standard comfortable popup width. */
-body.phase3IntegratedPreview dialog.equipmentItemDialog.equipmentStandardDialog[open]{
-  width:min(640px,calc(100vw - 24px))!important;max-width:min(640px,calc(100vw - 24px))!important;
-  max-height:calc(100dvh - 24px)!important;overflow-y:auto!important;
+/* Inventory and Between Realms use the same bounded equipment dialog.
+   Rings preserve the existing compact width; lengthy comparisons scroll inside. */
+body.phase3IntegratedPreview dialog.itemDialog.equipmentItemDialog[open]{
+  box-sizing:border-box!important;
+  width:min(480px,calc(100vw - 24px))!important;
+  max-width:min(480px,calc(100vw - 24px))!important;
+  max-height:min(72dvh,600px)!important;
+  height:fit-content!important;
+  overflow-x:hidden!important;overflow-y:auto!important;
+  overscroll-behavior:contain;
+}
+body.phase3IntegratedPreview dialog.itemDialog.equipmentItemDialog.equipmentStandardDialog[open]{
+  width:min(640px,calc(100vw - 24px))!important;
+  max-width:min(640px,calc(100vw - 24px))!important;
 }
 /* Explanatory copy uses legible sans-serif, while Gothic headings remain unchanged. */
 body.phase3IntegratedPreview :is(.phase3PassiveDescription,.phase3PassiveTooltip p,.phase3PassiveInline p,.phase3AffinityPassiveDescriptions p,.potionEffect,.inspect p,.dialogQuestion,.phase3EventDescription){
@@ -206,5 +216,11 @@ body.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveDescriptio
 }
 @media(max-width:700px){
  body.phase3IntegratedPreview :is(.phase3Camp .phase3ExpeditionPanel,.phase3CampStickyStart) button.phase3Start::before{top:28.5%!important;bottom:28.5%!important;left:18%!important;right:18%!important}
- body.phase3IntegratedPreview dialog.equipmentItemDialog.equipmentStandardDialog[open]{width:calc(100vw - 16px)!important;max-width:calc(100vw - 16px)!important}
+ body.phase3IntegratedPreview dialog.itemDialog.equipmentItemDialog[open]{
+   width:calc(100vw - 20px)!important;max-width:calc(100vw - 20px)!important;
+   max-height:min(82dvh,680px)!important;
+ }
+ body.phase3IntegratedPreview dialog.itemDialog.equipmentItemDialog.equipmentStandardDialog[open]{
+   width:calc(100vw - 20px)!important;max-width:calc(100vw - 20px)!important;
+ }
 }

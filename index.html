@@ -422,6 +422,13 @@ dialog.innerHTML=`<h2 id="${titleId}">${esc(title)}</h2>${content}<div class="bu
  document.body.appendChild(dialog);dialog.addEventListener('close',()=>{dialog.remove();if(previous?.isConnected)previous.focus();phase3UpdateCampStickyStart?.()});dialog.querySelector('[data-close]').onclick=()=>dialog.close();if(onConfirm)dialog.querySelector('[data-confirm]').onclick=()=>{dialog.close();onConfirm()};dialog.showModal();dialog.querySelector('[data-close]').focus();phase3UpdateCampStickyStart?.();return dialog;
 }
 
+/* Equipment inspection and Between Realms share a bounded Inventory-style popup. */
+function phase3StyleGearDialog(dialog,item){
+ if(!dialog||!item)return dialog;
+ dialog.classList.add('equipmentItemDialog');
+ if(!['ring1','ring2'].includes(item.slot))dialog.classList.add('equipmentStandardDialog');
+ return dialog;
+}
 /* Item inspection: one native, focus-trapped modal for Camp and Inventory.
    Existing equip/unequip/lock/salvage actions still own all mutations. */
 function phase3ShowGearPopup(item,source='stash',slot=null){
@@ -429,9 +436,7 @@ function phase3ShowGearPopup(item,source='stash',slot=null){
  const itemId=item.id,owned=source==='stash';
  const dialog=showModal(source==='equipped'?'Equipped equipment':'Equipment details',previewItem(item,source));
  if(!dialog)return null;
- dialog.classList.add('equipmentItemDialog');
- // The two-ring equip picker keeps its approved compact dimensions.
- if(!['ring1','ring2'].includes(item.slot))dialog.classList.add('equipmentStandardDialog');
+ phase3StyleGearDialog(dialog,item);
  const inspectActions=dialog.querySelector('.inspectActions'),modalActions=dialog.querySelector('.modalActions'),closeButton=modalActions?.querySelector('[data-close]');
  if(inspectActions&&modalActions&&closeButton){for(const action of [...inspectActions.children])modalActions.insertBefore(action,closeButton);inspectActions.remove();}
  const on=(selector,fn)=>{const button=dialog.querySelector(selector);if(button)button.onclick=()=>{if(button.disabled)return;dialog.close();fn();};};
@@ -1158,6 +1163,7 @@ function phase3BindBag(){
   const equips=(ring?[['ring1','Equip Ring I'],['ring2','Equip Ring II']]:[[item.slot,'Equip']]).map(([slot,label])=>'<button type="button" class="primary" data-phase3-equip="'+slot+'" '+(!safe||slot==='offhand'&&isTwoHanded(state.equip.weapon)?'disabled':'')+'>'+label+'</button>').join('');
   const dialog=showModal('Expedition loot',gearComparison(item)+previewItem(item,'bag')+'<div class="buttonRow">'+equips+'<button type="button" class="danger" data-phase3-discard '+(canDiscard?'':'disabled')+'>Discard</button></div>');
   if(!dialog)return;
+  phase3StyleGearDialog(dialog,item);
   dialog.querySelectorAll('[data-phase3-equip]').forEach(b=>b.onclick=()=>{dialog.close();equipItem(item.id,b.dataset.phase3Equip);});
   dialog.querySelector('[data-phase3-discard]').onclick=()=>{
    dialog.close();showConfirm('Discard Expedition loot','Discard '+item.name+' permanently? No Gold or Fragments are gained.',()=>phase3DiscardLoot(item.id),'Discard');
@@ -1228,6 +1234,7 @@ function phase3BindPaper(){
   if(phase3ExpeditionActive()){
     const canMove=phase3CanPrepare()&&phase3BagItems().length<PHASE3_BAG_CAPACITY;
     const dialog=showModal('Equipped gear',previewItem(state.equip[slot],'camp')+'<button type="button" class="ghost" id="moveEquippedToBag" '+(canMove?'':'disabled')+'>Move to Expedition Bag</button>');
+    phase3StyleGearDialog(dialog,state.equip[slot]);
     dialog?.querySelector('#moveEquippedToBag')?.addEventListener('click',()=>{dialog.close();unequipItem(slot);});return;
    }
   const item=state.equip[slot];
