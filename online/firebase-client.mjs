@@ -116,6 +116,7 @@ export async function createBackend(){
    return id;
   },
   async submitV012Feedback(form){
+   if(!auth.currentUser||auth.currentUser.isAnonymous)throw Error("Sign in with Google or email before submitting feedback.");
    const uid=user(),description=String(form.description||'').trim(),steps=String(form.steps||'').trim(),category=String(form.category||'bug');
    const types=['bug','idea','balance','general'];
    if(!types.includes(category)||description.length<10||description.length>1400||steps.length>1150)throw Error('Please review the report fields.');
@@ -123,6 +124,23 @@ export async function createBackend(){
    const record={uid,category,description,steps,appVersion:'0.12.0',commit:String(form.commit||'unknown').slice(0,20),screen:String(form.screen||'unknown').slice(0,60),viewport:String(form.viewport||'unknown').slice(0,40),browser:String(form.browser||'').slice(0,260),technical:String(form.technical||'').slice(0,600),createdAt:sdk.serverTimestamp()};
    await sdk.runTransaction(db,async tx=>{const [old,duplicate]=await Promise.all([tx.get(limit),tx.get(report)]);if(duplicate.exists())throw Error('duplicate-feedback');if(old.exists()&&Date.now()-old.data().updatedAt.toMillis()<60000)throw Error('feedback-rate-limited');tx.set(report,record);tx.set(limit,{uid,updatedAt:sdk.serverTimestamp()});});
    return id;
+  },
+  async publishV012CommunityScore(best,nickname){
+   const uid=user(),score=Number(best),name=nicknameKey(nickname);
+   if(auth.currentUser?.isAnonymous)throw Error('Registered account required.');
+   if(!Number.isSafeInteger(score)||score<1||score>100000)throw Error('Invalid Expedition result.');
+   const ref=sdk.doc(db,'communityV012Leaderboard',uid);
+   await sdk.runTransaction(db,async tx=>{
+    const previous=await tx.get(ref);
+    if(previous.exists()&&previous.data().best>=score)return;
+    tx.set(ref,{uid,nickname:name,best:score,verified:false,updatedAt:sdk.serverTimestamp()});
+   });
+  },
+  async listV012CommunityScores(){
+   if(!auth.currentUser||auth.currentUser.isAnonymous)throw Error('Sign in first.');
+   const col=sdk.collection(db,'communityV012Leaderboard');
+   const snap=await sdk.getDocs(sdk.query(col,sdk.orderBy('best','desc'),sdk.limit(50)));
+   return snap.docs.map(d=>({uid:d.id,nickname:d.data().nickname,best:d.data().best,verified:false}));
   },
   async publishLoadout(save){
    const loadout=publicLoadout(save),payload=JSON.stringify({...loadout.equipment,__runes:loadout.runes,__runeSlots:loadout.runeSlots}),ref=sdk.doc(db,PUBLIC_LOADOUTS,user());

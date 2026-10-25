@@ -13,17 +13,18 @@ const server=http.createServer((req,res)=>{
  try{for(const width of [360,390,430,768,1280,1440]){
   const page=await browser.newPage({viewport:{width,height:900}}),errors=[];page.setDefaultTimeout(7000);page.on('pageerror',error=>errors.push(error.message));
   await page.route('**/*',route=>route.request().url().startsWith(base)?route.continue():route.abort());
-  await page.goto(base,{waitUntil:'domcontentloaded'});if(width<=650)await page.locator('#menuToggle').click();await page.locator('[data-online-action="account"]').click();
-  const dialog=page.locator('.v012AccountDialog');await dialog.waitFor({state:'visible'});
-  assert.equal(await dialog.evaluate(node=>node.matches(':modal')),true,'the account and email/Google login dialog must be the active modal');
-  await page.locator('.v012AccountDialog input[type=email]').waitFor({state:'visible'});await page.locator('.v012AccountDialog [data-google]').waitFor({state:'visible'});
-  const box=await dialog.boundingBox();assert(box&&box.x>=0&&box.y>=0&&box.x+box.width<=width+1,'account dialog must fit viewport '+width);
-  assert.deepEqual(errors,[],'account dialog must render without JavaScript errors '+width);
-  await page.locator('.v012AccountDialog [data-close]').click();
-  if(width<=650)await page.locator('#menuToggle').click();
-  await page.locator('[data-online-action="feedback"]').click();
-  const feedback=page.locator('.wandererFeedbackDialog');await feedback.waitFor({state:'visible'});
-  assert.equal(await feedback.locator('textarea[name="description"]').isVisible(),true,'feedback form must be visible');
-  console.log('PASS Account and feedback dialogs '+width+'px: email/Google controls and report form are visible; no sign-in or report submitted');await page.close();
+  await page.goto(base,{waitUntil:'domcontentloaded'});
+  const gate=page.locator('#v012AuthGate');await gate.waitFor({state:'visible'});
+  assert.equal(await page.locator('.container').evaluate(e=>e.inert),true,'game must be inaccessible before authentication');
+  assert.equal(await gate.locator('[data-auth-google]').isVisible(),true,'Google sign-in must be visible');
+  assert.equal(await gate.locator('input[type=email]').isVisible(),true,'email sign-in must be visible');
+  assert.equal(await gate.locator('input[type=password]').isVisible(),true,'password input must be visible');
+  assert.equal(await page.locator('[data-guest]').count(),0,'Guest controls must not be rendered');
+  assert.equal(await page.locator('.v012AccountDialog').count(),0,'Account area must not open before authentication');
+  const box=await gate.locator('.v012GateAuthPanel').boundingBox();
+  assert(box&&box.x>=0&&box.y>=0&&box.x+box.width<=width+1,'login gate must fit viewport '+width);
+  assert.deepEqual(errors,[],'login gate must render without JavaScript errors '+width);
+  console.log('PASS required login gate '+width+'px: no Guest, no unauthenticated gameplay');
+  await page.close();
  }}finally{await browser.close();await new Promise(resolve=>server.close(resolve));}
 })().catch(error=>{console.error(error);process.exitCode=1;});

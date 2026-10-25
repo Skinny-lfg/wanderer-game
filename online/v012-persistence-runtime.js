@@ -103,6 +103,7 @@ function phase5Persist(){
   catch(error){ports.phase5Fail(error);return false;}
  }
  if(!ports.PHASE5_VALIDATION){
+  if(globalThis.__WANDERER_CLOUD_ONLY__)return false;
   if(!ports.PHASE1_PREVIEW||!ports.phase5Ready||!ports.phase5Snapshot)return true;
   try{
    const pending=WandererV012Save.validate(phase5Capture(),ports.phase5Snapshot.binding);
@@ -117,7 +118,7 @@ function phase5Persist(){
 
 function phase5Init(){
  if(!ports.PHASE5_VALIDATION){
-  if(!ports.PHASE1_PREVIEW)return;
+  if(!ports.PHASE1_PREVIEW||globalThis.__WANDERER_CLOUD_ONLY__)return;
   try{
    if(!globalThis.WandererV012Save)throw Error('Local playtest save module is unavailable');
    const binding='local-playtest',raw=globalThis.sessionStorage.getItem('wanderer_v012_local_preview');
