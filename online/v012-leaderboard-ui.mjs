@@ -1,6 +1,6 @@
 /* v0.12 community ranking and read-only public equipment cards.
    Scores remain self-reported; only published equipment snapshots are read. */
-import {createBackend} from './firebase-client.mjs?v=v012-public-profiles-1';
+import {createBackend} from './firebase-client.mjs?v=v012-equipped-gear-1';
 
 let busy=false,reported=0,dialog=null,backendPromise=null;
 const getBackend=()=>backendPromise??=(createBackend().catch(error=>{backendPromise=null;throw error;}));
