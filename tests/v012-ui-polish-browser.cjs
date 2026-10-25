@@ -11,6 +11,33 @@ const shot=async(page,name)=>page.screenshot({path:path.join(shotRoot,name+'.png
 (async()=>{await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox']});try{
  const measurements=[];
  for(const [width,height] of [[360,780],[390,844],[430,932],[1280,800]]){const context=await browser.newContext({viewport:{width,height},hasTouch:width<=430}),page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto('http://127.0.0.1:'+server.address().port+'/?expeditionPhase1=1');
+
+  // Prevent older hover rules from changing label metrics or shifting the
+  // 'Prepare for the next' content above the modular Start button.
+  if(!before&&(width===390||width===1280)){
+    const start=page.locator('.phase3ExpeditionPanel button.phase3Start');
+    const stats=()=>start.evaluate(button=>{
+      const label=button.querySelector('.phase3StartText');
+      const rect=e=>{const r=e.getBoundingClientRect();return{x:r.x,y:r.y,w:r.width,h:r.height};};
+      const s=getComputedStyle(label),p=getComputedStyle(button);
+      return {label:rect(label),button:rect(button),heading:rect(document.querySelector('.phase3ExpeditionPanel h2')),
+        fontSize:s.fontSize,fontFamily:s.fontFamily,fontWeight:s.fontWeight,lineHeight:s.lineHeight,
+        buttonFont:p.fontSize,buttonHeight:p.height,buttonPadding:p.padding};
+    });
+    await page.mouse.move(0,0);const normal=await stats();
+    await start.hover({force:true});const hovered=await stats();
+    assert.equal(hovered.fontSize,normal.fontSize,'Start label font size must not shrink on hover');
+    assert.equal(hovered.fontFamily,normal.fontFamily,'Start label font family must not change on hover');
+    assert.equal(hovered.lineHeight,normal.lineHeight,'Start label line height must not change on hover');
+    assert.equal(hovered.buttonFont,normal.buttonFont,'Start button font size must not shrink on hover');
+    assert.equal(hovered.buttonHeight,normal.buttonHeight,'Start button height must not change on hover');
+    assert.equal(hovered.buttonPadding,normal.buttonPadding,'Start padding must remain unchanged on hover');
+    for(const item of ['label','button','heading'])for(const metric of ['x','y','w','h']){
+      assert(Math.abs(hovered[item][metric]-normal[item][metric])<.6,
+        item+' '+metric+' must remain stable when hovering the button: '+JSON.stringify({normal,hovered}));
+    }
+    await page.mouse.move(0,0);
+  }
   if(width===390||width===1280)await shot(page,'camp-'+width);
   const picker=page.locator('.phase3CampCharacter .phase3CharacterPickerHitbox');if(!before){assert.equal(await picker.count(),1);const hit=await picker.boundingBox(),img=await page.locator('.phase3CampCharacter .paper>.model').boundingBox();const pickerStyle=await picker.evaluate(e=>({background:getComputedStyle(e).backgroundColor,borderWidth:getComputedStyle(e).borderWidth}));assert(['rgba(0, 0, 0, 0)','transparent'].includes(pickerStyle.background)&&pickerStyle.borderWidth==='0px','character hitbox remains visually transparent');assert(hit.width<img.width*.7&&hit.height<img.height,'character hitbox is significantly smaller than its rendered image');for(const selector of ['[data-eqslot="weapon"]','[data-eqslot="offhand"]','[data-eqslot="helm"]','[data-eqslot="boots"]']){const slot=await page.locator(selector).boundingBox();assert(!(hit.x<slot.x+slot.width&&hit.x+hit.width>slot.x&&hit.y<slot.y+slot.height&&hit.y+hit.height>slot.y),'character hitbox overlaps '+selector);}assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));}
   if(width===390||width===1280){await page.evaluate(()=>__uiPolish.account());const dialog=page.locator('dialog[open]'),layer=dialog.locator(':scope > .gothic-corner-layer');await dialog.waitFor();await shot(page,'account-popup-'+width);if(!before){const geometry=await dialog.evaluate(d=>{const r=d.getBoundingClientRect(),l=d.querySelector(':scope > .gothic-corner-layer').getBoundingClientRect();return{centerX:Math.abs((r.left+r.right)/2-innerWidth/2),centerY:Math.abs((r.top+r.bottom)/2-innerHeight/2),layerDelta:Math.max(Math.abs(r.left-l.left),Math.abs(r.top-l.top),Math.abs(r.width-l.width),Math.abs(r.height-l.height))}});assert(geometry.centerX<1&&geometry.centerY<1,'popup remains centered');assert(geometry.layerDelta<1,'PNG layer tracks exact popup bounds '+JSON.stringify(geometry));}await dialog.locator('[data-close]').click();}
