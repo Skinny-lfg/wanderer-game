@@ -75,6 +75,7 @@ function allRealms(a){
    if(a.events.run()?.event){assert.equal(a.events.choose(2),true);continue;}
   }
   if(a.controller().state.stage==='combat'){
+   if(a.draft()?.step==='element'){assert.equal(a.element('frost'),true);continue;}
    if(a.events.run()?.event){assert.equal(a.events.choose(2),true,'event should resolve normally');continue;}
    const run=a.state().run;
    assert(run?.enemy,'combat should have a current wave: '+JSON.stringify({debug:a.debug(),plane:a.controller().state.planeIndex,wave:a.controller().state.wave,draft:a.draft()?.kind}));

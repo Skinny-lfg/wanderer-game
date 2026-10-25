@@ -44,6 +44,9 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
   addLog=text=>{if(text.includes('BLOCK!'))measured.blocks++;if(text.includes('Barrier absorbs '))measured.absorbed+=Number(text.match(/absorbs ([0-9.]+)/)?.[1]||0);};
  }
  phase1Init();
+ // Synthetic event unit fixtures deliberately override generated Realm metadata;
+ // persistence is covered independently by the full lifecycle and browser suites.
+ if(${!!options.skipPersistence})phase5Persist=()=>true;
  let harnessCombatActive=false,harnessControlRandom=gameRandom,harnessCombatRandom=null;
  const harnessPrng=initial=>{let value=initial>>>0;return()=>((value=(Math.imul(value,1664525)+1013904223)>>>0)/4294967296);};
  function harnessStreams(routeSeed,draftSeed,controlSeed,combatSeed){
