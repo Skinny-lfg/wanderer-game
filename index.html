@@ -792,20 +792,25 @@ function animateDefense(){
  const img=$('heroPortrait');if(img){img.classList.remove('fxBlock');void img.offsetWidth;img.classList.add('fxBlock');combatEffect('Block');}
 }
 function phase3SetMobIdle(){const img=$('enemyPortrait');if(!img)return;const src=img.dataset.attackSrc;if(!src)return;img.dataset.idleSrc=img.dataset.idleSrc||src.replace(/\.gif(?:\?.*)?$/i,'.png');img.src=img.dataset.idleSrc}
+function phase3CombatAnimationSource(attackSrc,speed,bossStyle){
+ if(speed===1)return attackSrc;
+ return bossStyle?attackSrc.replace(/_x1\.gif$/,'_x'+speed+'.gif')
+   :attackSrc.replace(/\.gif$/,'_x'+speed+'.gif');
+}
 function animateEnemyWindup(){
  const img=$('enemyPortrait'),enemy=state.run?.enemy;if(!img||!img.dataset.attackSrc||!enemy)return;
  clearTimeout(img._mobIdleTimer);
  const attackSrc=img.dataset.attackSrc,eliteType=enemy.eliteType,bossStyle=enemy.boss?enemy.bossStyle:null;
  const speed=clockSpeed===4?4:clockSpeed===2?2:1;
- const playbackSrc=bossStyle?attackSrc.replace(/_x1\.gif$/,'_x'+speed+'.gif'):attackSrc;
+ const playbackSrc=phase3CombatAnimationSource(attackSrc,speed,bossStyle);
  const token=(img._mobAnimationToken||0)+1;
- img._mobAnimationToken=token;img._mobAttackStartedAt=Date.now();img._mobPlaybackSpeed=bossStyle?speed:1;
+ img._mobAnimationToken=token;img._mobAttackStartedAt=Date.now();img._mobPlaybackSpeed=speed;
  img.src=playbackSrc+(playbackSrc.includes('?')?'&':'?')+'play='+token;
- const duration=bossStyle?BOSS_ATTACK_DURATION_MS[bossStyle]/speed:(ELITE_ATTACK_DURATION_MS[eliteType]||1550);
+ const duration=(bossStyle?BOSS_ATTACK_DURATION_MS[bossStyle]:eliteType?ELITE_ATTACK_DURATION_MS[eliteType]:1570)/speed;
  img._mobIdleTimer=setTimeout(()=>{
   if(img.isConnected&&img._mobAnimationToken===token&&state.run?.enemy===enemy)
    img.src=img.dataset.idleSrc||attackSrc;
- },duration+(bossStyle?10:100));
+ },duration+10);
 }
 function animateEnemyStrike(abilityFx=null){
  const img=$('enemyPortrait');if(!img)return;
@@ -814,8 +819,8 @@ function animateEnemyStrike(abilityFx=null){
  const kind=abilityFx||eliteKind||(e?.role==='caster'?'EnemyCaster':e?.role==='tank'||e?.role==='bruiser'||e?.boss?'EnemyBruiser':'EnemySkirmisher');
  const visual=()=>{if(state.run?.enemy===e&&img.isConnected)combatEffect(kind,e?.effect==='regen'?'nature':e?.effect)};
  const bossStyle=e?.boss?e.bossStyle:null;
- const impact=ELITE_ATTACK_IMPACT_MS[e?.eliteType]||BOSS_ATTACK_IMPACT_MS[bossStyle];
- const speed=bossStyle?(img._mobPlaybackSpeed||1):1;
+ const impact=ELITE_ATTACK_IMPACT_MS[e?.eliteType]||BOSS_ATTACK_IMPACT_MS[bossStyle]||660;
+ const speed=img._mobPlaybackSpeed||1;
  if(impact&&img._mobAttackStartedAt){
   const remaining=Math.max(0,impact/speed-(Date.now()-img._mobAttackStartedAt));
   if(remaining>0){setTimeout(visual,remaining);return;}
