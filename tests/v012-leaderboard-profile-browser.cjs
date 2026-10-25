@@ -8,7 +8,7 @@ const path=require('node:path');
 const {chromium}=require('playwright');
 const root=path.resolve(__dirname,'..');
 const leaderboardSource=fs.readFileSync(path.join(root,'online/v012-leaderboard-ui.mjs'),'utf8');
-const importLine="import {createBackend} from './firebase-client.mjs?v=v012-public-profiles-1';";
+const importLine="import {createBackend} from './firebase-client.mjs?v=v012-equipped-gear-1';";
 assert.equal(leaderboardSource.split(importLine).length,2,'Leaderboard must share the version-pinned backend');
 const fixtureSource=leaderboardSource.replace(importLine,'const createBackend=async()=>globalThis.__fakeBackend;');
 const html='<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">'+
@@ -37,7 +37,8 @@ const server=http.createServer((req,res)=>{
    const page=await browser.newPage({viewport:{width,height:844}}),errors=[];
    page.on('pageerror',error=>errors.push(error.message));
    await page.addInitScript(()=>{
-    globalThis.__profileAudit={calls:[]};
+    globalThis.__profileAudit={calls:[],gearCalls:[]};
+    globalThis.WandererGame={inspectLoadout:equipment=>'<h3>Equipment</h3><div class="publicGear">'+Object.values(equipment).filter(Boolean).map(item=>'<div class="publicGearItem">'+String(item.name).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')+' · E'+item.tier+'</div>').join('')+'</div>'};
     globalThis.__fakeBackend={
      currentUser:()=>({uid:'viewer',isAnonymous:false}),
      listV012CommunityScores:async()=>[
@@ -46,6 +47,13 @@ const server=http.createServer((req,res)=>{
       {uid:'user_c',nickname:'gamma',best:9},
       {uid:'user_x',nickname:'<img src=x onerror=x>',best:1}
      ],
+     readV012EquippedEquipment:async uid=>{
+      globalThis.__profileAudit.gearCalls.push(uid);
+      if(uid==='user_a')return {weapon:{slot:'weapon',name:'Ash Sword',rarity:'Epic',tier:18,subtype:'Sword'},belt:{slot:'belt',name:'Vital Belt',rarity:'Rare',tier:17,subtype:'Belt'}};
+      if(uid==='user_b')return {armor:{slot:'armor',name:'Plate Armor',rarity:'Epic',tier:12,subtype:'Armor'}};
+      if(uid==='user_c')return null;
+      return null;
+     },
      readV012PublicProfile:async uid=>{
       globalThis.__profileAudit.calls.push(uid);
       if(uid==='user_a')return {nickname:'alpha',characterId:'ranger'};
@@ -67,23 +75,31 @@ const server=http.createServer((req,res)=>{
    assert.equal(await page.locator('[data-player-rank]').textContent(),'#1');
    assert.equal(await page.locator('[data-player-best]').textContent(),'E18');
    assert.equal(await page.locator('[data-player-avatar]').getAttribute('src'),'assets/characters/avatars/ranger.png');
+   await page.locator('.v012PublicGearContents .publicGearItem').first().waitFor();
+   assert.equal(await page.locator('.v012PublicGearContents .publicGearItem').count(),2);
+   assert.match(await page.locator('[data-player-gear]').textContent(),/Ash Sword/);
    assert.equal(await page.locator('[data-leaderboard-overview]').isHidden(),true);
    await page.locator('[data-leaderboard-back]').click();
    assert.equal(await buttons.nth(0).evaluate(element=>document.activeElement===element),true,'Back returns focus to selected player');
    await buttons.nth(1).click();
    await page.waitForFunction(()=>document.querySelector('[data-player-character]').textContent.includes('Warrior'));
    assert.equal(await page.locator('[data-player-rank]').textContent(),'#1','tied players share the same position');
+   await page.waitForFunction(()=>document.querySelector('[data-player-gear]').textContent.includes('Plate Armor'));
+   assert.equal(await page.locator('.v012PublicGearContents .publicGearItem').count(),1);
    await page.locator('[data-leaderboard-back]').click();
    await buttons.nth(2).click();
    await page.waitForFunction(()=>document.querySelector('[data-player-message]').textContent.includes('Unable to load public profile'));
    assert.equal(await page.locator('[data-player-rank]').textContent(),'#3');
    assert.equal(await page.locator('[data-player-best]').textContent(),'E9');
+   await page.waitForFunction(()=>document.querySelector('[data-player-gear-status]').textContent.includes('not published yet'));
+   assert.equal(await page.locator('.v012PublicGearContents .publicGearItem').count(),0);
    await page.locator('[data-leaderboard-back]').click();
    await buttons.nth(3).click();
    await page.waitForFunction(()=>document.querySelector('[data-player-message]').textContent.includes('Limited public'));
    assert.equal(await page.locator('[data-leaderboard-player] img:not([hidden])').count(),0,'Untrusted avatar path must not be rendered');
    assert.equal(await page.locator('[data-leaderboard-player] img[src*="onerror"]').count(),0,'Nickname must never render injected HTML');
    assert.deepEqual(await page.evaluate(()=>globalThis.__profileAudit.calls),['user_a','user_b','user_c','user_x']);
+   assert.deepEqual(await page.evaluate(()=>globalThis.__profileAudit.gearCalls),['user_a','user_b','user_c','user_x']);
    await page.keyboard.press('Escape');
    await page.waitForFunction(()=>!document.querySelector('dialog.v012LeaderboardDialog'));
    assert.deepEqual(errors,[],'No uncaught browser errors');
