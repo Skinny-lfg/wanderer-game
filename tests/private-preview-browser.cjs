@@ -15,7 +15,7 @@ const assert=require('node:assert/strict'),{chromium}=require('playwright');
   await page.getByRole('button',{name:'Enter Playtest'}).click();await page.waitForFunction(()=>globalThis.WandererGame?.validationStatus().ready);
   assert(await page.locator('[data-phase1-expedition="1"]').count()>=1);
   await page.locator('[data-phase1-expedition="1"]').first().click();assert.equal(await page.locator('[data-phase2-initial]').count(),6);
-  await page.locator('dialog[data-initial-affinity] [data-close]').click();await page.locator('#initialBack').click();await page.locator('[data-phase1-expedition="1"]').first().click();await page.locator('[data-phase2-initial="blood"]').click();
+  await page.locator('dialog[data-initial-affinity] [data-close]').click();await page.locator('.phase3Camp').waitFor();await page.locator('[data-phase1-expedition="1"]').first().click();await page.locator('[data-phase2-initial="blood"]').click();
   await page.locator('#enemyPortrait').waitFor();assert.equal(await page.evaluate(()=>WandererGame.snapshot().run.status),'fight');
   assert.equal(await page.evaluate(()=>localStorage.getItem('wanderer_browser_proto_v01')),'CLASSIC_UNTOUCHED');
   assert(!requests.some(u=>u.includes('/online/app.mjs')||u.includes('firebase-sdk')));assert.deepEqual(errors,[]);
