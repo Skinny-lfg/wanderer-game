@@ -13,7 +13,7 @@ const server=http.createServer((req,res)=>{
  try{for(const width of [360,390,430,768,1280,1440]){
   const page=await browser.newPage({viewport:{width,height:900}}),errors=[];page.setDefaultTimeout(7000);page.on('pageerror',error=>errors.push(error.message));
   await page.route('**/*',route=>route.request().url().startsWith(base)?route.continue():route.abort());
-  await page.goto(base,{waitUntil:'domcontentloaded'});
+  await page.goto(base+'?testAuthGate=1',{waitUntil:'domcontentloaded'});
   const gate=page.locator('#v012AuthGate');await gate.waitFor({state:'visible'});
   assert.equal(await page.locator('.container').evaluate(e=>e.inert),true,'game must be inaccessible before authentication');
   assert.equal(await gate.locator('[data-auth-google]').isVisible(),true,'Google sign-in must be visible');

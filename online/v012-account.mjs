@@ -1,6 +1,8 @@
 import {createBackend} from './firebase-client.mjs?v=v012-production-auth-1';
 import {createCloudSaveCoordinator} from './v012-cloud-save.mjs';
 
+const requiresGate=!['localhost','127.0.0.1'].includes(location.hostname)||new URLSearchParams(location.search).get('testAuthGate')==='1';
+if(requiresGate){
 const actions=[...document.querySelectorAll('[data-online-action="account"]')];
 const gameRoot=document.querySelector('.container');
 let backend=null,coordinator=null,activeUid=null,loading=null,profileName='',authSeen=false,mode='login';
@@ -151,4 +153,6 @@ if(!actions.length)notify('Account controls are unavailable on this page.',true)
 else {
  for(const action of actions)action.addEventListener('click',event=>{event.preventDefault();accountDialog();});
  createBackend().then(value=>{backend=value;backend.watchAuth(user=>{activate(user).catch(error=>{gateStep('login');notify(friendly(error),true);});});}).catch(error=>{gateStep('login');notify('Firebase is unavailable: '+friendly(error),true);});
+}
+
 }
