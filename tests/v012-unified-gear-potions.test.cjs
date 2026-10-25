@@ -78,3 +78,20 @@ test('Potion Bag and equipped slots are icon-only with square frames and accessi
  assert.match(inventory,/\.stashGrid>\.potionStackTile[\s\S]*?aspect-ratio:1\/1;/);
  assert.match(inventory,/\.phase3PotionSlot[\s\S]*?aspect-ratio:1\/1!important/);
 });
+
+
+test('Camp hides the inactive set-bonus summary and keeps square, centred potion art across Camp, Inventory and Stash',()=>{
+ const hotfix=fs.readFileSync(path.join(root,'online/v012-uiux-hotfix-oct25.css'),'utf8');
+ const campSource=functionSource('function phase3CampMarkup(g,stats){','function phase3Go(to){');
+ assert.doesNotMatch(campSource,/Set bonuses:|phase3SetSummary|none active/);
+ // Loaded Camp slots and their inspect buttons use the same 1:1 box as empty placeholders.
+ assert.match(hotfix,/\.phase3CampCharacter \.paper>\.phase3PotionSlots>\.phase3PotionSlot\{[^}]*aspect-ratio:1\/1!important;/);
+ assert.match(hotfix,/\.phase3CampCharacter \.paper>\.phase3PotionSlots>\.phase3PotionSlot>\.phase3PotionInspectButton\{[^}]*width:100%!important;[^}]*height:100%!important;[^}]*padding:0!important;/);
+ assert.match(hotfix,/\.phase3CampCharacter \.paper>\.phase3PotionSlots>\.phase3PotionSlot \.rarityImageFrame--potion\{[^}]*width:100%!important;[^}]*aspect-ratio:1\/1!important;/);
+ // Equipment uses square slots and a slightly raised row rather than pushing down the stats.
+ assert.match(hotfix,/\.equipmentOverview \.equipmentLoadout \.paper>\.phase3PotionSlots>\.phase3PotionSlot\{[^}]*width:var\(--gear-slot-width\)!important;[^}]*height:var\(--gear-slot-width\)!important;/);
+ assert.match(hotfix,/\.equipmentOverview \.equipmentLoadout \.paper>\.phase3PotionSlots\{[^}]*margin:-14px auto 0!important;/);
+ // Bag potion frames must centre their child image, not override grid with display:block.
+ assert.match(hotfix,/\.stashGrid>\.potionStackTile \.rarityImageFrame--potion-stack\{[^}]*display:grid!important;[^}]*place-items:center!important;/);
+ assert.match(hotfix,/\.stashGrid>\.potionStackTile \.rarityImageFrame--potion-stack>img\{[^}]*object-position:center!important;/);
+});
