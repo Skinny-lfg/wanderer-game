@@ -29,7 +29,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
  let auditConfirmation=null,auditFeedback=null;
  showConfirm=(title,body,fn)=>{auditConfirmation=fn;};showModal=()=>document.createElement('dialog');showPendingRuneReward=()=>{};
  render=renderCombat=renderPhase1=renderForge=renderMerchant=wallet=bannerMessage=animateStrike=animateDefense=animateEnemyStrike=updateBars=resetDungeonEntryScroll=()=>{};
- addLog=(text,type)=>{if(auditFeedback)auditFeedback.logs.push({text,type});};floatText=(value,target)=>{if(auditFeedback)auditFeedback.floats.push({value,target});};
+ addLog=(text,type)=>{if(auditFeedback)auditFeedback.logs.push({text,type});};floatText=(value,target,critical,source)=>{if(auditFeedback)auditFeedback.floats.push({value,target,...(source?{source}:{})});};
  const measured={healed:0,barrier:0,absorbed:0,dot:0,burst:0,crit:0,attacks:0,blocks:0,incoming:0};
  if(${!!options.measure}){
   const healNative=setHeal,barrierNative=setBarrier,dotNative=tickDots,directNative=setDirectEnemyDamage,attackNative=weaponAttack,contextNative=phase2Context;
