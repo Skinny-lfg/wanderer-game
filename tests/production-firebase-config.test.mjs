@@ -6,6 +6,7 @@ import { firebaseConfig, assertProductionFirebaseConfig } from '../online/fireba
 test('production Firebase config is explicitly bound to wanderer-play', () => {
   assert.equal(assertProductionFirebaseConfig().projectId, 'wanderer-play');
   assert.equal(firebaseConfig.authDomain, 'wanderer-play.firebaseapp.com');
+  assert.equal(firebaseConfig.appId, '1:761358319947:web:23a35ecd7ac5e0b4b968ce');
   assert.throws(() => assertProductionFirebaseConfig({ ...firebaseConfig, projectId: 'wanderer-development-8e3ee' }), /approved wanderer-play/);
 });
 

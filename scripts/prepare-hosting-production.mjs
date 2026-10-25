@@ -14,7 +14,7 @@ const publicDirs = {
 const assert = (condition, reason) => { if (!condition) throw new Error('Production Hosting blocked: ' + reason); };
 
 assert(process.env.GITHUB_ACTIONS === 'true', 'must run in the controlled GitHub Actions workflow');
-assert(process.env.GITHUB_REF === 'refs/heads/development', 'requires the development branch');
+assert((process.env.SOURCE_BRANCH || (process.env.GITHUB_REF === 'refs/heads/development' ? 'development' : '')) === 'development', 'requires source from the development branch');
 assert(process.env.FIREBASE_PROJECT_ID === PROJECT, 'target must be wanderer-play');
 assert(process.env.PUBLISH_PRODUCTION === 'DEPLOY wanderer-play', 'manual production release confirmation is missing');
 
@@ -51,7 +51,7 @@ for (const file of ['index.html', 'auth-action.html']) {
   count++;
 }
 await copyFile('online/firebase-config-production.mjs', join(OUTPUT, 'online/firebase-config.mjs'));
-await writeFile(join(OUTPUT, 'online/v012-build-info.mjs'), 'export const buildCommit=' + JSON.stringify(String(process.env.GITHUB_SHA || '').slice(0, 20)) + ';\n');
+await writeFile(join(OUTPUT, 'online/v012-build-info.mjs'), 'export const buildCommit=' + JSON.stringify(String(process.env.SOURCE_COMMIT_SHA || process.env.GITHUB_SHA || '').slice(0, 20)) + ';\n');
 
 for (const required of [
   'index.html', 'auth-action.html', 'online/firebase-config.mjs', 'online/vendor/firebase-sdk.mjs',
