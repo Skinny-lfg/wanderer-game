@@ -1,0 +1,23 @@
+name: E.2.5 Apothecary and Fortune comparison
+on:
+  push:
+    branches: [development]
+    paths: [.github/workflows/e25-apothecary-strategy.yml]
+  workflow_dispatch:
+jobs:
+  strategy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Eight strategies with 30 paired seeds
+        run: node scripts/v012-phase-e25-apothecary-strategy.cjs /tmp/wanderer-e25.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: wanderer-e25-results
+          path: /tmp/wanderer-e25.json
+          if-no-files-found: ignore

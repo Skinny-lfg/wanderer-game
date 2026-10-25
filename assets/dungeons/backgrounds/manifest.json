@@ -27,11 +27,6 @@
       "image": "assets/dungeons/backgrounds/bastion.webp"
     },
     {
-      "id": "frost",
-      "name": "Frostbound Catacombs",
-      "image": "assets/dungeons/backgrounds/frost.webp"
-    },
-    {
       "id": "ash",
       "name": "Ashen Sanctum",
       "image": "assets/dungeons/backgrounds/ash.webp"

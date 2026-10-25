@@ -1,0 +1,42 @@
+# Wanderer v0.12 — first playable development prototype
+
+**Status:** experimental playtest on development; old game stays available.
+**Safety:** intentionally uses \`wanderer_v012_prototype_local_v1\`, not the existing browser/account keys. No production/cloud/Firebase save schema is migrated or overwritten. Main branch remains unchanged.
+
+## Access
+Open development's index.html through an HTTP server (do not open as file:// because ES modules need HTTP). A **⚗ v0.12 Playtest** button appears below the classic game content; alternatively append ?playtest=v012 to the local URL. Use the button to enter a self-contained 15-room experimental adventure. Closing it returns to the classic Wanderer. The playtest state resumes if reopened, while permanent prototype gear is retained after victory/defeat.
+
+## Implemented
+- Fifteen rooms: **seven normal, two elite, two chest, two events, one altar, one boss**. The first room is always normal combat and the fifteenth is always a boss. Nonfinal positions are seeded and randomized.
+- **Expedition** is the outward-facing name for an adventure (formerly *Dungeon* in the level selector). The camp menu now lists **Expedition 1, Expedition 2**, etc.; **Planes** remain the choices inside an Expedition. Internal folder and dungeon asset filenames remain unchanged.
+- One active enemy at a time. **Planes** advertise 1–3 Waves and whether the final wave contains an Elite before the player chooses. Each completed Wave awards currency and independently rolls for permanent equipment (normal wave 7%, Elite wave 28% in the experimental prototype). More Waves bring more chances and more danger. Chests, random events and altars now follow the selected Plane's waves; the boss Plane uses three waves. No manual targeting.
+- Five temporary affinity families: Blood, Vitality, Aegis, Fury, **Magic** (renamed from Arcane). Thirteen old dungeon themes retained as *plans*, each mapped to one of the five reward families.
+- **Magic elemental school:** when Magic is first selected, the player must first choose exactly one spell school — **Fire**, **Poison** or **Frost** — before any Mana Regeneration or Spell Power passives appear. School counts as part of Magic, not a sixth affinity. Fire applies Burn, Poison applies Toxic stacks separate from Blood Bleed, and Frost inflicts Chill that slows enemy attack cadence. All weapons can cast Magic spells and spend Mana; Staff amplifies the elemental effect by 35%, Wand by 20% relative to a non-caster weapon with the same stats. Element-specific passives appear only for the chosen school, with nine new upgrades for these three elements. Active Magic school and selected passive descriptions are shown in the UI.
+- Start by selecting any one affinity and choosing one of three starting passives (after choosing a school for Magic). The initial affinity is guaranteed among the first room's three plans. After completing a room choose one of three passives linked to the chosen plan. Ten hybrid passives require the relevant affinity pair.
+- **Affinity plan rules:** until a second distinct affinity is acquired, the previously chosen family is excluded from the next Plane. After two different families have been acquired, that temporary lock disappears: any eligible family, including the one just chosen, can reappear immediately. **At most three active affinity families** per Expedition still applies; once three are acquired, no fourth family can be offered or rerolled. Three free rerolls per run. Each regular passive remains capped at rank two. If a player focuses one affinity long enough to exhaust normal options, three small, capped *Mastery* choices keep the run playable without runaway stacking. Legacy unselected offers are refreshed once when needed; previously collected gear/currency and spent rerolls remain unchanged.
+- **Health and Mana both reset to 100%** after every completed Expedition (victory, defeat or abandonment), including when starting a new Expedition from an old experimental local profile. Both resources continue to persist *between Planes within the same Expedition*. The main Camp is now read-only for HP/Mana and does **not** have potion-use buttons. Potion loadout is still selected before entering; Health and Mana potions can be used only during noncombat preparation between Planes, never during combat waves. Each potion stock refills one per completed Expedition (maximum three).
+- Permanent gear is stored immediately when received, even during failed expeditions. The player can open **Inventory & Equipment** and equip or swap gear between Planes, never during Waves; equipping updates health and Mana caps. Active passive names, descriptions, affinity and ranks appear in the side panel. The next difficulty unlocks only after the final boss wins.
+- Blood spread effect *Contagion* carries Bleed stacks from a killed enemy to the next **wave**, instead of targeting multiple simultaneous enemies.
+- Later rooms have a steeper enemy-power curve. Bleed stacks are capped at six, repeatable passive ranks at two, Second Wind at once per full expedition, and combat lifegain at a small capped amount. Chests and risk events no longer accidentally award a second gear drop after their guaranteed one.
+- Existing v0.12 local test runs with four or five affinities are retired when reopened, while keeping experimental permanent gear and currencies. Existing in-progress **Arcane** local saves with up to three affinities are migrated in place to **Magic** and prompted to select a school at the next safe noncombat step; no gear or currency is removed. This does not touch actual Wanderer accounts or saves. This does not touch actual Wanderer accounts or saves.
+- Completely separate gear/economy/combat rules from the old mode, for controlled experimental playtest only.
+
+## Intentional limitations before replacing classic gameplay
+- This is a deliberately **separate combat engine with provisional numbers**, not a migration of the classic D1–D200 engine. Win rates, drops, passives and income are not approved as balance values.
+- Classic Merchant, Forge, PvP, Firebase/cloud login, leaderboard, runes and class-specific animations have **not** been converted. Their existing behavior is unchanged in classic mode.
+- This prototype currently uses one shared local prototype profile per browser, independent of Google login, to avoid cross-account/save conflicts.
+- Some passive descriptions are design candidates; the code implements selected representative interactions, **not every full passive effect**. The gear's Epic/Legendary affinity fields are currently illustrative and require actual combat integration.
+- Private playtest deployment is separate from production at https://wanderer-private-v012-production.up.railway.app/ behind a server-side login. Its source is deliberately pinned to a tested development commit. No deploy to production Wanderer/main has been performed.
+- The initial development implementation uses a simplified separate simulator for combat, not the classic production battle mechanics. Its results should not be used for final tuning.
+
+## Quality checks
+- \`npm run test:v012\`: deterministic state-machine tests (affinities/paths, one-step lock, gear survival, waves, potions, final-boss unlock, Magic school gating, all-weapon casting, elemental statuses, weapon amplification, legacy Arcane save conversion).
+- \`npm run test:v012:browser\`: Playwright desktop 1280 px and mobile 390 px checks (launcher, path rerolls, single active enemy, isolation from real localStorage keys).
+- Existing \`npm test\` includes \`test:v012\`, \`test:preview\`, and \`test:v012:balance\`. The balance script executes 1,920 fixed-seed expeditions on the isolated engine, with deliberately simplified level-1 test gear; do not treat its win rates as production game estimates. Opt-in pre-release \`test:assets\` includes browser playtest smoke.
+- Validate overall development Actions status at https://github.com/Skinny-lfg/wanderer-game/actions
+
+## Next steps
+1. Interactive playtest in a development/local build: does the combat + reward loop feel rewarding?
+2. Tune rate of permanent gear accumulation and measure no-gear/low-gear progression across D1→D2.
+3. Integrate all proposed passive effects and hybrids with production combat semantics; run elite/boss simulations including Fire, Poison and Frost on every weapon category.
+4. Replace the prototype UI and isolated save only after passing compatibility/back-up checks and explicit approval for migration.

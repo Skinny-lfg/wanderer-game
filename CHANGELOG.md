@@ -1,13 +1,3 @@
-## v0.11.0 — Fresh Start / Firebase Hosting — 2026-10-18
-
-- **New production launch:** Wanderer now uses Firebase project `wanderer-play` for Hosting, Authentication and a fresh Firestore database. Everyone starts from D1, with new accounts and leaderboards. Historical accounts and saves remain archived in the previous Firebase project and are not migrated.
-- **Account system:** Google and Email/Password registration with a chosen public nickname; verified-email access checks, password reset and branded Wanderer verification/reset page.
-- **Forge progression:** Quality investments using Fragments (Standard / High Quality / Masterwork), clearer crafting odds and Forge layout, Legendary reinforcement and Affinity Transfer previews with icon and rarity indicators.
-- **Merchant & buildcraft:** Four random Affinity Sigils with Gold refreshes, improved affinity controls and equipped-set indicators on Dungeon selections.
-- **Game presentation:** Dark-fantasy homepage artwork and browser favicon, improved rarity backgrounds, affinity/icons and upgraded visual effects for player, enemy, elite and boss attacks. Elite portraits no longer resize the combat arena.
-- **Deployment:** Manual GitHub Actions release to Firebase Hosting. Production and development Firebase environments are isolated; the development branch remains a localhost test environment.
-- **Validation:** automated regression and Firestore emulator tests are required before deployment. Publishing Hosting never silently updates Firestore Rules.
-
 ## v0.10.0 — 2026-10-17
 
 - Reworked Legendary equipment with unique event-driven abilities, fixed signature affinities for selected items, and the new Frost Staff Winterheart Spire.

@@ -1,0 +1,795 @@
+{
+  "sizes": [
+    [
+      390,
+      844
+    ],
+    [
+      768,
+      1024
+    ],
+    [
+      1440,
+      900
+    ],
+    [
+      1920,
+      1080
+    ]
+  ],
+  "screenshots": 12,
+  "findings": [
+    {
+      "screen": "between-realm",
+      "viewport": "390x844",
+      "horizontalOverflow": false,
+      "scrollWidth": 390,
+      "scrollHeight": 1343,
+      "missingImages": [],
+      "errors": [],
+      "failedResponses": [],
+      "dialog": null,
+      "axe": {
+        "violations": [
+          {
+            "id": "region",
+            "impact": "moderate",
+            "help": "All page content should be contained by landmarks",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/4.10/region?application=axeAPI",
+            "nodes": [
+              {
+                "target": [
+                  "#wallet"
+                ],
+                "summary": "Fix any of the following:\n  Some page content is not contained by landmarks"
+              }
+            ]
+          }
+        ],
+        "passes": 41,
+        "incomplete": [
+          {
+            "id": "aria-prohibited-attr",
+            "impact": "serious",
+            "nodes": 2
+          },
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodes": 35
+          }
+        ]
+      },
+      "screenshot": "docs/ui-audit/phase2d-after/between-realms/realm/between-realm-mobile-390x844.jpg"
+    },
+    {
+      "screen": "between-equipment",
+      "viewport": "390x844",
+      "horizontalOverflow": false,
+      "scrollWidth": 390,
+      "scrollHeight": 1535,
+      "missingImages": [],
+      "errors": [],
+      "failedResponses": [],
+      "dialog": null,
+      "axe": {
+        "violations": [
+          {
+            "id": "image-redundant-alt",
+            "impact": "minor",
+            "help": "Alternative text of images should not be repeated as text",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/4.10/image-redundant-alt?application=axeAPI",
+            "nodes": [
+              {
+                "target": [
+                  "img[src$=\"amulet.svg\"]"
+                ],
+                "summary": "Fix all of the following:\n  Element contains <img> element with alt text that duplicates existing text"
+              },
+              {
+                "target": [
+                  "img[src$=\"gloves.svg\"]"
+                ],
+                "summary": "Fix all of the following:\n  Element contains <img> element with alt text that duplicates existing text"
+              },
+              {
+                "target": [
+                  "img[src$=\"shield.svg\"]"
+                ],
+                "summary": "Fix all of the following:\n  Element contains <img> element with alt text that duplicates existing text"
+              },
+              {
+                "target": [
+                  "img[alt=\"Ring I\"]"
+                ],
+                "summary": "Fix all of the following:\n  Element contains <img> element with alt text that duplicates existing text"
+              },
+              {
+                "target": [
+                  "img[alt=\"Ring II\"]"
+                ],
+                "summary": "Fix all of the following:\n  Element contains <img> element with alt text that duplicates existing text"
+              },
+              {
+                "target": [
+                  "img[src$=\"boots.svg\"]"
+                ],
+                "summary": "Fix all of the following:\n  Element contains <img> element with alt text that duplicates existing text"
+              },
+              {
+                "target": [
+                  "img[src$=\"belt.webp\"]"
+                ],
+                "summary": "Fix all of the following:\n  Element contains <img> element with alt text that duplicates existing text"
+              }
+            ]
+          },
+          {
+            "id": "region",
+            "impact": "moderate",
+            "help": "All page content should be contained by landmarks",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/4.10/region?application=axeAPI",
+            "nodes": [
+              {
+                "target": [
+                  "#wallet"
+                ],
+                "summary": "Fix any of the following:\n  Some page content is not contained by landmarks"
+              }
+            ]
+          }
+        ],
+        "passes": 41,
+        "incomplete": [
+          {
+            "id": "aria-prohibited-attr",
+            "impact": "serious",
+            "nodes": 3
+          },
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodes": 48
+          }
+        ]
+      },
+      "screenshot": "docs/ui-audit/phase2d-after/between-realms/equipment/between-equipment-mobile-390x844.jpg"
+    },
+    {
+      "screen": "between-stats-passives",
+      "viewport": "390x844",
+      "horizontalOverflow": false,
+      "scrollWidth": 390,
+      "scrollHeight": 1192,
+      "missingImages": [],
+      "errors": [],
+      "failedResponses": [],
+      "dialog": null,
+      "axe": {
+        "violations": [
+          {
+            "id": "heading-order",
+            "impact": "moderate",
+            "help": "Heading levels should only increase by one",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/4.10/heading-order?application=axeAPI",
+            "nodes": [
+              {
+                "target": [
+                  ".phase3BetweenBuild > h3"
+                ],
+                "summary": "Fix any of the following:\n  Heading order invalid"
+              }
+            ]
+          },
+          {
+            "id": "region",
+            "impact": "moderate",
+            "help": "All page content should be contained by landmarks",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/4.10/region?application=axeAPI",
+            "nodes": [
+              {
+                "target": [
+                  "#wallet"
+                ],
+                "summary": "Fix any of the following:\n  Some page content is not contained by landmarks"
+              }
+            ]
+          }
+        ],
+        "passes": 41,
+        "incomplete": [
+          {
+            "id": "aria-prohibited-attr",
+            "impact": "serious",
+            "nodes": 2
+          },
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodes": 48
+          }
+        ]
+      },
+      "screenshot": "docs/ui-audit/phase2d-after/between-realms/stats-passives/between-stats-passives-mobile-390x844.jpg"
+    },
+    {
+      "screen": "between-realm",
+      "viewport": "768x1024",
+      "horizontalOverflow": false,
+      "scrollWidth": 768,
+      "scrollHeight": 1436,
+      "missingImages": [],
+      "errors": [],
+      "failedResponses": [],
+      "dialog": null,
+      "axe": {
+        "violations": [
+          {
+            "id": "region",
+            "impact": "moderate",
+            "help": "All page content should be contained by landmarks",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/4.10/region?application=axeAPI",
+            "nodes": [
+              {
+                "target": [
+                  "#wallet"
+                ],
+                "summary": "Fix any of the following:\n  Some page content is not contained by landmarks"
+              }
+            ]
+          }
+        ],
+        "passes": 40,
+        "incomplete": [
+          {
+            "id": "aria-prohibited-attr",
+            "impact": "serious",
+            "nodes": 2
+          },
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodes": 37
+          }
+        ]
+      },
+      "screenshot": "docs/ui-audit/phase2d-after/between-realms/realm/between-realm-tablet-768x1024.jpg"
+    },
+    {
+      "screen": "between-equipment",
+      "viewport": "768x1024",
+      "horizontalOverflow": false,
+      "scrollWidth": 768,
+      "scrollHeight": 1616,
+      "missingImages": [],
+      "errors": [],
+      "failedResponses": [],
+      "dialog": null,
+      "axe": {
+        "violations": [
+          {
+            "id": "image-redundant-alt",
+            "impact": "minor",
+            "help": "Alternative text of images should not be repeated as text",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/4.10/image-redundant-alt?application=axeAPI",
+            "nodes": [
+              {
+                "target": [
+                  "img[src$=\"amulet.svg\"]"
+                ],
+                "summary": "Fix all of the following:\n  Element contains <img> element with alt text that duplicates existing text"
+              },
+              {
+                "target": [
+                  "img[src$=\"gloves.svg\"]"
+                ],
+                "summary": "Fix all of the following:\n  Element contains <img> element with alt text that duplicates existing text"
+              },
+              {
+                "target": [
+                  "img[src$=\"shield.svg\"]"
+                ],
+                "summary": "Fix all of the following:\n  Element contains <img> element with alt text that duplicates existing text"
+              },
+              {
+                "target": [
+                  "img[alt=\"Ring I\"]"
+                ],
+                "summary": "Fix all of the following:\n  Element contains <img> element with alt text that duplicates existing text"
+              },
+              {
+                "target": [
+                  "img[alt=\"Ring II\"]"
+                ],
+                "summary": "Fix all of the following:\n  Element contains <img> element with alt text that duplicates existing text"
+              },
+              {
+                "target": [
+                  "img[src$=\"boots.svg\"]"
+                ],
+                "summary": "Fix all of the following:\n  Element contains <img> element with alt text that duplicates existing text"
+              },
+              {
+                "target": [
+                  "img[src$=\"belt.webp\"]"
+                ],
+                "summary": "Fix all of the following:\n  Element contains <img> element with alt text that duplicates existing text"
+              }
+            ]
+          },
+          {
+            "id": "region",
+            "impact": "moderate",
+            "help": "All page content should be contained by landmarks",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/4.10/region?application=axeAPI",
+            "nodes": [
+              {
+                "target": [
+                  "#wallet"
+                ],
+                "summary": "Fix any of the following:\n  Some page content is not contained by landmarks"
+              }
+            ]
+          }
+        ],
+        "passes": 40,
+        "incomplete": [
+          {
+            "id": "aria-prohibited-attr",
+            "impact": "serious",
+            "nodes": 3
+          },
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodes": 50
+          }
+        ]
+      },
+      "screenshot": "docs/ui-audit/phase2d-after/between-realms/equipment/between-equipment-tablet-768x1024.jpg"
+    },
+    {
+      "screen": "between-stats-passives",
+      "viewport": "768x1024",
+      "horizontalOverflow": false,
+      "scrollWidth": 768,
+      "scrollHeight": 1200,
+      "missingImages": [],
+      "errors": [],
+      "failedResponses": [],
+      "dialog": null,
+      "axe": {
+        "violations": [
+          {
+            "id": "heading-order",
+            "impact": "moderate",
+            "help": "Heading levels should only increase by one",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/4.10/heading-order?application=axeAPI",
+            "nodes": [
+              {
+                "target": [
+                  ".phase3BetweenBuild > h3"
+                ],
+                "summary": "Fix any of the following:\n  Heading order invalid"
+              }
+            ]
+          },
+          {
+            "id": "region",
+            "impact": "moderate",
+            "help": "All page content should be contained by landmarks",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/4.10/region?application=axeAPI",
+            "nodes": [
+              {
+                "target": [
+                  "#wallet"
+                ],
+                "summary": "Fix any of the following:\n  Some page content is not contained by landmarks"
+              }
+            ]
+          }
+        ],
+        "passes": 40,
+        "incomplete": [
+          {
+            "id": "aria-prohibited-attr",
+            "impact": "serious",
+            "nodes": 2
+          },
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodes": 50
+          }
+        ]
+      },
+      "screenshot": "docs/ui-audit/phase2d-after/between-realms/stats-passives/between-stats-passives-tablet-768x1024.jpg"
+    },
+    {
+      "screen": "between-realm",
+      "viewport": "1440x900",
+      "horizontalOverflow": false,
+      "scrollWidth": 1440,
+      "scrollHeight": 1153,
+      "missingImages": [],
+      "errors": [],
+      "failedResponses": [],
+      "dialog": null,
+      "axe": {
+        "violations": [
+          {
+            "id": "region",
+            "impact": "moderate",
+            "help": "All page content should be contained by landmarks",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/4.10/region?application=axeAPI",
+            "nodes": [
+              {
+                "target": [
+                  "#wallet"
+                ],
+                "summary": "Fix any of the following:\n  Some page content is not contained by landmarks"
+              }
+            ]
+          }
+        ],
+        "passes": 40,
+        "incomplete": [
+          {
+            "id": "aria-prohibited-attr",
+            "impact": "serious",
+            "nodes": 2
+          },
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodes": 37
+          }
+        ]
+      },
+      "screenshot": "docs/ui-audit/phase2d-after/between-realms/realm/between-realm-desktop-1440x900.jpg"
+    },
+    {
+      "screen": "between-equipment",
+      "viewport": "1440x900",
+      "horizontalOverflow": false,
+      "scrollWidth": 1440,
+      "scrollHeight": 1327,
+      "missingImages": [],
+      "errors": [],
+      "failedResponses": [],
+      "dialog": null,
+      "axe": {
+        "violations": [
+          {
+            "id": "image-redundant-alt",
+            "impact": "minor",
+            "help": "Alternative text of images should not be repeated as text",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/4.10/image-redundant-alt?application=axeAPI",
+            "nodes": [
+              {
+                "target": [
+                  "img[src$=\"amulet.svg\"]"
+                ],
+                "summary": "Fix all of the following:\n  Element contains <img> element with alt text that duplicates existing text"
+              },
+              {
+                "target": [
+                  "img[src$=\"gloves.svg\"]"
+                ],
+                "summary": "Fix all of the following:\n  Element contains <img> element with alt text that duplicates existing text"
+              },
+              {
+                "target": [
+                  "img[src$=\"shield.svg\"]"
+                ],
+                "summary": "Fix all of the following:\n  Element contains <img> element with alt text that duplicates existing text"
+              },
+              {
+                "target": [
+                  "img[alt=\"Ring I\"]"
+                ],
+                "summary": "Fix all of the following:\n  Element contains <img> element with alt text that duplicates existing text"
+              },
+              {
+                "target": [
+                  "img[alt=\"Ring II\"]"
+                ],
+                "summary": "Fix all of the following:\n  Element contains <img> element with alt text that duplicates existing text"
+              },
+              {
+                "target": [
+                  "img[src$=\"boots.svg\"]"
+                ],
+                "summary": "Fix all of the following:\n  Element contains <img> element with alt text that duplicates existing text"
+              },
+              {
+                "target": [
+                  "img[src$=\"belt.webp\"]"
+                ],
+                "summary": "Fix all of the following:\n  Element contains <img> element with alt text that duplicates existing text"
+              }
+            ]
+          },
+          {
+            "id": "region",
+            "impact": "moderate",
+            "help": "All page content should be contained by landmarks",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/4.10/region?application=axeAPI",
+            "nodes": [
+              {
+                "target": [
+                  "#wallet"
+                ],
+                "summary": "Fix any of the following:\n  Some page content is not contained by landmarks"
+              }
+            ]
+          }
+        ],
+        "passes": 40,
+        "incomplete": [
+          {
+            "id": "aria-prohibited-attr",
+            "impact": "serious",
+            "nodes": 3
+          },
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodes": 50
+          }
+        ]
+      },
+      "screenshot": "docs/ui-audit/phase2d-after/between-realms/equipment/between-equipment-desktop-1440x900.jpg"
+    },
+    {
+      "screen": "between-stats-passives",
+      "viewport": "1440x900",
+      "horizontalOverflow": false,
+      "scrollWidth": 1440,
+      "scrollHeight": 1220,
+      "missingImages": [],
+      "errors": [],
+      "failedResponses": [],
+      "dialog": null,
+      "axe": {
+        "violations": [
+          {
+            "id": "heading-order",
+            "impact": "moderate",
+            "help": "Heading levels should only increase by one",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/4.10/heading-order?application=axeAPI",
+            "nodes": [
+              {
+                "target": [
+                  ".phase3BetweenBuild > h3"
+                ],
+                "summary": "Fix any of the following:\n  Heading order invalid"
+              }
+            ]
+          },
+          {
+            "id": "region",
+            "impact": "moderate",
+            "help": "All page content should be contained by landmarks",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/4.10/region?application=axeAPI",
+            "nodes": [
+              {
+                "target": [
+                  "#wallet"
+                ],
+                "summary": "Fix any of the following:\n  Some page content is not contained by landmarks"
+              }
+            ]
+          }
+        ],
+        "passes": 40,
+        "incomplete": [
+          {
+            "id": "aria-prohibited-attr",
+            "impact": "serious",
+            "nodes": 2
+          },
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodes": 50
+          }
+        ]
+      },
+      "screenshot": "docs/ui-audit/phase2d-after/between-realms/stats-passives/between-stats-passives-desktop-1440x900.jpg"
+    },
+    {
+      "screen": "between-realm",
+      "viewport": "1920x1080",
+      "horizontalOverflow": false,
+      "scrollWidth": 1920,
+      "scrollHeight": 1153,
+      "missingImages": [],
+      "errors": [],
+      "failedResponses": [],
+      "dialog": null,
+      "axe": {
+        "violations": [
+          {
+            "id": "region",
+            "impact": "moderate",
+            "help": "All page content should be contained by landmarks",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/4.10/region?application=axeAPI",
+            "nodes": [
+              {
+                "target": [
+                  "#wallet"
+                ],
+                "summary": "Fix any of the following:\n  Some page content is not contained by landmarks"
+              }
+            ]
+          }
+        ],
+        "passes": 40,
+        "incomplete": [
+          {
+            "id": "aria-prohibited-attr",
+            "impact": "serious",
+            "nodes": 2
+          },
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodes": 37
+          }
+        ]
+      },
+      "screenshot": "docs/ui-audit/phase2d-after/between-realms/realm/between-realm-wide-1920x1080.jpg"
+    },
+    {
+      "screen": "between-equipment",
+      "viewport": "1920x1080",
+      "horizontalOverflow": false,
+      "scrollWidth": 1920,
+      "scrollHeight": 1327,
+      "missingImages": [],
+      "errors": [],
+      "failedResponses": [],
+      "dialog": null,
+      "axe": {
+        "violations": [
+          {
+            "id": "image-redundant-alt",
+            "impact": "minor",
+            "help": "Alternative text of images should not be repeated as text",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/4.10/image-redundant-alt?application=axeAPI",
+            "nodes": [
+              {
+                "target": [
+                  "img[src$=\"amulet.svg\"]"
+                ],
+                "summary": "Fix all of the following:\n  Element contains <img> element with alt text that duplicates existing text"
+              },
+              {
+                "target": [
+                  "img[src$=\"gloves.svg\"]"
+                ],
+                "summary": "Fix all of the following:\n  Element contains <img> element with alt text that duplicates existing text"
+              },
+              {
+                "target": [
+                  "img[src$=\"shield.svg\"]"
+                ],
+                "summary": "Fix all of the following:\n  Element contains <img> element with alt text that duplicates existing text"
+              },
+              {
+                "target": [
+                  "img[alt=\"Ring I\"]"
+                ],
+                "summary": "Fix all of the following:\n  Element contains <img> element with alt text that duplicates existing text"
+              },
+              {
+                "target": [
+                  "img[alt=\"Ring II\"]"
+                ],
+                "summary": "Fix all of the following:\n  Element contains <img> element with alt text that duplicates existing text"
+              },
+              {
+                "target": [
+                  "img[src$=\"boots.svg\"]"
+                ],
+                "summary": "Fix all of the following:\n  Element contains <img> element with alt text that duplicates existing text"
+              },
+              {
+                "target": [
+                  "img[src$=\"belt.webp\"]"
+                ],
+                "summary": "Fix all of the following:\n  Element contains <img> element with alt text that duplicates existing text"
+              }
+            ]
+          },
+          {
+            "id": "region",
+            "impact": "moderate",
+            "help": "All page content should be contained by landmarks",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/4.10/region?application=axeAPI",
+            "nodes": [
+              {
+                "target": [
+                  "#wallet"
+                ],
+                "summary": "Fix any of the following:\n  Some page content is not contained by landmarks"
+              }
+            ]
+          }
+        ],
+        "passes": 40,
+        "incomplete": [
+          {
+            "id": "aria-prohibited-attr",
+            "impact": "serious",
+            "nodes": 3
+          },
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodes": 50
+          }
+        ]
+      },
+      "screenshot": "docs/ui-audit/phase2d-after/between-realms/equipment/between-equipment-wide-1920x1080.jpg"
+    },
+    {
+      "screen": "between-stats-passives",
+      "viewport": "1920x1080",
+      "horizontalOverflow": false,
+      "scrollWidth": 1920,
+      "scrollHeight": 1220,
+      "missingImages": [],
+      "errors": [],
+      "failedResponses": [],
+      "dialog": null,
+      "axe": {
+        "violations": [
+          {
+            "id": "heading-order",
+            "impact": "moderate",
+            "help": "Heading levels should only increase by one",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/4.10/heading-order?application=axeAPI",
+            "nodes": [
+              {
+                "target": [
+                  ".phase3BetweenBuild > h3"
+                ],
+                "summary": "Fix any of the following:\n  Heading order invalid"
+              }
+            ]
+          },
+          {
+            "id": "region",
+            "impact": "moderate",
+            "help": "All page content should be contained by landmarks",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/4.10/region?application=axeAPI",
+            "nodes": [
+              {
+                "target": [
+                  "#wallet"
+                ],
+                "summary": "Fix any of the following:\n  Some page content is not contained by landmarks"
+              }
+            ]
+          }
+        ],
+        "passes": 40,
+        "incomplete": [
+          {
+            "id": "aria-prohibited-attr",
+            "impact": "serious",
+            "nodes": 2
+          },
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodes": 50
+          }
+        ]
+      },
+      "screenshot": "docs/ui-audit/phase2d-after/between-realms/stats-passives/between-stats-passives-wide-1920x1080.jpg"
+    }
+  ]
+}

@@ -1,0 +1,3008 @@
+{
+  "nativeCases": 3360,
+  "nativeWallSeconds": 200.6,
+  "sourceHash": "e42076d2c97f2d00db4cbb9a64fc94debb46148aa2c36b128665117189c87521",
+  "tests": {
+    "unit": {
+      "pass": 205,
+      "fail": 0
+    },
+    "browser": "PASS at 390px and 1280px",
+    "assets": "PASS",
+    "pvp": "PASS"
+  },
+  "policy": "Same tier and rarity gear; zero potions, decline events, no equipment upgrades; steering RNG separate, initial combat seeds paired; observed EHP budget = MaxHP + actual healing + actual Barrier absorption, not a theoretical EHP formula.",
+  "groups": [
+    {
+      "key": "1/random/true",
+      "n": 84,
+      "wins": 83,
+      "winPct": 98.8,
+      "medianRealm": 15,
+      "p90Realm": 15,
+      "medianSeconds": 48.18,
+      "medianDps": 46.62,
+      "hybridRuns": 82,
+      "medianFirstHybrid": 8,
+      "missingFamilyRuns": 76,
+      "unplannedFamilyRuns": 76,
+      "targetHybridRuns": 32,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "1/random/false",
+      "n": 84,
+      "wins": 79,
+      "winPct": 94,
+      "medianRealm": 15,
+      "p90Realm": 15,
+      "medianSeconds": 51.92,
+      "medianDps": 43.8,
+      "hybridRuns": 84,
+      "medianFirstHybrid": 8,
+      "missingFamilyRuns": 73,
+      "unplannedFamilyRuns": 73,
+      "targetHybridRuns": 40,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "1/mono/true",
+      "n": 84,
+      "wins": 81,
+      "winPct": 96.4,
+      "medianRealm": 15,
+      "p90Realm": 15,
+      "medianSeconds": 43.12,
+      "medianDps": 47.08,
+      "hybridRuns": 37,
+      "medianFirstHybrid": 9,
+      "missingFamilyRuns": 0,
+      "unplannedFamilyRuns": 84,
+      "targetHybridRuns": 0,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "1/mono/false",
+      "n": 84,
+      "wins": 83,
+      "winPct": 98.8,
+      "medianRealm": 15,
+      "p90Realm": 15,
+      "medianSeconds": 46.97,
+      "medianDps": 44.9,
+      "hybridRuns": 38,
+      "medianFirstHybrid": 8,
+      "missingFamilyRuns": 0,
+      "unplannedFamilyRuns": 84,
+      "targetHybridRuns": 0,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "1/dual/true",
+      "n": 84,
+      "wins": 82,
+      "winPct": 97.6,
+      "medianRealm": 15,
+      "p90Realm": 15,
+      "medianSeconds": 42.68,
+      "medianDps": 47.22,
+      "hybridRuns": 74,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 10,
+      "unplannedFamilyRuns": 84,
+      "targetHybridRuns": 74,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "1/dual/false",
+      "n": 84,
+      "wins": 80,
+      "winPct": 95.2,
+      "medianRealm": 15,
+      "p90Realm": 15,
+      "medianSeconds": 47.08,
+      "medianDps": 45.11,
+      "hybridRuns": 72,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 12,
+      "unplannedFamilyRuns": 82,
+      "targetHybridRuns": 72,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "1/triple/true",
+      "n": 84,
+      "wins": 83,
+      "winPct": 98.8,
+      "medianRealm": 15,
+      "p90Realm": 15,
+      "medianSeconds": 42.24,
+      "medianDps": 47.53,
+      "hybridRuns": 81,
+      "medianFirstHybrid": 6,
+      "missingFamilyRuns": 30,
+      "unplannedFamilyRuns": 30,
+      "targetHybridRuns": 81,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "1/triple/false",
+      "n": 84,
+      "wins": 81,
+      "winPct": 96.4,
+      "medianRealm": 15,
+      "p90Realm": 15,
+      "medianSeconds": 43.89,
+      "medianDps": 45.11,
+      "hybridRuns": 80,
+      "medianFirstHybrid": 6,
+      "missingFamilyRuns": 26,
+      "unplannedFamilyRuns": 26,
+      "targetHybridRuns": 80,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "10/random/true",
+      "n": 84,
+      "wins": 1,
+      "winPct": 1.2,
+      "medianRealm": 8,
+      "p90Realm": 15,
+      "medianSeconds": 38.94,
+      "medianDps": 110.49,
+      "hybridRuns": 35,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 71,
+      "unplannedFamilyRuns": 68,
+      "targetHybridRuns": 14,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "10/random/false",
+      "n": 84,
+      "wins": 2,
+      "winPct": 2.4,
+      "medianRealm": 6,
+      "p90Realm": 13,
+      "medianSeconds": 34.87,
+      "medianDps": 104.47,
+      "hybridRuns": 24,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 77,
+      "unplannedFamilyRuns": 71,
+      "targetHybridRuns": 10,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "10/mono/true",
+      "n": 84,
+      "wins": 3,
+      "winPct": 3.6,
+      "medianRealm": 10,
+      "p90Realm": 15,
+      "medianSeconds": 38.06,
+      "medianDps": 111.56,
+      "hybridRuns": 21,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 0,
+      "unplannedFamilyRuns": 78,
+      "targetHybridRuns": 0,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "10/mono/false",
+      "n": 84,
+      "wins": 1,
+      "winPct": 1.2,
+      "medianRealm": 7,
+      "p90Realm": 15,
+      "medianSeconds": 34.32,
+      "medianDps": 106.98,
+      "hybridRuns": 18,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 0,
+      "unplannedFamilyRuns": 76,
+      "targetHybridRuns": 0,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "10/dual/true",
+      "n": 84,
+      "wins": 3,
+      "winPct": 3.6,
+      "medianRealm": 9,
+      "p90Realm": 15,
+      "medianSeconds": 37.73,
+      "medianDps": 110.06,
+      "hybridRuns": 49,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 13,
+      "unplannedFamilyRuns": 65,
+      "targetHybridRuns": 49,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "10/dual/false",
+      "n": 84,
+      "wins": 1,
+      "winPct": 1.2,
+      "medianRealm": 8,
+      "p90Realm": 15,
+      "medianSeconds": 35.64,
+      "medianDps": 103.63,
+      "hybridRuns": 39,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 18,
+      "unplannedFamilyRuns": 63,
+      "targetHybridRuns": 39,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "10/triple/true",
+      "n": 84,
+      "wins": 7,
+      "winPct": 8.3,
+      "medianRealm": 10,
+      "p90Realm": 15,
+      "medianSeconds": 36.96,
+      "medianDps": 109.14,
+      "hybridRuns": 57,
+      "medianFirstHybrid": 6,
+      "missingFamilyRuns": 37,
+      "unplannedFamilyRuns": 27,
+      "targetHybridRuns": 57,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "10/triple/false",
+      "n": 84,
+      "wins": 4,
+      "winPct": 4.8,
+      "medianRealm": 8,
+      "p90Realm": 15,
+      "medianSeconds": 34.54,
+      "medianDps": 103.94,
+      "hybridRuns": 48,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 45,
+      "unplannedFamilyRuns": 30,
+      "targetHybridRuns": 48,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "50/random/true",
+      "n": 84,
+      "wins": 1,
+      "winPct": 1.2,
+      "medianRealm": 5,
+      "p90Realm": 14,
+      "medianSeconds": 24.75,
+      "medianDps": 462.26,
+      "hybridRuns": 20,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 79,
+      "unplannedFamilyRuns": 66,
+      "targetHybridRuns": 6,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "50/random/false",
+      "n": 84,
+      "wins": 1,
+      "winPct": 1.2,
+      "medianRealm": 4,
+      "p90Realm": 10,
+      "medianSeconds": 22.44,
+      "medianDps": 439.9,
+      "hybridRuns": 17,
+      "medianFirstHybrid": 6,
+      "missingFamilyRuns": 78,
+      "unplannedFamilyRuns": 59,
+      "targetHybridRuns": 8,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "50/mono/true",
+      "n": 84,
+      "wins": 0,
+      "winPct": 0,
+      "medianRealm": 5,
+      "p90Realm": 11,
+      "medianSeconds": 25.52,
+      "medianDps": 444.14,
+      "hybridRuns": 10,
+      "medianFirstHybrid": 5,
+      "missingFamilyRuns": 0,
+      "unplannedFamilyRuns": 71,
+      "targetHybridRuns": 0,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "50/mono/false",
+      "n": 84,
+      "wins": 0,
+      "winPct": 0,
+      "medianRealm": 5,
+      "p90Realm": 12,
+      "medianSeconds": 22.33,
+      "medianDps": 426.35,
+      "hybridRuns": 4,
+      "medianFirstHybrid": 10,
+      "missingFamilyRuns": 0,
+      "unplannedFamilyRuns": 67,
+      "targetHybridRuns": 0,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "50/dual/true",
+      "n": 84,
+      "wins": 3,
+      "winPct": 3.6,
+      "medianRealm": 5,
+      "p90Realm": 15,
+      "medianSeconds": 25.41,
+      "medianDps": 451.48,
+      "hybridRuns": 26,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 18,
+      "unplannedFamilyRuns": 52,
+      "targetHybridRuns": 26,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "50/dual/false",
+      "n": 84,
+      "wins": 1,
+      "winPct": 1.2,
+      "medianRealm": 5,
+      "p90Realm": 12,
+      "medianSeconds": 23.76,
+      "medianDps": 427.63,
+      "hybridRuns": 25,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 22,
+      "unplannedFamilyRuns": 50,
+      "targetHybridRuns": 25,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "50/triple/true",
+      "n": 84,
+      "wins": 4,
+      "winPct": 4.8,
+      "medianRealm": 5,
+      "p90Realm": 15,
+      "medianSeconds": 25.41,
+      "medianDps": 453.51,
+      "hybridRuns": 32,
+      "medianFirstHybrid": 6,
+      "missingFamilyRuns": 45,
+      "unplannedFamilyRuns": 17,
+      "targetHybridRuns": 32,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "50/triple/false",
+      "n": 84,
+      "wins": 1,
+      "winPct": 1.2,
+      "medianRealm": 4,
+      "p90Realm": 15,
+      "medianSeconds": 23.76,
+      "medianDps": 436.72,
+      "hybridRuns": 28,
+      "medianFirstHybrid": 6,
+      "missingFamilyRuns": 51,
+      "unplannedFamilyRuns": 18,
+      "targetHybridRuns": 28,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "100/random/true",
+      "n": 84,
+      "wins": 8,
+      "winPct": 9.5,
+      "medianRealm": 6,
+      "p90Realm": 15,
+      "medianSeconds": 27.61,
+      "medianDps": 1054.24,
+      "hybridRuns": 26,
+      "medianFirstHybrid": 6,
+      "missingFamilyRuns": 75,
+      "unplannedFamilyRuns": 67,
+      "targetHybridRuns": 11,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "100/random/false",
+      "n": 84,
+      "wins": 6,
+      "winPct": 7.1,
+      "medianRealm": 4,
+      "p90Realm": 15,
+      "medianSeconds": 24.53,
+      "medianDps": 968.32,
+      "hybridRuns": 26,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 75,
+      "unplannedFamilyRuns": 59,
+      "targetHybridRuns": 13,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "100/mono/true",
+      "n": 84,
+      "wins": 8,
+      "winPct": 9.5,
+      "medianRealm": 6,
+      "p90Realm": 15,
+      "medianSeconds": 25.74,
+      "medianDps": 1032.79,
+      "hybridRuns": 14,
+      "medianFirstHybrid": 8,
+      "missingFamilyRuns": 0,
+      "unplannedFamilyRuns": 73,
+      "targetHybridRuns": 0,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "100/mono/false",
+      "n": 84,
+      "wins": 3,
+      "winPct": 3.6,
+      "medianRealm": 5,
+      "p90Realm": 15,
+      "medianSeconds": 25.52,
+      "medianDps": 1007.59,
+      "hybridRuns": 12,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 0,
+      "unplannedFamilyRuns": 70,
+      "targetHybridRuns": 0,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "100/dual/true",
+      "n": 84,
+      "wins": 7,
+      "winPct": 8.3,
+      "medianRealm": 7,
+      "p90Realm": 15,
+      "medianSeconds": 25.52,
+      "medianDps": 1047.39,
+      "hybridRuns": 34,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 19,
+      "unplannedFamilyRuns": 66,
+      "targetHybridRuns": 34,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "100/dual/false",
+      "n": 84,
+      "wins": 7,
+      "winPct": 8.3,
+      "medianRealm": 5,
+      "p90Realm": 15,
+      "medianSeconds": 26.73,
+      "medianDps": 1010.04,
+      "hybridRuns": 31,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 23,
+      "unplannedFamilyRuns": 60,
+      "targetHybridRuns": 31,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "100/triple/true",
+      "n": 84,
+      "wins": 8,
+      "winPct": 9.5,
+      "medianRealm": 7,
+      "p90Realm": 15,
+      "medianSeconds": 26.51,
+      "medianDps": 1047.39,
+      "hybridRuns": 45,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 44,
+      "unplannedFamilyRuns": 23,
+      "targetHybridRuns": 45,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "100/triple/false",
+      "n": 84,
+      "wins": 7,
+      "winPct": 8.3,
+      "medianRealm": 5,
+      "p90Realm": 15,
+      "medianSeconds": 25.19,
+      "medianDps": 1003.17,
+      "hybridRuns": 38,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 47,
+      "unplannedFamilyRuns": 21,
+      "targetHybridRuns": 38,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "200/random/true",
+      "n": 84,
+      "wins": 18,
+      "winPct": 21.4,
+      "medianRealm": 6,
+      "p90Realm": 15,
+      "medianSeconds": 27.72,
+      "medianDps": 2548.62,
+      "hybridRuns": 37,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 82,
+      "unplannedFamilyRuns": 69,
+      "targetHybridRuns": 19,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "200/random/false",
+      "n": 84,
+      "wins": 12,
+      "winPct": 14.3,
+      "medianRealm": 6,
+      "p90Realm": 15,
+      "medianSeconds": 27.28,
+      "medianDps": 2398.16,
+      "hybridRuns": 34,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 79,
+      "unplannedFamilyRuns": 65,
+      "targetHybridRuns": 14,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "200/mono/true",
+      "n": 84,
+      "wins": 15,
+      "winPct": 17.9,
+      "medianRealm": 8,
+      "p90Realm": 15,
+      "medianSeconds": 25.52,
+      "medianDps": 2632.06,
+      "hybridRuns": 23,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 0,
+      "unplannedFamilyRuns": 73,
+      "targetHybridRuns": 0,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "200/mono/false",
+      "n": 84,
+      "wins": 15,
+      "winPct": 17.9,
+      "medianRealm": 7,
+      "p90Realm": 15,
+      "medianSeconds": 26.29,
+      "medianDps": 2503.35,
+      "hybridRuns": 11,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 0,
+      "unplannedFamilyRuns": 71,
+      "targetHybridRuns": 0,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "200/dual/true",
+      "n": 84,
+      "wins": 16,
+      "winPct": 19,
+      "medianRealm": 8,
+      "p90Realm": 15,
+      "medianSeconds": 27.17,
+      "medianDps": 2587.04,
+      "hybridRuns": 40,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 21,
+      "unplannedFamilyRuns": 61,
+      "targetHybridRuns": 40,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "200/dual/false",
+      "n": 84,
+      "wins": 11,
+      "winPct": 13.1,
+      "medianRealm": 7,
+      "p90Realm": 15,
+      "medianSeconds": 25.52,
+      "medianDps": 2449.3,
+      "hybridRuns": 34,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 21,
+      "unplannedFamilyRuns": 60,
+      "targetHybridRuns": 34,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "200/triple/true",
+      "n": 84,
+      "wins": 20,
+      "winPct": 23.8,
+      "medianRealm": 9,
+      "p90Realm": 15,
+      "medianSeconds": 26.51,
+      "medianDps": 2653.77,
+      "hybridRuns": 49,
+      "medianFirstHybrid": 6,
+      "missingFamilyRuns": 42,
+      "unplannedFamilyRuns": 21,
+      "targetHybridRuns": 49,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "200/triple/false",
+      "n": 84,
+      "wins": 12,
+      "winPct": 14.3,
+      "medianRealm": 8,
+      "p90Realm": 15,
+      "medianSeconds": 24.86,
+      "medianDps": 2514,
+      "hybridRuns": 46,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 45,
+      "unplannedFamilyRuns": 20,
+      "targetHybridRuns": 46,
+      "timeouts": 0,
+      "errors": 0
+    }
+  ],
+  "weapons": [
+    {
+      "key": "Sword/random",
+      "n": 60,
+      "wins": 16,
+      "winPct": 26.7,
+      "medianRealm": 8,
+      "p90Realm": 15,
+      "medianSeconds": 44.88,
+      "medianDps": 368.33,
+      "hybridRuns": 31,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 57,
+      "unplannedFamilyRuns": 53,
+      "targetHybridRuns": 15,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Sword/mono",
+      "n": 60,
+      "wins": 15,
+      "winPct": 25,
+      "medianRealm": 11,
+      "p90Realm": 15,
+      "medianSeconds": 41.47,
+      "medianDps": 356.4,
+      "hybridRuns": 19,
+      "medianFirstHybrid": 9,
+      "missingFamilyRuns": 0,
+      "unplannedFamilyRuns": 55,
+      "targetHybridRuns": 0,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Sword/dual",
+      "n": 60,
+      "wins": 17,
+      "winPct": 28.3,
+      "medianRealm": 10,
+      "p90Realm": 15,
+      "medianSeconds": 40.92,
+      "medianDps": 357.22,
+      "hybridRuns": 33,
+      "medianFirstHybrid": 6,
+      "missingFamilyRuns": 11,
+      "unplannedFamilyRuns": 44,
+      "targetHybridRuns": 33,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Sword/triple",
+      "n": 60,
+      "wins": 20,
+      "winPct": 33.3,
+      "medianRealm": 14,
+      "p90Realm": 15,
+      "medianSeconds": 42.02,
+      "medianDps": 375.86,
+      "hybridRuns": 40,
+      "medianFirstHybrid": 5,
+      "missingFamilyRuns": 18,
+      "unplannedFamilyRuns": 10,
+      "targetHybridRuns": 40,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Mace/random",
+      "n": 60,
+      "wins": 15,
+      "winPct": 25,
+      "medianRealm": 7,
+      "p90Realm": 15,
+      "medianSeconds": 48.84,
+      "medianDps": 286.19,
+      "hybridRuns": 24,
+      "medianFirstHybrid": 8,
+      "missingFamilyRuns": 51,
+      "unplannedFamilyRuns": 47,
+      "targetHybridRuns": 7,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Mace/mono",
+      "n": 60,
+      "wins": 14,
+      "winPct": 23.3,
+      "medianRealm": 9,
+      "p90Realm": 15,
+      "medianSeconds": 43.56,
+      "medianDps": 280.81,
+      "hybridRuns": 15,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 0,
+      "unplannedFamilyRuns": 55,
+      "targetHybridRuns": 0,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Mace/dual",
+      "n": 60,
+      "wins": 13,
+      "winPct": 21.7,
+      "medianRealm": 10,
+      "p90Realm": 15,
+      "medianSeconds": 45.43,
+      "medianDps": 280.81,
+      "hybridRuns": 31,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 14,
+      "unplannedFamilyRuns": 50,
+      "targetHybridRuns": 31,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Mace/triple",
+      "n": 60,
+      "wins": 15,
+      "winPct": 25,
+      "medianRealm": 11,
+      "p90Realm": 15,
+      "medianSeconds": 47.85,
+      "medianDps": 277.67,
+      "hybridRuns": 37,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 29,
+      "unplannedFamilyRuns": 19,
+      "targetHybridRuns": 37,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Bow/random",
+      "n": 60,
+      "wins": 20,
+      "winPct": 33.3,
+      "medianRealm": 10,
+      "p90Realm": 15,
+      "medianSeconds": 31.46,
+      "medianDps": 607.79,
+      "hybridRuns": 33,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 54,
+      "unplannedFamilyRuns": 52,
+      "targetHybridRuns": 14,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Bow/mono",
+      "n": 60,
+      "wins": 19,
+      "winPct": 31.7,
+      "medianRealm": 11,
+      "p90Realm": 15,
+      "medianSeconds": 30.8,
+      "medianDps": 607.93,
+      "hybridRuns": 21,
+      "medianFirstHybrid": 8,
+      "missingFamilyRuns": 0,
+      "unplannedFamilyRuns": 56,
+      "targetHybridRuns": 0,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Bow/dual",
+      "n": 60,
+      "wins": 18,
+      "winPct": 30,
+      "medianRealm": 11,
+      "p90Realm": 15,
+      "medianSeconds": 29.48,
+      "medianDps": 605.9,
+      "hybridRuns": 30,
+      "medianFirstHybrid": 8,
+      "missingFamilyRuns": 13,
+      "unplannedFamilyRuns": 52,
+      "targetHybridRuns": 30,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Bow/triple",
+      "n": 60,
+      "wins": 23,
+      "winPct": 38.3,
+      "medianRealm": 12,
+      "p90Realm": 15,
+      "medianSeconds": 29.92,
+      "medianDps": 597.89,
+      "hybridRuns": 38,
+      "medianFirstHybrid": 6,
+      "missingFamilyRuns": 33,
+      "unplannedFamilyRuns": 23,
+      "targetHybridRuns": 38,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Daggers/random",
+      "n": 60,
+      "wins": 21,
+      "winPct": 35,
+      "medianRealm": 13,
+      "p90Realm": 15,
+      "medianSeconds": 30.03,
+      "medianDps": 650.43,
+      "hybridRuns": 37,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 55,
+      "unplannedFamilyRuns": 54,
+      "targetHybridRuns": 17,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Daggers/mono",
+      "n": 60,
+      "wins": 23,
+      "winPct": 38.3,
+      "medianRealm": 15,
+      "p90Realm": 15,
+      "medianSeconds": 28.71,
+      "medianDps": 651.93,
+      "hybridRuns": 17,
+      "medianFirstHybrid": 8,
+      "missingFamilyRuns": 0,
+      "unplannedFamilyRuns": 60,
+      "targetHybridRuns": 0,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Daggers/dual",
+      "n": 60,
+      "wins": 20,
+      "winPct": 33.3,
+      "medianRealm": 15,
+      "p90Realm": 15,
+      "medianSeconds": 30.8,
+      "medianDps": 666.35,
+      "hybridRuns": 43,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 6,
+      "unplannedFamilyRuns": 55,
+      "targetHybridRuns": 43,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Daggers/triple",
+      "n": 60,
+      "wins": 21,
+      "winPct": 35,
+      "medianRealm": 15,
+      "p90Realm": 15,
+      "medianSeconds": 30.69,
+      "medianDps": 672.84,
+      "hybridRuns": 51,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 21,
+      "unplannedFamilyRuns": 19,
+      "targetHybridRuns": 51,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Two-Handed/random",
+      "n": 60,
+      "wins": 14,
+      "winPct": 23.3,
+      "medianRealm": 9,
+      "p90Realm": 15,
+      "medianSeconds": 30.69,
+      "medianDps": 536.88,
+      "hybridRuns": 33,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 52,
+      "unplannedFamilyRuns": 45,
+      "targetHybridRuns": 13,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Two-Handed/mono",
+      "n": 60,
+      "wins": 14,
+      "winPct": 23.3,
+      "medianRealm": 10,
+      "p90Realm": 15,
+      "medianSeconds": 29.7,
+      "medianDps": 629.19,
+      "hybridRuns": 16,
+      "medianFirstHybrid": 8,
+      "missingFamilyRuns": 0,
+      "unplannedFamilyRuns": 54,
+      "targetHybridRuns": 0,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Two-Handed/dual",
+      "n": 60,
+      "wins": 17,
+      "winPct": 28.3,
+      "medianRealm": 12,
+      "p90Realm": 15,
+      "medianSeconds": 30.14,
+      "medianDps": 606.62,
+      "hybridRuns": 36,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 11,
+      "unplannedFamilyRuns": 46,
+      "targetHybridRuns": 36,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Two-Handed/triple",
+      "n": 60,
+      "wins": 18,
+      "winPct": 30,
+      "medianRealm": 13,
+      "p90Realm": 15,
+      "medianSeconds": 30.91,
+      "medianDps": 608.67,
+      "hybridRuns": 43,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 27,
+      "unplannedFamilyRuns": 15,
+      "targetHybridRuns": 43,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Staff/random",
+      "n": 60,
+      "wins": 14,
+      "winPct": 23.3,
+      "medianRealm": 8,
+      "p90Realm": 15,
+      "medianSeconds": 27.17,
+      "medianDps": 489.87,
+      "hybridRuns": 28,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 57,
+      "unplannedFamilyRuns": 54,
+      "targetHybridRuns": 10,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Staff/mono",
+      "n": 60,
+      "wins": 13,
+      "winPct": 21.7,
+      "medianRealm": 8,
+      "p90Realm": 15,
+      "medianSeconds": 29.37,
+      "medianDps": 444.14,
+      "hybridRuns": 10,
+      "medianFirstHybrid": 8,
+      "missingFamilyRuns": 0,
+      "unplannedFamilyRuns": 59,
+      "targetHybridRuns": 0,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Staff/dual",
+      "n": 60,
+      "wins": 15,
+      "winPct": 25,
+      "medianRealm": 8,
+      "p90Realm": 15,
+      "medianSeconds": 30.69,
+      "medianDps": 478.94,
+      "hybridRuns": 31,
+      "medianFirstHybrid": 6,
+      "missingFamilyRuns": 10,
+      "unplannedFamilyRuns": 51,
+      "targetHybridRuns": 31,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Staff/triple",
+      "n": 60,
+      "wins": 14,
+      "winPct": 23.3,
+      "medianRealm": 8,
+      "p90Realm": 15,
+      "medianSeconds": 28.82,
+      "medianDps": 480.62,
+      "hybridRuns": 36,
+      "medianFirstHybrid": 5,
+      "missingFamilyRuns": 30,
+      "unplannedFamilyRuns": 22,
+      "targetHybridRuns": 36,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Wand/random",
+      "n": 60,
+      "wins": 11,
+      "winPct": 18.3,
+      "medianRealm": 3,
+      "p90Realm": 15,
+      "medianSeconds": 21.34,
+      "medianDps": 335.64,
+      "hybridRuns": 14,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 57,
+      "unplannedFamilyRuns": 41,
+      "targetHybridRuns": 6,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Wand/mono",
+      "n": 60,
+      "wins": 9,
+      "winPct": 15,
+      "medianRealm": 4,
+      "p90Realm": 15,
+      "medianSeconds": 22.22,
+      "medianDps": 333.25,
+      "hybridRuns": 7,
+      "medianFirstHybrid": 8,
+      "missingFamilyRuns": 0,
+      "unplannedFamilyRuns": 40,
+      "targetHybridRuns": 0,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Wand/dual",
+      "n": 60,
+      "wins": 11,
+      "winPct": 18.3,
+      "medianRealm": 4,
+      "p90Realm": 15,
+      "medianSeconds": 22.22,
+      "medianDps": 333.25,
+      "hybridRuns": 19,
+      "medianFirstHybrid": 6,
+      "missingFamilyRuns": 16,
+      "unplannedFamilyRuns": 30,
+      "targetHybridRuns": 19,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Wand/triple",
+      "n": 60,
+      "wins": 11,
+      "winPct": 18.3,
+      "medianRealm": 4,
+      "p90Realm": 15,
+      "medianSeconds": 22.22,
+      "medianDps": 335.64,
+      "hybridRuns": 19,
+      "medianFirstHybrid": 6,
+      "missingFamilyRuns": 40,
+      "unplannedFamilyRuns": 10,
+      "targetHybridRuns": 19,
+      "timeouts": 0,
+      "errors": 0
+    }
+  ],
+  "families": [
+    {
+      "key": "blood/random",
+      "n": 70,
+      "wins": 20,
+      "winPct": 28.6,
+      "medianRealm": 8,
+      "p90Realm": 15,
+      "medianSeconds": 34.87,
+      "medianDps": 391.53,
+      "hybridRuns": 31,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 61,
+      "unplannedFamilyRuns": 54,
+      "targetHybridRuns": 14,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "blood/mono",
+      "n": 70,
+      "wins": 18,
+      "winPct": 25.7,
+      "medianRealm": 10,
+      "p90Realm": 15,
+      "medianSeconds": 32.34,
+      "medianDps": 391.53,
+      "hybridRuns": 32,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 0,
+      "unplannedFamilyRuns": 63,
+      "targetHybridRuns": 0,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "blood/dual",
+      "n": 70,
+      "wins": 13,
+      "winPct": 18.6,
+      "medianRealm": 8,
+      "p90Realm": 15,
+      "medianSeconds": 32.56,
+      "medianDps": 391.53,
+      "hybridRuns": 34,
+      "medianFirstHybrid": 6,
+      "missingFamilyRuns": 15,
+      "unplannedFamilyRuns": 55,
+      "targetHybridRuns": 34,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "blood/triple",
+      "n": 70,
+      "wins": 16,
+      "winPct": 22.9,
+      "medianRealm": 9,
+      "p90Realm": 15,
+      "medianSeconds": 31.57,
+      "medianDps": 391.53,
+      "hybridRuns": 42,
+      "medianFirstHybrid": 5,
+      "missingFamilyRuns": 30,
+      "unplannedFamilyRuns": 18,
+      "targetHybridRuns": 42,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "decay/random",
+      "n": 70,
+      "wins": 17,
+      "winPct": 24.3,
+      "medianRealm": 7,
+      "p90Realm": 15,
+      "medianSeconds": 31.68,
+      "medianDps": 411.46,
+      "hybridRuns": 31,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 64,
+      "unplannedFamilyRuns": 57,
+      "targetHybridRuns": 14,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "decay/mono",
+      "n": 70,
+      "wins": 16,
+      "winPct": 22.9,
+      "medianRealm": 9,
+      "p90Realm": 15,
+      "medianSeconds": 31.9,
+      "medianDps": 411.07,
+      "hybridRuns": 24,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 0,
+      "unplannedFamilyRuns": 64,
+      "targetHybridRuns": 0,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "decay/dual",
+      "n": 70,
+      "wins": 15,
+      "winPct": 21.4,
+      "medianRealm": 9,
+      "p90Realm": 15,
+      "medianSeconds": 31.57,
+      "medianDps": 411.07,
+      "hybridRuns": 33,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 18,
+      "unplannedFamilyRuns": 54,
+      "targetHybridRuns": 33,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "decay/triple",
+      "n": 70,
+      "wins": 17,
+      "winPct": 24.3,
+      "medianRealm": 10,
+      "p90Realm": 15,
+      "medianSeconds": 31.68,
+      "medianDps": 411.07,
+      "hybridRuns": 43,
+      "medianFirstHybrid": 6,
+      "missingFamilyRuns": 33,
+      "unplannedFamilyRuns": 19,
+      "targetHybridRuns": 43,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "vitality/random",
+      "n": 70,
+      "wins": 18,
+      "winPct": 25.7,
+      "medianRealm": 8,
+      "p90Realm": 15,
+      "medianSeconds": 33.44,
+      "medianDps": 428.22,
+      "hybridRuns": 31,
+      "medianFirstHybrid": 8,
+      "missingFamilyRuns": 64,
+      "unplannedFamilyRuns": 59,
+      "targetHybridRuns": 13,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "vitality/mono",
+      "n": 70,
+      "wins": 18,
+      "winPct": 25.7,
+      "medianRealm": 9,
+      "p90Realm": 15,
+      "medianSeconds": 31.46,
+      "medianDps": 427.65,
+      "hybridRuns": 21,
+      "medianFirstHybrid": 9,
+      "missingFamilyRuns": 0,
+      "unplannedFamilyRuns": 66,
+      "targetHybridRuns": 0,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "vitality/dual",
+      "n": 70,
+      "wins": 20,
+      "winPct": 28.6,
+      "medianRealm": 9,
+      "p90Realm": 15,
+      "medianSeconds": 31.9,
+      "medianDps": 390.13,
+      "hybridRuns": 36,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 15,
+      "unplannedFamilyRuns": 60,
+      "targetHybridRuns": 36,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "vitality/triple",
+      "n": 70,
+      "wins": 22,
+      "winPct": 31.4,
+      "medianRealm": 10,
+      "p90Realm": 15,
+      "medianSeconds": 32.12,
+      "medianDps": 412.54,
+      "hybridRuns": 46,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 31,
+      "unplannedFamilyRuns": 18,
+      "targetHybridRuns": 46,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "aegis/random",
+      "n": 70,
+      "wins": 20,
+      "winPct": 28.6,
+      "medianRealm": 9,
+      "p90Realm": 15,
+      "medianSeconds": 35.2,
+      "medianDps": 391.22,
+      "hybridRuns": 35,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 65,
+      "unplannedFamilyRuns": 59,
+      "targetHybridRuns": 8,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "aegis/mono",
+      "n": 70,
+      "wins": 18,
+      "winPct": 25.7,
+      "medianRealm": 8,
+      "p90Realm": 15,
+      "medianSeconds": 33.33,
+      "medianDps": 382.55,
+      "hybridRuns": 11,
+      "medianFirstHybrid": 8,
+      "missingFamilyRuns": 0,
+      "unplannedFamilyRuns": 57,
+      "targetHybridRuns": 0,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "aegis/dual",
+      "n": 70,
+      "wins": 21,
+      "winPct": 30,
+      "medianRealm": 10,
+      "p90Realm": 15,
+      "medianSeconds": 33.44,
+      "medianDps": 373.31,
+      "hybridRuns": 37,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 14,
+      "unplannedFamilyRuns": 51,
+      "targetHybridRuns": 37,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "aegis/triple",
+      "n": 70,
+      "wins": 23,
+      "winPct": 32.9,
+      "medianRealm": 11,
+      "p90Realm": 15,
+      "medianSeconds": 33.33,
+      "medianDps": 397.68,
+      "hybridRuns": 43,
+      "medianFirstHybrid": 6,
+      "missingFamilyRuns": 39,
+      "unplannedFamilyRuns": 25,
+      "targetHybridRuns": 43,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "fury/random",
+      "n": 70,
+      "wins": 20,
+      "winPct": 28.6,
+      "medianRealm": 8,
+      "p90Realm": 15,
+      "medianSeconds": 33.22,
+      "medianDps": 482.92,
+      "hybridRuns": 37,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 64,
+      "unplannedFamilyRuns": 57,
+      "targetHybridRuns": 17,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "fury/mono",
+      "n": 70,
+      "wins": 19,
+      "winPct": 27.1,
+      "medianRealm": 10,
+      "p90Realm": 15,
+      "medianSeconds": 30.14,
+      "medianDps": 523.81,
+      "hybridRuns": 17,
+      "medianFirstHybrid": 9,
+      "missingFamilyRuns": 0,
+      "unplannedFamilyRuns": 64,
+      "targetHybridRuns": 0,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "fury/dual",
+      "n": 70,
+      "wins": 22,
+      "winPct": 31.4,
+      "medianRealm": 10,
+      "p90Realm": 15,
+      "medianSeconds": 30.25,
+      "medianDps": 523.81,
+      "hybridRuns": 44,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 8,
+      "unplannedFamilyRuns": 53,
+      "targetHybridRuns": 44,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "fury/triple",
+      "n": 70,
+      "wins": 24,
+      "winPct": 34.3,
+      "medianRealm": 12,
+      "p90Realm": 15,
+      "medianSeconds": 29.59,
+      "medianDps": 509.6,
+      "hybridRuns": 47,
+      "medianFirstHybrid": 6,
+      "missingFamilyRuns": 32,
+      "unplannedFamilyRuns": 19,
+      "targetHybridRuns": 47,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "magic/random",
+      "n": 70,
+      "wins": 16,
+      "winPct": 22.9,
+      "medianRealm": 8,
+      "p90Realm": 15,
+      "medianSeconds": 34.65,
+      "medianDps": 431.9,
+      "hybridRuns": 35,
+      "medianFirstHybrid": 8,
+      "missingFamilyRuns": 65,
+      "unplannedFamilyRuns": 60,
+      "targetHybridRuns": 16,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "magic/mono",
+      "n": 70,
+      "wins": 18,
+      "winPct": 25.7,
+      "medianRealm": 10,
+      "p90Realm": 15,
+      "medianSeconds": 31.68,
+      "medianDps": 426,
+      "hybridRuns": 0,
+      "medianFirstHybrid": null,
+      "missingFamilyRuns": 0,
+      "unplannedFamilyRuns": 65,
+      "targetHybridRuns": 0,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "magic/dual",
+      "n": 70,
+      "wins": 20,
+      "winPct": 28.6,
+      "medianRealm": 11,
+      "p90Realm": 15,
+      "medianSeconds": 32.56,
+      "medianDps": 431.9,
+      "hybridRuns": 39,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 11,
+      "unplannedFamilyRuns": 55,
+      "targetHybridRuns": 39,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "magic/triple",
+      "n": 70,
+      "wins": 20,
+      "winPct": 28.6,
+      "medianRealm": 11,
+      "p90Realm": 15,
+      "medianSeconds": 31.13,
+      "medianDps": 429.18,
+      "hybridRuns": 43,
+      "medianFirstHybrid": 6,
+      "missingFamilyRuns": 33,
+      "unplannedFamilyRuns": 19,
+      "targetHybridRuns": 43,
+      "timeouts": 0,
+      "errors": 0
+    }
+  ],
+  "rarities": [
+    {
+      "key": "Rare/random/true",
+      "n": 210,
+      "wins": 42,
+      "winPct": 20,
+      "medianRealm": 5,
+      "p90Realm": 15,
+      "medianSeconds": 26.95,
+      "medianDps": 391.22,
+      "hybridRuns": 71,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 193,
+      "unplannedFamilyRuns": 167,
+      "targetHybridRuns": 32,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Rare/random/false",
+      "n": 210,
+      "wins": 38,
+      "winPct": 18.1,
+      "medianRealm": 5,
+      "p90Realm": 15,
+      "medianSeconds": 23.65,
+      "medianDps": 362.56,
+      "hybridRuns": 61,
+      "medianFirstHybrid": 8,
+      "missingFamilyRuns": 197,
+      "unplannedFamilyRuns": 157,
+      "targetHybridRuns": 25,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Rare/mono/true",
+      "n": 210,
+      "wins": 39,
+      "winPct": 18.6,
+      "medianRealm": 6,
+      "p90Realm": 15,
+      "medianSeconds": 26.62,
+      "medianDps": 382.55,
+      "hybridRuns": 35,
+      "medianFirstHybrid": 8,
+      "missingFamilyRuns": 0,
+      "unplannedFamilyRuns": 176,
+      "targetHybridRuns": 0,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Rare/mono/false",
+      "n": 210,
+      "wins": 42,
+      "winPct": 20,
+      "medianRealm": 5,
+      "p90Realm": 15,
+      "medianSeconds": 24.2,
+      "medianDps": 379.43,
+      "hybridRuns": 29,
+      "medianFirstHybrid": 8,
+      "missingFamilyRuns": 0,
+      "unplannedFamilyRuns": 170,
+      "targetHybridRuns": 0,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Rare/dual/true",
+      "n": 210,
+      "wins": 43,
+      "winPct": 20.5,
+      "medianRealm": 6,
+      "p90Realm": 15,
+      "medianSeconds": 27.17,
+      "medianDps": 375.86,
+      "hybridRuns": 84,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 45,
+      "unplannedFamilyRuns": 144,
+      "targetHybridRuns": 84,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Rare/dual/false",
+      "n": 210,
+      "wins": 38,
+      "winPct": 18.1,
+      "medianRealm": 5,
+      "p90Realm": 15,
+      "medianSeconds": 25.74,
+      "medianDps": 368.35,
+      "hybridRuns": 72,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 57,
+      "unplannedFamilyRuns": 137,
+      "targetHybridRuns": 72,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Rare/triple/true",
+      "n": 210,
+      "wins": 43,
+      "winPct": 20.5,
+      "medianRealm": 6,
+      "p90Realm": 15,
+      "medianSeconds": 26.62,
+      "medianDps": 385.54,
+      "hybridRuns": 100,
+      "medianFirstHybrid": 6,
+      "missingFamilyRuns": 105,
+      "unplannedFamilyRuns": 46,
+      "targetHybridRuns": 100,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Rare/triple/false",
+      "n": 210,
+      "wins": 39,
+      "winPct": 18.6,
+      "medianRealm": 5,
+      "p90Realm": 15,
+      "medianSeconds": 23.98,
+      "medianDps": 362.56,
+      "hybridRuns": 86,
+      "medianFirstHybrid": 6,
+      "missingFamilyRuns": 125,
+      "unplannedFamilyRuns": 49,
+      "targetHybridRuns": 86,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Epic/random/true",
+      "n": 210,
+      "wins": 69,
+      "winPct": 32.9,
+      "medianRealm": 12,
+      "p90Realm": 15,
+      "medianSeconds": 40.26,
+      "medianDps": 489.87,
+      "hybridRuns": 129,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 190,
+      "unplannedFamilyRuns": 179,
+      "targetHybridRuns": 50,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Epic/random/false",
+      "n": 210,
+      "wins": 62,
+      "winPct": 29.5,
+      "medianRealm": 10,
+      "p90Realm": 15,
+      "medianSeconds": 36.74,
+      "medianDps": 463.96,
+      "hybridRuns": 124,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 185,
+      "unplannedFamilyRuns": 170,
+      "targetHybridRuns": 60,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Epic/mono/true",
+      "n": 210,
+      "wins": 68,
+      "winPct": 32.4,
+      "medianRealm": 14,
+      "p90Realm": 15,
+      "medianSeconds": 36.41,
+      "medianDps": 489.93,
+      "hybridRuns": 70,
+      "medianFirstHybrid": 8,
+      "missingFamilyRuns": 0,
+      "unplannedFamilyRuns": 203,
+      "targetHybridRuns": 0,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Epic/mono/false",
+      "n": 210,
+      "wins": 60,
+      "winPct": 28.6,
+      "medianRealm": 12,
+      "p90Realm": 15,
+      "medianSeconds": 34.87,
+      "medianDps": 481.32,
+      "hybridRuns": 54,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 0,
+      "unplannedFamilyRuns": 198,
+      "targetHybridRuns": 0,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Epic/dual/true",
+      "n": 210,
+      "wins": 68,
+      "winPct": 32.4,
+      "medianRealm": 14,
+      "p90Realm": 15,
+      "medianSeconds": 37.4,
+      "medianDps": 517.27,
+      "hybridRuns": 139,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 36,
+      "unplannedFamilyRuns": 184,
+      "targetHybridRuns": 139,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Epic/dual/false",
+      "n": 210,
+      "wins": 62,
+      "winPct": 29.5,
+      "medianRealm": 13,
+      "p90Realm": 15,
+      "medianSeconds": 35.2,
+      "medianDps": 488.1,
+      "hybridRuns": 129,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 39,
+      "unplannedFamilyRuns": 178,
+      "targetHybridRuns": 129,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Epic/triple/true",
+      "n": 210,
+      "wins": 79,
+      "winPct": 37.6,
+      "medianRealm": 15,
+      "p90Realm": 15,
+      "medianSeconds": 37.29,
+      "medianDps": 519.96,
+      "hybridRuns": 164,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 93,
+      "unplannedFamilyRuns": 72,
+      "targetHybridRuns": 164,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "Epic/triple/false",
+      "n": 210,
+      "wins": 66,
+      "winPct": 31.4,
+      "medianRealm": 15,
+      "p90Realm": 15,
+      "medianSeconds": 34.65,
+      "medianDps": 489.95,
+      "hybridRuns": 154,
+      "medianFirstHybrid": 6,
+      "missingFamilyRuns": 89,
+      "unplannedFamilyRuns": 66,
+      "targetHybridRuns": 154,
+      "timeouts": 0,
+      "errors": 0
+    }
+  ],
+  "strategies": [
+    {
+      "key": "random/true",
+      "n": 420,
+      "wins": 111,
+      "winPct": 26.4,
+      "medianRealm": 8,
+      "p90Realm": 15,
+      "medianSeconds": 33.88,
+      "medianDps": 434.29,
+      "hybridRuns": 200,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 383,
+      "unplannedFamilyRuns": 346,
+      "targetHybridRuns": 82,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "random/false",
+      "n": 420,
+      "wins": 100,
+      "winPct": 23.8,
+      "medianRealm": 7,
+      "p90Realm": 15,
+      "medianSeconds": 32.45,
+      "medianDps": 425.67,
+      "hybridRuns": 185,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 382,
+      "unplannedFamilyRuns": 327,
+      "targetHybridRuns": 85,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "mono/true",
+      "n": 420,
+      "wins": 107,
+      "winPct": 25.5,
+      "medianRealm": 10,
+      "p90Realm": 15,
+      "medianSeconds": 32.12,
+      "medianDps": 427.65,
+      "hybridRuns": 105,
+      "medianFirstHybrid": 8,
+      "missingFamilyRuns": 0,
+      "unplannedFamilyRuns": 379,
+      "targetHybridRuns": 0,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "mono/false",
+      "n": 420,
+      "wins": 102,
+      "winPct": 24.3,
+      "medianRealm": 8,
+      "p90Realm": 15,
+      "medianSeconds": 30.91,
+      "medianDps": 412.58,
+      "hybridRuns": 83,
+      "medianFirstHybrid": 8,
+      "missingFamilyRuns": 0,
+      "unplannedFamilyRuns": 368,
+      "targetHybridRuns": 0,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "dual/true",
+      "n": 420,
+      "wins": 111,
+      "winPct": 26.4,
+      "medianRealm": 10,
+      "p90Realm": 15,
+      "medianSeconds": 32.34,
+      "medianDps": 431.9,
+      "hybridRuns": 223,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 81,
+      "unplannedFamilyRuns": 328,
+      "targetHybridRuns": 223,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "dual/false",
+      "n": 420,
+      "wins": 100,
+      "winPct": 23.8,
+      "medianRealm": 9,
+      "p90Realm": 15,
+      "medianSeconds": 30.8,
+      "medianDps": 412.55,
+      "hybridRuns": 201,
+      "medianFirstHybrid": 7,
+      "missingFamilyRuns": 96,
+      "unplannedFamilyRuns": 315,
+      "targetHybridRuns": 201,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "triple/true",
+      "n": 420,
+      "wins": 122,
+      "winPct": 29,
+      "medianRealm": 11,
+      "p90Realm": 15,
+      "medianSeconds": 31.68,
+      "medianDps": 431.9,
+      "hybridRuns": 264,
+      "medianFirstHybrid": 6,
+      "missingFamilyRuns": 198,
+      "unplannedFamilyRuns": 118,
+      "targetHybridRuns": 264,
+      "timeouts": 0,
+      "errors": 0
+    },
+    {
+      "key": "triple/false",
+      "n": 420,
+      "wins": 105,
+      "winPct": 25,
+      "medianRealm": 10,
+      "p90Realm": 15,
+      "medianSeconds": 30.14,
+      "medianDps": 412.55,
+      "hybridRuns": 240,
+      "medianFirstHybrid": 6,
+      "missingFamilyRuns": 214,
+      "unplannedFamilyRuns": 115,
+      "targetHybridRuns": 240,
+      "timeouts": 0,
+      "errors": 0
+    }
+  ],
+  "draft": {
+    "baselineCommit": "02feebb",
+    "seeds": 1000,
+    "policy": "Matched deterministic seeds, three early unlocked families; identical raw gear stats; all normal drafts through Realm14; random legal selections. Structural offers only, not win-rate simulation.",
+    "before": {
+      "drafts": 14000,
+      "cards": 42000,
+      "usefulUpgrades": 10802,
+      "synergyCards": 0,
+      "functionalSynergy": 0,
+      "untriggered": 34,
+      "overcap": 1380,
+      "pity": 0,
+      "hybridBy10": 1000,
+      "hybridBy14": 1000,
+      "errors": 0,
+      "distinctResults": 1000,
+      "usefulUpgradePct": 25.72,
+      "functionalSynergyPct": null
+    },
+    "after": {
+      "drafts": 14000,
+      "cards": 42000,
+      "usefulUpgrades": 16768,
+      "synergyCards": 14000,
+      "functionalSynergy": 14000,
+      "untriggered": 0,
+      "overcap": 0,
+      "pity": 4460,
+      "hybridBy10": 1000,
+      "hybridBy14": 1000,
+      "errors": 0,
+      "distinctResults": 1000,
+      "usefulUpgradePct": 39.92,
+      "functionalSynergyPct": 100
+    }
+  },
+  "rank": {
+    "cases": 580,
+    "policy": "E50 Epic gear and three real E50 Runes; 0..3 extra same-family complementary talents besides mandatory starter; fixed durable enemy, boss at 3 companions. Native ticks, no formula overrides. Random/proc timing can be non-monotonic; compare effect parameters and unit assertions as well as aggregate damage. Dormant deterministic statistical talents do not have activation counters.",
+    "comparisons": [
+      {
+        "id": "bleeding_edge",
+        "companions": 0,
+        "distinctNativeOutcomes": 3,
+        "activatedRanks": 5
+      },
+      {
+        "id": "bleeding_edge",
+        "companions": 1,
+        "distinctNativeOutcomes": 3,
+        "activatedRanks": 5
+      },
+      {
+        "id": "bleeding_edge",
+        "companions": 2,
+        "distinctNativeOutcomes": 4,
+        "activatedRanks": 5
+      },
+      {
+        "id": "bleeding_edge",
+        "companions": 3,
+        "distinctNativeOutcomes": 4,
+        "activatedRanks": 5
+      },
+      {
+        "id": "deep_cuts",
+        "companions": 0,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "deep_cuts",
+        "companions": 1,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "deep_cuts",
+        "companions": 2,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "deep_cuts",
+        "companions": 3,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "blood_drinker",
+        "companions": 0,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "blood_drinker",
+        "companions": 1,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "blood_drinker",
+        "companions": 2,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "blood_drinker",
+        "companions": 3,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "sanguine_fury",
+        "companions": 0,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "sanguine_fury",
+        "companions": 1,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "sanguine_fury",
+        "companions": 2,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "sanguine_fury",
+        "companions": 3,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "toxic_touch",
+        "companions": 0,
+        "distinctNativeOutcomes": 3,
+        "activatedRanks": 5
+      },
+      {
+        "id": "toxic_touch",
+        "companions": 1,
+        "distinctNativeOutcomes": 3,
+        "activatedRanks": 5
+      },
+      {
+        "id": "toxic_touch",
+        "companions": 2,
+        "distinctNativeOutcomes": 4,
+        "activatedRanks": 5
+      },
+      {
+        "id": "toxic_touch",
+        "companions": 3,
+        "distinctNativeOutcomes": 2,
+        "activatedRanks": 5
+      },
+      {
+        "id": "virulent_rot",
+        "companions": 0,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "virulent_rot",
+        "companions": 1,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "virulent_rot",
+        "companions": 2,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "virulent_rot",
+        "companions": 3,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "wasting_curse",
+        "companions": 0,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "wasting_curse",
+        "companions": 1,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "wasting_curse",
+        "companions": 2,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "wasting_curse",
+        "companions": 3,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "wither",
+        "companions": 0,
+        "distinctNativeOutcomes": 3,
+        "activatedRanks": 0
+      },
+      {
+        "id": "wither",
+        "companions": 1,
+        "distinctNativeOutcomes": 3,
+        "activatedRanks": 0
+      },
+      {
+        "id": "wither",
+        "companions": 2,
+        "distinctNativeOutcomes": 3,
+        "activatedRanks": 0
+      },
+      {
+        "id": "wither",
+        "companions": 3,
+        "distinctNativeOutcomes": 3,
+        "activatedRanks": 0
+      },
+      {
+        "id": "strong_heart",
+        "companions": 0,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "strong_heart",
+        "companions": 1,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "strong_heart",
+        "companions": 2,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "strong_heart",
+        "companions": 3,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "renewal",
+        "companions": 0,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "renewal",
+        "companions": 1,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "renewal",
+        "companions": 2,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "renewal",
+        "companions": 3,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "second_breath",
+        "companions": 0,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "second_breath",
+        "companions": 1,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "second_breath",
+        "companions": 2,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "second_breath",
+        "companions": 3,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "life_bloom",
+        "companions": 0,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "life_bloom",
+        "companions": 1,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "life_bloom",
+        "companions": 2,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "life_bloom",
+        "companions": 3,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "iron_skin",
+        "companions": 0,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "iron_skin",
+        "companions": 1,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "iron_skin",
+        "companions": 2,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "iron_skin",
+        "companions": 3,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "fortified",
+        "companions": 0,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "fortified",
+        "companions": 1,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "fortified",
+        "companions": 2,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "fortified",
+        "companions": 3,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "guarded_block",
+        "companions": 0,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "guarded_block",
+        "companions": 1,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "guarded_block",
+        "companions": 2,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "guarded_block",
+        "companions": 3,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "barrier_pulse",
+        "companions": 0,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "barrier_pulse",
+        "companions": 1,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "barrier_pulse",
+        "companions": 2,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "barrier_pulse",
+        "companions": 3,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "quick_hands",
+        "companions": 0,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "quick_hands",
+        "companions": 1,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "quick_hands",
+        "companions": 2,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "quick_hands",
+        "companions": 3,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "precision",
+        "companions": 0,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "precision",
+        "companions": 1,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "precision",
+        "companions": 2,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "precision",
+        "companions": 3,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "brutal_crit",
+        "companions": 0,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "brutal_crit",
+        "companions": 1,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "brutal_crit",
+        "companions": 2,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "brutal_crit",
+        "companions": 3,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "double_strike",
+        "companions": 0,
+        "distinctNativeOutcomes": 4,
+        "activatedRanks": 5
+      },
+      {
+        "id": "double_strike",
+        "companions": 1,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "double_strike",
+        "companions": 2,
+        "distinctNativeOutcomes": 4,
+        "activatedRanks": 5
+      },
+      {
+        "id": "double_strike",
+        "companions": 3,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "adrenaline",
+        "companions": 0,
+        "distinctNativeOutcomes": 2,
+        "activatedRanks": 5
+      },
+      {
+        "id": "adrenaline",
+        "companions": 1,
+        "distinctNativeOutcomes": 1,
+        "activatedRanks": 5
+      },
+      {
+        "id": "adrenaline",
+        "companions": 2,
+        "distinctNativeOutcomes": 2,
+        "activatedRanks": 5
+      },
+      {
+        "id": "adrenaline",
+        "companions": 3,
+        "distinctNativeOutcomes": 1,
+        "activatedRanks": 5
+      },
+      {
+        "id": "arcane_focus",
+        "companions": 0,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "arcane_focus",
+        "companions": 1,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "arcane_focus",
+        "companions": 2,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "arcane_focus",
+        "companions": 3,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "mana_spring",
+        "companions": 0,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "mana_spring",
+        "companions": 1,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "mana_spring",
+        "companions": 2,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "mana_spring",
+        "companions": 3,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "efficient_cast",
+        "companions": 0,
+        "distinctNativeOutcomes": 3,
+        "activatedRanks": 0
+      },
+      {
+        "id": "efficient_cast",
+        "companions": 1,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "efficient_cast",
+        "companions": 2,
+        "distinctNativeOutcomes": 4,
+        "activatedRanks": 0
+      },
+      {
+        "id": "efficient_cast",
+        "companions": 3,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "arcane_echo",
+        "companions": 0,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "arcane_echo",
+        "companions": 1,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "arcane_echo",
+        "companions": 2,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "arcane_echo",
+        "companions": 3,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "elemental_force",
+        "companions": 0,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "elemental_force",
+        "companions": 1,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "elemental_force",
+        "companions": 2,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "elemental_force",
+        "companions": 3,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 0
+      },
+      {
+        "id": "kindling",
+        "companions": 0,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "kindling",
+        "companions": 1,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "kindling",
+        "companions": 2,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "kindling",
+        "companions": 3,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "deep_winter",
+        "companions": 0,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "deep_winter",
+        "companions": 1,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "deep_winter",
+        "companions": 2,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "deep_winter",
+        "companions": 3,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "overcharge",
+        "companions": 0,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "overcharge",
+        "companions": 1,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "overcharge",
+        "companions": 2,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      },
+      {
+        "id": "overcharge",
+        "companions": 3,
+        "distinctNativeOutcomes": 5,
+        "activatedRanks": 5
+      }
+    ]
+  },
+  "telemetry": {
+    "bleeding_edge": {
+      "activations": 13149,
+      "exposureSeconds": 25935
+    },
+    "deep_cuts": {
+      "activations": 0,
+      "exposureSeconds": 4072.000000000001
+    },
+    "executioner": {
+      "activations": 538,
+      "exposureSeconds": 2885
+    },
+    "blood_drinker": {
+      "activations": 910,
+      "exposureSeconds": 3553
+    },
+    "sanguine_fury": {
+      "activations": 611,
+      "exposureSeconds": 3149
+    },
+    "toxic_touch": {
+      "activations": 10852,
+      "exposureSeconds": 26366
+    },
+    "virulent_rot": {
+      "activations": 0,
+      "exposureSeconds": 4071
+    },
+    "wasting_curse": {
+      "activations": 0,
+      "exposureSeconds": 3889.0000000000005
+    },
+    "wither": {
+      "activations": 0,
+      "exposureSeconds": 3015.0000000000005
+    },
+    "blight": {
+      "activations": 459,
+      "exposureSeconds": 3024
+    },
+    "strong_heart": {
+      "activations": 0,
+      "exposureSeconds": 27447
+    },
+    "renewal": {
+      "activations": 6938,
+      "exposureSeconds": 6938.000000000005
+    },
+    "last_stand": {
+      "activations": 59,
+      "exposureSeconds": 2366
+    },
+    "second_breath": {
+      "activations": 2459,
+      "exposureSeconds": 4852
+    },
+    "life_bloom": {
+      "activations": 5042,
+      "exposureSeconds": 5042.000000000001
+    },
+    "iron_skin": {
+      "activations": 0,
+      "exposureSeconds": 28353
+    },
+    "fortified": {
+      "activations": 0,
+      "exposureSeconds": 2949
+    },
+    "guarded_block": {
+      "activations": 0,
+      "exposureSeconds": 4369
+    },
+    "barrier_pulse": {
+      "activations": 1850,
+      "exposureSeconds": 8786.000000000002
+    },
+    "retaliation": {
+      "activations": 268,
+      "exposureSeconds": 1506
+    },
+    "quick_hands": {
+      "activations": 0,
+      "exposureSeconds": 26095
+    },
+    "precision": {
+      "activations": 0,
+      "exposureSeconds": 3170
+    },
+    "brutal_crit": {
+      "activations": 1576,
+      "exposureSeconds": 4177
+    },
+    "double_strike": {
+      "activations": 678,
+      "exposureSeconds": 2059
+    },
+    "adrenaline": {
+      "activations": 673,
+      "exposureSeconds": 3291
+    },
+    "arcane_focus": {
+      "activations": 0,
+      "exposureSeconds": 3294
+    },
+    "mana_spring": {
+      "activations": 0,
+      "exposureSeconds": 3093
+    },
+    "efficient_cast": {
+      "activations": 0,
+      "exposureSeconds": 3037
+    },
+    "arcane_echo": {
+      "activations": 475,
+      "exposureSeconds": 2554
+    },
+    "elemental_force": {
+      "activations": 0,
+      "exposureSeconds": 2720
+    },
+    "kindling": {
+      "activations": 8026,
+      "exposureSeconds": 9784
+    },
+    "deep_winter": {
+      "activations": 7630,
+      "exposureSeconds": 10734
+    },
+    "overcharge": {
+      "activations": 7643,
+      "exposureSeconds": 9543
+    },
+    "plague_rupture": {
+      "activations": 94,
+      "exposureSeconds": 2168
+    },
+    "blood_ward": {
+      "activations": 74,
+      "exposureSeconds": 369
+    },
+    "hemovore": {
+      "activations": 314,
+      "exposureSeconds": 840
+    },
+    "crimson_rush": {
+      "activations": 159,
+      "exposureSeconds": 805
+    },
+    "hex_bleed": {
+      "activations": 504,
+      "exposureSeconds": 1626
+    },
+    "rot_recovery": {
+      "activations": 91,
+      "exposureSeconds": 387
+    },
+    "rot_ward": {
+      "activations": 136,
+      "exposureSeconds": 839
+    },
+    "toxic_precision": {
+      "activations": 48,
+      "exposureSeconds": 220
+    },
+    "hex_bolt": {
+      "activations": 165,
+      "exposureSeconds": 1149
+    },
+    "sanctuary": {
+      "activations": 1887,
+      "exposureSeconds": 3061
+    },
+    "fervent_life": {
+      "activations": 155,
+      "exposureSeconds": 955
+    },
+    "life_conduit": {
+      "activations": 311,
+      "exposureSeconds": 866
+    },
+    "counterstrike": {
+      "activations": 71,
+      "exposureSeconds": 909
+    },
+    "runic_shield": {
+      "activations": 543,
+      "exposureSeconds": 1752
+    },
+    "spellblade": {
+      "activations": 3071,
+      "exposureSeconds": 1837
+    },
+    "carrion_detonation": {
+      "activations": 303,
+      "exposureSeconds": 2463
+    },
+    "crimson_pact": {
+      "activations": 58,
+      "exposureSeconds": 385
+    },
+    "sanguine_reprisal": {
+      "activations": 150,
+      "exposureSeconds": 327
+    },
+    "reapers_cadence": {
+      "activations": 86,
+      "exposureSeconds": 824
+    },
+    "hemal_sigil": {
+      "activations": 146,
+      "exposureSeconds": 1309
+    },
+    "rot_symbiosis": {
+      "activations": 65,
+      "exposureSeconds": 501
+    },
+    "rot_husk": {
+      "activations": 10,
+      "exposureSeconds": 214
+    },
+    "venom_shatter": {
+      "activations": 27,
+      "exposureSeconds": 364
+    },
+    "elemental_blight": {
+      "activations": 134,
+      "exposureSeconds": 1408
+    },
+    "guardians_oath": {
+      "activations": 273,
+      "exposureSeconds": 2201
+    },
+    "redline": {
+      "activations": 89,
+      "exposureSeconds": 844
+    },
+    "lifeweave": {
+      "activations": 69,
+      "exposureSeconds": 1169
+    },
+    "iron_reversal": {
+      "activations": 123,
+      "exposureSeconds": 778
+    },
+    "prismatic_rebound": {
+      "activations": 311,
+      "exposureSeconds": 775
+    },
+    "spell_surge": {
+      "activations": 1402,
+      "exposureSeconds": 2475
+    }
+  },
+  "errors": [],
+  "timeouts": [],
+  "archiveRevision": "d172c68",
+  "archiveNote": "Simulation results predate Rot-only correction; not post-correction balance results.",
+  "rotOnlyCorrection": {
+    "tests": {
+      "pass": 209,
+      "fail": 0
+    },
+    "browser": "PASS 390px/1280px",
+    "simulationsRerun": false,
+    "changes": [
+      "Toxic Touch only Rot",
+      "Toxic Precision only Rot",
+      "Toxic Fang uses canonical Rot",
+      "legacy enemy Poison converts once with six-stack cap"
+    ]
+  }
+}

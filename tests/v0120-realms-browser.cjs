@@ -1,0 +1,44 @@
+// Isolated functional UI fixture; forced Wave completion, no combat simulation or real-save IO.
+const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
+const {chromium}=require('playwright'),root=path.resolve(__dirname,'..');
+const source=fs.readFileSync(path.join(root,'index.html'),'utf8');
+const boot='phase1Init();\nconst phase3RestoredScroll=phase3RestoreUILocation(phase3SavedUILocation);\nrender();';assert(source.includes(boot));
+const fixture=`if(PHASE1_PREVIEW){phase1Init();
+ globalThis.__realmTest={snapshot:()=>({game:JSON.parse(JSON.stringify(phase1Controller.state)),picks:phase1Build?.picks||[],element:phase1Build?.element||null,draft:phase1Draft?.kind||null,active:!!state.run,status:state.run?.status||null}),
+ win:()=>{if(state.run?.status!=='fight')throw Error('No active Wave');state.run.enemy.hp=0;phase1WaveWon();},passive:phase2ChoosePassive};render();
+}else{load();if(!state.merchant)rollShop();save();render();}`;
+const server=http.createServer((req,res)=>{
+ const u=new URL(req.url,'http://fixture'),file=path.resolve(root,'.'+u.pathname);
+ if(u.pathname==='/'){res.setHeader('Content-Type','text/html');return res.end(source.replace(boot,fixture+'const phase3RestoredScroll=null;'));}
+ if(!file.startsWith(root+path.sep)){res.statusCode=403;return res.end();}
+ fs.readFile(file,(e,body)=>{res.statusCode=e?404:200;res.setHeader('Content-Type',({'.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.webp':'image/webp','.png':'image/png'})[path.extname(file)]||'application/octet-stream');res.end(e?'Missing':body);});
+});
+(async()=>{
+ await new Promise(r=>server.listen(0,'127.0.0.1',r));const base='http://127.0.0.1:'+server.address().port;
+ const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox']});
+ try{for(const width of [390,1280]){
+  const context=await browser.newContext({viewport:{width,height:900}}),page=await context.newPage(),errors=[],external=[];
+  page.setDefaultTimeout(5000);page.on('pageerror',e=>errors.push(e.message));
+  await context.addInitScript(()=>{localStorage.setItem('wanderer_browser_proto_v01','UNTOUCHED');window.setInterval=()=>0;const native=window.setTimeout;window.setTimeout=(f,ms,...args)=>native(f,ms===650?5:ms,...args);});
+  await page.route('**/*',route=>{if(route.request().url().startsWith(base))return route.continue();external.push(route.request().url());return route.abort();});
+  const snap=()=>page.evaluate(()=>__realmTest.snapshot());
+  await page.goto(base+'/?expeditionPhase1=1');await page.locator('[data-phase1-expedition="1"]').first().click();
+  assert.equal(await page.locator('[data-phase2-initial]').count(),6);
+  await page.locator('[data-phase2-initial="magic"]').click();assert.equal((await snap()).picks.length,0);
+  for(const id of ['fire','frost','lightning'])assert.equal(await page.locator('[data-phase2-element="'+id+'"]').count(),1);
+  await page.locator('[data-phase2-element="frost"]').click();let s=await snap();assert.deepEqual(s.picks,[],'initial affinity choice does not grant a passive before the first Realm win');assert.equal(s.element,'frost');
+  assert.equal(s.active,true);assert.equal(s.game.selected.family,'magic');assert.equal(s.status,'fight');
+  const waves=s.game.selected.waves;
+  for(let wave=0;wave<waves;wave++){await page.waitForFunction(()=>__realmTest.snapshot().status==='fight');await page.evaluate(()=>__realmTest.win());}
+  await page.waitForSelector('dialog [data-popup-passive]');s=await snap();assert.equal(s.active,true);assert.equal(s.picks.length,1);assert.equal(s.draft,'reward');
+  const reward=page.locator('dialog [data-popup-passive]').first(),id=await reward.getAttribute('data-popup-passive');assert(await reward.locator('.phase2PassiveIcon').count()>=1);await reward.click();await page.locator('#phase5ExitRealm').click();s=await snap();assert.equal(s.picks.length,2);assert.equal(s.game.planeIndex,2);
+  assert(s.game.offers.every(o=>o.family!=='magic'),'initial affinity needs a second distinct acquisition after first Realm');
+  await page.locator('[data-phase1-plane="'+s.game.offers[0].id+'"]').click();const selected=(await snap()).game.selected.id,unchanged=JSON.stringify((await snap()).game.offers[0]);
+  for(let n=0;n<3;n++)await page.locator('[data-phase2-reroll="1"]').click();s=await snap();assert.equal(s.game.selected.id,selected);assert.equal(JSON.stringify(s.game.offers[0]),unchanged);assert.equal(await page.locator('[data-phase2-reroll="1"]').isDisabled(),true);assert.deepEqual(s.game.rerollsByRealm[1],[3,3,3]);assert.equal(s.game.rerolls,0);
+  assert.equal(await page.evaluate(id=>__realmTest.passive(id),id),false);assert.equal((await snap()).picks.length,2);assert.equal((await snap()).active,false);await page.locator('#phase2EnterRealm').click();assert.equal((await snap()).status,'fight');
+  assert.equal(await page.evaluate(()=>localStorage.getItem('wanderer_browser_proto_v01')),'UNTOUCHED');
+  assert.deepEqual(errors,[]);assert.deepEqual(external,[]);assert(await page.locator('body').evaluate(n=>n.scrollWidth<=innerWidth+1));
+  console.log('PASS v0.12.0 Realms '+width+'px: six affinities, Magic element, one starter, independent rerolls, explicit entry, one post-Realm passive');
+  await context.close();
+ }}finally{await browser.close();await new Promise(r=>server.close(r));}
+})().catch(e=>{console.error(e);process.exitCode=1;});

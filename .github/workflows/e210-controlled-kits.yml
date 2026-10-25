@@ -1,0 +1,24 @@
+name: E.2.10 Controlled full potion kits
+on:
+  push:
+    branches: [development]
+    paths: [.github/workflows/e210-controlled-kits.yml]
+  workflow_dispatch:
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check scripts/v012-phase-e210-controlled-kits.cjs
+      - name: Run 450 full-kit experiments (fixture fixed)
+        run: node scripts/v012-phase-e210-controlled-kits.cjs /tmp/e210.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e210-full-kit-results
+          path: /tmp/e210.json
+          if-no-files-found: ignore

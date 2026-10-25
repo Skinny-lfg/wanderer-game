@@ -1,0 +1,62 @@
+[
+  {
+    "screen": "inventory",
+    "width": 360,
+    "paperTop": 282.890625,
+    "panelTop": 244,
+    "paperBottom": 702.890625,
+    "panelBottom": 951.125,
+    "attributesTop": 709.890625,
+    "attributesBottom": 743.890625
+  },
+  {
+    "screen": "between",
+    "width": 360,
+    "paperTop": 713.609375,
+    "panelTop": 643.078125,
+    "paperBottom": 1133.609375,
+    "panelBottom": 1487.796875,
+    "attributesTop": 1140.609375,
+    "attributesBottom": 1174.609375
+  },
+  {
+    "screen": "inventory",
+    "width": 390,
+    "paperTop": 282.890625,
+    "panelTop": 244,
+    "paperBottom": 702.890625,
+    "panelBottom": 952.953125,
+    "attributesTop": 709.890625,
+    "attributesBottom": 745.71875
+  },
+  {
+    "screen": "between",
+    "width": 390,
+    "paperTop": 713.609375,
+    "panelTop": 643.078125,
+    "paperBottom": 1133.609375,
+    "panelBottom": 1494.125,
+    "attributesTop": 1140.609375,
+    "attributesBottom": 1176.4375
+  },
+  {
+    "screen": "inventory",
+    "width": 430,
+    "paperTop": 282.890625,
+    "panelTop": 244,
+    "paperBottom": 702.890625,
+    "panelBottom": 955.5,
+    "attributesTop": 709.890625,
+    "attributesBottom": 748.265625
+  },
+  {
+    "screen": "between",
+    "width": 430,
+    "paperTop": 705.421875,
+    "panelTop": 634.890625,
+    "paperBottom": 1125.421875,
+    "panelBottom": 1488.484375,
+    "attributesTop": 1132.421875,
+    "attributesBottom": 1170.796875
+  }
+]

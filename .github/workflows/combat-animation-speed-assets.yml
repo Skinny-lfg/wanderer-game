@@ -1,0 +1,42 @@
+name: Prepare Wanderer combat animation speeds
+
+on:
+  push:
+    branches: [development]
+    paths:
+      - 'scripts/generate-combat-animation-speeds.cjs'
+      - '.github/workflows/combat-animation-speed-assets.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  generate-speed-assets:
+    if: github.ref == 'refs/heads/development'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout development
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 1
+      - name: Prepare Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Derive x2 and x4 GIFs preserving artwork and transparency
+        run: node scripts/generate-combat-animation-speeds.cjs
+      - name: Verify every derived GIF byte-for-byte
+        run: node scripts/generate-combat-animation-speeds.cjs --check
+      - name: Commit generated assets to development only
+        shell: bash
+        run: |
+          git add assets/mobs/animated/*_x2.gif assets/mobs/animated/*_x4.gif assets/elites/animated/*_x2.gif assets/elites/animated/*_x4.gif
+          if git diff --cached --quiet; then
+            echo 'All speed assets are already up to date.'
+            exit 0
+          fi
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'assets(animation): derive x2/x4 attack speeds for mobs and elites'
+          git push origin HEAD:development

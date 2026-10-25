@@ -36,7 +36,7 @@ jobs:
       - name: Verify this release uses dedicated production Firebase
         shell: bash
         run: |
-          node --input-type=module -e "import {firebaseConfig,assertProductionFirebaseConfig} from './online/firebase-config.mjs';assertProductionFirebaseConfig(firebaseConfig);"
+          node --input-type=module -e "import {firebaseConfig,assertProductionFirebaseConfig} from './online/firebase-config-production.mjs';assertProductionFirebaseConfig(firebaseConfig);"
           test -f firestore.rules
           grep -F '"rules":"firestore.rules"' <(tr -d '[:space:]' < firebase.json)
 

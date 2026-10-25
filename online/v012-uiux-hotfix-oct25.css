@@ -1,0 +1,324 @@
+/* Oct 25: follow-up hotfixes after live Safari screenshots.
+   Scope: presentation/layout only; no item mechanics, combat timing or save mutation. */
+
+/* The approved portrait portal now bleeds through the entire Expedition panel.
+   Keep the text readable with a translucent dark gradient over the lower half. */
+.phase3IntegratedPreview .phase3CampGrid>.phase3ExpeditionPanel {
+  position:relative!important;
+  isolation:isolate!important;
+  overflow:hidden!important;
+  background:#14121a!important;
+}
+.phase3IntegratedPreview .phase3ExpeditionPanel>.phase3Portal {
+  position:absolute!important;
+  inset:0!important;
+  z-index:0!important;
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  margin:0!important;
+  object-fit:cover!important;
+  object-position:center 35%!important;
+  opacity:.92!important;
+  mask-image:none!important;
+  pointer-events:none!important;
+}
+.phase3IntegratedPreview .phase3CampGrid>.phase3ExpeditionPanel::before{
+  content:""!important;
+  position:absolute!important;
+  z-index:1!important;
+  inset:0!important;
+  display:block!important;
+  background:linear-gradient(180deg,
+    rgba(10,10,17,.05) 0%,rgba(10,9,16,.08) 28%,
+    rgba(14,10,17,.40) 48%,rgba(13,9,16,.75) 64%,
+    rgba(10,7,13,.80) 100%)!important;
+  pointer-events:none!important;
+}
+.phase3IntegratedPreview .phase3CampGrid>.phase3ExpeditionPanel>:not(.phase3Portal):not(.gothic-corner-layer){
+  position:relative;
+  z-index:2!important;
+}
+.phase3IntegratedPreview .phase3CampGrid>.phase3ExpeditionPanel>.gothic-corner-layer{
+  position:absolute!important;z-index:5!important;pointer-events:none!important;
+}
+.phase3IntegratedPreview .phase3ExpeditionPanel>.eyebrow{color:#f0d6a5!important;text-shadow:0 2px 6px #000}
+/* Centre tile must reach underneath both modular illustrated ends; no gap. */
+.phase3IntegratedPreview .phase3Camp .phase3ExpeditionPanel button.phase3Start,
+.phase3IntegratedPreview .phase3CampStickyStart button.phase3Start{
+  width:min(100%,440px)!important;
+  max-width:440px!important;
+  min-height:74px!important;
+  padding:8px 86px!important;
+  margin:16px auto 2px!important;
+  border:0!important;border-radius:0!important;
+  background-image:url("../assets/ui-kit/original/hud/03_expedition_left.png"),
+    url("../assets/ui-kit/original/hud/05_expedition_right.png")!important;
+  background-size:96px 100%,96px 100%!important;
+  background-position:left center,right center!important;
+  background-repeat:no-repeat!important;
+  background-color:transparent!important;
+  box-shadow:none!important;
+  font-size:clamp(18px,1.8vw,24px)!important;
+  white-space:normal!important;
+}
+.phase3IntegratedPreview .phase3Camp .phase3Start::before,
+.phase3IntegratedPreview .phase3CampStickyStart .phase3Start::before{
+  left:13px!important;right:13px!important;top:15%!important;bottom:15%!important;
+  background-image:url("../assets/ui-kit/original/hud/04_expedition_center_tile.png")!important;
+  background-position:center!important;background-size:auto 100%!important;
+  background-repeat:repeat-x!important;
+}
+@media(max-width:600px){
+  .phase3IntegratedPreview .phase3Camp .phase3ExpeditionPanel button.phase3Start,
+  .phase3IntegratedPreview .phase3CampStickyStart button.phase3Start{
+    width:min(100%,360px)!important;min-height:64px!important;
+    background-size:76px 100%,76px 100%!important;
+    padding:7px 69px!important;font-size:clamp(15px,4.3vw,19px)!important;
+  }
+  .phase3IntegratedPreview .phase3Camp .phase3Start::before,
+  .phase3IntegratedPreview .phase3CampStickyStart .phase3Start::before{
+    left:10px!important;right:10px!important;
+  }
+}
+
+/* Soft rarity tint (not flat grey). Uniform treatment across gear and potions. */
+.phase3IntegratedPreview .rarityImageFrame{
+  --wf-rarity-fill:color-mix(in srgb,var(--ui-rarity-color,#8c8378) 17%,#343137)!important;
+  background:linear-gradient(145deg,
+    color-mix(in srgb,var(--ui-rarity-color,#8c8378) 19%,#343137),
+    color-mix(in srgb,var(--ui-rarity-color,#8c8378) 8%,#29262c))!important;
+  border:1px solid color-mix(in srgb,var(--ui-rarity-color,#8c8378) 55%,#59535a)!important;
+}
+.phase3IntegratedPreview .rarityImageFrame>i {
+  inset:6%!important;
+  background:radial-gradient(circle at 42% 30%,
+    color-mix(in srgb,var(--ui-rarity-color,#8c8378) 19%,#424047),
+    color-mix(in srgb,var(--ui-rarity-color,#8c8378) 10%,#2a292f) 90%)!important;
+}
+.phase3IntegratedPreview .phase3PotionSlot.empty .rarityImageFrame{
+  --ui-rarity-color:#8c8378;
+}
+
+/* Strictly square bag, stash and equipped gear tiles. */
+.phase3IntegratedPreview .equipmentInventory .stashGrid {
+  grid-auto-rows:max-content!important;
+  align-items:start!important;
+}
+.phase3IntegratedPreview .equipmentInventory .stashGrid>.invItem,
+.phase3IntegratedPreview .equipmentInventory .stashGrid>.potionStackTile,
+.phase3IntegratedPreview .phase3BetweenSide .phase3BagGrid>.phase3BagItem,
+.phase3IntegratedPreview .phase3BetweenSide .phase3BagGrid>.phase3BagEmpty{
+  box-sizing:border-box!important;
+  width:100%!important;
+  aspect-ratio:1/1!important;
+  height:auto!important;
+  min-height:0!important;
+  align-self:start!important;
+}
+.phase3IntegratedPreview .phase3BetweenGear .equipmentLoadout .paper>.slotTile[data-slot]{
+  box-sizing:border-box!important;
+  width:var(--gear-slot-width,64px)!important;
+  height:var(--gear-slot-width,64px)!important;
+  aspect-ratio:1/1!important;
+  min-height:0!important;
+}
+.phase3IntegratedPreview .equipmentInventory .stashGrid>.invItem .rarityImageFrame{
+  width:min(90%,100px)!important;
+  height:auto!important;
+  aspect-ratio:1/1!important;
+}
+
+/* Compact attributes that no longer dominate the space above the Bag. */
+@media(min-width:901px){
+  .phase3IntegratedPreview .phase3BetweenStatsRail .phase3PrimaryAttributeStrip {
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px!important;
+  }
+  .phase3IntegratedPreview .phase3BetweenStatsRail .phase3PrimaryAttributeStrip>div {
+    min-height:47px!important;
+    padding:5px 8px!important;
+    display:grid!important;
+    align-content:center!important;
+    justify-items:start!important;
+    gap:3px!important;
+  }
+  .phase3IntegratedPreview .phase3BetweenStatsRail .phase3PrimaryAttributeStrip span {
+    font-size:12px!important;
+    line-height:1.1!important;
+  }
+  .phase3IntegratedPreview .phase3BetweenStatsRail .phase3PrimaryAttributeStrip b {
+    font-size:18px!important;line-height:1!important;
+  }
+  .phase3IntegratedPreview .phase3BetweenSide{gap:10px!important}
+  .phase3IntegratedPreview .phase3BetweenStatsRail{gap:5px!important}
+}
+
+/* Show active buffs above the Between Realms tabs, not hidden in Build. */
+.phase3IntegratedPreview .phase3BetweenQuickBuffs{
+  grid-column:1/-1!important;min-width:0;
+  padding-top:6px;border-top:1px solid #85684960;
+}
+.phase3IntegratedPreview .phase3BetweenQuickBuffs .phase3ActiveBuffs{
+  display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;
+  margin:0!important;padding:0!important;
+  background:transparent!important;border:0!important;
+}
+.phase3IntegratedPreview .phase3BetweenQuickBuffs .phase3ActiveBuffs>h3 {
+  font-size:12px!important;margin:0!important;color:#f0d4a3;
+}
+.phase3IntegratedPreview .phase3BetweenQuickBuffs .phase3BuffList{
+  display:flex;flex-wrap:wrap;gap:5px!important;
+}
+.phase3IntegratedPreview .phase3BetweenQuickBuffs .tag{font-size:11px!important}
+
+/* Arena: use the saved Realm image even after wave clear; remove the old black veil. */
+.phase3IntegratedPreview .combatLayout .scene {
+  background-image:linear-gradient(180deg,rgba(7,6,10,.28),rgba(7,6,10,.50)),
+    var(--phase3-realm-image,url("../assets/backgrounds/dungeon-desktop.webp"))!important;
+  background-color:#18131d!important;
+  background-size:cover,cover!important;
+  background-position:center,center!important;
+  background-repeat:no-repeat!important;
+}
+.phase3IntegratedPreview .combatLayout .scene::before {
+  background:linear-gradient(180deg,rgba(0,0,0,.04),rgba(0,0,0,.14))!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+}
+.phase3IntegratedPreview .combatLayout .scene .combatant{
+  background:transparent!important;
+}
+.phase3IntegratedPreview .scene #enemyPortrait[data-attack-src*="canopy_stalker_"] {
+  position:relative!important;
+  top:16px!important;
+  object-position:center bottom!important;
+}
+
+/* Passive cards: explanations readable; only increased numbers are green. */
+.phase3IntegratedPreview .phase3PassiveCard .phase3PassiveDescription{
+  color:#f1e5da!important;font-size:clamp(14px,1.1vw,16px)!important;
+  line-height:1.52!important;
+  max-width:100%!important;
+}
+.phase3IntegratedPreview .phase3PassiveCard .phase3PassivePreview{
+  color:#d9cec5!important;
+  font-size:clamp(12px,1vw,14px)!important;
+  line-height:1.5!important;
+}
+.phase3IntegratedPreview .phase3PassivePreviewEntry{color:#dacbc2!important}
+.phase3IntegratedPreview .phase3PassivePreviewEntry>.phase3PassiveIncrease{
+  color:#7fe2aa!important;font-weight:800!important;
+}
+.phase3IntegratedPreview .phase3PassivePreviewEntry>.phase3PassiveValue{
+  color:#e8d4b4!important;font-weight:700!important;
+}
+.phase3IntegratedPreview .phase3PassiveSeparator{color:#8c7b7d!important}
+.phase3IntegratedPreview .phase3PassiveCard .phase3PassiveType{
+  font-size:12px!important;
+}
+/* Merchant now exposes the Stash Valuables sale control without leaving City Center. */
+.phase3IntegratedPreview .cityCenterLayout .inventoryValuables{
+  margin-top:12px!important;min-width:0!important;
+}
+
+
+/* Oct 25 potion geometry: a loaded potion must occupy the same square as an
+   empty slot. The inspect button previously inherited generic button padding,
+   shrinking only the loaded art into a narrow rectangle. */
+.phase3IntegratedPreview .phase3CampCharacter .paper>.phase3PotionSlots>.phase3PotionSlot{
+  box-sizing:border-box!important;
+  display:grid!important;
+  place-items:center!important;
+  width:100%!important;
+  height:auto!important;
+  aspect-ratio:1/1!important;
+  min-width:0!important;
+  min-height:0!important;
+  padding:0!important;
+}
+.phase3IntegratedPreview .phase3CampCharacter .paper>.phase3PotionSlots>.phase3PotionSlot>.phase3PotionInspectButton{
+  box-sizing:border-box!important;
+  display:grid!important;
+  place-items:center!important;
+  width:100%!important;
+  height:100%!important;
+  min-width:0!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.phase3IntegratedPreview .phase3CampCharacter .paper>.phase3PotionSlots>.phase3PotionSlot .rarityImageFrame--potion{
+  box-sizing:border-box!important;
+  display:grid!important;
+  place-items:center!important;
+  width:100%!important;
+  height:auto!important;
+  aspect-ratio:1/1!important;
+  min-width:0!important;
+  min-height:0!important;
+  flex:0 0 auto!important;
+}
+
+/* Inventory: use truly square equipped potion cells (previously 56px x 68px),
+   and keep the row visually close to the boots without overlapping stats. */
+.phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper{
+  grid-template-rows:repeat(5,var(--gear-row)) calc(var(--gear-slot-width) - 14px)!important;
+}
+.phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper>.phase3PotionSlots{
+  margin:-14px auto 0!important;
+  align-items:center!important;
+}
+.phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper>.phase3PotionSlots>.phase3PotionSlot{
+  box-sizing:border-box!important;
+  display:grid!important;
+  place-items:center!important;
+  width:var(--gear-slot-width)!important;
+  height:var(--gear-slot-width)!important;
+  aspect-ratio:1/1!important;
+  padding:0!important;
+}
+.phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper>.phase3PotionSlots .phase3PotionInspectButton{
+  box-sizing:border-box!important;
+  display:grid!important;
+  place-items:center!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  padding:0!important;
+}
+
+/* Stash: centre the potion illustration inside its rarity frame. Keep the
+   full inventory tile and artwork square; the quantity badge stays overlaid. */
+.phase3IntegratedPreview .equipmentInventory .stashGrid>.potionStackTile{
+  display:grid!important;
+  place-items:center!important;
+  aspect-ratio:1/1!important;
+}
+.phase3IntegratedPreview .equipmentInventory .stashGrid>.potionStackTile .rarityImageFrame--potion-stack{
+  display:grid!important;
+  place-items:center!important;
+  aspect-ratio:1/1!important;
+  margin:0 auto!important;
+}
+.phase3IntegratedPreview .equipmentInventory .stashGrid>.potionStackTile .rarityImageFrame--potion-stack>img{
+  display:block!important;
+  width:90%!important;
+  height:90%!important;
+  margin:auto!important;
+  object-fit:contain!important;
+  object-position:center!important;
+}
+@media(max-width:700px){
+  .phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper{
+    grid-template-rows:repeat(5,var(--gear-row)) calc(var(--gear-slot-width) - 8px)!important;
+  }
+  .phase3IntegratedPreview .equipmentOverview .equipmentLoadout .paper>.phase3PotionSlots{
+    margin-top:-8px!important;
+  }
+}
