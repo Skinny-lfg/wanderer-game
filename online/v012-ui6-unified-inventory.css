@@ -154,10 +154,9 @@
  padding:2px 4px!important;border-radius:4px;
  background:#160d14e8!important;color:#f1dfb1!important;
 }
-.phase3IntegratedPreview .equipmentInventory .stashGrid>.potionStackTile>.potionStackName{
- display:block!important;width:100%!important;
- color:#d8c6c5;font-size:9px!important;line-height:1.12!important;
- text-align:center;white-space:normal!important;overflow-wrap:anywhere;
+/* Potion stacks show only the icon and quantity, retaining their square tile size. */
+.phase3IntegratedPreview .phase3PotionSlot .phase3PotionInspectButton{
+ align-items:center!important;justify-content:center!important;
 }
 @media(max-width:700px){
  .phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear){

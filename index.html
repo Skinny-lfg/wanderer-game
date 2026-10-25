@@ -991,15 +991,15 @@ function phase6PotionStacksMarkup(){
     ' aria-label="Equip '+esc(p.name)+' from Stash, '+count+' available"'+
     ' title="'+esc(p.name)+' · '+count+' in Stash">'+
     rarityArt(p,phase6PotionImage(p.id),p.name,'potion-stack')+
-    '<b class="potionQuantity">'+count+'</b><span class="potionStackName">'+esc(p.name)+'</span></button>';
+    '<b class="potionQuantity">'+count+'</b></button>';
   });
  }).join('');
 }
 function phase6LoadoutMarkup(){
  const C=WandererV012Consumables.CATALOG,active=phase3ExpeditionActive(),selection=state.potionSelection||[],common={rarity:'Common'};
  const slotArt=(p,label,empty)=>p?rarityArt(C.find(c=>c.id===(p.id||p.kind))||common,phase6PotionImage(p.id||p.kind),label,'potion'):`<span class="rarityImageFrame rarityImageFrame--potion potionPlaceholder" data-rarity="Common"><img src="${phase6PotionImage('health')}" alt=""><i aria-hidden="true"></i></span>`;
- if(active){const loaded=phase6Run?.potions||[];return '<div class="phase3PotionSlots" aria-label="Expedition potion slots">'+Array.from({length:3},(_,i)=>{const potion=loaded[i],usable=potion&&!potion.used&&phase3IsBetweenPlanes(),definition=C.find(v=>v.id===potion?.kind),rarity=definition?rarityFrame(definition):'';return '<button type="button" class="phase3PotionSlot '+(potion&&!potion.used?'loaded':'empty')+'" '+rarity+' data-potion-use="'+i+'" '+(usable?'':'disabled')+' aria-label="Potion Slot '+(i+1)+(potion&&!potion.used?' · '+esc(definition?.name||potion.kind):' · empty')+'">'+slotArt(potion?{id:potion.kind}:null,'Potion Slot '+(i+1))+(potion&&!potion.used?'<b>'+esc(definition?.name||potion.kind)+'</b><small>1 dose</small>':'')+'</button>';}).join('')+'</div>';}
- return '<div class="phase3PotionSlots" aria-label="Potion loadout">'+Array.from({length:3},(_,i)=>{const kind=selection[i],p=C.find(v=>v.id===kind),rarity=p?rarityFrame(p):'';return '<div class="phase3PotionSlot '+(p?'loaded':'empty')+'" '+rarity+' data-potion-index="'+i+'" role="group" aria-label="Potion Slot '+(i+1)+(p?' · '+esc(p.name):' · empty')+'">'+(p?'<button type="button" class="phase3PotionInspectButton" data-potion-inspect="'+i+'" aria-label="Inspect '+esc(p.name)+'">'+slotArt(p,'Potion Slot '+(i+1))+'<b>'+esc(p.name)+'</b></button>':slotArt(null,'Potion Slot '+(i+1)))+'</div>';}).join('')+'</div>';
+ if(active){const loaded=phase6Run?.potions||[];return '<div class="phase3PotionSlots" aria-label="Expedition potion slots">'+Array.from({length:3},(_,i)=>{const potion=loaded[i],usable=potion&&!potion.used&&phase3IsBetweenPlanes(),definition=C.find(v=>v.id===potion?.kind),rarity=definition?rarityFrame(definition):'';return '<button type="button" class="phase3PotionSlot '+(potion&&!potion.used?'loaded':'empty')+'" '+rarity+' data-potion-use="'+i+'" '+(usable?'':'disabled')+' aria-label="Potion Slot '+(i+1)+(potion&&!potion.used?' · '+esc(definition?.name||potion.kind):' · empty')+'">'+slotArt(potion?{id:potion.kind}:null,'Potion Slot '+(i+1))+'</button>';}).join('')+'</div>';}
+ return '<div class="phase3PotionSlots" aria-label="Potion loadout">'+Array.from({length:3},(_,i)=>{const kind=selection[i],p=C.find(v=>v.id===kind),rarity=p?rarityFrame(p):'';return '<div class="phase3PotionSlot '+(p?'loaded':'empty')+'" '+rarity+' data-potion-index="'+i+'" role="group" aria-label="Potion Slot '+(i+1)+(p?' · '+esc(p.name):' · empty')+'">'+(p?'<button type="button" class="phase3PotionInspectButton" data-potion-inspect="'+i+'" aria-label="Inspect '+esc(p.name)+'">'+slotArt(p,'Potion Slot '+(i+1))+'</button>':slotArt(null,'Potion Slot '+(i+1)))+'</div>';}).join('')+'</div>';
 }
 function phase6ValuablesMarkup(){
  const valuables=state.valuables||[],total=valuables.reduce((sum,item)=>sum+(Number(item.worth)||0),0);

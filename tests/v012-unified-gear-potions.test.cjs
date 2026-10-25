@@ -52,3 +52,29 @@ test('Unified portrait still contains ten equipment and exactly three potion slo
  assert.equal((render(true).match(/class="phase3PotionSlot"/g)||[]).length,3);
  assert.doesNotMatch(render(false),/phase3PotionSlots/,'other screens preserve existing composition');
 });
+
+test('Potion Bag and equipped slots are icon-only with square frames and accessible potion identities',()=>{
+ const source=functionSource('function phase6PotionStacksMarkup(){','function phase6ValuablesMarkup(){');
+ const catalog={CATALOG:[{id:'health',name:'Health Potion',rarity:'Common'},{id:'mana',name:'Mana Potion',rarity:'Common'}]};
+ const frame=()=> 'data-rarity="Common"';
+ const art=()=>'<span class="rarityImageFrame rarityImageFrame--potion"><img alt=""></span>';
+ const renderBag=new Function('state','WandererV012Consumables','rarityFrame','esc','rarityArt','phase6PotionImage',
+  source+'return phase6PotionStacksMarkup;')(
+   {consumables:{health:2},potionSelection:[]},catalog,frame,String,art,id=>id);
+ const bag=renderBag();
+ assert.match(bag,/class="potionQuantity">2<\/b>/,'stack count remains visible');
+ assert.match(bag,/aria-label="Equip Health Potion from Stash/,'names remain available to screen readers');
+ assert.doesNotMatch(bag,/potionStackName|<span[^>]*>Health Potion<\/span>/,'no visual name on Bag tile');
+ const loadoutFn=new Function('WandererV012Consumables','phase3ExpeditionActive','state','phase6Run','phase3IsBetweenPlanes','rarityFrame','rarityArt','phase6PotionImage','esc',
+  source+'return phase6LoadoutMarkup;');
+ const prep=loadoutFn(catalog,()=>false,{potionSelection:['health']},null,()=>false,frame,art,id=>id,String)();
+ assert.match(prep,/aria-label="Inspect Health Potion"/);
+ assert.doesNotMatch(prep,/<b>Health Potion<\/b>/);
+ assert.equal((prep.match(/data-potion-index=/g)||[]).length,3);
+ const active=loadoutFn(catalog,()=>true,{potionSelection:['health']},{potions:[{kind:'health',used:false}]},()=>true,frame,art,id=>id,String)();
+ assert.match(active,/aria-label="Potion Slot 1 · Health Potion"/);
+ assert.doesNotMatch(active,/<b>Health Potion<\/b>|<small>1 dose<\/small>/);
+ assert.equal((active.match(/data-potion-use=/g)||[]).length,3);
+ assert.match(inventory,/\.stashGrid>\.potionStackTile[\s\S]*?aspect-ratio:1\/1;/);
+ assert.match(inventory,/\.phase3PotionSlot[\s\S]*?aspect-ratio:1\/1!important/);
+});
