@@ -224,3 +224,16 @@ body.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveDescriptio
    width:calc(100vw - 20px)!important;max-width:calc(100vw - 20px)!important;
  }
 }
+
+/* Visually re-center the Expedition portal artwork, whose focal point is left of center.
+   The small uniform overscan fills the panel after shifting; no stretching or layout change. */
+body.phase3IntegratedPreview .phase3CampGrid>.phase3ExpeditionPanel>.phase3Portal{
+  transform-origin:center center!important;
+  transform:translateX(11px) scale(1.06)!important;
+  clip-path:inset(0 5% 0 0)!important;
+}
+@media(max-width:700px){
+ body.phase3IntegratedPreview .phase3CampGrid>.phase3ExpeditionPanel>.phase3Portal{
+  transform:translateX(7px) scale(1.06)!important;
+ }
+}
