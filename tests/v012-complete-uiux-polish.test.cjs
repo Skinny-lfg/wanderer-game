@@ -47,3 +47,6 @@ require('./v012-camp-economy-and-visual.test.cjs');
 
 // Explicit visually classified normal-mob roles and safe spell hit regression tests.
 require('./v012-normal-mob-roles.test.cjs');
+
+// Native paired role balance audit against the previous gameplay mapping (RAM only).
+require('./v012-normal-mob-balance.test.cjs');
