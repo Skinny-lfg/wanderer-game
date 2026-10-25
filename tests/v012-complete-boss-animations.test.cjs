@@ -54,8 +54,10 @@ for(const boss of bosses)test('Boss '+boss.style+' attack is transparent, 768px 
  assert(html.includes(boss.style+':'+boss.impact),'missing impact timing map');
 });
 test('Boss windups and effects use the chosen GIF playback speed without modifying damage',()=>{
- assert.match(html,/const playbackSrc=bossStyle\?attackSrc\.replace/);
- assert.match(html,/BOSS_ATTACK_DURATION_MS\[bossStyle\]\/speed/);
+ assert.match(html,/function phase3CombatAnimationSource\(attackSrc,speed,bossStyle\)/);
+ assert.match(html,/return bossStyle\?attackSrc\.replace\(/);
+ assert.match(html,/const playbackSrc=phase3CombatAnimationSource\(attackSrc,speed,bossStyle\)/);
+ assert.match(html,/const duration=\(bossStyle\?BOSS_ATTACK_DURATION_MS\[bossStyle\]:eliteType\?ELITE_ATTACK_DURATION_MS\[eliteType\]:1570\)\/speed/);
  assert.match(html,/impact\/speed-\(Date\.now\(\)-img\._mobAttackStartedAt\)/);
  assert.match(html,/e\.boss\?\(BOSS_ATTACK_ART\[e\.bossStyle\]/);
  assert.match(runtime,/guardian:\.85,leech:\.86,berserker:\.71/);

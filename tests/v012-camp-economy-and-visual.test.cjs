@@ -85,7 +85,8 @@ test('Button uses only three intended artwork layers and no hidden base backgrou
  assert.match(tuning,/04_expedition_center_tile\.png/);
  assert.match(tuning,/03_expedition_left\.png/);
  assert.match(tuning,/05_expedition_right\.png/);
- assert.match(tuning,/top:30%!important;bottom:30%!important/);
+ assert.match(tuning,/top:28%!important;bottom:28%!important/);
+ assert.match(tuning,/top:28\.5%!important;bottom:28\.5%!important/);
  assert.match(tuning,/white-space:nowrap!important/);
 });
 

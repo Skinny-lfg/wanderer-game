@@ -103,6 +103,7 @@ test('Round 4: both portrait damage animations are red-only and character remain
  assert.match(round,/@keyframes phase3RedOnlyHit/);
  assert.match(round,/#enemyPortrait\.phase3DamageFlash/);
  assert.match(html,/function phase3FlashEnemyDamage\(\)/);
- assert.match(html,/if\(target==='enemy'&&typeof n==='number'&&n>0\)phase3FlashEnemyDamage\(\)/);
+ assert.match(html,/const damage=typeof n==='number'&&Number\.isFinite\(n\)/);
+ assert.match(html,/if\(target==='enemy'&&damage&&n>0\)phase3FlashEnemyDamage\(\)/);
  assert.match(round,/phase3CampSidebarJourney/);
 });

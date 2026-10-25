@@ -37,6 +37,18 @@ test('Potion Stash and loadout icons display a detail modal before equip or remo
  assert.match(css,/\.phase3PotionInspectButton/);
 });
 
+test('Forge result reuses the compact equipment dialog and keeps its item artwork square',()=>{
+ const forge=between('function renderForge(){','function renderMerchant(){');
+ assert.match(forge,/showModal\('Item Forged'/);
+ assert.match(forge,/previewItem\(o,'forge'\)/);
+ assert.doesNotMatch(forge,/const trends=/);
+ assert.match(forge,/phase3StyleGearDialog\(dialog,o\)/);
+ assert.match(forge,/dialog\?\.classList\.add\('forgeResultDialog'\)/);
+ assert.match(forge,/dialog\.close\(\);equipItem\(o\.id,target\)/);
+ assert.match(between('function previewItem(', 'function statsWidget('),/\['stash','bag'\]\.includes\(source\)/);
+ assert.match(css,/\.inspectHero img\{width:67px;height:67px;object-fit:contain/);
+});
+
 test('Between Realms equipment uses the same bounded native dialog as Inventory',()=>{
  const stylePopup=between('function phase3StyleGearDialog(', 'function phase3ShowGearPopup(');
  assert.match(stylePopup,/dialog\.classList\.add\('equipmentItemDialog'\)/);

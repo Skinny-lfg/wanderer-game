@@ -19,4 +19,4 @@ for(const [E,seed]of [[200,7202988],[300,7213124]]){
  if(r.error||r.timeout)throw Error(String(r.error||'timeout'));
  console.log('D7_CHECK '+JSON.stringify({E,seed,reached:r.reached,damage:r.damage,weaponAttacks:r.weaponAttacks}));
 }
-console.log('REFERENCE_JSON '+JSON.stringify({...fixture,cases:observed,baselineReason:'Validated 2026-10-21 against Endless unlock and approved Off-Hand Dagger 35% nerf; each trace computed twice and steps retained.'}));
+console.log('REFERENCE_JSON '+JSON.stringify({...fixture,cases:observed,baselineReason:'Revalidated 2026-10-25 after approved normal-mob role tuning and the passive-then-direct-Between-Realms event flow; all traces were stable across two runs and the D200/E300 off-hand guardrails were rerun.'}));

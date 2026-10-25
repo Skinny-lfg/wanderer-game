@@ -18,7 +18,8 @@ const assert=require('node:assert/strict'),{chromium}=require('playwright');
   await page.locator('dialog[data-initial-affinity] [data-close]').click();await page.locator('.phase3Camp').waitFor();await page.locator('[data-phase1-expedition="1"]').first().click();await page.locator('[data-phase2-initial="blood"]').click();
   await page.locator('#enemyPortrait').waitFor();assert.equal(await page.evaluate(()=>WandererGame.snapshot().run.status),'fight');
   assert.equal(await page.evaluate(()=>localStorage.getItem('wanderer_browser_proto_v01')),'CLASSIC_UNTOUCHED');
-  assert(!requests.some(u=>u.includes('/online/app.mjs')||u.includes('firebase-sdk')));assert.deepEqual(errors,[]);
+  assert(!requests.some(u=>u.includes('/online/app.mjs')||u.includes('firebase-sdk')||u.includes('/online/v012-feedback.mjs')),'private preview must not request classic/Firebase modules: '+requests.filter(u=>u.includes('/online/app.mjs')||u.includes('firebase-sdk')||u.includes('/online/v012-feedback.mjs')).join(', '));
+  assert.equal(await page.locator('#onlineBar').isVisible(),false,'account, leaderboard and Firebase feedback actions are unavailable in the local-only private preview');assert.deepEqual(errors,[]);
   console.log('PASS private hosting '+width+'px: access gate, CSP/native boot, six affinities, Back, combat and isolated storage');await context.close();
  }}finally{await browser.close();await new Promise(r=>server.close(r));}
 })().catch(e=>{console.error(e);process.exitCode=1});

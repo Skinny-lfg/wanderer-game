@@ -41,7 +41,7 @@ body.phase3IntegratedPreview #scene .combatant > .combatStatuses{
   padding:4px 6px;
 }
 body.phase3IntegratedPreview #scene .combatant > .combatStatuses .debuff{
-  font-size:13px;
+  font-size:14px;
   line-height:1.27;
   padding:5px 8px;
   gap:6px;
@@ -49,11 +49,13 @@ body.phase3IntegratedPreview #scene .combatant > .combatStatuses .debuff{
   box-sizing:border-box;
 }
 body.phase3IntegratedPreview #scene .combatant > .combatStatuses .statusIcon{
-  width:23px;
-  height:23px;
-  flex:0 0 23px;
+  width:26px;
+  height:26px;
+  flex:0 0 26px;
   object-fit:contain;
 }
+body.phase3IntegratedPreview .scene .combatStatuses .debuff{font-size:13px;line-height:1.27}
+body.phase3IntegratedPreview .scene .combatStatuses .statusIcon{width:26px;height:26px;flex:0 0 26px;object-fit:contain}
 body.phase3IntegratedPreview .combatActiveBuffs .phase3BuffList .tag{
   display:inline-flex;
   align-items:center;
@@ -75,17 +77,19 @@ body.phase3IntegratedPreview .combatActiveBuffs .phase3BuffList .statusIcon{
     padding:2px 3px;
   }
   body.phase3IntegratedPreview #scene .combatant > .combatStatuses .debuff{
-    font-size:11px;
+    font-size:12px;
     line-height:1.23;
     padding:4px 6px;
     min-height:29px;
     gap:4px;
   }
   body.phase3IntegratedPreview #scene .combatant > .combatStatuses .statusIcon{
-    width:19px;
-    height:19px;
-    flex-basis:19px;
+    width:21px;
+    height:21px;
+    flex-basis:21px;
   }
+  body.phase3IntegratedPreview .scene .combatStatuses .debuff{font-size:12px;line-height:1.23}
+  body.phase3IntegratedPreview .scene .combatStatuses .statusIcon{width:21px;height:21px;flex-basis:21px}
   body.phase3IntegratedPreview .combatActiveBuffs .phase3BuffList .tag{
     font-size:11px;
     padding:4px 7px;

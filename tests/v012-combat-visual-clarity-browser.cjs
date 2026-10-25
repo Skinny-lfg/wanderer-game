@@ -51,7 +51,7 @@ const server=http.createServer((req,res)=>{
    assert(result.backgroundFilter.includes('brightness(0.6)'));
    assert(result.hpFontSize>=13&&result.hpFontSize<=15,'HP text stays readable');
    assert(result.statsFontSize>=10&&result.statsFontSize<=11,'combat stats are compact');
-   assert(result.statusFontSize>=11&&result.statusFontSize<=13,'combat statuses are compact');
+   assert(result.statusFontSize>=11&&result.statusFontSize<=14,'combat statuses are compact');
    assert(result.damageFontSize>=22,'damage text stands out');
    assert(result.damageZIndex>=10&&result.damageShadow!=='none','damage text needs contrast');
    assert(result.passive.includes('phase3PassiveEmphasis--number')&&result.passive.includes('phase3PassiveEmphasis--effect'));
