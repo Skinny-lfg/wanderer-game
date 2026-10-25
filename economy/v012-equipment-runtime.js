@@ -162,7 +162,7 @@ function economyOwnedItem(id){return ports.economyOwnedGear().find(item=>item.id
 function economyCanAct(){
  // Expedition Bag overflow blocks the NEXT Expedition, not Camp shopping/crafting.
  // Purchases and crafting separately require room in Stash, so secured loot is safe.
- return !!ports.state&&!ports.state.run&&!ports.saveBlocked&&
+ return !!ports.state&&!ports.state.run&&!ports.saveBlocked&&!ports.phase5Results?.review&&
   (!ports.PHASE5_VALIDATION||ports.phase5Ready)&&
   (!ports.PHASE1_PREVIEW||(!ports.phase1Draft&&['camp','finished','failed'].includes(ports.phase1Controller?.state.stage)));
 }

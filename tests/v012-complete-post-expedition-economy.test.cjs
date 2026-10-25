@@ -31,7 +31,7 @@ function assertBlocked(a){
  assert.equal(a.purchaseNative(0),false);
  assert.equal(a.potions.buy(s.apothecary.stock[0].id),false);
  assert.equal(a.treasures.sell(),false);
- a.craft(1);a.salvage([s.stash[0].id]);
+ a.craft(1);a.salvage(s.stash.length?[s.stash[0].id]:[]);
  assert.deepEqual({gold:s.gold,fragments:s.fragments,stash:s.stash.length,valuables:s.valuables.length},before,'blocked actions must not mutate economy');
 }
 function assertAvailable(a){
@@ -74,11 +74,14 @@ function allRealms(a){
    assert.equal(a.enter(),true);
    if(a.events.run()?.event){assert.equal(a.events.choose(2),true);continue;}
   }
-  if(a.controller().state.stage==='combat'&&a.state().run){
-   a.state().run.enemy.hp=0;a.win();a.flush();
+  if(a.controller().state.stage==='combat'){
+   if(a.events.run()?.event){assert.equal(a.events.choose(2),true,'event should resolve normally');continue;}
+   const run=a.state().run;
+   assert(run?.enemy,'combat should have a current wave: '+JSON.stringify({debug:a.debug(),plane:a.controller().state.planeIndex,wave:a.controller().state.wave,draft:a.draft()?.kind}));
+   run.enemy.hp=0;a.win();a.flush();
   }
  }
- assert.equal(a.controller().state.stage,'finished','full Expedition victory');
+ assert.equal(a.controller().state.stage,'finished','full Expedition victory: '+JSON.stringify({debug:a.debug(),plane:a.controller().state.planeIndex,wave:a.controller().state.wave,event:a.events.run()?.event,runStatus:a.state().run?.status,review:a.results().review,draft:a.draft()?.kind}));
 }
 function restored(storage,seed){
  const a=create(seed,undefined,{}, {sessionStorage:storage});
