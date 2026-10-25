@@ -10,13 +10,16 @@ test('production Firebase config is explicitly bound to wanderer-play', () => {
 });
 
 test('production publisher is manual, secret-gated, and Hosting-only', async () => {
-  const workflow = await readFile(new URL('../.github/workflows/publish-firebase-production.yml', import.meta.url), 'utf8');
+  const workflow = await readFile(new URL('../.github/workflows/publish-firebase-development.yml', import.meta.url), 'utf8');
   assert.match(workflow, /workflow_dispatch:/);
-  assert.match(workflow, /inputs\.confirmation == 'DEPLOY wanderer-play'/);
+  assert.match(workflow, /inputs\.target == 'production'/);
+  assert.match(workflow, /inputs\.production_confirmation == 'DEPLOY wanderer-play'/);
   assert.match(workflow, /FIREBASE_SERVICE_ACCOUNT_WANDERER_PLAY/);
   assert.match(workflow, /channelId: live/);
   assert.doesNotMatch(workflow, /firestore:|deploy --only firestore/i);
-  assert.doesNotMatch(workflow, /push:\s*\n\s*branches:/);
+  assert.match(workflow, /deploy-production:[\s\S]*?event_name == 'workflow_dispatch'/);
+  assert.match(workflow, /deploy-production:[\s\S]*?inputs\.target == 'production'/);
+  assert.doesNotMatch(workflow, /event_name == 'push'[^\n]*production/);
 });
 
 test('production publisher builds assets from the correct public directories', async () => {
