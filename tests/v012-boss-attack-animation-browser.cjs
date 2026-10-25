@@ -25,7 +25,7 @@ globalThis.__bossProbe={
   observer.observe(scene,{childList:true});
   this.observer?.disconnect();this.observer=observer;
   animateEnemyWindup();
-  return {src:img.getAttribute('src'),duration:BOSS_ATTACK_DURATION_MS[style]/speed,impact:BOSS_ATTACK_IMPACT_MS[style]/speed};
+  return {src:img.getAttribute('src'),duration:BOSS_ATTACK_DURATION_MS[style]/speed,impact:BOSS_ATTACK_IMPACT_MS[style]/speed,idle:boss.image};
  },
  strike(kind){animateEnemyStrike(kind);},
  status(){const img=document.getElementById('enemyPortrait');return{src:img?.getAttribute('src'),impactAt:this.impactAt,startedAt:this.startedAt};}
@@ -56,6 +56,9 @@ const server=http.createServer((req,res)=>{
     await page.waitForFunction(()=>document.querySelector('#enemyPortrait')?.getAttribute('src')?.endsWith('.png'),null,{timeout:3000});
     const src=await page.locator('#enemyPortrait').getAttribute('src');
     assert(src.includes('assets/bosses/'),'static portrait not restored: '+src);
+    assert.equal(src,snapshot.idle,'idle no longer matches the boss first attack pose');
+    const loaded=await page.locator('#enemyPortrait').evaluate(img=>img.complete&&img.naturalWidth===768&&img.naturalHeight===768);
+    assert(loaded,'matching idle PNG failed to load: '+src);
     await page.evaluate(()=>__bossProbe.observer?.disconnect());
    }
    assert.deepEqual(errors,[]);
