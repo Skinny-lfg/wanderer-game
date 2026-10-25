@@ -45,10 +45,10 @@ const server=http.createServer((req,res)=>{
    // Synthetic combat HUD for the player and enemy, including stacked effects.
    await page.evaluate(()=>{
     const scene=document.createElement('div');
-    scene.id='scene';scene.className='scene';scene.style.cssText='position:fixed;top:0;left:0;width:min(100vw,380px);height:280px;min-height:280px;z-index:9999;';
+    scene.id='scene';scene.className='scene';scene.style.cssText='position:fixed;top:0;left:0;width:min(100vw,380px);height:280px;min-height:280px;z-index:9999;display:flex;align-items:stretch;';
     for(const kind of ['playerStatuses','enemyDebuffs']){
      const actor=document.createElement('div');actor.className='combatant';
-     actor.style.cssText='position:relative;min-width:0;';
+     actor.style.cssText='position:relative;min-width:0;flex:1 1 0;width:48%;';
      const lane=document.createElement('div');
      lane.className='combatStatuses '+kind;
      lane.innerHTML=[['barrier','Barrier 150'],['weakened','Weakened −20% damage'],['healing-reduction','Healing −40%'],['boss-barrier','Boss Barrier 200']]
