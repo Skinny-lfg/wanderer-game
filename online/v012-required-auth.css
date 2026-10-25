@@ -102,3 +102,44 @@ body.phase3IntegratedPreview dialog.v012LeaderboardDialog[open]{
   }
   .v012LeaderboardDialog .v012PublicPlayerIdentity{gap:10px}
 }
+
+/* v0.12 public equipped-gear viewer. Equipment art/stats reuse native item UI. */
+body.phase3IntegratedPreview dialog.v012LeaderboardDialog[open]{
+ width:min(940px,calc(100vw - 24px))!important;
+ max-width:min(940px,calc(100vw - 24px))!important;
+}
+.v012LeaderboardDialog .v012PublicGearSection{
+ margin-top:18px;padding-top:12px;border-top:1px solid #73504a;
+}
+.v012LeaderboardDialog .v012PublicGearSection>h3{
+ margin:0 0 9px;color:#f3d7aa;font-size:18px;
+}
+.v012LeaderboardDialog .v012PublicGearContents .publicGear{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;
+}
+.v012LeaderboardDialog .v012PublicGearContents .publicGearItem{
+ min-width:0;border:1px solid #78545f;background:#2c1c24;
+ padding:9px;align-items:flex-start;gap:10px;
+}
+.v012LeaderboardDialog .v012PublicGearContents .publicGearItem>div{min-width:0;flex:1}
+.v012LeaderboardDialog .v012PublicGearContents .rarityImageFrame--public{
+ flex:0 0 48px;width:48px;height:48px;aspect-ratio:1;
+}
+.v012LeaderboardDialog .v012PublicGearContents .rarityImageFrame--public img,
+.v012LeaderboardDialog .v012PublicGearContents .publicGearItem img{
+ width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain;
+}
+.v012LeaderboardDialog .v012PublicGearContents .publicGearItem b{
+ font-size:13px;line-height:1.3;color:#f6dfbf;
+}
+.v012LeaderboardDialog .v012PublicGearContents .publicGearMeta{font-size:11px}
+.v012LeaderboardDialog .v012PublicGearContents .publicGearStats{display:block;font-size:11px}
+.v012LeaderboardDialog .v012PublicGearContents .publicGearDetails{display:block;font-size:11px}
+.v012LeaderboardDialog .v012PublicGearContents h3{margin:16px 0 7px}
+@media(max-width:620px){
+ .v012LeaderboardDialog .v012PublicGearContents .publicGear{grid-template-columns:1fr}
+ .v012LeaderboardDialog .v012PublicGearContents .publicGearItem{padding:8px}
+ .v012LeaderboardDialog .v012PublicGearContents .rarityImageFrame--public{
+  width:52px;height:52px;flex-basis:52px;
+ }
+}
