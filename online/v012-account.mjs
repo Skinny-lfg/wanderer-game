@@ -1,4 +1,4 @@
-import {createBackend} from './firebase-client.mjs';
+import {createBackend} from './firebase-client.mjs?v=v012-production-auth-1';
 import {createCloudSaveCoordinator} from './v012-cloud-save.mjs';
 const buttons=[...document.querySelectorAll('[data-online-action="account"]')];
 const localOnly=new URLSearchParams(location.search).get('expeditionSave')==='1';
@@ -51,6 +51,6 @@ async function open(){
 }
 if(!localOnly&&buttons.length){
  createBackend().then(value=>{backend=value;backend.watchAuth(user=>activate(user).catch(error=>{setSaveStatus('error');updateDialog(user,human(error));}));}).catch(error=>{setSaveStatus('error');console.error('Firebase initialization failed',error);});
- for(const button of buttons)button.addEventListener('click',event=>{event.preventDefault();open().catch(error=>console.error('Account UI failed',error));});
+ for(const button of buttons)button.addEventListener('click',event=>{event.preventDefault();const bar=document.getElementById('onlineBar'),menu=document.getElementById('menuToggle');bar?.classList.remove('menuOpen');menu?.setAttribute('aria-expanded','false');open().catch(error=>console.error('Account UI failed',error));});
 }
 function human(error){const code=error?.code;if(code==='auth/credential-already-in-use'||code==='auth/email-already-in-use')return 'That credential belongs to an existing account. Sign in to that account first; Guest progress was not merged or replaced.';if(code==='auth/invalid-credential'||code==='auth/wrong-password')return 'Email or password was not accepted.';if(code==='auth/popup-closed-by-user')return 'Sign-in window closed before completion.';if(code==='auth/network-request-failed')return 'Network unavailable. Reconnect and retry.';return String(error?.message||'Account operation failed.');}
