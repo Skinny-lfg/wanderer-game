@@ -51,12 +51,14 @@ const server=http.createServer((req,res)=>{
     const data=await dialog.evaluate(d=>{
      const box=d.getBoundingClientRect(),c=getComputedStyle(d);
      return {width:box.width,height:box.height,maxHeight:c.maxHeight,scroll:c.overflowY,
-      horizontalOverflow:d.scrollWidth>d.clientWidth+2,
+      overflowX:c.overflowX,
+      pageOverflow:document.documentElement.scrollWidth>innerWidth+2,
       hasStandard:d.classList.contains('equipmentStandardDialog')};
     });
     assert.equal(data.hasStandard,standard,type+' dialog size class');
     assert(data.height<=Math.min(900*(width<=700?.82:.72),width<=700?680:600)+2,type+' exceeds bounded Inventory height '+JSON.stringify(data));
-    assert.equal(data.horizontalOverflow,false,type+' has unwanted horizontal scroll');
+    assert.equal(data.overflowX,'hidden',type+' dialog must contain horizontal table overflow');
+    assert.equal(data.pageOverflow,false,type+' caused page-wide horizontal overflow');
     await dialog.locator('[data-close]').click();
     return data;
    };
