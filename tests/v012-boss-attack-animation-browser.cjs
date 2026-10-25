@@ -13,11 +13,9 @@ globalThis.__bossProbe={
   clockSpeed=speed;
   const boss=BOSS_ARCHETYPES.find(item=>item.style===style);
   state.run={enemy:{boss:true,bossStyle:style,eliteType:null,effect:'burn',name:boss.name}};
-  let scene=document.getElementById('bossProbeScene');
-  if(!scene){scene=document.createElement('div');scene.id='bossProbeScene';document.body.appendChild(scene);}
-  let testScene=document.getElementById('scene');
-  if(testScene)testScene.id='oldScene';
-  scene.id='scene';scene.innerHTML='<img id="heroPortrait" src="assets/placeholders/sword.svg" alt=""><img id="enemyPortrait" alt="">';
+  let scene=document.getElementById('scene');
+  if(!scene){scene=document.createElement('div');scene.id='scene';document.body.appendChild(scene);}
+  scene.innerHTML='<img id="heroPortrait" src="assets/placeholders/sword.svg" alt=""><img id="enemyPortrait" alt="">';
   const img=document.getElementById('enemyPortrait');
   img.dataset.attackSrc=BOSS_ATTACK_ART[style];
   img.dataset.idleSrc=boss.image;

@@ -237,3 +237,9 @@ body.phase3IntegratedPreview .phase3CampGrid>.phase3ExpeditionPanel>.phase3Porta
   object-position:calc(50% + 7px) 35%!important;
  }
 }
+
+/* Boss portraits face the hero in their original art; mob GIF mirroring must not flip them. */
+body.phase3IntegratedPreview .scene #enemyPortrait[data-boss-style]:not([data-boss-style=""]){
+ transform:none!important;transform-origin:center bottom!important;
+ object-fit:contain!important;
+}
