@@ -115,3 +115,11 @@ body.phase3IntegratedPreview #scene #enemyPortrait.phase3DamageFlash:not(.fxDefe
    filter:sepia(.25) saturate(2.2) hue-rotate(-40deg) brightness(.92)!important;
  }
 }
+
+/* Creature presentation only: source GIF dimensions and transparency are preserved. */
+body.phase3IntegratedPreview .scene #enemyPortrait[data-attack-src*="hollow_shade_"]{width:min(225px,100%)!important;height:auto!important;max-height:none!important;object-fit:contain!important}
+body.phase3IntegratedPreview .scene #enemyPortrait[data-attack-src*="grave_lantern_"]{width:min(222px,100%)!important;height:auto!important;max-height:none!important;object-fit:contain!important}
+@media(max-width:700px){body.phase3IntegratedPreview .scene #enemyPortrait[data-attack-src*="grave_lantern_"]{width:min(150px,100%)!important}}
+/* Centre tile height reduced to 65% of prior 40%-tall strip; horizontal seams remain joined. */
+body.phase3IntegratedPreview button.phase3Start::before{top:37%!important;bottom:37%!important;left:19%!important;right:19%!important}
+@media(max-width:700px){body.phase3IntegratedPreview button.phase3Start::before{top:37.65%!important;bottom:37.65%!important;left:18%!important;right:18%!important}}

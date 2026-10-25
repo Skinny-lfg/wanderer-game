@@ -133,12 +133,11 @@ body.phase3IntegratedPreview :is(
   z-index: 0;
 }
 .gothic-corner-layer--viewport {
-  position: fixed;
-  inset: auto;
-  top: var(--gothic-layer-top);
-  left: var(--gothic-layer-left);
-  width: var(--gothic-layer-width);
-  height: var(--gothic-layer-height);
+  /* CSS-relative positioning avoids viewport-coordinate drift during desktop zoom. */
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
 }
 
 .gothic-corner {

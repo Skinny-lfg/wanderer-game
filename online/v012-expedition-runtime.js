@@ -352,7 +352,7 @@ function phase5ExitResult(){
  if(!ports.phase5Results.review)return false;
  const returningToCamp=ports.phase5Results.review==='summary';
  ports.phase5Results.review=ports.phase5Results.review==='realm'&&ports.phase5Results.summary?'summary':null;
- if(returningToCamp)ports.phase3LootIds=new Set(); // Retire Bag markers without removing any secured loot.
+ if(returningToCamp){ports.phase3LootIds=new Set();ports.phase5Results.eventExitPending=false;} // Retire Bag markers without removing any secured loot.
  ports.state.run=null;ports.view='phase1';if(!ports.phase5Persist())return false;ports.render();return true;
 }
 function phase5ReviewSummary(){ports.phase5Results.review='summary';ports.view='phase1';ports.phase5Persist();ports.render();}

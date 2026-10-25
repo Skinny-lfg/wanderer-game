@@ -72,3 +72,28 @@ test('endgame stays within existing gear/Rune tier cap and investment remains fi
   for(let rank=0;rank<10;rank++)assert(Number.isFinite(a.economy.upgradeCost(tier,rank)));
  }
 });
+
+test('extraction summary exit unlocks Camp purchases, forging and salvage',()=>{
+ const a=create(7301),s=a.state();s.gold=50000;s.fragments=50000;a.rollShop();
+ a.start(1);a.initial('blood');a.controller().state.planeIndex=2;
+ assert.equal(a.economyCanAct(),false);
+ assert.equal(a.checkpoint.extract(),true);
+ assert.equal(a.economyCanAct(),false,'summary remains guarded');
+ assert.equal(a.exitResult(),true);
+ assert.equal(a.economyCanAct(),true,'Camp economy available after extraction');
+ const gold=s.gold;assert.equal(a.purchaseNative(0),true);assert(s.gold<gold);
+ const fragments=s.fragments;a.craft(1);assert(s.fragments<fragments);
+ const item=s.stash.find(o=>!o.locked&&!o.recoveryStarter);assert(item);
+ const before=s.fragments;a.salvage([item.id]);
+ assert(!s.stash.some(o=>o.id===item.id));assert(s.fragments>before);
+});
+test('Camp salvage remains available with secured bag overflow without discarding loot',()=>{
+ const a=create(7302),s=a.state();s.gold=s.fragments=50000;
+ const chosen=a.makeItem(1,'belt',null,'loot','Belt','Common');s.stash.push(chosen);
+ a.controller().state.stage='failed';
+ for(let i=0;i<13;i++)a.bag.mark(a.makeItem(1,'helm',null,'loot','Helm','Common'));
+ assert(a.bag.overflow()>0);assert.equal(a.economyCanAct(),true);
+ const retained=a.bag.items().map(item=>item.id).sort();a.salvage([chosen.id]);
+ assert(!s.stash.some(item=>item.id===chosen.id));
+ assert.deepEqual(a.bag.items().map(item=>item.id).sort(),retained);
+});

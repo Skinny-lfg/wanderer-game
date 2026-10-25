@@ -229,14 +229,15 @@ function unequipItem(slot){
 }
 
 function bulkSell(){
- if(ports.phase3ExpeditionActive()||ports.phase3NeedsBagResolution())return false;
+ // Secured Bag overflow prevents the next Expedition, not Camp salvage.
+ if(!ports.economyCanAct())return false;
  if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked))return false;
  const items=ports.state.stash.filter(o=>ports.chosenItems.has(o.id)&&!o.locked);
  if(!items.length)return;
  const total=items.reduce((n,o)=>n+ports.saleFragments(o),0);
  const ids=new Set(items.map(o=>o.id));
  ports.showConfirm('Salvage Equipment','Salvage '+items.length+' items for '+total+' Fragments? This cannot be undone.',()=>{
-  if(ports.phase3ExpeditionActive()||ports.phase3NeedsBagResolution())return;
+  if(!ports.economyCanAct())return;
   const selling=ports.state.stash.filter(o=>ids.has(o.id)&&!o.locked);
   if(!selling.length)return;
   const value=selling.reduce((n,o)=>n+ports.saleFragments(o),0);
@@ -247,12 +248,12 @@ function bulkSell(){
 }
 
 function salvageOne(id){
- if(ports.phase3ExpeditionActive()||ports.phase3NeedsBagResolution())return false;
+ if(!ports.economyCanAct())return false;
  const o=ports.state.stash.find(o=>o.id===id);
  if(!o||o.locked)return;
  const n=ports.saleFragments(o);
  ports.showConfirm('Salvage Equipment','Salvage '+o.name+' for '+n+' Fragments? This cannot be undone.',()=>{
-  if(ports.phase3ExpeditionActive()||ports.phase3NeedsBagResolution())return;
+  if(!ports.economyCanAct())return;
   const current=ports.state.stash.find(x=>x.id===id);if(!current||current.locked)return;
   const value=ports.saleFragments(current);
   ports.state.stash=ports.state.stash.filter(x=>x.id!==id);ports.state.fragments+=value;ports.selectedId=null;
