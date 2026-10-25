@@ -6,7 +6,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
  const boot='phase1Init();\nconst phase3RestoredScroll=phase3RestoreUILocation(phase3SavedUILocation);\nrender();';
  if(!source.includes(boot))throw Error('Integrated bootstrap not found');
  let next=seed>>>0;const math=Object.create(Math);math.random=()=>{next=(Math.imul(next,1664525)+1013904223)>>>0;return next/4294967296;};
- const callbacks=[],nodes=new Map(),isolatedSessionStorage=new Map();
+ const callbacks=[],nodes=new Map(),isolatedSessionStorage=options.sessionStorage??new Map();
  const node=()=>({innerHTML:'',textContent:'',style:{},dataset:{},classList:{add(){},remove(){}},focus(){},querySelectorAll:()=>[],before(){},close(){}});
  const getNode=id=>{if(!nodes.has(id))nodes.set(id,node());return nodes.get(id);};
  const queryAll=selector=>{

@@ -25,7 +25,7 @@ function phase1Begin(level=1){
  ports.phase4Seed=Math.floor(Math.random()*4294967296)>>>0;ports.phase4Prefix=Date.now().toString(36);ports.phase4Stamp=null;ports.phase4Home=ports.phase4Clone(ports.state.equip);ports.phase4Entry=null;ports.phase4Resume=false;ports.phase4WaveKeys=[];
  ports.phase5Results={version:1,complete:true,review:null,realm:null,summary:null,earned:[],gold:0,fragments:0};
  ports.phase1Controller.start(level);ports.phase6Run={version:1,event:null,events:[],effects:{},combats:0};ports.phase3LootIds=new Set();ports.phase3PotionCooldowns={health:0,mana:0};ports.phase1Vitals=null;ports.phase1Clock=0;ports.phase1Continuity=null;ports.phase3Supplies={health:0,mana:0};ports.phase1Build=WandererV012Buildcraft.create();ports.phase1Build.runtime.hybridRules=true;ports.phase1Build.families=ports.phase1Controller.state.families;ports.phase1Draft=null;ports.state.run=null;ports.view='phase1';
- if(ports.PHASE5_VALIDATION){ports.phase5Snapshot.expedition.attempts++;ports.phase5Snapshot.expedition.awardKeys=[];ports.phase5Snapshot.expedition.lastOutcome='active';ports.phase5Persist();}
+ if(ports.PHASE1_PREVIEW){ports.phase5Snapshot.expedition.attempts++;ports.phase5Snapshot.expedition.awardKeys=[];ports.phase5Snapshot.expedition.lastOutcome='active';ports.phase5Persist();}
  ports.render();
 }
 
@@ -93,7 +93,7 @@ function phase6BackToCamp(){
  if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked)||g.planeIndex!==1||g.history.length||g.stage!=='choice'||ports.state.run||ports.phase6Run?.started)return false;
  ports.phase1Controller.abandon();if(ports.phase1Build)WandererV012Buildcraft.clear(ports.phase1Build);
  ports.phase1Build=ports.phase1Draft=ports.phase1Vitals=ports.phase1Continuity=null;ports.phase4Home=ports.phase4Entry=null;ports.phase4Seed=ports.phase4Prefix=null;ports.phase6Run=null;ports.phase4WaveKeys=[];
- if(ports.PHASE5_VALIDATION)ports.phase5Snapshot.expedition.lastOutcome='cancelled';ports.view='phase1';if(!ports.phase5Persist())return false;ports.render();return true;
+ if(ports.PHASE1_PREVIEW)ports.phase5Snapshot.expedition.lastOutcome='cancelled';ports.view='phase1';if(!ports.phase5Persist())return false;ports.render();return true;
 }
 
 function phase2EnterInitialRealm(){
@@ -197,7 +197,7 @@ function phase1WaveWon(){
  const r=ports.state.run,g=ports.phase1Controller.state;
  if(!ports.isPhase1Run()||r.status!=='fight'||!r.enemy||r.enemy.hp>0||g.stage!=='combat'||!g.selected||r.enc!==g.wave||r.phase4AwardedWave===r.enc)return;
  clearInterval(ports.clock);
- if(ports.PHASE5_VALIDATION){const token=ports.phase5Snapshot.expedition.attempts+':'+r.phase1Plane+':'+r.enc;if(ports.phase5Snapshot.expedition.awardKeys.includes(token)||ports.phase4WaveKeys.includes(token)){ports.phase5Fail(Error('Duplicate Wave reward rejected'));return;}ports.phase4WaveKeys.push(token);}
+ if(ports.PHASE1_PREVIEW){const token=ports.phase5Snapshot.expedition.attempts+':'+r.phase1Plane+':'+r.enc;if(ports.phase5Snapshot.expedition.awardKeys.includes(token)||ports.phase4WaveKeys.includes(token)){ports.phase5Fail(Error('Duplicate Wave reward rejected'));return;}ports.phase4WaveKeys.push(token);}
  r.phase4AwardedWave=r.enc;
  ports.legendaryKill(r);
  if(ports.phase1Build)WandererV012Buildcraft.onKill(ports.phase1Build,ports.phase2Context(r));
@@ -247,7 +247,7 @@ function phase1WaveWon(){
   ports.phase6ReturnPotions('victory');
   ports.phase5MakeSummary('victory');
   WandererV012Buildcraft.clear(ports.phase1Build);ports.phase1Build=null;
-  if(ports.PHASE5_VALIDATION){ports.phase5Snapshot.expedition.completed=Math.max(ports.phase5Snapshot.expedition.completed,r.tier);ports.phase5Snapshot.expedition.lastOutcome='victory';}
+  if(ports.PHASE1_PREVIEW){ports.phase5Snapshot.expedition.completed=Math.max(ports.phase5Snapshot.expedition.completed,r.tier);ports.phase5Snapshot.expedition.lastOutcome='victory';}
   // Keep classic Rune tiers and three-choice UI: only complete milestone bosses, never Elites.
   if(g.version===2||r.tier%10===0)ports.offerBossRunes(r.tier);
   if(ports.state.pendingRuneReward)ports.phase5Results.summary.runeTier=ports.state.pendingRuneReward.tier;
@@ -277,7 +277,7 @@ function phase1Death(){
  ports.phase4CommitRealm();ports.phase4LoseLoot();ports.phase1Controller.defeat();ports.phase1Vitals=null;ports.phase1Continuity=null;
  if(ports.phase1Build)WandererV012Buildcraft.clear(ports.phase1Build);
  ports.phase1Build=null;ports.phase1Draft=null;ports.state.run=null;ports.view='phase1';
- if(ports.PHASE5_VALIDATION)ports.phase5Snapshot.expedition.lastOutcome='defeat';ports.phase5Persist();ports.render();
+ if(ports.PHASE1_PREVIEW)ports.phase5Snapshot.expedition.lastOutcome='defeat';ports.phase5Persist();ports.render();
  ports.bannerMessage('You died. Only Bag contents were lost; equipped gear and earned currency are safe.');
 }
 
@@ -286,7 +286,7 @@ function phase1Abandon(){
  clearInterval(ports.clock);ports.phase4CommitRealm();ports.phase4LoseLoot();ports.phase1Controller.abandon();
  if(ports.phase1Build)WandererV012Buildcraft.clear(ports.phase1Build);
  ports.phase1Build=null;ports.phase1Draft=null;ports.phase1Vitals=null;ports.phase1Continuity=null;ports.state.run=null;ports.view='phase1';
- if(ports.PHASE5_VALIDATION)ports.phase5Snapshot.expedition.lastOutcome='abandoned';
+ if(ports.PHASE1_PREVIEW)ports.phase5Snapshot.expedition.lastOutcome='abandoned';
  ports.phase5Persist();ports.render();return true;
 }
 
