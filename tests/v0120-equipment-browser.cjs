@@ -39,6 +39,16 @@ const server=http.createServer((req,res)=>{
   assert.equal(await page.evaluate(()=>__gearTest.snapshot().equip.belt),null);
   const beforeMerchant=await page.evaluate(()=>__gearTest.persisted());assert(beforeMerchant,'isolated save missing before Merchant');assert.equal(beforeMerchant.expedition.unlocked,5);
   await page.locator('[data-phase3-nav="city-center"]').click();await page.locator('[data-city-tab="blacksmith"]').click();
+  // Forge image preview selects matching existing gear art (not sword fallback).
+  if(width===390||width===1280){
+   for(const [slot,type] of [['armor','Cloth'],['helm','Leather'],['boots','Plate']]){
+    await page.selectOption('#forgeSlot',slot);
+    await page.selectOption('#forgeSubtype',type);
+    await page.waitForFunction(()=>{const img=document.querySelector('.forgeGrid img.craftHero');return img?.complete&&img.naturalWidth>0});
+    const src=await page.locator('.forgeGrid img.craftHero').getAttribute('src');
+    assert(src.includes('/armor_'+type.toLowerCase()+'_'),type+' '+slot+' wrong preview: '+src);
+   }
+  }
   assert.equal(await page.getByRole('heading',{name:'Affinity Transfer',exact:true}).count(),0);
   await page.selectOption('#forgeSlot','belt');await page.selectOption('#forgeSubtype','Leather');await page.selectOption('#forgeTier','5');
   await page.locator('#craft').click();assert.deepEqual(errors,[]);assert.equal((await page.evaluate(()=>__gearTest.status())).saveBlocked,false,'valid isolated progression must not block saves');assert(await page.locator('dialog [data-close]').count(),'craft confirmation did not open');await page.locator('dialog [data-close]').click();

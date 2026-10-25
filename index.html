@@ -81,7 +81,10 @@ const isTwoHanded=o=>['Two-Handed','Bow','Staff'].includes(o?.subtype);
 const isMagicOffhand=o=>!!o&&['Orb','Tome','Charm'].includes(o.subtype);
 
 function forgePreviewImage(slot,subtype){
- // A Forge selection represents an equipment type, not an actual rolled item.
+ // Forge displays representative art for the selection, without rolling an item.
+ // The C3 inventory catalog has Cloth, Leather and Plate images for all five slots.
+ if(ARMOR_SLOTS.includes(slot)&&ARMOR_TYPES.includes(subtype))
+  return C3_ARMOR_ART[subtype]?.[slot]?.[0]||placeholderIcon(slot);
  return placeholderIcon(subtype==='random'?slot:subtype);
 }
 const DUNGEON_CAP=Number.MAX_SAFE_INTEGER;

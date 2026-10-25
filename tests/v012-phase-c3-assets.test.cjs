@@ -102,3 +102,24 @@ test('C.3.4: all 47 weapons, off-hands and jewelry are valid WebP and mapped to 
  assert.ok(html.includes('const c3Other=c3EquipmentImage(o);if(c3Other)return c3Other;'));
  assert.ok(html.includes("subtype==='Daggers'||subtype==='Off-Hand Dagger'"));
 });
+
+test('Forge preview uses existing Cloth/Leather/Plate art for all armor slots',()=>{
+ const vm=require('node:vm');
+ const source=html.match(/function forgePreviewImage\(slot,subtype\)\{[\s\S]*?\n\}/);
+ assert.ok(source,'missing Forge preview function');
+ const armor=require('../assets/equipment/c3/manifest.json').variants;
+ const placeholderIcon=slot=>'assets/placeholders/'+slot+'.svg';
+ const preview=vm.runInNewContext('('+source[0]+')',{
+  ARMOR_SLOTS:['helm','armor','gloves','boots','belt'],
+  ARMOR_TYPES:['Cloth','Leather','Plate'],
+  C3_ARMOR_ART:armor,placeholderIcon
+ });
+ for(const type of ['Cloth','Leather','Plate'])for(const slot of ['helm','armor','gloves','boots','belt']){
+  const image=preview(slot,type);
+  assert.equal(image,armor[type][slot][0],type+' '+slot+' must use matching equipment art');
+  assert.ok(!image.endsWith('/sword.svg'),type+' '+slot+' must not be a sword');
+  checkImage(image);
+ }
+ assert.equal(preview('armor','random'),placeholderIcon('armor'),'random subtype retains slot placeholder');
+ assert.equal(preview('weapon','Sword'),placeholderIcon('Sword'),'weapon previews unchanged');
+});
