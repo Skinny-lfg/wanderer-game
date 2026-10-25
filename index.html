@@ -827,7 +827,23 @@ function animateEnemyStrike(abilityFx=null){
  }
  visual();
 }
-function floatText(n,target='enemy',crit=false){const el=$('scene');if(!el)return;if(target==='enemy'&&typeof n==='number'&&n>0)phase3FlashEnemyDamage();let x=document.createElement('span');x.className='float';x.textContent=typeof n==='string'?n:(crit?'CRIT! ':'')+Math.round(n);x.style.color=crit?'#f4d18a':target==='enemy'?'#f5b5a8':'#a3e1ff';x.style.left=target==='enemy'?'70%':'22%';x.style.top='50%';el.appendChild(x);setTimeout(()=>x.remove(),870)}
+function floatText(n,target='enemy',crit=false){
+ const scene=$('scene');if(!scene)return;
+ const damage=typeof n==='number'&&Number.isFinite(n);
+ if(target==='enemy'&&damage&&n>0)phase3FlashEnemyDamage();
+ const x=document.createElement('span');
+ x.className='float'+(damage?' floatDamage':'')+(crit?' floatCritical':'');
+ x.textContent=typeof n==='string'?n:(crit?'CRIT! ':'')+Math.round(n);
+ x.style.color=crit?'#ffe1a1':target==='enemy'?'#ffd0c4':'#c5eaff';
+ if(damage){
+  // Stagger simultaneous damage labels without affecting combat values or attack timing.
+  const stagger=scene.querySelectorAll('.floatDamage[data-target="'+(target==='enemy'?'enemy':'player')+'"]').length%4;
+  x.style.left=(target==='enemy'?[70,65,74,68][stagger]:[22,18,26,20][stagger])+'%';
+  x.style.top=[45,54,42,51][stagger]+'%';
+ }else{x.style.left=target==='enemy'?'70%':'22%';x.style.top='50%';}
+ x.dataset.target=target==='enemy'?'enemy':'player';
+ scene.appendChild(x);setTimeout(()=>x.remove(),960);
+}
 
 
 /* Runtime-only set effects. No save schema changes; time always advances in combat seconds. */

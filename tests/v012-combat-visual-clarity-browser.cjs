@@ -25,7 +25,7 @@ const server=http.createServer((req,res)=>{
     document.body.classList.add('phase3IntegratedPreview','phase3CombatView');
     const container=document.createElement('section');
     container.className='combatLayout';
-    container.innerHTML='<div class="panel"><div class="topline"><p class="muted">Wave 4 · Boss</p></div><div class="scene" id="visualTestScene"><img class="phase3ArenaBackdrop" src="assets/dungeons/c3/blood_bloodscar_wastes.webp" alt=""><div class="combatant eliteCombatant"><img id="enemyPortrait" data-elite-type="caster" src="assets/elites/animated/caster_idle.png" alt=""><strong class="combatEnemyName eliteName">Voidborne Hexer</strong><small>ATK 120 · DEF 90</small><small id="enemyHpText">600 / 700</small></div></div></div>';
+    container.innerHTML='<div class="panel"><div class="topline"><p class="muted">Wave 4 · Boss</p></div><div class="scene" id="visualTestScene"><img class="phase3ArenaBackdrop" src="assets/dungeons/c3/blood_bloodscar_wastes.webp" alt=""><div class="combatant eliteCombatant"><div class="combatStatuses enemyDebuffs"><span class="debuff">Bleed</span></div><img id="enemyPortrait" data-elite-type="caster" src="assets/elites/animated/caster_idle.png" alt=""><strong class="combatEnemyName eliteName">Voidborne Hexer</strong><small>ATK 120 · DEF 90</small><small id="enemyHpText">600 / 700</small></div><span class="float floatDamage" data-target="enemy">125</span></div></div>';
     document.body.appendChild(container);
     const scene=container.querySelector('.scene');
     scene.id='scene';
@@ -35,20 +35,29 @@ const server=http.createServer((req,res)=>{
     enemy.dataset.eliteType='vampire';
     const vampire=getComputedStyle(enemy),vampireWidth=enemy.getBoundingClientRect().width;
     const hpStyle=getComputedStyle(scene.querySelector('#enemyHpText'));
+    const statsStyle=getComputedStyle(scene.querySelector('.combatant>small:not(#enemyHpText)'));
+    const statusStyle=getComputedStyle(scene.querySelector('.combatStatuses .debuff'));
+    const floatStyle=getComputedStyle(scene.querySelector('.floatDamage'));
     const passive=__visualPassive('Deal 24% damage with a 3s cooldown on the next attack.');
     return {casterTransform,casterWidth,vampireWidth,
       backgroundOpacity:artStyle.opacity,backgroundFilter:artStyle.filter,
-      hpFontSize:parseFloat(hpStyle.fontSize),hpColor:hpStyle.color,passive};
+      hpFontSize:parseFloat(hpStyle.fontSize),hpColor:hpStyle.color,
+      statsFontSize:parseFloat(statsStyle.fontSize),statusFontSize:parseFloat(statusStyle.fontSize),
+      damageFontSize:parseFloat(floatStyle.fontSize),damageShadow:floatStyle.textShadow,damageZIndex:Number(floatStyle.zIndex),passive};
    });
-   assert(result.casterTransform.includes('-1'),'elite caster must be mirrored: '+result.casterTransform);
+   assert(!result.casterTransform.includes('-1'),'Voidborne Hexer should face the opposite direction: '+result.casterTransform);
    assert(result.vampireWidth<result.casterWidth,'Sanguine Wraith must be smaller than the Caster');
    assert.equal(result.backgroundOpacity,'0.72');
    assert(result.backgroundFilter.includes('brightness(0.6)'));
-   assert(result.hpFontSize>=14,'combat HP text must remain readable');
+   assert(result.hpFontSize>=13&&result.hpFontSize<=15,'HP text stays readable');
+   assert(result.statsFontSize>=10&&result.statsFontSize<=11,'combat stats are compact');
+   assert(result.statusFontSize>=11&&result.statusFontSize<=13,'combat statuses are compact');
+   assert(result.damageFontSize>=22,'damage text stands out');
+   assert(result.damageZIndex>=10&&result.damageShadow!=='none','damage text needs contrast');
    assert(result.passive.includes('phase3PassiveEmphasis--number')&&result.passive.includes('phase3PassiveEmphasis--effect'));
    assert(!result.passive.includes('<script'),'passive descriptions must stay escaped');
    assert.deepEqual(errors,[],'browser script errors');
-   console.log('PASS combat visual clarity '+width+'px: mirrored Caster, smaller Wraith, darker arena, readable HP, emphasized passives');
+   console.log('PASS combat visual clarity '+width+'px: Hexer reversed, larger damage, compact HP/stats/statuses');
    await ctx.close();
   }
  }finally{await browser.close();await new Promise(resolve=>server.close(resolve));}

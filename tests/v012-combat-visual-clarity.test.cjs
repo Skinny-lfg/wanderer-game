@@ -10,8 +10,11 @@ test('boss idle images match attack poses and exist as transparent PNGs',()=>{
   assert.equal(fs.readFileSync(file).toString('hex',0,8),'89504e470d0a1a0a','invalid PNG');
  }
 });
-test('elite caster mirror, vampire reduced and combat readable, emphasis safely escaped',()=>{
- assert.match(css,/\[data-elite-type="caster"\]/);assert.match(css,/scaleX\(-1\)/);
+test('Voidborne Hexer reversed and floating damage remains readable',()=>{
+ assert.match(css,/\[data-elite-type="caster"\]/);assert.match(css,/scaleX\(1\)/);
+ assert.match(html,/className='float'\+\(damage\?' floatDamage'/);
+ assert.match(css,/#scene > \.floatDamage/);
+ assert.match(css,/font-size:15px!important/);
  assert.match(css,/\[data-elite-type="vampire"\]/);
  assert.doesNotMatch(css,/sanguine_leech/);
  assert.match(css,/brightness\(\.60\)/);

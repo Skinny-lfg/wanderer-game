@@ -1,96 +1,118 @@
 /* Combat and passive readability: visual-only; no changes to game rules. */
 body.phase3IntegratedPreview #scene{background-color:#100b12!important}
 body.phase3IntegratedPreview #scene>.phase3ArenaBackdrop{opacity:.72!important;filter:brightness(.60) saturate(.82)!important}
-/* Caster art faces the player; the spell VFX is not flipped. */
-body.phase3IntegratedPreview #scene #enemyPortrait[data-elite-type="caster"]{transform:scaleX(-1)!important;transform-origin:center center!important}
+/* Voidborne Hexer: reverse the previously mirrored portrait orientation only.
+   Applies to idle/attack imagery, without mirroring independent spell effects. */
+body.phase3IntegratedPreview #scene .eliteCombatant #enemyPortrait[data-elite-type="caster"]{transform:scaleX(1)!important;transform-origin:center bottom!important}
 /* Sanguine Wraith: increase the approved portrait dimensions by 5%. */
 body.phase3IntegratedPreview #scene .eliteCombatant #enemyPortrait[data-elite-type="vampire"]{width:min(174.3px,94.5%)!important;height:160.65px!important;max-height:160.65px!important;object-fit:contain!important}
 @media(max-width:650px){body.phase3IntegratedPreview #scene .eliteCombatant #enemyPortrait[data-elite-type="vampire"]{width:min(137.55px,94.5%)!important;height:99.75px!important;max-height:99.75px!important}}
 @media(max-width:370px){body.phase3IntegratedPreview #scene .eliteCombatant #enemyPortrait[data-elite-type="vampire"]{width:min(127.05px,94.5%)!important;height:99.75px!important;max-height:99.75px!important}}
-body.phase3IntegratedPreview #scene .combatant>small{color:#f5e9df!important;font-size:12px!important;font-weight:650!important;line-height:1.3!important;text-shadow:0 1px 3px #000,0 0 6px #000!important}
+body.phase3IntegratedPreview #scene .combatant>small{color:#f5e9df!important;font-size:11px!important;font-weight:650!important;line-height:1.28!important;text-shadow:0 1px 3px #000,0 0 6px #000!important}
 body.phase3IntegratedPreview #scene .combatant>strong{color:#f7e9cf;font-weight:800!important;font-size:clamp(13px,1.1vw,16px)!important;line-height:1.25!important;text-shadow:0 2px 3px #000,0 0 9px #000!important}
 body.phase3IntegratedPreview #scene .combatant>.combatEnemyName.eliteName{color:#ffadad!important}
 body.phase3IntegratedPreview #scene .combatant>.combatEnemyName.bossName{color:#ffdc98!important}
 body.phase3IntegratedPreview .combatLayout .topline p,body.phase3IntegratedPreview .combatLayout>.panel>.small.muted{color:#ead8d1!important;font-weight:600!important;text-shadow:0 1px 2px #000}
 body.phase3IntegratedPreview #scene .vs{color:#eed7ae!important;text-shadow:0 2px 4px #000,0 0 8px #000!important}
-@media(max-width:650px){body.phase3IntegratedPreview #scene .combatant>small{font-size:11px!important;line-height:1.24!important}body.phase3IntegratedPreview #scene .combatant>strong{font-size:12px!important}}
+@media(max-width:650px){body.phase3IntegratedPreview #scene .combatant>small{font-size:10px!important;line-height:1.22!important}body.phase3IntegratedPreview #scene .combatant>strong{font-size:12px!important}}
 body.phase3IntegratedPreview .phase3PassiveEmphasis{display:inline;font-weight:800!important;white-space:normal}
 body.phase3IntegratedPreview .phase3PassiveEmphasis--number{color:#99e5b5!important}
 body.phase3IntegratedPreview .phase3PassiveEmphasis--effect{color:#f1cf93!important}
 body.phase3IntegratedPreview :is(.phase3PassiveDescription,.phase3PassiveTooltip p,.phase3PassiveInline p,.phase3AffinityPassiveDescriptions p){color:#f0e2da;line-height:1.5}
 
-/* Keep HP readouts prominent; the compact stats rule above must not shrink them. */
+/* Health remains clear while slightly smaller than before. */
 body.phase3IntegratedPreview #scene .combatant>#heroHpText,
 body.phase3IntegratedPreview #scene .combatant>#enemyHpText{
- color:#fff5e9!important;font-size:16px!important;font-weight:800!important;
+ color:#fff5e9!important;font-size:15px!important;font-weight:800!important;
  font-variant-numeric:tabular-nums;text-shadow:0 1px 3px #000,0 0 7px #000!important;
 }
 @media(max-width:650px){
  body.phase3IntegratedPreview #scene .combatant>#heroHpText,
- body.phase3IntegratedPreview #scene .combatant>#enemyHpText{font-size:14px!important}
+ body.phase3IntegratedPreview #scene .combatant>#enemyHpText{font-size:13px!important}
 }
 
-/* Larger combat buff and debuff labels: readable at a glance on both combatants.
+/* Slightly smaller combat buffs and debuffs, readable on both sides.
    Keep each lane pinned to its own edge and independently scrollable; never
    resize source PNGs non-uniformly or expand the arena/portrait layout. */
 body.phase3IntegratedPreview #scene .combatant > .combatStatuses{
-  gap:7px;
+  gap:6px;
   max-width:clamp(155px,56%,265px);
   max-height:55%;
   padding:4px 6px;
 }
 body.phase3IntegratedPreview #scene .combatant > .combatStatuses .debuff{
-  font-size:14px;
-  line-height:1.3;
-  padding:6px 9px;
-  gap:7px;
-  min-height:38px;
+  font-size:13px;
+  line-height:1.27;
+  padding:5px 8px;
+  gap:6px;
+  min-height:35px;
   box-sizing:border-box;
 }
 body.phase3IntegratedPreview #scene .combatant > .combatStatuses .statusIcon{
-  width:26px;
-  height:26px;
-  flex:0 0 26px;
+  width:23px;
+  height:23px;
+  flex:0 0 23px;
   object-fit:contain;
 }
 body.phase3IntegratedPreview .combatActiveBuffs .phase3BuffList .tag{
   display:inline-flex;
   align-items:center;
-  gap:7px;
-  padding:6px 9px;
-  font-size:13px;
-  line-height:1.35;
+  gap:6px;
+  padding:5px 8px;
+  font-size:12px;
+  line-height:1.3;
 }
 body.phase3IntegratedPreview .combatActiveBuffs .phase3BuffList .statusIcon{
-  width:24px;
-  height:24px;
+  width:22px;
+  height:22px;
   object-fit:contain;
 }
 @media(max-width:650px){
   body.phase3IntegratedPreview #scene .combatant > .combatStatuses{
     max-width:min(100%,148px);
     max-height:52%;
-    gap:5px;
+    gap:4px;
     padding:2px 3px;
   }
   body.phase3IntegratedPreview #scene .combatant > .combatStatuses .debuff{
-    font-size:12px;
-    line-height:1.25;
+    font-size:11px;
+    line-height:1.23;
     padding:4px 6px;
-    min-height:32px;
-    gap:5px;
+    min-height:29px;
+    gap:4px;
   }
   body.phase3IntegratedPreview #scene .combatant > .combatStatuses .statusIcon{
-    width:21px;
-    height:21px;
-    flex-basis:21px;
+    width:19px;
+    height:19px;
+    flex-basis:19px;
   }
   body.phase3IntegratedPreview .combatActiveBuffs .phase3BuffList .tag{
-    font-size:12px;
-    padding:5px 7px;
+    font-size:11px;
+    padding:4px 7px;
   }
   body.phase3IntegratedPreview .combatActiveBuffs .phase3BuffList .statusIcon{
-    width:21px;
-    height:21px;
+    width:19px;
+    height:19px;
   }
+}
+
+/* Damage is the primary floating combat readout: bigger, bright and legible.
+   Do not change the hp bars, image proportions or combat timings. */
+body.phase3IntegratedPreview #scene > .floatDamage{
+ z-index:16!important;
+ display:block;min-width:2ch;text-align:center;white-space:nowrap;
+ font:900 clamp(23px,2.4vw,31px)/1.05 system-ui,-apple-system,"Segoe UI",sans-serif!important;
+ font-variant-numeric:tabular-nums;letter-spacing:-.035em;
+ -webkit-text-stroke:.6px #180d12;
+ text-shadow:0 2px 1px #080509,0 3px 6px #000,0 0 13px #000!important;
+ animation:rise .95s ease-out forwards!important;pointer-events:none;
+}
+body.phase3IntegratedPreview #scene > .floatDamage.floatCritical{
+ font-size:clamp(26px,2.7vw,35px)!important;
+ -webkit-text-stroke:.75px #1d0d0c;
+ text-shadow:0 2px 2px #130907,0 3px 7px #000,0 0 15px #281508!important;
+}
+@media(max-width:650px){
+ body.phase3IntegratedPreview #scene > .floatDamage{font-size:22px!important}
+ body.phase3IntegratedPreview #scene > .floatDamage.floatCritical{font-size:25px!important}
 }
