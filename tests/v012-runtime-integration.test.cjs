@@ -2,6 +2,8 @@ const test=require('node:test'),assert=require('node:assert/strict'),crypto=requ
 const trace=require('./v012-runtime-trace.cjs'),reference=require('./fixtures/v012-runtime-reference.json');
 for(const {scenario,steps,digest}of reference.cases)test(`runtime parity ${reference.reference}: E${scenario.E} ${scenario.weapon} ${scenario.family} ${scenario.element||''}`,()=>{
  const hashes=trace(scenario);
+ const currentDigest=crypto.createHash('sha256').update(JSON.stringify(hashes)).digest('hex');
+ if(hashes.length!==steps||currentDigest!==digest)console.log('NATIVE_TRACE_UPDATE '+JSON.stringify({scenario,steps:hashes.length,digest:currentDigest}));
  assert.equal(hashes.length,steps,'same lifecycle transitions');
  assert.equal(crypto.createHash('sha256').update(JSON.stringify(hashes)).digest('hex'),digest,'combat, RNG, gear, rewards, checkpoint and restored state must remain identical');
 });

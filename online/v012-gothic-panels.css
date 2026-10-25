@@ -135,7 +135,7 @@ body.phase3IntegratedPreview :is(
 .gothic-corner-layer--viewport {
   /* Dialog border-relative coordinates stay aligned through desktop zoom. */
   position: absolute;
-  inset: -1px;
+  inset: 0;
   width: auto;
   height: auto;
 }

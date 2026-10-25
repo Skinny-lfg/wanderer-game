@@ -22,5 +22,5 @@ test('rune visible amount uses display rounding not changed gameplay formulas',(
  assert(html.includes('formatItemStat(runeValue(r.family,r.tier))'));
 });
 test('popup corners use dialog-relative positioning through zoom',()=>{
- assert.match(corners,/\.gothic-corner-layer--viewport \{[\s\S]*?position: absolute;[\s\S]*?inset: -1px;/);
+ assert.match(corners,/\.gothic-corner-layer--viewport \{[\s\S]*?position: absolute;[\s\S]*?inset: 0;/);
 });

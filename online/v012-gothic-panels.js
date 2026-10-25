@@ -157,11 +157,14 @@
   function syncDialogLayer(dialog) {
     const layer = dialog.querySelector(':scope > .gothic-corner-layer');
     if (!layer) return;
-    const rect = dialog.getBoundingClientRect();
-    layer.style.setProperty('--gothic-layer-top', `${rect.top}px`);
-    layer.style.setProperty('--gothic-layer-left', `${rect.left}px`);
-    layer.style.setProperty('--gothic-layer-width', `${rect.width}px`);
-    layer.style.setProperty('--gothic-layer-height', `${rect.height}px`);
+    // Anchor decorations to the padded dialog itself, never to viewport pixels.
+    const style = getComputedStyle(dialog);
+    for (const side of ['top','right','bottom','left']) {
+      const amount = Number.parseFloat(style['padding' + side[0].toUpperCase() + side.slice(1)]) || 0;
+      layer.style[side] = `-${amount}px`;
+    }
+    layer.style.width = 'auto';
+    layer.style.height = 'auto';
   }
 
   const scan = root => {
