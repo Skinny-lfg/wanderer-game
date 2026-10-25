@@ -8,7 +8,11 @@ assert(source.includes(boot));
 
 const fixture=`phase1Init();
 const phase3RestoredScroll=null;
-render();`;
+render();
+globalThis.__statusIconIds=[...STATUS_ICON_FILES];
+globalThis.__statusIconArt=statusArt;
+globalThis.__openAuditModal=()=>showModal('Equipment','<p>Gear detail sample</p><button id="popupInnerButton">Action</button>');
+`;
 const types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.webp':'image/webp','.png':'image/png','.gif':'image/gif','.mjs':'text/javascript'};
 const server=http.createServer((req,res)=>{
  const u=new URL(req.url,'http://local'),relative=u.pathname==='/'?'index.html':decodeURIComponent(u.pathname.slice(1)),file=path.resolve(root,relative);
@@ -29,7 +33,7 @@ const server=http.createServer((req,res)=>{
     const host=document.createElement('div');
     host.id='statusIconAudit';host.className='scene';
     host.style.cssText='position:fixed;top:0;left:0;width:340px;height:130px;z-index:9999;background:#100b10;';
-    const icons=[...STATUS_ICON_FILES].map(key=>statusArt(key)).join('');
+    const icons=__statusIconIds.map(key=>__statusIconArt(key)).join('');
     host.innerHTML='<div class="combatStatuses" style="display:flex;flex-wrap:wrap;max-height:none;height:auto;overflow:visible">'+icons+'</div>';
     document.body.appendChild(host);
    });
@@ -38,7 +42,7 @@ const server=http.createServer((req,res)=>{
    assert.equal(icons.length,38);
    assert(icons.every(i=>i.src.startsWith('assets/status/icons/')&&i.fit==='contain'&&i.naturalWidth>0),'icon asset missing or distorted');
    await page.locator('#statusIconAudit').evaluate(e=>e.remove());
-   await page.evaluate(()=>showModal('Equipment', '<p>Gear detail sample</p><button id="popupInnerButton">Action</button>'));
+   await page.evaluate(()=>__openAuditModal());
    const dialog=page.locator('dialog[open]');
    await dialog.waitFor();
    await page.waitForFunction(()=>document.querySelector('dialog[open]')&&!document.querySelector('dialog[open] > .gothic-corner-layer'),null,{timeout:3000});
