@@ -1071,9 +1071,12 @@ function phase1DecorateCombat(){
  if(!isPhase1Run()||typeof document.querySelector!=='function')return;
  const g=phase1Controller.state,r=state.run;
  const classicTheme=phase2Theme(g.selected?.id||r?.path)||(r?.planeName?THEMES.find(t=>t.name===r.planeName):null);
- const arena=$('scene');if(arena&&classicTheme){
-   arena.style.setProperty('--phase3-realm-image','url("'+dungeonImage(classicTheme)+'")');
-   arena.style.removeProperty('background-image');
+ const arena=$('scene');if(arena&&classicTheme&&arena.style){
+   const realmArt='url("'+dungeonImage(classicTheme)+'")';
+   if(typeof arena.style.setProperty==='function'){
+    arena.style.setProperty('--phase3-realm-image',realmArt);
+    arena.style.removeProperty?.('background-image');
+   }else arena.style.backgroundImage=realmArt; // Lightweight DOM harness without CSSStyleDeclaration.
   }
  const heading=document.querySelector('.combatDungeonHeading');
  if(heading)heading.textContent='Expedition '+g.expedition+' · Realm '+r.phase1Plane+' / 15';
