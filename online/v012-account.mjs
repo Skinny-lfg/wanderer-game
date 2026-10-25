@@ -30,7 +30,7 @@ function paintName(){
  for(const element of document.querySelectorAll('.phase3CampAccountName,#heroName,.phase3CharacterSummary'))element.textContent=name;
 }
 function lock(){if(gameRoot)gameRoot.inert=true;document.body.classList.add('v012AuthLocked');}
-function unlock(){if(gameRoot)gameRoot.inert=false;document.body.classList.remove('v012AuthLocked');gate?.remove();gate=null;paintName();}
+function unlock(){if(gameRoot)gameRoot.inert=false;document.documentElement.removeAttribute('data-wanderer-cloud-only');document.body.classList.remove('v012AuthLocked');gate?.remove();gate=null;paintName();}
 function notify(message,isError=false){const el=$('[data-auth-message]',gate||dialog||document);if(el){el.textContent=message;el.dataset.error=String(isError);}}
 function makeGate(){
  lock();if(gate)return gate;

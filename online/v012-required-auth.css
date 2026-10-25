@@ -14,3 +14,7 @@ body.v012AuthLocked{overflow:hidden}body.v012AuthLocked .container{pointer-event
 .v012GateAuthPanel [data-auth-verify] button{margin:5px}.v012GateAuthPanel [hidden]{display:none!important}
 @media(max-width:620px){.v012GateShade{background-position:center,38% 30%,center 13%;background-size:cover,auto 80%,auto 30%}.v012GateContent{align-items:flex-end;padding:210px 12px 12px}.v012GateAuthPanel{padding:18px 15px}.v012GateAuthPanel h2{font-size:24px}}
 .v012RankList{display:grid;gap:7px;max-height:53vh;overflow-y:auto}.v012RankRow{display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:12px;padding:9px 12px;border:1px solid #76525b;border-radius:4px;background:#26191e}.v012RankRow strong{overflow-wrap:anywhere}.v012RankRow span:last-child{color:#e8bf7e;font-weight:700}
+
+/* Hide the game immediately on production, before Firebase SDK is downloaded. */
+html[data-wanderer-cloud-only] .container{visibility:hidden!important}
+html[data-wanderer-cloud-only] body::before{content:'Entering Wanderer…';display:flex;align-items:flex-end;justify-content:center;box-sizing:border-box;padding-bottom:25px;position:fixed;inset:0;z-index:18000;color:#eed6ba;letter-spacing:.15em;background:linear-gradient(180deg,rgba(12,7,10,.18),rgba(12,7,10,.8)),url('assets/branding/v0110-home-banner.webp') center/cover no-repeat,#10090b}
