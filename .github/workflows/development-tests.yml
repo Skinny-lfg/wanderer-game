@@ -22,6 +22,25 @@ jobs:
       - name: Keep PvP stats extractor consistent
         run: node scripts/build-pvp-stats.cjs --check
 
+
+  firestore-rules:
+    if: github.event_name == 'pull_request' && github.base_ref == 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm ci
+      - name: Validate v0.12 registered-account rules with Auth/Firestore emulators
+        run: npm run test:rules
+
   full-playtest-audit:
     if: contains(github.event.head_commit.message, '[audit]') || github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && (contains(github.event.pull_request.title, '[audit]') || github.base_ref == 'main'))
     runs-on: ubuntu-latest
