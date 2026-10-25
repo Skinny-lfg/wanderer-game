@@ -1,38 +1,40 @@
-# Wanderer — v0.12 (development)
+# Wanderer v0.12
 
-A branch `development` contém o **Wanderer v0.12 Expedition**, sem o protótipo isolado de v0.12 nem o carregador do jogo clássico v0.11. A branch `main` é uma publicação independente e não foi alterada.
+Wanderer is a browser game. The production release is maintained on `main` and hosted on Firebase Hosting at [wanderer-play.web.app](https://wanderer-play.web.app/).
 
-## Fluxo atual
-Camp → selecionar affinity → 15 Realms (combate/eventos, Elites e boss) → passivos e Between Realms → escolher 1 de 3 Runes em cada vitória final → relatório da Expedition.
+## Game
 
-- 12 temas de Realm, até 3 affinities e 30 opções híbridas.
-- Static persiste entre Realms, bag de seis peças de loot e até três poções preparadas.
-- Blacksmith, Apothecary e Forge; Runes E1–E200.
-- O Railway privado usa um perfil de playtest isolado: **não sincroniza saves de contas reais**.
+Camp → choose an Expedition → complete up to 15 Realms with combat, events, Elites and a boss → collect gear, Gold, Fragments and Runes.
 
-## Testes
+- 12 Realm themes, affinity combinations and hybrid options.
+- Between-Realms preparation, equipment, potions, Blacksmith, Apothecary and Forge.
+- Expedition progression and Runes through E200.
+
+## Branches
+
+- `main` is the production release branch.
+- `development` is a separate work branch. It currently differs from `main` in application files, Firestore Rules, assets and GitHub workflows. Review the branch diff before merging or resetting it; do not assume it is a mirror of production.
+
+## Firebase and publishing
+
+- Production Hosting targets Firebase project `wanderer-play`.
+- Publishing is manual through **Actions → Publish Wanderer v0.12 to Firebase Hosting**, from `main`, with target `production` and confirmation text `DEPLOY wanderer-play`.
+- The workflow uses the GitHub Secret `FIREBASE_SERVICE_ACCOUNT_WANDERER_PLAY`. Never commit service-account keys.
+- Development Firebase configuration remains separate in `online/firebase-config.mjs`; the production build installs the production configuration.
+- The Hosting workflow does not deploy Firestore Rules. Rules changes require their own review and deployment decision.
+
+## Checks
 
 ```sh
 npm ci
 npm test
+npm run test:browser
 npm run test:preview
 npm run simulate:v012
 ```
 
-Para os testes browser, instalar Chromium/Playwright e usar o servidor local:
+Browser tests require Chromium and Playwright. The production build packages the public `index.html`, `assets/`, `online/`, `combat/` and `economy/` files.
 
-```sh
-python3 -m http.server 8012 --bind 127.0.0.1
-npm run test:browser
-```
+## Data safety
 
-Abrir em `http://127.0.0.1:8012/?expeditionPhase1=1&expeditionSave=1&validationSlot=manual-clean`, com um `validationSlot` de teste, sem importar saves reais.
-
-## Repositório e segurança
-
-- Trabalhar exclusivamente em `development`, nunca alterar `main` por efeito de alterações nesta branch.
-- Não fazer deploy automático no Railway/Firebase; mudanças de produção precisam de autorização separada.
-- Não mudar as regras Firebase nem migrar saves reais durante a limpeza.
-- Os relatórios e decisões atuais estão em `docs/v012-*`. O histórico completo das versões anteriores continua acessível em Git e nos backups externos do projeto.
-
-> Nota técnica: o combate v0.12 ainda reutiliza funções da infraestrutura anterior dentro de `index.html`. O código morto restante só deve ser retirado depois de separar e testar as dependências usadas pelo combate atual. Esta limpeza inicial elimina o protótipo executável antigo, os calendários anteriores e suites de manutenção histórica; **não afirma que todo o motor inline já está desacoplado**.
+Do not delete player accounts or saves as part of code cleanup. Do not include real player data in tests or reports.
