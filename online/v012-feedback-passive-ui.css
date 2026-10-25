@@ -195,3 +195,32 @@ body.phase3IntegratedPreview :is(.phase3Camp .phase3ExpeditionPanel,.phase3CampS
     max-width:min(450px,calc(100vw - 18px))!important;
   }
 }
+
+
+/* The engine applies damage and creates VFX in one tick. Reach the target at
+   the beginning of the VFX instead of 0.56 s after the damage number. */
+body.phase3IntegratedPreview .scene .combatVfx.vfxProjectile {
+  animation:vfxHitOnPlayerAttack .56s ease-out both!important;
+}
+body.phase3IntegratedPreview .scene .combatVfx.vfxEnemyProjectile {
+  animation:vfxHitOnEnemyAttack .56s ease-out both!important;
+}
+@keyframes vfxHitOnPlayerAttack{
+  0%{opacity:0;left:var(--vfx-start-x,24%);top:var(--vfx-start-y,50%);transform:translate(-50%,-50%) scale(.62)}
+  7%{opacity:1;left:var(--vfx-end-x,76%);top:var(--vfx-end-y,50%);transform:translate(-50%,-50%) scale(.95)}
+  55%{opacity:1;left:var(--vfx-end-x,76%);top:var(--vfx-end-y,50%);transform:translate(-50%,-50%) scale(1.05)}
+  100%{opacity:0;left:var(--vfx-end-x,76%);top:var(--vfx-end-y,50%);transform:translate(-50%,-50%) scale(1.14)}
+}
+@keyframes vfxHitOnEnemyAttack{
+  0%{opacity:0;left:var(--vfx-start-x,76%);top:var(--vfx-start-y,50%);transform:translate(-50%,-50%) scale(.62)}
+  7%{opacity:1;left:var(--vfx-end-x,24%);top:var(--vfx-end-y,50%);transform:translate(-50%,-50%) scale(.95)}
+  55%{opacity:1;left:var(--vfx-end-x,24%);top:var(--vfx-end-y,50%);transform:translate(-50%,-50%) scale(1.05)}
+  100%{opacity:0;left:var(--vfx-end-x,24%);top:var(--vfx-end-y,50%);transform:translate(-50%,-50%) scale(1.14)}
+}
+@media(prefers-reduced-motion:reduce){
+  body.phase3IntegratedPreview .scene .combatVfx.vfxProjectile,
+  body.phase3IntegratedPreview .scene .combatVfx.vfxEnemyProjectile{
+    left:var(--vfx-end-x,76%);top:var(--vfx-end-y,50%);
+    animation:vfxFade .32s linear both!important;
+  }
+}
