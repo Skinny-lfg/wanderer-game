@@ -69,7 +69,7 @@ const server=http.createServer((req,res)=>{
    assert.equal(await page.locator('[data-player-avatar]').getAttribute('src'),'assets/characters/avatars/ranger.png');
    assert.equal(await page.locator('[data-leaderboard-overview]').isHidden(),true);
    await page.locator('[data-leaderboard-back]').click();
-   assert.equal(await buttons.nth(0).isFocused(),true,'Back returns focus to selected player');
+   assert.equal(await buttons.nth(0).evaluate(element=>document.activeElement===element),true,'Back returns focus to selected player');
    await buttons.nth(1).click();
    await page.waitForFunction(()=>document.querySelector('[data-player-character]').textContent.includes('Warrior'));
    assert.equal(await page.locator('[data-player-rank]').textContent(),'#1','tied players share the same position');
