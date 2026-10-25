@@ -30,13 +30,13 @@ const server=http.createServer((req,res)=>{
     const scene=container.querySelector('.scene');
     scene.id='scene';
     const art=scene.querySelector('.phase3ArenaBackdrop'),enemy=scene.querySelector('#enemyPortrait');
-    const caster=getComputedStyle(enemy),artStyle=getComputedStyle(art);
+    const casterTransform=getComputedStyle(enemy).transform,artStyle=getComputedStyle(art);
     const casterWidth=enemy.getBoundingClientRect().width;
     enemy.dataset.eliteType='vampire';
     const vampire=getComputedStyle(enemy),vampireWidth=enemy.getBoundingClientRect().width;
     const hpStyle=getComputedStyle(scene.querySelector('#enemyHpText'));
     const passive=phase3PassiveDescriptionHtml('Deal 24% damage with a 3s cooldown on the next attack.');
-    return {casterTransform:caster.transform,casterWidth,vampireWidth,
+    return {casterTransform,casterWidth,vampireWidth,
       backgroundOpacity:artStyle.opacity,backgroundFilter:artStyle.filter,
       hpFontSize:parseFloat(hpStyle.fontSize),hpColor:hpStyle.color,passive};
    });
