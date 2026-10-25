@@ -17,4 +17,4 @@ body.v012AuthLocked{overflow:hidden}body.v012AuthLocked .container{pointer-event
 
 /* Hide the game immediately on production, before Firebase SDK is downloaded. */
 body.v012Preboot .container{visibility:hidden!important}
-body.v012Preboot::before{content:'Entering Wanderer…';display:flex;align-items:flex-end;justify-content:center;box-sizing:border-box;padding-bottom:25px;position:fixed;inset:0;z-index:18000;color:#eed6ba;letter-spacing:.15em;background:linear-gradient(180deg,rgba(12,7,10,.18),rgba(12,7,10,.8)),url('assets/branding/v0110-home-banner.webp') center/cover no-repeat,#10090b}
+body.v012Preboot::before{content:'Entering Wanderer…';display:flex;align-items:flex-end;justify-content:center;box-sizing:border-box;padding-bottom:25px;position:fixed;inset:0;z-index:18000;color:#eed6ba;letter-spacing:.15em;background:linear-gradient(180deg,rgba(12,7,10,.18),rgba(12,7,10,.8)),url('../assets/branding/v0110-home-banner.webp') center/cover no-repeat,#10090b}
