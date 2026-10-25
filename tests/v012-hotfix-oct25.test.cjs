@@ -67,7 +67,7 @@ test('Canopy Stalker repositioning is CSS-only and unchanged portrait artwork is
 
 test('Round 4 fixes: post-Expedition valuables remain saleable, purchases still gated',()=>{
  assert.match(html,/function phase6CanSellValuables\(\)/);
- assert.match(html,/phase3NeedsBagResolution\(\)&&!\['phase1','city-center'\]\.includes\(to\)/);
+ assert.match(html,/phase3NeedsBagResolution\(\)&&phase3ExpeditionActive\(\)&&!\['phase1','city-center'\]\.includes\(to\)/);
  assert.match(html,/phase3LootIds=new Set\(\)/);
  assert.match(html,/state\.gold<o\.goldPrice\|\|!stashHasRoom\(\)\|\|!economyCanAct\(\)/);
  assert.match(equipment,/ports\.state\.gold\+=securedValue;ports\.state\.valuables=\[\]/);

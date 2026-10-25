@@ -1,0 +1,117 @@
+/* Wanderer v0.12 — post-Expedition vendor + visual tuning, 25 Oct.
+   Keep source asset dimensions and layout ratios unchanged. */
+
+/* A single consistent three-part START button: do not paint the older hidden
+   background PNGs underneath the new layers. Narrow the repeating middle strip. */
+body.phase3IntegratedPreview .phase3Camp button.phase3Start,
+body.phase3IntegratedPreview .phase3CampStickyStart button.phase3Start,
+body.phase3IntegratedPreview .phase3Camp button.phase3Start:hover:not(:disabled),
+body.phase3IntegratedPreview .phase3CampStickyStart button.phase3Start:hover:not(:disabled){
+  box-sizing:border-box!important;
+  width:min(100%,445px)!important;
+  max-width:445px!important;
+  height:94px!important;min-height:94px!important;
+  padding:0 17%!important;
+  background:none!important;
+  background-image:none!important;
+  background-color:transparent!important;
+  box-shadow:none!important;
+  border:none!important;
+  overflow:visible!important;
+  display:grid!important;place-items:center!important;
+  white-space:nowrap!important;
+  font-size:clamp(15px,1.85vw,22px)!important;
+  line-height:1!important;
+}
+body.phase3IntegratedPreview button.phase3Start::before {
+  content:""!important;
+  inset:30% 19% 30% 19%!important;
+  top:30%!important;bottom:30%!important;
+  left:19%!important;right:19%!important;
+  z-index:1!important;
+  opacity:1!important;
+  background-image:url("../assets/ui-kit/original/hud/04_expedition_center_tile.png")!important;
+  background-color:transparent!important;
+  background-size:auto 100%!important;
+  background-position:center!important;
+  background-repeat:repeat-x!important;
+  box-shadow:none!important;
+  border:0!important;
+}
+body.phase3IntegratedPreview button.phase3Start::after {
+  content:""!important;
+  inset:0!important;
+  z-index:2!important;
+  background-image:url("../assets/ui-kit/original/hud/03_expedition_left.png"),
+                   url("../assets/ui-kit/original/hud/05_expedition_right.png")!important;
+  background-position:left center,right center!important;
+  background-size:auto 100%,auto 100%!important;
+  background-repeat:no-repeat,no-repeat!important;
+  box-shadow:none!important;
+}
+body.phase3IntegratedPreview button.phase3Start>.phase3StartText{
+  z-index:3!important;
+  position:relative!important;
+  display:block!important;
+  white-space:nowrap!important;
+  font-size:inherit!important;
+  line-height:1!important;
+  text-shadow:0 2px 4px #000c!important;
+}
+@media(max-width:700px){
+ body.phase3IntegratedPreview .phase3Camp button.phase3Start,
+ body.phase3IntegratedPreview .phase3CampStickyStart button.phase3Start{
+   width:min(100%,360px)!important;
+   height:76px!important;min-height:76px!important;
+   padding:0 16%!important;
+   font-size:clamp(12px,3.65vw,18px)!important;
+ }
+ body.phase3IntegratedPreview button.phase3Start::before{
+   left:18%!important;right:18%!important;
+   top:31%!important;bottom:31%!important;
+ }
+}
+
+/* Text block: slightly more darkness behind heading, dropdown and instructions,
+   but keep the upper portion of the illustrated portal visible. */
+body.phase3IntegratedPreview .phase3CampGrid>.phase3ExpeditionPanel::before{
+  content:""!important;
+  z-index:1!important;
+  background:linear-gradient(
+    180deg,
+    rgba(8,7,13,.04) 0%,
+    rgba(9,7,14,.13) 27%,
+    rgba(9,7,15,.47) 43%,
+    rgba(8,7,13,.82) 58%,
+    rgba(8,7,13,.91) 74%,
+    rgba(8,7,13,.96) 100%
+  )!important;
+  pointer-events:none!important;
+}
+
+/* Arena shows the last chosen Realm, a little darker but still legible. */
+body.phase3IntegratedPreview #scene>.phase3ArenaBackdrop{
+  opacity:.72!important;
+  filter:brightness(.67) saturate(.90)!important;
+}
+
+/* Shared subtle red hit reaction, without white/bright flashes.
+   The same keyframes apply to hero and enemy. */
+@keyframes phase3RedOnlyHit {
+  0%,100%{filter:none}
+  25%,56%{
+    filter:sepia(.28) saturate(2.4) hue-rotate(-40deg) brightness(.92)
+      drop-shadow(0 0 3px rgba(170,31,43,.30));
+  }
+}
+body.phase3IntegratedPreview #scene #heroPortrait.phase3DamageFlash,
+body.phase3IntegratedPreview #scene #enemyPortrait.phase3DamageFlash:not(.fxDefeated){
+  animation:phase3RedOnlyHit .38s ease-out!important;
+}
+@media(prefers-reduced-motion:reduce){
+ body.phase3IntegratedPreview #scene #heroPortrait.phase3DamageFlash,
+ body.phase3IntegratedPreview #scene #enemyPortrait.phase3DamageFlash:not(.fxDefeated){
+   animation:none!important;
+   filter:sepia(.25) saturate(2.2) hue-rotate(-40deg) brightness(.92)!important;
+ }
+}

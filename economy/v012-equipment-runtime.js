@@ -159,7 +159,13 @@ function economyOwnedGear(){return [...Object.values(ports.state.equip).filter(B
 
 function economyOwnedItem(id){return ports.economyOwnedGear().find(item=>item.id===id)||null;}
 
-function economyCanAct(){return !ports.phase3NeedsBagResolution()&&!!ports.state&&!ports.state.run&&!ports.saveBlocked&&(!ports.PHASE1_PREVIEW||(!ports.phase1Draft&&['camp','finished','failed'].includes(ports.phase1Controller?.state.stage)));}
+function economyCanAct(){
+ // Expedition Bag overflow blocks the NEXT Expedition, not Camp shopping/crafting.
+ // Purchases and crafting separately require room in Stash, so secured loot is safe.
+ return !!ports.state&&!ports.state.run&&!ports.saveBlocked&&
+  (!ports.PHASE5_VALIDATION||ports.phase5Ready)&&
+  (!ports.PHASE1_PREVIEW||(!ports.phase1Draft&&['camp','finished','failed'].includes(ports.phase1Controller?.state.stage)));
+}
 
 function refreshMerchantStock(kind='gear',category=null){
  if(kind!=='gear'||!ports.economyCanAct()||!ports.state.merchant||ports.state.gold<ports.state.merchant.refreshCost||category!==null&&!Object.prototype.hasOwnProperty.call(MERCHANT_CATEGORIES,category))return;

@@ -41,3 +41,6 @@ require('./v012-visual-feedback-oct25.test.cjs');
 
 // Include post-deployment UI and secure vendor-flow regression checks.
 require('./v012-hotfix-oct25.test.cjs');
+
+// Terminal Expedition shopping and final visual regression checks.
+require('./v012-camp-economy-and-visual.test.cjs');
