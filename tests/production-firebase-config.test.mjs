@@ -52,7 +52,7 @@ test('v0.12 homepage exposes account and feedback controls without the local pla
   assert.doesNotMatch(html, /v0\.12\.0 · Local playtest/);
   assert.match(html, /data-online-action="account"/);
   assert.match(html, /data-online-action="feedback"/);
-  assert.match(html, /v012-account\.mjs\?v=v012-account-ui-1/);
-  assert.match(html, /v012-feedback\.mjs\?v=v012-feedback-ui-1/);
+  assert.match(html, /v012-account\.mjs\?v=v012-login-hotfix-2/);
+  assert.match(html, /v012-feedback\.mjs\?v=v012-login-hotfix-2/);
   assert.doesNotMatch(css, /data-online-action="feedback"\]\{display:none!important\}/);
 });
