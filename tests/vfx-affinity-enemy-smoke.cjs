@@ -23,7 +23,7 @@ const s=html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
 assert(s,'inline game script');
 new (require('node:vm').Script)(s,{filename:'wanderer-vfx.js'});
 for(const text of ['function combatVfxAsset(kind,affinity)','MAGIC_COMBAT_AFFINITIES',
- 'animateEnemyStrike(enemyAbilityVfx)','combatEffect(\'BossEmber\')','combatEffect(\'BossAbyssal\')',
+ 'animateEnemyStrike(enemyAbilityVfx)',"enemyAbilityVfx='BossEmber'","enemyAbilityVfx='BossAbyssal'",
  'enemyAbilityVfx=\'BossRift\'','enemyAbilityVfx=\'EliteCaster\'','enemyAbilityVfx=\'EliteVampire\'']){
  assert(html.includes(text),'missing VFX hook '+text);
 }
