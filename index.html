@@ -828,13 +828,13 @@ function animateEnemyStrike(abilityFx=null){
  }
  visual();
 }
-function floatText(n,target='enemy',crit=false){
+function floatText(n,target='enemy',crit=false,source=''){
  const scene=$('scene');if(!scene)return;
  const damage=typeof n==='number'&&Number.isFinite(n);
  if(target==='enemy'&&damage&&n>0)phase3FlashEnemyDamage();
  const x=document.createElement('span');
  x.className='float'+(damage?' floatDamage':'')+(crit?' floatCritical':'');
- x.textContent=typeof n==='string'?n:(crit?'CRIT! ':'')+Math.round(n);
+ x.textContent=typeof n==='string'?n:(source?source+' ':'')+(crit?'CRIT! ':'')+Math.round(n); if(source){x.dataset.damageSource=source;x.style.fontSize='clamp(13px,1.5vw,18px)';}
  x.style.color=crit?'#ffe1a1':target==='enemy'?'#ffd0c4':'#c5eaff';
  if(damage){
   // Stagger simultaneous damage labels without affecting combat values or attack timing.
