@@ -70,3 +70,9 @@ body.phase3IntegratedPreview .phase3PassiveEmphasis--heal{color:#a2e8b1!importan
 body.phase3IntegratedPreview :is(.phase3PassiveTooltip p,.phase3PassiveInline p,.phase3AffinityPassiveDescriptions p) .phase3PassiveEmphasis{
   font-size:inherit!important;font-weight:800!important;
 }
+
+/* The preview labels use the same status language as passive descriptions. */
+body.phase3IntegratedPreview .phase3PassivePreviewEntry--bleed{color:#fa858b!important}
+body.phase3IntegratedPreview .phase3PassivePreviewEntry--barrier{color:#94cbfa!important}
+body.phase3IntegratedPreview .phase3PassivePreviewEntry--rot{color:#7dbd78!important}
+body.phase3IntegratedPreview .phase3PassivePreviewEntry--heal{color:#a2e8b1!important}
