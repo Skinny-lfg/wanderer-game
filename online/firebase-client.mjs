@@ -1,14 +1,15 @@
 import {publicLoadout,cleanEquipment,cleanPublicRunes,cleanPublicRuneSlots} from './public-loadout.mjs';
 import * as bundledSdk from './vendor/firebase-sdk.mjs';
-import * as configModule from './firebase-config.mjs?v=v012-production-config-3';
-const {firebaseConfig,assertDevFirebaseConfig}=configModule;
+import * as configModule from './firebase-config.mjs?v=v012-production-config-4';
+const {firebaseConfig,firebaseEnvironment,assertDevFirebaseConfig,assertProductionFirebaseConfig}=configModule;
 import {nicknameKey,character,cloudRecord,compareRevision,validateSave,recoverInterruptedSave,SEASON,SAVE_NAMESPACE,PUBLIC_LOADOUTS,SPEEDRUN_BOARD,safeProgress,completedD200Time} from './model.mjs?v=v092-combat-hotfix-1';
 let backendPromise;
 export async function createBackend(){
  if(backendPromise)return backendPromise;
  backendPromise=(async()=>{
- if(typeof assertDevFirebaseConfig!=='function')throw new Error('Firebase dev config module is outdated. Refresh the page and update development branch.');
- assertDevFirebaseConfig(firebaseConfig);
+ const assertFirebaseConfig=firebaseEnvironment==='production'?assertProductionFirebaseConfig:assertDevFirebaseConfig;
+ if(typeof assertFirebaseConfig!=='function')throw new Error('Firebase config validator is unavailable. Refresh the page and try again.');
+ assertFirebaseConfig(firebaseConfig);
  // A rebuilt local bundle is preferred; the version-pinned official CDN supplies
  // the complete modular SDK in development until that bundle is regenerated.
  const sdk=typeof bundledSdk.createUserWithEmailAndPassword==='function' &&

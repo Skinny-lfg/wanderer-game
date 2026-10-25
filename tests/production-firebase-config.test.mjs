@@ -37,3 +37,22 @@ test('public entrypoint displays the released Wanderer version', async () => {
   assert.match(html, /<title>Wanderer v0\.12<\/title>/);
   assert.match(html, /<div class="version">v0\.12\.0<\/div>/);
 });
+
+
+test('production Firebase client validates wanderer-play and does not apply the development-only guard', async () => {
+  const client = await readFile(new URL('../online/firebase-client.mjs', import.meta.url), 'utf8');
+  assert.match(client, /firebaseEnvironment==='production'\?assertProductionFirebaseConfig:assertDevFirebaseConfig/);
+  assert.match(client, /assertFirebaseConfig\(firebaseConfig\)/);
+  assert.match(client, /firebase-config\.mjs\?v=v012-production-config-4/);
+});
+
+test('v0.12 homepage exposes account and feedback controls without the local playtest badge', async () => {
+  const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+  const css = await readFile(new URL('../online/v012-phase1.css', import.meta.url), 'utf8');
+  assert.doesNotMatch(html, /v0\.12\.0 · Local playtest/);
+  assert.match(html, /data-online-action="account"/);
+  assert.match(html, /data-online-action="feedback"/);
+  assert.match(html, /v012-account\.mjs\?v=v012-account-ui-1/);
+  assert.match(html, /v012-feedback\.mjs\?v=v012-feedback-ui-1/);
+  assert.doesNotMatch(css, /data-online-action="feedback"\]\{display:none!important\}/);
+});
