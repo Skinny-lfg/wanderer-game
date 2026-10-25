@@ -8,7 +8,7 @@ const boot='phase1Init();\nconst phase3RestoredScroll=phase3RestoreUILocation(ph
 const fixture=`if(PHASE1_PREVIEW){phase1Init();globalThis.__complete={
  snapshot:()=>({game:phase1Controller.state,build:phase1Build,extra:phase6Run,bag:phase3BagItems(),overflow:phase3BagOverflow(),stock:state.consumables,selection:state.potionSelection,gold:state.gold,fragments:state.fragments,runes:state.runes,pending:state.pendingRuneReward,run:state.run?{status:state.run.status,enc:state.run.enc,waves:state.run.planeWaves,boss:state.run.enemy.boss,style:state.run.enemy.bossStyle}:null,result:phase5Results}),
  fund:()=>{state.gold=state.fragments=10000;phase5Persist();},
- seedValuable:()=>{const valuable=WandererV012Treasures.create(makeId(),1);state.valuables.push(valuable);phase5Persist();return{id:valuable.id,worth:valuable.worth};},
+ seedValuable:()=>{const valuable=WandererV012Treasures.create(makeId(),1);state.valuables.push(valuable);phase5Persist();return{id:valuable.id,worth:valuable.worth,totalWorth:state.valuables.reduce((n,item)=>n+(Number(item.worth)||0),0)};},
  potionHealthOffers:()=>{if(state.apothecary?.stock?.length>=2){state.apothecary.stock[0].kind='health';state.apothecary.stock[1].kind='health';return state.apothecary.stock.slice(0,2).map(p=>p.id);}return [];},
  potionManaOffer:()=>{if(state.apothecary?.stock?.length)state.apothecary.stock[0].kind='mana';},
  casts:()=>{const r=state.run;r.mp=r.maxmp;for(let i=0;i<3;i++){r.combatSeconds+=3;phase1Build.runtime.lastSpellAt=-999;phase2MagicTick(r);}},
@@ -75,7 +75,7 @@ await page.locator('[data-city-tab="merchant"]').click();
 const beforeSale=(await snap()).gold;
 await page.locator('#phase6SellAllValuables').click();
 await page.locator('dialog [data-confirm]').click();
-assert.equal((await snap()).gold,beforeSale+treasure.worth,'Treasure converts into Gold once');
+assert.equal((await snap()).gold,beforeSale+treasure.totalWorth,'All owned valuables convert into Gold once');
 assert.equal(await page.locator('#phase6SellAllValuables').isDisabled(),true,'Sold valuables are removed from Merchant');
 assert.deepEqual(errors,[]);await context.close();console.log('PASS complete Expedition '+width+'px: shops, three potions, Back, Static/checkpoint, events, passive popup, global rerolls and guaranteed E1 Rune');
  }}finally{await browser.close();await new Promise(r=>server.close(r));}
