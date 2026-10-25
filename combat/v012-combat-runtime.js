@@ -555,9 +555,9 @@ function phase2MagicTick(r){
  if(ctx.now-b.runtime.lastSpellAt<2.5)return;
  const cost=WandererV012Buildcraft.nextCost(b);if(r.mp<cost)return;
  b.runtime.lastSpellAt=ctx.now;ports.phase6Metric(r,'manaSpent',cost);ports.phase6Metric(r,'fundedCasts',1);r.mp-=cost;ctx.power=r.stats.spellPower;ctx.amp=1;ctx.funded=true;
+ ports.combatEffect('Wand',({fire:'burn',frost:'slow',lightning:'shock'})[b.element]);
  ports.setDirectEnemyDamage(r,Math.max(1,Math.round(WandererV012Buildcraft.elementalPower(b,ctx.power)*.70)),'✨ '+b.element);
  WandererV012Buildcraft.onCast(b,ctx);
- ports.combatEffect('Wand',({fire:'burn',frost:'slow',lightning:'shock'})[b.element]);
 }
 
 function phase6Metric(r,key,n){if(!r?.phase1||!Number.isFinite(n)||n<0)return;r.metrics??={};r.metrics[key]=(r.metrics[key]||0)+n;}
