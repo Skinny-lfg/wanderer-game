@@ -65,10 +65,10 @@ const server=http.createServer((req,res)=>{
      laneTop:lr.top,laneBottom:lr.bottom,laneWidth:lr.width,actorWidth:ar.width,
      laneHeight:lr.height,actorHeight:ar.height,fit:is.objectFit};
    }));
-   const minFont=width<=650?12:14,minIcon=width<=650?21:26;
+   const limits=width<=650?{minFont:11,maxFont:12,minIcon:16,maxIcon:18}:{minFont:11,maxFont:13,minIcon:19,maxIcon:22};
    assert.equal(measurements.length,2);
    for(const m of measurements){
-    assert(m.font>=minFont&&m.iconW>=minIcon&&m.iconH>=minIcon,'combat effect below intended readability: '+JSON.stringify(m));
+    assert(m.font>=limits.minFont&&m.font<=limits.maxFont&&m.iconW>=limits.minIcon&&m.iconW<=limits.maxIcon&&m.iconH>=limits.minIcon&&m.iconH<=limits.maxIcon,'compact combat effects should stay readable: '+JSON.stringify(m));
     assert(m.fit==='contain','combat icon should preserve its proportions');
     assert(m.hasOwnScroll&&m.laneHeight<=m.actorHeight*.57,'status lane must scroll inside combatant: '+JSON.stringify(m));
     assert(m.laneWidth<=m.actorWidth+1,'status lane must not overflow the combatant: '+JSON.stringify(m));
@@ -91,7 +91,7 @@ const server=http.createServer((req,res)=>{
    assert(bounds.width<width&&bounds.height<900,'popup exceeds viewport bounds');
    await dialog.locator('[data-close]').click();
    assert.deepEqual(errors,[],'page errors');
-   console.log('PASS '+width+'px: all 38 status PNGs load; larger combat status labels and icons; no popup corners');
+   console.log('PASS '+width+'px: all 38 status PNGs load; compact readable combat statuses; no popup corners');
    await ctx.close();
   }
  }finally{await browser.close();await new Promise(r=>server.close(r));}
