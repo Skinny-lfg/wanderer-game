@@ -146,7 +146,7 @@ export function createPrivatePreviewServer({
     // Defense in depth: the private preview never loads the account or prototype bootstraps.
     body=Buffer.from(body.toString('utf8')
      .replace(/<script\b[^>]*id=["'](?:onlineAccountLoader|v012PrototypeLoader)["'][^>]*>[\s\S]*?<\/script>/gi,'')
-     .replace(/<script\b[^>]*src=["'][^"']*online\/(?:app|v012-prototype|v012-feedback|v012-account)\.mjs[^"']*["'][^>]*>[\s\S]*?<\/script>/gi,'')
+     .replace(/<script\b[^>]*src=["'][^"']*online\/(?:app|v012-prototype|v012-feedback|v012-account|v012-leaderboard-ui)\.mjs[^"']*["'][^>]*>[\s\S]*?<\/script>/gi,'')
      // The feedback module imports firebase-client.mjs at module evaluation time.
      // The private local-save preview has no cloud identity or feedback endpoint.
      .replace(/<\/head>/i,'<style id="private-preview-online-controls">#onlineBar,#accountError{display:none!important}</style></head>'),'utf8');
