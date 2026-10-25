@@ -46,7 +46,7 @@ test('private saves require owner + profile, monotonic revision and bounded payl
  await assertFails(setDoc(doc(alice,'players/alice/saves/current'),save(1)));
 });
 test('v0.12 cloud saves are private, owner-bound, versioned, monotonic and never deletable',async()=>{
- const guest=alice;
+ const guest=alice; // registered owner; anonymous users no longer have v0.12 saves
  const other=bob;
  const path='players/alice/saves/v012';
  let createdAt=serverTimestamp();
@@ -62,7 +62,19 @@ test('v0.12 cloud saves are private, owner-bound, versioned, monotonic and never
  await assertFails(setDoc(doc(guest,path),{...record(3),payload:'x'.repeat(700001)}));
  await assertFails(deleteDoc(doc(guest,path)));
  const unverified=env.authenticatedContext('email_unverified',{firebase:{sign_in_provider:'password'},email_verified:false}).firestore();
- await assertSucceeds(setDoc(doc(unverified,'players/email_unverified/saves/v012'),{...record(1),createdAt:serverTimestamp()}));
+ await assertFails(setDoc(doc(unverified,'players/email_unverified/saves/v012'),{...record(1),createdAt:serverTimestamp()}));
+});
+test('v0.12 public community results are owner-bound, monotonic and explicitly unverified',async()=>{
+ const ref=doc(alice,'communityV012Leaderboard/alice');
+ const entry={uid:'alice',nickname:'alice',best:4,verified:false,updatedAt:serverTimestamp()};
+ await assertSucceeds(setDoc(ref,entry));
+ await assertSucceeds(getDoc(doc(bob,'communityV012Leaderboard/alice')));
+ await assertFails(setDoc(doc(bob,'communityV012Leaderboard/alice'),{...entry,best:5}));
+ await assertFails(setDoc(ref,{...entry,best:3}));
+ await assertFails(setDoc(ref,{...entry,verified:true}));
+ await assertFails(setDoc(ref,{...entry,nickname:'someone_else'}));
+ await assertSucceeds(setDoc(ref,{...entry,best:5}));
+ await assertFails(deleteDoc(ref));
 });
 test('current depth resets per attempt, D200 personal best never increases, client claims stay unverified',async()=>{
  const ref=doc(alice,'testSeasons/v092-launch-1/deepest/alice');
@@ -128,12 +140,12 @@ test('feedback inbox accepts a bounded playtest report and forbids reading or sp
  await assertFails(setDoc(doc(env.unauthenticatedContext().firestore(),'feedbackInbox/anon_1'),good));
 });
 test('v0.12 feedback is private, create-only, bounded and rate-limited through an atomic lock',async()=>{
- const guest=env.authenticatedContext('feedback_guest').firestore(),other=env.authenticatedContext('feedback_other').firestore();
- const feedback=doc(guest,'feedbackInboxV012/feedback_guest_report1'),limit=doc(guest,'feedbackRateLimits/feedback_guest');
- const report={uid:'feedback_guest',category:'bug',description:'The reward panel did not open.',steps:'Complete a Realm then click reward.',appVersion:'0.12.0',commit:'af5e0d9',screen:'camp',viewport:'390x844',browser:'',technical:'',createdAt:serverTimestamp()};
+ const guest=alice,other=bob;
+ const feedback=doc(guest,'feedbackInboxV012/alice_report1'),limit=doc(guest,'feedbackRateLimits/alice');
+ const report={uid:'alice',category:'bug',description:'The reward panel did not open.',steps:'Complete a Realm then click reward.',appVersion:'0.12.0',commit:'af5e0d9',screen:'camp',viewport:'390x844',browser:'',technical:'',createdAt:serverTimestamp()};
  await assertFails(setDoc(feedback,report));
- const batch=writeBatch(guest);batch.set(feedback,report);batch.set(limit,{uid:'feedback_guest',updatedAt:serverTimestamp()});await assertSucceeds(batch.commit());
- await assertFails(getDoc(feedback));await assertFails(getDoc(doc(other,'feedbackInboxV012/feedback_guest_report1')));
+ const batch=writeBatch(guest);batch.set(feedback,report);batch.set(limit,{uid:'alice',updatedAt:serverTimestamp()});await assertSucceeds(batch.commit());
+ await assertFails(getDoc(feedback));await assertFails(getDoc(doc(other,'feedbackInboxV012/alice_report1')));
  await assertFails(setDoc(feedback,report));
- const early=writeBatch(guest);early.set(doc(guest,'feedbackInboxV012/feedback_guest_report2'),{...report,createdAt:serverTimestamp()});early.update(limit,{updatedAt:serverTimestamp()});await assertFails(early.commit());
+ const early=writeBatch(guest);early.set(doc(guest,'feedbackInboxV012/alice_report2'),{...report,createdAt:serverTimestamp()});early.update(limit,{updatedAt:serverTimestamp()});await assertFails(early.commit());
 });

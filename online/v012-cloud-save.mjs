@@ -1,6 +1,7 @@
 /* Owner-bound v0.12 save coordinator. v092 is never read. */
-export function createCloudSaveCoordinator({backend,uid,projectId,readSnapshot,applySnapshot,onStatus=()=>{},storage=globalThis.localStorage,delay=600}){
+export function createCloudSaveCoordinator({backend,uid,projectId,readSnapshot,applySnapshot,onStatus=()=>{},storage=null,delay=600}){
  if(!backend||!uid||!projectId||typeof readSnapshot!=='function')throw Error('Cloud save coordinator configuration is incomplete.');
+ const memory=new Map();storage??={getItem:key=>memory.get(key)||null,setItem:(key,value)=>memory.set(key,value),removeItem:key=>memory.delete(key)};
  const key='wanderer_v012_cloud_outbox_'+uid;let revision=0,timer=null,chain=Promise.resolve(),closed=false,lastRaw='',sessionWrote=false;
  const status=(value,error=null)=>{try{onStatus(value,error);}catch{}try{globalThis.dispatchEvent?.(new CustomEvent('wanderer:save-status',{detail:{state:value,error:error?.name||null}}));}catch{}};
  const valid=raw=>{const save=globalThis.WandererV012Save.validate(raw,uid);if(save.format!=='wanderer-expedition'||save.schemaVersion!==globalThis.WandererV012Save.VERSION)throw Error('Unsupported v0.12 save version.');const bytes=new TextEncoder().encode(JSON.stringify(save)).byteLength;if(bytes>680000)throw Error('Cloud save exceeds the safe 680,000-byte UTF-8 payload limit.');return save;};

@@ -1,0 +1,20 @@
+/* Public v0.12 auth gate; visual falls back to current Wanderer branding until the new banner is imported. */
+body.v012AuthLocked{overflow:hidden}body.v012AuthLocked .container{pointer-events:none;user-select:none}
+.v012AuthGate{position:fixed;inset:0;z-index:30000;display:grid;place-items:end center;overflow-y:auto;overscroll-behavior:contain;color:#f5e5d3;background:#10090b}
+.v012GateShade{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(180deg,rgba(8,5,7,.08) 0%,rgba(8,5,7,.14) 35%,rgba(8,5,7,.79) 77%,#10090b 100%),url("../assets/branding/v0110-home-banner.webp"),url("../assets/branding/wanderer-logo.webp");background-position:center,center 37%,center 22%;background-repeat:no-repeat;background-size:cover,cover,auto 50%;filter:saturate(.95)}
+.v012GateContent{position:relative;z-index:1;display:flex;justify-content:center;align-items:flex-end;width:100%;min-height:100dvh;padding:min(31vh,230px) 16px 28px;box-sizing:border-box}
+.v012GateAuthPanel{width:min(100%,390px);padding:22px 24px;border:1px solid rgba(209,154,109,.6);border-radius:8px;background:linear-gradient(160deg,rgba(35,21,26,.96),rgba(17,11,15,.98));box-shadow:0 20px 75px rgba(0,0,0,.8);backdrop-filter:blur(12px);text-align:center}
+.v012GateEyebrow{letter-spacing:.24em;color:#d8aa70;font-size:12px}.v012GateAuthPanel h2{font-family:var(--font-display,Georgia,serif);color:#f7dab4;font-size:28px;margin:2px 0 6px}
+.v012GateAuthPanel [data-auth-message]{font-size:13px;line-height:1.4;min-height:2.6em;color:#d7bec0;margin:0 0 12px}.v012GateAuthPanel [data-auth-message][data-error=true]{color:#ffada9}
+.v012GateAuthPanel form{display:grid;gap:10px}.v012GateAuthPanel label{display:grid;gap:4px;text-align:left;font-size:13px}
+.v012GateAuthPanel input{width:100%;box-sizing:border-box;border:1px solid #855d61;background:#160f13;color:#f4e7e4;border-radius:4px;min-height:40px;padding:9px}
+.v012GateAuthPanel button{min-height:42px;cursor:pointer}.v012GateGoogle,.v012GateAuthPanel form .primary{width:100%}
+.v012GateDivider{font-size:12px;color:#bea3a4;margin:12px 0}.v012GateLinks{display:flex;gap:12px;align-items:center;justify-content:center;margin-top:12px}
+.v012GateLinks button{border:0;background:transparent;color:#eac89d;text-decoration:underline;min-height:32px;padding:0 2px}
+.v012GateAuthPanel [data-auth-verify] button{margin:5px}.v012GateAuthPanel [hidden]{display:none!important}
+@media(max-width:620px){.v012GateShade{background-position:center,38% 30%,center 13%;background-size:cover,auto 80%,auto 30%}.v012GateContent{align-items:flex-end;padding:210px 12px 12px}.v012GateAuthPanel{padding:18px 15px}.v012GateAuthPanel h2{font-size:24px}}
+.v012RankList{display:grid;gap:7px;max-height:53vh;overflow-y:auto}.v012RankRow{display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:12px;padding:9px 12px;border:1px solid #76525b;border-radius:4px;background:#26191e}.v012RankRow strong{overflow-wrap:anywhere}.v012RankRow span:last-child{color:#e8bf7e;font-weight:700}
+
+/* Hide the game immediately on production, before Firebase SDK is downloaded. */
+body.v012Preboot .container{visibility:hidden!important}
+body.v012Preboot::before{content:'Entering Wanderer…';display:flex;align-items:flex-end;justify-content:center;box-sizing:border-box;padding-bottom:25px;position:fixed;inset:0;z-index:18000;color:#eed6ba;letter-spacing:.15em;background:linear-gradient(180deg,rgba(12,7,10,.18),rgba(12,7,10,.8)),url('../assets/branding/v0110-home-banner.webp') center/cover no-repeat,#10090b}
