@@ -56,11 +56,53 @@ test('Merchant and Inventory expose idempotent confirmed valuables sales when ou
  assert.match(html,/merchantSecondaryGrid[\s\S]*?phase6ValuablesMarkup\(\)\);/);
  assert.match(html,/phase6BindInventoryActions\(\);/);
  assert.match(html,/if\(view==='city-center'\)phase3RenderCityCenter\(\);else renderStash\(\)/);
- assert.match(equipment,/if\(!ports\.economyCanAct\(\)\|\|!ports\.state\.valuables\.length\)return false/);
+ assert.match(equipment,/const allowed=!!ports\.state\?\.valuables\?\.length/);
  assert.match(equipment,/ports\.state\.valuables=\[\];ports\.save\(\);return true/);
 });
 
 test('Canopy Stalker repositioning is CSS-only and unchanged portrait artwork is used',()=>{
  assert.match(css,/enemyPortrait\[data-attack-src\*="canopy_stalker_"\]/);
  assert.match(css,/top:16px!important/);
+});
+
+test('Round 4 fixes: post-Expedition valuables remain saleable, purchases still gated',()=>{
+ assert.match(html,/function phase6CanSellValuables\(\)/);
+ assert.match(html,/phase3NeedsBagResolution\(\)&&!\['phase1','city-center'\]\.includes\(to\)/);
+ assert.match(html,/phase3LootIds=new Set\(\)/);
+ assert.match(html,/state\.gold<o\.goldPrice\|\|!stashHasRoom\(\)\|\|!economyCanAct\(\)/);
+ assert.match(equipment,/ports\.state\.gold\+=securedValue;ports\.state\.valuables=\[\]/);
+ const run=read('online/v012-expedition-runtime.js');
+ assert.match(run,/if\(returningToCamp\)ports\.phase3LootIds=new Set\(\)/);
+});
+test('Round 4: visible arena image and smaller mobile scene',()=>{
+ const round=read('online/v012-uiux-round4.css');
+ assert.match(html,/class="phase3ArenaBackdrop" src="\$\{esc\(dungeonImage\(t\)\)\}"/);
+ assert.match(round,/\.phase3ArenaBackdrop/);
+ assert.match(round,/body\.phase3IntegratedPreview\.phase3CombatView #scene/);
+ assert.match(round,/height:clamp\(215px,34dvh,290px\)!important/);
+});
+test('Round 4: 6 by 2 square desktop bag, art corners raised, button label unwrapped',()=>{
+ const round=read('online/v012-uiux-round4.css');
+ assert.match(round,/repeat\(6,minmax\(0,1fr\)\)!important/);
+ assert.match(round,/aspect-ratio:1\/1!important/);
+ assert.match(round,/gothic-corner-layer[\s\S]*?z-index:40!important/);
+ assert.match(html,/phase3StartText/);
+ assert.match(round,/phase3Start::after/);
+});
+test('Round 4: desktop events two columns and passive picker fits mobile without duplicate icons',()=>{
+ const round=read('online/v012-uiux-round4.css');
+ assert.match(round,/\.phase6Event\{/);
+ assert.match(round,/\.phase6Event \.eventHeading>\.eventArt/);
+ assert.match(round,/\.phase6Event>\.eventOptions/);
+ assert.match(round,/dialog\[data-realm-passive\] \.phase3PassiveChoice/);
+ assert.match(html,/phase2PassiveIcons\(p,false\)/);
+ assert.match(html,/HYBRID · /);
+});
+test('Round 4: both portrait damage animations are red-only and character remains untouched',()=>{
+ const round=read('online/v012-uiux-round4.css');
+ assert.match(round,/@keyframes phase3RedOnlyHit/);
+ assert.match(round,/#enemyPortrait\.phase3DamageFlash/);
+ assert.match(html,/function phase3FlashEnemyDamage\(\)/);
+ assert.match(html,/if\(target==='enemy'&&typeof n==='number'&&n>0\)phase3FlashEnemyDamage\(\)/);
+ assert.match(round,/phase3CampSidebarJourney/);
 });

@@ -35,8 +35,13 @@ function purchaseEquipment(m,i,item){
 }
 
 function sellValuables(){
- if(!ports.economyCanAct()||!ports.state.valuables.length)return false;
- const securedValue=ports.state.valuables.reduce((n,o)=>n+(Number(o.worth)||0),0);ports.state.gold+=securedValue;ports.state.valuables=[];ports.save();return true;
+ // Selling secured treasure outside a run is independent of pending bag capacity.
+ const allowed=!!ports.state?.valuables?.length&&!ports.state.run&&!ports.phase1Draft&&!ports.saveBlocked&&
+  (!ports.PHASE5_VALIDATION||ports.phase5Ready)&&!ports.phase5Results?.review&&
+  (!ports.PHASE1_PREVIEW||['camp','finished','failed'].includes(ports.phase1Controller?.state.stage));
+ if(!allowed)return false;
+ const securedValue=ports.state.valuables.reduce((sum,item)=>sum+(Number(item.worth)||0),0);
+ ports.state.gold+=securedValue;ports.state.valuables=[];ports.save();return true;
 }
 
 function markItemSeen(id){
