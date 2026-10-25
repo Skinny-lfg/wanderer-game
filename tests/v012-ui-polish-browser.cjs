@@ -21,6 +21,7 @@ const shot=async(page,name)=>page.screenshot({path:path.join(shotRoot,name+'.png
       const rect=e=>{const r=e.getBoundingClientRect();return{x:r.x,y:r.y,w:r.width,h:r.height};};
       const s=getComputedStyle(label),p=getComputedStyle(button);
       return {label:rect(label),button:rect(button),heading:rect(document.querySelector('.phase3ExpeditionPanel h2')),
+        eyebrow:rect(document.querySelector('.phase3ExpeditionPanel > .eyebrow')),
         fontSize:s.fontSize,fontFamily:s.fontFamily,fontWeight:s.fontWeight,lineHeight:s.lineHeight,
         buttonFont:p.fontSize,buttonHeight:p.height,buttonPadding:p.padding};
     });
@@ -33,7 +34,7 @@ const shot=async(page,name)=>page.screenshot({path:path.join(shotRoot,name+'.png
     assert.equal(hovered.buttonFont,normal.buttonFont,'Start button font size must not shrink on hover');
     assert.equal(hovered.buttonHeight,normal.buttonHeight,'Start button height must not change on hover');
     assert.equal(hovered.buttonPadding,normal.buttonPadding,'Start padding must remain unchanged on hover');
-    for(const item of ['label','button','heading'])for(const metric of ['x','y','w','h']){
+    for(const item of ['label','button','heading','eyebrow'])for(const metric of ['x','y','w','h']){
       assert(Math.abs(hovered[item][metric]-normal[item][metric])<.6,
         item+' '+metric+' must remain stable when hovering the button: '+JSON.stringify({normal,hovered}));
     }
