@@ -44,3 +44,6 @@ require('./v012-hotfix-oct25.test.cjs');
 
 // Terminal Expedition shopping and final visual regression checks.
 require('./v012-camp-economy-and-visual.test.cjs');
+
+// Explicit visually classified normal-mob roles and safe spell hit regression tests.
+require('./v012-normal-mob-roles.test.cjs');
