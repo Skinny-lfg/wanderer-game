@@ -116,6 +116,12 @@
 
   const applyStyle = panel => {
     if (!(panel instanceof Element)) return;
+    // Popup frames have a plain CSS border: do not attach decorative PNG corners.
+    if (panel.matches('dialog')) {
+      panel.classList.remove(...sizes.map(value => `gothic-panel--${value}`), 'gothic-panel--ornate', 'gothic-panel--standard');
+      panel.querySelector(':scope > .gothic-corner-layer')?.remove();
+      return;
+    }
     const size = inferredSize(panel);
     const isButton = panel.matches('button,a') && panel.matches(conventionalButtonSelector);
     if (!size) {

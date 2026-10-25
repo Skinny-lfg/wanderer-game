@@ -691,12 +691,14 @@ body::before{
   color:#b5b6bd;background:#282832d9;border-color:#696a77;opacity:.8;
 }
 
-/* Status icons use one transparent 5x5 atlas for fast loading on mobile. */
+/* Standalone, transparent original-ratio status PNGs (Oct 25 Drive pack). */
 .scene .combatStatuses .statusIcon,.enemyDebuffs .statusIcon {
  display:inline-block;width:19px;height:19px;flex:none;vertical-align:middle;
- background-image:url('../assets/status/icons-atlas.png');background-repeat:no-repeat;background-size:500% 500%;
- border-radius:4px;image-rendering:auto;
+ object-fit:contain;border-radius:4px;image-rendering:auto;
 }
+.phase3BuffList .tag{display:inline-flex;align-items:center;gap:5px}
+.phase3BuffList .statusIcon{width:19px;height:19px;flex:none;object-fit:contain}
+@media(max-width:650px){.phase3BuffList .statusIcon{width:17px;height:17px}}
 .scene .combatStatuses .debuff,.enemyDebuffs .debuff {gap:3px}
 @media(max-width:650px){
  .scene .combatStatuses .statusIcon,.enemyDebuffs .statusIcon{width:17px;height:17px}

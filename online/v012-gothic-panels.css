@@ -242,3 +242,9 @@ body.phase3IntegratedPreview .gothic-panel--small[data-inventory-jump] {
 @media (prefers-reduced-motion: reduce) {
   .gothic-corner { scroll-behavior: auto; }
 }
+
+/* All popup frames use the ordinary border without image corners. */
+body.phase3IntegratedPreview dialog[open]{
+ padding:18px;border:1px solid var(--gothic-panel-gold,#9e7d44);border-radius:0;
+}
+body.phase3IntegratedPreview dialog > .gothic-corner-layer{display:none!important}
