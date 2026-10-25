@@ -144,7 +144,7 @@ test('v0.12 feedback is private, create-only, bounded and rate-limited through a
  const feedback=doc(guest,'feedbackInboxV012/alice_report1'),limit=doc(guest,'feedbackRateLimits/alice');
  const report={uid:'alice',category:'bug',description:'The reward panel did not open.',steps:'Complete a Realm then click reward.',appVersion:'0.12.0',commit:'af5e0d9',screen:'camp',viewport:'390x844',browser:'',technical:'',createdAt:serverTimestamp()};
  await assertFails(setDoc(feedback,report));
- const batch=writeBatch(guest);batch.set(feedback,report);batch.set(limit,{uid:'feedback_guest',updatedAt:serverTimestamp()});await assertSucceeds(batch.commit());
+ const batch=writeBatch(guest);batch.set(feedback,report);batch.set(limit,{uid:'alice',updatedAt:serverTimestamp()});await assertSucceeds(batch.commit());
  await assertFails(getDoc(feedback));await assertFails(getDoc(doc(other,'feedbackInboxV012/alice_report1')));
  await assertFails(setDoc(feedback,report));
  const early=writeBatch(guest);early.set(doc(guest,'feedbackInboxV012/alice_report2'),{...report,createdAt:serverTimestamp()});early.update(limit,{updatedAt:serverTimestamp()});await assertFails(early.commit());
