@@ -49,8 +49,8 @@ const server=http.createServer((req,res)=>{
      ],
      readV012EquippedEquipment:async uid=>{
       globalThis.__profileAudit.gearCalls.push(uid);
-      if(uid==='user_a')return {weapon:{slot:'weapon',name:'Ash Sword',rarity:'Epic',tier:18,subtype:'Sword'},belt:{slot:'belt',name:'Vital Belt',rarity:'Rare',tier:17,subtype:'Belt'}};
-      if(uid==='user_b')return {armor:{slot:'armor',name:'Plate Armor',rarity:'Epic',tier:12,subtype:'Armor'}};
+      if(uid==='user_a')return {equipment:{weapon:{slot:'weapon',name:'Ash Sword',rarity:'Epic',tier:18,subtype:'Sword'},belt:{slot:'belt',name:'Vital Belt',rarity:'Rare',tier:17,subtype:'Belt'}},runes:[{id:'r1',family:'might',tier:18}],runeSlots:['r1',null,null]};
+      if(uid==='user_b')return {equipment:{armor:{slot:'armor',name:'Plate Armor',rarity:'Epic',tier:12,subtype:'Armor'}},runes:[],runeSlots:[null,null,null]};
       if(uid==='user_c')return null;
       return null;
      },
