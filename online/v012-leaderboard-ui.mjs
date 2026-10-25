@@ -130,7 +130,8 @@ async function open(){
     playerButton.textContent=escapedName(entry.nickname);
     playerButton.setAttribute('aria-label','View '+escapedName(entry.nickname)+' public profile');
     const score=document.createElement('span');score.className='v012RankScore';score.textContent='E'+entry.best;
-    playerButton.addEventListener('click',()=>{showPlayer(entry,rank,playerButton).catch(console.error);});
+    const playerRank=rank;
+    playerButton.addEventListener('click',()=>{showPlayer(entry,playerRank,playerButton).catch(console.error);});
     row.append(ranking,playerButton,score);list.append(row);
    }
   }catch(error){status.textContent='Unable to load rankings: '+String(error?.message||error).slice(0,150);}
