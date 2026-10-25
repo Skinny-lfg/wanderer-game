@@ -123,7 +123,7 @@ async function open(){
    }else if(typeof globalThis.WandererGame?.inspectLoadout==='function'){
     // Reuse the native gear renderer: item imagery, rarity, affinity and stats.
     // The backend has already allowlisted the entire public snapshot.
-    gear.innerHTML=globalThis.WandererGame.inspectLoadout(equipment);
+    gear.innerHTML=globalThis.WandererGame.inspectLoadout(equipment.equipment,equipment.runes,equipment.runeSlots);
     gearStatus.textContent='';
    }else{
     gearStatus.textContent='Equipment viewer is temporarily unavailable.';
