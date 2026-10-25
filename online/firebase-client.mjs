@@ -55,6 +55,17 @@ export async function createBackend(){
   async createV012SaveIfMissing(uid,payload){if(!uid||uid!==user())throw Error('Save owner does not match signed-in account.');const ref=v012SaveRef(uid);let saved;await sdk.runTransaction(db,async tx=>{const snap=await tx.get(ref);if(snap.exists()){saved=snap.data();return;}const record={payload:JSON.stringify(payload),revision:1,schemaVersion:payload.schemaVersion,format:payload.format,createdAt:sdk.serverTimestamp(),updatedAt:sdk.serverTimestamp()};tx.set(ref,record);saved={...record,createdAt:new Date(),updatedAt:new Date()};});return saved;},
   async writeV012Save(uid,payload,expectedRevision){if(!uid||uid!==user())throw Error('Save owner does not match signed-in account.');const ref=v012SaveRef(uid);let record;await sdk.runTransaction(db,async tx=>{const snap=await tx.get(ref);if(!snap.exists()||snap.data().revision!==expectedRevision)throw Error('Cloud save changed in another session. Reload before saving.');record={payload:JSON.stringify(payload),revision:expectedRevision+1,schemaVersion:payload.schemaVersion,format:payload.format,createdAt:snap.data().createdAt,updatedAt:sdk.serverTimestamp()};tx.update(ref,record);});return record;},
   async profile(){const snap=await sdk.getDoc(profileRef(user()));if(!snap.exists()&&snap.metadata.fromCache)throw new Error('network-profile-unconfirmed');return snap.exists()?snap.data():null;},
+  // Only the already-public identity fields are read; private /players saves are never accessed.
+  async readV012PublicProfile(uid){
+   if(typeof uid!=='string'||uid.length<1||uid.length>128||uid.includes('/'))throw Error('Invalid player.');
+   const snap=await sdk.getDoc(profileRef(uid));
+   if(!snap.exists())return null;
+   const data=snap.data();
+   const nickname=typeof data.nickname==='string'&&/^[a-z0-9_]{3,20}$/.test(data.nickname)?data.nickname:null;
+   const characterId=['wanderer','ranger','knight','spellblade','duelist'].includes(data.characterId)?data.characterId:null;
+   return {nickname,characterId};
+  },
+
   async createProfile(name,characterId){
    const uid=user(),nickname=nicknameKey(name),nicknameRef=sdk.doc(db,'nicknames',nickname),ref=profileRef(uid);
    if(character(characterId).id!==characterId)throw new Error('Unknown character.');
