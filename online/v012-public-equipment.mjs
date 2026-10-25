@@ -37,15 +37,32 @@ export function cleanV012Equipment(raw){
  if(['Two-Handed','Bow','Staff'].includes(out.weapon?.subtype))out.offhand=null;
  return out;
 }
+const RUNE_FAMILIES=new Set(['might','swiftness','wisdom','fortitude','fortune','fury','warding','vitality']);
+export function cleanV012EquippedRunes(rawRunes,rawSlots){
+ const source=Array.isArray(rawRunes)?rawRunes:[];
+ const slots=Array.isArray(rawSlots)?rawSlots.slice(0,3):[];
+ const seenIds=new Set(),seenFamilies=new Set(),runes=[],runeSlots=[];
+ for(let i=0;i<3;i++){
+  const uid=slots[i];
+  const rune=typeof uid==='string'?source.find(item=>item?.id===uid):null;
+  if(!rune||typeof rune.id!=='string'||rune.id.length>120||seenIds.has(rune.id)||
+     !RUNE_FAMILIES.has(rune.family)||seenFamilies.has(rune.family)||
+     !Number.isInteger(rune.tier)||rune.tier<1||rune.tier>200){runeSlots.push(null);continue;}
+  seenIds.add(rune.id);seenFamilies.add(rune.family);
+  runes.push({id:rune.id,family:rune.family,tier:rune.tier,progression:'expedition'});
+  runeSlots.push(rune.id);
+ }
+ return {runes,runeSlots};
+}
 export function publishableV012Equipment(save){
  if(save?.format!=='wanderer-expedition'||!save?.profile?.equip)throw Error('Invalid v0.12 public equipment source.');
- return {version:V012_PUBLIC_EQUIPMENT_VERSION,equipment:cleanV012Equipment(save.profile.equip)};
+ return {version:V012_PUBLIC_EQUIPMENT_VERSION,equipment:cleanV012Equipment(save.profile.equip),...cleanV012EquippedRunes(save.profile.runes,save.profile.runeSlots)};
 }
 export function parseV012Equipment(json){
  if(typeof json!=='string'||json.length>30000)return null;
  try{
   const payload=JSON.parse(json);
   if(!payload||payload.version!==V012_PUBLIC_EQUIPMENT_VERSION||!payload.equipment)return null;
-  return cleanV012Equipment(payload.equipment);
+  return {equipment:cleanV012Equipment(payload.equipment),...cleanV012EquippedRunes(payload.runes,payload.runeSlots)};
  }catch{return null;}
 }
