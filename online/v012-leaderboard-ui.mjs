@@ -1,6 +1,6 @@
-/* v0.12 community ranking and read-only public player cards.
-   Scores remain self-reported; private saves and loadouts are NEVER queried. */
-import {createBackend} from './firebase-client.mjs?v=v012-public-profiles-1';
+/* v0.12 community ranking and read-only public equipment cards.
+   Scores remain self-reported; only published equipment snapshots are read. */
+import {createBackend} from './firebase-client.mjs?v=v012-equipped-gear-1';
 
 let busy=false,reported=0,dialog=null,backendPromise=null;
 const getBackend=()=>backendPromise??=(createBackend().catch(error=>{backendPromise=null;throw error;}));
@@ -48,7 +48,11 @@ async function open(){
   '<div><small>Highest Expedition</small><strong data-player-best>—</strong></div>',
   '</div>',
   '<p data-player-message class="small muted" role="status" aria-live="polite"></p>',
-  '<p class="small muted v012ProfilePrivacy">Public profile only. Equipment, inventory, build and cloud saves remain private. Ranking scores are not server-verified.</p>',
+  '<section class="v012PublicGearSection" aria-label="Equipped items">',
+  '<h3>Equipped Items</h3><p data-player-gear-status class="small muted" role="status" aria-live="polite">Loading equipped items…</p>',
+  '<div class="v012PublicGearContents" data-player-gear></div>',
+  '</section>',
+  '<p class="small muted v012ProfilePrivacy">Only currently equipped gear is published. Stash, Bag, currencies, personal details and cloud saves stay private. Community scores and equipment are player-submitted, not server-verified.</p>',
   '</div></section>',
   '<div class="buttonRow"><button type="button" data-leaderboard-close>Close</button></div>'
  ].join('');
@@ -60,6 +64,8 @@ async function open(){
  const list=activeDialog.querySelector('[data-leaderboard-list]');
  const playerMessage=activeDialog.querySelector('[data-player-message]');
  const back=activeDialog.querySelector('[data-leaderboard-back]');
+ const gearStatus=activeDialog.querySelector('[data-player-gear-status]');
+ const gear=activeDialog.querySelector('[data-player-gear]');
  let requestSerial=0,lastTrigger=null;
 
  const returnToLeaderboard=()=>{
@@ -83,6 +89,7 @@ async function open(){
   activeDialog.querySelector('[data-player-rank]').textContent='#'+rank;
   activeDialog.querySelector('[data-player-best]').textContent='E'+entry.best;
   playerMessage.textContent='Loading public profile…';
+  gearStatus.textContent='Loading equipped items…';gear.replaceChildren();
   back.focus();
   try{
    const backend=await getBackend();
@@ -106,6 +113,24 @@ async function open(){
    if(ticket!==requestSerial||dialog!==activeDialog||!activeDialog.open)return;
    character.textContent='Public avatar unavailable';
    playerMessage.textContent='Unable to load public profile. Leaderboard result is still shown.';
+  }
+  try{
+   const backend=await getBackend();
+   const equipment=await backend.readV012EquippedEquipment(entry.uid);
+   if(ticket!==requestSerial||dialog!==activeDialog||!activeDialog.open)return;
+   if(!equipment){
+    gearStatus.textContent='Equipped items are not published yet. They appear after this player signs in and syncs using the updated game.';
+   }else if(typeof globalThis.WandererGame?.inspectLoadout==='function'){
+    // Reuse the native gear renderer: item imagery, rarity, affinity and stats.
+    // The backend has already allowlisted the entire public snapshot.
+    gear.innerHTML=globalThis.WandererGame.inspectLoadout(equipment.equipment,equipment.runes,equipment.runeSlots);
+    gearStatus.textContent='';
+   }else{
+    gearStatus.textContent='Equipment viewer is temporarily unavailable.';
+   }
+  }catch(error){
+   if(ticket!==requestSerial||dialog!==activeDialog||!activeDialog.open)return;
+   gearStatus.textContent='Could not load equipped items. Please try again.';
   }
  };
 

@@ -1,4 +1,4 @@
-import {createBackend} from './firebase-client.mjs?v=v012-public-profiles-1';
+import {createBackend} from './firebase-client.mjs?v=v012-equipped-gear-1';
 import {createCloudSaveCoordinator} from './v012-cloud-save.mjs';
 
 const requiresGate=(!['localhost','127.0.0.1'].includes(location.hostname)&&!location.hostname.endsWith('.test'))||new URLSearchParams(location.search).get('testAuthGate')==='1';
@@ -7,6 +7,24 @@ const actions=[...document.querySelectorAll('[data-online-action="account"]')];
 const gameRoot=document.querySelector('.container');
 let backend=null,coordinator=null,activeUid=null,loading=null,profileName='',authSeen=false,mode='login';
 let gate=null,dialog=null;
+let publicEquipmentTimer=null,lastEquipmentFingerprint='',lastEquipmentUser='';
+function schedulePublicEquipment(){
+ if(!activeUid||backend?.currentUser()?.uid!==activeUid)return;
+ if(publicEquipmentTimer)clearTimeout(publicEquipmentTimer);
+ const uid=activeUid;
+ publicEquipmentTimer=setTimeout(async()=>{
+  publicEquipmentTimer=null;
+  if(!uid||uid!==activeUid||backend?.currentUser()?.uid!==uid)return;
+  try{
+   const snapshot=globalThis.WandererGame?.cloudSnapshot?.();
+   const fingerprint=JSON.stringify(snapshot?.profile?.equip||null);
+   if(!snapshot?.profile?.equip||uid===lastEquipmentUser&&fingerprint===lastEquipmentFingerprint)return;
+   await backend.publishV012EquippedEquipment(snapshot);
+   if(uid===activeUid){lastEquipmentUser=uid;lastEquipmentFingerprint=fingerprint;}
+  }catch(error){console.warn('[Wanderer] Public equipment snapshot not yet available:',String(error?.message||error));}
+ },250);
+}
+
 const $=(selector,root=document)=>root.querySelector(selector);
 const friendly=error=>{
  const code=String(error?.code||'');
@@ -19,6 +37,7 @@ const friendly=error=>{
  return String(error?.message||'Could not connect your account.');
 };
 function saveState(value){
+ if(value==='saved')schedulePublicEquipment();
  const node=$('#v012SaveStatus');
  if(node){node.textContent=({saving:'Saving…',saved:'Cloud saved',error:'Save error — progress not confirmed',conflict:'Save conflict'})[value]||'';node.dataset.state=value;}
  const line=$('[data-account-save-status]',dialog||document);if(line)line.textContent=node?.textContent||'';
@@ -125,7 +144,7 @@ function accountDialog(){
 async function activate(user){
  authSeen=true;
  if(user?.isAnonymous){lock();gateStep('login');notify('Guest accounts are not supported. Sign in with Google or email.');await backend.signOut();return;}
- if(!user){lock();activeUid=null;profileName='';coordinator=null;gateStep('login');notify('Sign in to play. Your progress is saved only in the cloud.');return;}
+ if(!user){lock();activeUid=null;lastEquipmentUser='';lastEquipmentFingerprint='';coordinator=null;profileName='';gateStep('login');notify('Sign in to play. Your progress is saved only in the cloud.');return;}
  lock();
  if(!user.emailVerified&&user.providerData?.some(x=>x.providerId==='password')){gateStep('verify');notify('Verify your email to continue.');return;}
  if(activeUid===user.uid&&coordinator){unlock();return;}
@@ -144,7 +163,7 @@ async function activate(user){
    const loaded=await next.initialize(fresh);
    if(backend.currentUser()?.uid!==user.uid){await next.close();return;}
    coordinator=next;game.restoreCloudSave(loaded);game.attachCloudSave(next);activeUid=user.uid;
-   unlock();setAccountDialog();
+   unlock();setAccountDialog();schedulePublicEquipment();
   }catch(error){saveState('error');gateStep('login');notify(friendly(error),true);}
   finally{loading=null;}
  })();return loading;
