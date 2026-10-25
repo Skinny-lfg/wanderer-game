@@ -24,6 +24,7 @@ const shot=async(page,name)=>page.screenshot({path:path.join(shotRoot,name+'.png
         fontSize:s.fontSize,fontFamily:s.fontFamily,fontWeight:s.fontWeight,lineHeight:s.lineHeight,
         buttonFont:p.fontSize,buttonHeight:p.height,buttonPadding:p.padding};
     });
+    await start.scrollIntoViewIfNeeded();
     await page.mouse.move(0,0);const normal=await stats();
     await start.hover({force:true});const hovered=await stats();
     assert.equal(hovered.fontSize,normal.fontSize,'Start label font size must not shrink on hover');
