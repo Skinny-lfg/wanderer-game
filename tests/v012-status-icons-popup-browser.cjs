@@ -1,0 +1,61 @@
+'use strict';
+// Isolated browser fixture: uses synthetic boss state, no player saves, network auth or combat simulation.
+const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
+const {chromium}=require('playwright');
+const root=path.resolve(__dirname,'..'),source=fs.readFileSync(path.join(root,'index.html'),'utf8');
+const boot='phase1Init();\nconst phase3RestoredScroll=phase3RestoreUILocation(phase3SavedUILocation);\nrender();';
+assert(source.includes(boot));
+
+const fixture=`phase1Init();
+const phase3RestoredScroll=null;
+render();`;
+const types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.webp':'image/webp','.png':'image/png','.gif':'image/gif','.mjs':'text/javascript'};
+const server=http.createServer((req,res)=>{
+ const u=new URL(req.url,'http://local'),relative=u.pathname==='/'?'index.html':decodeURIComponent(u.pathname.slice(1)),file=path.resolve(root,relative);
+ if(!file.startsWith(root+path.sep)){res.writeHead(403);return res.end();}
+ try{const data=relative==='index.html'?Buffer.from(source.replace(boot,fixture)):fs.readFileSync(file);
+  res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream'});res.end(data);}
+ catch{res.writeHead(404);res.end('Missing');}
+});
+(async()=>{
+ await new Promise(r=>server.listen(0,'127.0.0.1',r));
+ const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox']});
+ try{
+  for(const width of [390,1280]){
+   const ctx=await browser.newContext({viewport:{width,height:900}}),page=await ctx.newPage(),errors=[];
+   page.on('pageerror',error=>errors.push(error.message));
+   await page.goto('http://127.0.0.1:'+server.address().port+'/?expeditionPhase1=1');
+   await page.evaluate(()=>{
+    const host=document.createElement('div');
+    host.id='statusIconAudit';host.className='scene';
+    host.style.cssText='position:fixed;top:0;left:0;width:340px;height:130px;z-index:9999;background:#100b10;';
+    const icons=[...STATUS_ICON_FILES].map(key=>statusArt(key)).join('');
+    host.innerHTML='<div class="combatStatuses" style="display:flex;flex-wrap:wrap;max-height:none;height:auto;overflow:visible">'+icons+'</div>';
+    document.body.appendChild(host);
+   });
+   await page.waitForFunction(()=>[...document.querySelectorAll('#statusIconAudit .statusIcon')].length===38 && [...document.querySelectorAll('#statusIconAudit .statusIcon')].every(img=>img.complete&&img.naturalWidth>0&&img.naturalHeight>0),null,{timeout:10000});
+   const icons=await page.locator('#statusIconAudit .statusIcon').evaluateAll(imgs=>imgs.map(i=>({src:i.getAttribute('src'),naturalWidth:i.naturalWidth,fit:getComputedStyle(i).objectFit})));
+   assert.equal(icons.length,38);
+   assert(icons.every(i=>i.src.startsWith('assets/status/icons/')&&i.fit==='contain'&&i.naturalWidth>0),'icon asset missing or distorted');
+   await page.locator('#statusIconAudit').evaluate(e=>e.remove());
+   await page.evaluate(()=>showModal('Equipment', '<p>Gear detail sample</p><button id="popupInnerButton">Action</button>'));
+   const dialog=page.locator('dialog[open]');
+   await dialog.waitFor();
+   await page.waitForFunction(()=>document.querySelector('dialog[open]')&&!document.querySelector('dialog[open] > .gothic-corner-layer'),null,{timeout:3000});
+   const bounds=await dialog.evaluate(d=>{const r=d.getBoundingClientRect(),style=getComputedStyle(d);return {
+    cornerLayers:d.querySelectorAll(':scope > .gothic-corner-layer').length,
+    centeredX:Math.abs((r.left+r.right)/2-innerWidth/2),
+    centeredY:Math.abs((r.top+r.bottom)/2-innerHeight/2),
+    border:style.borderTopStyle,padding:style.paddingTop,width:r.width,height:r.height
+   };});
+   assert.equal(bounds.cornerLayers,0,'popup frame includes forbidden decorative corners');
+   assert(bounds.centeredX<2&&bounds.centeredY<2,'popup shifted outside viewport '+JSON.stringify(bounds));
+   assert(bounds.border==='solid','popup no longer has its CSS frame');
+   assert(bounds.width<width&&bounds.height<900,'popup exceeds viewport bounds');
+   await dialog.locator('[data-close]').click();
+   assert.deepEqual(errors,[],'page errors');
+   console.log('PASS '+width+'px: all 38 status PNGs load at original ratio; no popup corner layers; centered native dialog');
+   await ctx.close();
+  }
+ }finally{await browser.close();await new Promise(r=>server.close(r));}
+})().catch(err=>{console.error(err);process.exitCode=1;});
