@@ -121,8 +121,8 @@ body.phase3IntegratedPreview .scene #enemyPortrait[data-attack-src*="hollow_shad
 body.phase3IntegratedPreview .scene #enemyPortrait[data-attack-src*="grave_lantern_"]{width:min(222px,100%)!important;height:auto!important;max-height:none!important;object-fit:contain!important}
 @media(max-width:700px){body.phase3IntegratedPreview .scene #enemyPortrait[data-attack-src*="grave_lantern_"]{width:min(150px,100%)!important}}
 /* Centre tile height reduced to 65% of prior 40%-tall strip; horizontal seams remain joined. */
-body.phase3IntegratedPreview button.phase3Start::before{top:37%!important;bottom:37%!important;left:19%!important;right:19%!important}
-@media(max-width:700px){body.phase3IntegratedPreview button.phase3Start::before{top:37.65%!important;bottom:37.65%!important;left:18%!important;right:18%!important}}
+body.phase3IntegratedPreview button.phase3Start::before{top:34%!important;bottom:34%!important;left:19%!important;right:19%!important}
+@media(max-width:700px){body.phase3IntegratedPreview button.phase3Start::before{top:34.5%!important;bottom:34.5%!important;left:18%!important;right:18%!important}}
 
 /* Definitive modular START button: exactly three images, two ends and one center tile. */
 body.phase3IntegratedPreview :is(.phase3Camp .phase3ExpeditionPanel,.phase3CampStickyStart) button.phase3Start,
@@ -131,7 +131,7 @@ body.phase3IntegratedPreview :is(.phase3Camp .phase3ExpeditionPanel,.phase3CampS
   box-shadow:none!important;isolation:isolate!important;overflow:visible!important;
 }
 body.phase3IntegratedPreview :is(.phase3Camp .phase3ExpeditionPanel,.phase3CampStickyStart) button.phase3Start::before{
-  content:""!important;position:absolute!important;top:37%!important;bottom:37%!important;
+  content:""!important;position:absolute!important;top:34%!important;bottom:34%!important;
   left:19%!important;right:19%!important;
   background:url("../assets/ui-kit/original/hud/04_expedition_center_tile.png") center / auto 100% repeat-x!important;
   opacity:1!important;border:0!important;box-shadow:none!important;pointer-events:none!important;
@@ -160,6 +160,6 @@ body.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveDescriptio
   font:400 13px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif!important;
 }
 @media(max-width:700px){
- body.phase3IntegratedPreview :is(.phase3Camp .phase3ExpeditionPanel,.phase3CampStickyStart) button.phase3Start::before{top:37.65%!important;bottom:37.65%!important;left:18%!important;right:18%!important}
+ body.phase3IntegratedPreview :is(.phase3Camp .phase3ExpeditionPanel,.phase3CampStickyStart) button.phase3Start::before{top:34.5%!important;bottom:34.5%!important;left:18%!important;right:18%!important}
  body.phase3IntegratedPreview dialog.equipmentItemDialog.equipmentStandardDialog[open]{width:calc(100vw - 16px)!important;max-width:calc(100vw - 16px)!important}
 }
