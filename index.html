@@ -666,9 +666,7 @@ function renderMerchant(){
     '<details class="ringComparison"><summary>Ring 2</summary>'+itemComparison(item,'ring2')+'</details>'
    :itemComparison(item);
   comparison=comparison.replace('<span class="eyebrow">Selected</span>','<span class="eyebrow">Merchant offer</span>');
-  const dialog=showModal('Compare · '+item.name,
-   '<section class="merchantCompareSummary" aria-label="Offer and purchase result"><div><span>Offer</span><b style="color:'+rarityColor(item)+'">'+esc(item.name)+' · '+esc(item.rarity)+'</b><small>'+itemSource(item)+'</small></div><div><span>Price</span><b class="gold">'+item.goldPrice+' '+uiIcon('gold')+' Gold</b></div><p>Buying adds this item to your Stash; it does not equip it.</p></section>'+
-   '<p class="small">'+esc(itemStats(item))+'</p>'+comparison);
+  const dialog=showModal('Compare · '+item.name,comparison);
   if(dialog)dialog.classList.add('merchantCompareDialog');
  });
  Q('[data-buy]').forEach(button=>button.onclick=()=>{
