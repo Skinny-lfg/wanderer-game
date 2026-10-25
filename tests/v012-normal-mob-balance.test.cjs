@@ -60,3 +60,28 @@ test('native paired balance: E1 / E50 / E200; original roles vs 24 visual classe
  console.log('MOB_ROLE_NATIVE_BALANCE '+JSON.stringify({summary:out,paired:cases}));
  assert.equal(cases.length,48);
 });
+
+test('native deterministic D.7 audit snapshots across the same seven loadouts',()=>{
+ const builds=[
+  {weapon:'Staff',armorType:'Cloth',old:[7202600,9,71033,41]},
+  {weapon:'Wand',armorType:'Cloth',offhandType:'Orb',old:[7202697,9,66654,37],endless:[7212731,7,96843,34]},
+  {weapon:'Sword',armorType:'Plate',offhandType:'Shield',old:[7202794,14,115192,75],endless:[7212862,13,160073,67]},
+  {weapon:'Mace',armorType:'Plate',offhandType:'Shield',old:[7202891,15,99668,53],endless:[7212993,15,171032,55]},
+  {weapon:'Daggers',armorType:'Leather',offhandType:'Off-Hand Dagger',old:[7202988,15,102570,103],endless:[7213124,15,200525,137]},
+  {weapon:'Bow',armorType:'Leather',old:[7203085,15,145897,144]},
+  {weapon:'Two-Handed',armorType:'Leather',old:[7203182,15,112294,54]}
+ ];
+ const output=[];
+ for(const b of builds)for(const [E,reference]of [[200,b.old],[300,b.endless]]){
+  if(!reference)continue;
+  const seed=reference[0];
+  const args={E,weapon:b.weapon,armorType:b.armorType,offhandType:b.offhandType,rarity:'Epic',family:'blood',strategy:'triple',runes:true,seed,controlSeed:seed};
+  const priorResult=run({...args,...prior}),nextResult=run(args);
+  assert.equal(priorResult.error,null);
+  assert.equal(nextResult.error,null);
+  output.push({E,weapon:b.weapon,seed,baseline:[priorResult.reached,priorResult.damage,priorResult.weaponAttacks],
+    classified:[nextResult.reached,nextResult.damage,nextResult.weaponAttacks]});
+ }
+ console.log('D7_NORMAL_MOB_COMPARISON '+JSON.stringify(output));
+ assert.ok(output.length>=10);
+});
