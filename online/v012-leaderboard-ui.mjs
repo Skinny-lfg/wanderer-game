@@ -1,5 +1,5 @@
 /* Public v0.12 community ranking. Never claim server-verified combat results. */
-import {createBackend} from './firebase-client.mjs?v=v012-production-auth-1';
+import {createBackend} from './firebase-client.mjs?v=v012-production-auth-hotfix-2';
 let busy=false,reported=0,dialog=null,backendPromise=null;
 const getBackend=()=>backendPromise??=(createBackend().catch(error=>{backendPromise=null;throw error;}));
 const escapedName=name=>String(name||'Wanderer').slice(0,20);
