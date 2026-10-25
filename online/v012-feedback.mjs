@@ -11,10 +11,10 @@ function context(){
  catch{return {};}
 }
 function copyText(form,ctx){
- return ['WANDERER FEEDBACK','Type: '+form.category.value,'Description: '+form.description.value,
-   'Steps / suggestion: '+form.steps.value,'Version: '+(ctx.appVersion||'0.12.0'),
+ return ['WANDERER FEEDBACK','Type: '+form.elements.category.value,'Description: '+form.elements.description.value,
+   'Steps / suggestion: '+form.elements.steps.value,'Version: '+(ctx.appVersion||'0.12.0'),
    'Screen: '+(ctx.screen||'unknown'),'Dungeon: '+(ctx.maxDungeon||'unknown'),
-   'Character: '+(ctx.characterId||'unknown'),form.browser.checked?'Browser: '+navigator.userAgent:''].filter(Boolean).join('\n');
+   'Character: '+(ctx.characterId||'unknown'),form.elements.browser.checked?'Browser: '+navigator.userAgent:''].filter(Boolean).join('\n');
 }
 function openFeedback(){
  const bar=document.getElementById('onlineBar'),menu=document.getElementById('menuToggle');
