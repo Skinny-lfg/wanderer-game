@@ -3,7 +3,7 @@ const ICONS={"sword": "data:image/webp;base64,UklGRr4kAABXRUJQVlA4WAoAAAAQAAAAlQ
 (()=>{'use strict';
 // development v0.12: the Expedition client is the only entrypoint.
 const PHASE1_PREVIEW=true;
-globalThis.__WANDERER_CLOUD_ONLY__=!['','localhost','127.0.0.1'].includes(globalThis.location?.hostname||'');
+globalThis.__WANDERER_CLOUD_ONLY__=!(['','localhost','127.0.0.1'].includes(globalThis.location?.hostname||'')||(globalThis.location?.hostname||'').endsWith('.test'));
 const PHASE5_VALIDATION=PHASE1_PREVIEW&&['','localhost','127.0.0.1'].includes(globalThis.location?.hostname||'')&&new URLSearchParams(globalThis.location?.search||'').get('expeditionSave')==='1';
 // Expedition-only transaction state. Classic accounts never use this RNG or checkpoint.
 let phase5PersonalBest=0;

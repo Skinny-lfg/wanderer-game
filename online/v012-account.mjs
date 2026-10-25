@@ -1,7 +1,7 @@
 import {createBackend} from './firebase-client.mjs?v=v012-production-auth-1';
 import {createCloudSaveCoordinator} from './v012-cloud-save.mjs';
 
-const requiresGate=!['localhost','127.0.0.1'].includes(location.hostname)||new URLSearchParams(location.search).get('testAuthGate')==='1';
+const requiresGate=(!['localhost','127.0.0.1'].includes(location.hostname)&&!location.hostname.endsWith('.test'))||new URLSearchParams(location.search).get('testAuthGate')==='1';
 if(requiresGate){
 const actions=[...document.querySelectorAll('[data-online-action="account"]')];
 const gameRoot=document.querySelector('.container');
