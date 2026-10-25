@@ -96,6 +96,7 @@ const server=http.createServer((req,res)=>{
    await page.locator('[data-leaderboard-back]').click();
    await buttons.nth(3).click();
    await page.waitForFunction(()=>document.querySelector('[data-player-message]').textContent.includes('Limited public'));
+   await page.waitForFunction(()=>document.querySelector('[data-player-gear-status]').textContent.includes('not published yet'));
    assert.equal(await page.locator('[data-leaderboard-player] img:not([hidden])').count(),0,'Untrusted avatar path must not be rendered');
    assert.equal(await page.locator('[data-leaderboard-player] img[src*="onerror"]').count(),0,'Nickname must never render injected HTML');
    assert.deepEqual(await page.evaluate(()=>globalThis.__profileAudit.calls),['user_a','user_b','user_c','user_x']);
