@@ -1,0 +1,66 @@
+'use strict';
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const root=path.resolve(__dirname,'..');
+const read=p=>fs.readFileSync(path.join(root,p),'utf8');
+const html=read('index.html'),css=read('online/v012-uiux-hotfix-oct25.css');
+const oldCSS=read('online/v012-uiux-polish.css');
+const equipment=read('economy/v012-equipment-runtime.js');
+
+test('Camp Expedition portal fills its panel behind a translucent readability gradient',()=>{
+ assert.match(css,/phase3ExpeditionPanel>\.phase3Portal/);
+ assert.match(css,/position:absolute!important/);
+ assert.match(css,/object-fit:cover!important/);
+ assert.match(css,/phase3ExpeditionPanel::before/);
+ assert.match(css,/rgba\(13,9,16,\.75\)/);
+ assert.match(css,/04_expedition_center_tile\.png/);
+});
+
+test('Item and potion rarity use subtle per-rarity fill, and bag and stash tiles remain square',()=>{
+ assert.match(css,/--ui-rarity-color/);
+ assert.match(css,/color-mix\(in srgb,var\(--ui-rarity-color/);
+ assert.match(css,/\.equipmentInventory \.stashGrid>\.invItem/);
+ assert.match(css,/\.phase3BetweenSide \.phase3BagGrid>\.phase3BagItem/);
+ assert.match(css,/aspect-ratio:1\/1!important/);
+ assert.match(html,/rarityArt\(C\.find\(c=>c\.id===\(p\.id\|\|p\.kind\)\)\|\|common/);
+});
+
+test('Realm combat keeps background based on persisted run path even when selected realm is cleared',()=>{
+ assert.match(html,/phase2Theme\(g\.selected\?\.id\|\|r\?\.path\)/);
+ assert.match(css,/var\(--phase3-realm-image,url\("\.\.\/assets\/backgrounds\/dungeon-desktop\.webp"\)\)/);
+ assert.match(css,/backdrop-filter:none!important/);
+});
+
+test('Between Realms places active buffs in quick status and uses compact attribute chips',()=>{
+ assert.match(html,/const quickBuffs=Object\.values\(phase6Run\?\.effects\|\|\{\}\)/);
+ assert.match(html,/\+quickBuffs\+'<\/div><nav class="phase3BetweenTabs"/);
+ assert.match(css,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)!important/);
+});
+
+test('Passive effect labels stay neutral, increased numeric values alone turn green',()=>{
+ assert.match(html,/phase3PassivePreviewEntry/);
+ assert.match(html,/phase3PassiveIncrease/);
+ assert.match(css,/\.phase3PassivePreviewEntry>\.phase3PassiveIncrease/);
+ assert.match(css,/color:#7fe2aa!important/);
+ assert.match(css,/phase3PassiveDescription/);
+});
+
+test('City Center Apothecary no longer replaces the whole page with Camp if an action is unavailable',()=>{
+ assert.match(html,/if\(!economyCanAct\(\)\)\{html\('<section class="panel apothecaryPanel"/);
+ assert.doesNotMatch(html,/if\(!economyCanAct\(\)\)\{phase3ContentTarget=null;view='phase1';render\(\);return;\}/);
+});
+
+test('Merchant and Inventory expose idempotent confirmed valuables sales when outside Expeditions',()=>{
+ assert.match(html,/merchantSecondaryGrid[\s\S]*?phase6ValuablesMarkup\(\)\);/);
+ assert.match(html,/phase6BindInventoryActions\(\);/);
+ assert.match(html,/if\(view==='city-center'\)phase3RenderCityCenter\(\);else renderStash\(\)/);
+ assert.match(equipment,/if\(!ports\.economyCanAct\(\)\|\|!ports\.state\.valuables\.length\)return false/);
+ assert.match(equipment,/ports\.state\.valuables=\[\];ports\.save\(\);return true/);
+});
+
+test('Canopy Stalker repositioning is CSS-only and unchanged portrait artwork is used',()=>{
+ assert.match(css,/enemyPortrait\[data-attack-src\*="canopy_stalker_"\]/);
+ assert.match(css,/top:16px!important/);
+});

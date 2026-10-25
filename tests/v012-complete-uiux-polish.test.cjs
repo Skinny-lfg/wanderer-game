@@ -38,3 +38,6 @@ test('v0.12 creature overrides only scale the named animated portraits',()=>{
 
 // Run the Oct 25 visual QA contract whenever the standard v0.12 suite runs.
 require('./v012-visual-feedback-oct25.test.cjs');
+
+// Include post-deployment UI and secure vendor-flow regression checks.
+require('./v012-hotfix-oct25.test.cjs');
