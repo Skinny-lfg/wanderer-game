@@ -1,0 +1,20 @@
+/* Combat and passive readability: visual-only; no changes to game rules. */
+body.phase3IntegratedPreview #scene{background-color:#100b12!important}
+body.phase3IntegratedPreview #scene>.phase3ArenaBackdrop{opacity:.72!important;filter:brightness(.60) saturate(.82)!important}
+/* Caster art faces the player; the spell VFX is not flipped. */
+body.phase3IntegratedPreview #scene #enemyPortrait[data-elite-type="caster"]{transform:scaleX(-1)!important;transform-origin:center center!important}
+/* Sanguine Wraith is the elite vampire; reduce image approximately 10%. */
+body.phase3IntegratedPreview #scene .eliteCombatant #enemyPortrait[data-elite-type="vampire"]{width:min(166px,90%)!important;height:153px!important;max-height:153px!important;object-fit:contain!important}
+@media(max-width:650px){body.phase3IntegratedPreview #scene .eliteCombatant #enemyPortrait[data-elite-type="vampire"]{width:min(131px,90%)!important;height:122px!important;max-height:122px!important}}
+@media(max-width:370px){body.phase3IntegratedPreview #scene .eliteCombatant #enemyPortrait[data-elite-type="vampire"]{width:min(121px,90%)!important;height:112px!important;max-height:112px!important}}
+body.phase3IntegratedPreview #scene .combatant>small{color:#f5e9df!important;font-size:12px!important;font-weight:650!important;line-height:1.3!important;text-shadow:0 1px 3px #000,0 0 6px #000!important}
+body.phase3IntegratedPreview #scene .combatant>strong{color:#f7e9cf;font-weight:800!important;font-size:clamp(13px,1.1vw,16px)!important;line-height:1.25!important;text-shadow:0 2px 3px #000,0 0 9px #000!important}
+body.phase3IntegratedPreview #scene .combatant>.combatEnemyName.eliteName{color:#ffadad!important}
+body.phase3IntegratedPreview #scene .combatant>.combatEnemyName.bossName{color:#ffdc98!important}
+body.phase3IntegratedPreview .combatLayout .topline p,body.phase3IntegratedPreview .combatLayout>.panel>.small.muted{color:#ead8d1!important;font-weight:600!important;text-shadow:0 1px 2px #000}
+body.phase3IntegratedPreview #scene .vs{color:#eed7ae!important;text-shadow:0 2px 4px #000,0 0 8px #000!important}
+@media(max-width:650px){body.phase3IntegratedPreview #scene .combatant>small{font-size:11px!important;line-height:1.24!important}body.phase3IntegratedPreview #scene .combatant>strong{font-size:12px!important}}
+body.phase3IntegratedPreview .phase3PassiveEmphasis{display:inline;font-weight:800!important;white-space:normal}
+body.phase3IntegratedPreview .phase3PassiveEmphasis--number{color:#99e5b5!important}
+body.phase3IntegratedPreview .phase3PassiveEmphasis--effect{color:#f1cf93!important}
+body.phase3IntegratedPreview :is(.phase3PassiveDescription,.phase3PassiveTooltip p,.phase3PassiveInline p,.phase3AffinityPassiveDescriptions p){color:#f0e2da;line-height:1.5}
