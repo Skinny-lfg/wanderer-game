@@ -1453,7 +1453,7 @@ function phase3BindPassiveInspect(){Q('.phase3PassiveSlot').forEach(detail=>deta
 function phase3PassiveDescriptionHtml(value){
  const safe=esc(String(value).replace(/\bICD\b/gi,'cooldown').replace(/\bbounded\b/gi,'limited'));
  return safe.replace(/(?:[+−-])?\d+(?:\.\d+)?(?:%|s|×|x)?|\b(?:cooldown|damage|healing|heal|regeneration|regen|recovery|recover|restore|lifesteal|barrier|attack speed|mana|crit(?:ical)?|chance|bleed(?:ing)?|burn(?:ing)?|regeneration|shield|health|stacks?|charges?|blocks?|slow(?:ed)?|poison|rot|decay|stun|enemies|bosses)\b/gi,
-  m=>{const lower=m.toLowerCase(),effect=/\\b(?:bleed|bleeding)\\b/.test(lower)?'bleed':/\\b(?:barrier|shield|block)\\b/.test(lower)?'barrier':/\\b(?:rot|poison|decay)\\b/.test(lower)?'rot':/\\b(?:healing|heal|regeneration|regen|recovery|recover|restore|lifesteal)\\b/.test(lower)?'heal':null;
+  m=>{const lower=m.toLowerCase(),effect=/\b(?:bleed|bleeding)\b/.test(lower)?'bleed':/\b(?:barrier|shield|block)\b/.test(lower)?'barrier':/\b(?:rot|poison|decay)\b/.test(lower)?'rot':/\b(?:healing|heal|regeneration|regen|recovery|recover|restore|lifesteal)\b/.test(lower)?'heal':null;
     return '<strong class="phase3PassiveEmphasis '+(/[0-9]/.test(m)?'phase3PassiveEmphasis--number':'phase3PassiveEmphasis--effect')+(effect?' phase3PassiveEmphasis--'+effect:'')+'">'+m+'</strong>';});
 }
 function phase3PassivesMarkup(inline=false){
