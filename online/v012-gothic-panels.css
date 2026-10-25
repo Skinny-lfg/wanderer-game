@@ -133,9 +133,9 @@ body.phase3IntegratedPreview :is(
   z-index: 0;
 }
 .gothic-corner-layer--viewport {
-  /* CSS-relative positioning avoids viewport-coordinate drift during desktop zoom. */
+  /* Dialog border-relative coordinates stay aligned through desktop zoom. */
   position: absolute;
-  inset: 0;
+  inset: -1px;
   width: auto;
   height: auto;
 }

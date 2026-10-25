@@ -72,7 +72,7 @@ test('Round 4 fixes: post-Expedition valuables remain saleable, purchases still 
  assert.match(html,/state\.gold<o\.goldPrice\|\|!stashHasRoom\(\)\|\|!economyCanAct\(\)/);
  assert.match(equipment,/ports\.state\.gold\+=securedValue;ports\.state\.valuables=\[\]/);
  const run=read('online/v012-expedition-runtime.js');
- assert.match(run,/if\(returningToCamp\)ports\.phase3LootIds=new Set\(\)/);
+ assert.match(run,/if\(returningToCamp\)\{ports\.phase3LootIds=new Set\(\);ports\.phase5Results\.eventExitPending=false;/);
 });
 test('Round 4: visible arena image and smaller mobile scene',()=>{
  const round=read('online/v012-uiux-round4.css');

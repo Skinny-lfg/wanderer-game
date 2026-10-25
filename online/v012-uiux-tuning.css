@@ -123,3 +123,43 @@ body.phase3IntegratedPreview .scene #enemyPortrait[data-attack-src*="grave_lante
 /* Centre tile height reduced to 65% of prior 40%-tall strip; horizontal seams remain joined. */
 body.phase3IntegratedPreview button.phase3Start::before{top:37%!important;bottom:37%!important;left:19%!important;right:19%!important}
 @media(max-width:700px){body.phase3IntegratedPreview button.phase3Start::before{top:37.65%!important;bottom:37.65%!important;left:18%!important;right:18%!important}}
+
+/* Definitive modular START button: exactly three images, two ends and one center tile. */
+body.phase3IntegratedPreview :is(.phase3Camp .phase3ExpeditionPanel,.phase3CampStickyStart) button.phase3Start,
+body.phase3IntegratedPreview :is(.phase3Camp .phase3ExpeditionPanel,.phase3CampStickyStart) button.phase3Start:hover:not(:disabled){
+  background:none!important;background-image:none!important;background-color:transparent!important;
+  box-shadow:none!important;isolation:isolate!important;overflow:visible!important;
+}
+body.phase3IntegratedPreview :is(.phase3Camp .phase3ExpeditionPanel,.phase3CampStickyStart) button.phase3Start::before{
+  content:""!important;position:absolute!important;top:37%!important;bottom:37%!important;
+  left:19%!important;right:19%!important;
+  background:url("../assets/ui-kit/original/hud/04_expedition_center_tile.png") center / auto 100% repeat-x!important;
+  opacity:1!important;border:0!important;box-shadow:none!important;pointer-events:none!important;
+}
+body.phase3IntegratedPreview :is(.phase3Camp .phase3ExpeditionPanel,.phase3CampStickyStart) button.phase3Start::after{
+  content:""!important;position:absolute!important;inset:0!important;
+  background-image:url("../assets/ui-kit/original/hud/03_expedition_left.png"),url("../assets/ui-kit/original/hud/05_expedition_right.png")!important;
+  background-position:left center,right center!important;background-repeat:no-repeat,no-repeat!important;
+  background-size:auto 100%,auto 100%!important;pointer-events:none!important;
+}
+/* Match the other mobs' horizontal mirror for elite idle and attack assets. */
+body.phase3IntegratedPreview .scene .eliteCombatant #enemyPortrait[data-elite-type]{
+  transform:scaleX(-1)!important;transform-origin:center bottom!important;object-fit:contain!important;
+}
+/* Ring picker remains untouched, other equipment uses standard comfortable popup width. */
+body.phase3IntegratedPreview dialog.equipmentItemDialog.equipmentStandardDialog[open]{
+  width:min(640px,calc(100vw - 24px))!important;max-width:min(640px,calc(100vw - 24px))!important;
+  max-height:calc(100dvh - 24px)!important;overflow-y:auto!important;
+}
+/* Explanatory copy uses legible sans-serif, while Gothic headings remain unchanged. */
+body.phase3IntegratedPreview :is(.phase3PassiveDescription,.phase3PassiveTooltip p,.phase3PassiveInline p,.phase3AffinityPassiveDescriptions p,.potionEffect,.inspect p,.dialogQuestion,.phase3EventDescription){
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif!important;
+  font-size:14px!important;font-weight:400!important;line-height:1.55!important;letter-spacing:0!important;
+}
+body.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveDescription{
+  font:400 13px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif!important;
+}
+@media(max-width:700px){
+ body.phase3IntegratedPreview :is(.phase3Camp .phase3ExpeditionPanel,.phase3CampStickyStart) button.phase3Start::before{top:37.65%!important;bottom:37.65%!important;left:18%!important;right:18%!important}
+ body.phase3IntegratedPreview dialog.equipmentItemDialog.equipmentStandardDialog[open]{width:calc(100vw - 16px)!important;max-width:calc(100vw - 16px)!important}
+}

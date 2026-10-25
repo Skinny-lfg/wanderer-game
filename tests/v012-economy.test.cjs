@@ -80,7 +80,7 @@ test('extraction summary exit unlocks Camp purchases, forging and salvage',()=>{
  assert.equal(a.checkpoint.extract(),true);
  assert.equal(a.economyCanAct(),false,'summary remains guarded');
  assert.equal(a.exitResult(),true);
- assert.equal(a.economyCanAct(),true,'Camp economy available after extraction');
+ assert.equal(a.economyCanAct(),true,'Camp economy available after extraction: '+JSON.stringify({stage:a.controller().state.stage,run:!!a.state().run,draft:a.draft(),review:a.results().review,eventExitPending:a.results().eventExitPending}));
  const gold=s.gold;assert.equal(a.purchaseNative(0),true);assert(s.gold<gold);
  const fragments=s.fragments;a.craft(1);assert(s.fragments<fragments);
  const item=s.stash.find(o=>!o.locked&&!o.recoveryStarter);assert(item);

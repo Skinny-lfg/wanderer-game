@@ -34,7 +34,7 @@ function phase4Extract(){
  ports.phase6ReturnPotions('extracted');
  ports.phase5MakeSummary('extracted');ports.phase5Results.review='summary';
  ports.phase1Controller.abandon();if(ports.phase1Build)WandererV012Buildcraft.clear(ports.phase1Build);
- ports.phase1Build=null;ports.phase1Draft=null;ports.phase1Vitals=null;ports.phase1Continuity=null;ports.phase3LootIds=new Set();ports.phase4Home=null;ports.phase4Seed=null;ports.phase4Prefix=null;ports.phase4Entry=null;ports.phase4WaveKeys=[];
+ ports.phase1Build=null;ports.phase1Draft=null;ports.phase1Vitals=null;ports.phase1Continuity=null;ports.state.run=null;ports.phase5Results.eventExitPending=false;ports.phase3LootIds=new Set();ports.phase4Home=null;ports.phase4Seed=null;ports.phase4Prefix=null;ports.phase4Entry=null;ports.phase4WaveKeys=[];
  if(ports.PHASE5_VALIDATION)ports.phase5Snapshot.expedition.lastOutcome='extracted';
  ports.view='phase1';if(!ports.phase5Persist())return false;ports.render();
  ports.bannerMessage(ports.state.expeditionOverflow.length?'Extracted. Free Stash space to claim '+ports.state.expeditionOverflow.length+' secured items.':'Extraction complete. Loot kept; next difficulty remains locked.');return true;
