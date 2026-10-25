@@ -26,7 +26,7 @@ for(const text of ['function combatVfxAsset(kind,affinity)','MAGIC_COMBAT_AFFINI
  'enemyAbilityVfx=\'BossRift\'','enemyAbilityVfx=\'EliteCaster\'','enemyAbilityVfx=\'EliteVampire\'']){
  assert(html.includes(text),'missing VFX hook '+text);
 }
-assert(html.includes('@keyframes vfxEnemyTravel'),'enemy projectile travels toward player');
+assert(html.includes('@keyframes vfxCenteredEnemyTravel'),'enemy projectile travels toward player');
 assert(html.includes('.combatVfx.vfxEnemyWard'),'boss self-targeted VFX exists');
 // Regression: no cached 2026-10-15 player spells, centered projectiles, readable enemy attacks,
 // and direct weapon VFX routing in the current Expedition engine.
