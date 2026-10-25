@@ -1,0 +1,88 @@
+name: Publish Wanderer to Firebase LIVE (manual)
+
+# Dedicated production-only path: no target dropdown or hidden confirmation input.
+# This workflow never runs on push; a maintainer must click Run workflow on main.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wanderer-production-hosting
+  cancel-in-progress: false
+
+jobs:
+  deploy-production:
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 25
+    steps:
+      - name: Require manual production run on main
+        shell: bash
+        run: |
+          if [ "$GITHUB_EVENT_NAME" != "workflow_dispatch" ] || [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "::error::Choose branch main in Run workflow. Production Hosting can only be published manually from main."
+            exit 1
+          fi
+
+      - name: Checkout the exact selected main commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install project dependencies
+        run: npm ci
+
+      - name: Build Firebase SDK bundle
+        run: npm run build:firebase
+
+      - name: Run release tests
+        run: npm test
+
+      - name: Prepare verified production-only website
+        env:
+          FIREBASE_PROJECT_ID: wanderer-play
+          PUBLISH_PRODUCTION: DEPLOY wanderer-play
+          SOURCE_BRANCH: main
+          SOURCE_COMMIT_SHA: ${{ github.sha }}
+        run: node scripts/prepare-hosting-production.mjs
+
+      - name: Prepare Hosting-only config (no Firestore or Auth mutations)
+        run: |
+          cat > firebase.json <<'JSON'
+          {
+            "hosting": {
+              "public": "hosting-dist",
+              "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+              "headers": [
+                { "source": "**/*.html", "headers": [{ "key": "Cache-Control", "value": "no-cache, max-age=0, must-revalidate" }] },
+                { "source": "/online/firebase-config.mjs", "headers": [{ "key": "Cache-Control", "value": "no-store" }] }
+              ]
+            }
+          }
+          JSON
+
+      - name: Verify existing production service account
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_WANDERER_PLAY }}
+        shell: bash
+        run: |
+          if [ -z "$FIREBASE_SERVICE_ACCOUNT_JSON" ]; then
+            echo "::error::Missing FIREBASE_SERVICE_ACCOUNT_WANDERER_PLAY in GitHub Actions secrets."
+            exit 1
+          fi
+          node --input-type=module -e "const c=JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);if(c.type!=='service_account'||c.project_id!=='wanderer-play')throw Error('Wrong production service account project');"
+
+      - name: Deploy Firebase Hosting LIVE (not Firestore Rules)
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_WANDERER_PLAY }}
+          projectId: wanderer-play
+          channelId: live
