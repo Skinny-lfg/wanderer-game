@@ -75,12 +75,19 @@ test('endgame stays within existing gear/Rune tier cap and investment remains fi
 
 test('extraction summary exit unlocks Camp purchases, forging and salvage',()=>{
  const a=create(7301),s=a.state();s.gold=50000;s.fragments=50000;a.rollShop();
- a.start(1);a.initial('blood');a.controller().state.planeIndex=2;
+ a.start(1);enter(a);
+ // Complete the first Realm through actual combat, without manually forging an invalid checkpoint.
+ for(let i=0;i<6&&a.controller().state.stage==='combat';i++){
+  const run=a.state().run;assert(run&&run.enemy);run.enemy.hp=0;a.win();a.flush();
+ }
+ assert.equal(a.controller().state.planeIndex,2,'the first Realm was cleared naturally');
+ if(a.draft()?.kind==='reward')a.passive(a.draft().options[0]?.id??null);
+ if(a.state().run?.status==='cleared'||a.results().review||a.results().eventExitPending)a.exitResult();
  assert.equal(a.economyCanAct(),false);
  assert.equal(a.checkpoint.extract(),true);
  assert.equal(a.economyCanAct(),false,'summary remains guarded');
  assert.equal(a.exitResult(),true);
- assert.equal(a.economyCanAct(),true,'Camp economy available after extraction: '+JSON.stringify({stage:a.controller().state.stage,run:!!a.state().run,draft:a.draft(),review:a.results().review,eventExitPending:a.results().eventExitPending}));
+ assert.equal(a.economyCanAct(),true,'Camp economy available after extraction: '+JSON.stringify({stage:a.controller().state.stage,run:!!a.state().run,draft:a.draft(),review:a.results().review,eventExitPending:a.results().eventExitPending,debug:a.debug()}));
  const gold=s.gold;assert.equal(a.purchaseNative(0),true);assert(s.gold<gold);
  const fragments=s.fragments;a.craft(1);assert(s.fragments<fragments);
  const item=s.stash.find(o=>!o.locked&&!o.recoveryStarter);assert(item);
