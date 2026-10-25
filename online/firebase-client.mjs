@@ -1,4 +1,5 @@
 import {publicLoadout,cleanEquipment,cleanPublicRunes,cleanPublicRuneSlots} from './public-loadout.mjs';
+import {publishableV012Equipment,parseV012Equipment} from './v012-public-equipment.mjs';
 import * as bundledSdk from './vendor/firebase-sdk.mjs';
 import * as configModule from './firebase-config.mjs?v=v012-production-config-4';
 const {firebaseConfig,firebaseEnvironment,assertDevFirebaseConfig,assertProductionFirebaseConfig}=configModule;
@@ -64,6 +65,29 @@ export async function createBackend(){
    const nickname=typeof data.nickname==='string'&&/^[a-z0-9_]{3,20}$/.test(data.nickname)?data.nickname:null;
    const characterId=['wanderer','ranger','knight','spellblade','duelist'].includes(data.characterId)?data.characterId:null;
    return {nickname,characterId};
+  },
+
+  // Reuse the existing owner-writable/public-readable loadout collection. The
+  // version tag keeps retired v0.9.2 equipment distinct from current v0.12.
+  async publishV012EquippedEquipment(snapshot){
+   const uid=user();
+   if(auth.currentUser?.isAnonymous)throw Error('Registered account required.');
+   const publicData=publishableV012Equipment(snapshot);
+   const payload=JSON.stringify(publicData);
+   if(payload.length>30000)throw Error('Public equipment exceeds allowed size.');
+   const ref=sdk.doc(db,PUBLIC_LOADOUTS,uid);
+   const depth=Math.max(1,Math.min(200,Math.trunc(Number(snapshot?.expedition?.unlocked)||1)));
+   await sdk.runTransaction(db,async tx=>{
+    const old=await tx.get(ref);
+    if(old.exists()&&old.data().equipment===payload&&old.data().maxDungeon===depth)return;
+    tx.set(ref,{equipment:payload,maxDungeon:depth,updatedAt:sdk.serverTimestamp()});
+   });
+  },
+  async readV012EquippedEquipment(uid){
+   if(typeof uid!=='string'||uid.length<1||uid.length>128||uid.includes('/'))throw Error('Invalid player.');
+   const snap=await sdk.getDoc(sdk.doc(db,PUBLIC_LOADOUTS,uid));
+   if(!snap.exists())return null;
+   return parseV012Equipment(snap.data().equipment);
   },
 
   async createProfile(name,characterId){
