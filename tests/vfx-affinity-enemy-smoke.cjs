@@ -4,6 +4,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const html=require('./v012-runtime-source.cjs')(fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8'));
 const root=path.join(__dirname,'..','assets','combat-vfx');
+const combatCss=fs.readFileSync(path.join(__dirname,'..','online','v012-core.css'),'utf8');
 const physical=['slash_main_hand','smash_main_hand','double_slash_daggers','big_slash_two_hand','arrow_bow','block'];
 const affinities=['burn','slow','poison','drain','nature','shock','tide'];
 const names=[...physical,...affinities.flatMap(a=>['big_spell_projectile_staff_'+a,'spell_projectile_wand_'+a]),
@@ -26,15 +27,15 @@ for(const text of ['function combatVfxAsset(kind,affinity)','MAGIC_COMBAT_AFFINI
  'enemyAbilityVfx=\'BossRift\'','enemyAbilityVfx=\'EliteCaster\'','enemyAbilityVfx=\'EliteVampire\'']){
  assert(html.includes(text),'missing VFX hook '+text);
 }
-assert(html.includes('@keyframes vfxCenteredEnemyTravel'),'enemy projectile travels toward player');
-assert(html.includes('.combatVfx.vfxEnemyWard'),'boss self-targeted VFX exists');
+assert(combatCss.includes('@keyframes vfxCenteredEnemyTravel'),'enemy projectile travels toward player');
+assert(combatCss.includes('.combatVfx.vfxEnemyWard'),'boss self-targeted VFX exists');
 // Regression: no cached 2026-10-15 player spells, centered projectiles, readable enemy attacks,
 // and direct weapon VFX routing in the current Expedition engine.
 assert(html.includes('v=20261018-vfx3'),'VFX asset URLs must bust stale caches');
 assert(html.includes("MAGIC_COMBAT_AFFINITIES.has(affinity)?affinity:'shock'"),'Staff/Wand cannot fall back to old generic art');
 assert(html.includes("combatVfxPoint(scene,'heroPortrait',24)")&&html.includes("combatVfxPoint(scene,'enemyPortrait',76)"),'track actual portrait centers');
-assert(html.includes('@keyframes vfxCenteredTravel')&&html.includes('@keyframes vfxCenteredEnemyTravel'),'VFX travel is portrait centered in both directions');
-assert(html.includes('.scene .combatVfx.vfxEnemyImpact{width:clamp(145px'),'enemy VFX must remain large and visible');
+assert(combatCss.includes('@keyframes vfxCenteredTravel')&&combatCss.includes('@keyframes vfxCenteredEnemyTravel'),'VFX travel is portrait centered in both directions');
+assert(combatCss.includes('.scene .combatVfx.vfxEnemyImpact{width:clamp(145px'),'enemy VFX must remain large and visible');
 assert(html.includes('if(e.hp<=0){winEncounter(true);return;}'),'a lethal hit must be explicitly marked');
 assert(html.includes('combatEffect(kind,affinity);'),'native weapon attacks route their VFX directly');
 
