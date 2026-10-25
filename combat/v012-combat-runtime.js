@@ -428,8 +428,8 @@ function updateFight(){
  if(advancePlayerAttackClock(r,dt,s.attacksPerSec*haste)){ports.weaponAttack(r);if(e.hp<=0){ports.winEncounter(true);return;}}
  if(r.tDot>=1){
   r.tDot-=1;
-  const hasBurn=e.burnStacks>0,hasDots=e.bleedStacks+e.burnStacks>0;
-  if(hasDots){const bleeding=e.bleedStacks>0,applied=ports.tickDots(e);if(bleeding&&applied>=e.hp)e.v012DeathBleed=true;ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),applied));e.hp-=applied;ports.addLog('☠️ Damage over time: '+applied+' damage','spell');}
+  const hasBleed=e.bleedStacks>0,hasBurn=e.burnStacks>0,hasDots=hasBleed||hasBurn;
+  if(hasDots){const applied=ports.tickDots(e);if(hasBleed&&applied>=e.hp)e.v012DeathBleed=true;ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),applied));e.hp-=applied;ports.addLog('☠️ Damage over time: '+applied+' damage','spell');if(applied>0)ports.floatText(applied,'enemy',false,hasBleed&&hasBurn?'BLEED + BURN':hasBleed?'BLEED':'BURN');}
   if(hasBurn)ports.setHeatTick(r,true);
   if(s.bonus.regenBonus){const healed=ports.setHeal(r,ports.regenPerSecond(r.maxhp,s.bonus.regenBonus));if(healed>0)ports.addLog('💚 Regeneration +'+Math.round(healed)+' HP','good');}
   if(ports.isPhase1Run()&&ports.phase1Build)WandererV012Buildcraft.onSecond(ports.phase1Build,ports.phase2Context(r));
@@ -523,7 +523,7 @@ function phase2Context(r){
   ports.phase6Proc(r,kind+' application');const values=e.dots[kind]||(e.dots[kind]=[]);
   if(values.length>=12)values.shift();values.push({damage:Math.max(1,Math.round(kind==='bleed'?WandererV012Buildcraft.bleedDamage(ports.phase1Build,potency):potency)),remaining:3});ports.synchronizeDots(e);
  },
- dotDamage(amount,label){const n=Math.max(0,Math.round(amount));if(n){ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),n));e.hp-=n;ports.addLog(label+' '+n+' damage','spell');}},
+ dotDamage(amount,label){const n=Math.max(0,Math.round(amount));if(n){ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),n));e.hp-=n;ports.addLog(label+' '+n+' damage','spell');ports.floatText(n,'enemy',false,'ROT');}},
  damage(amount,label){return ports.setDirectEnemyDamage(r,amount,label);},
  heal(amount){return ports.setHeal(r,amount);},
  barrier(amount){return ports.setBarrier(r,amount);},
@@ -555,9 +555,9 @@ function phase2MagicTick(r){
  if(ctx.now-b.runtime.lastSpellAt<2.5)return;
  const cost=WandererV012Buildcraft.nextCost(b);if(r.mp<cost)return;
  b.runtime.lastSpellAt=ctx.now;ports.phase6Metric(r,'manaSpent',cost);ports.phase6Metric(r,'fundedCasts',1);r.mp-=cost;ctx.power=r.stats.spellPower;ctx.amp=1;ctx.funded=true;
+ ports.combatEffect('Wand',({fire:'burn',frost:'slow',lightning:'shock'})[b.element]);
  ports.setDirectEnemyDamage(r,Math.max(1,Math.round(WandererV012Buildcraft.elementalPower(b,ctx.power)*.70)),'✨ '+b.element);
  WandererV012Buildcraft.onCast(b,ctx);
- ports.combatEffect('Wand',({fire:'burn',frost:'slow',lightning:'shock'})[b.element]);
 }
 
 function phase6Metric(r,key,n){if(!r?.phase1||!Number.isFinite(n)||n<0)return;r.metrics??={};r.metrics[key]=(r.metrics[key]||0)+n;}

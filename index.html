@@ -828,13 +828,13 @@ function animateEnemyStrike(abilityFx=null){
  }
  visual();
 }
-function floatText(n,target='enemy',crit=false){
+function floatText(n,target='enemy',crit=false,source=''){
  const scene=$('scene');if(!scene)return;
  const damage=typeof n==='number'&&Number.isFinite(n);
  if(target==='enemy'&&damage&&n>0)phase3FlashEnemyDamage();
  const x=document.createElement('span');
  x.className='float'+(damage?' floatDamage':'')+(crit?' floatCritical':'');
- x.textContent=typeof n==='string'?n:(crit?'CRIT! ':'')+Math.round(n);
+ x.textContent=typeof n==='string'?n:(source?source+' ':'')+(crit?'CRIT! ':'')+Math.round(n); if(source){x.dataset.damageSource=source;x.style.fontSize='clamp(13px,1.5vw,18px)';}
  x.style.color=crit?'#ffe1a1':target==='enemy'?'#ffd0c4':'#c5eaff';
  if(damage){
   // Stagger simultaneous damage labels without affecting combat values or attack timing.
@@ -1195,7 +1195,7 @@ function phase3FlashEnemyDamage(){phase3FlashPortraitDamage('enemyPortrait');}
 function phase3BagMarkup(){
  const items=phase3BagItems(),overflow=Math.max(0,items.length-PHASE3_BAG_CAPACITY);
  const tile=item=>item.kind==='valuable'?'<button type="button" class="phase3BagItem '+(phase3LootNotices.some(notice=>notice.id===item.id)?'phase3BagItem--newLoot':'')+'" data-phase3-loot="'+esc(item.id)+'" title="'+esc(WandererV012Treasures.displayName(item))+' · '+item.worth+' Gold"><img class="c3TreasureImg" src="'+WandererV012Treasures.image(item)+'" alt="'+esc(WandererV012Treasures.displayName(item))+'"><span>'+item.worth+' Gold</span></button>':'<button type="button" class="phase3BagItem '+(phase3LootNotices.some(notice=>notice.id===item.id)?'phase3BagItem--newLoot':'')+'" '+rarityFrame(item)+' data-phase3-loot="'+esc(item.id)+'" title="'+esc(item.name+' · '+itemSource(item))+'">'+rarityArt(item,itemImg(item),item.subtype,'bag')+'<span>E'+item.tier+'</span></button>';
- return '<section class="phase3Bag"><h3>Expedition bag <small>'+Math.min(items.length,PHASE3_BAG_CAPACITY)+'/'+PHASE3_BAG_CAPACITY+'</small></h3><p class="micro muted">Only Bag items are lost on death. Treasures can be sold for Gold after extraction.</p>'+(items.length>=PHASE3_BAG_CAPACITY?'<p class="phase3BagFullNotice" role="status"><b>Bag full.</b> Discard an item before entering the next Realm. You can still extract.</p>':'')+'<div class="phase3BagGrid">'+items.slice(0,PHASE3_BAG_CAPACITY).map(tile).join('')+Array.from({length:Math.max(0,PHASE3_BAG_CAPACITY-items.length)},()=>'<span class="phase3BagEmpty" aria-hidden="true"></span>').join('')+'</div>'+(overflow?'<div class="phase3BagOverflow" role="status"><b>'+overflow+' overflow item'+(overflow===1?'':'s')+'</b><p>Discard unwanted loot before entering the next Realm. Items are not discarded automatically.</p><div class="phase3BagGrid">'+items.slice(PHASE3_BAG_CAPACITY).map(tile).join('')+'</div></div>':'')+'</section>';
+ return '<section class="phase3Bag"><h3>Expedition bag <small>'+Math.min(items.length,PHASE3_BAG_CAPACITY)+'/'+PHASE3_BAG_CAPACITY+'</small></h3><p class="micro muted">Only Bag items are lost on death. Treasures can be sold for Gold after extraction.</p>'+(overflow?'<p class="phase3BagFullNotice" role="status"><b>Items outside the Bag.</b> Resolve '+overflow+' overflow item'+(overflow===1?'':'s')+' before extracting or entering another Realm.</p>':items.length>=PHASE3_BAG_CAPACITY?'<p class="phase3BagFullNotice" role="status"><b>Bag full.</b> You can extract now, but must free space to enter another Realm.</p>':'')+'<div class="phase3BagGrid">'+items.slice(0,PHASE3_BAG_CAPACITY).map(tile).join('')+Array.from({length:Math.max(0,PHASE3_BAG_CAPACITY-items.length)},()=>'<span class="phase3BagEmpty" aria-hidden="true"></span>').join('')+'</div>'+(overflow?'<div class="phase3BagOverflow" role="status"><b>'+overflow+' overflow item'+(overflow===1?'':'s')+'</b><p>Discard unwanted loot before entering the next Realm. Items are not discarded automatically.</p><div class="phase3BagGrid">'+items.slice(PHASE3_BAG_CAPACITY).map(tile).join('')+'</div></div>':'')+'</section>';
 }
 
 function phase3BindBag(){
@@ -1534,11 +1534,11 @@ function renderPhase1(){
  const activeFamilies='<section class="phase3ActiveAffinities"><h3>Active Affinities</h3><div class="phase3AffinityStrip">'+(g.families.length?g.families.map(f=>'<span title="'+esc(WandererV012Expedition.FAMILY_NAMES[f])+' affinity">'+phase2FamilyIcon(f)+'<b>'+esc(WandererV012Expedition.FAMILY_NAMES[f])+'</b></span>').join(''): '<span class="small muted">None</span>')+'</div></section>';
  const rerolls=g.version===2?g.rerolls:(g.rerollsByRealm[g.planeIndex-1]||[]).join(' / ');
  const routeOffers='<div class="phase1Offers">'+g.offers.map((p,index)=>'<article class="phase2RealmOffer"><button type="button" class="phase1Offer '+(g.selected===p?'phase2Selected':'')+'" aria-pressed="'+(g.selected===p)+'" data-phase1-plane="'+p.id+'"><img src="'+dungeonImage(p)+'" alt="'+esc(p.name)+' landscape"><div class="phase1OfferBody"><strong>'+phase2FamilyIcon(p.family)+' '+esc(p.name)+'</strong><div class="phase1OfferMeta"><span class="realmRisk '+(p.boss?'boss':p.event?'event':p.elite?'elite':'normal')+'">'+(p.boss?'Boss':p.event?'Event':p.elite?'Elite':'Normal')+'</span>'+(!p.event?'<span>'+p.waves+' Waves</span>':'')+'</div><span class="small muted">'+(g.selected===p?'Selected':'Select Realm')+'</span></div></button>'+(p.boss&&g.version===2?'':'<button type="button" class="tiny ghost" data-phase2-reroll="'+index+'" title="'+(g.version===2?'Replace this Realm with a random one. Uses 1 shared reroll.':'Replace this Realm with a random one.')+'" '+((g.version===2?g.rerolls>0:g.rerollsByRealm[g.planeIndex-1][index]>0)?'':'disabled')+'>↻ Replace Realm</button>')+'</article>').join('')+'</div>';
- const bagFull=phase3BagItems().length>=PHASE3_BAG_CAPACITY;
- const routes='<section class="phase3Routes"><div class="phase3RouteHeading"><h2>Select the next Realm</h2><span class="small muted">Rerolls remaining: '+(g.version===2?g.rerolls+'/3':rerolls)+'</span></div>'+routeOffers+'<p class="micro muted">More Waves mean more opportunities and risk. Temporary effects end with the Expedition.</p>'+(bagFull?'<p class="phase3BagFullNotice" role="status"><b>Expedition Bag full.</b> Discard an item to enter the next Realm, or extract now.</p>':'')+'</section>';
- const enterButton='<button type="button" class="primary" id="phase2EnterRealm" '+(g.selected&&!bagFull&&!phase3BagOverflow()?'':'disabled')+'>Enter Realm</button>';
+ const bagFull=phase3BagItems().length>=PHASE3_BAG_CAPACITY,bagOutside=phase3BagOverflow();
+ const routes='<section class="phase3Routes"><div class="phase3RouteHeading"><h2>Select the next Realm</h2><span class="small muted">Rerolls remaining: '+(g.version===2?g.rerolls+'/3':rerolls)+'</span></div>'+routeOffers+'<p class="micro muted">More Waves mean more opportunities and risk. Temporary effects end with the Expedition.</p>'+(bagOutside?'<p class="phase3BagFullNotice" role="status"><b>Items outside the Bag.</b> Resolve '+bagOutside+' overflow item'+(bagOutside===1?'':'s')+' before extracting or entering another Realm.</p>':bagFull?'<p class="phase3BagFullNotice" role="status"><b>Expedition Bag full.</b> You can extract now, or discard an item to enter the next Realm.</p>':'')+'</section>';
+ const enterButton='<button type="button" class="primary" id="phase2EnterRealm" '+(g.selected&&!bagFull&&!bagOutside?'':'disabled')+'>Enter Realm</button>';
  const selectedRealm=g.selected?'':'<span class="phase3SelectedRealm">Select a Realm</span>';
- const extractButton=between?'<button type="button" id="phase4Extract" class="ghost phase3Extract">Extract &amp; Leave</button>':'';
+ const extractButton=between?'<button type="button" id="phase4Extract" class="ghost phase3Extract" '+(bagOutside?'disabled title="Resolve items outside the Bag first"':'')+'>Extract &amp; Leave</button>':'';
  if(between){
   if(!['realm','equipment','build'].includes(phase3BetweenTab))phase3BetweenTab='realm';
   const tabOptions=[['realm','Realm'],['equipment','Equipment'],['build','Stats & Passives']];

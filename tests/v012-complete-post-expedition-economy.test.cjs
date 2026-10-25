@@ -139,3 +139,49 @@ test('Corrupted checkpoint does not unlock economy on restore',()=>{
  assert.equal(b.debug().saveBlocked,true);
  assert.equal(b.economyCanAct(),false);
 });
+
+
+test('Extract allows a completely full Bag, but refuses items physically outside the Bag',()=>{
+ function betweenWithBag(seed){
+  const {a,storage}=fixture(seed);
+  begin(a);clearToBetween(a);
+  assert.equal(a.debug().saveBlocked,false);
+  const capacity=a.bag.capacity();
+  assert(capacity>1,'fixture has a meaningful Bag capacity');
+  while(a.bag.items().length<capacity){
+   const item=a.makeItem(1,'weapon',null,'loot','Sword','Rare');
+   a.bag.mark(item);
+  }
+  assert.equal(a.bag.items().length,capacity);
+  assert.equal(a.bag.overflow(),0);
+  return {a,storage,capacity};
+ }
+ {
+  const {a,storage,capacity}=betweenWithBag(73101);
+  const ids=a.bag.items().map(item=>item.id);
+  assert.equal(a.checkpoint.extract(),true,'full Bag at exactly '+capacity+' items must be extractable');
+  assert.equal(a.results().summary.outcome,'extracted');
+  assert.equal(a.state().run,null);
+  assert.equal(a.bag.items().length,0,'Bag markers retire without deleting secured loot');
+  assert(ids.every(id=>a.state().stash.some(item=>item.id===id)),'all original Bag items must remain secured');
+  assert.equal(a.exitResult(),true);
+  const snapshot=persisted(storage);
+  assert.equal(snapshot.expedition.lastOutcome,'extracted');
+  assert.equal(snapshot.expedition.active,null);
+  assert.equal(restored(storage,73102).debug().saveBlocked,false);
+ }
+ {
+  const {a,storage,capacity}=betweenWithBag(73111);
+  const extra=a.makeItem(1,'weapon',null,'loot','Sword','Rare');a.bag.mark(extra,true);
+  assert.equal(a.bag.items().length,capacity+1);
+  assert.equal(a.bag.overflow(),1);
+  assert.equal(a.checkpoint.extract(),false,'unplaced overflow item prevents extraction');
+  assert.equal(a.controller().state.stage,'choice','failed extraction must keep Expedition active');
+  assert.equal(a.state().expeditionOverflow.some(item=>item.id===extra.id),true,'failed extraction may not lose the extra item');
+  assert.equal(a.bag.discard(extra.id),true,'player can resolve the external item');
+  assert.equal(a.bag.overflow(),0);
+  assert.equal(a.checkpoint.extract(),true,'once external item is resolved, exact-full Bag must extract');
+  assert.equal(a.exitResult(),true);
+  assert.equal(persisted(storage).expedition.lastOutcome,'extracted');
+ }
+});

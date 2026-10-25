@@ -30,7 +30,11 @@ function phase4LoseLoot(){
 }
 
 function phase4Extract(){
- if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked)||!ports.phase3IsBetweenPlanes()||ports.phase3BagOverflow()||ports.phase4Resume)return false;
+ if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked)||!ports.phase3IsBetweenPlanes()||ports.phase4Resume)return false;
+ // A Bag at its exact capacity is safe to extract. Only unplaced loot outside
+ // the Bag (the overflow slots) requires a decision before extraction.
+ const outside=ports.phase3BagOverflow();
+ if(outside>0){ports.bannerMessage('Cannot extract: resolve '+outside+' item'+(outside===1?'':'s')+' outside the Expedition Bag first.');return false;}
  ports.phase6ReturnPotions('extracted');
  ports.phase5MakeSummary('extracted');ports.phase5Results.review='summary';
  ports.phase1Controller.abandon();if(ports.phase1Build)WandererV012Buildcraft.clear(ports.phase1Build);

@@ -19,3 +19,40 @@ test('DOT conversions repay the remaining damage consumed over 2/4/8 ticks',()=>
 test('Spell Surge cannot consume on its triggering critical; free echoes cannot create Static',()=>{
  const b=B.create();b.families=['magic','fury'];b.element='lightning';b.picks=['overcharge','spell_surge','spellblade','arcane_echo'];const {c,effects}=ctx();c.critical=true;B.onAttack(b,c);B.onCast(b,c);assert(!effects.some(e=>e[2]==='✨ Spell Surge'));c.now=1;B.onCast(b,c);assert(effects.some(e=>e[2]==='✨ Spell Surge'));assert.equal(b.runtime.staticCharges,2);B.onCast(b,{...c,funded:false});assert.equal(b.runtime.staticCharges,2);
 });
+
+
+test('Combat explains regular Bleed/Burn ticks and Rot ticks with visible damage and preserves HP accounting',()=>{
+ const create=require('./v012-economy-harness.cjs');
+ function fight(seed){
+  const a=create(seed);a.setup(1,'Sword','Rare');a.start(1);a.initial('blood');
+  const offer=a.controller().state.offers.find(o=>o.family==='blood');
+  assert(offer);a.select(offer.id);assert.equal(a.enter(),true);
+  const run=a.state().run;
+  assert(run&&run.status==='fight');
+  run.enemy.hp=run.enemy.maxhp=1000;run.enemy.attackEvery=999;run.tEnemy=0;run.tPlayer=0;run.tDot=.99;
+  return {a,run,feedback:a.feedback()};
+ }
+ {
+  const {a,run,feedback}=fight(44001),e=run.enemy;
+  e.dots={bleed:[{damage:12,remaining:2}],burn:[{damage:8,remaining:2}]};
+  e.bleedStacks=1;e.burnStacks=1;e.bleed=12;e.burn=8;
+  const hp=e.hp;a.tick();
+  assert.equal(e.hp,hp-20,'periodic Bleed and Burn retain original damage amounts');
+  assert(feedback.floats.some(f=>f.target==='enemy'&&f.value===20&&f.source==='BLEED + BURN'),
+   'players must see the damage value and its source');
+  assert(feedback.logs.some(f=>f.text.includes('Damage over time: 20 damage')));
+ }
+ {
+  const {a,run,feedback}=fight(44002),e=run.enemy;
+  e.v012Rot=[{damage:9,remaining:2,ticks:0}];
+  const hp=e.hp;a.tick();
+  assert.equal(e.hp,hp-9,'Rot retains its original periodic damage');
+  assert(feedback.floats.some(f=>f.target==='enemy'&&f.value===9&&f.source==='ROT'),
+   'Rot must display as a visible damage source');
+  assert(feedback.logs.some(f=>f.text.includes('Rot 9 damage')));
+ }
+ const fs=require('node:fs'),path=require('node:path');
+ const html=fs.readFileSync(path.resolve(__dirname,'../index.html'),'utf8');
+ assert.match(html,/function floatText\(n,target='enemy',crit=false,source=''\)/);
+ assert.match(html,/x\.dataset\.damageSource=source/);
+});
