@@ -1,0 +1,23 @@
+name: E.3.3 Bleed and proc diagnosis
+on:
+  push:
+    branches: [development]
+    paths: [.github/workflows/e33-bleed-procs.yml]
+  workflow_dispatch:
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run 180 native combat attribution experiments
+        run: node scripts/v012-phase-e33-bleed-procs.cjs /tmp/e33.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e33-results
+          path: /tmp/e33.json
+          if-no-files-found: ignore

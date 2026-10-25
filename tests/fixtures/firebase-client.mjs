@@ -23,7 +23,7 @@ export async function createBackend(){
   async createProfile(nickname,characterId){if(nickname==='taken')throw Error('That nickname is already taken.');f.profile={nickname:nickname.trim().toLowerCase(),characterId};return copy(f.profile);},
   async updateCharacter(characterId){f.profile.characterId=characterId;return copy(f.profile);},
   async readSave(){if(f.offline)throw Error('offline');return copy(f.cloud);},
-  async writeSave(payload,expected){if(f.offline)throw Error('offline');if((f.cloud?.revision||0)!==expected)throw Error('cloud-conflict');f.cloud={payload:JSON.stringify(payload),revision:expected+1};f.writes++;return copy(f.cloud);},
+  async writeSave(payload,expected){if(f.offline)throw Error('offline');if(f.failNextSave){f.failNextSave=false;throw Error('network');}if((f.cloud?.revision||0)!==expected)throw Error('cloud-conflict');f.cloud={payload:JSON.stringify(payload),revision:expected+1};f.writes++;return copy(f.cloud);},
   async submitFeedback(data){if(f.offline)throw Error('offline');f.feedback.push(copy(data));return 'feedback-test-'+f.feedback.length;},
   async publishLoadout(snapshot){f.loadout={equipment:copy(snapshot.equip),maxDungeon:snapshot.maxDungeon};},
   async player(uid){return {uid,profile:uid==='alice'?copy(f.profile):{nickname:uid==='outsider'?'outsider':'test_player',characterId:'knight'},loadout:uid==='missing'?null:{equipment:{weapon:{id:'opponent-sword',slot:'weapon',subtype:'Sword',name:'Opponent Sword',tier:10,rarity:'Rare',atk:30,str:5,effect:'poison'},ring1:{id:'ring',slot:'ring1',subtype:'Ring',name:'Poison Ring',tier:10,rarity:'Rare',effect:'poison'}},maxDungeon:20}};},

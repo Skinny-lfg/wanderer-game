@@ -1,0 +1,115 @@
+{
+  "sizes": [
+    [
+      390,
+      844
+    ],
+    [
+      768,
+      1024
+    ],
+    [
+      1440,
+      900
+    ],
+    [
+      1920,
+      1080
+    ]
+  ],
+  "screenshots": 4,
+  "findings": [
+    {
+      "screen": "passive-choice",
+      "viewport": "390x844",
+      "horizontalOverflow": false,
+      "scrollWidth": 390,
+      "scrollHeight": 1744,
+      "missingImages": [],
+      "errors": [],
+      "failedResponses": [],
+      "dialog": "Choose one Realm passive\nExecutioner\nBlood\nDISCOVERY\nBleeding foe at ≤30% HP: limited burst, cooldow",
+      "axe": {
+        "violations": [],
+        "passes": 20,
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodes": 17
+          }
+        ]
+      },
+      "screenshot": "docs/ui-audit/passive-phase2c-after/expedition/passive-choice/passive-choice-mobile-390x844.jpg"
+    },
+    {
+      "screen": "passive-choice",
+      "viewport": "768x1024",
+      "horizontalOverflow": false,
+      "scrollWidth": 768,
+      "scrollHeight": 1857,
+      "missingImages": [],
+      "errors": [],
+      "failedResponses": [],
+      "dialog": "Choose one Realm passive\nBlood Drinker\nBlood\nSYNERGY\nHit bleeding foe: limited heal, cooldown 4s; he",
+      "axe": {
+        "violations": [],
+        "passes": 20,
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodes": 17
+          }
+        ]
+      },
+      "screenshot": "docs/ui-audit/passive-phase2c-after/expedition/passive-choice/passive-choice-tablet-768x1024.jpg"
+    },
+    {
+      "screen": "passive-choice",
+      "viewport": "1440x900",
+      "horizontalOverflow": false,
+      "scrollWidth": 1440,
+      "scrollHeight": 1145,
+      "missingImages": [],
+      "errors": [],
+      "failedResponses": [],
+      "dialog": "Choose one Realm passive\nBleeding Edge\nBlood\nUPGRADE\nHits: Bleed chance; 16% base per tick, cooldown",
+      "axe": {
+        "violations": [],
+        "passes": 20,
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodes": 18
+          }
+        ]
+      },
+      "screenshot": "docs/ui-audit/passive-phase2c-after/expedition/passive-choice/passive-choice-desktop-1440x900.jpg"
+    },
+    {
+      "screen": "passive-choice",
+      "viewport": "1920x1080",
+      "horizontalOverflow": false,
+      "scrollWidth": 1920,
+      "scrollHeight": 1145,
+      "missingImages": [],
+      "errors": [],
+      "failedResponses": [],
+      "dialog": "Choose one Realm passive\nBleeding Edge\nBlood\nUPGRADE\nHits: Bleed chance; 16% base per tick, cooldown",
+      "axe": {
+        "violations": [],
+        "passes": 20,
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodes": 18
+          }
+        ]
+      },
+      "screenshot": "docs/ui-audit/passive-phase2c-after/expedition/passive-choice/passive-choice-wide-1920x1080.jpg"
+    }
+  ]
+}

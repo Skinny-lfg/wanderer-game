@@ -4,24 +4,21 @@
   "type": "module",
   "scripts": {
     "build:firebase": "esbuild online/firebase-sdk-source.mjs --bundle --format=esm --minify --outfile=online/vendor/firebase-sdk.mjs",
-    "test": "node tests/vfx-affinity-enemy-smoke.cjs && node scripts/build-pvp-stats.cjs --check && node tests/phase2-smoke.cjs && node tests/gear-balance-smoke.cjs && node tests/v081-smoke.cjs && node tests/dungeon-ui-smoke.cjs && node tests/equipment-ux-smoke.cjs && node tests/cumulative-set-combat.cjs && node tests/merchant-combat-balance.cjs && node tests/expedition-ui-smoke.cjs && node tests/elite-archetypes-art.cjs && node tests/elite-loot-hotfix-smoke.cjs && node tests/v092-gameplay-upgrades.cjs && node tests/rune-slot-picker-smoke.cjs && node tests/placeholder-assets-smoke.cjs && node tests/combat-timing-hotfix.cjs && node tests/ui-layout-d200.cjs && node tests/mobile-v092-smoke.cjs && node tests/online-save-compat.cjs && node tests/storage-quota-smoke.cjs && node --test tests/online-model.test.mjs tests/profile-restore.test.mjs tests/v0101-firebase-config.test.mjs tests/speedrun-leaderboard.test.mjs tests/pvp.test.mjs && node tests/v091-balance.cjs && node tests/v091-legal-builds.cjs && node tests/v093-buildcraft.cjs && node tests/legendary-signatures.cjs && node tests/v093-postgame-ui.cjs && node tests/v093-visual-polish.cjs && node tests/v093-fullbody-merchant-new.cjs && node tests/v093-difficulty-feedback.cjs && node tests/combat-ux-difficulty-regression.cjs && node tests/v093-elite-affinity-ux.cjs && node tests/v093-shatter-double-strike.cjs && node tests/v0100-affinity-scaling.cjs && node tests/v0100-ui-regression.cjs && node tests/v0100-mobile-combat-ui.cjs && node tests/v0100-mobile-qol.cjs && node tests/v0101-economy.cjs && node tests/v0101-auth-isolation.cjs && node tests/v011-ui-auth.cjs",
-    "test:rules": "firebase emulators:exec --only firestore --project demo-wanderer 'node --test tests/firestore-rules.test.mjs'",
-    "test:browser": "node tests/online-browser.cjs",
-    "test:assets": "node tests/equipment-vfx-browser.cjs && node tests/combat-mobile-browser.cjs && node tests/v093-browser.cjs && node tests/v0100-browser.cjs",
-    "test:pvp": "node tests/pvp-browser.cjs",
-    "build:pvp": "node scripts/build-pvp-stats.cjs",
-    "test:recovery": "node tests/interrupted-save-browser.cjs",
-    "simulate:balance": "node scripts/simulate-v091.cjs",
-    "validate:balance": "node scripts/validate-v091-builds.cjs",
-    "compare:balance": "node scripts/v091-final-eval.cjs",
-    "test:stress:phase1": "node tests/v092-simulation-smoke.cjs",
-    "test:v093:browser": "node tests/v093-browser.cjs"
+    "preview:private": "node preview/private-server.mjs",
+    "test": "node --test tests/firebase-config.test.mjs tests/production-firebase-config.test.mjs tests/v012-complete-*.test.cjs tests/v012-engine-core.test.cjs tests/v012-runtime-integration.test.cjs tests/v012-phase-c1.test.cjs tests/v012-buildcraft.test.cjs tests/v012-affinity-phase-*.test.cjs tests/v012-affinity-decay.test.cjs tests/v012-save.test.mjs tests/v012-cloud-save.test.mjs tests/v012-lifecycle.test.cjs tests/v012-economy.test.cjs tests/v0120-evasion.test.cjs tests/v0120-equipment.test.cjs tests/online-model.test.mjs tests/profile-restore.test.mjs tests/private-preview.test.mjs tests/v012-phase-c3-assets.test.cjs tests/v012-phase-c3-treasures.test.cjs tests/v012-phase-d-endless.test.cjs tests/v012-global-ui-audit.test.cjs tests/v012-unified-gear-potions.test.cjs tests/v012-typography.test.cjs tests/v012-item-popup.test.cjs tests/v0120-results.test.cjs tests/v0120-persistence.test.cjs tests/v012-status-icons.test.cjs tests/v012-combat-visual-clarity.test.cjs",
+    "test:browser": "node tests/v012-account-ui-browser.cjs && node tests/v012-forge-result-popup-browser.cjs && node tests/v012-combat-visual-clarity-browser.cjs && node tests/v012-status-icons-popup-browser.cjs && node tests/v012-boss-attack-animation-browser.cjs && node tests/v012-mob-elite-animation-speeds-browser.cjs && node tests/v012-between-equipment-popup-browser.cjs && node tests/v012-complete-browser.cjs && node tests/v0120-evasion-browser.cjs && node tests/v0120-equipment-browser.cjs && node tests/private-preview-browser.cjs && node tests/v012-phase-c3-treasures-browser.cjs && node tests/v012-global-ui-audit-browser.cjs && node tests/v012-ui-polish-browser.cjs",
+    "test:preview": "node --test tests/private-preview.test.mjs",
+    "test:rules": "firebase emulators:exec --only firestore,auth --project demo-wanderer 'node --test tests/firestore-rules.test.mjs tests/v012-auth-emulator.test.mjs'",
+    "test:assets": "node tests/vfx-affinity-enemy-smoke.cjs",
+    "simulate:v012": "node scripts/v012-complete-sim.cjs /tmp/wanderer-v012-sim.json",
+    "build:pvp": "node scripts/build-pvp-stats.cjs"
   },
   "dependencies": {
     "firebase": "11.10.0"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "4.0.1",
+    "axe-core": "^4.14.0",
     "esbuild": "0.25.5",
     "firebase-tools": "14.7.0",
     "playwright": "1.56.1"

@@ -43,3 +43,16 @@ test('D200 speedrun time requires an eligible completed D200 milestone',()=>{
  assert.equal(safeProgress(save).attemptId,'legacy','old saves remain readable');
  assert.throws(()=>validateSave({...base,onlineProgress:{...base.onlineProgress,attemptId:'a/b'}}),/attempt ID/);
 });
+test('Belt and armor category validation stays compatible with legacy saves',()=>{
+ const belt={id:'belt',name:'Woven Belt',slot:'belt',subtype:'Belt',armorType:'Leather',tier:5,rarity:'Rare',agi:1,def:11,hp:20};
+ const profile={...save,equip:{belt}};
+ assert.deepEqual(validateSave(profile),profile);assert.deepEqual(validateSave(save),save);
+ assert.throws(()=>validateSave({...save,equip:{belt:{...belt,armorType:'Hybrid'}}}),/armor type/);
+ assert.throws(()=>validateSave({...save,stash:[{...belt,slot:'weapon'}]}),/armor type/);
+});
+test('optional Leather Evasion Rating accepts old saves and rejects invalid new values',()=>{
+ const item={id:'leather',name:'Leather Vest',slot:'armor',armorType:'Leather',tier:5,rarity:'Rare',evasionRating:10};
+ assert.equal(validateSave({...save,stash:[item]}).stash[0].evasionRating,10);
+ for(const evasionRating of [-1,Infinity,NaN,false])assert.throws(()=>validateSave({...save,stash:[{...item,evasionRating}]}),/Evasion/);
+ assert.throws(()=>validateSave({...save,stash:[{...item,armorType:'Cloth'}]}),/Evasion/);
+});

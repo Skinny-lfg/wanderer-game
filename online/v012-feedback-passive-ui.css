@@ -1,0 +1,78 @@
+/* v0.12: dedicated player reports and consistent affinity/passive copy. */
+body.phase3IntegratedPreview .onlineBar [data-online-action="feedback"]{
+  white-space:nowrap;
+}
+.wandererFeedbackDialog{
+  box-sizing:border-box;
+  width:min(540px,calc(100vw - 24px))!important;
+  max-width:540px!important;
+  max-height:min(82dvh,740px);
+  overflow:auto;
+  color:#f0e3da;
+  background:linear-gradient(160deg,#2b1c24,#17131b)!important;
+  border:1px solid #a77d61!important;
+  border-radius:8px!important;
+  padding:20px!important;
+  box-shadow:0 20px 50px #000c;
+}
+.wandererFeedbackDialog::backdrop{background:rgba(4,3,7,.77)}
+.wandererFeedbackDialog h2{margin:0 0 6px;color:#f2d8ac;font-size:clamp(19px,3vw,25px)}
+.wandererFeedbackDialog .feedbackIntro{color:#e5d5ce;margin:0 0 12px;font-size:13px;line-height:1.4}
+.wandererFeedbackDialog .feedbackForm{display:grid;gap:10px;overflow:visible;max-height:none}
+.wandererFeedbackDialog .feedbackForm label{display:grid;gap:4px;color:#f0e0d8;font-size:13px;font-weight:700}
+.wandererFeedbackDialog .feedbackForm :is(input,select,textarea){
+  box-sizing:border-box;width:100%;min-width:0;
+  background:#1d171f;color:#fff2e5;border:1px solid #846758;border-radius:5px;
+  font:inherit;font-size:14px;line-height:1.35;padding:9px 10px;
+}
+.wandererFeedbackDialog .feedbackForm textarea{resize:vertical;min-height:94px}
+.wandererFeedbackDialog .feedbackForm #wandererReportSteps{min-height:62px}
+.wandererFeedbackDialog .feedbackForm :is(input,select,textarea):focus-visible,
+.wandererFeedbackDialog button:focus-visible{outline:2px solid #f3d398;outline-offset:2px}
+.wandererFeedbackDialog .feedbackNotice{font-size:12px;line-height:1.4;color:#dbc8c4;margin:2px 0}
+.wandererFeedbackDialog .feedbackNotice[data-status="error"]{color:#ffb6bb}
+.wandererFeedbackDialog .feedbackNotice[data-status="success"]{color:#a9e8bc}
+.wandererFeedbackDialog .feedbackPrivacy{display:flex!important;grid-template-columns:16px 1fr;align-items:start;gap:8px!important;font-weight:400!important}
+.wandererFeedbackDialog .feedbackPrivacy input{width:16px;min-width:16px;margin:3px 0 0;accent-color:#cfad77}
+.wandererFeedbackDialog .feedbackActions{display:flex;gap:9px;flex-wrap:wrap;justify-content:flex-end;margin-top:4px}
+.wandererFeedbackDialog .feedbackActions button{min-height:39px}
+.wandererFeedbackDialog .feedbackActions button[disabled]{opacity:.5;cursor:wait}
+@media(max-width:600px){.wandererFeedbackDialog{padding:15px!important;max-height:86dvh}.wandererFeedbackDialog .feedbackActions{justify-content:stretch}.wandererFeedbackDialog .feedbackActions button{flex:1 1 auto}}
+
+/* Compact, equal-size copy in the 'View passive' affinity dropdown.
+   Keep gothic headings, emphasis and affinity identity color. */
+body.phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityPassiveDetails{max-height:130px}
+body.phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityPassiveDetails summary,
+body.phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityPassiveDetails p,
+body.phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityPassiveDescriptions :is(b,strong){
+  font-size:13px!important;line-height:1.28!important;
+}
+body.phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityPassiveDetails summary{
+  min-height:28px!important;padding:2px 0!important;gap:4px!important;
+}
+body.phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityPassiveDetails p{margin:3px 0!important}
+body.phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityPassiveDescriptions{padding:0 2px 4px}
+
+/* Passive cards: same reading size from title through effects and preview.
+   Weight and semantic colors remain different, without enlarging numbers. */
+body.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveChoice > :not(.phase2PassiveIcons),
+body.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveChoice .phase3PassivePreviewEntry,
+body.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveChoice .phase3PassiveEmphasis{
+  font-size:13px!important;line-height:1.32!important;
+}
+body.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveChoice > strong{font-weight:800!important}
+body.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveChoice .phase3PassiveDescription{font-weight:400!important;margin:1px 0!important}
+body.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveChoice .phase3PassivePreview{margin:1px 0!important}
+body.phase3IntegratedPreview .phase3PassiveEmphasis--bleed{color:#fa858b!important;font-weight:800!important}
+body.phase3IntegratedPreview .phase3PassiveEmphasis--barrier{color:#94cbfa!important;font-weight:800!important}
+body.phase3IntegratedPreview .phase3PassiveEmphasis--rot{color:#7dbd78!important;font-weight:800!important}
+body.phase3IntegratedPreview .phase3PassiveEmphasis--heal{color:#a2e8b1!important;font-weight:800!important}
+body.phase3IntegratedPreview :is(.phase3PassiveTooltip p,.phase3PassiveInline p,.phase3AffinityPassiveDescriptions p) .phase3PassiveEmphasis{
+  font-size:inherit!important;font-weight:800!important;
+}
+
+/* The preview labels use the same status language as passive descriptions. */
+body.phase3IntegratedPreview .phase3PassivePreviewEntry--bleed{color:#fa858b!important}
+body.phase3IntegratedPreview .phase3PassivePreviewEntry--barrier{color:#94cbfa!important}
+body.phase3IntegratedPreview .phase3PassivePreviewEntry--rot{color:#7dbd78!important}
+body.phase3IntegratedPreview .phase3PassivePreviewEntry--heal{color:#a2e8b1!important}

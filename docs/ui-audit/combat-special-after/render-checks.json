@@ -1,0 +1,251 @@
+{
+  "sizes": [
+    [
+      390,
+      844
+    ],
+    [
+      768,
+      1024
+    ],
+    [
+      1440,
+      900
+    ],
+    [
+      1920,
+      1080
+    ]
+  ],
+  "screenshots": 4,
+  "findings": [
+    {
+      "screen": "combat",
+      "viewport": "390x844",
+      "horizontalOverflow": false,
+      "scrollWidth": 390,
+      "scrollHeight": 1256,
+      "missingImages": [],
+      "errors": [],
+      "failedResponses": [],
+      "dialog": null,
+      "axe": {
+        "violations": [
+          {
+            "id": "page-has-heading-one",
+            "impact": "moderate",
+            "help": "Page should contain a level-one heading",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/4.10/page-has-heading-one?application=axeAPI",
+            "nodes": [
+              {
+                "target": [
+                  "html"
+                ],
+                "summary": "Fix all of the following:\n  Page must have a level-one heading"
+              }
+            ]
+          },
+          {
+            "id": "region",
+            "impact": "moderate",
+            "help": "All page content should be contained by landmarks",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/4.10/region?application=axeAPI",
+            "nodes": [
+              {
+                "target": [
+                  "#wallet"
+                ],
+                "summary": "Fix any of the following:\n  Some page content is not contained by landmarks"
+              }
+            ]
+          }
+        ],
+        "passes": 38,
+        "incomplete": [
+          {
+            "id": "aria-prohibited-attr",
+            "impact": "serious",
+            "nodes": 2
+          },
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodes": 42
+          }
+        ]
+      },
+      "screenshot": "docs/ui-audit/combat-special-after/expedition/combat/combat-mobile-390x844.jpg"
+    },
+    {
+      "screen": "combat",
+      "viewport": "768x1024",
+      "horizontalOverflow": false,
+      "scrollWidth": 768,
+      "scrollHeight": 1241,
+      "missingImages": [],
+      "errors": [],
+      "failedResponses": [],
+      "dialog": null,
+      "axe": {
+        "violations": [
+          {
+            "id": "page-has-heading-one",
+            "impact": "moderate",
+            "help": "Page should contain a level-one heading",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/4.10/page-has-heading-one?application=axeAPI",
+            "nodes": [
+              {
+                "target": [
+                  "html"
+                ],
+                "summary": "Fix all of the following:\n  Page must have a level-one heading"
+              }
+            ]
+          },
+          {
+            "id": "region",
+            "impact": "moderate",
+            "help": "All page content should be contained by landmarks",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/4.10/region?application=axeAPI",
+            "nodes": [
+              {
+                "target": [
+                  "#wallet"
+                ],
+                "summary": "Fix any of the following:\n  Some page content is not contained by landmarks"
+              }
+            ]
+          }
+        ],
+        "passes": 39,
+        "incomplete": [
+          {
+            "id": "aria-prohibited-attr",
+            "impact": "serious",
+            "nodes": 2
+          },
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodes": 45
+          }
+        ]
+      },
+      "screenshot": "docs/ui-audit/combat-special-after/expedition/combat/combat-tablet-768x1024.jpg"
+    },
+    {
+      "screen": "combat",
+      "viewport": "1440x900",
+      "horizontalOverflow": false,
+      "scrollWidth": 1440,
+      "scrollHeight": 1019,
+      "missingImages": [],
+      "errors": [],
+      "failedResponses": [],
+      "dialog": null,
+      "axe": {
+        "violations": [
+          {
+            "id": "page-has-heading-one",
+            "impact": "moderate",
+            "help": "Page should contain a level-one heading",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/4.10/page-has-heading-one?application=axeAPI",
+            "nodes": [
+              {
+                "target": [
+                  "html"
+                ],
+                "summary": "Fix all of the following:\n  Page must have a level-one heading"
+              }
+            ]
+          },
+          {
+            "id": "region",
+            "impact": "moderate",
+            "help": "All page content should be contained by landmarks",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/4.10/region?application=axeAPI",
+            "nodes": [
+              {
+                "target": [
+                  "#wallet"
+                ],
+                "summary": "Fix any of the following:\n  Some page content is not contained by landmarks"
+              }
+            ]
+          }
+        ],
+        "passes": 39,
+        "incomplete": [
+          {
+            "id": "aria-prohibited-attr",
+            "impact": "serious",
+            "nodes": 2
+          },
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodes": 45
+          }
+        ]
+      },
+      "screenshot": "docs/ui-audit/combat-special-after/expedition/combat/combat-desktop-1440x900.jpg"
+    },
+    {
+      "screen": "combat",
+      "viewport": "1920x1080",
+      "horizontalOverflow": false,
+      "scrollWidth": 1920,
+      "scrollHeight": 1080,
+      "missingImages": [],
+      "errors": [],
+      "failedResponses": [],
+      "dialog": null,
+      "axe": {
+        "violations": [
+          {
+            "id": "page-has-heading-one",
+            "impact": "moderate",
+            "help": "Page should contain a level-one heading",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/4.10/page-has-heading-one?application=axeAPI",
+            "nodes": [
+              {
+                "target": [
+                  "html"
+                ],
+                "summary": "Fix all of the following:\n  Page must have a level-one heading"
+              }
+            ]
+          },
+          {
+            "id": "region",
+            "impact": "moderate",
+            "help": "All page content should be contained by landmarks",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/4.10/region?application=axeAPI",
+            "nodes": [
+              {
+                "target": [
+                  "#wallet"
+                ],
+                "summary": "Fix any of the following:\n  Some page content is not contained by landmarks"
+              }
+            ]
+          }
+        ],
+        "passes": 39,
+        "incomplete": [
+          {
+            "id": "aria-prohibited-attr",
+            "impact": "serious",
+            "nodes": 2
+          },
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodes": 45
+          }
+        ]
+      },
+      "screenshot": "docs/ui-audit/combat-special-after/expedition/combat/combat-wide-1920x1080.jpg"
+    }
+  ]
+}

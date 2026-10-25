@@ -1,42 +1,38 @@
-# Wanderer
+# Wanderer — v0.12 (development)
 
-Wanderer é um RPG de exploração de dungeons para browser, com combate automático, equipamento, afinidades e Tier Bonuses, Forge, Merchant e leaderboard.
+A branch `development` contém o **Wanderer v0.12 Expedition**, sem o protótipo isolado de v0.12 nem o carregador do jogo clássico v0.11. A branch `main` é uma publicação independente e não foi alterada.
 
-## Jogar online
+## Fluxo atual
+Camp → selecionar affinity → 15 Realms (combate/eventos, Elites e boss) → passivos e Between Realms → escolher 1 de 3 Runes em cada vitória final → relatório da Expedition.
 
-Página pública: https://skinny-lfg.github.io/wanderer-game/
+- 12 temas de Realm, até 3 affinities e 30 opções híbridas.
+- Static persiste entre Realms, bag de seis peças de loot e até três poções preparadas.
+- Blacksmith, Apothecary e Forge; Runes E1–E200.
+- O Railway privado usa um perfil de playtest isolado: **não sincroniza saves de contas reais**.
 
-A **`development` v0.10.1** passa a usar login obrigatório com **Google ou email/password**, verificação de email e recuperação de password. A funcionalidade Guest foi removida do novo ecrã de login. Os jogadores escolhem um nickname público; o nome e email da conta Google não são mostrados publicamente. O sistema de saves online continua em Firebase, mas a branch `development` exige um **projeto Firebase de testes separado**, ainda por configurar. **A `main` pública mantém temporariamente o login antigo até uma publicação autorizada.**
-
-O código do site está na branch `main`. Desenvolvimento e testes continuam na `development`.
-
-Instruções completas para criar o Firebase de desenvolvimento, configurar login e email, testar as regras e planear o reset futuro: [Guia Firebase v0.10.1](docs/firebase/README.md). **Nenhum reset é feito ao atualizar o código.**
-
-Roadmap de ideias adiadas e trabalhos ainda sem publicação: [Em desenvolvimento — futuras versões a avaliar](docs/roadmap-em-desenvolvimento.md).
-
-## Como funcionam os saves
-
-- Guarda-se o progresso localmente no browser; contas autenticadas podem sincronizá-lo para o Firestore.
-- Uma expedição interrompida ao fechar a janela é terminada no regresso; equipamento e recompensas já extraídas são preservados, mas loot ainda não extraído não é atribuído.
-- Existem cópias de recuperação locais e proteção contra conflitos entre saves. Se aparecer uma escolha entre **This device** e **Cloud**, confirma os dados antes de escolher.
-- A publicação do código no GitHub **não altera diretamente os saves do Firebase**. Os jogadores devem continuar no mesmo endereço e navegador quando usam contas Guest.
-
-## Executar localmente
-
-É necessário Python 3:
+## Testes
 
 ```sh
-python3 -m http.server 8000 --bind 127.0.0.1
+npm ci
+npm test
+npm run test:preview
+npm run simulate:v012
 ```
 
-Abre http://127.0.0.1:8000/ no navegador. Para parar o servidor, usa `Ctrl+C`.
+Para os testes browser, instalar Chromium/Playwright e usar o servidor local:
 
-## Testes e configuração
+```sh
+python3 -m http.server 8012 --bind 127.0.0.1
+npm run test:browser
+```
 
-- Instalar dependências: `npm ci`.
-- Testes de lógica: `npm test`.
-- Testes de browser: `npm run test:browser`, com Chromium/Playwright instalado.
-- A configuração de autenticação e as regras de segurança do Firebase têm de ser ativadas/publicadas separadamente: [docs/firebase/README.md](docs/firebase/README.md).
-- O formulário de playtest envia respostas para Firestore; a exportação privada para o Google Drive requer configuração administrativa: [docs/playtest-feedback.md](docs/playtest-feedback.md).
+Abrir em `http://127.0.0.1:8012/?expeditionPhase1=1&expeditionSave=1&validationSlot=manual-clean`, com um `validationSlot` de teste, sem importar saves reais.
 
-As leaderboards de teste não têm ainda validação de resultados autoritativa no servidor.
+## Repositório e segurança
+
+- Trabalhar exclusivamente em `development`, nunca alterar `main` por efeito de alterações nesta branch.
+- Não fazer deploy automático no Railway/Firebase; mudanças de produção precisam de autorização separada.
+- Não mudar as regras Firebase nem migrar saves reais durante a limpeza.
+- Os relatórios e decisões atuais estão em `docs/v012-*`. O histórico completo das versões anteriores continua acessível em Git e nos backups externos do projeto.
+
+> Nota técnica: o combate v0.12 ainda reutiliza funções da infraestrutura anterior dentro de `index.html`. O código morto restante só deve ser retirado depois de separar e testar as dependências usadas pelo combate atual. Esta limpeza inicial elimina o protótipo executável antigo, os calendários anteriores e suites de manutenção histórica; **não afirma que todo o motor inline já está desacoplado**.

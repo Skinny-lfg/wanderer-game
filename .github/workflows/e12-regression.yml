@@ -1,0 +1,63 @@
+name: E.1.2 regression T1-T5 (isolated)
+on:
+  push:
+    branches: [development]
+    paths:
+      - .github/workflows/e12-regression.yml
+  workflow_dispatch:
+jobs:
+  e12-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: E.1.2 native harness T1-T5
+        run: node tests/v012-phase-e12-harness.test.cjs
+      - name: E.1.3 nine genuine E200 attempts
+        env:
+          WANDERER_E11_RUNS: '9'
+        run: node scripts/v012-phase-e11-persistence-audit.cjs /tmp/wanderer-e13-results.json
+      - name: Upload E.1.3 trajectories
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wanderer-e13-nine-attempts
+          path: /tmp/wanderer-e13-results.json
+          if-no-files-found: ignore
+      - name: Validate audit harness syntax
+        run: |
+          node --check scripts/v012-affinity-combat-sim.cjs
+          node --check scripts/v012-phase-e11-persistence-audit.cjs
+
+  e2-progression-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: E.2 synthetic nine-player progression
+        env:
+          WANDERER_E11_RUNS: '270'
+        run: node scripts/v012-phase-e11-persistence-audit.cjs /tmp/wanderer-e2-results.json
+      - name: Aggregate E.2 resource metrics
+        run: |
+          node - <<'NODE'
+          const fs=require('fs'),d=JSON.parse(fs.readFileSync('/tmp/wanderer-e2-results.json','utf8'));
+          const sum=(xs,k)=>xs.reduce((s,x)=>s+(Number(x[k])||0),0);
+          for(const p of ['A','B','C']){
+            const a=d.agents.filter(x=>x.profile===p),r=d.rows.filter(x=>x.profile===p),losses=r.filter(x=>!x.win);
+            console.log('E2_METRICS '+JSON.stringify({profile:p,attempts:r.length,wins:sum(a,'wins'),defeats:sum(a,'defeats'),crafts:sum(a,'crafts'),upgrades:sum(a,'upgrades'),repeats:sum(a,'repeats'),runesClaimed:sum(a,'runeClaims'),goldEarned:sum(a,'goldEarned'),goldSpent:sum(a,'goldSpent'),fragmentsEarned:sum(a,'fragmentsEarned'),fragmentsSpent:sum(a,'fragmentsSpent'),startGold:sum(a.map(x=>x.initial),'gold'),endGold:sum(a.map(x=>x.final),'gold'),startFragments:sum(a.map(x=>x.initial),'fragments'),endFragments:sum(a.map(x=>x.final),'fragments'),finalUnlocks:a.map(x=>x.unlocked),fatalTelemetry:losses.filter(x=>x.fatalFight).length,defeatsLogged:losses.length,gearTierStart:a.map(x=>x.initial.meanGearTier),gearTierFinal:a.map(x=>x.final.meanGearTier)}));
+          }
+          NODE
+      - name: Upload E.2 full results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wanderer-e2-progression
+          path: /tmp/wanderer-e2-results.json
+          if-no-files-found: error

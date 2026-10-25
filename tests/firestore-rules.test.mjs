@@ -45,6 +45,25 @@ test('private saves require owner + profile, monotonic revision and bounded payl
  await assertFails(getDoc(doc(alice,'players/alice/saves/current')));
  await assertFails(setDoc(doc(alice,'players/alice/saves/current'),save(1)));
 });
+test('v0.12 cloud saves are private, owner-bound, versioned, monotonic and never deletable',async()=>{
+ const guest=alice;
+ const other=bob;
+ const path='players/alice/saves/v012';
+ let createdAt=serverTimestamp();
+ const record=rev=>({payload:'{"format":"wanderer-expedition"}',revision:rev,schemaVersion:13,format:'wanderer-expedition',createdAt,updatedAt:serverTimestamp()});
+ await assertSucceeds(setDoc(doc(guest,path),record(1)));
+ createdAt=(await getDoc(doc(guest,path))).data().createdAt;
+ await assertSucceeds(getDoc(doc(guest,path)));
+ await assertFails(getDoc(doc(other,path)));
+ await assertFails(setDoc(doc(other,path),record(2)));
+ await assertFails(setDoc(doc(guest,path),record(1)));
+ await assertSucceeds(setDoc(doc(guest,path),record(2)));
+ await assertFails(setDoc(doc(guest,path),{...record(3),schemaVersion:1}));
+ await assertFails(setDoc(doc(guest,path),{...record(3),payload:'x'.repeat(700001)}));
+ await assertFails(deleteDoc(doc(guest,path)));
+ const unverified=env.authenticatedContext('email_unverified',{firebase:{sign_in_provider:'password'},email_verified:false}).firestore();
+ await assertSucceeds(setDoc(doc(unverified,'players/email_unverified/saves/v012'),{...record(1),createdAt:serverTimestamp()}));
+});
 test('current depth resets per attempt, D200 personal best never increases, client claims stay unverified',async()=>{
  const ref=doc(alice,'testSeasons/v092-launch-1/deepest/alice');
  const claim={deepest:20,attemptId:'run-1',verified:false,updatedAt:serverTimestamp()};
@@ -107,4 +126,14 @@ test('feedback inbox accepts a bounded playtest report and forbids reading or sp
  await assertFails(setDoc(item,good));
  await assertFails(deleteDoc(item));
  await assertFails(setDoc(doc(env.unauthenticatedContext().firestore(),'feedbackInbox/anon_1'),good));
+});
+test('v0.12 feedback is private, create-only, bounded and rate-limited through an atomic lock',async()=>{
+ const guest=env.authenticatedContext('feedback_guest').firestore(),other=env.authenticatedContext('feedback_other').firestore();
+ const feedback=doc(guest,'feedbackInboxV012/feedback_guest_report1'),limit=doc(guest,'feedbackRateLimits/feedback_guest');
+ const report={uid:'feedback_guest',category:'bug',description:'The reward panel did not open.',steps:'Complete a Realm then click reward.',appVersion:'0.12.0',commit:'af5e0d9',screen:'camp',viewport:'390x844',browser:'',technical:'',createdAt:serverTimestamp()};
+ await assertFails(setDoc(feedback,report));
+ const batch=writeBatch(guest);batch.set(feedback,report);batch.set(limit,{uid:'feedback_guest',updatedAt:serverTimestamp()});await assertSucceeds(batch.commit());
+ await assertFails(getDoc(feedback));await assertFails(getDoc(doc(other,'feedbackInboxV012/feedback_guest_report1')));
+ await assertFails(setDoc(feedback,report));
+ const early=writeBatch(guest);early.set(doc(guest,'feedbackInboxV012/feedback_guest_report2'),{...report,createdAt:serverTimestamp()});early.update(limit,{updatedAt:serverTimestamp()});await assertFails(early.commit());
 });

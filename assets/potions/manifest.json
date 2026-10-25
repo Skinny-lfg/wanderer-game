@@ -1,0 +1,25 @@
+{
+  "sourceFolder": "Drive/02 - Assets/Packs/08 - Consumables & Loot/01 - Potions",
+  "sources": {
+    "Health_Potion_standard.png": "1uwlR2zXMAVIbRpetw4XoPehnASuXJtWb",
+    "Mana_Potion_standard.png": "1hhBFyLL6W1ISlQLx9nuWvqRWPya1qbJb",
+    "Potion_of_Might_enhanced.png": "1DNrMvJplAHL-zaPwTcPdL_n62bzRY6aV",
+    "Arcane_Elixir.png": "1gQecrv285eShh9-ae4HVeQE35ULO2V_N",
+    "Ironhide_Tonic.png": "1r6PCveTCXJP8Jz5n2Ex3okvAWUvPqUPo",
+    "Haste_Draught.png": "1OGJQ8XhdG1EvPoBaiyQ8p1HovoKI1RuP",
+    "Potion_of_Fortune.png": "11LWOFjibtIPKxqFhmXZNY5B8PlZsmhSJ",
+    "Barrier_Flask.png": "1z4YmGaaw0FdxvBVYHUHZ6uDLi-y2KtqR"
+  },
+  "idToImage": {
+    "health": "potion_health_standard.webp",
+    "mana": "potion_mana_standard.webp",
+    "might": "potion_might.webp",
+    "arcane": "potion_arcane.webp",
+    "ironhide": "potion_ironhide.webp",
+    "haste": "potion_haste.webp",
+    "fortune": "potion_fortune.webp",
+    "barrier": "potion_barrier.webp"
+  },
+  "unmapped": [],
+  "mappingNote": "All eight catalog potions map to named source images from the Drive Potions folder."
+}

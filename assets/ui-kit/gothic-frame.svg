@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 720" fill="none" aria-hidden="true">
+<!-- Nine-slice frame: slice 72 SVG units on each side. The centre remains transparent. -->
+<defs>
+  <linearGradient id="iron" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#806744"/><stop offset=".33" stop-color="#332b24"/><stop offset=".67" stop-color="#b18b52"/><stop offset="1" stop-color="#211b16"/></linearGradient>
+  <linearGradient id="ember" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#b99459"/><stop offset="1" stop-color="#423023"/></linearGradient>
+  <g id="corner" stroke-linejoin="round">
+    <path d="M9 69V32Q9 9 32 9H69" stroke="#100e0c" stroke-width="17"/>
+    <path d="M9 69V32Q9 9 32 9H69" stroke="url(#iron)" stroke-width="12"/>
+    <path d="M14 68V33Q14 14 33 14H68" stroke="#c19a60" stroke-width="1.5"/>
+    <path d="M20 66V35Q20 20 35 20H66" stroke="#1d1712" stroke-width="2.5"/>
+    <path d="M9 37Q23 41 37 9M9 54Q23 54 54 9" stroke="#6d5738" stroke-width="2.5"/>
+    <path d="M19 19L31 9L44 18L35 33L18 44L9 31Z" fill="#2b2119" stroke="#ab864d" stroke-width="2"/>
+    <path d="M20 20L33 20L20 33Z" fill="#80603c" stroke="#d9b779"/>
+    <path d="M25 13Q41 25 49 38L38 49Q24 41 13 25" stroke="#5f4b35" stroke-width="2"/>
+    <path d="M37 30L44 37L37 44L30 37Z" fill="#b18b52" stroke="#2d2219"/>
+    <circle cx="14" cy="57" r="2.5" fill="#ba9460" stroke="#261b14"/>
+    <circle cx="57" cy="14" r="2.5" fill="#ba9460" stroke="#261b14"/>
+  </g>
+</defs>
+<!-- Outer and inner edge rails; stretch independently under CSS border-image. -->
+<path d="M72 8H888M72 20H888M72 26H888" stroke="#221a14" stroke-width="7"/>
+<path d="M72 11H888M72 24H888" stroke="url(#iron)" stroke-width="3"/>
+<path d="M72 30H888" stroke="#947149" stroke-width="1" opacity=".75"/>
+<path d="M72 712H888M72 700H888M72 694H888" stroke="#221a14" stroke-width="7"/>
+<path d="M72 709H888M72 696H888" stroke="url(#iron)" stroke-width="3"/>
+<path d="M72 690H888" stroke="#947149" stroke-width="1" opacity=".75"/>
+<path d="M8 72V648M20 72V648M26 72V648M952 72V648M940 72V648M934 72V648" stroke="#221a14" stroke-width="7"/>
+<path d="M11 72V648M24 72V648M949 72V648M936 72V648" stroke="url(#iron)" stroke-width="3"/>
+<path d="M30 72V648M930 72V648" stroke="#947149" stroke-width="1" opacity=".75"/>
+<!-- Four matching corner ornaments. -->
+<use href="#corner"/>
+<use href="#corner" transform="translate(960 0) scale(-1 1)"/>
+<use href="#corner" transform="translate(0 720) scale(1 -1)"/>
+<use href="#corner" transform="translate(960 720) scale(-1 -1)"/>
+</svg>

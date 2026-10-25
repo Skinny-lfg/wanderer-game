@@ -1,0 +1,513 @@
+{
+  "sizes": [
+    {
+      "width": 390,
+      "height": 844
+    },
+    {
+      "width": 768,
+      "height": 1024
+    },
+    {
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "width": 1920,
+      "height": 1080
+    }
+  ],
+  "results": [
+    {
+      "screen": "event-decision",
+      "viewport": 390,
+      "errors": [],
+      "scrollWidth": 390,
+      "missingImages": [],
+      "violations": [
+        {
+          "id": "page-has-heading-one",
+          "nodes": [
+            [
+              "html"
+            ]
+          ]
+        },
+        {
+          "id": "region",
+          "nodes": [
+            [
+              "#wallet"
+            ]
+          ]
+        }
+      ],
+      "selection": "Selected · Restore health. Ready to confirm.",
+      "confirmDisabled": false,
+      "bodyClass": "phase3IntegratedPreview",
+      "optionDisplay": "grid",
+      "optionGrid": "36.5469px 269.453px",
+      "optionHeight": 85.578125,
+      "goldText": "v0.12.0 · Local playtest\n200 Gold\n200 Fragments",
+      "zoom200": {
+        "viewport": 390,
+        "scrollWidth": 390,
+        "overflow": false,
+        "optionRects": [
+          {
+            "left": 44,
+            "right": 346,
+            "width": 302,
+            "inside": true
+          },
+          {
+            "left": 44,
+            "right": 346,
+            "width": 302,
+            "inside": true
+          }
+        ]
+      }
+    },
+    {
+      "screen": "event-decision",
+      "viewport": 768,
+      "errors": [],
+      "scrollWidth": 768,
+      "missingImages": [],
+      "violations": [
+        {
+          "id": "page-has-heading-one",
+          "nodes": [
+            [
+              "html"
+            ]
+          ]
+        },
+        {
+          "id": "region",
+          "nodes": [
+            [
+              "#wallet"
+            ]
+          ]
+        }
+      ],
+      "selection": "Selected · Restore health. Ready to confirm.",
+      "confirmDisabled": false,
+      "bodyClass": "phase3IntegratedPreview",
+      "optionDisplay": "grid",
+      "optionGrid": "36.5469px 266.453px",
+      "optionHeight": 85.578125,
+      "goldText": "v0.12.0 · Local playtest\n200 Gold\n200 Fragments"
+    },
+    {
+      "screen": "event-decision",
+      "viewport": 1440,
+      "errors": [],
+      "scrollWidth": 1440,
+      "missingImages": [],
+      "violations": [
+        {
+          "id": "page-has-heading-one",
+          "nodes": [
+            [
+              "html"
+            ]
+          ]
+        },
+        {
+          "id": "region",
+          "nodes": [
+            [
+              "#wallet"
+            ]
+          ]
+        }
+      ],
+      "selection": "Selected · Restore health. Ready to confirm.",
+      "confirmDisabled": false,
+      "bodyClass": "phase3IntegratedPreview",
+      "optionDisplay": "grid",
+      "optionGrid": "36.5469px 512.453px",
+      "optionHeight": 85.578125,
+      "goldText": "v0.12.0 · Local playtest\n200 Gold\n200 Fragments"
+    },
+    {
+      "screen": "event-decision",
+      "viewport": 1920,
+      "errors": [],
+      "scrollWidth": 1920,
+      "missingImages": [],
+      "violations": [
+        {
+          "id": "page-has-heading-one",
+          "nodes": [
+            [
+              "html"
+            ]
+          ]
+        },
+        {
+          "id": "region",
+          "nodes": [
+            [
+              "#wallet"
+            ]
+          ]
+        }
+      ],
+      "selection": "Selected · Restore health. Ready to confirm.",
+      "confirmDisabled": false,
+      "bodyClass": "phase3IntegratedPreview",
+      "optionDisplay": "grid",
+      "optionGrid": "36.5469px 512.453px",
+      "optionHeight": 85.578125,
+      "goldText": "v0.12.0 · Local playtest\n200 Gold\n200 Fragments"
+    },
+    {
+      "screen": "functional",
+      "functional": {
+        "allEvents": [
+          {
+            "id": "traveling_merchant",
+            "heading": "Traveling Merchant",
+            "cards": [
+              {
+                "title": "Restore health",
+                "benefit": "+35% HP",
+                "terms": "Cost · 28 Gold · Have 0 Gold",
+                "unavailable": true
+              },
+              {
+                "title": "Prepare for battle",
+                "benefit": "+10% Attack · 3 combats",
+                "terms": "Cost · 28 Gold · Have 0 Gold",
+                "unavailable": true
+              }
+            ],
+            "overflow": false
+          },
+          {
+            "id": "smugglers_caravan",
+            "heading": "Smuggler’s Caravan",
+            "cards": [
+              {
+                "title": "Restore Mana",
+                "benefit": "+40% Mana",
+                "terms": "Cost · 11 Fragments · Have 0 Fragments",
+                "unavailable": true
+              },
+              {
+                "title": "Harden defenses",
+                "benefit": "+10% Defense · 3 combats",
+                "terms": "Cost · 11 Fragments · Have 0 Fragments",
+                "unavailable": true
+              }
+            ],
+            "overflow": false
+          },
+          {
+            "id": "relic_collector",
+            "heading": "Relic Collector",
+            "cards": [
+              {
+                "title": "Take Gold",
+                "benefit": "Gain 6 Gold",
+                "terms": "Condition · No Bag item · fallback reward",
+                "unavailable": false
+              },
+              {
+                "title": "Take Fragments",
+                "benefit": "Gain 4 Fragments",
+                "terms": "Condition · No Bag item · fallback reward",
+                "unavailable": false
+              }
+            ],
+            "overflow": false
+          },
+          {
+            "id": "cursed_artificer",
+            "heading": "Cursed Artificer",
+            "cards": [
+              {
+                "title": "Empower an owned item",
+                "benefit": "+10% power · 3 combats",
+                "terms": "Condition · No Bag item to sacrifice.",
+                "unavailable": true
+              },
+              {
+                "title": "Claim a Barrier",
+                "benefit": "15% of max HP",
+                "terms": "Condition · No Bag item to sacrifice.",
+                "unavailable": true
+              }
+            ],
+            "overflow": false
+          },
+          {
+            "id": "cursed_altar",
+            "heading": "Cursed Altar",
+            "cards": [
+              {
+                "title": "Embrace the altar",
+                "benefit": "+10% Attack · this Expedition",
+                "terms": "Cost · 20% max HP · Condition · Need more than 28 HP · Have 15",
+                "unavailable": true
+              },
+              {
+                "title": "Defy the altar",
+                "benefit": "+10% Defense · this Expedition",
+                "terms": "Cost · 20% max HP · Condition · Need more than 28 HP · Have 15",
+                "unavailable": true
+              }
+            ],
+            "overflow": false
+          },
+          {
+            "id": "soul_mirror",
+            "heading": "Soul Mirror",
+            "cards": [
+              {
+                "title": "Change your build",
+                "benefit": "Replace one passive with the displayed eligible passive",
+                "terms": "Condition · No eligible passive to replace.",
+                "unavailable": true
+              },
+              {
+                "title": "Keep your build",
+                "benefit": "No reward; no change",
+                "unavailable": false
+              }
+            ],
+            "overflow": false
+          },
+          {
+            "id": "whispering_idol",
+            "heading": "Whispering Idol",
+            "cards": [
+              {
+                "title": "Accept the curse",
+                "benefit": "Gain 29 Gold",
+                "terms": "Risk · +10% incoming damage · 3 combats",
+                "unavailable": false
+              },
+              {
+                "title": "Accept the curse",
+                "benefit": "Gain 14 Fragments",
+                "terms": "Risk · +10% incoming damage · 3 combats",
+                "unavailable": false
+              }
+            ],
+            "overflow": false
+          },
+          {
+            "id": "echo_shrine",
+            "heading": "Echo Shrine",
+            "cards": [
+              {
+                "title": "Empower a passive",
+                "benefit": "+0.5 rank · 3 combats",
+                "terms": "Condition · No eligible passive to empower.",
+                "unavailable": true
+              },
+              {
+                "title": "Restore Mana",
+                "benefit": "+15% Mana",
+                "unavailable": false
+              }
+            ],
+            "overflow": false
+          },
+          {
+            "id": "cursed_chest",
+            "heading": "Cursed Chest",
+            "cards": [
+              {
+                "title": "Take the offering",
+                "benefit": "Gain 9 Gold",
+                "unavailable": false
+              },
+              {
+                "title": "Open the chest",
+                "benefit": "50% chance of equipment",
+                "terms": "Risk · Otherwise lose 15% max HP · non-lethal",
+                "unavailable": false
+              }
+            ],
+            "overflow": false
+          },
+          {
+            "id": "forgotten_arsenal",
+            "heading": "Forgotten Arsenal",
+            "cards": [
+              {
+                "title": "Claim equipment",
+                "benefit": "One item at Expedition E1",
+                "unavailable": false
+              },
+              {
+                "title": "Take Fragments",
+                "benefit": "Gain 10 Fragments",
+                "unavailable": false
+              }
+            ],
+            "overflow": false
+          },
+          {
+            "id": "runic_vault",
+            "heading": "Runic Vault",
+            "cards": [
+              {
+                "title": "Invoke the Rune",
+                "benefit": "+20% equipped Rune stats · 3 combats",
+                "terms": "Condition · Equip a Rune first.",
+                "unavailable": true
+              },
+              {
+                "title": "Take Fragments",
+                "benefit": "Gain 11 Fragments",
+                "unavailable": false
+              }
+            ],
+            "overflow": false
+          },
+          {
+            "id": "bounty_writ",
+            "heading": "Bounty Writ",
+            "cards": [
+              {
+                "title": "Accept the bounty",
+                "benefit": "Next Elite: +25% HP/Attack; +50% Gold/Fragments and guaranteed equipment",
+                "unavailable": false
+              },
+              {
+                "title": "Reject the writ",
+                "benefit": "No reward; no change",
+                "unavailable": false
+              }
+            ],
+            "overflow": false
+          },
+          {
+            "id": "restless_spring",
+            "heading": "Restless Spring",
+            "cards": [
+              {
+                "title": "Drink from the spring",
+                "benefit": "Recover 35% HP",
+                "unavailable": false
+              },
+              {
+                "title": "Take the spring’s offering",
+                "benefit": "Gain 4 Fragments",
+                "terms": "Condition · This build has no Mana.",
+                "unavailable": false
+              }
+            ],
+            "overflow": false
+          },
+          {
+            "id": "fallen_wanderer",
+            "heading": "Fallen Wanderer",
+            "cards": [
+              {
+                "title": "Aid the wanderer",
+                "benefit": "Recover 20% HP and gain 10% Barrier",
+                "terms": "Cost · 11 Gold · Have 0 Gold",
+                "unavailable": true
+              },
+              {
+                "title": "Take provisions",
+                "benefit": "Recover 15% HP and 15% Mana",
+                "unavailable": false
+              }
+            ],
+            "overflow": false
+          },
+          {
+            "id": "oracle_of_paths",
+            "heading": "Oracle of Paths",
+            "cards": [
+              {
+                "title": "Choose an Affinity",
+                "benefit": "Guarantee it appears in the next non-boss offer",
+                "terms": "Condition · Choose one currently allowed Affinity.",
+                "unavailable": false
+              },
+              {
+                "title": "Take Fragments",
+                "benefit": "Gain 6 Fragments",
+                "unavailable": false
+              }
+            ],
+            "overflow": false
+          },
+          {
+            "id": "last_ember",
+            "heading": "Last Ember",
+            "cards": [
+              {
+                "title": "Trade a passive for health",
+                "benefit": "Recover 35% HP",
+                "terms": "Condition · No eligible passive to reduce. · Risk · Selected passive loses 0.5 rank · 3 combats",
+                "unavailable": true
+              },
+              {
+                "title": "Trade a passive for Mana",
+                "benefit": "Recover 40% Mana",
+                "terms": "Condition · No eligible passive to reduce. · Risk · Selected passive loses 0.5 rank · 3 combats",
+                "unavailable": true
+              }
+            ],
+            "overflow": false
+          }
+        ],
+        "shortages": {
+          "merchant": {
+            "status": "Selected · Prepare for battle. Need 28 Gold; current balance is 0.",
+            "confirmDisabled": true,
+            "selected": "true",
+            "axe": []
+          },
+          "fragments": {
+            "status": "Selected · Restore Mana. Need 11 Fragments; current balance is 0.",
+            "confirmDisabled": true,
+            "axe": []
+          }
+        },
+        "merchantPurchase": {
+          "goldDelta": 28,
+          "buff": 0.1,
+          "eventCleared": true
+        },
+        "freeChoice": {
+          "fragmentDelta": 10,
+          "eventCleared": true
+        },
+        "decline": {
+          "goldDelta": 0,
+          "fragmentDelta": 0,
+          "eventCleared": true
+        },
+        "relicCollector": {
+          "title": "Trade a Bag item",
+          "benefit": "Gain 14 Gold",
+          "status": "Selected · Trade a Bag item. Ready to confirm."
+        },
+        "touch": {
+          "pressed": "true",
+          "confirmDisabled": false
+        },
+        "selection": {
+          "status": "Selected · Prepare for battle. Ready to confirm.",
+          "confirmText": "Confirm Option 2",
+          "confirmDisabled": false,
+          "pressed": "true"
+        },
+        "axe": [],
+        "jsErrors": []
+      }
+    }
+  ]
+}

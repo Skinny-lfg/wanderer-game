@@ -1,0 +1,245 @@
+/* Wanderer v0.12 — post-Expedition vendor + visual tuning, 25 Oct.
+   Keep source asset dimensions and layout ratios unchanged. */
+
+/* A single consistent three-part START button: do not paint the older hidden
+   background PNGs underneath the new layers. Narrow the repeating middle strip. */
+body.phase3IntegratedPreview .phase3Camp button.phase3Start,
+body.phase3IntegratedPreview .phase3CampStickyStart button.phase3Start,
+body.phase3IntegratedPreview .phase3Camp button.phase3Start:hover:not(:disabled),
+body.phase3IntegratedPreview .phase3CampStickyStart button.phase3Start:hover:not(:disabled){
+  box-sizing:border-box!important;
+  width:min(100%,445px)!important;
+  max-width:445px!important;
+  height:94px!important;min-height:94px!important;
+  padding:0 17%!important;
+  background:none!important;
+  background-image:none!important;
+  background-color:transparent!important;
+  box-shadow:none!important;
+  border:none!important;
+  overflow:visible!important;
+  display:grid!important;place-items:center!important;
+  white-space:nowrap!important;
+  font-size:clamp(15px,1.85vw,22px)!important;
+  line-height:1!important;
+}
+body.phase3IntegratedPreview button.phase3Start::before {
+  content:""!important;
+  inset:28% 19% 28% 19%!important;
+  top:28%!important;bottom:28%!important;
+  left:19%!important;right:19%!important;
+  z-index:1!important;
+  opacity:1!important;
+  background-image:url("../assets/ui-kit/original/hud/04_expedition_center_tile.png")!important;
+  background-color:transparent!important;
+  background-size:auto 100%!important;
+  background-position:center!important;
+  background-repeat:repeat-x!important;
+  box-shadow:none!important;
+  border:0!important;
+}
+body.phase3IntegratedPreview button.phase3Start::after {
+  content:""!important;
+  inset:0!important;
+  z-index:2!important;
+  background-image:url("../assets/ui-kit/original/hud/03_expedition_left.png"),
+                   url("../assets/ui-kit/original/hud/05_expedition_right.png")!important;
+  background-position:left center,right center!important;
+  background-size:auto 100%,auto 100%!important;
+  background-repeat:no-repeat,no-repeat!important;
+  box-shadow:none!important;
+}
+body.phase3IntegratedPreview button.phase3Start>.phase3StartText{
+  z-index:3!important;
+  position:relative!important;
+  display:block!important;
+  white-space:nowrap!important;
+  font-size:inherit!important;
+  line-height:1!important;
+  text-shadow:0 2px 4px #000c!important;
+}
+@media(max-width:700px){
+ body.phase3IntegratedPreview .phase3Camp button.phase3Start,
+ body.phase3IntegratedPreview .phase3CampStickyStart button.phase3Start{
+   width:min(100%,360px)!important;
+   height:76px!important;min-height:76px!important;
+   padding:0 16%!important;
+   font-size:clamp(12px,3.65vw,18px)!important;
+ }
+ body.phase3IntegratedPreview button.phase3Start::before{
+   left:18%!important;right:18%!important;
+   top:28.5%!important;bottom:28.5%!important;
+ }
+}
+
+/* Text block: slightly more darkness behind heading, dropdown and instructions,
+   but keep the upper portion of the illustrated portal visible. */
+body.phase3IntegratedPreview .phase3CampGrid>.phase3ExpeditionPanel::before{
+  content:""!important;
+  z-index:1!important;
+  background:linear-gradient(
+    180deg,
+    rgba(8,7,13,.04) 0%,
+    rgba(9,7,14,.13) 27%,
+    rgba(9,7,15,.47) 43%,
+    rgba(8,7,13,.82) 58%,
+    rgba(8,7,13,.91) 74%,
+    rgba(8,7,13,.96) 100%
+  )!important;
+  pointer-events:none!important;
+}
+
+/* Arena shows the last chosen Realm, a little darker but still legible. */
+body.phase3IntegratedPreview #scene>.phase3ArenaBackdrop{
+  opacity:.72!important;
+  filter:brightness(.67) saturate(.90)!important;
+}
+
+/* Shared subtle red hit reaction, without white/bright flashes.
+   The same keyframes apply to hero and enemy. */
+@keyframes phase3RedOnlyHit {
+  0%,100%{filter:none}
+  25%,56%{
+    filter:sepia(.28) saturate(2.4) hue-rotate(-40deg) brightness(.92)
+      drop-shadow(0 0 3px rgba(170,31,43,.30));
+  }
+}
+body.phase3IntegratedPreview #scene #heroPortrait.phase3DamageFlash,
+body.phase3IntegratedPreview #scene #enemyPortrait.phase3DamageFlash:not(.fxDefeated){
+  animation:phase3RedOnlyHit .38s ease-out!important;
+}
+@media(prefers-reduced-motion:reduce){
+ body.phase3IntegratedPreview #scene #heroPortrait.phase3DamageFlash,
+ body.phase3IntegratedPreview #scene #enemyPortrait.phase3DamageFlash:not(.fxDefeated){
+   animation:none!important;
+   filter:sepia(.25) saturate(2.2) hue-rotate(-40deg) brightness(.92)!important;
+ }
+}
+
+/* Creature presentation only: source GIF dimensions and transparency are preserved. */
+body.phase3IntegratedPreview .scene #enemyPortrait[data-attack-src*="hollow_shade_"]{width:min(225px,100%)!important;height:auto!important;max-height:none!important;object-fit:contain!important}
+body.phase3IntegratedPreview .scene #enemyPortrait[data-attack-src*="grave_lantern_"]{width:min(222px,100%)!important;height:auto!important;max-height:none!important;object-fit:contain!important}
+@media(max-width:700px){body.phase3IntegratedPreview .scene #enemyPortrait[data-attack-src*="grave_lantern_"]{width:min(150px,100%)!important}}
+/* Definitive modular START button: exactly three images, two ends and one center tile. */
+body.phase3IntegratedPreview :is(.phase3Camp .phase3ExpeditionPanel,.phase3CampStickyStart) button.phase3Start,
+body.phase3IntegratedPreview :is(.phase3Camp .phase3ExpeditionPanel,.phase3CampStickyStart) button.phase3Start:hover:not(:disabled){
+  background:none!important;background-image:none!important;background-color:transparent!important;
+  box-shadow:none!important;isolation:isolate!important;overflow:visible!important;
+}
+body.phase3IntegratedPreview :is(.phase3Camp .phase3ExpeditionPanel,.phase3CampStickyStart) button.phase3Start::before{
+  content:""!important;position:absolute!important;top:28%!important;bottom:28%!important;
+  left:19%!important;right:19%!important;
+  background:url("../assets/ui-kit/original/hud/04_expedition_center_tile.png") center / auto 100% repeat-x!important;
+  opacity:1!important;border:0!important;box-shadow:none!important;pointer-events:none!important;
+}
+body.phase3IntegratedPreview :is(.phase3Camp .phase3ExpeditionPanel,.phase3CampStickyStart) button.phase3Start::after{
+  content:""!important;position:absolute!important;inset:0!important;
+  background-image:url("../assets/ui-kit/original/hud/03_expedition_left.png"),url("../assets/ui-kit/original/hud/05_expedition_right.png")!important;
+  background-position:left center,right center!important;background-repeat:no-repeat,no-repeat!important;
+  background-size:auto 100%,auto 100%!important;pointer-events:none!important;
+}
+/* START button: hover changes lighting only, never its geometry or label position.
+   Center the label in the same fixed box in normal/hover/focus states. */
+/* Fixed typography and box geometry for all interaction states.
+   Old hover selectors use a different font-size and must not shrink the button,
+   otherwise the flex column above it visibly drops. */
+body.phase3IntegratedPreview :is(.phase3Camp .phase3ExpeditionPanel,.phase3CampStickyStart) button.phase3Start,
+body.phase3IntegratedPreview :is(.phase3Camp .phase3ExpeditionPanel,.phase3CampStickyStart) button.phase3Start:hover:not(:disabled),
+body.phase3IntegratedPreview :is(.phase3Camp .phase3ExpeditionPanel,.phase3CampStickyStart) button.phase3Start:focus-visible{
+  box-sizing:border-box!important;
+  position:relative!important;
+  display:grid!important;place-items:center!important;
+  width:min(100%,445px)!important;max-width:445px!important;
+  height:94px!important;min-height:94px!important;max-height:94px!important;
+  flex-shrink:0!important;
+  margin:10px auto 0!important;padding:0 17%!important;
+  border:0!important;border-radius:0!important;
+  text-align:center!important;white-space:nowrap!important;
+  font:700 clamp(15px,1.85vw,22px)/1 var(--font-head)!important;
+  letter-spacing:0!important;
+  transform:none!important;translate:none!important;
+}
+body.phase3IntegratedPreview :is(.phase3Camp .phase3ExpeditionPanel,.phase3CampStickyStart) button.phase3Start>.phase3StartText,
+body.phase3IntegratedPreview :is(.phase3Camp .phase3ExpeditionPanel,.phase3CampStickyStart) button.phase3Start:hover:not(:disabled)>.phase3StartText,
+body.phase3IntegratedPreview :is(.phase3Camp .phase3ExpeditionPanel,.phase3CampStickyStart) button.phase3Start:focus-visible>.phase3StartText{
+  position:absolute!important;inset:0!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  box-sizing:border-box!important;
+  width:100%!important;height:100%!important;
+  margin:0!important;padding:0!important;
+  transform:none!important;translate:none!important;
+  text-align:center!important;white-space:nowrap!important;
+  font:700 clamp(15px,1.85vw,22px)/1 var(--font-head)!important;
+  letter-spacing:0!important;
+}
+@media(max-width:700px){
+  body.phase3IntegratedPreview :is(.phase3Camp .phase3ExpeditionPanel,.phase3CampStickyStart) button.phase3Start,
+  body.phase3IntegratedPreview :is(.phase3Camp .phase3ExpeditionPanel,.phase3CampStickyStart) button.phase3Start:hover:not(:disabled),
+  body.phase3IntegratedPreview :is(.phase3Camp .phase3ExpeditionPanel,.phase3CampStickyStart) button.phase3Start:focus-visible{
+    width:min(100%,360px)!important;max-width:360px!important;
+    height:76px!important;min-height:76px!important;max-height:76px!important;
+    padding:0 16%!important;
+    font:700 clamp(12px,3.65vw,18px)/1 var(--font-head)!important;
+  }
+  body.phase3IntegratedPreview :is(.phase3Camp .phase3ExpeditionPanel,.phase3CampStickyStart) button.phase3Start>.phase3StartText,
+  body.phase3IntegratedPreview :is(.phase3Camp .phase3ExpeditionPanel,.phase3CampStickyStart) button.phase3Start:hover:not(:disabled)>.phase3StartText,
+  body.phase3IntegratedPreview :is(.phase3Camp .phase3ExpeditionPanel,.phase3CampStickyStart) button.phase3Start:focus-visible>.phase3StartText{
+    font:700 clamp(12px,3.65vw,18px)/1 var(--font-head)!important;
+  }
+}
+/* Match the other mobs' horizontal mirror for elite idle and attack assets. */
+body.phase3IntegratedPreview .scene .eliteCombatant #enemyPortrait[data-elite-type]{
+  transform:scaleX(-1)!important;transform-origin:center bottom!important;object-fit:contain!important;
+}
+/* Inventory and Between Realms use the same bounded equipment dialog.
+   Rings preserve the existing compact width; lengthy comparisons scroll inside. */
+body.phase3IntegratedPreview dialog.itemDialog.equipmentItemDialog[open]{
+  box-sizing:border-box!important;
+  width:min(480px,calc(100vw - 24px))!important;
+  max-width:min(480px,calc(100vw - 24px))!important;
+  max-height:min(72dvh,600px)!important;
+  height:fit-content!important;
+  overflow-x:hidden!important;overflow-y:auto!important;
+  overscroll-behavior:contain;
+}
+body.phase3IntegratedPreview dialog.itemDialog.equipmentItemDialog.equipmentStandardDialog[open]{
+  width:min(640px,calc(100vw - 24px))!important;
+  max-width:min(640px,calc(100vw - 24px))!important;
+}
+/* Explanatory copy uses legible sans-serif, while Gothic headings remain unchanged. */
+body.phase3IntegratedPreview :is(.phase3PassiveDescription,.phase3PassiveTooltip p,.phase3PassiveInline p,.phase3AffinityPassiveDescriptions p,.potionEffect,.inspect p,.dialogQuestion,.phase3EventDescription){
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif!important;
+  font-size:14px!important;font-weight:400!important;line-height:1.55!important;letter-spacing:0!important;
+}
+body.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveDescription{
+  font:400 13px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif!important;
+}
+@media(max-width:700px){
+ body.phase3IntegratedPreview :is(.phase3Camp .phase3ExpeditionPanel,.phase3CampStickyStart) button.phase3Start::before{top:28.5%!important;bottom:28.5%!important;left:18%!important;right:18%!important}
+ body.phase3IntegratedPreview dialog.itemDialog.equipmentItemDialog[open]{
+   width:calc(100vw - 20px)!important;max-width:calc(100vw - 20px)!important;
+   max-height:min(82dvh,680px)!important;
+ }
+ body.phase3IntegratedPreview dialog.itemDialog.equipmentItemDialog.equipmentStandardDialog[open]{
+   width:calc(100vw - 20px)!important;max-width:calc(100vw - 20px)!important;
+ }
+}
+
+/* Recenter the image content within the original fixed portal frame.
+   object-position cannot move the element outside the panel (unlike scale/translate). */
+body.phase3IntegratedPreview .phase3CampGrid>.phase3ExpeditionPanel>.phase3Portal{
+  transform:none!important;
+  clip-path:none!important;
+  object-position:calc(50% + 11px) 35%!important;
+}
+@media(max-width:700px){
+ body.phase3IntegratedPreview .phase3CampGrid>.phase3ExpeditionPanel>.phase3Portal{
+  object-position:calc(50% + 7px) 35%!important;
+ }
+}
+
+/* Boss portraits face the hero in their original art; mob GIF mirroring must not flip them. */
+body.phase3IntegratedPreview .scene #enemyPortrait[data-boss-style]:not([data-boss-style=""]){
+ transform:none!important;transform-origin:center bottom!important;
+ object-fit:contain!important;
+}

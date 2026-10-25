@@ -1,6 +1,6 @@
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js';
 import {getAuth,applyActionCode,verifyPasswordResetCode,confirmPasswordReset,checkActionCode} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js';
-import {firebaseConfig,assertProductionFirebaseConfig} from './firebase-config.mjs?v=v0110-production-1';
+import {firebaseConfig,assertDevFirebaseConfig} from './firebase-config.mjs?v=v012-production-config-3';
 
 const heading=document.getElementById('heading');
 const status=document.getElementById('status');
@@ -10,7 +10,7 @@ const mode=params.get('mode'),code=params.get('oobCode'),requestedKey=params.get
 function show(text,type=''){status.textContent=text;status.className=type;}
 function fail(){heading.textContent='Link expired or invalid';show('This secure link could not be used. Return to Wanderer and request a new email.','error');form.hidden=true;}
 try {
- assertProductionFirebaseConfig(firebaseConfig);
+ assertDevFirebaseConfig(firebaseConfig);
  if(requestedKey && requestedKey!==firebaseConfig.apiKey)throw Error('Link belongs to another Firebase project');
  if(!code || !['verifyEmail','resetPassword','recoverEmail'].includes(mode))throw Error('Invalid action');
  const auth=getAuth(initializeApp(firebaseConfig));

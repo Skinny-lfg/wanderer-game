@@ -1,14 +1,15 @@
-name: Development regression tests
+name: Development v0.12 checks
 on:
   push:
     branches: [development]
   pull_request:
-    branches: [development]
+    branches: [development, main]
   workflow_dispatch:
+
 jobs:
-  smoke:
+  current-expedition:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -16,13 +17,12 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - name: Shatter and Double Strike isolated A/B
-        run: node tests/v093-shatter-double-strike.cjs
-      - run: npm test
+      - name: Current v0.12 Expedition, save and safety tests
+        run: npm test
+      - name: Keep PvP stats extractor consistent
+        run: node scripts/build-pvp-stats.cjs --check
 
-  # Intentionally opt-in: normal development pushes keep the fast smoke check.
-  # Add [audit] to a development commit message to run the full pre-release suite.
-  prerelease-audit:
+  full-playtest-audit:
     if: contains(github.event.head_commit.message, '[audit]') || github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && contains(github.event.pull_request.title, '[audit]'))
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -34,78 +34,100 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '21'
       - run: npm ci
-      - name: Prepare headless browser
+      - name: Prepare Chromium
         run: |
           if command -v google-chrome >/dev/null 2>&1; then
             sudo ln -sf "$(command -v google-chrome)" /usr/bin/chromium
           else
             npx playwright install --with-deps chromium
-            CHROME="$(find "$HOME/.cache/ms-playwright" -type f -path '*/chrome-linux64/chrome' | head -n 1)"
+            CHROME="$(find "$HOME/.cache/ms-playwright" -type f -path '*/chrome-linux64/chrome' -o -path '*/chrome-linux/chrome' | head -n 1)"
             test -n "$CHROME"
             sudo ln -sf "$CHROME" /usr/bin/chromium
           fi
           /usr/bin/chromium --version
-      - name: Start isolated local test server
+      - name: Start isolated local web server
         run: |
-          python3 -m http.server 8012 --bind 127.0.0.1 >/tmp/wanderer-audit-http.log 2>&1 &
-          echo $! >/tmp/wanderer-audit-http.pid
+          python3 -m http.server 8012 --bind 127.0.0.1 >/tmp/wanderer-v012-http.log 2>&1 &
           sleep 2
           curl --fail http://127.0.0.1:8012/ >/dev/null
-      - name: Unit and smoke regression
-        id: unit
-        continue-on-error: true
-        run: npm test
-      - name: Browser gameplay and mobile stress
-        id: stressbrowser
-        continue-on-error: true
-        timeout-minutes: 8
-        run: node tests/stress-browser.cjs
-      - name: Browser account and save flows
-        id: browser
-        continue-on-error: true
-        timeout-minutes: 6
+      - name: Current Expedition mobile/desktop browser tests
         run: npm run test:browser
-      - name: Browser asset and VFX checks
-        id: assets
-        continue-on-error: true
-        timeout-minutes: 4
+      - name: Current equipment VFX/asset tests
         run: npm run test:assets
-      - name: Interrupted save and conflict recovery
-        id: recovery
-        continue-on-error: true
-        timeout-minutes: 5
-        run: npm run test:recovery
-      - name: Deterministic combat and save stress
-        id: stress
-        continue-on-error: true
-        timeout-minutes: 7
-        run: node tests/stress-combat.cjs && node tests/stress-save-gameplay.cjs
-      - name: PvP browser regressions
-        id: pvp
-        continue-on-error: true
-        timeout-minutes: 4
-        run: npm run test:pvp
-      - name: Firestore rules in demo emulator ONLY
-        id: rules
-        continue-on-error: true
-        timeout-minutes: 8
-        run: npm run test:rules
-      - name: Pre-release audit result gate
+      - name: Focused E10/E50 and three affinity-pair native simulations
+        run: node scripts/v012-focused-build-sim.cjs /tmp/wanderer-v012-focused-builds.json
+      - name: Native v0.12 combat/loot simulations
+        run: npm run simulate:v012
+
+
+  utility-coverage-ab-audit:
+    if: contains(github.event.head_commit.message, '[coverage]') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run isolated paired utility-coverage simulations
+        env:
+          WANDERER_COVERAGE_LEVELS: '50,200'
+          WANDERER_COVERAGE_REPETITIONS: '12'
+          WANDERER_COVERAGE_SEED_OFFSET: '17000000'
+        run: node scripts/v012-coverage-ab-sim.cjs /tmp/wanderer-v012-coverage-ab.json
+      - name: Archive coverage comparison and full trajectories
         if: always()
-        run: |
-          echo "Unit:     ${{ steps.unit.outcome }}"
-          echo "Browser:  ${{ steps.browser.outcome }}"
-          echo "Assets:   ${{ steps.assets.outcome }}"
-          echo "Recovery: ${{ steps.recovery.outcome }}"
-          echo "Stress:   ${{ steps.stress.outcome }}"
-          echo "Stress UI:${{ steps.stressbrowser.outcome }}"
-          echo "PvP:      ${{ steps.pvp.outcome }}"
-          echo "Rules:    ${{ steps.rules.outcome }}"
-          for result in "${{ steps.unit.outcome }}" "${{ steps.browser.outcome }}" "${{ steps.assets.outcome }}" "${{ steps.recovery.outcome }}" "${{ steps.stress.outcome }}" "${{ steps.stressbrowser.outcome }}" "${{ steps.pvp.outcome }}" "${{ steps.rules.outcome }}"; do
-            test "$result" = success || exit 1
-          done
+        uses: actions/upload-artifact@v4
+        with:
+          name: wanderer-coverage-ab-${{ github.sha }}
+          path: /tmp/wanderer-v012-coverage-ab.json
+          if-no-files-found: ignore
+
+
+  armor-archetype-audit:
+    if: contains(github.event.head_commit.message, '[archetype]') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Simulate real full Cloth Leather Plate with targeted triple affinities
+        env:
+          WANDERER_ARCH_REPETITIONS: '8'
+          WANDERER_ARCH_SEED_OFFSET: '29000000'
+        run: node scripts/v012-armor-archetypes-sim.cjs /tmp/wanderer-v012-armor-archetypes.json
+      - name: Archive per-seed gear and build simulation results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wanderer-armor-archetypes-${{ github.sha }}
+          path: /tmp/wanderer-v012-armor-archetypes.json
+          if-no-files-found: ignore
+
+
+  legendary-prototype-audit:
+    if: contains(github.event.head_commit.message, '[legendary]') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Simulate all 12 prototype Legendaries in memory only
+        env:
+          WANDERER_LEGEND_LEVELS: '50,200'
+          WANDERER_LEGEND_REPS: '12'
+          WANDERER_LEGEND_SOLO_REPS: '1'
+          WANDERER_LEGEND_SEED_OFFSET: '93000000'
+        run: node scripts/v012-legendary-build-ab-sim.cjs /tmp/wanderer-v012-legendary-test.json
+      - name: Archive complete Legendary A/B trajectories
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wanderer-legendary-prototypes-${{ github.sha }}
+          path: /tmp/wanderer-v012-legendary-test.json
+          if-no-files-found: ignore

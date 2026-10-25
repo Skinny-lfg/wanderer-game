@@ -1,0 +1,306 @@
+/* Sub-panels retain their own existing fills, with a continuous square Gothic edge.
+   Avoid mask-composite, whose antialiasing caused the Safari corner seams. */
+.phase3IntegratedPreview :is(
+  .phase3Journey,.phase1BuildSummary,.phase2PassiveBar,.phase3Preparation,
+  .phase3Passives,.phase3ReturnBar,.phase3ResourcePanel,.phase3Bag,
+  .phase3PassiveTooltip,.phase3PassiveSlot,.phase3PassiveCard,.phase3PassiveInline,
+  .phase3BetweenHero,.phase3Routes,.phase3BetweenStats .metric,.phase3EventReadOnly,
+  .combatActiveBuffs,.phase3BetweenQuick,.phase3RealmActions,.phase3BetweenAffinity,
+  .phase3BetweenBag,.phase3PermanentStats,.phase3StatCell,.phase3ActiveAffinities,
+  .phase3CombatAffinityGroup,.phase3CombatBuild,.inspect,.delta,.gearSummary,
+  .setCompare,.sigilOfferCard,.forgePicker,.forgeSelectionSummary,
+  .forgeAffinityPreview,.forgeRankPreview,.c3TreasureResult,.cityCenterNpcArt,
+  .potionStash,.log,.combatBagDetails>summary,.phase3BetweenBag>summary,
+  .phase3EquipmentDetails>summary,.phase3EventCard,.stat,.token,.shopCard,
+  .merchantCompactCard,.potionOffer,.forgePickCard,.compareCard,.lootCard,
+  .phase3BagItem,.phase3BagEmpty,.rarityImageFrame,.slotTile,.miniSlot,.invItem,.runeSlot
+){
+  border-radius:0;clip-path:none;border-color:var(--ui4-chamfer-color,var(--ui4-gold-edge,#9e7d44));
+}
+.phase3IntegratedPreview :is(.merchantCompactCard[data-rarity],.compareCard[data-rarity],.lootCard[data-rarity],.phase3BagItem[data-rarity]){
+  --ui4-chamfer-color:var(--item-rarity,var(--ui4-gold-edge,#9e7d44));
+}
+.phase3IntegratedPreview .rarityImageFrame{--ui4-chamfer-color:var(--ui-rarity-color,#8c8378)}
+
+/* Phase 2I: keep result summaries scannable while retaining the existing Gothic surfaces. */
+.phase3IntegratedPreview .phase5VisualSummary,
+.phase3IntegratedPreview .phase5Result.phase5RealmResult{width:min(100%,1040px);margin-inline:auto}
+.phase3IntegratedPreview .phase5VisualSummary .phase5ResultHeading,
+.phase3IntegratedPreview .phase5RealmResult .phase5ResultHeading{margin:0 0 12px;padding-bottom:10px;border-bottom:1px solid var(--ui4-line)}
+.phase3IntegratedPreview .phase5ResultHeading .eyebrow{display:block;color:var(--ui4-accent);font-size:13px;font-weight:700;letter-spacing:.12em}
+.phase3IntegratedPreview .phase5ResultHeading h1{margin:5px 0;color:#f4e5d2;font-size:clamp(26px,3vw,36px);line-height:1.08}
+.phase3IntegratedPreview .phase5VisualSummary .phase5ResultMetrics,
+.phase3IntegratedPreview .phase5RealmResult .phase5ResultMetrics{grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));margin:10px 0}
+.phase3IntegratedPreview .phase5ResultMetric span{font-size:14px;line-height:1.25}
+.phase3IntegratedPreview .phase5ResultMetric strong{font-variant-numeric:tabular-nums;line-height:1.15}
+.phase3IntegratedPreview .phase5RewardGrid{align-items:start}
+.phase3IntegratedPreview .phase5GearGroup{min-width:0;margin:10px 0;padding:10px;border:1px solid var(--ui4-edge);background:#171219a8}
+.phase3IntegratedPreview .phase5GearGroup h2,
+.phase3IntegratedPreview .phase5GearGroup h3{margin:0 0 8px;color:#f0d6a6;font-size:19px;line-height:1.2}
+.phase3IntegratedPreview .phase5GearGroup .phase5GearGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,215px),1fr));gap:7px}
+.phase3IntegratedPreview .phase5GearItem{min-width:0;min-height:60px;overflow-wrap:anywhere}
+.phase3IntegratedPreview .phase5GearItem small{font-size:13px;line-height:1.25}
+.phase3IntegratedPreview .phase5RealmGear--lost{border-color:#9b5458;background:linear-gradient(130deg,#321c23a8,#171219a8)}
+.phase3IntegratedPreview .phase5RealmGear--lost h2{color:#f1b0a7}
+.phase3IntegratedPreview .phase5EmptyRewards{margin:2px 0}
+.phase3IntegratedPreview .phase5ResultActions{display:flex;justify-content:center;margin:12px 0 0;padding-top:12px;border-top:1px solid var(--ui4-line)}
+.phase3IntegratedPreview .phase5ResultActions #phase5ExitResult{position:static;inset:auto;width:min(100%,360px);min-height:48px;margin:0}
+.phase3IntegratedPreview .phase5LastLog{margin:10px 0}
+.phase3IntegratedPreview .phase5LastLog .log{max-height:min(40dvh,360px);overflow:auto}
+
+/* Shared native dialogs: readable content, stable action order and touch-sized controls. */
+.phase3IntegratedPreview dialog.itemDialog{width:min(500px,calc(100vw - 24px));max-width:500px;max-height:min(78dvh,680px);padding:16px;overscroll-behavior:contain;scrollbar-gutter:stable}
+.phase3IntegratedPreview dialog.itemDialog.equipmentItemDialog{width:min(480px,calc(100vw - 24px));max-width:480px;max-height:min(72dvh,600px);padding:clamp(12px,2vw,16px)}
+.phase3IntegratedPreview dialog.itemDialog>h2{margin:0 0 12px;font-size:clamp(23px,3vw,30px);line-height:1.15}
+.phase3IntegratedPreview dialog.itemDialog :is(p,li,label){font-size:15px;line-height:1.45;overflow-wrap:anywhere}
+.phase3IntegratedPreview dialog.itemDialog .modalActions{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:12px;border-top:1px solid var(--ui4-line)}
+.phase3IntegratedPreview dialog.itemDialog .modalActions button{min-width:96px;min-height:48px;height:48px}
+.phase3IntegratedPreview dialog.itemDialog .modalActions [data-close]{margin-right:auto}
+@media(max-width:600px){
+ .phase3IntegratedPreview dialog.itemDialog.equipmentItemDialog{width:calc(100vw - 20px);max-height:min(82dvh,680px);padding:14px}
+ .phase3IntegratedPreview .phase5VisualSummary,
+ .phase3IntegratedPreview .phase5Result.phase5RealmResult{padding:11px}
+ .phase3IntegratedPreview .phase5VisualSummary .phase5ResultMetrics,
+ .phase3IntegratedPreview .phase5RealmResult .phase5ResultMetrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .phase3IntegratedPreview .phase5GearGroup{padding:8px}
+ .phase3IntegratedPreview .phase5GearGroup .phase5GearGrid{grid-template-columns:minmax(0,1fr)}
+ .phase3IntegratedPreview .phase5ResultActions #phase5ExitResult{width:100%}
+ .phase3IntegratedPreview dialog.itemDialog{width:calc(100vw - 20px);max-height:calc(100dvh - 24px);padding:14px}
+ .phase3IntegratedPreview dialog.itemDialog .modalActions button{flex:1 1 120px;min-height:48px;height:48px}
+ .phase3IntegratedPreview dialog.itemDialog .modalActions [data-close]{margin-right:0}
+}
+
+.phase3IntegratedPreview :is(.slotTile,.miniSlot,.invItem,.phase3PotionSlot){
+  border:1px solid transparent;
+  border-radius:0;
+  background:linear-gradient(145deg,#20151b,#160f14);
+  box-shadow:inset 0 1px #ffffff0a;
+  box-sizing:border-box;
+}
+.phase3IntegratedPreview .rarityImageFrame{
+  display:inline-grid;
+  place-items:center;
+  aspect-ratio:1/1;
+  flex-shrink:0;
+  box-sizing:border-box;
+  --ui-rarity-color:#8c8378;
+  --wf-rarity-fill:color-mix(in srgb,var(--ui-rarity-color) 20%,#171116);
+  border:1px solid transparent;
+  background:linear-gradient(145deg,color-mix(in srgb,var(--ui-rarity-color) 23%,#21171d),#100c10 72%);
+  box-shadow:inset 0 0 0 1px #080609,0 0 5px color-mix(in srgb,var(--ui-rarity-color) 16%,transparent);
+}
+.phase3IntegratedPreview .rarityImageFrame[data-rarity="Common"]{--ui-rarity-color:#8c8378}
+.phase3IntegratedPreview .rarityImageFrame[data-rarity="Uncommon"]{--ui-rarity-color:#65956f}
+.phase3IntegratedPreview .rarityImageFrame[data-rarity="Rare"]{--ui-rarity-color:#5d8fb3}
+.phase3IntegratedPreview .rarityImageFrame[data-rarity="Epic"]{--ui-rarity-color:#9a72bc}
+.phase3IntegratedPreview .rarityImageFrame[data-rarity="Legendary"]{--ui-rarity-color:#c28b4c}
+.phase3IntegratedPreview .rarityImageFrame>i{
+  position:absolute;
+  inset:12%;
+  z-index:0;
+  display:block;
+  pointer-events:none;
+  background:radial-gradient(circle at 50% 38%,
+    color-mix(in srgb,var(--wf-rarity-fill) 85%,#ffffff 15%) 0%,
+    var(--wf-rarity-fill) 100%);
+}
+.phase3IntegratedPreview .rarityImageFrame>img{
+  position:relative;
+  z-index:1;
+  display:block;
+  width:78%;height:78%;
+  max-width:100%;max-height:100%;min-width:0;min-height:0;
+  padding:0;
+  box-sizing:border-box;
+  object-fit:contain;
+  background:none;border:0;border-radius:0;
+}
+
+/* Shared UI tokens are extracted from the mounted Camp/Home styles.  This is
+   the single palette and scale used by equivalent controls across v0.12. */
+.phase3IntegratedPreview{
+  --resource-radius:8px;
+  --resource-border:#80615d;
+  --resource-track-bg:linear-gradient(180deg,#180d12,#302027 50%,#10090d);
+  --health-liquid:linear-gradient(180deg,#f47b70,#b53338 52%,#6e1e2b);
+  --mana-liquid:linear-gradient(180deg,#9ad8ff,#3474d4 52%,#18366e);
+  --ui-panel-bg:var(--ui4-home-stats-bg,linear-gradient(145deg,rgba(48,43,46,.94),rgba(23,21,25,.92)));
+  --ui-section-bg:linear-gradient(145deg,#302b2e 0%,#211e22 48%,#171519 100%);
+  --ui-stat-bg:linear-gradient(90deg,#11101466,transparent);
+  --ui-stat-rule:#9e7d4433;
+  --ui-edge:color-mix(in srgb,#9e7d44 58%,#393238);
+  --ui-ink:#efe6d4;
+  --ui-muted:#c8bda9;
+  --ui-button-bg:linear-gradient(155deg,#302b2e,#1d1a1e 72%);
+  --ui-button-hover-bg:linear-gradient(155deg,#493b32,#292126 75%);
+  --ui-button-height:42px;
+  --ui-button-padding:8px 14px;
+  --ui-panel-padding:clamp(14px,1.8vw,22px);
+  --ui-card-gap:clamp(8px,1.2vw,16px);
+}
+
+/* Camp stat rows are the model for equivalent information cells elsewhere. */
+.phase3IntegratedPreview :is(
+  .stat,.statStrip .metric,.phase3StatCell,.phase3BetweenStats .metric,
+  .phase3CampStat
+){
+  min-width:0;
+  padding:4px 6px;
+  border:0;
+  border-bottom:1px solid var(--ui-stat-rule);
+  border-radius:0;
+  background:var(--ui-stat-bg);
+  box-shadow:none;
+  color:var(--ui-ink);
+}
+.phase3IntegratedPreview :is(.stat,.statStrip .metric,.phase3StatCell,.phase3BetweenStats .metric,.phase3CampStat) :is(label,span){
+  color:var(--ui-muted);
+}
+.phase3IntegratedPreview :is(.stat,.statStrip .metric,.phase3StatCell,.phase3BetweenStats .metric,.phase3CampStat) :is(b,strong){
+  color:var(--ui-ink);
+  font-variant-numeric:tabular-nums;
+}
+
+/* Secondary information panels reuse the Home stats panel surface. Keep item
+   rarity borders and semantic colors intact. */
+.phase3IntegratedPreview :is(
+  .phase3PermanentStats,.phase3BetweenHero,.phase3BetweenStats,.phase3Routes,
+  .phase3Bag,.phase3Passives,.phase3ResourcePanel,.phase3EventReadOnly,
+  .phase3BetweenQuick,.phase3BetweenBag,.phase3EquipmentDetails,
+  .phase3EventCard,.phase3PassiveTooltip,.phase3PassiveInline,
+  .forgeSelectionSummary,.forgeAffinityPreview,.forgeRankPreview,.forgeCraftOdds,
+  .inspect,.gearSummary,.setCompare,.shopCard,.merchantCompactCard,
+  .potionOffer,.valuable
+){
+  background:var(--ui-panel-bg);
+  border-color:var(--ui-edge);
+  border-radius:0;
+}
+.phase3IntegratedPreview :is(
+  .runePanel,.runeSlot,.runeCollection .runeCard,
+  .combatLayout>.panel,.combatActiveBuffs,.combatExpeditionDetails,
+  .combatExpeditionDetails .log,.phase3BetweenPane,.phase3BetweenEquipment .paper,
+  .phase3BagItem,.phase3BagEmpty,.phase3CombatBuild,.phase3ActiveAffinities,
+  .phase3CombatAffinityGroup,.combatRuneReadout
+){
+  background:var(--ui-panel-bg);
+  border-color:var(--ui-edge);
+  border-radius:0;
+}
+.phase3IntegratedPreview .runePanel{border-top-color:var(--ui-edge)}
+.phase3IntegratedPreview .runeCollection .runeCard.runeEquipped{background:var(--ui-section-bg)}
+.phase3IntegratedPreview .phase3BagGrid{background:transparent;border:0;padding:0}
+.phase3IntegratedPreview .phase3BagEmpty{background:var(--ui-stat-bg);border-style:dashed}
+.phase3IntegratedPreview .phase3BagItem{background:var(--ui-section-bg)}
+.phase3IntegratedPreview .token{
+  background:var(--ui-panel-bg);
+  border-color:var(--ui-edge);
+  border-radius:0;
+  color:var(--ui-muted);
+}
+.phase3IntegratedPreview .token b{color:var(--ui-ink)}
+.phase3IntegratedPreview .combatActiveBuffs{background:var(--ui-section-bg)}
+.phase3IntegratedPreview .combatExpeditionDetails .log{background:var(--ui-section-bg)}
+.phase3IntegratedPreview .phase3BetweenEquipment .paper{background:var(--ui-panel-bg)}
+.phase3IntegratedPreview :is(.phase3CombatBuild,.phase3ActiveAffinities,.combatRuneReadout){background:var(--ui-panel-bg)}
+.phase3IntegratedPreview .phase3CombatAffinityGroup{background:var(--ui-section-bg)}
+.phase3IntegratedPreview .equipmentInventory :is(
+  .stashCapacityBar,.stashGrid,.inventoryValuables,.potionStash
+){
+  background:var(--ui-panel-bg);
+  border-color:var(--ui-edge);
+  border-radius:0;
+}
+.phase3IntegratedPreview .inventoryJumpNav{
+  background:var(--ui-panel-bg);
+  border-color:var(--ui-edge);
+  border-radius:0;
+}
+.phase3IntegratedPreview .equipmentInventory .stashGrid>.small.muted{
+  background:var(--ui-section-bg);
+  border-color:var(--ui-edge);
+  color:var(--ui-muted);
+}
+.phase3IntegratedPreview .phase3PermanentStats{padding:10px}
+.phase3IntegratedPreview .phase3StatGrid{gap:2px 8px}
+
+/* Conventional buttons follow the Home navigation control dimensions and
+   surface. SMALL corner PNGs remain a separate, non-interactive overlay. */
+.phase3IntegratedPreview .gothic-button-ornamented{
+  display:inline-flex;
+  min-height:var(--ui-button-height);
+  align-items:center;
+  justify-content:center;
+  padding:var(--ui-button-padding);
+  border:1px solid var(--ui-edge);
+  border-radius:3px 11px 3px 11px;
+  clip-path:none;
+  -webkit-clip-path:none;
+  background:var(--ui-button-bg);
+  box-shadow:inset 0 1px #ffffff12,inset 0 -2px #09080a55;
+  color:var(--ui-muted);
+  font:500 14px/1.15 var(--font-head);
+  text-align:center;
+  text-shadow:none;
+  white-space:normal;
+}
+.phase3IntegratedPreview .gothic-button-ornamented:hover:not(:disabled){
+  border-color:#d8bc7d;
+  background:var(--ui-button-hover-bg);
+  color:var(--ui-ink);
+  filter:none;
+}
+.phase3IntegratedPreview .gothic-button-ornamented:active:not(:disabled){
+  border-color:#8d4a50;
+  background:linear-gradient(155deg,#512a31,#351d23 72%);
+}
+.phase3IntegratedPreview .gothic-button-ornamented:disabled{opacity:.6;color:#817974}
+.phase3IntegratedPreview .gothic-button-ornamented:is(.active,.selected,[aria-selected="true"],[aria-pressed="true"]){
+  border-color:#d8bc7d;
+  color:#fff0cf;
+  box-shadow:inset 0 0 0 1px #d8bc7d35,0 0 12px #9e7d4424;
+}
+.phase3IntegratedPreview #nav button.gothic-button-ornamented{
+  min-height:var(--ui-button-height);
+  padding:var(--ui-button-padding);
+}
+
+/* Inputs and selects match the Home Expedition selector. */
+.phase3IntegratedPreview :is(select,input[type="text"],input[type="number"],textarea){
+  min-height:42px;
+  padding:8px 10px;
+  border:1px solid var(--ui-edge);
+  border-radius:2px 8px 2px 8px;
+  background:#171519;
+  color:var(--ui-ink);
+}
+.phase3IntegratedPreview :is(select,input,textarea):focus-visible{
+  border-color:#d8bc7d;
+}
+
+@media(max-width:650px){
+  .phase3IntegratedPreview .gothic-button-ornamented{min-height:42px;padding:8px 10px}
+}
+.phase3IntegratedPreview .rarityImageFrame.potionPlaceholder{--ui-rarity-color:#8c8378;--wf-rarity-fill:#211e20}
+.phase3IntegratedPreview .rarityImageFrame.potionPlaceholder>i{background:#211e20}
+.phase3IntegratedPreview .rarityImageFrame.potionPlaceholder>img{filter:grayscale(1);opacity:.25}
+.phase3IntegratedPreview :is(.runeIcon,.phase2PassiveIcon,.phase3PassiveIcon,.affinityIcon){object-fit:contain}
+
+/* One responsive size scale for every square rarity frame. */
+.phase3IntegratedPreview .rarityImageFrame{max-width:100%}
+.phase3IntegratedPreview .rarityImageFrame--slot{width:clamp(36px,4.2vw,60px)}
+.phase3IntegratedPreview .rarityImageFrame--stash{width:clamp(48px,5.2vw,74px)}
+.phase3IntegratedPreview .rarityImageFrame--merchant{width:clamp(48px,5.4vw,76px);height:auto;aspect-ratio:1/1}
+.phase3IntegratedPreview .rarityImageFrame--forge{width:clamp(44px,4.7vw,66px)}
+.phase3IntegratedPreview .rarityImageFrame--compare{width:clamp(46px,4.8vw,68px)}
+.phase3IntegratedPreview .rarityImageFrame--inspect{width:clamp(64px,6.6vw,92px);height:auto;aspect-ratio:1/1}
+.phase3IntegratedPreview .rarityImageFrame--loot{width:clamp(48px,5vw,72px)}
+.phase3IntegratedPreview .rarityImageFrame--bag{width:clamp(42px,4.2vw,60px)}
+.phase3IntegratedPreview .rarityImageFrame--potion-stack{width:clamp(46px,4.5vw,64px)}
+.phase3IntegratedPreview .rarityImageFrame--potion{width:clamp(38px,4.1vw,58px)}
+.phase3IntegratedPreview .rarityImageFrame--public{width:clamp(28px,3vw,42px)}
+.phase3IntegratedPreview .rarityImageFrame>:is(.slotDLevel,.legendaryRankBadge){position:absolute;top:3px;left:3px;right:auto;bottom:auto;z-index:9;pointer-events:none}
+.phase3IntegratedPreview .slotTile .slotDLevel,.phase3IntegratedPreview .miniSlot .miniDLevel,.phase3IntegratedPreview .invItem .lv{z-index:9}
+.phase3IntegratedPreview .cityCenterLayout .merchantCompactCard{grid-template-columns:clamp(56px,5.4vw,76px) minmax(0,1fr) minmax(84px,auto)}
+@media(max-width:840px){.phase3IntegratedPreview .cityCenterLayout .merchantCompactCard{grid-template-columns:clamp(52px,8vw,68px) minmax(0,1fr)}}
+@media(max-width:580px){.phase3IntegratedPreview .cityCenterLayout .merchantCompactCard{grid-template-columns:54px minmax(0,1fr)}}
