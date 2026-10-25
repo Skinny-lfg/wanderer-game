@@ -1,4 +1,4 @@
-import {createBackend} from './firebase-client.mjs?v=v012-production-auth-hotfix-2';
+import {createBackend} from './firebase-client.mjs?v=v012-public-profiles-1';
 import {createCloudSaveCoordinator} from './v012-cloud-save.mjs';
 
 const requiresGate=(!['localhost','127.0.0.1'].includes(location.hostname)&&!location.hostname.endsWith('.test'))||new URLSearchParams(location.search).get('testAuthGate')==='1';
