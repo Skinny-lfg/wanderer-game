@@ -42,6 +42,39 @@ const server=http.createServer((req,res)=>{
    assert.equal(icons.length,38);
    assert(icons.every(i=>i.src.startsWith('assets/status/icons/')&&i.fit==='contain'&&i.naturalWidth>0),'icon asset missing or distorted');
    await page.locator('#statusIconAudit').evaluate(e=>e.remove());
+   // Synthetic combat HUD for the player and enemy, including stacked effects.
+   await page.evaluate(()=>{
+    const scene=document.createElement('div');
+    scene.id='scene';scene.className='scene';scene.style.cssText='position:fixed;top:0;left:0;width:min(100vw,380px);height:280px;min-height:280px;z-index:9999;';
+    for(const kind of ['playerStatuses','enemyDebuffs']){
+     const actor=document.createElement('div');actor.className='combatant';
+     actor.style.cssText='position:relative;min-width:0;';
+     const lane=document.createElement('div');
+     lane.className='combatStatuses '+kind;
+     lane.innerHTML=[['barrier','Barrier 150'],['weakened','Weakened −20% damage'],['healing-reduction','Healing −40%'],['boss-barrier','Boss Barrier 200']]
+      .map(([id,name])=>'<span class="debuff statusPositive">'+__statusIconArt(id)+' '+name+'</span>').join('');
+     actor.appendChild(lane);scene.appendChild(actor);
+    }
+    document.body.appendChild(scene);
+   });
+   const measurements=await page.locator('#scene .combatant').evaluateAll(actors=>actors.map(actor=>{
+    const lane=actor.querySelector('.combatStatuses'),badge=lane.querySelector('.debuff'),img=badge.querySelector('img');
+    const ls=getComputedStyle(lane),bs=getComputedStyle(badge),is=getComputedStyle(img),lr=lane.getBoundingClientRect(),ar=actor.getBoundingClientRect();
+    return {font:parseFloat(bs.fontSize),iconW:parseFloat(is.width),iconH:parseFloat(is.height),
+     minBadgeHeight:parseFloat(bs.minHeight),hasOwnScroll:ls.overflowY==='auto',
+     laneTop:lr.top,laneBottom:lr.bottom,laneWidth:lr.width,actorWidth:ar.width,
+     laneHeight:lr.height,actorHeight:ar.height,fit:is.objectFit};
+   }));
+   const minFont=width<=650?12:14,minIcon=width<=650?21:26;
+   assert.equal(measurements.length,2);
+   for(const m of measurements){
+    assert(m.font>=minFont&&m.iconW>=minIcon&&m.iconH>=minIcon,'combat effect below intended readability: '+JSON.stringify(m));
+    assert(m.fit==='contain','combat icon should preserve its proportions');
+    assert(m.hasOwnScroll&&m.laneHeight<=m.actorHeight*.57,'status lane must scroll inside combatant: '+JSON.stringify(m));
+    assert(m.laneWidth<=m.actorWidth+1,'status lane must not overflow the combatant: '+JSON.stringify(m));
+   }
+   await page.locator('#scene').evaluate(e=>e.remove());
+
    await page.evaluate(()=>__openAuditModal());
    const dialog=page.locator('dialog[open]');
    await dialog.waitFor();
@@ -58,7 +91,7 @@ const server=http.createServer((req,res)=>{
    assert(bounds.width<width&&bounds.height<900,'popup exceeds viewport bounds');
    await dialog.locator('[data-close]').click();
    assert.deepEqual(errors,[],'page errors');
-   console.log('PASS '+width+'px: all 38 status PNGs load at original ratio; no popup corner layers; centered native dialog');
+   console.log('PASS '+width+'px: all 38 status PNGs load; larger combat status labels and icons; no popup corners');
    await ctx.close();
   }
  }finally{await browser.close();await new Promise(r=>server.close(r));}
