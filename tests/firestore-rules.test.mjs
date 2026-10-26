@@ -1,8 +1,9 @@
-import {before,after,test} from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';
+import {before,beforeEach,after,test} from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';
 import {initializeTestEnvironment,assertSucceeds,assertFails} from '@firebase/rules-unit-testing';
 import {doc,getDoc,setDoc,updateDoc,deleteDoc,writeBatch,serverTimestamp} from 'firebase/firestore';
 let env,alice,bob;
 before(async()=>{env=await initializeTestEnvironment({projectId:'demo-wanderer',firestore:{host:'127.0.0.1',port:8085,rules:readFileSync('firestore.rules','utf8')}});alice=env.authenticatedContext('alice',{firebase:{sign_in_provider:'google.com'}}).firestore();bob=env.authenticatedContext('bob',{firebase:{sign_in_provider:'google.com'}}).firestore();});
+beforeEach(async()=>env.clearFirestore());
 after(async()=>env?.cleanup());
 async function profile(db,uid,name){const batch=writeBatch(db);batch.set(doc(db,'nicknames',name),{uid});batch.set(doc(db,'publicProfiles',uid),{nickname:name,characterId:'wanderer',createdAt:serverTimestamp(),updatedAt:serverTimestamp()});return batch.commit();}
 const save=rev=>({payload:'{"gold":123}',revision:rev,schemaVersion:1,updatedAt:serverTimestamp()});
@@ -37,6 +38,7 @@ test('nickname + profile are atomic, immutable, unique; no impersonation',async(
  await assertSucceeds(updateDoc(doc(alice,'publicProfiles/alice'),{characterId:'ranger',updatedAt:serverTimestamp()}));
 });
 test('private saves require owner + profile, monotonic revision and bounded payload',async()=>{
+ await profile(alice,'alice','alice');
  const path='players/alice/saves/v092';await assertSucceeds(setDoc(doc(alice,path),save(1)));
  await assertFails(getDoc(doc(bob,path)));await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(),path)));
  await assertSucceeds(getDoc(doc(alice,path)));await assertFails(setDoc(doc(alice,path),save(1)));await assertFails(setDoc(doc(alice,path),save(3)));
@@ -46,25 +48,27 @@ test('private saves require owner + profile, monotonic revision and bounded payl
  await assertFails(setDoc(doc(alice,'players/alice/saves/current'),save(1)));
 });
 test('v0.12 cloud saves are private, owner-bound, versioned, monotonic and never deletable',async()=>{
- const guest=alice;
+ await profile(alice,'alice','alice');
+ const registered=alice;
  const other=bob;
  const path='players/alice/saves/v012';
  let createdAt=serverTimestamp();
  const record=rev=>({payload:'{"format":"wanderer-expedition"}',revision:rev,schemaVersion:13,format:'wanderer-expedition',createdAt,updatedAt:serverTimestamp()});
- await assertSucceeds(setDoc(doc(guest,path),record(1)));
- createdAt=(await getDoc(doc(guest,path))).data().createdAt;
- await assertSucceeds(getDoc(doc(guest,path)));
+ await assertSucceeds(setDoc(doc(registered,path),record(1)));
+ createdAt=(await getDoc(doc(registered,path))).data().createdAt;
+ await assertSucceeds(getDoc(doc(registered,path)));
  await assertFails(getDoc(doc(other,path)));
  await assertFails(setDoc(doc(other,path),record(2)));
- await assertFails(setDoc(doc(guest,path),record(1)));
- await assertSucceeds(setDoc(doc(guest,path),record(2)));
- await assertFails(setDoc(doc(guest,path),{...record(3),schemaVersion:1}));
- await assertFails(setDoc(doc(guest,path),{...record(3),payload:'x'.repeat(700001)}));
- await assertFails(deleteDoc(doc(guest,path)));
+ await assertFails(setDoc(doc(registered,path),record(1)));
+ await assertSucceeds(setDoc(doc(registered,path),record(2)));
+ await assertFails(setDoc(doc(registered,path),{...record(3),schemaVersion:1}));
+ await assertFails(setDoc(doc(registered,path),{...record(3),payload:'x'.repeat(700001)}));
+ await assertFails(deleteDoc(doc(registered,path)));
  const unverified=env.authenticatedContext('email_unverified',{firebase:{sign_in_provider:'password'},email_verified:false}).firestore();
- await assertSucceeds(setDoc(doc(unverified,'players/email_unverified/saves/v012'),{...record(1),createdAt:serverTimestamp()}));
+ await assertFails(setDoc(doc(unverified,'players/email_unverified/saves/v012'),{...record(1),createdAt:serverTimestamp()}));
 });
 test('current depth resets per attempt, D200 personal best never increases, client claims stay unverified',async()=>{
+ await profile(alice,'alice','alice');
  const ref=doc(alice,'testSeasons/v092-launch-1/deepest/alice');
  const claim={deepest:20,attemptId:'run-1',verified:false,updatedAt:serverTimestamp()};
  await assertSucceeds(setDoc(ref,claim));
@@ -98,6 +102,7 @@ test('current depth resets per attempt, D200 personal best never increases, clie
 });
 
 test('public equipment is readable by signed-in players but never writable by opponents',async()=>{
+ await profile(alice,'alice','alice');
  const data={equipment:'{}',maxDungeon:10,updatedAt:serverTimestamp()};
  await assertSucceeds(setDoc(doc(alice,'publicLoadoutsV092/alice'),data));
  await assertSucceeds(getDoc(doc(bob,'publicLoadoutsV092/alice')));
@@ -111,6 +116,7 @@ test('public equipment is readable by signed-in players but never writable by op
 });
 
 test('feedback inbox accepts a bounded playtest report and forbids reading or spoofing',async()=>{
+ await profile(alice,'alice','alice');
  const good={uid:'alice',category:'bug',rating:4,combat:'repetitive',difficulty:'balanced',
    likes:'',problems:'Repeated dungeon clicks are tedious.',ideas:'',maxDungeon:22,
    characterId:'wanderer',appVersion:'0.11.0',createdAt:serverTimestamp()};
@@ -128,12 +134,27 @@ test('feedback inbox accepts a bounded playtest report and forbids reading or sp
  await assertFails(setDoc(doc(env.unauthenticatedContext().firestore(),'feedbackInbox/anon_1'),good));
 });
 test('v0.12 feedback is private, create-only, bounded and rate-limited through an atomic lock',async()=>{
- const guest=env.authenticatedContext('feedback_guest').firestore(),other=env.authenticatedContext('feedback_other').firestore();
- const feedback=doc(guest,'feedbackInboxV012/feedback_guest_report1'),limit=doc(guest,'feedbackRateLimits/feedback_guest');
- const report={uid:'feedback_guest',category:'bug',description:'The reward panel did not open.',steps:'Complete a Realm then click reward.',appVersion:'0.12.0',commit:'af5e0d9',screen:'camp',viewport:'390x844',browser:'',technical:'',createdAt:serverTimestamp()};
+ const reporter=env.authenticatedContext('feedback_registered',{firebase:{sign_in_provider:'google.com'}}).firestore();
+ const guest=env.authenticatedContext('feedback_guest',{firebase:{sign_in_provider:'anonymous'}}).firestore(),other=env.authenticatedContext('feedback_other',{firebase:{sign_in_provider:'google.com'}}).firestore();
+ await profile(reporter,'feedback_registered','reporter');
+ const feedback=doc(reporter,'feedbackInboxV012/feedback_registered_report1'),limit=doc(reporter,'feedbackRateLimits/feedback_registered');
+ const report={uid:'feedback_registered',category:'bug',description:'The reward panel did not open.',steps:'Complete a Realm then click reward.',appVersion:'0.12.0',commit:'af5e0d9',screen:'camp',viewport:'390x844',browser:'',technical:'',createdAt:serverTimestamp()};
+ await assertFails(setDoc(doc(guest,'feedbackInboxV012/feedback_guest_report1'),{...report,uid:'feedback_guest'}));
  await assertFails(setDoc(feedback,report));
- const batch=writeBatch(guest);batch.set(feedback,report);batch.set(limit,{uid:'feedback_guest',updatedAt:serverTimestamp()});await assertSucceeds(batch.commit());
- await assertFails(getDoc(feedback));await assertFails(getDoc(doc(other,'feedbackInboxV012/feedback_guest_report1')));
+ const batch=writeBatch(reporter);batch.set(feedback,report);batch.set(limit,{uid:'feedback_registered',updatedAt:serverTimestamp()});await assertSucceeds(batch.commit());
+ await assertFails(getDoc(feedback));await assertFails(getDoc(doc(other,'feedbackInboxV012/feedback_registered_report1')));
  await assertFails(setDoc(feedback,report));
- const early=writeBatch(guest);early.set(doc(guest,'feedbackInboxV012/feedback_guest_report2'),{...report,createdAt:serverTimestamp()});early.update(limit,{updatedAt:serverTimestamp()});await assertFails(early.commit());
+ const early=writeBatch(reporter);early.set(doc(reporter,'feedbackInboxV012/feedback_registered_report2'),{...report,createdAt:serverTimestamp()});early.update(limit,{updatedAt:serverTimestamp()});await assertFails(early.commit());
+});
+test('v0.12 public leaderboard and profiles expose no inventory, currency or save payload',async()=>{
+ const uid='public_player',player=env.authenticatedContext(uid,{firebase:{sign_in_provider:'google.com'}}).firestore();
+ await profile(player,uid,'publicplayer');
+ const score={uid,nickname:'publicplayer',best:42,verified:false,updatedAt:serverTimestamp()},ref=doc(player,'communityV012Leaderboard/public_player');
+ await assertSucceeds(setDoc(ref,score));
+ await assertSucceeds(getDoc(doc(env.unauthenticatedContext().firestore(),'communityV012Leaderboard/public_player')));
+ await assertFails(setDoc(ref,{...score,inventory:['private'],updatedAt:serverTimestamp()}));
+ await assertFails(setDoc(ref,{...score,best:41,updatedAt:serverTimestamp()}));
+ await assertFails(setDoc(ref,{...score,verified:true,updatedAt:serverTimestamp()}));
+ await assertSucceeds(getDoc(doc(env.unauthenticatedContext().firestore(),'publicProfiles/public_player')));
+ await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(),'publicLoadoutsV092/public_player')));
 });
