@@ -1,0 +1,17 @@
+{
+  "description": "Run a read-only Wanderer environment preflight before each prompt.",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/plugins/wanderer-dev-agent/scripts/preflight-hook.mjs\"",
+            "statusMessage": "Checking Wanderer development connections",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

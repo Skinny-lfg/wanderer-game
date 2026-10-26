@@ -1,0 +1,2 @@
+[plugins."wanderer-dev-agent@wanderer-local"]
+enabled = true

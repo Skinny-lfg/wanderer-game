@@ -17,6 +17,7 @@ async function start(){
  await writeFile(path.join(root,'index.html'),'<html>Wanderer<script id="onlineAccountLoader">loadAccount()</script><script id="v012PrototypeLoader">loadPrototype()</script><script id="integratedGame">startExpedition()</script><script type="module" src="online/app.mjs?v=demo"></script><script type="module" src="online/v012-prototype.mjs"></script></html>');
  await writeFile(path.join(root,'online','v012-prototype.mjs'),'export const testMode = true;');
  await writeFile(path.join(root,'assets','sample.svg'),'<svg xmlns="http://www.w3.org/2000/svg"></svg>');
+ await writeFile(path.join(root,'assets','sample.ttf'),'synthetic font asset');
  await writeFile(path.join(root,'preview','do-not-leak.mjs'),'private internals');
  const server=createPrivatePreviewServer({root,username:'private_owner',password:'test-only-long-password-unique',allowLocalHttp:true});
  server.listen(0,'127.0.0.1');await once(server,'listening');
@@ -52,6 +53,7 @@ test('private preview protects HTML, assets, JS and prevents access to repo inte
   assert.match(post.headers.get('set-cookie'),/SameSite=Strict/);
   const headers={Cookie:cookie};
   const economy=await request(env.base,'/economy/v0101.js',{headers});assert.equal(economy.status,200);assert.match(await economy.text(),/fixtureEconomy/);
+  const font=await request(env.base,'/assets/sample.ttf',{headers});assert.equal(font.status,200);assert.equal(font.headers.get('content-type'),'font/ttf');
   const index=await request(env.base,'/?expeditionPhase1=1&expeditionSave=1',{headers});
   assert.equal(index.status,200);const source=await index.text();assert.ok(source.includes('Wanderer'));
   assert.ok(!source.includes('v012-prototype.mjs'));

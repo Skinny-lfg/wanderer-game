@@ -1,0 +1,12 @@
+{
+  "name": "wanderer-local",
+  "plugins": [
+    {
+      "name": "wanderer-dev-agent",
+      "source": {"source": "local", "path": "./plugins/wanderer-dev-agent"},
+      "policy": {"installation": "AVAILABLE", "authentication": "ON_INSTALL"},
+      "category": "Developer tools",
+      "interface": {"displayName": "Wanderer Dev Agent"}
+    }
+  ]
+}
