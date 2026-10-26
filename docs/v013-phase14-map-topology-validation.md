@@ -42,6 +42,8 @@ Forks contain two or three options and keep lanes separated for the generated se
 | Mean expected waves per route | 25.00 |
 | Mean bonus Gold / Fragments | 14.80 / 11.10 |
 
+Compared with the fixed V2 graph, every V2 Expedition had the same 15-row, 35-node layout, four three-option decision points, and 81 graph paths. V3 varies the macro template, row widths, and fork locations; maps now have three or four decisions and average 29.69 nodes. All rows still connect only to the next Realm, and every generated node remains reachable and can reach the boss.
+
 The risk fork has an equal-weight distribution of one, two, or three Elite encounters. A sample safe route has one Elite, 10 Combat nodes, and three Events; the dangerous route has three Elites, eight Combat nodes, and three Events. Under existing reward formulas, expected bonus Gold/Fragments are 12/9 versus 18.4/13.8, expected waves are 25.5 versus 26.5, and expected Combat/Boss item drops are 7.40 versus 8.09. No loot formula or balance coefficient changed.
 
 ## Visual evidence
