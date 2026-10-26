@@ -1,0 +1,192 @@
+[
+  {
+    "width": 268,
+    "topology": "narrow-passages",
+    "shape": "112221331222111",
+    "decisionCount": 3,
+    "height": 986,
+    "nodes": 25,
+    "options": 2,
+    "rows": 15,
+    "visualAudit": {
+      "nodeCount": 25,
+      "edgeCount": 28,
+      "maxEndpointError": 0.015328124999996362,
+      "overlaps": [],
+      "details": [
+        {
+          "scroll": 254,
+          "client": 254,
+          "right": 288
+        },
+        {
+          "scroll": 254,
+          "client": 254,
+          "right": 288
+        }
+      ],
+      "rerolls": [
+        [
+          44,
+          44
+        ],
+        [
+          44,
+          44
+        ]
+      ]
+    }
+  },
+  {
+    "width": 338,
+    "topology": "narrow-passages",
+    "shape": "112221331222111",
+    "decisionCount": 3,
+    "height": 982,
+    "nodes": 25,
+    "options": 2,
+    "rows": 15,
+    "visualAudit": {
+      "nodeCount": 25,
+      "edgeCount": 28,
+      "maxEndpointError": 0.015495727539075688,
+      "overlaps": [],
+      "details": [
+        {
+          "scroll": 320,
+          "client": 320,
+          "right": 356
+        },
+        {
+          "scroll": 320,
+          "client": 320,
+          "right": 356
+        }
+      ],
+      "rerolls": [
+        [
+          44,
+          44
+        ],
+        [
+          44,
+          44
+        ]
+      ]
+    }
+  },
+  {
+    "width": 698,
+    "topology": "narrow-passages",
+    "shape": "112221331222111",
+    "decisionCount": 3,
+    "height": 923,
+    "nodes": 25,
+    "options": 2,
+    "rows": 15,
+    "visualAudit": {
+      "nodeCount": 25,
+      "edgeCount": 28,
+      "maxEndpointError": 0.015533752441399429,
+      "overlaps": [],
+      "details": [
+        {
+          "scroll": 218,
+          "client": 218,
+          "right": 267.171875
+        },
+        {
+          "scroll": 218,
+          "client": 218,
+          "right": 493.828125
+        }
+      ],
+      "rerolls": [
+        [
+          44,
+          44
+        ],
+        [
+          44,
+          44
+        ]
+      ]
+    }
+  },
+  {
+    "width": 1171,
+    "topology": "narrow-passages",
+    "shape": "112221331222111",
+    "decisionCount": 3,
+    "height": 925,
+    "nodes": 25,
+    "options": 2,
+    "rows": 15,
+    "visualAudit": {
+      "nodeCount": 25,
+      "edgeCount": 28,
+      "maxEndpointError": 0.014981079101573869,
+      "overlaps": [],
+      "details": [
+        {
+          "scroll": 371,
+          "client": 371,
+          "right": 446.53125
+        },
+        {
+          "scroll": 371,
+          "client": 371,
+          "right": 826.46875
+        }
+      ],
+      "rerolls": [
+        [
+          44,
+          44
+        ],
+        [
+          44,
+          44
+        ]
+      ]
+    }
+  },
+  {
+    "width": 1170,
+    "topology": "narrow-passages",
+    "shape": "112221331222111",
+    "decisionCount": 3,
+    "height": 925,
+    "nodes": 25,
+    "options": 2,
+    "rows": 15,
+    "visualAudit": {
+      "nodeCount": 25,
+      "edgeCount": 28,
+      "maxEndpointError": 0.014981079101517025,
+      "overlaps": [],
+      "details": [
+        {
+          "scroll": 371,
+          "client": 371,
+          "right": 766.65625
+        },
+        {
+          "scroll": 371,
+          "client": 371,
+          "right": 1146.328125
+        }
+      ],
+      "rerolls": [
+        [
+          44,
+          44
+        ],
+        [
+          44,
+          44
+        ]
+      ]
+    }
+  }
+]
