@@ -13,6 +13,38 @@
 
 O maior obstáculo imediato é a **fricção entre combates**, NÃO a falta de conteúdo ou simplesmente a dificuldade.
 
+## Atualização 26/10 — Hordas, packs e prazer de destruir mobs
+
+**Ideia do criador:** aumentar 2–3 Waves por Realm para 10–20 Waves ou colocar vários mobs na mesma Wave; objetivo principal não é farm ou dificuldade, é observar mobs a morrer rapidamente quando a build OP entra em funcionamento. Pergunta: como fazer isso em auto-combat sem manual targeting?
+
+### Diagnóstico técnico confirmado em development (26/10)
+- \`combat/v012-combat-runtime.js\` gira em torno de um \`r.enemy\` singular; \`weaponAttack\`, \`updateFight\`, \`phase2Context\`, DoTs, Legendary procs e derrota assumem alvo único.
+- \`online/v012-expedition-runtime.js\` \`phase1StartWave\` cria 1 enemy e \`phase1WaveWon\` recompensa cada Wave; transição de 650 ms antes da seguinte. Aumentar de 2–3 para 10–20 sem rever isto multiplica loot/Gold/Fragments, logs, risco, tempo morto, salvamentos, efeitos on-kill e possíveis exploits.
+- Em \`combat/v012-buildcraft.js\`, os status Bleed/Burn/Rot, DeathRot, cooldowns e activações operam sobre um enemy; \`onKill\` usa waveKey para evitar trigger duplo. Num multi-mob real, precisarão de entityId por kill mais ICD/caps por pack para não tornar healing/rewards imparáveis.
+- Arena/HP/animação usam \`enemyPortrait\`, \`enemyHpFill\`, \`enemyHpText\` singulares. Multi-target é uma re-arquitectura de runtime + UI, não só criar três sprites.
+- Recompensas devem ser por *pack/encounter ou Realm*, não por cada mob visual. Uma onda de 5 mobs não deve multiplicar loot ×5.
+
+### Proposta em duas etapas para isolar impacto e risco
+**Protótipo A — Gauntlet single-target:** 8–12 **micro-encontros automáticos** dentro de um Realm; 1 alvo activo de cada vez, próximo aparece imediatamente sem 650ms nem render completo do Realm; sem botões entre kills; 1–3 checkpoints de loot por Realm (calibrar pelo baseline atual); escolha de passivo / caminho ocorre só quando termina Realm ou num marco estratégico. Permite testar se "vida a derreter" e tempo de combate são o verdadeiro missing piece, sem mexer em AoE nem em 63 passivos.
+
+**Protótipo B — Horde packs multi-enemy (candidato final):** 3–5 packs num Realm normal; 2–4 mobs activos simultaneamente por pack, máximo experimental 5; Elite 1 Elite + até 2 minions (apenas se balanceado); boss primeiro testar solo para não comprometer legibilidade de telegraphs; 1–3 recompensas de equipamento por Realm, NÃO loot por kill. Na arena cada mob tem HP/DoT/debuffs/ataque próprio. Seleção automática de alvo por prioridade predefinida (inicial: menor HP relativo ou frontmost, mas testar para evitar target thrash; stickiness por vida do alvo). Sem manual aim nem movimentação obrigatória.
+
+**Orçamentos experimentais, nunca valores de produção:**
+- Packs de 3 mobs: HP individual inicial ~25–40% do HP de um mob atual, dano/seg individual ~20–30% do mob atual. Não somar HP e attack 1:1; gerir DPS total e atrição por wave.
+- Priorizar espetáculo: ao começo o jogador mata 1 mob a cada 2–4s de tempo real de referência; depois de atingir híbrido importante, alguns packs normais morrem 30–50% mais depressa. NÃO forçar todos os encontros ao mesmo TTK por auto-scaling individual, que anularia evolução de poder.
+- Em vez de 150–300 Waves com separadores, usar 3–5 **packs** por Realm, cada um com 2–4 mobs, até 6–20 kills por Realm; packs adicionais devem encadear sem janelas entre si.
+- Medir duração em tempo de relógio real e a velocidades x1/x2/x4; alvo exploratório 25–40s reais por Realm em x4 para runs completas, sem declarar que já funciona; 15 Realms = 6,25–10 min de combate + decisões/mapa. Rever tempo de players casuais antes de fixar.
+- O alvo final *não* é maximizar números ou prolongar mobs artificialmente; é sentir que upgrades aumentam kill rate, clears em cadeia, dano de área/status e sobrevivência.
+- Visual: reutilizar os assets/ataques existentes, diminuir escala dos mobs secundários na arena, transição de spawn/death curta, HP individual e contadores pack/Realm, eventos de proc agrupados para evitar spam. Ao nível de frame impact sincronizar dano para cada mob; cap de números e VFX por segundo.
+- Primeiro permitir auto-targeting com golpes singulares; AoE/splash só após medições, reutilizando afinidades atuais. Sugestões opcionais para A/B, não decisões: Lightning salta entre 2 alvos com dano secundário ~25–35%; Rot pode espalhar 1 stack on-kill via híbridos Decay existentes; Blood aproveita kills consecutivas sem multiplicar cure. Dar a cada build hipótese viável de ganhar a packs e boss.
+- DPS inimigo multi-target: 3× ataque actual mataria jogadores; teto de dano agregado e cadência escalados por tamanho do grupo. Evitar 3 ataques sincronizados e ataques invisíveis; visual de windups legível. Salto de alvo preserva cooldowns.
+- Cuidado com \`onKill\` por mob versus por pack; Last Stand, Second Breath, bleed kill-heal, regen e status duration. Não resetar HP/MP, cooldowns, passivos, DoT e buffs automaticamente em cada micro-kill como se fosse novo Realm.
+
+### Hipóteses e validação
+A/B 0: baseline v0.12; A: mais kills sequenciais na mesma arena; B: multi-target real; C: ajustes de curva de power/tempo de uso. Não alterar ao mesmo tempo duração, loot, ameaça e recompensas. 5 jogadores novos e mesmos jogadores habituais a comparar: tempo de combate, kill rate e densidade visual, tédio, performance 320/390 mobile e desktop, escolha de outra Expedition, reconhecimento dos passivos.
+
+**Escolha recomendada:** primeiro A em preview isolado para provar que "derreter" é divertido; depois B com 2–4 mobs como evolução. NÃO implementar já sem autorização. Preservar calendar de 15 Realms, boss, três afinidades, passivos, ruínas da Bag, idempotência de loot e saves.
+
 ## Atualização 26/10 — Mapa tipo Slay the Spire + evolução de build tipo Soulstone Survivors / Vampire Survivors
 
 **Feedback do criador:** "Expeditions demoram tão pouco tempo que não dá para sentir o prazer de ganhar passivos; quando a build está OP já está a acabar o jogo." Referências intencionais: (a) mapa de Slay the Spire para progressão entre Realms; (b) Soulstone Survivors e Vampire Survivors para acumulação/evolução de poderes. Esta referência substitui a hipótese simplista de "basta retirar Exit/Enter". **É uma proposta de v0.13, não implementação.**
