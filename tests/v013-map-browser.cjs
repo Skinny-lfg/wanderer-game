@@ -1,50 +1,14 @@
-/* Standalone v0.13 map browser test. This is NOT a production save or game test. */
-'use strict';
-const {chromium}=require('playwright');
-const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
-const root=path.resolve(__dirname,'..');
-const server=http.createServer((req,res)=>{
- const pathname=decodeURIComponent(req.url.split('?')[0]);
- const filename=path.resolve(root,'.'+pathname);
- if(!filename.startsWith(root+path.sep)){res.writeHead(403);res.end('Forbidden');return;}
- fs.readFile(filename,(err,bytes)=>{res.writeHead(err?404:200,{'Content-Type':filename.endsWith('.js')?'application/javascript':'text/html'});res.end(err?'Missing':bytes);});
-});
-(async()=>{
- await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
- const base='http://127.0.0.1:'+server.address().port;
- const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_PATH||process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox']});
- try{
-  for(const width of [320,390,1280]){
-   const ctx=await browser.newContext({viewport:{width,height:900}});
-   const page=await ctx.newPage(),errors=[],external=[];
-   page.on('pageerror',e=>errors.push(e.message));
-   await page.route('**/*',route=>{if(route.request().url().startsWith(base))route.continue();else{external.push(route.request().url());route.abort();}});
-   await page.addInitScript(()=>localStorage.setItem('wanderer-game-sentinel','PRESERVE'));
-   await page.goto(base+'/experiments/v013-map-prototype.html');
-   assert.equal(await page.locator('.node').count(),41,'41 map nodes');
-   assert.equal(await page.locator('.node.available').count(),3,'three initial branches');
-   assert.equal(await page.locator('.node[data-kind="boss"]').count(),1);
-   assert.equal(await page.locator('.node[data-kind="elite"]').count(),6,'two elite layers x three variants');
-   let steps=0;
-   while(await page.locator('.node.available').count()){
-     await page.locator('.node.available').first().click();
-     steps++;
-     if(steps>14)throw Error('Map never reached boss');
-   }
-   assert.equal(steps,14,'14 transitions from initial R1 through boss');
-   assert.equal(await page.locator('.node.current').getAttribute('data-id'),'r15n0');
-   assert.match(await page.locator('#message').innerText(),/Boss alcançado/);
-   await page.locator('#reset').click();
-   assert.equal(await page.locator('.node.current').getAttribute('data-id'),'r1n0');
-   await page.locator('#seed').fill('27');
-   await page.locator('#regenerate').click();
-   assert.equal(await page.locator('.node.available').count(),3);
-   assert.equal(await page.evaluate(()=>localStorage.getItem('wanderer-game-sentinel')),'PRESERVE');
-   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),'no horizontal overflow at '+width+'px');
-   assert.deepEqual(external,[],'must not make network calls outside local isolated prototype');
-   assert.deepEqual(errors,[],'no browser exceptions '+width+'px');
-   console.log('PASS v0.13 isolated map browser '+width+'px, seed/restart/15 Realms');
-   await ctx.close();
-  }
- }finally{await browser.close();await new Promise(resolve=>server.close(resolve));}
-})().catch(e=>{console.error(e);process.exitCode=1;});
+// Production map flow in isolated local preview storage; no account/Firebase IO.
+const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict'),{chromium}=require('playwright');
+const root=path.resolve(__dirname,'..'),source=fs.readFileSync(path.join(root,'index.html'),'utf8');
+const boot='phase1Init();\nconst phase3RestoredScroll=phase3RestoreUILocation(phase3SavedUILocation);\nrender();';
+const fixture=`phase1Init();globalThis.__mapAudit={state:()=>({game:structuredClone(phase1Controller.state),run:state.run?{status:state.run.status}:null}),win:()=>{state.run.enemy.hp=0;phase1WaveWon();}};render();`;
+assert(source.includes(boot));
+const server=http.createServer((req,res)=>{const u=new URL(req.url,'http://fixture'),file=path.resolve(root,'.'+u.pathname);if(u.pathname==='/'){res.setHeader('Content-Type','text/html');return res.end(source.replace(boot,fixture+'const phase3RestoredScroll=null;'));}if(!file.startsWith(root+path.sep)){res.statusCode=403;return res.end();}fs.readFile(file,(e,body)=>{res.statusCode=e?404:200;res.setHeader('Content-Type',({'.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.webp':'image/webp','.png':'image/png'})[path.extname(file)]||'application/octet-stream');res.end(e?'Missing':body);});});
+(async()=>{await new Promise(r=>server.listen(0,'127.0.0.1',r));const base='http://127.0.0.1:'+server.address().port,browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox']});
+try{for(const width of [320,390,768,1280,1920]){const context=await browser.newContext({viewport:{width,height:900}}),page=await context.newPage(),errors=[];page.setDefaultTimeout(8000);page.on('pageerror',e=>errors.push(e.message));await context.route('**/*',r=>r.request().url().startsWith(base)?r.continue():r.abort());await page.addInitScript(()=>{window.setInterval=()=>0;const t=window.setTimeout;window.setTimeout=(f,ms,...a)=>t(f,ms===650?5:ms,...a);});await page.goto(base+'/?expeditionPhase1=1&expeditionSave=1&validationSlot=v013-map-'+width);await page.waitForFunction(()=>WandererGame.validationStatus().ready);await page.locator('[data-phase3-nav="phase1"]').click();await page.locator('[data-phase1-expedition="1"]').first().click();await page.locator('[data-phase2-initial="blood"]').click();await page.locator('#enemyPortrait').waitFor();
+for(let i=0;i<5&&await page.evaluate(()=>__mapAudit.state().run?.status==='fight');i++){await page.evaluate(()=>__mapAudit.win());if(i<4)await page.waitForFunction(()=>__mapAudit.state().run?.status!=='ready');}
+await page.locator('dialog [data-popup-passive]').first().click();await page.locator('.phase3BetweenWorkspace').waitFor();assert.equal(await page.locator('[data-map-realm]').count(),15);assert.equal(await page.locator('[data-map-status="available"]').count(),3);assert(await page.locator('[data-map-realm="15"] .v013MapKind--boss').count()===1);let snap=await page.evaluate(()=>__mapAudit.state().game.map);const mapJson=JSON.stringify(snap);assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'horizontal overflow at '+width+'px: '+await page.evaluate(()=>document.documentElement.scrollWidth));if(width===390||width===1280){const dir=path.join(root,'docs/v013-phase1-map-validation/screenshots');fs.mkdirSync(dir,{recursive:true});await page.screenshot({path:path.join(dir,'map-'+width+'.png'),fullPage:true});}
+await page.locator('[data-between-tab="equipment"]').click();assert.equal(await page.locator('.phase3BetweenEquipment .paper [data-eqslot]').count(),10);assert(await page.locator('.phase3Bag').count()===1);await page.locator('[data-between-tab="realm"]').click();await page.locator('[data-map-auto-advance]').click();assert.equal((await page.evaluate(()=>__mapAudit.state().game.map.autoAdvance)),false);await page.reload();await page.waitForFunction(()=>WandererGame.validationStatus().ready);assert.equal((await page.evaluate(()=>__mapAudit.state().game.map.autoAdvance)),false,'pause setting persists at '+width);await page.locator('[data-map-auto-advance]').click();assert.equal((await page.evaluate(()=>__mapAudit.state().game.map.autoAdvance)),true);await page.locator('[data-phase2-reroll="0"]').click();const rerolled=await page.evaluate(()=>__mapAudit.state().game);assert.equal(rerolled.rerolls,2);await page.reload();await page.waitForFunction(()=>WandererGame.validationStatus().ready);assert.equal(JSON.stringify(await page.evaluate(()=>__mapAudit.state().game.map)),mapJson,'refresh preserves graph and current progress at '+width);assert.equal((await page.evaluate(()=>__mapAudit.state().game)).rerolls,2,'reroll budget persists at '+width);
+await page.locator('[data-phase1-plane]').first().click();await page.locator('#enemyPortrait').waitFor();assert.equal(await page.evaluate(()=>__mapAudit.state().game.map.completedNodeIds.length),1);assert.equal(await page.evaluate(()=>__mapAudit.state().game.stage),'combat');assert.deepEqual(errors,[]);console.log('PASS production map flow '+width+'px: 15 rows, boss, touch/scroll, bag/equipment, reroll persistence, route auto-entry, no console errors');await context.close();}}
+finally{await browser.close();await new Promise(r=>server.close(r));}})().catch(e=>{console.error(e);process.exitCode=1;});

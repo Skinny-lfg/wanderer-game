@@ -1,0 +1,65 @@
+.v013MapPanel{position:relative;min-width:0;margin:10px 0;padding:clamp(12px,2vw,24px);border:1px solid #705661;background:radial-gradient(ellipse at 50% 0,#30202dcc,#17141bdc 70%);border-radius:12px;overflow:hidden}
+.v013MapHeading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding-bottom:14px;border-bottom:1px solid #59414b}
+.v013MapHeading h2{margin:2px 0;color:#f0d4a7;font-family:var(--font-head)}
+.v013MapHeading p{margin:4px 0;color:#cbbabe;font-size:13px}
+.v013MapLegend{display:flex;align-items:center;justify-content:flex-end;gap:5px 11px;flex-wrap:wrap;color:#d5c3c2;font-size:11px}
+.v013MapLegend i{display:inline-block;width:10px;height:10px;border-radius:50%;background:#9a7f66;box-shadow:0 0 8px #d6b27055}
+.v013MapLegend i.elite{background:#d18a4f}.v013MapLegend i.event{background:#8d79cc}.v013MapLegend i.boss{background:#c75759}
+.v013MapAutoAdvance{margin-top:7px;padding:5px 9px;border:1px solid #705661;border-radius:7px;background:#211922;color:#d8c4a2;font-size:11px;cursor:pointer}
+.v013MapAutoAdvance[aria-pressed="true"]{border-color:#8e7450;color:#f1d59f}
+.v013MapViewport{position:relative;isolation:isolate;min-height:var(--v013-map-height);padding:2px 0}
+.v013MapConnections{position:absolute;inset:0;width:100%;height:100%;z-index:-1;overflow:visible}
+.v013MapEdge{fill:none;stroke:#56434d;stroke-width:5;stroke-linecap:round;opacity:.42;vector-effect:non-scaling-stroke}
+.v013MapEdge.is-lit{stroke:#c49a5c;opacity:.78;filter:drop-shadow(0 0 4px #e4bc6c77)}
+.v013MapRow{position:relative;display:grid;grid-template-columns:64px minmax(0,1fr);align-items:center;min-height:76px;gap:8px}
+.v013MapRealmLabel{display:grid;gap:2px;color:#ecd2a2;font:700 13px var(--font-head);text-align:center}
+.v013MapRealmLabel small{color:#bba9ae;font:600 8px var(--font-body);line-height:1.1}
+.v013MapNodes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:center;gap:clamp(5px,1.2vw,14px);min-width:0}
+.v013MapRow:has(.v013MapCell:only-child) .v013MapCell{grid-column:2}
+.v013MapCell{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 48px;align-items:center;gap:4px;min-width:0}
+.v013MapPanel .v013MapNode{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-auto-flow:row!important;align-content:center!important;justify-items:start!important;gap:3px!important;box-sizing:border-box;width:100%;min-width:0;min-height:60px;padding:7px 9px;border:1px solid #66545f;border-radius:9px;background:linear-gradient(145deg,#29212b,#1b1820);color:#d3c3c5;text-align:left;overflow:hidden}
+button.v013MapNode{cursor:pointer;min-height:64px;border-color:#9c754b;background:linear-gradient(145deg,#40302b,#211c25);box-shadow:0 0 12px #d8a85a18}
+button.v013MapNode:hover,button.v013MapNode:focus-visible{border-color:#f1ce82;outline:2px solid #c39967;outline-offset:1px;transform:translateY(-1px)}
+button.v013MapNode:disabled{cursor:not-allowed;opacity:.56;animation:none;filter:grayscale(.35)}
+.v013MapNode--completed{border-color:#57775f;background:linear-gradient(145deg,#213027,#1a1b22)}
+.v013MapNode--elite{border-color:#855b3d}.v013MapNode--event{border-color:#625683}.v013MapNode--boss{border-color:#994b50;box-shadow:0 0 12px #c7414b22}
+.v013MapNode--available{animation:v013MapPulse 2.8s ease-in-out infinite alternate}
+@keyframes v013MapPulse{from{box-shadow:0 0 7px #daa85b16}to{box-shadow:0 0 16px #daa85b44}}
+.v013MapNodeRealm{color:#c7ac8d;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.v013MapNode strong{width:100%;color:#f0dfc4;font:700 clamp(10px,1vw,13px)/1.15 var(--font-head);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v013MapBadges{display:flex;align-items:center;flex-wrap:wrap;gap:5px;min-width:0}
+.v013MapKind,.v013MapAffinity{display:inline-flex;align-items:center;gap:2px;min-width:0;color:#c8b9bd;font-size:9px;line-height:1.1}
+.v013MapKind--elite{color:#f2b178}.v013MapKind--event{color:#c5adff}.v013MapKind--boss{color:#ff999b}
+.v013MapAffinity .affinityGlyph{width:14px;height:14px;flex:none}
+.v013MapAction{color:#f1cd88;font-size:9px;font-weight:700}
+.v013MapState{color:#ad9da4;font-size:9px}
+.v013MapReroll{flex:none;min-width:42px;min-height:42px;padding:3px;border:1px solid #735968;border-radius:8px;background:#211922;color:#edcf9b;font-weight:700}
+.v013MapReroll span{display:block;font-size:8px;color:#bcabb1}
+.v013MapReroll:disabled{opacity:.4}
+.v013MapViewport .v013MapRow:last-child .v013MapNode{min-height:72px}
+@media(max-width:700px){
+ .v013MapPanel{padding:10px 7px;border-radius:9px}
+ .v013MapHeading{align-items:flex-start;flex-direction:column;gap:7px}
+ .v013MapLegend{justify-content:flex-start;gap:5px 10px}
+ .v013MapViewport{min-height:0!important}
+ .v013MapConnections{display:none}
+ .v013MapRow{grid-template-columns:34px minmax(0,1fr);gap:5px;min-height:0;margin:8px 0;padding:7px 0;border-top:1px solid #59414b}
+ .v013MapRealmLabel{font-size:11px}
+ .v013MapRealmLabel small{display:none}
+ .v013MapNodes{grid-template-columns:minmax(0,1fr);gap:6px}
+ .v013MapCell{grid-template-columns:minmax(0,1fr) 44px;gap:6px}
+ .v013MapNode,button.v013MapNode{min-height:68px;padding:8px 10px;border-radius:7px}
+ .v013MapNode strong{font-size:12px;white-space:normal}
+ .v013MapKind,.v013MapAffinity,.v013MapState,.v013MapAction{font-size:10px}
+ .v013MapAffinity .affinityGlyph{width:12px;height:12px}
+ .v013MapReroll{min-width:44px;min-height:48px;font-size:12px}
+}
+@media(max-width:350px){
+ .v013MapRow{grid-template-columns:29px minmax(0,1fr)}
+ .v013MapNodes{gap:3px}
+ .v013MapNode,button.v013MapNode{padding:4px 3px}
+ .v013MapNode strong{font-size:8px}
+ .v013MapKind,.v013MapAffinity,.v013MapState,.v013MapAction{font-size:7px}
+ .v013MapReroll{min-width:31px;padding:1px}
+}
+@media(prefers-reduced-motion:reduce){.v013MapNode--available{animation:none}.v013MapNode:hover{transform:none}}

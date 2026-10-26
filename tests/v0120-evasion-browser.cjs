@@ -7,7 +7,7 @@ const fixture=`if(PHASE1_PREVIEW){phase1Init();
  state.equip.helm=makeItem(5,'helm',null,'loot','Leather','Rare');delete state.equip.helm.evasionRating;
  const belt=makeItem(5,'belt',null,'loot','Leather','Rare');state.stash.push(belt);
  globalThis.__evasion={beltId:belt.id,hit:()=>{
-  phase1Begin(1);phase2ChooseInitial('blood');phase1Choose(phase1Controller.state.offers.find(o=>o.family==='blood').id);phase1Enter();
+  phase1Begin(1);phase2ChooseInitial('blood');
   const r=state.run;r.hp=r.maxhp/2;r.barrier=10;r.stats.attacksPerSec=0;r.stats.blockChance=0;
   Object.assign(r.enemy,{hp:500,maxhp:1000,atk:100,attackType:'physical',eliteType:'tank',bossStyle:null});
   r.tPlayer=r.tDot=0;r.tEnemy=100;const before={hp:r.hp,barrier:r.barrier};phase4Seed=12345;updateFight();

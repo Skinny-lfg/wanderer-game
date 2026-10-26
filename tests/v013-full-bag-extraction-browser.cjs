@@ -42,10 +42,9 @@ const server=http.createServer((req,res)=>{
    }
    await page.locator('dialog[data-realm-passive]').waitFor({state:'visible'});
    await page.locator('dialog [data-popup-passive]').first().click();
-   await page.locator('#phase5ExitRealm').click();
    await page.evaluate(()=>__bag.fill());
-   assert.equal(await page.locator('.phase3Routes .phase3BagFullNotice').isVisible(),true,'full Bag warning appears at Realm selection');
-   assert.equal(await page.locator('#phase2EnterRealm').isDisabled(),true,'full Bag blocks entering another Realm');
+   assert.equal(await page.locator('.v013MapPanel + .phase3BagFullNotice').isVisible(),true,'full Bag warning appears on the map');
+   assert.equal(await page.locator('[data-map-status="available"]').first().isDisabled(),true,'full Bag blocks selecting another map path');
    assert.equal(await page.locator('#phase4Extract').isEnabled(),true,'full Bag still permits extraction');
    const full=await page.evaluate(()=>__bag.outcome());
    assert.equal(full.bag,full.capacity,'fixture fills every Bag slot');

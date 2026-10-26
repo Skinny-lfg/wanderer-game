@@ -28,7 +28,7 @@ test('v0.12 initial affinity Close only cancels before selection',()=>{
 });
 test('v0.12 event return waits for passive reward and clears pending exit',()=>{
  assert.match(runtime,/const eventExitPending=!!ports\.phase5Results\?\.eventExitPending&&!ports\.state\.run/);
- assert.match(runtime,/if\(eventExitPending\)return phase5ExitResult\(\)/);
+ assert.match(runtime,/if\(eventExitPending\)\{const returned=phase5ExitResult\(\);if\(returned\)return phase1ContinueLinearMap\(\);return false;\}/);
 });
 test('v0.12 creature overrides only scale the named animated portraits',()=>{
  assert.match(css,/enemyPortrait\[data-attack-src\*="bloom_wisp_"\]/);

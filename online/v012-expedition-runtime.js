@@ -9,7 +9,7 @@ function phase1Init(){
  ports.state.equip.weapon=ports.state.stash.shift();
  ports.state.equip.armor=ports.makeItem(1,'armor',null,'loot','Armor','Uncommon');
  ports.state.equip.helm=ports.makeItem(1,'helm',null,'loot','Helm','Uncommon');
- ports.phase1Controller=WandererV012Expedition.create(ports.THEMES,ports.gameRandom);
+ ports.phase1Controller=WandererV012Expedition.create(ports.THEMES,ports.gameRandom,{mapEnabled:ports.expeditionMapEnabled!==false});
  ports.view='phase1';
  ports.phase5Init();
 }
@@ -101,7 +101,7 @@ function phase2EnterInitialRealm(){
  if(g.stage!=='choice'||g.planeIndex!==1||g.history.length||!g.initialFamily||!ports.phase1Build||ports.phase1Draft||ports.state.run||ports.phase4Resume||ports.phase5Results.review)return false;
  const plane=g.offers.find(p=>p.family===g.initialFamily);if(!plane)return false;
  if(!ports.phase1Choose(plane.id))return false;
- return ports.phase1Enter();
+ return g.map?true:ports.phase1Enter();
 }
 
 function phase2ChooseInitial(family){
@@ -110,7 +110,9 @@ function phase2ChooseInitial(family){
  if(g.stage!=='choice'||g.initialFamily||ports.phase1Draft||!ports.phase1Build)return false;
  ports.phase1Controller.chooseInitial(family);ports.phase1Build.families=g.families;
  if(family==='magic')ports.phase1Draft={kind:'initial',family,step:'element'};
- ports.phase5Persist();ports.render();return true;
+ if(!ports.phase5Persist())return false;
+ if(g.map&&family!=='magic')return phase2EnterInitialRealm();
+ ports.render();return true;
 }
 
 function phase2ChooseElement(id){
@@ -119,7 +121,9 @@ function phase2ChooseElement(id){
  WandererV012Buildcraft.element(ports.phase1Build,id);ports.phase1Draft=null;
  // Element selection only. The enabling Magic passive is earned on first Realm clear.
  if(!ports.phase5Persist())return false;
- if(draft.kind==='entry'&&!draft.plane.eventId)ports.phase2Launch(draft.plane);else ports.render();
+ if(draft.kind==='entry'&&!draft.plane.eventId)ports.phase2Launch(draft.plane);
+ else if(draft.kind==='initial'&&ports.phase1Controller.state.map)phase2EnterInitialRealm();
+ else ports.render();
  return true;
 }
 
@@ -135,15 +139,25 @@ function phase2ChoosePassive(id){
  ports.phase3ClampVitals();if(!ports.phase5Persist())return false;
  // Resolve the required passive first, then return directly to Between Realms.
  // phase5ExitResult clears the event flag without awarding anything twice.
- if(eventExitPending)return phase5ExitResult();
+ if(eventExitPending){const returned=phase5ExitResult();if(returned)return phase1ContinueLinearMap();return false;}
+ if(g.map){const returned=phase5ExitResult();if(returned)return phase1ContinueLinearMap();return false;}
  if(ports.state.run?.status==='cleared'){ports.view='combat';ports.renderCombat();}else{ports.view='phase1';ports.render();}
  return true;
+}
+
+function phase1ContinueLinearMap(){
+ const g=ports.phase1Controller.state;
+ if(!g.map||!g.map.autoAdvance||g.stage!=='choice'||g.rewardPending||g.offers.length!==1||ports.phase3BagItems().length>=ports.PHASE3_BAG_CAPACITY||ports.phase3BagOverflow())return true;
+ return phase1Choose(g.offers[0].id);
 }
 
 function phase1Choose(id){
  if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked))return false;
  if(ports.phase1Draft||!ports.phase1Build)return false;
- ports.phase1Controller.select(id);ports.view='phase1';ports.phase5Persist();ports.render();return true;
+ if(ports.phase1Controller.state.map&&(ports.phase3BagItems().length>=ports.PHASE3_BAG_CAPACITY||ports.phase3BagOverflow())){ports.bannerMessage('Bag full. Discard an item before entering another Realm.');return false;}
+ ports.phase1Controller.select(id);ports.view='phase1';
+ if(ports.phase1Controller.state.map)return phase1Enter();
+ ports.phase5Persist();ports.render();return true;
 }
 
 function phase1Enter(){
