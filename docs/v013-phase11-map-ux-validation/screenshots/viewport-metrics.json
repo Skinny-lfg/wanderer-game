@@ -1,0 +1,37 @@
+[
+  {
+    "width": 320,
+    "height": 1106,
+    "nodes": 41,
+    "choices": 3,
+    "rows": 15
+  },
+  {
+    "width": 390,
+    "height": 1114,
+    "nodes": 41,
+    "choices": 3,
+    "rows": 15
+  },
+  {
+    "width": 768,
+    "height": 1191,
+    "nodes": 41,
+    "choices": 3,
+    "rows": 15
+  },
+  {
+    "width": 1280,
+    "height": 1204,
+    "nodes": 41,
+    "choices": 3,
+    "rows": 15
+  },
+  {
+    "width": 1920,
+    "height": 1204,
+    "nodes": 41,
+    "choices": 3,
+    "rows": 15
+  }
+]
