@@ -10,6 +10,7 @@ const source=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const boot='phase1Init();\nconst phase3RestoredScroll=phase3RestoreUILocation(phase3SavedUILocation);\nrender();';
 assert(source.includes(boot));
 const fixture=`phase1Init();render();globalThis.__bag={
+ pause:()=>{if(phase1Controller.state.map){phase1Controller.state.map.autoAdvance=false;phase5Persist();}},
  win:()=>{state.run.enemy.hp=0;phase1WaveWon();},
  runStatus:()=>state.run?.status||phase1Controller.state.stage,
  fill:()=>{state.valuables=[];phase3LootIds=new Set();for(let i=0;i<PHASE3_BAG_CAPACITY;i++){const item={kind:'valuable',id:'full-bag-'+i,name:'Synthetic treasure',worth:1,image:'assets/loot/treasure_gem_pouch.webp'};state.valuables.push(item);phase3LootIds.add(item.id);}renderPhase1();},
@@ -35,6 +36,7 @@ const server=http.createServer((req,res)=>{
    await page.goto('http://127.0.0.1:'+server.address().port+'/?expeditionPhase1=1');
    await page.locator('[data-phase3-nav="phase1"]').click();
    await page.locator('[data-phase1-expedition="1"]').first().click();
+   await page.evaluate(()=>__bag.pause());
    await page.locator('[data-phase2-initial="blood"]').click();
    for(let wave=0;wave<5&&await page.evaluate(()=>__bag.runStatus())==='fight';wave++){
     await page.evaluate(()=>__bag.win());
