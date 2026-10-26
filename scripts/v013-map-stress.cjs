@@ -1,32 +1,10 @@
-/* Wanderer v0.13 isolated map stress test: no network, no saves, no Firebase. */
-const fs=require('node:fs');
-const {pathToFileURL}=require('node:url');
-const path=require('node:path');
-function numeric(flag,fallback){const i=process.argv.indexOf(flag);if(i<0)return fallback;const n=Number(process.argv[i+1]);if(!Number.isInteger(n)||n<0)throw Error('Invalid '+flag);return n;}
-(async()=>{
- await import(pathToFileURL(path.resolve(__dirname,'../online/v013-map-prototype.js')).href);
- const api=globalThis.WandererV013MapPrototype;
- const seeds=numeric('--seeds',10000),minutes=numeric('--minutes',0);
- if(seeds>50000000||minutes>180)throw Error('Safety cap: 50m seeds / 180 minutes');
- if(!seeds&&!minutes)throw Error('Choose at least one limit');
- const outIndex=process.argv.indexOf('--out'),out=outIndex>=0?process.argv[outIndex+1]:null;
- const began=Date.now(),until=minutes?began+minutes*60000:Infinity;
- const result={model:'isolated-map-v013',seedStart:0,requestedSeeds:seeds,requestedMinutes:minutes,checked:0,failures:0,events3:0,events4:0,firstFailure:null,seconds:0};
- for(let i=0;i<(seeds||50000000)&&Date.now()<until;i++){
-  try{
-   const map=api.create(i,{eventCount:i%2===0?3:4});
-   api.validate(map);
-   const visited=api.walk(map,[i%3,(i+1)%3,(i+2)%3]);
-   if(visited.length!==15||visited[14].id!==map.bossId)throw Error('Invalid path');
-   if(i%100===0&&JSON.stringify(api.create(i,{eventCount:i%2===0?3:4}))!==JSON.stringify(map))throw Error('Non deterministic map');
-   result.checked++;
-   if(map.eventCount===3)result.events3++;else result.events4++;
-  }catch(error){result.failures++;if(result.firstFailure===null)result.firstFailure={seed:i,error:String(error)};break;}
-  if((i+1)%10000===0)process.stdout.write('MAP_STRESS checked='+result.checked+' failures='+result.failures+' elapsed='+(Date.now()-began)/1000+'s\n');
- }
- result.seconds=Math.round((Date.now()-began)/10)/100;
- const output=JSON.stringify(result,null,2);
- if(out)fs.writeFileSync(out,output+'\n');
- process.stdout.write(output+'\n');
- if(result.failures||result.checked===0)process.exitCode=1;
-})().catch(e=>{process.stderr.write(String(e.stack||e)+'\n');process.exitCode=1;});
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const env={};vm.runInNewContext(fs.readFileSync('online/v013-expedition-map.js','utf8'),env);const M=env.WandererV013ExpeditionMap;
+function schedule(seed){let x=seed>>>0;const r=()=>((x=(Math.imul(x,1664525)+1013904223)>>>0)/4294967296);const count=r()<.5?3:4,rooms=Array(15).fill('combat');rooms[14]='boss';const windows=count===4?[[3,4,5],[6,7,8],[9,10,11],[12,13,14]]:[[3,4,5],[7,8,9],[11,12,13]];for(const row of windows)rooms[row[Math.floor(r()*row.length)]-1]='event';const candidates=Array.from({length:13},(_,i)=>i+1).filter(i=>rooms[i]==='combat');for(let i=candidates.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[candidates[i],candidates[j]]=[candidates[j],candidates[i]];}for(const realm of candidates.slice(0,2))rooms[realm]='elite';return rooms;}
+for(let seed=0;seed<10000;seed++){
+ const rooms=schedule(seed),map=M.create(seed,rooms);assert(M.validate(map,rooms));assert.equal(map.rows[14][0].kind,'boss');assert.equal(rooms.filter(k=>k==='elite').length,2);assert(rooms.filter(k=>k==='event').length>=3&&rooms.filter(k=>k==='event').length<=4);
+ const copy=M.create(seed,rooms);assert.equal(JSON.stringify(copy),JSON.stringify(map));let node=map.rows[0][0];
+ for(let realm=1;realm<15;realm++){const next=M.successors(map,node.id);assert(next.length>0&&next.length<=3);node=M.node(map,next[seed%next.length]);}
+ assert.equal(node.id,'r15n0');
+}
+console.log('PASS 10000 map seeds · valid 15 Realm calendars · 2 Elites · 3–4 Events · deterministic graph · every branch reaches Boss');
