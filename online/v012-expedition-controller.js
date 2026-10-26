@@ -31,12 +31,12 @@ function create(themes,rng=Math.random,options={}){
   return FAMILIES.filter(f=>game.families.length<3||game.families.includes(f));
  }
  function makeOffer(family,excluded=[],nodeId=null){
-  const kind=game.rooms[game.planeIndex-1],list=(game.version===2?expeditionThemes:byFamily[family]).filter(t=>t.family===family&&!excluded.includes(t.id)),theme=list[Math.floor(routeRng()*list.length)];
+  const routeNode=game.map&&nodeId?MAP.node(game.map,nodeId):null,kind=routeNode?.kind||game.rooms[game.planeIndex-1],eventId=kind==='event'?(routeNode?.eventId||game.eventsByRealm[game.planeIndex-1]):null,list=(game.version===2?expeditionThemes:byFamily[family]).filter(t=>t.family===family&&!excluded.includes(t.id)),theme=list[Math.floor(routeRng()*list.length)];
   if(!theme)throw Error('No distinct Realm available for '+family);
   return {id:theme.id,name:kind==='boss'&&game.version===2?BOSSES.find(b=>b.id===game.bossId).name:theme.name,image:theme.image,family,
    waves:game.version===2&&kind==='event'?0:kind==='boss'?3:kind==='elite'?2+Math.floor(routeRng()*2):1+Math.floor(routeRng()*3),
    elite:kind==='elite'||kind==='boss'||kind!=='event'&&routeRng()<.2,boss:kind==='boss',
-   event:game.version===2?(kind==='event'?game.eventsByRealm[game.planeIndex-1]:null):(['chest','event','altar'].includes(kind)?kind:null),...(game.map?{nodeId}: {})};
+   event:game.version===2?eventId:(['chest','event','altar'].includes(kind)?kind:null),...(game.map?{nodeId}: {})};
  }
  function offerRealms(){
   if(game.stage!=='choice'||!game.initialFamily||game.rewardPending)throw Error('Realm selection unavailable');
@@ -67,12 +67,16 @@ function create(themes,rng=Math.random,options={}){
   function start(level=1){
   if(!Number.isInteger(level)||level<1||level>game.unlocked)throw Error('Expedition locked');
   if(!['camp','finished','failed'].includes(game.stage))throw Error('Expedition already active');
-  const count=3+Math.floor(routeRng()*2),events=shuffle(EVENT_GROUPS,routeRng).slice(0,count).map(group=>group[Math.floor(routeRng()*group.length)]);
-  const windows=count===4?[[3,4,5],[6,7,8],[9,10,11],[12,13,14]]:[[3,4,5],[7,8,9],[11,12,13]],rooms=Array(15).fill('combat');rooms[14]='boss';
-  for(const window of windows)rooms[window[Math.floor(routeRng()*window.length)]-1]='event';
-  const eliteSlots=shuffle(Array.from({length:13},(_,i)=>i+1).filter(i=>rooms[i]==='combat'),routeRng).slice(0,2);for(const i of eliteSlots)rooms[i]='elite';let eventIndex=0;
-  const bossId=BOSSES[Math.floor(routeRng()*3)].id,mapEnabled=options.mapEnabled!==false,map=mapEnabled?MAP.create(Math.floor(routeRng()*4294967296),rooms):null;
-  Object.assign(game,{version:2,rerolls:3,bossId,eventsByRealm:rooms.map(k=>k==='event'?events[eventIndex++]:null),expedition:level,planeIndex:1,families:[],lastFamily:null,initialFamily:null,affinityPlanSeen:[false,false,false],
+  const count=3+Math.floor(routeRng()*2),mapEnabled=options.mapEnabled!==false;let rooms,map=null,eventsByRealm;
+  if(mapEnabled){map=MAP.create(Math.floor(routeRng()*4294967296),{eventCount:count,eventGroups:EVENT_GROUPS});rooms=MAP.calendar(map);eventsByRealm=MAP.events(map);}
+  else{
+   const events=shuffle(EVENT_GROUPS,routeRng).slice(0,count).map(group=>group[Math.floor(routeRng()*group.length)]),windows=count===4?[[3,4,5],[6,7,8],[9,10,11],[12,13,14]]:[[3,4,5],[7,8,9],[11,12,13]],legacyRooms=Array(15).fill('combat');legacyRooms[14]='boss';
+   for(const window of windows)legacyRooms[window[Math.floor(routeRng()*window.length)]-1]='event';
+   const eliteSlots=shuffle(Array.from({length:13},(_,i)=>i+1).filter(i=>legacyRooms[i]==='combat'),routeRng).slice(0,2);for(const i of eliteSlots)legacyRooms[i]='elite';
+   let eventIndex=0;rooms=legacyRooms;eventsByRealm=rooms.map(k=>k==='event'?events[eventIndex++]:null);
+  }
+  const bossId=BOSSES[Math.floor(routeRng()*3)].id;
+  Object.assign(game,{version:2,rerolls:3,bossId,eventsByRealm,expedition:level,planeIndex:1,families:[],lastFamily:null,initialFamily:null,affinityPlanSeen:[false,false,false],
    rooms,offers:[],selected:null,wave:0,history:[],
    rewardPending:null,rerollsByRealm:Array.from({length:15},()=>[3,3,3]),stage:'choice'});
   if(map)game.map=map;else delete game.map;
@@ -154,15 +158,15 @@ function create(themes,rng=Math.random,options={}){
   g.affinityPlan??=null;g.affinityPlanSeen??=[false,false,false];
   const integer=(v,min,max)=>Number.isInteger(v)&&v>=min&&v<=max;
   if(!g||!integer(g.unlocked,1,Number.MAX_SAFE_INTEGER)||!integer(g.expedition,1,g.unlocked)||!integer(g.planeIndex,1,15)||!['choice','combat','finished','failed'].includes(g.stage)||!Array.isArray(g.rooms)||g.rooms.length!==15||g.rooms[0]!=='combat'||g.rooms[14]!=='boss'||g.rooms.slice(0,14).some(k=>!(g.version===2?['combat','elite','event']:ROOMS).includes(k)))throw Error('Invalid Realm checkpoint');
-  if(g.version===2){if(!integer(g.rerolls,0,3)||!BOSSES.some(b=>b.id===g.bossId)||!Array.isArray(g.eventsByRealm)||g.eventsByRealm.length!==15||g.rooms.filter(k=>k==='event').length<3||g.rooms.filter(k=>k==='event').length>4||g.rooms.filter(k=>k==='elite').length!==2)throw Error('Invalid integration schedule');const ids=g.eventsByRealm.filter(Boolean),groups=ids.map(id=>EVENT_GROUPS.findIndex(group=>group.includes(id)));if(new Set(ids).size!==ids.length||new Set(groups).size!==groups.length||groups.includes(-1)||g.eventsByRealm.some((id,i)=>(g.rooms[i]==='event')!==!!id))throw Error('Invalid event schedule');}
-  if(g.map){MAP.validate(g.map,g.rooms);if(g.map.completedNodeIds.length!==g.history.length)throw Error('Invalid completed map progress');if(g.history.some((p,i)=>p.nodeId!==g.map.completedNodeIds[i]||MAP.node(g.map,p.nodeId)?.realm!==i+1))throw Error('Map/history mismatch');if(g.selected&&(g.selected.nodeId!==g.map.currentNodeId||!g.map.chosenNodeIds.includes(g.selected.nodeId)))throw Error('Invalid selected map route');if(g.stage==='combat'&&(!g.selected||MAP.node(g.map,g.selected.nodeId)?.realm!==g.planeIndex))throw Error('Invalid active map route');if(g.rewardPending&&g.offers.length)throw Error('Route revealed before mandatory reward');if(!g.rewardPending&&g.stage==='choice'&&g.initialFamily&&(g.offers.length!==g.map.availableNodeIds.length||g.offers.some(p=>!g.map.availableNodeIds.includes(p.nodeId))))throw Error('Map offers do not match available nodes');}
+  if(g.version===2){if(!integer(g.rerolls,0,3)||!BOSSES.some(b=>b.id===g.bossId)||!Array.isArray(g.eventsByRealm)||g.eventsByRealm.length!==15||g.rooms.filter(k=>k==='event').length<3||g.rooms.filter(k=>k==='event').length>4)throw Error('Invalid integration schedule');if(!g.map||g.map.version!==MAP.VERSION){if(g.rooms.filter(k=>k==='elite').length!==2)throw Error('Invalid legacy Elite schedule');}const ids=g.eventsByRealm.filter(Boolean),groups=ids.map(id=>EVENT_GROUPS.findIndex(group=>group.includes(id)));if(new Set(ids).size!==ids.length||groups.includes(-1)||g.map?.version!==MAP.VERSION&&new Set(groups).size!==groups.length||g.eventsByRealm.some((id,i)=>(g.rooms[i]==='event')!==!!id))throw Error('Invalid event schedule');}
+  if(g.map){MAP.validate(g.map,g.rooms,EVENT_GROUPS);if(g.map.version===MAP.VERSION&&(JSON.stringify(g.rooms)!==JSON.stringify(MAP.calendar(g.map))||JSON.stringify(g.eventsByRealm)!==JSON.stringify(MAP.events(g.map))))throw Error('Canonical schedule does not match route graph');if(g.map.completedNodeIds.length!==g.history.length)throw Error('Invalid completed map progress');if(g.history.some((p,i)=>p.nodeId!==g.map.completedNodeIds[i]||MAP.node(g.map,p.nodeId)?.realm!==i+1))throw Error('Map/history mismatch');if(g.selected&&(g.selected.nodeId!==g.map.currentNodeId||!g.map.chosenNodeIds.includes(g.selected.nodeId)))throw Error('Invalid selected map route');if(g.stage==='combat'&&(!g.selected||MAP.node(g.map,g.selected.nodeId)?.realm!==g.planeIndex))throw Error('Invalid active map route');if(g.rewardPending&&g.offers.length)throw Error('Route revealed before mandatory reward');if(!g.rewardPending&&g.stage==='choice'&&g.initialFamily&&(g.offers.length!==g.map.availableNodeIds.length||g.offers.some(p=>!g.map.availableNodeIds.includes(p.nodeId))))throw Error('Map offers do not match available nodes');}
   if(g.version!==2&&JSON.stringify([...g.rooms.slice(0,14)].sort())!==JSON.stringify([...ROOMS].sort()))throw Error('Invalid Realm schedule');
   if(!Array.isArray(g.families)||g.families.length>3||new Set(g.families).size!==g.families.length||!g.families.every(f=>FAMILIES.includes(f))||g.initialFamily!==null&&!FAMILIES.includes(g.initialFamily))throw Error('Invalid saved affinities');
   if(g.affinityPlan!==null&&(!Array.isArray(g.affinityPlan)||g.affinityPlan.length!==3||new Set(g.affinityPlan).size!==3||!g.affinityPlan.every(f=>FAMILIES.includes(f)))||!Array.isArray(g.affinityPlanSeen)||g.affinityPlanSeen.length!==3||!g.affinityPlanSeen.every(v=>typeof v==='boolean'))throw Error('Invalid affinity plan');
   if(!Array.isArray(g.rerollsByRealm)||g.rerollsByRealm.length!==15||!g.rerollsByRealm.every(row=>Array.isArray(row)&&row.length===3&&row.every(n=>integer(n,0,3))))throw Error('Invalid Realm rerolls');
   function realm(p,index){
-   const theme=(g.version===2?expeditionThemes:themes).find(t=>t.id===p?.id),kind=g.rooms[index-1];
-   if(!theme||(g.version===2?REALMS[p.id]?.[0]:THEME_FAMILIES[p.id])!==p.family||!integer(p.waves,g.version===2&&kind==='event'?0:1,3)||typeof p.elite!=='boolean'||p.boss!==(index===15)||p.event!==(g.version===2?(kind==='event'?g.eventsByRealm[index-1]:null):(['chest','event','altar'].includes(kind)?kind:null))||p.boss&&p.waves!==3)throw Error('Invalid saved Realm');
+   const theme=(g.version===2?expeditionThemes:themes).find(t=>t.id===p?.id),routeNode=g.map&&p?.nodeId?MAP.node(g.map,p.nodeId):null,kind=g.map?.version===MAP.VERSION?routeNode?.kind:g.rooms[index-1],expectedEvent=kind==='event'?(routeNode?.eventId||g.eventsByRealm[index-1]):null;
+   if(!theme||(g.version===2?REALMS[p.id]?.[0]:THEME_FAMILIES[p.id])!==p.family||!integer(p.waves,g.version===2&&kind==='event'?0:1,3)||typeof p.elite!=='boolean'||p.boss!==(index===15)||p.event!==(g.version===2?expectedEvent:(['chest','event','altar'].includes(kind)?kind:null))||p.boss&&p.waves!==3)throw Error('Invalid saved Realm');
    if(g.map&&(!MAP.node(g.map,p.nodeId)||MAP.node(g.map,p.nodeId).realm!==index||MAP.node(g.map,p.nodeId).kind!==kind))throw Error('Invalid Realm map node');
    return {...p,name:p.boss&&g.version===2?BOSSES.find(b=>b.id===g.bossId).name:theme.name,image:theme.image};
   }
