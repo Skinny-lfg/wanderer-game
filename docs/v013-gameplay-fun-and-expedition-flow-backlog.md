@@ -13,6 +13,33 @@
 
 O maior obstáculo imediato é a **fricção entre combates**, NÃO a falta de conteúdo ou simplesmente a dificuldade.
 
+### NOVA HIPÓTESE PRINCIPAL — recuperar o loop "só mais um dungeon" (feedback do criador 26/10/2026)
+
+**Observação do criador:** na primeira versão, os amigos pareciam divertir-se muito mais mesmo com gameplay simples de carregar repetidamente em "Next", com um objetivo concreto: chegar ao boss em cada 10 dungeons (D10, D20...). O criador não sabe se o motivo foi facilidade, metas curtas, simplicidade de progressão, novidade ou interação social. **Não declarar uma causa já provada.**
+
+**Correção de enquadramento do backlog:** o problema pode ser mais profundo que retirar Exit/Enter. A versão antiga favorecia o impulso "ganhei → avancei 1 dungeon → estou mais perto do boss → Next"; a v0.12 interrompe o ritmo com escolha de passivos/realm, ecrãs e um longo ciclo de 15 Realms antes do objetivo final. O problema pode ser o *rácio entre progresso sentido e esforço de navegação/decisão*, não apenas o número de cliques. Nunca interpretar "mais decisões" como automaticamente "mais diversão". Mesmo sem Exit/Enter, escolher passivos a cada poucos segundos pode continuar a parecer um imposto cognitivo.
+
+**Hipóteses concorrentes a testar separadamente:**
+1. **Fricção:** ecrãs e confirmações obrigatórias quebram o flow.
+2. **Objetivos claros e próximos:** um boss/milestone visível a cada 10 níveis criava antecipação e "mais uma".
+3. **Cadência de recompensas:** o antigo Next convertia cada vitória em progresso imediatamente perceptível, enquanto a v0.12 dá mais operações do que sensação de movimento.
+4. **Dificuldade/ritmo:** facilidade inicial, poucas derrotas ou tempo para atingir um boss podem ter ajudado.
+5. **Novidade e experiência social:** amigos podiam estar mais motivados pela descoberta inicial ou pela competição entre si. Não atribuir causalidade à UX sem testar.
+
+**Princípio de design:** "Poucas decisões com consequências; progressão frequente e compreensível; boss como objetivo próximo". A questão não é maximizar número de escolhas ou tornar lutas lentas.
+
+**Proposta de experimentação sem destruir v0.12:**
+- **Teste A — navegação:** manter 15 Realms, dificuldade, rewards e ofertas idênticas, remover apenas cliques Exit/Enter e ecrãs redundantes; comparar cliques/tempo/menu e replay voluntário.
+- **Teste B — objetivo:** sobre A, tornar a distância ao boss e marcos intermediários explícitos, com progressão visual simples "faltam X" (sem novas moedas/loot), mantendo mesma dificuldade; medir até onde chegam e continuidade.
+- **Teste C — cadência:** protótipo separado que condensa decisões em checkpoints em vez de após todo combate (por exemplo, algumas escolhas importantes a cada 2–3 Realms), sem remover o conteúdo existente e preservando orçamento total dos passivos; exigir novas simulações antes de alterar lógica live.
+- **Teste D — nostalgia/controlado:** reproduzir em ambiente sintético o objetivo de boss a cada 10 dungeons e uma única ação Next, com gear e dificuldade alinhados tanto quanto possível para comparação, sem reintroduzir classic em production/development runtime ou substituir v0.12. Isto é um protótipo de UX comparativo, não autorização para regressar à v0.9.
+
+**Instrumentação necessária:** segundos entre vitórias e próximo combate, número de interações para avançar, taxa de conclusão até milestone, tempo real para o primeiro boss, número de runs adicionais iniciadas espontaneamente, sessões voluntárias no dia seguinte, percentagem de tempo em menus vs combate e comentários dos jogadores. Em playtests, manter recompensa/dificuldade tanto quanto possível e aleatorizar ordem das variantes para reduzir efeitos de aprendizagem e novidade.
+
+**Critério de produto:** cada ação obrigatória deve ou (a) avançar claramente até ao objetivo ou (b) representar escolha estratégica com consequência. Caso contrário deve desaparecer ou tornar-se opcional.
+
+**Decisão atual:** dar prioridade à análise do *core loop / momentum* acima da auditoria de coeficientes; nenhuma mudança de gameplay aprovada ainda.
+
 ### P0 — Eliminar cliques cerimoniais, preservando escolhas reais
 
 **Fluxo observado:** combate termina → popup passivo obrigatório → regressa a combate concluído → botão Exit Realm → ecrã Between Realms → selecionar card Realm → botão Enter Realm → combate. A cada transição normal, até 4 ações manuais, repetidas até 14 vezes numa Expedition de 15 Realms. A sensação é de microgestão entre lutas demasiado rápidas.
