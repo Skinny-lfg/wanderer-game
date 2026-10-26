@@ -7,6 +7,10 @@ Referências: docs/v013-gameplay-fun-and-expedition-flow-backlog.md; docs/v012-c
 Baseline conhecido no início desta proposta: development 62637c4f2104089a6e46a33fb2d31297bb987dfc; main 7cd2a91f03844fe6586f84f11fa45723dd9a6001. Branches divergentes. Revalidar sempre SHA antes de escrever.
 Missão de produto: recuperar a sensação "Next → progresso → boss", introduzir mapa legível, construir passivos cedo e vê-los destruir hordas, com desafios estratégicos e equipamento permanente. Não construir outro jogo.
 
+## PRÉ-REQUISITO ANTES DA FASE 0 — PARIDADE DE PRODUÇÃO
+
+**Executar primeiro:** `docs/v013-main-parity-codex-handoff.md` — recuperar seletivamente da `main` o fluxo Account registrado, Feedback, leaderboard com perfis/equipamento/Runes e os hotfixes de 25/10. Não fazer merge global; preservar isolated saves/fixtures; não fazer deploy de Firestore Rules; reportar PASS/FAIL. Só depois de validar essa paridade começar a limpeza antiga e as alterações de mapa/combate.
+
 ## 0. LEIS DE IMPLEMENTAÇÃO
 
 1. Um parâmetro de cada vez nos testes causais; não mexer simultaneamente em dificuldade, duração, odds de loot e passivos.
