@@ -1,0 +1,42 @@
+[
+  {
+    "width": 320,
+    "height": 1066,
+    "nodes": 35,
+    "options": 3,
+    "rows": 15,
+    "duplicateCards": 0
+  },
+  {
+    "width": 390,
+    "height": 1054,
+    "nodes": 35,
+    "options": 3,
+    "rows": 15,
+    "duplicateCards": 0
+  },
+  {
+    "width": 768,
+    "height": 1036,
+    "nodes": 35,
+    "options": 3,
+    "rows": 15,
+    "duplicateCards": 0
+  },
+  {
+    "width": 1280,
+    "height": 1049,
+    "nodes": 35,
+    "options": 3,
+    "rows": 15,
+    "duplicateCards": 0
+  },
+  {
+    "width": 1920,
+    "height": 1049,
+    "nodes": 35,
+    "options": 3,
+    "rows": 15,
+    "duplicateCards": 0
+  }
+]
