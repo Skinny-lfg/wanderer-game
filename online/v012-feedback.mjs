@@ -1,12 +1,12 @@
 /* Player feedback / bug reports for the v0.12 preview.
    Read-only gameplay context; Firebase feedbackInbox is separate from saves.
    Do not treat a local copy as a submitted report. */
-import {createBackend} from './firebase-client.mjs';
 import {buildCommit} from './v012-build-info.mjs';
 const button=document.querySelector('[data-online-action="feedback"]');
 const timeKey='wanderer-feedback-last-sent-v012';
+const remoteSubmissionEnabled=(!['localhost','127.0.0.1'].includes(location.hostname)&&!location.hostname.endsWith('.test'))||new URLSearchParams(location.search).get('testAuthGate')==='1';
 let backendPromise=null;
-const getBackend=()=>backendPromise??=(createBackend().catch(error=>{backendPromise=null;throw error;}));
+const getBackend=()=>backendPromise??=(import('./firebase-client.mjs?v=v013-main-parity-1').then(({createBackend})=>createBackend()).catch(error=>{backendPromise=null;throw error;}));
 function context(){
  try{return typeof globalThis.WandererFeedbackContext==='function'?globalThis.WandererFeedbackContext():{};}
  catch{return {};}
@@ -42,10 +42,8 @@ function openFeedback(){
   <label>Steps to reproduce / additional details (optional)
     <textarea id="wandererReportSteps" name="steps" maxlength="1150" rows="2" placeholder="Where did it happen? What did you do first?"></textarea>
   </label>
-  <label>Nickname (only if you have not created a Firebase profile)
-   <input type="text" name="nickname" autocomplete="nickname" minlength="3" maxlength="20" pattern="[A-Za-z0-9_]{3,20}" placeholder="3–20 letters, numbers or _"></label>
   <label class="feedbackPrivacy"><input type="checkbox" name="browser" checked>Include browser information to help diagnose bugs</label>
- <p class="feedbackNotice">Sending requires an authenticated account or Guest session. If the service is not ready, use “Copy report”.</p>
+ <p class="feedbackNotice">Sending requires a registered Google or verified email account. If the service is unavailable, use “Copy report”.</p>
   <p class="feedbackNotice" id="wandererFeedbackStatus" role="status" aria-live="polite"></p>
   <div class="feedbackActions">
    <button type="button" class="ghost" data-copy-feedback>Copy report</button>
@@ -67,6 +65,7 @@ function openFeedback(){
  });
  form.addEventListener('submit',async event=>{
   event.preventDefault();if(send.disabled||!form.reportValidity())return;
+  if(!remoteSubmissionEnabled){message('Local preview is isolated from accounts and saves. Copy this report and submit it from the signed-in game.','error');return;}
   const desc=form.elements.description.value.trim(),steps=form.elements.steps.value.trim();
   if(desc.length<10){message('Please write at least 10 characters.','error');return;}
   // A client-side cooldown reduces accidental duplicate submissions; server protections still apply.
@@ -78,7 +77,7 @@ function openFeedback(){
     let unsubscribe=()=>{};
     unsubscribe=backend.watchAuth(user=>{unsubscribe();resolve(user);});
    });
-   if(!currentUser)await backend.signInGuest();
+   if(!currentUser||currentUser.isAnonymous)throw Error("Sign in to your Wanderer account before sending feedback.");
    const ctx=context();
    await backend.submitV012Feedback({
     category:form.elements.category.value,description:desc,steps,commit:buildCommit,
@@ -93,6 +92,7 @@ function openFeedback(){
    const explain=code==='auth/popup-closed-by-user'?'Sign-in cancelled. Your report was not sent.':
     code.includes('permission-denied')?'Reports are not enabled in this Firebase environment yet. Copy the report for now.':
     error?.message==='feedback-rate-limited'?'Please wait one minute between reports.':
+    /Sign in to your Wanderer account/.test(String(error?.message||''))?'Sign in first using the Account button. Your report was not submitted.':
     code.includes('auth/')?'Sign-in failed. Check your account or try again.':
     'Could not submit the report. Nothing was sent; you can copy it instead.';
    message(explain,'error');

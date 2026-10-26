@@ -1,6 +1,7 @@
 import {publicLoadout,cleanEquipment,cleanPublicRunes,cleanPublicRuneSlots} from './public-loadout.mjs';
+import {publishableV012Equipment,parseV012Equipment} from './v012-public-equipment.mjs';
 import * as bundledSdk from './vendor/firebase-sdk.mjs';
-import * as configModule from './firebase-config.mjs?v=v012-production-config-3';
+import * as configModule from './firebase-config.mjs?v=v013-main-parity-1';
 const {firebaseConfig,assertDevFirebaseConfig}=configModule;
 import {nicknameKey,character,cloudRecord,compareRevision,validateSave,recoverInterruptedSave,SEASON,SAVE_NAMESPACE,PUBLIC_LOADOUTS,SPEEDRUN_BOARD,safeProgress,completedD200Time} from './model.mjs?v=v092-combat-hotfix-1';
 let backendPromise;
@@ -24,10 +25,7 @@ export async function createBackend(){
   watchAuth:callback=>sdk.onAuthStateChanged(auth,callback),
   currentUser:()=>auth.currentUser,
   projectId:firebaseConfig.projectId,
-  signInGuest:()=>sdk.signInAnonymously(auth),
   signIn:()=>sdk.signInWithPopup(auth,new sdk.GoogleAuthProvider()),
-  async linkGoogle(){if(!auth.currentUser?.isAnonymous)throw Error('Sign in as Guest first to link Google.');return sdk.linkWithPopup(auth.currentUser,new sdk.GoogleAuthProvider());},
-  async linkEmail(email,password){if(!auth.currentUser?.isAnonymous)throw Error('Sign in as Guest first to link email.');return sdk.linkWithCredential(auth.currentUser,sdk.EmailAuthProvider.credential(String(email).trim(),String(password)));},
   signInWithEmail:(email,password)=>sdk.signInWithEmailAndPassword(auth,String(email).trim(),String(password)),
   async createEmailAccount(email,password){
    const credential=await sdk.createUserWithEmailAndPassword(auth,String(email).trim(),String(password));
@@ -54,6 +52,40 @@ export async function createBackend(){
   async createV012SaveIfMissing(uid,payload){if(!uid||uid!==user())throw Error('Save owner does not match signed-in account.');const ref=v012SaveRef(uid);let saved;await sdk.runTransaction(db,async tx=>{const snap=await tx.get(ref);if(snap.exists()){saved=snap.data();return;}const record={payload:JSON.stringify(payload),revision:1,schemaVersion:payload.schemaVersion,format:payload.format,createdAt:sdk.serverTimestamp(),updatedAt:sdk.serverTimestamp()};tx.set(ref,record);saved={...record,createdAt:new Date(),updatedAt:new Date()};});return saved;},
   async writeV012Save(uid,payload,expectedRevision){if(!uid||uid!==user())throw Error('Save owner does not match signed-in account.');const ref=v012SaveRef(uid);let record;await sdk.runTransaction(db,async tx=>{const snap=await tx.get(ref);if(!snap.exists()||snap.data().revision!==expectedRevision)throw Error('Cloud save changed in another session. Reload before saving.');record={payload:JSON.stringify(payload),revision:expectedRevision+1,schemaVersion:payload.schemaVersion,format:payload.format,createdAt:snap.data().createdAt,updatedAt:sdk.serverTimestamp()};tx.update(ref,record);});return record;},
   async profile(){const snap=await sdk.getDoc(profileRef(user()));if(!snap.exists()&&snap.metadata.fromCache)throw new Error('network-profile-unconfirmed');return snap.exists()?snap.data():null;},
+  // Public reads expose only the published identity and currently equipped gear.
+  async readV012PublicProfile(uid){
+   if(typeof uid!=='string'||uid.length<1||uid.length>128||uid.includes('/'))throw Error('Invalid player.');
+   const snap=await sdk.getDoc(profileRef(uid));if(!snap.exists())return null;
+   const data=snap.data();
+   const nickname=typeof data.nickname==='string'&&/^[a-z0-9_]{3,20}$/.test(data.nickname)?data.nickname:null;
+   const characterId=['wanderer','ranger','knight','spellblade','duelist'].includes(data.characterId)?data.characterId:null;
+   return nickname&&characterId?{nickname,characterId}:null;
+  },
+  async publishV012EquippedEquipment(snapshot){
+   const uid=user();if(auth.currentUser?.isAnonymous)throw Error('Registered account required.');
+   const publicData=publishableV012Equipment(snapshot),payload=JSON.stringify(publicData);
+   if(payload.length>30000)throw Error('Public equipment exceeds allowed size.');
+   const ref=sdk.doc(db,PUBLIC_LOADOUTS,uid);
+   const maxDungeon=Math.max(1,Math.min(200,Math.trunc(Number(snapshot?.expedition?.unlocked)||1)));
+   await sdk.runTransaction(db,async tx=>{
+    const old=await tx.get(ref);
+    if(old.exists()&&old.data().equipment===payload&&old.data().maxDungeon===maxDungeon)return;
+    tx.set(ref,{equipment:payload,maxDungeon,updatedAt:sdk.serverTimestamp()});
+   });
+  },
+  async readV012EquippedEquipment(uid){
+   if(typeof uid!=='string'||uid.length<1||uid.length>128||uid.includes('/'))throw Error('Invalid player.');
+   const snap=await sdk.getDoc(sdk.doc(db,PUBLIC_LOADOUTS,uid));
+   if(!snap.exists())return null;
+   return parseV012Equipment(snap.data().equipment);
+  },
+  async findV012Player(name){
+   const key=nicknameKey(name),claim=await sdk.getDoc(sdk.doc(db,'nicknames',key));
+   if(!claim.exists()||typeof claim.data().uid!=='string')throw Error('Player not found. Enter the full nickname.');
+   const uid=claim.data().uid,profile=await this.readV012PublicProfile(uid);
+   if(!profile)throw Error('Public profile is unavailable.');
+   return {uid,profile,loadout:await this.readV012EquippedEquipment(uid)};
+  },
   async createProfile(name,characterId){
    const uid=user(),nickname=nicknameKey(name),nicknameRef=sdk.doc(db,'nicknames',nickname),ref=profileRef(uid);
    if(character(characterId).id!==characterId)throw new Error('Unknown character.');
@@ -115,6 +147,7 @@ export async function createBackend(){
    return id;
   },
   async submitV012Feedback(form){
+   if(!auth.currentUser||auth.currentUser.isAnonymous)throw Error('Sign in with Google or email before submitting feedback.');
    const uid=user(),description=String(form.description||'').trim(),steps=String(form.steps||'').trim(),category=String(form.category||'bug');
    const types=['bug','idea','balance','general'];
    if(!types.includes(category)||description.length<10||description.length>1400||steps.length>1150)throw Error('Please review the report fields.');
@@ -122,6 +155,23 @@ export async function createBackend(){
    const record={uid,category,description,steps,appVersion:'0.12.0',commit:String(form.commit||'unknown').slice(0,20),screen:String(form.screen||'unknown').slice(0,60),viewport:String(form.viewport||'unknown').slice(0,40),browser:String(form.browser||'').slice(0,260),technical:String(form.technical||'').slice(0,600),createdAt:sdk.serverTimestamp()};
    await sdk.runTransaction(db,async tx=>{const [old,duplicate]=await Promise.all([tx.get(limit),tx.get(report)]);if(duplicate.exists())throw Error('duplicate-feedback');if(old.exists()&&Date.now()-old.data().updatedAt.toMillis()<60000)throw Error('feedback-rate-limited');tx.set(report,record);tx.set(limit,{uid,updatedAt:sdk.serverTimestamp()});});
    return id;
+  },
+  async publishV012CommunityScore(best,nickname){
+   const uid=user(),score=Number(best),name=nicknameKey(nickname);
+   if(auth.currentUser?.isAnonymous)throw Error('Registered account required.');
+   if(!Number.isSafeInteger(score)||score<1||score>100000)throw Error('Invalid Expedition result.');
+   const ref=sdk.doc(db,'communityV012Leaderboard',uid);
+   await sdk.runTransaction(db,async tx=>{
+    const previous=await tx.get(ref);
+    if(previous.exists()&&previous.data().best>=score)return;
+    tx.set(ref,{uid,nickname:name,best:score,verified:false,updatedAt:sdk.serverTimestamp()});
+   });
+  },
+  async listV012CommunityScores(){
+   if(!auth.currentUser||auth.currentUser.isAnonymous)throw Error('Sign in first.');
+   const col=sdk.collection(db,'communityV012Leaderboard');
+   const snap=await sdk.getDocs(sdk.query(col,sdk.orderBy('best','desc'),sdk.limit(50)));
+   return snap.docs.map(d=>({uid:d.id,nickname:d.data().nickname,best:d.data().best,verified:false}));
   },
   async publishLoadout(save){
    const loadout=publicLoadout(save),payload=JSON.stringify({...loadout.equipment,__runes:loadout.runes,__runeSlots:loadout.runeSlots}),ref=sdk.doc(db,PUBLIC_LOADOUTS,user());

@@ -29,7 +29,7 @@ test('D200 best survives reset and only improves on a faster complete attempt',a
  };
  let source=await readFile(new URL('../online/firebase-client.mjs',import.meta.url),'utf8');
  source=source.replace("import * as bundledSdk from './vendor/firebase-sdk.mjs';",'const bundledSdk=globalThis.__speedrunSdk;');
- for(const name of ['firebase-config','model','public-loadout'])source=source.replace(new RegExp(`'\\./${name}\\.mjs(?:\\?v=[^']+)?'`),JSON.stringify(new URL(`../online/${name}.mjs`,import.meta.url).href));
+ for(const name of ['firebase-config','model','public-loadout','v012-public-equipment'])source=source.replace(new RegExp(`'\\./${name}\\.mjs(?:\\?v=[^']+)?'`),JSON.stringify(new URL(`../online/${name}.mjs`,import.meta.url).href));
  try{
   const {createBackend}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
   const backend=await createBackend();

@@ -35,7 +35,16 @@ const server=http.createServer((req,res)=>{
    assert.equal(await page.locator('#v012-launch').count(),0,'standalone prototype must not load');
    assert(!requested.some(url=>url.includes('/online/app.mjs')),'account/cloud app must not load');
    assert(!requested.some(url=>url.includes('/online/v012-prototype.mjs')),'dual combat simulator must not load');
-   if(width<=650)await page.locator('#menuToggle').click();await page.locator('[data-online-action="account"]').click();assert.equal(await page.locator('[data-phase1-hero]').count(),5,'five original characters available');await page.locator('dialog [data-close]').click();
+   if(width<=650)await page.locator('#menuToggle').click();await page.locator('[data-online-action="account"]').click();assert.equal(await page.locator('[data-phase1-hero]').count(),5,'five current characters available');await page.locator('dialog [data-close]').click();
+   await page.locator('[data-online-action="feedback"]').click();await page.locator('.wandererFeedbackDialog').waitFor();
+   assert.equal(await page.locator('.wandererFeedbackDialog [data-copy-feedback]').count(),1,'local feedback can be copied without connecting an account');
+   assert.equal(await page.locator('.wandererFeedbackDialog [data-send-feedback]').isDisabled(),false);
+   await page.locator('.wandererFeedbackDialog textarea[name="description"]').fill('Local test feedback must remain offline.');
+   await page.locator('.wandererFeedbackDialog [data-send-feedback]').click();
+   await page.locator('#wandererFeedbackStatus').waitFor();
+   assert.match(await page.locator('#wandererFeedbackStatus').innerText(),/Local preview is isolated/);
+   await page.locator('.wandererFeedbackDialog [data-close-feedback]').click();
+   assert(!requested.some(url=>/firebase-client|firebase-sdk|firestore|identitytoolkit/i.test(url)),'local preview must not load Firebase account, save or SDK modules');
    await page.locator('[data-phase1-expedition="1"]').first().click();
    assert.equal(await page.locator('[data-phase2-initial]').count(),6);
    await page.locator('[data-phase2-initial="blood"]').click();
