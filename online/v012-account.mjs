@@ -176,5 +176,5 @@ else {
 }
 }else{
  // Local previews stay available without initializing Firebase Auth or cloud saves.
- document.body.classList.remove('v012Preboot');
+ document.body.classList.remove('v012Preboot','v012AuthLocked');
 }

@@ -1,7 +1,7 @@
 /* Public v0.12 auth gate; visual falls back to current Wanderer branding until the new banner is imported. */
 body.v012AuthLocked{overflow:hidden}body.v012AuthLocked .container{pointer-events:none;user-select:none}
 .v012AuthGate{position:fixed;inset:0;z-index:30000;display:grid;place-items:end center;overflow-y:auto;overscroll-behavior:contain;color:#f5e5d3;background:#10090b}
-.v012GateShade{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(180deg,rgba(8,5,7,.08) 0%,rgba(8,5,7,.14) 35%,rgba(8,5,7,.79) 77%,#10090b 100%),url("../assets/branding/v0110-home-banner.webp"),url("../assets/branding/wanderer-logo.webp");background-position:center,center 37%,center 22%;background-repeat:no-repeat;background-size:cover,cover,auto 50%;filter:saturate(.95)}
+.v012GateShade{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(180deg,rgba(8,5,7,.08) 0%,rgba(8,5,7,.14) 35%,rgba(8,5,7,.79) 77%,#10090b 100%),url("../assets/releases/v0110-home-banner.webp"),url("../assets/branding/wanderer-logo.webp");background-position:center,center 37%,center 22%;background-repeat:no-repeat;background-size:cover,cover,auto 50%;filter:saturate(.95)}
 .v012GateContent{position:relative;z-index:1;display:flex;justify-content:center;align-items:flex-end;width:100%;min-height:100dvh;padding:min(31vh,230px) 16px 28px;box-sizing:border-box}
 .v012GateAuthPanel{width:min(100%,390px);padding:22px 24px;border:1px solid rgba(209,154,109,.6);border-radius:8px;background:linear-gradient(160deg,rgba(35,21,26,.96),rgba(17,11,15,.98));box-shadow:0 20px 75px rgba(0,0,0,.8);backdrop-filter:blur(12px);text-align:center}
 .v012GateEyebrow{letter-spacing:.24em;color:#d8aa70;font-size:12px}.v012GateAuthPanel h2{font-family:var(--font-display,Georgia,serif);color:#f7dab4;font-size:28px;margin:2px 0 6px}
@@ -17,7 +17,7 @@ body.v012AuthLocked{overflow:hidden}body.v012AuthLocked .container{pointer-event
 
 /* Hide the game immediately on production, before Firebase SDK is downloaded. */
 body.v012Preboot .container{visibility:hidden!important}
-body.v012Preboot::before{content:'Entering Wanderer…';display:flex;align-items:flex-end;justify-content:center;box-sizing:border-box;padding-bottom:25px;position:fixed;inset:0;z-index:18000;color:#eed6ba;letter-spacing:.15em;background:linear-gradient(180deg,rgba(12,7,10,.18),rgba(12,7,10,.8)),url('../assets/branding/v0110-home-banner.webp') center/cover no-repeat,#10090b}
+body.v012Preboot::before{content:'Entering Wanderer…';display:flex;align-items:flex-end;justify-content:center;box-sizing:border-box;padding-bottom:25px;position:fixed;inset:0;z-index:18000;color:#eed6ba;letter-spacing:.15em;background:linear-gradient(180deg,rgba(12,7,10,.18),rgba(12,7,10,.8)),url('../assets/releases/v0110-home-banner.webp') center/cover no-repeat,#10090b}
 
 
 /* Read-only leaderboard player cards (v0.12); built from publicProfiles only. */

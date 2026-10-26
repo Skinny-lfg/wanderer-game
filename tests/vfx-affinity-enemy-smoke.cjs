@@ -23,10 +23,18 @@ const s=html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
 assert(s,'inline game script');
 new (require('node:vm').Script)(s,{filename:'wanderer-vfx.js'});
 for(const text of ['function combatVfxAsset(kind,affinity)','MAGIC_COMBAT_AFFINITIES',
- 'animateEnemyStrike(enemyAbilityVfx)','enemyAbilityVfx=\'BossEmber\'','enemyAbilityVfx=\'BossAbyssal\'',
+ 'animateEnemyStrike(enemyAbilityVfx)',
  'enemyAbilityVfx=\'BossRift\'','enemyAbilityVfx=\'EliteCaster\'','enemyAbilityVfx=\'EliteVampire\'']){
  assert(html.includes(text),'missing VFX hook '+text);
 }
+const engine=fs.readFileSync(path.join(__dirname,'..','combat','v012-combat-runtime.js'),'utf8');
+for(const [trigger,ability] of [['e.enraged=true','BossEmber'],['e.barrier=','BossAbyssal']]){
+ const at=engine.indexOf(trigger);
+ assert(at>=0,'missing boss ability trigger '+trigger);
+ const route=engine.indexOf("enemyAbilityVfx='"+ability+"'",at);
+ assert(route>=at&&route<engine.indexOf('\n  }',at),'boss effect must be routed by the combat engine: '+ability);
+}
+assert(engine.includes('ports.animateEnemyStrike(enemyAbilityVfx);'),'engine must synchronize the boss effect with the enemy strike');
 assert(combatCss.includes('@keyframes vfxCenteredEnemyTravel'),'enemy projectile travels toward player');
 assert(combatCss.includes('.combatVfx.vfxEnemyWard'),'boss self-targeted VFX exists');
 // Regression: boss ability IDs are assigned in the canonical combat runtime and routed via animateEnemyStrike(enemyAbilityVfx), not direct combatEffect calls.\n// No cached 2026-10-15 player spells, centered projectiles, readable enemy attacks,
