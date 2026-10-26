@@ -8,6 +8,7 @@
 .v013MapLegend i.elite{border-color:#d18a4f;color:#f2b178}.v013MapLegend i.event{border-color:#8d79cc;color:#c5adff}.v013MapLegend i.boss{border-color:#c75759;color:#ff999b}
 .v013MapAutoAdvance{min-height:44px!important;margin-top:6px;padding:5px 9px;border:1px solid #705661;border-radius:7px;background:#211922;color:#d8c4a2;font-size:11px;cursor:pointer}
 .v013MapAutoAdvance[aria-pressed="true"]{border-color:#8e7450;color:#f1d59f}
+.v013MapStrategicNote{display:block;max-width:580px;color:#d3c1c1;font-size:11px;line-height:1.25}
 .v013MapChoices{margin:9px 0 5px;padding:8px;border:1px solid #55414a;border-radius:9px;background:#120f16aa}
 .v013MapChoices h3{margin:0 0 7px;color:#e7c897;font:700 12px var(--font-head)}
 .v013MapChoiceGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
@@ -24,13 +25,25 @@
 .v013MapEdge{fill:none;stroke:#56434d;stroke-width:1.7;stroke-linecap:round;opacity:.28;vector-effect:non-scaling-stroke}
 .v013MapEdge.is-chosen{stroke:#d7ad67;stroke-width:2.4;opacity:.95;filter:drop-shadow(0 0 3px #e4bc6c77)}
 .v013MapEdge.is-next{stroke:#b69a6d;stroke-width:2;stroke-dasharray:4 4;opacity:.86}
-.v013MapRow{position:relative;z-index:1;display:grid;grid-template-columns:34px minmax(0,1fr);align-items:center;gap:5px;height:56px;min-height:56px}
-.v013MapRealmLabel{display:grid;place-items:center;min-height:22px;color:#e6c996;font:700 10px var(--font-head);text-align:center}
+.v013MapRow{position:relative;z-index:1;display:block;height:var(--v013-map-row-height,48px);min-height:var(--v013-map-row-height,48px)}
+.v013MapRealmLabel{position:absolute;left:0;top:50%;transform:translateY(-50%);display:grid;place-items:center;width:25px;min-height:22px;color:#e6c996;font:700 10px var(--font-head);text-align:center}
 .v013MapRealmLabel:not(.is-milestone){color:transparent}
 .v013MapRealmLabel.is-milestone{color:#e6c996}
-.v013MapNodes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:center;justify-items:center;min-width:0;height:100%}
+.v013MapNodes{position:absolute;inset:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:center;justify-items:center;min-width:0;height:100%}
 .v013MapRow:has(.v013MapCell:only-child) .v013MapCell{grid-column:2}
 .v013MapCell{display:grid;place-items:center;width:100%;height:100%;min-width:0}
+.v013MapNodes--active{align-items:start}
+.v013MapNodes--active .v013MapCell{align-content:start;justify-items:center;gap:2px;padding-top:6px}
+.v013MapRouteContext{display:grid;justify-items:center;align-content:start;gap:2px;width:100%;min-width:0;text-align:center;color:#d8c7c8}
+.v013MapRouteContext>b{display:flex;align-items:center;justify-content:center;gap:2px;max-width:100%;color:#f0dfc4;font:700 10px/1.1 var(--font-head);overflow-wrap:anywhere}
+.v013MapRouteContext>b .affinityFamilyIcon{width:13px;height:13px;flex:none}
+.v013MapRouteContext>small{display:block;max-width:100%;font-size:9px;line-height:1.08;overflow-wrap:anywhere}
+.v013MapRouteContext>small:nth-child(2){color:#dfcc9f}
+.v013MapBranchSequence{color:#cbbcc0}
+.v013MapRouteContext .v013MapBranchRisk{color:#e7be81}
+.v013MapRouteActions{display:flex;align-items:center;justify-content:center;gap:4px;min-height:44px;color:#baabb0;font-size:9px}
+.v013MapPanel .v013MapReroll{display:grid;place-items:center;width:44px!important;height:44px!important;min-width:44px!important;min-height:44px!important;margin:0;padding:0;border:1px solid #735968;border-radius:7px;background:#211922;color:#edcf9b;font-size:17px;line-height:1;cursor:pointer}
+.v013MapPanel .v013MapReroll:disabled{opacity:.4;cursor:not-allowed}
 .v013MapPanel .v013MapNode{position:relative;display:grid!important;place-items:center!important;box-sizing:border-box;width:34px;height:34px;min-width:34px;min-height:34px;padding:0;border:1px solid #76636a;border-radius:50%;background:linear-gradient(145deg,#29212b,#1b1820);color:#d3c3c5;text-align:center;overflow:visible;transition:transform .12s ease,border-color .12s ease,background .12s ease,box-shadow .12s ease}
 .v013MapIcon{display:grid;place-items:center;color:#d9c9ad;font-size:16px;line-height:1}
 .v013MapNode--elite{border-color:#855b3d!important}.v013MapNode--elite .v013MapIcon{color:#f2b178}
@@ -55,25 +68,18 @@ button.v013MapNode.v013MapNode--event .v013MapIcon{color:#c5adff}
  .v013MapHeading{align-items:flex-start;flex-direction:column;gap:6px;padding-bottom:8px}
  .v013MapLegend{justify-content:flex-start;gap:4px 8px}
  .v013MapLegend i{width:20px;height:20px}
- .v013MapChoices{margin:7px 0 2px;padding:6px}
- .v013MapChoices h3{font-size:11px}
- .v013MapChoiceGrid{gap:4px}
- .v013MapChoice{gap:3px;padding:5px 4px}
- .v013MapChoice>b{font-size:10px;line-height:1.15}
- .v013MapChoiceMeta{font-size:9px}
- .v013MapReroll{min-width:44px;min-height:44px;padding:3px 4px;font-size:9px}
- .v013MapRow{grid-template-columns:28px minmax(0,1fr);gap:2px;height:50px;min-height:50px}
- .v013MapViewport{height:calc(var(--v013-map-height) * .893);min-height:calc(var(--v013-map-height) * .893)}
+ .v013MapStrategicNote{font-size:10px}
+ .v013MapRow{height:var(--v013-map-row-height,46px);min-height:var(--v013-map-row-height,46px)}
+ .v013MapRealmLabel{width:22px;font-size:9px}
+ .v013MapRouteContext>b{font-size:10px}
+ .v013MapRouteContext>small{font-size:9px}
  .v013MapNode--boss{width:40px!important;height:40px!important}
 }
 @media(max-width:350px){
  .v013MapPanel{padding-right:5px;padding-left:5px}
- .v013MapChoiceGrid{gap:3px}
- .v013MapChoice{padding:4px 3px}
- .v013MapChoice>b{font-size:9px}
- .v013MapChoiceMeta{font-size:8px}
- .v013MapRow{grid-template-columns:25px minmax(0,1fr);gap:1px}
  .v013MapPanel .v013MapNode{width:30px;height:30px;min-width:30px;min-height:30px}
  button.v013MapNode{width:46px!important;height:46px!important;min-width:46px!important;min-height:46px!important}
+ .v013MapRouteContext>b{font-size:9px}
+ .v013MapRouteContext>small{font-size:8px}
 }
 @media(prefers-reduced-motion:reduce){.v013MapNode--available{animation:none}.v013MapNode:hover{transform:none}}
