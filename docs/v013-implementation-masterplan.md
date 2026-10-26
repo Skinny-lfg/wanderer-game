@@ -187,3 +187,14 @@ Camp → Escolher build/equipamento → Mapa de 15 Realms com boss visível → 
 
 - Este ficheiro é especificação. Não representa implementação completa nem aprovação para produção.
 - Em cada tarefa, apontar aqui commit, teste executado, resultado e problemas conhecidos. Evitar "PASS" baseado apenas em leitura de código.
+
+
+## 11. EXECUÇÃO INICIAL — 26/10/2026
+
+- Criado \`online/v013-map-prototype.js\`: modelo de grafo determinístico e isolado com 15 Realms, 41 nós, 78 ligações, 2 Elites e 3–4 eventos por percurso, boss em R15. Hints de affinity não são ofertas reais nem respeitam ainda o limite de 3 famílias; INTEGRAÇÃO PENDENTE.
+- Criado \`experiments/v013-map-prototype.html\`: laboratório interativo de navegação sem saves, rewards, Firebase ou combate. **Não está integrado na UI de jogo.**
+- Criados \`tests/v013-map-prototype.test.cjs\` e \`scripts/v013-map-stress.cjs\` para invariant/seed/reachability. Verificação JS local no conector: 2.000 seeds PASS. GitHub Actions de mapa (run 40289569594): PASS incluindo 10.000 seeds e check anti-live import.
+- Criado \`docs/v013-legacy-cleanup-inventory.md\`: lista C1 ativo, C2 compatibilidade, C3 candidato morto, C4 incerto; nenhuma remoção de runtime realizada.
+- Os testes nativos de v0.12 no GitHub Actions (run 40289569469) passaram na branch development após a criação destes ficheiros, demonstrando ausência de regressão no arranque do protótipo isolado.
+- Início da bateria baseline extensa v0.12 por workflow existente \`development-tests.yml\`: browser, VFX, builds E10/E50, simulação v0.12 e auditorias coverage/armor/12 legendary via marcadores neste commit. **Não interpretar o trigger como resultado PASS; verificar execução e artefactos.**
+- Nenhum combate multi-mob, novo sistema de passivos, novo mapa integrado ou limpeza de funções legadas foi introduzido no jogo. Main/saves/Firebase/Railway não foram modificados manualmente.
