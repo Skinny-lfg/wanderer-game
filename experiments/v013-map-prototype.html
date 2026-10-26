@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="pt-PT"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wanderer v0.13 — Map Prototype (Isolated)</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#100e13;color:#e6ded1}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% 15%,#33251e,#100e13 70%);min-height:100vh}main{max-width:960px;margin:auto;padding:16px}
+h1{font:500 clamp(22px,4vw,34px) Georgia,serif;letter-spacing:.02em;color:#e8cf9c;margin:0 0 8px}p{line-height:1.55;color:#b4ad9f}
+a{color:#d9bc85}.actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.actions button{background:#312822;color:#eacf9a;border:1px solid #866a48;border-radius:8px;padding:10px 16px;cursor:pointer;font-weight:600}.actions button:focus-visible,.node:focus-visible{outline:3px solid #ffcf73;outline-offset:2px}.actions label{font-size:14px}.actions input{width:115px;background:#17151b;color:#f1e4cc;border:1px solid #726046;padding:9px;border-radius:6px}#stats{color:#e5ca95;font-size:14px;margin:12px 0}
+.legend{display:flex;flex-wrap:wrap;gap:10px;color:#afa394;font-size:12px;margin:15px 0}.legend span{padding:5px 8px;background:#211c21;border-radius:5px}
+.mapShell{position:relative;border:1px solid #574331;box-shadow:inset 0 0 45px #160d08;background:linear-gradient(180deg,#211b23,#15121a);border-radius:12px;overflow:hidden}
+#map{position:relative;padding:24px 8px;min-height:700px}#lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:0}
+.mapRow{display:flex;justify-content:space-around;align-items:center;position:relative;z-index:1;min-height:120px;gap:12px}
+.node{border:1px solid #67543e;background:#221f25;color:#e3d4be;border-radius:10px;width:clamp(90px,24%,176px);min-height:76px;padding:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:13px;text-align:center;box-shadow:0 2px 16px #0008;opacity:.48}
+button.node{cursor:default}.node strong{font-size:15px}.node small{font-size:11px;color:#b8aa96}
+.node[data-kind="elite"]{border-color:#985951}.node[data-kind="event"]{border-color:#62828c}.node[data-kind="boss"]{border-color:#bc9060;background:#29211e}
+.node.available{opacity:1;cursor:pointer;background:#393024;border-color:#e4b96d;box-shadow:0 0 18px #ddaf6e35}
+.node.completed{opacity:1;border-color:#83a581;background:#222b23}.node.current{box-shadow:0 0 0 2px #b8dcb3}
+.node:disabled:not(.completed){cursor:default}
+.message{padding:12px 14px;background:#242026;border:1px solid #594c3e;border-radius:8px;margin:12px 0;color:#f0d9ae}
+.note{font-size:13px;color:#aaa2a2}
+@media(max-width:450px){main{padding:9px}.mapRow{min-height:110px;gap:5px}.node{width:31.5%;padding:6px 3px;font-size:11px;min-height:77px}.node strong{font-size:12px}.node small{font-size:10px}#map{padding:12px 2px}.mapRow:has(.node:only-child) .node{width:62%}}
+</style></head><body><main>
+<h1>Wanderer · v0.13 Map Lab</h1>
+<p>Protótipo interativo isolado para testar percursos e bifurcações. <strong>Não inicia combates nem altera saves.</strong> As affinities nos cartões são apenas exemplos visuais; a integração futura terá de respeitar o limite de três affinities.</p>
+<div class="actions"><label for="seed">Seed <input type="number" id="seed" min="0" max="4294967295" step="1" value="13013"></label><button id="regenerate" type="button">Gerar mapa</button><button id="reset" type="button">Recomeçar percurso</button></div>
+<div id="stats" role="status"></div>
+<div class="legend"><span>⚔ Combate</span><span>👑 Elite</span><span>✦ Evento</span><span>☠ Boss</span><span>🟡 Próximas escolhas</span><span>✓ Percurso concluído</span></div>
+<div id="message" class="message" role="status">Seleciona um nó dourado para avançar pelo mapa.</div>
+<section class="mapShell"><div id="map"><svg id="lines" aria-hidden="true"></svg></div></section>
+<p class="note">Nota: a agenda de tipo de encontro é comum às três rotas por nível nesta primeira experiência, para garantir dois Elites e 3–4 eventos por percurso. Num teste posterior, poderão existir distribuições de risco/recompensa diferentes sem alterar o orçamento da Expedition.</p>
+</main>
+<script src="../online/v013-map-prototype.js"></script>
+<script>
+(function(){'use strict';
+const api=globalThis.WandererV013MapPrototype;
+const host=document.getElementById('map'),svg=document.getElementById('lines'),stats=document.getElementById('stats'),message=document.getElementById('message'),seedInput=document.getElementById('seed');
+const icon={combat:'⚔',elite:'👑',event:'✦',boss:'☠'};
+let data=null,current=null,visited=[];
+function show(){
+ host.querySelectorAll('.mapRow').forEach(e=>e.remove());
+ const offered=new Set(current?api.next(data,current.id).map(n=>n.id):[]);
+ const done=new Set(visited.map(n=>n.id));
+ for(const row of [...data.rows].reverse()){
+  const wrapper=document.createElement('div');wrapper.className='mapRow';wrapper.dataset.realm=row[0].realm;
+  for(const node of row){const el=document.createElement('button');el.type='button';el.className='node';el.dataset.id=node.id;el.dataset.kind=node.kind;el.disabled=!offered.has(node.id);
+   if(done.has(node.id))el.classList.add('completed');if(current?.id===node.id)el.classList.add('current');if(offered.has(node.id))el.classList.add('available');
+   const title=document.createElement('strong');title.textContent=icon[node.kind]+' R'+node.realm+' · '+node.kind;
+   const hint=document.createElement('small');hint.textContent=node.kind==='boss'?'Boss final':'Pista: '+node.affinityHint+' · '+node.risk;
+   el.append(title,hint);el.setAttribute('aria-label','Realm '+node.realm+' '+node.kind+' '+node.risk);
+   if(el.classList.contains('available'))el.addEventListener('click',()=>pick(node));
+   wrapper.appendChild(el);}
+  host.appendChild(wrapper);
+ }
+ stats.textContent='Realm '+current.realm+'/15 · faltam '+(15-current.realm)+' · 2 Elites · '+data.eventCount+' Eventos · percurso '+visited.map(n=>'R'+n.realm).join(' → ');
+ requestAnimationFrame(draw);
+}
+function draw(){
+ const base=host.getBoundingClientRect(),paths=new Set(visited.slice(1).map((n,i)=>visited[i].id+'|'+n.id));
+ const list=data.edges.map(edge=>{
+  const a=host.querySelector('[data-id="'+edge.from+'"]'),b=host.querySelector('[data-id="'+edge.to+'"]');if(!a||!b)return '';
+  const from=a.getBoundingClientRect(),to=b.getBoundingClientRect(),x1=from.left+from.width/2-base.left,y1=from.top-base.top,x2=to.left+to.width/2-base.left,y2=to.bottom-base.top;
+  const chosen=paths.has(edge.from+'|'+edge.to);const visible=visited.some(v=>v.id===edge.from);
+  return '<path d="M'+x1.toFixed(1)+' '+y1.toFixed(1)+' L'+x2.toFixed(1)+' '+y2.toFixed(1)+'" stroke="'+(chosen?'#d3ad67':visible?'#786a52':'#423a3b')+'" stroke-width="'+(chosen?3:1.5)+'" fill="none" opacity="'+(chosen?1:.55)+'"/>';
+ });
+ svg.setAttribute('viewBox','0 0 '+Math.ceil(base.width)+' '+Math.ceil(base.height));svg.innerHTML=list.join('');
+}
+function pick(node){
+ if(!api.next(data,current.id).some(n=>n.id===node.id))return;
+ current=node;visited.push(node);show();
+ message.textContent=node.kind==='boss'?'Boss alcançado. Protótipo concluído — podes gerar outro mapa.':('R'+node.realm+' · '+node.kind+' · caminho escolhido. '+(15-node.realm)+' Realms até ao boss.');
+}
+function reset(){current=data.rows[0][0];visited=[current];message.textContent='R1 concluído para simular o início. Seleciona uma das rotas acessíveis em R2.';show();}
+function regenerate(){const seed=Number(seedInput.value);try{data=api.create(seed);reset();}catch(err){message.textContent='Seed inválida: '+err.message;}}
+document.getElementById('regenerate').addEventListener('click',regenerate);document.getElementById('reset').addEventListener('click',reset);window.addEventListener('resize',()=>{if(data)draw();});
+regenerate();
+})();
+</script></body></html>
