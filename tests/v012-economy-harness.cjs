@@ -15,7 +15,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
    const n=getNode('buy-'+m[1]);n.dataset.buy=m[1];return n;
   });
  };
- const sandbox={Math:math,...(options.now===undefined?{}:{Date:class extends Date{static now(){return options.now;}}}),URLSearchParams,location:{search:'?expeditionPhase1=1'},console,__WANDERER_TEST_LEGACY_NAV__:true,
+ const sandbox={Math:math,...(options.now===undefined?{}:{Date:class extends Date{static now(){return options.now;}}}),URLSearchParams,location:{hostname:options.hostname||'localhost',search:options.search??'?expeditionPhase1=1'},console,__WANDERER_TEST_LEGACY_NAV__:true,
   document:{body:node(),visibilityState:'visible',getElementById:getNode,querySelector:()=>null,querySelectorAll:queryAll,createElement:node,addEventListener(){}},
   localStorage:{getItem(){throw Error('Unexpected real save read');},setItem(){throw Error('Unexpected real save write');}},
   // The local preview deliberately persists only to sessionStorage. Keep that
@@ -68,6 +68,8 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
    mark(item,overflow=false){(overflow?state.expeditionOverflow:state.stash).push(item);phase3LootIds.add(item.id);},
    ids:()=>Array.from(phase3LootIds),markup:phase3BagMarkup,passives:phase3PassivesMarkup},
   checkpoint:{capture:()=>phase4Entry?phase4Clone(phase4Entry):{profile:phase4Clone({...state,run:null}),session:phase4Session(),ledger:[]},
+   captureSave:()=>phase5Capture(),
+   restoreSave(input){const save=WandererV012Save.validate(input,input.binding);phase5Snapshot=save;state=JSON.parse(JSON.stringify(save.profile));phase4Restore(save.expedition.session);phase5Ready=true;saveBlocked=false;return phase1ResumeGauntlet();},
    restore(cp){state=phase4Clone(cp.profile);phase4Restore(phase4Clone(cp.session));},resume:phase4ResumeRealm,extract:phase4Extract,
    seed:()=>phase4Seed,random:gameRandom},
   feedback:()=>auditFeedback={logs:[],floats:[]},rng:value=>{Math.random=()=>value;gameRandom=()=>value;},
@@ -114,7 +116,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
  };
  `;
  const main=source.match(/<script>([\s\S]*?)<\/script>/)?.[1];
- const files=['online/v012-treasures.js','online/v012-save.js','economy/v0101.js','combat/legendary.js','combat/v012-combat-core.js','combat/v012-gear-stats.js','combat/v012-runes.js','economy/v012-loot-rules.js','combat/v012-buildcraft.js','online/v013-expedition-map.js','online/v012-expedition-controller.js','online/v012-expedition-events.js','online/v012-consumables.js'];
+ const files=['online/v012-treasures.js','online/v012-save.js','economy/v0101.js','combat/legendary.js','combat/v012-combat-core.js','combat/v012-gear-stats.js','combat/v012-runes.js','economy/v012-loot-rules.js','combat/v012-buildcraft.js','combat/v013-gauntlet.js','online/v013-expedition-map.js','online/v012-expedition-controller.js','online/v012-expedition-events.js','online/v012-consumables.js'];
  files.push(...[...source.matchAll(/<script[^>]+src="([^"]+-runtime\.js)"/g)].map(m=>m[1]));
  vm.runInNewContext(files.map(f=>moduleOverrides[f]??fs.readFileSync(path.join(root,f),'utf8')).join('\n')+'\n'+main.replace(boot,inject+'\nconst phase3RestoredScroll=null;'),sandbox,{timeout:20000});
  sandbox.audit.flush=()=>{for(let i=0;callbacks.length;i++){if(i>10000)throw Error('Callback loop');callbacks.shift()();}};
