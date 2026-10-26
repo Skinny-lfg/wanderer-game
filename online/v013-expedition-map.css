@@ -5,7 +5,7 @@
 .v013MapLegend{display:flex;align-items:center;justify-content:flex-end;gap:5px 11px;flex-wrap:wrap;color:#d5c3c2;font-size:11px}
 .v013MapLegend i{display:inline-block;width:10px;height:10px;border-radius:50%;background:#9a7f66;box-shadow:0 0 8px #d6b27055}
 .v013MapLegend i.elite{background:#d18a4f}.v013MapLegend i.event{background:#8d79cc}.v013MapLegend i.boss{background:#c75759}
-.v013MapAutoAdvance{margin-top:7px;padding:5px 9px;border:1px solid #705661;border-radius:7px;background:#211922;color:#d8c4a2;font-size:11px;cursor:pointer}
+.v013MapAutoAdvance{height:48px!important;min-height:48px!important;margin-top:7px;padding:5px 9px;border:1px solid #705661;border-radius:7px;background:#211922;color:#d8c4a2;font-size:11px;cursor:pointer}
 .v013MapAutoAdvance[aria-pressed="true"]{border-color:#8e7450;color:#f1d59f}
 .v013MapViewport{position:relative;isolation:isolate;min-height:var(--v013-map-height);padding:2px 0}
 .v013MapConnections{position:absolute;inset:0;width:100%;height:100%;z-index:-1;overflow:visible}
@@ -33,7 +33,7 @@ button.v013MapNode:disabled{cursor:not-allowed;opacity:.56;animation:none;filter
 .v013MapAffinity .affinityGlyph{width:14px;height:14px;flex:none}
 .v013MapAction{color:#f1cd88;font-size:9px;font-weight:700}
 .v013MapState{color:#ad9da4;font-size:9px}
-.v013MapReroll{flex:none;min-width:42px;min-height:42px;padding:3px;border:1px solid #735968;border-radius:8px;background:#211922;color:#edcf9b;font-weight:700}
+.v013MapReroll{flex:none;min-width:48px;min-height:48px;height:48px!important;padding:3px;border:1px solid #735968;border-radius:8px;background:#211922;color:#edcf9b;font-weight:700}
 .v013MapReroll span{display:block;font-size:8px;color:#bcabb1}
 .v013MapReroll:disabled{opacity:.4}
 .v013MapViewport .v013MapRow:last-child .v013MapNode{min-height:72px}
@@ -52,7 +52,7 @@ button.v013MapNode:disabled{cursor:not-allowed;opacity:.56;animation:none;filter
  .v013MapNode strong{font-size:12px;white-space:normal}
  .v013MapKind,.v013MapAffinity,.v013MapState,.v013MapAction{font-size:10px}
  .v013MapAffinity .affinityGlyph{width:12px;height:12px}
- .v013MapReroll{min-width:44px;min-height:48px;font-size:12px}
+ .v013MapReroll{min-width:48px!important;min-height:48px;font-size:12px}
 }
 @media(max-width:350px){
  .v013MapRow{grid-template-columns:29px minmax(0,1fr)}
@@ -60,6 +60,6 @@ button.v013MapNode:disabled{cursor:not-allowed;opacity:.56;animation:none;filter
  .v013MapNode,button.v013MapNode{padding:4px 3px}
  .v013MapNode strong{font-size:8px}
  .v013MapKind,.v013MapAffinity,.v013MapState,.v013MapAction{font-size:7px}
- .v013MapReroll{min-width:31px;padding:1px}
+ .v013MapReroll{min-width:48px!important;padding:1px}
 }
 @media(prefers-reduced-motion:reduce){.v013MapNode--available{animation:none}.v013MapNode:hover{transform:none}}
