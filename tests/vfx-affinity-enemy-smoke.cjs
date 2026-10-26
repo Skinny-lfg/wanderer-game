@@ -23,13 +23,13 @@ const s=html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
 assert(s,'inline game script');
 new (require('node:vm').Script)(s,{filename:'wanderer-vfx.js'});
 for(const text of ['function combatVfxAsset(kind,affinity)','MAGIC_COMBAT_AFFINITIES',
- 'animateEnemyStrike(enemyAbilityVfx)','combatEffect(\'BossEmber\')','combatEffect(\'BossAbyssal\')',
+ 'animateEnemyStrike(enemyAbilityVfx)','enemyAbilityVfx=\'BossEmber\'','enemyAbilityVfx=\'BossAbyssal\'',
  'enemyAbilityVfx=\'BossRift\'','enemyAbilityVfx=\'EliteCaster\'','enemyAbilityVfx=\'EliteVampire\'']){
  assert(html.includes(text),'missing VFX hook '+text);
 }
 assert(combatCss.includes('@keyframes vfxCenteredEnemyTravel'),'enemy projectile travels toward player');
 assert(combatCss.includes('.combatVfx.vfxEnemyWard'),'boss self-targeted VFX exists');
-// Regression: no cached 2026-10-15 player spells, centered projectiles, readable enemy attacks,
+// Regression: boss ability IDs are assigned in the canonical combat runtime and routed via animateEnemyStrike(enemyAbilityVfx), not direct combatEffect calls.\n// No cached 2026-10-15 player spells, centered projectiles, readable enemy attacks,
 // and direct weapon VFX routing in the current Expedition engine.
 assert(html.includes('v=20261018-vfx3'),'VFX asset URLs must bust stale caches');
 assert(html.includes("MAGIC_COMBAT_AFFINITIES.has(affinity)?affinity:'shock'"),'Staff/Wand cannot fall back to old generic art');
