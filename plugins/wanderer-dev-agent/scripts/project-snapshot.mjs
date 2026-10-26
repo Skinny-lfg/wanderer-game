@@ -46,7 +46,8 @@ const versionAssessment=versionsInEvidence.size===0?'NO_CLEAR_VERSION_SIGNAL':ve
 export function collectProjectSnapshot(){
  const head=git('rev-parse','--short','HEAD').stdout?.trim()||null;
  const branch=git('branch','--show-current').stdout?.trim()||null;
+ const remoteTrackingDevelopment=git('rev-parse','refs/remotes/origin/development').stdout?.trim()||null;
  const status=git('status','--porcelain=v1');
- return {branch,head,workingTree:status.status===0?(status.stdout?'DIRTY':'CLEAN'):'UNKNOWN',version:{assessment:versionAssessment,explicitCandidates:[...versionsInEvidence].sort(),documentationCandidates,evidence:signals},architecture};
+ return {branch,head,remoteTrackingDevelopment,localHeadMatchesRemoteTracking:remoteTrackingDevelopment===head,workingTree:status.status===0?(status.stdout?'DIRTY':'CLEAN'):'UNKNOWN',version:{assessment:versionAssessment,explicitCandidates:[...versionsInEvidence].sort(),documentationCandidates,evidence:signals},architecture};
 }
 if(import.meta.url===`file://${process.argv[1]}`) process.stdout.write(JSON.stringify(collectProjectSnapshot(),null,2)+'\n');

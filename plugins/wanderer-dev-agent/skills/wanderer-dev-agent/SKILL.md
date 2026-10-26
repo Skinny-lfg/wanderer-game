@@ -7,13 +7,14 @@ description: Use for development, testing, Firebase emulator work, GitHub commit
 
 ## Start every task with the current snapshot
 
-1. Read the automatic `UserPromptSubmit` preflight context or call MCP `preflight` if it is missing. It reports the checked-out branch, working tree, version signals, canonical entrypoint, loaded modules, isolated experiments, relevant project docs, Firebase CLI/Emulator configuration and Playwright/Chromium availability.
-2. Determine the current product version from current code and authoritative, current-branch docs. Treat README, changelog, HTML title, version badge, and versioned filenames as separate evidence. If they conflict, state that and resolve from code/docs before making version-specific claims. Never assume a fixed release or architecture from these instructions.
-3. Inspect the active entrypoint and module loading before edits. Keep standalone prototypes and historical code isolated unless the user asks to integrate them and current project docs support that direction. Do not revive retired gameplay or old account paths by default.
-4. Verify GitHub through its connected integration: read repository metadata and the current `development` ref. Confirm `Skinny-lfg/wanderer-game`. For writes, verify permission, compare the exact remote head, preserve pending work, and ensure a fast-forward update to `development` only.
-5. When Drive is relevant, verify the connected Google Drive integration, then search/fetch only the documents or assets needed. Do not upload, share or modify Drive files unless directly requested.
-6. Use Firebase local emulators by default. Use a `demo-*` project; do not run CLI login, select a production project, deploy, publish Rules or inspect/modify real saves.
-7. If browser behavior matters, use the private-preview screenshot tool or isolated browser suites. They use generated synthetic credentials, local-only routing and synthetic storage.
+1. Read the automatic `UserPromptSubmit` preflight context or call MCP `preflight` if it is missing. It reports the checked-out branch, local working tree, local version evidence, canonical entrypoint, loaded modules, isolated experiments, relevant docs, Firebase CLI/Emulator configuration and Playwright/Chromium availability.
+2. Verify GitHub through its connected integration before edits: confirm `Skinny-lfg/wanderer-game`, read the current remote `development` ref, and compare its SHA with the local snapshot. If they differ, inspect the relevant source and docs at that exact remote SHA using GitHub reads or a read-only fetch. The local hook cannot access external connectors. Preserve local pending work; never reconcile divergence by resetting or overwriting.
+3. Determine the current product/version and architecture from code and authoritative documentation at the SHA being discussed. Treat README, changelog, HTML title, version badge, document headings and versioned filenames as separate evidence. If they conflict, state that and resolve from active code/docs before version-specific claims. Never assume a fixed release or architecture from these instructions.
+4. Inspect the active entrypoint and module loading before edits. Keep standalone prototypes and historical code isolated unless the user asks to integrate them and current project docs support that direction. Do not revive retired gameplay or old account paths by default.
+5. For Git writes, verify permission, compare the exact remote head, preserve pending work, and ensure a fast-forward update to `development` only.
+6. When Drive is relevant, verify the connected Google Drive integration, then search/fetch only the documents or assets needed. Do not upload, share or modify Drive files unless directly requested.
+7. Use Firebase local emulators by default. Use a `demo-*` project; do not run CLI login, select a production project, deploy, publish Rules or inspect/modify real saves.
+8. If browser behavior matters, use the private-preview screenshot tool or isolated browser suites. They use generated synthetic credentials, local-only routing and synthetic storage.
 
 If a check fails, state which path could not be verified and continue independent safe work. Never invent a connected state.
 

@@ -2,7 +2,7 @@
 
 ## Start every task with a current project snapshot
 
-The trusted `UserPromptSubmit` hook runs a read-only preflight and adds the current branch, version evidence, entrypoint, loaded modules, standalone experiments, relevant documentation and local tool readiness to task context. Review that snapshot before planning or editing. When the version signals disagree, report the conflict and establish the active product state from the current branch's code and authoritative documentation; do not infer the version from an old filename or cached instruction.
+The trusted `UserPromptSubmit` hook runs a read-only local preflight and adds the checked-out branch, local version evidence, entrypoint, loaded modules, standalone experiments, relevant documentation and local tool readiness to task context. At every task, also read the current remote `development` ref through the connected GitHub integration and compare its SHA with the local snapshot before edits. If they differ, inspect relevant code/docs at that remote SHA through GitHub or a read-only fetch; preserve local pending work and do not silently merge it. The local hook cannot authenticate to GitHub or Drive. When version signals disagree, report the conflict and establish the active product state from code and authoritative docs at the exact branch SHA; do not infer it from an old filename or cached instruction.
 
 Version numbers in titles, filenames and module names are historical/project identifiers, not permanent rules. Reassess the architecture from the current `development` branch on every task so these instructions remain valid for future releases.
 
