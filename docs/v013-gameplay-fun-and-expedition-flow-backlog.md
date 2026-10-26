@@ -13,6 +13,61 @@
 
 O maior obstáculo imediato é a **fricção entre combates**, NÃO a falta de conteúdo ou simplesmente a dificuldade.
 
+## Atualização 26/10 — Mapa tipo Slay the Spire + evolução de build tipo Soulstone Survivors / Vampire Survivors
+
+**Feedback do criador:** "Expeditions demoram tão pouco tempo que não dá para sentir o prazer de ganhar passivos; quando a build está OP já está a acabar o jogo." Referências intencionais: (a) mapa de Slay the Spire para progressão entre Realms; (b) Soulstone Survivors e Vampire Survivors para acumulação/evolução de poderes. Esta referência substitui a hipótese simplista de "basta retirar Exit/Enter". **É uma proposta de v0.13, não implementação.**
+
+### Diagnóstico e princípios
+
+Três problemas distintos:
+- **Time-to-power:** a primeira sinergia transformadora e o pico da build podem chegar tão tarde que resta pouco combate para os usufruir.
+- **Power payoff:** os eventos importantes de poder são pouco destacados; uma stack de ranks numérico nem sempre gera um momento reconhecível.
+- **Momentum vs microgestão:** múltiplas escolhas após lutas de segundos quebram flow; prolongar HP de mobs artificialmente é solução errada, e copiar sobrevivência estilo Vampire Survivors sem movimentação/manual dodge também não transferirá toda a diversão.
+
+Princípio: "Construir cedo, usufruir durante um período prolongado, enfrentar desafios que testem a build já formada." A versão antiga tinha boss a cada 10 dungeons permanentes (D10/D20...) e progresso imediato com Next; distinguir claramente progressão **permanente** de dificuldade/boss e progressão **temporária** do mapa de 15 Realms.
+
+### Proposta de mapa (não implementar como UI decorativa)
+
+Inspirado no branching map do Slay the Spire:
+- Gerar um grafo dirigido de caminhos conectados **por Expedition**, a partir de seed persistida; mostrar progressão, pontos de bifurcação/reencontro, Elite, evento, descanso/recompensa se a semântica existir e boss final. Não inventar lojas ou rests sem mecânica implementada; reutilizar os 16 eventos e dois elites atuais.
+- Mostrar um destino distante (boss) desde o início; opcionalmente revelar por etapas detalhes de eventos sem estragar surpresa.
+- Caminho escolhido altera exposição a encontros, affinities possíveis, risco/recompensas, sem tornar uma família indisponível por azar incontrolável.
+- Seleção de rota **só nos forks relevantes**. Se o percurso seguinte não tem escolha, mostrar avanço/animar Next automático com opção para parar e gerir Bag/poções. Não pedir confirmação em cada nodo de combate.
+- No caso de 15 Realms, testar marcos legíveis em torno de R5, R10 (elites/intermédios usando conteúdo atual), R15 (boss), sem acrescentar bosses nem forçar esquema antes de verificar calendário e curva de loot.
+- Persistir seleção, RNG, mapa e escolhas com segurança de save/reload, evitando exploits de voltar atrás e reroll grátis. Não alterar Firestore nem saves reais até autorização.
+- Não confundir mapa com uma lista visual de 3 cartões apresentada quinze vezes: se continuar a interromper a cada Realm, a nova UI não resolve o problema.
+
+### Curva de poder proposta, não implementada
+
+Hipótese para protótipo de 15 Realms:
+- R1–5: identidade e duas famílias; **primeira sinergia transformadora até R4–5** nas runs planeadas com offers viáveis.
+- R6–10: jogar vários combates **com a sinergia**, melhorar/evoluir efeitos existentes e enfrentar pelo menos um desafio apropriado.
+- R11–15: build consolidada e variações táticas, elite/boss devem testar condições sem anular sistematicamente sinergias.
+- Meta exploratória: primeiro híbrido ou interação significativa até ~30–35% do tempo de combate total; ainda **≥50% desse tempo** após a primeira grande interação. Primeiro pico de poder desejado por volta de 55–65% da Expedition, não só nos últimos 10%.
+- Híbridos existentes cumprem papel das evoluções de Vampire Survivors: **não adicionar classes/passivos de evolução novos** sem demonstrar necessidade. Dar "momento de evolução" visual/sonoro e feedback de contribuição quando um híbrido combina habilidades já obtidas.
+- Nem toda build deve ficar invencível; "OP" aqui significa perceptivelmente transformada e poderosa face a inimigos comuns, sem trivializar bosses e elites.
+- Rever ranks e oferta de passivos para atingir essa curva: preferir ajuste ao timing/pré-requisitos antes de buff geral de 63 coeficientes.
+
+### Ritmo e sessões — hipóteses a validar
+- Não utilizar exclusivamente número de Realms como duração; medir tempo ativo de combate, velocidade x1/x2/x4, menus, eventos, gestão de Bag e tempo pós-sinergia.
+- Ensaiar duração de 12–18 min como mediana de Expedition completa e 15–30 min como janela de sessão desejável *apenas como alvos exploratórios*; evitar alongar lutas sem interessante feedback.
+- A/B1: UI simplificada (duas escolhas manuais mínimas).
+- A/B2: mapa com forks e segmentos de combates encadeados sem prompts redundantes.
+- A/B3: agrupamento/redistribuição dos momentos de passivo; objetivo experimental de ~6–9 janelas de escolha relevantes em vez de 14, **preservando orçamento de poder total**, recalculado e simulado antes de aplicar.
+- A/B4: antecipar disponibilidade dos híbridos em relação ao baseline, sem alterar DPS/loot; medir tempo restante desde o spike.
+- Repetir 5 playtests cegos com time-on-task e preferência de continuar espontaneamente.
+
+### Critérios de aceitação adicionais
+1. Jogador sabe sempre posição no mapa, quantos marcos faltam e o objetivo seguinte.
+2. Avança por segmentos lineares sem carimbar repetidamente Exit/Enter/Next.
+3. Escolhe caminho apenas quando é bifurcação significativa, sem perder escolha de equipamento/extração.
+4. Pelo menos metade do tempo de combate pode ocorrer depois do primeiro momento forte de sinergia numa build bem-sucedida.
+5. Jogador identifica passivo/híbrido que tornou build poderosa, no resultado e numa luta real.
+6. Métricas de segurança: resultados, loot, rerolls, equip, potions, Rune, telemetria, reload e idempotência das rewards passam sem regressões.
+7. Não mudar simultaneamente length + passivos + dificuldade em teste causal: comparar uma variável de cada vez, com saves sintéticos.
+
+**Ordem agora:** (i) instrumentar distribuição real de duração/ação, (ii) protótipo navegável do mapa e avanço sem fricção, (iii) teste de antecipação do power spike, (iv) balancear efeitos específicos, (v) só então revisar profundidade da economia.
+
 ### NOVA HIPÓTESE PRINCIPAL — recuperar o loop "só mais um dungeon" (feedback do criador 26/10/2026)
 
 **Observação do criador:** na primeira versão, os amigos pareciam divertir-se muito mais mesmo com gameplay simples de carregar repetidamente em "Next", com um objetivo concreto: chegar ao boss em cada 10 dungeons (D10, D20...). O criador não sabe se o motivo foi facilidade, metas curtas, simplicidade de progressão, novidade ou interação social. **Não declarar uma causa já provada.**
