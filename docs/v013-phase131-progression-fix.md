@@ -56,7 +56,9 @@ A suite browser gravou screenshots em diretórios históricos versionados durant
 
 ## Commits locais
 
-A Fase 1.3 original foi guardada num commit separado antes do commit corretivo. Os identificadores estão registados na secção de commits deste relatório depois da criação do histórico local.
+- `bb167a1` — `feat(expedition): add seeded organic route map` (checkpoint local das alterações pendentes da Fase 1.3).
+- `f0e6a52` — `test(expedition): cover pending event rewards across reload` (helper robusto de browser, regressão Event e este relatório).
+- A atualização final dos identificadores deste relatório fica registada num commit documental separado.
 
 ## Estado final
 
