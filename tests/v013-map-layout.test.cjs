@@ -1,0 +1,15 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const env={};for(const file of ['online/v013-expedition-map.js','online/v013-expedition-map-layout.js'])vm.runInNewContext(fs.readFileSync(file,'utf8'),env);
+const M=env.WandererV013ExpeditionMap,L=env.WandererV013ExpeditionMapLayout,GROUPS=[['traveling_merchant','smugglers_caravan','relic_collector','cursed_artificer'],['cursed_altar','soul_mirror','whispering_idol','echo_shrine'],['cursed_chest','forgotten_arsenal','runic_vault','bounty_writ'],['restless_spring','fallen_wanderer','oracle_of_paths','last_ember']];
+function intersects(a,b,c,d){const orient=(p,q,r)=>(q.x-p.x)*(r.y-p.y)-(q.y-p.y)*(r.x-p.x);return orient(a,b,c)*orient(a,b,d)<0&&orient(c,d,a)*orient(c,d,b)<0;}
+test('seeded organic layout keeps ordered nodes, touch spacing and every graph edge',()=>{
+ for(let seed=0;seed<100;seed++){
+  const map=M.create(seed,{eventCount:seed%2?3:4,eventGroups:GROUPS}),a=L.layout(map),b=L.layout(map);assert.deepEqual(JSON.parse(JSON.stringify(a)),JSON.parse(JSON.stringify(b)),'layout repeats for seed '+seed);assert.equal(Object.keys(a.positions).length,35);assert.equal(a.edges.length,map.edges.length);assert.equal(a.height,15*44);
+  for(const row of map.rows){const nodes=row.map(node=>a.positions[node.id]);assert(nodes.every(point=>point.x>=L.MIN_X&&point.x<=L.MAX_X));for(let i=1;i<nodes.length;i++)assert(nodes[i].x-nodes[i-1].x>=L.MIN_GAP,'touch targets collide at seed '+seed);}
+  for(const edge of a.edges){const from=a.positions[edge.from],to=a.positions[edge.to];assert.equal(edge.d,L.smoothPath(from,to));assert(to.y>from.y,'graph direction must always descend toward the boss');}
+  for(let i=0;i<map.nodes.length;i++)for(let j=i+1;j<map.nodes.length;j++){const one=map.nodes[i],two=map.nodes[j],p=a.positions[one.id],q=a.positions[two.id],radius=n=>n.realm===15?22:n.realm===2?24:19,dx=p.x-q.x,dy=p.y-q.y;assert(dx*dx+dy*dy>=(radius(one)+radius(two))**2,'rendered route nodes overlap at seed '+seed+': '+one.id+'/'+two.id);}
+  for(let i=0;i<map.edges.length;i++)for(let j=i+1;j<map.edges.length;j++){const one=map.edges[i],two=map.edges[j];if(one.from===two.from||one.to===two.to||one.from===two.to||one.to===two.from)continue;const from=a.positions[one.from],to=a.positions[one.to],otherFrom=a.positions[two.from],otherTo=a.positions[two.to];if(from.realm===otherFrom.realm&&to.realm===otherTo.realm)assert(!intersects(from,to,otherFrom,otherTo),'neighboring route segments cross at seed '+seed);}
+  for(let realm=1;realm<15;realm++){const current=map.rows[realm-1],next=map.rows[realm];if(current.length===3&&next.length===3)for(let lane=0;lane<3;lane++)assert(a.positions[next[lane].id].x>a.positions[next[lane-1]?.id]?.x||lane===0,'lane order stays monotonic');}
+ }
+ const first=L.layout(M.create(0,{eventCount:3,eventGroups:GROUPS}));assert(new Set(first.positions?Object.entries(first.positions).filter(([id])=>id.startsWith('r')&&/r[2-4]n/.test(id)).map(([,p])=>p.x):[]).size>3,'successive levels visibly meander horizontally');
+});

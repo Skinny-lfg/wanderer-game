@@ -1,0 +1,332 @@
+[
+  {
+    "width": 268,
+    "height": 1063,
+    "nodes": 35,
+    "options": 3,
+    "rows": 15,
+    "duplicateCards": 0,
+    "visualAudit": {
+      "viewport": {
+        "x": 32,
+        "y": 933.84375,
+        "width": 256,
+        "height": 660
+      },
+      "nodes": 35,
+      "edges": 42,
+      "maxEdgeEndpointError": 0.015078125000002274,
+      "overlaps": [],
+      "details": [
+        {
+          "x": 32,
+          "y": 734.859375,
+          "right": 288,
+          "bottom": 800.453125,
+          "width": 256,
+          "height": 65.59375,
+          "scrollWidth": 254,
+          "clientWidth": 254
+        },
+        {
+          "x": 32,
+          "y": 804.453125,
+          "right": 288,
+          "bottom": 859.25,
+          "width": 256,
+          "height": 54.796875,
+          "scrollWidth": 254,
+          "clientWidth": 254
+        },
+        {
+          "x": 32,
+          "y": 863.25,
+          "right": 288,
+          "bottom": 928.84375,
+          "width": 256,
+          "height": 65.59375,
+          "scrollWidth": 254,
+          "clientWidth": 254
+        }
+      ],
+      "rerolls": [
+        [
+          44,
+          44
+        ],
+        [
+          44,
+          44
+        ],
+        [
+          44,
+          44
+        ]
+      ]
+    }
+  },
+  {
+    "width": 338,
+    "height": 1047,
+    "nodes": 35,
+    "options": 3,
+    "rows": 15,
+    "duplicateCards": 0,
+    "visualAudit": {
+      "viewport": {
+        "x": 34,
+        "y": 918.25,
+        "width": 322,
+        "height": 660
+      },
+      "nodes": 35,
+      "edges": 42,
+      "maxEdgeEndpointError": 0.014816162109383413,
+      "overlaps": [],
+      "details": [
+        {
+          "x": 34,
+          "y": 734.859375,
+          "right": 356,
+          "bottom": 791.65625,
+          "width": 322,
+          "height": 56.796875,
+          "scrollWidth": 320,
+          "clientWidth": 320
+        },
+        {
+          "x": 34,
+          "y": 795.65625,
+          "right": 356,
+          "bottom": 852.453125,
+          "width": 322,
+          "height": 56.796875,
+          "scrollWidth": 320,
+          "clientWidth": 320
+        },
+        {
+          "x": 34,
+          "y": 856.453125,
+          "right": 356,
+          "bottom": 913.25,
+          "width": 322,
+          "height": 56.796875,
+          "scrollWidth": 320,
+          "clientWidth": 320
+        }
+      ],
+      "rerolls": [
+        [
+          44,
+          44
+        ],
+        [
+          44,
+          44
+        ],
+        [
+          44,
+          44
+        ]
+      ]
+    }
+  },
+  {
+    "width": 698,
+    "height": 926,
+    "nodes": 35,
+    "options": 3,
+    "rows": 15,
+    "duplicateCards": 0,
+    "visualAudit": {
+      "viewport": {
+        "x": 47.515625,
+        "y": 874.453125,
+        "width": 672.96875,
+        "height": 660
+      },
+      "nodes": 35,
+      "edges": 42,
+      "maxEdgeEndpointError": 0.014062500000022737,
+      "overlaps": [],
+      "details": [
+        {
+          "x": 47.515625,
+          "y": 796.453125,
+          "right": 267.171875,
+          "bottom": 868.453125,
+          "width": 219.65625,
+          "height": 72,
+          "scrollWidth": 218,
+          "clientWidth": 218
+        },
+        {
+          "x": 274.171875,
+          "y": 796.453125,
+          "right": 493.828125,
+          "bottom": 868.453125,
+          "width": 219.65625,
+          "height": 72,
+          "scrollWidth": 218,
+          "clientWidth": 218
+        },
+        {
+          "x": 500.828125,
+          "y": 796.453125,
+          "right": 720.484375,
+          "bottom": 868.453125,
+          "width": 219.65625,
+          "height": 72,
+          "scrollWidth": 218,
+          "clientWidth": 218
+        }
+      ],
+      "rerolls": [
+        [
+          44,
+          44
+        ],
+        [
+          44,
+          44
+        ],
+        [
+          44,
+          44
+        ]
+      ]
+    }
+  },
+  {
+    "width": 1171,
+    "height": 939,
+    "nodes": 35,
+    "options": 3,
+    "rows": 15,
+    "duplicateCards": 0,
+    "visualAudit": {
+      "viewport": {
+        "x": 90,
+        "y": 704.78125,
+        "width": 1100,
+        "height": 660
+      },
+      "nodes": 35,
+      "edges": 42,
+      "maxEdgeEndpointError": 0.015405273437522737,
+      "overlaps": [],
+      "details": [
+        {
+          "x": 73.59375,
+          "y": 626.78125,
+          "right": 446.53125,
+          "bottom": 698.78125,
+          "width": 372.9375,
+          "height": 72,
+          "scrollWidth": 371,
+          "clientWidth": 371
+        },
+        {
+          "x": 453.53125,
+          "y": 626.78125,
+          "right": 826.46875,
+          "bottom": 698.78125,
+          "width": 372.9375,
+          "height": 72,
+          "scrollWidth": 371,
+          "clientWidth": 371
+        },
+        {
+          "x": 833.46875,
+          "y": 626.78125,
+          "right": 1206.40625,
+          "bottom": 698.78125,
+          "width": 372.9375,
+          "height": 72,
+          "scrollWidth": 371,
+          "clientWidth": 371
+        }
+      ],
+      "rerolls": [
+        [
+          44,
+          44
+        ],
+        [
+          44,
+          44
+        ],
+        [
+          44,
+          44
+        ]
+      ]
+    }
+  },
+  {
+    "width": 1170,
+    "height": 939,
+    "nodes": 35,
+    "options": 3,
+    "rows": 15,
+    "duplicateCards": 0,
+    "visualAudit": {
+      "viewport": {
+        "x": 410,
+        "y": 711.4375,
+        "width": 1100,
+        "height": 660
+      },
+      "nodes": 35,
+      "edges": 42,
+      "maxEdgeEndpointError": 0.01529541015634095,
+      "overlaps": [],
+      "details": [
+        {
+          "x": 394,
+          "y": 633.4375,
+          "right": 766.65625,
+          "bottom": 705.4375,
+          "width": 372.65625,
+          "height": 72,
+          "scrollWidth": 371,
+          "clientWidth": 371
+        },
+        {
+          "x": 773.65625,
+          "y": 633.4375,
+          "right": 1146.328125,
+          "bottom": 705.4375,
+          "width": 372.671875,
+          "height": 72,
+          "scrollWidth": 371,
+          "clientWidth": 371
+        },
+        {
+          "x": 1153.328125,
+          "y": 633.4375,
+          "right": 1525.984375,
+          "bottom": 705.4375,
+          "width": 372.65625,
+          "height": 72,
+          "scrollWidth": 371,
+          "clientWidth": 371
+        }
+      ],
+      "rerolls": [
+        [
+          44,
+          44
+        ],
+        [
+          44,
+          44
+        ],
+        [
+          44,
+          44
+        ]
+      ]
+    }
+  }
+]
