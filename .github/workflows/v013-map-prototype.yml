@@ -6,6 +6,7 @@ on:
       - 'online/v013-map-prototype.js'
       - 'experiments/v013-map-prototype.html'
       - 'tests/v013-map-prototype.test.cjs'
+      - 'tests/v013-map-browser.cjs'
       - 'scripts/v013-map-stress.cjs'
       - '.github/workflows/v013-map-prototype.yml'
   workflow_dispatch:
@@ -33,6 +34,21 @@ jobs:
         run: node --test tests/v013-map-prototype.test.cjs
       - name: Verify 10000 deterministic map seeds
         run: node scripts/v013-map-stress.cjs --seeds 10000 --out /tmp/v013-map-smoke.json
+      - name: Install browser dependencies
+        run: npm ci
+      - name: Prepare Chromium
+        run: |
+          if command -v google-chrome >/dev/null 2>&1; then
+            sudo ln -sf "$(command -v google-chrome)" /usr/bin/chromium
+          else
+            npx playwright install --with-deps chromium
+            CHROME="$(find "$HOME/.cache/ms-playwright" -type f \( -path '*/chrome-linux64/chrome' -o -path '*/chrome-linux/chrome' \) | head -n 1)"
+            test -n "$CHROME"
+            sudo ln -sf "$CHROME" /usr/bin/chromium
+          fi
+          /usr/bin/chromium --version
+      - name: Run isolated map in real Chromium mobile and desktop
+        run: node tests/v013-map-browser.cjs
       - name: Assert no live scripts imported by isolated map lab
         run: |
           test -f experiments/v013-map-prototype.html
