@@ -1,33 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {spawn} from 'node:child_process';
-import {createInterface} from 'node:readline';
+import {spawnSync} from 'node:child_process';
 import {readFile} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {collectProjectSnapshot} from '../plugins/wanderer-dev-agent/scripts/project-snapshot.mjs';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 
-function createMcpClient(child){
- const pending=new Map();
- let nextId=1;
- const lines=createInterface({input:child.stdout});
- lines.on('line',line=>{
-  let message;try{message=JSON.parse(line);}catch{return;}
-  const resolve=pending.get(message.id);if(resolve){pending.delete(message.id);resolve(message);}
- });
- return {
-  request(method,params={}){
-   const id=nextId++;
-   return new Promise((resolve,reject)=>{
-    const timer=setTimeout(()=>{pending.delete(id);reject(new Error(`MCP timeout: ${method}`));},15000);
-    pending.set(id,message=>{clearTimeout(timer);resolve(message);});
-    child.stdin.write(JSON.stringify({jsonrpc:'2.0',id,method,params})+'\n');
-   });
-  },
-  close(){lines.close();}
- };
-}
 
 test('private plugin package, marketplace and project enablement are valid references',async()=>{
  const manifest=JSON.parse(await readFile(path.join(root,'plugins/wanderer-dev-agent/plugin.json'),'utf8'));
@@ -42,3 +22,28 @@ test('private plugin package, marketplace and project enablement are valid refer
  assert.match(await readFile(path.join(root,'.codex/config.toml'),'utf8'),/wanderer-dev-agent@wanderer-local/);
 });
 
+
+
+test('new-prompt hook reports dynamically discovered version and architecture evidence',async()=>{
+ const snapshot=collectProjectSnapshot();
+ assert.ok(snapshot.head);
+ assert.ok(snapshot.version.assessment);
+ assert.ok(Array.isArray(snapshot.version.evidence));
+ assert.equal(snapshot.architecture.canonicalEntrypoint,'index.html');
+ assert.ok(Array.isArray(snapshot.architecture.directScriptLoads));
+ assert.ok(Array.isArray(snapshot.architecture.standaloneOrPrototypeFiles));
+ const hook=spawnSync(process.execPath,[path.join(root,'plugins/wanderer-dev-agent/scripts/preflight-hook.mjs')],{cwd:root,encoding:'utf8',timeout:30000});
+ assert.equal(hook.status,0,hook.stderr);
+ const event=JSON.parse(hook.stdout);
+ assert.equal(event.hookSpecificOutput.hookEventName,'UserPromptSubmit');
+ assert.match(event.hookSpecificOutput.additionalContext,/version/i);
+ assert.match(event.hookSpecificOutput.additionalContext,/directScriptLoads/i);
+});
+
+test('persistent project guidance contains no fixed game-version gate',async()=>{
+ const paths=['AGENTS.md','plugins/wanderer-dev-agent/skills/wanderer-dev-agent/SKILL.md','plugins/wanderer-dev-agent/skills/setup/SKILL.md'];
+ for(const file of paths){
+  const text=await readFile(path.join(root,file),'utf8');
+  assert.doesNotMatch(text,/keep the v0\.12|only v0\.12|unrequested v0\.13 mechanics/i,file);
+ }
+});

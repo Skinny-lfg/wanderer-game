@@ -1,3 +1,4 @@
+import {collectProjectSnapshot} from './project-snapshot.mjs';
 import {spawnSync} from 'node:child_process';
 import {existsSync,mkdirSync,readFileSync} from 'node:fs';
 import path from 'node:path';
@@ -7,7 +8,7 @@ const pluginRoot=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..')
 const repoRoot=path.resolve(pluginRoot,'../..');
 const firebaseConfigHome=path.join(process.env.TMPDIR||'/tmp','wanderer-dev-agent','firebase-config');
 mkdirSync(firebaseConfigHome,{recursive:true,mode:0o700});
-const run=(command,args,timeout=10000)=>spawnSync(command,args,{cwd:repoRoot,encoding:'utf8',timeout,stdio:['ignore','pipe','pipe'],env:{...process.env,XDG_CONFIG_HOME:firebaseConfigHome}});
+const run=(command,args,timeout=10000)=>spawnSync(command,args,{cwd:repoRoot,encoding:'utf8',timeout,stdio:['ignore','pipe','pipe'],env:{...process.env,XDG_CONFIG_HOME:firebaseConfigHome,NO_UPDATE_NOTIFIER:'1'}});
 const git=(...args)=>run('git',args);
 const branch=git('branch','--show-current').stdout?.trim()||null;
 const remote=git('remote','get-url','origin').stdout?.trim()||null;
@@ -22,6 +23,7 @@ const chromiumPath=process.env.CHROMIUM_PATH||'/usr/bin/chromium';
 const chromium=existsSync(chromiumPath)?run(chromiumPath,['--version']):null;
 const firebaseVersion=firebasePackageVersion||firebase?.stdout?.match(/\b\d+\.\d+\.\d+\b/)?.[0]||null;
 const checks={
+ project:collectProjectSnapshot(),
  repository:{path:repoRoot,branch,branchStatus:branch==='development'?'PASS':'FAIL',origin:remote,originStatus:/^https:\/\/github\.com\/Skinny-lfg\/wanderer-game(?:\.git)?$/.test(remote||'')?'PASS':'FAIL',workingTree:porcelain.status===0?(porcelain.stdout?'DIRTY':'CLEAN'):'UNKNOWN'},
  runtime:{node:process.version,nodeStatus:Number(process.versions.node.split('.')[0])>=20?'PASS':'FAIL'},
  firebase:{cli:firebaseVersion,cliStatus:firebaseVersion&&firebase?.status===0?'PASS':firebase?.status===null?'ERROR':'MISSING',cliExitCode:firebase?.status??null,authEmulator:firebaseConfig?.emulators?.auth?'CONFIGURED':'MISSING',firestoreEmulator:firebaseConfig?.emulators?.firestore?'CONFIGURED':'MISSING',emulatorStatus:firebaseConfig?.emulators?.auth&&firebaseConfig?.emulators?.firestore?'PASS':'FAIL',policy:'Isolated CLI config under /tmp; demo-wanderer emulators only; no CLI login or production project'},
