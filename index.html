@@ -78,7 +78,6 @@ const TYPES=['Sword','Mace','Bow','Daggers','Staff','Wand','Two-Handed'];
 const OFFHAND_TYPES=['Shield','Orb','Tome','Charm'];
 const isDagger=o=>o?.subtype==='Daggers'||o?.subtype==='Off-Hand Dagger';
 const isTwoHanded=o=>['Two-Handed','Bow','Staff'].includes(o?.subtype);
-const isMagicOffhand=o=>!!o&&['Orb','Tome','Charm'].includes(o.subtype);
 
 function forgePreviewImage(slot,subtype){
  // Forge displays representative art for the selection, without rolling an item.
@@ -527,7 +526,7 @@ let buttons=source==='stash'?
 return `<div class="inspect" ${rarityFrame(o)}><div class="inspectHero">${rarityArt(o,itemImg(o),o.subtype,'inspect')}<div><h3 style="color:${rarityColor(o)}">${esc(o.name)}</h3>${legendaryRankBadge(o)}<div class="small">${itemSource(o)}</div><div class="small" style="color:${rarityColor(o)}">${o.rarity==='Legendary'?'✦ ':''}${detailEffectHtml(o)}</div></div></div><div class="buttonRow inspectActions">${buttons}</div><div class="rule"></div><div class="small">${esc(itemStats(o)||'No base stats')}</div>${isTwoHanded(o)?'<p class="small gold">⚔ Two-Handed · occupies Weapon + Off-Hand</p>':''}${isDagger(o)?'<p class="small gold">🗡 Main Hand: full stats and Double Strike. Off-Hand: 50% offensive stats; no off-hand strikes or Double Strike.</p>':''}${legendaryDescription(o)?`<p class="small gold">✦ ${esc(legendaryDescription(o))}</p>`:''}${['stash','bag'].includes(source)?`${dagger?`<details class="ringComparison" open><summary>Compare in Main Hand</summary>${itemComparison(o,'weapon')}</details><details class="ringComparison"><summary>Compare in Off-Hand</summary>${itemComparison(o,'offhand')}</details>`:['ring1','ring2'].includes(o.slot)?`<details class="ringComparison"><summary>Compare if equipped in Ring 1</summary>${itemComparison(o,'ring1')}</details><details class="ringComparison"><summary>Compare if equipped in Ring 2</summary>${itemComparison(o,'ring2')}</details>`:itemComparison(o)}`:''}</div>`;
 }
 
-function statsWidget(s){const evasionTier=state?.run?.tier||(PHASE1_PREVIEW?(phase1Controller?.state.expedition||phase1Controller?.state.unlocked||1):state?.chosen||1);const uncapped=Math.round((4+s.cha*.95+(s.counts.crit||0)*2+(s.bonus.critBonus||0))/Math.sqrt(Math.max(1,s.rawAttackSpeed/1.3)));let rows=[['⚔️ Attack',s.attack],['🛡 Defense',s.defense],['❤️ Health',s.maxhp],['💨 Hits / sec',s.attacksPerSec.toFixed(2)],['🎯 Critical',s.crit+'%'+(s.crit>=65?' · CAP'+(uncapped>65?' ('+uncapped+'% raw)':''):'')],['⚡ Gear Power',s.power],['Evasion',formatItemStat(s.evasionRating||0)+' rating · '+(100*evasionChance(s.evasionRating||0,evasionTier)).toFixed(1)+'% vs E'+evasionTier]];if(s.blockChance)rows.push(['🛡 Block',s.blockChance+'%']);if(s.caster)rows.push(['💧 Mana',s.mana],['💠 Mana regen',s.manaRegen+'/s'],['✨ Spell Power',s.spellPower]);return `<div class="statsGrid">${rows.map(([name,num])=>`<div class="stat"><label>${name}</label><b>${num}</b></div>`).join('')}</div>`}
+function statsWidget(s){const evasionTier=state?.run?.tier||(PHASE1_PREVIEW?(phase1Controller?.state.expedition||phase1Controller?.state.unlocked||1):state?.chosen||1);const uncapped=Math.round((4+s.cha*.95)/Math.sqrt(Math.max(1,s.rawAttackSpeed/1.3)));let rows=[['⚔️ Attack',s.attack],['🛡 Defense',s.defense],['❤️ Health',s.maxhp],['💨 Hits / sec',s.attacksPerSec.toFixed(2)],['🎯 Critical',s.crit+'%'+(s.crit>=65?' · CAP'+(uncapped>65?' ('+uncapped+'% raw)':''):'')],['⚡ Gear Power',s.power],['Evasion',formatItemStat(s.evasionRating||0)+' rating · '+(100*evasionChance(s.evasionRating||0,evasionTier)).toFixed(1)+'% vs E'+evasionTier]];if(s.blockChance)rows.push(['🛡 Block',s.blockChance+'%']);if(s.caster)rows.push(['💧 Mana',s.mana],['💠 Mana regen',s.manaRegen+'/s'],['✨ Spell Power',s.spellPower]);return `<div class="statsGrid">${rows.map(([name,num])=>`<div class="stat"><label>${name}</label><b>${num}</b></div>`).join('')}</div>`}
 
 
 
@@ -876,10 +875,9 @@ function floatText(n,target='enemy',crit=false){
 
 
 
-function affinityProcChance(kind,cast=false){return WandererV012CombatCore.affinityProcChance(kind,cast);}
 
 
-const WANDERER_SHATTER_ENABLED=true,WANDERER_DOUBLE_STRIKE_ENABLED=true;
+const WANDERER_DOUBLE_STRIKE_ENABLED=true;
 
 
 
@@ -914,17 +912,11 @@ function playerStatusMarkup(r){
  if(r.barrier>0)items.push('<span class="debuff statusPositive">'+statusArt('barrier')+' Barrier '+Math.floor(r.barrier)+'</span>');
 
  if(r.phase1&&phase1Build?.element==='lightning')items.push('<span class="debuff statusPositive">'+statusArt('static')+' Static '+(phase1Build.runtime.staticCharges||0)+'/4</span>');
-  const buffs=r.setTemp||{},now=setNow(r);
+  const now=setNow(r);
  const legendary=r.legendaryState||{};
  for(const [field,label,icon] of [['armorReady','Soul Harvest ready','soul-harvest'],['focusReady','Golden Focus ready','golden-focus'],['refuge','Umbral Refuge ready','umbral-refuge'],['guard','Dawnward ready','dawnward'],['reserve','Dawnstar Bloom reserve','dawnstar-bloom'],['hotRemaining','Last Sunrise healing','last-sunrise']])if(legendary[field])items.push('<span class="debuff statusPositive statusLegendary">'+statusArt(icon)+' '+label+'</span>');
  if(legendary.natureHasteUntil>now)items.push('<span class="debuff statusPositive statusLegendary">'+statusArt('wildroot-volley')+' Wildroot Volley +10% speed</span>');
  if(legendary.thunderHasteUntil>now)items.push('<span class="debuff statusPositive statusLegendary">'+statusArt('thunderstep')+' Thunderstep +12% speed</span>');
- const haste=(buffs.haste||[]).filter(t=>t>now).length;
- if(haste)items.push('<span class="debuff statusPositive">'+statusArt('haste')+' Haste ×'+haste+'</span>');
- if(buffs.focus>0&&now<buffs.focusExpiry)items.push('<span class="debuff statusPositive">'+statusArt('focus')+' Focus '+buffs.focus+'/3</span>');
- if(buffs.heat>0&&now<buffs.heatExpiry)items.push('<span class="debuff statusPositive">'+statusArt('heat')+' Heat '+buffs.heat+'/5</span>');
- if(buffs.soul>0&&now<buffs.soulExpiry)items.push('<span class="debuff statusPositive">'+statusArt('soul')+' Soul '+buffs.soul+'/3</span>');
- if(buffs.lastBastionReady)items.push('<span class="debuff statusPositive">'+statusArt('counter-ready')+' Counter ready</span>');
  if(r.secondWindUsed)items.push('<span class="debuff muted statusUsed">'+statusArt('second-wind-used')+' Second Wind used</span>');
  if((r.playerDebuffUntil||0)>now)items.push('<span class="debuff playerDebuff statusNegative">'+statusArt('weakened')+' Weakened −20% damage · '+Math.ceil(r.playerDebuffUntil-now)+'s</span>');
  if((r.playerHealingDebuffUntil||0)>now)items.push('<span class="debuff playerDebuff statusNegative">'+statusArt('healing-reduction')+' Healing −40% · '+Math.ceil(r.playerHealingDebuffUntil-now)+'s</span>');
@@ -1733,15 +1725,12 @@ const runtimeContext={
  get THEMES(){return THEMES;},
  get TYPES(){return TYPES;},
  get WANDERER_DOUBLE_STRIKE_ENABLED(){return WANDERER_DOUBLE_STRIKE_ENABLED;},
- get WANDERER_SHATTER_ENABLED(){return WANDERER_SHATTER_ENABLED;},
  get activeLegendarySignatures(){return activeLegendarySignatures;},
  get addLog(){return addLog;},
- get affinityProcChance(){return affinityProcChance;},
  get animateDefense(){return animateDefense;},
  get animateEnemyStrike(){return animateEnemyStrike;},
  get animateEnemyWindup(){return animateEnemyWindup;},
  get animateStrike(){return animateStrike;},
- get applyAffinity(){return applyAffinity;},
  get bannerMessage(){return bannerMessage;},
  get bossForTier(){return bossForTier;},
  get chooseSubtype(){return chooseSubtype;},
@@ -1771,7 +1760,6 @@ const runtimeContext={
  get forgeTier(){return forgeTier;},
  get fresh(){return fresh;},
  get gameRandom(){return gameRandom;},
- get isMagicOffhand(){return isMagicOffhand;},
  get isPhase1Run(){return isPhase1Run;},
  get isTwoHanded(){return isTwoHanded;},
  get legendaryAffinity(){return legendaryAffinity;},
@@ -1894,16 +1882,11 @@ const runtimeContext={
  get selectedId(){return selectedId;},set selectedId(value){selectedId=value;},
  get setBarrier(){return setBarrier;},
  get setCombatExpire(){return setCombatExpire;},
- get setDelayEnemy(){return setDelayEnemy;},
  get setDirectEnemyDamage(){return setDirectEnemyDamage;},
- get setEnemyWeaken(){return setEnemyWeaken;},
  get setHeal(){return setHeal;},
- get setHeatTick(){return setHeatTick;},
  get setNow(){return setNow;},
- get setOnAttack(){return setOnAttack;},
  get setReady(){return setReady;},
  get setRuntime(){return setRuntime;},
- get setSoulHeal(){return setSoulHeal;},
  get showConfirm(){return showConfirm;},
  get showPendingRuneReward(){return showPendingRuneReward;},
  get starter(){return starter;},
@@ -1923,7 +1906,7 @@ const runtimeContext={
  get weaponAttack(){return weaponAttack;},
  get winEncounter(){return winEncounter;},
 };
-let {addLog,bossForTier,eliteArchetype,rollEliteArchetype,tryDodge,enemyFor,synchronizeDots,tickDots,setRuntime,setNow,activeLegendarySignatures,legendaryRuntime,legendaryHas,legendaryReady,legendaryEmpowered,legendaryProc,legendaryOnHit,legendaryExtend,legendaryAffinity,legendaryAttackBonus,legendaryOffhand,legendaryDefensiveEffects,legendaryRealmStart,legendaryTick,legendaryKill,setReady,setBarrier,regenPerSecond,setHeal,setDelayEnemy,setDirectEnemyDamage,setOnAttack,setCombatExpire,setEnemyWeaken,setHeatTick,setSoulHeal,applyAffinity,weaponAttack,updateFight,phase2Context,phase2Stats,phase2WeaponAttack,phase2MagicTick,phase6Metric,phase6Proc,phase6CollectMetrics,phase6Stats,winEncounter,die}=WandererV012CombatRuntime.create(runtimeContext);
+let {addLog,bossForTier,eliteArchetype,rollEliteArchetype,tryDodge,enemyFor,synchronizeDots,tickDots,setRuntime,setNow,setCombatExpire,activeLegendarySignatures,legendaryRuntime,legendaryHas,legendaryReady,legendaryEmpowered,legendaryProc,legendaryOnHit,legendaryExtend,legendaryAffinity,legendaryAttackBonus,legendaryOffhand,legendaryDefensiveEffects,legendaryRealmStart,legendaryTick,legendaryKill,setReady,setBarrier,regenPerSecond,setHeal,setDirectEnemyDamage,weaponAttack,updateFight,phase2Context,phase2Stats,phase2WeaponAttack,phase2MagicTick,phase6Metric,phase6Proc,phase6CollectMetrics,phase6Stats,winEncounter,die}=WandererV012CombatRuntime.create(runtimeContext);
 let {phase5ReviewSummary,phase1Init,phase1Begin,phase2Theme,phase6AwardGear,phase6Buff,phase6OpenEvent,phase6EventChoice,phase6PassiveOptions,phase6BackToCamp,phase2EnterInitialRealm,phase2ChooseInitial,phase2ChooseElement,phase2ChoosePassive,phase1Choose,phase1Enter,phase2Launch,phase1StartWave,phase1WaveWon,phase1Death,phase1Abandon,phase6TickDurations,phase3ExpeditionActive,phase3CanPrepare,phase3IsBetweenPlanes,phase3Vitals,phase3Reroll,phase5Item,phase5RememberRealm,phase5MakeSummary,phase5ExitResult}=WandererV012ExpeditionRuntime.create(runtimeContext);
 let {toggleEquipmentLock,chooseSubtype,economyTier,merchantTier,baseStatScore,offhandLocked,craftEquipment,reinforceEquipment,purchaseEquipment,sellValuables,markItemSeen,markAllAsSeen,comparisonEquip,stashCapacity,stashUpgradeCost,stashHasRoom,upgradeStash,fresh,makeSlots,starter,legendaryMatches,legendaryFor,legendarySignature,makeItem,rarityOdds,rarityRoll,rollEquipmentSlot,merchantCost,saleFragments,rollShop,ensureMerchantStock,economyOwnedGear,economyOwnedItem,economyCanAct,refreshMerchantStock,equipItem,unequipItem,bulkSell,salvageOne,phase3BagItems,phase3BagOverflow,phase3NeedsBagResolution,phase3DiscardLoot,phase4ClaimOverflow,phase6PotionInventory,phase6SelectPotion,phase6StartPotions,phase6ReturnPotions,phase6UsePotion,phase6BuyPotion,phase6RerollPotions,unequipRune,salvageRune,salvageDuplicateRunes,equipRune,offerBossRunes,claimPendingRuneChoice,runeCheckpointLocked,phase3UsePotion,phase3ClampVitals}=WandererV012EquipmentRuntime.create(runtimeContext);
 let {gameRandom,phase4Session,phase4CommitRealm,phase4LoseLoot,phase4Extract,phase4Restore,phase4ResumeRealm,phase5Capture,attachCloudSave,restoreCloudSave,phase5Persist,phase5Init,phase5Fail}=WandererV012PersistenceRuntime.create(runtimeContext);
