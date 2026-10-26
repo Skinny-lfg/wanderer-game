@@ -50,7 +50,7 @@ The integrated native runtime was ticked at 110 ms game-time increments. There w
 | 10 micro-enemies | 1,201 | 8.01 | 22.65 s | 0 s | 745.6 | 1,377.2 | 47.7% | 66.5 / 31.3 |
 | 12 micro-enemies | 928 | 8.79 | 24.66 s | 0 s | 745.2 | 1,436.8 | 36.8% | 64.0 / 30.1 |
 
-\*Reward averages are conditional on successful Realm completion. They are not multiplied by the micro-enemy count; small differences come from paired combat runs consuming RNG differently and from the subset of completed runs. At E1, all arms completed all 420 samples; Gold per completed Realm was 8.8 baseline, 8.9 at 8, 8.9 at 10 and 9.0 at 12; Fragments were 3.9, 4.0, 4.0 and 4.1. Each completed Realm used the original selected Wave count for reward slots. No duplicated item IDs or checkpoint timeouts were observed.
+\*Reward averages are conditional on successful Realm completion. They are not multiplied by the micro-enemy count; small differences come from paired combat runs consuming RNG differently and from the subset of completed runs. At E1, all arms completed all 420 samples; Gold per completed Realm was 8.8 baseline, 8.9 at 8, 8.9 at 10 and 9.0 at 12; Fragments were 3.9, 4.0, 4.0 and 4.1. Each completed Realm used the original selected Wave count for reward slots. The tests assert unique mob IDs and one-time reward checkpoint keys; no harness timeouts occurred. Item-ID uniqueness was not separately aggregated in the A/B output.
 
 Survival by tier is the main blocker:
 
