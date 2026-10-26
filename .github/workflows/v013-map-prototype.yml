@@ -1,0 +1,67 @@
+name: v0.13 isolated map prototype tests
+on:
+  push:
+    branches: [development]
+    paths:
+      - 'online/v013-map-prototype.js'
+      - 'experiments/v013-map-prototype.html'
+      - 'tests/v013-map-prototype.test.cjs'
+      - 'scripts/v013-map-stress.cjs'
+      - '.github/workflows/v013-map-prototype.yml'
+  workflow_dispatch:
+    inputs:
+      duration_minutes:
+        description: 'Isolated map stress duration; never accesses Firebase or saves'
+        required: true
+        default: '0'
+        type: choice
+        options: ['0', '60', '120']
+
+permissions:
+  contents: read
+
+jobs:
+  map-functional:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify isolated map model invariants
+        run: node --test tests/v013-map-prototype.test.cjs
+      - name: Verify 10000 deterministic map seeds
+        run: node scripts/v013-map-stress.cjs --seeds 10000 --out /tmp/v013-map-smoke.json
+      - name: Assert no live scripts imported by isolated map lab
+        run: |
+          test -f experiments/v013-map-prototype.html
+          ! grep -Eq 'firebase-client|firebase-sdk|v012-persistence-runtime|online/v012-save' experiments/v013-map-prototype.html
+      - name: Export map stress evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v013-map-smoke
+          path: /tmp/v013-map-smoke.json
+          if-no-files-found: warn
+
+  map-long-stress:
+    if: github.event_name == 'workflow_dispatch' && inputs.duration_minutes != '0'
+    runs-on: ubuntu-latest
+    timeout-minutes: 170
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run isolated stress by selected duration
+        run: node scripts/v013-map-stress.cjs --seeds 50000000 --minutes "$DURATION" --out /tmp/v013-map-long-stress.json
+        env:
+          DURATION: ${{ inputs.duration_minutes }}
+      - name: Export long-run report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v013-map-long-stress
+          path: /tmp/v013-map-long-stress.json
+          if-no-files-found: warn
