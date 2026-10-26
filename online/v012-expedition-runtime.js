@@ -194,6 +194,10 @@ function phase1StartWave(resetScroll=false){
  if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked))return false;
  const r=ports.state.run,g=ports.phase1Controller.state;
  if(!ports.isPhase1Run()||!g.selected||r.status==='fight')return;
+ if(!r.gauntlet&&ports.gauntletModeCount&& !g.selected.elite&&!g.selected.boss&&!g.selected.eventId){
+  r.gauntlet=WandererV013Gauntlet.create({attempt:ports.phase5Snapshot?.expedition?.attempts||1,plane:g.planeIndex,seed:ports.phase4Seed??0,count:ports.gauntletModeCount,waves:r.planeWaves});
+ }
+ if(r.gauntlet)return phase1StartGauntletMob(resetScroll);
  r.enc=g.wave;const last=g.wave===g.selected.waves;
  const theme=ports.phase2Theme(g.selected.id);
  r.enemy=ports.enemyFor(r.tier,r.enc,{theme,boss:last&&g.selected.boss,elite:last&&g.selected.elite&&!g.selected.boss,variant:g.version===2?ports.BOSS_ARCHETYPES.find(b=>b.style===WandererV012Expedition.BOSSES.find(v=>v.id===g.bossId).style):null});
@@ -206,40 +210,128 @@ function phase1StartWave(resetScroll=false){
  ports.clock=setInterval(()=>{if(ports.isVisible())ports.updateFight();},110/ports.clockSpeed);
 }
 
+function phase1StartGauntletMob(resetScroll=false){
+ const r=ports.state.run,g=ports.phase1Controller.state,experiment=r?.gauntlet;
+ if(!ports.isPhase1Run()||!experiment||!WandererV013Gauntlet.valid(experiment)||g.stage!=='combat'||!g.selected||experiment.index>=experiment.count)return false;
+ const index=experiment.index,enc=WandererV013Gauntlet.baselineWave(experiment,index),theme=ports.phase2Theme(g.selected.id);
+ // Each mob uses an unscaled stat row from the Realm's existing Wave range.
+ // The prototype adds targets, never HP or attack multipliers to an existing mob.
+ r.enc=g.wave;r.enemy=ports.enemyFor(r.tier,enc,{theme,boss:false,elite:false,variant:null});
+ r.enemy.gauntletMobId=WandererV013Gauntlet.mobId(experiment,index);
+ r.phase6Bounty=false;
+ // Player clocks, cooldowns, buffs, Mana, debuffs and encounter DoT cadence
+ // persist. Only the new enemy's own attack clock and enemy-bound DoTs reset.
+ r.tEnemy=0;ports.setRuntime(r);r.status='fight';
+ if(ports.phase1Build)WandererV012Buildcraft.resetWave(ports.phase1Build,r.enemy);
+ ports.addLog('Enemy '+(index+1)+'/'+experiment.count+': '+r.enemy.name);
+ // Persist every deterministic mob checkpoint before the next combat tick so
+ // reload cannot replay a kill, reset its mob-bound DoTs, or award twice.
+ if(!ports.phase5Persist())return false;
+ ports.renderCombat();if(resetScroll)ports.resetDungeonEntryScroll();
+ if(!ports.clock)ports.clock=setInterval(()=>{if(ports.isVisible())ports.updateFight();},110/ports.clockSpeed);
+ return true;
+}
+
+function phase1ResumeGauntlet(){
+ const r=ports.state.run;
+ if(!r?.gauntlet||r.status!=='fight'||!WandererV013Gauntlet.valid(r.gauntlet)||!r.enemy||r.enemy.gauntletMobId!==WandererV013Gauntlet.mobId(r.gauntlet))return false;
+ clearInterval(ports.clock);ports.renderCombat();
+ ports.clock=setInterval(()=>{if(ports.isVisible())ports.updateFight();},110/ports.clockSpeed);
+ return true;
+}
+
+function phase1AwardWaveBudget(r,enc,enemy,idempotencyValidated=false){
+ const g=ports.phase1Controller.state,boss=!!enemy.boss,elite=!!enemy.miniboss;
+ const attempt=ports.phase5Snapshot?.expedition?.attempts||1,token=attempt+':'+r.phase1Plane+':'+enc;
+ if(ports.PHASE1_PREVIEW&&!idempotencyValidated){
+  if(ports.phase5Snapshot.expedition.awardKeys.includes(token)||ports.phase4WaveKeys.includes(token)){ports.phase5Fail(Error('Duplicate Wave reward rejected'));return false;}
+  ports.phase4WaveKeys.push(token);
+ }
+ r.phase4AwardedWave=enc;
+ const gold=Math.round((ports.roll(3,6)+Math.floor(r.tier*.5)+(boss?8:elite?4:0))*(r.phase6Bounty?1.5:1));
+ const fragments=Math.round((ports.roll(1,3)+Math.floor(r.tier*.24)+(boss?5:elite?3:0))*(r.phase6Bounty?1.5:1));
+ ports.state.gold+=gold;ports.state.fragments+=fragments;r.gold+=gold;r.fragments+=fragments;ports.phase5Results.gold+=gold;ports.phase5Results.fragments+=fragments;
+ ports.addLog('Realm rewards pending: +'+gold+' Gold · +'+fragments+' Fragments.','good');
+ const odds=ports.waveLootOdds(boss?5:elite?4:enc,r.stats.cha);if(ports.phase6Run?.effects.fortune)odds.drop=Math.min(1,odds.drop*1.25);
+ if(boss||r.phase6Bounty||ports.gameRandom()<odds.drop){
+  const theme=ports.phase2Theme(r.path),pick=ports.dungeonEquipmentPick(theme,[]);
+  const rarity=ports.randomFromOdds(odds.rarities),item=ports.makeItem(r.tier,pick.slot,theme.effect,'loot',pick.subtype,rarity);
+  if(ports.stashHasRoom())ports.state.stash.push({...item,isNew:true});else ports.state.expeditionOverflow.push({...item,isNew:true});
+  ports.phase3LootIds.add(item.id);r.loot.push(item);ports.phase5Results.earned.push(ports.phase5Item(item));ports.phase3NotifyLoot?.(item);
+  ports.addLog('✦ '+item.rarity+' '+item.name+' added to Expedition bag.',item.rarity);
+ }
+ if(ports.gameRandom()<.23){
+  const worth=Math.max(2,Math.round(3+r.tier*.55+ports.gameRandom()*(4+r.tier*.30))),treasureId=ports.makeId();
+  const treasure=globalThis.WandererV012Treasures.create(treasureId,r.tier);
+  ports.state.valuables??=[];ports.state.valuables.push(treasure);ports.phase3LootIds.add(treasure.id);r.valuables.push(treasure);ports.phase3NotifyLoot?.(treasure);
+  ports.addLog('◆ '+treasure.name+' · '+treasure.worth+' Gold when extracted.','good');
+ }
+ return true;
+}
+
+function phase1GauntletMobWon(r){
+ const g=ports.phase1Controller.state,experiment=r.gauntlet,enemy=r.enemy;
+ if(!ports.isPhase1Run()||r.status!=='fight'||!enemy||enemy.hp>0||g.stage!=='combat'||!g.selected||g.selected.elite||g.selected.boss||g.selected.eventId||!WandererV013Gauntlet.valid(experiment))return false;
+ const mobId=enemy.gauntletMobId,last=experiment.index===experiment.count-1;
+ if(mobId!==WandererV013Gauntlet.mobId(experiment))return false;
+ const context=ports.phase2Context(r);context.killKey=mobId;context.checkpointKey=experiment.checkpointId;context.waveKey=experiment.checkpointId;context.checkpointComplete=last;
+ ports.legendaryKill(r,context);
+ if(ports.phase1Build)WandererV012Buildcraft.onKill(ports.phase1Build,context);
+ if(!WandererV013Gauntlet.recordKill(experiment,mobId))return false;
+ r.gauntletKills=(r.gauntletKills||0)+1;r.status='ready';
+ if(!last){phase1StartGauntletMob();return true;}
+
+ // The checkpoint emits the same number and shape of legacy reward rolls as
+ // the original selected Waves, independent of the experimental mob count.
+ const budgetWaves=g.selected.waves,attempt=ports.phase5Snapshot?.expedition?.attempts||1;
+ for(let wave=1;wave<=budgetWaves;wave++){
+  const rewardId=experiment.checkpointId+':reward:'+wave;
+  if(!WandererV013Gauntlet.award(experiment,rewardId))continue;
+  if(!phase1AwardWaveBudget(r,wave,{boss:false,miniboss:false}))return false;
+ }
+ let result=null;
+ for(let i=0;i<budgetWaves;i++)result=ports.phase1Controller.waveWon();
+ if(!result)return false;
+ r.phase1EncounterCheckpoint=experiment.checkpointId;r.phase1RealmCompletion=attempt+':'+r.phase1Plane;
+ return phase1CompleteRealm(r,result);
+}
+
+function phase1CompleteRealm(r,result){
+ const g=ports.phase1Controller.state;
+ ports.phase4CommitRealm();ports.phase6CollectMetrics(r);ports.phase6TickDurations();
+ r.status='cleared';ports.addLog(result.expeditionComplete?'Expedition boss defeated!':'Realm cleared. Select your next Realm.','good');
+ ports.phase5RememberRealm(r,'cleared');ports.phase1Clock+=r.combatSeconds||0;
+ ports.phase1Continuity=result.expeditionComplete?null:{setCooldowns:r.setCooldowns,secondWindUsed:r.secondWindUsed,legendaryState:r.legendaryState,legendaryCastCount:r.legendaryCastCount,legendaryAttackCount:r.legendaryAttackCount};
+ ports.phase1Vitals=result.expeditionComplete?null:{hp:Math.max(1,r.hp),mp:Math.max(0,r.mp),maxmp:r.maxmp};
+ if(result.expeditionComplete){
+  ports.phase5Results.review='summary';ports.phase5PersonalBest=Math.max(ports.phase5PersonalBest,r.tier);ports.phase6ReturnPotions('victory');ports.phase5MakeSummary('victory');
+  WandererV012Buildcraft.clear(ports.phase1Build);ports.phase1Build=null;
+  if(ports.PHASE1_PREVIEW){ports.phase5Snapshot.expedition.completed=Math.max(ports.phase5Snapshot.expedition.completed,r.tier);ports.phase5Snapshot.expedition.lastOutcome='victory';}
+  if(g.version===2||r.tier%10===0)ports.offerBossRunes(r.tier);
+  if(ports.state.pendingRuneReward)ports.phase5Results.summary.runeTier=ports.state.pendingRuneReward.tier;
+  if(ports.state.merchant)ports.state.merchant.refreshCost=16+ports.merchantTier()*4;
+ }
+ if(!result.expeditionComplete){
+  const plane=ports.phase1Controller.state.rewardPending;phase6UnlockBase(plane.family);ports.phase5Results.review=null;
+  ports.phase1Draft={version:3,kind:'reward',plane,step:'passive',options:ports.phase6PassiveOptions(plane)};ports.view='combat';
+ }else{ports.state.run=null;ports.view='phase1';}
+ if(!ports.phase5Persist())return false;
+ if(result.expeditionComplete)ports.render();else{ports.renderCombat();ports.phase6PassivePopup();}
+ return true;
+}
+
 function phase1WaveWon(){
  if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked))return false;
  const r=ports.state.run,g=ports.phase1Controller.state;
  if(!ports.isPhase1Run()||r.status!=='fight'||!r.enemy||r.enemy.hp>0||g.stage!=='combat'||!g.selected||r.enc!==g.wave||r.phase4AwardedWave===r.enc)return;
+ if(r.gauntlet)return phase1GauntletMobWon(r);
  clearInterval(ports.clock);
  if(ports.PHASE1_PREVIEW){const token=ports.phase5Snapshot.expedition.attempts+':'+r.phase1Plane+':'+r.enc;if(ports.phase5Snapshot.expedition.awardKeys.includes(token)||ports.phase4WaveKeys.includes(token)){ports.phase5Fail(Error('Duplicate Wave reward rejected'));return;}ports.phase4WaveKeys.push(token);}
  r.phase4AwardedWave=r.enc;
  ports.legendaryKill(r);
  if(ports.phase1Build)WandererV012Buildcraft.onKill(ports.phase1Build,ports.phase2Context(r));
- const enemy=r.enemy,boss=!!enemy.boss,elite=!!enemy.miniboss;
- const gold=Math.round((ports.roll(3,6)+Math.floor(r.tier*.5)+(boss?8:elite?4:0))*(r.phase6Bounty?1.5:1));
- const fragments=Math.round((ports.roll(1,3)+Math.floor(r.tier*.24)+(boss?5:elite?3:0))*(r.phase6Bounty?1.5:1));
- ports.state.gold+=gold;ports.state.fragments+=fragments;r.gold+=gold;r.fragments+=fragments;ports.phase5Results.gold+=gold;ports.phase5Results.fragments+=fragments;
- ports.addLog('Realm rewards pending: +'+gold+' Gold · +'+fragments+' Fragments.','good');
- const odds=ports.waveLootOdds(boss?5:elite?4:r.enc,r.stats.cha);if(ports.phase6Run?.effects.fortune)odds.drop=Math.min(1,odds.drop*1.25);
- if(boss||r.phase6Bounty||ports.gameRandom()<odds.drop){
-  const theme=ports.phase2Theme(r.path),pick=ports.dungeonEquipmentPick(theme,[]);
-  const rarity=ports.randomFromOdds(odds.rarities);
-  const item=ports.makeItem(r.tier,pick.slot,theme.effect,'loot',pick.subtype,rarity);
-  // Gear in the Bag is at risk; equipped gear survives failure.
-  if(ports.stashHasRoom())ports.state.stash.push({...item,isNew:true});
-  else ports.state.expeditionOverflow.push({...item,isNew:true});
-  ports.phase3LootIds.add(item.id);r.loot.push(item);ports.phase5Results.earned.push(ports.phase5Item(item));ports.phase3NotifyLoot?.(item);
-  ports.addLog('✦ '+item.rarity+' '+item.name+' added to Expedition bag.',item.rarity);
- }
- // Treasures share Bag capacity with equipment; they can only be sold outside the Expedition.
- if(ports.gameRandom()<.23){
-  const worth=Math.max(2,Math.round(3+r.tier*.55+ports.gameRandom()*(4+r.tier*.30)));
-  const treasureId=ports.makeId();
-  const treasure=globalThis.WandererV012Treasures.create(treasureId,r.tier);
-  ports.state.valuables??=[];ports.state.valuables.push(treasure);
-  ports.phase3LootIds.add(treasure.id);r.valuables.push(treasure);ports.phase3NotifyLoot?.(treasure);
-  ports.addLog('◆ '+treasure.name+' · '+treasure.worth+' Gold when extracted.','good');
- }
+ const enemy=r.enemy;
+ if(!phase1AwardWaveBudget(r,r.enc,enemy,true))return;
  r.status='ready';
  const result=ports.phase1Controller.waveWon();
  if(!result.planeComplete){
@@ -248,36 +340,7 @@ function phase1WaveWon(){
   setTimeout(()=>{if(ports.state.run===r&&r.status==='ready')ports.phase1StartWave();},650);
   return;
  }
- ports.phase4CommitRealm();ports.phase6CollectMetrics(r);ports.phase6TickDurations();
- r.status='cleared';
- ports.addLog(result.expeditionComplete?'Expedition boss defeated!':'Realm cleared. Select your next Realm.','good');
- ports.phase5RememberRealm(r,'cleared');
- ports.phase1Clock+=r.combatSeconds||0;
- ports.phase1Continuity=result.expeditionComplete?null:{setCooldowns:r.setCooldowns,secondWindUsed:r.secondWindUsed,legendaryState:r.legendaryState,legendaryCastCount:r.legendaryCastCount,legendaryAttackCount:r.legendaryAttackCount};
- ports.phase1Vitals=result.expeditionComplete?null:{hp:Math.max(1,r.hp),mp:Math.max(0,r.mp),maxmp:r.maxmp};
- if(result.expeditionComplete){
-  ports.phase5Results.review='summary';
-  ports.phase5PersonalBest=Math.max(ports.phase5PersonalBest,r.tier);
-  ports.phase6ReturnPotions('victory');
-  ports.phase5MakeSummary('victory');
-  WandererV012Buildcraft.clear(ports.phase1Build);ports.phase1Build=null;
-  if(ports.PHASE1_PREVIEW){ports.phase5Snapshot.expedition.completed=Math.max(ports.phase5Snapshot.expedition.completed,r.tier);ports.phase5Snapshot.expedition.lastOutcome='victory';}
-  // Keep classic Rune tiers and three-choice UI: only complete milestone bosses, never Elites.
-  if(g.version===2||r.tier%10===0)ports.offerBossRunes(r.tier);
-  if(ports.state.pendingRuneReward)ports.phase5Results.summary.runeTier=ports.state.pendingRuneReward.tier;
-  // Existing stock is retained; new progression does not grant free vendor rerolls.
-  if(ports.state.merchant)ports.state.merchant.refreshCost=16+ports.merchantTier()*4;
- }
- if(!result.expeditionComplete){
-  const plane=ports.phase1Controller.state.rewardPending;
-  phase6UnlockBase(plane.family);
-  ports.phase5Results.review=null;
-  ports.phase1Draft={version:3,kind:'reward',plane,step:'passive',options:ports.phase6PassiveOptions(plane)};
-  ports.view='combat';
- }else{ports.state.run=null;ports.view='phase1';}
- if(!ports.phase5Persist())return;
- if(result.expeditionComplete)ports.render();
- else{ports.renderCombat();ports.phase6PassivePopup();}
+ return phase1CompleteRealm(r,result);
 }
 
 function phase1Death(){
@@ -370,7 +433,7 @@ function phase5ExitResult(){
  ports.state.run=null;ports.view='phase1';if(!ports.phase5Persist())return false;ports.render();return true;
 }
 function phase5ReviewSummary(){ports.phase5Results.review='summary';ports.view='phase1';ports.phase5Persist();ports.render();}
-return {phase5ReviewSummary,phase1Init,phase1Begin,phase2Theme,phase6AwardGear,phase6Buff,phase6OpenEvent,phase6EventChoice,phase6PassiveOptions,phase6BackToCamp,phase2EnterInitialRealm,phase2ChooseInitial,phase2ChooseElement,phase2ChoosePassive,phase1Choose,phase1Enter,phase2Launch,phase1StartWave,phase1WaveWon,phase1Death,phase1Abandon,phase6TickDurations,phase3ExpeditionActive,phase3CanPrepare,phase3IsBetweenPlanes,phase3Vitals,phase3Reroll,phase5Item,phase5RememberRealm,phase5MakeSummary,phase5ExitResult};
+return {phase5ReviewSummary,phase1Init,phase1Begin,phase2Theme,phase6AwardGear,phase6Buff,phase6OpenEvent,phase6EventChoice,phase6PassiveOptions,phase6BackToCamp,phase2EnterInitialRealm,phase2ChooseInitial,phase2ChooseElement,phase2ChoosePassive,phase1Choose,phase1Enter,phase2Launch,phase1StartWave,phase1StartGauntletMob,phase1ResumeGauntlet,phase1WaveWon,phase1Death,phase1Abandon,phase6TickDurations,phase3ExpeditionActive,phase3CanPrepare,phase3IsBetweenPlanes,phase3Vitals,phase3Reroll,phase5Item,phase5RememberRealm,phase5MakeSummary,phase5ExitResult};
 }
 root.WandererV012ExpeditionRuntime=Object.freeze({create});
 })(globalThis);

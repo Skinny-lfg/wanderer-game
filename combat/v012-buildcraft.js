@@ -377,10 +377,12 @@ function onDefend(b,c,blocked,barrierAbsorbed){
  }
 }
 function onKill(b,c){
- const waveKey=c.waveKey??c.enemy;if(b.runtime.lastKillWave===waveKey)return;b.runtime.lastKillWave=waveKey;
+ const waveKey=c.waveKey??c.enemy,killKey=c.killKey;
+ if(killKey!==undefined){if(b.runtime.lastKillKey===killKey)return;b.runtime.lastKillKey=killKey;}
+ else{if(b.runtime.lastKillWave===waveKey)return;b.runtime.lastKillWave=waveKey;}
  if(rank(b,'hemovore')&&(c.enemy.bleedStacks>0||c.enemy.v012DeathBleed)&&activated(b,'hemovore'))heal(b,c,c.player.maxhp*.04);
  if(rank(b,'rot_recovery')&&(c.enemy.v012Rot?.length||c.enemy.v012DeathRot)&&activated(b,'rot_recovery'))heal(b,c,c.player.maxhp*.04);
- const key=c.waveKey??c.enemy;if(rank(b,'second_breath')&&b.runtime.lastWaveHeal!==key){b.runtime.lastWaveHeal=key;activated(b,'second_breath');heal(b,c,c.player.maxhp*values('second_breath',rank(b,'second_breath')).heal);}
+ const key=c.checkpointKey??waveKey;if(c.checkpointComplete!==false&&rank(b,'second_breath')&&b.runtime.lastWaveHeal!==key){b.runtime.lastWaveHeal=key;activated(b,'second_breath');heal(b,c,c.player.maxhp*values('second_breath',rank(b,'second_breath')).heal);}
 }
 function survive(b,c){if(!rank(b,'last_stand')||b.runtime.lastStand)return false;activated(b,'last_stand');b.runtime.lastStand=true;c.player.hp=Math.max(1,c.player.maxhp*.06);c.log('💚 Last Stand (once per Expedition)');return true;}
 function speed(b,now){return b?.runtime?.adrenalineUntil>now?1+values('adrenaline',rank(b,'adrenaline')).speed:1;}

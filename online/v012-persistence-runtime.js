@@ -9,10 +9,12 @@ function gameRandom(){
 function phase4Session(entry=false){
  const continuity=ports.phase1Continuity?ports.phase4Clone(ports.phase1Continuity):null;
  if(continuity?.legendaryState)delete continuity.legendaryState.enemy;
- return ports.phase4Clone({version:1,entry,controller:ports.phase1Controller.state,build:ports.phase1Build,vitals:ports.phase1Vitals,
+ const session={version:1,entry,controller:ports.phase1Controller.state,build:ports.phase1Build,vitals:ports.phase1Vitals,
   integration:ports.phase6Run,clock:ports.phase1Clock,supplies:{health:0,mana:0},lootIds:[...ports.phase3LootIds],home:ports.phase4Home,
   seed:ports.phase4Seed,prefix:ports.phase4Prefix,stamp:ports.phase4Stamp,idCounter:ports.uid,continuity,draft:ports.phase1Draft,results:ports.phase5Results,
-  clearedRun:ports.state.run?.status==='cleared'?ports.phase4Clone(ports.state.run):null});
+  clearedRun:ports.state.run?.status==='cleared'?ports.phase4Clone(ports.state.run):null};
+ if(ports.state.run?.gauntlet&&ports.state.run.status==='fight')session.activeRun=ports.phase4Clone(ports.state.run);
+ return ports.phase4Clone(session);
 }
 
 function phase4CommitRealm(){
@@ -66,7 +68,7 @@ function phase4Restore(session){
 
  }}
  if(session.results)ports.phase5Results=ports.phase4Clone(session.results);
- ports.state.run=session.clearedRun||null;if(ports.state.run?.valuables)ports.state.run.valuables=ports.state.run.valuables.map(item=>root.WandererV012Treasures.normalize(item));if(ports.state.run?.enemy)WandererV012Buildcraft.migrateEnemyDots(ports.state.run.enemy);ports.phase4WaveKeys=[];ports.phase4Resume=session.entry&&!session.clearedRun;
+ ports.state.run=session.activeRun||session.clearedRun||null;if(ports.state.run?.valuables)ports.state.run.valuables=ports.state.run.valuables.map(item=>root.WandererV012Treasures.normalize(item));if(ports.state.run?.enemy)WandererV012Buildcraft.migrateEnemyDots(ports.state.run.enemy);ports.phase4WaveKeys=[];ports.phase4Resume=session.entry&&!session.clearedRun&&!session.activeRun;
  ports.phase4Entry=session.entry?{profile:ports.phase4Clone({...ports.state,run:null}),session:ports.phase4Clone(session),ledger:[...(ports.phase5Snapshot?.expedition.awardKeys||[])]}:null;
  ports.view=session.clearedRun?'combat':'phase1';
 }
@@ -78,8 +80,9 @@ function phase4ResumeRealm(){
 
 function phase5Capture(){
  const g=ports.phase1Controller.state,active=['choice','combat'].includes(g.stage),entry=ports.phase4Entry;
- const session=entry?entry.session:active||ports.phase3NeedsBagResolution()?ports.phase4Session():null;
- return {...ports.phase5Snapshot,idCounter:entry?entry.session.idCounter:ports.uid,profile:entry?entry.profile:{...ports.state,run:null},expedition:{...ports.phase5Snapshot.expedition,
+ let session=entry?entry.session:active||ports.phase3NeedsBagResolution()?ports.phase4Session():null;
+ if(entry&&ports.state.run?.gauntlet&&ports.state.run.status==='fight')session={...entry.session,activeRun:ports.phase4Clone(ports.state.run),seed:ports.phase4Seed,idCounter:ports.uid};
+ return {...ports.phase5Snapshot,idCounter:session?.idCounter??ports.uid,profile:entry?entry.profile:{...ports.state,run:null},expedition:{...ports.phase5Snapshot.expedition,
   awardKeys:entry?entry.ledger:ports.phase5Snapshot.expedition.awardKeys,session,presentation:entry?.session.results||ports.phase5Results,
   unlocked:g.unlocked,active:active?{attempt:ports.phase5Snapshot.expedition.attempts,level:g.expedition,plane:g.planeIndex,wave:g.wave,stage:g.stage}:null}};
 }
@@ -133,7 +136,7 @@ function phase5Init(){
     if(recovered.save.expedition.presentation)ports.phase5Results=ports.phase4Clone(recovered.save.expedition.presentation);
     if(recovered.save.expedition.session)ports.phase4Restore(recovered.save.expedition.session);
    }else ports.phase5Snapshot=WandererV012Save.create({...ports.state,run:null},{binding});
-   ports.phase5Ready=true;ports.saveBlocked=false;phase5Persist();
+   ports.phase5Ready=true;ports.saveBlocked=false;phase5Persist();if(ports.state.run?.gauntlet)ports.resumeGauntlet?.();
   }catch(error){ports.phase5Fail(error);}
   return;
  }
@@ -161,7 +164,7 @@ function phase5Init(){
      if(ports.phase5Snapshot.expedition.session)ports.phase4Restore(ports.phase5Snapshot.expedition.session);
     }else ports.phase5Snapshot=WandererV012Save.create({...ports.state,run:null},{binding});
     ports.phase5Ready=true;ports.saveBlocked=false;
-    if(ports.phase5Persist()){if(!ports.phase2EnterInitialRealm())ports.render();}
+    if(ports.phase5Persist()){if(ports.state.run?.gauntlet)ports.resumeGauntlet?.();else if(!ports.phase2EnterInitialRealm())ports.render();}
    }catch(error){ports.phase5Fail(error);}
    await new Promise(resolve=>globalThis.addEventListener('pagehide',()=>{
     if(ports.phase5Ready)ports.phase5Persist();ports.phase5Ready=false;resolve();

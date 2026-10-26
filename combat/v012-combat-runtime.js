@@ -367,7 +367,10 @@ function updateFight(){
 
 function phase2Context(r){
  const e=r.enemy,now=ports.setNow(r);
- return {player:r,enemy:e,now,random:ports.gameRandom,base:r.lastBaseHit||r.stats.attack,healTriggersPassives:true,healingMultiplier:(r.playerHealingDebuffUntil||0)>now?.6:1,waveKey:r.phase1Plane+':'+r.enc,
+ const experiment=r.gauntlet;
+ return {player:r,enemy:e,now,random:ports.gameRandom,base:r.lastBaseHit||r.stats.attack,healTriggersPassives:true,healingMultiplier:(r.playerHealingDebuffUntil||0)>now?.6:1,
+  waveKey:experiment?.checkpointId||r.phase1Plane+':'+r.enc,killKey:experiment?e.gauntletMobId:undefined,
+  checkpointKey:experiment?.checkpointId||r.phase1Plane+':'+r.enc,checkpointComplete:!experiment||experiment.index===experiment.count-1,
  dot(kind,potency){
   if(!['bleed','burn'].includes(kind))return;
   ports.phase6Proc(r,kind+' application');const values=e.dots[kind]||(e.dots[kind]=[]);

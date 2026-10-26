@@ -172,6 +172,10 @@ function sessionCheck(s,p,e){
  requireValue(s.draft===null||plain(s.draft)&&['initial','entry','reward'].includes(s.draft.kind)&&['element','passive'].includes(s.draft.step),'draft checkpoint');
  if(s.draft?.version===3){requireValue(s.draft.kind==='reward'&&Array.isArray(s.draft.options)&&s.draft.options.length<=3&&new Set(s.draft.options.map(o=>o.id)).size===s.draft.options.length&&s.draft.options.every(o=>plain(o)&&typeof o.id==='string'&&['Upgrade','Synergy','Discovery'].includes(o.category)&&plain(o.preview)),'contextual draft');}
  if(s.build&&root.WandererV012Buildcraft)root.WandererV012Buildcraft.validate(s.build);
+ if(s.activeRun!==undefined){
+  const r=s.activeRun;
+  requireValue(plain(r)&&r.phase1===true&&r.status==='fight'&&plain(r.gauntlet)&&root.WandererV013Gauntlet?.valid(r.gauntlet)&&r.gauntlet.attempt===e.attempts&&r.gauntlet.plane===g.planeIndex&&r.gauntlet.index<r.gauntlet.count&&r.tier===g.expedition&&r.phase1Plane===g.planeIndex&&r.enc===g.wave&&r.planeWaves===r.gauntlet.waves&&typeof r.hp==='number'&&Number.isFinite(r.hp)&&r.hp>0&&typeof r.maxhp==='number'&&Number.isFinite(r.maxhp)&&r.maxhp>=r.hp&&typeof r.mp==='number'&&Number.isFinite(r.mp)&&r.mp>=0&&plain(r.stats)&&plain(r.enemy)&&r.enemy.gauntletMobId===root.WandererV013Gauntlet.mobId(r.gauntlet)&&typeof r.enemy.hp==='number'&&Number.isFinite(r.enemy.hp)&&r.enemy.hp>0&&typeof r.enemy.maxhp==='number'&&Number.isFinite(r.enemy.maxhp)&&r.enemy.maxhp>=r.enemy.hp&&Array.isArray(r.loot)&&r.loot.length===0&&Array.isArray(r.valuables)&&r.valuables.length===0&&JSON.stringify(r).length<=700000,'gauntlet runtime checkpoint');
+ }
  if(e.active){requireValue(g.expedition===e.active.level&&g.planeIndex===e.active.plane&&g.stage===e.active.stage,'checkpoint identity');}
  else requireValue(!s.entry&&['failed','finished'].includes(g.stage),'ended checkpoint');
  if(s.entry)requireValue(g.stage==='combat'&&g.wave===1&&s.draft===null&&e.active!==null,'Realm entry checkpoint');
