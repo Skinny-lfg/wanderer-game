@@ -44,10 +44,10 @@ const architecture={
 const versionsInEvidence=new Set(explicit);
 const versionAssessment=versionsInEvidence.size===0?'NO_CLEAR_VERSION_SIGNAL':versionsInEvidence.size===1?'CONSISTENT_VERSION_SIGNAL':'CONFLICTING_VERSION_SIGNALS';
 export function collectProjectSnapshot(){
- const head=git('rev-parse','--short','HEAD').stdout?.trim()||null;
+ const head=git('rev-parse','HEAD').stdout?.trim()||null;
  const branch=git('branch','--show-current').stdout?.trim()||null;
  const remoteTrackingDevelopment=git('rev-parse','refs/remotes/origin/development').stdout?.trim()||null;
  const status=git('status','--porcelain=v1');
- return {branch,head,remoteTrackingDevelopment,localHeadMatchesRemoteTracking:remoteTrackingDevelopment===head,workingTree:status.status===0?(status.stdout?'DIRTY':'CLEAN'):'UNKNOWN',version:{assessment:versionAssessment,explicitCandidates:[...versionsInEvidence].sort(),documentationCandidates,evidence:signals},architecture};
+ return {branch,head,remoteTrackingDevelopment,localHeadMatchesRemoteTracking:!!(head&&remoteTrackingDevelopment&&remoteTrackingDevelopment===head),workingTree:status.status===0?(status.stdout?'DIRTY':'CLEAN'):'UNKNOWN',version:{assessment:versionAssessment,explicitCandidates:[...versionsInEvidence].sort(),documentationCandidates,evidence:signals},architecture};
 }
 if(import.meta.url===`file://${process.argv[1]}`) process.stdout.write(JSON.stringify(collectProjectSnapshot(),null,2)+'\n');
