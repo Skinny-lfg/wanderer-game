@@ -27,6 +27,9 @@ test('private plugin package, marketplace and project enablement are valid refer
 test('new-prompt hook reports dynamically discovered version and architecture evidence',async()=>{
  const snapshot=collectProjectSnapshot();
  assert.ok(snapshot.head);
+ assert.match(snapshot.head,/^[0-9a-f]{40}$/,'local HEAD must be full SHA to compare with origin tracking');
+ const localHead=spawnSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'});
+ assert.equal(snapshot.head,localHead.stdout.trim());
  assert.ok(snapshot.version.assessment);
  assert.ok(Array.isArray(snapshot.version.evidence));
  assert.equal(snapshot.architecture.canonicalEntrypoint,'index.html');
