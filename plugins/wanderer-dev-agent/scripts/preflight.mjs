@@ -24,7 +24,7 @@ const chromium=existsSync(chromiumPath)?run(chromiumPath,['--version']):null;
 const firebaseVersion=firebasePackageVersion||firebase?.stdout?.match(/\b\d+\.\d+\.\d+\b/)?.[0]||null;
 const checks={
  project:collectProjectSnapshot(),
- repository:{path:repoRoot,branch,branchStatus:branch==='development'?'PASS':'FAIL',origin:remote,originStatus:/^https:\/\/github\.com\/Skinny-lfg\/wanderer-game(?:\.git)?$/.test(remote||'')?'PASS':'FAIL',workingTree:porcelain.status===0?(porcelain.stdout?'DIRTY':'CLEAN'):'UNKNOWN'},
+ repository:{path:repoRoot,branch,branchStatus:branch==='development'?'PASS':branch==='main'?'FAIL':'REVIEW',origin:remote,originStatus:/^https:\/\/github\.com\/Skinny-lfg\/wanderer-game(?:\.git)?$/.test(remote||'')?'PASS':'FAIL',workingTree:porcelain.status===0?(porcelain.stdout?'DIRTY':'CLEAN'):'UNKNOWN'},
  runtime:{node:process.version,nodeStatus:Number(process.versions.node.split('.')[0])>=20?'PASS':'FAIL'},
  firebase:{cli:firebaseVersion,cliStatus:firebaseVersion&&firebase?.status===0?'PASS':firebase?.status===null?'ERROR':'MISSING',cliExitCode:firebase?.status??null,authEmulator:firebaseConfig?.emulators?.auth?'CONFIGURED':'MISSING',firestoreEmulator:firebaseConfig?.emulators?.firestore?'CONFIGURED':'MISSING',emulatorStatus:firebaseConfig?.emulators?.auth&&firebaseConfig?.emulators?.firestore?'PASS':'FAIL',policy:'Isolated CLI config under /tmp; demo-wanderer emulators only; no CLI login or production project'},
  browser:{playwright:playwrightVersion,playwrightStatus:playwrightVersion?'PASS':'MISSING',chromium:chromium?.status===0?chromium.stdout.trim():null,chromiumStatus:chromium?.status===0?'PASS':'MISSING'},
