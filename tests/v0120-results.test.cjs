@@ -33,10 +33,9 @@ test('Realm clear can be left without a passive draft and cannot pay twice',()=>
 
 test('Death summary keeps newly equipped loot and home gear, and reports only discarded Bag items as discarded',()=>{
  const a=create(502);a.setup(5,'Sword');a.start();a.initial('blood');const state=a.state(),home=plain(state.equip);
- a.controller().state.planeIndex=2;
  const sword=a.makeItem(2,'weapon',null,'loot','Sword','Rare');a.bag.mark(sword);a.recordItem(sword);assert.equal(a.equip(sword.id),true);
  const belt=a.makeItem(2,'belt',null,'loot','Leather','Rare');a.bag.mark(belt);a.recordItem(belt);assert.equal(a.bag.discard(belt.id),true);
- a.select(a.controller().state.offers[0].id);assert.equal(a.enter(),true);state.run.combatSeconds=3;a.death();
+ a.select(a.controller().state.offers.find(p=>p.family==='blood').id);assert.equal(a.enter(),true);a.controller().state.planeIndex=2;state.run.combatSeconds=3;a.death();
  const result=a.results();assert.equal(result.review,'summary');assert.equal(result.realm.outcome,'defeat');assert.equal(result.summary.outcome,'defeat');
  assert.deepEqual(Array.from(result.summary.kept,item=>item.id),[sword.id]);
  assert.deepEqual(Array.from(result.summary.lost,item=>item.id),[home.weapon.id]);

@@ -14,10 +14,10 @@ test('preview uses a separate local save namespace and does not load account ser
  const create=require('./v012-economy-harness.cjs'),game=create(17,html,{}, {root:dir,validationStorage:storage});
  assert.equal(game.debug().phase5Ready,true);game.start(1);game.initial('blood');const offer=game.controller().state.offers.find(x=>x.family==='blood');game.select(offer.id);assert.equal(game.enter(),true);
  while(game.controller().state.planeIndex===1){const run=game.state().run;assert(run?.enemy);run.enemy.hp=0;game.win();game.flush();}
- assert.equal(game.state().automaticTalents.xp,30);
+ const earnedXP=game.state().automaticTalents.xp;assert(earnedXP>0);
  assert.equal(storage.get('wanderer_v012_endless_v1_local'),'untouched production-like data');
  assert(storage.has('wanderer_automatic_rpg_preview_v1_local'));
- const reload=create(17,html,{}, {root:dir,validationStorage:storage});assert.equal(reload.debug().phase5Ready,true);assert.equal(reload.state().automaticTalents.xp,30);
+ const reload=create(17,html,{}, {root:dir,validationStorage:storage});assert.equal(reload.debug().phase5Ready,true);assert.equal(reload.state().automaticTalents.xp,earnedXP);
  const play=reload;
  for(let i=0;i<300&&!['finished','failed'].includes(play.controller().state.stage);i++){
   if(play.draft()?.step==='passive')play.passive(play.draft().options[0]?.id??null);
@@ -26,7 +26,7 @@ test('preview uses a separate local save namespace and does not load account ser
   else if(play.state().run?.status==='fight'){play.state().run.enemy.hp=0;play.win();play.flush();}
   else if(play.controller().state.stage==='choice'){
    while(play.bag.items().length>=play.bag.capacity()||play.bag.overflow()){const item=play.bag.items().at(-1);assert(item&&play.bag.discard(item.id));}
-   play.select(play.controller().state.offers[0].id);assert.equal(play.enter(),true);
+   play.select(play.controller().state.offers.find(x=>play.controller().reachable(x)).id);assert.equal(play.enter(),true);
    if(play.draft()?.step==='element')play.element('fire');
   }else throw Error('Unexpected preview state: '+JSON.stringify(play.debug()));
  }

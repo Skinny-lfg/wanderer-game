@@ -56,7 +56,7 @@ test('D.7: Dual Dagger E200/Endless combat matches the updated audit',()=>{
  const {run}=require('../scripts/v012-affinity-combat-sim.cjs');
  // This exact historical audit used per-Realm drafts; retain those rules for
  // the legacy snapshot instead of comparing it to permanent-talent builds.
- const legacy={'online/v012-expedition-runtime.js':fs.readFileSync('tests/fixtures/legacy-expedition-runtime.js','utf8'),'online/v012-persistence-runtime.js':fs.readFileSync('tests/fixtures/legacy-persistence-runtime.js','utf8')};
+ const legacy={'online/v012-expedition-controller.js':fs.readFileSync('tests/fixtures/legacy-expedition-controller.js','utf8'),'online/v012-expedition-runtime.js':fs.readFileSync('tests/fixtures/legacy-expedition-runtime.js','utf8'),'online/v012-persistence-runtime.js':fs.readFileSync('tests/fixtures/legacy-persistence-runtime.js','utf8')};
  const builds=[
   {weapon:'Staff',armorType:'Cloth',old:[7202600,8,53993,30]},
   // The explicit 24-mob combat roles intentionally change native fight outcomes.

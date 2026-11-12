@@ -33,8 +33,8 @@ module.exports=function trace(scenario,source){
     if(!item||!a.bag.discard(item.id))throw Error('Cannot resolve full bag');
    }
    for(let n=0;a.bag.overflow();n++){if(n>40||!a.bag.discard(a.bag.items().at(-1).id))throw Error('Cannot resolve bag overflow');}
-   if(a.controller().state.planeIndex===2){a.reroll(0);a.potions.use(1);}
-   a.select(a.controller().state.offers[0].id);a.enter();if(a.draft()?.step==='element')a.element('lightning');
+   if(a.controller().state.planeIndex===2){a.reroll(a.controller().state.offers.findIndex(p=>a.controller().reachable(p)));a.potions.use(1);}
+   a.select(a.controller().state.offers.find(p=>a.controller().reachable(p)).id);a.enter();if(a.draft()?.step==='element')a.element('lightning');
   }
   record();
  }

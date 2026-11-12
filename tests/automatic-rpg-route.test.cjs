@@ -24,3 +24,9 @@ test('map escapes realm names from restored state',()=>{
  assert(!html.includes('<danger>'));
  assert.match(html,/&lt;danger&gt;/);
 });
+
+test('branching map shows paths, encounter types and current options',()=>{
+ const rooms=['combat','combat','boss'],routeMap=[['combat','combat','combat'],['combat','elite','combat'],['boss']];
+ const html=context.route({rooms,routeMap,planeIndex:2,history:[{lane:0}]});
+ assert.match(html,/connected path/);assert.match(html,/Elite/);assert.match(html,/is-chosen/);assert.equal((html.match(/is-available/g)||[]).length,2);
+});

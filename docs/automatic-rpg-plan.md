@@ -5,8 +5,12 @@ or connect it to production player data. Use isolated synthetic playtest saves.
 
 ## In place
 
-- A route overview shows the actual 15-Realm schedule, completed Realms and
-  current choices. This is a schedule, not yet a branching map.
+- New Expeditions have a saved, connected three-lane map of 15 Realms.
+  Players can move to an adjacent lane or stay in their lane, choosing between
+  normal and optional elite encounters; the last Realm is the shared boss.
+  Event rows remain mandatory. Existing in-progress checkpoints retain their
+  original schedule. Future Realm affinities and rewards are generated as the
+  player advances, not fixed or shown on the map.
 - Completed combat, elite, boss and event Realms grant permanent talent XP.
   The separate Talents page contains the existing ability catalogue and ranks,
   plus nine foundation nodes. Progress is stored in the profile, with
@@ -17,8 +21,8 @@ or connect it to production player data. Use isolated synthetic playtest saves.
 
 ## Still required
 
-1. Generate and persist a connected, branching map with distinct node types,
-   meaningful routes, deterministic rewards and safe checkpoint recovery.
+1. Expand map variety, add distinct optional event routes and preview meaningful
+   rewards; validate encounter and reward balance through real playtesting.
 2. Test the new permanent-talent pacing and rebalance across builds, especially
    magic, hybrids and Endless. Expand tree connections based on player feedback.
 3. Add simultaneous enemies and distinguish area from single-target builds in
