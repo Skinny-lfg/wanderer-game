@@ -73,7 +73,7 @@ function phase6EventChoice(choice,itemId,passiveId,family,targetId){
  case 'last_ember':if(!passive||!WandererV012Buildcraft.canModify(ports.phase1Build,passiveId,-.5,ports.totalStats()))return false;effects.echo={id:passiveId,power:-.5,remaining:3};ports.phase1Build.runtime.echo=effects.echo;choice===0?heal(.35):heal(0,.4);break;
  default:return false;
  }}
- ports.phase6Run.events.push(g.planeIndex);ports.phase6Run.event=null;ports.phase4CommitRealm();ports.phase1Controller.waveWon();
+ ports.phase6Run.events.push(g.planeIndex);ports.phase6Run.event=null;ports.phase4CommitRealm({awardXp:true});ports.phase1Controller.waveWon();
  phase6UnlockBase(p.family);
  ports.phase5Results.gold+=Math.max(0,ports.state.gold-beforeGold);ports.phase5Results.fragments+=Math.max(0,ports.state.fragments-beforeFragments);
  ports.phase5RememberRealm({tier:E,phase1Plane:g.planeIndex-1,planeName:p.name,planeFamily:p.family,combatSeconds:0,gold:Math.max(0,ports.state.gold-beforeGold),fragments:Math.max(0,ports.state.fragments-beforeFragments),loot,realmLog:[{text:choice===2?'Event declined. No reward.':WandererV012IntegratedEvents.get(ev.id)[3][choice],kind:'good'}]},'cleared');
@@ -234,7 +234,7 @@ function phase1WaveWon(){
   setTimeout(()=>{if(ports.state.run===r&&r.status==='ready')ports.phase1StartWave();},650);
   return;
  }
- ports.phase4CommitRealm();ports.phase6CollectMetrics(r);ports.phase6TickDurations();
+ ports.phase4CommitRealm({awardXp:true});ports.phase6CollectMetrics(r);ports.phase6TickDurations();
  r.status='cleared';
  ports.addLog(result.expeditionComplete?'Expedition boss defeated!':'Realm cleared. Select your next Realm.','good');
  ports.phase5RememberRealm(r,'cleared');

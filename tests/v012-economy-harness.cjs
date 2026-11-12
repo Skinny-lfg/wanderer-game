@@ -1,12 +1,13 @@
 // Execute the actual integrated HTML runtime with an inert DOM, seeded RNG and manual clock.
 // Never boots account modules, reads local saves, or substitutes combat/loot formulas.
 const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
+require('../combat/automatic-talents.js');
 const root=path.resolve(__dirname,'..');
 module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(root,'index.html'),'utf8'),moduleOverrides={},options={}){
  const boot='phase1Init();\nconst phase3RestoredScroll=phase3RestoreUILocation(phase3SavedUILocation);\nrender();';
  if(!source.includes(boot))throw Error('Integrated bootstrap not found');
  let next=seed>>>0;const math=Object.create(Math);math.random=()=>{next=(Math.imul(next,1664525)+1013904223)>>>0;return next/4294967296;};
- const callbacks=[],nodes=new Map(),isolatedSessionStorage=options.sessionStorage??new Map();
+ const callbacks=[],nodes=new Map(),isolatedSessionStorage=options.sessionStorage??new Map(),fixtureRoot=options.root||root;
  const node=()=>({innerHTML:'',textContent:'',style:{},dataset:{},classList:{add(){},remove(){}},focus(){},querySelectorAll:()=>[],before(){},close(){}});
  const getNode=id=>{if(!nodes.has(id))nodes.set(id,node());return nodes.get(id);};
  const queryAll=selector=>{
@@ -17,13 +18,14 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
  };
  const sandbox={Math:math,...(options.now===undefined?{}:{Date:class extends Date{static now(){return options.now;}}}),URLSearchParams,location:{search:'?expeditionPhase1=1'},console,
   document:{body:node(),visibilityState:'visible',getElementById:getNode,querySelector:()=>null,querySelectorAll:queryAll,createElement:node,addEventListener(){}},
-  localStorage:{getItem(){throw Error('Unexpected real save read');},setItem(){throw Error('Unexpected real save write');}},
+  localStorage:options.validationStorage?{getItem:key=>options.validationStorage.get(String(key))??null,setItem:(key,value)=>options.validationStorage.set(String(key),String(value)),removeItem:key=>options.validationStorage.delete(String(key))}:{getItem(){throw Error('Unexpected real save read');},setItem(){throw Error('Unexpected real save write');}},
   // The local preview deliberately persists only to sessionStorage. Keep that
   // slot isolated per harness; omitting it makes preview startup fail closed
   // and blocks otherwise valid economy actions in unit fixtures.
   sessionStorage:{getItem(key){return isolatedSessionStorage.has(String(key))?isolatedSessionStorage.get(String(key)):null;},setItem(key,value){isolatedSessionStorage.set(String(key),String(value));},removeItem(key){isolatedSessionStorage.delete(String(key));}},
   setTimeout:fn=>{callbacks.push(fn);return callbacks.length;},clearTimeout(){},setInterval:()=>0,clearInterval(){}};
  sandbox.window=sandbox;sandbox.addEventListener=()=>{};
+ if(options.validationStorage)sandbox.navigator={locks:{request(_key,_options,callback){return Promise.resolve(callback({}));}}};
  const inject=String.raw`
  const auditForge=renderForge,auditMerchant=renderMerchant,auditCombat=renderCombat;
  let auditConfirmation=null,auditFeedback=null;
@@ -113,9 +115,9 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
  };
  `;
  const main=source.match(/<script>([\s\S]*?)<\/script>/)?.[1];
- const files=['online/v012-treasures.js','online/v012-save.js','economy/v0101.js','combat/legendary.js','combat/v012-combat-core.js','combat/v012-gear-stats.js','combat/v012-runes.js','economy/v012-loot-rules.js','combat/v012-buildcraft.js','online/v012-expedition-controller.js','online/v012-expedition-events.js','online/v012-consumables.js'];
+ const files=['online/v012-treasures.js','combat/automatic-talents.js','online/v012-save.js','economy/v0101.js','combat/legendary.js','combat/v012-combat-core.js','combat/v012-gear-stats.js','combat/v012-runes.js','economy/v012-loot-rules.js','combat/v012-buildcraft.js','online/v012-expedition-controller.js','online/v012-expedition-events.js','online/v012-consumables.js'];
  files.push(...[...source.matchAll(/<script[^>]+src="([^"]+-runtime\.js)"/g)].map(m=>m[1]));
- vm.runInNewContext(files.map(f=>moduleOverrides[f]??fs.readFileSync(path.join(root,f),'utf8')).join('\n')+'\n'+main.replace(boot,inject+'\nconst phase3RestoredScroll=null;'),sandbox,{timeout:20000});
+ vm.runInNewContext(files.map(f=>moduleOverrides[f]??fs.readFileSync(path.join(fixtureRoot,f),'utf8')).join('\n')+'\n'+main.replace(boot,inject+'\nconst phase3RestoredScroll=null;'),sandbox,{timeout:20000});
  sandbox.audit.flush=()=>{for(let i=0;callbacks.length;i++){if(i>10000)throw Error('Callback loop');callbacks.shift()();}};
  sandbox.audit.buildcraft=sandbox.WandererV012Buildcraft;
  sandbox.audit.catalog=sandbox.WandererV012Buildcraft.CATALOG;

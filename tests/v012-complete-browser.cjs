@@ -2,7 +2,7 @@
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict'),{execFileSync}=require('node:child_process');
 const {chromium}=require('playwright'),root=path.resolve(__dirname,'..');
 const source=fs.readFileSync(path.join(root,'index.html'),'utf8');
-const screenshotMode=process.env.UI_HOME_BEFORE==='1'?'before':'after',screenshotDir=path.join(root,'docs/homepage-ui-consistency-screenshots',screenshotMode);fs.mkdirSync(screenshotDir,{recursive:true});
+const screenshotMode=process.env.UI_HOME_BEFORE==='1'?'before':'after',screenshotDir=path.join(process.env.WANDERER_ARTIFACT_ROOT||root,'docs/homepage-ui-consistency-screenshots',screenshotMode);fs.mkdirSync(screenshotDir,{recursive:true});
 const screenshot=async(page,name)=>page.screenshot({path:path.join(screenshotDir,name+'.jpg'),fullPage:true,type:'jpeg',quality:86});
 const boot='phase1Init();\nconst phase3RestoredScroll=phase3RestoreUILocation(phase3SavedUILocation);\nrender();';assert(source.includes(boot));
 const fixture=`if(PHASE1_PREVIEW){phase1Init();globalThis.__complete={
@@ -23,7 +23,7 @@ const server=http.createServer((req,res)=>{
 });
 (async()=>{
  await new Promise(r=>server.listen(0,'127.0.0.1',r));const base='http://127.0.0.1:'+server.address().port;
- const browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});
+ const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox']});
  try{for(const width of [390,1280]){
  const context=await browser.newContext({viewport:{width,height:900}}),page=await context.newPage(),errors=[];page.setDefaultTimeout(6000);page.on('pageerror',e=>errors.push(e.message));
  await context.addInitScript(()=>{window.setInterval=()=>0;localStorage.setItem('wanderer_browser_proto_v01','UNTOUCHED');const t=window.setTimeout;window.setTimeout=(f,ms,...a)=>t(f,ms===650?5:ms,...a);});await page.route('**/*',r=>r.request().url().startsWith(base)?r.continue():r.abort());
@@ -50,6 +50,7 @@ const server=http.createServer((req,res)=>{
   s=await snap();if(s.game.stage!=='finished'){await screenshot(page,'passive-'+width);await page.locator('dialog [data-popup-passive]').first().click();if(wasEvent)assert(await page.locator('.phase3BetweenWorkspace').isVisible(),'event auto-returns after mandatory passive');else assert(await page.locator('#phase5ExitRealm, #phase5ExitEvent').isVisible());assert.equal((await snap()).result.review,null);}
  }
  await resolveRealm();assert.equal((await snap()).build.runtime.staticCharges,0);await page.reload();await ready();assert.equal((await snap()).build.runtime.staticCharges,0);await page.locator('#phase5ExitRealm, #phase5ExitEvent').click();await screenshot(page,'between-realms-'+width);
+ const route=page.locator('.expeditionRouteMap');assert.equal(await route.locator('.expeditionRouteNode').count(),15);assert.equal(await route.locator('.is-complete').count(),1);assert.equal(await route.locator('.is-current').count(),1);assert.match(await route.locator('.is-current').getAttribute('aria-label'),/Realm 2/);assert.match(await route.locator('.expeditionRouteNode').last().innerText(),/Boss/);assert(await page.evaluate(()=>document.body.scrollWidth<=innerWidth+1));
  await page.locator('[data-between-tab="equipment"]').click();await screenshot(page,'between-equipment-'+width);const betweenFills=await page.evaluate(()=>{const get=s=>getComputedStyle(document.querySelector(s)).backgroundImage;return{hero:get('.phase3BetweenHero'),bag:get('.phase3Bag'),paper:get('.phase3BetweenEquipment .paper')}});assert(betweenFills.hero.includes('linear-gradient')&&betweenFills.bag.includes('linear-gradient')&&betweenFills.paper==='none','Between Realms panels use shared dark fills while the character stage stays transparent '+JSON.stringify(betweenFills));const slots=await page.locator('.phase3BetweenEquipment .paper [data-eqslot]').evaluateAll(nodes=>nodes.map(n=>{const r=n.getBoundingClientRect();return{x:r.x,y:r.y,right:r.right,bottom:r.bottom}})),paper=await page.locator('.phase3BetweenEquipment .paper').boundingBox();assert.equal(slots.length,10);assert(slots.every(n=>n.x>=paper.x-1&&n.right<=paper.x+paper.width+1&&n.y>=paper.y-1&&n.bottom<=paper.y+paper.height+1),'all equipment slots stay inside the mobile/desktop character panel');await page.locator('[data-between-tab="build"]').click();await screenshot(page,'between-stats-passives-'+width);await page.locator('[data-between-tab="realm"]').click();
  // Global balance must update every card and survive a refresh.
  for(let i=0;i<3;i++)await page.locator('[data-phase2-reroll="'+i+'"]').click();assert.equal((await snap()).game.rerolls,0);await page.reload();await ready();assert.equal((await snap()).game.rerolls,0);for(const button of await page.locator('[data-phase2-reroll]').all())assert(await button.isDisabled());

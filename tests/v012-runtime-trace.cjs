@@ -4,7 +4,11 @@ module.exports=function trace(scenario,source){
  const a=create(scenario.seed,source,{}, {now:1700000000000});a.setup(scenario.E,scenario.weapon,'Epic');
  const s=a.state(),g=a.controller().state;s.consumables={health:1,mana:1,fortune:1};s.potionSelection=['health','mana','fortune'];g.unlocked=scenario.E;
  const out=[];function record(){
-  const snapshot={profile:a.state(),controller:a.controller().state,build:a.build(),integration:a.events.run(),results:a.results(),checkpoint:a.checkpoint.capture()};
+  const snapshot=JSON.parse(JSON.stringify({profile:a.state(),controller:a.controller().state,build:a.build(),integration:a.events.run(),results:a.results(),checkpoint:a.checkpoint.capture()}));
+  // Permanent talent XP is intentionally new. Its award, save and validation
+  // are covered separately; exclude only this field from legacy parity hashes.
+  delete snapshot.profile.automaticTalents;
+  if(snapshot.checkpoint?.profile)delete snapshot.checkpoint.profile.automaticTalents;
   // Passive descriptions are player-facing copy persisted inside reward drafts.
   // Keep this parity trace focused on mechanics and checkpoint state, so a
   // reviewed wording correction does not invalidate all deterministic traces.

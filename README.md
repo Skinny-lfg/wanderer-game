@@ -8,7 +8,7 @@ Camp → choose an Expedition → complete up to 15 Realms with combat, events, 
 
 - 12 Realm themes, affinity combinations and hybrid options.
 - Between-Realms preparation, equipment, potions, Blacksmith, Apothecary and Forge.
-- Expedition progression and Runes through E200.
+- Endless Expedition progression and Rune tiers beyond E200.
 
 ## Branches
 
@@ -34,6 +34,21 @@ npm run simulate:v012
 ```
 
 Browser tests require Chromium and Playwright. The production build packages the public `index.html`, `assets/`, `online/`, `combat/` and `economy/` files.
+
+Set `CHROMIUM_PATH` to the browser executable when it is not `/usr/bin/chromium`.
+Set `WANDERER_ARTIFACT_ROOT` to an external directory to keep the main browser
+suite's generated screenshots and metrics out of the working tree. Firestore
+and Auth emulator tests use the demo project and require Java.
+
+For a map of the current gameplay modules, see [docs/current-game-map.md](docs/current-game-map.md).
+
+### Automatic RPG work in progress
+
+`node scripts/prepare-automatic-preview.mjs` builds an isolated English-language
+playtest in a new temporary directory and prints its path. Serve that directory
+over localhost or HTTPS. It uses its own local save namespace and does not load
+account or Firebase modules. The full design and unfinished systems are listed
+in [docs/automatic-rpg-plan.md](docs/automatic-rpg-plan.md).
 
 ## Data safety
 

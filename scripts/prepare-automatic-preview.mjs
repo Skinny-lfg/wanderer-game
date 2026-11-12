@@ -1,0 +1,29 @@
+// Build an isolated local-only playtest. This never deploys or reads player data.
+import {mkdtemp,mkdir,readFile,readdir,copyFile,writeFile} from 'node:fs/promises';
+import {join,extname} from 'node:path';
+import {tmpdir} from 'node:os';
+
+const output=await mkdtemp(join(tmpdir(),'wanderer-automatic-preview-'));
+const extensions={assets:new Set(['.json','.png','.webp','.jpg','.jpeg','.gif','.svg','.ico','.avif','.woff','.woff2']),online:new Set(['.js','.mjs','.css']),combat:new Set(['.js','.mjs','.json']),economy:new Set(['.js','.mjs','.json'])};
+const excluded=new Set(['auth-action.mjs','firebase-client.mjs','firebase-config.mjs','firebase-config-production.mjs','firebase-sdk-cdn.mjs','firebase-sdk-source.mjs','v012-account.mjs','v012-auth-bootstrap.js','v012-cloud-save.mjs','v012-feedback.mjs','v012-leaderboard-ui.mjs','v012-leaderboard.mjs']);
+async function copy(dir,relative=''){
+ for(const entry of await readdir(join(dir,relative),{withFileTypes:true})){
+  if(entry.name.startsWith('.')||dir==='online'&&(entry.name==='vendor'||excluded.has(entry.name)))continue;
+  const child=join(relative,entry.name),target=join(output,dir,child);
+  if(entry.isDirectory()){await mkdir(target,{recursive:true});await copy(dir,child);}
+  else if(entry.isFile()&&extensions[dir].has(extname(entry.name).toLowerCase())){await mkdir(join(output,dir,relative),{recursive:true});await copyFile(join(dir,child),target);}
+ }
+}
+for(const dir of Object.keys(extensions))await copy(dir);
+let html=await readFile('index.html','utf8');
+function replaceRequired(pattern,replacement,label){if(!pattern.test(html))throw Error('Preview blocked: '+label+' not found');html=html.replace(pattern,replacement);}
+replaceRequired(/globalThis\.__WANDERER_CLOUD_ONLY__=[^\n]+;/,'globalThis.__WANDERER_CLOUD_ONLY__=false;','cloud flag');
+replaceRequired(/const PHASE5_VALIDATION=[^\n]+;/,'const PHASE5_VALIDATION=true;','isolated save flag');
+for(const name of ['v012-auth-bootstrap.js','v012-account.mjs','v012-feedback.mjs','v012-leaderboard-ui.mjs'])replaceRequired(new RegExp('<script[^>]*src="online/'+name.replaceAll('.','\\.')+'(?:\\?[^" ]*)?"[^>]*><\\/script>'),'',name);
+replaceRequired(/<\/head>/,'<style>#onlineBar{display:none!important}</style></head>','head');
+await writeFile(join(output,'index.html'),html);
+const savePath=join(output,'online/v012-save.js');let save=await readFile(savePath,'utf8');
+if(!save.includes("PREFIX='wanderer_v012_endless_v1_'"))throw Error('Preview blocked: unknown save namespace');
+save=save.replace("PREFIX='wanderer_v012_endless_v1_'","PREFIX='wanderer_automatic_rpg_preview_v1_'");
+await writeFile(savePath,save);
+console.log('Isolated automatic RPG preview: '+output);

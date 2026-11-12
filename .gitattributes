@@ -1,2 +1,5 @@
 # Firebase's generated SDK contains intentional whitespace inside template literals.
 online/vendor/*.mjs -whitespace
+
+# The test harness reads exact HTML source fragments across platforms.
+*.html text eol=lf

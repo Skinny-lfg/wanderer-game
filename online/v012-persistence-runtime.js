@@ -15,7 +15,14 @@ function phase4Session(entry=false){
   clearedRun:ports.state.run?.status==='cleared'?ports.phase4Clone(ports.state.run):null});
 }
 
-function phase4CommitRealm(){
+function phase4CommitRealm({awardXp=false}={}){
+ // Award permanent XP only when a Realm is committed, alongside the existing
+ // reward ledger. Partial waves are rolled back by the entry checkpoint.
+ if(awardXp&&root.WandererAutomaticTalents){
+  const progress=ports.state.automaticTalents||root.WandererAutomaticTalents.create();
+  const enemy=ports.state.run?.enemy,amount=enemy?.boss?60:enemy?.miniboss?40:ports.state.run?30:20;
+  ports.state.automaticTalents=root.WandererAutomaticTalents.award(progress,amount);
+ }
  if(ports.PHASE1_PREVIEW)ports.phase5Snapshot.expedition.awardKeys=[...new Set([...ports.phase5Snapshot.expedition.awardKeys,...ports.phase4WaveKeys])];
  ports.phase4WaveKeys=[];ports.phase4Entry=null;ports.phase4Resume=false;
 }

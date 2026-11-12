@@ -13,7 +13,7 @@ const fixture=`phase1Init();globalThis.__c3={
  summary(){const t=({...WandererV012Treasures.CATALOG[2],id:'summary-treasure',kind:'valuable',treasureType:'golden-lion-statuette',tier:1});phase5Results.review='summary';phase5Results.complete=true;phase5Results.summary={level:1,outcome:'extracted',realms:1,families:['blood'],picks:[],seconds:1,gold:0,fragments:0,kept:[],lost:[],discarded:[],treasuresKept:[t],treasuresLost:[],runeTier:null};phase5RenderResult();}
 };render();`;
 (async()=>{
- const browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});
+ const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox']});
  try{
   for(const width of [390,1280]){
    const page=await browser.newPage({viewport:{width,height:900}}),errors=[];
@@ -23,7 +23,7 @@ const fixture=`phase1Init();globalThis.__c3={
     if(url.hostname!=='wanderer.test')return route.abort();
     const file=path.resolve(root,'.'+(url.pathname==='/'?'/index.html':url.pathname));
     if(!file.startsWith(root+path.sep))return route.fulfill({status:403});
-    try{const body=file.endsWith('/index.html')?fs.readFileSync(file,'utf8').replace(boot,fixture+'const phase3RestoredScroll=null;'):fs.readFileSync(file);await route.fulfill({body,contentType:mime[path.extname(file)]||'application/octet-stream'});}catch{return route.fulfill({status:404});}
+    try{const body=path.basename(file)==='index.html'?fs.readFileSync(file,'utf8').replace(boot,fixture+'const phase3RestoredScroll=null;'):fs.readFileSync(file);await route.fulfill({body,contentType:mime[path.extname(file)]||'application/octet-stream'});}catch{return route.fulfill({status:404});}
    });
    await page.goto('http://wanderer.test/?expeditionPhase1=1');
    if(errors.length)throw Error('App bootstrap: '+errors.join('; '));

@@ -59,6 +59,7 @@ function integrationCheck(r){
 function profileCheck(p){
  consumablesCheck(p);
  requireValue(plain(p)&&Array.isArray(p.stash)&&plain(p.equip),'profile');
+ if(p.automaticTalents!==undefined)requireValue(root.WandererAutomaticTalents?.valid(p.automaticTalents),'automatic talent progress');
  requireValue(p.run===null,'runtime must not be in permanent profile');
  for(const f of ['gold','fragments'])requireValue(integer(p[f],0,Number.MAX_SAFE_INTEGER),f);
  requireValue(integer(p.maxDungeon,1,200),'legacy dungeon progress');

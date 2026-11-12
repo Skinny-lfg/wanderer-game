@@ -25,7 +25,7 @@ const server=http.createServer((req,res)=>{
 (async()=>{
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
  const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox']});
- const shotDir=path.join(root,'docs/v012-release-audit/screenshots');fs.mkdirSync(shotDir,{recursive:true});
+ const shotDir=path.join(process.env.WANDERER_ARTIFACT_ROOT||root,'docs/v012-release-audit/screenshots');fs.mkdirSync(shotDir,{recursive:true});
  try{
   for(const [width,height] of [[360,800],[390,844],[430,932],[768,1024],[1280,720]]){
    for(const phase of ['before','after']){
