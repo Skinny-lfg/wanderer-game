@@ -120,8 +120,10 @@ function create(){return {version:3,element:null,initialFamily:null,initialPassi
 function ownedRank(b,id){return b?.picks?.filter(x=>x===id).length||0;}
 function rank(b,id){
  const p=BY_ID[id];if(!p)return 0;
- if(p.requires.length){const pairs=new Set();let count=0;for(const pick of new Set(b?.picks||[])){const q=BY_ID[pick];if(!q?.requires.length)continue;const pair=[...q.requires].sort().join(':');if(pairs.has(pair))continue;pairs.add(pair);if(++count>3)return 0;if(pick===id)return 1;}return 0;}
- const n=ownedRank(b,id),echo=b?.runtime?.echo;
+ const permanent=b?.runtime?.permanentTalents?.filter(value=>value===id).length||0;
+ if(p.element&&p.element!==b?.element)return 0;
+ if(p.requires.length){if(permanent)return 1;const pairs=new Set();let count=0;for(const pick of new Set(b?.picks||[])){const q=BY_ID[pick];if(!q?.requires.length)continue;const pair=[...q.requires].sort().join(':');if(pairs.has(pair))continue;pairs.add(pair);if(++count>3)return 0;if(pick===id)return 1;}return 0;}
+ const n=ownedRank(b,id)+permanent,echo=b?.runtime?.echo;
  return clamp(n&&echo?.id===id&&echo.remaining>0?n+echo.power:n,0,p.max);
 }
 function values(id,r){const t=Math.max(0,r-1),sqrt=Math.sqrt(r);return ({
@@ -143,7 +145,7 @@ function preview(b,id,base={}){
  const text=Object.entries(after).map(([key,v])=>key+': '+(current?Number((before[key]||0).toFixed(4))+' → ':'')+(typeof v==='number'?Number(v.toFixed(4)):v)).join(' · ');
  return {current,next,max:p?.max,useful,before,after,description:text};
 }
-function canModify(b,id,power,base={}){const p=BY_ID[id],n=ownedRank(b,id);return !!p&&p.max===5&&n>0&&clamp(n+power,0,p.max)!==rank(b,id)&&(power<0||preview(b,id,base).useful);}
+function canModify(b,id,power,base={}){const p=BY_ID[id],n=ownedRank(b,id)+(b?.runtime?.permanentTalents?.filter(value=>value===id).length||0),current=rank(b,id);return !!p&&p.max===5&&n>0&&current>0&&clamp(n+power,0,p.max)!==current&&(power<0||preview(b,id,base).useful);}
 function bleedDamage(b,amount){return amount*(1+.15*rank(b,'deep_cuts'));}
 function elementalPower(b,power){return power*(1+.12*rank(b,'elemental_force'))*(b.runtime.conduit?1.10:1);}
 function hasFamily(b,family){return Array.isArray(b?.families)&&b.families.includes(family);}
@@ -340,7 +342,7 @@ function onCast(b,c){
  if(rank(b,'spellblade')&&activated(b,'spellblade'))b.runtime.spellblade=true;
 }
 function onSecond(b,c){
- b.runtime.passiveTelemetry??={};for(const id of b.picks){const t=b.runtime.passiveTelemetry[id]??={activations:0,combatSeconds:0};t.combatSeconds+=1/b.picks.filter(p=>p===id).length;}
+ b.runtime.passiveTelemetry??={};for(const id of new Set([...b.picks,...(b.runtime.permanentTalents||[])])){if(!rank(b,id))continue;const t=b.runtime.passiveTelemetry[id]??={activations:0,combatSeconds:0};t.combatSeconds++;}
  const e=migrateEnemyDots(c.enemy);
  if(e.v012Rot?.length){
   const rot=e.v012Rot;
@@ -397,11 +399,13 @@ function validate(b){
  if(b.version>=3&&P.some(p=>ownedRank(b,p.id)>p.max))throw Error('Invalid passive rank');
  if(b.initialPassive!==null&&(b.initialPassive!==initialId(b.initialFamily,b.element)||!b.picks.includes(b.initialPassive)||!hasFamily(b,b.initialFamily)))throw Error('Invalid initial passive');
  if(!b.cooldowns||typeof b.cooldowns!=='object'||!Object.values(b.cooldowns).every(n=>typeof n==='number'&&Number.isFinite(n)&&n>=0)||!b.runtime||typeof b.runtime!=='object'||!['frenzyUntil','magicHits','lastSpellAt'].every(k=>typeof b.runtime[k]==='number'&&Number.isFinite(b.runtime[k]))||typeof b.runtime.lastStand!=='boolean')throw Error('Invalid saved cooldowns');
+ if(b.runtime.permanentTalents!==undefined&&(!Array.isArray(b.runtime.permanentTalents)||!b.runtime.permanentTalents.every(id=>BY_ID[id]&&b.runtime.permanentTalents.filter(value=>value===id).length<=BY_ID[id].max)))throw Error('Invalid permanent talents');
  if(b.runtime.hybridPity!==undefined&&(!b.runtime.hybridPity||typeof b.runtime.hybridPity!=='object'||Object.entries(b.runtime.hybridPity).some(([key,n])=>!/^([a-z]+):([a-z]+)$/.test(key)||key!==key.split(':').sort().join(':')||!key.split(':').every(f=>FAMILIES.includes(f))||!Number.isInteger(n)||n<0||n>3)))throw Error('Invalid hybrid pity');
  if(b.runtime.staticCharges===undefined)b.runtime.staticCharges=0;
  if(!Number.isInteger(b.runtime.staticCharges)||b.runtime.staticCharges<0||b.runtime.staticCharges>3)throw Error('Invalid Static charges');
  return b;
 }
+function syncPermanent(b,progress){if(!b)return;if(!root.WandererAutomaticTalents)throw Error('Permanent talents unavailable');const ids=root.WandererAutomaticTalents.passiveIds(progress||root.WandererAutomaticTalents.create());if(ids.length)b.runtime.permanentTalents=ids;else delete b.runtime.permanentTalents;}
 function clear(b){if(!b)return;b.picks.length=0;b.element=null;b.initialFamily=null;b.initialPassive=null;b.unlockedFamilies=[];b.families=[];b.cooldowns=Object.create(null);b.runtime={frenzyUntil:0,counterBlock:0,counterBarrier:0,spellblade:false,magicHits:0,staticCharges:0,adrenalineUntil:0,conduit:false,lastStand:false,lastSpellAt:-999};}
-root.WandererV012Buildcraft=Object.freeze({CATALOG,FAMILIES,ELEMENTS:elements,create,initial,initialId,ownedRank,rank,values,preview,canModify,capabilities,functional,synergy,bleedDamage,elementalPower,applyRot,migrateEnemyDots,eligible,options,choose,element,mods,onHeal,onAttack,onCast,onSecond,incoming,onDefend,onKill,survive,speed,enemyHealMultiplier,nextCost,resetWave,canCast,validate,clear});
+root.WandererV012Buildcraft=Object.freeze({CATALOG,FAMILIES,ELEMENTS:elements,create,initial,initialId,ownedRank,rank,values,preview,canModify,capabilities,functional,synergy,bleedDamage,elementalPower,applyRot,migrateEnemyDots,eligible,options,choose,element,mods,onHeal,onAttack,onCast,onSecond,incoming,onDefend,onKill,survive,speed,enemyHealMultiplier,nextCost,resetWave,canCast,validate,syncPermanent,clear});
 })(globalThis);
