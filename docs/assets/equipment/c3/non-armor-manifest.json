@@ -1,0 +1,85 @@
+{
+  "version": "C.3.4",
+  "source": "10 - Game Ready (WebP)/01 - Equipment",
+  "weapons": {
+    "Sword": [
+      "assets/equipment/c3/weapons/weapon_sword_01.webp",
+      "assets/equipment/c3/weapons/weapon_sword_02.webp"
+    ],
+    "Mace": [
+      "assets/equipment/c3/weapons/weapon_mace_01.webp",
+      "assets/equipment/c3/weapons/weapon_mace_02.webp",
+      "assets/equipment/c3/weapons/weapon_mace_03.webp"
+    ],
+    "Bow": [
+      "assets/equipment/c3/weapons/weapon_bow_01.webp",
+      "assets/equipment/c3/weapons/weapon_bow_02.webp",
+      "assets/equipment/c3/weapons/weapon_bow_03.webp"
+    ],
+    "Daggers": [
+      "assets/equipment/c3/weapons/weapon_dagger_01.webp",
+      "assets/equipment/c3/weapons/weapon_dagger_02.webp",
+      "assets/equipment/c3/weapons/weapon_dagger_03.webp",
+      "assets/equipment/c3/weapons/weapon_dagger_04.webp",
+      "assets/equipment/c3/weapons/weapon_dagger_05.webp"
+    ],
+    "Staff": [
+      "assets/equipment/c3/weapons/weapon_staff_01.webp",
+      "assets/equipment/c3/weapons/weapon_staff_02.webp",
+      "assets/equipment/c3/weapons/weapon_staff_03.webp"
+    ],
+    "Wand": [
+      "assets/equipment/c3/weapons/weapon_wand_01.webp",
+      "assets/equipment/c3/weapons/weapon_wand_02.webp",
+      "assets/equipment/c3/weapons/weapon_wand_03.webp"
+    ],
+    "Two-Handed": [
+      "assets/equipment/c3/weapons/weapon_twohand_01.webp",
+      "assets/equipment/c3/weapons/weapon_twohand_02.webp",
+      "assets/equipment/c3/weapons/weapon_twohand_03.webp",
+      "assets/equipment/c3/weapons/weapon_twohand_sapphire_battle_axe.webp"
+    ]
+  },
+  "offhands": {
+    "Shield": [
+      "assets/equipment/c3/weapons/offhand_shield_01.webp",
+      "assets/equipment/c3/weapons/offhand_shield_02.webp",
+      "assets/equipment/c3/weapons/offhand_shield_03.webp"
+    ],
+    "Orb": [
+      "assets/equipment/c3/weapons/offhand_orb_01.webp",
+      "assets/equipment/c3/weapons/offhand_orb_02.webp",
+      "assets/equipment/c3/weapons/offhand_orb_03.webp"
+    ],
+    "Tome": [
+      "assets/equipment/c3/weapons/offhand_tome_01.webp",
+      "assets/equipment/c3/weapons/offhand_tome_02.webp",
+      "assets/equipment/c3/weapons/offhand_tome_03.webp"
+    ],
+    "Charm": [
+      "assets/equipment/c3/weapons/offhand_charm_01.webp",
+      "assets/equipment/c3/weapons/offhand_charm_02.webp",
+      "assets/equipment/c3/weapons/offhand_charm_03.webp"
+    ]
+  },
+  "jewelry": {
+    "ring": [
+      "assets/equipment/c3/jewelry/accessory_ring_01.webp",
+      "assets/equipment/c3/jewelry/accessory_ring_02.webp",
+      "assets/equipment/c3/jewelry/accessory_ring_03.webp",
+      "assets/equipment/c3/jewelry/accessory_ring_04.webp",
+      "assets/equipment/c3/jewelry/accessory_ring_05.webp",
+      "assets/equipment/c3/jewelry/accessory_ring_06.webp"
+    ],
+    "amulet": [
+      "assets/equipment/c3/jewelry/accessory_amulet_01.webp",
+      "assets/equipment/c3/jewelry/accessory_amulet_02.webp",
+      "assets/equipment/c3/jewelry/accessory_amulet_03.webp",
+      "assets/equipment/c3/jewelry/accessory_amulet_04.webp",
+      "assets/equipment/c3/jewelry/accessory_amulet_05.webp",
+      "assets/equipment/c3/jewelry/accessory_amulet_06.webp"
+    ]
+  },
+  "preserveLegacy": true,
+  "note": "Visual assets only. Existing subtypes, item IDs, generation rates, save data and Legendary artwork stay unchanged. Off-hand Daggers reuse Daggers weapon art."
+}
