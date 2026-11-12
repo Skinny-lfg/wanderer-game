@@ -1,4 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),create=require('./v012-economy-harness.cjs');const {api,build,base}=require('./v012-affinity-fixture.cjs');
+const fs=require('node:fs'),legacy={ 'online/v012-expedition-runtime.js':fs.readFileSync('tests/fixtures/legacy-expedition-runtime.js','utf8'), 'online/v012-persistence-runtime.js':fs.readFileSync('tests/fixtures/legacy-persistence-runtime.js','utf8')},createLegacy=seed=>create(seed,undefined,legacy);
 const seeded=s=>()=>((s=(Math.imul(s,1664525)+1013904223)>>>0)/4294967296);
 test('B 1200 seeded drafts: useful distinct cards, categories, caps, elements and hybrid limits',()=>{
  for(let seed=1;seed<=1200;seed++){
@@ -16,7 +17,7 @@ test('B late second affinity: third eligible draft presents affinity-local pity 
  assert.equal(b.runtime.hybridPity['blood:decay'],0);
 });
 test('B new draft is stable after restore; first win gives starter plus one choice exactly once',()=>{
- const a=create(33);a.start(1);a.initial('blood');assert.equal(a.build().picks.length,0);a.select(a.controller().state.offers.find(p=>p.family==='blood').id);a.enter();
+ const a=createLegacy(33);a.start(1);a.initial('blood');assert.equal(a.build().picks.length,0);a.select(a.controller().state.offers.find(p=>p.family==='blood').id);a.enter();
  while(a.state().run?.status==='fight'){a.state().run.enemy.hp=0;a.win();a.flush();}
  assert.equal(a.build().picks.length,1);assert.equal(a.build().picks[0],'bleeding_edge');const before=JSON.stringify(a.draft()),cp=a.checkpoint.capture();a.checkpoint.restore(cp);assert.equal(JSON.stringify(a.draft()),before);
  const id=a.draft().options[0].id;assert(a.passive(id));assert.equal(a.passive(id),false);assert.equal(a.build().picks.length,2);
@@ -30,7 +31,7 @@ test('B triggers and caps, equipment block, one hybrid per pair, controlled exha
  for(const [b,count] of [[one,1],[two,2]]){const cards=api.options(b,'blood',seeded(31337));assert.equal(cards.length,count);assert.equal(new Set(cards.map(p=>p.id)).size,count);assert(cards.every(p=>api.eligible(b,p.family).some(q=>q.id===p.id)));const selected=cards[0];api.choose(b,'blood',selected.id,cards);assert(b.picks.includes(selected.id));}
 });
 test('B legacy overcap draft migrates deterministically without removing picks; modern draft remains byte-identical',()=>{
- const a=create(42);a.start();a.initial('blood');a.select(a.controller().state.offers.find(p=>p.family==='blood').id);a.enter();while(a.state().run?.status==='fight'){a.state().run.enemy.hp=0;a.win();a.flush();}
+ const a=createLegacy(42);a.start();a.initial('blood');a.select(a.controller().state.offers.find(p=>p.family==='blood').id);a.enter();while(a.state().run?.status==='fight'){a.state().run.enemy.hp=0;a.win();a.flush();}
  const cp=a.checkpoint.capture();cp.session.build.version=2;cp.session.build.picks=Array(8).fill('bleeding_edge');delete cp.session.draft.version;cp.session.draft.options=['bleeding_edge','deep_cuts','executioner'].map(id=>api.CATALOG.find(p=>p.id===id));
  a.checkpoint.restore(cp);const cards=JSON.stringify(a.draft()),seed=a.checkpoint.seed();assert.equal(a.build().picks.length,8);assert.equal(api.rank(a.build(),'bleeding_edge'),5);assert(!a.draft().options.some(p=>p.id==='bleeding_edge'));assert.equal(a.draft().version,3);
  a.checkpoint.restore(cp);assert.equal(JSON.stringify(a.draft()),cards);assert.equal(a.checkpoint.seed(),seed);
@@ -40,7 +41,7 @@ test('B legacy overcap draft migrates deterministically without removing picks; 
 
 test('B restored reward with 0, 1 or 2 legal offers continues without duplicate picks',()=>{
  for(const count of [0,1,2]){
-  const a=create(4200+count);a.start(1);a.initial('blood');
+  const a=createLegacy(4200+count);a.start(1);a.initial('blood');
   a.select(a.controller().state.offers.find(p=>p.family==='blood').id);a.enter();
   while(a.state().run?.status==='fight'){a.state().run.enemy.hp=0;a.win();a.flush();}
   const cp=a.checkpoint.capture(),before=cp.session.build.picks.length;
@@ -56,7 +57,7 @@ test('B restored reward with 0, 1 or 2 legal offers continues without duplicate 
 });
 
 test('old reward checkpoint drops foreign-affinity offers without changing saved build',()=>{
- const a=create(5800);a.start(1);a.initial('blood');a.select(a.controller().state.offers.find(p=>p.family==='blood').id);a.enter();
+ const a=createLegacy(5800);a.start(1);a.initial('blood');a.select(a.controller().state.offers.find(p=>p.family==='blood').id);a.enter();
  while(a.state().run?.status==='fight'){a.state().run.enemy.hp=0;a.win();a.flush();}
  const cp=a.checkpoint.capture(),picks=JSON.stringify(cp.session.build.picks);
  const foreign=api.CATALOG.find(p=>p.family==='decay'&&!p.requires.length);assert(foreign);

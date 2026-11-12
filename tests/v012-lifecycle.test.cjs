@@ -12,7 +12,7 @@ test('classic Second Wind, set/Legendary cooldowns and funded cast counters surv
  r.secondWindUsed=true;r.legendaryCastCount=2;r.legendaryAttackCount=3;
  assert.equal(a.ready(r,'legendary:fixture',10),true);assert.equal(a.ready(r,'legendary:fixture',10),false);
  while(s.run?.status==='fight'){s.run.enemy.hp=0;a.win();a.flush();}
- assert(a.draft());a.passive(a.draft().options[0].id);assert(a.exitResult());assert.equal(a.controller().state.stage,'choice');enter(a);r=s.run;
+ assert.equal(a.draft(),null);assert(a.exitResult());assert.equal(a.controller().state.stage,'choice');enter(a);r=s.run;
  assert.equal(r.secondWindUsed,true,'once per Expedition, not once per Plane');
  assert.equal(r.legendaryCastCount,2);assert.equal(r.legendaryAttackCount,3);
  assert.equal(a.now(r),2);assert.equal(a.ready(r,'legendary:fixture',10),false,'Plane change must not reset a cooldown');

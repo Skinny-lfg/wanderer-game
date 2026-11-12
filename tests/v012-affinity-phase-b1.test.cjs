@@ -33,14 +33,14 @@ test('B.1 optional plan restores old and active checkpoints without changing cap
  assert.equal(c.allowed().length,3);assert.throws(()=>c.planAffinities(['blood','decay','magic']),/between Expeditions/);
 });
 
-test('B.1 deterministic harness streams replay offers and passive drafts independently of combat RNG',()=>{
+test('B.1 deterministic harness streams replay Realm offers independently of combat RNG',()=>{
  function run(combatSeed){
   const a=plannedScenario(5201,combatSeed),c=a.controller();
   const offerAtStart=JSON.stringify(c.state.offers.map(p=>[p.id,p.family,p.waves,p.elite]));
   const first=c.state.offers.find(p=>p.family==='blood');a.select(first.id);a.enter();
   for(let i=0;i<8;i++)a.tick();
   const g=c.state;g.selected.waves=1;g.selected.event=null;g.selected.eventId=null;a.state().run.enemy.hp=0;a.win();a.flush();
-  return {offerAtStart,draft:JSON.stringify(a.draft().options.map(p=>[p.id,p.category,p.rank,p.requires]))};
+  assert.equal(a.draft(),null);return {offerAtStart,nextOffers:JSON.stringify(c.state.offers.map(p=>[p.id,p.family,p.waves,p.elite]))};
  }
- assert.deepEqual(run(40404),run(90909),'same control streams reproduce route offers and passive choices despite independent combat seeds');
+ assert.deepEqual(run(40404),run(90909),'same control streams reproduce route offers despite independent combat seeds');
 });

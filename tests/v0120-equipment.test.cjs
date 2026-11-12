@@ -158,7 +158,7 @@ test('between-Realm swaps return displaced gear to the Bag; death destroys only 
  a.start();a.initial('blood');a.select(a.controller().state.offers.find(p=>p.family==='blood').id);a.enter();
  let waves=a.state().run.planeWaves;
  for(let i=0;i<waves;i++){a.state().run.enemy.hp=0;a.win();a.flush();}
- assert.equal(a.draft().kind,'reward');assert.equal(a.passive(a.draft().options[0].id),true);assert.equal(a.exitResult(),true);
+ assert.equal(a.draft(),null);assert.equal(a.exitResult(),true);
  const found=a.makeItem(3,'weapon',null,'loot','Mace','Rare');
  a.bag.mark(found);assert.equal(a.equip(found.id),true);
  assert.equal(a.state().equip.weapon.id,found.id);

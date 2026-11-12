@@ -18,20 +18,16 @@ function persistPresentation(profile,presentation){
  return restored;
 }
 
-test('Realm clear remains available through its passive choice and cannot pay twice',()=>{
+test('Realm clear can be left without a passive draft and cannot pay twice',()=>{
  const a=create(501);begin(a);const state=a.state();state.run.combatSeconds=7.5;state.run.enemy.hp=0;a.win();a.flush();
  const pending=a.results();
- // In v0.12 the reward draft owns the screen first; the Realm snapshot is
- // retained while review stays null so the result modal cannot cover the draft.
  assert.equal(pending.review,null);assert.equal(pending.realm.outcome,'cleared');assert.equal(pending.realm.seconds,7.5);
- assert.equal(a.draft().kind,'reward');const gold=state.gold,fragments=state.fragments,earned=JSON.stringify(pending.earned);
- assert.equal(a.exitResult(),false,'cannot leave before claiming the Realm reward');
- assert.equal(a.passive(a.draft().options[0].id),true);
+ assert.equal(a.draft(),null);const gold=state.gold,fragments=state.fragments,earned=JSON.stringify(pending.earned);
  assert.equal(a.state().run.status,'cleared');assert.equal(a.exitResult(),true);
  assert.equal(a.results().realm.outcome,'cleared','result snapshot remains in memory until the next Expedition');
  assert.equal(a.exitResult(),false);a.win();
  assert.equal(state.gold,gold);assert.equal(state.fragments,fragments);assert.equal(JSON.stringify(a.results().earned),earned);
- assert.equal(a.build().picks.length,2);
+ assert.equal(a.build().picks.length,1);
  persistPresentation(state,a.results());
 });
 
@@ -53,7 +49,7 @@ test('Death summary keeps newly equipped loot and home gear, and reports only di
 
 test('Extraction summary is a snapshot and grants no boss Rune or progression credit',()=>{
  const a=create(503);begin(a);a.state().run.enemy.hp=0;a.win();a.flush();
- assert.equal(a.passive(a.draft().options[0].id),true);assert.equal(a.exitResult(),true);
+ assert.equal(a.draft(),null);assert.equal(a.exitResult(),true);
  const before=plain(a.state()),earned=plain(a.results().earned);
  assert.equal(a.checkpoint.extract(),true);const result=a.results();
  assert.equal(result.review,'summary');assert.equal(result.summary.realms,1);assert.equal(result.summary.outcome,'extracted');

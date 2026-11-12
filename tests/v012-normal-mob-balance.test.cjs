@@ -4,6 +4,9 @@ const root=path.resolve(__dirname,'..');
 const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const newCombat=fs.readFileSync(path.join(root,'combat/v012-combat-runtime.js'),'utf8');
 const {run}=require('../scripts/v012-affinity-combat-sim.cjs');
+// Keep the historical mob-role comparison on its original draft-based rules.
+// Current permanent-talent balance is exercised independently.
+const legacy={'online/v012-expedition-runtime.js':fs.readFileSync('tests/fixtures/legacy-expedition-runtime.js','utf8'),'online/v012-persistence-runtime.js':fs.readFileSync('tests/fixtures/legacy-persistence-runtime.js','utf8')};
 const before=(s,old,replacement,tag)=>{
  assert.equal(s.split(old).length-1,1,'Expected one '+tag+' source section');
  return s.replace(old,replacement);
@@ -40,8 +43,8 @@ test('native paired balance: E1 / E50 / E200; original roles vs 24 visual classe
  for(const E of [1,50,200])for(const b of builds)for(let iteration=0;iteration<4;iteration++){
   const seed=20261025+E*101+builds.indexOf(b)*331+iteration*17;
   const config={...b,E,rarity:'Epic',strategy:'triple',runes:true,seed,controlSeed:seed};
-  const a=run({...config,...prior});
-  const n=run(config);
+  const a=run({...config,...prior,moduleOverrides:{...legacy,...prior.moduleOverrides}});
+  const n=run({...config,moduleOverrides:legacy});
   assert.equal(a.error,null,'old runtime error '+E+'/'+b.weapon+'/'+seed);
   assert.equal(n.error,null,'new runtime error '+E+'/'+b.weapon+'/'+seed);
   assert.equal(a.timeout,false);
@@ -82,7 +85,7 @@ test('native deterministic D.7 audit snapshots across the same seven loadouts',(
   if(!reference)continue;
   const seed=reference[0];
   const args={E,weapon:b.weapon,armorType:b.armorType,offhandType:b.offhandType,rarity:'Epic',family:'blood',strategy:'triple',runes:true,seed,controlSeed:seed};
-  const priorResult=run({...args,...prior}),nextResult=run(args);
+  const priorResult=run({...args,...prior,moduleOverrides:{...legacy,...prior.moduleOverrides}}),nextResult=run({...args,moduleOverrides:legacy});
   assert.equal(priorResult.error,null);
   assert.equal(nextResult.error,null);
   output.push({E,weapon:b.weapon,seed,baseline:[priorResult.reached,priorResult.damage,priorResult.weaponAttacks],

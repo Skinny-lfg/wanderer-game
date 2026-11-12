@@ -1,7 +1,7 @@
 // Execute the actual integrated HTML runtime with an inert DOM, seeded RNG and manual clock.
 // Never boots account modules, reads local saves, or substitutes combat/loot formulas.
 const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
-require('../combat/automatic-talents.js');
+require('../combat/v012-buildcraft.js');require('../combat/automatic-talents.js');
 const root=path.resolve(__dirname,'..');
 module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(root,'index.html'),'utf8'),moduleOverrides={},options={}){
  const boot='phase1Init();\nconst phase3RestoredScroll=phase3RestoreUILocation(phase3SavedUILocation);\nrender();';

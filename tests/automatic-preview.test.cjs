@@ -32,4 +32,9 @@ test('preview uses a separate local save namespace and does not load account ser
  assert.equal(play.controller().state.stage,'finished');assert.equal(play.controller().state.history.length,15);
  assert.equal(play.state().pendingRuneReward.options.length,3);assert.equal(play.claimRune(play.state().pendingRuneReward.options[0].id),true);
  assert(play.state().automaticTalents.xp>30);assert.equal(storage.get('wanderer_v012_endless_v1_local'),'untouched production-like data');
+ const secondStorage=new Map(),talented=create(23,html,{}, {root:dir,validationStorage:secondStorage});talented.state().automaticTalents={xp:200,nodes:['might','passive_bleeding_edge']};
+ talented.start(1);talented.initial('blood');const selected=talented.controller().state.offers.find(x=>x.family==='blood');talented.select(selected.id);talented.enter();
+ assert.equal(talented.buildcraft.rank(talented.build(),'bleeding_edge'),1);
+ while(talented.controller().state.planeIndex===1){talented.state().run.enemy.hp=0;talented.win();talented.flush();}
+ assert.equal(talented.draft(),null);const resumed=create(23,html,{}, {root:dir,validationStorage:secondStorage});assert.equal(resumed.draft(),null);assert(resumed.buildcraft.rank(resumed.build(),'bleeding_edge')>=1);
 });

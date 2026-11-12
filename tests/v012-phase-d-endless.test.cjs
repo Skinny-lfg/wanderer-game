@@ -54,6 +54,9 @@ test('D.7: Endless weapon damage bonus excludes dual daggers and preserves other
 
 test('D.7: Dual Dagger E200/Endless combat matches the updated audit',()=>{
  const {run}=require('../scripts/v012-affinity-combat-sim.cjs');
+ // This exact historical audit used per-Realm drafts; retain those rules for
+ // the legacy snapshot instead of comparing it to permanent-talent builds.
+ const legacy={'online/v012-expedition-runtime.js':fs.readFileSync('tests/fixtures/legacy-expedition-runtime.js','utf8'),'online/v012-persistence-runtime.js':fs.readFileSync('tests/fixtures/legacy-persistence-runtime.js','utf8')};
  const builds=[
   {weapon:'Staff',armorType:'Cloth',old:[7202600,8,53993,30]},
   // The explicit 24-mob combat roles intentionally change native fight outcomes.
@@ -71,7 +74,7 @@ test('D.7: Dual Dagger E200/Endless combat matches the updated audit',()=>{
  for(const build of builds)for(const [E,expected] of [[200,build.old],[300,build.endless]]){
   if(!expected)continue;
   const [seed,reached,damage,weaponAttacks]=expected;
-  const actual=run({E,weapon:build.weapon,armorType:build.armorType,offhandType:build.offhandType,rarity:'Epic',family:'blood',strategy:'triple',runes:true,seed,controlSeed:seed});
+  const actual=run({E,weapon:build.weapon,armorType:build.armorType,offhandType:build.offhandType,rarity:'Epic',family:'blood',strategy:'triple',runes:true,seed,controlSeed:seed,moduleOverrides:legacy});
   assert.equal(actual.error,null);assert.equal(actual.timeout,false);
   assert.deepEqual([actual.reached,actual.damage,actual.weaponAttacks],[reached,damage,weaponAttacks],`${build.weapon} E${E}`);
  }

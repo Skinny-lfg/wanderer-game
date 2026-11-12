@@ -398,8 +398,8 @@ function totalStats(equipment=state.equip,ownedRunes=null,equippedRuneIds=null){
 
 function uiIcon(kind){const file={gold:'currency-gold.svg',fragments:'currency-fragments.svg',dungeon:'dungeon-progress.svg'}[kind];return file?'<img class="uiStatusIcon" src="assets/ui/'+file+'" alt="" aria-hidden="true">':'';}
 
-function wallet(){$('wallet').innerHTML='<span class="token">'+uiIcon('gold')+' '+state.gold+' Gold</span><span class="token">'+uiIcon('fragments')+' '+state.fragments+' Fragments</span>';phase3RenderNav();phase3BindHeader();}
-function render(){if(PHASE1_PREVIEW){document.body.classList.toggle?.('phase3RunesView',view==='runes');document.body.classList.toggle?.('phase3CombatView',view==='combat');}if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked)){phase5RenderBlocked();return;}wallet();if(view==='combat')renderCombat();else if(view==='equipment'||view==='runes')renderStash();else if(view==='city-center')phase3RenderCityCenter();else if(view==='apothecary')phase6RenderApothecary();else if(view==='forge')renderForge();else if(view==='merchant'){renderMerchant();const heading=document.querySelector('#screen h2');if(heading)heading.textContent='Blacksmith';}else renderPhase1();if(PHASE1_PREVIEW){phase3RememberUILocation();phase3BindCampStickyStart();}}
+function wallet(){$('wallet').innerHTML='<span class="token">'+uiIcon('gold')+' '+state.gold+' Gold</span><span class="token">'+uiIcon('fragments')+' '+state.fragments+' Fragments</span>'+automaticXpBar();phase3RenderNav();phase3BindHeader();}
+function render(){if(PHASE1_PREVIEW){document.body.classList.toggle?.('phase3RunesView',view==='runes');document.body.classList.toggle?.('phase3CombatView',view==='combat');}if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked)){phase5RenderBlocked();return;}wallet();if(view==='combat')renderCombat();else if(view==='equipment'||view==='runes')renderStash();else if(view==='talents')renderAutomaticTalents();else if(view==='city-center')phase3RenderCityCenter();else if(view==='apothecary')phase6RenderApothecary();else if(view==='forge')renderForge();else if(view==='merchant'){renderMerchant();const heading=document.querySelector('#screen h2');if(heading)heading.textContent='Blacksmith';}else renderPhase1();if(PHASE1_PREVIEW){phase3RememberUILocation();phase3BindCampStickyStart();}}
 function html(s){
  if(phase3ContentTarget){phase3ContentTarget.innerHTML=s;return;}
  const previewReturn=PHASE1_PREVIEW&&['forge','merchant','city-center'].includes(view);
@@ -1032,10 +1032,7 @@ function phase6RenderApothecary(){
 }
 function phase6EligibleEventPassives(eventId){
  const delta=eventId==='echo_shrine'?.5:-.5;
- return [...new Set(phase1Build?.picks||[])].filter(id=>id!==phase1Build?.initialPassive&&WandererV012Buildcraft.CATALOG.some(p=>p.id===id)&&(
-  eventId==='soul_mirror'?!!phase6Run.event.alternative&&WandererV012Buildcraft.eligible(phase1Build,WandererV012Buildcraft.CATALOG.find(p=>p.id===phase6Run.event.alternative)?.family).some(p=>p.id===phase6Run.event.alternative):
-  WandererV012Buildcraft.canModify(phase1Build,id,delta,totalStats())
- ));
+ return [...new Set([...(phase1Build?.picks||[]),...(phase1Build?.runtime?.permanentTalents||[])])].filter(id=>id!==phase1Build?.initialPassive&&WandererV012Buildcraft.CATALOG.some(p=>p.id===id)&&WandererV012Buildcraft.canModify(phase1Build,id,delta,totalStats()));
 }
 function phase6EventChoiceLabel(eventId,choice,bag){
  const E=phase1Controller.state.expedition,v=phase3Vitals();let label=WandererV012IntegratedEvents.get(eventId)[3][choice].replace(/(\d+) \+ (\d+)×E/g,(_,a,b)=>String(+a+ +b*E)).replace(/(\d+) \+ E/g,(_,a)=>String(+a+E));
@@ -1053,7 +1050,7 @@ function phase6EventOptionPresentation(ev,choice,bag){
   case 'relic_collector':return choice===0?option(item?'Trade a Bag item':bag.length?'Take fallback reward':'Take Gold',item?'Gain '+(12+2*item.tier)+' Gold':'Gain '+(5+E)+' Gold',{condition:item?'Sacrifice · '+item.name:bag.length?'Optional · no item gives '+(5+E)+' Gold':'No Bag item · fallback reward'}):option(item?'Trade a Bag item':bag.length?'Take fallback reward':'Take Fragments',item?'Gain '+(5+item.tier)+' Fragments':'Gain '+(3+E)+' Fragments',{condition:item?'Sacrifice · '+item.name:bag.length?'Optional · no item gives '+(3+E)+' Fragments':'No Bag item · fallback reward'});
   case 'cursed_artificer':return choice===0?option('Empower an owned item','+10% power · 3 combats',{condition:!bag.length?'No Bag item to sacrifice.':owned.length<2?'You need another owned item as the target.':'Sacrifice a Bag item and choose a different owned item.',unavailable:!bag.length||owned.length<2}):option('Claim a Barrier','15% of max HP',{condition:bag.length?'Sacrifice a Bag item.':'No Bag item to sacrifice.',unavailable:!bag.length});
   case 'cursed_altar':return option(choice===0?'Embrace the altar':'Defy the altar',choice===0?'+10% Attack · this Expedition':'+10% Defense · this Expedition',{cost:'20% max HP',condition:v.hp<=Math.ceil(v.maxhp*.2)?'Need more than '+Math.ceil(v.maxhp*.2)+' HP · Have '+Math.ceil(v.hp):'Must survive the 20% HP cost.',unavailable:v.hp<=Math.ceil(v.maxhp*.2)});
-  case 'soul_mirror':return choice===0?option('Change your build','Replace one passive with the displayed eligible passive',{condition:eligible.length?'Select a non-initial passive.':'No eligible passive to replace.',unavailable:!eligible.length}):option('Keep your build','No reward; no change');
+  case 'soul_mirror':return choice===0?option('Embrace strength','+10% Attack · 3 combats'):option('Embrace resilience','+10% Defense · 3 combats');
   case 'whispering_idol':return choice===0?option('Accept the curse','Gain '+(25+4*E)+' Gold',{risk:'+10% incoming damage · 3 combats'}):option('Accept the curse','Gain '+(12+2*E)+' Fragments',{risk:'+10% incoming damage · 3 combats'});
   case 'echo_shrine':return choice===0?option('Empower a passive','+0.5 rank · 3 combats',{condition:eligible.length?'Select an eligible non-initial passive.':'No eligible passive to empower.',unavailable:!eligible.length}):option('Restore Mana','+15% Mana');
   case 'cursed_chest':return choice===0?option('Take the offering','Gain '+(8+E)+' Gold'):option('Open the chest','50% chance of equipment',{risk:'Otherwise lose 15% max HP · non-lethal'});
@@ -1075,7 +1072,6 @@ function phase6EventReason(ev,choice,values){
  if(ev.id==='cursed_artificer'&&!values.itemId)return 'Select a Bag item to sacrifice.';
  if(ev.id==='cursed_artificer'&&choice===0&&!values.targetId)return 'Select an owned target item different from the sacrifice.';
  if(ev.id==='cursed_altar'&&v.hp<=Math.ceil(v.maxhp*.2))return 'Current HP must be above '+Math.ceil(v.maxhp*.2)+' to pay the health cost and survive.';
- if(ev.id==='soul_mirror'&&choice===0&&!values.passiveId)return 'No eligible non-initial passive can be replaced.';
  if(ev.id==='echo_shrine'&&choice===0&&!values.passiveId)return 'No eligible non-initial passive can gain a temporary rank.';
  if(ev.id==='runic_vault'&&choice===0&&!state.runeSlots.some(Boolean))return 'Equip a Rune before using this option.';
  if(ev.id==='fallen_wanderer'&&choice===0&&state.gold<10+E)return 'Need '+(10+E)+' Gold; current balance is '+state.gold+'.';
@@ -1095,8 +1091,7 @@ function phase6RenderEvent(){
   const rows=[];
   if(ev.id==='relic_collector'||ev.id==='cursed_artificer')rows.push('<label>Sacrifice Bag item '+(ev.id==='relic_collector'?'(optional)':'(required)')+'<select id="eventItem"><option value="">'+(ev.id==='relic_collector'?'No item — use the fallback reward':'Choose an item')+'</option>'+bag.map(i=>'<option value="'+esc(i.id)+'">'+esc(i.name)+' · E'+i.tier+'</option>').join('')+'</select></label>');
   if(ev.id==='cursed_artificer'&&selected===0)rows.push('<label>Target item<select id="eventTarget"><option value="">Choose an owned item</option>'+items.map(i=>'<option value="'+esc(i.id)+'" '+(i.id===document.querySelector('#eventItem')?.value?'disabled':'')+'>'+esc(i.name)+'</option>').join('')+'</select></label>');
-  if(eligiblePassives.length&&((ev.id==='soul_mirror'||ev.id==='echo_shrine')&&selected===0||ev.id==='last_ember'))rows.push('<label>Passive<select id="eventPassive"><option value="">Choose an eligible passive</option>'+eligiblePassives.map(id=>'<option value="'+esc(id)+'">'+esc(WandererV012Buildcraft.CATALOG.find(p=>p.id===id).name)+'</option>').join('')+'</select></label>');
-  if(ev.id==='soul_mirror'&&selected===0&&ev.alternative)rows.push('<p class="small muted">Replacement: '+esc(WandererV012Buildcraft.CATALOG.find(p=>p.id===ev.alternative)?.name||'Eligible passive')+'</p>');
+  if(eligiblePassives.length&&(ev.id==='echo_shrine'&&selected===0||ev.id==='last_ember'))rows.push('<label>Ability<select id="eventPassive"><option value="">Choose an eligible ability</option>'+eligiblePassives.map(id=>'<option value="'+esc(id)+'">'+esc(WandererV012Buildcraft.CATALOG.find(p=>p.id===id).name)+'</option>').join('')+'</select></label>');
   if(ev.id==='oracle_of_paths'&&selected===0)rows.push('<label>Affinity<select id="eventFamily"><option value="">Choose an allowed affinity</option>'+phase1Controller.allowed().map(f=>'<option value="'+esc(f)+'">'+esc(WandererV012Expedition.FAMILY_NAMES[f]||f)+'</option>').join('')+'</select></label>');
   inputBox.innerHTML=rows.join('');inputBox.hidden=!rows.length;
   const read=()=>({itemId:$('eventItem')?.value||'',targetId:$('eventTarget')?.value||'',passiveId:$('eventPassive')?.value||'',family:$('eventFamily')?.value||''});
@@ -1314,7 +1309,7 @@ function phase3RestoreUILocation(snapshot){
  if(!PHASE1_PREVIEW||!snapshot)return null;
  const outside=['camp','finished','failed'].includes(phase1Controller?.state.stage)&&
   !state.run&&!phase1Draft;
- const valid=outside?['phase1','equipment','city-center','runes']:['phase1'];
+ const valid=outside?['phase1','equipment','city-center','runes','talents']:['phase1'];
  if(typeof snapshot.view==='string'&&valid.includes(snapshot.view))view=snapshot.view;
  if(['blacksmith','merchant','apothecary'].includes(snapshot.cityTab))phase3CityTab=snapshot.cityTab;
  if(['forge','reinforcement'].includes(snapshot.blacksmithTab))phase3BlacksmithOperation=snapshot.blacksmithTab;
@@ -1360,7 +1355,7 @@ function phase3Go(to){
  const stage=phase1Controller?.state.stage;
  if(state.run||phase1Draft||phase3NeedsBagResolution()&&phase3ExpeditionActive()&&!['phase1','city-center'].includes(to))return;
  if(['finished','failed'].includes(stage)&&!phase5Results?.review&&phase3LootIds.size)phase3LootIds=new Set();
- const legal=phase3ExpeditionActive()&&phase1Controller.state.version===2?['phase1']:['phase1','equipment','runes'];
+ const legal=phase3ExpeditionActive()&&phase1Controller.state.version===2?['phase1']:['phase1','equipment','runes','talents'];
  if(['camp','finished','failed'].includes(stage))legal.push('city-center');
  if(!legal.includes(to))return;
  view=to;selectedId=null;chosenItems.clear();render();window.scrollTo(0,0);phase3RememberUILocation();
@@ -1372,7 +1367,7 @@ function phase3RenderNav(){
  if(phase1Draft){el.innerHTML='<span class="small muted">Choose your temporary passive before entering combat</span>';return;}
  const outside=['camp','finished','failed'].includes(stage);
  const between=phase3CanPrepare()&&phase1Controller.state.planeIndex>1;
- const destinations=[['phase1',between?'Between Realms':'Camp'],['equipment','Inventory'],['city-center','City Center'],['runes','Shrine']],expeditionLocked=phase3ExpeditionActive()&&phase1Controller.state.version===2;
+ const destinations=[['phase1',between?'Between Realms':'Camp'],['equipment','Inventory'],['talents','Talents'],['city-center','City Center'],['runes','Shrine']],expeditionLocked=phase3ExpeditionActive()&&phase1Controller.state.version===2;
  const resultLocked=phase5Results?.review==='summary';
  el.innerHTML='<div class="phase3Nav">'+destinations.map(([id,label])=>{const locked=resultLocked||id==='city-center'&&!outside||expeditionLocked&&id!=='phase1'||phase3NeedsBagResolution()&&phase3ExpeditionActive()&&!['phase1','city-center'].includes(id),title=resultLocked?'Return to Camp to leave the completed Expedition':locked?'Available at Camp':'';return '<button type="button" class="tiny '+(view===id?'primary':'ghost')+'" data-phase3-nav="'+id+'" '+(locked?'disabled title="'+title+'" aria-disabled="true"':'')+'>'+label+'</button>';}).join('')+'</div>';
  Q('[data-phase3-nav]').forEach(button=>button.onclick=()=>phase3Go(button.dataset.phase3Nav));
@@ -1463,7 +1458,8 @@ function phase3OpenInitialAffinity(g){
 function phase3CombatBuildMarkup(){
  const families=phase1Build?.unlockedFamilies||[];
  const icons='<section class="phase3CombatAffinityGroup"><h3>Affinities</h3><div class="phase3AffinityStrip">'+(families.map(f=>'<span title="'+esc(WandererV012Expedition.FAMILY_NAMES[f])+' affinity">'+phase2FamilyIcon(f)+'<b>'+esc(WandererV012Expedition.FAMILY_NAMES[f])+'</b></span>').join('')||'<span class="small muted">None</span>')+'</div></section>';
- return '<div class="phase3CombatBuild">'+icons+'<details class="phase3CombatPassives"><summary>Active Passives · '+(phase1Build?.picks?.length||0)+'</summary>'+phase3PassivesMarkup()+'</details></div>';
+ const active=[...new Set([...(phase1Build?.picks||[]),...(phase1Build?.runtime?.permanentTalents||[])])].filter(id=>WandererV012Buildcraft.rank(phase1Build,id)>0);
+ return '<div class="phase3CombatBuild">'+icons+'<details class="phase3CombatPassives"><summary>Active abilities · '+active.length+'</summary>'+phase3PassivesMarkup()+'</details></div>';
 }
 function phase3BindPassiveInspect(){Q('.phase3PassiveSlot').forEach(detail=>detail.addEventListener('toggle',()=>{if(detail.open)Q('.phase3PassiveSlot[open]').forEach(other=>{if(other!==detail)other.open=false;});}));}
 /* Escape original descriptions first; highlight key mechanics without editing passive balance. */
@@ -1475,7 +1471,8 @@ function phase3PassiveDescriptionHtml(value){
 }
 function phase3PassivesMarkup(inline=false){
  const counts=new Map();for(const id of phase1Build?.picks||[])counts.set(id,(counts.get(id)||0)+1);
- return '<section class="phase3CompactPassives" aria-label="Active Expedition passives"><h3>Active passives · '+(phase1Build?.unlockedFamilies.length||0)+'/3 affinities · '+([...new Set(phase1Build?.picks||[])].filter(id=>WandererV012Buildcraft.CATALOG.find(p=>p.id===id)?.requires.length).length)+'/3 hybrids</h3><div class="phase3PassiveGrid">'+[...counts].map(([id,rank])=>{
+ for(const id of phase1Build?.runtime?.permanentTalents||[])if(!counts.has(id))counts.set(id,0);
+ return '<section class="phase3CompactPassives" aria-label="Active Expedition abilities"><h3>Active abilities · '+(phase1Build?.unlockedFamilies.length||0)+'/3 affinities</h3><div class="phase3PassiveGrid">'+[...counts].map(([id,rank])=>{
   const p=WandererV012Buildcraft.CATALOG.find(x=>x.id===id);if(!p)return '';
   const effective=WandererV012Buildcraft.rank(phase1Build,id);if(!effective)return '';rank=effective;const label=p.name+' · '+(p.max===1?'UNIQUE':'Rank '+rank+' / '+p.max)+(id===phase1Build.initialPassive?' · Initial passive':'');
   if(inline)return '<article class="phase3PassiveSlot phase3PassiveInline"><div>'+phase2PassiveIcons(p,false)+'<small>'+rank+'</small></div><b>'+esc(label)+'</b><p>'+phase3PassiveDescriptionHtml(p.description)+'</p></article>';
@@ -1483,13 +1480,27 @@ function phase3PassivesMarkup(inline=false){
  }).join('')+'</div></section>';
 }
 
+function automaticXpBar(){
+ const system=globalThis.WandererAutomaticTalents,progress=state.automaticTalents||system.create(),earned=system.earned(progress),capped=earned>=system.MAX_POINTS,current=capped?system.POINT_XP:progress.xp%system.POINT_XP;
+ return '<span class="automaticXp"><span>Level '+(earned+1)+' · '+(capped?'Max points':current+' / '+system.POINT_XP+' XP')+'</span><span class="automaticXpTrack" role="progressbar" aria-label="Experience to next talent point" aria-valuemin="0" aria-valuemax="'+system.POINT_XP+'" aria-valuenow="'+current+'"><span style="width:'+(current/system.POINT_XP*100)+'%"></span></span></span>';
+}
 function automaticTalentTree(){
- const system=globalThis.WandererAutomaticTalents,progress=state.automaticTalents||system.create(),points=system.earned(progress)-progress.nodes.length;
- const nodes=system.NODES.map(node=>{const owned=progress.nodes.includes(node.id),available=points>0&&!owned&&(!node.requires||progress.nodes.includes(node.requires));
-  return '<button type="button" class="automaticTalent '+(owned?'is-owned':'')+'" data-auto-talent="'+esc(node.id)+'" '+(available?'':'disabled')+'><strong>'+esc(node.name)+'</strong><span>'+esc(node.description)+'</span><small>'+(owned?'Unlocked':node.requires&&!progress.nodes.includes(node.requires)?'Requires '+esc(system.NODES.find(n=>n.id===node.requires).name):'1 talent point')+'</small></button>';
- }).join('');
+ const system=globalThis.WandererAutomaticTalents,progress=state.automaticTalents||system.create(),points=system.earned(progress)-progress.nodes.length,list=system.NODES;
+ const card=node=>{const owned=progress.nodes.includes(node.id),requirements=node.prerequisites||[node.requires].filter(Boolean),missing=requirements.filter(id=>!progress.nodes.includes(id)),available=points>0&&!owned&&!missing.length;
+  const passive=node.passiveId&&WandererV012Buildcraft.CATALOG.find(p=>p.id===node.passiveId),icon=passive?phase2PassiveIcons(passive,false):'';
+  const rankLabel=node.passiveId?' · Rank '+(owned?node.rank:node.rank-1)+' / '+node.maxRank:'';
+  return '<button type="button" class="automaticTalent '+(owned?'is-owned':'')+'" data-auto-talent="'+esc(node.id)+'" '+(available?'':'disabled')+'>'+icon+'<strong>'+esc(node.name)+rankLabel+'</strong><span>'+esc(node.description)+'</span><small>'+(owned?'Maximum rank':missing.length?'Requires '+missing.map(id=>esc(list.find(n=>n.id===id)?.name||id)).join(' and '):'Spend 1 point · unlock rank '+(node.rank||1))+'</small></button>';
+ };
+ const core='<h3>Foundations</h3><div class="automaticTalentGrid">'+list.filter(n=>!n.passiveId).map(card).join('')+'</div>';
+ const branches=WandererV012Buildcraft.FAMILIES.map(family=>{const all=list.filter(n=>n.family===family),group=all.filter(n=>!progress.nodes.includes(n.id)?(n.rank===1||n.prerequisites.every(id=>progress.nodes.includes(id))):n.rank===n.maxRank);return '<details class="automaticTalentBranch"><summary>'+phase2FamilyIcon(family)+' '+esc(WandererV012Expedition.FAMILY_NAMES[family])+' <small>'+all.filter(n=>progress.nodes.includes(n.id)).length+' / '+all.length+' ranks</small></summary><div class="automaticTalentGrid">'+group.map(card).join('')+'</div></details>';}).join('');
  const next=system.earned(progress)>=system.MAX_POINTS?'Maximum talent points earned':(system.POINT_XP-progress.xp%system.POINT_XP)+' XP to next point';
- return '<section class="panel automaticTalentTree" aria-label="Permanent talents"><div class="automaticTalentHeading"><div><span class="eyebrow">PERMANENT PROGRESSION</span><h2>Talent Tree</h2></div><span>'+points+' unspent · '+progress.xp+' XP</span></div><p>Earn XP by completing Realms. Spend points between Expeditions; talents remain after defeat.</p><p class="automaticTalentNext">'+next+'</p><div class="automaticTalentGrid">'+nodes+'</div><button type="button" class="ghost" id="automaticTalentReset" '+(progress.nodes.length?'':'disabled')+'>Reset talents</button></section>';
+ return '<section class="panel automaticTalentTree" aria-label="Permanent talents"><div class="automaticTalentHeading"><div><span class="eyebrow">PERMANENT PROGRESSION</span><h2>Talent Tree</h2></div><span>'+points+' unspent · '+progress.xp+' XP</span></div><p>Earn XP by completing Realms. Unlock foundations, then choose permanent abilities. Magic talents require the matching element.</p><p class="automaticTalentNext">'+next+'</p>'+core+branches+'<button type="button" class="ghost" id="automaticTalentReset" '+(progress.nodes.length?'':'disabled')+'>Reset talents</button></section>';
+}
+function renderAutomaticTalents(){
+ if(!['camp','finished','failed'].includes(phase1Controller?.state.stage)||state.run){view='phase1';renderPhase1();return;}
+ html(automaticTalentTree());
+ Q('[data-auto-talent]').forEach(button=>button.onclick=()=>{const before=state.automaticTalents,next=WandererAutomaticTalents.allocate(before||WandererAutomaticTalents.create(),button.dataset.autoTalent);if(!next)return;state.automaticTalents=next;if(!phase5Persist()){if(before===undefined)delete state.automaticTalents;else state.automaticTalents=before;return;}render();});
+ const resetTalents=$('automaticTalentReset');if(resetTalents)resetTalents.onclick=()=>{const before=state.automaticTalents;state.automaticTalents=WandererAutomaticTalents.reset(before);if(!phase5Persist()){state.automaticTalents=before;return;}render();};
 }
 function expeditionRouteMap(g){
  const labels={combat:'Combat',elite:'Elite',event:'Event',boss:'Boss'};
@@ -1540,9 +1551,7 @@ function renderPhase1(){
   html('<section class="panel"><h2>Resolve Expedition loot</h2><p>Your bag holds 12 items. Discard overflow before returning to Camp; no loot is discarded automatically.</p>'+phase3BagMarkup()+'</section>');phase3BindBag();return;
  }
  if(['camp','finished','failed'].includes(g.stage)){
-  html(phase3CampMarkup(g,stats)+automaticTalentTree());
-  Q('[data-auto-talent]').forEach(button=>button.onclick=()=>{const before=state.automaticTalents,next=WandererAutomaticTalents.allocate(before||WandererAutomaticTalents.create(),button.dataset.autoTalent);if(!next)return;state.automaticTalents=next;if(!phase5Persist()){if(before===undefined)delete state.automaticTalents;else state.automaticTalents=before;return;}render();});
-  const resetTalents=$('automaticTalentReset');if(resetTalents)resetTalents.onclick=()=>{const before=state.automaticTalents;state.automaticTalents=WandererAutomaticTalents.reset(before);if(!phase5Persist()){state.automaticTalents=before;return;}render();};
+  html(phase3CampMarkup(g,stats));
   Q('[data-phase3-expedition-level]').forEach(control=>control.onchange=e=>{phase3SelectedExpedition=clamp(Math.floor(Number(e.target.value)||1),1,g.unlocked);renderPhase1();});
   const startSelected=button=>{phase3BetweenTab='realm';phase1Begin(Number(button.dataset.phase1Expedition));};Q('[data-phase1-expedition]').forEach(button=>button.onclick=()=>startSelected(button));
   phase3BindPaper();phase6AppendPotionStash();return;
@@ -1559,7 +1568,7 @@ function renderPhase1(){
  const extractButton=between?'<button type="button" id="phase4Extract" class="ghost phase3Extract" '+(bagOutside?'disabled title="Resolve items outside the Bag first"':'')+'>Extract &amp; Leave</button>':'';
  if(between){
   if(!['realm','equipment','build'].includes(phase3BetweenTab))phase3BetweenTab='realm';
-  const tabOptions=[['realm','Realm'],['equipment','Equipment'],['build','Stats & Passives']];
+  const tabOptions=[['realm','Realm'],['equipment','Equipment'],['build','Stats & Abilities']];
   const quickAffinities=g.families.map(f=>'<span class="phase3BetweenAffinity" title="'+esc(WandererV012Expedition.FAMILY_NAMES[f])+'">'+phase2FamilyIcon(f)+'<b>'+esc(WandererV012Expedition.FAMILY_NAMES[f])+'</b></span>').join('')||'<span class="small muted">No affinities</span>';
   const buildPane='<div class="phase3BetweenHero phase3BetweenBuild"><h3>Stats</h3>'+phase3DetailedStatsMarkup(combatStats)+phase3PassivesMarkup(true)+'</div>';
   const quickBuffs=Object.values(phase6Run?.effects||{}).some(v=>v&&(!Number.isInteger(v?.remaining)||v.remaining>0))?'<div class="phase3BetweenQuickBuffs">'+phase6EffectMarkup()+'</div>':'';
