@@ -2,6 +2,7 @@
 import {mkdtemp,mkdir,readFile,readdir,copyFile,writeFile} from 'node:fs/promises';
 import {join,extname} from 'node:path';
 import {tmpdir} from 'node:os';
+import {createHash} from 'node:crypto';
 
 const output=await mkdtemp(join(tmpdir(),'wanderer-automatic-preview-'));
 const extensions={assets:new Set(['.json','.png','.webp','.jpg','.jpeg','.gif','.svg','.ico','.avif','.woff','.woff2']),online:new Set(['.js','.mjs','.css']),combat:new Set(['.js','.mjs','.json']),economy:new Set(['.js','.mjs','.json'])};
@@ -20,6 +21,12 @@ function replaceRequired(pattern,replacement,label){if(!pattern.test(html))throw
 replaceRequired(/globalThis\.__WANDERER_CLOUD_ONLY__=[^\n]+;/,'globalThis.__WANDERER_CLOUD_ONLY__=false;','cloud flag');
 replaceRequired(/const PHASE5_VALIDATION=[^\n]+;/,'const PHASE5_VALIDATION=true;','isolated save flag');
 for(const name of ['v012-auth-bootstrap.js','v012-account.mjs','v012-feedback.mjs','v012-leaderboard-ui.mjs'])replaceRequired(new RegExp('<script[^>]*src="online/'+name.replaceAll('.','\\.')+'(?:\\?[^" ]*)?"[^>]*><\\/script>'),'',name);
+// Content-address the changing modules so a previously cached playtest cannot
+// mix the old progression engine with the new one after a Pages update.
+for(const file of ['combat/automatic-talents.js','combat/v012-buildcraft.js','online/v012-expedition-events.js','online/v012-expedition-runtime.js','online/v012-persistence-runtime.js','online/v012-uiux-tuning.css']){
+ const hash=createHash('sha256').update(await readFile(join(output,file))).digest('hex').slice(0,12);
+ const attr=file.endsWith('.css')?'href':'src';replaceRequired(new RegExp(attr+'="'+file.replaceAll('.','\\.')+'"'),attr+'="'+file+'?v='+hash+'"',file);
+}
 replaceRequired(/<\/head>/,'<style>#onlineBar{display:none!important}</style></head>','head');
 await writeFile(join(output,'index.html'),html);
 const savePath=join(output,'online/v012-save.js');let save=await readFile(savePath,'utf8');

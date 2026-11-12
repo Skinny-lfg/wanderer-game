@@ -7,6 +7,7 @@ test('preview uses a separate local save namespace and does not load account ser
  for(const file of ['v012-auth-bootstrap.js','v012-account.mjs','v012-feedback.mjs','v012-leaderboard-ui.mjs'])assert(!html.includes('src="online/'+file));
  assert(save.includes("PREFIX='wanderer_automatic_rpg_preview_v1_'"));assert(!fs.existsSync(path.join(dir,'online/firebase-client.mjs')));
  assert(fs.existsSync(path.join(dir,'combat/automatic-talents.js')));
+ assert.match(html,/src="combat\/v012-buildcraft\.js\?v=[a-f0-9]{12}"/);assert.match(html,/src="online\/v012-expedition-runtime\.js\?v=[a-f0-9]{12}"/);
  const refs=[...html.matchAll(/(?:src|href)="([^"#?]+)(?:\?[^\"]*)?"/g)].map(x=>x[1]).filter(x=>/^(online|combat|economy|assets)\//.test(x)&&!x.includes("'"));
  assert.deepEqual(refs.filter(x=>!fs.existsSync(path.join(dir,x))),[],'all local entrypoint files are present');
  const storage=new Map([['wanderer_v012_endless_v1_local','untouched production-like data']]);
