@@ -19,9 +19,9 @@ or connect it to production player data. Use isolated synthetic playtest saves.
   normal and optional elite encounters; the last Realm is the shared boss.
   Event rows remain mandatory. Existing in-progress checkpoints retain their
   original schedule. Each new map saves its node positions and restricted links. Future Realm affinities and rewards are generated as the
-  player advances, not fixed or shown on the map.
+  player advances, not fixed or shown on the map. Routes change lane at designated junctions.
 - Completed combat, elite, boss and event Realms grant permanent talent XP.
-  The separate Talents page contains the existing ability catalogue and ranks,
+  The separate Talents page connects small attribute nodes to the existing ability catalogue and ranks,
   plus nine foundation nodes. Progress is stored in the profile, with
   validation; unfinished encounters and deaths do not grant Realm XP.
 - Per-Realm passive drafts have been retired. Affinity starter abilities,

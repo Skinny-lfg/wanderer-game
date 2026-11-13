@@ -1,6 +1,7 @@
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const context={};vm.runInNewContext(fs.readFileSync('combat/v012-buildcraft.js','utf8')+'\n'+fs.readFileSync('combat/automatic-talents.js','utf8'),context);const talents=context.WandererAutomaticTalents;
+function unlock(progress,id){const node=talents.NODES.find(n=>n.id===id);for(const requirement of node.prerequisites||[node.requires].filter(Boolean))if(!progress.nodes.includes(requirement))progress=unlock(progress,requirement);return progress.nodes.includes(id)?progress:talents.allocate(progress,id);}
 test('experience earns bounded points and nodes require their predecessors',()=>{
  let p=talents.create();assert.equal(talents.earned(p),0);assert.equal(talents.allocate(p,'might'),null);
  p=talents.award(p,200);assert.equal(talents.earned(p),2);assert.equal(talents.allocate(p,'precision'),null);
@@ -19,8 +20,8 @@ test('the whole existing ability catalogue is available in the permanent tree',(
  const catalogue=context.WandererV012Buildcraft.CATALOG;
  assert.equal(talents.NODES.filter(n=>n.passiveId&&n.rank===1).length,catalogue.length);
  assert(catalogue.every(p=>talents.NODES.some(n=>n.passiveId===p.id)));
- let p=talents.award(talents.create(),200);assert.equal(talents.allocate(p,'passive_bleeding_edge'),null);
- p=talents.allocate(p,'might');p=talents.allocate(p,'passive_bleeding_edge');assert(talents.valid(p));
+ let p=talents.award(talents.create(),100000);assert.equal(talents.allocate(p,'passive_bleeding_edge'),null);
+ p=unlock(p,'passive_bleeding_edge');assert(talents.valid(p));
  const build=context.WandererV012Buildcraft.create();context.WandererV012Buildcraft.syncPermanent(build,p);
  assert.equal(context.WandererV012Buildcraft.rank(build,'bleeding_edge'),1);
  const dots=[];context.WandererV012Buildcraft.onAttack(build,{enemy:{hp:100},base:100,critical:false,random:()=>0,now:1,dot:(kind,amount)=>dots.push({kind,amount}),log(){}});
@@ -28,11 +29,11 @@ test('the whole existing ability catalogue is available in the permanent tree',(
  p=talents.award(p,100);p=talents.allocate(p,'passive_bleeding_edge_rank2');context.WandererV012Buildcraft.syncPermanent(build,p);assert.equal(context.WandererV012Buildcraft.rank(build,'bleeding_edge'),2);
 });
 test('element-specific talents only activate for the matching element',()=>{
- let p=talents.award(talents.create(),300);p=talents.allocate(p,'haste');p=talents.allocate(p,'flow');p=talents.allocate(p,'passive_kindling');
+ let p=unlock(talents.award(talents.create(),100000),'passive_kindling');
  const B=context.WandererV012Buildcraft,b=B.create();B.syncPermanent(b,p);assert.equal(B.rank(b,'kindling'),0);b.element='frost';assert.equal(B.rank(b,'kindling'),0);b.element='fire';assert.equal(B.rank(b,'kindling'),1);
 });
 test('talent ranks unlock in order and preserve the existing rank cap',()=>{
- let p=talents.award(talents.create(),600);p=talents.allocate(p,'might');assert.equal(talents.allocate(p,'passive_bleeding_edge_rank2'),null);
+ let p=talents.award(talents.create(),100000);p=talents.allocate(p,'might');p=talents.allocate(p,'path_bleeding_edge_1');p=talents.allocate(p,'path_bleeding_edge_2');assert.equal(talents.allocate(p,'passive_bleeding_edge_rank2'),null);
  for(const id of ['passive_bleeding_edge','passive_bleeding_edge_rank2','passive_bleeding_edge_rank3','passive_bleeding_edge_rank4','passive_bleeding_edge_rank5'])p=talents.allocate(p,id);
  assert(talents.valid(p));const B=context.WandererV012Buildcraft,b=B.create();B.syncPermanent(b,p);assert.equal(B.rank(b,'bleeding_edge'),5);assert.equal(B.canModify(b,'bleeding_edge',.5),false);
 });
@@ -82,4 +83,11 @@ test('an older in-progress save waiting for a passive draft resumes without one'
 
 test('attribute allocations survive XP and talent spending and cannot exceed levels',()=>{
  let p=talents.award(talents.create(),200);p=talents.allocateAttribute(p,'str');p=talents.allocate(p,'might');p=talents.award(p,100);assert.equal(p.attributes.str,1);assert.equal(talents.attributePoints(p),2);p=talents.allocateAttribute(p,'agi');p=talents.allocateAttribute(p,'agi');assert.equal(talents.allocateAttribute(p,'str'),null);assert.equal(talents.valid({...p,attributes:{str:4}}),false);assert.equal(talents.valid({...p,element:'invalid'}),false);
+});
+test('stat paths lead to skills, preserve legacy purchases and apply attributes',()=>{
+ for(const [family,stat] of [['aegis','end'],['decay','agi'],['magic','int']]){
+  const first=talents.NODES.find(n=>n.family===family&&n.passiveId&&n.rank===1),path=talents.NODES.filter(n=>n.pathFor===first.passiveId);assert.equal(path.length,2);assert(path.every(n=>n.attribute===stat));
+  let progress=talents.award(talents.create(),100000);assert.equal(talents.allocate(progress,first.id),null);progress=unlock(progress,first.id);assert(talents.valid(progress));assert.equal(talents.attributeBonuses(progress)[stat],2);
+ }
+ const legacy={xp:200,nodes:['might','passive_bleeding_edge']};assert(talents.valid(legacy));assert.equal(talents.passiveIds(legacy)[0],'bleeding_edge');
 });

@@ -74,8 +74,8 @@ function create(themes,rng=Math.random){
   if(game.freeBuild){
    game.routeEdges=Array.from({length:14},(_,i)=>Array.from({length:3},(_,lane)=>{
     if(i===13)return [0];
-    const candidates=[lane,...[lane-1,lane+1].filter(n=>n>=0&&n<3)],first=candidates[Math.floor(routeRng()*candidates.length)],other=candidates.filter(n=>n!==first);
-    return routeRng()<.48?[first,other[Math.floor(routeRng()*other.length)]]:[first];
+    if(![3,7,11].includes(i))return [lane];
+    const alternatives=[lane-1,lane+1].filter(n=>n>=0&&n<3),other=alternatives[Math.floor(routeRng()*alternatives.length)];return [lane,other];
    }));
    game.routePositions=game.routeMap.map((row,i)=>row.map((_,lane)=>i===14?150:Math.round(50+lane*100+(routeRng()-.5)*32)));
   }else{delete game.routeEdges;delete game.routePositions;}
