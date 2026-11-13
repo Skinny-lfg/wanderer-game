@@ -59,7 +59,7 @@ function makeGate(){
   <div class="v012GateContent">
    <h1 class="a11yVisuallyHidden">Wanderer</h1>
    <div class="v012GateAuthPanel">
-    <p class="v012GateEyebrow">WANDERER · v0.12</p>
+    <p class="v012GateEyebrow">WANDERER · v0.13</p>
     <h2>Enter the world</h2>
     <p data-auth-message role="status" aria-live="polite">Connecting to your account…</p>
     <div data-auth-login>

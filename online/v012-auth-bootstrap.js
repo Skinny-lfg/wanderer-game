@@ -14,7 +14,7 @@
  <div class="v012GateShade"></div>
  <div class="v012GateContent">
    <div class="v012GateAuthPanel" role="status" aria-live="polite">
-     <p class="v012GateEyebrow">WANDERER · v0.12</p>
+     <p class="v012GateEyebrow">WANDERER · v0.13</p>
      <h2>Enter the world</h2>
      <p data-bootstrap-status>Preparing secure sign-in…</p>
      <button type="button" class="primary v012GateGoogle" data-bootstrap-retry hidden>Reload sign-in</button>
