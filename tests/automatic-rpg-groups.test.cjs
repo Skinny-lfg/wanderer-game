@@ -52,7 +52,7 @@ test('fire and frost area talents affect up to two secondary mobs',()=>{
 test('cleave accounts for each secondary target defense',()=>{const {a,r}=startPack(826,'Two-Handed');r.enemies[1].def=0;r.enemies[2].def=100;untilPlayerHit(a,r);assert(10000-r.enemies[1].hp>10000-r.enemies[2].hp);});
 test('group rewards use one risk-adjusted roll and award XP once per Realm',()=>{
  const results=[];for(const size of [1,2,4]){const a=create(830),c=a.controller();a.start(1,true);const offer=c.state.offers.find(p=>p.groupSize===size&&c.reachable(p));a.select(offer.id);offer.waves=1;assert(a.enter());a.rng(.125);const r=a.state().run;while(r.status==='fight'){r.enemy.hp=0;a.win();}const xp=a.state().automaticTalents.xp,gold=a.state().gold,loot=r.loot.length;a.win();assert.equal(a.state().automaticTalents.xp,xp);assert.equal(a.state().gold,gold);results.push({xp,gold,loot});}
- assert.deepEqual(results.map(x=>x.xp),[30,35,39]);assert(results[0].gold<=results[1].gold&&results[1].gold<=results[2].gold);assert.deepEqual(results.map(x=>x.loot),[0,1,1]);
+ assert.deepEqual(results.map(x=>x.xp),[20,23,26]);assert(results[0].gold<=results[1].gold&&results[1].gold<=results[2].gold);assert.deepEqual(results.map(x=>x.loot),[0,1,1]);
 });
 test('Bow, Sword and Mace area forks affect one additional enemy only',()=>{
  for(const [weapon,id] of [['Bow','bow_pierce'],['Sword','sword_sweep'],['Mace','mace_shockwave']]){const {a,r}=startPack(831,weapon);a.state().automaticTalents={xp:1000,nodes:[id]};untilPlayerHit(a,r);assert(r.enemies[1].hp<10000,weapon);assert.equal(r.enemies[2].hp,10000,weapon);assert.equal(r.enemies[3].hp,10000,weapon);if(weapon==='Mace')assert.equal(r.enemies[1].slowTime,1);}

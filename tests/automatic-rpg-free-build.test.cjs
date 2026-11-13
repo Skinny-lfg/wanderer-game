@@ -27,7 +27,7 @@ test('free-build combat checkpoint restores without requesting an affinity',()=>
 test('new route graphs restrict choices and persist the exact connections',()=>{
  const a=create(77),c=a.controller();a.start(1,true);const g=c.state;assert(g.routeEdges);assert.equal(g.routeEdges.length,14);
  for(let i=0;i<14;i++)for(let lane=0;lane<3;lane++)assert(g.routeEdges[i][lane].length>0,'every node can progress');
- assert(g.routeEdges[0].every(links=>links.length===1));for(const row of [3,7,11])assert(g.routeEdges[row].every(links=>links.length===2));
+ assert(g.routeEdges[0].every(links=>links.length===1));const crossings=g.routeEdges.slice(0,13).map((row,i)=>row.every(links=>links.length===2)?i:-1).filter(i=>i>=0);assert.equal(crossings.length,3);assert(g.routeMap.some((row,i)=>g.rooms[i]==='event'&&row.includes('event')&&row.includes('combat')));
  const before=JSON.stringify([g.routeEdges,g.routePositions]);c.restore(JSON.parse(JSON.stringify(g)));assert.equal(JSON.stringify([g.routeEdges,g.routePositions]),before);
  const first=g.offers[0];c.select(first.id);c.enter();g.selected.waves=1;c.waveWon();c.claimReward();const expected=g.routeEdges[0][first.lane];for(const offer of g.offers)assert.equal(c.reachable(offer),expected.includes(offer.lane));
 });

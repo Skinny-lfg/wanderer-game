@@ -20,7 +20,7 @@ function phase4CommitRealm({awardXp=false}={}){
  // reward ledger. Partial waves are rolled back by the entry checkpoint.
  if(awardXp&&root.WandererAutomaticTalents){
   const progress=ports.state.automaticTalents||root.WandererAutomaticTalents.create();
-  const run=ports.state.run,enemy=run?.enemy,base=enemy?.boss?60:enemy?.miniboss?40:run?30:20,groupReward=enemy?.boss||enemy?.miniboss?1:run?.enemies?.length===4?1.3:run?.enemies?.length===2?1.15:1,amount=Math.round(base*groupReward);
+  const run=ports.state.run,enemy=run?.enemy,base=enemy?.boss?45:enemy?.miniboss?30:run?20:15,groupReward=enemy?.boss||enemy?.miniboss?1:run?.enemies?.length===4?1.3:run?.enemies?.length===2?1.15:1,amount=Math.round(base*groupReward);
   ports.state.automaticTalents=root.WandererAutomaticTalents.award(progress,amount);
  }
  if(ports.PHASE1_PREVIEW)ports.phase5Snapshot.expedition.awardKeys=[...new Set([...ports.phase5Snapshot.expedition.awardKeys,...ports.phase4WaveKeys])];

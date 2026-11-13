@@ -67,7 +67,7 @@ test('defeat and duplicate event decisions cannot repeatedly award XP',()=>{
  const create=require('./v012-economy-harness.cjs');
  const loss=create(31);loss.start();loss.initial('blood');const first=loss.controller().state.offers.find(p=>p.family==='blood');loss.select(first.id);loss.enter();loss.death();assert.equal(loss.state().automaticTalents,undefined);
  const event=create(41,undefined,{}, {skipPersistence:true});event.start();event.initial('blood');const g=event.controller().state,p=g.offers.find(x=>x.family==='blood');event.select(p.id);g.selected.event='forgotten_arsenal';g.selected.waves=0;event.enter();
- assert.equal(event.events.choose(2),true);assert.equal(event.state().automaticTalents.xp,20);assert.equal(event.events.choose(2),false);assert.equal(event.state().automaticTalents.xp,20);
+ assert.equal(event.events.choose(2),true);assert.equal(event.state().automaticTalents.xp,15);assert.equal(event.events.choose(2),false);assert.equal(event.state().automaticTalents.xp,15);
 });
 test('an older in-progress save waiting for a passive draft resumes without one',()=>{
  const create=require('./v012-economy-harness.cjs'),storage=new Map();
