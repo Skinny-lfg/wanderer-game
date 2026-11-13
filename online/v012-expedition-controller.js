@@ -73,10 +73,11 @@ function create(themes,rng=Math.random){
    rewardPending:null,rerollsByRealm:Array.from({length:15},()=>[3,3,3]),stage:'choice'});
   if(game.freeBuild){
    const crossings=[[2,3,4],[6,7,8],[10,11,12]].map(window=>window[Math.floor(routeRng()*window.length)]);
+   const directions=crossings.map(()=>routeRng()<.5?-1:1);
    game.routeEdges=Array.from({length:14},(_,i)=>Array.from({length:3},(_,lane)=>{
     if(i===13)return [0];
     if(!crossings.includes(i))return [lane];
-    const alternatives=[lane-1,lane+1].filter(n=>n>=0&&n<3),other=alternatives[Math.floor(routeRng()*alternatives.length)];return [lane,other];
+    const other=lane+directions[crossings.indexOf(i)];return other>=0&&other<3?[lane,other]:[lane];
    }));
    game.routePositions=game.routeMap.map((row,i)=>row.map((_,lane)=>i===14?150:Math.round(50+lane*100+(routeRng()-.5)*32)));
    game.routeGroups=game.routeMap.map(row=>{const sizes=shuffle([1,2,4],routeRng);return row.map((kind,lane)=>kind==='combat'?sizes[lane]:1);});
