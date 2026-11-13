@@ -14,7 +14,7 @@ function phase1Init(){
  ports.phase5Init();
 }
 
-function phase1Begin(level=1){
+function phase1Begin(level=1,freeBuild=false){
  if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked))return false;
  if(!ports.PHASE1_PREVIEW)return;
  if(ports.phase3NeedsBagResolution()){ports.bannerMessage('Discard overflow loot before starting another Expedition.');return false;}
@@ -24,7 +24,7 @@ function phase1Begin(level=1){
  if(!['camp','finished','failed'].includes(ports.phase1Controller.state.stage)||!Number.isInteger(level)||level<1||level>ports.phase1Controller.state.unlocked)return false;
  ports.phase4Seed=Math.floor(Math.random()*4294967296)>>>0;ports.phase4Prefix=Date.now().toString(36);ports.phase4Stamp=null;ports.phase4Home=ports.phase4Clone(ports.state.equip);ports.phase4Entry=null;ports.phase4Resume=false;ports.phase4WaveKeys=[];
  ports.phase5Results={version:1,complete:true,review:null,realm:null,summary:null,earned:[],gold:0,fragments:0};
- ports.phase1Controller.start(level);ports.phase6Run={version:1,event:null,events:[],effects:{},combats:0};ports.phase3LootIds=new Set();ports.phase3PotionCooldowns={health:0,mana:0};ports.phase1Vitals=null;ports.phase1Clock=0;ports.phase1Continuity=null;ports.phase3Supplies={health:0,mana:0};ports.phase1Build=WandererV012Buildcraft.create();WandererV012Buildcraft.syncPermanent(ports.phase1Build,ports.state.automaticTalents);ports.phase1Build.runtime.hybridRules=true;ports.phase1Build.families=ports.phase1Controller.state.families;ports.phase1Draft=null;ports.state.run=null;ports.view='phase1';
+ ports.phase1Controller.start(level,{freeBuild});if(freeBuild)ports.phase1Controller.chooseInitial('magic');ports.phase6Run={version:1,event:null,events:[],effects:{},combats:0};ports.phase3LootIds=new Set();ports.phase3PotionCooldowns={health:0,mana:0};ports.phase1Vitals=null;ports.phase1Clock=0;ports.phase1Continuity=null;ports.phase3Supplies={health:0,mana:0};ports.phase1Build=WandererV012Buildcraft.create();WandererV012Buildcraft.syncPermanent(ports.phase1Build,ports.state.automaticTalents);if(freeBuild){ports.phase1Build.element=ports.state.automaticTalents?.element||'fire';ports.phase1Build.unlockedFamilies=['magic'];}ports.phase1Build.runtime.hybridRules=true;ports.phase1Build.families=ports.phase1Controller.state.families;ports.phase1Draft=null;ports.state.run=null;ports.view='phase1';
  if(ports.PHASE1_PREVIEW){ports.phase5Snapshot.expedition.attempts++;ports.phase5Snapshot.expedition.awardKeys=[];ports.phase5Snapshot.expedition.lastOutcome='active';ports.phase5Persist();}
  ports.render();
 }
@@ -69,14 +69,14 @@ function phase6EventChoice(choice,itemId,passiveId,family,targetId){
  case 'bounty_writ':if(choice===0){if(g.rooms.slice(g.planeIndex).includes('elite'))effects.bounty=true;else ports.state.fragments+=5+E;}break;
  case 'restless_spring':if(choice===0&&v.hp>=v.maxhp||choice===1&&(v.maxmp===0||v.mp>=v.maxmp))ports.state.fragments+=3+E;else choice===0?heal(.35):heal(0,.4);break;
  case 'fallen_wanderer':if(choice===0){if(!pay('gold',10+E))return false;heal(.2);effects.barrier=Math.max(effects.barrier||0,.1);}else heal(.15,.15);break;
- case 'oracle_of_paths':if(choice===0){if(!ports.phase1Controller.allowed().includes(family))return false;ports.phase1Controller.influence(family);}else ports.state.fragments+=5+E;break;
+ case 'oracle_of_paths':if(choice===0){if(g.freeBuild){if(g.rerolls>=3)return false;g.rerolls++;}else{if(!ports.phase1Controller.allowed().includes(family))return false;ports.phase1Controller.influence(family);}}else ports.state.fragments+=5+E;break;
  case 'last_ember':if(!passive||!WandererV012Buildcraft.canModify(ports.phase1Build,passiveId,-.5,ports.totalStats()))return false;effects.echo={id:passiveId,power:-.5,remaining:3};ports.phase1Build.runtime.echo=effects.echo;choice===0?heal(.35):heal(0,.4);break;
  default:return false;
  }}
  ports.phase6Run.events.push(g.planeIndex);ports.phase6Run.event=null;ports.phase4CommitRealm({awardXp:true});ports.phase1Controller.waveWon();
- phase6UnlockBase(p.family);
+ if(!g.freeBuild)phase6UnlockBase(p.family);
  ports.phase5Results.gold+=Math.max(0,ports.state.gold-beforeGold);ports.phase5Results.fragments+=Math.max(0,ports.state.fragments-beforeFragments);
- ports.phase5RememberRealm({tier:E,phase1Plane:g.planeIndex-1,planeName:p.name,planeFamily:p.family,combatSeconds:0,gold:Math.max(0,ports.state.gold-beforeGold),fragments:Math.max(0,ports.state.fragments-beforeFragments),loot,realmLog:[{text:choice===2?'Event declined. No reward.':WandererV012IntegratedEvents.get(ev.id)[3][choice],kind:'good'}]},'cleared');
+ ports.phase5RememberRealm({tier:E,phase1Plane:g.planeIndex-1,planeName:p.name,planeFamily:p.family,combatSeconds:0,gold:Math.max(0,ports.state.gold-beforeGold),fragments:Math.max(0,ports.state.fragments-beforeFragments),loot,realmLog:[{text:choice===2?'Event declined. No reward.':(g.freeBuild&&ev.id==='oracle_of_paths'&&choice===0?'Restore one Realm reroll':WandererV012IntegratedEvents.get(ev.id)[3][choice]),kind:'good'}]},'cleared');
  ports.phase5Results.review=null;ports.phase5Results.eventExitPending=true;
  ports.phase1Controller.claimReward();ports.phase1Draft=null;
  if(!ports.phase5Persist())return false;return phase5ExitResult();
@@ -151,7 +151,7 @@ function phase1Enter(){
  if(ports.phase1Draft||!ports.phase1Build||ports.state.run)return false;
  if(ports.phase3BagItems().length>=ports.PHASE3_BAG_CAPACITY||ports.phase3BagOverflow()){ports.bannerMessage('Bag full. Discard an item before entering another Realm.');return false;}
  const plane=ports.phase1Controller.enter();ports.phase1Build.families=ports.phase1Controller.state.families;
- if(plane.family==='magic'&&!ports.phase1Build.element){
+ if(!ports.phase1Controller.state.freeBuild&&plane.family==='magic'&&!ports.phase1Build.element){
   ports.phase1Draft={kind:'entry',plane,family:'magic',step:'element'};ports.phase5Persist();ports.render();
  }
  else if(ports.phase5Persist())ports.phase2Launch(plane);
@@ -256,7 +256,7 @@ function phase1WaveWon(){
  }
  if(!result.expeditionComplete){
   const plane=ports.phase1Controller.state.rewardPending;
-  phase6UnlockBase(plane.family);
+  if(!g.freeBuild)phase6UnlockBase(plane.family);
   ports.phase5Results.review=null;
   ports.phase1Controller.claimReward();ports.phase1Draft=null;
   ports.view='combat';
