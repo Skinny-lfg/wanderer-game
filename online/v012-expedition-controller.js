@@ -71,6 +71,14 @@ function create(themes,rng=Math.random){
   Object.assign(game,{version:2,freeBuild:options.freeBuild===true,rerolls:3,bossId:BOSSES[Math.floor(routeRng()*3)].id,eventsByRealm:rooms.map(k=>k==='event'?events[eventIndex++]:null),expedition:level,planeIndex:1,families:[],lastFamily:null,initialFamily:null,affinityPlanSeen:[false,false,false],
    rooms,routeMap:rooms.map((kind,i)=>{if(i===14)return ['boss'];const row=[kind,kind,kind];if(i>0&&kind==='combat'&&routeRng()<.55)row[Math.floor(routeRng()*3)]='elite';return row;}),offers:[],selected:null,wave:0,history:[],
    rewardPending:null,rerollsByRealm:Array.from({length:15},()=>[3,3,3]),stage:'choice'});
+  if(game.freeBuild){
+   game.routeEdges=Array.from({length:14},(_,i)=>Array.from({length:3},(_,lane)=>{
+    if(i===13)return [0];
+    const candidates=[lane,...[lane-1,lane+1].filter(n=>n>=0&&n<3)],first=candidates[Math.floor(routeRng()*candidates.length)],other=candidates.filter(n=>n!==first);
+    return routeRng()<.48?[first,other[Math.floor(routeRng()*other.length)]]:[first];
+   }));
+   game.routePositions=game.routeMap.map((row,i)=>row.map((_,lane)=>i===14?150:Math.round(50+lane*100+(routeRng()-.5)*32)));
+  }else{delete game.routeEdges;delete game.routePositions;}
   return game;
  }
  function planAffinities(plan){
@@ -98,7 +106,7 @@ function create(themes,rng=Math.random){
   if(game.selected===old)game.selected=null;
   return game.offers[index];
  }
- function reachable(realm){const previous=game.history[game.history.length-1];return !game.routeMap||!previous||game.planeIndex===15||Math.abs(previous.lane-realm.lane)<=1;}
+ function reachable(realm){const previous=game.history[game.history.length-1];return !game.routeMap||!previous||(game.routeEdges?game.routeEdges[game.planeIndex-2][previous.lane].includes(realm.lane):game.planeIndex===15||Math.abs(previous.lane-realm.lane)<=1);}
  function select(id){
   if(game.stage!=='choice'||!game.initialFamily||game.rewardPending)throw Error('Realm not available');
   const realm=game.offers.find(p=>p.id===id);
@@ -147,6 +155,8 @@ function create(themes,rng=Math.random){
   if(!g||!integer(g.unlocked,1,Number.MAX_SAFE_INTEGER)||!integer(g.expedition,1,g.unlocked)||!integer(g.planeIndex,1,15)||!['choice','combat','finished','failed'].includes(g.stage)||!Array.isArray(g.rooms)||g.rooms.length!==15||g.rooms[0]!=='combat'||g.rooms[14]!=='boss'||g.rooms.slice(0,14).some(k=>!(g.version===2?['combat','elite','event']:ROOMS).includes(k)))throw Error('Invalid Realm checkpoint');
   if(g.version===2){if(!integer(g.rerolls,0,3)||!BOSSES.some(b=>b.id===g.bossId)||!Array.isArray(g.eventsByRealm)||g.eventsByRealm.length!==15||g.rooms.filter(k=>k==='event').length<3||g.rooms.filter(k=>k==='event').length>4||g.rooms.filter(k=>k==='elite').length!==2)throw Error('Invalid integration schedule');const ids=g.eventsByRealm.filter(Boolean),groups=ids.map(id=>EVENT_GROUPS.findIndex(group=>group.includes(id)));if(new Set(ids).size!==ids.length||new Set(groups).size!==groups.length||groups.includes(-1)||g.eventsByRealm.some((id,i)=>(g.rooms[i]==='event')!==!!id))throw Error('Invalid event schedule');}
   if(g.routeMap!==undefined&&(!Array.isArray(g.routeMap)||g.routeMap.length!==15||g.routeMap.some((row,i)=>!Array.isArray(row)||row.length!==(i===14?1:3)||row.some(k=>k!==g.rooms[i]&&!(i>0&&g.rooms[i]==='combat'&&k==='elite')))))throw Error('Invalid route map');
+  if(g.routeEdges!==undefined&&(!g.routeMap||!Array.isArray(g.routeEdges)||g.routeEdges.length!==14||g.routeEdges.some((row,i)=>!Array.isArray(row)||row.length!==3||row.some((links,lane)=>!Array.isArray(links)||!links.length||new Set(links).size!==links.length||links.some(n=>!integer(n,0,i===13?0:2)||(i<13&&Math.abs(lane-n)>1))))))throw Error('Invalid route connections');
+  if(g.routePositions!==undefined&&(!g.routeMap||!Array.isArray(g.routePositions)||g.routePositions.length!==15||g.routePositions.some((row,i)=>!Array.isArray(row)||row.length!==g.routeMap[i].length||row.some(x=>!integer(x,1,299)))))throw Error('Invalid route positions');
   if(g.version!==2&&JSON.stringify([...g.rooms.slice(0,14)].sort())!==JSON.stringify([...ROOMS].sort()))throw Error('Invalid Realm schedule');
   if(!Array.isArray(g.families)||g.families.length>3||new Set(g.families).size!==g.families.length||!g.families.every(f=>FAMILIES.includes(f))||g.initialFamily!==null&&!FAMILIES.includes(g.initialFamily))throw Error('Invalid saved affinities');
   if(g.affinityPlan!==null&&(!Array.isArray(g.affinityPlan)||g.affinityPlan.length!==3||new Set(g.affinityPlan).size!==3||!g.affinityPlan.every(f=>FAMILIES.includes(f)))||!Array.isArray(g.affinityPlanSeen)||g.affinityPlanSeen.length!==3||!g.affinityPlanSeen.every(v=>typeof v==='boolean'))throw Error('Invalid affinity plan');
@@ -162,7 +172,7 @@ function create(themes,rng=Math.random){
   g.offers=g.offers.map(p=>realm(p,g.planeIndex));
   if(!Array.isArray(g.history)||g.history.length>15)throw Error('Invalid Realm history');
   g.history=g.history.map((p,i)=>{if(p.plane!==i+1)throw Error('Invalid Realm history');return realm(p,i+1);});
-  if(g.routeMap&&(g.history.some((p,i)=>i>0&&i<14&&Math.abs(p.lane-g.history[i-1].lane)>1)||g.selected&&g.planeIndex<15&&g.history.length&&Math.abs(g.selected.lane-g.history[g.history.length-1].lane)>1||new Set(g.offers.map(p=>p.lane)).size!==g.offers.length))throw Error('Invalid route path');
+  if(g.routeMap&&(g.history.some((p,i)=>i>0&&(g.routeEdges?!g.routeEdges[i-1][g.history[i-1].lane].includes(p.lane):i<14&&Math.abs(p.lane-g.history[i-1].lane)>1))||g.selected&&g.history.length&&(g.routeEdges?!g.routeEdges[g.planeIndex-2][g.history[g.history.length-1].lane].includes(g.selected.lane):g.planeIndex<15&&Math.abs(g.selected.lane-g.history[g.history.length-1].lane)>1)||new Set(g.offers.map(p=>p.lane)).size!==g.offers.length))throw Error('Invalid route path');
   if(g.stage==='choice'||g.stage==='combat'){
    if(g.history.length!==g.planeIndex-1||g.initialFamily&&!g.families.includes(g.initialFamily))throw Error('Invalid Realm progress');
    if(g.rewardPending)g.rewardPending=realm(g.rewardPending,g.planeIndex-1);
@@ -179,7 +189,7 @@ function create(themes,rng=Math.random){
    if(!g.freeBuild&&g.stage==='choice'&&g.offers.some(p=>(g.families.length===3&&!g.families.includes(p.family)) ))throw Error('Invalid affinity offer');
    if(!g.freeBuild&&g.affinityPlan&&g.initialFamily&&g.affinityPlan[0]!==g.initialFamily)throw Error('Invalid active affinity plan');
   }
-  if(g.routeMap===undefined)delete game.routeMap;Object.assign(game,g);return game;
+  if(g.routeMap===undefined)delete game.routeMap;if(g.routeEdges===undefined)delete game.routeEdges;if(g.routePositions===undefined)delete game.routePositions;Object.assign(game,g);return game;
  }
  function influence(family){if(!allowed().includes(family))throw Error('Affinity influence unavailable');game.pathInfluence=family;}
  function setSimulationRandomStreams(route,draft){if(typeof route!=='function'||typeof draft!=='function')throw Error('Simulation RNG streams must be functions');routeRng=route;draftRng=draft;}

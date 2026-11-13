@@ -15,10 +15,10 @@ or connect it to production player data. Use isolated synthetic playtest saves.
   the wave tiers, 55% for Elites and 100% for the boss. Rarity tables are
   unchanged.
 - New Expeditions have a saved, connected three-lane map of 15 Realms.
-  Players can move to an adjacent lane or stay in their lane, choosing between
+  Players follow the generated connections between nodes, choosing between
   normal and optional elite encounters; the last Realm is the shared boss.
   Event rows remain mandatory. Existing in-progress checkpoints retain their
-  original schedule. Future Realm affinities and rewards are generated as the
+  original schedule. Each new map saves its node positions and restricted links. Future Realm affinities and rewards are generated as the
   player advances, not fixed or shown on the map.
 - Completed combat, elite, boss and event Realms grant permanent talent XP.
   The separate Talents page contains the existing ability catalogue and ranks,

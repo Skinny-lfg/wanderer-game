@@ -1,0 +1,5 @@
+'use strict';
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const html=fs.readFileSync('index.html','utf8'),start=html.indexOf('function phase3StatValue('),end=html.indexOf('\nfunction phase3DetailedStatsMarkup',start);
+const context={state:{equip:{},automaticTalents:{xp:100,nodes:['might'],attributes:{str:1}}},WandererV012GearStats:{totalStats:()=>({str:6,attack:15})},isTwoHanded:()=>false,FIELDS:[],itemStatValue:()=>0,RUNE_FAMILIES:[],runeValue:()=>0,setCounts:()=>({}),setBonuses:()=>({}),PHASE1_PREVIEW:true};vm.runInNewContext(html.slice(start,end)+'\nthis.value=phase3StatValue;',context);
+test('stats display the base separately from positive and negative bonuses',()=>{assert.match(context.value('Strength',{str:9},'9'),/^6<span class="stat-bonus"> \+ 3<\/span>$/);assert.match(context.value('Attack',{attack:12},'12'),/^15<span class="stat-penalty"> − 3<\/span>$/);assert.equal(context.value('Strength',{str:6},'6'),'6');});
