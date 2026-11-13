@@ -47,7 +47,10 @@ For a map of the current gameplay modules, see [docs/current-game-map.md](docs/c
 `node scripts/prepare-automatic-preview.mjs` builds an isolated English-language
 playtest in a new temporary directory and prints its path. Serve that directory
 over localhost or HTTPS. It uses its own local save namespace and does not load
-account or Firebase modules. The full design and unfinished systems are listed
+account or Firebase modules. GitHub Pages publishes the `docs/` folder of the
+`publish/automatic-rpg-preview` branch: copy the generated preview into that
+folder (not the branch root), push, then verify the public URL serves the new
+version. The full design and unfinished systems are listed
 in [docs/automatic-rpg-plan.md](docs/automatic-rpg-plan.md).
 
 ## Data safety
