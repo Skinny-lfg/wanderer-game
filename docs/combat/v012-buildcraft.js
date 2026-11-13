@@ -341,8 +341,7 @@ function onCast(b,c){
  }
  if(rank(b,'spellblade')&&activated(b,'spellblade'))b.runtime.spellblade=true;
 }
-function onSecond(b,c){
- b.runtime.passiveTelemetry??={};for(const id of new Set([...b.picks,...(b.runtime.permanentTalents||[])])){if(!rank(b,id))continue;const t=b.runtime.passiveTelemetry[id]??={activations:0,combatSeconds:0};t.combatSeconds++;}
+function tickRot(b,c){
  const e=migrateEnemyDots(c.enemy);
  if(e.v012Rot?.length){
   const rot=e.v012Rot;
@@ -353,6 +352,10 @@ function onSecond(b,c){
   if(rank(b,'rot_ward')&&ready(b,'rotWard',c.now,5)&&activated(b,'rot_ward'))c.barrier(c.player.maxhp*.018);
   if(rank(b,'rot_symbiosis')&&ready(b,'rotSymbiosis',c.now,6)&&activated(b,'rot_symbiosis'))heal(b,c,c.player.maxhp*.018);
  }
+}
+function onSecond(b,c){
+ b.runtime.passiveTelemetry??={};for(const id of new Set([...b.picks,...(b.runtime.permanentTalents||[])])){if(!rank(b,id))continue;const t=b.runtime.passiveTelemetry[id]??={activations:0,combatSeconds:0};t.combatSeconds++;}
+ const e=migrateEnemyDots(c.enemy);tickRot(b,c);
  if(rank(b,'renewal')&&activated(b,'renewal'))heal(b,c,c.player.maxhp*values('renewal',rank(b,'renewal')).heal);
  if(rank(b,'life_bloom')&&activated(b,'life_bloom')){heal(b,c,c.player.maxhp*values('life_bloom',rank(b,'life_bloom')).heal);c.mana(values('life_bloom',rank(b,'life_bloom')).mana);}
  if(rank(b,'barrier_pulse')&&ready(b,'barrierPulse',c.now,6)&&activated(b,'barrier_pulse'))c.barrier(c.player.maxhp*values('barrier_pulse',rank(b,'barrier_pulse')).barrier);
@@ -379,10 +382,10 @@ function onDefend(b,c,blocked,barrierAbsorbed){
  }
 }
 function onKill(b,c){
- const waveKey=c.waveKey??c.enemy;if(b.runtime.lastKillWave===waveKey)return;b.runtime.lastKillWave=waveKey;
+ const waveKey=c.waveKey??c.enemy;if(b.runtime.lastKillWave!==waveKey){b.runtime.lastKillWave=waveKey;
  if(rank(b,'hemovore')&&(c.enemy.bleedStacks>0||c.enemy.v012DeathBleed)&&activated(b,'hemovore'))heal(b,c,c.player.maxhp*.04);
- if(rank(b,'rot_recovery')&&(c.enemy.v012Rot?.length||c.enemy.v012DeathRot)&&activated(b,'rot_recovery'))heal(b,c,c.player.maxhp*.04);
- const key=c.waveKey??c.enemy;if(rank(b,'second_breath')&&b.runtime.lastWaveHeal!==key){b.runtime.lastWaveHeal=key;activated(b,'second_breath');heal(b,c,c.player.maxhp*values('second_breath',rank(b,'second_breath')).heal);}
+ if(rank(b,'rot_recovery')&&(c.enemy.v012Rot?.length||c.enemy.v012DeathRot)&&activated(b,'rot_recovery'))heal(b,c,c.player.maxhp*.04);}
+ const key=c.waveKey??c.enemy;if(c.waveComplete!==false&&rank(b,'second_breath')&&b.runtime.lastWaveHeal!==key){b.runtime.lastWaveHeal=key;activated(b,'second_breath');heal(b,c,c.player.maxhp*values('second_breath',rank(b,'second_breath')).heal);}
 }
 function survive(b,c){if(!rank(b,'last_stand')||b.runtime.lastStand)return false;activated(b,'last_stand');b.runtime.lastStand=true;c.player.hp=Math.max(1,c.player.maxhp*.06);c.log('💚 Last Stand (once per Expedition)');return true;}
 function speed(b,now){return b?.runtime?.adrenalineUntil>now?1+values('adrenaline',rank(b,'adrenaline')).speed:1;}
@@ -407,5 +410,5 @@ function validate(b){
 }
 function syncPermanent(b,progress){if(!b)return;if(!root.WandererAutomaticTalents)throw Error('Permanent talents unavailable');const ids=root.WandererAutomaticTalents.passiveIds(progress||root.WandererAutomaticTalents.create());if(ids.length)b.runtime.permanentTalents=ids;else delete b.runtime.permanentTalents;}
 function clear(b){if(!b)return;b.picks.length=0;b.element=null;b.initialFamily=null;b.initialPassive=null;b.unlockedFamilies=[];b.families=[];b.cooldowns=Object.create(null);b.runtime={frenzyUntil:0,counterBlock:0,counterBarrier:0,spellblade:false,magicHits:0,staticCharges:0,adrenalineUntil:0,conduit:false,lastStand:false,lastSpellAt:-999};}
-root.WandererV012Buildcraft=Object.freeze({CATALOG,FAMILIES,ELEMENTS:elements,create,initial,initialId,ownedRank,rank,values,preview,canModify,capabilities,functional,synergy,bleedDamage,elementalPower,applyRot,migrateEnemyDots,eligible,options,choose,element,mods,onHeal,onAttack,onCast,onSecond,incoming,onDefend,onKill,survive,speed,enemyHealMultiplier,nextCost,resetWave,canCast,validate,syncPermanent,clear});
+root.WandererV012Buildcraft=Object.freeze({CATALOG,FAMILIES,ELEMENTS:elements,create,initial,initialId,ownedRank,rank,values,preview,canModify,capabilities,functional,synergy,bleedDamage,elementalPower,applyRot,migrateEnemyDots,eligible,options,choose,element,mods,onHeal,onAttack,onCast,onSecond,tickRot,incoming,onDefend,onKill,survive,speed,enemyHealMultiplier,nextCost,resetWave,canCast,validate,syncPermanent,clear});
 })(globalThis);

@@ -182,11 +182,13 @@ function phase1StartWave(resetScroll=false){
  if(!ports.isPhase1Run()||!g.selected||r.status==='fight')return;
  r.enc=g.wave;const last=g.wave===g.selected.waves;
  const theme=ports.phase2Theme(g.selected.id);
- r.enemy=ports.enemyFor(r.tier,r.enc,{theme,boss:last&&g.selected.boss,elite:last&&g.selected.elite&&!g.selected.boss,variant:g.version===2?ports.BOSS_ARCHETYPES.find(b=>b.style===WandererV012Expedition.BOSSES.find(v=>v.id===g.bossId).style):null});
+ const count=last&&(g.selected.boss||g.selected.elite)?1:(g.selected.groupSize||1);
+ const group=WandererV012CombatCore.createEnemyGroup(()=>ports.enemyFor(r.tier,r.enc,{theme,boss:last&&g.selected.boss,elite:last&&g.selected.elite&&!g.selected.boss,variant:g.version===2?ports.BOSS_ARCHETYPES.find(b=>b.style===WandererV012Expedition.BOSSES.find(v=>v.id===g.bossId).style):null}),count);
+ if(count>1)r.enemies=group;else delete r.enemies;r.enemy=group[0];
  r.phase6Bounty=false;if(r.enemy.miniboss&&ports.phase6Run?.effects.bounty){r.phase6Bounty=true;ports.phase6Run.effects.bounty=false;r.enemy.hp=r.enemy.maxhp=Math.ceil(r.enemy.maxhp*1.25);r.enemy.atk=Math.ceil(r.enemy.atk*1.25);}
  r.tPlayer=r.tEnemy=r.tDot=0;r.setTemp=null;r.playerDebuffUntil=0;
  r.playerHealingDebuffUntil=0;r.nextCasterHexAt=0;ports.setRuntime(r);r.status='fight';
- if(ports.phase1Build)WandererV012Buildcraft.resetWave(ports.phase1Build,r.enemy);
+ if(ports.phase1Build)for(const enemy of r.enemies||[r.enemy])WandererV012Buildcraft.resetWave(ports.phase1Build,enemy);
  ports.addLog('Wave '+g.wave+'/'+g.selected.waves+': '+r.enemy.name);
  ports.renderCombat();if(resetScroll)ports.resetDungeonEntryScroll();clearInterval(ports.clock);
  ports.clock=setInterval(()=>{if(ports.isVisible())ports.updateFight();},110/ports.clockSpeed);
@@ -195,18 +197,26 @@ function phase1StartWave(resetScroll=false){
 function phase1WaveWon(){
  if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked))return false;
  const r=ports.state.run,g=ports.phase1Controller.state;
- if(!ports.isPhase1Run()||r.status!=='fight'||!r.enemy||r.enemy.hp>0||g.stage!=='combat'||!g.selected||r.enc!==g.wave||r.phase4AwardedWave===r.enc)return;
+ if(!ports.isPhase1Run()||r.status!=='fight'||!r.enemy||g.stage!=='combat'||!g.selected||r.enc!==g.wave||r.phase4AwardedWave===r.enc)return;
+ if(r.enemies?.length>1){
+  const dead=r.enemies.filter(enemy=>enemy.hp<=0&&!enemy.groupDefeated);if(!dead.length)return;
+  for(const enemy of dead){r.enemy=enemy;enemy.groupDefeated=true;
+   if(ports.state.automaticTalents?.nodes?.includes('plague_spread')){const bleed=enemy.dots?.bleed?.find(dot=>!dot.spread),rot=enemy.v012Rot?.find(dot=>!dot.spread);for(const target of r.enemies.filter(mob=>mob.hp>0).slice(0,2)){if(bleed){target.dots.bleed??=[];if(target.dots.bleed.length<12)target.dots.bleed.push({damage:Math.max(1,Math.round(bleed.damage*.5)),remaining:Math.min(2,bleed.remaining),spread:true});ports.synchronizeDots(target);}if(rot){target.v012Rot??=[];if(target.v012Rot.length<6)target.v012Rot.push({damage:Math.max(1,Math.round(rot.damage*.5)),remaining:Math.min(2,rot.remaining),ticks:0,spread:true});}}}
+   ports.legendaryKill(r);if(ports.phase1Build)WandererV012Buildcraft.onKill(ports.phase1Build,{...ports.phase2Context(r),waveComplete:WandererV012CombatCore.groupComplete(r.enemies)&&enemy===dead[dead.length-1]});}
+  const next=WandererV012CombatCore.nextGroupTarget(r.enemies);if(next){r.enemy=next;ports.renderCombat();return true;}
+ }else if(r.enemy.hp>0)return;
  clearInterval(ports.clock);
  if(ports.PHASE1_PREVIEW){const token=ports.phase5Snapshot.expedition.attempts+':'+r.phase1Plane+':'+r.enc;if(ports.phase5Snapshot.expedition.awardKeys.includes(token)||ports.phase4WaveKeys.includes(token)){ports.phase5Fail(Error('Duplicate Wave reward rejected'));return;}ports.phase4WaveKeys.push(token);}
  r.phase4AwardedWave=r.enc;
- ports.legendaryKill(r);
- if(ports.phase1Build)WandererV012Buildcraft.onKill(ports.phase1Build,ports.phase2Context(r));
+ if(!r.enemies){ports.legendaryKill(r);
+ if(ports.phase1Build)WandererV012Buildcraft.onKill(ports.phase1Build,ports.phase2Context(r));}
  const enemy=r.enemy,boss=!!enemy.boss,elite=!!enemy.miniboss;
- const gold=Math.round((ports.roll(3,6)+Math.floor(r.tier*.5)+(boss?8:elite?4:0))*(r.phase6Bounty?1.5:1));
- const fragments=Math.round((ports.roll(1,3)+Math.floor(r.tier*.24)+(boss?5:elite?3:0))*(r.phase6Bounty?1.5:1));
+ const groupReward=boss||elite?1:r.enemies?.length===4?1.3:r.enemies?.length===2?1.15:1;
+ const gold=Math.round((ports.roll(3,6)+Math.floor(r.tier*.5)+(boss?8:elite?4:0))*(r.phase6Bounty?1.5:1)*groupReward);
+ const fragments=Math.round((ports.roll(1,3)+Math.floor(r.tier*.24)+(boss?5:elite?3:0))*(r.phase6Bounty?1.5:1)*groupReward);
  ports.state.gold+=gold;ports.state.fragments+=fragments;r.gold+=gold;r.fragments+=fragments;ports.phase5Results.gold+=gold;ports.phase5Results.fragments+=fragments;
  ports.addLog('Realm rewards pending: +'+gold+' Gold · +'+fragments+' Fragments.','good');
- const odds=ports.waveLootOdds(boss?5:elite?4:r.enc,r.stats.cha);if(ports.phase6Run?.effects.fortune)odds.drop=Math.min(1,odds.drop*1.25);
+ const odds=ports.waveLootOdds(boss?5:elite?4:r.enc,r.stats.cha);odds.drop=Math.min(1,odds.drop*groupReward);if(ports.phase6Run?.effects.fortune)odds.drop=Math.min(1,odds.drop*1.25);
  if(boss||r.phase6Bounty||ports.gameRandom()<odds.drop){
   const theme=ports.phase2Theme(r.path),pick=ports.dungeonEquipmentPick(theme,[]);
   const rarity=ports.randomFromOdds(odds.rarities);
