@@ -1,0 +1,59 @@
+'use strict';
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');const ctx={};vm.runInNewContext(fs.readFileSync('combat/v012-combat-core.js','utf8'),ctx);const C=ctx.WandererV012CombatCore;
+const make=()=>({name:'Mob',hp:100,maxhp:100,atk:20,attackEvery:2,def:5,barrier:0,dots:{bleed:[]}});
+test('solo encounters preserve original enemy object and stats',()=>{const mob=make(),group=C.createEnemyGroup(()=>mob,1);assert.equal(group[0],mob);assert.equal(group[0].maxhp,100);assert.equal(group[0].atk,20);});
+test('duos and packs have independent members, staggered attacks and a living target',()=>{for(const [count,hp,atk] of [[2,70,13],[4,40,7]]){const g=C.createEnemyGroup(make,count);assert.equal(g.length,count);assert(g.every(e=>e.hp===hp&&e.atk===atk));assert.equal(new Set(g.map(e=>e.groupClock)).size,count);g[0].dots.bleed.push({damage:5});assert.equal(g[1].dots.bleed.length,0);assert.equal(C.nextGroupTarget(g),g[0]);g[0].hp=0;assert.equal(C.nextGroupTarget(g),g[1]);assert.equal(C.groupComplete(g),false);g.forEach(e=>e.hp=0);assert.equal(C.groupComplete(g),true);assert.equal(C.nextGroupTarget(g),null);}});
+test('rejects unsupported group sizes and multi-boss encounters',()=>{assert.throws(()=>C.createEnemyGroup(make,3),/Invalid/);assert.throws(()=>C.createEnemyGroup(()=>({...make(),boss:true}),2),/solo/);assert.equal(C.groupComplete([]),false);});
+test('group factory rejects shared instances and invalid attack clocks',()=>{const shared=make();assert.throws(()=>C.createEnemyGroup(()=>shared,2),/Invalid/);assert.throws(()=>C.createEnemyGroup(()=>({...make(),attackEvery:0}),2),/Invalid/);});
+const create=require('./v012-economy-harness.cjs');
+test('a four-enemy wave selects each living target and pays only once',()=>{
+ const a=create(810);a.start(1,true);const c=a.controller(),offer=c.state.offers.find(p=>c.reachable(p)&&p.groupSize===4);assert(offer);a.select(offer.id);assert.equal(a.enter(),true);let run=a.state().run;assert.equal(run.enemies.length,4);const gold=a.state().gold,plane=c.state.planeIndex;
+ for(let i=0;i<3;i++){const target=run.enemy;target.hp=0;a.win();assert.equal(target.groupDefeated,true);assert.notEqual(run.enemy,target);assert.equal(a.state().gold,gold);assert.equal(c.state.planeIndex,plane);assert.equal(run.status,'fight');}
+ run.enemy.hp=0;a.win();a.flush();assert(a.state().gold>gold);const paid=a.state().gold;a.win();assert.equal(a.state().gold,paid);
+});
+test('each live mob has an independent automatic attack clock',()=>{
+ const a=create(811);a.start(1,true);const c=a.controller(),offer=c.state.offers.find(p=>c.reachable(p)&&p.groupSize===4);assert(offer);a.select(offer.id);assert(a.enter());const run=a.state().run;run.stats.attacksPerSec=0;run.hp=run.maxhp=100000;run.enemies.forEach(e=>{e.hp=e.maxhp=100000;e.atk=10;});for(let i=0;i<100;i++)a.tick();assert(run.hp<run.maxhp);assert(run.enemies.every(e=>e.groupClock<e.attackEvery));assert(new Set(run.enemies.map(e=>e.groupClock.toFixed(2))).size>1);
+});
+test('reloading a group fight restarts the same wave without duplicating rewards',()=>{
+ const storage=new Map();let a=create(812,undefined,{}, {sessionStorage:storage});a.start(1,true);const c=a.controller(),offer=c.state.offers.find(p=>c.reachable(p)&&p.groupSize===4);assert(offer);a.select(offer.id);assert(a.enter());const before=a.state().run.enemies.map(e=>[e.name,e.maxhp,e.atk]);a.state().run.enemy.hp=0;a.win();assert.equal(a.state().gold,0);
+ a=create(812,undefined,{}, {sessionStorage:storage});assert.equal(a.debug().saveBlocked,false);assert(a.checkpoint.resume());assert.equal(JSON.stringify(a.state().run.enemies.map(e=>[e.name,e.maxhp,e.atk])),JSON.stringify(before));assert.equal(a.state().gold,0);
+});
+test('automatic single-target attacks clear a full pack without player actions',()=>{
+ const a=create(813);a.start(1,true);const c=a.controller(),offer=c.state.offers.find(p=>c.reachable(p)&&p.groupSize===4);assert(offer);a.select(offer.id);assert(a.enter());const run=a.state().run;run.stats.attack=1000;run.stats.attacksPerSec=3;run.hp=run.maxhp=10000;const wave=run.enc;for(let i=0;i<300&&run.status==='fight'&&run.enc===wave;i++)a.tick();assert(run.enemies.every(m=>m.hp<=0));assert.notEqual(run.status,'fight');assert(a.state().gold>0);
+});
+test('map offers saved Solo, Duo and Pack counts, retained by reroll',()=>{
+ const a=create(814),c=a.controller();a.start(1,true);const g=c.state;assert.deepEqual(Array.from(g.offers,p=>p.groupSize).sort((x,y)=>x-y),[1,2,4]);const snapshot=JSON.stringify(g.routeGroups);c.restore(JSON.parse(JSON.stringify(g)));assert.equal(JSON.stringify(c.state.routeGroups),snapshot);const index=c.state.offers.findIndex(p=>p.groupSize===4),old=c.state.offers[index];c.reroll(index);assert.equal(c.state.offers[index].groupSize,4);assert.equal(c.state.offers[index].lane,old.lane);const corrupt=JSON.parse(JSON.stringify(c.state));corrupt.offers[index].groupSize=1;assert.throws(()=>c.restore(corrupt),/group size/);
+});
+function startPack(seed,weapon,element){const a=create(seed);a.setup(1,weapon);if(element)a.state().automaticTalents={xp:0,nodes:[],element};a.start(1,true);const c=a.controller(),offer=c.state.offers.find(p=>c.reachable(p)&&p.groupSize===4);assert(offer);a.select(offer.id);assert(a.enter());const r=a.state().run;r.hp=r.maxhp=100000;r.stats.attack=100;r.stats.spellPower=100;r.stats.attacksPerSec=4;r.enemies.forEach(e=>{e.hp=e.maxhp=10000;e.atk=0;e.barrier=0;});return {a,r};}
+function untilPlayerHit(a,r){for(let i=0;i<20&&!r.lastBaseHit;i++)a.tick();assert(r.lastBaseHit>0);}
+test('Two-Handed cleaves two other targets without repeating primary procs',()=>{const {a,r}=startPack(815,'Two-Handed');untilPlayerHit(a,r);assert(r.enemies[0].hp<10000);assert(r.enemies[1].hp<10000);assert(r.enemies[2].hp<10000);assert.equal(r.enemies[3].hp,10000);assert.equal(r.enemies[1].dots.bleed.length,0);});
+test('Lightning casts hit two other mobs and spend Mana once',()=>{const {a,r}=startPack(816,'Staff','lightning');r.mp=r.maxmp=10000;untilPlayerHit(a,r);assert(r.enemies[0].hp<10000);assert(r.enemies[1].hp<10000);assert(r.enemies[2].hp<10000);assert.equal(r.enemies[3].hp,10000);assert.equal(r.metrics.fundedCasts,1);assert(r.metrics.manaSpent>0);});
+test('secondary multi-kills are settled once even when the main target survives',()=>{const {a,r}=startPack(817,'Two-Handed');r.enemies[1].hp=1;r.enemies[2].hp=1;const gold=a.state().gold;untilPlayerHit(a,r);assert(r.enemies[0].hp>0);assert(r.enemies[1].groupDefeated);assert(r.enemies[2].groupDefeated);assert.equal(a.state().gold,gold);assert.equal(r.status,'fight');a.win();assert.equal(a.state().gold,gold);});
+test('talent forks improve cleave, extend lightning and reward one-target focus',()=>{
+ {const {a,r}=startPack(818,'Two-Handed');a.state().automaticTalents={xp:1000,nodes:['might','passive_bleeding_edge','fork_cleave_str_1','fork_cleave_str_2','cleave_mastery']};untilPlayerHit(a,r);assert.equal(10000-r.enemies[1].hp,Math.round(r.lastBaseHit*.6));}
+ {const {a,r}=startPack(819,'Staff','lightning');a.state().automaticTalents={xp:1000,nodes:['haste','flow','passive_arcane_focus','fork_storm_int_1','fork_storm_int_2','storm_mastery'],element:'lightning'};r.mp=r.maxmp=10000;untilPlayerHit(a,r);assert(r.enemies[3].hp<10000);assert.equal(r.metrics.fundedCasts,1);}
+ {const plain=startPack(820,'Sword'),focus=startPack(820,'Sword');for(const x of [plain,focus])x.r.enemies.slice(1).forEach(e=>{e.hp=0;e.groupDefeated=true;});focus.a.state().automaticTalents={xp:1000,nodes:['haste','passive_quick_hands','fork_focus_agi_1','fork_focus_agi_2','single_target_mastery']};untilPlayerHit(plain.a,plain.r);untilPlayerHit(focus.a,focus.r);assert(focus.r.lastBaseHit>plain.r.lastBaseHit);}
+});
+test('contagion spreads weakened effects once and cannot spread recursively',()=>{
+ const {a,r}=startPack(821,'Sword');a.state().automaticTalents={xp:500,nodes:['might','passive_toxic_touch','fork_plague_agi_1','fork_plague_agi_2','plague_spread']};const first=r.enemy;first.dots.bleed=[{damage:20,remaining:3}];first.bleedStacks=1;first.v012Rot=[{damage:10,remaining:3,ticks:0}];first.hp=0;a.win();
+ for(const mob of r.enemies.slice(1,3)){assert.equal(mob.dots.bleed[0].damage,10);assert.equal(mob.v012Rot[0].damage,5);assert(mob.v012Rot[0].spread);}
+ r.enemy.hp=0;a.win();assert.equal(r.enemies[3].dots.bleed.length,0);assert.equal(r.enemies[3].v012Rot.length,0);
+});
+test('damage over time ticks independently on non-target enemies',()=>{
+ const {a,r}=startPack(822,'Sword');const mob=r.enemies[1];mob.dots.bleed=[{damage:10,remaining:2}];mob.bleedStacks=1;mob.v012Rot=[{damage:7,remaining:2,ticks:0}];r.tDot=.95;r.stats.attacksPerSec=0;const before=mob.hp;a.tick();assert.equal(before-mob.hp,17);assert.equal(mob.dots.bleed[0].remaining,1);assert.equal(mob.v012Rot[0].remaining,1);
+});
+test('Second Breath heals after the last enemy, not after the first',()=>{
+ const a=create(823);a.state().automaticTalents={xp:200,nodes:['vitality','passive_second_breath']};a.start(1,true);const c=a.controller(),offer=c.state.offers.find(p=>c.reachable(p)&&p.groupSize===4);a.select(offer.id);assert(a.enter());const r=a.state().run;r.hp=20;r.maxhp=1000;for(let i=0;i<3;i++){r.enemy.hp=0;a.win();assert.equal(r.hp,20);}r.enemy.hp=0;a.win();assert(r.hp>20);
+});
+test('fire and frost area talents affect up to two secondary mobs',()=>{
+ {const {a,r}=startPack(824,'Staff','fire');a.state().automaticTalents={xp:1000,nodes:['haste','flow','passive_kindling','fork_fire_int_1','fork_fire_int_2','fire_spread'],element:'fire'};a.build().runtime.permanentTalents=['kindling'];r.mp=r.maxmp=10000;untilPlayerHit(a,r);assert(r.enemies[0].dots.burn.length);assert(r.enemies[1].dots.burn.length);assert(r.enemies[2].dots.burn.length);assert.equal(r.enemies[3].dots.burn.length,0);assert(r.enemies[1].dots.burn[0].spread);}
+ {const {a,r}=startPack(825,'Staff','frost');a.state().automaticTalents={xp:1000,nodes:['haste','flow','passive_deep_winter','fork_frost_int_1','fork_frost_int_2','frost_spread'],element:'frost'};a.build().runtime.permanentTalents=['deep_winter'];r.mp=r.maxmp=10000;untilPlayerHit(a,r);assert(r.enemies[1].slowTime>0);assert(r.enemies[2].slowTime>0);assert.equal(r.enemies[3].slowTime,0);}
+});
+test('cleave accounts for each secondary target defense',()=>{const {a,r}=startPack(826,'Two-Handed');r.enemies[1].def=0;r.enemies[2].def=100;untilPlayerHit(a,r);assert(10000-r.enemies[1].hp>10000-r.enemies[2].hp);});
+test('group rewards use one risk-adjusted roll and award XP once per Realm',()=>{
+ const results=[];for(const size of [1,2,4]){const a=create(830),c=a.controller();a.start(1,true);const offer=c.state.offers.find(p=>p.groupSize===size&&c.reachable(p));a.select(offer.id);offer.waves=1;assert(a.enter());a.rng(.125);const r=a.state().run;while(r.status==='fight'){r.enemy.hp=0;a.win();}const xp=a.state().automaticTalents.xp,gold=a.state().gold,loot=r.loot.length;a.win();assert.equal(a.state().automaticTalents.xp,xp);assert.equal(a.state().gold,gold);results.push({xp,gold,loot});}
+ assert.deepEqual(results.map(x=>x.xp),[30,35,39]);assert(results[0].gold<=results[1].gold&&results[1].gold<=results[2].gold);assert.deepEqual(results.map(x=>x.loot),[0,1,1]);
+});
+test('Bow, Sword and Mace area forks affect one additional enemy only',()=>{
+ for(const [weapon,id] of [['Bow','bow_pierce'],['Sword','sword_sweep'],['Mace','mace_shockwave']]){const {a,r}=startPack(831,weapon);a.state().automaticTalents={xp:1000,nodes:[id]};untilPlayerHit(a,r);assert(r.enemies[1].hp<10000,weapon);assert.equal(r.enemies[2].hp,10000,weapon);assert.equal(r.enemies[3].hp,10000,weapon);if(weapon==='Mace')assert.equal(r.enemies[1].slowTime,1);}
+});

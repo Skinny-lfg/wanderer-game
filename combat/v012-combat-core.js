@@ -34,6 +34,23 @@ function estimateEnemy(level,n=1){
  return {hp:enemyStat(level,Math.round(Math.round(base.hp*1.4)*1.4*hpFactor)),atk:enemyStat(level,Math.round(Math.round(base.atk*1.25)*1.4*atkFactor)),def:enemyStat(level,Math.round(Math.round(base.def*1.2)*1.4*defFactor))};
 }
 
+// Group members retain their own HP, barrier, statuses and attack clocks.
+// Bosses and elites remain solo until their encounter rules are designed.
+function createEnemyGroup(spawn,count){
+ if(typeof spawn!=='function'||![1,2,4].includes(count))throw Error('Invalid enemy group');
+ const scale=count===4?{hp:.4,atk:.35}:count===2?{hp:.7,atk:.65}:{hp:1,atk:1};
+ const seen=new Set();return Array.from({length:count},(_,index)=>{
+  const enemy=spawn(index);if(!enemy||seen.has(enemy)||!Number.isFinite(enemy.maxhp)||!Number.isFinite(enemy.atk)||!Number.isFinite(enemy.attackEvery)||enemy.maxhp<=0||enemy.atk<0||enemy.attackEvery<=0)throw Error('Invalid enemy');seen.add(enemy);
+  if(count>1&&(enemy.boss||enemy.miniboss))throw Error('Bosses and elites must be solo');
+  if(count===1)return enemy;
+  enemy.maxhp=Math.max(1,Math.round(enemy.maxhp*scale.hp));enemy.hp=enemy.maxhp;enemy.atk=enemy.atk===0?0:Math.max(1,Math.round(enemy.atk*scale.atk));
+  enemy.groupSlot=index;enemy.groupClock=-(index*enemy.attackEvery/count);return enemy;
+ });
+}
+function livingEnemies(enemies){return enemies.filter(enemy=>enemy.hp>0);}
+function nextGroupTarget(enemies){return enemies.find(enemy=>enemy.hp>0)||null;}
+function groupComplete(enemies){return enemies.length>0&&enemies.every(enemy=>enemy.hp<=0);}
+
 function affinityProcChance(kind,cast=false){return cast?.9:kind==='Daggers'?.52:kind==='Two-Handed'?.26:.32}
 
 function applyExpeditionModifiers(stats,e){
@@ -42,5 +59,5 @@ function applyExpeditionModifiers(stats,e){
  if(e.attack)s.attack*=1+e.attack;if(e.defense)s.defense*=1+e.defense;
  return s;
 }
-root.WandererV012CombatCore=Object.freeze({evasionChance,enemyAttackType,referenceLevel,enemyStat,gearStat,endlessWeaponDamageBonus,estimateEnemy,affinityProcChance,applyExpeditionModifiers});
+root.WandererV012CombatCore=Object.freeze({evasionChance,enemyAttackType,referenceLevel,enemyStat,gearStat,endlessWeaponDamageBonus,estimateEnemy,createEnemyGroup,livingEnemies,nextGroupTarget,groupComplete,affinityProcChance,applyExpeditionModifiers});
 })(globalThis);

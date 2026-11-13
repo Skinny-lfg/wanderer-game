@@ -48,5 +48,5 @@ test('temporary speed changes preserve cycle progress, and buffs respect the 4.2
 test('enemy attack clock remains separate and unchanged in this phase',()=>{
  const fs=require('node:fs'),path=require('node:path'),source=fs.readFileSync(path.join(__dirname,'..','combat/v012-combat-runtime.js'),'utf8');
  assert.match(source,/r\.tEnemy\+=dt/);
- assert.match(source,/if\(r\.tEnemy>=e\.attackEvery\*slowed\)\{\s*r\.tEnemy=0;/);
+ assert.match(source,/r\.tEnemy>=e\.attackEvery\*slowed/);assert.match(source,/mob\.groupClock\+=dt/);
 });

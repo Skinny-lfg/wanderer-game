@@ -91,3 +91,4 @@ test('stat paths lead to skills, preserve legacy purchases and apply attributes'
  }
  const legacy={xp:200,nodes:['might','passive_bleeding_edge']};assert(talents.valid(legacy));assert.equal(talents.passiveIds(legacy)[0],'bleeding_edge');
 });
+test('new area and focus branches require their linked talent paths',()=>{for(const id of ['cleave_mastery','storm_mastery','single_target_mastery','plague_spread','fire_spread','frost_spread','bow_pierce','sword_sweep','mace_shockwave']){const p=talents.award(talents.create(),100000);assert.equal(talents.allocate(p,id),null,id);const unlocked=unlock(p,id);assert(unlocked.nodes.includes(id));assert(talents.valid(unlocked));}});
