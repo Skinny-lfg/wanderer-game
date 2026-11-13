@@ -34,17 +34,21 @@ function estimateEnemy(level,n=1){
  return {hp:enemyStat(level,Math.round(Math.round(base.hp*1.4)*1.4*hpFactor)),atk:enemyStat(level,Math.round(Math.round(base.atk*1.25)*1.4*atkFactor)),def:enemyStat(level,Math.round(Math.round(base.def*1.2)*1.4*defFactor))};
 }
 
-// Group members retain their own HP, barrier, statuses and attack clocks.
-// Bosses and elites remain solo until their encounter rules are designed.
-function createEnemyGroup(spawn,count){
- if(typeof spawn!=='function'||![1,2,4].includes(count))throw Error('Invalid enemy group');
- const scale=count===4?{hp:.4,atk:.35}:count===2?{hp:.7,atk:.65}:{hp:1,atk:1};
+// Encounter count may exceed the four visible arena slots. Every mob keeps its own state.
+// Large hordes use an explicit per-mob scale and fill empty slots as enemies die.
+function createEnemyGroup(spawn,count,options={}){
+ if(typeof spawn!=='function'||!Number.isInteger(count)||count<1||count>22||!options||typeof options!=='object')throw Error('Invalid enemy group');
+ const activeSlots=options.activeSlots??Math.min(4,count);
+ if(!Number.isInteger(activeSlots)||activeSlots<1||activeSlots>4||activeSlots>count)throw Error('Invalid active mob slots');
+ const defaultScale={1:{hp:1,atk:1},2:{hp:.7,atk:.65},3:{hp:.5,atk:.45},4:{hp:.4,atk:.35}};
+ const scale=options.scale||defaultScale[count];
+ if(!scale||!Number.isFinite(scale.hp)||!Number.isFinite(scale.atk)||scale.hp<=0||scale.atk<=0)throw Error('Invalid enemy group scale');
  const seen=new Set();return Array.from({length:count},(_,index)=>{
   const enemy=spawn(index);if(!enemy||seen.has(enemy)||!Number.isFinite(enemy.maxhp)||!Number.isFinite(enemy.atk)||!Number.isFinite(enemy.attackEvery)||enemy.maxhp<=0||enemy.atk<0||enemy.attackEvery<=0)throw Error('Invalid enemy');seen.add(enemy);
   if(count>1&&(enemy.boss||enemy.miniboss))throw Error('Bosses and elites must be solo');
   if(count===1)return enemy;
   enemy.maxhp=Math.max(1,Math.round(enemy.maxhp*scale.hp));enemy.hp=enemy.maxhp;enemy.atk=enemy.atk===0?0:Math.max(1,Math.round(enemy.atk*scale.atk));
-  enemy.groupSlot=index;enemy.groupClock=-(index*enemy.attackEvery/count);return enemy;
+  enemy.groupSlot=index%activeSlots;enemy.groupClock=-(enemy.groupSlot*enemy.attackEvery/activeSlots);return enemy;
  });
 }
 function livingEnemies(enemies){return enemies.filter(enemy=>enemy.hp>0);}

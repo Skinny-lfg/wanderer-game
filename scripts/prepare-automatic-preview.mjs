@@ -25,7 +25,7 @@ for(const name of ['v012-auth-bootstrap.js','v012-account.mjs','v012-feedback.mj
 // mix the old progression engine with the new one after a Pages update.
 for(const file of ['combat/automatic-talents.js','combat/v012-combat-core.js','combat/v012-combat-runtime.js','combat/v012-buildcraft.js','combat/v012-gear-stats.js','economy/v012-loot-rules.js','online/v012-expedition-controller.js','online/v012-expedition-events.js','online/v012-expedition-runtime.js','online/v012-persistence-runtime.js','online/v012-uiux-tuning.css']){
  const hash=createHash('sha256').update(await readFile(join(output,file))).digest('hex').slice(0,12);
- const attr=file.endsWith('.css')?'href':'src';replaceRequired(new RegExp(attr+'="'+file.replaceAll('.','\\.')+'"'),attr+'="'+file+'?v='+hash+'"',file);
+ const attr=file.endsWith('.css')?'href':'src';replaceRequired(new RegExp(attr+'="'+file.replaceAll('.','\\.')+'(?:\\?[^" ]*)?"'),attr+'="'+file+'?v='+hash+'"',file);
 }
 replaceRequired(/<\/head>/,'<style>#onlineBar{display:none!important}</style></head>','head');
 await writeFile(join(output,'index.html'),html);
