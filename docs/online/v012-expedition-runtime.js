@@ -181,6 +181,7 @@ function phase1StartWave(resetScroll=false){
  const r=ports.state.run,g=ports.phase1Controller.state;
  if(!ports.isPhase1Run()||!g.selected||r.status==='fight')return;
  r.enc=g.wave;const last=g.wave===g.selected.waves;
+ if(ports.state.automaticTalents?.nodes?.includes('affinity_aegis'))ports.setBarrier(r,r.maxhp*.05);
  const theme=ports.phase2Theme(g.selected.id);
  const count=last&&(g.selected.boss||g.selected.elite)?1:(g.selected.groupSize||1);
  const group=WandererV012CombatCore.createEnemyGroup(()=>ports.enemyFor(r.tier,r.enc,{theme,boss:last&&g.selected.boss,elite:last&&g.selected.elite&&!g.selected.boss,variant:g.version===2?ports.BOSS_ARCHETYPES.find(b=>b.style===WandererV012Expedition.BOSSES.find(v=>v.id===g.bossId).style):null}),count);
