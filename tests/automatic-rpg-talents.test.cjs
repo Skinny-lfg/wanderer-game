@@ -109,9 +109,13 @@ test('previous branching saves and invested points survive migration and reset',
 });
 
 test('affinity nodes grant their stated stats and magic branches gate their skills',()=>{
- for(const [family,key] of [['blood','attack'],['vitality','health'],['fury','speed'],['magic','spell']])assert(talents.NODES.find(n=>n.id==='affinity_'+family)[key]>0);
+ for(const [family,key] of [['vitality','health'],['fury','speed'],['magic','spell']])assert(talents.NODES.find(n=>n.id==='affinity_'+family)[key]>0);
  for(const [element,id] of [['fire','kindling'],['frost','deep_winter'],['lightning','overcharge']]){const p=unlock(talents.award(talents.create(),10000),'passive_'+id);assert(p.nodes.includes('element_'+element));assert(talents.valid(p));}
  const parent=talents.NODES.find(n=>n.id==='path_kindling_1').legacyV4Requires;let old=unlock(talents.award(talents.create(),10000),parent);old=unlock(old,'passive_kindling');const legacy={...old,treeVersion:4,nodes:old.nodes.filter(id=>id!=='element_fire')};assert(talents.valid(legacy));
 });
 
 test('Aegis affinity grants barrier when a wave starts',()=>{const game=require('./v012-economy-harness.cjs')(33);game.state().automaticTalents={xp:200,nodes:['vitality','affinity_aegis'],treeVersion:5};game.start(1,true);const c=game.controller(),offer=c.state.offers.find(p=>c.reachable(p)&&!p.event);game.select(offer.id);game.enter();const r=game.state().run;assert(r.barrier>=r.maxhp*.05);});
+
+test('Blood and Decay affinity nodes enable their original attack effects',()=>{
+ const B=context.WandererV012Buildcraft;for(const [family,root,expected] of [['blood','might','bleed'],['decay','haste','rot']]){const progress={xp:200,nodes:[root,'affinity_'+family],treeVersion:5},build=B.create(),dots=[],enemy={hp:100,v012Rot:[]};B.syncPermanent(build,progress);B.onAttack(build,{enemy,base:100,critical:false,random:()=>0,now:1,dot:(kind)=>dots.push(kind),log(){}});if(expected==='bleed')assert(dots.includes('bleed'));else assert.equal(enemy.v012Rot.length,1);assert.equal(B.rank(build,family==='blood'?'bleeding_edge':'toxic_touch'),1);}
+});
