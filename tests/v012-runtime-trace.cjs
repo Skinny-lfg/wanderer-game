@@ -17,14 +17,18 @@ module.exports=function trace(scenario,source){
  }
  a.start(scenario.E);a.initial(scenario.family);if(a.draft()?.step==='element')a.element(scenario.element||'fire');record();
  let restored=false;
- for(let i=0;i<150&&!['finished','failed'].includes(a.controller().state.stage);i++){
+ for(let i=0;i<2000&&!['finished','failed'].includes(a.controller().state.stage);i++){
   if(a.draft()?.step==='passive')a.passive(a.draft().options[0].id);
   else if(a.results().review||a.state().run?.status==='cleared'||a.results().eventExitPending)a.exitResult();
   else if(a.events.run()?.event)a.events.choose(2);
   else if(a.state().run){
    for(let tick=0;tick<5&&a.state().run?.status==='fight';tick++)a.tick();
    if(!restored&&a.state().run){const cp=a.checkpoint.capture();a.checkpoint.restore(cp);a.checkpoint.resume();restored=true;}
-   if(a.state().run?.status==='fight'){a.state().run.enemy.hp=0;a.win();a.flush();}
+   const run=a.state().run,wave=run?.enc;
+   while(run?.status==='fight'&&run.enc===wave){
+    if(run.enemies?.length>1){for(const mob of run.enemies)if(mob.hp>0)mob.hp=0;}else if(run.enemy)run.enemy.hp=0;
+    a.win();a.flush();
+   }
   }else if(a.controller().state.stage==='choice'){
    // A full Bag blocks realm entry in production. The deterministic trace
    // discards loot here, as a player can, so it continues testing combat parity.
@@ -33,8 +37,8 @@ module.exports=function trace(scenario,source){
     if(!item||!a.bag.discard(item.id))throw Error('Cannot resolve full bag');
    }
    for(let n=0;a.bag.overflow();n++){if(n>40||!a.bag.discard(a.bag.items().at(-1).id))throw Error('Cannot resolve bag overflow');}
-   if(a.controller().state.planeIndex===2){a.reroll(0);a.potions.use(1);}
-   a.select(a.controller().state.offers[0].id);a.enter();if(a.draft()?.step==='element')a.element('lightning');
+   if(a.controller().state.planeIndex===2){a.reroll(a.controller().state.offers.findIndex(p=>a.controller().reachable(p)));a.potions.use(1);}
+   a.select(a.controller().state.offers.find(p=>a.controller().reachable(p)).id);a.enter();if(a.draft()?.step==='element')a.element('lightning');
   }
   record();
  }

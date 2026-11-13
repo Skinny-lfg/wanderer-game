@@ -27,12 +27,7 @@ function enemyFor(level,enc,override=null){
  const atk=Math.max(1,Math.round(v.atk*mult*(elite?elite.atk:role==='skirmisher'?1.08:1)));
  const defense=Math.max(0,Math.round(v.def*mult*(elite?elite.def:1)));
  const barrier=variant?.style==='guardian'?Math.max(3,WandererV012CombatCore.enemyStat(level,Math.round(WandererV012CombatCore.referenceLevel(level)*.9))):elite?.id==='tank'?Math.max(1,WandererV012CombatCore.enemyStat(level,Math.round(1+WandererV012CombatCore.referenceLevel(level)*.3))):0;
- const arenaRole=elite?.id||(boss?variant?.style:role);
- const keepsRange=arenaRole==='caster'||arenaRole==='leech',advancesSlowly=arenaRole==='tank'||arenaRole==='guardian';
- const arenaStopDistance=keepsRange ? 0.76 : advancesSlowly ? 0.26 : 0.34;
- const arenaApproachSpeed=keepsRange ? 0 : advancesSlowly ? 0.055 : arenaRole==='berserker' ? 0.15 : 0.12;
  return {name:miniboss?elite.icon+' '+elite.name:mob.name,image:elite?ports.eliteArt(elite.id,mob.image):mob.image,role,bossStyle:variant?.style||null,attackType:elite?.id==='caster'||variant?.style==='leech'||role==='caster'?'spell':'physical',
- arenaDistance:1,arenaStopDistance,arenaApproachSpeed,
  miniboss,eliteType:elite?.id||null,archetypeName:elite?.name||null,hp,maxhp:hp,atk,def:defense,baseDef:defense,barrier,
  attackEvery:elite?elite.interval:role==='skirmisher'?1.42:role==='tank'||role==='caster'?1.72:1.62,boss,effect:theme.effect,burn:0,bleed:0,
  burnStacks:0,bleedStacks:0,dots:{bleed:[],burn:[]},slowTime:0,enraged:false};
@@ -440,16 +435,9 @@ function updateFight(){
  r.combatSeconds=(r.combatSeconds||0)+dt;
  if(!ports.isPhase1Run()&&ports.state.onlineProgress?.timerMetric==='combat-v1'&&r.combatSeconds-(r.lastCombatCheckpoint||0)>=3){r.lastCombatCheckpoint=r.combatSeconds;ports.save();}
  ports.setCombatExpire(r,dt);ports.legendaryTick(r,dt);
- const arenaActors=r.enemies||[e];
- for(const mob of arenaActors){
-  if(mob.hp<=0)continue;
-  if(!Number.isFinite(mob.arenaDistance))mob.arenaDistance=1;
-  const role=mob.eliteType||mob.bossStyle||mob.role,keepsRange=role==='caster'||role==='leech',advancesSlowly=role==='tank'||role==='guardian';
-  if(!Number.isFinite(mob.arenaStopDistance))mob.arenaStopDistance=keepsRange ? 0.76 : advancesSlowly ? 0.26 : 0.34;
-  if(!Number.isFinite(mob.arenaApproachSpeed))mob.arenaApproachSpeed=keepsRange ? 0 : advancesSlowly ? 0.055 : role==='berserker' ? 0.15 : 0.12;
-  mob.arenaDistance=Math.max(mob.arenaStopDistance,mob.arenaDistance-mob.arenaApproachSpeed*dt);
-  if(r.enemies)mob.groupClock+=dt;
- }
+ // v0.13 keeps actors in their arena slots. Only their independent attack
+ // clocks advance; enemy role affects attacks, never position or sprite scale.
+ if(r.enemies)for(const mob of r.enemies)if(mob.hp>0)mob.groupClock+=dt;
  if(r.enemies)r.tEnemy=e.groupClock;else r.tEnemy+=dt;r.tDot+=dt;
  // Align Elite contact frames with the original hit tick at normal playback speed.
  const windupSlowed=e.slowTime>0?1+(s.bonus.slowBonus||.22):1;

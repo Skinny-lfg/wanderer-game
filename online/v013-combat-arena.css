@@ -1,0 +1,358 @@
+/* v0.13 automatic combat: fixed player-left / enemies-right arena. */
+body.phase3IntegratedPreview #scene:has(.groupArena) {
+  display: block !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+body.phase3IntegratedPreview #scene:has(.groupArena) > .combatant:not(.arenaSingleEnemy) {
+  position: absolute !important;
+  z-index: 3;
+  left: 2%;
+  bottom: 3%;
+  width: min(29%, 205px);
+  height: 91%;
+  margin: 0 !important;
+  padding: 0 4px 6px;
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+
+body.phase3IntegratedPreview #scene:has(.groupArena) > .vs,
+body.phase3IntegratedPreview #scene:has(.arenaSingleEnemy) > .vs {
+  display: none !important;
+}
+
+body.phase3IntegratedPreview #scene .groupArena {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  display: block !important;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+body.phase3IntegratedPreview #scene .arenaGroupCounter {
+  position: absolute;
+  z-index: 6;
+  top: 7px;
+  right: 9px;
+  padding: 4px 8px;
+  color: #f0dfc6;
+  background: #100a10c9;
+  border: 1px solid #d1b27770;
+  border-radius: 4px;
+  font: 600 11px/1.2 system-ui, sans-serif;
+  text-shadow: 0 1px 3px #000;
+  pointer-events: none;
+}
+
+body.phase3IntegratedPreview #scene .arenaEnemy {
+  position: absolute;
+  left: var(--mob-x);
+  top: var(--mob-y);
+  z-index: var(--mob-depth);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: clamp(92px, 11vw, 144px);
+  min-width: 0;
+  padding: 3px 5px;
+  transform: translate(-50%, -50%);
+  transform-origin: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  text-align: center;
+  cursor: pointer;
+  pointer-events: auto;
+  touch-action: manipulation;
+  transition: opacity .25s ease, filter .25s ease;
+}
+
+body.phase3IntegratedPreview #scene .arenaEnemy:focus-visible {
+  outline: 2px solid #f0ca82;
+  outline-offset: 3px;
+}
+
+body.phase3IntegratedPreview #scene .arenaEnemy.is-target {
+  background: linear-gradient(180deg, #130d1140, #100a1090);
+  border-color: #d1b2774a;
+  box-shadow: none;
+}
+
+body.phase3IntegratedPreview #scene .arenaEnemy.is-defeated {
+  opacity: 0;
+  filter: grayscale(1);
+  pointer-events: none;
+}
+
+body.phase3IntegratedPreview #scene .arenaEnemy img {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: auto !important;
+  height: auto !important;
+  max-width: 100%;
+  max-height: clamp(70px, 11vh, 90px) !important;
+  object-fit: contain !important;
+  object-position: center bottom;
+  filter: drop-shadow(0 5px 6px #000b);
+}
+
+body.phase3IntegratedPreview #scene .arenaEnemy img[data-attack-src$=".gif"] {
+  transform: scaleX(-1);
+  transform-origin: center bottom;
+}
+
+body.phase3IntegratedPreview #scene .arenaEnemy .arenaTargetArrow {
+  display: none;
+  position: relative;
+  z-index: 2;
+  height: 16px;
+  margin-top: 1px;
+  color: #ffd36f;
+  font: 700 17px/16px system-ui, sans-serif;
+  text-shadow: 0 0 8px #d89b43;
+}
+
+body.phase3IntegratedPreview #scene .arenaEnemy.is-target .arenaTargetArrow {
+  display: block;
+}
+
+body.phase3IntegratedPreview #scene .arenaEnemy strong {
+  position: relative;
+  z-index: 2;
+  max-width: 100%;
+  margin-top: 2px;
+  padding: 1px 4px;
+  color: #f0dfc6;
+  background: #100a10c9;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  font-size: 11px;
+  line-height: 1.15;
+  text-shadow: 0 2px 4px #000;
+  overflow-wrap: anywhere;
+}
+
+body.phase3IntegratedPreview #scene .arenaEnemy.is-target strong {
+  color: #ffe0a0;
+  border-color: #f3c563;
+}
+
+body.phase3IntegratedPreview #scene .arenaEnemyHealth {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 6px;
+  margin-top: 3px;
+  background: #1b1010;
+  border: 1px solid #5a4640;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+body.phase3IntegratedPreview #scene .arenaEnemyHealth i {
+  display: block;
+  height: 100%;
+  width: var(--resource-pct);
+  background: #d6665c;
+}
+
+body.phase3IntegratedPreview #scene .arenaEnemy.is-target .arenaEnemyHealth i {
+  background: #f3c563;
+}
+
+body.phase3IntegratedPreview #scene .arenaEnemy small {
+  position: relative;
+  z-index: 2;
+  max-width: 100%;
+  color: #e5d1b7;
+  font-size: 9px;
+  line-height: 1.15;
+  text-shadow: 0 1px 3px #000;
+}
+
+body.phase3IntegratedPreview #scene .arenaEnemyStatuses {
+  position: absolute;
+  z-index: 4;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 2px);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px;
+  width: 100%;
+  max-height: 44px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+body.phase3IntegratedPreview #scene .arenaEnemyStatuses:empty {
+  display: none;
+}
+
+body.phase3IntegratedPreview #scene .arenaEnemyStatuses .debuff {
+  padding: 1px 4px;
+  font-size: 9px;
+  line-height: 1.2;
+}
+
+body.phase3IntegratedPreview #scene .arenaEnemy .arenaGroundShadow {
+  position: absolute;
+  z-index: 0;
+  top: clamp(70px, 11vh, 90px);
+  left: 24%;
+  width: 52%;
+  height: 11px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, #050407b8 0%, #05040770 46%, transparent 78%);
+  filter: blur(1px);
+  pointer-events: none;
+}
+
+body.phase3IntegratedPreview #scene .arenaEnemy.tookDamage img {
+  animation: v013ArenaHit .34s ease-out;
+}
+
+body.phase3IntegratedPreview #scene .arenaEnemy.is-arriving {
+  animation: v013ReinforcementArrival .48s cubic-bezier(.2,.75,.3,1) both;
+}
+
+@keyframes v013ArenaHit {
+  0% { filter: brightness(1.9) saturate(1.7) drop-shadow(0 0 12px #ff756d); }
+  100% { filter: drop-shadow(0 5px 6px #000b); }
+}
+
+@keyframes v013ReinforcementArrival {
+  from { opacity: 0; transform: translate(-50%, -44%) scale(.82); filter: blur(3px); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); filter: none; }
+}
+
+/* Single enemies, Elites and bosses keep their existing combat rules and use the same sides. */
+body.phase3IntegratedPreview #scene:has(.arenaSingleEnemy) {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+  align-items: stretch !important;
+}
+
+body.phase3IntegratedPreview #scene:has(.arenaSingleEnemy) > .combatant:not(.arenaSingleEnemy) {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: stretch;
+  padding: 0 4px 6px;
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+
+body.phase3IntegratedPreview #scene:has(.arenaSingleEnemy) > .arenaSingleEnemy {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: stretch;
+  transform: none;
+  transition: none;
+  padding: 0 4px 6px;
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+
+body.phase3IntegratedPreview #scene #heroPortrait,
+body.phase3IntegratedPreview #scene .arenaSingleEnemy #enemyPortrait {
+  width: min(165px, 96%) !important;
+  height: clamp(112px, 22vh, 152px) !important;
+  max-height: 152px !important;
+  object-fit: contain !important;
+  object-position: center bottom;
+}
+
+body.phase3IntegratedPreview #scene .playerGroundShadow {
+  position: absolute;
+  z-index: 0;
+  left: 24%;
+  bottom: 98px;
+  width: 52%;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, #050407bd 0%, #05040770 48%, transparent 80%);
+  filter: blur(1px);
+  pointer-events: none;
+}
+
+body.phase3IntegratedPreview #scene .singleGroundShadow {
+  position: absolute;
+  z-index: 0;
+  top: clamp(86px, 18vh, 142px);
+  left: 25%;
+  width: 50%;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, #050407bd 0%, #05040770 48%, transparent 80%);
+  filter: blur(1px);
+  pointer-events: none;
+}
+
+@media (max-width: 650px) {
+  body.phase3IntegratedPreview #scene .arenaGroupCounter {
+    top: 5px;
+    right: 5px;
+    padding: 3px 6px;
+    font-size: 9px;
+  }
+  body.phase3IntegratedPreview #scene:has(.groupArena) > .combatant:not(.arenaSingleEnemy) {
+    left: 1%;
+    bottom: 3%;
+    width: 32%;
+  }
+
+  body.phase3IntegratedPreview #scene .arenaEnemy {
+    width: clamp(72px, 19vw, 84px);
+    padding: 2px 3px;
+  }
+
+  body.phase3IntegratedPreview #scene .arenaEnemy img {
+    max-height: clamp(48px, 8vh, 64px) !important;
+  }
+
+  body.phase3IntegratedPreview #scene .arenaEnemy .arenaGroundShadow {
+    top: clamp(48px, 8vh, 64px);
+  }
+
+  body.phase3IntegratedPreview #scene .arenaEnemy strong {
+    font-size: 9px;
+    line-height: 1.1;
+  }
+
+  body.phase3IntegratedPreview #scene .arenaEnemy small,
+  body.phase3IntegratedPreview #scene .arenaEnemyStatuses .debuff {
+    font-size: 8px;
+  }
+
+  body.phase3IntegratedPreview #scene #heroPortrait,
+  body.phase3IntegratedPreview #scene .arenaSingleEnemy #enemyPortrait {
+    width: min(118px, 96%) !important;
+    height: clamp(88px, 15vh, 118px) !important;
+    max-height: 118px !important;
+  }
+
+  body.phase3IntegratedPreview #scene .playerGroundShadow {
+    bottom: 77px;
+  }
+
+  body.phase3IntegratedPreview #scene .singleGroundShadow {
+    top: clamp(66px, 12vh, 100px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.phase3IntegratedPreview #scene .arenaEnemy.is-arriving,
+  body.phase3IntegratedPreview #scene .arenaEnemy.tookDamage img {
+    animation-duration: .01ms;
+  }
+}

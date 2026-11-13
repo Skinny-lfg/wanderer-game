@@ -183,14 +183,17 @@ function phase1StartWave(resetScroll=false){
  r.enc=g.wave;const last=g.wave===g.selected.waves;
  if(ports.state.automaticTalents?.nodes?.includes('affinity_aegis'))ports.setBarrier(r,r.maxhp*.05);
  const theme=ports.phase2Theme(g.selected.id);
- const count=last&&(g.selected.boss||g.selected.elite)?1:(g.selected.groupSize||1);
- const group=WandererV012CombatCore.createEnemyGroup(()=>ports.enemyFor(r.tier,r.enc,{theme,boss:last&&g.selected.boss,elite:last&&g.selected.elite&&!g.selected.boss,variant:g.version===2?ports.BOSS_ARCHETYPES.find(b=>b.style===WandererV012Expedition.BOSSES.find(v=>v.id===g.bossId).style):null}),count);
- if(count>1)r.enemies=group;else delete r.enemies;r.enemy=group[0];
+ const totalCount=last&&(g.selected.boss||g.selected.elite)?1:(g.selected.mobCount||3),activeCount=Math.min(4,totalCount);
+ const spawn=()=>ports.enemyFor(r.tier,r.enc,{theme,boss:last&&g.selected.boss,elite:last&&g.selected.elite&&!g.selected.boss,variant:g.version===2?ports.BOSS_ARCHETYPES.find(b=>b.style===WandererV012Expedition.BOSSES.find(v=>v.id===g.bossId).style):null});
+ const scale=totalCount===12?{hp:.16,atk:.10}:totalCount>=18?{hp:2/totalCount,atk:.055}:null;
+ const group=WandererV012CombatCore.createEnemyGroup(spawn,totalCount,{activeSlots:activeCount,scale});
+ r.totalMobCount=totalCount;r.enemies=activeCount>1?group.slice(0,activeCount):undefined;r.groupReserve=group.slice(activeCount);if(activeCount===1)delete r.enemies;r.enemy=group[0];
  r.phase6Bounty=false;if(r.enemy.miniboss&&ports.phase6Run?.effects.bounty){r.phase6Bounty=true;ports.phase6Run.effects.bounty=false;r.enemy.hp=r.enemy.maxhp=Math.ceil(r.enemy.maxhp*1.25);r.enemy.atk=Math.ceil(r.enemy.atk*1.25);}
  r.tPlayer=r.tEnemy=r.tDot=0;r.setTemp=null;r.playerDebuffUntil=0;
  r.playerHealingDebuffUntil=0;r.nextCasterHexAt=0;ports.setRuntime(r);r.status='fight';
  if(ports.phase1Build)for(const enemy of r.enemies||[r.enemy])WandererV012Buildcraft.resetWave(ports.phase1Build,enemy);
- ports.addLog('Wave '+g.wave+'/'+g.selected.waves+': '+r.enemy.name);
+ ports.addLog('Wave '+g.wave+'/'+g.selected.waves+': '+r.enemy.name+' · '+totalCount+' enemies');
+ if(r.groupReserve?.length)ports.addLog(r.groupReserve.length+' reinforcements will fill the four arena positions.','good');
  ports.renderCombat();if(resetScroll)ports.resetDungeonEntryScroll();clearInterval(ports.clock);
  ports.clock=setInterval(()=>{if(ports.isVisible())ports.updateFight();},110/ports.clockSpeed);
 }
@@ -200,11 +203,13 @@ function phase1WaveWon(){
  const r=ports.state.run,g=ports.phase1Controller.state;
  if(!ports.isPhase1Run()||r.status!=='fight'||!r.enemy||g.stage!=='combat'||!g.selected||r.enc!==g.wave||r.phase4AwardedWave===r.enc)return;
  if(r.enemies?.length>1){
-  const dead=r.enemies.filter(enemy=>enemy.hp<=0&&!enemy.groupDefeated);if(!dead.length)return;
+   const selectedTarget=r.enemy,dead=r.enemies.filter(enemy=>enemy.hp<=0&&!enemy.groupDefeated);if(!dead.length)return;
   for(const enemy of dead){r.enemy=enemy;enemy.groupDefeated=true;
    if(ports.state.automaticTalents?.nodes?.includes('plague_spread')){const bleed=enemy.dots?.bleed?.find(dot=>!dot.spread),rot=enemy.v012Rot?.find(dot=>!dot.spread);for(const target of r.enemies.filter(mob=>mob.hp>0).slice(0,2)){if(bleed){target.dots.bleed??=[];if(target.dots.bleed.length<12)target.dots.bleed.push({damage:Math.max(1,Math.round(bleed.damage*.5)),remaining:Math.min(2,bleed.remaining),spread:true});ports.synchronizeDots(target);}if(rot){target.v012Rot??=[];if(target.v012Rot.length<6)target.v012Rot.push({damage:Math.max(1,Math.round(rot.damage*.5)),remaining:Math.min(2,rot.remaining),ticks:0,spread:true});}}}
-   ports.legendaryKill(r);if(ports.phase1Build)WandererV012Buildcraft.onKill(ports.phase1Build,{...ports.phase2Context(r),waveComplete:WandererV012CombatCore.groupComplete(r.enemies)&&enemy===dead[dead.length-1]});}
-  const next=WandererV012CombatCore.nextGroupTarget(r.enemies);if(next){r.enemy=next;if(!ports.phase3RetargetGroup?.())ports.renderCombat();return true;}
+    ports.legendaryKill(r);if(ports.phase1Build)WandererV012Buildcraft.onKill(ports.phase1Build,{...ports.phase2Context(r),waveComplete:!r.groupReserve?.length&&WandererV012CombatCore.groupComplete(r.enemies)&&enemy===dead[dead.length-1]});}
+  let reinforcements=0;
+  for(const fallen of dead){const replacement=r.groupReserve?.shift();if(!replacement)continue;const slot=Math.max(0,Number(fallen.groupSlot)||0),index=r.enemies.indexOf(fallen);if(index<0)continue;replacement.groupSlot=slot;replacement.groupClock=-(slot*replacement.attackEvery/r.enemies.length);replacement.isReinforcement=true;replacement.reinforcementArrival=true;r.enemies[index]=replacement;reinforcements++;}
+  const next=selectedTarget?.hp>0&&r.enemies.includes(selectedTarget)?selectedTarget:r.enemies.find(enemy=>enemy.hp>0&&!enemy.isReinforcement)||WandererV012CombatCore.nextGroupTarget(r.enemies);if(next){r.enemy=next;if(reinforcements){ports.addLog(reinforcements+' reinforcement'+(reinforcements===1?' arrives':'s arrive')+' in open position'+(reinforcements===1?'':'s')+'.','good');if(!ports.phase3RefreshGroupEnemies?.())ports.renderCombat();}else if(!ports.phase3RetargetGroup?.())ports.renderCombat();return true;}
  }else if(r.enemy.hp>0)return;
  clearInterval(ports.clock);
  if(ports.PHASE1_PREVIEW){const token=ports.phase5Snapshot.expedition.attempts+':'+r.phase1Plane+':'+r.enc;if(ports.phase5Snapshot.expedition.awardKeys.includes(token)||ports.phase4WaveKeys.includes(token)){ports.phase5Fail(Error('Duplicate Wave reward rejected'));return;}ports.phase4WaveKeys.push(token);}
@@ -212,7 +217,7 @@ function phase1WaveWon(){
  if(!r.enemies){ports.legendaryKill(r);
  if(ports.phase1Build)WandererV012Buildcraft.onKill(ports.phase1Build,ports.phase2Context(r));}
  const enemy=r.enemy,boss=!!enemy.boss,elite=!!enemy.miniboss;
- const groupReward=boss||elite?1:r.enemies?.length===4?1.3:r.enemies?.length===2?1.15:1;
+  const groupReward=boss||elite?1:r.totalMobCount>=18?1.3:r.totalMobCount>=10?1.2:r.totalMobCount>1?1.1:1;
  const gold=Math.round((ports.roll(3,6)+Math.floor(r.tier*.5)+(boss?8:elite?4:0))*(r.phase6Bounty?1.5:1)*groupReward);
  const fragments=Math.round((ports.roll(1,3)+Math.floor(r.tier*.24)+(boss?5:elite?3:0))*(r.phase6Bounty?1.5:1)*groupReward);
  ports.state.gold+=gold;ports.state.fragments+=fragments;r.gold+=gold;r.fragments+=fragments;ports.phase5Results.gold+=gold;ports.phase5Results.fragments+=fragments;
