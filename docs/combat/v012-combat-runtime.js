@@ -439,7 +439,7 @@ function updateFight(){
  // Align Elite contact frames with the original hit tick at normal playback speed.
  const windupSlowed=e.slowTime>0?1+(s.bonus.slowBonus||.22):1;
  const impactLead=({berserker:.49,tank:.81,caster:.89,vampire:.67}[e.eliteType]??(e.boss?{guardian:.85,leech:.86,berserker:.71}[e.bossStyle]:null)??.66);
- if(!mobWindups.has(e)&&r.tEnemy>=Math.max(0,e.attackEvery*windupSlowed-impactLead)){mobWindups.add(e);ports.animateEnemyWindup?.();}
+ if(r.enemies){for(const mob of r.enemies){if(mob.hp<=0||mobWindups.has(mob))continue;const slow=mob.slowTime>0?1+(s.bonus.slowBonus||.22):1,lead=({berserker:.49,tank:.81,caster:.89,vampire:.67}[mob.eliteType]??.66);if(mob.groupClock>=Math.max(0,mob.attackEvery*slow-lead)){mobWindups.add(mob);r.enemy=mob;ports.animateEnemyWindup?.();}}r.enemy=e;}else if(!mobWindups.has(e)&&r.tEnemy>=Math.max(0,e.attackEvery*windupSlowed-impactLead)){mobWindups.add(e);ports.animateEnemyWindup?.();}
  if(s.caster||r.phase1Magic)r.mp=Math.min(r.maxmp,r.mp+dt*s.manaRegen);
  if(ports.isPhase1Run())ports.phase2MagicTick(r);
  if(e.hp<=0||hasUnsettledGroupDeaths(r)){ports.winEncounter(true);return;}
