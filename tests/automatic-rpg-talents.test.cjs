@@ -107,3 +107,11 @@ test('affinity roots and both hybrid paths are required, with a bounded budget',
 test('previous branching saves and invested points survive migration and reset',()=>{
  const p=unlock(talents.award(talents.create(),100000),'passive_bleeding_edge');const old={...p,treeVersion:3,nodes:p.nodes.filter(id=>id!=='affinity_blood')};assert(talents.valid(old));assert(talents.valid(talents.reset(old)));
 });
+
+test('affinity nodes grant their stated stats and magic branches gate their skills',()=>{
+ for(const [family,key] of [['blood','attack'],['vitality','health'],['fury','speed'],['magic','spell']])assert(talents.NODES.find(n=>n.id==='affinity_'+family)[key]>0);
+ for(const [element,id] of [['fire','kindling'],['frost','deep_winter'],['lightning','overcharge']]){const p=unlock(talents.award(talents.create(),10000),'passive_'+id);assert(p.nodes.includes('element_'+element));assert(talents.valid(p));}
+ const parent=talents.NODES.find(n=>n.id==='path_kindling_1').legacyV4Requires;let old=unlock(talents.award(talents.create(),10000),parent);old=unlock(old,'passive_kindling');const legacy={...old,treeVersion:4,nodes:old.nodes.filter(id=>id!=='element_fire')};assert(talents.valid(legacy));
+});
+
+test('Aegis affinity grants barrier when a wave starts',()=>{const game=require('./v012-economy-harness.cjs')(33);game.state().automaticTalents={xp:200,nodes:['vitality','affinity_aegis'],treeVersion:5};game.start(1,true);const c=game.controller(),offer=c.state.offers.find(p=>c.reachable(p)&&!p.event);game.select(offer.id);game.enter();const r=game.state().run;assert(r.barrier>=r.maxhp*.05);});

@@ -44,6 +44,7 @@ const FORKS=Object.freeze([
 const ATTRIBUTES=Object.freeze(['str','agi','int','end','cha']);
 const OLD_ROOTS={blood:'might',decay:'might',vitality:'vitality',aegis:'vitality',fury:'haste',magic:'flow'};
 const POINT_XP=100,MAX_POINTS=100,ROOTS={blood:'might',decay:'haste',vitality:'vitality',aegis:'vitality',fury:'haste',magic:'flow'};
+const AFFINITY_BONUSES={blood:{attack:.05,description:'Increase Attack by 5%.'},decay:{crit:2,description:'Increase critical chance by 2%.'},vitality:{health:.08,description:'Increase maximum Health by 8%.'},aegis:{description:'Gain Barrier equal to 5% of maximum Health at the start of each wave.'},fury:{speed:.05,description:'Increase attack speed by 5%.'},magic:{spell:.08,description:'Increase Spell Power by 8% and unlock the three elemental paths.'}};
 const STATS={blood:'str',decay:'agi',vitality:'end',aegis:'end',fury:'agi',magic:'int'},LABELS={str:'Strength',agi:'Agility',end:'Endurance',int:'Intellect'};
 let cachedCatalog=null,cachedNodes=CORE;
 function nodes(){
@@ -51,18 +52,19 @@ function nodes(){
  if(catalogue!==cachedCatalog){cachedCatalog=catalogue;const branches=[];
  for(const family of Object.keys(ROOTS)){
   const affinity='affinity_'+family,lanes=[affinity,affinity,affinity],oldLanes=[ROOTS[family],ROOTS[family],ROOTS[family]];let previous=ROOTS[family],index=0,normalIndex=0;
-  branches.push(Object.freeze({id:affinity,family,affinity:family,name:'Choose '+family[0].toUpperCase()+family.slice(1),description:'Unlock the '+family+' talent paths.',requires:ROOTS[family]}));
+  branches.push(Object.freeze({id:affinity,family,affinity:family,name:'Choose '+family[0].toUpperCase()+family.slice(1),...AFFINITY_BONUSES[family],requires:ROOTS[family]}));
+  if(family==='magic')for(const element of ['fire','frost','lightning'])branches.push(Object.freeze({id:'element_'+element,family,elementBranch:element,name:element[0].toUpperCase()+element.slice(1)+' Path',description:'Unlock '+element+' talents. Select your active element above.',requires:affinity}));
   for(const p of catalogue.filter(x=>x.family===family)){
    const base='passive_'+p.id,other=(p.requires||[]).find(f=>f!==family),hybrid=!!other,oldLane=index%3,lane=normalIndex%3,oldBranch=oldLanes[oldLane],oldPrevious=previous;
-   let parent=hybrid?affinity:lanes[lane];
-   for(let i=1;i<=2;i++){const id='path_'+p.id+'_'+i,stat=STATS[family];branches.push(Object.freeze({id,family,pathFor:p.id,pathStep:i,pathLane:lane,...(hybrid?{hybridFor:p.id}:{}),name:LABELS[stat],description:'+1 '+LABELS[stat]+'.',attribute:stat,requires:parent,...(i===1?{legacyRequires:oldPrevious,legacyBranchRequires:oldBranch}:{})}));parent=id;}
+   let parent=hybrid?affinity:p.element?'element_'+p.element:lanes[lane];
+   for(let i=1;i<=2;i++){const id='path_'+p.id+'_'+i,stat=STATS[family];branches.push(Object.freeze({id,family,pathFor:p.id,pathStep:i,pathLane:lane,...(hybrid?{hybridFor:p.id}:{}),name:LABELS[stat],description:'+1 '+LABELS[stat]+'.',attribute:stat,requires:parent,...(i===1?{legacyRequires:oldPrevious,legacyBranchRequires:oldBranch,legacyV4Requires:hybrid?affinity:lanes[lane]}:{})}));parent=id;}
    let bridge=null;if(hybrid){bridge='affinity_'+other;for(let i=1;i<=2;i++){const id='bridge_'+p.id+'_'+i,stat=STATS[other];branches.push(Object.freeze({id,family:other,hybridFor:p.id,bridgeStep:i,name:LABELS[stat],description:'+1 '+LABELS[stat]+'.',attribute:stat,requires:bridge}));bridge=id;}}
    for(let i=0;i<p.max;i++){const rank=i+1,id=rank===1?base:base+'_rank'+rank,required=rank===1?[parent,...(bridge?[bridge]:[])]:[rank===2?base:base+'_rank'+(rank-1)];branches.push(Object.freeze({id,passiveId:p.id,rank,maxRank:p.max,family,...(hybrid?{hybridFor:p.id,hybridOther:other}:{}),name:p.name,description:p.description,prerequisites:required}));}
    previous=base;oldLanes[oldLane]=base;index++;if(!hybrid){lanes[lane]=base;normalIndex++;}
   }
  }cachedNodes=Object.freeze([...CORE,...branches,...FORKS]);}return cachedNodes;
 }
-function cap(v){return v.treeVersion===4?Math.max(MAX_POINTS,v.legacyTalentCap||0):Math.max(MAX_POINTS,v.nodes.length);}
+function cap(v){return v.treeVersion>=4?Math.max(MAX_POINTS,v.legacyTalentCap||0):Math.max(MAX_POINTS,v.nodes.length);}
 
 function requirements(node){return node.prerequisites||[node.requires].filter(Boolean);}
 function valid(v){
@@ -70,13 +72,13 @@ function valid(v){
  if(v.element!==undefined&&!['fire','frost','lightning'].includes(v.element))return false;
  const attrs=v.attributes??{};if(!attrs||typeof attrs!=='object'||Array.isArray(attrs)||Object.keys(attrs).some(k=>!ATTRIBUTES.includes(k)||!Number.isSafeInteger(attrs[k])||attrs[k]<0)||Object.values(attrs).reduce((a,b)=>a+b,0)>Math.floor(v.xp/POINT_XP))return false;
  const list=nodes();if(v.legacyTalentCap!==undefined&&(!Number.isSafeInteger(v.legacyTalentCap)||v.legacyTalentCap<MAX_POINTS||v.legacyTalentCap>list.length))return false;const points=Math.min(cap(v),Math.floor(v.xp/POINT_XP));
- return v.nodes.length<=points&&v.nodes.every(id=>{const node=list.find(n=>n.id===id);if(!node)return false;if(requirements(node).every(required=>v.nodes.includes(required)))return true;if(v.treeVersion!==4&&node.pathStep===1&&((node.legacyBranchRequires&&v.nodes.includes(node.legacyBranchRequires))||(v.treeVersion!==3&&node.legacyRequires&&v.nodes.includes(node.legacyRequires))))return true;if(v.treeVersion!==4&&node.hybridFor&&node.rank===1&&v.nodes.includes('path_'+node.passiveId+'_2')&&v.nodes.includes(ROOTS[node.hybridOther]))return true;if(v.treeVersion!==2&&v.treeVersion!==3&&v.treeVersion!==4&&node.passiveId){const p=root.WandererV012Buildcraft.CATALOG.find(p=>p.id===node.passiveId),old=node.rank===1?[...new Set((p.requires.length?p.requires:[p.family]).map(f=>OLD_ROOTS[f]))]:[node.rank===2?'passive_'+p.id:'passive_'+p.id+'_rank'+(node.rank-1)];return old.every(required=>v.nodes.includes(required));}return false;});
+ return v.nodes.length<=points&&v.nodes.every(id=>{const node=list.find(n=>n.id===id);if(!node)return false;if(requirements(node).every(required=>v.nodes.includes(required)))return true;if(v.treeVersion===4&&node.pathStep===1&&node.legacyV4Requires&&v.nodes.includes(node.legacyV4Requires))return true;if(v.treeVersion!==4&&v.treeVersion!==5&&node.pathStep===1&&((node.legacyBranchRequires&&v.nodes.includes(node.legacyBranchRequires))||(v.treeVersion!==3&&node.legacyRequires&&v.nodes.includes(node.legacyRequires))))return true;if(v.treeVersion!==4&&v.treeVersion!==5&&node.hybridFor&&node.rank===1&&v.nodes.includes('path_'+node.passiveId+'_2')&&v.nodes.includes(ROOTS[node.hybridOther]))return true;if(v.treeVersion!==2&&v.treeVersion!==3&&v.treeVersion!==4&&v.treeVersion!==5&&node.passiveId){const p=root.WandererV012Buildcraft.CATALOG.find(p=>p.id===node.passiveId),old=node.rank===1?[...new Set((p.requires.length?p.requires:[p.family]).map(f=>OLD_ROOTS[f]))]:[node.rank===2?'passive_'+p.id:'passive_'+p.id+'_rank'+(node.rank-1)];return old.every(required=>v.nodes.includes(required));}return false;});
 }
-function create(){return {xp:0,nodes:[],treeVersion:4};}
+function create(){return {xp:0,nodes:[],treeVersion:5};}
 function earned(v){if(!valid(v))throw Error('Invalid talent progress');return Math.min(cap(v),Math.floor(v.xp/POINT_XP));}
 function award(v,amount){if(!valid(v)||!Number.isSafeInteger(amount)||amount<0)throw Error('Invalid experience award');return {...v,xp:Math.min(Number.MAX_SAFE_INTEGER,v.xp+amount),nodes:[...v.nodes]};}
 function allocate(v,id){if(!valid(v))throw Error('Invalid talent progress');const node=nodes().find(n=>n.id===id);if(!node||v.nodes.includes(id)||v.nodes.length>=earned(v)||requirements(node).some(required=>!v.nodes.includes(required)))return null;return {...v,nodes:[...v.nodes,id]};}
-function reset(v){if(!valid(v))throw Error('Invalid talent progress');return {...v,nodes:[],treeVersion:4,...(cap(v)>MAX_POINTS?{legacyTalentCap:cap(v)}:{})};}
+function reset(v){if(!valid(v))throw Error('Invalid talent progress');return {...v,nodes:[],treeVersion:5,...(cap(v)>MAX_POINTS?{legacyTalentCap:cap(v)}:{})};}
 function attributePoints(v){if(!valid(v))throw Error('Invalid talent progress');return Math.floor(v.xp/POINT_XP)-Object.values(v.attributes||{}).reduce((a,b)=>a+b,0);}
 function allocateAttribute(v,key){if(!valid(v))throw Error('Invalid talent progress');if(!ATTRIBUTES.includes(key)||attributePoints(v)<1)return null;return {...v,attributes:{...v.attributes,[key]:(v.attributes?.[key]||0)+1}};}
 function passiveIds(v){if(!valid(v))throw Error('Invalid talent progress');const byId=new Map(nodes().filter(n=>n.passiveId).map(n=>[n.id,n.passiveId]));return v.nodes.filter(id=>byId.has(id)).map(id=>byId.get(id));}
