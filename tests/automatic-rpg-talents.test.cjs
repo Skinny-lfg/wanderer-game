@@ -33,7 +33,7 @@ test('element-specific talents only activate for the matching element',()=>{
  const B=context.WandererV012Buildcraft,b=B.create();B.syncPermanent(b,p);assert.equal(B.rank(b,'kindling'),0);b.element='frost';assert.equal(B.rank(b,'kindling'),0);b.element='fire';assert.equal(B.rank(b,'kindling'),1);
 });
 test('talent ranks unlock in order and preserve the existing rank cap',()=>{
- let p=talents.award(talents.create(),100000);p=talents.allocate(p,'might');p=talents.allocate(p,'path_bleeding_edge_1');p=talents.allocate(p,'path_bleeding_edge_2');assert.equal(talents.allocate(p,'passive_bleeding_edge_rank2'),null);
+ let p=talents.award(talents.create(),100000);p=talents.allocate(p,'might');p=talents.allocate(p,'affinity_blood');p=talents.allocate(p,'path_bleeding_edge_1');p=talents.allocate(p,'path_bleeding_edge_2');assert.equal(talents.allocate(p,'passive_bleeding_edge_rank2'),null);
  for(const id of ['passive_bleeding_edge','passive_bleeding_edge_rank2','passive_bleeding_edge_rank3','passive_bleeding_edge_rank4','passive_bleeding_edge_rank5'])p=talents.allocate(p,id);
  assert(talents.valid(p));const B=context.WandererV012Buildcraft,b=B.create();B.syncPermanent(b,p);assert.equal(B.rank(b,'bleeding_edge'),5);assert.equal(B.canModify(b,'bleeding_edge',.5),false);
 });
@@ -98,4 +98,12 @@ test('each family offers independent connected paths and older talent allocation
 });
 test('existing tree-version 2 purchases persist after the branching update',()=>{
  const create=require('./v012-economy-harness.cjs'),storage=new Map(),a=create(840,undefined,{}, {sessionStorage:storage}),catalogue=context.WandererV012Buildcraft.CATALOG.filter(p=>p.family==='blood'),nodes=['might'];for(const p of catalogue.slice(0,4))nodes.push('path_'+p.id+'_1','path_'+p.id+'_2','passive_'+p.id);const old={xp:1300,treeVersion:2,nodes};assert(talents.valid(old));a.state().automaticTalents=old;a.start(1,true);const b=create(840,undefined,{}, {sessionStorage:storage});assert.equal(b.debug().saveBlocked,false);assert.deepEqual(Array.from(b.state().automaticTalents.nodes),nodes);for(const p of catalogue.slice(0,4))assert.equal(b.buildcraft.rank(b.build(),p.id),1,p.id);
+});
+
+test('affinity roots and both hybrid paths are required, with a bounded budget',()=>{
+ const hybrid=talents.NODES.find(n=>n.hybridFor&&n.rank===1),p0=talents.award(talents.create(),100000);assert.equal(talents.earned(p0),100);assert.equal(talents.allocate(p0,hybrid.id),null);let p=unlock(p0,hybrid.id);assert(p.nodes.includes('affinity_'+hybrid.family));assert(p.nodes.includes('affinity_'+hybrid.hybridOther));assert(p.nodes.includes('bridge_'+hybrid.passiveId+'_2'));assert(talents.valid(p));
+ const removed={...p,nodes:p.nodes.filter(id=>id!=='bridge_'+hybrid.passiveId+'_2')};assert.equal(talents.valid(removed),false);
+});
+test('previous branching saves and invested points survive migration and reset',()=>{
+ const p=unlock(talents.award(talents.create(),100000),'passive_bleeding_edge');const old={...p,treeVersion:3,nodes:p.nodes.filter(id=>id!=='affinity_blood')};assert(talents.valid(old));assert(talents.valid(talents.reset(old)));
 });
