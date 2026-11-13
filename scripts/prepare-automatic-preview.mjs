@@ -31,6 +31,11 @@ replaceRequired(/<\/head>/,'<style>#onlineBar{display:none!important}</style></h
 await writeFile(join(output,'index.html'),html);
 const savePath=join(output,'online/v012-save.js');let save=await readFile(savePath,'utf8');
 if(!save.includes("PREFIX='wanderer_v012_endless_v1_'"))throw Error('Preview blocked: unknown save namespace');
-save=save.replace("PREFIX='wanderer_v012_endless_v1_'","PREFIX='wanderer_automatic_rpg_preview_v1_'");
+save=save.replace("PREFIX='wanderer_v012_endless_v1_'","PREFIX='wanderer_automatic_rpg_preview_v2_'");
 await writeFile(savePath,save);
+const saveHash=createHash('sha256').update(save).digest('hex').slice(0,12);
+let finalHtml=await readFile(join(output,'index.html'),'utf8');
+if(!finalHtml.includes('src="online/v012-save.js"'))throw Error('Preview blocked: save script not found');
+finalHtml=finalHtml.replace('src="online/v012-save.js"','src="online/v012-save.js?v='+saveHash+'"');
+await writeFile(join(output,'index.html'),finalHtml);
 console.log('Isolated automatic RPG preview: '+output);
