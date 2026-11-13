@@ -28,8 +28,8 @@ test('automatic single-target attacks clear a large mob encounter without player
 test('map offers save randomized mob counts and retain them through rerolls',()=>{
  const a=create(814),c=a.controller();a.start(1,true);const g=c.state;assert(g.offers.filter(p=>g.routeMap[0][p.lane]==='combat').every(p=>[3,12].includes(p.mobCount)||p.mobCount>=18&&p.mobCount<=22));const snapshot=JSON.stringify(g.routeMobCounts);c.restore(JSON.parse(JSON.stringify(g)));assert.equal(JSON.stringify(c.state.routeMobCounts),snapshot);const index=c.state.offers.findIndex(p=>p.mobCount>=18),old=c.state.offers[index];c.reroll(index);assert.equal(c.state.offers[index].mobCount,old.mobCount);assert.equal(c.state.offers[index].lane,old.lane);
 });
-test('old route group checkpoints migrate to the mob-count format',()=>{
- const a=create(814);a.start(1,true);const old=JSON.parse(JSON.stringify(a.controller().state));old.routeGroups=old.routeMap.map(row=>row.map(kind=>kind==='combat'?4:1));delete old.routeMobCounts;delete old.routeMobVersion;a.controller().restore(old);assert(a.controller().state.offers.filter(p=>a.controller().state.routeMap[0][p.lane]==='combat').every(p=>p.mobCount===20));assert.equal(a.controller().state.routeGroups,undefined);
+test('obsolete route checkpoints are rejected',()=>{
+ const a=create(814);a.start(1,true);const old=JSON.parse(JSON.stringify(a.controller().state));delete old.encounterVersion;assert.throws(()=>a.controller().restore(old),/encounter version/);
 });
 function startHorde(seed,weapon,element){const a=create(seed);a.setup(1,weapon);if(element)a.state().automaticTalents={xp:0,nodes:[],element};a.start(1,true);const c=a.controller(),offer=offerMob(a,20);assert(offer);a.select(offer.id);assert(a.enter());const r=a.state().run;r.hp=r.maxhp=100000;r.stats.attack=100;r.stats.spellPower=100;r.stats.attacksPerSec=4;r.enemies.forEach(e=>{e.hp=e.maxhp=10000;e.atk=0;e.barrier=0;});return {a,r};}
 function untilPlayerHit(a,r){for(let i=0;i<20&&!r.lastBaseHit;i++)a.tick();assert(r.lastBaseHit>0);}

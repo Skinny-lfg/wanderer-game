@@ -133,7 +133,6 @@ function create(themes,rng=Math.random){
  }
  function waveWon(){
   if(game.stage!=='combat'||!game.selected||game.selected.eventId)throw Error('No active combat wave');
-  if(game.wave<game.selected.waves){game.wave++;return {planeComplete:false,nextWave:game.wave};}
   game.history.push({plane:game.planeIndex,...game.selected});
   if(game.planeIndex===15){
    if(!game.selected.boss)throw Error('Realm 15 must contain the Expedition boss');
@@ -156,7 +155,8 @@ function create(themes,rng=Math.random){
  function restore(input){
   if(input?.version!==2)throw Error('Unsupported historical Expedition checkpoint (requires calendar version 2)');
   const g=JSON.parse(JSON.stringify(input));
-  if(g.encounterVersion!==undefined&&g.encounterVersion!==1)throw Error('Invalid encounter version');
+  if(!['weapon','armor','supplies'].includes(g.contract||'weapon'))throw Error('Invalid expedition contract');
+  if(g.encounterVersion!==1)throw Error('Invalid encounter version');
   g.affinityPlan??=null;g.affinityPlanSeen??=[false,false,false];
   const integer=(v,min,max)=>Number.isInteger(v)&&v>=min&&v<=max;
   if(!g||!integer(g.unlocked,1,Number.MAX_SAFE_INTEGER)||!integer(g.expedition,1,g.unlocked)||!integer(g.planeIndex,1,15)||!['choice','combat','finished','failed'].includes(g.stage)||!Array.isArray(g.rooms)||g.rooms.length!==15||g.rooms[0]!=='combat'||g.rooms[14]!=='boss'||g.rooms.slice(0,14).some(k=>!(g.version===2?['combat','elite','event']:ROOMS).includes(k)))throw Error('Invalid Realm checkpoint');
@@ -165,11 +165,7 @@ function create(themes,rng=Math.random){
   if(g.routeMap===undefined){delete g.routeMobCounts;delete g.routeMobVersion;for(const p of [...(g.offers||[]),...(g.history||[]),...(g.selected?[g.selected]:[]),...(g.rewardPending?[g.rewardPending]:[])])delete p.mobCount;}
   if(g.routeEdges!==undefined&&(!g.routeMap||!Array.isArray(g.routeEdges)||g.routeEdges.length!==14||g.routeEdges.some((row,i)=>!Array.isArray(row)||row.length!==3||row.some((links,lane)=>!Array.isArray(links)||!links.length||new Set(links).size!==links.length||links.some(n=>!integer(n,0,i===13?0:2)||(i<13&&Math.abs(lane-n)>1))))))throw Error('Invalid route connections');
   if(g.routePositions!==undefined&&(!g.routeMap||!Array.isArray(g.routePositions)||g.routePositions.length!==15||g.routePositions.some((row,i)=>!Array.isArray(row)||row.length!==g.routeMap[i].length||row.some(x=>!integer(x,1,299)))))throw Error('Invalid route positions');
-  if(g.routeGroups!==undefined&&(!g.routeMap||!Array.isArray(g.routeGroups)||g.routeGroups.length!==15||g.routeGroups.some((row,i)=>!Array.isArray(row)||row.length!==g.routeMap[i].length||row.some((n,lane)=>![1,2,4].includes(n)||(g.routeMap[i][lane]!=='combat'&&n!==1)))))throw Error('Invalid legacy route group sizes');
-  if(g.routeMobCounts===undefined&&g.routeMap){
-   if(g.routeGroups)g.routeMobCounts=g.routeGroups.map((row,i)=>row.map((n,lane)=>g.routeMap[i][lane]==='combat'?({1:3,2:12,4:20}[n]):1));
-   else g.routeMobCounts=makeRouteMobCounts(g.routeMap);
-  }
+  if(!g.routeMap||!g.routeMobCounts)throw Error('Current route format required');
   if(g.routeMobCounts!==undefined&&(!g.routeMap||g.routeMobVersion!==undefined&&g.routeMobVersion!==1||!Array.isArray(g.routeMobCounts)||g.routeMobCounts.length!==15||g.routeMobCounts.some((row,i)=>!Array.isArray(row)||row.length!==g.routeMap[i].length||row.some((n,lane)=>g.routeMap[i][lane]==='combat'?!allowedMobCount(n):n!==1))))throw Error('Invalid route mob counts');
   if(g.routeMobCounts){g.routeMobVersion=1;const updateMobCount=(p,index)=>{if(!p)return;const kind=g.routeMap[index]?.[p.lane];if(kind==='combat')p.mobCount=g.routeMobCounts[index][p.lane];else delete p.mobCount;delete p.groupSize;};
    g.offers?.forEach(p=>updateMobCount(p,g.planeIndex-1));g.history?.forEach((p,i)=>updateMobCount(p,i));if(g.selected)updateMobCount(g.selected,g.planeIndex-1);if(g.rewardPending)updateMobCount(g.rewardPending,(g.rewardPending.plane||g.planeIndex)-1);delete g.routeGroups;
@@ -184,7 +180,7 @@ function create(themes,rng=Math.random){
    if(kind==='combat'&&g.routeMobCounts&&p.mobCount!==g.routeMobCounts[index-1][p.lane])throw Error('Invalid Realm mob count');
    if(p.mobCount!==undefined&&(kind!=='combat'||!allowedMobCount(p.mobCount)))throw Error('Invalid Realm mob count');
    if(g.routeMap&&(p.elite!==(kind==='elite'||kind==='boss')||(kind==='event'&&p.waves!==0)))throw Error('Invalid route encounter');
-   if(!theme||(g.version===2?REALMS[p.id]?.[0]:THEME_FAMILIES[p.id])!==p.family||!integer(p.waves,g.version===2&&kind==='event'?0:1,3)||typeof p.elite!=='boolean'||p.boss!==(index===15)||p.event!==(g.version===2?(kind==='event'?g.eventsByRealm[index-1]:null):(['chest','event','altar'].includes(kind)?kind:null))||p.boss&&p.waves!==(g.encounterVersion===1?1:3))throw Error('Invalid saved Realm');
+   if(!theme||(g.version===2?REALMS[p.id]?.[0]:THEME_FAMILIES[p.id])!==p.family||!integer(p.waves,g.version===2&&kind==='event'?0:1,3)||typeof p.elite!=='boolean'||p.boss!==(index===15)||p.event!==(g.version===2?(kind==='event'?g.eventsByRealm[index-1]:null):(['chest','event','altar'].includes(kind)?kind:null))||p.waves!==(kind==='event'?0:1))throw Error('Invalid saved Realm');
    return {...p,name:p.boss&&g.version===2?BOSSES.find(b=>b.id===g.bossId).name:theme.name,image:theme.image};
   }
   if(!Array.isArray(g.offers)||!(g.version===2&&g.planeIndex===15?[0,1]:[0,3]).includes(g.offers.length)||new Set(g.offers.map(p=>p.id)).size!==g.offers.length )throw Error('Invalid Realm offers');

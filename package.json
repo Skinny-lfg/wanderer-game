@@ -11,7 +11,10 @@
     "test:rules": "firebase emulators:exec --only firestore,auth --project demo-wanderer 'node --test tests/firestore-rules.test.mjs tests/v012-auth-emulator.test.mjs'",
     "test:assets": "node tests/vfx-affinity-enemy-smoke.cjs",
     "simulate:v012": "node scripts/v012-complete-sim.cjs /tmp/wanderer-v012-sim.json",
-    "build:pvp": "node scripts/build-pvp-stats.cjs"
+    "build:pvp": "node scripts/build-pvp-stats.cjs",
+    "build:pages": "node scripts/update-pages-preview.mjs",
+    "test:v013": "node --test tests/automatic-rpg-groups.test.cjs tests/automatic-rpg-route.test.cjs tests/automatic-rpg-talents.test.cjs tests/v013-unified-lifecycle.test.cjs",
+    "test:v013:browser": "node tests/v013-pages-browser.cjs"
   },
   "dependencies": {
     "firebase": "11.10.0"

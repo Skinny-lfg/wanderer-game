@@ -14,7 +14,8 @@ function phase1Init(){
  ports.phase5Init();
 }
 
-function phase1Begin(level=1,freeBuild=false){
+function phase1Begin(level=1,freeBuild=false,contract='weapon'){
+ if(!['weapon','armor','supplies'].includes(contract))return false;
  if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked))return false;
  if(!ports.PHASE1_PREVIEW)return;
  if(ports.phase3NeedsBagResolution()){ports.bannerMessage('Discard overflow loot before starting another Expedition.');return false;}
@@ -24,15 +25,15 @@ function phase1Begin(level=1,freeBuild=false){
  if(!['camp','finished','failed'].includes(ports.phase1Controller.state.stage)||!Number.isInteger(level)||level<1||level>ports.phase1Controller.state.unlocked)return false;
  ports.phase4Seed=Math.floor(Math.random()*4294967296)>>>0;ports.phase4Prefix=Date.now().toString(36);ports.phase4Stamp=null;ports.phase4Home=ports.phase4Clone(ports.state.equip);ports.phase4Entry=null;ports.phase4Resume=false;ports.phase4WaveKeys=[];
  ports.phase5Results={version:1,complete:true,review:null,realm:null,summary:null,earned:[],gold:0,fragments:0};
- ports.phase1Controller.start(level,{freeBuild});if(freeBuild)ports.phase1Controller.chooseInitial('magic');ports.phase6Run={version:1,event:null,events:[],effects:{},combats:0};ports.phase3LootIds=new Set();ports.phase3PotionCooldowns={health:0,mana:0};ports.phase1Vitals=null;ports.phase1Clock=0;ports.phase1Continuity=null;ports.phase3Supplies={health:0,mana:0};ports.phase1Build=WandererV012Buildcraft.create();WandererV012Buildcraft.syncPermanent(ports.phase1Build,ports.state.automaticTalents);if(freeBuild){ports.phase1Build.element=ports.state.automaticTalents?.element||'fire';ports.phase1Build.unlockedFamilies=['magic'];}ports.phase1Build.runtime.hybridRules=true;ports.phase1Build.families=ports.phase1Controller.state.families;ports.phase1Draft=null;ports.state.run=null;ports.view='phase1';
+ ports.phase1Controller.start(level,{freeBuild});ports.phase1Controller.state.contract=contract;ports.phase1Controller.state.contractWeapon=ports.state.equip.weapon?.subtype||'Sword';if(freeBuild)ports.phase1Controller.chooseInitial('magic');ports.phase6Run={version:1,event:null,events:[],effects:{},combats:0};ports.phase3LootIds=new Set();ports.phase3PotionCooldowns={health:0,mana:0};ports.phase1Vitals=null;ports.phase1Clock=0;ports.phase1Continuity=null;ports.phase3Supplies={health:0,mana:0};ports.phase1Build=WandererV012Buildcraft.create();WandererV012Buildcraft.syncPermanent(ports.phase1Build,ports.state.automaticTalents);if(freeBuild){ports.phase1Build.element=ports.state.automaticTalents?.element||'fire';ports.phase1Build.unlockedFamilies=['magic'];}ports.phase1Build.runtime.hybridRules=true;ports.phase1Build.families=ports.phase1Controller.state.families;ports.phase1Draft=null;ports.state.run=null;ports.view='phase1';
  if(ports.PHASE1_PREVIEW){ports.phase5Snapshot.expedition.attempts++;ports.phase5Snapshot.expedition.awardKeys=[];ports.phase5Snapshot.expedition.lastOutcome='active';ports.phase5Persist();}
  ports.render();
 }
 
 function phase2Theme(id){if(id==='bloodscar')return ports.THEMES.find(t=>t.id==='bloodscar')||{...ports.THEMES.find(t=>t.id==='forge'),id,name:'Bloodscar Wastes'};return ports.THEMES.find(t=>t.id===id);}
 
-function phase6AwardGear(){
- const g=ports.phase1Controller.state,t=ports.phase2Theme(g.selected.id),pick=ports.dungeonEquipmentPick(t,[]),item=ports.makeItem(g.expedition,pick.slot,null,'loot',pick.subtype);
+function phase6AwardGear(guaranteed=null){
+ const g=ports.phase1Controller.state,t=ports.phase2Theme(g.selected?.id||ports.state.run?.path),pick=guaranteed||ports.dungeonEquipmentPick(t,[]),item=ports.makeItem(g.expedition,pick.slot,null,'loot',pick.subtype,guaranteed?'Rare':undefined);
  (ports.stashHasRoom()?ports.state.stash:ports.state.expeditionOverflow).push(item);ports.phase3LootIds.add(item.id);ports.phase5Results.earned.push(ports.phase5Item(item));return item;
 }
 
@@ -244,12 +245,6 @@ function phase1WaveWon(){
  }
  r.status='ready';
  const result=ports.phase1Controller.waveWon();
- if(!result.planeComplete){
-  if(!ports.phase5Persist())return;
-  ports.renderCombat();
-  setTimeout(()=>{if(ports.state.run===r&&r.status==='ready')ports.phase1StartWave();},650);
-  return;
- }
  ports.phase4CommitRealm({awardXp:true});ports.phase6CollectMetrics(r);ports.phase6TickDurations();
  r.status='cleared';
  ports.addLog(result.expeditionComplete?'Expedition boss defeated!':'Realm cleared. Select your next Realm.','good');
@@ -258,6 +253,10 @@ function phase1WaveWon(){
  ports.phase1Continuity=result.expeditionComplete?null:{setCooldowns:r.setCooldowns,secondWindUsed:r.secondWindUsed,legendaryState:r.legendaryState,legendaryCastCount:r.legendaryCastCount,legendaryAttackCount:r.legendaryAttackCount};
  ports.phase1Vitals=result.expeditionComplete?null:{hp:Math.max(1,r.hp),mp:Math.max(0,r.mp),maxmp:r.maxmp};
  if(result.expeditionComplete){
+  const contract=g.contract||'weapon';
+  if(contract==='supplies'){const reward=20+g.expedition*3;ports.state.fragments+=reward;ports.phase5Results.fragments+=reward;}
+  else phase6AwardGear({slot:contract==='weapon'?'weapon':'armor',subtype:contract==='weapon'?(g.contractWeapon||'Sword'):'Armor'});
+  ports.addLog('Contract completed: '+contract+' reward secured.','good');
   ports.phase5Results.review='summary';
   ports.phase5PersonalBest=Math.max(ports.phase5PersonalBest,r.tier);
   ports.phase6ReturnPotions('victory');
