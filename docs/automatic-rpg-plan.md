@@ -5,6 +5,15 @@ or connect it to production player data. Use isolated synthetic playtest saves.
 
 ## In place
 
+- New Expeditions no longer ask players to select Realm affinities or award
+  automatic starter passives. Talent purchases define the permanent build;
+  the magic element is selected on the Talents page. Active legacy runs keep
+  their former affinity rules until they finish.
+- Each level grants one attribute point as well as its talent point. Attribute
+  allocations and the selected element are saved with talent progress.
+- Equipment drop chances before Charisma and Fortune are 12%, 18%, 27% for
+  the wave tiers, 55% for Elites and 100% for the boss. Rarity tables are
+  unchanged.
 - New Expeditions have a saved, connected three-lane map of 15 Realms.
   Players can move to an adjacent lane or stay in their lane, choosing between
   normal and optional elite encounters; the last Realm is the shared boss.

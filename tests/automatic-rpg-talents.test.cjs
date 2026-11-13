@@ -79,3 +79,7 @@ test('an older in-progress save waiting for a passive draft resumes without one'
  assert.equal(restored.debug().saveBlocked,false);assert.equal(restored.draft(),null);assert.equal(restored.controller().state.rewardPending,null);assert.equal(restored.controller().state.offers.length,3);
  assert.equal(restored.state().automaticTalents.xp,old.state().automaticTalents.xp);
 });
+
+test('attribute allocations survive XP and talent spending and cannot exceed levels',()=>{
+ let p=talents.award(talents.create(),200);p=talents.allocateAttribute(p,'str');p=talents.allocate(p,'might');p=talents.award(p,100);assert.equal(p.attributes.str,1);assert.equal(talents.attributePoints(p),2);p=talents.allocateAttribute(p,'agi');p=talents.allocateAttribute(p,'agi');assert.equal(talents.allocateAttribute(p,'str'),null);assert.equal(talents.valid({...p,attributes:{str:4}}),false);assert.equal(talents.valid({...p,element:'invalid'}),false);
+});

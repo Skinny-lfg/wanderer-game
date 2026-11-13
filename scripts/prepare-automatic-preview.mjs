@@ -23,7 +23,7 @@ replaceRequired(/const PHASE5_VALIDATION=[^\n]+;/,'const PHASE5_VALIDATION=true;
 for(const name of ['v012-auth-bootstrap.js','v012-account.mjs','v012-feedback.mjs','v012-leaderboard-ui.mjs'])replaceRequired(new RegExp('<script[^>]*src="online/'+name.replaceAll('.','\\.')+'(?:\\?[^" ]*)?"[^>]*><\\/script>'),'',name);
 // Content-address the changing modules so a previously cached playtest cannot
 // mix the old progression engine with the new one after a Pages update.
-for(const file of ['combat/automatic-talents.js','combat/v012-buildcraft.js','online/v012-expedition-controller.js','online/v012-expedition-events.js','online/v012-expedition-runtime.js','online/v012-persistence-runtime.js','online/v012-uiux-tuning.css']){
+for(const file of ['combat/automatic-talents.js','combat/v012-buildcraft.js','combat/v012-gear-stats.js','economy/v012-loot-rules.js','online/v012-expedition-controller.js','online/v012-expedition-events.js','online/v012-expedition-runtime.js','online/v012-persistence-runtime.js','online/v012-uiux-tuning.css']){
  const hash=createHash('sha256').update(await readFile(join(output,file))).digest('hex').slice(0,12);
  const attr=file.endsWith('.css')?'href':'src';replaceRequired(new RegExp(attr+'="'+file.replaceAll('.','\\.')+'"'),attr+'="'+file+'?v='+hash+'"',file);
 }

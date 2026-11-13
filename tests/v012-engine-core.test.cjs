@@ -24,7 +24,8 @@ test('combat rules use the original formulas and do not mutate player or enemy',
 test('loot rules preserve drop odds, weighted gear selection and RNG injection',()=>{
  assert.equal(L.craftCost(80),810);
  const w1=L.waveLootOdds(1,5);
- assert.equal(w1.drop,.22);
+ assert.equal(w1.drop,.12);
+ assert.deepEqual([1,2,3,4,5].map(n=>L.waveLootOdds(n,5).drop),[.12,.18,.27,.55,1]);
  assert.equal(w1.rarities.Legendary,.001);
  assert.equal(L.randomFromOdds({Common:.5,Rare:.5},()=>0),'Common');
  assert.equal(L.randomFromOdds({Common:.5,Rare:.5},()=>.75),'Rare');

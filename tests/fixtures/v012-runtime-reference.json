@@ -1,5 +1,5 @@
 {
-  "reference": "automatic-rpg-branching-routes",
+  "reference": "automatic-rpg-reduced-loot",
   "cases": [
     {
       "scenario": {
@@ -8,8 +8,8 @@
         "weapon": "Sword",
         "family": "blood"
       },
-      "steps": 57,
-      "digest": "2c4763a07fbff4ed6d7175ee90a63e6d8835957038886110cb6e6d0da57cffb3"
+      "steps": 56,
+      "digest": "afe95d969073d1871b51ea351bd9180640553030398d63800bdfe03ae71f66ca"
     },
     {
       "scenario": {
@@ -18,8 +18,8 @@
         "weapon": "Daggers",
         "family": "decay"
       },
-      "steps": 61,
-      "digest": "11ce4bfdbe230734fec60a301be246f0258c578bd0385e533e61e018c03a95e1"
+      "steps": 60,
+      "digest": "494782c94a1225262d8d5e6a8844578a08230110f1a90245bb4a725b6586e1a4"
     },
     {
       "scenario": {
@@ -29,8 +29,8 @@
         "family": "magic",
         "element": "lightning"
       },
-      "steps": 57,
-      "digest": "f896b50bffe53b4c75ea2a73e061cd018b29225cc2832d5a2343ff629ba6946f"
+      "steps": 56,
+      "digest": "fa5360004412483c91252a8b612b7ed6b00a32a076fae84e6d9151adda34436d"
     },
     {
       "scenario": {
@@ -40,8 +40,8 @@
         "family": "magic",
         "element": "frost"
       },
-      "steps": 53,
-      "digest": "432c4de4a8de214a62f510ddcfd9895315152937d0fe6b02b52c061f1964875a"
+      "steps": 58,
+      "digest": "7bcaabaf7f03890b0552dcd376604dc74c2c19478a7b5810fa83b209cd005ad7"
     },
     {
       "scenario": {
@@ -50,8 +50,8 @@
         "weapon": "Bow",
         "family": "fury"
       },
-      "steps": 58,
-      "digest": "ca29ce85d9cc454b4be676412cf9bca3e2449664ee8d5ad0bf7ef3d509d0a8e4"
+      "steps": 55,
+      "digest": "28121d1841f9bb70bb2d2720a6bc6318a77771eb1906f6b9db924480a9449a62"
     },
     {
       "scenario": {
@@ -60,8 +60,8 @@
         "weapon": "Mace",
         "family": "aegis"
       },
-      "steps": 58,
-      "digest": "83e11c7d89716361e32bd7c3fe252da739a3b60b6b935cb6e7a6c657a146bc21"
+      "steps": 59,
+      "digest": "749d9c97b694a30d779357c073e119a8e89701d0ddbcfe1b94c27b409966dbd7"
     },
     {
       "scenario": {
@@ -70,8 +70,8 @@
         "weapon": "Two-Handed",
         "family": "vitality"
       },
-      "steps": 54,
-      "digest": "1705b184f5b8535d606d900eb5671b6afe5fea9a74cbf640e86a5eb365361600"
+      "steps": 55,
+      "digest": "9b40d80466a914cb2d0ef406dc0e938f28a5ef301b2e09d8f92c1cd7c37d4be3"
     },
     {
       "scenario": {
@@ -80,8 +80,8 @@
         "weapon": "Sword",
         "family": "blood"
       },
-      "steps": 62,
-      "digest": "b1097308d1c442e9b8fd8d781645e1c69486d2cfaf12dcca7c99afe8b8e7baef"
+      "steps": 61,
+      "digest": "ab76cbb6b184aa82c5a50c51db56ff96088bbe5f14472fd8202ff4572e1c55e7"
     },
     {
       "scenario": {
@@ -90,8 +90,8 @@
         "weapon": "Daggers",
         "family": "decay"
       },
-      "steps": 60,
-      "digest": "ac0cc4ced7d6de912f435661b43595fe9c09814097fa5fcb65d94ea6cd69bbba"
+      "steps": 58,
+      "digest": "9c5efcfc8734b418eb149b0143ffde4fafdaa61868d102de238d61ad56ce4f6c"
     },
     {
       "scenario": {
@@ -101,8 +101,8 @@
         "family": "magic",
         "element": "lightning"
       },
-      "steps": 53,
-      "digest": "c9219404fe0d7231ce7837da4e5173d94a75548cca798107a7454e336e9b6dd4"
+      "steps": 57,
+      "digest": "0893afd2403b196a383cba0968e88add61a0fce51b899ea5ef4fac6dfb7abcbd"
     },
     {
       "scenario": {
@@ -113,7 +113,7 @@
         "element": "frost"
       },
       "steps": 58,
-      "digest": "65e8424317d910417af42d00872389a7ef7e934bba19fd06f2c0b272c22ae614"
+      "digest": "1be97525393eb99f85e977247ed7ad76225ece39a46a7477272ecae9e3cdfef8"
     },
     {
       "scenario": {
@@ -122,8 +122,8 @@
         "weapon": "Bow",
         "family": "fury"
       },
-      "steps": 58,
-      "digest": "6c5dba1e2c5eebeb1a637c7900514a6e15a3e77ceda5e85b51b1171437e292b7"
+      "steps": 60,
+      "digest": "cbafcc564b8a731368dc20c76e2283faab72189a17238a26c236baa8e4cf15a1"
     },
     {
       "scenario": {
@@ -132,8 +132,8 @@
         "weapon": "Mace",
         "family": "aegis"
       },
-      "steps": 55,
-      "digest": "f9f78b0e899923c27d9a03b72c25798a624288a8b747ed33e2c8626759634205"
+      "steps": 56,
+      "digest": "1362b25969dd1b10a3299fa6e605d94b6e58f979db9cfc4a318305d5f2bb9f73"
     },
     {
       "scenario": {
@@ -142,8 +142,8 @@
         "weapon": "Two-Handed",
         "family": "vitality"
       },
-      "steps": 57,
-      "digest": "6f8f4b0265988d32506602f05e6fef5eed50e32c056ea73fb48a0bed8568d7d8"
+      "steps": 59,
+      "digest": "487ee7f1ecbcce3f3962ae1f98b33d56117cb8b3211103e6a23bc0d3af8e001d"
     },
     {
       "scenario": {
@@ -152,8 +152,8 @@
         "weapon": "Sword",
         "family": "blood"
       },
-      "steps": 56,
-      "digest": "14223b89b0f79baf24c93cb5467045df8ab317a720636669a09d4d2c8bbffdb3"
+      "steps": 59,
+      "digest": "0c7755b416c45f975f5b57f393ee304c8c451425d905ea592b2a50db03bd885e"
     },
     {
       "scenario": {
@@ -163,7 +163,7 @@
         "family": "decay"
       },
       "steps": 60,
-      "digest": "79dbff27bab1b56ba5dd1fd453ba7a690f661f1955ecf66f3281c7f4661505d8"
+      "digest": "717021cbbbe0ee5deb8c46453196fa1c81954f2d2fef3d95d3627a227e96cabb"
     },
     {
       "scenario": {
@@ -173,8 +173,8 @@
         "family": "magic",
         "element": "lightning"
       },
-      "steps": 54,
-      "digest": "c973403d5def8d58e48ae0e272d4f123ffba8d0477cf9adb64064d4f26b25985"
+      "steps": 55,
+      "digest": "22dcd21a3603bd23f96ea386780d69bb44f31c8e118d056b678dabc8ee6a20af"
     },
     {
       "scenario": {
@@ -184,8 +184,8 @@
         "family": "magic",
         "element": "frost"
       },
-      "steps": 61,
-      "digest": "6b3ebbda31318217360d5d2baf24d1f8e6a9050662a40897fe8c1bb1e4daa08f"
+      "steps": 63,
+      "digest": "719a91bd046e2f23d27a7b820ed46f19c801cc22d43c0fd6bc1d46efb120c68f"
     },
     {
       "scenario": {
@@ -195,7 +195,7 @@
         "family": "fury"
       },
       "steps": 57,
-      "digest": "1c4f373a7837034594ca5e8bc363de9ab1cc928dd85e1d390d7d660314da307d"
+      "digest": "8fda5fc101d66fb3437ccbdf72a5b8d38f4d0061b58c1b36ad00c92b6e46728f"
     },
     {
       "scenario": {
@@ -204,8 +204,8 @@
         "weapon": "Mace",
         "family": "aegis"
       },
-      "steps": 56,
-      "digest": "31cc4c89889994ba5d7ee3d1655bd511ef6a5391c673b5622b1ab07fb4f4743e"
+      "steps": 52,
+      "digest": "0fe66b5ab4cad45066e5938abfea924047bb3f53223e409818a6cd7eebcb86b7"
     },
     {
       "scenario": {
@@ -214,8 +214,8 @@
         "weapon": "Two-Handed",
         "family": "vitality"
       },
-      "steps": 57,
-      "digest": "74c8adb9f954829aed1460db2462eb641fe0b3c3ecb335138263d7a5a3653d22"
+      "steps": 56,
+      "digest": "4123b70a4b2848cafe6b3272071dd22705193c8fcb6b729c61916ec285195595"
     }
   ],
   "baselineReason": "Revalidated 2026-10-25 after approved normal-mob role tuning and the passive-then-direct-Between-Realms event flow; all traces were stable across two runs and the D200/E300 off-hand guardrails were rerun."

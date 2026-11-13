@@ -27,7 +27,7 @@ function create(themes,rng=Math.random){
  const game={unlocked:1,expedition:0,planeIndex:0,stage:'camp',families:[],lastFamily:null,rooms:[],offers:[],selected:null,wave:0,history:[],initialFamily:null,rewardPending:null,rerollsByRealm:[],eventIds:[],affinityPlan:null,affinityPlanSeen:[false,false,false]};
  let routeRng=rng,draftRng=rng;
  function allowed(){
-  return FAMILIES.filter(f=>game.families.length<3||game.families.includes(f));
+  return FAMILIES.filter(f=>game.freeBuild||game.families.length<3||game.families.includes(f));
  }
  function makeOffer(family,excluded=[],lane=null){
   const kind=game.routeMap&&lane!==null?game.routeMap[game.planeIndex-1][lane]:game.rooms[game.planeIndex-1],list=(game.version===2?expeditionThemes:byFamily[family]).filter(t=>t.family===family&&!excluded.includes(t.id)),theme=list[Math.floor(routeRng()*list.length)];
@@ -61,14 +61,14 @@ function create(themes,rng=Math.random){
   if(game.affinityPlan)for(let i=0;i<3;i++)if(game.planeIndex>=(i===0?1:i===1?2:3)&&game.offers.some(p=>p.family===game.affinityPlan[i]&&reachable(p)))game.affinityPlanSeen[i]=true;
   return game.offers;
  }
-  function start(level=1){
+  function start(level=1,options={}){
   if(!Number.isInteger(level)||level<1||level>game.unlocked)throw Error('Expedition locked');
   if(!['camp','finished','failed'].includes(game.stage))throw Error('Expedition already active');
   const count=3+Math.floor(routeRng()*2),events=shuffle(EVENT_GROUPS,routeRng).slice(0,count).map(group=>group[Math.floor(routeRng()*group.length)]);
   const windows=count===4?[[3,4,5],[6,7,8],[9,10,11],[12,13,14]]:[[3,4,5],[7,8,9],[11,12,13]],rooms=Array(15).fill('combat');rooms[14]='boss';
   for(const window of windows)rooms[window[Math.floor(routeRng()*window.length)]-1]='event';
   const eliteSlots=shuffle(Array.from({length:13},(_,i)=>i+1).filter(i=>rooms[i]==='combat'),routeRng).slice(0,2);for(const i of eliteSlots)rooms[i]='elite';let eventIndex=0;
-  Object.assign(game,{version:2,rerolls:3,bossId:BOSSES[Math.floor(routeRng()*3)].id,eventsByRealm:rooms.map(k=>k==='event'?events[eventIndex++]:null),expedition:level,planeIndex:1,families:[],lastFamily:null,initialFamily:null,affinityPlanSeen:[false,false,false],
+  Object.assign(game,{version:2,freeBuild:options.freeBuild===true,rerolls:3,bossId:BOSSES[Math.floor(routeRng()*3)].id,eventsByRealm:rooms.map(k=>k==='event'?events[eventIndex++]:null),expedition:level,planeIndex:1,families:[],lastFamily:null,initialFamily:null,affinityPlanSeen:[false,false,false],
    rooms,routeMap:rooms.map((kind,i)=>{if(i===14)return ['boss'];const row=[kind,kind,kind];if(i>0&&kind==='combat'&&routeRng()<.55)row[Math.floor(routeRng()*3)]='elite';return row;}),offers:[],selected:null,wave:0,history:[],
    rewardPending:null,rerollsByRealm:Array.from({length:15},()=>[3,3,3]),stage:'choice'});
   return game;
@@ -81,7 +81,7 @@ function create(themes,rng=Math.random){
  }
  function chooseInitial(family){
   if(game.stage!=='choice'||game.initialFamily||!FAMILIES.includes(family))throw Error('Initial affinity unavailable');
-  if(game.affinityPlan&&family!==game.affinityPlan[0])throw Error('Initial affinity must match the plan');
+  if(!game.freeBuild&&game.affinityPlan&&family!==game.affinityPlan[0])throw Error('Initial affinity must match the plan');
   game.initialFamily=family;game.families.push(family);offerRealms();return family;
  }
  function reroll(index){
@@ -110,7 +110,7 @@ function create(themes,rng=Math.random){
   if(game.stage!=='choice'||game.rewardPending||!game.selected||!game.offers.includes(game.selected))throw Error('Select an offered Realm before entering');
   const realm=game.selected;
   if(!reachable(realm)||!allowed().includes(realm.family))throw Error('Realm no longer eligible');
-  if(!game.families.includes(realm.family))game.families.push(realm.family);
+  if(!game.freeBuild&&!game.families.includes(realm.family))game.families.push(realm.family);
   game.lastFamily=realm.family;game.wave=1;game.stage='combat';return realm;
  }
  function claimReward(){
@@ -167,17 +167,17 @@ function create(themes,rng=Math.random){
    if(g.history.length!==g.planeIndex-1||g.initialFamily&&!g.families.includes(g.initialFamily))throw Error('Invalid Realm progress');
    if(g.rewardPending)g.rewardPending=realm(g.rewardPending,g.planeIndex-1);
    if(g.stage==='combat'){
-    const selected=g.offers.find(p=>p.id===g.selected?.id);if(!selected||!g.families.includes(selected.family)||!integer(g.wave,1,Math.max(1,selected.waves)))throw Error('Invalid combat checkpoint');g.selected=selected;
+    const selected=g.offers.find(p=>p.id===g.selected?.id);if(!selected||!g.freeBuild&&!g.families.includes(selected.family)||!integer(g.wave,1,Math.max(1,selected.waves)))throw Error('Invalid combat checkpoint');g.selected=selected;
    }else{
     if(g.wave!==0||g.rewardPending&&(g.offers.length||g.selected)||!g.initialFamily&&g.offers.length)throw Error('Invalid choice checkpoint');
     if(g.selected){const selected=g.offers.find(p=>p.id===g.selected.id);if(!selected)throw Error('Invalid selected Realm');g.selected=selected;}
    }
   }
   if(['choice','combat'].includes(g.stage)){
-   const acquired=new Set([g.initialFamily,...g.history.map(p=>p.family),...(g.stage==='combat'?[g.selected.family]:[])].filter(Boolean));
+   const acquired=new Set([g.initialFamily,...(g.freeBuild?[]:g.history.map(p=>p.family)),...(!g.freeBuild&&g.stage==='combat'?[g.selected.family]:[])].filter(Boolean));
    if(acquired.size!==g.families.length||!g.families.every(f=>acquired.has(f)))throw Error('Invalid affinity provenance');
-   if(g.stage==='choice'&&g.offers.some(p=>(g.families.length===3&&!g.families.includes(p.family)) ))throw Error('Invalid affinity offer');
-   if(g.affinityPlan&&g.initialFamily&&g.affinityPlan[0]!==g.initialFamily)throw Error('Invalid active affinity plan');
+   if(!g.freeBuild&&g.stage==='choice'&&g.offers.some(p=>(g.families.length===3&&!g.families.includes(p.family)) ))throw Error('Invalid affinity offer');
+   if(!g.freeBuild&&g.affinityPlan&&g.initialFamily&&g.affinityPlan[0]!==g.initialFamily)throw Error('Invalid active affinity plan');
   }
   if(g.routeMap===undefined)delete game.routeMap;Object.assign(game,g);return game;
  }
