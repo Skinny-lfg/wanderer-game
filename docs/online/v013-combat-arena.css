@@ -356,3 +356,52 @@ body.phase3IntegratedPreview #scene .singleGroundShadow {
     animation-duration: .01ms;
   }
 }
+
+/* Sprite-local ground contact: labels, HP and status rows cannot move the shadow. */
+body.phase3IntegratedPreview #scene .arenaSprite {
+  position: relative;
+  display: grid;
+  place-items: end center;
+  isolation: isolate;
+  width: 100%;
+  flex: 0 0 auto;
+}
+body.phase3IntegratedPreview #scene .arenaSprite > img {
+  grid-area: 1 / 1;
+  position: relative;
+  z-index: 1;
+  margin: 0 auto !important;
+}
+body.phase3IntegratedPreview #scene .arenaSprite > .arenaGroundShadow {
+  display: block !important;
+  position: absolute;
+  z-index: 0;
+  left: 22%;
+  top: auto !important;
+  bottom: 0 !important;
+  width: 56%;
+  height: 12px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, .52);
+  filter: blur(1px);
+  pointer-events: none;
+}
+body.phase3IntegratedPreview #scene .heroArenaSprite > .arenaGroundShadow {
+  width: 46%;
+  left: 27%;
+  height: 15px;
+}
+body.phase3IntegratedPreview #scene .arenaEnemy.is-target {
+  background: transparent;
+  border-color: transparent;
+}
+@media(max-width:650px) {
+  body.phase3IntegratedPreview #scene .arenaSprite > .arenaGroundShadow { height: 9px; }
+  body.phase3IntegratedPreview #scene .heroArenaSprite > .arenaGroundShadow { height: 12px; }
+}
+body.phase3IntegratedPreview #scene .arenaSprite > .arenaGroundShadow {
+  background: rgba(0, 0, 0, .68);
+  box-shadow: 0 2px 3px rgba(0, 0, 0, .35);
+}
+body.phase3IntegratedPreview #scene .heroArenaSprite > img { object-fit: contain !important; }
