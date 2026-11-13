@@ -16,4 +16,4 @@ The first group implementation, area forks and isolated preview have automated c
 
 Implemented branches include Sweeping Force, Storm Conductor, Focused Assault, Contagion, Wildfire, Winter Field, Piercing Arrow, Shielded Sweep and Concussive Swing. Secondary hits do not recursively trigger hit/cast effects. Existing purchased talents remain valid.
 
-Loot is rolled once per completed wave; normal Duo and Pack encounters apply provisional 1.15 and 1.30 multipliers to Gold, Fragments, equipment drop probability and Realm XP. Boss/Elite rules remain solo. The current group display uses a separate enemy strip; broader UI and extended balance testing remain appropriate before treating this as final.
+Loot is rolled once per completed wave; normal Duo and Pack encounters apply provisional 1.15 and 1.30 multipliers to Gold, Fragments, equipment drop probability and Realm XP. Boss/Elite rules remain solo. The group is displayed inside the arena, with independent portraits and Health bars. Broader animation coverage and extended balance testing remain appropriate before treating this as final.

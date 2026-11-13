@@ -119,6 +119,6 @@ test('normal casters reuse elemental enemy projectile VFX, not Elite Caster hex'
  assert.match(html,/EnemyCaster:'spell_projectile_wand'/);
  assert.match(html,/kind==='EnemyCaster'/);
  assert.match(html,/role==='caster'\?'EnemyCaster'/);
- assert.match(html,/combatEffect\(kind,e\?\.effect==='regen'\?'nature':e\?\.effect\)/);
+ assert.match(html,/combatEffect\(kind,e\?\.effect==='regen'\?'nature':e\?\.effect,img\.id\|\|'enemyPortrait'\)/);
  assert.doesNotMatch(runtime,/role==='caster'[\s\S]{0,100}playerDebuffUntil/);
 });
