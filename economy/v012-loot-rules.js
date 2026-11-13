@@ -4,10 +4,10 @@
 function craftCost(tier){return 10+10*tier}
 
 const WAVE_TABLE=[
- {drop:.22,rarities:{Common:.68,Uncommon:.25,Rare:.06,Epic:.009,Legendary:.001}},
- {drop:.32,rarities:{Common:.55,Uncommon:.30,Rare:.125,Epic:.02,Legendary:.005}},
- {drop:.47,rarities:{Common:.38,Uncommon:.33,Rare:.22,Epic:.06,Legendary:.01}},
- {drop:.84,rarities:{Common:.10,Uncommon:.25,Rare:.45,Epic:.17,Legendary:.03}},
+ {drop:.12,rarities:{Common:.68,Uncommon:.25,Rare:.06,Epic:.009,Legendary:.001}},
+ {drop:.18,rarities:{Common:.55,Uncommon:.30,Rare:.125,Epic:.02,Legendary:.005}},
+ {drop:.27,rarities:{Common:.38,Uncommon:.33,Rare:.22,Epic:.06,Legendary:.01}},
+ {drop:.55,rarities:{Common:.10,Uncommon:.25,Rare:.45,Epic:.17,Legendary:.03}},
  {drop:1,rarities:{Common:0,Uncommon:0,Rare:.71,Epic:.25,Legendary:.04}}
 ];
 

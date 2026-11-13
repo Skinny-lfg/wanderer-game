@@ -185,14 +185,14 @@ function phase1StartWave(resetScroll=false){
  const theme=ports.phase2Theme(g.selected.id);
  const totalCount=last&&(g.selected.boss||g.selected.elite)?1:(g.selected.mobCount||3),activeCount=Math.min(4,totalCount);
  const spawn=()=>ports.enemyFor(r.tier,r.enc,{theme,boss:last&&g.selected.boss,elite:last&&g.selected.elite&&!g.selected.boss,variant:g.version===2?ports.BOSS_ARCHETYPES.find(b=>b.style===WandererV012Expedition.BOSSES.find(v=>v.id===g.bossId).style):null});
- const scale=totalCount===12?{hp:.16,atk:.10}:totalCount>=18?{hp:2/totalCount,atk:.055}:null;
+ const scale=totalCount===12?{hp:.16,atk:.22}:totalCount>=18?{hp:2/totalCount,atk:.18}:null;
  const group=WandererV012CombatCore.createEnemyGroup(spawn,totalCount,{activeSlots:activeCount,scale});
  r.totalMobCount=totalCount;r.enemies=activeCount>1?group.slice(0,activeCount):undefined;r.groupReserve=group.slice(activeCount);if(activeCount===1)delete r.enemies;r.enemy=group[0];
  r.phase6Bounty=false;if(r.enemy.miniboss&&ports.phase6Run?.effects.bounty){r.phase6Bounty=true;ports.phase6Run.effects.bounty=false;r.enemy.hp=r.enemy.maxhp=Math.ceil(r.enemy.maxhp*1.25);r.enemy.atk=Math.ceil(r.enemy.atk*1.25);}
  r.tPlayer=r.tEnemy=r.tDot=0;r.setTemp=null;r.playerDebuffUntil=0;
  r.playerHealingDebuffUntil=0;r.nextCasterHexAt=0;ports.setRuntime(r);r.status='fight';
  if(ports.phase1Build)for(const enemy of r.enemies||[r.enemy])WandererV012Buildcraft.resetWave(ports.phase1Build,enemy);
- ports.addLog('Wave '+g.wave+'/'+g.selected.waves+': '+r.enemy.name+' · '+totalCount+' enemies');
+ ports.addLog('Encounter: '+r.enemy.name+' · '+totalCount+' enemies');
  if(r.groupReserve?.length)ports.addLog(r.groupReserve.length+' reinforcements will fill the four arena positions.','good');
  ports.renderCombat();if(resetScroll)ports.resetDungeonEntryScroll();clearInterval(ports.clock);
  ports.clock=setInterval(()=>{if(ports.isVisible())ports.updateFight();},110/ports.clockSpeed);
@@ -222,7 +222,7 @@ function phase1WaveWon(){
  const fragments=Math.round((ports.roll(1,3)+Math.floor(r.tier*.24)+(boss?5:elite?3:0))*(r.phase6Bounty?1.5:1)*groupReward);
  ports.state.gold+=gold;ports.state.fragments+=fragments;r.gold+=gold;r.fragments+=fragments;ports.phase5Results.gold+=gold;ports.phase5Results.fragments+=fragments;
  ports.addLog('Realm rewards pending: +'+gold+' Gold · +'+fragments+' Fragments.','good');
- const odds=ports.waveLootOdds(boss?5:elite?4:r.enc,r.stats.cha);odds.drop=Math.min(1,odds.drop*groupReward);if(ports.phase6Run?.effects.fortune)odds.drop=Math.min(1,odds.drop*1.25);
+ const odds=ports.waveLootOdds(boss?5:elite?4:Math.min(3,1+Math.floor((g.planeIndex-1)/5)),r.stats.cha);odds.drop=Math.min(1,odds.drop*groupReward);if(ports.phase6Run?.effects.fortune)odds.drop=Math.min(1,odds.drop*1.25);
  if(boss||r.phase6Bounty||ports.gameRandom()<odds.drop){
   const theme=ports.phase2Theme(r.path),pick=ports.dungeonEquipmentPick(theme,[]);
   const rarity=ports.randomFromOdds(odds.rarities);

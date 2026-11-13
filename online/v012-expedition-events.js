@@ -6,7 +6,7 @@ const rows=[
  ['relic_collector','Relic Collector','commerce',['Sacrifice selected bag item for 12 + 2×item E Gold','Sacrifice selected bag item for 5 + item E Fragments']],
  ['cursed_artificer','Cursed Artificer','commerce',['Sacrifice selected bag item; empower a different owned item +10% for 3 combats','Sacrifice selected bag item; gain Barrier equal to 15% max HP']],
  ['cursed_altar','Cursed Altar','sacrifice',['Pay 20% max HP (must survive): +10% Attack this Expedition','Pay 20% max HP (must survive): +10% Defense this Expedition']],
- ['soul_mirror','Soul Mirror','sacrifice',['Replace selected non-initial passive with the displayed eligible alternative','Keep your build; no reward']],
+ ['soul_mirror','Soul Mirror','sacrifice',['Gain +10% Attack for 3 combats','Gain +10% Defense for 3 combats']],
  ['whispering_idol','Whispering Idol','sacrifice',['Accept +10% incoming damage for 3 combats: gain 25 + 4×E Gold','Accept same curse: gain 12 + 2×E Fragments']],
  ['echo_shrine','Echo Shrine','sacrifice',['Selected passive gains half a rank for 3 combats','Recover 15% Mana']],
  ['cursed_chest','Cursed Chest','treasure',['Safely take 8 + E Gold','Risk: 50% equipment, otherwise lose 15% max HP (non-lethal)']],

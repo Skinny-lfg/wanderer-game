@@ -39,7 +39,7 @@ const FORKS=Object.freeze([
  {id:'mace_shockwave',name:'Concussive Swing',family:'aegis',requires:'fork_mace_end_2',forkAnchor:'passive_barrier_pulse',forkStep:3,description:'Mace attacks deal 30% damage to one additional enemy and Chill it for one second.'},
  {id:'fork_focus_agi_1',name:'Agility',family:'fury',attribute:'agi',requires:'passive_quick_hands',forkAnchor:'passive_quick_hands',forkStep:1,description:'+1 Agility.'},
  {id:'fork_focus_agi_2',name:'Agility',family:'fury',attribute:'agi',requires:'fork_focus_agi_1',forkAnchor:'passive_quick_hands',forkStep:2,description:'+1 Agility.'},
- {id:'single_target_mastery',name:'Focused Assault',family:'fury',requires:'fork_focus_agi_2',forkAnchor:'passive_quick_hands',forkStep:3,description:'Deal 15% more direct damage when only one enemy remains.'}
+ {id:'single_target_mastery',name:'Focused Assault',family:'fury',requires:'fork_focus_agi_2',forkAnchor:'passive_quick_hands',forkStep:3,description:'Deal 15% more direct damage when one enemy remains and no reinforcements are waiting.'}
 ].map(Object.freeze));
 const ATTRIBUTES=Object.freeze(['str','agi','int','end','cha']);
 const OLD_ROOTS={blood:'might',decay:'might',vitality:'vitality',aegis:'vitality',fury:'haste',magic:'flow'};
@@ -79,7 +79,7 @@ function earned(v){if(!valid(v))throw Error('Invalid talent progress');return Ma
 function award(v,amount){if(!valid(v)||!Number.isSafeInteger(amount)||amount<0)throw Error('Invalid experience award');return {...v,xp:Math.min(Number.MAX_SAFE_INTEGER,v.xp+amount),nodes:[...v.nodes]};}
 function allocate(v,id){if(!valid(v))throw Error('Invalid talent progress');const node=nodes().find(n=>n.id===id);if(!node||v.nodes.includes(id)||v.nodes.length>=earned(v)||requirements(node).some(required=>!v.nodes.includes(required)))return null;return {...v,nodes:[...v.nodes,id]};}
 function reset(v){if(!valid(v))throw Error('Invalid talent progress');return {...v,nodes:[],treeVersion:5,...(cap(v)>MAX_POINTS?{legacyTalentCap:cap(v)}:{})};}
-function attributePoints(v){if(!valid(v))throw Error('Invalid talent progress');return Math.floor(v.xp/POINT_XP)-Object.values(v.attributes||{}).reduce((a,b)=>a+b,0);}
+function attributePoints(v){if(!valid(v))throw Error('Invalid talent progress');const spent=Object.values(v.attributes||{}).reduce((a,b)=>a+b,0);return Math.min(Math.floor(v.xp/POINT_XP),Math.max(MAX_POINTS,spent))-spent;}
 function allocateAttribute(v,key){if(!valid(v))throw Error('Invalid talent progress');if(!ATTRIBUTES.includes(key)||attributePoints(v)<1)return null;return {...v,attributes:{...v.attributes,[key]:(v.attributes?.[key]||0)+1}};}
 function passiveIds(v){if(!valid(v))throw Error('Invalid talent progress');const byId=new Map(nodes().filter(n=>n.passiveId).map(n=>[n.id,n.passiveId]));const ids=v.nodes.filter(id=>byId.has(id)).map(id=>byId.get(id));for(const [family,id] of [['blood','bleeding_edge'],['decay','toxic_touch']])if(v.nodes.includes('affinity_'+family)&&!ids.includes(id))ids.push(id);return ids;}
 function attributeBonuses(v){if(!v)return {};if(!valid(v))throw Error('Invalid talent progress');const out={};for(const id of v.nodes){const node=nodes().find(n=>n.id===id);if(node?.attribute)out[node.attribute]=(out[node.attribute]||0)+1;}return out;}

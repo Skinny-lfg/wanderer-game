@@ -354,7 +354,7 @@ function weaponAttack(r,offhandStrike=false){
   damage=Math.max(1,Math.round(s.attack*factor)-Math.round(e.def*(armorReady?.8:1)));
  }
  if(offhandStrike)damage=Math.max(1,Math.round(damage*.35));
- if(ports.state.automaticTalents?.nodes?.includes('single_target_mastery')&&(!r.enemies||r.enemies.filter(enemy=>enemy.hp>0).length===1))damage=Math.max(1,Math.round(damage*1.15));
+ if(ports.state.automaticTalents?.nodes?.includes('single_target_mastery')&&(!r.groupReserve?.length&&(!r.enemies||r.enemies.filter(enemy=>enemy.hp>0).length===1)))damage=Math.max(1,Math.round(damage*1.15));
  const base=damage;r.lastBaseHit=base;
  const perfect=s.bonus.perfectStrike&&temp.focus>=3&&now>=(r.setCooldowns?.perfectStrike||0);
  if(perfect){ports.setReady(r,'perfectStrike',10);temp.focus=0;}
