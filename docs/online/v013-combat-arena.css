@@ -405,3 +405,5 @@ body.phase3IntegratedPreview #scene .arenaSprite > .arenaGroundShadow {
   box-shadow: 0 2px 3px rgba(0, 0, 0, .35);
 }
 body.phase3IntegratedPreview #scene .heroArenaSprite > img { object-fit: contain !important; }
+.v013Forge .filterBar{display:flex;flex-wrap:wrap;gap:12px}.v013Forge .filterBar label{display:grid;gap:6px;min-width:130px;flex:1}.v013Forge select{width:100%;max-width:100%;min-width:0}.v013Forge .statsGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px;margin:16px 0}.v013Forge .stat{display:grid;gap:7px;padding:12px;border:1px solid #786044;background:#1b1417}.v013Forge .stat small{font-size:12px;line-height:1.4}.v013Project{margin-top:16px}.v013Project p{line-height:1.5}
+.routeBranchNode.is-project{outline:2px solid #a6c7df;outline-offset:4px}

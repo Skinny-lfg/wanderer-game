@@ -12,6 +12,7 @@ function baseStatScore(o){if(!o)return 0;return [['atk',3],['def',3],['hp',.18],
 function offhandLocked(o){return o?.slot==='offhand'&&ports.isTwoHanded(ports.state.equip.weapon)}
 
 function craftEquipment(cost,odds){
+ if(ports.PHASE1_PREVIEW)return null;
  if(!ports.economyCanAct()||ports.forgeTier>ports.economyTier())return;
  if(ports.state.fragments<cost)return;
  if(!ports.stashHasRoom()){ports.bannerMessage('Stash full. Upgrade or salvage gear first.');return;}
@@ -95,6 +96,7 @@ function legendarySignature(item){
 }
 
 function makeItem(tier,slot=null,affinity=null,source='loot',subtype='random',forcedRarity=null){
+ if(ports.PHASE1_PREVIEW&&root.WandererV013Crafting)tier=root.WandererV013Crafting.tierBand(tier);
 slot=slot||ports.rollEquipmentSlot();
 let requestedArmorType=ports.ARMOR_TYPES.includes(subtype)?subtype:null;
 subtype=ports.chooseSubtype(slot,ports.ARMOR_TYPES.includes(subtype)?'random':subtype);
@@ -134,9 +136,15 @@ if(armorType){
 }
 if(rarity==='Legendary'){const identity=legendaryIdentity;if(identity){o.legendaryId=identity.id;o.name=identity.name;}o.legendaryPower=legendaryDefinition?legendaryDefinition.name+': '+legendaryDefinition.description:'';o.atk+=subtype==='Sword'?progressTier+4:0;}
 if(tier>200)for(const field of ['atk','def','hp','str','agi','int','end','cha','mana','spell','evasionRating'])if(typeof o[field]==='number'&&!(field==='atk'&&['Staff','Wand'].includes(subtype)))o[field]=WandererV012CombatCore.gearStat(tier,o[field]);
+if(ports.PHASE1_PREVIEW&&rarity!=='Common'){
+ const profile=armorType?({Cloth:'int',Leather:'agi',Plate:'str'}[armorType]):['Staff','Wand','Orb'].includes(subtype)?'int':['Bow','Daggers','Off-Hand Dagger'].includes(subtype)?'agi':subtype==='Shield'?'end':['Amulet','Ring'].includes(subtype)?'cha':'str';
+ o.craftingProfile=profile;o[profile]=(o[profile]||0)+(rarity==='Uncommon'?1:rarity==='Rare'?2:3);
+ if(rarity==='Rare')o.hp+=Math.max(2,Math.round(power*.5));
+ if(rarity==='Epic'){o.v013Trait=['Staff','Wand','Orb'].includes(subtype)?ports.sample(['efficient','ward',...(subtype==='Staff'?['conflagration']:[])]):ports.sample(['focused','blood_transfer']);}
+}
 return o;}
 
-function rarityOdds(tier,isCraft){let a={Common:.49,Uncommon:.30,Rare:.15,Epic:.045,Legendary:.015};
+function rarityOdds(tier,isCraft){if(ports.PHASE1_PREVIEW)return {Common:.75,Uncommon:.25,Rare:0,Epic:0,Legendary:0};let a={Common:.49,Uncommon:.30,Rare:.15,Epic:.045,Legendary:.015};
 if(isCraft){const gap=Math.max(0,ports.economyTier()-tier),boost=Math.min(.24,gap*.012);a.Common-=boost;a.Rare+=boost*.35;a.Epic+=boost*.65;a.Epic+=a.Legendary;a.Legendary=0;}
 else{const cha=ports.totalStats().cha,boost=Math.min(.040,Math.max(0,cha-5)*.0008);a.Common-=boost;a.Rare+=boost*.65;a.Epic+=boost*.35;}
 return a;}

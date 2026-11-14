@@ -23,7 +23,7 @@ replaceRequired(/const PHASE5_VALIDATION=[^\n]+;/,'const PHASE5_VALIDATION=true;
 for(const name of ['v012-auth-bootstrap.js','v012-account.mjs','v012-feedback.mjs','v012-leaderboard-ui.mjs'])replaceRequired(new RegExp('<script[^>]*src="online/'+name.replaceAll('.','\\.')+'(?:\\?[^" ]*)?"[^>]*><\\/script>'),'',name);
 // Content-address the changing modules so a previously cached playtest cannot
 // mix the old progression engine with the new one after a Pages update.
-for(const file of ['combat/automatic-talents.js','combat/v012-combat-core.js','combat/v012-combat-runtime.js','combat/v012-buildcraft.js','combat/v012-gear-stats.js','economy/v012-loot-rules.js','online/v012-expedition-controller.js','online/v012-expedition-events.js','online/v012-expedition-runtime.js','online/v012-persistence-runtime.js','online/v012-uiux-tuning.css','online/v013-combat-arena.css']){
+for(const file of ['economy/v013-crafting.js','combat/automatic-talents.js','combat/v012-combat-core.js','combat/v012-combat-runtime.js','combat/v012-buildcraft.js','combat/v012-gear-stats.js','economy/v012-loot-rules.js','online/v012-expedition-controller.js','online/v012-expedition-events.js','online/v012-expedition-runtime.js','online/v012-persistence-runtime.js','online/v012-uiux-tuning.css','online/v013-combat-arena.css']){
  const hash=createHash('sha256').update(await readFile(join(output,file))).digest('hex').slice(0,12);
  const attr=file.endsWith('.css')?'href':'src';replaceRequired(new RegExp(attr+'="'+file.replaceAll('.','\\.')+'(?:\\?[^" ]*)?"'),attr+'="'+file+'?v='+hash+'"',file);
 }
@@ -31,7 +31,7 @@ replaceRequired(/<\/head>/,'<style>#onlineBar{display:none!important}</style></h
 await writeFile(join(output,'index.html'),html);
 const savePath=join(output,'online/v012-save.js');let save=await readFile(savePath,'utf8');
 if(!save.includes("PREFIX='wanderer_v012_endless_v1_'"))throw Error('Preview blocked: unknown save namespace');
-save=save.replace("PREFIX='wanderer_v012_endless_v1_'","PREFIX='wanderer_automatic_rpg_preview_v4_'");
+save=save.replace("PREFIX='wanderer_v012_endless_v1_'","PREFIX='wanderer_automatic_rpg_preview_v5_'");
 await writeFile(savePath,save);
 const saveHash=createHash('sha256').update(save).digest('hex').slice(0,12);
 let finalHtml=await readFile(join(output,'index.html'),'utf8');

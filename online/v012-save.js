@@ -59,6 +59,7 @@ function integrationCheck(r){
 function profileCheck(p){
  consumablesCheck(p);
  requireValue(plain(p)&&Array.isArray(p.stash)&&plain(p.equip),'profile');
+ if(p.crafting!==undefined)requireValue(root.WandererV013Crafting?.valid(p.crafting),'crafting progress');
  if(p.automaticTalents!==undefined)requireValue(root.WandererAutomaticTalents?.valid(p.automaticTalents),'automatic talent progress');
  requireValue(p.run===null,'runtime must not be in permanent profile');
  for(const f of ['gold','fragments'])requireValue(integer(p[f],0,Number.MAX_SAFE_INTEGER),f);
@@ -75,6 +76,7 @@ function profileCheck(p){
   if(item.armorType!==undefined)requireValue(['helm','armor','gloves','boots','belt'].includes(item.slot)&&['Cloth','Leather','Plate'].includes(item.armorType),'armor type');
   requireValue(SLOTS.includes(item.slot)&&integer(item.tier,1,Number.MAX_SAFE_INTEGER)&&typeof item.name==='string','item identity');
   requireValue(['Common','Uncommon','Rare','Epic','Legendary'].includes(item.rarity),'item rarity');
+  if(item.v013Trait!==undefined)requireValue(['blood_transfer','focused','ward','conflagration','efficient'].includes(item.v013Trait),'item trait');
   for(const f of STATS)if(item[f]!==undefined)requireValue(typeof item[f]==='number'&&Number.isFinite(item[f]),'item '+f);
   if(item.effect!==undefined&&item.effect!==null)requireValue(EFFECTS.includes(item.effect),'item effect');
   if(item.magic!==undefined&&item.magic!==null)requireValue(EFFECTS.includes(item.magic),'item magic');

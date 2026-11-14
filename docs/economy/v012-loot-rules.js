@@ -4,20 +4,20 @@
 function craftCost(tier){return 10+10*tier}
 
 const WAVE_TABLE=[
- {drop:.12,rarities:{Common:.68,Uncommon:.25,Rare:.06,Epic:.009,Legendary:.001}},
- {drop:.18,rarities:{Common:.55,Uncommon:.30,Rare:.125,Epic:.02,Legendary:.005}},
- {drop:.27,rarities:{Common:.38,Uncommon:.33,Rare:.22,Epic:.06,Legendary:.01}},
- {drop:.55,rarities:{Common:.10,Uncommon:.25,Rare:.45,Epic:.17,Legendary:.03}},
- {drop:1,rarities:{Common:0,Uncommon:0,Rare:.71,Epic:.25,Legendary:.04}}
+ {drop:.04,rarities:{Common:.45,Uncommon:.45,Rare:.095,Epic:.005,Legendary:0}},
+ {drop:.04,rarities:{Common:.35,Uncommon:.50,Rare:.14,Epic:.01,Legendary:0}},
+ {drop:.04,rarities:{Common:.25,Uncommon:.55,Rare:.18,Epic:.02,Legendary:0}},
+ {drop:.18,rarities:{Common:0,Uncommon:.65,Rare:.30,Epic:.048,Legendary:.002}},
+ {drop:.45,rarities:{Common:0,Uncommon:.60,Rare:.35,Epic:.048,Legendary:.002}}
 ];
 
 
 function waveLootOdds(wave,cha=5){
  const base=WAVE_TABLE[Math.max(0,Math.min(4,(Number(wave)||1)-1))];
- const rarities={...base.rarities},boost=Math.min(.04,Math.max(0,(Number(cha)||5)-5)*.0008);
- if(wave===5){rarities.Rare-=boost;rarities.Epic+=boost*.65;rarities.Legendary+=boost*.35;}
+ const rarities={...base.rarities},boost=Math.min(.01,Math.max(0,(Number(cha)||5)-5)*.0002);
+ if(wave>=4){rarities.Uncommon-=boost;rarities.Epic+=boost*.65;rarities.Legendary+=boost*.35;}
  else{rarities.Common-=boost;rarities.Rare+=boost*.65;rarities.Epic+=boost*.35;}
- const drop=Math.min(1,base.drop+Math.min(.06,Math.max(0,(Number(cha)||5)-5)*.002));
+ const drop=Math.min(1,base.drop+Math.min(.01,Math.max(0,(Number(cha)||5)-5)*.0003));
  return {drop,rarities};
 }
 

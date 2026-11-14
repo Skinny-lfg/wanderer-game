@@ -22,7 +22,7 @@ test('a completed Realm grants XP once and persists it in an isolated checkpoint
  while(game.controller().state.planeIndex===1){const run=game.state().run;assert(run?.enemy);run.enemy.hp=0;game.win();game.flush();}
  const earned=game.state().automaticTalents.xp;assert.equal(earned,24);
  const saved=JSON.parse(storage.get('wanderer_v012_local_preview'));assert.equal(saved.profile.automaticTalents.xp,earned);
- require('../online/v012-save.js');require('../online/v012-treasures.js');
+ require('../economy/v013-crafting.js');require('../online/v012-save.js');require('../online/v012-treasures.js');
  const corrupt=JSON.parse(JSON.stringify(saved));corrupt.profile.automaticTalents={xp:0,nodes:['might']};
  assert.throws(()=>globalThis.WandererV012Save.validate(corrupt,'local-playtest'),/automatic talent progress/);
  game.win();assert.equal(game.state().automaticTalents.xp,earned);
@@ -36,7 +36,7 @@ test('equipped permanent talents are applied to the actual game stat calculation
 });
 test('defeat and duplicate event decisions cannot repeatedly award XP',()=>{
  const create=require('./v012-economy-harness.cjs');
- const loss=create(31);loss.start();loss.initial('blood');const first=loss.controller().state.offers.find(p=>p.family==='blood');loss.select(first.id);loss.enter();loss.death();assert.equal(loss.state().automaticTalents,undefined);
+ const loss=create(31);loss.start();loss.initial('blood');const first=loss.controller().state.offers.find(p=>p.family==='blood');loss.select(first.id);loss.enter();loss.death();assert.equal(loss.state().automaticTalents.xp,0);
  const event=create(41,undefined,{}, {skipPersistence:true});event.start();event.initial('blood');const g=event.controller().state,p=g.offers.find(x=>x.family==='blood');event.select(p.id);g.selected.event='forgotten_arsenal';g.selected.waves=0;event.enter();
  assert.equal(event.events.choose(2),true);assert.equal(event.state().automaticTalents.xp,15);assert.equal(event.events.choose(2),false);assert.equal(event.state().automaticTalents.xp,15);
 });

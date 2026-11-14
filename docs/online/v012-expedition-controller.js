@@ -41,9 +41,9 @@ function create(themes,rng=Math.random){
  }
  function offerRealms(){
   if(game.stage!=='choice'||!game.initialFamily||game.rewardPending)throw Error('Realm selection unavailable');
-  if(game.version===2&&game.planeIndex===15){game.offers=[makeOffer(game.families[Math.floor(routeRng()*game.families.length)],[],game.routeMap?0:null)];return game.offers;}
-  const previous=game.history[game.history.length-1],laneOrder=previous?.lane===2?[1,2,0]:[1,0,2];
-  const offers=[],required=game.history.length===0?game.initialFamily:game.version===2&&allowed().includes(game.pathInfluence)?game.pathInfluence:null;
+  if(game.version===2&&game.planeIndex===15){game.offers=[makeOffer(game.bossFamily,[],game.routeMap?0:null)];return game.offers;}
+  const previous=game.history[game.history.length-1],laneOrder=game.projectFamily&&previous?[previous.lane,...[0,1,2].filter(n=>n!==previous.lane)]:previous?.lane===2?[1,2,0]:[1,0,2];
+  const offers=[],required=game.freeBuild&&game.projectFamily?game.projectFamily:game.history.length===0?game.initialFamily:game.version===2&&allowed().includes(game.pathInfluence)?game.pathInfluence:null;
   if(required)offers.push(makeOffer(required,[],game.routeMap?laneOrder[offers.length]:null));
   // Planned routes create opportunities only; a family is unlocked only when its Realm is entered.
   // Offer the second family from Realm 2 through its Realm 4 deadline and the third from Realm 3 through Realm 7.
@@ -73,7 +73,7 @@ function create(themes,rng=Math.random){
   Object.assign(game,{version:2,freeBuild:options.freeBuild===true,rerolls:3,bossId:BOSSES[Math.floor(routeRng()*3)].id,eventsByRealm:rooms.map(k=>k==='event'?events[eventIndex++]:null),expedition:level,planeIndex:1,families:[],lastFamily:null,initialFamily:null,affinityPlanSeen:[false,false,false],
    rooms,routeMap:rooms.map((kind,i)=>{if(i===14)return ['boss'];const row=[kind,kind,kind];if(options.freeBuild&&kind==='event')row[Math.floor(routeRng()*3)]='combat';if(i>0&&kind==='combat'&&routeRng()<.55)row[Math.floor(routeRng()*3)]='elite';return row;}),offers:[],selected:null,wave:0,history:[],
    rewardPending:null,rerollsByRealm:Array.from({length:15},()=>[3,3,3]),stage:'choice'});
-  game.encounterVersion=1;game.routeMobVersion=1;game.routeMobCounts=makeRouteMobCounts(game.routeMap);
+  game.projectFamily=FAMILIES.includes(options.targetFamily)?options.targetFamily:null;game.bossFamily=FAMILIES.includes(options.targetFamily)?options.targetFamily:FAMILIES[Math.floor(routeRng()*FAMILIES.length)];game.encounterVersion=1;game.routeMobVersion=1;game.routeMobCounts=makeRouteMobCounts(game.routeMap);
   delete game.routeGroups;
   if(game.freeBuild){
    const crossings=[[2,3,4],[6,7,8],[10,11,12]].map(window=>window[Math.floor(routeRng()*window.length)]);
@@ -155,8 +155,7 @@ function create(themes,rng=Math.random){
  function restore(input){
   if(input?.version!==2)throw Error('Unsupported historical Expedition checkpoint (requires calendar version 2)');
   const g=JSON.parse(JSON.stringify(input));
-  if(!['weapon','armor','supplies'].includes(g.contract||'weapon'))throw Error('Invalid expedition contract');
-  if(g.encounterVersion!==1)throw Error('Invalid encounter version');
+  if(!FAMILIES.includes(g.bossFamily)||g.encounterVersion!==1)throw Error('Invalid encounter version');
   g.affinityPlan??=null;g.affinityPlanSeen??=[false,false,false];
   const integer=(v,min,max)=>Number.isInteger(v)&&v>=min&&v<=max;
   if(!g||!integer(g.unlocked,1,Number.MAX_SAFE_INTEGER)||!integer(g.expedition,1,g.unlocked)||!integer(g.planeIndex,1,15)||!['choice','combat','finished','failed'].includes(g.stage)||!Array.isArray(g.rooms)||g.rooms.length!==15||g.rooms[0]!=='combat'||g.rooms[14]!=='boss'||g.rooms.slice(0,14).some(k=>!(g.version===2?['combat','elite','event']:ROOMS).includes(k)))throw Error('Invalid Realm checkpoint');
