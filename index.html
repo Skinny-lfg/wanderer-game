@@ -1008,8 +1008,8 @@ function updateBars(){
  const heroStatuses=$('heroStatuses');if(heroStatuses){const newMarkup=playerStatusMarkup(r);if(heroStatuses.dataset.statusMarkup!==newMarkup){heroStatuses.innerHTML=newMarkup;heroStatuses.dataset.statusMarkup=newMarkup;}}
  const heroHp=Math.max(0,r.hp),heroBar=$('heroHpFill').parentElement;setFill($('heroHpFill'),heroHp,r.maxhp);heroBar.setAttribute('aria-valuenow',String(Math.ceil(heroHp)));heroBar.setAttribute('aria-valuemax',String(Math.ceil(r.maxhp)));
  if(!r.enemy){$('heroHpText').textContent=Math.ceil(heroHp)+'/'+r.maxhp+' HP';$('barrierText').textContent=Math.floor(r.barrier);return;}
- const enemyHp=Math.max(0,r.enemy.hp),enemyBar=$('enemyHpFill').parentElement;setFill($('enemyHpFill'),enemyHp,r.enemy.maxhp);enemyBar.setAttribute('aria-valuenow',String(Math.ceil(enemyHp)));enemyBar.setAttribute('aria-valuemax',String(Math.ceil(r.enemy.maxhp)));
- $('heroHpText').textContent=Math.ceil(heroHp)+'/'+r.maxhp+' HP';$('enemyHpText').textContent=Math.ceil(enemyHp)+'/'+r.enemy.maxhp+' HP';$('enemyDefense').textContent=r.enemy.def;$('barrierText').textContent=Math.floor(r.barrier);
+ const enemyHp=Math.max(0,r.enemy.hp),enemyFill=$('enemyHpFill'),enemyBar=enemyFill?.parentElement;if(enemyBar){setFill(enemyFill,enemyHp,r.enemy.maxhp);enemyBar.setAttribute('aria-valuenow',String(Math.ceil(enemyHp)));enemyBar.setAttribute('aria-valuemax',String(Math.ceil(r.enemy.maxhp)));}
+ $('heroHpText').textContent=Math.ceil(heroHp)+'/'+r.maxhp+' HP';if($('enemyHpText'))$('enemyHpText').textContent=Math.ceil(enemyHp)+'/'+r.enemy.maxhp+' HP';if($('enemyDefense'))$('enemyDefense').textContent=r.enemy.def;$('barrierText').textContent=Math.floor(r.barrier);
  const statuses=$('enemyDebuffs');if(statuses){const markup=enemyDebuffMarkup(r.enemy);if(statuses.dataset.debuffMarkup!==markup){statuses.innerHTML=markup;statuses.dataset.debuffMarkup=markup;}}
 }
 
