@@ -11,7 +11,7 @@ const THEME_FAMILIES=Object.freeze({
 });
 const REALMS=Object.freeze({forge:['blood','Crimson Dominion'],bloodscar:['blood','Bloodscar Wastes'],temple:['decay','Venomreach'],void:['decay','Umbral Hollow'],grove:['vitality','Verdant Wilds'],shrine:['vitality','Everroot Vale'],ward:['aegis','Warded Marches'],drowned:['aegis','Drowned Bastion'],crypt:['fury','Gravewind Barrens'],bastion:['fury','Ironbound Frontier'],ash:['magic','Ashen Aether'],storm:['magic','Stormglass Beyond']});
 const BOSSES=Object.freeze([{id:'guardian',name:"Abyssal Guardian’s Citadel",style:'guardian'},{id:'rift',name:"Harbinger’s Rift",style:'leech'},{id:'ember',name:"Ember Sovereign’s Throne",style:'berserker'}]);
-const EVENT_GROUPS=[['traveling_merchant','smugglers_caravan','relic_collector','cursed_artificer'],['cursed_altar','soul_mirror','whispering_idol','echo_shrine'],['cursed_chest','forgotten_arsenal','runic_vault','bounty_writ'],['restless_spring','fallen_wanderer','oracle_of_paths','last_ember']];
+const EVENT_GROUPS=[['traveling_merchant','relic_collector'],['cursed_altar','whispering_idol'],['forgotten_arsenal','bounty_writ'],['restless_spring','oracle_of_paths']];
 const ROOMS=Object.freeze(['combat','combat','combat','combat','combat','combat','combat','elite','elite','chest','chest','event','event','altar']);
 function shuffle(values,rng){
  const arr=[...values];
@@ -29,7 +29,10 @@ function create(themes,rng=Math.random){
  function makeRouteMobCounts(routeMap){return routeMap.map(row=>{const choices=shuffle([3,12,18+Math.floor(routeRng()*5)],routeRng);let next=0;return row.map(kind=>kind==='combat'?choices[next++%choices.length]:1);});}
  function allowedMobCount(value){return value===3||value===12||Number.isInteger(value)&&value>=18&&value<=22;}
  function allowed(){
-  return FAMILIES.filter(f=>game.freeBuild||game.families.length<3||game.families.includes(f));
+  const eligible=FAMILIES.filter(f=>game.freeBuild||game.families.length<3||game.families.includes(f));
+  // The final boss can belong to a fourth affinity; expose it only for the boss Realm.
+  if(game.version===2&&game.planeIndex===15&&FAMILIES.includes(game.bossFamily)&&!eligible.includes(game.bossFamily))eligible.push(game.bossFamily);
+  return eligible;
  }
  function makeOffer(family,excluded=[],lane=null){
   const kind=game.routeMap&&lane!==null?game.routeMap[game.planeIndex-1][lane]:game.rooms[game.planeIndex-1],list=(game.version===2?expeditionThemes:byFamily[family]).filter(t=>t.family===family&&!excluded.includes(t.id)),theme=list[Math.floor(routeRng()*list.length)];
@@ -125,7 +128,7 @@ function create(themes,rng=Math.random){
   if(game.stage!=='choice'||game.rewardPending||!game.selected||!game.offers.includes(game.selected))throw Error('Select an offered Realm before entering');
   const realm=game.selected;
   if(!reachable(realm)||!allowed().includes(realm.family))throw Error('Realm no longer eligible');
-  if(!game.freeBuild&&!game.families.includes(realm.family))game.families.push(realm.family);
+  if(!game.freeBuild&&game.planeIndex!==15&&!game.families.includes(realm.family))game.families.push(realm.family);
   game.lastFamily=realm.family;game.wave=1;game.stage='combat';return realm;
  }
  function claimReward(){
@@ -192,7 +195,7 @@ function create(themes,rng=Math.random){
    if(g.history.length!==g.planeIndex-1||g.initialFamily&&!g.families.includes(g.initialFamily))throw Error('Invalid Realm progress');
    if(g.rewardPending)g.rewardPending=realm(g.rewardPending,g.planeIndex-1);
    if(g.stage==='combat'){
-    const selected=g.offers.find(p=>p.id===g.selected?.id);if(!selected||!g.freeBuild&&!g.families.includes(selected.family)||!integer(g.wave,1,Math.max(1,selected.waves)))throw Error('Invalid combat checkpoint');g.selected=selected;
+    const selected=g.offers.find(p=>p.id===g.selected?.id),bossAffinity=g.planeIndex===15&&selected?.boss&&selected.family===g.bossFamily;if(!selected||!g.freeBuild&&!g.families.includes(selected.family)&&!bossAffinity||!integer(g.wave,1,Math.max(1,selected.waves)))throw Error('Invalid combat checkpoint');g.selected=selected;
    }else{
     if(g.wave!==0||g.rewardPending&&(g.offers.length||g.selected)||!g.freeBuild&&!g.initialFamily&&g.offers.length)throw Error('Invalid choice checkpoint');
     if(g.selected){const selected=g.offers.find(p=>p.id===g.selected.id);if(!selected)throw Error('Invalid selected Realm');g.selected=selected;}

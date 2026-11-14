@@ -10,7 +10,7 @@ const fs=require('fs'),path=require('path'),http=require('http'),assert=require(
  b=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||'C:/Program Files/Google/Chrome/Application/chrome.exe'});
  const p=await b.newPage({viewport:{width:1440,height:900}}),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.goto('http://127.0.0.1:'+server.address().port);
 
- const eventCopy=await p.evaluate(()=>['cursed_chest','forgotten_arsenal','bounty_writ'].map(id=>cleanupAudit.presentation({id},id==='cursed_chest'?1:0,[]).benefit));assert(eventCopy[0].includes('4 Essence'));assert(eventCopy[1].includes('6 Essence'));assert(!/equipment/i.test(eventCopy[2]));
+ const eventCopy=await p.evaluate(()=>['traveling_merchant','forgotten_arsenal','bounty_writ'].map(id=>cleanupAudit.presentation({id},0,[]).benefit));assert(eventCopy[0].includes('HP')||eventCopy[0].includes('Fragments'));assert(eventCopy[1].includes('6 Essence'));assert(eventCopy[2].includes('Fragments'));assert(!/equipment/i.test(eventCopy[2]));
  assert.equal(await p.locator('[data-phase3-expedition-level]').count(),1,'one Expedition selector');
  assert(!/Not tracked/.test(await p.locator('.phase3Journey').innerText()));
  await p.setViewportSize({width:390,height:844});

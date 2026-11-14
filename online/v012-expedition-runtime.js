@@ -40,8 +40,7 @@ function phase6AwardGear(guaranteed=null){
 function phase6Buff(key,power,remaining=3){ports.phase6Run.effects[key]={power,remaining};}
 
 function phase6OpenEvent(plane){
- if(!ports.phase6Run.event){const replacement=ports.phase1Controller.state.freeBuild?[]:ports.phase1Build.unlockedFamilies.flatMap(f=>WandererV012Buildcraft.eligible(ports.phase1Build,f)).filter(p=>!p.requires.length);
-  ports.phase6Run.event={id:plane.event,roll:ports.gameRandom(),alternative:replacement.length?replacement[Math.floor(ports.gameRandom()*replacement.length)].id:null};}
+ if(!ports.phase6Run.event)ports.phase6Run.event={id:plane.event,roll:0,alternative:null};
  if(!ports.phase4Entry){ports.phase4Stamp=Date.now();ports.phase4Entry={profile:ports.phase4Clone({...ports.state,run:null}),session:ports.phase4Session(true),ledger:[...(ports.phase5Snapshot?.expedition.awardKeys||[])]};}
  if(ports.phase5Persist()){ports.view='phase1';ports.render();}
 }
@@ -49,35 +48,27 @@ function phase6OpenEvent(plane){
 function phase6EventChoice(choice,itemId,passiveId,family,targetId){
  if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked)||!ports.phase6Run?.event||ports.phase4Resume||ports.state.run||![0,1,2].includes(choice))return false;
  const g=ports.phase1Controller.state,p=g.selected,ev=ports.phase6Run.event;if(g.stage!=='combat'||!p?.event||ev.id!==p.event||ports.phase6Run.events.includes(g.planeIndex))return false;
- const v=ports.phase3Vitals(),E=g.expedition,beforeGold=ports.state.gold,beforeFragments=ports.state.fragments,loot=[],costGold=25+3*E,costFragments=10+E;
- const item=ports.phase3BagItems().find(i=>i.id===itemId),target=[...Object.values(ports.state.equip).filter(Boolean),...ports.phase3BagItems()].find(i=>i.id===targetId);
- const passive=ports.phase1Build.picks.includes(passiveId)||ports.phase1Build.runtime.permanentTalents?.includes(passiveId),effects=ports.phase6Run.effects;
+ const v=ports.phase3Vitals(),E=g.expedition,beforeGold=ports.state.gold,beforeFragments=ports.state.fragments,loot=[],costGold=25+3*E;
+ const item=ports.phase3BagItems().find(i=>i.id===itemId),effects=ports.phase6Run.effects;
  const pay=(field,n)=>{if(ports.state[field]<n)return false;ports.state[field]-=n;return true;};
  const heal=(hp=0,mp=0)=>{ports.phase1Vitals={hp:Math.min(v.maxhp,v.hp+Math.ceil(v.maxhp*hp)),mp:Math.min(v.maxmp,v.mp+Math.ceil(v.maxmp*mp)),maxmp:v.maxmp};};
  const sacrifice=()=>{ports.state.stash=ports.state.stash.filter(i=>i.id!==itemId);ports.state.expeditionOverflow=ports.state.expeditionOverflow.filter(i=>i.id!==itemId);ports.state.valuables=(ports.state.valuables||[]).filter(i=>i.id!==itemId);ports.phase3LootIds.delete(itemId);};
  if(choice!==2){switch(ev.id){
- case 'traveling_merchant':if(choice===0&&v.hp>=v.maxhp)return false;if(!pay('gold',costGold))return false;if(choice===0)heal(.35);else ports.phase6Buff('might',.10);break;
- case 'smugglers_caravan':if(!pay('fragments',costFragments))return false;if(choice===0)heal(0,.4);else ports.phase6Buff('ironhide',.10);break;
+ case 'traveling_merchant':if(choice===0){if(v.hp>=v.maxhp||!pay('gold',costGold))return false;heal(.35);}else ports.state.fragments+=5+E;break;
  case 'relic_collector':if(!item){ports.state[choice===0?'gold':'fragments']+=choice===0?5+E:3+E;break;}sacrifice();ports.state[choice===0?'gold':'fragments']+=choice===0?12+2*item.tier:5+item.tier;break;
- case 'cursed_artificer':if(!item||choice===0&&(!target||target.id===itemId))return false;sacrifice();if(choice===0)effects.item={id:target.id,remaining:3};else effects.barrier=Math.max(effects.barrier||0,.15);break;
  case 'cursed_altar':if(v.hp<=Math.ceil(v.maxhp*.2))return false;heal();ports.phase1Vitals.hp-=Math.ceil(v.maxhp*.2);effects[choice===0?'attack':'defense']=.10;break;
- case 'soul_mirror':ports.phase6Buff(choice===0?'might':'ironhide',.10);break;
  case 'whispering_idol':ports.phase6Buff('curse',.10);ports.state[choice===0?'gold':'fragments']+=choice===0?25+4*E:12+2*E;break;
- case 'echo_shrine':if(choice===0){if(!passive||!WandererV012Buildcraft.canModify(ports.phase1Build,passiveId,.5,ports.totalStats()))return false;effects.echo={id:passiveId,power:.5,remaining:3};ports.phase1Build.runtime.echo=effects.echo;}else heal(0,.15);break;
- case 'cursed_chest':if(choice===0)ports.state.gold+=8+E;else if(ev.roll<.5){ports.state.crafting.essence+=4;}else{heal();ports.phase1Vitals.hp=Math.max(1,v.hp-Math.ceil(v.maxhp*.15));}break;
  case 'forgotten_arsenal':if(choice===0){ports.state.crafting.essence+=6;}else ports.state.fragments+=8+2*E;break;
- case 'runic_vault':if(choice===0){if(!ports.state.runeSlots.some(Boolean))return false;ports.phase6Buff('runeBoost',.20);}else ports.state.fragments+=10+E;break;
  case 'bounty_writ':if(choice===0){if(g.rooms.slice(g.planeIndex).includes('elite'))effects.bounty=true;else ports.state.fragments+=5+E;}break;
- case 'restless_spring':if(choice===0&&v.hp>=v.maxhp||choice===1&&(v.maxmp===0||v.mp>=v.maxmp))ports.state.fragments+=3+E;else choice===0?heal(.35):heal(0,.4);break;
- case 'fallen_wanderer':if(choice===0){if(!pay('gold',10+E))return false;heal(.2);effects.barrier=Math.max(effects.barrier||0,.1);}else heal(.15,.15);break;
+ case 'restless_spring':if(choice===0){if(v.hp>=v.maxhp)return false;heal(.35);}else if(v.maxmp===0||v.mp>=v.maxmp)ports.state.fragments+=3+E;else heal(0,.4);break;
  case 'oracle_of_paths':if(choice===0){if(g.freeBuild){if(g.rerolls>=3)return false;g.rerolls++;}else{if(!ports.phase1Controller.allowed().includes(family))return false;ports.phase1Controller.influence(family);}}else ports.state.fragments+=5+E;break;
- case 'last_ember':if(!passive||!WandererV012Buildcraft.canModify(ports.phase1Build,passiveId,-.5,ports.totalStats()))return false;effects.echo={id:passiveId,power:-.5,remaining:3};ports.phase1Build.runtime.echo=effects.echo;choice===0?heal(.35):heal(0,.4);break;
  default:return false;
  }}
  ports.phase6Run.events.push(g.planeIndex);ports.phase6Run.event=null;ports.phase4CommitRealm({awardXp:true});ports.phase1Controller.waveWon();
  if(!g.freeBuild)phase6UnlockBase(p.family);
  ports.phase5Results.gold+=Math.max(0,ports.state.gold-beforeGold);ports.phase5Results.fragments+=Math.max(0,ports.state.fragments-beforeFragments);
- ports.phase5RememberRealm({tier:E,phase1Plane:g.planeIndex-1,planeName:p.name,planeFamily:p.family,combatSeconds:0,gold:Math.max(0,ports.state.gold-beforeGold),fragments:Math.max(0,ports.state.fragments-beforeFragments),loot,realmLog:[{text:choice===2?'Event passed. Exploration materials secured.':(g.freeBuild&&ev.id==='oracle_of_paths'&&choice===0?'Restore one Realm reroll':WandererV012IntegratedEvents.get(ev.id)[3][choice]),kind:'good'}]},'cleared');
+ const eventText=choice===2?'Event passed. Exploration materials secured.':WandererV012IntegratedEvents.get(ev.id)[3][choice].replace(/(\d+) \+ (\d+)×E/g,(_,a,b)=>String(+a+ +b*E)).replace(/(\d+) \+ E/g,(_,a)=>String(+a+E));
+ ports.phase5RememberRealm({tier:E,phase1Plane:g.planeIndex-1,planeName:p.name,planeFamily:p.family,combatSeconds:0,gold:Math.max(0,ports.state.gold-beforeGold),fragments:Math.max(0,ports.state.fragments-beforeFragments),loot,realmLog:[{text:eventText,kind:'good'}]},'cleared');
  ports.phase5Results.review=null;ports.phase5Results.eventExitPending=true;
  ports.phase1Controller.claimReward();ports.phase1Draft=null;
  if(!ports.phase5Persist())return false;return phase5ExitResult();

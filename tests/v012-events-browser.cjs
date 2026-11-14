@@ -10,15 +10,15 @@ const fixture=[
  "phase1Init();state.equip.weapon=makeItem(200,'weapon',null,'loot','Sword','Rare');",
  "for(const slot of ['helm','armor','gloves','boots','amulet','ring1','ring2','belt'])state.equip[slot]=makeItem(200,slot,null,'loot','random','Rare');",
  "state.equip.offhand=makeItem(200,'offhand',null,'loot','Shield','Rare');state.gold=20000;state.fragments=20000;",
- "globalThis.__audit={start:()=>phase1Begin(1),state:()=>({stage:phase1Controller.state.stage,realm:phase1Controller.state.planeIndex,completed:phase1Controller.state.history.length,event:phase1Controller.state.selected?.event||null,active:!!state.run,runStatus:state.run?.status||null,draft:phase1Draft?{kind:phase1Draft.kind,step:phase1Draft.step}:null,review:phase5Results.review,bag:phase3BagItems().length,overflow:phase3BagOverflow(),capacity:PHASE3_BAG_CAPACITY,unlock:phase1Controller.state.unlocked,offers:phase1Controller.state.offers?.length||0,families:phase1Controller.state.families,reserved:(phase1Controller.state.version===2?Object.values(phase1Controller.state.eventsByRealm):phase1Controller.state.eventIds).filter(Boolean).length,options:document.querySelectorAll('[data-event-select]').length+document.querySelectorAll('#eventDecline').length}),",
+ "globalThis.__audit={start:()=>phase1Begin(1),state:()=>({stage:phase1Controller.state.stage,realm:phase1Controller.state.planeIndex,completed:phase1Controller.state.history.length,event:phase6Run?.event?.id||null,active:!!state.run,runStatus:state.run?.status||null,draft:phase1Draft?{kind:phase1Draft.kind,step:phase1Draft.step}:null,review:phase5Results.review,bag:phase3BagItems().length,overflow:phase3BagOverflow(),capacity:PHASE3_BAG_CAPACITY,unlock:phase1Controller.state.unlocked,offers:phase1Controller.state.offers?.length||0,families:phase1Controller.state.families,reserved:(phase1Controller.state.version===2?Object.values(phase1Controller.state.eventsByRealm):phase1Controller.state.eventIds).filter(Boolean).length,options:document.querySelectorAll('[data-event-select]').length+document.querySelectorAll('#eventDecline').length}),",
  "step:()=>{const g=phase1Controller.state;if(phase1Draft?.step==='element'){phase2ChooseElement('fire');return 'element';}",
  "if(phase1Draft?.step==='passive'){phase2ChoosePassive(phase1Draft.options[0].id);return 'passive';}",
  "if(phase5Results.review==='realm'&&!phase1Draft){phase5ExitResult();return 'exit';}",
  "if(state.run?.status==='cleared'&&!phase1Draft){phase5ExitResult();return 'exit';}",
  "if(g.stage==='choice'){if(!g.initialFamily){phase2ChooseInitial('blood');return 'initial';}",
  "if(phase3BagItems().length>=PHASE3_BAG_CAPACITY){const item=phase3BagItems()[0];if(item&&phase3CanPrepare()){phase3DiscardLoot(item.id);return 'discard';}}",
- "if(g.offers.length){const choice=g.planeIndex===1?g.offers.find(p=>p.family==='blood'):g.offers[0];phase1Choose(choice.id);phase1Enter();return 'enter';}}",
- "if(g.stage==='combat'&&g.selected?.event&&!state.run){phase6EventChoice(2);return 'event';}",
+ "if(g.offers.length){const allowed=phase1Controller.allowed(),choice=g.planeIndex===1?g.offers.find(p=>p.family==='blood'):g.offers.find(p=>allowed.includes(p.family));if(!choice)throw Error('No eligible Realm offer: '+JSON.stringify({realm:g.planeIndex,families:g.families,offers:g.offers.map(p=>({id:p.id,family:p.family})),allowed}));phase1Choose(choice.id);phase1Enter();return 'enter';}}",
+ "if(g.stage==='combat'&&phase6Run?.event&&!state.run){phase6EventChoice(2);return 'event';}",
  "const r=state.run;if(r?.status==='fight'){for(let i=0;i<2500&&state.run===r&&r.status==='fight';i++)updateFight();return 'fight';}",
  "return 'waiting';}};render();",
  "}else{load();if(!state.merchant)rollShop();save();render();}"
@@ -53,7 +53,7 @@ const server=http.createServer((req,res)=>{
     assert.equal(state.capacity,12);
     if(state.stage==='finished')break;
     assert.notEqual(state.stage,'failed','synthetic hero died');
-    if(state.event){assert.equal(state.options,3,'two event offers plus refusal');if(!eventShot){const shotDir=path.join(root,'docs/v012-global-ui-screenshots/after');fs.mkdirSync(shotDir,{recursive:true});await page.screenshot({path:path.join(shotDir,'event-'+width+'.jpg'),fullPage:true,type:'jpeg',quality:88});eventShot=true;}}
+    if(state.event){try{await page.locator('#eventDecline').waitFor({state:'visible',timeout:1500});}catch(error){throw new Error('Event route did not render its choice panel: '+JSON.stringify({state,screen:await page.locator('#screen').innerText()}));}assert.equal(state.options,3,'two event offers plus refusal');const cards=await page.locator('[data-event-select]').evaluateAll(nodes=>nodes.map(n=>({id:n.dataset.eventSelect,unavailable:n.classList.contains('unavailable')})));assert.equal(cards.length,2);assert(cards.some(card=>!card.unavailable),'every event has a usable choice: '+state.event);assert.equal(await page.locator('#eventPassive,#eventTarget').count(),0,'events do not require a learned ability or a second item');if(!eventShot){const shotDir=path.join(process.env.WANDERER_ARTIFACT_ROOT||root,'docs/v012-global-ui-screenshots/after');fs.mkdirSync(shotDir,{recursive:true});await page.screenshot({path:path.join(shotDir,'event-'+width+'.jpg'),fullPage:true,type:'jpeg',quality:88});eventShot=true;}}
     const action=await page.evaluate(()=>__audit.step());
     if(action==='event')events++;
     if(action==='passive')drafts++;
@@ -64,7 +64,7 @@ const server=http.createServer((req,res)=>{
    assert(index<1300,'stalled '+JSON.stringify(end));
    assert.equal(end.completed,15);assert.equal(end.unlock,2);
    assert.equal(events,end.reserved);assert([3,4].includes(events));
-   assert.equal(drafts,14);
+   assert.equal(drafts,0,'permanent Talent Tree replaces between-Realm passive drafts');
    assert.equal(await page.evaluate(()=>localStorage.getItem('wanderer_browser_proto_v01')),'LEGACY_SENTINEL_KEEP');
    assert.equal(await page.evaluate(()=>localStorage.getItem('wanderer_account_browser_fixture')),'ACCOUNT_SENTINEL_KEEP');
    assert(!requests.some(url=>url.includes('/online/app.mjs')),'no account access');
