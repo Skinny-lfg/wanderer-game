@@ -61,14 +61,14 @@ function phase4Restore(session){
  ports.phase1Controller.restore(session.controller);
  if(session.build)WandererV012Buildcraft.validate(session.build);
  ports.phase6Run=session.integration||null;
- ports.phase1Build=session.build;if(ports.phase1Build){WandererV012Buildcraft.syncPermanent(ports.phase1Build,ports.state.automaticTalents);if(ports.phase6Run?.effects.echo)ports.phase1Build.runtime.echo=ports.phase6Run.effects.echo;}ports.phase1Draft=session.draft;ports.phase1Vitals=session.vitals;ports.phase1Clock=session.clock;
+ ports.phase1Build=session.build;if(ports.phase1Build){WandererV012Buildcraft.syncPermanent(ports.phase1Build,ports.state.automaticTalents,session.controller.freeBuild);if(ports.phase6Run?.effects.echo)ports.phase1Build.runtime.echo=ports.phase6Run.effects.echo;}ports.phase1Draft=session.controller.freeBuild?null:session.draft;ports.phase1Vitals=session.vitals;ports.phase1Clock=session.clock;
  // Older local checkpoints stored remaining Health/Mana doses separately.
  // Move those doses into Stash once; new checkpoints persist only zeroes.
  const legacySupplies=session.supplies||{health:0,mana:0};
  for(const kind of ['health','mana'])if(Number.isInteger(legacySupplies[kind])&&legacySupplies[kind]>0){ports.state.consumables??={};ports.state.consumables[kind]=Math.min(99999,(ports.state.consumables[kind]||0)+legacySupplies[kind]);}
  ports.phase3Supplies={health:0,mana:0};
  ports.phase3LootIds=new Set(session.lootIds);ports.phase4Home=session.home;ports.phase4Seed=session.seed;ports.phase4Prefix=session.prefix;ports.phase4Stamp=session.stamp;ports.uid=session.idCounter;ports.phase1Continuity=session.continuity;
- if(ports.phase1Build){ports.phase1Build.families=ports.phase1Controller.state.families;if(ports.phase1Draft?.kind==='reward'){
+ if(ports.phase1Build){if(!ports.phase1Controller.state.freeBuild)ports.phase1Build.families=ports.phase1Controller.state.families;if(ports.phase1Draft?.kind==='reward'){
   const eligible=WandererV012Buildcraft.eligible,build=ports.phase1Build,draft=ports.phase1Draft;
   if(!ports.phase1Controller.state.rewardPending||!Array.isArray(draft.options)||draft.options.length>3||new Set(draft.options.map(p=>p.id)).size!==draft.options.length||!draft.options.every(p=>WandererV012Buildcraft.CATALOG.some(v=>v.id===p.id)))throw Error('Invalid saved passive choice');
   draft.plane=ports.phase1Controller.state.rewardPending;

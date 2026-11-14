@@ -10,7 +10,7 @@ export function completionCandidate(save){
  const e=save?.expedition,s=e?.presentation?.summary;
  if(e?.lastOutcome!=='victory'||e.active!==null||s?.outcome!=='victory'||
   !Number.isSafeInteger(e.completed)||e.completed<1||s.level!==e.completed||s.realms!==15||
-  !e.awardKeys?.includes(e.attempts+':15:3'))return null;
+  !e.awardKeys?.includes(e.attempts+':15:1'))return null;
  return Object.freeze({version:1,metric:EXPEDITION_RANKING.metric,cleared:e.completed,
   attempt:e.attempts,verification:'required'});
 }

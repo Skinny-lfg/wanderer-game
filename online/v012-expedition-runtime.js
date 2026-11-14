@@ -25,7 +25,7 @@ function phase1Begin(level=1,freeBuild=false){
  if(!['camp','finished','failed'].includes(ports.phase1Controller.state.stage)||!Number.isInteger(level)||level<1||level>ports.phase1Controller.state.unlocked)return false;
  ports.phase4Seed=Math.floor(Math.random()*4294967296)>>>0;ports.phase4Prefix=Date.now().toString(36);ports.phase4Stamp=null;ports.phase4Home=ports.phase4Clone(ports.state.equip);ports.phase4Entry=null;ports.phase4Resume=false;ports.phase4WaveKeys=[];
  ports.phase5Results={version:1,complete:true,review:null,realm:null,summary:null,earned:[],gold:0,fragments:0,craftingStart:ports.phase4Clone(ports.state.crafting||WandererV013Crafting.create())};
- const project=WandererV013Crafting.RECIPES.find(r=>r.id===ports.state.crafting?.targetRecipe);ports.phase1Controller.start(level,{freeBuild,targetFamily:project?.family});if(freeBuild)ports.phase1Controller.chooseInitial('magic');ports.phase6Run={version:1,event:null,events:[],effects:{},combats:0};ports.phase3LootIds=new Set();ports.phase3PotionCooldowns={health:0,mana:0};ports.phase1Vitals=null;ports.phase1Clock=0;ports.phase1Continuity=null;ports.phase3Supplies={health:0,mana:0};ports.phase1Build=WandererV012Buildcraft.create();WandererV012Buildcraft.syncPermanent(ports.phase1Build,ports.state.automaticTalents);if(freeBuild){ports.phase1Build.element=ports.state.automaticTalents?.element||'fire';ports.phase1Build.unlockedFamilies=['magic'];}ports.phase1Build.runtime.hybridRules=true;ports.phase1Build.families=ports.phase1Controller.state.families;ports.phase1Draft=null;ports.state.run=null;ports.view='phase1';
+ const project=WandererV013Crafting.RECIPES.find(r=>r.id===ports.state.crafting?.targetRecipe);ports.phase1Controller.start(level,{freeBuild,targetFamily:project?.family});ports.phase6Run={version:1,event:null,events:[],effects:{},combats:0};ports.phase3LootIds=new Set();ports.phase3PotionCooldowns={health:0,mana:0};ports.phase1Vitals=null;ports.phase1Clock=0;ports.phase1Continuity=null;ports.phase3Supplies={health:0,mana:0};ports.phase1Build=WandererV012Buildcraft.create();WandererV012Buildcraft.syncPermanent(ports.phase1Build,ports.state.automaticTalents,freeBuild);ports.phase1Build.runtime.hybridRules=true;if(!freeBuild)ports.phase1Build.families=ports.phase1Controller.state.families;ports.phase1Draft=null;ports.state.run=null;ports.view='phase1';
  if(ports.PHASE1_PREVIEW){ports.phase5Snapshot.expedition.attempts++;ports.phase5Snapshot.expedition.awardKeys=[];ports.phase5Snapshot.expedition.lastOutcome='active';ports.phase5Persist();}
  ports.render();
 }
@@ -40,7 +40,7 @@ function phase6AwardGear(guaranteed=null){
 function phase6Buff(key,power,remaining=3){ports.phase6Run.effects[key]={power,remaining};}
 
 function phase6OpenEvent(plane){
- if(!ports.phase6Run.event){const replacement=ports.phase1Build.unlockedFamilies.flatMap(f=>WandererV012Buildcraft.eligible(ports.phase1Build,f)).filter(p=>!p.requires.length);
+ if(!ports.phase6Run.event){const replacement=ports.phase1Controller.state.freeBuild?[]:ports.phase1Build.unlockedFamilies.flatMap(f=>WandererV012Buildcraft.eligible(ports.phase1Build,f)).filter(p=>!p.requires.length);
   ports.phase6Run.event={id:plane.event,roll:ports.gameRandom(),alternative:replacement.length?replacement[Math.floor(ports.gameRandom()*replacement.length)].id:null};}
  if(!ports.phase4Entry){ports.phase4Stamp=Date.now();ports.phase4Entry={profile:ports.phase4Clone({...ports.state,run:null}),session:ports.phase4Session(true),ledger:[...(ports.phase5Snapshot?.expedition.awardKeys||[])]};}
  if(ports.phase5Persist()){ports.view='phase1';ports.render();}
@@ -84,10 +84,11 @@ function phase6EventChoice(choice,itemId,passiveId,family,targetId){
 }
 
 function phase6UnlockBase(family){
+ if(ports.phase1Controller.state.freeBuild)return;
  const p=ports.phase1Build;
  if(!p.unlockedFamilies?.includes(family)){const starter=WandererV012Buildcraft.initial(p,family);if(starter)ports.addLog('Affinity unlocked: '+starter.name,'good');}
 }
-function phase6PassiveOptions(plane){ports.phase1Build.realmIndex=plane.plane;ports.phase1Build.runtime.draftStats=ports.totalStats();return WandererV012Buildcraft.options(ports.phase1Build,plane.family,ports.phase1Controller.passiveRandom?.()||ports.gameRandom);}
+function phase6PassiveOptions(plane){if(ports.phase1Controller.state.freeBuild)return [];ports.phase1Build.realmIndex=plane.plane;ports.phase1Build.runtime.draftStats=ports.totalStats();return WandererV012Buildcraft.options(ports.phase1Build,plane.family,ports.phase1Controller.passiveRandom?.()||ports.gameRandom);}
 
 function phase6BackToCamp(){
  const g=ports.phase1Controller.state;
@@ -106,6 +107,7 @@ function phase2EnterInitialRealm(){
 }
 
 function phase2ChooseInitial(family){
+ if(ports.phase1Controller.state.freeBuild)return false;
  if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked))return false;
  const g=ports.phase1Controller.state;
  if(g.stage!=='choice'||g.initialFamily||ports.phase1Draft||!ports.phase1Build)return false;
@@ -115,6 +117,7 @@ function phase2ChooseInitial(family){
 }
 
 function phase2ChooseElement(id){
+ if(ports.phase1Controller.state.freeBuild)return false;
  if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked))return false;
  const draft=ports.phase1Draft;if(!draft||draft.step!=='element')return false;
  WandererV012Buildcraft.element(ports.phase1Build,id);ports.phase1Draft=null;
@@ -125,6 +128,7 @@ function phase2ChooseElement(id){
 }
 
 function phase2ChoosePassive(id){
+ if(ports.phase1Controller.state.freeBuild)return false;
  if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked))return false;
  const draft=ports.phase1Draft,g=ports.phase1Controller.state;
  if(!draft||draft.kind!=='reward'||draft.step!=='passive'||!g.rewardPending||ports.state.run?.status==='fight')return false;
@@ -151,7 +155,7 @@ function phase1Enter(){
  if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked))return false;
  if(ports.phase1Draft||!ports.phase1Build||ports.state.run)return false;
  if(ports.phase3BagItems().length>=ports.PHASE3_BAG_CAPACITY||ports.phase3BagOverflow()){ports.bannerMessage('Bag full. Discard an item before entering another Realm.');return false;}
- const plane=ports.phase1Controller.enter();ports.phase1Build.families=ports.phase1Controller.state.families;
+ const plane=ports.phase1Controller.enter();if(!ports.phase1Controller.state.freeBuild)ports.phase1Build.families=ports.phase1Controller.state.families;
  if(!ports.phase1Controller.state.freeBuild&&plane.family==='magic'&&!ports.phase1Build.element){
   ports.phase1Draft={kind:'entry',plane,family:'magic',step:'element'};ports.phase5Persist();ports.render();
  }

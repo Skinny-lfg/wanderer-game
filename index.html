@@ -1515,7 +1515,7 @@ function phase3OpenInitialAffinity(g){
  if(!dialog)return null;dialog.dataset.initialAffinity='1';dialog.classList.add('phase3InitialAffinityDialog');
  // Close/Escape cancels only the untouched initial-affinity step, returning to Camp.
  // Successful choices set initialFamily before their dialog closes and are unaffected.
- dialog.addEventListener('close',()=>{const current=phase1Controller?.state;if(current?.stage==='choice'&&current.planeIndex===1&&!current.initialFamily)phase6BackToCamp();});
+ dialog.addEventListener('close',()=>{const current=phase1Controller?.state;if(current?.stage==='choice'&&current.planeIndex===1&&!current.initialFamily&&!current.freeBuild)phase6BackToCamp();});
  dialog.querySelectorAll('[data-phase2-initial]').forEach(button=>button.onclick=()=>{
   const family=button.dataset.phase2Initial;
   if(family==='magic'){
@@ -1635,7 +1635,7 @@ function renderPhase1(){
 
  const g=phase1Controller.state,stats=phase3Vitals();
  const familyLabel=f=>phase2FamilyIcon(f)+' '+WandererV012Expedition.FAMILY_NAMES[f];
- if(g.stage==='choice'&&!g.initialFamily){
+ if(g.stage==='choice'&&!g.freeBuild&&!g.initialFamily){
   html('<section class="panel phase3AffinityPending"><span class="eyebrow">Expedition '+g.expedition+' prepared</span><h1>Choose your initial affinity</h1><p class="small muted">Select one affinity to enter the first Realm. You can close the selection and return here without choosing.</p><button type="button" class="primary" id="phase3OpenInitialAffinity">Choose Initial Affinity</button></section>');
   $('phase3OpenInitialAffinity').onclick=()=>phase3OpenInitialAffinity(g);phase6BindBack();phase3OpenInitialAffinity(g);return;
  }

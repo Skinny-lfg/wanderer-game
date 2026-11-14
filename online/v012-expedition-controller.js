@@ -40,7 +40,7 @@ function create(themes,rng=Math.random){
    event:game.version===2?(kind==='event'?game.eventsByRealm[game.planeIndex-1]:null):(['chest','event','altar'].includes(kind)?kind:null),...(lane===null?{}:{lane}),...(kind==='combat'&&game.routeMobCounts&&lane!==null?{mobCount:game.routeMobCounts[game.planeIndex-1][lane]}:{})};
  }
  function offerRealms(){
-  if(game.stage!=='choice'||!game.initialFamily||game.rewardPending)throw Error('Realm selection unavailable');
+  if(game.stage!=='choice'||(!game.freeBuild&&!game.initialFamily)||game.rewardPending)throw Error('Realm selection unavailable');
   if(game.version===2&&game.planeIndex===15){game.offers=[makeOffer(game.bossFamily,[],game.routeMap?0:null)];return game.offers;}
   const previous=game.history[game.history.length-1],laneOrder=game.projectFamily&&previous?[previous.lane,...[0,1,2].filter(n=>n!==previous.lane)]:previous?.lane===2?[1,2,0]:[1,0,2];
   const offers=[],required=game.freeBuild&&game.projectFamily?game.projectFamily:game.history.length===0?game.initialFamily:game.version===2&&allowed().includes(game.pathInfluence)?game.pathInfluence:null;
@@ -85,6 +85,7 @@ function create(themes,rng=Math.random){
    }));
    game.routePositions=game.routeMap.map((row,i)=>row.map((_,lane)=>i===14?150:Math.round(50+lane*100+(routeRng()-.5)*32)));
   }else{delete game.routeEdges;delete game.routePositions;}
+  if(game.freeBuild)offerRealms();
   return game;
  }
  function planAffinities(plan){
@@ -94,16 +95,16 @@ function create(themes,rng=Math.random){
   game.affinityPlan=[...plan];game.affinityPlanSeen=[false,false,false];return game.affinityPlan;
  }
  function chooseInitial(family){
-  if(game.stage!=='choice'||game.initialFamily||!FAMILIES.includes(family))throw Error('Initial affinity unavailable');
+  if(game.freeBuild||game.stage!=='choice'||game.initialFamily||!FAMILIES.includes(family))throw Error('Initial affinity unavailable');
   if(!game.freeBuild&&game.affinityPlan&&family!==game.affinityPlan[0])throw Error('Initial affinity must match the plan');
   game.initialFamily=family;game.families.push(family);offerRealms();return family;
  }
  function reroll(index){
-  if(game.stage!=='choice'||!game.initialFamily||game.rewardPending||!Number.isInteger(index)||index<0||index>2||(game.version===2?(game.rerolls<=0||game.planeIndex===15):game.rerollsByRealm[game.planeIndex-1][index]<=0))throw Error('No Realm rerolls remaining');
+  if(game.stage!=='choice'||(!game.freeBuild&&!game.initialFamily)||game.rewardPending||!Number.isInteger(index)||index<0||index>2||(game.version===2?(game.rerolls<=0||game.planeIndex===15):game.rerollsByRealm[game.planeIndex-1][index]<=0))throw Error('No Realm rerolls remaining');
   const other=game.offers.filter((_,i)=>i!==index),old=game.offers[index];
   if(!old||!reachable(old))throw Error('Realm is not connected');
   // Keep all other cards and their counters intact. Guarantee the initial route even after rerolling it.
-  const mustInitial=game.history.length===0&&!other.some(o=>o.family===game.initialFamily);
+  const mustInitial=!game.freeBuild&&game.history.length===0&&!other.some(o=>o.family===game.initialFamily);
   const used=[...other.map(o=>o.id),old.id];
   const candidates=allowed().filter(f=>(!mustInitial||f===game.initialFamily)&&expeditionThemes.some(t=>t.family===f&&!used.includes(t.id)));
   if(!candidates.length)throw Error('No eligible replacement Realm');
@@ -114,7 +115,7 @@ function create(themes,rng=Math.random){
  }
  function reachable(realm){const previous=game.history[game.history.length-1];return !game.routeMap||!previous||(game.routeEdges?game.routeEdges[game.planeIndex-2][previous.lane].includes(realm.lane):game.planeIndex===15||Math.abs(previous.lane-realm.lane)<=1);}
  function select(id){
-  if(game.stage!=='choice'||!game.initialFamily||game.rewardPending)throw Error('Realm not available');
+  if(game.stage!=='choice'||(!game.freeBuild&&!game.initialFamily)||game.rewardPending)throw Error('Realm not available');
   const realm=game.offers.find(p=>p.id===id);
   if(!realm||!reachable(realm))throw Error('Not a reachable Realm');
   if(!allowed().includes(realm.family))throw Error('Affinity choice no longer eligible');
@@ -193,7 +194,7 @@ function create(themes,rng=Math.random){
    if(g.stage==='combat'){
     const selected=g.offers.find(p=>p.id===g.selected?.id);if(!selected||!g.freeBuild&&!g.families.includes(selected.family)||!integer(g.wave,1,Math.max(1,selected.waves)))throw Error('Invalid combat checkpoint');g.selected=selected;
    }else{
-    if(g.wave!==0||g.rewardPending&&(g.offers.length||g.selected)||!g.initialFamily&&g.offers.length)throw Error('Invalid choice checkpoint');
+    if(g.wave!==0||g.rewardPending&&(g.offers.length||g.selected)||!g.freeBuild&&!g.initialFamily&&g.offers.length)throw Error('Invalid choice checkpoint');
     if(g.selected){const selected=g.offers.find(p=>p.id===g.selected.id);if(!selected)throw Error('Invalid selected Realm');g.selected=selected;}
    }
   }
