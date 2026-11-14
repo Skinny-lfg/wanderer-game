@@ -7,8 +7,8 @@ function phase1Init(){
  ports.fresh();
  ports.state.expeditionOverflow=[];
  ports.state.equip.weapon=ports.state.stash.shift();
- ports.state.equip.armor=ports.makeItem(1,'armor',null,'loot','Armor','Common');
- ports.state.equip.helm=ports.makeItem(1,'helm',null,'loot','Helm','Common');
+ ports.state.equip.armor=ports.makeItem(1,'armor',null,'starter','Armor','Common');
+ ports.state.equip.helm=ports.makeItem(1,'helm',null,'starter','Helm','Common');
  ports.state.crafting=WandererV013Crafting.create();ports.state.automaticTalents={...WandererAutomaticTalents.create(),starterPoints:2};
  ports.phase1Controller=WandererV012Expedition.create(ports.THEMES,ports.gameRandom);
  ports.view='phase1';

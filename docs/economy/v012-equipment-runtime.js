@@ -77,7 +77,7 @@ function fresh(){ports.state={attemptCompleted:false,characterId:'wanderer',onli
 
 function makeSlots(){return Object.fromEntries(ports.SLOTS.map(s=>[s,null]))}
 
-function starter(){return {id:ports.makeId(),slot:'weapon',subtype:'Sword',name:'Old Sword',tier:1,rarity:'Common',effect:null,atk:5,str:1,obtainedAt:Date.now(),crafted:false,recoveryStarter:true}}
+function starter(){return {id:ports.makeId(),slot:'weapon',subtype:'Sword',name:'Old Sword',tier:1,rarity:'Common',effect:null,atk:5,str:1,obtainedAt:Date.now(),crafted:false,recoveryStarter:true,startingGear:true}}
 
 function legendaryMatches(entry,item){
  if(!entry||!item)return false;
@@ -142,6 +142,13 @@ if(ports.PHASE1_PREVIEW&&rarity!=='Common'){
  o.craftingProfile=profile;o[profile]=(o[profile]||0)+(rarity==='Uncommon'?1:rarity==='Rare'?2:3);
  if(rarity==='Rare')o.hp+=Math.max(2,Math.round(power*.5));
  if(rarity==='Epic'){o.v013Trait=preview?'focused':['Staff','Wand','Orb'].includes(subtype)?ports.sample(['efficient','ward',...(subtype==='Staff'?['conflagration']:[])]):ports.sample(['focused','blood_transfer']);}
+}
+// New characters begin with useful but modest flat gear stats. Keep weapon and
+// armor identity attributes intact; the ordinary loot/crafting tier curve is
+// deliberately unchanged. This marker also makes the starting kit measurable.
+if(source==='starter'){
+ for(const field of ['atk','def','hp','spd','mana','spell','evasionRating'])if(Number.isFinite(o[field]))o[field]=Math.floor(o[field]*.90);
+ o.startingGear=true;
 }
 return o;}
 
