@@ -163,7 +163,7 @@ function legendaryKill(r){}
 function setReady(r,name,seconds){
  const timers=r.setCooldowns||(r.setCooldowns={}),now=ports.setNow(r);
  if(now<(timers[name]||0))return false;
- timers[name]=now+seconds;return true;
+ (r.cooldownPeriods??={})[name]=seconds;timers[name]=now+seconds;return true;
 }
 
 function setBarrier(r,amount){
@@ -461,7 +461,7 @@ function updateFight(){
  if(ports.isPhase1Run())ports.phase2MagicTick(r);
  if(e.hp<=0||hasUnsettledGroupDeaths(r)){ports.winEncounter(true);return;}
  const lt=ports.legendaryRuntime(r),haste=(ports.isPhase1Run()&&ports.phase1Build?WandererV012Buildcraft.speed(ports.phase1Build,ports.phase1Clock+r.combatSeconds):1)*(s.bonus.bleedHaste?1+Math.min(3,t.haste.length)*.05:1)*(1+((lt.natureHasteUntil||0)>ports.setNow(r)?.10:0)+((lt.thunderHasteUntil||0)>ports.setNow(r)?.12:0));
- if(advancePlayerAttackClock(r,dt,s.attacksPerSec*haste)){ports.weaponAttack(r);if(e.hp<=0||hasUnsettledGroupDeaths(r)){ports.winEncounter(true);return;}}
+ if(advancePlayerAttackClock(r,dt,s.attacksPerSec*haste)){r.autoUses=(r.autoUses||0)+1;ports.weaponAttack(r);if(e.hp<=0||hasUnsettledGroupDeaths(r)){ports.winEncounter(true);return;}}
  if(r.tDot>=1){
   r.tDot-=1;
   const hasBleed=e.bleedStacks>0,hasBurn=e.burnStacks>0,hasDots=hasBleed||hasBurn;
@@ -480,6 +480,7 @@ function updateFight(){
   r.tEnemy=0;if(r.enemies)e.groupClock=0;mobWindups.delete(e);
   let enemyAbilityVfx=null;
   let raw=Math.max(Math.ceil(e.atk*.24),Math.round(e.atk*(1-Math.min(.75,s.defense/(s.defense+e.atk*1.35)))));
+  const armorPrevented=Math.max(0,e.atk-raw);
   if(e.effect==='burn')raw+=WandererV012CombatCore.enemyStat(r.tier,Math.round(WandererV012CombatCore.referenceLevel(r.tier)*.3));
   if(e.effect==='sunder')raw+=WandererV012CombatCore.enemyStat(r.tier,Math.round(WandererV012CombatCore.referenceLevel(r.tier)*.2));
   if(e.bossStyle==='berserker'&&e.hp<e.maxhp*.5){
@@ -494,6 +495,7 @@ function updateFight(){
   if(e.eliteType==='berserker')raw=Math.min(raw,Math.max(1,Math.floor(r.maxhp*.35)));
   const attackType=ports.enemyAttackType(e);
   if(ports.tryDodge(r,attackType)){
+   r.lastImpact={source:e.name,at:r.combatSeconds,dodge:true};
    if(attackType==='physical'&&s.main?.subtype==='Daggers'&&['Daggers','Off-Hand Dagger'].includes(s.off?.subtype)&&ports.setReady(r,'daggerEvasionBarrier',6))ports.setBarrier(r,r.maxhp*.03);
    ports.animateEnemyStrike(enemyAbilityVfx);
   }
@@ -517,6 +519,7 @@ function updateFight(){
   }
   const barrierBeforeHit=r.barrier,blocked=Math.min(r.barrier,raw);r.barrier-=blocked;
   const barrierBroken=barrierBeforeHit>0&&r.barrier<=0,hit=Math.max(0,raw-blocked);
+  r.lastImpact={source:e.name,at:r.combatSeconds,armor:armorPrevented,barrier:blocked,shield:damageBlocked,hit};
   if(blocked>0)ports.addLog('🛡 Barrier absorbs '+blocked+' damage','good');
   if(hit>0){
    ports.phase6Metric(r,'damageTaken',Math.min(Math.max(0,r.hp),hit));ports.phase3FlashPlayerDamage?.();r.hp-=hit;ports.addLog('🩸 '+e.name+' hits for '+hit+' HP','bleed');ports.floatText(hit,'hero');
