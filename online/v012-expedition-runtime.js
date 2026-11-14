@@ -181,23 +181,29 @@ function phase1StartWave(resetScroll=false){
  const theme=ports.phase2Theme(g.selected.id);
  const totalCount=last&&(g.selected.boss||g.selected.elite)?1:(g.selected.mobCount||3),activeCount=Math.min(4,totalCount);
  const spawn=()=>ports.enemyFor(r.tier,r.enc,{theme,boss:last&&g.selected.boss,elite:last&&g.selected.elite&&!g.selected.boss,variant:g.version===2?ports.BOSS_ARCHETYPES.find(b=>b.style===WandererV012Expedition.BOSSES.find(v=>v.id===g.bossId).style):null});
- const scale=totalCount===12?{hp:.16,atk:.22}:totalCount>=18?{hp:2/totalCount,atk:.18}:null;
+ const scale=totalCount===12?{hp:.40,atk:.16}:totalCount>=18?{hp:.32,atk:.12}:null;
  const group=WandererV012CombatCore.createEnemyGroup(spawn,totalCount,{activeSlots:activeCount,scale});
- // Stretch endurance while preserving approximate incoming damage per encounter.
- for(const enemy of group){enemy.hp=enemy.maxhp=Math.round(enemy.maxhp*1.8);enemy.attackEvery*=1.8;}
+ // Give ordinary mobs time to show their attacks; keep their pressure lower.
+ for(const enemy of group){
+  const endurance=enemy.boss||enemy.miniboss?1.8:3;
+  enemy.hp=enemy.maxhp=Math.round(enemy.maxhp*endurance);
+  enemy.attackEvery*=1.15;
+  enemy.atk=Math.max(1,Math.round(enemy.atk*.65));
+ }
  if(last&&(g.selected.boss||g.selected.elite)){
   const escorts=g.selected.boss?2:1;
   for(let i=0;i<escorts;i++){
    const guard=ports.enemyFor(r.tier,r.enc,{theme,boss:false,elite:false});
-   guard.hp=guard.maxhp=Math.round(guard.maxhp*.45);guard.atk=Math.round(guard.atk*.35);
-   guard.attackEvery*=2.2;guard.groupSlot=i+1;guard.groupClock=-(i+1)*.6;group.push(guard);
+   guard.hp=guard.maxhp=Math.round(guard.maxhp*1.2);guard.atk=Math.round(guard.atk*.35);
+   guard.attackEvery*=1.3;guard.groupSlot=i+1;guard.groupClock=-(i+1)*.6;group.push(guard);
   }
  }
  const fieldCount=Math.min(4,group.length);
- group[0].groupClock=0;group[0].groupSlot=0;
+ group[0].groupSlot=0;
+ for(const enemy of group)enemy.groupClock=Math.max(0,enemy.attackEvery-(.9+enemy.groupSlot*.3));
  r.totalMobCount=group.length;r.enemies=fieldCount>1?group.slice(0,fieldCount):undefined;r.groupReserve=group.slice(fieldCount);if(fieldCount===1)delete r.enemies;r.enemy=group[0];
  r.phase6Bounty=false;if(r.enemy.miniboss&&ports.phase6Run?.effects.bounty){r.phase6Bounty=true;ports.phase6Run.effects.bounty=false;r.enemy.hp=r.enemy.maxhp=Math.ceil(r.enemy.maxhp*1.25);r.enemy.atk=Math.ceil(r.enemy.atk*1.25);}
- r.tPlayer=r.tEnemy=r.tDot=0;r.setTemp=null;r.playerDebuffUntil=0;
+ r.tPlayer=r.tDot=0;r.tEnemy=r.enemy.groupClock;r.setTemp=null;r.playerDebuffUntil=0;
  r.playerHealingDebuffUntil=0;r.nextCasterHexAt=0;ports.setRuntime(r);r.status='fight';
  if(ports.phase1Build)for(const enemy of r.enemies||[r.enemy])WandererV012Buildcraft.resetWave(ports.phase1Build,enemy);
  ports.addLog('Encounter: '+r.enemy.name+' · '+totalCount+' enemies');
@@ -216,7 +222,7 @@ function phase1WaveWon(){
    if(ports.state.automaticTalents?.nodes?.includes('plague_spread')){const bleed=enemy.dots?.bleed?.find(dot=>!dot.spread),rot=enemy.v012Rot?.find(dot=>!dot.spread);for(const target of r.enemies.filter(mob=>mob.hp>0).concat(r.groupReserve||[]).slice(0,2)){if(bleed){target.dots.bleed??=[];if(target.dots.bleed.length<12)target.dots.bleed.push({damage:Math.max(1,Math.round(bleed.damage*.5)),remaining:Math.min(2,bleed.remaining),spread:true});ports.synchronizeDots(target);}if(rot){target.v012Rot??=[];if(target.v012Rot.length<6)target.v012Rot.push({damage:Math.max(1,Math.round(rot.damage*.5)),remaining:Math.min(2,rot.remaining),ticks:0,spread:true});}}}
     ports.legendaryKill(r);if(ports.phase1Build)WandererV012Buildcraft.onKill(ports.phase1Build,{...ports.phase2Context(r),waveComplete:!r.groupReserve?.length&&WandererV012CombatCore.groupComplete(r.enemies)&&enemy===dead[dead.length-1]});}
   let reinforcements=0;
-  for(const fallen of dead){const replacement=r.groupReserve?.shift();if(!replacement)continue;const slot=Math.max(0,Number(fallen.groupSlot)||0),index=r.enemies.indexOf(fallen);if(index<0)continue;replacement.groupSlot=slot;replacement.groupClock=-(slot*replacement.attackEvery/r.enemies.length);replacement.isReinforcement=true;replacement.reinforcementArrival=true;r.enemies[index]=replacement;reinforcements++;}
+  for(const fallen of dead){const replacement=r.groupReserve?.shift();if(!replacement)continue;const slot=Math.max(0,Number(fallen.groupSlot)||0),index=r.enemies.indexOf(fallen);if(index<0)continue;replacement.groupSlot=slot;replacement.groupClock=Math.max(0,replacement.attackEvery-(.9+slot*.3));replacement.isReinforcement=true;replacement.reinforcementArrival=true;r.enemies[index]=replacement;reinforcements++;}
   const next=selectedTarget?.hp>0&&r.enemies.includes(selectedTarget)?selectedTarget:r.enemies.find(enemy=>enemy.hp>0&&!enemy.isReinforcement)||WandererV012CombatCore.nextGroupTarget(r.enemies);if(next){r.enemy=next;if(reinforcements){ports.addLog(reinforcements+' reinforcement'+(reinforcements===1?' arrives':'s arrive')+' in open position'+(reinforcements===1?'':'s')+'.','good');if(!ports.phase3RefreshGroupEnemies?.())ports.renderCombat();}else if(!ports.phase3RetargetGroup?.())ports.renderCombat();return true;}
  }else if(r.enemy.hp>0)return;
  clearInterval(ports.clock);
