@@ -217,7 +217,7 @@ function phase1WaveWon(){
   const next=selectedTarget?.hp>0&&r.enemies.includes(selectedTarget)?selectedTarget:r.enemies.find(enemy=>enemy.hp>0&&!enemy.isReinforcement)||WandererV012CombatCore.nextGroupTarget(r.enemies);if(next){r.enemy=next;if(reinforcements){ports.addLog(reinforcements+' reinforcement'+(reinforcements===1?' arrives':'s arrive')+' in open position'+(reinforcements===1?'':'s')+'.','good');if(!ports.phase3RefreshGroupEnemies?.())ports.renderCombat();}else if(!ports.phase3RetargetGroup?.())ports.renderCombat();return true;}
  }else if(r.enemy.hp>0)return;
  clearInterval(ports.clock);
- if(ports.PHASE1_PREVIEW){const token=ports.phase5Snapshot.expedition.attempts+':'+r.phase1Plane+':'+r.enc;if(ports.phase5Snapshot.expedition.awardKeys.includes(token)||ports.phase4WaveKeys.includes(token)){ports.phase5Fail(Error('Duplicate Wave reward rejected'));return;}ports.phase4WaveKeys.push(token);}
+ if(ports.PHASE1_PREVIEW){const token=ports.phase5Snapshot.expedition.attempts+':'+r.phase1Plane+':'+r.enc;if(ports.phase5Snapshot.expedition.awardKeys.includes(token)||ports.phase4WaveKeys.includes(token)){ports.phase5Fail(Error('Duplicate encounter reward rejected'));return;}ports.phase4WaveKeys.push(token);}
  r.phase4AwardedWave=r.enc;
  if(!r.enemies){ports.legendaryKill(r);
  if(ports.phase1Build)WandererV012Buildcraft.onKill(ports.phase1Build,ports.phase2Context(r));}
@@ -314,7 +314,7 @@ function phase3ExpeditionActive(){return ports.PHASE1_PREVIEW&&['choice','combat
 function phase3CanPrepare(){
  if(ports.phase5Results.review)return false;
  if(ports.phase4Resume)return false;
- return ports.PHASE1_PREVIEW&&ports.phase1Controller?.state.stage==='choice'&&!!ports.phase1Controller.state.initialFamily&&!ports.phase1Controller.state.rewardPending&&!ports.phase1Draft&&!ports.state.run;
+ return ports.PHASE1_PREVIEW&&ports.phase1Controller?.state.stage==='choice'&&(ports.phase1Controller.state.freeBuild||!!ports.phase1Controller.state.initialFamily)&&!ports.phase1Controller.state.rewardPending&&!ports.phase1Draft&&!ports.state.run;
 }
 
 function phase3IsBetweenPlanes(){return ports.phase3CanPrepare()&&ports.phase1Controller.state.planeIndex>1;}

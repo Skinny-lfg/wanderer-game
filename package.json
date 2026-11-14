@@ -14,7 +14,7 @@
     "build:pvp": "node scripts/build-pvp-stats.cjs",
     "build:pages": "node scripts/update-pages-preview.mjs",
     "test:v013": "node --test tests/automatic-rpg-groups.test.cjs tests/automatic-rpg-route.test.cjs tests/automatic-rpg-talents.test.cjs tests/v013-unified-lifecycle.test.cjs tests/v013-crafting.test.cjs tests/v013-specializations.test.cjs tests/v013-loot.test.cjs",
-    "test:v013:browser": "node tests/v013-pages-browser.cjs"
+    "test:v013:browser": "node tests/v013-pages-browser.cjs && node tests/v013-cleanup-ui-browser.cjs"
   },
   "dependencies": {
     "firebase": "11.10.0"
