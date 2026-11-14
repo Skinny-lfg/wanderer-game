@@ -37,7 +37,7 @@ const P=[
  ['magic','elemental_force','Elemental Force','Increase Magic status potency by 15% per rank.'],
  ['magic','kindling','Kindling','Fire Burn gains 20% potency per rank.',[],'fire'],
  ['magic','deep_winter','Deep Winter','Funded Frost casts Chill; chilled foes take a bounded 18% Spell Power burst every 4s. Boss Chill lasts at most 1.2s.',[],'frost'],
- ['magic','overcharge','Overcharge','Funded Lightning casts add Static. Four player charges discharge for 38.4% Spell Power; charges persist between Realms.',[],'lightning'],
+ ['magic','overcharge','Overcharge','Funded Lightning casts chain to two additional foes for 50% then 30% of the primary hit and add Static. Four player charges discharge; charges persist between Realms.',[],'lightning'],
  ['blood','plague_rupture','Plague Rupture','Bleed + Rot unleash a burst on critical hits (8s cooldown).',['blood','decay']],
  ['blood','blood_ward','Blood Ward','Bleeding enemies generate Barrier every 5s.',['blood','aegis']],
  ['blood','hemovore','Hemovore','The first bleeding kill per encounter heals 4% max HP.',['blood','vitality']],
@@ -102,7 +102,7 @@ const descriptions={
  elemental_force:'Funded elemental casts gain 12% power per rank.',
  kindling:'Funded Fire casts apply Burn.',
  deep_winter:'Funded Frost casts Chill. Chilled foes take a Spell Power burst every 4s (18% at rank 1, +3 percentage points per rank; capped at 5% of normal foes’ Max HP or 1.5% of bosses’). Boss Chill lasts at most 1.2s.',
- overcharge:'Funded Lightning casts add Static. Every 4 charges deal 32% Spell Power at rank 1 (+6 percentage points per rank), capped at 3.5% of the foe’s Max HP. Charges persist between Realms.'
+ overcharge:'Funded Lightning casts chain to two additional foes for 50% then 30% of the primary hit and add Static. Every 4 charges discharge for 32% Spell Power at rank 1 (+6 percentage points per rank), capped at 3.5% of the foe’s Max HP. Charges persist between Realms.'
 };
 const TAGS={
  PRODUCE_BLEED:['bleeding_edge','sanguine_fury','hex_bleed','crimson_pact','sanguine_reprisal'],CONSUMES_BLEED:['deep_cuts','executioner','blood_drinker','blood_ward','hemovore','plague_rupture','carrion_detonation','crimson_rush','reapers_cadence','hemal_sigil'],

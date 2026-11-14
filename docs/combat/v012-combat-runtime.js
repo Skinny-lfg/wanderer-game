@@ -327,10 +327,12 @@ function applyAffinity(effect,enemy,s,mult=1,baseDamage=0){
 function v013Traits(){return [...new Set(Object.values(ports.state?.equip||{}).filter(Boolean).map(item=>item.v013Trait).filter(Boolean))];}
 function v013FundedCost(baseCost){if(baseCost<=0)return 0;const cost=Math.max(1,Math.ceil(baseCost));return v013Traits().includes('efficient')?Math.max(1,cost-Math.max(1,Math.floor(cost*.1))):cost;}
 function v013SpellMultiplier(r){const nodes=ports.state.automaticTalents?.nodes||[];return (ports.phase1Build?.element==='fire'&&nodes.includes('fire_focus')?.9:1)*(ports.phase1Build?.element==='frost'&&nodes.includes('frost_focus')&&r.enemy.slowTime>0?1.2:1)*(ports.phase1Build?.element==='lightning'&&nodes.includes('lightning_focus')?1.35:1);}
+function v013LightningChain(r){return ports.isPhase1Run()&&ports.phase1Build?.element==='lightning'&&WandererV012Buildcraft.rank(ports.phase1Build,'overcharge')>0&&!ports.state.automaticTalents?.nodes?.includes('lightning_focus');}
+function v013LightningChainFactors(){return ports.state.automaticTalents?.nodes?.includes('storm_mastery')?[.5,.3,.2]:[.5,.3];}
 function groupSecondaryDamage(r,base,factors,label,physical=false){
  if(!r.enemies||r.enemies.length<2)return 0;
  const targets=r.enemies.filter(enemy=>enemy!==r.enemy&&enemy.hp>0).slice(0,factors.length);let hit=0;
- targets.forEach((enemy,i)=>{let amount=Math.max(1,Math.round((physical?Math.max(1,Math.round(r.stats.attack*({'Two-Handed':1.70,Sword:1.12,Mace:1.4,Bow:1.08}[r.stats.main?.subtype]||1))-(enemy.def||0)):base)*factors[i]));const absorbed=Math.min(enemy.barrier||0,amount);enemy.barrier=Math.max(0,(enemy.barrier||0)-absorbed);amount-=absorbed;const actual=Math.min(Math.max(0,enemy.hp),amount);enemy.hp-=amount;ports.phase6Metric(r,'damageDealt',actual);hit++;});
+ targets.forEach((enemy,i)=>{let amount=Math.max(1,Math.round((physical?Math.max(1,Math.round(r.stats.attack*({'Two-Handed':1.70,Sword:1.12,Mace:1.4,Bow:1.08,Daggers:.80}[r.stats.main?.subtype]||1))-(enemy.def||0)):base)*factors[i]));const absorbed=Math.min(enemy.barrier||0,amount);enemy.barrier=Math.max(0,(enemy.barrier||0)-absorbed);amount-=absorbed;const actual=Math.min(Math.max(0,enemy.hp),amount);enemy.hp-=amount;ports.phase6Metric(r,'damageDealt',actual);hit++;});
  if(hit)ports.addLog(label+' hits '+hit+' additional '+(hit===1?'enemy':'enemies')+'.','good');return hit;
 }
 function groupElementalEffects(r,b){
@@ -425,10 +427,11 @@ function weaponAttack(r,offhandStrike=false){
 
  if(ports.isPhase1Run())ports.phase2WeaponAttack(r,base,critical,cast);
  if(!offhandStrike&&kind==='Two-Handed'){const factor=ports.state.automaticTalents?.nodes?.includes('cleave_mastery')?.6:.4;groupSecondaryDamage(r,base,[factor,factor],'⚔ Cleave',true);}
+ if(!offhandStrike&&kind==='Daggers'&&ports.state.automaticTalents?.nodes?.includes('fan_of_blades'))groupSecondaryDamage(r,base,[.22,.22],'🗡 Fan of Blades',true);
  if(!offhandStrike&&kind==='Bow'&&ports.state.automaticTalents?.nodes?.includes('bow_pierce'))groupSecondaryDamage(r,base,[.35],'🏹 Piercing Arrow',true);
  if(!offhandStrike&&kind==='Sword'&&off?.subtype==='Shield'&&ports.state.automaticTalents?.nodes?.includes('sword_sweep'))groupSecondaryDamage(r,base,[.25],'⚔ Shielded Sweep',true);
  if(!offhandStrike&&kind==='Mace'&&ports.state.automaticTalents?.nodes?.includes('mace_shockwave')){const secondary=r.enemies?.find(enemy=>enemy!==r.enemy&&enemy.hp>0);groupSecondaryDamage(r,base,[.3],'🔨 Concussive Swing',true);if(secondary&&secondary.hp>0)secondary.slowTime=Math.max(secondary.slowTime||0,1);}
- if(cast&&ports.phase1Build?.element==='lightning'&&!ports.state.automaticTalents?.nodes?.includes('lightning_focus'))groupSecondaryDamage(r,base,ports.state.automaticTalents?.nodes?.includes('storm_mastery')?[.5,.3,.2]:[.5,.3],'⚡ Chain Lightning');
+ if(cast&&v013LightningChain(r))groupSecondaryDamage(r,base,v013LightningChainFactors(),'⚡ Chain Lightning');
  if(s.counts.shield>=2){const gained=ports.setBarrier(r,Math.max(1,Math.round(r.maxhp*(s.bonus.shieldBonus||0))));if(gained>0)ports.addLog('🛡 Shield set: +'+Math.round(gained)+' Barrier','good');}
  if(!offhandStrike&&weapon?.subtype==='Daggers'&&['Daggers','Off-Hand Dagger'].includes(off?.subtype)&&e.hp>0)weaponAttack(r,true);
  return damage;
@@ -595,7 +598,7 @@ function phase2MagicTick(r){
  let spellDamage=Math.max(1,Math.round(WandererV012Buildcraft.elementalPower(b,ctx.power)*.70*v013SpellMultiplier(r)));if(v013Traits().includes('focused')&&!r.groupReserve?.length&&(!r.enemies||r.enemies.filter(enemy=>enemy.hp>0).length===1))spellDamage=Math.max(1,Math.round(spellDamage*1.1));if(ports.state.automaticTalents?.nodes?.includes('single_target_mastery')&&!r.groupReserve?.length&&(!r.enemies||r.enemies.filter(enemy=>enemy.hp>0).length===1))spellDamage=Math.max(1,Math.round(spellDamage*1.15));
  ports.setDirectEnemyDamage(r,spellDamage,'✨ '+b.element);
  WandererV012Buildcraft.onCast(b,ctx);groupElementalEffects(r,b);
- if(b.element==='lightning'&&!ports.state.automaticTalents?.nodes?.includes('lightning_focus'))groupSecondaryDamage(r,spellDamage,ports.state.automaticTalents?.nodes?.includes('storm_mastery')?[.5,.3,.2]:[.5,.3],'⚡ Chain Lightning');
+ if(v013LightningChain(r))groupSecondaryDamage(r,spellDamage,v013LightningChainFactors(),'⚡ Chain Lightning');
 }
 
 function phase6Metric(r,key,n){if(!r?.phase1||!Number.isFinite(n)||n<0)return;r.metrics??={};r.metrics[key]=(r.metrics[key]||0)+n;}
