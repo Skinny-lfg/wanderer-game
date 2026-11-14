@@ -218,7 +218,7 @@ function initial(b,family){
  if(!b.initialFamily){b.initialFamily=family;b.initialPassive=id;}
  b.unlockedFamilies.push(family);b.picks.push(id);return BY_ID[id];
 }
-function ready(b,id,now,seconds){if((b.cooldowns[id]??-1e10)>now)return false;b.cooldowns[id]=now+seconds;return true;}
+function ready(b,id,now,seconds){if((b.cooldowns[id]??-1e10)>now)return false;(b.cooldownPeriods??={})[id]=seconds;b.cooldowns[id]=now+seconds;return true;}
 function mods(b,base){
  const s={...base},h=rank(b,'strong_heart'),a=rank(b,'iron_skin'),q=rank(b,'quick_hands'),p=rank(b,'precision');
  s.maxhp=Math.round(s.maxhp*(1+.10*Math.sqrt(h)));

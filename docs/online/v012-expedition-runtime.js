@@ -183,7 +183,19 @@ function phase1StartWave(resetScroll=false){
  const spawn=()=>ports.enemyFor(r.tier,r.enc,{theme,boss:last&&g.selected.boss,elite:last&&g.selected.elite&&!g.selected.boss,variant:g.version===2?ports.BOSS_ARCHETYPES.find(b=>b.style===WandererV012Expedition.BOSSES.find(v=>v.id===g.bossId).style):null});
  const scale=totalCount===12?{hp:.16,atk:.22}:totalCount>=18?{hp:2/totalCount,atk:.18}:null;
  const group=WandererV012CombatCore.createEnemyGroup(spawn,totalCount,{activeSlots:activeCount,scale});
- r.totalMobCount=totalCount;r.enemies=activeCount>1?group.slice(0,activeCount):undefined;r.groupReserve=group.slice(activeCount);if(activeCount===1)delete r.enemies;r.enemy=group[0];
+ // Stretch endurance while preserving approximate incoming damage per encounter.
+ for(const enemy of group){enemy.hp=enemy.maxhp=Math.round(enemy.maxhp*1.8);enemy.attackEvery*=1.8;}
+ if(last&&(g.selected.boss||g.selected.elite)){
+  const escorts=g.selected.boss?2:1;
+  for(let i=0;i<escorts;i++){
+   const guard=ports.enemyFor(r.tier,r.enc,{theme,boss:false,elite:false});
+   guard.hp=guard.maxhp=Math.round(guard.maxhp*.45);guard.atk=Math.round(guard.atk*.35);
+   guard.attackEvery*=2.2;guard.groupSlot=i+1;guard.groupClock=-(i+1)*.6;group.push(guard);
+  }
+ }
+ const fieldCount=Math.min(4,group.length);
+ group[0].groupClock=0;group[0].groupSlot=0;
+ r.totalMobCount=group.length;r.enemies=fieldCount>1?group.slice(0,fieldCount):undefined;r.groupReserve=group.slice(fieldCount);if(fieldCount===1)delete r.enemies;r.enemy=group[0];
  r.phase6Bounty=false;if(r.enemy.miniboss&&ports.phase6Run?.effects.bounty){r.phase6Bounty=true;ports.phase6Run.effects.bounty=false;r.enemy.hp=r.enemy.maxhp=Math.ceil(r.enemy.maxhp*1.25);r.enemy.atk=Math.ceil(r.enemy.atk*1.25);}
  r.tPlayer=r.tEnemy=r.tDot=0;r.setTemp=null;r.playerDebuffUntil=0;
  r.playerHealingDebuffUntil=0;r.nextCasterHexAt=0;ports.setRuntime(r);r.status='fight';
