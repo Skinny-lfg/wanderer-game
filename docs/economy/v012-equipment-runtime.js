@@ -131,14 +131,14 @@ if(armorType){
  // Keep the existing primary-attribute budget; no new stat weights or scaling.
  const budget=o.str+o.agi+o.int+o.end;
  o.str=o.agi=o.int=o.end=0;
- o[{Cloth:'int',Leather:'agi',Plate:'str'}[armorType]]=budget;
+ o[{Cloth:'int',Leather:'agi',Plate:'end'}[armorType]]=budget;
  o.armorType=armorType;
  if(armorType==='Leather')o.evasionRating=power;
 }
 if(rarity==='Legendary'){const identity=legendaryIdentity;if(identity){o.legendaryId=identity.id;o.name=identity.name;}o.legendaryPower=legendaryDefinition?legendaryDefinition.name+': '+legendaryDefinition.description:'';o.atk+=subtype==='Sword'?progressTier+4:0;}
 if(tier>200)for(const field of ['atk','def','hp','str','agi','int','end','cha','mana','spell','evasionRating'])if(typeof o[field]==='number'&&!(field==='atk'&&['Staff','Wand'].includes(subtype)))o[field]=WandererV012CombatCore.gearStat(tier,o[field]);
 if(ports.PHASE1_PREVIEW&&rarity!=='Common'){
- const profile=armorType?({Cloth:'int',Leather:'agi',Plate:'str'}[armorType]):['Staff','Wand','Orb'].includes(subtype)?'int':['Bow','Daggers','Off-Hand Dagger'].includes(subtype)?'agi':subtype==='Shield'?'end':['Amulet','Ring'].includes(subtype)?'cha':'str';
+ const profile=armorType?({Cloth:'int',Leather:'agi',Plate:'end'}[armorType]):['Staff','Wand','Orb'].includes(subtype)?'int':['Bow','Daggers','Off-Hand Dagger'].includes(subtype)?'agi':subtype==='Shield'?'end':['Amulet','Ring'].includes(subtype)?'cha':'str';
  o.craftingProfile=profile;o[profile]=(o[profile]||0)+(rarity==='Uncommon'?1:rarity==='Rare'?2:3);
  if(rarity==='Rare')o.hp+=Math.max(2,Math.round(power*.5));
  if(rarity==='Epic'){o.v013Trait=preview?'focused':['Staff','Wand','Orb'].includes(subtype)?ports.sample(['efficient','ward',...(subtype==='Staff'?['conflagration']:[])]):ports.sample(['focused','blood_transfer']);}
