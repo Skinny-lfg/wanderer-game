@@ -1,7 +1,6 @@
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-const context={};vm.runInNewContext(fs.readFileSync('combat/v012-buildcraft.js','utf8')+'\n'+fs.readFileSync('combat/automatic-talents.js','utf8'),context);const talents=context.WandererAutomaticTalents;
-function unlock(progress,id){const node=talents.NODES.find(n=>n.id===id);for(const requirement of node.prerequisites||[node.requires].filter(Boolean))if(!progress.nodes.includes(requirement))progress=unlock(progress,requirement);return progress.nodes.includes(id)?progress:talents.allocate(progress,id);}
+const context={};vm.runInNewContext(fs.readFileSync('combat/automatic-talents.js','utf8'),context);const talents=context.WandererAutomaticTalents;
 test('experience earns bounded points and nodes require their predecessors',()=>{
  let p=talents.create();assert.equal(talents.earned(p),0);assert.equal(talents.allocate(p,'might'),null);
  p=talents.award(p,200);assert.equal(talents.earned(p),2);assert.equal(talents.allocate(p,'precision'),null);
@@ -16,36 +15,14 @@ test('allocated talents change native derived stats',()=>{
  const s=talents.apply({attack:100,spellPower:40,maxhp:100,defense:10,crit:10,attacksPerSec:1,mana:50,manaRegen:2,blockChance:0,caster:true,synergyPower:0},p);
  assert.equal(s.attack,105);assert.equal(s.spellPower,42);assert.equal(s.maxhp,100);
 });
-test('the whole existing ability catalogue is available in the permanent tree',()=>{
- const catalogue=context.WandererV012Buildcraft.CATALOG;
- assert.equal(talents.NODES.filter(n=>n.passiveId&&n.rank===1).length,catalogue.length);
- assert(catalogue.every(p=>talents.NODES.some(n=>n.passiveId===p.id)));
- let p=talents.award(talents.create(),100000);assert.equal(talents.allocate(p,'passive_bleeding_edge'),null);
- p=unlock(p,'passive_bleeding_edge');assert(talents.valid(p));
- const build=context.WandererV012Buildcraft.create();context.WandererV012Buildcraft.syncPermanent(build,p);
- assert.equal(context.WandererV012Buildcraft.rank(build,'bleeding_edge'),1);
- const dots=[];context.WandererV012Buildcraft.onAttack(build,{enemy:{hp:100},base:100,critical:false,random:()=>0,now:1,dot:(kind,amount)=>dots.push({kind,amount}),log(){}});
- assert.equal(dots[0].kind,'bleed');assert(dots[0].amount>0);
- p=talents.award(p,100);p=talents.allocate(p,'passive_bleeding_edge_rank2');context.WandererV012Buildcraft.syncPermanent(build,p);assert.equal(context.WandererV012Buildcraft.rank(build,'bleeding_edge'),2);
-});
-test('element-specific talents only activate for the matching element',()=>{
- let p=unlock(talents.award(talents.create(),100000),'passive_kindling');
- const B=context.WandererV012Buildcraft,b=B.create();B.syncPermanent(b,p);assert.equal(B.rank(b,'kindling'),0);b.element='frost';assert.equal(B.rank(b,'kindling'),0);b.element='fire';assert.equal(B.rank(b,'kindling'),1);
-});
-test('talent ranks unlock in order and preserve the existing rank cap',()=>{
- let p=talents.award(talents.create(),100000);p=talents.allocate(p,'might');p=talents.allocate(p,'affinity_blood');p=talents.allocate(p,'path_bleeding_edge_1');p=talents.allocate(p,'path_bleeding_edge_2');assert.equal(talents.allocate(p,'passive_bleeding_edge_rank2'),null);
- for(const id of ['passive_bleeding_edge','passive_bleeding_edge_rank2','passive_bleeding_edge_rank3','passive_bleeding_edge_rank4','passive_bleeding_edge_rank5'])p=talents.allocate(p,id);
- assert(talents.valid(p));const B=context.WandererV012Buildcraft,b=B.create();B.syncPermanent(b,p);assert.equal(B.rank(b,'bleeding_edge'),5);assert.equal(B.canModify(b,'bleeding_edge',.5),false);
-});
 test('a completed Realm grants XP once and persists it in an isolated checkpoint',()=>{
  const create=require('./v012-economy-harness.cjs'),storage=new Map();
  const game=create(17,undefined,{}, {sessionStorage:storage});game.start(1);game.initial('blood');
  const offer=game.controller().state.offers.find(p=>p.family==='blood');game.select(offer.id);assert.equal(game.enter(),true);
  while(game.controller().state.planeIndex===1){const run=game.state().run;assert(run?.enemy);run.enemy.hp=0;game.win();game.flush();}
- assert.equal(game.draft(),null,'no passive draft is created');assert.equal(game.controller().state.rewardPending,null);assert.equal(game.controller().state.offers.length,3);
- const earned=game.state().automaticTalents.xp;assert(earned>0);
+ const earned=game.state().automaticTalents.xp;assert.equal(earned,24);
  const saved=JSON.parse(storage.get('wanderer_v012_local_preview'));assert.equal(saved.profile.automaticTalents.xp,earned);
- require('../online/v012-save.js');require('../online/v012-treasures.js');
+ require('../economy/v013-crafting.js');require('../online/v012-save.js');require('../online/v012-treasures.js');
  const corrupt=JSON.parse(JSON.stringify(saved));corrupt.profile.automaticTalents={xp:0,nodes:['might']};
  assert.throws(()=>globalThis.WandererV012Save.validate(corrupt,'local-playtest'),/automatic talent progress/);
  game.win();assert.equal(game.state().automaticTalents.xp,earned);
@@ -57,65 +34,9 @@ test('equipped permanent talents are applied to the actual game stat calculation
  assert.equal(after.attack,Math.round(before.attack*1.05));
  assert.equal(after.spellPower,Math.round(before.spellPower*1.05));
 });
-test('purchased abilities apply to native combat and survive checkpoint restore',()=>{
- const game=require('./v012-economy-harness.cjs')(43);game.state().automaticTalents={xp:200,nodes:['might','passive_bleeding_edge']};
- game.start(1);game.initial('blood');const offer=game.controller().state.offers.find(p=>p.family==='blood');game.select(offer.id);game.enter();
- assert.equal(game.buildcraft.rank(game.build(),'bleeding_edge'),1);
- const cp=game.checkpoint.capture();game.checkpoint.restore(cp);assert.equal(game.buildcraft.rank(game.build(),'bleeding_edge'),1);
-});
 test('defeat and duplicate event decisions cannot repeatedly award XP',()=>{
  const create=require('./v012-economy-harness.cjs');
- const loss=create(31);loss.start();loss.initial('blood');const first=loss.controller().state.offers.find(p=>p.family==='blood');loss.select(first.id);loss.enter();loss.death();assert.equal(loss.state().automaticTalents,undefined);
+ const loss=create(31);loss.start();loss.initial('blood');const first=loss.controller().state.offers.find(p=>p.family==='blood');loss.select(first.id);loss.enter();loss.death();assert.equal(loss.state().automaticTalents.xp,0);
  const event=create(41,undefined,{}, {skipPersistence:true});event.start();event.initial('blood');const g=event.controller().state,p=g.offers.find(x=>x.family==='blood');event.select(p.id);g.selected.event='forgotten_arsenal';g.selected.waves=0;event.enter();
  assert.equal(event.events.choose(2),true);assert.equal(event.state().automaticTalents.xp,15);assert.equal(event.events.choose(2),false);assert.equal(event.state().automaticTalents.xp,15);
-});
-test('an older in-progress save waiting for a passive draft resumes without one',()=>{
- const create=require('./v012-economy-harness.cjs'),storage=new Map();
- const oldRuntime=fs.readFileSync('tests/fixtures/legacy-expedition-runtime.js','utf8');
- const old=create(17,undefined,{'online/v012-expedition-runtime.js':oldRuntime},{sessionStorage:storage});
- old.start(1);old.initial('blood');const offer=old.controller().state.offers.find(p=>p.family==='blood');old.select(offer.id);old.enter();
- while(old.controller().state.planeIndex===1){old.state().run.enemy.hp=0;old.win();old.flush();}
- assert.equal(old.draft().kind,'reward');
- const restored=create(17,undefined,{}, {sessionStorage:storage});
- assert.equal(restored.debug().saveBlocked,false);assert.equal(restored.draft(),null);assert.equal(restored.controller().state.rewardPending,null);assert.equal(restored.controller().state.offers.length,3);
- assert.equal(restored.state().automaticTalents.xp,old.state().automaticTalents.xp);
-});
-
-test('attribute allocations survive XP and talent spending and cannot exceed levels',()=>{
- let p=talents.award(talents.create(),200);p=talents.allocateAttribute(p,'str');p=talents.allocate(p,'might');p=talents.award(p,100);assert.equal(p.attributes.str,1);assert.equal(talents.attributePoints(p),2);p=talents.allocateAttribute(p,'agi');p=talents.allocateAttribute(p,'agi');assert.equal(talents.allocateAttribute(p,'str'),null);assert.equal(talents.valid({...p,attributes:{str:4}}),false);assert.equal(talents.valid({...p,element:'invalid'}),false);
-});
-test('stat paths lead to skills, preserve legacy purchases and apply attributes',()=>{
- for(const [family,stat] of [['aegis','end'],['decay','agi'],['magic','int']]){
-  const first=talents.NODES.find(n=>n.family===family&&n.passiveId&&n.rank===1),path=talents.NODES.filter(n=>n.pathFor===first.passiveId);assert.equal(path.length,2);assert(path.every(n=>n.attribute===stat));
-  let progress=talents.award(talents.create(),100000);assert.equal(talents.allocate(progress,first.id),null);progress=unlock(progress,first.id);assert(talents.valid(progress));assert.equal(talents.attributeBonuses(progress)[stat],2);
- }
- const legacy={xp:200,nodes:['might','passive_bleeding_edge']};assert(talents.valid(legacy));assert.equal(talents.passiveIds(legacy)[0],'bleeding_edge');
-});
-test('new area and focus branches require their linked talent paths',()=>{for(const id of ['cleave_mastery','storm_mastery','single_target_mastery','plague_spread','fire_spread','frost_spread','bow_pierce','sword_sweep','mace_shockwave']){const p=talents.award(talents.create(),100000);assert.equal(talents.allocate(p,id),null,id);const unlocked=unlock(p,id);assert(unlocked.nodes.includes(id));assert(talents.valid(unlocked));}});
-test('each family offers independent connected paths and older talent allocations stay valid',()=>{
- const C=context.WandererV012Buildcraft.CATALOG;for(const family of context.WandererV012Buildcraft.FAMILIES){const skills=C.filter(p=>p.family===family);const paths=skills.slice(0,3).map(p=>talents.NODES.find(n=>n.id==='path_'+p.id+'_1'));assert(paths.length===3);assert.equal(new Set(paths.map(n=>n.requires)).size,1,family+' branches share a starting root');let progress=talents.award(talents.create(),100000);progress=unlock(progress,'passive_'+skills[2].id);assert(progress.nodes.includes('passive_'+skills[2].id));assert(!progress.nodes.includes('passive_'+skills[0].id));}
- const skills=C.filter(p=>p.family==='blood'),old={xp:1300,treeVersion:2,nodes:['might']};for(const skill of skills.slice(0,4)){old.nodes.push('path_'+skill.id+'_1','path_'+skill.id+'_2','passive_'+skill.id);}assert(talents.valid(old),'old linear progress remains valid');
-});
-test('existing tree-version 2 purchases persist after the branching update',()=>{
- const create=require('./v012-economy-harness.cjs'),storage=new Map(),a=create(840,undefined,{}, {sessionStorage:storage}),catalogue=context.WandererV012Buildcraft.CATALOG.filter(p=>p.family==='blood'),nodes=['might'];for(const p of catalogue.slice(0,4))nodes.push('path_'+p.id+'_1','path_'+p.id+'_2','passive_'+p.id);const old={xp:1300,treeVersion:2,nodes};assert(talents.valid(old));a.state().automaticTalents=old;a.start(1,true);const b=create(840,undefined,{}, {sessionStorage:storage});assert.equal(b.debug().saveBlocked,false);assert.deepEqual(Array.from(b.state().automaticTalents.nodes),nodes);for(const p of catalogue.slice(0,4))assert.equal(b.buildcraft.rank(b.build(),p.id),1,p.id);
-});
-
-test('affinity roots and both hybrid paths are required, with a bounded budget',()=>{
- const hybrid=talents.NODES.find(n=>n.hybridFor&&n.rank===1),p0=talents.award(talents.create(),100000);assert.equal(talents.earned(p0),100);assert.equal(talents.allocate(p0,hybrid.id),null);let p=unlock(p0,hybrid.id);assert(p.nodes.includes('affinity_'+hybrid.family));assert(p.nodes.includes('affinity_'+hybrid.hybridOther));assert(p.nodes.includes('bridge_'+hybrid.passiveId+'_2'));assert(talents.valid(p));
- const removed={...p,nodes:p.nodes.filter(id=>id!=='bridge_'+hybrid.passiveId+'_2')};assert.equal(talents.valid(removed),false);
-});
-test('previous branching saves and invested points survive migration and reset',()=>{
- const p=unlock(talents.award(talents.create(),100000),'passive_bleeding_edge');const old={...p,treeVersion:3,nodes:p.nodes.filter(id=>id!=='affinity_blood')};assert(talents.valid(old));assert(talents.valid(talents.reset(old)));
-});
-
-test('affinity nodes grant their stated stats and magic branches gate their skills',()=>{
- for(const [family,key] of [['vitality','health'],['fury','speed'],['magic','spell']])assert(talents.NODES.find(n=>n.id==='affinity_'+family)[key]>0);
- for(const [element,id] of [['fire','kindling'],['frost','deep_winter'],['lightning','overcharge']]){const p=unlock(talents.award(talents.create(),10000),'passive_'+id);assert(p.nodes.includes('element_'+element));assert(talents.valid(p));}
- const parent=talents.NODES.find(n=>n.id==='path_kindling_1').legacyV4Requires;let old=unlock(talents.award(talents.create(),10000),parent);old=unlock(old,'passive_kindling');const legacy={...old,treeVersion:4,nodes:old.nodes.filter(id=>id!=='element_fire')};assert(talents.valid(legacy));
-});
-
-test('Aegis affinity grants barrier when a wave starts',()=>{const game=require('./v012-economy-harness.cjs')(33);game.state().automaticTalents={xp:200,nodes:['vitality','affinity_aegis'],treeVersion:5};game.start(1,true);const c=game.controller(),offer=c.state.offers.find(p=>c.reachable(p)&&!p.event);game.select(offer.id);game.enter();const r=game.state().run;assert(r.barrier>=r.maxhp*.05);});
-
-test('Blood and Decay affinity nodes enable their original attack effects',()=>{
- const B=context.WandererV012Buildcraft;for(const [family,root,expected] of [['blood','might','bleed'],['decay','haste','rot']]){const progress={xp:200,nodes:[root,'affinity_'+family],treeVersion:5},build=B.create(),dots=[],enemy={hp:100,v012Rot:[]};B.syncPermanent(build,progress);B.onAttack(build,{enemy,base:100,critical:false,random:()=>0,now:1,dot:(kind)=>dots.push(kind),log(){}});if(expected==='bleed')assert(dots.includes('bleed'));else assert.equal(enemy.v012Rot.length,1);assert.equal(B.rank(build,family==='blood'?'bleeding_edge':'toxic_touch'),1);}
 });

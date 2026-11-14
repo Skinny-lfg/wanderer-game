@@ -7,7 +7,7 @@ const source=fs.readFileSync('index.html','utf8');
 const start=source.indexOf('function expeditionRouteMap(g){');
 const end=source.indexOf('\nfunction renderPhase1(){',start);
 assert(start>=0&&end>start,'route map source exists');
-const context={esc:value=>String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;')};
+const context={esc:value=>String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;'),WandererV012Expedition:{FAMILY_NAMES:{magic:'Magic'}}};
 vm.runInNewContext(source.slice(start,end)+'\nthis.route=expeditionRouteMap;',context);
 test('map reflects the saved schedule and current realm without inventing paths',()=>{
  const rooms=['combat','event','elite',...Array(11).fill('combat'),'boss'];

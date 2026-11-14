@@ -72,7 +72,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
    restore(cp){state=phase4Clone(cp.profile);phase4Restore(phase4Clone(cp.session));},resume:phase4ResumeRealm,extract:phase4Extract,
    seed:()=>phase4Seed,random:gameRandom},
   feedback:()=>auditFeedback={logs:[],floats:[]},rng:value=>{Math.random=()=>value;gameRandom=()=>value;},
-  stats:phase2Stats,baseStats:totalStats,makeItem,
+  stats:phase2Stats,baseStats:totalStats,statSources:stats=>WandererV012GearStats.breakdown(state.equip,state.runes,state.runeSlots,statContext(),stats),statMarkup:phase3StatValue,makeItem,
   gear:{evasionChance,gearEvasionRating,tryDodge,enemyAttackType,statsWidget,itemComparison,setCounts,setBonuses,itemSource,itemImg,detailEffectHtml,affinityBadge,legendaryDescription,
    weaponAttack,legendaryReady,legendaryAttackBonus,enemyDebuffMarkup,dungeonEquipmentOdds,placeholderIcon,renderStash,
    renderForge:()=>auditForge(),renderMerchant:()=>auditMerchant(),
@@ -115,7 +115,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
  };
  `;
  const main=source.match(/<script>([\s\S]*?)<\/script>/)?.[1];
- const files=['online/v012-treasures.js','combat/automatic-talents.js','online/v012-save.js','economy/v0101.js','combat/legendary.js','combat/v012-combat-core.js','combat/v012-gear-stats.js','combat/v012-runes.js','economy/v012-loot-rules.js','combat/v012-buildcraft.js','online/v012-expedition-controller.js','online/v012-expedition-events.js','online/v012-consumables.js'];
+ const files=['economy/v013-crafting.js','online/v012-treasures.js','combat/automatic-talents.js','combat/automatic-talent-layout.js','online/v012-save.js','economy/v0101.js','combat/legendary.js','combat/v012-combat-core.js','combat/v012-gear-stats.js','combat/v012-runes.js','economy/v012-loot-rules.js','combat/v012-buildcraft.js','online/v012-expedition-controller.js','online/v012-expedition-events.js','online/v012-consumables.js'];
  files.push(...[...source.matchAll(/<script[^>]+src="([^"?]+-runtime\.js)(?:\?[^\"]*)?"/g)].map(m=>m[1]));
  vm.runInNewContext(files.map(f=>moduleOverrides[f]??fs.readFileSync(path.join(fixtureRoot,f),'utf8')).join('\n')+'\n'+main.replace(boot,inject+'\nconst phase3RestoredScroll=null;'),sandbox,{timeout:20000});
  sandbox.audit.flush=()=>{for(let i=0;callbacks.length;i++){if(i>10000)throw Error('Callback loop');callbacks.shift()();}};

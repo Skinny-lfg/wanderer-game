@@ -16,7 +16,10 @@ function itemStatValue(item,key,context){
  // Old Orbs retain their saved roll; new Orbs already store the B.4 value.
  return key==='spell'&&item?.slot==='offhand'&&item.subtype==='Orb'&&item.orbSpellB4!==true?Math.round(value*1.12):value;
 }
-function totalStats(equipment,ownedRunes,equippedRuneIds,{isTwoHanded,FIELDS,itemStatValue,RUNE_FAMILIES,runeValue,setCounts,setBonuses,state,PHASE1_PREVIEW,phase6Run}){
+function power(s){return Math.round(s.attack*2+s.defense*4+s.maxhp*.15+s.attacksPerSec*35+s.crit*1.2+s.blockChance*2+((s.caster||s.phase2Magic)?s.spellPower*1.7:0)+(s.synergyPower||0));}
+function totalStats(equipment,ownedRunes,equippedRuneIds,{isTwoHanded,FIELDS,itemStatValue,RUNE_FAMILIES,runeValue,setCounts,setBonuses,state,PHASE1_PREVIEW,phase6Run,build=null}){
+ const itemBuff=phase6Run?.effects?.item;
+ if(itemBuff?.remaining>0){equipment={...equipment};for(const [slot,item]of Object.entries(equipment))if(item?.id===itemBuff.id){equipment[slot]={...item};for(const [,key]of FIELDS)if(Number.isFinite(item[key]))equipment[slot][key]=item[key]*1.10;}}
  const equipped=isTwoHanded(equipment.weapon)?{...equipment,offhand:null}:equipment;
  const s={str:5,agi:5,int:5,end:5,cha:5,atkFlat:0,defFlat:0,hpFlat:0,spdFlat:0,manaFlat:0,spellFlat:0,evasionRating:0};
  const talentAttributes=root.WandererAutomaticTalents?.attributeBonuses(state?.automaticTalents)||{};
@@ -56,6 +59,9 @@ function totalStats(equipment,ownedRunes,equippedRuneIds,{isTwoHanded,FIELDS,ite
  s.mana=caster?Math.round(20+s.int*7+s.manaFlat):0;
  s.manaRegen=caster?+(1.5+s.int*.23).toFixed(1):0;
  s.spellPower=caster?Math.round(3+s.int*1.9+s.spellFlat):0;
+ // Magic resources exist before percentage talents, including on physical weapons.
+ const magic=PHASE1_PREVIEW&&(build?build.unlockedFamilies?.includes('magic'):state?.automaticTalents?.nodes?.includes('affinity_magic'));
+ if(magic){s.mana=caster?s.mana:Math.max(30,Math.round(20+s.int*7+s.manaFlat));s.manaRegen=caster?s.manaRegen:+(1.5+s.int*.23).toFixed(1);s.spellPower=caster?s.spellPower:Math.round(3+s.int*1.9+s.spellFlat);s.phase2Magic=true;}
  s.blockChance=off?.subtype==='Shield'?Math.min(48,Math.round(13+s.end*.27+Math.max(0,off.tier||1)*.25+(main?.subtype==='Mace'?7:0))):0;
  s.blockReduction=off?.subtype==='Shield'?(main?.subtype==='Mace'?.67:main?.subtype==='Sword'?.62:.58):0;
  // Cumulative tier estimates: 2 pieces = 12, 3 = 30, 5 = 54.
@@ -63,7 +69,20 @@ function totalStats(equipment,ownedRunes,equippedRuneIds,{isTwoHanded,FIELDS,ite
  s.power=Math.round(s.attack*2+s.defense*4+s.maxhp*.15+s.attacksPerSec*35+s.crit*1.2+s.blockChance*2+(caster?s.spellPower*1.7:0)+s.synergyPower);
  s.lootQuality=Math.min(10,Math.round(Math.max(0,s.cha-5)*.09*10)/10);
  if(state?.automaticTalents?.nodes?.length&&root.WandererAutomaticTalents)root.WandererAutomaticTalents.apply(s,state.automaticTalents);
- return s;
+ let result=s;
+ if(PHASE1_PREVIEW&&root.WandererV012Buildcraft){let active=build;if(!active){active=root.WandererV012Buildcraft.create();root.WandererV012Buildcraft.syncPermanent(active,state?.automaticTalents||root.WandererAutomaticTalents.create());}result=root.WandererV012Buildcraft.mods(active,result);}
+ if(PHASE1_PREVIEW&&phase6Run?.effects)result=root.WandererV012CombatCore.applyExpeditionModifiers(result,phase6Run.effects);
+ result.attacksPerSec=Math.min(4.2,result.attacksPerSec);result.power=power(result);
+ return result;
 }
-root.WandererV012GearStats=Object.freeze({gearEvasionRating,itemStatValue,totalStats});
+const STAT_KEYS=Object.freeze(['str','agi','int','end','cha','attack','defense','maxhp','attacksPerSec','crit','blockChance','mana','manaRegen','spellPower','evasionRating','power']);
+function breakdown(equipment,ownedRunes,equippedRuneIds,context,current=null){
+ const progress=context.state?.automaticTalents||root.WandererAutomaticTalents.create();
+ const bare={...context,state:{...context.state,automaticTalents:{...progress,nodes:[]}},build:null,phase6Run:null};
+ const clean=item=>item?{subtype:item.subtype,slot:item.slot,tier:item.tier}:null;
+ const stages=[totalStats({weapon:clean(equipment.weapon),offhand:clean(equipment.offhand)},[],[],bare),totalStats(equipment,[],[],bare),totalStats(equipment,ownedRunes,equippedRuneIds,bare),totalStats(equipment,ownedRunes,equippedRuneIds,{...context,build:null,phase6Run:null}),current||totalStats(equipment,ownedRunes,equippedRuneIds,context)];
+ const rounded=n=>Math.round((Number(n)||0)*100)/100;
+ return STAT_KEYS.map(key=>{const v=stages.map(s=>rounded(s[key]));return{key,base:v[0],equipment:rounded(v[1]-v[0]),runes:rounded(v[2]-v[1]),talents:rounded(v[3]-v[2]),temporary:rounded(v[4]-v[3]),total:v[4]};});
+}
+root.WandererV012GearStats=Object.freeze({gearEvasionRating,itemStatValue,totalStats,power,breakdown,STAT_KEYS});
 })(globalThis);

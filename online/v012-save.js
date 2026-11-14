@@ -59,6 +59,7 @@ function integrationCheck(r){
 function profileCheck(p){
  consumablesCheck(p);
  requireValue(plain(p)&&Array.isArray(p.stash)&&plain(p.equip),'profile');
+ if(p.crafting!==undefined)requireValue(root.WandererV013Crafting?.valid(p.crafting),'crafting progress');
  if(p.automaticTalents!==undefined)requireValue(root.WandererAutomaticTalents?.valid(p.automaticTalents),'automatic talent progress');
  requireValue(p.run===null,'runtime must not be in permanent profile');
  for(const f of ['gold','fragments'])requireValue(integer(p[f],0,Number.MAX_SAFE_INTEGER),f);
@@ -75,6 +76,7 @@ function profileCheck(p){
   if(item.armorType!==undefined)requireValue(['helm','armor','gloves','boots','belt'].includes(item.slot)&&['Cloth','Leather','Plate'].includes(item.armorType),'armor type');
   requireValue(SLOTS.includes(item.slot)&&integer(item.tier,1,Number.MAX_SAFE_INTEGER)&&typeof item.name==='string','item identity');
   requireValue(['Common','Uncommon','Rare','Epic','Legendary'].includes(item.rarity),'item rarity');
+  if(item.v013Trait!==undefined)requireValue(['blood_transfer','focused','ward','conflagration','efficient'].includes(item.v013Trait),'item trait');
   for(const f of STATS)if(item[f]!==undefined)requireValue(typeof item[f]==='number'&&Number.isFinite(item[f]),'item '+f);
   if(item.effect!==undefined&&item.effect!==null)requireValue(EFFECTS.includes(item.effect),'item effect');
   if(item.magic!==undefined&&item.magic!==null)requireValue(EFFECTS.includes(item.magic),'item magic');
@@ -245,7 +247,7 @@ function createStore(storage,binding='local'){
     requireValue(Array.isArray(before)&&Array.isArray(after)&&before.length===15&&after.length===15&&after.every((row,i)=>Array.isArray(row)&&row.length===3&&row.every((n,j)=>integer(n,0,before[i][j]))),'reroll rollback');
    }
    if(next.lastOutcome==='extracted'&&old.lastOutcome!=='extracted')requireValue(old.active?.stage==='choice'&&old.active.plane>1&&old.session&&!old.session.entry&&!old.session.controller.rewardPending&&next.completed===old.completed&&JSON.stringify(s.profile.pendingRuneReward)===JSON.stringify(previous.profile.pendingRuneReward)&&JSON.stringify(s.profile.runes)===JSON.stringify(previous.profile.runes),'invalid extraction');
-   if(next.completed>old.completed)requireValue(old.active?.plane===15&&old.active.wave===3&&old.active.level===next.completed&&next.lastOutcome==='victory'&&next.awardKeys.includes(next.attempts+':15:3'),'boss checkpoint required');
+   if(next.completed>old.completed)requireValue(old.active?.plane===15&&old.active.wave===1&&old.active.level===next.completed&&next.lastOutcome==='victory'&&next.awardKeys.includes(next.attempts+':15:1'),'boss checkpoint required');
   }
   if(archive!==null){const old=storage.getItem(source);requireValue(old===null||old===archive,'source archive already exists');if(old===null)storage.setItem(source,archive);}
   if(observed!==null)storage.setItem(backup,observed);

@@ -6,7 +6,7 @@ const FAMILIES=['blood','decay','vitality','aegis','fury','magic'];
 const elements=['fire','frost','lightning'];
 const P=[
  ['blood','bleeding_edge','Bleeding Edge','Hits may inflict Bleed (0.9s internal cooldown).'],
- ['blood','deep_cuts','Deep Cuts','Your temporary Bleed deals 20% more damage per rank.'],
+ ['blood','deep_cuts','Deep Cuts','Your Bleed deals 20% more damage per rank.'],
  ['blood','executioner','Executioner','Strike a bleeding foe below 30% HP for a bounded burst (6s cooldown).'],
  ['blood','blood_drinker','Blood Drinker','Hits on a bleeding foe heal up to 1.5% maximum HP (4s cooldown).'],
  ['blood','sanguine_fury','Sanguine Fury','Critical hits inflict Bleed; damage against bleeding foes increases by 8%.'],
@@ -18,7 +18,7 @@ const P=[
  ['vitality','strong_heart','Strong Heart','Increase maximum Health by 10% per rank.'],
  ['vitality','renewal','Renewal','Recover 0.55% maximum Health per combat second per rank.'],
  ['vitality','last_stand','Last Stand','Survive one lethal hit per Expedition, recovering 6% HP.'],
- ['vitality','second_breath','Second Breath','Recover 2.5% maximum HP after each completed Wave per rank.'],
+ ['vitality','second_breath','Second Breath','Recover 2.5% maximum HP after each completed encounter per rank.'],
  ['vitality','life_bloom','Life Bloom','Every combat second restores 0.25% HP and up to 1.5 Mana per rank.'],
  ['aegis','iron_skin','Iron Skin','Increase Defense by 12% per rank.'],
  ['aegis','fortified','Fortified','Reduce incoming damage by 6% per rank.'],
@@ -32,18 +32,18 @@ const P=[
  ['fury','adrenaline','Adrenaline','Critical strikes grant 10% attack speed for 3s (3s cooldown).'],
  ['magic','arcane_focus','Arcane Focus','Increase elemental Spell Power by 15% per rank.'],
  ['magic','mana_spring','Mana Spring','Increase Mana regeneration by 18% per rank.'],
- ['magic','efficient_cast','Efficient Casting','Reduce temporary elemental cast cost by 12% per rank.'],
+ ['magic','efficient_cast','Efficient Casting','Reduce elemental cast cost by 12% per rank.'],
  ['magic','arcane_echo','Arcane Echo','Every fourth elemental hit echoes for 25% Spell Power (no recursion).'],
- ['magic','elemental_force','Elemental Force','Increase temporary Magic status potency by 15% per rank.'],
+ ['magic','elemental_force','Elemental Force','Increase Magic status potency by 15% per rank.'],
  ['magic','kindling','Kindling','Fire Burn gains 20% potency per rank.',[],'fire'],
  ['magic','deep_winter','Deep Winter','Funded Frost casts Chill; chilled foes take a bounded 18% Spell Power burst every 4s. Boss Chill lasts at most 1.2s.',[],'frost'],
- ['magic','overcharge','Overcharge','Funded Lightning casts add Static. Four player charges discharge for 38.4% Spell Power; charges persist between Realms.',[],'lightning'],
+ ['magic','overcharge','Overcharge','Funded Lightning casts chain to two additional foes for 50% then 30% of the primary hit and add Static. Four player charges discharge; charges persist between Realms.',[],'lightning'],
  ['blood','plague_rupture','Plague Rupture','Bleed + Rot unleash a burst on critical hits (8s cooldown).',['blood','decay']],
  ['blood','blood_ward','Blood Ward','Bleeding enemies generate Barrier every 5s.',['blood','aegis']],
- ['blood','hemovore','Hemovore','Kills on bleeding foes heal 4% max HP.',['blood','vitality']],
+ ['blood','hemovore','Hemovore','The first bleeding kill per encounter heals 4% max HP.',['blood','vitality']],
  ['blood','crimson_rush','Crimson Rush','Critical strikes against bleeding foes deal 15% bonus damage.',['blood','fury']],
  ['blood','hex_bleed','Hex Bleed','Funded Magic hits inflict Bleed (3s cooldown).',['blood','magic']],
- ['decay','rot_recovery','Rot Recovery','Defeating a rotted enemy heals 4% max HP.',['decay','vitality']],
+ ['decay','rot_recovery','Rot Recovery','The first rotted kill per encounter heals 4% max HP.',['decay','vitality']],
  ['decay','rot_ward','Rot Ward','Rot ticks grant Barrier every 5s.',['decay','aegis']],
  ['decay','toxic_precision','Toxic Precision','Crits inflict Rot (2s cooldown).',['decay','fury']],
  ['decay','hex_bolt','Hex Bolt','Funded spells against Rot deal 25% Spell Power plus one Rot tick (3s cooldown).',['decay','magic']],
@@ -62,7 +62,7 @@ const P=[
  ['decay','rot_husk','Rot Husk','Breaking a Barrier while Rot is active grants a small new ward.',['decay','aegis']],
  ['decay','venom_shatter','Venom Shatter','Critical hits consume Rot for a bounded burst (5s cooldown).',['decay','fury']],
  ['decay','elemental_blight','Elemental Blight','Fire, Frost and Lightning manipulate accumulated Rot differently.',['decay','magic']],
- ['vitality','guardians_oath',"Guardian's Oath",'After a Barrier shatters, heal once per Wave.',['vitality','aegis']],
+ ['vitality','guardians_oath',"Guardian's Oath",'After a Barrier shatters, heal once per encounter.',['vitality','aegis']],
  ['vitality','redline','Redline','When wounded, deal a bounded burst but take increased damage briefly.',['vitality','fury']],
  ['vitality','lifeweave','Lifeweave','Convert HP into Mana when nearly empty (8s cooldown).',['vitality','magic']],
  ['aegis','iron_reversal','Iron Reversal','A successful Block charges a heavy counter at the cost of brief vulnerability.',['aegis','fury']],
@@ -83,7 +83,7 @@ const descriptions={
  strong_heart:'Max Health +10% at Rank 1; smaller gains at higher ranks.',
  renewal:'Heal 0.55% Max HP per second at Rank 1; smaller gains at higher ranks. Healing reduction applies.',
  last_stand:'Once per Expedition, survive a lethal hit and recover 6% Max HP.',
- second_breath:'Heal after each completed Wave: 1.5% Max HP at rank 1 (+0.4 percentage points per rank).',
+ second_breath:'Heal after each completed encounter: 1.5% Max HP at rank 1 (+0.4 percentage points per rank).',
  life_bloom:'Each combat second, restore up to 0.6% Max HP and 3.4 Mana; both gain less per additional rank.',
  iron_skin:'Defense +12% at Rank 1; smaller gains at higher ranks.',
  fortified:'Reduce incoming damage by 4% per rank, within the combined 28% cap.',
@@ -102,7 +102,7 @@ const descriptions={
  elemental_force:'Funded elemental casts gain 12% power per rank.',
  kindling:'Funded Fire casts apply Burn.',
  deep_winter:'Funded Frost casts Chill. Chilled foes take a Spell Power burst every 4s (18% at rank 1, +3 percentage points per rank; capped at 5% of normal foes’ Max HP or 1.5% of bosses’). Boss Chill lasts at most 1.2s.',
- overcharge:'Funded Lightning casts add Static. Every 4 charges deal 32% Spell Power at rank 1 (+6 percentage points per rank), capped at 3.5% of the foe’s Max HP. Charges persist between Realms.'
+ overcharge:'Funded Lightning casts chain to two additional foes for 50% then 30% of the primary hit and add Static. Every 4 charges discharge for 32% Spell Power at rank 1 (+6 percentage points per rank), capped at 3.5% of the foe’s Max HP. Charges persist between Realms.'
 };
 const TAGS={
  PRODUCE_BLEED:['bleeding_edge','sanguine_fury','hex_bleed','crimson_pact','sanguine_reprisal'],CONSUMES_BLEED:['deep_cuts','executioner','blood_drinker','blood_ward','hemovore','plague_rupture','carrion_detonation','crimson_rush','reapers_cadence','hemal_sigil'],
@@ -146,7 +146,8 @@ function preview(b,id,base={}){
  return {current,next,max:p?.max,useful,before,after,description:text};
 }
 function canModify(b,id,power,base={}){const p=BY_ID[id],n=ownedRank(b,id)+(b?.runtime?.permanentTalents?.filter(value=>value===id).length||0),current=rank(b,id);return !!p&&p.max===5&&n>0&&current>0&&clamp(n+power,0,p.max)!==current&&(power<0||preview(b,id,base).useful);}
-function bleedDamage(b,amount){return amount*(1+.15*rank(b,'deep_cuts'));}
+function specialized(b,id){return b?.runtime?.specializations?.includes(id);}
+function bleedDamage(b,amount){return amount*(1+.15*rank(b,'deep_cuts'))*(specialized(b,'blood_focus')?1.25:1);}
 function elementalPower(b,power){return power*(1+.12*rank(b,'elemental_force'))*(b.runtime.conduit?1.10:1);}
 function hasFamily(b,family){return Array.isArray(b?.families)&&b.families.includes(family);}
 function capabilities(b){
@@ -251,8 +252,8 @@ function migrateEnemyDots(enemy){
 function applyRot(b,c,power){
  const e=c.enemy;if(!e||e.hp<=0)return;
  const stacks=e.v012Rot||(e.v012Rot=[]);
- if(stacks.length>=6)stacks.shift();
- stacks.push({ticks:0,damage:Math.max(1,Math.round(power*(1+.15*rank(b,'virulent_rot')))),remaining:4});
+ if(stacks.length>=(specialized(b,'rot_focus')?3:6))stacks.shift();
+ stacks.push({ticks:0,damage:Math.max(1,Math.round(power*(1+.15*rank(b,'virulent_rot'))*(specialized(b,'rot_focus')?1.6:1))),remaining:4});
  c.log('☠ Rot '+stacks.length+'/6');
 }
 function onHeal(b,c,healed){
@@ -264,6 +265,7 @@ function activated(b,id){b.runtime.passiveTelemetry??={};const t=b.runtime.passi
 function onAttack(b,c){
  if(c.proc||c.extra||c.recursive)return;
  const e=c.enemy,base=Math.max(1,c.base||1),crit=!!c.critical;
+ if(b.runtime.specialReprisal&&e.hp>0){b.runtime.specialReprisal=false;c.damage(base*.25,'🛡 Reprisal');}
  if(rank(b,'bleeding_edge')&&ready(b,'bleedEdge',c.now,.9)&&c.random()<values('bleeding_edge',rank(b,'bleeding_edge')).chance&&activated(b,'bleeding_edge')) c.dot('bleed',base*.16);
  if(rank(b,'sanguine_fury')&&crit&&ready(b,'sanguineFury',c.now,2.5)&&activated(b,'sanguine_fury')){
   c.dot('bleed',base*.14);c.damage(base*values('sanguine_fury',rank(b,'sanguine_fury')).burst,'🩸 Sanguine Fury');
@@ -356,8 +358,9 @@ function tickRot(b,c){
 function onSecond(b,c){
  b.runtime.passiveTelemetry??={};for(const id of new Set([...b.picks,...(b.runtime.permanentTalents||[])])){if(!rank(b,id))continue;const t=b.runtime.passiveTelemetry[id]??={activations:0,combatSeconds:0};t.combatSeconds++;}
  const e=migrateEnemyDots(c.enemy);tickRot(b,c);
- if(rank(b,'renewal')&&activated(b,'renewal'))heal(b,c,c.player.maxhp*values('renewal',rank(b,'renewal')).heal);
- if(rank(b,'life_bloom')&&activated(b,'life_bloom')){heal(b,c,c.player.maxhp*values('life_bloom',rank(b,'life_bloom')).heal);c.mana(values('life_bloom',rank(b,'life_bloom')).mana);}
+ const recovery=specialized(b,'vitality_recovery')?1.25:specialized(b,'vitality_reserve')?.75:1;
+ if(rank(b,'renewal')&&activated(b,'renewal'))heal(b,c,c.player.maxhp*values('renewal',rank(b,'renewal')).heal*recovery);
+ if(rank(b,'life_bloom')&&activated(b,'life_bloom')){heal(b,c,c.player.maxhp*values('life_bloom',rank(b,'life_bloom')).heal*recovery);c.mana(values('life_bloom',rank(b,'life_bloom')).mana);}
  if(rank(b,'barrier_pulse')&&ready(b,'barrierPulse',c.now,6)&&activated(b,'barrier_pulse'))c.barrier(c.player.maxhp*values('barrier_pulse',rank(b,'barrier_pulse')).barrier);
  if(rank(b,'blood_ward')&&e.bleedStacks>0&&ready(b,'bloodWard',c.now,5)&&activated(b,'blood_ward'))c.barrier(c.player.maxhp*.022);
  if(rank(b,'lifeweave')&&c.player.mp<c.player.maxmp*.30&&c.player.hp>c.player.maxhp*.20&&ready(b,'lifeweave',c.now,8)&&activated(b,'lifeweave')){
@@ -369,6 +372,7 @@ function incoming(b,c,raw){
  const vulnerability=b.runtime?.ironExposedUntil>c.now||b.runtime?.redlineUntil>c.now?1.10:1;return Math.max(1,Math.round(raw*(1-clamp(reduction,0,.28))*vulnerability));
 }
 function onDefend(b,c,blocked,barrierAbsorbed){
+ if(blocked>0&&specialized(b,'aegis_reprisal')&&ready(b,'specialReprisal',c.now,3))b.runtime.specialReprisal=true;
  const broken=c.barrierBroken??(barrierAbsorbed>0&&c.player.barrier<=0);
  if(blocked>0&&rank(b,'counterstrike'))b.runtime.counterBlock=1;
  if(barrierAbsorbed>0&&rank(b,'retaliation')&&ready(b,'retaliation',c.now,4))b.runtime.counterBarrier=1;
@@ -382,19 +386,24 @@ function onDefend(b,c,blocked,barrierAbsorbed){
  }
 }
 function onKill(b,c){
- const waveKey=c.waveKey??c.enemy;if(b.runtime.lastKillWave!==waveKey){b.runtime.lastKillWave=waveKey;
- if(rank(b,'hemovore')&&(c.enemy.bleedStacks>0||c.enemy.v012DeathBleed)&&activated(b,'hemovore'))heal(b,c,c.player.maxhp*.04);
- if(rank(b,'rot_recovery')&&(c.enemy.v012Rot?.length||c.enemy.v012DeathRot)&&activated(b,'rot_recovery'))heal(b,c,c.player.maxhp*.04);}
+ const waveKey=c.waveKey??c.enemy;
+ if(rank(b,'hemovore')&&b.runtime.hemovoreEncounter!==waveKey&&(c.enemy.bleedStacks>0||c.enemy.v012DeathBleed)&&activated(b,'hemovore')){b.runtime.hemovoreEncounter=waveKey;heal(b,c,c.player.maxhp*.04);}
+ if(rank(b,'rot_recovery')&&b.runtime.rotRecoveryEncounter!==waveKey&&(c.enemy.v012Rot?.length||c.enemy.v012DeathRot)&&activated(b,'rot_recovery')){b.runtime.rotRecoveryEncounter=waveKey;heal(b,c,c.player.maxhp*.04);}
+ if(specialized(b,'fury_momentum'))b.runtime.momentumUntil=c.now+4;
+ if(specialized(b,'blood_transfer')||c.traits?.includes('blood_transfer')){
+  const dot=c.enemy.dots?.bleed?.find(d=>!d.transferred&&!d.spread),target=c.player.enemies?.find(e=>e!==c.enemy&&e.hp>0)||c.player.groupReserve?.[0];
+  if(dot&&target){target.dots??={};target.dots.bleed??=[];if(target.dots.bleed.length<12){target.dots.bleed.push({...dot,damage:Math.max(1,Math.round(dot.damage*.5)),remaining:Math.min(3,dot.remaining),transferred:true});target.bleedStacks=target.dots.bleed.length;}}
+ }
  const key=c.waveKey??c.enemy;if(c.waveComplete!==false&&rank(b,'second_breath')&&b.runtime.lastWaveHeal!==key){b.runtime.lastWaveHeal=key;activated(b,'second_breath');heal(b,c,c.player.maxhp*values('second_breath',rank(b,'second_breath')).heal);}
 }
 function survive(b,c){if(!rank(b,'last_stand')||b.runtime.lastStand)return false;activated(b,'last_stand');b.runtime.lastStand=true;c.player.hp=Math.max(1,c.player.maxhp*.06);c.log('💚 Last Stand (once per Expedition)');return true;}
-function speed(b,now){return b?.runtime?.adrenalineUntil>now?1+values('adrenaline',rank(b,'adrenaline')).speed:1;}
+function speed(b,now){const adrenaline=b?.runtime?.adrenalineUntil>now?1+values('adrenaline',rank(b,'adrenaline')).speed:1;return adrenaline*(b?.runtime?.momentumUntil>now?1.15:1);}
 function enemyHealMultiplier(b,e){return 1-(e.v012Rot?.length&&rank(b,'wither')?values('wither',rank(b,'wither')).healingReduction:0);}
-function nextCost(b){return 8-rank(b,'efficient_cast');}
+function nextCost(b,baseCost=8){return Math.max(1,Math.ceil(baseCost*(1-.12*rank(b,'efficient_cast'))));}
 function resetWave(b,e){e.v012Rot=[];e.v012Shock=0;}
 function canCast(b){return !!b&&!!b.element&&['kindling','deep_winter','overcharge','arcane_focus','arcane_echo','spell_surge','spellblade','hex_bolt','hex_bleed','hemal_sigil','elemental_blight','prismatic_rebound','runic_shield'].some(id=>rank(b,id));}
 function validate(b){
- if(!b||![undefined,1,2,3].includes(b.version)||!Array.isArray(b.families)||b.families.length>3||new Set(b.families).size!==b.families.length||!b.families.every(f=>FAMILIES.includes(f))||b.element!==null&&(!elements.includes(b.element)||!hasFamily(b,'magic'))||!Array.isArray(b.picks)||b.picks.length>20)throw Error('Invalid saved build');
+ if(!b||![undefined,1,2,3].includes(b.version)||!Array.isArray(b.families)||b.families.length>(b.runtime?.permanentBuild?FAMILIES.length:3)||new Set(b.families).size!==b.families.length||!b.families.every(f=>FAMILIES.includes(f))||b.element!==null&&(!elements.includes(b.element)||!hasFamily(b,'magic'))||!Array.isArray(b.picks)||b.picks.length>20)throw Error('Invalid saved build');
  if(!Array.isArray(b.unlockedFamilies))b.unlockedFamilies=[...new Set(b.picks.map(id=>BY_ID[id]?.family).filter(Boolean))];
  if(new Set(b.unlockedFamilies).size!==b.unlockedFamilies.length||!b.unlockedFamilies.every(f=>hasFamily(b,f)))throw Error('Invalid unlocked affinity');
  for(const id of b.picks){const p=BY_ID[id];if(!p||!hasFamily(b,p.family)||!b.unlockedFamilies.includes(p.family)||p.requires.some(f=>!b.unlockedFamilies.includes(f))||p.element&&p.element!==b.element)throw Error('Invalid saved passive');}
@@ -408,7 +417,7 @@ function validate(b){
  if(!Number.isInteger(b.runtime.staticCharges)||b.runtime.staticCharges<0||b.runtime.staticCharges>3)throw Error('Invalid Static charges');
  return b;
 }
-function syncPermanent(b,progress){if(!b)return;if(!root.WandererAutomaticTalents)throw Error('Permanent talents unavailable');const ids=root.WandererAutomaticTalents.passiveIds(progress||root.WandererAutomaticTalents.create());if(ids.length)b.runtime.permanentTalents=ids;else delete b.runtime.permanentTalents;}
+function syncPermanent(b,progress,permanentAffinities=true){if(!b)return;if(!root.WandererAutomaticTalents)throw Error('Permanent talents unavailable');b.runtime.specializations=[...(progress?.nodes||[])];if(permanentAffinities){b.runtime.permanentBuild=true;b.unlockedFamilies=FAMILIES.filter(f=>progress?.nodes?.includes('affinity_'+f));b.families=[...b.unlockedFamilies];b.element=b.unlockedFamilies.includes('magic')?(progress?.element||'fire'):null;}const ids=root.WandererAutomaticTalents.passiveIds(progress||root.WandererAutomaticTalents.create());if(ids.length)b.runtime.permanentTalents=ids;else delete b.runtime.permanentTalents;}
 function clear(b){if(!b)return;b.picks.length=0;b.element=null;b.initialFamily=null;b.initialPassive=null;b.unlockedFamilies=[];b.families=[];b.cooldowns=Object.create(null);b.runtime={frenzyUntil:0,counterBlock:0,counterBarrier:0,spellblade:false,magicHits:0,staticCharges:0,adrenalineUntil:0,conduit:false,lastStand:false,lastSpellAt:-999};}
 root.WandererV012Buildcraft=Object.freeze({CATALOG,FAMILIES,ELEMENTS:elements,create,initial,initialId,ownedRank,rank,values,preview,canModify,capabilities,functional,synergy,bleedDamage,elementalPower,applyRot,migrateEnemyDots,eligible,options,choose,element,mods,onHeal,onAttack,onCast,onSecond,tickRot,incoming,onDefend,onKill,survive,speed,enemyHealMultiplier,nextCost,resetWave,canCast,validate,syncPermanent,clear});
 })(globalThis);

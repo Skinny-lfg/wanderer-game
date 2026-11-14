@@ -48,6 +48,7 @@ function createEnemyGroup(spawn,count,options={}){
   if(count>1&&(enemy.boss||enemy.miniboss))throw Error('Bosses and elites must be solo');
   if(count===1)return enemy;
   enemy.maxhp=Math.max(1,Math.round(enemy.maxhp*scale.hp));enemy.hp=enemy.maxhp;enemy.atk=enemy.atk===0?0:Math.max(1,Math.round(enemy.atk*scale.atk));
+  const defenseScale=count<=4?.45:count===12?.22:.15;enemy.def=Math.max(0,Math.round((enemy.def||0)*defenseScale));if(Number.isFinite(enemy.baseDef))enemy.baseDef=Math.max(0,Math.round(enemy.baseDef*defenseScale));
   enemy.groupSlot=index%activeSlots;enemy.groupClock=-(enemy.groupSlot*enemy.attackEvery/activeSlots);return enemy;
  });
 }

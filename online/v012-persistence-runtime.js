@@ -22,6 +22,11 @@ function phase4CommitRealm({awardXp=false}={}){
   const progress=ports.state.automaticTalents||root.WandererAutomaticTalents.create();
   const run=ports.state.run,enemy=run?.enemy,base=enemy?.boss?45:enemy?.miniboss?30:run?20:15,groupReward=enemy?.boss||enemy?.miniboss?1:run?.totalMobCount>=18?1.3:run?.totalMobCount>=10?1.2:run?.totalMobCount>1?1.1:1,amount=Math.round(base*groupReward);
   ports.state.automaticTalents=root.WandererAutomaticTalents.award(progress,amount);
+  const g=ports.phase1Controller.state,selected=g.selected||g.rewardPending||g.history.at(-1);const family=selected?.family||run?.planeFamily||'magic';
+  const prior=ports.state.crafting||root.WandererV013Crafting.create();
+  ports.state.crafting=root.WandererV013Crafting.award(ports.state.crafting||root.WandererV013Crafting.create(),{family,boss:!!enemy?.boss,elite:!!enemy?.miniboss,event:!run});
+  if(run?.phase6Bounty)ports.state.crafting.essence+=2;
+  ports.addLog('Secured '+(ports.state.crafting.essence-prior.essence)+' Essence'+(enemy?.boss?' and a '+family+' Core':'')+'.','good');
  }
  if(ports.PHASE1_PREVIEW)ports.phase5Snapshot.expedition.awardKeys=[...new Set([...ports.phase5Snapshot.expedition.awardKeys,...ports.phase4WaveKeys])];
  ports.phase4WaveKeys=[];ports.phase4Entry=null;ports.phase4Resume=false;
@@ -56,14 +61,14 @@ function phase4Restore(session){
  ports.phase1Controller.restore(session.controller);
  if(session.build)WandererV012Buildcraft.validate(session.build);
  ports.phase6Run=session.integration||null;
- ports.phase1Build=session.build;if(ports.phase1Build){WandererV012Buildcraft.syncPermanent(ports.phase1Build,ports.state.automaticTalents);if(ports.phase6Run?.effects.echo)ports.phase1Build.runtime.echo=ports.phase6Run.effects.echo;}ports.phase1Draft=session.draft;ports.phase1Vitals=session.vitals;ports.phase1Clock=session.clock;
+ ports.phase1Build=session.build;if(ports.phase1Build){WandererV012Buildcraft.syncPermanent(ports.phase1Build,ports.state.automaticTalents,session.controller.freeBuild);if(ports.phase6Run?.effects.echo)ports.phase1Build.runtime.echo=ports.phase6Run.effects.echo;}ports.phase1Draft=session.controller.freeBuild?null:session.draft;ports.phase1Vitals=session.vitals;ports.phase1Clock=session.clock;
  // Older local checkpoints stored remaining Health/Mana doses separately.
  // Move those doses into Stash once; new checkpoints persist only zeroes.
  const legacySupplies=session.supplies||{health:0,mana:0};
  for(const kind of ['health','mana'])if(Number.isInteger(legacySupplies[kind])&&legacySupplies[kind]>0){ports.state.consumables??={};ports.state.consumables[kind]=Math.min(99999,(ports.state.consumables[kind]||0)+legacySupplies[kind]);}
  ports.phase3Supplies={health:0,mana:0};
  ports.phase3LootIds=new Set(session.lootIds);ports.phase4Home=session.home;ports.phase4Seed=session.seed;ports.phase4Prefix=session.prefix;ports.phase4Stamp=session.stamp;ports.uid=session.idCounter;ports.phase1Continuity=session.continuity;
- if(ports.phase1Build){ports.phase1Build.families=ports.phase1Controller.state.families;if(ports.phase1Draft?.kind==='reward'){
+ if(ports.phase1Build){if(!ports.phase1Controller.state.freeBuild)ports.phase1Build.families=ports.phase1Controller.state.families;if(ports.phase1Draft?.kind==='reward'){
   const eligible=WandererV012Buildcraft.eligible,build=ports.phase1Build,draft=ports.phase1Draft;
   if(!ports.phase1Controller.state.rewardPending||!Array.isArray(draft.options)||draft.options.length>3||new Set(draft.options.map(p=>p.id)).size!==draft.options.length||!draft.options.every(p=>WandererV012Buildcraft.CATALOG.some(v=>v.id===p.id)))throw Error('Invalid saved passive choice');
   draft.plane=ports.phase1Controller.state.rewardPending;
