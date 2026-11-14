@@ -95,7 +95,8 @@ function legendarySignature(item){
  return definition?{identity,definition}:null;
 }
 
-function makeItem(tier,slot=null,affinity=null,source='loot',subtype='random',forcedRarity=null){
+// Recipe previews supply a fixed slot, subtype and rarity; they never allocate IDs or roll names/traits.
+function makeItem(tier,slot=null,affinity=null,source='loot',subtype='random',forcedRarity=null,preview=false){
  if(ports.PHASE1_PREVIEW&&root.WandererV013Crafting)tier=root.WandererV013Crafting.tierBand(tier);
 slot=slot||ports.rollEquipmentSlot();
 let requestedArmorType=ports.ARMOR_TYPES.includes(subtype)?subtype:null;
@@ -110,7 +111,7 @@ const armorType=ports.PHASE1_PREVIEW&&ports.ARMOR_SLOTS.includes(slot)?(requeste
 const magic=false,effect=null;
 const legendaryIdentity=rarity==='Legendary'?ports.legendaryFor({slot,subtype}):null;
 const legendaryDefinition=legendaryIdentity&&globalThis.WandererLegendary?.DEFINITIONS?.[legendaryIdentity.id];
-let mult=ports.RARITY[rarity][1],progressTier=WandererV012CombatCore.referenceLevel(tier),power=Math.round((2+progressTier*.91)*mult),o={id:ports.makeId(),slot,subtype,name:(source==='loot'&&subtype==='Sword'&&rarity==='Common'&&ports.gameRandom()<.25?'Old Sword':ports.sample(ports.NAMES[subtype]||ports.NAMES[slot]||['Ancient Gear'])),rarity,tier,atk:0,def:0,hp:0,spd:0,str:0,agi:0,int:0,end:0,cha:0,mana:0,spell:0,effect,magic:magic?effect:null,crafted:source==='forge',craftPrice:source==='forge'?ports.craftCost(tier):null,obtainedAt:ports.PHASE1_PREVIEW&&ports.phase4Stamp?ports.phase4Stamp:Date.now(),locked:false,source};
+let mult=ports.RARITY[rarity][1],progressTier=WandererV012CombatCore.referenceLevel(tier),power=Math.round((2+progressTier*.91)*mult),o={id:preview?'forge-preview':ports.makeId(),slot,subtype,name:(preview?'Preview':source==='loot'&&subtype==='Sword'&&rarity==='Common'&&ports.gameRandom()<.25?'Old Sword':ports.sample(ports.NAMES[subtype]||ports.NAMES[slot]||['Ancient Gear'])),rarity,tier,atk:0,def:0,hp:0,spd:0,str:0,agi:0,int:0,end:0,cha:0,mana:0,spell:0,effect,magic:magic?effect:null,crafted:source==='forge',craftPrice:source==='forge'?ports.craftCost(tier):null,obtainedAt:preview?0:ports.PHASE1_PREVIEW&&ports.phase4Stamp?ports.phase4Stamp:Date.now(),locked:false,source};
 if(subtype==='Sword'){o.atk=power+3;o.str=1+Math.floor(progressTier*.20)}
 else if(subtype==='Mace'){o.atk=power+6;o.str=2+Math.floor(progressTier*.23);o.spd=-1}
 else if(subtype==='Bow'){o.atk=Math.round(power*1.18)+5;o.agi=2+Math.floor(progressTier*.21);o.spd=1}
@@ -140,7 +141,7 @@ if(ports.PHASE1_PREVIEW&&rarity!=='Common'){
  const profile=armorType?({Cloth:'int',Leather:'agi',Plate:'str'}[armorType]):['Staff','Wand','Orb'].includes(subtype)?'int':['Bow','Daggers','Off-Hand Dagger'].includes(subtype)?'agi':subtype==='Shield'?'end':['Amulet','Ring'].includes(subtype)?'cha':'str';
  o.craftingProfile=profile;o[profile]=(o[profile]||0)+(rarity==='Uncommon'?1:rarity==='Rare'?2:3);
  if(rarity==='Rare')o.hp+=Math.max(2,Math.round(power*.5));
- if(rarity==='Epic'){o.v013Trait=['Staff','Wand','Orb'].includes(subtype)?ports.sample(['efficient','ward',...(subtype==='Staff'?['conflagration']:[])]):ports.sample(['focused','blood_transfer']);}
+ if(rarity==='Epic'){o.v013Trait=preview?'focused':['Staff','Wand','Orb'].includes(subtype)?ports.sample(['efficient','ward',...(subtype==='Staff'?['conflagration']:[])]):ports.sample(['focused','blood_transfer']);}
 }
 return o;}
 

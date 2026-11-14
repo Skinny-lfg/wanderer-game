@@ -571,9 +571,7 @@ function phase2Context(r){
 }
 
 function phase2Stats(){
- let equipment=ports.state.equip;const buff=ports.phase6Run?.effects.item;
- if(buff?.remaining>0){equipment={...equipment};for(const [slot,item]of Object.entries(equipment))if(item?.id===buff.id){equipment[slot]={...item};for(const [,key]of ports.FIELDS)if(Number.isFinite(item[key]))equipment[slot][key]=item[key]*1.10;}}
- return ports.phase6Stats(ports.phase1Build?WandererV012Buildcraft.mods(ports.phase1Build,ports.totalStats(equipment)):ports.totalStats(equipment));
+ return ports.totalStats();
 }
 
 function phase2WeaponAttack(r,base,critical,cast){

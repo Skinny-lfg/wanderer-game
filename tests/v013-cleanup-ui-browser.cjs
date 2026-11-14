@@ -15,6 +15,7 @@ const fs=require('fs'),path=require('path'),http=require('http'),assert=require(
  assert(!/Not tracked/.test(await p.locator('.phase3Journey').innerText()));
  await p.setViewportSize({width:390,height:844});
  fs.mkdirSync('reports/cleanup-stage2',{recursive:true});await p.screenshot({path:'reports/cleanup-stage2/camp-mobile.png',fullPage:true});
+ await p.locator('.phase3CampSideStats').scrollIntoViewIfNeeded();await p.locator('.phase3CampStickyStart a').waitFor({state:'visible'});
  await p.locator('.phase3CampStickyStart a').click();
  await p.locator('#phase3Difficulty').waitFor({state:'visible'});
  await p.locator('[data-phase1-expedition]:visible').first().click();

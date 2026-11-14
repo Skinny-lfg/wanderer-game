@@ -72,7 +72,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
    restore(cp){state=phase4Clone(cp.profile);phase4Restore(phase4Clone(cp.session));},resume:phase4ResumeRealm,extract:phase4Extract,
    seed:()=>phase4Seed,random:gameRandom},
   feedback:()=>auditFeedback={logs:[],floats:[]},rng:value=>{Math.random=()=>value;gameRandom=()=>value;},
-  stats:phase2Stats,baseStats:totalStats,makeItem,
+  stats:phase2Stats,baseStats:totalStats,statSources:stats=>WandererV012GearStats.breakdown(state.equip,state.runes,state.runeSlots,statContext(),stats),statMarkup:phase3StatValue,makeItem,
   gear:{evasionChance,gearEvasionRating,tryDodge,enemyAttackType,statsWidget,itemComparison,setCounts,setBonuses,itemSource,itemImg,detailEffectHtml,affinityBadge,legendaryDescription,
    weaponAttack,legendaryReady,legendaryAttackBonus,enemyDebuffMarkup,dungeonEquipmentOdds,placeholderIcon,renderStash,
    renderForge:()=>auditForge(),renderMerchant:()=>auditMerchant(),
