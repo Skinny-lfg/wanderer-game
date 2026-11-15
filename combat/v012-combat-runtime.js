@@ -168,7 +168,7 @@ function setReady(r,name,seconds){
 
 function setBarrier(r,amount){
  const before=r.barrier;
- r.barrier=Math.min(Math.max(8,Math.round(r.maxhp*.3)),r.barrier+Math.max(0,amount));
+ r.barrier=Math.min(Math.max(8,Math.round(r.maxhp*.3)),r.barrier+Math.max(0,amount)*(1+(r.stats?.wardBonus||0)));
  return Math.max(0,r.barrier-before);
 }
 
@@ -368,6 +368,7 @@ function weaponAttack(r,offhandStrike=false){
  if(cast)damage=Math.max(1,Math.round(damage*v013SpellMultiplier(r)));
  if(v013Traits().includes('focused')&&!r.groupReserve?.length&&(!r.enemies||r.enemies.filter(enemy=>enemy.hp>0).length===1))damage=Math.max(1,Math.round(damage*1.1));
  if(cast&&v013Traits().includes('ward')&&ports.setReady(r,'v013Ward',6))ports.setBarrier(r,r.maxhp*.02);
+ if(!offhandStrike)r.unfundedAttack=caster&&!cast;
  const base=damage;r.lastBaseHit=base;
  const perfect=s.bonus.perfectStrike&&temp.focus>=3&&now>=(r.setCooldowns?.perfectStrike||0);
  if(perfect){ports.setReady(r,'perfectStrike',10);temp.focus=0;}
@@ -376,17 +377,14 @@ function weaponAttack(r,offhandStrike=false){
  const added=ports.setOnAttack(r,base,critical,perfect)+ports.legendaryAttackBonus(r,base,critical,cast);
  // Weapon identities: small sustain windows against burst without higher global damage.
  // Cooldowns run in combat seconds and persist across waves of one expedition.
- if(weapon?.subtype==='Staff'&&cast&&ports.setReady(r,'arcaneGuard',6)){
-  const gained=ports.setBarrier(r,r.maxhp*.035);
-  if(gained>0)ports.addLog('✨ Arcane Guard +'+Math.round(gained)+' Barrier','good');
- }
+
  if(weapon?.subtype==='Wand'&&off?.subtype==='Orb'&&cast&&ports.setReady(r,'wandOrbBarrier',6)){
   const gained=ports.setBarrier(r,r.maxhp*.025);
   if(gained>0)ports.addLog('🔮 Orb Ward +'+Math.round(gained)+' Barrier','good');
  }
- if(weapon?.subtype==='Two-Handed'&&ports.setReady(r,'heavyGuard',6)){
-  const gained=ports.setBarrier(r,r.maxhp*.025);
-  if(gained>0)ports.addLog('⚔ Heavy Guard +'+Math.round(gained)+' Barrier','good');
+ if(kind==='Mace'&&now>=(e.stunImmuneUntil||0)&&ports.gameRandom()<.25){
+  e.stunnedUntil=now+(e.boss ? .4 : 1);e.stunImmuneUntil=now+4;
+  ports.floatText('STUN','enemy',false,'',e);ports.addLog('Stunned '+e.name,'good');
  }
  if(s.bonus.sunderExpose&&e.baseDef>0&&e.def<=e.baseDef*.5)damage=Math.round(damage*1.08);
  const endlessBonus=offhandStrike?0:WandererV012CombatCore.endlessWeaponDamageBonus(r.tier,weapon,off);
@@ -428,7 +426,7 @@ function weaponAttack(r,offhandStrike=false){
  if(ports.isPhase1Run())ports.phase2WeaponAttack(r,base,critical,cast);
  if(!offhandStrike&&kind==='Two-Handed'){const factor=ports.state.automaticTalents?.nodes?.includes('cleave_mastery')?.6:.4;groupSecondaryDamage(r,base,[factor,factor],'⚔ Cleave',true);}
  if(!offhandStrike&&kind==='Daggers'&&ports.state.automaticTalents?.nodes?.includes('fan_of_blades'))groupSecondaryDamage(r,base,[.22,.22],'🗡 Fan of Blades',true);
- if(!offhandStrike&&kind==='Bow'&&ports.state.automaticTalents?.nodes?.includes('bow_pierce'))groupSecondaryDamage(r,base,[.35],'🏹 Piercing Arrow',true);
+ if(!offhandStrike&&kind==='Bow')groupSecondaryDamage(r,base,[ports.state.automaticTalents?.nodes?.includes('bow_pierce')?.55:.35],'🏹 Piercing Arrow',true);
  if(!offhandStrike&&kind==='Sword'&&off?.subtype==='Shield'&&ports.state.automaticTalents?.nodes?.includes('sword_sweep'))groupSecondaryDamage(r,base,[.25],'⚔ Shielded Sweep',true);
  if(!offhandStrike&&kind==='Mace'&&ports.state.automaticTalents?.nodes?.includes('mace_shockwave')){const secondary=r.enemies?.find(enemy=>enemy!==r.enemy&&enemy.hp>0);groupSecondaryDamage(r,base,[.3],'🔨 Concussive Swing',true);if(secondary&&secondary.hp>0)secondary.slowTime=Math.max(secondary.slowTime||0,1);}
  if(cast&&v013LightningChain(r))groupSecondaryDamage(r,base,v013LightningChainFactors(),'⚡ Chain Lightning');
@@ -451,8 +449,8 @@ function updateFight(){
  ports.setCombatExpire(r,dt);ports.legendaryTick(r,dt);
  // v0.13 keeps actors in their arena slots. Only their independent attack
  // clocks advance; enemy role affects attacks, never position or sprite scale.
- if(r.enemies)for(const mob of r.enemies)if(mob.hp>0)mob.groupClock+=dt;
- if(r.enemies)r.tEnemy=e.groupClock;else r.tEnemy+=dt;r.tDot+=dt;
+ if(r.enemies)for(const mob of r.enemies)if(mob.hp>0)mob.groupClock+=(mob.stunnedUntil>ports.setNow(r)?0:dt);
+ if(r.enemies)r.tEnemy=e.groupClock;else r.tEnemy+=(e.stunnedUntil>ports.setNow(r)?0:dt);r.tDot+=dt;
  // Align Elite contact frames with the original hit tick at normal playback speed.
  const windupSlowed=e.slowTime>0?1+(s.bonus.slowBonus||.22):1;
  const impactLead=({berserker:.49,tank:.81,caster:.89,vampire:.67}[e.eliteType]??(e.boss?{guardian:.85,leech:.86,berserker:.71}[e.bossStyle]:null)??.66);
@@ -473,10 +471,10 @@ function updateFight(){
   if(e.slowTime>0)e.slowTime=Math.max(0,e.slowTime-1);
   if(e.hp<=0||hasUnsettledGroupDeaths(r)){ports.winEncounter();return;}
  }
- const target=e,attacker=r.enemies?.find(mob=>mob.hp>0&&mob.groupClock>=mob.attackEvery*(mob.slowTime>0?1+(s.bonus.slowBonus||.22):1));
+ const target=e,attacker=r.enemies?.find(mob=>mob.hp>0&&!(mob.stunnedUntil>ports.setNow(r))&&mob.groupClock>=mob.attackEvery*(mob.slowTime>0?1+(s.bonus.slowBonus||.22):1));
  if(attacker){e=attacker;r.enemy=e;r.tEnemy=e.groupClock;}
  const slowed=e.slowTime>0?1+(s.bonus.slowBonus||.22):1;
- if((!r.enemies||attacker)&&r.tEnemy>=e.attackEvery*slowed){
+ if(!(e.stunnedUntil>ports.setNow(r))&&(!r.enemies||attacker)&&r.tEnemy>=e.attackEvery*slowed){
   r.tEnemy=0;if(r.enemies)e.groupClock=0;mobWindups.delete(e);
   let enemyAbilityVfx=null;
   let raw=Math.max(Math.ceil(e.atk*.24),Math.round(e.atk*(1-Math.min(.75,s.defense/(s.defense+e.atk*1.35)))));
@@ -494,9 +492,11 @@ function updateFight(){
   // Cap before Block/Barrier so defensive investment still matters.
   if(e.eliteType==='berserker')raw=Math.min(raw,Math.max(1,Math.floor(r.maxhp*.35)));
   const attackType=ports.enemyAttackType(e);
-  if(ports.tryDodge(r,attackType)){
+  if(attackType==='physical'&&s.main?.subtype==='Sword'&&ports.gameRandom()<.18){
+   r.lastImpact={parry:true,source:e.name,at:r.combatSeconds};ports.floatText('PARRY','hero');ports.phase6Metric(r,'parries',1);
+  }else if(ports.tryDodge(r,attackType)){
    r.lastImpact={source:e.name,at:r.combatSeconds,dodge:true};
-   if(attackType==='physical'&&s.main?.subtype==='Daggers'&&['Daggers','Off-Hand Dagger'].includes(s.off?.subtype)&&ports.setReady(r,'daggerEvasionBarrier',6))ports.setBarrier(r,r.maxhp*.03);
+   ports.phase6Metric(r,'dodges',1);
    ports.animateEnemyStrike(enemyAbilityVfx);
   }
   else{
@@ -510,7 +510,7 @@ function updateFight(){
    ports.addLog('🛡 BLOCK! Shield prevents '+damageBlocked+' damage','good');ports.animateDefense();
    if(s.bonus.shieldRiposte&&ports.setNow(r)>=t.shieldCounterUntil&&ports.setReady(r,'shieldRiposte',3)){t.shieldCounter=damageBlocked*.25;t.shieldCounterUntil=ports.setNow(r)+4;}
    if(s.off?.subtype==='Shield'&&ports.legendaryHas('oathwall')&&ports.legendaryProc(r,'oathwall')){const baseFactor=s.main?.subtype==='Mace'?1.4:1;const base=Math.max(1,Math.round(s.attack*baseFactor-e.def));ports.setDirectEnemyDamage(r,base*(ports.legendaryEmpowered(r,'oathwall')?1.10:.75),'🛡 Oathwall Counterattack');if(e.hp<=0){ports.winEncounter();return;}}
-   if(s.off?.subtype==='Shield'&&['Sword','Mace'].includes(s.main?.subtype)&&!ports.legendaryHas('oathwall')&&ports.setReady(r,'shieldBaseCounter',2.5)){
+   if(s.off?.subtype==='Shield'&&s.main?.subtype==='Sword'&&!ports.legendaryHas('oathwall')&&ports.setReady(r,'shieldBaseCounter',2.5)){
     const baseFactor=s.main.subtype==='Mace'?1.4:1;
     const base=Math.max(1,Math.round(s.attack*baseFactor-e.def));
     ports.setDirectEnemyDamage(r,base*(s.main.subtype==='Sword'?.65:.45),'🛡 Shield Counterattack');

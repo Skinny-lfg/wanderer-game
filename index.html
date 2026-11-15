@@ -416,7 +416,7 @@ function newBadge(o){return o?.isNew===true?'<span class="newBadge">NEW</span>':
 
 
 function itemSource(o){return `E${o.tier} · ${o.rarity}${o.rarity==='Legendary'&&(o.upgradeRank||0)>0?' · +'+o.upgradeRank+'/10':''} · ${esc(o.subtype)}${o.crafted?' · Forged':''}`}
-function weaponTrait(o){return o?.subtype==='Staff'?'✨ Arcane Guard: casts grant 3.5% max HP Barrier every 6 combat seconds.':o?.subtype==='Two-Handed'?'⚔ Cleave: '+(state.automaticTalents?.nodes?.includes('cleave_mastery')?'60%':'40%')+' damage to up to 2 additional enemies. Heavy Guard: strikes grant 2.5% max HP Barrier every 6 combat seconds.':'';}
+function weaponTrait(o){return ({Sword:'Parry · 18% chance to turn aside a physical hit, with or without a shield.',Mace:'Stun · 25% chance on hit to halt the target for 1 second (0.4 against bosses).',Bow:'Piercing Arrow · each shot hits one additional enemy when available.',Daggers:'Paired Strikes · a second dagger follows each main-hand attack.','Two-Handed':'Cleave · heavy strikes hit up to two additional enemies.',Staff:'Heavy Cast · a slower, stronger spell for 13 base Mana.',Wand:'Quick Cast · an economical spell for 9 base Mana. Pair with an Orb for Ward.'})[o?.subtype]||'';}
 function gearComparison(item){
 const current=totalStats(),next=totalStats(comparisonEquip(item)),change=next.power-current.power;
 return `<div class="gearSummary"><b>${Math.abs(change)<Math.max(1,current.power*.03)?'≈ Sidegrade':change>0?'▲ Upgrade':'▼ Downgrade'}</b> · <b>Gear Power</b> ${current.power} → ${next.power} <span class="${change>0?'green':change<0?'red':'muted'}">(${change>0?'+':''}${change})</span></div>`;

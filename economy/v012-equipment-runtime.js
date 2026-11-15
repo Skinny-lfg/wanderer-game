@@ -131,14 +131,26 @@ if(armorType){
  // Keep the existing primary-attribute budget; no new stat weights or scaling.
  const budget=o.str+o.agi+o.int+o.end;
  o.str=o.agi=o.int=o.end=0;
- o[{Cloth:'int',Leather:'agi',Plate:'end'}[armorType]]=budget;
+ o[{Cloth:'int',Leather:'agi',Plate:'str'}[armorType]]=budget;
  o.armorType=armorType;
+ o.def=Math.max(1,Math.round((power+(slot==='armor'?3:0))*({Cloth:.45,Leather:.8,Plate:1.35}[armorType])));
  if(armorType==='Leather')o.evasionRating=power;
+ if(armorType==='Plate')o.end=Math.max(1,Math.round(power*.18));
+ const pools={Cloth:[['spell','manaRegenBonus','mana'],['hp','critBonus','wardBonus']],Leather:[['evasionRating','spd','critBonus'],['atk','hp','def']],Plate:[['end','atk','def'],['hp','critBonus','blockBonus']]};
+ const [favoured,occasional]=pools[armorType].map(pool=>[...pool]);
+ let seed=Array.from(slot+armorType+rarity+tier).reduce((n,ch)=>(Math.imul(n,31)+ch.charCodeAt(0))>>>0,1);
+ const random=source==='forge'||preview?()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296):ports.gameRandom;
+ o.affixes=[];
+ for(let i=0;i<({Common:0,Uncommon:1,Rare:2,Epic:2,Legendary:2}[rarity]);i++){
+  const pool=random()<.75?favoured:occasional,key=pool.splice(Math.floor(random()*pool.length),1)[0];
+  const amount=key==='manaRegenBonus'?.4:key==='wardBonus'?.08:['critBonus','spd','blockBonus'].includes(key)?1:Math.max(1,Math.round(power*.35));
+  o[key]=(o[key]||0)+amount;o.affixes.push(key);
+ }
 }
 if(rarity==='Legendary'){const identity=legendaryIdentity;if(identity){o.legendaryId=identity.id;o.name=identity.name;}o.legendaryPower=legendaryDefinition?legendaryDefinition.name+': '+legendaryDefinition.description:'';o.atk+=subtype==='Sword'?progressTier+4:0;}
 if(tier>200)for(const field of ['atk','def','hp','str','agi','int','end','cha','mana','spell','evasionRating'])if(typeof o[field]==='number'&&!(field==='atk'&&['Staff','Wand'].includes(subtype)))o[field]=WandererV012CombatCore.gearStat(tier,o[field]);
 if(ports.PHASE1_PREVIEW&&rarity!=='Common'){
- const profile=armorType?({Cloth:'int',Leather:'agi',Plate:'end'}[armorType]):['Staff','Wand','Orb'].includes(subtype)?'int':['Bow','Daggers','Off-Hand Dagger'].includes(subtype)?'agi':subtype==='Shield'?'end':['Amulet','Ring'].includes(subtype)?'cha':'str';
+ const profile=armorType?({Cloth:'int',Leather:'agi',Plate:'str'}[armorType]):['Staff','Wand','Orb'].includes(subtype)?'int':['Bow','Daggers','Off-Hand Dagger'].includes(subtype)?'agi':subtype==='Shield'?'end':['Amulet','Ring'].includes(subtype)?'cha':'str';
  o.craftingProfile=profile;o[profile]=(o[profile]||0)+(rarity==='Uncommon'?1:rarity==='Rare'?2:3);
  if(rarity==='Rare')o.hp+=Math.max(2,Math.round(power*.5));
  if(rarity==='Epic'){o.v013Trait=preview?'focused':['Staff','Wand','Orb'].includes(subtype)?ports.sample(['efficient','ward',...(subtype==='Staff'?['conflagration']:[])]):ports.sample(['focused','blood_transfer']);}

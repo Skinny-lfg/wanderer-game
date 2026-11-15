@@ -46,6 +46,7 @@ function totalStats(equipment,ownedRunes,equippedRuneIds,{isTwoHanded,FIELDS,ite
  for(const id of runeSlots){const rune=runeItems.find(r=>r.id===id),type=RUNE_FAMILIES.find(x=>x.id===rune?.family);if(!rune||!type||usedFamilies.has(type.id))continue;usedFamilies.add(type.id);s[type.field]+=runeValue(type.id,rune.tier)*(PHASE1_PREVIEW&&phase6Run?.effects.runeBoost?.remaining>0?1.20:1);}
  // Read-only combat projection: legacy effects remain in stored items, but are inactive.
  const main=equipped.weapon?{...equipped.weapon,effect:null,magic:null}:null,off=equipped.offhand?{...equipped.offhand,effect:null,magic:null}:null,caster=!!main&&['Staff','Wand'].includes(main.subtype);
+ const gearBonus=key=>Object.values(equipped).reduce((sum,item)=>sum+(Number(item?.[key])||0),0);
  const counts=setCounts(equipped),sets=setBonuses(counts);
  s.caster=caster;s.main=main;s.off=off;s.sets=sets.list;s.bonus=sets.values;s.counts=counts;
  s.maxhp=Math.round(55+s.end*12+s.hpFlat);
@@ -62,6 +63,10 @@ function totalStats(equipment,ownedRunes,equippedRuneIds,{isTwoHanded,FIELDS,ite
  const magic=PHASE1_PREVIEW&&(build?build.unlockedFamilies?.includes('magic'):state?.automaticTalents?.nodes?.includes('affinity_magic'));
  if(magic){s.mana=caster?s.mana:Math.max(30,Math.round(20+s.int*7+s.manaFlat));s.manaRegen=caster?s.manaRegen:+(1.5+s.int*.23).toFixed(1);s.spellPower=caster?s.spellPower:Math.round(3+s.int*1.9+s.spellFlat);s.phase2Magic=true;}
  s.blockChance=off?.subtype==='Shield'?Math.min(48,Math.round(13+s.end*.27+Math.max(0,off.tier||1)*.25+(main?.subtype==='Mace'?7:0))):0;
+ s.crit=Math.min(55,s.crit+gearBonus('critBonus'));
+ if(s.mana)s.manaRegen+=gearBonus('manaRegenBonus');
+ s.wardBonus=gearBonus('wardBonus');
+ if(off?.subtype==='Shield')s.blockChance=Math.min(48,s.blockChance+gearBonus('blockBonus'));
  s.blockReduction=off?.subtype==='Shield'?(main?.subtype==='Mace'?.67:main?.subtype==='Sword'?.62:.58):0;
  // Cumulative tier estimates: 2 pieces = 12, 3 = 30, 5 = 54.
  s.synergyPower=0;

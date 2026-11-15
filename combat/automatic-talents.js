@@ -30,7 +30,7 @@ const FORKS=Object.freeze([
  {id:'plague_spread',excludes:['rot_focus'],name:'Contagion',family:'decay',requires:'fork_plague_agi_2',forkAnchor:'passive_toxic_touch',forkStep:3,description:'On kill, spread one active Bleed and Rot to up to two enemies at 50% damage; spread effects cannot spread again.'},
  {id:'fork_bow_agi_1',name:'Agility',family:'fury',attribute:'agi',requires:'passive_precision',forkAnchor:'passive_precision',forkStep:1,description:'+1 Agility.'},
  {id:'fork_bow_agi_2',name:'Agility',family:'fury',attribute:'agi',requires:'fork_bow_agi_1',forkAnchor:'passive_precision',forkStep:2,description:'+1 Agility.'},
- {id:'bow_pierce',name:'Piercing Arrow',family:'fury',requires:'fork_bow_agi_2',forkAnchor:'passive_precision',forkStep:3,description:'Bow attacks hit one additional enemy for 35% damage.'},
+ {id:'bow_pierce',name:'Deep Pierce',family:'fury',requires:'fork_bow_agi_2',forkAnchor:'passive_precision',forkStep:3,description:'Increase the base piercing hit from 35% to 55%.'},
  {id:'fork_dagger_agi_1',name:'Agility',family:'fury',attribute:'agi',requires:'passive_double_strike',forkAnchor:'passive_double_strike',forkStep:1,description:'+1 Agility.'},
  {id:'fork_dagger_agi_2',name:'Agility',family:'fury',attribute:'agi',requires:'fork_dagger_agi_1',forkAnchor:'passive_double_strike',forkStep:2,description:'+1 Agility.'},
  {id:'fan_of_blades',name:'Fan of Blades',family:'fury',requires:'fork_dagger_agi_2',forkAnchor:'passive_double_strike',forkStep:3,forkSide:1,description:'Daggers strike up to two additional enemies for 22% damage each.'},
