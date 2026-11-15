@@ -168,7 +168,7 @@ function setReady(r,name,seconds){
 
 function setBarrier(r,amount){
  const before=r.barrier;
- r.barrier=Math.min(Math.max(8,Math.round(r.maxhp*.3)),r.barrier+Math.max(0,amount));
+ r.barrier=Math.min(Math.max(8,Math.round(r.maxhp*.3)),r.barrier+Math.max(0,amount)*(1+(r.stats?.wardBonus||0)));
  return Math.max(0,r.barrier-before);
 }
 
@@ -180,7 +180,7 @@ function setHeal(r,amount,reserveRelease=false){
  const healingReduced=(r.playerHealingDebuffUntil||0)>ports.setNow(r);
  const heal=Math.max(0,Number(amount)||0)*(healingReduced ? 0.60 : 1),before=r.hp;
  r.hp=Math.min(r.maxhp,r.hp+heal);
- const actual=r.hp-before,overheal=heal-actual;
+ const actual=r.hp-before,overheal=heal-actual;ports.phase6Metric(r,'healing',actual);
  if(!reserveRelease&&heal>0&&ports.legendaryReady(r,'charm-of-the-dawnstar'))ports.legendaryRuntime(r).reserve=Math.min(r.maxhp*.04,heal);
  if(overheal>0&&r.stats.bonus.regenOverflow){
   const temp=ports.setRuntime(r),second=Math.floor(ports.setNow(r));
@@ -324,6 +324,7 @@ function applyAffinity(effect,enemy,s,mult=1,baseDamage=0){
 }
 
 // Secondary hits never invoke attack/cast/on-hit effects or create new chains.
+function signature(family){const id=ports.state.runeSlots?.[0];return !!id&&ports.state.runes?.some(r=>r.id===id&&r.family===family);}
 function v013Traits(){return [...new Set(Object.values(ports.state?.equip||{}).filter(Boolean).map(item=>item.v013Trait).filter(Boolean))];}
 function v013FundedCost(baseCost){if(baseCost<=0)return 0;const cost=Math.max(1,Math.ceil(baseCost));return v013Traits().includes('efficient')?Math.max(1,cost-Math.max(1,Math.floor(cost*.1))):cost;}
 function v013SpellMultiplier(r){const nodes=ports.state.automaticTalents?.nodes||[];return (ports.phase1Build?.element==='fire'&&nodes.includes('fire_focus')?.9:1)*(ports.phase1Build?.element==='frost'&&nodes.includes('frost_focus')&&r.enemy.slowTime>0?1.2:1)*(ports.phase1Build?.element==='lightning'&&nodes.includes('lightning_focus')?1.35:1);}
@@ -349,6 +350,7 @@ function weaponAttack(r,offhandStrike=false){
  const normalCost=baseCost&&ports.isPhase1Run()&&ports.phase1Build?.element?WandererV012Buildcraft.nextCost(ports.phase1Build,baseCost):baseCost;
  const cost=v013FundedCost(normalCost);
  let damage=0,element=null,cast=false;
+ if(caster&&r.mp<cost&&!r.wisdomUsed&&signature('wisdom')){r.wisdomUsed=true;r.mp=cost;ports.addLog('Wisdom funded the missing Mana.','spell');}
  if(caster&&r.mp>=cost){
   if(ports.legendaryHas('voidglass'))r.legendaryFundedCost=cost;
   ports.phase6Metric(r,'manaSpent',cost);ports.phase6Metric(r,'fundedCasts',1);r.mp-=cost;cast=true;element=null;
@@ -368,6 +370,7 @@ function weaponAttack(r,offhandStrike=false){
  if(cast)damage=Math.max(1,Math.round(damage*v013SpellMultiplier(r)));
  if(v013Traits().includes('focused')&&!r.groupReserve?.length&&(!r.enemies||r.enemies.filter(enemy=>enemy.hp>0).length===1))damage=Math.max(1,Math.round(damage*1.1));
  if(cast&&v013Traits().includes('ward')&&ports.setReady(r,'v013Ward',6))ports.setBarrier(r,r.maxhp*.02);
+ if(!offhandStrike)r.unfundedAttack=caster&&!cast;
  const base=damage;r.lastBaseHit=base;
  const perfect=s.bonus.perfectStrike&&temp.focus>=3&&now>=(r.setCooldowns?.perfectStrike||0);
  if(perfect){ports.setReady(r,'perfectStrike',10);temp.focus=0;}
@@ -376,17 +379,14 @@ function weaponAttack(r,offhandStrike=false){
  const added=ports.setOnAttack(r,base,critical,perfect)+ports.legendaryAttackBonus(r,base,critical,cast);
  // Weapon identities: small sustain windows against burst without higher global damage.
  // Cooldowns run in combat seconds and persist across waves of one expedition.
- if(weapon?.subtype==='Staff'&&cast&&ports.setReady(r,'arcaneGuard',6)){
-  const gained=ports.setBarrier(r,r.maxhp*.035);
-  if(gained>0)ports.addLog('✨ Arcane Guard +'+Math.round(gained)+' Barrier','good');
- }
+
  if(weapon?.subtype==='Wand'&&off?.subtype==='Orb'&&cast&&ports.setReady(r,'wandOrbBarrier',6)){
   const gained=ports.setBarrier(r,r.maxhp*.025);
   if(gained>0)ports.addLog('🔮 Orb Ward +'+Math.round(gained)+' Barrier','good');
  }
- if(weapon?.subtype==='Two-Handed'&&ports.setReady(r,'heavyGuard',6)){
-  const gained=ports.setBarrier(r,r.maxhp*.025);
-  if(gained>0)ports.addLog('⚔ Heavy Guard +'+Math.round(gained)+' Barrier','good');
+ if(kind==='Mace'&&now>=(e.stunImmuneUntil||0)&&ports.gameRandom()<.25){
+  e.stunnedUntil=now+(e.boss ? .4 : 1);e.stunImmuneUntil=now+4;
+  ports.floatText('STUN','enemy',false,'',e);ports.addLog('Stunned '+e.name,'good');
  }
  if(s.bonus.sunderExpose&&e.baseDef>0&&e.def<=e.baseDef*.5)damage=Math.round(damage*1.08);
  const endlessBonus=offhandStrike?0:WandererV012CombatCore.endlessWeaponDamageBonus(r.tier,weapon,off);
@@ -398,6 +398,7 @@ function weaponAttack(r,offhandStrike=false){
  if(e.barrier>0){const absorbed=Math.min(e.barrier,damage);e.barrier-=absorbed;damage-=absorbed;if(absorbed)ports.addLog('🛡 '+e.name+' absorbs '+absorbed+' damage','spell');}
  const real=Math.max(0,Math.min(e.hp,damage));
  ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),damage));e.hp-=damage;ports.floatText(damage,'enemy',critical,'',e);
+ if(e.hp<=0&&r.enemies?.some(m=>m!==e&&m.hp>0)&&!r.swiftUsed&&signature('swiftness')){r.swiftUsed=true;r.tPlayer=Math.min(.9/r.stats.attacksPerSec,(r.tPlayer||0)+.3/r.stats.attacksPerSec);ports.addLog('Swiftness advanced your next attack.','good');}
  ports.legendaryOnHit(r,base,real);
  if(temp.soulPactBonus>0){const withoutBonus=Math.min(hpBefore,Math.max(0,damage+Math.max(0,barrierBefore-e.barrier)-temp.soulPactBonus-barrierBefore));ports.setSoulHeal(r,Math.max(0,real-withoutBonus));}
  if(ports.WANDERER_SHATTER_ENABLED&&cast&&element==='slow'&&damage>0&&e.hp>0&&e.slowTime>0){
@@ -428,7 +429,7 @@ function weaponAttack(r,offhandStrike=false){
  if(ports.isPhase1Run())ports.phase2WeaponAttack(r,base,critical,cast);
  if(!offhandStrike&&kind==='Two-Handed'){const factor=ports.state.automaticTalents?.nodes?.includes('cleave_mastery')?.6:.4;groupSecondaryDamage(r,base,[factor,factor],'⚔ Cleave',true);}
  if(!offhandStrike&&kind==='Daggers'&&ports.state.automaticTalents?.nodes?.includes('fan_of_blades'))groupSecondaryDamage(r,base,[.22,.22],'🗡 Fan of Blades',true);
- if(!offhandStrike&&kind==='Bow'&&ports.state.automaticTalents?.nodes?.includes('bow_pierce'))groupSecondaryDamage(r,base,[.35],'🏹 Piercing Arrow',true);
+ if(!offhandStrike&&kind==='Bow')groupSecondaryDamage(r,base,[ports.state.automaticTalents?.nodes?.includes('bow_pierce')?.55:.35],'🏹 Piercing Arrow',true);
  if(!offhandStrike&&kind==='Sword'&&off?.subtype==='Shield'&&ports.state.automaticTalents?.nodes?.includes('sword_sweep'))groupSecondaryDamage(r,base,[.25],'⚔ Shielded Sweep',true);
  if(!offhandStrike&&kind==='Mace'&&ports.state.automaticTalents?.nodes?.includes('mace_shockwave')){const secondary=r.enemies?.find(enemy=>enemy!==r.enemy&&enemy.hp>0);groupSecondaryDamage(r,base,[.3],'🔨 Concussive Swing',true);if(secondary&&secondary.hp>0)secondary.slowTime=Math.max(secondary.slowTime||0,1);}
  if(cast&&v013LightningChain(r))groupSecondaryDamage(r,base,v013LightningChainFactors(),'⚡ Chain Lightning');
@@ -446,13 +447,13 @@ function updateFight(){
   ports.state.onlineProgress.activeMs+=110/ports.clockSpeed;
  }
  const dt=.11,s=r.stats,t=ports.setRuntime(r);let e=r.enemy;
- r.combatSeconds=(r.combatSeconds||0)+dt;
+ r.combatSeconds=(r.combatSeconds||0)+dt;if(s.caster&&r.mp<v013FundedCost(s.main.subtype==='Staff'?13:9))ports.phase6Metric(r,'manaStarvedSeconds',dt);
  if(!ports.isPhase1Run()&&ports.state.onlineProgress?.timerMetric==='combat-v1'&&r.combatSeconds-(r.lastCombatCheckpoint||0)>=3){r.lastCombatCheckpoint=r.combatSeconds;ports.save();}
  ports.setCombatExpire(r,dt);ports.legendaryTick(r,dt);
  // v0.13 keeps actors in their arena slots. Only their independent attack
  // clocks advance; enemy role affects attacks, never position or sprite scale.
- if(r.enemies)for(const mob of r.enemies)if(mob.hp>0)mob.groupClock+=dt;
- if(r.enemies)r.tEnemy=e.groupClock;else r.tEnemy+=dt;r.tDot+=dt;
+ if(r.enemies)for(const mob of r.enemies)if(mob.hp>0)mob.groupClock+=(mob.stunnedUntil>ports.setNow(r)?0:dt);
+ if(r.enemies)r.tEnemy=e.groupClock;else r.tEnemy+=(e.stunnedUntil>ports.setNow(r)?0:dt);r.tDot+=dt;
  // Align Elite contact frames with the original hit tick at normal playback speed.
  const windupSlowed=e.slowTime>0?1+(s.bonus.slowBonus||.22):1;
  const impactLead=({berserker:.49,tank:.81,caster:.89,vampire:.67}[e.eliteType]??(e.boss?{guardian:.85,leech:.86,berserker:.71}[e.bossStyle]:null)??.66);
@@ -465,18 +466,18 @@ function updateFight(){
  if(r.tDot>=1){
   r.tDot-=1;
   const hasBleed=e.bleedStacks>0,hasBurn=e.burnStacks>0,hasDots=hasBleed||hasBurn;
-  if(hasDots){const applied=ports.tickDots(e);if(hasBleed&&applied>=e.hp)e.v012DeathBleed=true;ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),applied));e.hp-=applied;ports.addLog('☠️ Damage over time: '+applied+' damage','spell');if(applied>0)ports.floatText(applied,'enemy',false,hasBleed&&hasBurn?'BLEED + BURN':hasBleed?'BLEED':'BURN',e);}
+  if(hasDots){const applied=ports.tickDots(e);if(hasBleed&&applied>=e.hp)e.v012DeathBleed=true;ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),applied));ports.phase6Metric(r,'periodicDamage',Math.min(Math.max(0,e.hp),applied));e.hp-=applied;ports.addLog('☠️ Damage over time: '+applied+' damage','spell');if(applied>0)ports.floatText(applied,'enemy',false,hasBleed&&hasBurn?'BLEED + BURN':hasBleed?'BLEED':'BURN',e);}
   if(hasBurn)ports.setHeatTick(r,true);
-  if(r.enemies){for(const mob of r.enemies){if(mob===e||mob.hp<=0)continue;const bleeding=mob.bleedStacks>0,burning=mob.burnStacks>0;if(bleeding||burning){const damage=ports.tickDots(mob);if(bleeding&&damage>=mob.hp)mob.v012DeathBleed=true;ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,mob.hp),damage));mob.hp-=damage;if(damage>0)ports.floatText(damage,'enemy',false,bleeding?'BLEED':'BURN',mob);}if(mob.hp>0&&ports.phase1Build){r.enemy=mob;WandererV012Buildcraft.tickRot(ports.phase1Build,ports.phase2Context(r));}if(mob.slowTime>0)mob.slowTime=Math.max(0,mob.slowTime-1);}r.enemy=e;}
+  if(r.enemies){for(const mob of r.enemies){if(mob===e||mob.hp<=0)continue;const bleeding=mob.bleedStacks>0,burning=mob.burnStacks>0;if(bleeding||burning){const damage=ports.tickDots(mob);if(bleeding&&damage>=mob.hp)mob.v012DeathBleed=true;ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,mob.hp),damage));ports.phase6Metric(r,'periodicDamage',Math.min(Math.max(0,mob.hp),damage));mob.hp-=damage;if(damage>0)ports.floatText(damage,'enemy',false,bleeding?'BLEED':'BURN',mob);}if(mob.hp>0&&ports.phase1Build){r.enemy=mob;WandererV012Buildcraft.tickRot(ports.phase1Build,ports.phase2Context(r));}if(mob.slowTime>0)mob.slowTime=Math.max(0,mob.slowTime-1);}r.enemy=e;}
   if(s.bonus.regenBonus){const healed=ports.setHeal(r,ports.regenPerSecond(r.maxhp,s.bonus.regenBonus));if(healed>0)ports.addLog('💚 Regeneration +'+Math.round(healed)+' HP','good');}
   if(ports.isPhase1Run()&&ports.phase1Build)WandererV012Buildcraft.onSecond(ports.phase1Build,ports.phase2Context(r));
   if(e.slowTime>0)e.slowTime=Math.max(0,e.slowTime-1);
   if(e.hp<=0||hasUnsettledGroupDeaths(r)){ports.winEncounter();return;}
  }
- const target=e,attacker=r.enemies?.find(mob=>mob.hp>0&&mob.groupClock>=mob.attackEvery*(mob.slowTime>0?1+(s.bonus.slowBonus||.22):1));
+ const target=e,attacker=r.enemies?.find(mob=>mob.hp>0&&!(mob.stunnedUntil>ports.setNow(r))&&mob.groupClock>=mob.attackEvery*(mob.slowTime>0?1+(s.bonus.slowBonus||.22):1));
  if(attacker){e=attacker;r.enemy=e;r.tEnemy=e.groupClock;}
  const slowed=e.slowTime>0?1+(s.bonus.slowBonus||.22):1;
- if((!r.enemies||attacker)&&r.tEnemy>=e.attackEvery*slowed){
+ if(!(e.stunnedUntil>ports.setNow(r))&&(!r.enemies||attacker)&&r.tEnemy>=e.attackEvery*slowed){
   r.tEnemy=0;if(r.enemies)e.groupClock=0;mobWindups.delete(e);
   let enemyAbilityVfx=null;
   let raw=Math.max(Math.ceil(e.atk*.24),Math.round(e.atk*(1-Math.min(.75,s.defense/(s.defense+e.atk*1.35)))));
@@ -494,9 +495,12 @@ function updateFight(){
   // Cap before Block/Barrier so defensive investment still matters.
   if(e.eliteType==='berserker')raw=Math.min(raw,Math.max(1,Math.floor(r.maxhp*.35)));
   const attackType=ports.enemyAttackType(e);
-  if(ports.tryDodge(r,attackType)){
-   r.lastImpact={source:e.name,at:r.combatSeconds,dodge:true};
-   if(attackType==='physical'&&s.main?.subtype==='Daggers'&&['Daggers','Off-Hand Dagger'].includes(s.off?.subtype)&&ports.setReady(r,'daggerEvasionBarrier',6))ports.setBarrier(r,r.maxhp*.03);
+  if(attackType==='physical'&&s.main?.subtype==='Sword'&&ports.gameRandom()<.18){
+   r.lastImpact={parry:true,source:e.name,at:r.combatSeconds};ports.floatText('PARRY','hero');ports.phase6Metric(r,'parries',1);
+  }else if(ports.tryDodge(r,attackType)){
+   ports.phase6Metric(r,'armor',armorPrevented);ports.phase6Metric(r,'shield',damageBlocked);ports.phase6Metric(r,'absorbed',blocked);
+  r.lastImpact={source:e.name,at:r.combatSeconds,dodge:true};
+   ports.phase6Metric(r,'dodges',1);
    ports.animateEnemyStrike(enemyAbilityVfx);
   }
   else{
@@ -510,7 +514,7 @@ function updateFight(){
    ports.addLog('🛡 BLOCK! Shield prevents '+damageBlocked+' damage','good');ports.animateDefense();
    if(s.bonus.shieldRiposte&&ports.setNow(r)>=t.shieldCounterUntil&&ports.setReady(r,'shieldRiposte',3)){t.shieldCounter=damageBlocked*.25;t.shieldCounterUntil=ports.setNow(r)+4;}
    if(s.off?.subtype==='Shield'&&ports.legendaryHas('oathwall')&&ports.legendaryProc(r,'oathwall')){const baseFactor=s.main?.subtype==='Mace'?1.4:1;const base=Math.max(1,Math.round(s.attack*baseFactor-e.def));ports.setDirectEnemyDamage(r,base*(ports.legendaryEmpowered(r,'oathwall')?1.10:.75),'🛡 Oathwall Counterattack');if(e.hp<=0){ports.winEncounter();return;}}
-   if(s.off?.subtype==='Shield'&&['Sword','Mace'].includes(s.main?.subtype)&&!ports.legendaryHas('oathwall')&&ports.setReady(r,'shieldBaseCounter',2.5)){
+   if(s.off?.subtype==='Shield'&&s.main?.subtype==='Sword'&&!ports.legendaryHas('oathwall')&&ports.setReady(r,'shieldBaseCounter',2.5)){
     const baseFactor=s.main.subtype==='Mace'?1.4:1;
     const base=Math.max(1,Math.round(s.attack*baseFactor-e.def));
     ports.setDirectEnemyDamage(r,base*(s.main.subtype==='Sword'?.65:.45),'🛡 Shield Counterattack');
@@ -518,7 +522,8 @@ function updateFight(){
    }
   }
   const barrierBeforeHit=r.barrier,blocked=Math.min(r.barrier,raw);r.barrier-=blocked;
-  const barrierBroken=barrierBeforeHit>0&&r.barrier<=0,hit=Math.max(0,raw-blocked);
+  const barrierBroken=barrierBeforeHit>0&&r.barrier<=0;let hit=Math.max(0,raw-blocked);
+  if(hit>0&&!r.wardingUsed&&signature('warding')){const saved=Math.ceil(hit*.25);hit-=saved;r.wardingUsed=true;ports.addLog('Warding prevented '+saved+' damage.','good');}
   r.lastImpact={source:e.name,at:r.combatSeconds,armor:armorPrevented,barrier:blocked,shield:damageBlocked,hit};
   if(blocked>0)ports.addLog('🛡 Barrier absorbs '+blocked+' damage','good');
   if(hit>0){
@@ -566,7 +571,7 @@ function phase2Context(r){
   ports.phase6Proc(r,kind+' application');const values=e.dots[kind]||(e.dots[kind]=[]);
   if(values.length>=12)values.shift();values.push({damage:Math.max(1,Math.round(kind==='bleed'?WandererV012Buildcraft.bleedDamage(ports.phase1Build,potency):potency*(ports.state.automaticTalents?.nodes?.includes('fire_focus')?1.35:1))),remaining:3});ports.synchronizeDots(e);
  },
- dotDamage(amount,label){const n=Math.max(0,Math.round(amount));if(n){ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),n));e.hp-=n;ports.addLog(label+' '+n+' damage','spell');ports.floatText(n,'enemy',false,'ROT',e);}},
+ dotDamage(amount,label){const n=Math.max(0,Math.round(amount));if(n){ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),n));ports.phase6Metric(r,'periodicDamage',Math.min(Math.max(0,e.hp),n));e.hp-=n;ports.addLog(label+' '+n+' damage','spell');ports.floatText(n,'enemy',false,'ROT',e);}},
  damage(amount,label){return ports.setDirectEnemyDamage(r,amount,label);},
  heal(amount){return ports.setHeal(r,amount);},
  barrier(amount){return ports.setBarrier(r,amount);},

@@ -12,7 +12,7 @@ globalThis.WandererActionBar = (() => {
   function slots(run, build, now) {
     const cycle = run.playerAttackPeriod || 1 / run.stats.attacksPerSec;
     const weapon = run.stats.main;
-    const rows = [{label:weapon?.subtype==='Staff'||weapon?.subtype==='Wand'?'Basic Cast':'Basic Attack', icon:'equipment/'+({Staff:'staff', 'Two-Handed':'two_handed', Daggers:'dagger',Bow:'bow',Mace:'mace',Wand:'wand'}[weapon?.subtype] || 'sword')+'_01.png',
+    const rows = [{label:run.unfundedAttack?'Fallback Strike':weapon?.subtype==='Staff'||weapon?.subtype==='Wand'?'Basic Cast':'Basic Attack', icon:'equipment/'+({Staff:'staff', 'Two-Handed':'two_handed', Daggers:'dagger',Bow:'bow',Mace:'mace',Wand:'wand'}[weapon?.subtype] || 'sword')+'_01.png',
       left:Math.max(0,cycle-(run.tPlayer||0)), period:cycle, count:run.autoUses||0}];
     const labels = globalThis.WandererV012Buildcraft.CATALOG;
     for (const [key, expiry] of Object.entries({...run.setCooldowns,...build?.cooldowns})) {

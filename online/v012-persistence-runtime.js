@@ -24,7 +24,7 @@ function phase4CommitRealm({awardXp=false}={}){
   ports.state.automaticTalents=root.WandererAutomaticTalents.award(progress,amount);
   const g=ports.phase1Controller.state,selected=g.selected||g.rewardPending||g.history.at(-1);const family=selected?.family||run?.planeFamily||'magic';
   const prior=ports.state.crafting||root.WandererV013Crafting.create();
-  ports.state.crafting=root.WandererV013Crafting.award(ports.state.crafting||root.WandererV013Crafting.create(),{family,boss:!!enemy?.boss,elite:!!enemy?.miniboss,event:!run,reagent:ports.gameRandom()<(enemy?.miniboss?.valueOf()? .65:.22)});
+  ports.state.crafting=root.WandererV013Crafting.award(ports.state.crafting||root.WandererV013Crafting.create(),{family,boss:!!enemy?.boss,elite:!!enemy?.miniboss,event:!run,reagent:ports.gameRandom()<(enemy?.miniboss ? .65 : .22)});
   if(!enemy?.boss&&ports.state.crafting.cores[family]>prior.cores[family])ports.addLog('Found '+family+' reagent.','good');
   if(run?.phase6Bounty)ports.state.crafting.essence+=2;
   ports.addLog('Secured '+(ports.state.crafting.essence-prior.essence)+' Essence'+(enemy?.boss?' and a '+family+' Core':'')+'.','good');
@@ -172,6 +172,14 @@ function phase5Init(){
   navigator.locks.request(key,{ifAvailable:true},async lock=>{
    if(!lock){ports.phase5Fail(Error('This validation slot is already open in another tab'));return;}
    try{
+    const url=new URL(globalThis.location.href),resetMarker=key+'_rank_reset_1';
+    if(binding==='local'&&WandererV012Save.PREFIX==='wanderer_automatic_rpg_preview_v5_'&&url.searchParams.get('reset')==='ranks-1'){
+     if(!localStorage.getItem(resetMarker)){
+      for(const suffix of ['', '_backup','_source'])localStorage.removeItem(key+suffix);
+      localStorage.setItem(resetMarker,'1');
+     }
+     url.searchParams.delete('reset');history.replaceState(null,'',url);
+    }
     ports.phase5Store=WandererV012Save.createStore(localStorage,binding);ports.phase5Raw=localStorage.getItem(key);
     const stored=ports.phase5Store.load();
     if(stored){

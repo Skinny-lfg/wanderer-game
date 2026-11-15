@@ -8,6 +8,14 @@ window.clearRoomTest=()=>{for(const enemy of state.run.enemies)enemy.hp=0;phase1
   g.dungeon.steps=0;
   if(phase1Controller.visitRoom(1)||g.dungeon.current!==0)throw Error('Travel exceeded budget');
   // Exercise every room and event independently of the expedition budget.
+  phase6Run.potions=[{kind:'trail',used:false},{kind:'scout',used:false}];
+  if(!phase6UsePotion(0)||g.dungeon.steps!==2||phase6UsePotion(0))throw Error('Trail Draught settlement failed');
+  const arsenal=c.nodes.findIndex(n=>n.event==='forgotten_arsenal');
+  if(arsenal<0)throw Error('Missing arsenal');
+  if(phase1Controller.travelPath(arsenal).length){
+   if(phase6UsePotion(1,'treasure')||phase6Run.potions[1].used)throw Error('Wasted scout dose');
+   if(!phase6UsePotion(1,'threat'))throw Error('Failed to scout a threat');
+  }else if(!phase6UsePotion(1,'treasure')||!g.dungeon.scouted.includes(arsenal))throw Error('Failed to scout hidden arsenal');
   g.dungeon.steps=100;
   let deferred=false;
   for(let i=1;i<c.nodes.length;i++){
@@ -58,6 +66,9 @@ window.clearRoomTest=()=>{for(const enemy of state.run.enemies)enemy.hp=0;phase1
  await p.reload();await p.locator('[data-dungeon-room="0"]').waitFor({timeout:5000});
  const result=await p.evaluate(()=>window.finishDungeonTest());
  assert.deepEqual(result,{unlocked:2,outcome:'victory',deferred:true});assert.deepEqual(errors,[]);
+ await p.goto('http://127.0.0.1:'+server.address().port+'/?reset=ranks-1');
+ await p.locator('[data-phase1-expedition]:visible').first().waitFor();
+ assert.equal(await p.evaluate(()=>JSON.parse(localStorage.getItem(Object.keys(localStorage).find(k=>k.endsWith('_local')))).expedition.attempts),0);
  console.log('PASS: fresh boot, deterministic craft, tracking/save/reload, realm choice, arena focus, mobile bounds, travel, reload, deferred event and boss unlock.');
  }finally{if(b)await b.close();await new Promise(r=>server.close(r));}
 })().catch(e=>{console.error(e);process.exitCode=1;});

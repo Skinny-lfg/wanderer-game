@@ -57,8 +57,8 @@ globalThis.WandererArenaHud = (() => {
     document.querySelector('.heroArenaSprite')?.classList.toggle('hasBarrier', run.barrier > 0);
     const impact = run.lastImpact;
     document.getElementById('arenaImpact').textContent = !impact ? 'Your build fights automatically.' :
-      impact.dodge ? 'Attack avoided' :
-      'Barrier absorbed ' + Math.round(impact.barrier || 0) + '  ·  Health lost ' + Math.round(impact.hit || 0);
+      impact.parry ? 'Sword parry' : impact.dodge ? 'Attack avoided' :
+      'Armor '+Math.round(impact.armor||0)+' · Block '+Math.round(impact.shield||0)+' · Barrier absorbed ' + Math.round(impact.barrier || 0) + '  ·  Health lost ' + Math.round(impact.hit || 0);
   }
   return {mount, update};
 })();

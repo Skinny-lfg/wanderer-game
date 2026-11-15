@@ -31,6 +31,17 @@ globalThis.arenaFixture = {
   r.hp=r.maxhp=10000;r.barrier=500;r.mp=r.maxmp=10000;
   renderCombat();clearInterval(clock);
  },
+ verifyWeapons(){
+  const r=state.run, target=r.enemies[0], second=r.enemies[1];
+  state.equip.offhand=null;
+  const arm=kind=>{state.equip.weapon=makeItem(1,'weapon',null,'loot',kind,'Rare');r.stats=phase2Stats();r.enemy=target;};
+  arm('Bow');const hp=second.hp;weaponAttack(r);if(second.hp>=hp)throw Error('Base piercing missed');
+  arm('Mace');for(let seed=1;seed<=16&&!target.stunnedUntil;seed++){phase4Seed=seed*7919;weaponAttack(r);}if(!(target.stunnedUntil>setNow(r)))throw Error('Stun missing');
+  arm('Sword');target.attackType='physical';target.stunnedUntil=0;
+  let parried=false;
+  for(let i=0;i<8&&!parried;i++){phase4Seed=(i*998877)>>>0;target.groupClock=100;r.tPlayer=0;updateFight();parried=!!r.lastImpact?.parry;}
+  if(!parried||r.stats.off)throw Error('Sword parry without shield failed');
+ },
  healthFraction(value){state.run.hp=state.run.maxhp*value;updateBars();},
  tick(){updateFight();}
 };
@@ -86,6 +97,7 @@ const server = http.createServer((req,res)=>{
         },fraction);
         assert(Math.abs(visibleFraction-fraction)<.02,'Red health fill failed at '+fraction);
       }
+      if(kind==='patrol')await page.evaluate(()=>{arenaFixture.healthFraction(1);arenaFixture.verifyWeapons();});
       assert.deepEqual(errors,[]);
       await page.close();
     }

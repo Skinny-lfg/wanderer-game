@@ -22,7 +22,7 @@ function phase1Begin(level=1,freeBuild=false){
  ports.phase4ClaimOverflow();
  if(ports.state.pendingRuneReward){ports.showPendingRuneReward();return;}
  if(ports.state.expeditionOverflow.length||!ports.stashHasRoom()){ports.bannerMessage('Claim secured loot and free Stash space before starting another Expedition.');return;}
- if(!['camp','finished','failed'].includes(ports.phase1Controller.state.stage)||!Number.isInteger(level)||level<1||level>ports.phase1Controller.state.unlocked)return false;
+ if(!['camp','finished','failed'].includes(ports.phase1Controller.state.stage)||!Number.isInteger(level)||level<1||level>Math.min(freeBuild?5:Infinity,ports.phase1Controller.state.unlocked))return false;
  ports.phase4Seed=Math.floor(Math.random()*4294967296)>>>0;ports.phase4Prefix=Date.now().toString(36);ports.phase4Stamp=null;ports.phase4Home=ports.phase4Clone(ports.state.equip);ports.phase4Entry=null;ports.phase4Resume=false;ports.phase4WaveKeys=[];
  ports.phase5Results={version:1,complete:true,review:null,realm:null,summary:null,earned:[],gold:0,fragments:0,craftingStart:ports.phase4Clone(ports.state.crafting||WandererV013Crafting.create())};
  const project=WandererV013Crafting.RECIPES.find(r=>r.id===ports.state.crafting?.targetRecipe);ports.phase1Controller.start(level,{freeBuild,dungeon:freeBuild,targetFamily:project?.family});ports.phase6Run={version:1,event:null,events:[],effects:{},combats:0};ports.phase3LootIds=new Set();ports.phase3PotionCooldowns={health:0,mana:0};ports.phase1Vitals=null;ports.phase1Clock=0;ports.phase1Continuity=null;ports.phase3Supplies={health:0,mana:0};ports.phase1Build=WandererV012Buildcraft.create();WandererV012Buildcraft.syncPermanent(ports.phase1Build,ports.state.automaticTalents,freeBuild);ports.phase1Build.runtime.hybridRules=true;if(!freeBuild)ports.phase1Build.families=ports.phase1Controller.state.families;ports.phase1Draft=null;ports.state.run=null;ports.view='phase1';
@@ -58,7 +58,7 @@ function phase6EventChoice(choice,itemId,passiveId,family,targetId){
  case 'relic_collector':if(!item){ports.state[choice===0?'gold':'fragments']+=choice===0?5+E:3+E;break;}sacrifice();ports.state[choice===0?'gold':'fragments']+=choice===0?12+2*item.tier:5+item.tier;break;
  case 'cursed_altar':if(v.hp<=Math.ceil(v.maxhp*.2))return false;heal();ports.phase1Vitals.hp-=Math.ceil(v.maxhp*.2);effects[choice===0?'attack':'defense']=.10;break;
  case 'whispering_idol':ports.phase6Buff('curse',.10);ports.state[choice===0?'gold':'fragments']+=choice===0?25+4*E:12+2*E;break;
- case 'forgotten_arsenal':if(choice===0){ports.state.crafting.essence+=6;}else ports.state.fragments+=8+2*E;break;
+ case 'forgotten_arsenal':if(choice===0){ports.state.crafting.essence+=6;}else if(g.dungeon){const c=ports.phase1Controller.realmMap();g.dungeon.steps=Math.min(c.stepLimit,g.dungeon.steps+2);}else ports.state.fragments+=8+2*E;break;
  case 'bounty_writ':if(choice===0){if(g.rooms.slice(g.planeIndex).includes('elite'))effects.bounty=true;else ports.state.fragments+=5+E;}break;
  case 'restless_spring':if(choice===0){if(v.hp>=v.maxhp)return false;heal(.35);}else if(v.maxmp===0||v.mp>=v.maxmp)ports.state.fragments+=3+E;else heal(0,.4);break;
  case 'oracle_of_paths':if(choice===0){if(g.freeBuild){if(g.rerolls>=3)return false;g.rerolls++;}else{if(!ports.phase1Controller.allowed().includes(family))return false;ports.phase1Controller.influence(family);}}else ports.state.fragments+=5+E;break;
@@ -241,7 +241,7 @@ function phase1WaveWon(){
  ports.addLog('Realm rewards pending: +'+gold+' Gold · +'+fragments+' Fragments.','good');
  const odds=ports.waveLootOdds(boss?5:elite?4:Math.min(3,1+Math.floor((g.planeIndex-1)/5)),r.stats.cha);odds.drop=Math.min(1,odds.drop*groupReward);if(ports.phase6Run?.effects.fortune)odds.drop=Math.min(1,odds.drop*1.25);
  if(ports.gameRandom()<odds.drop){
-  const theme=ports.phase2Theme(r.path),pick=ports.dungeonEquipmentPick(theme,[]);
+  const theme=ports.phase2Theme(r.path),pick=g.dungeon&&g.selected.node===ports.phase1Controller.realmMap().objective&&ports.gameRandom()<.55?{slot:'offhand',subtype:'Shield'}:ports.dungeonEquipmentPick(theme,[]);
   const rarity=ports.randomFromOdds(odds.rarities);
   const item=ports.makeItem(r.tier,pick.slot,theme.effect,'loot',pick.subtype,rarity);
   // Gear in the Bag is at risk; equipped gear survives failure.
@@ -272,7 +272,7 @@ function phase1WaveWon(){
   ports.phase5Results.review='summary';
   ports.phase5PersonalBest=Math.max(ports.phase5PersonalBest,r.tier);
   ports.phase6ReturnPotions('victory');
-  ports.phase5MakeSummary('victory');
+  ports.settleContract();ports.phase5MakeSummary('victory');
   WandererV012Buildcraft.clear(ports.phase1Build);ports.phase1Build=null;
   if(ports.PHASE1_PREVIEW){ports.phase5Snapshot.expedition.completed=Math.max(ports.phase5Snapshot.expedition.completed,r.tier);ports.phase5Snapshot.expedition.lastOutcome='victory';}
   // Keep classic Rune tiers and three-choice UI: only complete milestone bosses, never Elites.

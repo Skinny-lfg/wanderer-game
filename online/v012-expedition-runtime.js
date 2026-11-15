@@ -241,7 +241,7 @@ function phase1WaveWon(){
  ports.addLog('Realm rewards pending: +'+gold+' Gold · +'+fragments+' Fragments.','good');
  const odds=ports.waveLootOdds(boss?5:elite?4:Math.min(3,1+Math.floor((g.planeIndex-1)/5)),r.stats.cha);odds.drop=Math.min(1,odds.drop*groupReward);if(ports.phase6Run?.effects.fortune)odds.drop=Math.min(1,odds.drop*1.25);
  if(ports.gameRandom()<odds.drop){
-  const theme=ports.phase2Theme(r.path),pick=ports.dungeonEquipmentPick(theme,[]);
+  const theme=ports.phase2Theme(r.path),pick=g.dungeon&&g.selected.node===ports.phase1Controller.realmMap().objective&&ports.gameRandom()<.55?{slot:'offhand',subtype:'Shield'}:ports.dungeonEquipmentPick(theme,[]);
   const rarity=ports.randomFromOdds(odds.rarities);
   const item=ports.makeItem(r.tier,pick.slot,theme.effect,'loot',pick.subtype,rarity);
   // Gear in the Bag is at risk; equipped gear survives failure.

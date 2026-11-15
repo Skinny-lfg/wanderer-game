@@ -30,7 +30,7 @@ const FORKS=Object.freeze([
  {id:'plague_spread',excludes:['rot_focus'],name:'Contagion',family:'decay',requires:'fork_plague_agi_2',forkAnchor:'passive_toxic_touch',forkStep:3,description:'On kill, spread one active Bleed and Rot to up to two enemies at 50% damage; spread effects cannot spread again.'},
  {id:'fork_bow_agi_1',name:'Agility',family:'fury',attribute:'agi',requires:'passive_precision',forkAnchor:'passive_precision',forkStep:1,description:'+1 Agility.'},
  {id:'fork_bow_agi_2',name:'Agility',family:'fury',attribute:'agi',requires:'fork_bow_agi_1',forkAnchor:'passive_precision',forkStep:2,description:'+1 Agility.'},
- {id:'bow_pierce',name:'Piercing Arrow',family:'fury',requires:'fork_bow_agi_2',forkAnchor:'passive_precision',forkStep:3,description:'Bow attacks hit one additional enemy for 35% damage.'},
+ {id:'bow_pierce',name:'Deep Pierce',family:'fury',requires:'fork_bow_agi_2',forkAnchor:'passive_precision',forkStep:3,description:'Increase the base piercing hit from 35% to 55%.'},
  {id:'fork_dagger_agi_1',name:'Agility',family:'fury',attribute:'agi',requires:'passive_double_strike',forkAnchor:'passive_double_strike',forkStep:1,description:'+1 Agility.'},
  {id:'fork_dagger_agi_2',name:'Agility',family:'fury',attribute:'agi',requires:'fork_dagger_agi_1',forkAnchor:'passive_double_strike',forkStep:2,description:'+1 Agility.'},
  {id:'fan_of_blades',name:'Fan of Blades',family:'fury',requires:'fork_dagger_agi_2',forkAnchor:'passive_double_strike',forkStep:3,forkSide:1,description:'Daggers strike up to two additional enemies for 22% damage each.'},
@@ -91,7 +91,13 @@ function nodes(){
   }
   for(const [id,side]of [[first,-1],[second,1]]){const n=forks.find(n=>n.id===id);n.legacyRequires=n.requires;n.requires='fork_'+prefix+'_'+stat+'_2';n.forkAnchor=a;n.forkStep=3;n.forkSide=side;}
  }
- cachedNodes=Object.freeze([...CORE,...branches,...forks.map(Object.freeze)]);}return cachedNodes;
+ cachedNodes=Object.freeze([...CORE,...branches,...forks].map(node=>{
+  if(!node.attribute)return Object.freeze(node);
+  const step=node.pathStep||node.bridgeStep||node.forkStep||1;
+  const options={str:[['flatAttack',2,'Attack Power'],['flatArmor',2,'Armor']],end:[['flatArmor',2,'Armor'],['flatLife',5,'Health']],agi:[['flatAttack',2,'Attack Power'],['flatAvoid',2,'Evasion rating']],int:[['flatSpell',2,'Spell Power'],['flatRegen',.25,'Mana per second']],cha:[['flatLife',5,'Health'],['flatAttack',2,'Attack Power']]};
+  const [key,value,label]=(options[node.attribute]||options.str)[(step-1)%2];
+  return Object.freeze({...node,attribute:null,[key]:value,name:label,description:'+'+value+' '+label+'.'});
+ }));}return cachedNodes;
 }
 function cap(v){return v.treeVersion>=4?Math.max(MAX_POINTS,v.legacyTalentCap||0):Math.max(MAX_POINTS,v.nodes.length);}
 
@@ -115,6 +121,7 @@ function allocateAttribute(v,key){if(!valid(v))throw Error('Invalid talent progr
 function passiveIds(v){if(!valid(v))throw Error('Invalid talent progress');const byId=new Map(nodes().filter(n=>n.passiveId).map(n=>[n.id,n.passiveId]));const ids=v.nodes.filter(id=>byId.has(id)).map(id=>byId.get(id));for(const [family,id] of [['blood','bleeding_edge'],['decay','toxic_touch']])if(v.nodes.includes('affinity_'+family))ids.push(id);return ids;}
 function attributeBonuses(v){if(!v)return {};if(!valid(v))throw Error('Invalid talent progress');const out={};for(const id of v.nodes){const node=nodes().find(n=>n.id===id);if(node?.attribute)out[node.attribute]=(out[node.attribute]||0)+1;}return out;}
 function apply(stats,v){if(!v)return stats;if(!valid(v))throw Error('Invalid talent progress');const bonuses={attack:0,spell:0,health:0,defense:0,crit:0,speed:0,mana:0};for(const id of v.nodes){const node=nodes().find(n=>n.id===id);for(const key of Object.keys(bonuses))bonuses[key]+=node[key]||0;}
+ for(const id of v.nodes){const n=nodes().find(node=>node.id===id);stats.attack+=n.flatAttack||0;stats.defense+=n.flatArmor||0;stats.maxhp+=n.flatLife||0;stats.evasionRating+=n.flatAvoid||0;if(stats.mana){stats.spellPower+=n.flatSpell||0;stats.manaRegen+=n.flatRegen||0;}}
  stats.attack=Math.round(stats.attack*(1+bonuses.attack));stats.spellPower=Math.round(stats.spellPower*(1+bonuses.spell));stats.maxhp=Math.round(stats.maxhp*(1+bonuses.health));stats.defense=Math.round(stats.defense*(1+bonuses.defense));stats.crit=Math.min(55,stats.crit+bonuses.crit);stats.attacksPerSec=Math.min(4.2,stats.attacksPerSec*(1+bonuses.speed));stats.mana=Math.round(stats.mana*(1+bonuses.mana));stats.manaRegen=+(stats.manaRegen*(1+bonuses.mana)).toFixed(1);
  if(v.nodes.includes('vitality_reserve'))stats.maxhp=Math.round(stats.maxhp*1.2);
  if(v.nodes.includes('vitality_recovery'))stats.maxhp=Math.round(stats.maxhp*.9);
