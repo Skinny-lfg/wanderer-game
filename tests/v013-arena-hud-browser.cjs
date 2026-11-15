@@ -31,6 +31,7 @@ globalThis.arenaFixture = {
   r.hp=r.maxhp=10000;r.barrier=500;r.mp=r.maxmp=10000;
   renderCombat();clearInterval(clock);
  },
+ healthFraction(value){state.run.hp=state.run.maxhp*value;updateBars();},
  tick(){updateFight();}
 };
 `;
@@ -77,6 +78,14 @@ const server = http.createServer((req,res)=>{
         return box.left>=arena.left && box.right<=arena.right+1 && box.top>=arena.top && box.bottom<=arena.bottom+1;
       }));
       assert(bounds,'Enemy outside mobile arena');
+      for(const fraction of [1,.75,.25,0]){
+        const visibleFraction=await page.evaluate(f=>{
+          arenaFixture.healthFraction(f);
+          const fill=document.getElementById('heroHpFill');
+          return fill.getBoundingClientRect().width/fill.parentElement.clientWidth;
+        },fraction);
+        assert(Math.abs(visibleFraction-fraction)<.02,'Red health fill failed at '+fraction);
+      }
       assert.deepEqual(errors,[]);
       await page.close();
     }

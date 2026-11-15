@@ -99,6 +99,7 @@ body.phase3IntegratedPreview .arenaHud .combatActions {
 .arenaHud #combatStatusNote { display: none; }
 .arenaHud .combatSpeedWord { display: none; }
 body.phase3IntegratedPreview .arenaResources .hpbar i {
+  width: var(--resource-pct, 0%);
   background: linear-gradient(#cf6863, #8f303b) !important;
 }
 body.phase3IntegratedPreview .arenaResources .mpbar i {
