@@ -4,6 +4,11 @@ const fixture=`
 window.clearRoomTest=()=>{for(const enemy of state.run.enemies)enemy.hp=0;phase1WaveWon();phase5ExitResult();};window.finishDungeonTest=()=>{
   const c=phase1Controller.realmMap(),g=phase1Controller.state;
   if(g.dungeon.current!==0||g.history.length!==1)throw Error('Travel/reload mismatch');
+  if(g.dungeon.steps!==c.stepLimit-2)throw Error('Return trip not charged or not saved');
+  g.dungeon.steps=0;
+  if(phase1Controller.visitRoom(1)||g.dungeon.current!==0)throw Error('Travel exceeded budget');
+  // Exercise every room and event independently of the expedition budget.
+  g.dungeon.steps=100;
   let deferred=false;
   for(let i=1;i<c.nodes.length;i++){
    if(g.dungeon.cleared.includes(i))continue;

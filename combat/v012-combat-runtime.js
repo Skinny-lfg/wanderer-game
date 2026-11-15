@@ -202,7 +202,7 @@ function setDelayEnemy(r,seconds){
 function setDirectEnemyDamage(r,amount,label){
  const enemy=r.enemy;let damage=Math.max(0,Math.round(amount));
  if(enemy.barrier>0){const absorbed=Math.min(enemy.barrier,damage);enemy.barrier-=absorbed;damage-=absorbed;}
- ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,enemy.hp),damage));ports.phase6Proc(r,label);enemy.hp-=damage;if(damage>0){ports.addLog(label+' '+damage+' bonus damage','good');ports.floatText(damage,'enemy');}
+ ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,enemy.hp),damage));ports.phase6Proc(r,label);enemy.hp-=damage;if(damage>0){ports.addLog(label+' '+damage+' bonus damage','good');ports.floatText(damage,'enemy',false,'',enemy);}
  return damage;
 }
 
@@ -332,7 +332,7 @@ function v013LightningChainFactors(){return ports.state.automaticTalents?.nodes?
 function groupSecondaryDamage(r,base,factors,label,physical=false){
  if(!r.enemies||r.enemies.length<2)return 0;
  const targets=r.enemies.filter(enemy=>enemy!==r.enemy&&enemy.hp>0).slice(0,factors.length);let hit=0;
- targets.forEach((enemy,i)=>{let amount=Math.max(1,Math.round((physical?Math.max(1,Math.round(r.stats.attack*({'Two-Handed':1.70,Sword:1.12,Mace:1.4,Bow:1.08,Daggers:.80}[r.stats.main?.subtype]||1))-(enemy.def||0)):base)*factors[i]));const absorbed=Math.min(enemy.barrier||0,amount);enemy.barrier=Math.max(0,(enemy.barrier||0)-absorbed);amount-=absorbed;const actual=Math.min(Math.max(0,enemy.hp),amount);enemy.hp-=amount;ports.phase6Metric(r,'damageDealt',actual);hit++;});
+ targets.forEach((enemy,i)=>{let amount=Math.max(1,Math.round((physical?Math.max(1,Math.round(r.stats.attack*({'Two-Handed':1.70,Sword:1.12,Mace:1.4,Bow:1.08,Daggers:.80}[r.stats.main?.subtype]||1))-(enemy.def||0)):base)*factors[i]));const absorbed=Math.min(enemy.barrier||0,amount);enemy.barrier=Math.max(0,(enemy.barrier||0)-absorbed);amount-=absorbed;const actual=Math.min(Math.max(0,enemy.hp),amount);enemy.hp-=amount;if(actual>0)ports.floatText(actual,'enemy',false,'',enemy);ports.phase6Metric(r,'damageDealt',actual);hit++;});
  if(hit)ports.addLog(label+' hits '+hit+' additional '+(hit===1?'enemy':'enemies')+'.','good');return hit;
 }
 function groupElementalEffects(r,b){
@@ -397,7 +397,7 @@ function weaponAttack(r,offhandStrike=false){
  ports.animateStrike(kind,cast);
  if(e.barrier>0){const absorbed=Math.min(e.barrier,damage);e.barrier-=absorbed;damage-=absorbed;if(absorbed)ports.addLog('🛡 '+e.name+' absorbs '+absorbed+' damage','spell');}
  const real=Math.max(0,Math.min(e.hp,damage));
- ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),damage));e.hp-=damage;ports.floatText(damage,'enemy',critical);
+ ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),damage));e.hp-=damage;ports.floatText(damage,'enemy',critical,'',e);
  ports.legendaryOnHit(r,base,real);
  if(temp.soulPactBonus>0){const withoutBonus=Math.min(hpBefore,Math.max(0,damage+Math.max(0,barrierBefore-e.barrier)-temp.soulPactBonus-barrierBefore));ports.setSoulHeal(r,Math.max(0,real-withoutBonus));}
  if(ports.WANDERER_SHATTER_ENABLED&&cast&&element==='slow'&&damage>0&&e.hp>0&&e.slowTime>0){
@@ -465,9 +465,9 @@ function updateFight(){
  if(r.tDot>=1){
   r.tDot-=1;
   const hasBleed=e.bleedStacks>0,hasBurn=e.burnStacks>0,hasDots=hasBleed||hasBurn;
-  if(hasDots){const applied=ports.tickDots(e);if(hasBleed&&applied>=e.hp)e.v012DeathBleed=true;ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),applied));e.hp-=applied;ports.addLog('☠️ Damage over time: '+applied+' damage','spell');if(applied>0)ports.floatText(applied,'enemy',false,hasBleed&&hasBurn?'BLEED + BURN':hasBleed?'BLEED':'BURN');}
+  if(hasDots){const applied=ports.tickDots(e);if(hasBleed&&applied>=e.hp)e.v012DeathBleed=true;ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),applied));e.hp-=applied;ports.addLog('☠️ Damage over time: '+applied+' damage','spell');if(applied>0)ports.floatText(applied,'enemy',false,hasBleed&&hasBurn?'BLEED + BURN':hasBleed?'BLEED':'BURN',e);}
   if(hasBurn)ports.setHeatTick(r,true);
-  if(r.enemies){for(const mob of r.enemies){if(mob===e||mob.hp<=0)continue;const bleeding=mob.bleedStacks>0,burning=mob.burnStacks>0;if(bleeding||burning){const damage=ports.tickDots(mob);if(bleeding&&damage>=mob.hp)mob.v012DeathBleed=true;ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,mob.hp),damage));mob.hp-=damage;}if(mob.hp>0&&ports.phase1Build){r.enemy=mob;WandererV012Buildcraft.tickRot(ports.phase1Build,ports.phase2Context(r));}if(mob.slowTime>0)mob.slowTime=Math.max(0,mob.slowTime-1);}r.enemy=e;}
+  if(r.enemies){for(const mob of r.enemies){if(mob===e||mob.hp<=0)continue;const bleeding=mob.bleedStacks>0,burning=mob.burnStacks>0;if(bleeding||burning){const damage=ports.tickDots(mob);if(bleeding&&damage>=mob.hp)mob.v012DeathBleed=true;ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,mob.hp),damage));mob.hp-=damage;if(damage>0)ports.floatText(damage,'enemy',false,bleeding?'BLEED':'BURN',mob);}if(mob.hp>0&&ports.phase1Build){r.enemy=mob;WandererV012Buildcraft.tickRot(ports.phase1Build,ports.phase2Context(r));}if(mob.slowTime>0)mob.slowTime=Math.max(0,mob.slowTime-1);}r.enemy=e;}
   if(s.bonus.regenBonus){const healed=ports.setHeal(r,ports.regenPerSecond(r.maxhp,s.bonus.regenBonus));if(healed>0)ports.addLog('💚 Regeneration +'+Math.round(healed)+' HP','good');}
   if(ports.isPhase1Run()&&ports.phase1Build)WandererV012Buildcraft.onSecond(ports.phase1Build,ports.phase2Context(r));
   if(e.slowTime>0)e.slowTime=Math.max(0,e.slowTime-1);
@@ -566,7 +566,7 @@ function phase2Context(r){
   ports.phase6Proc(r,kind+' application');const values=e.dots[kind]||(e.dots[kind]=[]);
   if(values.length>=12)values.shift();values.push({damage:Math.max(1,Math.round(kind==='bleed'?WandererV012Buildcraft.bleedDamage(ports.phase1Build,potency):potency*(ports.state.automaticTalents?.nodes?.includes('fire_focus')?1.35:1))),remaining:3});ports.synchronizeDots(e);
  },
- dotDamage(amount,label){const n=Math.max(0,Math.round(amount));if(n){ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),n));e.hp-=n;ports.addLog(label+' '+n+' damage','spell');ports.floatText(n,'enemy',false,'ROT');}},
+ dotDamage(amount,label){const n=Math.max(0,Math.round(amount));if(n){ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),n));e.hp-=n;ports.addLog(label+' '+n+' damage','spell');ports.floatText(n,'enemy',false,'ROT',e);}},
  damage(amount,label){return ports.setDirectEnemyDamage(r,amount,label);},
  heal(amount){return ports.setHeal(r,amount);},
  barrier(amount){return ports.setBarrier(r,amount);},

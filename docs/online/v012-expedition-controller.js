@@ -102,7 +102,7 @@ function create(themes,rng=Math.random){
    const events=shuffle(['forgotten_arsenal','whispering_idol','traveling_merchant','cursed_altar'],routeRng);
    const width=5+risk%2, size=2*width+2;
    const kinds=Array(size).fill('combat');kinds[0]='entrance';kinds[size-1]='boss';
-   const slots=shuffle(Array.from({length:size-4},(_,i)=>i+3),routeRng);
+   const slots=shuffle(Array.from({length:size-6},(_,i)=>i+5),routeRng);
    kinds[slots.pop()]='spring';kinds[slots.pop()]='event';kinds[slots.pop()]='event';
    // Elites occupy a single corridor so the opposite corridor always bypasses them.
    const eliteSlots=shuffle(slots.filter(i=>i%2===slots[0]%2),routeRng);
@@ -113,12 +113,22 @@ function create(themes,rng=Math.random){
     const count=range[0]+Math.floor(routeRng()*(range[1]-range[0]+1));
     return {kind,offset:Math.round((routeRng()-.5)*22),range,count,escorts:kind==='boss'?risk:kind==='elite'?Math.floor(routeRng()*(risk+1)):0,event:kind==='spring'?'restless_spring':kind==='event'?events.pop():null};
    });
-   const edges=[[0,1],[0,2],[size-3,size-1],[size-2,size-1]];
-   for(let i=1;i<size-3;i++)edges.push([i,i+2]);
-   const bridges=shuffle(Array.from({length:width},(_,i)=>1+i*2),routeRng);
-   for(const i of bridges.slice(0,2))edges.push([i,i+1]);
-   const shortcut=bridges[2];edges.push([shortcut,shortcut+1]);
-   return {id:theme.id,name:theme.name,family,image:theme.image,risk,nodes,edges,shortcut};
+   const edges=[],positions=[[50,50]],rotation=Math.floor(routeRng()*4)*Math.PI/2;
+   const place=(angle,radius)=>positions.push([50+radius*Math.cos(angle+rotation),50+radius*Math.sin(angle+rotation)]);
+   for(let arm=0;arm<4;arm++){
+    place(arm*Math.PI/2,19);
+    edges.push([0,1+arm],[1+arm,5+arm],[1+(arm+1)%4,5+arm]);
+   }
+   for(let arm=0;arm<4;arm++)place((arm+.5)*Math.PI/2,34);
+   const outer=size-9,offset=Math.floor(routeRng()*4);
+   for(let k=0;k<outer;k++){
+    const angle=(k/outer+offset/4)*2*Math.PI;
+    place(angle,43);
+    edges.push([5+Math.floor((angle/(Math.PI/2))+4)%4,9+k]);
+    if(k>0)edges.push([8+k,9+k]);
+   }
+   const shortcut=9;
+   return {id:theme.id,name:theme.name,family,image:theme.image,risk,nodes,edges,shortcut,positions,stepLimit:12-risk};
   });
   Object.assign(game,{version:2,expedition:level,planeIndex:1,stage:'choice',freeBuild:true,offers:[],selected:null,wave:0,history:[],rooms:[],rewardPending:null,families:[],initialFamily:null,lastFamily:null,rerolls:0,rerollsByRealm:Array.from({length:15},()=>[0,0,0]),bossId:shuffle(BOSSES,routeRng)[0].id,encounterVersion:1,dungeon:{cards,realm:null,current:0,cleared:[0],visited:[0]}});
   for(const k of ['routeMap','routeEdges','routePositions','routeMobCounts'])delete game[k];
@@ -128,7 +138,7 @@ function create(themes,rng=Math.random){
  function chooseRealm(id){
   const d=game.dungeon,card=d.cards.find(c=>c.id===id);
   if(!card||d.realm||game.stage!=='choice')throw Error('Realm unavailable');
-  d.realm=id;game.bossFamily=card.family;
+  d.realm=id;if(card.stepLimit)d.steps=card.stepLimit;game.bossFamily=card.family;
  }
  function travelPath(target){
   const d=game.dungeon,card=realmMap(),paths=[[d.current]],seen=new Set([d.current]);
@@ -152,8 +162,10 @@ function create(themes,rng=Math.random){
  function visitRoom(i){
   const d=game.dungeon,card=realmMap(),path=travelPath(i);
   if(game.stage!=='choice'||!path.length||game.rewardPending)return false;
+  const cost=path.length-1;
+  if(d.steps!==undefined){if(cost>d.steps)return false;d.steps-=cost;}
   if(d.cleared.includes(i)){d.current=i;return true;}
-  d.current=path[path.length-2];
+  if(path.length>1)d.current=path[path.length-2];
   const n=card.nodes[i],boss=n.kind==='boss';
   const p={id:card.id,family:card.family,image:card.image,name:card.name,node:i,waves:n.event?0:1,boss,elite:boss||n.kind==='elite',event:n.event,mobCount:n.count,escorts:n.escorts,risk:card.risk};
   game.planeIndex=boss?15:game.history.length+1;game.offers=[p];game.selected=p;return true;
