@@ -7,7 +7,7 @@ const FAMILIES=[
  {id:'wisdom',name:'Rune of Wisdom',field:'int',icon:'✨'},
  {id:'fortitude',name:'Rune of Fortitude',field:'end',icon:'🛡️'},
  {id:'fortune',name:'Rune of Fortune',field:'cha',icon:'🍀'},
- {id:'fury',name:'Rune of Fury',field:'atkFlat',icon:'🔥'},
+ {id:'fury',name:'Rune of Force',field:'atkFlat',icon:'🔥'},
  {id:'warding',name:'Rune of Warding',field:'defFlat',icon:'🔰'},
  {id:'vitality',name:'Rune of Vitality',field:'hpFlat',icon:'❤️'}
 ];

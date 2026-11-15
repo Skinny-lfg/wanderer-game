@@ -180,7 +180,7 @@ function setHeal(r,amount,reserveRelease=false){
  const healingReduced=(r.playerHealingDebuffUntil||0)>ports.setNow(r);
  const heal=Math.max(0,Number(amount)||0)*(healingReduced ? 0.60 : 1),before=r.hp;
  r.hp=Math.min(r.maxhp,r.hp+heal);
- const actual=r.hp-before,overheal=heal-actual;
+ const actual=r.hp-before,overheal=heal-actual;ports.phase6Metric(r,'healing',actual);
  if(!reserveRelease&&heal>0&&ports.legendaryReady(r,'charm-of-the-dawnstar'))ports.legendaryRuntime(r).reserve=Math.min(r.maxhp*.04,heal);
  if(overheal>0&&r.stats.bonus.regenOverflow){
   const temp=ports.setRuntime(r),second=Math.floor(ports.setNow(r));
@@ -495,7 +495,8 @@ function updateFight(){
   if(attackType==='physical'&&s.main?.subtype==='Sword'&&ports.gameRandom()<.18){
    r.lastImpact={parry:true,source:e.name,at:r.combatSeconds};ports.floatText('PARRY','hero');ports.phase6Metric(r,'parries',1);
   }else if(ports.tryDodge(r,attackType)){
-   r.lastImpact={source:e.name,at:r.combatSeconds,dodge:true};
+   ports.phase6Metric(r,'armor',armorPrevented);ports.phase6Metric(r,'shield',damageBlocked);ports.phase6Metric(r,'absorbed',blocked);
+  r.lastImpact={source:e.name,at:r.combatSeconds,dodge:true};
    ports.phase6Metric(r,'dodges',1);
    ports.animateEnemyStrike(enemyAbilityVfx);
   }
