@@ -24,7 +24,8 @@ function phase4CommitRealm({awardXp=false}={}){
   ports.state.automaticTalents=root.WandererAutomaticTalents.award(progress,amount);
   const g=ports.phase1Controller.state,selected=g.selected||g.rewardPending||g.history.at(-1);const family=selected?.family||run?.planeFamily||'magic';
   const prior=ports.state.crafting||root.WandererV013Crafting.create();
-  ports.state.crafting=root.WandererV013Crafting.award(ports.state.crafting||root.WandererV013Crafting.create(),{family,boss:!!enemy?.boss,elite:!!enemy?.miniboss,event:!run});
+  ports.state.crafting=root.WandererV013Crafting.award(ports.state.crafting||root.WandererV013Crafting.create(),{family,boss:!!enemy?.boss,elite:!!enemy?.miniboss,event:!run,reagent:ports.gameRandom()<(enemy?.miniboss?.valueOf()? .65:.22)});
+  if(!enemy?.boss&&ports.state.crafting.cores[family]>prior.cores[family])ports.addLog('Found '+family+' reagent.','good');
   if(run?.phase6Bounty)ports.state.crafting.essence+=2;
   ports.addLog('Secured '+(ports.state.crafting.essence-prior.essence)+' Essence'+(enemy?.boss?' and a '+family+' Core':'')+'.','good');
  }
@@ -42,6 +43,11 @@ function phase4LoseLoot(){
  ports.phase3LootIds=new Set();ports.phase4Home=null;
 }
 
+function settleContract(){
+ const g=ports.phase1Controller.state,d=g.dungeon,card=d&&ports.phase1Controller.realmMap();
+ if(!card||card.objective===undefined||d.contractPaid||!d.cleared.includes(card.objective))return;
+ d.contractPaid=true;ports.state.crafting.essence+=4+card.risk*2;
+}
 function phase4Extract(){
  if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked)||!ports.phase3IsBetweenPlanes()||ports.phase4Resume)return false;
  // A Bag at its exact capacity is safe to extract. Only unplaced loot outside
@@ -49,7 +55,7 @@ function phase4Extract(){
  const outside=ports.phase3BagOverflow();
  if(outside>0){ports.bannerMessage('Cannot extract: resolve '+outside+' item'+(outside===1?'':'s')+' outside the Expedition Bag first.');return false;}
  ports.phase6ReturnPotions('extracted');
- ports.phase5MakeSummary('extracted');ports.phase5Results.review='summary';
+ settleContract();ports.phase5MakeSummary('extracted');ports.phase5Results.review='summary';
  ports.phase1Controller.abandon();if(ports.phase1Build)WandererV012Buildcraft.clear(ports.phase1Build);
  ports.phase1Build=null;ports.phase1Draft=null;ports.phase1Vitals=null;ports.phase1Continuity=null;ports.state.run=null;ports.phase5Results.eventExitPending=false;ports.phase3LootIds=new Set();ports.phase4Home=null;ports.phase4Seed=null;ports.phase4Prefix=null;ports.phase4Entry=null;ports.phase4WaveKeys=[];
  if(ports.PHASE1_PREVIEW)ports.phase5Snapshot.expedition.lastOutcome='extracted';
@@ -199,7 +205,7 @@ function phase5Fail(error){
  ports.phase5Message='Validation save blocked: '+String(error?.message||error)+'. Existing saves are retained. Export before closing if a write failed.';
  ports.phase5RenderBlocked();
 }
-return {gameRandom,phase4Session,phase4CommitRealm,phase4LoseLoot,phase4Extract,phase4Restore,phase4ResumeRealm,phase5Capture,attachCloudSave,restoreCloudSave,phase5Persist,phase5Init,phase5Fail};
+return {settleContract,gameRandom,phase4Session,phase4CommitRealm,phase4LoseLoot,phase4Extract,phase4Restore,phase4ResumeRealm,phase5Capture,attachCloudSave,restoreCloudSave,phase5Persist,phase5Init,phase5Fail};
 }
 root.WandererV012PersistenceRuntime=Object.freeze({create});
 })(globalThis);
