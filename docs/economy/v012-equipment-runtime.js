@@ -428,6 +428,7 @@ function phase3ClampVitals(){
  // Expedition. Re-equipping stronger gear must never restore clipped HP/Mana.
  if(ports.PHASE1_PREVIEW&&ports.phase1Controller?.state.stage==='choice'&&!ports.phase1Draft&&ports.phase1Vitals){
   const next=ports.phase2Stats();
+  if(ports.phase1Controller.state.dungeon){const v=ports.phase1Vitals;if(v.maxhp)v.hp=next.maxhp*v.hp/v.maxhp;if(v.maxmp)v.mp=next.mana*v.mp/v.maxmp;v.maxhp=next.maxhp;}
   ports.phase1Vitals.hp=Math.max(1,Math.min(next.maxhp,ports.phase1Vitals.hp));
   ports.phase1Vitals.mp=Math.max(0,Math.min(next.mana,ports.phase1Vitals.mp));
   ports.phase1Vitals.maxmp=next.mana;

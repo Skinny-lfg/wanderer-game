@@ -35,6 +35,7 @@ function phase4CommitRealm({awardXp=false}={}){
 function phase4LoseLoot(){
  // Only physical Bag contents are lost. Currently equipped items are always protected.
  const lost=new Set(ports.phase3BagItems().map(item=>item.id));
+ if(ports.phase1Controller.state.dungeon){for(const item of Object.values(ports.phase4Home||{}))if(item)lost.add(item.id);for(const item of ports.phase5Results.earned)lost.add(item.id);ports.state.equip=ports.phase4Clone(ports.phase4Home);}
  ports.state.stash=ports.state.stash.filter(item=>!lost.has(item.id));
  ports.state.expeditionOverflow=ports.state.expeditionOverflow.filter(item=>!lost.has(item.id));
  ports.state.valuables=(ports.state.valuables||[]).filter(item=>!lost.has(item.id));

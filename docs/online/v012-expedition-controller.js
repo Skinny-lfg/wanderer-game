@@ -69,6 +69,8 @@ function create(themes,rng=Math.random){
   function start(level=1,options={}){
   if(!Number.isInteger(level)||level<1||level>game.unlocked)throw Error('Expedition locked');
   if(!['camp','finished','failed'].includes(game.stage))throw Error('Expedition already active');
+  if(options.dungeon)return startDungeon(level,options.targetFamily);
+  delete game.dungeon;
   const count=3+Math.floor(routeRng()*2),events=shuffle(EVENT_GROUPS,routeRng).slice(0,count).map(group=>group[Math.floor(routeRng()*group.length)]);
   const windows=count===4?[[3,4,5],[6,7,8],[9,10,11],[12,13,14]]:[[3,4,5],[7,8,9],[11,12,13]],rooms=Array(15).fill('combat');rooms[14]='boss';
   for(const window of windows)rooms[window[Math.floor(routeRng()*window.length)]-1]='event';
@@ -90,6 +92,71 @@ function create(themes,rng=Math.random){
   }else{delete game.routeEdges;delete game.routePositions;}
   if(game.freeBuild)offerRealms();
   return game;
+ }
+ function startDungeon(level, targetFamily){
+  if(!Number.isInteger(level)||level<1||level>game.unlocked||!['camp','finished','failed'].includes(game.stage))throw Error('Expedition unavailable');
+  const families=shuffle(FAMILIES,routeRng);
+  if(FAMILIES.includes(targetFamily)){families.splice(families.indexOf(targetFamily),1);families.unshift(targetFamily);}
+  const cards=shuffle(families.slice(0,3),routeRng).map((family,risk)=>{
+   const theme=shuffle(expeditionThemes.filter(t=>t.family===family),routeRng)[0];
+   const events=shuffle(['forgotten_arsenal','whispering_idol','traveling_merchant','cursed_altar'],routeRng);
+   const width=5+risk%2, size=2*width+2;
+   const kinds=Array(size).fill('combat');kinds[0]='entrance';kinds[size-1]='boss';
+   const slots=shuffle(Array.from({length:size-4},(_,i)=>i+3),routeRng);
+   kinds[slots.pop()]='spring';kinds[slots.pop()]='event';kinds[slots.pop()]='event';
+   // Elites occupy a single corridor so the opposite corridor always bypasses them.
+   const eliteSlots=shuffle(slots.filter(i=>i%2===slots[0]%2),routeRng);
+   for(const i of eliteSlots.slice(0,risk===2?2:1))kinds[i]='elite';
+   const horde=risk===2?slots.find(i=>kinds[i]==='combat'):-1;
+   const nodes=kinds.map((kind,i)=>{
+    const range=i===1?[1,1]:i===2?[2,4]:i===horde?[18,22]:routeRng()<.45?[6,12]:[2,4];
+    const count=range[0]+Math.floor(routeRng()*(range[1]-range[0]+1));
+    return {kind,offset:Math.round((routeRng()-.5)*22),range,count,escorts:kind==='boss'?risk:kind==='elite'?Math.floor(routeRng()*(risk+1)):0,event:kind==='spring'?'restless_spring':kind==='event'?events.pop():null};
+   });
+   const edges=[[0,1],[0,2],[size-3,size-1],[size-2,size-1]];
+   for(let i=1;i<size-3;i++)edges.push([i,i+2]);
+   const bridges=shuffle(Array.from({length:width},(_,i)=>1+i*2),routeRng);
+   for(const i of bridges.slice(0,2))edges.push([i,i+1]);
+   const shortcut=bridges[2];edges.push([shortcut,shortcut+1]);
+   return {id:theme.id,name:theme.name,family,image:theme.image,risk,nodes,edges,shortcut};
+  });
+  Object.assign(game,{version:2,expedition:level,planeIndex:1,stage:'choice',freeBuild:true,offers:[],selected:null,wave:0,history:[],rooms:[],rewardPending:null,families:[],initialFamily:null,lastFamily:null,rerolls:0,rerollsByRealm:Array.from({length:15},()=>[0,0,0]),bossId:shuffle(BOSSES,routeRng)[0].id,encounterVersion:1,dungeon:{cards,realm:null,current:0,cleared:[0],visited:[0]}});
+  for(const k of ['routeMap','routeEdges','routePositions','routeMobCounts'])delete game[k];
+  return game;
+ }
+ function realmMap(){return game.dungeon.cards.find(c=>c.id===game.dungeon.realm);}
+ function chooseRealm(id){
+  const d=game.dungeon,card=d.cards.find(c=>c.id===id);
+  if(!card||d.realm||game.stage!=='choice')throw Error('Realm unavailable');
+  d.realm=id;game.bossFamily=card.family;
+ }
+ function travelPath(target){
+  const d=game.dungeon,card=realmMap(),paths=[[d.current]],seen=new Set([d.current]);
+  for(const path of paths){
+   const last=path[path.length-1];if(last===target)return path;
+   if(!d.visited.includes(last))continue;
+   for(const [a,b] of card.edges){
+    if(a===card.shortcut&&b===a+1&&!d.visited.includes(b))continue;
+    const next=a===last?b:b===last?a:null;
+    if(next!==null&&!seen.has(next)){seen.add(next);paths.push([...path,next]);}
+   }
+  }
+  return [];
+ }
+ function deferEvent(){
+  const d=game.dungeon,p=game.selected;
+  if(!d||game.stage!=='combat'||!p?.event)return false;
+  d.current=p.node;if(!d.visited.includes(p.node))d.visited.push(p.node);
+  game.stage='choice';game.wave=0;game.offers=[];game.selected=null;return true;
+ }
+ function visitRoom(i){
+  const d=game.dungeon,card=realmMap(),path=travelPath(i);
+  if(game.stage!=='choice'||!path.length||game.rewardPending)return false;
+  if(d.cleared.includes(i)){d.current=i;return true;}
+  d.current=path[path.length-2];
+  const n=card.nodes[i],boss=n.kind==='boss';
+  const p={id:card.id,family:card.family,image:card.image,name:card.name,node:i,waves:n.event?0:1,boss,elite:boss||n.kind==='elite',event:n.event,mobCount:n.count,escorts:n.escorts,risk:card.risk};
+  game.planeIndex=boss?15:game.history.length+1;game.offers=[p];game.selected=p;return true;
  }
  function planAffinities(plan){
   if(!['camp','finished','failed'].includes(game.stage))throw Error('Affinity plan can only change between Expeditions');
@@ -133,10 +200,11 @@ function create(themes,rng=Math.random){
  }
  function claimReward(){
   if(game.stage!=='choice'||!game.rewardPending)throw Error('No Realm passive pending');
-  game.rewardPending=null;offerRealms();return game.offers;
+  game.rewardPending=null;if(!game.dungeon)offerRealms();return game.offers;
  }
  function waveWon(){
   if(game.stage!=='combat'||!game.selected||game.selected.eventId)throw Error('No active combat wave');
+  if(game.dungeon){game.dungeon.current=game.selected.node;game.dungeon.cleared.push(game.selected.node);if(!game.dungeon.visited.includes(game.selected.node))game.dungeon.visited.push(game.selected.node);}
   game.history.push({plane:game.planeIndex,...game.selected});
   if(game.planeIndex===15){
    if(!game.selected.boss)throw Error('Realm 15 must contain the Expedition boss');
@@ -159,6 +227,8 @@ function create(themes,rng=Math.random){
  function restore(input){
   if(input?.version!==2)throw Error('Unsupported historical Expedition checkpoint (requires calendar version 2)');
   const g=JSON.parse(JSON.stringify(input));
+  if(g.dungeon){const d=g.dungeon;if(!g.freeBuild||d.cards?.length!==3||!d.cards.every(c=>REALMS[c.id]?.[0]===c.family&&[12,14].includes(c.nodes.length)&&Array.isArray(c.edges))||!Array.isArray(d.cleared)||!d.visited.includes(d.current)||d.realm&&!d.cards.some(c=>c.id===d.realm))throw Error('Invalid dungeon checkpoint');Object.assign(game,g);if(g.selected)game.selected=game.offers.find(p=>p.node===g.selected.node);return game;}
+  delete game.dungeon;
   if(!FAMILIES.includes(g.bossFamily)||g.encounterVersion!==1)throw Error('Invalid encounter version');
   g.affinityPlan??=null;g.affinityPlanSeen??=[false,false,false];
   const integer=(v,min,max)=>Number.isInteger(v)&&v>=min&&v<=max;
@@ -213,7 +283,7 @@ function create(themes,rng=Math.random){
  function setSimulationRandomStreams(route,draft){if(typeof route!=='function'||typeof draft!=='function')throw Error('Simulation RNG streams must be functions');routeRng=route;draftRng=draft;}
  function passiveRandom(){return draftRng;}
  
- return Object.freeze({influence,state:game,start,restore,planAffinities,chooseInitial:chooseInitial,select:select,enter:enter,claimReward:claimReward,reroll:reroll,waveWon:waveWon,eventWon:()=>{throw Error('Resolve the offered integrated event');},defeat:defeat,abandon:abandon,allowed:allowed,reachable,setSimulationRandomStreams,passiveRandom});
+ return Object.freeze({deferEvent,chooseRealm,realmMap,visitRoom,travelPath,influence,state:game,start,restore,planAffinities,chooseInitial:chooseInitial,select:select,enter:enter,claimReward:claimReward,reroll:reroll,waveWon:waveWon,eventWon:()=>{throw Error('Resolve the offered integrated event');},defeat:defeat,abandon:abandon,allowed:allowed,reachable,setSimulationRandomStreams,passiveRandom});
 }
 root.WandererV012Expedition=Object.freeze({create,FAMILIES,FAMILY_NAMES,THEME_FAMILIES,REALMS,BOSSES,EVENT_GROUPS});
 })(globalThis);

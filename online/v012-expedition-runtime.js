@@ -25,7 +25,7 @@ function phase1Begin(level=1,freeBuild=false){
  if(!['camp','finished','failed'].includes(ports.phase1Controller.state.stage)||!Number.isInteger(level)||level<1||level>ports.phase1Controller.state.unlocked)return false;
  ports.phase4Seed=Math.floor(Math.random()*4294967296)>>>0;ports.phase4Prefix=Date.now().toString(36);ports.phase4Stamp=null;ports.phase4Home=ports.phase4Clone(ports.state.equip);ports.phase4Entry=null;ports.phase4Resume=false;ports.phase4WaveKeys=[];
  ports.phase5Results={version:1,complete:true,review:null,realm:null,summary:null,earned:[],gold:0,fragments:0,craftingStart:ports.phase4Clone(ports.state.crafting||WandererV013Crafting.create())};
- const project=WandererV013Crafting.RECIPES.find(r=>r.id===ports.state.crafting?.targetRecipe);ports.phase1Controller.start(level,{freeBuild,targetFamily:project?.family});ports.phase6Run={version:1,event:null,events:[],effects:{},combats:0};ports.phase3LootIds=new Set();ports.phase3PotionCooldowns={health:0,mana:0};ports.phase1Vitals=null;ports.phase1Clock=0;ports.phase1Continuity=null;ports.phase3Supplies={health:0,mana:0};ports.phase1Build=WandererV012Buildcraft.create();WandererV012Buildcraft.syncPermanent(ports.phase1Build,ports.state.automaticTalents,freeBuild);ports.phase1Build.runtime.hybridRules=true;if(!freeBuild)ports.phase1Build.families=ports.phase1Controller.state.families;ports.phase1Draft=null;ports.state.run=null;ports.view='phase1';
+ const project=WandererV013Crafting.RECIPES.find(r=>r.id===ports.state.crafting?.targetRecipe);ports.phase1Controller.start(level,{freeBuild,dungeon:freeBuild,targetFamily:project?.family});ports.phase6Run={version:1,event:null,events:[],effects:{},combats:0};ports.phase3LootIds=new Set();ports.phase3PotionCooldowns={health:0,mana:0};ports.phase1Vitals=null;ports.phase1Clock=0;ports.phase1Continuity=null;ports.phase3Supplies={health:0,mana:0};ports.phase1Build=WandererV012Buildcraft.create();WandererV012Buildcraft.syncPermanent(ports.phase1Build,ports.state.automaticTalents,freeBuild);ports.phase1Build.runtime.hybridRules=true;if(!freeBuild)ports.phase1Build.families=ports.phase1Controller.state.families;ports.phase1Draft=null;ports.state.run=null;ports.view='phase1';
  if(ports.PHASE1_PREVIEW){ports.phase5Snapshot.expedition.attempts++;ports.phase5Snapshot.expedition.awardKeys=[];ports.phase5Snapshot.expedition.lastOutcome='active';ports.phase5Persist();}
  ports.render();
 }
@@ -51,7 +51,7 @@ function phase6EventChoice(choice,itemId,passiveId,family,targetId){
  const v=ports.phase3Vitals(),E=g.expedition,beforeGold=ports.state.gold,beforeFragments=ports.state.fragments,loot=[],costGold=25+3*E;
  const item=ports.phase3BagItems().find(i=>i.id===itemId),effects=ports.phase6Run.effects;
  const pay=(field,n)=>{if(ports.state[field]<n)return false;ports.state[field]-=n;return true;};
- const heal=(hp=0,mp=0)=>{ports.phase1Vitals={hp:Math.min(v.maxhp,v.hp+Math.ceil(v.maxhp*hp)),mp:Math.min(v.maxmp,v.mp+Math.ceil(v.maxmp*mp)),maxmp:v.maxmp};};
+ const heal=(hp=0,mp=0)=>{ports.phase1Vitals={maxhp:v.maxhp,hp:Math.min(v.maxhp,v.hp+Math.ceil(v.maxhp*hp)),mp:Math.min(v.maxmp,v.mp+Math.ceil(v.maxmp*mp)),maxmp:v.maxmp};};
  const sacrifice=()=>{ports.state.stash=ports.state.stash.filter(i=>i.id!==itemId);ports.state.expeditionOverflow=ports.state.expeditionOverflow.filter(i=>i.id!==itemId);ports.state.valuables=(ports.state.valuables||[]).filter(i=>i.id!==itemId);ports.phase3LootIds.delete(itemId);};
  if(choice!==2){switch(ev.id){
  case 'traveling_merchant':if(choice===0){if(v.hp>=v.maxhp||!pay('gold',costGold))return false;heal(.35);}else ports.state.fragments+=5+E;break;
@@ -181,17 +181,17 @@ function phase1StartWave(resetScroll=false){
  const theme=ports.phase2Theme(g.selected.id);
  const totalCount=last&&(g.selected.boss||g.selected.elite)?1:(g.selected.mobCount||3),activeCount=Math.min(4,totalCount);
  const spawn=()=>ports.enemyFor(r.tier,r.enc,{theme,boss:last&&g.selected.boss,elite:last&&g.selected.elite&&!g.selected.boss,variant:g.version===2?ports.BOSS_ARCHETYPES.find(b=>b.style===WandererV012Expedition.BOSSES.find(v=>v.id===g.bossId).style):null});
- const scale=totalCount===12?{hp:.15,atk:.16}:totalCount>=18?{hp:.10,atk:.12}:null;
+ const scale=totalCount>=6&&totalCount<18?{hp:.15,atk:.16}:totalCount>=18?{hp:.10,atk:.12}:null;
  const group=WandererV012CombatCore.createEnemyGroup(spawn,totalCount,{activeSlots:activeCount,scale});
  // Give ordinary mobs time to show their attacks; keep their pressure lower.
  for(const enemy of group){
   const endurance=enemy.boss||enemy.miniboss?1.8:3;
-  enemy.hp=enemy.maxhp=Math.round(enemy.maxhp*endurance);
+  enemy.hp=enemy.maxhp=Math.round(enemy.maxhp*endurance*(1+.10*(g.selected.risk||0)));
   enemy.attackEvery*=1.15;
-  enemy.atk=Math.max(1,Math.round(enemy.atk*.65));
+  enemy.atk=Math.max(1,Math.round(enemy.atk*.65*(1+.12*(g.selected.risk||0))));
  }
  if(last&&(g.selected.boss||g.selected.elite)){
-  const escorts=g.selected.boss?2:1;
+  const escorts=g.selected.escorts??(g.selected.boss?2:1);
   for(let i=0;i<escorts;i++){
    const guard=ports.enemyFor(r.tier,r.enc,{theme,boss:false,elite:false});
    guard.hp=guard.maxhp=Math.round(guard.maxhp*1.2);guard.atk=Math.round(guard.atk*.35);
@@ -234,7 +234,7 @@ function phase1WaveWon(){
  const leader=r.enemies?.find(mob=>mob.boss||mob.miniboss);
  if(leader)r.enemy=leader;
  const enemy=r.enemy,boss=!!enemy.boss,elite=!!enemy.miniboss;
-  const groupReward=boss||elite?1:r.totalMobCount>=18?1.3:r.totalMobCount>=10?1.2:r.totalMobCount>1?1.1:1;
+  const groupReward=(boss||elite?1:r.totalMobCount>=18?1.3:r.totalMobCount>=10?1.2:r.totalMobCount>1?1.1:1)*(1+.12*(g.selected.risk||0));
  const gold=Math.round((ports.roll(3,6)+Math.floor(r.tier*.5)+(boss?8:elite?4:0))*(r.phase6Bounty?1.5:1)*groupReward);
  const fragments=Math.round((ports.roll(1,3)+Math.floor(r.tier*.24)+(boss?5:elite?3:0))*(r.phase6Bounty?1.5:1)*groupReward);
  ports.state.gold+=gold;ports.state.fragments+=fragments;r.gold+=gold;r.fragments+=fragments;ports.phase5Results.gold+=gold;ports.phase5Results.fragments+=fragments;
@@ -267,7 +267,7 @@ function phase1WaveWon(){
  ports.phase5RememberRealm(r,'cleared');
  ports.phase1Clock+=r.combatSeconds||0;
  ports.phase1Continuity=result.expeditionComplete?null:{setCooldowns:r.setCooldowns,secondWindUsed:r.secondWindUsed,legendaryState:r.legendaryState,legendaryCastCount:r.legendaryCastCount,legendaryAttackCount:r.legendaryAttackCount};
- ports.phase1Vitals=result.expeditionComplete?null:{hp:Math.max(1,r.hp),mp:Math.max(0,r.mp),maxmp:r.maxmp};
+ ports.phase1Vitals=result.expeditionComplete?null:{hp:Math.max(1,r.hp),maxhp:r.maxhp,mp:Math.max(0,r.mp),maxmp:r.maxmp};
  if(result.expeditionComplete){
   ports.phase5Results.review='summary';
   ports.phase5PersonalBest=Math.max(ports.phase5PersonalBest,r.tier);
@@ -296,7 +296,7 @@ function phase1WaveWon(){
 function phase1Death(){
  clearInterval(ports.clock);
  if(!ports.isPhase1Run())return;
- ports.addLog('YOU DIED · Expedition Bag lost; equipped gear is safe.','critical');
+ ports.addLog('YOU DIED · Expedition ended.','critical');
  ports.phase6CollectMetrics(ports.state.run);ports.phase6ReturnPotions('defeat');
  ports.phase5RememberRealm(ports.state.run,'defeat');ports.phase5MakeSummary('defeat');
  // Do not show the intermediary "YOU DIED" Realm page as well as the final loss summary.
@@ -305,7 +305,7 @@ function phase1Death(){
  if(ports.phase1Build)WandererV012Buildcraft.clear(ports.phase1Build);
  ports.phase1Build=null;ports.phase1Draft=null;ports.state.run=null;ports.view='phase1';
  if(ports.PHASE1_PREVIEW)ports.phase5Snapshot.expedition.lastOutcome='defeat';ports.phase5Persist();ports.render();
- ports.bannerMessage('You died. Only Bag contents were lost; equipped gear and earned currency are safe.');
+ ports.bannerMessage('You died. Your secured resources remain in Camp.');
 }
 
 function phase1Abandon(){
@@ -356,14 +356,15 @@ function phase5RememberRealm(r,outcome){
 function phase5MakeSummary(outcome){
  const g=ports.phase1Controller.state,owned=new Set([...ports.state.stash,...(ports.state.expeditionOverflow||[]),...Object.values(ports.state.equip).filter(Boolean)].map(i=>i.id));
  const lost=outcome==='defeat'||outcome==='abandoned',bagIds=new Set(ports.phase3BagItems().map(i=>i.id));
+ if(g.dungeon){for(const i of Object.values(ports.phase4Home||{}))if(i)bagIds.delete(i.id);for(const i of ports.phase5Results.earned)if(owned.has(i.id))bagIds.add(i.id);}
  const earnedIds=new Set(ports.phase5Results.earned.map(i=>i.id));
  const lostGear=lost?[
   ...ports.phase5Results.earned.filter(i=>bagIds.has(i.id)),
-  ...ports.phase3BagItems().filter(i=>i.kind!=='valuable'&&!earnedIds.has(i.id)).map(ports.phase5Item)
+  ...ports.phase3BagItems().filter(i=>i.kind!=='valuable'&&bagIds.has(i.id)&&!earnedIds.has(i.id)).map(ports.phase5Item)
  ]:[];
  const expeditionTreasures=(ports.state.valuables||[]).filter(i=>bagIds.has(i.id)).map(i=>({...i}));
  const start=ports.phase5Results.craftingStart||WandererV013Crafting.create(),craft=ports.state.crafting||WandererV013Crafting.create();
- ports.phase5Results.summary={craftingEarned:{essence:Math.max(0,craft.essence-start.essence),cores:Object.fromEntries(WandererV013Crafting.FAMILIES.map(f=>[f,Math.max(0,craft.cores[f]-start.cores[f])]))},passiveTelemetry:ports.phase4Clone(ports.phase1Build?.runtime.passiveTelemetry||{}),metrics:ports.phase6Run?.metrics||null,level:g.expedition,outcome,realms:g.history.length,
+ ports.phase5Results.summary={realmMap:!!g.dungeon,craftingEarned:{essence:Math.max(0,craft.essence-start.essence),cores:Object.fromEntries(WandererV013Crafting.FAMILIES.map(f=>[f,Math.max(0,craft.cores[f]-start.cores[f])]))},passiveTelemetry:ports.phase4Clone(ports.phase1Build?.runtime.passiveTelemetry||{}),metrics:ports.phase6Run?.metrics||null,level:g.expedition,outcome,realms:g.history.length,
   families:[...(ports.phase1Build?.families||g.families)],picks:[...(ports.phase1Build?.picks||[])],element:ports.phase1Build?.element||null,
   seconds:ports.phase1Clock+(outcome==='defeat'?(ports.state.run?.combatSeconds||0):0),gold:ports.phase5Results.gold,fragments:ports.phase5Results.fragments,
   kept:ports.phase5Results.earned.filter(i=>owned.has(i.id)&&(!lost||!bagIds.has(i.id))),lost:lostGear,

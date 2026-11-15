@@ -19,7 +19,8 @@ globalThis.arenaFixture = {
     if(!progress.nodes.includes(node))progress=WandererAutomaticTalents.allocate(progress,node);
   state.automaticTalents=progress;
   phase1Begin(1,true);
-  phase1Choose(phase1Controller.state.offers.find(p=>p.mobCount).id);
+  phase1Controller.chooseRealm(phase1Controller.state.dungeon.cards[0].id);
+  phase1Controller.visitRoom(1);
   phase1Enter();
   const r=state.run,theme=phase2Theme(phase1Controller.state.selected.id);
   const boss=kind==='boss',elite=kind==='elite';
