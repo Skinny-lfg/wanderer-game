@@ -1,0 +1,129 @@
+/* The arena and its HUD share the existing gothic visual language. */
+body.phase3IntegratedPreview #scene.hasArenaHud {
+  min-height: 370px !important;
+  height: clamp(370px, 48vh, 530px) !important;
+  border-bottom: 0 !important;
+  border-radius: 5px 5px 0 0 !important;
+}
+body.phase3IntegratedPreview #scene.hasArenaHud > .combatant:not(.arenaSingleEnemy) {
+  position: absolute !important;
+  left: 7% !important;
+  bottom: 15% !important;
+  top: auto !important;
+  width: 20% !important;
+  height: auto !important;
+  padding: 0 !important;
+}
+body.phase3IntegratedPreview #scene.hasArenaHud > .combatant:not(.arenaSingleEnemy) > small { display: none; }
+body.phase3IntegratedPreview #scene.hasArenaHud .heroArenaSprite {
+  scale: 1;
+}
+body.phase3IntegratedPreview #scene.hasArenaHud #heroPortrait {
+  width: 100% !important;
+  height: 156px !important;
+  max-height: 156px !important;
+}
+body.phase3IntegratedPreview #scene.hasArenaHud .heroArenaSprite.hasBarrier::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  inset: -8% -7% -2%;
+  border: 1px solid #8de1f2b0;
+  border-radius: 48%;
+  background: radial-gradient(ellipse, transparent 52%, #5fcedb18 72%, #a0f3fa50 88%, transparent 95%);
+  box-shadow: inset 0 0 16px #72ddf33b, 0 0 12px #72ddf32b;
+  pointer-events: none;
+}
+body.phase3IntegratedPreview #scene.hasArenaHud .arenaEnemy { width: clamp(100px, 12vw, 150px); }
+body.phase3IntegratedPreview #scene.hasArenaHud .arenaEnemy .arenaSprite { scale: 1; }
+body.phase3IntegratedPreview #scene.hasArenaHud .arenaEnemy img {
+  height: 95px !important;
+  max-height: 95px !important;
+}
+body.phase3IntegratedPreview #scene.hasArenaHud .arenaEnemy img[data-elite-type="caster"] {
+  transform: scaleX(1) !important;
+}
+body.phase3IntegratedPreview #scene.hasArenaHud .arenaEnemy.role-berserker img,
+body.phase3IntegratedPreview #scene.hasArenaHud .arenaEnemy.role-guardian img,
+body.phase3IntegratedPreview #scene.hasArenaHud .arenaEnemy.role-leech img,
+body.phase3IntegratedPreview #scene.hasArenaHud .arenaEnemy.role-tank img {
+  height: 116px !important;
+  max-height: 116px !important;
+}
+body.phase3IntegratedPreview #scene.hasArenaHud .arenaEnemyHealth i { background: linear-gradient(#d16a61, #912d35); }
+body.phase3IntegratedPreview #scene.hasArenaHud .arenaEnemy strong {
+  font: 12px/1.2 Georgia, serif;
+  border: 0 !important;
+  background: #100b0c90;
+}
+body.phase3IntegratedPreview .arenaHud {
+  display: grid;
+  grid-template-columns: minmax(170px, 215px) minmax(0, 1fr) 56px;
+  gap: 12px 18px;
+  align-items: center;
+  padding: 18px 16px 10px;
+  color: #e7d4b4;
+  background: linear-gradient(135deg, #221b1b, #0e0d10 60%, #20191a);
+  border: 1px solid #9c7b49;
+  border-top: 2px solid #b69459;
+  box-shadow: inset 0 0 0 4px #100d0e, inset 0 0 0 5px #70553355;
+}
+.arenaHeroReadout { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.arenaHudPortrait { width: 56px; height: 74px; object-fit: contain; border: 1px solid #9f8050; background: #181316; border-radius: 45% 45% 6px 6px; }
+.arenaResources { flex: 1; min-width: 0; display: grid; gap: 5px; }
+.arenaResources #heroName { font: 17px/1.2 Georgia, serif; color: #f4dfb8; text-align: left; }
+body.phase3IntegratedPreview .arenaResources .hpbar,
+body.phase3IntegratedPreview .arenaResources .mpbar,
+.arenaShieldBar {
+  position: relative !important; width: 100% !important; height: 17px !important;
+  margin: 0 !important; border: 1px solid #94734c !important; border-radius: 3px !important;
+  background: #161316 !important; overflow: hidden;
+}
+.arenaResources small, .arenaShieldBar small {
+  position: absolute; inset: 0; z-index: 1; display: grid; place-items: center;
+  color: #fff4df; font: 11px/1 system-ui, sans-serif; text-shadow: 0 1px 2px #000, 0 0 3px #000;
+}
+.arenaShieldBar small { display: block; text-align: center; line-height: 15px; }
+.arenaShieldBar i { display: block; height: 100%; background: linear-gradient(#6bd1d9, #277a92); }
+.arenaAbilities { min-width: 0; }
+.arenaAutoLabel { display: block; text-align: center; text-transform: uppercase; font: 10px/1.2 system-ui, sans-serif; letter-spacing: .18em; color: #c3a56e; margin-bottom: 8px; }
+.arenaHud .actionBar { justify-content: center; margin: 0; gap: 8px; }
+.arenaHud .combatActions { margin: 0 !important; flex-direction: column; }
+.arenaHud .combatActions button { min-width: 48px; }
+body.phase3IntegratedPreview .arenaHud .combatActions {
+  position: static !important; inset: auto !important; transform: none !important;
+  width: auto !important; min-width: 0 !important; height: auto !important;
+  padding: 0 !important; background: none !important; border: 0 !important;
+  box-shadow: none !important;
+}
+.arenaHud #combatStatusNote { display: none; }
+.arenaHud .combatSpeedWord { display: none; }
+body.phase3IntegratedPreview .arenaResources .hpbar i {
+  background: linear-gradient(#cf6863, #8f303b) !important;
+}
+body.phase3IntegratedPreview .arenaResources .mpbar i {
+  display: block; height: 100%; width: var(--resource-pct, 0%);
+  background: linear-gradient(#6caed0, #2e648b) !important;
+}
+.arenaImpact { grid-column: 1 / -1; margin: 0; min-height: 16px; color: #9bcbd0; font: 11px/1.4 system-ui, sans-serif; }
+@media(max-width: 700px) {
+  body.phase3IntegratedPreview #scene.hasArenaHud { min-height: 300px !important; height: 350px !important; }
+  body.phase3IntegratedPreview #scene.hasArenaHud > .combatant:not(.arenaSingleEnemy) { left: 2% !important; width: 26% !important; bottom: 13% !important; }
+  body.phase3IntegratedPreview #scene.hasArenaHud #heroPortrait { height: 110px !important; max-height: 110px !important; }
+  body.phase3IntegratedPreview #scene.hasArenaHud .arenaEnemy { width: 84px; }
+  body.phase3IntegratedPreview #scene.hasArenaHud .arenaEnemy img { height: 68px !important; max-height: 68px !important; }
+  body.phase3IntegratedPreview #scene.hasArenaHud .arenaEnemy.role-guardian img,
+  body.phase3IntegratedPreview #scene.hasArenaHud .arenaEnemy.role-berserker img,
+  body.phase3IntegratedPreview #scene.hasArenaHud .arenaEnemy.role-leech img,
+  body.phase3IntegratedPreview #scene.hasArenaHud .arenaEnemy.role-tank img { height: 78px !important; max-height: 78px !important; }
+  body.phase3IntegratedPreview .arenaHud { grid-template-columns: minmax(0, 1fr) auto; gap: 12px; padding: 14px 12px 8px; }
+  .arenaHeroReadout { max-width: 280px; }
+  .arenaHudPortrait { width: 40px; height: 57px; }
+  .arenaAbilities { grid-column: 1 / -1; grid-row: 2; }
+  .arenaControls { grid-column: 2; grid-row: 1; }
+  .arenaHud .combatActions { flex-direction: row; }
+  .arenaImpact { font-size: 10px; }
+}
+@media(prefers-reduced-motion: reduce) {
+  .arenaHud .actionSlot { transition: none; }
+}

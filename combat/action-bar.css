@@ -1,5 +1,11 @@
-.actionBar{display:flex;gap:.4rem;flex-wrap:wrap;margin:.6rem 0}.actionSlot{display:grid;grid-template-columns:26px auto;gap:0 .35rem;min-width:85px;align-items:center;color:#f1dbac;background:#201b20;border:1px solid #705c40;border-radius:4px;padding:.3rem;font:13px Georgia,serif}.actionSlot b{grid-row:span 2;width:26px;height:26px;background-size:contain;background-position:center;background-repeat:no-repeat}.actionSlot small{color:#d7b881;font:11px monospace}.actionSlot progress{grid-column:span 2;width:100%;height:4px;accent-color:#d4a951}.actionSlot.used{border-color:#ffe2a1;background:#53412b}
 
-.actionSlot{position:relative;isolation:isolate;overflow:hidden}.actionSlot::before{content:"";position:absolute;inset:0 auto 0 0;width:var(--cooldown,0%);background:#777b80;opacity:.68;z-index:-1}.actionSlot b{position:relative}.actionSlot b::after{content:"";position:absolute;inset:0;background-image:inherit;background-size:contain;background-repeat:no-repeat;background-position:center;filter:grayscale(1);clip-path:inset(0 calc(100% - var(--cooldown,0%)) 0 0)}
-
-.groupArena .arenaSprite{scale:.85;transform-origin:center bottom}.groupArena [data-group-index]:nth-of-type(even){translate:0 -9px}
+.actionBar {display:flex;align-items:start;flex-wrap:wrap;gap:8px;margin:10px 0}
+.actionSlot {position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;width:68px;min-width:0;padding:0;color:#ead8b9;font:11px/1.2 Georgia,serif;text-align:center}
+.actionSlot b {position:relative;display:block;width:54px;height:54px;border:1px solid #aa8957;border-radius:4px;background-color:#1a151a;background-size:cover;background-position:center;background-repeat:no-repeat;box-shadow:0 0 0 2px #080709,inset 0 0 0 2px #6c553e}
+.actionSlot b::after {content:"";position:absolute;inset:0;background-image:inherit;background-size:cover;background-position:center;filter:grayscale(1) brightness(.5);clip-path:inset(calc(100% - var(--cooldown,0%)) 0 0 0)}
+.actionSlot small {position:absolute;z-index:1;top:34px;left:7px;right:7px;margin:0;color:#fff5df;font:12px/18px system-ui,sans-serif;text-shadow:0 1px 3px #000,0 0 4px #000}
+.actionSlot span {min-height:26px;max-width:100%;overflow-wrap:anywhere}
+.actionSlot progress {position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);opacity:0}
+.actionSlot.used b {border-color:#ffdf94;box-shadow:0 0 0 1px #bf8c3b,0 0 12px #e5af5060}
+.actionSlot:focus-visible {outline:1px solid #e5c78b;outline-offset:3px}
+@media(max-width:700px){.actionSlot{width:57px;font-size:10px}.actionSlot b{width:46px;height:46px}.actionSlot small{top:28px;left:5px;right:5px;font-size:11px}.actionBar{gap:5px}}
