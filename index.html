@@ -1204,7 +1204,7 @@ function phase1DecorateCombat(){
  const heading=document.querySelector('.combatDungeonHeading');
  if(heading)heading.textContent='Expedition '+g.expedition+' · '+(g.dungeon?r.planeName:'Realm '+r.phase1Plane+' / 15');
  const header=heading?.parentElement?.querySelector('p');
- if(header)header.textContent=r.status==='fight'?'Encounter · '+r.planeName+' · '+WandererV012Expedition.FAMILY_NAMES[r.planeFamily]:'Realm '+r.phase1Plane+' cleared · Rewards secured';
+ if(header)header.textContent=r.status==='fight'?'Encounter · '+r.planeName+' · '+WandererV012Expedition.FAMILY_NAMES[r.planeFamily]:(g.dungeon?'Room cleared':'Realm '+r.phase1Plane+' cleared')+' · Rewards secured';
  if(arena){const buffs=document.createElement('div');buffs.id='combatActiveBuffs';buffs.className='combatActiveBuffs';buffs.innerHTML=phase6EffectMarkup();arena.before(buffs);}
 
 
@@ -1216,7 +1216,7 @@ function phase1DecorateCombat(){
   note.textContent=r.status==='fight'?(r.enemies?'Auto-combat · click or tap a mob to focus':'Auto-combat · one enemy at a time'):r.status==='cleared'?'Realm completed · review your log before leaving':'Encounter resolved';
   actions.prepend(note);
   if(r.status==='cleared'&&!phase1Draft){
-    const exit=document.createElement('button');exit.id='phase5ExitRealm';exit.className='primary';exit.textContent='EXIT REALM';exit.onclick=phase5ExitResult;
+    const exit=document.createElement('button');exit.id='phase5ExitRealm';exit.className='primary';exit.textContent=g.dungeon?'Return to map':'EXIT REALM';exit.onclick=phase5ExitResult;
     actions.prepend(exit);actions.classList.add('phase3CombatExitActions');
     if(arena)arena.before(actions);
    }
@@ -1657,7 +1657,7 @@ function dungeonMapMarkup(g){
 function renderRealmCards(g){
  html('<section class="panel"><span class="eyebrow">Expedition '+g.expedition+'</span><h1>Choose your Realm</h1><div class="phase1Offers">'+g.dungeon.cards.map(c=>{
  const t=phase2Theme(c.id);
- return '<button class="phase1Offer" data-realm-card="'+c.id+'"><img src="'+dungeonImage(c)+'" alt=""><div class="phase1OfferBody"><strong>'+esc(c.name)+'</strong><p>'+phase2FamilyIcon(c.family)+' '+esc(c.family)+' · '+realmDifficulty(c)+'</p><p>'+esc(t.enemy)+' · '+esc(t.effect)+' · Boss with '+c.risk+' guards</p><small>+'+(c.risk*12)+'% encounter rewards · '+esc(c.family)+' Core</small></div></button>';
+ return '<button class="phase1Offer" data-realm-card="'+c.id+'"><img src="'+dungeonImage(c)+'" alt=""><div class="phase1OfferBody"><strong>'+esc(c.name)+'</strong><p>'+phase2FamilyIcon(c.family)+' '+esc(c.family)+' · '+realmDifficulty(c)+'</p><p>'+esc(t.enemy)+' · '+esc(t.effect)+' · '+(c.risk?'Boss with '+c.risk+' guard'+(c.risk===1?'':'s'):'Solo boss')+'</p><small>'+(c.risk?'+'+(c.risk*12)+'% encounter rewards':'Standard rewards')+' · '+esc(c.family)+' Core</small></div></button>';
  }).join('')+'</div><button id="phase1BackToCamp">Return to Camp</button></section>');
  Q('[data-realm-card]').forEach(b=>b.onclick=()=>{phase1Controller.chooseRealm(b.dataset.realmCard);if(phase5Persist())render();});
  $('phase1BackToCamp').onclick=phase6BackToCamp;
