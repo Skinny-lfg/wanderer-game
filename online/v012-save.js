@@ -50,7 +50,7 @@ function consumablesCheck(p){
  if(p.apothecary!==undefined&&p.apothecary!==null){const a=p.apothecary;requireValue(plain(a)&&integer(a.refreshCost,0,Number.MAX_SAFE_INTEGER)&&Array.isArray(a.stock)&&a.stock.length<=4&&new Set(a.stock.map(v=>v.id)).size===a.stock.length&&a.stock.every(v=>plain(v)&&typeof v.id==='string'&&POTIONS.includes(v.kind)&&integer(v.price,1,Number.MAX_SAFE_INTEGER)),'Apothecary stock');}
 }
 function integrationCheck(r){
- requireValue(plain(r)&&r.version===1&&Array.isArray(r.events)&&r.events.length<=4&&r.events.every(i=>integer(i,2,14))&&new Set(r.events).size===r.events.length&&integer(r.combats,0,15)&&plain(r.effects),'integration checkpoint');
+ requireValue(plain(r)&&r.version===1&&Array.isArray(r.events)&&r.events.length<=4&&r.events.every(i=>integer(i,2,24))&&new Set(r.events).size===r.events.length&&integer(r.combats,0,24)&&plain(r.effects),'integration checkpoint');
  requireValue(r.event===null||plain(r.event)&&typeof r.event.id==='string'&&typeof r.event.roll==='number'&&r.event.roll>=0&&r.event.roll<1&&(r.event.alternative===null||typeof r.event.alternative==='string'),'event choice checkpoint');
  for(const [k,e]of Object.entries(r.effects)){requireValue(['might','arcane','ironhide','haste','attack','defense','curse','echo','item','barrier','runeBoost','bounty','fortune'].includes(k),'temporary effect');requireValue(typeof e==='boolean'||typeof e==='number'&&Number.isFinite(e)&&e>=0&&e<=1||plain(e)&&(e.remaining===undefined||integer(e.remaining,0,3))&&(e.power===undefined||typeof e.power==='number'&&Number.isFinite(e.power)&&Math.abs(e.power)<=1)&&(e.id===undefined||typeof e.id==='string'),'temporary effect bounds');}
  if(r.potions!==undefined)requireValue(Array.isArray(r.potions)&&r.potions.length<=3&&r.potions.every(p=>plain(p)&&POTIONS.includes(p.kind)&&typeof p.used==='boolean'),'selected potion checkpoint');
@@ -147,11 +147,11 @@ function presentationCheck(p){
  requireValue(Array.isArray(p.earned)&&p.earned.length<=45&&p.earned.every(item)&&new Set(p.earned.map(i=>i.id)).size===p.earned.length&&integer(p.gold,0,Number.MAX_SAFE_INTEGER)&&integer(p.fragments,0,Number.MAX_SAFE_INTEGER),'result loot/currencies');
  if(p.treasures!==undefined)requireValue(Array.isArray(p.treasures)&&p.treasures.length<=120&&p.treasures.every(treasure),'result treasures');
  const seconds=x=>typeof x==='number'&&Number.isFinite(x)&&x>=0;
- if(p.realm!==null){const r=p.realm;requireValue(plain(r)&&integer(r.level,1,Number.MAX_SAFE_INTEGER)&&integer(r.plane,1,15)&&['cleared','defeat'].includes(r.outcome)&&typeof r.name==='string'&&typeof r.family==='string'&&typeof r.enemy==='string'&&seconds(r.seconds)&&integer(r.gold,0,Number.MAX_SAFE_INTEGER)&&integer(r.fragments,0,Number.MAX_SAFE_INTEGER)&&Array.isArray(r.log)&&r.log.every(l=>plain(l)&&typeof l.text==='string'&&typeof l.kind==='string')&&r.log.reduce((n,l)=>n+l.text.length+l.kind.length,0)<=180000,'Realm result');}
+ if(p.realm!==null){const r=p.realm;requireValue(plain(r)&&integer(r.level,1,Number.MAX_SAFE_INTEGER)&&integer(r.plane,1,24)&&['cleared','defeat'].includes(r.outcome)&&typeof r.name==='string'&&typeof r.family==='string'&&typeof r.enemy==='string'&&seconds(r.seconds)&&integer(r.gold,0,Number.MAX_SAFE_INTEGER)&&integer(r.fragments,0,Number.MAX_SAFE_INTEGER)&&Array.isArray(r.log)&&r.log.every(l=>plain(l)&&typeof l.text==='string'&&typeof l.kind==='string')&&r.log.reduce((n,l)=>n+l.text.length+l.kind.length,0)<=180000,'Realm result');}
  if(p.realm?.loot!==undefined)requireValue(Array.isArray(p.realm.loot)&&p.realm.loot.length<=3&&p.realm.loot.every(item),'Realm loot result');
  if(p.realm?.treasures!==undefined)requireValue(Array.isArray(p.realm.treasures)&&p.realm.treasures.length<=3&&p.realm.treasures.every(treasure),'Realm treasures');
- if(p.summary!==null){const r=p.summary;requireValue(plain(r)&&integer(r.level,1,Number.MAX_SAFE_INTEGER)&&integer(r.realms,0,15)&&['victory','defeat','extracted','abandoned'].includes(r.outcome)&&seconds(r.seconds)&&integer(r.gold,0,Number.MAX_SAFE_INTEGER)&&integer(r.fragments,0,Number.MAX_SAFE_INTEGER)&&Array.isArray(r.families)&&r.families.length<=3&&r.families.every(f=>['blood','decay','vitality','aegis','fury','magic'].includes(f))&&Array.isArray(r.picks)&&r.picks.length<=20&&r.picks.every(id=>typeof id==='string')&&['kept','lost','discarded'].every(k=>Array.isArray(r[k])&&r[k].length<=45&&r[k].every(item))&&(r.runeTier===null||integer(r.runeTier,1,Number.MAX_SAFE_INTEGER)),'Expedition summary');
-  requireValue(r.outcome!=='victory'||(r.realmMap?integer(r.realms,2,13):r.realms===15),'victory result');requireValue((r.runeTier===null||r.outcome==='victory')&&(r.runeName===undefined||r.runeTier!==null&&typeof r.runeName==='string'),'Rune result');
+ if(p.summary!==null){const r=p.summary;requireValue(plain(r)&&integer(r.level,1,Number.MAX_SAFE_INTEGER)&&integer(r.realms,0,24)&&['victory','defeat','extracted','abandoned'].includes(r.outcome)&&seconds(r.seconds)&&integer(r.gold,0,Number.MAX_SAFE_INTEGER)&&integer(r.fragments,0,Number.MAX_SAFE_INTEGER)&&Array.isArray(r.families)&&r.families.length<=3&&r.families.every(f=>['blood','decay','vitality','aegis','fury','magic'].includes(f))&&Array.isArray(r.picks)&&r.picks.length<=20&&r.picks.every(id=>typeof id==='string')&&['kept','lost','discarded'].every(k=>Array.isArray(r[k])&&r[k].length<=45&&r[k].every(item))&&(r.runeTier===null||integer(r.runeTier,1,Number.MAX_SAFE_INTEGER)),'Expedition summary');
+  requireValue(r.outcome!=='victory'||(r.realmMap?integer(r.realms,2,24):r.realms===15),'victory result');requireValue((r.runeTier===null||r.outcome==='victory')&&(r.runeName===undefined||r.runeTier!==null&&typeof r.runeName==='string'),'Rune result');
   for(const key of ['treasuresKept','treasuresLost'])if(r[key]!==undefined)requireValue(Array.isArray(r[key])&&r[key].length<=120&&r[key].every(treasure),'Expedition treasures');
  }
  requireValue(p.review!=='realm'||p.realm!==null,'missing Realm result');requireValue(p.review!=='summary'||p.summary!==null,'missing Expedition summary');
@@ -161,7 +161,7 @@ function sessionCheck(s,p,e){
  if(s.results!==undefined)presentationCheck(s.results);
  if(s.integration!==undefined&&s.integration!==null)integrationCheck(s.integration);
  const g=s.controller;
- requireValue(integer(g.expedition,1,e.unlocked)&&g.unlocked===e.unlocked&&integer(g.planeIndex,1,15)&&['choice','combat','failed','finished'].includes(g.stage),'checkpoint progress');
+ requireValue(integer(g.expedition,1,e.unlocked)&&g.unlocked===e.unlocked&&integer(g.planeIndex,1,24)&&['choice','combat','failed','finished'].includes(g.stage),'checkpoint progress');
  requireValue(integer(s.seed,0,4294967295)&&typeof s.prefix==='string'&&/^[a-z0-9]+$/.test(s.prefix)&&integer(s.idCounter,0,Number.MAX_SAFE_INTEGER)&&typeof s.clock==='number'&&Number.isFinite(s.clock)&&s.clock>=0,'checkpoint RNG/counter');
  requireValue(s.stamp===null||integer(s.stamp,1,Number.MAX_SAFE_INTEGER),'checkpoint timestamp');
  requireValue(plain(s.home)&&Array.isArray(s.lootIds)&&s.lootIds.length<=120&&new Set(s.lootIds).size===s.lootIds.length,'loot provenance');
@@ -193,10 +193,10 @@ function validate(input,binding){
  requireValue(['new','active','victory','defeat','abandoned','interrupted','extracted','cancelled'].includes(e.lastOutcome)&&e.completed<=e.attempts,'outcome/attempt count');
  if(e.lastOutcome==='new')requireValue(e.attempts===0&&e.completed===0,'new profile progress');
  requireValue(Array.isArray(e.awardKeys)&&e.awardKeys.length<=45&&new Set(e.awardKeys).size===e.awardKeys.length,'award ledger');
- for(const token of e.awardKeys){const m=typeof token==='string'&&token.match(/^(\d+):(\d+):(\d+)$/);requireValue(m&&Number(m[1])===e.attempts&&integer(Number(m[2]),1,15)&&integer(Number(m[3]),1,3),'award token');}
+ for(const token of e.awardKeys){const m=typeof token==='string'&&token.match(/^(\d+):(\d+):(\d+)$/);requireValue(m&&Number(m[1])===e.attempts&&integer(Number(m[2]),1,24)&&integer(Number(m[3]),1,3),'award token');}
  requireValue((e.active!==null)===(e.lastOutcome==='active'),'active checkpoint outcome');
  if(e.attempts===0)requireValue(e.awardKeys.length===0,'rewards before entry');
- if(e.active!==null){const a=e.active;requireValue(e.attempts>0,'entry checkpoint');requireValue(plain(a)&&a.attempt===e.attempts&&integer(a.level,1,e.unlocked)&&integer(a.plane,1,15)&&integer(a.wave,0,3)&&['choice','combat'].includes(a.stage),'checkpoint');requireValue(e.lastOutcome==='active','active outcome');}
+ if(e.active!==null){const a=e.active;requireValue(e.attempts>0,'entry checkpoint');requireValue(plain(a)&&a.attempt===e.attempts&&integer(a.level,1,e.unlocked)&&integer(a.plane,1,24)&&integer(a.wave,0,3)&&['choice','combat'].includes(a.stage),'checkpoint');requireValue(e.lastOutcome==='active','active outcome');}
  if(e.session!==undefined&&e.session!==null)sessionCheck(e.session,s.profile,e);
  if(e.presentation!==undefined)presentationCheck(e.presentation);
  requireValue(plain(s.legacyHistory)&&integer(s.legacyHistory.maxDungeon,1,200),'legacy history');

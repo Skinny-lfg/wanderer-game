@@ -1654,7 +1654,7 @@ function dungeonRoomLabel(n){
 function dungeonMapMarkup(g){
  const d=g.dungeon,c=phase1Controller.realmMap(),last=c.nodes.length-1,width=last>>1;
  const point=i=>c.positions?c.positions[i]:i===0?[7,50]:i===last?[93,50]:[16+68*Math.floor((i-1)/2)/(width-1),(i%2?26:74)+(c.nodes[i].offset||0)];
- const visible=c.nodes.map((_,i)=>phase1Controller.travelPath(i).length>0);
+ const visible=c.nodes.map((_,i)=>phase1Controller.travelPath(i).length>0||d.scouted?.includes(i));
  const lines=c.edges.filter(([a,b])=>visible[a]&&visible[b]).map(([a,b])=>{
   const [x,y]=point(a),[u,v]=point(b),locked=a===c.shortcut&&b===a+1&&!d.visited.includes(b);
   return '<line data-room-edge="'+a+'-'+b+'" x1="'+x+'" y1="'+y+'" x2="'+u+'" y2="'+v+'" stroke="'+(locked?'#654d44':'#ad9269')+'" stroke-dasharray="'+(locked?'2 2':'none')+'" vector-effect="non-scaling-stroke" stroke-width="2"/>';
@@ -1662,9 +1662,9 @@ function dungeonMapMarkup(g){
  const buttons=c.nodes.map((n,i)=>{
   if(!visible[i])return '';
   const [x,y]=point(i),cleared=d.cleared.includes(i),label=dungeonRoomLabel(n);
-  return '<button type="button" data-dungeon-room="'+i+'" style="position:absolute;left:'+x+'%;top:'+y+'%;transform:translate(-50%,-50%);padding:5px;background:'+(i===d.current?'#513b26':cleared?'#24352d':'#241d22')+'">'+label+'<small style="display:block">'+(i===d.current?'You are here':cleared?'Cleared':n.kind==='combat'?n.range.join('–')+' mobs':n.kind==='boss'||n.kind==='elite'?n.escorts+' guards':'Inspect')+'</small></button>';
+  return '<button type="button" data-dungeon-room="'+i+'" style="position:absolute;left:'+x+'%;top:'+y+'%;transform:translate(-50%,-50%);padding:5px;background:'+(i===d.current?'#513b26':cleared?'#24352d':'#241d22')+'">'+label+(c.bossSector!==undefined&&i>=1&&i<=4?' '+i:'')+'<small style="display:block">'+(i===d.current?'You are here':cleared?'Cleared':n.kind==='combat'?n.range.join('–')+' mobs':n.kind==='boss'||n.kind==='elite'?n.escorts+' guards':'Inspect')+'</small></button>';
  }).join('');
- return '<h2>'+esc(c.name)+'</h2><p>'+realmDifficulty(c)+' · '+esc(c.family)+' affinity · '+g.history.length+' rooms cleared'+(d.steps===undefined?'':' · <strong>'+d.steps+' / '+c.stepLimit+' steps left</strong>')+'</p><div data-realm-viewport style="overflow-x:auto"><div style="position:relative;min-width:580px;height:'+(c.positions?'450':'225')+'px;background:linear-gradient(#141016d9,#141016e8),url('+dungeonImage(c)+') center/cover"><svg aria-hidden="true" style="position:absolute;width:100%;height:100%" viewBox="0 0 100 100" preserveAspectRatio="none">'+lines+'</svg>'+buttons+'</div></div><p class="small muted">Inspect a room to travel.'+(d.steps===undefined?'':' Each passage costs one step, including the return trip. Extraction is free.')+' Cleared passages are safe. Springs and events can wait until you need them.</p>';
+ return '<h2>'+esc(c.name)+'</h2><p>'+realmDifficulty(c)+' · '+esc(c.family)+' affinity · '+g.history.length+' rooms cleared'+(c.bossSector!==undefined?' · Boss trail follows the '+['first','second','third','fourth'][c.bossSector]+' entrance passage.':'')+(d.steps===undefined?'':' · <strong>'+d.steps+' / '+c.stepLimit+' steps left</strong>')+'</p><div data-realm-viewport style="overflow-x:auto"><div style="position:relative;min-width:580px;height:'+(c.positions?'450':'225')+'px;background:linear-gradient(#141016d9,#141016e8),url('+dungeonImage(c)+') center/cover"><svg aria-hidden="true" style="position:absolute;width:100%;height:100%" viewBox="0 0 100 100" preserveAspectRatio="none">'+lines+'</svg>'+buttons+'</div></div><p class="small muted">Inspect a room to travel.'+(d.steps===undefined?'':' Each passage costs one step, including the return trip. Extraction is free.')+' Cleared passages are safe. Springs and events can wait until you need them.</p>';
 }
 function renderRealmCards(g){
  html('<section class="panel"><span class="eyebrow">Expedition '+g.expedition+'</span><h1>Choose your Realm</h1><div class="phase1Offers">'+g.dungeon.cards.map(c=>{
@@ -1681,6 +1681,7 @@ function bindDungeonRooms(g){
  Q('[data-dungeon-room]').forEach(b=>b.onclick=()=>{
   const i=Number(b.dataset.dungeonRoom),n=c.nodes[i],cleared=g.dungeon.cleared.includes(i);
   const path=phase1Controller.travelPath(i);
+  if(!path.length){showModal(dungeonRoomLabel(n),'Follow the connected passages to reach this scouted room.');return;}
   const cost=path.length-1,remaining=g.dungeon.steps,tooFar=remaining!==undefined&&cost>remaining;
   const highlighted=path.slice(1).map((id,k)=>document.querySelector('[data-room-edge="'+path[k]+'-'+id+'"],[data-room-edge="'+id+'-'+path[k]+'"]')).filter(Boolean);
   for(const line of highlighted)line.style.stroke='#ffd57a';
