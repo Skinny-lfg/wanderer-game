@@ -181,7 +181,7 @@ function phase1StartWave(resetScroll=false){
  const theme=ports.phase2Theme(g.selected.id);
  const totalCount=last&&(g.selected.boss||g.selected.elite)?1:(g.selected.mobCount||3),activeCount=Math.min(4,totalCount);
  const spawn=()=>ports.enemyFor(r.tier,r.enc,{theme,boss:last&&g.selected.boss,elite:last&&g.selected.elite&&!g.selected.boss,variant:g.version===2?ports.BOSS_ARCHETYPES.find(b=>b.style===WandererV012Expedition.BOSSES.find(v=>v.id===g.bossId).style):null});
- const scale=totalCount===12?{hp:.40,atk:.16}:totalCount>=18?{hp:.32,atk:.12}:null;
+ const scale=totalCount===12?{hp:.15,atk:.16}:totalCount>=18?{hp:.10,atk:.12}:null;
  const group=WandererV012CombatCore.createEnemyGroup(spawn,totalCount,{activeSlots:activeCount,scale});
  // Give ordinary mobs time to show their attacks; keep their pressure lower.
  for(const enemy of group){
@@ -230,6 +230,9 @@ function phase1WaveWon(){
  r.phase4AwardedWave=r.enc;
  if(!r.enemies){ports.legendaryKill(r);
  if(ports.phase1Build)WandererV012Buildcraft.onKill(ports.phase1Build,ports.phase2Context(r));}
+ // Rewards belong to the encounter leader even when an escort falls last.
+ const leader=r.enemies?.find(mob=>mob.boss||mob.miniboss);
+ if(leader)r.enemy=leader;
  const enemy=r.enemy,boss=!!enemy.boss,elite=!!enemy.miniboss;
   const groupReward=boss||elite?1:r.totalMobCount>=18?1.3:r.totalMobCount>=10?1.2:r.totalMobCount>1?1.1:1;
  const gold=Math.round((ports.roll(3,6)+Math.floor(r.tier*.5)+(boss?8:elite?4:0))*(r.phase6Bounty?1.5:1)*groupReward);
