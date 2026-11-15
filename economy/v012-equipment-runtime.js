@@ -318,12 +318,18 @@ function phase6ReturnPotions(outcome){
  const stock=ports.phase6PotionInventory();for(const p of ports.phase6Run.potions||[])if(!p.used){stock[p.kind]=(stock[p.kind]||0)+1;p.used=true;}
 }
 
-function phase6UsePotion(index){
+function phase6UsePotion(index,mode='threat'){
  if(!ports.phase3IsBetweenPlanes()||!ports.phase6Run||ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked))return false;
  const potion=ports.phase6Run.potions?.[index];if(!potion||potion.used||potion.kind==='fortune')return false;
  const v=ports.phase3Vitals(),kind=potion.kind;if(kind==='barrier'&&(ports.phase6Run.effects.barrier||0)>=.3||ports.phase6Run.effects[kind]?.remaining===3)return false;if(kind==='health'&&v.hp>=v.maxhp||kind==='mana'&&v.mp>=v.maxmp)return false;
  if(!ports.phase1Vitals)ports.phase1Vitals={hp:v.hp,mp:v.mp,maxmp:v.maxmp};
- if(kind==='health')ports.phase1Vitals.hp=Math.min(v.maxhp,v.hp+Math.ceil(v.maxhp*.35));
+ if(kind==='trail'||kind==='scout'){
+  const g=ports.phase1Controller.state,d=g.dungeon,c=d&&ports.phase1Controller.realmMap();if(!c)return false;
+  if(kind==='trail'){if(d.steps>=c.stepLimit)return false;d.steps=Math.min(c.stepLimit,d.steps+2);}else{
+   const i=c.nodes.findIndex((n,i)=>(mode==='treasure'?n.event==='forgotten_arsenal':['elite','boss'].includes(n.kind))&&!d.visited.includes(i)&&!d.scouted?.includes(i)&&!ports.phase1Controller.travelPath(i).length);
+   if(i<0){ports.bannerMessage('No undiscovered target. Dose retained.');return false;}(d.scouted??=[]).push(i);
+  }
+ }else if(kind==='health')ports.phase1Vitals.hp=Math.min(v.maxhp,v.hp+Math.ceil(v.maxhp*.35));
  else if(kind==='mana')ports.phase1Vitals.mp=Math.min(v.maxmp,v.mp+Math.ceil(v.maxmp*.4));
  else if(kind==='barrier')ports.phase6Run.effects.barrier=Math.min(.3,(ports.phase6Run.effects.barrier||0)+.15);
  else ports.phase6Buff(kind,kind==='haste'?.08:.10);

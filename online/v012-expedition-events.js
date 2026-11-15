@@ -5,7 +5,7 @@ const rows=[
  ['relic_collector','Relic Collector','commerce',['Sacrifice a Bag item for Gold, or take a smaller free reward','Sacrifice a Bag item for Fragments, or take a smaller free reward']],
  ['cursed_altar','Cursed Altar','sacrifice',['Pay 20% max HP (must survive): +10% Attack this Expedition','Pay 20% max HP (must survive): +10% Defense this Expedition']],
  ['whispering_idol','Whispering Idol','sacrifice',['Accept +10% incoming damage for 3 combats: gain 25 + 4×E Gold','Accept +10% incoming damage for 3 combats: gain 12 + 2×E Fragments']],
- ['forgotten_arsenal','Forgotten Arsenal','treasure',['Recover 6 Essence for directed crafting','Take 8 + 2×E Fragments']],
+ ['forgotten_arsenal','Forgotten Arsenal','treasure',['Recover 6 Essence for directed crafting','Take provisions to recover up to 2 spent steps']],
  ['bounty_writ','Bounty Writ','treasure',['Accept the bounty for the next Elite, or take Fragments if none remains','Pass and keep your current supplies']],
  ['restless_spring','Restless Spring','survival',['Recover 35% HP, or take 3 + E Fragments if full','Recover 40% Mana, or take 3 + E Fragments if full or unavailable']],
  ['oracle_of_paths','Oracle of Paths','survival',['Ensure an eligible Affinity appears in the next non-boss offer, or restore one reroll','Take 5 + E Fragments instead']]

@@ -99,7 +99,7 @@ function create(themes,rng=Math.random){
   if(FAMILIES.includes(targetFamily)){families.splice(families.indexOf(targetFamily),1);families.unshift(targetFamily);}
   const cards=shuffle(families.slice(0,3),routeRng).map((family,risk)=>{
    const theme=shuffle(expeditionThemes.filter(t=>t.family===family),routeRng)[0];
-   const events=shuffle(['forgotten_arsenal','whispering_idol','traveling_merchant','cursed_altar'],routeRng);
+   const events=[...shuffle(['whispering_idol','traveling_merchant','cursed_altar'],routeRng),'forgotten_arsenal'];
    const size=18+risk*2;
    const kinds=Array(size).fill('combat');kinds[0]='entrance';kinds[size-1]='boss';
    const slots=shuffle(Array.from({length:size-6},(_,i)=>i+5),routeRng);

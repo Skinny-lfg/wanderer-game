@@ -43,7 +43,7 @@ function json(value){
 }
 function bindingName(binding){requireValue(typeof binding==='string'&&/^[A-Za-z0-9_-]{1,100}$/.test(binding),'binding');return binding;}
 function key(binding){return PREFIX+bindingName(binding);}
-const POTIONS=['health','mana','might','arcane','ironhide','haste','fortune','barrier'];
+const POTIONS=['health','mana','might','arcane','ironhide','haste','fortune','barrier','scout','trail'];
 function consumablesCheck(p){
  if(p.consumables!==undefined)requireValue(plain(p.consumables)&&Object.entries(p.consumables).every(([id,q])=>POTIONS.includes(id)&&integer(q,0,99999)),'consumable inventory');
  if(p.potionSelection!==undefined){requireValue(Array.isArray(p.potionSelection)&&p.potionSelection.length<=3&&p.potionSelection.every(id=>POTIONS.includes(id))&&p.potionSelection.filter(id=>id==='fortune').length<=1,'potion selection');for(const id of p.potionSelection)requireValue((p.consumables?.[id]||0)>=p.potionSelection.filter(v=>v===id).length,'selected potion ownership');}
