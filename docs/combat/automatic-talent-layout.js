@@ -158,7 +158,7 @@ function create(list){
  // Resolve collisions while keeping prominent affinity and mixed nodes fixed.
  const radius=n=>n.affinity?82:n.advanced||n.hybridFor&&n.passiveId?58:n.passiveId||n.skillKey||n.specialisationTier?48:32;
  const fixed=n=>!!n.affinity||!!n.advanced||!!(n.hybridFor&&n.passiveId);
- for(let pass=0;pass<250;pass++){
+ for(let pass=0;pass<8;pass++){
   let moved=false;
   for(let i=0;i<visible.length;i++)for(let j=i+1;j<visible.length;j++){
    const a=visible[i],b=visible[j],pa=positions[a.id],pb=positions[b.id],dx=pb.x-pa.x,dy=pb.y-pa.y,dist=Math.hypot(dx,dy),gap=radius(a)+radius(b)+12-dist;
