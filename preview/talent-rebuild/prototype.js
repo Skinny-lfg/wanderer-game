@@ -46,7 +46,23 @@ for(const n of graph.filter(n=>n.approachOf)){
  occupied.push({id:n.id,x:best.x,y:best.y,r:9});
 }
 const el=(tag,attrs)=>{const e=document.createElementNS(ns,tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);return e};
-for(const n of graph){const p=positions[n.id];for(const dep of [...new Set([n.requires,...(n.prerequisites||[]),...(n.anyRequires||[])].filter(Boolean))]){const q=positions[dep];links.append(el('line',{x1:q.x,y1:q.y,x2:p.x,y2:p.y}));}}
+// Route the first link into each mixed-family corridor around the main spokes,
+// instead of drawing a long diagonal over the ordinary affinity talents.
+function mixedCorridorRoute(node,dependency){
+ if(!node.id.startsWith('mixed_path_')||node.tier!==1||dependency!=='affinity_'+node.family)return null;
+ const from=positions[dependency],to=positions[node.id],a=angle(node.family);
+ const radial={x:Math.cos(a),y:Math.sin(a)},tangent={x:-radial.y,y:radial.x};
+ const dx=to.x-from.x,dy=to.y-from.y,side=dx*tangent.x+dy*tangent.y,forward=dx*radial.x+dy*radial.y;
+ return [from,
+  {x:from.x+tangent.x*side*.62+radial.x*forward*.10,y:from.y+tangent.y*side*.62+radial.y*forward*.10},
+  {x:from.x+tangent.x*side*.94+radial.x*forward*.56,y:from.y+tangent.y*side*.94+radial.y*forward*.56},
+  to];
+}
+for(const n of graph){const p=positions[n.id];for(const dep of [...new Set([n.requires,...(n.prerequisites||[]),...(n.anyRequires||[])].filter(Boolean))]){
+ const route=mixedCorridorRoute(n,dep);
+ if(route)links.append(el('polyline',{class:'mixed-corridor',points:route.map(v=>v.x+','+v.y).join(' '),fill:'none'}));
+ else{const q=positions[dep];links.append(el('line',{x1:q.x,y1:q.y,x2:p.x,y2:p.y}));}
+}}
 const core=el('circle',{cx:0,cy:0,r:95,fill:'#171418',stroke:'#b39568','stroke-width':3});links.append(core);for(const f of families){const p=positions['root_'+f];links.prepend(el('line',{x1:Math.cos(angle(f))*95,y1:Math.sin(angle(f))*95,x2:p.x,y2:p.y}));}
 const glyph={blood:'✦',fury:'⚔',aegis:'⛨',vitality:'✿',magic:'✧',decay:'☠'},colors={blood:'#ae4b57',fury:'#d78246',aegis:'#79a7c8',vitality:'#8ebc72',magic:'#aa87d7',decay:'#9dae68'};
 for(const n of graph){const p=positions[n.id],rad=n.kind==='affinity'?37:n.kind==='mixed'?29:['basic','focused','element'].includes(n.kind)?23:9,g=el('g',{class:'node','data-id':n.id,transform:`translate(${p.x} ${p.y})`,tabindex:'0',role:'button','aria-label':n.name});const c=el('circle',{r:rad,style:`stroke:${colors[n.family]||'#b39568'}`});g.append(c);
