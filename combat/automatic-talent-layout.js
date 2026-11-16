@@ -160,12 +160,12 @@ function create(list){
  visibleNodes.filter(n=>!positions[n.id]).forEach((n,i)=>{positions[n.id]={x:9000+(i%16)*155,y:4100+Math.floor(i/16)*155}});
  const visible=list.filter(n=>n.rank===undefined||n.rank===1).filter(n=>positions[n.id]);
  // Resolve collisions while keeping prominent affinity and mixed nodes fixed.
- const radius=n=>n.affinity?82:n.advanced||n.hybridFor&&n.passiveId?58:n.passiveId||n.skillKey||n.specialisationTier?48:32;
+ const radius=n=>n.affinity?82:n.advanced||n.hybridFor&&n.passiveId?58:n.passiveId||n.skillKey||n.specialisationTier||n.elementBranch?52:40;
  const fixed=n=>anchors.has(n.id)||!!n.specialisationTier||!!n.elementBranch||!!n.affinity||!!n.advanced||!!(n.hybridFor&&n.passiveId);
  for(let pass=0;pass<80;pass++){
   let moved=false;
   for(let i=0;i<visible.length;i++)for(let j=i+1;j<visible.length;j++){
-   const a=visible[i],b=visible[j],pa=positions[a.id],pb=positions[b.id],dx=pb.x-pa.x,dy=pb.y-pa.y,dist=Math.hypot(dx,dy),gap=radius(a)+radius(b)+12-dist;
+   const a=visible[i],b=visible[j],pa=positions[a.id],pb=positions[b.id],dx=pb.x-pa.x,dy=pb.y-pa.y,dist=Math.hypot(dx,dy),gap=radius(a)+radius(b)+38-dist;
    if(gap<=0)continue;
    const ux=dist>0?dx/dist:1,uy=dist>0?dy/dist:0,fa=fixed(a),fb=fixed(b),shareA=fa&&!fb?0:fb&&!fa?1:.5,shareB=1-shareA;
    pa.x-=ux*gap*shareA;pa.y-=uy*gap*shareA;pb.x+=ux*gap*shareB;pb.y+=uy*gap*shareB;moved=true;

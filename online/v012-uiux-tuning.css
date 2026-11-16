@@ -369,3 +369,11 @@ body.phase3IntegratedPreview .phase3CombatBuild{display:flex;flex-wrap:wrap;alig
 .automaticTalentTree .talentFamilyNavigation button{border:1px solid #96734e;background:#241b20;color:#edd2a9;border-radius:3px;min-height:38px}
 .automaticTalentTree .talentGraphControls button{min-height:38px;min-width:40px}
 @media(max-width:600px){.automaticTalentTree .talentGraphControls>span{font-size:11px}.automaticTalentTree .talentFamilyNavigation button{min-height:40px}}
+
+/* Keep labels inside the inspector at atlas scale, so adjacent circles stay clear. */
+.talentGraphCanvas .talentMixedName,
+.talentGraphCanvas .treeSpecializationName,
+.talentGraphCanvas .treeGraphNode:not(.is-affinity) .treeAffinityName { display:none; }
+.talentGraphCanvas .treeGraphNode .treeNodeRank { display:none; }
+.talentGraphCanvas .treeGraphNode.is-selected .treeNodeRank { display:block; }
+.talentGraphCanvas .treeGraphNode { box-sizing:border-box; }
