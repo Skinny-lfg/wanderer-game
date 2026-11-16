@@ -10,26 +10,53 @@ const source=fs.readFileSync(path.join(__dirname,'../preview/talent-rebuild/prot
 const split=source.indexOf('const el='),routeStart=source.indexOf('function mixedCorridorRoute('),routeEnd=source.indexOf('\nfor(const n of graph){const p=positions[n.id];',routeStart);
 assert(split>0&&routeStart>split&&routeEnd>routeStart,'Expected prototype geometry');
 const geometry=source.slice(0,split)+'\n'+source.slice(routeStart,routeEnd);
-const {graph,positions,mixedCorridorRoute}=new Function('WandererTalentGraph','WandererV012Buildcraft','WandererAutomaticTalents','document',geometry+';return {graph,positions,mixedCorridorRoute};')(WandererTalentGraph,WandererV012Buildcraft,WandererAutomaticTalents,{querySelector:()=>null});
+const {graph,positions,mixedCorridorRoute,focusedJunction,focusedMergeRoute}=new Function('WandererTalentGraph','WandererV012Buildcraft','WandererAutomaticTalents','document',geometry+';return {graph,positions,mixedCorridorRoute};')(WandererTalentGraph,WandererV012Buildcraft,WandererAutomaticTalents,{querySelector:()=>null});
 const get=id=>graph.find(n=>n.id===id);
 const radius=n=>n.kind==='affinity'?37:n.kind==='mixed'?29:['basic','focused','element'].includes(n.kind)?23:9;
 const distance=(p,a,b)=>{const dx=b.x-a.x,dy=b.y-a.y,d=dx*dx+dy*dy,t=d?Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/d)):0;return Math.hypot(p.x-a.x-t*dx,p.y-a.y-t*dy)};
 const intersects=(a,b,c,d)=>{const o=(p,q,r)=>(q.x-p.x)*(r.y-p.y)-(q.y-p.y)*(r.x-p.x);return o(a,b,c)*o(a,b,d)<0&&o(c,d,a)*o(c,d,b)<0};
 
-test('all 18 focused talents use same-tier side connectors and a central gate',()=>{
+test('all 18 Focused talents retain their three original paid stat paths',()=>{
+ assert.equal(graph.length,375);
+ assert.equal(graph.filter(n=>n.approachOf).length,138);
  for(const family of WandererTalentGraph.FAMILIES)for(let tier=1;tier<=3;tier++){
-  const middle=get('focus_path_'+family+'_'+tier),ability=get(WandererTalentGraph.FOCUSED[family][tier-1]);
+  const ability=get(WandererTalentGraph.FOCUSED[family][tier-1]);
+  const middle=get('focus_path_'+family+'_'+tier);
   const prev=tier===1?'affinity_'+family:'focus_path_'+family+'_'+(tier-1);
-  assert.deepEqual(middle.anyRequires,[prev,'focus_branch_'+family+'_0_'+tier,'focus_branch_'+family+'_1_'+tier]);
-  assert.equal(get(ability.requires).requires,middle.id);
-  for(const lane of [0,1]){
-   const side=get('focus_branch_'+family+'_'+lane+'_'+tier),base=positions[side.requires],goal=positions[middle.id],point=positions[side.id];
-   assert(distance(point,base,goal)<1,side.id+' must lie on its own tier connector');
-   assert(Math.hypot(point.x-goal.x,point.y-goal.y)<200,side.id+' must not cut diagonally across tiers');
+  assert.equal(middle.requires,prev);
+  const original=[middle.id,'focus_branch_'+family+'_0_'+tier,'focus_branch_'+family+'_1_'+tier];
+  assert.deepEqual(ability.anyRequires,original.map((_,i)=>'entry_'+ability.id+'_'+i+'_1'));
+  for(const [i,source] of original.entries()){
+   const entry=get('entry_'+ability.id+'_'+i+'_1');
+   assert.equal(entry.requires,source);
+   if(i>0){
+    const side=get(source),first=positions[side.id],centre=positions[middle.id],actual=positions[entry.id];
+    assert.equal(side.tier,tier);
+    assert(distance(actual,first,centre)<1e-6,entry.id+' must lie on its own-tier branch');
+   }
   }
  }
 });
 
+test('54 Focused prerequisite routes converge after the paid stat entries without hitting nodes',()=>{
+ let count=0;
+ for(const ability of graph.filter(n=>n.kind==='focused')){
+  const merge=focusedJunction(ability);
+  for(const [i,id] of ability.anyRequires.entries()){
+   const points=focusedMergeRoute(ability,id);
+   assert.equal(points.length,i===0?2:3,id);
+   assert.deepEqual(points[0],positions[id]);
+   assert.deepEqual(points[points.length-1],merge);
+   for(let k=1;k<points.length;k++)for(const other of graph){
+    if(other.id===id||other.id===ability.id)continue;
+    assert(distance(positions[other.id],points[k-1],points[k])>=radius(other)+5,
+     id+' route crosses '+other.id);
+   }
+   count++;
+  }
+ }
+ assert.equal(count,54);
+});
 test('talent circles remain separate after rerouting the links',()=>{
  for(let i=0;i<graph.length;i++)for(let j=i+1;j<graph.length;j++){
   const a=graph[i],b=graph[j],p=positions[a.id],q=positions[b.id];
