@@ -1,5 +1,5 @@
 // Build an isolated local-only playtest. This never deploys or reads player data.
-import {mkdtemp,mkdir,readFile,readdir,copyFile,writeFile} from 'node:fs/promises';
+import {mkdtemp,mkdir,readFile,readdir,copyFile,writeFile,cp} from 'node:fs/promises';
 import {join,extname} from 'node:path';
 import {tmpdir} from 'node:os';
 import {createHash} from 'node:crypto';
@@ -16,6 +16,7 @@ async function copy(dir,relative=''){
  }
 }
 for(const dir of Object.keys(extensions))await copy(dir);
+await cp('preview/talent-rebuild',join(output,'preview/talent-rebuild'),{recursive:true});
 let html=await readFile('index.html','utf8');
 function replaceRequired(pattern,replacement,label){if(!pattern.test(html))throw Error('Preview blocked: '+label+' not found');html=html.replace(pattern,replacement);}
 replaceRequired(/globalThis\.__WANDERER_CLOUD_ONLY__=[^\n]+;/,'globalThis.__WANDERER_CLOUD_ONLY__=false;','cloud flag');

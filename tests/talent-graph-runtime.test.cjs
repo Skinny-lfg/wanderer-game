@@ -1,0 +1,7 @@
+'use strict';
+const {test}=require('node:test'),assert=require('node:assert/strict');require('../combat/v012-buildcraft.js');require('../combat/automatic-talents.js');require('../combat/talent-graph-next.js');require('../combat/talent-graph-bridge.js');require('../combat/talent-graph-runtime.js');
+const T=WandererAutomaticTalents,C=WandererV012Buildcraft;
+function buy(p,id){const n=T.NODES.find(x=>x.id===id);for(const dep of [n.requires,...(n.prerequisites||[])].filter(Boolean))if(!p.nodes.includes(dep))p=buy(p,dep);if(n.anyRequires&&!n.anyRequires.some(x=>p.nodes.includes(x)))p=buy(p,n.anyRequires[0]);const v=T.allocate(p,id);assert(v,id);return v;}
+test('fresh progress invests on the new graph and enforces available points',()=>{let p={...T.create(),starterPoints:2};p=T.allocate(p,'root_blood');p=T.allocate(p,'affinity_blood');assert(p);assert.equal(T.allocate(p,'basic_path_blood_0_1'),null);assert(T.valid(p));});
+test('ranks and affinities are passed into the real build',()=>{let p={...T.create(),xp:10000};p=buy(p,'deep_cuts');p=T.allocate(p,'deep_cuts');const b=C.create();C.syncPermanent(b,p);assert(b.unlockedFamilies.includes('blood'));assert.equal(C.rank(b,'deep_cuts'),2);assert(T.valid(p));});
+test('stats apply and invalid unearned ranks fail validation',()=>{const p=buy({...T.create(),xp:10000},'arcane_mastery');const s=T.apply({attack:20,defense:10,maxhp:100,evasionRating:0,spellPower:100,manaRegen:1},p);assert(s.spellPower>125);assert.equal(T.valid({...p,xp:0}),false);});

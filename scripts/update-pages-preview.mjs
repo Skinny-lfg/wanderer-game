@@ -9,4 +9,5 @@ const source=output.slice(prefix.length),target=resolve('docs');
 await mkdir(target,{recursive:true});
 await cp(join(source,'index.html'),join(target,'index.html'));
 for(const dir of ['assets','combat','online','economy'])await cp(join(source,dir),join(target,dir),{recursive:true});
+await cp(join(source,'preview/talent-rebuild'),join(target,'preview/talent-rebuild'),{recursive:true});
 console.log('Updated isolated v0.13 Pages build in '+target);
