@@ -32,7 +32,7 @@ function create(list){
   const at=(along,side)=>({x:center.x+radial.x*along+tangent.x*side,y:center.y+radial.y*along+tangent.y*side});
   const group=hybrids.filter(n=>[n.family,n.hybridOther].includes(first)&&[n.family,n.hybridOther].includes(second)).sort((a,b)=>a.id.localeCompare(b.id));
   group.forEach((n,index)=>{
-   const radius=1800+index*460,id=n.passiveId;positions[n.id]=at(radius,0);proxies[id]={};
+   const radius=1850+index*560,id=n.passiveId;positions[n.id]=at(radius,0);proxies[id]={};
    for(const [prefix,family] of [['path',n.family],['bridge',n.hybridOther]]){
     const side=family===first?-1:1;
     positions[prefix+'_'+id+'_1']=at(radius-180,side*290);
@@ -41,7 +41,7 @@ function create(list){
   });
   const advanced=list.find(n=>n.advanced&&[n.left,n.right].every(id=>[first,second].includes(list.find(x=>x.id===id)?.family)));
   if(advanced){
-   const radius=2950;positions[advanced.id]=at(radius,0);
+   const radius=3250;positions[advanced.id]=at(radius,0);
    for(const link of list.filter(n=>n.outerLink===advanced.id)){
     const side=list.find(x=>x.id===link.side).family===first?-1:1;
     positions[link.id]=at(radius-240+link.step*120,side*(3-link.step)*130);
@@ -55,7 +55,7 @@ function create(list){
   skills.forEach((n,i)=>{positions[n.id]=local(family,i?210:-210,2450);});
  }
  const visible=list.filter(n=>n.rank===undefined||n.rank===1).filter(n=>positions[n.id]);
- const obstacles=visible.map(n=>({...positions[n.id],radius:n.affinity?86:39}));
+ const obstacles=visible.map(n=>({...positions[n.id],radius:n.affinity?86:n.advanced||n.hybridFor&&n.passiveId?62:n.passiveId||n.skillKey?49:39}));
 
 
  const cache=new Map();
