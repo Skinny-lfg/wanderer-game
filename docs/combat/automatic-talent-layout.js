@@ -92,17 +92,15 @@ function create(list){
   const value=1+Math.max(0,...keys.map(id=>depth(byId.get(id),next)));
   levels.set(node.id,value);return value;
  }
- // Keep the four foundation groups close to the centre.
- for(const id of ['might','vitality','haste','insight']){
-  const angle=ROOT_ANGLES[id];
-  const ancestry=(key,seen=new Set())=>{
-   const n=byId.get(key);if(!n||!n.requires||seen.has(key))return false;
-   if(n.requires===id)return true;seen.add(key);return ancestry(n.requires,seen);
-  };
-  const members=visibleNodes.filter(n=>!n.family&&!n.advanced&&n.id!==id&&ancestry(n.id)).sort((a,b)=>depth(a)-depth(b)||a.id.localeCompare(b.id));
-  positions[id]=point(angle,200);
-  members.forEach((n,i)=>positions[n.id]=point(angle+((i%3)-1)*.18,350+Math.floor(i/3)*140));
- }
+ // Each foundation branch occupies one contiguous arc of the starting ring.
+ const foundationGroups=[
+  ['might','precision','execution',...Array.from({length:5},(_,i)=>'minor_attack_'+(i+1))],
+  ['vitality','guard','fortitude',...Array.from({length:5},(_,i)=>'minor_health_'+(i+1))],
+  ['haste','flow','mastery',...Array.from({length:5},(_,i)=>'minor_speed_'+(i+1))],
+  ['insight']
+ ];
+ const foundation=foundationGroups.flat().filter(id=>byId.has(id));
+ foundation.forEach((id,i)=>{positions[id]=point(-Math.PI/2+i*2*Math.PI/foundation.length,490)});
  for(const f of familyOrder)positions['affinity_'+f]=point(ANGLES[f],760);
  const baseSkills={blood:['bleeding_edge','deep_cuts','blood_drinker','sanguine_fury','executioner','open_wound'],fury:['quick_hands','precision','double_strike','adrenaline','brutal_crit','relentless'],aegis:['iron_skin','fortified','guarded_block','barrier_pulse','retaliation','brace'],vitality:['strong_heart','renewal','second_breath','life_bloom','last_stand','second_pulse'],magic:['arcane_focus','mana_spring','efficient_cast','arcane_echo','elemental_force','spell_echo'],decay:['toxic_touch','virulent_rot','wasting_curse','wither','blight','incubation']};
 
@@ -155,6 +153,19 @@ function create(list){
   const pair=corridors.find(p=>p.slice().sort().join(':')===[f1,f2].sort().join(':'));
   positions[n.id]=point(pair?ANGLES[pair[0]]+Math.PI/6:-Math.PI/2+i*Math.PI/3,3200);
  });
+ // Place each optional stat chain on the approach from its affinity to the shared junction.
+ for(const n of shown.filter(n=>n.alternateStep)){
+  const destination=byId.get('passive_'+n.alternateFor);
+  if(!destination)continue;
+  const prefix=n.family===destination.family?'path':'bridge';
+  const end=positions[prefix+'_'+n.alternateFor+'_1'],start=positions['affinity_'+n.family];
+  if(!start||!end)continue;
+  const t=n.alternateStep/4,at=blend(start,end,t),angle=ANGLES[n.family];
+  const side=Math.sign((end.y-center.y)*Math.cos(angle)-(end.x-center.x)*Math.sin(angle));
+  const tier=Math.round((Math.hypot(positions[destination.id].x-center.x,positions[destination.id].y-center.y)-2050)/520);
+  const shift=side*(tier?220:-110)*Math.sin(Math.PI*t);
+  positions[n.id]={x:at.x-Math.sin(angle)*shift,y:at.y+Math.cos(angle)*shift};
+ }
  // These are not drawn on the playable preview. Reserve coordinates for integrity checks.
  [...outside,...hiddenRanks].forEach((n,i)=>{positions[n.id]={x:9000+(i%16)*155,y:500+Math.floor(i/16)*155}});
  visibleNodes.filter(n=>!positions[n.id]).forEach((n,i)=>{positions[n.id]={x:9000+(i%16)*155,y:4100+Math.floor(i/16)*155}});

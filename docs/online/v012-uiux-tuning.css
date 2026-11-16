@@ -377,3 +377,15 @@ body.phase3IntegratedPreview .phase3CombatBuild{display:flex;flex-wrap:wrap;alig
 .talentGraphCanvas .treeGraphNode .treeNodeRank { display:none; }
 .talentGraphCanvas .treeGraphNode.is-selected .treeNodeRank { display:block; }
 .talentGraphCanvas .treeGraphNode { box-sizing:border-box; }
+
+/* Compact stat markers retain the larger button target around the painted disc. */
+.talentGraphCanvas button.treeGraphNode.is-minor-stat {
+ border:0!important;background:transparent!important;box-shadow:none!important;
+ font:19px/1 Georgia,serif!important;color:#e3cba1;isolation:isolate;
+}
+.talentGraphCanvas button.treeGraphNode.is-minor-stat::before {
+ content:'';position:absolute;inset:9px;border-radius:50%;z-index:-1;
+ background:#211b19;border:2px solid #947a52;
+}
+.talentGraphCanvas button.treeGraphNode.is-minor-stat.is-owned::before {border-color:#f6ce81;background:#46351f}
+.talentGraphCanvas button.treeGraphNode.is-minor-stat.is-available::before {border-color:#9bc9a2}
