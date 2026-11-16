@@ -9,4 +9,27 @@ test('an optional ability rank does not gate the next ability; elemental and mix
 const circles=[...list.map(n=>({id:n.id,...L.positions[n.id],r:n.affinity?75:28})),...Object.entries(L.proxies).flatMap(([id,p])=>Object.entries(p).map(([family,pos])=>({id:'copy_'+id+'_'+family,...pos,r:38})))];
 test('all nodes and repeated mixed-family circles have distinct readable positions',()=>{for(const c of circles){assert(Number.isFinite(c.x)&&Number.isFinite(c.y),c.id);assert(c.x>0&&c.x<L.width&&c.y>0&&c.y<L.height,c.id);}for(let i=0;i<circles.length;i++)for(let j=i+1;j<circles.length;j++){const a=circles[i],b=circles[j];assert(Math.hypot(a.x-b.x,a.y-b.y)>=a.r+b.r+12,a.id+' overlaps '+b.id);}});
 function distance(p,a,b){const dx=b.x-a.x,dy=b.y-a.y,t=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/(dx*dx+dy*dy)));return Math.hypot(p.x-a.x-t*dx,p.y-a.y-t*dy);}
-test('rendered connections, including the central arcs, do not pass over unrelated nodes',()=>{for(const node of list)for(const required of node.prerequisites||[node.requires].filter(Boolean)){let route=L.waypoints(node,required);if(node.affinity){const a=L.rootAngles[required],b=L.angles[node.family],delta=((b-a+Math.PI*3)%(Math.PI*2))-Math.PI;route=[L.positions[required],...Array.from({length:65},(_,i)=>L.point(a+delta*i/64,500)),L.positions[node.id]];}if(node.hybridFor&&required.startsWith('affinity_'))route=[L.proxies[node.hybridFor][required.slice(9)],L.positions[node.id]];for(let i=1;i<route.length;i++)if(Math.hypot(route[i].x-route[i-1].x,route[i].y-route[i-1].y)>0.001)for(const c of circles){if(c.id===node.id||c.id===required||Math.hypot(c.x-route[0].x,c.y-route[0].y)<1)continue;assert(distance(c,route[i-1],route[i])>=c.r+8,required+' → '+node.id+' crosses '+c.id);}}});
+test('the visible talent atlas routes prerequisites without passing through unrelated talent circles',()=>{
+ const adjacent=['blood:fury','aegis:fury','aegis:vitality','magic:vitality','decay:magic','blood:decay'];
+ const visible=list.filter(n=>{
+  if(n.rank>1)return false;
+  if(!n.hybridFor)return true;
+  const catalog=WandererV012Buildcraft.CATALOG.find(p=>p.id===n.hybridFor);
+  return catalog&&adjacent.includes([...catalog.requires].sort().join(':'));
+ });
+ const tree=WandererTalentLayout.create(visible);
+ const markers=visible.map(n=>({id:n.id,...tree.positions[n.id],r:n.affinity?88:n.advanced||n.hybridFor&&n.passiveId?63:n.passiveId||n.skillKey||n.specialisationTier?50:39}));
+ let edges=0;
+ for(const node of visible)for(const required of node.prerequisites||node.anyRequires||[node.requires].filter(Boolean)){
+  const route=tree.waypoints(node,required);
+  if(route.length<2)continue;
+  edges++;
+  assert.equal(route[0],tree.positions[required]);
+  assert.equal(route[route.length-1],tree.positions[node.id]);
+  for(let i=1;i<route.length;i++)for(const other of markers){
+   if(other.id===node.id||other.id===required)continue;
+   assert(distance(other,route[i-1],route[i])>=other.r+8,required+' → '+node.id+' crosses '+other.id);
+  }
+ }
+ assert(edges>350,'A representative set of visible talent links must be checked');
+});
