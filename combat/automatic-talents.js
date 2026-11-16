@@ -65,6 +65,47 @@ const POINT_XP=100,MAX_POINTS=100,ROOTS={blood:'might',decay:'haste',vitality:'v
 const AFFINITY_BONUSES={blood:{description:'Your attacks can inflict Bleed: 42% chance, dealing 16% of hit damage per tick (0.9s cooldown).'},decay:{description:'Your attacks can inflict Rot: 42% chance, dealing 6.5% of hit damage per tick (1.3s cooldown).'},vitality:{health:.10,description:'Increase maximum Health by 10%.'},aegis:{description:'Gain Barrier equal to 5% of maximum Health at the start of each encounter.'},fury:{speed:.08,description:'Increase attack speed by 8%.'},magic:{spell:.08,description:'Increase Spell Power by 8% and unlock the three elemental paths.'}};
 const STATS={blood:'str',decay:'agi',vitality:'end',aegis:'end',fury:'agi',magic:'int'},LABELS={str:'Strength',agi:'Agility',end:'Endurance',int:'Intellect'};
 const junctionSkills={blood:'bleeding_edge',decay:'toxic_touch',vitality:'renewal',aegis:'barrier_pulse',fury:'quick_hands',magic:'arcane_focus'};
+const outerSkills=[
+ ['blood','open_wound','🩸','Open Wound','First direct hit against a full-health enemy applies Bleed.',1,'bleeding_edge'],
+ ['blood','blood_price','🫀','Blood Price','Consume a third Bleed stack to heal 5% Health. Cooldown 6s.',1,'blood_drinker'],
+ ['fury','relentless','🎯','Relentless Aim','Every fourth attack on the same target deals +10% damage per rank.',5,'quick_hands'],
+ ['fury','follow_through','🏃','Follow Through','Carry a prepared fourth strike when its target dies.',1,'relentless'],
+ ['aegis','brace','🔰','Brace','Reduce incoming elite and boss strikes by 4% per rank.',5,'iron_skin'],
+ ['aegis','stored_impact','🔨','Stored Impact','Return half the damage absorbed by a broken barrier on your next attack.',1,'barrier_pulse'],
+ ['vitality','second_pulse','💚','Second Pulse','Crossing below half Health heals 1% per rank each second for 3s, once per room.',5,'renewal'],
+ ['vitality','deep_reserves','🌱','Deep Reserves','Store the first full-health heal each room, up to 8% Health.',1,'second_breath'],
+ ['magic','spell_echo','✨','Spell Echo','Every third funded cast echoes for 10% damage per rank.',5,'arcane_focus'],
+ ['magic','last_spark','💠','Last Spark','The first cast each room that empties Mana always critically strikes.',1,'mana_spring'],
+ ['decay','incubation','🦠','Incubation','Every third consecutive Rot tick deals 12% more damage per rank.',5,'toxic_touch'],
+ ['decay','spore_mark','🪰','Spore Mark','Changing targets from Rot to a healthy enemy copies one Rot stack on hit. Cooldown 5s.',1,'wasting_curse']
+];
+const outerPairs=[
+ ['red_guillotine','🪓','Red Guillotine','relentless','open_wound','Execute up to three Bleed stacks on your fourth strike. A kill spreads one stack.'],
+ ['turn_tide','⚔️','Turn the Tide','relentless','brace','Defending an elite or boss strike primes a riposte for 3s.'],
+ ['last_bastion','🏰','Last Bastion','stored_impact','second_pulse','Once per expedition survive lethal damage with a barrier for 4s. Recover half its absorbed damage.'],
+ ['lifeweaver','🌙','Lifeweaver','deep_reserves','spell_echo','Overhealing charges a funded cast: +30% damage or restore 8% Health below half.'],
+ ['grave_bloom','🕳️','Grave Bloom','spell_echo','incubation','Echoes on Rot spread infection to two targets or immediately deal a Rot tick in a duel.'],
+ ['septic_wound','🦂','Septic Wound','incubation','open_wound','Overlapping Rot and Bleed ticks mark an enemy. Strike it to weaken its next attack by 30%.']
+];
+function outerNodes(){
+ const result=[];
+ for(const [family,id,icon,name,description,max,base] of outerSkills){
+  for(let rank=1;rank<=max;rank++)result.push({id:rank===1?id:id+'_rank'+rank,skillKey:id,family,rank,maxRank:max,icon,name,description,requires:rank>1?(rank===2?id:id+'_rank'+(rank-1)):base==='relentless'?base:'passive_'+base});
+ }
+ for(const [id,icon,name,left,right,description] of outerPairs){
+  const prerequisites=[];
+  for(const skill of [left,right]){
+   const family=outerSkills.find(row=>row[1]===skill)[0];let parent=skill;
+   for(let step=1;step<=2;step++){
+    const key=id+'_'+skill+'_'+step;
+    result.push({id:key,family,outerLink:id,side:skill,step,attribute:STATS[family],pathStep:step,requires:parent});parent=key;
+   }
+   prerequisites.push(parent);
+  }
+  result.push({id,advanced:true,icon,name,description,left,right,prerequisites});
+ }
+ return result;
+}
 let cachedCatalog=null,cachedNodes=CORE;
 function nodes(){
  const catalogue=root.WandererV012Buildcraft?.CATALOG;if(!catalogue)return CORE;
@@ -93,7 +134,7 @@ function nodes(){
   }
   for(const [id,side]of [[first,-1],[second,1]]){const n=forks.find(n=>n.id===id);n.legacyRequires=n.requires;n.requires='fork_'+prefix+'_'+stat+'_2';n.forkAnchor=a;n.forkStep=3;n.forkSide=side;}
  }
- cachedNodes=Object.freeze([...CORE,...branches,...forks,{id:"soul_sip",family:"magic",junction:"hex_bolt",requires:"passive_hex_bolt",name:"Soul Sip",icon:"🌀",description:"A funded cast against Rot restores 3 Mana, once every 5 seconds."},{id:"living_ward",family:"aegis",junction:"sanctuary",requires:"passive_sanctuary",name:"Living Ward",icon:"🌿",description:"Below half Health, attacking grants 5% maximum Health as Barrier, once every 8 seconds."}].map(node=>{
+ cachedNodes=Object.freeze([...CORE,...branches,...forks,...outerNodes(),{id:"soul_sip",family:"magic",junction:"hex_bolt",requires:"passive_hex_bolt",name:"Soul Sip",icon:"🌀",description:"A funded cast against Rot restores 3 Mana, once every 5 seconds."},{id:"living_ward",family:"aegis",junction:"sanctuary",requires:"passive_sanctuary",name:"Living Ward",icon:"🌿",description:"Below half Health, attacking grants 5% maximum Health as Barrier, once every 8 seconds."}].map(node=>{
   
   if(!node.attribute)return Object.freeze(node);
   const step=node.pathStep||node.bridgeStep||node.forkStep||1;
@@ -117,7 +158,7 @@ function create(){return {xp:0,nodes:[],treeVersion:8};}
 function earned(v){if(!valid(v))throw Error('Invalid talent progress');return Math.min(cap(v),Math.floor(v.xp/POINT_XP)+(v.starterPoints||0));}
 function award(v,amount){if(!valid(v)||!Number.isSafeInteger(amount)||amount<0)throw Error('Invalid experience award');return {...v,xp:Math.min(Number.MAX_SAFE_INTEGER,v.xp+amount),nodes:[...v.nodes]};}
 function allocate(v,id){if(!valid(v))throw Error('Invalid talent progress');const node=nodes().find(n=>n.id===id);if(!node||node.excludes?.some(id=>v.nodes.includes(id))||v.nodes.includes(id)||v.nodes.length>=earned(v)||requirements(node).some(required=>!v.nodes.includes(required)))return null;return {...v,nodes:[...v.nodes,id]};}
-function reset(v){if(!valid(v))throw Error('Invalid talent progress');return {...v,nodes:[],treeVersion:8,...(cap(v)>MAX_POINTS?{legacyTalentCap:cap(v)}:{})};}
+function reset(v){if(!valid(v))throw Error('Invalid talent progress');return {...v,nodes:[],prepared:null,treeVersion:8,...(cap(v)>MAX_POINTS?{legacyTalentCap:cap(v)}:{})};}
 function path(v,id){if(!valid(v))throw Error('Invalid talent progress');const list=nodes(),route=[],seen=new Set(v.nodes),visiting=new Set();function visit(key){if(seen.has(key))return true;const n=list.find(n=>n.id===key);if(!n||visiting.has(key)||n.excludes?.some(x=>v.nodes.includes(x)))return false;visiting.add(key);for(const required of requirements(n))if(!visit(required))return false;visiting.delete(key);seen.add(key);route.push(key);return true;}return visit(id)?route:null;}
 function attributePoints(v){if(!valid(v))throw Error('Invalid talent progress');const spent=Object.values(v.attributes||{}).reduce((a,b)=>a+b,0);return Math.min(Math.floor(v.xp/POINT_XP),Math.max(MAX_POINTS,spent))-spent;}
 function allocateAttribute(v,key){if(!valid(v))throw Error('Invalid talent progress');if(!ATTRIBUTES.includes(key)||attributePoints(v)<1)return null;return {...v,attributes:{...v.attributes,[key]:(v.attributes?.[key]||0)+1}};}

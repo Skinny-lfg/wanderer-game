@@ -32,6 +32,11 @@ globalThis.WandererActionBar = (() => {
       const talent=labels.find(t=>t.id===id);
       if(talent&&!rows.some(r=>r.label===talent.name))rows.push({label:talent.name,icon:passiveIcon(id),left:0,period:0,count:0});
     }
+    if(build?.runtime.prepared){
+      const id=build.runtime.prepared,ability=globalThis.WandererAutomaticTalents.NODES.find(n=>n.id===id);
+      const hints={red_guillotine:(run.aim||0)+'/3',turn_tide:run.riposteUntil>now?'Riposte ready':'Guard',last_bastion:run.bastionUntil?'Triggered':'Lethal hit',lifeweaver:run.lifeCharge?'Charged':'Overheal',grave_bloom:(run.echoCount||0)+'/3',septic_wound:run.enemy?.septicMark?'Marked':'Rot + Bleed'};
+      if(ability)rows.push({label:ability.name,emoji:ability.icon,hint:hints[id],count:run.outerUses?.[id]||0,left:0,period:0});
+    }
     return [rows[0],...rows.slice(1).sort((a,b)=>a.label.localeCompare(b.label))];
   }
   function draw(host,rows,resolveIcon=name=>'assets/'+name){
@@ -45,7 +50,7 @@ globalThis.WandererActionBar = (() => {
       cell.title=row.label+(row.left>0?' · '+row.left.toFixed(1)+'s remaining':row.period?' · Available when triggered':' · Triggered '+row.count+' times');
       cell.style.setProperty('--cooldown',Math.round(100*Math.min(1,Math.max(0,row.period?row.left/row.period:0)))+'%');
       icon.style.backgroundImage=row.icon?'url("'+resolveIcon(row.icon)+'")':'none';
-      label.textContent=row.label;status.textContent=row.left>0?row.left.toFixed(1):row.period?'Ready':row.count?'×'+row.count:'…';
+      icon.textContent=row.emoji||'';label.textContent=row.label;status.textContent=row.hint|| (row.left>0?row.left.toFixed(1):row.period?'Ready':row.count?'×'+row.count:'…');
       bar.value=row.period?Math.max(0,1-row.left/row.period):1;
       if(previous[row.label]!==undefined&&row.count!==previous[row.label]&&row.count)cell.dataset.used=String(Date.now());
       cell.classList.toggle('used',Date.now()-Number(cell.dataset.used||0)<380);

@@ -25,6 +25,18 @@ function create(list){
   }list.filter(n=>n.passiveId===id).forEach((n,j)=>positions[n.id]={x:x+j*90,y});});
  
  for(const n of list.filter(n=>n.junction)){const p=positions[n.requires];positions[n.id]={x:p.x,y:p.y+150};}
+ for(const family of Object.keys(ANGLES)){
+  const skills=list.filter(n=>n.family===family&&n.skillKey&&n.rank===1);
+  skills.forEach((n,i)=>{positions[n.id]=local(family,i===0?-260:260,2950);});
+ }
+ for(const n of list.filter(n=>n.advanced)){
+  const a=positions[n.left],b=positions[n.right],angle=Math.atan2((a.y+b.y)/2-center.y,(a.x+b.x)/2-center.x);
+  const tip=positions[n.id]=point(angle,3700);
+  for(const link of list.filter(x=>x.outerLink===n.id)){
+   const origin=positions[link.side],t=link.step/3;
+   positions[link.id]={x:origin.x+(tip.x-origin.x)*t,y:origin.y+(tip.y-origin.y)*t};
+  }
+ }
  const obstacles=list.map(n=>({...positions[n.id],radius:n.affinity?86:39}));
  const cache=new Map();
  function waypoints(node,required){
