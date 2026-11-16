@@ -13,6 +13,13 @@ for(const n of graph){let a=angle(n.family),r=0;
  else if(n.kind==='element'||n.id.startsWith('element_path_')){a=angle('magic')+({fire:-1,frost:0,lightning:1}[n.element]||0)*.14;r=1230+(n.tier-1)*115+(n.kind==='element'?55:0);}
  positions[n.id]=polar(a,r);
 }
+// Connect each side lane to the centre of its own tier, rather than
+// displaying a crossing shortcut to the centre of the next tier.
+for(const n of graph.filter(n=>n.id.startsWith('focus_branch_'))){
+ const from=positions[n.requires],to=positions['focus_path_'+n.family+'_'+n.tier];
+ if(!from||!to)throw Error('Missing focus connector '+n.id);
+ positions[n.id]={x:from.x+(to.x-from.x)*.53,y:from.y+(to.y-from.y)*.53};
+}
 // The approved ability positions stay unchanged. Fit each new minor-stat gate
 // along its incoming link, shifting it only if another icon would overlap.
 const iconRadius=n=>n.kind==='affinity'?37:n.kind==='mixed'?29:['basic','focused','element'].includes(n.kind)?23:9;
