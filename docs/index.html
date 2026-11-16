@@ -1615,11 +1615,11 @@ function skillRank(node,progress){
 }
 function automaticTalentTree(){
  const system=globalThis.WandererAutomaticTalents,progress=state.automaticTalents||system.create(),points=system.earned(progress)-progress.nodes.length,list=system.NODES.filter(n=>{if(n.rank>1)return false;if(!n.hybridFor)return true;const p=WandererV012Buildcraft.CATALOG.find(p=>p.id===n.hybridFor);return ['blood:fury','aegis:fury','aegis:vitality','magic:vitality','decay:magic','blood:decay'].includes([...p.requires].sort().join(':'));});
- const layout=WandererTalentLayout.create(list),{positions,center,proxies,hybrids,angles,rootAngles,point}=layout,families=WandererV012Buildcraft.FAMILIES;
+ const layout=WandererTalentLayout.create(list),{positions,center,proxies,hybrids,angles,rootAngles,point,axes}=layout,families=WandererV012Buildcraft.FAMILIES;
  const requirements=node=>node.prerequisites||[node.requires].filter(Boolean),rootEntry=new Set(['might','vitality','haste','insight']);
  const line=(a,b,active)=>'<line class="'+(active?'is-owned':'')+'" x1="'+a.x+'" y1="'+a.y+'" x2="'+b.x+'" y2="'+b.y+'"/>';
  const startLines=[...rootEntry].map(id=>line(center,positions[id],progress.nodes.includes(id))).join('');
- const rings='';
+ const rings=axes.map(axis=>{const a=point(axis.angle,820),b=point(axis.angle,3890);return '<line class="talentAxisGuide" x1="'+a.x+'" y1="'+a.y+'" x2="'+b.x+'" y2="'+b.y+'"/>';}).join('');
  const edge=(node,id)=>' data-from="'+id+'" data-to="'+node.id+'" ';
  const lines=rings+startLines+list.map(node=>{const req=node.anyRequires||requirements(node),b=positions[node.id];if(!b)return '';return req.map(id=>{let a=positions[id];if(!a)return '';const active=progress.nodes.includes(id)&&progress.nodes.includes(node.id);const route=layout.waypoints(node,id);return '<path '+edge(node,id)+'class="'+(active?'is-owned':'')+'" d="'+route.map((p,i)=>(i?'L ':'M ')+p.x+' '+p.y).join(' ')+'"/>';}).join('');}).join('');
 
