@@ -16,7 +16,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
    const n=getNode('buy-'+m[1]);n.dataset.buy=m[1];return n;
   });
  };
- const sandbox={Math:math,...(options.now===undefined?{}:{Date:class extends Date{static now(){return options.now;}}}),URLSearchParams,location:{search:'?expeditionPhase1=1'},console,
+ const sandbox={Math:math,...(options.now===undefined?{}:{Date:class extends Date{static now(){return options.now;}}}),URL,URLSearchParams,location:{href:'http://localhost/?expeditionPhase1=1',search:'?expeditionPhase1=1'},history:{replaceState(){}},console,
   document:{body:node(),visibilityState:'visible',getElementById:getNode,querySelector:()=>null,querySelectorAll:queryAll,createElement:node,addEventListener(){}},
   localStorage:options.validationStorage?{getItem:key=>options.validationStorage.get(String(key))??null,setItem:(key,value)=>options.validationStorage.set(String(key),String(value)),removeItem:key=>options.validationStorage.delete(String(key))}:{getItem(){throw Error('Unexpected real save read');},setItem(){throw Error('Unexpected real save write');}},
   // The local preview deliberately persists only to sessionStorage. Keep that
