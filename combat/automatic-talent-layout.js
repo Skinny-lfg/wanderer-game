@@ -169,16 +169,87 @@ function create(list){
   if(!moved)break;
  }
 
- const obstacles=visible.map(n=>({...positions[n.id],radius:n.affinity?86:n.advanced||n.hybridFor&&n.passiveId?62:n.passiveId||n.skillKey?49:39}));
 
-
-
+ // Spatially-indexed routes: every edge goes around unrelated talent circles.
+ const blockers=visible.filter(n=>!outside.includes(n)).map(n=>({id:n.id,...positions[n.id],r:n.affinity?88:n.advanced||n.hybridFor&&n.passiveId?63:n.passiveId||n.skillKey||n.specialisationTier?50:39}));
+ const bucketSize=220,buckets=new Map();
+ const bucketKey=(x,y)=>x+':'+y;
+ for(const b of blockers){
+  for(let x=Math.floor((b.x-b.r-14)/bucketSize);x<=Math.floor((b.x+b.r+14)/bucketSize);x++)
+   for(let y=Math.floor((b.y-b.r-14)/bucketSize);y<=Math.floor((b.y+b.r+14)/bucketSize);y++){
+    const key=bucketKey(x,y);if(!buckets.has(key))buckets.set(key,[]);buckets.get(key).push(b);
+   }
+ }
+ function segmentDistance(p,a,b){
+  const dx=b.x-a.x,dy=b.y-a.y,d=dx*dx+dy*dy;
+  const t=d?Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/d)):0;
+  return Math.hypot(p.x-a.x-t*dx,p.y-a.y-t*dy);
+ }
+ function clear(a,b,source,target){
+  const candidates=new Set();
+  const x0=Math.min(a.x,b.x),x1=Math.max(a.x,b.x),y0=Math.min(a.y,b.y),y1=Math.max(a.y,b.y);
+  for(let x=Math.floor((x0-106)/bucketSize);x<=Math.floor((x1+106)/bucketSize);x++)
+   for(let y=Math.floor((y0-106)/bucketSize);y<=Math.floor((y1+106)/bucketSize);y++){
+    for(const p of buckets.get(bucketKey(x,y))||[])candidates.add(p);
+   }
+  for(const p of candidates){
+   if(p.id===source||p.id===target)continue;
+   if(p.x+p.r+8<x0||p.x-p.r-8>x1||p.y+p.r+8<y0||p.y-p.r-8>y1)continue;
+   if(segmentDistance(p,a,b)<p.r+8)return false;
+  }
+  return true;
+ }
+ const cell=74,cols=Math.ceil(12300/cell),rows=Math.ceil(8600/cell),occupied=new Uint8Array(cols*rows),grid=Array.from({length:cols*rows},(_,i)=>({x:(i%cols+.5)*cell,y:(Math.floor(i/cols)+.5)*cell}));
+ const idx=(x,y)=>Math.max(0,Math.min(rows-1,Math.floor(y/cell)))*cols+Math.max(0,Math.min(cols-1,Math.floor(x/cell)));
+ for(const b of blockers){
+  for(let row=Math.max(0,Math.floor((b.y-b.r-16)/cell));row<=Math.min(rows-1,Math.ceil((b.y+b.r+16)/cell));row++)
+   for(let col=Math.max(0,Math.floor((b.x-b.r-16)/cell));col<=Math.min(cols-1,Math.ceil((b.x+b.r+16)/cell));col++){
+    const i=row*cols+col;if(Math.hypot(grid[i].x-b.x,grid[i].y-b.y)<b.r+12)occupied[i]=1;
+   }
+ }
+ const dirs=[[0,-1],[1,-1],[1,0],[1,1],[0,1],[-1,1],[-1,0],[-1,-1]];
+ const push=(heap,entry)=>{heap.push(entry);for(let i=heap.length-1;i>0;){const parent=(i-1)>>1;if(heap[parent][0]<=entry[0])break;heap[i]=heap[parent];i=parent;heap[i]=entry}};
+ const pop=heap=>{const first=heap[0],tail=heap.pop();if(heap.length){let i=0;while(i*2+1<heap.length){let j=i*2+1,k=j+1;if(k<heap.length&&heap[k][0]<heap[j][0])j=k;if(heap[j][0]>=tail[0])break;heap[i]=heap[j];i=j}heap[i]=tail}return first};
  const cache=new Map();
  function waypoints(node,required){
   const key=required+'>'+node.id;if(cache.has(key))return cache.get(key);
-  const from=positions[required],to=positions[node.id];if(!from||!to)return [];
-  const path=[from,to];
-  cache.set(key,path);return path;
+  const a=positions[required],b=positions[node.id];if(!a||!b)return [];
+  if(clear(a,b,required,node.id)){const result=[a,b];cache.set(key,result);return result}
+  const size=n=>n?.affinity?150:n?.advanced||n?.hybridFor&&n?.passiveId?115:n?.passiveId||n?.skillKey?98:87;
+  function entrances(p,r){
+   const found=new Set();
+   for(let i=0;i<24;i++){
+    const angle=i*Math.PI/12,j=idx(p.x+Math.cos(angle)*(r+40),p.y+Math.sin(angle)*(r+40));
+    if(!occupied[j]&&clear(p,grid[j],required,node.id))found.add(j);
+   }
+   return [...found];
+  }
+  const starts=entrances(a,size(byId.get(required))),goals=entrances(b,size(node));
+  if(!starts.length||!goals.length){const result=[a,b];cache.set(key,result);return result;}
+  const destination=new Set(goals),distance=new Float64Array(grid.length),parent=new Int32Array(grid.length),visited=new Uint8Array(grid.length),heap=[];
+  distance.fill(Infinity);parent.fill(-1);
+  const heuristic=i=>Math.min(...goals.map(j=>Math.hypot(grid[i].x-grid[j].x,grid[i].y-grid[j].y)));
+  for(const i of starts){distance[i]=Math.hypot(grid[i].x-a.x,grid[i].y-a.y);push(heap,[distance[i]+heuristic(i),i])}
+  let reached=-1,iterations=0;
+  while(heap.length&&iterations++<40000){
+   const current=pop(heap)[1];if(visited[current])continue;visited[current]=1;
+   if(destination.has(current)){reached=current;break;}
+   const col=current%cols,row=Math.floor(current/cols);
+   for(const [dx,dy] of dirs){
+    const x=col+dx,y=row+dy;if(x<0||y<0||x>=cols||y>=rows)continue;
+    const next=y*cols+x;if(occupied[next]||visited[next]||!clear(grid[current],grid[next],required,node.id))continue;
+    const cost=distance[current]+(dx&&dy?Math.SQRT2:1)*cell;
+    if(cost<distance[next]){distance[next]=cost;parent[next]=current;push(heap,[cost+heuristic(next),next])}
+   }
+  }
+  if(reached<0){const result=[a,b];cache.set(key,result);return result;}
+  const chain=[];for(let i=reached;i>=0;i=parent[i])chain.push(grid[i]);chain.reverse();
+  const path=[a,...chain,b],result=[a];
+  for(let i=0;i<path.length-1;){
+   let next=path.length-1;while(next>i+1&&!clear(path[i],path[next],required,node.id))next--;
+   result.push(path[next]);i=next;
+  }
+  cache.set(key,result);return result;
  }
  return {positions,proxies,hybrids,center,angles:ANGLES,rootAngles:ROOT_ANGLES,point,waypoints,axes,axisByNode,width:12300,height:8600};
 }
