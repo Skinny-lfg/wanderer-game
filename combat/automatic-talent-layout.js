@@ -16,15 +16,15 @@ function create(list){
  }
  for(const node of list.filter(n=>n.forkAnchor)){const anchor=list.find(n=>n.id===node.forkAnchor);if(!anchor)continue;const t=((anchor.branchLane??1)-1)*450,r=1150+(anchor.branchDepth||0)*600;positions[node.id]=local(node.family,t+(node.forkStep<3?(node.forkStep===1?-105:105):(node.forkSide||0)*190),r+(node.forkStep<3?170:320));}
  const hybrids=list.filter(n=>n.hybridFor&&n.passiveId&&n.rank===1).sort((a,b)=>[a.family,a.hybridOther].sort().join(':').localeCompare([b.family,b.hybridOther].sort().join(':')));
- hybrids.forEach((node,i)=>{const angle=ANGLES[node.family]+Math.atan2(Math.sin(ANGLES[node.hybridOther]-ANGLES[node.family]),Math.cos(ANGLES[node.hybridOther]-ANGLES[node.family]))/2,at=point(angle,1750+(i%2)*650),{x,y}=at,id=node.passiveId;proxies[id]={};for(const [prefix,family] of [['path',node.family],['bridge',node.hybridOther]]){
-   const origin=positions[list.find(n=>n.id===prefix+'_'+id+'_1').requires],side=i%2===0?-1:1;
+ hybrids.forEach((node,i)=>{const pair=hybrids.filter(n=>[n.family,n.hybridOther].sort().join(':')===[node.family,node.hybridOther].sort().join(':')),ordinal=pair.indexOf(node),angle=ANGLES[node.family]+Math.atan2(Math.sin(ANGLES[node.hybridOther]-ANGLES[node.family]),Math.cos(ANGLES[node.hybridOther]-ANGLES[node.family]))/2+(ordinal-(pair.length-1)/2)*.09,at=point(angle,2050),{x,y}=at,id=node.passiveId;proxies[id]={};for(const [prefix,family] of [['path',node.family],['bridge',node.hybridOther]]){
+   const origin=positions[list.find(n=>n.id===prefix+'_'+id+'_1').requires],side=prefix==='path'?-1:1;
    for(const [step,fraction] of [[1,.36],[2,.72]]){
     const dx=x-origin.x,dy=y-origin.y,length=Math.hypot(dx,dy);
-    positions[prefix+'_'+id+'_'+step]={x:origin.x+dx*fraction-side*dy*75/length,y:origin.y+dy*fraction+side*dx*75/length};
+    positions[prefix+'_'+id+'_'+step]={x:origin.x+dx*fraction-side*dy*(90+ordinal*45)/length,y:origin.y+dy*fraction+side*dx*(90+ordinal*45)/length};
    }
   }list.filter(n=>n.passiveId===id).forEach((n,j)=>positions[n.id]={x:x+j*90,y});});
  
- for(const n of list.filter(n=>n.junction)){const p=positions[n.requires];positions[n.id]={x:p.x,y:p.y+150};}
+ for(const n of list.filter(n=>n.junction)){const p=positions[n.requires];positions[n.id]={x:p.x+(p.x-center.x)*.12,y:p.y+(p.y-center.y)*.12};}
  for(const family of Object.keys(ANGLES)){
   const skills=list.filter(n=>n.family===family&&n.skillKey&&n.rank===1);
   skills.forEach((n,i)=>{positions[n.id]=local(family,i===0?-260:260,2950);});
