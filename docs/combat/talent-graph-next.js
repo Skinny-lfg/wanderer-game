@@ -58,14 +58,22 @@ function createGraph(catalog,legacy=[]){
   if(target.anyRequires?.length)changes.anyRequires=target.anyRequires.map(extend);
   rewired.set(target.id,Object.freeze({...target,...changes}));
  }
- // Add the tier-to-tier lateral diagonals drawn in red. Keep the existing
- // radial basic path as an alternative, rather than deleting a legitimate edge.
- for(const family of FAMILIES)for(const lane of [0,1])for(const tier of [2,3]){
-  const id='basic_path_'+family+'_'+lane+'_'+tier;
-  const node=nodes.find(n=>n.id===id);
-  const previous='focus_branch_'+family+'_'+lane+'_'+(tier-1);
-  if(!node||!nodes.some(n=>n.id===previous))throw Error('Missing red connector '+id);
-  rewired.set(id,Object.freeze({...node,requires:null,anyRequires:[node.requires,previous]}));
+ // Follow the marked RED diagonals through the side paths. These replace
+ // BLUE shortcuts that skipped small nodes (not all diagonals globally).
+ for(const family of FAMILIES)for(const lane of [0,1])for(let tier=1;tier<=3;tier++){
+  const branch='focus_branch_'+family+'_'+lane+'_'+tier;
+  const basicId=BASICS[family][lane*3+tier-1];
+  const entry='entry_'+basicId+'_0_1';
+  const branchNode=nodes.find(n=>n.id===branch);
+  if(!branchNode||!nodes.some(n=>n.id===entry))throw Error('Missing side entry '+branch);
+  rewired.set(branch,Object.freeze({...branchNode,requires:entry}));
+  if(tier>1){
+   const id='basic_path_'+family+'_'+lane+'_'+tier;
+   const current=nodes.find(n=>n.id===id);
+   const predecessor='focus_branch_'+family+'_'+lane+'_'+(tier-1);
+   if(!current)throw Error('Missing radial lane '+id);
+   rewired.set(id,Object.freeze({...current,requires:predecessor}));
+  }
  }
  const connected=Object.freeze(nodes.map(n=>rewired.get(n.id)||n));
  const ids=new Set(connected.map(n=>n.id));for(const n of connected)for(const id of [...(n.requires?[n.requires]:[]),...(n.prerequisites||[]),...(n.anyRequires||[])])if(!ids.has(id))throw Error('Missing prerequisite '+id);
