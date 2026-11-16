@@ -13,13 +13,6 @@ for(const n of graph){let a=angle(n.family),r=0;
  else if(n.kind==='element'||n.id.startsWith('element_path_')){a=angle('magic')+({fire:-1,frost:0,lightning:1}[n.element]||0)*.14;r=1230+(n.tier-1)*115+(n.kind==='element'?55:0);}
  positions[n.id]=polar(a,r);
 }
-// Connect each side lane to the centre of its own tier, rather than
-// displaying a crossing shortcut to the centre of the next tier.
-for(const n of graph.filter(n=>n.id.startsWith('focus_branch_'))){
- const from=positions[n.requires],to=positions['focus_path_'+n.family+'_'+n.tier];
- if(!from||!to)throw Error('Missing focus connector '+n.id);
- positions[n.id]={x:from.x+(to.x-from.x)*.53,y:from.y+(to.y-from.y)*.53};
-}
 // The approved ability positions stay unchanged. Fit each new minor-stat gate
 // along its incoming link, shifting it only if another icon would overlap.
 const iconRadius=n=>n.kind==='affinity'?37:n.kind==='mixed'?29:['basic','focused','element'].includes(n.kind)?23:9;
@@ -28,8 +21,7 @@ for(const n of graph.filter(n=>n.approachOf)){
  const from=positions[n.approachFrom];
  // Focused side entries belong on the short horizontal approach to their tier,
  // not on the old diagonal that aimed directly at the skill icon.
- const sideEntry=n.approachIndex>0&&byId.get(n.approachOf)?.kind==='focused';
- const to=sideEntry?positions['focus_path_'+n.family+'_'+n.tier]:positions[n.approachOf];
+ const to=positions[n.approachOf];
  if(!from||!to)throw Error('Missing stat-node connection '+n.id);
  const dx=to.x-from.x,dy=to.y-from.y,length=Math.hypot(dx,dy)||1;
  const normal={x:-dy/length,y:dx/length};
@@ -65,32 +57,11 @@ function mixedCorridorRoute(node,dependency){
 // Focused nodes accept THREE alternative paid approaches. Draw them converging
 // at an unpurchasable junction AFTER the three entry stats, so the visual
 // topology matches OR prerequisites without charging for the central branch.
-function focusedJunction(node){
- const middle=positions['entry_'+node.id+'_0_1'],end=positions[node.id];
- if(!middle||!end)throw Error('Missing focused entry '+node.id);
- return {x:middle.x+(end.x-middle.x)*.5,y:middle.y+(end.y-middle.y)*.5};
-}
-function focusedMergeRoute(node,dep){
- const start=positions[dep],end=focusedJunction(node);
- if(!start)throw Error('Missing focused approach '+dep);
- if(dep==='entry_'+node.id+'_0_1')return [start,end];
- const a=angle(node.family),axis={x:Math.cos(a),y:Math.sin(a)};
- const forward=(end.x-start.x)*axis.x+(end.y-start.y)*axis.y;
- return [start,{x:start.x+axis.x*forward,y:start.y+axis.y*forward},end];
-}
+// Diagonal connections are intentional. Only the cross-TIER shortcuts were
+// removed from the graph; all three paid Focused routes stay visible.
 for(const n of graph){
  const p=positions[n.id];
  const deps=[...new Set([n.requires,...(n.prerequisites||[]),...(n.anyRequires||[])].filter(Boolean))];
- if(n.kind==='focused'){
-  for(const dep of deps){
-   const route=focusedMergeRoute(n,dep);
-   if(route.length===2)links.append(el('line',{class:'focused-merge',x1:route[0].x,y1:route[0].y,x2:route[1].x,y2:route[1].y}));
-   else links.append(el('polyline',{class:'focused-merge',points:route.map(v=>v.x+','+v.y).join(' '),fill:'none'}));
-  }
-  const join=focusedJunction(n);
-  links.append(el('line',{class:'focused-trunk',x1:join.x,y1:join.y,x2:p.x,y2:p.y}));
-  continue;
- }
  for(const dep of deps){
   const route=mixedCorridorRoute(n,dep);
   if(route)links.append(el('polyline',{class:'mixed-corridor',points:route.map(v=>v.x+','+v.y).join(' '),fill:'none'}));
