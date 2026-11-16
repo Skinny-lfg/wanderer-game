@@ -13,6 +13,31 @@ for(const n of graph){let a=angle(n.family),r=0;
  else if(n.kind==='element'||n.id.startsWith('element_path_')){a=angle('magic')+({fire:-1,frost:0,lightning:1}[n.element]||0)*.14;r=1230+(n.tier-1)*115+(n.kind==='element'?55:0);}
  positions[n.id]=polar(a,r);
 }
+// The approved ability positions stay unchanged. Fit each new minor-stat gate
+// along its incoming link, shifting it only if another icon would overlap.
+const iconRadius=n=>n.kind==='affinity'?37:n.kind==='mixed'?29:['basic','focused','element'].includes(n.kind)?23:9;
+const occupied=graph.filter(n=>!n.approachOf).map(n=>({id:n.id,x:positions[n.id].x,y:positions[n.id].y,r:iconRadius(n)}));
+for(const n of graph.filter(n=>n.approachOf)){
+ const from=positions[n.approachFrom],to=positions[n.approachOf];
+ if(!from||!to)throw Error('Missing stat-node connection '+n.id);
+ const dx=to.x-from.x,dy=to.y-from.y,length=Math.hypot(dx,dy)||1;
+ const normal={x:-dy/length,y:dx/length};
+ let best=null;
+ for(const t of [.48,.34,.62,.24,.74,.85,.15]){
+  for(const offset of [0,14,-14,22,-22,30,-30,40,-40,54,-54,72,-72,96,-96]){
+   const x=from.x+dx*t+normal.x*offset,y=from.y+dy*t+normal.y*offset;
+   let penalty=0;
+   for(const p of occupied){
+    const clearance=Math.hypot(p.x-x,p.y-y)-p.r-9-5;
+    if(clearance<0)penalty+=10000+1000*clearance*clearance;
+   }
+   const score=penalty+Math.abs(offset)*2+Math.abs(t-.48)*70;
+   if(!best||score<best.score)best={x,y,score};
+  }
+ }
+ positions[n.id]={x:best.x,y:best.y};
+ occupied.push({id:n.id,x:best.x,y:best.y,r:9});
+}
 const el=(tag,attrs)=>{const e=document.createElementNS(ns,tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);return e};
 for(const n of graph){const p=positions[n.id];for(const dep of [...new Set([n.requires,...(n.prerequisites||[]),...(n.anyRequires||[])].filter(Boolean))]){const q=positions[dep];links.append(el('line',{x1:q.x,y1:q.y,x2:p.x,y2:p.y}));}}
 const core=el('circle',{cx:0,cy:0,r:95,fill:'#171418',stroke:'#b39568','stroke-width':3});links.append(core);for(const f of families){const p=positions['root_'+f];links.prepend(el('line',{x1:Math.cos(angle(f))*95,y1:Math.sin(angle(f))*95,x2:p.x,y2:p.y}));}
