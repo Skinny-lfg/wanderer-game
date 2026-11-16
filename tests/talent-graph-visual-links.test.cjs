@@ -10,7 +10,7 @@ const source=fs.readFileSync(path.join(__dirname,'../preview/talent-rebuild/prot
 const split=source.indexOf('const el='),routeStart=source.indexOf('function mixedCorridorRoute('),routeEnd=source.indexOf('\nfor(const n of graph){',routeStart);
 assert(split>0&&routeStart>split&&routeEnd>routeStart,'Expected prototype geometry');
 const geometry=source.slice(0,split)+'\n'+source.slice(routeStart,routeEnd);
-const {graph,positions,mixedCorridorRoute,focusedJunction,focusedMergeRoute}=new Function('WandererTalentGraph','WandererV012Buildcraft','WandererAutomaticTalents','document',geometry+';return {graph,positions,mixedCorridorRoute};')(WandererTalentGraph,WandererV012Buildcraft,WandererAutomaticTalents,{querySelector:()=>null});
+const {graph,positions,mixedCorridorRoute,focusedJunction,focusedMergeRoute}=new Function('WandererTalentGraph','WandererV012Buildcraft','WandererAutomaticTalents','document',geometry+';return {graph,positions,mixedCorridorRoute,focusedJunction,focusedMergeRoute};')(WandererTalentGraph,WandererV012Buildcraft,WandererAutomaticTalents,{querySelector:()=>null});
 const get=id=>graph.find(n=>n.id===id);
 const radius=n=>n.kind==='affinity'?37:n.kind==='mixed'?29:['basic','focused','element'].includes(n.kind)?23:9;
 const distance=(p,a,b)=>{const dx=b.x-a.x,dy=b.y-a.y,d=dx*dx+dy*dy,t=d?Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/d)):0;return Math.hypot(p.x-a.x-t*dx,p.y-a.y-t*dy)};
