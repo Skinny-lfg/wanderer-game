@@ -1,87 +1,100 @@
 'use strict';
-const {test}=require('node:test'),assert=require('node:assert/strict');
-const fs=require('node:fs'),path=require('node:path');
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
 require('../combat/v012-buildcraft.js');
 require('../combat/automatic-talents.js');
 require('../combat/talent-graph-next.js');
 
-// Evaluate only the geometry portion of the actual prototype; no browser DOM required.
+// Geometry is evaluated from the same source that renders the preview.
 const source=fs.readFileSync(path.join(__dirname,'../preview/talent-rebuild/prototype.js'),'utf8');
-const split=source.indexOf('const el='),routeStart=source.indexOf('function mixedCorridorRoute('),routeEnd=source.indexOf('\nfor(const n of graph){',routeStart);
-assert(split>0&&routeStart>split&&routeEnd>routeStart,'Expected prototype geometry');
-const geometry=source.slice(0,split)+'\n'+source.slice(routeStart,routeEnd);
-const {graph,positions,mixedCorridorRoute,focusedJunction,focusedMergeRoute}=new Function('WandererTalentGraph','WandererV012Buildcraft','WandererAutomaticTalents','document',geometry+';return {graph,positions,mixedCorridorRoute,focusedJunction,focusedMergeRoute};')(WandererTalentGraph,WandererV012Buildcraft,WandererAutomaticTalents,{querySelector:()=>null});
+const split=source.indexOf('const el=');
+const routing=source.indexOf('function mixedCorridorRoute(');
+const render=source.indexOf('\nfor(const n of graph){',routing);
+assert(split>0&&routing>split&&render>routing,'Expected preview geometry and link renderer');
+const geometry=source.slice(0,split)+'\n'+source.slice(routing,render);
+const {graph,positions,mixedCorridorRoute,avoidIcons,clearSegment}=new Function(
+ 'WandererTalentGraph','WandererV012Buildcraft','WandererAutomaticTalents','document',
+ geometry+';return {graph,positions,mixedCorridorRoute,avoidIcons,clearSegment};'
+)(WandererTalentGraph,WandererV012Buildcraft,WandererAutomaticTalents,{querySelector:()=>null});
 const get=id=>graph.find(n=>n.id===id);
 const radius=n=>n.kind==='affinity'?37:n.kind==='mixed'?29:['basic','focused','element'].includes(n.kind)?23:9;
-const distance=(p,a,b)=>{const dx=b.x-a.x,dy=b.y-a.y,d=dx*dx+dy*dy,t=d?Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/d)):0;return Math.hypot(p.x-a.x-t*dx,p.y-a.y-t*dy)};
-const intersects=(a,b,c,d)=>{const o=(p,q,r)=>(q.x-p.x)*(r.y-p.y)-(q.y-p.y)*(r.x-p.x);return o(a,b,c)*o(a,b,d)<0&&o(c,d,a)*o(c,d,b)<0};
+const gap=(p,a,b)=>{const dx=b.x-a.x,dy=b.y-a.y,d=dx*dx+dy*dy,t=d?Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/d)):0;return Math.hypot(p.x-a.x-t*dx,p.y-a.y-t*dy)};
 
-test('all 18 Focused talents retain their three original paid stat paths',()=>{
+test('all 375 nodes retain a position and no talent icons overlap',()=>{
  assert.equal(graph.length,375);
- assert.equal(graph.filter(n=>n.approachOf).length,138);
- for(const family of WandererTalentGraph.FAMILIES)for(let tier=1;tier<=3;tier++){
-  const ability=get(WandererTalentGraph.FOCUSED[family][tier-1]);
-  const middle=get('focus_path_'+family+'_'+tier);
-  const prev=tier===1?'affinity_'+family:'focus_path_'+family+'_'+(tier-1);
-  assert.equal(middle.requires,prev);
-  const original=[middle.id,'focus_branch_'+family+'_0_'+tier,'focus_branch_'+family+'_1_'+tier];
-  assert.deepEqual(ability.anyRequires,original.map((_,i)=>'entry_'+ability.id+'_'+i+'_1'));
-  for(const [i,source] of original.entries()){
-   const entry=get('entry_'+ability.id+'_'+i+'_1');
-   assert.equal(entry.requires,source);
-   if(i>0){
-    const side=get(source),first=positions[side.id],centre=positions[middle.id],actual=positions[entry.id];
-    assert.equal(side.tier,tier);
-    assert(distance(actual,first,centre)<1e-6,entry.id+' must lie on its own-tier branch');
-   }
+ for(let i=0;i<graph.length;i++){
+  const a=graph[i],p=positions[a.id];
+  assert(p&&Number.isFinite(p.x)&&Number.isFinite(p.y),a.id);
+  for(let j=i+1;j<graph.length;j++){
+   const b=graph[j],q=positions[b.id];
+   assert(Math.hypot(p.x-q.x,p.y-q.y)>=radius(a)+radius(b)+5,a.id+' intersects '+b.id);
   }
  }
 });
 
-test('54 Focused prerequisite routes converge after the paid stat entries without hitting nodes',()=>{
- let count=0;
- for(const ability of graph.filter(n=>n.kind==='focused')){
-  const merge=focusedJunction(ability);
-  for(const [i,id] of ability.anyRequires.entries()){
-   const points=focusedMergeRoute(ability,id);
-   assert.equal(points.length,i===0?2:3,id);
-   assert.deepEqual(points[0],positions[id]);
-   assert.deepEqual(points[points.length-1],merge);
-   for(let k=1;k<points.length;k++)for(const other of graph){
-    if(other.id===id||other.id===ability.id)continue;
-    assert(distance(positions[other.id],points[k-1],points[k])>=radius(other)+5,
-     id+' route crosses '+other.id);
-   }
-   count++;
+test('the 84 intended red links are real diagonal prerequisites, not decorative lines',()=>{
+ let red=0;
+ for(const family of WandererTalentGraph.FAMILIES)for(const lane of [0,1])for(let tier=1;tier<=3;tier++){
+  const basic=WandererTalentGraph.BASICS[family][lane*3+tier-1];
+  const branch=get('focus_branch_'+family+'_'+lane+'_'+tier);
+  assert.equal(branch.requires,'entry_'+basic+'_0_1');
+  assert.equal(avoidIcons(branch,branch.requires).length,2,'Keep entry-to-side diagonal '+branch.id);
+  red++;
+  if(tier>1){
+   const path=get('basic_path_'+family+'_'+lane+'_'+tier);
+   assert.equal(path.requires,'focus_branch_'+family+'_'+lane+'_'+(tier-1));
+   assert.equal(avoidIcons(path,path.requires).length,2,'Keep side-to-next-tier diagonal '+path.id);
+   red++;
   }
  }
- assert.equal(count,54);
-});
-test('talent circles remain separate after rerouting the links',()=>{
- for(let i=0;i<graph.length;i++)for(let j=i+1;j<graph.length;j++){
-  const a=graph[i],b=graph[j],p=positions[a.id],q=positions[b.id];
-  assert(p&&q,a.id+' / '+b.id+' need coordinates');
-  assert(Math.hypot(p.x-q.x,p.y-q.y)>=radius(a)+radius(b)+5,a.id+' overlaps '+b.id);
+ for(const family of WandererTalentGraph.FAMILIES)for(let tier=2;tier<=3;tier++){
+  const center=get('focus_path_'+family+'_'+tier);
+  for(const lane of [0,1]){
+   const side='focus_branch_'+family+'_'+lane+'_'+tier;
+   assert(center.anyRequires.includes(side),'Keep same-tier diagonal '+side);
+   assert.equal(avoidIcons(center,side).length,2,'Preserve the diagonal from '+side);
+   red++;
+  }
  }
+ assert.equal(red,84);
 });
 
-test('12 routed mixed-family entry connectors avoid talents and each other',()=>{
- const routes=[];
- for(const node of graph.filter(n=>n.id.startsWith('mixed_path_')&&n.tier===1)){
-  const dependency='affinity_'+node.family;
-  if(!node.anyRequires?.includes(dependency))continue;
-  const route=mixedCorridorRoute(node,dependency);assert.equal(route.length,4,node.id);
-  assert.deepEqual(route[0],positions[dependency]);assert.deepEqual(route[3],positions[node.id]);
-  for(let i=1;i<route.length;i++)for(const other of graph){
-   if(other.id===node.id||other.id===dependency)continue;
-   assert(distance(positions[other.id],route[i-1],route[i])>=radius(other)+5,node.id+' crosses '+other.id);
+test('all 54 original side/centre entry diagonals into Focused skills are retained',()=>{
+ let total=0;
+ for(const n of graph.filter(n=>n.kind==='focused')){
+  assert.equal(n.anyRequires.length,3,n.id);
+  for(const dep of n.anyRequires){
+   assert.equal(get(dep).kind,'stat');
+   assert.equal(avoidIcons(n,dep).length,2,'Do not erase the diagonal '+dep+' -> '+n.id);
+   total++;
   }
-  routes.push({id:node.id,points:route});
  }
- assert.equal(routes.length,12);
- for(let i=0;i<routes.length;i++)for(let j=i+1;j<routes.length;j++){
-  const a=routes[i],b=routes[j];
-  for(let k=1;k<a.points.length;k++)for(let m=1;m<b.points.length;m++)
-   assert(!intersects(a.points[k-1],a.points[k],b.points[m-1],b.points[m]),a.id+' crosses '+b.id);
+ assert.equal(total,54);
+});
+
+test('all existing prerequisite links avoid other talent icons without removing diagonals',()=>{
+ let checked=0,detours=0,corridors=0;
+ for(const n of graph){
+  const deps=[...new Set([n.requires,...(n.prerequisites||[]),...(n.anyRequires||[])].filter(Boolean))];
+  for(const dep of deps){
+   const corridor=mixedCorridorRoute(n,dep),points=corridor||avoidIcons(n,dep);
+   if(corridor)corridors++;
+   else if(points.length>2)detours++;
+   assert(points.length>=2,n.id+' missing rendered path');
+   assert.deepEqual(points[0],positions[dep]);
+   assert.deepEqual(points[points.length-1],positions[n.id]);
+   for(let i=1;i<points.length;i++){
+    if(corridor){
+     for(const o of graph)if(o.id!==dep&&o.id!==n.id)
+      assert(gap(positions[o.id],points[i-1],points[i])>=radius(o)+5,n.id+' corridor crosses '+o.id);
+    } else assert(clearSegment(points[i-1],points[i],dep,n.id),dep+' -> '+n.id+' crosses an icon');
+   }
+   checked++;
+  }
  }
+ assert.equal(corridors,12);
+ assert(checked>480);
+ assert(detours>0&&detours<60,'Only necessary icon-crossing links should be detoured');
 });
