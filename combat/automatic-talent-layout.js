@@ -77,36 +77,88 @@ function create(list){
  for(const n of shown.filter(n=>n.junction)){const base=positions[n.requires];if(base)positions[n.id]={x:base.x+90,y:base.y+90}}
  for(const n of list.filter(n=>n.rank>1)){const base=positions[n.rank===2?(n.passiveId?'passive_'+n.passiveId:n.skillKey):n.id.replace(/_rank\d+$/,'')];if(base)positions[n.id]={x:base.x+n.rank*80,y:base.y+100}}
 
- // Match the approved prototype: central ring, six affinity spines and three mixed tiers.
- const baseSkills={blood:['bleeding_edge','deep_cuts','blood_drinker','sanguine_fury','executioner','open_wound'],fury:['quick_hands','precision','double_strike','adrenaline','brutal_crit','relentless'],aegis:['iron_skin','fortified','guarded_block','barrier_pulse','retaliation','brace'],vitality:['strong_heart','renewal','second_breath','life_bloom','last_stand','second_pulse'],magic:['arcane_focus','mana_spring','efficient_cast','arcane_echo','elemental_force','spell_echo'],decay:['toxic_touch','virulent_rot','wasting_curse','wither','blight','incubation']};
- const core=list.filter(n=>!n.family&&!n.advanced&&(n.rank===undefined||n.rank===1));
- core.forEach((n,i)=>{positions[n.id]=point(-Math.PI/2+i*Math.PI*2/core.length,340)});
- for(const family of Object.keys(ANGLES)){
-  const angle=ANGLES[family];positions['affinity_'+family]=point(angle,600);
-  baseSkills[family].forEach((id,i)=>{const key=byId.has('passive_'+id)?'passive_'+id:id,side=i<3?-1:1,r=950+(i%3)*250;positions[key]=point(angle+side*Math.PI/12,r);});
-  for(const n of list.filter(n=>n.family===family&&n.specialisationTier)){
-   const lane=n.elementSpecialisation?({fire:-1,frost:0,lightning:1}[n.elementSpecialisation]*.12):0;
-   positions[n.id]=point(angle+lane,1950+n.specialisationTier*195);
-  }
+
+ // Exactly 24 radial axes: four 15-degree-spaced spokes in each 60-degree affinity sector.
+ // Positions are visual only; allocation, prerequisites, XP and saves are never modified here.
+ const familyOrder=Object.keys(ANGLES),axisOffsets=[-3,-1,1,3].map(n=>n*Math.PI/24),axisByNode={};
+ const axes=familyOrder.flatMap(f=>axisOffsets.map((offset,lane)=>({family:f,lane,angle:ANGLES[f]+offset})));
+ const visibleNodes=list.filter(n=>n.rank===undefined||n.rank===1),hiddenRanks=list.filter(n=>n.rank>1);
+ const levels=new Map();
+ function depth(node,stack=new Set()){
+  if(!node||stack.has(node.id))return 0;
+  if(levels.has(node.id))return levels.get(node.id);
+  const next=new Set(stack);next.add(node.id);
+  const keys=[...(node.prerequisites||[]),...(node.anyRequires||[]),...(node.requires?[node.requires]:[])];
+  const value=1+Math.max(0,...keys.map(id=>depth(byId.get(id),next)));
+  levels.set(node.id,value);return value;
  }
- for(const family of Object.keys(ANGLES)){
-  const angle=ANGLES[family],ordinary=shown.filter(n=>n.family===family&&!n.hybridFor&&!n.outerLink&&!n.affinity&&!n.specialisationTier&&!n.junction);
-  const groups=[[],[]];
-  ordinary.forEach((n,i)=>{let side=n.branchLane===0?0:n.branchLane===2?1:i%2;groups[side].push(n)});
-  groups.forEach((group,side)=>group.forEach((n,i)=>{const axis=angle+(side?1:-1)*Math.PI/12,r=900+Math.floor(i/3)*150,offset=((i%3)-1)*65;positions[n.id]={x:center.x+Math.cos(axis)*r-Math.sin(axis)*offset,y:center.y+Math.sin(axis)*r+Math.cos(axis)*offset}}));
-  baseSkills[family].forEach((id,i)=>{const key=byId.has('passive_'+id)?'passive_'+id:id,side=i<3?-1:1;positions[key]=point(angle+side*Math.PI/12,950+(i%3)*250)});
+ // Keep the four foundation groups close to the centre.
+ for(const id of ['might','vitality','haste','insight']){
+  const angle=ROOT_ANGLES[id];
+  const ancestry=(key,seen=new Set())=>{
+   const n=byId.get(key);if(!n||!n.requires||seen.has(key))return false;
+   if(n.requires===id)return true;seen.add(key);return ancestry(n.requires,seen);
+  };
+  const members=visibleNodes.filter(n=>!n.family&&!n.advanced&&n.id!==id&&ancestry(n.id)).sort((a,b)=>depth(a)-depth(b)||a.id.localeCompare(b.id));
+  positions[id]=point(angle,200);
+  members.forEach((n,i)=>positions[n.id]=point(angle+((i%3)-1)*.18,350+Math.floor(i/3)*140));
  }
- for(const [first,second] of corridors){
-  const delta=Math.atan2(Math.sin(ANGLES[second]-ANGLES[first]),Math.cos(ANGLES[second]-ANGLES[first])),a=ANGLES[first]+delta/2;
-  const group=hybrids.filter(n=>[n.family,n.hybridOther].includes(first)&&[n.family,n.hybridOther].includes(second)).sort((x,y)=>x.id.localeCompare(y.id));
-  group.forEach((n,i)=>{const r=1150+i*420;positions[n.id]=point(a,r);for(const prefix of ['path','bridge'])for(let step=1;step<=2;step++){const id=prefix+'_'+n.passiveId+'_'+step,node=byId.get(id);if(node)positions[id]=point(a+(node.family===first?-1:1)*(.30-step*.10),r-100*(2-step))}for(const family of [first,second])for(let step=1;step<=3;step++){const id='alternate_'+n.passiveId+'_'+family+'_'+step;if(byId.has(id))positions[id]=point(a+(family===first?-1:1)*(.42-step*.06),r-420+step*105)}});
-  const adv=list.find(n=>n.advanced&&[n.left,n.right].every(id=>[first,second].includes(byId.get(id)?.family)));if(adv)positions[adv.id]=point(a,2100);
+ for(const f of familyOrder)positions['affinity_'+f]=point(ANGLES[f],760);
+ const groupKey=n=>{
+  if(n.hybridFor)return 'hybrid:'+n.hybridFor;
+  if(n.outerLink)return 'outer:'+n.outerLink;
+  if(n.pathFor)return 'route:'+Math.max(0,byId.get('passive_'+n.pathFor)?.branchLane??n.branchLane??0);
+  if(n.passiveId)return 'route:'+Math.max(0,n.branchLane??0);
+  if(n.forkAnchor)return 'fork:'+n.forkAnchor;
+  if(n.specialisationTier)return 'special:'+(n.elementSpecialisation||n.specialisationTier);
+  if(n.elementBranch)return 'element:'+n.elementBranch;
+  if(n.skillKey)return 'skill:'+n.skillKey;
+  if(n.branchLane!==undefined&&n.branchLane>=0)return 'route:'+n.branchLane;
+  return 'chain:'+(n.requires||n.id);
+ };
+ const preference=key=>key.startsWith('route:')?Math.min(3,Number(key.slice(6))||0):key.includes('fire')?0:key.includes('frost')?1:key.includes('lightning')?2:3;
+ const weight=key=>key.startsWith('route:')?0:key.startsWith('element:')?1:key.startsWith('skill:')?2:key.startsWith('fork:')?3:key.startsWith('special:')?4:key.startsWith('hybrid:')?5:6;
+ for(const family of familyOrder){
+  const groups=new Map();
+  visibleNodes.filter(n=>n.family===family&&!n.affinity&&!n.advanced&&!(n.hybridFor&&n.passiveId)).forEach(n=>{
+   const key=groupKey(n);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(n);
+  });
+  const lanes=[[],[],[],[]],loads=[0,0,0,0];
+  [...groups].sort((a,b)=>b[1].length-a[1].length||a[0].localeCompare(b[0])).forEach(([key,nodes])=>{
+   const pref=preference(key),lane=[0,1,2,3].sort((a,b)=>(loads[a]+Math.abs(a-pref)*.25)-(loads[b]+Math.abs(b-pref)*.25)||a-b)[0];
+   nodes.sort((a,b)=>depth(a)-depth(b)||a.id.localeCompare(b.id));
+   lanes[lane].push({key,nodes});loads[lane]+=nodes.length;
+  });
+  lanes.forEach((groups,lane)=>{
+   groups.sort((a,b)=>weight(a.key)-weight(b.key)||a.key.localeCompare(b.key));
+   groups.flatMap(g=>g.nodes).forEach((n,i)=>{
+    positions[n.id]=point(ANGLES[family]+axisOffsets[lane],1020+i*123);
+    axisByNode[n.id]={family,lane};
+   });
+  });
  }
+ // Hybrid abilities use the six inter-affinity corridors, without generating a new spoke.
+ const outside=[];
+ for(const n of visibleNodes.filter(n=>n.hybridFor&&n.passiveId)){
+  const key=[n.family,n.hybridOther].sort().join(':');
+  const pair=corridors.find(p=>p.slice().sort().join(':')===key);
+  if(!pair){outside.push(n);continue}
+  const peers=visibleNodes.filter(x=>x.hybridFor&&x.passiveId&&[x.family,x.hybridOther].sort().join(':')===key).sort((a,b)=>a.id.localeCompare(b.id));
+  positions[n.id]=point(ANGLES[pair[0]]+Math.PI/6,1460+peers.indexOf(n)*420);
+ }
+ visibleNodes.filter(n=>n.advanced).forEach((n,i)=>{
+  const f1=byId.get(n.left)?.family,f2=byId.get(n.right)?.family;
+  const pair=corridors.find(p=>p.slice().sort().join(':')===[f1,f2].sort().join(':'));
+  positions[n.id]=point(pair?ANGLES[pair[0]]+Math.PI/6:-Math.PI/2+i*Math.PI/3,3500);
+ });
+ // These are not drawn on the playable preview. Reserve coordinates for integrity checks.
+ [...outside,...hiddenRanks].forEach((n,i)=>{positions[n.id]={x:9000+(i%16)*155,y:500+Math.floor(i/16)*155}});
+ visibleNodes.filter(n=>!positions[n.id]).forEach((n,i)=>{positions[n.id]={x:9000+(i%16)*155,y:4100+Math.floor(i/16)*155}});
  const visible=list.filter(n=>n.rank===undefined||n.rank===1).filter(n=>positions[n.id]);
  // Resolve collisions while keeping prominent affinity and mixed nodes fixed.
  const radius=n=>n.affinity?82:n.advanced||n.hybridFor&&n.passiveId?58:n.passiveId||n.skillKey||n.specialisationTier?48:32;
  const fixed=n=>!!n.affinity||!!n.advanced||!!(n.hybridFor&&n.passiveId);
- for(let pass=0;pass<250;pass++){
+ for(let pass=0;pass<8;pass++){
   let moved=false;
   for(let i=0;i<visible.length;i++)for(let j=i+1;j<visible.length;j++){
    const a=visible[i],b=visible[j],pa=positions[a.id],pb=positions[b.id],dx=pb.x-pa.x,dy=pb.y-pa.y,dist=Math.hypot(dx,dy),gap=radius(a)+radius(b)+12-dist;
@@ -117,18 +169,89 @@ function create(list){
   if(!moved)break;
  }
 
- const obstacles=visible.map(n=>({...positions[n.id],radius:n.affinity?86:n.advanced||n.hybridFor&&n.passiveId?62:n.passiveId||n.skillKey?49:39}));
 
-
-
+ // Spatially-indexed routes: every edge goes around unrelated talent circles.
+ const blockers=visible.filter(n=>!outside.includes(n)).map(n=>({id:n.id,...positions[n.id],r:n.affinity?88:n.advanced||n.hybridFor&&n.passiveId?63:n.passiveId||n.skillKey||n.specialisationTier?50:39}));
+ const bucketSize=220,buckets=new Map();
+ const bucketKey=(x,y)=>x+':'+y;
+ for(const b of blockers){
+  for(let x=Math.floor((b.x-b.r-14)/bucketSize);x<=Math.floor((b.x+b.r+14)/bucketSize);x++)
+   for(let y=Math.floor((b.y-b.r-14)/bucketSize);y<=Math.floor((b.y+b.r+14)/bucketSize);y++){
+    const key=bucketKey(x,y);if(!buckets.has(key))buckets.set(key,[]);buckets.get(key).push(b);
+   }
+ }
+ function segmentDistance(p,a,b){
+  const dx=b.x-a.x,dy=b.y-a.y,d=dx*dx+dy*dy;
+  const t=d?Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/d)):0;
+  return Math.hypot(p.x-a.x-t*dx,p.y-a.y-t*dy);
+ }
+ function clear(a,b,source,target){
+  const candidates=new Set();
+  const x0=Math.min(a.x,b.x),x1=Math.max(a.x,b.x),y0=Math.min(a.y,b.y),y1=Math.max(a.y,b.y);
+  for(let x=Math.floor((x0-106)/bucketSize);x<=Math.floor((x1+106)/bucketSize);x++)
+   for(let y=Math.floor((y0-106)/bucketSize);y<=Math.floor((y1+106)/bucketSize);y++){
+    for(const p of buckets.get(bucketKey(x,y))||[])candidates.add(p);
+   }
+  for(const p of candidates){
+   if(p.id===source||p.id===target)continue;
+   if(p.x+p.r+8<x0||p.x-p.r-8>x1||p.y+p.r+8<y0||p.y-p.r-8>y1)continue;
+   if(segmentDistance(p,a,b)<p.r+8)return false;
+  }
+  return true;
+ }
+ const cell=74,cols=Math.ceil(12300/cell),rows=Math.ceil(8600/cell),occupied=new Uint8Array(cols*rows),grid=Array.from({length:cols*rows},(_,i)=>({x:(i%cols+.5)*cell,y:(Math.floor(i/cols)+.5)*cell}));
+ const idx=(x,y)=>Math.max(0,Math.min(rows-1,Math.floor(y/cell)))*cols+Math.max(0,Math.min(cols-1,Math.floor(x/cell)));
+ for(const b of blockers){
+  for(let row=Math.max(0,Math.floor((b.y-b.r-16)/cell));row<=Math.min(rows-1,Math.ceil((b.y+b.r+16)/cell));row++)
+   for(let col=Math.max(0,Math.floor((b.x-b.r-16)/cell));col<=Math.min(cols-1,Math.ceil((b.x+b.r+16)/cell));col++){
+    const i=row*cols+col;if(Math.hypot(grid[i].x-b.x,grid[i].y-b.y)<b.r+12)occupied[i]=1;
+   }
+ }
+ const dirs=[[0,-1],[1,-1],[1,0],[1,1],[0,1],[-1,1],[-1,0],[-1,-1]];
+ const push=(heap,entry)=>{heap.push(entry);for(let i=heap.length-1;i>0;){const parent=(i-1)>>1;if(heap[parent][0]<=entry[0])break;heap[i]=heap[parent];i=parent;heap[i]=entry}};
+ const pop=heap=>{const first=heap[0],tail=heap.pop();if(heap.length){let i=0;while(i*2+1<heap.length){let j=i*2+1,k=j+1;if(k<heap.length&&heap[k][0]<heap[j][0])j=k;if(heap[j][0]>=tail[0])break;heap[i]=heap[j];i=j}heap[i]=tail}return first};
  const cache=new Map();
  function waypoints(node,required){
   const key=required+'>'+node.id;if(cache.has(key))return cache.get(key);
-  const from=positions[required],to=positions[node.id];if(!from||!to)return [];
-  const path=[from,to];
-  cache.set(key,path);return path;
+  const a=positions[required],b=positions[node.id];if(!a||!b)return [];
+  if(clear(a,b,required,node.id)){const result=[a,b];cache.set(key,result);return result}
+  const size=n=>n?.affinity?150:n?.advanced||n?.hybridFor&&n?.passiveId?115:n?.passiveId||n?.skillKey?98:87;
+  function entrances(p,r){
+   const found=new Set();
+   for(let i=0;i<24;i++){
+    const angle=i*Math.PI/12,j=idx(p.x+Math.cos(angle)*(r+40),p.y+Math.sin(angle)*(r+40));
+    if(!occupied[j]&&clear(p,grid[j],required,node.id))found.add(j);
+   }
+   return [...found];
+  }
+  const starts=entrances(a,size(byId.get(required))),goals=entrances(b,size(node));
+  if(!starts.length||!goals.length){const result=[a,b];cache.set(key,result);return result;}
+  const destination=new Set(goals),distance=new Float64Array(grid.length),parent=new Int32Array(grid.length),visited=new Uint8Array(grid.length),heap=[];
+  distance.fill(Infinity);parent.fill(-1);
+  const heuristic=i=>Math.min(...goals.map(j=>Math.hypot(grid[i].x-grid[j].x,grid[i].y-grid[j].y)));
+  for(const i of starts){distance[i]=Math.hypot(grid[i].x-a.x,grid[i].y-a.y);push(heap,[distance[i]+heuristic(i),i])}
+  let reached=-1,iterations=0;
+  while(heap.length&&iterations++<40000){
+   const current=pop(heap)[1];if(visited[current])continue;visited[current]=1;
+   if(destination.has(current)){reached=current;break;}
+   const col=current%cols,row=Math.floor(current/cols);
+   for(const [dx,dy] of dirs){
+    const x=col+dx,y=row+dy;if(x<0||y<0||x>=cols||y>=rows)continue;
+    const next=y*cols+x;if(occupied[next]||visited[next]||!clear(grid[current],grid[next],required,node.id))continue;
+    const cost=distance[current]+(dx&&dy?Math.SQRT2:1)*cell;
+    if(cost<distance[next]){distance[next]=cost;parent[next]=current;push(heap,[cost+heuristic(next),next])}
+   }
+  }
+  if(reached<0){const result=[a,b];cache.set(key,result);return result;}
+  const chain=[];for(let i=reached;i>=0;i=parent[i])chain.push(grid[i]);chain.reverse();
+  const path=[a,...chain,b],result=[a];
+  for(let i=0;i<path.length-1;){
+   let next=path.length-1;while(next>i+1&&!clear(path[i],path[next],required,node.id))next--;
+   result.push(path[next]);i=next;
+  }
+  cache.set(key,result);return result;
  }
- return {positions,proxies,hybrids,center,angles:ANGLES,rootAngles:ROOT_ANGLES,point,waypoints,width:12300,height:8600};
+ return {positions,proxies,hybrids,center,angles:ANGLES,rootAngles:ROOT_ANGLES,point,waypoints,axes,axisByNode,width:12300,height:8600};
 }
 root.WandererTalentLayout=Object.freeze({create});
 })(globalThis);

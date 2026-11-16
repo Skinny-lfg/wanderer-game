@@ -335,3 +335,37 @@ body.phase3IntegratedPreview .phase3CombatBuild{display:flex;flex-wrap:wrap;alig
 .talentGraphCanvas button.treeGraphNode.is-mixed{width:102px!important;height:102px!important;font-size:43px!important;border-width:5px!important;border-color:#c49b5f!important;z-index:2}
 .talentGraphCanvas .treeGraphNode.is-ability img,.talentGraphCanvas .treeGraphNode.is-ability .phase2PassiveIcons{width:58px;height:58px}
 .talentGraphCanvas .treeGraphNode.is-mixed img,.talentGraphCanvas .treeGraphNode.is-mixed .phase2PassiveIcons{width:78px;height:78px}
+/* Architectural guides are decorative, behind functional prerequisite edges. */
+.talentGraphCanvas line.talentAxisGuide{stroke:#a58b61;stroke-width:2;stroke-opacity:.18;stroke-dasharray:10 22}
+
+/* v0.13 radial talent atlas: subtle engraved geometry, readable routes and family identity. */
+.automaticTalentTree .talentGraphViewport{background:radial-gradient(ellipse at 50% 48%,#2d2621 0%,#17131a 60%,#0c0c10 100%);border-color:#9f8056;box-shadow:inset 0 0 38px #0009}
+.talentGraphCanvas .talentGeometricMap{pointer-events:none}
+.talentGraphCanvas .talentSectorWash{fill-opacity:.035;stroke:none}
+.talentGraphCanvas .talentOrbit{fill:none;stroke:#bb9661;stroke-width:2;stroke-opacity:.26}
+.talentGraphCanvas .talentOrbit.is-affinity-orbit{stroke-width:4;stroke-opacity:.45}
+.talentGraphCanvas line.talentAxisGuide{stroke:#bd995f;stroke-width:2;stroke-opacity:.32;stroke-dasharray:none}
+.talentGraphCanvas .talentSectorName{font:600 70px/1 Georgia,serif;letter-spacing:18px;opacity:.78;paint-order:stroke;stroke:#111015;stroke-width:13}
+.talentGraphCanvas path.talentPrerequisite{fill:none;stroke:#a78a61;stroke-width:4;stroke-opacity:.29;stroke-linejoin:round;stroke-linecap:round;transition:stroke-opacity .15s ease,stroke .15s ease;vector-effect:none}
+.talentGraphCanvas path.talentPrerequisite.is-owned{stroke:#e0bc70;stroke-width:7;stroke-opacity:.88}
+.talentGraphCanvas.is-inspecting path.talentPrerequisite:not(.is-owned):not(.is-related):not(.is-planned){stroke-opacity:.065}
+.talentGraphCanvas path.talentPrerequisite.is-related{stroke:#d8b982;stroke-width:7;stroke-opacity:.96}
+.talentGraphCanvas path.talentPrerequisite.is-planned{stroke:#87aec7;stroke-width:6;stroke-opacity:.9}
+.talentGraphCanvas button.treeGraphNode{--talent-accent:#ae9069;transition:border-color .17s ease,filter .17s ease,opacity .17s ease;box-shadow:inset 0 0 12px #0008!important}
+.talentGraphCanvas button.treeGraphNode.is-ability{border-color:var(--talent-accent)!important;background:#211b20!important}
+.talentGraphCanvas button.treeGraphNode.is-ability.is-locked{border-color:#755f61!important;opacity:.79}
+.talentGraphCanvas button.treeGraphNode.is-ability.is-owned{border-color:#e9cb84!important;box-shadow:0 0 18px #dfb87577,inset 0 0 8px #0008!important}
+.talentGraphCanvas button.treeGraphNode.is-ability.is-available{border-color:#9bc9a2!important;box-shadow:0 0 10px #97c69b33!important}
+.talentGraphCanvas button.treeGraphNode.is-affinity-main{border-color:var(--talent-accent)!important;box-shadow:0 0 22px color-mix(in srgb,var(--talent-accent) 28%,transparent),inset 0 0 22px #0009!important;z-index:3}
+.talentGraphCanvas .treeGraphNode.is-mixed{background:#291f25!important}
+.talentGraphCanvas button.treeGraphNode.is-selected{outline:5px solid #f1d8a7!important;outline-offset:8px;z-index:5;opacity:1}
+.talentGraphCanvas.is-overview button.treeGraphNode.is-stat{visibility:hidden!important;pointer-events:none}
+.talentGraphCanvas.is-overview .treeSpecializationName,.talentGraphCanvas.is-overview .treeNodeRank,.talentGraphCanvas.is-overview .treeExtraRequirement,.talentGraphCanvas.is-overview .talentMixedName{opacity:0}
+.talentGraphCanvas.is-overview path.talentPrerequisite:not(.is-owned){stroke-opacity:.1}
+.talentGraphCanvas.is-overview path.talentPrerequisite.is-owned{stroke-opacity:.7}
+.talentGraphCanvas.is-overview button.treeGraphNode.is-ability{opacity:.94}
+.talentGraphCanvas .treeAffinityName{font-family:Georgia,serif;letter-spacing:.09em;color:#f0d8aa}
+.automaticTalentTree .talentFamilyNavigation{gap:8px}
+.automaticTalentTree .talentFamilyNavigation button{border:1px solid #96734e;background:#241b20;color:#edd2a9;border-radius:3px;min-height:38px}
+.automaticTalentTree .talentGraphControls button{min-height:38px;min-width:40px}
+@media(max-width:600px){.automaticTalentTree .talentGraphControls>span{font-size:11px}.automaticTalentTree .talentFamilyNavigation button{min-height:40px}}
