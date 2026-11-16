@@ -9,35 +9,53 @@ function create(list){
   [[-80,210],[-80,290],[-160,290],[-160,370],[-80,370]].forEach(([t,r],i)=>positions['minor_'+type+'_'+(i+1)]=at(t,r));
  }
  for(const family of Object.keys(ANGLES))positions['affinity_'+family]=point(ANGLES[family],650);
- for(const node of list){if(node.hybridFor)continue;const t=((node.branchLane??1)-1)*450,r=1150+(node.branchDepth||0)*600;
-  if(node.pathFor)positions[node.id]=local(node.family,t+(node.pathStep===1?-80:0),r-(node.pathStep===1?80:160));
+ for(const node of list){if(node.hybridFor)continue;const t=((node.branchLane??1)-1)*510,r=1200+(node.branchDepth||0)*550;
+  if(node.pathFor)positions[node.id]=local(node.family,t+(node.pathStep===1?-75:0),r-(node.pathStep===1?150:225));
   if(node.passiveId){const offsets=[[0,0],[90,0],[180,0],[180,90],[90,90]],o=offsets[node.rank-1];positions[node.id]=local(node.family,t+o[0],r+o[1]);}
   if(node.elementBranch){const lane=['fire','frost','lightning'].indexOf(node.elementBranch);positions[node.id]=local('magic',(lane-1)*450,1990);}
  }
- for(const node of list.filter(n=>n.forkAnchor)){const anchor=list.find(n=>n.id===node.forkAnchor);if(!anchor)continue;const t=((anchor.branchLane??1)-1)*450,r=1150+(anchor.branchDepth||0)*600;positions[node.id]=local(node.family,t+(node.forkStep<3?(node.forkStep===1?-105:105):(node.forkSide||0)*190),r+(node.forkStep<3?170:320));}
+ for(const node of list.filter(n=>n.forkAnchor)){const anchor=list.find(n=>n.id===node.forkAnchor);if(!anchor)continue;const t=((anchor.branchLane??1)-1)*510,r=1200+(anchor.branchDepth||0)*550;positions[node.id]=local(node.family,t+(node.forkStep<3?(node.forkStep===1?-105:105):(node.forkSide||0)*190),r+(node.forkStep<3?170:320));}
  const hybrids=list.filter(n=>n.hybridFor&&n.passiveId&&n.rank===1);
  for(const family of Object.keys(ANGLES)){
   const skills=list.filter(n=>n.family===family&&n.skillKey&&n.rank===1);
   skills.forEach((n,i)=>{const origin=positions[n.requires];positions[n.id]={x:origin.x+Math.cos(ANGLES[family])*410-Math.sin(ANGLES[family])*(i?150:-150),y:origin.y+Math.sin(ANGLES[family])*410+Math.cos(ANGLES[family])*(i?150:-150)};});
  }
- const pairs=new Map();
- for(const node of hybrids){
-  const key=[node.family,node.hybridOther].sort().join(':');if(!pairs.has(key))pairs.set(key,[]);pairs.get(key).push(node);
+
+ // Fixed coordinates in each corridor, rotated around the centre.
+ const corridors=[
+  ['blood','fury'],['fury','aegis'],['aegis','vitality'],
+  ['vitality','magic'],['magic','decay'],['decay','blood']
+ ];
+ for(const [first,second] of corridors){
+  const delta=Math.atan2(Math.sin(ANGLES[second]-ANGLES[first]),Math.cos(ANGLES[second]-ANGLES[first]));
+  const angle=ANGLES[first]+delta/2,radial={x:Math.cos(angle),y:Math.sin(angle)},tangent={x:-radial.y,y:radial.x};
+  const at=(along,side)=>({x:center.x+radial.x*along+tangent.x*side,y:center.y+radial.y*along+tangent.y*side});
+  const group=hybrids.filter(n=>[n.family,n.hybridOther].includes(first)&&[n.family,n.hybridOther].includes(second)).sort((a,b)=>a.id.localeCompare(b.id));
+  group.forEach((n,index)=>{
+   const radius=1800+index*460,id=n.passiveId;positions[n.id]=at(radius,0);proxies[id]={};
+   for(const [prefix,family] of [['path',n.family],['bridge',n.hybridOther]]){
+    const side=family===first?-1:1;
+    positions[prefix+'_'+id+'_1']=at(radius-180,side*290);
+    positions[prefix+'_'+id+'_2']=at(radius,side*145);
+   }
+  });
+  const advanced=list.find(n=>n.advanced&&[n.left,n.right].every(id=>[first,second].includes(list.find(x=>x.id===id)?.family)));
+  if(advanced){
+   const radius=2950;positions[advanced.id]=at(radius,0);
+   for(const link of list.filter(n=>n.outerLink===advanced.id)){
+    const side=list.find(x=>x.id===link.side).family===first?-1:1;
+    positions[link.id]=at(radius-240+link.step*120,side*(3-link.step)*130);
+   }
+  }
  }
- for(const group of pairs.values())group.forEach((node,ordinal)=>{
-  const id=node.passiveId,left=list.find(n=>n.id==='path_'+id+'_1'),right=list.find(n=>n.id==='bridge_'+id+'_1'),a=positions[left.requires],b=positions[right.requires];
-  const dx=b.x-a.x,dy=b.y-a.y,length=Math.hypot(dx,dy),radial=point(ANGLES[node.family]+Math.atan2(Math.sin(ANGLES[node.hybridOther]-ANGLES[node.family]),Math.cos(ANGLES[node.hybridOther]-ANGLES[node.family]))/2,1);
-  const offset=170+ordinal*210,sign=(radial.x-center.x)*(-dy)+(radial.y-center.y)*dx>=0?1:-1;
-  const tip=positions[node.id]={x:(a.x+b.x)/2-sign*dy/length*offset,y:(a.y+b.y)/2+sign*dx/length*offset};proxies[id]={};
-  for(const [prefix,origin] of [['path',a],['bridge',b]])for(const [step,t] of [[1,.35],[2,.7]])positions[prefix+'_'+id+'_'+step]={x:origin.x+(tip.x-origin.x)*t,y:origin.y+(tip.y-origin.y)*t};
- });
- for(const n of list.filter(n=>n.junction)){const p=positions[n.requires];if(p)positions[n.id]={x:p.x+(p.x-center.x)*.08,y:p.y+(p.y-center.y)*.08};}
- for(const n of list.filter(n=>n.advanced)){
-  const a=positions[n.left],b=positions[n.right],mx=(a.x+b.x)/2,my=(a.y+b.y)/2,dx=mx-center.x,dy=my-center.y,length=Math.hypot(dx,dy);
-  const tip=positions[n.id]={x:mx+dx/length*470,y:my+dy/length*470};
-  for(const link of list.filter(x=>x.outerLink===n.id)){const origin=positions[link.side],t=link.step/3;positions[link.id]={x:origin.x+(tip.x-origin.x)*t,y:origin.y+(tip.y-origin.y)*t};}
+ for(const n of list.filter(n=>n.junction)){const p=positions[n.requires];if(p)positions[n.id]={x:p.x+(p.x-center.x)*.10,y:p.y+(p.y-center.y)*.10};}
+ // Every ordinary branch uses fixed, radial lanes.
+ for(const family of Object.keys(ANGLES)){
+  const skills=list.filter(n=>n.family===family&&n.skillKey&&n.rank===1);
+  skills.forEach((n,i)=>{positions[n.id]=local(family,i?210:-210,2450);});
  }
- const obstacles=list.map(n=>({...positions[n.id],radius:n.affinity?86:39}));
+ const visible=list.filter(n=>n.rank===undefined||n.rank===1).filter(n=>positions[n.id]);
+ const obstacles=visible.map(n=>({...positions[n.id],radius:n.affinity?86:39}));
  const cache=new Map();
  function waypoints(node,required){
   const key=required+'>'+node.id;
