@@ -266,7 +266,7 @@ function activated(b,id){b.runtime.passiveTelemetry??={};const t=b.runtime.passi
 function onAttack(b,c){
  if(c.proc||c.extra||c.recursive)return;
  const e=c.enemy,base=Math.max(1,c.base||1),crit=!!c.critical;
- if(specialized(b,'battle_tempo')){b.runtime.battleTempo=Math.min(5,(b.runtime.battleTempo||0)+1);if(b.runtime.battleTempo===5&&specialized(b,'relentless_assault')&&c.random()<.15)c.damage(base*.30,'🗡 Relentless Assault');if(b.runtime.battleTempo===5&&specialized(b,'unchained_fury'))c.damage(base*.20,'🔥 Unchained Fury');}
+ if(['battle_tempo','relentless_assault','unchained_fury'].some(id=>specialized(b,id))){b.runtime.battleTempo=Math.min(5,(b.runtime.battleTempo||0)+1);if(b.runtime.battleTempo===5&&specialized(b,'relentless_assault')&&c.random()<.15)c.damage(base*.30,'🗡 Relentless Assault');if(b.runtime.battleTempo===5&&specialized(b,'unchained_fury'))c.damage(base*.20,'🔥 Unchained Fury');}
  if(e.bleedStacks>0&&specialized(b,'crimson_feast')){b.runtime.crimsonHits=(b.runtime.crimsonHits||0)+1;if(b.runtime.crimsonHits%3===0){c.damage(base*.30,'🫀 Crimson Feast');heal(b,c,c.player.maxhp*.02);}}
  if(e.bleedStacks>0&&c.player.hp<c.player.maxhp*.5&&specialized(b,'heart_of_carnage')&&ready(b,'heartCarnage',c.now,3)){c.damage(base*.20,'🩸 Heart of Carnage');heal(b,c,c.player.maxhp*.01);}
  if(specialized(b,'corruption_cycle')&&e.v012Rot?.length>=3&&ready(b,'corruptionCycle',c.now,5)){const rot=e.v012Rot.shift();c.damage(rot.damage*rot.remaining,'🦠 Corruption Cycle');}
@@ -316,6 +316,9 @@ function onAttack(b,c){
 }
 function onCast(b,c){
  if(c.proc||c.extra||c.recursive||c.funded!==true||!hasFamily(b,'magic')||!elements.includes(b.element))return;
+ // These advanced elemental choices supply their own trigger when taken alone.
+ if(b.element==='fire'&&(specialized(b,'combustion')||specialized(b,'living_inferno'))&&!c.enemy.dots?.burn?.length&&!rank(b,'kindling')&&!specialized(b,'kindling_flame'))c.dot('burn',Math.max(1,c.power)*.08);
+ if(b.element==='frost'&&(specialized(b,'shatter')||specialized(b,'absolute_winter'))&&!(c.enemy.slowTime>0)&&!rank(b,'deep_winter')&&!specialized(b,'deep_chill'))c.chill(c.enemy.boss?1.2:3.5);
  const multiplier=b.element==='fire'&&specialized(b,'living_inferno')&&c.enemy.dots?.burn?.length?1.25:b.element==='frost'&&specialized(b,'absolute_winter')&&c.enemy.slowTime>0?1.2:b.element==='lightning'&&specialized(b,'storm_conductor')?1.2:1;
  const power=elementalPower(b,Math.max(1,c.power))*(c.amp||1)*multiplier;b.runtime.conduit=false;
  const e=c.enemy; b.runtime.magicHits++;

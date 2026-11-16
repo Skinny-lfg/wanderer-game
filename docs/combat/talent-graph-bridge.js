@@ -12,9 +12,9 @@ function project(graph,progress,element='fire',prepared=null){
 }
 function apply(stats,graph,progress){
  if(!root.WandererTalentGraph.valid(graph,progress))throw Error('Invalid talent progress');
- const result={...stats};let spell=0;
- for(const n of graph){const rank=progress.ranks[n.id]||0;if(!rank)continue;for(const [property,dest] of [['flatAttack','attack'],['flatArmor','defense'],['flatLife','maxhp'],['flatAvoid','evasionRating'],['flatSpell','spellPower'],['flatRegen','manaRegen']])if(n[property])result[dest]=(result[dest]||0)+n[property]*rank;spell+=(n.spell||0)*rank;}
- result.spellPower=Math.round((result.spellPower||0)*(1+spell));return result;
+ const result={...stats};let spell=0,health=0,speed=0;
+ for(const n of graph){const rank=progress.ranks[n.id]||0;if(!rank)continue;for(const [property,dest] of [['flatAttack','attack'],['flatArmor','defense'],['flatLife','maxhp'],['flatAvoid','evasionRating'],['flatSpell','spellPower'],['flatRegen','manaRegen']])if(n[property])result[dest]=(result[dest]||0)+n[property]*rank;spell+=(n.spell||0)*rank;health+=(n.health||0)*rank;speed+=(n.speed||0)*rank;}
+ result.spellPower=Math.round((result.spellPower||0)*(1+spell));if(health)result.maxhp=Math.round(result.maxhp*(1+health));if(speed)result.attacksPerSec=Math.min(4.2,result.attacksPerSec*(1+speed));return result;
 }
 root.WandererTalentGraphBridge=Object.freeze({project,apply});
 })(globalThis);

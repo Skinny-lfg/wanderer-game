@@ -17,14 +17,23 @@ async function copy(dir,relative=''){
 }
 for(const dir of Object.keys(extensions))await copy(dir);
 await cp('preview/talent-rebuild',join(output,'preview/talent-rebuild'),{recursive:true});
+const treePath=join(output,'preview/talent-rebuild/index.html');
+let treeHtml=await readFile(treePath,'utf8');
+for(const [reference,file] of [['../../combat/v012-buildcraft.js','combat/v012-buildcraft.js'],['../../combat/automatic-talents.js','combat/automatic-talents.js'],['../../combat/talent-graph-next.js','combat/talent-graph-next.js'],['prototype.js','preview/talent-rebuild/prototype.js']]){
+ const hash=createHash('sha256').update(await readFile(join(output,file))).digest('hex').slice(0,12);
+ treeHtml=treeHtml.replace('src="'+reference+'"','src="'+reference+'?v='+hash+'"');
+}
+await writeFile(treePath,treeHtml);
 let html=await readFile('index.html','utf8');
+const treeHash=createHash('sha256').update(treeHtml).digest('hex').slice(0,12);
+html=html.replaceAll('src="preview/talent-rebuild/index.html"','src="preview/talent-rebuild/index.html?v='+treeHash+'"');
 function replaceRequired(pattern,replacement,label){if(!pattern.test(html))throw Error('Preview blocked: '+label+' not found');html=html.replace(pattern,replacement);}
 replaceRequired(/globalThis\.__WANDERER_CLOUD_ONLY__=[^\n]+;/,'globalThis.__WANDERER_CLOUD_ONLY__=false;','cloud flag');
 replaceRequired(/const PHASE5_VALIDATION=[^\n]+;/,'const PHASE5_VALIDATION=true;','isolated save flag');
 for(const name of ['v012-auth-bootstrap.js','v012-account.mjs','v012-feedback.mjs','v012-leaderboard-ui.mjs'])replaceRequired(new RegExp('<script[^>]*src="online/'+name.replaceAll('.','\\.')+'(?:\\?[^" ]*)?"[^>]*><\\/script>'),'',name);
 // Content-address the changing modules so a previously cached playtest cannot
 // mix the old progression engine with the new one after a Pages update.
-for(const file of ['combat/v012-runes.js','online/v012-consumables.js','combat/action-bar.js','combat/action-bar.css','combat/arena-hud.js','online/v013-arena-hud.css','economy/v013-crafting.js','economy/v012-equipment-runtime.js','combat/automatic-talents.js','combat/automatic-talent-layout.js','combat/v012-combat-core.js','combat/v012-combat-runtime.js','combat/v012-buildcraft.js','combat/v012-gear-stats.js','economy/v012-loot-rules.js','online/v012-expedition-controller.js','online/v012-expedition-events.js','online/v012-expedition-runtime.js','online/v012-persistence-runtime.js','online/v012-uiux-tuning.css','online/v013-combat-arena.css']){
+for(const file of ['combat/v012-runes.js','online/v012-consumables.js','combat/action-bar.js','combat/action-bar.css','combat/arena-hud.js','online/v013-arena-hud.css','economy/v013-crafting.js','economy/v012-equipment-runtime.js','combat/automatic-talents.js','combat/automatic-talent-layout.js','combat/talent-graph-next.js','combat/talent-graph-bridge.js','combat/talent-graph-runtime.js','combat/v012-combat-core.js','combat/v012-combat-runtime.js','combat/v012-buildcraft.js','combat/v012-gear-stats.js','economy/v012-loot-rules.js','online/v012-expedition-controller.js','online/v012-expedition-events.js','online/v012-expedition-runtime.js','online/v012-persistence-runtime.js','online/v012-uiux-tuning.css','online/v013-combat-arena.css']){
  const hash=createHash('sha256').update(await readFile(join(output,file))).digest('hex').slice(0,12);
  const attr=file.endsWith('.css')?'href':'src';replaceRequired(new RegExp(attr+'="'+file.replaceAll('.','\\.')+'(?:\\?[^" ]*)?"'),attr+'="'+file+'?v='+hash+'"',file);
 }
