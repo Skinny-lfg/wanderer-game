@@ -57,20 +57,23 @@ function create(list){
  const visible=list.filter(n=>n.rank===undefined||n.rank===1).filter(n=>positions[n.id]);
  const obstacles=visible.map(n=>({...positions[n.id],radius:n.affinity?86:39}));
 
+
  const cache=new Map();
  function waypoints(node,required){
   const key=required+'>'+node.id;if(cache.has(key))return cache.get(key);
   const from=positions[required],to=positions[node.id];if(!from||!to)return [];
-  const excluded=obstacles.filter(p=>Math.hypot(p.x-from.x,p.y-from.y)>1&&Math.hypot(p.x-to.x,p.y-to.y)>1);
-  const candidates=[];
-  for(const offset of [0,100,-100,200,-200,350,-350]){
-   const x=(from.x+to.x)/2+offset,y=(from.y+to.y)/2+offset;
-   candidates.push([from,{x,y:from.y},{x,y:to.y},to],[from,{x:from.x,y},{x:to.x,y},to]);
+  const dx=to.x-from.x,dy=to.y-from.y,length=Math.hypot(dx,dy);
+  if(length<1)return [from,to];
+  const candidates=[[from,to]];
+  for(const shift of [100,-100,200,-200,320,-320]){
+   const px=-dy/length*shift,py=dx/length*shift;
+   candidates.push([from,{x:from.x+dx*.33+px,y:from.y+dy*.33+py},{x:from.x+dx*.67+px,y:from.y+dy*.67+py},to]);
   }
-  const score=route=>{let collisions=0,length=0;for(let i=1;i<route.length;i++){
-   const a=route[i-1],b=route[i];length+=Math.abs(b.x-a.x)+Math.abs(b.y-a.y);
-   for(const p of excluded){const x=Math.max(Math.min(a.x,b.x),Math.min(Math.max(a.x,b.x),p.x)),y=Math.max(Math.min(a.y,b.y),Math.min(Math.max(a.y,b.y),p.y));if(Math.hypot(x-p.x,y-p.y)<p.radius+12)collisions++;}
-  }return collisions*100000+length;};
+  const score=route=>{let cost=0;for(let i=1;i<route.length;i++){
+   const a=route[i-1],b=route[i],vx=b.x-a.x,vy=b.y-a.y,d2=vx*vx+vy*vy;
+   cost+=Math.sqrt(d2);
+   for(const p of obstacles){if(Math.hypot(p.x-from.x,p.y-from.y)<1||Math.hypot(p.x-to.x,p.y-to.y)<1)continue;const t=Math.max(0,Math.min(1,((p.x-a.x)*vx+(p.y-a.y)*vy)/(d2||1)));if(Math.hypot(p.x-a.x-t*vx,p.y-a.y-t*vy)<p.radius+10)cost+=100000;}
+  }return cost;};
   candidates.sort((a,b)=>score(a)-score(b));cache.set(key,candidates[0]);return candidates[0];
  }
  return {positions,proxies,hybrids,center,angles:ANGLES,rootAngles:ROOT_ANGLES,point,waypoints,width:12300,height:8600};
