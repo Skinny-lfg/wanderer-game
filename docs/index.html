@@ -1650,23 +1650,31 @@ function renderAutomaticTalents(){
  if(!['camp','finished','failed'].includes(phase1Controller?.state.stage)||state.run){view='phase1';renderPhase1();return;}
  globalThis.wandererTalentResize?.disconnect();html(automaticTalentTree());
  const system=WandererAutomaticTalents,progress=state.automaticTalents||system.create(),list=system.NODES,viewport=document.querySelector('.talentGraphViewport'),canvas=document.querySelector('.talentGraphCanvas'),buttons=[...document.querySelectorAll('[data-auto-talent]')];
- const camera=globalThis.wandererTalentView??={x:null,y:null,scale:.4},draw=()=>{canvas.style.transform='translate('+camera.x+'px,'+camera.y+'px) scale('+camera.scale+')';};
+ const camera=globalThis.wandererTalentView??={x:null,y:null,scale:.4},draw=()=>{canvas.style.transform='translate('+camera.x+'px,'+camera.y+'px) scale('+camera.scale+')';canvas.classList.toggle('is-overview',camera.scale<.14);};
  const centerOn=(x,y,scale=camera.scale)=>{camera.scale=scale;camera.x=viewport.clientWidth/2-x*scale;camera.y=viewport.clientHeight/2-y*scale;draw();};
- const overview=()=>centerOn(4300,4300,Math.min(.4,(viewport.clientWidth-40)/1600,(viewport.clientHeight-40)/1600));
+ const overview=()=>centerOn(4300,4300,Math.min(.22,(viewport.clientWidth-60)/8200,(viewport.clientHeight-60)/8200));
  if(camera.x===null)overview();else draw();
  let previousWidth=viewport.clientWidth,previousHeight=viewport.clientHeight;
  if('ResizeObserver'in globalThis){globalThis.wandererTalentResize=new ResizeObserver(()=>{camera.x+=(viewport.clientWidth-previousWidth)/2;camera.y+=(viewport.clientHeight-previousHeight)/2;previousWidth=viewport.clientWidth;previousHeight=viewport.clientHeight;draw();});globalThis.wandererTalentResize.observe(viewport);}
  if($('outerPrepared'))$('outerPrepared').onchange=e=>{const before=state.automaticTalents;state.automaticTalents={...before,prepared:e.target.value||null};if(!phase5Persist())state.automaticTalents=before;render();};
  const allocate=$('automaticTalentAllocate');let selected=null;
- const inspect=button=>{
+ const links=[...canvas.querySelectorAll('path.talentPrerequisite')];
+ const inspect=(button,emphasise=true)=>{
   const id=button.dataset.autoTalent,node=list.find(n=>n.id===id);if(!node)return;const rank=node.passiveId||node.skillKey?skillRank(node,progress):null;selected=rank?.next||node;globalThis.wandererTalentSelection=id;
   const path=system.path(progress,selected.id),requirements=selected.prerequisites||[selected.requires].filter(Boolean),missing=selected.anyRequires?(selected.anyRequires.some(id=>progress.nodes.includes(id))?[]:selected.anyRequires):requirements.filter(id=>!progress.nodes.includes(id)),owned=progress.nodes.includes(selected.id),points=system.earned(progress)-progress.nodes.length,conflict=(node.excludes||[]).find(id=>progress.nodes.includes(id));
+  const routeNodes=new Set(path||[]),neighbours=new Set([id,...requirements]);
+  canvas.classList.toggle('is-inspecting',emphasise);
+  links.forEach(edge=>{
+   const from=edge.dataset.from,to=edge.dataset.to;
+   edge.classList.toggle('is-related',emphasise&&(neighbours.has(from)&&to===id||from===id));
+   edge.classList.toggle('is-planned',emphasise&&routeNodes.has(from)&&routeNodes.has(to));
+  });
   buttons.forEach(b=>{b.classList.toggle('is-selected',b.dataset.autoTalent===id);b.classList.toggle('is-planned',!!path?.includes(b.dataset.autoTalent));b.setAttribute('aria-pressed',String(b.dataset.autoTalent===id));b.tabIndex=b===button?0:-1;});
   $('talentInspectorTitle').textContent=node.name+(rank?' · Rank '+rank.current+' / '+rank.max:'');allocate.textContent=owned?'Fully allocated':rank?'Invest 1 point · Rank '+(rank.current+1):'Allocate · 1 point';$('talentGraphHelp').textContent=node.description;
   $('talentInspectorStatus').textContent=owned?'Allocated.':conflict?'Alternative to '+list.find(n=>n.id===conflict).name+'. Reset talents to switch.':(missing.length?'Requires '+missing.map(id=>list.find(n=>n.id===id)?.name||id).join(selected.anyRequires?' or ':' + ')+'. ':'')+(path?'Path from your build: '+path.length+' point'+(path.length===1?'':'s')+'. ':'')+points+' unspent.';
   allocate.disabled=owned||!!conflict||!!missing.length||points<1;
  };
- const initial=buttons.find(b=>b.dataset.autoTalent===globalThis.wandererTalentSelection)||buttons.find(b=>b.dataset.autoTalent==='might');if(initial)inspect(initial);
+ const initial=buttons.find(b=>b.dataset.autoTalent===globalThis.wandererTalentSelection)||buttons.find(b=>b.dataset.autoTalent==='might');if(initial)inspect(initial,false);
  buttons.forEach(button=>{button.onclick=()=>inspect(button);button.addEventListener('focus',()=>inspect(button));button.addEventListener('keydown',e=>{
   if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key))return;e.preventDefault();const x=parseFloat(button.style.left),y=parseFloat(button.style.top),dx=e.key==='ArrowLeft'?-1:e.key==='ArrowRight'?1:0,dy=e.key==='ArrowUp'?-1:e.key==='ArrowDown'?1:0;
   const next=buttons.filter(b=>b!==button).map(b=>{const bx=parseFloat(b.style.left)-x,by=parseFloat(b.style.top)-y,forward=bx*dx+by*dy,side=Math.abs(bx*dy-by*dx);return{b,forward,score:Math.hypot(bx,by)+side*2};}).filter(n=>n.forward>10).sort((a,b)=>a.score-b.score)[0]?.b;
@@ -1678,10 +1686,10 @@ function renderAutomaticTalents(){
  viewport.addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>5&&!moved){moved=true;viewport.setPointerCapture(e.pointerId);}if(moved){camera.x=drag.ox+dx;camera.y=drag.oy+dy;draw();}});
  viewport.addEventListener('pointerup',()=>{drag=null;});viewport.addEventListener('pointercancel',()=>{drag=null;moved=false;});
  viewport.addEventListener('click',e=>{if(moved){e.preventDefault();e.stopImmediatePropagation();moved=false;}},true);
- const zoom=(factor,x,y)=>{const scale=Math.max(.16,Math.min(1.4,camera.scale*factor));camera.x=x-(x-camera.x)*scale/camera.scale;camera.y=y-(y-camera.y)*scale/camera.scale;camera.scale=scale;draw();};
+ const zoom=(factor,x,y)=>{const scale=Math.max(.035,Math.min(1.4,camera.scale*factor));camera.x=x-(x-camera.x)*scale/camera.scale;camera.y=y-(y-camera.y)*scale/camera.scale;camera.scale=scale;draw();};
  viewport.addEventListener('wheel',e=>{e.preventDefault();const box=viewport.getBoundingClientRect();zoom(e.deltaY<0?1.15:1/1.15,e.clientX-box.left,e.clientY-box.top);},{passive:false});
- Q('[data-tree-family]').forEach(button=>button.onclick=()=>{const position=WandererTalentLayout.create(list).positions['affinity_'+button.dataset.treeFamily];if(position)centerOn(position.x,position.y,.8);});
- Q('[data-tree-zoom]').forEach(button=>button.onclick=()=>{if(button.dataset.treeZoom==='reset')overview();else zoom(button.dataset.treeZoom==='in'?1.2:1/1.2,viewport.clientWidth/2,viewport.clientHeight/2);});
+ Q('[data-tree-family]').forEach(button=>button.onclick=()=>{const position=WandererTalentLayout.create(list).positions['affinity_'+button.dataset.treeFamily];if(position)centerOn(position.x,position.y,.48);});
+ Q('[data-tree-zoom]').forEach(button=>button.onclick=()=>{if(button.dataset.treeZoom==='fit')overview();else if(button.dataset.treeZoom==='reset')centerOn(4300,4300,.38);else zoom(button.dataset.treeZoom==='in'?1.2:1/1.2,viewport.clientWidth/2,viewport.clientHeight/2);});
  Q('[data-auto-element]').forEach(button=>button.onclick=()=>{const before=state.automaticTalents;state.automaticTalents={...(before||system.create()),element:button.dataset.autoElement};if(!phase5Persist()){if(before===undefined)delete state.automaticTalents;else state.automaticTalents=before;return;}render();});
  Q('[data-auto-attribute]').forEach(button=>button.onclick=()=>{const before=state.automaticTalents,next=system.allocateAttribute(before||system.create(),button.dataset.autoAttribute);if(!next)return;state.automaticTalents=next;if(!phase5Persist()){if(before===undefined)delete state.automaticTalents;else state.automaticTalents=before;return;}render();});
  const resetTalents=$('automaticTalentReset');if(resetTalents)resetTalents.onclick=()=>{const before=state.automaticTalents;state.automaticTalents=system.reset(before);if(!phase5Persist()){state.automaticTalents=before;return;}globalThis.wandererTalentSelection='might';globalThis.wandererTalentView={x:null,y:null,scale:.4};render();};
