@@ -8,39 +8,8 @@ const empty=()=>({points:1000,ranks:{}});
 test('six affinities have two basic axes and one focused axis with three tiers each',()=>{assert.deepEqual(G.FAMILIES,['blood','fury','aegis','vitality','magic','decay']);for(const family of G.FAMILIES){for(const lane of [0,1])assert.deepEqual(graph.filter(n=>n.kind==='basic'&&n.family===family&&n.lane===lane).map(n=>n.tier),[1,2,3]);assert.deepEqual(graph.filter(n=>n.kind==='focused'&&n.family===family).map(n=>n.tier),[1,2,3]);}});
 test('each adjacent pair has three mixed tiers requiring both sides',()=>{for(const [a,b,...ids] of G.MIXED)for(const [i,id] of ids.entries()){const n=node(id);assert.equal(n.kind,'mixed');assert.equal(n.tier,i+1);assert.deepEqual(n.pair,[a,b]);const p=buy(empty(),id);assert(p.ranks['affinity_'+a]&&p.ranks['affinity_'+b]);}});
 test('mixed abilities branch into both side paths of the next tier',()=>{for(const [a,b,...ids] of G.MIXED)for(let tier=2;tier<=3;tier++){let p=buy(empty(),ids[tier-2]);for(const family of [a,b]){const next=`mixed_path_${a}_${b}_${family}_${tier}`;assert(node(next).anyRequires.includes(ids[tier-2]));p=G.allocate(graph,p,next);assert(p,`${next} via ${ids[tier-2]}`);const gate=node(ids[tier-1]).prerequisites.find(id=>node(id).requires===next);assert(gate,next);p=G.allocate(graph,p,gate);assert(p,gate);}assert(G.allocate(graph,p,ids[tier-1]));}});
-test('focused abilities retain three independent paid entries without extra central spending',()=>{
- for(const family of G.FAMILIES)for(let tier=1;tier<=3;tier++){
-  const id=G.FOCUSED[family][tier-1],target=node(id),middle=node('focus_path_'+family+'_'+tier);
-  const previous=tier===1?'affinity_'+family:'focus_path_'+family+'_'+(tier-1);
-  assert.equal(middle.requires,previous);
-  assert.equal(middle.anyRequires,undefined,'Do not force diagonal shortcuts into the central path');
-  const sources=[middle.id,'focus_branch_'+family+'_0_'+tier,'focus_branch_'+family+'_1_'+tier];
-  assert.deepEqual(target.anyRequires,sources.map((_,i)=>'entry_'+id+'_'+i+'_1'));
-  for(const [i,source] of sources.entries()){
-   const entry=node('entry_'+id+'_'+i+'_1');
-   assert.equal(entry.kind,'stat');assert.equal(entry.requires,source);
-   let p=buy(empty(),entry.id);
-   if(i>0)assert(!p.ranks[middle.id],'Lateral builds must not buy the central talent path');
-   const pointsBefore=Object.keys(p.ranks).length;
-   p=G.allocate(graph,p,id);assert(p,id+' approach '+i);
-   assert.equal(Object.keys(p.ranks).length,pointsBefore+1);
-   assert.equal(Object.keys(p.ranks).length,i===0?tier+4:tier+5,id+' route cost must not rise');
-  }
- }
-});
-test('lateral Focused entries stay within their own tier and cannot skip central tiers',()=>{
- for(const family of G.FAMILIES)for(let tier=1;tier<=3;tier++){
-  const skill=G.FOCUSED[family][tier-1],middle=node('focus_path_'+family+'_'+tier);
-  assert.equal(middle.requires,tier===1?'affinity_'+family:'focus_path_'+family+'_'+(tier-1));
-  for(const lane of [0,1]){
-   const side='focus_branch_'+family+'_'+lane+'_'+tier;
-   const entry=node('entry_'+skill+'_'+(lane+1)+'_1');
-   assert.equal(node(side).requires,'basic_path_'+family+'_'+lane+'_'+tier);
-   assert.equal(entry.requires,side);
-   assert(!entry.requires.endsWith('_'+(tier-1)),'Side must not connect to a previous tier');
-  }
- }
-});
+test('focused skills can be reached from the centre or either lateral path',()=>{for(const family of G.FAMILIES)for(let tier=1;tier<=3;tier++){const target=node(G.FOCUSED[family][tier-1]),bases=[`focus_path_${family}_${tier}`,`focus_branch_${family}_0_${tier}`,`focus_branch_${family}_1_${tier}`];assert.deepEqual(target.anyRequires.map(id=>node(id).requires),bases);for(const base of bases){let p=buy(empty(),base);const gate=target.anyRequires.find(id=>node(id).requires===base);p=G.allocate(graph,p,gate);assert(p,gate);assert(G.allocate(graph,p,target.id),`${family} tier ${tier} via ${base}`);}}});
+test('focused side branches join the centre of the SAME tier',()=>{for(const family of G.FAMILIES)for(const tier of [2,3])for(const side of [0,1]){const source=`focus_branch_${family}_${side}_${tier}`,next=`focus_path_${family}_${tier}`;const p=buy(empty(),source);assert(!p.ranks[G.FOCUSED[family][tier-2]]);assert(node(next).anyRequires.includes(source));assert(!node(next).anyRequires.includes(`focus_branch_${family}_${side}_${tier-1}`));assert(G.allocate(graph,p,next),`${family} ${tier} ${side}`);}});
 test('each elemental junction accepts either affinity or an adjacent magic path',()=>{for(const element of Object.keys(G.ELEMENTS)){const junction=node(`element_junction_${element}`);assert.equal(junction.anyRequires.length,2);for(const start of junction.anyRequires){const p=buy(empty(),start);assert(G.allocate(graph,p,junction.id),`${element} via ${start}`);}}});
 test('every node is reachable, focused paths need no basic skills',()=>{for(const n of graph){const p=buy(empty(),n.id);assert(p,n.id);assert(Object.keys(p.ranks).length<100,n.id);}for(const n of graph.filter(n=>n.kind==='focused')){const p=buy(empty(),n.id);assert(!graph.some(x=>x.kind==='basic'&&p.ranks[x.id]),n.id);}});
 test('every basic, focused, mixed and elemental skill has a route without other skills',()=>{for(const n of graph.filter(n=>['basic','focused','mixed','element'].includes(n.kind))){const p=buy(empty(),n.id);const prior=graph.filter(x=>x.id!==n.id&&['basic','focused','mixed','element'].includes(x.kind)&&p.ranks[x.id]);assert.deepEqual(prior.map(x=>x.id),[],n.id);}});
@@ -84,9 +53,28 @@ test('affinity entry still costs two points and later abilities remain independe
  }
 });
 
-test('375 nodes, 138 stat approaches and all 84 ability icons remain present',()=>{
+test('red diagonals replace only blue shortcuts, without deleting any node',()=>{
  assert.equal(graph.length,375);
  assert.equal(graph.filter(n=>n.approachOf).length,138);
  assert.equal(graph.filter(n=>['basic','focused','mixed','element'].includes(n.kind)).length,84);
- assert.equal(graph.filter(n=>n.kind==='focused').length,18);
+ let red=0;
+ for(const family of G.FAMILIES)for(const lane of [0,1])for(let tier=1;tier<=3;tier++){
+  const basicId=G.BASICS[family][lane*3+tier-1];
+  const side=node(`focus_branch_${family}_${lane}_${tier}`);
+  assert.equal(side.requires,'entry_'+basicId+'_0_1','red: entry basic stat to side branch');red++;
+  if(tier>1){
+   const base=node(`basic_path_${family}_${lane}_${tier}`);
+   assert.equal(base.requires,`focus_branch_${family}_${lane}_${tier-1}`,'red: prior side branch to new basic tier');red++;
+   assert.notEqual(base.requires,`basic_path_${family}_${lane}_${tier-1}`,'blue: skip an existing minor stat');
+  }
+ }
+ for(const family of G.FAMILIES)for(const tier of [2,3]){
+  const centre=node(`focus_path_${family}_${tier}`);
+  for(const lane of [0,1]){
+   const side=`focus_branch_${family}_${lane}_${tier}`;
+   assert(centre.anyRequires.includes(side),'red: same-tier diagonal');red++;
+   assert(!centre.anyRequires.includes(`focus_branch_${family}_${lane}_${tier-1}`),'blue: diagonal skipping tier');
+  }
+ }
+ assert.equal(red,84);
 });
