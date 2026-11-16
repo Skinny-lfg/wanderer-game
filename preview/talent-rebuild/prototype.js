@@ -25,7 +25,11 @@ for(const n of graph.filter(n=>n.id.startsWith('focus_branch_'))){
 const iconRadius=n=>n.kind==='affinity'?37:n.kind==='mixed'?29:['basic','focused','element'].includes(n.kind)?23:9;
 const occupied=graph.filter(n=>!n.approachOf).map(n=>({id:n.id,x:positions[n.id].x,y:positions[n.id].y,r:iconRadius(n)}));
 for(const n of graph.filter(n=>n.approachOf)){
- const from=positions[n.approachFrom],to=positions[n.approachOf];
+ const from=positions[n.approachFrom];
+ // Focused side entries belong on the short horizontal approach to their tier,
+ // not on the old diagonal that aimed directly at the skill icon.
+ const sideEntry=n.approachIndex>0&&byId.get(n.approachOf)?.kind==='focused';
+ const to=sideEntry?positions['focus_path_'+n.family+'_'+n.tier]:positions[n.approachOf];
  if(!from||!to)throw Error('Missing stat-node connection '+n.id);
  const dx=to.x-from.x,dy=to.y-from.y,length=Math.hypot(dx,dy)||1;
  const normal={x:-dy/length,y:dx/length};
@@ -58,11 +62,41 @@ function mixedCorridorRoute(node,dependency){
   {x:from.x+tangent.x*side*.94+radial.x*forward*.56,y:from.y+tangent.y*side*.94+radial.y*forward*.56},
   to];
 }
-for(const n of graph){const p=positions[n.id];for(const dep of [...new Set([n.requires,...(n.prerequisites||[]),...(n.anyRequires||[])].filter(Boolean))]){
- const route=mixedCorridorRoute(n,dep);
- if(route)links.append(el('polyline',{class:'mixed-corridor',points:route.map(v=>v.x+','+v.y).join(' '),fill:'none'}));
- else{const q=positions[dep];links.append(el('line',{x1:q.x,y1:q.y,x2:p.x,y2:p.y}));}
-}}
+// Focused nodes accept THREE alternative paid approaches. Draw them converging
+// at an unpurchasable junction AFTER the three entry stats, so the visual
+// topology matches OR prerequisites without charging for the central branch.
+function focusedJunction(node){
+ const middle=positions['entry_'+node.id+'_0_1'],end=positions[node.id];
+ if(!middle||!end)throw Error('Missing focused entry '+node.id);
+ return {x:middle.x+(end.x-middle.x)*.5,y:middle.y+(end.y-middle.y)*.5};
+}
+function focusedMergeRoute(node,dep){
+ const start=positions[dep],end=focusedJunction(node);
+ if(!start)throw Error('Missing focused approach '+dep);
+ if(dep==='entry_'+node.id+'_0_1')return [start,end];
+ const a=angle(node.family),axis={x:Math.cos(a),y:Math.sin(a)};
+ const forward=(end.x-start.x)*axis.x+(end.y-start.y)*axis.y;
+ return [start,{x:start.x+axis.x*forward,y:start.y+axis.y*forward},end];
+}
+for(const n of graph){
+ const p=positions[n.id];
+ const deps=[...new Set([n.requires,...(n.prerequisites||[]),...(n.anyRequires||[])].filter(Boolean))];
+ if(n.kind==='focused'){
+  for(const dep of deps){
+   const route=focusedMergeRoute(n,dep);
+   if(route.length===2)links.append(el('line',{class:'focused-merge',x1:route[0].x,y1:route[0].y,x2:route[1].x,y2:route[1].y}));
+   else links.append(el('polyline',{class:'focused-merge',points:route.map(v=>v.x+','+v.y).join(' '),fill:'none'}));
+  }
+  const join=focusedJunction(n);
+  links.append(el('line',{class:'focused-trunk',x1:join.x,y1:join.y,x2:p.x,y2:p.y}));
+  continue;
+ }
+ for(const dep of deps){
+  const route=mixedCorridorRoute(n,dep);
+  if(route)links.append(el('polyline',{class:'mixed-corridor',points:route.map(v=>v.x+','+v.y).join(' '),fill:'none'}));
+  else{const q=positions[dep];links.append(el('line',{x1:q.x,y1:q.y,x2:p.x,y2:p.y}));}
+ }
+}
 const core=el('circle',{cx:0,cy:0,r:95,fill:'#171418',stroke:'#b39568','stroke-width':3});links.append(core);for(const f of families){const p=positions['root_'+f];links.prepend(el('line',{x1:Math.cos(angle(f))*95,y1:Math.sin(angle(f))*95,x2:p.x,y2:p.y}));}
 const glyph={blood:'✦',fury:'⚔',aegis:'⛨',vitality:'✿',magic:'✧',decay:'☠'},colors={blood:'#ae4b57',fury:'#d78246',aegis:'#79a7c8',vitality:'#8ebc72',magic:'#aa87d7',decay:'#9dae68'};
 for(const n of graph){const p=positions[n.id],rad=n.kind==='affinity'?37:n.kind==='mixed'?29:['basic','focused','element'].includes(n.kind)?23:9,g=el('g',{class:'node','data-id':n.id,transform:`translate(${p.x} ${p.y})`,tabindex:'0',role:'button','aria-label':n.name});const c=el('circle',{r:rad,style:`stroke:${colors[n.family]||'#b39568'}`});g.append(c);
