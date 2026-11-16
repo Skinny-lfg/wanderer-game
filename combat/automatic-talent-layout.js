@@ -1,9 +1,9 @@
 // Shared layout data for rendering and geometric checks. No character state is changed.
 (function(root){'use strict';
-const CENTER={x:4300,y:4300},ANGLES={blood:-Math.PI/2,decay:-Math.PI/6,vitality:Math.PI/6,aegis:Math.PI/2,fury:Math.PI*5/6,magic:Math.PI*7/6},ROOT_ANGLES={might:-Math.PI/2,vitality:Math.PI/3,haste:Math.PI};
+const CENTER={x:4300,y:4300},ANGLES={blood:-Math.PI/2,fury:-Math.PI/6,aegis:Math.PI/6,vitality:Math.PI/2,magic:Math.PI*5/6,decay:Math.PI*7/6},ROOT_ANGLES={insight:Math.PI*1.35,might:-Math.PI/2,vitality:Math.PI/3,haste:Math.PI};
 function create(list){
  const positions={},proxies={},center={...CENTER},point=(angle,r)=>({x:center.x+Math.cos(angle)*r,y:center.y+Math.sin(angle)*r}),local=(family,t,r)=>{const angle=ANGLES[family];return{x:center.x+Math.cos(angle)*r-Math.sin(angle)*t,y:center.y+Math.sin(angle)*r+Math.cos(angle)*t};};
- for(const id of ['might','vitality','haste'])positions[id]=point(ROOT_ANGLES[id],210);
+ for(const id of ['might','vitality','haste','insight'])positions[id]=point(ROOT_ANGLES[id],210);
  for(const [id,second,third,type]of [['might','precision','execution','attack'],['vitality','guard','fortitude','health'],['haste','flow','mastery','speed']]){
   const angle=ROOT_ANGLES[id],at=(t,r)=>({x:center.x+Math.cos(angle)*r-Math.sin(angle)*t,y:center.y+Math.sin(angle)*r+Math.cos(angle)*t});positions[second]=at(85,210);positions[third]=at(170,210);
   [[-80,210],[-80,290],[-160,290],[-160,370],[-80,370]].forEach(([t,r],i)=>positions['minor_'+type+'_'+(i+1)]=at(t,r));
@@ -16,8 +16,15 @@ function create(list){
  }
  for(const node of list.filter(n=>n.forkAnchor)){const anchor=list.find(n=>n.id===node.forkAnchor);if(!anchor)continue;const t=((anchor.branchLane??1)-1)*450,r=1150+(anchor.branchDepth||0)*600;positions[node.id]=local(node.family,t+(node.forkStep<3?(node.forkStep===1?-105:105):(node.forkSide||0)*190),r+(node.forkStep<3?170:320));}
  const hybrids=list.filter(n=>n.hybridFor&&n.passiveId&&n.rank===1).sort((a,b)=>[a.family,a.hybridOther].sort().join(':').localeCompare([b.family,b.hybridOther].sort().join(':')));
- hybrids.forEach((node,i)=>{const pair=Math.floor(i/2),x=9400+(pair%3)*950,y=1000+Math.floor(pair/3)*1200+(i%2)*500,id=node.passiveId;proxies[id]={[node.family]:{x:x-270,y:y-270},[node.hybridOther]:{x:x+270,y:y-270}};positions['path_'+id+'_1']={x:x-275,y:y-140};positions['path_'+id+'_2']={x:x-145,y:y-265};positions['bridge_'+id+'_1']={x:x+275,y:y-140};positions['bridge_'+id+'_2']={x:x+145,y:y-265};list.filter(n=>n.passiveId===id).forEach((n,j)=>positions[n.id]={x:x+j*90,y});});
+ hybrids.forEach((node,i)=>{const angle=ANGLES[node.family]+Math.atan2(Math.sin(ANGLES[node.hybridOther]-ANGLES[node.family]),Math.cos(ANGLES[node.hybridOther]-ANGLES[node.family]))/2,at=point(angle,1750+(i%2)*650),{x,y}=at,id=node.passiveId;proxies[id]={};for(const [prefix,family] of [['path',node.family],['bridge',node.hybridOther]]){
+   const origin=positions['affinity_'+family],side=i%2===0?-1:1;
+   for(const [step,fraction] of [[1,.36],[2,.72]]){
+    const dx=x-origin.x,dy=y-origin.y,length=Math.hypot(dx,dy);
+    positions[prefix+'_'+id+'_'+step]={x:origin.x+dx*fraction-side*dy*75/length,y:origin.y+dy*fraction+side*dx*75/length};
+   }
+  }list.filter(n=>n.passiveId===id).forEach((n,j)=>positions[n.id]={x:x+j*90,y});});
  
+ for(const n of list.filter(n=>n.junction)){const p=positions[n.requires];positions[n.id]={x:p.x,y:p.y+150};}
  const obstacles=list.map(n=>({...positions[n.id],radius:n.affinity?86:39}));
  const cache=new Map();
  function waypoints(node,required){

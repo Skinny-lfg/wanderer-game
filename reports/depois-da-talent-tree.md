@@ -1,0 +1,1 @@
+Após a árvore: atualizar o simulador para reclamar runas, equipar loot, comprar e usar poções. Reproduzir e corrigir a extração ao nível 100. Acompanhar Sword, Bow e Wand desde nível 1 até 20, 50 e 100. Medir especialização, recuperação após derrota, clareza dos riscos e duração dos bosses antes de calibrar desafios opcionais após Mythic.
