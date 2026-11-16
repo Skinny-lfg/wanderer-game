@@ -1,0 +1,26 @@
+name: v0.13 talent-graph regression
+on:
+  pull_request:
+    branches:
+      - publish/automatic-rpg-preview
+    paths:
+      - 'combat/talent-graph-*.js'
+      - 'preview/talent-rebuild/**'
+      - 'docs/preview/talent-rebuild/**'
+      - 'tests/talent-graph-*.cjs'
+      - 'package.json'
+      - '.github/workflows/v013-talent-graph-checks.yml'
+permissions:
+  contents: read
+jobs:
+  talent-graph:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run test:v013:talent-graph
