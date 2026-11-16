@@ -17,14 +17,13 @@ function createGraph(catalog,legacy=[]){
  for(const family of FAMILIES){
   const root=stat('root_'+family,family,null);add({id:'affinity_'+family,kind:'affinity',family,name:family,requires:root,...AFFINITY[family]});
   for(let lane=0;lane<2;lane++){let parent='affinity_'+family;for(let tier=1;tier<=3;tier++){parent=stat(`basic_path_${family}_${lane}_${tier}`,family,parent,{lane,tier});skill(BASICS[family][lane*3+tier-1],'basic',family,tier,parent,{lane});}}
-  // Connect side branches to the central node at their SAME tier.
-  // Do not bypass the central node or jump diagonally between different tiers.
+  // Keep the original three independent routes to every Focused skill.
+  // Side-to-centre diagonals may reach the SAME tier only, never skip one.
   let parent='affinity_'+family;for(let tier=1;tier<=3;tier++){
    const sides=[0,1].map(lane=>stat('focus_branch_'+family+'_'+lane+'_'+tier,family,'basic_path_'+family+'_'+lane+'_'+tier,{lane,tier}));
-   // The central route continues along its own axis. Both side approaches
-   // retain their original purchasable entry stats and unlock costs.
-   // All three alternatives merge visually, never as extra mandatory nodes.
-   const middle=stat('focus_path_'+family+'_'+tier,family,parent,{tier});
+   const middle=tier===1?
+    stat('focus_path_'+family+'_'+tier,family,parent,{tier}):
+    stat('focus_path_'+family+'_'+tier,family,null,{tier,anyRequires:[parent,...sides]});
    skill(FOCUSED[family][tier-1],'focused',family,tier,null,{anyRequires:[middle,...sides]});
    parent=middle;
   }
@@ -58,6 +57,15 @@ function createGraph(catalog,legacy=[]){
   if(target.prerequisites?.length)changes.prerequisites=target.prerequisites.map(extend);
   if(target.anyRequires?.length)changes.anyRequires=target.anyRequires.map(extend);
   rewired.set(target.id,Object.freeze({...target,...changes}));
+ }
+ // Add the tier-to-tier lateral diagonals drawn in red. Keep the existing
+ // radial basic path as an alternative, rather than deleting a legitimate edge.
+ for(const family of FAMILIES)for(const lane of [0,1])for(const tier of [2,3]){
+  const id='basic_path_'+family+'_'+lane+'_'+tier;
+  const node=nodes.find(n=>n.id===id);
+  const previous='focus_branch_'+family+'_'+lane+'_'+(tier-1);
+  if(!node||!nodes.some(n=>n.id===previous))throw Error('Missing red connector '+id);
+  rewired.set(id,Object.freeze({...node,requires:null,anyRequires:[node.requires,previous]}));
  }
  const connected=Object.freeze(nodes.map(n=>rewired.get(n.id)||n));
  const ids=new Set(connected.map(n=>n.id));for(const n of connected)for(const id of [...(n.requires?[n.requires]:[]),...(n.prerequisites||[]),...(n.anyRequires||[])])if(!ids.has(id))throw Error('Missing prerequisite '+id);
