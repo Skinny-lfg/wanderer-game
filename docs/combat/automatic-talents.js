@@ -75,8 +75,8 @@ function nodes(){
    const base='passive_'+p.id,other=(p.requires||[]).find(f=>f!==family),hybrid=!!other,oldLane=index%3,lane=normalIndex%3,oldBranch=oldLanes[oldLane],oldPrevious=previous;
    const branchLane=p.element?['fire','frost','lightning'].indexOf(p.element):ROUTES[family].findIndex(route=>route.includes(p.id)),branchDepth=p.element?2:ROUTES[family][branchLane]?.indexOf(p.id)||0,route=ROUTES[family][branchLane],oldParent=hybrid?affinity:p.element?'element_'+p.element:lanes[lane];
    let parent=hybrid?affinity:p.element?'element_'+p.element:branchDepth?'passive_'+route[branchDepth-1]:affinity;
-   for(let i=1;i<=2;i++){const id='path_'+p.id+'_'+i,stat=STATS[family];branches.push(Object.freeze({id,family,pathFor:p.id,pathStep:i,pathLane:lane,branchLane,branchDepth,...(hybrid?{hybridFor:p.id}:{}),name:LABELS[stat],description:'+1 '+LABELS[stat]+'.',attribute:stat,requires:parent,...(i===1?{legacyRequires:oldPrevious,legacyBranchRequires:oldBranch,legacyV5Requires:oldParent,legacyV4Requires:hybrid?affinity:lanes[lane]}:{})}));parent=id;}
-   let bridge=null;if(hybrid){bridge='affinity_'+other;for(let i=1;i<=2;i++){const id='bridge_'+p.id+'_'+i,stat=STATS[other];branches.push(Object.freeze({id,family:other,hybridFor:p.id,bridgeStep:i,name:LABELS[stat],description:'+1 '+LABELS[stat]+'.',attribute:stat,requires:bridge}));bridge=id;}}
+   for(let i=1;i<=2;i++){const id='path_'+p.id+'_'+i,stat=STATS[family];branches.push(Object.freeze({id,family,pathFor:p.id,pathStep:i,pathLane:lane,branchLane,branchDepth,...(hybrid?{hybridFor:p.id}:{}),name:LABELS[stat],description:'+1 '+LABELS[stat]+'.',attribute:stat,requires:parent,...(i===1?{legacyRequires:oldPrevious,legacyBranchRequires:oldBranch,legacyV5Requires:oldParent,legacyV4Requires:hybrid?affinity:lanes[lane]}:{})}));}
+   let bridge=null;if(hybrid){bridge='affinity_'+other;for(let i=1;i<=2;i++){const id='bridge_'+p.id+'_'+i,stat=STATS[other];branches.push(Object.freeze({id,family:other,hybridFor:p.id,bridgeStep:i,name:LABELS[stat],description:'+1 '+LABELS[stat]+'.',attribute:stat,requires:bridge}));}}
    const starterUpgrade=['bleeding_edge','toxic_touch'].includes(p.id),ranks=starterUpgrade?p.max-1:p.max;
    for(let i=0;i<ranks;i++){const rank=i+1,id=rank===1?base:base+'_rank'+rank,required=rank===1?[parent,...(bridge?[bridge]:[])]:[rank===2?base:base+'_rank'+(rank-1)];branches.push(Object.freeze({id,passiveId:p.id,rank,maxRank:ranks,family,branchLane,branchDepth,...(hybrid?{hybridFor:p.id,hybridOther:other}:{}),name:starterUpgrade?'Improve '+p.name:p.name,description:starterUpgrade?'Improve the application chance granted by your affinity by 4 percentage points per rank.':p.description,prerequisites:required}));}
    previous=base;oldLanes[oldLane]=base;index++;if(!hybrid){lanes[lane]=base;normalIndex++;}
@@ -86,12 +86,13 @@ function nodes(){
  for(const [anchor,stat,prefix,first,second]of CHOICES){
   const a='passive_'+anchor,family=catalogue.find(p=>p.id===anchor).family;
   for(let step=1;step<=2;step++){
-   const id='fork_'+prefix+'_'+stat+'_'+step,requires=step===1?a:'fork_'+prefix+'_'+stat+'_1';let n=forks.find(n=>n.id===id);
+   const id='fork_'+prefix+'_'+stat+'_'+step,requires=a;let n=forks.find(n=>n.id===id);
    if(n){n.legacyRequires=n.requires;n.requires=requires;n.forkAnchor=a;}else forks.push({id,name:LABELS[stat],description:'+1 '+LABELS[stat]+'.',attribute:stat,family,requires,forkAnchor:a,forkStep:step});
   }
-  for(const [id,side]of [[first,-1],[second,1]]){const n=forks.find(n=>n.id===id);n.legacyRequires=n.requires;n.requires='fork_'+prefix+'_'+stat+'_2';n.forkAnchor=a;n.forkStep=3;n.forkSide=side;}
+  for(const [id,side]of [[first,-1],[second,1]]){const n=forks.find(n=>n.id===id);n.legacyRequires=n.requires;n.requires=a;n.forkAnchor=a;n.forkStep=3;n.forkSide=side;}
  }
  cachedNodes=Object.freeze([...CORE,...branches,...forks].map(node=>{
+  if(node.forkAnchor)node={...node,requires:node.forkAnchor};
   if(!node.attribute)return Object.freeze(node);
   const step=node.pathStep||node.bridgeStep||node.forkStep||1;
   const options={str:[['flatAttack',2,'Attack Power'],['flatArmor',2,'Armor']],end:[['flatArmor',2,'Armor'],['flatLife',5,'Health']],agi:[['flatAttack',2,'Attack Power'],['flatAvoid',2,'Evasion rating']],int:[['flatSpell',2,'Spell Power'],['flatRegen',.25,'Mana per second']],cha:[['flatLife',5,'Health'],['flatAttack',2,'Attack Power']]};

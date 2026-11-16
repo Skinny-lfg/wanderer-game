@@ -41,8 +41,15 @@ globalThis.arenaFixture = {
   let parried=false;
   for(let i=0;i<8&&!parried;i++){phase4Seed=(i*998877)>>>0;target.groupClock=100;r.tPlayer=0;updateFight();parried=!!r.lastImpact?.parry;}
   if(!parried||r.stats.off)throw Error('Sword parry without shield failed');
+  const socket=family=>{const rune=makeRune(family,1);state.runes=[rune];state.runeSlots=[rune.id];};
+  socket('wisdom');arm('Wand');r.mp=0;weaponAttack(r);if(!r.wisdomUsed)throw Error('Wisdom did not fund cast');
+  socket('warding');r.barrier=0;target.attackType='spell';target.groupClock=100;r.tPlayer=0;updateFight();
+  if(!r.wardingUsed)throw Error('Warding did not protect hero');
+  socket('swiftness');arm('Daggers');target.hp=1;target.barrier=0;weaponAttack(r);
+  if(!r.swiftUsed)throw Error('Swiftness did not advance clock');
  },
- healthFraction(value){state.run.hp=state.run.maxhp*value;updateBars();},
+ healthFraction(value){clearInterval(clock);state.run.hp=state.run.maxhp*value;updateBars();},
+ freeze(){clearInterval(clock);},
  tick(){updateFight();}
 };
 `;
@@ -78,6 +85,7 @@ const server = http.createServer((req,res)=>{
       }
       await page.locator('#combatSpeed').click();
       await page.locator('#combatSpeed').click();
+      await page.evaluate(()=>arenaFixture.freeze());
       assert.match(await page.locator('#combatSpeed').innerText(), /4/);
       await page.locator('#scene').screenshot({path:path.join(output,kind+'-scene.png')});
       await page.locator('.combatLayout > .panel').first().screenshot({path:path.join(output,kind+'-desktop.png')});

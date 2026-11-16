@@ -131,8 +131,10 @@ function create(themes,rng=Math.random){
     edges.push([13+arm,id]);
    }
    const shortcut=9;edges.push([9,10]);
+   const pools={blood:[['weapon','Sword'],['weapon','Two-Handed']],decay:[['weapon','Daggers'],['armor','Leather']],vitality:[['weapon','Wand'],['armor','Plate']],aegis:[['offhand','Shield'],['armor','Cloth']],fury:[['weapon','Bow'],['weapon','Daggers']],magic:[['weapon','Staff'],['offhand','Orb']]};
+   const [slot,subtype]=shuffle(pools[family],routeRng)[0];
    const objective=nodes.findIndex(n=>n.kind==='elite');
-   return {id:theme.id,name:theme.name,family,image:theme.image,risk,nodes,edges,shortcut,positions,objective,bossSector,stepLimit:14-risk};
+   return {id:theme.id,name:theme.name,family,image:theme.image,risk,nodes,edges,shortcut,positions,objective,favoured:{slot,subtype},bossSector,stepLimit:14-risk};
   });
   Object.assign(game,{version:2,expedition:level,planeIndex:1,stage:'choice',freeBuild:true,offers:[],selected:null,wave:0,history:[],rooms:[],rewardPending:null,families:[],initialFamily:null,lastFamily:null,rerolls:0,rerollsByRealm:Array.from({length:15},()=>[0,0,0]),bossId:shuffle(BOSSES,routeRng)[0].id,encounterVersion:1,dungeon:{cards,realm:null,current:0,cleared:[0],visited:[0]}});
   for(const k of ['routeMap','routeEdges','routePositions','routeMobCounts'])delete game[k];

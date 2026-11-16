@@ -512,8 +512,18 @@ function showConfirm(title,message,onConfirm,actionLabel='Confirm'){
 
 function affinityBadge(item){return '';}
 
+function barrierSource(gear){
+ const nodes=state.automaticTalents?.nodes||[],caster=['Staff','Wand'].includes(gear.weapon?.subtype);
+ if(gear.weapon?.subtype==='Wand'&&gear.offhand?.subtype==='Orb')return 'Orb Ward';
+ if(Object.values(gear).some(i=>i?.v013Trait==='ward')&&(caster||nodes.includes('affinity_magic')))return 'Arcane Ward';
+ if(Object.values(gear).some(i=>i?.legendaryId==='veil-thousand-seals'))return 'Veil of a Thousand Seals';
+ const talents=['barrier_pulse','blood_ward','runic_shield','rot_ward','rot_husk','sanctuary','fervent_life'];
+ const talent=talents.find(t=>nodes.includes('passive_'+t));if(talent)return talent.replaceAll('_',' ')+' (conditional)';
+ if(state.potionSelection?.includes('barrier')||phase6Run?.potions?.some(p=>p.kind==='barrier'&&!p.used))return 'Barrier Flask';
+ return '';
+}
 function itemComparison(item,target=item.slot){
-const equipped=state.equip[target],next=totalStats(comparisonEquip(item,target)),current=totalStats();
+const equipped=state.equip[target],gear=comparisonEquip(item,target),next=totalStats(gear),current=totalStats();
 const powerDiff=next.power-current.power,sign=n=>n>0?'+'+n:String(n);
 const card=(o,label)=>`<div class="compareCard" ${rarityFrame(o)}><span class="eyebrow">${label}</span>${o?`${rarityArt(o,itemImg(o),o.subtype,'compare')}<b style="color:${rarityColor(o)}">${esc(o.name)}</b><span>${itemSource(o)}</span><span>${detailEffectHtml(o)}</span>`:'<b>Empty slot</b>'}</div>`;
 const rows=FIELDS.filter(([,key])=>itemStatValue(item,key)!==itemStatValue(equipped,key)).map(([label,key])=>{
@@ -521,7 +531,7 @@ const effective=o=>itemStatValue(o,key)*(target==='offhand'&&isDagger(o)&&['atk'
 const a=effective(equipped),b=effective(item),d=b-a;
 return `<tr><th scope="row">${label}</th><td>${a}</td><td>${b}</td><td class="${d>0?'green':d<0?'red':'muted'}">${sign(d)}</td></tr>`;
 }).join('');
-return `<section class="itemComparison"><div class="topline"><h3>Quick Compare · ${esc(SNAME[target])}</h3><span class="tag">Estimated Power ${current.power} → ${next.power} <b class="${lostSetTiers(item,target).length?'gold':powerDiff>0?'green':powerDiff<0?'red':'muted'}">(${sign(powerDiff)})</b></span></div>${comparisonWarning(item,target)}<div class="comparisonCards">${card(equipped,'Equipped')}${card(item,'Selected')}</div><div class="comparisonTable"><table><thead><tr><th>Attribute</th><th>Current</th><th>Selected</th><th>Δ</th></tr></thead><tbody>${rows||'<tr><td colspan="4">Same base attributes</td></tr>'}</tbody></table></div>${target==='offhand'&&isTwoHanded(state.equip.weapon)?'<p class="small gold">Off-Hand locked. Unequip your two-handed weapon before equipping an Off-Hand.</p>':''}</section>`;
+return `<section class="itemComparison"><div class="topline"><h3>Quick Compare · ${esc(SNAME[target])}</h3><span class="tag">Estimated Power ${current.power} → ${next.power} <b class="${lostSetTiers(item,target).length?'gold':powerDiff>0?'green':powerDiff<0?'red':'muted'}">(${sign(powerDiff)})</b></span></div>${comparisonWarning(item,target)}${next.wardBonus||current.wardBonus?'<p>Barrier strength +'+Math.round((current.wardBonus||0)*100)+'% → +'+Math.round((next.wardBonus||0)*100)+'% · '+esc(barrierSource(gear)||'No barrier source identified in this loadout')+'</p>':''}<div class="comparisonCards">${card(equipped,'Equipped')}${card(item,'Selected')}</div><div class="comparisonTable"><table><thead><tr><th>Attribute</th><th>Current</th><th>Selected</th><th>Δ</th></tr></thead><tbody>${rows||'<tr><td colspan="4">Same base attributes</td></tr>'}</tbody></table></div>${target==='offhand'&&isTwoHanded(state.equip.weapon)?'<p class="small gold">Off-Hand locked. Unequip your two-handed weapon before equipping an Off-Hand.</p>':''}</section>`;
 }
 function previewItem(o,source='stash'){
 if(!o)return `<div class="inspect"><h3>Choose an item</h3><p class="small muted">Tap an icon to inspect its attributes and compare it with your current equipment.</p></div>`;
@@ -643,6 +653,13 @@ function renderV013Forge(){
  const compareTargets=recipe.subtype==='Daggers'?['weapon','offhand']:['ring1','ring2'].includes(recipe.slot)?['ring1','ring2']:[recipe.slot],target=compareTargets.includes(v013CompareTarget)?v013CompareTarget:compareTargets[0];
  const reason=busy?'Finish your Expedition before crafting.':!progress.unlocked?'Discover this recipe in its Realm before crafting.':!stashHasRoom()?'Free a Stash slot before crafting.':missing.length?'Need '+missing.map(x=>(x.need-x.have)+' '+x.name).join(' · ')+'.':'Ready to craft.';
  html('<section class="panel v013Forge"><div class="v013ForgeHeading"><span class="eyebrow">Equipment projects</span><h2>Forge</h2><p class="small muted">Review the exact item and compare it with your equipment before spending materials.</p></div><div class="filterBar"><label>Rarity<select id="v013RecipeRarity">'+['Uncommon','Rare','Epic'].map(x=>'<option>'+x+'</option>').join('')+'</select></label><label>Slot<select id="v013RecipeSlot">'+[...new Set(c.RECIPES.filter(r=>r.rarity===v013RecipeRarity).map(r=>r.slot))].map(x=>'<option value="'+x+'">'+esc(SNAME[x]||x)+'</option>').join('')+'</select></label><label>Recipe<select id="v013Recipe">'+choices.map(r=>'<option value="'+r.id+'">'+esc(r.name)+'</option>').join('')+'</select></label></div>'+(focusOptions.length?'<div class="v013CraftFocus"><label for="v013CraftFocus">Optional armor infusion<select id="v013CraftFocus"><option value="none">No infusion · save Essence</option>'+focusOptions.map(([id,f])=>'<option value="'+id+'">'+esc(f.name)+' · +'+f.essence[recipe.rarity]+' Essence</option>').join('')+'</select></label><p class="small muted">'+(focus?esc(focus.description):'Cloth favors spell builds, Leather adds evasion, and Plate favors endurance. Infusions are deterministic and included in the preview.')+'</p></div>':'')+'<div class="v013ForgeRecipe"><div class="v013ForgeArt">'+rarityArt(preview,itemImg(preview),recipe.name,'inspect')+'</div><div><span class="eyebrow">Exact craft preview · E'+price.tier+'</span><h3 style="color:'+RARITY[recipe.rarity][0]+'">'+esc(recipe.name)+'</h3><p class="v013ForgeStats">'+esc(itemStats(preview))+'</p><p>'+esc(recipe.description)+'</p>'+(focus?'<p class="small gold">'+esc(focus.name)+': '+esc(focus.description)+' Costs '+price.focusEssence+' additional Essence.</p>':'')+(isTwoHanded(preview)?'<p class="small gold">Two-Handed · occupies Weapon and Off-Hand.</p>':'')+'</div></div><details class="v013ForgeComparison"><summary>Compare with equipped</summary>'+(compareTargets.length>1?'<label>Compare slot<select id="v013CompareTarget">'+compareTargets.map(t=>'<option value="'+t+'" '+(t===target?'selected':'')+'>'+esc(SNAME[t])+'</option>').join('')+'</select></label>':'')+itemComparison(preview,target)+'</details><section class="v013MaterialCosts"><h3>Materials</h3><div class="statsGrid">'+progress.requirements.map(x=>'<div class="stat '+(x.have>=x.need?'is-met':'is-missing')+'"><label>'+esc(x.name)+'</label><b>'+x.have+' / '+x.need+'</b><small>'+(x.have>=x.need?'Ready':'Need '+(x.need-x.have)+' more')+'</small></div>').join('')+'</div><p class="v013CraftStatus" role="status">'+esc(reason)+'</p><div class="buttonRow"><button id="v013TrackRecipe" aria-pressed="'+(p.targetRecipe===recipe.id)+'" '+(busy?'disabled':'')+'>'+(p.targetRecipe===recipe.id?'Stop tracking':'Track this recipe')+'</button><button class="primary" id="v013Craft" '+(!progress.ready||busy||!stashHasRoom()?'disabled':'')+'>Craft '+recipe.rarity+' item</button></div></section><details class="v013ForgeNotes"><summary>Material sources &amp; crafting rules</summary><p>'+esc(recipe.source)+'</p>'+progress.requirements.map(x=>'<p class="small"><b>'+esc(x.name)+':</b> '+esc(x.source)+'</p>').join('')+'<p class="small muted">Equipment band E'+price.tier+'–E'+(price.tier+4)+'. Materials occupy no Bag slots. Tracking guides your next route and boss destination. Repeated copies of the same Epic effect do not stack. Plate has Endurance; Leather has Agility and Evasion; Cloth has Intellect. Armor infusions are optional Essence costs.</p></details></section>');
+ if(recipe.rarity==='Epic'&&state.crafting.cores[recipe.family]<price.cores){
+  const count=state.crafting.dryRooms?.[recipe.family]||0,button=document.createElement('button');
+  button.textContent='Refine 1 '+recipe.family+' reagent · 6 Essence · '+count+'/3 rooms without a reagent';
+  button.disabled=busy||count<3||state.crafting.essence<6;
+  button.onclick=()=>{const old=state.crafting,next=c.refine(old,recipe.family);if(!next||!economyCanAct())return;state.crafting=next;if(!phase5Persist()){state.crafting=old;return;}renderV013Forge();};
+  $('v013Craft').after(button);
+ }
  $('v013RecipeRarity').value=v013RecipeRarity;$('v013RecipeSlot').value=v013RecipeSlot;$('v013Recipe').value=recipe.id;
  $('v013RecipeRarity').onchange=e=>{v013RecipeRarity=e.target.value;v013RecipeId=null;renderV013Forge();};$('v013RecipeSlot').onchange=e=>{v013RecipeSlot=e.target.value;v013RecipeId=null;renderV013Forge();};$('v013Recipe').onchange=e=>{v013RecipeId=e.target.value;renderV013Forge();};
  const focusControl=$('v013CraftFocus');if(focusControl){focusControl.value=v013CraftFocus;focusControl.onchange=e=>{v013CraftFocus=e.target.value;renderV013Forge();};}
@@ -1205,6 +1222,14 @@ function phase6BindBack(){if(phase1Controller.state.planeIndex!==1||phase6Run?.s
 
 
 
+function encounterHighlight(r){
+ const metrics=r.metrics||{};
+    const notes=[[metrics.absorbed,'Barrier absorbed','damage'],[metrics.armor,'Armor prevented','damage'],[metrics.shield,'Shield blocked','damage'],[metrics.periodicDamage,'Damage over time dealt','damage'],[metrics.healing,'Healing restored','HP']].filter(([value])=>value>0).sort((a,b)=>b[0]-a[0]);
+    
+    const signature=r.wardingUsed?'Warding softened a hit. ':r.wisdomUsed?'Wisdom funded a cast. ':r.swiftUsed?'Swiftness advanced an attack. ':'';
+    const [value,label,unit]=notes[0]||[metrics.damageDealt||0,'Your attacks dealt','damage'];
+    return signature+label+' '+Math.round(value)+' '+unit+'.'+(metrics.parries?' Parries: '+metrics.parries+'.':'')+(metrics.dodges?' Dodges: '+metrics.dodges+'.':'');
+}
 function phase1DecorateCombat(){
  if(!isPhase1Run()||typeof document.querySelector!=='function')return;
  const g=phase1Controller.state,r=state.run;
@@ -1231,6 +1256,8 @@ function phase1DecorateCombat(){
   note.textContent=r.status==='fight'?(r.enemies?'Auto-combat · click or tap a mob to focus':'Auto-combat · one enemy at a time'):r.status==='cleared'?'Realm completed · review your log before leaving':'Encounter resolved';
   actions.prepend(note);
   if(r.status==='cleared'&&!phase1Draft){
+    const highlight=document.createElement('p');highlight.className='small';highlight.textContent=encounterHighlight(r);
+    if(arena)arena.before(highlight);
     const exit=document.createElement('button');exit.id='phase5ExitRealm';exit.className='primary';exit.textContent=g.dungeon?'Return to map':'EXIT REALM';exit.onclick=phase5ExitResult;
     actions.prepend(exit);actions.classList.add('phase3CombatExitActions');
     if(arena)arena.before(actions);
@@ -1673,7 +1700,7 @@ function dungeonMapMarkup(g){
 function renderRealmCards(g){
  html('<section class="panel"><span class="eyebrow">Expedition '+g.expedition+'</span><h1>Choose your Realm</h1><div class="phase1Offers">'+g.dungeon.cards.map(c=>{
  const t=phase2Theme(c.id);
- return '<button class="phase1Offer" data-realm-card="'+c.id+'"><img src="'+dungeonImage(c)+'" alt=""><div class="phase1OfferBody"><strong>'+esc(c.name)+'</strong><p>'+phase2FamilyIcon(c.family)+' '+esc(c.family)+' · '+realmDifficulty(c)+'</p><p>'+esc(t.enemy)+' · '+esc(t.effect)+' · '+(c.risk?'Boss with '+c.risk+' guard'+(c.risk===1?'':'s'):'Solo boss')+'</p><small>'+(c.stepLimit?c.stepLimit+' steps · ':'')+(c.risk?'+'+(c.risk*12)+'% combat Gold, Fragments and equipment chance':'Standard rewards')+' · '+esc(c.family)+' reagent · Marked elite favours shields · '+(4+c.risk*2)+' Essence on extraction</small></div></button>';
+ return '<button class="phase1Offer" data-realm-card="'+c.id+'"><img src="'+dungeonImage(c)+'" alt=""><div class="phase1OfferBody"><strong>'+esc(c.name)+'</strong><p>'+phase2FamilyIcon(c.family)+' '+esc(c.family)+' · '+realmDifficulty(c)+'</p><p>'+esc(t.enemy)+' · '+esc(t.effect)+' · '+(c.risk?'Boss with '+c.risk+' guard'+(c.risk===1?'':'s'):'Solo boss')+'</p><small>'+(c.stepLimit?c.stepLimit+' steps · ':'')+(c.risk?'+'+(c.risk*12)+'% combat Gold, Fragments and equipment chance':'Standard rewards')+' · '+esc(c.family)+' reagent · Marked elite favours '+esc(c.favoured?.subtype||'Shield')+' · '+(4+c.risk*2)+' Essence on extraction</small></div></button>';
  }).join('')+'</div><button id="phase1BackToCamp">Return to Camp</button></section>');
  Q('[data-realm-card]').forEach(b=>b.onclick=()=>{phase1Controller.chooseRealm(b.dataset.realmCard);if(phase5Persist())render();});
  $('phase1BackToCamp').onclick=phase6BackToCamp;
@@ -1692,7 +1719,7 @@ function bindDungeonRooms(g){
   const route=path.map(j=>dungeonRoomLabel(c.nodes[j])).join(' → ');
   const detail=cleared?'Cleared passage.':n.event?WandererV012IntegratedEvents.get(n.event)[1]:n.kind==='combat'?n.range[0]+'–'+n.range[1]+' enemies':dungeonRoomLabel(n)+' with '+n.escorts+' guards';
   const full=!cleared&&(phase3BagOverflow()||phase3BagItems().length>=PHASE3_BAG_CAPACITY);
-  const dialog=showModal(dungeonRoomLabel(n),'<p>'+esc(detail)+'</p><p>'+esc(route)+'</p>'+(remaining===undefined?'':'<p>'+cost+' steps · '+(tooFar?'Not enough steps.':(remaining-cost)+' left after travel.')+'</p>')+(full?'<p>Free a bag slot to enter.</p>':''),full||tooFar?null:()=>{
+  const dialog=showModal(dungeonRoomLabel(n),'<p>'+esc(detail)+(i===c.objective?' · Favours '+esc(c.favoured?.subtype||'Shield'):'')+'</p><p>'+esc(route)+'</p>'+(remaining===undefined?'':'<p>'+cost+' steps · '+(tooFar?'Not enough steps.':(remaining-cost)+' left after travel.')+'</p>')+(full?'<p>Free a bag slot to enter.</p>':''),full||tooFar?null:()=>{
    if(!phase1Controller.visitRoom(i))return;
    if(cleared){if(phase5Persist())render();}else phase1Enter();
   },cleared?'Travel here':'Enter room');
@@ -1852,7 +1879,7 @@ function phase5RealmResultMarkup(r,summary){
   '<div class="phase5ResultActions phase5ResultActions--early"><button id="phase5ExitResult" class="primary" '+(phase1Controller.state.version===2&&phase1Draft?.kind==='reward'?'disabled':'')+'>EXIT REALM</button></div>'+
    '<div class="phase5ResultMetrics">'+metric('Combat time',Number(r.seconds).toFixed(1)+'s')+metric('Gold','+'+(Number(r.gold)||0))+metric('Fragments','+'+(Number(r.fragments)||0))+'</div><p class="small muted">Combat time excludes Camp and offline time.</p>'+
   (phase5Results.complete?'':'<p class="small muted">Older checkpoint: only activity recorded since this update is included.</p>')+
-  (damage.length?'<section class="phase5DamageStats"><h2>Realm statistics</h2><div class="phase5ResultMetrics">'+damage.map(([label,value])=>metric(label,Math.round(value))).join('')+'</div></section>':'')+
+  (damage.length?'<p>'+esc(encounterHighlight(r))+'</p><section class="phase5DamageStats"><h2>Realm statistics</h2><div class="phase5ResultMetrics">'+damage.map(([label,value])=>metric(label,Math.round(value))).join('')+'</div></section>':'')+
   '<section class="phase5GearGroup phase5RealmGear phase5RealmGear--'+lootState+'"><h2>Realm equipment '+(lootState==='lost'?'lost':'secured')+'</h2>'+itemCards(r.loot||[])+'</section>'+
   '<section class="phase5GearGroup phase5RealmGear"><h2>Realm treasures '+(outcome?'secured':'collected · still at risk')+'</h2>'+treasureCards(r.treasures||[])+'</section>'+
   (r.log?.length?'<details class="phase5LastLog"><summary>Last Realm Combat Log</summary>'+(r.truncated?'<p>Older entries omitted: log storage safety limit reached.</p>':'')+'<div class="log">'+r.log.map(l=>'<div class="logLine">'+esc(l.text)+'</div>').join('')+'</div></details>':'')+

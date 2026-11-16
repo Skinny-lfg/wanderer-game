@@ -51,7 +51,7 @@ function totalStats(equipment,ownedRunes,equippedRuneIds,{isTwoHanded,FIELDS,ite
  s.caster=caster;s.main=main;s.off=off;s.sets=sets.list;s.bonus=sets.values;s.counts=counts;
  s.maxhp=Math.round(55+s.end*12+s.hpFlat);
  s.attack=Math.round(4+s.str*1.8+s.agi*.4+s.atkFlat);
- s.defense=Math.round(1+s.end*.8+s.str*.3+s.defFlat);
+ s.defense=Math.round(1+s.end*.8+s.defFlat);
  s.rawAttackSpeed=attackSpeed(main?.subtype,s.agi,s.spdFlat,s.int);
  s.attacksPerSec=s.rawAttackSpeed;
  const critRating=Math.max(0,s.cha-5)/Math.sqrt(Math.max(1,main?.tier||1));

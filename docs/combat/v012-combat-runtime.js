@@ -498,7 +498,6 @@ function updateFight(){
   if(attackType==='physical'&&s.main?.subtype==='Sword'&&ports.gameRandom()<.18){
    r.lastImpact={parry:true,source:e.name,at:r.combatSeconds};ports.floatText('PARRY','hero');ports.phase6Metric(r,'parries',1);
   }else if(ports.tryDodge(r,attackType)){
-   ports.phase6Metric(r,'armor',armorPrevented);ports.phase6Metric(r,'shield',damageBlocked);ports.phase6Metric(r,'absorbed',blocked);
   r.lastImpact={source:e.name,at:r.combatSeconds,dodge:true};
    ports.phase6Metric(r,'dodges',1);
    ports.animateEnemyStrike(enemyAbilityVfx);
@@ -524,6 +523,7 @@ function updateFight(){
   const barrierBeforeHit=r.barrier,blocked=Math.min(r.barrier,raw);r.barrier-=blocked;
   const barrierBroken=barrierBeforeHit>0&&r.barrier<=0;let hit=Math.max(0,raw-blocked);
   if(hit>0&&!r.wardingUsed&&signature('warding')){const saved=Math.ceil(hit*.25);hit-=saved;r.wardingUsed=true;ports.addLog('Warding prevented '+saved+' damage.','good');}
+  ports.phase6Metric(r,'armor',armorPrevented);ports.phase6Metric(r,'shield',damageBlocked);ports.phase6Metric(r,'absorbed',blocked);
   r.lastImpact={source:e.name,at:r.combatSeconds,armor:armorPrevented,barrier:blocked,shield:damageBlocked,hit};
   if(blocked>0)ports.addLog('🛡 Barrier absorbs '+blocked+' damage','good');
   if(hit>0){
