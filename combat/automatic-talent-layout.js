@@ -10,7 +10,7 @@ function create(list){
  }
  for(const family of Object.keys(ANGLES))positions['affinity_'+family]=point(ANGLES[family],650);
  for(const node of list){if(node.hybridFor)continue;const t=((node.branchLane??1)-1)*450,r=1150+(node.branchDepth||0)*600;
-  if(node.pathFor)positions[node.id]=local(node.family,t+(node.pathStep===1?-85:85),r-150);
+  if(node.pathFor)positions[node.id]=local(node.family,t+(node.pathStep===1?-80:0),r-(node.pathStep===1?80:160));
   if(node.passiveId){const offsets=[[0,0],[90,0],[180,0],[180,90],[90,90]],o=offsets[node.rank-1];positions[node.id]=local(node.family,t+o[0],r+o[1]);}
   if(node.elementBranch){const lane=['fire','frost','lightning'].indexOf(node.elementBranch);positions[node.id]=local('magic',(lane-1)*450,1990);}
  }
