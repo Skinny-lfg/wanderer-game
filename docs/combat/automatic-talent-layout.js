@@ -56,27 +56,22 @@ function create(list){
  }
  const visible=list.filter(n=>n.rank===undefined||n.rank===1).filter(n=>positions[n.id]);
  const obstacles=visible.map(n=>({...positions[n.id],radius:n.affinity?86:39}));
+
  const cache=new Map();
  function waypoints(node,required){
-  const key=required+'>'+node.id;
-  if(cache.has(key))return cache.get(key);
-  const path=[positions[required],positions[node.id]];
-  const active=obstacles.filter(p=>path.length&&[path[0],path.at(-1)].every(q=>Math.hypot(p.x-q.x,p.y-q.y)>1));
-  for(let i=1,limit=0;i<path.length&&limit<100;i++,limit++){
-   const a=path[i-1],b=path[i],dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy);
-   if(!len)continue;
-   let first=null,nearest=Infinity;
-   for(const p of active){
-    const t=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/(len*len)));
-    if(t<nearest&&Math.hypot(p.x-a.x-t*dx,p.y-a.y-t*dy)<p.radius){first=p;nearest=t;}
-   }
-   if(!first)continue;
-   const side=((first.x-a.x)*dy-(first.y-a.y)*dx)>=0?1:-1;
-   const offset=first.radius+10;
-   path.splice(i,0,{x:first.x-side*dy*offset/len,y:first.y+side*dx*offset/len});
-   i--;
+  const key=required+'>'+node.id;if(cache.has(key))return cache.get(key);
+  const from=positions[required],to=positions[node.id];if(!from||!to)return [];
+  const excluded=obstacles.filter(p=>Math.hypot(p.x-from.x,p.y-from.y)>1&&Math.hypot(p.x-to.x,p.y-to.y)>1);
+  const candidates=[];
+  for(const offset of [0,100,-100,200,-200,350,-350]){
+   const x=(from.x+to.x)/2+offset,y=(from.y+to.y)/2+offset;
+   candidates.push([from,{x,y:from.y},{x,y:to.y},to],[from,{x:from.x,y},{x:to.x,y},to]);
   }
-  cache.set(key,path);return path;
+  const score=route=>{let collisions=0,length=0;for(let i=1;i<route.length;i++){
+   const a=route[i-1],b=route[i];length+=Math.abs(b.x-a.x)+Math.abs(b.y-a.y);
+   for(const p of excluded){const x=Math.max(Math.min(a.x,b.x),Math.min(Math.max(a.x,b.x),p.x)),y=Math.max(Math.min(a.y,b.y),Math.min(Math.max(a.y,b.y),p.y));if(Math.hypot(x-p.x,y-p.y)<p.radius+12)collisions++;}
+  }return collisions*100000+length;};
+  candidates.sort((a,b)=>score(a)-score(b));cache.set(key,candidates[0]);return candidates[0];
  }
  return {positions,proxies,hybrids,center,angles:ANGLES,rootAngles:ROOT_ANGLES,point,waypoints,width:12300,height:8600};
 }
