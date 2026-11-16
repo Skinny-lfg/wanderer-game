@@ -84,7 +84,7 @@ const descriptions={
  renewal:'Heal 0.55% Max HP per second at Rank 1; smaller gains at higher ranks. Healing reduction applies.',
  last_stand:'Once per Expedition, survive a lethal hit and recover 6% Max HP.',
  second_breath:'Heal after each completed encounter: 1.5% Max HP at rank 1 (+0.4 percentage points per rank).',
- life_bloom:'Each combat second, restore up to 0.6% Max HP and 3.4 Mana; both gain less per additional rank.',
+ life_bloom:'Each combat second, restore 0.25% Max HP and 1.5 Mana at rank 1; gains become smaller at higher ranks, up to 0.6% Health and 3.4 Mana.',
  iron_skin:'Defense +12% at Rank 1; smaller gains at higher ranks.',
  fortified:'Reduce incoming damage by 4% per rank, within the combined 28% cap.',
  guarded_block:'Raises Block chance. Total Block chance cannot exceed 65%.',
@@ -325,7 +325,7 @@ function onCast(b,c){
  if(b.element==='fire'&&specialized(b,'kindling_flame'))c.dot('burn',power*.08);
  if(b.element==='fire'&&specialized(b,'combustion')&&e.dots?.burn?.length&&ready(b,'combustion',c.now,4))c.damage(power*.20,'💥 Combustion');
  if(b.element==='frost'&&specialized(b,'shatter')&&e.slowTime>0&&ready(b,'shatter',c.now,4))c.damage(power*.25,'💠 Shatter');
- if(b.element==='frost'&&specialized(b,'deep_chill'))c.chill(e.boss?1.2:4);
+ if(b.element==='frost'&&specialized(b,'deep_chill'))c.chill(e.boss?1.2:Math.min(5,Math.max(3.5,e.slowTime||0)+.5));
  if(b.element==='lightning'&&specialized(b,'static_charge'))c.damage(power*.10,'⚡ Static Charge');
  if(b.element==='lightning'&&specialized(b,'chain_discharge')&&b.runtime.magicHits%4===0)c.damage(power*.35,'🔗 Chain Discharge');
  if(b.element==='fire'&&rank(b,'kindling')&&activated(b,'kindling'))c.dot('burn',power*values('kindling',rank(b,'kindling')).burn);
@@ -424,9 +424,9 @@ function onKill(b,c){
 function survive(b,c){if(specialized(b,'unbreakable')&&!b.runtime.unbreakableUsed){b.runtime.unbreakableUsed=true;b.runtime.unbreakableUntil=c.now+5;c.player.hp=1;c.barrier(c.player.maxhp*.20);c.log('🏰 Unbreakable');return true;}if(!rank(b,'last_stand')||b.runtime.lastStand)return false;activated(b,'last_stand');b.runtime.lastStand=true;c.player.hp=Math.max(1,c.player.maxhp*.06);c.log('💚 Last Stand (once per Expedition)');return true;}
 function speed(b,now){const adrenaline=b?.runtime?.adrenalineUntil>now?1+values('adrenaline',rank(b,'adrenaline')).speed:1;return adrenaline*(1+(specialized(b,'battle_tempo')?.03*(b.runtime.battleTempo||0):0))*(b?.runtime?.momentumUntil>now?1.15:1)*(b?.runtime?.unbreakableUntil>now?.8:1);}
 function enemyHealMultiplier(b,e){return 1-(e.v012Rot?.length&&rank(b,'wither')?values('wither',rank(b,'wither')).healingReduction:0);}
-function nextCost(b,baseCost=8){return Math.max(1,Math.ceil(baseCost*(1-.12*rank(b,'efficient_cast'))));}
+function nextCost(b,baseCost=8){return Math.max(Math.min(3,baseCost),baseCost-rank(b,'efficient_cast'));}
 function resetWave(b,e){e.v012Rot=[];e.v012Shock=0;}
-function canCast(b){return !!b&&!!b.element&&['kindling','deep_winter','overcharge','arcane_focus','arcane_echo','spell_surge','spellblade','hex_bolt','hex_bleed','hemal_sigil','elemental_blight','prismatic_rebound','runic_shield'].some(id=>rank(b,id));}
+function canCast(b){return !!b&&!!b.element&&(b.runtime?.permanentBuild&&b.unlockedFamilies?.includes('magic')||['kindling','deep_winter','overcharge','arcane_focus','arcane_echo','spell_surge','spellblade','hex_bolt','hex_bleed','hemal_sigil','elemental_blight','prismatic_rebound','runic_shield'].some(id=>rank(b,id)));}
 function validate(b){
  if(!b||![undefined,1,2,3].includes(b.version)||!Array.isArray(b.families)||b.families.length>(b.runtime?.permanentBuild?FAMILIES.length:3)||new Set(b.families).size!==b.families.length||!b.families.every(f=>FAMILIES.includes(f))||b.element!==null&&(!elements.includes(b.element)||!hasFamily(b,'magic'))||!Array.isArray(b.picks)||b.picks.length>20)throw Error('Invalid saved build');
  if(!Array.isArray(b.unlockedFamilies))b.unlockedFamilies=[...new Set(b.picks.map(id=>BY_ID[id]?.family).filter(Boolean))];

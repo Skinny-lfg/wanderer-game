@@ -1700,7 +1700,7 @@ function renderRebuiltTalents(){
  if(!state.automaticTalents)state.automaticTalents={...system.create(),starterPoints:2};
  if(!system.valid(state.automaticTalents)){html('<section class="panel"><h2>Talent Tree</h2><p>Talent progress is incompatible with the new tree.</p></section>');return;}
  globalThis.WandererTreeAPI={
-  snapshot:()=>{const p=state.automaticTalents;return {ranks:system.graphProgress(p).ranks,points:system.earned(p)-p.nodes.length};},
+  snapshot:()=>{const p=state.automaticTalents;return {ranks:system.graphProgress(p).ranks,points:system.earned(p)-p.nodes.length,element:p.element||'fire'};},
   allocate:id=>{const before=state.automaticTalents,next=system.allocate(before,id);if(!next)return false;state.automaticTalents=next;if(!phase5Persist()){state.automaticTalents=before;return false;}return true;},
   prepare:id=>{const before=state.automaticTalents;if(id&&(!before.nodes.includes(id)||!system.NODES.find(n=>n.id===id)?.advanced))return false;state.automaticTalents={...before,prepared:id||null};if(!phase5Persist()){state.automaticTalents=before;return false;}return true;},
   element:id=>{if(!['fire','frost','lightning'].includes(id))return false;const before=state.automaticTalents;state.automaticTalents={...before,element:id};if(!phase5Persist()){state.automaticTalents=before;return false;}return true;},

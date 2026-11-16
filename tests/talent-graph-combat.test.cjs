@@ -50,3 +50,30 @@ test('catalogue mixed skills trigger their combat effect when purchased alone',(
  ];
  for(const [id,run,expected] of cases){const b=build([id]),{c,events}=context();run(b,c);assert(events.some(e=>e[0]===expected||e[0]==='damage'&&e[1].includes(expected)),id);}
 });
+test('Efficient Cast lowers the funded spell cost at each rank down to three',()=>{let p=buy({...T.create(),xp:10000},'efficient_cast');for(let rank=1;rank<=5;rank++){if(rank>1)p=T.allocate(p,'efficient_cast');const b=C.create();C.syncPermanent(b,p);assert.equal(C.nextCost(b,8),8-rank,'rank '+rank);}});
+test('Deep Chill extends existing Chill and respects the boss limit',()=>{const b=build(['deep_chill'],'frost');for(const boss of [false,true]){const {c}=context();c.enemy.boss=boss;c.enemy.slowTime=boss?1:4;c.chill=n=>{c.enemy.slowTime=Math.max(c.enemy.slowTime,n)};C.onCast(b,c);assert.equal(c.enemy.slowTime,boss?1.2:4.5);}});
+test('basic combat skills trigger their advertised attack, defense and recovery behavior',()=>{
+ const cases=[
+  ['executioner',(b,c)=>{c.enemy.hp=100;C.onAttack(b,c)},'Execute'],['blood_drinker',(b,c)=>C.onAttack(b,c),'heal'],['sanguine_fury',(b,c)=>C.onAttack(b,c),'Sanguine Fury'],
+  ['brutal_crit',(b,c)=>C.onAttack(b,c),'Brutal Critical'],['double_strike',(b,c)=>C.onAttack(b,c),'Extra Strike'],
+  ['retaliation',(b,c)=>{C.onDefend(b,c,0,10);C.onAttack(b,c)},'Retaliation'],['barrier_pulse',(b,c)=>C.onSecond(b,c),'barrier'],
+  ['renewal',(b,c)=>C.onSecond(b,c),'heal'],['second_breath',(b,c)=>C.onKill(b,c),'heal'],['life_bloom',(b,c)=>C.onSecond(b,c),'mana'],
+  ['arcane_echo',(b,c)=>{for(let i=0;i<4;i++)C.onCast(b,c)},'Arcane Echo'],['blight',(b,c)=>C.onAttack(b,c),'Blight']
+ ];
+ for(const [id,run,expected] of cases){const b=build([id]),{c,events}=context();run(b,c);assert(events.some(e=>e[0]===expected||e[0]==='damage'&&e[1].includes(expected)),id);}
+});
+test('basic combat passives alter healing, defense, speed, and resource modifiers',()=>{
+ const stats={maxhp:160,defense:20,attacksPerSec:1.25,crit:10,attack:25,int:5,spellFlat:0,manaFlat:0,mana:50,manaRegen:2,spellPower:20,caster:false};
+ for(const [id,key] of [['quick_hands','attacksPerSec'],['precision','crit'],['iron_skin','defense'],['guarded_block','blockChance'],['strong_heart','maxhp'],['arcane_focus','spellPower'],['mana_spring','manaRegen']]){const b=build([id]),baseline=build(['affinity_'+T.NODES.find(n=>n.id===id).family]);assert(C.mods(b,stats)[key]>(C.mods(baseline,stats)[key]||0),id);}
+ {const b=build(['deep_cuts']);assert(C.bleedDamage(b,100)>100);}
+ {const b=build(['elemental_force']);assert(C.elementalPower(b,100)>100);}
+ {const b=build(['virulent_rot']),{c}=context();c.enemy.v012Rot=[];C.applyRot(b,c,100);assert(c.enemy.v012Rot[0].damage>100);}
+ for(const id of ['fortified','wasting_curse','wither']){const b=build([id]),{c}=context();assert(C.incoming(b,c,100)<100,id);}
+ {const b=build(['wither']),{enemy}=context();assert(C.enemyHealMultiplier(b,enemy)<1);}
+ {const b=build(['last_stand']),{c}=context();assert(C.survive(b,c));assert(!C.survive(b,c));}
+ {const b=build(['adrenaline']),{c}=context();C.onAttack(b,c);assert(C.speed(b,1)>1);}
+});
+test('elemental specializations modify actual direct spell multiplier',()=>{const fs=require('node:fs'),vm=require('node:vm');const source=fs.readFileSync(require('node:path').join(__dirname,'../combat/v012-combat-runtime.js'),'utf8');const match=source.match(/function v013SpellMultiplier\(r\)\{[^\n]+\}/);assert(match);for(const [id,element,enemy,expected] of [['living_inferno','fire',{dots:{burn:[{}]},slowTime:0},1.25],['absolute_winter','frost',{dots:{burn:[]},slowTime:2},1.2],['storm_conductor','lightning',{dots:{burn:[]},slowTime:0},1.2]]){const sandbox={ports:{state:{automaticTalents:{nodes:[id]}},phase1Build:{element}}};vm.runInNewContext(match[0]+';this.multiplier=v013SpellMultiplier;',sandbox);assert.equal(sandbox.multiplier({enemy}),expected,id);}});
+test('Magic affinity enables a funded Fire cast without a staff',()=>{require('../combat/v012-combat-runtime.js');const b=build(['affinity_magic'],'fire'),{c,enemy}=context(),hits=[];c.now=10;const r={phase1:true,status:'fight',stats:{caster:false,spellPower:100},mp:30,hp:100,maxhp:100,enemy};const ports={state:{automaticTalents:{nodes:['affinity_magic']},equip:{}},phase1Build:b,isPhase1Run:()=>true,phase2Context:()=>c,phase6Metric:()=>{},combatEffect:()=>{},setDirectEnemyDamage:(_r,n)=>hits.push(n)};const runtime=WandererV012CombatRuntime.create(ports);runtime.phase2MagicTick(r);assert.equal(hits.length,1);assert.equal(r.mp,22);});
+test('Lifeweaver and Grave Bloom also trigger from magic casts with a physical weapon',()=>{require('../combat/v012-combat-runtime.js');for(const id of ['lifeweaver','grave_bloom']){const b=build([id],'fire'),{c,enemy}=context(),hits=[],procs=[];c.now=10;const r={phase1:true,status:'fight',stats:{caster:false,spellPower:100},mp:100,hp:100,maxhp:100,enemy,lifeCharge:true,echoCount:2};const ports={state:{automaticTalents:{nodes:[id],prepared:id},equip:{}},phase1Build:b,isPhase1Run:()=>true,phase2Context:()=>c,phase6Metric:()=>{},phase6Proc:(_r,name)=>procs.push(name),combatEffect:()=>{},setDirectEnemyDamage:(_r,n)=>hits.push(n),setHeal:()=>{}};WandererV012CombatRuntime.create(ports).phase2MagicTick(r);assert(procs.includes(id),id);assert(hits[0]>70,id);}});
+test('Septic Wound marks an enemy after overlapping Bleed and Rot ticks',()=>{const b=build(['septic_wound']),{c,enemy}=context();b.runtime.prepared='septic_wound';enemy.lastBleedTick=10;c.now=10;C.tickRot(b,c);assert.equal(enemy.septicMark,true);});
