@@ -1674,7 +1674,7 @@ function renderAutomaticTalents(){
   $('talentInspectorStatus').textContent=owned?'Allocated.':conflict?'Alternative to '+list.find(n=>n.id===conflict).name+'. Reset talents to switch.':(missing.length?'Requires '+missing.map(id=>list.find(n=>n.id===id)?.name||id).join(selected.anyRequires?' or ':' + ')+'. ':'')+(path?'Path from your build: '+path.length+' point'+(path.length===1?'':'s')+'. ':'')+points+' unspent.';
   allocate.disabled=owned||!!conflict||!!missing.length||points<1;
  };
- const initial=buttons.find(b=>b.dataset.autoTalent===globalThis.wandererTalentSelection)||buttons.find(b=>b.dataset.autoTalent==='might');if(initial)inspect(initial,false);
+ const initial=buttons.find(b=>b.dataset.autoTalent===globalThis.wandererTalentSelection&&(!canvas.classList.contains('is-overview')||!b.classList.contains('is-stat')))||buttons.find(b=>b.dataset.autoTalent===(canvas.classList.contains('is-overview')?'affinity_blood':'might'));if(initial)inspect(initial,false);
  buttons.forEach(button=>{button.onclick=()=>inspect(button);button.addEventListener('focus',()=>inspect(button));button.addEventListener('keydown',e=>{
   if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key))return;e.preventDefault();const x=parseFloat(button.style.left),y=parseFloat(button.style.top),dx=e.key==='ArrowLeft'?-1:e.key==='ArrowRight'?1:0,dy=e.key==='ArrowUp'?-1:e.key==='ArrowDown'?1:0;
   const next=buttons.filter(b=>b!==button).map(b=>{const bx=parseFloat(b.style.left)-x,by=parseFloat(b.style.top)-y,forward=bx*dx+by*dy,side=Math.abs(bx*dy-by*dx);return{b,forward,score:Math.hypot(bx,by)+side*2};}).filter(n=>n.forward>10).sort((a,b)=>a.score-b.score)[0]?.b;
