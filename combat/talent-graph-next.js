@@ -21,8 +21,11 @@ function createGraph(catalog,legacy=[]){
   // Do not bypass the central node or jump diagonally between different tiers.
   let parent='affinity_'+family;for(let tier=1;tier<=3;tier++){
    const sides=[0,1].map(lane=>stat('focus_branch_'+family+'_'+lane+'_'+tier,family,'basic_path_'+family+'_'+lane+'_'+tier,{lane,tier}));
-   const middle=stat('focus_path_'+family+'_'+tier,family,null,{tier,anyRequires:[parent,...sides]});
-   skill(FOCUSED[family][tier-1],'focused',family,tier,middle);
+   // The central route continues along its own axis. Both side approaches
+   // retain their original purchasable entry stats and unlock costs.
+   // All three alternatives merge visually, never as extra mandatory nodes.
+   const middle=stat('focus_path_'+family+'_'+tier,family,parent,{tier});
+   skill(FOCUSED[family][tier-1],'focused',family,tier,null,{anyRequires:[middle,...sides]});
    parent=middle;
   }
  }
