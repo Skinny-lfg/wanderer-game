@@ -59,13 +59,54 @@ function mixedCorridorRoute(node,dependency){
 // topology matches OR prerequisites without charging for the central branch.
 // Diagonal connections are intentional. Only the cross-TIER shortcuts were
 // removed from the graph; all three paid Focused routes stay visible.
+// Reroute ONLY links that cross an unrelated icon; diagonal links otherwise
+// retain their geometry and therefore remain visible in the atlas.
+const obstacleR=n=>n.kind==='affinity'?39:n.kind==='mixed'?31:['basic','focused','element'].includes(n.kind)?25:11;
+const obstacleNodes=graph.map(n=>({...positions[n.id],id:n.id,r:obstacleR(n)}));
+function segmentGap(point,a,b){
+ const dx=b.x-a.x,dy=b.y-a.y,den=dx*dx+dy*dy;
+ const t=den?Math.max(0,Math.min(1,((point.x-a.x)*dx+(point.y-a.y)*dy)/den)):0;
+ return Math.hypot(point.x-a.x-t*dx,point.y-a.y-t*dy);
+}
+function clearSegment(a,b,source,target){
+ const minx=Math.min(a.x,b.x),maxx=Math.max(a.x,b.x),miny=Math.min(a.y,b.y),maxy=Math.max(a.y,b.y);
+ for(const o of obstacleNodes){if(o.id===source||o.id===target)continue;
+  if(o.x+o.r+3<minx||o.x-o.r-3>maxx||o.y+o.r+3<miny||o.y-o.r-3>maxy)continue;
+  if(segmentGap(o,a,b)<o.r+3)return false;
+ }return true;
+}
+function avoidIcons(n,dep){
+ const start=positions[dep],end=positions[n.id];
+ if(clearSegment(start,end,dep,n.id))return [start,end];
+ const dx=end.x-start.x,dy=end.y-start.y,length=Math.hypot(dx,dy)||1,normal={x:-dy/length,y:dx/length};
+ let best=null;
+ const attempt=points=>{for(let k=1;k<points.length;k++)if(!clearSegment(points[k-1],points[k],dep,n.id))return;
+  let len=0;for(let k=1;k<points.length;k++)len+=Math.hypot(points[k].x-points[k-1].x,points[k].y-points[k-1].y);
+  if(!best||len<best.cost)best={points,cost:len};
+ };
+ for(const offset of [35,48,62,76,92,110,132,165,200,245])for(const sign of [-1,1]){
+  const t={x:normal.x*offset*sign,y:normal.y*offset*sign};
+  for(const factor of [.3,.4,.5,.6,.7]){
+   const p={x:start.x+dx*factor+t.x,y:start.y+dy*factor+t.y};
+   attempt([start,p,end]);
+  }
+  if(best)break;
+  for(const [a,b] of [[.27,.73],[.18,.82],[.36,.64]]){
+   const p={x:start.x+dx*a+t.x,y:start.y+dy*a+t.y},q={x:start.x+dx*b+t.x,y:start.y+dy*b+t.y};
+   attempt([start,p,q,end]);
+  }
+  if(best)break;
+ }
+ return best?.points||[start,end];
+}
 for(const n of graph){
  const p=positions[n.id];
  const deps=[...new Set([n.requires,...(n.prerequisites||[]),...(n.anyRequires||[])].filter(Boolean))];
  for(const dep of deps){
-  const route=mixedCorridorRoute(n,dep);
-  if(route)links.append(el('polyline',{class:'mixed-corridor',points:route.map(v=>v.x+','+v.y).join(' '),fill:'none'}));
-  else{const q=positions[dep];links.append(el('line',{x1:q.x,y1:q.y,x2:p.x,y2:p.y}));}
+  const corridor=mixedCorridorRoute(n,dep);
+  const points=corridor||avoidIcons(n,dep);
+  if(points.length>2)links.append(el('polyline',{class:corridor?'mixed-corridor':'talent-detour',points:points.map(v=>v.x+','+v.y).join(' '),fill:'none'}));
+  else links.append(el('line',{x1:points[0].x,y1:points[0].y,x2:points[1].x,y2:points[1].y}));
  }
 }
 const core=el('circle',{cx:0,cy:0,r:95,fill:'#171418',stroke:'#b39568','stroke-width':3});links.append(core);for(const f of families){const p=positions['root_'+f];links.prepend(el('line',{x1:Math.cos(angle(f))*95,y1:Math.sin(angle(f))*95,x2:p.x,y2:p.y}));}
