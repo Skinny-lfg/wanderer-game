@@ -7,7 +7,7 @@ require('../combat/talent-graph-next.js');
 
 // Evaluate only the geometry portion of the actual prototype; no browser DOM required.
 const source=fs.readFileSync(path.join(__dirname,'../preview/talent-rebuild/prototype.js'),'utf8');
-const split=source.indexOf('const el='),routeStart=source.indexOf('function mixedCorridorRoute('),routeEnd=source.indexOf('\nfor(const n of graph){const p=positions[n.id];',routeStart);
+const split=source.indexOf('const el='),routeStart=source.indexOf('function mixedCorridorRoute('),routeEnd=source.indexOf('\nfor(const n of graph){',routeStart);
 assert(split>0&&routeStart>split&&routeEnd>routeStart,'Expected prototype geometry');
 const geometry=source.slice(0,split)+'\n'+source.slice(routeStart,routeEnd);
 const {graph,positions,mixedCorridorRoute,focusedJunction,focusedMergeRoute}=new Function('WandererTalentGraph','WandererV012Buildcraft','WandererAutomaticTalents','document',geometry+';return {graph,positions,mixedCorridorRoute};')(WandererTalentGraph,WandererV012Buildcraft,WandererAutomaticTalents,{querySelector:()=>null});
