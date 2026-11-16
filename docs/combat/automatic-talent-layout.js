@@ -80,7 +80,7 @@ function create(list){
 
  // Exactly 24 radial axes: four 15-degree-spaced spokes in each 60-degree affinity sector.
  // Positions are visual only; allocation, prerequisites, XP and saves are never modified here.
- const familyOrder=Object.keys(ANGLES),axisOffsets=[-3,-1,1,3].map(n=>n*Math.PI/24),axisByNode={};
+ const familyOrder=Object.keys(ANGLES),axisOffsets=[-1,0,1,2].map(n=>n*Math.PI/12),axisByNode={};
  const axes=familyOrder.flatMap(f=>axisOffsets.map((offset,lane)=>({family:f,lane,angle:ANGLES[f]+offset})));
  const visibleNodes=list.filter(n=>n.rank===undefined||n.rank===1),hiddenRanks=list.filter(n=>n.rank>1);
  const levels=new Map();
@@ -104,38 +104,42 @@ function create(list){
   members.forEach((n,i)=>positions[n.id]=point(angle+((i%3)-1)*.18,350+Math.floor(i/3)*140));
  }
  for(const f of familyOrder)positions['affinity_'+f]=point(ANGLES[f],760);
- const groupKey=n=>{
-  if(n.hybridFor)return 'hybrid:'+n.hybridFor;
-  if(n.outerLink)return 'outer:'+n.outerLink;
-  if(n.pathFor)return 'route:'+Math.max(0,byId.get('passive_'+n.pathFor)?.branchLane??n.branchLane??0);
-  if(n.passiveId)return 'route:'+Math.max(0,n.branchLane??0);
-  if(n.forkAnchor)return 'fork:'+n.forkAnchor;
-  if(n.specialisationTier)return 'special:'+(n.elementSpecialisation||n.specialisationTier);
-  if(n.elementBranch)return 'element:'+n.elementBranch;
-  if(n.skillKey)return 'skill:'+n.skillKey;
-  if(n.branchLane!==undefined&&n.branchLane>=0)return 'route:'+n.branchLane;
-  return 'chain:'+(n.requires||n.id);
- };
- const preference=key=>key.startsWith('route:')?Math.min(3,Number(key.slice(6))||0):key.includes('fire')?0:key.includes('frost')?1:key.includes('lightning')?2:3;
- const weight=key=>key.startsWith('route:')?0:key.startsWith('element:')?1:key.startsWith('skill:')?2:key.startsWith('fork:')?3:key.startsWith('special:')?4:key.startsWith('hybrid:')?5:6;
+ const baseSkills={blood:['bleeding_edge','deep_cuts','blood_drinker','sanguine_fury','executioner','open_wound'],fury:['quick_hands','precision','double_strike','adrenaline','brutal_crit','relentless'],aegis:['iron_skin','fortified','guarded_block','barrier_pulse','retaliation','brace'],vitality:['strong_heart','renewal','second_breath','life_bloom','last_stand','second_pulse'],magic:['arcane_focus','mana_spring','efficient_cast','arcane_echo','elemental_force','spell_echo'],decay:['toxic_touch','virulent_rot','wasting_curse','wither','blight','incubation']};
+
+ const anchors=new Set();
  for(const family of familyOrder){
-  const groups=new Map();
-  visibleNodes.filter(n=>n.family===family&&!n.affinity&&!n.advanced&&!(n.hybridFor&&n.passiveId)).forEach(n=>{
-   const key=groupKey(n);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(n);
+  baseSkills[family].forEach((id,i)=>{
+   const key=byId.has('passive_'+id)?'passive_'+id:id;
+   if(!byId.has(key))return;
+   const lane=i<3?0:2;
+   positions[key]=point(ANGLES[family]+axisOffsets[lane],1420+i%3*720);
+   axisByNode[key]={family,lane};anchors.add(key);
   });
-  const lanes=[[],[],[],[]],loads=[0,0,0,0];
-  [...groups].sort((a,b)=>b[1].length-a[1].length||a[0].localeCompare(b[0])).forEach(([key,nodes])=>{
-   const pref=preference(key),lane=[0,1,2,3].sort((a,b)=>(loads[a]+Math.abs(a-pref)*.25)-(loads[b]+Math.abs(b-pref)*.25)||a-b)[0];
-   nodes.sort((a,b)=>depth(a)-depth(b)||a.id.localeCompare(b.id));
-   lanes[lane].push({key,nodes});loads[lane]+=nodes.length;
-  });
-  lanes.forEach((groups,lane)=>{
-   groups.sort((a,b)=>weight(a.key)-weight(b.key)||a.key.localeCompare(b.key));
-   groups.flatMap(g=>g.nodes).forEach((n,i)=>{
-    positions[n.id]=point(ANGLES[family]+axisOffsets[lane],1020+i*123);
-    axisByNode[n.id]={family,lane};
-   });
-  });
+  for(const n of shown.filter(n=>n.family===family&&n.specialisationTier&&!n.elementSpecialisation)){
+   positions[n.id]=point(ANGLES[family],1600+n.specialisationTier*600);
+   anchors.add(n.id);
+  }
+  for(const n of shown.filter(n=>n.family===family&&n.skillKey&&!anchors.has(n.id)))
+   positions[n.id]=local(family,200,3270);
+ }
+ const elementNodes={fire:['element_fire','path_kindling_1','path_kindling_2','passive_kindling','kindling_flame','combustion','living_inferno'],frost:['element_frost','path_deep_winter_1','path_deep_winter_2','passive_deep_winter','deep_chill','shatter','absolute_winter'],lightning:['element_lightning','path_overcharge_1','path_overcharge_2','passive_overcharge','static_charge','chain_discharge','storm_conductor']};
+ for(const [element,ids] of Object.entries(elementNodes)){
+  const offset={fire:-.17,frost:0,lightning:.17}[element];
+  ids.forEach((id,i)=>{if(byId.has(id))positions[id]=point(ANGLES.magic+offset,1880+i*300)});
+ }
+
+
+ const blend=(a,b,t)=>({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t});
+ for(const n of shown.filter(n=>n.pathFor&&!n.hybridFor)){
+  const a=positions[byId.get('path_'+n.pathFor+'_1')?.requires],b=positions['passive_'+n.pathFor];
+  if(a&&b)positions[n.id]=blend(a,b,n.pathStep/3);
+ }
+ for(const n of shown.filter(n=>n.forkAnchor)){
+  const p=positions[n.forkAnchor],angle=ANGLES[n.family];
+  if(!p)continue;
+  const side=Math.sign((p.y-center.y)*Math.cos(angle)-(p.x-center.x)*Math.sin(angle))||1;
+  const offset=local(n.family,-side*110*n.forkStep,90*n.forkStep+(n.forkSide||0)*90);
+  positions[n.id]={x:p.x+offset.x-center.x,y:p.y+offset.y-center.y};
  }
  // Hybrid abilities use the six inter-affinity corridors, without generating a new spoke.
  const outside=[];
@@ -144,12 +148,12 @@ function create(list){
   const pair=corridors.find(p=>p.slice().sort().join(':')===key);
   if(!pair){outside.push(n);continue}
   const peers=visibleNodes.filter(x=>x.hybridFor&&x.passiveId&&[x.family,x.hybridOther].sort().join(':')===key).sort((a,b)=>a.id.localeCompare(b.id));
-  positions[n.id]=point(ANGLES[pair[0]]+Math.PI/6,1460+peers.indexOf(n)*420);
+  positions[n.id]=point(ANGLES[pair[0]]+Math.PI/6,2050+peers.indexOf(n)*520);
  }
  visibleNodes.filter(n=>n.advanced).forEach((n,i)=>{
   const f1=byId.get(n.left)?.family,f2=byId.get(n.right)?.family;
   const pair=corridors.find(p=>p.slice().sort().join(':')===[f1,f2].sort().join(':'));
-  positions[n.id]=point(pair?ANGLES[pair[0]]+Math.PI/6:-Math.PI/2+i*Math.PI/3,3500);
+  positions[n.id]=point(pair?ANGLES[pair[0]]+Math.PI/6:-Math.PI/2+i*Math.PI/3,3200);
  });
  // These are not drawn on the playable preview. Reserve coordinates for integrity checks.
  [...outside,...hiddenRanks].forEach((n,i)=>{positions[n.id]={x:9000+(i%16)*155,y:500+Math.floor(i/16)*155}});
@@ -157,8 +161,8 @@ function create(list){
  const visible=list.filter(n=>n.rank===undefined||n.rank===1).filter(n=>positions[n.id]);
  // Resolve collisions while keeping prominent affinity and mixed nodes fixed.
  const radius=n=>n.affinity?82:n.advanced||n.hybridFor&&n.passiveId?58:n.passiveId||n.skillKey||n.specialisationTier?48:32;
- const fixed=n=>!!n.affinity||!!n.advanced||!!(n.hybridFor&&n.passiveId);
- for(let pass=0;pass<8;pass++){
+ const fixed=n=>anchors.has(n.id)||!!n.specialisationTier||!!n.elementBranch||!!n.affinity||!!n.advanced||!!(n.hybridFor&&n.passiveId);
+ for(let pass=0;pass<80;pass++){
   let moved=false;
   for(let i=0;i<visible.length;i++)for(let j=i+1;j<visible.length;j++){
    const a=visible[i],b=visible[j],pa=positions[a.id],pb=positions[b.id],dx=pb.x-pa.x,dy=pb.y-pa.y,dist=Math.hypot(dx,dy),gap=radius(a)+radius(b)+12-dist;

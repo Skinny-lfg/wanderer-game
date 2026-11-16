@@ -348,7 +348,7 @@ body.phase3IntegratedPreview .phase3CombatBuild{display:flex;flex-wrap:wrap;alig
 .talentGraphCanvas .talentSectorName{font:600 70px/1 Georgia,serif;letter-spacing:18px;opacity:.78;paint-order:stroke;stroke:#111015;stroke-width:13}
 .talentGraphCanvas path.talentPrerequisite{fill:none;stroke:#a78a61;stroke-width:4;stroke-opacity:.29;stroke-linejoin:round;stroke-linecap:round;transition:stroke-opacity .15s ease,stroke .15s ease;vector-effect:none}
 .talentGraphCanvas path.talentPrerequisite.is-owned{stroke:#e0bc70;stroke-width:7;stroke-opacity:.88}
-.talentGraphCanvas.is-inspecting path.talentPrerequisite:not(.is-owned):not(.is-related):not(.is-planned){stroke-opacity:.065}
+.talentGraphCanvas.is-inspecting path.talentPrerequisite:not(.is-owned):not(.is-related):not(.is-planned){stroke-opacity:.34}
 .talentGraphCanvas path.talentPrerequisite.is-related{stroke:#d8b982;stroke-width:7;stroke-opacity:.96}
 .talentGraphCanvas path.talentPrerequisite.is-planned{stroke:#87aec7;stroke-width:6;stroke-opacity:.9}
 .talentGraphCanvas button.treeGraphNode{--talent-accent:#ae9069;transition:border-color .17s ease,filter .17s ease,opacity .17s ease;box-shadow:inset 0 0 12px #0008!important}
@@ -359,9 +359,9 @@ body.phase3IntegratedPreview .phase3CombatBuild{display:flex;flex-wrap:wrap;alig
 .talentGraphCanvas button.treeGraphNode.is-affinity-main{border-color:var(--talent-accent)!important;box-shadow:0 0 22px color-mix(in srgb,var(--talent-accent) 28%,transparent),inset 0 0 22px #0009!important;z-index:3}
 .talentGraphCanvas .treeGraphNode.is-mixed{background:#291f25!important}
 .talentGraphCanvas button.treeGraphNode.is-selected{outline:5px solid #f1d8a7!important;outline-offset:8px;z-index:5;opacity:1}
-.talentGraphCanvas.is-overview button.treeGraphNode.is-stat{visibility:hidden!important;pointer-events:none}
+
 .talentGraphCanvas.is-overview .treeSpecializationName,.talentGraphCanvas.is-overview .treeNodeRank,.talentGraphCanvas.is-overview .treeExtraRequirement,.talentGraphCanvas.is-overview .talentMixedName{opacity:0}
-.talentGraphCanvas.is-overview path.talentPrerequisite:not(.is-owned){stroke-opacity:.1}
+.talentGraphCanvas.is-overview path.talentPrerequisite:not(.is-owned){stroke-width:7;stroke-opacity:.65}
 .talentGraphCanvas.is-overview path.talentPrerequisite.is-owned{stroke-opacity:.7}
 .talentGraphCanvas.is-overview button.treeGraphNode.is-ability{opacity:.94}
 .talentGraphCanvas .treeAffinityName{font-family:Georgia,serif;letter-spacing:.09em;color:#f0d8aa}
