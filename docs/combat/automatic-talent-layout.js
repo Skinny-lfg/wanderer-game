@@ -54,27 +54,62 @@ function create(list){
   const skills=list.filter(n=>n.family===family&&n.skillKey&&n.rank===1);
   skills.forEach((n,i)=>{positions[n.id]=local(family,i?190:-190,2200);});
  }
+ for(const node of list.filter(n=>n.specialisationTier)){const lane=node.elementSpecialisation?({fire:-1,frost:0,lightning:1}[node.elementSpecialisation]*260):0;positions[node.id]=local(node.family,350+lane,2450+node.specialisationTier*200);}
+ // Compact the finished layout before routing, preserving each node's direction.
+ for(const position of Object.values(positions)){
+  position.x=center.x+(position.x-center.x)*.82;
+  position.y=center.y+(position.y-center.y)*.82;
+ }
+ // Put the Aegis and Fury approaches between their two existing prerequisites.
+ const arms=['path_counterstrike','bridge_counterstrike'].map(prefix=>{
+  const entry=list.find(n=>n.id===prefix+'_1');
+  return {prefix,start:positions[entry?.requires]};
+ });
+ if(positions.passive_counterstrike&&arms.every(arm=>arm.start)){
+  const [a,b]=arms.map(arm=>arm.start);
+  const goal={x:(a.x+b.x)/2-80,y:(a.y+b.y)/2};
+  positions.passive_counterstrike=goal;
+  for(const {prefix,start} of arms){
+   for(const step of [1,2]){
+    positions[prefix+'_'+step]={x:start.x+(goal.x-start.x)*step/3,y:start.y+(goal.y-start.y)*step/3};
+   }
+  }
+ }
+ for(const n of list.filter(n=>n.alternateFor)){const first=positions['alternate_'+n.alternateFor+'_'+n.family+'_1'],target=positions[(list.find(x=>x.id==='path_'+n.alternateFor+'_1')?.family===n.family?'path_':'bridge_')+n.alternateFor+'_1'],origin=positions['affinity_'+n.family];if(target&&origin){const t=n.alternateStep/4;positions[n.id]={x:origin.x+(target.x-origin.x)*t+45,y:origin.y+(target.y-origin.y)*t+45};}}
  const visible=list.filter(n=>n.rank===undefined||n.rank===1).filter(n=>positions[n.id]);
  const obstacles=visible.map(n=>({...positions[n.id],radius:n.affinity?86:n.advanced||n.hybridFor&&n.passiveId?62:n.passiveId||n.skillKey?49:39}));
+
 
 
  const cache=new Map();
  function waypoints(node,required){
   const key=required+'>'+node.id;if(cache.has(key))return cache.get(key);
   const from=positions[required],to=positions[node.id];if(!from||!to)return [];
-  const dx=to.x-from.x,dy=to.y-from.y,length=Math.hypot(dx,dy);
-  if(length<1)return [from,to];
-  const candidates=[[from,to]];
-  for(const shift of [100,-100,200,-200,320,-320]){
-   const px=-dy/length*shift,py=dx/length*shift;
-   candidates.push([from,{x:from.x+dx*.33+px,y:from.y+dy*.33+py},{x:from.x+dx*.67+px,y:from.y+dy*.67+py},to]);
+  const active=obstacles.filter(p=>Math.hypot(p.x-from.x,p.y-from.y)>1&&Math.hypot(p.x-to.x,p.y-to.y)>1);
+  const path=[from,to];
+  for(let iteration=0;iteration<120;iteration++){
+   let collision=null;
+   for(let i=1;i<path.length&&!collision;i++){
+    const a=path[i-1],b=path[i],dx=b.x-a.x,dy=b.y-a.y,length=Math.hypot(dx,dy);
+    if(length<1)continue;
+    let first=Infinity;
+    for(const p of active){
+     const t=((p.x-a.x)*dx+(p.y-a.y)*dy)/(length*length);
+     if(t<=.001||t>=.999||t>=first)continue;
+     if(Math.hypot(p.x-a.x-t*dx,p.y-a.y-t*dy)<p.radius+10){first=t;collision={i,a,b,p,dx,dy,length};}
+    }
+   }
+   if(!collision)break;
+   const {i,a,b,p,dx,dy,length}=collision,ux=dx/length,uy=dy/length;
+   const side=((p.x-a.x)*dy-(p.y-a.y)*dx)>=0?1:-1,r=p.radius+32;
+   const detour=[
+    {x:p.x-ux*r-side*uy*r,y:p.y-uy*r+side*ux*r},
+    {x:p.x-side*uy*r,y:p.y+side*ux*r},
+    {x:p.x+ux*r-side*uy*r,y:p.y+uy*r+side*ux*r}
+   ];
+   path.splice(i,0,...detour);
   }
-  const score=route=>{let cost=0;for(let i=1;i<route.length;i++){
-   const a=route[i-1],b=route[i],vx=b.x-a.x,vy=b.y-a.y,d2=vx*vx+vy*vy;
-   cost+=Math.sqrt(d2);
-   for(const p of obstacles){if(Math.hypot(p.x-from.x,p.y-from.y)<1||Math.hypot(p.x-to.x,p.y-to.y)<1)continue;const t=Math.max(0,Math.min(1,((p.x-a.x)*vx+(p.y-a.y)*vy)/(d2||1)));if(Math.hypot(p.x-a.x-t*vx,p.y-a.y-t*vy)<p.radius+10)cost+=100000;}
-  }return cost;};
-  candidates.sort((a,b)=>score(a)-score(b));cache.set(key,candidates[0]);return candidates[0];
+  cache.set(key,path);return path;
  }
  return {positions,proxies,hybrids,center,angles:ANGLES,rootAngles:ROOT_ANGLES,point,waypoints,width:12300,height:8600};
 }
