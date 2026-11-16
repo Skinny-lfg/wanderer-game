@@ -15,27 +15,27 @@ function create(list){
   if(node.elementBranch){const lane=['fire','frost','lightning'].indexOf(node.elementBranch);positions[node.id]=local('magic',(lane-1)*450,1990);}
  }
  for(const node of list.filter(n=>n.forkAnchor)){const anchor=list.find(n=>n.id===node.forkAnchor);if(!anchor)continue;const t=((anchor.branchLane??1)-1)*450,r=1150+(anchor.branchDepth||0)*600;positions[node.id]=local(node.family,t+(node.forkStep<3?(node.forkStep===1?-105:105):(node.forkSide||0)*190),r+(node.forkStep<3?170:320));}
- const hybrids=list.filter(n=>n.hybridFor&&n.passiveId&&n.rank===1).sort((a,b)=>[a.family,a.hybridOther].sort().join(':').localeCompare([b.family,b.hybridOther].sort().join(':')));
- hybrids.forEach((node,i)=>{const pair=hybrids.filter(n=>[n.family,n.hybridOther].sort().join(':')===[node.family,node.hybridOther].sort().join(':')),ordinal=pair.indexOf(node),angle=ANGLES[node.family]+Math.atan2(Math.sin(ANGLES[node.hybridOther]-ANGLES[node.family]),Math.cos(ANGLES[node.hybridOther]-ANGLES[node.family]))/2+(ordinal-(pair.length-1)/2)*.09,at=point(angle,2050),{x,y}=at,id=node.passiveId;proxies[id]={};for(const [prefix,family] of [['path',node.family],['bridge',node.hybridOther]]){
-   const origin=positions[list.find(n=>n.id===prefix+'_'+id+'_1').requires],side=prefix==='path'?-1:1;
-   for(const [step,fraction] of [[1,.36],[2,.72]]){
-    const dx=x-origin.x,dy=y-origin.y,length=Math.hypot(dx,dy);
-    positions[prefix+'_'+id+'_'+step]={x:origin.x+dx*fraction-side*dy*(90+ordinal*45)/length,y:origin.y+dy*fraction+side*dx*(90+ordinal*45)/length};
-   }
-  }list.filter(n=>n.passiveId===id).forEach((n,j)=>positions[n.id]={x:x+j*90,y});});
- 
- for(const n of list.filter(n=>n.junction)){const p=positions[n.requires];positions[n.id]={x:p.x+(p.x-center.x)*.12,y:p.y+(p.y-center.y)*.12};}
+ const hybrids=list.filter(n=>n.hybridFor&&n.passiveId&&n.rank===1);
  for(const family of Object.keys(ANGLES)){
   const skills=list.filter(n=>n.family===family&&n.skillKey&&n.rank===1);
-  skills.forEach((n,i)=>{positions[n.id]=local(family,i===0?-260:260,2950);});
+  skills.forEach((n,i)=>{const origin=positions[n.requires];positions[n.id]={x:origin.x+Math.cos(ANGLES[family])*410-Math.sin(ANGLES[family])*(i?150:-150),y:origin.y+Math.sin(ANGLES[family])*410+Math.cos(ANGLES[family])*(i?150:-150)};});
  }
+ const pairs=new Map();
+ for(const node of hybrids){
+  const key=[node.family,node.hybridOther].sort().join(':');if(!pairs.has(key))pairs.set(key,[]);pairs.get(key).push(node);
+ }
+ for(const group of pairs.values())group.forEach((node,ordinal)=>{
+  const id=node.passiveId,left=list.find(n=>n.id==='path_'+id+'_1'),right=list.find(n=>n.id==='bridge_'+id+'_1'),a=positions[left.requires],b=positions[right.requires];
+  const dx=b.x-a.x,dy=b.y-a.y,length=Math.hypot(dx,dy),radial=point(ANGLES[node.family]+Math.atan2(Math.sin(ANGLES[node.hybridOther]-ANGLES[node.family]),Math.cos(ANGLES[node.hybridOther]-ANGLES[node.family]))/2,1);
+  const offset=170+ordinal*210,sign=(radial.x-center.x)*(-dy)+(radial.y-center.y)*dx>=0?1:-1;
+  const tip=positions[node.id]={x:(a.x+b.x)/2-sign*dy/length*offset,y:(a.y+b.y)/2+sign*dx/length*offset};proxies[id]={};
+  for(const [prefix,origin] of [['path',a],['bridge',b]])for(const [step,t] of [[1,.35],[2,.7]])positions[prefix+'_'+id+'_'+step]={x:origin.x+(tip.x-origin.x)*t,y:origin.y+(tip.y-origin.y)*t};
+ });
+ for(const n of list.filter(n=>n.junction)){const p=positions[n.requires];if(p)positions[n.id]={x:p.x+(p.x-center.x)*.08,y:p.y+(p.y-center.y)*.08};}
  for(const n of list.filter(n=>n.advanced)){
-  const a=positions[n.left],b=positions[n.right],angle=Math.atan2((a.y+b.y)/2-center.y,(a.x+b.x)/2-center.x);
-  const tip=positions[n.id]=point(angle,3700);
-  for(const link of list.filter(x=>x.outerLink===n.id)){
-   const origin=positions[link.side],t=link.step/3;
-   positions[link.id]={x:origin.x+(tip.x-origin.x)*t,y:origin.y+(tip.y-origin.y)*t};
-  }
+  const a=positions[n.left],b=positions[n.right],mx=(a.x+b.x)/2,my=(a.y+b.y)/2,dx=mx-center.x,dy=my-center.y,length=Math.hypot(dx,dy);
+  const tip=positions[n.id]={x:mx+dx/length*470,y:my+dy/length*470};
+  for(const link of list.filter(x=>x.outerLink===n.id)){const origin=positions[link.side],t=link.step/3;positions[link.id]={x:origin.x+(tip.x-origin.x)*t,y:origin.y+(tip.y-origin.y)*t};}
  }
  const obstacles=list.map(n=>({...positions[n.id],radius:n.affinity?86:39}));
  const cache=new Map();
