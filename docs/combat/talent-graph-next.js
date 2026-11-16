@@ -33,8 +33,31 @@ function createGraph(catalog,legacy=[]){
  for(const [element,ids] of Object.entries(ELEMENTS)){let parent='affinity_magic';for(let tier=1;tier<=ids.length;tier++){const id=ids[tier-1];if(nodes.some(n=>n.id===id))continue;
   if(tier===1){const alternatives={fire:'basic_path_magic_0_1',frost:'focus_path_magic_1',lightning:'basic_path_magic_1_1'};parent=stat(`element_junction_${element}`,'magic',null,{element,tier,anyRequires:[parent,alternatives[element]]});}
   parent=stat(`element_path_${element}_${tier}`,'magic',parent,{element,tier});skill(id,'element','magic',tier,parent,{element});}}
- const ids=new Set(nodes.map(n=>n.id));for(const n of nodes)for(const id of [...(n.requires?[n.requires]:[]),...(n.prerequisites||[]),...(n.anyRequires||[])])if(!ids.has(id))throw Error('Missing prerequisite '+id);
- return Object.freeze(nodes);
+ // Every incoming path into a skill must cross two consecutive minor-stat nodes.
+ // Preserve independent specialization routes and keep affinity starter costs unchanged.
+ const originalNodes=nodes.slice(),originalById=new Map(originalNodes.map(n=>[n.id,n])),rewired=new Map();
+ for(const target of originalNodes.filter(n=>['basic','focused','mixed','element'].includes(n.kind))){
+  let routeIndex=0;
+  const extend=source=>{
+   const origin=originalById.get(source);if(!origin)throw Error('Missing entry route '+source);
+   const steps=origin.kind==='stat'?1:2,index=routeIndex++;
+   let previous=source;
+   for(let step=1;step<=steps;step++){
+    const id='entry_'+target.id+'_'+index+'_'+step;
+    stat(id,origin.family||target.family,previous,{approachOf:target.id,approachFrom:previous,approachIndex:index,approachStep:step,approachTotal:steps,tier:target.tier,lane:origin.lane??target.lane,element:target.element||origin.element,pair:target.pair||origin.pair});
+    previous=id;
+   }
+   return previous;
+  };
+  const changes={};
+  if(target.requires)changes.requires=extend(target.requires);
+  if(target.prerequisites?.length)changes.prerequisites=target.prerequisites.map(extend);
+  if(target.anyRequires?.length)changes.anyRequires=target.anyRequires.map(extend);
+  rewired.set(target.id,Object.freeze({...target,...changes}));
+ }
+ const connected=Object.freeze(nodes.map(n=>rewired.get(n.id)||n));
+ const ids=new Set(connected.map(n=>n.id));for(const n of connected)for(const id of [...(n.requires?[n.requires]:[]),...(n.prerequisites||[]),...(n.anyRequires||[])])if(!ids.has(id))throw Error('Missing prerequisite '+id);
+ return connected;
 }
 function requirements(n,ranks){return (!n.requires||ranks[n.requires]>0)&&(!n.prerequisites||n.prerequisites.every(id=>ranks[id]>0))&&(!n.anyRequires||n.anyRequires.some(id=>ranks[id]>0));}
 function valid(graph,progress){if(!progress||!Number.isSafeInteger(progress.points)||progress.points<0||!progress.ranks||typeof progress.ranks!=='object'||Array.isArray(progress.ranks))return false;const ranks=progress.ranks,byId=new Map(graph.map(n=>[n.id,n]));let spent=0;for(const [id,rank] of Object.entries(ranks)){const n=byId.get(id);if(!n||!Number.isSafeInteger(rank)||rank<1||rank>(n.maxRank||1)||!requirements(n,ranks))return false;spent+=rank;}return spent<=progress.points;}
