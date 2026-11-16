@@ -22,12 +22,15 @@ function phase4CommitRealm({awardXp=false}={}){
   const progress=ports.state.automaticTalents||root.WandererAutomaticTalents.create();
   const run=ports.state.run,enemy=run?.enemy,base=enemy?.boss?45:enemy?.miniboss?30:run?20:15,groupReward=enemy?.boss||enemy?.miniboss?1:run?.totalMobCount>=18?1.3:run?.totalMobCount>=10?1.2:run?.totalMobCount>1?1.1:1,amount=Math.round(base*groupReward);
   ports.state.automaticTalents=root.WandererAutomaticTalents.award(progress,amount);
+  if(run){
   const g=ports.phase1Controller.state,selected=g.selected||g.rewardPending||g.history.at(-1);const family=selected?.family||run?.planeFamily||'magic';
   const prior=ports.state.crafting||root.WandererV013Crafting.create();
   ports.state.crafting=root.WandererV013Crafting.award(ports.state.crafting||root.WandererV013Crafting.create(),{family,boss:!!enemy?.boss,elite:!!enemy?.miniboss,event:!run,reagent:ports.gameRandom()<(enemy?.miniboss ? .65 : .22)});
+  if(enemy?.boss&&g.dungeon&&g.expedition===5){const crafting=ports.state.crafting;crafting.mythicFamilies=[...new Set([...(crafting.mythicFamilies||[]),family])];}
   if(!enemy?.boss&&ports.state.crafting.cores[family]>prior.cores[family])ports.addLog('Found '+family+' reagent.','good');
   if(run?.phase6Bounty)ports.state.crafting.essence+=2;
-  ports.addLog('Secured '+(ports.state.crafting.essence-prior.essence)+' Essence'+(enemy?.boss?' and a '+family+' Core':'')+'.','good');
+  ports.addLog('Secured '+(ports.state.crafting.essence-prior.essence)+' Essence'+(enemy?.boss?' and a '+family+' reagent':'')+'.','good');
+  }
  }
  if(ports.PHASE1_PREVIEW)ports.phase5Snapshot.expedition.awardKeys=[...new Set([...ports.phase5Snapshot.expedition.awardKeys,...ports.phase4WaveKeys])];
  ports.phase4WaveKeys=[];ports.phase4Entry=null;ports.phase4Resume=false;
@@ -46,7 +49,7 @@ function phase4LoseLoot(){
 function settleContract(){
  const g=ports.phase1Controller.state,d=g.dungeon,card=d&&ports.phase1Controller.realmMap();
  if(!card||card.objective===undefined||d.contractPaid||!d.cleared.includes(card.objective))return;
- d.contractPaid=true;ports.state.crafting.essence+=4+card.risk*2;
+ d.contractPaid=true;ports.state.crafting.cores[card.family]++;ports.state.crafting.essence+=2+card.risk*2;
 }
 function phase4Extract(){
  if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked)||!ports.phase3IsBetweenPlanes()||ports.phase4Resume)return false;
@@ -60,7 +63,7 @@ function phase4Extract(){
  ports.phase1Build=null;ports.phase1Draft=null;ports.phase1Vitals=null;ports.phase1Continuity=null;ports.state.run=null;ports.phase5Results.eventExitPending=false;ports.phase3LootIds=new Set();ports.phase4Home=null;ports.phase4Seed=null;ports.phase4Prefix=null;ports.phase4Entry=null;ports.phase4WaveKeys=[];
  if(ports.PHASE1_PREVIEW)ports.phase5Snapshot.expedition.lastOutcome='extracted';
  ports.view='phase1';if(!ports.phase5Persist())return false;ports.render();
- ports.bannerMessage(ports.state.expeditionOverflow.length?'Extracted. Free Stash space to claim '+ports.state.expeditionOverflow.length+' secured items.':'Extraction complete. Loot kept; next difficulty remains locked.');return true;
+ ports.bannerMessage(ports.state.expeditionOverflow.length?'Extracted. Free Stash space to claim '+ports.state.expeditionOverflow.length+' secured items.':'Extraction complete. Loot secured.');return true;
 }
 
 function phase4Restore(session){

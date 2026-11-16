@@ -94,7 +94,7 @@ function create(themes,rng=Math.random){
   return game;
  }
  function startDungeon(level, targetFamily){
-  if(!Number.isInteger(level)||level<1||level>game.unlocked||!['camp','finished','failed'].includes(game.stage))throw Error('Expedition unavailable');
+  if(!Number.isInteger(level)||level<1||level>Math.min(5,game.unlocked)||!['camp','finished','failed'].includes(game.stage))throw Error('Expedition unavailable');
   const families=shuffle(FAMILIES,routeRng);
   if(FAMILIES.includes(targetFamily)){families.splice(families.indexOf(targetFamily),1);families.unshift(targetFamily);}
   const cards=shuffle(families.slice(0,3),routeRng).map((family,risk)=>{
@@ -121,7 +121,7 @@ function create(themes,rng=Math.random){
      const id=1+ring*4+arm;
      place((arm+ring*.24)*Math.PI/2,12+ring*9);
      edges.push([ring?id-4:0,id]);
-     if(ring&&arm===cross)edges.push([1+(ring-1)*4+(arm+1)%4,id]);
+     if(ring&&(arm===cross||arm===(cross+2)%4&&routeRng()<.55))edges.push([1+(ring-1)*4+(arm+1)%4,id]);
     }
    }
    const sectors=shuffle([0,1,2,3],routeRng),bossSector=sectors[0];
@@ -130,11 +130,13 @@ function create(themes,rng=Math.random){
     place((arm+1.1+(id===21?.4:0))*Math.PI/2,44);
     edges.push([13+arm,id]);
    }
-   const shortcut=9;edges.push([9,10]);
+   const shortcut=5+4*Math.floor(routeRng()*3)+Math.floor(routeRng()*3);edges.push([shortcut,shortcut+1]);
+   const secondSector=(bossSector+1)%4;edges.push([(routeRng()<.5?9:13)+secondSector,size-1]);
+   const clueRoom=5+bossSector;
    const pools={blood:[['weapon','Sword'],['weapon','Two-Handed']],decay:[['weapon','Daggers'],['armor','Leather']],vitality:[['weapon','Wand'],['armor','Plate']],aegis:[['offhand','Shield'],['armor','Cloth']],fury:[['weapon','Bow'],['weapon','Daggers']],magic:[['weapon','Staff'],['offhand','Orb']]};
    const [slot,subtype]=shuffle(pools[family],routeRng)[0];
-   const objective=nodes.findIndex(n=>n.kind==='elite');
-   return {id:theme.id,name:theme.name,family,image:theme.image,risk,nodes,edges,shortcut,positions,objective,favoured:{slot,subtype},bossSector,stepLimit:14-risk};
+   const objective=shuffle(nodes.map((n,i)=>n.kind==='elite'?i:-1).filter(i=>i>=0),routeRng)[0];
+   return {id:theme.id,name:theme.name,family,image:theme.image,risk,nodes,edges,shortcut,positions,objective,favoured:{slot,subtype},bossSector,secondSector,clueRoom,stepLimit:14-risk};
   });
   Object.assign(game,{version:2,expedition:level,planeIndex:1,stage:'choice',freeBuild:true,offers:[],selected:null,wave:0,history:[],rooms:[],rewardPending:null,families:[],initialFamily:null,lastFamily:null,rerolls:0,rerollsByRealm:Array.from({length:15},()=>[0,0,0]),bossId:shuffle(BOSSES,routeRng)[0].id,encounterVersion:1,dungeon:{cards,realm:null,current:0,cleared:[0],visited:[0]}});
   for(const k of ['routeMap','routeEdges','routePositions','routeMobCounts'])delete game[k];
@@ -165,10 +167,11 @@ function create(themes,rng=Math.random){
   d.current=p.node;if(!d.visited.includes(p.node))d.visited.push(p.node);
   game.stage='choice';game.wave=0;game.offers=[];game.selected=null;return true;
  }
+ function travelCost(path){const d=game.dungeon;let cost=0,cleared=0;for(const room of path.slice(1)){if(d.cleared.includes(room))cleared++;else{cost+=Math.min(2,cleared)+1;cleared=0;}}return cost+Math.min(2,cleared);}
  function visitRoom(i){
   const d=game.dungeon,card=realmMap(),path=travelPath(i);
   if(game.stage!=='choice'||!path.length||game.rewardPending)return false;
-  const cost=path.length-1;
+  const cost=travelCost(path);
   if(d.steps!==undefined){if(cost>d.steps)return false;d.steps-=cost;}
   if(d.cleared.includes(i)){d.current=i;return true;}
   if(path.length>1)d.current=path[path.length-2];
@@ -226,7 +229,7 @@ function create(themes,rng=Math.random){
   game.history.push({plane:game.planeIndex,...game.selected});
   if(game.selected.boss){
    if(!game.selected.boss)throw Error('Realm 15 must contain the Expedition boss');
-   game.unlocked=Math.max(game.unlocked,game.expedition+1);
+   game.unlocked=Math.max(game.unlocked,game.dungeon?Math.min(5,game.expedition+1):game.expedition+1);
    game.stage='finished';game.selected=null;game.offers=[];game.wave=0;game.families=[];game.lastFamily=null;game.rewardPending=null;
    return {planeComplete:true,expeditionComplete:true};
   }
@@ -301,7 +304,7 @@ function create(themes,rng=Math.random){
  function setSimulationRandomStreams(route,draft){if(typeof route!=='function'||typeof draft!=='function')throw Error('Simulation RNG streams must be functions');routeRng=route;draftRng=draft;}
  function passiveRandom(){return draftRng;}
  
- return Object.freeze({deferEvent,chooseRealm,realmMap,visitRoom,travelPath,influence,state:game,start,restore,planAffinities,chooseInitial:chooseInitial,select:select,enter:enter,claimReward:claimReward,reroll:reroll,waveWon:waveWon,eventWon:()=>{throw Error('Resolve the offered integrated event');},defeat:defeat,abandon:abandon,allowed:allowed,reachable,setSimulationRandomStreams,passiveRandom});
+ return Object.freeze({deferEvent,chooseRealm,realmMap,visitRoom,travelPath,travelCost,influence,state:game,start,restore,planAffinities,chooseInitial:chooseInitial,select:select,enter:enter,claimReward:claimReward,reroll:reroll,waveWon:waveWon,eventWon:()=>{throw Error('Resolve the offered integrated event');},defeat:defeat,abandon:abandon,allowed:allowed,reachable,setSimulationRandomStreams,passiveRandom});
 }
 root.WandererV012Expedition=Object.freeze({create,FAMILIES,FAMILY_NAMES,THEME_FAMILIES,REALMS,BOSSES,EVENT_GROUPS});
 })(globalThis);

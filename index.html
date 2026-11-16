@@ -948,7 +948,7 @@ const STATUS_ICON_FILES=new Set(["barrier","static","soul-harvest","golden-focus
 function statusArt(id){return STATUS_ICON_FILES.has(id)?'<img class="statusIcon" src="assets/status/icons/'+id+'.png" alt="" aria-hidden="true" loading="lazy" decoding="async">':'';}
 function enemyDebuffMarkup(e){
  if(!e)return '';
- const items=[];
+ const items=e.vanguard?['<span class="debuff">Preparing opening strike</span>']:[];
  for(const [effect,field] of [['bleed','bleedStacks'],['burn','burnStacks']]){
   const n=e[field]||0;if(n>0)items.push('<span class="debuff statusNegative">'+statusArt(effect)+' '+(effect==='burn'?'Burn':ELEMENTS[effect].name)+' ×'+n+'</span>');
  }
@@ -1170,7 +1170,7 @@ function phase6RenderEvent(){
  const ev=phase6Run.event,def=WandererV012IntegratedEvents.get(ev.id),bag=phase3BagItems(),equipped=Object.values(state.equip).filter(Boolean);let selected=null;
  const vitals=phase3Vitals();
  const choices=def[3].map((_,i)=>{const p=phase6EventOptionPresentation(ev,i,bag),condition=p.condition?(p.condition.startsWith('Have ')?p.condition:'Condition · '+p.condition):'',terms=[p.cost?'Cost · '+p.cost:'',condition,p.risk?'Risk · '+p.risk:''].filter(Boolean).join(' · ');return '<button type="button" class="eventOption '+(p.unavailable?'unavailable':'')+'" data-event-select="'+i+'" aria-pressed="false" aria-describedby="eventRequirement"><span class="eventOptionNumber">Option '+(i+1)+'</span><b class="eventOptionTitle">'+esc(p.action)+'</b><span class="eventOptionBenefit">'+esc(p.benefit)+'</span>'+(p.unavailable?'<span class="eventOptionState">Unavailable</span>':'')+(terms?'<small class="eventOptionTerms">'+esc(terms)+'</small>':'')+'</button>';}).join('');
- html('<section class="panel phase6Event"><div class="eventHeading"><img class="eventArt" src="assets/events/'+esc(ev.id)+'.png" alt="" loading="lazy" decoding="async"><div><span class="eyebrow">Realm '+phase1Controller.state.planeIndex+' · Event</span><span class="phase3EventCategory phase3EventCategory--'+esc(def[2])+'">'+({commerce:'Commerce',sacrifice:'Sacrifice',treasure:'Treasure',survival:'Survival'}[def[2]]||'Event')+'</span><h2>'+esc(def[1])+'</h2><p class="small muted">Every completed event secures 1 Essence. Choose an option for its additional effects, or leave.</p></div></div><div class="eventReadOnly"><div><b>HP</b><span>'+Math.ceil(vitals.hp)+' / '+vitals.maxhp+'</span></div><div><b>Mana</b><span>'+Math.floor(vitals.mp)+' / '+vitals.maxmp+'</span></div><div class="eventGear" aria-label="Equipped gear">'+equipped.map(item=>'<img src="'+itemImg(item)+'" alt="'+esc(item.name)+'" title="'+esc(item.name)+' · read only">').join('')+'</div></div><div class="eventOptions">'+choices+'</div><div id="eventInputs" class="eventInputs" hidden></div><p id="eventRequirement" class="small muted" role="status">Choose an option to review its requirements.</p><div class="buttonRow eventActions"><button type="button" class="primary" id="eventConfirm" disabled>Confirm choice</button><button type="button" class="ghost" id="eventCancel" disabled>Change choice</button><button type="button" class="ghost" id="eventDecline">Leave event · secure 1 Essence</button></div></section>');
+ html('<section class="panel phase6Event"><div class="eventHeading"><img class="eventArt" src="assets/events/'+esc(ev.id)+'.png" alt="" loading="lazy" decoding="async"><div><span class="eyebrow">Realm '+phase1Controller.state.planeIndex+' · Event</span><span class="phase3EventCategory phase3EventCategory--'+esc(def[2])+'">'+({commerce:'Commerce',sacrifice:'Sacrifice',treasure:'Treasure',survival:'Survival'}[def[2]]||'Event')+'</span><h2>'+esc(def[1])+'</h2><p class="small muted">Resolve a choice for its listed reward and 15 XP. Pass to clear this room without rewards, or return later.</p></div></div><div class="eventReadOnly"><div><b>HP</b><span>'+Math.ceil(vitals.hp)+' / '+vitals.maxhp+'</span></div><div><b>Mana</b><span>'+Math.floor(vitals.mp)+' / '+vitals.maxmp+'</span></div><div class="eventGear" aria-label="Equipped gear">'+equipped.map(item=>'<img src="'+itemImg(item)+'" alt="'+esc(item.name)+'" title="'+esc(item.name)+' · read only">').join('')+'</div></div><div class="eventOptions">'+choices+'</div><div id="eventInputs" class="eventInputs" hidden></div><p id="eventRequirement" class="small muted" role="status">Choose an option to review its requirements.</p><div class="buttonRow eventActions"><button type="button" class="primary" id="eventConfirm" disabled>Confirm choice</button><button type="button" class="ghost" id="eventCancel" disabled>Change choice</button><button type="button" class="ghost" id="eventDecline">Leave event · secure 1 Essence</button></div></section>');
  const inputBox=$('eventInputs'),requirement=$('eventRequirement'),confirm=$('eventConfirm');
  const renderSelection=()=>{
   document.querySelectorAll('[data-event-select]').forEach(b=>{const active=Number(b.dataset.eventSelect)===selected;b.setAttribute('aria-pressed',String(active));});
@@ -1187,7 +1187,7 @@ function phase6RenderEvent(){
  };
  Q('[data-event-select]').forEach(b=>b.onclick=()=>{selected=Number(b.dataset.eventSelect);renderSelection();});
  $('eventDecline').onclick=()=>phase6EventChoice(2,'','','','');renderSelection();
- if(phase1Controller.state.dungeon){const b=$('eventDecline');b.textContent='Leave for later';b.onclick=()=>{if(!phase1Controller.deferEvent())return;phase6Run.event=null;phase4Entry=null;phase4Resume=false;if(phase5Persist())render();};}
+ if(phase1Controller.state.dungeon){const b=$('eventDecline');const pass=document.createElement('button');pass.textContent='Pass without rewards';pass.onclick=()=>phase6EventChoice(2);b.before(pass);b.textContent='Leave for later';b.onclick=()=>{if(!phase1Controller.deferEvent())return;phase6Run.event=null;phase4Entry=null;phase4Resume=false;if(phase5Persist())render();};}
 }
 
 function phase6EffectMarkup(){
@@ -1226,6 +1226,11 @@ function encounterHighlight(r){
  const metrics=r.metrics||{};
     const notes=[[metrics.absorbed,'Barrier absorbed','damage'],[metrics.armor,'Armor prevented','damage'],[metrics.shield,'Shield blocked','damage'],[metrics.periodicDamage,'Damage over time dealt','damage'],[metrics.healing,'Healing restored','HP']].filter(([value])=>value>0).sort((a,b)=>b[0]-a[0]);
     
+    const procs=metrics.procs||{};
+    if(procs['🛡 Retaliation'])return 'Barrier absorbed '+Math.round(metrics.absorbed||0)+' damage and triggered Retaliation '+procs['🛡 Retaliation']+' time(s).';
+    if(metrics.maceStuns)return 'Mace stunned an enemy '+metrics.maceStuns+' time(s), delaying its attack.';
+    if(metrics.pierced)return 'Piercing Arrow struck a secondary target '+metrics.pierced+' time(s).';
+    if(metrics.parries)return 'Sword parried '+metrics.parries+' incoming attack(s).';
     const signature=r.wardingUsed?'Warding softened a hit. ':r.wisdomUsed?'Wisdom funded a cast. ':r.swiftUsed?'Swiftness advanced an attack. ':'';
     const [value,label,unit]=notes[0]||[metrics.damageDealt||0,'Your attacks dealt','damage'];
     return signature+label+' '+Math.round(value)+' '+unit+'.'+(metrics.parries?' Parries: '+metrics.parries+'.':'')+(metrics.dodges?' Dodges: '+metrics.dodges+'.':'');
@@ -1287,7 +1292,7 @@ function phase3FlashPlayerDamage(){phase3FlashPortraitDamage('heroPortrait');}
 function phase3BagMarkup(){
  const items=phase3BagItems(),overflow=Math.max(0,items.length-PHASE3_BAG_CAPACITY);
  const tile=item=>item.kind==='valuable'?'<button type="button" class="phase3BagItem '+(phase3LootNotices.some(notice=>notice.id===item.id)?'phase3BagItem--newLoot':'')+'" data-phase3-loot="'+esc(item.id)+'" title="'+esc(WandererV012Treasures.displayName(item))+' · '+item.worth+' Gold"><img class="c3TreasureImg" src="'+WandererV012Treasures.image(item)+'" alt="'+esc(WandererV012Treasures.displayName(item))+'"><span>'+item.worth+' Gold</span></button>':'<button type="button" class="phase3BagItem '+(phase3LootNotices.some(notice=>notice.id===item.id)?'phase3BagItem--newLoot':'')+'" '+rarityFrame(item)+' data-phase3-loot="'+esc(item.id)+'" title="'+esc(item.name+' · '+itemSource(item))+'">'+rarityArt(item,itemImg(item),item.subtype,'bag')+'<span>E'+item.tier+'</span></button>';
- return '<section class="phase3Bag"><h3>Expedition bag <small>'+Math.min(items.length,PHASE3_BAG_CAPACITY)+'/'+PHASE3_BAG_CAPACITY+'</small></h3><p class="micro muted">New expedition loot is at risk until extraction. Treasures can be sold for Gold after extraction.</p>'+(overflow?'<p class="phase3BagFullNotice" role="status"><b>Items outside the Bag.</b> Resolve '+overflow+' overflow item'+(overflow===1?'':'s')+' before extracting or entering another Realm.</p>':items.length>=PHASE3_BAG_CAPACITY?'<p class="phase3BagFullNotice" role="status"><b>Bag full.</b> You can extract now, but must free space to enter another Realm.</p>':'')+'<div class="phase3BagGrid">'+items.slice(0,PHASE3_BAG_CAPACITY).map(tile).join('')+Array.from({length:Math.max(0,PHASE3_BAG_CAPACITY-items.length)},()=>'<span class="phase3BagEmpty" aria-hidden="true"></span>').join('')+'</div>'+(overflow?'<div class="phase3BagOverflow" role="status"><b>'+overflow+' overflow item'+(overflow===1?'':'s')+'</b><p>Discard unwanted loot before entering the next Realm. Items are not discarded automatically.</p><div class="phase3BagGrid">'+items.slice(PHASE3_BAG_CAPACITY).map(tile).join('')+'</div></div>':'')+'</section>';
+ return '<section class="phase3Bag"><h3>Expedition bag <small>'+Math.min(items.length,PHASE3_BAG_CAPACITY)+'/'+PHASE3_BAG_CAPACITY+'</small></h3><p class="micro muted">New expedition loot is at risk until extraction. Treasures can be sold for Gold after extraction.</p>'+(overflow?'<p class="phase3BagFullNotice" role="status"><b>Items outside the Bag.</b> Resolve '+overflow+' overflow item'+(overflow===1?'':'s')+' before travelling or extracting.</p>':items.length>=PHASE3_BAG_CAPACITY?'<p class="phase3BagFullNotice" role="status"><b>Bag full.</b> You can keep exploring. Choose what to keep when new loot drops.</p>':'')+'<div class="phase3BagGrid">'+items.slice(0,PHASE3_BAG_CAPACITY).map(tile).join('')+Array.from({length:Math.max(0,PHASE3_BAG_CAPACITY-items.length)},()=>'<span class="phase3BagEmpty" aria-hidden="true"></span>').join('')+'</div>'+(overflow?'<div class="phase3BagOverflow" role="status"><b>'+overflow+' overflow item'+(overflow===1?'':'s')+'</b><p>Choose a new item to leave, or replace an item in your bag.</p><div class="phase3BagGrid">'+items.slice(PHASE3_BAG_CAPACITY).map(tile).join('')+'</div></div>':'')+'</section>';
 }
 
 function phase3BindBag(){
@@ -1295,6 +1300,13 @@ function phase3BindBag(){
  Q('[data-phase3-loot]').forEach(button=>button.onclick=()=>{
   const item=phase3BagItems().find(o=>o.id===button.dataset.phase3Loot);if(!item)return;
   const safe=phase3CanPrepare(),canDiscard=safe||phase3NeedsBagResolution()&&!state.run&&!phase1Draft,ring=['ring1','ring2'].includes(item.slot);
+   if(canDiscard&&phase3BagItems().slice(PHASE3_BAG_CAPACITY).some(o=>o.id===item.id)){
+    const name=o=>esc(o.name||WandererV012Treasures.displayName(o));
+    const options=phase3BagItems().slice(0,PHASE3_BAG_CAPACITY).map(o=>'<option value="'+esc(o.id)+'">'+name(o)+'</option>').join('');
+    const dialog=showModal('Take '+name(item),(item.kind==='valuable'?'':gearComparison(item))+'<p>Bag full. Choose an item to replace.</p><select aria-label="Item to replace">'+options+'</select><button data-replace>Replace</button><button data-leave>Leave new item</button>');
+    dialog.querySelector('[data-replace]').onclick=()=>{const id=dialog.querySelector('select').value;dialog.close();phase3DiscardLoot(id,item.id);};
+    dialog.querySelector('[data-leave]').onclick=()=>{dialog.close();phase3DiscardLoot(item.id);};return;
+   }
    if(item.kind==='valuable'){
     const dialog=showModal('Expedition treasure','<img class="c3TreasureModalImage" src="'+WandererV012Treasures.image(item)+'" alt=""><p><b>'+esc(WandererV012Treasures.displayName(item))+'</b></p><p>Sell for '+item.worth+' Gold once outside the Expedition.</p><button type="button" class="danger" data-phase3-discard '+(canDiscard?'':'disabled')+'>Discard treasure</button>');
     dialog?.querySelector('[data-phase3-discard]')?.addEventListener('click',()=>{dialog.close();showConfirm('Discard treasure','Permanently discard this treasure?',()=>phase3DiscardLoot(item.id),'Discard');});return;
@@ -1397,11 +1409,8 @@ function phase3BindPaper(){
  });
 }
 function phase5MilestoneMarkup(value){
- const best=Math.max(0,Number(value)||0),count=Math.floor(best/25),unlocked=Array.from({length:Math.min(count,8)},(_,i)=>(count-Math.min(count,8)+i+1)*25);
- const next=25*(Math.floor(best/25)+1);
- return '<div class="phase5Milestones" aria-label="Personal expedition milestones"><p class="small muted"><b>Expedition milestones</b> · '+(count?count+' reached':'Not yet reached')+'</p>'+
- '<div class="phase5MilestoneChips">'+(unlocked.length?unlocked.map(level=>'<span class="phase5MilestoneChip" title="Defeated Expedition '+level+'">✦ E'+level+'</span>').join(''):'<span class="small muted">Your first milestone is E25.</span>')+'</div>'+
- '<p class="small muted">Next milestone: E'+next+' · '+(next-best)+' Expeditions to go</p>'+'</div>';
+ const best=Math.min(5,Math.max(0,Number(value)||0)),wins=state.crafting?.mythicFamilies||[];
+ return '<div class="phase5Milestones"><b>Expedition milestones</b><p>'+rankNames.map((rank,i)=>(best>i?'✓ ':'')+rank).join(' · ')+'</p><p>Mythic victories by affinity: '+(wins.length?wins.map(esc).join(', '):'None recorded')+'</p></div>';
 }
 /* UI.5 — Session UI location only; never written into player saves. */
 const PHASE3_UI_SESSION_KEY='wanderer-v012-ui-location-v1';
@@ -1454,7 +1463,7 @@ function phase3CampStatsMarkup(s){
 
 const rankNames=['Scout','Delver','Vanguard','Warden','Mythic'];
 function phase3DifficultyMarkup(g,selected,id,labelClass='phase3Difficulty'){
- const control=g.unlocked>200?'<input id="'+id+'" data-phase3-expedition-level type="number" min="1" max="'+g.unlocked+'" value="'+selected+'">':'<select id="'+id+'" data-phase3-expedition-level>'+Array.from({length:Math.min(rankNames.length,g.unlocked)},(_,i)=>'<option value="'+(i+1)+'" '+(selected===i+1?'selected':'')+ '>'+rankNames[i]+'</option>').join('')+'</select>';
+ const control='<select id="'+id+'" data-phase3-expedition-level>'+Array.from({length:Math.min(rankNames.length,g.unlocked)},(_,i)=>'<option value="'+(i+1)+'" '+(selected===i+1?'selected':'')+ '>'+rankNames[i]+'</option>').join('')+'</select>';
  return '<label class="'+labelClass+'">Expedition'+control+'</label>';
 }
 function phase3CampMarkup(g,stats){
@@ -1679,7 +1688,7 @@ function expeditionRouteMap(g){
 }
 function realmDifficulty(card){return ['Guarded','Dangerous','Brutal'][card.risk];}
 function dungeonRoomLabel(n){
- if(n.kind==='combat')return n.range[1]===1?'Solo':n.range[1]<=4?'Patrol':'Swarm';
+ if(n.kind==='combat')return n.range[1]===1?'Solo':n.range[1]<=4?'Patrol':'Fragile swarm';
  return {entrance:'Entrance',boss:'Boss',elite:'Elite',spring:'Spring',event:'Event'}[n.kind];
 }
 function dungeonMapMarkup(g){
@@ -1695,12 +1704,12 @@ function dungeonMapMarkup(g){
   const [x,y]=point(i),cleared=d.cleared.includes(i),label=dungeonRoomLabel(n);
   return '<button type="button" data-dungeon-room="'+i+'" style="position:absolute;left:'+x+'%;top:'+y+'%;transform:translate(-50%,-50%);padding:5px;background:'+(i===d.current?'#513b26':cleared?'#24352d':'#241d22')+'">'+label+(i===c.objective?' ★':'')+(c.bossSector!==undefined&&i>=1&&i<=4?' '+i:'')+'<small style="display:block">'+(i===d.current?'You are here':cleared?'Cleared':n.kind==='combat'?n.range.join('–')+' mobs':n.kind==='boss'||n.kind==='elite'?n.escorts+' guards':'Inspect')+'</small></button>';
  }).join('');
- return '<h2>'+esc(c.name)+'</h2><p>'+realmDifficulty(c)+' · '+esc(c.family)+' affinity · '+g.history.length+' rooms cleared'+(c.bossSector!==undefined?' · Boss trail follows the '+['first','second','third','fourth'][c.bossSector]+' entrance passage.':'')+(d.steps===undefined?'':' · <strong>'+d.steps+' / '+c.stepLimit+' steps left</strong>')+'</p><div data-realm-viewport style="overflow-x:auto"><div style="position:relative;min-width:580px;height:'+(c.positions?'450':'225')+'px;background:linear-gradient(#141016d9,#141016e8),url('+dungeonImage(c)+') center/cover"><svg aria-hidden="true" style="position:absolute;width:100%;height:100%" viewBox="0 0 100 100" preserveAspectRatio="none">'+lines+'</svg>'+buttons+'</div></div><p class="small muted">Inspect a room to travel.'+(d.steps===undefined?'':' Each passage costs one step, including the return trip. Extraction is free.')+' Cleared passages are safe. Springs and events can wait until you need them.</p>';
+ return '<h2>'+esc(c.name)+'</h2><p>'+realmDifficulty(c)+' · '+esc(c.family)+' affinity · '+g.history.length+' rooms cleared'+(c.clueRoom!==undefined?(d.cleared.includes(c.clueRoom)?' · Tracks lead to the outer end of passage '+(c.bossSector+1)+'.':' · Tracks between passages '+(c.bossSector+1)+' and '+(c.secondSector+1)+'. Search the inner rooms for a clearer trail.'):c.bossSector!==undefined?' · Boss trail follows passage '+(c.bossSector+1)+'.':'')+(d.steps===undefined?'':' · <strong>'+d.steps+' / '+c.stepLimit+' steps left</strong>')+'</p><div data-realm-viewport style="overflow-x:auto"><div style="position:relative;min-width:580px;height:'+(c.positions?'450':'225')+'px;background:linear-gradient(#141016d9,#141016e8),url('+dungeonImage(c)+') center/cover"><svg aria-hidden="true" style="position:absolute;width:100%;height:100%" viewBox="0 0 100 100" preserveAspectRatio="none">'+lines+'</svg>'+buttons+'</div></div><p class="small muted">Inspect a room to travel.'+(d.steps===undefined?'':' Each passage costs one step, including the return trip. Extraction is free.')+' Cleared passages are safe. Springs and events can wait until you need them.</p>';
 }
 function renderRealmCards(g){
  html('<section class="panel"><span class="eyebrow">Expedition '+g.expedition+'</span><h1>Choose your Realm</h1><div class="phase1Offers">'+g.dungeon.cards.map(c=>{
  const t=phase2Theme(c.id);
- return '<button class="phase1Offer" data-realm-card="'+c.id+'"><img src="'+dungeonImage(c)+'" alt=""><div class="phase1OfferBody"><strong>'+esc(c.name)+'</strong><p>'+phase2FamilyIcon(c.family)+' '+esc(c.family)+' · '+realmDifficulty(c)+'</p><p>'+esc(t.enemy)+' · '+esc(t.effect)+' · '+(c.risk?'Boss with '+c.risk+' guard'+(c.risk===1?'':'s'):'Solo boss')+'</p><small>'+(c.stepLimit?c.stepLimit+' steps · ':'')+(c.risk?'+'+(c.risk*12)+'% combat Gold, Fragments and equipment chance':'Standard rewards')+' · '+esc(c.family)+' reagent · Marked elite favours '+esc(c.favoured?.subtype||'Shield')+' · '+(4+c.risk*2)+' Essence on extraction</small></div></button>';
+ return '<button class="phase1Offer" data-realm-card="'+c.id+'"><img src="'+dungeonImage(c)+'" alt=""><div class="phase1OfferBody"><strong>'+esc(c.name)+'</strong><p>'+phase2FamilyIcon(c.family)+' '+esc(c.family)+' · '+realmDifficulty(c)+'</p><p>'+esc(t.enemy)+' · '+esc(t.effect)+' · '+(c.risk?'Boss with '+c.risk+' guard'+(c.risk===1?'':'s'):'Solo boss')+'</p><small>'+(c.stepLimit?c.stepLimit+' steps · ':'')+(c.risk?'+'+(c.risk*12)+'% combat Gold, Fragments and equipment chance':'Standard rewards')+' · Marked elite contract: 1 '+esc(c.family)+' reagent + '+(2+c.risk*2)+' Essence on extraction. Equipment drops: 55% chance to favour '+esc(c.favoured?.subtype||'Shield')+'</small></div></button>';
  }).join('')+'</div><button id="phase1BackToCamp">Return to Camp</button></section>');
  Q('[data-realm-card]').forEach(b=>b.onclick=()=>{phase1Controller.chooseRealm(b.dataset.realmCard);if(phase5Persist())render();});
  $('phase1BackToCamp').onclick=phase6BackToCamp;
@@ -1713,13 +1722,13 @@ function bindDungeonRooms(g){
   const i=Number(b.dataset.dungeonRoom),n=c.nodes[i],cleared=g.dungeon.cleared.includes(i);
   const path=phase1Controller.travelPath(i);
   if(!path.length){showModal(dungeonRoomLabel(n),'Follow the connected passages to reach this scouted room.');return;}
-  const cost=path.length-1,remaining=g.dungeon.steps,tooFar=remaining!==undefined&&cost>remaining;
+  const cost=phase1Controller.travelCost(path),remaining=g.dungeon.steps,tooFar=remaining!==undefined&&cost>remaining;
   const highlighted=path.slice(1).map((id,k)=>document.querySelector('[data-room-edge="'+path[k]+'-'+id+'"],[data-room-edge="'+id+'-'+path[k]+'"]')).filter(Boolean);
   for(const line of highlighted)line.style.stroke='#ffd57a';
   const route=path.map(j=>dungeonRoomLabel(c.nodes[j])).join(' → ');
-  const detail=cleared?'Cleared passage.':n.event?WandererV012IntegratedEvents.get(n.event)[1]:n.kind==='combat'?n.range[0]+'–'+n.range[1]+' enemies':dungeonRoomLabel(n)+' with '+n.escorts+' guards';
-  const full=!cleared&&(phase3BagOverflow()||phase3BagItems().length>=PHASE3_BAG_CAPACITY);
-  const dialog=showModal(dungeonRoomLabel(n),'<p>'+esc(detail)+(i===c.objective?' · Favours '+esc(c.favoured?.subtype||'Shield'):'')+'</p><p>'+esc(route)+'</p>'+(remaining===undefined?'':'<p>'+cost+' steps · '+(tooFar?'Not enough steps.':(remaining-cost)+' left after travel.')+'</p>')+(full?'<p>Free a bag slot to enter.</p>':''),full||tooFar?null:()=>{
+  const detail=cleared?'Cleared passage.':n.event?WandererV012IntegratedEvents.get(n.event)[1]:n.kind==='combat'?n.range[0]+'–'+n.range[1]+(i===2?' enemies · Vanguard prepares the opening strike':n.range[1]>=6?' fragile enemies · reinforcements':' enemies'):dungeonRoomLabel(n)+' with '+n.escorts+' guards';
+  const full=!cleared&&phase3BagOverflow()>0;
+  const dialog=showModal(dungeonRoomLabel(n),'<p>'+esc(detail)+(i===c.objective?' · Contract on extraction: 1 '+esc(c.family)+' reagent and '+(2+c.risk*2)+' Essence. Equipment drops favour '+esc(c.favoured?.subtype||'Shield')+' (55%).':'')+'</p><p>'+esc(route)+'</p>'+(remaining===undefined?'':'<p>'+cost+' steps · '+(tooFar?'Not enough steps.':(remaining-cost)+' left after travel.')+'</p>')+(full?'<p>Choose which newly found loot to keep before travelling.</p>':''),full||tooFar?null:()=>{
    if(!phase1Controller.visitRoom(i))return;
    if(cleared){if(phase5Persist())render();}else phase1Enter();
   },cleared?'Travel here':'Enter room');
@@ -1865,7 +1874,7 @@ function phase5SummaryMarkup(r,title,realm){
   combatMetrics+
   (gearGroups?'<div class="phase5RewardGrid">'+gearGroups+'</div>':'<p class="small muted phase5EmptyRewards">No equipment or treasures recorded for this Expedition.</p>')+
   (r.runeTier?'<p class="phase5RuneResult">'+esc(r.runeName?'Rune obtained: '+r.runeName:'Boss Rune choice pending in Camp')+' · E'+r.runeTier+'</p>':'')+
-  (r.outcome==='victory'?'<p>Highest Expedition Cleared: '+(phase5Snapshot?.expedition.completed||r.level)+'</p>'+(r.level%25===0?'<p class="phase5MilestoneWin">✦ Milestone completed: E'+r.level+'</p>':''):'<p class="small muted">No next difficulty unlocked. Equipped equipment and earned currencies are safe.</p>')+
+  (r.outcome==='victory'?'<p>Highest Expedition Cleared: '+(phase5Snapshot?.expedition.completed||r.level)+'</p>'+(r.level===5?'<p class="phase5MilestoneWin">Mythic cleared! '+esc(r.family||'')+'</p>':''):'<p class="small muted">No next difficulty unlocked. Equipped equipment and earned currencies are safe.</p>')+
   '<section class="phase5TemporaryBuild"><h2>Temporary build'+(r.element?' · '+esc(r.element):'')+'</h2><div class="phase5PassiveChips">'+(build||'<span class="small muted">No passives recorded.</span>')+'</div></section>'+
   '</section>';
 }
@@ -1900,7 +1909,7 @@ function phase5RenderResult(){
 }
 function phase5Leaderboard(){
  const e=phase5Snapshot?.expedition;
- showModal('Expedition Leaderboard','<h3>Highest Expedition Cleared</h3><p>Personal best: '+(e?.completed??phase5PersonalBest)+'</p>'+phase5MilestoneMarkup(e?.completed||0)+'<p>Shared rankings are unavailable in this playtest. Results are not submitted.</p><p class="small muted">Entering a difficulty, extracting or dying does not count as clearing it. Expeditions continue beyond E200.</p>'+(phase5Results.summary?'<button id="phase5Review">Review last Expedition</button>':''));
+ showModal('Expedition Leaderboard','<h3>Highest Expedition Cleared</h3><p>Personal best: '+(e?.completed??phase5PersonalBest)+'</p>'+phase5MilestoneMarkup(e?.completed||0)+'<p>Shared rankings are unavailable in this playtest. Results are not submitted.</p><p class="small muted">Entering a difficulty, extracting or dying does not count as clearing it. Mythic is the fifth and final rank.</p>'+(phase5Results.summary?'<button id="phase5Review">Review last Expedition</button>':''));
  const button=$('phase5Review');if(button)button.onclick=()=>{document.querySelectorAll('dialog').forEach(d=>d.close());phase5ReviewSummary();};
 }
 // Phase 5 is deliberately opt-in and local-only. It never reads any classic/account slot.

@@ -189,7 +189,7 @@ function validate(input,binding){
  for(const item of [...s.profile.stash,...Object.values(s.profile.equip).filter(Boolean),...s.profile.expeditionOverflow,...(s.profile.merchant?.stock||[])])if(item?.subtype==='Off-Hand Dagger')item.subtype='Daggers';
  requireValue(s.identity===null||(plain(s.identity)&&typeof s.identity.uid==='string'&&s.identity.uid.length>0&&typeof s.identity.projectId==='string'&&s.identity.projectId.length>0&&typeof s.identity.nickname==='string'&&/^[A-Za-z0-9_]{3,20}$/.test(s.identity.nickname)),'identity');
  if(s.migration!==null)requireValue(plain(s.migration)&&s.migration.source==='classic-v092'&&s.migration.requiresApproval===true&&(s.migration.sourceRevision===null||integer(s.migration.sourceRevision,1,Number.MAX_SAFE_INTEGER)),'migration approval metadata');
- const e=s.expedition;requireValue(plain(e)&&integer(e.completed,0,Number.MAX_SAFE_INTEGER-1)&&e.unlocked===e.completed+1&&integer(e.attempts,0,Number.MAX_SAFE_INTEGER),'Expedition progress');
+ const e=s.expedition;requireValue(plain(e)&&integer(e.completed,0,Number.MAX_SAFE_INTEGER-1)&&(e.unlocked===e.completed+1||(e.completed===5&&e.unlocked===5))&&integer(e.attempts,0,Number.MAX_SAFE_INTEGER),'Expedition progress');
  requireValue(['new','active','victory','defeat','abandoned','interrupted','extracted','cancelled'].includes(e.lastOutcome)&&e.completed<=e.attempts,'outcome/attempt count');
  if(e.lastOutcome==='new')requireValue(e.attempts===0&&e.completed===0,'new profile progress');
  requireValue(Array.isArray(e.awardKeys)&&e.awardKeys.length<=45&&new Set(e.awardKeys).size===e.awardKeys.length,'award ledger');

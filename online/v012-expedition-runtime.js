@@ -64,10 +64,10 @@ function phase6EventChoice(choice,itemId,passiveId,family,targetId){
  case 'oracle_of_paths':if(choice===0){if(g.freeBuild){if(g.rerolls>=3)return false;g.rerolls++;}else{if(!ports.phase1Controller.allowed().includes(family))return false;ports.phase1Controller.influence(family);}}else ports.state.fragments+=5+E;break;
  default:return false;
  }}
- ports.phase6Run.events.push(g.planeIndex);ports.phase6Run.event=null;ports.phase4CommitRealm({awardXp:true});ports.phase1Controller.waveWon();
+ ports.phase6Run.events.push(g.planeIndex);ports.phase6Run.event=null;ports.phase4CommitRealm({awardXp:choice!==2});ports.phase1Controller.waveWon();
  if(!g.freeBuild)phase6UnlockBase(p.family);
  ports.phase5Results.gold+=Math.max(0,ports.state.gold-beforeGold);ports.phase5Results.fragments+=Math.max(0,ports.state.fragments-beforeFragments);
- const eventText=choice===2?'Event passed. Exploration materials secured.':WandererV012IntegratedEvents.get(ev.id)[3][choice].replace(/(\d+) \+ (\d+)×E/g,(_,a,b)=>String(+a+ +b*E)).replace(/(\d+) \+ E/g,(_,a)=>String(+a+E));
+ const eventText=choice===2?'Event passed.':ev.id==='forgotten_arsenal'?(choice===0?'Recovered 6 Essence.':'Took provisions to restore up to 2 steps.'):WandererV012IntegratedEvents.get(ev.id)[3][choice].replace(/(\d+) \+ (\d+)×E/g,(_,a,b)=>String(+a+ +b*E)).replace(/(\d+) \+ E/g,(_,a)=>String(+a+E));
  ports.phase5RememberRealm({tier:E,phase1Plane:g.planeIndex-1,planeName:p.name,planeFamily:p.family,combatSeconds:0,gold:Math.max(0,ports.state.gold-beforeGold),fragments:Math.max(0,ports.state.fragments-beforeFragments),loot,realmLog:[{text:eventText,kind:'good'}]},'cleared');
  ports.phase5Results.review=null;ports.phase5Results.eventExitPending=true;
  ports.phase1Controller.claimReward();ports.phase1Draft=null;
@@ -145,7 +145,7 @@ function phase1Choose(id){
 function phase1Enter(){
  if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked))return false;
  if(ports.phase1Draft||!ports.phase1Build||ports.state.run)return false;
- if(ports.phase3BagItems().length>=ports.PHASE3_BAG_CAPACITY||ports.phase3BagOverflow()){ports.bannerMessage('Bag full. Discard an item before entering another Realm.');return false;}
+ if(!ports.phase1Controller.state.dungeon&&(ports.phase3BagItems().length>=ports.PHASE3_BAG_CAPACITY||ports.phase3BagOverflow())){ports.bannerMessage('Bag full. Discard an item before entering another Realm.');return false;}
  const plane=ports.phase1Controller.enter();if(!ports.phase1Controller.state.freeBuild)ports.phase1Build.families=ports.phase1Controller.state.families;
  if(!ports.phase1Controller.state.freeBuild&&plane.family==='magic'&&!ports.phase1Build.element){
   ports.phase1Draft={kind:'entry',plane,family:'magic',step:'element'};ports.phase5Persist();ports.render();
@@ -181,7 +181,7 @@ function phase1StartWave(resetScroll=false){
  const theme=ports.phase2Theme(g.selected.id);
  const totalCount=last&&(g.selected.boss||g.selected.elite)?1:(g.selected.mobCount||3),activeCount=Math.min(4,totalCount);
  const spawn=()=>ports.enemyFor(r.tier,r.enc,{theme,boss:last&&g.selected.boss,elite:last&&g.selected.elite&&!g.selected.boss,variant:g.version===2?ports.BOSS_ARCHETYPES.find(b=>b.style===WandererV012Expedition.BOSSES.find(v=>v.id===g.bossId).style):null});
- const scale=totalCount>=6&&totalCount<18?{hp:.15,atk:.16}:totalCount>=18?{hp:.10,atk:.12}:null;
+ const scale=totalCount>=6?{hp:(1.65+.045*(totalCount-6))/totalCount,atk:totalCount>=18?.12:.16}:null;
  const group=WandererV012CombatCore.createEnemyGroup(spawn,totalCount,{activeSlots:activeCount,scale});
  // Give ordinary mobs time to show their attacks; keep their pressure lower.
  for(const enemy of group){
@@ -190,6 +190,7 @@ function phase1StartWave(resetScroll=false){
   enemy.attackEvery*=1.15;
   enemy.atk=Math.max(1,Math.round(enemy.atk*.65*(1+.12*(g.selected.risk||0))));
  }
+ if(g.dungeon&&g.selected.node===2&&group.length>1){const guard=group[0];guard.name+=' · Vanguard';guard.vanguard=true;guard.hp=guard.maxhp=Math.round(guard.maxhp*1.8);guard.atk=Math.ceil(guard.atk*1.2);ports.addLog(guard.name+' prepares the first strike.','critical');}
  if(last&&(g.selected.boss||g.selected.elite)){
   const escorts=g.selected.escorts??(g.selected.boss?2:1);
   for(let i=0;i<escorts;i++){
@@ -364,7 +365,7 @@ function phase5MakeSummary(outcome){
  ]:[];
  const expeditionTreasures=(ports.state.valuables||[]).filter(i=>bagIds.has(i.id)).map(i=>({...i}));
  const start=ports.phase5Results.craftingStart||WandererV013Crafting.create(),craft=ports.state.crafting||WandererV013Crafting.create();
- ports.phase5Results.summary={realmMap:!!g.dungeon,craftingEarned:{essence:Math.max(0,craft.essence-start.essence),cores:Object.fromEntries(WandererV013Crafting.FAMILIES.map(f=>[f,Math.max(0,craft.cores[f]-start.cores[f])]))},passiveTelemetry:ports.phase4Clone(ports.phase1Build?.runtime.passiveTelemetry||{}),metrics:ports.phase6Run?.metrics||null,level:g.expedition,outcome,realms:g.history.length,
+ ports.phase5Results.summary={family:g.bossFamily,realmMap:!!g.dungeon,craftingEarned:{essence:Math.max(0,craft.essence-start.essence),cores:Object.fromEntries(WandererV013Crafting.FAMILIES.map(f=>[f,Math.max(0,craft.cores[f]-start.cores[f])]))},passiveTelemetry:ports.phase4Clone(ports.phase1Build?.runtime.passiveTelemetry||{}),metrics:ports.phase6Run?.metrics||null,level:g.expedition,outcome,realms:g.history.length,
   families:[...(ports.phase1Build?.families||g.families)],picks:[...(ports.phase1Build?.picks||[])],element:ports.phase1Build?.element||null,
   seconds:ports.phase1Clock+(outcome==='defeat'?(ports.state.run?.combatSeconds||0):0),gold:ports.phase5Results.gold,fragments:ports.phase5Results.fragments,
   kept:ports.phase5Results.earned.filter(i=>owned.has(i.id)&&(!lost||!bagIds.has(i.id))),lost:lostGear,

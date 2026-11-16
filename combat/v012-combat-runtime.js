@@ -334,6 +334,7 @@ function groupSecondaryDamage(r,base,factors,label,physical=false){
  if(!r.enemies||r.enemies.length<2)return 0;
  const targets=r.enemies.filter(enemy=>enemy!==r.enemy&&enemy.hp>0).slice(0,factors.length);let hit=0;
  targets.forEach((enemy,i)=>{let amount=Math.max(1,Math.round((physical?Math.max(1,Math.round(r.stats.attack*({'Two-Handed':1.70,Sword:1.12,Mace:1.4,Bow:1.08,Daggers:.80}[r.stats.main?.subtype]||1))-(enemy.def||0)):base)*factors[i]));const absorbed=Math.min(enemy.barrier||0,amount);enemy.barrier=Math.max(0,(enemy.barrier||0)-absorbed);amount-=absorbed;const actual=Math.min(Math.max(0,enemy.hp),amount);enemy.hp-=amount;if(actual>0)ports.floatText(actual,'enemy',false,'',enemy);ports.phase6Metric(r,'damageDealt',actual);hit++;});
+ if(hit&&label.includes('Piercing Arrow'))ports.phase6Metric(r,'pierced',hit);
  if(hit)ports.addLog(label+' hits '+hit+' additional '+(hit===1?'enemy':'enemies')+'.','good');return hit;
 }
 function groupElementalEffects(r,b){
@@ -385,7 +386,7 @@ function weaponAttack(r,offhandStrike=false){
   if(gained>0)ports.addLog('🔮 Orb Ward +'+Math.round(gained)+' Barrier','good');
  }
  if(kind==='Mace'&&now>=(e.stunImmuneUntil||0)&&ports.gameRandom()<.25){
-  e.stunnedUntil=now+(e.boss ? .4 : 1);e.stunImmuneUntil=now+4;
+  e.stunnedUntil=now+(e.boss ? .4 : 1);e.stunImmuneUntil=now+4;ports.phase6Metric(r,'maceStuns',1);
   ports.floatText('STUN','enemy',false,'',e);ports.addLog('Stunned '+e.name,'good');
  }
  if(s.bonus.sunderExpose&&e.baseDef>0&&e.def<=e.baseDef*.5)damage=Math.round(damage*1.08);
@@ -494,6 +495,7 @@ function updateFight(){
   // Elite Berserker cannot one-shot a full-health player with one direct hit.
   // Cap before Block/Barrier so defensive investment still matters.
   if(e.eliteType==='berserker')raw=Math.min(raw,Math.max(1,Math.floor(r.maxhp*.35)));
+  if(e.vanguard){e.vanguard=false;ports.addLog(e.name+' delivers its opening strike.','critical');}
   const attackType=ports.enemyAttackType(e);
   if(attackType==='physical'&&s.main?.subtype==='Sword'&&ports.gameRandom()<.18){
    r.lastImpact={parry:true,source:e.name,at:r.combatSeconds};ports.floatText('PARRY','hero');ports.phase6Metric(r,'parries',1);

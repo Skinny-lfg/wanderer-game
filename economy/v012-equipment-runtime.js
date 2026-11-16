@@ -289,15 +289,20 @@ function salvageOne(id){
  },'Salvage');
 }
 
-function phase3BagItems(){return [...ports.state.stash,...(ports.state.expeditionOverflow||[]),...(ports.state.valuables||[])].filter(item=>ports.phase3LootIds.has(item.id));}
+function phase3BagItems(){const owned=new Map([...ports.state.stash,...(ports.state.expeditionOverflow||[]),...(ports.state.valuables||[])].map(item=>[item.id,item]));return [...ports.phase3LootIds].map(id=>owned.get(id)).filter(Boolean);}
 
 function phase3BagOverflow(){return Math.max(0,ports.phase3BagItems().length-ports.PHASE3_BAG_CAPACITY);}
 
 function phase3NeedsBagResolution(){return ports.PHASE1_PREVIEW&&['finished','failed'].includes(ports.phase1Controller?.state.stage)&&ports.phase3BagOverflow()>0;}
 
-function phase3DiscardLoot(id){
+function phase3DiscardLoot(id,replacementId){
  if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked)||!ports.phase3CanPrepare()&&!(ports.phase3NeedsBagResolution()&&!ports.state.run&&!ports.phase1Draft))return false;
- const item=ports.phase3BagItems().find(o=>o.id===id);if(!item)return false;
+ const items=ports.phase3BagItems(),item=items.find(o=>o.id===id);if(!item)return false;
+ if(replacementId){
+  if(!items.slice(ports.PHASE3_BAG_CAPACITY).some(o=>o.id===replacementId)||!items.slice(0,ports.PHASE3_BAG_CAPACITY).includes(item))return false;
+  const order=[...ports.phase3LootIds].filter(key=>key!==replacementId).map(key=>key===id?replacementId:key);
+  ports.phase3LootIds.clear();for(const key of order)ports.phase3LootIds.add(key);
+ }
  ports.state.stash=ports.state.stash.filter(o=>o.id!==id);ports.state.expeditionOverflow=ports.state.expeditionOverflow.filter(o=>o.id!==id);ports.state.valuables=(ports.state.valuables||[]).filter(o=>o.id!==id);ports.phase3LootIds.delete(id);
  ports.save();ports.render();return true;
 }
