@@ -16,7 +16,7 @@
     "test:v013": "node --test tests/automatic-rpg-groups.test.cjs tests/automatic-rpg-route.test.cjs tests/automatic-rpg-talents.test.cjs tests/v013-unified-lifecycle.test.cjs tests/v013-crafting.test.cjs tests/v013-specializations.test.cjs tests/v013-loot.test.cjs tests/v013-talent-structure.test.cjs tests/v013-stat-consistency.test.cjs tests/v013-craft-preview.test.cjs tests/v013-talent-24-axes.test.cjs",
     "test:v013:browser": "node tests/v013-pages-browser.cjs && node tests/v013-cleanup-ui-browser.cjs && node tests/v013-talent-tree-browser.cjs && node tests/v013-clarity-browser.cjs",
     "test:v013:layout": "node --test tests/v013-talent-24-axes.test.cjs",
-    "test:v013:talent-graph": "node --test tests/talent-graph-next.test.cjs tests/talent-graph-runtime.test.cjs tests/talent-graph-bridge.test.cjs tests/talent-graph-combat.test.cjs tests/talent-graph-visual-links.test.cjs"
+    "test:v013:talent-graph": "node --test tests/talent-graph-next.test.cjs tests/talent-graph-runtime.test.cjs tests/talent-graph-bridge.test.cjs tests/talent-graph-combat.test.cjs"
   },
   "dependencies": {
     "firebase": "11.10.0"

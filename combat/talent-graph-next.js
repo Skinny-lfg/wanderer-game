@@ -17,16 +17,12 @@ function createGraph(catalog,legacy=[]){
  for(const family of FAMILIES){
   const root=stat('root_'+family,family,null);add({id:'affinity_'+family,kind:'affinity',family,name:family,requires:root,...AFFINITY[family]});
   for(let lane=0;lane<2;lane++){let parent='affinity_'+family;for(let tier=1;tier<=3;tier++){parent=stat(`basic_path_${family}_${lane}_${tier}`,family,parent,{lane,tier});skill(BASICS[family][lane*3+tier-1],'basic',family,tier,parent,{lane});}}
-  // Connect side branches to the central node at their SAME tier.
-  // Do not bypass the central node or jump diagonally between different tiers.
   let parent='affinity_'+family;for(let tier=1;tier<=3;tier++){
-   const sides=[0,1].map(lane=>stat('focus_branch_'+family+'_'+lane+'_'+tier,family,'basic_path_'+family+'_'+lane+'_'+tier,{lane,tier}));
-   // The central route continues along its own axis. Both side approaches
-   // retain their original purchasable entry stats and unlock costs.
-   // All three alternatives merge visually, never as extra mandatory nodes.
-   const middle=stat('focus_path_'+family+'_'+tier,family,parent,{tier});
-   skill(FOCUSED[family][tier-1],'focused',family,tier,null,{anyRequires:[middle,...sides]});
-   parent=middle;
+   // From the second layer, either lateral branch can also lead toward the
+   // next central passive. The first layer starts at the affinity as before.
+   const middle=tier===1?stat(`focus_path_${family}_${tier}`,family,parent,{tier}):stat(`focus_path_${family}_${tier}`,family,null,{tier,anyRequires:[parent,`focus_branch_${family}_0_${tier-1}`,`focus_branch_${family}_1_${tier-1}`]});
+   const sides=[0,1].map(lane=>stat(`focus_branch_${family}_${lane}_${tier}`,family,`basic_path_${family}_${lane}_${tier}`,{lane,tier}));
+   skill(FOCUSED[family][tier-1],'focused',family,tier,null,{anyRequires:[middle,...sides]});parent=middle;
   }
  }
  for(const [first,second,...abilities] of MIXED){let previous=null;for(let tier=1;tier<=3;tier++){
