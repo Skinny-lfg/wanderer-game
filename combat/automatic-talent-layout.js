@@ -17,7 +17,7 @@ function create(list){
  for(const node of list.filter(n=>n.forkAnchor)){const anchor=list.find(n=>n.id===node.forkAnchor);if(!anchor)continue;const t=((anchor.branchLane??1)-1)*450,r=1150+(anchor.branchDepth||0)*600;positions[node.id]=local(node.family,t+(node.forkStep<3?(node.forkStep===1?-105:105):(node.forkSide||0)*190),r+(node.forkStep<3?170:320));}
  const hybrids=list.filter(n=>n.hybridFor&&n.passiveId&&n.rank===1).sort((a,b)=>[a.family,a.hybridOther].sort().join(':').localeCompare([b.family,b.hybridOther].sort().join(':')));
  hybrids.forEach((node,i)=>{const angle=ANGLES[node.family]+Math.atan2(Math.sin(ANGLES[node.hybridOther]-ANGLES[node.family]),Math.cos(ANGLES[node.hybridOther]-ANGLES[node.family]))/2,at=point(angle,1750+(i%2)*650),{x,y}=at,id=node.passiveId;proxies[id]={};for(const [prefix,family] of [['path',node.family],['bridge',node.hybridOther]]){
-   const origin=positions['affinity_'+family],side=i%2===0?-1:1;
+   const origin=positions[list.find(n=>n.id===prefix+'_'+id+'_1').requires],side=i%2===0?-1:1;
    for(const [step,fraction] of [[1,.36],[2,.72]]){
     const dx=x-origin.x,dy=y-origin.y,length=Math.hypot(dx,dy);
     positions[prefix+'_'+id+'_'+step]={x:origin.x+dx*fraction-side*dy*75/length,y:origin.y+dy*fraction+side*dx*75/length};
