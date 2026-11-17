@@ -2,7 +2,7 @@
 (function(root){'use strict';
 function project(graph,progress,element='fire',prepared=null){
  if(!root.WandererTalentGraph.valid(graph,progress))throw Error('Invalid talent progress');
- if(!['fire','frost','lightning'].includes(element))throw Error('Invalid element');
+ if(!['arcane','fire','frost','lightning'].includes(element))throw Error('Invalid element');
  const selected=graph.filter(n=>progress.ranks[n.id]),nodes=[],permanentTalents=[];
  for(const n of selected){const rank=progress.ranks[n.id];for(let i=1;i<=rank;i++)nodes.push(i===1?n.id:n.id+'_rank'+i);if(n.passiveId)for(let i=0;i<rank;i++)permanentTalents.push(n.passiveId);}
  // The legacy combat engine supplies these first ranks with their affinity.

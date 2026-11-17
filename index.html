@@ -1700,10 +1700,10 @@ function renderRebuiltTalents(){
  if(!state.automaticTalents)state.automaticTalents={...system.create(),starterPoints:2};
  if(!system.valid(state.automaticTalents)){html('<section class="panel"><h2>Talent Tree</h2><p>Talent progress is incompatible with the new tree.</p></section>');return;}
  globalThis.WandererTreeAPI={
-  snapshot:()=>{const p=state.automaticTalents;return {ranks:system.graphProgress(p).ranks,points:system.earned(p)-p.nodes.length,element:p.element||'fire'};},
+  snapshot:()=>{const p=state.automaticTalents;return {ranks:system.graphProgress(p).ranks,points:system.earned(p)-p.nodes.length,element:p.element||'arcane'};},
   allocate:id=>{const before=state.automaticTalents,next=system.allocate(before,id);if(!next)return false;state.automaticTalents=next;if(!phase5Persist()){state.automaticTalents=before;return false;}return true;},
   prepare:id=>{const before=state.automaticTalents;if(id&&(!before.nodes.includes(id)||!system.NODES.find(n=>n.id===id)?.advanced))return false;state.automaticTalents={...before,prepared:id||null};if(!phase5Persist()){state.automaticTalents=before;return false;}return true;},
-  element:id=>{if(!['fire','frost','lightning'].includes(id))return false;const before=state.automaticTalents;state.automaticTalents={...before,element:id};if(!phase5Persist()){state.automaticTalents=before;return false;}return true;},
+  element:id=>{const before=state.automaticTalents,next=system.selectElement(before,id);if(!next)return false;state.automaticTalents=next;if(!phase5Persist()){state.automaticTalents=before;return false;}return true;},
   reset:()=>{const before=state.automaticTalents;state.automaticTalents=system.reset(before);if(!phase5Persist()){state.automaticTalents=before;return false;}return true;}
  };
  html('<section class="panel automaticTalentTree" aria-label="Permanent talents"><h2>Talent Tree</h2><iframe title="Talent tree" src="preview/talent-rebuild/index.html" style="width:100%;height:min(78vh,850px);min-height:520px;border:1px solid #715742"></iframe></section>');
@@ -2251,4 +2251,5 @@ document.addEventListener('visibilitychange',()=>{
 });
 })();
 </script><script src="online/v012-gothic-panels.js"></script><script src="online/v012-auth-bootstrap.js?v=v012-login-hotfix-2"></script><script type="module" src="online/v012-account.mjs?v=v012-equipped-gear-1"></script><script type="module" src="online/v012-feedback.mjs?v=v012-equipped-gear-1"></script><script type="module" src="online/v012-leaderboard-ui.mjs?v=v012-equipped-gear-1"></script></body></html>
+
 

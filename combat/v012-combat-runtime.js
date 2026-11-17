@@ -491,7 +491,7 @@ function updateFight(){
  const windupSlowed=e.slowTime>0?1+(s.bonus.slowBonus||.22):1;
  const impactLead=({berserker:.49,tank:.81,caster:.89,vampire:.67}[e.eliteType]??(e.boss?{guardian:.85,leech:.86,berserker:.71}[e.bossStyle]:null)??.66);
  if(r.enemies){for(const mob of r.enemies){if(mob.hp<=0||mobWindups.has(mob))continue;const slow=mob.slowTime>0?1+(s.bonus.slowBonus||.22):1,lead=({berserker:.49,tank:.81,caster:.89,vampire:.67}[mob.eliteType]??.66);if(mob.groupClock>=Math.max(0,mob.attackEvery*slow-lead)){mobWindups.add(mob);r.enemy=mob;ports.animateEnemyWindup?.();}}r.enemy=e;}else if(!mobWindups.has(e)&&r.tEnemy>=Math.max(0,e.attackEvery*windupSlowed-impactLead)){mobWindups.add(e);ports.animateEnemyWindup?.();}
- if(s.caster||r.phase1Magic)r.mp=Math.min(r.maxmp,r.mp+dt*s.manaRegen);
+ if(s.caster||r.phase1Magic||s.phase2Decay)r.mp=Math.min(r.maxmp,r.mp+dt*s.manaRegen);
  if(ports.isPhase1Run())ports.phase2MagicTick(r);
  if(e.hp<=0||hasUnsettledGroupDeaths(r)){ports.winEncounter(true);return;}
  const lt=ports.legendaryRuntime(r),haste=(ports.isPhase1Run()&&ports.phase1Build?WandererV012Buildcraft.speed(ports.phase1Build,ports.phase1Clock+r.combatSeconds):1)*(s.bonus.bleedHaste?1+Math.min(3,t.haste.length)*.05:1)*(1+((lt.natureHasteUntil||0)>ports.setNow(r)?.10:0)+((lt.thunderHasteUntil||0)>ports.setNow(r)?.12:0));
@@ -612,7 +612,8 @@ function updateFight(){
 
 function phase2Context(r){
  const e=r.enemy,now=ports.setNow(r);
- return {player:r,enemy:e,traits:v013Traits(),now,random:ports.gameRandom,base:r.lastBaseHit||r.stats.attack,healTriggersPassives:true,healingMultiplier:(r.playerHealingDebuffUntil||0)>now?.6:1,waveKey:r.phase1Plane+':'+r.enc,
+ return {player:r,enemy:e,traits:v013Traits(),now,random:ports.gameRandom,base:r.lastBaseHit||r.stats.attack,power:r.stats.spellPower||0,healTriggersPassives:true,healingMultiplier:(r.playerHealingDebuffUntil||0)>now?.6:1,waveKey:r.phase1Plane+':'+r.enc,
+ spendMana(amount){if(r.mp<amount)return false;r.mp-=amount;ports.phase6Metric(r,'manaSpent',amount);return true;},
  dot(kind,potency){
   if(!['bleed','burn'].includes(kind))return;
   ports.phase6Proc(r,kind+' application');const values=e.dots[kind]||(e.dots[kind]=[]);

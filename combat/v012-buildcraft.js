@@ -79,7 +79,7 @@ const descriptions={
  virulent_rot:'New Rot stacks deal 15% more damage per rank.',
  wasting_curse:'Rotted enemies deal 4% less damage per rank. Combined damage reduction cannot exceed 28%.',
  wither:'Rotted foes heal 20% less at rank 1 (+10% per rank) and deal 2% less attack damage per rank. Player healing is unaffected.',
- blight:'Hit a rotted foe for a burst of 38% base hit damage, capped at 2.5% of its Max HP (7s cooldown).',
+ blight:'On hit against Rot, spend 3 Mana to deal 38% base hit damage plus 35% Spell Power, capped at 2.5% enemy Max HP (7s cooldown).',
  strong_heart:'Max Health +10% at Rank 1; smaller gains at higher ranks.',
  renewal:'Heal 0.55% Max HP per second at Rank 1; smaller gains at higher ranks. Healing reduction applies.',
  last_stand:'Once per Expedition, survive a lethal hit and recover 6% Max HP.',
@@ -152,7 +152,7 @@ function elementalPower(b,power){return power*(1+.12*rank(b,'elemental_force'))*
 function hasFamily(b,family){return Array.isArray(b?.families)&&b.families.includes(family);}
 function capabilities(b){
  const owns=id=>rank(b,id)>0,tag=t=>(TAGS[t]||[]).some(owns),stats=b.runtime.draftStats||{};
- const funded=b.unlockedFamilies?.includes('magic')&&elements.includes(b.element)&&b.runtime.fundedAvailable!==false;
+ const funded=b.unlockedFamilies?.includes('magic')&&(elements.includes(b.element)||b.element==='arcane')&&b.runtime.fundedAvailable!==false;
  const crit=stats.crit===undefined||stats.crit>0||owns('precision'),block=(stats.blockChance||0)>0||owns('guarded_block');
  const bleed=owns('bleeding_edge')||owns('sanguine_fury')&&crit||owns('crimson_pact')||owns('hex_bleed')&&funded||owns('sanguine_reprisal')&&(block||tag('BARRIER_SOURCE'));
  const rot=owns('toxic_touch')||owns('toxic_precision')&&crit;
@@ -263,6 +263,7 @@ function onHeal(b,c,healed){
 }
 function heal(b,c,amount){const healed=c.heal(Math.max(0,amount))||0;if(!c.healTriggersPassives)onHeal(b,c,healed);return healed;}
 function activated(b,id){b.runtime.passiveTelemetry??={};const t=b.runtime.passiveTelemetry[id]??={activations:0,combatSeconds:0};t.activations++;return true;}
+function spendDarkMana(c,amount){if(c.spendMana)return c.spendMana(amount);if(!Number.isFinite(c.player?.mp)||c.player.mp<amount)return false;c.player.mp-=amount;return true;}
 function onAttack(b,c){
  if(c.proc||c.extra||c.recursive)return;
  const e=c.enemy,base=Math.max(1,c.base||1),crit=!!c.critical;
@@ -270,7 +271,7 @@ function onAttack(b,c){
  if(['battle_tempo','relentless_assault','unchained_fury'].some(id=>specialized(b,id))){b.runtime.battleTempo=Math.min(5,(b.runtime.battleTempo||0)+1);if(b.runtime.battleTempo===5&&specialized(b,'relentless_assault')&&c.random()<.15)c.damage(base*.30,'🗡 Relentless Assault');if(b.runtime.battleTempo===5&&specialized(b,'unchained_fury'))c.damage(base*.20,'🔥 Unchained Fury');}
  if(e.bleedStacks>0&&specialized(b,'crimson_feast')){b.runtime.crimsonHits=(b.runtime.crimsonHits||0)+1;if(b.runtime.crimsonHits%3===0){c.damage(base*.30,'🫀 Crimson Feast');heal(b,c,c.player.maxhp*.02);}}
  if(e.bleedStacks>0&&c.player.hp<c.player.maxhp*.5&&specialized(b,'heart_of_carnage')&&ready(b,'heartCarnage',c.now,3)){c.damage(base*.20,'🩸 Heart of Carnage');heal(b,c,c.player.maxhp*.01);}
- if(specialized(b,'corruption_cycle')&&e.v012Rot?.length>=3&&ready(b,'corruptionCycle',c.now,5)){const rot=e.v012Rot.shift();c.damage(rot.damage*rot.remaining,'🦠 Corruption Cycle');}
+ if(specialized(b,'corruption_cycle')&&e.v012Rot?.length>=3&&(c.player?.mp||0)>=4&&ready(b,'corruptionCycle',c.now,5)&&spendDarkMana(c,4)){const rot=e.v012Rot.shift();c.damage(rot.damage*rot.remaining+Math.max(0,c.power||0)*.20,'🦠 Corruption Cycle');}
  if(specialized(b,'stored_force')&&b.runtime.storedForce>0){const stored=b.runtime.storedForce;b.runtime.storedForce=0;c.damage(stored,'🔨 Stored Force');}
  if(b.runtime.specialReprisal&&e.hp>0){b.runtime.specialReprisal=false;c.damage(base*.25,'🛡 Reprisal');}
  if(rank(b,'bleeding_edge')&&ready(b,'bleedEdge',c.now,.9)&&c.random()<values('bleeding_edge',rank(b,'bleeding_edge')).chance&&activated(b,'bleeding_edge')) c.dot('bleed',base*.16);
@@ -280,7 +281,7 @@ function onAttack(b,c){
  if(rank(b,'executioner')&&e.bleedStacks>0&&e.hp<=e.maxhp*.30&&ready(b,'execute',c.now,6)&&activated(b,'executioner'))c.damage(Math.min(base*.32,e.maxhp*.025),'🩸 Execute');
  if(rank(b,'blood_drinker')&&e.bleedStacks>0&&ready(b,'bloodHeal',c.now,4)&&activated(b,'blood_drinker'))heal(b,c,Math.min(c.player.maxhp*values('blood_drinker',rank(b,'blood_drinker')).hp,base*values('blood_drinker',rank(b,'blood_drinker')).base));
  if(rank(b,'toxic_touch')&&ready(b,'toxicTouch',c.now,1.3)&&c.random()<values('toxic_touch',rank(b,'toxic_touch')).chance&&activated(b,'toxic_touch'))applyRot(b,c,base*.065);
- if(rank(b,'blight')&&e.v012Rot?.length&&ready(b,'blight',c.now,7)&&activated(b,'blight'))c.damage(Math.min(base*.38,e.maxhp*.025),'☠ Blight');
+ if(rank(b,'blight')&&e.v012Rot?.length&&(c.player?.mp||0)>=3&&ready(b,'blight',c.now,7)&&spendDarkMana(c,3)&&activated(b,'blight'))c.damage(Math.min(base*.38+Math.max(0,c.power||0)*.35,e.maxhp*.025),'☠ Blight');
  if(rank(b,'toxic_precision')&&crit&&ready(b,'toxicPrecision',c.now,2)&&activated(b,'toxic_precision'))applyRot(b,c,base*.06);
  if(rank(b,'plague_rupture')&&crit&&e.bleedStacks>0&&e.v012Rot?.length&&ready(b,'plagueRupture',c.now,8)&&activated(b,'plague_rupture'))c.damage(Math.min(base*.55,e.maxhp*.032),'🩸 Plague Rupture');
  if(rank(b,'crimson_rush')&&crit&&e.bleedStacks>0&&activated(b,'crimson_rush'))c.damage(base*.15,'🩸 Crimson Rush');
@@ -316,7 +317,7 @@ function onAttack(b,c){
  }
 }
 function onCast(b,c){
- if(c.proc||c.extra||c.recursive||c.funded!==true||!hasFamily(b,'magic')||!elements.includes(b.element))return;
+ if(c.proc||c.extra||c.recursive||c.funded!==true||!hasFamily(b,'magic')||!(elements.includes(b.element)||b.element==='arcane'))return;
  // These advanced elemental choices supply their own trigger when taken alone.
  if(b.element==='fire'&&(specialized(b,'combustion')||specialized(b,'living_inferno')||specialized(b,'fire_spread'))&&!c.enemy.dots?.burn?.length&&!rank(b,'kindling')&&!specialized(b,'kindling_flame'))c.dot('burn',Math.max(1,c.power)*.08);
  if(b.element==='frost'&&(specialized(b,'shatter')||specialized(b,'absolute_winter'))&&!(c.enemy.slowTime>0)&&!rank(b,'deep_winter')&&!specialized(b,'deep_chill'))c.chill(c.enemy.boss?1.2:3.5);
@@ -431,7 +432,7 @@ function nextCost(b,baseCost=8){return Math.max(Math.min(3,baseCost),baseCost-ra
 function resetWave(b,e){e.v012Rot=[];e.v012Shock=0;}
 function canCast(b){return !!b&&!!b.element&&(b.runtime?.permanentBuild&&b.unlockedFamilies?.includes('magic')||['kindling','deep_winter','overcharge','arcane_focus','arcane_echo','spell_surge','spellblade','hex_bolt','hex_bleed','hemal_sigil','elemental_blight','prismatic_rebound','runic_shield'].some(id=>rank(b,id)));}
 function validate(b){
- if(!b||![undefined,1,2,3].includes(b.version)||!Array.isArray(b.families)||b.families.length>(b.runtime?.permanentBuild?FAMILIES.length:3)||new Set(b.families).size!==b.families.length||!b.families.every(f=>FAMILIES.includes(f))||b.element!==null&&(!elements.includes(b.element)||!hasFamily(b,'magic'))||!Array.isArray(b.picks)||b.picks.length>20)throw Error('Invalid saved build');
+ if(!b||![undefined,1,2,3].includes(b.version)||!Array.isArray(b.families)||b.families.length>(b.runtime?.permanentBuild?FAMILIES.length:3)||new Set(b.families).size!==b.families.length||!b.families.every(f=>FAMILIES.includes(f))||b.element!==null&&(!(elements.includes(b.element)||b.element==='arcane')||!hasFamily(b,'magic'))||!Array.isArray(b.picks)||b.picks.length>20)throw Error('Invalid saved build');
  if(!Array.isArray(b.unlockedFamilies))b.unlockedFamilies=[...new Set(b.picks.map(id=>BY_ID[id]?.family).filter(Boolean))];
  if(new Set(b.unlockedFamilies).size!==b.unlockedFamilies.length||!b.unlockedFamilies.every(f=>hasFamily(b,f)))throw Error('Invalid unlocked affinity');
  for(const id of b.picks){const p=BY_ID[id];if(!p||!hasFamily(b,p.family)||!b.unlockedFamilies.includes(p.family)||p.requires.some(f=>!b.unlockedFamilies.includes(f))||p.element&&p.element!==b.element)throw Error('Invalid saved passive');}
@@ -445,7 +446,8 @@ function validate(b){
  if(!Number.isInteger(b.runtime.staticCharges)||b.runtime.staticCharges<0||b.runtime.staticCharges>3)throw Error('Invalid Static charges');
  return b;
 }
-function syncPermanent(b,progress,permanentAffinities=true){if(!b)return;if(!root.WandererAutomaticTalents)throw Error('Permanent talents unavailable');b.runtime.prepared=progress?.nodes?.includes(progress.prepared)?progress.prepared:null;b.runtime.specializations=[...(progress?.nodes||[])];if(permanentAffinities){b.runtime.permanentBuild=true;b.unlockedFamilies=FAMILIES.filter(f=>progress?.nodes?.includes('affinity_'+f));b.families=[...b.unlockedFamilies];b.element=b.unlockedFamilies.includes('magic')?(progress?.element||'fire'):null;}const current=progress||root.WandererAutomaticTalents.create(),ids=root.WandererAutomaticTalents.passiveIds(current);b.runtime.talentBonuses=root.WandererAutomaticTalents.bonuses?.(current)||{};if(ids.length)b.runtime.permanentTalents=ids;else delete b.runtime.permanentTalents;}
+function syncPermanent(b,progress,permanentAffinities=true){if(!b)return;if(!root.WandererAutomaticTalents)throw Error('Permanent talents unavailable');b.runtime.prepared=progress?.nodes?.includes(progress.prepared)?progress.prepared:null;b.runtime.specializations=[...(progress?.nodes||[])];if(permanentAffinities){b.runtime.permanentBuild=true;b.unlockedFamilies=FAMILIES.filter(f=>progress?.nodes?.includes('affinity_'+f));b.families=[...b.unlockedFamilies];b.element=b.unlockedFamilies.includes('magic')?(progress?.element||'arcane'):null;}const current=progress||root.WandererAutomaticTalents.create(),ids=root.WandererAutomaticTalents.passiveIds(current);b.runtime.talentBonuses=root.WandererAutomaticTalents.bonuses?.(current)||{};if(ids.length)b.runtime.permanentTalents=ids;else delete b.runtime.permanentTalents;}
 function clear(b){if(!b)return;b.picks.length=0;b.element=null;b.initialFamily=null;b.initialPassive=null;b.unlockedFamilies=[];b.families=[];b.cooldowns=Object.create(null);b.runtime={frenzyUntil:0,counterBlock:0,counterBarrier:0,spellblade:false,magicHits:0,staticCharges:0,adrenalineUntil:0,conduit:false,lastStand:false,lastSpellAt:-999};}
 root.WandererV012Buildcraft=Object.freeze({CATALOG,FAMILIES,ELEMENTS:elements,create,initial,initialId,ownedRank,rank,values,preview,canModify,capabilities,functional,synergy,bleedDamage,elementalPower,applyRot,migrateEnemyDots,eligible,options,choose,element,mods,onHeal,onAttack,onCast,onSecond,tickRot,incoming,onDefend,onKill,survive,speed,enemyHealMultiplier,enemyDefense,nextCost,resetWave,canCast,validate,syncPermanent,clear});
 })(globalThis);
+
