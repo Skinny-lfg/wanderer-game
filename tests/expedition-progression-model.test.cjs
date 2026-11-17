@@ -9,32 +9,33 @@ test('real gear generation uses a fixed named tier above E70',()=>{const a=requi
 test('real enemy calculation uses the continuous reference above E100',()=>{require('../combat/v012-combat-core.js');const C=globalThis.WandererV012CombatCore,a=C.estimateEnemy(100,1),b=C.estimateEnemy(1000,1);assert(b.hp>a.hp);assert(b.atk>a.atk);assert(b.hp<a.hp*2);});
 
 
-// Regression: named gear tiers must not rewrite existing E1-E5 item rolls.
-test('E1-E5 generated swords retain legacy stats and distinct tiers',()=>{
+// v0.13 gear roll budgets increase with tier, while stat layouts are intentionally variable.
+test('E1–E5 generated Swords keep their distinct tiers and consistent rarity budgets',()=>{
  const a=require('./v012-economy-harness.cjs')(124,undefined,{}, {skipPersistence:true});
+ let lastBudget=0;
  for(let level=1;level<=5;level++){
   const item=a.makeItem(level,'weapon',null,'loot','Sword','Rare');
-  const power=Math.round((2+level*.91)*1.57);
+  const expected=Math.round((2+level*.91)*1.7*100)/100;
   assert.equal(item.tier,level);
-  assert.equal(item.atk,power+3);
-  assert.equal(item.str,1+Math.floor(level*.20)+2);
-  assert.equal(item.hp,Math.max(2,Math.round(power*.5)));
+  assert.equal(item.v013Budget,expected);
+  assert(item.v013StatCount>=2&&item.v013StatCount<=4);
+  assert(item.atk>0);
+  assert(item.v013Budget>lastBudget);
+  lastBudget=item.v013Budget;
  }
 });
-test('later named tiers never downgrade the E5 base item budget',()=>{
+test('later named tiers never downgrade the underlying rarity budget despite different affix layouts',()=>{
  const a=require('./v012-economy-harness.cjs')(125,undefined,{}, {skipPersistence:true});
  const tiers=[5,6,14,15,35,70,100,1000];
  const swords=tiers.map(level=>a.makeItem(level,'weapon',null,'loot','Sword','Rare'));
  const staffs=tiers.map(level=>a.makeItem(level,'weapon',null,'loot','Staff','Rare'));
  const plates=tiers.map(level=>a.makeItem(level,'armor',null,'loot','Plate','Common'));
- for(let i=1;i<tiers.length;i++){
-  assert(swords[i].atk>=swords[i-1].atk,'Sword E'+tiers[i]);
-  assert(staffs[i].spell>=staffs[i-1].spell,'Staff E'+tiers[i]);
-  assert(plates[i].def>=plates[i-1].def,'Plate E'+tiers[i]);
- }
+ for(const items of [swords,staffs,plates])for(let i=1;i<items.length;i++)
+  assert(items[i].v013Budget>=items[i-1].v013Budget,'budget cannot fall at E'+tiers[i]);
  assert.equal(swords[1].tier,5);
  assert.equal(swords.at(-1).tier,70);
- assert.equal(swords.at(-1).atk,swords.at(-2).atk);
+ assert.equal(swords.at(-1).v013Budget,swords.at(-2).v013Budget);
+ assert(plates.every(item=>!['str','agi','int','end','cha'].some(stat=>item[stat]>0)),'White Plate has no primary stats');
 });
 test('crafting retains distinct E1-E5 prices before switching to named tiers',()=>{
  require('../economy/v013-crafting.js');const C=globalThis.WandererV013Crafting;
