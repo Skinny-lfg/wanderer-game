@@ -49,6 +49,10 @@ function roll(item,{referenceLevel=1,tierFactor=1,random=Math.random}={}){
  // No accidental 14 Attack + 12 Spell Power on a budget-limited accessory.
  // Fewer affixes receive the ENTIRE budget; they are not weaker.
  const total=budget(item,referenceLevel,tierFactor);
+ distribute(item,picked,total);
+ return item;
+}
+function distribute(item,picked,total){
  for(const key of KEYS)item[key]=0;
  for(let i=0;i<picked.length;i++){
   const key=picked[i],share=picked.length===1?1:i===0?(picked.length===2?.60:picked.length===3?.50:.40):(picked.length===2?.40:picked.length===3?.25:.20);
@@ -59,7 +63,19 @@ function roll(item,{referenceLevel=1,tierFactor=1,random=Math.random}={}){
  item.v013RollBudget=total;
  return item;
 }
-const API=Object.freeze({ATTRS,KEYS,WEIGHTS,BASE_POOLS,RARITY_BUDGET,COUNT,poolFor,budget,roll});
+// A crafting recipe specifies ONE guaranteed attribute direction, not five
+// simultaneous flat bonuses. The other affixes remain random and budgeted.
+function applyCraftProfile(item,profile){
+ if(!item||!ATTRS.includes(profile)||!poolFor(item).includes(profile)||!item.v013RollBudget)return item;
+ const picked=Array.isArray(item.affixes)?[...item.affixes]:[];
+ if(!picked.length||picked.includes(profile))return item;
+ const mandatory=PRIMARY[item.armorType]||PRIMARY[item.subtype];
+ const replace=picked.findLastIndex(key=>key!==mandatory);
+ if(replace<0)return item;
+ picked[replace]=profile;
+ return distribute(item,picked,item.v013RollBudget);
+}
+const API=Object.freeze({ATTRS,KEYS,WEIGHTS,BASE_POOLS,RARITY_BUDGET,COUNT,poolFor,budget,roll,applyCraftProfile});
 root.WandererV013ItemRolls=API;
 if(typeof module==='object'&&module.exports)module.exports=API;
 })(globalThis);
