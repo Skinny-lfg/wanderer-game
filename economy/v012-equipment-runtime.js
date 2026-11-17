@@ -174,6 +174,14 @@ if(source==='starter'){
  for(const field of ['atk','def','hp','spd','mana','spell','evasionRating'])if(Number.isFinite(o[field]))o[field]=Math.floor(o[field]*.90);
  o.startingGear=true;
 }
+// v0.13 only: fewer stat lines share the SAME total power budget.
+// A forge preview shows a sample roll. An actual craft or loot uses seeded game RNG;
+// browsing previews must not affect future rolls.
+if(ports.PHASE1_PREVIEW&&source!=='starter'&&globalThis.WandererV013ItemRolls){
+ let seed=Array.from([tier,slot,subtype,rarity].join(':')).reduce((n,ch)=>(Math.imul(n,31)+ch.charCodeAt(0))>>>0,1583);
+ const previewRandom=()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);
+ globalThis.WandererV013ItemRolls.roll(o,{referenceLevel:progressTier,tierFactor,random:preview?previewRandom:ports.gameRandom});
+}
 return o;}
 
 function rarityOdds(tier,isCraft){if(ports.PHASE1_PREVIEW)return {Common:.75,Uncommon:.25,Rare:0,Epic:0,Legendary:0};let a={Common:.49,Uncommon:.30,Rare:.15,Epic:.045,Legendary:.015};
