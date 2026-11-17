@@ -353,7 +353,8 @@ function triggered(r,id){r.outerUses??={};r.outerUses[id]=(r.outerUses[id]||0)+1
 function weaponAttack(r,offhandStrike=false){
  const s=r.stats,e=r.enemy,weapon=offhandStrike?s.off:s.main,off=s.off,caster=!offhandStrike&&s.caster,now=ports.setNow(r),temp=ports.setRuntime(r);
  const lt=ports.legendaryRuntime(r),focus=!!lt.focusReady,armorReady=!!lt.armorReady;lt.focusReady=false;lt.armorReady=false;
- const kind=weapon?.subtype||'Unarmed',baseCost=kind==='Staff'?13:kind==='Wand'?9:0;
+ // An Off-Hand Dagger uses the same physical scaling as Daggers, before its 50% penalty.
+ const kind=weapon?.subtype==='Off-Hand Dagger'?'Daggers':weapon?.subtype||'Unarmed',baseCost=kind==='Staff'?13:kind==='Wand'?9:0;
  const normalCost=baseCost&&ports.isPhase1Run()&&ports.phase1Build?.element?WandererV012Buildcraft.nextCost(ports.phase1Build,baseCost):baseCost;
  const cost=v013FundedCost(normalCost);
  let damage=0,element=null,cast=false;
