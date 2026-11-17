@@ -191,6 +191,10 @@ function phase1StartWave(resetScroll=false){
   enemy.attackEvery*=1.15;
   enemy.atk=Math.max(1,Math.round(enemy.atk*.65*(1+.12*(g.selected.risk||0))));
  }
+ const traits=globalThis.WandererV013EncounterTraits;
+ const traitId=g.dungeon&&!g.selected.boss&&!g.selected.elite?g.selected.traitId:null;
+ if(traitId&&traits?.applyGroup(traitId,group)){r.encounterTraitId=traitId;ports.addLog('Encounter trait: '+traits.get(traitId).name,'critical');}
+ else r.encounterTraitId=null;
  if(g.dungeon&&g.selected.node===2&&group.length>1){const guard=group[0];guard.name+=' · Vanguard';guard.vanguard=true;guard.hp=guard.maxhp=Math.round(guard.maxhp*1.8);guard.atk=Math.ceil(guard.atk*1.2);ports.addLog(guard.name+' prepares the first strike.','critical');}
  if(last&&(g.selected.boss||g.selected.elite)){
   const escorts=g.selected.escorts??(g.selected.boss?2:1);
@@ -202,7 +206,7 @@ function phase1StartWave(resetScroll=false){
  }
  const fieldCount=Math.min(4,group.length);
  group[0].groupSlot=0;
- for(const enemy of group)enemy.groupClock=Math.max(0,enemy.attackEvery-(.9+enemy.groupSlot*.3));
+ for(const enemy of group)enemy.groupClock=traits?traits.initialClock(enemy,enemy.groupSlot):Math.max(0,enemy.attackEvery-(.9+enemy.groupSlot*.3));
  r.totalMobCount=group.length;r.enemies=fieldCount>1?group.slice(0,fieldCount):undefined;r.groupReserve=group.slice(fieldCount);if(fieldCount===1)delete r.enemies;r.enemy=group[0];
  r.phase6Bounty=false;if(r.enemy.miniboss&&ports.phase6Run?.effects.bounty){r.phase6Bounty=true;ports.phase6Run.effects.bounty=false;r.enemy.hp=r.enemy.maxhp=Math.ceil(r.enemy.maxhp*1.25);r.enemy.atk=Math.ceil(r.enemy.atk*1.25);}
  r.tPlayer=r.tDot=0;r.tEnemy=r.enemy.groupClock;r.setTemp=null;r.playerDebuffUntil=0;
@@ -218,13 +222,22 @@ function phase1WaveWon(){
  if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked))return false;
  const r=ports.state.run,g=ports.phase1Controller.state;
  if(!ports.isPhase1Run()||r.status!=='fight'||!r.enemy||g.stage!=='combat'||!g.selected||r.enc!==g.wave||r.phase4AwardedWave===r.enc)return;
+ const traits=globalThis.WandererV013EncounterTraits;
+ if(r.encounterTraitId==='death_throes'&&traits){
+  const fallen=r.enemies?.length?r.enemies.filter(mob=>mob.hp<=0&&!mob.groupDefeated):[r.enemy].filter(mob=>mob.hp<=0);
+  const pulse=traits.deathPulse(r,fallen);
+  if(pulse.triggers){ports.phase6Metric(r,'traitDeathPulse',pulse.triggers);ports.phase6Metric(r,'damageTaken',pulse.damage);ports.phase6Metric(r,'absorbed',pulse.absorbed);
+   ports.addLog('Death Throes · '+pulse.damage+' damage'+(pulse.absorbed?' ('+pulse.absorbed+' absorbed)':'')+'!','critical');
+   if(r.hp<=0){ports.phase1Death();return;}
+  }
+ }
  if(r.enemies?.length>1){
    const selectedTarget=r.enemy,dead=r.enemies.filter(enemy=>enemy.hp<=0&&!enemy.groupDefeated);if(!dead.length)return;
   for(const enemy of dead){r.enemy=enemy;enemy.groupDefeated=true;
    if(ports.state.automaticTalents?.nodes?.includes('plague_spread')){const bleed=enemy.dots?.bleed?.find(dot=>!dot.spread),rot=enemy.v012Rot?.find(dot=>!dot.spread);for(const target of r.enemies.filter(mob=>mob.hp>0).concat(r.groupReserve||[]).slice(0,2)){if(bleed){target.dots.bleed??=[];if(target.dots.bleed.length<12)target.dots.bleed.push({damage:Math.max(1,Math.round(bleed.damage*.5)),remaining:Math.min(2,bleed.remaining),spread:true});ports.synchronizeDots(target);}if(rot){target.v012Rot??=[];if(target.v012Rot.length<6)target.v012Rot.push({damage:Math.max(1,Math.round(rot.damage*.5)),remaining:Math.min(2,rot.remaining),ticks:0,spread:true});}}}
     ports.legendaryKill(r);if(ports.phase1Build)WandererV012Buildcraft.onKill(ports.phase1Build,{...ports.phase2Context(r),waveComplete:!r.groupReserve?.length&&WandererV012CombatCore.groupComplete(r.enemies)&&enemy===dead[dead.length-1]});}
   let reinforcements=0;
-  for(const fallen of dead){const replacement=r.groupReserve?.shift();if(!replacement)continue;const slot=Math.max(0,Number(fallen.groupSlot)||0),index=r.enemies.indexOf(fallen);if(index<0)continue;replacement.groupSlot=slot;replacement.groupClock=Math.max(0,replacement.attackEvery-(.9+slot*.3));replacement.isReinforcement=true;replacement.reinforcementArrival=true;r.enemies[index]=replacement;reinforcements++;}
+  for(const fallen of dead){const replacement=r.groupReserve?.shift();if(!replacement)continue;const slot=Math.max(0,Number(fallen.groupSlot)||0),index=r.enemies.indexOf(fallen);if(index<0)continue;replacement.groupSlot=slot;replacement.groupClock=traits?traits.initialClock(replacement,slot):Math.max(0,replacement.attackEvery-(.9+slot*.3));replacement.isReinforcement=true;replacement.reinforcementArrival=true;r.enemies[index]=replacement;reinforcements++;}
   const next=selectedTarget?.hp>0&&r.enemies.includes(selectedTarget)?selectedTarget:r.enemies.find(enemy=>enemy.hp>0&&!enemy.isReinforcement)||WandererV012CombatCore.nextGroupTarget(r.enemies);if(next){r.enemy=next;if(reinforcements){ports.addLog(reinforcements+' reinforcement'+(reinforcements===1?' arrives':'s arrive')+' in open position'+(reinforcements===1?'':'s')+'.','good');if(!ports.phase3RefreshGroupEnemies?.())ports.renderCombat();}else if(!ports.phase3RetargetGroup?.())ports.renderCombat();return true;}
  }else if(r.enemy.hp>0)return;
  clearInterval(ports.clock);
@@ -238,7 +251,7 @@ function phase1WaveWon(){
  const enemy=r.enemy,boss=!!enemy.boss,elite=!!enemy.miniboss;
   const groupReward=(boss||elite?1:r.totalMobCount>=18?1.3:r.totalMobCount>=10?1.2:r.totalMobCount>1?1.1:1)*(1+.12*(g.selected.risk||0));
  const gold=Math.round((ports.roll(3,6)+Math.floor(r.tier*.5)+(boss?8:elite?4:0))*(r.phase6Bounty?1.5:1)*groupReward);
- const fragments=Math.round((ports.roll(1,3)+Math.floor(r.tier*.24)+(boss?5:elite?3:0))*(r.phase6Bounty?1.5:1)*groupReward);
+ const fragments=Math.round((ports.roll(1,3)+Math.floor(r.tier*.24)+(boss?5:elite?3:0))*(r.phase6Bounty?1.5:1)*groupReward*(r.encounterTraitId?1.10:1));
  ports.state.gold+=gold;ports.state.fragments+=fragments;r.gold+=gold;r.fragments+=fragments;ports.phase5Results.gold+=gold;ports.phase5Results.fragments+=fragments;
  ports.addLog('Realm rewards pending: +'+gold+' Gold · +'+fragments+' Fragments.','good');
  const odds=ports.waveLootOdds(boss?5:elite?4:Math.min(3,1+Math.floor((g.planeIndex-1)/5)),r.stats.cha);odds.drop=Math.min(1,odds.drop*groupReward);if(ports.phase6Run?.effects.fortune)odds.drop=Math.min(1,odds.drop*1.25);
