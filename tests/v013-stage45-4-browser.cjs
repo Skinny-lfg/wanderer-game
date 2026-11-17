@@ -6,7 +6,7 @@ const {chromium}=require('playwright');
 const out=path.resolve('reports/stage45-4-browser');fs.mkdirSync(out,{recursive:true});
 const findings=[];
 const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.svg':'image/svg+xml','.webp':'image/webp','.gif':'image/gif','.woff':'font/woff','.woff2':'font/woff2'};
-const hook=String.raw\`
+const hook=String.raw`
 window.__stage454={
  snapshot(){const g=phase1Controller.state,d=g.dungeon||null,c=d?.realm?phase1Controller.realmMap():null,r=state.run;
   return {stage:g.stage,expedition:g.expedition,realm:d?.realm??null,steps:d?.steps??null,current:d?.current??null,
@@ -26,7 +26,7 @@ window.__stage454={
   return {status:r.status,stage:phase1Controller.state.stage};
  }
 };
-\`;
+`;
 async function main(){
  const root=execFileSync(process.execPath,['scripts/prepare-automatic-preview.mjs'],{encoding:'utf8',maxBuffer:2*1024*1024}).trim().replace(/^Isolated automatic RPG preview: /,'');
  const entry=path.join(root,'index.html');let html=fs.readFileSync(entry,'utf8');
