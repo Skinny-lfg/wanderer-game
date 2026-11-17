@@ -156,18 +156,25 @@ async function main(){
   assert.equal(finishedReload.unlocked,victorious.unlocked,'Extraction must persist');
   assert.deepEqual(errors,[],'Uncaught browser errors');
 
-  // Second isolated run: Oracle, chosen only from a naturally generated card.
-  // A missing Oracle is explicitly reported rather than fabricated through QA state mutation.
-  const oracleContext=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1});
-  const oraclePage=await oracleContext.newPage();
-  oraclePage.setDefaultTimeout(12000);
-  oraclePage.on('pageerror',e=>errors.push(String(e)));
-  await oraclePage.goto(base+'/',{waitUntil:'domcontentloaded'});
-  await oraclePage.locator('.phase3Camp').waitFor({state:'visible'});
-  await oraclePage.locator('[data-phase1-expedition]:visible').first().click();
-  const naturalCards=await oraclePage.evaluate(()=>__stage455.snapshot().cards);
-  const oracleChoice=naturalCards.findIndex(c=>c.oracle>=0);
-  assert(oracleChoice>=0,'No natural Oracle among the current 3 cards; seed/fixture coverage must be extended, not fake a room');
+  // Oracle is optional per naturally generated card. Retry isolated local starts
+  // rather than tampering with the generator or forging an event into the map.
+  let oracleContext=null,oraclePage=null,naturalCards=null,oracleChoice=-1;
+  for(let attempt=1;attempt<=16;attempt++){
+   oracleContext=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1});
+   oraclePage=await oracleContext.newPage();
+   oraclePage.setDefaultTimeout(12000);
+   oraclePage.on('pageerror',e=>errors.push(String(e)));
+   await oraclePage.goto(base+'/',{waitUntil:'domcontentloaded'});
+   await oraclePage.locator('.phase3Camp').waitFor({state:'visible'});
+   await oraclePage.locator('[data-phase1-expedition]:visible').first().click();
+   naturalCards=await oraclePage.evaluate(()=>__stage455.snapshot().cards);
+   oracleChoice=naturalCards.findIndex(c=>c.oracle>=0);
+   console.log('Natural Oracle cards: attempt '+attempt+', found='+String(oracleChoice>=0));
+   if(oracleChoice>=0)break;
+   await oracleContext.close();
+   oracleContext=oraclePage=null;
+  }
+  assert(oracleChoice>=0,'No Oracle among 16 independently generated sets of real cards; investigate generation, not fabricated rooms');
   await oraclePage.locator('[data-realm-card]').nth(oracleChoice).click();
   await navigate(oraclePage,naturalCards[oracleChoice].oracle,{oracle:true});
   const oracleDone=await oraclePage.evaluate(()=>__stage455.snapshot());
