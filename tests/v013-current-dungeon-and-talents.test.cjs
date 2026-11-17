@@ -37,7 +37,7 @@ test('native 3-card Dungeon uses correct real risk, steps and costs',()=>{
  assert(c.visitRoom(1));assert.equal(c.state.dungeon.steps,card.stepLimit-cost);
  assert(a.enter());assert(a.state().run.enemy);
 });
-test('native dungeon simulator reaches real boss with natural route modifiers',()=>{
+test('native dungeon simulator records honest defeat or boss reachability after gear rebalance',()=>{
  const report=S.simulate({...S.DEFAULTS,levels:[5],seeds:[9101],builds:['blood-fury'],mode:'dungeon'});
  assert.equal(report.summary.errors,0);assert.equal(report.summary.timeouts,0);
  assert.equal(report.rows.length,1);
