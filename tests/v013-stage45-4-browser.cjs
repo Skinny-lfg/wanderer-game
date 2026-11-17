@@ -59,7 +59,7 @@ async function main(){
   for(const id of ['root_blood','root_decay','root_vitality','root_aegis','root_fury','root_magic'])assert.equal(await atlas.locator('[data-id="'+id+'"]').count(),1,'Missing '+id);
   await atlas.locator('#families button').filter({hasText:'Blood'}).first().click();
   await atlas.locator('[data-id="root_blood"]').evaluate(n=>n.dispatchEvent(new MouseEvent('click',{bubbles:true})));
-  assert.match(await atlas.locator('aside #name').innerText(),/blood/i);
+  assert.equal(await atlas.locator('aside #name').innerText(),await atlas.locator('[data-id="root_blood"]').getAttribute('aria-label'),'The inspected node must match the selected graph ID');
   assert(await atlas.getByRole('button',{name:'Invest 1 point'}).isEnabled());
   await atlas.getByRole('button',{name:'Invest 1 point'}).click();
   assert((await page.evaluate(()=>__stage454.snapshot())).savedTalents.includes('root_blood'),'Talent purchase must update real parent state');
