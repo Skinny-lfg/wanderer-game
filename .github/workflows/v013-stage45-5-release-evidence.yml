@@ -43,6 +43,8 @@ jobs:
             npx playwright install chromium
           fi
           npm run test:v013:stage45-browser
+      - name: Stage 4.5.5 Oracle, Marked Elite, boss and extraction browser QA
+        run: node tests/v013-stage45-5-browser.cjs
       - name: Capture legacy-test failure evidence (non-blocking, not a pass)
         if: always()
         shell: bash
