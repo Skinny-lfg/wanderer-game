@@ -20,6 +20,20 @@ for(const [id,type,family,attribute,other,otherAttribute] of weapons){add('green
 const armor=[['helm','Helm'],['armor','Armor'],['gloves','Gloves'],['boots','Boots'],['belt','Belt']];
 for(const [slot,label] of armor)for(const [type,family,attribute] of [['Plate','aegis','str'],['Leather','fury','agi'],['Cloth','magic','int']]){add('green_'+slot+'_'+type.toLowerCase(),'Apprentice '+type+' '+label,slot,type,'Uncommon',family,attribute);add('blue_'+slot+'_'+type.toLowerCase(),({Plate:'Bastion',Leather:'Tracker',Cloth:'Aetherweave'}[type])+' '+label,slot,type,'Rare',family,attribute);}
 for(const [id,slot,type,family,attribute] of [['shield','offhand','Shield','aegis','end'],['orb','offhand','Orb','magic','int'],['offdagger','offhand','Off-Hand Dagger','fury','agi'],['amulet','amulet','Amulet','vitality','end'],['ring','ring1','Ring','fury','cha'],['ring2','ring2','Ring','fury','cha']])for(const rarity of ['Uncommon','Rare'])add((rarity==='Uncommon'?'green_':'blue_')+id,(rarity==='Uncommon'?'Apprentice ':'Artisan ')+type,slot,type,rarity,family,attribute);
+// Alternative recipes add attribute choices to weapons and jewellery; actual
+// Forge item affixes are independently rolled from the same v0.13 pools.
+for(const [id,name,subtype,family,attribute] of [
+ ['sword_insight','Runic Sword','Sword','magic','int'],
+ ['mace_guard','Warden Mace','Mace','vitality','end'],
+ ['bow_might','War Bow','Bow','blood','str'],
+ ['daggers_might','Butcher Daggers','Daggers','blood','str'],
+ ['daggers_insight','Hex Daggers','Daggers','decay','int']
+])add('blue_'+id,name,'weapon',subtype,'Rare',family,attribute);
+for(const [family,attribute,label] of [
+ ['blood','str','Crimson'],['fury','agi','Keen'],['magic','int','Runic'],
+ ['vitality','end','Verdant'],['aegis','cha','Warded']
+])for(const [slot,type]of [['ring1','Ring'],['ring2','Ring'],['amulet','Amulet']])
+ add('blue_'+slot+'_'+family,label+' '+type,slot,type,'Rare',family,attribute);
 for(const row of [
  ['oathkeeper','Oathkeeper','weapon','Mace','aegis','str','focused'],['wardens_promise',"Warden's Promise",'offhand','Shield','aegis','end','focused'],
  ['sanguine_edge','Sanguine Edge','weapon','Sword','blood','str','blood_transfer'],['gravecleaver','Gravecleaver','weapon','Two-Handed','blood','str','blood_transfer'],
