@@ -77,3 +77,25 @@ test('native Regrowth is called inside normal combat tick without extra cooldown
  assert(enemy.hp>=before,'native regrowth unexpectedly injured the enemy');
  assert((r.metrics?.traitRegrowthHealing||0)>0,'native combat tick did not apply regrowth');
 });
+
+test('trait diagnostic simulator exercises all six effects against a matched baseline',()=>{
+ const S=require('../scripts/simulate-progression.cjs');
+ const opts={...S.DEFAULTS,mode:'traits',levels:[35],seeds:[9101],builds:['blood-fury']};
+ const report=S.simulate(opts),rows=report.rows;
+ assert.equal(report.summary.cases,7);
+ assert.equal(report.summary.errors,0);assert.equal(report.summary.timeouts,0);
+ assert.deepEqual(rows.map(r=>r.kind),['baseline',...E.CATALOG.encounterTraits.map(t=>t.id)]);
+ assert.deepEqual(rows.map(r=>r.traitId),[null,...E.CATALOG.encounterTraits.map(t=>t.id)]);
+ assert.match(report.assumptions.traits,/deliberately bypasses affinity/);
+});
+test('group reinforcements inherit marked trait without exceeding four active slots',()=>{
+ const {a,r}=prepare('ambush',2100);
+ a.encounter({count:20});
+ assert.equal(r.enemies.length,4);
+ assert.equal(r.totalMobCount,20);
+ assert.equal(r.groupReserve.length,16);
+ assert(r.groupReserve.every(mob=>mob.encounterTraitId==='ambush'));
+ const replaced=r.enemies[0];replaced.hp=0;a.win();
+ assert.equal(r.enemies.length,4);assert.equal(r.groupReserve.length,15);
+ assert(r.enemies.some(mob=>mob.isReinforcement&&mob.encounterTraitId==='ambush'));
+});
