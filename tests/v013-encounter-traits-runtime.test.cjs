@@ -100,3 +100,23 @@ test('group reinforcements inherit marked trait without exceeding four active sl
  assert.equal(r.enemies.length,4);assert.equal(r.groupReserve.length,15);
  assert(r.enemies.some(mob=>mob.isReinforcement&&mob.encounterTraitId==='ambush'));
 });
+
+test('map markup visibly labels marked combat rooms without revealing other rooms',()=>{
+ const vm=require('node:vm');
+ require('../online/v013-map-intelligence.js');
+ require('../online/v013-encounter-traits.js');
+ const I=globalThis.WandererV013MapIntelligence,T=globalThis.WandererV013EncounterTraits;
+ const html=fs.readFileSync('index.html','utf8'),start=html.indexOf('function dungeonMapMarkup(g){'),end=html.indexOf('\nfunction renderRealmCards(g){',start);
+ assert(start>=0&&end>start);
+ const card={name:'Crimson Dominion',id:'forge',family:'blood',risk:1,stepLimit:13,
+  nodes:[{kind:'entrance'},{kind:'combat',range:[2,4],count:3,traitId:'armored'},{kind:'boss',escorts:1}],
+  edges:[[0,1],[1,2]],positions:[[10,50],[50,50],[90,50]]};
+ const d={current:0,visited:[0],cleared:[0],scouted:[],discoveredSecrets:[],steps:13};
+ const controller={realmMap:()=>card,travelPath:id=>I.route(card,d,id),exitCount:id=>I.exitCount(card,d,id)};
+ const ctx={WandererV013MapIntelligence:I,WandererV013EncounterTraits:T,phase1Controller:controller,
+  esc:v=>String(v),realmDifficulty:()=> 'Dangerous',dungeonImage:()=>'',dungeonRoomLabel:n=>n.kind==='combat'?'Patrol':n.kind};
+ vm.runInNewContext(html.slice(start,end)+'\nthis.renderDungeon=dungeonMapMarkup;',ctx);
+ const markup=ctx.renderDungeon({dungeon:d,history:[]});
+ assert.match(markup,/encounterTraitBadge/);assert.match(markup,/Armored/);
+ assert(!markup.includes('data-dungeon-room="2"'));
+});
