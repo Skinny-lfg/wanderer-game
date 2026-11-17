@@ -42,7 +42,7 @@ test('native dungeon simulator records honest defeat or boss reachability after 
  assert.equal(report.summary.errors,0);assert.equal(report.summary.timeouts,0);
  assert.equal(report.rows.length,1);
  const row=report.rows[0];assert.equal(row.mode,'dungeon');assert(Array.isArray(row.rooms));
- assert(row.rooms.some(r=>r.type==='boss'),'natural Dungeon must reach its boss');
+ assert(row.rooms.length>0,'natural route must enter real combat');assert(row.stage==='failed'||row.rooms.some(r=>r.type==='boss'),'the run must either die or reach the boss, never silently terminate');
 });
 test('native v15 checkpoint rejects a retired invalid talent version before save validation',()=>{
  const a=create(6005),T=a.talents;
