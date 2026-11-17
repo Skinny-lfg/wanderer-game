@@ -51,7 +51,7 @@ npm run test:v013:prep
 node scripts/simulate-progression.cjs --mode=bossprep --levels=1,5,15,35,70,100,250,1000 --seeds=9101,9102,9103 --out=reports/v013-stage4-bossprep.json
 ```
 
-- **82/82 testes direcionados** passaram (Stages 0–4 e simulador). Os testes Stage 4 incluem evento transacional real, HP/Mana, insuficiência de HP, pass, dupla ativação, Elite marcado, guardas, dano boss Guarded, Rune/Essence sem duplicação, boss real com uma propriedade removida, Oracle, checkpoint restaurado e regras de replay.
+- **82/82 testes direcionados** passaram (Stages 0–4 e simulador). Os testes Stage 4 incluem evento transacional real, HP/Mana, insuficiência de HP, pass, dupla ativação, Elite marcado, guardas, dano boss Guarded, preservação do pagamento anterior sem liquidação antecipada, boss real com uma propriedade removida, Oracle, checkpoint restaurado e regras de replay.
 - **10.000 seeds × 3 Realm Cards = 30.000 mapas**: 1 Reliquary opcional por mapa, 18/20/22 salas e 14/13/12 passos preservados, acesso por ligações normais dentro do orçamento, 1/2/3 Encounter Traits, horda Brutal preservada.
 - Diagnóstico `--mode=bossprep`: **384 combates** (8 níveis × 4 builds × 3 seeds × 4 estratégias). **372 vitórias, 12 mortes, 0 erros e 0 timeouts**. Compara boss completo, Elite marcado, Reliquary e ambos. Usa **boss injetado no anel inicial e preparação forçada para diagnóstico**; contabiliza o custo de 15% HP da Reliquary, mas **não simula a exploração para chegar ao Elite e à sala**.
 - Modo natural `--mode=both`: **288 cenários**, **283 vitórias, 5 mortes, 0 erros ou timeouts**. **96/96** percursos Dungeon atingiram o boss, **91/96** venceram. **16 percursos** atravessaram a Reliquary, mas o agente atual escolhe **passar**, sem tentar otimizar desvios.
