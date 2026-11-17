@@ -85,3 +85,18 @@ test('index loads foundation and intelligence before expedition controller and h
  assert.match(html,/WandererV013MapIntelligence\.unlocked\(c,d,a,b\)/);
  assert.match(html,/phase1Controller\.scoutPreview\(2\)/);
 });
+
+test('native Oracle event transaction reveals two other rooms, consumes no steps and records decisions',()=>{
+ const create=require('./v012-economy-harness.cjs');
+ const a=create(9101,undefined,{}, {skipPersistence:true});a.setUnlocked(70);a.start(70,true);
+ const c=a.controller(),g=c.state,card=g.dungeon.cards[1];c.chooseRealm(card.id);
+ // Synthetic event placement tests the real transaction without depending on room RNG.
+ card.nodes[1].kind='event';card.nodes[1].event='oracle_of_paths';
+ assert.equal(c.visitRoom(1),true);assert.equal(a.enter(),true);
+ const preview=c.scoutPreview(2),steps=g.dungeon.steps;
+ assert.equal(preview.rooms.length,2);assert(!preview.rooms.includes(1));
+ assert.equal(a.events.choose(0),true);
+ assert.deepEqual(g.dungeon.scouted,preview.rooms);assert.equal(g.dungeon.steps,steps);
+ assert.equal(g.dungeon.foundationState.decisions.filter(x=>x.type==='reveal_room').length,2);
+ assert.equal(g.stage,'choice');
+});
