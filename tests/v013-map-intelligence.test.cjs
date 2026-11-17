@@ -60,6 +60,11 @@ test('10k native maps retain 18/20/22 rooms, 14/13/12 steps and valid stage0 man
   assert.equal(new Set(d.foundationManifest.cards.map(c=>c.conditionId)).size,3);
   for(const c of d.cards){const normal=c.edges.filter(([a,b])=>!I.secretEdge(c,a,b));
    assert(normal.length>0);for(let id=0;id<c.nodes.length;id++)assert.equal(I.exitCount(c,{visited:[0],discoveredSecrets:[]},id),new Set(normal.filter(e=>e.includes(id)).map(([a,b])=>a===id?b:a)).size);
+   const queue=[[0]],seen=new Set([0]);let bossPath=null;
+   for(const path of queue){const last=path.at(-1);if(last===c.nodes.length-1){bossPath=path;break;}
+    for(const next of I.neighbors(c,{visited:[0],discoveredSecrets:[]},last))if(!seen.has(next)){seen.add(next);queue.push([...path,next]);}
+   }
+   assert(bossPath,'no normal route to boss');assert(bossPath.length-1<=c.stepLimit,'initial step budget cannot reach boss');
   }
  }
 });
