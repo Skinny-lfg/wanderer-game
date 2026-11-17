@@ -32,7 +32,7 @@ function parseArgs(args){
  for(const arg of args){
   const match=/^--([a-z-]+)=(.*)$/.exec(arg);if(!match)throw Error('Expected --option=value: '+arg);
   const [,key,value]=match;
-  if(key==='mode'&&['encounter','dungeon','both','traits','bossmods','bossprep'].includes(value))result.mode=value;
+  if(key==='mode'&&['encounter','dungeon','both','traits','bossmods','bossprep','conditions'].includes(value))result.mode=value;
   else if(key==='levels')result.levels=parseIntegers(value,'levels');
   else if(key==='seeds')result.seeds=parseIntegers(value,'seeds');
   else if(key==='builds'){
@@ -95,7 +95,7 @@ function fight(a,c,limit){
  let ticks=0,minimumHp=r.maxhp>0?r.hp/r.maxhp:0;
  while(r.status==='fight'&&c.state.stage==='combat'&&r.hp>0&&ticks<limit){a.tick();ticks++;minimumHp=Math.min(minimumHp,Math.max(0,r.hp)/(r.maxhp||1));}
  const metrics=r.metrics||{},died=c.state.stage==='failed'||r.hp<=0,timedOut=!died&&r.status==='fight'&&ticks>=limit;
- const row={tier:startedTier,type:r.enemy?.boss?'boss':r.enemy?.miniboss?'elite':'combat',traitId:r.encounterTraitId||null,traitRegrowthHealing:Math.round(metrics.traitRegrowthHealing||0),traitDeathPulse:Math.round(metrics.traitDeathPulse||0),bossModifierIds:[...(r.bossModifierIds||[])],bossPulseTriggers:Math.round(metrics.bossPulseTriggers||0),bossFrenzyTriggers:Math.round(metrics.bossFrenzyTriggers||0),bossPreparation:r.bossPreparation?JSON.parse(JSON.stringify(r.bossPreparation)):null,status:died?'died':timedOut?'timeout':r.status,timedOut,died,won:!died&&r.status==='cleared',seconds:+(ticks*.11).toFixed(2),ticks,hpStart:+startHp.toFixed(2),hpEnd:+Math.max(0,r.hp).toFixed(2),hpMax:r.maxhp,mpStart:+startMp.toFixed(2),mpEnd:+Math.max(0,r.mp).toFixed(2),mpMax:r.maxmp,minHpPct:+(minimumHp*100).toFixed(1),damageDealt:Math.round(metrics.damageDealt||0),damageTaken:Math.round(metrics.damageTaken||0),absorbed:Math.round(metrics.absorbed||0),manaSpent:Math.round(metrics.manaSpent||0),enemies:r.totalMobCount||1};
+ const row={tier:startedTier,type:r.enemy?.boss?'boss':r.enemy?.miniboss?'elite':'combat',traitId:r.encounterTraitId||null,traitRegrowthHealing:Math.round(metrics.traitRegrowthHealing||0),traitDeathPulse:Math.round(metrics.traitDeathPulse||0),bossModifierIds:[...(r.bossModifierIds||[])],bossPulseTriggers:Math.round(metrics.bossPulseTriggers||0),bossFrenzyTriggers:Math.round(metrics.bossFrenzyTriggers||0),bossPreparation:r.bossPreparation?JSON.parse(JSON.stringify(r.bossPreparation)):null,status:died?'died':timedOut?'timeout':r.status,timedOut,died,won:!died&&r.status==='cleared',seconds:+(ticks*.11).toFixed(2),ticks,hpStart:+startHp.toFixed(2),hpEnd:+Math.max(0,r.hp).toFixed(2),hpMax:r.maxhp,mpStart:+startMp.toFixed(2),mpEnd:+Math.max(0,r.mp).toFixed(2),mpMax:r.maxmp,minHpPct:+(minimumHp*100).toFixed(1),conditionId:r.conditionId||null,conditionMarked:!!r.conditionMarked,conditionBarrierGranted:Math.round(r.conditionBarrierGranted||0),conditionRiteTriggers:Math.round(metrics.conditionRiteTriggers||0),damageDealt:Math.round(metrics.damageDealt||0),damageTaken:Math.round(metrics.damageTaken||0),absorbed:Math.round(metrics.absorbed||0),manaSpent:Math.round(metrics.manaSpent||0),enemies:r.totalMobCount||1};
  return row;
 }
 function shortestRoute(card){
@@ -161,8 +161,9 @@ function bossPreparationEncounter(level,build,seed,opts,strategy){
   risk:card.risk,preparationCostHp:sacrifice,pointsSpent:a.state().automaticTalents.nodes.length,
   realm:card.name,unlocked:level,...result};
 }
-function dungeon(level,build,seed,opts){
- const {a,c,g,card,gearE}=prepare(level,build,seed,opts);
+function dungeon(level,build,seed,opts,desiredRisk=undefined){
+ const {a,c,g,card,gearE}=prepare(level,build,seed,opts,desiredRisk);
+ const conditionId=g.dungeon?.foundationState?.conditionId||null;
  const route=shortestRoute(card),events=[],rooms=[],initial={gold:a.state().gold,fragments:a.state().fragments,essence:a.state().crafting.essence};
  let error=null;
  for(const node of route.slice(1)){
@@ -178,7 +179,7 @@ function dungeon(level,build,seed,opts){
  }
  const s=a.state();
  const hpLast=rooms.at(-1),survival=rooms.length?hpLast.hpEnd/hpLast.hpMax:null;
- return {mode:'dungeon',level,build:build.id,seed,gearE,gearTier:P.gearTier(gearE).name,pointsSpent:s.automaticTalents.nodes.length,realm:card.name,risk:card.risk,route,rooms,events,stage:g.stage,won:g.stage==='finished',bossReached:rooms.some(r=>r.kind==='boss'),timedOut:rooms.some(r=>r.timedOut),error,seconds:+rooms.reduce((v,r)=>v+r.seconds,0).toFixed(2),damageDealt:rooms.reduce((v,r)=>v+r.damageDealt,0),damageTaken:rooms.reduce((v,r)=>v+r.damageTaken,0),manaSpent:rooms.reduce((v,r)=>v+r.manaSpent,0),minHpPct:rooms.length?Math.min(...rooms.map(r=>r.minHpPct)):null,lastHpPct:survival===null?null:+(100*survival).toFixed(1),goldNet:s.gold-initial.gold,fragmentsNet:s.fragments-initial.fragments,essenceNet:s.crafting.essence-initial.essence,stepsLeft:g.dungeon?.steps};
+ return {mode:desiredRisk===undefined?'dungeon':'conditions',kind:conditionId||'unknown',conditionId,conditionMarkedRooms:rooms.filter(r=>r.conditionMarked).length,conditionPassagesCrossed:g.dungeon?.conditionEdgesUsed?.length||0,level,build:build.id,seed,gearE,gearTier:P.gearTier(gearE).name,pointsSpent:s.automaticTalents.nodes.length,realm:card.name,risk:card.risk,route,rooms,events,stage:g.stage,won:g.stage==='finished',bossReached:rooms.some(r=>r.kind==='boss'),timedOut:rooms.some(r=>r.timedOut),error,seconds:+rooms.reduce((v,r)=>v+r.seconds,0).toFixed(2),damageDealt:rooms.reduce((v,r)=>v+r.damageDealt,0),damageTaken:rooms.reduce((v,r)=>v+r.damageTaken,0),manaSpent:rooms.reduce((v,r)=>v+r.manaSpent,0),minHpPct:rooms.length?Math.min(...rooms.map(r=>r.minHpPct)):null,lastHpPct:survival===null?null:+(100*survival).toFixed(1),goldNet:s.gold-initial.gold,fragmentsNet:s.fragments-initial.fragments,essenceNet:s.crafting.essence-initial.essence,stepsLeft:g.dungeon?.steps};
 }
 function summarize(rows){
  const groups=[];const keys=[...new Set(rows.map(r=>[r.level,r.build,r.mode,r.kind||'all'].join('|')))];
@@ -210,10 +211,14 @@ function simulate(opts){
    try{rows.push(dungeon(level,build,seed,opts));}
    catch(e){rows.push({level,build:build.id,seed,mode:'dungeon',won:false,error:e.message});}
   }
+  if(opts.mode==='conditions')for(const risk of [0,1,2]){
+   try{rows.push(dungeon(level,build,seed,opts,risk));}
+   catch(e){rows.push({level,build:build.id,seed,mode:'conditions',risk,won:false,error:e.message});}
+  }
  }
  const summary={cases:rows.length,wins:rows.filter(r=>r.won).length,deaths:rows.filter(r=>r.died||r.stage==='failed').length,errors:rows.filter(r=>r.error).length,timeouts:rows.filter(r=>r.timedOut).length,groups:summarize(rows)};
  return {schemaVersion:2,engine:'Wanderer v0.13 native HTML combat + current permanent talent tree + dungeon controller',mode:opts.mode,
-  assumptions:{levels:opts.levels,seeds:opts.seeds,builds:opts.builds,pointsAvailable:opts.points,rarity:opts.rarity,gear:opts.gear,runes:opts.runes,mode:opts.mode,potions:'none',lootUpgrades:'none',talents:'current tree version 15, fixed scenario budget; not earned progression',encounter:'native wave at selected Expedition Level; boss case injects a boss into an otherwise normal room for matched combat comparison',dungeon:'shortest accessible route through one real Realm map; persistent HP/Mana across rooms; no manual healing or artificial resets',traits:'controlled diagnostic: baseline plus six injected traits in one initial-ring normal room; unlike natural maps this deliberately bypasses affinity and first-ring placement restrictions to compare identical combat scenarios, not to model exploration',bossmods:'controlled diagnostic: baseline plus six injected boss modifiers against Rift Harbinger in an initial-ring room; bypasses regular map boss placement and multi-modifier counts for matched-seed comparison only',bossprep:'controlled Dangerous boss baseline versus Marked Elite, Forgotten Reliquary sacrifice and both; applies real boss mechanics but injects preparation state and first-ring boss placement without actual optional-room exploration',limits:'Synthetic fixed gear and permanent points. Runs one Realm card, not all 15 Realms or multi-expedition economic progression. No production balance conclusions on small seed counts.'},
+  assumptions:{levels:opts.levels,seeds:opts.seeds,builds:opts.builds,pointsAvailable:opts.points,rarity:opts.rarity,gear:opts.gear,runes:opts.runes,mode:opts.mode,potions:'none',lootUpgrades:'none',talents:'current tree version 15, fixed scenario budget; not earned progression',encounter:'native wave at selected Expedition Level; boss case injects a boss into an otherwise normal room for matched combat comparison',dungeon:'shortest accessible route through one real Realm map; persistent HP/Mana across rooms; no manual healing or artificial resets',traits:'controlled diagnostic: baseline plus six injected traits in one initial-ring normal room; unlike natural maps this deliberately bypasses affinity and first-ring placement restrictions to compare identical combat scenarios, not to model exploration',bossmods:'controlled diagnostic: baseline plus six injected boss modifiers against Rift Harbinger in an initial-ring room; bypasses regular map boss placement and multi-modifier counts for matched-seed comparison only',bossprep:'controlled Dangerous boss baseline versus Marked Elite, Forgotten Reliquary sacrifice and both; applies real boss mechanics but injects preparation state and first-ring boss placement without actual optional-room exploration',conditions:'Natural three-card Realm selection and six condition effects, without modifying the map or combat formulas. Selected paths follow the shortest topology, not optimal player choices.',limits:'Synthetic fixed gear and permanent points. Conditions mode follows one natural route per each of the three Realm cards, not all 15 Realms or multi-expedition economic progression. No production balance conclusions on small seed counts.'},
   sourceSha256:crypto.createHash('sha256').update(fs.readFileSync(path.join(__dirname,'../index.html'))).digest('hex'),durationMs:Date.now()-start,summary,rows};
 }
 function main(args=process.argv.slice(2)){
