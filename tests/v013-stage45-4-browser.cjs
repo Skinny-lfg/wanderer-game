@@ -89,6 +89,7 @@ async function main(){
    }return pairs;
   });
   console.log('QA mobile map node overlaps:',JSON.stringify(overlap));
+  assert.deepEqual(overlap,[],'All interactive mobile map room buttons must be distinguishable and non-overlapping');
   await page.locator('[data-dungeon-room="1"]').click();
   const dialog=page.locator('dialog[open]');await dialog.waitFor();
   assert.match(await dialog.innerText(),/steps?\s*·|steps?\s+left/);
