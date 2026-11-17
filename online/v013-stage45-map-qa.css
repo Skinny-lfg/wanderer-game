@@ -11,7 +11,7 @@
     scrollbar-width: thin;
   }
   [data-realm-viewport] > div {
-    min-width: 900px !important;
+    min-width: 1200px !important;
     height: 760px !important;
   }
   [data-realm-viewport] [data-dungeon-room] {
