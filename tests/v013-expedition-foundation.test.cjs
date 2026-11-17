@@ -99,3 +99,10 @@ test('foundation reuses the actual six affinities, boss styles and Realm Card sh
   {id:'ward',family:native.REALMS.ward[0],risk:2}];
  assert.equal(F.createManifest(cards,{seed:350,expeditionLevel:250,bossStyle:native.BOSSES[0].style}).cards.length,3);
 });
+
+test('boon journal does not confuse Realm affinity with the character build affinity',()=>{
+ const m=manifest(77,'guardian');const s=F.createExpeditionState(m,'forge');
+ const next=F.applyDecision(s,{type:'choose_boon',id:'aetherbound_pact'},m);
+ assert.deepEqual(next.boonIds,['aetherbound_pact']);
+ assert.deepEqual(s.boonIds,[]);
+});
