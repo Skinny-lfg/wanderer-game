@@ -58,10 +58,10 @@ jobs:
           --seeds=9101,9102
           --builds=blood-fury
           --out=reports/stage5-conditions-simulation.json
-      - name: Four-build E1/E15/E50/E200 Condition stress with confidence bounds
+      - name: 24-seed, four-build E1/E15/E50/E200 Condition stress (1152 native dungeons)
         run: >-
           node scripts/v013-stage5-stress.cjs
-          --seed-count=4
+          --seed-count=24
           --levels=1,15,50,200
           --builds=all
           --out=reports/stage5-conditions-stress.json
