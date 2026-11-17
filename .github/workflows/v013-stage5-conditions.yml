@@ -11,9 +11,11 @@ on:
       - 'online/v013-stage5-conditions.css'
       - 'index.html'
       - 'scripts/simulate-progression.cjs'
+      - 'scripts/v013-stage5-stress.cjs'
       - 'scripts/prepare-automatic-preview.mjs'
       - 'tests/v013-stage5-conditions.test.cjs'
       - 'tests/v013-stage5-simulation.test.cjs'
+      - 'tests/v013-stage5-stress.test.cjs'
       - 'tests/v012-economy-harness.cjs'
       - 'package.json'
       - '.github/workflows/v013-stage5-conditions.yml'
@@ -37,6 +39,15 @@ jobs:
         run: npm run test:v013:stage5
       - name: Current v0.13 mandatory gameplay and simulation gate
         run: npm run test:v013:gate
+      - name: Carry Stage 4.5.6 critical gameplay guards forward
+        run: >-
+          node --test
+          tests/v013-stage45-6-economy-p0.test.cjs
+          tests/v013-stage45-6-extraction-p0.test.cjs
+          tests/v013-stage45-6-dodge-p0.test.cjs
+          tests/v013-stage45-6-legendary-p0.test.cjs
+          tests/v013-stage45-6-combat-contract.test.cjs
+          tests/v013-stage45-6-prepared-cadence.test.cjs
       - name: Real map-to-boss progression and checkpoint safety
         run: node --test tests/v013-full-expedition-integration.test.cjs tests/v013-dungeon-checkpoint-integrity.test.cjs
       - name: Two-seed three-card condition simulation
@@ -47,10 +58,19 @@ jobs:
           --seeds=9101,9102
           --builds=blood-fury
           --out=reports/stage5-conditions-simulation.json
+      - name: Multi-build E15/E50 Condition stress with confidence bounds
+        run: >-
+          node scripts/v013-stage5-stress.cjs
+          --seed-count=3
+          --levels=15,50
+          --builds=blood-fury,magic-decay
+          --out=reports/stage5-conditions-stress.json
       - name: Store reproducible scenario metrics
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: stage5-conditions-${{ github.run_id }}
-          path: reports/stage5-conditions-simulation.json
+          path: |
+            reports/stage5-conditions-simulation.json
+            reports/stage5-conditions-stress.json
           if-no-files-found: warn
