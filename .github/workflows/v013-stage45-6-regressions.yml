@@ -35,6 +35,7 @@ jobs:
           tests/v013-current-dungeon-and-talents.test.cjs
           tests/v013-stage45-6-combat-contract.test.cjs
           tests/v013-stage45-6-event-contract.test.cjs
+          tests/v013-stage45-6-encounter-matrix.test.cjs
           tests/v013-full-expedition-integration.test.cjs
           tests/v013-stat-consistency.test.cjs
           tests/v013-encounter-traits-runtime.test.cjs
