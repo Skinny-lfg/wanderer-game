@@ -17,6 +17,14 @@ async function copy(dir,relative=''){
 }
 for(const dir of Object.keys(extensions))await copy(dir);
 await cp('preview/talent-rebuild',join(output,'preview/talent-rebuild'),{recursive:true});
+// The preview save namespace is v6. Keep its reset-only helper in sync with
+// the preview without changing production's persisted-save behavior.
+const persistencePath=join(output,'online/v012-persistence-runtime.js');
+let persistenceSource=await readFile(persistencePath,'utf8');
+const resetPrefix="WandererV012Save.PREFIX==='wanderer_automatic_rpg_preview_v5_'";
+if(!persistenceSource.includes(resetPrefix))throw Error('Preview reset namespace guard changed; review before updating');
+persistenceSource=persistenceSource.replace(resetPrefix,"WandererV012Save.PREFIX==='wanderer_automatic_rpg_preview_v6_'");
+await writeFile(persistencePath,persistenceSource);
 const treePath=join(output,'preview/talent-rebuild/index.html');
 let treeHtml=await readFile(treePath,'utf8');
 for(const [reference,file] of [['../../combat/v012-buildcraft.js','combat/v012-buildcraft.js'],['../../combat/automatic-talents.js','combat/automatic-talents.js'],['../../combat/talent-graph-next.js','combat/talent-graph-next.js'],['../../combat/talent-requirements.js','combat/talent-requirements.js'],['prototype.js','preview/talent-rebuild/prototype.js']]){
