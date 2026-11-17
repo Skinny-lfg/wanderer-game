@@ -1,6 +1,7 @@
 // v0.12 equipment runtime. Canonical state transitions; UI effects are injected.
 (function(root){'use strict';
 function create(ports){
+let v013GearRollSequence=0;
 function chooseSubtype(slot,requested='random'){if(requested!=='random')return requested;if(slot==='weapon')return ports.sample(ports.TYPES);if(slot==='offhand')return ports.sample(ports.OFFHAND_TYPES);return ['ring1','ring2'].includes(slot)?'Ring':ports.SNAME[slot];}
 
 function economyTier(){return Math.min(ports.DUNGEON_CAP,ports.phase1Controller?.state.unlocked||1);}
@@ -178,10 +179,12 @@ if(source==='starter'){
 // A forge preview shows a sample roll. An actual craft or loot uses seeded game RNG;
 // browsing previews must not affect future rolls.
 if(ports.PHASE1_PREVIEW&&source!=='starter'&&globalThis.WandererV013ItemRolls){
- // Roll from this item's already allocated identity: no extra global RNG draws.
- // This keeps deterministic Dungeon maps and loot event sequences unchanged.
- // Forge previews use a fixed example identity; real crafts vary by unique item ID.
- let seed=Array.from([tier,slot,subtype,rarity,preview?'example':o.id].join(':')).reduce((n,ch)=>(Math.imul(n,31)+ch.charCodeAt(0))>>>0,1583);
+ // A separate deterministic gear stream must NOT draw from gameRandom,
+ // and transient item IDs can include Date.now(), so never use them as seeds.
+ // Each non-preview gear item advances a local serial; inspecting the Forge
+ // neither consumes a serial nor changes map/loot RNG.
+ const rollSerial=preview?0:++v013GearRollSequence;
+ let seed=Array.from([tier,slot,subtype,rarity,rollSerial].join(':')).reduce((n,ch)=>(Math.imul(n,31)+ch.charCodeAt(0))>>>0,1583);
  const itemRandom=()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);
  globalThis.WandererV013ItemRolls.roll(o,{referenceLevel:progressTier,tierFactor,random:itemRandom});
   // Keep the Mace/Two-Handed heft penalty: it remains a trade-off, never an extra positive affix.
