@@ -58,12 +58,12 @@ jobs:
           --seeds=9101,9102
           --builds=blood-fury
           --out=reports/stage5-conditions-simulation.json
-      - name: Multi-build E15/E50 Condition stress with confidence bounds
+      - name: Four-build E1/E15/E50/E200 Condition stress with confidence bounds
         run: >-
           node scripts/v013-stage5-stress.cjs
-          --seed-count=3
-          --levels=15,50
-          --builds=blood-fury,magic-decay
+          --seed-count=4
+          --levels=1,15,50,200
+          --builds=all
           --out=reports/stage5-conditions-stress.json
       - name: Store reproducible scenario metrics
         if: always()
