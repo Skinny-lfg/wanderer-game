@@ -192,12 +192,19 @@ function phase1StartWave(resetScroll=false){
   enemy.atk=Math.max(1,Math.round(enemy.atk*.65*(1+.12*(g.selected.risk||0))));
  }
  const traits=globalThis.WandererV013EncounterTraits;
+ const modifiers=globalThis.WandererV013BossModifiers;
+ const bossIds=g.dungeon&&g.selected.boss&&modifiers?modifiers.selection(g):[];
+ if(bossIds.length&&!modifiers.check(bossIds,WandererV012Expedition.BOSSES.find(v=>v.id===g.bossId).style,g.dungeon.foundationState?.conditionId))throw Error('Invalid boss modifiers for the native encounter');
+ r.bossModifierIds=[];
+ if(g.selected.boss&&modifiers){if(!modifiers.activate(r,group[0],bossIds))throw Error('Boss modifiers failed to apply');
+  if(bossIds.length)ports.addLog('Boss properties: '+bossIds.map(id=>modifiers.get(id).name).join(' · '),'critical');}
  const traitId=g.dungeon&&!g.selected.boss&&!g.selected.elite?g.selected.traitId:null;
  if(traitId&&traits?.applyGroup(traitId,group)){r.encounterTraitId=traitId;ports.addLog('Encounter trait: '+traits.get(traitId).name,'critical');}
  else r.encounterTraitId=null;
  if(g.dungeon&&g.selected.node===2&&group.length>1){const guard=group[0];guard.name+=' · Vanguard';guard.vanguard=true;guard.hp=guard.maxhp=Math.round(guard.maxhp*1.8);guard.atk=Math.ceil(guard.atk*1.2);ports.addLog(guard.name+' prepares the first strike.','critical');}
  if(last&&(g.selected.boss||g.selected.elite)){
-  const escorts=g.selected.escorts??(g.selected.boss?2:1);
+  const baseEscorts=g.selected.escorts??(g.selected.boss?2:1);
+  const escorts=g.selected.boss&&modifiers?modifiers.extraEscorts(bossIds,baseEscorts):baseEscorts;
   for(let i=0;i<escorts;i++){
    const guard=ports.enemyFor(r.tier,r.enc,{theme,boss:false,elite:false});
    guard.hp=guard.maxhp=Math.round(guard.maxhp*1.2);guard.atk=Math.round(guard.atk*.35);
