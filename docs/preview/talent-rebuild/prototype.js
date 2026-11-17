@@ -9,6 +9,7 @@ for(const n of graph){let a=angle(n.family),r=0;
  if(n.id==='element_choice')r=430;
  else if(n.kind==='affinity')r=330;
  else if(n.id.startsWith('root_'))r=180;
+ else if(n.basicDetour){a+=(n.lane===0?-1:1)*.235;r=875;}
  else if(n.kind==='basic'||n.id.startsWith('basic_path_')){a+=(n.lane===0?-1:1)*Math.PI/10;r=450+(n.tier-1)*265+(n.kind==='basic'?105:n.tier===2?-65:0);}
  else if(n.id.startsWith('focus_bridge_')){a+=(n.lane===0?-1:1)*Math.PI/20;r=505+(n.tier-1.5)*265;}
  else if(n.id.startsWith('focus_branch_')){a+=(n.lane===0?-1:1)*Math.PI/20;r=505+(n.tier-1)*265;}
