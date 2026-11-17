@@ -178,9 +178,12 @@ if(source==='starter'){
 // A forge preview shows a sample roll. An actual craft or loot uses seeded game RNG;
 // browsing previews must not affect future rolls.
 if(ports.PHASE1_PREVIEW&&source!=='starter'&&globalThis.WandererV013ItemRolls){
- let seed=Array.from([tier,slot,subtype,rarity].join(':')).reduce((n,ch)=>(Math.imul(n,31)+ch.charCodeAt(0))>>>0,1583);
- const previewRandom=()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);
- globalThis.WandererV013ItemRolls.roll(o,{referenceLevel:progressTier,tierFactor,random:preview?previewRandom:ports.gameRandom});
+ // Roll from this item's already allocated identity: no extra global RNG draws.
+ // This keeps deterministic Dungeon maps and loot event sequences unchanged.
+ // Forge previews use a fixed example identity; real crafts vary by unique item ID.
+ let seed=Array.from([tier,slot,subtype,rarity,preview?'example':o.id].join(':')).reduce((n,ch)=>(Math.imul(n,31)+ch.charCodeAt(0))>>>0,1583);
+ const itemRandom=()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);
+ globalThis.WandererV013ItemRolls.roll(o,{referenceLevel:progressTier,tierFactor,random:itemRandom});
   // Keep the Mace/Two-Handed heft penalty: it remains a trade-off, never an extra positive affix.
   if(rarity!=='Common'&&subtype==='Mace')o.spd=-1;
   if(rarity!=='Common'&&subtype==='Two-Handed')o.spd=-2;
