@@ -99,5 +99,5 @@ test('Stage 5: native controller exposes 3 different affinity-valid Conditions; 
  assert.equal(a.controller().visitRoom(1),true);
  assert.equal(a.enter(),true);
  assert.equal(a.state().run.conditionId,C.forDungeon(c,g.dungeon).id);
- assert.equal(a.controller().validate(g),undefined);
+ assert.doesNotThrow(()=>a.controller().restore(JSON.parse(JSON.stringify(g))));
 });
