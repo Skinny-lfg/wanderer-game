@@ -483,6 +483,10 @@ function updateFight(){
  }
  const dt=.11,s=r.stats,t=ports.setRuntime(r);let e=r.enemy;
  r.combatSeconds=(r.combatSeconds||0)+dt;if(s.caster&&r.mp<v013FundedCost(s.main.subtype==='Staff'?13:9))ports.phase6Metric(r,'manaStarvedSeconds',dt);
+ if(r.encounterTraitId==='unhallowed_regrowth'&&globalThis.WandererV013EncounterTraits){
+  const healed=globalThis.WandererV013EncounterTraits.regenTick(r);
+  if(healed>0){ports.phase6Metric(r,'traitRegrowthHealing',healed);ports.addLog('Unhallowed Regrowth restores '+healed+' enemy HP.','critical');}
+ }
  if(!ports.isPhase1Run()&&ports.state.onlineProgress?.timerMetric==='combat-v1'&&r.combatSeconds-(r.lastCombatCheckpoint||0)>=3){r.lastCombatCheckpoint=r.combatSeconds;ports.save();}
  ports.setCombatExpire(r,dt);ports.legendaryTick(r,dt);
  // v0.13 keeps actors in their arena slots. Only their independent attack
