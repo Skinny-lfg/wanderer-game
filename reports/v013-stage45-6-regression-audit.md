@@ -24,6 +24,20 @@ Do **not** delete tests merely because the v0.13 design changed, and do **not** 
 4. **Drafts/rewards, checkpoints and old fixtures (P1):** many failures have `Cannot read properties of null (reading 'options')`, `Invalid v0.12 save: crafting progress` and `$(...).onclick is not a function`. These suggest old fixtures/mocks, but must be reproduced in the current API before dismissing.
 5. **Changed event catalog/version (P2):** an old test demands exactly eight events; the current game introduces Oracle and the old test reports nine. This is a **likely intentional contract change**, not yet proof that the event scheduler and no-duplicate constraints still hold.
 
+## Measured Stage 4.5.6 audit (GitHub Actions)
+
+- [Run 44179634054](https://github.com/Skinny-lfg/wanderer-game/actions/runs/44179634054): **SUCCESS** for current v0.13 gate, independently selected native gameplay integrations and automatic per-test triage. The historical suite itself **continues failing**; the audit workflow intentionally records that nonzero exit without treating it as success.
+- Historical failures: **96**, all matched to the old 106-item baseline; **0 new test names**, **10 old failures absent** in the complete checkout. This comparison cannot establish why those ten disappeared.
+- Provisional risk classification (all initially **OPEN**, not presumed harmless): **28 P0** combat/economy, **59 P1** stale-route/fixture/parity/other, **9 P2** presentation and event-contract issues.
+- Major P0 examples: Reaper's Cadence, Oathwall, Veil, Crimson Fang, dodge, Bag overflow, boss Runes and extraction economy. The remaining cases need reproduction or an explicit documented contract replacement before declaring gameplay risk cleared.
+- Targeted modern replacement probes added in this PR:
+  - `tests/v013-stage45-6-combat-contract.test.cjs`: Reaper's Cadence requires **Bleed + Fury Sunder**; 5-second cooldown survives serialization; 3% HP cap for normal/Elite/boss.
+  - `tests/v013-stage45-6-event-contract.test.cjs`: 9 unique event IDs (8 normal scheduled + optional Forgotten Reliquary), 4 normal event categories with no repeats and old removed events still excluded.
+  - `tests/v013-stage45-6-encounter-matrix.test.cjs`: deterministic native E1/E50/E200 outcomes for four current v0.13 build profiles, finite metrics, no encounter timeout.
+- **Important:** These new probes do not prove all old combat, economy or seven legacy loadout tests are harmless. They verify current contracts in specifically exercised cases. The historical tests remain untouched.
+
+The full `classification.json`, `classification.md` and raw historical TAP log are archived as a GitHub Actions artifact, with an entry for **every failing test** and its next suggested modern probe.
+
 ## Stage 5 decision rule
 
 - Mandatory current v0.13, browser, progression and simulation tests: PASS.
