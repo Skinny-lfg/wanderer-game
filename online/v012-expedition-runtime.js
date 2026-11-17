@@ -273,10 +273,14 @@ function phase1WaveWon(){
  const fragments=Math.round((ports.roll(1,3)+Math.floor(r.tier*.24)+(boss?5:elite?3:0))*(r.phase6Bounty?1.5:1)*groupReward*(r.encounterTraitId?1.10:1));
  ports.state.gold+=gold;ports.state.fragments+=fragments;r.gold+=gold;r.fragments+=fragments;ports.phase5Results.gold+=gold;ports.phase5Results.fragments+=fragments;
  ports.addLog('Realm rewards pending: +'+gold+' Gold · +'+fragments+' Fragments.','good');
- const odds=ports.waveLootOdds(boss?5:elite?4:Math.min(3,1+Math.floor((g.planeIndex-1)/5)),r.stats.cha);odds.drop=Math.min(1,odds.drop*groupReward);if(ports.phase6Run?.effects.fortune)odds.drop=Math.min(1,odds.drop*1.25);
- if(ports.gameRandom()<odds.drop){
+ const stage=boss?5:elite?4:Math.min(3,1+Math.floor((g.planeIndex-1)/5));
+ const odds=g.dungeon?WandererV012LootRules.v013DungeonWaveOdds(stage,r.stats.cha):ports.waveLootOdds(stage,r.stats.cha);
+ odds.drop=Math.min(1,odds.drop*groupReward);if(ports.phase6Run?.effects.fortune)odds.drop=Math.min(1,odds.drop*1.25);
+ // First native Dungeon encounter always yields an Uncommon-or-better item so the Bag is not empty.
+ const firstRoom=g.dungeon&&g.dungeon.cleared?.length===1&&!g.selected.boss;
+ if(firstRoom||ports.gameRandom()<odds.drop){
   const theme=ports.phase2Theme(r.path),pick=g.dungeon&&g.selected.node===ports.phase1Controller.realmMap().objective&&ports.gameRandom()<.55?(ports.phase1Controller.realmMap().favoured||{slot:'offhand',subtype:'Shield'}):ports.dungeonEquipmentPick(theme,[]);
-  const rarity=ports.randomFromOdds(odds.rarities);
+  const rolled=ports.randomFromOdds(odds.rarities),rarity=firstRoom&&rolled==='Common'?'Uncommon':rolled;
   const item=ports.makeItem(r.tier,pick.slot,theme.effect,'loot',pick.subtype,rarity);
   // Gear in the Bag is at risk; equipped gear survives failure.
   if(ports.stashHasRoom())ports.state.stash.push({...item,isNew:true});
