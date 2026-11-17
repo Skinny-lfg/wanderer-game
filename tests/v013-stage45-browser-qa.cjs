@@ -51,7 +51,7 @@ async function visit(page,id){
    await page.locator('#eventConfirm').click();
   }else await page.getByRole('button',{name:'Pass without rewards'}).click();
  }else if(info.status==='fight'){
-  await page.locator('.arenaEnemy').first().waitFor();
+  await page.locator('#scene').waitFor(); // Solo and group encounters use different enemy markup
   await page.evaluate(()=>__qa45.finish());
  }
  await page.locator('[data-dungeon-room]').first().waitFor();
