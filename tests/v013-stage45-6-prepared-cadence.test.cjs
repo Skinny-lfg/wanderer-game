@@ -1,6 +1,7 @@
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const {api,build,context}=require('./v012-affinity-fixture.cjs');
+require('../combat/v012-buildcraft.js');
 require('../combat/automatic-talents.js');
 const T=globalThis.WandererAutomaticTalents;
 
