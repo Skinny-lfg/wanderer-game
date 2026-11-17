@@ -13,7 +13,7 @@ const REALMS=Object.freeze({forge:['blood','Crimson Dominion'],bloodscar:['blood
 const BOSSES=Object.freeze([{id:'guardian',name:"Abyssal Guardian’s Citadel",style:'guardian'},{id:'rift',name:"Harbinger’s Rift",style:'leech'},{id:'ember',name:"Ember Sovereign’s Throne",style:'berserker'}]);
 const EVENT_GROUPS=[['traveling_merchant','relic_collector'],['cursed_altar','whispering_idol'],['forgotten_arsenal','bounty_writ'],['restless_spring','oracle_of_paths']];
 const ROOMS=Object.freeze(['combat','combat','combat','combat','combat','combat','combat','elite','elite','chest','chest','event','event','altar']);
-const I=root.WandererV013MapIntelligence,F=root.WandererV013ExpeditionFoundation,T=root.WandererV013EncounterTraits;
+const I=root.WandererV013MapIntelligence,F=root.WandererV013ExpeditionFoundation,T=root.WandererV013EncounterTraits,P=root.WandererV013BossPreparation;
 function shuffle(values,rng){
  const arr=[...values];
  for(let i=arr.length-1;i>0;i--){const j=Math.min(i,Math.floor(rng()*(i+1)));[arr[i],arr[j]]=[arr[j],arr[i]];}
@@ -143,6 +143,7 @@ function create(themes,rng=Math.random){
   });
   const bossId=shuffle(BOSSES,routeRng)[0].id,seed=Math.floor(routeRng()*4294967296)>>>0;
   const manifest=F?.createManifest(cards,{seed,expeditionLevel:level,bossStyle:BOSSES.find(b=>b.id===bossId).style})||null;
+  if(P&&manifest)for(const card of cards)P.planRoom(card,seed);
   if(T&&manifest)for(const card of cards)for(const {room,traitId} of T.assign(card,seed))card.nodes[room].traitId=traitId;
   Object.assign(game,{version:2,expedition:level,planeIndex:1,stage:'choice',freeBuild:true,offers:[],selected:null,wave:0,history:[],rooms:[],rewardPending:null,families:[],initialFamily:null,lastFamily:null,rerolls:0,rerollsByRealm:Array.from({length:15},()=>[0,0,0]),bossId,encounterVersion:1,dungeon:{cards,realm:null,current:0,cleared:[0],visited:[0],scouted:[],discoveredSecrets:[],...(manifest?{foundationManifest:manifest}:{})}});
   for(const k of ['routeMap','routeEdges','routePositions','routeMobCounts'])delete game[k];
@@ -254,7 +255,10 @@ function create(themes,rng=Math.random){
  }
  function waveWon(){
   if(game.stage!=='combat'||!game.selected||game.selected.eventId)throw Error('No active combat wave');
-  if(game.dungeon){game.dungeon.current=game.selected.node;game.dungeon.cleared.push(game.selected.node);if(!game.dungeon.visited.includes(game.selected.node))game.dungeon.visited.push(game.selected.node);}
+  if(game.dungeon){
+   if(P)P.markElite(game);
+   game.dungeon.current=game.selected.node;game.dungeon.cleared.push(game.selected.node);if(!game.dungeon.visited.includes(game.selected.node))game.dungeon.visited.push(game.selected.node);
+  }
   game.history.push({plane:game.planeIndex,...game.selected});
   if(game.selected.boss){
    if(!game.selected.boss)throw Error('Realm 15 must contain the Expedition boss');
