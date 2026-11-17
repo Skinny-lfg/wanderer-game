@@ -1,0 +1,30 @@
+/* v0.13 Stage 4.5.4 browser QA: responsive map legibility.
+ * Keep all original map positions, links, travel rules and interactions.
+ * Scrollable cartography is intentionally larger on touch viewports so
+ * absolute-positioned room buttons do not overlap one another. */
+@media (max-width: 600px) {
+  [data-realm-viewport] {
+    overflow-x: auto !important;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y;
+    scrollbar-width: thin;
+  }
+  [data-realm-viewport] > div {
+    min-width: 900px !important;
+    height: 760px !important;
+  }
+  [data-realm-viewport] [data-dungeon-room] {
+    box-sizing: border-box;
+    max-width: 112px;
+    font-size: 12px;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+    white-space: normal;
+    padding: 5px 7px !important;
+  }
+  [data-realm-viewport] [data-dungeon-room] small {
+    font-size: 10px;
+    line-height: 1.25;
+  }
+}
