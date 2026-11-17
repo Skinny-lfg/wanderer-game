@@ -1,0 +1,56 @@
+name: Wanderer v0.13 Stage 5 — Conditions and simulator (no deploy)
+
+on:
+  pull_request:
+    paths:
+      - 'combat/v013-expedition-foundation.js'
+      - 'combat/v012-combat-runtime.js'
+      - 'online/v013-expedition-conditions.js'
+      - 'online/v012-expedition-controller.js'
+      - 'online/v012-expedition-runtime.js'
+      - 'online/v013-stage5-conditions.css'
+      - 'index.html'
+      - 'scripts/simulate-progression.cjs'
+      - 'scripts/prepare-automatic-preview.mjs'
+      - 'tests/v013-stage5-conditions.test.cjs'
+      - 'tests/v013-stage5-simulation.test.cjs'
+      - 'tests/v012-economy-harness.cjs'
+      - 'package.json'
+      - '.github/workflows/v013-stage5-conditions.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  current-gameplay-and-conditions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Test deterministic condition plans, all six mechanics and native save validation
+        run: npm run test:v013:stage5
+      - name: Current v0.13 mandatory gameplay and simulation gate
+        run: npm run test:v013:gate
+      - name: Real map-to-boss progression and checkpoint safety
+        run: node --test tests/v013-full-expedition-integration.test.cjs tests/v013-dungeon-checkpoint-integrity.test.cjs
+      - name: Two-seed three-card condition simulation
+        run: >-
+          node scripts/simulate-progression.cjs
+          --mode=conditions
+          --levels=15
+          --seeds=9101,9102
+          --builds=blood-fury
+          --out=reports/stage5-conditions-simulation.json
+      - name: Store reproducible scenario metrics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage5-conditions-${{ github.run_id }}
+          path: reports/stage5-conditions-simulation.json
+          if-no-files-found: warn
