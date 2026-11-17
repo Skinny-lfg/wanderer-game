@@ -14,8 +14,15 @@ test('current talent graph distinguishes prepared Reaper’s Cadence from old Ru
  assert(oldNode,'Legacy Rupture still exists: removing it would require an intentional design migration');
  assert.equal(oldNode.name,'Rupture');
  assert.equal(oldNode.passiveId,'reapers_cadence');
- assert(T.path({...T.create(),xp:100000},oldNode.id)?.includes(oldNode.id),
-  'Legacy Rupture has a graph route and cannot be called fully removed');
+ const account={...T.create(),xp:100000,starterPoints:2};
+ const route=T.path(account,oldNode.id);
+ assert(route?.includes(oldNode.id),'Legacy Rupture must have a graph path');
+ assert(route.length<=T.MAX_POINTS,'Old Rupture route must fit available points to remain truly accessible');
+ let bought=account;
+ for(const id of route){bought=T.allocate(bought,id);assert(bought,'Cannot actually purchase '+id);}
+ assert(T.passiveIds(bought).includes('reapers_cadence'),
+  'Legacy Rupture is not only listed: the current tree actually grants its runtime passive');
+ console.log('Legacy Rupture is still purchasable in',route.length,'talent nodes');
 });
 
 function prepared(){
