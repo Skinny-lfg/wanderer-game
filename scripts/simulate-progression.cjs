@@ -13,6 +13,7 @@ require('../combat/talent-graph-runtime.js');
 require('../combat/expedition-progression.js');
 require('../combat/v013-expedition-foundation.js');
 require('../online/v013-boss-modifiers.js');
+require('../online/v013-boss-preparation.js');
 const F=globalThis.WandererV013ExpeditionFoundation;
 const T=globalThis.WandererAutomaticTalents;
 const P=globalThis.WandererExpeditionProgression;
@@ -31,7 +32,7 @@ function parseArgs(args){
  for(const arg of args){
   const match=/^--([a-z-]+)=(.*)$/.exec(arg);if(!match)throw Error('Expected --option=value: '+arg);
   const [,key,value]=match;
-  if(key==='mode'&&['encounter','dungeon','both','traits','bossmods'].includes(value))result.mode=value;
+  if(key==='mode'&&['encounter','dungeon','both','traits','bossmods','bossprep'].includes(value))result.mode=value;
   else if(key==='levels')result.levels=parseIntegers(value,'levels');
   else if(key==='seeds')result.seeds=parseIntegers(value,'seeds');
   else if(key==='builds'){
@@ -74,7 +75,7 @@ function gearLevel(level,mode){
  if(index<=0)return Math.max(1,level-1);
  return tiers[index-1].minimum;
 }
-function prepare(level,build,seed,opts){
+function prepare(level,build,seed,opts,desiredRisk=undefined){
  const a=create(seed,undefined,{}, {skipPersistence:true});
  const gearE=gearLevel(level,opts.gear);
  a.setup(gearE,build.weapon,opts.rarity);
@@ -83,7 +84,7 @@ function prepare(level,build,seed,opts){
  a.setUnlocked(level);a.start(level,true);
  const c=a.controller(),g=c.state;
  if(g.expedition!==level||!g.dungeon?.cards?.length)throw Error('Current v0.13 dungeon unavailable at E'+level);
- const card=[...g.dungeon.cards].sort((x,y)=>(Number(x.family!==build.families[0])-Number(y.family!==build.families[0]))||x.risk-y.risk)[0];
+ const card=desiredRisk===undefined?[...g.dungeon.cards].sort((x,y)=>(Number(x.family!==build.families[0])-Number(y.family!==build.families[0]))||x.risk-y.risk)[0]:g.dungeon.cards[desiredRisk];
  c.chooseRealm(card.id);
  return {a,c,g,card,gearE};
 }
@@ -94,7 +95,7 @@ function fight(a,c,limit){
  let ticks=0,minimumHp=r.maxhp>0?r.hp/r.maxhp:0;
  while(r.status==='fight'&&c.state.stage==='combat'&&r.hp>0&&ticks<limit){a.tick();ticks++;minimumHp=Math.min(minimumHp,Math.max(0,r.hp)/(r.maxhp||1));}
  const metrics=r.metrics||{},died=c.state.stage==='failed'||r.hp<=0,timedOut=!died&&r.status==='fight'&&ticks>=limit;
- const row={tier:startedTier,type:r.enemy?.boss?'boss':r.enemy?.miniboss?'elite':'combat',traitId:r.encounterTraitId||null,traitRegrowthHealing:Math.round(metrics.traitRegrowthHealing||0),traitDeathPulse:Math.round(metrics.traitDeathPulse||0),bossModifierIds:[...(r.bossModifierIds||[])],bossPulseTriggers:Math.round(metrics.bossPulseTriggers||0),bossFrenzyTriggers:Math.round(metrics.bossFrenzyTriggers||0),status:died?'died':timedOut?'timeout':r.status,timedOut,died,won:!died&&r.status==='cleared',seconds:+(ticks*.11).toFixed(2),ticks,hpStart:+startHp.toFixed(2),hpEnd:+Math.max(0,r.hp).toFixed(2),hpMax:r.maxhp,mpStart:+startMp.toFixed(2),mpEnd:+Math.max(0,r.mp).toFixed(2),mpMax:r.maxmp,minHpPct:+(minimumHp*100).toFixed(1),damageDealt:Math.round(metrics.damageDealt||0),damageTaken:Math.round(metrics.damageTaken||0),absorbed:Math.round(metrics.absorbed||0),manaSpent:Math.round(metrics.manaSpent||0),enemies:r.totalMobCount||1};
+ const row={tier:startedTier,type:r.enemy?.boss?'boss':r.enemy?.miniboss?'elite':'combat',traitId:r.encounterTraitId||null,traitRegrowthHealing:Math.round(metrics.traitRegrowthHealing||0),traitDeathPulse:Math.round(metrics.traitDeathPulse||0),bossModifierIds:[...(r.bossModifierIds||[])],bossPulseTriggers:Math.round(metrics.bossPulseTriggers||0),bossFrenzyTriggers:Math.round(metrics.bossFrenzyTriggers||0),bossPreparation:r.bossPreparation?JSON.parse(JSON.stringify(r.bossPreparation)):null,status:died?'died':timedOut?'timeout':r.status,timedOut,died,won:!died&&r.status==='cleared',seconds:+(ticks*.11).toFixed(2),ticks,hpStart:+startHp.toFixed(2),hpEnd:+Math.max(0,r.hp).toFixed(2),hpMax:r.maxhp,mpStart:+startMp.toFixed(2),mpEnd:+Math.max(0,r.mp).toFixed(2),mpMax:r.maxmp,minHpPct:+(minimumHp*100).toFixed(1),damageDealt:Math.round(metrics.damageDealt||0),damageTaken:Math.round(metrics.damageTaken||0),absorbed:Math.round(metrics.absorbed||0),manaSpent:Math.round(metrics.manaSpent||0),enemies:r.totalMobCount||1};
  return row;
 }
 function shortestRoute(card){
@@ -134,6 +135,32 @@ function encounter(level,build,seed,kind,opts,forcedTrait=undefined,forcedBossMo
  const result=fight(a,c,opts.tickLimit);
  return {mode:forcedBossMod!==undefined?'bossmods':forcedTrait===undefined?'encounter':'traits',kind:forcedBossMod!==undefined?(forcedBossMod||'baseline'):forcedTrait===undefined?kind:(forcedTrait||'baseline'),level,build:build.id,seed,gearE,gearTier:P.gearTier(gearE).name,pointsSpent:a.state().automaticTalents.nodes.length,realm:card.name,unlocked:level,...result};
 }
+function bossPreparationEncounter(level,build,seed,opts,strategy){
+ if(!['baseline','marked_elite','reliquary','both'].includes(strategy))throw Error('Unknown boss preparation strategy');
+ // Controlled matched-seed native boss in a first-ring room. The selected Realm Card
+ // is Dangerous so the marked Elite removes one guard rather than lowering Attack.
+ const {a,c,g,card,gearE}=prepare(level,build,seed,opts,1);
+ const P4=globalThis.WandererV013BossPreparation;
+ const state=g.dungeon.foundationState,manifest=g.dungeon.foundationManifest;
+ const candidate=card.edges.filter(([x])=>x===0).map(([,y])=>y).find(n=>card.nodes[n]?.kind==='combat');
+ if(candidate===undefined)throw Error('No first ring combat to host controlled boss');
+ card.nodes[candidate].kind='boss';card.nodes[candidate].event=null;card.nodes[candidate].escorts=card.risk;
+ if(strategy==='marked_elite'||strategy==='both')g.dungeon.foundationState=F.applyDecision(g.dungeon.foundationState,{type:'prepare_boss',source:'markedElite'},manifest);
+ let sacrifice=0;
+ if(strategy==='reliquary'||strategy==='both'){
+  const first=state.bossModifierIds[0];g.dungeon.disabledBossModifierId=first;
+  g.dungeon.foundationState=F.applyDecision(g.dungeon.foundationState,{type:'prepare_boss',source:'reliquary'},manifest);
+  const vitals=a.vitals();sacrifice=Math.ceil(vitals.maxhp*.15);
+  if(vitals.hp<=sacrifice)throw Error('Reliquary cannot be paid: insufficient HP');
+  a.setVitals({...vitals,hp:vitals.hp-sacrifice});
+ }
+ if(!c.visitRoom(candidate)||!a.enter())throw Error('Cannot enter prepared native boss');
+ const run=a.encounter({count:1,boss:true});
+ const result=fight(a,c,opts.tickLimit);
+ return {mode:'bossprep',kind:strategy,level,build:build.id,seed,gearE,gearTier:P.gearTier(gearE).name,
+  risk:card.risk,preparationCostHp:sacrifice,pointsSpent:a.state().automaticTalents.nodes.length,
+  realm:card.name,unlocked:level,...result};
+}
 function dungeon(level,build,seed,opts){
  const {a,c,g,card,gearE}=prepare(level,build,seed,opts);
  const route=shortestRoute(card),events=[],rooms=[],initial={gold:a.state().gold,fragments:a.state().fragments,essence:a.state().crafting.essence};
@@ -167,6 +194,10 @@ function simulate(opts){
    try{rows.push(encounter(level,build,seed,kind,opts));}
    catch(e){rows.push({level,build:build.id,seed,kind,mode:'encounter',won:false,error:e.message});}
   }
+  if(opts.mode==='bossprep')for(const strategy of ['baseline','marked_elite','reliquary','both']){
+   try{rows.push(bossPreparationEncounter(level,build,seed,opts,strategy));}
+   catch(e){rows.push({level,build:build.id,seed,kind:strategy,mode:'bossprep',won:false,error:e.message});}
+  }
   if(opts.mode==='bossmods')for(const modifier of [null,...F.CATALOG.bossModifiers.map(x=>x.id)]){
    try{rows.push(encounter(level,build,seed,'boss',opts,undefined,modifier));}
    catch(e){rows.push({level,build:build.id,seed,kind:modifier||'baseline',mode:'bossmods',won:false,error:e.message});}
@@ -182,7 +213,7 @@ function simulate(opts){
  }
  const summary={cases:rows.length,wins:rows.filter(r=>r.won).length,deaths:rows.filter(r=>r.died||r.stage==='failed').length,errors:rows.filter(r=>r.error).length,timeouts:rows.filter(r=>r.timedOut).length,groups:summarize(rows)};
  return {schemaVersion:2,engine:'Wanderer v0.13 native HTML combat + current permanent talent tree + dungeon controller',mode:opts.mode,
-  assumptions:{levels:opts.levels,seeds:opts.seeds,builds:opts.builds,pointsAvailable:opts.points,rarity:opts.rarity,gear:opts.gear,runes:opts.runes,mode:opts.mode,potions:'none',lootUpgrades:'none',talents:'current tree version 15, fixed scenario budget; not earned progression',encounter:'native wave at selected Expedition Level; boss case injects a boss into an otherwise normal room for matched combat comparison',dungeon:'shortest accessible route through one real Realm map; persistent HP/Mana across rooms; no manual healing or artificial resets',traits:'controlled diagnostic: baseline plus six injected traits in one initial-ring normal room; unlike natural maps this deliberately bypasses affinity and first-ring placement restrictions to compare identical combat scenarios, not to model exploration',bossmods:'controlled diagnostic: baseline plus six injected boss modifiers against Rift Harbinger in an initial-ring room; bypasses regular map boss placement and multi-modifier counts for matched-seed comparison only',limits:'Synthetic fixed gear and permanent points. Runs one Realm card, not all 15 Realms or multi-expedition economic progression. No production balance conclusions on small seed counts.'},
+  assumptions:{levels:opts.levels,seeds:opts.seeds,builds:opts.builds,pointsAvailable:opts.points,rarity:opts.rarity,gear:opts.gear,runes:opts.runes,mode:opts.mode,potions:'none',lootUpgrades:'none',talents:'current tree version 15, fixed scenario budget; not earned progression',encounter:'native wave at selected Expedition Level; boss case injects a boss into an otherwise normal room for matched combat comparison',dungeon:'shortest accessible route through one real Realm map; persistent HP/Mana across rooms; no manual healing or artificial resets',traits:'controlled diagnostic: baseline plus six injected traits in one initial-ring normal room; unlike natural maps this deliberately bypasses affinity and first-ring placement restrictions to compare identical combat scenarios, not to model exploration',bossmods:'controlled diagnostic: baseline plus six injected boss modifiers against Rift Harbinger in an initial-ring room; bypasses regular map boss placement and multi-modifier counts for matched-seed comparison only',bossprep:'controlled Dangerous boss baseline versus Marked Elite, Forgotten Reliquary sacrifice and both; applies real boss mechanics but injects preparation state and first-ring boss placement without actual optional-room exploration',limits:'Synthetic fixed gear and permanent points. Runs one Realm card, not all 15 Realms or multi-expedition economic progression. No production balance conclusions on small seed counts.'},
   sourceSha256:crypto.createHash('sha256').update(fs.readFileSync(path.join(__dirname,'../index.html'))).digest('hex'),durationMs:Date.now()-start,summary,rows};
 }
 function main(args=process.argv.slice(2)){
@@ -191,5 +222,5 @@ function main(args=process.argv.slice(2)){
  if(report.summary.errors||report.summary.timeouts)process.exitCode=1;
  return report;
 }
-module.exports={BUILDS,DEFAULTS,parseArgs,talentPlan,gearLevel,shortestRoute,encounter,dungeon,simulate,main};
+module.exports={BUILDS,DEFAULTS,parseArgs,talentPlan,gearLevel,shortestRoute,encounter,bossPreparationEncounter,dungeon,simulate,main};
 if(require.main===module)main();
