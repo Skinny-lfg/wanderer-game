@@ -1742,12 +1742,12 @@ function dungeonRoomLabel(n){
  return {entrance:'Entrance',boss:'Boss',elite:'Elite',spring:'Spring',event:'Event'}[n.kind];
 }
 function dungeonMapMarkup(g){
- const d=g.dungeon,c=phase1Controller.realmMap(),last=c.nodes.length-1,width=last>>1,conditionPlan=WandererV013ExpeditionConditions.forDungeon(c,d),conditionInfo=WandererV013ExpeditionConditions.get(conditionPlan?.id),conditionGuide=WandererV013ExpeditionConditions.GUIDE[conditionPlan?.id];
+ const d=g.dungeon,c=phase1Controller.realmMap(),last=c.nodes.length-1,width=last>>1,conditions=globalThis.WandererV013ExpeditionConditions,conditionPlan=conditions?.forDungeon(c,d),conditionInfo=conditions?.get(conditionPlan?.id),conditionGuide=conditions?.GUIDE?.[conditionPlan?.id];
  const point=i=>c.positions?c.positions[i]:i===0?[7,50]:i===last?[93,50]:[16+68*Math.floor((i-1)/2)/(width-1),(i%2?26:74)+(c.nodes[i].offset||0)];
  const visible=c.nodes.map((_,i)=>phase1Controller.travelPath(i).length>0||d.scouted?.includes(i));
  const lines=c.edges.filter(([a,b])=>visible[a]&&visible[b]&&WandererV013MapIntelligence.unlocked(c,d,a,b)).map(([a,b])=>{
   const [x,y]=point(a),[u,v]=point(b),locked=false;
-  const marked=conditionPlan?.edges?.includes(WandererV013ExpeditionConditions.edgeId(a,b));return '<line data-room-edge="'+a+'-'+b+'" x1="'+x+'" y1="'+y+'" x2="'+u+'" y2="'+v+'" stroke="'+(marked?'#b36e82':locked?'#654d44':'#ad9269')+'" stroke-dasharray="'+(marked?'5 3':locked?'2 2':'none')+'" vector-effect="non-scaling-stroke" stroke-width="'+(marked?3:2)+'"/>';
+  const marked=conditionPlan?.edges?.includes(conditions.edgeId(a,b));return '<line data-room-edge="'+a+'-'+b+'" x1="'+x+'" y1="'+y+'" x2="'+u+'" y2="'+v+'" stroke="'+(marked?'#b36e82':locked?'#654d44':'#ad9269')+'" stroke-dasharray="'+(marked?'5 3':locked?'2 2':'none')+'" vector-effect="non-scaling-stroke" stroke-width="'+(marked?3:2)+'"/>';
  }).join('');
  const buttons=c.nodes.map((n,i)=>{
   if(!visible[i])return '';
@@ -1760,7 +1760,7 @@ function dungeonMapMarkup(g){
 function renderRealmCards(g){
  html('<section class="panel"><span class="eyebrow">Expedition '+g.expedition+'</span><h1>Choose your Realm</h1><div class="phase1Offers">'+g.dungeon.cards.map(c=>{
  const t=phase2Theme(c.id);
- const conditionMeta=g.dungeon.foundationManifest?.cards?.find(m=>m.realmId===c.id),condition=WandererV013ExpeditionConditions.get(conditionMeta?.conditionId),conditionGuide=WandererV013ExpeditionConditions.GUIDE[conditionMeta?.conditionId];
+ const conditions=globalThis.WandererV013ExpeditionConditions,conditionMeta=g.dungeon.foundationManifest?.cards?.find(m=>m.realmId===c.id),condition=conditions?.get(conditionMeta?.conditionId),conditionGuide=conditions?.GUIDE?.[conditionMeta?.conditionId];
  const omen=WandererV013BossModifiers.known(g,c.id);
   return '<button class="phase1Offer" data-realm-card="'+c.id+'"><img src="'+dungeonImage(c)+'" alt=""><div class="phase1OfferBody"><strong>'+esc(c.name)+'</strong><p>'+phase2FamilyIcon(c.family)+' '+esc(c.family)+' · '+realmDifficulty(c)+'</p><p>'+esc(t.enemy)+' · '+esc(t.effect)+' · '+('Boss with '+c.risk+' base guard'+(c.risk===1?'':'s')+' · properties may add guards')+'</p><p class="stage5Condition"><b>⚠ '+esc(condition?.name||'Unknown Condition')+'</b> · '+esc(conditionGuide?.danger||'')+'</p><p class="small muted">Counterplay: '+esc(conditionGuide?.counter||'')+'</p><p class="small muted">Known boss omen: '+esc(omen?.name||'Unknown')+(c.risk?' · '+c.risk+' unrevealed':'')+'</p><small>'+(c.stepLimit?c.stepLimit+' steps · ':'')+(c.risk?'+'+(c.risk*12)+'% combat Gold, Fragments and equipment chance':'Standard rewards')+' · Marked elite contract: 1 '+esc(c.family)+' reagent + '+(2+c.risk*2)+' Essence on extraction. Equipment drops: 55% chance to favour '+esc(c.favoured?.subtype||'Shield')+'</small></div></button>';
  }).join('')+'</div><button id="phase1BackToCamp">Return to Camp</button></section>');
