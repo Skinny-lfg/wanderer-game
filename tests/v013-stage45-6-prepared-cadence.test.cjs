@@ -5,15 +5,24 @@ require('../combat/v012-buildcraft.js');
 require('../combat/automatic-talents.js');
 const T=globalThis.WandererAutomaticTalents;
 
-test('current talent graph distinguishes prepared Reaper’s Cadence from old Rupture',()=>{
+test('v0.13 tree uses canonical Reaper’s Cadence and Rupture IDs without collisions',()=>{
  const newNode=T.NODES.find(n=>n.id==='reapers_cadence');
  assert(newNode,'Current prepared Reaper’s Cadence missing');
  assert.equal(newNode.name,"Reaper's Cadence");
  assert(newNode.prerequisites?.length===2);
  const oldNode=T.NODES.find(n=>n.id==='passive_rupture');
- assert(oldNode,'Legacy Rupture still exists: removing it would require an intentional design migration');
+ assert(oldNode,'Blood/Fury Rupture should remain an independent valid skill');
  assert.equal(oldNode.name,'Rupture');
  assert.equal(oldNode.passiveId,'rupture');
+ assert.equal(api.CATALOG.find(p=>p.id==='rupture')?.name,'Rupture');
+ assert.equal(api.CATALOG.filter(p=>p.id==='reapers_cadence').length,0,'Prepared skill is not a Buildcraft passive');
+ assert.equal(T.NODES.filter(n=>n.id==='reapers_cadence').length,1,'Prepared skill ID must be unique');
+ assert.equal(T.NODES.filter(n=>n.id==='passive_rupture').length,1,'Rupture must have exactly one passive node');
+ assert(!T.NODES.some(n=>n.id==='septic_wound'||n.id==='passive_reapers_cadence'),
+  'Retired IDs must not be offered in new v0.13 talent graphs');
+ assert.equal(new Set(T.NODES.map(n=>n.id)).size,T.NODES.length,'No duplicate talent nodes');
+ assert(T.path({...T.create(),xp:100000,starterPoints:2},'reapers_cadence')?.includes('reapers_cadence'),
+  'Reaper\'s Cadence must retain a connected route');
  const account={...T.create(),xp:100000,starterPoints:2};
  const route=T.path(account,oldNode.id);
  assert(route?.includes(oldNode.id),'Legacy Rupture must have a graph path');
