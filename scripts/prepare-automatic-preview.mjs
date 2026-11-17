@@ -19,7 +19,7 @@ for(const dir of Object.keys(extensions))await copy(dir);
 await cp('preview/talent-rebuild',join(output,'preview/talent-rebuild'),{recursive:true});
 const treePath=join(output,'preview/talent-rebuild/index.html');
 let treeHtml=await readFile(treePath,'utf8');
-for(const [reference,file] of [['../../combat/v012-buildcraft.js','combat/v012-buildcraft.js'],['../../combat/automatic-talents.js','combat/automatic-talents.js'],['../../combat/talent-graph-next.js','combat/talent-graph-next.js'],['prototype.js','preview/talent-rebuild/prototype.js']]){
+for(const [reference,file] of [['../../combat/v012-buildcraft.js','combat/v012-buildcraft.js'],['../../combat/automatic-talents.js','combat/automatic-talents.js'],['../../combat/talent-graph-next.js','combat/talent-graph-next.js'],['../../combat/talent-requirements.js','combat/talent-requirements.js'],['prototype.js','preview/talent-rebuild/prototype.js']]){
  const hash=createHash('sha256').update(await readFile(join(output,file))).digest('hex').slice(0,12);
  treeHtml=treeHtml.replace('src="'+reference+'"','src="'+reference+'?v='+hash+'"');
 }

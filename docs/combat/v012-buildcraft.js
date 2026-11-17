@@ -147,7 +147,7 @@ function preview(b,id,base={}){
 }
 function canModify(b,id,power,base={}){const p=BY_ID[id],n=ownedRank(b,id)+(b?.runtime?.permanentTalents?.filter(value=>value===id).length||0),current=rank(b,id);return !!p&&p.max===5&&n>0&&current>0&&clamp(n+power,0,p.max)!==current&&(power<0||preview(b,id,base).useful);}
 function specialized(b,id){return b?.runtime?.specializations?.includes(id);}
-function bleedDamage(b,amount){return amount*(1+.15*rank(b,'deep_cuts'))*(specialized(b,'blood_focus')?1.25:1);}
+function bleedDamage(b,amount){return amount*(1+.15*rank(b,'deep_cuts')+(b?.runtime?.talentBonuses?.bleedBonus||0))*(specialized(b,'blood_focus')?1.25:1);}
 function elementalPower(b,power){return power*(1+.12*rank(b,'elemental_force'))*(b.runtime.conduit?1.10:1);}
 function hasFamily(b,family){return Array.isArray(b?.families)&&b.families.includes(family);}
 function capabilities(b){
@@ -253,7 +253,7 @@ function applyRot(b,c,power){
  const e=c.enemy;if(!e||e.hp<=0)return;
  const stacks=e.v012Rot||(e.v012Rot=[]);
  if(stacks.length>=(specialized(b,'rot_focus')?3:6))stacks.shift();
- stacks.push({ticks:0,damage:Math.max(1,Math.round(power*(1+.15*rank(b,'virulent_rot'))*(specialized(b,'rot_focus')?1.6:1))),remaining:specialized(b,'lingering_rot')?5:4});
+ stacks.push({ticks:0,damage:Math.max(1,Math.round(power*(1+.15*rank(b,'virulent_rot')+(b.runtime.talentBonuses?.rotBonus||0))*(specialized(b,'rot_focus')?1.6:1))),remaining:specialized(b,'lingering_rot')?5:4});
  c.log('☠ Rot '+stacks.length+'/6');
 }
 function onHeal(b,c,healed){
@@ -266,6 +266,7 @@ function activated(b,id){b.runtime.passiveTelemetry??={};const t=b.runtime.passi
 function onAttack(b,c){
  if(c.proc||c.extra||c.recursive)return;
  const e=c.enemy,base=Math.max(1,c.base||1),crit=!!c.critical;
+ if(specialized(b,'affinity_fury')&&e.baseDef>0&&c.now>=(e.nextFurySunder||0)&&c.random()<.15){const baseDef=e.baseDef,applied=e.furySunder||0,reduction=Math.max(0,Math.min(baseDef*.04,baseDef*.20-applied,e.def-baseDef*.25));if(reduction>0){e.def-=reduction;e.furySunder=applied+reduction;e.nextFurySunder=c.now+1;c.log('⚔ Sunder: enemy Defense reduced.');}}
  if(['battle_tempo','relentless_assault','unchained_fury'].some(id=>specialized(b,id))){b.runtime.battleTempo=Math.min(5,(b.runtime.battleTempo||0)+1);if(b.runtime.battleTempo===5&&specialized(b,'relentless_assault')&&c.random()<.15)c.damage(base*.30,'🗡 Relentless Assault');if(b.runtime.battleTempo===5&&specialized(b,'unchained_fury'))c.damage(base*.20,'🔥 Unchained Fury');}
  if(e.bleedStacks>0&&specialized(b,'crimson_feast')){b.runtime.crimsonHits=(b.runtime.crimsonHits||0)+1;if(b.runtime.crimsonHits%3===0){c.damage(base*.30,'🫀 Crimson Feast');heal(b,c,c.player.maxhp*.02);}}
  if(e.bleedStacks>0&&c.player.hp<c.player.maxhp*.5&&specialized(b,'heart_of_carnage')&&ready(b,'heartCarnage',c.now,3)){c.damage(base*.20,'🩸 Heart of Carnage');heal(b,c,c.player.maxhp*.01);}
@@ -317,7 +318,7 @@ function onAttack(b,c){
 function onCast(b,c){
  if(c.proc||c.extra||c.recursive||c.funded!==true||!hasFamily(b,'magic')||!elements.includes(b.element))return;
  // These advanced elemental choices supply their own trigger when taken alone.
- if(b.element==='fire'&&(specialized(b,'combustion')||specialized(b,'living_inferno'))&&!c.enemy.dots?.burn?.length&&!rank(b,'kindling')&&!specialized(b,'kindling_flame'))c.dot('burn',Math.max(1,c.power)*.08);
+ if(b.element==='fire'&&(specialized(b,'combustion')||specialized(b,'living_inferno')||specialized(b,'fire_spread'))&&!c.enemy.dots?.burn?.length&&!rank(b,'kindling')&&!specialized(b,'kindling_flame'))c.dot('burn',Math.max(1,c.power)*.08);
  if(b.element==='frost'&&(specialized(b,'shatter')||specialized(b,'absolute_winter'))&&!(c.enemy.slowTime>0)&&!rank(b,'deep_winter')&&!specialized(b,'deep_chill'))c.chill(c.enemy.boss?1.2:3.5);
  const multiplier=b.element==='fire'&&specialized(b,'living_inferno')&&c.enemy.dots?.burn?.length?1.25:b.element==='frost'&&specialized(b,'absolute_winter')&&c.enemy.slowTime>0?1.2:b.element==='lightning'&&specialized(b,'storm_conductor')?1.2:1;
  const power=elementalPower(b,Math.max(1,c.power))*(c.amp||1)*multiplier;b.runtime.conduit=false;
@@ -378,6 +379,7 @@ function tickRot(b,c){
 function onSecond(b,c){
  b.runtime.passiveTelemetry??={};for(const id of new Set([...b.picks,...(b.runtime.permanentTalents||[])])){if(!rank(b,id))continue;const t=b.runtime.passiveTelemetry[id]??={activations:0,combatSeconds:0};t.combatSeconds++;}
  const e=migrateEnemyDots(c.enemy);tickRot(b,c);
+ if(b.runtime.talentBonuses?.healthRegen>0)heal(b,c,b.runtime.talentBonuses.healthRegen);
  if(specialized(b,'living_recovery')&&c.player.hp<c.player.maxhp*.5)heal(b,c,c.player.maxhp*.005);
  if(specialized(b,'heart_of_the_wild')&&c.player.hp<c.player.maxhp*.3&&b.runtime.heartWildWave!==(c.waveKey??c.enemy)){b.runtime.heartWildWave=c.waveKey??c.enemy;heal(b,c,c.player.maxhp*.12);}
  const recovery=specialized(b,'vitality_recovery')?1.25:specialized(b,'vitality_reserve')?.75:1;
@@ -424,6 +426,7 @@ function onKill(b,c){
 function survive(b,c){if(specialized(b,'unbreakable')&&!b.runtime.unbreakableUsed){b.runtime.unbreakableUsed=true;b.runtime.unbreakableUntil=c.now+5;c.player.hp=1;c.barrier(c.player.maxhp*.20);c.log('🏰 Unbreakable');return true;}if(!rank(b,'last_stand')||b.runtime.lastStand)return false;activated(b,'last_stand');b.runtime.lastStand=true;c.player.hp=Math.max(1,c.player.maxhp*.06);c.log('💚 Last Stand (once per Expedition)');return true;}
 function speed(b,now){const adrenaline=b?.runtime?.adrenalineUntil>now?1+values('adrenaline',rank(b,'adrenaline')).speed:1;return adrenaline*(1+(specialized(b,'battle_tempo')?.03*(b.runtime.battleTempo||0):0))*(b?.runtime?.momentumUntil>now?1.15:1)*(b?.runtime?.unbreakableUntil>now?.8:1);}
 function enemyHealMultiplier(b,e){return 1-(e.v012Rot?.length&&rank(b,'wither')?values('wither',rank(b,'wither')).healingReduction:0);}
+function enemyDefense(b,e){const defense=Math.max(0,Number(e?.def)||0),base=Math.max(0,Number(e?.baseDef)||0),reduction=e?.v012Rot?.length?Math.min(.10,b?.runtime?.talentBonuses?.rotDefense||0):0;return reduction?Math.min(defense,Math.max(base*.25,defense*(1-reduction))):defense;}
 function nextCost(b,baseCost=8){return Math.max(Math.min(3,baseCost),baseCost-rank(b,'efficient_cast'));}
 function resetWave(b,e){e.v012Rot=[];e.v012Shock=0;}
 function canCast(b){return !!b&&!!b.element&&(b.runtime?.permanentBuild&&b.unlockedFamilies?.includes('magic')||['kindling','deep_winter','overcharge','arcane_focus','arcane_echo','spell_surge','spellblade','hex_bolt','hex_bleed','hemal_sigil','elemental_blight','prismatic_rebound','runic_shield'].some(id=>rank(b,id)));}
@@ -442,7 +445,7 @@ function validate(b){
  if(!Number.isInteger(b.runtime.staticCharges)||b.runtime.staticCharges<0||b.runtime.staticCharges>3)throw Error('Invalid Static charges');
  return b;
 }
-function syncPermanent(b,progress,permanentAffinities=true){if(!b)return;if(!root.WandererAutomaticTalents)throw Error('Permanent talents unavailable');b.runtime.prepared=progress?.nodes?.includes(progress.prepared)?progress.prepared:null;b.runtime.specializations=[...(progress?.nodes||[])];if(permanentAffinities){b.runtime.permanentBuild=true;b.unlockedFamilies=FAMILIES.filter(f=>progress?.nodes?.includes('affinity_'+f));b.families=[...b.unlockedFamilies];b.element=b.unlockedFamilies.includes('magic')?(progress?.element||'fire'):null;}const ids=root.WandererAutomaticTalents.passiveIds(progress||root.WandererAutomaticTalents.create());if(ids.length)b.runtime.permanentTalents=ids;else delete b.runtime.permanentTalents;}
+function syncPermanent(b,progress,permanentAffinities=true){if(!b)return;if(!root.WandererAutomaticTalents)throw Error('Permanent talents unavailable');b.runtime.prepared=progress?.nodes?.includes(progress.prepared)?progress.prepared:null;b.runtime.specializations=[...(progress?.nodes||[])];if(permanentAffinities){b.runtime.permanentBuild=true;b.unlockedFamilies=FAMILIES.filter(f=>progress?.nodes?.includes('affinity_'+f));b.families=[...b.unlockedFamilies];b.element=b.unlockedFamilies.includes('magic')?(progress?.element||'fire'):null;}const current=progress||root.WandererAutomaticTalents.create(),ids=root.WandererAutomaticTalents.passiveIds(current);b.runtime.talentBonuses=root.WandererAutomaticTalents.bonuses?.(current)||{};if(ids.length)b.runtime.permanentTalents=ids;else delete b.runtime.permanentTalents;}
 function clear(b){if(!b)return;b.picks.length=0;b.element=null;b.initialFamily=null;b.initialPassive=null;b.unlockedFamilies=[];b.families=[];b.cooldowns=Object.create(null);b.runtime={frenzyUntil:0,counterBlock:0,counterBarrier:0,spellblade:false,magicHits:0,staticCharges:0,adrenalineUntil:0,conduit:false,lastStand:false,lastSpellAt:-999};}
-root.WandererV012Buildcraft=Object.freeze({CATALOG,FAMILIES,ELEMENTS:elements,create,initial,initialId,ownedRank,rank,values,preview,canModify,capabilities,functional,synergy,bleedDamage,elementalPower,applyRot,migrateEnemyDots,eligible,options,choose,element,mods,onHeal,onAttack,onCast,onSecond,tickRot,incoming,onDefend,onKill,survive,speed,enemyHealMultiplier,nextCost,resetWave,canCast,validate,syncPermanent,clear});
+root.WandererV012Buildcraft=Object.freeze({CATALOG,FAMILIES,ELEMENTS:elements,create,initial,initialId,ownedRank,rank,values,preview,canModify,capabilities,functional,synergy,bleedDamage,elementalPower,applyRot,migrateEnemyDots,eligible,options,choose,element,mods,onHeal,onAttack,onCast,onSecond,tickRot,incoming,onDefend,onKill,survive,speed,enemyHealMultiplier,enemyDefense,nextCost,resetWave,canCast,validate,syncPermanent,clear});
 })(globalThis);
