@@ -48,7 +48,7 @@ test('scouting reveals two nearby nonvisited rooms and never modifies visit/step
  const card={nodes:Array.from({length:8},()=>({})),edges:[[0,1],[1,2],[1,3],[2,4],[2,5],[3,6],[5,7]],shortcut:null};
  const d={current:1,visited:[0,1],cleared:[0,1],steps:12,scouted:[],discoveredSecrets:[]};
  const before=JSON.stringify(d),info=I.scout(card,d,2);
- assert.equal(info.rooms.length,2);assert(info.rooms.every(id=>!d.visited.includes(id)));
+ assert.equal(info.rooms.length,2);assert(info.rooms.every(id=>!d.visited.includes(id)&&id!==d.current));
  assert.equal(JSON.stringify(d),before);
 });
 test('10k native maps retain 18/20/22 rooms, 14/13/12 steps and valid stage0 manifests',()=>{
