@@ -21,15 +21,22 @@
 
 **Conclusion:** no failure in the expanded current-version scenarios; **not** an assertion that all 28 historical P0 cases are harmless.
 
-## Reaper’s Cadence: name collision / outdated assumption
+## Canonical Talent IDs — fixed in the v0.13 development branch
 
-The *current prepared* Talent Tree skill is **Reaper’s Cadence**, node ID `septic_wound`. It requires **Bleed + Rot**, deals the sum of one tick of the strongest stack of each (max **4% enemy max HP**) on a **6-second cooldown**, without consuming them.
+The two skills remain intentionally **distinct** in effect, position and name:
 
-Separately, the inherited Buildcraft catalog has passive ID `reapers_cadence`, displayed as **Rupture**, requiring **Bleed + Fury Sunder**, dealing two strongest Bleed ticks (max **3% max HP**) on a **5-second cooldown**.
+| Name | Canonical ID | Talent node | Trigger | Cooldown | Damage cap |
+| --- | --- | --- | --- | --- | --- |
+| **Rupture** (Blood/Fury) | `rupture` | `passive_rupture` in the v0.13 permanent graph; `rupture` in v15 native graph | Bleed + Fury Sunder | 5 seconds | 3% enemy max HP |
+| **Reaper's Cadence** (prepared Blood/Decay) | `reapers_cadence` | `reapers_cadence` | Bleed + Rot | 6 seconds | 4% enemy max HP |
 
-**Verified:** the existing v0.13 Talent Tree still generates `passive_reapers_cadence`, and the native test purchases it along a valid **15-node** route. It is **not** safely described as removed or unreachable. Both distinct runtime activations were covered by successful independent tests in [run 44181827194](https://github.com/Skinny-lfg/wanderer-game/actions/runs/44181827194). The old `v012-affinity-phase-c` fixture assumes a *different* positive-trigger context, which does not prove a v0.13 defect.
+Former misleading IDs: `reapers_cadence` (formerly Rupture), `septic_wound` (formerly Reaper's Cadence). They were corrected **together** in `combat/v012-buildcraft.js`, `combat/automatic-talents.js` and `combat/talent-graph-next.js`. Both effect hooks, telemetry counters, the catalog, graph IDs and tests now use their matching canonical identities. Names and numerical effects were **not** changed. The old cooldown bookkeeping keys remain internally stable; cooldown behavior still has explicit tests.
 
-**Decision deferred:** whether the intended design keeps *Rupture* as a separate Blood/Fury node or explicitly removes it from new builds. Any removal requires a talent migration/validation decision and must preserve graph topology; do not delete it in an audit-only PR.
+**Verified on GitHub:** a current v0.13 test buys `passive_rupture` along its **15-node** path, verifies no duplicate node IDs, a valid connected prepared Reaper's Cadence route, distinct proc conditions and cooldowns, including serialization and damage caps. The new `T.NODES` no longer advertises retired IDs `passive_reapers_cadence` or `septic_wound`.
+
+**Local save caveat:** v0.13 is unpublished and its old local talent/checkpoint snapshots are not migrated by this PR. A pre-fix v0.13 local draft with either old ID may require a fresh local run. **The live v0.12 hosting/login/saves are not modified or deployed.** Do not merge this PR into live until separately approved.
+
+The historical failing test labelled `C reapers_cadence positive trigger…` is now labelled `C rupture positive trigger…` because of the canonical ID; the audit script matches this **exact** legacy-title rename to the same historical failure, without classifying it as a new gameplay regression or suppressing other new failures.
 
 ## P0 coverage currently exercised
 
@@ -52,6 +59,12 @@ Separately, the inherited Buildcraft catalog has passive ID `reapers_cadence`, d
 
 A candidate can move from OPEN only when a **named current-version regression test** verifies the corresponding behavior or there is a documented intentionally changed contract and replacement coverage. Do not waive one of the 28 solely due to green broad test runs.
 
-## Stage 5 verdict
+## Stage 5 verdict — development vs. release
 
-**P0 INVESTIGATION IN PROGRESS; NOT YET CLEARED for Stage 5.** The source-level issue involving two related but distinct Reaper names is now explicit, and the false-negative browser / Veil tests have been corrected. No production code, Firebase service, map layout, balance or player saves were modified by this investigation.
+**GO for starting Stage 5 simulation infrastructure and offline gameplay development**, provided the latest PR checks stay green. The modern v0.13 mandatory native tests, independent combat/economy P0 tests, map-to-boss tests, and isolated Chromium QA have passed; there are **no confirmed current v0.13 P0 gameplay regressions** in those exercised paths.
+
+**NOT CLEARED for public launch, production save integration or final balancing sign-off.** The original 28 P0 *historical test signals* remain recorded for targeted verification. In particular, before trusting final balance statistics or publishing, verify **full Bag/Stash overflow**, **guaranteed boss Runes and exactly-once claiming**, **Crimson Fang offhand**, **all 12 Legendary affinity/cooldown interactions**, and **dodge/status timing** through current v0.13 fixtures. The 96 historical failures must not be relabelled green.
+
+**Reasoning:** retrofitting the obsolete v0.12 suite before building the stronger v0.13 simulation harness creates unnecessary work and risks changing working gameplay based on retired mechanics. Stage 5 should incorporate the remaining risk cases as new simulation assertions; genuine modern failures found there must be fixed before balance is accepted.
+
+No PR merge, Firebase live login changes, or deployment occurred.
