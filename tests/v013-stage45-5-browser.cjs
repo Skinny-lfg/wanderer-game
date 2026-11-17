@@ -110,9 +110,16 @@ async function main(){
         }
         const cleared=await contextPage.evaluate(()=>__stage455.finishCombat());
         assert.equal(cleared.status,'cleared','Combat must settle');
-        const exitButton=contextPage.locator(options.boss?'#phase5ExitResult':'#phase5ExitRealm');
-        await exitButton.waitFor();
-        await exitButton.click();
+        const settled=await contextPage.evaluate(()=>__stage455.snapshot());
+        const actions=await contextPage.locator('#phase5ExitResult:visible, #phase5ExitRealm:visible').count();
+        console.log('Post-combat:',JSON.stringify({node,stage:settled.stage,result:settled.result,runStatus:settled.runStatus,exitButtons:actions}));
+        if(!(options.boss&&settled.stage==='finished')){
+          const resultExit=contextPage.locator('#phase5ExitResult:visible');
+          const ordinaryExit=contextPage.locator('#phase5ExitRealm:visible');
+          if(await resultExit.count())await resultExit.click();
+          else if(await ordinaryExit.count())await ordinaryExit.click();
+          else throw Error('No visible result/exit after encounter '+node+'; stage='+settled.stage+' status='+settled.runStatus);
+        }
       }
       const after=await contextPage.evaluate(()=>__stage455.snapshot());
       assert(before.steps>=after.steps,'No room may refund travel steps');
