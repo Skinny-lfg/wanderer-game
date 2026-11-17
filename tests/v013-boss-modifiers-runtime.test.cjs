@@ -37,7 +37,7 @@ test('native Soul Drain applies the reduced healing in the real runtime',()=>{
  const amount=Math.min(40,Math.floor(Math.min(base.r.maxhp,drain.r.maxhp)*.2));
  assert(amount>0);
  const plain=base.a.heal(base.r,amount),reduced=drain.a.heal(drain.r,amount);
- assert.equal(plain,amount);assert.equal(reduced,amount*.85);
+ assert.equal(plain,amount);assert(Math.abs(reduced-amount*.85)<1e-8,'Soul Drain must apply exactly 15% less healing within float tolerance');
 });
 test('native Sanguine Frenzy triggers only once when boss crosses 50% HP',()=>{
  const {a,r}=run(['sanguine_frenzy'],'leech',0,7003);
