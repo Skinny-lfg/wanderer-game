@@ -27,7 +27,8 @@
     "test:v013:native": "node --test tests/v013-current-dungeon-and-talents.test.cjs tests/v013-dungeon-checkpoint-integrity.test.cjs",
     "test:v013:integration": "node --test tests/v013-full-expedition-integration.test.cjs",
     "test:v013:gate": "npm run test:v013 && npm run test:v013:sim",
-    "audit:v013:legacy": "node scripts/v013-legacy-audit.cjs"
+    "audit:v013:legacy": "node scripts/v013-legacy-audit.cjs",
+    "test:v013:stage45-browser": "node tests/v013-stage45-4-browser.cjs"
   },
   "dependencies": {
     "firebase": "11.10.0"
