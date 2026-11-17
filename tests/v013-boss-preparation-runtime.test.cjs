@@ -111,7 +111,15 @@ test('UI includes Reliquary descriptions, boss preparation and visible discovery
  assert(html.indexOf('online/v013-boss-preparation.js')<html.indexOf('online/v012-expedition-controller.js'));
 });
 test('checkpoint restore preserves the one-time Reliquary change without replaying the HP sacrifice',()=>{
- const {a,g}=scenario(1,9601);
+ const a=create(9601,undefined,{}, {skipPersistence:true});a.setup(35,'Sword','Rare');a.setUnlocked(35);a.start(35,true);
+ const c=a.controller(),g=c.state,card=g.dungeon.cards[1];c.chooseRealm(card.id);
+ // Reach the naturally generated Reliquary through legitimate known connections.
+ const target=card.reliquaryRoom,edges=card.edges.filter(([x,y])=>!(x===card.shortcut&&y===x+1||y===card.shortcut&&x===y+1));
+ const paths=[[0]],seen=new Set([0]);let route=[];
+ for(const path of paths){const last=path.at(-1);if(last===target){route=path;break;}for(const [x,y] of edges){const next=x===last?y:y===last?x:null;if(next!==null&&!seen.has(next)){seen.add(next);paths.push([...path,next]);}}}
+ assert(route.length>0);
+ g.dungeon.visited=route.slice(0,-1);g.dungeon.cleared=[...g.dungeon.visited];g.dungeon.current=route.length===2?0:route.at(-2);
+ assert(c.visitRoom(target));assert(a.enter());
  const before=a.vitals();assert.equal(a.events.choose(0),true);
  const after=a.vitals(),disabled=g.dungeon.disabledBossModifierId;
  const snap=a.checkpoint.capture();assert.equal(a.checkpoint.restore(snap),undefined);

@@ -13,7 +13,7 @@
     "simulate:v012": "node scripts/v012-complete-sim.cjs /tmp/wanderer-v012-sim.json",
     "build:pvp": "node scripts/build-pvp-stats.cjs",
     "build:pages": "node scripts/update-pages-preview.mjs",
-    "test:v013": "node --test tests/automatic-rpg-groups.test.cjs tests/automatic-rpg-route.test.cjs tests/automatic-rpg-talents.test.cjs tests/v013-unified-lifecycle.test.cjs tests/v013-crafting.test.cjs tests/v013-specializations.test.cjs tests/v013-loot.test.cjs tests/v013-talent-structure.test.cjs tests/v013-stat-consistency.test.cjs tests/v013-craft-preview.test.cjs tests/v013-talent-24-axes.test.cjs tests/v013-tier-upgrade.test.cjs tests/expedition-progression-model.test.cjs tests/v013-expedition-foundation.test.cjs tests/v013-map-intelligence.test.cjs tests/v013-map-ui.test.cjs tests/v013-encounter-traits.test.cjs tests/v013-encounter-traits-runtime.test.cjs tests/v013-boss-modifiers.test.cjs tests/v013-boss-modifiers-runtime.test.cjs tests/v013-boss-preparation.test.cjs tests/v013-boss-preparation-runtime.test.cjs",
+    "test:v013": "node --test tests/automatic-rpg-groups.test.cjs tests/automatic-rpg-route.test.cjs tests/automatic-rpg-talents.test.cjs tests/v013-unified-lifecycle.test.cjs tests/v013-crafting.test.cjs tests/v013-specializations.test.cjs tests/v013-loot.test.cjs tests/v013-talent-structure.test.cjs tests/v013-stat-consistency.test.cjs tests/v013-craft-preview.test.cjs tests/v013-talent-24-axes.test.cjs tests/v013-tier-upgrade.test.cjs tests/expedition-progression-model.test.cjs tests/v013-expedition-foundation.test.cjs tests/v013-map-intelligence.test.cjs tests/v013-map-ui.test.cjs tests/v013-encounter-traits.test.cjs tests/v013-encounter-traits-runtime.test.cjs tests/v013-boss-modifiers.test.cjs tests/v013-boss-modifiers-runtime.test.cjs tests/v013-boss-preparation.test.cjs tests/v013-boss-preparation-runtime.test.cjs tests/v013-dungeon-checkpoint-integrity.test.cjs tests/v013-current-dungeon-and-talents.test.cjs",
     "test:v013:browser": "node tests/v013-pages-browser.cjs && node tests/v013-cleanup-ui-browser.cjs && node tests/v013-talent-tree-browser.cjs && node tests/v013-clarity-browser.cjs",
     "test:v013:layout": "node --test tests/v013-talent-24-axes.test.cjs",
     "simulate:v013": "node scripts/simulate-progression.cjs",
@@ -22,7 +22,9 @@
     "test:v013:map": "node --test tests/v013-map-intelligence.test.cjs tests/v013-map-ui.test.cjs",
     "test:v013:traits": "node --test tests/v013-encounter-traits.test.cjs tests/v013-encounter-traits-runtime.test.cjs",
     "test:v013:bossmods": "node --test tests/v013-boss-modifiers.test.cjs tests/v013-boss-modifiers-runtime.test.cjs",
-    "test:v013:prep": "node --test tests/v013-boss-preparation.test.cjs tests/v013-boss-preparation-runtime.test.cjs"
+    "test:v013:prep": "node --test tests/v013-boss-preparation.test.cjs tests/v013-boss-preparation-runtime.test.cjs",
+    "test:v013:checkpoint": "node --test tests/v013-dungeon-checkpoint-integrity.test.cjs tests/v013-boss-preparation-runtime.test.cjs",
+    "test:v013:native": "node --test tests/v013-current-dungeon-and-talents.test.cjs tests/v013-dungeon-checkpoint-integrity.test.cjs"
   },
   "dependencies": {
     "firebase": "11.10.0"
