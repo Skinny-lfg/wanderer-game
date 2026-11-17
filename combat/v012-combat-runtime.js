@@ -544,10 +544,12 @@ function updateFight(){
   if(mitigation)raw=Math.max(1,Math.round(raw*(1-mitigation)));
   if(ports.isPhase1Run()&&ports.phase1Build)raw=WandererV012Buildcraft.incoming(ports.phase1Build,ports.phase2Context(r),raw);if(r.phase1&&ports.phase6Run?.effects.curse?.remaining>0)raw=Math.round(raw*1.10);
   let damageBlocked=0;
-  const block=s.blockChance&&ports.gameRandom()<s.blockChance/100;
+  const barrierGuard=ports.isPhase1Run()&&ports.phase1Build?.runtime?.specializations?.includes('steadfast_guard')&&r.barrier>0;
+  const blockChance=barrierGuard?Math.min(65,(s.blockChance||0)+15):(s.blockChance||0);
+  const block=blockChance&&ports.gameRandom()<blockChance/100;
   if(block){
-   damageBlocked=Math.max(1,Math.round(raw*s.blockReduction));raw-=damageBlocked;
-   ports.addLog('🛡 BLOCK! Shield prevents '+damageBlocked+' damage','good');ports.animateDefense();
+   damageBlocked=Math.max(1,Math.round(raw*(barrierGuard?(s.blockReduction||.35):s.blockReduction)));raw-=damageBlocked;
+   ports.addLog('🛡 BLOCK! Prevented '+damageBlocked+' damage','good');ports.animateDefense();
    if(s.bonus.shieldRiposte&&ports.setNow(r)>=t.shieldCounterUntil&&ports.setReady(r,'shieldRiposte',3)){t.shieldCounter=damageBlocked*.25;t.shieldCounterUntil=ports.setNow(r)+4;}
    if(s.off?.subtype==='Shield'&&ports.legendaryHas('oathwall')&&ports.legendaryProc(r,'oathwall')){const baseFactor=s.main?.subtype==='Mace'?1.4:1;const base=Math.max(1,Math.round(s.attack*baseFactor-WandererV012Buildcraft.enemyDefense(ports.phase1Build,e)));ports.setDirectEnemyDamage(r,base*(ports.legendaryEmpowered(r,'oathwall')?1.10:.75),'🛡 Oathwall Counterattack');if(e.hp<=0){ports.winEncounter();return;}}
    if(s.off?.subtype==='Shield'&&s.main?.subtype==='Sword'&&!ports.legendaryHas('oathwall')&&ports.setReady(r,'shieldBaseCounter',2.5)){
