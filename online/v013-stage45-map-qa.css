@@ -16,10 +16,12 @@
   }
   [data-realm-viewport] [data-dungeon-room] {
     box-sizing: border-box;
-    max-width: 112px;
+    width: 104px;
+    max-width: 104px;
     font-size: 12px;
     line-height: 1.2;
-    overflow-wrap: anywhere;
+    overflow-wrap: normal;
+    word-break: normal;
     white-space: normal;
     padding: 5px 7px !important;
   }
