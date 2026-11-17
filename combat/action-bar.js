@@ -14,6 +14,7 @@ globalThis.WandererActionBar = (() => {
     const weapon = run.stats.main;
     const rows = [{label:run.unfundedAttack?'Fallback Strike':weapon?.subtype==='Staff'||weapon?.subtype==='Wand'?'Basic Cast':'Basic Attack', icon:'equipment/'+({Staff:'staff', 'Two-Handed':'two_handed', Daggers:'dagger',Bow:'bow',Mace:'mace',Wand:'wand'}[weapon?.subtype] || 'sword')+'_01.png',
       left:Math.max(0,cycle-(run.tPlayer||0)), period:cycle, count:run.autoUses||0}];
+    if(weapon?.subtype==='Daggers'&&['Daggers','Off-Hand Dagger'].includes(run.stats.off?.subtype))rows.push({label:'Off-hand Dagger',icon:'equipment/dagger_01.png',hint:(run.offhandCadence||0)+'/2',description:'Attacks after every two main-hand strikes for 35% damage.',left:0,period:0,count:run.offhandStrikes||0});
     if(build?.element&&globalThis.WandererV012Buildcraft.canCast(build)){
       const element=build.element, icon=element==='arcane'?'affinities/families/magic.png':'affinities/magic/'+element+'.png';
       const label=element[0].toUpperCase()+element.slice(1)+' Cast';
@@ -53,7 +54,7 @@ globalThis.WandererActionBar = (() => {
       if(!cell){cell=document.createElement('div');cell.className='actionSlot';cell.innerHTML='<b></b><span></span><small></small><progress max="1"></progress>';host.append(cell);}
       const [icon,label,status,bar]=cell.children;
       cell.tabIndex=0;
-      cell.title=row.label+(row.left>0?' · '+row.left.toFixed(1)+'s remaining':row.period?' · Available when triggered':' · Triggered '+row.count+' times');
+      cell.title=row.label+(row.description?' · '+row.description:row.left>0?' · '+row.left.toFixed(1)+'s remaining':row.period?' · Available when triggered':' · Triggered '+row.count+' times');
       cell.style.setProperty('--cooldown',Math.round(100*Math.min(1,Math.max(0,row.period?row.left/row.period:0)))+'%');
       icon.style.backgroundImage=row.icon?'url("'+resolveIcon(row.icon)+'")':'none';
       icon.textContent=row.emoji||'';label.textContent=row.label;status.textContent=row.hint|| (row.left>0?row.left.toFixed(1):row.period?'Ready':row.count?'×'+row.count:'…');

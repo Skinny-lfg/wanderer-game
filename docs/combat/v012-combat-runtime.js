@@ -466,7 +466,10 @@ function weaponAttack(r,offhandStrike=false){
  if(!offhandStrike&&kind==='Mace'&&ports.state.automaticTalents?.nodes?.includes('mace_shockwave')){const secondary=r.enemies?.find(enemy=>enemy!==r.enemy&&enemy.hp>0);groupSecondaryDamage(r,base,[.3],'🔨 Concussive Swing',true);if(secondary&&secondary.hp>0)secondary.slowTime=Math.max(secondary.slowTime||0,1);}
  if(cast&&v013LightningChain(r))groupSecondaryDamage(r,base,v013LightningChainFactors(),'⚡ Chain Lightning');
  if(s.counts.shield>=2){const gained=ports.setBarrier(r,Math.max(1,Math.round(r.maxhp*(s.bonus.shieldBonus||0))));if(gained>0)ports.addLog('🛡 Shield set: +'+Math.round(gained)+' Barrier','good');}
- if(!offhandStrike&&weapon?.subtype==='Daggers'&&['Daggers','Off-Hand Dagger'].includes(off?.subtype)&&e.hp>0)weaponAttack(r,true);
+ if(!offhandStrike&&weapon?.subtype==='Daggers'&&['Daggers','Off-Hand Dagger'].includes(off?.subtype)){
+  r.offhandCadence=((r.offhandCadence||0)+1)%2;
+  if(r.offhandCadence===0&&e.hp>0){r.offhandStrikes=(r.offhandStrikes||0)+1;weaponAttack(r,true);}
+ }
  return damage;
 }
 
