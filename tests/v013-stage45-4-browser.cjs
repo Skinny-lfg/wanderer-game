@@ -17,7 +17,18 @@ window.__stage454={
    savedTalents:state.automaticTalents?.nodes||[],
    result:phase5Results.summary?.outcome||null};
  },
- finishCombat(){const r=state.run;if(!r||r.status!=='fight')return {status:r?.status||null};
+ pathToRoom(target){
+  const c=phase1Controller.realmMap(),d=phase1Controller.state.dungeon;
+  const q=[[d.current]],seen=new Set([d.current]);
+  for(const currentPath of q){
+   const current=currentPath.at(-1);if(current===target)return currentPath;
+   for(const next of WandererV013MapIntelligence.neighbors(c,d,current)){
+    if(seen.has(next))continue;seen.add(next);q.push([...currentPath,next]);
+   }
+  }
+  return null;
+ },
+  finishCombat(){const r=state.run;if(!r||r.status!=='fight')return {status:r?.status||null};
   for(let n=0;n<90&&r.status==='fight';n++){
    // Only a test accelerator: preserve actual victory settlement, rewards and phases.
    for(const mob of r.enemies?.length?r.enemies:[r.enemy])if(mob&&mob.hp>0)mob.hp=0;
@@ -109,17 +120,7 @@ async function main(){
   // Visit the *naturally generated* Forgotten Reliquary by real map clicks, rather than
   // replacing the node. No travel, event or boss properties are modified by the hook.
   const targetRoom=resumed.cards[1].reliquary;
-  const route=await page.evaluate(target=>{
-   const c=phase1Controller.realmMap(),d=phase1Controller.state.dungeon;
-   const q=[[d.current]],seen=new Set([d.current]);
-   for(const currentPath of q){
-    const current=currentPath.at(-1);if(current===target)return currentPath;
-    for(const next of WandererV013MapIntelligence.neighbors(c,d,current)){
-     if(seen.has(next))continue;seen.add(next);q.push([...currentPath,next]);
-    }
-   }
-   return null;
-  },targetRoom);
+  const route=await page.evaluate(target=>__stage454.pathToRoom(target),targetRoom);
   assert(route?.length>1,'No normal map path to the optional Reliquary');
   console.log('QA natural Reliquary route:',JSON.stringify(route));
   for(const node of route.slice(1)){
