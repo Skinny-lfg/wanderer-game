@@ -88,6 +88,7 @@ test('trait diagnostic simulator exercises all six effects against a matched bas
  assert.deepEqual(rows.map(r=>r.traitId),[null,...E.CATALOG.encounterTraits.map(t=>t.id)]);
  assert.match(report.assumptions.traits,/deliberately bypasses affinity/);
 });
+
 test('group reinforcements inherit marked trait without exceeding four active slots',()=>{
  const {a,r}=prepare('ambush',2100);
  a.encounter({count:20});
