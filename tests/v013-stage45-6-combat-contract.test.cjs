@@ -35,3 +35,17 @@ test('v0.13 Reaper’s Cadence honours 5s cooldown through serialized checkpoint
  api.onAttack(persisted,c);
  assert.equal(persisted.runtime.passiveTelemetry?.reapers_cadence?.activations,2);
 });
+
+test('v0.13 Reaper’s Cadence burst is capped at 3% enemy maximum Health',()=>{
+ for(const type of ['normal','elite','boss']){
+  const {b,c,calls}=cadenceFixture();
+  c.enemy.maxhp=100;c.enemy.hp=100;
+  c.enemy.boss=type==='boss';c.enemy.miniboss=type==='elite';
+  c.enemy.furySunder=1;
+  c.enemy.dots.bleed=[{damage:10,remaining:3}];
+  api.onAttack(b,c);
+  const hit=calls.find(x=>x[0]==='damage'&&x[2]==='🩸 Rupture');
+  assert(hit, 'Cadence must activate for '+type);
+  assert(hit[1]>0&&hit[1]<=3,'3% boss/elite/normal cap');
+ }
+});
