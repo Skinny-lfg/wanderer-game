@@ -51,7 +51,7 @@ function roll(item,{referenceLevel=1,tierFactor=1,random=Math.random}={}){
  const total=budget(item,referenceLevel,tierFactor);
  for(const key of KEYS)item[key]=0;
  for(let i=0;i<picked.length;i++){
-  const key=picked[i],share=i===0?.60:picked.length===2?.40:(.40/Math.max(1,picked.length-1));
+  const key=picked[i],share=picked.length===1?1:i===0?(picked.length===2?.60:picked.length===3?.50:.40):(picked.length===2?.40:picked.length===3?.25:.20);
   const units=total*share,weight=WEIGHTS[key],value=units/weight;
   item[key]=['manaRegenBonus','wardBonus'].includes(key)?Math.max(key==='wardBonus'?.01:.1,Math.round(value*100)/100):Math.max(1,Math.round(value));
  }
