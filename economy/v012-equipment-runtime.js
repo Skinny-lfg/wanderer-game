@@ -77,7 +77,7 @@ function fresh(){ports.state={attemptCompleted:false,characterId:'wanderer',onli
 
 function makeSlots(){return Object.fromEntries(ports.SLOTS.map(s=>[s,null]))}
 
-function starter(){return {id:ports.makeId(),slot:'weapon',subtype:'Sword',name:'Old Sword',tier:1,rarity:'Common',effect:null,atk:5,str:1,obtainedAt:Date.now(),crafted:false,recoveryStarter:true,startingGear:true}}
+function starter(){return {id:ports.makeId(),slot:'weapon',subtype:'Sword',name:ports.PHASE1_PREVIEW?'Worn Sword':'Old Sword',tier:1,rarity:'Common',effect:null,atk:ports.PHASE1_PREVIEW?3:5,str:ports.PHASE1_PREVIEW?0:1,obtainedAt:ports.PHASE1_PREVIEW?0:Date.now(),source:'starter',crafted:false,recoveryStarter:true,startingGear:true}}
 
 function legendaryMatches(entry,item){
  if(!entry||!item)return false;
