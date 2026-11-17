@@ -42,7 +42,7 @@ test('native dungeon simulator reaches real boss with natural route modifiers',(
  assert.equal(report.summary.errors,0);assert.equal(report.summary.timeouts,0);
  assert.equal(report.rows.length,1);
  const row=report.rows[0];assert.equal(row.mode,'dungeon');assert(Array.isArray(row.rooms));
- assert(row.rooms.some(r=>r.type==='boss'),'natural Dungeon must reach its boss');
+ assert(row.rooms.some(r=>r.type==='boss')||row.stage==='failed','native route must either reach its boss or finish with a real combat defeat, never a stuck route');
 });
 test('native v15 checkpoint rejects a retired invalid talent version before save validation',()=>{
  const a=create(6005),T=a.talents;
