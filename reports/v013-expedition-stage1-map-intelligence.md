@@ -22,7 +22,7 @@
 ## Ficheiros
 
 - NOVO: `online/v013-map-intelligence.js` — rotas de custo mínimo, contagem de ligações, scouting e segredos.
-- Alterados: `online/v012-expedition-controller.js`, `online/v012-expedition-runtime.js`, `online/v012-expedition-events.js`, `index.html`, `package.json`.
+- Alterados: `online/v012-expedition-controller.js`, `online/v012-expedition-runtime.js`, `online/v012-expedition-events.js`, `index.html`, `package.json`, `tests/v012-economy-harness.cjs` (agora carrega Stage 0/1 no simulador).
 - NOVOS testes: `tests/v013-map-intelligence.test.cjs`, `tests/v013-map-ui.test.cjs`.
 
 ## Validação efetuada
@@ -34,12 +34,12 @@ npm run test:v013:map
 node --test tests/v013-map-intelligence.test.cjs tests/v013-map-ui.test.cjs tests/v013-expedition-foundation.test.cjs tests/v013-simulation.test.cjs
 ```
 
-- **27/27** testes direcionados passaram no snapshot local.
+- **28/28** testes direcionados passaram no snapshot local (incluindo o evento Oracle real com colocação de sala controlada).
 - **10.000 seeds geradas**, produzindo 30.000 Realm Cards com 18/20/22 salas, condições e contagem de saídas válidas.
 - Verificação independente em 30.000 Realm Cards: 0 mapas cujo boss estivesse inicialmente inacessível dentro do orçamento de passos, considerando ligações normais.
 - Testes de caminhos com custo mínimo, corredores limpos, atalhos fechados/abertos, scouting e diário de decisões.
 - Teste isolado de renderização HTML do mapa, incluindo uma ligação secreta oculta e a sua revelação.
-- Os 7 testes direcionados do simulador PR #40 continuam a passar.
+- O harness do PR #40 agora injeta os novos módulos na sandbox, garantindo que a simulação testa as novas rotas. Os 7 testes direcionados do simulador continuam a passar.
 
 **Não foi verificado:** browser completo, ações reais de clique em dispositivos desktop/mobile, integração no site público, CI GitHub e suíte completa v0.13 (com falhas antigas conhecidas). Não declarar RELEASE/QA concluído.
 
