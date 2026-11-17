@@ -40,4 +40,6 @@ function display(){
  };
 }
 root.renderV013Forge=function(){const result=renderOriginal.apply(this,arguments);display();return result;};
+// A restored Forge view may have rendered before this script was loaded.
+if(typeof view!=='undefined'&&view==='forge'&&document.querySelector('.v013Forge')&&!document.getElementById('v013TierTitle'))display();
 })(globalThis);
