@@ -132,7 +132,7 @@ function applyDecision(state,decision,manifest){
   next.contractId=decision.id;recorded={type:decision.type,id:decision.id};
  }else if(decision.type==='choose_boon'){
   const boon=lookup('boons',decision.id);
-  if(!boon||!boon.families.includes(c.family)||next.boonIds.length>=2||next.boonIds.includes(decision.id))throw Error('Invalid, incompatible or duplicate boon');
+  if(!boon||next.boonIds.length>=2||next.boonIds.includes(decision.id))throw Error('Invalid or duplicate boon');
   next.boonIds.push(decision.id);recorded={type:decision.type,id:decision.id};
  }else if(decision.type==='prepare_boss'){
   if(!['markedElite','reliquary'].includes(decision.source)||next.bossPreparation[decision.source])throw Error('Invalid or repeated boss preparation');
