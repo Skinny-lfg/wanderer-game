@@ -1,8 +1,5 @@
 {
-  "sourceBranch": "fix/v013-expedition-continuation-20261117",
+  "sourceBranch": "experiment/automatic-rpg",
   "mode": "isolated-playtest",
-  "sourceCommit": "91a053f7be7662ce9987ae2d9da534e491cd6dbe",
-  "saveNamespace": "wanderer_automatic_rpg_preview_v7_",
-  "publishedAt": "2026-11-17",
-  "includes": "v0.13 expedition progression + Forge tier upgrades"
+  "sourceCommit": "fb77bfa"
 }

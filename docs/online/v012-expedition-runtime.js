@@ -59,15 +59,22 @@ function phase6EventChoice(choice,itemId,passiveId,family,targetId){
  case 'cursed_altar':if(v.hp<=Math.ceil(v.maxhp*.2))return false;heal();ports.phase1Vitals.hp-=Math.ceil(v.maxhp*.2);effects[choice===0?'attack':'defense']=.10;break;
  case 'whispering_idol':ports.phase6Buff('curse',.10);ports.state[choice===0?'gold':'fragments']+=choice===0?25+4*E:12+2*E;break;
  case 'forgotten_arsenal':if(choice===0){ports.state.crafting.essence+=6;}else if(g.dungeon){const c=ports.phase1Controller.realmMap();g.dungeon.steps=Math.min(c.stepLimit,g.dungeon.steps+2);}else ports.state.fragments+=8+2*E;break;
- case 'bounty_writ':if(choice===0){if(g.rooms.slice(g.planeIndex).includes('elite'))effects.bounty=true;else ports.state.fragments+=5+E;}break;
+ case 'forgotten_reliquary':{
+  if(!g.dungeon)return false;
+  if(choice===0){const cost=Math.ceil(v.maxhp*.15);if(v.hp<=cost||!globalThis.WandererV013BossPreparation?.reliquaryCanDisrupt(g))return false;
+   const disabled=globalThis.WandererV013BossPreparation.disrupt(g);if(!disabled)return false;
+   heal();ports.phase1Vitals.hp-=cost;
+  }else if(choice===1){heal(.15,.25);}break;
+ }
+ case 'bounty_writ':if(choice===0){if(g.dungeon){if(!g.dungeon.cleared.includes(ports.phase1Controller.realmMap().objective))effects.bounty=true;else ports.state.fragments+=5+E;}else if(g.rooms.slice(g.planeIndex).includes('elite'))effects.bounty=true;else ports.state.fragments+=5+E;}break;
  case 'restless_spring':if(choice===0){if(v.hp>=v.maxhp)return false;heal(.35);}else if(v.maxmp===0||v.mp>=v.maxmp)ports.state.fragments+=3+E;else heal(0,.4);break;
- case 'oracle_of_paths':if(choice===0){if(g.freeBuild){if(g.rerolls>=3)return false;g.rerolls++;}else{if(!ports.phase1Controller.allowed().includes(family))return false;ports.phase1Controller.influence(family);}}else ports.state.fragments+=5+E;break;
+ case 'oracle_of_paths':if(choice===0){if(g.dungeon){ports.phase1Controller.scoutRooms(2);globalThis.WandererV013BossPreparation?.revealBoss(g);}else if(g.freeBuild){if(g.rerolls>=3)return false;g.rerolls++;}else{if(!ports.phase1Controller.allowed().includes(family))return false;ports.phase1Controller.influence(family);}}else ports.state.fragments+=5+E;break;
  default:return false;
  }}
  ports.phase6Run.events.push(g.planeIndex);ports.phase6Run.event=null;ports.phase4CommitRealm({awardXp:choice!==2});ports.phase1Controller.waveWon();
  if(!g.freeBuild)phase6UnlockBase(p.family);
  ports.phase5Results.gold+=Math.max(0,ports.state.gold-beforeGold);ports.phase5Results.fragments+=Math.max(0,ports.state.fragments-beforeFragments);
- const eventText=choice===2?'Event passed.':ev.id==='forgotten_arsenal'?(choice===0?'Recovered 6 Essence.':'Took provisions to restore up to 2 steps.'):WandererV012IntegratedEvents.get(ev.id)[3][choice].replace(/(\d+) \+ (\d+)×E/g,(_,a,b)=>String(+a+ +b*E)).replace(/(\d+) \+ E/g,(_,a)=>String(+a+E));
+ const eventText=choice===2?'Event passed.':ev.id==='forgotten_reliquary'?(choice===0?'Forgotten Reliquary: disabled the known boss property at a cost of 15% maximum HP.':'Forgotten Reliquary: recovered Health and Mana.'):ev.id==='forgotten_arsenal'?(choice===0?'Recovered 6 Essence.':'Took provisions to restore up to 2 steps.'):WandererV012IntegratedEvents.get(ev.id)[3][choice].replace(/(\d+) \+ (\d+)×E/g,(_,a,b)=>String(+a+ +b*E)).replace(/(\d+) \+ E/g,(_,a)=>String(+a+E));
  ports.phase5RememberRealm({tier:E,phase1Plane:g.planeIndex-1,planeName:p.name,planeFamily:p.family,combatSeconds:0,gold:Math.max(0,ports.state.gold-beforeGold),fragments:Math.max(0,ports.state.fragments-beforeFragments),loot,realmLog:[{text:eventText,kind:'good'}]},'cleared');
  ports.phase5Results.review=null;ports.phase5Results.eventExitPending=true;
  ports.phase1Controller.claimReward();ports.phase1Draft=null;
@@ -191,9 +198,23 @@ function phase1StartWave(resetScroll=false){
   enemy.attackEvery*=1.15;
   enemy.atk=Math.max(1,Math.round(enemy.atk*.65*(1+.12*(g.selected.risk||0))));
  }
+ const traits=globalThis.WandererV013EncounterTraits;
+ const modifiers=globalThis.WandererV013BossModifiers;
+ const preparation=globalThis.WandererV013BossPreparation;
+ const bossIds=g.dungeon&&g.selected.boss&&modifiers?(preparation?preparation.effectiveModifiers(g):modifiers.selection(g)):[];
+ if(bossIds.length&&!modifiers.check(bossIds,WandererV012Expedition.BOSSES.find(v=>v.id===g.bossId).style,g.dungeon.foundationState?.conditionId))throw Error('Invalid boss modifiers for the native encounter');
+ r.bossModifierIds=[];
+ if(g.selected.boss&&modifiers){if(!modifiers.activate(r,group[0],bossIds))throw Error('Boss modifiers failed to apply');
+  if(preparation){const factor=preparation.bossAttackFactor(g);group[0].atk=Math.max(1,Math.round(group[0].atk*factor));r.bossPreparation={...preparation.status(g)};if(factor<1)ports.addLog('Marked Elite defeated: boss attacks weakened by 10%.','good');}
+  if(bossIds.length)ports.addLog('Boss properties: '+bossIds.map(id=>modifiers.get(id).name).join(' · '),'critical');}
+ const traitId=g.dungeon&&!g.selected.boss&&!g.selected.elite?g.selected.traitId:null;
+ if(traitId&&traits?.applyGroup(traitId,group)){r.encounterTraitId=traitId;ports.addLog('Encounter trait: '+traits.get(traitId).name,'critical');}
+ else r.encounterTraitId=null;
  if(g.dungeon&&g.selected.node===2&&group.length>1){const guard=group[0];guard.name+=' · Vanguard';guard.vanguard=true;guard.hp=guard.maxhp=Math.round(guard.maxhp*1.8);guard.atk=Math.ceil(guard.atk*1.2);ports.addLog(guard.name+' prepares the first strike.','critical');}
  if(last&&(g.selected.boss||g.selected.elite)){
-  const escorts=g.selected.escorts??(g.selected.boss?2:1);
+  const baseEscorts=g.selected.escorts??(g.selected.boss?2:1);
+  const escorted=g.selected.boss&&modifiers?modifiers.extraEscorts(bossIds,baseEscorts):baseEscorts;
+  const escorts=g.selected.boss&&preparation?preparation.escortCount(g,escorted):escorted;
   for(let i=0;i<escorts;i++){
    const guard=ports.enemyFor(r.tier,r.enc,{theme,boss:false,elite:false});
    guard.hp=guard.maxhp=Math.round(guard.maxhp*1.2);guard.atk=Math.round(guard.atk*.35);
@@ -202,7 +223,7 @@ function phase1StartWave(resetScroll=false){
  }
  const fieldCount=Math.min(4,group.length);
  group[0].groupSlot=0;
- for(const enemy of group)enemy.groupClock=Math.max(0,enemy.attackEvery-(.9+enemy.groupSlot*.3));
+ for(const enemy of group)enemy.groupClock=traits?traits.initialClock(enemy,enemy.groupSlot):Math.max(0,enemy.attackEvery-(.9+enemy.groupSlot*.3));
  r.totalMobCount=group.length;r.enemies=fieldCount>1?group.slice(0,fieldCount):undefined;r.groupReserve=group.slice(fieldCount);if(fieldCount===1)delete r.enemies;r.enemy=group[0];
  r.phase6Bounty=false;if(r.enemy.miniboss&&ports.phase6Run?.effects.bounty){r.phase6Bounty=true;ports.phase6Run.effects.bounty=false;r.enemy.hp=r.enemy.maxhp=Math.ceil(r.enemy.maxhp*1.25);r.enemy.atk=Math.ceil(r.enemy.atk*1.25);}
  r.tPlayer=r.tDot=0;r.tEnemy=r.enemy.groupClock;r.setTemp=null;r.playerDebuffUntil=0;
@@ -218,13 +239,22 @@ function phase1WaveWon(){
  if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked))return false;
  const r=ports.state.run,g=ports.phase1Controller.state;
  if(!ports.isPhase1Run()||r.status!=='fight'||!r.enemy||g.stage!=='combat'||!g.selected||r.enc!==g.wave||r.phase4AwardedWave===r.enc)return;
+ const traits=globalThis.WandererV013EncounterTraits;
+ if(r.encounterTraitId==='death_throes'&&traits){
+  const fallen=r.enemies?.length?r.enemies.filter(mob=>mob.hp<=0&&!mob.groupDefeated):[r.enemy].filter(mob=>mob.hp<=0);
+  const pulse=traits.deathPulse(r,fallen);
+  if(pulse.triggers){ports.phase6Metric(r,'traitDeathPulse',pulse.triggers);ports.phase6Metric(r,'damageTaken',pulse.damage);ports.phase6Metric(r,'absorbed',pulse.absorbed);
+   ports.addLog('Death Throes · '+pulse.damage+' damage'+(pulse.absorbed?' ('+pulse.absorbed+' absorbed)':'')+'!','critical');
+   if(r.hp<=0){ports.phase1Death();return;}
+  }
+ }
  if(r.enemies?.length>1){
    const selectedTarget=r.enemy,dead=r.enemies.filter(enemy=>enemy.hp<=0&&!enemy.groupDefeated);if(!dead.length)return;
   for(const enemy of dead){r.enemy=enemy;enemy.groupDefeated=true;
    if(ports.state.automaticTalents?.nodes?.includes('plague_spread')){const bleed=enemy.dots?.bleed?.find(dot=>!dot.spread),rot=enemy.v012Rot?.find(dot=>!dot.spread);for(const target of r.enemies.filter(mob=>mob.hp>0).concat(r.groupReserve||[]).slice(0,2)){if(bleed){target.dots.bleed??=[];if(target.dots.bleed.length<12)target.dots.bleed.push({damage:Math.max(1,Math.round(bleed.damage*.5)),remaining:Math.min(2,bleed.remaining),spread:true});ports.synchronizeDots(target);}if(rot){target.v012Rot??=[];if(target.v012Rot.length<6)target.v012Rot.push({damage:Math.max(1,Math.round(rot.damage*.5)),remaining:Math.min(2,rot.remaining),ticks:0,spread:true});}}}
     ports.legendaryKill(r);if(ports.phase1Build)WandererV012Buildcraft.onKill(ports.phase1Build,{...ports.phase2Context(r),waveComplete:!r.groupReserve?.length&&WandererV012CombatCore.groupComplete(r.enemies)&&enemy===dead[dead.length-1]});}
   let reinforcements=0;
-  for(const fallen of dead){const replacement=r.groupReserve?.shift();if(!replacement)continue;const slot=Math.max(0,Number(fallen.groupSlot)||0),index=r.enemies.indexOf(fallen);if(index<0)continue;replacement.groupSlot=slot;replacement.groupClock=Math.max(0,replacement.attackEvery-(.9+slot*.3));replacement.isReinforcement=true;replacement.reinforcementArrival=true;r.enemies[index]=replacement;reinforcements++;}
+  for(const fallen of dead){const replacement=r.groupReserve?.shift();if(!replacement)continue;const slot=Math.max(0,Number(fallen.groupSlot)||0),index=r.enemies.indexOf(fallen);if(index<0)continue;replacement.groupSlot=slot;replacement.groupClock=traits?traits.initialClock(replacement,slot):Math.max(0,replacement.attackEvery-(.9+slot*.3));replacement.isReinforcement=true;replacement.reinforcementArrival=true;r.enemies[index]=replacement;reinforcements++;}
   const next=selectedTarget?.hp>0&&r.enemies.includes(selectedTarget)?selectedTarget:r.enemies.find(enemy=>enemy.hp>0&&!enemy.isReinforcement)||WandererV012CombatCore.nextGroupTarget(r.enemies);if(next){r.enemy=next;if(reinforcements){ports.addLog(reinforcements+' reinforcement'+(reinforcements===1?' arrives':'s arrive')+' in open position'+(reinforcements===1?'':'s')+'.','good');if(!ports.phase3RefreshGroupEnemies?.())ports.renderCombat();}else if(!ports.phase3RetargetGroup?.())ports.renderCombat();return true;}
  }else if(r.enemy.hp>0)return;
  clearInterval(ports.clock);
@@ -238,7 +268,7 @@ function phase1WaveWon(){
  const enemy=r.enemy,boss=!!enemy.boss,elite=!!enemy.miniboss;
   const groupReward=(boss||elite?1:r.totalMobCount>=18?1.3:r.totalMobCount>=10?1.2:r.totalMobCount>1?1.1:1)*(1+.12*(g.selected.risk||0));
  const gold=Math.round((ports.roll(3,6)+Math.floor(r.tier*.5)+(boss?8:elite?4:0))*(r.phase6Bounty?1.5:1)*groupReward);
- const fragments=Math.round((ports.roll(1,3)+Math.floor(r.tier*.24)+(boss?5:elite?3:0))*(r.phase6Bounty?1.5:1)*groupReward);
+ const fragments=Math.round((ports.roll(1,3)+Math.floor(r.tier*.24)+(boss?5:elite?3:0))*(r.phase6Bounty?1.5:1)*groupReward*(r.encounterTraitId?1.10:1));
  ports.state.gold+=gold;ports.state.fragments+=fragments;r.gold+=gold;r.fragments+=fragments;ports.phase5Results.gold+=gold;ports.phase5Results.fragments+=fragments;
  ports.addLog('Realm rewards pending: +'+gold+' Gold · +'+fragments+' Fragments.','good');
  const odds=ports.waveLootOdds(boss?5:elite?4:Math.min(3,1+Math.floor((g.planeIndex-1)/5)),r.stats.cha);odds.drop=Math.min(1,odds.drop*groupReward);if(ports.phase6Run?.effects.fortune)odds.drop=Math.min(1,odds.drop*1.25);

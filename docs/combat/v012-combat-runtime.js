@@ -178,7 +178,8 @@ function setHeal(r,amount,reserveRelease=false){
  // Tank's healing wound affects all player healing: regeneration, Drain,
  // Nature, Soul Pact and heal-on-hit, but does not reduce Barrier generation.
  const healingReduced=(r.playerHealingDebuffUntil||0)>ports.setNow(r);
- const heal=Math.max(0,Number(amount)||0)*(healingReduced ? 0.60 : 1),before=r.hp;
+ const bossHealingFactor=globalThis.WandererV013BossModifiers?.healingFactor(r)??1;
+ const heal=Math.max(0,Number(amount)||0)*(healingReduced ? 0.60 : 1)*bossHealingFactor,before=r.hp;
  r.hp=Math.min(r.maxhp,r.hp+heal);
  const actual=r.hp-before,overheal=heal-actual;if(!reserveRelease&&overheal>0){if(prepared('lifeweaver'))r.lifeCharge=true;if(before>=r.maxhp&&learned('deep_reserves')&&!r.reserveSaved){r.reserveSaved=true;r.deepReserve=Math.min(overheal,r.maxhp*.08);}}ports.phase6Metric(r,'healing',actual);
  if(!reserveRelease&&heal>0&&ports.legendaryReady(r,'charm-of-the-dawnstar'))ports.legendaryRuntime(r).reserve=Math.min(r.maxhp*.04,heal);
@@ -473,6 +474,18 @@ function weaponAttack(r,offhandStrike=false){
  return damage;
 }
 
+function resolveBossPulseLethal(r,s){
+ if(r.hp>0)return false;
+ if(prepared('last_bastion')&&ports.phase6Run&&!ports.phase6Run.bastionSpent){ports.phase6Run.bastionSpent=true;r.hp=1;const before=r.barrier;ports.setBarrier(r,r.maxhp*.35);r.bastionSize=r.barrier-before;r.bastionUntil=ports.setNow(r)+4;triggered(r,'last_bastion');}
+ if(r.hp>0)return false;
+ if(s.bonus.secondWind&&!r.secondWindUsed){r.secondWindUsed=true;r.hp=1;ports.setBarrier(r,r.maxhp*.08);ports.addLog('💚 Second Wind! Survived lethal damage (once per expedition)','good');return false;}
+ if(ports.isPhase1Run()&&ports.phase1Build&&WandererV012Buildcraft.survive(ports.phase1Build,ports.phase2Context(r))){
+  if(ports.phase4Entry?.session.build){ports.phase4Entry.session.build.runtime.lastStand=true;ports.phase5Persist();}
+  return false;
+ }
+ ports.die();return true;
+}
+
 function updateFight(){
  if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked)){clearInterval(ports.clock);return;}
  const r=ports.state.run;if(!r||r.status!=='fight'){clearInterval(ports.clock);return;}
@@ -482,7 +495,20 @@ function updateFight(){
   ports.state.onlineProgress.activeMs+=110/ports.clockSpeed;
  }
  const dt=.11,s=r.stats,t=ports.setRuntime(r);let e=r.enemy;
- r.combatSeconds=(r.combatSeconds||0)+dt;if(s.caster&&r.mp<v013FundedCost(s.main.subtype==='Staff'?13:9))ports.phase6Metric(r,'manaStarvedSeconds',dt);
+ r.combatSeconds=(r.combatSeconds||0)+dt;
+ if(r.bossModifierIds?.length&&globalThis.WandererV013BossModifiers){
+  const effects=globalThis.WandererV013BossModifiers.tick(r);
+  if(effects.frenzy){ports.addLog('Sanguine Frenzy · Boss attacks faster!','critical');ports.phase6Metric(r,'bossFrenzyTriggers',1);}
+  if(effects.pulse){ports.phase6Metric(r,'bossPulseTriggers',1);ports.phase6Metric(r,'damageTaken',effects.damage);ports.phase6Metric(r,'absorbed',effects.absorbed);
+   ports.addLog('Profane Pulse · '+effects.damage+' damage'+(effects.absorbed?' ('+effects.absorbed+' absorbed)':'')+'!','critical');
+   if(resolveBossPulseLethal(r,s))return;
+  }
+ }
+ if(s.caster&&r.mp<v013FundedCost(s.main.subtype==='Staff'?13:9))ports.phase6Metric(r,'manaStarvedSeconds',dt);
+ if(r.encounterTraitId==='unhallowed_regrowth'&&globalThis.WandererV013EncounterTraits){
+  const healed=globalThis.WandererV013EncounterTraits.regenTick(r);
+  if(healed>0){ports.phase6Metric(r,'traitRegrowthHealing',healed);ports.addLog('Unhallowed Regrowth restores '+healed+' enemy HP.','critical');}
+ }
  if(!ports.isPhase1Run()&&ports.state.onlineProgress?.timerMetric==='combat-v1'&&r.combatSeconds-(r.lastCombatCheckpoint||0)>=3){r.lastCombatCheckpoint=r.combatSeconds;ports.save();}
  ports.setCombatExpire(r,dt);ports.legendaryTick(r,dt);
  // v0.13 keeps actors in their arena slots. Only their independent attack
@@ -603,12 +629,7 @@ function updateFight(){
   }
  }
  if(r.enemies){r.enemy=target;e=target;}
- if(r.hp<=0&&prepared('last_bastion')&&ports.phase6Run&&!ports.phase6Run.bastionSpent){ports.phase6Run.bastionSpent=true;r.hp=1;const before=r.barrier;ports.setBarrier(r,r.maxhp*.35);r.bastionSize=r.barrier-before;r.bastionUntil=ports.setNow(r)+4;triggered(r,'last_bastion');}
- if(r.hp<=0){
-  if(s.bonus.secondWind&&!r.secondWindUsed){r.secondWindUsed=true;r.hp=1;ports.setBarrier(r,r.maxhp*.08);ports.addLog('💚 Second Wind! Survived lethal damage (once per expedition)','good');}
-  else if(ports.isPhase1Run()&&ports.phase1Build&&WandererV012Buildcraft.survive(ports.phase1Build,ports.phase2Context(r))){if(ports.phase4Entry?.session.build){ports.phase4Entry.session.build.runtime.lastStand=true;ports.phase5Persist();}}
-  else {ports.die();return;}
- }
+ if(resolveBossPulseLethal(r,s))return;
  if(e.hp<=0){ports.winEncounter();return;}
  ports.updateBars();
 }
