@@ -8,7 +8,8 @@ const rows=[
  ['forgotten_arsenal','Forgotten Arsenal','treasure',['Recover 6 Essence for directed crafting','Take provisions to recover up to 2 spent steps']],
  ['bounty_writ','Bounty Writ','treasure',['Accept the bounty for the next Elite, or take Fragments if none remains','Pass and keep your current supplies']],
  ['restless_spring','Restless Spring','survival',['Recover 35% HP, or take 3 + E Fragments if full','Recover 40% Mana, or take 3 + E Fragments if full or unavailable']],
- ['oracle_of_paths','Oracle of Paths','survival',['Reveal up to 2 nearby rooms and a nearby secret passage, if one exists','Take 5 + E Fragments instead']]
+ ['oracle_of_paths','Oracle of Paths','survival',['Reveal up to 2 nearby rooms, a nearby hidden passage and one unknown boss property','Take 5 + E Fragments instead']],
+ ['forgotten_reliquary','Forgotten Reliquary','sacrifice',['Sacrifice 15% maximum HP to disable the known boss property','Recover 15% Health and 25% Mana instead']]
 ];
 root.WandererV012IntegratedEvents=Object.freeze({CATALOG:rows.map(([id,name,category,choices])=>Object.freeze({id,name,category,choices})),get:id=>rows.find(r=>r[0]===id)});
 })(globalThis);
