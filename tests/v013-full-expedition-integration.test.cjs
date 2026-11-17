@@ -77,6 +77,7 @@ function naturalRoute(risk,targets,options={},seedFilter=()=>true){
  const rejected=[];
  for(let seed=1;seed<=32;seed++){
   const state=fresh(risk,seed);
+  assert.equal(state.g.dungeon.foundationState.revealedBossModifiers.length,0,'new natural card must start without revealed modifiers');
   if(!seedFilter(state.card))continue;
   try{finishThrough(state,targets(state.card),options);state.testSeed=seed;return state;}
   catch(error){rejected.push(seed+': '+error.message);}
@@ -102,7 +103,7 @@ test('native Dangerous map: actual optional route removes escort and disables on
  const boss=s.fights.find(x=>x.kind==='boss')?.bossSnapshot;
  assert.equal(g.stage,'finished');assert.equal(boss.modifiers.length,1);
  assert.deepEqual(boss.modifiers,mods.slice(1));
- assert.equal(boss.escorts,1+Number(mods.includes('gravebound_retinue'))-1);
+ assert.equal(boss.escorts,1+Number(boss.modifiers.includes('gravebound_retinue'))-1,'only active Gravebound Retinue can add an escort after the Reliquary seals one property');
  assert.equal(boss.preparation.escortsRemoved,1);
  const event=s.events.find(x=>x.event==='forgotten_reliquary');
  assert(event);assert.equal(event.beforeVitals.hp-event.afterVitals.hp,Math.ceil(event.beforeVitals.maxhp*.15));
@@ -144,7 +145,6 @@ test('native Reliquary supplies choice does not disable boss properties or deduc
 test('native Oracle event scouts real rooms and reveals exactly one additional boss property',()=>{
  const s=naturalRoute(1,c=>[c.nodes.findIndex(x=>x.event==='oracle_of_paths'),c.nodes.length-1],{oracleChoice:0,reliquaryChoice:2,checkpoints:true},c=>c.nodes.some(n=>n.event==='oracle_of_paths')),{card,g}=s,oracle=card.nodes.findIndex(x=>x.event==='oracle_of_paths');
  assert(oracle>0,'selected natural map must include Oracle');
- assert.equal(g.dungeon.foundationState.revealedBossModifiers.length,0);
  assert.equal(g.stage,'finished');
  assert.equal(s.events.filter(x=>x.event==='oracle_of_paths'&&x.choice===0).length,1);
  assert.equal(g.dungeon.foundationState.revealedBossModifiers.length,1);
