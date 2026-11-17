@@ -25,7 +25,7 @@ The code retains the original starter-roll RNG consumption, then normalises item
 | Epic | 3–4 | Yes, plus any existing Epic trait |
 | Legendary | 4 | Yes, plus its identity effect |
 
-A two-stat item distributes the whole power budget over **two stronger values**, not two weaker leftover values. Affix pools are specific to the subtype: swords and daggers may roll INT, bows may roll STR, maces END/HP, while wands and staves never roll STR or AGI. Rings and amulets draw from a broad cross-role stat pool. Physical armor continues to use Cloth, Leather or Plate themes.
+A two-stat item distributes the whole power budget over **two stronger values**, not two weaker leftover values. For gameplay continuity, the new budget retains approximately 42% (Common), 66% (Uncommon), 72% (Rare), 76% (Epic) and 82% (Legendary) of the item's *previous weighted stat bundle*, subject to a tier/slot minimum. These are provisional tuning weights, **not win-rate guarantees**. Affix pools are specific to the subtype: swords and daggers may roll INT, bows may roll STR, maces END/HP, while wands and staves never roll STR or AGI. Rings and amulets draw from a broad cross-role stat pool. Physical armor continues to use Cloth, Leather or Plate themes.
 
 **Determinism:** new affix-roll streams are local to the v0.13 equipment runtime. They use an item sequence number plus tier, rarity and slot; they never draw from the existing global map/combat/loot PRNG. Forge previews use a constant example identity and do not increment that sequence.
 
@@ -66,3 +66,16 @@ Loot remains in the existing Bag/Stash/overflow ledger, with protection against 
 **Balance warning:** Stage 5's older 1,152-dungeon win rate was measured with **different, stronger gear**; do not reuse those win rates to sign off the new item budgets. The next step is a new, appropriately stratified post-gear balance baseline. Test fixtures that once *required a win* must now assert the appropriate real combat outcome (win or defeat) and no engine errors/timeouts. This is an intentional gear-budget change, not a waived simulation defect.
 
 **Future release caveats:** loot rates and stat budget numbers are provisional; verify human gameplay, readable mobile HUD, weapon/class survival and whole-Expedition economy before release. Existing local v0.13 playtest saves may contain old-format items, while new items use the v0.13 budget.
+
+## Measured acceptance evidence (post-budget calibration)
+
+At the implementation commit `495b69915460f00d4f6677750373c62835dafa43`, GitHub Actions verified:
+
+- [Stage 5.1 checks #44199687216](https://github.com/Skinny-lfg/wanderer-game/actions/runs/44199687216): new gear/Bag/daggers **14/14**, current native v0.13 **245/245**, legacy-current simulator **7/7** and P0 checks passed. Preview compilation was also verified without publishing.
+- [Integration #44199687733](https://github.com/Skinny-lfg/wanderer-game/actions/runs/44199687733): full native v0.13 and actual map-to-boss tests passed.
+- [Isolated browser #44199687294](https://github.com/Skinny-lfg/wanderer-game/actions/runs/44199687294): desktop/mobile browser checks passed.
+- [Stage 5 stress #44199687194](https://github.com/Skinny-lfg/wanderer-game/actions/runs/44199687194): **1,152 actual dungeons**, **412 wins (35.8%) and 740 ordinary combat deaths**, **0 errors**, **0 timeouts**, **0 blocked routes**; all six Conditions represented. This replaces the earlier pre-gear **1,009/1,152 wins** as the relevant *technical comparison*, though differences include the new gear budgets and drop rules and are not controlled causal estimates.
+
+**Important:** the 35.8% native automated win rate is **not balance-approved**. It includes E1/E15/E50/E200, Guarded/Dangerous/Brutal, four synthetic builds with fixed 24 talent points and Rare synthetic gear, and **no consumables or gear upgrades during runs**. Separate analysis by E/build/difficulty and actual player decisions is needed before adjusting combat or declaring the game too difficult. The new drop rates do not yet benefit simulated players because the simulator does not equip mid-dungeon finds.
+
+Do not deploy this stacked PR or touch live v0.12 authentication/saves before a separate publication decision.
