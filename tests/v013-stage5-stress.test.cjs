@@ -22,7 +22,25 @@ test('Stage 5 stress report separates wins, route-blocked runs, mechanic exposur
  assert.equal(report.rows.length,3);
  assert(report.groups.every(g=>Array.isArray(g.win95Pct)&&g.win95Pct.length===2));
  assert(report.rows.every(x=>x.conditionId));
+ assert.equal(report.rollups.difficulty.length,3);
+ assert.equal(report.rollups.build.length,1);
+ assert.equal(report.rollups.level.length,1);
+ assert.equal(report.rollups.condition.reduce((n,x)=>n+x.n,0),3);
+ assert(report.rollups.condition.every(x=>x.p50Seconds!==null&&x.p90Seconds>=x.p50Seconds&&x.win95Pct.length===2));
  assert.equal(report.summary.errors,0);
  assert.equal(report.summary.timeouts,0);
  assert(report.summary.warnings.some(s=>s.includes('balance decisions')));
+});
+
+test('Stage 5 pooled reports count actual deaths and events without hiding errors',()=>{
+ const rows=[
+  {conditionId:'carrion_swarm',risk:2,build:'blood-fury',level:15,won:false,stage:'failed',seconds:12,damageTaken:80,minHpPct:0},
+  {conditionId:'carrion_swarm',risk:2,build:'blood-fury',level:15,won:true,stage:'finished',seconds:24,damageTaken:40,minHpPct:33},
+  {conditionId:'carrion_swarm',risk:2,build:'blood-fury',level:15,won:false,error:'simulated issue',stage:'choice',seconds:0}
+ ];
+ const result=M.rollups(rows,'condition');
+ assert.equal(result.length,1);assert.equal(result[0].n,3);assert.equal(result[0].wins,1);
+ assert.equal(result[0].deaths,1);assert.equal(result[0].errors,1);assert.equal(result[0].blocked,1);
+ assert.equal(result[0].p50Seconds,12);assert.equal(result[0].p90Seconds,21.6);
+ assert.throws(()=>M.rollups(rows,'invalid'));
 });
