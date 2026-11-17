@@ -9,7 +9,7 @@ function cadenceFixture(){
  c.enemy.bleedStacks=1;
  return {b,c,calls};
 }
-test('v0.13 Reaper’s Cadence requires both Bleed and Fury Sunder, not Bleed alone',()=>{
+test('legacy Rupture (reapers_cadence) requires Bleed and Fury Sunder',()=>{
  const {b,c,calls}=cadenceFixture();
  c.enemy.furySunder=0;
  api.onAttack(b,c);
@@ -22,7 +22,7 @@ test('v0.13 Reaper’s Cadence requires both Bleed and Fury Sunder, not Bleed al
    'Both statuses activate Cadence once');
  assert(calls.some(x=>x[0]==='damage'&&x[2]==='🩸 Rupture'));
 });
-test('v0.13 Reaper’s Cadence honours 5s cooldown through serialized checkpoints',()=>{
+test('legacy Rupture has a 5s cooldown through serialized checkpoints',()=>{
  const {b,c}=cadenceFixture();
  c.enemy.furySunder=1;
  api.onAttack(b,c);
@@ -36,7 +36,7 @@ test('v0.13 Reaper’s Cadence honours 5s cooldown through serialized checkpoint
  assert.equal(persisted.runtime.passiveTelemetry?.reapers_cadence?.activations,2);
 });
 
-test('v0.13 Reaper’s Cadence burst is capped at 3% enemy maximum Health',()=>{
+test('legacy Rupture is capped at 3% enemy maximum Health',()=>{
  for(const type of ['normal','elite','boss']){
   const {b,c,calls}=cadenceFixture();
   c.enemy.maxhp=100;c.enemy.hp=100;
