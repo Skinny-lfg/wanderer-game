@@ -13,7 +13,7 @@ const REALMS=Object.freeze({forge:['blood','Crimson Dominion'],bloodscar:['blood
 const BOSSES=Object.freeze([{id:'guardian',name:"Abyssal Guardian’s Citadel",style:'guardian'},{id:'rift',name:"Harbinger’s Rift",style:'leech'},{id:'ember',name:"Ember Sovereign’s Throne",style:'berserker'}]);
 const EVENT_GROUPS=[['traveling_merchant','relic_collector'],['cursed_altar','whispering_idol'],['forgotten_arsenal','bounty_writ'],['restless_spring','oracle_of_paths']];
 const ROOMS=Object.freeze(['combat','combat','combat','combat','combat','combat','combat','elite','elite','chest','chest','event','event','altar']);
-const I=root.WandererV013MapIntelligence,F=root.WandererV013ExpeditionFoundation,T=root.WandererV013EncounterTraits,P=root.WandererV013BossPreparation;
+const I=root.WandererV013MapIntelligence,F=root.WandererV013ExpeditionFoundation,T=root.WandererV013EncounterTraits,P=root.WandererV013BossPreparation,C=root.WandererV013ExpeditionConditions;
 function shuffle(values,rng){
  const arr=[...values];
  for(let i=arr.length-1;i>0;i--){const j=Math.min(i,Math.floor(rng()*(i+1)));[arr[i],arr[j]]=[arr[j],arr[i]];}
@@ -153,7 +153,7 @@ function create(themes,rng=Math.random){
  function chooseRealm(id){
   const d=game.dungeon,card=d.cards.find(c=>c.id===id);
   if(!card||d.realm||game.stage!=='choice')throw Error('Realm unavailable');
-  d.realm=id;if(card.stepLimit)d.steps=card.stepLimit;game.bossFamily=card.family;
+  d.realm=id;if(card.stepLimit)d.steps=card.stepLimit;d.conditionEdgesUsed=[];game.bossFamily=card.family;
   if(F&&d.foundationManifest)d.foundationState=F.createExpeditionState(d.foundationManifest,id);
  }
  function travelPath(target){
@@ -197,12 +197,13 @@ function create(themes,rng=Math.random){
   d.current=p.node;if(!d.visited.includes(p.node))d.visited.push(p.node);
   game.stage='choice';game.wave=0;game.offers=[];game.selected=null;return true;
  }
- function travelCost(path){if(I&&game.dungeon)return I.travelCost(path,game.dungeon.cleared);const d=game.dungeon;let cost=0,cleared=0;for(const room of path.slice(1)){if(d.cleared.includes(room))cleared++;else{cost+=Math.min(2,cleared)+1;cleared=0;}}return cost+Math.min(2,cleared);}
+ function travelCost(path){if(I&&game.dungeon){const base=I.travelCost(path,game.dungeon.cleared),card=realmMap();return base+(C&&card?C.travelSurcharge(card,game.dungeon,path):0);}const d=game.dungeon;let cost=0,cleared=0;for(const room of path.slice(1)){if(d.cleared.includes(room))cleared++;else{cost+=Math.min(2,cleared)+1;cleared=0;}}return cost+Math.min(2,cleared);}
  function visitRoom(i){
   const d=game.dungeon,card=realmMap(),path=travelPath(i);
   if(game.stage!=='choice'||!path.length||game.rewardPending)return false;
   const cost=travelCost(path);
   if(d.steps!==undefined){if(cost>d.steps)return false;d.steps-=cost;}
+  if(C)C.markTraversed(card,d,path);
   if(d.cleared.includes(i)){d.current=i;return true;}
   if(path.length>1)d.current=path[path.length-2];
   const n=card.nodes[i],boss=n.kind==='boss';
@@ -313,10 +314,10 @@ function create(themes,rng=Math.random){
   const expectedManifest=F.createManifest(d.cards,{seed:manifest.seed,expeditionLevel:g.expedition,bossStyle:manifest.bossStyle});
   if(JSON.stringify(expectedManifest)!==JSON.stringify(manifest))throw Error('Invalid deterministic dungeon manifest');
   if(d.realm===null){
-   if(d.current!==0||d.steps!==undefined||d.foundationState!==undefined||d.disabledBossModifierId!==undefined||
+   if(d.current!==0||d.steps!==undefined||d.conditionEdgesUsed!==undefined||d.foundationState!==undefined||d.disabledBossModifierId!==undefined||
       d.visited.length!==1||d.visited[0]!==0||d.cleared.length!==1||d.cleared[0]!==0||d.scouted.length||d.discoveredSecrets.length||g.selected!==null||g.offers.length)throw Error('Invalid unselected dungeon');
   }else{
-   if(!integer(d.steps,0,selectedCard.stepLimit)||!roomList(d.visited,size)||!roomList(d.cleared,size)||!roomList(d.scouted,size)||
+   if(!integer(d.steps,0,selectedCard.stepLimit)||!C?.validLedger(selectedCard,d)||!roomList(d.visited,size)||!roomList(d.cleared,size)||!roomList(d.scouted,size)||
       !d.visited.includes(d.current)||!d.cleared.includes(0)||!d.visited.includes(0)||d.cleared.some(i=>!d.visited.includes(i)))throw Error('Invalid dungeon progress');
    if(!unique(d.discoveredSecrets)||d.discoveredSecrets.some(e=>typeof e!=='string'||!selectedCard.edges.some(([a,b])=>e===Math.min(a,b)+'-'+Math.max(a,b)&&I?.secretEdge(selectedCard,a,b))))throw Error('Invalid hidden passage state');
    if(!F||!d.foundationManifest||!d.foundationState||!F.validateExpeditionState(d.foundationState,d.foundationManifest)||
