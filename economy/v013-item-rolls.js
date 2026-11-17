@@ -29,10 +29,17 @@ function poolFor(item){
  if(item.armorType&&BASE_POOLS[item.armorType])return BASE_POOLS[item.armorType];
  return BASE_POOLS[item.subtype]||['def','hp','end','mana','critBonus'];
 }
+const RETAINED_POWER=Object.freeze({Common:.42,Uncommon:.66,Rare:.72,Epic:.76,Legendary:.82});
 function budget(item,referenceLevel,tierFactor=1){
  const level=Math.max(1,Number(referenceLevel)||1),power=2+level*.9;
  const weight=(item.slot==='weapon'&&item.subtype==='Two-Handed'?1.4:item.slot==='weapon'?1.1:item.slot==='armor'?1.15:1);
- return Math.max(2,Math.round(power*(RARITY_BUDGET[item.rarity]||.8)*Math.max(1,Number(tierFactor)||1)*weight));
+ const floor=Math.max(2,Math.round(power*(RARITY_BUDGET[item.rarity]||.8)*Math.max(1,Number(tierFactor)||1)*weight));
+ // The old generated item already has a complete stat bundle here. Treat its
+ // weighted sum as a reference, retain only a bounded share of overall power,
+ // and then distribute that budget across fewer, stronger legal affixes.
+ // Raw stats are read BEFORE roll() clears them; no extra attributes are granted.
+ const reference=KEYS.reduce((total,key)=>total+Math.max(0,Number(item[key])||0)*(WEIGHTS[key]||0),0);
+ return Math.max(floor,Math.round(reference*(RETAINED_POWER[item.rarity]||.7)));
 }
 function sample(pool,random){
  const x=Math.max(0,Math.min(.999999999,Number(random())||0));
@@ -75,7 +82,7 @@ function applyCraftProfile(item,profile){
  picked[replace]=profile;
  return distribute(item,picked,item.v013RollBudget);
 }
-const API=Object.freeze({ATTRS,KEYS,WEIGHTS,BASE_POOLS,RARITY_BUDGET,COUNT,poolFor,budget,roll,applyCraftProfile});
+const API=Object.freeze({ATTRS,KEYS,WEIGHTS,BASE_POOLS,RARITY_BUDGET,RETAINED_POWER,COUNT,poolFor,budget,roll,applyCraftProfile});
 root.WandererV013ItemRolls=API;
 if(typeof module==='object'&&module.exports)module.exports=API;
 })(globalThis);
