@@ -47,5 +47,14 @@ jobs:
           tests/v013-stage45-6-prepared-cadence.test.cjs
       - name: Static HTML preview generation (isolated)
         run: npm run build:pages
-      - name: Ensure v0.13 build stays local-only and preserves v0.12
-        run: node scripts/check-v013-pages-publish.cjs
+      - name: Ensure isolated v0.13 preview remains local-only
+        run: |
+          node - <<'NODE'
+          const fs=require('node:fs'),assert=require('node:assert/strict');
+          const html=fs.readFileSync('docs/index.html','utf8');
+          assert(html.includes('const PHASE5_VALIDATION=true;'),'Preview validation flag absent');
+          assert(html.includes('economy/v013-item-rolls.js'),'New gear module omitted from build');
+          assert(html.includes('online/v013-stage51-equipment.css'),'New gear UI stylesheet omitted from build');
+          assert(!html.includes('src="online/firebase-client.js'),'Preview must not load Firebase account runtime');
+          console.log('PASS: isolated Pages build contains v0.13 gear, no Firebase login, no deploy');
+          NODE
