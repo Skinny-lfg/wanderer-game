@@ -179,7 +179,8 @@ function setHeal(r,amount,reserveRelease=false){
  // Nature, Soul Pact and heal-on-hit, but does not reduce Barrier generation.
  const healingReduced=(r.playerHealingDebuffUntil||0)>ports.setNow(r);
  const bossHealingFactor=globalThis.WandererV013BossModifiers?.healingFactor(r)??1;
- const heal=Math.max(0,Number(amount)||0)*(healingReduced ? 0.60 : 1)*bossHealingFactor,before=r.hp;
+ const conditionHealingFactor=globalThis.WandererV013ExpeditionConditions?.healingFactor(r)??1;
+ const heal=Math.max(0,Number(amount)||0)*(healingReduced ? 0.60 : 1)*bossHealingFactor*conditionHealingFactor,before=r.hp;
  r.hp=Math.min(r.maxhp,r.hp+heal);
  const actual=r.hp-before,overheal=heal-actual;if(!reserveRelease&&overheal>0){if(prepared('lifeweaver'))r.lifeCharge=true;if(before>=r.maxhp&&learned('deep_reserves')&&!r.reserveSaved){r.reserveSaved=true;r.deepReserve=Math.min(overheal,r.maxhp*.08);}}ports.phase6Metric(r,'healing',actual);
  if(!reserveRelease&&heal>0&&ports.legendaryReady(r,'charm-of-the-dawnstar'))ports.legendaryRuntime(r).reserve=Math.min(r.maxhp*.04,heal);
@@ -496,6 +497,7 @@ function updateFight(){
  }
  const dt=.11,s=r.stats,t=ports.setRuntime(r);let e=r.enemy;
  r.combatSeconds=(r.combatSeconds||0)+dt;
+ if(globalThis.WandererV013ExpeditionConditions?.tick(r)){ports.phase6Metric(r,'conditionRiteTriggers',1);ports.addLog('Sanguine Rite · The boss grows stronger below half Health!','critical');}
  if(r.bossModifierIds?.length&&globalThis.WandererV013BossModifiers){
   const effects=globalThis.WandererV013BossModifiers.tick(r);
   if(effects.frenzy){ports.addLog('Sanguine Frenzy · Boss attacks faster!','critical');ports.phase6Metric(r,'bossFrenzyTriggers',1);}
