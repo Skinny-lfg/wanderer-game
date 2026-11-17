@@ -33,8 +33,11 @@ test('native Bone Ward + Graven Hide change only boss statistics in matched seed
 test('native Soul Drain applies the reduced healing in the real runtime',()=>{
  const base=run([],'leech',0,7002),drain=run(['soul_drain'],'leech',0,7002);
  base.r.hp=Math.floor(base.r.maxhp/2);drain.r.hp=Math.floor(drain.r.maxhp/2);
- const plain=base.a.heal(base.r,100),reduced=drain.a.heal(drain.r,100);
- assert.equal(plain,100);assert.equal(reduced,85);
+ // Use a heal below available missing HP; smaller v0.13 gear budgets lower max HP.
+ const amount=Math.min(40,Math.floor(Math.min(base.r.maxhp,drain.r.maxhp)*.2));
+ assert(amount>0);
+ const plain=base.a.heal(base.r,amount),reduced=drain.a.heal(drain.r,amount);
+ assert.equal(plain,amount);assert.equal(reduced,amount*.85);
 });
 test('native Sanguine Frenzy triggers only once when boss crosses 50% HP',()=>{
  const {a,r}=run(['sanguine_frenzy'],'leech',0,7003);
