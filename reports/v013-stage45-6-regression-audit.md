@@ -14,7 +14,7 @@ Do **not** delete tests merely because the v0.13 design changed, and do **not** 
 - Every historical failure gets its **own** risk (P0/P1/P2), suspected category, supporting reason, relevant current test probes and **OPEN** status. Candidate categories are *not* accepted as final diagnoses.
 - The script identifies **new failures relative to the baseline by name**, even if the total number of failures decreases; it also reports old tests no longer failing separately.
 - The GitHub Action runs the current v0.13 gate and independent critical-area tests, records the unmodified failing historical suite and archives the complete classification as JSON and Markdown.
-- No Firebase updates, no player-save migration, no balance changes, no production deployment.
+- No Firebase updates, no player-save migration, no balance changes, no production deployment. The Stage 4.5.6 canonical skill-ID fix is confined to this **unmerged** v0.13 development branch.
 
 ## Findings that need real gameplay attention
 
@@ -31,7 +31,7 @@ Do **not** delete tests merely because the v0.13 design changed, and do **not** 
 - Provisional risk classification (all initially **OPEN**, not presumed harmless): **28 P0** combat/economy, **59 P1** stale-route/fixture/parity/other, **9 P2** presentation and event-contract issues.
 - Major P0 examples: Reaper's Cadence, Oathwall, Veil, Crimson Fang, dodge, Bag overflow, boss Runes and extraction economy. The remaining cases need reproduction or an explicit documented contract replacement before declaring gameplay risk cleared.
 - Targeted modern replacement probes added in this PR:
-  - `tests/v013-stage45-6-combat-contract.test.cjs`: Reaper's Cadence requires **Bleed + Fury Sunder**; 5-second cooldown survives serialization; 3% HP cap for normal/Elite/boss.
+  - `tests/v013-stage45-6-combat-contract.test.cjs`: **Rupture** requires **Bleed + Fury Sunder**; 5-second cooldown survives serialization; 3% HP cap for normal/Elite/boss.
   - `tests/v013-stage45-6-event-contract.test.cjs`: 9 unique event IDs (8 normal scheduled + optional Forgotten Reliquary), 4 normal event categories with no repeats and old removed events still excluded.
   - `tests/v013-stage45-6-encounter-matrix.test.cjs`: deterministic native E1/E50/E200 outcomes for four current v0.13 build profiles, finite metrics, no encounter timeout.
 - **Important:** These new probes do not prove all old combat, economy or seven legacy loadout tests are harmless. They verify current contracts in specifically exercised cases. The historical tests remain untouched.
@@ -45,7 +45,7 @@ The full `classification.json`, `classification.md` and raw historical TAP log a
 - Every historical failure assessed, with explicit evidence for any closed/waived case. Unresolved P1/P2 items can be recorded with owner and risk and separated from gameplay blocking, but should not silently disappear.
 - Offline/local development does **not** require fixing authentication, Firebase live integration or cloud saves now; production security is a separate future release gate.
 
-**Initial decision: NO-GO to claim Stage 4.5.6 complete until the new workflow finishes and critical failures are investigated.** A green workflow demonstrates that *current tested paths* pass, not that all 96 historical cases are safe.
+**Updated decision: GO for Stage 5 offline simulation development only, after the mandatory native and browser checks pass.** The legacy 96 cases stay documented, with targeted P0 coverage continued as part of Stage 5. **NO-GO for release, final balance sign-off or Firebase/live integration** until the modern equivalents of outstanding high-risk behavior are checked. See `reports/v013-stage45-6-p0-investigation.md` for the canonical Rupture/Reaper's Cadence IDs, verified checks and remaining P0 concerns.
 
 ## Reproduction
 
