@@ -7,14 +7,17 @@ function phase1Init(){
  ports.fresh();
  ports.state.expeditionOverflow=[];
  ports.state.equip.weapon=ports.state.stash.shift();
+ // Preserve the original two starter generation RNG draws / IDs so deterministic
+ // native dungeon seeds do not drift when the visible kit becomes fixed.
+ const armorRoll=ports.makeItem(1,'armor',null,'starter','Armor','Common');
+ const helmRoll=ports.makeItem(1,'helm',null,'starter','Helm','Common');
  if(ports.PHASE1_PREVIEW){
-  // Identical modest kit for every fresh v0.13 character. No RNG or attributes.
-  const base=(slot,name,subtype,def,hp)=>({id:ports.makeId(),slot,subtype,name,tier:1,rarity:'Common',effect:null,atk:0,def,hp,spd:0,str:0,agi:0,int:0,end:0,cha:0,mana:0,spell:0,obtainedAt:0,source:'starter',startingGear:true,recoveryStarter:true,crafted:false});
-  ports.state.equip.armor={...base('armor','Worn Tunic','Armor',1,5),armorType:'Cloth'};
-  ports.state.equip.helm={...base('helm','Worn Hood','Helm',1,2),armorType:'Cloth'};
+  const fixed=(original,name,def,hp)=>({...original,name,armorType:'Cloth',atk:0,def,hp,spd:0,str:0,agi:0,int:0,end:0,cha:0,mana:0,spell:0,evasionRating:0,critBonus:0,blockBonus:0,manaRegenBonus:0,wardBonus:0,affixes:[],startingGear:true,source:'starter'});
+  ports.state.equip.armor=fixed(armorRoll,'Worn Tunic',1,5);
+  ports.state.equip.helm=fixed(helmRoll,'Worn Hood',1,2);
  }else{
-  ports.state.equip.armor=ports.makeItem(1,'armor',null,'starter','Armor','Common');
-  ports.state.equip.helm=ports.makeItem(1,'helm',null,'starter','Helm','Common');
+  ports.state.equip.armor=armorRoll;
+  ports.state.equip.helm=helmRoll;
  }
  ports.state.crafting=WandererV013Crafting.create();ports.state.automaticTalents={...WandererAutomaticTalents.create(),starterPoints:2};
  ports.phase1Controller=WandererV012Expedition.create(ports.THEMES,ports.gameRandom);
