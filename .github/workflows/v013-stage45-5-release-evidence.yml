@@ -78,5 +78,6 @@ jobs:
           name: v013-stage45-5-release-evidence-${{ github.run_id }}
           path: |
             reports/stage45-4-browser/
+            reports/stage45-5-browser/
             reports/stage45-5-release/
           if-no-files-found: warn
