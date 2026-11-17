@@ -17,8 +17,8 @@ test('traits map to six lore-aligned Stage 0 definitions and do not change any c
  assert.equal(T.get('not_an_id'),null);
  assert(Object.isFrozen(F.CATALOG.encounterTraits[0]));
 });
-test('1000 deterministic native map seeds produce 1/2/3 regular-room traits, none on the starting ring',()=>{
- for(let seed=0;seed<1000;seed++){
+test('10000 deterministic native map seeds produce 1/2/3 regular-room traits, none on the starting ring',()=>{
+ for(let seed=0;seed<10000;seed++){
   const cards=native(seed),repeat=native(seed);assert.deepEqual(cards.map(c=>c.nodes.map(n=>n.traitId)),repeat.map(c=>c.nodes.map(n=>n.traitId)));
   for(let risk=0;risk<3;risk++){
    const card=cards[risk],marked=card.nodes.map((n,i)=>({i,n})).filter(({n})=>n.traitId);
