@@ -14,6 +14,13 @@ globalThis.WandererActionBar = (() => {
     const weapon = run.stats.main;
     const rows = [{label:run.unfundedAttack?'Fallback Strike':weapon?.subtype==='Staff'||weapon?.subtype==='Wand'?'Basic Cast':'Basic Attack', icon:'equipment/'+({Staff:'staff', 'Two-Handed':'two_handed', Daggers:'dagger',Bow:'bow',Mace:'mace',Wand:'wand'}[weapon?.subtype] || 'sword')+'_01.png',
       left:Math.max(0,cycle-(run.tPlayer||0)), period:cycle, count:run.autoUses||0}];
+    if(weapon?.subtype==='Daggers'&&['Daggers','Off-Hand Dagger'].includes(run.stats.off?.subtype))rows.push({label:'Off-hand Dagger',icon:'equipment/dagger_01.png',hint:(run.offhandCadence||0)+'/2',description:'Attacks after every two main-hand strikes for 35% damage.',left:0,period:0,count:run.offhandStrikes||0});
+    if(build?.element&&globalThis.WandererV012Buildcraft.canCast(build)){
+      const element=build.element, icon=element==='arcane'?'affinities/families/magic.png':'affinities/magic/'+element+'.png';
+      const label=element[0].toUpperCase()+element.slice(1)+' Cast';
+      if(run.stats.caster){rows[0].icon=icon;if(!run.unfundedAttack)rows[0].label=label;}
+      else rows.push({label,icon,left:Math.max(0,2.5-(now-(build.runtime.lastSpellAt??-999))),period:2.5,count:build.runtime.magicHits||0});
+    }
     const labels = globalThis.WandererV012Buildcraft.CATALOG;
     for (const [key, expiry] of Object.entries({...run.setCooldowns,...build?.cooldowns})) {
       const action = weaponActions[key];
@@ -34,7 +41,7 @@ globalThis.WandererActionBar = (() => {
     }
     if(build?.runtime.prepared){
       const id=build.runtime.prepared,ability=globalThis.WandererAutomaticTalents.NODES.find(n=>n.id===id);
-      const hints={red_guillotine:(run.aim||0)+'/3',turn_tide:run.riposteUntil>now?'Riposte ready':'Guard',last_bastion:run.bastionUntil?'Triggered':'Lethal hit',lifeweaver:run.lifeCharge?'Charged':'Overheal',grave_bloom:(run.echoCount||0)+'/3',septic_wound:run.enemy?.septicMark?'Marked':'Rot + Bleed'};
+      const hints={red_guillotine:(run.aim||0)+'/3',turn_tide:run.riposteUntil>now?'Riposte ready':'Guard',last_bastion:run.bastionUntil?'Triggered':'Lethal hit',lifeweaver:run.lifeCharge?'Charged':'Overheal',grave_bloom:(run.echoCount||0)+'/3',septic_wound:'Rot + Bleed'};
       if(ability)rows.push({label:ability.name,emoji:ability.icon,hint:hints[id],count:run.outerUses?.[id]||0,left:0,period:0});
     }
     return [rows[0],...rows.slice(1).sort((a,b)=>a.label.localeCompare(b.label))];
@@ -47,7 +54,7 @@ globalThis.WandererActionBar = (() => {
       if(!cell){cell=document.createElement('div');cell.className='actionSlot';cell.innerHTML='<b></b><span></span><small></small><progress max="1"></progress>';host.append(cell);}
       const [icon,label,status,bar]=cell.children;
       cell.tabIndex=0;
-      cell.title=row.label+(row.left>0?' · '+row.left.toFixed(1)+'s remaining':row.period?' · Available when triggered':' · Triggered '+row.count+' times');
+      cell.title=row.label+(row.description?' · '+row.description:row.left>0?' · '+row.left.toFixed(1)+'s remaining':row.period?' · Available when triggered':' · Triggered '+row.count+' times');
       cell.style.setProperty('--cooldown',Math.round(100*Math.min(1,Math.max(0,row.period?row.left/row.period:0)))+'%');
       icon.style.backgroundImage=row.icon?'url("'+resolveIcon(row.icon)+'")':'none';
       icon.textContent=row.emoji||'';label.textContent=row.label;status.textContent=row.hint|| (row.left>0?row.left.toFixed(1):row.period?'Ready':row.count?'×'+row.count:'…');

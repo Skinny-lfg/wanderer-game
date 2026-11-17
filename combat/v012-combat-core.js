@@ -4,7 +4,7 @@
 function evasionChance(rating,tier,EVASION_SCALE,EVASION_CAP){
  if(!Number.isFinite(rating)||rating<=0)return 0;
  const level=Math.max(1,Number(tier)||1);
- const scale=EVASION_SCALE*(2+referenceLevel(level)*.91)*(level>200?1+.005*(level-200):1);
+ const scale=EVASION_SCALE*(2+referenceLevel(level)*.91)*(!root.WandererExpeditionProgression&&level>200?1+.005*(level-200):1);
  return Math.min(EVASION_CAP,1/(1+scale/rating));
 }
 
@@ -13,10 +13,11 @@ function enemyAttackType(enemy){
  return enemy.eliteType==='caster'||enemy.bossStyle==='leech'?'spell':'physical';
 }
 
-function referenceLevel(level){return Math.min(200,level);}
-function enemyStat(level,value){return level>200?Math.round(value*(1+.005*(level-200))):value;}
+function referenceLevel(level){return root.WandererExpeditionProgression?root.WandererExpeditionProgression.enemyReference(level):Math.min(200,level);}
+function enemyStat(level,value){return !root.WandererExpeditionProgression&&level>200?Math.round(value*(1+.005*(level-200))):value;}
 function gearStat(level,value){return level>200?Math.round(value*(1+.0048*(level-200))):value;}
 function endlessWeaponDamageBonus(level,main,off){
+ if(root.WandererExpeditionProgression)return 0;
  const progress=Math.max(0,Math.min(1,(level-200)/100));
  if(!progress)return 0;
  const weapon=main?.subtype,offhand=off?.subtype;

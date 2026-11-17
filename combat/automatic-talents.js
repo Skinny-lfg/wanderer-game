@@ -80,12 +80,12 @@ const outerSkills=[
  ['decay','spore_mark','🪰','Spore Mark','Changing targets from Rot to a healthy enemy copies one Rot stack on hit. Cooldown 5s.',1,'wasting_curse']
 ];
 const outerPairs=[
- ['red_guillotine','🪓','Red Guillotine','relentless','open_wound','Execute up to three Bleed stacks on your fourth strike. A kill spreads one stack.'],
+ ['red_guillotine','🪓','Red Guillotine','relentless','open_wound','Prepared: every fourth strike consumes up to three Bleeds for their remaining damage. A kill spreads one stack.'],
  ['turn_tide','⚔️','Turn the Tide','relentless','brace','Defending an elite or boss strike primes a riposte for 3s.'],
- ['last_bastion','🏰','Last Bastion','stored_impact','second_pulse','Once per expedition survive lethal damage with a barrier for 4s. Recover half its absorbed damage.'],
+ ['last_bastion','🏰','Last Bastion','stored_impact','second_pulse','Prepared: once per expedition, survive lethal damage and gain Barrier for 4s. Recover half its absorbed damage.'],
  ['lifeweaver','🌙','Lifeweaver','deep_reserves','spell_echo','Overhealing charges a funded cast: +30% damage or restore 8% Health below half.'],
- ['grave_bloom','🕳️','Grave Bloom','spell_echo','incubation','Echoes on Rot spread infection to two targets or immediately deal a Rot tick in a duel.'],
- ['septic_wound','🦂','Septic Wound','incubation','open_wound','Overlapping Rot and Bleed ticks mark an enemy. Strike it to weaken its next attack by 30%.']
+ ['grave_bloom','🕳️','Grave Bloom','spell_echo','incubation','Prepared: echoes spread Rot to two enemies, or deal a Rot tick against a lone enemy.'],
+ ['septic_wound','🦂',"Reaper's Cadence",'incubation','open_wound','Prepared: attacks against enemies with Bleed and Rot deal damage equal to one tick of the strongest stack of each, capped at 4% enemy maximum Health (6s cooldown). Neither stack is consumed.']
 ];
 function outerNodes(){
  const result=[];
@@ -108,11 +108,11 @@ function outerNodes(){
 }
 const NEW_SPECIALISATIONS=[
  ['blood','blood_harvest','🩸','Blood Harvest','Bleeding kills restore 3% maximum Health.','passive_blood_drinker'],
- ['blood','crimson_feast','🫀','Crimson Feast','Every third hit against a bleeding enemy deals 30% bonus damage and heals 2% maximum Health.','blood_harvest'],
- ['blood','heart_of_carnage','🩸','Heart of Carnage','Below half Health, hits against bleeding enemies deal 20% more damage and heal 1% maximum Health, once every 3 seconds.','crimson_feast'],
+ ['blood','crimson_feast','🫀','Crimson Feast','Every third hit against a bleeding enemy deals 45% bonus damage.','blood_harvest'],
+ ['blood','heart_of_carnage','🩸','Heart of Carnage','Below half Health, hit a bleeding enemy for 40% bonus damage, or 60% if the enemy is below half Health (3s cooldown).','crimson_feast'],
  ['fury','battle_tempo','⚔️','Battle Tempo','Consecutive attacks build attack speed, up to 15%.','passive_quick_hands'],
- ['fury','relentless_assault','🗡️','Relentless Assault','At maximum tempo, attacks have a 15% chance of an additional 30% hit.','battle_tempo'],
- ['fury','unchained_fury','🔥','Unchained Fury','At maximum tempo, attacks deal 20% bonus damage.','relentless_assault'],
+ ['fury','relentless_assault','🗡️','Relentless Assault','Attacks against Sundered enemies deal 20% bonus damage every 3 seconds.','battle_tempo'],
+ ['fury','unchained_fury','🔥','Unchained Fury','Every fifth consecutive attack opens a 3-second window in which attacks deal 25% bonus damage.','relentless_assault'],
  ['vitality','living_recovery','💚','Living Recovery','Below half Health, restore 0.5% maximum Health each second.','passive_renewal'],
  ['vitality','overflowing_life','🌿','Overflowing Life','Effective healing grants Barrier equal to 15% of Health restored, up to 10% maximum Health.','living_recovery'],
  ['vitality','heart_of_the_wild','🌳','Heart of the Wild','Below 30% Health, restore 12% maximum Health once per encounter.','overflowing_life'],
@@ -158,7 +158,7 @@ function nodes(){
   }
   for(const [id,side]of [[first,-1],[second,1]]){const n=forks.find(n=>n.id===id);n.legacyRequires=n.requires;n.requires='fork_'+prefix+'_'+stat+'_2';n.forkAnchor=a;n.forkStep=3;n.forkSide=side;}
  }
- cachedNodes=Object.freeze([...CORE,...branches,...forks,...outerNodes(),...NEW_SPECIALISATIONS,{id:'steadfast_guard',family:'aegis',name:'Steadfast Guard',icon:'🛡️',description:'Blocking grants 3% damage reduction per stack for 5 seconds, up to 3 stacks.',requires:'passive_guarded_block',specialisationTier:1},{id:'stored_force',family:'aegis',name:'Stored Force',icon:'🔨',description:'Store 30% of blocked and absorbed damage, up to 25% maximum Health, and release it on your next hit.',requires:'steadfast_guard',specialisationTier:2},{id:'unbreakable',family:'aegis',name:'Unbreakable',icon:'🏰',description:'Once per Expedition, survive a fatal hit with 1 Health and gain a Barrier equal to 20% of maximum Health. Attack speed is reduced by 20% for 5 seconds.',requires:'stored_force',specialisationTier:3},{id:"soul_sip",family:"magic",junction:"hex_bolt",requires:"passive_hex_bolt",name:"Soul Sip",icon:"🌀",description:"A funded cast against Rot restores 3 Mana, once every 5 seconds."},{id:"living_ward",family:"aegis",junction:"sanctuary",requires:"passive_sanctuary",name:"Living Ward",icon:"🌿",description:"Below half Health, attacking grants 5% maximum Health as Barrier, once every 8 seconds."}].map(node=>{
+ cachedNodes=Object.freeze([...CORE,...branches,...forks,...outerNodes(),...NEW_SPECIALISATIONS,{id:'steadfast_guard',family:'aegis',name:'Steadfast Guard',icon:'🛡️',description:'While you have Barrier, gain 15 percentage points of Block chance (maximum 65%), even without a shield. A block prevents part of the hit before Barrier absorbs the remainder. Each block also grants 3% damage reduction for 5 seconds, up to 3 stacks.',requires:'passive_guarded_block',specialisationTier:1},{id:'stored_force',family:'aegis',name:'Stored Force',icon:'🔨',description:'Store 30% of damage blocked or absorbed by Barrier. At 25% maximum Health stored, release the stored damage against all enemies immediately.',requires:'steadfast_guard',specialisationTier:2},{id:'unbreakable',family:'aegis',name:'Unbreakable',icon:'🏰',description:'Once per Expedition, survive a fatal hit with 1 Health and gain a Barrier equal to 20% of maximum Health. Attack speed is reduced by 20% for 5 seconds.',requires:'stored_force',specialisationTier:3},{id:"soul_sip",family:"magic",junction:"hex_bolt",requires:"passive_hex_bolt",name:"Soul Sip",icon:"🌀",description:"A funded cast against Rot restores 3 Mana, once every 5 seconds."},{id:"living_ward",family:"aegis",junction:"sanctuary",requires:"passive_sanctuary",name:"Living Ward",icon:"🌿",description:"Below half Health, attacking grants 5% maximum Health as Barrier, once every 8 seconds."}].map(node=>{
   
   if(!node.attribute)return Object.freeze(node);
   const step=node.pathStep||node.bridgeStep||node.forkStep||1;
