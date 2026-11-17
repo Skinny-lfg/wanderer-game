@@ -37,11 +37,25 @@ for(const file of ['combat/expedition-progression.js','combat/v012-runes.js','on
  const hash=createHash('sha256').update(await readFile(join(output,file))).digest('hex').slice(0,12);
  const attr=file.endsWith('.css')?'href':'src';replaceRequired(new RegExp(attr+'="'+file.replaceAll('.','\\.')+'(?:\\?[^" ]*)?"'),attr+'="'+file+'?v='+hash+'"',file);
 }
-replaceRequired(/<\/head>/,'<style>#onlineBar{display:none!important}</style></head>','head');
+// One-time reset of ONLY old v0.13 Pages playtest saves on this browser/origin.
+// Never touch the Firebase v0.12 namespace, accounts, or unrelated localStorage.
+const resetScript=`<script id="v013-preview-save-reset">
+(()=>{'use strict';try{
+ const marker='wanderer_v013_pages_reset_20261117';
+ if(localStorage.getItem(marker)==='1')return;
+ const old=/^wanderer_automatic_rpg_preview_v(?:[1-7])_/;
+ const keys=[];
+ for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&old.test(k))keys.push(k);}
+ for(const k of keys)localStorage.removeItem(k);
+ localStorage.setItem(marker,'1');
+}catch(error){console.warn('Preview save reset: storage unavailable',error?.name||'');}})();
+</script>`;
+replaceRequired(/<\/head>/,resetScript+'<style>#onlineBar{display:none!important}</style></head>','head');
+
 await writeFile(join(output,'index.html'),html);
 const savePath=join(output,'online/v012-save.js');let save=await readFile(savePath,'utf8');
 if(!save.includes("PREFIX='wanderer_v012_endless_v1_'"))throw Error('Preview blocked: unknown save namespace');
-save=save.replace("PREFIX='wanderer_v012_endless_v1_'","PREFIX='wanderer_automatic_rpg_preview_v7_'");
+save=save.replace("PREFIX='wanderer_v012_endless_v1_'","PREFIX='wanderer_automatic_rpg_preview_v8_'");
 await writeFile(savePath,save);
 const saveHash=createHash('sha256').update(save).digest('hex').slice(0,12);
 let finalHtml=await readFile(join(output,'index.html'),'utf8');
