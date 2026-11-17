@@ -1,0 +1,71 @@
+name: Wanderer v0.13 isolated browser QA (not a deployment)
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/v013-browser-qa.yml'
+      - 'tests/*browser*.cjs'
+      - 'scripts/prepare-automatic-preview.mjs'
+      - 'index.html'
+      - 'online/**'
+      - 'combat/**'
+      - 'economy/**'
+      - 'preview/**'
+      - 'package.json'
+      - 'package-lock.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser-qa:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      CI: 'true'
+      WANDERER_TEST_URL: http://127.0.0.1:8012
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Prepare isolated Chromium (no deployment)
+        run: |
+          npx playwright install --with-deps chromium
+          echo "CHROMIUM_PATH=$(node -e "console.log(require('playwright').chromium.executablePath())")" >> "$GITHUB_ENV"
+      - name: Browser regression — four existing v0.13 workflows
+        shell: bash
+        run: |
+          mkdir -p reports/v013-browser-qa
+          status=0
+          for file in v013-stage45-browser-qa.cjs v013-pages-browser.cjs v013-cleanup-ui-browser.cjs v013-talent-tree-browser.cjs v013-clarity-browser.cjs; do
+            echo "::group::$file"
+            if node "tests/$file" > "reports/v013-browser-qa/$file.log" 2>&1; then
+              code=0
+            else
+              code=$?
+            fi
+            cat "reports/v013-browser-qa/$file.log"
+            if [ "$code" -ne 0 ]; then
+              echo "::error title=$file::Browser test failed (exit $code)"
+              status=1
+            fi
+            echo "::endgroup::"
+          done
+          exit "$status"
+      - name: Archive reports, screenshots and browser logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v013-browser-qa-${{ github.sha }}
+          path: |
+            reports/v013-browser-qa/
+            reports/arena-review/
+            reports/cleanup-stage2/
+            reports/talent-stage3/
+            reports/clarity-stage45/
+          retention-days: 14
+          if-no-files-found: warn
