@@ -103,7 +103,7 @@ function createManifest(cards,{seed,expeditionLevel,bossStyle}={}){
 function createExpeditionState(manifest,realmId){
  if(!manifest||manifest.version!==VERSION||!Array.isArray(manifest.cards))throw Error('Invalid manifest');
  const c=manifest.cards.find(x=>x.realmId===realmId);if(!c)throw Error('Unknown Realm Card');
- return {version:VERSION,seed:manifest.seed,expeditionLevel:manifest.expeditionLevel,realmId,risk:c.risk,conditionId:c.conditionId,bossModifierIds:[...c.bossModifierIds],contractId:null,boonIds:[],knownRooms:[0],discoveredSecrets:[],completedObjectives:[],bossPreparation:{markedElite:false,reliquary:false},decisions:[]};
+ return {version:VERSION,seed:manifest.seed,expeditionLevel:manifest.expeditionLevel,realmId,risk:c.risk,conditionId:c.conditionId,bossModifierIds:[...c.bossModifierIds],contractId:null,boonIds:[],knownRooms:[0],discoveredSecrets:[],completedObjectives:[],revealedBossModifiers:[],bossPreparation:{markedElite:false,reliquary:false},decisions:[]};
 }
 function validateExpeditionState(state,manifest){
  if(!state||state.version!==VERSION||!manifest||state.seed!==manifest.seed||state.expeditionLevel!==manifest.expeditionLevel)return false;
@@ -111,11 +111,11 @@ function validateExpeditionState(state,manifest){
  const validIds=(arr,table,max)=>Array.isArray(arr)&&arr.length<=max&&new Set(arr).size===arr.length&&arr.every(x=>table.has(x));
  if(state.contractId!==null&&!byId.contracts.has(state.contractId)||!validIds(state.boonIds,byId.boons,2))return false;
  if(!Array.isArray(state.knownRooms)||state.knownRooms[0]!==0||new Set(state.knownRooms).size!==state.knownRooms.length||!state.knownRooms.every(n=>Number.isInteger(n)&&n>=0&&n<DIFFICULTIES[card.risk].rooms))return false;
- if(!Array.isArray(state.discoveredSecrets)||!Array.isArray(state.completedObjectives)||!Array.isArray(state.decisions)||!state.bossPreparation||typeof state.bossPreparation.markedElite!=='boolean'||typeof state.bossPreparation.reliquary!=='boolean')return false;
+ if(!Array.isArray(state.discoveredSecrets)||!Array.isArray(state.completedObjectives)||!Array.isArray(state.revealedBossModifiers||[])||new Set(state.revealedBossModifiers||[]).size!==(state.revealedBossModifiers||[]).length||(state.revealedBossModifiers||[]).some(id=>!card.bossModifierIds.includes(id))||!Array.isArray(state.decisions)||!state.bossPreparation||typeof state.bossPreparation.markedElite!=='boolean'||typeof state.bossPreparation.reliquary!=='boolean')return false;
  return true;
 }
 // The Stage 0 ledger records intentions for later adapters; it applies no combat or economy effects.
-const DECISION_TYPES=Object.freeze(['reveal_room','discover_secret','select_contract','choose_boon','prepare_boss']);
+const DECISION_TYPES=Object.freeze(['reveal_room','discover_secret','reveal_boss','select_contract','choose_boon','prepare_boss']);
 function lookup(group,id){return Object.hasOwn(CATALOG,group)?byId[group].get(id)||null:null;}
 function applyDecision(state,decision,manifest){
  if(!validateExpeditionState(state,manifest)||!decision||typeof decision!=='object'||!DECISION_TYPES.includes(decision.type))throw Error('Invalid foundation decision');
@@ -127,6 +127,9 @@ function applyDecision(state,decision,manifest){
  }else if(decision.type==='discover_secret'){
   if(typeof decision.edgeId!=='string'||!/^\d+-\d+$/.test(decision.edgeId)||next.discoveredSecrets.includes(decision.edgeId))throw Error('Invalid or repeated secret');
   next.discoveredSecrets.push(decision.edgeId);recorded={type:decision.type,edgeId:decision.edgeId};
+ }else if(decision.type==='reveal_boss'){
+  if(!c.bossModifierIds.includes(decision.id)||decision.id===c.bossModifierIds[0]||next.revealedBossModifiers?.includes(decision.id))throw Error('Invalid or repeated boss reveal');
+  next.revealedBossModifiers??=[];next.revealedBossModifiers.push(decision.id);recorded={type:decision.type,id:decision.id};
  }else if(decision.type==='select_contract'){
   if(next.contractId!==null||!byId.contracts.has(decision.id))throw Error('Invalid or repeated contract');
   next.contractId=decision.id;recorded={type:decision.type,id:decision.id};
