@@ -81,11 +81,19 @@ async function main(){
   const first=await page.evaluate(()=>__stage454.snapshot());assert.equal(first.realm,first.cards[1].id);assert.equal(first.steps,13);
   assert(await page.locator('[data-dungeon-room="1"]').isVisible());
   await page.screenshot({path:path.join(out,'06-map-mobile.png'),fullPage:true});
+  const overlap=await page.locator('[data-dungeon-room]').evaluateAll(nodes=>{
+   const rects=nodes.map(el=>({id:el.dataset.dungeonRoom,box:el.getBoundingClientRect()})),pairs=[];
+   for(let i=0;i<rects.length;i++)for(let j=i+1;j<rects.length;j++){
+    const a=rects[i].box,b=rects[j].box,w=Math.max(0,Math.min(a.right,b.right)-Math.max(a.left,b.left)),h=Math.max(0,Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top));
+    if(w*h>30)pairs.push({a:rects[i].id,b:rects[j].id,px:Math.round(w*h)});
+   }return pairs;
+  });
+  console.log('QA mobile map node overlaps:',JSON.stringify(overlap));
   await page.locator('[data-dungeon-room="1"]').click();
   const dialog=page.locator('dialog[open]');await dialog.waitFor();
   assert.match(await dialog.innerText(),/steps?\s*·|steps?\s+left/);
   await dialog.getByRole('button',{name:'Enter room',exact:true}).click();
-  await page.locator('.arenaEnemy').first().waitFor();
+  await page.locator('.arenaEnemy, #enemyPortrait').first().waitFor();
   const combat=await page.evaluate(()=>__stage454.snapshot());assert(combat.steps<13&&combat.runStatus==='fight');
   await page.screenshot({path:path.join(out,'07-combat-mobile.png'),fullPage:true});
   await page.setViewportSize({width:1440,height:900});
@@ -98,6 +106,7 @@ async function main(){
   const resumed=await page.evaluate(()=>__stage454.snapshot());assert.equal(resumed.steps,steps,'Checkpoint must preserve travel cost');assert.equal(resumed.current,1);
   await page.screenshot({path:path.join(out,'09-map-restored-desktop.png'),fullPage:true});
   assert.deepEqual(errors,[],'Uncaught JavaScript errors must be absent on all screens');
+  assert.equal(findings.filter(x=>/SVG.*viewBox.*Infinity/.test(x)).length,0,'Talent Atlas SVG must never receive Infinity viewBox dimensions');
   console.log('PASS Stage 4.5.4 browser: Camp (desktop/mobile), v15 Talent iframe and real purchase/reload, 3 Realm Cards, map cost/room inspection, arena (mobile/desktop), combat result and checkpoint reload. Nodes='+count);
   fs.writeFileSync(path.join(out,'result.json'),JSON.stringify({status:'passed',scenarios:9,atlasNodes:count,viewportWidths:[390,1440],errors,notes:'Combat accelerated by the test-only QA hook; screenshot layout is assessed separately; no cloud access.'},null,2));
  }catch(error){fs.writeFileSync(path.join(out,'result.json'),JSON.stringify({status:'failed',error:String(error),findings},null,2));throw error;}
