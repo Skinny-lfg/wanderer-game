@@ -102,6 +102,6 @@ test('5.1 dual daggers have exactly two strikes over two mains; offhand is 50% d
 });
 test('5.1 HUD, talents indicator and forge description follow new gameplay rules',()=>{
  const src=fs.readFileSync('index.html','utf8');
- for(const needle of ['stage51TalentPointIndicator','stage51Essence','stage51Reagents','WandererV013ItemRolls','Example roll (stats vary)'])assert(src.includes(needle),needle);
+ for(const needle of ['stage51TalentPointIndicator','stage51Essence','stage51Reagents','src="economy/v013-item-rolls.js"','Example roll (stats vary)'])assert(src.includes(needle),needle);
  assert(src.includes("PHASE1_PREVIEW?'':o?'E'+o.tier:''"),'Old E1/E2 badge must not show on slot tiles');
 });
