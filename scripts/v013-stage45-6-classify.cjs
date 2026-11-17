@@ -7,6 +7,13 @@ fs.mkdirSync(root,{recursive:true});
 const tap=fs.readFileSync(path.join(root,'npm-test.tap'),'utf8');
 const baseline=JSON.parse(fs.readFileSync('reports/v013-stage45-3-general-suite-baseline.json','utf8'));
 const legacyIndex=new Map(baseline.items.map(x=>[x.name,x]));
+const renamedLegacyTests=new Map([
+ // The previous failing test was renamed by a canonical skill-ID correction.
+ // This is an EXACT title alias only, never a general test-results exclusion.
+ ['C rupture positive trigger, unique gate and serializable cooldown',
+  'C reapers_cadence positive trigger, unique gate and serializable cooldown']
+]);
+const baselineNameOf=name=>renamedLegacyTests.get(name)||name;
 const failed=[...tap.matchAll(/^not ok\s+\d+\s+-\s+(.+)$/gm)].map(x=>x[1]);
 assert.equal(new Set(failed).size,failed.length,'Duplicated names: cannot classify reliably');
 const textOf=(name)=>name.toLowerCase();
@@ -32,17 +39,19 @@ function select(old,name){
  {id:'unresolved',risk:'P1',suspected:'No trustworthy classification — requires reproduction',probe:'Investigate source test and current rule',evidence:'No matching pattern'};
 }
 const rows=failed.map((name,i)=>{
- const old=legacyIndex.get(name),p=select(old,name);
- return {number:i+1,name,legacyFile:old?.file||null,baselineError:old?.error||null,
+ const baselineName=baselineNameOf(name),old=legacyIndex.get(baselineName),p=select(old,name);
+ return {number:i+1,name,baselineName,renamedFromBaseline:baselineName!==name,legacyFile:old?.file||null,baselineError:old?.error||null,
    existedIn106:!!old,candidate:p.id,risk:p.risk,suspectedCause:p.suspected,
    evidence:p.evidence,currentProbe:p.probe,status:'OPEN — no individual gameplay clearance'};
 });
 const counts={};
 for(const r of rows){const k=r.risk+'/'+r.candidate;counts[k]=(counts[k]||0)+1}
 const fresh=rows.filter(x=>!x.existedIn106);
-const resolved=baseline.items.filter(x=>!failed.includes(x.name));
+const failingBaselineNames=new Set(failed.map(baselineNameOf));
+const resolved=baseline.items.filter(x=>!failingBaselineNames.has(x.name));
 const output={source:'npm test on full GitHub runner, v0.13 stacked PR',legacyBaseline:baseline.failing,
  totalNow:rows.length,notPresentFromBaseline:resolved.length,newAgainstBaseline:fresh.length,
+ renamedLegacyCases:rows.filter(x=>x.renamedFromBaseline).map(x=>({now:x.name,baseline:x.baselineName})),
  counts, releaseDecision:'NOT CLEARED — all 96 legacy failures remain individually open until reproduced/accepted',
  note:'Even when a current v0.13 gate passes, it cannot prove that a legacy failure is obsolete. Risk groups prioritize manual/current-API checks.',
  newFailures:fresh, resolvedFromOldSnapshot:resolved.map(x=>({name:x.name,file:x.file,oldError:x.error})),cases:rows};
