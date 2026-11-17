@@ -366,10 +366,10 @@ function weaponAttack(r,offhandStrike=false){
   if(element&&ports.isMagicOffhand(off)&&off.magic===element)damage=Math.round(damage*1.30);
   ports.addLog((ports.ELEMENTS[element]?.icon||'✨')+' '+kind+' casts '+(ports.ELEMENTS[element]?.name||'Magic')+' ('+damage+' magic).','spell');
  }else{
-  const factor=kind==='Two-Handed'?1.70:kind==='Mace'?1.4:kind==='Bow'?1.08:kind==='Daggers'?.80:kind==='Sword'?1.12:caster?.55:1;
+  const factor=kind==='Two-Handed'?1.70:kind==='Mace'?1.4:kind==='Bow'?1.08:(kind==='Daggers'||kind==='Off-Hand Dagger')?.80:kind==='Sword'?1.12:caster?.55:1;
   damage=Math.max(1,Math.round(s.attack*factor)-Math.round(WandererV012Buildcraft.enemyDefense(ports.phase1Build,e)*(armorReady?.8:1)));
  }
- if(offhandStrike)damage=Math.max(1,Math.round(damage*.35));
+ if(offhandStrike)damage=Math.max(1,Math.round(damage*.50)); // 50% of a comparable Dagger hit; off-hand fires every second main hit.
  if(ports.state.automaticTalents?.nodes?.includes('single_target_mastery')&&(!r.groupReserve?.length&&(!r.enemies||r.enemies.filter(enemy=>enemy.hp>0).length===1)))damage=Math.max(1,Math.round(damage*1.15));
  const specialized=ports.state.automaticTalents?.nodes||[];
  if(specialized.includes('blood_focus'))damage=Math.max(1,Math.round(damage*.9));
@@ -450,7 +450,7 @@ function weaponAttack(r,offhandStrike=false){
  }
  // Crescent keeps its cooldown-limited Bleed extension without independent off-hand hits.
  ports.legendaryOffhand(r,damage);
- if(!offhandStrike&&ports.WANDERER_DOUBLE_STRIKE_ENABLED&&kind==='Daggers'&&damage>0&&e.hp>0&&ports.gameRandom()<.25){
+ if(!offhandStrike&&ports.WANDERER_DOUBLE_STRIKE_ENABLED&&kind==='Daggers'&&!['Daggers','Off-Hand Dagger'].includes(off?.subtype)&&damage>0&&e.hp>0&&ports.gameRandom()<.25){
   // One ordinary pre-critical main-hand hit, with no further rolls or recursive triggers.
   ports.setDirectEnemyDamage(r,Math.max(1,Math.round(base*.55)),'🗡 Double Strike!');
  }

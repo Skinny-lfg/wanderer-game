@@ -1,0 +1,60 @@
+name: Wanderer v0.13 Stage 5.1 — Equipment, Bag and dual daggers (no deploy)
+
+on:
+  pull_request:
+    paths:
+      - 'economy/v013-item-rolls.js'
+      - 'economy/v012-equipment-runtime.js'
+      - 'economy/v013-crafting.js'
+      - 'online/v012-expedition-runtime.js'
+      - 'combat/v012-combat-runtime.js'
+      - 'combat/v012-gear-stats.js'
+      - 'online/v013-stage51-equipment.css'
+      - 'index.html'
+      - 'tests/v013-stage51-equipment.test.cjs'
+      - 'tests/v013-craft-preview.test.cjs'
+      - 'tests/v013-loot.test.cjs'
+      - 'package.json'
+      - '.github/workflows/v013-stage51-equipment.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  v013-gameplay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Stage 5.1 native gear, crafting, Bag and dagger tests
+        run: npm run test:v013:stage51
+      - name: All current v0.13 gameplay and simulation tests
+        run: npm run test:v013:gate
+      - name: Loot, boss, checkpoint and economy integration safety
+        run: >-
+          node --test
+          tests/v013-stage45-6-economy-p0.test.cjs
+          tests/v013-stage45-6-extraction-p0.test.cjs
+          tests/v013-stage45-6-dodge-p0.test.cjs
+          tests/v013-stage45-6-legendary-p0.test.cjs
+          tests/v013-stage45-6-combat-contract.test.cjs
+          tests/v013-stage45-6-prepared-cadence.test.cjs
+      - name: Static HTML preview generation (isolated)
+        run: npm run build:pages
+      - name: Ensure isolated v0.13 preview remains local-only
+        run: |
+          node - <<'NODE'
+          const fs=require('node:fs'),assert=require('node:assert/strict');
+          const html=fs.readFileSync('docs/index.html','utf8');
+          assert(html.includes('const PHASE5_VALIDATION=true;'),'Preview validation flag absent');
+          assert(html.includes('economy/v013-item-rolls.js'),'New gear module omitted from build');
+          assert(html.includes('online/v013-stage51-equipment.css'),'New gear UI stylesheet omitted from build');
+          assert(!html.includes('src="online/firebase-client.js'),'Preview must not load Firebase account runtime');
+          console.log('PASS: isolated Pages build contains v0.13 gear, no Firebase login, no deploy');
+          NODE

@@ -1,0 +1,9 @@
+/* v0.13 stage 5.1 — compact resources and discoverable pending talent points. */
+.wallet{flex-wrap:wrap;gap:5px 9px}
+.stage51Reagents{display:inline-flex;gap:4px;align-items:center;flex-wrap:wrap}
+.stage51Reagent{display:inline-flex;align-items:center;gap:3px;padding:3px 5px;white-space:nowrap}
+.stage51Reagent img{width:17px;height:17px;object-fit:contain}
+.stage51Essence{white-space:nowrap}
+.stage51TalentPointIndicator{display:inline-block;margin-left:6px;border:1px solid rgba(224,172,87,.55);border-radius:7px;padding:1px 5px;color:#ffe1a6;font-weight:700;font-size:.85em;white-space:nowrap}
+[data-phase3-nav="talents"] .stage51TalentPointIndicator{pointer-events:none}
+@media(max-width:600px){.stage51Reagent{padding:2px 3px;font-size:.83rem}.stage51Reagent img{width:15px;height:15px}.stage51Reagents{gap:2px}}

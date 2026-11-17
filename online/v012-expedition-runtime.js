@@ -7,8 +7,18 @@ function phase1Init(){
  ports.fresh();
  ports.state.expeditionOverflow=[];
  ports.state.equip.weapon=ports.state.stash.shift();
- ports.state.equip.armor=ports.makeItem(1,'armor',null,'starter','Armor','Common');
- ports.state.equip.helm=ports.makeItem(1,'helm',null,'starter','Helm','Common');
+ // Preserve the original two starter generation RNG draws / IDs so deterministic
+ // native dungeon seeds do not drift when the visible kit becomes fixed.
+ const armorRoll=ports.makeItem(1,'armor',null,'starter','Armor','Common');
+ const helmRoll=ports.makeItem(1,'helm',null,'starter','Helm','Common');
+ if(ports.PHASE1_PREVIEW){
+  const fixed=(original,name,def,hp)=>({...original,name,armorType:'Cloth',atk:0,def,hp,spd:0,str:0,agi:0,int:0,end:0,cha:0,mana:0,spell:0,evasionRating:0,critBonus:0,blockBonus:0,manaRegenBonus:0,wardBonus:0,affixes:[],startingGear:true,source:'starter'});
+  ports.state.equip.armor=fixed(armorRoll,'Worn Tunic',1,5);
+  ports.state.equip.helm=fixed(helmRoll,'Worn Hood',1,2);
+ }else{
+  ports.state.equip.armor=armorRoll;
+  ports.state.equip.helm=helmRoll;
+ }
  ports.state.crafting=WandererV013Crafting.create();ports.state.automaticTalents={...WandererAutomaticTalents.create(),starterPoints:2};
  ports.phase1Controller=WandererV012Expedition.create(ports.THEMES,ports.gameRandom);
  ports.view='phase1';
@@ -273,7 +283,7 @@ function phase1WaveWon(){
  const fragments=Math.round((ports.roll(1,3)+Math.floor(r.tier*.24)+(boss?5:elite?3:0))*(r.phase6Bounty?1.5:1)*groupReward*(r.encounterTraitId?1.10:1));
  ports.state.gold+=gold;ports.state.fragments+=fragments;r.gold+=gold;r.fragments+=fragments;ports.phase5Results.gold+=gold;ports.phase5Results.fragments+=fragments;
  ports.addLog('Realm rewards pending: +'+gold+' Gold · +'+fragments+' Fragments.','good');
- const odds=ports.waveLootOdds(boss?5:elite?4:Math.min(3,1+Math.floor((g.planeIndex-1)/5)),r.stats.cha);odds.drop=Math.min(1,odds.drop*groupReward);if(ports.phase6Run?.effects.fortune)odds.drop=Math.min(1,odds.drop*1.25);
+ const odds=ports.waveLootOdds(boss?5:elite?4:Math.min(3,1+Math.floor((g.planeIndex-1)/5)),r.stats.cha);if(ports.PHASE1_PREVIEW){const firstDungeonFight=!!g.dungeon&&g.history.length===0&&!boss&&!elite;odds.drop=firstDungeonFight?1:Math.max(odds.drop,boss?1:elite?.65:.28);}odds.drop=Math.min(1,odds.drop*groupReward);if(ports.phase6Run?.effects.fortune)odds.drop=Math.min(1,odds.drop*1.25);
  if(ports.gameRandom()<odds.drop){
   const theme=ports.phase2Theme(r.path),pick=g.dungeon&&g.selected.node===ports.phase1Controller.realmMap().objective&&ports.gameRandom()<.55?(ports.phase1Controller.realmMap().favoured||{slot:'offhand',subtype:'Shield'}):ports.dungeonEquipmentPick(theme,[]);
   const rarity=ports.randomFromOdds(odds.rarities);

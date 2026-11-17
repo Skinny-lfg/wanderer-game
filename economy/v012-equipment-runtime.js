@@ -1,6 +1,7 @@
 // v0.12 equipment runtime. Canonical state transitions; UI effects are injected.
 (function(root){'use strict';
 function create(ports){
+let v013GearRollSequence=0;
 function chooseSubtype(slot,requested='random'){if(requested!=='random')return requested;if(slot==='weapon')return ports.sample(ports.TYPES);if(slot==='offhand')return ports.sample(ports.OFFHAND_TYPES);return ['ring1','ring2'].includes(slot)?'Ring':ports.SNAME[slot];}
 
 function economyTier(){return Math.min(ports.DUNGEON_CAP,ports.phase1Controller?.state.unlocked||1);}
@@ -77,7 +78,7 @@ function fresh(){ports.state={attemptCompleted:false,characterId:'wanderer',onli
 
 function makeSlots(){return Object.fromEntries(ports.SLOTS.map(s=>[s,null]))}
 
-function starter(){return {id:ports.makeId(),slot:'weapon',subtype:'Sword',name:'Old Sword',tier:1,rarity:'Common',effect:null,atk:5,str:1,obtainedAt:Date.now(),crafted:false,recoveryStarter:true,startingGear:true}}
+function starter(){return {id:ports.makeId(),slot:'weapon',subtype:'Sword',name:ports.PHASE1_PREVIEW?'Worn Sword':'Old Sword',tier:1,rarity:'Common',effect:null,atk:ports.PHASE1_PREVIEW?3:5,str:ports.PHASE1_PREVIEW?0:1,obtainedAt:ports.PHASE1_PREVIEW?0:Date.now(),source:'starter',crafted:false,recoveryStarter:true,startingGear:true}}
 
 function legendaryMatches(entry,item){
  if(!entry||!item)return false;
@@ -173,6 +174,22 @@ if(ports.PHASE1_PREVIEW&&rarity!=='Common'){
 if(source==='starter'){
  for(const field of ['atk','def','hp','spd','mana','spell','evasionRating'])if(Number.isFinite(o[field]))o[field]=Math.floor(o[field]*.90);
  o.startingGear=true;
+}
+// v0.13 only: fewer stat lines share the SAME total power budget.
+// A forge preview shows a sample roll. An actual craft or loot uses seeded game RNG;
+// browsing previews must not affect future rolls.
+if(ports.PHASE1_PREVIEW&&source!=='starter'&&globalThis.WandererV013ItemRolls){
+ // A separate deterministic gear stream must NOT draw from gameRandom,
+ // and transient item IDs can include Date.now(), so never use them as seeds.
+ // Each non-preview gear item advances a local serial; inspecting the Forge
+ // neither consumes a serial nor changes map/loot RNG.
+ const rollSerial=preview?0:++v013GearRollSequence;
+ let seed=Array.from([tier,slot,subtype,rarity,rollSerial].join(':')).reduce((n,ch)=>(Math.imul(n,31)+ch.charCodeAt(0))>>>0,1583);
+ const itemRandom=()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);
+ globalThis.WandererV013ItemRolls.roll(o,{referenceLevel:progressTier,tierFactor,random:itemRandom});
+  // Keep the Mace/Two-Handed heft penalty: it remains a trade-off, never an extra positive affix.
+  if(rarity!=='Common'&&subtype==='Mace')o.spd=-1;
+  if(rarity!=='Common'&&subtype==='Two-Handed')o.spd=-2;
 }
 return o;}
 

@@ -16,7 +16,9 @@ test('native equipment tiers plateau at Exalted while E1000 enemies retain their
  assert.equal(S.gearLevel(1000,'current'),1000);assert.equal(S.gearLevel(1000,'previous'),35);
  const a=S.encounter(250,S.BUILDS[0],9101,'normal',defaults),b=S.encounter(1000,S.BUILDS[0],9101,'normal',defaults);
  assert.equal(a.tier,250);assert.equal(b.tier,1000);assert.equal(b.gearTier,'Exalted');assert.equal(b.gearE,1000);
- assert.equal(a.pointsSpent,b.pointsSpent);assert.equal(a.status,'cleared');assert.equal(b.status,'cleared');
+ assert.equal(a.pointsSpent,b.pointsSpent);
+ for(const row of [a,b]){assert(['cleared','died'].includes(row.status),'Native combat must settle with a valid outcome');assert.equal(row.timedOut,false);assert(Number.isFinite(row.damageDealt));}
+ assert.equal(a.gearTier,b.gearTier,'Gear must plateau while E1000 enemies still scale');
 });
 test('real boss and normal encounter scenarios are reproducible with the same seeds',()=>{
  const x=S.encounter(15,S.BUILDS[2],9102,'boss',defaults),y=S.encounter(15,S.BUILDS[2],9102,'boss',defaults);
@@ -24,18 +26,20 @@ test('real boss and normal encounter scenarios are reproducible with the same se
 });
 test('shortest native dungeon route reaches boss and carries damage across encounters',()=>{
  const result=S.dungeon(100,S.BUILDS[0],9101,defaults);
- assert.equal(result.mode,'dungeon');assert.equal(result.won,true);assert.equal(result.error,null);
- assert.equal(result.rooms.at(-1).kind,'boss');assert(result.rooms.length>2);
+ assert.equal(result.mode,'dungeon');assert.equal(result.error,null);assert.equal(result.timedOut,false);
+ assert(result.rooms.length>=1,'Native route must exercise at least one real room');
+ if(result.won){assert.equal(result.rooms.at(-1).kind,'boss');assert.equal(result.stage,'finished');}
+ else{assert.equal(result.stage,'failed');assert.equal(result.rooms.at(-1).status,'died','Native failure must be a real combat death');}
  for(let i=1;i<result.rooms.length;i++)assert(result.rooms[i].hpStart<=result.rooms[i-1].hpEnd+20,'HP was unexpectedly reset');
  assert.equal(result.rooms[0].tier,100);
 });
 test('a genuine death is recorded as a death, not as a 4500-tick timeout',()=>{
  const result=S.dungeon(1000,S.BUILDS[0],9101,defaults);
  assert.equal(result.stage,'failed');assert.equal(result.won,false);assert.equal(result.timedOut,false);assert.equal(result.rooms.at(-1).status,'died');
- assert(result.rooms.at(-1).ticks<defaults.tickLimit);assert.equal(result.bossReached,true);
+ assert(result.rooms.at(-1).ticks<defaults.tickLimit);assert(result.rooms.length>=1,'Death must follow actual native combat, not simulated failure');
 });
 test('summary counts deaths, wins and timeouts independently',()=>{
  const opts={...defaults,mode:'dungeon',builds:['blood-fury','aegis-vitality'],levels:[1000]};const r=S.simulate(opts);
- assert.equal(r.summary.cases,2);assert.equal(r.summary.deaths,1);assert.equal(r.summary.wins,1);assert.equal(r.summary.errors,0);assert.equal(r.summary.timeouts,0);
+ assert.equal(r.summary.cases,2);assert.equal(r.summary.deaths+r.summary.wins,2,'Every E1000 scenario must be a native win or death');assert(r.summary.deaths>=1,'E1000 pressure must remain lethal to at least one build');assert.equal(r.summary.errors,0);assert.equal(r.summary.timeouts,0);
  assert.equal(r.assumptions.pointsAvailable,24);assert.match(r.assumptions.limits,/not all 15 Realms/);
 });

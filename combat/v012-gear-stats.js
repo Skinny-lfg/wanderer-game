@@ -36,8 +36,8 @@ function totalStats(equipment,ownedRunes,equippedRuneIds,{isTwoHanded,FIELDS,ite
  const dest={atk:'atkFlat',def:'defFlat',hp:'hpFlat',spd:'spdFlat',mana:'manaFlat',spell:'spellFlat'}[key]||key;
  // Off-Hand dagger: 50% offensive stats; its separate strike uses the same factor.
  const offDagger=slot==='offhand'&&['Daggers','Off-Hand Dagger'].includes(item.subtype);
- const factor=offDagger&&['atk','str','agi','int','cha','spd','spell'].includes(key)?.5:1;
- s[dest]+=itemStatValue(item,key)*factor;
+ const factor=offDagger&&['atk','str','agi','int','cha','spd','spell','critBonus'].includes(key)?.5:1;
+ s[dest]=(Number(s[dest])||0)+itemStatValue(item,key)*factor;
  }
  s.evasionRating=Math.min(Number.MAX_SAFE_INTEGER,s.evasionRating);
  const runeItems=ownedRunes===null?(typeof state==='undefined'?[]:state.runes||[]):ownedRunes;
