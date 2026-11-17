@@ -26,7 +26,7 @@ test('Blood focused nodes apply their individual combat effects',()=>{
 test('Fury tempo node raises attack speed after attacks',()=>{const b=build(['battle_tempo']),{c}=context();for(let i=0;i<5;i++)C.onAttack(b,c);assert.equal(C.speed(b,0),1.15);});
 test('Aegis focused nodes reduce damage, return stored force, and prevent a fatal hit',()=>{
  {const b=build(['steadfast_guard']),{c}=context();C.onDefend(b,c,10,0);assert(C.incoming(b,c,100)<100);}
- {const b=build(['stored_force']),{c,events}=context();C.onDefend(b,c,10,10);C.onAttack(b,c);assert(events.some(e=>e[0]==='damage'&&e[1].includes('Stored Force')));}
+ {const b=build(['stored_force']),{c,events}=context();C.onDefend(b,c,10,10);C.onAttack(b,c);assert(!events.some(e=>e[0]==='damage'&&e[1].includes('Stored Force')));C.onDefend(b,c,100,60);assert(events.some(e=>e[0]==='damage'&&e[1].includes('Stored Force')&&e[2]===50));assert.equal(b.runtime.storedForce,0);}
  {const b=build(['unbreakable']),{c}=context();assert(C.survive(b,c));assert(!C.survive(b,c));}
 });
 test('Vitality focused nodes heal and convert healing to barrier',()=>{

@@ -274,7 +274,6 @@ function onAttack(b,c){
  if(e.bleedStacks>0&&specialized(b,'crimson_feast')){b.runtime.crimsonHits=(b.runtime.crimsonHits||0)+1;if(b.runtime.crimsonHits%3===0)c.damage(base*.45,'🫀 Crimson Feast');}
  if(e.bleedStacks>0&&c.player.hp<c.player.maxhp*.5&&specialized(b,'heart_of_carnage')&&ready(b,'heartCarnage',c.now,3))c.damage(base*(e.hp<e.maxhp*.5?.60:.40),'🩸 Heart of Carnage');
  if(specialized(b,'corruption_cycle')&&e.v012Rot?.length>=3&&(c.player?.mp||0)>=4&&ready(b,'corruptionCycle',c.now,5)&&spendDarkMana(c,4)){const rot=e.v012Rot.shift();c.damage(rot.damage*rot.remaining+Math.max(0,c.power||0)*.20,'🦠 Corruption Cycle');}
- if(specialized(b,'stored_force')&&b.runtime.storedForce>0){const stored=b.runtime.storedForce;b.runtime.storedForce=0;c.damage(stored,'🔨 Stored Force');}
  if(b.runtime.specialReprisal&&e.hp>0){b.runtime.specialReprisal=false;c.damage(base*.25,'🛡 Reprisal');}
  if(rank(b,'bleeding_edge')&&ready(b,'bleedEdge',c.now,.9)&&c.random()<values('bleeding_edge',rank(b,'bleeding_edge')).chance&&activated(b,'bleeding_edge')) c.dot('bleed',base*.16);
  if(rank(b,'sanguine_fury')&&crit&&ready(b,'sanguineFury',c.now,2.5)&&activated(b,'sanguine_fury')){
@@ -403,7 +402,7 @@ function incoming(b,c,raw){
 function onDefend(b,c,blocked,barrierAbsorbed){
  if(b.runtime.prepared==='arcane_bastion'&&barrierAbsorbed>0)b.runtime.arcaneBastionReady=true;
  if(blocked>0&&specialized(b,'steadfast_guard')){b.runtime.steadfastStacks=Math.min(3,(b.runtime.steadfastUntil>c.now?b.runtime.steadfastStacks||0:0)+1);b.runtime.steadfastUntil=c.now+5;}
- if(specialized(b,'stored_force'))b.runtime.storedForce=Math.min(c.player.maxhp*.25,(b.runtime.storedForce||0)+Math.max(0,blocked+barrierAbsorbed)*.30);
+ if(specialized(b,'stored_force')){const threshold=c.player.maxhp*.25;b.runtime.storedForce=Math.min(threshold,(b.runtime.storedForce||0)+Math.max(0,blocked+barrierAbsorbed)*.30);if(threshold>0&&b.runtime.storedForce>=threshold){b.runtime.storedForce=0;if(c.areaDamage)c.areaDamage(threshold,'🔨 Stored Force');else c.damage(threshold,'🔨 Stored Force');}}
  if(blocked>0&&specialized(b,'aegis_reprisal')&&ready(b,'specialReprisal',c.now,3))b.runtime.specialReprisal=true;
  const broken=c.barrierBroken??(barrierAbsorbed>0&&c.player.barrier<=0);
  if(blocked>0&&rank(b,'counterstrike'))b.runtime.counterBlock=1;

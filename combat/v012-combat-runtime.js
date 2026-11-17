@@ -621,6 +621,7 @@ function phase2Context(r){
  },
  dotDamage(amount,label){const n=Math.max(0,Math.round(amount));if(n){ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),n));ports.phase6Metric(r,'periodicDamage',Math.min(Math.max(0,e.hp),n));e.hp-=n;ports.addLog(label+' '+n+' damage','spell');ports.floatText(n,'enemy',false,'ROT',e);}},
  damage(amount,label){return ports.setDirectEnemyDamage(r,amount,label);},
+ areaDamage(amount,label){ports.setDirectEnemyDamage(r,amount,label);groupSecondaryDamage(r,amount,Array(Math.max(0,(r.enemies?.length||1)-1)).fill(1),label);},
  trigger(id){triggered(r,id);},
  heal(amount){return ports.setHeal(r,amount);},
  barrier(amount){return ports.setBarrier(r,amount);},
