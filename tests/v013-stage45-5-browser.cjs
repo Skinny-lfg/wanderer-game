@@ -110,8 +110,9 @@ async function main(){
         }
         const cleared=await contextPage.evaluate(()=>__stage455.finishCombat());
         assert.equal(cleared.status,'cleared','Combat must settle');
-        await contextPage.locator('#phase5ExitRealm').waitFor();
-        await contextPage.locator('#phase5ExitRealm').click();
+        const exitButton=contextPage.locator(options.boss?'#phase5ExitResult':'#phase5ExitRealm');
+        await exitButton.waitFor();
+        await exitButton.click();
       }
       const after=await contextPage.evaluate(()=>__stage455.snapshot());
       assert(before.steps>=after.steps,'No room may refund travel steps');
