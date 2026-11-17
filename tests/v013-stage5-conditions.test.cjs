@@ -75,7 +75,7 @@ test('Stage 5: Veiled Passages add one step on first traversal only; preserve ma
 test('Stage 5: Sanguine Rite fires once under 50% boss HP; +12% Attack and +8% speed',()=>{
  const c=card('blood'),d=dungeon(c,'sanguine_rite');
  const enemy={boss:true,hp:500,maxhp:1000,atk:100,attackEvery:2};
- const r={status:'fight'};
+ const r={status:'fight',enemy};
  C.applyEncounter(r,[enemy],{boss:true,node:21},c,d);
  assert.equal(C.tick(r),false);
  enemy.hp=499;assert.equal(C.tick(r),true);
