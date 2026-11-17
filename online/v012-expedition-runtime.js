@@ -187,7 +187,8 @@ function phase1StartWave(resetScroll=false){
  if(ports.state.automaticTalents?.nodes?.includes('affinity_aegis'))ports.setBarrier(r,r.maxhp*.05);
  const talentBarrier=ports.phase1Build?.runtime?.talentBonuses?.startBarrier||0;if(talentBarrier>0)ports.setBarrier(r,talentBarrier);
  const theme=ports.phase2Theme(g.selected.id);
- const totalCount=last&&(g.selected.boss||g.selected.elite)?1:(g.selected.mobCount||3),activeCount=Math.min(4,totalCount);
+ const conditions=globalThis.WandererV013ExpeditionConditions,conditionCard=g.dungeon&&ports.phase1Controller.realmMap();
+ const totalCount=last&&(g.selected.boss||g.selected.elite)?1:(conditions&&conditionCard?conditions.countFor(g.selected,conditionCard,g.dungeon):(g.selected.mobCount||3)),activeCount=Math.min(4,totalCount);
  const spawn=()=>ports.enemyFor(r.tier,r.enc,{theme,boss:last&&g.selected.boss,elite:last&&g.selected.elite&&!g.selected.boss,variant:g.version===2?ports.BOSS_ARCHETYPES.find(b=>b.style===WandererV012Expedition.BOSSES.find(v=>v.id===g.bossId).style):null});
  const scale=totalCount>=6?{hp:(1.65+.045*(totalCount-6))/totalCount,atk:totalCount>=18?.12:.16}:null;
  const group=WandererV012CombatCore.createEnemyGroup(spawn,totalCount,{activeSlots:activeCount,scale});
@@ -221,6 +222,7 @@ function phase1StartWave(resetScroll=false){
    guard.attackEvery*=1.3;guard.groupSlot=i+1;guard.groupClock=-(i+1)*.6;group.push(guard);
   }
  }
+ if(conditions&&conditionCard){const applied=conditions.applyEncounter(r,group,g.selected,conditionCard,g.dungeon);if(applied&&(r.conditionMarked||g.selected.boss))ports.addLog('Expedition Condition: '+applied.name,'critical');}
  const fieldCount=Math.min(4,group.length);
  group[0].groupSlot=0;
  for(const enemy of group)enemy.groupClock=traits?traits.initialClock(enemy,enemy.groupSlot):Math.max(0,enemy.attackEvery-(.9+enemy.groupSlot*.3));
