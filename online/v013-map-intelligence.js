@@ -41,7 +41,7 @@ function scout(card,d,amount=2){
  if(!Number.isInteger(amount)||amount<0||amount>5)throw Error('Invalid scouting limit');
  const seen=new Set([d.current]),distance=new Map([[d.current,0]]),queue=[d.current];
  for(const room of queue){const depth=distance.get(room);if(depth>=3)continue;for(const next of neighbors(card,d,room))if(!seen.has(next)){seen.add(next);distance.set(next,depth+1);queue.push(next);}}
- const known=new Set([...(d.visited||[]),...(d.scouted||[])]);
+ const known=new Set([d.current,...(d.visited||[]),...(d.scouted||[])]);
  const candidates=[...distance.keys()].filter(id=>!known.has(id));
  candidates.sort((a,b)=>{
   const aAccessible=route(card,d,a).length>0,bAccessible=route(card,d,b).length>0;
