@@ -106,6 +106,60 @@ async function main(){
   await page.reload();await page.locator('[data-dungeon-room="1"]').waitFor();
   const resumed=await page.evaluate(()=>__stage454.snapshot());assert.equal(resumed.steps,steps,'Checkpoint must preserve travel cost');assert.equal(resumed.current,1);
   await page.screenshot({path:path.join(out,'09-map-restored-desktop.png'),fullPage:true});
+  // Visit the *naturally generated* Forgotten Reliquary by real map clicks, rather than
+  // replacing the node. No travel, event or boss properties are modified by the hook.
+  const targetRoom=resumed.cards[1].reliquary;
+  const route=await page.evaluate(target=>{
+   const c=phase1Controller.realmMap(),d=phase1Controller.state.dungeon;
+   const q=[[d.current]],seen=new Set([d.current]);
+   for(const currentPath of q){
+    const current=currentPath.at(-1);if(current===target)return currentPath;
+    for(const next of WandererV013MapIntelligence.neighbors(c,d,current)){
+     if(seen.has(next))continue;seen.add(next);q.push([...currentPath,next]);
+    }
+   }
+   return null;
+  },targetRoom);
+  assert(route?.length>1,'No normal map path to the optional Reliquary');
+  console.log('QA natural Reliquary route:',JSON.stringify(route));
+  for(const node of route.slice(1)){
+   await page.locator('[data-dungeon-room="'+node+'"]').click();
+   const roomDialog=page.locator('dialog[open]');await roomDialog.waitFor();
+   const label=await roomDialog.getByRole('button',{name:/^(Enter room|Travel here)$/}).innerText();
+   await roomDialog.getByRole('button',{name:label,exact:true}).click();
+   if(label==='Travel here')continue;
+   if(await page.locator('.phase6Event').count()){
+    if(node===targetRoom){
+     assert.match(await page.locator('.phase6Event h2').innerText(),/Forgotten Reliquary/);
+     const before=await page.evaluate(()=>__stage454.snapshot());
+     const expected=Math.ceil(before.maxHp*.15);
+     await page.locator('[data-event-select="0"]').click();
+     await page.locator('#eventConfirm').click();
+     const after=await page.evaluate(()=>__stage454.snapshot());
+     assert(after.preparation?.reliquary,'Reliquary option must disable the known boss modifier');
+     assert(after.disabledId,'Disabled boss modifier must be tracked');
+     assert.equal(before.hp-after.hp,expected,'Real HP sacrifice should match 15% max HP');
+     await page.screenshot({path:path.join(out,'10-reliquary-disrupted-desktop.png'),fullPage:true});
+    }else{
+     await page.getByRole('button',{name:'Pass without rewards'}).click();
+    }
+    if(await page.locator('#phase5ExitEvent').count())await page.locator('#phase5ExitEvent').click();
+   }else if(await page.locator('.arenaEnemy, #enemyPortrait').count()){
+    const resolved=await page.evaluate(()=>__stage454.finishCombat());
+    assert.equal(resolved.status,'cleared');await page.locator('#phase5ExitRealm').click();
+   }else if(await page.locator('#phase5ExitRealm').count()){
+    await page.locator('#phase5ExitRealm').click();
+   }
+   assert.equal((await page.evaluate(()=>__stage454.snapshot())).current,node,'Current room must match travel choice');
+  }
+  const afterEvent=await page.evaluate(()=>__stage454.snapshot());
+  assert(afterEvent.preparation?.reliquary,'Reliquary preparation must persist after leaving event');
+  assert.equal(afterEvent.current,targetRoom);
+  await page.reload();await page.locator('[data-dungeon-room="'+targetRoom+'"]').waitFor();
+  const afterReload=await page.evaluate(()=>__stage454.snapshot());
+  assert.equal(afterReload.disabledId,afterEvent.disabledId);
+  assert.equal(afterReload.hp,afterEvent.hp,'Checkpoint reload must not charge Reliquary sacrifice twice');
+  await page.screenshot({path:path.join(out,'11-reliquary-checkpoint-restored.png'),fullPage:true});
   assert.deepEqual(errors,[],'Uncaught JavaScript errors must be absent on all screens');
   assert.equal(findings.filter(x=>/SVG.*viewBox.*Infinity/.test(x)).length,0,'Talent Atlas SVG must never receive Infinity viewBox dimensions');
   console.log('PASS Stage 4.5.4 browser: Camp (desktop/mobile), v15 Talent iframe and real purchase/reload, 3 Realm Cards, map cost/room inspection, arena (mobile/desktop), combat result and checkpoint reload. Nodes='+count);
