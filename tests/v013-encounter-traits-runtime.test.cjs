@@ -113,7 +113,7 @@ test('map markup visibly labels marked combat rooms without revealing other room
   edges:[[0,1],[1,2]],positions:[[10,50],[50,50],[90,50]]};
  const d={current:0,visited:[0],cleared:[0],scouted:[],discoveredSecrets:[],steps:13};
  const controller={realmMap:()=>card,travelPath:id=>I.route(card,d,id),exitCount:id=>I.exitCount(card,d,id)};
- const ctx={WandererV013MapIntelligence:I,WandererV013EncounterTraits:T,phase1Controller:controller,
+ const ctx={WandererV013MapIntelligence:I,WandererV013EncounterTraits:T,WandererV013BossModifiers:globalThis.WandererV013BossModifiers,phase1Controller:controller,
   esc:v=>String(v),realmDifficulty:()=> 'Dangerous',dungeonImage:()=>'',dungeonRoomLabel:n=>n.kind==='combat'?'Patrol':n.kind};
  vm.runInNewContext(html.slice(start,end)+'\nthis.renderDungeon=dungeonMapMarkup;',ctx);
  const markup=ctx.renderDungeon({dungeon:d,history:[]});
