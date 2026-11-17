@@ -28,8 +28,16 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - name: Install Playwright Chromium (isolated)
-        run: npx playwright install --with-deps chromium
+      - name: Use preinstalled Chrome or install Playwright Chromium
+        shell: bash
+        run: |
+          CHROME_BIN="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          if [ -n "$CHROME_BIN" ]; then
+            echo "CHROMIUM_PATH=$CHROME_BIN" >> "$GITHUB_ENV"
+            "$CHROME_BIN" --version
+          else
+            npx playwright install chromium
+          fi
       - name: Stage 4.5.4 — actual desktop and mobile browser QA
         run: npm run test:v013:stage45-browser
       - name: Upload UI screenshots and QA result (even on failure)
