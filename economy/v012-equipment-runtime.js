@@ -111,7 +111,11 @@ const armorType=ports.PHASE1_PREVIEW&&ports.ARMOR_SLOTS.includes(slot)?(requeste
 const magic=false,effect=null;
 const legendaryIdentity=rarity==='Legendary'?ports.legendaryFor({slot,subtype}):null;
 const legendaryDefinition=legendaryIdentity&&globalThis.WandererLegendary?.DEFINITIONS?.[legendaryIdentity.id];
-let mult=ports.RARITY[rarity][1],progressTier=ports.PHASE1_PREVIEW&&root.WandererExpeditionProgression?1:WandererV012CombatCore.referenceLevel(tier),power=Math.round((2+progressTier*.91)*mult),o={id:preview?'forge-preview':ports.makeId(),slot,subtype,name:(preview?'Preview':source==='loot'&&subtype==='Sword'&&rarity==='Common'&&ports.gameRandom()<.25?'Old Sword':ports.sample(ports.NAMES[subtype]||ports.NAMES[slot]||['Ancient Gear'])),rarity,tier,atk:0,def:0,hp:0,spd:0,str:0,agi:0,int:0,end:0,cha:0,mana:0,spell:0,effect,magic:magic?effect:null,crafted:source==='forge',craftPrice:source==='forge'?ports.craftCost(tier):null,obtainedAt:preview?0:ports.PHASE1_PREVIEW&&ports.phase4Stamp?ports.phase4Stamp:Date.now(),locked:false,source};
+// Preserve original E1-E5 rolls; higher equipment bands start at the E5 budget.
+const experimentalTier=ports.PHASE1_PREVIEW&&root.WandererExpeditionProgression;
+const baseTier=experimentalTier&&tier>5?5:tier;
+const tierFactor=experimentalTier&&tier>5?root.WandererExpeditionProgression.gearTier(tier).multiplier/root.WandererExpeditionProgression.gearTier(5).multiplier:1;
+let mult=ports.RARITY[rarity][1],progressTier=WandererV012CombatCore.referenceLevel(baseTier),power=Math.round((2+progressTier*.91)*mult),o={id:preview?'forge-preview':ports.makeId(),slot,subtype,name:(preview?'Preview':source==='loot'&&subtype==='Sword'&&rarity==='Common'&&ports.gameRandom()<.25?'Old Sword':ports.sample(ports.NAMES[subtype]||ports.NAMES[slot]||['Ancient Gear'])),rarity,tier,atk:0,def:0,hp:0,spd:0,str:0,agi:0,int:0,end:0,cha:0,mana:0,spell:0,effect,magic:magic?effect:null,crafted:source==='forge',craftPrice:source==='forge'?ports.craftCost(tier):null,obtainedAt:preview?0:ports.PHASE1_PREVIEW&&ports.phase4Stamp?ports.phase4Stamp:Date.now(),locked:false,source};
 if(subtype==='Sword'){o.atk=power+3;o.str=1+Math.floor(progressTier*.20)}
 else if(subtype==='Mace'){o.atk=power+6;o.str=2+Math.floor(progressTier*.23);o.spd=-1}
 else if(subtype==='Bow'){o.atk=Math.round(power*1.18)+5;o.agi=2+Math.floor(progressTier*.21);o.spd=1}
@@ -127,6 +131,12 @@ else if(slot==='gloves'){o.str=1+Math.floor(progressTier*.2);o.agi=1+Math.floor(
 else if(slot==='boots'){o.agi=2+Math.floor(progressTier*.23);o.spd=1;o.hp=power}
 else if(slot==='amulet'){o.int=1+Math.floor(progressTier*.22);o.cha=1+Math.floor(progressTier*.18);o.hp=power*2}
 else if(['ring1','ring2'].includes(slot)){o.cha=1+Math.floor(progressTier*.25);o.atk=Math.round(power*.45);o.hp=power}
+// Apply only to the underlying gear budget, before rarity affixes and traits.
+const applyTierBudget=()=>{
+ if(tierFactor===1)return;
+ for(const field of ['atk','def','hp','str','agi','int','end','cha','mana','spell','evasionRating'])
+  if(Number.isFinite(o[field])&&o[field]>0)o[field]=Math.round(o[field]*tierFactor);
+};
 if(armorType){
  // Keep the existing primary-attribute budget; no new stat weights or scaling.
  const budget=o.str+o.agi+o.int+o.end;
@@ -136,6 +146,7 @@ if(armorType){
  o.def=Math.max(1,Math.round((power+(slot==='armor'?3:0))*({Cloth:.45,Leather:.8,Plate:1.35}[armorType])));
  if(armorType==='Leather')o.evasionRating=power;
  if(armorType==='Plate')o.end=Math.max(1,Math.round(power*.18));
+ applyTierBudget();
  const pools={Cloth:[['spell','manaRegenBonus','mana'],['hp','critBonus','wardBonus']],Leather:[['evasionRating','spd','critBonus'],['atk','hp','def']],Plate:[['end','atk','def'],['hp','critBonus','blockBonus']]};
  const [favoured,occasional]=pools[armorType].map(pool=>[...pool]);
  let seed=Array.from(slot+armorType+rarity+tier).reduce((n,ch)=>(Math.imul(n,31)+ch.charCodeAt(0))>>>0,1);
@@ -147,6 +158,7 @@ if(armorType){
   o[key]=(o[key]||0)+amount;o.affixes.push(key);
  }
 }
+else applyTierBudget();
 if(rarity==='Legendary'){const identity=legendaryIdentity;if(identity){o.legendaryId=identity.id;o.name=identity.name;}o.legendaryPower=legendaryDefinition?legendaryDefinition.name+': '+legendaryDefinition.description:'';o.atk+=subtype==='Sword'?progressTier+4:0;}
 if(tier>200)for(const field of ['atk','def','hp','str','agi','int','end','cha','mana','spell','evasionRating'])if(typeof o[field]==='number'&&!(field==='atk'&&['Staff','Wand'].includes(subtype)))o[field]=WandererV012CombatCore.gearStat(tier,o[field]);
 if(ports.PHASE1_PREVIEW&&rarity!=='Common'){
@@ -155,7 +167,6 @@ if(ports.PHASE1_PREVIEW&&rarity!=='Common'){
  if(rarity==='Rare')o.hp+=Math.max(2,Math.round(power*.5));
  if(rarity==='Epic'){o.v013Trait=preview?'focused':['Staff','Wand','Orb'].includes(subtype)?ports.sample(['efficient','ward',...(subtype==='Staff'?['conflagration']:[])]):ports.sample(['focused','blood_transfer']);}
 }
-if(ports.PHASE1_PREVIEW&&root.WandererExpeditionProgression){const factor=root.WandererExpeditionProgression.gearTier(tier).multiplier;for(const field of ['atk','def','hp','str','agi','int','end','cha','mana','spell','evasionRating'])if(Number.isFinite(o[field]))o[field]=Math.round(o[field]*factor);}
 // New characters begin with useful but modest flat gear stats. Keep weapon and
 // armor identity attributes intact; the ordinary loot/crafting tier curve is
 // deliberately unchanged. This marker also makes the starting kit measurable.
