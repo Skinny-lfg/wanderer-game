@@ -40,10 +40,16 @@ The full `classification.json`, `classification.md` and raw historical TAP log a
 
 ## Stage 5 decision rule
 
-- Mandatory current v0.13, browser, progression and simulation tests: PASS.
-- No known **current P0 gameplay regression** outstanding; P0 legacy suspects must have modern reproduction tests and documented decisions.
-- Every historical failure assessed, with explicit evidence for any closed/waived case. Unresolved P1/P2 items can be recorded with owner and risk and separated from gameplay blocking, but should not silently disappear.
-- Offline/local development does **not** require fixing authentication, Firebase live integration or cloud saves now; production security is a separate future release gate.
+**To START Stage 5 simulation development (GO):**
+- Current v0.13 native gameplay, selected critical integrations, browser and simulation gates: PASS.
+- No **confirmed current P0 gameplay defect** on those exercised paths; new failures must be investigated instead of waived.
+- All 96 historical cases preserved in the risk register, including 28 P0 *candidates*, with no unexpected new failing cases against the baseline.
+- Remaining P0 hypotheses become **focused Stage 5 simulation/test cases**, not requirements to fix all v0.12 test fixtures first.
+
+**To APPROVE final balance or PUBLISH (NO-GO yet):**
+- Investigate and fix any real current P0 uncovered, including all high-impact economics (overflow, boss Runes, once-only grants), Legendary combinations and dodge/DoT timing.
+- Obtain a complete current-version acceptance report, device testing, and release security check. Firebase login/cloud saves are excluded from offline development, but not from any eventual live release.
+- No automatic merge or deploy of this draft.
 
 **Updated decision: GO for Stage 5 offline simulation development only, after the mandatory native and browser checks pass.** The legacy 96 cases stay documented, with targeted P0 coverage continued as part of Stage 5. **NO-GO for release, final balance sign-off or Firebase/live integration** until the modern equivalents of outstanding high-risk behavior are checked. See `reports/v013-stage45-6-p0-investigation.md` for the canonical Rupture/Reaper's Cadence IDs, verified checks and remaining P0 concerns.
 
