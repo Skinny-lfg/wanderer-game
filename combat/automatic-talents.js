@@ -85,7 +85,7 @@ const outerPairs=[
  ['last_bastion','🏰','Last Bastion','stored_impact','second_pulse','Once per expedition survive lethal damage with a barrier for 4s. Recover half its absorbed damage.'],
  ['lifeweaver','🌙','Lifeweaver','deep_reserves','spell_echo','Overhealing charges a funded cast: +30% damage or restore 8% Health below half.'],
  ['grave_bloom','🕳️','Grave Bloom','spell_echo','incubation','Echoes on Rot spread infection to two targets or immediately deal a Rot tick in a duel.'],
- ['septic_wound','🦂','Septic Wound','incubation','open_wound','Overlapping Rot and Bleed ticks mark an enemy. Strike it to weaken its next attack by 30%.']
+ ['septic_wound','🦂',"Reaper's Cadence",'incubation','open_wound','Prepared: attacks against enemies with Bleed and Rot deal damage equal to one tick of the strongest stack of each, capped at 4% enemy maximum Health (6s cooldown). Neither stack is consumed.']
 ];
 function outerNodes(){
  const result=[];
@@ -108,11 +108,11 @@ function outerNodes(){
 }
 const NEW_SPECIALISATIONS=[
  ['blood','blood_harvest','🩸','Blood Harvest','Bleeding kills restore 3% maximum Health.','passive_blood_drinker'],
- ['blood','crimson_feast','🫀','Crimson Feast','Every third hit against a bleeding enemy deals 30% bonus damage and heals 2% maximum Health.','blood_harvest'],
- ['blood','heart_of_carnage','🩸','Heart of Carnage','Below half Health, hits against bleeding enemies deal 20% more damage and heal 1% maximum Health, once every 3 seconds.','crimson_feast'],
+ ['blood','crimson_feast','🫀','Crimson Feast','Every third hit against a bleeding enemy deals 45% bonus damage.','blood_harvest'],
+ ['blood','heart_of_carnage','🩸','Heart of Carnage','Below half Health, hit a bleeding enemy for 40% bonus damage, or 60% if the enemy is below half Health (3s cooldown).','crimson_feast'],
  ['fury','battle_tempo','⚔️','Battle Tempo','Consecutive attacks build attack speed, up to 15%.','passive_quick_hands'],
- ['fury','relentless_assault','🗡️','Relentless Assault','At maximum tempo, attacks have a 15% chance of an additional 30% hit.','battle_tempo'],
- ['fury','unchained_fury','🔥','Unchained Fury','At maximum tempo, attacks deal 20% bonus damage.','relentless_assault'],
+ ['fury','relentless_assault','🗡️','Relentless Assault','Attacks against Sundered enemies deal 20% bonus damage every 3 seconds.','battle_tempo'],
+ ['fury','unchained_fury','🔥','Unchained Fury','Every fifth consecutive attack opens a 3-second window in which attacks deal 25% bonus damage.','relentless_assault'],
  ['vitality','living_recovery','💚','Living Recovery','Below half Health, restore 0.5% maximum Health each second.','passive_renewal'],
  ['vitality','overflowing_life','🌿','Overflowing Life','Effective healing grants Barrier equal to 15% of Health restored, up to 10% maximum Health.','living_recovery'],
  ['vitality','heart_of_the_wild','🌳','Heart of the Wild','Below 30% Health, restore 12% maximum Health once per encounter.','overflowing_life'],

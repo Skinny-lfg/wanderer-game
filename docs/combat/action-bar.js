@@ -34,7 +34,7 @@ globalThis.WandererActionBar = (() => {
     }
     if(build?.runtime.prepared){
       const id=build.runtime.prepared,ability=globalThis.WandererAutomaticTalents.NODES.find(n=>n.id===id);
-      const hints={red_guillotine:(run.aim||0)+'/3',turn_tide:run.riposteUntil>now?'Riposte ready':'Guard',last_bastion:run.bastionUntil?'Triggered':'Lethal hit',lifeweaver:run.lifeCharge?'Charged':'Overheal',grave_bloom:(run.echoCount||0)+'/3',septic_wound:run.enemy?.septicMark?'Marked':'Rot + Bleed'};
+      const hints={red_guillotine:(run.aim||0)+'/3',turn_tide:run.riposteUntil>now?'Riposte ready':'Guard',last_bastion:run.bastionUntil?'Triggered':'Lethal hit',lifeweaver:run.lifeCharge?'Charged':'Overheal',grave_bloom:(run.echoCount||0)+'/3',septic_wound:'Rot + Bleed'};
       if(ability)rows.push({label:ability.name,emoji:ability.icon,hint:hints[id],count:run.outerUses?.[id]||0,left:0,period:0});
     }
     return [rows[0],...rows.slice(1).sort((a,b)=>a.label.localeCompare(b.label))];

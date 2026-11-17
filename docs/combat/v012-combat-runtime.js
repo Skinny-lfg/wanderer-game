@@ -413,7 +413,6 @@ function weaponAttack(r,offhandStrike=false){
   if(learned('blood_price')&&bleed.length>=3&&ports.setReady(r,'bloodPrice',6)){bleed.pop();ports.synchronizeDots(e);ports.setHeal(r,r.maxhp*.05);}
   if(r.storedImpact){damage+=r.storedImpact;r.storedImpact=0;}
   if(r.riposteUntil>now){damage+=s.attack*.75;r.riposteUntil=0;triggered(r,'turn_tide');}
-  if(e.septicMark){e.septicMark=false;e.septicWeak=true;triggered(r,'septic_wound');}
   if(cast&&r.lifeCharge){r.lifeCharge=false;if(r.hp<r.maxhp*.5)ports.setHeal(r,r.maxhp*.08,true);else damage*=1.3;triggered(r,'lifeweaver');}
   if(cast&&(learned('spell_echo')||prepared('grave_bloom'))){r.echoCount=((r.echoCount||0)+1)%3;if(!r.echoCount){const echo=learned('spell_echo')?Math.max(1,Math.round(damage*.1*learned('spell_echo'))):0;damage+=echo;if(echo)ports.floatText(echo,'enemy',false,'ECHO',e);
    if(prepared('grave_bloom')&&e.v012Rot?.length){const others=(r.enemies||[]).filter(m=>m!==e&&m.hp>0).slice(0,2);if(others.length)for(const m of others){m.v012Rot??=[];if(m.v012Rot.length<6)m.v012Rot.push({...e.v012Rot[0]});}else damage+=e.v012Rot.reduce((sum,d)=>sum+d.damage,0);triggered(r,'grave_bloom');}
@@ -532,7 +531,6 @@ function updateFight(){
   if(e.vanguard){e.vanguard=false;ports.addLog(e.name+' delivers its opening strike.','critical');}
   const special=e.miniboss||e.boss;
   if(special)raw=Math.round(raw*(1-.04*learned('brace')));
-  if(e.septicWeak){raw=Math.round(raw*.7);e.septicWeak=false;}
   const attackType=ports.enemyAttackType(e);
   if(attackType==='physical'&&s.main?.subtype==='Sword'&&ports.gameRandom()<.18){
    if(special&&prepared('turn_tide'))r.riposteUntil=ports.setNow(r)+3;r.lastImpact={parry:true,source:e.name,at:r.combatSeconds};ports.floatText('PARRY','hero');ports.phase6Metric(r,'parries',1);
@@ -621,6 +619,7 @@ function phase2Context(r){
  },
  dotDamage(amount,label){const n=Math.max(0,Math.round(amount));if(n){ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),n));ports.phase6Metric(r,'periodicDamage',Math.min(Math.max(0,e.hp),n));e.hp-=n;ports.addLog(label+' '+n+' damage','spell');ports.floatText(n,'enemy',false,'ROT',e);}},
  damage(amount,label){return ports.setDirectEnemyDamage(r,amount,label);},
+ trigger(id){triggered(r,id);},
  heal(amount){return ports.setHeal(r,amount);},
  barrier(amount){return ports.setBarrier(r,amount);},
  mana(amount){r.mp=Math.min(r.maxmp,r.mp+Math.max(0,amount));},
