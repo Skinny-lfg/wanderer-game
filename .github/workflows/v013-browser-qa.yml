@@ -41,10 +41,13 @@ jobs:
         run: |
           mkdir -p reports/v013-browser-qa
           status=0
-          for file in v013-pages-browser.cjs v013-cleanup-ui-browser.cjs v013-talent-tree-browser.cjs v013-clarity-browser.cjs; do
+          for file in v013-stage45-browser-qa.cjs v013-pages-browser.cjs v013-cleanup-ui-browser.cjs v013-talent-tree-browser.cjs v013-clarity-browser.cjs; do
             echo "::group::$file"
-            node "tests/$file" > "reports/v013-browser-qa/$file.log" 2>&1
-            code=$?
+            if node "tests/$file" > "reports/v013-browser-qa/$file.log" 2>&1; then
+              code=0
+            else
+              code=$?
+            fi
             cat "reports/v013-browser-qa/$file.log"
             if [ "$code" -ne 0 ]; then
               echo "::error title=$file::Browser test failed (exit $code)"
