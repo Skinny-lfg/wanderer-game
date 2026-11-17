@@ -67,6 +67,9 @@ jobs:
           echo "$rc" > reports/stage45-5-release/npm-audit-exit-code.txt
           echo "npm audit exit code: $rc (must be triaged before release)"
           exit 0
+      - name: Summarize historical failures and dependency exposure candidates
+        if: always()
+        run: node scripts/v013-stage45-5-triage.cjs
       - name: Upload release evidence
         if: always()
         uses: actions/upload-artifact@v4
