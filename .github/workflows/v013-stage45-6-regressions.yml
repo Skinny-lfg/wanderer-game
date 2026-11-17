@@ -37,6 +37,7 @@ jobs:
           tests/v013-stage45-6-prepared-cadence.test.cjs
           tests/v013-stage45-6-economy-p0.test.cjs
           tests/v013-stage45-6-dodge-p0.test.cjs
+          tests/v013-stage45-6-legendary-p0.test.cjs
           tests/v013-stage45-6-event-contract.test.cjs
           tests/v013-stage45-6-encounter-matrix.test.cjs
           tests/v013-full-expedition-integration.test.cjs
