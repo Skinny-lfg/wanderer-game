@@ -180,17 +180,27 @@ body.phase3IntegratedPreview #scene .arenaEnemy small {
 body.phase3IntegratedPreview #scene .arenaEnemyStatuses {
   position: absolute;
   z-index: 4;
-  left: 0;
-  right: 0;
-  bottom: calc(100% + 2px);
+  left: auto;
+  right: calc(100% - 15px);
+  top: 4px;
+  bottom: auto;
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: flex-end;
   gap: 2px;
-  width: 100%;
-  max-height: 44px;
-  overflow: hidden;
+  width: max-content;
+  max-width: 90px;
+  max-height: none;
+  overflow: visible;
   pointer-events: none;
+}
+
+body.phase3IntegratedPreview #scene .arenaEnemy[data-group-index="1"] .arenaEnemyStatuses,
+body.phase3IntegratedPreview #scene .arenaEnemy[data-group-index="3"] .arenaEnemyStatuses {
+  left: auto;
+  right: 0;
+  align-items: flex-end;
 }
 
 body.phase3IntegratedPreview #scene .arenaEnemyStatuses:empty {
@@ -198,10 +208,14 @@ body.phase3IntegratedPreview #scene .arenaEnemyStatuses:empty {
 }
 
 body.phase3IntegratedPreview #scene .arenaEnemyStatuses .debuff {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 5px;
   padding: 1px 4px;
   font-size: 9px;
   line-height: 1.2;
 }
+body.phase3IntegratedPreview #scene .arenaEnemyStatuses .statusIcon { width: 16px !important; height: 16px !important; max-height: 16px !important; object-fit: contain; }
 
 body.phase3IntegratedPreview #scene .arenaEnemy .arenaGroundShadow {
   position: absolute;

@@ -80,11 +80,11 @@ const outerSkills=[
  ['decay','spore_mark','🪰','Spore Mark','Changing targets from Rot to a healthy enemy copies one Rot stack on hit. Cooldown 5s.',1,'wasting_curse']
 ];
 const outerPairs=[
- ['red_guillotine','🪓','Red Guillotine','relentless','open_wound','Execute up to three Bleed stacks on your fourth strike. A kill spreads one stack.'],
+ ['red_guillotine','🪓','Red Guillotine','relentless','open_wound','Prepared: every fourth strike consumes up to three Bleeds for their remaining damage. A kill spreads one stack.'],
  ['turn_tide','⚔️','Turn the Tide','relentless','brace','Defending an elite or boss strike primes a riposte for 3s.'],
- ['last_bastion','🏰','Last Bastion','stored_impact','second_pulse','Once per expedition survive lethal damage with a barrier for 4s. Recover half its absorbed damage.'],
+ ['last_bastion','🏰','Last Bastion','stored_impact','second_pulse','Prepared: once per expedition, survive lethal damage and gain Barrier for 4s. Recover half its absorbed damage.'],
  ['lifeweaver','🌙','Lifeweaver','deep_reserves','spell_echo','Overhealing charges a funded cast: +30% damage or restore 8% Health below half.'],
- ['grave_bloom','🕳️','Grave Bloom','spell_echo','incubation','Echoes on Rot spread infection to two targets or immediately deal a Rot tick in a duel.'],
+ ['grave_bloom','🕳️','Grave Bloom','spell_echo','incubation','Prepared: echoes spread Rot to two enemies, or deal a Rot tick against a lone enemy.'],
  ['septic_wound','🦂',"Reaper's Cadence",'incubation','open_wound','Prepared: attacks against enemies with Bleed and Rot deal damage equal to one tick of the strongest stack of each, capped at 4% enemy maximum Health (6s cooldown). Neither stack is consumed.']
 ];
 function outerNodes(){

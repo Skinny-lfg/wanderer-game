@@ -14,6 +14,12 @@ globalThis.WandererActionBar = (() => {
     const weapon = run.stats.main;
     const rows = [{label:run.unfundedAttack?'Fallback Strike':weapon?.subtype==='Staff'||weapon?.subtype==='Wand'?'Basic Cast':'Basic Attack', icon:'equipment/'+({Staff:'staff', 'Two-Handed':'two_handed', Daggers:'dagger',Bow:'bow',Mace:'mace',Wand:'wand'}[weapon?.subtype] || 'sword')+'_01.png',
       left:Math.max(0,cycle-(run.tPlayer||0)), period:cycle, count:run.autoUses||0}];
+    if(build?.element&&globalThis.WandererV012Buildcraft.canCast(build)){
+      const element=build.element, icon=element==='arcane'?'affinities/families/magic.png':'affinities/magic/'+element+'.png';
+      const label=element[0].toUpperCase()+element.slice(1)+' Cast';
+      if(run.stats.caster){rows[0].icon=icon;if(!run.unfundedAttack)rows[0].label=label;}
+      else rows.push({label,icon,left:Math.max(0,2.5-(now-(build.runtime.lastSpellAt??-999))),period:2.5,count:build.runtime.magicHits||0});
+    }
     const labels = globalThis.WandererV012Buildcraft.CATALOG;
     for (const [key, expiry] of Object.entries({...run.setCooldowns,...build?.cooldowns})) {
       const action = weaponActions[key];
