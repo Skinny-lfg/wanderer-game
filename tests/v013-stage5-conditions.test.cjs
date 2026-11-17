@@ -1,8 +1,9 @@
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict');
-const F=require('../combat/v013-expedition-foundation.js');
-const I=require('../online/v013-map-intelligence.js');
-const C=require('../online/v013-expedition-conditions.js');
+require('../combat/v013-expedition-foundation.js');
+require('../online/v013-map-intelligence.js');
+require('../online/v013-expedition-conditions.js');
+const F=globalThis.WandererV013ExpeditionFoundation,I=globalThis.WandererV013MapIntelligence,C=globalThis.WandererV013ExpeditionConditions;
 const create=require('./v012-economy-harness.cjs');
 function card(family='decay'){
  const nodes=Array.from({length:22},(_,i)=>({kind:i===0?'entrance':i===21?'boss':'combat',count:3}));
