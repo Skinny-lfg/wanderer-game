@@ -100,6 +100,11 @@ async function visit(page,id){
   await mobile.locator('[data-phase1-expedition]:visible').first().click();
   await mobile.locator('[data-realm-card]').nth(2).click();
   await shot(mobile,'map-mobile');
+  // Regression for overlapping center-ring buttons at 390px: a neighboring
+  // room's exit-count text must not intercept the Entrance button.
+  await mobile.locator('[data-dungeon-room="0"]').click({timeout:5000});
+  await mobile.locator('dialog[open]').waitFor({timeout:5000});
+  pass('mobile center Entrance can be clicked without hit-target interception');
   const mapOverflow=await mobile.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
   assert(mapOverflow<=2,'Mobile map document overflow '+mapOverflow+' px');
   pass('390px mobile camp and map fit viewport');
