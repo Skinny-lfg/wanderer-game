@@ -28,14 +28,13 @@ test('current v0.13 Dungeon: Oathwall performs one real-block counterattack',()=
 });
 test('current v0.13 Dungeon: Veil creates one Barrier rather than repeatedly granting it each tick',()=>{
  const {a,r}=nativeLegendary('veil-thousand-seals','belt');
- const before=r.barrier;
- a.tick();
- const added=r.legendaryState?.veilBarrier||0;
- assert(added>0,'Veil must grant its initial Barrier in current Dungeon');
- assert(r.barrier>before,'Veil initial Barrier must be a real defensive resource');
- const procs=r.metrics?.procs?.['Legendary: veil-thousand-seals: barrier']||0;
- assert.equal(procs,1);
- a.tick();
+ // Native phase1Enter() already runs legendaryRealmStart; do not assume tick creates it.
+ const initialBarrier=r.barrier;
+ const granted=r.legendaryState?.veilBarrier||0;
+ assert(granted>0,'Veil must grant real Barrier during encounter entry');
+ assert(initialBarrier>0,'The awarded Barrier must be present in combat state');
+ assert.equal(r.metrics?.procs?.['Legendary: veil-thousand-seals: barrier'],1);
+ a.tick();a.tick();
  assert.equal(r.metrics?.procs?.['Legendary: veil-thousand-seals: barrier'],1,
    'Veil must not re-issue initial Barrier during same encounter');
 });
