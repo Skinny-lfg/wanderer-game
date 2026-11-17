@@ -61,6 +61,28 @@ function aggregate(rows){
  }
  return output.sort((a,b)=>a.level-b.level||a.build.localeCompare(b.build)||a.risk-b.risk||a.conditionId.localeCompare(b.conditionId));
 }
+function percentile(values,p){
+ const sorted=values.filter(Number.isFinite).sort((a,b)=>a-b);
+ if(!sorted.length)return null;
+ const rank=(sorted.length-1)*p,index=Math.floor(rank),weight=rank-index;
+ return round(sorted[index]*(1-weight)+sorted[Math.min(sorted.length-1,index+1)]*weight);
+}
+function rollups(rows,dimension){
+ const fields={condition:'conditionId',difficulty:'risk',build:'build',level:'level'};
+ const field=fields[dimension];
+ if(!field)throw Error('Unknown rollup dimension');
+ const buckets=new Map();
+ for(const row of rows){const key=String(row[field]??'missing');if(!buckets.has(key))buckets.set(key,[]);buckets.get(key).push(row);}
+ return [...buckets].map(([key,group])=>{
+  const n=group.length,wins=group.filter(x=>x.won).length;
+  return {key,n,wins,winPct:round(100*wins/n,1),win95Pct:wilson(wins,n),deaths:group.filter(x=>x.stage==='failed').length,
+   errors:group.filter(x=>x.error).length,timeouts:group.filter(x=>x.timedOut).length,blocked:group.filter(x=>x.stage==='choice').length,
+   meanSeconds:round(group.reduce((a,x)=>a+finite(x.seconds),0)/n),
+   p50Seconds:percentile(group.map(x=>x.seconds),.5),p90Seconds:percentile(group.map(x=>x.seconds),.9),
+   p10MinHpPct:percentile(group.map(x=>x.minHpPct),.1),
+   meanDamageTaken:round(group.reduce((a,x)=>a+finite(x.damageTaken),0)/n)};
+ }).sort((a,b)=>Number.isFinite(+a.key)&&Number.isFinite(+b.key)?+a.key-+b.key:a.key.localeCompare(b.key));
+}
 function run(config){
  const simulation=S.simulate({...S.DEFAULTS,mode:'conditions',levels:config.levels,builds:config.builds,seeds:Array.from({length:config.seedCount},(_,i)=>config.seedStart+i),points:config.points,gear:config.gear,rarity:config.rarity,tickLimit:config.tickLimit});
  const rows=simulation.rows,byCondition=Object.fromEntries(F.CATALOG.conditions.map(x=>[x.id,rows.filter(r=>r.conditionId===x.id).length]));
@@ -68,9 +90,11 @@ function run(config){
  summary:{cases:rows.length,wins:rows.filter(r=>r.won).length,deaths:rows.filter(r=>r.stage==='failed').length,
    blocked:rows.filter(r=>r.stage==='choice').length,errors:rows.filter(r=>r.error).length,timeouts:rows.filter(r=>r.timedOut).length,conditionCoverage:byCondition,
    coverageComplete:Object.values(byCondition).every(n=>n>0),warnings:[]},
- groups:aggregate(rows),rows};
+ groups:aggregate(rows),rollups:{condition:rollups(rows,'condition'),difficulty:rollups(rows,'difficulty'),build:rollups(rows,'build'),level:rollups(rows,'level')},rows};
  if(!report.summary.coverageComplete)report.summary.warnings.push('Not all six conditions appeared. Increase seed count before inferring fairness.');
- if(report.groups.some(x=>x.n<100))report.summary.warnings.push('At least one cohort has fewer than 100 cases; 95% intervals are descriptive and balance decisions are NOT approved.');
+ if(report.groups.some(x=>x.n<100))report.summary.warnings.push('Detailed cohorts have fewer than 100 cases; do not use them for final balance decisions.');
+ if(report.rollups.condition.some(x=>x.n<100))report.summary.warnings.push('At least one pooled Condition has fewer than 100 cases; this cannot support a final Condition fairness verdict.');
+ report.summary.warnings.push('Natural conditions co-vary with chosen Realm affinity, risk, routes and enemy compositions; pooled rates are observational, not randomized causal effects.');
  if(report.summary.blocked)report.summary.warnings.push('Some short routes lack sufficient steps; inspect travel paths before calling them unwinnable maps.');
  return report;
 }
@@ -82,4 +106,4 @@ function main(argv=process.argv.slice(2)){
  return report;
 }
 if(require.main===module)main();
-module.exports={args,wilson,aggregate,run,main};
+module.exports={args,wilson,aggregate,rollups,percentile,run,main};
