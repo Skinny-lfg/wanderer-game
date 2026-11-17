@@ -369,7 +369,7 @@ function weaponAttack(r,offhandStrike=false){
   const factor=kind==='Two-Handed'?1.70:kind==='Mace'?1.4:kind==='Bow'?1.08:kind==='Daggers'?.80:kind==='Sword'?1.12:caster?.55:1;
   damage=Math.max(1,Math.round(s.attack*factor)-Math.round(WandererV012Buildcraft.enemyDefense(ports.phase1Build,e)*(armorReady?.8:1)));
  }
- if(offhandStrike)damage=Math.max(1,Math.round(damage*.35));
+ if(offhandStrike)damage=Math.max(1,Math.round(damage*.50));
  if(ports.state.automaticTalents?.nodes?.includes('single_target_mastery')&&(!r.groupReserve?.length&&(!r.enemies||r.enemies.filter(enemy=>enemy.hp>0).length===1)))damage=Math.max(1,Math.round(damage*1.15));
  const specialized=ports.state.automaticTalents?.nodes||[];
  if(specialized.includes('blood_focus'))damage=Math.max(1,Math.round(damage*.9));
@@ -450,7 +450,7 @@ function weaponAttack(r,offhandStrike=false){
  }
  // Crescent keeps its cooldown-limited Bleed extension without independent off-hand hits.
  ports.legendaryOffhand(r,damage);
- if(!offhandStrike&&ports.WANDERER_DOUBLE_STRIKE_ENABLED&&kind==='Daggers'&&damage>0&&e.hp>0&&ports.gameRandom()<.25){
+ if(!offhandStrike&&ports.WANDERER_DOUBLE_STRIKE_ENABLED&&kind==='Daggers'&&!['Daggers','Off-Hand Dagger'].includes(off?.subtype)&&damage>0&&e.hp>0&&ports.gameRandom()<.25){
   // One ordinary pre-critical main-hand hit, with no further rolls or recursive triggers.
   ports.setDirectEnemyDamage(r,Math.max(1,Math.round(base*.55)),'🗡 Double Strike!');
  }
@@ -469,6 +469,7 @@ function weaponAttack(r,offhandStrike=false){
  if(cast&&v013LightningChain(r))groupSecondaryDamage(r,base,v013LightningChainFactors(),'⚡ Chain Lightning');
  if(s.counts.shield>=2){const gained=ports.setBarrier(r,Math.max(1,Math.round(r.maxhp*(s.bonus.shieldBonus||0))));if(gained>0)ports.addLog('🛡 Shield set: +'+Math.round(gained)+' Barrier','good');}
  if(!offhandStrike&&weapon?.subtype==='Daggers'&&['Daggers','Off-Hand Dagger'].includes(off?.subtype)){
+  // Off-Hand swings at half the main-hand frequency: one strike for two main attacks.
   r.offhandCadence=((r.offhandCadence||0)+1)%2;
   if(r.offhandCadence===0&&e.hp>0){r.offhandStrikes=(r.offhandStrikes||0)+1;weaponAttack(r,true);}
  }
