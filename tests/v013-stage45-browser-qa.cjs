@@ -26,7 +26,7 @@ function preview(){
 }
 async function serve(root){
  const server=http.createServer((req,res)=>{
-  const url=new URL(req.url,'http://localhost'),p=path.resolve(root,'.'+decodeURIComponent(url.pathname));
+  const url=new URL(req.url,'http://localhost'),pathname=url.pathname==='/'?'/index.html':url.pathname,p=path.resolve(root,'.'+decodeURIComponent(pathname));
   if(!p.startsWith(root+path.sep))return res.writeHead(403).end();
   fs.readFile(p,(e,data)=>{if(e)return res.writeHead(404).end();
    res.setHeader('Content-Type',({'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.webp':'image/webp','.woff2':'font/woff2'}[path.extname(p)]||'application/octet-stream'));res.end(data);
