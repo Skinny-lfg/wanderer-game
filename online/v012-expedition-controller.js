@@ -13,6 +13,7 @@ const REALMS=Object.freeze({forge:['blood','Crimson Dominion'],bloodscar:['blood
 const BOSSES=Object.freeze([{id:'guardian',name:"Abyssal Guardian’s Citadel",style:'guardian'},{id:'rift',name:"Harbinger’s Rift",style:'leech'},{id:'ember',name:"Ember Sovereign’s Throne",style:'berserker'}]);
 const EVENT_GROUPS=[['traveling_merchant','relic_collector'],['cursed_altar','whispering_idol'],['forgotten_arsenal','bounty_writ'],['restless_spring','oracle_of_paths']];
 const ROOMS=Object.freeze(['combat','combat','combat','combat','combat','combat','combat','elite','elite','chest','chest','event','event','altar']);
+const I=root.WandererV013MapIntelligence,F=root.WandererV013ExpeditionFoundation;
 function shuffle(values,rng){
  const arr=[...values];
  for(let i=arr.length-1;i>0;i--){const j=Math.min(i,Math.floor(rng()*(i+1)));[arr[i],arr[j]]=[arr[j],arr[i]];}
@@ -100,6 +101,8 @@ function create(themes,rng=Math.random){
   const cards=shuffle(families.slice(0,3),routeRng).map((family,risk)=>{
    const theme=shuffle(expeditionThemes.filter(t=>t.family===family),routeRng)[0];
    const events=[...shuffle(['whispering_idol','traveling_merchant','cursed_altar'],routeRng),'forgotten_arsenal'];
+   // Convert a known ritual event into an Oracle encounter without advancing map RNG.
+   if(events.includes('cursed_altar')&&risk>=1)events[events.indexOf('cursed_altar')]='oracle_of_paths';
    const size=18+risk*2;
    const kinds=Array(size).fill('combat');kinds[0]='entrance';kinds[size-1]='boss';
    const slots=shuffle(Array.from({length:size-6},(_,i)=>i+5),routeRng);
@@ -138,7 +141,9 @@ function create(themes,rng=Math.random){
    const objective=shuffle(nodes.map((n,i)=>n.kind==='elite'?i:-1).filter(i=>i>=0),routeRng)[0];
    return {id:theme.id,name:theme.name,family,image:theme.image,risk,nodes,edges,shortcut,positions,objective,favoured:{slot,subtype},bossSector,secondSector,clueRoom,stepLimit:14-risk};
   });
-  Object.assign(game,{version:2,expedition:level,planeIndex:1,stage:'choice',freeBuild:true,offers:[],selected:null,wave:0,history:[],rooms:[],rewardPending:null,families:[],initialFamily:null,lastFamily:null,rerolls:0,rerollsByRealm:Array.from({length:15},()=>[0,0,0]),bossId:shuffle(BOSSES,routeRng)[0].id,encounterVersion:1,dungeon:{cards,realm:null,current:0,cleared:[0],visited:[0]}});
+  const bossId=shuffle(BOSSES,routeRng)[0].id,seed=Math.floor(routeRng()*4294967296)>>>0;
+  const manifest=F?.createManifest(cards,{seed,expeditionLevel:level,bossStyle:BOSSES.find(b=>b.id===bossId).style})||null;
+  Object.assign(game,{version:2,expedition:level,planeIndex:1,stage:'choice',freeBuild:true,offers:[],selected:null,wave:0,history:[],rooms:[],rewardPending:null,families:[],initialFamily:null,lastFamily:null,rerolls:0,rerollsByRealm:Array.from({length:15},()=>[0,0,0]),bossId,encounterVersion:1,dungeon:{cards,realm:null,current:0,cleared:[0],visited:[0],scouted:[],discoveredSecrets:[],...(manifest?{foundationManifest:manifest}:{})}});
   for(const k of ['routeMap','routeEdges','routePositions','routeMobCounts'])delete game[k];
   return game;
  }
@@ -147,9 +152,12 @@ function create(themes,rng=Math.random){
   const d=game.dungeon,card=d.cards.find(c=>c.id===id);
   if(!card||d.realm||game.stage!=='choice')throw Error('Realm unavailable');
   d.realm=id;if(card.stepLimit)d.steps=card.stepLimit;game.bossFamily=card.family;
+  if(F&&d.foundationManifest)d.foundationState=F.createExpeditionState(d.foundationManifest,id);
  }
  function travelPath(target){
-  const d=game.dungeon,card=realmMap(),paths=[[d.current]],seen=new Set([d.current]);
+  const d=game.dungeon,card=realmMap();
+  if(I)return I.route(card,d,target);
+  const paths=[[d.current]],seen=new Set([d.current]);
   for(const path of paths){
    const last=path[path.length-1];if(last===target)return path;
    if(!d.visited.includes(last))continue;
@@ -161,13 +169,33 @@ function create(themes,rng=Math.random){
   }
   return [];
  }
+ function exitCount(id){return I?I.exitCount(realmMap(),game.dungeon,id):0;}
+ function scoutPreview(amount=2){
+  if(!I||!game.dungeon?.realm)return {rooms:[],secret:null};
+  const d=game.dungeon,origin=game.selected?.node??d.current;
+  return I.scout(realmMap(),{...d,current:origin},amount);
+ }
+ function scoutRooms(amount=2){
+  const d=game.dungeon;
+  if(!d?.realm||!I||!['choice','combat'].includes(game.stage))return {rooms:[],secret:null};
+  const selection=scoutPreview(amount);d.scouted??=[];d.discoveredSecrets??=[];
+  for(const room of selection.rooms)if(!d.scouted.includes(room)){
+   d.scouted.push(room);
+   if(F&&d.foundationManifest&&d.foundationState&&!d.foundationState.knownRooms.includes(room))d.foundationState=F.applyDecision(d.foundationState,{type:'reveal_room',room},d.foundationManifest);
+  }
+  if(selection.secret&&!d.discoveredSecrets.includes(selection.secret)){
+   d.discoveredSecrets.push(selection.secret);
+   if(F&&d.foundationManifest&&d.foundationState)d.foundationState=F.applyDecision(d.foundationState,{type:'discover_secret',edgeId:selection.secret},d.foundationManifest);
+  }
+  return selection;
+ }
  function deferEvent(){
   const d=game.dungeon,p=game.selected;
   if(!d||game.stage!=='combat'||!p?.event)return false;
   d.current=p.node;if(!d.visited.includes(p.node))d.visited.push(p.node);
   game.stage='choice';game.wave=0;game.offers=[];game.selected=null;return true;
  }
- function travelCost(path){const d=game.dungeon;let cost=0,cleared=0;for(const room of path.slice(1)){if(d.cleared.includes(room))cleared++;else{cost+=Math.min(2,cleared)+1;cleared=0;}}return cost+Math.min(2,cleared);}
+ function travelCost(path){if(I&&game.dungeon)return I.travelCost(path,game.dungeon.cleared);const d=game.dungeon;let cost=0,cleared=0;for(const room of path.slice(1)){if(d.cleared.includes(room))cleared++;else{cost+=Math.min(2,cleared)+1;cleared=0;}}return cost+Math.min(2,cleared);}
  function visitRoom(i){
   const d=game.dungeon,card=realmMap(),path=travelPath(i);
   if(game.stage!=='choice'||!path.length||game.rewardPending)return false;
@@ -304,7 +332,7 @@ function create(themes,rng=Math.random){
  function setSimulationRandomStreams(route,draft){if(typeof route!=='function'||typeof draft!=='function')throw Error('Simulation RNG streams must be functions');routeRng=route;draftRng=draft;}
  function passiveRandom(){return draftRng;}
  
- return Object.freeze({deferEvent,chooseRealm,realmMap,visitRoom,travelPath,travelCost,influence,state:game,start,restore,planAffinities,chooseInitial:chooseInitial,select:select,enter:enter,claimReward:claimReward,reroll:reroll,waveWon:waveWon,eventWon:()=>{throw Error('Resolve the offered integrated event');},defeat:defeat,abandon:abandon,allowed:allowed,reachable,setSimulationRandomStreams,passiveRandom});
+ return Object.freeze({deferEvent,chooseRealm,realmMap,visitRoom,travelPath,travelCost,exitCount,scoutPreview,scoutRooms,influence,state:game,start,restore,planAffinities,chooseInitial:chooseInitial,select:select,enter:enter,claimReward:claimReward,reroll:reroll,waveWon:waveWon,eventWon:()=>{throw Error('Resolve the offered integrated event');},defeat:defeat,abandon:abandon,allowed:allowed,reachable,setSimulationRandomStreams,passiveRandom});
 }
 root.WandererV012Expedition=Object.freeze({create,FAMILIES,FAMILY_NAMES,THEME_FAMILIES,REALMS,BOSSES,EVENT_GROUPS});
 })(globalThis);
