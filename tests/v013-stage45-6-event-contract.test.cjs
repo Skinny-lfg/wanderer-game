@@ -12,6 +12,10 @@ test('v0.13 event catalog intentionally adds the optional Forgotten Reliquary wi
  assert(relic,'New optional boss-preparation event exists');
  assert.equal(relic.category,'sacrifice');
  assert.equal(relic.choices.length,2);
+ const expected=['traveling_merchant','relic_collector','cursed_altar','whispering_idol','forgotten_arsenal','bounty_writ','restless_spring','oracle_of_paths','forgotten_reliquary'];
+ assert.deepEqual(catalog.map(x=>x.id).sort(),expected.sort(),'Only the optional v0.13 Reliquary extends the old catalog');
+ const removed=['smugglers_caravan','cursed_artificer','soul_mirror','echo_shrine','cursed_chest','runic_vault','fallen_wanderer','last_ember'];
+ assert(removed.every(id=>!catalog.some(e=>e.id===id)),'Retired events must not reappear');
  const oracle=catalog.find(e=>e.id==='oracle_of_paths');
  assert(oracle,'Oracle must remain available through normal schedule');
 });
