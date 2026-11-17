@@ -59,15 +59,22 @@ function phase6EventChoice(choice,itemId,passiveId,family,targetId){
  case 'cursed_altar':if(v.hp<=Math.ceil(v.maxhp*.2))return false;heal();ports.phase1Vitals.hp-=Math.ceil(v.maxhp*.2);effects[choice===0?'attack':'defense']=.10;break;
  case 'whispering_idol':ports.phase6Buff('curse',.10);ports.state[choice===0?'gold':'fragments']+=choice===0?25+4*E:12+2*E;break;
  case 'forgotten_arsenal':if(choice===0){ports.state.crafting.essence+=6;}else if(g.dungeon){const c=ports.phase1Controller.realmMap();g.dungeon.steps=Math.min(c.stepLimit,g.dungeon.steps+2);}else ports.state.fragments+=8+2*E;break;
- case 'bounty_writ':if(choice===0){if(g.rooms.slice(g.planeIndex).includes('elite'))effects.bounty=true;else ports.state.fragments+=5+E;}break;
+ case 'forgotten_reliquary':{
+  if(!g.dungeon)return false;
+  if(choice===0){const cost=Math.ceil(v.maxhp*.15);if(v.hp<=cost||!globalThis.WandererV013BossPreparation?.reliquaryCanDisrupt(g))return false;
+   const disabled=globalThis.WandererV013BossPreparation.disrupt(g);if(!disabled)return false;
+   heal();ports.phase1Vitals.hp-=cost;
+  }else if(choice===1){heal(.15,.25);}break;
+ }
+ case 'bounty_writ':if(choice===0){if(g.dungeon){if(!g.dungeon.cleared.includes(ports.phase1Controller.realmMap().objective))effects.bounty=true;else ports.state.fragments+=5+E;}else if(g.rooms.slice(g.planeIndex).includes('elite'))effects.bounty=true;else ports.state.fragments+=5+E;}break;
  case 'restless_spring':if(choice===0){if(v.hp>=v.maxhp)return false;heal(.35);}else if(v.maxmp===0||v.mp>=v.maxmp)ports.state.fragments+=3+E;else heal(0,.4);break;
- case 'oracle_of_paths':if(choice===0){if(g.dungeon){ports.phase1Controller.scoutRooms(2);}else if(g.freeBuild){if(g.rerolls>=3)return false;g.rerolls++;}else{if(!ports.phase1Controller.allowed().includes(family))return false;ports.phase1Controller.influence(family);}}else ports.state.fragments+=5+E;break;
+ case 'oracle_of_paths':if(choice===0){if(g.dungeon){ports.phase1Controller.scoutRooms(2);globalThis.WandererV013BossPreparation?.revealBoss(g);}else if(g.freeBuild){if(g.rerolls>=3)return false;g.rerolls++;}else{if(!ports.phase1Controller.allowed().includes(family))return false;ports.phase1Controller.influence(family);}}else ports.state.fragments+=5+E;break;
  default:return false;
  }}
  ports.phase6Run.events.push(g.planeIndex);ports.phase6Run.event=null;ports.phase4CommitRealm({awardXp:choice!==2});ports.phase1Controller.waveWon();
  if(!g.freeBuild)phase6UnlockBase(p.family);
  ports.phase5Results.gold+=Math.max(0,ports.state.gold-beforeGold);ports.phase5Results.fragments+=Math.max(0,ports.state.fragments-beforeFragments);
- const eventText=choice===2?'Event passed.':ev.id==='forgotten_arsenal'?(choice===0?'Recovered 6 Essence.':'Took provisions to restore up to 2 steps.'):WandererV012IntegratedEvents.get(ev.id)[3][choice].replace(/(\d+) \+ (\d+)×E/g,(_,a,b)=>String(+a+ +b*E)).replace(/(\d+) \+ E/g,(_,a)=>String(+a+E));
+ const eventText=choice===2?'Event passed.':ev.id==='forgotten_reliquary'?(choice===0?'Forgotten Reliquary: disabled the known boss property at a cost of 15% maximum HP.':'Forgotten Reliquary: recovered Health and Mana.'):ev.id==='forgotten_arsenal'?(choice===0?'Recovered 6 Essence.':'Took provisions to restore up to 2 steps.'):WandererV012IntegratedEvents.get(ev.id)[3][choice].replace(/(\d+) \+ (\d+)×E/g,(_,a,b)=>String(+a+ +b*E)).replace(/(\d+) \+ E/g,(_,a)=>String(+a+E));
  ports.phase5RememberRealm({tier:E,phase1Plane:g.planeIndex-1,planeName:p.name,planeFamily:p.family,combatSeconds:0,gold:Math.max(0,ports.state.gold-beforeGold),fragments:Math.max(0,ports.state.fragments-beforeFragments),loot,realmLog:[{text:eventText,kind:'good'}]},'cleared');
  ports.phase5Results.review=null;ports.phase5Results.eventExitPending=true;
  ports.phase1Controller.claimReward();ports.phase1Draft=null;
@@ -193,10 +200,12 @@ function phase1StartWave(resetScroll=false){
  }
  const traits=globalThis.WandererV013EncounterTraits;
  const modifiers=globalThis.WandererV013BossModifiers;
- const bossIds=g.dungeon&&g.selected.boss&&modifiers?modifiers.selection(g):[];
+ const preparation=globalThis.WandererV013BossPreparation;
+ const bossIds=g.dungeon&&g.selected.boss&&modifiers?(preparation?preparation.effectiveModifiers(g):modifiers.selection(g)):[];
  if(bossIds.length&&!modifiers.check(bossIds,WandererV012Expedition.BOSSES.find(v=>v.id===g.bossId).style,g.dungeon.foundationState?.conditionId))throw Error('Invalid boss modifiers for the native encounter');
  r.bossModifierIds=[];
  if(g.selected.boss&&modifiers){if(!modifiers.activate(r,group[0],bossIds))throw Error('Boss modifiers failed to apply');
+  if(preparation){const factor=preparation.bossAttackFactor(g);group[0].atk=Math.max(1,Math.round(group[0].atk*factor));r.bossPreparation={...preparation.status(g)};if(factor<1)ports.addLog('Marked Elite defeated: boss attacks weakened by 10%.','good');}
   if(bossIds.length)ports.addLog('Boss properties: '+bossIds.map(id=>modifiers.get(id).name).join(' · '),'critical');}
  const traitId=g.dungeon&&!g.selected.boss&&!g.selected.elite?g.selected.traitId:null;
  if(traitId&&traits?.applyGroup(traitId,group)){r.encounterTraitId=traitId;ports.addLog('Encounter trait: '+traits.get(traitId).name,'critical');}
@@ -204,7 +213,8 @@ function phase1StartWave(resetScroll=false){
  if(g.dungeon&&g.selected.node===2&&group.length>1){const guard=group[0];guard.name+=' · Vanguard';guard.vanguard=true;guard.hp=guard.maxhp=Math.round(guard.maxhp*1.8);guard.atk=Math.ceil(guard.atk*1.2);ports.addLog(guard.name+' prepares the first strike.','critical');}
  if(last&&(g.selected.boss||g.selected.elite)){
   const baseEscorts=g.selected.escorts??(g.selected.boss?2:1);
-  const escorts=g.selected.boss&&modifiers?modifiers.extraEscorts(bossIds,baseEscorts):baseEscorts;
+  const escorted=g.selected.boss&&modifiers?modifiers.extraEscorts(bossIds,baseEscorts):baseEscorts;
+  const escorts=g.selected.boss&&preparation?preparation.escortCount(g,escorted):escorted;
   for(let i=0;i<escorts;i++){
    const guard=ports.enemyFor(r.tier,r.enc,{theme,boss:false,elite:false});
    guard.hp=guard.maxhp=Math.round(guard.maxhp*1.2);guard.atk=Math.round(guard.atk*.35);
