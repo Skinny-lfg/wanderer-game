@@ -1,0 +1,76 @@
+name: Build v0.13 isolated Pages preview with playtest save reset
+
+on:
+  push:
+    branches:
+      - release/v013-pages-reset-20261117
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wanderer-v013-pages-build-20261117
+  cancel-in-progress: false
+
+jobs:
+  prepare-pages-commit:
+    if: contains(github.event.head_commit.message, '[publish-v013-preview]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact v0.13 source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Install Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Verify native v0.13 gameplay and simulations
+        run: npm run test:v013:gate
+      - name: Verify canonical talent IDs, rewards and checkpoints
+        run: >-
+          node --test
+          tests/v013-stage45-6-combat-contract.test.cjs
+          tests/v013-stage45-6-prepared-cadence.test.cjs
+          tests/v013-stage45-6-economy-p0.test.cjs
+          tests/v013-stage45-6-extraction-p0.test.cjs
+      - name: Build Pages preview from exact current v0.13 source
+        run: npm run build:pages
+      - name: Verify isolated preview, fresh saves, and v0.12 isolation
+        run: node scripts/check-v013-pages-publish.cjs
+      - name: Prepare fast-forward commit derived from existing Pages branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Preview source SHA: $GITHUB_SHA"
+          mkdir -p "$RUNNER_TEMP/v013-pages"
+          cp -a docs/. "$RUNNER_TEMP/v013-pages/"
+          # All checkout/reset operations below are ONLY within this disposable Actions runner.
+          git reset --hard HEAD
+          git clean -fd docs
+          git fetch origin refs/heads/publish/automatic-rpg-preview:refs/remotes/origin/publish/automatic-rpg-preview
+          git switch -c pages-pack origin/publish/automatic-rpg-preview
+          mkdir -p docs
+          rsync -a --delete "$RUNNER_TEMP/v013-pages/" docs/
+          printf '%s\n' '{"version":"v0.13","sourceCommit":"'"$GITHUB_SHA"'","saveNamespace":"wanderer_automatic_rpg_preview_v8_","reset":"v0.13-only","firebase":"disabled"}' > docs/v013-build.json
+          touch docs/.nojekyll
+          git add -A docs
+          git diff --cached --quiet && { echo "::error::Preview build had no changes; refusing an empty release"; exit 1; }
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "pages: v0.13 isolated preview (save reset; source $GITHUB_SHA)"
+          echo "PREPARED_PAGES_COMMIT_SHA=$(git rev-parse HEAD)"
+          echo "PAGES_OLD_SHA=$(git rev-parse origin/publish/automatic-rpg-preview)"
+          # Staging branch only. The assistant will atomically advance the actual Pages branch
+          # using GitHub App after verifying this build, which triggers GitHub Pages publication.
+          git push origin HEAD:refs/heads/build/v013-pages-ready-20261117
+      - name: Summary
+        run: |
+          echo 'Prepared Pages commit on build/v013-pages-ready-20261117.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'No Firebase Hosting, accounts, Firestore, or main/development branches were modified.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Actual Pages publication requires a separate reviewed branch-ref update.' >> "$GITHUB_STEP_SUMMARY"
