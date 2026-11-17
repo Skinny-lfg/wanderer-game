@@ -94,7 +94,7 @@ function create(themes,rng=Math.random){
   return game;
  }
  function startDungeon(level, targetFamily){
-  if(!Number.isInteger(level)||level<1||level>Math.min(5,game.unlocked)||!['camp','finished','failed'].includes(game.stage))throw Error('Expedition unavailable');
+  if(!Number.isInteger(level)||level<1||level>game.unlocked||!['camp','finished','failed'].includes(game.stage))throw Error('Expedition unavailable');
   const families=shuffle(FAMILIES,routeRng);
   if(FAMILIES.includes(targetFamily)){families.splice(families.indexOf(targetFamily),1);families.unshift(targetFamily);}
   const cards=shuffle(families.slice(0,3),routeRng).map((family,risk)=>{
@@ -229,7 +229,7 @@ function create(themes,rng=Math.random){
   game.history.push({plane:game.planeIndex,...game.selected});
   if(game.selected.boss){
    if(!game.selected.boss)throw Error('Realm 15 must contain the Expedition boss');
-   game.unlocked=Math.max(game.unlocked,game.dungeon?Math.min(5,game.expedition+1):game.expedition+1);
+   game.unlocked=Math.max(game.unlocked,game.expedition+1);
    game.stage='finished';game.selected=null;game.offers=[];game.wave=0;game.families=[];game.lastFamily=null;game.rewardPending=null;
    return {planeComplete:true,expeditionComplete:true};
   }
