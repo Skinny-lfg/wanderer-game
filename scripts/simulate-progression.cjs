@@ -11,6 +11,8 @@ require('../combat/talent-graph-next.js');
 require('../combat/talent-graph-bridge.js');
 require('../combat/talent-graph-runtime.js');
 require('../combat/expedition-progression.js');
+require('../combat/v013-expedition-foundation.js');
+const F=globalThis.WandererV013ExpeditionFoundation;
 const T=globalThis.WandererAutomaticTalents;
 const P=globalThis.WandererExpeditionProgression;
 const byNode=new Map(T.NODES.map(n=>[n.id,n]));
@@ -28,7 +30,7 @@ function parseArgs(args){
  for(const arg of args){
   const match=/^--([a-z-]+)=(.*)$/.exec(arg);if(!match)throw Error('Expected --option=value: '+arg);
   const [,key,value]=match;
-  if(key==='mode'&&['encounter','dungeon','both'].includes(value))result.mode=value;
+  if(key==='mode'&&['encounter','dungeon','both','traits'].includes(value))result.mode=value;
   else if(key==='levels')result.levels=parseIntegers(value,'levels');
   else if(key==='seeds')result.seeds=parseIntegers(value,'seeds');
   else if(key==='builds'){
@@ -111,14 +113,16 @@ function resolveEvent(a){
  for(const choice of [2,0,1])if(a.events.choose(choice,item?.id,passive,family,target?.id))return true;
  throw Error('Could not resolve real event');
 }
-function encounter(level,build,seed,kind,opts){
+function encounter(level,build,seed,kind,opts,forcedTrait=undefined){
  const {a,c,g,card,gearE}=prepare(level,build,seed,opts);
  const candidate=card.edges.filter(([x])=>x===0).map(([,y])=>y).find(n=>card.nodes[n]?.kind==='combat');
- if(candidate===undefined||!c.visitRoom(candidate)||!a.enter())throw Error('Cannot enter native v0.13 encounter');
+ if(candidate===undefined)throw Error('Cannot find native v0.13 encounter');
+ if(forcedTrait!==undefined){if(forcedTrait!==null&&!F.CATALOG.encounterTraits.some(x=>x.id===forcedTrait))throw Error('Unknown forced encounter trait');card.nodes[candidate].traitId=forcedTrait;}
+ if(!c.visitRoom(candidate)||!a.enter())throw Error('Cannot enter native v0.13 encounter');
  const run=a.encounter({count:kind==='boss'?1:3,boss:kind==='boss'});
  if(run.tier!==level)throw Error('Incorrect encounter tier: '+run.tier+' vs '+level);
  const result=fight(a,c,opts.tickLimit);
- return {mode:'encounter',kind,level,build:build.id,seed,gearE,gearTier:P.gearTier(gearE).name,pointsSpent:a.state().automaticTalents.nodes.length,realm:card.name,unlocked:level,...result};
+ return {mode:forcedTrait===undefined?'encounter':'traits',kind:forcedTrait===undefined?kind:(forcedTrait||'baseline'),level,build:build.id,seed,gearE,gearTier:P.gearTier(gearE).name,pointsSpent:a.state().automaticTalents.nodes.length,realm:card.name,unlocked:level,...result};
 }
 function dungeon(level,build,seed,opts){
  const {a,c,g,card,gearE}=prepare(level,build,seed,opts);
@@ -153,6 +157,10 @@ function simulate(opts){
    try{rows.push(encounter(level,build,seed,kind,opts));}
    catch(e){rows.push({level,build:build.id,seed,kind,mode:'encounter',won:false,error:e.message});}
   }
+  if(opts.mode==='traits')for(const trial of [null,...F.CATALOG.encounterTraits.map(x=>x.id)]){
+   try{rows.push(encounter(level,build,seed,'normal',opts,trial));}
+   catch(e){rows.push({level,build:build.id,seed,kind:trial||'baseline',mode:'traits',won:false,error:e.message});}
+  }
   if(['dungeon','both'].includes(opts.mode)){
    try{rows.push(dungeon(level,build,seed,opts));}
    catch(e){rows.push({level,build:build.id,seed,mode:'dungeon',won:false,error:e.message});}
@@ -160,7 +168,7 @@ function simulate(opts){
  }
  const summary={cases:rows.length,wins:rows.filter(r=>r.won).length,deaths:rows.filter(r=>r.died||r.stage==='failed').length,errors:rows.filter(r=>r.error).length,timeouts:rows.filter(r=>r.timedOut).length,groups:summarize(rows)};
  return {schemaVersion:2,engine:'Wanderer v0.13 native HTML combat + current permanent talent tree + dungeon controller',mode:opts.mode,
-  assumptions:{levels:opts.levels,seeds:opts.seeds,builds:opts.builds,pointsAvailable:opts.points,rarity:opts.rarity,gear:opts.gear,runes:opts.runes,mode:opts.mode,potions:'none',lootUpgrades:'none',talents:'current tree version 15, fixed scenario budget; not earned progression',encounter:'native wave at selected Expedition Level; boss case injects a boss into an otherwise normal room for matched combat comparison',dungeon:'shortest accessible route through one real Realm map; persistent HP/Mana across rooms; no manual healing or artificial resets',limits:'Synthetic fixed gear and permanent points. Runs one Realm card, not all 15 Realms or multi-expedition economic progression. No production balance conclusions on small seed counts.'},
+  assumptions:{levels:opts.levels,seeds:opts.seeds,builds:opts.builds,pointsAvailable:opts.points,rarity:opts.rarity,gear:opts.gear,runes:opts.runes,mode:opts.mode,potions:'none',lootUpgrades:'none',talents:'current tree version 15, fixed scenario budget; not earned progression',encounter:'native wave at selected Expedition Level; boss case injects a boss into an otherwise normal room for matched combat comparison',dungeon:'shortest accessible route through one real Realm map; persistent HP/Mana across rooms; no manual healing or artificial resets',traits:'controlled diagnostic: baseline plus six injected traits in one initial-ring normal room; unlike natural maps this deliberately bypasses affinity and first-ring placement restrictions to compare identical combat scenarios, not to model exploration',limits:'Synthetic fixed gear and permanent points. Runs one Realm card, not all 15 Realms or multi-expedition economic progression. No production balance conclusions on small seed counts.'},
   sourceSha256:crypto.createHash('sha256').update(fs.readFileSync(path.join(__dirname,'../index.html'))).digest('hex'),durationMs:Date.now()-start,summary,rows};
 }
 function main(args=process.argv.slice(2)){
