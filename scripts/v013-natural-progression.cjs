@@ -48,6 +48,25 @@ function gearSnapshot(a){
   rarity:Object.fromEntries([...new Set(items.map(x=>x.rarity))].sort().map(r=>[r,items.filter(x=>x.rarity===r).length])),
   items:items.map(x=>({slot:x.slot,subtype:x.subtype,name:x.name,rarity:x.rarity,tier:x.tier,startingGear:!!x.startingGear}))};
 }
+// Current v15 graph has no T.path helper; walk its real prerequisites and let
+// T.allocate enforce every purchase, point cap, rank and exclusion.
+function missingPath(T,progress,target){
+ const nodes=new Map(T.NODES.map(x=>[x.id,x]));
+ const owned=new Set(progress.nodes),visiting=new Set(),path=[];
+ function add(id){
+  if(owned.has(id)||path.includes(id))return true;
+  const n=nodes.get(id);
+  if(!n||visiting.has(id)||n.excludes?.some(x=>owned.has(x)||path.includes(x)))return false;
+  visiting.add(id);
+  for(const key of [n.requires,...(n.prerequisites||[])].filter(Boolean))if(!add(key)){visiting.delete(id);return false;}
+  if(n.anyRequires?.length&&!n.anyRequires.some(x=>owned.has(x)||path.includes(x))){
+   const candidate=n.anyRequires.find(x=>add(x));
+   if(!candidate){visiting.delete(id);return false;}
+  }
+  visiting.delete(id);path.push(id);return true;
+ }
+ return add(target)?path:null;
+}
 function spendEarnedTalents(a,profile){
  const T=a.talents,s=a.state(),before=s.automaticTalents;
  if(!T.valid(before))throw Error('Invalid natural talent account before spending');
@@ -56,7 +75,7 @@ function spendEarnedTalents(a,profile){
  for(let attempts=0;attempts<40&&T.earned(progress)>progress.nodes.length;attempts++){
   let changed=false;
   for(const target of targets){
-   const route=T.path(progress,target);if(!route?.length)continue;
+   const route=missingPath(T,progress,target);if(!route?.length)continue;
    const next=T.allocate(progress,route[0]);
    if(next){progress=next;bought.push(route[0]);changed=true;break;}
   }
@@ -92,6 +111,7 @@ function equipEarned(a,profile,between=false){
 function prepareCamp(a,profile,level){
  const actions={talents:[],equipped:[],bought:[],potions:[],runes:[],soldTreasures:false};
  const s=a.state();
+ a.potions.inventory(); // Native initializer: an empty player loadout is legal.
  // All purchases and rewards go through the native economy.
  if(s.pendingRuneReward?.options?.length){
   const options=s.pendingRuneReward.options,choice=options.find(x=>/vitality|ward|aegis/i.test(x.kind||x.name||x.id))||options[0];
@@ -123,7 +143,7 @@ function prepareCamp(a,profile,level){
  // Any already-owned dose may be selected via native inventory rules.
  for(const kind of ['health','barrier','mana','scout']){
   if((s.potionSelection||[]).length>=3)break;
-  if(!s.potionSelection.includes(kind)&&(s.consumables?.[kind]||0)>0&&a.potions.select(kind))actions.potions.push({kind,owned:true});
+  if(!(s.potionSelection||[]).includes(kind)&&(s.consumables?.[kind]||0)>0&&a.potions.select(kind))actions.potions.push({kind,owned:true});
  }
  return actions;
 }
