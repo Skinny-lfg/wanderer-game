@@ -36,24 +36,20 @@ function complete(env,id){
   g.stage='finished';
  }else throw Error('Unknown synthetic completion');
 }
-test('Stage 7.2 catalogue retains 4 lore Contracts and exclusive reward plans',()=>{
+test('Stage 7.5 keeps four lore Contracts and deterministic exclusive rewards',()=>{
  assert.deepEqual(K.CATALOG.map(c=>c.id),['bounty_writ','pathfinder','purification','oath_of_defiance']);
- for(const entry of K.CATALOG){
-  assert(K.DESCRIPTIONS[entry.id]?.objective&&K.DESCRIPTIONS[entry.id]?.detail);
-  let previous=0;
-  for(let risk=0;risk<=2;risk++){
-   const prize=K.reward(entry.id,risk);
-   assert.equal(prize.kind,'essence');assert(prize.essence>previous);
-   assert(!Object.hasOwn(prize,'fragments'));previous=prize.essence;
-  }
+ const types=new Set();
+ for(const entry of K.CATALOG)for(let risk=0;risk<=2;risk++){
+  const prize=K.reward(entry.id,risk,'blood');
+  types.add(prize.kind);assert(K.DESCRIPTIONS[entry.id]?.objective);
  }
+ assert.deepEqual([...types].sort(),['fragments','gold','potion','reagent']);
  assert.throws(()=>K.reward('fake',1),/Invalid/);
  const env=fresh(7111,2),p=K.plan(env.d.foundationManifest.seed,env.card,[]);
- assert.equal(p.ids.length,2);
- assert.deepEqual(p,K.plan(env.d.foundationManifest.seed,env.card,[]));
- assert.equal(p.rewards[p.ids[1]].kind,'essence');
- assert(['blueprint','essence'].includes(p.rewards[p.ids[0]].kind));
- for(const prize of Object.values(p.rewards))assert.equal(Object.keys(prize).includes('fragments'),false);
+ assert.equal(p.ids.length,2);assert.deepEqual(p,K.plan(env.d.foundationManifest.seed,env.card,[]));
+ assert.equal(p.rewards[p.ids[0]].kind,'blueprint_chance');
+ assert.equal(p.rewards[p.ids[0]].chance,.55);
+ assert.notEqual(p.rewards[p.ids[1]].kind,'blueprint_chance');
 });
 test('Stage 7 generates two distinct feasible options on all real three-card maps, independently of other RNG',()=>{
  const {d}=fresh(7001);
