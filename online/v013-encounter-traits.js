@@ -64,7 +64,7 @@ function deathPulse(run,fallen){
  for(const enemy of fallen){
   if(!enemy||enemy.hp>0||enemy.traitDeathProcessed||enemy.encounterTraitId!=='death_throes')continue;
   enemy.traitDeathProcessed=true;
-  const amount=Math.max(0,Math.min(perDeath,cap-(run.traitDeathThroesTotal||0)));
+  const amount=Math.max(0,Math.min(Math.round(perDeath*(root.WandererV013ExpeditionBoons?.takenFactor(run)||1)),cap-(run.traitDeathThroesTotal||0)));
   if(!amount)continue;
   run.traitDeathThroesTotal=(run.traitDeathThroesTotal||0)+amount;
   const blocked=Math.min(run.barrier||0,amount),hit=amount-blocked;
