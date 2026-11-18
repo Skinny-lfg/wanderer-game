@@ -22,7 +22,7 @@ Stage 9.1's severe controlled Boss results are **not a representative campaign w
 | e35-talents | 35 | 16 | Uncommon | Yes | Yes | No |
 | e35-geared | 35 | 16 | Rare | Yes | Yes | No |
 
-Default: 3 builds (Blood/Fury, Aegis/Vitality, Magic/Decay), 2 seeds, controlled first-ring group of 3, native shortest path on each Dungeon, and a narrow **Blood + Aegis, Normal-risk** Boss pilot. **Only two seeds per cell**; this is exploratory triage, not a quantitative balancing decision.
+Default: 3 builds (Blood/Fury, Aegis/Vitality, Magic/Decay), 2 widely separated seeds (9101 and 9201; avoids overlapping native Boss seed-search windows), controlled first-ring group of 3, native shortest path on each Dungeon, and a narrow **Blood + Aegis, Normal-risk** Boss pilot. **Only two seeds per cell**; this is exploratory triage, not a quantitative balancing decision.
 
 The permanent points at E5/E15/E35 are synthetic **counterfactuals**. Nothing in this report claims players naturally earn those exact budgets, rarities or upgrade timings. Real player loot and talent accumulation must later be measured independently.
 
@@ -36,7 +36,7 @@ Seven declared A/B contrasts change **exactly one dimension at the same Expediti
 
 **Scenario lock:** Stage 9.2 re-seeds the native harness' separate route, draft, control and combat RNG streams immediately *after* equipment is rolled, so changing rarity alone cannot silently choose different enemies. This change is isolated to the simulator flag and does **not** change live game RNG, gameplay formulas or loot odds. A regression test verifies the exact native Dungeon route, Affinity, risk and Boss style across rarities.
 
-The tool retains all raw attempts, but pairs **only** rows with equal native resolvedSeed, Affinity, risk, build, mode, room group size, target policy and (for natural Dungeons) equal native route. When gear changes affect RNG or generated map identity, that contrast has fewer matched pairs and may be **inconclusive**, rather than manufacturing an A/B win rate. Rows with errors/timeouts are *not* classified as deaths. Duplicate native seeds do not create independent observations.
+The tool retains all raw attempts, but pairs **only** rows with equal native resolvedSeed, Affinity, risk, build, mode, room group size, target policy and (for natural Dungeons) equal native route. When gear changes affect RNG or generated map identity, that contrast has fewer matched pairs and may be **inconclusive**, rather than manufacturing an A/B win rate. Rows with errors/timeouts are *not* classified as deaths. Duplicate native seeds do not create independent observations. The top-level report shows effective independent fights and duplicate native attempts separately for each mode.
 
 Cross-E1/E5/E15/E35 summaries are **descriptive, not paired causal effects**, because enemy tiers and encounters also evolve.
 
