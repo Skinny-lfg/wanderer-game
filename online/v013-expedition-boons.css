@@ -10,3 +10,10 @@
 .stage6BoonSynergy{color:#e5c18a;font-size:.78rem;letter-spacing:.02em;}
 .stage6BoonSummary{padding:10px 12px;border-left:3px solid #ac8451;background:#2b2228;font-size:.9rem;}
 @media(max-width:700px){.stage6BoonChoices{grid-template-columns:1fr;gap:10px;}.stage6BoonCard{min-height:0;gap:8px;padding:18px 14px;}.stage6BoonBenefit{margin-top:0;}}
+
+/* Stage 7.4 — utility potion actions only while navigating the Dungeon map. */
+.stage74PotionTools{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:12px 0;padding:12px 14px;border:1px solid #705043;border-radius:8px;background:#211b20;}
+.stage74PotionTools strong{margin-right:4px;color:#e5c18a;font-size:.88rem;}
+.stage74PotionTools button{min-height:36px;white-space:normal;}
+#stage74RerollBoon{margin:12px 10px 0 0;border-color:#ac8451;}
+@media(max-width:700px){.stage74PotionTools{padding:10px;gap:7px}.stage74PotionTools strong{flex-basis:100%}}
