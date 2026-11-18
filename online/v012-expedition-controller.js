@@ -183,7 +183,7 @@ function create(themes,rng=Math.random){
     game.selected||game.rewardPending||d.contractOffer||!B||!d.cleared.includes(room)||
     B.resolutions(d.foundationState).some(a=>a.room===room)||d.foundationState.boonIds.length>=2)return null;
   const ids=B.offer(d.foundationManifest.seed,d.realm,round,families,d.foundationState.boonIds);
-  d.boonOffer={room,round,families:[...families],ids};
+  d.boonOffer={room,round,families:[...families],ids,rerolled:false};
   return d.boonOffer;
  }
  function chooseBoon(id=null){
@@ -197,6 +197,44 @@ function create(themes,rng=Math.random){
   if(id!==null){const bonus=B.stepsAdded(id);if(bonus)d.steps+=bonus;}
   d.foundationState=next;delete d.boonOffer;
   return id;
+ }
+ function rerollBoon(){
+  const d=game.dungeon,o=d?.boonOffer;
+  if(!o||o.rerolled||game.stage!=='choice'||game.selected||game.rewardPending||d.contractOffer||!B?.validateOffer(d,game))return false;
+  const next=B.rerollOffer(d.foundationManifest.seed,d.realm,o.round,o.families,d.foundationState.boonIds);
+  d.foundationState=F.applyDecision(d.foundationState,{type:'reroll_boon',room:o.room},d.foundationManifest);
+  o.ids=next;o.rerolled=true;return true;
+ }
+ // Potion discoveries must use the same replayable ledger as Oracle scouting.
+ function scoutPotion(kind,mode='shrine'){
+  const d=game.dungeon,card=realmMap();
+  if(!d?.realm||!card||game.stage!=='choice'||game.selected||game.rewardPending||d.boonOffer||d.contractOffer||
+     !['scout','veilsight'].includes(kind)||!['shrine','treasure','threat'].includes(mode))return null;
+  const pathTo=target=>{
+   const queue=[[d.current]],seen=new Set([d.current]);
+   for(const path of queue){
+    if(path.at(-1)===target)return path;
+    for(const other of I.neighbors(card,d,path.at(-1)))if(!seen.has(other)){
+     seen.add(other);queue.push([...path,other]);
+    }
+   }
+   return [];
+  };
+  const unknown=i=>!d.visited.includes(i)&&!d.scouted.includes(i);
+  const candidates=kind==='veilsight'||mode==='shrine'?card.boonShrines:
+   card.nodes.map((node,i)=>(mode==='treasure'&&node.event==='forgotten_arsenal'||mode==='threat'&&['elite','boss'].includes(node.kind))?i:-1).filter(i=>i>=0);
+  const targets=candidates.filter(unknown).map(i=>({id:i,path:pathTo(i)})).filter(x=>x.path.length>0)
+    .sort((a,b)=>a.path.length-b.path.length||a.id-b.id);
+  if(!targets.length)return null;
+  const destinations=kind==='veilsight'?targets:targets.slice(0,1);
+  const reveals=new Set();
+  for(const item of destinations)for(const room of item.path.slice(1))if(unknown(room))reveals.add(room);
+  if(!reveals.size)return null;
+  for(const room of reveals){
+   d.scouted.push(room);
+   d.foundationState=F.applyDecision(d.foundationState,{type:'reveal_room',room},d.foundationManifest);
+  }
+  return {rooms:[...reveals],shrines:destinations.map(x=>x.id)};
  }
  function travelPath(target){
   const d=game.dungeon,card=realmMap();
@@ -465,7 +503,7 @@ function create(themes,rng=Math.random){
  function setSimulationRandomStreams(route,draft){if(typeof route!=='function'||typeof draft!=='function')throw Error('Simulation RNG streams must be functions');routeRng=route;draftRng=draft;}
  function passiveRandom(){return draftRng;}
  
- return Object.freeze({deferEvent,chooseRealm,offerContracts,chooseContract,offerBoons,chooseBoon,realmMap,visitRoom,travelPath,travelCost,exitCount,scoutPreview,scoutRooms,influence,state:game,start,restore,planAffinities,chooseInitial:chooseInitial,select:select,enter:enter,claimReward:claimReward,reroll:reroll,waveWon:waveWon,eventWon:()=>{throw Error('Resolve the offered integrated event');},defeat:defeat,abandon:abandon,allowed:allowed,reachable,setSimulationRandomStreams,passiveRandom});
+ return Object.freeze({deferEvent,chooseRealm,offerContracts,chooseContract,offerBoons,chooseBoon,rerollBoon,scoutPotion,realmMap,visitRoom,travelPath,travelCost,exitCount,scoutPreview,scoutRooms,influence,state:game,start,restore,planAffinities,chooseInitial:chooseInitial,select:select,enter:enter,claimReward:claimReward,reroll:reroll,waveWon:waveWon,eventWon:()=>{throw Error('Resolve the offered integrated event');},defeat:defeat,abandon:abandon,allowed:allowed,reachable,setSimulationRandomStreams,passiveRandom});
 }
 root.WandererV012Expedition=Object.freeze({create,FAMILIES,FAMILY_NAMES,THEME_FAMILIES,REALMS,BOSSES,EVENT_GROUPS});
 })(globalThis);
