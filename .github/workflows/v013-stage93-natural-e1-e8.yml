@@ -20,6 +20,8 @@ jobs:
           npm run test:v013:stage92
       - name: Run actual native E1–E8 progression for four new accounts
         run: npm run simulate:v013:natural-e1-e8
+      - name: Investigate early-game bottleneck with up to 12 native attempts per profile
+        run: npm run simulate:v013:natural-e1-e8 -- --seeds=9304 --profiles=cautious,balanced --max-attempts=12 --out=reports/v013-stage93-natural-e1-e8-targeted.json
       - name: Print brief E1–E8 overview
         if: always()
         run: |
@@ -32,5 +34,7 @@ jobs:
           path: |
             reports/v013-stage93-natural-e1-e8.json
             reports/v013-stage93-natural-e1-e8.md
+            reports/v013-stage93-natural-e1-e8-targeted.json
+            reports/v013-stage93-natural-e1-e8-targeted.md
           if-no-files-found: warn
           retention-days: 14
