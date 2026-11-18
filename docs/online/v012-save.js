@@ -1,7 +1,7 @@
 // Versioned, pure save policy and explicitly isolated validation storage. No Firebase/auth/DOM.
 (function(root){
 'use strict';
-const FORMAT='wanderer-expedition',VERSION=13,PREFIX='wanderer_automatic_rpg_preview_v10_';
+const FORMAT='wanderer-expedition',VERSION=13,PREFIX='wanderer_automatic_rpg_preview_v11_';
 const SLOTS=['helm','amulet','armor','gloves','weapon','offhand','ring1','ring2','boots','belt'];
 const STATS=['atk','def','hp','spd','str','agi','int','end','cha','mana','spell','evasionRating'];
 const EFFECTS=['poison','bleed','crit','sunder','shield','regen','burn','slow','drain','nature','shock','tide','crystal'];
@@ -159,12 +159,19 @@ function presentationCheck(p){
     (c.id===null||validIds.includes(c.id))&&
     typeof c.name==='string'&&c.name.length<=100&&
     integer(c.progress,0,2)&&integer(c.target,0,2)&&c.progress<=c.target&&
-    integer(c.essence,0,30)&&c.fragments===0&&
+    integer(c.essence,0,30)&&integer(c.fragments,0,30)&&
     (c.recipeId===null||typeof c.recipeId==='string'&&c.recipeId.length<=100)&&
-    (c.kind===null||['blueprint','essence'].includes(c.kind))&&
-    (c.status!=='completed'||c.id!==null)&&
-    (c.status!=='completed'||c.kind!==null)&&
-    (c.kind!=='blueprint'||c.recipeId!==null&&c.essence===0),'Expedition Contract summary');
+    (c.kind===null||['blueprint','essence','gold','fragments','reagent','potion'].includes(c.kind))&&
+    (c.status!=='completed'||c.id!==null&&c.kind!==null)&&
+    (c.status==='completed'||c.kind===null&&c.recipeId===null&&c.essence===0&&c.fragments===0)&&
+    (c.kind!=='blueprint'||c.status==='completed'&&c.recipeId!==null&&c.essence===0&&c.fragments===0)&&
+    (c.paid===undefined||c.paid===null||plain(c.paid)&&c.status==='completed'&&
+      c.paid.id===c.id&&c.paid.kind===c.kind&&
+      (c.paid.recipeId??null)===c.recipeId&&
+      (c.paid.essence||0)===c.essence&&(c.paid.fragments||0)===c.fragments&&
+      (c.kind!=='gold'||integer(c.paid.gold,0,40))&&
+      (c.kind!=='reagent'||['blood','decay','vitality','aegis','fury','magic'].includes(c.paid.family)&&integer(c.paid.amount,0,2))&&
+      (c.kind!=='potion'||POTIONS.includes(c.paid.potion)&&integer(c.paid.amount,0,1))),'Expedition Contract summary');
   }
  }
  requireValue(p.review!=='realm'||p.realm!==null,'missing Realm result');requireValue(p.review!=='summary'||p.summary!==null,'missing Expedition summary');
