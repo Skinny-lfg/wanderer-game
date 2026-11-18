@@ -177,3 +177,15 @@ test('Stage 7 old Stage 6 checkpoints without optional contract state remain res
  assert.equal(c.restore(clone(g)).dungeon.foundationState.contractId,null);
  assert.equal(c.state.dungeon.contractOffer,undefined);
 });
+
+test('Stage 7 native abandonment records failed or ignored contracts in the real expedition summary',()=>{
+ const accepted=chosen(8080,'purification'),before=accepted.a.state().fragments;
+ assert.equal(accepted.a.abandon(),true);
+ assert.equal(accepted.g.stage,'failed');
+ assert.equal(accepted.a.results().summary?.outcome,'abandoned');
+ assert.equal(accepted.a.results().summary?.contract?.status,'failed');
+ assert.equal(accepted.a.state().fragments,before);
+ const declined=fresh(8090);declined.c.offerContracts();declined.c.chooseContract(null);
+ assert.equal(declined.a.abandon(),true);
+ assert.equal(declined.a.results().summary?.contract?.status,'ignored');
+});
