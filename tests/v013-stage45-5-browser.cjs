@@ -30,6 +30,16 @@ window.__stage455={
   }
   return null;
  },
+  probeAbilityTelegraph(){
+    const run=state.run,enemy=run?.enemies?.find(e=>e.stage81?.name)||run?.enemy;
+    if(!enemy?.stage81?.name)return {error:'No active Stage 8.1 normal enemy'};
+    run.hp=run.maxhp=500000;run.stats.attacksPerSec=0;
+    enemy.hp=enemy.maxhp=Math.max(100000,enemy.maxhp);
+    enemy.stage81.nextAt=(run.combatSeconds||0)+.05;enemy.stage81.castingUntil=0;
+    updateFight();
+    return {name:enemy.name,role:enemy.role,kind:globalThis.WandererV013EnemyAbilities.status(enemy,run.combatSeconds)?.kind,
+      visible:!!document.querySelector('#scene [data-enemy-ability] .enemyAbilityStatus.is-casting')};
+  },
   finishCombat(){const r=state.run;if(!r||r.status!=='fight')return {status:r?.status||null};
   for(let n=0;n<90&&r.status==='fight';n++){
    // Only a test accelerator: preserve actual victory settlement, rewards and phases.
@@ -115,16 +125,7 @@ async function main(){
         }
         assert.equal(combat.runStatus,'fight','Expected normal combat at room '+node);
         if(node===target&&options.ability){
-          const proof=await contextPage.evaluate(()=>{
-            const run=state.run,enemy=run.enemies?.find(e=>e.stage81?.name)||run.enemy;
-            if(!enemy?.stage81?.name)return {error:'No active Stage 8.1 normal enemy'};
-            run.hp=run.maxhp=500000;run.stats.attacksPerSec=0;
-            enemy.hp=enemy.maxhp=Math.max(100000,enemy.maxhp);
-            enemy.stage81.nextAt=(run.combatSeconds||0)+.05;enemy.stage81.castingUntil=0;
-            updateFight();
-            return {name:enemy.name,role:enemy.role,kind:globalThis.WandererV013EnemyAbilities.status(enemy,run.combatSeconds)?.kind,
-              visible:!!document.querySelector('#scene [data-enemy-ability] .enemyAbilityStatus.is-casting')};
-          });
+          const proof=await contextPage.evaluate(()=>__stage455.probeAbilityTelegraph());
           assert.equal(proof.kind,'casting','Normal mob should telegraph: '+JSON.stringify(proof));
           assert.equal(proof.visible,true,'Casting warning must be visible in live arena');
           await contextPage.screenshot({path:path.join(out,'stage81-casting-telegraph.png'),fullPage:true});
