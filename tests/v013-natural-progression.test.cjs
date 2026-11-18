@@ -1,0 +1,81 @@
+'use strict';
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs');
+const N=require('../scripts/v013-natural-progression.cjs');
+const create=require('./v012-economy-harness.cjs');
+const clone=x=>JSON.parse(JSON.stringify(x));
+test('Natural E1–E8 defaults are bounded and include different player behaviors',()=>{
+ const p=N.parseArgs();
+ assert.deepEqual(p.seeds,[9101,9201]);assert.deepEqual(p.profiles,['cautious','balanced']);
+ assert.equal(p.maxLevel,8);assert.equal(p.maxAttempts,3);
+ assert.throws(()=>N.parseArgs(['--max-level=9']),/E1–E8/);
+ assert.throws(()=>N.parseArgs(['--max-attempts=0']),/Max attempts/);
+ assert.throws(()=>N.parseArgs(['--profiles=synthetic']),/Invalid profiles/);
+ assert.throws(()=>N.parseArgs(['--seeds=1,2,3,4,5,6,7,8,9','--profiles=cautious,balanced,daring']),/cohort/);
+});
+test('Natural gear score values measured item attributes, not fabricated rarity rewards',()=>{
+ const p=N.PROFILES.cautious;
+ const starter={slot:'weapon',rarity:'Common',tier:1,atk:3};
+ const loot={...starter,rarity:'Uncommon',atk:9};
+ assert(N.gearScore(loot,p)>N.gearScore(starter,p));
+ assert.equal(N.gearScore(null,p),-1);
+});
+test('Natural account actually starts with v0.13 native weak equipment and 0 earned points',()=>{
+ const a=create(9301,undefined,{}, {skipPersistence:true,now:1720000009301});
+ const before=N.gearSnapshot(a);
+ assert(before.total>=3);assert.equal(before.starter,before.total);
+ assert.equal(a.talents.earned(a.state().automaticTalents),0);
+ const p=N.spendEarnedTalents(a,N.PROFILES.cautious);
+ assert.equal(p.bought.length,0);assert.equal(a.state().automaticTalents.xp,0);
+});
+test('Only earned native XP unlocks permanent talent purchases',()=>{
+ const a=create(9302,undefined,{}, {skipPersistence:true,now:1720000009302}),T=a.talents;
+ const initial=a.state().automaticTalents;
+ const minted=T.award(initial,200); // Unit fixture: tests accounting, runner never awards XP.
+ a.state().automaticTalents=minted;
+ const report=N.spendEarnedTalents(a,N.PROFILES.cautious);
+ assert.equal(report.xp,200);assert.equal(a.state().automaticTalents.xp,200);
+ assert(report.spent<=T.earned(a.state().automaticTalents));
+ assert(T.valid(a.state().automaticTalents));
+ assert(report.bought.length>0);
+});
+test('Realm selection and human-like event preferences respond to risk and HP',()=>{
+ const cards=[{id:'fury',risk:2,family:'fury'},{id:'aegis',risk:0,family:'aegis'},{id:'blood',risk:1,family:'blood'}];
+ assert.equal(N.choiceRealm(cards,N.PROFILES.cautious,{starter:3}).id,'aegis');
+ assert.equal(N.choiceRealm(cards,N.PROFILES.daring,{starter:0}).risk,1);
+ assert.equal(N.eventOptions('forgotten_reliquary',{hp:50,maxhp:100},N.PROFILES.cautious)[0],1);
+ assert.equal(N.eventOptions('forgotten_reliquary',{hp:100,maxhp:100},N.PROFILES.cautious)[0],0);
+});
+test('Room selection never reads hidden room kind to favor undiscovered loot or avoid an unseen elite',()=>{
+ const card={nodes:[{kind:'entrance'},{kind:'combat'},{kind:'elite'},{kind:'boss'}],edges:[[0,1],[0,2],[1,3],[2,3]]};
+ const state={stage:'choice',dungeon:{realm:'test',cards:[card],current:0,visited:[0],cleared:[],scouted:[],steps:12,discoveredSecrets:[]}};
+ const c={state,realmMap:()=>card,travelPath:i=>i===0?[0]:i===1||i===2?[0,i]:[],travelCost:path=>path.length-1};
+ const first=N.selectRoom(c,N.PROFILES.cautious,{hp:100,maxhp:100});
+ card.nodes[1].kind='shrine';card.nodes[2].kind='event';
+ const second=N.selectRoom(c,N.PROFILES.cautious,{hp:100,maxhp:100});
+ assert.equal(first.room,second.room);
+});
+test('Censored E2–E8 levels are not misreported as zero-percent success',()=>{
+ const options=N.parseArgs(['--seeds=9303','--profiles=cautious','--max-attempts=1']);
+ const fake={seed:9303,profile:'cautious',initialGear:{},attempts:[{level:1,attempt:1,status:'defeat',xpEarned:20,fightsWon:1}],
+  reached:[1],endLevel:1,stopReason:'E1 unbeaten',xp:20,talents:[],finalGear:{total:3,starter:3}};
+ const report=N.analyze([fake],options);
+ assert.equal(report.levels[0].attempts,1);
+ assert.equal(report.levels[1].attempts,0);
+ assert.match(report.levels[1].observations,/not_reached/);
+});
+test('Native runner source cannot inject free equipment, level unlocks or arbitrary enemy deaths',()=>{
+ const source=fs.readFileSync('scripts/v013-natural-progression.cjs','utf8');
+ for(const forbidden of ['a.setup(','.setUnlocked(','.encounter(','.makeItem(','.award(','.hp=0'])
+  assert(!source.includes(forbidden),'Runner bypasses native progression: '+forbidden);
+});
+test('One true E1 account run completes by victory, defeat or extraction without bypassing progression',()=>{
+ const cfg=N.parseArgs(['--seeds=9304','--profiles=cautious','--max-level=1','--max-attempts=1','--tick-limit=4500']);
+ const result=N.run(cfg),a=result.accounts[0],r=a.attempts[0];
+ assert.equal(result.coverage.accounts,1);assert.equal(result.coverage.attempts,1);
+ assert.equal(result.coverage.errors,0,JSON.stringify({error:r.error,stop:a.stopReason}));
+ assert(['victory','defeat','extracted'].includes(r.status),r.status);
+ assert(a.endLevel>=1&&a.endLevel<=2,'unlocked must only advance from natural Boss victory');
+ assert.equal(r.before.xp,0);assert.equal(r.before.earned,0);
+ assert(r.xpEnd>=r.xpStart);
+ assert(r.gearAfter.items.every(i=>i.rarity!==null));
+});
