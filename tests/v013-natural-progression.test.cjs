@@ -6,7 +6,7 @@ const clone=x=>JSON.parse(JSON.stringify(x));
 test('Natural E1–E8 defaults are bounded and include different player behaviors',()=>{
  const p=N.parseArgs();
  assert.deepEqual(p.seeds,[9101,9201]);assert.deepEqual(p.profiles,['cautious','balanced']);
- assert.equal(p.maxLevel,8);assert.equal(p.maxAttempts,3);
+ assert.equal(p.maxLevel,8);assert.equal(p.maxAttempts,6);
  assert.throws(()=>N.parseArgs(['--max-level=9']),/E1–E8/);
  assert.throws(()=>N.parseArgs(['--max-attempts=0']),/Max attempts/);
  assert.throws(()=>N.parseArgs(['--profiles=synthetic']),/Invalid profiles/);
@@ -45,14 +45,18 @@ test('Realm selection and human-like event preferences respond to risk and HP',(
  assert.equal(N.eventOptions('forgotten_reliquary',{hp:50,maxhp:100},N.PROFILES.cautious)[0],1);
  assert.equal(N.eventOptions('forgotten_reliquary',{hp:100,maxhp:100},N.PROFILES.cautious)[0],0);
 });
-test('Room selection never reads hidden room kind to favor undiscovered loot or avoid an unseen elite',()=>{
- const card={nodes:[{kind:'entrance'},{kind:'combat'},{kind:'elite'},{kind:'boss'}],edges:[[0,1],[0,2],[1,3],[2,3]]};
+test('A cautious player uses UI-visible mob ranges and prioritizes a reachable solo room',()=>{
+ const card={nodes:[{kind:'entrance'},{kind:'combat',range:[1,1]},{kind:'combat',range:[2,4]},{kind:'boss'}],edges:[[0,1],[0,2],[1,3],[2,3]]};
  const state={stage:'choice',dungeon:{realm:'test',cards:[card],current:0,visited:[0],cleared:[],scouted:[],steps:12,discoveredSecrets:[]}};
  const c={state,realmMap:()=>card,travelPath:i=>i===0?[0]:i===1||i===2?[0,i]:[],travelCost:path=>path.length-1};
  const first=N.selectRoom(c,N.PROFILES.cautious,{hp:100,maxhp:100});
- card.nodes[1].kind='shrine';card.nodes[2].kind='event';
+ assert.equal(first.room,1);
+ assert.deepEqual(first.visibleMobRange,[1,1]);
+ card.nodes[2].kind='shrine';
  const second=N.selectRoom(c,N.PROFILES.cautious,{hp:100,maxhp:100});
- assert.equal(first.room,second.room);
+ assert.equal(second.room,2,'a discovered accessible shrine is allowed to influence native decision');
+ card.nodes[3].kind='elite';
+ assert.equal(N.selectRoom(c,N.PROFILES.cautious,{hp:100,maxhp:100}).room,2,'unreachable room 3 must not alter choice');
 });
 test('Censored E2–E8 levels are not misreported as zero-percent success',()=>{
  const options=N.parseArgs(['--seeds=9303','--profiles=cautious','--max-attempts=1']);
