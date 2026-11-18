@@ -197,7 +197,8 @@ function phase1StartWave(resetScroll=false){
   seed:g.dungeon?.foundationManifest?.seed??0,realm:theme.id,family:g.selected.family||g.bossFamily||'blood',
   node:g.selected.node??g.planeIndex,count:totalCount,catalog:theme.mobs
  }):null;
- const spawn=index=>ports.enemyFor(r.tier,r.enc,{theme,mob:roster?.[index]||null,boss:last&&g.selected.boss,elite:last&&g.selected.elite&&!g.selected.boss,variant:g.version===2?ports.BOSS_ARCHETYPES.find(b=>b.style===WandererV012Expedition.BOSSES.find(v=>v.id===g.bossId).style):null});
+ const actualBossStyle=last&&g.selected.boss&&g.version===2?WandererV012Expedition.bossForAffinity(g.selected.family)?.style:null;
+ const spawn=index=>ports.enemyFor(r.tier,r.enc,{theme,mob:roster?.[index]||null,boss:last&&g.selected.boss,elite:last&&g.selected.elite&&!g.selected.boss,variant:actualBossStyle?ports.BOSS_ARCHETYPES.find(b=>b.style===actualBossStyle):null});
  const scale=totalCount>=6?{hp:(1.65+.045*(totalCount-6))/totalCount,atk:totalCount>=18?.12:.16}:null;
  const group=WandererV012CombatCore.createEnemyGroup(spawn,totalCount,{activeSlots:activeCount,scale,
   ...(roster?{scaleFor:(enemy,count,base)=>rosterSystem.scaleFor(enemy,count,base)}:{})
@@ -212,8 +213,10 @@ function phase1StartWave(resetScroll=false){
  const traits=globalThis.WandererV013EncounterTraits;
  const modifiers=globalThis.WandererV013BossModifiers;
  const preparation=globalThis.WandererV013BossPreparation;
- const bossIds=g.dungeon&&g.selected.boss&&modifiers?(preparation?preparation.effectiveModifiers(g):modifiers.selection(g)):[];
- if(bossIds.length&&!modifiers.check(bossIds,WandererV012Expedition.BOSSES.find(v=>v.id===g.bossId).style,g.dungeon.foundationState?.conditionId))throw Error('Invalid boss modifiers for the native encounter');
+ const plannedBossIds=g.dungeon&&g.selected.boss&&modifiers?(preparation?preparation.effectiveModifiers(g):modifiers.selection(g)):[];
+ // Manifest compatibility: properties planned for the legacy global boss are applied only if valid for the chosen Affinity Boss.
+ const bossIds=plannedBossIds;
+ if(bossIds.length&&!modifiers.check(bossIds,actualBossStyle||group[0].bossStyle,g.dungeon?.foundationState?.conditionId))throw Error('Incompatible Boss modifiers for selected Affinity');
  r.bossModifierIds=[];
  if(g.selected.boss&&modifiers){if(!modifiers.activate(r,group[0],bossIds))throw Error('Boss modifiers failed to apply');
   if(preparation){const factor=preparation.bossAttackFactor(g);group[0].atk=Math.max(1,Math.round(group[0].atk*factor));r.bossPreparation={...preparation.status(g)};if(factor<1)ports.addLog('Marked Elite defeated: boss attacks weakened by 10%.','good');}
@@ -240,11 +243,12 @@ function phase1StartWave(resetScroll=false){
  const fieldCount=Math.min(4,group.length);
  group[0].groupSlot=0;
  for(const enemy of group)enemy.groupClock=traits?traits.initialClock(enemy,enemy.groupSlot):Math.max(0,enemy.attackEvery-(.9+enemy.groupSlot*.3));
- r.totalMobCount=group.length;r.enemies=fieldCount>1?group.slice(0,fieldCount):undefined;r.groupReserve=group.slice(fieldCount);if(fieldCount===1)delete r.enemies;r.enemy=group[0];r.encounterLeader=last&&(g.selected.boss||g.selected.elite)?group[0]:null;
+ r.initialMobCount=group.length;r.totalMobCount=group.length;r.enemies=fieldCount>1?group.slice(0,fieldCount):undefined;r.groupReserve=group.slice(fieldCount);if(fieldCount===1)delete r.enemies;r.enemy=group[0];r.encounterLeader=last&&(g.selected.boss||g.selected.elite)?group[0]:null;
  if(last&&g.selected.boss)globalThis.WandererV013BossInfrastructure?.attach(r,group[0]);
  r.phase6Bounty=false;if(r.enemy.miniboss&&ports.phase6Run?.effects.bounty){r.phase6Bounty=true;ports.phase6Run.effects.bounty=false;r.enemy.hp=r.enemy.maxhp=Math.ceil(r.enemy.maxhp*1.25);r.enemy.atk=Math.ceil(r.enemy.atk*1.25);}
  r.tPlayer=r.tDot=0;r.tEnemy=r.enemy.groupClock;r.setTemp=null;r.boonRotboundTriggers=0;r.playerDebuffUntil=0;
  r.playerHealingDebuffUntil=0;r.nextCasterHexAt=0;ports.setRuntime(r);r.status='fight';
+ if(last&&g.selected.boss)globalThis.WandererV013BossAbilities?.attach(r);
  if(ports.phase1Build)for(const enemy of r.enemies||[r.enemy])WandererV012Buildcraft.resetWave(ports.phase1Build,enemy);
  ports.addLog('Encounter: '+r.enemy.name+' · '+totalCount+' enemies');
  if(r.groupReserve?.length)ports.addLog(r.groupReserve.length+' reinforcements will fill the four arena positions.','good');
@@ -269,6 +273,8 @@ function phase1WaveWon(){
    const selectedTarget=r.enemy,dead=r.enemies.filter(enemy=>enemy.hp<=0&&!enemy.groupDefeated);if(!dead.length)return;
   for(const enemy of dead){r.enemy=enemy;enemy.groupDefeated=true;
   const death=globalThis.WandererV013BossInfrastructure?.onMinionDeath(r,enemy);
+   const bossDeath=globalThis.WandererV013BossAbilities?.onDeath(r,enemy);
+   if(bossDeath?.type==='node_broken'){ports.addLog('⚡ Storm Node destroyed · Arcane Convergence '+(bossDeath.canceled?'interrupted':'next cast canceled')+' · Boss weakened for '+bossDeath.duration+'s','good');ports.phase6Metric(r,'bossNodeDestroyed',1);}
   if(death?.healed){ports.addLog('☠ Minion falls · Boss recovers '+death.healed+' HP','spell');ports.phase6Metric(r,'bossHealing',death.healed);}
   if(death?.counted&&enemy.stage83Summoner==='boss')ports.phase6Metric(r,'bossMinionDeaths',1);
    const spread=globalThis.WandererV013ExpeditionBoons?.spreadOnDeath(r,enemy,ports.synchronizeDots)||0;

@@ -137,9 +137,9 @@ test('simulator preparation diagnostic uses same native boss and reports all fou
  assert.equal(report.summary.errors,0);assert.equal(report.summary.timeouts,0);
  assert.equal(report.rows[0].preparationCostHp,0);assert.equal(report.rows[1].preparationCostHp,0);
  assert(report.rows[2].preparationCostHp>0);assert.equal(report.rows[3].preparationCostHp,report.rows[2].preparationCostHp);
- assert.equal(report.rows[0].enemies,report.rows[2].enemies);
- assert.equal(report.rows[0].enemies-1,report.rows[1].enemies);
- assert.equal(report.rows[0].enemies-1,report.rows[3].enemies);
+ assert.equal(report.rows[0].initialEnemies,report.rows[2].initialEnemies);
+ assert.equal(report.rows[0].initialEnemies-1,report.rows[1].initialEnemies);
+ assert.equal(report.rows[0].initialEnemies-1,report.rows[3].initialEnemies);
  assert.equal(report.rows[0].bossModifierIds.length,2);
  assert.equal(report.rows[2].bossModifierIds.length,1);
  assert.equal(report.rows[3].bossModifierIds.length,1);

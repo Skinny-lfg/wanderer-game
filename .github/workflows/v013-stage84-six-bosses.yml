@@ -1,0 +1,19 @@
+name: Stage 8.4 Six affinity Bosses
+on:
+  pull_request:
+    branches: [publish/automatic-rpg-preview]
+  push:
+    branches: [feature/v013-stage84-boss-abilities-20261118]
+jobs:
+  stage84:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify Boss roster, mechanics, combat and native Dungeon
+        run: node --test tests/v013-stage80-enemy-roster.test.cjs tests/v013-stage81-enemy-abilities.test.cjs tests/v013-stage82-elite-abilities.test.cjs tests/v013-stage83-boss-infrastructure.test.cjs tests/v013-stage84-six-bosses.test.cjs
+      - name: Core Boss manifest, boss modifiers, preparation and expedition regression
+        run: node --test tests/v013-expedition-foundation.test.cjs tests/v013-boss-modifiers.test.cjs tests/v013-boss-modifiers-runtime.test.cjs tests/v013-boss-preparation-runtime.test.cjs tests/v013-current-dungeon-and-talents.test.cjs tests/v013-full-expedition-integration.test.cjs
