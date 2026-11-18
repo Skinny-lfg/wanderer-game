@@ -14,4 +14,4 @@ jobs:
         with:
           node-version: '22'
       - name: Run focused Stage 8 balance simulator and legacy compatibility tests
-        run: node --test tests/v013-balance-v2.test.cjs tests/v013-simulation.test.cjs tests/v013-stage5-simulation.test.cjs tests/v013-stage84-six-bosses.test.cjs
+        run: node --test tests/v013-balance-v2.test.cjs tests/v013-simulation.test.cjs tests/v013-stage5-simulation.test.cjs tests/v013-stage5-stress.test.cjs tests/v013-stage84-six-bosses.test.cjs

@@ -3,7 +3,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const M=require('../scripts/v013-stage5-stress.cjs');
 test('Stage 5 stress matrix rejects invalid or excessive scope, preserves selected profiles',()=>{
  const config=M.args(['--seed-start=9101','--seed-count=2','--levels=15,50','--builds=blood-fury,magic-decay','--gear=previous']);
- assert.deepEqual(config.levels,[15,50]);assert.deepEqual(config.builds,['blood-fury','magic-decay']);assert.equal(config.gear,'previous');
+ assert.deepEqual(config.levels,[15,50]);assert.deepEqual(config.builds,['blood-fury','magic-decay']);assert.equal(config.gear,'previous');assert.equal(config.contracts,'none');
  for(const invalid of ['--seed-count=0','--seed-count=9999','--levels=0','--builds=unknown','--out=','--untrusted=1','--seed-start=-1','--levels=1,15,30000'])
   assert.throws(()=>M.args([invalid]),invalid);
 });
@@ -26,6 +26,10 @@ test('Stage 5 stress report separates wins, route-blocked runs, mechanic exposur
  assert.equal(report.rollups.build.length,1);
  assert.equal(report.rollups.level.length,1);
  assert.equal(report.rollups.condition.reduce((n,x)=>n+x.n,0),3);
+ assert.equal(report.rollups.affinity.reduce((n,x)=>n+x.n,0),3);
+ assert.equal(report.rollups.boss.reduce((n,x)=>n+x.n,0),3);
+ assert(report.groups.every(x=>x.affinity&&x.bossName));
+ assert(report.rollups.affinity.every(x=>Number.isFinite(x.meanEnemyAbilityCasts)));
  assert(report.rollups.condition.every(x=>x.p50Seconds!==null&&x.p90Seconds>=x.p50Seconds&&x.win95Pct.length===2));
  assert.equal(report.summary.errors,0);
  assert.equal(report.summary.timeouts,0);

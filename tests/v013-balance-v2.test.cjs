@@ -11,7 +11,7 @@ test('CLI supports current six-Boss, Elite and swarm modes, bounded affinities/r
  assert.equal(opts.mode,'bosses');assert.deepEqual(opts.affinities,['magic','decay']);assert.deepEqual(opts.risks,[0,2]);assert.equal(opts.points,0);assert.equal(opts.boons,'first');
  opts=S.parseArgs(['--mode=enemies','--group-sizes=3,12,20']);assert.deepEqual(opts.groupSizes,[3,12,20]);
  assert.equal(S.parseArgs(['--mode=elites']).mode,'elites');
- for(const arg of ['--affinities=unknown','--risks=3','--group-sizes=1','--group-sizes=23','--points=-1','--points=101','--mode=obsolete','--boons=best'])
+ for(const arg of ['--affinities=unknown','--risks=3','--group-sizes=1','--group-sizes=23','--points=-1','--points=101','--mode=obsolete','--boons=best','--contracts=best'])
   assert.throws(()=>S.parseArgs([arg]),arg);
  assert.throws(()=>S.parseArgs(['--mode=bosses','--levels=1,5,15,35,50,70,100,200,250,500,1000','--seeds='+Array.from({length:30},(_,i)=>i+1).join(',')]),/matrix too large/);
 });
@@ -71,6 +71,15 @@ test('Real Dungeon balance report includes Stage 7 Essence/reagents/XP and Stage
  assert(Number.isFinite(data.talentXpNet));
  assert(data.coresNet&&Object.keys(data.coresNet).length===6);
  assert(data.rooms.every(r=>Number.isFinite(r.enemyAbilityCasts)&&Number.isFinite(r.bossSummons)));
+});
+test('Optional Contract policy selects the actual native Stage 7 offer without injecting rewards',()=>{
+ const opts={...small,mode:'dungeon',contracts:'first',boons:'none'};
+ const row=S.dungeon(15,S.BUILDS[0],9101,opts);
+ assert.equal(row.error,null,JSON.stringify(row));
+ assert(row.contractId);
+ assert(row.contractReward===null||typeof row.contractReward==='object');
+ const repeat=S.dungeon(15,S.BUILDS[0],9101,opts);
+ assert.deepEqual(row,repeat);
 });
 test('Historical Rift-only diagnostic and synthetic boss-ID manipulation have been removed',()=>{
  const src=fs.readFileSync('scripts/simulate-progression.cjs','utf8');
