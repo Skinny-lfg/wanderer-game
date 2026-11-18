@@ -34,7 +34,7 @@
 .inspectActions{margin:9px 0 7px;display:flex;flex-wrap:wrap;gap:5px;align-items:center}
 .inspectActions button{min-height:34px}
 .slotTile .slotDLevel,.miniSlot .miniDLevel{position:absolute;top:2px;left:2px;font-size:9px!important;font-weight:800;color:#e6d19f;background:#111a23e8;border-radius:3px;padding:1px 3px;pointer-events:none}
-.invItem .gearTrend{position:absolute;bottom:2px;right:2px;z-index:3;padding:1px 4px;background:#101a23dd;border-radius:4px;font-size:14px;font-weight:900}
+:is(.invItem,.phase3BagItem) .gearTrend{position:absolute;bottom:2px;right:2px;z-index:3;padding:1px 4px;background:#101a23dd;border-radius:4px;font-size:14px;font-weight:900}
 .gearTrend.up{color:#7cdd9f}.gearTrend.down{color:#fc8e8e}.gearTrend.same{color:#b0b8c1}
 .merchantEquipped{display:flex;align-items:center;flex-wrap:wrap;min-width:0;gap:5px;font-size:11px;color:#c2d0de;border-top:1px solid #374151;padding-top:6px;margin-top:7px;overflow-wrap:anywhere}
 .merchantEquipped img{height:30px;width:30px;object-fit:contain}
