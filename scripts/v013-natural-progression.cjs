@@ -9,11 +9,11 @@ const S=require('./simulate-progression.cjs');
 require('../online/v013-map-intelligence.js');
 const I=globalThis.WandererV013MapIntelligence;
 const PROFILES=Object.freeze({
- cautious:{name:'Cautious',risk:0,targets:['strong_heart','guarded_block','renewal','guard','vitality','might'],families:['aegis','vitality'],healAt:.72,retreatAt:.2,target:'mechanics',shop:true},
- balanced:{name:'Balanced',risk:0,targets:['bleeding_edge','deep_cuts','strong_heart','might','vitality'],families:['blood','aegis'],healAt:.53,retreatAt:.12,target:'mechanics',shop:true},
- daring:{name:'Daring',risk:1,targets:['quick_hands','double_strike','bleeding_edge','might','haste'],families:['fury','blood'],healAt:.35,retreatAt:.07,target:'focus',shop:true}
+ cautious:{name:'Cautious',risk:0,targets:['strong_heart','guarded_block','renewal','guard','vitality','might'],families:['aegis','vitality'],healAt:.72,retreatAt:.5,target:'mechanics',shop:true},
+ balanced:{name:'Balanced',risk:0,targets:['bleeding_edge','deep_cuts','strong_heart','might','vitality'],families:['blood','aegis'],healAt:.53,retreatAt:.34,target:'mechanics',shop:true},
+ daring:{name:'Daring',risk:1,targets:['quick_hands','double_strike','bleeding_edge','might','haste'],families:['fury','blood'],healAt:.35,retreatAt:.16,target:'focus',shop:true}
 });
-const DEFAULTS=Object.freeze({seeds:[9101,9201],profiles:['cautious','balanced'],maxLevel:8,maxAttempts:3,tickLimit:4500,maxRooms:34,output:'reports/v013-stage93-natural-e1-e8.json'});
+const DEFAULTS=Object.freeze({seeds:[9101,9201],profiles:['cautious','balanced'],maxLevel:8,maxAttempts:6,tickLimit:4500,maxRooms:34,output:'reports/v013-stage93-natural-e1-e8.json'});
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const round=(n,places=2)=>Number(Number(n).toFixed(places));
 function parseArgs(args=[]){
@@ -24,7 +24,7 @@ function parseArgs(args=[]){
   if(k==='seeds'){v.seeds=[...new Set(value.split(',').map(Number))];if(!v.seeds.length||v.seeds.some(x=>!Number.isSafeInteger(x)||x<1))throw Error('Invalid seeds');}
   else if(k==='profiles'){v.profiles=[...new Set(value.split(','))];if(!v.profiles.length||v.profiles.some(x=>!PROFILES[x]))throw Error('Invalid profiles');}
   else if(k==='max-level'){v.maxLevel=Number(value);if(!Number.isInteger(v.maxLevel)||v.maxLevel<1||v.maxLevel>8)throw Error('Levels are E1–E8 only');}
-  else if(k==='max-attempts'){v.maxAttempts=Number(value);if(!Number.isInteger(v.maxAttempts)||v.maxAttempts<1||v.maxAttempts>8)throw Error('Max attempts must be 1–8');}
+  else if(k==='max-attempts'){v.maxAttempts=Number(value);if(!Number.isInteger(v.maxAttempts)||v.maxAttempts<1||v.maxAttempts>12)throw Error('Max attempts must be 1–12');}
   else if(k==='tick-limit'){v.tickLimit=Number(value);if(!Number.isInteger(v.tickLimit)||v.tickLimit<100||v.tickLimit>100000)throw Error('Invalid tick limit');}
   else if(k==='out'&&value.endsWith('.json'))v.output=value;
   else throw Error('Unsupported option: '+arg);
@@ -167,24 +167,42 @@ function pathLength(card,d,start,dest){
 }
 function selectRoom(c,profile,vitals){
  const g=c.state,d=g.dungeon,card=c.realmMap(),boss=card.nodes.findIndex(n=>n.kind==='boss');
- const selected=[];
+ const selected=[],hpRatio=vitals.maxhp>0?vitals.hp/vitals.maxhp:0;
  const currentDist=pathLength(card,d,d.current,boss);
  for(let i=0;i<card.nodes.length;i++){
   if(d.cleared.includes(i)||i===d.current)continue;
   const route=c.travelPath(i);if(!route?.length)continue;
   const cost=c.travelCost(route);if(cost>d.steps)continue;
-  const known=d.scouted.includes(i)||d.visited.includes(i);
-  const type=known?card.nodes[i].kind:'unknown';
-  const dist=pathLength(card,d,i,boss);
-  const improves=dist<currentDist;
-  let score=dist*4+cost*2+(improves?-2:4)+(known?-1:0);
-  if(type==='shrine')score-=12;
-  if(type==='spring'&&vitals.hp/vitals.maxhp<.8)score-=10;
-  if(type==='elite')score+=profile.name==='Daring'?2:9;
-  if(type==='event')score-=2;
-  if(i===boss){score+=vitals.hp/vitals.maxhp<.6?9:0;score-=d.steps<3?9:0;}
+  // The native map UI reveals type and mob range for reachable rooms:
+  // index.html dungeonMapMarkup() uses travelPath(i).length > 0 || scouted.
+  // This is NOT a look ahead at unreachable/undiscovered nodes.
+  const known=!!route.length||d.scouted?.includes(i);
+  const node=known?card.nodes[i]:null,type=node?.kind||'unknown';
+  const dist=pathLength(card,d,i,boss),improves=dist<currentDist;
+  let score=dist*1.5+cost*2+(improves?-2:5)+(known?-1:0);
+  if(type==='combat'){
+   const max=Number(node.range?.[1]??node.count??4);
+   const min=Number(node.range?.[0]??node.count??max);
+   // A cautious early player chooses the actual visible solo encounter over
+   // rushing 3, 12 or 20 mobs with the starter Worn Tunic.
+   if(max===1)score-=19;
+   else if(max<=4)score+=profile.name==='Daring'?1:7+(min>=3?2:0);
+   else if(max<=12)score+=profile.name==='Daring'?9:19;
+   else score+=profile.name==='Daring'?17:28;
+   if(hpRatio<.7&&max>1)score+=8;
+  }
+  if(type==='shrine')score-=15;
+  if(type==='spring'&&hpRatio<.8)score-=20;
+  if(type==='elite')score+=profile.name==='Daring'?12:28;
+  if(type==='event')score-=5;
+  if(type==='boss'){
+   if(hpRatio<.65)score+=18;
+   else score+=3;
+   if(d.steps<3)score-=8;
+  }
   if(d.steps<dist+2)score+=8;
-  selected.push({room:i,score,dist,cost,known,type});
+  selected.push({room:i,score,dist,cost,known,type,
+   ...(type==='combat'?{visibleMobRange:node.range||[node.count,node.count]}:{})});
  }
  return selected.sort((a,b)=>a.score-b.score||a.room-b.room)[0]||null;
 }
@@ -202,10 +220,16 @@ function eventOptions(id,v,profile){
  return profile.name==='Daring'?[0,2,1]:[2,0,1];
 }
 function usePotionsBetween(a,profile,history){
- const run=a.potions.supplies?.(); // Historical supplies are read-only; actual doses live in native phase6Run.
  const v=a.vitals(),used=[];
- if(v.maxhp>0&&v.hp/v.maxhp<profile.healAt)for(let i=0;i<3;i++)if(a.potions.use(i)){used.push({slot:i,reason:'low_hp',ratio:round(v.hp/v.maxhp)});break;}
- // Do not manufacture consumable stock or cast in combat; native APIs enforce legality.
+ const run=a.events.run?.();
+ const slots=run?.started?(run.potions||[]):(a.state().potionSelection||[]).map(kind=>({kind,used:false}));
+ // Choose by actual potion kind. Never accidentally spend a Scout or Trail
+ // potion when the decision was to heal.
+ if(v.maxhp>0&&v.hp/v.maxhp<profile.healAt){
+  const i=slots.findIndex(p=>p?.kind==='health'&&!p.used);
+  if(i>=0&&a.potions.use(i))used.push({kind:'health',slot:i,reason:'low_hp',ratio:round(v.hp/v.maxhp)});
+ }
+ // No synthetic replenishment, no mid-combat potion use.
  if(used.length)history.push(...used);
  return used;
 }
