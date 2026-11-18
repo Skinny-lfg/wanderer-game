@@ -31,9 +31,10 @@ function show(run,kind,origin,receivers){
  if(!scene||typeof scene.getBoundingClientRect!=='function'||typeof scene.querySelectorAll!=='function'||
     typeof scene.appendChild!=='function'||typeof document.createElement!=='function')return 0;
  const now=Number(run.combatSeconds)||0,prev=recent.get(run);
- if(prev?.kind===kind&&now-prev.at<COOLDOWN)return 0;
- const from=point(scene,nodeFor(scene,run,origin));if(!from)return 0;
  const targets=[...new Set((Array.isArray(receivers)?receivers:[receivers]).filter(Boolean))].slice(0,MAX_TARGETS);
+ if(prev?.kind===kind&&prev.origin===origin&&now-prev.at>=0&&now-prev.at<COOLDOWN&&
+    prev.targets.length===targets.length&&targets.every((target,i)=>prev.targets[i]===target))return 0;
+ const from=point(scene,nodeFor(scene,run,origin));if(!from)return 0;
  let shown=0;
  for(const target of targets){
   const to=point(scene,nodeFor(scene,run,target));if(!to)continue;
@@ -51,7 +52,7 @@ function show(run,kind,origin,receivers){
   fx.addEventListener?.('animationend',()=>fx.remove?.(),{once:true});
   if(typeof setTimeout==='function')setTimeout(()=>fx.remove?.(),DURATION);
  }
- if(shown)recent.set(run,{kind,at:now});
+ if(shown)recent.set(run,{kind,at:now,origin,targets});
  return shown;
 }
 const API=Object.freeze({COLORS,MAX_ACTIVE,MAX_TARGETS,DURATION,nodeFor,show});
