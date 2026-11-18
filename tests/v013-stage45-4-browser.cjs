@@ -103,7 +103,7 @@ async function main(){
   await page.screenshot({path:path.join(out,'04-camp-mobile.png'),fullPage:true});
   await page.locator('[data-phase1-expedition]:visible').first().click();
   const cards=page.locator('[data-realm-card]');assert.equal(await cards.count(),3);
-  const titles=await cards.allInnerTexts();assert(titles.every(x=>x.includes('Known boss omen:')));
+  const titles=await cards.allInnerTexts();assert(titles.every(x=>/Known Boss Omen/i.test(x)&&/Reagent/i.test(x)));
   await page.screenshot({path:path.join(out,'05-realm-cards-mobile.png'),fullPage:true});
   await cards.nth(1).click(); // Dangerous
   assert.equal(await page.locator('[data-stage7-contract]').count(),2,'Stage 7 must offer two feasible contracts');
