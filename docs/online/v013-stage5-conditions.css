@@ -1,0 +1,7 @@
+/* Stage 5 conditions: readable warnings without hiding the complex Realm map. */
+.stage5Condition{border-left:3px solid #b36e82;padding:7px 10px;margin:8px 0;background:rgba(92,39,60,.20);color:#e9d8d5;font-size:.9em;line-height:1.45}
+.stage5Condition b{color:#f2c2b5}
+.stage5Condition span{display:block;color:#dac8ba;font-size:.92em;margin-top:3px}
+.stage5ConditionRoom{display:block;color:#f0b5c7;margin-top:3px;font-size:.77em}
+.phase1Offer .stage5Condition{font-size:.86em}
+@media(max-width:650px){.phase1Offer .stage5Condition{font-size:.84em;padding:5px 8px}}

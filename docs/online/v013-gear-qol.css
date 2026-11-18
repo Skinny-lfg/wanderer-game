@@ -1,0 +1,17 @@
+/* v0.13 gear-and-economy clarity; never targets the v0.12 live branch. */
+.walletReagents{position:relative;display:inline-flex;align-items:center;font-size:.9em}
+.walletReagents>summary{list-style:none;cursor:pointer;white-space:nowrap;border:1px solid rgba(183,144,102,.35);border-radius:5px;padding:5px 9px;color:#dfc9b7}
+.walletReagents>summary::-webkit-details-marker{display:none}
+.walletReagents>summary b{color:#f1d5ab;margin-left:3px}
+.walletReagentList{position:absolute;top:calc(100% + 6px);right:0;min-width:235px;z-index:100;display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:10px;background:#211820;border:1px solid #88664f;border-radius:8px;box-shadow:0 7px 25px #000b}
+.walletReagent{display:flex;align-items:center;gap:5px;font-size:.85em;text-transform:capitalize;white-space:nowrap}
+.walletReagent b{margin-left:auto;color:#f3d3a8}
+.walletEssence{color:#e8cc9f}
+.phase3Nav [data-phase3-nav="talents"]{position:relative}
+.talentUnspentBadge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;margin-left:6px;padding:0 4px;border-radius:12px;border:1px solid #d6a26a;background:#65412d;color:#fff6dc;font-weight:800;font-size:.75rem;line-height:1}
+.slotDLevel{font-size:.65em}
+@media(max-width:680px){
+ .walletReagentList{left:0;right:auto;min-width:210px}
+ .walletReagents>summary{padding:3px 6px;font-size:.9em}
+ .talentUnspentBadge{min-width:16px;height:16px;font-size:.7rem}
+}

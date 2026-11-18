@@ -178,7 +178,9 @@ function setHeal(r,amount,reserveRelease=false){
  // Tank's healing wound affects all player healing: regeneration, Drain,
  // Nature, Soul Pact and heal-on-hit, but does not reduce Barrier generation.
  const healingReduced=(r.playerHealingDebuffUntil||0)>ports.setNow(r);
- const heal=Math.max(0,Number(amount)||0)*(healingReduced ? 0.60 : 1),before=r.hp;
+ const bossHealingFactor=globalThis.WandererV013BossModifiers?.healingFactor(r)??1;
+ const conditionHealingFactor=globalThis.WandererV013ExpeditionConditions?.healingFactor(r)??1;
+ const heal=Math.max(0,Number(amount)||0)*(healingReduced ? 0.60 : 1)*bossHealingFactor*conditionHealingFactor,before=r.hp;
  r.hp=Math.min(r.maxhp,r.hp+heal);
  const actual=r.hp-before,overheal=heal-actual;if(!reserveRelease&&overheal>0){if(prepared('lifeweaver'))r.lifeCharge=true;if(before>=r.maxhp&&learned('deep_reserves')&&!r.reserveSaved){r.reserveSaved=true;r.deepReserve=Math.min(overheal,r.maxhp*.08);}}ports.phase6Metric(r,'healing',actual);
  if(!reserveRelease&&heal>0&&ports.legendaryReady(r,'charm-of-the-dawnstar'))ports.legendaryRuntime(r).reserve=Math.min(r.maxhp*.04,heal);
@@ -351,7 +353,8 @@ function triggered(r,id){r.outerUses??={};r.outerUses[id]=(r.outerUses[id]||0)+1
 function weaponAttack(r,offhandStrike=false){
  const s=r.stats,e=r.enemy,weapon=offhandStrike?s.off:s.main,off=s.off,caster=!offhandStrike&&s.caster,now=ports.setNow(r),temp=ports.setRuntime(r);
  const lt=ports.legendaryRuntime(r),focus=!!lt.focusReady,armorReady=!!lt.armorReady;lt.focusReady=false;lt.armorReady=false;
- const kind=weapon?.subtype||'Unarmed',baseCost=kind==='Staff'?13:kind==='Wand'?9:0;
+ // An Off-Hand Dagger uses the same physical scaling as Daggers, before its 50% penalty.
+ const kind=weapon?.subtype==='Off-Hand Dagger'?'Daggers':weapon?.subtype||'Unarmed',baseCost=kind==='Staff'?13:kind==='Wand'?9:0;
  const normalCost=baseCost&&ports.isPhase1Run()&&ports.phase1Build?.element?WandererV012Buildcraft.nextCost(ports.phase1Build,baseCost):baseCost;
  const cost=v013FundedCost(normalCost);
  let damage=0,element=null,cast=false;
@@ -367,7 +370,7 @@ function weaponAttack(r,offhandStrike=false){
   const factor=kind==='Two-Handed'?1.70:kind==='Mace'?1.4:kind==='Bow'?1.08:kind==='Daggers'?.80:kind==='Sword'?1.12:caster?.55:1;
   damage=Math.max(1,Math.round(s.attack*factor)-Math.round(WandererV012Buildcraft.enemyDefense(ports.phase1Build,e)*(armorReady?.8:1)));
  }
- if(offhandStrike)damage=Math.max(1,Math.round(damage*.35));
+ if(offhandStrike)damage=Math.max(1,Math.round(damage*.50));
  if(ports.state.automaticTalents?.nodes?.includes('single_target_mastery')&&(!r.groupReserve?.length&&(!r.enemies||r.enemies.filter(enemy=>enemy.hp>0).length===1)))damage=Math.max(1,Math.round(damage*1.15));
  const specialized=ports.state.automaticTalents?.nodes||[];
  if(specialized.includes('blood_focus'))damage=Math.max(1,Math.round(damage*.9));
@@ -448,7 +451,7 @@ function weaponAttack(r,offhandStrike=false){
  }
  // Crescent keeps its cooldown-limited Bleed extension without independent off-hand hits.
  ports.legendaryOffhand(r,damage);
- if(!offhandStrike&&ports.WANDERER_DOUBLE_STRIKE_ENABLED&&kind==='Daggers'&&damage>0&&e.hp>0&&ports.gameRandom()<.25){
+ if(!offhandStrike&&ports.WANDERER_DOUBLE_STRIKE_ENABLED&&kind==='Daggers'&&!['Daggers','Off-Hand Dagger'].includes(off?.subtype)&&damage>0&&e.hp>0&&ports.gameRandom()<.25){
   // One ordinary pre-critical main-hand hit, with no further rolls or recursive triggers.
   ports.setDirectEnemyDamage(r,Math.max(1,Math.round(base*.55)),'🗡 Double Strike!');
  }
@@ -458,7 +461,12 @@ function weaponAttack(r,offhandStrike=false){
   if(cast&&e.v012Rot?.length&&talents.includes('soul_sip')&&ports.setReady(r,'soulSip',5)){r.mp=Math.min(r.maxmp,r.mp+3);ports.addLog('🌀 Soul Sip restores Mana.','spell');}
   if(r.hp<r.maxhp*.5&&talents.includes('living_ward')&&ports.setReady(r,'livingWard',8)){ports.setBarrier(r,r.maxhp*.05);ports.addLog('🌿 Living Ward grants Barrier.','good');}
  }
- if(ports.isPhase1Run())ports.phase2WeaponAttack(r,base,critical,cast);
+ if(ports.isPhase1Run()&&!offhandStrike){
+   // Keep the purchased Fury Double Strike useful on the first main swing, but
+   // never proc it on an offhand hit or the main swing that triggers the offhand.
+   const dual=kind==='Daggers'&&['Daggers','Off-Hand Dagger'].includes(off?.subtype);
+   ports.phase2WeaponAttack(r,base,critical,cast,dual&&(r.offhandCadence||0)===1);
+  }
  if(!offhandStrike&&kind==='Two-Handed'){const factor=ports.state.automaticTalents?.nodes?.includes('cleave_mastery')?.6:.4;groupSecondaryDamage(r,base,[factor,factor],'⚔ Cleave',true);}
  if(!offhandStrike&&kind==='Daggers'&&ports.state.automaticTalents?.nodes?.includes('fan_of_blades'))groupSecondaryDamage(r,base,[.22,.22],'🗡 Fan of Blades',true);
  if(!offhandStrike&&kind==='Bow')groupSecondaryDamage(r,base,[ports.state.automaticTalents?.nodes?.includes('bow_pierce')?.55:.35],'🏹 Piercing Arrow',true);
@@ -467,10 +475,23 @@ function weaponAttack(r,offhandStrike=false){
  if(cast&&v013LightningChain(r))groupSecondaryDamage(r,base,v013LightningChainFactors(),'⚡ Chain Lightning');
  if(s.counts.shield>=2){const gained=ports.setBarrier(r,Math.max(1,Math.round(r.maxhp*(s.bonus.shieldBonus||0))));if(gained>0)ports.addLog('🛡 Shield set: +'+Math.round(gained)+' Barrier','good');}
  if(!offhandStrike&&weapon?.subtype==='Daggers'&&['Daggers','Off-Hand Dagger'].includes(off?.subtype)){
+  // Off-Hand swings at half the main-hand frequency: one strike for two main attacks.
   r.offhandCadence=((r.offhandCadence||0)+1)%2;
   if(r.offhandCadence===0&&e.hp>0){r.offhandStrikes=(r.offhandStrikes||0)+1;weaponAttack(r,true);}
  }
  return damage;
+}
+
+function resolveBossPulseLethal(r,s){
+ if(r.hp>0)return false;
+ if(prepared('last_bastion')&&ports.phase6Run&&!ports.phase6Run.bastionSpent){ports.phase6Run.bastionSpent=true;r.hp=1;const before=r.barrier;ports.setBarrier(r,r.maxhp*.35);r.bastionSize=r.barrier-before;r.bastionUntil=ports.setNow(r)+4;triggered(r,'last_bastion');}
+ if(r.hp>0)return false;
+ if(s.bonus.secondWind&&!r.secondWindUsed){r.secondWindUsed=true;r.hp=1;ports.setBarrier(r,r.maxhp*.08);ports.addLog('💚 Second Wind! Survived lethal damage (once per expedition)','good');return false;}
+ if(ports.isPhase1Run()&&ports.phase1Build&&WandererV012Buildcraft.survive(ports.phase1Build,ports.phase2Context(r))){
+  if(ports.phase4Entry?.session.build){ports.phase4Entry.session.build.runtime.lastStand=true;ports.phase5Persist();}
+  return false;
+ }
+ ports.die();return true;
 }
 
 function updateFight(){
@@ -482,7 +503,21 @@ function updateFight(){
   ports.state.onlineProgress.activeMs+=110/ports.clockSpeed;
  }
  const dt=.11,s=r.stats,t=ports.setRuntime(r);let e=r.enemy;
- r.combatSeconds=(r.combatSeconds||0)+dt;if(s.caster&&r.mp<v013FundedCost(s.main.subtype==='Staff'?13:9))ports.phase6Metric(r,'manaStarvedSeconds',dt);
+ r.combatSeconds=(r.combatSeconds||0)+dt;
+ if(globalThis.WandererV013ExpeditionConditions?.tick(r)){ports.phase6Metric(r,'conditionRiteTriggers',1);ports.addLog('Sanguine Rite · The boss grows stronger below half Health!','critical');}
+ if(r.bossModifierIds?.length&&globalThis.WandererV013BossModifiers){
+  const effects=globalThis.WandererV013BossModifiers.tick(r);
+  if(effects.frenzy){ports.addLog('Sanguine Frenzy · Boss attacks faster!','critical');ports.phase6Metric(r,'bossFrenzyTriggers',1);}
+  if(effects.pulse){ports.phase6Metric(r,'bossPulseTriggers',1);ports.phase6Metric(r,'damageTaken',effects.damage);ports.phase6Metric(r,'absorbed',effects.absorbed);
+   ports.addLog('Profane Pulse · '+effects.damage+' damage'+(effects.absorbed?' ('+effects.absorbed+' absorbed)':'')+'!','critical');
+   if(resolveBossPulseLethal(r,s))return;
+  }
+ }
+ if(s.caster&&r.mp<v013FundedCost(s.main.subtype==='Staff'?13:9))ports.phase6Metric(r,'manaStarvedSeconds',dt);
+ if(r.encounterTraitId==='unhallowed_regrowth'&&globalThis.WandererV013EncounterTraits){
+  const healed=globalThis.WandererV013EncounterTraits.regenTick(r);
+  if(healed>0){ports.phase6Metric(r,'traitRegrowthHealing',healed);ports.addLog('Unhallowed Regrowth restores '+healed+' enemy HP.','critical');}
+ }
  if(!ports.isPhase1Run()&&ports.state.onlineProgress?.timerMetric==='combat-v1'&&r.combatSeconds-(r.lastCombatCheckpoint||0)>=3){r.lastCombatCheckpoint=r.combatSeconds;ports.save();}
  ports.setCombatExpire(r,dt);ports.legendaryTick(r,dt);
  // v0.13 keeps actors in their arena slots. Only their independent attack
@@ -603,12 +638,7 @@ function updateFight(){
   }
  }
  if(r.enemies){r.enemy=target;e=target;}
- if(r.hp<=0&&prepared('last_bastion')&&ports.phase6Run&&!ports.phase6Run.bastionSpent){ports.phase6Run.bastionSpent=true;r.hp=1;const before=r.barrier;ports.setBarrier(r,r.maxhp*.35);r.bastionSize=r.barrier-before;r.bastionUntil=ports.setNow(r)+4;triggered(r,'last_bastion');}
- if(r.hp<=0){
-  if(s.bonus.secondWind&&!r.secondWindUsed){r.secondWindUsed=true;r.hp=1;ports.setBarrier(r,r.maxhp*.08);ports.addLog('💚 Second Wind! Survived lethal damage (once per expedition)','good');}
-  else if(ports.isPhase1Run()&&ports.phase1Build&&WandererV012Buildcraft.survive(ports.phase1Build,ports.phase2Context(r))){if(ports.phase4Entry?.session.build){ports.phase4Entry.session.build.runtime.lastStand=true;ports.phase5Persist();}}
-  else {ports.die();return;}
- }
+ if(resolveBossPulseLethal(r,s))return;
  if(e.hp<=0){ports.winEncounter();return;}
  ports.updateBars();
 }
@@ -638,9 +668,9 @@ function phase2Stats(){
  return ports.totalStats();
 }
 
-function phase2WeaponAttack(r,base,critical,cast){
+function phase2WeaponAttack(r,base,critical,cast,suppressDoubleStrike=false){
  if(!ports.isPhase1Run()||!ports.phase1Build)return;
- const ctx=ports.phase2Context(r);ctx.base=base;ctx.critical=critical;ctx.magical=cast;ctx.funded=!!cast;
+ const ctx=ports.phase2Context(r);ctx.base=base;ctx.critical=critical;ctx.magical=cast;ctx.funded=!!cast;ctx.suppressDoubleStrike=!!suppressDoubleStrike;
  WandererV012Buildcraft.onAttack(ports.phase1Build,ctx);
  if(cast&&ports.phase1Build.element){
   ctx.power=r.stats.spellPower;ctx.amp=r.stats.main?.subtype==='Staff'?1.25:r.stats.main?.subtype==='Wand'?1.12:1;

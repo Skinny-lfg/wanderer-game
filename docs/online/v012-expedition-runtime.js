@@ -187,7 +187,8 @@ function phase1StartWave(resetScroll=false){
  if(ports.state.automaticTalents?.nodes?.includes('affinity_aegis'))ports.setBarrier(r,r.maxhp*.05);
  const talentBarrier=ports.phase1Build?.runtime?.talentBonuses?.startBarrier||0;if(talentBarrier>0)ports.setBarrier(r,talentBarrier);
  const theme=ports.phase2Theme(g.selected.id);
- const totalCount=last&&(g.selected.boss||g.selected.elite)?1:(g.selected.mobCount||3),activeCount=Math.min(4,totalCount);
+ const conditions=globalThis.WandererV013ExpeditionConditions,conditionCard=g.dungeon&&ports.phase1Controller.realmMap();
+ const totalCount=last&&(g.selected.boss||g.selected.elite)?1:(conditions&&conditionCard?conditions.countFor(g.selected,conditionCard,g.dungeon):(g.selected.mobCount||3)),activeCount=Math.min(4,totalCount);
  const spawn=()=>ports.enemyFor(r.tier,r.enc,{theme,boss:last&&g.selected.boss,elite:last&&g.selected.elite&&!g.selected.boss,variant:g.version===2?ports.BOSS_ARCHETYPES.find(b=>b.style===WandererV012Expedition.BOSSES.find(v=>v.id===g.bossId).style):null});
  const scale=totalCount>=6?{hp:(1.65+.045*(totalCount-6))/totalCount,atk:totalCount>=18?.12:.16}:null;
  const group=WandererV012CombatCore.createEnemyGroup(spawn,totalCount,{activeSlots:activeCount,scale});
@@ -221,6 +222,7 @@ function phase1StartWave(resetScroll=false){
    guard.attackEvery*=1.3;guard.groupSlot=i+1;guard.groupClock=-(i+1)*.6;group.push(guard);
   }
  }
+ if(conditions&&conditionCard){const applied=conditions.applyEncounter(r,group,g.selected,conditionCard,g.dungeon);if(applied&&(r.conditionMarked||g.selected.boss))ports.addLog('Expedition Condition: '+applied.name,'critical');}
  const fieldCount=Math.min(4,group.length);
  group[0].groupSlot=0;
  for(const enemy of group)enemy.groupClock=traits?traits.initialClock(enemy,enemy.groupSlot):Math.max(0,enemy.attackEvery-(.9+enemy.groupSlot*.3));
@@ -271,10 +273,14 @@ function phase1WaveWon(){
  const fragments=Math.round((ports.roll(1,3)+Math.floor(r.tier*.24)+(boss?5:elite?3:0))*(r.phase6Bounty?1.5:1)*groupReward*(r.encounterTraitId?1.10:1));
  ports.state.gold+=gold;ports.state.fragments+=fragments;r.gold+=gold;r.fragments+=fragments;ports.phase5Results.gold+=gold;ports.phase5Results.fragments+=fragments;
  ports.addLog('Realm rewards pending: +'+gold+' Gold · +'+fragments+' Fragments.','good');
- const odds=ports.waveLootOdds(boss?5:elite?4:Math.min(3,1+Math.floor((g.planeIndex-1)/5)),r.stats.cha);odds.drop=Math.min(1,odds.drop*groupReward);if(ports.phase6Run?.effects.fortune)odds.drop=Math.min(1,odds.drop*1.25);
- if(ports.gameRandom()<odds.drop){
+ const stage=boss?5:elite?4:Math.min(3,1+Math.floor((g.planeIndex-1)/5));
+ const odds=g.dungeon?WandererV012LootRules.v013DungeonWaveOdds(stage,r.stats.cha):ports.waveLootOdds(stage,r.stats.cha);
+ odds.drop=Math.min(1,odds.drop*groupReward);if(ports.phase6Run?.effects.fortune)odds.drop=Math.min(1,odds.drop*1.25);
+ // First native Dungeon encounter always yields an Uncommon-or-better item so the Bag is not empty.
+ const firstRoom=g.dungeon&&g.dungeon.cleared?.length===1&&!g.selected.boss;
+ if(firstRoom||ports.gameRandom()<odds.drop){
   const theme=ports.phase2Theme(r.path),pick=g.dungeon&&g.selected.node===ports.phase1Controller.realmMap().objective&&ports.gameRandom()<.55?(ports.phase1Controller.realmMap().favoured||{slot:'offhand',subtype:'Shield'}):ports.dungeonEquipmentPick(theme,[]);
-  const rarity=ports.randomFromOdds(odds.rarities);
+  const rolled=ports.randomFromOdds(odds.rarities),rarity=firstRoom&&rolled==='Common'?'Uncommon':rolled;
   const item=ports.makeItem(r.tier,pick.slot,theme.effect,'loot',pick.subtype,rarity);
   // Gear in the Bag is at risk; equipped gear survives failure.
   if(ports.stashHasRoom())ports.state.stash.push({...item,isNew:true});

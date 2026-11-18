@@ -1,0 +1,45 @@
+name: Wanderer v0.13 integration (not a release gate)
+
+on:
+  pull_request:
+    paths:
+      - 'combat/**'
+      - 'economy/**'
+      - 'online/**'
+      - 'tests/**'
+      - 'scripts/**'
+      - 'index.html'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/v013-integration.yml'
+  push:
+    branches: [development, main]
+    paths:
+      - 'combat/**'
+      - 'economy/**'
+      - 'online/**'
+      - 'tests/**'
+      - 'scripts/**'
+      - 'index.html'
+      - 'package.json'
+      - 'package-lock.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-v013:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Native v0.13, map-to-boss and simulator regression tests
+        run: npm run test:v013:gate
+      # Deliberately separate from `npm test`, the historical v0.12 suite.
+      # A passing result is NOT a release approval while legacy tests are red.

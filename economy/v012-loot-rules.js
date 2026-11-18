@@ -21,6 +21,14 @@ function waveLootOdds(wave,cha=5){
  return {drop,rarities};
 }
 
+// v0.13 Dungeon loot is separate from unchanged v0.12 live drop odds.
+// Common combat rewards must actually reach the 12-slot Expedition Bag.
+function v013DungeonWaveOdds(wave,cha=5){
+ const legacy=waveLootOdds(wave,cha);
+ const tier=Math.max(1,Math.min(5,Number(wave)||1));
+ return {...legacy,drop:[0,.28,.30,.32,.60,1][tier]};
+}
+
 function randomFromOdds(odds,rng){
  let remaining=rng();
  for(const [key,probability]of Object.entries(odds)){remaining-=probability;if(remaining<0)return key;}
@@ -57,5 +65,5 @@ function dungeonEquipmentPick(theme,favored=[],TYPES,OFFHAND_TYPES,rng,sample){
  for(const option of options){rand-=option.prob;if(rand<0){found=option;break;}}
  return {slot:found.slot==='ring'?sample(['ring1','ring2']):found.slot,subtype:found.subtype};
 }
-root.WandererV012LootRules=Object.freeze({craftCost,waveLootOdds,randomFromOdds,dungeonEquipmentOdds,dungeonEquipmentPick});
+root.WandererV012LootRules=Object.freeze({craftCost,waveLootOdds,v013DungeonWaveOdds,randomFromOdds,dungeonEquipmentOdds,dungeonEquipmentPick});
 })(globalThis);

@@ -56,7 +56,7 @@ const P=[
  ['blood','carrion_detonation','Carrion Detonation','Consume one Bleed and one Rot to deal their remaining damage plus a small bonus (8s cooldown).',['blood','decay']],
  ['blood','crimson_pact','Crimson Pact','Pay 2% max HP to inflict an immediate empowered Bleed (8s cooldown; requires more than 20% HP).',['blood','vitality']],
  ['blood','sanguine_reprisal','Sanguine Reprisal','Blocking or absorbing Barrier charges a counter-bleed.',['blood','aegis']],
- ['blood','rupture','Rupture','Attacks against enemies with Bleed and Fury Sunder deal damage equal to two ticks of the strongest Bleed, capped at 3% enemy maximum Health (5s cooldown). Bleed is not consumed.',['blood','fury']],
+ ['blood','reapers_cadence','Rupture','Attacks against enemies with Bleed and Fury Sunder deal damage equal to two ticks of the strongest Bleed, capped at 3% enemy maximum Health (5s cooldown). Bleed is not consumed.',['blood','fury']],
  ['blood','hemal_sigil','Hemal Sigil','Magic converts Bleed into elemental Fire, Frost or Lightning effects.',['blood','magic']],
  ['decay','rot_symbiosis','Rot Symbiosis','Rot ticks recover a little HP (6s cooldown).',['decay','vitality']],
  ['decay','rot_husk','Rot Husk','Breaking a Barrier while Rot is active grants a small new ward.',['decay','aegis']],
@@ -105,7 +105,7 @@ const descriptions={
  overcharge:'Funded Lightning casts chain to two additional foes for 50% then 30% of the primary hit and add Static. Every 4 charges discharge for 32% Spell Power at rank 1 (+6 percentage points per rank), capped at 3.5% of the foe’s Max HP. Charges persist between Realms.'
 };
 const TAGS={
- PRODUCE_BLEED:['bleeding_edge','sanguine_fury','hex_bleed','crimson_pact','sanguine_reprisal'],CONSUMES_BLEED:['deep_cuts','executioner','blood_drinker','blood_ward','hemovore','plague_rupture','carrion_detonation','crimson_rush','rupture','hemal_sigil'],
+ PRODUCE_BLEED:['bleeding_edge','sanguine_fury','hex_bleed','crimson_pact','sanguine_reprisal'],CONSUMES_BLEED:['deep_cuts','executioner','blood_drinker','blood_ward','hemovore','plague_rupture','carrion_detonation','crimson_rush','reapers_cadence','hemal_sigil'],
  PRODUCE_ROT:['toxic_touch','toxic_precision'],CONSUMES_ROT:['virulent_rot','wasting_curse','wither','blight','plague_rupture','carrion_detonation','rot_recovery','rot_symbiosis','rot_ward','rot_husk','venom_shatter','hex_bolt','elemental_blight'],
  CRIT_SOURCE:['precision'],CRIT_PAYOFF:['sanguine_fury','brutal_crit','adrenaline','crimson_rush','toxic_precision','venom_shatter','plague_rupture','fervent_life','spell_surge'],
  BARRIER_SOURCE:['barrier_pulse','blood_ward','rot_ward','runic_shield','sanctuary','fervent_life'],BARRIER_PAYOFF:['retaliation','rot_husk','prismatic_rebound','guardians_oath','sanguine_reprisal'],
@@ -163,7 +163,7 @@ function capabilities(b){
 function functional(b,p){
  const c=capabilities(b),gates={
  deep_cuts:c.bleed,executioner:c.bleed,blood_drinker:c.bleed,sanguine_fury:c.crit,virulent_rot:c.rot,wasting_curse:c.rot,wither:c.rot,blight:c.rot,retaliation:c.barrier,brutal_crit:c.crit,adrenaline:c.crit,
- plague_rupture:c.bleed&&c.rot&&c.crit,carrion_detonation:c.bleed&&c.rot,blood_ward:c.bleed,sanguine_reprisal:c.block||c.barrier,hemovore:c.bleed,crimson_rush:c.crit&&c.bleed,rupture:c.bleed,hex_bleed:c.funded,hemal_sigil:c.funded&&c.bleed,
+ plague_rupture:c.bleed&&c.rot&&c.crit,carrion_detonation:c.bleed&&c.rot,blood_ward:c.bleed,sanguine_reprisal:c.block||c.barrier,hemovore:c.bleed,crimson_rush:c.crit&&c.bleed,reapers_cadence:c.bleed,hex_bleed:c.funded,hemal_sigil:c.funded&&c.bleed,
  rot_recovery:c.rot,rot_symbiosis:c.rot,rot_ward:c.rot,rot_husk:c.rot&&c.barrier,toxic_precision:c.crit,venom_shatter:c.rot&&c.crit,hex_bolt:c.rot&&c.funded,elemental_blight:c.rot&&c.funded,
  sanctuary:c.heal,guardians_oath:c.barrier,fervent_life:c.crit,life_conduit:c.heal&&c.funded,lifeweave:c.funded,counterstrike:c.block,iron_reversal:c.block,runic_shield:c.funded,prismatic_rebound:c.barrier&&c.funded,spellblade:c.funded,spell_surge:c.funded&&c.crit
  };
@@ -287,7 +287,7 @@ function onAttack(b,c){
  if(rank(b,'plague_rupture')&&crit&&e.bleedStacks>0&&e.v012Rot?.length&&ready(b,'plagueRupture',c.now,8)&&activated(b,'plague_rupture'))c.damage(Math.min(base*.55,e.maxhp*.032),'🩸 Plague Rupture');
  if(rank(b,'crimson_rush')&&crit&&e.bleedStacks>0&&activated(b,'crimson_rush'))c.damage(base*.15,'🩸 Crimson Rush');
  if(rank(b,'brutal_crit')&&crit&&activated(b,'brutal_crit'))c.damage(base*Math.min(.65,.12*Math.sqrt(rank(b,'brutal_crit'))),'⚔ Brutal Critical');
- if(rank(b,'double_strike')&&c.random()<Math.min(.60,.10*Math.sqrt(rank(b,'double_strike')))&&activated(b,'double_strike'))c.damage(base*.30,'🗡 Extra Strike');
+ if(rank(b,'double_strike')&&!c.suppressDoubleStrike&&c.random()<Math.min(.60,.10*Math.sqrt(rank(b,'double_strike')))&&activated(b,'double_strike'))c.damage(base*.30,'🗡 Extra Strike');
  if(rank(b,'fervent_life')&&crit&&ready(b,'ferventLife',c.now,4)&&activated(b,'fervent_life')){const amount=c.player.maxhp*.02,restorable=amount*(c.healingMultiplier??1),actual=heal(b,c,amount);if(actual<restorable)c.barrier((restorable-actual)*.5);}
  if(rank(b,'adrenaline')&&crit&&ready(b,'adrenaline',c.now,3)&&activated(b,'adrenaline'))b.runtime.adrenalineUntil=c.now+3;
  if(rank(b,'counterstrike')&&b.runtime.counterBlock&&activated(b,'counterstrike')){b.runtime.counterBlock=0;c.damage(base*.18,'🛡 Counterstrike');}
@@ -302,8 +302,8 @@ function onAttack(b,c){
  if(rank(b,'sanguine_reprisal')&&b.runtime.reprisalReady&&activated(b,'sanguine_reprisal')){
   b.runtime.reprisalReady=false;c.dot('bleed',base*.3);c.damage(base*.18,'🩸 Sanguine Reprisal');
  }
- if(rank(b,'rupture')&&e.furySunder>0&&e.dots?.bleed?.length&&ready(b,'reapersCadence',c.now,5)&&activated(b,'rupture'))c.damage(Math.min(2*Math.max(...e.dots.bleed.map(dot=>dot.damage||0)),e.maxhp*.03),'🩸 Rupture');
- if(b.runtime.prepared==='reapers_cadence'&&e.dots?.bleed?.length&&e.v012Rot?.length&&ready(b,'reaperFinal',c.now,6)&&activated(b,'reapers_cadence')){c.damage(Math.min(Math.max(...e.dots.bleed.map(dot=>dot.damage||0))+Math.max(...e.v012Rot.map(dot=>dot.damage||0)),e.maxhp*.04),"☠ Reaper's Cadence");c.trigger?.('reapers_cadence');}
+ if(rank(b,'reapers_cadence')&&e.furySunder>0&&e.dots?.bleed?.length&&ready(b,'reapersCadence',c.now,5)&&activated(b,'reapers_cadence'))c.damage(Math.min(2*Math.max(...e.dots.bleed.map(dot=>dot.damage||0)),e.maxhp*.03),'🩸 Rupture');
+ if(b.runtime.prepared==='septic_wound'&&e.dots?.bleed?.length&&e.v012Rot?.length&&ready(b,'reaperFinal',c.now,6)&&activated(b,'septic_wound')){c.damage(Math.min(Math.max(...e.dots.bleed.map(dot=>dot.damage||0))+Math.max(...e.v012Rot.map(dot=>dot.damage||0)),e.maxhp*.04),"☠ Reaper's Cadence");c.trigger?.('septic_wound');}
  if(rank(b,'venom_shatter')&&crit&&e.v012Rot?.length&&ready(b,'venomShatter',c.now,5)&&activated(b,'venom_shatter')){
   const rot=e.v012Rot.shift();c.damage(rot.damage*rot.remaining+Math.min(base*.20,e.maxhp*.015),'☠ Venom Shatter');
  }

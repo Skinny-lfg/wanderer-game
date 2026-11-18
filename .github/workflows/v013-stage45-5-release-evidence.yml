@@ -1,0 +1,83 @@
+name: Wanderer v0.13 Stage 4.5.5 release evidence (no deploy)
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/v013-stage45-5-release-evidence.yml'
+      - 'reports/v013-stage45-5-release-gate.md'
+      - 'tests/**'
+      - 'scripts/**'
+      - 'online/**'
+      - 'combat/**'
+      - 'economy/**'
+      - 'preview/**'
+      - 'index.html'
+      - 'package.json'
+      - 'package-lock.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  release-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Run v0.13 native and simulation release gate
+        run: npm run test:v013:gate
+      - name: Run independent browser QA (desktop + emulated mobile Chromium)
+        shell: bash
+        run: |
+          CHROME_BIN="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          if [ -n "$CHROME_BIN" ]; then
+            echo "CHROMIUM_PATH=$CHROME_BIN" >> "$GITHUB_ENV"
+            "$CHROME_BIN" --version
+          else
+            npx playwright install chromium
+          fi
+      - name: Stage 4.5.4 isolated Chromium browser smoke
+        run: npm run test:v013:stage45-browser
+      - name: Stage 4.5.5 Oracle, Marked Elite, boss and extraction browser QA
+        run: node tests/v013-stage45-5-browser.cjs
+      - name: Capture legacy-test failure evidence (non-blocking, not a pass)
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p reports/stage45-5-release
+          set +e
+          npm test > reports/stage45-5-release/legacy-test.log 2>&1
+          rc=$?
+          echo "$rc" > reports/stage45-5-release/legacy-test-exit-code.txt
+          echo "Legacy suite exit code: $rc (nonzero means unresolved failures)"
+          exit 0
+      - name: Capture npm dependency audit (non-blocking, not a security clearance)
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p reports/stage45-5-release
+          set +e
+          npm audit --json > reports/stage45-5-release/npm-audit.json
+          rc=$?
+          echo "$rc" > reports/stage45-5-release/npm-audit-exit-code.txt
+          echo "npm audit exit code: $rc (must be triaged before release)"
+          exit 0
+      - name: Summarize historical failures and dependency exposure candidates
+        if: always()
+        run: node scripts/v013-stage45-5-triage.cjs
+      - name: Upload release evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v013-stage45-5-release-evidence-${{ github.run_id }}
+          path: |
+            reports/stage45-4-browser/
+            reports/stage45-5-browser/
+            reports/stage45-5-release/
+          if-no-files-found: warn
