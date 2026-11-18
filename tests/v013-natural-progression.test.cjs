@@ -83,3 +83,15 @@ test('One true E1 account run completes by victory, defeat or extraction without
  assert(r.xpEnd>=r.xpStart);
  assert(r.gearAfter.items.every(i=>i.rarity!==null));
 });
+
+test('Successful native extraction is never counted as a defeat despite controller abandoned stage',()=>{
+ const cfg=N.parseArgs(['--seeds=9101','--profiles=cautious','--max-level=1','--max-attempts=1']);
+ const out=N.run(cfg);
+ assert.equal(out.coverage.errors,0);
+ const attempt=out.accounts[0].attempts[0];
+ assert.equal(attempt.extracted,true,'early cautious profile should bank real cleared-room rewards');
+ assert.equal(attempt.status,'extracted','native controller.abandon() must not overwrite extraction outcome');
+ assert.equal(out.levels[0].extractions,1);
+ assert.equal(out.levels[0].deaths,0);
+ assert.equal(out.accounts[0].endLevel,1,'extraction must not unlock E2');
+});
