@@ -14,7 +14,16 @@ require('../combat/expedition-progression.js');
 require('../combat/v013-expedition-foundation.js');
 require('../online/v013-boss-modifiers.js');
 require('../online/v013-boss-preparation.js');
+require('../online/v013-boss-infrastructure.js');
+require('../online/v013-boss-abilities.js');
+require('../online/v013-enemy-abilities.js');
+require('../online/v013-elite-abilities.js');
 const F=globalThis.WandererV013ExpeditionFoundation;
+const A=globalThis.WandererV013BossAbilities;
+const M=globalThis.WandererV013BossModifiers;
+const AFFINITIES=Object.freeze(Object.keys(A.PROFILES));
+const GROUP_SIZES=Object.freeze([3,12,20]);
+const RISKS=Object.freeze([0,1,2]);
 const T=globalThis.WandererAutomaticTalents;
 const P=globalThis.WandererExpeditionProgression;
 const byNode=new Map(T.NODES.map(n=>[n.id,n]));
@@ -24,31 +33,38 @@ const BUILDS=Object.freeze([
  {id:'magic-decay',name:'Magic/Decay',weapon:'Wand',families:['magic','decay'],skills:['arcane_focus','mana_spring','toxic_touch','virulent_rot','hex_bolt'],element:'fire'},
  {id:'blood-decay',name:'Blood/Decay',weapon:'Two-Handed',families:['blood','decay'],skills:['bleeding_edge','deep_cuts','toxic_touch','virulent_rot','plague_spread']}
 ]);
-const DEFAULTS=Object.freeze({mode:'encounter',levels:[1,5,15,35,70,100,250,1000],seeds:[9101,9102,9103],builds:BUILDS.map(b=>b.id),points:24,rarity:'Rare',gear:'current',runes:false,tickLimit:4500,output:'reports/v013-simulation-results.json'});
+const DEFAULTS=Object.freeze({mode:'encounter',levels:[1,5,15,35,70,100,250,1000],seeds:[9101,9102,9103],builds:BUILDS.map(b=>b.id),points:24,rarity:'Rare',gear:'current',runes:false,tickLimit:4500,
+ affinities:[...AFFINITIES],risks:[1],groupSizes:[...GROUP_SIZES],boons:'none',output:'reports/v013-simulation-results.json'});
 const finitePositive=value=>Number.isSafeInteger(value)&&value>=1;
 function parseIntegers(value,label){const values=value.split(',').map(Number);if(!values.length||values.some(n=>!finitePositive(n)))throw Error('Invalid '+label+': '+value);return [...new Set(values)];}
 function parseArgs(args){
- const result={...DEFAULTS,levels:[...DEFAULTS.levels],seeds:[...DEFAULTS.seeds],builds:[...DEFAULTS.builds]};
+ const result={...DEFAULTS,levels:[...DEFAULTS.levels],seeds:[...DEFAULTS.seeds],builds:[...DEFAULTS.builds],affinities:[...DEFAULTS.affinities],risks:[...DEFAULTS.risks],groupSizes:[...DEFAULTS.groupSizes]};
  for(const arg of args){
   const match=/^--([a-z-]+)=(.*)$/.exec(arg);if(!match)throw Error('Expected --option=value: '+arg);
   const [,key,value]=match;
-  if(key==='mode'&&['encounter','dungeon','both','traits','bossmods','bossprep','conditions'].includes(value))result.mode=value;
+  if(key==='mode'&&['encounter','dungeon','both','traits','bossmods','bossprep','conditions','bosses','enemies','elites'].includes(value))result.mode=value;
   else if(key==='levels')result.levels=parseIntegers(value,'levels');
   else if(key==='seeds')result.seeds=parseIntegers(value,'seeds');
   else if(key==='builds'){
    result.builds=[...new Set(value.split(','))];if(!result.builds.length||result.builds.some(id=>!BUILDS.some(b=>b.id===id)))throw Error('Invalid builds: '+value);
   }
   else if(key==='points'){
-   result.points=Number(value);if(!Number.isSafeInteger(result.points)||result.points<23||result.points>100)throw Error('Points must be 23–100: '+value);
+   result.points=Number(value);if(!Number.isSafeInteger(result.points)||result.points<0||result.points>100)throw Error('Points must be 0–100 (fixed synthetic account budget): '+value);
   }
   else if(key==='rarity'&&['Common','Uncommon','Rare','Epic'].includes(value))result.rarity=value;
   else if(key==='gear'&&['current','previous'].includes(value))result.gear=value;
+  else if(key==='affinities'){result.affinities=[...new Set(value.split(','))];if(!result.affinities.length||result.affinities.some(f=>!AFFINITIES.includes(f)))throw Error('Invalid affinities: '+value);}
+  else if(key==='risks'){result.risks=[...new Set(value.split(',').map(Number))];if(!result.risks.length||result.risks.some(r=>!RISKS.includes(r)))throw Error('Invalid risks: '+value);}
+  else if(key==='group-sizes'){result.groupSizes=parseIntegers(value,'group-sizes');if(result.groupSizes.some(n=>n<2||n>22))throw Error('Group sizes must be 2–22');}
+  else if(key==='boons'&&['none','first'].includes(value))result.boons=value;
   else if(key==='runes'&&['true','false'].includes(value))result.runes=value==='true';
   else if(key==='tick-limit'){result.tickLimit=Number(value);if(!finitePositive(result.tickLimit)||result.tickLimit>100000)throw Error('Invalid tick-limit: '+value);}
   else if(key==='out'&&value)result.output=value;
   else throw Error('Unsupported option: '+arg);
  }
- if(result.levels.length*result.seeds.length*result.builds.length>3000)throw Error('Simulation matrix too large (maximum 3000 level/seed/build combinations)');
+ const base=result.levels.length*result.seeds.length*result.builds.length;
+ const factor=result.mode==='bosses'?result.affinities.length*result.risks.length:result.mode==='enemies'?result.groupSizes.length:result.mode==='bossmods'?1+F.CATALOG.bossModifiers.length:result.mode==='traits'?1+F.CATALOG.encounterTraits.length:result.mode==='bossprep'?4:result.mode==='both'?3:result.mode==='encounter'||result.mode==='conditions'?3:1;
+ if(base*factor>3000)throw Error('Simulation matrix too large (maximum 3000 native scenarios)');
  return result;
 }
 function talentPlan(build,points){
