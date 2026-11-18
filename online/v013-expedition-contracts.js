@@ -205,6 +205,9 @@ function settle(game,profile,results){
   paid.potion=prize.potion;paid.amount=Math.min(1,Math.max(0,99999-(profile.consumables[prize.potion]||0)));
   profile.consumables[prize.potion]=(profile.consumables[prize.potion]||0)+paid.amount;
  }else return null;
+ // Include optional currency in the existing Expedition result totals once.
+ if(results&&kind==='gold')results.gold=(results.gold||0)+paid.gold;
+ if(results&&kind==='fragments')results.fragments=(results.fragments||0)+paid.fragments;
  d.foundationState=next;d.stage7RewardPaid=paid;
  return {...paid,name:get(id).name};
 }
