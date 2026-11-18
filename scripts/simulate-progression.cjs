@@ -406,5 +406,5 @@ function main(args=process.argv.slice(2)){
  if(report.summary.errors||report.summary.timeouts)process.exitCode=1;
  return report;
 }
-module.exports={BUILDS,DEFAULTS,parseArgs,talentPlan,gearLevel,shortestRoute,selectTarget,encounter,bossPreparationEncounter,dungeon,simulate,main};
+module.exports={BUILDS,DEFAULTS,parseArgs,talentPlan,gearLevel,shortestRoute,selectTarget,encounter,bossPreparationEncounter,dungeon,simulate,sourceFingerprint,main};
 if(require.main===module)main();

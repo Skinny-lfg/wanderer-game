@@ -1,0 +1,40 @@
+name: Wanderer v0.13 Stage 9.3 - natural E1 to E8 accounts (no deploy)
+on:
+  push:
+    branches: [feature/v013-stage93-natural-e1-e8-sim-20261118]
+  workflow_dispatch:
+jobs:
+  native-progression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check natural account simulation, native combat and previous stages
+        run: |
+          npm run test:v013:natural
+          npm run test:v013:balance
+          npm run test:v013:stage91
+          npm run test:v013:stage92
+      - name: Run actual native E1–E8 progression for four new accounts
+        run: npm run simulate:v013:natural-e1-e8
+      - name: Investigate early-game bottleneck with up to 12 native attempts per profile
+        run: npm run simulate:v013:natural-e1-e8 -- --seeds=9304 --profiles=cautious,balanced --max-attempts=12 --out=reports/v013-stage93-natural-e1-e8-targeted.json
+      - name: Print brief E1–E8 overview
+        if: always()
+        run: |
+          node -e "const fs=require('fs');const p='reports/v013-stage93-natural-e1-e8.json';if(!fs.existsSync(p))process.exit(0);const r=JSON.parse(fs.readFileSync(p));console.log(JSON.stringify({coverage:r.coverage,levels:r.levels,accounts:r.accounts.map(a=>({seed:a.seed,profile:a.profile,unlocked:a.endLevel,stop:a.stopReason}))},null,2));"
+      - name: Preserve full native account histories (no deployment)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wanderer-v013-natural-e1-e8-results
+          path: |
+            reports/v013-stage93-natural-e1-e8.json
+            reports/v013-stage93-natural-e1-e8.md
+            reports/v013-stage93-natural-e1-e8-targeted.json
+            reports/v013-stage93-natural-e1-e8-targeted.md
+          if-no-files-found: warn
+          retention-days: 14

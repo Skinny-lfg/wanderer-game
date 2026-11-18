@@ -52,7 +52,9 @@
     "test:v013:stage91": "node --test tests/v013-stage91-diagnosis.test.cjs",
     "diagnose:v013:stage91": "node scripts/v013-stage91-diagnosis.cjs",
     "test:v013:stage92": "node --test tests/v013-stage92-progression-diagnosis.test.cjs",
-    "diagnose:v013:stage92": "node scripts/v013-stage92-progression-diagnosis.cjs"
+    "diagnose:v013:stage92": "node scripts/v013-stage92-progression-diagnosis.cjs",
+    "simulate:v013:natural-e1-e8": "node scripts/v013-natural-progression.cjs",
+    "test:v013:natural": "node --test tests/v013-natural-progression.test.cjs"
   },
   "dependencies": {
     "firebase": "11.10.0"
