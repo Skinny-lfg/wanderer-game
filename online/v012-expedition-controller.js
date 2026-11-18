@@ -144,6 +144,7 @@ function create(themes,rng=Math.random){
   const bossId=shuffle(BOSSES,routeRng)[0].id,seed=Math.floor(routeRng()*4294967296)>>>0;
   const manifest=F?.createManifest(cards,{seed,expeditionLevel:level,bossStyle:BOSSES.find(b=>b.id===bossId).style})||null;
   if(P&&manifest)for(const card of cards)P.planRoom(card,seed);
+  if(B&&manifest)for(const card of cards)B.placeShrines(card,seed);
   if(T&&manifest)for(const card of cards)for(const {room,traitId} of T.assign(card,seed))card.nodes[room].traitId=traitId;
   Object.assign(game,{version:2,expedition:level,planeIndex:1,stage:'choice',freeBuild:true,offers:[],selected:null,wave:0,history:[],rooms:[],rewardPending:null,families:[],initialFamily:null,lastFamily:null,rerolls:0,rerollsByRealm:Array.from({length:15},()=>[0,0,0]),bossId,encounterVersion:1,dungeon:{cards,realm:null,current:0,cleared:[0],visited:[0],scouted:[],discoveredSecrets:[],...(manifest?{foundationManifest:manifest}:{})}});
   for(const k of ['routeMap','routeEdges','routePositions','routeMobCounts'])delete game[k];
@@ -174,22 +175,26 @@ function create(themes,rng=Math.random){
   if(rewardPlan)d.stage72RewardPlan=rewardPlan;
   delete d.contractOffer;return id;
  }
- // Stage 6: two non-repeatable, seeded choices, independent of map RNG and permanent talents.
+ // Stage 7.3: Boons are found in Shrine rooms, not offered on entry or after fights.
  function offerBoons(families=[]){
-  const d=game.dungeon;
-  if(!d?.realm||!d.foundationState||game.stage!=='choice'||game.selected||game.rewardPending||!B||d.boonOffer)return d?.boonOffer||null;
-  const round=d.foundationState.boonIds.length;
-  if(round>=2||round===1&&game.history.filter(entry=>!entry.event).length<4)return null;
+  const d=game.dungeon,card=realmMap(),room=d?.current,round=card?.boonShrines?.indexOf(room)??-1;
+  if(d?.boonOffer)return d.boonOffer;
+  if(!d?.realm||!d.foundationState||round<0||game.stage!=='choice'||
+    game.selected||game.rewardPending||d.contractOffer||!B||!d.cleared.includes(room)||
+    B.resolutions(d.foundationState).some(a=>a.room===room)||d.foundationState.boonIds.length>=2)return null;
   const ids=B.offer(d.foundationManifest.seed,d.realm,round,families,d.foundationState.boonIds);
-  d.boonOffer={round,families:[...families],ids};
+  d.boonOffer={room,round,families:[...families],ids};
   return d.boonOffer;
  }
- function chooseBoon(id){
+ function chooseBoon(id=null){
   const d=game.dungeon,o=d?.boonOffer;
-  if(!o||game.stage!=='choice'||game.selected||game.rewardPending||!o.ids.includes(id)||d.contractOffer||!B?.validateOffer(d,game.history))throw Error('Boon selection unavailable');
-  const next=F.applyDecision(d.foundationState,{type:'choose_boon',id},d.foundationManifest);
-  const bonus=B.stepsAdded(id);
-  if(bonus)d.steps+=bonus;
+  if(!o||game.stage!=='choice'||game.selected||game.rewardPending||
+    id!==null&&!o.ids.includes(id)||d.contractOffer||!B?.validateOffer(d,game))
+    throw Error('Boon Shrine selection unavailable');
+  const next=F.applyDecision(d.foundationState,id===null?
+    {type:'skip_boon',room:o.room}:
+    {type:'choose_boon',id,room:o.room,families:o.families},d.foundationManifest);
+  if(id!==null){const bonus=B.stepsAdded(id);if(bonus)d.steps+=bonus;}
   d.foundationState=next;delete d.boonOffer;
   return id;
  }
@@ -235,7 +240,7 @@ function create(themes,rng=Math.random){
   game.stage='choice';game.wave=0;game.offers=[];game.selected=null;return true;
  }
  function travelCost(path){if(I&&game.dungeon){const base=I.travelCost(path,game.dungeon.cleared),card=realmMap();return base+(C&&card?C.travelSurcharge(card,game.dungeon,path):0);}const d=game.dungeon;let cost=0,cleared=0;for(const room of path.slice(1)){if(d.cleared.includes(room))cleared++;else{cost+=Math.min(2,cleared)+1;cleared=0;}}return cost+Math.min(2,cleared);}
- function visitRoom(i){
+ function visitRoom(i,families=[]){
   const d=game.dungeon,card=realmMap(),path=travelPath(i);
   if(game.stage!=='choice'||!path.length||game.rewardPending||d.boonOffer||d.contractOffer)return false;
   const cost=travelCost(path);
@@ -244,6 +249,14 @@ function create(themes,rng=Math.random){
   if(d.cleared.includes(i)){d.current=i;return true;}
   if(path.length>1)d.current=path[path.length-2];
   const n=card.nodes[i],boss=n.kind==='boss';
+  if(n.kind==='shrine'){
+   d.current=i;d.visited.push(i);d.cleared.push(i);
+   game.history.push({plane:game.planeIndex,id:card.id,name:card.name,family:card.family,image:card.image,
+     node:i,waves:0,boss:false,elite:false,event:'boon_shrine',mobCount:0,escorts:0,risk:card.risk});
+   if(!offerBoons(families)&&d.foundationState.boonIds.length<2)
+     throw Error('Boon Shrine offer could not be generated');
+   return true;
+  }
   const p={id:card.id,family:card.family,image:card.image,name:card.name,node:i,waves:n.event?0:1,boss,elite:boss||n.kind==='elite',event:n.event,mobCount:n.count,escorts:n.escorts,risk:card.risk,...(n.traitId?{traitId:n.traitId}:{})};
   game.planeIndex=boss?15:game.history.length+(game.history.length>=14?2:1);game.offers=[p];game.selected=p;return true;
  }
@@ -314,6 +327,11 @@ function create(themes,rng=Math.random){
  }
  function abandon(){
   if(!['choice','combat'].includes(game.stage))throw Error('No active Expedition');
+  if(game.dungeon?.boonOffer){
+   const d=game.dungeon,o=d.boonOffer;
+   d.foundationState=F.applyDecision(d.foundationState,{type:'skip_boon',room:o.room},d.foundationManifest);
+   delete d.boonOffer;
+  }
   game.stage='failed';game.selected=null;game.offers=[];game.wave=0;game.families=[];game.lastFamily=null;game.rewardPending=null;
  }
  function validateDungeonCheckpoint(g){
@@ -333,7 +351,7 @@ function create(themes,rng=Math.random){
       !integer(c.shortcut,0,size-2)||!integer(c.clueRoom,0,size-1)||
       c.edges.some(edge=>!Array.isArray(edge)||edge.length!==2||!integer(edge[0],0,size-1)||!integer(edge[1],0,size-1)||edge[0]===edge[1])||
       !unique(c.edges.map(([a,b])=>Math.min(a,b)+'-'+Math.max(a,b)))||
-      c.nodes.some(n=>!n||!['entrance','combat','elite','event','spring','boss'].includes(n.kind)||n.traitId!==undefined&&(!T?.get(n.traitId)||n.kind!=='combat'))||
+      c.nodes.some(n=>!n||!['entrance','combat','elite','event','spring','boss','shrine'].includes(n.kind)||n.traitId!==undefined&&(!T?.get(n.traitId)||n.kind!=='combat'))||
       c.positions.some(v=>!Array.isArray(v)||v.length!==2||v.some(x=>!Number.isFinite(x))))throw Error('Invalid dungeon map topology');
   }
   const selectedCard=d.cards.find(c=>c.id===d.realm),size=selectedCard?.nodes?.length;
@@ -348,13 +366,14 @@ function create(themes,rng=Math.random){
      F.lookup('conditions',v.conditionId).conflicts?.some(id=>v.bossModifierIds.includes(id))||
      v.bossModifierIds.some(id=>F.lookup('bossModifiers',id).conflicts?.includes(v.conditionId)||F.lookup('bossModifiers',id).excludeBossStyles?.includes(manifest.bossStyle)))||
     new Set(manifest.cards.map(c=>c.conditionId)).size!==3)throw Error('Invalid dungeon manifest');
+  if(!B||d.cards.some(card=>!B.validateTopology(card,manifest.seed)))throw Error('Invalid deterministic Boon Shrines');
   const expectedManifest=F.createManifest(d.cards,{seed:manifest.seed,expeditionLevel:g.expedition,bossStyle:manifest.bossStyle});
   if(JSON.stringify(expectedManifest)!==JSON.stringify(manifest))throw Error('Invalid deterministic dungeon manifest');
   if(d.realm===null){
    if(d.current!==0||d.steps!==undefined||d.conditionEdgesUsed!==undefined||d.foundationState!==undefined||d.boonOffer!==undefined||d.contractOffer!==undefined||d.stage72RewardPlan!==undefined||d.stage7RewardPaid!==undefined||d.disabledBossModifierId!==undefined||
       d.visited.length!==1||d.visited[0]!==0||d.cleared.length!==1||d.cleared[0]!==0||d.scouted.length||d.discoveredSecrets.length||g.selected!==null||g.offers.length)throw Error('Invalid unselected dungeon');
   }else{
-   if(!integer(d.steps,0,selectedCard.stepLimit+(d.foundationState?.boonIds?.includes('wayfarers_bargain')?1:0))||!B?.validateOffer(d,g.history)||!K?.validate(g)||!C?.validLedger(selectedCard,d)||!roomList(d.visited,size)||!roomList(d.cleared,size)||!roomList(d.scouted,size)||
+   if(!integer(d.steps,0,selectedCard.stepLimit+(d.foundationState?.boonIds?.includes('wayfarers_bargain')?1:0))||!B?.validateOffer(d,g)||!K?.validate(g)||!C?.validLedger(selectedCard,d)||!roomList(d.visited,size)||!roomList(d.cleared,size)||!roomList(d.scouted,size)||
       !d.visited.includes(d.current)||!d.cleared.includes(0)||!d.visited.includes(0)||d.cleared.some(i=>!d.visited.includes(i)))throw Error('Invalid dungeon progress');
    if(!unique(d.discoveredSecrets)||d.discoveredSecrets.some(e=>typeof e!=='string'||!selectedCard.edges.some(([a,b])=>e===Math.min(a,b)+'-'+Math.max(a,b)&&I?.secretEdge(selectedCard,a,b))))throw Error('Invalid hidden passage state');
    if(!F||!d.foundationManifest||!d.foundationState||!F.validateExpeditionState(d.foundationState,d.foundationManifest)||
