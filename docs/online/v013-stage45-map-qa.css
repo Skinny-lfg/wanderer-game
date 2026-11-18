@@ -109,12 +109,12 @@ body.phase3IntegratedPreview dialog.realmRouteDialog[open]{position:fixed;inset:
 .realmMapMain .realmSteps::after{right:-3px;transform:scaleY(-1)}
 
 /* Affinity artwork supplied for the generated Expedition map. */
-.realmMapCanvas[data-map-affinity="blood"]{--realm-map-art:url("../assets/expedition-map/blood.png")}
-.realmMapCanvas[data-map-affinity="decay"]{--realm-map-art:url("../assets/expedition-map/decay.png")}
-.realmMapCanvas[data-map-affinity="vitality"]{--realm-map-art:url("../assets/expedition-map/vitality.png")}
-.realmMapCanvas[data-map-affinity="aegis"]{--realm-map-art:url("../assets/expedition-map/aegis.png")}
-.realmMapCanvas[data-map-affinity="fury"]{--realm-map-art:url("../assets/expedition-map/fury.png")}
-.realmMapCanvas[data-map-affinity="magic"]{--realm-map-art:url("../assets/expedition-map/magic.png")}
+.realmMapCanvas[data-map-affinity="blood"]{background-image:linear-gradient(#14101644,#14101677),url("../assets/expedition-map/blood.webp")}
+.realmMapCanvas[data-map-affinity="decay"]{background-image:linear-gradient(#14101644,#14101677),url("../assets/expedition-map/decay.webp")}
+.realmMapCanvas[data-map-affinity="vitality"]{background-image:linear-gradient(#14101644,#14101677),url("../assets/expedition-map/vitality.webp")}
+.realmMapCanvas[data-map-affinity="aegis"]{background-image:linear-gradient(#14101644,#14101677),url("../assets/expedition-map/aegis.webp")}
+.realmMapCanvas[data-map-affinity="fury"]{background-image:linear-gradient(#14101644,#14101677),url("../assets/expedition-map/fury.webp")}
+.realmMapCanvas[data-map-affinity="magic"]{background-image:linear-gradient(#14101644,#14101677),url("../assets/expedition-map/magic.webp")}
 
 /* Map fog stays aligned with the map and never intercepts input. */
 .realmFog{position:absolute;inset:0;width:100%;height:100%;overflow:hidden;pointer-events:none;z-index:0}
