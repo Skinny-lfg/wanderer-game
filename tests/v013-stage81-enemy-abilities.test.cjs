@@ -1,7 +1,7 @@
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs');
+require('../combat/v013-expedition-foundation.js');
 const A=require('../online/v013-enemy-abilities.js');
-const C=require('../online/v013-enemy-roster.js');
 const FAMILY=['blood','decay','vitality','aegis','fury','magic'];
 function mob(role,name=role){return {name,role,hp:100,maxhp:100,barrier:0,atk:25,attackEvery:2,groupClock:0};}
 function run(...enemies){return {enemies,enemy:enemies[0],status:'fight',phase1:true,combatSeconds:0,phase1ClockBase:0,hp:100,maxhp:100,mp:60,maxmp:60,playerDebuffUntil:0,playerHealingDebuffUntil:0};}
@@ -36,7 +36,7 @@ test('Class setup is deterministic, boss/elite unaffected, Minions never cast',(
 test('Telegraph resolves after windup, then cooldown; no duplicate activation in one timestamp',()=>{
  const tank=mob('tank'),ally=mob('caster');const r=run(tank,ally);
  A.attach(r.enemies,'aegis');
- const before=A.TIMINGS.tank.first+.3;
+ const before=tank.stage81.nextAt;
  assert.equal(advance(r,tank,before-.1).length,0);
  const warning=advance(r,tank,before);assert.equal(warning.length,1);assert.equal(warning[0].type,'prepare');
  assert.equal(A.status(tank,r.combatSeconds).label,'Casting');
@@ -77,12 +77,14 @@ test('Affinity Tank support stays capped, Vitality healing respects max HP',()=>
 });
 test('Fury rally and skirmisher rush are bounded queued attacks, not permanent DPS multipliers',()=>{
  const tank=mob('tank'),fighter=mob('skirmisher'),r=run(tank,fighter);A.attach(r.enemies,'fury');
+ fighter.stage81.nextAt=100;
  advance(r,tank,tank.stage81.nextAt);
  advance(r,tank,tank.stage81.castingUntil+.01);
  assert.equal(fighter.stage81.charges,1);
  assert(A.status(fighter,r.combatSeconds).label==='Enraged');
  const bonus=A.consumeStrike(fighter,r.combatSeconds);assert(bonus?.bonus>.1);
  assert.equal(A.consumeStrike(fighter,r.combatSeconds),null);
+ fighter.stage81.nextAt=r.combatSeconds+.2;
  advance(r,fighter,fighter.stage81.nextAt);
  advance(r,fighter,fighter.stage81.castingUntil+.01);
  assert.equal(fighter.stage81.charges,2);
