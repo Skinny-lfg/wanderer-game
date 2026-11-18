@@ -8,7 +8,7 @@ const CATALOG=F.CATALOG.contracts;
 const get=id=>F.lookup('contracts',id);
 const DESCRIPTIONS=Object.freeze({
  bounty_writ:{icon:'⚔',objective:'Defeat the marked Elite',detail:'Claim the optional marked Elite on the map. Its existing reagent reward is separate.'},
- pathfinder:{icon:'🧭',objective:'Visit two distinct map sectors',detail:'Enter two different passages. Scouting alone does not count.'},
+ pathfinder:{icon:'🧭',objective:'Clear rooms in two distinct map sectors',detail:'Complete an encounter or event in two different passages. Scouting alone does not count.'},
  purification:{icon:'✦',objective:'Disrupt a boss seal at the Forgotten Reliquary',detail:'Reach the Reliquary and sacrifice Health to disable one boss modifier.'},
  oath_of_defiance:{icon:'🛡',objective:'Defeat the final boss without disrupting its seal',detail:'Leave every boss modifier intact. Marked Elite preparation is allowed.'}
 });
@@ -67,7 +67,7 @@ function progress(game){
  let current=0,target=1;
  if(id==='bounty_writ')current=Number(!!s.bossPreparation.markedElite&&d.cleared.includes(card.objective));
  else if(id==='pathfinder'){
-  target=2;const visited=new Set((d.visited||[]).map(room=>sector(card,room)).filter(n=>n!==null));current=Math.min(target,visited.size);
+  target=2;const cleared=new Set(d.cleared||[]),visited=new Set((game.history||[]).filter(entry=>cleared.has(entry.node)).map(entry=>sector(card,entry.node)).filter(n=>n!==null));current=Math.min(target,visited.size);
  }else if(id==='purification')current=Number(!!s.bossPreparation.reliquary&&d.disabledBossModifierId===s.bossModifierIds[0]);
  else if(id==='oath_of_defiance')current=Number(game.stage==='finished'&&d.cleared.includes(card.nodes.length-1)&&!s.bossPreparation.reliquary);
  return {current,target,done:current===target};
