@@ -46,7 +46,7 @@ test('Realm selection and human-like event preferences respond to risk and HP',(
  assert.equal(N.eventOptions('forgotten_reliquary',{hp:100,maxhp:100},N.PROFILES.cautious)[0],0);
 });
 test('A cautious player uses UI-visible mob ranges and prioritizes a reachable solo room',()=>{
- const card={nodes:[{kind:'entrance'},{kind:'combat',range:[1,1]},{kind:'combat',range:[2,4]},{kind:'boss'}],edges:[[0,1],[0,2],[1,3],[2,3]]};
+ const card={nodes:[{kind:'entrance'},{kind:'combat',range:[1,1]},{kind:'combat',range:[2,4]},{kind:'boss'},{kind:'event'}],edges:[[0,1],[0,2],[1,3],[2,3]]};
  const state={stage:'choice',dungeon:{realm:'test',cards:[card],current:0,visited:[0],cleared:[],scouted:[],steps:12,discoveredSecrets:[]}};
  const c={state,realmMap:()=>card,travelPath:i=>i===0?[0]:i===1||i===2?[0,i]:[],travelCost:path=>path.length-1};
  const first=N.selectRoom(c,N.PROFILES.cautious,{hp:100,maxhp:100});
@@ -55,8 +55,8 @@ test('A cautious player uses UI-visible mob ranges and prioritizes a reachable s
  card.nodes[2].kind='shrine';
  const second=N.selectRoom(c,N.PROFILES.cautious,{hp:100,maxhp:100});
  assert.equal(second.room,2,'a discovered accessible shrine is allowed to influence native decision');
- card.nodes[3].kind='elite';
- assert.equal(N.selectRoom(c,N.PROFILES.cautious,{hp:100,maxhp:100}).room,2,'unreachable room 3 must not alter choice');
+ card.nodes[4].kind='elite';
+ assert.equal(N.selectRoom(c,N.PROFILES.cautious,{hp:100,maxhp:100}).room,2,'unreachable room 4 must not alter choice');
 });
 test('Censored E2–E8 levels are not misreported as zero-percent success',()=>{
  const options=N.parseArgs(['--seeds=9303','--profiles=cautious','--max-attempts=1']);
