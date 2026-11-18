@@ -32,7 +32,7 @@ const BUILDS=Object.freeze([
  {id:'aegis-vitality',name:'Aegis/Vitality',weapon:'Mace',families:['aegis','vitality'],skills:['guarded_block','barrier_pulse','strong_heart','renewal','sanctuary']},
  {id:'magic-decay',name:'Magic/Decay',weapon:'Wand',families:['magic','decay'],skills:['arcane_focus','mana_spring','toxic_touch','virulent_rot','hex_bolt'],element:'fire'},
  {id:'blood-decay',name:'Blood/Decay',weapon:'Two-Handed',families:['blood','decay'],skills:['bleeding_edge','deep_cuts','toxic_touch','virulent_rot','plague_spread']},
-  {id:'aegis-sword',name:'Aegis/Vitality Sword & Shield',weapon:'Sword',families:['aegis','vitality'],skills:['guarded_block','iron_skin','fortified','renewal','sanctuary']},
+  {id:'aegis-sword',name:'Aegis Sword & Shield',weapon:'Sword',families:['aegis','vitality'],skills:['guarded_block','iron_skin','fortified','brace','renewal']},
   {id:'fury-bow',name:'Fury Archer',weapon:'Bow',families:['fury','vitality'],skills:['quick_hands','precision','brutal_crit','double_strike','adrenaline']},
   {id:'magic-storm',name:'Magic Lightning Staff',weapon:'Staff',families:['magic','fury'],skills:['arcane_focus','mana_spring','overcharge','storm_mastery','chain_discharge'],element:'lightning'}
 ]);
