@@ -278,6 +278,7 @@ function selectRoom(c,profile,vitals,context={}){
    // Reward does not justify spending the last steps on a side corridor
    // that cannot lead to the native Boss.
    if(slack<1)score+=12;
+   if(hpRatio<Math.max(.58,profile.retreatAt+.08))score+=22;
   }
   if(type==='boss')score+=hpRatio<.7?16:1;
   const objective=i===card.objective&&!prep.markedElite&&type==='elite';
