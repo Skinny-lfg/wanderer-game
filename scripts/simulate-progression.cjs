@@ -167,25 +167,36 @@ function resolveEvent(a){
  for(const choice of [2,0,1])if(a.events.choose(choice,item?.id,passive,family,target?.id))return true;
  throw Error('Could not resolve real event');
 }
-function encounter(level,build,seed,kind,opts,forcedTrait=undefined,forcedBossMod=undefined){
- const {a,c,g,card,gearE}=prepare(level,build,seed,opts);
+// Controlled diagnostic: real native combat/stats/ability scheduler, but an encounter
+// is deliberately staged in a first-ring room. Use dungeon() for actual travel/extraction.
+function encounter(level,build,seed,kind,opts,forcedTrait=undefined,forcedBossMod=undefined,forcedFamily=undefined,desiredRisk=undefined,groupSize=undefined){
+ if(!['normal','boss','elite'].includes(kind))throw Error('Unknown controlled encounter '+kind);
+ if(groupSize!==undefined&&(!Number.isSafeInteger(groupSize)||groupSize<2||groupSize>22||kind!=='normal'))throw Error('Invalid controlled group size');
+ const {a,c,g,card,gearE,resolvedSeed,seedShift,allocatedPoints}=prepare(level,build,seed,opts,desiredRisk,forcedFamily);
  const candidate=card.edges.filter(([x])=>x===0).map(([,y])=>y).find(n=>card.nodes[n]?.kind==='combat');
- if(candidate===undefined)throw Error('Cannot find native v0.13 encounter');
- if(forcedTrait!==undefined){if(forcedTrait!==null&&!F.CATALOG.encounterTraits.some(x=>x.id===forcedTrait))throw Error('Unknown forced encounter trait');card.nodes[candidate].traitId=forcedTrait;}
+ if(candidate===undefined)throw Error('No first-ring native combat encounter');
+ if(forcedTrait!==undefined){if(kind!=='normal'||forcedTrait!==null&&!F.CATALOG.encounterTraits.some(x=>x.id===forcedTrait))throw Error('Unknown forced encounter trait');card.nodes[candidate].traitId=forcedTrait;}
  if(forcedBossMod!==undefined){
-  if(kind!=='boss'||forcedBossMod!==null&&!F.CATALOG.bossModifiers.some(x=>x.id===forcedBossMod))throw Error('Unknown forced boss modifier');
-  // Diagnostic-only native boss. Rift Harbinger has no built-in Barrier or Enrage,
-  // allowing all six boss properties to be tested under one matched boss archetype.
-  g.bossId='rift';
+  if(kind!=='boss'||forcedBossMod!==null&&!F.CATALOG.bossModifiers.some(x=>x.id===forcedBossMod))throw Error('Unknown forced Boss property');
+  // Stage 8.4: never override g.bossId to the old Rift Harbinger. The selected
+  // real Affinity decides the Boss, and only compatible properties are injected.
+  const selectedStyle=A.profileFor(card.family).style;
+  if(forcedBossMod&&!M.check([forcedBossMod],selectedStyle,'relentless_hunt'))throw Error('Boss property not compatible with '+card.family);
   const plan=g.dungeon.foundationManifest.cards.find(x=>x.realmId===card.id);
   plan.bossModifierIds=forcedBossMod?[forcedBossMod]:[];
   g.dungeon.foundationState.conditionId='relentless_hunt';
  }
- if(!c.visitRoom(candidate)||!a.enter())throw Error('Cannot enter native v0.13 encounter');
- const run=a.encounter({count:kind==='boss'?1:3,boss:kind==='boss'});
- if(run.tier!==level)throw Error('Incorrect encounter tier: '+run.tier+' vs '+level);
+ if(!c.visitRoom(candidate)||!a.enter())throw Error('Cannot enter controlled native combat encounter');
+ const count=groupSize??(kind==='normal'?3:1);
+ const run=a.encounter({count,boss:kind==='boss',elite:kind==='elite'});
+ if(run.tier!==level)throw Error('Incorrect encounter tier '+run.tier+' vs '+level);
+ if(kind==='boss'&&run.encounterLeader?.bossStyle!==A.profileFor(card.family).style)throw Error('Native Boss mismatch for '+card.family);
  const result=fight(a,c,opts.tickLimit);
- return {mode:forcedBossMod!==undefined?'bossmods':forcedTrait===undefined?'encounter':'traits',kind:forcedBossMod!==undefined?(forcedBossMod||'baseline'):forcedTrait===undefined?kind:(forcedTrait||'baseline'),level,build:build.id,seed,gearE,gearTier:P.gearTier(gearE).name,pointsSpent:a.state().automaticTalents.nodes.length,realm:card.name,unlocked:level,...result};
+ const mode=forcedBossMod!==undefined?'bossmods':forcedTrait!==undefined?'traits':opts.mode==='bosses'?'bosses':opts.mode==='enemies'?'enemies':opts.mode==='elites'?'elites':'encounter';
+ const label=forcedBossMod!==undefined?(forcedBossMod||'baseline'):forcedTrait!==undefined?(forcedTrait||'baseline'):mode==='bosses'?card.family:mode==='enemies'?'swarm-'+count:kind;
+ return {mode,kind:label,level,build:build.id,seed,resolvedSeed,seedShift,gearE,gearTier:P.gearTier(gearE).name,
+  gearRarity:opts.rarity,runes:opts.runes,pointsBudget:opts.points,pointsSpent:allocatedPoints,
+  realm:card.name,affinity:card.family,risk:card.risk,nativeEncounter:kind,groupSize:count,unlocked:level,...result};
 }
 function bossPreparationEncounter(level,build,seed,opts,strategy){
  if(!['baseline','marked_elite','reliquary','both'].includes(strategy))throw Error('Unknown boss preparation strategy');
