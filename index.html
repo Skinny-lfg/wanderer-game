@@ -419,7 +419,13 @@ function html(s){
 }
 // Round only rendered stats, never stored data or combat calculations.
 function formatItemStat(n){const x=Number(n);return Number.isFinite(x)?Number(x.toFixed(2)).toString():'0'}
-function itemStats(o){return FIELDS.filter(([,f])=>itemStatValue(o,f)).map(([k,f])=>`${itemStatValue(o,f)>0?'+':''}${formatItemStat(itemStatValue(o,f))} ${k}`).join(' · ')}
+function itemStats(o){
+ const extras=PHASE1_PREVIEW?[['Critical chance','critBonus'],['Block chance','blockBonus'],['Mana regeneration','manaRegenBonus'],['Barrier strength','wardBonus']]:[];
+ return [...FIELDS,...extras].filter(([,f])=>itemStatValue(o,f)).map(([name,field])=>{
+  const amount=itemStatValue(o,field),percent=['critBonus','blockBonus','wardBonus'].includes(field),value=percent&&field==='wardBonus'?amount*100:amount;
+  return (value>0?'+':'')+formatItemStat(value)+(percent?'%':'')+' '+name+(field==='manaRegenBonus'?'/s':'');
+ }).join(' · ');
+}
 function legendaryRankBadge(o){return o?.rarity==='Legendary'&&(o.upgradeRank||0)>0?'<span class="legendaryRankBadge" title="Legendary reinforcement rank '+o.upgradeRank+' of 10">+'+o.upgradeRank+'/10</span>':''}
 
 function newBadge(o){return o?.isNew===true?'<span class="newBadge">NEW</span>':''}
@@ -550,7 +556,7 @@ let buttons=source==='stash'?
 return `<div class="inspect" ${rarityFrame(o)}><div class="inspectHero">${rarityArt(o,itemImg(o),o.subtype,'inspect')}<div><h3 style="color:${rarityColor(o)}">${esc(o.name)}</h3>${legendaryRankBadge(o)}<div class="small">${itemSource(o)} ${phase3ExpeditionActive()?(phase5Results.earned.some(i=>i.id===o.id)?' · At risk until extraction':' · Secured'):''}</div><div class="small" style="color:${rarityColor(o)}">${o.rarity==='Legendary'?'✦ ':''}${detailEffectHtml(o)}</div></div></div><div class="buttonRow inspectActions">${buttons}</div><div class="rule"></div><div class="small">${esc(itemStats(o)||'No base stats')} ${esc(weaponTrait(o))}</div>${isTwoHanded(o)?'<p class="small gold">⚔ Two-Handed · occupies Weapon + Off-Hand</p>':''}${isDagger(o)?'<p class="small gold">🗡 Main Hand: full stats. Off-Hand: 50% offensive stats, half attack frequency and 50% strike damage. Double Strike is available only without a second dagger.</p>':''}${legendaryDescription(o)?`<p class="small gold">✦ ${esc(legendaryDescription(o))}</p>`:''}${['stash','bag'].includes(source)?`${dagger?`<details class="ringComparison" open><summary>Compare in Main Hand</summary>${itemComparison(o,'weapon')}</details><details class="ringComparison"><summary>Compare in Off-Hand</summary>${itemComparison(o,'offhand')}</details>`:['ring1','ring2'].includes(o.slot)?`<details class="ringComparison"><summary>Compare if equipped in Ring 1</summary>${itemComparison(o,'ring1')}</details><details class="ringComparison"><summary>Compare if equipped in Ring 2</summary>${itemComparison(o,'ring2')}</details>`:itemComparison(o)}`:''}</div>`;
 }
 
-function statsWidget(s){const evasionTier=state?.run?.tier||(PHASE1_PREVIEW?(phase1Controller?.state.expedition||phase1Controller?.state.unlocked||1):state?.chosen||1);const uncapped=Math.round((4+s.cha*.95+(s.counts.crit||0)*2+(s.bonus.critBonus||0))/Math.sqrt(Math.max(1,s.rawAttackSpeed/1.3)));let rows=[['⚔️ Attack',s.attack],['🛡 Defense',s.defense],['❤️ Health',s.maxhp],['💨 Hits / sec',s.attacksPerSec.toFixed(2)],['🎯 Critical',s.crit+'%'+(s.crit>=65?' · CAP'+(uncapped>65?' ('+uncapped+'% raw)':''):'')],['⚡ Gear Power',s.power],['Evasion',formatItemStat(s.evasionRating||0)+' rating · '+(100*evasionChance(s.evasionRating||0,evasionTier)).toFixed(1)+'% vs E'+evasionTier]];if(s.blockChance)rows.push(['🛡 Block',s.blockChance+'%']);if(s.caster)rows.push(['💧 Mana',s.mana],['💠 Mana regen',s.manaRegen+'/s'],['✨ Spell Power',s.spellPower]);return `<div class="statsGrid">${rows.map(([name,num])=>`<div class="stat"><label>${name}</label><b>${PHASE1_PREVIEW?phase3StatValue(name,s,num):num}</b></div>`).join('')}</div>`}
+function statsWidget(s){const evasionTier=state?.run?.tier||(PHASE1_PREVIEW?(phase1Controller?.state.expedition||phase1Controller?.state.unlocked||1):state?.chosen||1);const uncapped=Math.round((4+s.cha*.95+(s.counts.crit||0)*2+(s.bonus.critBonus||0))/Math.sqrt(Math.max(1,s.rawAttackSpeed/1.3)));let rows=[['⚔️ Attack',s.attack],['🛡 Defense',s.defense],['❤️ Health',s.maxhp],['💨 Hits / sec',s.attacksPerSec.toFixed(2)],['🎯 Critical',s.crit+'%'+(s.crit>=65?' · CAP'+(uncapped>65?' ('+uncapped+'% raw)':''):'')],['⚡ Gear Power',s.power],['Evasion',formatItemStat(s.evasionRating||0)+' rating · '+(100*evasionChance(s.evasionRating||0,evasionTier)).toFixed(1)+'% vs E'+evasionTier]];if(s.blockChance)rows.push(['🛡 Block',s.blockChance+'%']);if(s.caster)rows.push(['💧 Mana',s.mana],['💠 Mana regen',formatItemStat(s.manaRegen)+'/s'],['✨ Spell Power',s.spellPower]);return `<div class="statsGrid">${rows.map(([name,num])=>`<div class="stat"><label>${name}</label><b>${PHASE1_PREVIEW?phase3StatValue(name,s,num):num}</b></div>`).join('')}</div>`}
 
 
 
@@ -1376,7 +1382,7 @@ function phase3DetailedStatsMarkup(s){
   ['STR',formatItemStat(s.str||0)],['AGI',formatItemStat(s.agi||0)],['INT',formatItemStat(s.int||0)],['END',formatItemStat(s.end||0)],['CHA',formatItemStat(s.cha||0)]
  ];
  if(s.blockChance)rows.push(['Block',s.blockChance+'%']);
- if(s.mana>0)rows.push(['Mana',s.mana]);if(s.spellPower>0)rows.push(['Spell Power',s.spellPower]);if(s.manaRegen>0)rows.push(['Mana Regen',s.manaRegen+'/s']);
+ if(s.mana>0)rows.push(['Mana',s.mana]);if(s.spellPower>0)rows.push(['Spell Power',s.spellPower]);if(s.manaRegen>0)rows.push(['Mana Regen',formatItemStat(s.manaRegen)+'/s']);
  return '<section class="phase3PermanentStats" aria-label="Character stats"><div class="phase3StatGrid">'+rows.map(([label,value])=>'<div class="phase3StatCell"><span>'+label+'</span><b>'+phase3StatValue(label,s,value)+'</b></div>').join('')+'</div>'+phase3StatSourcesMarkup(s)+'</section>';
 }
 function phase3PrimaryAttributesMarkup(stats){
