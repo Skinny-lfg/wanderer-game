@@ -55,12 +55,14 @@ async function main(){
  html=html.replace(anchor,'phase1Init();\n'+hook+'\nconst phase3RestoredScroll');fs.writeFileSync(entry,html);
  const server=http.createServer((req,res)=>{
   let pathname;try{pathname=decodeURIComponent(new URL(req.url,'http://127.0.0.1').pathname);}catch{res.statusCode=400;return res.end();}
+  if(!pathname.startsWith('/wanderer-game/')){res.statusCode=404;return res.end();}
+  pathname=pathname.slice('/wanderer-game'.length);
   const file=path.resolve(root,'.'+(pathname==='/'?'/index.html':pathname));
   if(file!==path.join(root,'index.html')&&!file.startsWith(root+path.sep)){res.statusCode=403;return res.end();}
   fs.readFile(file,(err,body)=>{if(err){res.statusCode=404;return res.end();}res.setHeader('Content-Type',mime[path.extname(file)]||'application/octet-stream');res.end(body);});
  });
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
- const base='http://127.0.0.1:'+server.address().port;
+ const base='http://127.0.0.1:'+server.address().port+'/wanderer-game';
  const opts={headless:true,args:['--no-sandbox']};if(process.env.CHROMIUM_PATH)opts.executablePath=process.env.CHROMIUM_PATH;
  let browser;
  try{
@@ -115,6 +117,7 @@ async function main(){
   const first=await page.evaluate(()=>__stage454.snapshot());assert.equal(first.realm,first.cards[1].id);assert.equal(first.steps,13);
   assert.equal(await page.locator('.stage7ContractStatus').count(),1,'Accepted contract progress must appear on the native Dungeon map');
   assert(await page.locator('[data-dungeon-room="1"]').isVisible());
+  const mapArtwork=await page.locator('.realmMapCanvas').evaluate(async el=>{const match=getComputedStyle(el).backgroundImage.match(/url\("?([^"\)]+)/);if(!match)return null;const response=await fetch(match[1]);return {url:match[1],status:response.status,type:response.headers.get('content-type')};});assert(mapArtwork&&mapArtwork.status===200&&mapArtwork.type?.includes('image/webp'),'Affinity background must load under the Pages subpath: '+JSON.stringify(mapArtwork));
   const initialFogCount=Number(await page.locator('.realmFogCurrent').getAttribute('data-fog-revealed'));assert(initialFogCount>=5,'Current room and available neighbors should be revealed');
   const fogHoles=()=>page.locator('.realmFogCurrent mask ellipse').evaluateAll(els=>els.map(el=>el.getAttribute('cx')+','+el.getAttribute('cy')));
   const initialFogHoles=await fogHoles();
