@@ -240,7 +240,7 @@ function phase1StartWave(resetScroll=false){
  const fieldCount=Math.min(4,group.length);
  group[0].groupSlot=0;
  for(const enemy of group)enemy.groupClock=traits?traits.initialClock(enemy,enemy.groupSlot):Math.max(0,enemy.attackEvery-(.9+enemy.groupSlot*.3));
- r.totalMobCount=group.length;r.enemies=fieldCount>1?group.slice(0,fieldCount):undefined;r.groupReserve=group.slice(fieldCount);if(fieldCount===1)delete r.enemies;r.enemy=group[0];
+ r.totalMobCount=group.length;r.enemies=fieldCount>1?group.slice(0,fieldCount):undefined;r.groupReserve=group.slice(fieldCount);if(fieldCount===1)delete r.enemies;r.enemy=group[0];r.encounterLeader=last&&(g.selected.boss||g.selected.elite)?group[0]:null;
  r.phase6Bounty=false;if(r.enemy.miniboss&&ports.phase6Run?.effects.bounty){r.phase6Bounty=true;ports.phase6Run.effects.bounty=false;r.enemy.hp=r.enemy.maxhp=Math.ceil(r.enemy.maxhp*1.25);r.enemy.atk=Math.ceil(r.enemy.atk*1.25);}
  r.tPlayer=r.tDot=0;r.tEnemy=r.enemy.groupClock;r.setTemp=null;r.boonRotboundTriggers=0;r.playerDebuffUntil=0;
  r.playerHealingDebuffUntil=0;r.nextCasterHexAt=0;ports.setRuntime(r);r.status='fight';
@@ -281,7 +281,7 @@ function phase1WaveWon(){
  if(!r.enemies){ports.legendaryKill(r);
  if(ports.phase1Build)WandererV012Buildcraft.onKill(ports.phase1Build,ports.phase2Context(r));}
  // Rewards belong to the encounter leader even when an escort falls last.
- const leader=r.enemies?.find(mob=>mob.boss||mob.miniboss);
+ const leader=r.encounterLeader||r.enemies?.find(mob=>mob.boss||mob.miniboss);
  if(leader)r.enemy=leader;
  const enemy=r.enemy,boss=!!enemy.boss,elite=!!enemy.miniboss;
   const groupReward=(boss||elite?1:r.totalMobCount>=18?1.3:r.totalMobCount>=10?1.2:r.totalMobCount>1?1.1:1)*(1+.12*(g.selected.risk||0));
