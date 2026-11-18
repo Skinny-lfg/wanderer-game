@@ -141,3 +141,29 @@ body.phase3IntegratedPreview dialog.realmRouteDialog>.gothic-corner-layer{displa
 [data-realm-viewport]>.realmMapScale{position:relative;min-width:0!important;height:auto;overflow:visible}
 [data-realm-viewport] .realmMapCanvas{position:absolute!important;left:0;top:0;min-width:0!important;transform-origin:0 0}
 @media(max-width:600px){[data-realm-viewport]{height:520px;overflow:auto!important}[data-realm-viewport]>.realmMapScale{height:auto!important}.realmZoomControls{top:49px}.realmMapScrollHint{display:block}}
+
+[data-realm-viewport]{scrollbar-width:none;-ms-overflow-style:none}
+[data-realm-viewport]::-webkit-scrollbar{display:none;width:0;height:0}
+.realmMapDragging .realmFogDense,.realmMapDragging .realmFogDispersed{animation-play-state:paused}
+
+/* Keep the Expedition essentials close to the Realm map. */
+body.phase3IntegratedPreview .phase3RealmWorkspace .realmMapQuick{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:4px 0;margin:0;background:transparent;border:0;box-shadow:none;clip-path:none}
+body.phase3IntegratedPreview .realmMapQuick .phase3HeroVitals{flex:1 1 320px;max-width:420px;min-width:0}
+body.phase3IntegratedPreview .realmMapQuick .realmMapSupplies{display:flex;align-items:center;justify-content:flex-end;gap:14px;min-width:0}
+body.phase3IntegratedPreview .realmMapQuick .phase3BetweenQuickPotions .phase3PotionSlots{display:flex;gap:5px}
+body.phase3IntegratedPreview .realmMapQuick .phase3BetweenQuickPotions .phase3PotionSlot{width:46px;min-width:46px;height:46px;min-height:46px}
+body.phase3IntegratedPreview .realmMapQuick .phase3BetweenQuickBuffs{flex-basis:100%}
+@media(max-width:700px){body.phase3IntegratedPreview .phase3RealmWorkspace .realmMapQuick{gap:8px;align-items:center;flex-wrap:wrap}body.phase3IntegratedPreview .realmMapQuick .phase3HeroVitals{flex:1 1 140px}body.phase3IntegratedPreview .realmMapQuick .realmMapSupplies{gap:6px;flex:1 1 160px;flex-wrap:wrap}body.phase3IntegratedPreview .realmMapQuick .phase3BetweenQuickPotions .phase3PotionSlot{width:36px;min-width:36px;height:36px;min-height:36px}body.phase3IntegratedPreview .realmMapQuick .phase3BetweenQuickMeta{font-size:.7rem}}
+
+/* The travel budget shares one row with vitals and supplies. */
+body.phase3IntegratedPreview .phase3RealmWorkspace .realmMapQuick{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:12px;align-items:center}
+body.phase3IntegratedPreview .realmMapQuick .phase3HeroVitals{width:100%;max-width:420px}
+body.phase3IntegratedPreview .realmMapQuick .realmMapQuickSteps{position:relative;display:flex;flex-direction:column;justify-content:center;gap:2px;min-height:0;margin:0;padding:.45rem 1.2rem .55rem;background:#21191a;border:1px solid #ad8951;box-shadow:0 4px 12px #0009;text-align:center;white-space:nowrap}
+body.phase3IntegratedPreview .realmMapQuickSteps span{font-size:.62rem;letter-spacing:.12em}
+body.phase3IntegratedPreview .realmMapQuickSteps strong{font-size:2rem}
+body.phase3IntegratedPreview .realmMapQuickSteps::before,body.phase3IntegratedPreview .realmMapQuickSteps::after{content:"";position:absolute;bottom:-3px;width:27px;height:27px;background:url('../assets/ui-kit/gothic-corners/standard-tr.png') center/contain no-repeat;pointer-events:none}
+body.phase3IntegratedPreview .realmMapQuickSteps::before{left:-3px;transform:rotate(180deg)}body.phase3IntegratedPreview .realmMapQuickSteps::after{right:-3px;transform:scaleY(-1)}
+.phase3RealmWorkspace .realmMapMain{padding-top:0}.phase3RealmWorkspace .realmZoomControls{top:8px}.phase3RealmWorkspace .realmMapSide{top:8px}
+@media(max-width:700px){body.phase3IntegratedPreview .phase3RealmWorkspace .realmMapQuick{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:5px}body.phase3IntegratedPreview .realmMapQuick .realmMapQuickSteps{padding:.3rem .55rem .4rem}body.phase3IntegratedPreview .realmMapQuickSteps span{font-size:.5rem}body.phase3IntegratedPreview .realmMapQuickSteps strong{font-size:1.4rem}body.phase3IntegratedPreview .realmMapQuick .realmMapSupplies{justify-content:flex-end}body.phase3IntegratedPreview .realmMapQuick .phase3BetweenQuickPotions .phase3PotionSlot{width:30px;min-width:30px;height:30px;min-height:30px}.phase3RealmWorkspace .realmMapSide{top:50px}}
+@media(min-width:701px){body.phase3IntegratedPreview .phase3RealmWorkspace .realmMapQuick{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)!important}}
+[data-realm-viewport]{-webkit-user-select:none;user-select:none}
