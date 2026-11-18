@@ -22,6 +22,7 @@ test('Stage 7.1 UI only exposes preview Forge with named equipment tiers',()=>{
  const source=fs.readFileSync('index.html','utf8');
  assert(source.includes("if(PHASE1_PREVIEW){phase3BlacksmithOperation='forge';renderForge();}"));
  assert(source.includes('Known Blueprints:'));
+ assert(!fs.readFileSync('online/v012-expedition-runtime.js','utf8').includes('targetRecipe'),'old tracked route targeting removed');
  assert(source.includes('Undiscovered Blueprints'));
  assert(!source.includes('id="v013TrackRecipe"'));
  assert(!source.includes('starterPoints:2'));
