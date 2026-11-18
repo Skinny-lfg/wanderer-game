@@ -27,7 +27,7 @@ jobs:
           test -f docs/index.html
           grep -q "PREFIX='wanderer_automatic_rpg_preview_v9_'" docs/online/v012-save.js
           grep -q 'Fate Distillate' docs/index.html
-          grep -q 'Veilsight Elixir' docs/index.html
+          grep -q 'Veilsight Elixir' docs/online/v012-consumables.js
           ! grep -q 'src="online/v012-account.mjs"' docs/index.html
           ! grep -q 'src="online/v012-auth-bootstrap.js"' docs/index.html
           ! grep -q 'src="online/firebase-client.mjs"' docs/index.html
