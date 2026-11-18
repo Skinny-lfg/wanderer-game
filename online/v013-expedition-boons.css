@@ -1,0 +1,12 @@
+/* Wanderer v0.13 Stage 6 — Expedition Boon draft. */
+.stage6BoonOffer{max-width:1120px;margin-inline:auto;}
+.stage6BoonChoices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:20px 0;}
+.stage6BoonCard{display:flex;flex-direction:column;align-items:center;gap:12px;min-height:265px;padding:25px 18px;background:linear-gradient(160deg,#322329,#19171d 75%);border:1px solid #705043;border-radius:11px;color:#ebddce;text-align:center;cursor:pointer;transition:border-color .15s,transform .15s,background .15s;white-space:normal;}
+.stage6BoonCard:hover,.stage6BoonCard:focus-visible{border-color:#e1b879;transform:translateY(-2px);outline-offset:2px;}
+.stage6BoonCard strong{font-size:1.18rem;letter-spacing:.02em;}
+.stage6BoonIcon{font-size:2.4rem;line-height:1;}
+.stage6BoonBenefit{font-size:.95rem;color:#bddbbf;margin-top:auto;}
+.stage6BoonCost{font-size:.9rem;color:#e2a5aa;}
+.stage6BoonSynergy{color:#e5c18a;font-size:.78rem;letter-spacing:.02em;}
+.stage6BoonSummary{padding:10px 12px;border-left:3px solid #ac8451;background:#2b2228;font-size:.9rem;}
+@media(max-width:700px){.stage6BoonChoices{grid-template-columns:1fr;gap:10px;}.stage6BoonCard{min-height:0;gap:8px;padding:18px 14px;}.stage6BoonBenefit{margin-top:0;}}
