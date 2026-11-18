@@ -68,7 +68,15 @@ function compare(opts={}){
    eliteMeanAbilityCasts:mean('elite','enemyAbilityCasts'),
    tankMeanHpLoss:mean('tank','hpLossFraction'),eliteMeanHpLoss:mean('elite','hpLossFraction'),
    eliteTypes:Object.fromEntries([...new Set(group.map(x=>x.elite.initial.eliteType))].sort()
-    .map(t=>[t,group.filter(x=>x.elite.initial.eliteType===t).length]))};
+    .map(t=>[t,group.filter(x=>x.elite.initial.eliteType===t).length])),
+   byEliteType:Object.fromEntries([...new Set(group.map(x=>x.elite.initial.eliteType))].sort().map(type=>{
+    const matched=group.filter(x=>x.elite.initial.eliteType===type);
+    const avg=(role,k)=>Number((matched.reduce((total,x)=>total+(x[role][k]||0),0)/matched.length).toFixed(2));
+    return [type,{pairs:matched.length,tankWins:matched.filter(x=>x.tank.won).length,
+     eliteWins:matched.filter(x=>x.elite.won).length,
+     tankMeanDamageTaken:avg('tank','damageTaken'),eliteMeanDamageTaken:avg('elite','damageTaken'),
+     tankMeanSeconds:avg('tank','seconds'),eliteMeanSeconds:avg('elite','seconds')}];
+   }))};
  }
  return {stage:'9.5',cohort:'controlled-matched-same-seed-single-tank-vs-single-elite',
   note:'Diagnostic only: forcibly swaps the first native room encounter to Elite; no natural player, no injected items, same native combat and RNG seed.',
@@ -83,6 +91,13 @@ function markdown(out){
   '| '+gear+' ('+r.pairs+' pairs) | '+r.tankWins+' | '+r.eliteWins+' | '+r.tankMeanDamageTaken+
   ' | '+r.eliteMeanDamageTaken+' | '+r.tankMeanSeconds+'s | '+r.eliteMeanSeconds+
   's | '+r.tankMeanAbilityCasts+' | '+r.eliteMeanAbilityCasts+' |');
+ lines.push('','## Seven Elite archetypes (small subsets, not standalone win rates)','',
+  '| Gear | Elite | Pairs | Tank wins | Elite wins | Tank damage | Elite damage | Elite time |',
+  '|---|---|---:|---:|---:|---:|---:|---:|');
+ for(const [gear,block] of Object.entries(out.summary))
+  for(const [type,r] of Object.entries(block.byEliteType||{}))
+   lines.push('| '+gear+' | '+type+' | '+r.pairs+' | '+r.tankWins+' | '+r.eliteWins+
+     ' | '+r.tankMeanDamageTaken+' | '+r.eliteMeanDamageTaken+' | '+r.eliteMeanSeconds+'s |');
  lines.push('','## Limitations','', '- The normal Tank is selected from the native seeded roster; the selected-room Elite flag is only a controlled fixture',
   '- Match starts before earning any loot/XP within the run. Both fight the same number of enemies at E1, with the same hero and seed.',
   '- Each paired fight consumes its own native encounter RNG; it is not a bitwise clone of combat RNG after the enemy archetype diverges',
