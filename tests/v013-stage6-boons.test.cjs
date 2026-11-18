@@ -50,9 +50,9 @@ test('Stage 6: offer is checkpoint-safe and blocks room travel until a legal cho
  const invalid=clone(c.state);invalid.dungeon.boonOffer.ids[0]='forged_boon';
  assert.throws(()=>c.restore(invalid),/Invalid/);
  const id=offered.ids[0];assert.equal(c.chooseBoon(id),id);
- assert.equal(d.boonOffer,undefined);assert.deepEqual([...d.foundationState.boonIds],[id]);
+ assert.equal(c.state.dungeon.boonOffer,undefined);assert.deepEqual([...c.state.dungeon.foundationState.boonIds],[id]);
  assert.throws(()=>c.chooseBoon(id),/unavailable/);
- assert.equal(d.foundationState.decisions.at(-1).type,'choose_boon');
+ assert.equal(c.state.dungeon.foundationState.decisions.at(-1).type,'choose_boon');
  assert.equal(c.restore(clone(c.state)).dungeon.foundationState.boonIds[0],id);
  assert(c.visitRoom(1));assert(c.state.dungeon.steps<card.stepLimit+B.stepsAdded(id));
 });
