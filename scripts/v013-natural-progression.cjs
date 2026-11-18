@@ -191,7 +191,7 @@ function selectRoom(c,profile,vitals){
    else score+=profile.name==='Daring'?17:28;
    if(hpRatio<.7&&max>1)score+=8;
   }
-  if(type==='shrine')score-=15;
+  if(type==='shrine')score-=26; // Free discovered Boon before risking scarce early HP
   if(type==='spring'&&hpRatio<.8)score-=20;
   if(type==='elite')score+=profile.name==='Daring'?12:28;
   if(type==='event')score-=5;
