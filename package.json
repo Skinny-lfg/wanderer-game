@@ -50,7 +50,9 @@
     "simulate:v013:elites": "node scripts/simulate-progression.cjs --mode=elites",
     "test:v013:balance": "node --test tests/v013-balance-v2.test.cjs tests/v013-simulation.test.cjs tests/v013-stage5-simulation.test.cjs",
     "test:v013:stage91": "node --test tests/v013-stage91-diagnosis.test.cjs",
-    "diagnose:v013:stage91": "node scripts/v013-stage91-diagnosis.cjs"
+    "diagnose:v013:stage91": "node scripts/v013-stage91-diagnosis.cjs",
+    "test:v013:stage92": "node --test tests/v013-stage92-progression-diagnosis.test.cjs",
+    "diagnose:v013:stage92": "node scripts/v013-stage92-progression-diagnosis.cjs"
   },
   "dependencies": {
     "firebase": "11.10.0"
