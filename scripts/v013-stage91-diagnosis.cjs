@@ -44,8 +44,13 @@ function summarize(rows){
  for(const row of rows){const key=contextKey(row);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(row);}
  const out=[];
  for(const sample of groups.values()){
-  const first=sample[0],resolved=sample.filter(r=>!r.error&&!r.timedOut&&
+  const first=sample[0],resolvedAttempts=sample.filter(r=>!r.error&&!r.timedOut&&
    (r.won||r.died||r.stage==='failed'||r.status==='died'||r.status==='cleared'));
+  // Affinity lookup may shift 9101 and 9102 to the SAME native Realm RNG seed.
+  // Identical resolved seeds are repeat observations, NOT independent fights.
+  const unique=new Map();
+  for(const row of resolvedAttempts){const seed=row.resolvedSeed??row.seed;if(!unique.has(seed))unique.set(seed,row);}
+  const resolved=[...unique.values()],duplicateResolvedSeeds=resolvedAttempts.length-resolved.length;
   const wins=resolved.filter(r=>r.won).length,deaths=resolved.filter(r=>r.died||r.stage==='failed'||r.status==='died').length;
   const sec=resolved.map(r=>r.seconds),hp=resolved.map(r=>r.minHpPct);
   const netHp=resolved.map(r=>r.hpMax>0?round(r.hpEnd/r.hpMax*100,1):null).filter(x=>x!==null);
@@ -55,6 +60,7 @@ function summarize(rows){
   if(sample.some(r=>r.error))flags.push('simulation_error');
   if(sample.some(r=>r.timedOut))flags.push('timeout');
   if(!resolved.length)flags.push('no_resolved_fights');
+  if(duplicateResolvedSeeds)flags.push('duplicate_resolved_seed');
   if(resolved.length<5)flags.push('small_sample');
   if(resolved.length>=2&&pct(deaths,resolved.length)>=50)flags.push('survival_pressure_candidate');
   if(sec.length&&quantile(sec,.5)>=90)flags.push('long_fight_candidate');
@@ -66,15 +72,16 @@ function summarize(rows){
    groupSize:first.mode==='enemies'?(first.groupSize||null):null,
    eliteType:first.mode==='elites'?(first.eliteType||null):null,
    targetPolicy:first.targetPolicy||'focus',
-   n:sample.length,resolved:resolved.length,wins,deaths,
+   n:sample.length,resolved:resolved.length,resolvedAttempts:resolvedAttempts.length,duplicateResolvedSeeds,wins,deaths,
    errors:sample.filter(r=>r.error).length,timeouts:sample.filter(r=>r.timedOut).length,
    winPctResolved:pct(wins,resolved.length),
    durationP50:quantile(sec,.5),durationP90:quantile(sec,.9),
    damageTakenMean:avg(resolved,'damageTaken'),damageDealtMean:avg(resolved,'damageDealt'),
    absorbedMean:avg(resolved,'absorbed'),manaSpentMean:avg(resolved,'manaSpent'),
    minHpPctP50:quantile(hp,.5),endHpPctP50:quantile(netHp,.5),
-   enemyAbilityCastsMean:avg(resolved,'enemyAbilityCasts'),
-   enemyAbilityCastsPerMinute:seconds>0?round(casts*60/seconds):null,
+   // This counter is for normal enemy abilities; native Boss mechanics use separate metrics.
+   enemyAbilityCastsMean:first.mode==='bosses'?null:avg(resolved,'enemyAbilityCasts'),
+   enemyAbilityCastsPerMinute:first.mode==='bosses'?null:(seconds>0?round(casts*60/seconds):null),
    bossSummonsMean:avg(resolved,'bossSummons'),
    bossHealingMean:avg(resolved,'bossHealing'),
    bossWardsMean:avg(resolved,'bossWards'),
@@ -109,18 +116,24 @@ function analyze(modeResults,opts){
   flag:f,mode:g.mode,boss:g.bossName,affinity:g.affinity,build:g.build,risk:g.risk,level:g.level
  })));
  if(missing.length)flags.push({flag:'missing_boss_coverage',affinities:missing});
+ const bossRows=rows.filter(r=>r.mode==='bosses'&&!r.error);
+ if(bossRows.length&&bossRows.every(r=>!r.bossCastPreparations)&&bossRows.some(r=>num(r.bossCastInterruptions)>0))
+  flags.push({flag:'boss_cast_preparations_unobserved',note:'Boss casts and interruptions may use distinct counters. Verify instrumentation before inferring cast frequency.'});
  return {
   schemaVersion:1,stage:'9.1',sourceSha256:fingerprint,sourceModules:modeResults[0].sourceModules,
   assumptions:{...modeResults[0].assumptions,
    scope:'Controlled native first-ring Boss, 3/12/20-enemy rooms and seeded Elite fights; not campaign or full natural dungeon',
    comparisons:'Each row keeps its level, resolvedSeed, Affinity, risk, build and targeting; seed shifts across Affinities are NOT paired',
-   sampleWarning:'Exploratory only. Do not calibrate numbers on groups below 30 independent seeds per cell.',
+   sampleWarning:'Exploratory only. Deduplicate matched resolvedSeed per cell; no calibration below 30 independent seeds per cell.',
    talentWarning:'24 points are synthetic at E15, not naturally earned; use --points=0 --levels=1 for E1 baseline.',
-   abilityWarning:'Casts, summons, healing, wards and interrupts are exposure/proxy metrics; direct damage by each ability is NOT attributed.',
+   abilityWarning:'Normal enemy casts and Boss mechanics have separate counters. Boss cast preparations may be uninstrumented. Direct damage by each ability is NOT attributed.',
    thresholds:'Flags are triage signals (>=90s median, <=15% median minimum HP, >=50% deaths with n>=2), not validated balance targets.'},
   matrix:{levels:opts.levels,seeds:opts.seeds,builds:opts.builds,affinities:opts.affinities,risks:opts.risks,
    groupSizes:opts.groupSizes,points:opts.points,targetPolicy:opts.targetPolicy},
-  coverage:{...actual,requested:opts.expectedCases,completed:rows.length,observedBosses:seen,
+  coverage:{...actual,requested:opts.expectedCases,completed:rows.length,
+   independentBossFights:groups.filter(g=>g.mode==='bosses').reduce((n,g)=>n+g.resolved,0),
+   duplicateBossAttempts:groups.filter(g=>g.mode==='bosses').reduce((n,g)=>n+g.duplicateResolvedSeeds,0),
+   observedBosses:seen,
    missingBosses:missing,observedEliteTypes:[...new Set(rows.map(r=>r.eliteType).filter(Boolean))].sort(),
    errorCount:errors.length,timeoutCount:timeouts.length},
   groups,flags,rows,
@@ -129,7 +142,8 @@ function analyze(modeResults,opts){
    'One or two seeds are diagnostics, not statistically meaningful balance percentages.',
    'No automatic potion timing, equipment upgrades during route, or complete manual player input.',
    'All results use explicit synthetic talent budgets; generated gear is seeded, not standardized item-by-item.',
-   'Elite type is seed-dependent; an unobserved archetype must be checked in a later targeted cohort.'
+   'Elite type is seed-dependent; an unobserved archetype must be checked in a later targeted cohort.',
+   'Different input seeds can resolve to the same native seed within a Boss cell; effective sample size counts unique resolvedSeed only.'
   ]
  };
 }
@@ -152,12 +166,13 @@ function markdown(report){
   '- Bosses observados: '+(c.observedBosses.join(', ')||'nenhum')+'. Em falta: '+(c.missingBosses.join(', ')||'nenhum'),
   '- Tipos Elite observados: '+(c.observedEliteTypes.join(', ')||'nenhum'),
   '- Erros: '+c.errorCount+'; timeouts: '+c.timeoutCount,
+  '- Boss fights com sementes independentes: '+c.independentBossFights+'; tentativas duplicadas: '+c.duplicateBossAttempts,
   '- Builds: '+report.matrix.builds.join(', ')+'; risks: '+report.matrix.risks.join(', '),
   '- Seeds: '+report.matrix.seeds.join(', ')+'; level(s): '+report.matrix.levels.join(', '),
   '',
   '## Resultados agrupados por Boss/Affinity/build/dificuldade',
   '',
-  '| Tipo | Boss/Affinity | Build | Risco | n (concl.) | Vitórias | Duração p50/p90 (s) | Dano recebido médio | HP mín. p50 | Casts/min | Flags |',
+  '| Tipo | Boss/Affinity | Build | Risco | Execuções (seeds únicos) | Vitórias | Duração p50/p90 (s) | Dano recebido médio | HP mín. p50 | Casts/min* | Flags |',
   '|---|---|---|---:|---:|---:|---:|---:|---:|---:|---|'
  ];
  for(const g of report.groups){
@@ -172,7 +187,8 @@ function markdown(report){
  if(report.flags.length)for(const x of report.flags)lines.push('- '+x.flag+': '+[x.mode,x.boss||x.affinity,x.build,'risk '+x.risk,'E'+x.level].filter(Boolean).join(' / '));
  else lines.push('Sem flags além de amostras pequenas; **não** significa equilíbrio confirmado.');
  lines.push('','## Leitura correta','',
-  '- Win rate usa apenas lutas concluídas. Erros e timeouts ficam separados, nunca como derrotas.',
+  '- Win rate usa apenas lutas concluídas **e sementes nativas únicas por célula**. Duplicados, erros e timeouts não contam como derrotas.',
+  '- *Casts/min refere-se a habilidades de inimigos normais; Bosses têm contadores separados para summons, wards, healing e interrupts. Não interpretar casts/min em branco como Boss inativo.',
   '- p50/p90, danos, HP e casts usam apenas lutas concluídas.',
   '- Eficácia de habilidades é apenas observada indiretamente: casts, summons, wards, healing, interrupts; sem atribuição de dano por habilidade.',
   '- Bosses de Affinities diferentes podem exigir resolvedSeed diferente: não comparar como A/B emparelhado.',
