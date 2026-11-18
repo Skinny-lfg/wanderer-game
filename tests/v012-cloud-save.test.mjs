@@ -27,16 +27,16 @@ test('missing cloud save creates exactly once and subsequent login restores clou
 test('concurrent/stale revision is surfaced and offline outbox is retained',async()=>{
  const storage=memory();let status='';const backend={async readV012Save(){return null;},async createV012SaveIfMissing(){return {revision:1,payload:JSON.stringify(initial()),schemaVersion:13,format:'wanderer-expedition'};},async writeV012Save(){throw Error('revision conflict');}};
  const coordinator=createCloudSaveCoordinator({backend,uid:'alice',projectId:'test',readSnapshot:initial,applySnapshot:()=>{},onStatus:value=>status=value,storage,delay:60000});
- await coordinator.initialize(initial());const save=initial();save.profile.gold=5;coordinator.persist(save);await assert.rejects(coordinator.flush(),/revision conflict/);assert.equal(status,'error');assert.ok(storage.getItem('wanderer_v012_cloud_outbox_alice'));
+ await coordinator.initialize(initial());const save=initial();save.profile.gold=5;coordinator.persist(save);await assert.rejects(coordinator.flush(),/revision conflict/);assert.equal(status,'error');assert.ok(storage.getItem('wanderer_v013_stage74_cloud_outbox_alice'));
 });
 
 test('offline outbox resumes only when its base cloud revision still matches',async()=>{
  const storage=memory(),base=initial(),pending=initial();pending.profile.gold=9;
  let record={payload:JSON.stringify(base),revision:1,schemaVersion:13,format:'wanderer-expedition'},writes=0,applied;
- storage.setItem('wanderer_v012_cloud_outbox_alice',JSON.stringify({uid:'alice',baseRevision:1,save:pending}));
+ storage.setItem('wanderer_v013_stage74_cloud_outbox_alice',JSON.stringify({uid:'alice',baseRevision:1,save:pending}));
  const backend={async readV012Save(){return record;},async writeV012Save(uid,save,revision){writes++;assert.equal(revision,1);record={payload:JSON.stringify(save),revision:2,schemaVersion:13,format:'wanderer-expedition'};return record;}};
  const coordinator=createCloudSaveCoordinator({backend,uid:'alice',projectId:'test',readSnapshot:()=>pending,applySnapshot:save=>{applied=save;},storage});
- await coordinator.initialize(base);assert.equal(writes,1);assert.equal(applied.profile.gold,9);assert.equal(storage.getItem('wanderer_v012_cloud_outbox_alice'),null);
+ await coordinator.initialize(base);assert.equal(writes,1);assert.equal(applied.profile.gold,9);assert.equal(storage.getItem('wanderer_v013_stage74_cloud_outbox_alice'),null);
 });
 
 test('foreign UID snapshots are rejected before writing',async()=>{
@@ -55,10 +55,43 @@ test('payload cap is measured in UTF-8 bytes before any Cloud write',async()=>{
 
 test('diverged outbox is retained until an explicit cloud reload resolution',async()=>{
  const storage=memory(),local=initial(),cloud=initial();local.profile.gold=12;cloud.profile.gold=31;
- const key='wanderer_v012_cloud_outbox_alice';storage.setItem(key,JSON.stringify({uid:'alice',baseRevision:1,save:local}));
+ const key='wanderer_v013_stage74_cloud_outbox_alice';storage.setItem(key,JSON.stringify({uid:'alice',baseRevision:1,save:local}));
  const record={payload:JSON.stringify(cloud),revision:4,schemaVersion:13,format:'wanderer-expedition'};let applied;
  const backend={async readV012Save(){return record;},async writeV012Save(){throw Error('must not overwrite divergent cloud');}};
  const coordinator=createCloudSaveCoordinator({backend,uid:'alice',projectId:'test',readSnapshot:()=>local,applySnapshot:save=>{applied=save;},storage,onStatus:()=>{}});
  await assert.rejects(coordinator.initialize(local),/diverged/);assert.ok(coordinator.exportRecovery());
  await coordinator.reloadCloud();assert.equal(applied.profile.gold,31);assert.equal(storage.getItem(key),null);
+});
+
+test('Stage 7.4 resets stale development cloud saves once and preserves owner/revision',async()=>{
+ const old=initial(),next=initial();old.profile.gold=999;next.previewGeneration='stage74';
+ let record={payload:JSON.stringify(old),revision:4,schemaVersion:13,format:'wanderer-expedition'};
+ let writes=0,lastSaved=null;
+ const backend={
+  async readV012Save(){return record;},
+  async writeV012Save(uid,save,revision){
+   assert.equal(uid,'alice');assert.equal(revision,record.revision);
+   writes++;lastSaved=save;record={payload:JSON.stringify(save),revision:revision+1,schemaVersion:13,format:'wanderer-expedition'};
+   return record;
+  }
+ };
+ let applied;
+ const create=()=>createCloudSaveCoordinator({backend,uid:'alice',projectId:'wanderer-development-8e3ee',readSnapshot:()=>next,applySnapshot:save=>{applied=save;},storage:memory()});
+ const coordinator=create();
+ await coordinator.initialize(next);
+ assert.equal(writes,1);assert.equal(record.revision,5);
+ assert.equal(lastSaved.previewGeneration,'stage74');assert.equal(applied.profile.gold,0);
+ await coordinator.close();
+ const again=create();await again.initialize(next);
+ assert.equal(writes,1,'Stage 7.4 cloud save must not reset repeatedly');
+ assert.equal(applied.previewGeneration,'stage74');await again.close();
+});
+test('Stage 7.4 cloud reset is forbidden outside dedicated development project',async()=>{
+ const old=initial(),next=initial();old.profile.gold=88;next.previewGeneration='stage74';
+ let writes=0,applied;
+ const record={payload:JSON.stringify(old),revision:7,schemaVersion:13,format:'wanderer-expedition'};
+ const backend={async readV012Save(){return record;},async writeV012Save(){writes++;throw Error('Must not reset production');}};
+ const coordinator=createCloudSaveCoordinator({backend,uid:'alice',projectId:'production-project',readSnapshot:()=>next,applySnapshot:save=>{applied=save;},storage:memory()});
+ await coordinator.initialize(next);
+ assert.equal(writes,0);assert.equal(applied.profile.gold,88);await coordinator.close();
 });
