@@ -36,12 +36,20 @@ test('Exarch shields a living ally by at most 15% max HP, three times with real 
  assert.equal(e.stage82.castCount,3);assert.equal(friend.barrier,15);
  assert.equal(move(r,100).length,0);
 });
-test('Exarch cannot shield itself and holds ability until a living ally appears',()=>{
+test('Exarch casts a self-Barrier in solo Elite rooms, but protects allies first when present',()=>{
  const e=elite('rotbound_exarch'),r=run(e);A.attach(e);
- assert.deepEqual(move(r,4),[]);assert.equal(e.stage82.castCount,0);assert.equal(e.barrier,0);
- const friend=mob('arrived');r.enemies.push(friend);
- assert.equal(move(r,5)[0].type,'prepare');
- assert.equal(move(r,5.75)[0].target,friend);
+ assert.equal(move(r,2).length,0);
+ assert.equal(move(r,3)[0].type,'prepare');
+ const ward=move(r,3.75)[0];
+ assert.equal(ward.type,'activate');
+ assert.equal(ward.target,e);
+ assert.equal(e.barrier,15,'native Guarded solo Exarch has a useful ability');
+ assert.equal(A.status(e,3.8).label,'Self Ward');
+ const ally=mob('arrived');r.enemies.push(ally);
+ assert.equal(move(r,13.75)[0].type,'prepare');
+ const protect=move(r,14.5)[0];
+ assert.equal(protect.target,ally,'Exarch supports an actual ally when one is present');
+ assert.equal(ally.barrier,15);
 });
 test('Executioner: 1.5s telegraph, one 2.4x strike with 18% cap; stun and attack delay interrupt',()=>{
  const e=elite('ashen_executioner'),r=run(e);A.attach(e);
