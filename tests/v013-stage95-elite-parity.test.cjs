@@ -32,3 +32,18 @@ test('Paired cohort records truly native tank-roster encounters and does not man
   assert.equal(elite.won,elite.status==='cleared');
  }
 });
+
+test('E1 Elites must be more dangerous than normal Tanks in independent paired native combat cohorts',()=>{
+ const result=C.compare({seedStart:9470,scan:160,pairCap:24,gearModes:['starter','common']});
+ assert.equal(result.errors.length,0,JSON.stringify(result.errors.slice(0,2)));
+ for(const gear of ['starter','common']){
+  const row=result.summary[gear];
+  assert.equal(row.pairs,24,'both comparisons need sufficient native Tanks');
+  assert(row.eliteMeanDamageTaken>row.tankMeanDamageTaken,
+   gear+' Elites should cause more damage than the exact same-seed solo Tanks: '+JSON.stringify(row));
+  assert(row.eliteMeanSeconds<row.tankMeanSeconds,
+   gear+' Elite threat should not be produced solely by longer HP-sponge fights');
+ }
+ assert(result.summary.starter.eliteWins<=result.summary.starter.tankWins,
+  'Elites must not be safer to defeat than the normal Tank under native E1 starter conditions');
+});
