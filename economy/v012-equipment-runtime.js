@@ -359,7 +359,7 @@ function phase6UsePotion(index,mode='threat'){
  if(!potion||potion.used||potion.kind==='fortune')return false;
  const kind=potion.kind,v=ports.phase3Vitals();
  if(kind==='barrier'&&(ports.phase6Run.effects.barrier||0)>=.3||
-    ports.phase6Run.effects[kind]?.remaining>0||
+    (kind==='purifying'?ports.phase6Run.effects[kind]?.remaining>0:ports.phase6Run.effects[kind]?.remaining===3)||
     kind==='health'&&v.hp>=v.maxhp||kind==='mana'&&v.mp>=v.maxmp)return false;
  if((kind==='scout'||kind==='veilsight'||kind==='purifying'||kind==='fate'||kind==='trail')&&!d)return false;
  if(kind==='fate'){
