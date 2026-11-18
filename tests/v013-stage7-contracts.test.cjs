@@ -184,7 +184,7 @@ test('Stage 7 cannot be paid on a forged completion or a duplicated reward recor
  assert.throws(()=>c.restore(wrong),/Invalid/);
  complete(env,'pathfinder');
  K.settle(g,a.state(),a.results());
- const copy=clone(g);copy.dungeon.stage7RewardPaid.kind='blueprint';
+ const copy=clone(g);copy.dungeon.stage7RewardPaid.kind=copy.dungeon.stage7RewardPaid.kind==='blueprint'?'essence':'blueprint';
  assert.throws(()=>c.restore(copy),/Invalid/);
  assert.equal(K.validate(g),true);
 });
