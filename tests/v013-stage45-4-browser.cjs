@@ -17,6 +17,14 @@ window.__stage454={
    savedTalents:state.automaticTalents?.nodes||[],
    result:phase5Results.summary?.outcome||null};
  },
+ grantOneTestLevel(){
+  if(phase1Controller.state.stage!=='camp'||state.run)throw Error('Test level-up only in Camp');
+  const before=WandererAutomaticTalents.earned(state.automaticTalents);
+  state.automaticTalents=WandererAutomaticTalents.award(state.automaticTalents,100);
+  if(WandererAutomaticTalents.earned(state.automaticTalents)!==before+1)throw Error('Level-up did not grant exactly one Talent Point');
+  if(!phase5Persist())throw Error('Could not persist test progression');
+  render();
+ },
  pathToRoom(target){
   const c=phase1Controller.realmMap(),d=phase1Controller.state.dungeon;
   const q=[[d.current]],seen=new Set([d.current]);
@@ -61,7 +69,16 @@ async function main(){
   await page.goto(base+'/',{waitUntil:'domcontentloaded'});
   await page.locator('.phase3Camp').waitFor({state:'visible'});
   assert.equal((await page.evaluate(()=>__stage454.snapshot())).stage,'camp');
+  const selector=page.locator('.phase3ExpeditionSelector');
+  assert(await selector.isVisible(),'Camp must use the centered Expedition arrow selector');
+  assert.equal(await selector.locator('.phase3ExpeditionNumber').innerText(),'1');
+  assert(await selector.getByRole('button',{name:'Previous Expedition'}).isDisabled());
+  assert(await selector.getByRole('button',{name:'Next Expedition'}).isDisabled());
+  assert.equal(await page.locator('.phase3BlueprintCompact[open]').count(),0,'Blueprint collection starts collapsed');
+  assert.equal(await page.locator('[data-phase3-nav="talents"] .talentUnspentBadge').count(),0,'Level 1 must show no Talent Point');
   await page.screenshot({path:path.join(out,'01-camp-desktop.png'),fullPage:true});
+  await page.evaluate(()=>__stage454.grantOneTestLevel());
+  assert.equal(await page.locator('[data-phase3-nav="talents"] .talentUnspentBadge').innerText(),'1','Level-up must show one unspent Talent Point, not two');
   // Real current Talent Tree is hosted in an iframe; old inline-graph selectors must not be used.
   await page.getByRole('button',{name:'Talents',exact:true}).click();
   const atlas=page.frameLocator('iframe[title="Talent tree"]');
