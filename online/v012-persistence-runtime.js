@@ -143,7 +143,7 @@ function phase5Persist(){
   if(!ports.PHASE1_PREVIEW||!ports.phase5Ready||!ports.phase5Snapshot)return true;
   try{
    const pending=WandererV012Save.validate(phase5Capture(),ports.phase5Snapshot.binding);
-   globalThis.sessionStorage.setItem('wanderer_v012_local_preview',JSON.stringify(pending));
+   globalThis.sessionStorage.setItem('wanderer_v013_stage74_local_preview',JSON.stringify(pending));
    ports.phase5Snapshot=pending;return true;
   }catch(error){ports.phase5Fail(error);return false;}
  }
@@ -157,7 +157,7 @@ function phase5Init(){
   if(!ports.PHASE1_PREVIEW||globalThis.__WANDERER_CLOUD_ONLY__)return;
   try{
    if(!globalThis.WandererV012Save)throw Error('Local playtest save module is unavailable');
-   const binding='local-playtest',raw=globalThis.sessionStorage.getItem('wanderer_v012_local_preview');
+   const binding='local-playtest',raw=globalThis.sessionStorage.getItem('wanderer_v013_stage74_local_preview');
    if(raw){
     const recovered=WandererV012Save.recover(raw,binding);ports.phase5Snapshot=recovered.save;
     ports.state=JSON.parse(JSON.stringify(recovered.save.profile));ports.uid=Math.max(ports.uid,recovered.save.idCounter);
