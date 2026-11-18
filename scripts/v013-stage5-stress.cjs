@@ -6,7 +6,7 @@ const F=globalThis.WandererV013ExpeditionFoundation;
 const finite=n=>Number.isFinite(n)?n:0;
 const round=(n,p=2)=>Number(finite(n).toFixed(p));
 function args(argv){
- const config={seedStart:9101,seedCount:8,levels:[15,50,200],builds:S.BUILDS.map(x=>x.id),points:24,gear:'current',rarity:'Rare',boons:'none',tickLimit:4500,output:'reports/v013-stage5-stress.json'};
+ const config={seedStart:9101,seedCount:8,levels:[15,50,200],builds:S.BUILDS.map(x=>x.id),points:24,gear:'current',rarity:'Rare',boons:'none',contracts:'none',tickLimit:4500,output:'reports/v013-stage5-stress.json'};
  for(const arg of argv){
   const m=/^--([a-z-]+)=(.+)$/.exec(arg);if(!m)throw Error('Expected --key=value: '+arg);
   const [_,key,val]=m;
@@ -18,6 +18,7 @@ function args(argv){
   else if(key==='gear')config.gear=val;
   else if(key==='rarity')config.rarity=val;
    else if(key==='boons')config.boons=val;
+   else if(key==='contracts')config.contracts=val;
   else if(key==='tick-limit')config.tickLimit=Number(val);
   else if(key==='out')config.output=val;
   else throw Error('Unknown option '+key);
@@ -27,7 +28,7 @@ function args(argv){
     !config.levels.length||config.levels.some(x=>!Number.isSafeInteger(x)||x<1||x>10000)||
     !config.builds.length||config.builds.some(x=>!S.BUILDS.some(b=>b.id===x))||
     !Number.isSafeInteger(config.points)||config.points<0||config.points>100||
-    !['current','previous'].includes(config.gear)||!['Common','Uncommon','Rare','Epic'].includes(config.rarity)||!['none','first'].includes(config.boons)||
+    !['current','previous'].includes(config.gear)||!['Common','Uncommon','Rare','Epic'].includes(config.rarity)||!['none','first'].includes(config.boons)||!['none','first'].includes(config.contracts)||
     !Number.isSafeInteger(config.tickLimit)||config.tickLimit<100||config.tickLimit>100000||
     !config.output||config.levels.length*config.builds.length*config.seedCount*3>3000)throw Error('Invalid or excessive Stage 5 scenario matrix (max 3000 dungeons)');
  return config;
@@ -86,7 +87,7 @@ function rollups(rows,dimension){
  }).sort((a,b)=>Number.isFinite(+a.key)&&Number.isFinite(+b.key)?+a.key-+b.key:a.key.localeCompare(b.key));
 }
 function run(config){
- const simulation=S.simulate({...S.DEFAULTS,mode:'conditions',levels:config.levels,builds:config.builds,seeds:Array.from({length:config.seedCount},(_,i)=>config.seedStart+i),points:config.points,gear:config.gear,rarity:config.rarity,boons:config.boons,tickLimit:config.tickLimit});
+ const simulation=S.simulate({...S.DEFAULTS,mode:'conditions',levels:config.levels,builds:config.builds,seeds:Array.from({length:config.seedCount},(_,i)=>config.seedStart+i),points:config.points,gear:config.gear,rarity:config.rarity,boons:config.boons,contracts:config.contracts,tickLimit:config.tickLimit});
  const rows=simulation.rows,byCondition=Object.fromEntries(F.CATALOG.conditions.map(x=>[x.id,rows.filter(r=>r.conditionId===x.id).length]));
  const report={schemaVersion:2,method:'Current v0.13 Dungeon routes with Stage 7 rewards, six Affinity Bosses and Stage 8 creature skills; deterministic seeded replay. Observational, not a paired causal estimate.',sourceSha256:simulation.sourceSha256,settings:config,
  summary:{cases:rows.length,wins:rows.filter(r=>r.won).length,deaths:rows.filter(r=>r.stage==='failed').length,
