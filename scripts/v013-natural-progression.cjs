@@ -276,19 +276,57 @@ function eventOptions(id,v,profile,context={}){
  if(id==='whispering_idol'||id==='cursed_altar')return [2,1,0];
  return profile.name==='Daring'?[0,2,1]:[2,0,1];
 }
-function usePotionsBetween(a,profile,history){
- const v=a.vitals(),used=[];
+function potionSlots(a){
  const run=a.events.run?.();
- const slots=run?.started?(run.potions||[]):(a.state().potionSelection||[]).map(kind=>({kind,used:false}));
- // Choose by actual potion kind. Never accidentally spend a Scout or Trail
- // potion when the decision was to heal.
- if(v.maxhp>0&&v.hp/v.maxhp<profile.healAt){
-  const i=slots.findIndex(p=>p?.kind==='health'&&!p.used);
-  if(i>=0&&a.potions.use(i))used.push({kind:'health',slot:i,reason:'low_hp',ratio:round(v.hp/v.maxhp)});
+ return run?.started?(run.potions||[]):(a.state().potionSelection||[]).map(kind=>({kind,used:false}));
+}
+function usePotionKind(a,kind,reason,history,mode){
+ const slots=potionSlots(a);
+ const index=slots.findIndex(p=>p?.kind===kind&&!p.used);
+ if(index<0)return false;
+ if(!a.potions.use(index,mode))return false; // Only native legal actions succeed.
+ history.push({kind,slot:index,reason});
+ return true;
+}
+function usePotionsBetween(a,profile,history,next){
+ const v=a.vitals(),g=a.controller().state,d=g.dungeon;
+ if(!next||!d?.realm)return false;
+ const ratio=v.maxhp>0?v.hp/v.maxhp:1,mpRatio=v.maxmp?v.mp/v.maxmp:1;
+ const dangerous=next.type==='boss'||next.type==='elite'||
+  next.type==='combat'&&(Number(next.visibleMobRange?.[1]??4)>3);
+ let changed=false;
+ // A map Scout is valuable *before* exploring if there is no already visible
+ // Shrine. Its native targeting works without knowing hidden room contents.
+ const hasVisibleShrine=a.controller().realmMap().boonShrines?.some(i=>
+  d.scouted?.includes(i)||a.controller().travelPath(i).length>0);
+ if(!hasVisibleShrine&&d.steps>=7&&history.filter(x=>x.kind==='scout').length===0)
+  changed=usePotionKind(a,'scout','discover_real_shrine',history,'shrine')||changed;
+ if(d.steps<=4&&next.type!=='boss'&&next.slack<1)
+  changed=usePotionKind(a,'trail','avoid_exhausting_map_steps',history)||changed;
+ // Do not spend healing before entering a zero-damage Shrine / Spring; heal
+ // when the next actual threat justifies using an irreplaceable purchased dose.
+ if(ratio<profile.healAt&&
+   !['shrine','spring'].includes(next.type)&&
+   (dangerous||next.type==='combat'||ratio<.4))
+  changed=usePotionKind(a,'health','low_hp_before_threat',history)||changed;
+ if(mpRatio<.35&&v.maxmp>0&&dangerous)
+  changed=usePotionKind(a,'mana','low_mana_before_threat',history)||changed;
+ if(dangerous&&ratio>.32){
+  const kind=next.type==='boss'?'barrier':'ironhide';
+  changed=usePotionKind(a,kind,'prepare_for_'+next.type,history)||changed;
+  if(next.type==='boss')changed=usePotionKind(a,'ironhide','boss_defense',history)||changed;
+  if(next.type==='boss'&&d.foundationState?.conditionId!=='veiled_passages')
+   changed=usePotionKind(a,'purifying','boss_condition_mitigation',history)||changed;
  }
- // No synthetic replenishment, no mid-combat potion use.
- if(used.length)history.push(...used);
- return used;
+ return changed;
+}
+function rerollPoorBoonAtShrine(a,offer,profile,history){
+ const g=a.controller().state;
+ const context={vitals:a.vitals(),steps:g.dungeon.steps,
+  bleedReady:a.state().automaticTalents.nodes.includes('affinity_blood')};
+ const best=chooseBoon(offer,profile,context);
+ if(best&&boonScore(best,profile,context)>=12)return false;
+ return usePotionKind(a,'fate','reroll_weak_boon_offer',history);
 }
 function fightNatural(a,profile,tickLimit){
  const r=a.state().run;
