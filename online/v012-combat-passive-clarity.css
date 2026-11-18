@@ -120,3 +120,8 @@ body.phase3IntegratedPreview #scene > .floatDamage.floatCritical{
  body.phase3IntegratedPreview #scene > .floatDamage{font-size:22px!important}
  body.phase3IntegratedPreview #scene > .floatDamage.floatCritical{font-size:25px!important}
 }
+
+/* Existing weapon traits, surfaced in item details and combat. */
+.weaponPassiveNote{display:flex;flex-wrap:wrap;gap:.2rem .5rem;align-items:baseline;margin:.6rem 0;padding:.5rem .65rem;border:1px solid #806339;border-radius:5px;background:rgba(45,30,19,.62);color:#eadcc1;font-size:.85rem;line-height:1.4}
+.weaponPassiveNote strong{color:#edc880;white-space:nowrap}
+.weaponPassiveNote span{min-width:0;flex:1 1 15rem}
