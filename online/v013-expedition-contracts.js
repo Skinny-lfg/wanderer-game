@@ -87,7 +87,7 @@ function validate(game){
  const d=game?.dungeon,card=d?.cards?.find(c=>c.id===d?.realm),s=d?.foundationState;
  if(!d||!card||!s)return d?.contractOffer===undefined&&d?.stage7RewardPaid===undefined;
  const events=s.decisions.filter(x=>['select_contract','skip_contract','complete_contract'].includes(x.type));
- if(!events.length)return d.contractOffer===undefined&&d.stage7RewardPaid===undefined&&s.contractId===null&&s.completedObjectives.length===0;
+ if(!events.length)return validateOffer(game)&&d.stage7RewardPaid===undefined&&s.contractId===null&&s.completedObjectives.length===0;
  const planned=offer(d.foundationManifest.seed,card);
  const initial=events[0],selection=initial.type==='select_contract',skip=initial.type==='skip_contract';
  if(!selection&&!skip||d.contractOffer!==undefined||events.length>2||!['choice','combat','finished','failed'].includes(game.stage))return false;
@@ -97,8 +97,8 @@ function validate(game){
   const paid=d.stage7RewardPaid,completed=events.find(x=>x.type==='complete_contract');
   if(events.length===(paid?2:1)&&(!paid||completed?.id===initial.id&&events[1]===completed)&&
     (paid?s.completedObjectives.length===1&&s.completedObjectives[0]===initial.id&&
-       paid.id===initial.id&&paid.essence===reward(initial.id,card.risk).essence&&
-       paid.fragments===reward(initial.id,card.risk).fragments&&progress(game)?.done:
+       paid.id===initial.id&&Number.isSafeInteger(paid.essence)&&paid.essence>=0&&paid.essence<=reward(initial.id,card.risk).essence&&
+       Number.isSafeInteger(paid.fragments)&&paid.fragments>=0&&paid.fragments<=reward(initial.id,card.risk).fragments&&progress(game)?.done:
        s.completedObjectives.length===0))return true;
   return false;
  }
