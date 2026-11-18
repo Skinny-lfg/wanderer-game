@@ -161,14 +161,14 @@ function create(themes,rng=Math.random){
   const d=game.dungeon;
   if(!d?.realm||!d.foundationState||game.stage!=='choice'||game.selected||game.rewardPending||!B||d.boonOffer)return d?.boonOffer||null;
   const round=d.foundationState.boonIds.length;
-  if(round>=2||round===1&&d.cleared.length<5)return null;
+  if(round>=2||round===1&&game.history.filter(entry=>!entry.event).length<4)return null;
   const ids=B.offer(d.foundationManifest.seed,d.realm,round,families,d.foundationState.boonIds);
   d.boonOffer={round,families:[...families],ids};
   return d.boonOffer;
  }
  function chooseBoon(id){
   const d=game.dungeon,o=d?.boonOffer;
-  if(!o||game.stage!=='choice'||game.selected||game.rewardPending||!o.ids.includes(id)||!B?.validateOffer(d))throw Error('Boon selection unavailable');
+  if(!o||game.stage!=='choice'||game.selected||game.rewardPending||!o.ids.includes(id)||!B?.validateOffer(d,game.history))throw Error('Boon selection unavailable');
   const next=F.applyDecision(d.foundationState,{type:'choose_boon',id},d.foundationManifest);
   const bonus=B.stepsAdded(id);
   if(bonus)d.steps+=bonus;
@@ -336,7 +336,7 @@ function create(themes,rng=Math.random){
    if(d.current!==0||d.steps!==undefined||d.conditionEdgesUsed!==undefined||d.foundationState!==undefined||d.boonOffer!==undefined||d.disabledBossModifierId!==undefined||
       d.visited.length!==1||d.visited[0]!==0||d.cleared.length!==1||d.cleared[0]!==0||d.scouted.length||d.discoveredSecrets.length||g.selected!==null||g.offers.length)throw Error('Invalid unselected dungeon');
   }else{
-   if(!integer(d.steps,0,selectedCard.stepLimit+(d.foundationState?.boonIds?.includes('wayfarers_bargain')?1:0))||!B?.validateOffer(d)||!C?.validLedger(selectedCard,d)||!roomList(d.visited,size)||!roomList(d.cleared,size)||!roomList(d.scouted,size)||
+   if(!integer(d.steps,0,selectedCard.stepLimit+(d.foundationState?.boonIds?.includes('wayfarers_bargain')?1:0))||!B?.validateOffer(d,g.history)||!C?.validLedger(selectedCard,d)||!roomList(d.visited,size)||!roomList(d.cleared,size)||!roomList(d.scouted,size)||
       !d.visited.includes(d.current)||!d.cleared.includes(0)||!d.visited.includes(0)||d.cleared.some(i=>!d.visited.includes(i)))throw Error('Invalid dungeon progress');
    if(!unique(d.discoveredSecrets)||d.discoveredSecrets.some(e=>typeof e!=='string'||!selectedCard.edges.some(([a,b])=>e===Math.min(a,b)+'-'+Math.max(a,b)&&I?.secretEdge(selectedCard,a,b))))throw Error('Invalid hidden passage state');
    if(!F||!d.foundationManifest||!d.foundationState||!F.validateExpeditionState(d.foundationState,d.foundationManifest)||
