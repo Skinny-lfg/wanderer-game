@@ -69,18 +69,18 @@ test('Stage 7 generates two distinct feasible options on all real three-card map
  assert.equal(K.eligible(broken,'bounty_writ'),false);
  const blocked=clone(card);blocked.edges=[];assert.equal(K.eligible(blocked,'purification'),false);
 });
-test('Stage 7 makes contract choice optional and mandatory-to-resolve before Boon and map travel',()=>{
- const {c,g}=fresh(7712),offer=c.offerContracts(),boons=c.offerBoons(['blood']);
- assert.equal(offer.ids.length,2);assert.equal(boons.ids.length,3);
+test('Stage 7 contract selection precedes map travel, while Boons require discovered Shrines',()=>{
+ const {c,g}=fresh(7712),offer=c.offerContracts();
+ assert.equal(offer.ids.length,2);
+ assert.equal(c.offerBoons(['blood']),null,'entry cannot offer Boons');
  assert.equal(K.validate(g),true);assert.equal(c.visitRoom(1),false);
- assert.throws(()=>c.chooseBoon(boons.ids[0]),/unavailable/);
+ assert.throws(()=>c.chooseBoon('blood_tribute'),/unavailable/);
  assert.throws(()=>c.chooseContract('impossible'),/unavailable/);
  assert.equal(c.chooseContract(null),null);
  assert.equal(K.inspect(g).status,'ignored');
  assert.throws(()=>c.chooseContract(offer.ids[0]),/unavailable/);
- assert.equal(c.chooseBoon(boons.ids[0]),boons.ids[0]);
- assert(c.visitRoom(1));
- assert.equal(K.validate(g),true);
+ assert.equal(c.offerBoons(['blood']),null);
+ assert(c.visitRoom(1));assert.equal(K.validate(g),true);
  assert.equal(c.restore(clone(g)).dungeon.foundationState.decisions.some(x=>x.type==='skip_contract'),true);
 });
 test('Stage 7 contract selection is replay-safe; forged options and alternate selected IDs are rejected',()=>{

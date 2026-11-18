@@ -91,9 +91,8 @@ async function main(){
   await cards.nth(1).click(); // Dangerous
   assert.equal(await page.locator('[data-stage7-contract]').count(),2,'Stage 7 must offer two feasible contracts');
   await page.locator('[data-stage7-contract]').first().click();
-  assert.equal(await page.locator('[data-stage6-boon]').count(),3);
-  assert.equal(await page.locator('[data-stage6-boon]').count(),3,'Stage 6 must present three Boons before map entry');
-  await page.locator('[data-stage6-boon]:not([data-stage6-boon="wayfarers_bargain"])').first().click();
+  assert.equal(await page.locator('[data-stage6-boon]').count(),0,'No Boons are offered at Dungeon entry');
+  assert.equal(await page.locator('[data-dungeon-room="1"]').count(),1,'The player should see the Dungeon map immediately after the Contract');
   const first=await page.evaluate(()=>__stage454.snapshot());assert.equal(first.realm,first.cards[1].id);assert.equal(first.steps,13);
   assert.equal(await page.locator('.stage7ContractStatus').count(),1,'Accepted contract progress must appear on the native Dungeon map');
   assert(await page.locator('[data-dungeon-room="1"]').isVisible());
