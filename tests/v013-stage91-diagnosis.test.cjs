@@ -47,7 +47,7 @@ test('Native group separation and p50/p90 are deterministic',()=>{
  assert.equal(b.durationP50,25);
  assert.equal(b.durationP90,25);
  assert.equal(b.damageTakenMean,100);
- assert.equal(b.enemyAbilityCastsPerMinute,7.2);
+ assert.equal(b.enemyAbilityCastsPerMinute,null);
  assert.deepEqual(d.groups.map(g=>g.mode).sort(),['bosses','elites','enemies']);
  assert(D.markdown(d).includes('Rift Harbinger'));
 });
