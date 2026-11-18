@@ -234,6 +234,8 @@ function phase1StartWave(resetScroll=false){
   }
  }
  if(conditions&&conditionCard){const applied=conditions.applyEncounter(r,group,g.selected,conditionCard,g.dungeon);if(applied&&(r.conditionMarked||g.selected.boss))ports.addLog('Expedition Condition: '+applied.name,'critical');}
+ // Stage 8.1 abilities belong to normal enemies only; Bosses/Elites retain their own systems.
+ if(!g.selected.boss&&!g.selected.elite)globalThis.WandererV013EnemyAbilities?.attach(group,g.selected.family||'blood',r.combatSeconds||0);
  const fieldCount=Math.min(4,group.length);
  group[0].groupSlot=0;
  for(const enemy of group)enemy.groupClock=traits?traits.initialClock(enemy,enemy.groupSlot):Math.max(0,enemy.attackEvery-(.9+enemy.groupSlot*.3));
