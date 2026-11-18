@@ -1,0 +1,17 @@
+name: v0.13 Balance simulator v2 — smoke
+on:
+  push:
+    branches: [feature/v013-balance-simulator-v2-20261118]
+  pull_request:
+    branches: [publish/automatic-rpg-preview]
+jobs:
+  native-balance-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run focused Stage 8 balance simulator and legacy compatibility tests
+        run: node --test tests/v013-balance-v2.test.cjs tests/v013-simulation.test.cjs tests/v013-stage5-simulation.test.cjs tests/v013-stage5-stress.test.cjs tests/v013-stage84-six-bosses.test.cjs

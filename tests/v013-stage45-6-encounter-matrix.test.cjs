@@ -3,7 +3,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const S=require('../scripts/simulate-progression.cjs');
 const opts={...S.DEFAULTS,tickLimit:4500,gear:'current',runes:false,points:24};
 
-test('current v0.13 E1/E50/E200 native encounters: four modern build profiles resolve deterministically without invalid numbers',()=>{
+test('current v0.13 E1/E50/E200 native encounters: seven modern weapon/build profiles resolve deterministically without invalid numbers',()=>{
  let tested=0;
  for(const level of [1,50,200]){
   for(const build of S.BUILDS){
@@ -23,5 +23,5 @@ test('current v0.13 E1/E50/E200 native encounters: four modern build profiles re
    tested++;
   }
  }
- assert.equal(tested,12,'Four current builds × three reference levels');
+ assert.equal(tested,S.BUILDS.length*3,'Every current profile × three reference levels');
 });
