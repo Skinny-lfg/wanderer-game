@@ -31,7 +31,10 @@ const BUILDS=Object.freeze([
  {id:'blood-fury',name:'Blood/Fury',weapon:'Daggers',families:['blood','fury'],skills:['bleeding_edge','deep_cuts','quick_hands','double_strike','crimson_rush']},
  {id:'aegis-vitality',name:'Aegis/Vitality',weapon:'Mace',families:['aegis','vitality'],skills:['guarded_block','barrier_pulse','strong_heart','renewal','sanctuary']},
  {id:'magic-decay',name:'Magic/Decay',weapon:'Wand',families:['magic','decay'],skills:['arcane_focus','mana_spring','toxic_touch','virulent_rot','hex_bolt'],element:'fire'},
- {id:'blood-decay',name:'Blood/Decay',weapon:'Two-Handed',families:['blood','decay'],skills:['bleeding_edge','deep_cuts','toxic_touch','virulent_rot','plague_spread']}
+ {id:'blood-decay',name:'Blood/Decay',weapon:'Two-Handed',families:['blood','decay'],skills:['bleeding_edge','deep_cuts','toxic_touch','virulent_rot','plague_spread']},
+  {id:'aegis-sword',name:'Aegis/Vitality Sword & Shield',weapon:'Sword',families:['aegis','vitality'],skills:['guarded_block','iron_skin','fortified','renewal','sanctuary']},
+  {id:'fury-bow',name:'Fury Archer',weapon:'Bow',families:['fury','vitality'],skills:['quick_hands','precision','brutal_crit','double_strike','adrenaline']},
+  {id:'magic-storm',name:'Magic Lightning Staff',weapon:'Staff',families:['magic','fury'],skills:['arcane_focus','mana_spring','overcharge','storm_mastery','chain_discharge'],element:'lightning'}
 ]);
 const DEFAULTS=Object.freeze({mode:'encounter',levels:[1,5,15,35,70,100,250,1000],seeds:[9101,9102,9103],builds:BUILDS.map(b=>b.id),points:24,rarity:'Rare',gear:'current',runes:false,tickLimit:4500,
  affinities:[...AFFINITIES],risks:[1],groupSizes:[...GROUP_SIZES],boons:'none',contracts:'none',targetPolicy:'focus',output:'reports/v013-simulation-results.json'});
