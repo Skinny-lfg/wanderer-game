@@ -56,7 +56,7 @@ function parseArgs(args=[]){
  return out;
 }
 function optionsFor(cohort,mode,settings){
- return S.parseArgs([
+ const native=S.parseArgs([
   '--mode='+mode,'--levels='+cohort.level,'--seeds='+settings.seeds.join(','),
   '--builds='+settings.builds.join(','),'--points='+cohort.points,
   '--rarity='+cohort.rarity,'--gear=current','--runes=false',
@@ -64,6 +64,8 @@ function optionsFor(cohort,mode,settings){
   ...(mode==='enemies'?['--group-sizes=3']:[]),
   ...(mode==='bosses'?['--affinities='+settings.bossAffinities.join(','),'--risks='+settings.bossRisks.join(',')]:[])
  ]);
+ // Public gameplay RNG remains unchanged; the native test harness splits streams.
+ return {...native,lockScenarioStreams:true};
 }
 function identity(r){
  // Full natural encounter identity, not merely input seed. Different gear rolls may
@@ -182,6 +184,7 @@ function analyze(runs,settings){
    encounters:'Natural shortest-path Dungeon vs controlled first-ring group of 3 and selected first-ring Bosses; these are not full 15-Realm expeditions.',
    bossScope:'Exploratory blood/aegis Normal Boss subset (configurable); not an assessment of all six Bosses or other risks.',
    playstyle:'Automatic combat, targetPolicy='+settings.targetPolicy+', no potion use/equip upgrades between rooms, no adaptive real-player strategy.',
+   rng:'Scenario streams are re-seeded after native gear generation so rarity cannot change map/encounter identity. Combat formulas and game RNG outside the simulator remain untouched.',
    matching:'Within the SAME E, a comparison requires identical native resolvedSeed, Affinity, risk, room route (Dungeon), build, encounter kind and targeting. Unpaired observations are NOT effects.',
    performance:'Pairs with fewer than 5 fights are exploratory. No broad stat changes until larger seeds and manual play confirm.',
    focus:'Includes both early bottleneck and performance uplift from talents versus armour, separately where matches exist.'
