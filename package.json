@@ -32,7 +32,8 @@
     "simulate:v013:conditions": "node scripts/simulate-progression.cjs --mode=conditions",
     "test:v013:stage5": "node --test tests/v013-stage5-conditions.test.cjs tests/v013-stage5-simulation.test.cjs tests/v013-stage5-stress.test.cjs",
     "simulate:v013:stress": "node scripts/v013-stage5-stress.cjs",
-    "test:v013:gear": "node --test tests/v013-gear-loot-daggers.test.cjs tests/v013-craft-preview.test.cjs tests/v013-loot.test.cjs"
+    "test:v013:gear": "node --test tests/v013-gear-loot-daggers.test.cjs tests/v013-craft-preview.test.cjs tests/v013-loot.test.cjs",
+    "test:v013:talent-graph": "node --test tests/talent-graph-next.test.cjs tests/talent-graph-runtime.test.cjs tests/talent-graph-bridge.test.cjs tests/talent-graph-combat.test.cjs"
   },
   "dependencies": {
     "firebase": "11.10.0"
