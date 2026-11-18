@@ -198,6 +198,8 @@ function setDelayEnemy(r,seconds){
  const temp=ports.setRuntime(r),now=ports.setNow(r);
  if(now<temp.delayImmuneUntil)return false;
  r.tEnemy-=seconds;temp.delayImmuneUntil=now+4;
+ const disarmed=root.WandererV013BossAbilities?.interruptCharge(r,'delay');
+ if(disarmed)ports.addLog('✓ '+disarmed.enemy.name+' interrupted: '+disarmed.ability,'good');
  const interrupted=root.WandererV013EliteAbilities?.interrupt(r.enemy,r,'delay');
  if(interrupted)ports.addLog('✓ '+r.enemy.name+' interrupted: '+interrupted.ability,'good');
  if(r.enemy?.boss){const bossInterrupt=root.WandererV013BossInfrastructure?.interrupt(r,'delay');
@@ -206,8 +208,8 @@ function setDelayEnemy(r,seconds){
 }
 
 function setDirectEnemyDamage(r,amount,label){
- const enemy=r.enemy;let damage=Math.max(0,Math.round(amount*(root.WandererV013ExpeditionBoons?.factor(r)||1)));
- if(enemy.barrier>0){const absorbed=Math.min(enemy.barrier,damage);enemy.barrier-=absorbed;damage-=absorbed;}
+ const enemy=r.enemy;let damage=Math.max(0,Math.round(amount*(root.WandererV013ExpeditionBoons?.factor(r)||1)*(root.WandererV013BossAbilities?.directFactor(r,enemy)||1)));
+ if(enemy.barrier>0){const before=enemy.barrier,absorbed=Math.min(enemy.barrier,damage);enemy.barrier-=absorbed;damage-=absorbed;if(root.WandererV013BossAbilities?.barrierChanged(r,enemy,before,enemy.barrier))ports.addLog('⛨ Ward shattered · Vulnerable for 3s!','good');}
  ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,enemy.hp),damage));ports.phase6Proc(r,label);enemy.hp-=damage;if(damage>0){ports.addLog(label+' '+damage+' bonus damage','good');ports.floatText(damage,'enemy',false,'',enemy);}
  return damage;
 }
@@ -426,10 +428,10 @@ function weaponAttack(r,offhandStrike=false){
   }}
   damage=Math.round(damage);
  }
- damage=Math.max(1,Math.round(damage*(root.WandererV013ExpeditionBoons?.factor(r)||1)));
+ damage=Math.max(1,Math.round(damage*(root.WandererV013ExpeditionBoons?.factor(r)||1)*(root.WandererV013BossAbilities?.directFactor(r,e)||1)));
  const hpBefore=e.hp,barrierBefore=e.barrier;
  ports.animateStrike(kind,cast);
- if(e.barrier>0){const absorbed=Math.min(e.barrier,damage);e.barrier-=absorbed;damage-=absorbed;if(absorbed)ports.addLog('🛡 '+e.name+' absorbs '+absorbed+' damage','spell');}
+ if(e.barrier>0){const absorbed=Math.min(e.barrier,damage);e.barrier-=absorbed;damage-=absorbed;if(absorbed)ports.addLog('🛡 '+e.name+' absorbs '+absorbed+' damage','spell');if(root.WandererV013BossAbilities?.barrierChanged(r,e,barrierBefore,e.barrier))ports.addLog('⛨ Ward shattered · Vulnerable for 3s!','good');}
  const real=Math.max(0,Math.min(e.hp,damage));
  ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),damage));e.hp-=damage;ports.floatText(damage,'enemy',critical,'',e);
  if(r.guillotineSpore){const other=r.enemies?.find(m=>m!==e&&m.hp>0);if(e.hp<=0&&other){other.dots??={};other.dots.bleed??=[];other.dots.bleed.push({...r.guillotineSpore});ports.synchronizeDots(other);}delete r.guillotineSpore;}
@@ -543,9 +545,23 @@ function updateFight(){
   }
  }
  if(root.WandererV013BossInfrastructure&&r.phase1){
-  for(const event of root.WandererV013BossInfrastructure.tick(r,ports.setNow(r))){
-   if(event.type==='interrupted'){ports.addLog('✓ '+event.enemy.name+' interrupted: '+event.ability,'good');ports.phase6Metric(r,'bossCastInterruptions',1);}
-   else if(event.type==='ready'){ports.addLog('✦ '+event.enemy.name+' finishes preparing '+event.ability+'.','spell');ports.phase6Metric(r,'bossCastPreparations',1);}
+  const baseEvents=root.WandererV013BossInfrastructure.tick(r,ports.setNow(r));
+  const events=root.WandererV013BossAbilities?.tick(r,ports.setNow(r),baseEvents)||baseEvents;
+  for(const event of events){
+   if(event.type==='prepare')ports.addLog('⚠ '+event.enemy.name+' prepares '+event.ability+'!','critical');
+   else if(event.type==='interrupted'||event.type==='disarmed'){ports.addLog('✓ '+event.enemy.name+' interrupted: '+event.ability,'good');ports.phase6Metric(r,'bossCastInterruptions',1);}
+   else if(event.type==='ward'){ports.addLog('⛨ '+event.enemy.name+' restores '+event.barrier+' Barrier','spell');ports.phase6Metric(r,'bossWards',1);}
+   else if(event.type==='charge')ports.addLog('♨ Furnace Strike charged · next hit empowered!','critical');
+   else if(event.type==='offering'){ports.addLog('🩸 Blood Thrall sacrificed · Boss recovers '+event.healed+' HP','critical');ports.phase6Metric(r,'bossHealing',event.healed);}
+   else if(event.type==='pulse'){ports.addLog('⚡ Arcane Convergence · '+event.damage+' damage'+(event.absorbed?' · '+event.absorbed+' absorbed':'')+'!','critical');ports.phase6Metric(r,'bossArcanePulses',1);ports.phase6Metric(r,'damageTaken',event.damage);ports.phase6Metric(r,'absorbed',event.absorbed);if(resolveBossPulseLethal(r,s))return;}
+   else if(event.type==='canceled')ports.addLog('⚡ Arcane Convergence canceled by the destroyed Storm Node.','good');
+   else if(event.type==='summon'){
+    const theme=ports.THEMES.find(t=>t.id===r.path)||ports.currentTheme(),mob=theme?.mobs?.find(m=>m.role==='minion');
+    if(!mob)throw Error('Stage 8.4 Boss summon requires a Realm Minion');
+    const result=root.WandererV013BossAbilities.spawned(r,event,()=>ports.enemyFor(r.tier,r.enc,{theme,mob,boss:false,elite:false}));
+    if(result.spawned){ports.phase6Metric(r,'bossSummons',result.spawned);ports.addLog('☠ '+event.enemy.name+' summons '+result.spawned+' '+(event.kind==='blood'?'Blood Thrall':event.kind==='node'?'Storm Node':event.kind==='vitality'?'Bloomling':'Carrion Brood')+(result.spawned===1?'':'s')+'!','critical');ports.renderCombat();}
+    else ports.addLog('☠ '+event.enemy.name+' has no reinforcement space.','critical');
+   }
   }
  }
  if(globalThis.WandererV013ExpeditionConditions?.tick(r)){ports.phase6Metric(r,'conditionRiteTriggers',1);ports.addLog('Sanguine Rite · The boss grows stronger below half Health!','critical');}
@@ -566,7 +582,7 @@ function updateFight(){
  ports.setCombatExpire(r,dt);ports.legendaryTick(r,dt);
  // v0.13 keeps actors in their arena slots. Only their independent attack
  // clocks advance; enemy role affects attacks, never position or sprite scale.
- if(r.enemies)for(const mob of r.enemies)if(mob.hp>0)mob.groupClock+=(mob.stunnedUntil>ports.setNow(r)?0:dt);
+ if(r.enemies)for(const mob of r.enemies)if(mob.hp>0&&!mob.stage84Node)mob.groupClock+=(mob.stunnedUntil>ports.setNow(r)?0:dt);
  if(r.enemies)r.tEnemy=e.groupClock;else r.tEnemy+=(e.stunnedUntil>ports.setNow(r)?0:dt);r.tDot+=dt;
  // Align Elite contact frames with the original hit tick at normal playback speed.
  const windupSlowed=e.slowTime>0?1+(s.bonus.slowBonus||.22):1;
@@ -590,7 +606,7 @@ function updateFight(){
   if(e.slowTime>0)e.slowTime=Math.max(0,e.slowTime-1);
   if(e.hp<=0||hasUnsettledGroupDeaths(r)){ports.winEncounter();return;}
  }
- const target=e,attacker=r.enemies?.find(mob=>mob.hp>0&&!(mob.stunnedUntil>ports.setNow(r))&&mob.groupClock>=mob.attackEvery*(mob.slowTime>0?1+(s.bonus.slowBonus||.22):1));
+ const target=e,attacker=r.enemies?.find(mob=>mob.hp>0&&!mob.stage84Node&&!(mob.stunnedUntil>ports.setNow(r))&&mob.groupClock>=mob.attackEvery*(mob.slowTime>0?1+(s.bonus.slowBonus||.22):1));
  if(attacker){e=attacker;r.enemy=e;r.tEnemy=e.groupClock;}
  const slowed=e.slowTime>0?1+(s.bonus.slowBonus||.22):1;
  if(!(e.stunnedUntil>ports.setNow(r))&&(!r.enemies||attacker)&&r.tEnemy>=e.attackEvery*slowed){
@@ -599,6 +615,7 @@ function updateFight(){
   const stage81=root.WandererV013EnemyAbilities;
   const stage81Strike=stage81?.consumeStrike(e,r.combatSeconds)||null;
   const stage82Strike=root.WandererV013EliteAbilities?.consumeStrike(e,r.combatSeconds)||null;
+   const stage84Strike=root.WandererV013BossAbilities?.chargedStrike(e,r.combatSeconds)||null;
   const stage81Pack=stage81?.packFactor(r,e)||1;
   let raw=Math.max(Math.ceil(e.atk*.24),Math.round(e.atk*(1-Math.min(.75,s.defense/(s.defense+e.atk*1.35)))));
   if(stage81Strike||stage81Pack!==1)raw=Math.max(1,Math.round(raw*(1+(stage81Strike?.bonus||0))*stage81Pack));
@@ -616,6 +633,8 @@ function updateFight(){
   // Cap before Block/Barrier so defensive investment still matters.
   if(e.eliteType==='berserker')raw=Math.min(raw,Math.max(1,Math.floor(r.maxhp*.35)));
   if(stage82Strike)raw=Math.min(Math.max(1,Math.round(raw*stage82Strike.multiplier)),Math.max(1,Math.floor(r.maxhp*stage82Strike.capFraction)));
+   if(stage84Strike)raw=Math.min(Math.max(1,Math.round(raw*stage84Strike.multiplier)),Math.max(1,Math.floor(r.maxhp*stage84Strike.capFraction)));
+   raw=Math.max(0,Math.round(raw*(root.WandererV013BossAbilities?.incomingFactor(r,e,r.combatSeconds)||1)));
   if(e.vanguard){e.vanguard=false;ports.addLog(e.name+' delivers its opening strike.','critical');}
   const special=e.miniboss||e.boss;
   if(special)raw=Math.round(raw*(1-.04*learned('brace')));
@@ -682,8 +701,8 @@ function updateFight(){
     ports.addLog('🔮 Caster applies Weakened: -20% direct damage for 3s!','spell');enemyAbilityVfx='EliteCaster';
    }
   }
-  if(e.bossStyle==='leech'&&hit>0){const multiplier=ports.isPhase1Run()&&ports.phase1Build?WandererV012Buildcraft.enemyHealMultiplier(ports.phase1Build,e):1;const heal=Math.floor(Math.min(e.maxhp-e.hp,Math.round(hit*.28))*multiplier);e.hp+=heal;if(heal){ports.addLog('🌑 Rift Harbinger drains '+heal+' HP','spell');enemyAbilityVfx='BossRift';}}
-  if(e.bossStyle==='guardian'&&!e.barrier){e.barrier=Math.max(2,WandererV012CombatCore.enemyStat(r.tier,Math.round(WandererV012CombatCore.referenceLevel(r.tier)*.45)));ports.addLog('🛡 Abyssal Guardian restores '+e.barrier+' Barrier','spell');enemyAbilityVfx='BossAbyssal';}
+  if(e.bossStyle==='leech'&&hit>0){const multiplier=ports.isPhase1Run()&&ports.phase1Build?WandererV012Buildcraft.enemyHealMultiplier(ports.phase1Build,e):1;const heal=Math.floor(Math.min(e.maxhp-e.hp,Math.round(hit*.18))*multiplier);e.hp+=heal;if(heal){ports.addLog('🌑 Rift Harbinger drains '+heal+' HP','spell');enemyAbilityVfx='BossRift';}}
+  // Guardian Barrier is restored only by the Stage 8.4 timed Ward Cycle.
   ports.legendaryDefensiveEffects(r,damageBlocked,hit,blocked,barrierBeforeHit>0&&r.barrier<=0);
   if(ports.isPhase1Run()&&ports.phase1Build)WandererV012Buildcraft.onDefend(ports.phase1Build,{...ports.phase2Context(r),barrierBroken},damageBlocked,blocked);
   if(s.bonus.lastBastion&&r.barrier>=r.maxhp*.1&&ports.setReady(r,'lastBastion',12))t.lastBastionReady=true;
