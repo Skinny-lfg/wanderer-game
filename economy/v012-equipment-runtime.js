@@ -64,7 +64,7 @@ function comparisonEquip(item,target=item.slot){
 
 function stashCapacity(){return Math.max(ports.STASH_BASE_CAPACITY,Math.min(ports.STASH_MAX_CAPACITY,Math.round(Number(ports.state.stashCapacity)||ports.STASH_BASE_CAPACITY)))}
 
-function potionStackCount(){return Object.values(ports.state.consumables||{}).reduce((total,quantity)=>total+Math.ceil(quantity/99),0)}
+function potionStackCount(){return Object.entries(ports.state.consumables||{}).reduce((total,[kind,quantity])=>total+Math.ceil(Math.max(0,quantity-(ports.state.potionSelection||[]).filter(id=>id===kind).length)/99),0)}
 function stashItemCount(){return ports.state.stash.length+potionStackCount()}
 
 function stashUpgradeCost(){return 60+40*Math.floor((ports.stashCapacity()-ports.STASH_BASE_CAPACITY)/ports.STASH_UPGRADE_STEP)}
