@@ -1230,12 +1230,13 @@ function phase6RenderEvent(){
 
 function phase6EffectMarkup(){
  if(!phase6Run)return '';
- const labels={might:'Attack',arcane:'Arcane',ironhide:'Defense',haste:'Haste',attack:'Attack',defense:'Defense',curse:'Incoming damage',barrier:'Barrier',runeBoost:'Rune effect',bounty:'Bounty',fortune:'Fortune',echo:'Ability',item:'Empowered item'};
+ const labels={might:'Attack',arcane:'Arcane',ironhide:'Defense',haste:'Haste',attack:'Attack',defense:'Defense',curse:'Incoming damage',barrier:'Barrier',runeBoost:'Rune effect',bounty:'Bounty',fortune:'Fortune',purifying:'Purified Conditions',echo:'Ability',item:'Empowered item'};
  const active=Object.entries(phase6Run.effects||{}).filter(([,value])=>value&&(!Number.isInteger(value.remaining)||value.remaining>0)).map(([key,value])=>{
   let name=labels[key]||key,intensity='',remaining='';
   if(key==='echo'&&value.id){const passive=WandererV012Buildcraft.CATALOG.find(p=>p.id===value.id);name=(passive?.name||'Ability');}
   if(key==='item'&&value.id){const item=[...Object.values(state.equip).filter(Boolean),...phase3BagItems()].find(i=>i.id===value.id);if(item)name=item.name;}
-  if(key==='barrier'&&typeof value==='number')intensity=Math.round(value*100)+'% max HP';
+  if(key==='purifying')intensity='−50% combat Condition penalties';
+  else if(key==='barrier'&&typeof value==='number')intensity=Math.round(value*100)+'% max HP';
   else if(key==='echo'&&typeof value?.power==='number')intensity=(value.power>0?'+':'')+value.power+' effective rank';
   else if(typeof value==='object'&&typeof value.power==='number')intensity=(value.power>0?'+':'')+Math.round(value.power*100)+'%';
   else if(typeof value==='number')intensity=(value>0?'+':'')+Math.round(value*100)+'%';
@@ -1858,7 +1859,14 @@ function bindDungeonRooms(g){
  const c=phase1Controller.realmMap();
  Q('[data-stage74-potion]').forEach(button=>button.onclick=()=>{
   const i=Number(button.dataset.stage74Potion),kind=phase6Run?.started?phase6Run.potions?.[i]?.kind:state.potionSelection?.[i];
-  if(!phase6UsePotion(i,'shrine'))bannerMessage('Potion cannot be used now or its target is already known.');
+  if(kind!=='scout'){
+   if(!phase6UsePotion(i,'shrine'))bannerMessage('Potion cannot be used now or its target is already known.');
+   return;
+  }
+  const dialog=showModal('Scout a room','<button type="button" data-scout="shrine">Boon Shrine</button> <button type="button" data-scout="treasure">Treasure</button> <button type="button" data-scout="threat">Elite or boss</button>');
+  dialog.querySelectorAll('[data-scout]').forEach(choice=>choice.onclick=()=>{
+   dialog.close();if(!phase6UsePotion(i,choice.dataset.scout))bannerMessage('No unknown destination of that type. Potion retained.');
+  });
  });
  const viewport=document.querySelector('[data-realm-viewport]');
  if(viewport&&c.positions)viewport.scrollLeft=viewport.scrollWidth*c.positions[g.dungeon.current][0]/100-viewport.clientWidth/2;
