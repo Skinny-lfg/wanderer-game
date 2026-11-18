@@ -9,7 +9,6 @@ const LIMITS=Object.freeze({
 function leader(run){const e=run?.encounterLeader||run?.enemies?.find(m=>m?.boss)||run?.enemy;return e?.boss?e:null;}
 function attach(run,enemy=leader(run)){
  if(!run||!enemy?.boss||enemy.hp<=0||!Number.isFinite(enemy.maxhp)||enemy.maxhp<=0)return null;
- if(run.bossInfrastructure&&run.bossInfrastructure.ownerStyle===enemy.bossStyle)return run.bossInfrastructure;
  return run.bossInfrastructure={
   ownerStyle:enemy.bossStyle||'boss',summoned:0,minionDeaths:0,healed:0,
   maxSummons:LIMITS.maxSummons,maxLivingMinions:LIMITS.maxLivingMinions,
@@ -60,8 +59,9 @@ function summon(run,source,count,makeMinion,options={}){
    throw Error('Stage 8.3 requires valid summoned Minions');
   mob.maxhp=Math.max(1,Math.round(mob.maxhp*hpFactor));mob.hp=mob.maxhp;
   mob.atk=mob.atk===0?0:Math.max(1,Math.round(mob.atk*atkFactor));
-  mob.def=Math.max(0,Math.round((mob.def||0)*defFactor));
-  mob.baseDef=Math.max(0,Math.round((mob.baseDef??mob.def)*defFactor));
+  const originalDefense=mob.def||0,originalBase=mob.baseDef??originalDefense;
+  mob.def=Math.max(0,Math.round(originalDefense*defFactor));
+  mob.baseDef=Math.max(0,Math.round(originalBase*defFactor));
   mob.attackEvery*=intervalFactor;mob.groupClock=0;
   mob.stage83Summoned=true;mob.stage83Summoner=source.boss?'boss':'elite';
   root.WandererV013EnemyAbilities?.attach([mob],options.family||run.planeFamily||'decay',run.combatSeconds||0);

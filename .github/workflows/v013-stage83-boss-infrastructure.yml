@@ -1,0 +1,17 @@
+name: Stage 8.3 Boss infrastructure
+on:
+  pull_request:
+    branches: [publish/automatic-rpg-preview]
+  push:
+    branches: [feature/v013-stage83-boss-infrastructure-20261118]
+jobs:
+  stage83:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test enemy roster, Elites, Boss infrastructure and native lifecycle
+        run: node --test tests/v013-stage80-enemy-roster.test.cjs tests/v013-stage81-enemy-abilities.test.cjs tests/v013-stage82-elite-abilities.test.cjs tests/v013-stage83-boss-infrastructure.test.cjs
