@@ -1377,7 +1377,7 @@ function phase3BindBag(){
     const dialog=showModal('Expedition treasure','<img class="c3TreasureModalImage" src="'+WandererV012Treasures.image(item)+'" alt=""><p><b>'+esc(WandererV012Treasures.displayName(item))+'</b></p><p>Sell for '+item.worth+' Gold once outside the Expedition.</p><button type="button" class="danger" data-phase3-discard '+(canDiscard?'':'disabled')+'>Discard treasure</button>');
     dialog?.querySelector('[data-phase3-discard]')?.addEventListener('click',()=>{dialog.close();showConfirm('Discard treasure','Permanently discard this treasure?',()=>phase3DiscardLoot(item.id),'Discard');});return;
    }
-  const equips=(ring?[['ring1','Equip Ring I'],['ring2','Equip Ring II']]:[[item.slot,'Equip']]).map(([slot,label])=>'<button type="button" class="primary" data-phase3-equip="'+slot+'" '+(!safe||slot==='offhand'&&isTwoHanded(state.equip.weapon)?'disabled':'')+'>'+label+'</button>').join('');
+  const equips=(isDagger(item)?[['weapon','Equip Main Hand'],['offhand','Equip Off-Hand']]:ring?[['ring1','Equip Ring I'],['ring2','Equip Ring II']]:[[item.slot,'Equip']]).map(([slot,label])=>'<button type="button" class="primary" data-phase3-equip="'+slot+'" '+(!safe||slot==='offhand'&&isTwoHanded(state.equip.weapon)?'disabled':'')+'>'+label+'</button>').join('');
   const dialog=showModal('Expedition loot',gearComparison(item)+previewItem(item,'bag')+'<div class="buttonRow">'+equips+'<button type="button" class="danger" data-phase3-discard '+(canDiscard?'':'disabled')+'>Discard</button></div>');
   if(!dialog)return;
   phase3StyleGearDialog(dialog,item);

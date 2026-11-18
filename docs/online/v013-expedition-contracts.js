@@ -33,7 +33,7 @@ function blueprintChance(seed,card,id,due){
 }
 function canon(known){
  if(!Array.isArray(known)||new Set(known).size!==known.length||
-    known.some(id=>!C.RECIPES.some(r=>r.id===id&&r.rarity!=='Uncommon')))
+    known.some(id=>id!=='blue_offdagger'&&!C.RECIPES.some(r=>r.id===id&&r.rarity!=='Uncommon')))
   throw Error('Invalid Contract Blueprint collection');
  return [...known].sort();
 }
