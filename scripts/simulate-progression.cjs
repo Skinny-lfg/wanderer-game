@@ -202,7 +202,7 @@ function bossPreparationEncounter(level,build,seed,opts,strategy){
  if(!['baseline','marked_elite','reliquary','both'].includes(strategy))throw Error('Unknown boss preparation strategy');
  // Controlled matched-seed native boss in a first-ring room. The selected Realm Card
  // is Dangerous so the marked Elite removes one guard rather than lowering Attack.
- const {a,c,g,card,gearE}=prepare(level,build,seed,opts,1);
+ const {a,c,g,card,gearE,resolvedSeed,seedShift,allocatedPoints}=prepare(level,build,seed,opts,1);
  const P4=globalThis.WandererV013BossPreparation;
  const state=g.dungeon.foundationState,manifest=g.dungeon.foundationManifest;
  const candidate=card.edges.filter(([x])=>x===0).map(([,y])=>y).find(n=>card.nodes[n]?.kind==='combat');
@@ -221,13 +221,14 @@ function bossPreparationEncounter(level,build,seed,opts,strategy){
  const run=a.encounter({count:1,boss:true});
  const result=fight(a,c,opts.tickLimit);
  return {mode:'bossprep',kind:strategy,level,build:build.id,seed,gearE,gearTier:P.gearTier(gearE).name,
-  risk:card.risk,preparationCostHp:sacrifice,pointsSpent:a.state().automaticTalents.nodes.length,
+  risk:card.risk,affinity:card.family,resolvedSeed,seedShift,preparationCostHp:sacrifice,pointsBudget:opts.points,pointsSpent:allocatedPoints,
   realm:card.name,unlocked:level,...result};
 }
 function dungeon(level,build,seed,opts,desiredRisk=undefined){
- const {a,c,g,card,gearE}=prepare(level,build,seed,opts,desiredRisk);
+ const {a,c,g,card,gearE,resolvedSeed,seedShift,allocatedPoints}=prepare(level,build,seed,opts,desiredRisk);
  const conditionId=g.dungeon?.foundationState?.conditionId||null;
- const route=shortestRoute(card),events=[],rooms=[],initial={gold:a.state().gold,fragments:a.state().fragments,essence:a.state().crafting.essence};
+ const route=shortestRoute(card),events=[],rooms=[],initial={gold:a.state().gold,fragments:a.state().fragments,essence:a.state().crafting.essence,
+  cores:{...a.state().crafting.cores},xp:a.state().automaticTalents.xp};
  let error=null;
  for(const node of route.slice(1)){
   if(g.stage==='failed'||g.stage==='finished')break;
@@ -236,7 +237,8 @@ function dungeon(level,build,seed,opts,desiredRisk=undefined){
    if(g.dungeon?.boonOffer){
     // Shrines are map rooms, never combat. The baseline simulator declines
     // optional powers; this is route coverage, not a Boon-balance experiment.
-    c.chooseBoon(null);events.push('boon_shrine');continue;
+    const chosen=opts.boons==='first'?g.dungeon.boonOffer.ids[0]:null;
+     c.chooseBoon(chosen);events.push(chosen?'boon:'+chosen:'boon_shrine_skipped');continue;
    }
    if(!a.enter())throw Error('Native entry rejected for room '+node);
    if(a.events.run()?.event){events.push(a.events.run().event.id);resolveEvent(a);continue;}
@@ -247,7 +249,12 @@ function dungeon(level,build,seed,opts,desiredRisk=undefined){
  }
  const s=a.state();
  const hpLast=rooms.at(-1),survival=rooms.length?hpLast.hpEnd/hpLast.hpMax:null;
- return {mode:desiredRisk===undefined?'dungeon':'conditions',kind:conditionId||'unknown',conditionId,conditionMarkedRooms:rooms.filter(r=>r.conditionMarked).length,conditionPassagesCrossed:g.dungeon?.conditionEdgesUsed?.length||0,level,build:build.id,seed,gearE,gearTier:P.gearTier(gearE).name,pointsSpent:s.automaticTalents.nodes.length,realm:card.name,risk:card.risk,route,rooms,events,stage:g.stage,won:g.stage==='finished',bossReached:rooms.some(r=>r.kind==='boss'),timedOut:rooms.some(r=>r.timedOut),error,seconds:+rooms.reduce((v,r)=>v+r.seconds,0).toFixed(2),damageDealt:rooms.reduce((v,r)=>v+r.damageDealt,0),damageTaken:rooms.reduce((v,r)=>v+r.damageTaken,0),manaSpent:rooms.reduce((v,r)=>v+r.manaSpent,0),minHpPct:rooms.length?Math.min(...rooms.map(r=>r.minHpPct)):null,lastHpPct:survival===null?null:+(100*survival).toFixed(1),goldNet:s.gold-initial.gold,fragmentsNet:s.fragments-initial.fragments,essenceNet:s.crafting.essence-initial.essence,stepsLeft:g.dungeon?.steps};
+ return {mode:desiredRisk===undefined?'dungeon':'conditions',kind:conditionId||'unknown',conditionId,conditionMarkedRooms:rooms.filter(r=>r.conditionMarked).length,conditionPassagesCrossed:g.dungeon?.conditionEdgesUsed?.length||0,level,build:build.id,seed,resolvedSeed,seedShift,gearE,gearTier:P.gearTier(gearE).name,gearRarity:opts.rarity,
+  pointsBudget:opts.points,pointsSpent:allocatedPoints,affinity:card.family,bossAffinity:card.family,bossName:A.profileFor(card.family).name,
+  bossStyle:A.profileFor(card.family).style,boonsTaken:[...(g.dungeon?.foundationState?.boonIds||[])],realm:card.name,risk:card.risk,route,rooms,events,stage:g.stage,won:g.stage==='finished',bossReached:rooms.some(r=>r.kind==='boss'),timedOut:rooms.some(r=>r.timedOut),error,seconds:+rooms.reduce((v,r)=>v+r.seconds,0).toFixed(2),damageDealt:rooms.reduce((v,r)=>v+r.damageDealt,0),damageTaken:rooms.reduce((v,r)=>v+r.damageTaken,0),manaSpent:rooms.reduce((v,r)=>v+r.manaSpent,0),minHpPct:rooms.length?Math.min(...rooms.map(r=>r.minHpPct)):null,lastHpPct:survival===null?null:+(100*survival).toFixed(1),goldNet:s.gold-initial.gold,fragmentsNet:s.fragments-initial.fragments,essenceNet:s.crafting.essence-initial.essence,coresNet:Object.fromEntries(Object.keys(initial.cores).map(k=>[k,(s.crafting.cores[k]||0)-(initial.cores[k]||0)])),
+  talentXpNet:s.automaticTalents.xp-initial.xp,enemyAbilityCasts:rooms.reduce((n,x)=>n+x.enemyAbilityCasts,0),
+  bossSummons:rooms.reduce((n,x)=>n+x.bossSummons,0),bossHealing:rooms.reduce((n,x)=>n+x.bossHealing,0),
+  eliteSummons:rooms.reduce((n,x)=>n+x.eliteSummons,0),stepsLeft:g.dungeon?.steps};
 }
 function summarize(rows){
  const groups=[];const keys=[...new Set(rows.map(r=>[r.level,r.build,r.mode,r.kind||'all'].join('|')))];
