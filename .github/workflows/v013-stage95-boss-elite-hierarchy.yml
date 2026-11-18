@@ -1,0 +1,26 @@
+name: Stage 9.5 - Boss above Elite hierarchy diagnostic
+on:
+  push:
+    branches:
+      - diagnostic/v013-boss-elite-hierarchy-20261118
+  workflow_dispatch:
+jobs:
+  hierarchy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Compare six native Bosses with Elite encounters across paired E1 seeds
+        run: node scripts/v013-boss-elite-hierarchy-diagnostic.cjs 10510 8
+      - name: Archive comparative results without deploying or changing game
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage95-boss-elite-hierarchy
+          path: |
+            reports/v013-stage95-boss-vs-elite-hierarchy.json
+            reports/v013-stage95-boss-vs-elite-hierarchy.md
+          if-no-files-found: warn
