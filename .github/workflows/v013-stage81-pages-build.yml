@@ -1,0 +1,44 @@
+name: Stage 8.1 isolated Pages preview builder (temporary)
+on:
+  pull_request:
+    branches:
+      - publish/automatic-rpg-preview
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/v013-stage81-enemy-abilities-20261118
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Native enemy abilities and isolated preview smoke
+        run: npm run test:v013:stage81 && node --test tests/automatic-preview.test.cjs
+      - name: Build isolated Pages
+        run: npm run build:pages
+      - name: Verify Stage 8.1 in isolated Pages output
+        run: |
+          test -f docs/online/v013-enemy-abilities.js
+          grep -q 'Arcane Convergence' docs/online/v013-enemy-abilities.js
+          grep -q "PREFIX='wanderer_automatic_rpg_preview_v13_'" docs/online/v012-save.js
+          grep -q 'data-enemy-ability' docs/index.html
+          grep -q 'online/v013-enemy-abilities.js?v=' docs/index.html
+          grep -q 'enemyAbilityCasts' docs/combat/v012-combat-runtime.js
+          ! grep -q 'src="online/v012-account.mjs"' docs/index.html
+          ! grep -q 'src="online/firebase-client.mjs"' docs/index.html
+      - name: Commit generated Pages docs to PR
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- docs
+          if ! git diff --cached --quiet; then
+            git commit -m "Build Stage 8.1 isolated v0.13 preview [skip ci]"
+            git push origin HEAD:refs/heads/feature/v013-stage81-enemy-abilities-20261118
+          fi
