@@ -449,3 +449,38 @@ body.phase3IntegratedPreview #scene .arenaSingleEnemy .arenaEnemyVitals{max-widt
  body.phase3IntegratedPreview #scene .arenaEnemyVitals{gap:3px}
  body.phase3IntegratedPreview #scene .enemyRoleBadge{flex-basis:18px;width:18px;height:18px;font-size:13px}
 }
+
+/* Stage 8.1 — readable class telegraphs without changing the arena's hit targets. */
+body.phase3IntegratedPreview #scene .enemyAbilityNotice{
+ position:relative;z-index:3;min-height:16px;width:100%;display:flex;
+ align-items:center;justify-content:center;pointer-events:none;margin-top:2px;
+}
+body.phase3IntegratedPreview #scene .enemyAbilityNotice:empty{min-height:0;margin:0}
+body.phase3IntegratedPreview #scene .enemyAbilityStatus{
+ display:inline-flex;align-items:center;justify-content:center;gap:3px;
+ max-width:100%;padding:2px 5px;border:1px solid #a98a5a;
+ border-radius:3px;background:#271c1cdb;color:#f2d5a0;
+ font:700 10px/1.1 sans-serif;white-space:nowrap;text-shadow:0 1px 2px #000;
+ letter-spacing:.02em;
+}
+body.phase3IntegratedPreview #scene .enemyAbilityStatus small{
+ color:inherit;font-size:9px;font-weight:600;white-space:nowrap;
+}
+body.phase3IntegratedPreview #scene .enemyAbilityStatus.is-casting{
+ background:#43312ddd;border-color:#e5b36d;color:#ffe1a5;
+ box-shadow:0 0 10px #d79c4c45;
+}
+body.phase3IntegratedPreview #scene .enemyAbilityStatus.is-guarding{
+ background:#23363add;border-color:#83c1b4;color:#bcf3e6;
+}
+body.phase3IntegratedPreview #scene .enemyAbilityStatus.is-enraged{
+ background:#482329dd;border-color:#de776c;color:#ffb8a7;
+}
+body.phase3IntegratedPreview #scene .enemyAbilityStatus.is-interrupted{
+ background:#253627dd;border-color:#7aad89;color:#d6f4da;
+}
+body.phase3IntegratedPreview #scene .arenaEnemy.is-defeated .enemyAbilityNotice{display:none}
+@media(max-width:650px){
+ body.phase3IntegratedPreview #scene .enemyAbilityStatus{font-size:9px;padding:2px 3px;letter-spacing:0}
+ body.phase3IntegratedPreview #scene .enemyAbilityStatus small{font-size:8px}
+}
