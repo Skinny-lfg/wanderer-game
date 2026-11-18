@@ -142,7 +142,8 @@ function create(themes,rng=Math.random){
    const objective=shuffle(nodes.map((n,i)=>n.kind==='elite'?i:-1).filter(i=>i>=0),routeRng)[0];
    return {id:theme.id,name:theme.name,family,image:theme.image,risk,nodes,edges,shortcut,positions,objective,favoured:{slot,subtype},bossSector,secondSector,clueRoom,stepLimit:14-risk};
   });
-  const bossId=shuffle(BOSSES,routeRng)[0].id,seed=Math.floor(routeRng()*4294967296)>>>0;
+  const legacyBossOrder=shuffle(BOSSES.slice(0,3),routeRng); // Preserve deterministic map/seed RNG draw count from Stage 8.3.
+   const bossId=bossForAffinity(cards[0].family).id,seed=Math.floor(routeRng()*4294967296)>>>0;
   const manifest=F?.createManifest(cards,{seed,expeditionLevel:level,bossStyle:BOSSES.find(b=>b.id===bossId).style})||null;
   if(P&&manifest)for(const card of cards)P.planRoom(card,seed);
   if(B&&manifest)for(const card of cards)B.placeShrines(card,seed);
