@@ -65,7 +65,7 @@ function parseArgs(args){
   else throw Error('Unsupported option: '+arg);
  }
  const base=result.levels.length*result.seeds.length*result.builds.length;
- const factor=result.mode==='bosses'?result.affinities.length*result.risks.length:result.mode==='enemies'?result.groupSizes.length:result.mode==='bossmods'?1+F.CATALOG.bossModifiers.length:result.mode==='traits'?1+F.CATALOG.encounterTraits.length:result.mode==='bossprep'?4:result.mode==='both'?3:result.mode==='encounter'||result.mode==='conditions'?3:1;
+ const factor=result.mode==='bosses'?result.affinities.length*result.risks.length:result.mode==='enemies'?result.groupSizes.length:result.mode==='bossmods'?result.affinities.length*result.risks.length*(1+F.CATALOG.bossModifiers.length):result.mode==='traits'?1+F.CATALOG.encounterTraits.length:result.mode==='bossprep'?4:result.mode==='both'?3:result.mode==='encounter'||result.mode==='conditions'?3:1;
  if(base*factor>3000)throw Error('Simulation matrix too large (maximum 3000 native scenarios)');
  return result;
 }
@@ -287,12 +287,12 @@ function dungeon(level,build,seed,opts,desiredRisk=undefined){
   eliteSummons:rooms.reduce((n,x)=>n+x.eliteSummons,0),stepsLeft:g.dungeon?.steps};
 }
 function summarize(rows){
- const keyOf=r=>JSON.stringify([r.level,r.build,r.mode,r.kind||'all',r.bossAffinity||r.affinity||null,r.risk??null,r.pointsBudget??null,r.gearRarity||null]);
+ const keyOf=r=>JSON.stringify([r.level,r.build,r.mode,r.kind||'all',r.bossAffinity||r.affinity||null,r.risk??null,r.pointsBudget??null,r.gearRarity||null,r.targetPolicy||null]);
  const keys=[...new Set(rows.map(keyOf))],groups=[];
  for(const key of keys){
   const selected=rows.filter(r=>keyOf(r)===key),first=selected[0],mean=name=>+(selected.reduce((n,r)=>n+(Number(r[name])||0),0)/selected.length).toFixed(2);
   const wins=selected.filter(r=>r.won).length;
-  groups.push({level:first.level,build:first.build,mode:first.mode,kind:first.kind||'all',affinity:first.bossAffinity||first.affinity||null,risk:first.risk??null,
+  groups.push({level:first.level,build:first.build,mode:first.mode,kind:first.kind||'all',targetPolicy:first.targetPolicy||'focus',affinity:first.bossAffinity||first.affinity||null,risk:first.risk??null,
    n:selected.length,wins,deaths:selected.filter(r=>r.died||r.stage==='failed').length,winPct:+(100*wins/selected.length).toFixed(1),
    errors:selected.filter(r=>r.error).length,timeouts:selected.filter(r=>r.timedOut).length,meanSeconds:mean('seconds'),meanDamageTaken:mean('damageTaken'),
    meanMinHpPct:mean('minHpPct'),meanBossHealing:mean('bossHealing'),meanBossSummons:mean('bossSummons'),meanEnemyAbilityCasts:mean('enemyAbilityCasts')});

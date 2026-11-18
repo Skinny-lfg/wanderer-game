@@ -9,9 +9,10 @@ const small={...S.DEFAULTS,levels:[15],seeds:[9101],builds:['blood-fury'],points
 test('CLI supports current six-Boss, Elite and swarm modes, bounded affinities/risk/size/points',()=>{
  let opts=S.parseArgs(['--mode=bosses','--levels=15','--seeds=9101','--builds=blood-fury','--affinities=magic,decay','--risks=0,2','--points=0','--boons=first']);
  assert.equal(opts.mode,'bosses');assert.deepEqual(opts.affinities,['magic','decay']);assert.deepEqual(opts.risks,[0,2]);assert.equal(opts.points,0);assert.equal(opts.boons,'first');
+ assert.equal(S.parseArgs(['--target-policy=mechanics']).targetPolicy,'mechanics');
  opts=S.parseArgs(['--mode=enemies','--group-sizes=3,12,20']);assert.deepEqual(opts.groupSizes,[3,12,20]);
  assert.equal(S.parseArgs(['--mode=elites']).mode,'elites');
- for(const arg of ['--affinities=unknown','--risks=3','--group-sizes=1','--group-sizes=23','--points=-1','--points=101','--mode=obsolete','--boons=best','--contracts=best'])
+ for(const arg of ['--affinities=unknown','--risks=3','--group-sizes=1','--group-sizes=23','--points=-1','--points=101','--mode=obsolete','--boons=best','--contracts=best','--target-policy=random'])
   assert.throws(()=>S.parseArgs([arg]),arg);
  assert.throws(()=>S.parseArgs(['--mode=bosses','--levels=1,5,15,35,50,70,100,200,250,500,1000','--seeds='+Array.from({length:30},(_,i)=>i+1).join(',')]),/matrix too large/);
 });
@@ -80,6 +81,22 @@ test('Optional Contract policy selects the actual native Stage 7 offer without i
  assert(row.contractReward===null||typeof row.contractReward==='object');
  const repeat=S.dungeon(15,S.BUILDS[0],9101,opts);
  assert.deepEqual(row,repeat);
+});
+test('Counterplay targeting reproduces valid arena clicks for Thralls, Storm Nodes and Bloomlings',()=>{
+ const boss={name:'Boss',boss:true,bossStyle:'leech',hp:600,maxhp:1000,groupClock:1};
+ const thrall={name:'Blood Thrall',hp:90,stage84Minion:'blood',groupClock:2};
+ const node={name:'Storm Node',hp:90,stage84Node:true,groupClock:3};
+ const bloom={name:'Bloomling',hp:60,stage84Minion:'vitality',groupClock:3};
+ const r={status:'fight',enemy:boss,encounterLeader:boss,enemies:[boss,thrall,node,bloom]};
+ assert.equal(S.selectTarget(r,'focus'),boss);
+ assert.equal(S.selectTarget(r,'mechanics'),thrall);
+ assert.equal(S.selectTarget(r,'adds'),thrall);
+ boss.bossStyle='conductor';assert.equal(S.selectTarget(r,'mechanics'),node);
+ boss.bossStyle='devourer';assert.equal(S.selectTarget(r,'mechanics'),boss,'do not feed the death siphon');
+ boss.bossStyle='matriarch';thrall.stage84Minion='decay';bloom.stage84Minion='decay';
+ assert.equal(S.selectTarget(r,'mechanics'),thrall);
+ bloom.hp=0;assert.equal(S.selectTarget(r,'mechanics'),boss);
+ assert.throws(()=>S.selectTarget(r,'random'),/Unknown target policy/);
 });
 test('Historical Rift-only diagnostic and synthetic boss-ID manipulation have been removed',()=>{
  const src=fs.readFileSync('scripts/simulate-progression.cjs','utf8');
