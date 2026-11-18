@@ -37,19 +37,19 @@ Supports standard v0.13 simulator CLI controls: levels, seeds, builds, affinitie
 
 - **Coverage:** requested/actual fights, six Boss Affinities, observed Elite archetypes, source hash, errors and timeouts.
 - **Strata:** Boss/Affinity, build, difficulty, level; for swarms, group size; for Elites, actual Elite archetype.
-- **Outcomes:** win/death separated from errors and timeouts. Win percentage is calculated only on resolved fights.
+- **Outcomes:** win/death separated from errors and timeouts. Win percentage is calculated only on resolved fights with **unique native resolvedSeed per cell**. Two different input seeds can converge to the same generated Realm.
 - **Duration and survivability:** p50/p90 seconds, damage dealt/taken, absorbed Barrier, Mana spent, median minimum/final HP.
-- **Ability proxies:** casts/minute, Boss summons/healing/wards, preparations/interruptions, arcane pulses, node destruction, Elite summons, target switches.
+- **Ability proxies:** casts/minute for normal enemies, separate Boss mechanics (summons/healing/wards, preparations/interruptions, arcane pulses, node destruction), Elite summons and target switches. General enemy casts in Boss mode are not a Boss-cast measure.
 
 **This does not attribute damage to each individual player skill or enemy ability.** "Ability efficacy" means observable cast frequency, mechanic consequences and whole-build output/survival, not skill-by-skill DPS. Stage 9.2 can add direct skill attribution if the initial data requires it.
 
 ## Reading the flags
 
-The reporter flags errors, timeouts, no completed fights, under 5 completed fights per cell, median duration of at least 90 seconds, median lowest HP of at most 15%, and at least 50% deaths when 2+ resolved fights exist. Thresholds are exploratory triage signals, **not approved balance targets**. Most first-stage cells have n=2, so do not infer rates or rebalance from this report alone.
+The reporter flags errors, timeouts, no completed fights, duplicate resolved seeds, under 5 independent completed fights per cell, median duration of at least 90 seconds, median lowest HP of at most 15%, and at least 50% deaths when 2+ resolved fights exist. Thresholds are exploratory triage signals, **not approved balance targets**. Most first-stage cells have n=2, so do not infer rates or rebalance from this report alone.
 
 ## Comparability and limitations
 
-- Boss Affinities may use different resolvedSeed values to find a real Realm card. Cross-Affinity comparisons are **not** matched A/B experiments. Pair by resolvedSeed only **within** a fixed Boss/Affinity/risk/build.
+- Boss Affinities may use different resolvedSeed values to find a real Realm card. **Different input seeds can resolve to the same native RNG seed.** The report retains all attempts but deduplicates completed results when computing per-cell rates and percentiles. Cross-Affinity comparisons are **not** matched A/B experiments.
 - Boss/Elite encounters run in a controlled first-ring room, not through all 15 Realms or a complete Expedition.
 - Default E15 has 24 **synthetic** talent points. Real E1 starts with zero, and gear is fixed during each controlled fight.
 - No automatic potion timing, between-room equipment upgrades, crafting/trading, optimization of routes/Boons/Contracts, or full manual play.
