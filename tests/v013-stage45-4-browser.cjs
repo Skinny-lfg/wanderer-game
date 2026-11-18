@@ -17,6 +17,8 @@ window.__stage454={
    savedTalents:state.automaticTalents?.nodes||[],
    result:phase5Results.summary?.outcome||null};
  },
+ scoutForFogTest(){const result=phase1Controller.scoutRooms(2);render();return result;},
+ backForFogTest(){return phase6BackToCamp();},
  grantOneTestLevel(){
   if(phase1Controller.state.stage!=='camp'||state.run)throw Error('Test level-up only in Camp');
   const before=WandererAutomaticTalents.earned(state.automaticTalents);
@@ -113,7 +115,27 @@ async function main(){
   const first=await page.evaluate(()=>__stage454.snapshot());assert.equal(first.realm,first.cards[1].id);assert.equal(first.steps,13);
   assert.equal(await page.locator('.stage7ContractStatus').count(),1,'Accepted contract progress must appear on the native Dungeon map');
   assert(await page.locator('[data-dungeon-room="1"]').isVisible());
+  const initialFogCount=Number(await page.locator('.realmFogCurrent').getAttribute('data-fog-revealed'));assert(initialFogCount>=5,'Current room and available neighbors should be revealed');
+  const fogHoles=()=>page.locator('.realmFogCurrent mask ellipse').evaluateAll(els=>els.map(el=>el.getAttribute('cx')+','+el.getAttribute('cy')));
+  const initialFogHoles=await fogHoles();
+  const assertFogAlignment=async()=>{const result=await page.locator('.realmMapCanvas').evaluate(canvas=>{const fog=canvas.querySelector('.realmFogCurrent'),box=fog.getBoundingClientRect(),holes=[...fog.querySelectorAll('mask ellipse')].map(e=>[box.left+box.width*Number(e.getAttribute('cx'))/100,box.top+box.height*Number(e.getAttribute('cy'))/100]);return [...canvas.querySelectorAll('[data-dungeon-room] .realmNodeIcon')].map(el=>{const r=el.getBoundingClientRect(),x=(r.left+r.right)/2,y=(r.top+r.bottom)/2;return Math.min(...holes.map(p=>Math.hypot(x-p[0],y-p[1])));});});assert(result.every(x=>x<3),'Fog holes must align with every visible node: '+result);};
+  await assertFogAlignment();
+  await page.locator('[data-realm-viewport]').evaluate(el=>{el.scrollLeft+=130});await assertFogAlignment();
+  await page.setViewportSize({width:1440,height:900});await assertFogAlignment();
+  await page.locator('.realmMapCanvas').evaluate(el=>{el.style.zoom='1.25'});await assertFogAlignment();
+  await page.locator('.realmMapCanvas').evaluate(el=>{el.style.zoom=''});await page.setViewportSize({width:390,height:844});await assertFogAlignment();
+  await page.emulateMedia({reducedMotion:'reduce'});assert.equal(await page.locator('.realmFogDense').first().evaluate(el=>getComputedStyle(el).animationName),'none','Reduced motion disables cloud movement');await page.emulateMedia({reducedMotion:'no-preference'});
+  assert.equal(await page.locator('.realmFogCurrent').evaluate(el=>getComputedStyle(el).pointerEvents),'none','Fog must not block map interactions');
+  // Freeze the same synthetic map at comparable points on the alternating drift cycle.
+  for(const [label,part] of [['start',0],['mid',.5],['turn-before',.999],['turn-after',1.001]]){
+   await page.locator('.realmFogCurrent').evaluate((el,part)=>{for(const animation of el.getAnimations({subtree:true})){const duration=animation.effect.getTiming().duration;if(typeof duration==='number'){animation.pause();animation.currentTime=duration*part;}}},part);
+   await page.locator('[data-realm-viewport]').screenshot({path:path.join(out,'fog-drift-'+label+'.png')});
+  }
+  await page.locator('.realmFogCurrent').evaluate(el=>{for(const animation of el.getAnimations({subtree:true}))animation.play()});
   await page.screenshot({path:path.join(out,'06-map-mobile.png'),fullPage:true});
+  const mapInfo=page.locator('.realmMapInfo');assert.equal(await mapInfo.getAttribute('open'),null,'mobile information starts collapsed');
+  await mapInfo.locator('summary').first().click();assert.notEqual(await mapInfo.getAttribute('open'),null,'mobile information can be expanded');
+  await page.screenshot({path:path.join(out,'06a-map-mobile-info-open.png'),fullPage:true});await mapInfo.locator('summary').first().click();
   const overlap=await page.locator('[data-dungeon-room]').evaluateAll(nodes=>{
    const rects=nodes.map(el=>({id:el.dataset.dungeonRoom,box:el.getBoundingClientRect()})),pairs=[];
    for(let i=0;i<rects.length;i++)for(let j=i+1;j<rects.length;j++){
@@ -123,8 +145,12 @@ async function main(){
   });
   console.log('QA mobile map node overlaps:',JSON.stringify(overlap));
   assert.deepEqual(overlap,[],'All interactive mobile map room buttons must be distinguishable and non-overlapping');
+  const labelOverlaps=await page.locator('[data-dungeon-room]').evaluateAll(nodes=>{const intersections=[];for(let i=0;i<nodes.length;i++){const label=nodes[i].querySelector('.realmNodeInfo')?.getBoundingClientRect();if(!label)continue;for(let j=0;j<nodes.length;j++){if(i===j)continue;const icon=nodes[j].querySelector('.realmNodeIcon')?.getBoundingClientRect();if(!icon)continue;const w=Math.max(0,Math.min(label.right,icon.right)-Math.max(label.left,icon.left)),h=Math.max(0,Math.min(label.bottom,icon.bottom)-Math.max(label.top,icon.top));if(w*h>20)intersections.push([nodes[i].dataset.dungeonRoom,nodes[j].dataset.dungeonRoom,Math.round(w*h)]);}}return intersections;});assert.deepEqual(labelOverlaps,[],'Node labels must not cover another node icon in the initial mobile map');
   await page.locator('[data-dungeon-room="1"]').click();
   const dialog=page.locator('dialog[open]');await dialog.waitFor();
+  assert((await page.locator('.realmRouteSelected').count())>0,'Selecting a room must show the route');
+  assert.equal(await page.locator('.realmRouteSelected').first().evaluate(el=>getComputedStyle(el).stroke),'rgb(255, 83, 77)','The preview route must be red');
+  await page.screenshot({path:path.join(out,'06b-selected-route-mobile.png'),fullPage:true});
   assert.match(await dialog.innerText(),/steps?\s*·|steps?\s+left/);
   await dialog.getByRole('button',{name:'Enter room',exact:true}).click();
   await page.locator('.arenaEnemy, #enemyPortrait').first().waitFor();
@@ -135,9 +161,23 @@ async function main(){
   const clear=await page.evaluate(()=>__stage454.finishCombat());assert.equal(clear.status,'cleared');
   await page.locator('#phase5ExitRealm').waitFor();await page.locator('#phase5ExitRealm').click();
   const cleared=await page.evaluate(()=>__stage454.snapshot());assert.equal(cleared.stage,'choice');assert.equal(cleared.current,1);
+  const nextFogCount=Number(await page.locator('.realmFogCurrent').getAttribute('data-fog-revealed'));assert(nextFogCount>=initialFogCount,'Explored areas must stay revealed');
+  const nextFogHoles=await fogHoles();assert(initialFogHoles.every(h=>nextFogHoles.includes(h)),'Previously revealed map positions must remain revealed');await assertFogAlignment();
+  if(nextFogCount>initialFogCount){
+   const previous=page.locator('.realmFogPrevious');assert.equal(await previous.count(),1,'A new reveal should animate from the previous mask');
+   for(const [label,time] of [['start',0],['mid',500],['end',999]]){
+    await previous.evaluate((el,time)=>{const animation=el.getAnimations().find(a=>a.animationName==='realmFogReveal');if(!animation)throw Error('Missing reveal animation');animation.pause();animation.currentTime=time;},time);
+    await page.locator('[data-realm-viewport]').screenshot({path:path.join(out,'fog-reveal-'+label+'.png')});
+   }
+   await previous.evaluate(el=>{const a=el.getAnimations().find(a=>a.animationName==='realmFogReveal');a.play();});
+   await previous.waitFor({state:'detached',timeout:3000});
+  }
+  await page.screenshot({path:path.join(out,'08b-fog-after-victory-desktop.png'),fullPage:true});
   const steps=cleared.steps;
   await page.reload();await page.locator('[data-dungeon-room="1"]').waitFor();
   const resumed=await page.evaluate(()=>__stage454.snapshot());assert.equal(resumed.steps,steps,'Checkpoint must preserve travel cost');assert.equal(resumed.current,1);
+  assert.equal(Number(await page.locator('.realmFogCurrent').getAttribute('data-fog-revealed')),nextFogCount,'Reload restores revealed locations from real expedition state');
+  assert.equal(await page.locator('[data-room-edge="0-1"]').getAttribute('stroke-dasharray'),'none','Travelled passage must remain solid after reload');
   await page.screenshot({path:path.join(out,'09-map-restored-desktop.png'),fullPage:true});
   // Visit the *naturally generated* Forgotten Reliquary by real map clicks, rather than
   // replacing the node. No travel, event or boss properties are modified by the hook.
@@ -186,6 +226,14 @@ async function main(){
   await page.screenshot({path:path.join(out,'11-reliquary-checkpoint-restored.png'),fullPage:true});
   assert.deepEqual(errors,[],'Uncaught JavaScript errors must be absent on all screens');
   assert.equal(findings.filter(x=>/SVG.*viewBox.*Infinity/.test(x)).length,0,'Talent Atlas SVG must never receive Infinity viewBox dimensions');
+  // A separate synthetic session verifies a new Expedition starts with fresh fog.
+  const resetPage=await browser.newPage({viewport:{width:390,height:844}});resetPage.setDefaultTimeout(12000);
+  await resetPage.goto(base+'/',{waitUntil:'domcontentloaded'});await resetPage.locator('.phase3Camp').waitFor();
+  async function startFogRun(){await resetPage.locator('[data-phase1-expedition]:visible').first().click();await resetPage.locator('[data-realm-card]').first().click();await resetPage.locator('[data-stage7-contract]').first().click();await resetPage.locator('.realmFogCurrent').waitFor();return Number(await resetPage.locator('.realmFogCurrent').getAttribute('data-fog-revealed'));}
+  const freshCount=await startFogRun();await resetPage.evaluate(()=>__stage454.scoutForFogTest());const scoutedCount=Number(await resetPage.locator('.realmFogCurrent').getAttribute('data-fog-revealed'));assert(scoutedCount>freshCount,'Scouting should reveal additional map areas');
+  assert.equal(await resetPage.evaluate(()=>__stage454.backForFogTest()),true,'Can return from the unstarted test Expedition');
+  const restartedCount=await startFogRun();assert.equal(restartedCount,freshCount,'A new Expedition must start with fresh unexplored fog');
+  await resetPage.screenshot({path:path.join(out,'fog-new-expedition-mobile.png'),fullPage:true});await resetPage.close();
   console.log('PASS Stage 4.5.4 browser: Camp (desktop/mobile), v15 Talent iframe and real purchase/reload, 3 Realm Cards, map cost/room inspection, arena (mobile/desktop), combat result and checkpoint reload. Nodes='+count);
   fs.writeFileSync(path.join(out,'result.json'),JSON.stringify({status:'passed',scenarios:9,atlasNodes:count,viewportWidths:[390,1440],errors,notes:'Combat accelerated by the test-only QA hook; screenshot layout is assessed separately; no cloud access.'},null,2));
  }catch(error){fs.writeFileSync(path.join(out,'result.json'),JSON.stringify({status:'failed',error:String(error),findings},null,2));throw error;}
