@@ -1,0 +1,28 @@
+name: Stage 9.5 - Elite native threat tuning sweep (diagnostic only)
+on:
+  push:
+    branches:
+      - experiment/v013-stage95-elite-danger-sweep-20261118
+  workflow_dispatch:
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Compare four Elite HP and damage options with real native Tanks
+        run: node scripts/v013-stage95-threat-sweep.cjs
+      - name: Check no gameplay files were left modified by diagnostic
+        run: git diff --exit-code -- online/v012-expedition-runtime.js
+      - name: Save paired results without deployment
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage95-native-elite-threat-sweep
+          path: |
+            reports/v013-stage95-threat-sweep.json
+            reports/v013-stage95-threat-sweep.md
+          if-no-files-found: warn
