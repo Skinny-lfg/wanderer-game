@@ -39,6 +39,15 @@ function offer(seed,realmId,round,families=[],chosen=[]){
  const rest=shuffle(available.filter(b=>b.id!==first.id),random);
  return [first,...rest.slice(0,2)].map(b=>b.id);
 }
+// Distilled rerolls prioritise options not shown on the first draw.
+function rerollOffer(seed,realmId,round,families=[],chosen=[]){
+ const original=offer(seed,realmId,round,families,chosen);
+ const rng=F.rng(seed,'boon_reroll_v1_'+realmId+'_'+round);
+ const remaining=CATALOG.filter(x=>!chosen.includes(x.id));
+ const fresh=shuffle(remaining.filter(x=>!original.includes(x.id)),rng).map(x=>x.id);
+ const filler=shuffle(remaining.filter(x=>original.includes(x.id)),rng).map(x=>x.id);
+ return [...fresh,...filler].slice(0,3);
+}
 // The two Shrines replace existing combat rooms; topology and all edges remain intact.
 const WINDOWS=Object.freeze([[4,5,6],[9,10,11,12]]);
 const FALLBACK=Object.freeze([[7,8],[13,14,15,16]]);
@@ -78,6 +87,10 @@ function validateOffer(d,game){
  const card=d.cards?.find(c=>c.id===d.realm),s=d.foundationState;
  if(!card||!s||!validateTopology(card,d.foundationManifest?.seed))return false;
  const done=resolutions(s),seen=new Set(),chosen=[],manifest=d.foundationManifest;
+ const rerolls=(s.decisions||[]).filter(a=>a.type==='reroll_boon');
+ if(rerolls.length>2||new Set(rerolls.map(a=>a.room)).size!==rerolls.length||
+    rerolls.some(a=>!card.boonShrines.includes(a.room)||!d.visited.includes(a.room)||!d.cleared.includes(a.room)||
+      s.decisions.some(b=>b.room===a.room&&['choose_boon','skip_boon'].includes(b.type)&&b.seq<a.seq)))return false;
  if(done.length>2)return false;
  for(const a of done){
   const round=card.boonShrines.indexOf(a.room);
@@ -86,7 +99,10 @@ function validateOffer(d,game){
   if(a.type==='choose_boon'){
    if(!Array.isArray(a.families)||new Set(a.families).size!==a.families.length||
       a.families.some(f=>!F.AFFINITIES.includes(f))||chosen.includes(a.id))return false;
-   try{if(!offer(manifest.seed,d.realm,round,a.families,chosen).includes(a.id))return false;}catch{return false;}
+   try{
+    const rolled=rerolls.some(x=>x.room===a.room);
+    if(!(rolled?rerollOffer(manifest.seed,d.realm,round,a.families,chosen):offer(manifest.seed,d.realm,round,a.families,chosen)).includes(a.id))return false;
+   }catch{return false;}
    chosen.push(a.id);
   }
  }
@@ -99,8 +115,11 @@ function validateOffer(d,game){
      game?.selected!==null||game?.rewardPending||!Array.isArray(o.ids)||o.ids.length!==3||
      !Array.isArray(o.families)||new Set(o.families).size!==o.families.length||
      o.families.some(f=>!F.AFFINITIES.includes(f))||
-     d.contractOffer)return false;
-  try{if(JSON.stringify(o.ids)!==JSON.stringify(offer(manifest.seed,d.realm,o.round,o.families,chosen)))return false;}
+     d.contractOffer||![false,true].includes(o.rerolled??false)||
+     Boolean(o.rerolled)!==rerolls.some(a=>a.room===o.room))return false;
+  try{if(JSON.stringify(o.ids)!==JSON.stringify(o.rerolled?
+     rerollOffer(manifest.seed,d.realm,o.round,o.families,chosen):
+     offer(manifest.seed,d.realm,o.round,o.families,chosen)))return false;}
   catch{return false;}
  }
  return card.boonShrines.every(room=>!d.cleared.includes(room)||seen.has(room)||o?.room===room);
@@ -146,7 +165,7 @@ function spreadOnDeath(run,fallen,synchronize){
  if(count)run.boonRotboundTriggers=1;
  return count;
 }
-const API=Object.freeze({CATALOG,GUIDE,get,familiesFor,offer,placeShrines,validateTopology,resolutions,validateOffer,has,factor,dotFactor,takenFactor,speedFactor,costFactor,stats,stepsAdded,spreadOnDeath});
+const API=Object.freeze({CATALOG,GUIDE,get,familiesFor,offer,rerollOffer,placeShrines,validateTopology,resolutions,validateOffer,has,factor,dotFactor,takenFactor,speedFactor,costFactor,stats,stepsAdded,spreadOnDeath});
 root.WandererV013ExpeditionBoons=API;
 if(typeof module==='object'&&module.exports)module.exports=API;
 })(globalThis);
