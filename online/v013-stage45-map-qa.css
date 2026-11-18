@@ -167,3 +167,13 @@ body.phase3IntegratedPreview .realmMapQuickSteps::before{left:-3px;transform:rot
 @media(max-width:700px){body.phase3IntegratedPreview .phase3RealmWorkspace .realmMapQuick{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:5px}body.phase3IntegratedPreview .realmMapQuick .realmMapQuickSteps{padding:.3rem .55rem .4rem}body.phase3IntegratedPreview .realmMapQuickSteps span{font-size:.5rem}body.phase3IntegratedPreview .realmMapQuickSteps strong{font-size:1.4rem}body.phase3IntegratedPreview .realmMapQuick .realmMapSupplies{justify-content:flex-end}body.phase3IntegratedPreview .realmMapQuick .phase3BetweenQuickPotions .phase3PotionSlot{width:30px;min-width:30px;height:30px;min-height:30px}.phase3RealmWorkspace .realmMapSide{top:50px}}
 @media(min-width:701px){body.phase3IntegratedPreview .phase3RealmWorkspace .realmMapQuick{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)!important}}
 [data-realm-viewport]{-webkit-user-select:none;user-select:none}
+/* Realm name above the hanging Steps plaque, between the status areas. */
+body.phase3IntegratedPreview .phase3RealmWorkspace .realmMapQuick{position:relative;z-index:6}
+body.phase3IntegratedPreview .realmMapCenter{display:flex;flex-direction:column;align-items:center;justify-content:end;gap:5px;min-width:0;align-self:end}
+body.phase3IntegratedPreview .realmMapCenter .realmMapTitle{font-size:1.25rem;line-height:1.15;margin:0;text-align:center}
+body.phase3IntegratedPreview .realmMapQuick .realmMapQuickSteps{margin-bottom:-25px;z-index:6}
+@media(max-width:700px){body.phase3IntegratedPreview .realmMapCenter .realmMapTitle{font-size:.95rem}body.phase3IntegratedPreview .realmMapQuick .realmMapQuickSteps{margin-bottom:-18px}}
+body.phase3IntegratedPreview .phase3RealmWorkspace .realmMapQuick{z-index:10!important}
+/* Extend the plaque a little farther over the map. */
+body.phase3IntegratedPreview .realmMapQuick .realmMapQuickSteps{margin-bottom:-36px}
+@media(max-width:700px){body.phase3IntegratedPreview .realmMapQuick .realmMapQuickSteps{margin-bottom:-26px}}
