@@ -109,12 +109,11 @@ function equipEarned(a,profile,between=false){
  return actions;
 }
 function prepareCamp(a,profile,level){
- const actions={talents:[],equipped:[],bought:[],potions:[],runes:[],soldTreasures:false};
- const s=a.state();
- a.potions.inventory(); // Native initializer: an empty player loadout is legal.
- // All purchases and rewards go through the native economy.
+ const actions={talents:[],equipped:[],bought:[],potions:[],runes:[],soldTreasures:false,restocks:0};
+ const s=a.state();a.potions.inventory();
  if(s.pendingRuneReward?.options?.length){
-  const options=s.pendingRuneReward.options,choice=options.find(x=>/vitality|ward|aegis/i.test(x.kind||x.name||x.id))||options[0];
+  const options=s.pendingRuneReward.options;
+  const choice=options.find(x=>/vitality|ward|aegis/i.test(x.kind||x.name||x.id))||options[0];
   if(a.claimRune(choice.id))actions.runes.push(choice.name||choice.id);
  }
  for(let i=0;i<3&&a.results().review;i++)a.exitResult();
@@ -122,29 +121,57 @@ function prepareCamp(a,profile,level){
  actions.equipped.push(...equipEarned(a,profile,false));
  actions.talents.push(...spendEarnedTalents(a,profile).bought);
  if(profile.shop&&a.economyCanAct()){
-  if(!s.merchant)a.rollShop();
-  const available=s.merchant?.stock||[];
-  const candidates=available.map((item,index)=>({item,index,
-   gain:gearScore(item,profile)-gearScore(s.equip[item.slot],profile)}))
-   .filter(x=>x.item?.goldPrice<=s.gold&&x.gain>8)
-   .sort((x,y)=>y.gain-x.gain);
-  for(const {item,index} of candidates.slice(0,1)){
-   if(a.purchaseNative(index)){actions.bought.push({name:item.name,cost:item.goldPrice});actions.equipped.push(...equipEarned(a,profile,false));}
-  }
+  // The game's first Apothecary visit constructs a native 4-item stock. No
+  // custom availability odds, injected potions, discounted prices or free Gold.
   if(!s.apothecary)s.apothecary=a.potions.shop(level);
-  const stock=s.apothecary.stock||[],wanted=['health','barrier','mana','scout','purifying'];
-  for(const kind of wanted){
+  const manaUseful=(a.baseStats()?.mana||0)>0;
+  const priority=['health','ironhide','barrier','scout','trail','purifying','fate',...(manaUseful?['mana','arcane']:[])];
+  const owns=kind=>(s.consumables?.[kind]||0)>0;
+  function affordable(kind){
+   return s.apothecary?.stock?.find(p=>p.kind===kind&&p.price<=s.gold)||null;
+  }
+  // Prefer an actual Health dose for early progress over marginal merchant
+  // equipment. The remaining budget can still improve the permanent loadout.
+  for(const kind of priority){
    if((s.potionSelection||[]).length>=3)break;
-   if((s.potionSelection||[]).includes(kind))continue;
-   const offer=stock.find(p=>p.kind===kind&&p.price<=s.gold);
-   if(offer&&a.potions.buy(offer.id))actions.potions.push({kind,cost:offer.price});
+   if(owns(kind)||s.potionSelection.includes(kind))continue;
+   const offer=affordable(kind);
+   if(offer&&a.potions.buy(offer.id))actions.potions.push({kind,cost:offer.price,reason:'reserve'});
+  }
+  // One sensible restock when Gold covers both restock AND the desired dose.
+  // In E1 with little money, conserve Gold rather than blindly rerolling.
+  if(!owns('health')&&s.apothecary&&s.gold>=s.apothecary.refreshCost+17){
+   if(a.potions.reroll()){
+    actions.restocks++;
+    const heal=affordable('health');
+    if(heal&&a.potions.buy(heal.id))actions.potions.push({kind:'health',cost:heal.price,reason:'restock'});
+   }
+  }
+  // Spend spare Gold on permanent upgrade only if the expected item-stat gain
+  // outweighs the real opportunity cost of an emergency 14+ Gold potion.
+  if(!s.merchant)a.rollShop();
+  const reserve=owns('health')?0:14;
+  const choices=(s.merchant?.stock||[]).map((item,index)=>({item,index,
+   gain:gearScore(item,profile)-gearScore(s.equip[item.slot],profile)}))
+   .filter(x=>x.item?.goldPrice<=s.gold-reserve&&x.gain>8)
+   .sort((x,y)=>y.gain-x.gain);
+  for(const {item,index} of choices.slice(0,1)){
+   if(a.purchaseNative(index)){
+    actions.bought.push({name:item.name,cost:item.goldPrice});
+    actions.equipped.push(...equipEarned(a,profile,false));
+   }
   }
  }
- // Any already-owned dose may be selected via native inventory rules.
- for(const kind of ['health','barrier','mana','scout']){
+ // Fill the real 3-slot loadout from already-owned doses. Physical characters
+ // do not waste a slot on Mana. We do not synthesize consumable availability.
+ const manaUseful=(a.baseStats()?.mana||0)>0;
+ const priorities=['health','ironhide','barrier','scout','trail','purifying','fate',...(manaUseful?['mana','arcane']:[])];
+ for(const kind of priorities){
   if((s.potionSelection||[]).length>=3)break;
-  if(!(s.potionSelection||[]).includes(kind)&&(s.consumables?.[kind]||0)>0&&a.potions.select(kind))actions.potions.push({kind,owned:true});
+  if(!(s.potionSelection||[]).includes(kind)&&(s.consumables?.[kind]||0)>0&&a.potions.select(kind))
+   actions.potions.push({kind,owned:true});
  }
+ actions.unspentGold=s.gold;
  return actions;
 }
 function choiceRealm(cards,profile,gear){
