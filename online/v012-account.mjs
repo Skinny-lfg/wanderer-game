@@ -160,6 +160,8 @@ async function activate(user){
    profileName=profile.nickname;paintName();
    const next=createCloudSaveCoordinator({backend,uid:user.uid,projectId:backend.projectId,readSnapshot:()=>game.cloudSnapshot(),applySnapshot:save=>game.restoreCloudSave(save),onStatus:saveState});
    const fresh=globalThis.WandererV012Save.create(game.newSave(),{binding:user.uid,identity:{uid:user.uid,projectId:backend.projectId,nickname:profile.nickname}});
+   // Stage 7.4 requires a one-time clean preview profile on DEVELOPMENT Firebase only.
+   if(backend.projectId==='wanderer-development-8e3ee')fresh.previewGeneration='stage74';
    const loaded=await next.initialize(fresh);
    if(backend.currentUser()?.uid!==user.uid){await next.close();return;}
    coordinator=next;game.restoreCloudSave(loaded);game.attachCloudSave(next);activeUid=user.uid;
