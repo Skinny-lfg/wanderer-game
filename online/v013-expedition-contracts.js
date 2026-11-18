@@ -130,8 +130,8 @@ function inspect(game,outcome=null){
  const failed=['defeat','abandoned'].includes(outcome)||outcome==='extracted'&&!paid||
    outcome==='victory'&&!paid||game.stage==='failed'&&outcome!=='extracted';
  return {id,name:get(id).name,status:paid?'completed':failed?'failed':p.done?'ready':'active',
-  progress:p.current,target:p.target,essence:paid?.essence||0,fragments:0,recipeId:paid?.recipeId||null,
-  kind:paid?.kind||prize?.kind||null,potential:prize||null};
+  progress:p.current,target:p.target,essence:paid?.essence||0,fragments:paid?.fragments||0,recipeId:paid?.recipeId||null,
+  kind:paid?.kind||prize?.kind||null,potential:prize||null,paid:paid||null};
 }
 function validate(game){
  const d=game?.dungeon,card=d?.cards?.find(c=>c.id===d?.realm),s=d?.foundationState;
