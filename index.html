@@ -1939,7 +1939,7 @@ function renderPhase1(){
   html('<section class="panel"><h2>Resolve Expedition loot</h2><p>Your bag holds 12 items. Discard overflow before returning to Camp; no loot is discarded automatically.</p>'+phase3BagMarkup()+'</section>');phase3BindBag();return;
  }
  if(['camp','finished','failed'].includes(g.stage)){
-  html(phase3CampMarkup(g,stats));const openForge=$('v013OpenForge');if(openForge)openForge.onclick=()=>{const tracked=WandererV013Crafting.RECIPES.find(r=>r.id===state.crafting?.targetRecipe);if(tracked){v013RecipeRarity=tracked.rarity;v013RecipeSlot=tracked.slot;v013RecipeId=tracked.id;}view='forge';render();window.scrollTo(0,0);};
+  html(phase3CampMarkup(g,stats));const openForge=$('v013OpenForge');if(openForge)openForge.onclick=()=>{view='forge';render();window.scrollTo(0,0);};
   Q('[data-phase3-expedition-step]').forEach(button=>button.onclick=()=>{const step=Number(button.dataset.phase3ExpeditionStep)||0;phase3SelectedExpedition=clamp((phase3SelectedExpedition??g.unlocked)+step,1,g.unlocked);renderPhase1();});
   const startSelected=button=>{phase3BetweenTab='realm';phase1Begin(Number(button.dataset.phase1Expedition),true);};Q('[data-phase1-expedition]').forEach(button=>button.onclick=()=>startSelected(button));
   phase3BindPaper();phase6AppendPotionStash();return;
