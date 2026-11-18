@@ -107,6 +107,21 @@ function talentPlan(build,points){
   if(!selected)throw Error('Invalid build element '+build.element);
   progress=selected;
  }
+ // Finish a comparable fixed-budget test build with currently purchasable nodes
+ // from its listed Affinities; never fabricate skills or bypass T.allocate().
+ const goal=Math.min(points,24);
+ for(let pass=0;pass<goal&&progress.nodes.length<goal;pass++){
+  let changed=false;
+  for(const node of T.NODES){
+   if(progress.nodes.length>=goal)break;
+   if(node.family&&!build.families.includes(node.family))continue;
+   if(node.element&&node.element!=='arcane'&&node.element!==(progress.element||'arcane'))continue;
+   if(progress.nodes.includes(node.id))continue;
+   const next=T.allocate(progress,node.id);
+   if(next){progress=next;changed=true;}
+  }
+  if(!changed)break;
+ }
  if(!T.valid(progress))throw Error('Invalid v0.13 permanent talent allocation');
  return progress;
 }
