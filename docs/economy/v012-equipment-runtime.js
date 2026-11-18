@@ -77,7 +77,7 @@ function fresh(){ports.state={attemptCompleted:false,characterId:'wanderer',onli
 
 function makeSlots(){return Object.fromEntries(ports.SLOTS.map(s=>[s,null]))}
 
-function starter(){return {id:ports.makeId(),slot:'weapon',subtype:'Sword',name:'Old Sword',tier:1,rarity:'Common',effect:null,atk:5,str:1,obtainedAt:Date.now(),crafted:false,recoveryStarter:true,startingGear:true}}
+function starter(){return ports.PHASE1_PREVIEW&&root.WandererV013GearRolls?root.WandererV013GearRolls.starter('weapon',ports.makeId(),Date.now()):{id:ports.makeId(),slot:'weapon',subtype:'Sword',name:'Old Sword',tier:1,rarity:'Common',effect:null,atk:5,str:1,obtainedAt:Date.now(),crafted:false,recoveryStarter:true,startingGear:true}}
 
 function legendaryMatches(entry,item){
  if(!entry||!item)return false;
@@ -97,6 +97,7 @@ function legendarySignature(item){
 
 // Recipe previews supply a fixed slot, subtype and rarity; they never allocate IDs or roll names/traits.
 function makeItem(tier,slot=null,affinity=null,source='loot',subtype='random',forcedRarity=null,preview=false){
+ if(ports.PHASE1_PREVIEW&&source==='starter'&&root.WandererV013GearRolls&&['weapon','armor','helm'].includes(slot))return root.WandererV013GearRolls.starter(slot,ports.makeId(),Date.now());
  if(ports.PHASE1_PREVIEW&&root.WandererV013Crafting)tier=root.WandererV013Crafting.tierBand(tier);
 slot=slot||ports.rollEquipmentSlot();
 let requestedArmorType=ports.ARMOR_TYPES.includes(subtype)?subtype:null;
@@ -167,12 +168,12 @@ if(ports.PHASE1_PREVIEW&&rarity!=='Common'){
  if(rarity==='Rare')o.hp+=Math.max(2,Math.round(power*.5));
  if(rarity==='Epic'){o.v013Trait=preview?'focused':['Staff','Wand','Orb'].includes(subtype)?ports.sample(['efficient','ward',...(subtype==='Staff'?['conflagration']:[])]):ports.sample(['focused','blood_transfer']);}
 }
-// New characters begin with useful but modest flat gear stats. Keep weapon and
-// armor identity attributes intact; the ordinary loot/crafting tier curve is
-// deliberately unchanged. This marker also makes the starting kit measurable.
-if(source==='starter'){
- for(const field of ['atk','def','hp','spd','mana','spell','evasionRating'])if(Number.isFinite(o[field]))o[field]=Math.floor(o[field]*.90);
- o.startingGear=true;
+// v0.13: a rarity defines the overall budget, not four guaranteed attributes.
+// Actual crafting/loot rolls vary; preview rolls are deterministic examples.
+if(ports.PHASE1_PREVIEW&&root.WandererV013GearRolls){
+ let x=Array.from(slot+subtype+(armorType||'')+rarity+tier).reduce((n,ch)=>(Math.imul(n,31)+ch.charCodeAt(0))>>>0,1);
+ const previewRandom=()=>((x=(Math.imul(x,1664525)+1013904223)>>>0)/4294967296);
+ root.WandererV013GearRolls.apply(o,Math.max(1,(2+progressTier*.91)*tierFactor),preview?previewRandom:ports.gameRandom);
 }
 return o;}
 

@@ -55,7 +55,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
   const route=harnessPrng(routeSeed),draft=harnessPrng(draftSeed);harnessControlRandom=harnessPrng(controlSeed);harnessCombatRandom=harnessPrng(combatSeed);
   phase1Controller.setSimulationRandomStreams(route,draft);gameRandom=()=>harnessCombatActive?harnessCombatRandom():harnessControlRandom();
  }
- globalThis.audit={measured,debug:()=>({phase5Ready,saveBlocked,message:phase5Message,validation:PHASE5_VALIDATION,preview:PHASE1_PREVIEW,active:phase3ExpeditionActive(),run:!!state.run,draft:!!phase1Draft,stage:phase1Controller?.state.stage}),
+ globalThis.audit={talents:WandererAutomaticTalents,measured,debug:()=>({phase5Ready,saveBlocked,message:phase5Message,validation:PHASE5_VALIDATION,preview:PHASE1_PREVIEW,active:phase3ExpeditionActive(),run:!!state.run,draft:!!phase1Draft,stage:phase1Controller?.state.stage}),
   potions:{supplies:()=>phase3Supplies,select:phase6SelectPotion,use:phase6UsePotion,inventory:phase6PotionInventory,start:phase6StartPotions,finish:phase6ReturnPotions,tick:phase6TickDurations,shop:(E=1,rng=gameRandom)=>WandererV012Consumables.shop(E,rng,makeId),buy:phase6BuyPotion,reroll:phase6RerollPotions},
   events:{open:phase6OpenEvent,choose:phase6EventChoice,run:()=>phase6Run},
   back:phase6BackToCamp,markAllSeen:markAllAsSeen,
@@ -116,7 +116,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
  };
  `;
  const main=source.match(/<script>([\s\S]*?)<\/script>/)?.[1];
- const files=['economy/v013-crafting.js','online/v012-treasures.js','combat/automatic-talents.js','combat/automatic-talent-layout.js','online/v012-save.js','economy/v0101.js','combat/legendary.js','combat/v012-combat-core.js','combat/v012-gear-stats.js','combat/v012-runes.js','economy/v012-loot-rules.js','combat/v012-buildcraft.js','online/v012-expedition-controller.js','online/v012-expedition-events.js','online/v012-consumables.js'];
+ const files=['combat/expedition-progression.js','economy/v013-crafting.js','economy/v013-gear-rolls.js','online/v012-treasures.js','combat/automatic-talents.js','combat/automatic-talent-layout.js','online/v012-save.js','economy/v0101.js','combat/legendary.js','combat/v012-combat-core.js','combat/v012-gear-stats.js','combat/v012-runes.js','economy/v012-loot-rules.js','combat/v012-buildcraft.js','combat/v013-expedition-foundation.js','online/v013-map-intelligence.js','online/v013-expedition-conditions.js','online/v013-encounter-traits.js','online/v013-boss-modifiers.js','online/v013-boss-preparation.js','online/v012-expedition-controller.js','online/v012-expedition-events.js','online/v012-consumables.js'];
  files.push('combat/talent-graph-next.js','combat/talent-graph-bridge.js');
  files.push(...[...source.matchAll(/<script[^>]+src="([^"?]+-runtime\.js)(?:\?[^\"]*)?"/g)].map(m=>m[1]));
  vm.runInNewContext(files.map(f=>moduleOverrides[f]??fs.readFileSync(path.join(fixtureRoot,f),'utf8')).join('\n')+'\n'+main.replace(boot,inject+'\nconst phase3RestoredScroll=null;'),sandbox,{timeout:20000});

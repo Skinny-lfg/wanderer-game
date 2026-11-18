@@ -13,6 +13,7 @@ const REALMS=Object.freeze({forge:['blood','Crimson Dominion'],bloodscar:['blood
 const BOSSES=Object.freeze([{id:'guardian',name:"Abyssal Guardian’s Citadel",style:'guardian'},{id:'rift',name:"Harbinger’s Rift",style:'leech'},{id:'ember',name:"Ember Sovereign’s Throne",style:'berserker'}]);
 const EVENT_GROUPS=[['traveling_merchant','relic_collector'],['cursed_altar','whispering_idol'],['forgotten_arsenal','bounty_writ'],['restless_spring','oracle_of_paths']];
 const ROOMS=Object.freeze(['combat','combat','combat','combat','combat','combat','combat','elite','elite','chest','chest','event','event','altar']);
+const I=root.WandererV013MapIntelligence,F=root.WandererV013ExpeditionFoundation,T=root.WandererV013EncounterTraits,P=root.WandererV013BossPreparation,C=root.WandererV013ExpeditionConditions;
 function shuffle(values,rng){
  const arr=[...values];
  for(let i=arr.length-1;i>0;i--){const j=Math.min(i,Math.floor(rng()*(i+1)));[arr[i],arr[j]]=[arr[j],arr[i]];}
@@ -94,12 +95,14 @@ function create(themes,rng=Math.random){
   return game;
  }
  function startDungeon(level, targetFamily){
-  if(!Number.isInteger(level)||level<1||level>Math.min(5,game.unlocked)||!['camp','finished','failed'].includes(game.stage))throw Error('Expedition unavailable');
+  if(!Number.isInteger(level)||level<1||level>game.unlocked||!['camp','finished','failed'].includes(game.stage))throw Error('Expedition unavailable');
   const families=shuffle(FAMILIES,routeRng);
   if(FAMILIES.includes(targetFamily)){families.splice(families.indexOf(targetFamily),1);families.unshift(targetFamily);}
   const cards=shuffle(families.slice(0,3),routeRng).map((family,risk)=>{
    const theme=shuffle(expeditionThemes.filter(t=>t.family===family),routeRng)[0];
    const events=[...shuffle(['whispering_idol','traveling_merchant','cursed_altar'],routeRng),'forgotten_arsenal'];
+   // Convert a known ritual event into an Oracle encounter without advancing map RNG.
+   if(events.includes('cursed_altar')&&risk>=1)events[events.indexOf('cursed_altar')]='oracle_of_paths';
    const size=18+risk*2;
    const kinds=Array(size).fill('combat');kinds[0]='entrance';kinds[size-1]='boss';
    const slots=shuffle(Array.from({length:size-6},(_,i)=>i+5),routeRng);
@@ -138,7 +141,11 @@ function create(themes,rng=Math.random){
    const objective=shuffle(nodes.map((n,i)=>n.kind==='elite'?i:-1).filter(i=>i>=0),routeRng)[0];
    return {id:theme.id,name:theme.name,family,image:theme.image,risk,nodes,edges,shortcut,positions,objective,favoured:{slot,subtype},bossSector,secondSector,clueRoom,stepLimit:14-risk};
   });
-  Object.assign(game,{version:2,expedition:level,planeIndex:1,stage:'choice',freeBuild:true,offers:[],selected:null,wave:0,history:[],rooms:[],rewardPending:null,families:[],initialFamily:null,lastFamily:null,rerolls:0,rerollsByRealm:Array.from({length:15},()=>[0,0,0]),bossId:shuffle(BOSSES,routeRng)[0].id,encounterVersion:1,dungeon:{cards,realm:null,current:0,cleared:[0],visited:[0]}});
+  const bossId=shuffle(BOSSES,routeRng)[0].id,seed=Math.floor(routeRng()*4294967296)>>>0;
+  const manifest=F?.createManifest(cards,{seed,expeditionLevel:level,bossStyle:BOSSES.find(b=>b.id===bossId).style})||null;
+  if(P&&manifest)for(const card of cards)P.planRoom(card,seed);
+  if(T&&manifest)for(const card of cards)for(const {room,traitId} of T.assign(card,seed))card.nodes[room].traitId=traitId;
+  Object.assign(game,{version:2,expedition:level,planeIndex:1,stage:'choice',freeBuild:true,offers:[],selected:null,wave:0,history:[],rooms:[],rewardPending:null,families:[],initialFamily:null,lastFamily:null,rerolls:0,rerollsByRealm:Array.from({length:15},()=>[0,0,0]),bossId,encounterVersion:1,dungeon:{cards,realm:null,current:0,cleared:[0],visited:[0],scouted:[],discoveredSecrets:[],...(manifest?{foundationManifest:manifest}:{})}});
   for(const k of ['routeMap','routeEdges','routePositions','routeMobCounts'])delete game[k];
   return game;
  }
@@ -146,10 +153,13 @@ function create(themes,rng=Math.random){
  function chooseRealm(id){
   const d=game.dungeon,card=d.cards.find(c=>c.id===id);
   if(!card||d.realm||game.stage!=='choice')throw Error('Realm unavailable');
-  d.realm=id;if(card.stepLimit)d.steps=card.stepLimit;game.bossFamily=card.family;
+  d.realm=id;if(card.stepLimit)d.steps=card.stepLimit;d.conditionEdgesUsed=[];game.bossFamily=card.family;
+  if(F&&d.foundationManifest)d.foundationState=F.createExpeditionState(d.foundationManifest,id);
  }
  function travelPath(target){
-  const d=game.dungeon,card=realmMap(),paths=[[d.current]],seen=new Set([d.current]);
+  const d=game.dungeon,card=realmMap();
+  if(I)return I.route(card,d,target);
+  const paths=[[d.current]],seen=new Set([d.current]);
   for(const path of paths){
    const last=path[path.length-1];if(last===target)return path;
    if(!d.visited.includes(last))continue;
@@ -161,22 +171,43 @@ function create(themes,rng=Math.random){
   }
   return [];
  }
+ function exitCount(id){return I?I.exitCount(realmMap(),game.dungeon,id):0;}
+ function scoutPreview(amount=2){
+  if(!I||!game.dungeon?.realm)return {rooms:[],secret:null};
+  const d=game.dungeon,origin=game.selected?.node??d.current;
+  return I.scout(realmMap(),{...d,current:origin},amount);
+ }
+ function scoutRooms(amount=2){
+  const d=game.dungeon;
+  if(!d?.realm||!I||!['choice','combat'].includes(game.stage))return {rooms:[],secret:null};
+  const selection=scoutPreview(amount);d.scouted??=[];d.discoveredSecrets??=[];
+  for(const room of selection.rooms)if(!d.scouted.includes(room)){
+   d.scouted.push(room);
+   if(F&&d.foundationManifest&&d.foundationState&&!d.foundationState.knownRooms.includes(room))d.foundationState=F.applyDecision(d.foundationState,{type:'reveal_room',room},d.foundationManifest);
+  }
+  if(selection.secret&&!d.discoveredSecrets.includes(selection.secret)){
+   d.discoveredSecrets.push(selection.secret);
+   if(F&&d.foundationManifest&&d.foundationState)d.foundationState=F.applyDecision(d.foundationState,{type:'discover_secret',edgeId:selection.secret},d.foundationManifest);
+  }
+  return selection;
+ }
  function deferEvent(){
   const d=game.dungeon,p=game.selected;
   if(!d||game.stage!=='combat'||!p?.event)return false;
   d.current=p.node;if(!d.visited.includes(p.node))d.visited.push(p.node);
   game.stage='choice';game.wave=0;game.offers=[];game.selected=null;return true;
  }
- function travelCost(path){const d=game.dungeon;let cost=0,cleared=0;for(const room of path.slice(1)){if(d.cleared.includes(room))cleared++;else{cost+=Math.min(2,cleared)+1;cleared=0;}}return cost+Math.min(2,cleared);}
+ function travelCost(path){if(I&&game.dungeon){const base=I.travelCost(path,game.dungeon.cleared),card=realmMap();return base+(C&&card?C.travelSurcharge(card,game.dungeon,path):0);}const d=game.dungeon;let cost=0,cleared=0;for(const room of path.slice(1)){if(d.cleared.includes(room))cleared++;else{cost+=Math.min(2,cleared)+1;cleared=0;}}return cost+Math.min(2,cleared);}
  function visitRoom(i){
   const d=game.dungeon,card=realmMap(),path=travelPath(i);
   if(game.stage!=='choice'||!path.length||game.rewardPending)return false;
   const cost=travelCost(path);
   if(d.steps!==undefined){if(cost>d.steps)return false;d.steps-=cost;}
+  if(C)C.markTraversed(card,d,path);
   if(d.cleared.includes(i)){d.current=i;return true;}
   if(path.length>1)d.current=path[path.length-2];
   const n=card.nodes[i],boss=n.kind==='boss';
-  const p={id:card.id,family:card.family,image:card.image,name:card.name,node:i,waves:n.event?0:1,boss,elite:boss||n.kind==='elite',event:n.event,mobCount:n.count,escorts:n.escorts,risk:card.risk};
+  const p={id:card.id,family:card.family,image:card.image,name:card.name,node:i,waves:n.event?0:1,boss,elite:boss||n.kind==='elite',event:n.event,mobCount:n.count,escorts:n.escorts,risk:card.risk,...(n.traitId?{traitId:n.traitId}:{})};
   game.planeIndex=boss?15:game.history.length+(game.history.length>=14?2:1);game.offers=[p];game.selected=p;return true;
  }
  function planAffinities(plan){
@@ -225,11 +256,14 @@ function create(themes,rng=Math.random){
  }
  function waveWon(){
   if(game.stage!=='combat'||!game.selected||game.selected.eventId)throw Error('No active combat wave');
-  if(game.dungeon){game.dungeon.current=game.selected.node;game.dungeon.cleared.push(game.selected.node);if(!game.dungeon.visited.includes(game.selected.node))game.dungeon.visited.push(game.selected.node);}
+  if(game.dungeon){
+   if(P)P.markElite(game);
+   game.dungeon.current=game.selected.node;game.dungeon.cleared.push(game.selected.node);if(!game.dungeon.visited.includes(game.selected.node))game.dungeon.visited.push(game.selected.node);
+  }
   game.history.push({plane:game.planeIndex,...game.selected});
   if(game.selected.boss){
    if(!game.selected.boss)throw Error('Realm 15 must contain the Expedition boss');
-   game.unlocked=Math.max(game.unlocked,game.dungeon?Math.min(5,game.expedition+1):game.expedition+1);
+   game.unlocked=Math.max(game.unlocked,game.expedition+1);
    game.stage='finished';game.selected=null;game.offers=[];game.wave=0;game.families=[];game.lastFamily=null;game.rewardPending=null;
    return {planeComplete:true,expeditionComplete:true};
   }
@@ -245,10 +279,81 @@ function create(themes,rng=Math.random){
   if(!['choice','combat'].includes(game.stage))throw Error('No active Expedition');
   game.stage='failed';game.selected=null;game.offers=[];game.wave=0;game.families=[];game.lastFamily=null;game.rewardPending=null;
  }
+ function validateDungeonCheckpoint(g){
+  const d=g.dungeon,integer=(n,min,max)=>Number.isSafeInteger(n)&&n>=min&&n<=max;
+  const unique=a=>Array.isArray(a)&&new Set(a).size===a.length;
+  const roomList=(a,size)=>unique(a)&&a.every(i=>integer(i,0,size-1));
+  if(!g.freeBuild||g.encounterVersion!==1||!integer(g.expedition,1,Number.MAX_SAFE_INTEGER)||!integer(g.unlocked,g.expedition,Number.MAX_SAFE_INTEGER)||
+    !['choice','combat','finished','failed'].includes(g.stage)||!Array.isArray(g.offers)||!Array.isArray(g.history)||!Array.isArray(d.cards)||d.cards.length!==3||
+    !integer(d.current,0,21)||!unique(d.cleared)||!unique(d.visited)||!unique(d.scouted)||!unique(d.discoveredSecrets))throw Error('Invalid dungeon checkpoint');
+  for(let risk=0;risk<3;risk++){
+   const c=d.cards[risk],size=18+risk*2;
+   if(!c||c.risk!==risk||REALMS[c.id]?.[0]!==c.family||!Array.isArray(c.nodes)||c.nodes.length!==size||
+      !Array.isArray(c.edges)||!Array.isArray(c.positions)||c.positions.length!==size||
+      c.nodes[0]?.kind!=='entrance'||c.nodes[size-1]?.kind!=='boss'||c.stepLimit!==14-risk||
+      !integer(c.objective,1,size-2)||c.nodes[c.objective]?.kind!=='elite'||
+      !integer(c.reliquaryRoom,5,12)||c.nodes[c.reliquaryRoom]?.event!=='forgotten_reliquary'||
+      !integer(c.shortcut,0,size-2)||!integer(c.clueRoom,0,size-1)||
+      c.edges.some(edge=>!Array.isArray(edge)||edge.length!==2||!integer(edge[0],0,size-1)||!integer(edge[1],0,size-1)||edge[0]===edge[1])||
+      !unique(c.edges.map(([a,b])=>Math.min(a,b)+'-'+Math.max(a,b)))||
+      c.nodes.some(n=>!n||!['entrance','combat','elite','event','spring','boss'].includes(n.kind)||n.traitId!==undefined&&(!T?.get(n.traitId)||n.kind!=='combat'))||
+      c.positions.some(v=>!Array.isArray(v)||v.length!==2||v.some(x=>!Number.isFinite(x))))throw Error('Invalid dungeon map topology');
+  }
+  const selectedCard=d.cards.find(c=>c.id===d.realm),size=selectedCard?.nodes?.length;
+  const manifest=d.foundationManifest;
+  if(!F||!manifest||!integer(manifest.seed,0,0xffffffff)||manifest.expeditionLevel!==g.expedition||
+    !Array.isArray(manifest.cards)||manifest.cards.length!==3||
+    !BOSSES.some(b=>b.style===manifest.bossStyle&&b.id===g.bossId)||
+    manifest.cards.some((v,i)=>v.realmId!==d.cards[i].id||v.family!==d.cards[i].family||v.risk!==i||
+     !F.lookup('conditions',v.conditionId)?.families.includes(v.family)||
+     !Array.isArray(v.bossModifierIds)||v.bossModifierIds.length!==i+1||new Set(v.bossModifierIds).size!==v.bossModifierIds.length||
+     v.bossModifierIds.some(id=>!F.lookup('bossModifiers',id))||
+     F.lookup('conditions',v.conditionId).conflicts?.some(id=>v.bossModifierIds.includes(id))||
+     v.bossModifierIds.some(id=>F.lookup('bossModifiers',id).conflicts?.includes(v.conditionId)||F.lookup('bossModifiers',id).excludeBossStyles?.includes(manifest.bossStyle)))||
+    new Set(manifest.cards.map(c=>c.conditionId)).size!==3)throw Error('Invalid dungeon manifest');
+  const expectedManifest=F.createManifest(d.cards,{seed:manifest.seed,expeditionLevel:g.expedition,bossStyle:manifest.bossStyle});
+  if(JSON.stringify(expectedManifest)!==JSON.stringify(manifest))throw Error('Invalid deterministic dungeon manifest');
+  if(d.realm===null){
+   if(d.current!==0||d.steps!==undefined||d.conditionEdgesUsed!==undefined||d.foundationState!==undefined||d.disabledBossModifierId!==undefined||
+      d.visited.length!==1||d.visited[0]!==0||d.cleared.length!==1||d.cleared[0]!==0||d.scouted.length||d.discoveredSecrets.length||g.selected!==null||g.offers.length)throw Error('Invalid unselected dungeon');
+  }else{
+   if(!integer(d.steps,0,selectedCard.stepLimit)||!C?.validLedger(selectedCard,d)||!roomList(d.visited,size)||!roomList(d.cleared,size)||!roomList(d.scouted,size)||
+      !d.visited.includes(d.current)||!d.cleared.includes(0)||!d.visited.includes(0)||d.cleared.some(i=>!d.visited.includes(i)))throw Error('Invalid dungeon progress');
+   if(!unique(d.discoveredSecrets)||d.discoveredSecrets.some(e=>typeof e!=='string'||!selectedCard.edges.some(([a,b])=>e===Math.min(a,b)+'-'+Math.max(a,b)&&I?.secretEdge(selectedCard,a,b))))throw Error('Invalid hidden passage state');
+   if(!F||!d.foundationManifest||!d.foundationState||!F.validateExpeditionState(d.foundationState,d.foundationManifest)||
+      d.foundationState.realmId!==d.realm||d.foundationState.seed!==d.foundationManifest.seed||
+      d.foundationManifest.expeditionLevel!==g.expedition||d.foundationManifest.cards.length!==3||
+      d.foundationManifest.cards.some((v,i)=>v.realmId!==d.cards[i].id||v.family!==d.cards[i].family||v.risk!==i||
+      v.conditionId!==d.foundationState.conditionId&&v.realmId===d.realm||
+      !F.lookup('conditions',v.conditionId)?.families.includes(v.family)||
+      !Array.isArray(v.bossModifierIds)||v.bossModifierIds.length!==i+1||new Set(v.bossModifierIds).size!==v.bossModifierIds.length||
+      v.bossModifierIds.some(id=>!F.lookup('bossModifiers',id)))||
+      !BOSSES.some(b=>b.style===d.foundationManifest.bossStyle&&b.id===g.bossId))throw Error('Invalid dungeon manifest');
+   if(!d.foundationState.decisions.every((x,i)=>x?.seq===i)||
+     !roomList(d.foundationState.knownRooms,size)||
+     JSON.stringify(d.scouted)!==JSON.stringify(d.foundationState.knownRooms.slice(1).filter(i=>!d.visited.includes(i)||d.scouted.includes(i)))||
+     JSON.stringify(d.discoveredSecrets)!==JSON.stringify(d.foundationState.discoveredSecrets))throw Error('Invalid dungeon scouting ledger');
+   let replay;
+   try{replay=F.replayDecisions(d.foundationManifest,d.realm,d.foundationState.decisions.map(({seq,...action})=>action));}catch{throw Error('Invalid dungeon decision history');}
+   if(JSON.stringify(replay)!==JSON.stringify(d.foundationState))throw Error('Invalid dungeon decision history');
+   if((d.foundationState.bossPreparation.reliquary&&d.disabledBossModifierId!==d.foundationState.bossModifierIds[0])||
+     (!d.foundationState.bossPreparation.reliquary&&d.disabledBossModifierId!==undefined)||
+     (d.foundationState.bossPreparation.markedElite&&!d.cleared.includes(selectedCard.objective)))throw Error('Invalid dungeon boss preparation');
+  }
+  if(!Array.isArray(g.offers)||g.offers.length>1||g.offers.some(p=>!selectedCard||!integer(p.node,0,size-1)))throw Error('Invalid dungeon offers');
+  if(g.selected!==null){
+   const p=g.selected,node=selectedCard?.nodes[p?.node];
+   if(!node||g.offers.length!==1||g.offers[0].node!==p.node||p.id!==selectedCard.id||
+     p.boss!==(node.kind==='boss')||p.elite!==(node.kind==='boss'||node.kind==='elite')||p.event!==(node.event||null))throw Error('Invalid dungeon selection');
+  }else if(g.offers.length)throw Error('Invalid dungeon selection');
+  if(g.stage==='combat'&&!g.selected)throw Error('Invalid dungeon combat');
+  if(['finished','failed'].includes(g.stage)&&(g.selected!==null||g.offers.length))throw Error('Invalid terminal dungeon state');
+  if(g.stage==='finished'&&(!selectedCard||!d.cleared.includes(size-1)))throw Error('Invalid dungeon completion');
+ }
  function restore(input){
   if(input?.version!==2)throw Error('Unsupported historical Expedition checkpoint (requires calendar version 2)');
   const g=JSON.parse(JSON.stringify(input));
-  if(g.dungeon){const d=g.dungeon;if(!g.freeBuild||d.cards?.length!==3||!d.cards.every(c=>REALMS[c.id]?.[0]===c.family&&[12,14,18,20,22].includes(c.nodes.length)&&Array.isArray(c.edges))||!Array.isArray(d.cleared)||!d.visited.includes(d.current)||d.realm&&!d.cards.some(c=>c.id===d.realm))throw Error('Invalid dungeon checkpoint');Object.assign(game,g);if(g.selected)game.selected=game.offers.find(p=>p.node===g.selected.node);return game;}
+  if(g.dungeon){validateDungeonCheckpoint(g);Object.assign(game,g);if(g.selected)game.selected=game.offers.find(p=>p.node===g.selected.node);return game;}
   delete game.dungeon;
   if(!FAMILIES.includes(g.bossFamily)||g.encounterVersion!==1)throw Error('Invalid encounter version');
   g.affinityPlan??=null;g.affinityPlanSeen??=[false,false,false];
@@ -304,7 +409,7 @@ function create(themes,rng=Math.random){
  function setSimulationRandomStreams(route,draft){if(typeof route!=='function'||typeof draft!=='function')throw Error('Simulation RNG streams must be functions');routeRng=route;draftRng=draft;}
  function passiveRandom(){return draftRng;}
  
- return Object.freeze({deferEvent,chooseRealm,realmMap,visitRoom,travelPath,travelCost,influence,state:game,start,restore,planAffinities,chooseInitial:chooseInitial,select:select,enter:enter,claimReward:claimReward,reroll:reroll,waveWon:waveWon,eventWon:()=>{throw Error('Resolve the offered integrated event');},defeat:defeat,abandon:abandon,allowed:allowed,reachable,setSimulationRandomStreams,passiveRandom});
+ return Object.freeze({deferEvent,chooseRealm,realmMap,visitRoom,travelPath,travelCost,exitCount,scoutPreview,scoutRooms,influence,state:game,start,restore,planAffinities,chooseInitial:chooseInitial,select:select,enter:enter,claimReward:claimReward,reroll:reroll,waveWon:waveWon,eventWon:()=>{throw Error('Resolve the offered integrated event');},defeat:defeat,abandon:abandon,allowed:allowed,reachable,setSimulationRandomStreams,passiveRandom});
 }
 root.WandererV012Expedition=Object.freeze({create,FAMILIES,FAMILY_NAMES,THEME_FAMILIES,REALMS,BOSSES,EVENT_GROUPS});
 })(globalThis);

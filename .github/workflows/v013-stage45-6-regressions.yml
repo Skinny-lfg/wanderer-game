@@ -1,0 +1,70 @@
+name: Wanderer v0.13 Stage 4.5.6 gameplay-regression audit (no deploy)
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/v013-stage45-6-regressions.yml'
+      - 'scripts/v013-stage45-6-classify.cjs'
+      - 'tests/**'
+      - 'combat/**'
+      - 'online/**'
+      - 'economy/**'
+      - 'package.json'
+      - 'reports/v013-stage45-6-regression-audit.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  classify-and-crosscheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Run current v0.13 mandatory gameplay and simulation gates
+        run: npm run test:v013:gate
+      - name: Independently check critical current gameplay integrations
+        run: >-
+          node --test
+          tests/v013-current-dungeon-and-talents.test.cjs
+          tests/v013-stage45-6-combat-contract.test.cjs
+          tests/v013-stage45-6-prepared-cadence.test.cjs
+          tests/v013-stage45-6-economy-p0.test.cjs
+          tests/v013-stage45-6-dodge-p0.test.cjs
+          tests/v013-stage45-6-legendary-p0.test.cjs
+          tests/v013-stage45-6-extraction-p0.test.cjs
+          tests/v013-stage45-6-event-contract.test.cjs
+          tests/v013-stage45-6-encounter-matrix.test.cjs
+          tests/v013-full-expedition-integration.test.cjs
+          tests/v013-stat-consistency.test.cjs
+          tests/v013-encounter-traits-runtime.test.cjs
+          tests/v013-boss-modifiers-runtime.test.cjs
+          tests/v013-boss-preparation-runtime.test.cjs
+          tests/v013-dungeon-checkpoint-integrity.test.cjs
+      - name: Capture historical suite without masking its failure status
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p reports/stage45-6-regression
+          set +e
+          npm test > reports/stage45-6-regression/npm-test.tap 2>&1
+          code=$?
+          printf '%s\n' "$code" > reports/stage45-6-regression/npm-test.exit-code
+          printf 'Legacy test exit code (nonzero = not passed): %s\n' "$code"
+          exit 0
+      - name: Categorize every historical failure against old baseline
+        if: always()
+        run: node scripts/v013-stage45-6-classify.cjs
+      - name: Publish detailed failure report as CI artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage45-6-regression-audit-${{ github.run_id }}
+          path: reports/stage45-6-regression/
+          if-no-files-found: error

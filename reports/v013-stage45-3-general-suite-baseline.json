@@ -1,0 +1,646 @@
+{
+  "baseCommit": "283b8391573ab32d475a6605d74022d4a6ce320c",
+  "testCommand": "npm test",
+  "tests": 387,
+  "passing": 281,
+  "failing": 106,
+  "environment": "incomplete local source snapshot (does not contain GitHub assets, CI files or firestore.rules); do not treat missing-file errors as repository absence",
+  "items": [
+    {
+      "name": "preview uses a separate local save namespace and does not load account services",
+      "file": "automatic-preview.test.cjs",
+      "error": "Command failed: /opt/nvm/versions/node/v22.16.0/bin/node scripts/prepare-automatic-preview.mjs",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "production publisher is manual, secret-gated, and Hosting-only",
+      "file": "production-firebase-config.test.mjs",
+      "error": "\"ENOENT: no such file or directory, open '/mnt/data/wanderer-stage45-3/.github/workflows/publish-firebase-development.yml'\"",
+      "category": "local_checkout_missing_assets_or_config"
+    },
+    {
+      "name": "public entrypoint displays the released Wanderer version",
+      "file": "production-firebase-config.test.mjs",
+      "error": "The input did not match the regular expression /<title>Wanderer v0\\.12<\\/title>/. Input:",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "B new draft is stable after restore; first win gives starter plus one choice exactly once",
+      "file": "v012-affinity-phase-b.test.cjs",
+      "error": "\"Cannot read properties of null (reading 'options')\"",
+      "category": "old_route_or_synthetic_combat_fixture"
+    },
+    {
+      "name": "B legacy overcap draft migrates deterministically without removing picks; modern draft remains byte-identical",
+      "file": "v012-affinity-phase-b.test.cjs",
+      "error": "'Cannot convert undefined or null to object'",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "B restored reward with 0, 1 or 2 legal offers continues without duplicate picks",
+      "file": "v012-affinity-phase-b.test.cjs",
+      "error": "\"Cannot read properties of null (reading 'options')\"",
+      "category": "old_route_or_synthetic_combat_fixture"
+    },
+    {
+      "name": "old reward checkpoint drops foreign-affinity offers without changing saved build",
+      "file": "v012-affinity-phase-b.test.cjs",
+      "error": "\"Cannot read properties of null (reading 'options')\"",
+      "category": "old_route_or_synthetic_combat_fixture"
+    },
+    {
+      "name": "B.1 plan creates early offer opportunities without unlocking affinities or forcing the route",
+      "file": "v012-affinity-phase-b1.test.cjs",
+      "error": "The expression evaluated to a falsy value:",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "B.1 deterministic harness streams replay offers and passive drafts independently of combat RNG",
+      "file": "v012-affinity-phase-b1.test.cjs",
+      "error": "\"Cannot read properties of null (reading 'options')\"",
+      "category": "old_route_or_synthetic_combat_fixture"
+    },
+    {
+      "name": "C reapers_cadence positive trigger, unique gate and serializable cooldown",
+      "file": "v012-affinity-phase-c.test.cjs",
+      "error": "'positive trigger must execute'",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "C percentage burst bounds hold for normal, Elite and boss; explicit cooldowns survive JSON",
+      "file": "v012-affinity-phase-c.test.cjs",
+      "error": "The expression evaluated to a falsy value:",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "every advertised passive is unique, finite, and changes at least one executed combat outcome",
+      "file": "v012-buildcraft.test.cjs",
+      "error": "'Displayed passive did not affect covered combat scenario: reapers_cadence'",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "integration gates original weapons, Legendary and permanent save mechanics unchanged",
+      "file": "v012-buildcraft.test.cjs",
+      "error": "The input did not match the regular expression /state.run=\\{phase1:true,/. Input:",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "passive UX copy preserves runtime values and trigger conditions",
+      "file": "v012-buildcraft.test.cjs",
+      "error": "The input did not match the regular expression /7 Mana at rank 1.*minimum of 3/i. Input:",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "boss idle images match attack poses and exist as transparent PNGs",
+      "file": "v012-combat-visual-clarity.test.cjs",
+      "error": "'missing assets/bosses/animated/abyssal_guardian_idle.png'",
+      "category": "local_checkout_missing_assets_or_config"
+    },
+    {
+      "name": "Boss guardian attack is transparent, 768px and frame-synced at x1/x2/x4",
+      "file": "v012-complete-boss-animations.test.cjs",
+      "error": "\"ENOENT: no such file or directory, open '/mnt/data/wanderer-stage45-3/assets/bosses/animated/abyssal_guardian_attack_x1.gif'\"",
+      "category": "local_checkout_missing_assets_or_config"
+    },
+    {
+      "name": "Boss leech attack is transparent, 768px and frame-synced at x1/x2/x4",
+      "file": "v012-complete-boss-animations.test.cjs",
+      "error": "\"ENOENT: no such file or directory, open '/mnt/data/wanderer-stage45-3/assets/bosses/animated/rift_harbinger_attack_x1.gif'\"",
+      "category": "local_checkout_missing_assets_or_config"
+    },
+    {
+      "name": "Boss berserker attack is transparent, 768px and frame-synced at x1/x2/x4",
+      "file": "v012-complete-boss-animations.test.cjs",
+      "error": "\"ENOENT: no such file or directory, open '/mnt/data/wanderer-stage45-3/assets/bosses/animated/ember_sovereign_attack_x1.gif'\"",
+      "category": "local_checkout_missing_assets_or_config"
+    },
+    {
+      "name": "six bare families grant no combat effects; explicit starters do",
+      "file": "v012-complete-combat.test.cjs",
+      "error": "'decay'",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "Combat explains regular Bleed/Burn ticks and Rot ticks with visible damage and preserves HP accounting",
+      "file": "v012-complete-combat.test.cjs",
+      "error": "The input did not match the regular expression /function floatText\\(n,target='enemy',crit=false,source=''\\)/. Input:",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "the expedition event catalog has eight distinct events, two per category",
+      "file": "v012-complete-events.test.cjs",
+      "error": "Expected values to be strictly equal:",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "route schedule groups match the catalog and never repeat an event category in one Expedition",
+      "file": "v012-complete-events.test.cjs",
+      "error": "Expected values to be strictly equal:",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "no retained event requires a Rune, passive rank, or temporary ability selector",
+      "file": "v012-complete-events.test.cjs",
+      "error": "Expected values to be strictly deep-equal:",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "passive must be chosen before leaving a completed Realm; choosing returns to its result",
+      "file": "v012-complete-flow.test.cjs",
+      "error": "\"Cannot read properties of null (reading 'options')\"",
+      "category": "old_route_or_synthetic_combat_fixture"
+    },
+    {
+      "name": "Local preview validates entry, keeps active and Between Realms economy blocked, then restores it after Extract and refresh",
+      "file": "v012-complete-post-expedition-economy.test.cjs",
+      "error": "'Invalid v0.12 save: crafting progress'",
+      "category": "legacy_save_fixture"
+    },
+    {
+      "name": "Death clears Expedition guard without losing earned currencies and remains valid on reload",
+      "file": "v012-complete-post-expedition-economy.test.cjs",
+      "error": "'$(...).onclick is not a function'",
+      "category": "legacy_mock_dom"
+    },
+    {
+      "name": "Early abandon and pre-entry Back to Camp end legitimately without unlocked purchases inside an Expedition",
+      "file": "v012-complete-post-expedition-economy.test.cjs",
+      "error": "'$(...).onclick is not a function'",
+      "category": "legacy_mock_dom"
+    },
+    {
+      "name": "Full Expedition victory preserves reward ledger and unlocks merchant, salvage, forge and potions after summary",
+      "file": "v012-complete-post-expedition-economy.test.cjs",
+      "error": "full Expedition victory: {\"debug\":{\"phase5Ready\":true,\"saveBlocked\":false,\"message\":\"\",\"validation\":false,\"preview\":true,\"active\":true,\"run\":true,\"draft\":false,\"stage\":\"combat\"},\"plane\":12,\"wave\":1,\"event\":null,\"runStatus\":\"fight\",\"review\":",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "Extract allows a completely full Bag, but refuses items physically outside the Bag",
+      "file": "v012-complete-post-expedition-economy.test.cjs",
+      "error": "first Realm completed",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "Potion of Fortune is Epic and its offer probability is exactly half the previous rate",
+      "file": "v012-complete-potions.test.cjs",
+      "error": "Expected values to be strictly deep-equal:",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "E1/E2/E9/E10/E11/E50/E100/E199/E200 Rune tiers remain real and old Runes keep their values",
+      "file": "v012-complete-runes.test.cjs",
+      "error": "'Invalid v0.12 save: crafting progress'",
+      "category": "legacy_save_fixture"
+    },
+    {
+      "name": "all supported Expedition final bosses offer three Runes, never an Elite",
+      "file": "v012-complete-runes.test.cjs",
+      "error": "'Boss modifiers failed to apply'",
+      "category": "old_route_or_synthetic_combat_fixture"
+    },
+    {
+      "name": "three shared rerolls, no fourth, and exactly one saved boss card without acquiring a fourth affinity",
+      "file": "v012-complete-schedule.test.cjs",
+      "error": "The expression evaluated to a falsy value:",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "Round 4: both portrait damage animations are red-only and character remains untouched",
+      "file": "v012-hotfix-oct25.test.cjs",
+      "error": "The input did not match the regular expression /function phase3FlashEnemyDamage\\(\\)/. Input:",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "Finished Expedition permits crafting even if the old Bag had overflow",
+      "file": "v012-camp-economy-and-visual.test.cjs",
+      "error": "'a real item must be crafted'",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "During a Realm and an active combat encounter the economy remains locked",
+      "file": "v012-camp-economy-and-visual.test.cjs",
+      "error": "Expected values to be strictly equal:",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "Full Stash still protects player loot and resources after a run",
+      "file": "v012-camp-economy-and-visual.test.cjs",
+      "error": "Expected values to be strictly equal:",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "Post-expedition UI keeps Inventory navigable and preserves separate Bag resolution",
+      "file": "v012-camp-economy-and-visual.test.cjs",
+      "error": "The input did not match the regular expression /href=\"online\\/v012-uiux-tuning\\.css\"/. Input:",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "24 animated mobs each have a stable, explicit visual combat type",
+      "file": "v012-normal-mob-roles.test.cjs",
+      "error": "\"ENOENT: no such file or directory, open '/mnt/data/wanderer-stage45-3/assets/mobs/animated/blight_mantis_attack_raised_claw_v3.gif'\"",
+      "category": "local_checkout_missing_assets_or_config"
+    },
+    {
+      "name": "normal casters reuse elemental enemy projectile VFX, not Elite Caster hex",
+      "file": "v012-normal-mob-roles.test.cjs",
+      "error": "The input did not match the regular expression /combatEffect\\(kind,e\\?\\.effect==='regen'\\?'nature':e\\?\\.effect\\)/. Input:",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "native paired balance: E1 / E50 / E200; original roles vs 24 visual classes",
+      "file": "v012-normal-mob-balance.test.cjs",
+      "error": "'Not a reachable Realm'",
+      "category": "old_route_or_synthetic_combat_fixture"
+    },
+    {
+      "name": "native deterministic D.7 audit snapshots across the same seven loadouts",
+      "file": "v012-normal-mob-balance.test.cjs",
+      "error": "'Not a reachable Realm'",
+      "category": "old_route_or_synthetic_combat_fixture"
+    },
+    {
+      "name": "Forge and Merchant prices use Expedition unlocks without touching legacy progress",
+      "file": "v012-economy.test.cjs",
+      "error": "'$(...).onclick is not a function'",
+      "category": "legacy_mock_dom"
+    },
+    {
+      "name": "stale vendor/crafting actions are blocked during routes, draft and combat; entry grants nothing",
+      "file": "v012-economy.test.cjs",
+      "error": "'$(...).onclick is not a function'",
+      "category": "legacy_mock_dom"
+    },
+    {
+      "name": "full Stash keeps guaranteed boss loot in overflow, claims exactly once, and blocks another entry",
+      "file": "v012-economy.test.cjs",
+      "error": "Expected values to be strictly equal:",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "every completed Expedition boss awards real-tier Runes, without legacy unlock side effects",
+      "file": "v012-economy.test.cjs",
+      "error": "Expected values to be strictly equal:",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "endgame stays within existing gear/Rune tier cap and investment remains finite",
+      "file": "v012-economy.test.cjs",
+      "error": "Expected values to be strictly equal:",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "extraction summary exit unlocks Camp purchases, forging and salvage",
+      "file": "v012-economy.test.cjs",
+      "error": "the first Realm was cleared naturally",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "loot rules preserve drop odds, weighted gear selection and RNG injection",
+      "file": "v012-engine-core.test.cjs",
+      "error": "Expected values to be strictly equal:",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "classic Second Wind, set/Legendary cooldowns and funded cast counters survive Plane changes",
+      "file": "v012-lifecycle.test.cjs",
+      "error": "The expression evaluated to a falsy value:",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "Elite debuffs use the same Expedition clock as healing, damage and status expiry",
+      "file": "v012-lifecycle.test.cjs",
+      "error": "The expression evaluated to a falsy value:",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "oathwall activates with and without its affinity; cooldown or per-Realm limit applies",
+      "file": "v012-phase-c1.test.cjs",
+      "error": "'oathwall without aegis'",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "Crimson Fang works in offhand with two real hits but only one proc per cooldown",
+      "file": "v012-phase-c1.test.cjs",
+      "error": "Expected values to be strictly equal:",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "Oathwall replaces the base counter and cannot recurse",
+      "file": "v012-phase-c1.test.cjs",
+      "error": "Expected values to be strictly equal:",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "numerical affinity scaling for all twelve effects",
+      "file": "v012-phase-c1.test.cjs",
+      "error": "Expected values to be strictly deep-equal:",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "Veil empowers only after its own Barrier absorbs and respects its offensive cooldown",
+      "file": "v012-phase-c1.test.cjs",
+      "error": "Expected values to be strictly equal:",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "tests/v012-phase-c3-assets.test.cjs",
+      "file": "v012-phase-c3-assets.test.cjs",
+      "error": "'test failed'",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "C.3 six named treasures have exact values and valid WebP assets",
+      "file": "v012-phase-c3-treasures.test.cjs",
+      "error": "\"ENOENT: no such file or directory, open 'assets/loot/treasure_gem_pouch.webp'\"",
+      "category": "local_checkout_missing_assets_or_config"
+    },
+    {
+      "name": "C.3 old names and unknown valuables gain images without changing IDs or sale values",
+      "file": "v012-phase-c3-treasures.test.cjs",
+      "error": "'Invalid v0.12 save: crafting progress'",
+      "category": "legacy_save_fixture"
+    },
+    {
+      "name": "C.3 expedition reward keeps the existing single drop check and renders its treasure",
+      "file": "v012-phase-c3-treasures.test.cjs",
+      "error": "Expected values to be strictly equal:",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "D: Forge and boss Rune rewards accept Endless tiers",
+      "file": "v012-phase-d-endless.test.cjs",
+      "error": "'$(...).onclick is not a function'",
+      "category": "legacy_mock_dom"
+    },
+    {
+      "name": "D: gear and Runes scale once; costs continue; attack speed is not multiplied",
+      "file": "v012-phase-d-endless.test.cjs",
+      "error": "Expected values to be strictly equal:",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "D.7: Dual Dagger E200/Endless combat matches the updated audit",
+      "file": "v012-phase-d-endless.test.cjs",
+      "error": "Staff E200",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "D: isolated schema 13 accepts high tiers and does not read schema 12 keys",
+      "file": "v012-phase-d-endless.test.cjs",
+      "error": "'Invalid v0.12 save: crafting progress'",
+      "category": "legacy_save_fixture"
+    },
+    {
+      "name": "D: personal leaderboard milestones continue beyond E200",
+      "file": "v012-phase-d-endless.test.cjs",
+      "error": "'state is not defined'",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "public equipment never writes private save collection, and production rules already allow owner-only loadouts",
+      "file": "v012-public-equipment.test.mjs",
+      "error": "\"ENOENT: no such file or directory, open '/mnt/data/wanderer-stage45-3/firestore.rules'\"",
+      "category": "local_checkout_missing_assets_or_config"
+    },
+    {
+      "name": "runtime parity automatic-rpg-variable-mob-counts: E1 Sword blood ",
+      "file": "v012-runtime-integration.test.cjs",
+      "error": "same lifecycle transitions",
+      "category": "historical_parity_reference"
+    },
+    {
+      "name": "runtime parity automatic-rpg-variable-mob-counts: E1 Daggers decay ",
+      "file": "v012-runtime-integration.test.cjs",
+      "error": "same lifecycle transitions",
+      "category": "historical_parity_reference"
+    },
+    {
+      "name": "runtime parity automatic-rpg-variable-mob-counts: E1 Staff magic lightning",
+      "file": "v012-runtime-integration.test.cjs",
+      "error": "same lifecycle transitions",
+      "category": "historical_parity_reference"
+    },
+    {
+      "name": "runtime parity automatic-rpg-variable-mob-counts: E1 Wand magic frost",
+      "file": "v012-runtime-integration.test.cjs",
+      "error": "same lifecycle transitions",
+      "category": "historical_parity_reference"
+    },
+    {
+      "name": "runtime parity automatic-rpg-variable-mob-counts: E1 Bow fury ",
+      "file": "v012-runtime-integration.test.cjs",
+      "error": "same lifecycle transitions",
+      "category": "historical_parity_reference"
+    },
+    {
+      "name": "runtime parity automatic-rpg-variable-mob-counts: E1 Mace aegis ",
+      "file": "v012-runtime-integration.test.cjs",
+      "error": "same lifecycle transitions",
+      "category": "historical_parity_reference"
+    },
+    {
+      "name": "runtime parity automatic-rpg-variable-mob-counts: E1 Two-Handed vitality ",
+      "file": "v012-runtime-integration.test.cjs",
+      "error": "same lifecycle transitions",
+      "category": "historical_parity_reference"
+    },
+    {
+      "name": "runtime parity automatic-rpg-variable-mob-counts: E50 Sword blood ",
+      "file": "v012-runtime-integration.test.cjs",
+      "error": "'Magic element already chosen or ineligible'",
+      "category": "historical_parity_reference"
+    },
+    {
+      "name": "runtime parity automatic-rpg-variable-mob-counts: E50 Daggers decay ",
+      "file": "v012-runtime-integration.test.cjs",
+      "error": "same lifecycle transitions",
+      "category": "historical_parity_reference"
+    },
+    {
+      "name": "runtime parity automatic-rpg-variable-mob-counts: E50 Staff magic lightning",
+      "file": "v012-runtime-integration.test.cjs",
+      "error": "same lifecycle transitions",
+      "category": "historical_parity_reference"
+    },
+    {
+      "name": "runtime parity automatic-rpg-variable-mob-counts: E50 Wand magic frost",
+      "file": "v012-runtime-integration.test.cjs",
+      "error": "same lifecycle transitions",
+      "category": "historical_parity_reference"
+    },
+    {
+      "name": "runtime parity automatic-rpg-variable-mob-counts: E50 Bow fury ",
+      "file": "v012-runtime-integration.test.cjs",
+      "error": "same lifecycle transitions",
+      "category": "historical_parity_reference"
+    },
+    {
+      "name": "runtime parity automatic-rpg-variable-mob-counts: E50 Mace aegis ",
+      "file": "v012-runtime-integration.test.cjs",
+      "error": "same lifecycle transitions",
+      "category": "historical_parity_reference"
+    },
+    {
+      "name": "runtime parity automatic-rpg-variable-mob-counts: E50 Two-Handed vitality ",
+      "file": "v012-runtime-integration.test.cjs",
+      "error": "same lifecycle transitions",
+      "category": "historical_parity_reference"
+    },
+    {
+      "name": "runtime parity automatic-rpg-variable-mob-counts: E200 Sword blood ",
+      "file": "v012-runtime-integration.test.cjs",
+      "error": "same lifecycle transitions",
+      "category": "historical_parity_reference"
+    },
+    {
+      "name": "runtime parity automatic-rpg-variable-mob-counts: E200 Daggers decay ",
+      "file": "v012-runtime-integration.test.cjs",
+      "error": "same lifecycle transitions",
+      "category": "historical_parity_reference"
+    },
+    {
+      "name": "runtime parity automatic-rpg-variable-mob-counts: E200 Staff magic lightning",
+      "file": "v012-runtime-integration.test.cjs",
+      "error": "same lifecycle transitions",
+      "category": "historical_parity_reference"
+    },
+    {
+      "name": "runtime parity automatic-rpg-variable-mob-counts: E200 Wand magic frost",
+      "file": "v012-runtime-integration.test.cjs",
+      "error": "same lifecycle transitions",
+      "category": "historical_parity_reference"
+    },
+    {
+      "name": "runtime parity automatic-rpg-variable-mob-counts: E200 Bow fury ",
+      "file": "v012-runtime-integration.test.cjs",
+      "error": "same lifecycle transitions",
+      "category": "historical_parity_reference"
+    },
+    {
+      "name": "runtime parity automatic-rpg-variable-mob-counts: E200 Mace aegis ",
+      "file": "v012-runtime-integration.test.cjs",
+      "error": "same lifecycle transitions",
+      "category": "historical_parity_reference"
+    },
+    {
+      "name": "runtime parity automatic-rpg-variable-mob-counts: E200 Two-Handed vitality ",
+      "file": "v012-runtime-integration.test.cjs",
+      "error": "'Magic element already chosen or ineligible'",
+      "category": "historical_parity_reference"
+    },
+    {
+      "name": "runtime functions have one implementation outside the UI entrypoint",
+      "file": "v012-runtime-integration.test.cjs",
+      "error": "\"Cannot read properties of undefined (reading 'createGraph')\"",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "enemy attack clock remains separate and unchanged in this phase",
+      "file": "v012-runtime-integration.test.cjs",
+      "error": "The input did not match the regular expression /r\\.tEnemy\\+=dt/. Input:",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "all 38 Drive status icons have their own real PNGs",
+      "file": "v012-status-icons.test.cjs",
+      "error": "'missing /mnt/data/wanderer-stage45-3/assets/status/icons/barrier.png'",
+      "category": "local_checkout_missing_assets_or_config"
+    },
+    {
+      "name": "armor categories reuse the primary stat budget, rarity and tier; weapons remain untyped",
+      "file": "v0120-equipment.test.cjs",
+      "error": "Expected values to be strictly equal:",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "legacy gear retains its data but grants neither affinities nor sets",
+      "file": "v0120-equipment.test.cjs",
+      "error": "Expected values to be strictly equal:",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "Belt crafts, equips, compares, unequips, drops and sells through existing systems",
+      "file": "v0120-equipment.test.cjs",
+      "error": "'$(...).onclick is not a function'",
+      "category": "legacy_mock_dom"
+    },
+    {
+      "name": "Phase A.2 weapon item coefficients and Sword/Shield reduction are exact",
+      "file": "v0120-equipment.test.cjs",
+      "error": "Expected values to be strictly equal:",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "Phase A.2 changes per-hit multipliers and gives Wand + Orb a capped 6s cast Barrier",
+      "file": "v0120-equipment.test.cjs",
+      "error": "'funded Wand + Orb cast grants 2.5% max HP Barrier'",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "off-hand daggers make a separate half-strength strike without a recursive Double Strike",
+      "file": "v0120-equipment.test.cjs",
+      "error": "one main-hand and one off-hand impact",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "between-Realm swaps return displaced gear to the Bag; death destroys only Bag items",
+      "file": "v0120-equipment.test.cjs",
+      "error": "\"Cannot read properties of null (reading 'kind')\"",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "legacy Leather derives rating without changing saved item fields; old gear has zero Evasion",
+      "file": "v0120-evasion.test.cjs",
+      "error": "Expected values to be strictly equal:",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "native physical dodges cause zero damage, no Barrier loss or defensive/on-hit effects, and log DODGE",
+      "file": "v0120-evasion.test.cjs",
+      "error": "The expression evaluated to a falsy value:",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "failed dodge retains normal hits; spells and DoTs never roll dodge, regardless of rating",
+      "file": "v0120-evasion.test.cjs",
+      "error": "The expression evaluated to a falsy value:",
+      "category": "requires_individual_review"
+    },
+    {
+      "name": "versioned save sessions round-trip, old checkpoints remain compatible, corrupt provenance and reroll rollback fail",
+      "file": "v0120-persistence.test.cjs",
+      "error": "'Invalid v0.12 save: crafting progress'",
+      "category": "legacy_save_fixture"
+    },
+    {
+      "name": "Realm clear remains available through its passive choice and cannot pay twice",
+      "file": "v0120-results.test.cjs",
+      "error": "\"Cannot read properties of null (reading 'outcome')\"",
+      "category": "old_route_or_synthetic_combat_fixture"
+    },
+    {
+      "name": "Death summary keeps newly equipped loot and home gear, and reports only discarded Bag items as discarded",
+      "file": "v0120-results.test.cjs",
+      "error": "'Invalid v0.12 save: crafting progress'",
+      "category": "legacy_save_fixture"
+    },
+    {
+      "name": "Extraction summary is a snapshot and grants no boss Rune or progression credit",
+      "file": "v0120-results.test.cjs",
+      "error": "\"Cannot read properties of null (reading 'options')\"",
+      "category": "old_route_or_synthetic_combat_fixture"
+    },
+    {
+      "name": "Expedition boss result preserves the actual Magic build and one-time Rune claim",
+      "file": "v0120-results.test.cjs",
+      "error": "'Boss modifiers failed to apply'",
+      "category": "old_route_or_synthetic_combat_fixture"
+    },
+    {
+      "name": "Malformed persisted results are rejected without mutating the original save",
+      "file": "v0120-results.test.cjs",
+      "error": "'Invalid v0.12 save: crafting progress'",
+      "category": "legacy_save_fixture"
+    }
+  ]
+}
