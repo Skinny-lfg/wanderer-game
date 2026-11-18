@@ -661,6 +661,7 @@ function forgeEquippedReference(slot){
 }
 let v013RecipeId=null,v013RecipeRarity='Uncommon',v013RecipeSlot='weapon',v013CompareTarget=null,v013CraftFocus='none';
 function renderV013Forge(){
+ if(view==='city-center'&&!phase3ContentTarget){phase3RenderCityCenter();return;}
  wallet();const c=WandererV013Crafting,p=state.crafting||c.create(),level=phase1Controller.state.unlocked;
  const known=c.RECIPES.filter(r=>c.unlocked(p,r.id)),unknown=c.RECIPES.filter(r=>!c.unlocked(p,r.id));
  const rarities=['Uncommon','Rare','Epic'].filter(x=>known.some(r=>r.rarity===x));
