@@ -15,6 +15,7 @@ window.__stage455={
    runStatus:r?.status||null,runModifiers:r?.bossModifierIds||[],runBoss:r?.enemy?.boss||false,runEscorts:r?.totalMobCount?Math.max(0,r.totalMobCount-1):null,
    hp:phase3Vitals()?.hp, maxHp:phase3Vitals()?.maxhp, mp:phase3Vitals()?.mp, maxMp:phase3Vitals()?.maxmp,
    savedTalents:state.automaticTalents?.nodes||[],
+   plane:g.planeIndex,validation:{enabled:PHASE5_VALIDATION,ready:phase5Ready,blocked:saveBlocked,message:phase5Message||null,lastOutcome:phase5Snapshot?.expedition?.lastOutcome||null},
    result:phase5Results.summary?.outcome||null};
  },
  pathToRoom(target){
@@ -59,7 +60,7 @@ async function main(){
   page.setDefaultTimeout(12000);page.on('pageerror',err=>errors.push(String(err)));
   page.on('console',msg=>{if(msg.type()==='error'&&!/Failed to load resource/.test(msg.text()))findings.push('Browser console error: '+msg.text().slice(0,300));});
 
-  async function chooseRealm(contextPage,index){
+  async function chooseRealm(contextPage,index,acceptContract=false){
     await contextPage.goto(base+'/',{waitUntil:'domcontentloaded'});
     await contextPage.locator('.phase3Camp').waitFor({state:'visible'});
     await contextPage.locator('[data-phase1-expedition]:visible').first().click();
@@ -67,7 +68,7 @@ async function main(){
     assert.equal(cards.length,3);
     await contextPage.locator('[data-realm-card]').nth(index).click();
     assert.equal(await contextPage.locator('[data-stage7-contract]').count(),2);
-    await contextPage.locator('#stage7SkipContract').click();
+    if(acceptContract)await contextPage.locator('[data-stage7-contract]').first().click();else await contextPage.locator('#stage7SkipContract').click();
     assert.equal(await contextPage.locator('[data-stage6-boon]').count(),0,'No Boon is offered at Dungeon entry');
     assert(await contextPage.locator('[data-dungeon-room="1"]').count()>0,'Contract must lead straight to the map');
     return cards[index];
@@ -166,6 +167,30 @@ async function main(){
   const finishedReload=await page.evaluate(()=>__stage455.snapshot());
   assert.equal(finishedReload.unlocked,victorious.unlocked,'Extraction must persist');
   assert.deepEqual(errors,[],'Uncaught browser errors');
+
+  // Extraction safety: clear one real combat, keep an optional Contract, then
+  // extract from the between-Realm UI and reload. Never bypass the save validator.
+  const extractContext=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1}),extractPage=await extractContext.newPage();
+  extractPage.setDefaultTimeout(12000);
+  await chooseRealm(extractPage,0,true);
+  await navigate(extractPage,1);
+  const preExtract=await extractPage.evaluate(()=>__stage455.snapshot());
+  assert.equal(preExtract.stage,'choice');
+  assert(preExtract.plane>1,'Must reach a valid extraction checkpoint');
+  const extractButton=extractPage.locator('#phase4Extract');
+  assert(await extractButton.isVisible(),'Extraction must be available between Realms');
+  await extractButton.click();
+  const confirm=extractPage.locator('dialog[open]').getByRole('button',{name:'Extract & Leave'});
+  await confirm.click();
+  const extracted=await extractPage.evaluate(()=>__stage455.snapshot());
+  assert.equal(extracted.validation.blocked,false,'Extraction must not show Reload validation: '+JSON.stringify(extracted.validation));
+  assert.equal(extracted.result,'extracted');
+  assert.equal(await extractPage.locator('#phase5Reload').count(),0,'Save validation must remain unblocked');
+  await extractPage.reload();
+  const restoredExtraction=await extractPage.evaluate(()=>__stage455.snapshot());
+  assert.equal(restoredExtraction.result,'extracted','Extraction result must survive reload');
+  assert.equal(restoredExtraction.validation.blocked,false);
+  await extractContext.close();
 
   // Oracle is optional per naturally generated card. Retry isolated local starts
   // rather than tampering with the generator or forging an event into the map.
