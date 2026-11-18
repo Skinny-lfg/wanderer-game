@@ -10,7 +10,7 @@ test('CLI accepts a bounded deterministic v0.13 scenario matrix and rejects unkn
  for(const args of [['--mode=garbage'],['--levels=0'],['--seeds=NaN'],['--points=200'],['--builds=unknown'],['--out='],['--nope=1']])assert.throws(()=>S.parseArgs(args));
 });
 test('build profiles buy valid modern permanent Talent Tree nodes without fake ability IDs',()=>{
- for(const b of S.BUILDS){const p=S.talentPlan(b,24);assert.equal(p.treeVersion,15);assert(T.valid(p),b.id);assert(p.nodes.length>=20);for(const id of b.skills)assert(p.nodes.includes(id),b.id+' '+id);}
+ for(const b of S.BUILDS){const p=S.talentPlan(b,24);assert.equal(p.treeVersion,15);assert(T.valid(p),b.id);assert(p.nodes.length>=20,b.id+' allocated only '+p.nodes.length+' nodes');for(const id of b.skills)assert(p.nodes.includes(id),b.id+' '+id);}
 });
 test('native equipment tiers plateau at Exalted while E1000 enemies retain their actual level',()=>{
  assert.equal(S.gearLevel(1000,'current'),1000);assert.equal(S.gearLevel(1000,'previous'),35);
