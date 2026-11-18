@@ -13,6 +13,7 @@ window.__stage455={
    cards:d?.cards?.map(c=>({id:c.id,level:c.risk,name:c.name,objective:c.objective,reliquary:c.reliquaryRoom,oracle:c.nodes.findIndex(n=>n.event==='oracle_of_paths'),boss:c.nodes.length-1,edges:c.edges,nodes:c.nodes.map(n=>({kind:n.kind,event:n.event||null,traitId:n.traitId||null}))}))||[],
    preparation:d?.foundationState?.bossPreparation||null,knownMods:d?.foundationState?.revealedBossModifiers||[],disabledId:d?.disabledBossModifierId||null,scouted:d?.scouted||[],decisions:d?.foundationState?.decisions||[],cleared:d?.cleared||[],unlocked:g.unlocked,modifiers:d?.foundationState?.bossModifierIds||[],
    runStatus:r?.status||null,runModifiers:r?.bossModifierIds||[],runBoss:r?.enemy?.boss||false,runEscorts:r?.totalMobCount?Math.max(0,r.totalMobCount-1):null,
+   runRoster:(r?.enemies?.length?r.enemies:r?.enemy?[r.enemy]:[]).map(e=>({name:e.name,role:e.role,boss:e.boss,miniboss:e.miniboss})),
    hp:phase3Vitals()?.hp, maxHp:phase3Vitals()?.maxhp, mp:phase3Vitals()?.mp, maxMp:phase3Vitals()?.maxmp,
    savedTalents:state.automaticTalents?.nodes||[],
    plane:g.planeIndex,validation:{enabled:PHASE5_VALIDATION,ready:phase5Ready,blocked:saveBlocked,message:phase5Message||null,lastOutcome:phase5Snapshot?.expedition?.lastOutcome||null},
@@ -113,6 +114,10 @@ async function main(){
           assert.match(await dialog.count()?'':await contextPage.locator('body').innerText(),/Elite|Combat/i);
         }
         assert.equal(combat.runStatus,'fight','Expected normal combat at room '+node);
+         const badges=contextPage.locator('#scene .enemyRoleBadge');
+         assert.equal(await badges.count(),combat.runRoster.length,'one class icon per active combat enemy');
+         assert(await badges.first().isVisible(),'class icon remains visible beside enemy health');
+         assert(combat.runRoster.every(e=>e.boss||e.miniboss||['minion','tank','skirmisher','caster'].includes(e.role)),'unknown normal class');
         if(node===target&&options.boss){
           assert.equal(combat.runBoss,true,'Target must actually spawn a boss');
           assert.deepEqual(combat.runModifiers,options.expectedMods,'Boss properties must reflect preparations');

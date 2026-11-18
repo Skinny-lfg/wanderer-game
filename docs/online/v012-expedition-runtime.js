@@ -191,9 +191,17 @@ function phase1StartWave(resetScroll=false){
  const conditionMitigation=(ports.phase6Run?.effects?.purifying?.remaining||0)>0 ? .5 : 0;
  r.conditionMitigation=conditionMitigation;
  const totalCount=last&&(g.selected.boss||g.selected.elite)?1:(conditions&&conditionCard?conditions.countFor(g.selected,conditionCard,g.dungeon,conditionMitigation):(g.selected.mobCount||3)),activeCount=Math.min(4,totalCount);
- const spawn=()=>ports.enemyFor(r.tier,r.enc,{theme,boss:last&&g.selected.boss,elite:last&&g.selected.elite&&!g.selected.boss,variant:g.version===2?ports.BOSS_ARCHETYPES.find(b=>b.style===WandererV012Expedition.BOSSES.find(v=>v.id===g.bossId).style):null});
+ const rosterSystem=globalThis.WandererV013EnemyRoster;
+ const hasRoster=!!(rosterSystem&&!g.selected.boss&&!g.selected.elite&&theme?.mobs?.length);
+ const roster=hasRoster?rosterSystem.plan({
+  seed:g.dungeon?.foundationManifest?.seed??0,realm:theme.id,family:g.selected.family||g.bossFamily||'blood',
+  node:g.selected.node??g.planeIndex,count:totalCount,catalog:theme.mobs
+ }):null;
+ const spawn=index=>ports.enemyFor(r.tier,r.enc,{theme,mob:roster?.[index]||null,boss:last&&g.selected.boss,elite:last&&g.selected.elite&&!g.selected.boss,variant:g.version===2?ports.BOSS_ARCHETYPES.find(b=>b.style===WandererV012Expedition.BOSSES.find(v=>v.id===g.bossId).style):null});
  const scale=totalCount>=6?{hp:(1.65+.045*(totalCount-6))/totalCount,atk:totalCount>=18?.12:.16}:null;
- const group=WandererV012CombatCore.createEnemyGroup(spawn,totalCount,{activeSlots:activeCount,scale});
+ const group=WandererV012CombatCore.createEnemyGroup(spawn,totalCount,{activeSlots:activeCount,scale,
+  ...(roster?{scaleFor:(enemy,count,base)=>rosterSystem.scaleFor(enemy,count,base)}:{})
+ });
  // Give ordinary mobs time to show their attacks; keep their pressure lower.
  for(const enemy of group){
   const endurance=enemy.boss||enemy.miniboss?1.8:3;
@@ -219,7 +227,8 @@ function phase1StartWave(resetScroll=false){
   const escorted=g.selected.boss&&modifiers?modifiers.extraEscorts(bossIds,baseEscorts):baseEscorts;
   const escorts=g.selected.boss&&preparation?preparation.escortCount(g,escorted):escorted;
   for(let i=0;i<escorts;i++){
-   const guard=ports.enemyFor(r.tier,r.enc,{theme,boss:false,elite:false});
+   const escortMob=theme.mobs?.find(m=>m.role==='skirmisher')||theme.mobs?.find(m=>m.role!=='minion');
+   const guard=ports.enemyFor(r.tier,r.enc,{theme,mob:escortMob||null,boss:false,elite:false});
    guard.hp=guard.maxhp=Math.round(guard.maxhp*1.2);guard.atk=Math.round(guard.atk*.35);
    guard.attackEvery*=1.3;guard.groupSlot=i+1;guard.groupClock=-(i+1)*.6;group.push(guard);
   }

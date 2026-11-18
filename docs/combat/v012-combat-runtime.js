@@ -20,16 +20,16 @@ function tryDodge(run,type){
 function enemyFor(level,enc,override=null){
  const theme=override?.theme||ports.currentTheme(),boss=override?!!override.boss:enc===5&&level%10===0,miniboss=override?!boss&&!!override.elite:enc===4,v=ports.estimateEnemy(level,Math.min(5,enc)),mult=boss?2:1;
  const variant=boss?(override?.variant||ports.bossForTier(level)):null;
- const mob=boss?{name:variant.name,image:variant.image}:ports.sample(theme.mobs);
- const role=boss?'boss':miniboss?'miniboss':(['tank','skirmisher','caster'].includes(mob.role)?mob.role:'skirmisher');
+ const mob=boss?{name:variant.name,image:variant.image}:override?.mob||ports.sample(theme.mobs);
+ const role=boss?'boss':miniboss?'miniboss':(['minion','tank','skirmisher','caster'].includes(mob.role)?mob.role:'skirmisher');
  const elite=miniboss?ports.eliteArchetype(ports.state.run):null;
- const hp=Math.max(1,Math.round(v.hp*mult*(elite?elite.hp:role==='tank'?1.08:role==='skirmisher'?.92:role==='caster'?.95:1)));
- const atk=Math.max(1,Math.round(v.atk*mult*(elite?elite.atk:role==='skirmisher'?1.08:1)));
- const defense=Math.max(0,Math.round(v.def*mult*(elite?elite.def:1)));
+ const hp=Math.max(1,Math.round(v.hp*mult*(elite?elite.hp:role==='minion'?.68:role==='tank'?1.32:role==='skirmisher'?.96:role==='caster'?.90:1)));
+ const atk=Math.max(1,Math.round(v.atk*mult*(elite?elite.atk:role==='minion'?.70:role==='skirmisher'?1.10:role==='caster'?1.08:role==='tank'?.90:1)));
+ const defense=Math.max(0,Math.round(v.def*mult*(elite?elite.def:role==='tank'?1.35:role==='minion'?.55:1)));
  const barrier=variant?.style==='guardian'?Math.max(3,WandererV012CombatCore.enemyStat(level,Math.round(WandererV012CombatCore.referenceLevel(level)*.9))):elite?.id==='tank'?Math.max(1,WandererV012CombatCore.enemyStat(level,Math.round(1+WandererV012CombatCore.referenceLevel(level)*.3))):0;
  return {name:miniboss?elite.icon+' '+elite.name:mob.name,image:elite?ports.eliteArt(elite.id,mob.image):mob.image,role,bossStyle:variant?.style||null,attackType:elite?.id==='caster'||variant?.style==='leech'||role==='caster'?'spell':'physical',
  miniboss,eliteType:elite?.id||null,archetypeName:elite?.name||null,hp,maxhp:hp,atk,def:defense,baseDef:defense,barrier,
- attackEvery:elite?elite.interval:role==='skirmisher'?1.42:role==='tank'||role==='caster'?1.72:1.62,boss,effect:theme.effect,burn:0,bleed:0,
+ attackEvery:elite?elite.interval:role==='skirmisher'?1.42:role==='minion'?1.90:role==='tank'||role==='caster'?1.72:1.62,boss,effect:theme.effect,burn:0,bleed:0,
  burnStacks:0,bleedStacks:0,dots:{bleed:[],burn:[]},slowTime:0,enraged:false};
 }
 
