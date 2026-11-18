@@ -351,7 +351,10 @@ function phase1Death(){
 
 function phase1Abandon(){
  if(!ports.PHASE1_PREVIEW||(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked))||!['choice','combat'].includes(ports.phase1Controller?.state.stage))return false;
- clearInterval(ports.clock);ports.phase4CommitRealm();ports.phase4LoseLoot();ports.phase1Controller.abandon();
+ clearInterval(ports.clock);
+ const contract=globalThis.WandererV013ExpeditionContracts?.inspect(ports.phase1Controller.state,'abandoned');
+ if(contract&&contract.status!=='offered'){ports.phase5MakeSummary('abandoned');ports.phase5Results.review='summary';}
+ ports.phase4CommitRealm();ports.phase4LoseLoot();ports.phase1Controller.abandon();
  if(ports.phase1Build)WandererV012Buildcraft.clear(ports.phase1Build);
  ports.phase1Build=null;ports.phase1Draft=null;ports.phase1Vitals=null;ports.phase1Continuity=null;ports.state.run=null;ports.view='phase1';
  if(ports.PHASE1_PREVIEW)ports.phase5Snapshot.expedition.lastOutcome='abandoned';
@@ -405,7 +408,7 @@ function phase5MakeSummary(outcome){
  ]:[];
  const expeditionTreasures=(ports.state.valuables||[]).filter(i=>bagIds.has(i.id)).map(i=>({...i}));
  const start=ports.phase5Results.craftingStart||WandererV013Crafting.create(),craft=ports.state.crafting||WandererV013Crafting.create();
- ports.phase5Results.summary={family:g.bossFamily,realmMap:!!g.dungeon,craftingEarned:{essence:Math.max(0,craft.essence-start.essence),cores:Object.fromEntries(WandererV013Crafting.FAMILIES.map(f=>[f,Math.max(0,craft.cores[f]-start.cores[f])]))},passiveTelemetry:ports.phase4Clone(ports.phase1Build?.runtime.passiveTelemetry||{}),metrics:ports.phase6Run?.metrics||null,level:g.expedition,outcome,realms:g.history.length,
+ ports.phase5Results.summary={family:g.bossFamily,realmMap:!!g.dungeon,contract:globalThis.WandererV013ExpeditionContracts?.inspect(g,outcome)||null,craftingEarned:{essence:Math.max(0,craft.essence-start.essence),cores:Object.fromEntries(WandererV013Crafting.FAMILIES.map(f=>[f,Math.max(0,craft.cores[f]-start.cores[f])]))},passiveTelemetry:ports.phase4Clone(ports.phase1Build?.runtime.passiveTelemetry||{}),metrics:ports.phase6Run?.metrics||null,level:g.expedition,outcome,realms:g.history.length,
   families:[...(ports.phase1Build?.families||g.families)],picks:[...(ports.phase1Build?.picks||[])],element:ports.phase1Build?.element||null,
   seconds:ports.phase1Clock+(outcome==='defeat'?(ports.state.run?.combatSeconds||0):0),gold:ports.phase5Results.gold,fragments:ports.phase5Results.fragments,
   kept:ports.phase5Results.earned.filter(i=>owned.has(i.id)&&(!lost||!bagIds.has(i.id))),lost:lostGear,

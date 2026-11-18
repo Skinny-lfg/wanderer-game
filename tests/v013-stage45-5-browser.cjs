@@ -66,6 +66,8 @@ async function main(){
     const cards=await contextPage.evaluate(()=>__stage455.snapshot().cards);
     assert.equal(cards.length,3);
     await contextPage.locator('[data-realm-card]').nth(index).click();
+    assert.equal(await contextPage.locator('[data-stage7-contract]').count(),2);
+    await contextPage.locator('#stage7SkipContract').click();
     assert.equal(await contextPage.locator('[data-stage6-boon]').count(),3);
     await contextPage.locator('[data-stage6-boon]:not([data-stage6-boon="wayfarers_bargain"])').first().click();
     return cards[index];
@@ -179,6 +181,8 @@ async function main(){
   }
   assert(oracleChoice>=0,'No Oracle among 16 independently generated sets of real cards; investigate generation, not fabricated rooms');
   await oraclePage.locator('[data-realm-card]').nth(oracleChoice).click();
+  assert.equal(await oraclePage.locator('[data-stage7-contract]').count(),2);
+  await oraclePage.locator('#stage7SkipContract').click();
   assert.equal(await oraclePage.locator('[data-stage6-boon]').count(),3);
   await oraclePage.locator('[data-stage6-boon]:not([data-stage6-boon="wayfarers_bargain"])').first().click();
   await navigate(oraclePage,naturalCards[oracleChoice].oracle,{oracle:true});

@@ -115,7 +115,7 @@ function validateExpeditionState(state,manifest){
  return true;
 }
 // The Stage 0 ledger records intentions for later adapters; it applies no combat or economy effects.
-const DECISION_TYPES=Object.freeze(['reveal_room','discover_secret','reveal_boss','select_contract','choose_boon','prepare_boss']);
+const DECISION_TYPES=Object.freeze(['reveal_room','discover_secret','reveal_boss','select_contract','skip_contract','complete_contract','choose_boon','prepare_boss']);
 function lookup(group,id){return Object.hasOwn(CATALOG,group)?byId[group].get(id)||null:null;}
 function applyDecision(state,decision,manifest){
  if(!validateExpeditionState(state,manifest)||!decision||typeof decision!=='object'||!DECISION_TYPES.includes(decision.type))throw Error('Invalid foundation decision');
@@ -131,8 +131,14 @@ function applyDecision(state,decision,manifest){
   if(!c.bossModifierIds.includes(decision.id)||decision.id===c.bossModifierIds[0]||next.revealedBossModifiers?.includes(decision.id))throw Error('Invalid or repeated boss reveal');
   next.revealedBossModifiers??=[];next.revealedBossModifiers.push(decision.id);recorded={type:decision.type,id:decision.id};
  }else if(decision.type==='select_contract'){
-  if(next.contractId!==null||!byId.contracts.has(decision.id))throw Error('Invalid or repeated contract');
+  if(next.contractId!==null||next.decisions.some(x=>x.type==='skip_contract')||!byId.contracts.has(decision.id))throw Error('Invalid or repeated contract');
   next.contractId=decision.id;recorded={type:decision.type,id:decision.id};
+ }else if(decision.type==='skip_contract'){
+  if(next.contractId!==null||next.decisions.some(x=>x.type==='skip_contract'))throw Error('Invalid or repeated contract skip');
+  recorded={type:decision.type};
+ }else if(decision.type==='complete_contract'){
+  if(next.contractId===null||decision.id!==next.contractId||next.completedObjectives.includes(decision.id)||next.decisions.some(x=>x.type==='skip_contract'))throw Error('Invalid contract completion');
+  next.completedObjectives.push(decision.id);recorded={type:decision.type,id:decision.id};
  }else if(decision.type==='choose_boon'){
   const boon=lookup('boons',decision.id);
   if(!boon||next.boonIds.length>=2||next.boonIds.includes(decision.id))throw Error('Invalid or duplicate boon');

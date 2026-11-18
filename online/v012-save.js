@@ -153,6 +153,15 @@ function presentationCheck(p){
  if(p.summary!==null){const r=p.summary;requireValue(plain(r)&&integer(r.level,1,Number.MAX_SAFE_INTEGER)&&integer(r.realms,0,24)&&['victory','defeat','extracted','abandoned'].includes(r.outcome)&&seconds(r.seconds)&&integer(r.gold,0,Number.MAX_SAFE_INTEGER)&&integer(r.fragments,0,Number.MAX_SAFE_INTEGER)&&Array.isArray(r.families)&&r.families.length<=3&&r.families.every(f=>['blood','decay','vitality','aegis','fury','magic'].includes(f))&&Array.isArray(r.picks)&&r.picks.length<=20&&r.picks.every(id=>typeof id==='string')&&['kept','lost','discarded'].every(k=>Array.isArray(r[k])&&r[k].length<=45&&r[k].every(item))&&(r.runeTier===null||integer(r.runeTier,1,Number.MAX_SAFE_INTEGER)),'Expedition summary');
   requireValue(r.outcome!=='victory'||(r.realmMap?integer(r.realms,2,24):r.realms===15),'victory result');requireValue((r.runeTier===null||r.outcome==='victory')&&(r.runeName===undefined||r.runeTier!==null&&typeof r.runeName==='string'),'Rune result');
   for(const key of ['treasuresKept','treasuresLost'])if(r[key]!==undefined)requireValue(Array.isArray(r[key])&&r[key].length<=120&&r[key].every(treasure),'Expedition treasures');
+  if(r.contract!==undefined&&r.contract!==null){
+   const c=r.contract,validIds=['bounty_writ','pathfinder','purification','oath_of_defiance'],statuses=['offered','active','ready','completed','failed','ignored'];
+   requireValue(plain(c)&&statuses.includes(c.status)&&
+    (c.id===null||validIds.includes(c.id))&&
+    typeof c.name==='string'&&c.name.length<=100&&
+    integer(c.progress,0,2)&&integer(c.target,0,2)&&c.progress<=c.target&&
+    integer(c.essence,0,30)&&integer(c.fragments,0,30)&&
+    (c.status!=='completed'||c.id!==null),'Expedition Contract summary');
+  }
  }
  requireValue(p.review!=='realm'||p.realm!==null,'missing Realm result');requireValue(p.review!=='summary'||p.summary!==null,'missing Expedition summary');
 }

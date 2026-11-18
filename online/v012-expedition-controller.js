@@ -13,7 +13,7 @@ const REALMS=Object.freeze({forge:['blood','Crimson Dominion'],bloodscar:['blood
 const BOSSES=Object.freeze([{id:'guardian',name:"Abyssal Guardian’s Citadel",style:'guardian'},{id:'rift',name:"Harbinger’s Rift",style:'leech'},{id:'ember',name:"Ember Sovereign’s Throne",style:'berserker'}]);
 const EVENT_GROUPS=[['traveling_merchant','relic_collector'],['cursed_altar','whispering_idol'],['forgotten_arsenal','bounty_writ'],['restless_spring','oracle_of_paths']];
 const ROOMS=Object.freeze(['combat','combat','combat','combat','combat','combat','combat','elite','elite','chest','chest','event','event','altar']);
-const I=root.WandererV013MapIntelligence,F=root.WandererV013ExpeditionFoundation,T=root.WandererV013EncounterTraits,P=root.WandererV013BossPreparation,C=root.WandererV013ExpeditionConditions,B=root.WandererV013ExpeditionBoons;
+const I=root.WandererV013MapIntelligence,F=root.WandererV013ExpeditionFoundation,T=root.WandererV013EncounterTraits,P=root.WandererV013BossPreparation,C=root.WandererV013ExpeditionConditions,B=root.WandererV013ExpeditionBoons,K=root.WandererV013ExpeditionContracts;
 function shuffle(values,rng){
  const arr=[...values];
  for(let i=arr.length-1;i>0;i--){const j=Math.min(i,Math.floor(rng()*(i+1)));[arr[i],arr[j]]=[arr[j],arr[i]];}
@@ -156,6 +156,23 @@ function create(themes,rng=Math.random){
   d.realm=id;if(card.stepLimit)d.steps=card.stepLimit;d.conditionEdgesUsed=[];game.bossFamily=card.family;
   if(F&&d.foundationManifest)d.foundationState=F.createExpeditionState(d.foundationManifest,id);
  }
+ // Stage 7 contracts use the Dungeon seed but never consume map or combat RNG.
+ function offerContracts(){
+  const d=game.dungeon,card=d?.cards?.find(c=>c.id===d.realm);
+  if(!d?.foundationState||!card||!K||game.stage!=='choice'||game.selected||game.history.length||game.rewardPending)return null;
+  if(K.decision(d.foundationState))return null;
+  if(d.contractOffer)return d.contractOffer;
+  const ids=K.offer(d.foundationManifest.seed,card);
+  d.contractOffer={ids};return d.contractOffer;
+ }
+ function chooseContract(id=null){
+  const d=game.dungeon,o=d?.contractOffer;
+  if(!o||!K?.validateOffer(game)||game.stage!=='choice'||game.selected||
+    id!==null&&!o.ids.includes(id))throw Error('Contract selection unavailable');
+  const action=id===null?{type:'skip_contract'}:{type:'select_contract',id};
+  d.foundationState=F.applyDecision(d.foundationState,action,d.foundationManifest);
+  delete d.contractOffer;return id;
+ }
  // Stage 6: two non-repeatable, seeded choices, independent of map RNG and permanent talents.
  function offerBoons(families=[]){
   const d=game.dungeon;
@@ -168,7 +185,7 @@ function create(themes,rng=Math.random){
  }
  function chooseBoon(id){
   const d=game.dungeon,o=d?.boonOffer;
-  if(!o||game.stage!=='choice'||game.selected||game.rewardPending||!o.ids.includes(id)||!B?.validateOffer(d,game.history))throw Error('Boon selection unavailable');
+  if(!o||game.stage!=='choice'||game.selected||game.rewardPending||!o.ids.includes(id)||d.contractOffer||!B?.validateOffer(d,game.history))throw Error('Boon selection unavailable');
   const next=F.applyDecision(d.foundationState,{type:'choose_boon',id},d.foundationManifest);
   const bonus=B.stepsAdded(id);
   if(bonus)d.steps+=bonus;
@@ -198,7 +215,7 @@ function create(themes,rng=Math.random){
  }
  function scoutRooms(amount=2){
   const d=game.dungeon;
-  if(!d?.realm||d.boonOffer||!I||!['choice','combat'].includes(game.stage))return {rooms:[],secret:null};
+  if(!d?.realm||d.boonOffer||d.contractOffer||!I||!['choice','combat'].includes(game.stage))return {rooms:[],secret:null};
   const selection=scoutPreview(amount);d.scouted??=[];d.discoveredSecrets??=[];
   for(const room of selection.rooms)if(!d.scouted.includes(room)){
    d.scouted.push(room);
@@ -219,7 +236,7 @@ function create(themes,rng=Math.random){
  function travelCost(path){if(I&&game.dungeon){const base=I.travelCost(path,game.dungeon.cleared),card=realmMap();return base+(C&&card?C.travelSurcharge(card,game.dungeon,path):0);}const d=game.dungeon;let cost=0,cleared=0;for(const room of path.slice(1)){if(d.cleared.includes(room))cleared++;else{cost+=Math.min(2,cleared)+1;cleared=0;}}return cost+Math.min(2,cleared);}
  function visitRoom(i){
   const d=game.dungeon,card=realmMap(),path=travelPath(i);
-  if(game.stage!=='choice'||!path.length||game.rewardPending||d.boonOffer)return false;
+  if(game.stage!=='choice'||!path.length||game.rewardPending||d.boonOffer||d.contractOffer)return false;
   const cost=travelCost(path);
   if(d.steps!==undefined){if(cost>d.steps)return false;d.steps-=cost;}
   if(C)C.markTraversed(card,d,path);
@@ -263,7 +280,7 @@ function create(themes,rng=Math.random){
   game.selected=realm;return realm;
  }
  function enter(){
-  if(game.stage!=='choice'||game.rewardPending||game.dungeon?.boonOffer||!game.selected||!game.offers.includes(game.selected))throw Error('Select an offered Realm before entering');
+  if(game.stage!=='choice'||game.rewardPending||game.dungeon?.boonOffer||game.dungeon?.contractOffer||!game.selected||!game.offers.includes(game.selected))throw Error('Select an offered Realm before entering');
   const realm=game.selected;
   if(!reachable(realm)||!allowed().includes(realm.family))throw Error('Realm no longer eligible');
   if(!game.freeBuild&&game.planeIndex!==15&&!game.families.includes(realm.family))game.families.push(realm.family);
@@ -333,10 +350,10 @@ function create(themes,rng=Math.random){
   const expectedManifest=F.createManifest(d.cards,{seed:manifest.seed,expeditionLevel:g.expedition,bossStyle:manifest.bossStyle});
   if(JSON.stringify(expectedManifest)!==JSON.stringify(manifest))throw Error('Invalid deterministic dungeon manifest');
   if(d.realm===null){
-   if(d.current!==0||d.steps!==undefined||d.conditionEdgesUsed!==undefined||d.foundationState!==undefined||d.boonOffer!==undefined||d.disabledBossModifierId!==undefined||
+   if(d.current!==0||d.steps!==undefined||d.conditionEdgesUsed!==undefined||d.foundationState!==undefined||d.boonOffer!==undefined||d.contractOffer!==undefined||d.stage7RewardPaid!==undefined||d.disabledBossModifierId!==undefined||
       d.visited.length!==1||d.visited[0]!==0||d.cleared.length!==1||d.cleared[0]!==0||d.scouted.length||d.discoveredSecrets.length||g.selected!==null||g.offers.length)throw Error('Invalid unselected dungeon');
   }else{
-   if(!integer(d.steps,0,selectedCard.stepLimit+(d.foundationState?.boonIds?.includes('wayfarers_bargain')?1:0))||!B?.validateOffer(d,g.history)||!C?.validLedger(selectedCard,d)||!roomList(d.visited,size)||!roomList(d.cleared,size)||!roomList(d.scouted,size)||
+   if(!integer(d.steps,0,selectedCard.stepLimit+(d.foundationState?.boonIds?.includes('wayfarers_bargain')?1:0))||!B?.validateOffer(d,g.history)||!K?.validate(g)||!C?.validLedger(selectedCard,d)||!roomList(d.visited,size)||!roomList(d.cleared,size)||!roomList(d.scouted,size)||
       !d.visited.includes(d.current)||!d.cleared.includes(0)||!d.visited.includes(0)||d.cleared.some(i=>!d.visited.includes(i)))throw Error('Invalid dungeon progress');
    if(!unique(d.discoveredSecrets)||d.discoveredSecrets.some(e=>typeof e!=='string'||!selectedCard.edges.some(([a,b])=>e===Math.min(a,b)+'-'+Math.max(a,b)&&I?.secretEdge(selectedCard,a,b))))throw Error('Invalid hidden passage state');
    if(!F||!d.foundationManifest||!d.foundationState||!F.validateExpeditionState(d.foundationState,d.foundationManifest)||
@@ -428,7 +445,7 @@ function create(themes,rng=Math.random){
  function setSimulationRandomStreams(route,draft){if(typeof route!=='function'||typeof draft!=='function')throw Error('Simulation RNG streams must be functions');routeRng=route;draftRng=draft;}
  function passiveRandom(){return draftRng;}
  
- return Object.freeze({deferEvent,chooseRealm,offerBoons,chooseBoon,realmMap,visitRoom,travelPath,travelCost,exitCount,scoutPreview,scoutRooms,influence,state:game,start,restore,planAffinities,chooseInitial:chooseInitial,select:select,enter:enter,claimReward:claimReward,reroll:reroll,waveWon:waveWon,eventWon:()=>{throw Error('Resolve the offered integrated event');},defeat:defeat,abandon:abandon,allowed:allowed,reachable,setSimulationRandomStreams,passiveRandom});
+ return Object.freeze({deferEvent,chooseRealm,offerContracts,chooseContract,offerBoons,chooseBoon,realmMap,visitRoom,travelPath,travelCost,exitCount,scoutPreview,scoutRooms,influence,state:game,start,restore,planAffinities,chooseInitial:chooseInitial,select:select,enter:enter,claimReward:claimReward,reroll:reroll,waveWon:waveWon,eventWon:()=>{throw Error('Resolve the offered integrated event');},defeat:defeat,abandon:abandon,allowed:allowed,reachable,setSimulationRandomStreams,passiveRandom});
 }
 root.WandererV012Expedition=Object.freeze({create,FAMILIES,FAMILY_NAMES,THEME_FAMILIES,REALMS,BOSSES,EVENT_GROUPS});
 })(globalThis);
