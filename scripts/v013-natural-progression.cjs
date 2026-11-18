@@ -548,10 +548,15 @@ function analyze(accounts,opts){
    roomsWon:attempts.reduce((n,a)=>n+(a.fightsWon||0),0),
    nativeXpEarned:attempts.reduce((n,a)=>n+(a.xpEarned||0),0),
    potionsUsed:attempts.reduce((n,a)=>n+(a.potions?.length||0),0),
+   boonsSelected:attempts.reduce((n,a)=>n+(a.boons?.length||0),0),
+   markedElitePreparations:attempts.filter(a=>a.prepFinal?.markedElite).length,
+   reliquaryPreparations:attempts.filter(a=>a.prepFinal?.reliquary).length,
+   reachedBossWithPreparation:attempts.filter(a=>a.bossReached&&
+    (a.prepAtBoss?.markedElite||a.prepAtBoss?.reliquary)).length,
    gearUpgrades:attempts.reduce((n,a)=>n+(a.equipped?.length||0)+(a.camp?.equipped?.length||0),0),
    observations:attempts.length?null:'not_reached; do not infer win rate'});
  }
- return {stage:'9.3',schemaVersion:1,engine:'v0.13 live native account, dungeon and combat runtime',
+ return {stage:'9.4',schemaVersion:2,engine:'v0.13 live native account, dungeon and combat runtime',
   source:S.sourceFingerprint().sha256,settings:opts,
   integrity:{
    noFabricatedXp:true,noForcedEquipment:true,noForcedEncounter:true,
@@ -576,13 +581,13 @@ function run(opts=parseArgs()){
  return analyze(accounts,opts);
 }
 function markdown(data){
- const out=['# Wanderer v0.13 — Stage 9.3: Native progression E1–E8','',
+ const out=['# Wanderer v0.13 — Stage 9.4: Context-aware natural E1–E8 progression','',
   '**One persistent native account from E1; XP, equipment, rewards, resources and unlocks are never fabricated.**',
   '', 'Source hash: '+data.source,'', '## E1–E8 natural-account pilot','',
-  '| E | Accounts reached | Attempts | Wins | Defeats | Extractions | Boss reached | Rooms won | Native XP | Gear changes | Errors |',
-  '|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|'];
+  '| E | Accounts reached | Attempts | Wins | Deaths | Extractions | Boss reached | Prepared bosses | Marked Elites | Reliquaries | Boons | Potions | Rooms won | Native XP | Gear changes | Errors |',
+  '|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|'];
  for(const x of data.levels)out.push('| E'+x.level+' | '+x.accountsReached+' | '+x.attempts+' | '+x.wins+
-  ' | '+x.deaths+' | '+x.extractions+' | '+x.bossReached+' | '+x.roomsWon+' | '+x.nativeXpEarned+' | '+x.gearUpgrades+' | '+x.errors+' |');
+  ' | '+x.deaths+' | '+x.extractions+' | '+x.bossReached+' | '+x.reachedBossWithPreparation+' | '+x.markedElitePreparations+' | '+x.reliquaryPreparations+' | '+x.boonsSelected+' | '+x.potionsUsed+' | '+x.roomsWon+' | '+x.nativeXpEarned+' | '+x.gearUpgrades+' | '+x.errors+' |');
  out.push('','## Account outcomes','');
  for(const a of data.accounts){
   out.push('- '+a.profile+' / seed '+a.seed+': unlocked E'+a.endLevel+'; '+a.attempts.length+' attempts; XP '+a.xp+
@@ -592,6 +597,9 @@ function markdown(data){
   '- Attempts only happen at an **actually unlocked** Expedition. Unreached E levels are censored and have no win rate.',
   '- Native loot, gear swaps, real XP awards, talent purchases, Contracts, Boon Shrines, event effects, Gold shops and potion usage are tracked without injecting inventory.',
   '- Combat target switching has a reaction delay; map traversal uses native movement and step costs; hidden room types are not peeked for room selection.',
+  '- Boon decisions are ranked by actual trade-offs, not chosen blindly by Affinity; native Fate rerolls are conditional.',
+  '- Native potions are purchased with earned Gold, used by exact kind only at legal map windows, and conserved before safe rooms.',
+  '- Boss preparation is earned via the real marked Elite and Forgotten Reliquary; both are separately counted, including preparation at Boss entry.',
   '- A win requires the real Boss at its natural map location. Extracting saves resources but **does not unlock E+1**.',
   '- The policy is more human-like than synthetic cohorts, but **not** a validated model of how actual players play.',
   '- Review full JSON per account and investigate runtime errors separately from player deaths before balancing.', '');
