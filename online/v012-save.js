@@ -159,8 +159,12 @@ function presentationCheck(p){
     (c.id===null||validIds.includes(c.id))&&
     typeof c.name==='string'&&c.name.length<=100&&
     integer(c.progress,0,2)&&integer(c.target,0,2)&&c.progress<=c.target&&
-    integer(c.essence,0,30)&&integer(c.fragments,0,30)&&
-    (c.status!=='completed'||c.id!==null),'Expedition Contract summary');
+    integer(c.essence,0,30)&&c.fragments===0&&
+    (c.recipeId===null||typeof c.recipeId==='string'&&c.recipeId.length<=100)&&
+    (c.kind===null||['blueprint','essence'].includes(c.kind))&&
+    (c.status!=='completed'||c.id!==null)&&
+    (c.status!=='completed'||c.kind!==null)&&
+    (c.kind!=='blueprint'||c.recipeId!==null&&c.essence===0),'Expedition Contract summary');
   }
  }
  requireValue(p.review!=='realm'||p.realm!==null,'missing Realm result');requireValue(p.review!=='summary'||p.summary!==null,'missing Expedition summary');

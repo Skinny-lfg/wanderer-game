@@ -55,7 +55,7 @@ function settleContract(){
   d.contractPaid=true;ports.state.crafting.cores[card.family]++;ports.state.crafting.essence+=2+card.risk*2;
  }
  const paid=root.WandererV013ExpeditionContracts?.settle(g,ports.state,ports.phase5Results);
- if(paid)ports.bannerMessage(paid.name+' completed · +'+paid.essence+' Essence · +'+paid.fragments+' Fragments.');
+ if(paid)ports.bannerMessage(paid.name+' completed · '+root.WandererV013ExpeditionContracts.label(paid)+'.');
  return paid||null;
 }
 function phase4Extract(){

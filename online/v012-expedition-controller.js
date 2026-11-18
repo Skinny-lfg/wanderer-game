@@ -157,20 +157,21 @@ function create(themes,rng=Math.random){
   if(F&&d.foundationManifest)d.foundationState=F.createExpeditionState(d.foundationManifest,id);
  }
  // Stage 7 contracts use the Dungeon seed but never consume map or combat RNG.
- function offerContracts(){
+ function offerContracts(learnedRecipes=[]){
   const d=game.dungeon,card=d?.cards?.find(c=>c.id===d.realm);
   if(!d?.foundationState||!card||!K||game.stage!=='choice'||game.selected||game.history.length||game.rewardPending)return null;
   if(K.decision(d.foundationState))return null;
   if(d.contractOffer)return d.contractOffer;
-  const ids=K.offer(d.foundationManifest.seed,card);
-  d.contractOffer={ids};return d.contractOffer;
+  d.contractOffer=K.plan(d.foundationManifest.seed,card,learnedRecipes);return d.contractOffer;
  }
  function chooseContract(id=null){
   const d=game.dungeon,o=d?.contractOffer;
   if(!o||!K?.validateOffer(game)||game.stage!=='choice'||game.selected||
     id!==null&&!o.ids.includes(id))throw Error('Contract selection unavailable');
   const action=id===null?{type:'skip_contract'}:{type:'select_contract',id};
+  const rewardPlan=id===null?null:JSON.parse(JSON.stringify(o));
   d.foundationState=F.applyDecision(d.foundationState,action,d.foundationManifest);
+  if(rewardPlan)d.stage72RewardPlan=rewardPlan;
   delete d.contractOffer;return id;
  }
  // Stage 6: two non-repeatable, seeded choices, independent of map RNG and permanent talents.
@@ -350,7 +351,7 @@ function create(themes,rng=Math.random){
   const expectedManifest=F.createManifest(d.cards,{seed:manifest.seed,expeditionLevel:g.expedition,bossStyle:manifest.bossStyle});
   if(JSON.stringify(expectedManifest)!==JSON.stringify(manifest))throw Error('Invalid deterministic dungeon manifest');
   if(d.realm===null){
-   if(d.current!==0||d.steps!==undefined||d.conditionEdgesUsed!==undefined||d.foundationState!==undefined||d.boonOffer!==undefined||d.contractOffer!==undefined||d.stage7RewardPaid!==undefined||d.disabledBossModifierId!==undefined||
+   if(d.current!==0||d.steps!==undefined||d.conditionEdgesUsed!==undefined||d.foundationState!==undefined||d.boonOffer!==undefined||d.contractOffer!==undefined||d.stage72RewardPlan!==undefined||d.stage7RewardPaid!==undefined||d.disabledBossModifierId!==undefined||
       d.visited.length!==1||d.visited[0]!==0||d.cleared.length!==1||d.cleared[0]!==0||d.scouted.length||d.discoveredSecrets.length||g.selected!==null||g.offers.length)throw Error('Invalid unselected dungeon');
   }else{
    if(!integer(d.steps,0,selectedCard.stepLimit+(d.foundationState?.boonIds?.includes('wayfarers_bargain')?1:0))||!B?.validateOffer(d,g.history)||!K?.validate(g)||!C?.validLedger(selectedCard,d)||!roomList(d.visited,size)||!roomList(d.cleared,size)||!roomList(d.scouted,size)||
