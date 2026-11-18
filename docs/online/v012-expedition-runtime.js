@@ -205,10 +205,10 @@ function phase1StartWave(resetScroll=false){
  });
  // Give ordinary mobs time to show their attacks; keep their pressure lower.
  for(const enemy of group){
-  const endurance=enemy.boss||enemy.miniboss?1.8:3;
+  const endurance=enemy.boss?1.8:enemy.miniboss?3:3;
   enemy.hp=enemy.maxhp=Math.round(enemy.maxhp*endurance*(1+.10*(g.selected.risk||0)));
   enemy.attackEvery*=1.15;
-  enemy.atk=Math.max(1,Math.round(enemy.atk*.65*(1+.12*(g.selected.risk||0))));
+  enemy.atk=Math.max(1,Math.round(enemy.atk*(enemy.miniboss?.75:.65)*(1+.12*(g.selected.risk||0))));
  }
  const traits=globalThis.WandererV013EncounterTraits;
  const modifiers=globalThis.WandererV013BossModifiers;
