@@ -351,7 +351,10 @@ function phase1Death(){
 
 function phase1Abandon(){
  if(!ports.PHASE1_PREVIEW||(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked))||!['choice','combat'].includes(ports.phase1Controller?.state.stage))return false;
- clearInterval(ports.clock);ports.phase4CommitRealm();ports.phase4LoseLoot();ports.phase1Controller.abandon();
+ clearInterval(ports.clock);
+ const contract=globalThis.WandererV013ExpeditionContracts?.inspect(ports.phase1Controller.state,'abandoned');
+ if(contract&&contract.status!=='offered'){ports.phase5MakeSummary('abandoned');ports.phase5Results.review='summary';}
+ ports.phase4CommitRealm();ports.phase4LoseLoot();ports.phase1Controller.abandon();
  if(ports.phase1Build)WandererV012Buildcraft.clear(ports.phase1Build);
  ports.phase1Build=null;ports.phase1Draft=null;ports.phase1Vitals=null;ports.phase1Continuity=null;ports.state.run=null;ports.view='phase1';
  if(ports.PHASE1_PREVIEW)ports.phase5Snapshot.expedition.lastOutcome='abandoned';
