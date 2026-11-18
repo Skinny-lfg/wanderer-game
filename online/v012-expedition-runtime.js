@@ -58,7 +58,7 @@ function phase6EventChoice(choice,itemId,passiveId,family,targetId){
  case 'relic_collector':if(!item){ports.state[choice===0?'gold':'fragments']+=choice===0?5+E:3+E;break;}sacrifice();ports.state[choice===0?'gold':'fragments']+=choice===0?12+2*item.tier:5+item.tier;break;
  case 'cursed_altar':if(v.hp<=Math.ceil(v.maxhp*.2))return false;heal();ports.phase1Vitals.hp-=Math.ceil(v.maxhp*.2);effects[choice===0?'attack':'defense']=.10;break;
  case 'whispering_idol':ports.phase6Buff('curse',.10);ports.state[choice===0?'gold':'fragments']+=choice===0?25+4*E:12+2*E;break;
- case 'forgotten_arsenal':if(choice===0){ports.state.crafting.essence+=6;}else if(g.dungeon){const c=ports.phase1Controller.realmMap();g.dungeon.steps=Math.min(c.stepLimit,g.dungeon.steps+2);}else ports.state.fragments+=8+2*E;break;
+ case 'forgotten_arsenal':if(choice===0){ports.state.crafting.essence+=6;}else if(g.dungeon){const c=ports.phase1Controller.realmMap();g.dungeon.steps=Math.min(c.stepLimit+(g.dungeon.foundationState?.boonIds?.includes('wayfarers_bargain')?1:0),g.dungeon.steps+2);}else ports.state.fragments+=8+2*E;break;
  case 'forgotten_reliquary':{
   if(!g.dungeon)return false;
   if(choice===0){const cost=Math.ceil(v.maxhp*.15);if(v.hp<=cost||!globalThis.WandererV013BossPreparation?.reliquaryCanDisrupt(g))return false;
@@ -78,6 +78,7 @@ function phase6EventChoice(choice,itemId,passiveId,family,targetId){
  ports.phase5RememberRealm({tier:E,phase1Plane:g.planeIndex-1,planeName:p.name,planeFamily:p.family,combatSeconds:0,gold:Math.max(0,ports.state.gold-beforeGold),fragments:Math.max(0,ports.state.fragments-beforeFragments),loot,realmLog:[{text:eventText,kind:'good'}]},'cleared');
  ports.phase5Results.review=null;ports.phase5Results.eventExitPending=true;
  ports.phase1Controller.claimReward();ports.phase1Draft=null;
+  if(g.dungeon?.foundationState?.boonIds?.length===1){const boons=globalThis.WandererV013ExpeditionBoons;ports.phase1Controller.offerBoons(boons?.familiesFor(ports.phase1Build,ports.state.automaticTalents)||[]);}
  if(!ports.phase5Persist())return false;return phase5ExitResult();
 }
 
@@ -172,7 +173,7 @@ function phase2Launch(plane){
  ports.state.run={phase1:true,phase1ClockBase:ports.phase1Clock,phase1Magic:!!ports.phase1Build.element,phase1Plane:ports.phase1Controller.state.planeIndex,planeWaves:plane.waves,planeName:plane.name,planeFamily:plane.family,tier:ports.phase1Controller.state.expedition,path:plane.id,enc:0,status:'ready',
  hp,maxhp:stats.maxhp,mp,maxmp:stats.mana,barrier:0,stats,enemy:null,tPlayer:0,tEnemy:0,tDot:0,
  loot:[],valuables:[],gold:0,fragments:0,eliteType:ports.rollEliteArchetype(),
- playerHealingDebuffUntil:0,combatSeconds:0,setCooldowns:{...(ports.phase1Continuity?.setCooldowns||{})},secondWindUsed:ports.phase1Continuity?.secondWindUsed||false,
+ boonIds:[...(ports.phase1Controller.state.dungeon?.foundationState?.boonIds||[])],playerHealingDebuffUntil:0,combatSeconds:0,setCooldowns:{...(ports.phase1Continuity?.setCooldowns||{})},secondWindUsed:ports.phase1Continuity?.secondWindUsed||false,
  legendaryState:ports.phase1Continuity?.legendaryState||null,legendaryCastCount:ports.phase1Continuity?.legendaryCastCount||0,legendaryAttackCount:ports.phase1Continuity?.legendaryAttackCount||0};
  if(ports.phase6Run?.effects.barrier){ports.setBarrier(ports.state.run,ports.state.run.maxhp*ports.phase6Run.effects.barrier);ports.phase6Run.effects.barrier=0;}
  ports.legendaryRealmStart(ports.state.run);
@@ -228,7 +229,7 @@ function phase1StartWave(resetScroll=false){
  for(const enemy of group)enemy.groupClock=traits?traits.initialClock(enemy,enemy.groupSlot):Math.max(0,enemy.attackEvery-(.9+enemy.groupSlot*.3));
  r.totalMobCount=group.length;r.enemies=fieldCount>1?group.slice(0,fieldCount):undefined;r.groupReserve=group.slice(fieldCount);if(fieldCount===1)delete r.enemies;r.enemy=group[0];
  r.phase6Bounty=false;if(r.enemy.miniboss&&ports.phase6Run?.effects.bounty){r.phase6Bounty=true;ports.phase6Run.effects.bounty=false;r.enemy.hp=r.enemy.maxhp=Math.ceil(r.enemy.maxhp*1.25);r.enemy.atk=Math.ceil(r.enemy.atk*1.25);}
- r.tPlayer=r.tDot=0;r.tEnemy=r.enemy.groupClock;r.setTemp=null;r.playerDebuffUntil=0;
+ r.tPlayer=r.tDot=0;r.tEnemy=r.enemy.groupClock;r.setTemp=null;r.boonRotboundTriggers=0;r.playerDebuffUntil=0;
  r.playerHealingDebuffUntil=0;r.nextCasterHexAt=0;ports.setRuntime(r);r.status='fight';
  if(ports.phase1Build)for(const enemy of r.enemies||[r.enemy])WandererV012Buildcraft.resetWave(ports.phase1Build,enemy);
  ports.addLog('Encounter: '+r.enemy.name+' · '+totalCount+' enemies');
@@ -253,6 +254,8 @@ function phase1WaveWon(){
  if(r.enemies?.length>1){
    const selectedTarget=r.enemy,dead=r.enemies.filter(enemy=>enemy.hp<=0&&!enemy.groupDefeated);if(!dead.length)return;
   for(const enemy of dead){r.enemy=enemy;enemy.groupDefeated=true;
+   const spread=globalThis.WandererV013ExpeditionBoons?.spreadOnDeath(r,enemy,ports.synchronizeDots)||0;
+   if(spread)ports.addLog('Rotbound Echo spreads a lingering curse to '+spread+' '+(spread===1?'enemy':'enemies')+'.','spell');
    if(ports.state.automaticTalents?.nodes?.includes('plague_spread')){const bleed=enemy.dots?.bleed?.find(dot=>!dot.spread),rot=enemy.v012Rot?.find(dot=>!dot.spread);for(const target of r.enemies.filter(mob=>mob.hp>0).concat(r.groupReserve||[]).slice(0,2)){if(bleed){target.dots.bleed??=[];if(target.dots.bleed.length<12)target.dots.bleed.push({damage:Math.max(1,Math.round(bleed.damage*.5)),remaining:Math.min(2,bleed.remaining),spread:true});ports.synchronizeDots(target);}if(rot){target.v012Rot??=[];if(target.v012Rot.length<6)target.v012Rot.push({damage:Math.max(1,Math.round(rot.damage*.5)),remaining:Math.min(2,rot.remaining),ticks:0,spread:true});}}}
     ports.legendaryKill(r);if(ports.phase1Build)WandererV012Buildcraft.onKill(ports.phase1Build,{...ports.phase2Context(r),waveComplete:!r.groupReserve?.length&&WandererV012CombatCore.groupComplete(r.enemies)&&enemy===dead[dead.length-1]});}
   let reinforcements=0;

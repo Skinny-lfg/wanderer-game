@@ -66,6 +66,8 @@ async function main(){
     const cards=await contextPage.evaluate(()=>__stage455.snapshot().cards);
     assert.equal(cards.length,3);
     await contextPage.locator('[data-realm-card]').nth(index).click();
+    assert.equal(await contextPage.locator('[data-stage6-boon]').count(),3);
+    await contextPage.locator('[data-stage6-boon]:not([data-stage6-boon="wayfarers_bargain"])').first().click();
     return cards[index];
   }
   async function navigate(contextPage,target,options={}){
@@ -121,6 +123,7 @@ async function main(){
           else throw Error('No visible result/exit after encounter '+node+'; stage='+settled.stage+' status='+settled.runStatus);
         }
       }
+      if(await contextPage.locator('[data-stage6-boon]').count())await contextPage.locator('[data-stage6-boon]:not([data-stage6-boon="wayfarers_bargain"])').first().click();
       const after=await contextPage.evaluate(()=>__stage455.snapshot());
       assert(before.steps>=after.steps,'No room may refund travel steps');
       if(node!==target||!options.boss)assert.equal(after.current,node,'Current room mismatch');
@@ -176,6 +179,8 @@ async function main(){
   }
   assert(oracleChoice>=0,'No Oracle among 16 independently generated sets of real cards; investigate generation, not fabricated rooms');
   await oraclePage.locator('[data-realm-card]').nth(oracleChoice).click();
+  assert.equal(await oraclePage.locator('[data-stage6-boon]').count(),3);
+  await oraclePage.locator('[data-stage6-boon]:not([data-stage6-boon="wayfarers_bargain"])').first().click();
   await navigate(oraclePage,naturalCards[oracleChoice].oracle,{oracle:true});
   const oracleDone=await oraclePage.evaluate(()=>__stage455.snapshot());
   await oraclePage.screenshot({path:path.join(out,'stage455-oracle-mobile.png'),fullPage:true});
