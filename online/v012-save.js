@@ -1,7 +1,7 @@
 // Versioned, pure save policy and explicitly isolated validation storage. No Firebase/auth/DOM.
 (function(root){
 'use strict';
-const FORMAT='wanderer-expedition',VERSION=13,PREFIX='wanderer_v012_endless_v1_';
+const FORMAT='wanderer-expedition',VERSION=13,PREFIX='wanderer_v013_stage74_preview_v1_';
 const SLOTS=['helm','amulet','armor','gloves','weapon','offhand','ring1','ring2','boots','belt'];
 const STATS=['atk','def','hp','spd','str','agi','int','end','cha','mana','spell','evasionRating'];
 const EFFECTS=['poison','bleed','crit','sunder','shield','regen','burn','slow','drain','nature','shock','tide','crystal'];
@@ -43,7 +43,7 @@ function json(value){
 }
 function bindingName(binding){requireValue(typeof binding==='string'&&/^[A-Za-z0-9_-]{1,100}$/.test(binding),'binding');return binding;}
 function key(binding){return PREFIX+bindingName(binding);}
-const POTIONS=['health','mana','might','arcane','ironhide','haste','fortune','barrier','scout','trail'];
+const POTIONS=['health','mana','might','arcane','ironhide','haste','fortune','barrier','scout','trail','purifying','veilsight','fate'];
 function consumablesCheck(p){
  if(p.consumables!==undefined)requireValue(plain(p.consumables)&&Object.entries(p.consumables).every(([id,q])=>POTIONS.includes(id)&&integer(q,0,99999)),'consumable inventory');
  if(p.potionSelection!==undefined){requireValue(Array.isArray(p.potionSelection)&&p.potionSelection.length<=3&&p.potionSelection.every(id=>POTIONS.includes(id))&&p.potionSelection.filter(id=>id==='fortune').length<=1,'potion selection');for(const id of p.potionSelection)requireValue((p.consumables?.[id]||0)>=p.potionSelection.filter(v=>v===id).length,'selected potion ownership');}
@@ -52,7 +52,7 @@ function consumablesCheck(p){
 function integrationCheck(r){
  requireValue(plain(r)&&r.version===1&&Array.isArray(r.events)&&r.events.length<=4&&r.events.every(i=>integer(i,2,24))&&new Set(r.events).size===r.events.length&&integer(r.combats,0,24)&&plain(r.effects),'integration checkpoint');
  requireValue(r.event===null||plain(r.event)&&typeof r.event.id==='string'&&typeof r.event.roll==='number'&&r.event.roll>=0&&r.event.roll<1&&(r.event.alternative===null||typeof r.event.alternative==='string'),'event choice checkpoint');
- for(const [k,e]of Object.entries(r.effects)){requireValue(['might','arcane','ironhide','haste','attack','defense','curse','echo','item','barrier','runeBoost','bounty','fortune'].includes(k),'temporary effect');requireValue(typeof e==='boolean'||typeof e==='number'&&Number.isFinite(e)&&e>=0&&e<=1||plain(e)&&(e.remaining===undefined||integer(e.remaining,0,3))&&(e.power===undefined||typeof e.power==='number'&&Number.isFinite(e.power)&&Math.abs(e.power)<=1)&&(e.id===undefined||typeof e.id==='string'),'temporary effect bounds');}
+ for(const [k,e]of Object.entries(r.effects)){requireValue(['might','arcane','ironhide','haste','attack','defense','curse','echo','item','barrier','runeBoost','bounty','fortune','purifying'].includes(k),'temporary effect');requireValue(typeof e==='boolean'||typeof e==='number'&&Number.isFinite(e)&&e>=0&&e<=1||plain(e)&&(e.remaining===undefined||integer(e.remaining,0,3))&&(e.power===undefined||typeof e.power==='number'&&Number.isFinite(e.power)&&Math.abs(e.power)<=1)&&(e.id===undefined||typeof e.id==='string'),'temporary effect bounds');}
  if(r.potions!==undefined)requireValue(Array.isArray(r.potions)&&r.potions.length<=3&&r.potions.every(p=>plain(p)&&POTIONS.includes(p.kind)&&typeof p.used==='boolean'),'selected potion checkpoint');
  for(const k of ['started','returned'])if(r[k]!==undefined)requireValue(typeof r[k]==='boolean','consumable settlement');
 }
@@ -159,8 +159,12 @@ function presentationCheck(p){
     (c.id===null||validIds.includes(c.id))&&
     typeof c.name==='string'&&c.name.length<=100&&
     integer(c.progress,0,2)&&integer(c.target,0,2)&&c.progress<=c.target&&
-    integer(c.essence,0,30)&&integer(c.fragments,0,30)&&
-    (c.status!=='completed'||c.id!==null),'Expedition Contract summary');
+    integer(c.essence,0,30)&&c.fragments===0&&
+    (c.recipeId===null||typeof c.recipeId==='string'&&c.recipeId.length<=100)&&
+    (c.kind===null||['blueprint','essence'].includes(c.kind))&&
+    (c.status!=='completed'||c.id!==null)&&
+    (c.status!=='completed'||c.kind!==null)&&
+    (c.kind!=='blueprint'||c.recipeId!==null&&c.essence===0),'Expedition Contract summary');
   }
  }
  requireValue(p.review!=='realm'||p.realm!==null,'missing Realm result');requireValue(p.review!=='summary'||p.summary!==null,'missing Expedition summary');

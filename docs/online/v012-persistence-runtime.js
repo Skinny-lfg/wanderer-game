@@ -55,7 +55,7 @@ function settleContract(){
   d.contractPaid=true;ports.state.crafting.cores[card.family]++;ports.state.crafting.essence+=2+card.risk*2;
  }
  const paid=root.WandererV013ExpeditionContracts?.settle(g,ports.state,ports.phase5Results);
- if(paid)ports.bannerMessage(paid.name+' completed · +'+paid.essence+' Essence · +'+paid.fragments+' Fragments.');
+ if(paid)ports.bannerMessage(paid.name+' completed · '+root.WandererV013ExpeditionContracts.label(paid)+'.');
  return paid||null;
 }
 function phase4Extract(){
@@ -143,7 +143,7 @@ function phase5Persist(){
   if(!ports.PHASE1_PREVIEW||!ports.phase5Ready||!ports.phase5Snapshot)return true;
   try{
    const pending=WandererV012Save.validate(phase5Capture(),ports.phase5Snapshot.binding);
-   globalThis.sessionStorage.setItem('wanderer_v012_local_preview',JSON.stringify(pending));
+   globalThis.sessionStorage.setItem('wanderer_v013_stage74_local_preview',JSON.stringify(pending));
    ports.phase5Snapshot=pending;return true;
   }catch(error){ports.phase5Fail(error);return false;}
  }
@@ -157,7 +157,7 @@ function phase5Init(){
   if(!ports.PHASE1_PREVIEW||globalThis.__WANDERER_CLOUD_ONLY__)return;
   try{
    if(!globalThis.WandererV012Save)throw Error('Local playtest save module is unavailable');
-   const binding='local-playtest',raw=globalThis.sessionStorage.getItem('wanderer_v012_local_preview');
+   const binding='local-playtest',raw=globalThis.sessionStorage.getItem('wanderer_v013_stage74_local_preview');
    if(raw){
     const recovered=WandererV012Save.recover(raw,binding);ports.phase5Snapshot=recovered.save;
     ports.state=JSON.parse(JSON.stringify(recovered.save.profile));ports.uid=Math.max(ports.uid,recovered.save.idCounter);

@@ -2,12 +2,12 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const create=require('./v012-economy-harness.cjs');
 const S=require('../scripts/simulate-progression.cjs');
-function p15(a){let p={...a.talents.create(),starterPoints:2};for(const id of ['root_blood','affinity_blood']){const next=a.talents.allocate(p,id);assert(next,id);p=next;}return p;}
+function p15(a){let p=a.talents.award(a.talents.create(),200);for(const id of ['root_blood','affinity_blood']){const next=a.talents.allocate(p,id);assert(next,id);p=next;}return p;}
 test('native v15 graph does not accept old treeVersion 8, duplicates or non-earned nodes',()=>{
  const a=create(6001),T=a.talents,p=p15(a);
  assert.equal(p.treeVersion,15);assert(T.valid(p));assert.equal(T.valid({...p,treeVersion:8}),false);
  assert.equal(T.valid({...p,nodes:[...p.nodes,'affinity_blood']}),false);
- assert.equal(T.allocate(p,'root_magic'),null,'exhausted two starter points');
+ assert.equal(T.allocate(p,'root_magic'),null,'exhausted two earned points');
 });
 test('native v15 purchase is locked behind graph prerequisites and uses actual XP',()=>{
  const a=create(6002),T=a.talents,p=p15(a);

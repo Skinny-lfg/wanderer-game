@@ -25,7 +25,7 @@ function phase1Begin(level=1,freeBuild=false){
  if(!['camp','finished','failed'].includes(ports.phase1Controller.state.stage)||!Number.isInteger(level)||level<1||level>ports.phase1Controller.state.unlocked)return false;
  ports.phase4Seed=Math.floor(Math.random()*4294967296)>>>0;ports.phase4Prefix=Date.now().toString(36);ports.phase4Stamp=null;ports.phase4Home=ports.phase4Clone(ports.state.equip);ports.phase4Entry=null;ports.phase4Resume=false;ports.phase4WaveKeys=[];
  ports.phase5Results={version:1,complete:true,review:null,realm:null,summary:null,earned:[],gold:0,fragments:0,craftingStart:ports.phase4Clone(ports.state.crafting||WandererV013Crafting.create())};
- const project=WandererV013Crafting.RECIPES.find(r=>r.id===ports.state.crafting?.targetRecipe);ports.phase1Controller.start(level,{freeBuild,dungeon:freeBuild,targetFamily:project?.family});ports.phase6Run={version:1,event:null,events:[],effects:{},combats:0};ports.phase3LootIds=new Set();ports.phase3PotionCooldowns={health:0,mana:0};ports.phase1Vitals=null;ports.phase1Clock=0;ports.phase1Continuity=null;ports.phase3Supplies={health:0,mana:0};ports.phase1Build=WandererV012Buildcraft.create();WandererV012Buildcraft.syncPermanent(ports.phase1Build,ports.state.automaticTalents,freeBuild);ports.phase1Build.runtime.hybridRules=true;if(!freeBuild)ports.phase1Build.families=ports.phase1Controller.state.families;ports.phase1Draft=null;ports.state.run=null;ports.view='phase1';
+ ports.phase1Controller.start(level,{freeBuild,dungeon:freeBuild});ports.phase6Run={version:1,event:null,events:[],effects:{},combats:0};ports.phase3LootIds=new Set();ports.phase3PotionCooldowns={health:0,mana:0};ports.phase1Vitals=null;ports.phase1Clock=0;ports.phase1Continuity=null;ports.phase3Supplies={health:0,mana:0};ports.phase1Build=WandererV012Buildcraft.create();WandererV012Buildcraft.syncPermanent(ports.phase1Build,ports.state.automaticTalents,freeBuild);ports.phase1Build.runtime.hybridRules=true;if(!freeBuild)ports.phase1Build.families=ports.phase1Controller.state.families;ports.phase1Draft=null;ports.state.run=null;ports.view='phase1';
  if(ports.PHASE1_PREVIEW){ports.phase5Snapshot.expedition.attempts++;ports.phase5Snapshot.expedition.awardKeys=[];ports.phase5Snapshot.expedition.lastOutcome='active';ports.phase5Persist();}
  ports.render();
 }
@@ -78,7 +78,6 @@ function phase6EventChoice(choice,itemId,passiveId,family,targetId){
  ports.phase5RememberRealm({tier:E,phase1Plane:g.planeIndex-1,planeName:p.name,planeFamily:p.family,combatSeconds:0,gold:Math.max(0,ports.state.gold-beforeGold),fragments:Math.max(0,ports.state.fragments-beforeFragments),loot,realmLog:[{text:eventText,kind:'good'}]},'cleared');
  ports.phase5Results.review=null;ports.phase5Results.eventExitPending=true;
  ports.phase1Controller.claimReward();ports.phase1Draft=null;
-  if(g.dungeon?.foundationState?.boonIds?.length===1){const boons=globalThis.WandererV013ExpeditionBoons;ports.phase1Controller.offerBoons(boons?.familiesFor(ports.phase1Build,ports.state.automaticTalents)||[]);}
  if(!ports.phase5Persist())return false;return phase5ExitResult();
 }
 
@@ -189,7 +188,9 @@ function phase1StartWave(resetScroll=false){
  const talentBarrier=ports.phase1Build?.runtime?.talentBonuses?.startBarrier||0;if(talentBarrier>0)ports.setBarrier(r,talentBarrier);
  const theme=ports.phase2Theme(g.selected.id);
  const conditions=globalThis.WandererV013ExpeditionConditions,conditionCard=g.dungeon&&ports.phase1Controller.realmMap();
- const totalCount=last&&(g.selected.boss||g.selected.elite)?1:(conditions&&conditionCard?conditions.countFor(g.selected,conditionCard,g.dungeon):(g.selected.mobCount||3)),activeCount=Math.min(4,totalCount);
+ const conditionMitigation=(ports.phase6Run?.effects?.purifying?.remaining||0)>0 ? .5 : 0;
+ r.conditionMitigation=conditionMitigation;
+ const totalCount=last&&(g.selected.boss||g.selected.elite)?1:(conditions&&conditionCard?conditions.countFor(g.selected,conditionCard,g.dungeon,conditionMitigation):(g.selected.mobCount||3)),activeCount=Math.min(4,totalCount);
  const spawn=()=>ports.enemyFor(r.tier,r.enc,{theme,boss:last&&g.selected.boss,elite:last&&g.selected.elite&&!g.selected.boss,variant:g.version===2?ports.BOSS_ARCHETYPES.find(b=>b.style===WandererV012Expedition.BOSSES.find(v=>v.id===g.bossId).style):null});
  const scale=totalCount>=6?{hp:(1.65+.045*(totalCount-6))/totalCount,atk:totalCount>=18?.12:.16}:null;
  const group=WandererV012CombatCore.createEnemyGroup(spawn,totalCount,{activeSlots:activeCount,scale});

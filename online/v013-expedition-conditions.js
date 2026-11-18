@@ -64,9 +64,9 @@ function validLedger(card,d){
  const p=forDungeon(card,d);
  return !!p&&(p.id==='veiled_passages'?d.conditionEdgesUsed.every(x=>p.edges.includes(x)):d.conditionEdgesUsed.length===0);
 }
-function countFor(selected,card,d){
+function countFor(selected,card,d,mitigation=0){
  const p=forDungeon(card,d);
- if(p?.id==='carrion_swarm'&&p.rooms.includes(selected.node))return p.counts[selected.node];
+ if(p?.id==='carrion_swarm'&&p.rooms.includes(selected.node))return Math.round((selected.mobCount||3)+(p.counts[selected.node]-(selected.mobCount||3))*(1-mitigation));
  return selected.mobCount||3;
 }
 function applyEncounter(run,enemies,selected,card,d){
@@ -76,25 +76,25 @@ function applyEncounter(run,enemies,selected,card,d){
  run.conditionMarked=p.rooms.includes(selected.node);
  run.conditionBoss=!!selected.boss;
  run.conditionRiteTriggered=false;
- const q=get(p.id).params;
+ const q=get(p.id).params,mitigation=run.conditionMitigation||0;
  if(p.id==='relentless_hunt'&&run.conditionMarked){
-  for(const enemy of enemies)enemy.attackEvery=Math.max(.15,enemy.attackEvery/q.attackSpeedMult);
+  for(const enemy of enemies)enemy.attackEvery=Math.max(.15,enemy.attackEvery/(1+(q.attackSpeedMult-1)*(1-mitigation)));
  }else if(p.id==='blighted_ground'&&run.conditionMarked){
-  run.conditionHealingMult=q.healingReceivedMult;
+  run.conditionHealingMult=1-(1-q.healingReceivedMult)*(1-mitigation);
  }else if(p.id==='unbroken_ward'&&selected.boss){
   const boss=enemies.find(e=>e.boss);
-  if(boss){const awarded=Math.max(1,Math.round(boss.maxhp*q.bossBarrierMaxHpPct));boss.barrier=(boss.barrier||0)+awarded;run.conditionBarrierGranted=awarded;}
+  if(boss){const awarded=Math.max(1,Math.round(boss.maxhp*q.bossBarrierMaxHpPct*(1-mitigation)));boss.barrier=(boss.barrier||0)+awarded;run.conditionBarrierGranted=awarded;}
  }
  return p;
 }
-function healingFactor(run){return run?.conditionId==='blighted_ground'&&run.conditionMarked?get('blighted_ground').params.healingReceivedMult:1;}
+function healingFactor(run){return run?.conditionId==='blighted_ground'&&run.conditionMarked?(run.conditionHealingMult??get('blighted_ground').params.healingReceivedMult):1;}
 function tick(run){
  if(run?.conditionId!=='sanguine_rite'||!run.conditionBoss||run.conditionRiteTriggered||run.status!=='fight')return false;
  const boss=run.enemies?.find(e=>e?.boss)||run.enemy?.boss&&run.enemy;
  if(!boss||boss.hp<=0||boss.hp>=boss.maxhp*get('sanguine_rite').params.bossHpThreshold)return false;
  const p=get('sanguine_rite').params;
- boss.atk=Math.max(1,Math.round(boss.atk*p.attackMult));
- boss.attackEvery=Math.max(.15,boss.attackEvery/p.attackSpeedMult);
+ boss.atk=Math.max(1,Math.round(boss.atk*(1+(p.attackMult-1)*(1-(run.conditionMitigation||0)))));
+ boss.attackEvery=Math.max(.15,boss.attackEvery/(1+(p.attackSpeedMult-1)*(1-(run.conditionMitigation||0))));
  run.conditionRiteTriggered=true;
  return true;
 }

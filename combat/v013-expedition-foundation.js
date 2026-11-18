@@ -115,7 +115,7 @@ function validateExpeditionState(state,manifest){
  return true;
 }
 // The Stage 0 ledger records intentions for later adapters; it applies no combat or economy effects.
-const DECISION_TYPES=Object.freeze(['reveal_room','discover_secret','reveal_boss','select_contract','skip_contract','complete_contract','choose_boon','prepare_boss']);
+const DECISION_TYPES=Object.freeze(['reveal_room','discover_secret','reveal_boss','select_contract','skip_contract','complete_contract','choose_boon','skip_boon','reroll_boon','prepare_boss']);
 function lookup(group,id){return Object.hasOwn(CATALOG,group)?byId[group].get(id)||null:null;}
 function applyDecision(state,decision,manifest){
  if(!validateExpeditionState(state,manifest)||!decision||typeof decision!=='object'||!DECISION_TYPES.includes(decision.type))throw Error('Invalid foundation decision');
@@ -139,10 +139,24 @@ function applyDecision(state,decision,manifest){
  }else if(decision.type==='complete_contract'){
   if(next.contractId===null||decision.id!==next.contractId||next.completedObjectives.includes(decision.id)||next.decisions.some(x=>x.type==='skip_contract'))throw Error('Invalid contract completion');
   next.completedObjectives.push(decision.id);recorded={type:decision.type,id:decision.id};
- }else if(decision.type==='choose_boon'){
-  const boon=lookup('boons',decision.id);
-  if(!boon||next.boonIds.length>=2||next.boonIds.includes(decision.id))throw Error('Invalid or duplicate boon');
-  next.boonIds.push(decision.id);recorded={type:decision.type,id:decision.id};
+ }else if(decision.type==='reroll_boon'){
+  if(!Number.isInteger(decision.room)||decision.room<1||decision.room>=DIFFICULTIES[c.risk].rooms||
+     next.decisions.some(x=>x.room===decision.room&&['reroll_boon','choose_boon','skip_boon'].includes(x.type))||
+     next.decisions.filter(x=>x.type==='reroll_boon').length>=2)
+     throw Error('Invalid or repeated Boon reroll');
+  recorded={type:'reroll_boon',room:decision.room};
+ }else if(decision.type==='choose_boon'||decision.type==='skip_boon'){
+  if(!Number.isInteger(decision.room)||decision.room<1||decision.room>=DIFFICULTIES[c.risk].rooms||
+     next.decisions.some(x=>(x.type==='choose_boon'||x.type==='skip_boon')&&x.room===decision.room))
+     throw Error('Invalid or repeated Boon Shrine resolution');
+  if(decision.type==='choose_boon'){
+   const boon=lookup('boons',decision.id);
+   if(!boon||next.boonIds.length>=2||next.boonIds.includes(decision.id)||
+      !Array.isArray(decision.families)||new Set(decision.families).size!==decision.families.length||
+      decision.families.some(f=>!AFFINITIES.includes(f)))throw Error('Invalid or duplicate Boon');
+   next.boonIds.push(decision.id);
+   recorded={type:decision.type,id:decision.id,room:decision.room,families:[...decision.families]};
+  }else recorded={type:decision.type,room:decision.room};
  }else if(decision.type==='prepare_boss'){
   if(!['markedElite','reliquary'].includes(decision.source)||next.bossPreparation[decision.source])throw Error('Invalid or repeated boss preparation');
   next.bossPreparation[decision.source]=true;recorded={type:decision.type,source:decision.source};

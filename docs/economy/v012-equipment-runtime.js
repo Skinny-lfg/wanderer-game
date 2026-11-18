@@ -64,7 +64,7 @@ function comparisonEquip(item,target=item.slot){
 
 function stashCapacity(){return Math.max(ports.STASH_BASE_CAPACITY,Math.min(ports.STASH_MAX_CAPACITY,Math.round(Number(ports.state.stashCapacity)||ports.STASH_BASE_CAPACITY)))}
 
-function potionStackCount(){return Object.values(ports.state.consumables||{}).reduce((total,quantity)=>total+Math.ceil(quantity/99),0)}
+function potionStackCount(){return Object.entries(ports.state.consumables||{}).reduce((total,[kind,quantity])=>total+Math.ceil(Math.max(0,quantity-(ports.state.potionSelection||[]).filter(id=>id===kind).length)/99),0)}
 function stashItemCount(){return ports.state.stash.length+potionStackCount()}
 
 function stashUpgradeCost(){return 60+40*Math.floor((ports.stashCapacity()-ports.STASH_BASE_CAPACITY)/ports.STASH_UPGRADE_STEP)}
@@ -349,28 +349,62 @@ function phase6ReturnPotions(outcome){
 }
 
 function phase6UsePotion(index,mode='threat'){
- if(!ports.phase3IsBetweenPlanes()||!ports.phase6Run||ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked))return false;
- const potion=ports.phase6Run.potions?.[index];if(!potion||potion.used||potion.kind==='fortune')return false;
- const v=ports.phase3Vitals(),kind=potion.kind;if(kind==='barrier'&&(ports.phase6Run.effects.barrier||0)>=.3||ports.phase6Run.effects[kind]?.remaining===3)return false;if(kind==='health'&&v.hp>=v.maxhp||kind==='mana'&&v.mp>=v.maxmp)return false;
- if(!ports.phase1Vitals)ports.phase1Vitals={hp:v.hp,mp:v.mp,maxmp:v.maxmp};
- if(kind==='trail'||kind==='scout'){
-  const g=ports.phase1Controller.state,d=g.dungeon,c=d&&ports.phase1Controller.realmMap();if(!c)return false;
-  if(kind==='trail'){if(d.steps>=c.stepLimit)return false;d.steps=Math.min(c.stepLimit,d.steps+2);}else{
-   const i=c.nodes.findIndex((n,i)=>(mode==='treasure'?n.event==='forgotten_arsenal':['elite','boss'].includes(n.kind))&&!d.visited.includes(i)&&!d.scouted?.includes(i)&&!ports.phase1Controller.travelPath(i).length);
-   if(i<0){ports.bannerMessage('No undiscovered target. Dose retained.');return false;}(d.scouted??=[]).push(i);
+ const g=ports.phase1Controller.state,d=g.dungeon,atShrine=!!d?.boonOffer;
+ const selectedKind=ports.phase6Run?.started?ports.phase6Run.potions?.[index]?.kind:ports.state.potionSelection?.[index];
+ const mapUtility=['scout','veilsight','purifying','trail'].includes(selectedKind)&&!!d?.realm&&ports.phase3CanPrepare();
+ if(!(ports.phase3IsBetweenPlanes()||atShrine&&ports.phase3CanPrepare()||mapUtility)||!ports.phase6Run||
+    ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked))return false;
+ if(!ports.phase6Run.started&&!ports.phase6StartPotions())return false;
+ const potion=ports.phase6Run.potions?.[index];
+ if(!potion||potion.used||potion.kind==='fortune')return false;
+ const kind=potion.kind,v=ports.phase3Vitals();
+ if(kind==='barrier'&&(ports.phase6Run.effects.barrier||0)>=.3||
+    (kind==='purifying'?ports.phase6Run.effects[kind]?.remaining>0:ports.phase6Run.effects[kind]?.remaining===3)||
+    kind==='health'&&v.hp>=v.maxhp||kind==='mana'&&v.mp>=v.maxmp)return false;
+ if((kind==='scout'||kind==='veilsight'||kind==='purifying'||kind==='fate'||kind==='trail')&&!d)return false;
+ if(kind==='fate'){
+  if(!ports.phase1Controller.rerollBoon())return false;
+ }else if(kind==='veilsight'||kind==='scout'){
+  if(!ports.phase1Controller.scoutPotion(kind,kind==='veilsight'?'shrine':mode)){
+   ports.bannerMessage('Nothing new to discover. Dose retained.');return false;
   }
- }else if(kind==='health')ports.phase1Vitals.hp=Math.min(v.maxhp,v.hp+Math.ceil(v.maxhp*.35));
- else if(kind==='mana')ports.phase1Vitals.mp=Math.min(v.maxmp,v.mp+Math.ceil(v.maxmp*.4));
- else if(kind==='barrier')ports.phase6Run.effects.barrier=Math.min(.3,(ports.phase6Run.effects.barrier||0)+.15);
- else ports.phase6Buff(kind,kind==='haste'?.08:.10);
+ }else if(kind==='purifying'){
+  const condition=d.foundationState?.conditionId;
+  if(!condition||condition==='veiled_passages'){
+   ports.bannerMessage('This tincture counters combat Conditions only. Dose retained.');return false;
+  }
+  ports.phase6Run.effects.purifying={remaining:2,power:.5};
+ }else if(kind==='trail'){
+  const c=ports.phase1Controller.realmMap(),limit=c.stepLimit+
+    (d.foundationState?.boonIds?.includes('wayfarers_bargain')?1:0);
+  if(d.steps>=limit)return false;
+  d.steps=Math.min(limit,d.steps+2);
+ }else{
+  if(!ports.phase1Vitals)ports.phase1Vitals={hp:v.hp,mp:v.mp,maxmp:v.maxmp};
+  if(kind==='health')ports.phase1Vitals.hp=Math.min(v.maxhp,v.hp+Math.ceil(v.maxhp*.35));
+  else if(kind==='mana')ports.phase1Vitals.mp=Math.min(v.maxmp,v.mp+Math.ceil(v.maxmp*.4));
+  else if(kind==='barrier')ports.phase6Run.effects.barrier=Math.min(.3,(ports.phase6Run.effects.barrier||0)+.15);
+  else ports.phase6Buff(kind,kind==='haste'?.08:.10);
+ }
  potion.used=true;ports.view='phase1';ports.save();ports.render();return true;
 }
-
 function phase6BuyPotion(id){
- if(!ports.economyCanAct())return false;const a=ports.state.apothecary,index=a?.stock.findIndex(p=>p.id===id);if(index===undefined||index<0)return false;const p=a.stock[index],stock=ports.phase6PotionInventory(),quantity=stock[p.kind]||0;if(ports.state.gold<p.price||quantity>=99999||quantity%99===0&&!ports.stashHasRoom())return false;
- ports.state.gold-=p.price;stock[p.kind]=(stock[p.kind]||0)+1;const replacementKind=WandererV012Consumables.offer(ports.gameRandom),replacement=WandererV012Consumables.CATALOG.find(entry=>entry.id===replacementKind);a.stock[index]={id:ports.makeId(),kind:replacementKind,price:Math.ceil(replacement.base*(1+ports.economyTier()*.12))};ports.save();ports.render();return true;
+ if(!ports.economyCanAct())return false;
+ const a=ports.state.apothecary,index=a?.stock.findIndex(p=>p.id===id);
+ if(index===undefined||index<0)return false;
+ const p=a.stock[index],stock=ports.phase6PotionInventory(),quantity=stock[p.kind]||0;
+ const equipped=ports.state.potionSelection;
+ const autoSlot=equipped.length<3&&!equipped.includes(p.kind);
+ const stashed=quantity-equipped.filter(kind=>kind===p.kind).length;
+ if(ports.state.gold<p.price||quantity>=99999||
+    !autoSlot&&stashed%99===0&&!ports.stashHasRoom())return false;
+ ports.state.gold-=p.price;stock[p.kind]=quantity+1;
+ if(autoSlot)equipped.push(p.kind);
+ const replacementKind=WandererV012Consumables.offer(ports.gameRandom);
+ const replacement=WandererV012Consumables.CATALOG.find(entry=>entry.id===replacementKind);
+ a.stock[index]={id:ports.makeId(),kind:replacementKind,price:Math.ceil(replacement.base*(1+ports.economyTier()*.12))};
+ ports.save();ports.render();return true;
 }
-
 function phase6RerollPotions(){if(!ports.economyCanAct()||!ports.state.apothecary||ports.state.gold<ports.state.apothecary.refreshCost)return false;ports.state.gold-=ports.state.apothecary.refreshCost;ports.state.apothecary=WandererV012Consumables.shop(ports.economyTier(),ports.gameRandom,ports.makeId);ports.save();ports.render();return true;}
 
 function unequipRune(index){
