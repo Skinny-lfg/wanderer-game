@@ -1019,10 +1019,10 @@ function enemyRoleBadge(enemy){
   return '<span class="enemyRoleBadge role-'+esc(role)+'" title="'+esc(label+(detail?' · '+detail:''))+'" aria-label="'+esc(label)+'">'+(eliteInfo?.icon||ENEMY_ROLE_ICON[role]||'◆')+'</span>';
 }
 function enemyAbilityMarkup(enemy,now){
- const state=globalThis.WandererV013BossInfrastructure?.status(enemy,state.run,now)||globalThis.WandererV013EliteAbilities?.status(enemy,now)||globalThis.WandererV013EnemyAbilities?.status(enemy,now);
- if(!state)return '';
- return '<span class="enemyAbilityStatus is-'+esc(state.kind)+'" title="'+esc(state.detail)+'">'+
-  esc(state.label)+' <small>'+Math.max(0,state.remaining).toFixed(1)+'s</small></span>';
+ const abilityStatus=globalThis.WandererV013BossInfrastructure?.status(enemy,state.run,now)||globalThis.WandererV013EliteAbilities?.status(enemy,now)||globalThis.WandererV013EnemyAbilities?.status(enemy,now);
+ if(!abilityStatus)return '';
+ return '<span class="enemyAbilityStatus is-'+esc(abilityStatus.kind)+'" title="'+esc(abilityStatus.detail)+'">'+
+  esc(abilityStatus.label)+' <small>'+Math.max(0,abilityStatus.remaining).toFixed(1)+'s</small></span>';
 }
 function phase3GroupEnemyMarkup(enemy,index,run){
  const target=enemy===run.enemy,attack=enemy.miniboss?(ELITE_ATTACK_ART[enemy.eliteType]||enemy.image):enemy.boss?(BOSS_ATTACK_ART[enemy.bossStyle]||enemy.image):enemy.image||ART.enemy,idle=enemy.miniboss?(ELITE_ART[enemy.eliteType]||enemy.image):enemy.boss?enemy.image:attack.replace(/\.gif(?:\?.*)?$/i,'.png'),id=' id="'+(target?'enemyPortrait':'arenaEnemyPortrait-'+index)+'"',hpId=target?' id="enemyHpFill"':'',textId=target?' id="enemyHpText"':'',hp=Math.max(0,Math.ceil(enemy.hp)),arrival=enemy.reinforcementArrival?'is-arriving ':'';
