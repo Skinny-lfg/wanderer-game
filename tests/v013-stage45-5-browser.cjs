@@ -68,8 +68,8 @@ async function main(){
     await contextPage.locator('[data-realm-card]').nth(index).click();
     assert.equal(await contextPage.locator('[data-stage7-contract]').count(),2);
     await contextPage.locator('#stage7SkipContract').click();
-    assert.equal(await contextPage.locator('[data-stage6-boon]').count(),3);
-    await contextPage.locator('[data-stage6-boon]:not([data-stage6-boon="wayfarers_bargain"])').first().click();
+    assert.equal(await contextPage.locator('[data-stage6-boon]').count(),0,'No Boon is offered at Dungeon entry');
+    assert(await contextPage.locator('[data-dungeon-room="1"]').count()>0,'Contract must lead straight to the map');
     return cards[index];
   }
   async function navigate(contextPage,target,options={}){
@@ -83,8 +83,14 @@ async function main(){
       const button=dialog.getByRole('button',{name:/^(Enter room|Travel here)$/});
       const label=await button.innerText();await button.click();
       if(label==='Travel here')continue;
+      const shrine=await contextPage.locator('#stage73SkipBoon').count()>0;
+      if(shrine){
+        assert.equal(await contextPage.locator('[data-stage6-boon]').count(),3,'Found Shrine must show three Boons');
+        await contextPage.locator('#stage73SkipBoon').click();
+        assert.equal(await contextPage.locator('[data-stage6-boon]').count(),0,'Skipped Shrine must be resolved');
+      }
       const event=await contextPage.locator('.phase6Event').count()>0;
-      if(event){
+      if(!shrine&&event){
         const name=await contextPage.locator('.phase6Event h2').innerText();
         if(node===target&&options.oracle){
           assert.match(name,/Oracle/i,'Expected natural Oracle event');
@@ -99,7 +105,7 @@ async function main(){
             next.knownMods.length>snapshot.knownMods.length?1:0);
         }else await contextPage.getByRole('button',{name:'Pass without rewards'}).click();
         if(await contextPage.locator('#phase5ExitEvent').count())await contextPage.locator('#phase5ExitEvent').click();
-      }else{
+      }else if(!shrine){
         const combat=await contextPage.evaluate(()=>__stage455.snapshot());
         if(node===target&&options.elite){
           assert(combat.runStatus==='fight','Elite must start combat');
@@ -125,7 +131,7 @@ async function main(){
           else throw Error('No visible result/exit after encounter '+node+'; stage='+settled.stage+' status='+settled.runStatus);
         }
       }
-      if(await contextPage.locator('[data-stage6-boon]').count())await contextPage.locator('[data-stage6-boon]:not([data-stage6-boon="wayfarers_bargain"])').first().click();
+      assert.equal(await contextPage.locator('[data-stage6-boon]').count(),0,'No automated after-combat Boon selection');
       const after=await contextPage.evaluate(()=>__stage455.snapshot());
       assert(before.steps>=after.steps,'No room may refund travel steps');
       if(node!==target||!options.boss)assert.equal(after.current,node,'Current room mismatch');
@@ -183,8 +189,7 @@ async function main(){
   await oraclePage.locator('[data-realm-card]').nth(oracleChoice).click();
   assert.equal(await oraclePage.locator('[data-stage7-contract]').count(),2);
   await oraclePage.locator('#stage7SkipContract').click();
-  assert.equal(await oraclePage.locator('[data-stage6-boon]').count(),3);
-  await oraclePage.locator('[data-stage6-boon]:not([data-stage6-boon="wayfarers_bargain"])').first().click();
+  assert.equal(await oraclePage.locator('[data-stage6-boon]').count(),0,'Oracle route begins on the Dungeon map');
   await navigate(oraclePage,naturalCards[oracleChoice].oracle,{oracle:true});
   const oracleDone=await oraclePage.evaluate(()=>__stage455.snapshot());
   await oraclePage.screenshot({path:path.join(out,'stage455-oracle-mobile.png'),fullPage:true});
