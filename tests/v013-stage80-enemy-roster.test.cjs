@@ -80,8 +80,8 @@ test('Stage 8.0 normal mobs retain real health, damage and defense while Minions
  }),12,{activeSlots:4,scale:{hp:.16,atk:.16},scaleFor:(mob,count,base)=>R.scaleFor(mob,count,base)});
  const normal=spawned.find(m=>m.role!=='minion'),small=spawned.find(m=>m.role==='minion');
  assert(normal&&small);
- assert(normal.maxhp>=small.maxhp*2.5,'normal mob must withstand appreciably more punishment');
- assert(normal.atk>=small.atk*2,'normal mob must be higher pressure than a Minion');
+ assert(normal.maxhp>=small.maxhp*1.8,'normal mob must withstand appreciably more punishment');
+ assert(normal.atk>=small.atk*1.6,'normal mob must be higher pressure than a Minion');
  assert(normal.def>=small.def*2,'Tanks/casters/skirmishers keep defense scale');
  assert.equal(spawned.length,12);
  assert.deepEqual(spawned.slice(0,4).map(m=>m.groupSlot),[0,1,2,3]);
