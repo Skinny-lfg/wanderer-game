@@ -29,7 +29,7 @@ test('Stage 9.2 pilot bounds are explicit and small',()=>{
  const cfg=D.parseArgs();
  assert.equal(cfg.expectedCases,228);
  assert.equal(cfg.builds.length,3);
- assert.equal(cfg.seeds.length,2);
+ assert.deepEqual(cfg.seeds,[9101,9201]);
  assert.equal(cfg.bossAffinities.length,2);
  assert.throws(()=>D.parseArgs(['--seeds='+Array.from({length:8},(_,i)=>9101+i).join(',')]),/exceeds/);
  assert.throws(()=>D.parseArgs(['--boss-affinities=imaginary']),/Invalid boss affinities/);
