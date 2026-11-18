@@ -30,3 +30,8 @@ test('rapid consecutive reveals keep both earlier fades at their original progre
   assert.match(html,/data-fog-revealed="1"/);assert.match(html,/data-fog-revealed="2"/);assert.match(html,/data-fog-revealed="3"/);
  }finally{Date.now=clock;fog.reset();}
 });
+test('cloud movement phase stays continuous after a drag pause and map redraw',()=>{
+ const clock=Date.now;let time=100000;Date.now=()=>time;
+ try{fog.reset();const before=render('pause',[0]);const phase=Number(before.match(/realmFogDense" style="animation-delay:-(\d+)ms/)[1]);fog.pause();time+=5000;fog.resume();const after=render('pause',[0]);assert.equal(Number(after.match(/realmFogDense" style="animation-delay:-(\d+)ms/)[1]),phase);}
+ finally{Date.now=clock;fog.reset();}
+});
