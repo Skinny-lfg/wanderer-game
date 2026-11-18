@@ -81,8 +81,10 @@ test('Stage 6: the second offer requires four cleared fights, cannot duplicate, 
  const {c}=fresh(6305),d=c.state.dungeon,first=c.offerBoons(['blood']);
  const selected=first.ids[0];c.chooseBoon(selected);
  assert.equal(c.offerBoons(['blood']),null);
- // This unit fixture advances the milestone ledger only; actual map traversal
- // and combat are validated separately by the browser/native CI integration.
+ // Event completions do not count. Use the real controller's combat history.
+ c.state.history.push({event:'oracle_of_paths'});
+ assert.equal(c.offerBoons(['blood']),null);
+ for(let i=0;i<4;i++)c.state.history.push({node:i+1,waves:1,event:null});
  d.cleared.push(1,2,3,4);d.visited.push(1,2,3,4);
  const offer=c.offerBoons(['blood']);assert.equal(offer.round,1);
  assert.equal(offer.ids.length,3);assert(!offer.ids.includes(selected));
