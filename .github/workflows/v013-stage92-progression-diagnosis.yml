@@ -1,0 +1,35 @@
+name: Wanderer v0.13 Stage 9.2 - progression sensitivity (no deploy)
+on:
+  push:
+    branches: [feature/v013-stage92-progression-diagnosis-20261118]
+  workflow_dispatch:
+jobs:
+  progression-diagnosis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate Stage 9.2, Stage 9.1 and current native simulator
+        run: |
+          npm run test:v013:stage92
+          npm run test:v013:stage91
+          npm run test:v013:balance
+      - name: Diagnose 228 native progression scenarios
+        run: npm run diagnose:v013:stage92
+      - name: Print compact curve and paired contrast overview
+        if: always()
+        run: |
+          node -e "const fs=require('fs');const p='reports/v013-stage92-progression-diagnosis.json';if(!fs.existsSync(p))process.exit(0);const d=JSON.parse(fs.readFileSync(p));console.log(JSON.stringify({coverage:d.coverage,groups:d.groups.map(g=>({cohort:g.cohort,mode:g.mode,build:g.build,boss:g.bossAffinity,n:g.resolved,win:g.winPct,hp:g.meanMinHpPct,rooms:g.meanRooms,flags:g.flags})),contrasts:d.comparisons.map(c=>({from:c.from,to:c.to,mode:c.mode,build:c.build,boss:c.boss,pairs:c.pairs,deltaWinPct:c.deltaWinPct,deltaHP:c.deltaMinHpPct}))},null,2));"
+      - name: Preserve JSON and Markdown (no deployment)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wanderer-v013-stage92-progression-diagnosis
+          path: |
+            reports/v013-stage92-progression-diagnosis.json
+            reports/v013-stage92-progression-diagnosis.md
+          if-no-files-found: warn
+          retention-days: 14
