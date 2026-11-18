@@ -215,7 +215,8 @@ function phase1StartWave(resetScroll=false){
  const preparation=globalThis.WandererV013BossPreparation;
  const plannedBossIds=g.dungeon&&g.selected.boss&&modifiers?(preparation?preparation.effectiveModifiers(g):modifiers.selection(g)):[];
  // Manifest compatibility: properties planned for the legacy global boss are applied only if valid for the chosen Affinity Boss.
- const bossIds=plannedBossIds.filter(id=>modifiers.check([id],actualBossStyle||group[0].bossStyle,g.dungeon?.foundationState?.conditionId));
+ const bossIds=plannedBossIds;
+ if(bossIds.length&&!modifiers.check(bossIds,actualBossStyle||group[0].bossStyle,g.dungeon?.foundationState?.conditionId))throw Error('Incompatible Boss modifiers for selected Affinity');
  r.bossModifierIds=[];
  if(g.selected.boss&&modifiers){if(!modifiers.activate(r,group[0],bossIds))throw Error('Boss modifiers failed to apply');
   if(preparation){const factor=preparation.bossAttackFactor(g);group[0].atk=Math.max(1,Math.round(group[0].atk*factor));r.bossPreparation={...preparation.status(g)};if(factor<1)ports.addLog('Marked Elite defeated: boss attacks weakened by 10%.','good');}

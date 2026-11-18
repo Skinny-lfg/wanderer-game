@@ -3,6 +3,7 @@
 const VERSION=1;
 const AFFINITIES=Object.freeze(['blood','decay','vitality','aegis','fury','magic']);
 const BOSS_STYLES=Object.freeze(['guardian','leech','berserker','matriarch','devourer','conductor']);
+const BOSS_STYLE_BY_AFFINITY=Object.freeze({blood:'leech',decay:'matriarch',vitality:'devourer',aegis:'guardian',fury:'berserker',magic:'conductor'});
 const DIFFICULTIES=Object.freeze([
  {id:'guarded',name:'Guarded',risk:0,rooms:18,steps:14,elites:1,escorts:0,bonus:0,traits:1,bossModifiers:1},
  {id:'dangerous',name:'Dangerous',risk:1,rooms:20,steps:13,elites:1,escorts:1,bonus:.12,traits:2,bossModifiers:2},
@@ -98,7 +99,7 @@ function createManifest(cards,{seed,expeditionLevel,bossStyle}={}){
  if(!Number.isSafeInteger(expeditionLevel)||expeditionLevel<1)throw Error('Invalid Expedition Level');
  if(!BOSS_STYLES.includes(bossStyle))throw Error('Invalid boss style');
  const streams=createStreams(seed),selected=chooseConditions(cards,streams.map);
- return {version:VERSION,seed,expeditionLevel,bossStyle,cards:cards.map((card,i)=>({realmId:card.id,family:card.family,risk:card.risk,difficulty:DIFFICULTIES[card.risk].id,conditionId:selected[i].id,bossModifierIds:chooseBossModifiers(selected[i].id,card.risk,bossStyle,streams.boss)}))};
+ return {version:VERSION,seed,expeditionLevel,bossStyle,cards:cards.map((card,i)=>({realmId:card.id,family:card.family,risk:card.risk,bossStyle:BOSS_STYLE_BY_AFFINITY[card.family],difficulty:DIFFICULTIES[card.risk].id,conditionId:selected[i].id,bossModifierIds:chooseBossModifiers(selected[i].id,card.risk,BOSS_STYLE_BY_AFFINITY[card.family],streams.boss)}))};
 }
 function createExpeditionState(manifest,realmId){
  if(!manifest||manifest.version!==VERSION||!Array.isArray(manifest.cards))throw Error('Invalid manifest');
@@ -169,7 +170,7 @@ function replayDecisions(manifest,realmId,decisions){
  if(!Array.isArray(decisions))throw Error('Invalid decisions');
  return decisions.reduce((state,action)=>applyDecision(state,action,manifest),createExpeditionState(manifest,realmId));
 }
-const API={VERSION,AFFINITIES,BOSS_STYLES,DIFFICULTIES,CATALOG,DECISION_TYPES,lookup,validateCatalog,deriveSeed,rng,createStreams,chooseConditions,chooseBossModifiers,createManifest,createExpeditionState,validateExpeditionState,applyDecision,replayDecisions};
+const API={VERSION,AFFINITIES,BOSS_STYLES,BOSS_STYLE_BY_AFFINITY,DIFFICULTIES,CATALOG,DECISION_TYPES,lookup,validateCatalog,deriveSeed,rng,createStreams,chooseConditions,chooseBossModifiers,createManifest,createExpeditionState,validateExpeditionState,applyDecision,replayDecisions};
 root.WandererV013ExpeditionFoundation=Object.freeze(API);
 if(typeof module==='object'&&module.exports)module.exports=root.WandererV013ExpeditionFoundation;
 })(globalThis);

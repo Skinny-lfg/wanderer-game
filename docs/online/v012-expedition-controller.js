@@ -403,7 +403,7 @@ function create(themes,rng=Math.random){
      !Array.isArray(v.bossModifierIds)||v.bossModifierIds.length!==i+1||new Set(v.bossModifierIds).size!==v.bossModifierIds.length||
      v.bossModifierIds.some(id=>!F.lookup('bossModifiers',id))||
      F.lookup('conditions',v.conditionId).conflicts?.some(id=>v.bossModifierIds.includes(id))||
-     v.bossModifierIds.some(id=>F.lookup('bossModifiers',id).conflicts?.includes(v.conditionId)||F.lookup('bossModifiers',id).excludeBossStyles?.includes(manifest.bossStyle)))||
+     v.bossStyle!==bossForAffinity(v.family).style||v.bossModifierIds.some(id=>F.lookup('bossModifiers',id).conflicts?.includes(v.conditionId)||F.lookup('bossModifiers',id).excludeBossStyles?.includes(v.bossStyle)))||
     new Set(manifest.cards.map(c=>c.conditionId)).size!==3)throw Error('Invalid dungeon manifest');
   if(!B||d.cards.some(card=>!B.validateTopology(card,manifest.seed)))throw Error('Invalid deterministic Boon Shrines');
   const expectedManifest=F.createManifest(d.cards,{seed:manifest.seed,expeditionLevel:g.expedition,bossStyle:manifest.bossStyle});
@@ -422,7 +422,7 @@ function create(themes,rng=Math.random){
       v.conditionId!==d.foundationState.conditionId&&v.realmId===d.realm||
       !F.lookup('conditions',v.conditionId)?.families.includes(v.family)||
       !Array.isArray(v.bossModifierIds)||v.bossModifierIds.length!==i+1||new Set(v.bossModifierIds).size!==v.bossModifierIds.length||
-      v.bossModifierIds.some(id=>!F.lookup('bossModifiers',id)))||
+      v.bossModifierIds.some(id=>!F.lookup('bossModifiers',id))||v.bossStyle!==bossForAffinity(v.family).style||v.bossModifierIds.some(id=>F.lookup('bossModifiers',id).excludeBossStyles?.includes(v.bossStyle)))||
       !BOSSES.some(b=>b.style===d.foundationManifest.bossStyle&&b.id===g.bossId))throw Error('Invalid dungeon manifest');
    if(!d.foundationState.decisions.every((x,i)=>x?.seq===i)||
      !roomList(d.foundationState.knownRooms,size)||
