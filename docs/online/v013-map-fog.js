@@ -1,19 +1,19 @@
 // Visual-only Expedition fog. No map generation, routing, or save mutation.
 (function(root){'use strict';
 let previous=null;
-const colors={blood:'#ff6666',decay:'#a7d564',vitality:'#77db9c',aegis:'#ffda87',fury:'#ffad65',magic:'#9d9dff'};
+const colors={blood:'#ff6666',decay:'#a7d564',vitality:'#e2f6b0',aegis:'#ffda87',fury:'#ffad65',magic:'#9d9dff'};
 const validPoint=p=>Array.isArray(p)&&p.length===2&&p.every(Number.isFinite);
 function normalized(points,indices){return [...new Set(indices)].filter(i=>Number.isInteger(i)&&i>=0&&i<points.length&&validPoint(points[i])).sort((a,b)=>a-b);}
 function layer(id,points,indices,family,old,elapsed=0,nextIndices=indices,now=Date.now()){
- const holes=indices.map(i=>{const p=points[i];return '<ellipse cx="'+p[0]+'" cy="'+p[1]+'" rx="7.5" ry="12" fill="url(#'+id+'-hole)"/>';}).join('');
- const added=old?nextIndices.filter(i=>!indices.includes(i)&&validPoint(points[i])).map(i=>{const p=points[i];return '<ellipse cx="'+p[0]+'" cy="'+p[1]+'" rx="7.5" ry="12" fill="url(#'+id+'-light)"/>';}).join(''):'';
+ const holes=indices.map(i=>{const p=points[i];return '<ellipse cx="'+p[0]+'" cy="'+p[1]+'" rx="8.5" ry="13.2" fill="url(#'+id+'-hole)"/>';}).join('');
+ const added=old?nextIndices.filter(i=>!indices.includes(i)&&validPoint(points[i])).map(i=>{const p=points[i];return '<ellipse cx="'+p[0]+'" cy="'+p[1]+'" rx="8.5" ry="13.2" fill="url(#'+id+'-light)"/>';}).join(''):'';
  return '<svg class="realmFog '+(old?'realmFogPrevious':'realmFogCurrent')+'"'+(old?' style="animation-delay:-'+Math.min(999,Math.max(0,elapsed))+'ms"':'')+' aria-hidden="true" focusable="false" viewBox="0 0 100 100" preserveAspectRatio="none" data-fog-revealed="'+indices.length+'">'+
  '<defs><radialGradient id="'+id+'-hole"><stop offset="0" stop-color="black"/><stop offset="55%" stop-color="black"/><stop offset="100%" stop-color="black" stop-opacity="0"/></radialGradient>'+
  '<radialGradient id="'+id+'-light"><stop offset="0" stop-color="white"/><stop offset="55%" stop-color="white"/><stop offset="100%" stop-color="white" stop-opacity="0"/></radialGradient>'+
  '<mask id="'+id+'-mask" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" x="0" y="0" width="100" height="100" style="mask-type:luminance"><rect width="100" height="100" fill="'+(old?'black':'white')+'"/>'+added+holes+'</mask></defs>'+
  '<g mask="url(#'+id+'-mask)"><rect width="100" height="100" fill="#121117" fill-opacity=".35"/>'+
- '<image class="realmFogDense" style="animation-delay:-'+(now%108000)+'ms" href="assets/expedition-map/fog-dense-'+family+'.webp" x="-16" y="-16" width="132" height="132" preserveAspectRatio="none" opacity=".48"/>'+
- '<image class="realmFogDispersed" style="animation-delay:-'+(now%146000)+'ms" href="assets/expedition-map/fog-dispersed-'+family+'.webp" x="-24" y="-24" width="148" height="148" preserveAspectRatio="none" opacity=".32"/></g></svg>';
+ '<image class="realmFogDense" style="animation-delay:-'+(now%108000)+'ms" href="assets/expedition-map/fog-dense-'+family+'.webp?v=2" x="-16" y="-16" width="132" height="132" preserveAspectRatio="none" opacity=".48"/>'+
+ '<image class="realmFogDispersed" style="animation-delay:-'+(now%146000)+'ms" href="assets/expedition-map/fog-dispersed-'+family+'.webp?v=2" x="-24" y="-24" width="148" height="148" preserveAspectRatio="none" opacity=".32"/></g></svg>';
 }
 function render({key,points,revealed,family}){
  if(!Array.isArray(points)||!Array.isArray(revealed))return '';
