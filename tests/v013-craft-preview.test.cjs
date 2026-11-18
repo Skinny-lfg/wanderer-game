@@ -5,7 +5,7 @@ const C=globalThis.WandererV013Crafting;
 test('every Forge recipe previews the same guaranteed profile, rarity, tier and functional trait; stat values are sample rolls',()=>{
  const a=create(421,undefined,{}, {now:1700000000000});
  a.state().fragments=10000000;
- a.state().crafting={...C.create(),essence:1000000,cores:Object.fromEntries(C.FAMILIES.map(f=>[f,100])),realmFamilies:[...C.FAMILIES],bossFamilies:[...C.FAMILIES]};
+ a.state().crafting={...C.create(),essence:1000000,cores:Object.fromEntries(C.FAMILIES.map(f=>[f,100])),realmFamilies:[...C.FAMILIES],bossFamilies:[...C.FAMILIES],learnedRecipes:C.RECIPES.filter(r=>r.rarity!=='Uncommon').map(r=>r.id)};
  for(const tier of [1,6,201])for(const recipe of C.RECIPES){
   const focus=recipe.slot==='armor'?({Cloth:'spellweave',Leather:'quickstep',Plate:'bulwark'}[recipe.subtype]):'none',before=JSON.stringify(a.state());
   const preview=C.previewCraft(recipe.id,tier,(...args)=>a.makeItem(...args,true),focus);
