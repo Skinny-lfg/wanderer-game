@@ -27,7 +27,7 @@ function enemyFor(level,enc,override=null){
  const atk=Math.max(1,Math.round(v.atk*mult*(elite?elite.atk:role==='minion'?.70:role==='skirmisher'?1.10:role==='caster'?1.08:role==='tank'?.90:1)));
  const defense=Math.max(0,Math.round(v.def*mult*(elite?elite.def:role==='tank'?1.35:role==='minion'?.55:1)));
  const barrier=variant?.style==='guardian'?Math.max(3,WandererV012CombatCore.enemyStat(level,Math.round(WandererV012CombatCore.referenceLevel(level)*.9))):elite?.id==='tank'?Math.max(1,WandererV012CombatCore.enemyStat(level,Math.round(1+WandererV012CombatCore.referenceLevel(level)*.3))):0;
- return {name:miniboss?elite.icon+' '+elite.name:mob.name,image:elite?ports.eliteArt(elite.id,mob.image):mob.image,role,bossStyle:variant?.style||null,attackType:elite?.id==='caster'||variant?.style==='leech'||role==='caster'?'spell':'physical',
+ return {name:miniboss?elite.icon+' '+elite.name:mob.name,image:elite?ports.eliteArt(elite.id,mob.image):mob.image,role,bossStyle:variant?.style||null,attackType:['caster','gravecaller','rotbound_exarch'].includes(elite?.id)||variant?.style==='leech'||role==='caster'?'spell':'physical',
  miniboss,eliteType:elite?.id||null,archetypeName:elite?.name||null,hp,maxhp:hp,atk,def:defense,baseDef:defense,barrier,
  attackEvery:elite?elite.interval:role==='skirmisher'?1.42:role==='minion'?1.90:role==='tank'||role==='caster'?1.72:1.62,boss,effect:theme.effect,burn:0,bleed:0,
  burnStacks:0,bleedStacks:0,dots:{bleed:[],burn:[]},slowTime:0,enraged:false};
@@ -198,6 +198,8 @@ function setDelayEnemy(r,seconds){
  const temp=ports.setRuntime(r),now=ports.setNow(r);
  if(now<temp.delayImmuneUntil)return false;
  r.tEnemy-=seconds;temp.delayImmuneUntil=now+4;
+ const interrupted=root.WandererV013EliteAbilities?.interrupt(r.enemy,r,'delay');
+ if(interrupted)ports.addLog('✓ '+r.enemy.name+' interrupted: '+interrupted.ability,'good');
  ports.addLog('⏳ Enemy attack delayed by '+seconds+'s','good');return true;
 }
 
@@ -516,6 +518,39 @@ function updateFight(){
    }
   }
  }
+ if(root.WandererV013EliteAbilities&&r.phase1){
+  for(const event of root.WandererV013EliteAbilities.tick(r,ports.setNow(r))){
+   if(event.type==='prepare')ports.addLog('⚠ '+event.enemy.name+' prepares '+event.ability+'!','critical');
+   else if(event.type==='interrupted')ports.addLog('✓ '+event.enemy.name+' interrupted: '+event.ability,'good');
+   else if(event.type==='activate'){
+    ports.phase6Metric(r,'enemyAbilityCasts',1);
+    ports.addLog('✦ '+event.enemy.name+' uses '+event.ability+(event.target?' on '+event.target.name:'')+(event.result?' · '+event.result+' Barrier':''),'spell');
+   }else if(event.type==='summon'){
+    const theme=ports.THEMES.find(t=>t.id===r.path)||ports.currentTheme();
+    const mob=theme?.mobs?.find(m=>m.role==='minion');
+    if(!mob)throw Error('Stage 8.2 summon requires a Realm Minion');
+    if(!r.enemies)r.enemies=[r.enemy];
+    r.groupReserve??=[];
+    for(let i=0;i<event.count;i++){
+     const summon=ports.enemyFor(r.tier,r.enc,{theme,mob,boss:false,elite:false});
+     summon.hp=summon.maxhp=Math.max(1,Math.round(summon.maxhp*.42));
+     summon.atk=Math.max(1,Math.round(summon.atk*.25));
+     summon.def=summon.baseDef=Math.max(0,Math.round(summon.def*.35));
+     summon.attackEvery*=1.35;summon.groupClock=-.3*(i+1);
+     summon.stage82Summon=true;
+     root.WandererV013EnemyAbilities?.attach([summon],r.planeFamily||'decay',r.combatSeconds||0);
+     const open=r.enemies.findIndex(m=>m.hp<=0&&m.groupDefeated);
+     if(open>=0){summon.groupSlot=r.enemies[open].groupSlot;r.enemies[open]=summon;}
+     else if(r.enemies.length<4){summon.groupSlot=r.enemies.length;r.enemies.push(summon);}
+     else{summon.groupSlot=0;r.groupReserve.push(summon);}
+    }
+    r.totalMobCount=(r.totalMobCount||1)+event.count;
+    ports.phase6Metric(r,'eliteSummons',event.count);
+    ports.addLog('☠ '+event.enemy.name+' summons '+event.count+' undead Minions!','critical');
+    ports.renderCombat();
+   }
+  }
+ }
  if(globalThis.WandererV013ExpeditionConditions?.tick(r)){ports.phase6Metric(r,'conditionRiteTriggers',1);ports.addLog('Sanguine Rite · The boss grows stronger below half Health!','critical');}
  if(r.bossModifierIds?.length&&globalThis.WandererV013BossModifiers){
   const effects=globalThis.WandererV013BossModifiers.tick(r);
@@ -566,6 +601,7 @@ function updateFight(){
   let enemyAbilityVfx=null;
   const stage81=root.WandererV013EnemyAbilities;
   const stage81Strike=stage81?.consumeStrike(e,r.combatSeconds)||null;
+  const stage82Strike=root.WandererV013EliteAbilities?.consumeStrike(e,r.combatSeconds)||null;
   const stage81Pack=stage81?.packFactor(r,e)||1;
   let raw=Math.max(Math.ceil(e.atk*.24),Math.round(e.atk*(1-Math.min(.75,s.defense/(s.defense+e.atk*1.35)))));
   if(stage81Strike||stage81Pack!==1)raw=Math.max(1,Math.round(raw*(1+(stage81Strike?.bonus||0))*stage81Pack));
@@ -582,6 +618,7 @@ function updateFight(){
   // Elite Berserker cannot one-shot a full-health player with one direct hit.
   // Cap before Block/Barrier so defensive investment still matters.
   if(e.eliteType==='berserker')raw=Math.min(raw,Math.max(1,Math.floor(r.maxhp*.35)));
+  if(stage82Strike)raw=Math.min(Math.max(1,Math.round(raw*stage82Strike.multiplier)),Math.max(1,Math.floor(r.maxhp*stage82Strike.capFraction)));
   if(e.vanguard){e.vanguard=false;ports.addLog(e.name+' delivers its opening strike.','critical');}
   const special=e.miniboss||e.boss;
   if(special)raw=Math.round(raw*(1-.04*learned('brace')));
