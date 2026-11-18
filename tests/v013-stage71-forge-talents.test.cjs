@@ -8,7 +8,7 @@ test('Stage 7.1 level one starts with no free talent points',()=>{
  const a=create(7101),T=a.talents,p=T.create();
  assert(T.valid(p));assert.equal(T.earned(p),0);assert.equal(T.allocate(p,'root_blood'),null);
  const one=T.award(p,100);assert.equal(T.earned(one),1);assert(T.allocate(one,'root_blood'));
- assert.equal(T.valid({...p,starterPoints:2}),false,'legacy free points are rejected');
+ assert(!Object.prototype.hasOwnProperty.call(p,'starterPoints'),'new characters must not have a starter bonus');
 });
 test('Stage 7.1 Blueprints unlock only once and never just by clearing a Realm',()=>{
  let p=C.create();assert(C.valid(p));assert(C.unlocked(p,'green_sword'));assert(!C.unlocked(p,'blue_sword'));

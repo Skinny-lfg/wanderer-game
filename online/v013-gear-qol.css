@@ -15,3 +15,11 @@
  .walletReagents>summary{padding:3px 6px;font-size:.9em}
  .talentUnspentBadge{min-width:16px;height:16px;font-size:.7rem}
 }
+
+/* Stage 7.1 — Blueprint collection in the v0.13 Forge. */
+.v013BlueprintCollection{margin:14px 0;padding:12px 14px;border:1px solid rgba(183,144,102,.35);border-radius:9px;background:rgba(30,23,31,.6)}
+.v013BlueprintCollection p{margin:0 0 9px}
+.v013BlueprintCollection summary{cursor:pointer;color:#e4bd83;font-weight:650;padding:5px 0}
+.v013BlueprintCollection details>p{margin:10px 0}
+.v013BlueprintCollection ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:6px;max-height:290px;overflow:auto}
+.v013BlueprintCollection li{padding:8px 10px;border:1px solid rgba(155,126,102,.3);border-radius:5px;background:rgba(15,13,20,.55);font-size:.84rem;color:#baa99e}
