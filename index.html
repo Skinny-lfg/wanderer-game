@@ -655,7 +655,8 @@ let v013RecipeId=null,v013RecipeRarity='Uncommon',v013RecipeSlot='weapon',v013Co
 function v013ProjectPanel(compact=false){
  const c=WandererV013Crafting,p=state.crafting||c.create(),known=c.RECIPES.filter(r=>c.unlocked(p,r.id));
  const rare=known.filter(r=>r.rarity==='Rare').length,epic=known.filter(r=>r.rarity==='Epic').length;
- return '<section class="'+(compact?'v013Project v013Project--compact':'panel v013Project')+'"><span class="eyebrow">Blueprint Collection</span><h3>'+known.length+' / '+c.RECIPES.length+' recipes discovered</h3><p class="small muted">Rare: '+rare+' · Epic: '+epic+'. Uncommon Blueprints are known from the start. Discover more through optional Dungeon Contracts.</p><button type="button" id="v013OpenForge" class="ghost">Browse known recipes</button></section>';
+ if(compact)return '<details class="phase3BlueprintCompact"><summary><span>Blueprint Collection</span><strong>'+known.length+' / '+c.RECIPES.length+'</strong></summary><div class="phase3BlueprintBody"><p class="small muted">'+rare+' Rare · '+epic+' Epic discovered. Find new Blueprints through optional Dungeon Contracts.</p><button type="button" id="v013OpenForge" class="ghost">Browse Blueprints in Forge</button></div></details>';
+ return '<section class="panel v013Project"><span class="eyebrow">Blueprint Collection</span><h3>'+known.length+' / '+c.RECIPES.length+' recipes discovered</h3><p class="small muted">Rare: '+rare+' · Epic: '+epic+'. Uncommon Blueprints are known from the start. Discover more through optional Dungeon Contracts.</p><button type="button" id="v013OpenForge" class="ghost">Browse known recipes</button></section>';
 }
 function renderV013Forge(){
  wallet();const c=WandererV013Crafting,p=state.crafting||c.create(),level=phase1Controller.state.unlocked;
@@ -1501,14 +1502,17 @@ function phase3CampStatsMarkup(s){
 }
 
 const rankNames=['Scout','Delver','Vanguard','Warden','Mythic'];
-function phase3DifficultyMarkup(g,selected,id,labelClass='phase3Difficulty'){
- const control='<input id="'+id+'" data-phase3-expedition-level type="number" min="1" max="'+g.unlocked+'" value="'+selected+'" inputmode="numeric" aria-label="Expedition Level">';
- return '<label class="'+labelClass+'">Expedition'+control+'</label>';
+function phase3DifficultyMarkup(g,selected){
+ return '<div class="phase3ExpeditionSelector" role="group" aria-label="Select Expedition level">'+
+  '<button type="button" class="phase3ExpeditionArrow" data-phase3-expedition-step="-1" aria-label="Previous Expedition" '+(selected<=1?'disabled':'')+'><span aria-hidden="true">‹</span></button>'+
+  '<div class="phase3ExpeditionCurrent" aria-live="polite"><strong class="phase3ExpeditionNumber">'+selected+'</strong><span class="phase3ExpeditionCount">of '+g.unlocked+' unlocked</span></div>'+
+  '<button type="button" class="phase3ExpeditionArrow" data-phase3-expedition-step="1" aria-label="Next Expedition" '+(selected>=g.unlocked?'disabled':'')+'><span aria-hidden="true">›</span></button>'+
+ '</div>';
 }
 function phase3CampMarkup(g,stats){
  const selected=clamp(phase3SelectedExpedition??g.unlocked,1,g.unlocked),progress=phase5Snapshot?.expedition;
  const journey='<details class="phase3Journey"><summary>Your Journey</summary><dl><div><dt>Highest Expedition cleared</dt><dd>'+(progress?(progress.completed?'E'+progress.completed:'None yet'):'Not tracked')+'</dd></div><div><dt>Expeditions started</dt><dd>'+(progress?progress.attempts:'Not tracked')+'</dd></div><div><dt>Runes owned</dt><dd>'+state.runes.length+'</dd></div></dl>'+phase5MilestoneMarkup(progress?.completed||0)+'</details>';
- const portal='<section class="phase3ExpeditionPanel"><img class="phase3Portal" src="assets/dungeons/backgrounds/start_expedition_portal_vertical.png" alt="A luminous portal leading into the Expedition realms"><span class="eyebrow">Expedition Level</span><h2>'+selected+'</h2>'+phase3DifficultyMarkup(g,selected,'phase3Difficulty')+v013ProjectPanel(true)+'<p class="phase3RouteSummary">Three Realms · interconnected rooms · optional elites</p><button class="primary phase3Start" data-phase1-expedition="'+selected+'"><span class="phase3StartText">Start Expedition</span></button><details class="phase3ExpeditionRewards"><summary>Route &amp; rewards</summary><ul><li>Essence, Gold, Fragments and rare equipment</li><li>Boss victory: an affinity reagent and a choice of Rune</li><li>Boss victory in your highest Expedition Level unlocks the next</li></ul></details></section>';
+ const portal='<section class="phase3ExpeditionPanel"><img class="phase3Portal" src="assets/dungeons/backgrounds/start_expedition_portal_vertical.png" alt="A luminous portal leading into the Expedition realms"><span class="eyebrow">Select Expedition</span>'+phase3DifficultyMarkup(g,selected)+'<p class="phase3RouteSummary">Three Realms · branching paths · optional elites</p><button class="primary phase3Start" data-phase1-expedition="'+selected+'"><span class="phase3StartText">Start Expedition</span></button>'+v013ProjectPanel(true)+'<details class="phase3ExpeditionRewards"><summary>Route &amp; rewards</summary><ul><li>Essence, Gold, Fragments and rare equipment</li><li>Boss victory: an affinity reagent and a choice of Rune</li><li>Boss victory in your highest Expedition Level unlocks the next</li></ul></details></section>';
  return '<section class="panel phase3Camp"><div class="phase3CampGrid"><section class="phase3CampStatus"><span class="eyebrow">Wanderer v0.13.0</span><h1>Expedition Camp</h1><p class="muted">Prepare your build. Pursue your next upgrade.</p></section>'+portal+'<div class="equipmentLoadout phase3HeroColumn phase3CampCharacter" aria-label="Character equipment, potions and stats">'+phase3PaperMarkup(true,stats)+'</div><section class="phase3CampSideStats" aria-label="Character attributes and combat stats">'+phase3CampStatsMarkup(phase2Stats())+'</section><div class="phase3CampSidebarJourney">'+journey+'</div></div><details class="phase3SaveInfo"><summary>'+(PHASE5_VALIDATION?'Playtest save · isolated':'Save information')+'</summary><p>'+phase3SaveStatus()+'</p><p>'+phase6StashUsedSlots()+'/'+stashCapacity()+' Stash slots · '+state.expeditionOverflow.length+' secured items awaiting space.</p></details></section><div class="phase3CampStickyStart"><a class="phase3StickyDifficulty" href="#phase3Difficulty">Expedition '+selected+' · Change at the portal</a><button type="button" class="primary phase3Start" data-phase1-expedition="'+selected+'"><span class="phase3StartText">Start Expedition</span></button></div>';
 }
 
@@ -1532,8 +1536,8 @@ function phase3RenderNav(){
  const destinations=[['phase1',between?'Between Realms':'Camp'],['equipment','Inventory'],['talents','Talents'],['city-center','City Center'],['runes','Shrine']],expeditionLocked=phase3ExpeditionActive()&&phase1Controller.state.version===2;
  const resultLocked=phase5Results?.review==='summary';
  const talent=state.automaticTalents||WandererAutomaticTalents.create();
- const talentUnspent=Math.max(0,WandererAutomaticTalents.earned(talent)-talent.nodes.length)+Math.max(0,WandererAutomaticTalents.attributePoints(talent));
- el.innerHTML='<div class="phase3Nav">'+destinations.map(([id,label])=>{const locked=resultLocked||id==='city-center'&&!outside||expeditionLocked&&id!=='phase1'||phase3NeedsBagResolution()&&phase3ExpeditionActive()&&!['phase1','city-center'].includes(id),title=resultLocked?'Return to Camp to leave the completed Expedition':locked?'Available at Camp':'';const badge=id==='talents'&&talentUnspent>0?'<span class="talentUnspentBadge" title="'+talentUnspent+' unspent talent or attribute points" aria-hidden="true">'+talentUnspent+'</span>':'';return '<button type="button" class="tiny '+(view===id?'primary':'ghost')+'" data-phase3-nav="'+id+'" '+(locked?'disabled title="'+title+'" aria-disabled="true"':'')+'>'+label+badge+'</button>';}).join('')+'</div>';
+ const talentUnspent=Math.max(0,WandererAutomaticTalents.earned(talent)-talent.nodes.length);
+ el.innerHTML='<div class="phase3Nav">'+destinations.map(([id,label])=>{const locked=resultLocked||id==='city-center'&&!outside||expeditionLocked&&id!=='phase1'||phase3NeedsBagResolution()&&phase3ExpeditionActive()&&!['phase1','city-center'].includes(id),title=resultLocked?'Return to Camp to leave the completed Expedition':locked?'Available at Camp':'';const badge=id==='talents'&&talentUnspent>0?'<span class="talentUnspentBadge" title="'+talentUnspent+' unspent talent points" aria-hidden="true">'+talentUnspent+'</span>':'';return '<button type="button" class="tiny '+(view===id?'primary':'ghost')+'" data-phase3-nav="'+id+'" '+(locked?'disabled title="'+title+'" aria-disabled="true"':'')+'>'+label+badge+'</button>';}).join('')+'</div>';
  Q('[data-phase3-nav]').forEach(button=>button.onclick=()=>phase3Go(button.dataset.phase3Nav));
 }
 
@@ -1936,7 +1940,7 @@ function renderPhase1(){
  }
  if(['camp','finished','failed'].includes(g.stage)){
   html(phase3CampMarkup(g,stats));const openForge=$('v013OpenForge');if(openForge)openForge.onclick=()=>{const tracked=WandererV013Crafting.RECIPES.find(r=>r.id===state.crafting?.targetRecipe);if(tracked){v013RecipeRarity=tracked.rarity;v013RecipeSlot=tracked.slot;v013RecipeId=tracked.id;}view='forge';render();window.scrollTo(0,0);};
-  Q('[data-phase3-expedition-level]').forEach(control=>control.onchange=e=>{phase3SelectedExpedition=clamp(Math.floor(Number(e.target.value)||1),1,g.unlocked);renderPhase1();});
+  Q('[data-phase3-expedition-step]').forEach(button=>button.onclick=()=>{const step=Number(button.dataset.phase3ExpeditionStep)||0;phase3SelectedExpedition=clamp((phase3SelectedExpedition??g.unlocked)+step,1,g.unlocked);renderPhase1();});
   const startSelected=button=>{phase3BetweenTab='realm';phase1Begin(Number(button.dataset.phase1Expedition),true);};Q('[data-phase1-expedition]').forEach(button=>button.onclick=()=>startSelected(button));
   phase3BindPaper();phase6AppendPotionStash();return;
  }
