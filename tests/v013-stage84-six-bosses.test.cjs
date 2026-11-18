@@ -34,7 +34,7 @@ test('Aegis Guardian Ward Cycle restores 8% every 12s and breaking Barrier creat
  assert.equal(step(r,11.9).filter(x=>x.type==='ward').length,0);
  assert.equal(step(r,12).filter(x=>x.type==='ward').length,0,'no stacking while Barrier exists');
  assert(A.barrierChanged(r,e,90,0));e.barrier=0;
- assert.equal(A.status(e,r,12).label,'Ward Broken');
+ assert.equal(A.status(e,r,12).label,'Vulnerable');
  assert(!step(r,14.9).some(x=>x.type==='ward'));
  assert(!step(r,23.9).some(x=>x.type==='ward'));
  assert.equal(step(r,24).find(x=>x.type==='ward').barrier,80);
