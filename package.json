@@ -48,7 +48,9 @@
     "simulate:v013:bosses": "node scripts/simulate-progression.cjs --mode=bosses",
     "simulate:v013:enemies": "node scripts/simulate-progression.cjs --mode=enemies",
     "simulate:v013:elites": "node scripts/simulate-progression.cjs --mode=elites",
-    "test:v013:balance": "node --test tests/v013-balance-v2.test.cjs tests/v013-simulation.test.cjs tests/v013-stage5-simulation.test.cjs"
+    "test:v013:balance": "node --test tests/v013-balance-v2.test.cjs tests/v013-simulation.test.cjs tests/v013-stage5-simulation.test.cjs",
+    "test:v013:stage91": "node --test tests/v013-stage91-diagnosis.test.cjs",
+    "diagnose:v013:stage91": "node scripts/v013-stage91-diagnosis.cjs"
   },
   "dependencies": {
     "firebase": "11.10.0"
