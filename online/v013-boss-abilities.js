@@ -143,7 +143,7 @@ function tick(r,absoluteNow,infraEvents=[]){
 }
 function status(enemy,r,now){
  const s=state(r);if(!enemy?.boss||enemy!==leader(r)||!s)return null;
- if(s.style==='guardian'&&s.vulnerableUntil>now)return {kind:'interrupted',label:'Ward Broken',detail:'Ward Cycle interrupted',remaining:s.vulnerableUntil-now};
+ if(s.style==='guardian'&&s.vulnerableUntil>now)return {kind:'interrupted',label:'Vulnerable',detail:'Ward Cycle interrupted · Barrier unavailable',remaining:s.vulnerableUntil-now};
  if(s.style==='conductor'&&s.weakUntil>now)return {kind:'interrupted',label:'Weakened',detail:'Storm Node destroyed: −20% damage',remaining:s.weakUntil-now};
  if(s.style==='berserker'&&enemy.stage84Charge?.until>now)return {kind:'enraged',label:'Furnace Strike',detail:'Heavy strike charged',remaining:enemy.stage84Charge.until-now};
  if(s.style==='matriarch'&&livingMinions(r)>=2)return {kind:'guarding',label:'Brood Guard',detail:'15% less direct damage while 2+ brood Minions are alive',remaining:0};

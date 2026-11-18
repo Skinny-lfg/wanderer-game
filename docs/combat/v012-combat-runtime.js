@@ -27,7 +27,7 @@ function enemyFor(level,enc,override=null){
  const atk=Math.max(1,Math.round(v.atk*mult*(elite?elite.atk:role==='minion'?.70:role==='skirmisher'?1.10:role==='caster'?1.08:role==='tank'?.90:1)));
  const defense=Math.max(0,Math.round(v.def*mult*(elite?elite.def:role==='tank'?1.35:role==='minion'?.55:1)));
  const barrier=variant?.style==='guardian'?Math.max(3,WandererV012CombatCore.enemyStat(level,Math.round(WandererV012CombatCore.referenceLevel(level)*.9))):elite?.id==='tank'?Math.max(1,WandererV012CombatCore.enemyStat(level,Math.round(1+WandererV012CombatCore.referenceLevel(level)*.3))):0;
- return {name:miniboss?elite.icon+' '+elite.name:mob.name,image:elite?ports.eliteArt(elite.id,mob.image):mob.image,role,bossStyle:variant?.style||null,attackType:['caster','gravecaller','rotbound_exarch'].includes(elite?.id)||variant?.style==='leech'||role==='caster'?'spell':'physical',
+ return {name:miniboss?elite.icon+' '+elite.name:mob.name,image:elite?ports.eliteArt(elite.id,mob.image):mob.image,role,bossStyle:variant?.style||null,attackType:['caster','gravecaller','rotbound_exarch'].includes(elite?.id)||['leech','conductor','devourer'].includes(variant?.style)||role==='caster'?'spell':'physical',
  miniboss,eliteType:elite?.id||null,archetypeName:elite?.name||null,hp,maxhp:hp,atk,def:defense,baseDef:defense,barrier,
  attackEvery:elite?elite.interval:role==='skirmisher'?1.42:role==='minion'?1.90:role==='tank'||role==='caster'?1.72:1.62,boss,effect:theme.effect,burn:0,bleed:0,
  burnStacks:0,bleedStacks:0,dots:{bleed:[],burn:[]},slowTime:0,enraged:false};
