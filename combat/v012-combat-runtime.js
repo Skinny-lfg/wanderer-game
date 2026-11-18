@@ -505,6 +505,17 @@ function updateFight(){
  }
  const dt=.11,s=r.stats,t=ports.setRuntime(r);let e=r.enemy;
  r.combatSeconds=(r.combatSeconds||0)+dt;
+ if(root.WandererV013EnemyAbilities&&r.phase1){
+  const events=root.WandererV013EnemyAbilities.tick(r,ports.setNow(r));
+  for(const event of events){
+   if(event.type==='prepare')ports.addLog('⚠ '+event.enemy.name+' prepares '+event.ability+'!','critical');
+   else if(event.type==='interrupted')ports.addLog('✓ '+event.enemy.name+' interrupted: '+event.ability,'good');
+   else if(event.type==='activate'){
+    ports.phase6Metric(r,'enemyAbilityCasts',1);
+    ports.addLog('✦ '+event.enemy.name+' uses '+event.ability+(event.target!==event.enemy?' on '+event.target.name:'')+(event.result?' · '+event.result:''),'spell');
+   }
+  }
+ }
  if(globalThis.WandererV013ExpeditionConditions?.tick(r)){ports.phase6Metric(r,'conditionRiteTriggers',1);ports.addLog('Sanguine Rite · The boss grows stronger below half Health!','critical');}
  if(r.bossModifierIds?.length&&globalThis.WandererV013BossModifiers){
   const effects=globalThis.WandererV013BossModifiers.tick(r);
@@ -553,7 +564,11 @@ function updateFight(){
  if(!(e.stunnedUntil>ports.setNow(r))&&(!r.enemies||attacker)&&r.tEnemy>=e.attackEvery*slowed){
   r.tEnemy=0;if(r.enemies)e.groupClock=0;mobWindups.delete(e);
   let enemyAbilityVfx=null;
+  const stage81=root.WandererV013EnemyAbilities;
+  const stage81Strike=stage81?.consumeStrike(e,r.combatSeconds)||null;
+  const stage81Pack=stage81?.packFactor(r,e)||1;
   let raw=Math.max(Math.ceil(e.atk*.24),Math.round(e.atk*(1-Math.min(.75,s.defense/(s.defense+e.atk*1.35)))));
+  if(stage81Strike||stage81Pack!==1)raw=Math.max(1,Math.round(raw*(1+(stage81Strike?.bonus||0))*stage81Pack));
   const armorPrevented=Math.max(0,e.atk-raw);
   if(e.effect==='burn')raw+=WandererV012CombatCore.enemyStat(r.tier,Math.round(WandererV012CombatCore.referenceLevel(r.tier)*.3));
   if(e.effect==='sunder')raw+=WandererV012CombatCore.enemyStat(r.tier,Math.round(WandererV012CombatCore.referenceLevel(r.tier)*.2));
@@ -614,6 +629,10 @@ function updateFight(){
    if(r.hp>0&&previousHp>=r.maxhp*.5&&r.hp<r.maxhp*.5&&learned('second_pulse')&&!r.pulseStarted){r.pulseStarted=true;r.pulses=3;}
    if(r.hp>0&&r.deepReserve){const reserve=r.deepReserve;r.deepReserve=0;ports.setHeal(r,reserve,true);}
    ports.addLog('🩸 '+e.name+' hits for '+hit+' HP','bleed');ports.floatText(hit,'hero');
+   if(stage81Strike?.secondary){
+    const effect=stage81.onHit(e,r,hit,ports.setNow(r),stage81Strike);
+    if(effect>0)ports.addLog('✦ '+e.name+' · '+(stage81Strike.secondary==='siphon'?'Siphon +'+effect+' HP':stage81Strike.secondary==='mana'?'Mana −'+effect:'Healing wound'),'spell');
+   }
    if(e.eliteType==='tank'){
     const newWound=(r.playerHealingDebuffUntil||0)<=ports.setNow(r);
     r.playerHealingDebuffUntil=ports.setNow(r)+5;
