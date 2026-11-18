@@ -145,7 +145,7 @@ function stats(raw,boonIds=[]){
  return next;
 }
 function stepsAdded(id){return id==='wayfarers_bargain'?get(id).params.extraSteps:0;}
-function spreadOnDeath(run,fallen,synchronize){
+function spreadOnDeath(run,fallen,synchronize,onSpread){
  if(!has(run,'rotbound_echo')||run.boonRotboundTriggers||!fallen||fallen.hp>0)return 0;
  const living=[...(run.enemies||[]),...(run.groupReserve||[])].filter(e=>e&&e!==fallen&&e.hp>0).slice(0,2);
  if(!living.length)return 0;
@@ -161,6 +161,7 @@ function spreadOnDeath(run,fallen,synchronize){
   if(kind==='rot'){enemy.v012Rot??=[];if(enemy.v012Rot.length>=6)continue;enemy.v012Rot.push({damage:potency,remaining:duration,ticks:0,spread:true,boon:true});}
   else{enemy.dots??={};enemy.dots[kind]??=[];if(enemy.dots[kind].length>=12)continue;enemy.dots[kind].push({damage:potency,remaining:duration,spread:true,boon:true});synchronize?.(enemy);}
   count++;
+  onSpread?.(enemy,kind);
  }
  if(count)run.boonRotboundTriggers=1;
  return count;

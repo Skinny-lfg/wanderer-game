@@ -484,3 +484,47 @@ body.phase3IntegratedPreview #scene .arenaEnemy.is-defeated .enemyAbilityNotice{
  body.phase3IntegratedPreview #scene .enemyAbilityStatus{font-size:9px;padding:2px 3px;letter-spacing:0}
  body.phase3IntegratedPreview #scene .enemyAbilityStatus small{font-size:8px}
 }
+
+
+/* Stage 8.5: small links between visible arena sprites; pointer-events never capture targeting. */
+body.phase3IntegratedPreview #scene .combatLinkFx{
+ position:absolute;z-index:30;pointer-events:none;
+ left:var(--link-x);top:var(--link-y);width:var(--link-length);height:2px;
+ transform:rotate(var(--link-angle));transform-origin:left center;
+ filter:drop-shadow(0 0 6px var(--link-color));
+ animation:combatLinkFade .62s ease-out forwards;
+}
+body.phase3IntegratedPreview #scene .combatLinkFx::before{
+ content:'';position:absolute;left:0;top:-1px;width:100%;height:4px;
+ border-radius:4px;background:linear-gradient(90deg,transparent,var(--link-color) 22%,var(--link-glow) 80%,transparent);
+ box-shadow:0 0 9px var(--link-color);
+ transform:scaleX(.02);transform-origin:left center;
+ animation:combatLinkTravel .36s cubic-bezier(.2,.7,.25,1) forwards;
+}
+body.phase3IntegratedPreview #scene .combatLinkFx::after{
+ content:'';position:absolute;top:50%;left:100%;height:15px;width:15px;
+ border-radius:50%;border:1px solid var(--link-glow);
+ background:radial-gradient(circle,var(--link-glow) 0%,var(--link-color) 28%,transparent 75%);
+ box-shadow:0 0 10px 3px var(--link-color);
+ transform:translate(-50%,-50%) scale(.1);opacity:0;
+ animation:combatLinkImpact .42s .20s ease-out forwards;
+}
+body.phase3IntegratedPreview #scene .combatLinkFx.effect-aoe::before,
+body.phase3IntegratedPreview #scene .combatLinkFx.effect-cleave::before{height:7px;top:-3px;opacity:.85}
+body.phase3IntegratedPreview #scene .combatLinkFx.effect-shock::before{height:3px;border-top:1px dashed var(--link-glow)}
+body.phase3IntegratedPreview #scene .combatLinkFx.effect-ward::after,
+body.phase3IntegratedPreview #scene .combatLinkFx.effect-heal::after{height:23px;width:23px}
+body.phase3IntegratedPreview #scene .combatLinkFx.is-self::before{display:none}
+body.phase3IntegratedPreview #scene .combatLinkFx.is-self::after{
+ left:0;height:32px;width:32px;animation:combatLinkImpact .48s ease-out forwards;
+}
+@keyframes combatLinkTravel{from{transform:scaleX(.02);opacity:.25}to{transform:scaleX(1);opacity:1}}
+@keyframes combatLinkImpact{0%{transform:translate(-50%,-50%) scale(.15);opacity:0}38%{opacity:.95}100%{transform:translate(-50%,-50%) scale(1.85);opacity:0}}
+@keyframes combatLinkFade{0%,57%{opacity:1}100%{opacity:0}}
+@media(max-width:650px){
+ body.phase3IntegratedPreview #scene .combatLinkFx::after{height:10px;width:10px}
+ body.phase3IntegratedPreview #scene .combatLinkFx.is-self::after{height:22px;width:22px}
+}
+@media(prefers-reduced-motion:reduce){
+ body.phase3IntegratedPreview #scene .combatLinkFx{display:none}
+}

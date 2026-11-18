@@ -343,13 +343,14 @@ function groupSecondaryDamage(r,base,factors,label,physical=false){
  const targets=r.enemies.filter(enemy=>enemy!==r.enemy&&enemy.hp>0).slice(0,factors.length);let hit=0;
  targets.forEach((enemy,i)=>{let amount=Math.max(1,Math.round((physical?Math.max(1,Math.round(r.stats.attack*({'Two-Handed':1.70,Sword:1.12,Mace:1.4,Bow:1.08,Daggers:.80}[r.stats.main?.subtype]||1))-WandererV012Buildcraft.enemyDefense(ports.phase1Build,enemy)):base)*factors[i]));if(enemy.baseDef>0&&enemy.def<enemy.baseDef)amount=Math.max(1,Math.round(amount*(1+(ports.phase1Build?.runtime?.talentBonuses?.sunderDamage||0))));amount=Math.max(1,Math.round(amount*(root.WandererV013ExpeditionBoons?.factor(r,true)||1)));const absorbed=Math.min(enemy.barrier||0,amount);enemy.barrier=Math.max(0,(enemy.barrier||0)-absorbed);amount-=absorbed;const actual=Math.min(Math.max(0,enemy.hp),amount);enemy.hp-=amount;if(actual>0)ports.floatText(actual,'enemy',false,'',enemy);ports.phase6Metric(r,'damageDealt',actual);hit++;});
  if(hit&&label.includes('Piercing Arrow'))ports.phase6Metric(r,'pierced',hit);
- if(hit)ports.addLog(label+' hits '+hit+' additional '+(hit===1?'enemy':'enemies')+'.','good');return hit;
+ if(hit){ports.combatLinkEffect?.(r,label.includes('Chain Lightning')?'shock':label.includes('Piercing')?'pierce':label.includes('Cleave')?'cleave':'aoe',r.enemy,targets);
+   ports.addLog(label+' hits '+hit+' additional '+(hit===1?'enemy':'enemies')+'.','good');}return hit;
 }
 function groupElementalEffects(r,b){
  if(!r.enemies||!b)return;const nodes=ports.state.automaticTalents?.nodes||[],targets=r.enemies.filter(enemy=>enemy!==r.enemy&&enemy.hp>0).slice(0,2);
- if(b.element==='fire'&&nodes.includes('fire_spread')){const burn=r.enemy.dots?.burn?.at(-1);if(burn)for(const enemy of targets){enemy.dots.burn??=[];if(enemy.dots.burn.length<12)enemy.dots.burn.push({damage:Math.max(1,Math.round(burn.damage*.5)),remaining:Math.min(2,burn.remaining),spread:true});ports.synchronizeDots(enemy);}}
- if(b.element==='fire'&&v013Traits().includes('conflagration')){const burn=r.enemy.dots?.burn?.at(-1),enemy=r.enemies.filter(enemy=>enemy!==r.enemy&&enemy.hp>0)[nodes.includes('fire_spread')?2:0];if(burn&&enemy){enemy.dots.burn??=[];if(enemy.dots.burn.length<12)enemy.dots.burn.push({damage:Math.max(1,Math.round(burn.damage*.35)),remaining:Math.min(2,burn.remaining),spread:true});ports.synchronizeDots(enemy);}}
- if(b.element==='frost'&&nodes.includes('frost_spread'))for(const enemy of targets)enemy.slowTime=Math.max(enemy.slowTime||0,2);
+ if(b.element==='fire'&&nodes.includes('fire_spread')){const burn=r.enemy.dots?.burn?.at(-1);if(burn)for(const enemy of targets){enemy.dots.burn??=[];if(enemy.dots.burn.length<12){enemy.dots.burn.push({damage:Math.max(1,Math.round(burn.damage*.5)),remaining:Math.min(2,burn.remaining),spread:true});ports.combatLinkEffect?.(r,'burn',r.enemy,[enemy]);}ports.synchronizeDots(enemy);}}
+ if(b.element==='fire'&&v013Traits().includes('conflagration')){const burn=r.enemy.dots?.burn?.at(-1),enemy=r.enemies.filter(enemy=>enemy!==r.enemy&&enemy.hp>0)[nodes.includes('fire_spread')?2:0];if(burn&&enemy){enemy.dots.burn??=[];if(enemy.dots.burn.length<12){enemy.dots.burn.push({damage:Math.max(1,Math.round(burn.damage*.35)),remaining:Math.min(2,burn.remaining),spread:true});ports.combatLinkEffect?.(r,'burn',r.enemy,[enemy]);}ports.synchronizeDots(enemy);}}
+ if(b.element==='frost'&&nodes.includes('frost_spread'))for(const enemy of targets){enemy.slowTime=Math.max(enemy.slowTime||0,2);ports.combatLinkEffect?.(r,'frost',r.enemy,[enemy]);}
 }
 function hasUnsettledGroupDeaths(r){return !!r.enemies?.some(enemy=>enemy.hp<=0&&!enemy.groupDefeated);}
 const lastStruck=new WeakMap();
@@ -413,7 +414,7 @@ function weaponAttack(r,offhandStrike=false){
   const previous=lastStruck.get(r);
   if(previous!==e){
    if(!(previous?.hp<=0&&r.aim===3&&learned('follow_through')))r.aim=0;
-   if(previous?.v012Rot?.length&&!e.v012Rot?.length&&learned('spore_mark')&&ports.setReady(r,'sporeMark',5))e.v012Rot=[{...previous.v012Rot[0]}];
+   if(previous?.v012Rot?.length&&!e.v012Rot?.length&&learned('spore_mark')&&ports.setReady(r,'sporeMark',5)){e.v012Rot=[{...previous.v012Rot[0]}];ports.combatLinkEffect?.(r,'rot',previous,[e]);}
   }
   lastStruck.set(r,e);
   const bleed=e.dots?.bleed||[];
@@ -424,7 +425,7 @@ function weaponAttack(r,offhandStrike=false){
   if(r.riposteUntil>now){damage+=s.attack*.75;r.riposteUntil=0;triggered(r,'turn_tide');}
   if(cast&&r.lifeCharge){r.lifeCharge=false;if(r.hp<r.maxhp*.5)ports.setHeal(r,r.maxhp*.08,true);else damage*=1.3;triggered(r,'lifeweaver');}
   if(cast&&(learned('spell_echo')||prepared('grave_bloom'))){r.echoCount=((r.echoCount||0)+1)%3;if(!r.echoCount){const echo=learned('spell_echo')?Math.max(1,Math.round(damage*.1*learned('spell_echo'))):0;damage+=echo;if(echo)ports.floatText(echo,'enemy',false,'ECHO',e);
-   if(prepared('grave_bloom')&&e.v012Rot?.length){const others=(r.enemies||[]).filter(m=>m!==e&&m.hp>0).slice(0,2);if(others.length)for(const m of others){m.v012Rot??=[];if(m.v012Rot.length<6)m.v012Rot.push({...e.v012Rot[0]});}else damage+=e.v012Rot.reduce((sum,d)=>sum+d.damage,0);triggered(r,'grave_bloom');}
+   if(prepared('grave_bloom')&&e.v012Rot?.length){const others=(r.enemies||[]).filter(m=>m!==e&&m.hp>0).slice(0,2);if(others.length)for(const m of others){m.v012Rot??=[];if(m.v012Rot.length<6){m.v012Rot.push({...e.v012Rot[0]});ports.combatLinkEffect?.(r,'rot',e,[m]);}}else damage+=e.v012Rot.reduce((sum,d)=>sum+d.damage,0);triggered(r,'grave_bloom');}
   }}
   damage=Math.round(damage);
  }
@@ -519,6 +520,8 @@ function updateFight(){
    else if(event.type==='activate'){
     ports.phase6Metric(r,'enemyAbilityCasts',1);
     ports.addLog('✦ '+event.enemy.name+' uses '+event.ability+(event.target!==event.enemy?' on '+event.target.name:'')+(event.result?' · '+event.result:''),'spell');
+     const visualKind=event.label==='Guarding'?'ward':event.label==='Renewing'?'heal':event.label==='Enraged'&&event.target!==event.enemy?'rally':null;
+     if(visualKind&&event.result>0)ports.combatLinkEffect?.(r,visualKind,event.enemy,[event.target]);
    }
   }
  }
@@ -529,6 +532,7 @@ function updateFight(){
    else if(event.type==='activate'){
     ports.phase6Metric(r,'enemyAbilityCasts',1);
     ports.addLog('✦ '+event.enemy.name+' uses '+event.ability+(event.target?' on '+event.target.name:'')+(event.result?' · '+event.result+' Barrier':''),'spell');
+     if(event.target&&event.result>0)ports.combatLinkEffect?.(r,'ward',event.enemy,[event.target]);
    }else if(event.type==='summon'){
     const theme=ports.THEMES.find(t=>t.id===r.path)||ports.currentTheme();
     const mob=theme?.mobs?.find(m=>m.role==='minion');
@@ -550,10 +554,10 @@ function updateFight(){
   for(const event of events){
    if(event.type==='prepare')ports.addLog('⚠ '+event.enemy.name+' prepares '+event.ability+'!','critical');
    else if(event.type==='interrupted'||event.type==='disarmed'){ports.addLog('✓ '+event.enemy.name+' interrupted: '+event.ability,'good');ports.phase6Metric(r,'bossCastInterruptions',1);}
-   else if(event.type==='ward'){ports.addLog('⛨ '+event.enemy.name+' restores '+event.barrier+' Barrier','spell');ports.phase6Metric(r,'bossWards',1);}
+   else if(event.type==='ward'){ports.addLog('⛨ '+event.enemy.name+' restores '+event.barrier+' Barrier','spell');ports.phase6Metric(r,'bossWards',1);ports.combatLinkEffect?.(r,'ward',event.enemy,[event.enemy]);}
    else if(event.type==='charge')ports.addLog('♨ Furnace Strike charged · next hit empowered!','critical');
-   else if(event.type==='offering'){ports.addLog('🩸 Blood Thrall sacrificed · Boss recovers '+event.healed+' HP','critical');ports.phase6Metric(r,'bossHealing',event.healed);}
-   else if(event.type==='pulse'){ports.addLog('⚡ Arcane Convergence · '+event.damage+' damage'+(event.absorbed?' · '+event.absorbed+' absorbed':'')+'!','critical');ports.phase6Metric(r,'bossArcanePulses',1);ports.phase6Metric(r,'damageTaken',event.damage);ports.phase6Metric(r,'absorbed',event.absorbed);if(resolveBossPulseLethal(r,s))return;}
+   else if(event.type==='offering'){ports.addLog('🩸 Blood Thrall sacrificed · Boss recovers '+event.healed+' HP','critical');ports.phase6Metric(r,'bossHealing',event.healed);ports.combatLinkEffect?.(r,'siphon',event.minion,[event.enemy]);}
+   else if(event.type==='pulse'){ports.combatLinkEffect?.(r,'shock',event.enemy,['hero']);ports.addLog('⚡ Arcane Convergence · '+event.damage+' damage'+(event.absorbed?' · '+event.absorbed+' absorbed':'')+'!','critical');ports.phase6Metric(r,'bossArcanePulses',1);ports.phase6Metric(r,'damageTaken',event.damage);ports.phase6Metric(r,'absorbed',event.absorbed);if(resolveBossPulseLethal(r,s))return;}
    else if(event.type==='canceled')ports.addLog('⚡ Arcane Convergence canceled by the destroyed Storm Node.','good');
    else if(event.type==='summon'){
     const theme=ports.THEMES.find(t=>t.id===r.path)||ports.currentTheme(),mob=theme?.mobs?.find(m=>m.role==='minion');
