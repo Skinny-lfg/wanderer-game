@@ -139,6 +139,13 @@ function prepare(level,build,seed,opts,desiredRisk=undefined,desiredFamily=undef
   const resolvedSeed=(seed+attempt)>>>0||1;
   const a=create(resolvedSeed,undefined,{}, {skipPersistence:true});
   a.setup(gearE,build.weapon,opts.rarity);
+  // Stage 9.2 only: hold native route, draft, control and combat RNG streams fixed
+  // AFTER gear rolls. Gear rarity must not silently change the test encounter.
+  // Harness streams are deterministic test controls, not gameplay overrides.
+  if(opts.lockScenarioStreams===true){
+   const stream=salt=>((Math.imul((resolvedSeed^salt)>>>0,1664525)+1013904223)>>>0)||1;
+   a.streams(stream(0x1afc9081),stream(0x2b6e5d73),stream(0x3c8e193b),stream(0x4d29b145));
+  }
   a.state().automaticTalents={...talents,nodes:[...talents.nodes]};
   if(opts.runes){const st=a.state();st.runes=['vitality','warding',build.weapon==='Wand'?'wisdom':'might'].map(k=>a.makeRune(k,gearE));st.runeSlots=st.runes.map(r=>r.id);}
   a.setUnlocked(level);a.start(level,true);
