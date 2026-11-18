@@ -68,22 +68,42 @@ function parseArgs(args){
  return result;
 }
 function talentPlan(build,points){
- let p={...T.create(),xp:points*T.POINT_XP},visiting=new Set();
- function add(id){
-  if(p.nodes.includes(id))return;
-  const n=byNode.get(id);if(!n)throw Error('Unknown v0.13 Talent Tree node: '+id);
-  if(visiting.has(id))throw Error('Talent dependency cycle: '+id);visiting.add(id);
-  if(n.requires)add(n.requires);
-  for(const dep of n.prerequisites||[])add(dep);
-  if(n.anyRequires&&!n.anyRequires.some(dep=>p.nodes.includes(dep)))add(n.anyRequires[0]);
-  if(n.element&&n.element!=='arcane'&&p.element!==n.element){add('element_choice');p=T.selectElement(p,n.element);if(!p)throw Error('Cannot select element '+n.element);}
-  const next=T.allocate(p,id);if(!next)throw Error('Cannot purchase '+id+' with '+points+' points; spent '+p.nodes.length);
-  p=next;visiting.delete(id);
+ if(!Number.isSafeInteger(points)||points<0||points>100)throw Error('Invalid Talent Tree point budget');
+ let progress={...T.create(),xp:points*T.POINT_XP};
+ if(points===0)return progress; // The real first Expedition starts with zero permanent points.
+ for(const id of build.skills){
+  const saved=progress,visiting=new Set();
+  function add(key){
+   if(progress.nodes.includes(key))return;
+   const n=byNode.get(key);if(!n)throw Error('Unknown current Talent Tree node: '+key);
+   if(visiting.has(key))throw Error('Talent graph dependency cycle: '+key);
+   visiting.add(key);
+   if(n.requires)add(n.requires);
+   for(const dep of n.prerequisites||[])add(dep);
+   if(n.anyRequires&&!n.anyRequires.some(dep=>progress.nodes.includes(dep)))add(n.anyRequires[0]);
+   if(n.element&&n.element!=='arcane'&&progress.element!==n.element){
+    add('element_choice');
+    const selected=T.selectElement(progress,n.element);
+    if(!selected)throw Error('Talent element selection failed: '+n.element);
+    progress=selected;
+   }
+   const next=T.allocate(progress,key);
+   if(!next)throw Error('INSUFFICIENT_POINTS '+key);
+   progress=next;visiting.delete(key);
+  }
+  try{add(id);}catch(error){
+   if(!String(error.message).startsWith('INSUFFICIENT_POINTS'))throw error;
+   // Insufficient points are not free talents. Preserve valid partial builds instead.
+   progress=saved;
+  }
  }
- for(const id of build.skills)add(id);
- if(build.element){add('element_choice');p=T.selectElement(p,build.element);if(!p)throw Error('Cannot select '+build.element);}
- if(!T.valid(p))throw Error('Invalid current talent tree progress');
- return p;
+ if(build.element&&progress.nodes.includes('element_choice')){
+  const selected=T.selectElement(progress,build.element);
+  if(!selected)throw Error('Invalid build element '+build.element);
+  progress=selected;
+ }
+ if(!T.valid(progress))throw Error('Invalid v0.13 permanent talent allocation');
+ return progress;
 }
 function gearLevel(level,mode){
  if(mode!=='previous')return level;
@@ -91,18 +111,30 @@ function gearLevel(level,mode){
  if(index<=0)return Math.max(1,level-1);
  return tiers[index-1].minimum;
 }
-function prepare(level,build,seed,opts,desiredRisk=undefined){
- const a=create(seed,undefined,{}, {skipPersistence:true});
- const gearE=gearLevel(level,opts.gear);
- a.setup(gearE,build.weapon,opts.rarity);
- a.state().automaticTalents=talentPlan(build,opts.points);
- if(opts.runes){const s=a.state();s.runes=['vitality','warding',build.weapon==='Wand'?'wisdom':'might'].map(k=>a.makeRune(k,gearE));s.runeSlots=s.runes.map(r=>r.id);}
- a.setUnlocked(level);a.start(level,true);
- const c=a.controller(),g=c.state;
- if(g.expedition!==level||!g.dungeon?.cards?.length)throw Error('Current v0.13 dungeon unavailable at E'+level);
- const card=desiredRisk===undefined?[...g.dungeon.cards].sort((x,y)=>(Number(x.family!==build.families[0])-Number(y.family!==build.families[0]))||x.risk-y.risk)[0]:g.dungeon.cards[desiredRisk];
- c.chooseRealm(card.id);
- return {a,c,g,card,gearE};
+function prepare(level,build,seed,opts,desiredRisk=undefined,desiredFamily=undefined){
+ if(desiredFamily!==undefined&&!AFFINITIES.includes(desiredFamily))throw Error('Unknown Boss Affinity '+desiredFamily);
+ if(desiredRisk!==undefined&&!RISKS.includes(desiredRisk))throw Error('Unknown Realm risk '+desiredRisk);
+ const gearE=gearLevel(level,opts.gear),talents=talentPlan(build,opts.points);
+ for(let attempt=0;attempt<(desiredFamily?48:1);attempt++){
+  const resolvedSeed=(seed+attempt)>>>0||1;
+  const a=create(resolvedSeed,undefined,{}, {skipPersistence:true});
+  a.setup(gearE,build.weapon,opts.rarity);
+  a.state().automaticTalents={...talents,nodes:[...talents.nodes]};
+  if(opts.runes){const st=a.state();st.runes=['vitality','warding',build.weapon==='Wand'?'wisdom':'might'].map(k=>a.makeRune(k,gearE));st.runeSlots=st.runes.map(r=>r.id);}
+  a.setUnlocked(level);a.start(level,true);
+  const c=a.controller(),g=c.state;
+  if(g.expedition!==level||!g.dungeon?.cards?.length)throw Error('Current native v0.13 Dungeon unavailable at E'+level);
+  const cards=g.dungeon.cards;
+  const card=desiredRisk!==undefined?(cards[desiredRisk]?.family===desiredFamily||desiredFamily===undefined?cards[desiredRisk]:null):
+   desiredFamily?cards.find(x=>x.family===desiredFamily):
+   [...cards].sort((x,y)=>Number(x.family!==build.families[0])-Number(y.family!==build.families[0])||x.risk-y.risk)[0];
+  if(!card)continue; // Keep the real generated Realm card: never rewrite its Affinity.
+  c.chooseRealm(card.id);
+  const boss=A.profileFor(card.family);
+  if(!boss||boss.style!==globalThis.WandererV012Expedition.bossForAffinity(card.family)?.style)throw Error('Boss roster drift for '+card.family);
+  return {a,c,g,card,gearE,resolvedSeed,seedShift:attempt,plannedPoints:opts.points,allocatedPoints:talents.nodes.length};
+ }
+ throw Error('No natural Realm card matches '+desiredFamily+' and risk '+desiredRisk+' within 48 deterministic seeds');
 }
 function fight(a,c,limit){
  const r=a.state().run;
