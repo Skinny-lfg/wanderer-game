@@ -44,7 +44,11 @@
     "test:v013:stage7": "node --test tests/v013-stage7-contracts.test.cjs",
     "test:v013:stage71": "node --test tests/v013-stage71-forge-talents.test.cjs tests/v013-crafting.test.cjs tests/v013-craft-preview.test.cjs",
     "test:v013:stage73": "node --test tests/v013-stage73-shrines.test.cjs tests/v013-stage6-boons.test.cjs",
-    "test:v013:stage74": "node --test tests/v013-stage74-potions.test.cjs tests/v013-stage73-shrines.test.cjs tests/v012-cloud-save.test.mjs"
+    "test:v013:stage74": "node --test tests/v013-stage74-potions.test.cjs tests/v013-stage73-shrines.test.cjs tests/v012-cloud-save.test.mjs",
+    "simulate:v013:bosses": "node scripts/simulate-progression.cjs --mode=bosses",
+    "simulate:v013:enemies": "node scripts/simulate-progression.cjs --mode=enemies",
+    "simulate:v013:elites": "node scripts/simulate-progression.cjs --mode=elites",
+    "test:v013:balance": "node --test tests/v013-balance-v2.test.cjs tests/v013-simulation.test.cjs tests/v013-stage5-simulation.test.cjs"
   },
   "dependencies": {
     "firebase": "11.10.0"
