@@ -34,6 +34,8 @@ Seven declared A/B contrasts change **exactly one dimension at the same Expediti
 - E15: +8 points (same Common gear), then Common→Rare (same 8 points), then +16 more points (same Rare gear).
 - E35: +8 points (same Uncommon gear), then Uncommon→Rare (same 16 points).
 
+**Scenario lock:** Stage 9.2 re-seeds the native harness' separate route, draft, control and combat RNG streams immediately *after* equipment is rolled, so changing rarity alone cannot silently choose different enemies. This change is isolated to the simulator flag and does **not** change live game RNG, gameplay formulas or loot odds. A regression test verifies the exact native Dungeon route, Affinity, risk and Boss style across rarities.
+
 The tool retains all raw attempts, but pairs **only** rows with equal native resolvedSeed, Affinity, risk, build, mode, room group size, target policy and (for natural Dungeons) equal native route. When gear changes affect RNG or generated map identity, that contrast has fewer matched pairs and may be **inconclusive**, rather than manufacturing an A/B win rate. Rows with errors/timeouts are *not* classified as deaths. Duplicate native seeds do not create independent observations.
 
 Cross-E1/E5/E15/E35 summaries are **descriptive, not paired causal effects**, because enemy tiers and encounters also evolve.
