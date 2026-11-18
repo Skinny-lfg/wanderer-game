@@ -8,6 +8,8 @@ const create=require('../tests/v012-economy-harness.cjs');
 const S=require('./simulate-progression.cjs');
 require('../online/v013-map-intelligence.js');
 const I=globalThis.WandererV013MapIntelligence;
+require('../economy/v012-loot-rules.js');
+const LOOT=globalThis.WandererV012LootRules;
 const PROFILES=Object.freeze({
  cautious:{name:'Cautious',risk:0,targets:['strong_heart','guarded_block','renewal','guard','vitality','might'],families:['aegis','vitality'],healAt:.72,retreatAt:.5,target:'mechanics',shop:true},
  balanced:{name:'Balanced',risk:0,targets:['bleeding_edge','deep_cuts','strong_heart','might','vitality'],families:['blood','aegis'],healAt:.53,retreatAt:.34,target:'mechanics',shop:true},
@@ -109,12 +111,11 @@ function equipEarned(a,profile,between=false){
  return actions;
 }
 function prepareCamp(a,profile,level){
- const actions={talents:[],equipped:[],bought:[],potions:[],runes:[],soldTreasures:false};
- const s=a.state();
- a.potions.inventory(); // Native initializer: an empty player loadout is legal.
- // All purchases and rewards go through the native economy.
+ const actions={talents:[],equipped:[],bought:[],potions:[],runes:[],soldTreasures:false,restocks:0};
+ const s=a.state();a.potions.inventory();
  if(s.pendingRuneReward?.options?.length){
-  const options=s.pendingRuneReward.options,choice=options.find(x=>/vitality|ward|aegis/i.test(x.kind||x.name||x.id))||options[0];
+  const options=s.pendingRuneReward.options;
+  const choice=options.find(x=>/vitality|ward|aegis/i.test(x.kind||x.name||x.id))||options[0];
   if(a.claimRune(choice.id))actions.runes.push(choice.name||choice.id);
  }
  for(let i=0;i<3&&a.results().review;i++)a.exitResult();
@@ -122,29 +123,57 @@ function prepareCamp(a,profile,level){
  actions.equipped.push(...equipEarned(a,profile,false));
  actions.talents.push(...spendEarnedTalents(a,profile).bought);
  if(profile.shop&&a.economyCanAct()){
-  if(!s.merchant)a.rollShop();
-  const available=s.merchant?.stock||[];
-  const candidates=available.map((item,index)=>({item,index,
-   gain:gearScore(item,profile)-gearScore(s.equip[item.slot],profile)}))
-   .filter(x=>x.item?.goldPrice<=s.gold&&x.gain>8)
-   .sort((x,y)=>y.gain-x.gain);
-  for(const {item,index} of candidates.slice(0,1)){
-   if(a.purchaseNative(index)){actions.bought.push({name:item.name,cost:item.goldPrice});actions.equipped.push(...equipEarned(a,profile,false));}
-  }
+  // The game's first Apothecary visit constructs a native 4-item stock. No
+  // custom availability odds, injected potions, discounted prices or free Gold.
   if(!s.apothecary)s.apothecary=a.potions.shop(level);
-  const stock=s.apothecary.stock||[],wanted=['health','barrier','mana','scout','purifying'];
-  for(const kind of wanted){
+  const manaUseful=(a.baseStats()?.mana||0)>0;
+  const priority=['health','ironhide','barrier','scout','trail','purifying','fate',...(manaUseful?['mana','arcane']:[])];
+  const owns=kind=>(s.consumables?.[kind]||0)>0;
+  function affordable(kind){
+   return s.apothecary?.stock?.find(p=>p.kind===kind&&p.price<=s.gold)||null;
+  }
+  // Prefer an actual Health dose for early progress over marginal merchant
+  // equipment. The remaining budget can still improve the permanent loadout.
+  for(const kind of priority){
    if((s.potionSelection||[]).length>=3)break;
-   if((s.potionSelection||[]).includes(kind))continue;
-   const offer=stock.find(p=>p.kind===kind&&p.price<=s.gold);
-   if(offer&&a.potions.buy(offer.id))actions.potions.push({kind,cost:offer.price});
+   if(owns(kind)||s.potionSelection.includes(kind))continue;
+   const offer=affordable(kind);
+   if(offer&&a.potions.buy(offer.id))actions.potions.push({kind,cost:offer.price,reason:'reserve'});
+  }
+  // One sensible restock when Gold covers both restock AND the desired dose.
+  // In E1 with little money, conserve Gold rather than blindly rerolling.
+  if(!owns('health')&&s.apothecary&&s.gold>=s.apothecary.refreshCost+17){
+   if(a.potions.reroll()){
+    actions.restocks++;
+    const heal=affordable('health');
+    if(heal&&a.potions.buy(heal.id))actions.potions.push({kind:'health',cost:heal.price,reason:'restock'});
+   }
+  }
+  // Spend spare Gold on permanent upgrade only if the expected item-stat gain
+  // outweighs the real opportunity cost of an emergency 14+ Gold potion.
+  if(!s.merchant)a.rollShop();
+  const reserve=owns('health')?0:14;
+  const choices=(s.merchant?.stock||[]).map((item,index)=>({item,index,
+   gain:gearScore(item,profile)-gearScore(s.equip[item.slot],profile)}))
+   .filter(x=>x.item?.goldPrice<=s.gold-reserve&&x.gain>8)
+   .sort((x,y)=>y.gain-x.gain);
+  for(const {item,index} of choices.slice(0,1)){
+   if(a.purchaseNative(index)){
+    actions.bought.push({name:item.name,cost:item.goldPrice});
+    actions.equipped.push(...equipEarned(a,profile,false));
+   }
   }
  }
- // Any already-owned dose may be selected via native inventory rules.
- for(const kind of ['health','barrier','mana','scout']){
+ // Fill the real 3-slot loadout from already-owned doses. Physical characters
+ // do not waste a slot on Mana. We do not synthesize consumable availability.
+ const manaUseful=(a.baseStats()?.mana||0)>0;
+ const priorities=['health','ironhide','barrier','scout','trail','purifying','fate',...(manaUseful?['mana','arcane']:[])];
+ for(const kind of priorities){
   if((s.potionSelection||[]).length>=3)break;
-  if(!(s.potionSelection||[]).includes(kind)&&(s.consumables?.[kind]||0)>0&&a.potions.select(kind))actions.potions.push({kind,owned:true});
+  if(!(s.potionSelection||[]).includes(kind)&&(s.consumables?.[kind]||0)>0&&a.potions.select(kind))
+   actions.potions.push({kind,owned:true});
  }
+ actions.unspentGold=s.gold;
  return actions;
 }
 function choiceRealm(cards,profile,gear){
@@ -165,73 +194,194 @@ function pathLength(card,d,start,dest){
  }}
  return Infinity;
 }
-function selectRoom(c,profile,vitals){
+// Distances use traversable graph topology; decisions only inspect details of
+// rooms the native map UI currently exposes through travelPath/scouting.
+// Heuristic decision utility (not currency, not guaranteed drops). Read the
+// exact live loot tables: Elite stage 4 vs ordinary Dungeon stages 1-3.
+// Never create items / inspect RNG / force outcomes when evaluating a route.
+function eliteOpportunity(game,card,node,profile,vitals,context={}){
+ const hpRatio=vitals.maxhp>0?vitals.hp/vitals.maxhp:0;
+ const cha=Number.isFinite(context.cha)?context.cha:5;
+ const regularStage=Math.min(3,1+Math.floor(Math.max(0,game.history?.length||0)/5));
+ const normal=LOOT.v013DungeonWaveOdds(regularStage,cha);
+ const elite=LOOT.v013DungeonWaveOdds(4,cha);
+ const quality={Common:.35,Uncommon:.85,Rare:1.6,Epic:2.8,Legendary:4.5};
+ const weighted=rarities=>Object.entries(rarities).reduce((total,[r,prob])=>
+  total+(quality[r]||0)*prob,0);
+ const firstRoom=game.dungeon?.cleared?.length===1;
+ const eliteDrop=firstRoom?1:elite.drop,normalDrop=firstRoom?1:normal.drop;
+ const eliteGear=eliteDrop*weighted(elite.rarities);
+ const normalGear=normalDrop*weighted(normal.rarities);
+ const equipment=context.equipment?Object.values(context.equipment).filter(Boolean):[];
+ const starter=equipment.filter(x=>x.startingGear).length;
+ const need=equipment.length?1+Math.min(.65,starter/10):1.25;
+ const marked=card.objective===context.room&&!game.dungeon?.foundationState?.bossPreparation?.markedElite;
+ const escorts=Number(node.escorts||0);
+ const lootUtility=22*need*Math.max(0,eliteGear-normalGear);
+ const goldFragmentUtility=6; // Native Elite adds +4 Gold and +3 Fragments before modifiers.
+ const favoredUtility=marked?3:0; // 55% favoured equipment slot, conditional on an actual drop.
+ const extractionUtility=marked?10:0; // Native settlement: 1 Affinity reagent and 2+2*risk Essence.
+ const bossPrepUtility=marked?9:0; // Native -10% Guarded boss attack / -1 higher-risk escort.
+ const recent=(context.recentFights||[]).slice(-3).filter(x=>x.hpMax>0);
+ const avgDamage=recent.length?recent.reduce((n,x)=>n+
+   Math.max(0,(x.hpStart-x.hpEnd)/x.hpMax),0)/recent.length:0;
+ // An E1 Elite has no escorts at Guarded risk. It is one stronger enemy,
+ // not a 12- or 22-mob swarm; penalize its real potential HP loss rather than
+ // classifying all Elites as extremely dangerous.
+ const baseThreat=8+escorts*13+(profile.name==='Cautious'?3:profile.name==='Daring'?-2:0);
+ const injuryPenalty=hpRatio<.48?40:hpRatio<.64?19:hpRatio<.77?7:0;
+ const historyPenalty=avgDamage>.65?11:avgDamage>.4?5:0;
+ const threat=baseThreat+injuryPenalty+historyPenalty;
+ const benefit=lootUtility+goldFragmentUtility+favoredUtility+extractionUtility+bossPrepUtility;
+ return {
+  scoreDelta:round(threat-benefit),benefit:round(benefit),threat:round(threat),
+  marked,escorts,firstRoom,
+  loot:{eliteDrop:round(eliteDrop,4),normalDrop:round(normalDrop,4),
+   eliteRarePlus:round((elite.rarities.Rare||0)+(elite.rarities.Epic||0)+(elite.rarities.Legendary||0),4),
+   normalRarePlus:round((normal.rarities.Rare||0)+(normal.rarities.Epic||0)+(normal.rarities.Legendary||0),4)},
+  breakdown:{lootUtility:round(lootUtility),goldFragmentUtility,favoredUtility,
+   extractionUtility,bossPrepUtility,baseThreat,injuryPenalty,historyPenalty}
+ };
+}
+function selectRoom(c,profile,vitals,context={}){
  const g=c.state,d=g.dungeon,card=c.realmMap(),boss=card.nodes.findIndex(n=>n.kind==='boss');
- const selected=[],hpRatio=vitals.maxhp>0?vitals.hp/vitals.maxhp:0;
- const currentDist=pathLength(card,d,d.current,boss);
+ const hpRatio=vitals.maxhp>0?vitals.hp/vitals.maxhp:0,prep=d.foundationState?.bossPreparation||{};
+ const currentDist=pathLength(card,d,d.current,boss),options=[];
  for(let i=0;i<card.nodes.length;i++){
   if(d.cleared.includes(i)||i===d.current)continue;
   const route=c.travelPath(i);if(!route?.length)continue;
   const cost=c.travelCost(route);if(cost>d.steps)continue;
-  // The native map UI reveals type and mob range for reachable rooms:
-  // index.html dungeonMapMarkup() uses travelPath(i).length > 0 || scouted.
-  // This is NOT a look ahead at unreachable/undiscovered nodes.
-  const known=!!route.length||d.scouted?.includes(i);
-  const node=known?card.nodes[i]:null,type=node?.kind||'unknown';
-  const dist=pathLength(card,d,i,boss),improves=dist<currentDist;
-  let score=dist*1.5+cost*2+(improves?-2:5)+(known?-1:0);
+  const visible=!!route.length||d.scouted?.includes(i);
+  const n=visible?card.nodes[i]:null,type=n?.kind||'unknown';
+  const dist=pathLength(card,d,i,boss);
+  const remaining=d.steps-cost;
+  const slack=Number.isFinite(dist)?remaining-dist:-10;
+  let score=dist*1.35+cost*2+(dist<currentDist?-2:5);
+  if(!Number.isFinite(score))score=100;
+  if(i!==boss&&slack<0)score+=30+Math.abs(slack)*7;
+  else if(i!==boss&&slack<2)score+=8;
   if(type==='combat'){
-   const max=Number(node.range?.[1]??node.count??4);
-   const min=Number(node.range?.[0]??node.count??max);
-   // A cautious early player chooses the actual visible solo encounter over
-   // rushing 3, 12 or 20 mobs with the starter Worn Tunic.
-   if(max===1)score-=19;
-   else if(max<=4)score+=profile.name==='Daring'?1:7+(min>=3?2:0);
-   else if(max<=12)score+=profile.name==='Daring'?9:19;
-   else score+=profile.name==='Daring'?17:28;
-   if(hpRatio<.7&&max>1)score+=8;
+   const count=Number(n.range?.[1]??n.count??4);
+   if(count<=1)score-=18;
+   else if(count<=4)score+=profile.name==='Daring'?1:7;
+   else if(count<=12)score+=profile.name==='Daring'?12:22;
+   else score+=profile.name==='Daring'?22:36;
+   if(hpRatio<.65&&count>1)score+=12;
   }
-  if(type==='shrine')score-=26; // Free discovered Boon before risking scarce early HP
-  if(type==='spring'&&hpRatio<.8)score-=20;
-  if(type==='elite')score+=profile.name==='Daring'?12:28;
-  if(type==='event')score-=5;
-  if(type==='boss'){
-   if(hpRatio<.65)score+=18;
-   else score+=3;
-   if(d.steps<3)score-=8;
+  if(type==='shrine')score-=19;
+  if(type==='spring')score-=hpRatio<.8?27:5;
+  if(type==='event')score-=3;
+  let elite=null;
+  if(type==='elite'){
+   elite=eliteOpportunity(g,card,n,profile,vitals,{...context,room:i});
+   score+=elite.scoreDelta;
+   // Reward does not justify spending the last steps on a side corridor
+   // that cannot lead to the native Boss.
+   if(slack<1)score+=12;
+   if(hpRatio<Math.max(.58,profile.retreatAt+.08))score+=22;
   }
-  if(d.steps<dist+2)score+=8;
-  selected.push({room:i,score,dist,cost,known,type,
-   ...(type==='combat'?{visibleMobRange:node.range||[node.count,node.count]}:{})});
+  if(type==='boss')score+=hpRatio<.7?16:1;
+  const objective=i===card.objective&&!prep.markedElite&&type==='elite';
+  const reliquary=i===card.reliquaryRoom&&!prep.reliquary&&n?.event==='forgotten_reliquary';
+  if(reliquary)score+=hpRatio>.83&&slack>=0?-15:12;
+  if(type==='boss'&&((prep.markedElite||prep.reliquary)&&hpRatio>.75))score-=4;
+  if(i!==boss&&d.steps<dist+2)score+=6;
+  options.push({room:i,score,dist,cost,slack,known:visible,type,objective,reliquary,elite,
+   ...(type==='combat'?{visibleMobRange:n.range||[n.count,n.count]}:{})});
  }
- return selected.sort((a,b)=>a.score-b.score||a.room-b.room)[0]||null;
+ options.sort((a,b)=>a.score-b.score||a.room-b.room);
+ const best=options[0];
+ if(best)best.eligibleEliteAlternatives=options.filter(x=>x.type==='elite')
+  .map(({room,cost,slack,score,elite})=>({room,cost,slack,score:round(score),...elite}));
+ return best||null;
 }
-function chooseBoon(offer,profile){
+function boonScore(id,profile,context={}){
+ const hp=context.vitals?.maxhp?context.vitals.hp/context.vitals.maxhp:1;
+ const mana=context.vitals?.maxmp??0,steps=context.steps??10;
+ const blood=profile.families.includes('blood'),decay=profile.families.includes('decay');
+ switch(id){
+  case 'bastion_oath':return 28+(hp<.75?9:0)-(profile.name==='Daring'?3:0);
+  case 'predators_focus':return 26+(context.bossSoon?5:0);
+  case 'blood_tribute':return blood?20+(context.bleedReady?6:0):2;
+  case 'rotbound_echo':return decay||context.bleedReady?18:2;
+  case 'aetherbound_pact':return mana>0?22:0;
+  case 'wayfarers_bargain':return steps<=4&&hp>.7?24:steps<7&&hp>.85?16:-8;
+  default:return 0;
+ }
+}
+function chooseBoon(offer,profile,context={}){
  const ids=offer.ids||[];
- const affinity=profile.families;
- return [...ids].sort((a,b)=>affinity.some(f=>a.includes(f))?-1:affinity.some(f=>b.includes(f))?1:0)[0]||null;
+ return [...ids].sort((a,b)=>boonScore(b,profile,context)-boonScore(a,profile,context)||a.localeCompare(b))[0]||null;
 }
-function eventOptions(id,v,profile){
- const ratio=v.maxhp? v.hp/v.maxhp:1;
- if(id==='forgotten_reliquary')return ratio>.67?[0,1,2]:[1,2,0];
- if(id==='restless_spring'||id==='traveling_merchant')return ratio<.9?[0,1,2]:[1,2,0];
+function chooseContract(offer,profile,card){
+ if(!offer?.ids?.length)return null;
+ const rank={pathfinder:24,purification:profile.name==='Cautious'?8:17,
+  bounty_writ:profile.name==='Daring'?15:4,oath_of_defiance:5};
+ return [...offer.ids].sort((a,b)=>(rank[b]||0)-(rank[a]||0))[0]||null;
+}
+function eventOptions(id,v,profile,context={}){
+ const ratio=v.maxhp?v.hp/v.maxhp:1;
+ if(id==='forgotten_reliquary'){
+  // Sacrifice 15% Max Health only with sufficient remaining HP and a boss
+  // worth weakening; otherwise use the event's native supplies option.
+  return ratio>.83&&!context.reliquaryCompleted?[0,1,2]:[1,2,0];
+ }
+ if(id==='restless_spring'||id==='traveling_merchant')return ratio<.92?[0,1,2]:[1,2,0];
  if(id==='oracle_of_paths')return [0,2,1];
  if(id==='whispering_idol'||id==='cursed_altar')return [2,1,0];
  return profile.name==='Daring'?[0,2,1]:[2,0,1];
 }
-function usePotionsBetween(a,profile,history){
- const v=a.vitals(),used=[];
+function potionSlots(a){
  const run=a.events.run?.();
- const slots=run?.started?(run.potions||[]):(a.state().potionSelection||[]).map(kind=>({kind,used:false}));
- // Choose by actual potion kind. Never accidentally spend a Scout or Trail
- // potion when the decision was to heal.
- if(v.maxhp>0&&v.hp/v.maxhp<profile.healAt){
-  const i=slots.findIndex(p=>p?.kind==='health'&&!p.used);
-  if(i>=0&&a.potions.use(i))used.push({kind:'health',slot:i,reason:'low_hp',ratio:round(v.hp/v.maxhp)});
+ return run?.started?(run.potions||[]):(a.state().potionSelection||[]).map(kind=>({kind,used:false}));
+}
+function usePotionKind(a,kind,reason,history,mode){
+ const slots=potionSlots(a);
+ const index=slots.findIndex(p=>p?.kind===kind&&!p.used);
+ if(index<0)return false;
+ if(!a.potions.use(index,mode))return false; // Only native legal actions succeed.
+ history.push({kind,slot:index,reason});
+ return true;
+}
+function usePotionsBetween(a,profile,history,next){
+ const v=a.vitals(),g=a.controller().state,d=g.dungeon;
+ if(!next||!d?.realm)return false;
+ const ratio=v.maxhp>0?v.hp/v.maxhp:1,mpRatio=v.maxmp?v.mp/v.maxmp:1;
+ const dangerous=next.type==='boss'||next.type==='elite'||
+  next.type==='combat'&&(Number(next.visibleMobRange?.[1]??4)>3);
+ let changed=false;
+ // A map Scout is valuable *before* exploring if there is no already visible
+ // Shrine. Its native targeting works without knowing hidden room contents.
+ const hasVisibleShrine=a.controller().realmMap().boonShrines?.some(i=>
+  d.scouted?.includes(i)||a.controller().travelPath(i).length>0);
+ if(!hasVisibleShrine&&d.steps>=7&&history.filter(x=>x.kind==='scout').length===0)
+  changed=usePotionKind(a,'scout','discover_real_shrine',history,'shrine')||changed;
+ if(d.steps<=4&&next.type!=='boss'&&next.slack<1)
+  changed=usePotionKind(a,'trail','avoid_exhausting_map_steps',history)||changed;
+ // Do not spend healing before entering a zero-damage Shrine / Spring; heal
+ // when the next actual threat justifies using an irreplaceable purchased dose.
+ if(ratio<profile.healAt&&
+   !['shrine','spring'].includes(next.type)&&
+   (dangerous||next.type==='combat'||ratio<.4))
+  changed=usePotionKind(a,'health','low_hp_before_threat',history)||changed;
+ if(mpRatio<.35&&v.maxmp>0&&dangerous)
+  changed=usePotionKind(a,'mana','low_mana_before_threat',history)||changed;
+ if(dangerous&&ratio>.32){
+  const kind=next.type==='boss'?'barrier':'ironhide';
+  changed=usePotionKind(a,kind,'prepare_for_'+next.type,history)||changed;
+  if(next.type==='boss')changed=usePotionKind(a,'ironhide','boss_defense',history)||changed;
+  if(next.type==='boss'&&d.foundationState?.conditionId!=='veiled_passages')
+   changed=usePotionKind(a,'purifying','boss_condition_mitigation',history)||changed;
  }
- // No synthetic replenishment, no mid-combat potion use.
- if(used.length)history.push(...used);
- return used;
+ return changed;
+}
+function rerollPoorBoonAtShrine(a,offer,profile,history){
+ const g=a.controller().state;
+ const context={vitals:a.vitals(),steps:g.dungeon.steps,
+  bleedReady:a.state().automaticTalents.nodes.includes('affinity_blood')};
+ const best=chooseBoon(offer,profile,context);
+ if(best&&boonScore(best,profile,context)>=12)return false;
+ return usePotionKind(a,'fate','reroll_weak_boon_offer',history);
 }
 function fightNatural(a,profile,tickLimit){
  const r=a.state().run;
@@ -263,11 +413,15 @@ function fightNatural(a,profile,tickLimit){
 function resolveEvent(a,profile){
  const event=a.events.run()?.event;
  if(!event)return null;
- const v=a.vitals(),opts=eventOptions(event.id,v,profile);
- for(const choice of opts){
-  const bag=a.bag.items().filter(i=>i.kind!=='valuable'),unused=bag.at(-1),target=Object.values(a.state().equip).filter(Boolean).at(-1);
-  const family=profile.families[0];
-  if(a.events.choose(choice,unused?.id,null,family,target?.id))return {event:event.id,choice};
+ const g=a.controller().state,prior=g.dungeon?.foundationState?.bossPreparation||{};
+ const v=a.vitals(),options=eventOptions(event.id,v,profile,{reliquaryCompleted:prior.reliquary});
+ for(const choice of options){
+  const bag=a.bag.items().filter(i=>i.kind!=='valuable'),unused=bag.at(-1);
+  const target=Object.values(a.state().equip).filter(Boolean).at(-1);
+  const family=profile.families[0],hpBefore=v.hp;
+  if(a.events.choose(choice,unused?.id,null,family,target?.id))
+   return {event:event.id,choice,hpBefore:round(hpBefore),hpAfter:round(a.vitals().hp),
+    reliquaryCompleted:!!g.dungeon?.foundationState?.bossPreparation?.reliquary};
  }
  throw Error('Native event could not resolve: '+event.id);
 }
@@ -294,47 +448,82 @@ function playDungeon(a,level,profile,opts){
  const card=choiceRealm(g.dungeon.cards,profile,gearSnapshot(a));
  c.chooseRealm(card.id);
  const offer=c.offerContracts(a.state().crafting?.learnedRecipes||[]);
- const contract=offer?.ids?.find(x=>['pathfinder','purification','bounty_writ'].includes(x))||null;
+ const contract=chooseContract(offer,profile,card);
  if(offer)c.chooseContract(contract);
  const report={level,realm:card.id,affinity:card.family,risk:card.risk,contract,rooms:[],
-  events:[],boons:[],potions:[],equipped:[],xpStart:a.state().automaticTalents.xp,
-  goldStart:a.state().gold,stepsStart:g.dungeon.steps,bossReached:false,extracted:false,status:null,error:null};
+  events:[],boons:[],potions:[],equipped:[],decisions:[],
+  xpStart:a.state().automaticTalents.xp,goldStart:a.state().gold,
+  stepsStart:g.dungeon.steps,bossReached:false,extracted:false,status:null,error:null,
+  prepAtBoss:null,prepFinal:null};
  for(let iteration=0;iteration<opts.maxRooms&&g.stage==='choice';iteration++){
   clearResults(a);
   if(g.stage!=='choice')break;
   if(g.dungeon.boonOffer){
-   const boon=chooseBoon(g.dungeon.boonOffer,profile);
-   c.chooseBoon(boon);report.boons.push(boon);continue;
+   let offer=g.dungeon.boonOffer;
+   rerollPoorBoonAtShrine(a,offer,profile,report.potions);
+   offer=g.dungeon.boonOffer;
+   const context={vitals:a.vitals(),steps:g.dungeon.steps,bossSoon:g.dungeon.steps<=5,
+    bleedReady:a.state().automaticTalents.nodes.includes('affinity_blood')};
+   const boon=chooseBoon(offer,profile,context);
+   c.chooseBoon(boon);
+   report.boons.push({id:boon,room:offer.room,score:boonScore(boon,profile,context)});
+   continue;
   }
   if(g.dungeon.contractOffer){c.chooseContract(null);continue;}
   report.equipped.push(...equipEarned(a,profile,true));
-  if(a.bag.overflow()>0){
-   const spare=[...a.bag.items()].filter(x=>x.kind!=='valuable').sort((x,y)=>gearScore(x,profile)-gearScore(y,profile))[0];
-   if(spare)a.bag.discard(spare.id);
+  // Resolve Bag overflow using native discard (not by deleting stash objects).
+  for(let discard=0;discard<10&&a.bag.overflow()>0;discard++){
+   const spare=[...a.bag.items()].filter(x=>x.kind!=='valuable')
+    .sort((x,y)=>gearScore(x,profile)-gearScore(y,profile))[0];
+   if(!spare||!a.bag.discard(spare.id))break;
   }
-  const v=a.vitals();
-  usePotionsBetween(a,profile,report.potions);
-  const current=a.vitals();
-  const next=selectRoom(c,profile,current);
-  if(!next||current.hp/current.maxhp<profile.retreatAt&&report.rooms.length>0){
+  let next=selectRoom(c,profile,a.vitals(),{equipment:a.state().equip,
+   recentFights:report.rooms,cha:a.baseStats()?.cha??5});
+  if(!next&&g.dungeon.steps<=4&&usePotionKind(a,'trail','restore_route_steps',report.potions))
+   next=selectRoom(c,profile,a.vitals(),{equipment:a.state().equip,
+   recentFights:report.rooms,cha:a.baseStats()?.cha??5});
+  if(next){
+   usePotionsBetween(a,profile,report.potions,next);
+   next=selectRoom(c,profile,a.vitals(),{equipment:a.state().equip,
+   recentFights:report.rooms,cha:a.baseStats()?.cha??5}); // Native scouting/step potions can change options.
+  }
+  const current=a.vitals(),ratio=current.maxhp>0?current.hp/current.maxhp:0;
+  const canRecoverWithoutFight=next&&['shrine','spring','event'].includes(next.type);
+  const tooInjured=ratio<profile.retreatAt&&report.rooms.length>0&&!canRecoverWithoutFight;
+  if(!next||tooInjured){
+   report.decisions.push({type:'extract',reason:next?'conserve_HP':'no_legal_path',
+    hpRatio:round(ratio),steps:g.dungeon.steps});
    if(a.checkpoint.extract()){report.extracted=true;break;}
-   report.error='Could not find a legal next room and native extraction was rejected';break;
+   report.error='Native extraction rejected after route or HP decision';break;
   }
+  report.decisions.push({type:'move',room:next.room,node:next.type,cost:next.cost,
+   visibleMobRange:next.visibleMobRange||null,stepsRemaining:g.dungeon.steps,
+   hpRatio:round(ratio),slack:next.slack,objective:next.objective,reliquary:next.reliquary,
+   elite:next.elite,eligibleEliteAlternatives:next.eligibleEliteAlternatives});
   if(!c.visitRoom(next.room,profile.families)){report.error='Native room travel rejected '+next.room;break;}
   if(g.dungeon.boonOffer)continue;
   const node=card.nodes[next.room];
   if(!a.enter()){report.error='Native room entry rejected '+next.room;break;}
   if(a.events.run()?.event){
-   const ev=resolveEvent(a,profile);
-   report.events.push({room:next.room,...ev});
+   const event=resolveEvent(a,profile);
+   report.events.push({room:next.room,...event});
    clearResults(a);continue;
   }
   if(!a.state().run||a.state().run.status!=='fight'){
    report.error='Entered room without native fight/event at '+next.room;break;
   }
+  if(node.kind==='boss'){
+   report.bossReached=true;
+   report.prepAtBoss=JSON.parse(JSON.stringify(g.dungeon.foundationState?.bossPreparation||{}));
+   report.bossInitialModifiers=[...(a.state().run?.bossModifierIds||[])];
+   report.bossInitialHP=a.state().run?.enemies?.find(e=>e?.boss)?.maxhp||
+    a.state().run?.enemy?.maxhp||null;
+  }
   const fight=fightNatural(a,profile,opts.tickLimit);
-  report.rooms.push({room:next.room,roomType:node.kind,...fight});
-  if(node.kind==='boss')report.bossReached=true;
+  const actualDrops=node.kind==='elite'?(a.state().run?.loot||[]).map(item=>
+   ({slot:item.slot,rarity:item.rarity,subtype:item.subtype})):[];
+  report.rooms.push({room:next.room,roomType:node.kind,...fight,
+   ...(node.kind==='elite'?{loot:actualDrops,marked:next.room===card.objective}:{})});
   if(fight.timedOut){report.error='Native combat timeout';break;}
   if(fight.died)break;
   clearResults(a);
@@ -343,9 +532,10 @@ function playDungeon(a,level,profile,opts){
   if(a.checkpoint.extract())report.extracted=true;
   else report.error='Iteration cap reached without a legal native extraction';
  }
+ report.prepFinal=JSON.parse(JSON.stringify(g.dungeon?.foundationState?.bossPreparation||{}));
  clearResults(a);
- // Native extraction calls controller.abandon(), setting g.stage='failed' internally.
- // The explicit successful extraction flag must take precedence over that state.
+ // Native extraction uses controller.abandon(), marking the session as failed.
+ // Trust explicit native extraction success over the controller's terminal flag.
  report.status=g.stage==='finished'?'victory':report.extracted?'extracted':report.error?'error':g.stage==='failed'?'defeat':g.stage;
  report.xpEnd=a.state().automaticTalents.xp;
  report.xpEarned=report.xpEnd-report.xpStart;
@@ -418,12 +608,23 @@ function analyze(accounts,opts){
    errors:attempts.filter(a=>a.status==='error'||a.error).length,
    bossReached:attempts.filter(a=>a.bossReached).length,
    roomsWon:attempts.reduce((n,a)=>n+(a.fightsWon||0),0),
+   eligibleEliteDecisions:attempts.reduce((n,a)=>n+
+    (a.decisions||[]).filter(x=>x.type==='move'&&x.eligibleEliteAlternatives?.length).length,0),
+   eliteFights:attempts.reduce((n,a)=>n+(a.rooms||[]).filter(x=>x.roomType==='elite').length,0),
+   eliteWins:attempts.reduce((n,a)=>n+(a.rooms||[]).filter(x=>x.roomType==='elite'&&x.won).length,0),
+   eliteDrops:attempts.reduce((n,a)=>n+(a.rooms||[]).filter(x=>x.roomType==='elite')
+    .reduce((k,x)=>k+(x.loot?.length||0),0),0),
    nativeXpEarned:attempts.reduce((n,a)=>n+(a.xpEarned||0),0),
    potionsUsed:attempts.reduce((n,a)=>n+(a.potions?.length||0),0),
+   boonsSelected:attempts.reduce((n,a)=>n+(a.boons?.length||0),0),
+   markedElitePreparations:attempts.filter(a=>a.prepFinal?.markedElite).length,
+   reliquaryPreparations:attempts.filter(a=>a.prepFinal?.reliquary).length,
+   reachedBossWithPreparation:attempts.filter(a=>a.bossReached&&
+    (a.prepAtBoss?.markedElite||a.prepAtBoss?.reliquary)).length,
    gearUpgrades:attempts.reduce((n,a)=>n+(a.equipped?.length||0)+(a.camp?.equipped?.length||0),0),
    observations:attempts.length?null:'not_reached; do not infer win rate'});
  }
- return {stage:'9.3',schemaVersion:1,engine:'v0.13 live native account, dungeon and combat runtime',
+ return {stage:'9.4.1',schemaVersion:3,engine:'v0.13 live native account, dungeon and combat runtime',
   source:S.sourceFingerprint().sha256,settings:opts,
   integrity:{
    noFabricatedXp:true,noForcedEquipment:true,noForcedEncounter:true,
@@ -448,13 +649,13 @@ function run(opts=parseArgs()){
  return analyze(accounts,opts);
 }
 function markdown(data){
- const out=['# Wanderer v0.13 — Stage 9.3: Native progression E1–E8','',
+ const out=['# Wanderer v0.13 — Stage 9.4.1: Elite risk/reward decisions E1–E8','',
   '**One persistent native account from E1; XP, equipment, rewards, resources and unlocks are never fabricated.**',
   '', 'Source hash: '+data.source,'', '## E1–E8 natural-account pilot','',
-  '| E | Accounts reached | Attempts | Wins | Defeats | Extractions | Boss reached | Rooms won | Native XP | Gear changes | Errors |',
-  '|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|'];
+  '| E | Accounts reached | Attempts | Wins | Deaths | Extractions | Boss reached | Prepared bosses | Marked Elites | Elite fights | Elite wins | Elite drops | Reliquaries | Boons | Potions | Rooms won | Native XP | Gear changes | Errors |',
+  '|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|'];
  for(const x of data.levels)out.push('| E'+x.level+' | '+x.accountsReached+' | '+x.attempts+' | '+x.wins+
-  ' | '+x.deaths+' | '+x.extractions+' | '+x.bossReached+' | '+x.roomsWon+' | '+x.nativeXpEarned+' | '+x.gearUpgrades+' | '+x.errors+' |');
+  ' | '+x.deaths+' | '+x.extractions+' | '+x.bossReached+' | '+x.reachedBossWithPreparation+' | '+x.markedElitePreparations+' | '+x.eliteFights+' | '+x.eliteWins+' | '+x.eliteDrops+' | '+x.reliquaryPreparations+' | '+x.boonsSelected+' | '+x.potionsUsed+' | '+x.roomsWon+' | '+x.nativeXpEarned+' | '+x.gearUpgrades+' | '+x.errors+' |');
  out.push('','## Account outcomes','');
  for(const a of data.accounts){
   out.push('- '+a.profile+' / seed '+a.seed+': unlocked E'+a.endLevel+'; '+a.attempts.length+' attempts; XP '+a.xp+
@@ -464,6 +665,10 @@ function markdown(data){
   '- Attempts only happen at an **actually unlocked** Expedition. Unreached E levels are censored and have no win rate.',
   '- Native loot, gear swaps, real XP awards, talent purchases, Contracts, Boon Shrines, event effects, Gold shops and potion usage are tracked without injecting inventory.',
   '- Combat target switching has a reaction delay; map traversal uses native movement and step costs; hidden room types are not peeked for room selection.',
+  '- Boon decisions are ranked by actual trade-offs, not chosen blindly by Affinity; native Fate rerolls are conditional.',
+  '- Native potions are purchased with earned Gold, used by exact kind only at legal map windows, and conserved before safe rooms.',
+  '- Elite route scores compare live native 60% loot odds and rarity tables to ordinary rooms, extra Gold/Fragments, Marked Elite rewards and Boss preparation against HP/escort/step risk; they never guarantee a drop.',
+  '- Boss preparation is earned via the real marked Elite and Forgotten Reliquary; both are separately counted, including preparation at Boss entry.',
   '- A win requires the real Boss at its natural map location. Extracting saves resources but **does not unlock E+1**.',
   '- The policy is more human-like than synthetic cohorts, but **not** a validated model of how actual players play.',
   '- Review full JSON per account and investigate runtime errors separately from player deaths before balancing.', '');
@@ -480,6 +685,6 @@ function main(args=process.argv.slice(2)){
  return report;
 }
 module.exports={PROFILES,DEFAULTS,parseArgs,gearScore,gearSnapshot,spendEarnedTalents,equipEarned,
- prepareCamp,choiceRealm,pathLength,selectRoom,chooseBoon,eventOptions,usePotionsBetween,
+ prepareCamp,choiceRealm,pathLength,eliteOpportunity,selectRoom,boonScore,chooseBoon,chooseContract,eventOptions,potionSlots,usePotionKind,usePotionsBetween,rerollPoorBoonAtShrine,
  fightNatural,resolveEvent,clearResults,playDungeon,simulateAccount,analyze,run,markdown,main};
 if(require.main===module)main();

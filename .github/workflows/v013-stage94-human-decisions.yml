@@ -1,0 +1,37 @@
+name: Wanderer v0.13 Stage 9.4 - Natural human-like E1 to E8 (no deploy)
+on:
+  push:
+    branches: [feature/v013-stage94-human-decisions-20261118]
+  workflow_dispatch:
+jobs:
+  human-policy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 29
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate Stage 9.4 and previous native simulator suites
+        run: |
+          npm run test:v013:human-decisions
+          npm run test:v013:natural
+          npm run test:v013:balance
+          npm run test:v013:stage91
+          npm run test:v013:stage92
+      - name: Four natural accounts through actual unlocked Expeditions E1-E8
+        run: npm run simulate:v013:human-e1-e8 -- --seeds=9101,9201 --profiles=cautious,balanced --out=reports/v013-stage94-natural-e1-e8.json
+      - name: Two independent 12-attempt early-game accounts
+        run: npm run simulate:v013:human-e1-e8 -- --seeds=9304 --profiles=cautious,balanced --max-attempts=12 --out=reports/v013-stage94-targeted-e1-e8.json
+      - name: Publish simulation reports only as Action artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wanderer-v013-stage94-human-decisions
+          path: |
+            reports/v013-stage94-natural-e1-e8.json
+            reports/v013-stage94-natural-e1-e8.md
+            reports/v013-stage94-targeted-e1-e8.json
+            reports/v013-stage94-targeted-e1-e8.md
+          if-no-files-found: warn
+          retention-days: 14
