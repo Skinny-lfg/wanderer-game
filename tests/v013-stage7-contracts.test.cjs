@@ -254,3 +254,9 @@ test('A winning Blueprint chance cannot duplicate a Blueprint already learned be
  assert.equal(d.stage7RewardPaid,undefined);
  assert.deepEqual(clone(a.state().crafting),original);
 });
+test('previous catalog contract offers and selected plans remain valid after Forge update',()=>{
+ const env=fresh(7111,2),{c,g,d,card}=env;
+ const legacy=K.plan(d.foundationManifest.seed,card,[],true);d.contractOffer=clone(legacy);
+ assert(K.validateOffer(g));const selected=legacy.ids[0];assert(c.chooseContract(selected));assert(K.validate(g));
+ d.stage72RewardPlan.rewards[selected]={kind:'essence',essence:9999};assert(!K.validate(g));
+});
