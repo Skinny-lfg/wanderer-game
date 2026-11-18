@@ -257,43 +257,75 @@ function dungeon(level,build,seed,opts,desiredRisk=undefined){
   eliteSummons:rooms.reduce((n,x)=>n+x.eliteSummons,0),stepsLeft:g.dungeon?.steps};
 }
 function summarize(rows){
- const groups=[];const keys=[...new Set(rows.map(r=>[r.level,r.build,r.mode,r.kind||'all'].join('|')))];
- for(const key of keys){const selected=rows.filter(r=>[r.level,r.build,r.mode,r.kind||'all'].join('|')===key),first=selected[0],mean=name=>+(selected.reduce((n,r)=>n+(Number(r[name])||0),0)/selected.length).toFixed(2);
-  groups.push({level:first.level,build:first.build,mode:first.mode,kind:first.kind||'all',n:selected.length,wins:selected.filter(r=>r.won).length,deaths:selected.filter(r=>r.died||r.stage==='failed').length,winPct:+(100*selected.filter(r=>r.won).length/selected.length).toFixed(1),errors:selected.filter(r=>r.error).length,timeouts:selected.filter(r=>r.timedOut).length,meanSeconds:mean('seconds'),meanDamageTaken:mean('damageTaken'),meanMinHpPct:mean('minHpPct')});
+ const keyOf=r=>JSON.stringify([r.level,r.build,r.mode,r.kind||'all',r.bossAffinity||r.affinity||null,r.risk??null,r.pointsBudget??null,r.gearRarity||null]);
+ const keys=[...new Set(rows.map(keyOf))],groups=[];
+ for(const key of keys){
+  const selected=rows.filter(r=>keyOf(r)===key),first=selected[0],mean=name=>+(selected.reduce((n,r)=>n+(Number(r[name])||0),0)/selected.length).toFixed(2);
+  const wins=selected.filter(r=>r.won).length;
+  groups.push({level:first.level,build:first.build,mode:first.mode,kind:first.kind||'all',affinity:first.bossAffinity||first.affinity||null,risk:first.risk??null,
+   n:selected.length,wins,deaths:selected.filter(r=>r.died||r.stage==='failed').length,winPct:+(100*wins/selected.length).toFixed(1),
+   errors:selected.filter(r=>r.error).length,timeouts:selected.filter(r=>r.timedOut).length,meanSeconds:mean('seconds'),meanDamageTaken:mean('damageTaken'),
+   meanMinHpPct:mean('minHpPct'),meanBossHealing:mean('bossHealing'),meanBossSummons:mean('bossSummons'),meanEnemyAbilityCasts:mean('enemyAbilityCasts')});
  }
  return groups;
 }
 function simulate(opts){
- const rows=[],start=Date.now();const builds=opts.builds.map(id=>BUILDS.find(b=>b.id===id));
+ const rows=[],start=Date.now(),builds=opts.builds.map(id=>BUILDS.find(b=>b.id===id));
+ const add=(mode,kind,level,build,seed,run,affinity=undefined,risk=undefined)=>{
+  try{rows.push(run());}
+  catch(e){rows.push({level,build:build.id,seed,kind,mode,affinity,risk,won:false,error:e.message});}
+ };
  for(const level of opts.levels)for(const build of builds)for(const seed of opts.seeds){
-  if(['encounter','both'].includes(opts.mode))for(const kind of ['normal','boss']){
-   try{rows.push(encounter(level,build,seed,kind,opts));}
-   catch(e){rows.push({level,build:build.id,seed,kind,mode:'encounter',won:false,error:e.message});}
+  if(['encounter','both'].includes(opts.mode))for(const kind of ['normal','boss'])
+   add('encounter',kind,level,build,seed,()=>encounter(level,build,seed,kind,opts));
+  if(opts.mode==='enemies')for(const count of opts.groupSizes)
+   add('enemies','swarm-'+count,level,build,seed,()=>encounter(level,build,seed,'normal',opts,undefined,undefined,undefined,undefined,count));
+  if(opts.mode==='elites')
+   add('elites','elite',level,build,seed,()=>encounter(level,build,seed,'elite',opts));
+  if(opts.mode==='bosses')for(const affinity of opts.affinities)for(const risk of opts.risks)
+   add('bosses',affinity,level,build,seed,()=>encounter(level,build,seed,'boss',opts,undefined,undefined,affinity,risk),affinity,risk);
+  if(opts.mode==='bossprep')for(const strategy of ['baseline','marked_elite','reliquary','both'])
+   add('bossprep',strategy,level,build,seed,()=>bossPreparationEncounter(level,build,seed,opts,strategy));
+  if(opts.mode==='bossmods')for(const affinity of opts.affinities)for(const risk of opts.risks){
+   const bossStyle=A.profileFor(affinity).style;
+   for(const modifier of [null,...F.CATALOG.bossModifiers.filter(x=>M.check([x.id],bossStyle,'relentless_hunt')).map(x=>x.id)]){
+    add('bossmods',modifier||'baseline',level,build,seed,
+     ()=>encounter(level,build,seed,'boss',opts,undefined,modifier,affinity,risk),affinity,risk);
+   }
   }
-  if(opts.mode==='bossprep')for(const strategy of ['baseline','marked_elite','reliquary','both']){
-   try{rows.push(bossPreparationEncounter(level,build,seed,opts,strategy));}
-   catch(e){rows.push({level,build:build.id,seed,kind:strategy,mode:'bossprep',won:false,error:e.message});}
-  }
-  if(opts.mode==='bossmods')for(const modifier of [null,...F.CATALOG.bossModifiers.map(x=>x.id)]){
-   try{rows.push(encounter(level,build,seed,'boss',opts,undefined,modifier));}
-   catch(e){rows.push({level,build:build.id,seed,kind:modifier||'baseline',mode:'bossmods',won:false,error:e.message});}
-  }
-  if(opts.mode==='traits')for(const trial of [null,...F.CATALOG.encounterTraits.map(x=>x.id)]){
-   try{rows.push(encounter(level,build,seed,'normal',opts,trial));}
-   catch(e){rows.push({level,build:build.id,seed,kind:trial||'baseline',mode:'traits',won:false,error:e.message});}
-  }
-  if(['dungeon','both'].includes(opts.mode)){
-   try{rows.push(dungeon(level,build,seed,opts));}
-   catch(e){rows.push({level,build:build.id,seed,mode:'dungeon',won:false,error:e.message});}
-  }
-  if(opts.mode==='conditions')for(const risk of [0,1,2]){
-   try{rows.push(dungeon(level,build,seed,opts,risk));}
-   catch(e){rows.push({level,build:build.id,seed,mode:'conditions',risk,won:false,error:e.message});}
-  }
+  if(opts.mode==='traits')for(const trial of [null,...F.CATALOG.encounterTraits.map(x=>x.id)])
+   add('traits',trial||'baseline',level,build,seed,()=>encounter(level,build,seed,'normal',opts,trial));
+  if(['dungeon','both'].includes(opts.mode))
+   add('dungeon','route',level,build,seed,()=>dungeon(level,build,seed,opts));
+  if(opts.mode==='conditions')for(const risk of RISKS)
+   add('conditions','risk-'+risk,level,build,seed,()=>dungeon(level,build,seed,opts,risk),undefined,risk);
  }
- const summary={cases:rows.length,wins:rows.filter(r=>r.won).length,deaths:rows.filter(r=>r.died||r.stage==='failed').length,errors:rows.filter(r=>r.error).length,timeouts:rows.filter(r=>r.timedOut).length,groups:summarize(rows)};
- return {schemaVersion:2,engine:'Wanderer v0.13 native HTML combat + current permanent talent tree + dungeon controller',mode:opts.mode,
-  assumptions:{levels:opts.levels,seeds:opts.seeds,builds:opts.builds,pointsAvailable:opts.points,rarity:opts.rarity,gear:opts.gear,runes:opts.runes,mode:opts.mode,potions:'none',lootUpgrades:'none',talents:'current tree version 15, fixed scenario budget; not earned progression',encounter:'native wave at selected Expedition Level; boss case injects a boss into an otherwise normal room for matched combat comparison',dungeon:'shortest accessible route through one real Realm map; persistent HP/Mana across rooms; no manual healing or artificial resets',traits:'controlled diagnostic: baseline plus six injected traits in one initial-ring normal room; unlike natural maps this deliberately bypasses affinity and first-ring placement restrictions to compare identical combat scenarios, not to model exploration',bossmods:'controlled diagnostic: baseline plus six injected boss modifiers against Rift Harbinger in an initial-ring room; bypasses regular map boss placement and multi-modifier counts for matched-seed comparison only',bossprep:'controlled Dangerous boss baseline versus Marked Elite, Forgotten Reliquary sacrifice and both; applies real boss mechanics but injects preparation state and first-ring boss placement without actual optional-room exploration',conditions:'Natural three-card Realm selection and six condition effects, without modifying the map or combat formulas. Selected paths follow the shortest topology, not optimal player choices.',limits:'Synthetic fixed gear and permanent points. Conditions mode follows one natural route per each of the three Realm cards, not all 15 Realms or multi-expedition economic progression. No production balance conclusions on small seed counts.'},
+ const distinct=field=>[...new Set(rows.map(r=>r[field]).filter(x=>x!==null&&x!==undefined))].sort(),
+  sum=field=>rows.reduce((n,r)=>n+(Number(r[field])||0),0);
+ const summary={cases:rows.length,wins:rows.filter(r=>r.won).length,deaths:rows.filter(r=>r.died||r.stage==='failed').length,
+  errors:rows.filter(r=>r.error).length,timeouts:rows.filter(r=>r.timedOut).length,
+  exposures:{bossAffinities:distinct('bossAffinity'),bossStyles:distinct('bossStyle'),eliteTypes:distinct('eliteType'),affinities:distinct('affinity'),
+   conditions:distinct('conditionId'),totalBossSummons:sum('bossSummons'),totalBossHealing:sum('bossHealing'),
+   totalBossWards:sum('bossWards'),totalBossCastInterruptions:sum('bossCastInterruptions'),
+   totalArcanePulses:sum('bossArcanePulses'),totalEnemyAbilityCasts:sum('enemyAbilityCasts'),totalEliteSummons:sum('eliteSummons')},
+  groups:summarize(rows)};
+ const notes=[];
+ if(opts.mode==='bosses'&&opts.affinities.some(x=>!summary.exposures.bossAffinities.includes(x)))notes.push('Not every requested Boss Affinity entered combat. Check errors and scenario seed search.');
+ if(opts.points>0)notes.push('Fixed '+opts.points+'-point Talent Tree debug build is synthetic at all E levels, not earned account XP. Compare an explicit --points=0 baseline for E1.');
+ if(['bosses','bossmods','enemies','elites','encounter','traits','bossprep'].includes(opts.mode))notes.push('Controlled first-ring encounter injection: uses native combat but not natural room placement, 15-Realm progression or earned equipment.');
+ if(['dungeon','conditions','both'].includes(opts.mode))notes.push('Natural Dungeon route uses shortest accessible path and the explicit Boon selection policy; potions and optional contracts are not optimized.');
+ if(rows.length<100)notes.push('Small samples: do not infer final balance from win rates without larger seed cohorts and player tests.');
+ return {schemaVersion:3,engine:'Wanderer v0.13 native combat/dungeon + Stage 7 economy + Stages 8.0–8.4 actors and abilities',mode:opts.mode,
+  assumptions:{levels:opts.levels,seeds:opts.seeds,builds:opts.builds,pointsAvailable:opts.points,rarity:opts.rarity,gear:opts.gear,runes:opts.runes,
+   affinities:opts.affinities,risks:opts.risks,groupSizes:opts.groupSizes,boons:opts.boons,mode:opts.mode,potions:'not automatically selected',
+   talents:'Tree v15, synthetic fixed budget; real E1 starts with zero points. XP rewards in natural Dungeon are reported but cannot be spent during this single simulated route.',
+   gearProgression:'Current native item tiers and stat rolls; equipment held constant throughout the scenario (no auto-equipping drops).',
+   controlled:'Boss, modifier, elite and swarm diagnostics deliberately replace a first-ring encounter; native skills, defender AI, six-Boss lookup, status effects, damage, rewards and summon limits remain unmodified.',
+   dungeon:'Native three-card Realm and shortest accessible route; persistent HP/Mana and resource ledger, native Boon selection optional; not all 15 Realms or an account-level campaign.',
+   bossmods:'Only Boss-compatible properties are tested on each selected real Affinity Boss. Legacy Rift-only forced boss ID removed.',
+   visualVfx:'Present in browser but not simulated (visual-only, cannot change combat RNG or numbers).',
+   limits:'No automatic potions, intelligent target swapping, conditional boon optimization, trading/crafting between rooms or manual player strategy. Not a complete player-behavior model.',
+   warnings:notes},
   sourceSha256:crypto.createHash('sha256').update(fs.readFileSync(path.join(__dirname,'../index.html'))).digest('hex'),durationMs:Date.now()-start,summary,rows};
 }
 function main(args=process.argv.slice(2)){
