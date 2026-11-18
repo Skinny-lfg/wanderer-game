@@ -64,7 +64,7 @@ function tick(run){
   if(run.combatSeconds+1e-9>=deadline){
    // One pulse per real deadline; advance exactly one interval to avoid drifting.
    run.bossNextPulseAt=deadline+p.intervalSec;
-   const amount=Math.max(1,Math.round(run.maxhp*p.damagePlayerMaxHpPct));
+   const amount=Math.max(1,Math.round(run.maxhp*p.damagePlayerMaxHpPct*(root.WandererV013ExpeditionBoons?.takenFactor(run)||1)));
    const blocked=Math.min(run.barrier||0,amount);
    run.barrier=Math.max(0,(run.barrier||0)-blocked);
    const actual=Math.min(run.hp,amount-blocked);
