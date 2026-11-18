@@ -68,11 +68,11 @@ function scaleFor(enemy,count,base){
  if(!ROLES.includes(role)||count<=1)return null;
  const baseHp=base.hp,baseAtk=base.atk;
  if(count>=6){
-  if(role==='minion')return {hp:baseHp*.8,atk:baseAtk*.85,def:count<=12?.20:.14};
-  return {hp:Math.min(.48,baseHp*2.8),atk:Math.min(.46,baseAtk*2.4),def:.72};
+  if(role==='minion')return {hp:baseHp*.95,atk:baseAtk*.92,def:count<=12?.25:.18};
+  return {hp:Math.min(.38,baseHp*1.85),atk:Math.min(.32,baseAtk*1.55),def:.66};
  }
- if(role==='minion')return {hp:baseHp*.7,atk:baseAtk*.72,def:.32};
- return {hp:Math.max(.78,baseHp*1.55),atk:Math.max(.73,baseAtk*1.6),def:.83};
+ if(role==='minion')return {hp:baseHp*.95,atk:baseAtk*.90,def:.35};
+ return {hp:Math.max(.57,baseHp*1.35),atk:Math.max(.50,baseAtk*1.35),def:.72};
 }
 const API=Object.freeze({ROLES,CATALOG,FAMILY_WEIGHTS,catalogFor,plan,scaleFor});
 root.WandererV013EnemyRoster=API;
