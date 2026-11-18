@@ -423,3 +423,29 @@ body.phase3IntegratedPreview #scene .heroArenaSprite > img { object-fit: contain
 .v013CraftFocus{display:grid;grid-template-columns:minmax(220px,340px) minmax(0,1fr);align-items:end;gap:14px;margin:14px 0;padding:12px 14px;border:1px solid #80644366;background:#211a22}.v013CraftFocus label{display:grid;gap:6px}.v013CraftFocus p{margin:0;line-height:1.45}
 @media(max-width:640px){.v013CraftFocus{grid-template-columns:1fr;align-items:start}}
 .routeBranchNode.is-project{outline:2px solid #a6c7df;outline-offset:4px}
+
+/* Stage 8.0: immediate class readability beside each enemy's health bar. */
+body.phase3IntegratedPreview #scene .arenaEnemyVitals{
+ display:flex;align-items:center;justify-content:center;gap:5px;width:100%;min-width:0;
+}
+body.phase3IntegratedPreview #scene .arenaEnemyVitals .arenaEnemyHealth,
+body.phase3IntegratedPreview #scene .arenaEnemyVitals .hpbar.enemy{
+ flex:1 1 auto;min-width:0;width:auto;margin-top:0;
+}
+body.phase3IntegratedPreview #scene .enemyRoleBadge{
+ flex:0 0 21px;display:inline-flex;align-items:center;justify-content:center;
+ width:21px;height:21px;border:1px solid #806956;border-radius:5px;
+ background:#1b1820e8;color:#e6d7bd;
+ font:700 16px/1 Georgia,serif;text-shadow:0 1px 2px #000;
+}
+body.phase3IntegratedPreview #scene .enemyRoleBadge.role-minion{color:#bdaca0;border-color:#655b58}
+body.phase3IntegratedPreview #scene .enemyRoleBadge.role-tank{color:#d0ba83;border-color:#937854}
+body.phase3IntegratedPreview #scene .enemyRoleBadge.role-skirmisher{color:#e6a397;border-color:#a67568}
+body.phase3IntegratedPreview #scene .enemyRoleBadge.role-caster{color:#b6a6ec;border-color:#8378b5}
+body.phase3IntegratedPreview #scene .enemyRoleBadge.role-boss{color:#f3d18d;border-color:#b18d49}
+body.phase3IntegratedPreview #scene .enemyRoleBadge.role-miniboss{color:#efb27b;border-color:#a47753}
+body.phase3IntegratedPreview #scene .arenaSingleEnemy .arenaEnemyVitals{max-width:100%}
+@media(max-width:650px){
+ body.phase3IntegratedPreview #scene .arenaEnemyVitals{gap:3px}
+ body.phase3IntegratedPreview #scene .enemyRoleBadge{flex-basis:18px;width:18px;height:18px;font-size:13px}
+}
