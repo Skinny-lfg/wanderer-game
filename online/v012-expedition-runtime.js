@@ -405,7 +405,7 @@ function phase5MakeSummary(outcome){
  ]:[];
  const expeditionTreasures=(ports.state.valuables||[]).filter(i=>bagIds.has(i.id)).map(i=>({...i}));
  const start=ports.phase5Results.craftingStart||WandererV013Crafting.create(),craft=ports.state.crafting||WandererV013Crafting.create();
- ports.phase5Results.summary={family:g.bossFamily,realmMap:!!g.dungeon,craftingEarned:{essence:Math.max(0,craft.essence-start.essence),cores:Object.fromEntries(WandererV013Crafting.FAMILIES.map(f=>[f,Math.max(0,craft.cores[f]-start.cores[f])]))},passiveTelemetry:ports.phase4Clone(ports.phase1Build?.runtime.passiveTelemetry||{}),metrics:ports.phase6Run?.metrics||null,level:g.expedition,outcome,realms:g.history.length,
+ ports.phase5Results.summary={family:g.bossFamily,realmMap:!!g.dungeon,contract:globalThis.WandererV013ExpeditionContracts?.inspect(g,outcome)||null,craftingEarned:{essence:Math.max(0,craft.essence-start.essence),cores:Object.fromEntries(WandererV013Crafting.FAMILIES.map(f=>[f,Math.max(0,craft.cores[f]-start.cores[f])]))},passiveTelemetry:ports.phase4Clone(ports.phase1Build?.runtime.passiveTelemetry||{}),metrics:ports.phase6Run?.metrics||null,level:g.expedition,outcome,realms:g.history.length,
   families:[...(ports.phase1Build?.families||g.families)],picks:[...(ports.phase1Build?.picks||[])],element:ports.phase1Build?.element||null,
   seconds:ports.phase1Clock+(outcome==='defeat'?(ports.state.run?.combatSeconds||0):0),gold:ports.phase5Results.gold,fragments:ports.phase5Results.fragments,
   kept:ports.phase5Results.earned.filter(i=>owned.has(i.id)&&(!lost||!bagIds.has(i.id))),lost:lostGear,
