@@ -11,17 +11,19 @@ function attach(run,enemy=leader(run)){
  if(!run||!enemy?.boss||enemy.hp<=0||!Number.isFinite(enemy.maxhp)||enemy.maxhp<=0)return null;
  return run.bossInfrastructure={
   ownerStyle:enemy.bossStyle||'boss',summoned:0,minionDeaths:0,healed:0,
-  maxSummons:LIMITS.maxSummons,maxLivingMinions:LIMITS.maxLivingMinions,
+  maxSummons:LIMITS.maxSummons,maxLivingMinions:LIMITS.maxLivingMinions,maxTotalHealing:LIMITS.maxTotalHealing,
   healOnMinionDeath:.0,cast:null,readyAt:{},uses:{},interruptedUntil:0,interruptedName:''
  };
 }
 function configure(run,opts={}){
  const state=run?.bossInfrastructure;
  if(!state||!opts||typeof opts!=='object')return false;
- const {maxSummons,maxLivingMinions,healOnMinionDeath}=opts;
+ const {maxSummons,maxLivingMinions,healOnMinionDeath,maxTotalHealing}=opts;
+ if(maxTotalHealing!==undefined&&(!Number.isFinite(maxTotalHealing)||maxTotalHealing<0||maxTotalHealing>LIMITS.maxTotalHealing))return false;
  if(maxSummons!==undefined&&(!Number.isInteger(maxSummons)||maxSummons<0||maxSummons>LIMITS.maxSummons))return false;
  if(maxLivingMinions!==undefined&&(!Number.isInteger(maxLivingMinions)||maxLivingMinions<0||maxLivingMinions>LIMITS.maxLivingMinions))return false;
  if(healOnMinionDeath!==undefined&&(!Number.isFinite(healOnMinionDeath)||healOnMinionDeath<0||healOnMinionDeath>LIMITS.maxHealPerUse))return false;
+ if(maxTotalHealing!==undefined)state.maxTotalHealing=maxTotalHealing;
  if(maxSummons!==undefined)state.maxSummons=maxSummons;
  if(maxLivingMinions!==undefined)state.maxLivingMinions=maxLivingMinions;
  if(healOnMinionDeath!==undefined)state.healOnMinionDeath=healOnMinionDeath;
@@ -52,7 +54,9 @@ function summon(run,source,count,makeMinion,options={}){
  for(let i=0;i<allowed;i++){
   const open=run.enemies.findIndex(e=>e?.hp<=0&&e.groupDefeated);
   const slotAvailable=open>=0||run.enemies.length<LIMITS.activeSlots;
-  if(!slotAvailable&&run.groupReserve.length>=LIMITS.maxReserve)break;
+  const displacedIndex=!slotAvailable&&options.priority&&run.groupReserve.length<LIMITS.maxReserve?
+   run.enemies.findLastIndex(e=>e?.hp>0&&!e.boss&&!e.miniboss&&!e.stage84Minion):-1;
+  if(!slotAvailable&&displacedIndex<0&&run.groupReserve.length>=LIMITS.maxReserve)break;
   const mob=makeMinion(i);
   if(!mob||mob.boss||mob.miniboss||mob.role!=='minion'||!Number.isFinite(mob.maxhp)||mob.maxhp<=0||
       !Number.isFinite(mob.atk)||mob.atk<0||!Number.isFinite(mob.attackEvery)||mob.attackEvery<=0)
@@ -64,11 +68,14 @@ function summon(run,source,count,makeMinion,options={}){
   mob.baseDef=Math.max(0,Math.round(originalBase*defFactor));
   mob.attackEvery*=intervalFactor;mob.groupClock=0;
   mob.stage83Summoned=true;mob.stage83Summoner=source.boss?'boss':'elite';
+  if(options.stage84Kind)mob.stage84Minion=options.stage84Kind;
   root.WandererV013EnemyAbilities?.attach([mob],options.family||run.planeFamily||'decay',run.combatSeconds||0);
-  if(slotAvailable){
-   const slot=open>=0?run.enemies[open].groupSlot:run.enemies.length;
+  if(slotAvailable||displacedIndex>=0){
+   const slot=displacedIndex>=0?run.enemies[displacedIndex].groupSlot:open>=0?run.enemies[open].groupSlot:run.enemies.length;
+   if(displacedIndex>=0){const displaced=run.enemies[displacedIndex];displaced.groupSlot=-1;run.groupReserve.unshift(displaced);}
    mob.groupSlot=slot;mob.groupClock=-.3*(i+1);
-   if(open>=0)run.enemies[open]=mob;else run.enemies.push(mob);
+   if(displacedIndex>=0)run.enemies[displacedIndex]=mob;
+   else if(open>=0)run.enemies[open]=mob;else run.enemies.push(mob);
    root.WandererV013EnemyAbilities?.onEnter(mob,run.combatSeconds||0);
    result.field++;
   }else{
@@ -85,7 +92,7 @@ function recover(run,requested){
  const e=leader(run),s=run?.bossInfrastructure;
  if(run?.status!=='fight'||!e||e.hp<=0||!s||!Number.isFinite(requested)||requested<=0)return 0;
  const maxUse=Math.max(0,Math.round(e.maxhp*LIMITS.maxHealPerUse));
- const maxLifetime=Math.max(0,Math.round(e.maxhp*LIMITS.maxTotalHealing)-s.healed);
+ const maxLifetime=Math.max(0,Math.round(e.maxhp*(s.maxTotalHealing??LIMITS.maxTotalHealing))-s.healed);
  const heal=Math.max(0,Math.min(Math.round(requested),maxUse,maxLifetime,Math.max(0,e.maxhp-e.hp)));
  e.hp+=heal;s.healed+=heal;
  return heal;

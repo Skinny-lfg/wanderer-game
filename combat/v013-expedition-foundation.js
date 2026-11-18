@@ -2,7 +2,7 @@
 (function(root){'use strict';
 const VERSION=1;
 const AFFINITIES=Object.freeze(['blood','decay','vitality','aegis','fury','magic']);
-const BOSS_STYLES=Object.freeze(['guardian','leech','berserker']);
+const BOSS_STYLES=Object.freeze(['guardian','leech','berserker','matriarch','devourer','conductor']);
 const DIFFICULTIES=Object.freeze([
  {id:'guarded',name:'Guarded',risk:0,rooms:18,steps:14,elites:1,escorts:0,bonus:0,traits:1,bossModifiers:1},
  {id:'dangerous',name:'Dangerous',risk:1,rooms:20,steps:13,elites:1,escorts:1,bonus:.12,traits:2,bossModifiers:2},
