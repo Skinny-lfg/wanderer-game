@@ -2,8 +2,8 @@
 // Two deterministic, feasible objectives per Dungeon. No duplicate Elite settlement.
 // All progress is derived from the real controller, not from player-supplied counters.
 (function(root){'use strict';
-const F=root.WandererV013ExpeditionFoundation;
-if(!F)throw Error('Stage 7 Contracts require the Stage 0 foundation');
+const F=root.WandererV013ExpeditionFoundation,C=root.WandererV013Crafting;
+if(!F||!C)throw Error('Stage 7.2 Contracts require Stage 0 and Blueprint Collection');
 const CATALOG=F.CATALOG.contracts;
 const get=id=>F.lookup('contracts',id);
 const DESCRIPTIONS=Object.freeze({
@@ -12,16 +12,47 @@ const DESCRIPTIONS=Object.freeze({
  purification:{icon:'✦',objective:'Disrupt a boss seal at the Forgotten Reliquary',detail:'Reach the Reliquary and sacrifice Health to disable one boss modifier.'},
  oath_of_defiance:{icon:'🛡',objective:'Defeat the final boss without disrupting its seal',detail:'Leave every boss modifier intact. Marked Elite preparation is allowed.'}
 });
-const REWARDS=Object.freeze({
- bounty_writ:[[3,6],[5,10],[7,14]],
- pathfinder:[[3,7],[5,12],[8,18]],
- purification:[[5,10],[8,16],[11,23]],
- oath_of_defiance:[[6,12],[10,20],[14,30]]
+// Contract rewards are exclusive. A Blueprint offer must be earned and known
+// before settlement; a duplicate Blueprint is not converted to free currency.
+const ESSENCE=Object.freeze({
+ bounty_writ:[3,5,7],pathfinder:[3,5,8],
+ purification:[5,8,11],oath_of_defiance:[6,10,14]
 });
+const REWARDS=ESSENCE;
 function reward(id,risk){
  if(!get(id)||![0,1,2].includes(risk))throw Error('Invalid Contract reward');
- const [essence,fragments]=REWARDS[id][risk];
- return {essence,fragments:Math.min(30,fragments)};
+ return {kind:'essence',essence:ESSENCE[id][risk]};
+}
+function canon(known){
+ if(!Array.isArray(known)||new Set(known).size!==known.length||
+    known.some(id=>!C.RECIPES.some(r=>r.id===id&&r.rarity!=='Uncommon')))
+  throw Error('Invalid Contract Blueprint collection');
+ return [...known].sort();
+}
+function blueprint(seed,card,known){
+ const candidates=C.RECIPES.filter(r=>r.family===card.family&&!known.includes(r.id)&&r.rarity!=='Uncommon');
+ const preferred=card.risk===2?'Epic':'Rare';
+ const available=candidates.filter(r=>r.rarity===preferred);
+ const fallback=card.risk===0?[]:candidates.filter(r=>r.rarity!==preferred);
+ const pool=available.length?available:fallback;
+ if(!pool.length)return null;
+ const random=F.rng(seed,'contract_blueprint_v1_'+card.id);
+ return pool[Math.floor(random()*pool.length)].id;
+}
+function plan(seed,card,known=[]){
+ const ids=offer(seed,card),knownRecipes=canon(known);
+ const newBlueprint=blueprint(seed,card,knownRecipes),rewards={};
+ for(let i=0;i<ids.length;i++){
+  const id=ids[i];rewards[id]=i===0&&newBlueprint?{kind:'blueprint',recipeId:newBlueprint}:reward(id,card.risk);
+ }
+ return {ids,knownRecipes,rewards};
+}
+function label(prize){
+ if(prize?.kind==='blueprint'){
+  const r=C.RECIPES.find(r=>r.id===prize.recipeId);
+  return r?r.rarity+' Blueprint · '+r.name:'Unknown Blueprint';
+ }
+ return prize?.kind==='essence'?'+'+prize.essence+' Essence':'No optional reward';
 }
 function reachable(card,destination){
  if(!card||!Array.isArray(card.nodes)||!Array.isArray(card.edges)||!Number.isInteger(destination)||destination<0||destination>=card.nodes.length)return Infinity;
@@ -76,56 +107,67 @@ function inspect(game,outcome=null){
  const d=game?.dungeon,card=d?.cards?.find(c=>c.id===d?.realm),s=d?.foundationState;
  if(!card||!s)return null;
  const choice=decision(s),id=s.contractId;
- if(!choice){return d.contractOffer?{status:'offered',options:[...d.contractOffer.ids]}:null;}
- if(choice.type==='skip_contract')return {id:null,name:'No contract',status:'ignored',progress:0,target:0,essence:0,fragments:0};
- const p=progress(game),prize=reward(id,card.risk),paid=d.stage7RewardPaid;
- const failed=['defeat','abandoned'].includes(outcome)||outcome==='extracted'&&!paid||outcome==='victory'&&!paid||game.stage==='failed'&&outcome!=='extracted';
+ if(!choice)return d.contractOffer?{status:'offered',options:[...d.contractOffer.ids]}:null;
+ if(choice.type==='skip_contract')return {id:null,name:'No contract',status:'ignored',progress:0,target:0,essence:0,fragments:0,recipeId:null,kind:null};
+ const p=progress(game),prize=d.stage72RewardPlan?.rewards?.[id],paid=d.stage7RewardPaid;
+ const failed=['defeat','abandoned'].includes(outcome)||outcome==='extracted'&&!paid||
+   outcome==='victory'&&!paid||game.stage==='failed'&&outcome!=='extracted';
  return {id,name:get(id).name,status:paid?'completed':failed?'failed':p.done?'ready':'active',
-   progress:p.current,target:p.target,essence:paid?.essence||0,fragments:paid?.fragments||0,potential:prize};
+  progress:p.current,target:p.target,essence:paid?.essence||0,fragments:0,recipeId:paid?.recipeId||null,
+  kind:paid?.kind||prize?.kind||null,potential:prize||null};
 }
 function validate(game){
  const d=game?.dungeon,card=d?.cards?.find(c=>c.id===d?.realm),s=d?.foundationState;
- if(!d||!card||!s)return d?.contractOffer===undefined&&d?.stage7RewardPaid===undefined;
+ if(!d||!card||!s)return d?.contractOffer===undefined&&d?.stage72RewardPlan===undefined&&d?.stage7RewardPaid===undefined;
  const events=s.decisions.filter(x=>['select_contract','skip_contract','complete_contract'].includes(x.type));
- if(!events.length)return validateOffer(game)&&d.stage7RewardPaid===undefined&&s.contractId===null&&s.completedObjectives.length===0;
- const planned=offer(d.foundationManifest.seed,card);
+ if(!events.length)return validateOffer(game)&&d.stage72RewardPlan===undefined&&
+    d.stage7RewardPaid===undefined&&s.contractId===null&&s.completedObjectives.length===0;
  const initial=events[0],selection=initial.type==='select_contract',skip=initial.type==='skip_contract';
  if(!selection&&!skip||d.contractOffer!==undefined||events.length>2||!['choice','combat','finished','failed'].includes(game.stage))return false;
- if(selection&&(!planned.includes(initial.id)||initial.id!==s.contractId))return false;
- if(skip&&(s.contractId!==null||events.length!==1||s.completedObjectives.length||d.stage7RewardPaid!==undefined))return false;
- if(selection){
-  const paid=d.stage7RewardPaid,completed=events.find(x=>x.type==='complete_contract');
-  if(events.length===(paid?2:1)&&(!paid||completed?.id===initial.id&&events[1]===completed)&&
-    (paid?s.completedObjectives.length===1&&s.completedObjectives[0]===initial.id&&
-       paid.id===initial.id&&Number.isSafeInteger(paid.essence)&&paid.essence>=0&&paid.essence<=reward(initial.id,card.risk).essence&&
-       Number.isSafeInteger(paid.fragments)&&paid.fragments>=0&&paid.fragments<=reward(initial.id,card.risk).fragments&&progress(game)?.done:
-       s.completedObjectives.length===0))return true;
-  return false;
- }
- return true;
+ if(skip)return s.contractId===null&&events.length===1&&!s.completedObjectives.length&&
+    d.stage72RewardPlan===undefined&&d.stage7RewardPaid===undefined;
+ const p=d.stage72RewardPlan;
+ if(!p||!Array.isArray(p.knownRecipes)||!Array.isArray(p.ids)||
+    !p.ids.includes(initial.id)||initial.id!==s.contractId)return false;
+ try{if(JSON.stringify(p)!==JSON.stringify(plan(d.foundationManifest.seed,card,p.knownRecipes)))return false;}
+ catch{return false;}
+ const paid=d.stage7RewardPaid,completed=events.find(x=>x.type==='complete_contract'),due=p.rewards[initial.id];
+ if(events.length!==(paid?2:1)||paid&&(!completed||completed.id!==initial.id||events[1]!==completed)||
+    !paid&&s.completedObjectives.length||!due)return false;
+ if(!paid)return true;
+ if(s.completedObjectives.length!==1||s.completedObjectives[0]!==initial.id||
+    paid.id!==initial.id||paid.kind!==due.kind||!progress(game)?.done)return false;
+ if(due.kind==='blueprint')return paid.recipeId===due.recipeId&&
+    paid.essence===undefined&&paid.fragments===undefined;
+ return Number.isSafeInteger(paid.essence)&&paid.essence>=0&&
+    paid.essence<=due.essence&&paid.recipeId===undefined&&paid.fragments===undefined;
 }
 function validateOffer(game){
  const d=game?.dungeon,card=d?.cards?.find(c=>c.id===d?.realm),o=d?.contractOffer;
  if(!o)return o===undefined;
  if(!card||game.stage!=='choice'||game.selected!==null||decision(d.foundationState))return false;
- try{return Array.isArray(o.ids)&&o.ids.length===2&&new Set(o.ids).size===2&&
-   JSON.stringify(o.ids)===JSON.stringify(offer(d.foundationManifest.seed,card));}
+ try{return JSON.stringify(o)===JSON.stringify(plan(d.foundationManifest.seed,card,o.knownRecipes));}
  catch{return false;}
 }
 function settle(game,profile,results){
- const d=game?.dungeon,s=d?.foundationState,card=d?.cards?.find(c=>c.id===d?.realm),id=s?.contractId;
- if(!d||!card||!get(id)||d.stage7RewardPaid||!progress(game)?.done)return null;
- if(!profile?.crafting||!Number.isSafeInteger(profile.crafting.essence)||!Number.isSafeInteger(profile.fragments))throw Error('Invalid Contract wallet');
- const next=F.applyDecision(s,{type:'complete_contract',id},d.foundationManifest),amount=reward(id,card.risk);
- const essence=Math.min(amount.essence,Number.MAX_SAFE_INTEGER-profile.crafting.essence);
- const fragments=Math.min(amount.fragments,Number.MAX_SAFE_INTEGER-profile.fragments);
- // If ever at the currency limit, record the actual payout rather than duplicate or overflow it.
- d.foundationState=next;d.stage7RewardPaid={id,essence,fragments};
- profile.crafting.essence+=essence;profile.fragments+=fragments;
- if(results)results.fragments+=fragments;
- return {id,name:get(id).name,essence,fragments};
+ const d=game?.dungeon,s=d?.foundationState,card=d?.cards?.find(c=>c.id===d.realm),id=s?.contractId;
+ if(!d||!card||!get(id)||d.stage7RewardPaid||!progress(game)?.done||!validate(game))return null;
+ if(!C.valid(profile?.crafting))throw Error('Invalid Contract wallet');
+ const prize=d.stage72RewardPlan?.rewards?.[id];if(!prize)return null;
+ const next=F.applyDecision(s,{type:'complete_contract',id},d.foundationManifest);
+ let paid;
+ if(prize.kind==='blueprint'){
+  const discovered=C.discover(profile.crafting,prize.recipeId);
+  if(!discovered)return null;
+  profile.crafting=discovered;paid={id,kind:'blueprint',recipeId:prize.recipeId};
+ }else{
+  const essence=Math.min(prize.essence,Math.max(0,1000000000-profile.crafting.essence));
+  profile.crafting.essence+=essence;paid={id,kind:'essence',essence};
+ }
+ d.foundationState=next;d.stage7RewardPaid=paid;
+ return {...paid,name:get(id).name};
 }
-const API=Object.freeze({CATALOG,DESCRIPTIONS,REWARDS,get,reward,reachable,sector,eligible,offer,decision,progress,inspect,validate,validateOffer,settle});
+const API=Object.freeze({CATALOG,DESCRIPTIONS,REWARDS,get,reward,plan,label,reachable,sector,eligible,offer,decision,progress,inspect,validate,validateOffer,settle});
 root.WandererV013ExpeditionContracts=API;
 if(typeof module==='object'&&module.exports)module.exports=API;
 })(globalThis);

@@ -30,8 +30,8 @@ function familiesFor(build,permanent){
 function offer(seed,realmId,round,families=[],chosen=[]){
  if(!Number.isInteger(seed)||seed<0||seed>0xffffffff||typeof realmId!=='string'||!/^[a-z0-9_-]+$/.test(realmId)||
    ![0,1].includes(round)||!Array.isArray(families)||new Set(families).size!==families.length||
-   families.some(f=>!F.AFFINITIES.includes(f))||!Array.isArray(chosen)||chosen.length!==round||
-   new Set(chosen).size!==chosen.length||chosen.some(id=>!get(id)))throw Error('Invalid Boon offer input');
+   families.some(f=>!F.AFFINITIES.includes(f))||!Array.isArray(chosen)||
+   new Set(chosen).size!==chosen.length||chosen.length>1||chosen.some(id=>!get(id)))throw Error('Invalid Boon offer input');
  const available=CATALOG.filter(b=>!chosen.includes(b.id)),random=F.rng(seed,'boons_v1_'+realmId+'_'+round);
  if(available.length<3)throw Error('Insufficient unique Boons');
  const matches=shuffle(available.filter(b=>b.families.some(f=>families.includes(f))&&b.id!=='wayfarers_bargain'),random);
@@ -39,14 +39,90 @@ function offer(seed,realmId,round,families=[],chosen=[]){
  const rest=shuffle(available.filter(b=>b.id!==first.id),random);
  return [first,...rest.slice(0,2)].map(b=>b.id);
 }
-function validateOffer(d,history){
- if(!d?.boonOffer)return d?.boonOffer===undefined;
- const o=d.boonOffer,chosen=d.foundationState?.boonIds,manifest=d.foundationManifest;
- if(!manifest||!d.realm||!Array.isArray(chosen)||!Number.isInteger(o.round)||o.round!==chosen.length||o.round>1||
-   !Array.isArray(o.ids)||o.ids.length!==3||new Set(o.ids).size!==3||
-   !Array.isArray(o.families)||new Set(o.families).size!==o.families.length||
-   o.families.some(f=>!F.AFFINITIES.includes(f))||o.round===1&&(!Array.isArray(history)||history.filter(entry=>!entry.event).length<4))return false;
- try{return JSON.stringify(o.ids)===JSON.stringify(offer(manifest.seed,d.realm,o.round,o.families,chosen));}catch{return false;}
+// Distilled rerolls prioritise options not shown on the first draw.
+function rerollOffer(seed,realmId,round,families=[],chosen=[]){
+ const original=offer(seed,realmId,round,families,chosen);
+ const rng=F.rng(seed,'boon_reroll_v1_'+realmId+'_'+round);
+ const remaining=CATALOG.filter(x=>!chosen.includes(x.id));
+ const fresh=shuffle(remaining.filter(x=>!original.includes(x.id)),rng).map(x=>x.id);
+ const filler=shuffle(remaining.filter(x=>original.includes(x.id)),rng).map(x=>x.id);
+ return [...fresh,...filler].slice(0,3);
+}
+// The two Shrines replace existing combat rooms; topology and all edges remain intact.
+const WINDOWS=Object.freeze([[4,5,6],[9,10,11,12]]);
+const FALLBACK=Object.freeze([[7,8],[13,14,15,16]]);
+function placeShrines(card,seed){
+ if(!card?.nodes||!F.DIFFICULTIES[card.risk]||!Number.isInteger(seed)||seed<0||seed>0xffffffff||
+    card.boonShrines!==undefined)throw Error('Invalid Boon Shrine map');
+ const chosen=[];
+ for(let round=0;round<2;round++){
+  const find=slots=>slots.filter(id=>card.nodes[id]?.kind==='combat'&&id!==card.clueRoom&&
+    !chosen.includes(id));
+  const candidates=find(WINDOWS[round]),pool=candidates.length?candidates:find(FALLBACK[round]);
+  if(!pool.length)throw Error('No room for Boon Shrine');
+  const random=F.rng(seed,'boon_shrine_v1_'+card.id+'_'+round);
+  const room=pool[Math.floor(random()*pool.length)];
+  card.nodes[room].kind='shrine';chosen.push(room);
+ }
+ card.boonShrines=chosen;
+ return [...chosen];
+}
+function validateTopology(card,seed){
+ if(!card||!Array.isArray(card.boonShrines)||card.boonShrines.length!==2||
+    new Set(card.boonShrines).size!==2||
+    card.boonShrines.some(id=>card.nodes[id]?.kind!=='shrine'||card.nodes[id]?.event!==null||card.nodes[id]?.traitId!==undefined)||
+    card.nodes.some((n,i)=>n.kind==='shrine'&&!card.boonShrines.includes(i)))return false;
+ try{
+  const reference=JSON.parse(JSON.stringify(card));
+  delete reference.boonShrines;
+  for(const id of card.boonShrines)reference.nodes[id].kind='combat';
+  return JSON.stringify(placeShrines(reference,seed))===JSON.stringify(card.boonShrines);
+ }catch{return false;}
+}
+function resolutions(state){
+ return (state?.decisions||[]).filter(a=>a.type==='choose_boon'||a.type==='skip_boon');
+}
+function validateOffer(d,game){
+ if(!d?.realm)return d?.boonOffer===undefined;
+ const card=d.cards?.find(c=>c.id===d.realm),s=d.foundationState;
+ if(!card||!s||!validateTopology(card,d.foundationManifest?.seed))return false;
+ const done=resolutions(s),seen=new Set(),chosen=[],manifest=d.foundationManifest;
+ const rerolls=(s.decisions||[]).filter(a=>a.type==='reroll_boon');
+ if(rerolls.length>2||new Set(rerolls.map(a=>a.room)).size!==rerolls.length||
+    rerolls.some(a=>!card.boonShrines.includes(a.room)||!d.visited.includes(a.room)||!d.cleared.includes(a.room)||
+      s.decisions.some(b=>b.room===a.room&&['choose_boon','skip_boon'].includes(b.type)&&b.seq<a.seq)))return false;
+ if(done.length>2)return false;
+ for(const a of done){
+  const round=card.boonShrines.indexOf(a.room);
+  if(round<0||seen.has(a.room)||!d.cleared.includes(a.room)||!d.visited.includes(a.room))return false;
+  seen.add(a.room);
+  if(a.type==='choose_boon'){
+   if(!Array.isArray(a.families)||new Set(a.families).size!==a.families.length||
+      a.families.some(f=>!F.AFFINITIES.includes(f))||chosen.includes(a.id))return false;
+   try{
+    const rolled=rerolls.some(x=>x.room===a.room);
+    if(!(rolled?rerollOffer(manifest.seed,d.realm,round,a.families,chosen):offer(manifest.seed,d.realm,round,a.families,chosen)).includes(a.id))return false;
+   }catch{return false;}
+   chosen.push(a.id);
+  }
+ }
+ if(JSON.stringify(chosen)!==JSON.stringify(s.boonIds))return false;
+ const o=d.boonOffer;
+ if(o){
+  if(!Number.isInteger(o.round)||o.round<0||o.round>1||
+     o.room!==card.boonShrines[o.round]||seen.has(o.room)||!d.cleared.includes(o.room)||
+     !d.visited.includes(o.room)||d.current!==o.room||game?.stage!=='choice'||
+     game?.selected!==null||game?.rewardPending||!Array.isArray(o.ids)||o.ids.length!==3||
+     !Array.isArray(o.families)||new Set(o.families).size!==o.families.length||
+     o.families.some(f=>!F.AFFINITIES.includes(f))||
+     d.contractOffer||![false,true].includes(o.rerolled??false)||
+     Boolean(o.rerolled)!==rerolls.some(a=>a.room===o.room))return false;
+  try{if(JSON.stringify(o.ids)!==JSON.stringify(o.rerolled?
+     rerollOffer(manifest.seed,d.realm,o.round,o.families,chosen):
+     offer(manifest.seed,d.realm,o.round,o.families,chosen)))return false;}
+  catch{return false;}
+ }
+ return card.boonShrines.every(room=>!d.cleared.includes(room)||seen.has(room)||o?.room===room);
 }
 function ids(run){return Array.isArray(run?.boonIds)?run.boonIds:[];}
 function has(run,id){return ids(run).includes(id);}
@@ -89,7 +165,7 @@ function spreadOnDeath(run,fallen,synchronize){
  if(count)run.boonRotboundTriggers=1;
  return count;
 }
-const API=Object.freeze({CATALOG,GUIDE,get,familiesFor,offer,validateOffer,has,factor,dotFactor,takenFactor,speedFactor,costFactor,stats,stepsAdded,spreadOnDeath});
+const API=Object.freeze({CATALOG,GUIDE,get,familiesFor,offer,rerollOffer,placeShrines,validateTopology,resolutions,validateOffer,has,factor,dotFactor,takenFactor,speedFactor,costFactor,stats,stepsAdded,spreadOnDeath});
 root.WandererV013ExpeditionBoons=API;
 if(typeof module==='object'&&module.exports)module.exports=API;
 })(globalThis);
