@@ -28,7 +28,7 @@ const CONTRASTS=Object.freeze([
 ]);
 const DEFAULTS=Object.freeze({
  builds:['blood-fury','aegis-vitality','magic-decay'],
- seeds:[9101,9102],targetPolicy:'focus',
+ seeds:[9101,9201],targetPolicy:'focus',
  bossAffinities:['blood','aegis'],bossRisks:[0],
  output:'reports/v013-stage92-progression-diagnosis.json'
 });
@@ -192,6 +192,8 @@ function analyze(runs,settings){
    requested:settings.expectedCases,completed:rows.length,executions:runs.length,
    errors:errors.length,timeouts:timeouts.length,unresolved:rows.filter(r=>!r.error&&!r.timedOut&&!resolved(r)).length,
    byMode:Object.fromEntries(['enemies','dungeon','bosses'].map(m=>[m,rows.filter(r=>r.mode===m).length])),
+   independentByMode:Object.fromEntries(['enemies','dungeon','bosses'].map(m=>[m,groups.filter(g=>g.mode===m).reduce((n,g)=>n+g.resolved,0)])),
+   duplicateAttemptsByMode:Object.fromEntries(['enemies','dungeon','bosses'].map(m=>[m,groups.filter(g=>g.mode===m).reduce((n,g)=>n+g.duplicates,0)])),
    matchedPairs:comparisons.reduce((n,c)=>n+c.pairs,0),
    zeroPairContrasts:comparisons.filter(c=>c.pairs===0).length
   },groups,comparisons,rows,
@@ -216,6 +218,7 @@ function markdown(data){
   '', '## Cobertura', '',
   '- '+data.coverage.completed+'/'+data.coverage.requested+' combates; '+JSON.stringify(data.coverage.byMode),
   '- Erros: '+data.coverage.errors+'; timeouts: '+data.coverage.timeouts+'; unresolved: '+data.coverage.unresolved,
+  '- Combates independentes por modo: '+JSON.stringify(data.coverage.independentByMode)+'; repetições de RNG: '+JSON.stringify(data.coverage.duplicateAttemptsByMode),
   '- Pares válidos: '+data.coverage.matchedPairs+'; contrastes sem pares: '+data.coverage.zeroPairContrasts,
   '', '## Resultados por nível, investimento, combate e build', '',
   '| E / investimento | Tipo | Build | Boss | n | Vitórias | HP mín. % | Dano recebido | Salas | Boss alcançado | Flags |',
