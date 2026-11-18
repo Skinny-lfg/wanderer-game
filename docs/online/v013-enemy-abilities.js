@@ -62,7 +62,7 @@ function attach(enemies,family,baseTime=0){
 function active(run){return (run?.enemies?.length?run.enemies:run?.enemy?[run.enemy]:[]).filter(e=>e?.hp>0);}
 function preferredTarget(actors,source,kind){
  const allies=actors.filter(e=>e!==source&&e.hp>0),pool=allies.length?allies:[source];
- if(kind==='mend')return [...pool].sort((a,b)=>(a.hp/a.maxhp)-(b.hp/b.maxhp))[0];
+ if(kind==='mend')return [...actors].sort((a,b)=>(a.hp/a.maxhp)-(b.hp/b.maxhp))[0];
  const priority={caster:0,skirmisher:1,tank:2,minion:3};
  return [...pool].sort((a,b)=>(priority[a.role]??4)-(priority[b.role]??4))[0];
 }
@@ -109,6 +109,12 @@ function resolve(run,enemy,now){
  }
  state.status=label;state.statusUntil=now+1.5;state.cycle++;
  return {type:'activate',enemy,ability:definition.name,target,result,label};
+}
+function onEnter(enemy,now){
+ const s=enemy?.stage81,t=s&&TIMINGS[s.role];
+ if(!t||!Number.isFinite(now))return;
+ s.nextAt=Math.max(s.nextAt,now+t.first);
+ s.castingUntil=0;s.charges=0;s.chargedUntil=0;s.status='';s.statusUntil=0;
 }
 function tick(run,absoluteNow){
  if(!run||run.status!=='fight')return [];
@@ -165,11 +171,12 @@ function packFactor(run,enemy){
  return count>=2?1+PASSIVES[state.family].bonus:1;
 }
 function status(enemy,now){
- const s=enemy?.stage81;if(!s||s.role==='minion')return null;
+ const s=enemy?.stage81;if(!s)return null;
+ if(enemy.stage81GuardUntil>now)return {kind:'guarding',label:'Guarding',detail:'Protected',remaining:enemy.stage81GuardUntil-now};
+ if(s.role==='minion')return null;
  if(s.castingUntil>now)return {kind:'casting',label:'Casting',detail:s.name,remaining:Math.max(0,s.castingUntil-now)};
  if(s.charges>0&&s.chargedUntil>now)return {kind:'enraged',label:'Enraged',detail:s.name,remaining:Math.max(0,s.chargedUntil-now)};
  if(s.statusUntil>now)return {kind:s.status==='Enraged'?'enraged':s.status==='Interrupted'?'interrupted':'guarding',label:s.status,detail:s.name,remaining:s.statusUntil-now};
- if(enemy.stage81GuardUntil>now)return {kind:'guarding',label:'Guarding',detail:'Protected',remaining:enemy.stage81GuardUntil-now};
  return null;
 }
 function describe(enemy){
@@ -177,7 +184,7 @@ function describe(enemy){
  return s.role==='minion'?PASSIVES[s.family]?.description||'':
   DEFINITIONS[s.family]?.[s.role]?.description||'';
 }
-const API=Object.freeze({DEFINITIONS,PASSIVES,TIMINGS,attach,tick,consumeStrike,onHit,packFactor,status,describe});
+const API=Object.freeze({DEFINITIONS,PASSIVES,TIMINGS,attach,onEnter,tick,consumeStrike,onHit,packFactor,status,describe});
 root.WandererV013EnemyAbilities=API;
 if(typeof module==='object'&&module.exports)module.exports=API;
 })(globalThis);
