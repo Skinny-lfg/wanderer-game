@@ -98,8 +98,8 @@ test('Native RNG streams lock the same Dungeon and Boss encounters across rarity
  for(const mode of ['enemies','dungeon','bosses']){
   const a=S.simulate(D.optionsFor(common,mode,cfg)).rows[0];
   const b=S.simulate(D.optionsFor(better,mode,cfg)).rows[0];
-  assert.equal(a.error,undefined,'baseline failed: '+a.error);
-  assert.equal(b.error,undefined,'upgrade failed: '+b.error);
+  assert(!a.error,'baseline failed: '+a.error);
+  assert(!b.error,'upgrade failed: '+b.error);
   assert.equal(a.resolvedSeed,b.resolvedSeed,mode+' must use identical native seed');
   assert.equal(a.affinity,b.affinity,mode+' must preserve Realm Affinity');
   assert.equal(a.risk,b.risk,mode+' must preserve risk');
