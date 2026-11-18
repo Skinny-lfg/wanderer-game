@@ -193,10 +193,11 @@ function phase1StartWave(resetScroll=false){
  const totalCount=last&&(g.selected.boss||g.selected.elite)?1:(conditions&&conditionCard?conditions.countFor(g.selected,conditionCard,g.dungeon,conditionMitigation):(g.selected.mobCount||3)),activeCount=Math.min(4,totalCount);
  const rosterSystem=globalThis.WandererV013EnemyRoster;
  const hasRoster=!!(rosterSystem&&!g.selected.boss&&!g.selected.elite&&theme?.mobs?.length);
- const roster=hasRoster?rosterSystem.plan({
+ let roster=hasRoster?rosterSystem.plan({
   seed:g.dungeon?.foundationManifest?.seed??0,realm:theme.id,family:g.selected.family||g.bossFamily||'blood',
   node:g.selected.node??g.planeIndex,count:totalCount,catalog:theme.mobs
  }):null;
+ if(roster&&theme.affinityArtPeers?.length)roster=rosterSystem.shareAffinityArt(roster,theme.affinityArtPeers,{seed:g.dungeon?.foundationManifest?.seed??0,realm:theme.id,node:g.selected.node??g.planeIndex});
  const actualBossStyle=last&&g.selected.boss&&g.version===2?WandererV012Expedition.bossForAffinity(g.selected.family)?.style:null;
  const spawn=index=>ports.enemyFor(r.tier,r.enc,{theme,mob:roster?.[index]||null,boss:last&&g.selected.boss,elite:last&&g.selected.elite&&!g.selected.boss,variant:actualBossStyle?ports.BOSS_ARCHETYPES.find(b=>b.style===actualBossStyle):null});
  const scale=totalCount>=6?{hp:(1.65+.045*(totalCount-6))/totalCount,atk:totalCount>=18?.12:.16}:null;

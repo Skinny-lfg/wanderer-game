@@ -105,3 +105,19 @@ test('Stage 8.0 native Expedition first combat spawns a named regular role, not 
  assert(['tank','skirmisher','caster'].includes(r.enemy.role));
  assert(catalog(first.id).some(m=>m.name===r.enemy.name&&m.role===r.enemy.role));
 });
+
+test('paired Affinity Realms share artwork without changing the encounter roster or RNG',()=>{
+ const peers={temple:'void',void:'temple',forge:'bloodscar',bloodscar:'forge',grove:'shrine',shrine:'grove',ward:'drowned',drowned:'ward',crypt:'bastion',bastion:'crypt',ash:'storm',storm:'ash'};
+ for(const [realm,peer] of Object.entries(peers)){
+  const partner=catalog(peer),images=new Set(),other=new Set(partner.map(m=>m.image));let shared=0;
+  for(let seed=0;seed<20;seed++){
+   const input=plan(realm,12,seed,5),before=JSON.stringify(input),mixed=R.shareAffinityArt(input,partner,{seed,realm,node:5});
+   assert.equal(JSON.stringify(input),before,'does not mutate deterministic roster');
+   assert.deepEqual(mixed.map(m=>[m.name,m.role]),input.map(m=>[m.name,m.role]),'no gameplay role or name changes');
+   assert.deepEqual(R.shareAffinityArt(input,partner,{seed,realm,node:5}),mixed,'art selection is deterministic');
+   for(let i=0;i<mixed.length;i++){images.add(mixed[i].image);if(mixed[i].image!==input[i].image){shared++;assert(partner.some(p=>p.image===mixed[i].image&&p.role===mixed[i].role),'paired art shares role');assert(other.has(mixed[i].image));}}
+   assert.deepEqual(plan(realm,12,seed,5),input,'separate art selection does not change roster RNG');
+  }
+  assert(shared>0,realm+' must use artwork from its affinity partner');assert(images.size>=3,realm+' should offer more than two distinct appearances');
+ }
+});

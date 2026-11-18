@@ -63,6 +63,17 @@ function plan({seed,realm,family,node=0,count,catalog}){
   return {name:chosen.name,image:chosen.image,role};
  });
 }
+// Choose only artwork from the paired Realm, without consuming combat or roster RNG.
+function shareAffinityArt(roster,peerCatalog,{seed,realm,node=0}={}){
+ if(!Array.isArray(roster)||!Array.isArray(peerCatalog)||roster.length<2||!Number.isSafeInteger(seed)||!CATALOG[realm])return roster;
+ const random=F.rng(seed,'stage8_shared_art_'+realm+'_'+node),offset=Math.floor(random()*2);
+ return roster.map((enemy,index)=>{
+  if((index+offset)%2===0)return enemy;
+  const choices=peerCatalog.filter(candidate=>candidate.role===enemy.role&&candidate.image&&candidate.image!==enemy.image);
+  if(!choices.length)return enemy;
+  return {...enemy,image:choices[Math.floor(random()*choices.length)].image};
+ });
+}
 function scaleFor(enemy,count,base){
  const role=enemy?.role;
  if(!ROLES.includes(role)||count<=1)return null;
@@ -74,7 +85,7 @@ function scaleFor(enemy,count,base){
  if(role==='minion')return {hp:baseHp*.95,atk:baseAtk*.90,def:.35};
  return {hp:Math.max(.57,baseHp*1.35),atk:Math.max(.50,baseAtk*1.35),def:.72};
 }
-const API=Object.freeze({ROLES,CATALOG,FAMILY_WEIGHTS,catalogFor,plan,scaleFor});
+const API=Object.freeze({ROLES,CATALOG,FAMILY_WEIGHTS,catalogFor,plan,shareAffinityArt,scaleFor});
 root.WandererV013EnemyRoster=API;
 if(typeof module==='object'&&module.exports)module.exports=API;
 })(globalThis);

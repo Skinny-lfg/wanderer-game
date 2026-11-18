@@ -63,6 +63,9 @@ const MOB_POOLS={
 };
 for(const mobs of Object.values(MOB_POOLS))for(const mob of mobs)mob[1]='assets/mobs/animated/'+mob[1];
 THEMES.forEach(t=>t.mobs=WandererV013EnemyRoster.catalogFor(t.id,(MOB_POOLS[t.id]||[]).map(([name,image,role])=>({name,image,role}))));
+// Two Realms of an Affinity share artwork; encounter names and roles remain local.
+const REALM_ART_PEERS={temple:'void',void:'temple',forge:'bloodscar',bloodscar:'forge',grove:'shrine',shrine:'grove',ward:'drowned',drowned:'ward',crypt:'bastion',bastion:'crypt',ash:'storm',storm:'ash'};
+THEMES.forEach(t=>{t.affinityArtPeers=THEMES.find(peer=>peer.id===REALM_ART_PEERS[t.id])?.mobs||[];});
 const C3_DUNGEON_ART={"temple":"assets/dungeons/c3/decay_venomreach.webp","forge":"assets/dungeons/c3/blood_crimson_dominion.webp","bloodscar":"assets/dungeons/c3/blood_bloodscar_wastes.webp","crypt":"assets/dungeons/c3/fury_gravewind_barrens.webp","bastion":"assets/dungeons/c3/fury_ironbound_frontier.webp","ash":"assets/dungeons/c3/magic_ashen_aether.webp","void":"assets/dungeons/c3/decay_umbral_hollow.webp","ward":"assets/dungeons/c3/aegis_warded_marches.webp","grove":"assets/dungeons/c3/vitality_verdant_wilds.webp","shrine":"assets/dungeons/c3/vitality_everroot_vale.webp","storm":"assets/dungeons/c3/magic_stormglass_beyond.webp","drowned":"assets/dungeons/c3/aegis_drowned_bastion.webp"};
 function dungeonImage(t){
  const image=C3_DUNGEON_ART[t?.id];
