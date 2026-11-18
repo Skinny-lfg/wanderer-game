@@ -1786,11 +1786,18 @@ function dungeonMapMarkup(g){
   return '<button type="button" data-dungeon-room="'+i+'" style="position:absolute;left:'+x+'%;top:'+y+'%;transform:translate(-50%,-50%);padding:5px;background:'+(i===d.current?'#513b26':cleared?'#24352d':'#241d22')+'">'+label+(i===c.objective?' ★':'')+(c.bossSector!==undefined&&i>=1&&i<=4?' '+i:'')+'<small style="display:block">'+(i===d.current?'You are here':cleared?'Cleared':n.kind==='combat'?n.range.join('–')+' mobs':n.kind==='shrine'?'Boon discovery':n.kind==='boss'||n.kind==='elite'?n.escorts+' base guards':'Inspect')+'</small>'+(cleared?'':'<small class="mapExitCount" style="display:block;color:#d7b47d">'+phase1Controller.exitCount(i)+' '+(phase1Controller.exitCount(i)===1?'exit':'exits')+(d.scouted?.includes(i)?' · Scouted':'')+'</small>')+(conditionPlan?.rooms?.includes(i)?'<small class="stage5ConditionRoom">⚠ Condition</small>':'')+(n.traitId?'<small class="encounterTraitBadge" style="display:block;color:#f0b96f">⚔ '+esc(WandererV013EncounterTraits.get(n.traitId)?.name||'Unknown Trait')+'</small>':'')+(omen?'<small class="bossKnownOmen" style="display:block;color:#d9a5ba">☠ '+esc(omen.name)+(prep?.disabledId===omen.id?' (disabled)':'')+(prep?.hiddenCount?' · ?×'+prep.hiddenCount:'')+'</small>':'')+'</button>';
  }).join('');
  const prep=WandererV013BossPreparation.status(g);
+ const carried=phase6Run?.started?phase6Run.potions:(state.potionSelection||[]).map(kind=>({kind,used:false}));
+ const potionActions=(carried||[]).map((p,i)=>{
+  if(!p||p.used||!['scout','veilsight','purifying','trail'].includes(p.kind))return '';
+  const name=WandererV012Consumables.CATALOG.find(x=>x.id===p.kind)?.name||p.kind;
+  return '<button type="button" class="tiny ghost" data-stage74-potion="'+i+'">'+esc(name)+'</button>';
+ }).join('');
+ const utilityPanel=potionActions?'<section class="stage74PotionTools" aria-label="Map utility potions"><strong>Map potions</strong> '+potionActions+'</section>':'';
  const boonNames=(d.foundationState?.boonIds||[]).map(id=>globalThis.WandererV013ExpeditionBoons?.get(id)?.name||id);
  const contract=globalThis.WandererV013ExpeditionContracts?.inspect(g);
  const contractMarkup=contract?(contract.status==='ignored'?'<p class="stage7ContractStatus"><strong>Contract:</strong> Declined · No optional reward</p>':
   '<section class="stage7ContractStatus" aria-label="Contract progress"><div><strong>✦ '+esc(contract.name)+'</strong><span>'+contract.progress+' / '+contract.target+' · '+(contract.status==='ready'?'Ready to claim on extraction':contract.status==='completed'?'Reward secured':'In progress')+'</span></div><progress max="'+contract.target+'" value="'+contract.progress+'">'+contract.progress+' of '+contract.target+'</progress><small>Reward on successful extraction: '+esc(globalThis.WandererV013ExpeditionContracts.label(contract.potential))+'</small></section>'):'';
- return '<h2>'+esc(c.name)+'</h2>'+contractMarkup+'<p class="stage6BoonSummary"><strong>Expedition Boons ('+boonNames.length+'/2)</strong> · '+esc(boonNames.join(' · ')||'None chosen')+'</p><p class="stage5Condition"><b>⚠ '+esc(conditionInfo?.name||'Condition')+'</b> — '+esc(conditionGuide?.danger||'')+' <span>Counterplay: '+esc(conditionGuide?.counter||'')+'</span></p><p>'+realmDifficulty(c)+' · '+esc(c.family)+' affinity · '+g.history.length+' rooms cleared'+(c.clueRoom!==undefined?(d.cleared.includes(c.clueRoom)?' · Tracks lead to the outer end of passage '+(c.bossSector+1)+'.':' · Tracks between passages '+(c.bossSector+1)+' and '+(c.secondSector+1)+'. Search the inner rooms for a clearer trail.'):c.bossSector!==undefined?' · Boss trail follows passage '+(c.bossSector+1)+'.':'')+(d.steps===undefined?'':' · <strong>'+d.steps+' / '+c.stepLimit+' steps left</strong>')+(prep?.markedElite?' · <strong>Marked Elite defeated: '+(c.risk?'one fewer boss guard':'−10% boss Attack')+'</strong>':'')+(prep?.disabledId?' · <strong>Boss seal disrupted: '+esc(WandererV013BossModifiers.get(prep.disabledId)?.name||'property')+'</strong>':'')+(prep?.knownIds.length>1?' · <strong>Oracle revealed: '+esc(prep.knownIds.slice(1).map(id=>WandererV013BossModifiers.get(id)?.name||id).join(', '))+'</strong>':'')+'</p><div data-realm-viewport style="overflow-x:auto"><div style="position:relative;min-width:580px;height:'+(c.positions?'450':'225')+'px;background:linear-gradient(#141016d9,#141016e8),url('+dungeonImage(c)+') center/cover"><svg aria-hidden="true" style="position:absolute;width:100%;height:100%" viewBox="0 0 100 100" preserveAspectRatio="none">'+lines+'</svg>'+buttons+'</div></div><p class="small muted">Inspect a room to travel.'+(d.steps===undefined?'':' Each passage costs one step, including the return trip. Extraction is free.')+' Cleared passages are safe. Springs and events can wait until you need them.</p>';
+ return '<h2>'+esc(c.name)+'</h2>'+contractMarkup+'<p class="stage6BoonSummary"><strong>Expedition Boons ('+boonNames.length+'/2)</strong> · '+esc(boonNames.join(' · ')||'None chosen')+'</p><p class="stage5Condition"><b>⚠ '+esc(conditionInfo?.name||'Condition')+'</b> — '+esc(conditionGuide?.danger||'')+' <span>Counterplay: '+esc(conditionGuide?.counter||'')+'</span></p><p>'+realmDifficulty(c)+' · '+esc(c.family)+' affinity · '+g.history.length+' rooms cleared'+(c.clueRoom!==undefined?(d.cleared.includes(c.clueRoom)?' · Tracks lead to the outer end of passage '+(c.bossSector+1)+'.':' · Tracks between passages '+(c.bossSector+1)+' and '+(c.secondSector+1)+'. Search the inner rooms for a clearer trail.'):c.bossSector!==undefined?' · Boss trail follows passage '+(c.bossSector+1)+'.':'')+(d.steps===undefined?'':' · <strong>'+d.steps+' / '+c.stepLimit+' steps left</strong>')+(prep?.markedElite?' · <strong>Marked Elite defeated: '+(c.risk?'one fewer boss guard':'−10% boss Attack')+'</strong>':'')+(prep?.disabledId?' · <strong>Boss seal disrupted: '+esc(WandererV013BossModifiers.get(prep.disabledId)?.name||'property')+'</strong>':'')+(prep?.knownIds.length>1?' · <strong>Oracle revealed: '+esc(prep.knownIds.slice(1).map(id=>WandererV013BossModifiers.get(id)?.name||id).join(', '))+'</strong>':'')+'</p><div data-realm-viewport style="overflow-x:auto"><div style="position:relative;min-width:580px;height:'+(c.positions?'450':'225')+'px;background:linear-gradient(#141016d9,#141016e8),url('+dungeonImage(c)+') center/cover"><svg aria-hidden="true" style="position:absolute;width:100%;height:100%" viewBox="0 0 100 100" preserveAspectRatio="none">'+lines+'</svg>'+buttons+'</div></div><p class="small muted">Inspect a room to travel.'+(d.steps===undefined?'':' Each passage costs one step, including the return trip. Extraction is free.')+' Cleared passages are safe. Springs and events can wait until you need them.</p>'+utilityPanel;
 }
 function renderStage7ContractOffer(g){
  const K=globalThis.WandererV013ExpeditionContracts,o=g.dungeon?.contractOffer,c=phase1Controller.realmMap();
@@ -1816,10 +1823,14 @@ function renderStage6BoonOffer(g){
  if(!offer||!B)return;
  const selected=g.dungeon.foundationState?.boonIds||[],familySet=new Set(offer.families);
  const selectedNames=selected.map(id=>B.get(id)?.name||id);
+ const carried=phase6Run?.started?phase6Run.potions:(state.potionSelection||[]).map(kind=>({kind,used:false}));
+ const fateIndex=(carried||[]).findIndex(p=>p.kind==='fate'&&!p.used);
+ const fateControl=!offer.rerolled&&fateIndex>=0?'<button type="button" id="stage74RerollBoon" class="ghost">Use Fate Distillate · Reroll 3 Boons</button>':
+   offer.rerolled?'<p class="small muted">Fate Distillate used · This Shrine cannot be rerolled again.</p>':'';
  html('<section class="panel stage6BoonOffer" aria-labelledby="stage6BoonHeading"><span class="eyebrow">Expedition '+g.expedition+' · Shrine '+(offer.round+1)+' of 2</span><h1 id="stage6BoonHeading">Boon Shrine Discovered</h1><p class="small muted">Choose one of three temporary powers or leave this Shrine untouched. Each choice has a trade-off. You can discover up to two Boons per Dungeon.</p><p class="stage6BoonSummary">Active Boons: '+esc(selectedNames.join(' · ')||'None')+'</p><div class="stage6BoonChoices">'+offer.ids.map(id=>{
   const boon=B.get(id),guide=B.GUIDE[id],matched=boon.families.some(f=>familySet.has(f))&&id!=='wayfarers_bargain';
   return '<button type="button" class="stage6BoonCard" data-stage6-boon="'+esc(id)+'"><span class="stage6BoonIcon" aria-hidden="true">'+esc(guide.icon)+'</span><strong>'+esc(boon.name)+'</strong>'+(matched?'<small class="stage6BoonSynergy">Synergy with your build</small>':'')+'<span class="stage6BoonBenefit">'+esc(guide.benefit)+'</span><span class="stage6BoonCost">'+esc(guide.cost)+'</span></button>';
- }).join('')+'</div><p class="small muted">Shrines are hidden until their passages are explored. Skipping a Shrine is permanent for this Expedition.</p><button type="button" id="stage73SkipBoon" class="ghost">Leave Shrine without a Boon</button></section>');
+ }).join('')+'</div><p class="small muted">Shrines are hidden until their passages are explored. Skipping a Shrine is permanent for this Expedition.</p><button type="button" id="stage73SkipBoon" class="ghost">Leave Shrine without a Boon</button>'+fateControl+'</section>');
  const resolve=id=>{
   if(!g.dungeon?.boonOffer||g.stage!=='choice')return;
   const old=JSON.parse(JSON.stringify(g.dungeon));
@@ -1831,6 +1842,7 @@ function renderStage6BoonOffer(g){
  };
  Q('[data-stage6-boon]').forEach(button=>button.onclick=()=>resolve(button.dataset.stage6Boon));
  $('stage73SkipBoon').onclick=()=>resolve(null);
+ const fateButton=$('stage74RerollBoon');if(fateButton)fateButton.onclick=()=>{if(!phase6UsePotion(fateIndex))bannerMessage('Fate Distillate cannot be used here.');};
 }
 function renderRealmCards(g){
  html('<section class="panel"><span class="eyebrow">Expedition '+g.expedition+'</span><h1>Choose your Realm</h1><div class="phase1Offers">'+g.dungeon.cards.map(c=>{
@@ -1844,6 +1856,10 @@ function renderRealmCards(g){
 }
 function bindDungeonRooms(g){
  const c=phase1Controller.realmMap();
+ Q('[data-stage74-potion]').forEach(button=>button.onclick=()=>{
+  const i=Number(button.dataset.stage74Potion),kind=phase6Run?.started?phase6Run.potions?.[i]?.kind:state.potionSelection?.[i];
+  if(!phase6UsePotion(i,kind==='scout'?'shrine':'shrine'))bannerMessage('Potion cannot be used now or its target is already known.');
+ });
  const viewport=document.querySelector('[data-realm-viewport]');
  if(viewport&&c.positions)viewport.scrollLeft=viewport.scrollWidth*c.positions[g.dungeon.current][0]/100-viewport.clientWidth/2;
  Q('[data-dungeon-room]').forEach(b=>b.onclick=()=>{
