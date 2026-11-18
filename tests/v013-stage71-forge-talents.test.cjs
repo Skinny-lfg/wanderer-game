@@ -5,8 +5,12 @@ require('../economy/v013-crafting.js');
 const C=globalThis.WandererV013Crafting;
 
 test('Stage 7.1 level one starts with no free talent points',()=>{
- const a=create(7101),T=a.talents,p=T.create();
+ const a=create(7101),T=a.talents,p=T.create(),real=a.state().automaticTalents;
  assert(T.valid(p));assert.equal(T.earned(p),0);assert.equal(T.allocate(p,'root_blood'),null);
+ assert(T.valid(real),'real Camp startup talent progress must validate');
+ assert.equal(T.earned(real),0,'real Camp startup must award zero talent points');
+ assert.equal(T.attributePoints(real),0,'real Camp startup has no attribute points');
+ assert.equal(real.starterPoints,undefined,'real Camp startup must not inject legacy starter bonus');
  const one=T.award(p,100);assert.equal(T.earned(one),1);assert(T.allocate(one,'root_blood'));
  assert(!Object.prototype.hasOwnProperty.call(p,'starterPoints'),'new characters must not have a starter bonus');
 });
@@ -27,4 +31,19 @@ test('Stage 7.1 UI only exposes preview Forge with named equipment tiers',()=>{
  assert(!source.includes('id="v013TrackRecipe"'));
  assert(!source.includes('starterPoints:2'));
  assert(source.includes("Example stat roll · '+esc(WandererExpeditionProgression.gearTier(price.tier).name)+'"));
+});
+
+test('Camp shows a level stepper and never counts attributes as Talent tab notifications',()=>{
+ const source=fs.readFileSync('index.html','utf8');
+ assert(source.includes('data-phase3-expedition-step="-1"'));
+ assert(source.includes('data-phase3-expedition-step="1"'));
+ assert(!source.includes('data-phase3-expedition-level'));
+ assert(source.includes('const talentUnspent=Math.max(0,WandererAutomaticTalents.earned(talent)-talent.nodes.length);'));
+ assert(source.includes('phase3BlueprintCompact'));
+ assert(!source.includes('state.crafting?.targetRecipe'),'retired recipe tracking must not be wired to Camp');
+ const T=create(7102).talents;
+ const gained=T.award(T.create(),100);
+ assert.equal(T.earned(gained),1);
+ assert.equal(T.attributePoints(gained),1);
+ assert.equal(T.earned(gained)-gained.nodes.length,1,'Talent tab notification gains exactly one per level');
 });

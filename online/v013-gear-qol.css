@@ -23,3 +23,30 @@
 .v013BlueprintCollection details>p{margin:10px 0}
 .v013BlueprintCollection ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:6px;max-height:290px;overflow:auto}
 .v013BlueprintCollection li{padding:8px 10px;border:1px solid rgba(155,126,102,.3);border-radius:5px;background:rgba(15,13,20,.55);font-size:.84rem;color:#baa99e}
+
+/* v0.13 Camp: focused Expedition selection; mobile and keyboard friendly. */
+.phase3IntegratedPreview .phase3ExpeditionSelector{display:grid;grid-template-columns:minmax(48px,64px) minmax(0,1fr) minmax(48px,64px);gap:clamp(8px,2vw,15px);align-items:center;margin:10px 0 8px;padding:7px 1px 10px}
+.phase3IntegratedPreview .phase3ExpeditionArrow{display:flex;align-items:center;justify-content:center;width:100%;min-height:60px;padding:0;border:1px solid #9a714e;border-radius:5px 12px 5px 12px;background:linear-gradient(135deg,#2c1c23,#100d13);color:#e7c394;box-shadow:inset 0 1px #f1d4a225,0 3px 13px #0005;font:400 42px/1 Georgia,serif;cursor:pointer;transition:background .15s,border-color .15s,transform .15s}
+.phase3IntegratedPreview .phase3ExpeditionArrow:not(:disabled):hover{border-color:#e7bf81;background:linear-gradient(135deg,#472b2e,#1a1318);transform:translateY(-1px)}
+.phase3IntegratedPreview .phase3ExpeditionArrow:focus-visible{outline:2px solid #f5ce8c;outline-offset:3px}
+.phase3IntegratedPreview .phase3ExpeditionArrow:disabled{opacity:.32;cursor:not-allowed}
+.phase3IntegratedPreview .phase3ExpeditionCurrent{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:66px;min-width:0;padding:3px 0;text-align:center;border-bottom:1px solid #9e75433d}
+.phase3IntegratedPreview .phase3ExpeditionNumber{display:block;color:#f1ddba;font:500 clamp(32px,4vw,48px)/1 var(--font-head,Georgia,serif);font-variant-numeric:tabular-nums;text-shadow:0 2px 12px #000}
+.phase3IntegratedPreview .phase3ExpeditionCount{display:block;margin-top:7px;color:#bba989;font:600 10px/1.3 sans-serif;letter-spacing:.07em;text-transform:uppercase}
+.phase3IntegratedPreview .phase3RouteSummary{margin:3px 0 15px;text-align:center;font-size:12px;line-height:1.6}
+.phase3IntegratedPreview .phase3BlueprintCompact{margin:15px 0 0;padding:12px 0 0;border-top:1px solid #a37e5045;background:transparent}
+.phase3IntegratedPreview .phase3BlueprintCompact summary{display:flex;align-items:center;justify-content:space-between;gap:12px;list-style:none;cursor:pointer;color:#d4bd9a;font:600 12px/1.45 var(--font-head,Georgia,serif)}
+.phase3IntegratedPreview .phase3BlueprintCompact summary::-webkit-details-marker{display:none}
+.phase3IntegratedPreview .phase3BlueprintCompact summary>strong{margin-left:auto;color:#f0d4a5;font:600 13px/1.4 Georgia,serif;white-space:nowrap}
+.phase3IntegratedPreview .phase3BlueprintCompact summary::after{content:'⌄';font:24px/14px Georgia,serif;color:#b4926f;transform:rotate(0deg);transition:transform .15s}
+.phase3IntegratedPreview .phase3BlueprintCompact[open] summary::after{transform:rotate(180deg)}
+.phase3IntegratedPreview .phase3BlueprintCompact summary:focus-visible{outline:2px solid #e7bf81;outline-offset:5px}
+.phase3IntegratedPreview .phase3BlueprintBody{padding:12px 0 3px}
+.phase3IntegratedPreview .phase3BlueprintBody p{margin:0 0 11px;line-height:1.5}
+.phase3IntegratedPreview .phase3BlueprintBody button{width:100%;min-height:38px}
+@media(max-width:700px){
+ .phase3IntegratedPreview .phase3ExpeditionSelector{grid-template-columns:52px minmax(0,1fr) 52px;gap:9px;margin:7px 0}
+ .phase3IntegratedPreview .phase3ExpeditionArrow{min-height:55px;font-size:40px}
+ .phase3IntegratedPreview .phase3ExpeditionNumber{font-size:38px}
+ .phase3IntegratedPreview .phase3BlueprintCompact summary{font-size:11px}
+}
