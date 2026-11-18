@@ -610,9 +610,9 @@ function analyze(accounts,opts){
    roomsWon:attempts.reduce((n,a)=>n+(a.fightsWon||0),0),
    eligibleEliteDecisions:attempts.reduce((n,a)=>n+
     (a.decisions||[]).filter(x=>x.type==='move'&&x.eligibleEliteAlternatives?.length).length,0),
-   eliteFights:attempts.reduce((n,a)=>n+a.rooms.filter(x=>x.roomType==='elite').length,0),
-   eliteWins:attempts.reduce((n,a)=>n+a.rooms.filter(x=>x.roomType==='elite'&&x.won).length,0),
-   eliteDrops:attempts.reduce((n,a)=>n+a.rooms.filter(x=>x.roomType==='elite')
+   eliteFights:attempts.reduce((n,a)=>n+(a.rooms||[]).filter(x=>x.roomType==='elite').length,0),
+   eliteWins:attempts.reduce((n,a)=>n+(a.rooms||[]).filter(x=>x.roomType==='elite'&&x.won).length,0),
+   eliteDrops:attempts.reduce((n,a)=>n+(a.rooms||[]).filter(x=>x.roomType==='elite')
     .reduce((k,x)=>k+(x.loot?.length||0),0),0),
    nativeXpEarned:attempts.reduce((n,a)=>n+(a.xpEarned||0),0),
    potionsUsed:attempts.reduce((n,a)=>n+(a.potions?.length||0),0),
