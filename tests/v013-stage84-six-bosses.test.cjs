@@ -138,6 +138,7 @@ test('HTML/docs, Stage 8.3 and preview build load six Boss assets and ability co
  for(const h of [html,docs]){
   assert(h.includes('online/v013-boss-abilities.js'));
   assert(h.includes('Carrion Matriarch')&&h.includes('Heartroot Devourer')&&h.includes('Stormglass Conductor'));
+  assert(h.includes("esc(globalThis.WandererV013BossAbilities?.profileFor(c.family)?.name||t.enemy)"),'Realm choice Boss label must reflect the six Affinity Bosses');
   assert(h.includes('WandererV013BossAbilities?.status(enemy,state.run,now)'));
  }
  assert.equal(fs.readFileSync('online/v013-boss-abilities.js','utf8'),fs.readFileSync('docs/online/v013-boss-abilities.js','utf8'));

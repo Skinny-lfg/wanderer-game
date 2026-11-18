@@ -1898,7 +1898,7 @@ function renderRealmCards(g){
    '<img class="realmCardHero" src="'+dungeonImage(c)+'" alt="'+esc(c.name)+' realm landscape" loading="lazy" decoding="async">'+
    '<div class="realmChoiceBody"><div class="realmChoiceTitle"><strong>'+esc(c.name)+'</strong><span class="realmChoiceRisk">'+esc(realmDifficulty(c))+'</span></div>'+
    '<div class="realmReagent"><span class="realmReagentIcon">'+phase2FamilyIcon(c.family)+'</span><span><b>'+esc(family)+' Reagent</b><small>Possible drop · Marked Elite guarantees 1 on extraction</small></span></div>'+
-   '<div class="realmDetail"><span class="realmDetailLabel">Boss</span><b>'+esc(t.enemy)+'</b><small>'+esc(t.effect)+' · '+c.risk+' base guard'+(c.risk===1?'':'s')+'</small></div>'+
+   '<div class="realmDetail"><span class="realmDetailLabel">Boss</span><b>'+esc(globalThis.WandererV013BossAbilities?.profileFor(c.family)?.name||t.enemy)+'</b><small>'+esc(t.effect)+' · '+c.risk+' base guard'+(c.risk===1?'':'s')+'</small></div>'+
    '<div class="realmDetail realmHazard"><span class="realmDetailLabel">Realm Condition</span><b>⚠ '+esc(condition?.name||'Unknown Condition')+'</b><small>'+esc(conditionGuide?.danger||'')+'</small></div>'+
    '<div class="realmDetail realmCounter"><span class="realmDetailLabel">Counterplay</span><small>'+esc(conditionGuide?.counter||'Prepare your build.')+'</small></div>'+
    '<div class="realmDetail realmOmens"><span class="realmDetailLabel">Known Boss Omen</span><small>'+esc(omen?.name||'Unknown')+(c.risk?' · '+c.risk+' still hidden':'')+'</small></div>'+
