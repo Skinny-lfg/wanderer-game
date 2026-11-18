@@ -1,8 +1,8 @@
 name: Stage 7.4 isolated Pages build (temporary)
 on:
-  push:
+  pull_request:
     branches:
-      - integration/v013-stage74-preview-20261118
+      - publish/automatic-rpg-preview
 permissions:
   contents: write
 jobs:
@@ -12,6 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: integration/v013-stage74-preview-20261118
           persist-credentials: true
       - uses: actions/setup-node@v4
         with:
