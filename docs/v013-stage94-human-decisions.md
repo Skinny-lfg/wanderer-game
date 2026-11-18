@@ -14,6 +14,19 @@ Stage 9.4 changes **only simulator decision heuristics**. It does not modify liv
 4. **Potions:** Camp purchases use native random stock, genuine Gold, prices, and three-slot loadout rules. Health is prioritized over marginal merchant upgrades, but no potion is injected. Between rooms, Health is saved for real threats, Barrier/Ironhide for Elites/Bosses, Scout for discovery, Trail when movement is constrained, Mana for low-resource casters, and Purifying for relevant combat Conditions. The bot cannot drink in combat or use a dose twice.
 5. **Extraction:** After considering visible safe Springs/Shrines and legal native healing, a low-HP bot can genuinely extract to keep secured rewards and XP. This does not unlock E+1.
 
+## Stage 9.4.1 — Elite value-aware routing
+
+The previous policy imposed a flat +30 Elite risk and only a weak -5 Marked Elite discount. This made it ignore valuable, often manageable encounters. The revised **simulator-only** score reads the game's real `v013DungeonWaveOdds()` tables (Elite 60% base equipment drop versus ordinary 28–32% away from the first-room guarantee), the per-rarity quality mix, and the native settlement rules.
+
+It values:
+- Actual loot probability and relative rarity; no generated item is examined and no success/drop is guaranteed
+- Elite's bonus +4 Gold and +3 Fragments (before ordinary risk multipliers)
+- Marked Elite's 55% favoured-slot roll **conditional on a drop**
+- Marked Elite reward (one Affinity reagent and 2 + 2 × risk Essence on successful extraction/victory), plus its real Boss weakening effect
+- HP ratio, visible Elite escort count, recent observed HP damage, surviving equipment needs, legal route cost, and remaining steps to Boss
+
+The numbers called *utility points* are subjective **agent preferences**, not game stat modifications or claimed exact economic expected value. Events and drops continue to be sampled by the real native runtime. The report now includes eligible-Elite decisions, actual Elite fights, victories and item drops, independently from the Boss preparation counter. It should be judged against the previous Stage 9.4 baseline using the same seeds/profiles.
+
 ## Testing and validation
 
 Run the following from a checkout of this branch:
