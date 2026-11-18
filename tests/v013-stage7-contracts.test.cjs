@@ -36,24 +36,20 @@ function complete(env,id){
   g.stage='finished';
  }else throw Error('Unknown synthetic completion');
 }
-test('Stage 7.2 catalogue retains 4 lore Contracts and exclusive reward plans',()=>{
+test('Stage 7.5 keeps four lore Contracts and deterministic exclusive rewards',()=>{
  assert.deepEqual(K.CATALOG.map(c=>c.id),['bounty_writ','pathfinder','purification','oath_of_defiance']);
- for(const entry of K.CATALOG){
-  assert(K.DESCRIPTIONS[entry.id]?.objective&&K.DESCRIPTIONS[entry.id]?.detail);
-  let previous=0;
-  for(let risk=0;risk<=2;risk++){
-   const prize=K.reward(entry.id,risk);
-   assert.equal(prize.kind,'essence');assert(prize.essence>previous);
-   assert(!Object.hasOwn(prize,'fragments'));previous=prize.essence;
-  }
+ const types=new Set();
+ for(const entry of K.CATALOG)for(let risk=0;risk<=2;risk++){
+  const prize=K.reward(entry.id,risk,'blood');
+  types.add(prize.kind);assert(K.DESCRIPTIONS[entry.id]?.objective);
  }
+ assert.deepEqual([...types].sort(),['fragments','gold','potion','reagent']);
  assert.throws(()=>K.reward('fake',1),/Invalid/);
  const env=fresh(7111,2),p=K.plan(env.d.foundationManifest.seed,env.card,[]);
- assert.equal(p.ids.length,2);
- assert.deepEqual(p,K.plan(env.d.foundationManifest.seed,env.card,[]));
- assert.equal(p.rewards[p.ids[1]].kind,'essence');
- assert(['blueprint','essence'].includes(p.rewards[p.ids[0]].kind));
- for(const prize of Object.values(p.rewards))assert.equal(Object.keys(prize).includes('fragments'),false);
+ assert.equal(p.ids.length,2);assert.deepEqual(p,K.plan(env.d.foundationManifest.seed,env.card,[]));
+ assert.equal(p.rewards[p.ids[0]].kind,'blueprint_chance');
+ assert.equal(p.rewards[p.ids[0]].chance,.55);
+ assert.notEqual(p.rewards[p.ids[1]].kind,'blueprint_chance');
 });
 test('Stage 7 generates two distinct feasible options on all real three-card maps, independently of other RNG',()=>{
  const {d}=fresh(7001);
@@ -109,50 +105,44 @@ test('Stage 7 Pathfinder counts two completed sectors, not scouting or manually 
  d.cleared.push(2);d.visited.push(2);g.history.push({node:2,event:null});
  assert.equal(K.progress(g).done,true);
 });
-test('Stage 7.2 Bounty Writ grants one exclusive reward, never Elite reagent or Fragments twice',()=>{
+test('Bounty Writ pays only one Contract reward; automatic Elite reagent stays separate',()=>{
  const env=chosen(7780,'bounty_writ'),{a,g,d,card}=env;
- assert.equal(K.progress(g).done,false);
- const promised=d.stage72RewardPlan.rewards.bounty_writ;
  complete(env,'bounty_writ');
- const before={essence:a.state().crafting.essence,fragments:a.state().fragments,cores:a.state().crafting.cores[card.family]};
+ const before={essence:a.state().crafting.essence,fragments:a.state().fragments,cores:a.state().crafting.cores[card.family],gold:a.state().gold};
  const payout=K.settle(g,a.state(),a.results());
- assert.equal(payout.id,'bounty_writ');assert.equal(payout.kind,promised.kind);
- assert.equal(a.state().fragments,before.fragments,'optional Contracts never pay Fragments');
- assert.equal(a.state().crafting.cores[card.family],before.cores,'Elite reagent paid by separate native path');
- if(promised.kind==='blueprint'){
-  assert.equal(payout.recipeId,promised.recipeId);
-  assert.equal(C.unlocked(a.state().crafting,payout.recipeId),true);
-  assert.equal(a.state().crafting.essence,before.essence);
-  assert(!Object.hasOwn(payout,'essence'));
- }else{
-  assert.equal(payout.essence,promised.essence);
-  assert.equal(a.state().crafting.essence-before.essence,payout.essence);
-  assert(!Object.hasOwn(payout,'recipeId'));
- }
+ assert.equal(payout.id,'bounty_writ');
+ assert(['gold','essence','blueprint'].includes(payout.kind));
+ assert.equal(a.state().fragments,before.fragments);
+ assert.equal(a.state().crafting.cores[card.family],before.cores);
+ if(payout.kind==='blueprint')assert(C.unlocked(a.state().crafting,payout.recipeId));
+ if(payout.kind==='essence')assert.equal(a.state().crafting.essence-before.essence,payout.essence);
+ if(payout.kind==='gold')assert.equal(a.state().gold-before.gold,payout.gold);
  assert.equal(K.validate(g),true);
- const after=clone(a.state().crafting);
+ const snapshot=clone(a.state());
  assert.equal(K.settle(g,a.state(),a.results()),null);
- assert.deepEqual(clone(a.state().crafting),after);
+ assert.deepEqual(clone(a.state()),snapshot);
  assert.equal(canonicalReplay(g).completedObjectives[0],'bounty_writ');
 });
 function canonicalReplay(g){
  const {foundationState:s,foundationManifest:manifest,realm}=g.dungeon;
  return F.replayDecisions(manifest,realm,s.decisions.map(({seq,...action})=>action));
 }
-test('Stage 7.2 pays each accepted Contract exactly once and displays the correct exclusive type',()=>{
+test('Every accepted Contract pays one validated receipt for its prize kind',()=>{
  for(const id of K.CATALOG.map(x=>x.id)){
-  const env=chosen(7840,id),{a,g,d}=env,promised=d.stage72RewardPlan.rewards[id];
-  complete(env,id);assert.equal(K.progress(g).done,true,id);
-  assert.equal(K.validate(g),true);
-  const before=clone(a.state().crafting),frags=a.state().fragments;
-  const paid=K.settle(g,a.state(),a.results());
-  assert.equal(paid.kind,promised.kind);
-  assert.equal(a.state().fragments,frags);
-  if(paid.kind==='blueprint'){assert.equal(paid.recipeId,promised.recipeId);assert(C.unlocked(a.state().crafting,paid.recipeId));assert.equal(a.state().crafting.essence,before.essence);}
-  else{assert.equal(paid.essence,promised.essence);assert.equal(a.state().crafting.essence-before.essence,paid.essence);}
-  assert.equal(K.inspect(g).status,'completed');
-  assert.equal(K.settle(g,a.state(),a.results()),null);
-  assert.equal(K.validate(g),true);
+  const env=chosen(7840,id),{a,g,d,card}=env,prize=d.stage72RewardPlan.rewards[id];
+  complete(env,id);assert(K.progress(g).done);assert(K.validate(g));
+  const before=clone(a.state()),paid=K.settle(g,a.state(),a.results());
+  assert(paid);
+  const kind=prize.kind==='blueprint_chance'?(K.blueprintChance(d.foundationManifest.seed,card,id,prize)?'blueprint':'essence'):prize.kind;
+  assert.equal(paid.kind,kind);
+  if(kind==='blueprint')assert(C.unlocked(a.state().crafting,paid.recipeId));
+  if(kind==='essence')assert.equal(a.state().crafting.essence-before.crafting.essence,paid.essence);
+  if(kind==='gold')assert.equal(a.state().gold-before.gold,paid.gold);
+  if(kind==='fragments')assert.equal(a.state().fragments-before.fragments,paid.fragments);
+  if(kind==='reagent')assert.equal(a.state().crafting.cores[card.family]-before.crafting.cores[card.family],paid.amount);
+  if(kind==='potion')assert.equal((a.state().consumables[paid.potion]||0)-(before.consumables?.[paid.potion]||0),paid.amount);
+  assert.equal(K.inspect(g).status,'completed');assert.equal(K.inspect(g).paid.kind,paid.kind);
+  assert.equal(K.settle(g,a.state(),a.results()),null);assert(K.validate(g));
  }
 });
 test('Stage 7 Oath of Defiance fails if any boss seal was disabled',()=>{
@@ -207,29 +197,27 @@ test('Stage 7 native abandonment records failed or ignored contracts in the real
  assert.equal(declined.a.results().summary?.contract?.status,'ignored');
 });
 
-test('Stage 7.2 chooses Blueprint from the selected Dungeon affinity and risk tier',()=>{
+test('Blueprint chance matches Realm affinity and difficulty and has exclusive fallback',()=>{
  for(const risk of [0,1,2]){
-  const {d,card}=fresh(9941+risk,risk);
-  const offer=K.plan(d.foundationManifest.seed,card,[]);
-  const prize=offer.rewards[offer.ids[0]];
-  assert.equal(offer.rewards[offer.ids[1]].kind,'essence');
-  assert.equal(prize.kind,'blueprint');
+  const {d,card}=fresh(9941+risk,risk),offer=K.plan(d.foundationManifest.seed,card,[]),prize=offer.rewards[offer.ids[0]];
+  assert.equal(prize.kind,'blueprint_chance');
+  assert.equal(prize.chance,[.35,.45,.55][risk]);
+  assert(prize.fallbackEssence>0);
   const recipe=C.RECIPES.find(r=>r.id===prize.recipeId);
-  assert(recipe);assert.equal(recipe.family,card.family);
-  assert.equal(recipe.rarity,risk===2?'Epic':'Rare');
-  assert.equal(K.label(prize),recipe.rarity+' Blueprint · '+recipe.name);
+  assert(recipe);assert.equal(recipe.family,card.family);assert.equal(recipe.rarity,risk===2?'Epic':'Rare');
+  assert.match(K.label(prize),/chance/);
  }
 });
-test('Stage 7.2 previously learned Blueprints never appear again; completed collection yields Essence',()=>{
+test('No duplicate Blueprints are offered and exhausted collections yield simple rewards',()=>{
  const env=fresh(9518,2),{d,card}=env,seed=d.foundationManifest.seed;
  const all=C.RECIPES.filter(r=>r.family===card.family&&r.rarity!=='Uncommon').map(r=>r.id);
  const initial=K.plan(seed,card,[]);
- assert.equal(initial.rewards[initial.ids[0]].kind,'blueprint');
+ assert.equal(initial.rewards[initial.ids[0]].kind,'blueprint_chance');
  const next=K.plan(seed,card,[initial.rewards[initial.ids[0]].recipeId]);
- assert.equal(next.rewards[next.ids[0]].kind,'blueprint');
+ assert.equal(next.rewards[next.ids[0]].kind,'blueprint_chance');
  assert.notEqual(next.rewards[next.ids[0]].recipeId,initial.rewards[initial.ids[0]].recipeId);
  const finished=K.plan(seed,card,all);
- assert(finished.ids.every(id=>finished.rewards[id].kind==='essence'));
+ assert(finished.ids.every(id=>finished.rewards[id].kind!=='blueprint_chance'));
  assert.throws(()=>K.plan(seed,card,['unknown']),/Invalid/);
 });
 test('Stage 7.2 canonical reward plan cannot be replaced, increased or changed in a checkpoint',()=>{
@@ -250,14 +238,19 @@ test('Stage 7.2 canonical reward plan cannot be replaced, increased or changed i
  tampered.dungeon.contractOffer.rewards[o.ids[0]]={kind:'essence',essence:9999};
  assert.throws(()=>offered.c.restore(tampered),/Invalid/);
 });
-test('Stage 7.2 forged completion does not duplicate a real Blueprint, even before reward ledger is set',()=>{
- const env=chosen(9877,'bounty_writ'),{g,d,a}=env;
- complete(env,'bounty_writ');
- const reward=d.stage72RewardPlan.rewards.bounty_writ;
- if(reward.kind!=='blueprint')throw Error('Expected unowned Blueprint');
- a.state().crafting=C.discover(a.state().crafting,reward.recipeId);
- const initial=clone(a.state().crafting);
+test('A winning Blueprint chance cannot duplicate a Blueprint already learned before settlement',()=>{
+ let env;
+ for(let seed=8100;seed<8350;seed++){
+  const candidate=fresh(seed),offer=candidate.c.offerContracts(),id=offer.ids[0],prize=offer.rewards[id];
+  if(prize.kind!=='blueprint_chance'||!K.blueprintChance(candidate.d.foundationManifest.seed,candidate.card,id,prize))continue;
+  candidate.c.chooseContract(id);env={...candidate,id,prize};break;
+ }
+ assert(env);
+ complete(env,env.id);
+ const {a,g,d,prize}=env;
+ a.state().crafting=C.discover(a.state().crafting,prize.recipeId);
+ const original=clone(a.state().crafting);
  assert.equal(K.settle(g,a.state(),a.results()),null);
  assert.equal(d.stage7RewardPaid,undefined);
- assert.deepEqual(clone(a.state().crafting),initial);
+ assert.deepEqual(clone(a.state().crafting),original);
 });

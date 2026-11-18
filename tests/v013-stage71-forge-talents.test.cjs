@@ -39,7 +39,7 @@ test('Camp shows a level stepper and never counts attributes as Talent tab notif
  assert(source.includes('data-phase3-expedition-step="1"'));
  assert(!source.includes('data-phase3-expedition-level'));
  assert(source.includes('const talentUnspent=Math.max(0,WandererAutomaticTalents.earned(talent)-talent.nodes.length);'));
- assert(source.includes('phase3BlueprintCompact'));
+ assert(!source.includes('v013ProjectPanel(true)'),'Camp must not show Blueprint Collection');
  assert(!source.includes('state.crafting?.targetRecipe'),'retired recipe tracking must not be wired to Camp');
  const T=create(7102).talents;
  const gained=T.award(T.create(),100);
