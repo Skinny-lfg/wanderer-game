@@ -49,3 +49,7 @@ Do not claim that all E1–E8 were played by the same account if it never got pa
 3. No hard-coded stat rolls, artificial XP, instant Boss fights, unlocked E bypass or enemy HP edits.
 4. Every sim run emits deterministic, inspectable E1–E8 outcomes with explicit not_reached censoring.
 5. The report separates observed player-policy effects from actual game balance and openly flags remaining limitations.
+
+## Focused follow-up when the pilot remains at E1
+
+The CI also executes a bounded targeted cohort with seed 9304, cautious and balanced policies, up to 12 native attempts per policy. This is a separate E1–E8 continuous-account run with no forced progression and its own JSON/Markdown report. Its purpose is to distinguish early unlucky runs and initial XP starvation from genuine multi-attempt progression issues. If E1 is never cleared, later E levels remain explicitly untested. Neither result is a calibrated player success rate.
