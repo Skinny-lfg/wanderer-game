@@ -5,7 +5,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const S=require('./simulate-progression.cjs');
 const DEFAULT_ARGS=[
- '--mode=bosses','--levels=15','--seeds=9101,9102',
+ '--mode=bosses','--levels=15','--seeds=9101,9201',
  '--builds=blood-fury,aegis-vitality,magic-decay',
  '--risks=0,1,2','--affinities=blood,decay,vitality,aegis,fury,magic',
  '--points=24','--out=reports/v013-stage91-diagnosis.json'
