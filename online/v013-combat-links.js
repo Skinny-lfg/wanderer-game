@@ -49,7 +49,7 @@ function show(run,kind,origin,receivers){
    '--link-color':colors[0],'--link-glow':colors[1]
   }))fx.style?.setProperty?.(key,value);
   scene.appendChild(fx);shown++;
-  fx.addEventListener?.('animationend',()=>fx.remove?.(),{once:true});
+  fx.addEventListener?.('animationend',event=>{if(event.animationName==='combatLinkFade')fx.remove?.();});
   if(typeof setTimeout==='function')setTimeout(()=>fx.remove?.(),DURATION);
  }
  if(shown)recent.set(run,{kind,at:now,origin,targets});
