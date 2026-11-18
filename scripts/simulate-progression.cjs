@@ -317,6 +317,19 @@ function summarize(rows){
  }
  return groups;
 }
+function sourceFingerprint(){
+ const base=path.resolve(__dirname,'..'),html=fs.readFileSync(path.join(base,'index.html'),'utf8');
+ const scriptPaths=[...html.matchAll(/<script[^>]*src="([^"]+)"/g)].map(m=>m[1].split('?')[0])
+  .filter(file=>/^(?:online|combat|economy)\/[a-zA-Z0-9_./-]+\.(?:js|mjs)$/.test(file));
+ const refs=[...new Set(['index.html','scripts/simulate-progression.cjs',...scriptPaths])].sort();
+ const hash=crypto.createHash('sha256'),included=[];
+ for(const file of refs){
+  const full=path.resolve(base,file);
+  if(!full.startsWith(base+path.sep)||!fs.existsSync(full))continue;
+  hash.update(file+'\0');hash.update(fs.readFileSync(full));included.push(file);
+ }
+ return {sha256:hash.digest('hex'),files:included};
+}
 function simulate(opts){
  const rows=[],start=Date.now(),builds=opts.builds.map(id=>BUILDS.find(b=>b.id===id));
  const add=(mode,kind,level,build,seed,run,affinity=undefined,risk=undefined)=>{
@@ -363,6 +376,7 @@ function simulate(opts){
  if(['bosses','bossmods','enemies','elites','encounter','traits','bossprep'].includes(opts.mode))notes.push('Controlled first-ring encounter injection: uses native combat but not natural room placement, 15-Realm progression or earned equipment.');
  if(['dungeon','conditions','both'].includes(opts.mode))notes.push('Natural Dungeon route uses shortest accessible path and explicit Boon/Contract selection policies; potions are not automatically spent.');
  if(rows.length<100)notes.push('Small samples: do not infer final balance from win rates without larger seed cohorts and player tests.');
+ const fingerprint=sourceFingerprint();
  return {schemaVersion:3,engine:'Wanderer v0.13 native combat/dungeon + Stage 7 economy + Stages 8.0–8.4 actors and abilities',mode:opts.mode,
   assumptions:{levels:opts.levels,seeds:opts.seeds,builds:opts.builds,pointsAvailable:opts.points,rarity:opts.rarity,gear:opts.gear,runes:opts.runes,
    affinities:opts.affinities,risks:opts.risks,groupSizes:opts.groupSizes,boons:opts.boons,contracts:opts.contracts,targetPolicy:opts.targetPolicy,mode:opts.mode,potions:'not automatically selected',
@@ -374,7 +388,7 @@ function simulate(opts){
    visualVfx:'Present in browser but not simulated (visual-only, cannot change combat RNG or numbers).',
    limits:'No automatic potions, conditional boon optimization, trading/crafting between rooms or adaptive player strategy beyond the specified target policy. Not a complete player-behavior model; not all 15 Realms and cross-Expedition build investments are modeled.',
    warnings:notes},
-  sourceSha256:crypto.createHash('sha256').update(fs.readFileSync(path.join(__dirname,'../index.html'))).digest('hex'),durationMs:Date.now()-start,summary,rows};
+  sourceSha256:fingerprint.sha256,sourceModules:fingerprint.files,durationMs:Date.now()-start,summary,rows};
 }
 function main(args=process.argv.slice(2)){
  const opts=parseArgs(args),report=simulate(opts),dest=path.resolve(process.cwd(),opts.output);fs.mkdirSync(path.dirname(dest),{recursive:true});fs.writeFileSync(dest,JSON.stringify(report,null,2)+'\n');
