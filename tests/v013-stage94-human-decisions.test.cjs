@@ -56,20 +56,30 @@ test('Exact-kind potion selection never consumes another native dose on a failed
  assert.equal(N.usePotionKind(a,'barrier','boss',log),false);
  assert.equal(calls.length,1,'never substitute a Scout for a missing Barrier dose');
 });
-test('Native between-room Health Potion uses actual game rules and costs the owned dose',()=>{
- const a=create(9451,undefined,{}, {skipPersistence:true,now:1720000009451}),s=a.state();
- const stats=a.baseStats(),maxhp=stats.maxhp;
- // Controlled native API fixture to exercise the consumption rule; campaign
- // simulator itself never injects Gold, HP, equipment or consumables.
+test('Native Health Potion can be consumed only after a genuine first-room combat',()=>{
+ const a=create(9101,undefined,{}, {skipPersistence:true,now:1720000009101}),s=a.state();
+ // A unit fixture injects doses, but all combat and subsequent potion actions
+ // are native: this is API verification, not part of the balance cohort.
  s.consumables={health:1,scout:1};s.potionSelection=['health','scout'];
  a.start(1,true);
  const c=a.controller();c.chooseRealm(c.state.dungeon.cards[0].id);
- a.setVitals({hp:Math.floor(maxhp*.35),mp:stats.mana,maxhp,maxmp:stats.mana});
+ const before=[];
+ assert.equal(N.usePotionKind(a,'health','too_early',before),false,
+  'a player cannot drink restorative potions before the first room');
+ assert.equal(c.visitRoom(1),true);
+ assert.equal(a.enter(),true);
+ const combat=a.state().run;
+ for(let t=0;t<4500&&combat?.status==='fight';t++)a.tick();
+ assert.equal(combat.status,'cleared','native E1 solo room must actually be beaten');
+ assert.equal(a.exitResult(),true);
+ assert(c.state.planeIndex>1);
+ const low=a.vitals().hp,max=a.vitals().maxhp;
+ assert(low<max,'native first-room combat damages player');
  const log=[];
  assert.equal(N.usePotionKind(a,'health','recover_from_real_room',log),true);
  assert.equal(log[0].kind,'health');
  assert.equal(a.events.run().potions[0].used,true);
- assert(a.vitals().hp>Math.floor(maxhp*.35));
+ assert(a.vitals().hp>low);
  assert.equal(N.usePotionKind(a,'health','double_dose',log),false);
  assert.equal(log.length,1);
  assert.equal(a.events.run().potions[1].used,false,'Scout not consumed as Health');
