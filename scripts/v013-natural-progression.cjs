@@ -165,56 +165,86 @@ function pathLength(card,d,start,dest){
  }}
  return Infinity;
 }
+// Distances use traversable graph topology; decisions only inspect details of
+// rooms the native map UI currently exposes through travelPath/scouting.
 function selectRoom(c,profile,vitals){
  const g=c.state,d=g.dungeon,card=c.realmMap(),boss=card.nodes.findIndex(n=>n.kind==='boss');
- const selected=[],hpRatio=vitals.maxhp>0?vitals.hp/vitals.maxhp:0;
- const currentDist=pathLength(card,d,d.current,boss);
+ const hpRatio=vitals.maxhp>0?vitals.hp/vitals.maxhp:0,prep=d.foundationState?.bossPreparation||{};
+ const currentDist=pathLength(card,d,d.current,boss),options=[];
  for(let i=0;i<card.nodes.length;i++){
   if(d.cleared.includes(i)||i===d.current)continue;
   const route=c.travelPath(i);if(!route?.length)continue;
   const cost=c.travelCost(route);if(cost>d.steps)continue;
-  // The native map UI reveals type and mob range for reachable rooms:
-  // index.html dungeonMapMarkup() uses travelPath(i).length > 0 || scouted.
-  // This is NOT a look ahead at unreachable/undiscovered nodes.
-  const known=!!route.length||d.scouted?.includes(i);
-  const node=known?card.nodes[i]:null,type=node?.kind||'unknown';
-  const dist=pathLength(card,d,i,boss),improves=dist<currentDist;
-  let score=dist*1.5+cost*2+(improves?-2:5)+(known?-1:0);
+  const visible=!!route.length||d.scouted?.includes(i);
+  const n=visible?card.nodes[i]:null,type=n?.kind||'unknown';
+  const dist=pathLength(card,d,i,boss);
+  const remaining=d.steps-cost;
+  // Avoid optional rooms that consume the step budget needed to approach Boss.
+  const slack=Number.isFinite(dist)?remaining-dist:-10;
+  let score=dist*1.35+cost*2+(dist<currentDist?-2:5);
+  if(!Number.isFinite(score))score=100;
+  if(i!==boss&&slack<0)score+=30+Math.abs(slack)*7;
+  else if(i!==boss&&slack<2)score+=8;
   if(type==='combat'){
-   const max=Number(node.range?.[1]??node.count??4);
-   const min=Number(node.range?.[0]??node.count??max);
-   // A cautious early player chooses the actual visible solo encounter over
-   // rushing 3, 12 or 20 mobs with the starter Worn Tunic.
-   if(max===1)score-=19;
-   else if(max<=4)score+=profile.name==='Daring'?1:7+(min>=3?2:0);
-   else if(max<=12)score+=profile.name==='Daring'?9:19;
-   else score+=profile.name==='Daring'?17:28;
-   if(hpRatio<.7&&max>1)score+=8;
+   const count=Number(n.range?.[1]??n.count??4);
+   if(count<=1)score-=18;
+   else if(count<=4)score+=profile.name==='Daring'?1:7;
+   else if(count<=12)score+=profile.name==='Daring'?12:22;
+   else score+=profile.name==='Daring'?22:36;
+   if(hpRatio<.65&&count>1)score+=12;
   }
-  if(type==='shrine')score-=26; // Free discovered Boon before risking scarce early HP
-  if(type==='spring'&&hpRatio<.8)score-=20;
-  if(type==='elite')score+=profile.name==='Daring'?12:28;
-  if(type==='event')score-=5;
-  if(type==='boss'){
-   if(hpRatio<.65)score+=18;
-   else score+=3;
-   if(d.steps<3)score-=8;
-  }
-  if(d.steps<dist+2)score+=8;
-  selected.push({room:i,score,dist,cost,known,type,
-   ...(type==='combat'?{visibleMobRange:node.range||[node.count,node.count]}:{})});
+  if(type==='shrine')score-=19;
+  if(type==='spring')score-=hpRatio<.8?27:5;
+  if(type==='event')score-=3;
+  if(type==='elite')score+=profile.name==='Daring'?12:30;
+  if(type==='boss')score+=hpRatio<.7?16:1;
+  const objective=i===card.objective&&!prep.markedElite&&type==='elite';
+  const reliquary=i===card.reliquaryRoom&&!prep.reliquary&&n?.event==='forgotten_reliquary';
+  // Marked Elite weakens Guarded boss attack 10%, or removes one escort at
+  // higher difficulty. Worth considering ONLY with enough actual HP.
+  if(objective)score+=hpRatio>.85&&slack>=0?(profile.name==='Daring'?-10:-5):22;
+  // The Reliquary sacrifices 15% maximum HP to disable one genuine modifier.
+  // Unlike a free Shrine, it is generally not desirable when already injured.
+  if(reliquary)score+=hpRatio>.83&&slack>=0?-15:12;
+  if(type==='boss'&&((prep.markedElite||prep.reliquary)&&hpRatio>.75))score-=4;
+  if(i!==boss&&d.steps<dist+2)score+=6;
+  options.push({room:i,score,dist,cost,slack,known:visible,type,objective,reliquary,
+   ...(type==='combat'?{visibleMobRange:n.range||[n.count,n.count]}:{})});
  }
- return selected.sort((a,b)=>a.score-b.score||a.room-b.room)[0]||null;
+ return options.sort((x,y)=>x.score-y.score||x.room-y.room)[0]||null;
 }
-function chooseBoon(offer,profile){
+function boonScore(id,profile,context={}){
+ const hp=context.vitals?.maxhp?context.vitals.hp/context.vitals.maxhp:1;
+ const mana=context.vitals?.maxmp??0,steps=context.steps??10;
+ const blood=profile.families.includes('blood'),decay=profile.families.includes('decay');
+ switch(id){
+  case 'bastion_oath':return 28+(hp<.75?9:0)-(profile.name==='Daring'?3:0);
+  case 'predators_focus':return 26+(context.bossSoon?5:0);
+  case 'blood_tribute':return blood?20+(context.bleedReady?6:0):2;
+  case 'rotbound_echo':return decay||context.bleedReady?18:2;
+  case 'aetherbound_pact':return mana>0?22:0;
+  case 'wayfarers_bargain':return steps<=4&&hp>.7?24:steps<7&&hp>.85?16:-8;
+  default:return 0;
+ }
+}
+function chooseBoon(offer,profile,context={}){
  const ids=offer.ids||[];
- const affinity=profile.families;
- return [...ids].sort((a,b)=>affinity.some(f=>a.includes(f))?-1:affinity.some(f=>b.includes(f))?1:0)[0]||null;
+ return [...ids].sort((a,b)=>boonScore(b,profile,context)-boonScore(a,profile,context)||a.localeCompare(b))[0]||null;
 }
-function eventOptions(id,v,profile){
- const ratio=v.maxhp? v.hp/v.maxhp:1;
- if(id==='forgotten_reliquary')return ratio>.67?[0,1,2]:[1,2,0];
- if(id==='restless_spring'||id==='traveling_merchant')return ratio<.9?[0,1,2]:[1,2,0];
+function chooseContract(offer,profile,card){
+ if(!offer?.ids?.length)return null;
+ const rank={pathfinder:24,purification:profile.name==='Cautious'?8:17,
+  bounty_writ:profile.name==='Daring'?15:4,oath_of_defiance:5};
+ return [...offer.ids].sort((a,b)=>(rank[b]||0)-(rank[a]||0))[0]||null;
+}
+function eventOptions(id,v,profile,context={}){
+ const ratio=v.maxhp?v.hp/v.maxhp:1;
+ if(id==='forgotten_reliquary'){
+  // Sacrifice 15% Max Health only with sufficient remaining HP and a boss
+  // worth weakening; otherwise use the event's native supplies option.
+  return ratio>.83&&!context.reliquaryCompleted?[0,1,2]:[1,2,0];
+ }
+ if(id==='restless_spring'||id==='traveling_merchant')return ratio<.92?[0,1,2]:[1,2,0];
  if(id==='oracle_of_paths')return [0,2,1];
  if(id==='whispering_idol'||id==='cursed_altar')return [2,1,0];
  return profile.name==='Daring'?[0,2,1]:[2,0,1];
