@@ -108,7 +108,7 @@ test('Native Expedition attaches Boss infrastructure and resolves summoned Minio
  const c=a.controller(),g=c.state,card=g.dungeon.cards[0];
  c.chooseRealm(card.id);g.bossId='rift';card.nodes[1].kind='boss';card.nodes[1].escorts=1;
  assert.equal(c.visitRoom(1),true);assert.equal(a.enter(),true);
- const r=a.state().run,lead=r.encounterLeader;assert(lead?.boss&&r.bossInfrastructure);
+ const r=a.state().run,lead=r.encounterLeader;assert(lead?.boss&&r.bossInfrastructure,JSON.stringify({selected:g.selected,enc:r.enc,enemyRole:r.enemy?.role,enemyBoss:r.enemy?.boss,leaderBoss:lead?.boss,bossInfrastructure:!!r.bossInfrastructure,groupSize:r.enemies?.length}));
  assert.equal(r.bossInfrastructure.cast,null);
  assert.equal(B.configure(r,{healOnMinionDeath:.05}),true);
  const sp=B.summon(r,lead,1,minion);
