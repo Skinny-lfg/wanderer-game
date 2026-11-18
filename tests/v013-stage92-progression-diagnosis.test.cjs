@@ -89,3 +89,21 @@ test('Source fingerprint mismatch and missing scenarios cause hard failure',()=>
  runs[1].report.sourceSha256='native-stage92';runs[0].report.rows.pop();
  assert.throws(()=>D.analyze(runs,cfg),/Missing Stage 9.2 cases/);
 });
+
+test('Native RNG streams lock the same Dungeon and Boss encounters across rarity changes',()=>{
+ const S=require('../scripts/simulate-progression.cjs');
+ const cfg=D.parseArgs(['--builds=blood-fury','--seeds=9101','--boss-affinities=blood']);
+ const common=D.COHORTS.find(c=>c.id==='e5-talents');
+ const better=D.COHORTS.find(c=>c.id==='e5-geared');
+ for(const mode of ['enemies','dungeon','bosses']){
+  const a=S.simulate(D.optionsFor(common,mode,cfg)).rows[0];
+  const b=S.simulate(D.optionsFor(better,mode,cfg)).rows[0];
+  assert.equal(a.error,undefined,'baseline failed: '+a.error);
+  assert.equal(b.error,undefined,'upgrade failed: '+b.error);
+  assert.equal(a.resolvedSeed,b.resolvedSeed,mode+' must use identical native seed');
+  assert.equal(a.affinity,b.affinity,mode+' must preserve Realm Affinity');
+  assert.equal(a.risk,b.risk,mode+' must preserve risk');
+  if(mode==='dungeon')assert.deepEqual(a.route,b.route,'route must match');
+  if(mode==='bosses')assert.equal(a.bossStyle,b.bossStyle,'Boss style must match');
+ }
+});
