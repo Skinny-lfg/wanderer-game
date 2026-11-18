@@ -28,7 +28,7 @@ npm run simulate:v013:natural-e1-e8 -- --seeds=9304 --profiles=cautious --max-le
 npm run simulate:v013:natural-e1-e8 -- --seeds=9101,9201,9301 --profiles=cautious,balanced,daring --max-level=8 --max-attempts=4
 ~~~
 
-Defaults: 2 seeds (9101, 9201) × 2 behavior policies × up to 3 attempts per actually reached E. Max E8; max 192 potential account-level attempts. The same native character continues across retries and successful Expeditions, including real retained XP and secured resources. No legacy v0.12 synthetic battle simulator is invoked; an old test harness filename is reused only because it loads the live v0.13 HTML runtime.
+Defaults: 2 seeds (9101, 9201) × 2 behavior policies × up to 6 attempts per actually reached E. Max E8; max 192 potential account-level attempts. Cautious profiles prefer map-visible solo rooms and extract at low HP to preserve XP/loot. The same native character continues across retries and successful Expeditions, including real retained XP and secured resources. No legacy v0.12 synthetic battle simulator is invoked; an old test harness filename is reused only because it loads the live v0.13 HTML runtime.
 
 JSON: reports/v013-stage93-natural-e1-e8.json. Markdown: adjacent .md. Both include raw account histories and per-E rollups; CI uploads both as artifacts, with no deployment.
 
