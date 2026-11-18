@@ -39,13 +39,13 @@ function offer(seed,realmId,round,families=[],chosen=[]){
  const rest=shuffle(available.filter(b=>b.id!==first.id),random);
  return [first,...rest.slice(0,2)].map(b=>b.id);
 }
-function validateOffer(d){
+function validateOffer(d,history){
  if(!d?.boonOffer)return d?.boonOffer===undefined;
  const o=d.boonOffer,chosen=d.foundationState?.boonIds,manifest=d.foundationManifest;
  if(!manifest||!d.realm||!Array.isArray(chosen)||!Number.isInteger(o.round)||o.round!==chosen.length||o.round>1||
    !Array.isArray(o.ids)||o.ids.length!==3||new Set(o.ids).size!==3||
    !Array.isArray(o.families)||new Set(o.families).size!==o.families.length||
-   o.families.some(f=>!F.AFFINITIES.includes(f))||o.round===1&&d.cleared.length<5)return false;
+   o.families.some(f=>!F.AFFINITIES.includes(f))||o.round===1&&(!Array.isArray(history)||history.filter(entry=>!entry.event).length<4))return false;
  try{return JSON.stringify(o.ids)===JSON.stringify(offer(manifest.seed,d.realm,o.round,o.families,chosen));}catch{return false;}
 }
 function ids(run){return Array.isArray(run?.boonIds)?run.boonIds:[];}
