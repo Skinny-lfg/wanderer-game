@@ -34,7 +34,7 @@ const BUILDS=Object.freeze([
  {id:'blood-decay',name:'Blood/Decay',weapon:'Two-Handed',families:['blood','decay'],skills:['bleeding_edge','deep_cuts','toxic_touch','virulent_rot','plague_spread']}
 ]);
 const DEFAULTS=Object.freeze({mode:'encounter',levels:[1,5,15,35,70,100,250,1000],seeds:[9101,9102,9103],builds:BUILDS.map(b=>b.id),points:24,rarity:'Rare',gear:'current',runes:false,tickLimit:4500,
- affinities:[...AFFINITIES],risks:[1],groupSizes:[...GROUP_SIZES],boons:'none',output:'reports/v013-simulation-results.json'});
+ affinities:[...AFFINITIES],risks:[1],groupSizes:[...GROUP_SIZES],boons:'none',contracts:'none',output:'reports/v013-simulation-results.json'});
 const finitePositive=value=>Number.isSafeInteger(value)&&value>=1;
 function parseIntegers(value,label){const values=value.split(',').map(Number);if(!values.length||values.some(n=>!finitePositive(n)))throw Error('Invalid '+label+': '+value);return [...new Set(values)];}
 function parseArgs(args){
@@ -57,6 +57,7 @@ function parseArgs(args){
   else if(key==='risks'){result.risks=[...new Set(value.split(',').map(Number))];if(!result.risks.length||result.risks.some(r=>!RISKS.includes(r)))throw Error('Invalid risks: '+value);}
   else if(key==='group-sizes'){result.groupSizes=parseIntegers(value,'group-sizes');if(result.groupSizes.some(n=>n<2||n>22))throw Error('Group sizes must be 2–22');}
   else if(key==='boons'&&['none','first'].includes(value))result.boons=value;
+  else if(key==='contracts'&&['none','first'].includes(value))result.contracts=value;
   else if(key==='runes'&&['true','false'].includes(value))result.runes=value==='true';
   else if(key==='tick-limit'){result.tickLimit=Number(value);if(!finitePositive(result.tickLimit)||result.tickLimit>100000)throw Error('Invalid tick-limit: '+value);}
   else if(key==='out'&&value)result.output=value;
@@ -130,6 +131,11 @@ function prepare(level,build,seed,opts,desiredRisk=undefined,desiredFamily=undef
    [...cards].sort((x,y)=>Number(x.family!==build.families[0])-Number(y.family!==build.families[0])||x.risk-y.risk)[0];
   if(!card)continue; // Keep the real generated Realm card: never rewrite its Affinity.
   c.chooseRealm(card.id);
+  if(opts.contracts==='first'){
+   const offer=c.offerContracts(a.state().crafting?.learnedRecipes||[]);
+   if(!offer?.ids?.length)throw Error('Native Contract offers unavailable');
+   c.chooseContract(offer.ids[0]);
+  }
   const boss=A.profileFor(card.family);
   if(!boss||boss.style!==F.BOSS_STYLE_BY_AFFINITY[card.family])throw Error('Boss roster drift for '+card.family);
   return {a,c,g,card,gearE,resolvedSeed,seedShift:attempt,plannedPoints:opts.points,allocatedPoints:talents.nodes.length};
@@ -251,7 +257,8 @@ function dungeon(level,build,seed,opts,desiredRisk=undefined){
  const hpLast=rooms.at(-1),survival=rooms.length?hpLast.hpEnd/hpLast.hpMax:null;
  return {mode:desiredRisk===undefined?'dungeon':'conditions',kind:conditionId||'unknown',conditionId,conditionMarkedRooms:rooms.filter(r=>r.conditionMarked).length,conditionPassagesCrossed:g.dungeon?.conditionEdgesUsed?.length||0,level,build:build.id,seed,resolvedSeed,seedShift,gearE,gearTier:P.gearTier(gearE).name,gearRarity:opts.rarity,
   pointsBudget:opts.points,pointsSpent:allocatedPoints,affinity:card.family,bossAffinity:card.family,bossName:A.profileFor(card.family).name,
-  bossStyle:A.profileFor(card.family).style,boonsTaken:[...(g.dungeon?.foundationState?.boonIds||[])],realm:card.name,risk:card.risk,route,rooms,events,stage:g.stage,won:g.stage==='finished',bossReached:rooms.some(r=>r.kind==='boss'),timedOut:rooms.some(r=>r.timedOut),error,seconds:+rooms.reduce((v,r)=>v+r.seconds,0).toFixed(2),damageDealt:rooms.reduce((v,r)=>v+r.damageDealt,0),damageTaken:rooms.reduce((v,r)=>v+r.damageTaken,0),manaSpent:rooms.reduce((v,r)=>v+r.manaSpent,0),minHpPct:rooms.length?Math.min(...rooms.map(r=>r.minHpPct)):null,lastHpPct:survival===null?null:+(100*survival).toFixed(1),goldNet:s.gold-initial.gold,fragmentsNet:s.fragments-initial.fragments,essenceNet:s.crafting.essence-initial.essence,coresNet:Object.fromEntries(Object.keys(initial.cores).map(k=>[k,(s.crafting.cores[k]||0)-(initial.cores[k]||0)])),
+  bossStyle:A.profileFor(card.family).style,boonsTaken:[...(g.dungeon?.foundationState?.boonIds||[])],contractId:g.dungeon?.foundationState?.contractId||null,
+  contractReward:g.dungeon?.stage7RewardPaid||null,realm:card.name,risk:card.risk,route,rooms,events,stage:g.stage,won:g.stage==='finished',bossReached:rooms.some(r=>r.kind==='boss'),timedOut:rooms.some(r=>r.timedOut),error,seconds:+rooms.reduce((v,r)=>v+r.seconds,0).toFixed(2),damageDealt:rooms.reduce((v,r)=>v+r.damageDealt,0),damageTaken:rooms.reduce((v,r)=>v+r.damageTaken,0),manaSpent:rooms.reduce((v,r)=>v+r.manaSpent,0),minHpPct:rooms.length?Math.min(...rooms.map(r=>r.minHpPct)):null,lastHpPct:survival===null?null:+(100*survival).toFixed(1),goldNet:s.gold-initial.gold,fragmentsNet:s.fragments-initial.fragments,essenceNet:s.crafting.essence-initial.essence,coresNet:Object.fromEntries(Object.keys(initial.cores).map(k=>[k,(s.crafting.cores[k]||0)-(initial.cores[k]||0)])),
   talentXpNet:s.automaticTalents.xp-initial.xp,enemyAbilityCasts:rooms.reduce((n,x)=>n+x.enemyAbilityCasts,0),
   bossSummons:rooms.reduce((n,x)=>n+x.bossSummons,0),bossHealing:rooms.reduce((n,x)=>n+x.bossHealing,0),
   eliteSummons:rooms.reduce((n,x)=>n+x.eliteSummons,0),stepsLeft:g.dungeon?.steps};
@@ -313,15 +320,15 @@ function simulate(opts){
  if(opts.mode==='bosses'&&opts.affinities.some(x=>!summary.exposures.bossAffinities.includes(x)))notes.push('Not every requested Boss Affinity entered combat. Check errors and scenario seed search.');
  if(opts.points>0)notes.push('Fixed '+opts.points+'-point Talent Tree debug build is synthetic at all E levels, not earned account XP. Compare an explicit --points=0 baseline for E1.');
  if(['bosses','bossmods','enemies','elites','encounter','traits','bossprep'].includes(opts.mode))notes.push('Controlled first-ring encounter injection: uses native combat but not natural room placement, 15-Realm progression or earned equipment.');
- if(['dungeon','conditions','both'].includes(opts.mode))notes.push('Natural Dungeon route uses shortest accessible path and the explicit Boon selection policy; potions and optional contracts are not optimized.');
+ if(['dungeon','conditions','both'].includes(opts.mode))notes.push('Natural Dungeon route uses shortest accessible path and explicit Boon/Contract selection policies; potions are not automatically spent.');
  if(rows.length<100)notes.push('Small samples: do not infer final balance from win rates without larger seed cohorts and player tests.');
  return {schemaVersion:3,engine:'Wanderer v0.13 native combat/dungeon + Stage 7 economy + Stages 8.0–8.4 actors and abilities',mode:opts.mode,
   assumptions:{levels:opts.levels,seeds:opts.seeds,builds:opts.builds,pointsAvailable:opts.points,rarity:opts.rarity,gear:opts.gear,runes:opts.runes,
-   affinities:opts.affinities,risks:opts.risks,groupSizes:opts.groupSizes,boons:opts.boons,mode:opts.mode,potions:'not automatically selected',
+   affinities:opts.affinities,risks:opts.risks,groupSizes:opts.groupSizes,boons:opts.boons,contracts:opts.contracts,mode:opts.mode,potions:'not automatically selected',
    talents:'Tree v15, synthetic fixed budget; real E1 starts with zero points. XP rewards in natural Dungeon are reported but cannot be spent during this single simulated route.',
    gearProgression:'Current native item tiers and stat rolls; equipment held constant throughout the scenario (no auto-equipping drops).',
    controlled:'Boss, modifier, elite and swarm diagnostics deliberately replace a first-ring encounter; native skills, defender AI, six-Boss lookup, status effects, damage, rewards and summon limits remain unmodified.',
-   dungeon:'Native three-card Realm and shortest accessible route; persistent HP/Mana and resource ledger, native Boon selection optional; not all 15 Realms or an account-level campaign.',
+   dungeon:'Native three-card Realm and shortest accessible route; persistent HP/Mana and resource ledger, native Boon and Contract selection optional; not all 15 Realms or an account-level campaign.',
    bossmods:'Only Boss-compatible properties are tested on each selected real Affinity Boss. Legacy Rift-only forced boss ID removed.',
    visualVfx:'Present in browser but not simulated (visual-only, cannot change combat RNG or numbers).',
    limits:'No automatic potions, intelligent target swapping, conditional boon optimization, trading/crafting between rooms or manual player strategy. Not a complete player-behavior model; not all 15 Realms and cross-Expedition build investments are modeled.',
