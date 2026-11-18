@@ -1,0 +1,17 @@
+name: Stage 8.5 Combat link VFX
+on:
+  push:
+    branches: [feature/v013-combat-links-vfx-20261118]
+  pull_request:
+    branches: [publish/automatic-rpg-preview]
+jobs:
+  linked-effects:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify link VFX, native enemy skills and expedition support
+        run: node --test tests/v013-stage85-combat-links.test.cjs tests/v013-stage81-enemy-abilities.test.cjs tests/v013-stage82-elite-abilities.test.cjs tests/v013-stage83-boss-infrastructure.test.cjs tests/v013-stage84-six-bosses.test.cjs
