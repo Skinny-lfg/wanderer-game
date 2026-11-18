@@ -1,6 +1,7 @@
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs');
-const Links=require('../online/v013-combat-links.js');
+require('../online/v013-combat-links.js');
+const Links=globalThis.WandererV013CombatLinks;
 function actor(name){return {name,role:'skirmisher',hp:100,maxhp:100};}
 function mockArena(run){
  const participants=new Map(),effects=[];
