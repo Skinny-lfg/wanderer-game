@@ -39,7 +39,8 @@ function scenario(seed,type,gear='starter',opts={}){
 function compare(opts={}){
  const cfg={seedStart:opts.seedStart??9300,scan:opts.scan??180,
   pairCap:opts.pairCap??30,tickLimit:opts.tickLimit??4500};
- const gearModes=opts.gearModes||['starter','common'],pairs=[],skipped=0,errors=[];
+ const gearModes=opts.gearModes||['starter','common'],pairs=[],errors=[];
+ let skipped=0;
  for(const gear of gearModes){
   let count=0;
   for(let seed=cfg.seedStart;seed<cfg.seedStart+cfg.scan&&count<cfg.pairCap;seed++){
