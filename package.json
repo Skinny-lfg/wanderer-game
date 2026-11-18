@@ -18,6 +18,7 @@
     "test:v013:stage81": "node --test tests/v013-stage81-enemy-abilities.test.cjs",
     "test:v013:stage82": "node --test tests/v013-stage82-elite-abilities.test.cjs",
     "test:v013:stage83": "node --test tests/v013-stage83-boss-infrastructure.test.cjs",
+    "test:v013:stage84": "node --test tests/v013-stage84-six-bosses.test.cjs",
     "test:v013:browser": "node tests/v013-pages-browser.cjs && node tests/v013-cleanup-ui-browser.cjs && node tests/v013-talent-tree-browser.cjs && node tests/v013-clarity-browser.cjs",
     "test:v013:layout": "node --test tests/v013-talent-24-axes.test.cjs",
     "simulate:v013": "node scripts/simulate-progression.cjs",
