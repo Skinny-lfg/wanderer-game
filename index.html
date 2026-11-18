@@ -1761,7 +1761,7 @@ function realmDifficulty(card){return ['Guarded','Dangerous','Brutal'][card.risk
 function dungeonRoomLabel(n){
  if(n.kind==='combat')return n.range[1]===1?'Solo':n.range[1]<=4?'Patrol':'Fragile swarm';
  if(n.event==='forgotten_reliquary')return 'Forgotten Reliquary';
- return {entrance:'Entrance',boss:'Boss',elite:'Elite',spring:'Spring',event:'Event'}[n.kind];
+ return {entrance:'Entrance',boss:'Boss',elite:'Elite',spring:'Spring',event:'Event',shrine:'✦ Shrine'}[n.kind];
 }
 function dungeonMapMarkup(g){
  const d=g.dungeon,c=phase1Controller.realmMap(),last=c.nodes.length-1,width=last>>1,conditions=globalThis.WandererV013ExpeditionConditions,conditionPlan=conditions?.forDungeon(c,d),conditionInfo=conditions?.get(conditionPlan?.id),conditionGuide=conditions?.GUIDE?.[conditionPlan?.id];
@@ -1774,7 +1774,7 @@ function dungeonMapMarkup(g){
  const buttons=c.nodes.map((n,i)=>{
   if(!visible[i])return '';
   const [x,y]=point(i),cleared=d.cleared.includes(i),label=dungeonRoomLabel(n),omen=n.kind==='boss'?WandererV013BossModifiers.known(g,c.id):null,prep=WandererV013BossPreparation.status(g);
-  return '<button type="button" data-dungeon-room="'+i+'" style="position:absolute;left:'+x+'%;top:'+y+'%;transform:translate(-50%,-50%);padding:5px;background:'+(i===d.current?'#513b26':cleared?'#24352d':'#241d22')+'">'+label+(i===c.objective?' ★':'')+(c.bossSector!==undefined&&i>=1&&i<=4?' '+i:'')+'<small style="display:block">'+(i===d.current?'You are here':cleared?'Cleared':n.kind==='combat'?n.range.join('–')+' mobs':n.kind==='boss'||n.kind==='elite'?n.escorts+' base guards':'Inspect')+'</small>'+(cleared?'':'<small class="mapExitCount" style="display:block;color:#d7b47d">'+phase1Controller.exitCount(i)+' '+(phase1Controller.exitCount(i)===1?'exit':'exits')+(d.scouted?.includes(i)?' · Scouted':'')+'</small>')+(conditionPlan?.rooms?.includes(i)?'<small class="stage5ConditionRoom">⚠ Condition</small>':'')+(n.traitId?'<small class="encounterTraitBadge" style="display:block;color:#f0b96f">⚔ '+esc(WandererV013EncounterTraits.get(n.traitId)?.name||'Unknown Trait')+'</small>':'')+(omen?'<small class="bossKnownOmen" style="display:block;color:#d9a5ba">☠ '+esc(omen.name)+(prep?.disabledId===omen.id?' (disabled)':'')+(prep?.hiddenCount?' · ?×'+prep.hiddenCount:'')+'</small>':'')+'</button>';
+  return '<button type="button" data-dungeon-room="'+i+'" style="position:absolute;left:'+x+'%;top:'+y+'%;transform:translate(-50%,-50%);padding:5px;background:'+(i===d.current?'#513b26':cleared?'#24352d':'#241d22')+'">'+label+(i===c.objective?' ★':'')+(c.bossSector!==undefined&&i>=1&&i<=4?' '+i:'')+'<small style="display:block">'+(i===d.current?'You are here':cleared?'Cleared':n.kind==='combat'?n.range.join('–')+' mobs':n.kind==='shrine'?'Boon discovery':n.kind==='boss'||n.kind==='elite'?n.escorts+' base guards':'Inspect')+'</small>'+(cleared?'':'<small class="mapExitCount" style="display:block;color:#d7b47d">'+phase1Controller.exitCount(i)+' '+(phase1Controller.exitCount(i)===1?'exit':'exits')+(d.scouted?.includes(i)?' · Scouted':'')+'</small>')+(conditionPlan?.rooms?.includes(i)?'<small class="stage5ConditionRoom">⚠ Condition</small>':'')+(n.traitId?'<small class="encounterTraitBadge" style="display:block;color:#f0b96f">⚔ '+esc(WandererV013EncounterTraits.get(n.traitId)?.name||'Unknown Trait')+'</small>':'')+(omen?'<small class="bossKnownOmen" style="display:block;color:#d9a5ba">☠ '+esc(omen.name)+(prep?.disabledId===omen.id?' (disabled)':'')+(prep?.hiddenCount?' · ?×'+prep.hiddenCount:'')+'</small>':'')+'</button>';
  }).join('');
  const prep=WandererV013BossPreparation.status(g);
  const boonNames=(d.foundationState?.boonIds||[]).map(id=>globalThis.WandererV013ExpeditionBoons?.get(id)?.name||id);
@@ -1807,19 +1807,21 @@ function renderStage6BoonOffer(g){
  if(!offer||!B)return;
  const selected=g.dungeon.foundationState?.boonIds||[],familySet=new Set(offer.families);
  const selectedNames=selected.map(id=>B.get(id)?.name||id);
- html('<section class="panel stage6BoonOffer" aria-labelledby="stage6BoonHeading"><span class="eyebrow">Expedition '+g.expedition+' · '+(offer.round===0?'First':'Second')+' Boon</span><h1 id="stage6BoonHeading">Choose your Expedition Boon</h1><p class="small muted">Choose one of three temporary powers. Each grants an advantage and a trade-off. Maximum two per Dungeon; neither changes your permanent talents or equipment.</p><p class="stage6BoonSummary">Active Boons: '+esc(selectedNames.join(' · ')||'None')+'</p><div class="stage6BoonChoices">'+offer.ids.map(id=>{
+ html('<section class="panel stage6BoonOffer" aria-labelledby="stage6BoonHeading"><span class="eyebrow">Expedition '+g.expedition+' · Shrine '+(offer.round+1)+' of 2</span><h1 id="stage6BoonHeading">Boon Shrine Discovered</h1><p class="small muted">Choose one of three temporary powers or leave this Shrine untouched. Each choice has a trade-off. You can discover up to two Boons per Dungeon.</p><p class="stage6BoonSummary">Active Boons: '+esc(selectedNames.join(' · ')||'None')+'</p><div class="stage6BoonChoices">'+offer.ids.map(id=>{
   const boon=B.get(id),guide=B.GUIDE[id],matched=boon.families.some(f=>familySet.has(f))&&id!=='wayfarers_bargain';
   return '<button type="button" class="stage6BoonCard" data-stage6-boon="'+esc(id)+'"><span class="stage6BoonIcon" aria-hidden="true">'+esc(guide.icon)+'</span><strong>'+esc(boon.name)+'</strong>'+(matched?'<small class="stage6BoonSynergy">Synergy with your build</small>':'')+'<span class="stage6BoonBenefit">'+esc(guide.benefit)+'</span><span class="stage6BoonCost">'+esc(guide.cost)+'</span></button>';
- }).join('')+'</div><p class="small muted">The next Boon is offered after four cleared fights. Choices cannot be repeated and disappear when the Expedition ends.</p></section>');
- Q('[data-stage6-boon]').forEach(button=>button.onclick=()=>{
+ }).join('')+'</div><p class="small muted">Shrines are hidden until their passages are explored. Skipping a Shrine is permanent for this Expedition.</p><button type="button" id="stage73SkipBoon" class="ghost">Leave Shrine without a Boon</button></section>');
+ const resolve=id=>{
   if(!g.dungeon?.boonOffer||g.stage!=='choice')return;
   const old=JSON.parse(JSON.stringify(g.dungeon));
   try{
-   phase1Controller.chooseBoon(button.dataset.stage6Boon);
+   phase1Controller.chooseBoon(id);
    if(!phase5Persist()){for(const key of Object.keys(g.dungeon))delete g.dungeon[key];Object.assign(g.dungeon,old);return;}
    phase3ClampVitals();render();
-  }catch(error){bannerMessage('Boon choice rejected: '+error.message);}
- });
+  }catch(error){bannerMessage('Boon Shrine choice rejected: '+error.message);}
+ };
+ Q('[data-stage6-boon]').forEach(button=>button.onclick=()=>resolve(button.dataset.stage6Boon));
+ $('stage73SkipBoon').onclick=()=>resolve(null);
 }
 function renderRealmCards(g){
  html('<section class="panel"><span class="eyebrow">Expedition '+g.expedition+'</span><h1>Choose your Realm</h1><div class="phase1Offers">'+g.dungeon.cards.map(c=>{
@@ -1828,7 +1830,7 @@ function renderRealmCards(g){
  const omen=WandererV013BossModifiers.known(g,c.id);
   return '<button class="phase1Offer" data-realm-card="'+c.id+'"><img src="'+dungeonImage(c)+'" alt=""><div class="phase1OfferBody"><strong>'+esc(c.name)+'</strong><p>'+phase2FamilyIcon(c.family)+' '+esc(c.family)+' · '+realmDifficulty(c)+'</p><p>'+esc(t.enemy)+' · '+esc(t.effect)+' · '+('Boss with '+c.risk+' base guard'+(c.risk===1?'':'s')+' · properties may add guards')+'</p><p class="stage5Condition"><b>⚠ '+esc(condition?.name||'Unknown Condition')+'</b> · '+esc(conditionGuide?.danger||'')+'</p><p class="small muted">Counterplay: '+esc(conditionGuide?.counter||'')+'</p><p class="small muted">Known boss omen: '+esc(omen?.name||'Unknown')+(c.risk?' · '+c.risk+' unrevealed':'')+'</p><small>'+(c.stepLimit?c.stepLimit+' steps · ':'')+(c.risk?'+'+(c.risk*12)+'% combat Gold, Fragments and equipment chance':'Standard rewards')+' · Marked Elite bonus (automatic): 1 '+esc(c.family)+' reagent + '+(2+c.risk*2)+' Essence on extraction. Equipment drops: 55% chance to favour '+esc(c.favoured?.subtype||'Shield')+'</small></div></button>';
  }).join('')+'</div><button id="phase1BackToCamp">Return to Camp</button></section>');
- Q('[data-realm-card]').forEach(b=>b.onclick=()=>{phase1Controller.chooseRealm(b.dataset.realmCard);phase1Controller.offerContracts(state.crafting?.learnedRecipes||[]);const B=globalThis.WandererV013ExpeditionBoons;phase1Controller.offerBoons(B?.familiesFor(phase1Build,state.automaticTalents)||[]);if(phase5Persist())render();});
+ Q('[data-realm-card]').forEach(b=>b.onclick=()=>{phase1Controller.chooseRealm(b.dataset.realmCard);phase1Controller.offerContracts(state.crafting?.learnedRecipes||[]);if(phase5Persist())render();});
  $('phase1BackToCamp').onclick=phase6BackToCamp;
 }
 function bindDungeonRooms(g){
@@ -1843,7 +1845,7 @@ function bindDungeonRooms(g){
   const highlighted=path.slice(1).map((id,k)=>document.querySelector('[data-room-edge="'+path[k]+'-'+id+'"],[data-room-edge="'+id+'-'+path[k]+'"]')).filter(Boolean);
   for(const line of highlighted)line.style.stroke='#ffd57a';
   const route=path.map(j=>dungeonRoomLabel(c.nodes[j])).join(' → ');
-  const detail=cleared?'Cleared passage.':n.event?WandererV012IntegratedEvents.get(n.event)[1]:n.kind==='combat'?n.range[0]+'–'+n.range[1]+(i===2?' enemies · Vanguard prepares the opening strike':n.range[1]>=6?' fragile enemies · reinforcements':' enemies'):dungeonRoomLabel(n)+' with '+n.escorts+' base guards';
+  const detail=cleared?'Cleared passage.':n.event?WandererV012IntegratedEvents.get(n.event)[1]:n.kind==='combat'?n.range[0]+'–'+n.range[1]+(i===2?' enemies · Vanguard prepares the opening strike':n.range[1]>=6?' fragile enemies · reinforcements':' enemies'):n.kind==='shrine'?'An ancient Boon Shrine. Choose one of three temporary powers, or leave without one.':dungeonRoomLabel(n)+' with '+n.escorts+' base guards';
   const trait=n.traitId?WandererV013EncounterTraits.get(n.traitId):null;
   const hazard=trait?' · ⚔ '+trait.name+': '+({armored:'Higher Defense, lower Health',frenzied:'Faster attacks, lower Health',ambush:'First attacks arrive sooner',sigilbound:'Enemies begin shielded, but strike less hard',unhallowed_regrowth:'Enemies recover Health during longer battles',death_throes:'Dying enemies deal damage, capped per encounter'}[trait.id]||'Altered combat')+'. · +10% Fragments.':'';
   const omen=n.kind==='boss'?WandererV013BossModifiers.known(g,c.id):null;
@@ -1851,8 +1853,10 @@ function bindDungeonRooms(g){
   const bossOmen=omen?' · Known boss omen: '+omen.name+(prep?.disabledId===omen.id?' (disabled)':'')+(prep?.knownIds.length>1?' · Also known: '+prep.knownIds.slice(1).map(id=>WandererV013BossModifiers.get(id)?.name||id).join(', '):'')+(prep?.hiddenCount?' · '+prep.hiddenCount+' other propert'+(prep.hiddenCount===1?'y remains':'ies remain')+' unknown':'')+'.'+(prep?.markedElite?' · Marked Elite defeated: '+(c.risk?'one fewer guard.':'−10% boss Attack.'):''):'';
   const full=!cleared&&phase3BagOverflow()>0;
   const dialog=showModal(dungeonRoomLabel(n),'<p>'+esc(detail+hazard+bossOmen)+(i===c.objective?' · Marked Elite: '+(c.risk?'defeat to remove one boss guard':'defeat to reduce boss Attack by 10%')+'. Automatic Elite bonus on extraction: 1 '+esc(c.family)+' reagent and '+(2+c.risk*2)+' Essence. Equipment drops favour '+esc(c.favoured?.subtype||'Shield')+' (55%).':'')+'</p><p>'+esc(route)+'</p>'+(remaining===undefined?'':'<p>'+cost+' steps · '+(tooFar?'Not enough steps.':(remaining-cost)+' left after travel.')+'</p>')+(full?'<p>Choose which newly found loot to keep before travelling.</p>':''),full||tooFar?null:()=>{
-   if(!phase1Controller.visitRoom(i))return;
-   if(cleared){if(phase5Persist())render();}else phase1Enter();
+   const boons=globalThis.WandererV013ExpeditionBoons;
+   const families=boons?.familiesFor(phase1Build,state.automaticTalents)||[];
+   if(!phase1Controller.visitRoom(i,families))return;
+   if(cleared||n.kind==='shrine'){if(phase5Persist())render();}else phase1Enter();
   },cleared?'Travel here':'Enter room');
   dialog.addEventListener('close',()=>highlighted.forEach(line=>line.style.removeProperty('stroke')));
  });

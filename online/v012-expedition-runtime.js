@@ -78,7 +78,6 @@ function phase6EventChoice(choice,itemId,passiveId,family,targetId){
  ports.phase5RememberRealm({tier:E,phase1Plane:g.planeIndex-1,planeName:p.name,planeFamily:p.family,combatSeconds:0,gold:Math.max(0,ports.state.gold-beforeGold),fragments:Math.max(0,ports.state.fragments-beforeFragments),loot,realmLog:[{text:eventText,kind:'good'}]},'cleared');
  ports.phase5Results.review=null;ports.phase5Results.eventExitPending=true;
  ports.phase1Controller.claimReward();ports.phase1Draft=null;
-  if(g.dungeon?.foundationState?.boonIds?.length===1){const boons=globalThis.WandererV013ExpeditionBoons;ports.phase1Controller.offerBoons(boons?.familiesFor(ports.phase1Build,ports.state.automaticTalents)||[]);}
  if(!ports.phase5Persist())return false;return phase5ExitResult();
 }
 
