@@ -143,3 +143,25 @@ test('Native Expedition role abilities activate without changing base boss or El
  assert(r.enemy.stage81.cycle>=1,'enemy should execute first short ability');
  assert.equal(r.status,'fight');
 });
+
+test('Reserve normal enemies begin cooldown after entering an open arena slot',()=>{
+ const caster=mob('caster'),r=run(caster);A.attach([caster],'magic',0);
+ assert.equal(caster.stage81.nextAt,A.TIMINGS.caster.first);
+ A.onEnter(caster,18);
+ assert(caster.stage81.nextAt>=18+A.TIMINGS.caster.first);
+ assert.equal(advance(r,caster,18).length,0,'no instant reinforcement spell');
+ assert.equal(advance(r,caster,caster.stage81.nextAt).at(0)?.type,'prepare');
+});
+test('Vitality mending chooses the most wounded ally, including the caster if needed',()=>{
+ const tank=mob('tank'),caster=mob('caster'),r=run(tank,caster);
+ tank.hp=20;caster.hp=95;A.attach(r.enemies,'vitality');
+ advance(r,tank,tank.stage81.nextAt);
+ const healed=advance(r,tank,tank.stage81.castingUntil+.01)[0];
+ assert.equal(healed.target,tank);assert(tank.hp>20);
+});
+test('Minions protected by Aegis show Guarding despite never casting themselves',()=>{
+ const minion=mob('minion');A.attach([minion],'aegis');
+ minion.stage81GuardUntil=5;
+ assert.equal(A.status(minion,4.5).label,'Guarding');
+ assert.equal(A.status(minion,6),null);
+});
