@@ -37,12 +37,58 @@ test('Route decisions respect real visible steps, Boss prep and cannot path to u
  const c={state:{dungeon:d},realmMap:()=>card,travelPath:i=>i===2||i===3?[0,i]:[],
   travelCost:()=>1};
  const next=N.selectRoom(c,N.PROFILES.cautious,{hp:100,maxhp:100});
- assert.equal(next.room,3,'safe Reliquary with a high-HP player offers a genuine Boss preparation route');
- assert.equal(next.reliquary,true);
+ assert.equal(next.room,2,'high-HP player considers valuable marked Elite before a Reliquary detour');
+ assert.equal(next.objective,true);
+ assert(next.elite?.marked,'native marked Elite reward is recognized');
+ const injured=N.selectRoom(c,N.PROFILES.cautious,{hp:35,maxhp:100});
+ assert.equal(injured.room,3,'a dangerously wounded player refuses the optional Elite encounter');
  d.steps=0;
  assert.equal(N.selectRoom(c,N.PROFILES.cautious,{hp:100,maxhp:100}),null,
   'steps are never bypassed');
 });
+
+test('Elite risk/reward policy uses native drop and rarity tables, not invented guarantees',()=>{
+ const LOOT=globalThis.WandererV012LootRules;
+ const g={history:[],dungeon:{cleared:[0,1],foundationState:{bossPreparation:{markedElite:false}}}};
+ const card={objective:7,risk:0};
+ const node={kind:'elite',escorts:0};
+ const ctx={room:7,cha:5,equipment:{armor:{startingGear:true},weapon:{startingGear:true}}};
+ const eval0=N.eliteOpportunity(g,card,node,N.PROFILES.cautious,{hp:100,maxhp:100},ctx);
+ const ordinary=LOOT.v013DungeonWaveOdds(1,5),elite=LOOT.v013DungeonWaveOdds(4,5);
+ assert.equal(eval0.loot.eliteDrop,elite.drop);
+ assert.equal(eval0.loot.normalDrop,ordinary.drop);
+ assert.equal(eval0.loot.eliteRarePlus,
+  Math.round((elite.rarities.Rare+elite.rarities.Epic+elite.rarities.Legendary)*1e4)/1e4);
+ assert.equal(eval0.marked,true);
+ assert(eval0.benefit>eval0.threat,'healthy starter account has a profitable 0-escort Elite');
+ assert(eval0.breakdown.bossPrepUtility>0);
+ assert(eval0.breakdown.extractionUtility>0);
+});
+test('Extra Elite escorts, low HP and observed HP losses legitimately reduce appeal',()=>{
+ const g={history:[],dungeon:{cleared:[0,1],foundationState:{bossPreparation:{markedElite:false}}}};
+ const card={objective:5,risk:0},context={room:5};
+ const healthy=N.eliteOpportunity(g,card,{escorts:0},N.PROFILES.balanced,{hp:100,maxhp:100},context);
+ const escorted=N.eliteOpportunity(g,card,{escorts:2},N.PROFILES.balanced,{hp:100,maxhp:100},context);
+ const injured=N.eliteOpportunity(g,card,{escorts:0},N.PROFILES.balanced,{hp:40,maxhp:100},
+  {...context,recentFights:[{hpStart:90,hpEnd:20,hpMax:100}]});
+ assert(escorted.scoreDelta>healthy.scoreDelta);
+ assert(injured.scoreDelta>healthy.scoreDelta);
+ assert(injured.threat>healthy.threat);
+});
+test('Unmarked Elite gets better loot without pretending it prepares the boss or pays Marked Essence',()=>{
+ const g={history:[],dungeon:{cleared:[0,1],foundationState:{bossPreparation:{markedElite:false}}}};
+ const node={escorts:0};
+ const marked=N.eliteOpportunity(g,{objective:5},node,N.PROFILES.balanced,{hp:100,maxhp:100},{room:5});
+ const unmarked=N.eliteOpportunity(g,{objective:6},node,N.PROFILES.balanced,{hp:100,maxhp:100},{room:5});
+ assert.equal(unmarked.loot.eliteDrop,marked.loot.eliteDrop);
+ assert(unmarked.benefit<marked.benefit);
+ assert.equal(unmarked.breakdown.extractionUtility,0);
+ assert.equal(unmarked.breakdown.bossPrepUtility,0);
+ const first={...g,dungeon:{...g.dungeon,cleared:[0]}};
+ assert.equal(N.eliteOpportunity(first,{objective:6},node,N.PROFILES.balanced,{hp:100,maxhp:100},{room:5}).loot.eliteDrop,1,
+  'first real Dungeon encounter has a guarantee for all room types');
+});
+
 test('Exact-kind potion selection never consumes another native dose on a failed request',()=>{
  const calls=[],a={
   events:{run:()=>({started:true,potions:[{kind:'scout',used:false},{kind:'health',used:false}]})},
@@ -99,9 +145,11 @@ test('A full new E1 account reports independent prep, Boon and potion telemetry 
  const r=N.run(opts),entry=r.accounts[0].attempts[0],E1=r.levels[0];
  assert.equal(r.coverage.errors,0,entry.error);
  assert.equal(entry.level,1);
- assert.equal(r.stage,'9.4');
+ assert.equal(r.stage,'9.4.1');
  assert(Array.isArray(entry.decisions)&&entry.decisions.length>0);
  assert.equal(E1.boonsSelected,entry.boons.length);
+ assert.equal(E1.eliteFights,entry.rooms.filter(x=>x.roomType==='elite').length);
+ assert.equal(E1.eliteDrops,entry.rooms.filter(x=>x.roomType==='elite').reduce((n,x)=>n+(x.loot?.length||0),0));
  assert.equal(E1.potionsUsed,entry.potions.length);
  assert.equal(E1.markedElitePreparations,Number(!!entry.prepFinal?.markedElite));
  assert.equal(E1.reliquaryPreparations,Number(!!entry.prepFinal?.reliquary));
