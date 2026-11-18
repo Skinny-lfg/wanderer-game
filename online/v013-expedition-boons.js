@@ -30,7 +30,7 @@ function familiesFor(build,permanent){
 function offer(seed,realmId,round,families=[],chosen=[]){
  if(!Number.isInteger(seed)||seed<0||seed>0xffffffff||typeof realmId!=='string'||!/^[a-z0-9_-]+$/.test(realmId)||
    ![0,1].includes(round)||!Array.isArray(families)||new Set(families).size!==families.length||
-   families.some(f=>!F.AFFINITIES.includes(f))||!Array.isArray(chosen)||chosen.length!==round||
+   families.some(f=>!F.AFFINITIES.includes(f))||!Array.isArray(chosen)||
    new Set(chosen).size!==chosen.length||chosen.length>1||chosen.some(id=>!get(id)))throw Error('Invalid Boon offer input');
  const available=CATALOG.filter(b=>!chosen.includes(b.id)),random=F.rng(seed,'boons_v1_'+realmId+'_'+round);
  if(available.length<3)throw Error('Insufficient unique Boons');

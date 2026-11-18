@@ -72,8 +72,8 @@ test('Stage 0 state has JSON-safe default shape and rejects invalid manifest car
 test('pure decision journal can replay scouting, contract, boons and boss preparation without mutating input',()=>{
  const m=manifest(125,'leech');let s=F.createExpeditionState(m,'forge');const initial=JSON.stringify(s);
  const choices=[{type:'reveal_room',room:2},{type:'discover_secret',edgeId:'7-8'},
- {type:'select_contract',id:'bounty_writ'}, {type:'choose_boon',id:'blood_tribute'},
- {type:'choose_boon',id:'wayfarers_bargain'}, {type:'prepare_boss',source:'markedElite'}];
+ {type:'select_contract',id:'bounty_writ'}, {type:'choose_boon',id:'blood_tribute',room:4,families:['blood']},
+ {type:'choose_boon',id:'wayfarers_bargain',room:9,families:['blood']}, {type:'prepare_boss',source:'markedElite'}];
  for(const action of choices)s=F.applyDecision(s,action,m);
  assert.equal(s.decisions.length,choices.length);
  assert.equal(s.knownRooms[1],2);assert.equal(s.contractId,'bounty_writ');assert.equal(s.boonIds.length,2);
@@ -102,7 +102,7 @@ test('foundation reuses the actual six affinities, boss styles and Realm Card sh
 
 test('boon journal does not confuse Realm affinity with the character build affinity',()=>{
  const m=manifest(77,'guardian');const s=F.createExpeditionState(m,'forge');
- const next=F.applyDecision(s,{type:'choose_boon',id:'aetherbound_pact'},m);
+ const next=F.applyDecision(s,{type:'choose_boon',id:'aetherbound_pact',room:4,families:['magic']},m);
  assert.deepEqual(next.boonIds,['aetherbound_pact']);
  assert.deepEqual(s.boonIds,[]);
 });

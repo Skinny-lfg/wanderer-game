@@ -170,6 +170,11 @@ function dungeon(level,build,seed,opts,desiredRisk=undefined){
   if(g.stage==='failed'||g.stage==='finished')break;
   try{
    if(!c.visitRoom(node))throw Error('Room unreachable or insufficient steps: '+node);
+   if(g.dungeon?.boonOffer){
+    // Shrines are map rooms, never combat. The baseline simulator declines
+    // optional powers; this is route coverage, not a Boon-balance experiment.
+    c.chooseBoon(null);events.push('boon_shrine');continue;
+   }
    if(!a.enter())throw Error('Native entry rejected for room '+node);
    if(a.events.run()?.event){events.push(a.events.run().event.id);resolveEvent(a);continue;}
    const entry=fight(a,c,opts.tickLimit);rooms.push({room:node,kind:card.nodes[node].kind,...entry});

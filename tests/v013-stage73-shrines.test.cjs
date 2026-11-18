@@ -56,12 +56,12 @@ test('Stage 7.3 Shrine skip cannot be reclaimed and restores from the replayable
  const {c,card,d,g}=directShrine(7380);
  assert(c.visitRoom(card.boonShrines[0],['fury']));
  assert.deepEqual(clone(c.restore(clone(g)).dungeon.boonOffer),clone(d.boonOffer));
- assert.equal(c.chooseBoon(null),null);assert.equal(d.foundationState.boonIds.length,0);
- const last=d.foundationState.decisions.at(-1);
+ assert.equal(c.chooseBoon(null),null);assert.equal(c.state.dungeon.foundationState.boonIds.length,0);
+ const last=c.state.dungeon.foundationState.decisions.at(-1);
  assert.equal(last.type,'skip_boon');assert.equal(last.room,card.boonShrines[0]);
  assert.equal(c.offerBoons(['fury']),null);
- assert(c.visitRoom(card.boonShrines[0],['fury']));assert.equal(d.boonOffer,undefined);
- assert(B.validateOffer(d,g));assert.equal(c.restore(clone(g)).dungeon.foundationState.decisions.at(-1).type,'skip_boon');
+ assert(c.visitRoom(card.boonShrines[0],['fury']));assert.equal(c.state.dungeon.boonOffer,undefined);
+ assert(B.validateOffer(c.state.dungeon,g));assert.equal(c.restore(clone(g)).dungeon.foundationState.decisions.at(-1).type,'skip_boon');
 });
 test('Stage 7.3 forged room placement, claimed Boon or unresolved offer cannot be restored',()=>{
  const {c,card,d,g}=directShrine(7410);

@@ -86,12 +86,12 @@ test('Stage 7.3 no Boon can be picked before physically discovering a Shrine',()
  const saved=clone(c.state);assert.deepEqual(clone(c.restore(saved).dungeon.boonOffer),saved.dungeon.boonOffer);
  const invalid=clone(saved);invalid.dungeon.boonOffer.ids[0]='forged_boon';
  assert.throws(()=>c.restore(invalid),/Invalid/);
- const id=d.boonOffer.ids[0];assert.equal(c.chooseBoon(id),id);
+ const id=c.state.dungeon.boonOffer.ids[0];assert.equal(c.chooseBoon(id),id);
  assert.equal(c.state.dungeon.boonOffer,undefined);
- assert.deepEqual([...d.foundationState.boonIds],[id]);
+ assert.deepEqual([...c.state.dungeon.foundationState.boonIds],[id]);
  assert.throws(()=>c.chooseBoon(id),/unavailable/);
- assert.equal(d.foundationState.decisions.at(-1).type,'choose_boon');
- assert.equal(d.foundationState.decisions.at(-1).room,card.boonShrines[0]);
+ assert.equal(c.state.dungeon.foundationState.decisions.at(-1).type,'choose_boon');
+ assert.equal(c.state.dungeon.foundationState.decisions.at(-1).room,card.boonShrines[0]);
  assert.equal(c.restore(clone(c.state)).dungeon.foundationState.boonIds[0],id);
 });
 test('Stage 7.3 Wayfarer grants exactly one step when picked at a Shrine and reduces Health',()=>{
