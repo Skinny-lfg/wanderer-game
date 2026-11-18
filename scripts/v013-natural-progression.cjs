@@ -358,11 +358,15 @@ function fightNatural(a,profile,tickLimit){
 function resolveEvent(a,profile){
  const event=a.events.run()?.event;
  if(!event)return null;
- const v=a.vitals(),opts=eventOptions(event.id,v,profile);
- for(const choice of opts){
-  const bag=a.bag.items().filter(i=>i.kind!=='valuable'),unused=bag.at(-1),target=Object.values(a.state().equip).filter(Boolean).at(-1);
-  const family=profile.families[0];
-  if(a.events.choose(choice,unused?.id,null,family,target?.id))return {event:event.id,choice};
+ const g=a.controller().state,prior=g.dungeon?.foundationState?.bossPreparation||{};
+ const v=a.vitals(),options=eventOptions(event.id,v,profile,{reliquaryCompleted:prior.reliquary});
+ for(const choice of options){
+  const bag=a.bag.items().filter(i=>i.kind!=='valuable'),unused=bag.at(-1);
+  const target=Object.values(a.state().equip).filter(Boolean).at(-1);
+  const family=profile.families[0],hpBefore=v.hp;
+  if(a.events.choose(choice,unused?.id,null,family,target?.id))
+   return {event:event.id,choice,hpBefore:round(hpBefore),hpAfter:round(a.vitals().hp),
+    reliquaryCompleted:!!g.dungeon?.foundationState?.bossPreparation?.reliquary};
  }
  throw Error('Native event could not resolve: '+event.id);
 }
@@ -389,47 +393,75 @@ function playDungeon(a,level,profile,opts){
  const card=choiceRealm(g.dungeon.cards,profile,gearSnapshot(a));
  c.chooseRealm(card.id);
  const offer=c.offerContracts(a.state().crafting?.learnedRecipes||[]);
- const contract=offer?.ids?.find(x=>['pathfinder','purification','bounty_writ'].includes(x))||null;
+ const contract=chooseContract(offer,profile,card);
  if(offer)c.chooseContract(contract);
  const report={level,realm:card.id,affinity:card.family,risk:card.risk,contract,rooms:[],
-  events:[],boons:[],potions:[],equipped:[],xpStart:a.state().automaticTalents.xp,
-  goldStart:a.state().gold,stepsStart:g.dungeon.steps,bossReached:false,extracted:false,status:null,error:null};
+  events:[],boons:[],potions:[],equipped:[],decisions:[],
+  xpStart:a.state().automaticTalents.xp,goldStart:a.state().gold,
+  stepsStart:g.dungeon.steps,bossReached:false,extracted:false,status:null,error:null,
+  prepAtBoss:null,prepFinal:null};
  for(let iteration=0;iteration<opts.maxRooms&&g.stage==='choice';iteration++){
   clearResults(a);
   if(g.stage!=='choice')break;
   if(g.dungeon.boonOffer){
-   const boon=chooseBoon(g.dungeon.boonOffer,profile);
-   c.chooseBoon(boon);report.boons.push(boon);continue;
+   let offer=g.dungeon.boonOffer;
+   rerollPoorBoonAtShrine(a,offer,profile,report.potions);
+   offer=g.dungeon.boonOffer;
+   const context={vitals:a.vitals(),steps:g.dungeon.steps,bossSoon:g.dungeon.steps<=5,
+    bleedReady:a.state().automaticTalents.nodes.includes('affinity_blood')};
+   const boon=chooseBoon(offer,profile,context);
+   c.chooseBoon(boon);
+   report.boons.push({id:boon,room:offer.room,score:boonScore(boon,profile,context)});
+   continue;
   }
   if(g.dungeon.contractOffer){c.chooseContract(null);continue;}
   report.equipped.push(...equipEarned(a,profile,true));
-  if(a.bag.overflow()>0){
-   const spare=[...a.bag.items()].filter(x=>x.kind!=='valuable').sort((x,y)=>gearScore(x,profile)-gearScore(y,profile))[0];
-   if(spare)a.bag.discard(spare.id);
+  // Resolve Bag overflow using native discard (not by deleting stash objects).
+  for(let discard=0;discard<10&&a.bag.overflow()>0;discard++){
+   const spare=[...a.bag.items()].filter(x=>x.kind!=='valuable')
+    .sort((x,y)=>gearScore(x,profile)-gearScore(y,profile))[0];
+   if(!spare||!a.bag.discard(spare.id))break;
   }
-  const v=a.vitals();
-  usePotionsBetween(a,profile,report.potions);
-  const current=a.vitals();
-  const next=selectRoom(c,profile,current);
-  if(!next||current.hp/current.maxhp<profile.retreatAt&&report.rooms.length>0){
+  let next=selectRoom(c,profile,a.vitals());
+  if(!next&&g.dungeon.steps<=4&&usePotionKind(a,'trail','restore_route_steps',report.potions))
+   next=selectRoom(c,profile,a.vitals());
+  if(next){
+   usePotionsBetween(a,profile,report.potions,next);
+   next=selectRoom(c,profile,a.vitals()); // Native scouting/step potions can change options.
+  }
+  const current=a.vitals(),ratio=current.maxhp>0?current.hp/current.maxhp:0;
+  const canRecoverWithoutFight=next&&['shrine','spring','event'].includes(next.type);
+  const tooInjured=ratio<profile.retreatAt&&report.rooms.length>0&&!canRecoverWithoutFight;
+  if(!next||tooInjured){
+   report.decisions.push({type:'extract',reason:next?'conserve_HP':'no_legal_path',
+    hpRatio:round(ratio),steps:g.dungeon.steps});
    if(a.checkpoint.extract()){report.extracted=true;break;}
-   report.error='Could not find a legal next room and native extraction was rejected';break;
+   report.error='Native extraction rejected after route or HP decision';break;
   }
+  report.decisions.push({type:'move',room:next.room,node:next.type,cost:next.cost,
+   visibleMobRange:next.visibleMobRange||null,stepsRemaining:g.dungeon.steps,
+   hpRatio:round(ratio),slack:next.slack,objective:next.objective,reliquary:next.reliquary});
   if(!c.visitRoom(next.room,profile.families)){report.error='Native room travel rejected '+next.room;break;}
   if(g.dungeon.boonOffer)continue;
   const node=card.nodes[next.room];
   if(!a.enter()){report.error='Native room entry rejected '+next.room;break;}
   if(a.events.run()?.event){
-   const ev=resolveEvent(a,profile);
-   report.events.push({room:next.room,...ev});
+   const event=resolveEvent(a,profile);
+   report.events.push({room:next.room,...event});
    clearResults(a);continue;
   }
   if(!a.state().run||a.state().run.status!=='fight'){
    report.error='Entered room without native fight/event at '+next.room;break;
   }
+  if(node.kind==='boss'){
+   report.bossReached=true;
+   report.prepAtBoss=JSON.parse(JSON.stringify(g.dungeon.foundationState?.bossPreparation||{}));
+   report.bossInitialModifiers=[...(a.state().run?.bossModifierIds||[])];
+   report.bossInitialHP=a.state().run?.enemies?.find(e=>e?.boss)?.maxhp||
+    a.state().run?.enemy?.maxhp||null;
+  }
   const fight=fightNatural(a,profile,opts.tickLimit);
   report.rooms.push({room:next.room,roomType:node.kind,...fight});
-  if(node.kind==='boss')report.bossReached=true;
   if(fight.timedOut){report.error='Native combat timeout';break;}
   if(fight.died)break;
   clearResults(a);
@@ -438,9 +470,10 @@ function playDungeon(a,level,profile,opts){
   if(a.checkpoint.extract())report.extracted=true;
   else report.error='Iteration cap reached without a legal native extraction';
  }
+ report.prepFinal=JSON.parse(JSON.stringify(g.dungeon?.foundationState?.bossPreparation||{}));
  clearResults(a);
- // Native extraction calls controller.abandon(), setting g.stage='failed' internally.
- // The explicit successful extraction flag must take precedence over that state.
+ // Native extraction uses controller.abandon(), marking the session as failed.
+ // Trust explicit native extraction success over the controller's terminal flag.
  report.status=g.stage==='finished'?'victory':report.extracted?'extracted':report.error?'error':g.stage==='failed'?'defeat':g.stage;
  report.xpEnd=a.state().automaticTalents.xp;
  report.xpEarned=report.xpEnd-report.xpStart;
@@ -575,6 +608,6 @@ function main(args=process.argv.slice(2)){
  return report;
 }
 module.exports={PROFILES,DEFAULTS,parseArgs,gearScore,gearSnapshot,spendEarnedTalents,equipEarned,
- prepareCamp,choiceRealm,pathLength,selectRoom,chooseBoon,eventOptions,usePotionsBetween,
+ prepareCamp,choiceRealm,pathLength,selectRoom,boonScore,chooseBoon,chooseContract,eventOptions,potionSlots,usePotionKind,usePotionsBetween,rerollPoorBoonAtShrine,
  fightNatural,resolveEvent,clearResults,playDungeon,simulateAccount,analyze,run,markdown,main};
 if(require.main===module)main();
