@@ -350,7 +350,9 @@ function phase6ReturnPotions(outcome){
 
 function phase6UsePotion(index,mode='threat'){
  const g=ports.phase1Controller.state,d=g.dungeon,atShrine=!!d?.boonOffer;
- if(!(ports.phase3IsBetweenPlanes()||atShrine&&ports.phase3CanPrepare())||!ports.phase6Run||
+ const selectedKind=ports.phase6Run?.started?ports.phase6Run.potions?.[index]?.kind:ports.state.potionSelection?.[index];
+ const mapUtility=['scout','veilsight','purifying','trail'].includes(selectedKind)&&!!d?.realm&&ports.phase3CanPrepare();
+ if(!(ports.phase3IsBetweenPlanes()||atShrine&&ports.phase3CanPrepare()||mapUtility)||!ports.phase6Run||
     ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked))return false;
  if(!ports.phase6Run.started&&!ports.phase6StartPotions())return false;
  const potion=ports.phase6Run.potions?.[index];
