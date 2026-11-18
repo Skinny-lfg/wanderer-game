@@ -1844,11 +1844,25 @@ function renderStage6BoonOffer(g){
  const fateButton=$('stage74RerollBoon');if(fateButton)fateButton.onclick=()=>{if(!phase6UsePotion(fateIndex))bannerMessage('Fate Distillate cannot be used here.');};
 }
 function renderRealmCards(g){
- html('<section class="panel"><span class="eyebrow">Expedition '+g.expedition+'</span><h1>Choose your Realm</h1><div class="phase1Offers">'+g.dungeon.cards.map(c=>{
- const t=phase2Theme(c.id);
- const conditions=globalThis.WandererV013ExpeditionConditions,conditionMeta=g.dungeon.foundationManifest?.cards?.find(m=>m.realmId===c.id),condition=conditions?.get(conditionMeta?.conditionId),conditionGuide=conditions?.GUIDE?.[conditionMeta?.conditionId];
- const omen=WandererV013BossModifiers.known(g,c.id);
-  return '<button class="phase1Offer" data-realm-card="'+c.id+'"><img src="'+dungeonImage(c)+'" alt=""><div class="phase1OfferBody"><strong>'+esc(c.name)+'</strong><p>'+phase2FamilyIcon(c.family)+' '+esc(c.family)+' · '+realmDifficulty(c)+'</p><p>'+esc(t.enemy)+' · '+esc(t.effect)+' · '+('Boss with '+c.risk+' base guard'+(c.risk===1?'':'s')+' · properties may add guards')+'</p><p class="stage5Condition"><b>⚠ '+esc(condition?.name||'Unknown Condition')+'</b> · '+esc(conditionGuide?.danger||'')+'</p><p class="small muted">Counterplay: '+esc(conditionGuide?.counter||'')+'</p><p class="small muted">Known boss omen: '+esc(omen?.name||'Unknown')+(c.risk?' · '+c.risk+' unrevealed':'')+'</p><small>'+(c.stepLimit?c.stepLimit+' steps · ':'')+(c.risk?'+'+(c.risk*12)+'% combat Gold, Fragments and equipment chance':'Standard rewards')+' · Marked Elite bonus (automatic): 1 '+esc(c.family)+' reagent + '+(2+c.risk*2)+' Essence on extraction. Equipment drops: 55% chance to favour '+esc(c.favoured?.subtype||'Shield')+'</small></div></button>';
+ html('<section class="panel phase3RealmSelection"><span class="eyebrow">Expedition '+g.expedition+'</span><h1>Choose your Realm</h1><p class="small muted">Each Realm has its own hazards, boss and affinity reagents. Choose your path before accepting an optional Contract.</p><div class="phase1Offers realmChoiceGrid">'+g.dungeon.cards.map(c=>{
+  const t=phase2Theme(c.id);
+  const conditions=globalThis.WandererV013ExpeditionConditions,conditionMeta=g.dungeon.foundationManifest?.cards?.find(m=>m.realmId===c.id),condition=conditions?.get(conditionMeta?.conditionId),conditionGuide=conditions?.GUIDE?.[conditionMeta?.conditionId];
+  const omen=WandererV013BossModifiers.known(g,c.id),family=WandererV012Expedition.FAMILY_NAMES[c.family]||c.family,bonus=2+c.risk*2;
+  return '<button type="button" class="phase1Offer realmChoiceCard" data-realm-card="'+c.id+'">'+
+   '<img class="realmCardHero" src="'+dungeonImage(c)+'" alt="'+esc(c.name)+' realm landscape" loading="lazy" decoding="async">'+
+   '<div class="realmChoiceBody"><div class="realmChoiceTitle"><strong>'+esc(c.name)+'</strong><span class="realmChoiceRisk">'+esc(realmDifficulty(c))+'</span></div>'+
+   '<div class="realmReagent"><span class="realmReagentIcon">'+phase2FamilyIcon(c.family)+'</span><span><b>'+esc(family)+' Reagent</b><small>Possible drop · Marked Elite guarantees 1 on extraction</small></span></div>'+
+   '<div class="realmDetail"><span class="realmDetailLabel">Boss</span><b>'+esc(t.enemy)+'</b><small>'+esc(t.effect)+' · '+c.risk+' base guard'+(c.risk===1?'':'s')+'</small></div>'+
+   '<div class="realmDetail realmHazard"><span class="realmDetailLabel">Realm Condition</span><b>⚠ '+esc(condition?.name||'Unknown Condition')+'</b><small>'+esc(conditionGuide?.danger||'')+'</small></div>'+
+   '<div class="realmDetail realmCounter"><span class="realmDetailLabel">Counterplay</span><small>'+esc(conditionGuide?.counter||'Prepare your build.')+'</small></div>'+
+   '<div class="realmDetail realmOmens"><span class="realmDetailLabel">Known Boss Omen</span><small>'+esc(omen?.name||'Unknown')+(c.risk?' · '+c.risk+' still hidden':'')+'</small></div>'+
+   '<div class="realmChoiceRewards"><span class="realmDetailLabel">Expedition Rewards</span>'+
+    '<div><b>'+c.stepLimit+'</b><small>Travel steps</small></div>'+
+    '<div><b>'+(c.risk?'+'+(c.risk*12)+'%':'Standard')+'</b><small>Combat rewards</small></div>'+
+    '<p>Marked Elite: <b>+1 '+esc(family)+' Reagent · +'+bonus+' Essence</b></p>'+
+    '<p>Equipment: <b>55% bias toward '+esc(c.favoured?.subtype||'Shield')+'</b></p>'+
+    '<p>Optional Contracts: Blueprint chance, currency or supplies</p>'+
+   '</div><span class="realmChoiceAction">Enter '+esc(realmDifficulty(c))+' Realm</span></div></button>';
  }).join('')+'</div><button id="phase1BackToCamp">Return to Camp</button></section>');
  Q('[data-realm-card]').forEach(b=>b.onclick=()=>{phase1Controller.chooseRealm(b.dataset.realmCard);phase1Controller.offerContracts(state.crafting?.learnedRecipes||[]);if(phase5Persist())render();});
  $('phase1BackToCamp').onclick=phase6BackToCamp;
