@@ -74,3 +74,22 @@ test('Timeout is distinct from defeat and statistics ignore unresolved combat',(
  assert.equal(b.durationP50,25);assert.equal(b.winPctResolved,100);
  assert(b.flags.includes('timeout'));
 });
+
+test('Shifted RNG seeds collapsing to one native Realm are NOT counted as independent evidence',()=>{
+ const r=[result('bosses'),result('enemies'),result('elites')];
+ r[0].rows[1].resolvedSeed=r[0].rows[0].resolvedSeed;
+ const d=D.analyze(r,opts()),b=d.groups.find(x=>x.mode==='bosses');
+ assert.equal(b.n,2);assert.equal(b.resolvedAttempts,2);assert.equal(b.resolved,1);
+ assert.equal(b.duplicateResolvedSeeds,1);assert.equal(b.wins,1);
+ assert.equal(d.coverage.independentBossFights,1);
+ assert.equal(d.coverage.duplicateBossAttempts,1);
+ assert(b.flags.includes('duplicate_resolved_seed'));
+ assert(D.markdown(d).includes('tentativas duplicadas: 1'));
+});
+test('Boss general cast telemetry is not confused with regular enemy ability casts',()=>{
+ const d=D.analyze([result('bosses'),result('enemies'),result('elites')],opts());
+ const b=d.groups.find(x=>x.mode==='bosses'),e=d.groups.find(x=>x.mode==='enemies');
+ assert.equal(b.enemyAbilityCastsMean,null);
+ assert.equal(b.enemyAbilityCastsPerMinute,null);
+ assert.equal(e.enemyAbilityCastsPerMinute,7.2);
+});
