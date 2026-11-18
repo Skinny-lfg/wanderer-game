@@ -48,8 +48,13 @@ function createEnemyGroup(spawn,count,options={}){
   const enemy=spawn(index);if(!enemy||seen.has(enemy)||!Number.isFinite(enemy.maxhp)||!Number.isFinite(enemy.atk)||!Number.isFinite(enemy.attackEvery)||enemy.maxhp<=0||enemy.atk<0||enemy.attackEvery<=0)throw Error('Invalid enemy');seen.add(enemy);
   if(count>1&&(enemy.boss||enemy.miniboss))throw Error('Bosses and elites must be solo');
   if(count===1)return enemy;
-  enemy.maxhp=Math.max(1,Math.round(enemy.maxhp*scale.hp));enemy.hp=enemy.maxhp;enemy.atk=enemy.atk===0?0:Math.max(1,Math.round(enemy.atk*scale.atk));
-  const defenseScale=count<=4?.45:count===12?.22:.15;enemy.def=Math.max(0,Math.round((enemy.def||0)*defenseScale));if(Number.isFinite(enemy.baseDef))enemy.baseDef=Math.max(0,Math.round(enemy.baseDef*defenseScale));
+  const roleScale=typeof options.scaleFor==='function'?options.scaleFor(enemy,count,scale,index):null;
+  const adjusted=roleScale||scale;
+  if(!Number.isFinite(adjusted.hp)||adjusted.hp<=0||!Number.isFinite(adjusted.atk)||adjusted.atk<=0||
+     roleScale&&(!Number.isFinite(roleScale.def)||roleScale.def<=0))throw Error('Invalid enemy role scale');
+  enemy.maxhp=Math.max(1,Math.round(enemy.maxhp*adjusted.hp));enemy.hp=enemy.maxhp;enemy.atk=enemy.atk===0?0:Math.max(1,Math.round(enemy.atk*adjusted.atk));
+  const defenseScale=roleScale?.def??(count<=4?.45:count===12?.22:.15);
+  enemy.def=Math.max(0,Math.round((enemy.def||0)*defenseScale));if(Number.isFinite(enemy.baseDef))enemy.baseDef=Math.max(0,Math.round(enemy.baseDef*defenseScale));
   enemy.groupSlot=index%activeSlots;enemy.groupClock=-(enemy.groupSlot*enemy.attackEvery/activeSlots);return enemy;
  });
 }
