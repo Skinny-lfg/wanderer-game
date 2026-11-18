@@ -668,9 +668,9 @@ function phase2Stats(){
  return ports.totalStats();
 }
 
-function phase2WeaponAttack(r,base,critical,cast){
+function phase2WeaponAttack(r,base,critical,cast,suppressDoubleStrike=false){
  if(!ports.isPhase1Run()||!ports.phase1Build)return;
- const ctx=ports.phase2Context(r);ctx.base=base;ctx.critical=critical;ctx.magical=cast;ctx.funded=!!cast;
+ const ctx=ports.phase2Context(r);ctx.base=base;ctx.critical=critical;ctx.magical=cast;ctx.funded=!!cast;ctx.suppressDoubleStrike=!!suppressDoubleStrike;
  WandererV012Buildcraft.onAttack(ports.phase1Build,ctx);
  if(cast&&ports.phase1Build.element){
   ctx.power=r.stats.spellPower;ctx.amp=r.stats.main?.subtype==='Staff'?1.25:r.stats.main?.subtype==='Wand'?1.12:1;
