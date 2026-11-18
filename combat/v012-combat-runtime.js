@@ -461,7 +461,12 @@ function weaponAttack(r,offhandStrike=false){
   if(cast&&e.v012Rot?.length&&talents.includes('soul_sip')&&ports.setReady(r,'soulSip',5)){r.mp=Math.min(r.maxmp,r.mp+3);ports.addLog('🌀 Soul Sip restores Mana.','spell');}
   if(r.hp<r.maxhp*.5&&talents.includes('living_ward')&&ports.setReady(r,'livingWard',8)){ports.setBarrier(r,r.maxhp*.05);ports.addLog('🌿 Living Ward grants Barrier.','good');}
  }
- if(ports.isPhase1Run())ports.phase2WeaponAttack(r,base,critical,cast);
+ if(ports.isPhase1Run()&&!offhandStrike){
+   // Keep the purchased Fury Double Strike useful on the first main swing, but
+   // never proc it on an offhand hit or the main swing that triggers the offhand.
+   const dual=kind==='Daggers'&&['Daggers','Off-Hand Dagger'].includes(off?.subtype);
+   ports.phase2WeaponAttack(r,base,critical,cast,dual&&(r.offhandCadence||0)===1);
+  }
  if(!offhandStrike&&kind==='Two-Handed'){const factor=ports.state.automaticTalents?.nodes?.includes('cleave_mastery')?.6:.4;groupSecondaryDamage(r,base,[factor,factor],'⚔ Cleave',true);}
  if(!offhandStrike&&kind==='Daggers'&&ports.state.automaticTalents?.nodes?.includes('fan_of_blades'))groupSecondaryDamage(r,base,[.22,.22],'🗡 Fan of Blades',true);
  if(!offhandStrike&&kind==='Bow')groupSecondaryDamage(r,base,[ports.state.automaticTalents?.nodes?.includes('bow_pierce')?.55:.35],'🏹 Piercing Arrow',true);
