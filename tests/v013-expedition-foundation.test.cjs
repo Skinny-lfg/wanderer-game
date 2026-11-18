@@ -45,7 +45,7 @@ test('10k seeded manifests have distinct affinity-compatible conditions and lega
    assert.equal(c.bossModifierIds.length,c.risk+1);
    assert.equal(new Set(c.bossModifierIds).size,c.bossModifierIds.length);
    for(const id of c.bossModifierIds){const modifier=F.lookup('bossModifiers',id);
-    assert(!modifier.excludeBossStyles?.includes(m.bossStyle));
+    assert(!modifier.excludeBossStyles?.includes(c.bossStyle));
     assert(!modifier.conflicts?.includes(c.conditionId));
     assert(!F.lookup('conditions',c.conditionId).conflicts?.includes(id));
    }

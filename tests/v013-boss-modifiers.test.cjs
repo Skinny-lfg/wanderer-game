@@ -23,7 +23,7 @@ test('10k real plans retain 1/2/3 compatible modifiers and reveal only first',()
    const plan=g.dungeon.foundationManifest.cards[i],known=M.known(g,card.id);
    assert.equal(plan.bossModifierIds.length,i+1);
    assert(known&&known.id===plan.bossModifierIds[0]);
-   assert.equal(M.check(plan.bossModifierIds,g.dungeon.foundationManifest.bossStyle,plan.conditionId),true);
+   assert.equal(M.check(plan.bossModifierIds,plan.bossStyle,plan.conditionId),true);
   }
  }
 });

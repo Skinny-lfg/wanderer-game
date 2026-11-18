@@ -9,12 +9,12 @@ require('../online/v013-boss-modifiers.js');
 const run=(ids=[],style='leech',risk=0,seed=7103)=>{
  const a=create(seed,undefined,{}, {skipPersistence:true});a.setup(35,'Sword','Rare');a.setUnlocked(35);a.start(35,true);
  const c=a.controller(),g=c.state,card=g.dungeon.cards[risk];c.chooseRealm(card.id);
- g.bossId=({guardian:'guardian',leech:'rift',berserker:'ember'})[style];
+ const affinity={guardian:'aegis',leech:'blood',berserker:'fury'}[style];
  const manifest=g.dungeon.foundationManifest.cards.find(x=>x.realmId===card.id);
  manifest.bossModifierIds=[...ids];g.dungeon.foundationState.conditionId='relentless_hunt';
  // Diagnostic boss placement only; actual generated maps keep boss in final room.
  card.nodes[1].kind='boss';card.nodes[1].escorts=risk;
- assert.equal(c.visitRoom(1),true);assert.equal(a.enter(),true);
+ assert.equal(c.visitRoom(1),true);g.selected.family=affinity;assert.equal(a.enter(),true);
  return {a,c,g,card,r:a.state().run};
 };
 test('native final-boss spawn receives planned modifiers, while its guards do not',()=>{
