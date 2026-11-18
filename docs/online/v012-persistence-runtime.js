@@ -48,8 +48,15 @@ function phase4LoseLoot(){
 
 function settleContract(){
  const g=ports.phase1Controller.state,d=g.dungeon,card=d&&ports.phase1Controller.realmMap();
- if(!card||card.objective===undefined||d.contractPaid||!d.cleared.includes(card.objective))return;
- d.contractPaid=true;ports.state.crafting.cores[card.family]++;ports.state.crafting.essence+=2+card.risk*2;
+ if(!card)return;
+ // Stage 4.5 Marked Elite settlement is independent from Stage 7's optional contract.
+ // Never duplicate the existing reagent/Essence award when Bounty Writ is selected.
+ if(card.objective!==undefined&&!d.contractPaid&&d.cleared.includes(card.objective)){
+  d.contractPaid=true;ports.state.crafting.cores[card.family]++;ports.state.crafting.essence+=2+card.risk*2;
+ }
+ const paid=root.WandererV013ExpeditionContracts?.settle(g,ports.state,ports.phase5Results);
+ if(paid)ports.bannerMessage(paid.name+' completed · +'+paid.essence+' Essence · +'+paid.fragments+' Fragments.');
+ return paid||null;
 }
 function phase4Extract(){
  if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked)||!ports.phase3IsBetweenPlanes()||ports.phase4Resume)return false;

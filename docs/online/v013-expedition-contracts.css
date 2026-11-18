@@ -1,0 +1,18 @@
+/* Wanderer v0.13 Stage 7 — optional contracts. */
+.stage7ContractOffer{max-width:1100px;margin-inline:auto;}
+.stage7ContractChoices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;margin:18px 0;}
+.stage7ContractCard{display:flex;flex-direction:column;align-items:center;gap:12px;min-height:258px;padding:24px 20px;background:linear-gradient(155deg,#35272a,#19171d 80%);border:1px solid #73574d;border-radius:12px;color:#eee0cf;text-align:center;cursor:pointer;white-space:normal;transition:transform .16s,border-color .16s;}
+.stage7ContractCard:hover,.stage7ContractCard:focus-visible{border-color:#ddbd86;transform:translateY(-2px);outline-offset:3px;}
+.stage7ContractCard strong{font-size:1.15rem;letter-spacing:.025em;}
+.stage7ContractIcon{font-size:2.15rem;}
+.stage7ContractObjective{font-weight:600;color:#e1c18f;}
+.stage7ContractCard small{font-size:.9rem;line-height:1.5;color:#cfc0b8;}
+.stage7ContractReward{margin-top:auto;padding:8px 12px;border-top:1px solid #725341;color:#bfe0bd;font-weight:650;}
+.stage7ContractSkip{margin:8px 0 16px;}
+.stage7ContractStatus{display:grid;gap:7px;margin:8px 0 12px;padding:12px 14px;border-left:3px solid #bf9960;background:linear-gradient(90deg,#34282b,#211c22);font-size:.9rem;}
+.stage7ContractStatus>div{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.stage7ContractStatus>div span{color:#d6c4b3;}
+.stage7ContractStatus progress{width:100%;height:9px;accent-color:#c9aa70;}
+.stage7ContractStatus small{color:#c1dab9;}
+.stage7ContractResult{margin-top:14px;}
+@media(max-width:700px){.stage7ContractChoices{grid-template-columns:1fr;gap:12px;}.stage7ContractCard{min-height:0;padding:20px 16px;}.stage7ContractReward{margin-top:0;}}
