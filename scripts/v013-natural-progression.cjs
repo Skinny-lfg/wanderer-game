@@ -244,7 +244,8 @@ function clearResults(a){
 function playDungeon(a,level,profile,opts){
  const c=a.controller(),g=c.state;
  if(g.unlocked<level)throw Error('Cannot bypass native unlock from E'+g.unlocked+' to E'+level);
- if(!a.start(level,true))throw Error('Native Expedition start rejected at E'+level);
+ a.start(level,true);
+ if(g.expedition!==level||g.stage!=='choice')throw Error('Native Expedition start rejected at E'+level);
  if(!g.dungeon?.cards?.length)throw Error('Natural Realm Cards were not generated');
  const card=choiceRealm(g.dungeon.cards,profile,gearSnapshot(a));
  c.chooseRealm(card.id);
