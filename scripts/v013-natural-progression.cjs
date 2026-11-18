@@ -344,7 +344,9 @@ function playDungeon(a,level,profile,opts){
   else report.error='Iteration cap reached without a legal native extraction';
  }
  clearResults(a);
- report.status=g.stage==='finished'?'victory':g.stage==='failed'?'defeat':report.extracted?'extracted':report.error?'error':g.stage;
+ // Native extraction calls controller.abandon(), setting g.stage='failed' internally.
+ // The explicit successful extraction flag must take precedence over that state.
+ report.status=g.stage==='finished'?'victory':report.extracted?'extracted':report.error?'error':g.stage==='failed'?'defeat':g.stage;
  report.xpEnd=a.state().automaticTalents.xp;
  report.xpEarned=report.xpEnd-report.xpStart;
  report.goldEnd=a.state().gold;
