@@ -30,6 +30,16 @@ window.__stage455={
   }
   return null;
  },
+  probeAbilityTelegraph(){
+    const run=state.run,enemy=run?.enemies?.find(e=>e.stage81?.name)||run?.enemy;
+    if(!enemy?.stage81?.name)return {error:'No active Stage 8.1 normal enemy'};
+    run.hp=run.maxhp=500000;run.stats.attacksPerSec=0;
+    enemy.hp=enemy.maxhp=Math.max(100000,enemy.maxhp);
+    enemy.stage81.nextAt=(run.combatSeconds||0)+.05;enemy.stage81.castingUntil=0;
+    updateFight();
+    return {name:enemy.name,role:enemy.role,kind:globalThis.WandererV013EnemyAbilities.status(enemy,run.combatSeconds)?.kind,
+      visible:!!document.querySelector('#scene [data-enemy-ability] .enemyAbilityStatus.is-casting')};
+  },
   finishCombat(){const r=state.run;if(!r||r.status!=='fight')return {status:r?.status||null};
   for(let n=0;n<90&&r.status==='fight';n++){
    // Only a test accelerator: preserve actual victory settlement, rewards and phases.
@@ -114,6 +124,12 @@ async function main(){
           assert.match(await dialog.count()?'':await contextPage.locator('body').innerText(),/Elite|Combat/i);
         }
         assert.equal(combat.runStatus,'fight','Expected normal combat at room '+node);
+        if(node===target&&options.ability){
+          const proof=await contextPage.evaluate(()=>__stage455.probeAbilityTelegraph());
+          assert.equal(proof.kind,'casting','Normal mob should telegraph: '+JSON.stringify(proof));
+          assert.equal(proof.visible,true,'Casting warning must be visible in live arena');
+          await contextPage.screenshot({path:path.join(out,'stage81-casting-telegraph.png'),fullPage:true});
+        }
          const badges=contextPage.locator('#scene .enemyRoleBadge');
          assert.equal(await badges.count(),combat.runRoster.length,'one class icon per active combat enemy');
          assert(await badges.first().isVisible(),'class icon remains visible beside enemy health');
@@ -143,6 +159,12 @@ async function main(){
       if(node!==target||!options.boss)assert.equal(after.current,node,'Current room mismatch');
     }
   }
+  // Stage 8.1: verify a real Casting telegraph in a mobile-width normal encounter.
+  const castPage=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1});
+  castPage.setDefaultTimeout(12000);
+  await chooseRealm(castPage,0);
+  await navigate(castPage,1,{ability:true});
+  await castPage.close();
   // First run: UI-controlled Marked Elite and the final boss on a natural Dangerous card.
   const selected=await chooseRealm(page,1);
   let stateBefore=await page.evaluate(()=>__stage455.snapshot());
