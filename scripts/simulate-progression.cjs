@@ -324,7 +324,7 @@ function simulate(opts){
    dungeon:'Native three-card Realm and shortest accessible route; persistent HP/Mana and resource ledger, native Boon selection optional; not all 15 Realms or an account-level campaign.',
    bossmods:'Only Boss-compatible properties are tested on each selected real Affinity Boss. Legacy Rift-only forced boss ID removed.',
    visualVfx:'Present in browser but not simulated (visual-only, cannot change combat RNG or numbers).',
-   limits:'No automatic potions, intelligent target swapping, conditional boon optimization, trading/crafting between rooms or manual player strategy. Not a complete player-behavior model.',
+   limits:'No automatic potions, intelligent target swapping, conditional boon optimization, trading/crafting between rooms or manual player strategy. Not a complete player-behavior model; not all 15 Realms and cross-Expedition build investments are modeled.',
    warnings:notes},
   sourceSha256:crypto.createHash('sha256').update(fs.readFileSync(path.join(__dirname,'../index.html'))).digest('hex'),durationMs:Date.now()-start,summary,rows};
 }
