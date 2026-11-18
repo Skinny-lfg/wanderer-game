@@ -1,7 +1,8 @@
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs');
 require('../combat/v013-expedition-foundation.js');
-const A=require('../online/v013-enemy-abilities.js');
+require('../online/v013-enemy-abilities.js');
+const A=globalThis.WandererV013EnemyAbilities;
 const FAMILY=['blood','decay','vitality','aegis','fury','magic'];
 function mob(role,name=role){return {name,role,hp:100,maxhp:100,barrier:0,atk:25,attackEvery:2,groupClock:0};}
 function run(...enemies){return {enemies,enemy:enemies[0],status:'fight',phase1:true,combatSeconds:0,phase1ClockBase:0,hp:100,maxhp:100,mp:60,maxmp:60,playerDebuffUntil:0,playerHealingDebuffUntil:0};}
