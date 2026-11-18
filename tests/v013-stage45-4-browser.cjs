@@ -89,6 +89,8 @@ async function main(){
   const titles=await cards.allInnerTexts();assert(titles.every(x=>x.includes('Known boss omen:')));
   await page.screenshot({path:path.join(out,'05-realm-cards-mobile.png'),fullPage:true});
   await cards.nth(1).click(); // Dangerous
+  assert.equal(await page.locator('[data-stage6-boon]').count(),3,'Stage 6 must present three Boons before map entry');
+  await page.locator('[data-stage6-boon]:not([data-stage6-boon="wayfarers_bargain"])').first().click();
   const first=await page.evaluate(()=>__stage454.snapshot());assert.equal(first.realm,first.cards[1].id);assert.equal(first.steps,13);
   assert(await page.locator('[data-dungeon-room="1"]').isVisible());
   await page.screenshot({path:path.join(out,'06-map-mobile.png'),fullPage:true});
@@ -151,6 +153,7 @@ async function main(){
    }else if(await page.locator('#phase5ExitRealm').count()){
     await page.locator('#phase5ExitRealm').click();
    }
+   if(await page.locator('[data-stage6-boon]').count())await page.locator('[data-stage6-boon]:not([data-stage6-boon="wayfarers_bargain"])').first().click();
    assert.equal((await page.evaluate(()=>__stage454.snapshot())).current,node,'Current room must match travel choice');
   }
   const afterEvent=await page.evaluate(()=>__stage454.snapshot());
