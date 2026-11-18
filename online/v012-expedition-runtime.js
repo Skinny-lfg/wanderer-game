@@ -241,6 +241,7 @@ function phase1StartWave(resetScroll=false){
  group[0].groupSlot=0;
  for(const enemy of group)enemy.groupClock=traits?traits.initialClock(enemy,enemy.groupSlot):Math.max(0,enemy.attackEvery-(.9+enemy.groupSlot*.3));
  r.totalMobCount=group.length;r.enemies=fieldCount>1?group.slice(0,fieldCount):undefined;r.groupReserve=group.slice(fieldCount);if(fieldCount===1)delete r.enemies;r.enemy=group[0];r.encounterLeader=last&&(g.selected.boss||g.selected.elite)?group[0]:null;
+ if(last&&g.selected.boss)globalThis.WandererV013BossInfrastructure?.attach(r,group[0]);
  r.phase6Bounty=false;if(r.enemy.miniboss&&ports.phase6Run?.effects.bounty){r.phase6Bounty=true;ports.phase6Run.effects.bounty=false;r.enemy.hp=r.enemy.maxhp=Math.ceil(r.enemy.maxhp*1.25);r.enemy.atk=Math.ceil(r.enemy.atk*1.25);}
  r.tPlayer=r.tDot=0;r.tEnemy=r.enemy.groupClock;r.setTemp=null;r.boonRotboundTriggers=0;r.playerDebuffUntil=0;
  r.playerHealingDebuffUntil=0;r.nextCasterHexAt=0;ports.setRuntime(r);r.status='fight';
@@ -267,6 +268,9 @@ function phase1WaveWon(){
  if(r.enemies?.length>1){
    const selectedTarget=r.enemy,dead=r.enemies.filter(enemy=>enemy.hp<=0&&!enemy.groupDefeated);if(!dead.length)return;
   for(const enemy of dead){r.enemy=enemy;enemy.groupDefeated=true;
+  const death=globalThis.WandererV013BossInfrastructure?.onMinionDeath(r,enemy);
+  if(death?.healed){ports.addLog('☠ Minion falls · Boss recovers '+death.healed+' HP','spell');ports.phase6Metric(r,'bossHealing',death.healed);}
+  if(death?.counted&&enemy.stage83Summoner==='boss')ports.phase6Metric(r,'bossMinionDeaths',1);
    const spread=globalThis.WandererV013ExpeditionBoons?.spreadOnDeath(r,enemy,ports.synchronizeDots)||0;
    if(spread)ports.addLog('Rotbound Echo spreads a lingering curse to '+spread+' '+(spread===1?'enemy':'enemies')+'.','spell');
    if(ports.state.automaticTalents?.nodes?.includes('plague_spread')){const bleed=enemy.dots?.bleed?.find(dot=>!dot.spread),rot=enemy.v012Rot?.find(dot=>!dot.spread);for(const target of r.enemies.filter(mob=>mob.hp>0).concat(r.groupReserve||[]).slice(0,2)){if(bleed){target.dots.bleed??=[];if(target.dots.bleed.length<12)target.dots.bleed.push({damage:Math.max(1,Math.round(bleed.damage*.5)),remaining:Math.min(2,bleed.remaining),spread:true});ports.synchronizeDots(target);}if(rot){target.v012Rot??=[];if(target.v012Rot.length<6)target.v012Rot.push({damage:Math.max(1,Math.round(rot.damage*.5)),remaining:Math.min(2,rot.remaining),ticks:0,spread:true});}}}

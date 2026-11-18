@@ -200,6 +200,8 @@ function setDelayEnemy(r,seconds){
  r.tEnemy-=seconds;temp.delayImmuneUntil=now+4;
  const interrupted=root.WandererV013EliteAbilities?.interrupt(r.enemy,r,'delay');
  if(interrupted)ports.addLog('✓ '+r.enemy.name+' interrupted: '+interrupted.ability,'good');
+ if(r.enemy?.boss){const bossInterrupt=root.WandererV013BossInfrastructure?.interrupt(r,'delay');
+  if(bossInterrupt)ports.addLog('✓ '+bossInterrupt.enemy.name+' interrupted: '+bossInterrupt.ability,'good');}
  ports.addLog('⏳ Enemy attack delayed by '+seconds+'s','good');return true;
 }
 
@@ -529,26 +531,21 @@ function updateFight(){
     const theme=ports.THEMES.find(t=>t.id===r.path)||ports.currentTheme();
     const mob=theme?.mobs?.find(m=>m.role==='minion');
     if(!mob)throw Error('Stage 8.2 summon requires a Realm Minion');
-    if(!r.enemies)r.enemies=[r.enemy];
-    r.groupReserve??=[];
-    for(let i=0;i<event.count;i++){
-     const summon=ports.enemyFor(r.tier,r.enc,{theme,mob,boss:false,elite:false});
-     summon.hp=summon.maxhp=Math.max(1,Math.round(summon.maxhp*.42));
-     summon.atk=Math.max(1,Math.round(summon.atk*.25));
-     summon.def=summon.baseDef=Math.max(0,Math.round(summon.def*.35));
-     summon.attackEvery*=1.35;summon.groupClock=-.3*(i+1);
-     summon.stage82Summon=true;
-     root.WandererV013EnemyAbilities?.attach([summon],r.planeFamily||'decay',r.combatSeconds||0);
-     const open=r.enemies.findIndex(m=>m.hp<=0&&m.groupDefeated);
-     if(open>=0){summon.groupSlot=r.enemies[open].groupSlot;r.enemies[open]=summon;}
-     else if(r.enemies.length<4){summon.groupSlot=r.enemies.length;r.enemies.push(summon);}
-     else{summon.groupSlot=0;r.groupReserve.push(summon);}
-    }
-    r.totalMobCount=(r.totalMobCount||1)+event.count;
-    ports.phase6Metric(r,'eliteSummons',event.count);
-    ports.addLog('☠ '+event.enemy.name+' summons '+event.count+' undead Minions!','critical');
-    ports.renderCombat();
+    const created=root.WandererV013BossInfrastructure?.summon(r,event.enemy,event.count,
+     ()=>ports.enemyFor(r.tier,r.enc,{theme,mob,boss:false,elite:false}),
+     {family:r.planeFamily||'decay',hpFactor:.42,atkFactor:.25,defFactor:.35,intervalFactor:1.35});
+    if(created?.spawned){
+     ports.phase6Metric(r,'eliteSummons',created.spawned);
+     ports.addLog('☠ '+event.enemy.name+' summons '+created.spawned+' undead Minions!','critical');
+     ports.renderCombat();
+    }else ports.addLog('☠ '+event.enemy.name+' cannot summon more Minions.','critical');
    }
+  }
+ }
+ if(root.WandererV013BossInfrastructure&&r.phase1){
+  for(const event of root.WandererV013BossInfrastructure.tick(r,ports.setNow(r))){
+   if(event.type==='interrupted'){ports.addLog('✓ '+event.enemy.name+' interrupted: '+event.ability,'good');ports.phase6Metric(r,'bossCastInterruptions',1);}
+   else if(event.type==='ready'){ports.addLog('✦ '+event.enemy.name+' finishes preparing '+event.ability+'.','spell');ports.phase6Metric(r,'bossCastPreparations',1);}
   }
  }
  if(globalThis.WandererV013ExpeditionConditions?.tick(r)){ports.phase6Metric(r,'conditionRiteTriggers',1);ports.addLog('Sanguine Rite · The boss grows stronger below half Health!','critical');}
