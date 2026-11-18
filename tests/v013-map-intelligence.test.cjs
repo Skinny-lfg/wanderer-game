@@ -105,3 +105,10 @@ test('native Oracle event transaction reveals two other rooms, consumes no steps
  assert.equal(g.dungeon.foundationState.decisions.filter(x=>x.type==='reveal_room').length,2);
  assert.equal(g.stage,'choice');
 });
+test('routes never traverse uncleared rooms, even if previously visited',()=>{
+ const card={nodes:Array.from({length:5},()=>({})),edges:[[0,1],[1,2],[0,3],[3,4],[4,2]]};
+ const d={current:0,visited:[0,1,2,3,4],cleared:[0,3,4],discoveredSecrets:[]};
+ assert.deepEqual(I.route(card,d,2),[0,3,4,2]);
+ assert.deepEqual(I.route(card,{...d,cleared:[0]},2),[]);
+ assert.deepEqual(I.route(card,{...d,cleared:[0]},1),[0,1]);
+});

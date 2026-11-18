@@ -45,3 +45,8 @@ test('native checkpoints remain restorable through real scouting, travel, combat
   c.restore(clone(c.state));
  }
 });
+test('travelled passage records survive checkpoints; old checkpoints remain valid',()=>{
+ const {c}=fresh();c.chooseRealm(c.state.dungeon.cards[0].id);const old=clone(c.state);delete old.dungeon.traversedEdges;assert(c.restore(old));
+ assert(c.visitRoom(1));assert.deepEqual(Array.from(c.state.dungeon.traversedEdges),['0-1']);const saved=clone(c.state);assert(c.restore(saved));assert.deepEqual(Array.from(c.state.dungeon.traversedEdges),['0-1']);
+ const bad=clone(saved);bad.dungeon.traversedEdges.push('0-999');assert.throws(()=>c.restore(bad),/Invalid traversed/);
+});

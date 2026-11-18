@@ -13,7 +13,7 @@ function route(card,d,target){
  if(!visited.has(origin))return [];
  if(target===origin)return [origin];
  // Dijkstra on (room, streak-of-cleared-rooms), rather than unweighted BFS. Intermediate rooms
- // must already have been visited; only the destination may be new.
+ // must already be cleared; only the destination may be uncleared.
  const pending=[{node:origin,streak:0,cost:0,path:[origin]}],best=new Map([[origin+'|0',0]]);
  let solution=null;
  while(pending.length){
@@ -24,9 +24,9 @@ function route(card,d,target){
    if(!solution||cost<solution.cost||cost===solution.cost&&current.path.length<solution.path.length)solution={cost,path:current.path};
    continue;
   }
-  if(!visited.has(current.node))continue;
+  if(current.node!==origin&&!cleared.has(current.node))continue;
   for(const next of neighbors(card,d,current.node)){
-   if(!visited.has(next)&&next!==target)continue;
+   if(!cleared.has(next)&&next!==target)continue;
    // Avoid looping through old nodes for free when the cleared-run cap has been reached.
    if(current.path.includes(next))continue;
    const safe=cleared.has(next),streak=safe?Math.min(2,current.streak+1):0;
