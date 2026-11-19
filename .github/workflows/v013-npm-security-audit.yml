@@ -2,7 +2,10 @@ name: Wanderer v0.13 npm dependency security audit (no deploy)
 on:
   push:
     branches: [audit/v013]
-    paths: ['.github/workflows/v013-npm-security-audit.yml']
+    paths:
+      - '.github/workflows/v013-npm-security-audit.yml'
+      - 'package.json'
+      - 'package-lock.json'
   workflow_dispatch:
 permissions:
   contents: read
@@ -47,6 +50,16 @@ jobs:
               console.log('VULN ' + JSON.stringify({name, severity:vuln.severity, isDirect:vuln.isDirect, range:vuln.range, fixAvailable:vuln.fixAvailable, effects:vuln.effects, via, paths}));
             }
           }
+          NODE
+      - name: Block reintroduction of critical npm advisories
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const a = JSON.parse(fs.readFileSync('npm-audit-full.json', 'utf8'));
+          const c = a.metadata?.vulnerabilities;
+          if (!c) throw Error('Missing audit counts');
+          console.log('NPM_SECURITY_GATE ' + JSON.stringify(c));
+          if (c.critical > 0) throw Error('Critical npm advisories detected');
           NODE
       - name: Verify browser Firebase bundle excludes vulnerable Node-only modules
         shell: bash
