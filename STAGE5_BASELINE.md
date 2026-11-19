@@ -165,3 +165,60 @@ Full report: artifact `stage5-starter-gear-comparison` in the workflow run;
 contains complete account histories, concise paired summary, exact source
 hashes, and evidence of unchanged native loot.
 
+
+## Stage 5 — risk-aware extraction and Camp investment
+
+**Implementation only in the natural simulation and its test harness**; live
+gameplay rules, starter items, loot, enemy difficulty, and rewards are unchanged.
+
+Changes:
+- Analyze actual physical Expedition Bag inventory (unsecured equipment and
+  valuables), current HP, accessible/visible room threat, recent health loss,
+  and budget available for Camp investments. Use native checkpoint extraction.
+- Protect valuable carried loot when health becomes dangerous. If no physical
+  loot is at risk, permit a low-HP gamble on a visible single-enemy room when
+  no immediate upgrade is affordable; prefer returning to Camp when an
+  upgrade is viable or the route ahead is clearly dangerous.
+- Spend **earned** Fragments *and Essence* on the v0.13 Forge. A simulator-only
+  harness adapter delegates to the same native recipe, cost, inventory and
+  transaction rules as the Forge UI. No free inventory injections. Spend
+  available Gold on actual Merchant equipment and offered Apothecary potions,
+  then equip acquired gear and earned talents before entering again.
+- Keep the former decision policy as an explicit matched comparison, rather
+  than overwriting its prior evidence.
+- Capture all purchase, crafting, extraction-risk and account progression
+  decisions in the native simulation report.
+
+Verified comparison:
+- GitHub Actions: https://github.com/Skinny-lfg/wanderer-game/actions/runs/44576547486
+- Workflow revision: `522823a84a6af79a0269485c458936f25900725f`
+- Targeted tests **20 passed / 0 failed**. Matched 12 distinct seeds ×
+  2 heuristic profiles × up to 6 real E1 attempts.
+- Old → improved: native E1 victories **0/24 → 5/24** (three on
+  attempt 5, two on attempt 6); deaths **71 → 40**; extractions
+  **73 → 96**; Merchant purchases **2 → 4**, Forge purchases **0 → 15**,
+  potion uses **28 → 33**.
+- Native Forge spending: **210 Fragments and 60 Essence**, 15 crafted pieces,
+  all 15 successfully equipped. Total native gear drops **73 → 75**;
+  drop probabilities remain unchanged.
+- Policy identified 63 extractions protecting physical Bag contents
+  (59 explicitly triggered by low HP while carrying loot, four by dangerous
+  known threat). Another 13 extractions were for returning to Camp to invest.
+- **No actual run in this 12-seed sample selected a single-enemy low-HP
+  gamble with an empty Bag**, despite the branch being tested in a synthetic
+  decision fixture. The visible solo opportunity was not encountered under
+  these specific maps/routes/HP/funds. Do not misrepresent this as validated
+  real-run behavior.
+- Mean starter equipment still carried: **2.75 → 2.46 pieces** of
+  three; mean earned talents **1.46 → 1.08**. The new policy produces
+  more E1 Boss wins but remains conservative, and does not prove that gear
+  replacement or human play is fully modeled.
+- All run-to-run Gold/Fragments and potion investments are native actions;
+  Gold and Fragments from cleared encounters already survive death, so
+  they are *not* double-counted as Bag-loss risk.
+
+Review the GitHub Actions artifact `stage5-camp-decision-comparison` for
+per-account, per-attempt traces and reasons. The new outcomes follow
+different player decisions and thus different RNG consumption, not just
+different equipment. No changes are authorized to numerical balance by
+this experiment.
