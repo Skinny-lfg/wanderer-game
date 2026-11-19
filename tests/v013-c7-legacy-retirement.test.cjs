@@ -49,3 +49,11 @@ test('C7: clean-sheet save rejects retired draft snapshots but retains current D
  assert.equal(typeof a.controller().reroll,'undefined');
  assert.equal(typeof a.controller().chooseRealm,'function');
 });
+
+test('C7: all retired initial-affinity and passive-draft CSS is absent from the shipped styles',()=>{
+ const obsolete=/\.(?:phase1Draft(?:Card|Cards)|phase3Affinity(?:Choice|Choices|Identity|Pending|PassiveDetails|PassiveDescriptions)|phase3InitialAffinity[\\w-]*|phase3Magic(?:ElementChoice|ElementChoices|Step|ElementDialog)[\\w-]*|phase3Passive(?:Card|Choice|Choices|Preview[\\w-]*|Rank|Affinity|Type|Description|Hybrid|Increase|Value|Separator|Build|Draft[\\w-]*|Context))\b/;
+ for(const filename of fs.readdirSync('online').filter(name=>name.endsWith('.css'))){
+  const css=read('online/'+filename);
+  assert(!obsolete.test(css),'Old Realm draft CSS found in '+filename);
+ }
+});
