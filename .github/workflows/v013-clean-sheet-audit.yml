@@ -1,0 +1,59 @@
+name: Wanderer audit — Clean sheet dependency and obsolete-code scan (no deploy)
+
+on:
+  push:
+    branches:
+      - audit/v013
+    paths:
+      - '.github/workflows/v013-clean-sheet-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scan-current-game:
+    if: github.ref == 'refs/heads/audit/v013'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Generate broad static reachability and migration audit
+        run: node scripts/v013-clean-sheet-audit.cjs
+      - name: Establish current save and talent regression baseline
+        run: >-
+          node --test
+          tests/v013-dead-talent-cleanup.test.cjs
+          tests/talent-graph-runtime.test.cjs
+          tests/v013-current-dungeon-and-talents.test.cjs
+          tests/v012-save.test.mjs
+          tests/v013-stage5-build-audit.test.cjs
+      - name: Record exact source provenance
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p reports
+          {
+            echo "commit=${GITHUB_SHA}"
+            echo "branch=${GITHUB_REF}"
+            echo "node=$(node --version)"
+            sha256sum combat/talent-graph-runtime.js combat/automatic-talents.js online/v012-save.js index.html
+          } > reports/v013-clean-sheet-audit-provenance.txt
+      - name: Store candidate audit and details
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v013-clean-sheet-static-audit
+          path: |
+            reports/v013-clean-sheet-audit.json
+            reports/v013-clean-sheet-audit.md
+            reports/v013-clean-sheet-audit-provenance.txt
+          if-no-files-found: warn
+          retention-days: 30
