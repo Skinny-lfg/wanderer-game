@@ -23,6 +23,7 @@ const A=globalThis.WandererV013BossAbilities;
 const M=globalThis.WandererV013BossModifiers;
 const AFFINITIES=Object.freeze(Object.keys(A.PROFILES));
 const GROUP_SIZES=Object.freeze([3,12,20]);
+const ROLE_EFFECTS=Object.freeze(['baseline','trait','condition','both']);
 const RISKS=Object.freeze([0,1,2]);
 const T=globalThis.WandererAutomaticTalents;
 const P=globalThis.WandererExpeditionProgression;
@@ -37,11 +38,11 @@ const BUILDS=Object.freeze([
   {id:'magic-storm',name:'Magic/Decay Lightning Staff',weapon:'Staff',families:['magic','decay'],skills:['arcane_focus','mana_spring','toxic_touch','virulent_rot','hex_bolt'],element:'lightning'}
 ]);
 const DEFAULTS=Object.freeze({mode:'encounter',levels:[1,5,15,35,70,100,250,1000],seeds:[9101,9102,9103],builds:BUILDS.map(b=>b.id),points:24,rarity:'Rare',gear:'current',runes:false,tickLimit:4500,
- affinities:[...AFFINITIES],risks:[1],groupSizes:[...GROUP_SIZES],boons:'none',contracts:'none',targetPolicy:'focus',output:'reports/v013-simulation-results.json'});
+ affinities:[...AFFINITIES],risks:[1],groupSizes:[...GROUP_SIZES],roleEffects:[...ROLE_EFFECTS],boons:'none',contracts:'none',targetPolicy:'focus',output:'reports/v013-simulation-results.json'});
 const finitePositive=value=>Number.isSafeInteger(value)&&value>=1;
 function parseIntegers(value,label){const values=value.split(',').map(Number);if(!values.length||values.some(n=>!finitePositive(n)))throw Error('Invalid '+label+': '+value);return [...new Set(values)];}
 function parseArgs(args){
- const result={...DEFAULTS,levels:[...DEFAULTS.levels],seeds:[...DEFAULTS.seeds],builds:[...DEFAULTS.builds],affinities:[...DEFAULTS.affinities],risks:[...DEFAULTS.risks],groupSizes:[...DEFAULTS.groupSizes]};
+ const result={...DEFAULTS,levels:[...DEFAULTS.levels],seeds:[...DEFAULTS.seeds],builds:[...DEFAULTS.builds],affinities:[...DEFAULTS.affinities],risks:[...DEFAULTS.risks],groupSizes:[...DEFAULTS.groupSizes],roleEffects:[...DEFAULTS.roleEffects]};
  for(const arg of args){
   const match=/^--([a-z-]+)=(.*)$/.exec(arg);if(!match)throw Error('Expected --option=value: '+arg);
   const [,key,value]=match;
@@ -59,7 +60,8 @@ function parseArgs(args){
   else if(key==='affinities'){result.affinities=[...new Set(value.split(','))];if(!result.affinities.length||result.affinities.some(f=>!AFFINITIES.includes(f)))throw Error('Invalid affinities: '+value);}
   else if(key==='risks'){result.risks=[...new Set(value.split(',').map(Number))];if(!result.risks.length||result.risks.some(r=>!RISKS.includes(r)))throw Error('Invalid risks: '+value);}
   else if(key==='group-sizes'){result.groupSizes=parseIntegers(value,'group-sizes');if(result.groupSizes.some(n=>n<1||n>22))throw Error('Group sizes must be 1–22');}
-  else if(key==='boons'&&['none','first'].includes(value))result.boons=value;
+  else if(key==='role-effects'){result.roleEffects=[...new Set(value.split(','))];if(!result.roleEffects.length||result.roleEffects.some(x=>!ROLE_EFFECTS.includes(x)))throw Error('Invalid role effects: '+value);}
+   else if(key==='boons'&&['none','first'].includes(value))result.boons=value;
   else if(key==='contracts'&&['none','first'].includes(value))result.contracts=value;
   else if(key==='target-policy'&&['focus','mechanics','adds'].includes(value))result.targetPolicy=value;
   else if(key==='runes'&&['true','false'].includes(value))result.runes=value==='true';
@@ -68,7 +70,7 @@ function parseArgs(args){
   else throw Error('Unsupported option: '+arg);
  }
  const base=result.levels.length*result.seeds.length*result.builds.length;
- const factor=result.mode==='bosses'?result.affinities.length*result.risks.length:['enemies','roles'].includes(result.mode)?result.groupSizes.length*(result.mode==='roles'?result.affinities.length:1):result.mode==='bossmods'?result.affinities.length*result.risks.length*(1+F.CATALOG.bossModifiers.length):result.mode==='traits'?1+F.CATALOG.encounterTraits.length:result.mode==='bossprep'?4:result.mode==='both'?3:result.mode==='encounter'||result.mode==='conditions'?3:1;
+ const factor=result.mode==='bosses'?result.affinities.length*result.risks.length:['enemies','roles'].includes(result.mode)?result.groupSizes.length*(result.mode==='roles'?result.affinities.length*result.roleEffects.length:1):result.mode==='bossmods'?result.affinities.length*result.risks.length*(1+F.CATALOG.bossModifiers.length):result.mode==='traits'?1+F.CATALOG.encounterTraits.length:result.mode==='bossprep'?4:result.mode==='both'?3:result.mode==='encounter'||result.mode==='conditions'?3:1;
  if(base*factor>3000)throw Error('Simulation matrix too large (maximum 3000 native scenarios)');
  return result;
 }
@@ -239,13 +241,26 @@ function resolveEvent(a){
 }
 // Controlled diagnostic: real native combat/stats/ability scheduler, but an encounter
 // is deliberately staged in a first-ring room. Use dungeon() for actual travel/extraction.
-function encounter(level,build,seed,kind,opts,forcedTrait=undefined,forcedBossMod=undefined,forcedFamily=undefined,desiredRisk=undefined,groupSize=undefined){
+function encounter(level,build,seed,kind,opts,forcedTrait=undefined,forcedBossMod=undefined,forcedFamily=undefined,desiredRisk=undefined,groupSize=undefined,roleEffect=undefined){
  if(!['normal','boss','elite'].includes(kind))throw Error('Unknown controlled encounter '+kind);
  if(groupSize!==undefined&&(!Number.isSafeInteger(groupSize)||groupSize<1||groupSize>22||kind!=='normal'))throw Error('Invalid controlled group size');
+ if(roleEffect!==undefined&&(!ROLE_EFFECTS.includes(roleEffect)||kind!=='normal'))throw Error('Invalid role effect');
  const {a,c,g,card,gearE,resolvedSeed,seedShift,allocatedPoints}=prepare(level,build,seed,opts,desiredRisk,forcedFamily);
   const gearFingerprint=equipmentFingerprint(a);
- const candidate=card.edges.filter(([x])=>x===0).map(([,y])=>y).find(n=>card.nodes[n]?.kind==='combat');
- if(candidate===undefined)throw Error('No first-ring native combat encounter');
+ const C=globalThis.WandererV013ExpeditionConditions;
+ const conditionPlan=C?.forDungeon(card,g.dungeon)||null;
+ // Marked Condition effects are tested in genuine marked rooms from the map.
+ // Trait assignment is a controlled fixture using an Affinity-compatible definition.
+ const conditionTrial=roleEffect==='condition'||roleEffect==='both';
+ const marked=conditionTrial?conditionPlan?.rooms?.find(n=>card.nodes[n]?.kind==='combat'):undefined;
+ const candidate=marked??card.edges.filter(([x])=>x===0).map(([,y])=>y).find(n=>card.nodes[n]?.kind==='combat');
+ if(candidate===undefined)throw Error('No native combat encounter');
+ let trialTraitId=null;
+ if(roleEffect!==undefined){
+  const eligible=F.CATALOG.encounterTraits.filter(t=>t.families.includes(card.family));
+  if(roleEffect==='trait'||roleEffect==='both')trialTraitId=eligible[(resolvedSeed+groupSize)%eligible.length].id;
+  card.nodes[candidate].traitId=trialTraitId;
+ }
  if(forcedTrait!==undefined){if(kind!=='normal'||forcedTrait!==null&&!F.CATALOG.encounterTraits.some(x=>x.id===forcedTrait))throw Error('Unknown forced encounter trait');card.nodes[candidate].traitId=forcedTrait;}
  if(forcedBossMod!==undefined){
   if(kind!=='boss'||forcedBossMod!==null&&!F.CATALOG.bossModifiers.some(x=>x.id===forcedBossMod))throw Error('Unknown forced Boss property');
@@ -265,7 +280,7 @@ function encounter(level,build,seed,kind,opts,forcedTrait=undefined,forcedBossMo
  const result=fight(a,c,opts.tickLimit,opts.targetPolicy);
  const mode=forcedBossMod!==undefined?'bossmods':forcedTrait!==undefined?'traits':opts.mode==='bosses'?'bosses':['enemies','roles'].includes(opts.mode)?opts.mode:opts.mode==='elites'?'elites':'encounter';
  const label=forcedBossMod!==undefined?(forcedBossMod||'baseline'):forcedTrait!==undefined?(forcedTrait||'baseline'):mode==='bosses'?card.family:['enemies','roles'].includes(mode)?'swarm-'+count:kind;
- return {mode,kind:label,level,build:build.id,seed,resolvedSeed,seedShift,gearE,gearFingerprint,gearTier:P.gearTier(gearE).name,
+ return {mode,kind:label,roleEffect:roleEffect||null,plannedConditionId:conditionPlan?.id||null,conditionNaturallyMarked:!!conditionPlan?.rooms?.includes(candidate),traitFixtureInjected:!!trialTraitId,level,build:build.id,seed,resolvedSeed,seedShift,gearE,gearFingerprint,gearTier:P.gearTier(gearE).name,
   gearRarity:opts.rarity,runes:opts.runes,pointsBudget:opts.points,pointsSpent:allocatedPoints,
   realm:card.name,affinity:card.family,risk:card.risk,nativeEncounter:kind,groupSize:count,unlocked:level,...result};
 }
@@ -331,15 +346,15 @@ function dungeon(level,build,seed,opts,desiredRisk=undefined){
   eliteSummons:rooms.reduce((n,x)=>n+x.eliteSummons,0),stepsLeft:g.dungeon?.steps};
 }
 function summarize(rows){
- const keyOf=r=>JSON.stringify([r.level,r.build,r.mode,r.kind||'all',r.bossAffinity||r.affinity||null,r.risk??null,r.pointsBudget??null,r.gearRarity||null,r.targetPolicy||null]);
+ const keyOf=r=>JSON.stringify([r.level,r.build,r.mode,r.kind||'all',r.bossAffinity||r.affinity||null,r.risk??null,r.pointsBudget??null,r.gearRarity||null,r.targetPolicy||null,r.roleEffect||null,r.traitId||null,r.plannedConditionId||null]);
  const keys=[...new Set(rows.map(keyOf))],groups=[];
  for(const key of keys){
   const selected=rows.filter(r=>keyOf(r)===key),first=selected[0],mean=name=>+(selected.reduce((n,r)=>n+(Number(r[name])||0),0)/selected.length).toFixed(2);
   const wins=selected.filter(r=>r.won).length;
-  groups.push({level:first.level,build:first.build,mode:first.mode,kind:first.kind||'all',targetPolicy:first.targetPolicy||'focus',affinity:first.bossAffinity||first.affinity||null,risk:first.risk??null,
+  groups.push({level:first.level,build:first.build,mode:first.mode,kind:first.kind||'all',targetPolicy:first.targetPolicy||'focus',roleEffect:first.roleEffect||null,traitId:first.traitId||null,conditionId:first.plannedConditionId||null,affinity:first.bossAffinity||first.affinity||null,risk:first.risk??null,
    n:selected.length,wins,deaths:selected.filter(r=>r.died||r.stage==='failed').length,winPct:+(100*wins/selected.length).toFixed(1),
    errors:selected.filter(r=>r.error).length,timeouts:selected.filter(r=>r.timedOut).length,meanSeconds:mean('seconds'),meanDamageTaken:mean('damageTaken'),
-   meanMinHpPct:mean('minHpPct'),meanBossHealing:mean('bossHealing'),meanBossSummons:mean('bossSummons'),meanEnemyAbilityCasts:mean('enemyAbilityCasts'),
+   meanMinHpPct:mean('minHpPct'),naturallyMarkedFights:selected.filter(r=>r.conditionNaturallyMarked).length,meanTraitRegrowthHealing:mean('traitRegrowthHealing'),meanTraitDeathPulse:mean('traitDeathPulse'),meanBossHealing:mean('bossHealing'),meanBossSummons:mean('bossSummons'),meanEnemyAbilityCasts:mean('enemyAbilityCasts'),
     roleComposition:Object.fromEntries(['minion','tank','skirmisher','caster'].map(role=>[role,selected.reduce((n,r)=>n+(r.initialRoles?.[role]||0),0)])),
     uniqueAbilities:[...new Set(selected.flatMap(r=>(r.roster||[]).map(e=>e.ability).filter(Boolean)))].sort()});
  }
@@ -369,8 +384,8 @@ function simulate(opts){
    add('encounter',kind,level,build,seed,()=>encounter(level,build,seed,kind,opts));
   if(opts.mode==='enemies')for(const count of opts.groupSizes)
    add('enemies','swarm-'+count,level,build,seed,()=>encounter(level,build,seed,'normal',opts,undefined,undefined,undefined,undefined,count));
-  if(opts.mode==='roles')for(const affinity of opts.affinities)for(const count of opts.groupSizes)
-   add('roles','swarm-'+count,level,build,seed,()=>encounter(level,build,seed,'normal',opts,undefined,undefined,affinity,undefined,count),affinity);
+  if(opts.mode==='roles')for(const affinity of opts.affinities)for(const count of opts.groupSizes)for(const effect of opts.roleEffects)
+   add('roles','swarm-'+count+'-'+effect,level,build,seed,()=>encounter(level,build,seed,'normal',opts,undefined,undefined,affinity,undefined,count,effect),affinity);
   if(opts.mode==='elites')
    add('elites','elite',level,build,seed,()=>encounter(level,build,seed,'elite',opts));
   if(opts.mode==='bosses')for(const affinity of opts.affinities)for(const risk of opts.risks)
@@ -406,15 +421,16 @@ function simulate(opts){
  if(['bosses','bossmods','enemies','roles','elites','encounter','traits','bossprep'].includes(opts.mode))notes.push('Controlled first-ring encounter injection: uses native combat but not natural room placement, 15-Realm progression or earned equipment.');
  if(['dungeon','conditions','both'].includes(opts.mode))notes.push('Natural Dungeon route uses shortest accessible path and explicit Boon/Contract selection policies; potions are not automatically spent.');
  if(opts.mode==='roles'){
-   const observed=new Set(rows.filter(r=>!r.error).map(r=>r.affinity+'|'+r.groupSize));
-   for(const affinity of opts.affinities)for(const count of opts.groupSizes)if(!observed.has(affinity+'|'+count))notes.push('Missing role scenario: '+affinity+' '+count+' enemies');
+   const observed=new Set(rows.filter(r=>!r.error).map(r=>r.affinity+'|'+r.groupSize+'|'+r.roleEffect));
+   for(const affinity of opts.affinities)for(const count of opts.groupSizes)for(const effect of opts.roleEffects)if(!observed.has(affinity+'|'+count+'|'+effect))notes.push('Missing role scenario: '+affinity+' '+count+' enemies / '+effect);
    notes.push('Native roster is seeded, not forced. Validate per-role sampling before balance conclusions.');
+   notes.push('Trait trials inject an Affinity-compatible native Trait into a controlled encounter. Condition trials select naturally marked rooms where available. Boss-only and passage-only Conditions have no ordinary-room combat effect. Natural co-occurrence is not implied.');
   }
   if(rows.length<100)notes.push('Small samples: do not infer final balance from win rates without larger seed cohorts and player tests.');
  const fingerprint=sourceFingerprint();
  return {schemaVersion:4,engine:'Wanderer v0.13 native combat/dungeon + Stage 7 economy + Stages 8.0–8.4 actors and abilities',mode:opts.mode,
   assumptions:{levels:opts.levels,seeds:opts.seeds,builds:opts.builds,pointsAvailable:opts.points,rarity:opts.rarity,gear:opts.gear,runes:opts.runes,
-   affinities:opts.affinities,risks:opts.risks,groupSizes:opts.groupSizes,boons:opts.boons,contracts:opts.contracts,targetPolicy:opts.targetPolicy,mode:opts.mode,potions:'not automatically selected',
+   affinities:opts.affinities,risks:opts.risks,groupSizes:opts.groupSizes,roleEffects:opts.roleEffects,boons:opts.boons,contracts:opts.contracts,targetPolicy:opts.targetPolicy,mode:opts.mode,potions:'not automatically selected',
    talents:'Tree v15, synthetic fixed budget; real E1 starts with zero points. XP rewards in natural Dungeon are reported but cannot be spent during this single simulated route.',
    gearProgression:'Current native item tiers and stat rolls; equipment held constant throughout the scenario (no auto-equipping drops).',
    controlled:'Boss, modifier, elite and swarm diagnostics deliberately replace a first-ring encounter; native skills, defender AI, six-Boss lookup, status effects, damage, rewards and summon limits remain unmodified.',
