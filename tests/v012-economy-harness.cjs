@@ -121,6 +121,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
  files.push(...[...source.matchAll(/<script[^>]+src="([^"?]+-runtime\.js)(?:\?[^\"]*)?"/g)].map(m=>m[1]));
  const units=files.map(file=>({file,source:moduleOverrides[file]??fs.readFileSync(path.join(fixtureRoot,file),'utf8'),overridden:Object.hasOwn(moduleOverrides,file)}));
  units.push({file:'index.html',source:main.replace(boot,inject+'\nconst phase3RestoredScroll=null;'),overridden:true});
+ if(options.captureEntry)options.captureEntry(units.at(-1).source);
  vm.runInNewContext(units.map(unit=>unit.source).join('\n'),sandbox,{timeout:20000});
  if(options.recordModules){
   const {createHash}=require('node:crypto');
