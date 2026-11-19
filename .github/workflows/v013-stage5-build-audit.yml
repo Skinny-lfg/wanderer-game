@@ -37,7 +37,8 @@ jobs:
             objectKeys:Object.keys(native),nodes:native.NODES.length,
             names:native.NODES.filter(n=>/strong_heart|deep_cuts|quick_hands/.test(n.id)).map(n=>n.id),
             hostNodes:host?.NODES?.length,hostBuildcraft:globalThis.WandererV012Buildcraft?.CATALOG?.length,
-            nativeCreate:native.create(),nativePath:native.path(native.create(),'passive_strong_heart')
+            nativeCreate:native.create(),strongHeart:native.NODES.find(n=>n.id==='strong_heart'),
+            v15ResetAvailable:typeof native.reset==='function',v15PathAvailable:typeof native.path==='function'
           }));
           NODE
       - name: Validate native graph, reset semantics and build instrumentation
