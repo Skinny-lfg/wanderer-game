@@ -31,7 +31,9 @@ const missingEntries=entrypoints.filter(x=>!x.exists),missingImports=[];
 for(const [p,s] of texts){
  if(!/\.[cm]?js$/.test(p))continue;
  for(const m of [...s.matchAll(/\brequire\s*\(\s*["'](\.[^"']+)["']\s*\)/g),...s.matchAll(/\bfrom\s*["'](\.[^"']+)["']/g)]){
-  const target=path.posix.normalize(path.posix.join(path.posix.dirname(p),m[1]));
+  const line=s.slice(s.lastIndexOf('\n',m.index)+1,s.indexOf('\n',m.index)<0?s.length:s.indexOf('\n',m.index));
+  if(/\b(?:source\.replace|const importLine)\b/.test(line))continue;
+  const target=path.posix.normalize(path.posix.join(path.posix.dirname(p),m[1].split(/[?#]/)[0]));
   if([target,target+'.js',target+'.mjs',target+'.cjs',target+'/index.js'].some(t=>fs.existsSync(path.join(ROOT,t))))continue;
   missingImports.push({source:p,target});
  }
@@ -63,5 +65,5 @@ fs.writeFileSync(path.join(ROOT,'reports/v013-c6-final-static-audit.json'),JSON.
 const summary=['# Final v0.13 C6 static audit','',report.caveat,'','Commit: '+report.sha,'','Missing entrypoints: '+missingEntries.length,'Missing relative imports: '+missingImports.length,'Deleted-module references in active source: '+retiredRefs.length,'','## Leftover route CSS',...deadCss.map(s=>'- '+s),'','## Candidate unused modules',...orphanCandidates.map(s=>'- '+s),'','## Reference matches',...Object.entries(details).flatMap(([k,rows])=>['','### '+k+' ('+counts[k]+')',...rows.map(x=>'- '+x.file+':'+x.line+' '+x.excerpt)]),'','## Broken paths',...missingEntries.map(x=>'- '+JSON.stringify(x)),...missingImports.map(x=>'- '+JSON.stringify(x))];
 fs.writeFileSync(path.join(ROOT,'reports/v013-c6-final-static-audit.md'),summary.join('\n')+'\n');
 console.log('C6_FINAL_STATIC='+JSON.stringify({activeFiles:active.length,entrypoints:entrypoints.length,missingEntries:missingEntries.length,missingImports:missingImports.length,missingImportDetails:missingImports.slice(0,20),retiredRefs:retiredRefs.length,counts,deadCss,removedMethodDetails:details.removedMethods.slice(0,12),orphanCandidates:orphanCandidates.slice(0,25)}));
-if(missingEntries.length||retiredRefs.length)process.exitCode=1;
+if(missingEntries.length||missingImports.length||retiredRefs.length)process.exitCode=1;
 module.exports={report};

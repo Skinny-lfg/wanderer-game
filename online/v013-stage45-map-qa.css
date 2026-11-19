@@ -93,12 +93,14 @@ body.phase3IntegratedPreview dialog.realmRouteDialog[open]{position:fixed;inset:
 @media(max-width:700px){.realmMapMain .realmSteps{top:0}}
 
 /* Information sits over the map rather than in an added side column. */
-.realmMapLayout{display:block;position:relative}.realmMapMain{width:100%}.realmMapSide{position:absolute;top:56px;right:8px;z-index:5;width:min(220px,28%)}.realmMapSide .realmAtGlance>div{background:#1a1518ee}.realmMapSide .realmBrief{background:#1a1518ee}.realmMapSide .realmAtGlance>div{padding:.4rem .5rem}.realmMapSide .realmAtGlance{gap:3px}@media(max-width:700px){.realmMapSide{position:absolute;top:96px;right:6px;width:min(150px,42%)}.realmMapSide .realmAtGlance>div{flex-direction:column;align-items:start;gap:1px;padding:.25rem .35rem;font-size:.7rem;line-height:1.2}.realmMapSide .realmBrief summary{font-size:.7rem;padding:.3rem}}
+/* Keep map navigation and expedition information in separate grid cells.
+   The former overlaid aside obscured later Dungeon/Boss nodes on desktop. */
+.realmMapLayout{position:relative}.realmMapMain{width:100%}.realmMapSide .realmAtGlance>div{background:#1a1518ee}.realmMapSide .realmBrief{background:#1a1518ee}.realmMapSide .realmAtGlance>div{padding:.4rem .5rem}.realmMapSide .realmAtGlance{gap:3px}@media(max-width:700px){.realmMapSide .realmAtGlance>div{flex-direction:column;align-items:start;gap:1px;padding:.25rem .35rem;font-size:.7rem;line-height:1.2}.realmMapSide .realmBrief summary{font-size:.7rem;padding:.3rem}}
 
 /* Mobile map information folds away; labels remain consistently below icons. */
 .realmMapInfo>summary{display:none}
 [data-label-side="bottom"] .realmNodeInfo{left:50%;top:49px;transform:translateX(-50%)}
-@media(max-width:700px){.realmMapInfo>summary{display:block;padding:.45rem .55rem;background:#1a1518f2;border:1px solid #94734a;color:#e7d2a7;font-size:.72rem;cursor:pointer}.realmMapSide{width:min(165px,44%)}.realmMapSide .realmMapInfo[open]{background:#1a1518f2}.realmMapCanvas [data-label-side="bottom"] .realmNodeInfo{top:43px}}
+@media(max-width:700px){.realmMapInfo>summary{display:block;padding:.45rem .55rem;background:#1a1518f2;border:1px solid #94734a;color:#e7d2a7;font-size:.72rem;cursor:pointer}.realmMapSide .realmMapInfo[open]{background:#1a1518f2}.realmMapCanvas [data-label-side="bottom"] .realmNodeInfo{top:43px}}
 
 @media(min-width:701px){.realmMapInfo:not([open])>summary{display:block;padding:.45rem .55rem;background:#1a1518f2;border:1px solid #94734a;color:#e7d2a7;cursor:pointer}}
 
@@ -133,7 +135,7 @@ body.phase3IntegratedPreview dialog.realmRouteDialog[open]{inset:0!important;mar
 body.phase3IntegratedPreview dialog.realmRouteDialog>.gothic-corner-layer{display:none!important}
 .realmDialogCorner{position:absolute;width:32px;height:32px;background:url('../assets/ui-kit/gothic-corners/standard-tr.png') center/contain no-repeat;pointer-events:none;z-index:2}
 .realmDialogCorner-tr{right:0;top:0}.realmDialogCorner-tl{left:0;top:0;transform:scaleX(-1)}.realmDialogCorner-br{right:0;bottom:0;transform:scaleY(-1)}.realmDialogCorner-bl{left:0;bottom:0;transform:rotate(180deg)}
-@media(min-width:701px){.realmMapSide{width:min(270px,30%)}.realmMapSide .realmAtGlance>div,.realmMapSide .realmBrief,.realmMapSide .realmMapInfo summary{font-size:1rem;line-height:1.4}.realmMapLegend{font-size:.95rem;line-height:1.4}}
+@media(min-width:701px){.realmMapSide .realmAtGlance>div,.realmMapSide .realmBrief,.realmMapSide .realmMapInfo summary{font-size:1rem;line-height:1.4}.realmMapLegend{font-size:.95rem;line-height:1.4}}
 .realmZoomControls{position:absolute;top:55px;left:8px;z-index:6;display:flex;align-items:center;gap:4px;background:#1a1518ed;border:1px solid #94734a;padding:3px;color:#f2d7a1;font-size:.8rem}
 .realmZoomControls button{min-width:34px;width:34px;height:32px;min-height:32px;padding:0;font-size:1.2rem}.realmZoomControls span{min-width:38px;text-align:center}
 [data-realm-viewport]{height:800px;overflow:auto!important;touch-action:none;cursor:grab;overscroll-behavior:contain;scrollbar-width:thin}
@@ -163,8 +165,8 @@ body.phase3IntegratedPreview .realmMapQuickSteps span{font-size:.62rem;letter-sp
 body.phase3IntegratedPreview .realmMapQuickSteps strong{font-size:2rem}
 body.phase3IntegratedPreview .realmMapQuickSteps::before,body.phase3IntegratedPreview .realmMapQuickSteps::after{content:"";position:absolute;bottom:-3px;width:27px;height:27px;background:url('../assets/ui-kit/gothic-corners/standard-tr.png') center/contain no-repeat;pointer-events:none}
 body.phase3IntegratedPreview .realmMapQuickSteps::before{left:-3px;transform:rotate(180deg)}body.phase3IntegratedPreview .realmMapQuickSteps::after{right:-3px;transform:scaleY(-1)}
-.phase3RealmWorkspace .realmMapMain{padding-top:0}.phase3RealmWorkspace .realmZoomControls{top:8px}.phase3RealmWorkspace .realmMapSide{top:8px}
-@media(max-width:700px){body.phase3IntegratedPreview .phase3RealmWorkspace .realmMapQuick{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:5px}body.phase3IntegratedPreview .realmMapQuick .realmMapQuickSteps{padding:.3rem .55rem .4rem}body.phase3IntegratedPreview .realmMapQuickSteps span{font-size:.5rem}body.phase3IntegratedPreview .realmMapQuickSteps strong{font-size:1.4rem}body.phase3IntegratedPreview .realmMapQuick .realmMapSupplies{justify-content:flex-end}body.phase3IntegratedPreview .realmMapQuick .phase3BetweenQuickPotions .phase3PotionSlot{width:30px;min-width:30px;height:30px;min-height:30px}.phase3RealmWorkspace .realmMapSide{top:50px}}
+.phase3RealmWorkspace .realmMapMain{padding-top:0}.phase3RealmWorkspace .realmZoomControls{top:8px}
+@media(max-width:700px){body.phase3IntegratedPreview .phase3RealmWorkspace .realmMapQuick{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:5px}body.phase3IntegratedPreview .realmMapQuick .realmMapQuickSteps{padding:.3rem .55rem .4rem}body.phase3IntegratedPreview .realmMapQuickSteps span{font-size:.5rem}body.phase3IntegratedPreview .realmMapQuickSteps strong{font-size:1.4rem}body.phase3IntegratedPreview .realmMapQuick .realmMapSupplies{justify-content:flex-end}body.phase3IntegratedPreview .realmMapQuick .phase3BetweenQuickPotions .phase3PotionSlot{width:30px;min-width:30px;height:30px;min-height:30px}}
 @media(min-width:701px){body.phase3IntegratedPreview .phase3RealmWorkspace .realmMapQuick{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)!important}}
 [data-realm-viewport]{-webkit-user-select:none;user-select:none}
 /* Realm name above the hanging Steps plaque, between the status areas. */

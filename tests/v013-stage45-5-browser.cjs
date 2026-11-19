@@ -88,6 +88,14 @@ async function main(){
     const route=await contextPage.evaluate(id=>__stage455.pathToRoom(id),target);
     assert(route?.length>1,'No natural connected route to room '+target);
     console.log('Browser journey '+target+': '+route.join(' -> '));
+    // C6 regression: every room, including the final Boss, must be clickable.
+    // A floating expedition-info aside used to cover buttons after map scrolling.
+    const overlap=await contextPage.evaluate(()=>{
+      const a=document.querySelector('[data-realm-viewport]')?.getBoundingClientRect();
+      const b=document.querySelector('.realmMapSide')?.getBoundingClientRect();
+      return a&&b&&a.left<b.right-2&&a.right>b.left+2&&a.top<b.bottom-2&&a.bottom>b.top+2;
+    });
+    assert.equal(overlap,false,'Expedition information must not overlay navigable Dungeon rooms');
     for(const node of route.slice(1)){
       const before=await contextPage.evaluate(()=>__stage455.snapshot());
       await contextPage.locator('[data-dungeon-room="'+node+'"]').click();
