@@ -42,3 +42,5 @@ Ability-specific Barrier detail: online/v013-enemy-abilities.js computes a ward 
 ## Implementation disposition
 
 The existing combat core now owns the size budget and applies room pressure and escort stats. A caller-supplied size budget still takes precedence. The low-level group builder can now infer the standard horde budget for 6–22 actors when no custom scale is supplied; game rooms previously passed that same formula explicitly. Five still requires an explicit budget. Risk factors are computed once per initial group without regrouping floating-point multiplications. Elite/Boss special strikes share the identical rounding and cap operation. No compensating coefficient or generic modifier engine was introduced.
+
+**Stage 4.5 resolution:** weaker ordinary wards and capped hero grants now preserve existing Barrier. Vanguard placement remains at the same generated group room; combat and room detail now depend on its explicit marker. See CLEANUP_CHANGELOG.md and VALIDATION.md for intentional changes and targeted tests.
