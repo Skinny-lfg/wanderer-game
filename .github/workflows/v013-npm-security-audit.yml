@@ -1,0 +1,58 @@
+name: Wanderer v0.13 npm dependency security audit (no deploy)
+on:
+  push:
+    branches: [audit/v013]
+    paths: ['.github/workflows/v013-npm-security-audit.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  npm-security-audit:
+    if: github.ref == 'refs/heads/audit/v013'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Audit full locked dependency tree
+        shell: bash
+        run: |
+          npm audit --package-lock-only --json > npm-audit-full.json || true
+          npm audit --omit=dev --package-lock-only --json > npm-audit-prod.json || true
+      - name: Summarize all advisories and production impact
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const lock = JSON.parse(fs.readFileSync('package-lock.json', 'utf8'));
+          const packages = lock.packages || {};
+          for (const mode of ['full', 'prod']) {
+            const audit = JSON.parse(fs.readFileSync('npm-audit-' + mode + '.json', 'utf8'));
+            console.log('==== ' + mode.toUpperCase() + ' AUDIT ====');
+            console.log('COUNTS ' + JSON.stringify(audit.metadata?.vulnerabilities || {}));
+            if (!audit.vulnerabilities) {
+              console.log('NO_VULNERABILITY_DATA: ' + JSON.stringify(audit.error || audit).slice(0, 1500));
+              continue;
+            }
+            for (const [name, vuln] of Object.entries(audit.vulnerabilities).sort((a,b) => a[0].localeCompare(b[0]))) {
+              const paths = Object.entries(packages)
+                .filter(([p]) => p === 'node_modules/' + name || p.endsWith('/node_modules/' + name))
+                .map(([path, pkg]) => ({path, version:pkg.version, dev:!!pkg.dev}));
+              const via = (vuln.via || []).map(x => typeof x === 'string' ? x : ({name:x.name, title:x.title, url:x.url, severity:x.severity, range:x.range})); 
+              console.log('VULN ' + JSON.stringify({name, severity:vuln.severity, isDirect:vuln.isDirect, range:vuln.range, fixAvailable:vuln.fixAvailable, effects:vuln.effects, via, paths}));
+            }
+          }
+          NODE
+      - name: Archive machine-readable audit reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: v013-npm-security-audit
+          path: |
+            npm-audit-full.json
+            npm-audit-prod.json
+          retention-days: 14
