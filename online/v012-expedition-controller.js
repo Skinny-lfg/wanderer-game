@@ -12,8 +12,6 @@ const THEME_FAMILIES=Object.freeze({
 const REALMS=Object.freeze({forge:['blood','Crimson Dominion'],bloodscar:['blood','Bloodscar Wastes'],temple:['decay','Venomreach'],void:['decay','Umbral Hollow'],grove:['vitality','Verdant Wilds'],shrine:['vitality','Everroot Vale'],ward:['aegis','Warded Marches'],drowned:['aegis','Drowned Bastion'],crypt:['fury','Gravewind Barrens'],bastion:['fury','Ironbound Frontier'],ash:['magic','Ashen Aether'],storm:['magic','Stormglass Beyond']});
 const BOSSES=Object.freeze([{id:'guardian',name:"Abyssal Guardian’s Citadel",style:'guardian',affinity:'aegis'},{id:'rift',name:"Harbinger’s Rift",style:'leech',affinity:'blood'},{id:'ember',name:"Ember Sovereign’s Throne",style:'berserker',affinity:'fury'},{id:'carrion',name:"Matriarch’s Brood",style:'matriarch',affinity:'decay'},{id:'heartroot',name:"Heartroot’s Hollow",style:'devourer',affinity:'vitality'},{id:'stormglass',name:"Stormglass Spire",style:'conductor',affinity:'magic'}]);
 const bossForAffinity=family=>BOSSES.find(b=>b.affinity===family);
-const EVENT_GROUPS=[['traveling_merchant','relic_collector'],['cursed_altar','whispering_idol'],['forgotten_arsenal','bounty_writ'],['restless_spring','oracle_of_paths']];
-const ROOMS=Object.freeze(['combat','combat','combat','combat','combat','combat','combat','elite','elite','chest','chest','event','event','altar']);
 const I=root.WandererV013MapIntelligence,F=root.WandererV013ExpeditionFoundation,T=root.WandererV013EncounterTraits,P=root.WandererV013BossPreparation,C=root.WandererV013ExpeditionConditions,B=root.WandererV013ExpeditionBoons,K=root.WandererV013ExpeditionContracts;
 function shuffle(values,rng){
  const arr=[...values];
@@ -24,76 +22,12 @@ function create(themes,rng=Math.random){
  if(!Array.isArray(themes)||!themes.length||!themes.every(t=>typeof t?.id==='string'&&THEME_FAMILIES[t.id]))throw Error('Classic themes required');
  if(typeof rng!=='function')throw Error('Invalid RNG');
  const expeditionThemes=Object.entries(REALMS).map(([id,[family,name]])=>({...(themes.find(t=>t.id===id)||themes.find(t=>t.id==='forge')),id,name,family}));
- const byFamily=Object.fromEntries(FAMILIES.map(f=>[f,themes.filter(t=>THEME_FAMILIES[t.id]===f)]));
- if(FAMILIES.some(f=>!byFamily[f].length))throw Error('Missing classic themes for affinity '+FAMILIES.find(f=>!byFamily[f].length));
+ if(FAMILIES.some(f=>!expeditionThemes.some(t=>t.family===f)))throw Error('Missing themes for an affinity');
  const game={unlocked:1,expedition:0,planeIndex:0,stage:'camp',families:[],lastFamily:null,rooms:[],offers:[],selected:null,wave:0,history:[],initialFamily:null,rewardPending:null,rerollsByRealm:[],eventIds:[],affinityPlan:null,affinityPlanSeen:[false,false,false]};
  let routeRng=rng,draftRng=rng;
- function makeRouteMobCounts(routeMap){return routeMap.map(row=>{const choices=shuffle([3,12,18+Math.floor(routeRng()*5)],routeRng);let next=0;return row.map(kind=>kind==='combat'?choices[next++%choices.length]:1);});}
- function allowedMobCount(value){return value===3||value===12||Number.isInteger(value)&&value>=18&&value<=22;}
- function allowed(){
-  const eligible=FAMILIES.filter(f=>game.freeBuild||game.families.length<3||game.families.includes(f));
-  // The final boss can belong to a fourth affinity; expose it only for the boss Realm.
-  if(game.version===2&&game.planeIndex===15&&FAMILIES.includes(game.bossFamily)&&!eligible.includes(game.bossFamily))eligible.push(game.bossFamily);
-  return eligible;
- }
- function makeOffer(family,excluded=[],lane=null){
-  const kind=game.routeMap&&lane!==null?game.routeMap[game.planeIndex-1][lane]:game.rooms[game.planeIndex-1],list=(game.version===2?expeditionThemes:byFamily[family]).filter(t=>t.family===family&&!excluded.includes(t.id)),theme=list[Math.floor(routeRng()*list.length)];
-  if(!theme)throw Error('No distinct Realm available for '+family);
-  return {id:theme.id,name:kind==='boss'&&game.version===2?bossForAffinity(family).name:theme.name,image:theme.image,family,
-   waves:kind==='event'?0:1,
-   elite:kind==='elite'||kind==='boss'||!game.routeMap&&kind!=='event'&&routeRng()<.2,boss:kind==='boss',
-   event:game.version===2?(kind==='event'?game.eventsByRealm[game.planeIndex-1]:null):(['chest','event','altar'].includes(kind)?kind:null),...(lane===null?{}:{lane}),...(kind==='combat'&&game.routeMobCounts&&lane!==null?{mobCount:game.routeMobCounts[game.planeIndex-1][lane]}:{})};
- }
- function offerRealms(){
-  if(game.stage!=='choice'||(!game.freeBuild&&!game.initialFamily)||game.rewardPending)throw Error('Realm selection unavailable');
-  if(game.version===2&&game.planeIndex===15){game.offers=[makeOffer(game.bossFamily,[],game.routeMap?0:null)];return game.offers;}
-  const previous=game.history[game.history.length-1],laneOrder=game.projectFamily&&previous?[previous.lane,...[0,1,2].filter(n=>n!==previous.lane)]:previous?.lane===2?[1,2,0]:[1,0,2];
-  const offers=[],required=game.freeBuild&&game.projectFamily?game.projectFamily:game.history.length===0?game.initialFamily:game.version===2&&allowed().includes(game.pathInfluence)?game.pathInfluence:null;
-  if(required)offers.push(makeOffer(required,[],game.routeMap?laneOrder[offers.length]:null));
-  // Planned routes create opportunities only; a family is unlocked only when its Realm is entered.
-  // Offer the second family from Realm 2 through its Realm 4 deadline and the third from Realm 3 through Realm 7.
-  const plannedIndex=game.planeIndex>=2&&game.planeIndex<=4&&!game.affinityPlanSeen[1]?1:
-   game.planeIndex>=3&&game.planeIndex<=7&&!game.affinityPlanSeen[2]?2:-1;
-  const planned=game.affinityPlan&&plannedIndex>=0&&!game.affinityPlanSeen[plannedIndex]?game.affinityPlan[plannedIndex]:null;
-  if(planned&&!offers.some(p=>p.family===planned)&&allowed().includes(planned))offers.push(makeOffer(planned,offers.map(p=>p.id),game.routeMap?laneOrder[offers.length]:null));
-  game.pathInfluence=null;
-  while(offers.length<3){
-   const used=offers.map(p=>p.id);
-   const candidates=allowed().filter(f=>expeditionThemes.some(t=>t.family===f&&!used.includes(t.id)));
-   if(!candidates.length)throw Error('Cannot construct three distinct Realm offers');
-   const family=candidates[Math.floor(routeRng()*candidates.length)];
-   offers.push(makeOffer(family,used,game.routeMap?laneOrder[offers.length]:null));
-  }
-  game.offers=game.routeMap?offers.sort((a,b)=>a.lane-b.lane):shuffle(offers,routeRng);
-  if(game.affinityPlan)for(let i=0;i<3;i++)if(game.planeIndex>=(i===0?1:i===1?2:3)&&game.offers.some(p=>p.family===game.affinityPlan[i]&&reachable(p)))game.affinityPlanSeen[i]=true;
-  return game.offers;
- }
-  function start(level=1,options={}){
-  if(!Number.isInteger(level)||level<1||level>game.unlocked)throw Error('Expedition locked');
-  if(!['camp','finished','failed'].includes(game.stage))throw Error('Expedition already active');
-  if(options.dungeon)return startDungeon(level,options.targetFamily);
-  delete game.dungeon;
-  const count=3+Math.floor(routeRng()*2),events=shuffle(EVENT_GROUPS,routeRng).slice(0,count).map(group=>group[Math.floor(routeRng()*group.length)]);
-  const windows=count===4?[[3,4,5],[6,7,8],[9,10,11],[12,13,14]]:[[3,4,5],[7,8,9],[11,12,13]],rooms=Array(15).fill('combat');rooms[14]='boss';
-  for(const window of windows)rooms[window[Math.floor(routeRng()*window.length)]-1]='event';
-  const eliteSlots=shuffle(Array.from({length:13},(_,i)=>i+1).filter(i=>rooms[i]==='combat'),routeRng).slice(0,2);for(const i of eliteSlots)rooms[i]='elite';let eventIndex=0;
-  Object.assign(game,{version:2,freeBuild:options.freeBuild===true,rerolls:3,bossId:BOSSES[Math.floor(routeRng()*BOSSES.length)].id,eventsByRealm:rooms.map(k=>k==='event'?events[eventIndex++]:null),expedition:level,planeIndex:1,families:[],lastFamily:null,initialFamily:null,affinityPlanSeen:[false,false,false],
-   rooms,routeMap:rooms.map((kind,i)=>{if(i===14)return ['boss'];const row=[kind,kind,kind];if(options.freeBuild&&kind==='event')row[Math.floor(routeRng()*3)]='combat';if(i>0&&kind==='combat'&&routeRng()<.55)row[Math.floor(routeRng()*3)]='elite';return row;}),offers:[],selected:null,wave:0,history:[],
-   rewardPending:null,rerollsByRealm:Array.from({length:15},()=>[3,3,3]),stage:'choice'});
-  game.projectFamily=FAMILIES.includes(options.targetFamily)?options.targetFamily:null;game.bossFamily=FAMILIES.includes(options.targetFamily)?options.targetFamily:FAMILIES[Math.floor(routeRng()*FAMILIES.length)];game.bossId=bossForAffinity(game.bossFamily).id;game.encounterVersion=1;game.routeMobVersion=1;game.routeMobCounts=makeRouteMobCounts(game.routeMap);
-  delete game.routeGroups;
-  if(game.freeBuild){
-   const crossings=[[2,3,4],[6,7,8],[10,11,12]].map(window=>window[Math.floor(routeRng()*window.length)]);
-   const directions=crossings.map(()=>routeRng()<.5?-1:1);
-   game.routeEdges=Array.from({length:14},(_,i)=>Array.from({length:3},(_,lane)=>{
-    if(i===13)return [0];
-    if(!crossings.includes(i))return [lane];
-    const other=lane+directions[crossings.indexOf(i)];return other>=0&&other<3?[lane,other]:[lane];
-   }));
-   game.routePositions=game.routeMap.map((row,i)=>row.map((_,lane)=>i===14?150:Math.round(50+lane*100+(routeRng()-.5)*32)));
-  }else{delete game.routeEdges;delete game.routePositions;}
-  if(game.freeBuild)offerRealms();
-  return game;
+ function start(level=1,options={}){
+  if(options?.dungeon!==true)throw Error('Only the deterministic Dungeon is supported');
+  return startDungeon(level,options.targetFamily);
  }
  function startDungeon(level, targetFamily){
   if(!Number.isInteger(level)||level<1||level>game.unlocked||!['camp','finished','failed'].includes(game.stage))throw Error('Expedition unavailable');
@@ -142,15 +76,14 @@ function create(themes,rng=Math.random){
    const objective=shuffle(nodes.map((n,i)=>n.kind==='elite'?i:-1).filter(i=>i>=0),routeRng)[0];
    return {id:theme.id,name:theme.name,family,image:theme.image,risk,nodes,edges,shortcut,positions,objective,favoured:{slot,subtype},bossSector,secondSector,clueRoom,stepLimit:14-risk};
   });
-  const legacyBossOrder=shuffle(BOSSES.slice(0,3),routeRng); // Preserve deterministic map/seed RNG draw count from Stage 8.3.
+  shuffle(BOSSES.slice(0,3),routeRng); // Keep the active Dungeon's seeded generation sequence unchanged.
    const bossId=bossForAffinity(cards[0].family).id,seed=Math.floor(routeRng()*4294967296)>>>0;
   const manifest=F?.createManifest(cards,{seed,expeditionLevel:level,bossStyle:BOSSES.find(b=>b.id===bossId).style})||null;
   if(P&&manifest)for(const card of cards)P.planRoom(card,seed);
   if(B&&manifest)for(const card of cards)B.placeShrines(card,seed);
   if(T&&manifest)for(const card of cards)for(const {room,traitId} of T.assign(card,seed))card.nodes[room].traitId=traitId;
   Object.assign(game,{version:2,expedition:level,planeIndex:1,stage:'choice',freeBuild:true,offers:[],selected:null,wave:0,history:[],rooms:[],rewardPending:null,families:[],initialFamily:null,lastFamily:null,rerolls:0,rerollsByRealm:Array.from({length:15},()=>[0,0,0]),bossId,encounterVersion:1,dungeon:{cards,realm:null,current:0,cleared:[0],visited:[0],scouted:[],discoveredSecrets:[],...(manifest?{foundationManifest:manifest}:{})}});
-  for(const k of ['routeMap','routeEdges','routePositions','routeMobCounts'])delete game[k];
-  return game;
+   return game;
  }
  function realmMap(){return game.dungeon.cards.find(c=>c.id===game.dungeon.realm);}
  function chooseRealm(id){
@@ -302,56 +235,21 @@ function create(themes,rng=Math.random){
   const p={id:card.id,family:card.family,image:card.image,name:card.name,node:i,waves:n.event?0:1,boss,elite:boss||n.kind==='elite',event:n.event,mobCount:n.count,escorts:n.escorts,risk:card.risk,...(n.vanguard?{vanguard:true}:{}),...(n.traitId?{traitId:n.traitId}:{})};
   game.planeIndex=boss?15:game.history.length+(game.history.length>=14?2:1);game.offers=[p];game.selected=p;return true;
  }
- function planAffinities(plan){
-  if(!['camp','finished','failed'].includes(game.stage))throw Error('Affinity plan can only change between Expeditions');
-  if(plan===null){game.affinityPlan=null;game.affinityPlanSeen=[false,false,false];return null;}
-  if(!Array.isArray(plan)||plan.length!==3||new Set(plan).size!==3||!plan.every(f=>FAMILIES.includes(f)))throw Error('Affinity plan must contain three distinct affinities');
-  game.affinityPlan=[...plan];game.affinityPlanSeen=[false,false,false];return game.affinityPlan;
- }
- function chooseInitial(family){
-  if(game.freeBuild||game.stage!=='choice'||game.initialFamily||!FAMILIES.includes(family))throw Error('Initial affinity unavailable');
-  if(!game.freeBuild&&game.affinityPlan&&family!==game.affinityPlan[0])throw Error('Initial affinity must match the plan');
-  game.initialFamily=family;game.families.push(family);offerRealms();return family;
- }
- function reroll(index){
-  if(game.stage!=='choice'||(!game.freeBuild&&!game.initialFamily)||game.rewardPending||!Number.isInteger(index)||index<0||index>2||(game.version===2?(game.rerolls<=0||game.planeIndex===15):game.rerollsByRealm[game.planeIndex-1][index]<=0))throw Error('No Realm rerolls remaining');
-  const other=game.offers.filter((_,i)=>i!==index),old=game.offers[index];
-  if(!old||!reachable(old))throw Error('Realm is not connected');
-  // Keep all other cards and their counters intact. Guarantee the initial route even after rerolling it.
-  const mustInitial=!game.freeBuild&&game.history.length===0&&!other.some(o=>o.family===game.initialFamily);
-  const used=[...other.map(o=>o.id),old.id];
-  const candidates=allowed().filter(f=>(!mustInitial||f===game.initialFamily)&&expeditionThemes.some(t=>t.family===f&&!used.includes(t.id)));
-  if(!candidates.length)throw Error('No eligible replacement Realm');
-  if(game.version===2)game.rerolls--;else game.rerollsByRealm[game.planeIndex-1][index]--;
-  game.offers[index]=makeOffer(candidates[Math.floor(routeRng()*candidates.length)],used,game.routeMap?old.lane:null);
-  if(game.selected===old)game.selected=null;
-  return game.offers[index];
- }
- function reachable(realm){const previous=game.history[game.history.length-1];return !game.routeMap||!previous||(game.routeEdges?game.routeEdges[game.planeIndex-2][previous.lane].includes(realm.lane):game.planeIndex===15||Math.abs(previous.lane-realm.lane)<=1);}
- function select(id){
-  if(game.stage!=='choice'||(!game.freeBuild&&!game.initialFamily)||game.rewardPending)throw Error('Realm not available');
-  const realm=game.offers.find(p=>p.id===id);
-  if(!realm||!reachable(realm))throw Error('Not a reachable Realm');
-  if(!allowed().includes(realm.family))throw Error('Affinity choice no longer eligible');
-  game.selected=realm;return realm;
- }
  function enter(){
-  if(game.stage!=='choice'||game.rewardPending||game.dungeon?.boonOffer||game.dungeon?.contractOffer||!game.selected||!game.offers.includes(game.selected))throw Error('Select an offered Realm before entering');
+  if(game.stage!=='choice'||!game.dungeon?.realm||game.rewardPending||game.dungeon.boonOffer||game.dungeon.contractOffer||!game.selected||!game.offers.includes(game.selected))throw Error('Select a visited Dungeon room before entering');
   const realm=game.selected;
-  if(!reachable(realm)||!allowed().includes(realm.family))throw Error('Realm no longer eligible');
-  if(!game.freeBuild&&game.planeIndex!==15&&!game.families.includes(realm.family))game.families.push(realm.family);
+  if(realm.node===undefined||realm.id!==game.dungeon.realm)throw Error('Dungeon selection no longer valid');
   game.lastFamily=realm.family;game.wave=1;game.stage='combat';return realm;
  }
  function claimReward(){
   if(game.stage!=='choice'||!game.rewardPending)throw Error('No Realm passive pending');
-  game.rewardPending=null;if(!game.dungeon)offerRealms();return game.offers;
+  game.rewardPending=null;return game.offers;
  }
  function waveWon(){
   if(game.stage!=='combat'||!game.selected||game.selected.eventId)throw Error('No active combat wave');
-  if(game.dungeon){
-   if(P)P.markElite(game);
-   game.dungeon.current=game.selected.node;game.dungeon.cleared.push(game.selected.node);if(!game.dungeon.visited.includes(game.selected.node))game.dungeon.visited.push(game.selected.node);
-  }
+  if(!game.dungeon)throw Error('Current Dungeon required');
+  if(P)P.markElite(game);
+  game.dungeon.current=game.selected.node;game.dungeon.cleared.push(game.selected.node);if(!game.dungeon.visited.includes(game.selected.node))game.dungeon.visited.push(game.selected.node);
   game.history.push({plane:game.planeIndex,...game.selected});
   if(game.selected.boss){
    game.unlocked=Math.max(game.unlocked,game.expedition+1);
@@ -457,11 +355,10 @@ function restore(input){
  if(g.selected)game.selected=game.offers.find(p=>p.node===g.selected.node);
  return game;
 }
-function influence(family){if(!allowed().includes(family))throw Error('Affinity influence unavailable');game.pathInfluence=family;}
- function setSimulationRandomStreams(route,draft){if(typeof route!=='function'||typeof draft!=='function')throw Error('Simulation RNG streams must be functions');routeRng=route;draftRng=draft;}
+function setSimulationRandomStreams(route,draft){if(typeof route!=='function'||typeof draft!=='function')throw Error('Simulation RNG streams must be functions');routeRng=route;draftRng=draft;}
  function passiveRandom(){return draftRng;}
  
- return Object.freeze({deferEvent,chooseRealm,offerContracts,chooseContract,offerBoons,chooseBoon,rerollBoon,scoutPotion,realmMap,visitRoom,travelPath,travelCost,exitCount,scoutPreview,scoutRooms,influence,state:game,start,restore,planAffinities,chooseInitial:chooseInitial,select:select,enter:enter,claimReward:claimReward,reroll:reroll,waveWon:waveWon,eventWon:()=>{throw Error('Resolve the offered integrated event');},defeat:defeat,abandon:abandon,allowed:allowed,reachable,setSimulationRandomStreams,passiveRandom});
+ return Object.freeze({deferEvent,chooseRealm,offerContracts,chooseContract,offerBoons,chooseBoon,rerollBoon,scoutPotion,realmMap,visitRoom,travelPath,travelCost,exitCount,scoutPreview,scoutRooms,state:game,start,restore,enter,claimReward,waveWon,defeat,abandon,setSimulationRandomStreams,passiveRandom});
 }
-root.WandererV012Expedition=Object.freeze({create,FAMILIES,FAMILY_NAMES,THEME_FAMILIES,REALMS,BOSSES,bossForAffinity,EVENT_GROUPS});
+root.WandererV012Expedition=Object.freeze({create,FAMILIES,FAMILY_NAMES,THEME_FAMILIES,REALMS,BOSSES,bossForAffinity});
 })(globalThis);
