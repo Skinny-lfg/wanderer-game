@@ -63,7 +63,8 @@ test('camp portrait is reduced and shadow stays under the boots',()=>{
   assert.ok(tuned.length>500,'camp portrait tuning missing');
   assert.match(tuned,/\.paper>\.model\s*\{[^}]*scale\(\.80\)[^}]*filter:none/s);
   assert.match(tuned,/\.paper>\.characterGroundShadow\s*\{[^}]*top:calc\(var\(--camp-vitals-row\)[^}]*radial-gradient\(ellipse at center[^}]*pointer-events:none/s);
-  assert.match(tuned,/box-shadow:0 0 8px 1px rgba\(157,117,77,\.23\)/,'shadow must have visible separation from dark floor');
+  assert.match(tuned,/filter:blur\(6px\)/,'contact shadow must feather at the edges');
+  assert.ok(!tuned.includes('rgba(0,0,0,.94)'),'contact shadow must not be a solid black oval');
   assert.ok(!tuned.includes('.paper::before'),'old unreliable pseudo shadow removed');
 });
 test('inventory and equipment portraits match camp scale and have no silhouette filter',()=>{
@@ -73,4 +74,18 @@ test('inventory and equipment portraits match camp scale and have no silhouette 
   assert.match(portrait,/filter:none!important/);
   assert.match(css,/\.paper>\.characterGroundShadow\s*\{[^}]*top:calc\(5 \* var\(--gear-row\) - 11px\)[^}]*radial-gradient\(ellipse at center/s);
   assert.match(css,/\.phase3BagInventory \.equipmentLoadout \.paper>\.characterGroundShadow/,'expedition inventory is also covered');
+});
+
+test('GitHub Pages preview includes the same feathered ground shadow as source',()=>{
+  const sourceHTML=fs.readFileSync(path.join(root,'index.html'),'utf8');
+  const pagesHTML=fs.readFileSync(path.join(root,'docs/index.html'),'utf8');
+  assert.equal((pagesHTML.match(/class="characterGroundShadow"/g)||[]).length,1,'Pages paper doll has a single shadow layer');
+  assert.ok(sourceHTML.includes('<span class="characterGroundShadow" aria-hidden="true"></span>'));
+  for(const cssName of ['v012-ui5-camp.css','v012-ui6-unified-inventory.css']){
+    const source=fs.readFileSync(path.join(root,'online',cssName),'utf8');
+    const pages=fs.readFileSync(path.join(root,'docs/online',cssName),'utf8');
+    assert.equal(pages,source,'Pages should match source shadow styles: '+cssName);
+    assert.ok(pages.includes('filter:blur(6px)'),'soft feathered shadow present on Pages');
+    assert.ok(!pages.includes('rgba(0,0,0,.94)'),'no opaque black oval on Pages');
+  }
 });
