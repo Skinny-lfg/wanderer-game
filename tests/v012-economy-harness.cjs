@@ -59,7 +59,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
   potions:{supplies:()=>phase3Supplies,select:phase6SelectPotion,use:phase6UsePotion,inventory:phase6PotionInventory,start:phase6StartPotions,finish:phase6ReturnPotions,tick:phase6TickDurations,shop:(E=1,rng=gameRandom)=>WandererV012Consumables.shop(E,rng,makeId),buy:phase6BuyPotion,reroll:phase6RerollPotions},
   events:{open:phase6OpenEvent,choose:phase6EventChoice,run:()=>phase6Run},
   back:phase6BackToCamp,markAllSeen:markAllAsSeen,
-  state:()=>state,results:()=>phase5Results,exitResult:phase5ExitResult,recordItem:item=>phase5Results.earned.push(phase5Item(item)),controller:()=>phase1Controller,build:()=>phase1Build
+  state:()=>state,results:()=>phase5Results,exitResult:phase5ExitResult,recordItem:item=>phase5Results.earned.push(phase5Item(item)),controller:()=>phase1Controller,build:()=>phase1Build,
   treasures:{bag:phase3BagMarkup,stash:phase6ValuablesMarkup,result(){phase5RenderResult();return $('screen').innerHTML;},combat(){auditCombat();return $('screen').innerHTML;},sell:sellValuables},
   start:phase1Begin,enter:phase1Enter,
   passiveIcons:phase2PassiveIcons,initialPassive:WandererV012Buildcraft.initial,
