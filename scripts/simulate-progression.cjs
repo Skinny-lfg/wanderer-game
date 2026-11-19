@@ -12,6 +12,7 @@ require('../combat/talent-graph-bridge.js');
 require('../combat/talent-graph-runtime.js');
 require('../combat/expedition-progression.js');
 require('../combat/v013-expedition-foundation.js');
+require('../online/v013-expedition-conditions.js');
 require('../online/v013-boss-modifiers.js');
 require('../online/v013-boss-preparation.js');
 require('../online/v013-boss-infrastructure.js');
