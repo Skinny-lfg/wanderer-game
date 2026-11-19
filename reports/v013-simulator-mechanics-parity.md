@@ -99,6 +99,16 @@ Inspeção de `index.html` e `tests/v012-economy-harness.cjs` no HEAD auditado:
 9. Medir coortes persistentes E1→E5→E10→E20, repetição de tentativas, taxas de extração, build swaps, gastos, loot, equipamento, dificuldades Guarded/Dangerous/Brutal e razões de morte. Agrupar por seed e perfil; **separar** falha de agente, erro técnico, morte legítima, timeout e nível não alcançado.
 10. Com cobertura confirmada, ajustar Elites/Bosses, E1/E5/E10/E20, economia e sinergias. **Não alterar balanceamento com amostras onde prepared/upgrade/runa/crafting não foram sequer usados.**
 
+## Validação de auditoria executada no GitHub Actions
+
+[**Paridade do simulador — execução 44629608521 (aprovada)**](https://github.com/Skinny-lfg/wanderer-game/actions/runs/44629608521). Feita em `audit/v013`, sem deploy, sem alterar gameplay, sem credenciais Firebase. Resultados: `npm run test:v013:sim` **7/7**; comparador VM/Chromium + testes de Tier Upgrade **9/9**; testes de progressão natural e escolhas **21/21**. Total de **37/37 testes** executados neste gate isolado, com comparação de um trace real de combate no navegador.
+
+A execução automática conferiu **47 scripts ativos** em `index.html`, **36 scripts VM** contando os dois módulos Talent extra carregados, e identificou **11 imports live não reproduzidos no VM**: sobretudo UI, conta/Firebase, mapa e FX; entre eles, a omissão funcional do **`economy/v013-tier-upgrade.js`**. O valor `TIER_UPGRADE_LOADED_IN_SIMULATOR=false` foi confirmado no CI.
+
+**Correção no próprio teste de auditoria:** a primeira execução [44629334624](https://github.com/Skinny-lfg/wanderer-game/actions/runs/44629334624) falhou porque o caminho do Chromium não foi exportado para a etapa que executava Playwright; foi corrigido na configuração do workflow de auditoria, **não no jogo**, e o gate acima passou integralmente. Nenhum desvio de lógica de combate foi confirmado nessa falha inicial.
+
+---
+
 ## Ficheiros inspecionados
 
 - `index.html`; `tests/v012-economy-harness.cjs`; `scripts/simulate-progression.cjs`; `scripts/v013-natural-progression.cjs`; `scripts/v013-elite-tank-parity.cjs`.
