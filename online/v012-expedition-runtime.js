@@ -206,10 +206,15 @@ function phase1StartWave(resetScroll=false){
  });
  // Give ordinary mobs time to show their attacks; keep their pressure lower.
  for(const enemy of group){
-  const endurance=enemy.boss||enemy.miniboss?1.8:3;
+  // Solo Elites are optional high-risk encounters, not easier normal Tanks.
+  // Attack pressure (not inflated HP) is the primary difficulty lever.
+  // Gravebound Bulwark is still slower/less damaging than other Elite roles,
+  // but can no longer be farmed as a harmless high-HP target.
+  const endurance=enemy.boss?1.8:enemy.miniboss?3.05:3;
   enemy.hp=enemy.maxhp=Math.round(enemy.maxhp*endurance*(1+.10*(g.selected.risk||0)));
   enemy.attackEvery*=1.15;
-  enemy.atk=Math.max(1,Math.round(enemy.atk*.65*(1+.12*(g.selected.risk||0))));
+  const threatScale=enemy.miniboss?(enemy.eliteType==='tank'?1.40:1.12):.65;
+  enemy.atk=Math.max(1,Math.round(enemy.atk*threatScale*(1+.12*(g.selected.risk||0))));
  }
  const traits=globalThis.WandererV013EncounterTraits;
  const modifiers=globalThis.WandererV013BossModifiers;
