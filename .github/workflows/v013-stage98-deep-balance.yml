@@ -1,0 +1,187 @@
+name: Wanderer Stage 9.8 — Deep combat balance campaign (no deploy)
+on:
+  pull_request:
+    paths:
+      - 'scripts/v013-stage98-balance-campaign.cjs'
+      - 'scripts/v013-elite-tank-parity.cjs'
+      - 'tests/v013-stage98-balance-campaign.test.cjs'
+      - '.github/workflows/v013-stage98-deep-balance.yml'
+      - 'package.json'
+  workflow_dispatch:
+permissions:
+  contents: read
+
+jobs:
+  campaign-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Native sampling, censorship and aggregation contract
+        run: npm run test:v013:stage98
+
+  elites:
+    needs: campaign-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      matrix:
+        gear: [starter, common]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: 30 true Tank/Elite same-seed pairs per one of seven native archetypes
+        run: >-
+          npm run diagnose:v013:stage98 --
+          --mode=elites --gear=${{ matrix.gear }}
+          --target=30 --scan=3600 --seed-start=16001
+          --out=reports/stage98-elites-${{ matrix.gear }}.json
+      - name: Preserve complete 1v1 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage98-elites-${{ matrix.gear }}
+          path: |
+            reports/stage98-elites-${{ matrix.gear }}.json
+            reports/stage98-elites-${{ matrix.gear }}.md
+          if-no-files-found: warn
+          retention-days: 30
+
+  bosses:
+    needs: campaign-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        affinity: [aegis, blood, decay, fury, magic, vitality]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: 30 independent seeds per Boss/risk/primary build
+        run: >-
+          npm run diagnose:v013:stage98 --
+          --mode=bosses --affinity=${{ matrix.affinity }}
+          --seeds=30 --seed-start=20001
+          --builds=blood-fury,aegis-vitality,magic-decay
+          --risks=0,1,2
+          --out=reports/stage98-bosses-${{ matrix.affinity }}.json
+      - name: Preserve Boss-affinity/risk evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage98-bosses-${{ matrix.affinity }}
+          path: |
+            reports/stage98-bosses-${{ matrix.affinity }}.json
+            reports/stage98-bosses-${{ matrix.affinity }}.md
+          if-no-files-found: warn
+          retention-days: 30
+
+  builds:
+    needs: campaign-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Seven live weapon/builds x 30 independent seeds x two group sizes
+        run: >-
+          npm run diagnose:v013:stage98 --
+          --mode=builds --seeds=30 --seed-start=30001
+          --builds=blood-fury,aegis-vitality,magic-decay,blood-decay,aegis-sword,fury-bow,magic-storm
+          --group-sizes=3,12
+          --out=reports/stage98-builds.json
+      - name: Preserve seven-build results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage98-builds
+          path: |
+            reports/stage98-builds.json
+            reports/stage98-builds.md
+          if-no-files-found: warn
+          retention-days: 30
+
+  natural:
+    needs: campaign-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [40001, 42001, 44001, 46001]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Earned-account E1-E8 (no forced unlock, guaranteed loot or XP)
+        run: >-
+          npm run diagnose:v013:stage98 --
+          --mode=natural --seed-start=${{ matrix.seed }}
+          --profiles=cautious,balanced --max-attempts=6
+          --out=reports/stage98-natural-${{ matrix.seed }}.json
+      - name: Preserve native-account attempts and censored E levels
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage98-natural-${{ matrix.seed }}
+          path: |
+            reports/stage98-natural-${{ matrix.seed }}.json
+            reports/stage98-natural-${{ matrix.seed }}.md
+          if-no-files-found: warn
+          retention-days: 30
+
+  consolidate:
+    needs: [campaign-tests, elites, bosses, builds, natural]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage98-*
+          path: balance-artifacts
+          merge-multiple: false
+      - name: Validate all 13 native evidence jobs and consolidate
+        run: >-
+          npm run diagnose:v013:stage98 --
+          --mode=summarize --inputs=balance-artifacts
+          --out=reports/stage98-consolidated.json
+      - name: Publish final evidence as GitHub Actions artifacts, never as a deploy
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage98-consolidated-report
+          path: |
+            reports/stage98-consolidated.json
+            reports/stage98-consolidated.md
+          if-no-files-found: warn
+          retention-days: 60
