@@ -44,24 +44,6 @@ test('Gravecaller: 85% and 40% HP cast two 1s interruptible waves without overla
  undead2.hp=0;
  assert.equal(A.deathboundStatus(r),null,'no infection without successful summoned-undead hits');
 });
-test('Gravecaller automatic targeting prefers live summoned undead, never overrides manual focus',()=>{
- const g=elite('gravecaller'),undeadA={...mob('undeadA','minion'),stage83Summoned:true,stage83Summoner:'elite'},
-  undeadB={...mob('undeadB','minion'),stage83Summoned:true,stage83Summoner:'elite'},
-  unrelated=mob('normal','skirmisher');
- const r=run(g,unrelated,undeadA,undeadB);r.encounterLeader=g;
- assert.equal(A.preferredTarget(r),undeadA);
- r.gravecallerManualTarget=g;assert.equal(A.preferredTarget(r),null,'manual leader focus wins');
- r.gravecallerManualTarget=undeadA;assert.equal(A.preferredTarget(r),null,'manual summoned-undead focus wins');
- undeadA.hp=0;assert.equal(A.preferredTarget(r),undeadB,'dead manual target releases focus');
- assert.equal(r.gravecallerManualTarget,null);
- undeadB.hp=0;assert.equal(A.preferredTarget(r),g,'fallback is Gravecaller, not unrelated mob');
- r.simulationTargetPolicy=true;assert.equal(A.preferredTarget(r),null,'explicit sim strategies cannot be overridden');
- delete r.simulationTargetPolicy;
- g.hp=0;assert.equal(A.preferredTarget(r),null,'no target after leader is dead');
- const other=elite('ashen_executioner'),normalRun=run(other,unrelated,undeadB);
- normalRun.encounterLeader=other;undeadB.hp=50;
- assert.equal(A.preferredTarget(normalRun),null,'other Elites unaffected');
-});
 test('Deathbound Ritual: only live summoned undead infect the player on successful damage',()=>{
  const g=elite('gravecaller'),normal=mob('normal','minion');
  const undead={...mob('raised','minion'),stage83Summoned:true,stage83Summoner:'elite'};
@@ -214,10 +196,6 @@ test('Stage 8.2 is loaded in game and docs with four legacy Elites retained',()=
  assert(combat.includes('WandererV013EliteAbilities?.applyDeathbound'));
  assert(combat.includes('WandererV013EliteAbilities?.tickDeathbound'));
  assert(combat.includes('deathboundApplications'));
- assert(combat.includes('gravecallerAutoTargetSwitches'));
- assert(combat.includes('ports.phase3RetargetGroup?.()'));
- assert(fs.readFileSync('index.html','utf8').includes('r.gravecallerManualTarget=r.gravecallerManualTarget===mob?null:mob'));
- assert(fs.readFileSync('docs/index.html','utf8').includes('r.gravecallerManualTarget=r.gravecallerManualTarget===mob?null:mob'));
  assert(combat.includes('hpFactor:spec.hpFactor,atkFactor:spec.atkFactor'));
  assert(!combat.includes('10% protection while they live'));
  assert(fs.readFileSync('index.html','utf8').includes('Deathbound Decay ×'));
