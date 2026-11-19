@@ -150,7 +150,8 @@ function prepare(level,build,seed,opts,desiredRisk=undefined,desiredFamily=undef
  const gearE=gearLevel(level,opts.gear),talents=talentPlan(build,opts.points);
  for(let attempt=0;attempt<(desiredFamily?48:1);attempt++){
   const resolvedSeed=(seed+attempt)>>>0||1;
-  const a=create(resolvedSeed,undefined,{}, {skipPersistence:true});
+  // Freeze wall-clock-dependent IDs as well as native RNG for exact replay.
+   const a=create(resolvedSeed,undefined,{}, {skipPersistence:true,now:1720000000000+resolvedSeed});
   a.setup(gearE,build.weapon,opts.rarity);
   // Stage 9.2 only: hold native route, draft, control and combat RNG streams fixed
   // AFTER gear rolls. Gear rarity must not silently change the test encounter.
