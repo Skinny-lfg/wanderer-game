@@ -1,5 +1,5 @@
 'use strict';
-const G=WandererTalentGraph,graph=G.createGraph(WandererV012Buildcraft.CATALOG,WandererAutomaticTalents.NODES),ids={arcane:['arcane_resonance','arcane_surge','arcane_mastery'],...G.ELEMENTS},families=G.FAMILIES,byId=new Map(graph.map(n=>[n.id,n]));
+const G=WandererTalentGraph,graph=G.createGraph(WandererV012Buildcraft.CATALOG,WandererTalentCatalog.NODES),ids={arcane:['arcane_resonance','arcane_surge','arcane_mastery'],...G.ELEMENTS},families=G.FAMILIES,byId=new Map(graph.map(n=>[n.id,n]));
 const ns='http://www.w3.org/2000/svg',svg=document.querySelector('#svg'),links=document.querySelector('#links'),nodes=document.querySelector('#nodes'),viewport=document.querySelector('#view');
 const angle=f=>-Math.PI/2+families.indexOf(f)*Math.PI/3,polar=(a,r)=>({x:Math.cos(a)*r,y:Math.sin(a)*r}),positions={};
 for(const n of graph){let a=angle(n.family),r=0;

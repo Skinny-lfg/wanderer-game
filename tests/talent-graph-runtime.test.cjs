@@ -1,5 +1,5 @@
 'use strict';
-const {test}=require('node:test'),assert=require('node:assert/strict');require('../combat/v012-buildcraft.js');require('../combat/automatic-talents.js');require('../combat/talent-graph-next.js');require('../combat/talent-graph-bridge.js');require('../combat/talent-graph-runtime.js');
+const {test}=require('node:test'),assert=require('node:assert/strict');require('../combat/v012-buildcraft.js');require('../combat/automatic-talents.js');require('../combat/talent-catalog.js');require('../combat/talent-graph-next.js');require('../combat/talent-graph-bridge.js');require('../combat/talent-graph-runtime.js');
 const T=WandererAutomaticTalents,C=WandererV012Buildcraft;
 function buy(p,id){const n=T.NODES.find(x=>x.id===id);for(const dep of [n.requires,...(n.prerequisites||[])].filter(Boolean))if(!p.nodes.includes(dep))p=buy(p,dep);if(n.anyRequires&&!n.anyRequires.some(x=>p.nodes.includes(x)))p=buy(p,n.anyRequires[0]);const v=T.allocate(p,id);assert(v,id);return v;}
 test('fresh progress earns talent points from XP, never retired starter points',()=>{let p={...T.create(),xp:200};p=T.allocate(p,'root_blood');p=T.allocate(p,'affinity_blood');assert(p);assert.equal(T.allocate(p,'basic_path_blood_0_1'),null);assert(T.valid(p));assert.equal(T.valid({...T.create(),starterPoints:2}),false);});
