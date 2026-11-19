@@ -40,7 +40,7 @@ test('browser encounter and CLI fight agree before, during and after native upda
  a.selectCombatTarget=(r,target)=>{targetSlots.push(r.enemies.indexOf(target));return select(r,target);};
  a.tick=()=>{tick();expected.push(sim.combatSnapshot(a,c));};
  const row=sim.fight(a,c,1500,'adds');
- assert(!row.timedOut);assert(row.targetSwitches>0);assert(expected.some(s=>s.run?.groupReserve?.length<initial.run.groupReserve.length));
+ assert(!row.timedOut);assert(row.reinforcementsSpawned>0);assert(row.targetSwitches>0);assert(expected.some(s=>s.run?.groupReserve?.length<initial.run.groupReserve.length));
  const {chromium}=require('playwright');
  const browser=await chromium.launch(process.env.WANDERER_BROWSER?{executablePath:process.env.WANDERER_BROWSER}:{});
  try{
@@ -60,7 +60,7 @@ test('browser encounter and CLI fight agree before, during and after native upda
    Date.now=()=>now;window.setTimeout=window.setInterval=()=>0;
   },{seed,now});
   await page.goto('http://localhost/?expeditionPhase1=1');
-  await page.evaluate(enterFixture.toString().replace('function enterFixture','(function')+')(window.audit)');
+  await page.evaluate('('+enterFixture.toString()+')(window.audit)');
   const snapshots=await page.evaluate(({read,slots})=>{
    const a=window.audit,c=a.controller(),snapshot=Function('return ('+read+')')();
    const result=[snapshot(a,c)];
