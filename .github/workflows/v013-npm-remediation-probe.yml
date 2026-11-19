@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [safe-fix, cli-upgrade, full-upgrade]
+        variant: [latest-upgrade]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -44,9 +44,9 @@ jobs:
               npm install --package-lock-only --ignore-scripts --save-dev firebase-tools@15.37.0
               npm audit fix --package-lock-only --ignore-scripts || true
               ;;
-            full-upgrade)
-              npm install --package-lock-only --ignore-scripts --save firebase@12
-              npm install --package-lock-only --ignore-scripts --save-dev @firebase/rules-unit-testing@5 firebase-tools@15.37.0
+            latest-upgrade)
+              npm install --package-lock-only --ignore-scripts --save firebase@13
+              npm install --package-lock-only --ignore-scripts --save-dev @firebase/rules-unit-testing@6 firebase-tools@15.37.0
               npm audit fix --package-lock-only --ignore-scripts || true
               ;;
           esac
