@@ -12,3 +12,8 @@
 - Updated tests/v012-save.test.mjs, tests/v012-cloud-save.test.mjs and tests/v012-save-browser.cjs to use current saves. tests/v0120-results.test.cjs now loads the crafting validator used by current profiles.
 - Targeted Node run: 48/48 passed across local save, cloud save, dungeon checkpoint integrity, unified gear/potion UI and Stage 7.4 potion files. Separate Node assertions passed for stash counts (0, 99, 100 and reserved dose) and detached armor reward identity.
 - Additional historical result suite: 2/5 now pass; the same five tests failed on baseline 8d07cf3 before these changes. Remaining failures concern the old Realm passive flow, extraction setup and a synthetic Boss modifier setup. This does not validate those three flows through the browser. No browser suite or large balancing campaign was run.
+
+## Stage 3
+- tests/v012-economy-harness.cjs records executed bytes and exposes the shared target action; scripts/simulate-progression.cjs records ordered sources, replay settings, initial state digest, native elapsed time and target policy. Replaced inferred reinforcement counts with observed reserve actors.
+- index.html centralizes the existing player action; selection policy stays in the CLI.
+- tests/v013-runtime-parity.test.cjs covers ordered provenance, overrides, cross-engine snapshots and combat events. tests/v0120-results.test.cjs corrects three obsolete/invalid scenarios. No changes to the combat formulas.
