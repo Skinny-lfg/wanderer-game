@@ -273,7 +273,17 @@ function encounter(level,build,seed,kind,opts,forcedTrait=undefined,forcedBossMo
   plan.bossModifierIds=forcedBossMod?[forcedBossMod]:[];
   g.dungeon.foundationState.conditionId='relentless_hunt';
  }
- if(!c.visitRoom(candidate)||!a.enter())throw Error('Cannot enter controlled native combat encounter');
+ // Marked rooms may be inaccessible from the first unexplored ring.
+ // Controlled diagnostics may stage the selected real room directly, without
+ // changing its actual Condition plan, Trait implementation or combat engine.
+ let controlledRoomAccess=false;
+ if(!c.visitRoom(candidate)){
+  if(!conditionTrial||marked===undefined)throw Error('Cannot enter controlled native combat encounter');
+  g.dungeon.current=candidate;
+  controlledRoomAccess=true;
+  if(!c.visitRoom(candidate))throw Error('Cannot stage marked native Condition room');
+ }
+ if(!a.enter())throw Error('Cannot enter controlled native combat encounter');
  const count=groupSize??(kind==='normal'?3:1);
  const run=a.encounter({count,boss:kind==='boss',elite:kind==='elite'});
  if(run.tier!==level)throw Error('Incorrect encounter tier '+run.tier+' vs '+level);
@@ -281,7 +291,7 @@ function encounter(level,build,seed,kind,opts,forcedTrait=undefined,forcedBossMo
  const result=fight(a,c,opts.tickLimit,opts.targetPolicy);
  const mode=forcedBossMod!==undefined?'bossmods':forcedTrait!==undefined?'traits':opts.mode==='bosses'?'bosses':['enemies','roles'].includes(opts.mode)?opts.mode:opts.mode==='elites'?'elites':'encounter';
  const label=forcedBossMod!==undefined?(forcedBossMod||'baseline'):forcedTrait!==undefined?(forcedTrait||'baseline'):mode==='bosses'?card.family:['enemies','roles'].includes(mode)?'swarm-'+count:kind;
- return {mode,kind:label,roleEffect:roleEffect||null,plannedConditionId:conditionPlan?.id||null,conditionNaturallyMarked:!!conditionPlan?.rooms?.includes(candidate),traitFixtureInjected:!!trialTraitId,level,build:build.id,seed,resolvedSeed,seedShift,gearE,gearFingerprint,gearTier:P.gearTier(gearE).name,
+ return {mode,kind:label,roleEffect:roleEffect||null,plannedConditionId:conditionPlan?.id||null,conditionNaturallyMarked:!!conditionPlan?.rooms?.includes(candidate),controlledRoomAccess,traitFixtureInjected:!!trialTraitId,level,build:build.id,seed,resolvedSeed,seedShift,gearE,gearFingerprint,gearTier:P.gearTier(gearE).name,
   gearRarity:opts.rarity,runes:opts.runes,pointsBudget:opts.points,pointsSpent:allocatedPoints,
   realm:card.name,affinity:card.family,risk:card.risk,nativeEncounter:kind,requestedGroupSize:count,groupSize:result.initialEnemies,unlocked:level,...result};
 }
@@ -425,7 +435,7 @@ function simulate(opts){
    const observed=new Set(rows.filter(r=>!r.error).map(r=>r.affinity+'|'+r.requestedGroupSize+'|'+r.roleEffect));
    for(const affinity of opts.affinities)for(const count of opts.groupSizes)for(const effect of opts.roleEffects)if(!observed.has(affinity+'|'+count+'|'+effect))notes.push('Missing role scenario: '+affinity+' '+count+' enemies / '+effect);
    notes.push('Native roster is seeded, not forced. Validate per-role sampling before balance conclusions.');
-   notes.push('Trait trials inject an Affinity-compatible native Trait into a controlled encounter. Condition trials select naturally marked rooms where available. Boss-only and passage-only Conditions have no ordinary-room combat effect. Natural co-occurrence is not implied.');
+   notes.push('Trait trials inject an Affinity-compatible native Trait into a controlled encounter. Condition trials select naturally marked rooms where available. Boss-only and passage-only Conditions have no ordinary-room combat effect. Controlled marked-room access bypasses route traversal when unreachable; natural co-occurrence is not implied.');
   }
   if(rows.length<100)notes.push('Small samples: do not infer final balance from win rates without larger seed cohorts and player tests.');
  const fingerprint=sourceFingerprint();
