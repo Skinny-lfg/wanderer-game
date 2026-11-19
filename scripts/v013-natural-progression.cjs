@@ -756,31 +756,40 @@ function usePotionsBetween(a,profile,history,next){
  const v=a.vitals(),g=a.controller().state,d=g.dungeon;
  if(!next||!d?.realm)return false;
  const ratio=v.maxhp>0?v.hp/v.maxhp:1,mpRatio=v.maxmp?v.mp/v.maxmp:1;
+ const magic=profile.families.includes('magic');
  const dangerous=next.type==='boss'||next.type==='elite'||
   next.type==='combat'&&(Number(next.visibleMobRange?.[1]??4)>3);
  let changed=false;
- // A map Scout is valuable *before* exploring if there is no already visible
- // Shrine. Its native targeting works without knowing hidden room contents.
+ // Reveal otherwise hidden shrines only by actual map utility. Both Scout
+ // and Veilsight have to satisfy the game's native map legality check.
  const hasVisibleShrine=a.controller().realmMap().boonShrines?.some(i=>
   d.scouted?.includes(i)||a.controller().travelPath(i).length>0);
- if(!hasVisibleShrine&&d.steps>=7&&history.filter(x=>x.kind==='scout').length===0)
-  changed=usePotionKind(a,'scout','discover_real_shrine',history,'shrine')||changed;
+ if(!hasVisibleShrine&&d.steps>=7&&
+  !history.some(x=>['scout','veilsight'].includes(x.kind))){
+  changed=usePotionKind(a,'veilsight','reveal_shrine_before_route',history)||changed;
+  if(!changed)changed=usePotionKind(a,'scout','discover_real_shrine',history,'shrine')||changed;
+ }
  if(d.steps<=4&&next.type!=='boss'&&next.slack<1)
   changed=usePotionKind(a,'trail','avoid_exhausting_map_steps',history)||changed;
- // Do not spend healing before entering a zero-damage Shrine / Spring; heal
- // when the next actual threat justifies using an irreplaceable purchased dose.
- if(ratio<profile.healAt&&
-   !['shrine','spring'].includes(next.type)&&
-   (dangerous||next.type==='combat'||ratio<.4))
+ // Potions are never used mid-fight: the real runtime only accepts them at
+ // map utility windows, shrine decisions or valid inter-plane preparations.
+ if(ratio<profile.healAt&&!['shrine','spring'].includes(next.type)&&
+  (dangerous||next.type==='combat'||ratio<.4))
   changed=usePotionKind(a,'health','low_hp_before_threat',history)||changed;
  if(mpRatio<.35&&v.maxmp>0&&dangerous)
   changed=usePotionKind(a,'mana','low_mana_before_threat',history)||changed;
  if(dangerous&&ratio>.32){
-  const kind=next.type==='boss'?'barrier':'ironhide';
-  changed=usePotionKind(a,kind,'prepare_for_'+next.type,history)||changed;
-  if(next.type==='boss')changed=usePotionKind(a,'ironhide','boss_defense',history)||changed;
-  if(next.type==='boss'&&d.foundationState?.conditionId!=='veiled_passages')
-   changed=usePotionKind(a,'purifying','boss_condition_mitigation',history)||changed;
+  const defensive=next.type==='boss'?'barrier':'ironhide';
+  changed=usePotionKind(a,defensive,'prepare_for_'+next.type,history)||changed;
+  if(next.type==='boss'){
+   changed=usePotionKind(a,magic?'arcane':'might',magic?'boss_spell_power':'boss_attack_power',history)||changed;
+   changed=usePotionKind(a,'haste','boss_attack_speed',history)||changed;
+   changed=usePotionKind(a,'ironhide','boss_defense',history)||changed;
+   if(d.foundationState?.conditionId&&d.foundationState.conditionId!=='veiled_passages')
+    changed=usePotionKind(a,'purifying','boss_condition_mitigation',history)||changed;
+  }else if(next.type==='elite'){
+   changed=usePotionKind(a,magic?'arcane':'might','elite_damage_preparation',history)||changed;
+  }
  }
  return changed;
 }
