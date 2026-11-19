@@ -574,9 +574,9 @@ function playDungeon(a,level,profile,opts){
  report.seconds=round(report.rooms.reduce((n,r)=>n+r.seconds,0));
  return report;
 }
-function simulateAccount(seed,id,opts){
+function simulateAccount(seed,id,opts,simulationOptions={}){
  const profile=PROFILES[id];
- const a=create(seed,undefined,{}, {skipPersistence:true,now:1720000000000+seed});
+ const a=create(seed,undefined,simulationOptions.moduleOverrides||{}, {skipPersistence:true,now:1720000000000+seed});
  const initialGear=gearSnapshot(a);
  if(a.talents.earned(a.state().automaticTalents)!==0||
     !initialGear.items.length||initialGear.items.some(x=>!x.startingGear))
@@ -680,9 +680,9 @@ function analyze(accounts,opts){
     completedE8:accounts.filter(a=>a.reached.includes(8)&&a.attempts.some(x=>x.level===8&&x.bossWon)).length},
   levels,accounts};
 }
-function run(opts=parseArgs()){
+function run(opts=parseArgs(),simulationOptions={}){
  const accounts=[];
- for(const seed of opts.seeds)for(const id of opts.profiles)accounts.push(simulateAccount(seed,id,opts));
+ for(const seed of opts.seeds)for(const id of opts.profiles)accounts.push(simulateAccount(seed,id,opts,simulationOptions));
  return analyze(accounts,opts);
 }
 function markdown(data){
