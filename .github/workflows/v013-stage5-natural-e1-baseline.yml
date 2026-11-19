@@ -1,0 +1,100 @@
+name: Wanderer Stage 5 — E1 natural baseline (no deploy)
+
+# Single low-cost pilot on the isolated audit branch. Re-run from Actions as needed.
+# No game publication, production credentials, or changes to player accounts.
+on:
+  push:
+    branches:
+      - audit/v013
+    paths:
+      - '.github/workflows/v013-stage5-natural-e1-baseline.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wanderer-stage5-e1-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  e1-natural-pilot:
+    if: github.ref == 'refs/heads/audit/v013'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+
+      - name: Focused Stage 5 and native natural-progression tests
+        run: node --test tests/v013-stage5-natural-baseline.test.cjs tests/v013-natural-progression.test.cjs
+
+      - name: Four genuine E1 attempts (two independent seeds x two decision policies)
+        run: >-
+          npm run simulate:v013:natural-e1-e8 --
+          --seeds=9101,9201
+          --profiles=cautious,balanced
+          --max-level=1
+          --max-attempts=1
+          --out=reports/stage5-e1-baseline.json
+
+      - name: Verify natural-account cohort and report integrity
+        run: |
+          node <<'NODE'
+          const assert=require('node:assert/strict');
+          const fs=require('node:fs');
+          const r=JSON.parse(fs.readFileSync('reports/stage5-e1-baseline.json','utf8'));
+          assert.equal(r.coverage.accounts,4);
+          assert.equal(r.coverage.attempts,4);
+          assert.equal(r.coverage.errors,0,'Native simulator errors must not be counted as player losses');
+          assert.equal(r.levels.length,1);
+          assert.equal(r.levels[0].accountsReached,4);
+          assert.match(r.source,/^[a-f0-9]{64}$/);
+          assert.match(r.runnerSha256,/^[a-f0-9]{64}$/);
+          assert.equal(new Set(r.accounts.map(a=>a.seed+':'+a.profile)).size,4);
+          for(const account of r.accounts){
+            assert.equal(account.startXp,0);
+            assert(account.initialGear.items.length>0);
+            assert(account.initialGear.items.every(item=>item.startingGear));
+            assert.equal(account.attempts.length,1);
+            assert.equal(account.attempts[0].before.earned,0);
+            assert(!account.attempts[0].error);
+          }
+          console.log('STAGE5_E1_COHORT='+JSON.stringify({
+            accounts:r.coverage.accounts,attempts:r.coverage.attempts,
+            wins:r.levels[0].wins,deaths:r.levels[0].deaths,
+            extractions:r.levels[0].extractions,bossReached:r.levels[0].bossReached,
+            ordinaryGreyDrops:r.levels[0].ordinaryGreyDrops,
+            errors:r.coverage.errors,runnerSha256:r.runnerSha256
+          }));
+          NODE
+
+      - name: Record exact Git revision and source hashes
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p reports
+          {
+            echo "commit=${GITHUB_SHA}"
+            echo "branch=${GITHUB_REF}"
+            echo "node=$(node --version)"
+            sha256sum scripts/v013-natural-progression.cjs scripts/simulate-progression.cjs tests/v012-economy-harness.cjs
+          } > reports/stage5-e1-baseline-provenance.txt
+
+      - name: Store full JSON, readable summary, and provenance (no deploy)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage5-e1-natural-baseline
+          path: |
+            reports/stage5-e1-baseline.json
+            reports/stage5-e1-baseline.md
+            reports/stage5-e1-baseline-provenance.txt
+          if-no-files-found: warn
+          retention-days: 30
