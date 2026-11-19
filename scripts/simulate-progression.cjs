@@ -154,7 +154,7 @@ function prepare(level,build,seed,opts,desiredRisk=undefined,desiredFamily=undef
  for(let attempt=0;attempt<(desiredFamily?48:1);attempt++){
   const resolvedSeed=(seed+attempt)>>>0||1;
   // Freeze wall-clock-dependent IDs as well as native RNG for exact replay.
-   const a=create(resolvedSeed,undefined,{}, {skipPersistence:true,now:1720000000000+resolvedSeed});
+   const a=create(resolvedSeed,undefined,{}, {recordModules:opts.recordModules,skipPersistence:true,now:1720000000000+resolvedSeed});
   a.setup(gearE,build.weapon,opts.rarity);
   // Stage 9.2 only: hold native route, draft, control and combat RNG streams fixed
   // AFTER gear rolls. Gear rarity must not silently change the test encounter.
@@ -373,20 +373,24 @@ function summarize(rows){
  }
  return groups;
 }
-function sourceFingerprint(){
- const base=path.resolve(__dirname,'..'),html=fs.readFileSync(path.join(base,'index.html'),'utf8');
- const scriptPaths=[...html.matchAll(/<script[^>]*src="([^"]+)"/g)].map(m=>m[1].split('?')[0])
-  .filter(file=>/^(?:online|combat|economy)\/[a-zA-Z0-9_./-]+\.(?:js|mjs)$/.test(file));
- const refs=[...new Set(['index.html','scripts/simulate-progression.cjs',...scriptPaths])].sort();
- const hash=crypto.createHash('sha256'),included=[];
- for(const file of refs){
-  const full=path.resolve(base,file);
-  if(!full.startsWith(base+path.sep)||!fs.existsSync(full))continue;
-  hash.update(file+'\0');hash.update(fs.readFileSync(full));included.push(file);
+function sourceFingerprint(vmModules){
+ if(!vmModules){
+  create(1,undefined,{}, {skipPersistence:true,now:1720000000001,recordModules:entries=>{vmModules=entries;}});
  }
- return {sha256:hash.digest('hex'),files:included};
+ const base=path.resolve(__dirname,'..'),seen=new Set(),host=[];
+ function visit(mod){
+  if(seen.has(mod))return;
+  seen.add(mod);
+  host.push({file:path.relative(base,mod.filename).split(path.sep).join('/'),sha256:crypto.createHash('sha256').update(fs.readFileSync(mod.filename)).digest('hex')});
+  mod.children.forEach(visit);
+ }
+ visit(module);
+ const manifest={host,vm:vmModules,node:process.version};
+ return {sha256:crypto.createHash('sha256').update(JSON.stringify(manifest)).digest('hex'),files:[...new Set([...host,...vmModules].map(m=>m.file))],manifest};
 }
 function simulate(opts){
+ let vmModules;
+ opts={...opts,recordModules(entries){if(vmModules&&JSON.stringify(entries)!==JSON.stringify(vmModules))throw Error('Scenario module graph changed');vmModules=entries;}};
  const rows=[],start=Date.now(),builds=opts.builds.map(id=>BUILDS.find(b=>b.id===id));
  const add=(mode,kind,level,build,seed,run,affinity=undefined,risk=undefined)=>{
   try{rows.push(run());}
@@ -440,7 +444,7 @@ function simulate(opts){
    notes.push('Trait trials inject an Affinity-compatible native Trait into a controlled encounter. Condition trials select naturally marked rooms where available. Boss-only and passage-only Conditions have no ordinary-room combat effect. Controlled marked-room access bypasses route traversal when unreachable; natural co-occurrence is not implied.');
   }
   if(rows.length<100)notes.push('Small samples: do not infer final balance from win rates without larger seed cohorts and player tests.');
- const fingerprint=sourceFingerprint();
+ const fingerprint=sourceFingerprint(vmModules);
  return {schemaVersion:4,engine:'Wanderer v0.13 native combat/dungeon + Stage 7 economy + Stages 8.0–8.4 actors and abilities',mode:opts.mode,
   assumptions:{levels:opts.levels,seeds:opts.seeds,builds:opts.builds,pointsAvailable:opts.points,rarity:opts.rarity,gear:opts.gear,runes:opts.runes,
    affinities:opts.affinities,risks:opts.risks,groupSizes:opts.groupSizes,roleEffects:opts.roleEffects,boons:opts.boons,contracts:opts.contracts,targetPolicy:opts.targetPolicy,mode:opts.mode,potions:'not automatically selected',
@@ -455,7 +459,7 @@ function simulate(opts){
    visualVfx:'Present in browser but not simulated (visual-only, cannot change combat RNG or numbers).',
    limits:'No automatic potions, conditional boon optimization, trading/crafting between rooms or adaptive player strategy beyond the specified target policy. Not a complete player-behavior model; not all 15 Realms and cross-Expedition build investments are modeled.',
    warnings:notes},
-  sourceSha256:fingerprint.sha256,sourceModules:fingerprint.files,durationMs:Date.now()-start,summary,rows};
+  sourceSha256:fingerprint.sha256,sourceModules:fingerprint.files,sourceManifest:fingerprint.manifest,durationMs:Date.now()-start,summary,rows};
 }
 function main(args=process.argv.slice(2)){
  const opts=parseArgs(args),report=simulate(opts),dest=path.resolve(process.cwd(),opts.output);fs.mkdirSync(path.dirname(dest),{recursive:true});fs.writeFileSync(dest,JSON.stringify(report,null,2)+'\n');
