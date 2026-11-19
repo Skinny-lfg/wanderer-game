@@ -20,7 +20,7 @@ test('fingerprint changes with executed override bytes and evaluation order',()=
 // Identical controlled player setup for the two drivers. The browser loads real
 // classic scripts in HTML order; neither driver starts account or cloud services.
 function enterFixture(a){
- a.setup(4,'Wand','Rare');
+ a.setup(1,'Wand','Common');
  a.state().runes=[a.makeRune('wisdom',4)];a.state().runeSlots=[a.state().runes[0].id,null,null];
  a.start(1,true);
  const c=a.controller(),card=c.state.dungeon.cards[0];
@@ -41,6 +41,8 @@ test('browser encounter and CLI fight agree before, during and after native upda
  a.tick=()=>{tick();expected.push(sim.combatSnapshot(a,c));};
  const row=sim.fight(a,c,1500,'adds');
  assert(!row.timedOut);assert(row.reinforcementsSpawned>0);assert(row.targetSwitches>0);assert(expected.some(s=>s.run?.groupReserve?.length<initial.run.groupReserve.length));
+ assert(expected.some(s=>s.run?.metrics?.damageDealt>0),'native attacks dealt damage');
+ assert(expected.some(s=>s.run?.enemies?.some(e=>e.stage81?.castingUntil>0)),'timed enemy cast appears in trace');
  const {chromium}=require('playwright');
  const browser=await chromium.launch(process.env.WANDERER_BROWSER?{executablePath:process.env.WANDERER_BROWSER}:{});
  try{
