@@ -33,7 +33,7 @@ function classifyGear(gear={},talentNodes=[]){
    (families.includes('fury')||attrs.agi>0))labels.push('leather_agility');
  if(plateWeapon&&armorMix.Plate>=1&&
    (families.includes('aegis')||families.includes('blood')||attrs.str+attrs.end>0))labels.push('plate_strength_endurance');
- const isHybrid=talentNodes.some(id=>NODE.get(id)?.hybridFor||NODE.get(id)?.advanced||NODE.get(id)?.junction);
+ const isHybrid=talentNodes.some(id=>{const n=NODE.get(id.replace(/_rank\d+$/,''));return n?.kind==='mixed'||n?.advanced;});
  if(families.length>=2)labels.push('multi_affinity');
  if(isHybrid)labels.push('cross_branch_special');
  const statLeaders=Object.entries({str:attrs.str,agi:attrs.agi,int:attrs.int,end:attrs.end,cha:attrs.cha})
@@ -44,16 +44,38 @@ function classifyGear(gear={},talentNodes=[]){
   gearPrimaryStat:statLeaders[0]?.[1]>0?statLeaders[0][0]:null,
   noGearPieces:items.length===0,starterPieces:gear.starter??null};
 }
+// v15 has no T.path API. Determine the minimum logical prerequisite
+// closure from the actual T.NODES requires / prerequisites / anyRequires.
+// This is for diagnostics only; native T.allocate remains the purchase gate.
+function prerequisiteClosure(target,visiting=new Set()){
+ const id=target.replace(/_rank\d+$/,''),node=NODE.get(id);
+ if(!node||visiting.has(id))return null;
+ const active=new Set(visiting);active.add(id);
+ const needed=new Set();
+ function join(candidate){
+  if(!candidate)return false;
+  for(const key of candidate)needed.add(key);
+  return true;
+ }
+ for(const key of [node.requires,...(node.prerequisites||[])].filter(Boolean)){
+  if(!join(prerequisiteClosure(key,active)))return null;
+ }
+ if(node.anyRequires?.length){
+  const options=node.anyRequires.map(key=>prerequisiteClosure(key,active)).filter(Boolean)
+   .sort((a,b)=>a.length-b.length);
+  if(!join(options[0]))return null;
+ }
+ needed.add(id);
+ return [...needed];
+}
 function talentDepth(ids=[]){
- const skill=ids.map(id=>NODE.get(id)).filter(Boolean)
-  .filter(n=>n.passiveId||n.skillKey||n.advanced||n.specialisationTier||n.junction);
- const depths=ids.map(id=>{
-  try {return T.path(T.create(),id)?.length||0;} catch{return 0;}
- });
+ const skill=ids.map(id=>NODE.get(id.replace(/_rank\d+$/,''))).filter(Boolean)
+  .filter(n=>['basic','focused','mixed','element'].includes(n.kind)||n.advanced);
+ const depths=ids.map(id=>prerequisiteClosure(id)?.length||0);
  return {allocated:ids.length,skillNodes:skill.length,
   deepestLegalRoute:depths.length?Math.max(...depths):0,
   abilityIds:skill.map(n=>n.id),
-  mixedAbilities:skill.filter(n=>n.hybridFor||n.advanced||n.junction).map(n=>n.id)};
+  mixedAbilities:skill.filter(n=>n.kind==='mixed'||n.advanced).map(n=>n.id)};
 }
 function account(a){
  const attempts=a.attempts||[],first=attempts[0];
