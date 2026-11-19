@@ -35,14 +35,39 @@ function estimateEnemy(level,n=1){
  return {hp:enemyStat(level,Math.round(Math.round(base.hp*1.4)*1.4*hpFactor)),atk:enemyStat(level,Math.round(Math.round(base.atk*1.25)*1.4*atkFactor)),def:enemyStat(level,Math.round(Math.round(base.def*1.2)*1.4*defFactor))};
 }
 
+// Initial room actors receive risk once. Escorts are added after this step.
+function applyEncounterPressure(group,risk){
+ const hpRisk=1+.10*risk,attackRisk=1+.12*risk;
+ for(const enemy of group){
+  let endurance=3,pressure=.65;
+  if(enemy.boss){
+   endurance=1.8; // Boss base stats already include their own multiplier.
+  }else if(enemy.miniboss){
+   endurance=3.05;
+   pressure=enemy.eliteType==='tank'?1.40:1.12;
+  }
+  enemy.hp=enemy.maxhp=Math.round(enemy.maxhp*endurance*hpRisk);
+  enemy.attackEvery*=1.15;
+  enemy.atk=Math.max(1,Math.round(enemy.atk*pressure*attackRisk));
+ }
+}
+function applyEscortStats(enemy){
+ enemy.hp=enemy.maxhp=Math.round(enemy.maxhp*1.2);
+ enemy.atk=Math.round(enemy.atk*.35);
+ enemy.attackEvery*=1.3;
+}
+function expeditionGroupScale(count){
+ if(count>=6)return {hp:(1.65+.045*(count-6))/count,atk:count>=18?.12:.16};
+ return {1:{hp:1,atk:1},2:{hp:.7,atk:.65},3:{hp:.5,atk:.45},4:{hp:.4,atk:.35}}[count];
+}
+
 // Encounter count may exceed the four visible arena slots. Every mob keeps its own state.
 // Large hordes use an explicit per-mob scale and fill empty slots as enemies die.
 function createEnemyGroup(spawn,count,options={}){
  if(typeof spawn!=='function'||!Number.isInteger(count)||count<1||count>22||!options||typeof options!=='object')throw Error('Invalid enemy group');
  const activeSlots=options.activeSlots??Math.min(4,count);
  if(!Number.isInteger(activeSlots)||activeSlots<1||activeSlots>4||activeSlots>count)throw Error('Invalid active mob slots');
- const defaultScale={1:{hp:1,atk:1},2:{hp:.7,atk:.65},3:{hp:.5,atk:.45},4:{hp:.4,atk:.35}};
- const scale=options.scale||defaultScale[count];
+ const scale=options.scale||expeditionGroupScale(count);
  if(!scale||!Number.isFinite(scale.hp)||!Number.isFinite(scale.atk)||scale.hp<=0||scale.atk<=0)throw Error('Invalid enemy group scale');
  const seen=new Set();return Array.from({length:count},(_,index)=>{
   const enemy=spawn(index);if(!enemy||seen.has(enemy)||!Number.isFinite(enemy.maxhp)||!Number.isFinite(enemy.atk)||!Number.isFinite(enemy.attackEvery)||enemy.maxhp<=0||enemy.atk<0||enemy.attackEvery<=0)throw Error('Invalid enemy');seen.add(enemy);
@@ -70,5 +95,5 @@ function applyExpeditionModifiers(stats,e){
  if(e.attack)s.attack*=1+e.attack;if(e.defense)s.defense*=1+e.defense;
  return s;
 }
-root.WandererV012CombatCore=Object.freeze({evasionChance,enemyAttackType,referenceLevel,enemyStat,gearStat,endlessWeaponDamageBonus,estimateEnemy,createEnemyGroup,livingEnemies,nextGroupTarget,groupComplete,affinityProcChance,applyExpeditionModifiers});
+root.WandererV012CombatCore=Object.freeze({evasionChance,enemyAttackType,referenceLevel,enemyStat,gearStat,endlessWeaponDamageBonus,estimateEnemy,createEnemyGroup,applyEncounterPressure,applyEscortStats,livingEnemies,nextGroupTarget,groupComplete,affinityProcChance,applyExpeditionModifiers});
 })(globalThis);

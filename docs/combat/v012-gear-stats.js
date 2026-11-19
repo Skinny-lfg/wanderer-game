@@ -1,20 +1,15 @@
 // Wanderer v0.12 — one calculation for derived character/equipment/rune stats.
 // Explicit dependencies preserve the native formulas and allow isolated testing.
 (function(root){'use strict';
-function gearEvasionRating(item,{ARMOR_SLOTS,RARITY,clamp}){
+function gearEvasionRating(item,{ARMOR_SLOTS}){
  if(!item||item.armorType!=='Leather'||!ARMOR_SLOTS.includes(item.slot))return 0;
- if(item.evasionRating!==undefined)return Number.isFinite(Number(item.evasionRating))?Math.max(0,Number(item.evasionRating)):0;
- // Read-only compatibility for pre-hotfix Leather, including reinforced Legendaries.
- const tier=clamp(Number(item.tier)||1,1,Number.MAX_SAFE_INTEGER),base=Math.round((2+Math.min(tier,200)*.91)*(RARITY[item.rarity]?.[1]||1));
- const scaled=item.tier>200?WandererV012CombatCore.gearStat(item.tier,base):base;
- const rank=item.rarity==='Legendary'?clamp(Number(item.upgradeRank)||0,0,10):0;
- return Math.round(scaled*(1+rank*.02)*100)/100;
+ // Fresh Leather stores Evasion Rating explicitly; there is no legacy recalculation.
+ const value=Number(item.evasionRating);
+ return Number.isFinite(value)&&value>0?value:0;
 }
 function itemStatValue(item,key,context){
  if(key==='evasionRating')return gearEvasionRating(item,context);
- const value=Number(item?.[key])||0;
- // Old Orbs retain their saved roll; new Orbs already store the B.4 value.
- return key==='spell'&&item?.slot==='offhand'&&item.subtype==='Orb'&&item.orbSpellB4!==true?Math.round(value*1.12):value;
+ return Number(item?.[key])||0;
 }
 function power(s){return Math.round(s.attack*2+s.defense*4+s.maxhp*.15+s.attacksPerSec*35+s.crit*1.2+s.blockChance*2+((s.caster||s.phase2Magic)?s.spellPower*1.7:0)+(s.synergyPower||0));}
 const WEAPON_INTERVALS=Object.freeze({Sword:1.6,Mace:2.2,Bow:2,Daggers:1.15,'Two-Handed':2.8,Staff:2.3,Wand:1.65});
@@ -61,9 +56,10 @@ function totalStats(equipment,ownedRunes,equippedRuneIds,{isTwoHanded,FIELDS,ite
  s.spellPower=caster?Math.round(3+s.int*1.9+s.spellFlat):0;
  // Magic resources exist before percentage talents, including on physical weapons.
  const magic=PHASE1_PREVIEW&&(build?build.unlockedFamilies?.includes('magic'):state?.automaticTalents?.nodes?.includes('affinity_magic'));
- if(magic){s.mana=caster?s.mana:Math.max(30,Math.round(20+s.int*7+s.manaFlat));s.manaRegen=caster?s.manaRegen:+(1.5+s.int*.23).toFixed(1);s.spellPower=caster?s.spellPower:Math.round(3+s.int*1.9+s.spellFlat);s.phase2Magic=true;}
  const decay=PHASE1_PREVIEW&&(build?build.unlockedFamilies?.includes('decay'):state?.automaticTalents?.nodes?.includes('affinity_decay'));
- if(decay){s.mana=caster?s.mana:Math.max(30,Math.round(20+s.int*7+s.manaFlat));s.manaRegen=caster?s.manaRegen:+(1.5+s.int*.23).toFixed(1);s.spellPower=caster?s.spellPower:Math.round(3+s.int*1.9+s.spellFlat);s.phase2Decay=true;}
+ if(magic||decay){s.mana=caster?s.mana:Math.max(30,Math.round(20+s.int*7+s.manaFlat));s.manaRegen=caster?s.manaRegen:+(1.5+s.int*.23).toFixed(1);s.spellPower=caster?s.spellPower:Math.round(3+s.int*1.9+s.spellFlat);}
+ if(magic)s.phase2Magic=true;
+ if(decay)s.phase2Decay=true;
  s.blockChance=off?.subtype==='Shield'?Math.min(48,Math.round(13+s.end*.27+Math.max(0,off.tier||1)*.25+(main?.subtype==='Mace'?7:0))):0;
  s.crit=Math.min(55,s.crit+gearBonus('critBonus'));
  if(s.mana)s.manaRegen+=gearBonus('manaRegenBonus');

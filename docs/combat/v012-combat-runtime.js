@@ -1,5 +1,10 @@
 // v0.12 combat runtime. Canonical state transitions; UI effects are injected.
 (function(root){'use strict';
+function cappedStrikeDamage(raw,strike,heroMaxHp){
+ const charged=Math.max(1,Math.round(raw*strike.multiplier));
+ const cap=Math.max(1,Math.floor(heroMaxHp*strike.capFraction));
+ return Math.min(charged,cap);
+}
 function create(ports){
 const mobWindups=new WeakSet;
 function addLog(text,kind=''){if(ports.isPhase1Run()){const r=ports.state.run;r.realmLog??=[];const line={text:String(text),kind:String(kind)};r.realmLogBytes=(r.realmLogBytes||0)+line.text.length+line.kind.length;r.realmLog.push(line);while(r.realmLogBytes>180000){const old=r.realmLog.shift();r.realmLogBytes-=old.text.length+old.kind.length;r.realmLogTruncated=true;}}ports.logEntries.unshift({text,kind});ports.logEntries=ports.logEntries.slice(0,75);if(ports.view==='combat')ports.renderLog()}
@@ -113,7 +118,6 @@ function legendaryExtend(e,type){
  if(!stack)return false;stack.remaining++;ports.synchronizeDots(e);return true;
 }
 
-function legendaryAffinity(r,effect,effectiveHeal=0){}
 
 function legendaryAttackBonus(r,base,critical,cast){
  const t=ports.legendaryRuntime(r),e=r.enemy,now=ports.setNow(r);let added=0;
@@ -138,7 +142,6 @@ function legendaryOnHit(r,base,real){
  if(ports.legendaryHas('gravewake')&&ports.legendaryProc(r,'gravewake'))WandererV012Buildcraft.applyRot(ports.phase1Build,ports.phase2Context(r),base*(ports.legendaryEmpowered(r,'gravewake')?.10:.07));
 }
 
-function legendaryOffhand(r,damage){}
 
 function legendaryDefensiveEffects(r,blocked,hit,absorbed=0,broken=false){
  if(r.hp<=0)return;
@@ -158,7 +161,6 @@ function legendaryTick(r,dt){
  if(ports.legendaryHas('heartroot-carapace')&&r.hp>0&&r.hp<r.maxhp*.7){const budget=Math.max(0,r.maxhp*.10-(t.heartrootHealed||0));if(budget>0){const healed=ports.setHeal(r,Math.min(budget,r.maxhp*(ports.legendaryEmpowered(r,'heartroot-carapace')?.003:.002)*dt));if(healed>0){t.heartrootHealed=(t.heartrootHealed||0)+healed;ports.phase6Proc(r,'Legendary: heartroot-carapace');}}}
 }
 
-function legendaryKill(r){}
 
 function setReady(r,name,seconds){
  const timers=r.setCooldowns||(r.setCooldowns={}),now=ports.setNow(r);
@@ -168,7 +170,9 @@ function setReady(r,name,seconds){
 
 function setBarrier(r,amount){
  const before=r.barrier;
- r.barrier=Math.min(Math.max(8,Math.round(r.maxhp*.3)),r.barrier+Math.max(0,amount)*(1+(r.stats?.wardBonus||0)));
+ const cap=Math.max(8,Math.round(r.maxhp*.3));
+ if(before>=cap)return 0;
+ r.barrier=Math.min(cap,before+Math.max(0,amount*(1+(r.stats?.wardBonus||0))));
  return Math.max(0,r.barrier-before);
 }
 
@@ -301,11 +305,9 @@ function applyAffinity(effect,enemy,s,mult=1,baseDamage=0){
   return;
  }
  if(effect==='slow')enemy.slowTime=Math.max(enemy.slowTime,2.9);
- if(effect==='sunder'&&r)ports.legendaryAffinity(r,'sunder');
  if(effect==='sunder')enemy.def=Math.max(Math.round(enemy.baseDef*.25),enemy.def-Math.max(1,Math.round(enemy.baseDef*(bonus.sunderBonus||.1))));
  if(!r)return;
  if(effect==='drain'){
-  ports.legendaryAffinity(r,'drain');
   const healed=ports.setHeal(r,Math.max(1,Math.round((baseDamage||s.spellPower||s.attack||5)*.16*mult*(1+(bonus.drainBonus||0)))));
   if(healed>0){ports.addLog('🌑 Drain heals +'+Math.round(healed)+' HP','good');
    if(bonus.soulCharge){const t=ports.setRuntime(r),now=ports.setNow(r);if(now-t.soulLast>=1){t.soul=Math.min(3,t.soul+1);t.soulLast=now;t.soulExpiry=now+6;}}
@@ -321,7 +323,7 @@ function applyAffinity(effect,enemy,s,mult=1,baseDamage=0){
  }
  if(effect==='nature'){
   const heal=Math.max(1,Math.round((baseDamage||s.spellPower||s.attack||5)*.08*mult*(1+(bonus.natureBonus||0))*(bonus.natureVitality&&r.hp<r.maxhp*.5?1.5:1)));
-  const gained=ports.setHeal(r,heal);ports.legendaryAffinity(r,'nature',gained);if(gained>0)ports.addLog('🌿 Nature heals +'+Math.round(gained)+' HP','good');
+  const gained=ports.setHeal(r,heal);if(gained>0)ports.addLog('🌿 Nature heals +'+Math.round(gained)+' HP','good');
  }
  if(effect==='crystal')ports.setDirectEnemyDamage(r,(baseDamage||s.spellPower||s.attack||5)*.06*mult,'💎 Crystal:');
  if(effect==='shock')ports.setDirectEnemyDamage(r,(baseDamage||s.spellPower||s.attack||5)*.08*mult*(1+(bonus.shockBonus||0)),'⚡ Storm:');
@@ -458,7 +460,6 @@ function weaponAttack(r,offhandStrike=false){
   }
  }
  // Crescent keeps its cooldown-limited Bleed extension without independent off-hand hits.
- ports.legendaryOffhand(r,damage);
  if(!offhandStrike&&ports.WANDERER_DOUBLE_STRIKE_ENABLED&&kind==='Daggers'&&!['Daggers','Off-Hand Dagger'].includes(off?.subtype)&&damage>0&&e.hp>0&&ports.gameRandom()<.25){
   // One ordinary pre-critical main-hand hit, with no further rolls or recursive triggers.
   ports.setDirectEnemyDamage(r,Math.max(1,Math.round(base*.55)),'🗡 Double Strike!');
@@ -653,8 +654,8 @@ function updateFight(){
   // Elite Berserker cannot one-shot a full-health player with one direct hit.
   // Cap before Block/Barrier so defensive investment still matters.
   if(e.eliteType==='berserker')raw=Math.min(raw,Math.max(1,Math.floor(r.maxhp*.35)));
-  if(stage82Strike)raw=Math.min(Math.max(1,Math.round(raw*stage82Strike.multiplier)),Math.max(1,Math.floor(r.maxhp*stage82Strike.capFraction)));
-   if(stage84Strike)raw=Math.min(Math.max(1,Math.round(raw*stage84Strike.multiplier)),Math.max(1,Math.floor(r.maxhp*stage84Strike.capFraction)));
+  if(stage82Strike)raw=cappedStrikeDamage(raw,stage82Strike,r.maxhp);
+   if(stage84Strike)raw=cappedStrikeDamage(raw,stage84Strike,r.maxhp);
    raw=Math.max(0,Math.round(raw*(root.WandererV013BossAbilities?.incomingFactor(r,e,r.combatSeconds)||1)));
   if(e.vanguard){e.vanguard=false;ports.addLog(e.name+' delivers its opening strike.','critical');}
   const special=e.miniboss||e.boss;
@@ -811,7 +812,7 @@ function phase6Stats(stats){return ports.phase6Run?WandererV012CombatCore.applyE
 function winEncounter(){ports.phase1WaveWon();}
 
 function die(){ports.phase1Death();}
-return {addLog,bossForTier,eliteArchetype,rollEliteArchetype,tryDodge,enemyFor,synchronizeDots,tickDots,setRuntime,setNow,advancePlayerAttackClock,activeLegendarySignatures,legendaryRuntime,legendaryHas,legendaryReady,legendaryEmpowered,legendaryProc,legendaryOnHit,legendaryExtend,legendaryAffinity,legendaryAttackBonus,legendaryOffhand,legendaryDefensiveEffects,legendaryRealmStart,legendaryTick,legendaryKill,setReady,setBarrier,regenPerSecond,setHeal,setDelayEnemy,setDirectEnemyDamage,setOnAttack,setCombatExpire,setEnemyWeaken,setHeatTick,setSoulHeal,applyAffinity,weaponAttack,updateFight,phase2Context,phase2Stats,phase2WeaponAttack,phase2MagicTick,phase6Metric,phase6Proc,phase6CollectMetrics,phase6Stats,winEncounter,die};
+return {addLog,bossForTier,eliteArchetype,rollEliteArchetype,tryDodge,enemyFor,synchronizeDots,tickDots,setRuntime,setNow,advancePlayerAttackClock,activeLegendarySignatures,legendaryRuntime,legendaryHas,legendaryReady,legendaryEmpowered,legendaryProc,legendaryOnHit,legendaryExtend,legendaryAttackBonus,legendaryDefensiveEffects,legendaryRealmStart,legendaryTick,setReady,setBarrier,regenPerSecond,setHeal,setDelayEnemy,setDirectEnemyDamage,setOnAttack,setCombatExpire,setEnemyWeaken,setHeatTick,setSoulHeal,applyAffinity,weaponAttack,updateFight,phase2Context,phase2Stats,phase2WeaponAttack,phase2MagicTick,phase6Metric,phase6Proc,phase6CollectMetrics,phase6Stats,winEncounter,die};
 }
 root.WandererV012CombatRuntime=Object.freeze({create});
 })(globalThis);

@@ -52,7 +52,6 @@ function apply(item,basePower,random){
   item[key]=(item[key]||0)+value;
  }
  if(item.subtype==='Wand'||item.subtype==='Staff')item.atk=0;
- if(item.subtype==='Orb')item.orbSpellB4=true;
  item.affixes=[...selected];item.v013StatCount=selected.length;
  item.v013Budget=Math.round(total*100)/100;
  if(item.rarity!=='Common')item.craftingProfile=selected.find(x=>PRIMARY.includes(x))||null;

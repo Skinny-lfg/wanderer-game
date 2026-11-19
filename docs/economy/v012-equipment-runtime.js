@@ -125,7 +125,7 @@ else if(subtype==='Two-Handed'){o.atk=Math.round(power*1.75)+7;o.str=3+Math.floo
 else if(subtype==='Staff'){o.atk=1;o.int=4+Math.floor(progressTier*.34);o.spell=Math.round(power*1.8)+8;o.mana=Math.round(power*2.4)}
 else if(subtype==='Wand'){o.atk=1;o.int=2+Math.floor(progressTier*.22);o.spell=Math.round(power*1.15)+2;o.mana=power}
 else if(subtype==='Shield'){o.def=power+2;o.hp=power*3;o.end=2+Math.floor(progressTier*.22)}
-else if(slot==='offhand'){o.spell=subtype==='Orb'?Math.round(power*1.12):power;if(subtype==='Orb')o.orbSpellB4=true;o.int=1+Math.floor(progressTier*.2);o.mana=power}
+else if(slot==='offhand'){o.spell=subtype==='Orb'?Math.round(power*1.12):power;o.int=1+Math.floor(progressTier*.2);o.mana=power}
 else if(slot==='armor'){o.def=power+3;o.hp=power*4;o.end=1+Math.floor(progressTier*.23)}
 else if(slot==='helm'||slot==='belt'){o.def=power+1;o.hp=power*2;o.end=1}
 else if(slot==='gloves'){o.str=1+Math.floor(progressTier*.2);o.agi=1+Math.floor(progressTier*.2);o.atk=Math.round(power*.55)}
@@ -505,7 +505,7 @@ function phase3ClampVitals(){
  }
 }
 function toggleEquipmentLock(item){item.locked=!item.locked;ports.save();}
-return {toggleEquipmentLock,chooseSubtype,economyTier,merchantTier,baseStatScore,offhandLocked,craftEquipment,reinforceEquipment,purchaseEquipment,sellValuables,markItemSeen,markAllAsSeen,comparisonEquip,stashCapacity,stashUpgradeCost,stashHasRoom,upgradeStash,fresh,makeSlots,starter,legendaryMatches,legendaryFor,legendarySignature,makeItem,rarityOdds,rarityRoll,rollEquipmentSlot,merchantCost,saleFragments,rollShop,ensureMerchantStock,economyOwnedGear,economyOwnedItem,economyCanAct,refreshMerchantStock,equipItem,unequipItem,bulkSell,salvageOne,phase3BagItems,phase3BagOverflow,phase3NeedsBagResolution,phase3DiscardLoot,phase4ClaimOverflow,phase6PotionInventory,phase6SelectPotion,phase6StartPotions,phase6ReturnPotions,phase6UsePotion,phase6BuyPotion,phase6RerollPotions,unequipRune,salvageRune,salvageDuplicateRunes,equipRune,offerBossRunes,claimPendingRuneChoice,runeCheckpointLocked,phase3UsePotion,phase3ClampVitals};
+return {toggleEquipmentLock,chooseSubtype,economyTier,merchantTier,baseStatScore,offhandLocked,craftEquipment,reinforceEquipment,purchaseEquipment,sellValuables,markItemSeen,markAllAsSeen,comparisonEquip,stashItemCount,stashCapacity,stashUpgradeCost,stashHasRoom,upgradeStash,fresh,makeSlots,starter,legendaryMatches,legendaryFor,legendarySignature,makeItem,rarityOdds,rarityRoll,rollEquipmentSlot,merchantCost,saleFragments,rollShop,ensureMerchantStock,economyOwnedGear,economyOwnedItem,economyCanAct,refreshMerchantStock,equipItem,unequipItem,bulkSell,salvageOne,phase3BagItems,phase3BagOverflow,phase3NeedsBagResolution,phase3DiscardLoot,phase4ClaimOverflow,phase6PotionInventory,phase6SelectPotion,phase6StartPotions,phase6ReturnPotions,phase6UsePotion,phase6BuyPotion,phase6RerollPotions,unequipRune,salvageRune,salvageDuplicateRunes,equipRune,offerBossRunes,claimPendingRuneChoice,runeCheckpointLocked,phase3UsePotion,phase3ClampVitals};
 }
 root.WandererV012EquipmentRuntime=Object.freeze({create});
 })(globalThis);
