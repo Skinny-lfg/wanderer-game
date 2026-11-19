@@ -17,17 +17,18 @@ test('current target priorities omit real IDs for several deep skills',()=>{
   assert(profile.targets.some(id=>!ids.has(id)),'at least one invalid depth target');
  }
 });
-test('real reset removes nodes while retaining earned XP and primary attribute assignments',()=>{
+test('v15 reset refunds node investments without a manual primary-attribute mechanic',()=>{
  let p={...T.create(),xp:1000};
  p=T.allocate(p,'root_blood');
- p=T.allocateAttribute(p,'str');
  assert(p);
  const q=T.reset(p);
  assert.equal(q.nodes.length,0,'native VM array must be empty after respec');
  assert.equal(q.xp,p.xp);
- assert.equal(q.attributes.str,1);
  assert.equal(T.earned(q),T.earned(p));
  assert.equal(T.valid(q),true);
+ assert.equal(Object.hasOwn(q,'attributes'),false);
+ assert.equal(typeof T.attributePoints,'undefined');
+ assert.equal(typeof T.allocateAttribute,'undefined');
 });
 test('classify natural physical, caster, agility and multi-affinity loadouts',()=>{
  const item=(slot,subtype,armorType,stats={})=>({slot,subtype,armorType,stats});
