@@ -33,6 +33,7 @@ miss dynamic code, DOM event handlers, generated previews and import graphs.
 | v15 manual Strength/Agility/Intellect/Endurance/Charisma allocation API | `combat/talent-graph-runtime.js`, mirrored `docs` | Not available in the current UI; native tree stat nodes remain |
 | v9–v14 talent graph migration and four legacy graph instances | Same two v15 runtime files | Fresh accounts use v15; old saves explicitly out of scope |
 | Manual saved-attribute boost used by derived stats | `combat/v012-gear-stats.js`, mirrored `docs` | New profiles gain attributes only from equipment and purchased v15 stat nodes |
+| Retired two-free-starter-talent-points save override | `combat/talent-graph-runtime.js`, mirrored `docs` | New v15 profiles gain talent points only through XP; old `starterPoints:2` is rejected |
 | Historical treasure-name alias table | `online/v012-treasures.js`, mirrored `docs` | New drops have stable `treasureType` IDs |
 | Four unreferenced helpers in main `index.html` | `forgePreviewImage`, `heroImage`, `chanceText`, `forgeComparisonTrend` | Each had one static reference: its own declaration |
 | Three unreferenced helpers in `docs/index.html` | `heroImage`, `chanceText`, `forgeComparisonTrend` | Same, but see the important Forge exception below |
