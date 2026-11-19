@@ -1,0 +1,39 @@
+name: Wanderer v0.13 Stage S1 native simulator parity (audit only)
+on:
+  push:
+    branches: [audit/v013]
+    paths: ['.github/workflows/v013-s1-parity.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  s1-native-tests:
+    if: github.ref == 'refs/heads/audit/v013'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: S1 contracts and legal native decisions
+        run: node --test tests/v013-s1-parity.test.cjs
+      - name: Existing simulation, progression and talent gate
+        run: |
+          npm run test:v013:sim
+          node --test tests/v013-natural-progression.test.cjs tests/v013-stage94-human-decisions.test.cjs tests/v013-tier-upgrade.test.cjs tests/v013-talent-structure.test.cjs
+      - name: Browser to VM equivalence (real Chromium)
+        shell: bash
+        run: |
+          CHROME_BIN="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          if [ -n "$CHROME_BIN" ]; then
+            export WANDERER_BROWSER="$CHROME_BIN"
+            "$CHROME_BIN" --version
+          else
+            npx playwright install chromium
+          fi
+          node --test tests/v013-runtime-parity.test.cjs
