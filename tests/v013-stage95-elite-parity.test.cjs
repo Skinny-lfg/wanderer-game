@@ -34,12 +34,16 @@ test('Paired cohort records truly native tank-roster encounters and does not man
 });
 
 test('E1 Elites must be more dangerous than normal Tanks in independent paired native combat cohorts',()=>{
+ const coverage=C.scanEliteCoverage({seedStart:9470,scan:500,expected:8});
+ assert.equal(coverage.errors.length,0,JSON.stringify(coverage.errors.slice(0,2)));
+ assert.equal(Object.keys(coverage.counts).length,8,'all eight archetypes must appear in an independent, larger native-seed coverage scan');
  const result=C.compare({seedStart:9470,scan:160,pairCap:24,gearModes:['starter','common']});
  assert.equal(result.errors.length,0,JSON.stringify(result.errors.slice(0,2)));
  for(const gear of ['starter','common']){
   const row=result.summary[gear];
   assert.equal(row.pairs,24,'both comparisons need sufficient native Tanks');
-  assert.equal(Object.keys(row.byEliteType||{}).length,8,'report all eight native Elite archetypes');
+  assert(Object.keys(row.byEliteType||{}).every(id=>coverage.counts[id]>0),
+   'all types reported in the 24-pair sample must be genuine members of the native eight-type roster');
   assert.equal(Object.values(row.byEliteType).reduce((sum,r)=>sum+r.pairs,0),24,
    'per-archetype reports must account for every matched pair');
   assert(row.eliteMeanDamageTaken>row.tankMeanDamageTaken,
