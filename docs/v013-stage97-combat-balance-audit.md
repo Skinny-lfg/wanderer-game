@@ -33,8 +33,10 @@ and adds a **balance decision layer**. It does not retune enemies or invent comb
 - Genuine same-seed Tank/Elite outcomes report discordance and mean paired
   HP damage/time differences, with reproducible bootstrap intervals only at
   20+ valid pairs.
-- Optional prior-version baseline with exact native scenario matching, explicit
-  different gear/HP or source warnings, no assumed causal balance fix.
+- Optional prior-version baseline with exact scenario identities and a SHA-256
+  fingerprint of each *actually rolled equipped loadout*. Comparisons with
+  different equipment or player HP/MP are excluded from summary deltas and
+  explicitly counted. No assumed causal balance fix.
 - Dedicated no-deploy GitHub Actions CI smoke.
 
 ## Commands (Node 22, repo root)
