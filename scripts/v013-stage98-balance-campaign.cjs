@@ -116,8 +116,39 @@ function runBosses(opts,deps={}){
  const matrix={...S.DEFAULTS,mode:'bosses',levels:[1],seeds,
   builds:opts.builds,affinities:[opts.affinity],risks:opts.risks,
   points:0,rarity:'Common',gear:'current',runes:false,targetPolicy:'mechanics'};
- const raw=sim(matrix),groups=summarizeNative(raw.rows),errors=raw.rows.filter(r=>A.status(r)==='error'),
-  unresolved=raw.rows.filter(r=>['timeout','unresolved'].includes(A.status(r)));
+ const raw=sim(matrix),attempts=[...raw.rows];
+ const key=r=>JSON.stringify([r.build,r.risk]);
+ const take=()=>{
+  const used=new Map(),seen=new Map();
+  for(const row of attempts){
+   if(!['win','death'].includes(A.status(row)))continue;
+   const k=key(row),id=row.resolvedSeed??row.seed;
+   if(!used.has(k)){used.set(k,[]);seen.set(k,new Set());}
+   if(used.get(k).length>=opts.seeds||seen.get(k).has(id))continue;
+   used.get(k).push(row);seen.get(k).add(id);
+  }
+  return used;
+ };
+ const isCovered=groups=>opts.builds.every(build=>opts.risks.every(risk=>
+  (groups.get(JSON.stringify([build,risk]))||[]).length>=opts.seeds));
+ let selected=take(),resampled=0;
+ // Native card search may legitimately fail to find a requested Affinity/risk
+ // within its fixed 48 attempts. Substitute a different spaced seed; never
+ // rewrite or force a Realm Card, and retain every skipped attempt in the report.
+ while(!isCovered(selected)&&resampled<20){
+  const replacement=opts.seedStart+(opts.seeds+resampled)*100;
+  const extra=sim({...matrix,seeds:[replacement]});
+  if(extra.sourceSha256!==raw.sourceSha256)
+   throw Error('Native source changed during Boss cohort');
+  attempts.push(...extra.rows);
+  resampled++;
+  selected=take();
+ }
+ const rows=[...selected.values()].flat(),groups=summarizeNative(rows);
+ const skippedCards=attempts.filter(r=>A.status(r)==='error'&&
+  /^No natural Realm card matches /.test(r.error||''));
+ const errors=attempts.filter(r=>A.status(r)==='error'&&!skippedCards.includes(r));
+ const unresolved=attempts.filter(r=>['timeout','unresolved'].includes(A.status(r)));
  const cells=opts.builds.flatMap(build=>opts.risks.map(risk=>{
   const found=groups.find(g=>g.mode==='bosses'&&g.build===build&&
    g.affinity===opts.affinity&&g.risk===risk);
@@ -129,17 +160,21 @@ function runBosses(opts,deps={}){
    flags:found?.flags||['missing_boss_cell']};
  }));
  const success=!errors.length&&!unresolved.length&&
-  cells.every(x=>x.independent>=opts.seeds);
+  cells.every(x=>x.independent===opts.seeds);
  return {stage:'9.8',mode:'bosses',affinity:opts.affinity,
-  sourceSha256:raw.sourceSha256,settings:{seeds,builds:opts.builds,risks:opts.risks},
+  sourceSha256:raw.sourceSha256,
+  settings:{seeds,builds:opts.builds,risks:opts.risks,resampled},
   coverage:{planned:seeds.length*opts.builds.length*opts.risks.length,
-   observed:raw.rows.length,errors:errors.length,unresolved:unresolved.length,
+   observed:rows.length,nativeAttempts:attempts.length,
+   skippedMissingNativeRealmCards:skippedCards.length,
+   resampledSeeds:resampled,errors:errors.length,unresolved:unresolved.length,
    independentByCell:cells.map(x=>x.independent),complete:success},
-  success,cells,groups,errors,unresolved,warnings:[
+  success,cells,groups,errors,unresolved,skippedCards,warnings:[
    'Native Boss forced into first-ring room, with actual Affinity/ability/condition',
+   'Missing generated native Realm Card is a censored placement, replaced by a distinct spaced seed; all attempts retained',
    'E1 Common equipment and zero synthetic talent points; not a natural route',
    'Boss preparation and pre-Boss attrition are separately examined in earned-account runner'
-  ],rows:raw.rows};
+  ],rows,rawAttempts:attempts};
 }
 function runBuilds(opts,deps={}){
  const sim=deps.simulate||S.simulate;
