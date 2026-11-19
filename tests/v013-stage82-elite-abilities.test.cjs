@@ -36,12 +36,16 @@ test('Exarch shields a living ally by at most 15% max HP, three times with real 
  assert.equal(e.stage82.castCount,3);assert.equal(friend.barrier,15);
  assert.equal(move(r,100).length,0);
 });
-test('Exarch cannot shield itself and holds ability until a living ally appears',()=>{
+test('Exarch shields itself when alone, then prioritizes a living ally',()=>{
  const e=elite('rotbound_exarch'),r=run(e);A.attach(e);
- assert.deepEqual(move(r,4),[]);assert.equal(e.stage82.castCount,0);assert.equal(e.barrier,0);
+ assert.equal(move(r,4)[0].type,'prepare');assert.equal(e.barrier,0);
+ const first=move(r,4.75)[0];assert.equal(first.type,'activate');assert.equal(first.target,e);
+ assert.equal(e.barrier,15);assert.equal(e.stage82.castCount,1);
  const friend=mob('arrived');r.enemies.push(friend);
- assert.equal(move(r,5)[0].type,'prepare');
- assert.equal(move(r,5.75)[0].target,friend);
+ assert.equal(move(r,14.74).length,0);
+ assert.equal(move(r,14.75)[0].type,'prepare');
+ const second=move(r,15.5)[0];assert.equal(second.type,'activate');assert.equal(second.target,friend);
+ assert.equal(friend.barrier,15);assert.equal(e.stage82.castCount,2);
 });
 test('Executioner: 1.5s telegraph, one 2.4x strike with 18% cap; stun and attack delay interrupt',()=>{
  const e=elite('ashen_executioner'),r=run(e);A.attach(e);
