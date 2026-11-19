@@ -1,0 +1,124 @@
+name: Wanderer Stage 5 — Longitudinal E1 to E20 native progression (no deploy)
+
+on:
+  push:
+    branches:
+      - audit/v013
+    paths:
+      - '.github/workflows/v013-stage5-e20-longitudinal.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-longitudinal:
+    if: github.ref == 'refs/heads/audit/v013'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Validate native account, capped progression and milestone report
+        run: >-
+          node --test
+          tests/v013-natural-progression.test.cjs
+          tests/v013-stage5-longitudinal.test.cjs
+          tests/v013-stage5-camp-decisions.test.cjs
+
+  longitudinal-cohorts:
+    needs: validate-longitudinal
+    if: github.ref == 'refs/heads/audit/v013'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - cohort: A
+            seeds: '9101,9102,9103,9104,9105,9106,9107,9108'
+            profiles: 'cautious,balanced'
+          - cohort: B
+            seeds: '9201,9202,9203,9204,9205,9206,9207,9208'
+            profiles: 'balanced,daring'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Native account progression from E1; stop only at Boss win or attempt cap
+        shell: bash
+        run: |
+          node scripts/v013-stage5-longitudinal.cjs \
+            --seeds=${{ matrix.seeds }} \
+            --profiles=${{ matrix.profiles }} \
+            --max-level=20 \
+            --max-attempts=24 \
+            --max-total-attempts=90 \
+            --out=reports/stage5-e1-e20-${{ matrix.cohort }}.json
+
+      - name: Verify no synthetic progress or native simulator errors
+        shell: bash
+        run: |
+          node - "reports/stage5-e1-e20-${{ matrix.cohort }}.summary.json" <<'NODE'
+          const assert=require('node:assert/strict'),fs=require('node:fs');
+          const r=JSON.parse(fs.readFileSync(process.argv[2],'utf8'));
+          assert.equal(r.evidence.accountCount,16);
+          assert.equal(r.evidence.independentMapSeeds,8);
+          assert.equal(r.evidence.nativeErrors,0);
+          assert.equal(r.evidence.noFakeUnlocks,true);
+          assert.equal(r.evidence.noFakeEquipment,true);
+          assert(r.evidence.totalAttempts>0&&r.evidence.totalAttempts<=1440);
+          for(const key of ['E5','E10','E20']){
+            const m=r.milestones[key];
+            assert(m.unlocked>=m.entered&&m.entered>=m.cleared);
+          }
+          for(const a of r.accounts){
+            assert(a.totalAttempts<=90);
+            if(a.milestones.E20.unlocked)assert(a.deepestUnlocked>=20);
+          }
+          console.log('STAGE5_MILESTONE_VALID='+JSON.stringify({
+            cohort:'${{ matrix.cohort }}',attempts:r.evidence.totalAttempts,
+            E5:r.milestones.E5.unlocked,
+            E10:r.milestones.E10.unlocked,
+            E20:r.milestones.E20.unlocked,
+            nativeErrors:r.evidence.nativeErrors,
+            stops:r.stopped
+          }));
+          NODE
+
+      - name: Record exact source and workflow provenance
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p reports
+          {
+            echo "commit=${GITHUB_SHA}"
+            echo "branch=${GITHUB_REF}"
+            echo "cohort=${{ matrix.cohort }}"
+            echo "node=$(node --version)"
+            sha256sum scripts/v013-natural-progression.cjs scripts/v013-stage5-longitudinal.cjs tests/v012-economy-harness.cjs
+          } > reports/stage5-e1-e20-${{ matrix.cohort }}.provenance.txt
+
+      - name: Upload cohort data including any diagnostic failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage5-e1-e20-cohort-${{ matrix.cohort }}
+          path: |
+            reports/stage5-e1-e20-${{ matrix.cohort }}.json
+            reports/stage5-e1-e20-${{ matrix.cohort }}.summary.json
+            reports/stage5-e1-e20-${{ matrix.cohort }}.md
+            reports/stage5-e1-e20-${{ matrix.cohort }}.provenance.txt
+          if-no-files-found: warn
+          retention-days: 30
