@@ -11,7 +11,7 @@ function phase4Session(entry=false){
  if(continuity?.legendaryState)delete continuity.legendaryState.enemy;
  return ports.phase4Clone({version:1,entry,controller:ports.phase1Controller.state,build:ports.phase1Build,vitals:ports.phase1Vitals,
   integration:ports.phase6Run,clock:ports.phase1Clock,supplies:{health:0,mana:0},lootIds:[...ports.phase3LootIds],home:ports.phase4Home,
-  seed:ports.phase4Seed,prefix:ports.phase4Prefix,stamp:ports.phase4Stamp,idCounter:ports.uid,continuity,draft:ports.phase1Draft,results:ports.phase5Results,
+  seed:ports.phase4Seed,prefix:ports.phase4Prefix,stamp:ports.phase4Stamp,idCounter:ports.uid,continuity,results:ports.phase5Results,
   clearedRun:ports.state.run?.status==='cleared'?ports.phase4Clone(ports.state.run):null});
 }
 
@@ -67,7 +67,7 @@ function phase4Extract(){
  ports.phase6ReturnPotions('extracted');
  settleContract();ports.phase5MakeSummary('extracted');ports.phase5Results.review='summary';
  ports.phase1Controller.abandon();if(ports.phase1Build)WandererV012Buildcraft.clear(ports.phase1Build);
- ports.phase1Build=null;ports.phase1Draft=null;ports.phase1Vitals=null;ports.phase1Continuity=null;ports.state.run=null;ports.phase5Results.eventExitPending=false;ports.phase3LootIds=new Set();ports.phase4Home=null;ports.phase4Seed=null;ports.phase4Prefix=null;ports.phase4Entry=null;ports.phase4WaveKeys=[];
+ ports.phase1Build=null;ports.phase1Vitals=null;ports.phase1Continuity=null;ports.state.run=null;ports.phase5Results.eventExitPending=false;ports.phase3LootIds=new Set();ports.phase4Home=null;ports.phase4Seed=null;ports.phase4Prefix=null;ports.phase4Entry=null;ports.phase4WaveKeys=[];
  if(ports.PHASE1_PREVIEW)ports.phase5Snapshot.expedition.lastOutcome='extracted';
  ports.view='phase1';if(!ports.phase5Persist())return false;ports.render();
  ports.bannerMessage(ports.state.expeditionOverflow.length?'Extracted. Free Stash space to claim '+ports.state.expeditionOverflow.length+' secured items.':'Extraction complete. Loot secured.');return true;
@@ -77,27 +77,11 @@ function phase4Restore(session){
  ports.phase1Controller.restore(session.controller);
  if(session.build)WandererV012Buildcraft.validate(session.build);
  ports.phase6Run=session.integration||null;
- ports.phase1Build=session.build;if(ports.phase1Build){WandererV012Buildcraft.syncPermanent(ports.phase1Build,ports.state.automaticTalents,session.controller.freeBuild);if(ports.phase6Run?.effects.echo)ports.phase1Build.runtime.echo=ports.phase6Run.effects.echo;}ports.phase1Draft=session.controller.freeBuild?null:session.draft;ports.phase1Vitals=session.vitals;ports.phase1Clock=session.clock;
+ ports.phase1Build=session.build;if(ports.phase1Build){WandererV012Buildcraft.syncPermanent(ports.phase1Build,ports.state.automaticTalents,true);if(ports.phase6Run?.effects.echo)ports.phase1Build.runtime.echo=ports.phase6Run.effects.echo;}ports.phase1Vitals=session.vitals;ports.phase1Clock=session.clock;
  ports.phase3Supplies={health:0,mana:0};
  ports.phase3LootIds=new Set(session.lootIds);ports.phase4Home=session.home;ports.phase4Seed=session.seed;ports.phase4Prefix=session.prefix;ports.phase4Stamp=session.stamp;ports.uid=session.idCounter;ports.phase1Continuity=session.continuity;
- if(ports.phase1Build){if(!ports.phase1Controller.state.freeBuild)ports.phase1Build.families=ports.phase1Controller.state.families;if(ports.phase1Draft?.kind==='reward'){
-  const eligible=WandererV012Buildcraft.eligible,build=ports.phase1Build,draft=ports.phase1Draft;
-  if(!ports.phase1Controller.state.rewardPending||!Array.isArray(draft.options)||draft.options.length>3||new Set(draft.options.map(p=>p.id)).size!==draft.options.length||!draft.options.every(p=>WandererV012Buildcraft.CATALOG.some(v=>v.id===p.id)))throw Error('Invalid saved passive choice');
-  draft.plane=ports.phase1Controller.state.rewardPending;
-  if(draft.version!==3){build.realmIndex=draft.plane.plane;build.runtime.draftStats=ports.totalStats();draft.options=WandererV012Buildcraft.options(build,draft.plane.family,ports.gameRandom);draft.version=3;}
-  else{
-   // Old v3 checkpoints could contain cross-affinity fallback cards. Keep the
-   // checkpoint and its build intact, but do not offer those cards again.
-   draft.options=draft.options.filter(p=>p.family===draft.plane.family);
-   if(!draft.options.every(p=>eligible(build,draft.plane.family).some(v=>v.id===p.id)))throw Error('Invalid saved passive choice');
-  }
-
- }}
  if(session.results)ports.phase5Results=ports.phase4Clone(session.results);
  ports.state.run=session.clearedRun||null;if(ports.state.run?.valuables)if(ports.state.run?.enemy)WandererV012Buildcraft.migrateEnemyDots(ports.state.run.enemy);ports.phase4WaveKeys=[];ports.phase4Resume=session.entry&&!session.clearedRun;
- // Old playtest checkpoints may be waiting for a retired Realm draft. Keep
- // earned rewards and continue to the next Realm without granting a free pick.
- if(ports.phase1Draft?.kind==='reward'&&ports.phase1Controller.state.rewardPending){ports.phase1Controller.claimReward();ports.phase1Draft=null;}
  ports.phase4Entry=session.entry?{profile:ports.phase4Clone({...ports.state,run:null}),session:ports.phase4Clone(session),ledger:[...(ports.phase5Snapshot?.expedition.awardKeys||[])]}:null;
  ports.view=session.clearedRun?'combat':'phase1';
 }
@@ -120,7 +104,7 @@ function restoreCloudSave(save){
  const recovered=WandererV012Save.recover(save,save.binding);ports.phase5Snapshot=recovered.save;
  ports.state=JSON.parse(JSON.stringify(recovered.save.profile));ports.uid=Math.max(ports.uid,recovered.save.idCounter);
  ports.phase1Controller.state.unlocked=recovered.save.expedition.unlocked;ports.phase5PersonalBest=recovered.save.expedition.completed;
- ports.phase5Ready=true;ports.saveBlocked=false;ports.phase1Vitals=null;ports.phase1Build=null;ports.phase1Draft=null;
+ ports.phase5Ready=true;ports.saveBlocked=false;ports.phase1Vitals=null;ports.phase1Build=null;
  if(recovered.save.expedition.presentation)ports.phase5Results=ports.phase4Clone(recovered.save.expedition.presentation);
  if(recovered.save.expedition.session)ports.phase4Restore(recovered.save.expedition.session);
  else {const g=ports.phase1Controller.state;Object.assign(g,{stage:'camp',expedition:recovered.save.expedition.unlocked,unlocked:recovered.save.expedition.unlocked,planeIndex:0,families:[],lastFamily:null,rooms:[],offers:[],selected:null,wave:0,history:[],initialFamily:null,rewardPending:null});ports.phase5Results={version:1,complete:false,review:null,realm:null,summary:null,earned:[],gold:0,fragments:0};ports.state.run=null;ports.phase4Entry=null;ports.phase4Resume=false;ports.phase4Home=null;ports.phase4Seed=null;ports.phase4Prefix=null;ports.phase4WaveKeys=[];ports.view='phase1';}
@@ -161,7 +145,7 @@ function phase5Init(){
      if(Number.isSafeInteger(number))ports.uid=Math.max(ports.uid,number);
     }
     ports.phase1Controller.state.unlocked=recovered.save.expedition.unlocked;ports.phase5PersonalBest=recovered.save.expedition.completed;
-    ports.phase1Vitals=null;ports.phase1Build=null;ports.phase1Draft=null;
+    ports.phase1Vitals=null;ports.phase1Build=null;
     if(recovered.save.expedition.presentation)ports.phase5Results=ports.phase4Clone(recovered.save.expedition.presentation);
     if(recovered.save.expedition.session)ports.phase4Restore(recovered.save.expedition.session);
    }else ports.phase5Snapshot=WandererV012Save.create({...ports.state,run:null},{binding});
@@ -196,12 +180,12 @@ function phase5Init(){
       if(Number.isSafeInteger(number))ports.uid=Math.max(ports.uid,number);
      }
      ports.phase1Controller.state.unlocked=ports.phase5Snapshot.expedition.unlocked;ports.phase5PersonalBest=ports.phase5Snapshot.expedition.completed;
-     ports.phase1Vitals=null;ports.phase1Build=null;ports.phase1Draft=null;
+     ports.phase1Vitals=null;ports.phase1Build=null;
      if(ports.phase5Snapshot.expedition.presentation)ports.phase5Results=ports.phase4Clone(ports.phase5Snapshot.expedition.presentation);
      if(ports.phase5Snapshot.expedition.session)ports.phase4Restore(ports.phase5Snapshot.expedition.session);
     }else ports.phase5Snapshot=WandererV012Save.create({...ports.state,run:null},{binding});
     ports.phase5Ready=true;ports.saveBlocked=false;
-    if(ports.phase5Persist()){if(!ports.phase2EnterInitialRealm())ports.render();}
+    if(ports.phase5Persist())ports.render();
    }catch(error){ports.phase5Fail(error);}
    await new Promise(resolve=>globalThis.addEventListener('pagehide',()=>{
     if(ports.phase5Ready)ports.phase5Persist();ports.phase5Ready=false;resolve();
