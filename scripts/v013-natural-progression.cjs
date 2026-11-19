@@ -216,22 +216,28 @@ function craftEarned(a,profile,level){
 // resource. Craft previews are estimates; named-tier upgrades are deterministic.
 // Decisions do not modify RNG, prices, drops or equipment ownership.
 function investEarnedGear(a,profile,level){
- const outcome={crafted:[],upgraded:[]},forge=a.forge;
+ const outcome={crafted:[],upgraded:[],reinforced:[]},forge=a.forge;
  if(!forge||!a.economyCanAct())return outcome;
  const efficiency=(gain,fragments,essence)=>gain/(Math.max(1,fragments)+4*Math.max(0,essence));
  for(let attempt=0;attempt<2;attempt++){
   const s=a.state(),options=[];
   for(const recipe of forge.recipes){
-   const progress=forge.progress(recipe.id,level);
-   if(!progress?.ready)continue;
-   const preview=forge.preview(recipe.id,level);
-   if(!preview)continue;
-   const targets=['ring1','ring2'].includes(recipe.slot)?['ring1','ring2']:[recipe.slot];
-   const target=targets.map(slot=>({slot,gain:gearScore(preview,profile)-gearScore(s.equip[slot],profile)}))
-    .sort((x,y)=>y.gain-x.gain)[0];
-   if(target.gain<5)continue;
-   options.push({kind:'craft',recipe,target,gain:target.gain,fragments:progress.cost.fragments,
-    essence:progress.cost.essence,efficiency:efficiency(target.gain,progress.cost.fragments,progress.cost.essence)});
+   const desiredFocus=recipe.subtype===profile.armor&&
+    ['helm','armor','gloves','boots','belt'].includes(recipe.slot)?
+    {Cloth:'spellweave',Leather:'quickstep',Plate:'bulwark'}[profile.armor]:null;
+   for(const focus of ['none',...(desiredFocus?[desiredFocus]:[])]){
+    const progress=forge.progress(recipe.id,level,focus);
+    if(!progress?.ready)continue;
+    const preview=forge.preview(recipe.id,level,focus);
+    if(!preview)continue;
+    const targets=['ring1','ring2'].includes(recipe.slot)?['ring1','ring2']:[recipe.slot];
+    const target=targets.map(slot=>({slot,gain:gearScore(preview,profile)-gearScore(s.equip[slot],profile)}))
+     .sort((x,y)=>y.gain-x.gain)[0];
+    if(target.gain<5)continue;
+    options.push({kind:'craft',recipe,focus,target,gain:target.gain,
+     fragments:progress.cost.fragments,essence:progress.cost.essence,
+     efficiency:efficiency(target.gain,progress.cost.fragments,progress.cost.essence)});
+   }
   }
   for(const item of [...s.stash,...Object.values(s.equip).filter(Boolean)]){
    if(!item?.id)continue;
@@ -243,6 +249,20 @@ function investEarnedGear(a,profile,level){
    if(gain<3)continue;
    options.push({kind:'upgrade',item,preview,gain,fragments:preview.cost.fragments,
     essence:preview.cost.essence,efficiency:efficiency(gain,preview.cost.fragments,preview.cost.essence)});
+  }
+  for(const item of [...s.stash,...Object.values(s.equip).filter(Boolean)]){
+   if(item?.rarity!=='Legendary'||!item.id)continue;
+   const price=forge.reinforceCost(item.id);
+   if(!price||price>s.fragments)continue;
+   const rank=(item.upgradeRank||0)+1,preview={...item,upgradeRank:rank};
+   for(const key of ['atk','def','hp','spd','str','agi','int','end','cha','mana','spell','evasionRating']){
+    const original=Number((item.upgradeBase||item)[key])||0;
+    if(original>0)preview[key]=Math.round(original*(1+rank*.02)*100)/100;
+   }
+   const gain=gearScore(preview,profile)-gearScore(item,profile);
+   if(gain<.35)continue;
+   options.push({kind:'reinforce',item,gain,fragments:price,essence:0,
+    efficiency:efficiency(gain,price,0)});
   }
   options.sort((x,y)=>y.efficiency-x.efficiency||y.gain-x.gain||Number(x.kind==='craft')-Number(y.kind==='craft'));
   const best=options[0];if(!best)break;
@@ -259,14 +279,21 @@ function investEarnedGear(a,profile,level){
     fromTier:best.item.tier,toTier:item.tier,fragmentsSpent:best.fragments,
     essenceSpent:best.essence,expectedGain:round(best.gain),
     equipped:!!Object.values(s.equip).find(e=>e?.id===item.id),equipmentChanges:equipped});
+  }else if(best.kind==='reinforce'){
+   const previousRank=best.item.upgradeRank||0,id=best.item.id;
+   if(!forge.reinforce(id))throw Error('Native Legendary reinforcement rejected after affordable preview');
+   if((best.item.upgradeRank||0)!==previousRank+1||s.fragments!==before.fragments-best.fragments)
+    throw Error('Native Legendary reinforcement settlement mismatch');
+   outcome.reinforced.push({id,name:best.item.name,fromRank:previousRank,
+    toRank:best.item.upgradeRank,fragmentsSpent:best.fragments,expectedGain:round(best.gain)});
   }else{
-   const item=forge.craft(best.recipe.id,level);
+   const item=forge.craft(best.recipe.id,level,best.focus);
    if(!item)throw Error('Native Forge craft rejected after valid Camp preview');
    if(s.fragments!==before.fragments-best.fragments||
       s.crafting.essence!==before.essence-best.essence)
     throw Error('Native Forge crafting cost mismatch');
    const equipped=equipEarned(a,profile,false);
-   outcome.crafted.push({recipe:best.recipe.id,item:item.name,slot:best.target.slot,
+   outcome.crafted.push({recipe:best.recipe.id,focus:best.focus,item:item.name,slot:best.target.slot,
     fragmentsSpent:best.fragments,essenceSpent:best.essence,
     expectedGain:round(best.gain),equipped:equipped.some(x=>x.item===item.name)});
   }
