@@ -1914,7 +1914,7 @@ function phase5RealmResultMarkup(r,summary){
  const metrics=r.metrics||{},damage=[['Damage dealt',metrics.damageDealt],['Damage taken',metrics.damageTaken]].filter(([,value])=>Number.isFinite(value)&&value>0);
  const metric=(label,value)=>'<div class="phase5ResultMetric"><span>'+label+'</span><strong>'+value+'</strong></div>';
  return '<section class="panel phase5Result phase5VisualSummary phase5RealmResult"><div class="phase5ResultHeading"><span class="eyebrow">Expedition '+r.level+' · Realm '+r.plane+'</span><h1>'+(outcome?'REALM CLEARED':'YOU DIED')+'</h1><p>'+esc(r.name)+' · '+esc(WandererV012Expedition.FAMILY_NAMES[r.family]||r.family)+(outcome?' · Rewards secured':' · Final enemy: '+esc(r.enemy||'Unknown'))+'</p></div>'+
-  '<div class="phase5ResultActions phase5ResultActions--early"><button id="phase5ExitResult" class="primary" ''>EXIT REALM</button></div>'+
+  '<div class="phase5ResultActions phase5ResultActions--early"><button id="phase5ExitResult" class="primary">EXIT REALM</button></div>'+
    '<div class="phase5ResultMetrics">'+metric('Combat time',Number(r.seconds).toFixed(1)+'s')+metric('Gold','+'+(Number(r.gold)||0))+metric('Fragments','+'+(Number(r.fragments)||0))+'</div><p class="small muted">Combat time excludes Camp and offline time.</p>'+
   (phase5Results.complete?'':'<p class="small muted">Older checkpoint: only activity recorded since this update is included.</p>')+
   (damage.length?'<p>'+esc(encounterHighlight(r))+'</p><section class="phase5DamageStats"><h2>Realm statistics</h2><div class="phase5ResultMetrics">'+damage.map(([label,value])=>metric(label,Math.round(value))).join('')+'</div></section>':'')+
