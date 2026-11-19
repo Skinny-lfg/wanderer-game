@@ -111,7 +111,7 @@ function equipEarned(a,profile,between=false){
  return actions;
 }
 function prepareCamp(a,profile,level){
- const actions={talents:[],equipped:[],bought:[],potions:[],runes:[],soldTreasures:false,restocks:0};
+ const actions={talents:[],equipped:[],bought:[],potions:[],runes:[],soldTreasures:false,restocks:0,salvagedGrey:0,salvageFragments:0};
  const s=a.state();a.potions.inventory();
  if(s.pendingRuneReward?.options?.length){
   const options=s.pendingRuneReward.options;
@@ -121,6 +121,22 @@ function prepareCamp(a,profile,level){
  for(let i=0;i<3&&a.results().review;i++)a.exitResult();
  actions.soldTreasures=!!(s.valuables?.length&&a.treasures.sell());
  actions.equipped.push(...equipEarned(a,profile,false));
+ // Native Camp decision: obsolete Expedition Grey gear funds the Forge.
+ // Never sell starter, equipped or locked items or create resources artificially.
+ if(a.economyCanAct()){
+  const surplus=s.stash.filter(item=>item.source==='loot'&&item.rarity==='Common'&&
+   !item.locked&&!item.recoveryStarter&&item.id&&
+   gearScore(item,profile)+2.5<=gearScore(s.equip[item.slot],profile));
+  if(surplus.length){
+   const ids=surplus.map(item=>item.id),expected=surplus.reduce((sum,item)=>sum+a.sale(item),0);
+   const before=s.fragments;
+   a.salvage(ids);
+   const received=s.fragments-before;
+   if(received!==expected||surplus.some(item=>s.stash.some(x=>x.id===item.id)))
+    throw Error('Grey salvage was not settled by native Camp economy');
+   actions.salvagedGrey=surplus.length;actions.salvageFragments=received;
+  }
+ }
  actions.talents.push(...spendEarnedTalents(a,profile).bought);
  if(profile.shop&&a.economyCanAct()){
   // The game's first Apothecary visit constructs a native 4-item stock. No
@@ -519,11 +535,14 @@ function playDungeon(a,level,profile,opts){
    report.bossInitialHP=a.state().run?.enemies?.find(e=>e?.boss)?.maxhp||
     a.state().run?.enemy?.maxhp||null;
   }
+  // Record all actual native drops; first-room bonus is not ordinary Grey loot.
+  const wasFirstRoom=g.dungeon?.cleared?.length===1&&!g.selected.boss;
   const fight=fightNatural(a,profile,opts.tickLimit);
-  const actualDrops=node.kind==='elite'?(a.state().run?.loot||[]).map(item=>
-   ({slot:item.slot,rarity:item.rarity,subtype:item.subtype})):[];
+  const actualDrops=(a.state().run?.loot||[]).map(item=>
+   ({slot:item.slot,rarity:item.rarity,subtype:item.subtype,source:item.source}));
   report.rooms.push({room:next.room,roomType:node.kind,...fight,
-   ...(node.kind==='elite'?{loot:actualDrops,marked:next.room===card.objective}:{})});
+   loot:actualDrops,firstGuaranteedRoom:!!wasFirstRoom,
+   ...(node.kind==='elite'?{marked:next.room===card.objective}:{})});
   if(fight.timedOut){report.error='Native combat timeout';break;}
   if(fight.died)break;
   clearResults(a);
@@ -614,6 +633,14 @@ function analyze(accounts,opts){
    eliteWins:attempts.reduce((n,a)=>n+(a.rooms||[]).filter(x=>x.roomType==='elite'&&x.won).length,0),
    eliteDrops:attempts.reduce((n,a)=>n+(a.rooms||[]).filter(x=>x.roomType==='elite')
     .reduce((k,x)=>k+(x.loot?.length||0),0),0),
+   ordinaryGearDrops:attempts.reduce((n,a)=>n+(a.rooms||[]).filter(x=>x.roomType==='combat')
+    .reduce((k,x)=>k+(x.loot?.length||0),0),0),
+   ordinaryGreyDrops:attempts.reduce((n,a)=>n+(a.rooms||[]).filter(x=>x.roomType==='combat'&&!x.firstGuaranteedRoom)
+    .reduce((k,x)=>k+(x.loot||[]).filter(item=>item.rarity==='Common').length,0),0),
+   guaranteedFirstGear:attempts.reduce((n,a)=>n+(a.rooms||[]).filter(x=>x.firstGuaranteedRoom)
+    .reduce((k,x)=>k+(x.loot?.length||0),0),0),
+   campGreySalvaged:attempts.reduce((n,a)=>n+(a.camp?.salvagedGrey||0),0),
+   forgeFragmentsFromGrey:attempts.reduce((n,a)=>n+(a.camp?.salvageFragments||0),0),
    nativeXpEarned:attempts.reduce((n,a)=>n+(a.xpEarned||0),0),
    potionsUsed:attempts.reduce((n,a)=>n+(a.potions?.length||0),0),
    boonsSelected:attempts.reduce((n,a)=>n+(a.boons?.length||0),0),
@@ -624,7 +651,7 @@ function analyze(accounts,opts){
    gearUpgrades:attempts.reduce((n,a)=>n+(a.equipped?.length||0)+(a.camp?.equipped?.length||0),0),
    observations:attempts.length?null:'not_reached; do not infer win rate'});
  }
- return {stage:'9.4.1',schemaVersion:3,engine:'v0.13 live native account, dungeon and combat runtime',
+ return {stage:'9.6',schemaVersion:4,engine:'v0.13 live native account, dungeon and combat runtime',
   source:S.sourceFingerprint().sha256,settings:opts,
   integrity:{
    noFabricatedXp:true,noForcedEquipment:true,noForcedEncounter:true,
@@ -649,13 +676,13 @@ function run(opts=parseArgs()){
  return analyze(accounts,opts);
 }
 function markdown(data){
- const out=['# Wanderer v0.13 — Stage 9.4.1: Elite risk/reward decisions E1–E8','',
+ const out=['# Wanderer v0.13 — Stage 9.6: Grey loot, salvage and natural progression E1–E8','',
   '**One persistent native account from E1; XP, equipment, rewards, resources and unlocks are never fabricated.**',
   '', 'Source hash: '+data.source,'', '## E1–E8 natural-account pilot','',
-  '| E | Accounts reached | Attempts | Wins | Deaths | Extractions | Boss reached | Prepared bosses | Marked Elites | Elite fights | Elite wins | Elite drops | Reliquaries | Boons | Potions | Rooms won | Native XP | Gear changes | Errors |',
-  '|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|'];
+  '| E | Accounts reached | Attempts | Wins | Deaths | Extractions | Boss reached | Prepared bosses | Marked Elites | Elite fights | Elite wins | Elite drops | Grey drops | First guaranteed | Grey salvaged | Forge Fragments from Grey | Reliquaries | Boons | Potions | Rooms won | Native XP | Gear changes | Errors |',
+  '|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|'];
  for(const x of data.levels)out.push('| E'+x.level+' | '+x.accountsReached+' | '+x.attempts+' | '+x.wins+
-  ' | '+x.deaths+' | '+x.extractions+' | '+x.bossReached+' | '+x.reachedBossWithPreparation+' | '+x.markedElitePreparations+' | '+x.eliteFights+' | '+x.eliteWins+' | '+x.eliteDrops+' | '+x.reliquaryPreparations+' | '+x.boonsSelected+' | '+x.potionsUsed+' | '+x.roomsWon+' | '+x.nativeXpEarned+' | '+x.gearUpgrades+' | '+x.errors+' |');
+  ' | '+x.deaths+' | '+x.extractions+' | '+x.bossReached+' | '+x.reachedBossWithPreparation+' | '+x.markedElitePreparations+' | '+x.eliteFights+' | '+x.eliteWins+' | '+x.eliteDrops+' | '+x.ordinaryGreyDrops+' | '+x.guaranteedFirstGear+' | '+x.campGreySalvaged+' | '+x.forgeFragmentsFromGrey+' | '+x.reliquaryPreparations+' | '+x.boonsSelected+' | '+x.potionsUsed+' | '+x.roomsWon+' | '+x.nativeXpEarned+' | '+x.gearUpgrades+' | '+x.errors+' |');
  out.push('','## Account outcomes','');
  for(const a of data.accounts){
   out.push('- '+a.profile+' / seed '+a.seed+': unlocked E'+a.endLevel+'; '+a.attempts.length+' attempts; XP '+a.xp+
@@ -663,11 +690,11 @@ function markdown(data){
  }
  out.push('','## How to interpret','',
   '- Attempts only happen at an **actually unlocked** Expedition. Unreached E levels are censored and have no win rate.',
-  '- Native loot, gear swaps, real XP awards, talent purchases, Contracts, Boon Shrines, event effects, Gold shops and potion usage are tracked without injecting inventory.',
+  '- Native Grey loot, gear swaps, real Camp salvage into Forge Fragments, XP awards, talents, Contracts, Boon Shrines, events, Gold shops and potions are tracked without injecting inventory.',
   '- Combat target switching has a reaction delay; map traversal uses native movement and step costs; hidden room types are not peeked for room selection.',
   '- Boon decisions are ranked by actual trade-offs, not chosen blindly by Affinity; native Fate rerolls are conditional.',
   '- Native potions are purchased with earned Gold, used by exact kind only at legal map windows, and conserved before safe rooms.',
-  '- Elite route scores compare live native 60% loot odds and rarity tables to ordinary rooms, extra Gold/Fragments, Marked Elite rewards and Boss preparation against HP/escort/step risk; they never guarantee a drop.',
+  '- Elite route scores compare native Elite 60% loot odds to ordinary room odds, including extra Grey loot, Gold/Fragments, Marked Elite rewards and Boss preparation; they never guarantee a drop.',
   '- Boss preparation is earned via the real marked Elite and Forgotten Reliquary; both are separately counted, including preparation at Boss entry.',
   '- A win requires the real Boss at its natural map location. Extracting saves resources but **does not unlock E+1**.',
   '- The policy is more human-like than synthetic cohorts, but **not** a validated model of how actual players play.',
