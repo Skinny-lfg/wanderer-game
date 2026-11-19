@@ -206,6 +206,8 @@ function fight(a,c,limit,targetPolicy='focus'){
  const r=a.state().run;
  if(!r||r.status!=='fight')throw Error('Expected native combat encounter');
  const startHp=r.hp,startMp=r.mp,startedTier=r.tier,leader=r.encounterLeader||r.enemy;
+ // This fixture explicitly selects targets; disable UI-style automatic Gravecaller focus.
+ r.simulationTargetPolicy=true;
  const profile=A.profileForStyle(leader?.bossStyle),sourceActors=[...(r.enemies||[r.enemy]),...(r.groupReserve||[])].filter(Boolean);
  const initialRoles=Object.fromEntries(['minion','tank','skirmisher','caster','boss','elite'].map(role=>[role,sourceActors.filter(e=>(e.boss?'boss':e.miniboss?'elite':e.role)===role).length]));
  const initialEnemies=r.initialMobCount||r.totalMobCount||sourceActors.length;
