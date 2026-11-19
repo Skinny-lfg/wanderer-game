@@ -28,7 +28,7 @@ for(const base of ['', 'docs/']){
   const source=read(base+'combat/talent-graph-runtime.js');
   assert.match(source,/function attributeBonuses\(/,'bonuses from actual talent nodes retained');
   assert.match(source,/function reset\(/);
-  assert.match(source,/function migrate\(/,'saved-tree migration must remain');
+  assert(!source.includes('function migrate('),'clean-sheet v15 must not migrate old trees');
   assert(!source.includes('function allocateAttribute('));
   assert(!source.includes('function attributePoints('));
   assert(!source.includes('bonuses,attributePoints'));
@@ -51,12 +51,10 @@ test('integrated native talent graph still works after cleanup',()=>{
  assert.equal(T.valid(next),true);
 });
 
-test('older saves keep their carried historical fields during native migration',()=>{
+test('clean sheet rejects obsolete talent saves, keeps fresh v15 accounts',()=>{
  const a=create(8802,undefined,{}, {skipPersistence:true,now:1720000008802});
  const T=a.talents;
- const old={treeVersion:10,xp:1200,nodes:['root_magic'],attributes:{int:2}};
- const migrated=T.migrate(old);
- assert.equal(migrated.treeVersion,15);
- assert.equal(migrated.attributes.int,2,'do not destroy historical saved fields');
- assert.equal(T.valid(migrated),true);
+ assert.equal(typeof T.migrate,'undefined');
+ assert.equal(T.valid({treeVersion:10,xp:1200,nodes:['root_magic'],attributes:{int:2}}),false);
+ assert.equal(T.valid(T.create()),true);
 });
