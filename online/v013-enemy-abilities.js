@@ -74,7 +74,7 @@ function resolve(run,enemy,now){
    target=preferredTarget(actors,enemy,'ward');
    const cap=Math.max(1,Math.round(target.maxhp*definition.power));
    const previous=target.barrier||0;
-   target.barrier=Math.min(cap,previous+cap);
+   target.barrier=Math.max(previous,cap);
    result=target.barrier-previous;target.stage81GuardUntil=now+1.7;label='Guarding';
    break;
   }

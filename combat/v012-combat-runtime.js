@@ -170,7 +170,9 @@ function setReady(r,name,seconds){
 
 function setBarrier(r,amount){
  const before=r.barrier;
- r.barrier=Math.min(Math.max(8,Math.round(r.maxhp*.3)),r.barrier+Math.max(0,amount)*(1+(r.stats?.wardBonus||0)));
+ const cap=Math.max(8,Math.round(r.maxhp*.3));
+ if(before>=cap)return 0;
+ r.barrier=Math.min(cap,before+Math.max(0,amount*(1+(r.stats?.wardBonus||0))));
  return Math.max(0,r.barrier-before);
 }
 

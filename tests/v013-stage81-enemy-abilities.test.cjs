@@ -165,3 +165,23 @@ test('Minions protected by Aegis show Guarding despite never casting themselves'
  assert.equal(A.status(minion,4.5).label,'Guarding');
  assert.equal(A.status(minion,6),null);
 });
+test('ward grants reach their own strength without stripping stronger Barrier',()=>{
+ for(const [family,role,cap] of [['aegis','tank',12],['blood','tank',9],['decay','tank',9],['magic','tank',10],['aegis','caster',10]]){
+  for(const before of [cap-4,cap,cap+7]){
+   const caster=mob(role),ally=mob('minion');ally.barrier=before;
+   A.attach([caster,ally],family);
+   const r=run(caster,ally);advance(r,caster,caster.stage81.nextAt+.01);
+   const event=advance(r,caster,caster.stage81.castingUntil+.01)[0];
+   assert.equal(event.target,ally);assert.equal(ally.barrier,Math.max(before,cap));
+   assert.equal(event.result,ally.barrier-before);
+  }
+ }
+});
+test('hero Barrier stacks up to its cap and a grant never removes existing protection',()=>{
+ require('../combat/v012-combat-runtime.js');
+ const {setBarrier}=globalThis.WandererV012CombatRuntime.create({});
+ for(const [before,after] of [[5,11],[28,30],[30,30],[42,42]]){
+  const r={maxhp:100,barrier:before,stats:{wardBonus:.5}};
+  assert.equal(setBarrier(r,4),after-before);assert.equal(r.barrier,after);
+ }
+});
