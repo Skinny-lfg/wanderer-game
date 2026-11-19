@@ -3,11 +3,13 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),fs=requir
 const N=require('../scripts/v013-natural-progression.cjs');
 const create=require('./v012-economy-harness.cjs');
 const clone=x=>JSON.parse(JSON.stringify(x));
-test('Natural E1–E8 defaults are bounded and include different player behaviors',()=>{
+test('Natural E1–E8 defaults remain bounded and opt-in E20 is supported',()=>{
  const p=N.parseArgs();
  assert.deepEqual(p.seeds,[9101,9201]);assert.deepEqual(p.profiles,['cautious','balanced']);
  assert.equal(p.maxLevel,8);assert.equal(p.maxAttempts,6);
- assert.throws(()=>N.parseArgs(['--max-level=9']),/E1–E8/);
+ assert.equal(N.parseArgs(['--max-level=20','--max-attempts=24','--max-total-attempts=90']).maxLevel,20);
+ assert.throws(()=>N.parseArgs(['--max-level=21']),/E1–E20/);
+ assert.throws(()=>N.parseArgs(['--max-total-attempts=0']),/Total attempt budget/);
  assert.throws(()=>N.parseArgs(['--max-attempts=0']),/Max attempts/);
  assert.throws(()=>N.parseArgs(['--profiles=synthetic']),/Invalid profiles/);
  assert.throws(()=>N.parseArgs(['--seeds=1,2,3,4,5,6,7,8,9','--profiles=cautious,balanced,daring']),/cohort/);
