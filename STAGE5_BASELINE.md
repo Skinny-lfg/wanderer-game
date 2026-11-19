@@ -118,3 +118,50 @@ encounters using truly native starter gear (not the full-slot Common harness
 fixture). Record initial enemy composition, player stats, incoming-hit
 frequency, healing/Barrier, damage per attack, time, and recovery resources.
 Keep these controlled tests distinct from natural progression observations.
+
+## Stage 5 — controlled starter-only A/B, real E1 progression (12 seeds × 2 profiles)
+
+- GitHub Actions: https://github.com/Skinny-lfg/wanderer-game/actions/runs/44573790864
+- Tested workflow revision `0afe88aa6b15ee95c2aad3c76d48bcd78124694a`.
+  **17/17 targeted tests passed**, no native simulator errors, no deployment.
+- Test-only variation: in the VM-loaded `economy/v013-gear-rolls.js`,
+  Old Sword ATK **3→4**, Worn Tunic DEF **1→2**, Worn Hood HP **4→8**.
+  The repository's normal gameplay item source was **not edited**. Native
+  seeded loot output was checked identical across arms.
+- Starting native hero totals: control **119 HP / 18 attack / 6 defense**;
+  experimental **123 HP / 19 attack / 7 defense**. Attack rate remains **0.625/s**.
+- Replayed the same 12 map seeds (9101–9112) across cautious and balanced
+  deterministic policies, **24 matched account pairs**, up to **6 real E1
+  attempts** per arm with persistent earned items, XP and talent allocations.
+  This yielded 144 control attempts and 143 adjusted attempts (one adjusted
+  account won on attempt 5 and stopped).
+- E1 victories within six attempts: **0/24 control**, **2/24 adjusted**
+  (adjusted wins on attempt 5 and attempt 6; 2 improved-only pairs,
+  0 control-only wins). No serious claim about human-player win rate.
+- Mean first-encounter HP lost: **57.02% → 50.42%** across repeated
+  attempts, paired average change **−6.62 percentage points**. This
+  describes observed first-fight attrition, not a promise of later scaling.
+- Boss encounters across attempts **21 → 30**, total earned equipment
+  drops **73 → 107**, mean earned XP per account **226.96 → 287.13**,
+  and mean talents owned **1.46 → 1.79**. These are downstream
+  consequences of changed survival and choices; drop probabilities,
+  talent math and general balance code were never changed.
+- Critically, after six E1 attempts (or on earlier victory), each account
+  still had on average **2.75 of 3 original starter items** in control and
+  **2.54 of 3** in the experimental arm. The deterministic decision
+  agent **did not reproduce** the user's experience of replacing multiple
+  starter items and progressing strongly after four or five expeditions.
+
+**Design conclusion:** The modest starter adjustment measurably reduces
+opening attrition, and its effect is isolated to starter item definitions,
+but it is **not yet authorized to become gameplay**. The experimental
+items can remain equipped longer than expected. Calibrate the simulator's
+equipment/merchant/crafting/route decisions against observed human progression
+before evaluating whether the slight early buff becomes too strong by attempt
+4–5. Avoid changing enemy, loot, talent, health-regeneration or persistent
+hero coefficients on these results alone.
+
+Full report: artifact `stage5-starter-gear-comparison` in the workflow run;
+contains complete account histories, concise paired summary, exact source
+hashes, and evidence of unchanged native loot.
+
