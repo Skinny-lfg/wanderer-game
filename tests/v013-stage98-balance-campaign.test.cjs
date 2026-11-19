@@ -171,3 +171,26 @@ test('native Boss seed search can be censored and replaced without forcing a Rea
  assert.equal(r.skippedCards[0].seed,30001);
  assert.equal(r.cells[0].independent,2);
 });
+
+test('focused native Elite cohort inspects only real Gravecaller encounters and preserves matched Tank',()=>{
+ const type='gravecaller',calls=[];
+ const scenario=(seed,kind,gear,options={})=>{
+  calls.push({seed,kind,inspectOnly:!!options.inspectOnly});
+  const initial={role:kind==='tank'?'tank':'miniboss',eliteType:kind==='elite'?type:null,
+   playerHp:100,playerMaxHp:100};
+  return {seed,gear,family:'decay',initial,gearFingerprint:true,
+   ...(options.inspectOnly?{inspected:true}:{
+    won:kind==='tank',died:kind==='elite',status:kind==='tank'?'cleared':'died',
+    seconds:20,damageTaken:kind==='tank'?20:90,hpLossFraction:kind==='tank'?.2:.9})};
+ };
+ const cfg=B.parseArgs(['--mode=elites','--elite-type=gravecaller','--target=2',
+  '--scan=10','--seed-start=1200']);
+ const r=B.runElites(cfg,{scenario});
+ assert.equal(r.success,true);
+ assert.equal(r.coverage.nativePairs,2);
+ assert.deepEqual(r.coverage.perArchetype,{gravecaller:2});
+ assert.equal(calls.filter(x=>!x.inspectOnly).length,4);
+ assert.equal(r.pairs.length,2);
+ assert(r.pairs.every(x=>x.elite.initial.eliteType==='gravecaller'));
+ assert.throws(()=>B.parseArgs(['--mode=elites','--elite-type=unknown']));
+});
