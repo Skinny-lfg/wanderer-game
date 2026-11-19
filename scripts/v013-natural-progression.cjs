@@ -53,7 +53,12 @@ function gearSnapshot(a){
  const items=Object.values(a.state().equip).filter(Boolean);
  return {total:items.length,starter:items.filter(x=>x.startingGear).length,
   rarity:Object.fromEntries([...new Set(items.map(x=>x.rarity))].sort().map(r=>[r,items.filter(x=>x.rarity===r).length])),
-  items:items.map(x=>({slot:x.slot,subtype:x.subtype,name:x.name,rarity:x.rarity,tier:x.tier,startingGear:!!x.startingGear}))};
+  items:items.map(x=>({slot:x.slot,subtype:x.subtype,armorType:x.armorType||null,
+   name:x.name,rarity:x.rarity,tier:x.tier,startingGear:!!x.startingGear,
+   source:x.source||null,crafted:!!x.crafted,recipeId:x.recipeId||null,
+   stats:Object.fromEntries(['atk','def','hp','spd','str','agi','int','end','cha','mana',
+    'spell','evasionRating','critBonus','blockBonus','manaRegenBonus','wardBonus']
+    .map(key=>[key,Number(x[key])||0]))}))};
 }
 // Current v15 graph has no T.path helper; walk its real prerequisites and let
 // T.allocate enforce every purchase, point cap, rank and exclusion.
@@ -178,7 +183,7 @@ function consolidateStash(a,profile,reserve=4){
  return action;
 }
 function prepareCamp(a,profile,level,decisionModel='risk-aware'){
- const actions={talents:[],equipped:[],bought:[],crafted:[],potions:[],runes:[],storage:[],soldTreasures:false,restocks:0,salvagedGrey:0,salvageFragments:0};
+ const actions={talents:[],resets:[],equipped:[],bought:[],crafted:[],potions:[],runes:[],storage:[],soldTreasures:false,restocks:0,salvagedGrey:0,salvageFragments:0};
  const s=a.state();a.potions.inventory();
  if(s.pendingRuneReward?.options?.length){
   const options=s.pendingRuneReward.options;
@@ -722,6 +727,10 @@ function simulateAccount(seed,id,opts,simulationOptions={}){
     const before={xp:a.state().automaticTalents.xp,earned:a.talents.earned(a.state().automaticTalents),
      spent:a.state().automaticTalents.nodes.length,gear:gearSnapshot(a),gold:a.state().gold,
      fragments:a.state().fragments,essence:a.state().crafting?.essence||0,
+     talentNodes:[...a.state().automaticTalents.nodes],
+     attributes:{...(a.state().automaticTalents.attributes||{})},
+     element:a.state().automaticTalents.element||null,
+     prepared:a.state().automaticTalents.prepared||null,
      unlocked:a.controller().state.unlocked};
     const encounter=playDungeon(a,level,profile,opts,decisionModel);
     if(encounter.xpEnd<before.xp)throw Error('Native earned XP decreased');
@@ -729,7 +738,11 @@ function simulateAccount(seed,id,opts,simulationOptions={}){
      after:{xp:a.state().automaticTalents.xp,earned:a.talents.earned(a.state().automaticTalents),
       spent:a.state().automaticTalents.nodes.length,unlocked:a.controller().state.unlocked,
       gold:a.state().gold,fragments:a.state().fragments,
-      essence:a.state().crafting?.essence||0}};
+      essence:a.state().crafting?.essence||0,
+      talentNodes:[...a.state().automaticTalents.nodes],
+      attributes:{...(a.state().automaticTalents.attributes||{})},
+      element:a.state().automaticTalents.element||null,
+      prepared:a.state().automaticTalents.prepared||null}};
     if(entry.status==='error'||entry.error){acc.stopReason='Simulator limitation at E'+level+': '+entry.error;stopped=true;}
     if(entry.bossWon){
      if(a.controller().state.unlocked<level+1)throw Error('Native Boss won but next Expedition is not unlocked');
