@@ -48,6 +48,19 @@ jobs:
             }
           }
           NODE
+      - name: Verify browser Firebase bundle excludes vulnerable Node-only modules
+        shell: bash
+        run: |
+          npm ci --ignore-scripts --no-fund --no-audit
+          ./node_modules/.bin/esbuild online/firebase-sdk-source.mjs --bundle --format=esm --minify --metafile=./firebase-browser-metafile.json --outfile=/tmp/firebase-sdk-audit.mjs
+          node <<'NODE'
+          const fs = require('node:fs');
+          const meta = JSON.parse(fs.readFileSync('firebase-browser-metafile.json', 'utf8'));
+          const inputs = Object.keys(meta.inputs || {});
+          const dangerous = inputs.filter(x => /node_modules\\/(?:@grpc\\/grpc-js|tar|firebase-tools)(?:\\/|$)/.test(x));
+          console.log('BROWSER_BUNDLE ' + JSON.stringify({inputs:inputs.length, dangerous, outputBytes:fs.statSync('/tmp/firebase-sdk-audit.mjs').size}));
+          if (dangerous.length) process.exitCode = 1;
+          NODE
       - name: Archive machine-readable audit reports
         uses: actions/upload-artifact@v4
         with:
@@ -55,4 +68,5 @@ jobs:
           path: |
             npm-audit-full.json
             npm-audit-prod.json
+            firebase-browser-metafile.json
           retention-days: 14
