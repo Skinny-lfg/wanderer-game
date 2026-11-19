@@ -243,24 +243,17 @@ body.phase3IntegratedPreview .scene #enemyPortrait[data-boss-style]:not([data-bo
  transform:none!important;transform-origin:center bottom!important;
  object-fit:contain!important;
 }
-.expeditionRouteMap{padding:14px;margin-bottom:18px;background:#21191c;border:1px solid #795a42;border-radius:6px}
-.expeditionRouteMapHeading{display:flex;justify-content:space-between;align-items:center;gap:12px;color:#e7c98d}
-.expeditionRouteMapHeading h3{margin:0;font-size:16px}.expeditionRouteMapHeading span,.expeditionRouteMap p{font-size:12px;color:#b9a79c}
-.expeditionRouteMap p{margin:7px 0 12px}.expeditionRouteMap ol{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;list-style:none;padding:0;margin:0}
-.expeditionRouteNode{display:flex;align-items:center;gap:5px;min-width:0;padding:6px;background:#2d2224;border:1px solid #57423a;border-radius:4px;color:#a99a90;font-size:11px}
-.expeditionRouteNode.is-complete{border-color:#687254;color:#d5d4ae}.expeditionRouteNode.is-current{border-color:#e0bb77;color:#f7dfae;background:#49352a}
-.expeditionRouteNumber{display:grid;place-items:center;flex:0 0 19px;height:19px;border:1px solid currentColor;border-radius:50%;font-size:10px}.expeditionRouteKind{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-@media(max-width:600px){.expeditionRouteMap ol{grid-template-columns:repeat(3,minmax(0,1fr))}.expeditionRouteNode{font-size:10px}}
+
+
 .automaticTalentTree{margin-top:18px}
 .automaticXp{display:inline-flex;flex-direction:column;gap:3px;min-width:118px;color:#e4c28b;font-size:11px;line-height:1.2}.automaticXpTrack{height:6px;overflow:hidden;background:#332a30;border:1px solid #715942;border-radius:6px}.automaticXpTrack>span{display:block;height:100%;background:#bf9955}
 
-.expeditionRouteMap ol.routeBranchList{display:grid;grid-template-columns:1fr;gap:4px}.routeBranchRow{display:grid;grid-template-columns:24px 1fr;gap:5px;align-items:center;color:#b9a79c;font-size:11px}.routeBranchRow>div{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}.routeBranchNode{padding:5px;text-align:center;background:#2d2224;border:1px solid #57423a;border-radius:4px}.routeBranchNode.is-chosen{border-color:#687254;color:#d5d4ae}.routeBranchNode.is-available{border-color:#e0bb77;color:#f7dfae;background:#49352a}
 
-.stat-bonus{color:#88d987!important}.stat-penalty{color:#ee7777!important}.routeBranchCanvas{position:relative}.routeBranchCanvas svg{position:absolute;top:0;left:29px;width:calc(100% - 29px);height:100%;pointer-events:none}.routeBranchCanvas line{stroke:#806449;stroke-width:1.3}.expeditionRouteMap ol.routeBranchList{position:relative;gap:0}.routeBranchRow{height:72px}.routeBranchNode{position:relative;justify-self:center;display:grid;place-items:center;width:46px;height:46px;border-radius:50%;padding:0;font-size:18px;background:#2d2224;color:#d9c4a4}.routeBranchNode small{position:absolute;top:44px;white-space:nowrap;font-size:9px;color:#b9a79c}.routeBranchRow>div:has(>.routeBranchNode:only-child)>.routeBranchNode{grid-column:2}
+.stat-bonus{color:#88d987!important}.stat-penalty{color:#ee7777!important}
 
 
-.routeBranchRow>div{position:relative;display:block;height:72px}.routeBranchRow .routeBranchNode,.routeBranchRow>div:has(>.routeBranchNode:only-child)>.routeBranchNode{position:absolute;top:13px;transform:translateX(-50%)}.realmDialogImage{display:block;width:100%;max-height:210px;object-fit:cover;border:1px solid #765746}
-.routeBranchCanvas line{stroke-dasharray:2 5;stroke-linecap:round;stroke-width:2}.routeBranchNode.is-available{outline:2px solid #e4c78e;outline-offset:3px}
+.realmDialogImage{display:block;width:100%;max-height:210px;object-fit:cover;border:1px solid #765746}
+
 .groupEnemies{margin:12px 0;padding:10px;background:#21191c;border:1px solid #795a42}.groupEnemies h3{margin:0 0 8px}.groupEnemyList{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.groupEnemy{display:grid;gap:4px;min-width:0;padding:5px;text-align:center;border:1px solid #57423a}.groupEnemy.is-target{border-color:#e0bb77}.groupEnemy.is-defeated{opacity:.4}.groupEnemy img{width:100%;height:68px;object-fit:contain}.groupEnemy strong,.groupEnemy small{font-size:11px;overflow:hidden;text-overflow:ellipsis}.groupEnemyHealth{height:7px;background:#382329}.groupEnemyHealth span{display:block;height:100%;background:#be5c5c}@media(max-width:480px){.groupEnemyList{grid-template-columns:repeat(2,minmax(0,1fr))}}
 body.phase3IntegratedPreview .scene:has(.groupArena){display:grid!important;grid-template-columns:minmax(0,1fr) auto minmax(0,2fr)!important;align-items:end!important;gap:4px!important}.groupArena{position:relative;z-index:2;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;align-items:end;width:100%;min-width:0}.arenaEnemy{display:flex;flex-direction:column;align-items:center;justify-content:end;min-width:0;padding:3px;background:#130d11a8;border:1px solid transparent;border-radius:4px}.arenaEnemy.is-target{border-color:#e0bb77;background:#21150ec9}.arenaEnemy.is-defeated{opacity:.3;filter:grayscale(1)}.arenaEnemy img,body.phase3IntegratedPreview .scene .arenaEnemy #enemyPortrait{width:100%!important;height:72px!important;max-height:72px!important;object-fit:contain!important}.arenaEnemy strong,.arenaEnemy small{max-width:100%;font-size:10px;line-height:1.15;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.arenaEnemyHealth{width:100%;height:6px;background:#382329}.arenaEnemyHealth i{display:block;height:100%;width:var(--resource-pct);background:#be5c5c}.arenaEnemyStatuses{max-height:24px;overflow:hidden}.arenaEnemyStatuses:empty{display:none}@media(max-width:600px){body.phase3IntegratedPreview .scene:has(.groupArena){grid-template-columns:minmax(0,1fr) auto minmax(0,1.5fr)!important}.arenaEnemy img,body.phase3IntegratedPreview .scene .arenaEnemy #enemyPortrait{height:48px!important;max-height:48px!important}.arenaEnemy strong,.arenaEnemy small{font-size:10px}}
 body.phase3IntegratedPreview .scene .arenaEnemy img,body.phase3IntegratedPreview .scene .arenaEnemy #enemyPortrait{height:110px!important;max-height:110px!important}@media(max-width:600px){body.phase3IntegratedPreview .scene .arenaEnemy img,body.phase3IntegratedPreview .scene .arenaEnemy #enemyPortrait{height:72px!important;max-height:72px!important}}
@@ -268,13 +261,6 @@ body.phase3IntegratedPreview .scene .arenaEnemy img,body.phase3IntegratedPreview
 body.phase3IntegratedPreview .scene .arenaEnemy img[data-attack-src$=".gif"]{transform:scaleX(-1);transform-origin:center bottom}
 @media(max-width:600px){.arenaEnemy strong{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.1;min-height:2.2em}}
 
-
-
-
-
-.routeLegend{display:flex;flex-wrap:wrap;gap:8px 15px;margin:8px 0 16px;color:#cdbba7;font:12px system-ui}.routeLegend span:not(:last-child):before{content:'';display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;background:#6c5d56}.routeLegend .legend-available:before{background:#e9c77e}.routeLegend .legend-chosen:before{background:#8fcba0}.routeBranchCanvas line.is-travelled{stroke:#90c89a;stroke-width:2.8;stroke-dasharray:none}.routeBranchCanvas line.is-next{stroke:#e8c77e;stroke-width:2.8;stroke-dasharray:none}.routeBranchRow button.routeBranchNode{min-width:46px!important;min-height:46px!important;width:46px!important;height:46px!important;border-radius:50%!important;padding:0!important;background:#49352a!important;background-image:none!important}.routeBranchNode.is-chosen{background:#314439;border:2px solid #94cba2;color:#e3f2df}.routeBranchNode.is-passed{opacity:.38}.routeBranchNode.is-future{opacity:.72}.routeBranchNode small{top:46px;color:#d8c4ae}.phase3Routes #phase1BackToCamp{margin-bottom:12px}
-
-.routeMapViewport{height:min(650px,70vh);overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;cursor:grab;scrollbar-color:#9b7950 #21191c;border:1px solid #6f513b;background:#1d1719}.routeMapViewport.is-dragging{cursor:grabbing;user-select:none}.routeScrollHint{margin:0 0 8px!important}.routeBranchRow,.routeBranchRow>div{height:100px}.routeBranchRow .routeBranchNode,.routeBranchRow>div:has(>.routeBranchNode:only-child)>.routeBranchNode{top:21px}.routeBranchNode,.routeBranchRow button.routeBranchNode{width:58px!important;height:58px!important;min-width:58px!important;min-height:58px!important;font-size:22px}.routeBranchNode small{top:59px;font-size:11px}.routeBranchCanvas line{stroke-width:1.5}
 
 /* Automatic combat arena: mobs share the scene and advance without a walk cycle. */
 body.phase3IntegratedPreview .scene:has(.groupArena){display:block!important;position:relative!important;overflow:hidden!important}
@@ -293,9 +279,6 @@ body.phase3IntegratedPreview .arenaEnemyStatuses{position:absolute;bottom:100%;d
 body.phase3IntegratedPreview .arenaEnemyStatuses:empty{display:none}
 body.phase3IntegratedPreview .arenaEnemy img[data-attack-src$=".gif"]{transform:scaleX(-1);transform-origin:center bottom}
 @media(max-width:600px){body.phase3IntegratedPreview .scene:has(.groupArena)>.combatant:not(.arenaSingleEnemy){left:1%;bottom:7%;width:27%}.phase3IntegratedPreview .arenaEnemy{width:clamp(83px,24vw,122px);padding:3px 4px}.phase3IntegratedPreview .arenaEnemy img,body.phase3IntegratedPreview .scene .arenaEnemy #enemyPortrait{max-height:clamp(64px,14vh,94px)!important}.phase3IntegratedPreview .arenaEnemy strong{font-size:10px}.phase3IntegratedPreview .arenaEnemy small{font-size:9px}}
-
-
-
 
 
 /* v0.13: quieter preparation screens, with the same art and combat actors. */
