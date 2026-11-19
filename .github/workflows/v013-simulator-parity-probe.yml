@@ -43,6 +43,7 @@ jobs:
           CHROME_BIN="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
           if [ -n "$CHROME_BIN" ]; then
             echo "WANDERER_BROWSER=$CHROME_BIN" >> "$GITHUB_ENV"
+            export WANDERER_BROWSER="$CHROME_BIN"
             "$CHROME_BIN" --version
           else
             npx playwright install chromium
