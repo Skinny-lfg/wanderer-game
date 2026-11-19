@@ -211,7 +211,6 @@ function itemImg(o){
 
 function save(){phase5Persist();}
 
-function heroImage(){return 'assets/characters/avatars/'+(state.characterId||'wanderer')+'.png';}
 function heroFullImage(){return globalThis.WandererCharacterArt?.imageForEquipment(state.equip)||'assets/characters/full/wanderer.webp';}
 // Optimized transparent elite WebP portraits with fallback art if loading fails.
 // Idle PNGs are frame 1 of the new attack GIFs, never legacy elite portraits.
@@ -246,7 +245,6 @@ function dungeonEquipmentOdds(theme,favored=[]){return WandererV012LootRules.dun
 function dungeonEquipmentPick(theme,favored=[]){return WandererV012LootRules.dungeonEquipmentPick(theme,favored,TYPES,OFFHAND_TYPES,gameRandom,sample);}
 
 
-function chanceText(value){return (value*100).toFixed(1).replace(/\.0$/,'')+'%'}
 /* Permanent chapter-boss runes. Separate inventory, not part of normal gear sets. */
 const RUNE_FAMILIES=WandererV012Runes.FAMILIES;
 function runeValue(family,tier){return WandererV012Runes.runeValue(family,tier);}
@@ -648,14 +646,6 @@ Q('[data-eqslot]').forEach(b=>b.onclick=()=>{
   slotFilter=slotFilter===filter?'all':filter;selectedId=null;chosenItems.clear();renderStash();
  });
 phase3BindRuneControls();phase6BindPotions();phase6BindInventoryActions();
-}
-function forgeComparisonTrend(item,target=item.slot){
- const diff=totalStats(comparisonEquip(item,target)).power-totalStats().power;
- const loss=lostSetTiers(item,target).length;
- const locked=target==='offhand'&&isTwoHanded(state.equip.weapon);
- const trend=locked?'same':loss?'same':diff>0?'up':diff<0?'down':'same';
- const label=locked?'🔒 Off-Hand locked':loss?'⚠ Loses set bonus':diff>0?'▲ Higher estimate':diff<0?'▼ Lower estimate':'≈ Similar';
- return '<div class="forgeTrend"><span class="merchantPowerTrend '+trend+'">'+label+' · '+(diff>0?'+':'')+diff+' estimated Gear Power</span></div>';
 }
 function forgeEquippedReference(slot){
  const targets=slot==='ring1'?['ring1','ring2']:[slot];
