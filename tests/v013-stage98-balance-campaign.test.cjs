@@ -119,3 +119,26 @@ test('consolidator requires complete cohorts and identical actual native source'
   ...x,report:{...x.report,sourceSha256:'different'}}:x));
  assert(drift.failures.some(x=>x.includes('SHA-256 drift')));
 });
+
+test('Markdown serialization supports each individual cohort before final consolidation',()=>{
+ const common={coverage:{observed:1},sourceSha256:'test-native'};
+ const samples=[
+  {...common,mode:'elites',groups:[{gear:'starter',eliteType:'vampire',
+   resolvedPairs:30,tankWins:26,eliteWins:16,extraEliteDamageMean:12}]},
+  {...common,mode:'bosses',affinity:'blood',cells:[{
+   build:'blood-fury',risk:0,independent:30,winPct:60,damagePctMaxHpMean:40}]},
+  {...common,mode:'builds',cells:[{build:'fury-bow',groupSize:3,
+   independent:30,winPct:80,damageTakenMean:22}]},
+  {...common,mode:'natural',settings:{seeds:[1,2]},
+   levels:[{level:1,accountsReached:4,attempts:24,wins:0,deaths:2,extractions:22}]}
+ ];
+ for(const item of samples){
+  const markdown=B.markdown(item);
+  assert.match(markdown,/Failures: none/);
+  assert.match(markdown,/Native combat balance research/);
+ }
+ assert.match(B.markdown(samples[0]),/vampire/);
+ assert.match(B.markdown(samples[1]),/blood-fury/);
+ assert.match(B.markdown(samples[2]),/fury-bow/);
+ assert.match(B.markdown(samples[3]),/1,2/);
+});
