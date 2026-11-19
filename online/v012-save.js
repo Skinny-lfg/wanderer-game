@@ -149,12 +149,11 @@ function sessionCheck(s,p,e){
  requireValue(plain(s.supplies)&&integer(s.supplies.health,0,2)&&integer(s.supplies.mana,0,2),'potion checkpoint');
  requireValue(s.vitals===null||plain(s.vitals)&&['hp','mp','maxmp'].every(k=>typeof s.vitals[k]==='number'&&Number.isFinite(s.vitals[k])&&s.vitals[k]>=0),'resource checkpoint');
  requireValue(s.build===null||plain(s.build)&&Array.isArray(s.build.picks)&&s.build.picks.length<=20,'build checkpoint');
- requireValue(s.draft===null||plain(s.draft)&&['initial','entry','reward'].includes(s.draft.kind)&&['element','passive'].includes(s.draft.step),'draft checkpoint');
- if(s.draft?.version===3){requireValue(s.draft.kind==='reward'&&Array.isArray(s.draft.options)&&s.draft.options.length<=3&&new Set(s.draft.options.map(o=>o.id)).size===s.draft.options.length&&s.draft.options.every(o=>plain(o)&&typeof o.id==='string'&&['Upgrade','Synergy','Discovery'].includes(o.category)&&plain(o.preview)),'contextual draft');}
+ requireValue(!Object.prototype.hasOwnProperty.call(s,'draft'),'retired Realm draft in checkpoint');
  if(s.build&&root.WandererV012Buildcraft)root.WandererV012Buildcraft.validate(s.build);
  if(e.active){requireValue(g.expedition===e.active.level&&g.planeIndex===e.active.plane&&g.stage===e.active.stage,'checkpoint identity');}
  else requireValue(!s.entry&&['failed','finished'].includes(g.stage),'ended checkpoint');
- if(s.entry)requireValue(g.stage==='combat'&&g.wave===1&&s.draft===null&&e.active!==null,'Realm entry checkpoint');
+ if(s.entry)requireValue(g.stage==='combat'&&g.wave===1&&e.active!==null,'Realm entry checkpoint');
  return s;
 }
 function validate(input,binding){
