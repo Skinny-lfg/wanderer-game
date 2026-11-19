@@ -200,7 +200,8 @@ test('Stage 8.2 is loaded in game and docs with four legacy Elites retained',()=
  assert(!combat.includes('10% protection while they live'));
  assert(fs.readFileSync('index.html','utf8').includes('Deathbound Decay ×'));
  assert(fs.readFileSync('docs/index.html','utf8').includes('Deathbound Decay ×'));
- assert(combat.includes('stage82Strike.capFraction'));
+ assert(combat.includes('if(stage82Strike)raw=cappedStrikeDamage(raw,stage82Strike,r.maxhp)'),'Elite charge uses the shared capped damage path');
+ assert(combat.includes('heroMaxHp*strike.capFraction'),'Shared charged strike helper caps damage against hero maximum Health');
  assert(combat.includes('WandererV013EliteAbilities?.interrupt'));
  const encounter=fs.readFileSync('online/v012-expedition-runtime.js','utf8');
  assert(encounter.includes('if(last&&g.selected.elite&&!g.selected.boss)globalThis.WandererV013EliteAbilities?.attach'));
