@@ -403,8 +403,6 @@ function fightNatural(a,profile,tickLimit){
  const r=a.state().run;
  if(!r||r.status!=='fight')throw Error('Combat entry missing');
  const start=r.hp,first=r.encounterLeader||r.enemy,initial=r.totalMobCount||r.initialMobCount||r.enemies?.length||1;
- // Explicit simulation policies remain authoritative, separate from the live game's auto-focus.
- r.simulationTargetPolicy=true;
  let ticks=0,switches=0,minionFocusTicks=0,minionFocusSwitches=0,minimum=r.maxhp>0?r.hp/r.maxhp:0;
  while(r.status==='fight'&&a.controller().state.stage==='combat'&&r.hp>0&&ticks<tickLimit){
   // A human needs time to notice add waves; target switches are throttled.
