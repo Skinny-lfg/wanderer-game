@@ -249,31 +249,39 @@ function aggregate(reports,expected={eliteGear:2,bosses:6,builds:1,natural:4}){
  return summary;
 }
 function markdown(report){
+ const eliteRows=report.elite||(report.mode==='elites'?
+  (report.groups||[]).filter(g=>g.eliteType!=='all'):[ ]);
+ const bossRows=report.bosses||(report.mode==='bosses'?
+  (report.cells||[]).map(x=>({affinity:report.affinity,...x})):[ ]);
+ const buildRows=report.builds||(report.mode==='builds'?(report.cells||[]):[ ]);
+ const naturalRows=report.natural||(report.mode==='natural'?
+  (report.levels||[]).map(x=>({shard:(report.settings?.seeds||[]).join(','),...x})):[ ]);
+ const failures=report.failures||[];
  const lines=['# Wanderer Stage 9.8 — Native combat balance research','',
   'Runtime SHA256: '+(report.sourceSha256||'n/a'),'',
   '## Coverage','',JSON.stringify(report.coverage),'',
   '## True native Tank versus Elite — independent E1 matched seeds','',
   '| Gear | Elite | Matched pairs | Tank victories | Elite victories | Extra Elite damage (HP) |',
   '|---|---|---:|---:|---:|---:|'];
- for(const x of report.elite||[])lines.push('| '+x.gear+' | '+x.eliteType+
+ for(const x of eliteRows)lines.push('| '+x.gear+' | '+x.eliteType+
   ' | '+x.resolvedPairs+' | '+x.tankWins+' | '+x.eliteWins+' | '+x.extraEliteDamageMean+' |');
  lines.push('','## Six native Boss Affinities by risk and build','',
   '| Boss Affinity | Build | Risk | Independent | Win % | Damage as % max HP |',
   '|---|---|---:|---:|---:|---:|');
- for(const x of report.bosses||[])lines.push('| '+x.affinity+' | '+x.build+
+ for(const x of bossRows)lines.push('| '+x.affinity+' | '+x.build+
   ' | '+x.risk+' | '+x.independent+' | '+x.winPct+' | '+x.damagePctMaxHpMean+' |');
  lines.push('','## Weapon/build contrasts','',
   '| Build | Mob count | Independent | Wins % | Damage taken |',
   '|---|---:|---:|---:|---:|');
- for(const x of report.builds||[])lines.push('| '+x.build+' | '+x.groupSize+
+ for(const x of buildRows)lines.push('| '+x.build+' | '+x.groupSize+
   ' | '+x.independent+' | '+x.winPct+' | '+x.damageTakenMean+' |');
  lines.push('','## Earned-account natural E1–E8','',
   '| Shard | E | Accounts reached | Attempts | Boss wins | Deaths | Extracts |',
   '|---|---:|---:|---:|---:|---:|---:|');
- for(const x of report.natural||[])lines.push('| '+x.shard+' | '+x.level+
+ for(const x of naturalRows)lines.push('| '+x.shard+' | '+x.level+
   ' | '+x.accountsReached+' | '+x.attempts+' | '+x.wins+' | '+x.deaths+' | '+x.extractions+' |');
  lines.push('','## Data quality','',
-  'Failures: '+(report.failures.join('; ')||'none'),
+  'Failures: '+(failures.join('; ')||'none'),
   'Never infer natural E2–E8 defeat rates from zero reached accounts.',
   'Controlled E1 fights are not representative earned-account/Boss progression.',
   'Do not retune individual archetypes solely from pooled means.',
