@@ -206,3 +206,46 @@
  .phase3IntegratedPreview .equipmentLayout{row-gap:24px}
 }
 @media(max-width:850px){.phase3IntegratedPreview .equipmentLayout{grid-template-columns:minmax(0,1fr)}}
+
+
+/* v0.13 — Foot contact in Inventory and Between-Realm Equipment only.
+   The portrait is raised by 22px inside the first five equipment rows.
+   Match that visual baseline instead of applying an unrelated full-body glow. */
+.phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper{
+  isolation:isolate;
+}
+.phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper>.characterGroundShadow,
+.phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper:not(:has(>.characterGroundShadow))::after{
+  content:"";
+  display:block;
+  position:absolute;
+  z-index:0;
+  pointer-events:none;
+  left:50%;
+  top:calc(5 * var(--gear-row) - 22px);
+  width:clamp(90px,43%,175px);
+  height:28px;
+  transform:translate(-50%,-50%);
+  border:0;
+  border-radius:50%;
+  background:
+    radial-gradient(ellipse 35% 28% at 50% 50%,rgba(0,0,0,.70) 0%,rgba(0,0,0,.40) 60%,transparent 100%),
+    radial-gradient(ellipse at 50% 54%,rgba(0,0,0,.43) 0%,rgba(0,0,0,.14) 55%,transparent 100%);
+  box-shadow:none;
+  filter:blur(3px);
+}
+/* Equip and Inventory use the same character color grade as the Camp.
+   Keep equipment buttons above the portrait and the contact shadow below it. */
+.phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper>.model{
+  z-index:1!important;
+  filter:sepia(.07) saturate(1.20) brightness(1.035) contrast(1.04) drop-shadow(0 5px 6px rgba(0,0,0,.48))!important;
+}
+@media(max-width:700px){
+  .phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper>.characterGroundShadow,
+  .phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper:not(:has(>.characterGroundShadow))::after{
+    top:calc(5 * var(--gear-row) - 22px);
+    width:clamp(85px,44%,145px);
+    height:23px;
+    filter:blur(2.5px);
+  }
+}
