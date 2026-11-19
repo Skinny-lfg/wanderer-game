@@ -29,7 +29,8 @@ function waveLootOdds(wave,cha=5){
 // equipment item can drop per encounter; Bag limits and loss on defeat stay native.
 // Legacy v0.12 tables, Elites, Bosses and the first-room guarantee are unchanged.
 const V013_GREY_EXTRA=Object.freeze([0,.10,.08,.06,0,0]);
-const V013_BASE_DROPS=Object.freeze([0,.28,.30,.32,.60,1]);
+// Boss gear is likely but not guaranteed; risk/fortune caps remain below 100%.
+const V013_BASE_DROPS=Object.freeze([0,.28,.30,.32,.60,.85]);
 function v013DungeonWaveOdds(wave,cha=5){
  const legacy=waveLootOdds(wave,cha);
  const tier=Math.max(1,Math.min(5,Number(wave)||1));
