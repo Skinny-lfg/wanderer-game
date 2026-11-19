@@ -1,0 +1,25 @@
+name: Wanderer v0.13 role affinity simulation coverage (no deploy)
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/simulate-progression.cjs'
+      - 'tests/v013-role-affinity-matrix.test.cjs'
+      - '.github/workflows/v013-role-affinity-matrix.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-role-matrix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node --test tests/v013-role-affinity-matrix.test.cjs
