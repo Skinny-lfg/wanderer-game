@@ -1,4 +1,5 @@
 name: Wanderer Stage 5 — Longitudinal E1 to E20 native progression (no deploy)
+# Repeated after native Camp stash cleanup and overflow recovery.
 
 on:
   push:
