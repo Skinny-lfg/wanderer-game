@@ -115,6 +115,8 @@ function controlledGroups(rows){
    100*r.damageTaken/r.hpMax:null).filter(x=>x!==null);
   const casts=selected.reduce((n,r)=>n+(num(r.enemyAbilityCasts)||0),0);
   const seconds=selected.reduce((n,r)=>n+(num(r.seconds)||0),0);
+  const initialRoles=Object.fromEntries(['minion','tank','skirmisher','caster','boss','elite']
+   .map(role=>[role,selected.reduce((n,r)=>n+(num(r.initialRoles?.[role])||0),0)]));
   const flags=[];
   if(errors)flags.push('native_error');
   if(timeouts)flags.push('native_timeout');
@@ -141,6 +143,11 @@ function controlledGroups(rows){
    damageDealtMean:mean(numbers(selected,'damageDealt')),
    minHpPctP50:percentile(numbers(selected,'minHpPct'),.5),
    manaSpentMean:mean(numbers(selected,'manaSpent')),
+   absorbedMean:mean(numbers(selected,'absorbed')),
+   initialRoles,initialEnemiesMean:mean(numbers(selected,'initialEnemies')),
+   reinforcementsSpawnedMean:mean(numbers(selected,'reinforcementsSpawned')),
+   bossWardsMean:mean(numbers(selected,'bossWards')),
+   bossCastInterruptionsMean:mean(numbers(selected,'bossCastInterruptions')),
    castsPerMinute:seconds>0?round(60*casts/seconds):null,
    bossCastPreparationsMean:mean(numbers(selected,'bossCastPreparations')),
    bossHealingMean:mean(numbers(selected,'bossHealing')),
@@ -239,7 +246,12 @@ function compareBaseline(current,previous){
   matched.push({old,now:r});
  }
  const sameBase=JSON.stringify(current.settings)===JSON.stringify(previous.settings);
- const clean=matched.filter(p=>p.old.hpMax===p.now.hpMax&&p.old.mpMax===p.now.mpMax);
+ const sameVitals=matched.filter(p=>p.old.hpMax===p.now.hpMax&&p.old.mpMax===p.now.mpMax);
+ const clean=sameVitals.filter(p=>typeof p.old.gearFingerprint==='string'&&
+  p.old.gearFingerprint===p.now.gearFingerprint);
+ const equipmentChanged=sameVitals.filter(p=>typeof p.old.gearFingerprint==='string'&&
+  typeof p.now.gearFingerprint==='string'&&p.old.gearFingerprint!==p.now.gearFingerprint).length;
+ const equipmentUntracked=sameVitals.length-clean.length-equipmentChanged;
  const byMode={};
  for(const mode of MODES){
   const rows=clean.filter(p=>p.now.mode===mode);
@@ -251,12 +263,15 @@ function compareBaseline(current,previous){
   };
  }
  return {previousSource:previous.sourceSha256,currentSource:current.sourceSha256,
-  identicalSettings:sameBase,matched:matched.length,comparablePlayerHpAndMp:clean.length,
-  playerVitalsChanged:matched.length-clean.length,unmatched:unmatched.length,
+  identicalSettings:sameBase,matched:matched.length,comparablePlayerHpAndMp:sameVitals.length,
+  comparableEquipment:clean.length,playerVitalsChanged:matched.length-sameVitals.length,
+  equipmentChanged,equipmentUntracked,unmatched:unmatched.length,
   byMode,warnings:[
    ...(!sameBase?['settings_differ_do_not_infer_causes']:[]),
    ...(matched.length<30?['fewer_than_30_matched_scenarios']:[]),
-   ...(matched.length!==clean.length?['native_player_vitals_changed']:[]),
+   ...(matched.length!==sameVitals.length?['native_player_vitals_changed']:[]),
+   ...(equipmentChanged?['native_equipment_fingerprint_changed']:[]),
+   ...(equipmentUntracked?['native_equipment_fingerprint_unavailable']:[]),
    ...(unmatched.length?['native_scenario_not_matched']:[])
   ]};
 }
@@ -347,6 +362,7 @@ function run(cfg=parseArgs(),deps={}){
   failures,
   interpretation:[
    'Controlled Boss/Elite/swarms are deliberately inserted into a first-ring room with fixed debug gear; NOT representative campaign victories.',
+   'Before/after native fights are only comparable when exact rolled equipment fingerprints, player HP/MP and scenario identities match. Changed gear is flagged, not silently averaged.'
    'Wilson intervals apply to native independent-seed fight outcomes, NOT to human player win rates.',
    'Rows with native errors/timeouts/unresolved outcomes are excluded from win denominators, and separately fail data-quality checks.',
    'Do not add together different builds, archetypes or risk groups to choose balance multipliers.',
@@ -401,6 +417,7 @@ function markdown(r){
  if(r.baselineComparison)lines.push('## Matched prior-version comparison','',
   'Paired scenarios: '+r.baselineComparison.matched+
   '; comparable player HP/MP: '+r.baselineComparison.comparablePlayerHpAndMp+
+  '; identical native equipment: '+r.baselineComparison.comparableEquipment+
   '; unmatched: '+r.baselineComparison.unmatched+
   '; identical settings: '+r.baselineComparison.identicalSettings,'',
   'Interpret with caution: '+r.baselineComparison.warnings.join(', '),'');
