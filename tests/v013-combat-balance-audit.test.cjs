@@ -6,6 +6,7 @@ function combat(extra={}){
  return {mode:'elites',kind:'elite',level:1,build:'blood-fury',seed:9301,
   resolvedSeed:9301,affinity:'decay',risk:0,eliteType:'vampire',
   targetPolicy:'mechanics',pointsBudget:0,gearRarity:'Common',gearE:1,
+  gearFingerprint:'fixed-native-item-rolls',
   nativeEncounter:'elite',runes:false,groupSize:1,won:true,died:false,
   status:'cleared',seconds:20,damageTaken:30,damageDealt:60,
   hpStart:100,hpEnd:70,hpMax:100,mpMax:0,minHpPct:70,
@@ -81,11 +82,16 @@ test('baseline comparison is matched on native seed, loadout dimensions and actu
  assert.equal(match.byMode.elites.winDeltaPct,-100);
  assert.equal(match.byMode.elites.damageTakenDeltaMean,30);
  assert.equal(match.byMode.elites.secondsDeltaMean,8);
+ assert.equal(match.comparableEquipment,1);
  const shift=A.compareBaseline({...current,controlled:{rows:[{...now,resolvedSeed:9307}]}},old);
  assert.equal(shift.matched,0);assert.equal(shift.unmatched,1);
  const stats=A.compareBaseline({...current,controlled:{rows:[{...now,hpMax:140}]}},old);
  assert.equal(stats.comparablePlayerHpAndMp,0);
  assert(stats.warnings.includes('native_player_vitals_changed'));
+ const gear=A.compareBaseline({...current,controlled:{rows:[{...now,gearFingerprint:'changed-rolls'}]}},old);
+ assert.equal(gear.comparableEquipment,0);
+ assert.equal(gear.equipmentChanged,1);
+ assert(gear.warnings.includes('native_equipment_fingerprint_changed'));
 });
 test('unit-sized audit uses isolated native input modes and exposes missing coverage honestly',()=>{
  const cfg=A.parseArgs(['--seeds=1','--builds=blood-fury','--affinities=blood',
@@ -136,4 +142,18 @@ test('a live/preview combat module mismatch is a blocking data-quality failure',
  });
  assert(result.failures.some(x=>x.includes('preview_runtime_module_mismatch')));
  assert.equal(result.previewRuntimeParity.mismatches.length,1);
+});
+
+test('real native controlled combat stores a deterministic complete equipment signature',()=>{
+ const S=require('../scripts/simulate-progression.cjs');
+ const o={...S.DEFAULTS,mode:'enemies',points:0,rarity:'Common',
+  gear:'current',groupSizes:[3],targetPolicy:'mechanics'};
+ const build=S.BUILDS.find(b=>b.id==='blood-fury');
+ const one=S.encounter(1,build,9101,'normal',o,undefined,undefined,undefined,undefined,3);
+ const repeat=S.encounter(1,build,9101,'normal',o,undefined,undefined,undefined,undefined,3);
+ assert.match(one.gearFingerprint,/^[0-9a-f]{64}$/);
+ assert.equal(one.gearFingerprint,repeat.gearFingerprint);
+ assert.equal(one.resolvedSeed,repeat.resolvedSeed);
+ assert.equal(one.damageTaken,repeat.damageTaken);
+ assert.equal(one.won,repeat.won);
 });
