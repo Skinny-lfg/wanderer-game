@@ -419,7 +419,7 @@ function phase3Reroll(index){
  ports.phase1Controller.reroll(index);ports.view='phase1';ports.phase5Persist();ports.render();return true;
 }
 
-function phase5Item(i){return {id:i.id,name:i.name,tier:i.tier,rarity:i.rarity,slot:i.slot};}
+function phase5Item(i){return {id:i.id,name:i.name,tier:i.tier,rarity:i.rarity,slot:i.slot,subtype:i.subtype??null,armorType:i.armorType??null,legendaryId:i.legendaryId??null};}
 
 function phase5RememberRealm(r,outcome){
  ports.phase5Results.realm={level:r.tier,plane:r.phase1Plane,name:r.planeName,family:r.planeFamily,outcome,
