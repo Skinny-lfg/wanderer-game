@@ -122,3 +122,49 @@ jobs:
           path: reports/v013-c3-browser/
           if-no-files-found: warn
           retention-days: 14
+
+  sync-generated-pages:
+    # Commit only to the isolated audit branch, after native and real-browser tests.
+    # No Pages action, deployment, pull request merge or production data mutation.
+    if: github.ref == 'refs/heads/audit/v013' && github.repository == 'Skinny-lfg/wanderer-game'
+    needs: [scan-current-game, browser-clean-sheet]
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: audit/v013
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Generate canonical isolated Pages mirror
+        run: npm run build:pages
+      - name: Commit generated docs to audit branch only (no deploy)
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/audit/v013"
+          git add -A docs
+          echo "C3_GENERATED_DOC_PATHS=$(git diff --cached --name-only -- docs | wc -l)"
+          if git diff --cached --quiet -- docs; then
+            echo "C3_DOCS_ALREADY_IN_SYNC=true"
+          else
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git commit -m "build(C3): synchronize generated Pages preview on audit branch [skip ci]"
+            git push origin HEAD:refs/heads/audit/v013
+          fi
+      - name: Confirm Pages generator is deterministic after sync
+        shell: bash
+        run: |
+          npm run build:pages
+          if [ -n "$(git status --porcelain -- docs)" ]; then
+            echo "::error::Pages generator is not reproducible against the committed docs tree"
+            git status --short docs
+            exit 1
+          fi
+          echo "C3_DOCS_SOURCE_PARITY=true"
