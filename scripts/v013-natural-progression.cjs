@@ -818,7 +818,7 @@ function simulateAccount(seed,id,opts,simulationOptions={}){
   throw Error('New account must start with native weak equipment and zero earned talents');
  const acc={seed,profile:id,initialGear,startXp:a.state().automaticTalents.xp,
   attempts:[],reached:[1],endLevel:null,stopReason:null};
- let stopped=false;
+ let stopped=false,activeProfile=profile,pivoted=false;
  for(let level=1;level<=opts.maxLevel&&!stopped;level++){
   if(a.controller().state.unlocked<level){
    acc.stopReason='E'+level+' remains locked (prior Boss not defeated)';
@@ -833,15 +833,20 @@ function simulateAccount(seed,id,opts,simulationOptions={}){
    }
    let entry={level,attempt,profile:id};
    try{
-    const camp=prepareCamp(a,profile,level,decisionModel);
+    const canPivot=!pivoted&&attempt>=3&&a.state().automaticTalents.nodes.length>=4&&
+     acc.attempts.filter(x=>x.level===level&&!x.error&&x.status!=='error').length>=2;
+    const nextProfile=canPivot?pivotProfile(id):activeProfile;
+    const camp=prepareCamp(a,nextProfile,level,decisionModel,
+     canPivot?{resetReason:'two_undefeated_attempts_at_E'+level}:undefined);
+    if(canPivot){if(camp.resets.length!==1)throw Error('Expected one native profile reset');activeProfile=nextProfile;pivoted=true;}
     const before={xp:a.state().automaticTalents.xp,earned:a.talents.earned(a.state().automaticTalents),
-     spent:a.state().automaticTalents.nodes.length,gear:gearSnapshot(a),gold:a.state().gold,
+     spent:a.state().automaticTalents.nodes.length,gear:gearSnapshot(a),strategy:activeProfile.variantId||id,gold:a.state().gold,
      fragments:a.state().fragments,essence:a.state().crafting?.essence||0,
      talentNodes:[...a.state().automaticTalents.nodes],
      element:a.state().automaticTalents.element||null,
      prepared:a.state().automaticTalents.prepared||null,
      unlocked:a.controller().state.unlocked};
-    const encounter=playDungeon(a,level,profile,opts,decisionModel);
+    const encounter=playDungeon(a,level,activeProfile,opts,decisionModel);
     if(encounter.xpEnd<before.xp)throw Error('Native earned XP decreased');
     entry={...entry,camp,before,...encounter,
      after:{xp:a.state().automaticTalents.xp,earned:a.talents.earned(a.state().automaticTalents),
@@ -904,6 +909,11 @@ function analyze(accounts,opts){
    reachedBossWithPreparation:attempts.filter(a=>a.bossReached&&
     (a.prepAtBoss?.markedElite||a.prepAtBoss?.reliquary)).length,
    gearUpgrades:attempts.reduce((n,a)=>n+(a.equipped?.length||0)+(a.camp?.equipped?.length||0),0),
+   tierUpgrades:attempts.reduce((n,a)=>n+(a.camp?.upgraded?.length||0),0),
+   talentResets:attempts.reduce((n,a)=>n+(a.camp?.resets?.length||0),0),
+   elementalSelections:attempts.reduce((n,a)=>n+(a.camp?.elementChoices?.length||0),0),
+   advancedPrepared:attempts.filter(a=>!!a.before?.prepared).length,
+   strategyPivots:attempts.filter(a=>!!a.before?.strategy?.endsWith('-pivot')).length,
    observations:attempts.length?null:'not_reached; do not infer win rate'});
  }
  return {stage:'9.6',schemaVersion:5,engine:'v0.13 live native account, dungeon and combat runtime',
@@ -920,7 +930,8 @@ function analyze(accounts,opts){
    'No guaranteed drops, fixed rarity, synthetic starting gear, invented XP or teleporting Boss to first room.',
    'Consumables can only be used between rooms or at native Shrine windows; no mid-combat healing.',
    'The map topology and known/scouted room types guide movement; hidden room types are not read for priority scoring.',
-   'No simulated manual dodging, frame-perfect casts, merchant browsing strategy or complex craft optimization.',
+   'No simulated manual dodging, frame-perfect casts, merchant browsing strategy or exhaustive craft optimization.',
+   'S1 uses native tier upgrades, prepared talents, elemental attunement and one possible full reset after repeated legitimate failure; exact player optimization remains unvalidated.',
    'Limited seeds, attempts and behavior profiles: pilot-only, not statistical balance rates.'
   ],coverage:{accounts:accounts.length,attempts:accounts.reduce((n,a)=>n+a.attempts.length,0),
     errors:accounts.flatMap(a=>a.attempts).filter(x=>x.error||x.status==='error').length,
@@ -952,6 +963,8 @@ function markdown(data){
   '- Combat target switching has a reaction delay; map traversal uses native movement and step costs; hidden room types are not peeked for room selection.',
   '- Boon decisions are ranked by actual trade-offs, not chosen blindly by Affinity; native Fate rerolls are conditional.',
   '- Native potions are purchased with earned Gold, used by exact kind only at legal map windows, and conserved before safe rooms.',
+  '- S1: the Camp compares crafting previews with real named-tier upgrade requirements and never bypasses materials or Expedition unlocks.',
+  '- S1: earned talents can select Fire/Frost/Lightning, choose an owned advanced prepared skill, and reset (without losing XP) once after two failed attempts when at least four talent nodes exist.',
   '- Elite route scores compare native Elite 60% loot odds to ordinary room odds, including extra Grey loot, Gold/Fragments, Marked Elite rewards and Boss preparation; they never guarantee a drop.',
   '- Boss preparation is earned via the real marked Elite and Forgotten Reliquary; both are separately counted, including preparation at Boss entry.',
   '- A win requires the real Boss at its natural map location. Extracting saves resources but **does not unlock E+1**.',
@@ -969,7 +982,7 @@ function main(args=process.argv.slice(2)){
  if(report.coverage.errors)process.exitCode=1;
  return report;
 }
-module.exports={PROFILES,DEFAULTS,parseArgs,gearScore,gearSnapshot,spendEarnedTalents,equipEarned,
- prepareCamp,craftEarned,consolidateStash,choiceRealm,pathLength,eliteOpportunity,selectRoom,evaluateRetreat,boonScore,chooseBoon,chooseContract,eventOptions,potionSlots,usePotionKind,usePotionsBetween,rerollPoorBoonAtShrine,
+module.exports={PROFILES,PIVOTS,pivotProfile,DEFAULTS,parseArgs,gearScore,gearSnapshot,spendEarnedTalents,prepareEarnedAbility,equipEarned,
+ prepareCamp,craftEarned,investEarnedGear,consolidateStash,choiceRealm,pathLength,eliteOpportunity,selectRoom,evaluateRetreat,boonScore,chooseBoon,chooseContract,eventOptions,potionSlots,usePotionKind,usePotionsBetween,rerollPoorBoonAtShrine,
  fightNatural,resolveEvent,clearResults,playDungeon,simulateAccount,analyze,run,markdown,main};
 if(require.main===module)main();
