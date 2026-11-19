@@ -36,7 +36,7 @@ test('S1: tier upgrade uses exact native Forge costs, preserves item ID and resp
 test('S1: investment policy selects legal tier upgrades when crafting is unaffordable',()=>{
  const a=make(115),s=a.state(),id=s.equip.weapon.id;
  a.setUnlocked(5);
- s.fragments=1000;s.crafting.essence=7;
+ s.fragments=1000;s.crafting.essence=2;
  const expected=a.forge.tierPreview(id);assert(expected.ready);
  const anyCraft=a.forge.recipes.some(r=>a.forge.progress(r.id,5)?.ready);
  assert.equal(anyCraft,false,'fixture should have resources for tiers but no recipe craft');
@@ -44,7 +44,7 @@ test('S1: investment policy selects legal tier upgrades when crafting is unaffor
  assert.equal(result.crafted.length,0);
  assert(result.upgraded.length>0,'native tier upgrades should be selected if useful');
  assert(result.upgraded.some(x=>x.toTier===5));
- assert(s.fragments<1000&&s.crafting.essence<7);
+ assert(s.fragments<1000&&s.crafting.essence<2);
  assert.equal(s.equip.weapon.id,id);
 });
 
