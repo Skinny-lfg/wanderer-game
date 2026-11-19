@@ -3,7 +3,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 require('../online/v012-expedition-events.js');
 require('../online/v012-expedition-controller.js');
 const catalog=globalThis.WandererV012IntegratedEvents.CATALOG;
-const groups=globalThis.WandererV012Expedition.EVENT_GROUPS;
+const fs=require('node:fs');
 
 test('v0.13 event catalog intentionally adds the optional Forgotten Reliquary without duplicating IDs',()=>{
  assert.equal(catalog.length,9,'Eight scheduled events plus one v0.13 optional Reliquary');
@@ -19,16 +19,16 @@ test('v0.13 event catalog intentionally adds the optional Forgotten Reliquary wi
  const oracle=catalog.find(e=>e.id==='oracle_of_paths');
  assert(oracle,'Oracle must remain available through normal schedule');
 });
-test('v0.13 legacy event schedule still uses four non-repeated categories; Reliquary remains optional',()=>{
- assert.equal(groups.length,4);
- assert(groups.every(g=>g.length===2));
- const scheduled=groups.flat();
- assert.equal(new Set(scheduled).size,8,'Exactly eight scheduled events');
- assert.equal(scheduled.includes('forgotten_reliquary'),false,'Optional Reliquary must not displace scheduled events');
- assert.equal(new Set(scheduled.map(id=>catalog.find(e=>e.id===id)?.category)).size,4);
- for(let seed=0;seed<100;seed++){
-  const selected=groups.slice(0,3+seed%2).map((g,i)=>g[(seed+i)%g.length]);
-  assert.equal(new Set(selected.map(id=>catalog.find(e=>e.id===id)?.category)).size,selected.length,
-   'Normal event categories must not repeat');
- }
+test('current Dungeon owns event placement; retired 15-Realm event groups no longer exist',()=>{
+ const source=fs.readFileSync('online/v012-expedition-controller.js','utf8');
+ assert.equal(globalThis.WandererV012Expedition.EVENT_GROUPS,undefined);
+ assert(!source.includes('EVENT_GROUPS'));
+ assert(source.includes('function startDungeon('));
+ assert(source.includes("oracle_of_paths"));
+ assert(source.includes("forgotten_reliquary"));
+ const optional=catalog.find(e=>e.id==='forgotten_reliquary');
+ assert(optional&&optional.category==='sacrifice');
+ const scheduled=catalog.filter(e=>e.id!=='forgotten_reliquary');
+ assert.equal(scheduled.length,8);
+ assert.equal(new Set(scheduled.map(e=>e.id)).size,8);
 });
