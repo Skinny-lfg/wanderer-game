@@ -32,7 +32,7 @@ test('Grey is a basic one-stat, zero-primary item and yields real Forge Fragment
  assert.equal(a.sale(a.state().equip.weapon),0,'initial protected sword cannot be farmed');
 });
 test('Native first room remains guaranteed Uncommon+, later normal room may drop a Grey and salvage at Camp',()=>{
- let found=false;
+ let found=false;const debug=[];
  for(let seed=6041;seed<6070&&!found;seed++){
   const a=create(seed,undefined,{}, {skipPersistence:true});
   const c=a.controller();a.start(1,true);const card=c.state.dungeon.cards[0];c.chooseRealm(card.id);
@@ -47,7 +47,7 @@ test('Native first room remains guaranteed Uncommon+, later normal room may drop
   const candidates=card.nodes.map((n,i)=>({n,i})).filter(({n,i})=>
    n.kind==='combat'&&!dungeon.cleared.includes(i)&&c.travelPath(i)?.length&&
    c.travelCost(c.travelPath(i))<=steps);
-  if(!candidates.length)continue;
+  if(!candidates.length){if(debug.length<4)debug.push({seed,stage:c.state.stage,steps,current:dungeon.current,cleared:dungeon.cleared,rewardPending:!!c.state.rewardPending, kinds:card.nodes.map((n,i)=>({i,kind:n.kind,path:c.travelPath(i),cost:c.travelCost(c.travelPath(i))})).slice(0,9)});continue;}
   const next=candidates[0].i;
   if(!c.visitRoom(next)||!a.enter())continue;
   r=a.state().run;
@@ -67,5 +67,5 @@ test('Native first room remains guaranteed Uncommon+, later normal room may drop
   assert(!a.state().stash.some(i=>i.id===gained[0].id));
   found=true;
  }
- assert(found,'at least one seeded E1 Dungeon allows two ordinary encounters and extraction');
+ assert(found,'at least one seeded E1 Dungeon allows two ordinary encounters and extraction: '+JSON.stringify(debug));
 });
