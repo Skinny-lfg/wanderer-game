@@ -52,12 +52,25 @@ test('character picker removed and both camp and combat use dynamic images',()=>
   assert.ok(html.includes('class="model" src="${heroFullImage()}"'));
 });
 
-test('camp portrait is reduced and has ground-only shadow',()=>{
+test('all paper dolls render one dedicated shadow beneath the avatar',()=>{
+  const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+  assert.match(html,/class="model" src="\$\{heroFullImage\(\)\}"[^>]+><span class="characterGroundShadow" aria-hidden="true"><\/span>/);
+  assert.equal((html.match(/class="characterGroundShadow"/g)||[]).length,1,'shared markup must supply a single ground shadow to each view');
+});
+test('camp portrait is reduced and shadow stays under the boots',()=>{
   const css=fs.readFileSync(path.join(root,'online/v012-ui5-camp.css'),'utf8');
-  const tuned=css.slice(css.indexOf('/* v0.13: scaled equipment portrait'));
-  assert.ok(tuned.length>400,'portrait tuning CSS missing');
-  assert.match(tuned,/\.phase3CampCharacter \.paper>\.model\s*\{[^}]*scale\(\.80\)[^}]*filter:none/s,'portrait must shrink without silhouette drop-shadow');
-  assert.match(tuned,/\.phase3CampCharacter \.paper::before\s*\{[^}]*radial-gradient\(ellipse at center[^}]*pointer-events:none/s,'contact shadow should sit below boots');
-  assert.match(tuned,/top:calc\(var\(--camp-vitals-row\) \+ 4 \* var\(--camp-slot-row\) - 18px\)/,'shadow must track equipment grid, not viewport');
-  assert.match(tuned,/@media\(max-width:700px\)/,'mobile portrait sizing must be defined');
+  const tuned=css.slice(css.indexOf('/* v0.13: one visible ground shadow'));
+  assert.ok(tuned.length>500,'camp portrait tuning missing');
+  assert.match(tuned,/\.paper>\.model\s*\{[^}]*scale\(\.80\)[^}]*filter:none/s);
+  assert.match(tuned,/\.paper>\.characterGroundShadow\s*\{[^}]*top:calc\(var\(--camp-vitals-row\)[^}]*radial-gradient\(ellipse at center[^}]*pointer-events:none/s);
+  assert.match(tuned,/box-shadow:0 0 8px 1px rgba\(157,117,77,\.23\)/,'shadow must have visible separation from dark floor');
+  assert.ok(!tuned.includes('.paper::before'),'old unreliable pseudo shadow removed');
+});
+test('inventory and equipment portraits match camp scale and have no silhouette filter',()=>{
+  const css=fs.readFileSync(path.join(root,'online/v012-ui6-unified-inventory.css'),'utf8');
+  const portrait=css.slice(css.indexOf('.phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper>.model'));
+  assert.match(portrait,/transform:translateY\(-22px\) scale\(\.80\)!important/);
+  assert.match(portrait,/filter:none!important/);
+  assert.match(css,/\.paper>\.characterGroundShadow\s*\{[^}]*top:calc\(5 \* var\(--gear-row\) - 11px\)[^}]*radial-gradient\(ellipse at center/s);
+  assert.match(css,/\.phase3BagInventory \.equipmentLoadout \.paper>\.characterGroundShadow/,'expedition inventory is also covered');
 });
