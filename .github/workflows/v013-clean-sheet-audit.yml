@@ -16,6 +16,7 @@ on:
       - 'preview/talent-rebuild/**'
       - 'tests/v013-c2-reset.test.cjs'
       - 'tests/v0120-evasion.test.cjs'
+      - 'tests/v012-economy-harness.cjs'
       - 'tests/v013-*.cjs'
       - 'CLEAN_SHEET_AUDIT_REPORT.md'
       - 'tests/v013-c3-*.cjs'
