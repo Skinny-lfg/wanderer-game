@@ -25,7 +25,7 @@ jobs:
       - name: Existing simulation, progression and talent gate
         run: |
           npm run test:v013:sim
-          node --test tests/v013-natural-progression.test.cjs tests/v013-stage94-human-decisions.test.cjs tests/v013-tier-upgrade.test.cjs tests/v013-talent-structure.test.cjs
+          node --test tests/v013-natural-progression.test.cjs tests/v013-stage94-human-decisions.test.cjs tests/v013-tier-upgrade.test.cjs tests/v013-talent-structure.test.cjs tests/v013-stage5-build-audit.test.cjs
       - name: Browser to VM equivalence (real Chromium)
         shell: bash
         run: |
