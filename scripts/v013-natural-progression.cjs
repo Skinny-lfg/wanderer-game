@@ -273,6 +273,145 @@ function investEarnedGear(a,profile,level){
  }
  return outcome;
 }
+// Eight native Rune families. Valuation is build policy, not an additional
+// player stat. The actual Rune values, slot cap, duplicates and transactions
+// always come from the production game.
+function runeScore(rune,profile){
+ if(!rune)return -Infinity;
+ const magic=profile.families.includes('magic'),leather=profile.armor==='Leather',plate=profile.armor==='Plate';
+ const affinity={might:plate?5.2:leather?2.2:1.4,
+  swiftness:leather?5.2:magic?1.8:2.1,
+  wisdom:magic?6:1.1,
+  fortitude:plate?5.1:leather?2.3:3.6,
+  fortune:2.1,fury:magic?2.5:leather?4.8:3.4,
+  warding:plate?5:magic?3.2:3.1,vitality:plate?5.1:4.2};
+ const base={fury:3,warding:2,vitality:10}[rune.family]||1;
+ const normalized=Number(rune.value||0)/base;
+ return round((affinity[rune.family]||0)*(1+Math.max(0,normalized)*.08),3);
+}
+function chooseRuneReward(options,profile){
+ return (options||[]).filter(x=>x?.id).sort((x,y)=>
+  runeScore(y,profile)-runeScore(x,profile)||y.tier-x.tier)[0]||null;
+}
+function manageEarnedRunes(a,profile){
+ const s=a.state(),actions=[];
+ if(!a.economyCanAct())return actions;
+ const available=[...s.runes].filter(r=>r?.id).sort((x,y)=>
+  runeScore(y,profile)-runeScore(x,profile)||y.tier-x.tier);
+ const used=new Set(),desired=[];
+ for(const rune of available){
+  if(used.has(rune.family))continue;
+  used.add(rune.family);desired.push(rune);
+  if(desired.length===3)break;
+ }
+ for(let i=0;i<3;i++){
+  const current=s.runeSlots[i],wanted=desired[i]?.id||null;
+  if(current===wanted)continue;
+  if(current!==null&&!desired.some(r=>r.id===current)){
+   if(!a.runes.unequip(i))throw Error('Native Rune unequip rejected in Camp');
+   actions.push({action:'unequip',slot:i,id:current});
+  }
+ }
+ for(let i=0;i<desired.length;i++){
+  const rune=desired[i];
+  if(s.runeSlots[i]===rune.id)continue;
+  if(!a.runes.equip(rune.id,i))throw Error('Native Rune equip rejected in Camp');
+  actions.push({action:'equip',slot:i,id:rune.id,family:rune.family,score:runeScore(rune,profile)});
+ }
+ // Native recycling never destroys an equipped or strongest rune per family.
+ if(s.runes.length>5){
+  const before={count:s.runes.length,fragments:s.fragments};
+  if(a.runes.recycle()){
+   a.runes.confirm();
+   if(s.runes.length>=before.count||s.fragments<=before.fragments)
+    throw Error('Native Rune recycling did not settle');
+   actions.push({action:'recycle',count:before.count-s.runes.length,fragments:s.fragments-before.fragments});
+  }
+ }
+ return actions;
+}
+// Score every one of the game's 13 named potions; no custom stock odds or
+// invented inventory. A potion still only activates in native legal windows.
+function potionScore(kind,profile,vitals={}){
+ const magic=profile.families.includes('magic'),leather=profile.armor==='Leather',plate=profile.armor==='Plate';
+ const hpRatio=vitals.maxhp?Math.max(0,vitals.hp)/vitals.maxhp:1,
+  manaRatio=vitals.maxmp?Math.max(0,vitals.mp)/vitals.maxmp:1;
+ const score={health:hpRatio<.65?92:75,mana:magic?(manaRatio<.5?70:51):12,
+  might:magic?13:plate?54:48,arcane:magic?62:20,
+  ironhide:plate?57:46,haste:leather?59:magic?45:49,
+  fortune:52,barrier:plate?53:56,trail:48,scout:47,
+  purifying:32,veilsight:51,fate:38};
+ return score[kind]??-Infinity;
+}
+function selectEarnedPotions(a,profile){
+ const s=a.state(),actions=[],v=a.vitals();
+ const available=Object.keys(s.consumables||{}).filter(kind=>
+  (s.consumables[kind]||0)>0&&a.potions.catalog.some(entry=>entry.id===kind));
+ const wanted=available.sort((x,y)=>potionScore(y,profile,v)-potionScore(x,profile,v))
+  .slice(0,3);
+ if((s.potionSelection||[]).join('|')===wanted.join('|'))return actions;
+ for(const kind of [...s.potionSelection||[]]){
+  if(!a.potions.select(kind,true))throw Error('Native potion loadout removal rejected '+kind);
+ }
+ for(const kind of wanted){
+  if(!a.potions.select(kind))throw Error('Native potion loadout selection rejected '+kind);
+ }
+ actions.push({action:'loadout',kinds:[...s.potionSelection]});
+ return actions;
+}
+function buyEarnedPotions(a,profile,level){
+ const s=a.state(),actions=[];
+ if(!profile.shop||!a.economyCanAct())return actions;
+ if(!s.apothecary)s.apothecary=a.potions.shop(level);
+ const owned=kind=>(s.consumables?.[kind]||0)>0;
+ const wantedKind=profile.families.includes('magic')?'mana':'health';
+ // Only buy available offers at their actual dynamic prices; replacement
+ // stock is drawn by the native Apothecary and may contain any of 13 types.
+ for(let n=0;n<3;n++){
+  const offers=(s.apothecary?.stock||[]).filter(p=>p.price<=s.gold&&!owned(p.kind))
+   .map(p=>({...p,score:potionScore(p.kind,profile,a.vitals())}))
+   .filter(p=>p.score>=35)
+   .sort((x,y)=>y.score/y.price-x.score/x.price);
+  const best=offers[0];if(!best)break;
+  const before=s.gold;
+  if(!a.potions.buy(best.id))break;
+  if(s.gold!==before-best.price||!owned(best.kind))
+   throw Error('Native Apothecary purchase not settled');
+  actions.push({action:'buy',kind:best.kind,cost:best.price});
+ }
+ if(!owned('health')&&s.gold>=s.apothecary.refreshCost+17){
+  const before=s.gold,cost=s.apothecary.refreshCost;
+  if(a.potions.reroll()){
+   if(s.gold!==before-cost)throw Error('Native Apothecary restock cost mismatch');
+   actions.push({action:'restock',cost});
+   const heal=s.apothecary.stock.find(p=>p.kind==='health'&&p.price<=s.gold);
+   if(heal&&a.potions.buy(heal.id))actions.push({action:'buy',kind:'health',cost:heal.price});
+  }
+ }
+ actions.push(...selectEarnedPotions(a,profile));
+ return actions;
+}
+function refineEarnedReagents(a,profile,level){
+ const s=a.state(),out=[],forge=a.forge;
+ if(!forge||!a.economyCanAct())return out;
+ // Refine only to clear a real material bottleneck for an already learned
+ // Epic recipe; ordinary reagent gain remains tied to completed encounters.
+ const epic=forge.recipes.filter(r=>r.rarity==='Epic'&&
+  (profile.families.includes(r.family)||r.subtype===profile.armor));
+ for(const recipe of epic){
+  const p=forge.progress(recipe.id,level);if(!p?.unlocked||!p.cost.cores)continue;
+  const family=recipe.family;
+  if((s.crafting.cores[family]||0)>=p.cost.cores)continue;
+  if((s.crafting.dryRooms?.[family]||0)<3||s.crafting.essence<p.cost.essence+6)continue;
+  const before={essence:s.crafting.essence,cores:s.crafting.cores[family]};
+  if(!forge.refine(family))throw Error('Native reagent refinement rejected after legal preview');
+  if(s.crafting.essence!==before.essence-6||s.crafting.cores[family]!==before.cores+1)
+   throw Error('Native reagent refinement settlement mismatch');
+  out.push({family,recipe:recipe.id,essenceSpent:6,coresGained:1});
+  break;
+ }
+ return out;
+}
 // Free Stash capacity through actual Camp salvage, not state mutation.
 function consolidateStash(a,profile,reserve=4){
  const s=a.state(),capacity=Number(s.stashCapacity);
