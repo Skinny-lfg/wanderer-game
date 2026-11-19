@@ -1,0 +1,66 @@
+name: Wanderer v0.13 Stage 9.7 — Combat balance evidence (no deploy)
+
+on:
+  pull_request:
+    paths:
+      - 'combat/**'
+      - 'economy/**'
+      - 'online/**/*.js'
+      - 'scripts/v013-*'
+      - 'tests/v013-*'
+      - 'index.html'
+      - 'package.json'
+      - '.github/workflows/v013-stage97-combat-audit.yml'
+  push:
+    branches:
+      - publish/automatic-rpg-preview
+    paths:
+      - 'combat/**'
+      - 'economy/**'
+      - 'online/**/*.js'
+      - 'scripts/v013-*'
+      - 'tests/v013-*'
+      - 'index.html'
+      - 'package.json'
+      - '.github/workflows/v013-stage97-combat-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-combat-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Independent-seed, matched-pair and baseline integrity tests
+        run: npm run test:v013:stage97
+      - name: Controlled native combat pilot with E1 earned-power baseline
+        run: >-
+          npm run diagnose:v013:stage97 --
+          --seeds=9101,9201
+          --builds=blood-fury
+          --affinities=blood,decay,aegis
+          --risks=0
+          --group-sizes=3
+          --policies=mechanics
+          --points=0
+          --rarity=Common
+          --scan=35
+          --pairs=2
+          --out=reports/v013-stage97-combat-smoke.json
+      - name: Upload reproducible audit and raw observations (no deploy)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v013-stage97-combat-audit
+          path: |
+            reports/v013-stage97-combat-smoke.json
+            reports/v013-stage97-combat-smoke.md
+          if-no-files-found: ignore
