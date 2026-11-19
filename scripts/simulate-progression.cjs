@@ -249,7 +249,7 @@ function shortestRoute(card){
 }
 function resolveEvent(a){
  if(!a.events.run()?.event)return false;
- const bag=a.bag.items(),item=bag[0],passive=a.build()?.picks?.[0],family=a.controller().allowed()[0],target=Object.values(a.state().equip).find(Boolean);
+ const bag=a.bag.items(),item=bag[0],passive=a.build()?.picks?.[0],family=null,target=Object.values(a.state().equip).find(Boolean);
  for(const choice of [2,0,1])if(a.events.choose(choice,item?.id,passive,family,target?.id))return true;
  throw Error('Could not resolve real event');
 }
