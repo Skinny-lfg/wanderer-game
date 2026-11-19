@@ -205,9 +205,19 @@ function selectTarget(run,policy='focus'){
  if(elite)return elite;
  return alive.find(e=>e.role==='caster')||(current?.hp>0&&alive.includes(current)?current:alive[0]);
 }
+// Detached snapshot: no additional RNG calls, stat recalculation or UI actions.
+function combatSnapshot(a,c){
+ const p=a.state(),r=p.run,g=c.state;
+ return JSON.parse(JSON.stringify({
+  equipment:p.equip,talents:p.automaticTalents,runes:p.runes,runeSlots:p.runeSlots,
+  build:a.build(),room:g.selected,realm:g.dungeon?.realm,foundation:g.dungeon?.foundationState,
+  stage:g.stage,run:r,results:a.results()
+ }));
+}
 function fight(a,c,limit,targetPolicy='focus'){
  const r=a.state().run;
  if(!r||r.status!=='fight')throw Error('Expected native combat encounter');
+ const initialStateSha256=crypto.createHash('sha256').update(JSON.stringify(combatSnapshot(a,c))).digest('hex');
  const startHp=r.hp,startMp=r.mp,startedTier=r.tier,leader=r.encounterLeader||r.enemy;
  const profile=A.profileForStyle(leader?.bossStyle),sourceActors=[...(r.enemies||[r.enemy]),...(r.groupReserve||[])].filter(Boolean);
  const initialRoles=Object.fromEntries(['minion','tank','skirmisher','caster','boss','elite'].map(role=>[role,sourceActors.filter(e=>(e.boss?'boss':e.miniboss?'elite':e.role)===role).length]));
@@ -220,7 +230,7 @@ function fight(a,c,limit,targetPolicy='focus'){
   const next=selectTarget(r,targetPolicy);if(next&&next!==r.enemy&&next.hp>0){r.enemy=next;r.tEnemy=next.groupClock;targetSwitches++;}
   a.tick();ticks++;minimumHp=Math.min(minimumHp,Math.max(0,r.hp)/(r.maxhp||1));peakLiving=Math.max(peakLiving,(r.enemies||[r.enemy]).filter(e=>e?.hp>0).length+(r.groupReserve||[]).filter(e=>e?.hp>0).length);peakVisible=Math.max(peakVisible,(r.enemies||[r.enemy]).filter(e=>e?.hp>0).length);}
  const metrics=r.metrics||{},died=c.state.stage==='failed'||r.hp<=0,timedOut=!died&&r.status==='fight'&&ticks>=limit;
- const row={tier:startedTier,type:leader?.boss?'boss':leader?.miniboss?'elite':'combat',bossId:profile?.id||null,bossAffinity:profile?Object.keys(A.PROFILES).find(f=>A.PROFILES[f]===profile):null,bossName:profile?.name||null,bossStyle:leader?.bossStyle||null,eliteType:leader?.eliteType||null,initialRoles,roster,initialVisible,initialReserve,peakLivingEnemies:peakLiving,peakVisibleEnemies:peakVisible,targetPolicy,targetSwitches,traitId:r.encounterTraitId||null,traitRegrowthHealing:Math.round(metrics.traitRegrowthHealing||0),traitDeathPulse:Math.round(metrics.traitDeathPulse||0),bossModifierIds:[...(r.bossModifierIds||[])],bossPulseTriggers:Math.round(metrics.bossPulseTriggers||0),bossFrenzyTriggers:Math.round(metrics.bossFrenzyTriggers||0),bossPreparation:r.bossPreparation?JSON.parse(JSON.stringify(r.bossPreparation)):null,status:died?'died':timedOut?'timeout':r.status,timedOut,died,won:!died&&r.status==='cleared',seconds:+(ticks*.11).toFixed(2),ticks,hpStart:+startHp.toFixed(2),hpEnd:+Math.max(0,r.hp).toFixed(2),hpMax:r.maxhp,mpStart:+startMp.toFixed(2),mpEnd:+Math.max(0,r.mp).toFixed(2),mpMax:r.maxmp,minHpPct:+(minimumHp*100).toFixed(1),conditionId:r.conditionId||null,conditionMarked:!!r.conditionMarked,conditionBarrierGranted:Math.round(r.conditionBarrierGranted||0),conditionRiteTriggers:Math.round(metrics.conditionRiteTriggers||0),damageDealt:Math.round(metrics.damageDealt||0),damageTaken:Math.round(metrics.damageTaken||0),absorbed:Math.round(metrics.absorbed||0),manaSpent:Math.round(metrics.manaSpent||0),initialEnemies,enemies:r.totalMobCount||initialEnemies,reinforcementsSpawned:Math.max(0,(r.totalMobCount||initialEnemies)-initialEnemies),bossSummons:Math.round(metrics.bossSummons||0),bossHealing:Math.round(metrics.bossHealing||0),bossMinionDeaths:Math.round(metrics.bossMinionDeaths||0),bossWards:Math.round(metrics.bossWards||0),bossArcanePulses:Math.round(metrics.bossArcanePulses||0),bossCastInterruptions:Math.round(metrics.bossCastInterruptions||0),bossNodeDestroyed:Math.round(metrics.bossNodeDestroyed||0),enemyAbilityCasts:Math.round(metrics.enemyAbilityCasts||0),eliteSummons:Math.round(metrics.eliteSummons||0),bossCastPreparations:Math.round(metrics.bossCastPreparations||0)};
+ const row={initialStateSha256,targetPolicy,tier:startedTier,type:leader?.boss?'boss':leader?.miniboss?'elite':'combat',bossId:profile?.id||null,bossAffinity:profile?Object.keys(A.PROFILES).find(f=>A.PROFILES[f]===profile):null,bossName:profile?.name||null,bossStyle:leader?.bossStyle||null,eliteType:leader?.eliteType||null,initialRoles,roster,initialVisible,initialReserve,peakLivingEnemies:peakLiving,peakVisibleEnemies:peakVisible,targetPolicy,targetSwitches,traitId:r.encounterTraitId||null,traitRegrowthHealing:Math.round(metrics.traitRegrowthHealing||0),traitDeathPulse:Math.round(metrics.traitDeathPulse||0),bossModifierIds:[...(r.bossModifierIds||[])],bossPulseTriggers:Math.round(metrics.bossPulseTriggers||0),bossFrenzyTriggers:Math.round(metrics.bossFrenzyTriggers||0),bossPreparation:r.bossPreparation?JSON.parse(JSON.stringify(r.bossPreparation)):null,status:died?'died':timedOut?'timeout':r.status,timedOut,died,won:!died&&r.status==='cleared',seconds:+(ticks*.11).toFixed(2),ticks,hpStart:+startHp.toFixed(2),hpEnd:+Math.max(0,r.hp).toFixed(2),hpMax:r.maxhp,mpStart:+startMp.toFixed(2),mpEnd:+Math.max(0,r.mp).toFixed(2),mpMax:r.maxmp,minHpPct:+(minimumHp*100).toFixed(1),conditionId:r.conditionId||null,conditionMarked:!!r.conditionMarked,conditionBarrierGranted:Math.round(r.conditionBarrierGranted||0),conditionRiteTriggers:Math.round(metrics.conditionRiteTriggers||0),damageDealt:Math.round(metrics.damageDealt||0),damageTaken:Math.round(metrics.damageTaken||0),absorbed:Math.round(metrics.absorbed||0),manaSpent:Math.round(metrics.manaSpent||0),initialEnemies,enemies:r.totalMobCount||initialEnemies,reinforcementsSpawned:Math.max(0,(r.totalMobCount||initialEnemies)-initialEnemies),bossSummons:Math.round(metrics.bossSummons||0),bossHealing:Math.round(metrics.bossHealing||0),bossMinionDeaths:Math.round(metrics.bossMinionDeaths||0),bossWards:Math.round(metrics.bossWards||0),bossArcanePulses:Math.round(metrics.bossArcanePulses||0),bossCastInterruptions:Math.round(metrics.bossCastInterruptions||0),bossNodeDestroyed:Math.round(metrics.bossNodeDestroyed||0),enemyAbilityCasts:Math.round(metrics.enemyAbilityCasts||0),eliteSummons:Math.round(metrics.eliteSummons||0),bossCastPreparations:Math.round(metrics.bossCastPreparations||0)};
  return row;
 }
 function shortestRoute(card){
@@ -459,7 +469,7 @@ function simulate(opts){
    visualVfx:'Present in browser but not simulated (visual-only, cannot change combat RNG or numbers).',
    limits:'No automatic potions, conditional boon optimization, trading/crafting between rooms or adaptive player strategy beyond the specified target policy. Not a complete player-behavior model; not all 15 Realms and cross-Expedition build investments are modeled.',
    warnings:notes},
-  sourceSha256:fingerprint.sha256,sourceModules:fingerprint.files,sourceManifest:fingerprint.manifest,durationMs:Date.now()-start,summary,rows};
+  fixtureOrigin:'synthetic loadout and unlocks; native generated realm; controlled encounters may replace room actors',sourceSha256:fingerprint.sha256,sourceModules:fingerprint.files,sourceManifest:fingerprint.manifest,durationMs:Date.now()-start,summary,rows};
 }
 function main(args=process.argv.slice(2)){
  const opts=parseArgs(args),report=simulate(opts),dest=path.resolve(process.cwd(),opts.output);fs.mkdirSync(path.dirname(dest),{recursive:true});fs.writeFileSync(dest,JSON.stringify(report,null,2)+'\n');
@@ -467,5 +477,5 @@ function main(args=process.argv.slice(2)){
  if(report.summary.errors||report.summary.timeouts)process.exitCode=1;
  return report;
 }
-module.exports={BUILDS,DEFAULTS,parseArgs,talentPlan,gearLevel,shortestRoute,selectTarget,encounter,bossPreparationEncounter,dungeon,simulate,sourceFingerprint,main};
+module.exports={combatSnapshot,fight,prepare,BUILDS,DEFAULTS,parseArgs,talentPlan,gearLevel,shortestRoute,selectTarget,encounter,bossPreparationEncounter,dungeon,simulate,sourceFingerprint,main};
 if(require.main===module)main();
