@@ -92,13 +92,6 @@ const isDagger=o=>o?.subtype==='Daggers'||o?.subtype==='Off-Hand Dagger';
 const isTwoHanded=o=>['Two-Handed','Bow','Staff'].includes(o?.subtype);
 const isMagicOffhand=o=>!!o&&['Orb','Tome','Charm'].includes(o.subtype);
 
-function forgePreviewImage(slot,subtype){
- // Forge displays representative art for the selection, without rolling an item.
- // The C3 inventory catalog has Cloth, Leather and Plate images for all five slots.
- if(ARMOR_SLOTS.includes(slot)&&ARMOR_TYPES.includes(subtype))
-  return C3_ARMOR_ART[subtype]?.[slot]?.[0]||placeholderIcon(slot);
- return placeholderIcon(subtype==='random'?slot:subtype);
-}
 const DUNGEON_CAP=Number.MAX_SAFE_INTEGER;
 const STASH_BASE_CAPACITY=40,STASH_UPGRADE_STEP=10,STASH_MAX_CAPACITY=300;
 
@@ -212,21 +205,6 @@ function itemImg(o){
 
 function save(){phase5Persist();}
 
-function heroImage(){return 'assets/characters/avatars/'+(state.characterId||'wanderer')+'.png';}
-function heroFullImage(){return 'assets/characters/full/'+(state.characterId||'wanderer')+'.webp';}
-// Optimized transparent elite WebP portraits with fallback art if loading fails.
-// Idle PNGs are frame 1 of the new attack GIFs, never legacy elite portraits.
-const ELITE_ART={tank:'assets/elites/animated/tank_idle.png',caster:'assets/elites/animated/caster_idle.png',vampire:'assets/elites/animated/vampire_idle.png',berserker:'assets/elites/animated/berserker_idle.png',gravecaller:'assets/elites/animated/caster_idle.png',rotbound_exarch:'assets/elites/animated/tank_idle.png',ashen_executioner:'assets/elites/animated/berserker_idle.png'};
-const ELITE_ATTACK_ART={tank:'assets/elites/animated/tank_attack.gif',caster:'assets/elites/animated/caster_attack.gif',vampire:'assets/elites/animated/vampire_attack.gif',berserker:'assets/elites/animated/berserker_attack.gif',gravecaller:'assets/elites/animated/caster_attack.gif',rotbound_exarch:'assets/elites/animated/tank_attack.gif',ashen_executioner:'assets/elites/animated/berserker_attack.gif'};
-const ELITE_ATTACK_IMPACT_MS={tank:810,caster:890,vampire:670,berserker:490};
-const ELITE_ATTACK_DURATION_MS={tank:1850,caster:1750,vampire:1800,berserker:1400};
-const eliteArtReady={};
-if(typeof Image!=='undefined'){
- const brand=new Image();
- brand.onload=()=>document.getElementById('brandLogo')?.classList.add('hasArt');
- brand.src='assets/branding/wanderer-logo.webp';
- for(const [id,src] of Object.entries(ELITE_ART)){const pic=new Image();pic.onload=()=>{eliteArtReady[id]=true};pic.src=src;}
-}
 function eliteArt(id,fallback){return eliteArtReady[id]?ELITE_ART[id]:fallback;}
 
 
@@ -247,19 +225,6 @@ function dungeonEquipmentOdds(theme,favored=[]){return WandererV012LootRules.dun
 function dungeonEquipmentPick(theme,favored=[]){return WandererV012LootRules.dungeonEquipmentPick(theme,favored,TYPES,OFFHAND_TYPES,gameRandom,sample);}
 
 
-function chanceText(value){return (value*100).toFixed(1).replace(/\.0$/,'')+'%'}
-/* Permanent chapter-boss runes. Separate inventory, not part of normal gear sets. */
-const RUNE_FAMILIES=WandererV012Runes.FAMILIES;
-function runeValue(family,tier){return WandererV012Runes.runeValue(family,tier);}
-function makeRune(family,tier){return WandererV012Runes.makeRune(family,tier,makeId,PHASE1_PREVIEW);}
-function validRune(r){return WandererV012Runes.validRune(r,DUNGEON_CAP,PHASE1_PREVIEW);}
-function safeRunes(raw){return WandererV012Runes.safeRunes(raw,DUNGEON_CAP,PHASE1_PREVIEW);}
-function safePendingRune(raw){return WandererV012Runes.safePendingRune(raw,DUNGEON_CAP,PHASE1_PREVIEW);}
-
-function runeLine(r){
- const type=RUNE_FAMILIES.find(x=>x.id===r.family);
- return '<span class="runeLine"><img class="runeIcon" src="assets/runes/'+type.id+'.png" alt="" width="40" height="40" decoding="async"><span class="runeText">'+esc(type.name)+' · '+(PHASE1_PREVIEW?'E':'D')+r.tier+' · +'+formatItemStat(runeValue(r.family,r.tier))+' '+({atkFlat:'Attack',defFlat:'Defense',hpFlat:'Health'}[type.field]||type.field.toUpperCase())+'</span></span>';
-}
 function runeSlotChoicesMarkup(rune,slots){
  if(!rune)return '';
  return '<div id="runeSlotPicker" class="runeSlotPicker" role="group" aria-label="Choose slot for '+esc(rune.name)+'">'+
@@ -649,14 +614,6 @@ Q('[data-eqslot]').forEach(b=>b.onclick=()=>{
   slotFilter=slotFilter===filter?'all':filter;selectedId=null;chosenItems.clear();renderStash();
  });
 phase3BindRuneControls();phase6BindPotions();phase6BindInventoryActions();
-}
-function forgeComparisonTrend(item,target=item.slot){
- const diff=totalStats(comparisonEquip(item,target)).power-totalStats().power;
- const loss=lostSetTiers(item,target).length;
- const locked=target==='offhand'&&isTwoHanded(state.equip.weapon);
- const trend=locked?'same':loss?'same':diff>0?'up':diff<0?'down':'same';
- const label=locked?'🔒 Off-Hand locked':loss?'⚠ Loses set bonus':diff>0?'▲ Higher estimate':diff<0?'▼ Lower estimate':'≈ Similar';
- return '<div class="forgeTrend"><span class="merchantPowerTrend '+trend+'">'+label+' · '+(diff>0?'+':'')+diff+' estimated Gear Power</span></div>';
 }
 function forgeEquippedReference(slot){
  const targets=slot==='ring1'?['ring1','ring2']:[slot];
