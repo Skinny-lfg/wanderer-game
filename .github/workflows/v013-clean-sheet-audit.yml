@@ -32,6 +32,7 @@ jobs:
         run: >-
           node --test
           tests/v013-dead-talent-cleanup.test.cjs
+          tests/v013-clean-sheet-treasures.test.cjs
           tests/talent-graph-runtime.test.cjs
           tests/v013-talent-structure.test.cjs
           tests/v013-current-dungeon-and-talents.test.cjs
@@ -71,3 +72,29 @@ jobs:
             reports/v013-pages-generated-drift.txt
           if-no-files-found: warn
           retention-days: 30
+
+  browser-clean-sheet:
+    if: github.ref == 'refs/heads/audit/v013'
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Find installed Chrome or provision Playwright Chromium
+        shell: bash
+        run: |
+          CHROME_BIN="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          if [ -n "$CHROME_BIN" ]; then
+            echo "CHROMIUM_PATH=$CHROME_BIN" >> "$GITHUB_ENV"
+            "$CHROME_BIN" --version
+          else
+            npx playwright install chromium
+          fi
+      - name: Verify real browser uses v15 iframe and no old attribute controls
+        run: node tests/v013-clean-sheet-browser.cjs
