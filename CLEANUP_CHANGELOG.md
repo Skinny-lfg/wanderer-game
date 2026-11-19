@@ -38,3 +38,26 @@
 - Removed false manual-attribute-spending metrics from current natural progression/build reports and updated Stage 5 documentation and tests.
 - Added `tests/v013-dead-talent-cleanup.test.cjs` and isolated CI `.github/workflows/v013-legacy-talent-cleanup.yml`. Neither deploys nor changes numerical combat balance.
 
+
+## Clean-sheet audit follow-up — no backward-save requirement
+
+The previous Stage 5 note about preserving migration compatibility is
+**superseded** by the clean-sheet requirement: old save formats do not need to
+load in `audit/v013`. Current accounts, transactional persistence, prevention
+of duplicate rewards and active checkpoint restoration remain essential.
+
+- Removed v9–v14 `WandererAutomaticTalents.migrate`, obsolete graph
+  construction, old direct UI helpers and obsolete treasure-name aliases.
+- Removed invisible manual attributes from **actual derived combat stats**,
+  and from the natural account audit. Live v15 stat nodes still work.
+- Native regression tests now assert the v15-only contract.
+- Replaced the obsolete default talent browser checks with a real v15
+  isolated-browser smoke.
+- Confirmed that `combat/automatic-talents.js` still provides `old.NODES`
+  to the current v15 graph: it must be converted to a catalog module before
+  that file's old runtime can be deleted. `combat/talent-requirements.js`
+  is used by the active preview iframe.
+- Dry-run `npm run build:pages` produced 12 modified generated docs files.
+  No generated docs were published or committed by that test.
+- Full classification, evidence, remaining candidates and stages:
+  `CLEAN_SHEET_AUDIT_REPORT.md`. No gameplay balancing, merge or deploy.
