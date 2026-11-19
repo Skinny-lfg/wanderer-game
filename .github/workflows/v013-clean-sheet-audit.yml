@@ -61,7 +61,7 @@ jobs:
             echo "commit=${GITHUB_SHA}"
             echo "branch=${GITHUB_REF}"
             echo "node=$(node --version)"
-            sha256sum combat/talent-graph-runtime.js combat/automatic-talents.js online/v012-save.js index.html
+            sha256sum combat/talent-catalog.js combat/talent-graph-runtime.js combat/automatic-talents.js online/v012-save.js index.html
           } > reports/v013-clean-sheet-audit-provenance.txt
       - name: Store candidate audit and details
         if: always()

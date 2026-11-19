@@ -6,7 +6,8 @@ const path=require('node:path');
 const crypto=require('node:crypto');
 const create=require('../tests/v012-economy-harness.cjs');
 require('../combat/v012-buildcraft.js');
-require('../combat/automatic-talents.js');
+require('../combat/automatic-talents.js'); // Legacy test-only API remains isolated.
+require('../combat/talent-catalog.js');
 require('../combat/talent-graph-next.js');
 require('../combat/talent-graph-bridge.js');
 require('../combat/talent-graph-runtime.js');
