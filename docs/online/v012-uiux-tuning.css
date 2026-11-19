@@ -207,12 +207,9 @@ body.phase3IntegratedPreview dialog.itemDialog.equipmentItemDialog.equipmentStan
   max-width:min(640px,calc(100vw - 24px))!important;
 }
 /* Explanatory copy uses legible sans-serif, while Gothic headings remain unchanged. */
-body.phase3IntegratedPreview :is(.phase3PassiveDescription,.phase3PassiveTooltip p,.phase3PassiveInline p,.phase3AffinityPassiveDescriptions p,.potionEffect,.inspect p,.dialogQuestion,.phase3EventDescription){
+body.phase3IntegratedPreview :is(.phase3PassiveTooltip p,.phase3PassiveInline p,.potionEffect,.inspect p,.dialogQuestion,.phase3EventDescription){
   font-family:system-ui,-apple-system,"Segoe UI",sans-serif!important;
   font-size:14px!important;font-weight:400!important;line-height:1.55!important;letter-spacing:0!important;
-}
-body.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveDescription{
-  font:400 13px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif!important;
 }
 @media(max-width:700px){
  body.phase3IntegratedPreview :is(.phase3Camp .phase3ExpeditionPanel,.phase3CampStickyStart) button.phase3Start::before{top:28.5%!important;bottom:28.5%!important;left:18%!important;right:18%!important}

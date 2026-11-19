@@ -18,7 +18,7 @@ body.phase3IntegratedPreview #scene .vs{color:#eed7ae!important;text-shadow:0 2p
 body.phase3IntegratedPreview .phase3PassiveEmphasis{display:inline;font-weight:800!important;white-space:normal}
 body.phase3IntegratedPreview .phase3PassiveEmphasis--number{color:#99e5b5!important}
 body.phase3IntegratedPreview .phase3PassiveEmphasis--effect{color:#f1cf93!important}
-body.phase3IntegratedPreview :is(.phase3PassiveDescription,.phase3PassiveTooltip p,.phase3PassiveInline p,.phase3AffinityPassiveDescriptions p){color:#f0e2da;line-height:1.5}
+body.phase3IntegratedPreview :is(.phase3PassiveTooltip p,.phase3PassiveInline p){color:#f0e2da;line-height:1.5}
 
 /* Health remains clear while slightly smaller than before. */
 body.phase3IntegratedPreview #scene .combatant>#heroHpText,
