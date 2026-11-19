@@ -4,9 +4,10 @@
 const fs=require('node:fs');
 const path=require('node:path');
 const N=require('./v013-natural-progression.cjs');
-require('../combat/v012-buildcraft.js');
-require('../combat/automatic-talents.js');
-const T=globalThis.WandererAutomaticTalents;
+const create=require('../tests/v012-economy-harness.cjs');
+// Resolve the talent catalog from the exact integrated VM, not the Node-side
+// fallback that only sees CORE when Buildcraft has not initialized.
+const T=create(7365,undefined,{}, {skipPersistence:true,now:1720000007365}).talents;
 const NODE=new Map(T.NODES.map(n=>[n.id,n]));
 const TARGETS=Object.freeze([1,5,10,20]);
 const avg=rows=>rows.length?+(rows.reduce((a,b)=>a+b,0)/rows.length).toFixed(2):null;
