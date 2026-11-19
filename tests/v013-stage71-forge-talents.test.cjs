@@ -9,7 +9,7 @@ test('Stage 7.1 level one starts with no free talent points',()=>{
  assert(T.valid(p));assert.equal(T.earned(p),0);assert.equal(T.allocate(p,'root_blood'),null);
  assert(T.valid(real),'real Camp startup talent progress must validate');
  assert.equal(T.earned(real),0,'real Camp startup must award zero talent points');
- assert.equal(T.attributePoints(real),0,'real Camp startup has no attribute points');
+ assert.equal(typeof T.attributePoints,'undefined','manual attribute-point allocation must not exist');
  assert.equal(real.starterPoints,undefined,'real Camp startup must not inject legacy starter bonus');
  const one=T.award(p,100);assert.equal(T.earned(one),1);assert(T.allocate(one,'root_blood'));
  assert(!Object.prototype.hasOwnProperty.call(p,'starterPoints'),'new characters must not have a starter bonus');
@@ -44,6 +44,6 @@ test('Camp shows a level stepper and never counts attributes as Talent tab notif
  const T=create(7102).talents;
  const gained=T.award(T.create(),100);
  assert.equal(T.earned(gained),1);
- assert.equal(T.attributePoints(gained),1);
+ assert.equal(typeof T.attributePoints,'undefined','Talent XP is not a manual attribute-point currency');
  assert.equal(T.earned(gained)-gained.nodes.length,1,'Talent tab notification gains exactly one per level');
 });

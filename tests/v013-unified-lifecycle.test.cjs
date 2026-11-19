@@ -20,7 +20,7 @@ test('defeat retains committed materials but grants no partial or boss reward',(
 test('directed craft and discovered Blueprint survive local save/reload without repeated material awards',()=>{const storage=new Map(),a=create(148,undefined,{}, {sessionStorage:storage});a.state().fragments=100;a.state().crafting={...C.discover(C.create(),'blue_sword'),essence:20};const result=C.prepareCraft(a.state(),'green_sword',1,a.makeItem);assert(result);Object.assign(a.state(),{fragments:result.fragments,crafting:result.crafting,stash:[...a.state().stash,result.item]});a.markAllSeen();const b=create(148,undefined,{}, {sessionStorage:storage});assert.equal(b.debug().saveBlocked,false);assert.equal(b.state().crafting.essence,16);assert(C.unlocked(b.state().crafting,'blue_sword'));assert(b.state().stash.some(i=>i.id===result.item.id&&i.rarity==='Uncommon'));});
 
 
-test('permanent affinities survive entering a different Realm and reloading without temporary choices',()=>{
+test('obsolete route checkpoint cannot reload permanent affinities after clean-sheet reset',()=>{
  const storage=new Map(),a=create(145,undefined,{}, {sessionStorage:storage});
  a.state().automaticTalents={xp:1000,nodes:['might','affinity_blood'],element:'fire'};
  a.start(1,true);
@@ -35,10 +35,8 @@ test('permanent affinities survive entering a different Realm and reloading with
  a.select(offer.id);assert(a.enter());
  assert.deepEqual([...a.build().families],['blood']);
  const b=create(145,undefined,{}, {sessionStorage:storage});
- assert.equal(b.debug().saveBlocked,false);
- assert.deepEqual([...b.build().unlockedFamilies],['blood']);
- assert.deepEqual([...b.build().families],['blood']);
- assert.equal(b.build().element,null);assert.equal(b.draft(),null);
+ assert.equal(b.debug().saveBlocked,true,'Old route checkpoint must be rejected, not migrated');
+ assert.equal(b.state().run,null,'Rejected checkpoint must not resume a fight');
 });
 
 test('validated Pages storage completes a one-encounter boss, Rune and reload into E2 exactly once',()=>{
