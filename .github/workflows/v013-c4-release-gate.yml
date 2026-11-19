@@ -1,0 +1,200 @@
+name: Wanderer v0.13 C4 clean-sheet release gate (audit only; no deploy)
+
+on:
+  push:
+    branches: [audit/v013]
+    paths:
+      - '.github/workflows/v013-c4-release-gate.yml'
+      - 'combat/**'
+      - 'economy/**'
+      - 'online/**'
+      - 'index.html'
+      - 'preview/**'
+      - 'tests/v013-c4-*.cjs'
+      - 'scripts/v013-c4-*.cjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  current-native:
+    if: github.ref == 'refs/heads/audit/v013'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Current full v0.13 gameplay and simulation gate
+        run: npm run test:v013:gate
+      - name: Current combat, Elite, Boss, class, balance and natural-account suites
+        run: >-
+          node --test
+          tests/v013-stage82-elite-abilities.test.cjs
+          tests/v013-stage83-boss-infrastructure.test.cjs
+          tests/v013-stage84-six-bosses.test.cjs
+          tests/v013-stage85-combat-links.test.cjs
+          tests/v013-stage94-human-decisions.test.cjs
+          tests/v013-stage95-elite-parity.test.cjs
+          tests/v013-stage96-grey-loot.test.cjs
+          tests/v013-combat-balance-audit.test.cjs
+          tests/v013-stage98-balance-campaign.test.cjs
+          tests/v013-gravecaller-target-study.test.cjs
+          tests/v013-natural-progression.test.cjs
+      - name: Current post-stage-4.5 integration and economy regressions
+        run: >-
+          node --test
+          tests/v013-stage45-6-combat-contract.test.cjs
+          tests/v013-stage45-6-prepared-cadence.test.cjs
+          tests/v013-stage45-6-economy-p0.test.cjs
+          tests/v013-stage45-6-dodge-p0.test.cjs
+          tests/v013-stage45-6-legendary-p0.test.cjs
+          tests/v013-stage45-6-extraction-p0.test.cjs
+          tests/v013-stage45-6-event-contract.test.cjs
+          tests/v013-stage45-6-encounter-matrix.test.cjs
+          tests/v013-full-expedition-integration.test.cjs
+          tests/v013-stat-consistency.test.cjs
+          tests/v013-encounter-traits-runtime.test.cjs
+          tests/v013-boss-modifiers-runtime.test.cjs
+          tests/v013-boss-preparation-runtime.test.cjs
+          tests/v013-dungeon-checkpoint-integrity.test.cjs
+
+  security-account:
+    if: github.ref == 'refs/heads/audit/v013'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm ci
+      - name: Strict save-generation, cloud conflict, account and checkpoint tests
+        run: >-
+          node --test
+          tests/v012-save.test.mjs
+          tests/v012-cloud-save.test.mjs
+          tests/v013-c2-reset.test.cjs
+          tests/v013-dungeon-checkpoint-integrity.test.cjs
+          tests/v013-current-dungeon-and-talents.test.cjs
+          tests/v013-c3-ui-static.test.cjs
+      - name: Firestore authorization and Auth/Firestore emulator regressions
+        run: npm run test:rules
+
+  browser-journey:
+    if: github.ref == 'refs/heads/audit/v013'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Use Chromium available on runner
+        shell: bash
+        run: |
+          CHROME_BIN="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          if [ -n "$CHROME_BIN" ]; then
+            echo "CHROMIUM_PATH=$CHROME_BIN" >> "$GITHUB_ENV"
+            "$CHROME_BIN" --version
+          else
+            npx playwright install chromium
+          fi
+      - name: Real current Talent/Forge/Inventory/Dungeon browser tests
+        run: npm run test:v013:browser
+      - name: Deep historical stage-4.5 browser scenarios (diagnostic; never presented as green if failed)
+        shell: bash
+        run: |
+          mkdir -p reports/v013-c4
+          for test in tests/v013-stage45-4-browser.cjs tests/v013-stage45-5-browser.cjs; do
+            name="$(basename "$test" .cjs)"
+            set +e
+            node "$test" > "reports/v013-c4/$name.log" 2>&1
+            code=$?
+            set -e
+            printf '%s\n' "$code" > "reports/v013-c4/$name.exit"
+            echo "C4_DIAGNOSTIC_$name=$code"
+            tail -30 "reports/v013-c4/$name.log" || true
+          done
+      - name: Browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v013-c4-browser-and-legacy-diagnostics
+          path: |
+            reports/v013-c3-browser/
+            reports/v013-c4/
+            reports/stage45-4-browser/
+            reports/stage45-5-browser/
+          if-no-files-found: warn
+          retention-days: 14
+
+  natural-and-source-parity:
+    if: github.ref == 'refs/heads/audit/v013'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Natural-account E1-E5 progression pilot (no forced wins, gear or XP)
+        run: >-
+          node scripts/v013-natural-progression.cjs
+          --seeds=9101,9201
+          --profiles=cautious,balanced
+          --max-level=5
+          --max-attempts=3
+          --max-total-attempts=12
+          --out=reports/v013-c4-natural-e5.json
+      - name: Natural-account E1-E20 horizon pilot (report censored levels as censored)
+        run: >-
+          node scripts/v013-natural-progression.cjs
+          --seeds=9101
+          --profiles=daring
+          --max-level=20
+          --max-attempts=3
+          --max-total-attempts=12
+          --out=reports/v013-c4-natural-e20.json
+      - name: Require exact canonical source/docs parity
+        run: |
+          npm run build:pages
+          if [ -n "$(git status --porcelain -- docs)" ]; then
+            echo "::error::Source and generated Pages preview are inconsistent"
+            git status --short docs
+            exit 1
+          fi
+          echo "C4_SOURCE_DOCS_PARITY=true"
+      - name: Store natural progression data (not a balance approval)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v013-c4-natural-progression-and-parity
+          path: |
+            reports/v013-c4-natural-e5.json
+            reports/v013-c4-natural-e5.md
+            reports/v013-c4-natural-e20.json
+            reports/v013-c4-natural-e20.md
+          if-no-files-found: warn
+          retention-days: 30
