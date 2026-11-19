@@ -39,9 +39,11 @@ function gearScore(item,profile){
  if(!item)return -1;
  const r={Common:0,Uncommon:1,Rare:2,Epic:3,Legendary:4};
  const s=Number(item.atk||0)*2.8+Number(item.def||0)*3.2+Number(item.hp||0)*.24+
-  Number(item.spellPower||0)*2.2+Number(item.attack||0)*2+Number(item.armor||0)*3+
+  Number(item.spell||item.spellPower||0)*2.2+Number(item.attack||0)*2+Number(item.armor||0)*3+
   Number(item.str||0)*2+Number(item.end||0)*2.5+Number(item.int||0)*1.5+
-  Number(item.agi||0)*1.3+Number(item.block||0)*2+Number(item.blockChance||0)*2;
+  Number(item.agi||0)*1.3+Number(item.block||0)*2+Number(item.blockChance||0)*2+
+  Number(item.evasionRating||0)*1.15+Number(item.wardBonus||0)*15+
+  Number(item.manaRegenBonus||0)*10;
  const weapon=item.slot==='weapon'&&['Wand','Staff'].includes(item.subtype)&&profile.name!=='Daring'?-9:0;
  return round(s+Number(item.tier||1)*.5+(r[item.rarity]||0)*1.5+weapon);
 }
@@ -111,8 +113,37 @@ function equipEarned(a,profile,between=false){
  }
  return actions;
 }
-function prepareCamp(a,profile,level){
- const actions={talents:[],equipped:[],bought:[],potions:[],runes:[],soldTreasures:false,restocks:0,salvagedGrey:0,salvageFragments:0};
+function craftEarned(a,profile,level){
+ const actions=[],forge=a.forge;
+ if(!forge||!a.economyCanAct())return actions;
+ for(let attempt=0;attempt<2;attempt++){
+  const state=a.state();
+  const candidates=forge.recipes.map(recipe=>{
+   const progress=forge.progress(recipe.id,level);
+   if(!progress?.ready)return null;
+   const preview=forge.preview(recipe.id,level);
+   if(!preview)return null;
+   const targets=['ring1','ring2'].includes(recipe.slot)?['ring1','ring2']:[recipe.slot];
+   const best=targets.map(slot=>({slot,gain:gearScore(preview,profile)-gearScore(state.equip[slot],profile)}))
+    .sort((a,b)=>b.gain-a.gain)[0];
+   return {...best,recipe,fragments:progress.cost.fragments};
+  }).filter(Boolean).filter(x=>x.gain>=5)
+   .sort((a,b)=>b.gain-a.gain||a.fragments-b.fragments);
+  const best=candidates[0];if(!best)break;
+  const before={fragments:state.fragments,essence:state.crafting.essence};
+  const item=forge.craft(best.recipe.id,level);
+  if(!item)break;
+  if(state.fragments!==before.fragments-best.fragments||state.crafting.essence>=before.essence)
+   throw Error('Native Forge did not consume Fragments and Essence');
+  const equipped=equipEarned(a,profile,false);
+  actions.push({recipe:best.recipe.id,item:item.name,slot:best.slot,
+   fragmentsSpent:best.fragments,essenceSpent:before.essence-state.crafting.essence,
+   expectedGain:round(best.gain),equipped:equipped.some(x=>x.item===item.name)});
+ }
+ return actions;
+}
+function prepareCamp(a,profile,level,decisionModel='risk-aware'){
+ const actions={talents:[],equipped:[],bought:[],crafted:[],potions:[],runes:[],soldTreasures:false,restocks:0,salvagedGrey:0,salvageFragments:0};
  const s=a.state();a.potions.inventory();
  if(s.pendingRuneReward?.options?.length){
   const options=s.pendingRuneReward.options;
@@ -139,6 +170,7 @@ function prepareCamp(a,profile,level){
   }
  }
  actions.talents.push(...spendEarnedTalents(a,profile).bought);
+ if(decisionModel==='risk-aware')actions.crafted.push(...craftEarned(a,profile,level));
  if(profile.shop&&a.economyCanAct()){
   // The game's first Apothecary visit constructs a native 4-item stock. No
   // custom availability odds, injected potions, discounted prices or free Gold.
@@ -169,14 +201,19 @@ function prepareCamp(a,profile,level){
   // Spend spare Gold on permanent upgrade only if the expected item-stat gain
   // outweighs the real opportunity cost of an emergency 14+ Gold potion.
   if(!s.merchant)a.rollShop();
-  const reserve=owns('health')?0:14;
-  const choices=(s.merchant?.stock||[]).map((item,index)=>({item,index,
-   gain:gearScore(item,profile)-gearScore(s.equip[item.slot],profile)}))
-   .filter(x=>x.item?.goldPrice<=s.gold-reserve&&x.gain>8)
-   .sort((x,y)=>y.gain-x.gain);
-  for(const {item,index} of choices.slice(0,1)){
+  // Keep Gold for an actually offered Health dose; don't permanently
+  // block affordable gear just because an unavailable potion might appear.
+  const healthOffer=s.apothecary?.stock?.find(p=>p.kind==='health'&&p.price<=s.gold);
+  const reserve=decisionModel==='legacy'?(owns('health')?0:14):
+   owns('health')||!healthOffer?0:healthOffer.price;
+  const candidates=(s.merchant?.stock||[]).map((item,index)=>({item,index,
+   gain:gearScore(item,profile)-gearScore(s.equip[item?.slot],profile)}))
+   .filter(x=>x.item?.goldPrice<=s.gold-reserve&&x.gain>(decisionModel==='legacy'?8:5))
+   .sort((x,y)=>y.gain-x.gain||x.item.goldPrice-y.item.goldPrice);
+  for(const {item,index} of candidates.slice(0,decisionModel==='legacy'?1:2)){
+   if(s.gold<item.goldPrice+reserve||s.merchant?.stock?.[index]?.id!==item.id)continue;
    if(a.purchaseNative(index)){
-    actions.bought.push({name:item.name,cost:item.goldPrice});
+    actions.bought.push({name:item.name,cost:item.goldPrice,gain:round(gearScore(item,profile)-gearScore(s.equip[item.slot],profile))});
     actions.equipped.push(...equipEarned(a,profile,false));
    }
   }
@@ -191,6 +228,8 @@ function prepareCamp(a,profile,level){
    actions.potions.push({kind,owned:true});
  }
  actions.unspentGold=s.gold;
+ actions.unspentFragments=s.fragments;
+ actions.unspentEssence=s.crafting?.essence||0;
  return actions;
 }
 function choiceRealm(cards,profile,gear){
@@ -632,16 +671,18 @@ function simulateAccount(seed,id,opts,simulationOptions={}){
   for(let attempt=1;attempt<=opts.maxAttempts;attempt++){
    let entry={level,attempt,profile:id};
    try{
-    const camp=prepareCamp(a,profile,level);
+    const camp=prepareCamp(a,profile,level,decisionModel);
     const before={xp:a.state().automaticTalents.xp,earned:a.talents.earned(a.state().automaticTalents),
      spent:a.state().automaticTalents.nodes.length,gear:gearSnapshot(a),gold:a.state().gold,
+     fragments:a.state().fragments,essence:a.state().crafting?.essence||0,
      unlocked:a.controller().state.unlocked};
     const encounter=playDungeon(a,level,profile,opts,decisionModel);
     if(encounter.xpEnd<before.xp)throw Error('Native earned XP decreased');
     entry={...entry,camp,before,...encounter,
      after:{xp:a.state().automaticTalents.xp,earned:a.talents.earned(a.state().automaticTalents),
       spent:a.state().automaticTalents.nodes.length,unlocked:a.controller().state.unlocked,
-      gold:a.state().gold}};
+      gold:a.state().gold,fragments:a.state().fragments,
+      essence:a.state().crafting?.essence||0}};
     if(entry.status==='error'||entry.error){acc.stopReason='Simulator limitation at E'+level+': '+entry.error;stopped=true;}
     if(entry.bossWon){
      if(a.controller().state.unlocked<level+1)throw Error('Native Boss won but next Expedition is not unlocked');
@@ -761,6 +802,6 @@ function main(args=process.argv.slice(2)){
  return report;
 }
 module.exports={PROFILES,DEFAULTS,parseArgs,gearScore,gearSnapshot,spendEarnedTalents,equipEarned,
- prepareCamp,choiceRealm,pathLength,eliteOpportunity,selectRoom,evaluateRetreat,boonScore,chooseBoon,chooseContract,eventOptions,potionSlots,usePotionKind,usePotionsBetween,rerollPoorBoonAtShrine,
+ prepareCamp,craftEarned,choiceRealm,pathLength,eliteOpportunity,selectRoom,evaluateRetreat,boonScore,chooseBoon,chooseContract,eventOptions,potionSlots,usePotionKind,usePotionsBetween,rerollPoorBoonAtShrine,
  fightNatural,resolveEvent,clearResults,playDungeon,simulateAccount,analyze,run,markdown,main};
 if(require.main===module)main();
