@@ -1,0 +1,50 @@
+name: Wanderer v0.13 Stage 9.5 + latest visual compatibility (no deploy)
+on:
+  push:
+    branches:
+      - integration/v013-stage95-after-visuals-20261118
+  workflow_dispatch:
+jobs:
+  stage95-visual-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Full current v0.13 tests, including visual map/fog and progression
+        run: npm run test:v013
+      - name: Native Stage 9 diagnostics, enemies, Elite abilities and new simulations
+        run: |
+          npm run test:v013:stage82
+          npm run test:v013:balance
+          npm run test:v013:stage91
+          npm run test:v013:stage92
+          npm run test:v013:natural
+          npm run test:v013:human-decisions
+          npm run test:v013:stage95
+      - name: Check visual and live/docs mirror compatibility
+        run: |
+          node --test tests/v013-map-fog.test.cjs tests/v013-map-intelligence.test.cjs tests/v013-map-ui.test.cjs tests/v013-stage80-enemy-roster.test.cjs
+          node -e "const fs=require('fs');for(const p of ['online/v012-expedition-runtime.js','online/v013-elite-abilities.js']){const a=fs.readFileSync(p,'utf8'),b=fs.readFileSync('docs/'+p,'utf8');if(a!==b)throw Error('Live/docs mismatch '+p);}"
+      - name: Match E1 Tanks vs Elites with current artwork and runtime
+        run: npm run simulate:v013:elite-parity -- --scan=130 --pairs=24 --out=reports/v013-stage95-integrated-parity.json
+      - name: Natural four-account progression on current map routing
+        run: npm run simulate:v013:human-e1-e8 -- --seeds=9101,9201 --profiles=cautious,balanced --max-attempts=6 --out=reports/v013-stage95-integrated-natural.json
+      - name: Natural early-game extended cohort
+        run: npm run simulate:v013:human-e1-e8 -- --seeds=9304 --profiles=cautious,balanced --max-attempts=12 --out=reports/v013-stage95-integrated-targeted.json
+      - name: Upload diagnostics without publishing the website
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wanderer-stage95-compatible-with-visuals
+          path: |
+            reports/v013-stage95-integrated-parity.json
+            reports/v013-stage95-integrated-parity.md
+            reports/v013-stage95-integrated-natural.json
+            reports/v013-stage95-integrated-natural.md
+            reports/v013-stage95-integrated-targeted.json
+            reports/v013-stage95-integrated-targeted.md
+          if-no-files-found: warn
+          retention-days: 21

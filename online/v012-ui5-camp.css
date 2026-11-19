@@ -283,3 +283,32 @@ body.phase3IntegratedPreview:has(.phase3Camp) .phase3Camp [role="progressbar"]{f
 /* Screen-reader-only page titles and section landmarks keep semantics without adding visual height. */
 .a11yVisuallyHidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
 .runesInventoryOnly .clearNewHeading h2{font-size:17px;margin:0 0 7px}
+
+/* v0.13: one visible ground shadow under boots, never a silhouette halo. */
+.phase3IntegratedPreview .phase3CampCharacter .paper>.characterGroundShadow{
+  position:absolute;
+  display:block;
+  z-index:1;
+  left:50%;
+  top:calc(var(--camp-vitals-row) + 4 * var(--camp-slot-row) - 8px);
+  width:clamp(120px,48%,190px);
+  height:26px;
+  border-radius:50%;
+  transform:translate(-50%,-50%);
+  background:radial-gradient(ellipse at center,rgba(0,0,0,.94) 0%,rgba(0,0,0,.85) 32%,rgba(0,0,0,.61) 60%,transparent 83%);
+  box-shadow:0 0 8px 1px rgba(157,117,77,.23);
+  pointer-events:none;
+}
+.phase3IntegratedPreview .phase3CampCharacter .paper>.model{
+  z-index:2;
+  transform:translate(-50%,-18px) scale(.80);
+  filter:none;
+}
+@media(max-width:700px){
+  .phase3IntegratedPreview .phase3CampCharacter .paper>.characterGroundShadow{
+    width:clamp(100px,44%,150px);
+    height:20px;
+    box-shadow:0 0 5px 1px rgba(157,117,77,.20);
+  }
+  .phase3IntegratedPreview .phase3CampCharacter .paper>.model{transform:translate(-50%,-18px) scale(.80)}
+}
