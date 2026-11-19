@@ -23,7 +23,7 @@ test('real reset removes nodes while retaining earned XP and primary attribute a
  p=T.allocateAttribute(p,'str');
  assert(p);
  const q=T.reset(p);
- assert.deepEqual(q.nodes,[]);
+ assert.equal(q.nodes.length,0,'native VM array must be empty after respec');
  assert.equal(q.xp,p.xp);
  assert.equal(q.attributes.str,1);
  assert.equal(T.earned(q),T.earned(p));
