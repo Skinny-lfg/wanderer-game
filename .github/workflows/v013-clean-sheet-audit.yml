@@ -13,6 +13,8 @@ on:
       - 'scripts/prepare-automatic-preview.mjs'
       - 'tests/v013-c2-reset.test.cjs'
       - 'tests/v0120-evasion.test.cjs'
+      - 'tests/v013-c3-*.cjs'
+      - 'package.json'
   workflow_dispatch:
 
 permissions:
@@ -47,6 +49,8 @@ jobs:
           tests/v013-stage7-contracts.test.cjs
           tests/v012-save.test.mjs
           tests/v013-stage5-build-audit.test.cjs
+      - name: C3 root CSS and modern UI reachability guards
+        run: npm run test:v013:c3:static
       - name: Current native talent graph regression suite
         run: npm run test:v013:talent-graph
       - name: C2 current crafting, contracts, gear, checkpoints and cloud reset
@@ -108,5 +112,13 @@ jobs:
           else
             npx playwright install chromium
           fi
-      - name: Verify current v15 iframe and new-game browser controls (clean-sheet smoke)
+      - name: Verify v15 Talents, Forge, Inventory, Dungeon and responsive UI in Chromium
         run: npm run test:v013:browser
+      - name: Store C3 desktop/mobile screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v013-c3-responsive-browser
+          path: reports/v013-c3-browser/
+          if-no-files-found: warn
+          retention-days: 14
