@@ -55,3 +55,29 @@ for simulator errors/timeouts and impossible resource/equipment changes, and
 identify whether extraction/death/route decisions censor Boss/Elite exposure.
 Only then enlarge the native E1 cohort. Keep controlled Boss/Elite-vs-Tank tests
 distinct from real progression; do not change multipliers in this baseline stage.
+
+## First executed pilot (GitHub Actions)
+
+- Run: https://github.com/Skinny-lfg/wanderer-game/actions/runs/44571197179
+- Revision: `9843027d55d788f5959cd2b8a29d4db87b8719bc`; focused tests: **13/13 passed**.
+- Four native E1 attempts, zero simulator errors: **2 extractions, 2 deaths,
+  0 Boss encounters**. Four ordinary rooms were won, 110 native XP earned,
+  zero equipment drops recorded. These are observations, not win-rate estimates.
+- Seed 9101, both policies: one solo fight lasted 55.22 native seconds;
+  player HP fell from 119 to 31, followed by extraction.
+- Seed 9201: each policy won the first solo room but died against the
+  following three-enemy encounter. Different policies took different damage.
+- Two seeds are not sufficient to infer systematic E1 difficulty. The result
+  justifies the bounded extension below; it does not justify tuning coefficients.
+
+## Extended exploratory E1 survey
+
+- Workflow: `.github/workflows/v013-stage5-natural-e1-survey.yml`
+- Run: https://github.com/Skinny-lfg/wanderer-game/actions/runs/44571595116
+- Revision: `399548a66269db9ced15192393b60d9d7cdc192b`.
+- 20 distinct seeds (9101–9120) × 3 decision policies (cautious, balanced,
+  daring), one E1 attempt each. Analyze per-policy errors, deaths, extraction,
+  Boss reach, first-fight HP loss, duration and actual drops. Controlled and
+  natural encounters must never be mixed in one victory-rate estimate.
+- Full JSON, readable account report and concise cross-policy summary are
+  uploaded as an artifact. This workflow cannot deploy.
