@@ -43,6 +43,8 @@ test('Native first room remains guaranteed Uncommon+, later normal room may drop
   const first=a.bag.items().filter(i=>i.kind!=='valuable'&&i.source==='loot');
   assert.equal(first.length,1,'first encounter guarantees exactly one equipment item');
   assert.notEqual(first[0].rarity,'Common','first-room reward must still be upgraded');
+  // Clear the previous native Realm result; the next Enter refuses an active run.
+  for(let n=0;n<3&&a.state().run?.status==='cleared';n++)a.exitResult();
   const dungeon=c.state.dungeon,steps=dungeon.steps;
   const candidates=card.nodes.map((n,i)=>({n,i})).filter(({n,i})=>
    n.kind==='combat'&&!dungeon.cleared.includes(i)&&c.travelPath(i)?.length&&
@@ -57,6 +59,7 @@ test('Native first room remains guaranteed Uncommon+, later normal room may drop
   assert.equal(gained.length,1,'second ordinary fight must roll at most one gear drop');
   assert.equal(gained[0].rarity,'Common','Grey may drop outside first-room guarantee');
   assert(gained[0].v013StatCount===1);
+  for(let n=0;n<3&&a.state().run?.status==='cleared';n++)a.exitResult();
   if(!a.checkpoint.extract())throw Error('native extraction rejected for verified Grey loot');
   for(let n=0;n<4&&a.results().review;n++)a.exitResult();
   const before=a.state().fragments,worth=a.sale(gained[0]);
