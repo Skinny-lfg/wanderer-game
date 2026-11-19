@@ -306,7 +306,7 @@ body.phase3IntegratedPreview:has(.phase3Camp) .phase3Camp [role="progressbar"]{f
     radial-gradient(ellipse at 13% 50%,rgba(110,153,200,.21) 0%,rgba(89,131,183,.07) 33%,transparent 68%),
     radial-gradient(ellipse at 87% 60%,rgba(230,148,86,.18) 0%,rgba(203,115,64,.055) 33%,transparent 68%);
   filter:blur(18px);
-  opacity:.82;
+  opacity:.58;
 }
 
 /* Keep both the existing Pages shadow span and the alternate source build
@@ -335,9 +335,9 @@ body.phase3IntegratedPreview:has(.phase3Camp) .phase3Camp [role="progressbar"]{f
 .phase3IntegratedPreview .phase3CampCharacter .paper>.model{
   z-index:1;
   filter:
-    saturate(.87) brightness(.98) contrast(1.035)
-    drop-shadow(-4px 0 6px rgba(122,159,202,.16))
-    drop-shadow(4px 0 6px rgba(226,145,87,.14))
+    sepia(.07) saturate(1.20) brightness(1.035) contrast(1.04)
+    drop-shadow(-4px 0 6px rgba(122,159,202,.12))
+    drop-shadow(4px 0 6px rgba(226,145,87,.10))
     drop-shadow(0 5px 6px rgba(0,0,0,.48));
 }
 
@@ -352,7 +352,7 @@ body.phase3IntegratedPreview:has(.phase3Camp) .phase3Camp [role="progressbar"]{f
     width:calc(100% - 90px);
     height:calc(var(--camp-vitals-row) + 4 * var(--camp-slot-row) - 78px);
     filter:blur(15px);
-    opacity:.66;
+    opacity:.48;
   }
   .phase3IntegratedPreview .phase3CampCharacter .paper>.characterGroundShadow,
   .phase3IntegratedPreview .phase3CampCharacter .paper:not(:has(>.characterGroundShadow))::after{
