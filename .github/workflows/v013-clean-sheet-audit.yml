@@ -39,6 +39,8 @@ jobs:
           tests/v013-stage7-contracts.test.cjs
           tests/v012-save.test.mjs
           tests/v013-stage5-build-audit.test.cjs
+      - name: Current native talent graph regression suite
+        run: npm run test:v013:talent-graph
       - name: Historical v0.12 treasure tests (diagnostic only)
         continue-on-error: true
         run: node --test tests/v012-phase-c3-treasures.test.cjs
