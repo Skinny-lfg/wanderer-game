@@ -3,8 +3,8 @@
 const old=root.WandererAutomaticTalents,G=root.WandererTalentGraph,B=root.WandererTalentGraphBridge,graph=G.createGraph(root.WandererV012Buildcraft.CATALOG,old.NODES),byId=new Map(graph.map(n=>[n.id,n]));
 const MAX_POINTS=100,POINT_XP=100,ATTRIBUTES=old.ATTRIBUTES;
 function ranks(v){const out={};for(const id of v.nodes){const m=id.match(/^(.*)_rank(\d+)$/),base=m?m[1]:id,n=m?+m[2]:1;if(n!==(out[base]||0)+1)return null;out[base]=n;}return out;}
-function points(v){return Math.min(MAX_POINTS,Math.floor(v.xp/POINT_XP)+(v.starterPoints||0));}
-function valid(v){if(!v||v.treeVersion!==15||!Number.isSafeInteger(v.xp)||v.xp<0||!Array.isArray(v.nodes)||(v.starterPoints!==undefined&&v.starterPoints!==2)||v.element!==undefined&&!['fire','frost','lightning'].includes(v.element))return false;const rs=ranks(v),mode=v.element||'arcane';return !!rs&&G.valid(graph,{points:points(v),ranks:rs})&&Object.keys(rs).every(id=>!byId.get(id)?.element||byId.get(id).element===mode)&&(!v.prepared||!!rs[v.prepared]&&!!byId.get(v.prepared)?.advanced);}
+function points(v){return Math.min(MAX_POINTS,Math.floor(v.xp/POINT_XP));}
+function valid(v){if(!v||v.treeVersion!==15||!Number.isSafeInteger(v.xp)||v.xp<0||!Array.isArray(v.nodes)||v.starterPoints!==undefined||v.element!==undefined&&!['fire','frost','lightning'].includes(v.element))return false;const rs=ranks(v),mode=v.element||'arcane';return !!rs&&G.valid(graph,{points:points(v),ranks:rs})&&Object.keys(rs).every(id=>!byId.get(id)?.element||byId.get(id).element===mode)&&(!v.prepared||!!rs[v.prepared]&&!!byId.get(v.prepared)?.advanced);}
 function create(){return {xp:0,nodes:[],treeVersion:15};}
 
 function earned(v){if(!valid(v))throw Error('Invalid talent progress');return points(v);}
