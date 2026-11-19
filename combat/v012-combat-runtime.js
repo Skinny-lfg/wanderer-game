@@ -1,5 +1,10 @@
 // v0.12 combat runtime. Canonical state transitions; UI effects are injected.
 (function(root){'use strict';
+function cappedStrikeDamage(raw,strike,heroMaxHp){
+ const charged=Math.max(1,Math.round(raw*strike.multiplier));
+ const cap=Math.max(1,Math.floor(heroMaxHp*strike.capFraction));
+ return Math.min(charged,cap);
+}
 function create(ports){
 const mobWindups=new WeakSet;
 function addLog(text,kind=''){if(ports.isPhase1Run()){const r=ports.state.run;r.realmLog??=[];const line={text:String(text),kind:String(kind)};r.realmLogBytes=(r.realmLogBytes||0)+line.text.length+line.kind.length;r.realmLog.push(line);while(r.realmLogBytes>180000){const old=r.realmLog.shift();r.realmLogBytes-=old.text.length+old.kind.length;r.realmLogTruncated=true;}}ports.logEntries.unshift({text,kind});ports.logEntries=ports.logEntries.slice(0,75);if(ports.view==='combat')ports.renderLog()}
@@ -647,8 +652,8 @@ function updateFight(){
   // Elite Berserker cannot one-shot a full-health player with one direct hit.
   // Cap before Block/Barrier so defensive investment still matters.
   if(e.eliteType==='berserker')raw=Math.min(raw,Math.max(1,Math.floor(r.maxhp*.35)));
-  if(stage82Strike)raw=Math.min(Math.max(1,Math.round(raw*stage82Strike.multiplier)),Math.max(1,Math.floor(r.maxhp*stage82Strike.capFraction)));
-   if(stage84Strike)raw=Math.min(Math.max(1,Math.round(raw*stage84Strike.multiplier)),Math.max(1,Math.floor(r.maxhp*stage84Strike.capFraction)));
+  if(stage82Strike)raw=cappedStrikeDamage(raw,stage82Strike,r.maxhp);
+   if(stage84Strike)raw=cappedStrikeDamage(raw,stage84Strike,r.maxhp);
    raw=Math.max(0,Math.round(raw*(root.WandererV013BossAbilities?.incomingFactor(r,e,r.combatSeconds)||1)));
   if(e.vanguard){e.vanguard=false;ports.addLog(e.name+' delivers its opening strike.','critical');}
   const special=e.miniboss||e.boss;
