@@ -362,7 +362,7 @@ function run(cfg=parseArgs(),deps={}){
   failures,
   interpretation:[
    'Controlled Boss/Elite/swarms are deliberately inserted into a first-ring room with fixed debug gear; NOT representative campaign victories.',
-   'Before/after native fights are only comparable when exact rolled equipment fingerprints, player HP/MP and scenario identities match. Changed gear is flagged, not silently averaged.'
+   'Before/after native fights are only comparable when exact rolled equipment fingerprints, player HP/MP and scenario identities match. Changed gear is flagged, not silently averaged.',
    'Wilson intervals apply to native independent-seed fight outcomes, NOT to human player win rates.',
    'Rows with native errors/timeouts/unresolved outcomes are excluded from win denominators, and separately fail data-quality checks.',
    'Do not add together different builds, archetypes or risk groups to choose balance multipliers.',
