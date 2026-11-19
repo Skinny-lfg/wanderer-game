@@ -81,7 +81,6 @@ jobs:
             attempts:r.cohort.totalAttempts,
             resets:r.resets,
             gearSwaps:r.gearEquips,
-            attributePointsSpent:r.attributePointsSpent,
             E5:r.milestoneMatrix.E5.reached,
             E10:r.milestoneMatrix.E10.reached,
             E20:r.milestoneMatrix.E20.reached
