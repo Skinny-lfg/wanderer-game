@@ -1,5 +1,5 @@
 'use strict';
-// Stage 9.3: real-account E1–E8 natural progression.
+// Stage 5: native real-account progression, with optional E1–E20 horizon.
 // Absolutely no synthetic talent XP, fabricated gear, forced unlocks, forced
 // encounters, instant-kill enemies or direct state mutation of rewards.
 const fs=require('node:fs');
@@ -26,13 +26,14 @@ function parseArgs(args=[]){
   const [,k,value]=m;
   if(k==='seeds'){v.seeds=[...new Set(value.split(',').map(Number))];if(!v.seeds.length||v.seeds.some(x=>!Number.isSafeInteger(x)||x<1))throw Error('Invalid seeds');}
   else if(k==='profiles'){v.profiles=[...new Set(value.split(','))];if(!v.profiles.length||v.profiles.some(x=>!PROFILES[x]))throw Error('Invalid profiles');}
-  else if(k==='max-level'){v.maxLevel=Number(value);if(!Number.isInteger(v.maxLevel)||v.maxLevel<1||v.maxLevel>8)throw Error('Levels are E1–E8 only');}
-  else if(k==='max-attempts'){v.maxAttempts=Number(value);if(!Number.isInteger(v.maxAttempts)||v.maxAttempts<1||v.maxAttempts>12)throw Error('Max attempts must be 1–12');}
+  else if(k==='max-level'){v.maxLevel=Number(value);if(!Number.isInteger(v.maxLevel)||v.maxLevel<1||v.maxLevel>20)throw Error('Levels are E1–E20 only');}
+  else if(k==='max-attempts'){v.maxAttempts=Number(value);if(!Number.isInteger(v.maxAttempts)||v.maxAttempts<1||v.maxAttempts>36)throw Error('Max attempts must be 1–36');}
   else if(k==='tick-limit'){v.tickLimit=Number(value);if(!Number.isInteger(v.tickLimit)||v.tickLimit<100||v.tickLimit>100000)throw Error('Invalid tick limit');}
   else if(k==='out'&&value.endsWith('.json'))v.output=value;
   else throw Error('Unsupported option: '+arg);
  }
- if(v.seeds.length*v.profiles.length*v.maxAttempts*v.maxLevel>192)throw Error('Natural cohort >192 potential attempts. Narrow the pilot.');
+ const potential=v.seeds.length*v.profiles.length*v.maxAttempts*v.maxLevel;
+ if(potential>(v.maxLevel<=8&&v.maxAttempts<=12?192:10000))throw Error('Natural cohort too large. Narrow the pilot.');
  return v;
 }
 function gearScore(item,profile){
