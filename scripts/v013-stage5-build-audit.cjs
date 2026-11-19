@@ -177,5 +177,5 @@ function run(args=process.argv.slice(2)){
  if(report.cohort.errors)process.exitCode=1;
  return report;
 }
-module.exports={TARGETS,classifyGear,talentDepth,account,summarize,markdown,run};
+module.exports={TARGETS,nativeTalentAPI:T,classifyGear,talentDepth,account,summarize,markdown,run};
 if(require.main===module)run();
