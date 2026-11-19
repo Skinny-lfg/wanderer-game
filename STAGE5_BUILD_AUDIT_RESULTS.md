@@ -11,7 +11,7 @@ entered E20. No numerical balance or published-game change.
 
 The integrated game currently runs `combat/talent-graph-runtime.js` version
 **15**, with **343 actual talent nodes**. Its public API offers `NODES`,
-`allocate`, `allocateAttribute`, `reset`, and `graphProgress`, but no
+`allocate`, `reset`, and `graphProgress`, but no
 `T.path` function. Do not use the older `combat/automatic-talents.js` API
 in isolation as the source of current node IDs or routes.
 
@@ -32,8 +32,8 @@ not the originally intended consistent deep-build strategy.
 
 - **Native talent resets: 0** in all 669 attempts. This is a policy gap,
   not evidence that human players never reset.
-- **Primary attribute allocations: 0**, despite accumulated XP and access
-  to native `allocateAttribute`. The agent never calls that function.
+- **Manual primary-attribute points are not a playable v15 mechanic.**
+  The earlier zero-allocation statistic was an invalid audit metric and is removed.
 - **251 actual equip decisions**. Of the observed cross-attempt transitions,
   10 changed dominant weapon subtype and 17 changed dominant armor type.
   Equipment substitution does occur, but no strategic class-change policy
@@ -60,10 +60,9 @@ comparison against truly single-affinity specialists.
 ## Reset constraints in the real game
 
 The v15 native `T.reset` removes purchased **talent nodes**, preserves
-accumulated XP and refunds them for reallocation. It also **retains primary
-attributes** already assigned to the account. Switching to a build with
-different Strength/Intellect/Agility requirements is therefore not a free
-full-character rebuild: the permanent attributes remain.
+accumulated XP and refunds them for reallocation. It does not expose separate manual primary-attribute spending. Historical
+saved `attributes` fields may be preserved for compatibility, but do not
+constitute selectable primary-stat points in the current interface.
 
 A reset should be counted separately from weapon switches and armor swaps.
 Profile flexibility must be tested as a strategic hypothesis, not treated
@@ -73,7 +72,7 @@ as an inherently negative or positive event.
 
 **Implemented and tested:** additive item-stat snapshot, real node IDs
 from v15, approximate prerequisite-closure depth, equipped weapon/armor
-change counts, attribute allocations, and explicit reset event placeholders.
+change counts, and explicit reset event placeholders.
 The previous decision policies and all gameplay rules remain unchanged.
 
 **Not yet implemented:** a full build planner that pursues Magic/Cloth,
