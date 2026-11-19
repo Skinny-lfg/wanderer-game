@@ -107,6 +107,27 @@ component, existing preview build or CSS before it appears in the outer
   `audit/v013` branch. **No deployment, merge, gameplay coefficient
   change, guaranteed drop, player-data mutation or save migration** was done.
 
+## Browser-test drift confirmed during the audit
+
+The previous default `test:v013:browser` script was **not aligned with
+the current UI**:
+
+- `tests/v013-pages-browser.cjs` timed out waiting for
+  `#v013OpenForge`, which is no longer present in root `index.html`.
+- `tests/v013-cleanup-ui-browser.cjs` failed its obsolete
+  `[data-phase3-expedition-level]` selector expectation.
+- `tests/v013-talent-tree-browser.cjs` references the old parent
+  `.talentGraphViewport` and old starter talent UI.
+- `tests/v013-clarity-browser.cjs` expects the old
+  `.talentPreparation` manual attribute panel.
+
+These old browser files have **not** been made to pass or silently
+counted as green. They remain as historical sources to migrate the useful
+map/Forge assertions, while the default browser script now runs
+`tests/v013-clean-sheet-browser.cjs` against the actual active v15
+iframe. This narrower smoke is necessary but **not sufficient** browser
+coverage for a release.
+
 ## Recommended next cleanup stages
 
 - **C1 — Graph catalog extraction:** decouple v15 generation from the
