@@ -145,7 +145,9 @@ test('A full new E1 account reports independent prep, Boon and potion telemetry 
  const r=N.run(opts),entry=r.accounts[0].attempts[0],E1=r.levels[0];
  assert.equal(r.coverage.errors,0,entry.error);
  assert.equal(entry.level,1);
- assert.equal(r.stage,'9.4.1');
+ assert.equal(r.stage,'9.6')
+ assert.equal(r.schemaVersion,4);
+ assert(r.levels.every(x=>Number.isInteger(x.ordinaryGreyDrops)&&Number.isInteger(x.forgeFragmentsFromGrey)));;
  assert(Array.isArray(entry.decisions)&&entry.decisions.length>0);
  assert.equal(E1.boonsSelected,entry.boons.length);
  assert.equal(E1.eliteFights,entry.rooms.filter(x=>x.roomType==='elite').length);
