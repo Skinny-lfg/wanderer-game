@@ -15,12 +15,11 @@ Branch: `audit/v013`. No gameplay balance changes authorized.
   `anyRequires`; strategies must build a native-valid path themselves and
   use `T.allocate` to enforce actual availability and point limits.
 - `T.reset` is available from Camp. It returns invested **talent nodes**
-  to the pool while preserving accumulated XP and **allocated primary
-  attributes**. Therefore switching from permanent Strength to Intellect
-  is not the same as an unconstrained character rebuild.
-- The current natural agent never invokes `T.reset` or
-  `T.allocateAttribute`; its fixed gear score barely depends on talent
-  synergies or its current weapon/armor archetype.
+  to the pool while preserving accumulated XP. There is **no manual primary-
+  attribute allocation** in the current v15 UI; attributes come from gear
+  and the small stat nodes purchased along the talent-tree branches.
+- The current natural agent never invokes `T.reset`; its fixed gear score
+  barely depends on talent synergies or the current weapon/armor archetype.
 - v0.13 item rules allow cloth Intellect/Spell/Mana, leather
   Agility/Evasion/Speed, plate Endurance/Strength/Block, caster
   Wand/Staff/Orb, Agility Bow/Daggers, and mixed stat accessories.
@@ -58,9 +57,9 @@ Branch: `audit/v013`. No gameplay balance changes authorized.
   measure the value of experimentation, not to label switching as failure.
 
 Never force a gear drop, rarity, XP, unlock or discounted reset to make
-one strategy work. Attribute allocation and non-refundable stats must be
-handled as real restrictions. Weapon/armor switching is not automatically a
-talent respec.
+one strategy work. Gear-derived attributes and purchased talent-tree stat
+nodes are real restrictions; manual primary-stat spending is not. Weapon/
+armor switching is not automatically a talent respec.
 
 ## Instrumentation
 
@@ -70,7 +69,7 @@ Capture for each account and each attempt:
 - Acquired item and newly equipped item; swaps by slot, rarity and source
 - Talent purchases, tree family coverage, deepest valid prerequisite path,
   ranks, optional deep skills and mutually exclusive specialisations
-- Spent/unspent native talent points and attribute allocations
+- Spent/unspent native talent points and stats earned through talent nodes
 - Reset count, level and prior/new tree; what triggered a reset and whether
   it improved survival or progression; no invented reset cost
 - Archetype signature and actual meaningful style transitions (not one item swap)
@@ -80,14 +79,14 @@ Capture for each account and each attempt:
 
 For any outcome describe both **net benefit** and **cost of switching**
 (e.g. loss of a learned ability for several runs, lack of matching gear,
-inability to reallocate permanent attribute points).
+different prerequisite paths when rebuilding the talent tree).
 
 ## Test design and gates
 
 - **Gate A:** audit current 3 heuristics using native VM, confirm zero resets
   and invalid priority IDs; verify snapshot correctness.
 - **Gate B:** implement a single v15-aware build planner using native graph
-  prerequisites, `T.allocate`, `T.allocateAttribute` and slot-safe gear valuation.
+  prerequisites, `T.allocate` and slot-safe gear valuation.
   Add unit tests for every archetype + hybrid prerequisite and conflicting
   ability restrictions.
 - **Gate C:** 4 matched seeds × 4 clear archetypes × 2 talent-allocation
