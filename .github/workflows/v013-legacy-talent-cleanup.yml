@@ -1,0 +1,47 @@
+name: Wanderer v0.13 — Retired talent UI cleanup regression (no deploy)
+
+on:
+  push:
+    branches:
+      - audit/v013
+    paths:
+      - '.github/workflows/v013-legacy-talent-cleanup.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-v15-cleanup:
+    if: github.ref == 'refs/heads/audit/v013'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Parse active and docs native v15 runtimes
+        run: |
+          node --check combat/talent-graph-runtime.js
+          node --check docs/combat/talent-graph-runtime.js
+          node --check scripts/v013-natural-progression.cjs
+          node --check scripts/v013-stage5-build-audit.cjs
+      - name: Check old UI is gone and v15 migration, reset, account and combat parity survive
+        run: >-
+          node --test
+          tests/v013-dead-talent-cleanup.test.cjs
+          tests/talent-graph-runtime.test.cjs
+          tests/v013-stage5-build-audit.test.cjs
+          tests/v013-natural-progression.test.cjs
+          tests/v013-current-dungeon-and-talents.test.cjs
+      - name: Report exact commit and no-deploy scope
+        if: always()
+        run: |
+          echo "TESTED_COMMIT=${GITHUB_SHA}"
+          echo "TARGET_BRANCH=${GITHUB_REF}"
+          echo "No deployment or merge in this workflow."
