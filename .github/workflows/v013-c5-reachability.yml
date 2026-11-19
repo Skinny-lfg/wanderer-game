@@ -1,0 +1,21 @@
+name: Wanderer C5 old-route-and-talent reachability (audit only)
+on:
+  push:
+    branches: [audit/v013]
+    paths: ['.github/workflows/v013-c5-reachability.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  find-legacy-references:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - name: Catalog legacy imports and controllers (source/tests/scripts, no docs mirror)
+        shell: bash
+        run: |
+          echo '=== OLDER TALENT SCRIPT REFERENCES ==='
+          rg -n 'automatic-talents[.]js|v013-legacy-fixture[.]cjs|legacyTopology|legacyBasic|legacyFocused|legacyV14' --glob '*.js' --glob '*.mjs' --glob '*.cjs' --glob '*.html' --glob '*.yml' --glob '!docs/**' combat online preview index.html tests scripts .github || true
+          echo '=== ROUTE GENERATOR REFERENCES ==='
+          rg -n 'routeMap|routeMobCounts|rerollsByRealm|planAffinities|chooseInitial\(|phase1Controller[.](select|allowed|influence|reachable|reroll)\(' --glob '*.js' --glob '*.mjs' --glob '*.cjs' --glob '*.html' --glob '!docs/**' combat online preview index.html tests scripts | head -110 || true
