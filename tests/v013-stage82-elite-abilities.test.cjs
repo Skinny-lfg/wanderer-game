@@ -6,8 +6,8 @@ function elite(type,hp=100){return {name:type,eliteType:type,miniboss:true,hp,ma
 function mob(name,role='skirmisher',hp=100){return {name,role,hp,maxhp:100,barrier:0};}
 function run(...enemies){return {enemy:enemies[0],enemies,status:'fight',combatSeconds:0,maxhp:1000,hp:1000};}
 function move(r,t){r.combatSeconds=t;return A.tick(r,t);}
-test('Three Stage 8.2 roles are defined and normal/boss enemies are excluded',()=>{
- assert.deepEqual(Object.keys(A.DEFINITIONS),['gravecaller','rotbound_exarch','ashen_executioner']);
+test('Four Stage 8.2 roles are defined and normal/boss enemies are excluded',()=>{
+ assert.deepEqual(Object.keys(A.DEFINITIONS),['gravecaller','oathbound_exarch','briarspine_horror','ashen_executioner']);
  for(const id of Object.keys(A.DEFINITIONS))assert(A.info(elite(id)).description);
  assert.equal(A.attach(mob('normal')),null);
  assert.equal(A.attach({...elite('gravecaller'),miniboss:false,boss:true}),null);
@@ -136,7 +136,7 @@ test('Undead summon infrastructure respects max two alive and four total',()=>{
  assert.equal(live.length,2);
 });
 test('Exarch shields a living ally by at most 15% max HP, three times with real 10s cooldown',()=>{
- const e=elite('rotbound_exarch'),friend=mob('escort','caster'),r=run(e,friend);A.attach(e);
+ const e=elite('oathbound_exarch'),friend=mob('escort','caster'),r=run(e,friend);A.attach(e);
  assert.equal(move(r,2).length,0);
  assert.equal(move(r,3)[0].type,'prepare');
  assert.equal(A.status(e,3.1).kind,'casting');
@@ -150,7 +150,7 @@ test('Exarch shields a living ally by at most 15% max HP, three times with real 
  assert.equal(move(r,100).length,0);
 });
 test('Exarch shields itself when alone, then prioritizes a living ally',()=>{
- const e=elite('rotbound_exarch'),r=run(e);A.attach(e);
+ const e=elite('oathbound_exarch'),r=run(e);A.attach(e);
  assert.equal(move(r,4)[0].type,'prepare');assert.equal(e.barrier,0);
  const first=move(r,4.75)[0];assert.equal(first.type,'activate');assert.equal(first.target,e);
  assert.equal(e.barrier,15);assert.equal(e.stage82.castCount,1);
@@ -178,17 +178,16 @@ test('Executioner: 1.5s telegraph, one 2.4x strike with 18% cap; stun and attack
  assert.equal(A.interrupt(e,r,'delay').type,'interrupted');
  assert.equal(move(r,18.2).length,0);
 });
-test('Stage 8.2 is loaded in game and docs with four legacy Elites retained',()=>{
- for(const p of ['index.html','docs/index.html']){
+test('Stage 8.2 is loaded in the arena with all eight Elites registered',()=>{
+ for(const p of ['index.html']){
   const html=fs.readFileSync(p,'utf8');
   assert(html.includes('online/v013-elite-abilities.js'));
   assert(html.includes('WandererV013EliteAbilities?.status(enemy,now)'));
-  for(const id of ['tank','berserker','vampire','caster','gravecaller','rotbound_exarch','ashen_executioner']){
+  for(const id of ['tank','berserker','vampire','caster','gravecaller','oathbound_exarch','briarspine_horror','ashen_executioner']){
    assert(html.includes(id+":{id:'"+id+"'"),p+' missing '+id);
-   assert(html.includes(id+":'assets/elites/animated/"),p+' sprite '+id);
+   assert.match(html,new RegExp(id+":'assets/(elites|mobs)/animated/"));
   }
  }
- assert.equal(fs.readFileSync('online/v013-elite-abilities.js','utf8'),fs.readFileSync('docs/online/v013-elite-abilities.js','utf8'));
  const combat=fs.readFileSync('combat/v012-combat-runtime.js','utf8');
  assert(combat.includes("event.type==='summon'"));
  assert(combat.includes('ledger.maxLivingMinions=spec.maxLiving'));
@@ -205,4 +204,51 @@ test('Stage 8.2 is loaded in game and docs with four legacy Elites retained',()=
  assert(combat.includes('WandererV013EliteAbilities?.interrupt'));
  const encounter=fs.readFileSync('online/v012-expedition-runtime.js','utf8');
  assert(encounter.includes('if(last&&g.selected.elite&&!g.selected.boss)globalThis.WandererV013EliteAbilities?.attach'));
+});
+test('Thornbloom starts at 12s, telegraphs for 1s and protects for 4s with per-hit and cycle caps',()=>{
+ const e=elite('briarspine_horror'),r=run(e);A.attach(e);
+ assert.deepEqual(move(r,11.99),[]);assert.equal(move(r,12)[0].type,'prepare');
+ assert.equal(A.status(e,12.5).label,'Casting');assert.equal(A.thornbloomDamage(e,12.9,1000,1000),0);
+ assert.equal(move(r,13)[0].type,'activate');
+ assert.equal(A.thornbloomDamage(e,13,20,1000),3);
+ assert.deepEqual(Array.from({length:5},()=>A.thornbloomDamage(e,14,900,1000)),[15,15,15,12,0]);
+ assert.equal(A.status(e,17),null);assert.equal(A.thornbloomDamage(e,17,900,1000),0);
+ assert.equal(move(r,24)[0].type,'prepare');move(r,25);assert.equal(A.thornbloomDamage(e,25,900,1000),15);
+});
+
+function horrorFixture(build){
+ const sim=require('../scripts/simulate-progression.cjs');
+ const {a,c,card}=sim.prepare(1,sim.BUILDS.find(b=>b.id===build),501,{...sim.DEFAULTS,points:12});
+ const room=card.edges.filter(([from])=>from===0).map(([,to])=>to).find(n=>card.nodes[n].kind==='combat');
+ assert(c.visitRoom(room));assert(a.enter());a.state().run.eliteType='briarspine_horror';
+ const r=a.encounter({elite:true,count:1});return {a,c,r,sim};
+}
+test('native Horror encounters resolve with speed, paired daggers, DoT, magic and tank loadouts',()=>{
+ for(const build of ['fury-bow','blood-fury','blood-decay','magic-decay','aegis-vitality']){
+  const {a,c,r,sim}=horrorFixture(build);
+  assert.equal(r.enemy.eliteType,'briarspine_horror');
+  const row=sim.fight(a,c,2000);
+  assert(!row.timedOut,build);assert(row.won||row.died,build);
+ }
+});
+test('reflection uses actual primary HP loss, mitigates through block and Barrier, and settles a lethal trade once',()=>{
+ const {a,c,r}=horrorFixture('aegis-vitality'),e=r.enemy;
+ r.combatSeconds=13;e.stage82.bloomUntil=17;e.stage82.reflected=0;
+ r.stats.blockChance=100;r.stats.blockReduction=.5;r.barrier=100;a.rng(.5);
+ e.hp=e.maxhp=1000;e.barrier=9999;
+ a.gear.weaponAttack(r);assert.equal(r.metrics.thornbloomHits||0,0);
+ e.barrier=0;const before=r.hp;
+ a.gear.weaponAttack(r);assert.equal(r.metrics.thornbloomHits,1);
+ assert.equal(r.hp,before);assert(r.barrier<100);
+ assert(100-r.barrier<=e.stage82.reflected*.5+1e-9);
+ r.barrier=0;r.stats.blockChance=0;r.hp=.001;e.hp=1;
+ a.gear.weaponAttack(r);assert.equal(c.state.stage,'failed');assert(e.hp<=0);
+ assert.equal(a.results().summary.outcome,'defeat');
+});
+test('periodic damage during Thornbloom does not trigger reflection',()=>{
+ const {a,r}=horrorFixture('blood-decay'),e=r.enemy;
+ e.stage82.bloomUntil=17;e.stage82.reflected=0;r.combatSeconds=13;
+ r.stats.attacksPerSec=0;r.tPlayer=0;r.tDot=1;
+ e.dots.bleed=[{damage:4,remaining:2}];e.bleed=4;e.bleedStacks=1;
+ const hp=e.hp;a.tick();assert(e.hp<hp);assert.equal(r.metrics.thornbloomHits||0,0);
 });

@@ -1,15 +1,15 @@
 // Wanderer v0.13 Stage 8.4 — six affinity bosses, encounter-scoped deterministic mechanics.
-// Assets for the three new bosses are explicitly provisional, reused themed creature art.
+// Combat art is shared by the arena and the affinity profiles.
 (function(root){'use strict';
 const I=root.WandererV013BossInfrastructure;
 if(!I)throw Error('Stage 8.4 requires Boss infrastructure');
 const PROFILES=Object.freeze({
- blood:Object.freeze({id:'rift',style:'leech',name:'Rift Harbinger',location:"Harbinger's Rift",icon:'🩸',description:'Blood Offering: summon a Thrall at 70% and 35% HP; after 10s alive it sacrifices itself to heal the boss 5%. Basic lifesteal is 18%.',image:'assets/bosses/animated/rift_harbinger_idle.png',attack:'assets/bosses/animated/rift_harbinger_attack_x1.gif'}),
- decay:Object.freeze({id:'carrion',style:'matriarch',name:'Carrion Matriarch',location:"Matriarch's Brood",icon:'☠',description:'Brood of Decay: summons two Minions at 75% and 40% HP. With two living Minions in the arena she takes 15% less direct damage.',image:'assets/mobs/animated/blight_mantis_attack_raised_claw_v3.png',attack:'assets/mobs/animated/blight_mantis_attack_raised_claw_v3.gif',artProvisional:true}),
- vitality:Object.freeze({id:'heartroot',style:'devourer',name:'Heartroot Devourer',location:"Heartroot's Hollow",icon:'🌿',description:'Death Bloom: summons two Bloomlings at 70% and 35% HP. Killing a Bloomling heals the boss 5% max HP, capped at 15% total.',image:'assets/mobs/animated/rootbound_hermit_staff_spell_original_768x896.png',attack:'assets/mobs/animated/rootbound_hermit_staff_spell_original_768x896.gif',artProvisional:true}),
- aegis:Object.freeze({id:'guardian',style:'guardian',name:'The Abyssal Guardian',location:"Abyssal Guardian's Citadel",icon:'⛨',description:'Ward Cycle: checks every 12s and gains Barrier equal to 8% max HP if it has no Barrier and ward recovery is available. Breaking its Barrier interrupts the cycle and prevents new wards for 3s.',image:'assets/bosses/animated/abyssal_guardian_idle.png',attack:'assets/bosses/animated/abyssal_guardian_attack_x1.gif'}),
- fury:Object.freeze({id:'ember',style:'berserker',name:'Ember Sovereign',location:"Ember Sovereign's Throne",icon:'♨',description:'Furnace Strike: every 12s, prepares a heavy attack for 1.5s. Can be interrupted; retains the Enrage below 50% HP.',image:'assets/bosses/animated/ember_sovereign_idle.png',attack:'assets/bosses/animated/ember_sovereign_attack_x1.gif'}),
- magic:Object.freeze({id:'stormglass',style:'conductor',name:'Stormglass Conductor',location:"Stormglass Spire",icon:'⚡',description:'Arcane Convergence: channels for 2s every 12s, dealing 7% of hero max HP before Boon mitigation and Barrier. At 65% HP calls a Storm Node; breaking it cancels the next discharge and weakens the boss.',image:'assets/mobs/animated/wanderer_aether_wyrm_attack_768.png',attack:'assets/mobs/animated/wanderer_aether_wyrm_attack_768.gif',artProvisional:true})
+ blood:Object.freeze({id:'rift',style:'leech',name:'Rift Harbinger',location:"Harbinger's Rift",icon:'🩸',description:'Blood Offering: summon a Riftbound Vessel at 70% and 35% HP; after 10s alive it sacrifices itself to heal the boss 5%. Basic lifesteal is 18%.',image:'assets/bosses/v013/rift-harbinger.png',attack:'assets/bosses/v013/rift-harbinger.png'}),
+ decay:Object.freeze({id:'carrion',style:'matriarch',name:'Carrion Matriarch',location:"Matriarch's Brood",icon:'☠',description:'Brood of Decay: summons two Carrion Broodlings at 75% and 40% HP. With two living Minions in the arena she takes 15% less direct damage.',image:'assets/bosses/v013/carrion-matriarch.png',attack:'assets/bosses/v013/carrion-matriarch.png'}),
+ vitality:Object.freeze({id:'heartroot',style:'devourer',name:'Heartroot Devourer',location:"Heartroot's Hollow",icon:'🌿',description:'Death Bloom: summons two Heartroot Mawbuds at 70% and 35% HP. Killing a Heartroot Mawbud heals the boss 5% max HP, capped at 15% total.',image:'assets/bosses/v013/heartroot-devourer.png',attack:'assets/bosses/v013/heartroot-devourer.png'}),
+ aegis:Object.freeze({id:'guardian',style:'guardian',name:'The Abyssal Guardian',location:"Abyssal Guardian's Citadel",icon:'⛨',description:'Ward Cycle: checks every 12s and gains Barrier equal to 8% max HP if it has no Barrier and ward recovery is available. Breaking its Barrier interrupts the cycle and prevents new wards for 3s.',image:'assets/bosses/v013/abyssal-guardian.png',attack:'assets/bosses/v013/abyssal-guardian.png'}),
+ fury:Object.freeze({id:'ember',style:'berserker',name:'Ember Sovereign',location:"Ember Sovereign's Throne",icon:'♨',description:'Furnace Strike: every 12s, prepares a heavy attack for 1.5s. Can be interrupted; retains the Enrage below 50% HP.',image:'assets/bosses/v013/ember-sovereign.png',attack:'assets/bosses/v013/ember-sovereign.png'}),
+ magic:Object.freeze({id:'stormglass',style:'conductor',name:'Stormglass Conductor',location:"Stormglass Spire",icon:'⚡',description:'Arcane Convergence: channels for 2s every 12s, dealing 7% of hero max HP before Boon mitigation and Barrier. At 65% HP calls a Convergence Anchor; breaking it cancels the next discharge and weakens the boss.',image:'assets/bosses/v013/stormglass-conductor.png',attack:'assets/bosses/v013/stormglass-conductor.png'})
 });
 const byStyle=Object.freeze(Object.fromEntries(Object.values(PROFILES).map(x=>[x.style,x])));
 function profileFor(family){return PROFILES[family]||null;}
@@ -49,8 +49,12 @@ function spawned(r,event,makeMinion,options={}){
  const e=leader(r),p=profileForStyle(e?.bossStyle);if(!e||!p||typeof makeMinion!=='function')return {spawned:0,field:0,reserve:0};
  const result=I.summon(r,e,event.count,i=>{
   const mob=makeMinion(i);
-  mob.name=event.kind==='blood'?'Blood Thrall':event.kind==='node'?'Storm Node':
-   event.kind==='vitality'?'Bloomling': 'Carrion Brood';
+  mob.name=event.kind==='blood'?'Riftbound Vessel':event.kind==='node'?'Convergence Anchor':
+   event.kind==='vitality'?'Heartroot Mawbud': 'Carrion Broodling';
+  const stem={blood:'riftbound-vessel',decay:'carrion-matriarch',vitality:'heartroot-mawbud',node:'convergence-anchor'}[event.kind];
+  const base='assets/bosses/v013/'+stem;
+  mob.image=base+(event.kind==='node'?'.png':'-01.png');
+  if(event.kind!=='node'){mob.attackImage=base+'-02.png';mob.impactImage=base+'-03.png';}
   if(event.kind==='node')mob.atk=0;
   return mob;
  },{family:p.style==='conductor'?'magic':p.style==='devourer'?'vitality':p.style==='matriarch'?'decay':'blood',
@@ -101,7 +105,7 @@ function tick(r,absoluteNow,infraEvents=[]){
   }else if(event.id.startsWith('summon_')){
    const kind=s.style==='leech'?'blood':s.style==='devourer'?'vitality':'decay';
    events.push({type:'summon',enemy:e,ability:p.name,kind,count:s.style==='leech'?1:2});s.nextAt=now+1.5;
-  }else if(event.id==='storm_node'){s.nodeCreated=true;events.push({type:'summon',enemy:e,ability:'Storm Node',kind:'node',count:1});s.nextAt=now+1.5;}
+  }else if(event.id==='storm_node'){s.nodeCreated=true;events.push({type:'summon',enemy:e,ability:'Convergence Anchor',kind:'node',count:1});s.nextAt=now+1.5;}
  }
  if(s.style==='guardian'&&now+1e-7>=s.wardAt){
   s.wardAt=now+12;
@@ -124,8 +128,8 @@ function tick(r,absoluteNow,infraEvents=[]){
   s.style==='conductor'?[[.65,'storm_node',1]]:[];
  for(const [fraction,id,count] of thresholdPlans){
   if(e.hp>e.maxhp*fraction||s.thresholds.includes(id))continue;
-  if(I.prepare(r,{id,name:id==='storm_node'?'Storm Node':p.name+' · '+(s.style==='leech'?'Blood Offering':s.style==='devourer'?'Death Bloom':'Brood of Decay'),cast:.75,cooldown:3,maxUses:1})){
-   s.thresholds.push(id);events.push({type:'prepare',enemy:e,ability:id==='storm_node'?'Storm Node':p.name+' · Summoning',count});return events;
+  if(I.prepare(r,{id,name:id==='storm_node'?'Convergence Anchor':p.name+' · '+(s.style==='leech'?'Blood Offering':s.style==='devourer'?'Death Bloom':'Brood of Decay'),cast:.75,cooldown:3,maxUses:1})){
+   s.thresholds.push(id);events.push({type:'prepare',enemy:e,ability:id==='storm_node'?'Convergence Anchor':p.name+' · Summoning',count});return events;
   }
  }
  if(now+1e-7<s.nextAt)return events;
@@ -144,9 +148,9 @@ function tick(r,absoluteNow,infraEvents=[]){
 function status(enemy,r,now){
  const s=state(r);if(!enemy?.boss||enemy!==leader(r)||!s)return null;
  if(s.style==='guardian'&&s.vulnerableUntil>now)return {kind:'interrupted',label:'Vulnerable',detail:'Ward Cycle interrupted · Barrier unavailable',remaining:s.vulnerableUntil-now};
- if(s.style==='conductor'&&s.weakUntil>now)return {kind:'interrupted',label:'Weakened',detail:'Storm Node destroyed: −20% damage',remaining:s.weakUntil-now};
+ if(s.style==='conductor'&&s.weakUntil>now)return {kind:'interrupted',label:'Weakened',detail:'Convergence Anchor destroyed: −20% damage',remaining:s.weakUntil-now};
  if(s.style==='berserker'&&enemy.stage84Charge?.until>now)return {kind:'enraged',label:'Furnace Strike',detail:'Heavy strike charged',remaining:enemy.stage84Charge.until-now};
- if(s.style==='matriarch'&&livingMinions(r)>=2)return {kind:'guarding',label:'Brood Guard',detail:'15% less direct damage while 2+ brood Minions are alive',remaining:0};
+ if(s.style==='matriarch'&&livingMinions(r)>=2)return {kind:'guarding',label:'Brood Guard',detail:'15% less direct damage while 2+ Carrion Broodlings are alive',remaining:0};
  return null;
 }
 const API=Object.freeze({PROFILES,profileFor,profileForStyle,attach,tick,spawned,onDeath,barrierChanged,

@@ -208,8 +208,8 @@ function save(){phase5Persist();}
 function heroFullImage(){return 'assets/characters/full/'+(state.characterId||'wanderer')+'.webp';}
 // Optimized transparent elite WebP portraits with fallback art if loading fails.
 // Idle PNGs are frame 1 of the new attack GIFs, never legacy elite portraits.
-const ELITE_ART={tank:'assets/elites/animated/tank_idle.png',caster:'assets/elites/animated/caster_idle.png',vampire:'assets/elites/animated/vampire_idle.png',berserker:'assets/elites/animated/berserker_idle.png',gravecaller:'assets/elites/animated/caster_idle.png',rotbound_exarch:'assets/elites/animated/tank_idle.png',ashen_executioner:'assets/elites/animated/berserker_idle.png'};
-const ELITE_ATTACK_ART={tank:'assets/elites/animated/tank_attack.gif',caster:'assets/elites/animated/caster_attack.gif',vampire:'assets/elites/animated/vampire_attack.gif',berserker:'assets/elites/animated/berserker_attack.gif',gravecaller:'assets/elites/animated/caster_attack.gif',rotbound_exarch:'assets/elites/animated/tank_attack.gif',ashen_executioner:'assets/elites/animated/berserker_attack.gif'};
+const ELITE_ART={tank:'assets/elites/animated/tank_idle.png',caster:'assets/elites/animated/caster_idle.png',vampire:'assets/elites/animated/vampire_idle.png',berserker:'assets/elites/animated/berserker_idle.png',gravecaller:'assets/elites/animated/caster_idle.png',briarspine_horror:'assets/mobs/animated/rootbound_hermit_staff_spell_original_768x896.png',oathbound_exarch:'assets/elites/animated/tank_idle.png',ashen_executioner:'assets/elites/animated/berserker_idle.png'};
+const ELITE_ATTACK_ART={tank:'assets/elites/animated/tank_attack.gif',caster:'assets/elites/animated/caster_attack.gif',vampire:'assets/elites/animated/vampire_attack.gif',berserker:'assets/elites/animated/berserker_attack.gif',gravecaller:'assets/elites/animated/caster_attack.gif',briarspine_horror:'assets/mobs/animated/rootbound_hermit_staff_spell_original_768x896.gif',oathbound_exarch:'assets/elites/animated/tank_attack.gif',ashen_executioner:'assets/elites/animated/berserker_attack.gif'};
 const ELITE_ATTACK_IMPACT_MS={tank:810,caster:890,vampire:670,berserker:490};
 const ELITE_ATTACK_DURATION_MS={tank:1850,caster:1750,vampire:1800,berserker:1400};
 const eliteArtReady={};
@@ -742,25 +742,15 @@ const ELITE_ARCHETYPES={
  vampire:{id:'vampire',icon:'🩸',name:'Sanguine Wraith',role:'Vampire',risk:'Recovers HP when its attacks damage your health. Barrier and burst are useful.',hp:1.10,atk:1.02,def:1.00,interval:1.56},
  caster:{id:'caster',icon:'🔮',name:'Voidborne Hexer',role:'Caster',risk:'Successful hits weaken your direct damage by 20% for 3 combat seconds (7s between casts).',hp:.91,atk:.93,def:.90,interval:1.64},
  gravecaller:{id:'gravecaller',icon:'☠',name:'Gravecaller',role:'Summoner',risk:'Channels a 1s interruptible ritual at 85% and 40% HP, summoning up to 2 undead each time (4 total, 2 alive). Undead hits apply stacking Deathbound Decay (up to 4 stacks, 4s), damaging you each second until the summons die.',hp:1.03,atk:.75,def:.86,interval:1.8},
- rotbound_exarch:{id:'rotbound_exarch',icon:'✚',name:'Rotbound Exarch',role:'Support',risk:'Every 10s channels Barrier for an ally, or itself when alone, worth 15% max Health, up to 3 casts. Stun interrupts.',hp:1.23,atk:.67,def:1.12,interval:1.95},
+ oathbound_exarch:{id:'oathbound_exarch',icon:'⛨',name:'Oathbound Exarch',role:'Support',risk:'Aegis oath: every 10s channels Barrier for an ally, or itself when alone, worth 15% max Health, up to 3 casts. Stun interrupts.',hp:1.23,atk:.67,def:1.12,interval:1.95},
+ briarspine_horror:{id:'briarspine_horror',icon:'🌵',name:'Briarspine Horror',role:'Thorns',risk:'Vitality · Thornbloom reflects direct hits during its four-second guard.',hp:1.12,atk:.78,def:1.00,interval:1.90},
  ashen_executioner:{id:'ashen_executioner',icon:'⚒',name:'Ashen Executioner',role:'Heavy Striker',risk:'Every 10s prepares 1.5s heavy strike, capped at 18% max HP before Block/Barrier. Stun and delay interrupt.',hp:1.05,atk:1.1,def:.91,interval:2.05}
 };
-const BOSS_ARCHETYPES=[
-  {name:'The Abyssal Guardian',style:'guardian',image:'assets/bosses/animated/abyssal_guardian_idle.png',risk:'Aegis · Ward Cycle: 8% Barrier every 12s; breaking it creates a 3s vulnerable window.'},
-  {name:'Rift Harbinger',style:'leech',image:'assets/bosses/animated/rift_harbinger_idle.png',risk:'Blood · Blood Offering: Thralls mature after 10s. Destroy them before they are sacrificed.'},
-  {name:'Ember Sovereign',style:'berserker',image:'assets/bosses/animated/ember_sovereign_idle.png',risk:'Fury · Furnace Strike: 1.5s warning before a heavy hit every 12s; Enrage below 50% HP.'},
-  {name:'Carrion Matriarch',style:'matriarch',image:'assets/mobs/animated/blight_mantis_attack_raised_claw_v3.png',risk:'Decay · Brood of Decay: two Minions at 75% and 40% HP; 15% direct damage reduction with 2+ alive. Provisional character art.'},
-  {name:'Heartroot Devourer',style:'devourer',image:'assets/mobs/animated/rootbound_hermit_staff_spell_original_768x896.png',risk:'Vitality · Death Bloom: killing a Bloomling heals 5% Boss HP, up to 15%. Provisional character art.'},
-  {name:'Stormglass Conductor',style:'conductor',image:'assets/mobs/animated/wanderer_aether_wyrm_attack_768.png',risk:'Magic · Arcane Convergence: 2s cast every 12s. Destroy the Storm Node to cancel a cast. Provisional character art.'}
- ];
- const BOSS_ATTACK_ART={
-  guardian:'assets/bosses/animated/abyssal_guardian_attack_x1.gif',
-  leech:'assets/bosses/animated/rift_harbinger_attack_x1.gif',
-  berserker:'assets/bosses/animated/ember_sovereign_attack_x1.gif',
-  matriarch:'assets/mobs/animated/blight_mantis_attack_raised_claw_v3.gif',
-  devourer:'assets/mobs/animated/rootbound_hermit_staff_spell_original_768x896.gif',
-  conductor:'assets/mobs/animated/wanderer_aether_wyrm_attack_768.gif'
- };
+const BOSS_ARCHETYPES=['guardian','leech','berserker','matriarch','devourer','conductor'].map(style=>{
+ const profile=WandererV013BossAbilities.profileForStyle(style);
+ return {...profile,risk:profile.description};
+});
+const BOSS_ATTACK_ART=Object.fromEntries(BOSS_ARCHETYPES.map(b=>[b.style,b.attack]));
  const BOSS_ATTACK_DURATION_MS={guardian:1600,leech:1600,berserker:1600,matriarch:1600,devourer:1600,conductor:1600};
 const BOSS_ATTACK_IMPACT_MS={guardian:850,leech:860,berserker:710,matriarch:650,devourer:740,conductor:820};
 
@@ -855,25 +845,30 @@ function phase3CombatAnimationSource(attackSrc,speed,bossStyle){
    :attackSrc.replace(/\.gif$/,'_x'+speed+'.gif');
 }
 function animateEnemyWindup(){
- const enemy=state.run?.enemy,img=enemy?.groupSlot!==undefined?document.querySelector('[data-group-portrait="'+enemy.groupSlot+'"]'):$('enemyPortrait');if(!img||!img.dataset.attackSrc||!enemy)return;
+ const enemy=state.run?.enemy,img=state.run?.enemies&&enemy?.groupSlot!==undefined?document.querySelector('[data-group-portrait="'+enemy.groupSlot+'"]'):$('enemyPortrait');if(!img||!img.dataset.attackSrc||!enemy)return;
  clearTimeout(img._mobIdleTimer);
  const attackSrc=img.dataset.attackSrc,eliteType=enemy.eliteType,bossStyle=enemy.boss?enemy.bossStyle:null;
  const speed=clockSpeed===4?4:clockSpeed===2?2:1;
  const playbackSrc=phase3CombatAnimationSource(attackSrc,speed,bossStyle);
  const token=(img._mobAnimationToken||0)+1;
  img._mobAnimationToken=token;img._mobAttackStartedAt=Date.now();img._mobPlaybackSpeed=speed;
- img.src=playbackSrc+(playbackSrc.includes('?')?'&':'?')+'play='+token;
- const duration=(bossStyle?BOSS_ATTACK_DURATION_MS[bossStyle]:eliteType?ELITE_ATTACK_DURATION_MS[eliteType]:1570)/speed;
+ if(enemy.boss||enemy.stage84Minion){
+  const impact=BOSS_ATTACK_IMPACT_MS[bossStyle]||660;
+  img.animate?.([{translate:'0 0'},{translate:'-5% 0',offset:impact/(impact+240)},{translate:'0 0'}],{duration:(impact+240)/speed});
+  img.src=playbackSrc;
+ }else img.src=playbackSrc+(playbackSrc.includes('?')?'&':'?')+'play='+token;
+ const duration=(bossStyle?BOSS_ATTACK_DURATION_MS[bossStyle]:eliteType?(ELITE_ATTACK_DURATION_MS[eliteType]||1570):1570)/speed;
  img._mobIdleTimer=setTimeout(()=>{
   if(img.isConnected&&img._mobAnimationToken===token&&(state.run?.enemy===enemy||state.run?.enemies?.includes(enemy)))
    img.src=img.dataset.idleSrc||attackSrc;
  },duration+10);
 }
 function animateEnemyStrike(abilityFx=null){
- const e=state.run?.enemy,img=e?.groupSlot!==undefined?document.querySelector('[data-group-portrait="'+e.groupSlot+'"]'):$('enemyPortrait');if(!img)return;
+ const e=state.run?.enemy,img=state.run?.enemies&&e?.groupSlot!==undefined?document.querySelector('[data-group-portrait="'+e.groupSlot+'"]'):$('enemyPortrait');if(!img)return;
+
  const eliteKind={tank:'EliteTank',berserker:'EliteBerserker',vampire:'EliteVampire',caster:'EliteCaster'}[e?.eliteType];
  const kind=abilityFx||eliteKind||(e?.role==='caster'?'EnemyCaster':e?.role==='tank'||e?.role==='bruiser'||e?.boss?'EnemyBruiser':'EnemySkirmisher');
- const visual=()=>{if(img.isConnected&&(state.run?.enemy===e||state.run?.enemies?.includes(e)))combatEffect(kind,e?.effect==='regen'?'nature':e?.effect,img.id||'enemyPortrait')};
+ const visual=()=>{if(img.isConnected&&(state.run?.enemy===e||state.run?.enemies?.includes(e))){if(e.impactImage)img.src=e.impactImage;combatEffect(kind,e?.effect==='regen'?'nature':e?.effect,img.id||'enemyPortrait')}};
  const bossStyle=e?.boss?e.bossStyle:null;
  const impact=ELITE_ATTACK_IMPACT_MS[e?.eliteType]||BOSS_ATTACK_IMPACT_MS[bossStyle]||660;
  const speed=img._mobPlaybackSpeed||1;
@@ -1018,7 +1013,7 @@ function enemyAbilityMarkup(enemy,now){
   esc(abilityStatus.label)+' <small>'+Math.max(0,abilityStatus.remaining).toFixed(1)+'s</small></span>';
 }
 function phase3GroupEnemyMarkup(enemy,index,run){
- const target=enemy===run.enemy,attack=enemy.miniboss?(ELITE_ATTACK_ART[enemy.eliteType]||enemy.image):enemy.boss?(BOSS_ATTACK_ART[enemy.bossStyle]||enemy.image):enemy.image||ART.enemy,idle=enemy.miniboss?(ELITE_ART[enemy.eliteType]||enemy.image):enemy.boss?enemy.image:attack.replace(/\.gif(?:\?.*)?$/i,'.png'),id=' id="'+(target?'enemyPortrait':'arenaEnemyPortrait-'+index)+'"',hpId=target?' id="enemyHpFill"':'',textId=target?' id="enemyHpText"':'',hp=Math.max(0,Math.ceil(enemy.hp)),arrival=enemy.reinforcementArrival?'is-arriving ':'';
+ const target=enemy===run.enemy,attack=enemy.miniboss?(ELITE_ATTACK_ART[enemy.eliteType]||enemy.image):enemy.boss?(BOSS_ATTACK_ART[enemy.bossStyle]||enemy.image):enemy.attackImage||enemy.image||ART.enemy,idle=enemy.miniboss?(ELITE_ART[enemy.eliteType]||enemy.image):enemy.boss||enemy.attackImage?enemy.image:attack.replace(/\.gif(?:\?.*)?$/i,'.png'),id=' id="'+(target?'enemyPortrait':'arenaEnemyPortrait-'+index)+'"',hpId=target?' id="enemyHpFill"':'',textId=target?' id="enemyHpText"':'',hp=Math.max(0,Math.ceil(enemy.hp)),arrival=enemy.reinforcementArrival?'is-arriving ':'';
  delete enemy.reinforcementArrival;
  return '<div class="arenaEnemy '+arrival+(target?'is-target ':'')+(enemy.hp<=0?'is-defeated':'')+' role-'+esc(enemy.eliteType||enemy.bossStyle||enemy.role||'skirmisher')+'" data-group-index="'+index+'" role="button" tabindex="'+(enemy.hp>0?'0':'-1')+'" aria-pressed="'+target+'" aria-label="'+(target?'Focused ':'Focus ')+esc(enemy.name)+', '+hp+' of '+enemy.maxhp+' health" style="'+phase3MobArenaPosition(enemy,index,run.enemies.length)+'"><div class="arenaEnemyStatuses" '+(target?'id="enemyDebuffs"':'')+'>'+enemyDebuffMarkup(enemy)+'</div><div class="arenaSprite mobArenaSprite"><img'+id+' data-group-portrait="'+index+'" data-elite-type="'+esc(enemy.eliteType||'')+'" data-boss-style="'+esc(enemy.bossStyle||'')+'" data-attack-src="'+esc(attack)+'" data-idle-src="'+esc(idle)+'" src="'+esc(idle)+'" alt=""><span class="arenaGroundShadow" aria-hidden="true"></span></div><span class="arenaTargetArrow" aria-hidden="true">'+(target?'▼':'')+'</span><strong title="'+esc(enemy.name)+'">'+esc(enemy.name)+'</strong><div class="enemyAbilityNotice" data-enemy-ability>'+enemyAbilityMarkup(enemy,run.combatSeconds||0)+'</div><div class="arenaEnemyVitals">'+enemyRoleBadge(enemy)+'<div class="arenaEnemyHealth" role="progressbar" aria-label="'+esc(enemy.name)+' health" aria-valuemin="0" aria-valuemax="'+enemy.maxhp+'" aria-valuenow="'+hp+'"><i'+hpId+' style="--resource-pct:'+Math.max(0,Math.min(100,100*enemy.hp/enemy.maxhp))+'%"></i></div></div><small'+textId+' data-mob-hp>'+hp+' / '+enemy.maxhp+'</small><span data-mob-defense '+(target?'id="enemyDefense"':'')+' hidden>'+enemy.def+'</span></div>';
 }

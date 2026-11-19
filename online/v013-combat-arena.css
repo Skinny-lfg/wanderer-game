@@ -528,3 +528,5 @@ body.phase3IntegratedPreview #scene .combatLinkFx.is-self::after{
 @media(prefers-reduced-motion:reduce){
  body.phase3IntegratedPreview #scene .combatLinkFx{display:none}
 }
+.role-oathbound_exarch .arenaSprite img{filter:drop-shadow(0 0 5px #8cbcff)}
+.role-briarspine_horror .enemyAbilityStatus.is-guarding{color:#d7fbaa;background:#213922}

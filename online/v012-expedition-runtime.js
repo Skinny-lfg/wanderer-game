@@ -204,7 +204,7 @@ function phase1WaveWon(){
   for(const enemy of dead){r.enemy=enemy;enemy.groupDefeated=true;
   const death=globalThis.WandererV013BossInfrastructure?.onMinionDeath(r,enemy);
    const bossDeath=globalThis.WandererV013BossAbilities?.onDeath(r,enemy);
-   if(bossDeath?.type==='node_broken'){ports.combatLinkEffect?.(r,'shock',enemy,[bossDeath.enemy]);ports.addLog('⚡ Storm Node destroyed · Arcane Convergence '+(bossDeath.canceled?'interrupted':'next cast canceled')+' · Boss weakened for '+bossDeath.duration+'s','good');ports.phase6Metric(r,'bossNodeDestroyed',1);}
+   if(bossDeath?.type==='node_broken'){ports.combatLinkEffect?.(r,'shock',enemy,[bossDeath.enemy]);ports.addLog('⚡ Convergence Anchor destroyed · Arcane Convergence '+(bossDeath.canceled?'interrupted':'next cast canceled')+' · Boss weakened for '+bossDeath.duration+'s','good');ports.phase6Metric(r,'bossNodeDestroyed',1);}
   if(death?.healed){ports.addLog('☠ Minion falls · Boss recovers '+death.healed+' HP','spell');ports.phase6Metric(r,'bossHealing',death.healed);}
   if(death?.counted&&enemy.stage83Summoner==='boss')ports.phase6Metric(r,'bossMinionDeaths',1);
    const spread=globalThis.WandererV013ExpeditionBoons?.spreadOnDeath(r,enemy,ports.synchronizeDots,(target,kind)=>ports.combatLinkEffect?.(r,kind,enemy,[target]))||0;

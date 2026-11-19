@@ -28,7 +28,7 @@ test('Talents: zero points means genuinely no talents; partial points never crea
 test('Every current Boss Affinity enters a real native fight and reports its Stage 8 mechanics',()=>{
  const opts={...small,mode:'bosses',affinities:['blood','decay','vitality','aegis','fury','magic'],risks:[1]};
  const result=S.simulate(opts);
- assert.equal(result.schemaVersion,3);assert.equal(result.summary.cases,6);
+ assert.equal(result.schemaVersion,4);assert.equal(result.summary.cases,6);
  assert.equal(result.summary.errors,0,JSON.stringify(result.rows.filter(x=>x.error)));
  assert.equal(result.summary.timeouts,0);
  assert.deepEqual(result.summary.exposures.bossAffinities,['aegis','blood','decay','fury','magic','vitality']);
@@ -82,11 +82,11 @@ test('Optional Contract policy selects the actual native Stage 7 offer without i
  const repeat=S.dungeon(15,S.BUILDS[0],9101,opts);
  assert.deepEqual(row,repeat);
 });
-test('Counterplay targeting reproduces valid arena clicks for Thralls, Storm Nodes and Bloomlings',()=>{
+test('Counterplay targeting reproduces valid arena clicks for Riftbound Vessels, Convergence Anchors and Heartroot Mawbuds',()=>{
  const boss={name:'Boss',boss:true,bossStyle:'leech',hp:600,maxhp:1000,groupClock:1};
- const thrall={name:'Blood Thrall',hp:90,stage84Minion:'blood',groupClock:2};
- const node={name:'Storm Node',hp:90,stage84Node:true,groupClock:3};
- const bloom={name:'Bloomling',hp:60,stage84Minion:'vitality',groupClock:3};
+ const thrall={name:'Riftbound Vessel',hp:90,stage84Minion:'blood',groupClock:2};
+ const node={name:'Convergence Anchor',hp:90,stage84Node:true,groupClock:3};
+ const bloom={name:'Heartroot Mawbud',hp:60,stage84Minion:'vitality',groupClock:3};
  const r={status:'fight',enemy:boss,encounterLeader:boss,enemies:[boss,thrall,node,bloom]};
  assert.equal(S.selectTarget(r,'focus'),boss);
  assert.equal(S.selectTarget(r,'mechanics'),thrall);

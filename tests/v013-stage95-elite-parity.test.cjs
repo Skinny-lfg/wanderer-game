@@ -39,7 +39,7 @@ test('E1 Elites must be more dangerous than normal Tanks in independent paired n
  for(const gear of ['starter','common']){
   const row=result.summary[gear];
   assert.equal(row.pairs,24,'both comparisons need sufficient native Tanks');
-  assert.equal(Object.keys(row.byEliteType||{}).length,7,'report all seven native Elite archetypes');
+  assert.equal(Object.keys(row.byEliteType||{}).length,8,'report all eight native Elite archetypes');
   assert.equal(Object.values(row.byEliteType).reduce((sum,r)=>sum+r.pairs,0),24,
    'per-archetype reports must account for every matched pair');
   assert(row.eliteMeanDamageTaken>row.tankMeanDamageTaken,

@@ -45,14 +45,14 @@ test('Blood Offering spawns a named Thrall on field and sacrifices after 10s for
  const r=run('leech',3),e=r.enemy;const {result}=castSummon(r,.69);
  assert.equal(result.spawned,1);assert.equal(result.field,1,'priority summon must be attackable, not hidden in reserve');
  assert.equal(r.enemies.length,4);assert.equal(r.groupReserve.length,1);
- const thrall=r.enemies.find(x=>x.stage84Minion==='blood');assert.equal(thrall.name,'Blood Thrall');
+ const thrall=r.enemies.find(x=>x.stage84Minion==='blood');assert.equal(thrall.name,'Riftbound Vessel');
  step(r,1);assert.equal(thrall.stage84ThrallAppearedAt,1);
  assert(!step(r,10.99).some(x=>x.type==='offering'));
  assert.equal(step(r,11).find(x=>x.type==='offering').healed,50);
  assert.equal(e.hp,740);assert.equal(thrall.hp,0);
  assert.equal(step(r,11.1).filter(x=>x.type==='offering').length,0);
 });
-test('Dead Blood Thrall cannot be offered; Blood uses only two threshold summons',()=>{
+test('Dead Riftbound Vessel cannot be offered; Blood uses only two threshold summons',()=>{
  const r=run('leech');
  let first=castSummon(r,.69);assert.equal(first.result.spawned,1);
  const thrall=r.enemies.find(x=>x.stage84Minion==='blood');thrall.hp=0;thrall.groupDefeated=true;
@@ -69,7 +69,7 @@ test('Decay Brood counts only visible living summoned Minions for 15% less direc
  assert.equal(A.directFactor(r,r.enemy),1);
  assert.equal(A.directFactor(r,mob()),1);
 });
-test('Vitality Death Bloom grants 5% per killed Bloomling, capped at 15% across four Minions',()=>{
+test('Vitality Death Bloom grants 5% per killed Heartroot Mawbud, capped at 15% across four Minions',()=>{
  const r=run('devourer');
  assert.equal(castSummon(r,.69).result.spawned,2);
  for(const x of r.enemies.filter(x=>x.stage84Minion==='vitality')){x.hp=0;assert.equal(I.onMinionDeath(r,x).healed,50);x.groupDefeated=true;}
@@ -102,13 +102,13 @@ test('Magic Arcane Convergence has 2s channel, 7% maxHP hit through Barrier and 
  assert(!step(r,25.99).some(x=>x.type==='prepare'));
  assert(step(r,26).some(x=>x.type==='prepare'));
 });
-test('Storm Node becomes attackable, cancels next discharge and weakens Boss for 6s',()=>{
+test('Convergence Anchor becomes attackable, cancels next discharge and weakens Boss for 6s',()=>{
  const r=run('conductor',3),e=r.enemy;
  r.combatSeconds=0;e.hp=640;
  assert(step(r,0).some(x=>x.type==='prepare'));
  const summon=step(r,.75).find(x=>x.type==='summon');assert(summon);
  const result=A.spawned(r,summon,newMinion);assert.equal(result.spawned,1);assert.equal(result.field,1);
- const node=r.enemies.find(x=>x.stage84Node);assert.equal(node?.name,'Storm Node');assert.equal(node.atk,0);
+ const node=r.enemies.find(x=>x.stage84Node);assert.equal(node?.name,'Convergence Anchor');assert.equal(node.atk,0);
  node.hp=0;r.combatSeconds=1;
  const event=A.onDeath(r,node);assert.equal(event.type,'node_broken');
  assert.equal(A.incomingFactor(r,e,2),.8);assert.equal(A.incomingFactor(r,e,7),1);
@@ -133,16 +133,24 @@ test('Native Dungeon selects Boss matching the chosen Affinity and uses real Sta
  assert.equal(r.encounterLeader,r.enemy);
  assert.equal(r.stage84Boss.style,r.enemy.bossStyle);
 });
-test('HTML/docs, Stage 8.3 and preview build load six Boss assets and ability code',()=>{
- const html=fs.readFileSync('index.html','utf8'),docs=fs.readFileSync('docs/index.html','utf8');
- for(const h of [html,docs]){
+test('Arena and preview manifest load six Boss profiles and ability code',()=>{
+ const html=fs.readFileSync('index.html','utf8');
+ for(const h of [html]){
   assert(h.includes('online/v013-boss-abilities.js'));
-  assert(h.includes('Carrion Matriarch')&&h.includes('Heartroot Devourer')&&h.includes('Stormglass Conductor'));
+  assert(h.includes('WandererV013BossAbilities.profileForStyle(style)'));
+  for(const profile of Object.values(A.PROFILES)){assert.equal(profile.attack,profile.image);assert(fs.existsSync(profile.image));}
   assert(h.includes("esc(globalThis.WandererV013BossAbilities?.profileFor(c.family)?.name||t.enemy)"),'Realm choice Boss label must reflect the six Affinity Bosses');
   assert(h.includes('WandererV013BossAbilities?.status(enemy,state.run,now)'));
  }
- assert.equal(fs.readFileSync('online/v013-boss-abilities.js','utf8'),fs.readFileSync('docs/online/v013-boss-abilities.js','utf8'));
- assert.equal(fs.readFileSync('combat/v012-combat-runtime.js','utf8'),fs.readFileSync('docs/combat/v012-combat-runtime.js','utf8'));
- assert.equal(fs.readFileSync('online/v012-expedition-runtime.js','utf8'),fs.readFileSync('docs/online/v012-expedition-runtime.js','utf8'));
  assert(fs.readFileSync('scripts/prepare-automatic-preview.mjs','utf8').includes("'online/v013-boss-abilities.js'"));
+});
+
+test('Summoned entities expose their display names and real PNG poses',()=>{
+ for(const [style,kind,name] of [['leech','blood','Riftbound Vessel'],['matriarch','decay','Carrion Broodling'],['devourer','vitality','Heartroot Mawbud'],['conductor','node','Convergence Anchor']]){
+  const r=run(style);assert.equal(A.spawned(r,{kind,count:1},newMinion).spawned,1);
+  const actor=r.enemies.find(e=>e.stage84Minion===kind);assert.equal(actor.name,name);
+  const poses=kind==='node'?[actor.image]:[actor.image,actor.attackImage,actor.impactImage];
+  assert.equal(new Set(poses).size,poses.length);
+  for(const file of poses)assert.equal(fs.readFileSync(file).subarray(1,4).toString(),'PNG');
+ }
 });

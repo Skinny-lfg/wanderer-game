@@ -49,11 +49,11 @@ test('stratified Elite sampler never forces an archetype or manufactures combat 
   '--seed-start='+seedStart]);
  const r=B.runElites(cfg,{scenario});
  assert.equal(r.success,true);
- assert.equal(r.coverage.nativePairs,7);
+ assert.equal(r.coverage.nativePairs,types.length);
  assert(B.TYPES.every(t=>r.coverage.perArchetype[t]===1));
- assert.equal(calls.filter(x=>!x.inspectOnly).length,14);
+ assert.equal(calls.filter(x=>!x.inspectOnly).length,types.length*2);
  assert.equal(r.errors.length,0);
- assert.equal(r.groups.filter(g=>g.eliteType!=='all').length,7);
+ assert.equal(r.groups.filter(g=>g.eliteType!=='all').length,8);
 });
 test('native Boss cohort preserves risk/build cell separation and distinct resolved seeds',()=>{
  const cfg=B.parseArgs(['--mode=bosses','--affinity=blood','--seeds=2',
