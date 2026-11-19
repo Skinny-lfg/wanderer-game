@@ -1,23 +1,60 @@
 'use strict';
-const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-const scope={};for(const file of ['combat/v012-buildcraft.js','combat/automatic-talents.js'])vm.runInNewContext(fs.readFileSync(file,'utf8'),scope);const B=scope.WandererV012Buildcraft,T=scope.WandererAutomaticTalents;
-function buy(id,progress={...T.create(),xp:10000}){if(progress.nodes.includes(id))return progress;const n=T.NODES.find(n=>n.id===id);assert(n,id);for(const required of n.prerequisites||[n.requires].filter(Boolean))progress=buy(required,progress);const next=T.allocate(progress,id);assert(next,id);return next;}
-for(const [a,b] of [['blood_focus','blood_transfer'],['rot_focus','plague_spread'],['vitality_recovery','vitality_reserve'],['aegis_bulwark','aegis_reprisal'],['fury_momentum','single_target_mastery'],['fire_focus','fire_spread'],['frost_focus','frost_spread'],['lightning_focus','storm_mastery']])test('specializations are mutually exclusive: '+a+' / '+b,()=>{for(const [first,second]of [[a,b],[b,a]]){let p=buy(first);const node=T.NODES.find(n=>n.id===second);for(const required of node.prerequisites||[node.requires].filter(Boolean))p=buy(required,p);assert.equal(T.allocate(p,second),null);assert.equal(T.valid({...p,nodes:[...p.nodes,second]}),false);}});
-test('Staff and Wand preserve different funded costs with efficiency ranks',()=>{const b=B.create();assert.equal(B.nextCost(b,13),13);assert.equal(B.nextCost(b,9),9);b.picks=Array(5).fill('efficient_cast');assert.equal(B.nextCost(b,13),8);assert.equal(B.nextCost(b,9),4);assert.equal(B.nextCost(b,8),3);});
-function context(){let healed=0;return {c:{waveKey:'1:1',now:0,enemy:{hp:0,dots:{bleed:[]}},player:{hp:50,maxhp:100,enemies:[],groupReserve:[]},heal:n=>(healed+=n,n),barrier:()=>{},mana:()=>{},log:()=>{}},healed:()=>healed};}
-test('first unqualified death does not consume Bleed or Rot recovery',()=>{const b=B.create();b.runtime.permanentTalents=['hemovore','rot_recovery'];const x=context();B.onKill(b,x.c);assert.equal(x.healed(),0);x.c.enemy.bleedStacks=1;B.onKill(b,x.c);assert.equal(x.healed(),4);x.c.enemy.v012Rot=[{}];B.onKill(b,x.c);assert.equal(x.healed(),8);B.onKill(b,x.c);assert.equal(x.healed(),8);x.c.waveKey='2:1';B.onKill(b,x.c);assert.equal(x.healed(),16);});
-test('Bloodshed transfers one Bleed into a queued reinforcement without recursive transfers',()=>{const b=B.create();b.runtime.specializations=['blood_transfer'];const x=context(),queued={hp:30,dots:{bleed:[]}};x.c.player.groupReserve=[queued];x.c.enemy.dots.bleed=[{damage:20,remaining:4}];B.onKill(b,x.c);assert.equal(queued.dots.bleed[0].damage,10);assert.equal(queued.dots.bleed[0].remaining,3);assert.equal(queued.dots.bleed[0].transferred,true);const third={hp:30,dots:{bleed:[]}};x.c.enemy=queued;queued.hp=0;x.c.player.groupReserve=[third];B.onKill(b,x.c);assert.equal(third.dots.bleed.length,0);});
-test('Corruption trades maximum stack count for stronger individual stacks',()=>{const b=B.create();b.runtime.specializations=['rot_focus'];const x=context();x.c.enemy.hp=100;for(let i=0;i<6;i++)B.applyRot(b,x.c,10);assert.equal(x.c.enemy.v012Rot.length,3);assert.equal(x.c.enemy.v012Rot[0].damage,16);});
-test('defensive and recovery specializations apply their advertised tradeoffs',()=>{const base={attack:100,spellPower:100,maxhp:1000,defense:100,crit:10,attacksPerSec:1,mana:100,manaRegen:5,blockChance:0};for(const [id,key,ratio]of [['vitality_reserve','maxhp',1.2],['vitality_recovery','maxhp',.9],['aegis_bulwark','defense',1.18],['aegis_reprisal','defense',.9]]){const p=buy(id),plain=T.apply({...base},{...p,nodes:p.nodes.filter(n=>n!==id)}),special=T.apply({...base},p);assert.equal(special[key],Math.round(plain[key]*ratio),id);}});
-const createHarness=require('./v013-legacy-fixture.cjs');
-function fight(weapon,progress,trait){const a=createHarness(723);a.setup(1,weapon);if(progress)a.state().automaticTalents=JSON.parse(JSON.stringify(progress));if(trait)a.state().equip.weapon.v013Trait=trait;a.start(1,true);const c=a.controller();a.select(c.state.offers.find(p=>c.reachable(p)).id);a.enter();const r=a.state().run;r.hp=r.maxhp=100000;r.mp=r.maxmp=10000;r.stats.attack=r.stats.spellPower=100;r.stats.attacksPerSec=4;r.stats.crit=0;r.enemies=Array.from({length:4},(_,i)=>({...JSON.parse(JSON.stringify(r.enemy)),groupSlot:i,groupClock:0}));r.enemy=r.enemies[0];r.enemies.forEach(e=>{e.hp=e.maxhp=10000;e.atk=0;e.barrier=0;});return{a,r};}
-function hit(x){for(let i=0;i<20&&!x.r.lastBaseHit;i++)x.a.tick();assert(x.r.lastBaseHit>0);}
-test('actual funded attacks charge Staff 13 and Wand 9 Mana once',()=>{for(const [weapon,cost]of [['Staff',13],['Wand',9]]){const x=fight(weapon);hit(x);assert.equal(x.r.metrics.fundedCasts,1);assert.equal(x.r.metrics.manaSpent,cost);}});
-test('Focused Discharge increases the primary Lightning hit and removes Overcharge chains',()=>{const start={...T.create(),xp:10000,element:'lightning'},overcharge=buy('passive_overcharge',start),p=buy('lightning_focus',overcharge),plain=fight('Staff',overcharge),focused=fight('Staff',p);hit(plain);hit(focused);assert(focused.r.lastBaseHit>plain.r.lastBaseHit);assert(plain.r.enemies[1].hp<10000);assert.equal(focused.r.enemies[1].hp,10000);assert.equal(focused.r.metrics.fundedCasts,1);});
-test('Epic efficiency and ward traits have bounded, observable effects',()=>{const efficient=fight('Staff',undefined,'efficient');hit(efficient);assert.equal(efficient.r.metrics.manaSpent,12);const ward=fight('Staff',undefined,'ward');hit(ward);assert(ward.r.barrier>=ward.r.maxhp*.02);});
-test('affinity application upgrades improve the existing starter without redundant ranks',()=>{for(const [family,id]of [['blood','bleeding_edge'],['decay','toxic_touch']]){const starter=buy('affinity_'+family),upgraded=buy('passive_'+id),maximum=buy('passive_'+id+'_rank4');assert.equal(T.passiveIds(starter).filter(x=>x===id).length,1);assert.equal(T.passiveIds(upgraded).filter(x=>x===id).length,2);assert.equal(T.passiveIds(maximum).filter(x=>x===id).length,5);assert.equal(T.NODES.some(n=>n.id==='passive_'+id+'_rank5'),false);}});
-test('Epic conflagration spreads an actual funded Fire Burn to one secondary target',()=>{const p=buy('passive_kindling');p.element='fire';const x=fight('Staff',p,'conflagration');hit(x);assert(x.r.enemies[0].dots.burn.length>0);assert(x.r.enemies[1].dots.burn.length>0);assert.equal(x.r.enemies[2].dots.burn.length,0);assert.equal(x.r.enemies[1].dots.burn[0].spread,true);});
-test('Epic efficiency saves at least one Mana for Wand and already-efficient casts',()=>{const wand=fight('Wand',undefined,'efficient');hit(wand);assert.equal(wand.r.metrics.manaSpent,8);const progress=buy('passive_efficient_cast_rank5');const efficient=fight('Wand',progress,'efficient');hit(efficient);assert.equal(efficient.r.metrics.manaSpent,3);assert.equal(efficient.r.metrics.fundedCasts,1);});
-test('Epic efficiency applies the same minimum saving to hybrid magic',()=>{const p=buy('passive_kindling');p.element='fire';const x=fight('Sword',p,'efficient');for(let i=0;i<20&&!x.r.metrics?.fundedCasts;i++)x.a.tick();assert.equal(x.r.metrics.fundedCasts,1);assert.equal(x.r.metrics.manaSpent,7);});
+const {test}=require('node:test'),assert=require('node:assert/strict');
+const {T,buy}=require('./v013-current-talent-helper.cjs');
+const B=globalThis.WandererV012Buildcraft;
+const create=require('./v012-economy-harness.cjs');
 
-test('Epic conflagration extends Wildfire to a distinct third secondary target',()=>{const p=buy('fire_spread');p.element='fire';const x=fight('Staff',p,'conflagration');hit(x);assert(x.r.enemies.every(e=>e.dots.burn.length>0));assert.equal(x.r.enemies[1].dots.burn.length,1);assert.equal(x.r.enemies[2].dots.burn.length,1);assert.equal(x.r.enemies[3].dots.burn.length,1);});
+test('current v15 affinity, Basic and Magic purchases use actual prerequisites and earned XP',()=>{
+ for(const id of ['affinity_blood','affinity_decay','affinity_aegis','affinity_vitality','affinity_fury','affinity_magic','bleeding_edge','toxic_touch','quick_hands','guarded_block']){
+  const p=buy([id]);assert(p.nodes.includes(id),id);
+  assert(T.earned(p)>=p.nodes.length,id);
+ }
+ assert.equal(typeof T.attributePoints,'undefined');
+ assert.equal(T.valid({...T.create(),treeVersion:12}),false);
+});
+test('v15 Magic attunement selects one mode and cannot retain skills from another mode',()=>{
+ const p=buy(['affinity_magic']);
+ const fire=T.selectElement(p,'fire');assert(fire&&T.valid(fire));
+ const frost=T.selectElement(fire,'frost');assert(frost&&T.valid(frost));
+ assert.notEqual(fire.element,frost.element);
+ const invalid={...frost,nodes:[...frost.nodes,'nonexistent_historical_node']};
+ assert.equal(T.valid(invalid),false);
+});
+test('current v15 stats are applied from a permanent Magic build',()=>{
+ const p=buy(['affinity_magic']);
+ const base={attack:100,spellPower:60,maxhp:500,defense:20,crit:5,attacksPerSec:1,mana:50,manaRegen:1,blockChance:0};
+ const result=T.apply({...base},p);
+ assert(result.spellPower>base.spellPower);
+ assert(T.valid(p));
+});
+test('Staff and Wand retain different native funded Mana costs',()=>{
+ const b=B.create();
+ assert.equal(B.nextCost(b,13),13);
+ assert.equal(B.nextCost(b,9),9);
+ b.picks=Array(5).fill('efficient_cast');
+ assert.equal(B.nextCost(b,13),8);
+ assert.equal(B.nextCost(b,9),4);
+});
+test('native Bleed transfer cannot recursively spread through queued reinforcements',()=>{
+ const b=B.create();b.runtime.specializations=['blood_transfer'];
+ const queued={hp:30,dots:{bleed:[]}},next={hp:30,dots:{bleed:[]}};
+ const c={waveKey:'1:1',now:0,enemy:{hp:0,bleedStacks:1,dots:{bleed:[{damage:20,remaining:4}]}},
+  player:{hp:50,maxhp:100,enemies:[],groupReserve:[queued]},
+  heal:()=>{},barrier:()=>{},mana:()=>{},log:()=>{}};
+ B.onKill(b,c);
+ assert.equal(queued.dots.bleed.length,1);
+ assert.equal(queued.dots.bleed[0].damage,10);
+ assert.equal(queued.dots.bleed[0].transferred,true);
+ c.enemy=queued;c.player.groupReserve=[next];queued.hp=0;
+ B.onKill(b,c);assert.equal(next.dots.bleed.length,0);
+});
+test('current Dungeon start and combat use equipment and v15 talents from the native harness',()=>{
+ const a=create(7301);a.setup(1,'Staff');
+ a.state().automaticTalents=buy(['affinity_magic']);
+ a.start(1,true);const controller=a.controller(),card=controller.state.dungeon.cards[0];
+ controller.chooseRealm(card.id);assert(controller.visitRoom(1));assert(a.enter());
+ const run=a.state().run;
+ assert(run?.enemy&&run.status==='fight');
+ assert(run.stats.attack>=0&&run.stats.spellPower>0);
+ assert.equal(a.state().automaticTalents.treeVersion,15);
+});

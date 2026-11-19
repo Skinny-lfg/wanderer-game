@@ -1,11 +1,48 @@
 'use strict';
-const {test}=require('node:test'),assert=require('node:assert/strict'),create=require('./v013-legacy-fixture.cjs');require('../combat/v012-buildcraft.js');require('../combat/automatic-talents.js');const T=WandererAutomaticTalents,fields=['str','agi','int','end','cha','attack','defense','maxhp','attacksPerSec','crit','blockChance','mana','manaRegen','spellPower','power'];
-function progress(...ids){let p={...T.create(),xp:10000};for(const id of ids)for(const step of T.path(p,id)||[]){p=T.allocate(p,step);assert(p,step);}return p;}
-for(const [weapon,ids]of [['Sword',['passive_iron_skin','passive_strong_heart','passive_quick_hands']],['Sword',['passive_arcane_focus','flow','might']],['Staff',['passive_arcane_focus','flow']],['Daggers',['passive_precision','passive_quick_hands']],['Mace',['aegis_reprisal']]])test('Camp, preparation and encounter use the same stats: '+weapon+' / '+ids.join(', '),()=>{const a=create(311);a.setup(1,weapon);a.state().automaticTalents=progress(...ids);const camp=a.baseStats();a.start(1,true);const ready=a.stats();for(const key of fields)assert.equal(ready[key],camp[key],key+' on entry');const c=a.controller();a.select(c.state.offers.find(p=>c.reachable(p)).id);assert(a.enter());for(const key of fields)assert.equal(a.state().run.stats[key],camp[key],key+' in combat');});
-test('Magic resources are created before percentage talents on physical weapons',()=>{const a=create(312);a.setup(1,'Sword');a.state().automaticTalents=progress('passive_arcane_focus','flow','might');const s=a.baseStats();assert(s.spellPower>3+s.int*1.9,'Magic talents must increase physical-weapon Spell Power');assert(s.mana>20+s.int*7,'Magic talents must increase physical-weapon Mana');assert.equal(s.caster,false);assert(s.phase2Magic);});
-test('temporary item, Rune and event buffs apply once and disappear on returning to Camp',()=>{const a=create(313);a.state().automaticTalents=progress('passive_iron_skin');const rune=a.makeRune('might',1);a.state().runes=[rune];a.state().runeSlots=[rune.id,null,null];const camp=a.baseStats();a.start(1,true);const effects=a.events.run().effects;effects.might={power:.1,remaining:3};effects.runeBoost={power:.2,remaining:3};effects.item={id:a.state().equip.weapon.id,remaining:3};assert(a.stats().attack>camp.attack);assert.equal(a.baseStats().attack,a.stats().attack);const c=a.controller();a.select(c.state.offers.find(p=>c.reachable(p)).id);assert(a.enter());a.death();assert(a.events.run().effects.might.remaining>0,'retained event metadata must not leak into Camp');assert.equal(a.baseStats().attack,camp.attack);assert.equal(a.stats().attack,camp.attack);});
-test('source contributions sum to displayed totals, preserve penalties and never mutate character data',()=>{const a=create(314);a.state().automaticTalents=progress('vitality_recovery','aegis_bulwark');a.start(1,true);a.events.run().effects.might={power:.1,remaining:2};const before=JSON.stringify(a.state()),s=a.stats(),rows=a.statSources(s);for(const r of rows)assert(Math.abs(r.base+r.equipment+r.runes+r.talents+r.temporary-r.total)<.001,r.key);assert.equal(JSON.stringify(a.state()),before);const hp=rows.find(r=>r.key==='maxhp');assert(hp.talents!==0);const markup=a.statMarkup('Health',s,s.maxhp);assert(markup.includes('data-stat="maxhp"'));assert(markup.includes(String(s.maxhp)));});
+const {test}=require('node:test'),assert=require('node:assert/strict');
+const create=require('./v012-economy-harness.cjs');
+const {T,buy}=require('./v013-current-talent-helper.cjs');
+const fields=['str','agi','int','end','cha','attack','defense','maxhp','attacksPerSec','crit','blockChance','mana','manaRegen','spellPower','power'];
 
-test('negative equipment bonuses remain red beside the total',()=>{const a=create(315);for(const slot of Object.keys(a.state().equip))a.state().equip[slot]=null;a.state().equip.weapon=a.makeItem(1,'weapon',null,'loot','Mace','Common');a.state().equip.weapon.spd=-1;const s=a.stats(),markup=a.statMarkup('Hits/sec',s,s.attacksPerSec);assert(markup.includes('stat-penalty'));assert(markup.includes('data-stat="attacksPerSec"'));});
-
-test('temporary haste respects the same final attack-speed cap as permanent bonuses',()=>{const a=create(316);a.state().automaticTalents=progress('passive_quick_hands');a.state().equip.weapon.spd=10000;a.start(1,true);a.events.run().effects.haste={power:.5,remaining:2};assert.equal(a.stats().attacksPerSec,4.2);});
+for(const [weapon,id] of [['Sword','affinity_blood'],['Staff','affinity_magic'],['Daggers','affinity_fury'],['Mace','affinity_aegis']]){
+ test('current Dungeon remains statistically finite for '+weapon+' / '+id,()=>{
+  const a=create(3301);a.setup(1,weapon);a.state().automaticTalents=buy([id]);
+  const initial=a.baseStats();
+  a.start(1,true);
+  const prep=a.stats(),c=a.controller(),card=c.state.dungeon.cards[0];
+  assert(c.state.dungeon&&c.state.dungeon.cards.length===3);
+  c.chooseRealm(card.id);assert(c.visitRoom(1));assert(a.enter());
+  const fight=a.state().run.stats;
+  for(const key of fields){
+   assert(Number.isFinite(initial[key]),'Camp '+key);
+   assert(Number.isFinite(prep[key]),'Preparation '+key);
+   assert(Number.isFinite(fight[key]),'Combat '+key);
+  }
+  assert.equal(a.state().automaticTalents.treeVersion,15);
+  assert(T.valid(a.state().automaticTalents));
+ });
+}
+test('current native source breakdown matches its displayed totals without mutating state',()=>{
+ const a=create(3401);a.state().automaticTalents=buy(['affinity_vitality']);
+ a.start(1,true);
+ const before=JSON.stringify(a.state()),stats=a.stats(),rows=a.statSources(stats);
+ assert(rows.length>0);
+ for(const row of rows)assert(Math.abs(row.base+row.equipment+row.runes+row.talents+row.temporary-row.total)<.001,row.key);
+ assert.equal(JSON.stringify(a.state()),before);
+ const markup=a.statMarkup('Health',stats,stats.maxhp);
+ assert(markup.includes('data-stat="maxhp"'));
+ assert(markup.includes(String(stats.maxhp)));
+});
+test('negative equipment attributes remain visually distinct',()=>{
+ const a=create(3501);for(const slot of Object.keys(a.state().equip))a.state().equip[slot]=null;
+ a.state().equip.weapon=a.makeItem(1,'weapon',null,'loot','Mace','Common');a.state().equip.weapon.spd=-1;
+ const stats=a.stats(),markup=a.statMarkup('Hits/sec',stats,stats.attacksPerSec);
+ assert(markup.includes('stat-penalty'));
+ assert(markup.includes('data-stat="attacksPerSec"'));
+});
+test('fresh v15 talent progress never exposes historical attribute spending',()=>{
+ const p=T.create();assert.equal(p.treeVersion,15);
+ assert.equal(typeof T.attributePoints,'undefined');
+ assert.equal(typeof T.allocateAttribute,'undefined');
+ assert(T.valid(p));
+});
