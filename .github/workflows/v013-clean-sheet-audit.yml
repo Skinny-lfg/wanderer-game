@@ -34,6 +34,7 @@ jobs:
           tests/v013-dead-talent-cleanup.test.cjs
           tests/v013-clean-sheet-treasures.test.cjs
           tests/talent-graph-runtime.test.cjs
+          tests/v013-c1-catalog-equivalence.test.cjs
           tests/v013-talent-structure.test.cjs
           tests/v013-current-dungeon-and-talents.test.cjs
           tests/v013-stage7-contracts.test.cjs

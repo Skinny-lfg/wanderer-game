@@ -39,7 +39,7 @@
     "test:v013:stage5": "node --test tests/v013-stage5-conditions.test.cjs tests/v013-stage5-simulation.test.cjs tests/v013-stage5-stress.test.cjs",
     "simulate:v013:stress": "node scripts/v013-stage5-stress.cjs",
     "test:v013:gear": "node --test tests/v013-gear-loot-daggers.test.cjs tests/v013-craft-preview.test.cjs tests/v013-loot.test.cjs",
-    "test:v013:talent-graph": "node --test tests/talent-graph-next.test.cjs tests/talent-graph-runtime.test.cjs tests/talent-graph-bridge.test.cjs tests/talent-graph-combat.test.cjs",
+    "test:v013:talent-graph": "node --test tests/talent-graph-next.test.cjs tests/talent-graph-runtime.test.cjs tests/talent-graph-bridge.test.cjs tests/talent-graph-combat.test.cjs tests/v013-c1-catalog-equivalence.test.cjs",
     "test:v013:stage6": "node --test tests/v013-stage6-boons.test.cjs",
     "test:v013:stage7": "node --test tests/v013-stage7-contracts.test.cjs",
     "test:v013:stage71": "node --test tests/v013-stage71-forge-talents.test.cjs tests/v013-crafting.test.cjs tests/v013-craft-preview.test.cjs",
