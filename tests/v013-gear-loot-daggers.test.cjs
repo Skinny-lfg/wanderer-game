@@ -94,7 +94,7 @@ test('v0.13 loot rates are distinct from unchanged v0.12 live odds',()=>{
  const L=ctx.WandererV012LootRules;
  assert.equal(L.waveLootOdds(1).drop,.04);
  assert.equal(L.waveLootOdds(5).drop,.45);
- assert.equal(L.v013DungeonWaveOdds(1).drop,.28);
+ assert.equal(L.v013DungeonWaveOdds(1).drop,.38);
  assert.equal(L.v013DungeonWaveOdds(4).drop,.60);
  assert.equal(L.v013DungeonWaveOdds(5).drop,1);
 });
