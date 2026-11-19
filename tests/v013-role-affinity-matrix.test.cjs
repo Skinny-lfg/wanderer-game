@@ -52,3 +52,22 @@ test('native role matrix combines compatible Traits and map Conditions without g
   assert.equal(row.initialReserve,row.initialEnemies-row.initialVisible);
  }
 });
+
+test('all seven weapon archetypes work with native talents and optional runes',()=>{
+ const weapons=new Set(S.BUILDS.map(b=>b.weapon));
+ assert.deepEqual([...weapons].sort(),['Sword','Mace','Two-Handed','Daggers','Bow','Wand','Staff'].sort());
+ for(const [label,points,runes,rarity] of [['common',0,false,'Common'],['geared',24,true,'Rare']]){
+  const o=S.parseArgs(['--mode=roles','--levels=1','--seeds=9101',
+   '--builds='+S.BUILDS.map(b=>b.id).join(','),
+   '--affinities=blood','--group-sizes=4','--role-effects=baseline',
+   '--points='+points,'--runes='+runes,'--rarity='+rarity,'--tick-limit=900']);
+  const result=S.simulate(o);
+  assert.equal(result.rows.length,7,label);
+  assert.equal(result.summary.errors,0,label+': '+JSON.stringify(result.rows.filter(r=>r.error)));
+  for(const row of result.rows){
+   assert.equal(row.runes,runes);
+   assert.equal(row.pointsBudget,points);
+   assert.equal(row.roster.length,4);
+  }
+ }
+});
