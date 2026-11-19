@@ -12,9 +12,9 @@ const I=globalThis.WandererV013MapIntelligence;
 require('../economy/v012-loot-rules.js');
 const LOOT=globalThis.WandererV012LootRules;
 const PROFILES=Object.freeze({
- cautious:{name:'Cautious',risk:0,targets:['strong_heart','guarded_block','renewal','guard','vitality','might'],families:['aegis','vitality'],preparedTargets:['last_bastion'],healAt:.72,retreatAt:.5,target:'mechanics',shop:true},
- balanced:{name:'Balanced',risk:0,targets:['bleeding_edge','deep_cuts','strong_heart','might','vitality'],families:['blood','aegis'],preparedTargets:['red_guillotine'],healAt:.53,retreatAt:.34,target:'mechanics',shop:true},
- daring:{name:'Daring',risk:1,targets:['quick_hands','double_strike','bleeding_edge','might','haste'],families:['fury','blood'],preparedTargets:['red_guillotine'],healAt:.35,retreatAt:.16,target:'focus',shop:true},
+ cautious:{name:'Cautious',risk:0,targets:['strong_heart','guarded_block','renewal'],families:['aegis','vitality'],preparedTargets:['last_bastion'],healAt:.72,retreatAt:.5,target:'mechanics',shop:true},
+ balanced:{name:'Balanced',risk:0,targets:['bleeding_edge','deep_cuts','strong_heart'],families:['blood','aegis'],preparedTargets:['red_guillotine'],healAt:.53,retreatAt:.34,target:'mechanics',shop:true},
+ daring:{name:'Daring',risk:1,targets:['quick_hands','double_strike','bleeding_edge'],families:['fury','blood'],preparedTargets:['red_guillotine'],healAt:.35,retreatAt:.16,target:'focus',shop:true},
  'magic-fire':{name:'Fire Caster',risk:0,targets:['element_choice','arcane_focus','mana_spring','kindling','fire_spread'],families:['magic'],element:'fire',preparedTargets:[],healAt:.57,retreatAt:.36,target:'mechanics',shop:true},
  'magic-frost':{name:'Frost Caster',risk:0,targets:['element_choice','arcane_focus','mana_spring','deep_winter','frost_spread'],families:['magic'],element:'frost',preparedTargets:[],healAt:.62,retreatAt:.41,target:'mechanics',shop:true},
  'magic-lightning':{name:'Lightning Caster',risk:0,targets:['element_choice','arcane_focus','mana_spring','overcharge','storm_mastery'],families:['magic'],element:'lightning',preparedTargets:[],healAt:.54,retreatAt:.34,target:'mechanics',shop:true}
@@ -98,7 +98,7 @@ function spendEarnedTalents(a,profile){
  if(!T.valid(before))throw Error('Invalid natural talent account before spending');
  if(!a.talentActions?.available())throw Error('Talents may only be changed in Camp');
  let progress=before;const bought=[],elements=[];
- const targets=[...profile.targets,...(profile.preparedTargets||[]),...profile.families.map(x=>'affinity_'+x),...profile.families.map(x=>'root_'+x),'vitality','might','haste'];
+ const targets=[...profile.targets,...(profile.preparedTargets||[]),...profile.families.map(x=>'affinity_'+x),...profile.families.map(x=>'root_'+x)];
  function tuneElement(){
   if(!profile.element||!progress.nodes.includes('element_choice')||progress.element===profile.element)return;
   if(!a.talentActions.element(profile.element))throw Error('Native element choice rejected: '+profile.element);
