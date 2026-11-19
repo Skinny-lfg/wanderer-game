@@ -96,5 +96,5 @@ jobs:
           else
             npx playwright install chromium
           fi
-      - name: Verify real browser uses v15 iframe and no old attribute controls
-        run: node tests/v013-clean-sheet-browser.cjs
+      - name: Verify current v0.13 preview in browser, including live v15 talent interface
+        run: npm run test:v013:browser
