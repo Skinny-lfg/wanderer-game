@@ -1,0 +1,52 @@
+name: Wanderer C6 final static/hidden-code verification (no deploy)
+on:
+  push:
+    branches: [audit/v013]
+    paths:
+      - '.github/workflows/v013-c6-final-audit.yml'
+      - 'scripts/v013-c6-final-audit.cjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  final-reachability:
+    if: github.ref == 'refs/heads/audit/v013'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Check hidden legacy routes, paths and orphan references
+        run: node scripts/v013-c6-final-audit.cjs
+      - name: Syntax check all current combat, economy and online modules
+        shell: bash
+        run: |
+          set -euo pipefail
+          n=0
+          while IFS= read -r -d '' f; do
+            node --check "$f"
+            n=$((n+1))
+          done < <(find combat economy online -type f \( -name '*.js' -o -name '*.mjs' -o -name '*.cjs' \) -print0)
+          echo "C6_SYNTAX_MODULES=$n"
+      - name: Record workflow references to physically deleted files (diagnostic)
+        shell: bash
+        run: |
+          grep -R -n -E 'combat/(automatic-talents|automatic-talent-layout)[.]js|tests/v013-legacy-fixture[.]cjs' .github/workflows scripts tests --include='*.yml' --include='*.cjs' --include='*.js' > reports/v013-c6-remaining-test-refs.txt || true
+          wc -l reports/v013-c6-remaining-test-refs.txt
+      - name: Upload audited paths and candidate inventory
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v013-c6-final-audit
+          path: |
+            reports/v013-c6-final-static-audit.json
+            reports/v013-c6-final-static-audit.md
+            reports/v013-c6-remaining-test-refs.txt
+          retention-days: 30
+          if-no-files-found: warn

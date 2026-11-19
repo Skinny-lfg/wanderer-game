@@ -13,6 +13,7 @@ on:
       - 'tests/**'
       - 'scripts/v013-c4-*.cjs'
       - 'scripts/simulate-progression.cjs'
+      - 'scripts/v013-c6-final-audit.cjs'
       - 'scripts/prepare-automatic-preview.mjs'
       - 'scripts/update-pages-preview.mjs'
       - 'package.json'
