@@ -74,9 +74,9 @@ regeneration from the canonical source, not a blind function deletion.
 |---|---|---|---|
 | Medium | `combat/automatic-talents.js` | Historical v8-style runtime is no longer loaded by active v15; retained as golden-master fixture | Retire or migrate historical tests that still use it, then delete the obsolete runtime (do not regress current v15 graph) |
 | High | `combat/talent-graph-next.js` | Options `legacyTopology`, `legacyBasic`, `legacyFocused`, `legacyV14` exist for building old trees, no longer selected by the v15 runtime | Compare current graph serialization and current-target tests before deleting branches |
-| High | `economy/v013-crafting.js`, `online/v013-expedition-contracts.js` | `LEGACY_RECIPES` and explicit `legacy` plan support old recipe/contract variants | Verify new recipe discovery, current contract generation and reward validation first |
-| Medium | `combat/v012-gear-stats.js`, `online/pvp-stats.mjs` | Read-only old Leather evasion, pre-hotfix Orb and old gear effects paths | Native freshly rolled item tests, combat/PvP parity, equality of new equipment formulas |
-| Medium | `online/v012-expedition-controller.js` | Versioned checkpoint branches and pre-v2 route handling | Current deterministic map and checkpoint restore fixtures, including complex 15-Realm routes |
+| Completed C2 | `economy/v013-crafting.js`, `online/v013-expedition-contracts.js` | Hidden Off-Hand Dagger recipe IDs and old contract plan acceptance removed | Validated current Recipe/Contract paths and forged-plan rejection in CI |
+| Completed C2 (legacy stat shims) | `combat/v012-gear-stats.js`, `online/pvp-stats.mjs` | Removed historical Leather missing-rating fallback and pre-hotfix Orb multiplier | Current gear budget and direct stored stats preserved; further full combat/PvP reconciliation remains a release check |
+| Completed C2 (restore branch) | `online/v012-expedition-controller.js` | Only current deterministic Dungeon state can be restored; old 15-Realm checkpoints rejected | Current Dungeon checkpoint integrity tests passed; historical generation code may still need separate runtime pruning |
 | Medium | `online/v012-save.js`, `online/model.mjs`, cloud services | Some `maxDungeon`, `chosen`, `onlineProgress` naming is historical, but actively used by current profile/PvP plumbing | Cross-service schema inventory; do not rename/drop without current account and leaderboard tests |
 | Medium | `docs/` | **12 generated files differ** when rebuilding Pages from current source, including Forge UI, save runtime, gear stats and enemy abilities | Build on intended publish branch, review generated diff, commit output and recheck live preview |
 | Low | `online/v012-uiux-tuning.css` and related stylesheets | Selectors for old talent graph parent DOM may be unused after iframe adoption | Real browser computed-style inspection across viewport widths |
@@ -162,9 +162,11 @@ release-coverage gap, not a gameplay regression verdict.
   automatic runtime. Full-node parity and representative combat output
   comparisons passed. Pruning old-only graph options and deleting the
   retained historical test fixture remain separate gated cleanup work.
-- **C2 — Economy and save aliases:** remove `LEGACY_RECIPES`, old treasure
-  and gear compatibility branches, plus pre-v2 checkpoint paths in small
-  independently tested commits. Keep **current** recovery and anti-duplication.
+- **C2 — Economy and save aliases (completed):** remove hidden obsolete
+  recipes and contract fallbacks; eliminate pre-hotfix Leather/Orb derived-stat
+  shims and retired recipe IDs; reject non-Dungeon controller checkpoints.
+  Require a fresh `c2-clean-sheet` save generation, preserve owner-bound revisions
+  and modern restore/anti-duplication. No deployment or live data mutation.
 - **C3 — UI and CSS:** migrate remaining obsolete root UI/CSS to active v15
   patterns, replace retired browser tests, then regenerate the `docs/`
   preview from canonical source and compare visually on desktop/mobile.
@@ -188,3 +190,16 @@ claiming that full definition is met yet.
 - Historical v0.12 treasure tests remain **2/5 passing, 3/5 failing** and are explicitly diagnostic rather than release gating.
 - Ephemeral Pages regeneration reported **16 differing tracked `docs/` paths**, compared with 12 at the prior checkpoint. **Nothing in `docs/` was committed or deployed.** The checked-in preview still needs review and regeneration before release.
 - **No balancing, published-version, save-data, merge or deploy changes.** Full clean-sheet completion remains pending C2–C4 and obsolete test cleanup.
+
+
+## Stage C2 verification — 19 November 2026
+
+- **Implementation branch:** `audit/v013`. Main changes are in commits `95d2ba7`, `5392124`, `d47f9a4`, `66da9d5`, `18b0821` and `afaec29`.
+- **Current blueprints:** `LEGACY_RECIPES`, hidden `green_offdagger`/`blue_offdagger` recipes and old Contract plan validation are removed. Current Blueprint discovery and reward provenance are still checked.
+- **Current equipment:** no pre-hotfix Leather missing-stat scaling, no old Orb +12% projection and no newly generated `orbSpellB4` flags. Modern Leather can legitimately have zero Evasion if the current gear budget does not roll it; no gear coefficients were deliberately changed.
+- **Current checkpoints:** `online/v012-expedition-controller.js` now accepts restore of version-2 current Dungeon checkpoints only. Retired old local potion-dose conversion and treasure normalization on resume have been removed; current session persistence and anti-duplication remain.
+- **Full clean-sheet reset:** `online/v012-save.js` now requires `saveGeneration: 'c2-clean-sheet'` in addition to schema version 13. A new local namespace isolates old browser saves, and the cloud coordinator has a **one-time generation reset for every project/account on next login once deployed**, using optimistic owner-bound revision checks and the Firestore-compatible v13 envelope. The old cloud record is replaced, not deleted in advance. **No server data were changed in this audit branch.** Inactive cloud accounts will not reset until they log in after deployment.
+- **Validation:** [GitHub Actions run 44598412476](https://github.com/Skinny-lfg/wanderer-game/actions/runs/44598412476), successfully verified at commit `afaec2989108efb86c1b186d6acc0c0eddb40438`. **68/68** current native save/regression tests, **80/80** Talent Graph tests, **69/69** C2 current Forge/Contract/Gear/Dungeon/Cloud tests and the Chromium browser smoke passed.
+- **Historical tests:** the retired v0.12 treasure suite remains **2/5 passing, 3/5 failing**, intentionally non-gating. Legacy test assumptions are not carried forward as gameplay requirements.
+- **Generated docs:** ephemeral `npm run build:pages` found **21 changed `docs/` paths** against the checked-in preview. Generated files were **not committed or published**; resolve in Stage C3.
+- **Next:** Stage C3 for remaining old-only UI/JS/CSS, generated preview sync and modern browser coverage. Stage C4 for the complete current release gate. The old 15-Realm generator and historical talent test fixture need separate reachability-based deletion; C2 removed obsolete restore paths, not every old source declaration.
