@@ -1,22 +1,4 @@
-/* Sub-panels retain their own existing fills, with a continuous square Gothic edge.
-   Avoid mask-composite, whose antialiasing caused the Safari corner seams. */
-.phase3IntegratedPreview :is(
-  .phase3Journey,.phase1BuildSummary,.phase2PassiveBar,.phase3Preparation,
-  .phase3Passives,.phase3ReturnBar,.phase3ResourcePanel,.phase3Bag,
-  .phase3PassiveTooltip,.phase3PassiveSlot,.phase3PassiveCard,.phase3PassiveInline,
-  .phase3BetweenHero,.phase3Routes,.phase3BetweenStats .metric,.phase3EventReadOnly,
-  .combatActiveBuffs,.phase3BetweenQuick,.phase3RealmActions,.phase3BetweenAffinity,
-  .phase3BetweenBag,.phase3PermanentStats,.phase3StatCell,.phase3ActiveAffinities,
-  .phase3CombatAffinityGroup,.phase3CombatBuild,.inspect,.delta,.gearSummary,
-  .setCompare,.sigilOfferCard,.forgePicker,.forgeSelectionSummary,
-  .forgeAffinityPreview,.forgeRankPreview,.c3TreasureResult,.cityCenterNpcArt,
-  .potionStash,.log,.combatBagDetails>summary,.phase3BetweenBag>summary,
-  .phase3EquipmentDetails>summary,.phase3EventCard,.stat,.token,.shopCard,
-  .merchantCompactCard,.potionOffer,.forgePickCard,.compareCard,.lootCard,
-  .phase3BagItem,.phase3BagEmpty,.rarityImageFrame,.slotTile,.miniSlot,.invItem,.runeSlot
-){
-  border-radius:0;clip-path:none;border-color:var(--ui4-chamfer-color,var(--ui4-gold-edge,#9e7d44));
-}
+
 .phase3IntegratedPreview :is(.merchantCompactCard[data-rarity],.compareCard[data-rarity],.lootCard[data-rarity],.phase3BagItem[data-rarity]){
   --ui4-chamfer-color:var(--item-rarity,var(--ui4-gold-edge,#9e7d44));
 }

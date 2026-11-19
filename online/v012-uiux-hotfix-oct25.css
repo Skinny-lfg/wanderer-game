@@ -195,29 +195,6 @@
   top:16px!important;
   object-position:center bottom!important;
 }
-
-/* Passive cards: explanations readable; only increased numbers are green. */
-.phase3IntegratedPreview .phase3PassiveCard .phase3PassiveDescription{
-  color:#f1e5da!important;font-size:clamp(14px,1.1vw,16px)!important;
-  line-height:1.52!important;
-  max-width:100%!important;
-}
-.phase3IntegratedPreview .phase3PassiveCard .phase3PassivePreview{
-  color:#d9cec5!important;
-  font-size:clamp(12px,1vw,14px)!important;
-  line-height:1.5!important;
-}
-.phase3IntegratedPreview .phase3PassivePreviewEntry{color:#dacbc2!important}
-.phase3IntegratedPreview .phase3PassivePreviewEntry>.phase3PassiveIncrease{
-  color:#7fe2aa!important;font-weight:800!important;
-}
-.phase3IntegratedPreview .phase3PassivePreviewEntry>.phase3PassiveValue{
-  color:#e8d4b4!important;font-weight:700!important;
-}
-.phase3IntegratedPreview .phase3PassiveSeparator{color:#8c7b7d!important}
-.phase3IntegratedPreview .phase3PassiveCard .phase3PassiveType{
-  font-size:12px!important;
-}
 /* Merchant now exposes the Stash Valuables sale control without leaving City Center. */
 .phase3IntegratedPreview .cityCenterLayout .inventoryValuables{
   margin-top:12px!important;min-width:0!important;

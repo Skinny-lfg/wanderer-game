@@ -270,12 +270,8 @@
   max-width:calc(100vw - 40px)!important;
   max-height:88dvh!important;overflow-y:auto!important;
 }
-.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveChoices{
-  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;
-}
 @media(max-width:700px){
   .phase3IntegratedPreview dialog[data-realm-passive]{width:calc(100vw - 16px)!important;max-width:calc(100vw - 16px)!important}
-  .phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveChoices{grid-template-columns:1fr;gap:7px}
 }
 /* Preserve the selected Realm image in the arena, with a readable but not black overlay. */
 .phase3IntegratedPreview .combatLayout .scene{

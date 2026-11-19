@@ -23,20 +23,10 @@
 @media(max-width:390px){.phase1Intro{grid-template-columns:1fr}.phase1Intro img{display:none}.phase1Offer{grid-template-columns:110px minmax(0,1fr)}.phase1Offer strong{font-size:14px}.phase1OfferMeta span{font-size:10px}}
 
 .phase1FamilyRow .affinityGlyph,.phase1OfferMeta .affinityGlyph{display:inline-block;vertical-align:middle;width:20px;height:20px;margin-right:3px;flex:none}
-
-/* Phase 2 — temporary passive draft uses existing palette, never global styles. */
-.phase1DraftCards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0}
-.phase1DraftCard{display:flex;flex-direction:column;align-items:flex-start;gap:10px;text-align:left;min-height:150px;padding:17px 15px;
- background:linear-gradient(150deg,#39232e,#1c1720);color:#f3e5d4;border:1px solid #795262;border-radius:12px}
-.phase1DraftCard strong{font:700 20px var(--font-head);color:#f1d4a3}
-.phase1DraftCard small{font-size:13px;line-height:1.55;color:#d8c3c1}
-.phase1DraftCard:hover,.phase1DraftCard:focus-visible{border-color:#edc785;outline:2px solid #c39967;outline-offset:2px}
-.phase1DraftCard .affinityGlyph{width:42px;height:42px;display:inline-block}
 .phase1BuildSummary{margin:12px 0;padding:9px 12px;border:1px solid #715063;background:#2b1b27;border-radius:8px}
 .phase1BuildSummary summary{cursor:pointer;color:#edcfa7;font-weight:700}
 .phase1BuildSummary p{margin:8px 0 2px;line-height:1.6}
 .phase2PassiveBar{margin:10px 0;padding:8px 12px;background:#291d2c;border:1px solid #654859;border-radius:9px;color:#e9cfb5;line-height:1.5;font-size:12px}
-@media(max-width:700px){.phase1DraftCards{grid-template-columns:1fr}.phase1DraftCard{min-height:unset;padding:13px}.phase1DraftCard strong{font-size:17px}}
 
 /* v0.12 Phase 3: scoped preparation and compact, readable dark-fantasy views. */
 .phase3IntegratedPreview #screen,.phase3IntegratedPreview #nav{min-width:0}
@@ -59,16 +49,6 @@
 .phase3Preparation button:disabled{opacity:.44;cursor:default}
 .phase3Passives{background:#201c29;border:1px solid #655368;border-radius:9px;padding:11px 14px;margin:12px 0}
 .phase3Passives summary{color:#ecd2a5;font-weight:700;cursor:pointer;min-height:25px}
-.phase3AffinityPassiveDetails{width:100%;margin:0;padding:0;text-align:left}
-.phase3AffinityPassiveDetails summary{min-height:34px;display:flex;align-items:center;justify-content:space-between;gap:5px;cursor:pointer;color:#dfc49b;font:500 12px/1.25 var(--font-head);list-style:none}
-.phase3AffinityPassiveDetails summary::-webkit-details-marker{display:none}
-.phase3AffinityPassiveDetails summary::after{content:"▾";flex:none;color:#cda76e;font-size:14px}
-.phase3AffinityPassiveDetails[open] summary::after{content:"▴"}
-.phase3AffinityPassiveDetails summary b{color:#f1d4a3;font-weight:700}
-.phase3AffinityPassiveDetails[open]{max-height:150px;overflow:auto;overscroll-behavior:contain}
-.phase3AffinityPassiveDetails p{margin:5px 0;color:#d8c8c3;font:400 12px/1.35 var(--font-body)}
-.phase3AffinityPassiveDetails p b{color:#f1d4a3}
-.phase3AffinityPassiveDescriptions p:first-child{margin-top:0}
 .phase3Passives ul{list-style:none;padding:0;margin:10px 0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
 .phase3Passives li{background:#292232;border:1px solid #634e65;border-radius:8px;padding:9px;min-width:0}
 .phase3Passives li b{display:block;color:#f1d9bd;font-size:12px}
@@ -117,8 +97,7 @@
 .phase2RealmOffer{display:flex;flex-direction:column;gap:6px;min-width:0}
 .phase2RealmOffer>.phase1Offer{width:100%;height:100%}
 .phase2RealmOffer .phase2Selected{outline:2px solid var(--gold)}
-.phase2PassiveIcons{display:inline-flex;align-items:center;gap:4px}
-.phase2PassiveIcons .affinityGlyph,.phase1DraftCard>.affinityGlyph{width:28px;height:28px;flex:none}
+.phase2PassiveIcons{display:inline-flex;align-items:center;gap:4px}.phase2PassiveIcons .affinityGlyph{width:28px;height:28px;flex:none}
 #phase2EnterRealm{margin-top:12px;min-height:44px;width:100%}
 
 /* v0.12.0 Camp: reuse native art, ten-slot paper doll, inventory and vendors. */
