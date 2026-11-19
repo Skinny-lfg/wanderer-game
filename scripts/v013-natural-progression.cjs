@@ -473,11 +473,11 @@ function consolidateStash(a,profile,reserve=4){
  return action;
 }
 function prepareCamp(a,profile,level,decisionModel='risk-aware',options={}){
- const actions={talents:[],resets:[],elementChoices:[],prepared:null,equipped:[],bought:[],crafted:[],upgraded:[],potions:[],runes:[],storage:[],soldTreasures:false,restocks:0,salvagedGrey:0,salvageFragments:0};
+ const actions={talents:[],resets:[],elementChoices:[],prepared:null,equipped:[],bought:[],crafted:[],upgraded:[],reinforced:[],refined:[],potions:[],runes:[],storage:[],soldTreasures:false,restocks:0,salvagedGrey:0,salvageFragments:0};
  const s=a.state();a.potions.inventory();
  if(s.pendingRuneReward?.options?.length){
   const options=s.pendingRuneReward.options;
-  const choice=options.find(x=>/vitality|ward|aegis/i.test(x.kind||x.name||x.id))||options[0];
+  const choice=chooseRuneReward(options,profile);
   if(a.claimRune(choice.id))actions.runes.push(choice.name||choice.id);
  }
  for(let i=0;i<3&&a.results().review;i++)a.exitResult();
@@ -512,37 +512,16 @@ function prepareCamp(a,profile,level,decisionModel='risk-aware',options={}){
  actions.elementChoices.push(...talentInvestment.elements);
  actions.prepared=prepareEarnedAbility(a,profile);
  if(decisionModel==='risk-aware'){
+  actions.runes.push(...manageEarnedRunes(a,profile));
+  actions.refined.push(...refineEarnedReagents(a,profile,level));
   const investment=investEarnedGear(a,profile,level);
   actions.crafted.push(...investment.crafted);
   actions.upgraded.push(...investment.upgraded);
+  actions.reinforced.push(...investment.reinforced);
  }
+ actions.potions.push(...buyEarnedPotions(a,profile,level));
  if(profile.shop&&a.economyCanAct()){
-  // The game's first Apothecary visit constructs a native 4-item stock. No
-  // custom availability odds, injected potions, discounted prices or free Gold.
-  if(!s.apothecary)s.apothecary=a.potions.shop(level);
-  const manaUseful=(a.baseStats()?.mana||0)>0;
-  const priority=['health','ironhide','barrier','scout','trail','purifying','fate',...(manaUseful?['mana','arcane']:[])];
   const owns=kind=>(s.consumables?.[kind]||0)>0;
-  function affordable(kind){
-   return s.apothecary?.stock?.find(p=>p.kind===kind&&p.price<=s.gold)||null;
-  }
-  // Prefer an actual Health dose for early progress over marginal merchant
-  // equipment. The remaining budget can still improve the permanent loadout.
-  for(const kind of priority){
-   if((s.potionSelection||[]).length>=3)break;
-   if(owns(kind)||s.potionSelection.includes(kind))continue;
-   const offer=affordable(kind);
-   if(offer&&a.potions.buy(offer.id))actions.potions.push({kind,cost:offer.price,reason:'reserve'});
-  }
-  // One sensible restock when Gold covers both restock AND the desired dose.
-  // In E1 with little money, conserve Gold rather than blindly rerolling.
-  if(!owns('health')&&s.apothecary&&s.gold>=s.apothecary.refreshCost+17){
-   if(a.potions.reroll()){
-    actions.restocks++;
-    const heal=affordable('health');
-    if(heal&&a.potions.buy(heal.id))actions.potions.push({kind:'health',cost:heal.price,reason:'restock'});
-   }
-  }
   // Spend spare Gold on permanent upgrade only if the expected item-stat gain
   // outweighs the real opportunity cost of an emergency 14+ Gold potion.
   if(!s.merchant)a.rollShop();
@@ -563,15 +542,8 @@ function prepareCamp(a,profile,level,decisionModel='risk-aware',options={}){
    }
   }
  }
- // Fill the real 3-slot loadout from already-owned doses. Physical characters
- // do not waste a slot on Mana. We do not synthesize consumable availability.
- const manaUseful=(a.baseStats()?.mana||0)>0;
- const priorities=['health','ironhide','barrier','scout','trail','purifying','fate',...(manaUseful?['mana','arcane']:[])];
- for(const kind of priorities){
-  if((s.potionSelection||[]).length>=3)break;
-  if(!(s.potionSelection||[]).includes(kind)&&(s.consumables?.[kind]||0)>0&&a.potions.select(kind))
-   actions.potions.push({kind,owned:true});
- }
+ // Re-rank all genuinely owned doses and use the real 3-slot Camp UI API.
+ actions.potions.push(...selectEarnedPotions(a,profile));
  if(decisionModel==='risk-aware'){
   actions.storage.push(consolidateStash(a,profile));
   actions.equipped.push(...equipEarned(a,profile,false));
@@ -869,7 +841,7 @@ function resolveEvent(a,profile){
  }
  throw Error('Native event could not resolve: '+event.id);
 }
-function clearResults(a){
+function clearResults(a,profile){
  const c=a.controller();
  for(let i=0;i<3&&(a.state().run?.status==='cleared'||a.results().eventExitPending);i++){
   if(!a.exitResult())break;
@@ -877,7 +849,7 @@ function clearResults(a){
  if(c.state.stage==='finished'||c.state.stage==='failed'){
   if(a.state().pendingRuneReward?.options?.length){
    const opts=a.state().pendingRuneReward.options;
-   const option=opts.find(x=>/vitality|ward|aegis/i.test(x.id||x.name||''))||opts[0];
+   const option=chooseRuneReward(opts,profile||PROFILES.cautious);
    a.claimRune(option.id);
   }
   for(let i=0;i<3&&a.results().review;i++)a.exitResult();
@@ -904,7 +876,7 @@ function playDungeon(a,level,profile,opts,decisionModel='risk-aware'){
   stepsStart:g.dungeon.steps,bossReached:false,extracted:false,status:null,error:null,
   prepAtBoss:null,prepFinal:null};
  for(let iteration=0;iteration<opts.maxRooms&&g.stage==='choice';iteration++){
-  clearResults(a);
+  clearResults(a,profile);
   if(g.stage!=='choice')break;
   if(g.dungeon.boonOffer){
    let offer=g.dungeon.boonOffer;
@@ -960,7 +932,7 @@ function playDungeon(a,level,profile,opts,decisionModel='risk-aware'){
   if(a.events.run()?.event){
    const event=resolveEvent(a,profile);
    report.events.push({room:next.room,...event});
-   clearResults(a);continue;
+   clearResults(a,profile);continue;
   }
   if(!a.state().run||a.state().run.status!=='fight'){
    report.error='Entered room without native fight/event at '+next.room;break;
@@ -982,14 +954,14 @@ function playDungeon(a,level,profile,opts,decisionModel='risk-aware'){
    ...(node.kind==='elite'?{marked:next.room===card.objective}:{})});
   if(fight.timedOut){report.error='Native combat timeout';break;}
   if(fight.died)break;
-  clearResults(a);
+  clearResults(a,profile);
  }
  if(g.stage==='choice'&&!report.extracted&&!report.error){
   if(a.checkpoint.extract())report.extracted=true;
   else report.error='Iteration cap reached without a legal native extraction';
  }
  report.prepFinal=JSON.parse(JSON.stringify(g.dungeon?.foundationState?.bossPreparation||{}));
- clearResults(a);
+ clearResults(a,profile);
  // Native extraction uses controller.abandon(), marking the session as failed.
  // Trust explicit native extraction success over the controller's terminal flag.
  report.status=g.stage==='finished'?'victory':report.extracted?'extracted':report.error?'error':g.stage==='failed'?'defeat':g.stage;
