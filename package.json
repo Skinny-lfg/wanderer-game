@@ -64,7 +64,9 @@
     "test:v013:stage97": "node --test tests/v013-combat-balance-audit.test.cjs",
     "diagnose:v013:stage97": "node scripts/v013-combat-balance-audit.cjs",
     "test:v013:stage98": "node --test tests/v013-stage98-balance-campaign.test.cjs",
-    "diagnose:v013:stage98": "node scripts/v013-stage98-balance-campaign.cjs"
+    "diagnose:v013:stage98": "node scripts/v013-stage98-balance-campaign.cjs",
+    "test:v013:gravecaller-target": "node --test tests/v013-gravecaller-target-study.test.cjs",
+    "diagnose:v013:gravecaller-target": "node scripts/v013-gravecaller-target-study.cjs"
   },
   "dependencies": {
     "firebase": "11.10.0"

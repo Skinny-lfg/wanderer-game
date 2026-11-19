@@ -403,13 +403,15 @@ function fightNatural(a,profile,tickLimit){
  const r=a.state().run;
  if(!r||r.status!=='fight')throw Error('Combat entry missing');
  const start=r.hp,first=r.encounterLeader||r.enemy,initial=r.totalMobCount||r.initialMobCount||r.enemies?.length||1;
- let ticks=0,switches=0,minimum=r.maxhp>0?r.hp/r.maxhp:0;
+ let ticks=0,switches=0,minionFocusTicks=0,minionFocusSwitches=0,minimum=r.maxhp>0?r.hp/r.maxhp:0;
  while(r.status==='fight'&&a.controller().state.stage==='combat'&&r.hp>0&&ticks<tickLimit){
   // A human needs time to notice add waves; target switches are throttled.
   if(ticks%8===0){
    const next=S.selectTarget(r,profile.target);
-   if(next&&next.hp>0&&next!==r.enemy){r.enemy=next;r.tEnemy=next.groupClock;switches++;}
+   if(next&&next.hp>0&&next!==r.enemy){r.enemy=next;r.tEnemy=next.groupClock;switches++;
+    if(next.stage83Summoned&&next.stage83Summoner==='elite')minionFocusSwitches++;}
   }
+  if(r.enemy?.hp>0&&r.enemy.stage83Summoned&&r.enemy.stage83Summoner==='elite')minionFocusTicks++;
   a.tick();ticks++;
   minimum=Math.min(minimum,Math.max(0,r.hp)/(r.maxhp||1));
  }
@@ -418,7 +420,8 @@ function fightNatural(a,profile,tickLimit){
   kind:first?.boss?'boss':first?.miniboss?'elite':'combat',initialEnemies:initial,
   status:r.status,died:r.hp<=0||stage==='failed',
   won:r.status==='cleared'&&stage!=='failed',timedOut:r.status==='fight'&&ticks>=tickLimit,
-  seconds:round(ticks*.11),targetSwitches:switches,hpStart:round(start),hpEnd:round(Math.max(0,r.hp)),
+  seconds:round(ticks*.11),targetSwitches:switches,minionFocusSwitches,
+  minionFocusSeconds:round(minionFocusTicks*.11),hpStart:round(start),hpEnd:round(Math.max(0,r.hp)),
   hpMax:round(r.maxhp),minHpPct:round(minimum*100,1),
   damageTaken:Math.round(r.metrics?.damageTaken||0),
   damageDealt:Math.round(r.metrics?.damageDealt||0),
