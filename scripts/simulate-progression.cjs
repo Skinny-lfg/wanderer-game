@@ -45,7 +45,7 @@ function parseArgs(args){
  for(const arg of args){
   const match=/^--([a-z-]+)=(.*)$/.exec(arg);if(!match)throw Error('Expected --option=value: '+arg);
   const [,key,value]=match;
-  if(key==='mode'&&['encounter','dungeon','both','traits','bossmods','bossprep','conditions','bosses','enemies','elites'].includes(value))result.mode=value;
+  if(key==='mode'&&['encounter','dungeon','both','traits','bossmods','bossprep','conditions','bosses','enemies','roles','elites'].includes(value))result.mode=value;
   else if(key==='levels')result.levels=parseIntegers(value,'levels');
   else if(key==='seeds')result.seeds=parseIntegers(value,'seeds');
   else if(key==='builds'){
@@ -58,7 +58,7 @@ function parseArgs(args){
   else if(key==='gear'&&['current','previous'].includes(value))result.gear=value;
   else if(key==='affinities'){result.affinities=[...new Set(value.split(','))];if(!result.affinities.length||result.affinities.some(f=>!AFFINITIES.includes(f)))throw Error('Invalid affinities: '+value);}
   else if(key==='risks'){result.risks=[...new Set(value.split(',').map(Number))];if(!result.risks.length||result.risks.some(r=>!RISKS.includes(r)))throw Error('Invalid risks: '+value);}
-  else if(key==='group-sizes'){result.groupSizes=parseIntegers(value,'group-sizes');if(result.groupSizes.some(n=>n<2||n>22))throw Error('Group sizes must be 2–22');}
+  else if(key==='group-sizes'){result.groupSizes=parseIntegers(value,'group-sizes');if(result.groupSizes.some(n=>n<1||n>22))throw Error('Group sizes must be 1–22');}
   else if(key==='boons'&&['none','first'].includes(value))result.boons=value;
   else if(key==='contracts'&&['none','first'].includes(value))result.contracts=value;
   else if(key==='target-policy'&&['focus','mechanics','adds'].includes(value))result.targetPolicy=value;
@@ -68,7 +68,7 @@ function parseArgs(args){
   else throw Error('Unsupported option: '+arg);
  }
  const base=result.levels.length*result.seeds.length*result.builds.length;
- const factor=result.mode==='bosses'?result.affinities.length*result.risks.length:result.mode==='enemies'?result.groupSizes.length:result.mode==='bossmods'?result.affinities.length*result.risks.length*(1+F.CATALOG.bossModifiers.length):result.mode==='traits'?1+F.CATALOG.encounterTraits.length:result.mode==='bossprep'?4:result.mode==='both'?3:result.mode==='encounter'||result.mode==='conditions'?3:1;
+ const factor=result.mode==='bosses'?result.affinities.length*result.risks.length:['enemies','roles'].includes(result.mode)?result.groupSizes.length*(result.mode==='roles'?result.affinities.length:1):result.mode==='bossmods'?result.affinities.length*result.risks.length*(1+F.CATALOG.bossModifiers.length):result.mode==='traits'?1+F.CATALOG.encounterTraits.length:result.mode==='bossprep'?4:result.mode==='both'?3:result.mode==='encounter'||result.mode==='conditions'?3:1;
  if(base*factor>3000)throw Error('Simulation matrix too large (maximum 3000 native scenarios)');
  return result;
 }
@@ -209,13 +209,15 @@ function fight(a,c,limit,targetPolicy='focus'){
  const profile=A.profileForStyle(leader?.bossStyle),sourceActors=[...(r.enemies||[r.enemy]),...(r.groupReserve||[])].filter(Boolean);
  const initialRoles=Object.fromEntries(['minion','tank','skirmisher','caster','boss','elite'].map(role=>[role,sourceActors.filter(e=>(e.boss?'boss':e.miniboss?'elite':e.role)===role).length]));
  const initialEnemies=r.initialMobCount||r.totalMobCount||sourceActors.length;
+ const roster=sourceActors.map(e=>({name:e.name,role:e.boss?'boss':e.miniboss?'elite':e.role,ability:e.stage81?.name||null,affinity:e.stage81?.family||null,attackEvery:e.attackEvery,maxHp:e.maxhp,attack:e.atk,defense:e.def}));
+ const initialVisible=(r.enemies||[r.enemy]).filter(e=>e?.hp>0).length,initialReserve=(r.groupReserve||[]).filter(e=>e?.hp>0).length;
  let peakLiving=sourceActors.filter(e=>e.hp>0).length,peakVisible=(r.enemies||[r.enemy]).filter(e=>e?.hp>0).length;
  let ticks=0,targetSwitches=0,minimumHp=r.maxhp>0?r.hp/r.maxhp:0;
  while(r.status==='fight'&&c.state.stage==='combat'&&r.hp>0&&ticks<limit){
   const next=selectTarget(r,targetPolicy);if(next&&next!==r.enemy&&next.hp>0){r.enemy=next;r.tEnemy=next.groupClock;targetSwitches++;}
   a.tick();ticks++;minimumHp=Math.min(minimumHp,Math.max(0,r.hp)/(r.maxhp||1));peakLiving=Math.max(peakLiving,(r.enemies||[r.enemy]).filter(e=>e?.hp>0).length+(r.groupReserve||[]).filter(e=>e?.hp>0).length);peakVisible=Math.max(peakVisible,(r.enemies||[r.enemy]).filter(e=>e?.hp>0).length);}
  const metrics=r.metrics||{},died=c.state.stage==='failed'||r.hp<=0,timedOut=!died&&r.status==='fight'&&ticks>=limit;
- const row={tier:startedTier,type:leader?.boss?'boss':leader?.miniboss?'elite':'combat',bossId:profile?.id||null,bossAffinity:profile?Object.keys(A.PROFILES).find(f=>A.PROFILES[f]===profile):null,bossName:profile?.name||null,bossStyle:leader?.bossStyle||null,eliteType:leader?.eliteType||null,initialRoles,peakLivingEnemies:peakLiving,peakVisibleEnemies:peakVisible,targetPolicy,targetSwitches,traitId:r.encounterTraitId||null,traitRegrowthHealing:Math.round(metrics.traitRegrowthHealing||0),traitDeathPulse:Math.round(metrics.traitDeathPulse||0),bossModifierIds:[...(r.bossModifierIds||[])],bossPulseTriggers:Math.round(metrics.bossPulseTriggers||0),bossFrenzyTriggers:Math.round(metrics.bossFrenzyTriggers||0),bossPreparation:r.bossPreparation?JSON.parse(JSON.stringify(r.bossPreparation)):null,status:died?'died':timedOut?'timeout':r.status,timedOut,died,won:!died&&r.status==='cleared',seconds:+(ticks*.11).toFixed(2),ticks,hpStart:+startHp.toFixed(2),hpEnd:+Math.max(0,r.hp).toFixed(2),hpMax:r.maxhp,mpStart:+startMp.toFixed(2),mpEnd:+Math.max(0,r.mp).toFixed(2),mpMax:r.maxmp,minHpPct:+(minimumHp*100).toFixed(1),conditionId:r.conditionId||null,conditionMarked:!!r.conditionMarked,conditionBarrierGranted:Math.round(r.conditionBarrierGranted||0),conditionRiteTriggers:Math.round(metrics.conditionRiteTriggers||0),damageDealt:Math.round(metrics.damageDealt||0),damageTaken:Math.round(metrics.damageTaken||0),absorbed:Math.round(metrics.absorbed||0),manaSpent:Math.round(metrics.manaSpent||0),initialEnemies,enemies:r.totalMobCount||initialEnemies,reinforcementsSpawned:Math.max(0,(r.totalMobCount||initialEnemies)-initialEnemies),bossSummons:Math.round(metrics.bossSummons||0),bossHealing:Math.round(metrics.bossHealing||0),bossMinionDeaths:Math.round(metrics.bossMinionDeaths||0),bossWards:Math.round(metrics.bossWards||0),bossArcanePulses:Math.round(metrics.bossArcanePulses||0),bossCastInterruptions:Math.round(metrics.bossCastInterruptions||0),bossNodeDestroyed:Math.round(metrics.bossNodeDestroyed||0),enemyAbilityCasts:Math.round(metrics.enemyAbilityCasts||0),eliteSummons:Math.round(metrics.eliteSummons||0),bossCastPreparations:Math.round(metrics.bossCastPreparations||0)};
+ const row={tier:startedTier,type:leader?.boss?'boss':leader?.miniboss?'elite':'combat',bossId:profile?.id||null,bossAffinity:profile?Object.keys(A.PROFILES).find(f=>A.PROFILES[f]===profile):null,bossName:profile?.name||null,bossStyle:leader?.bossStyle||null,eliteType:leader?.eliteType||null,initialRoles,roster,initialVisible,initialReserve,peakLivingEnemies:peakLiving,peakVisibleEnemies:peakVisible,targetPolicy,targetSwitches,traitId:r.encounterTraitId||null,traitRegrowthHealing:Math.round(metrics.traitRegrowthHealing||0),traitDeathPulse:Math.round(metrics.traitDeathPulse||0),bossModifierIds:[...(r.bossModifierIds||[])],bossPulseTriggers:Math.round(metrics.bossPulseTriggers||0),bossFrenzyTriggers:Math.round(metrics.bossFrenzyTriggers||0),bossPreparation:r.bossPreparation?JSON.parse(JSON.stringify(r.bossPreparation)):null,status:died?'died':timedOut?'timeout':r.status,timedOut,died,won:!died&&r.status==='cleared',seconds:+(ticks*.11).toFixed(2),ticks,hpStart:+startHp.toFixed(2),hpEnd:+Math.max(0,r.hp).toFixed(2),hpMax:r.maxhp,mpStart:+startMp.toFixed(2),mpEnd:+Math.max(0,r.mp).toFixed(2),mpMax:r.maxmp,minHpPct:+(minimumHp*100).toFixed(1),conditionId:r.conditionId||null,conditionMarked:!!r.conditionMarked,conditionBarrierGranted:Math.round(r.conditionBarrierGranted||0),conditionRiteTriggers:Math.round(metrics.conditionRiteTriggers||0),damageDealt:Math.round(metrics.damageDealt||0),damageTaken:Math.round(metrics.damageTaken||0),absorbed:Math.round(metrics.absorbed||0),manaSpent:Math.round(metrics.manaSpent||0),initialEnemies,enemies:r.totalMobCount||initialEnemies,reinforcementsSpawned:Math.max(0,(r.totalMobCount||initialEnemies)-initialEnemies),bossSummons:Math.round(metrics.bossSummons||0),bossHealing:Math.round(metrics.bossHealing||0),bossMinionDeaths:Math.round(metrics.bossMinionDeaths||0),bossWards:Math.round(metrics.bossWards||0),bossArcanePulses:Math.round(metrics.bossArcanePulses||0),bossCastInterruptions:Math.round(metrics.bossCastInterruptions||0),bossNodeDestroyed:Math.round(metrics.bossNodeDestroyed||0),enemyAbilityCasts:Math.round(metrics.enemyAbilityCasts||0),eliteSummons:Math.round(metrics.eliteSummons||0),bossCastPreparations:Math.round(metrics.bossCastPreparations||0)};
  return row;
 }
 function shortestRoute(card){
@@ -239,7 +241,7 @@ function resolveEvent(a){
 // is deliberately staged in a first-ring room. Use dungeon() for actual travel/extraction.
 function encounter(level,build,seed,kind,opts,forcedTrait=undefined,forcedBossMod=undefined,forcedFamily=undefined,desiredRisk=undefined,groupSize=undefined){
  if(!['normal','boss','elite'].includes(kind))throw Error('Unknown controlled encounter '+kind);
- if(groupSize!==undefined&&(!Number.isSafeInteger(groupSize)||groupSize<2||groupSize>22||kind!=='normal'))throw Error('Invalid controlled group size');
+ if(groupSize!==undefined&&(!Number.isSafeInteger(groupSize)||groupSize<1||groupSize>22||kind!=='normal'))throw Error('Invalid controlled group size');
  const {a,c,g,card,gearE,resolvedSeed,seedShift,allocatedPoints}=prepare(level,build,seed,opts,desiredRisk,forcedFamily);
   const gearFingerprint=equipmentFingerprint(a);
  const candidate=card.edges.filter(([x])=>x===0).map(([,y])=>y).find(n=>card.nodes[n]?.kind==='combat');
@@ -261,8 +263,8 @@ function encounter(level,build,seed,kind,opts,forcedTrait=undefined,forcedBossMo
  if(run.tier!==level)throw Error('Incorrect encounter tier '+run.tier+' vs '+level);
  if(kind==='boss'&&run.encounterLeader?.bossStyle!==A.profileFor(card.family).style)throw Error('Native Boss mismatch for '+card.family);
  const result=fight(a,c,opts.tickLimit,opts.targetPolicy);
- const mode=forcedBossMod!==undefined?'bossmods':forcedTrait!==undefined?'traits':opts.mode==='bosses'?'bosses':opts.mode==='enemies'?'enemies':opts.mode==='elites'?'elites':'encounter';
- const label=forcedBossMod!==undefined?(forcedBossMod||'baseline'):forcedTrait!==undefined?(forcedTrait||'baseline'):mode==='bosses'?card.family:mode==='enemies'?'swarm-'+count:kind;
+ const mode=forcedBossMod!==undefined?'bossmods':forcedTrait!==undefined?'traits':opts.mode==='bosses'?'bosses':['enemies','roles'].includes(opts.mode)?opts.mode:opts.mode==='elites'?'elites':'encounter';
+ const label=forcedBossMod!==undefined?(forcedBossMod||'baseline'):forcedTrait!==undefined?(forcedTrait||'baseline'):mode==='bosses'?card.family:['enemies','roles'].includes(mode)?'swarm-'+count:kind;
  return {mode,kind:label,level,build:build.id,seed,resolvedSeed,seedShift,gearE,gearFingerprint,gearTier:P.gearTier(gearE).name,
   gearRarity:opts.rarity,runes:opts.runes,pointsBudget:opts.points,pointsSpent:allocatedPoints,
   realm:card.name,affinity:card.family,risk:card.risk,nativeEncounter:kind,groupSize:count,unlocked:level,...result};
@@ -337,7 +339,9 @@ function summarize(rows){
   groups.push({level:first.level,build:first.build,mode:first.mode,kind:first.kind||'all',targetPolicy:first.targetPolicy||'focus',affinity:first.bossAffinity||first.affinity||null,risk:first.risk??null,
    n:selected.length,wins,deaths:selected.filter(r=>r.died||r.stage==='failed').length,winPct:+(100*wins/selected.length).toFixed(1),
    errors:selected.filter(r=>r.error).length,timeouts:selected.filter(r=>r.timedOut).length,meanSeconds:mean('seconds'),meanDamageTaken:mean('damageTaken'),
-   meanMinHpPct:mean('minHpPct'),meanBossHealing:mean('bossHealing'),meanBossSummons:mean('bossSummons'),meanEnemyAbilityCasts:mean('enemyAbilityCasts')});
+   meanMinHpPct:mean('minHpPct'),meanBossHealing:mean('bossHealing'),meanBossSummons:mean('bossSummons'),meanEnemyAbilityCasts:mean('enemyAbilityCasts'),
+    roleComposition:Object.fromEntries(['minion','tank','skirmisher','caster'].map(role=>[role,selected.reduce((n,r)=>n+(r.initialRoles?.[role]||0),0)])),
+    uniqueAbilities:[...new Set(selected.flatMap(r=>(r.roster||[]).map(e=>e.ability).filter(Boolean)))].sort()});
  }
  return groups;
 }
@@ -365,6 +369,8 @@ function simulate(opts){
    add('encounter',kind,level,build,seed,()=>encounter(level,build,seed,kind,opts));
   if(opts.mode==='enemies')for(const count of opts.groupSizes)
    add('enemies','swarm-'+count,level,build,seed,()=>encounter(level,build,seed,'normal',opts,undefined,undefined,undefined,undefined,count));
+  if(opts.mode==='roles')for(const affinity of opts.affinities)for(const count of opts.groupSizes)
+   add('roles','swarm-'+count,level,build,seed,()=>encounter(level,build,seed,'normal',opts,undefined,undefined,affinity,undefined,count),affinity);
   if(opts.mode==='elites')
    add('elites','elite',level,build,seed,()=>encounter(level,build,seed,'elite',opts));
   if(opts.mode==='bosses')for(const affinity of opts.affinities)for(const risk of opts.risks)
@@ -397,11 +403,16 @@ function simulate(opts){
  const notes=[];
  if(opts.mode==='bosses'&&opts.affinities.some(x=>!summary.exposures.bossAffinities.includes(x)))notes.push('Not every requested Boss Affinity entered combat. Check errors and scenario seed search.');
  if(opts.points>0)notes.push('Fixed '+opts.points+'-point Talent Tree debug build is synthetic at all E levels, not earned account XP. Compare an explicit --points=0 baseline for E1.');
- if(['bosses','bossmods','enemies','elites','encounter','traits','bossprep'].includes(opts.mode))notes.push('Controlled first-ring encounter injection: uses native combat but not natural room placement, 15-Realm progression or earned equipment.');
+ if(['bosses','bossmods','enemies','roles','elites','encounter','traits','bossprep'].includes(opts.mode))notes.push('Controlled first-ring encounter injection: uses native combat but not natural room placement, 15-Realm progression or earned equipment.');
  if(['dungeon','conditions','both'].includes(opts.mode))notes.push('Natural Dungeon route uses shortest accessible path and explicit Boon/Contract selection policies; potions are not automatically spent.');
- if(rows.length<100)notes.push('Small samples: do not infer final balance from win rates without larger seed cohorts and player tests.');
+ if(opts.mode==='roles'){
+   const observed=new Set(rows.filter(r=>!r.error).map(r=>r.affinity+'|'+r.groupSize));
+   for(const affinity of opts.affinities)for(const count of opts.groupSizes)if(!observed.has(affinity+'|'+count))notes.push('Missing role scenario: '+affinity+' '+count+' enemies');
+   notes.push('Native roster is seeded, not forced. Validate per-role sampling before balance conclusions.');
+  }
+  if(rows.length<100)notes.push('Small samples: do not infer final balance from win rates without larger seed cohorts and player tests.');
  const fingerprint=sourceFingerprint();
- return {schemaVersion:3,engine:'Wanderer v0.13 native combat/dungeon + Stage 7 economy + Stages 8.0–8.4 actors and abilities',mode:opts.mode,
+ return {schemaVersion:4,engine:'Wanderer v0.13 native combat/dungeon + Stage 7 economy + Stages 8.0–8.4 actors and abilities',mode:opts.mode,
   assumptions:{levels:opts.levels,seeds:opts.seeds,builds:opts.builds,pointsAvailable:opts.points,rarity:opts.rarity,gear:opts.gear,runes:opts.runes,
    affinities:opts.affinities,risks:opts.risks,groupSizes:opts.groupSizes,boons:opts.boons,contracts:opts.contracts,targetPolicy:opts.targetPolicy,mode:opts.mode,potions:'not automatically selected',
    talents:'Tree v15, synthetic fixed budget; real E1 starts with zero points. XP rewards in natural Dungeon are reported but cannot be spent during this single simulated route.',
