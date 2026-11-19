@@ -286,7 +286,7 @@ function phase1WaveWon(){
    const spread=globalThis.WandererV013ExpeditionBoons?.spreadOnDeath(r,enemy,ports.synchronizeDots,(target,kind)=>ports.combatLinkEffect?.(r,kind,enemy,[target]))||0;
    if(spread)ports.addLog('Rotbound Echo spreads a lingering curse to '+spread+' '+(spread===1?'enemy':'enemies')+'.','spell');
    if(ports.state.automaticTalents?.nodes?.includes('plague_spread')){const bleed=enemy.dots?.bleed?.find(dot=>!dot.spread),rot=enemy.v012Rot?.find(dot=>!dot.spread);for(const target of r.enemies.filter(mob=>mob.hp>0).concat(r.groupReserve||[]).slice(0,2)){if(bleed){target.dots.bleed??=[];if(target.dots.bleed.length<12){target.dots.bleed.push({damage:Math.max(1,Math.round(bleed.damage*.5)),remaining:Math.min(2,bleed.remaining),spread:true});ports.combatLinkEffect?.(r,'bleed',enemy,[target]);}ports.synchronizeDots(target);}if(rot){target.v012Rot??=[];if(target.v012Rot.length<6){target.v012Rot.push({damage:Math.max(1,Math.round(rot.damage*.5)),remaining:Math.min(2,rot.remaining),ticks:0,spread:true});ports.combatLinkEffect?.(r,'rot',enemy,[target]);}}}}
-    ports.legendaryKill(r);if(ports.phase1Build)WandererV012Buildcraft.onKill(ports.phase1Build,{...ports.phase2Context(r),waveComplete:!r.groupReserve?.length&&WandererV012CombatCore.groupComplete(r.enemies)&&enemy===dead[dead.length-1]});}
+    if(ports.phase1Build)WandererV012Buildcraft.onKill(ports.phase1Build,{...ports.phase2Context(r),waveComplete:!r.groupReserve?.length&&WandererV012CombatCore.groupComplete(r.enemies)&&enemy===dead[dead.length-1]});}
   let reinforcements=0;
   for(const fallen of dead){const replacement=r.groupReserve?.shift();if(!replacement)continue;const slot=Math.max(0,Number(fallen.groupSlot)||0),index=r.enemies.indexOf(fallen);if(index<0)continue;replacement.groupSlot=slot;replacement.groupClock=traits?traits.initialClock(replacement,slot):Math.max(0,replacement.attackEvery-(.9+slot*.3));globalThis.WandererV013EnemyAbilities?.onEnter(replacement,r.combatSeconds||0);replacement.isReinforcement=true;replacement.reinforcementArrival=true;r.enemies[index]=replacement;reinforcements++;}
   const next=selectedTarget?.hp>0&&r.enemies.includes(selectedTarget)?selectedTarget:r.enemies.find(enemy=>enemy.hp>0&&!enemy.isReinforcement)||WandererV012CombatCore.nextGroupTarget(r.enemies);if(next){r.enemy=next;if(reinforcements){ports.addLog(reinforcements+' reinforcement'+(reinforcements===1?' arrives':'s arrive')+' in open position'+(reinforcements===1?'':'s')+'.','good');if(!ports.phase3RefreshGroupEnemies?.())ports.renderCombat();}else if(!ports.phase3RetargetGroup?.())ports.renderCombat();return true;}
@@ -294,7 +294,7 @@ function phase1WaveWon(){
  clearInterval(ports.clock);
  if(ports.PHASE1_PREVIEW){const token=ports.phase5Snapshot.expedition.attempts+':'+r.phase1Plane+':'+r.enc;if(ports.phase5Snapshot.expedition.awardKeys.includes(token)||ports.phase4WaveKeys.includes(token)){ports.phase5Fail(Error('Duplicate encounter reward rejected'));return;}ports.phase4WaveKeys.push(token);}
  r.phase4AwardedWave=r.enc;
- if(!r.enemies){ports.legendaryKill(r);
+ if(!r.enemies){
  if(ports.phase1Build)WandererV012Buildcraft.onKill(ports.phase1Build,ports.phase2Context(r));}
  // Rewards belong to the encounter leader even when an escort falls last.
  const leader=r.encounterLeader||r.enemies?.find(mob=>mob.boss||mob.miniboss);

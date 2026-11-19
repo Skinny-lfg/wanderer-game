@@ -354,7 +354,6 @@ function create(themes,rng=Math.random){
   }
   game.history.push({plane:game.planeIndex,...game.selected});
   if(game.selected.boss){
-   if(!game.selected.boss)throw Error('Realm 15 must contain the Expedition boss');
    game.unlocked=Math.max(game.unlocked,game.expedition+1);
    game.stage='finished';game.selected=null;game.offers=[];game.wave=0;game.families=[];game.lastFamily=null;game.rewardPending=null;
    return {planeComplete:true,expeditionComplete:true};

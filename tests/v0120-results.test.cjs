@@ -1,5 +1,6 @@
 // Isolated v0.12 result transitions. No live saves, economy changes or balance simulation.
 const {test}=require('node:test'),assert=require('node:assert/strict'),create=require('./v012-economy-harness.cjs');
+require('../economy/v013-crafting.js');
 require('../online/v012-save.js');
 require('../online/v012-treasures.js');
 const Save=globalThis.WandererV012Save;

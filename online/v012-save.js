@@ -8,25 +8,8 @@ const EFFECTS=['poison','bleed','crit','sunder','shield','regen','burn','slow','
 const MERCHANT_CATEGORY_SLOTS={weapons:['weapon','offhand'],armor:['helm','armor','gloves','boots','belt'],accessories:['ring1','ring2','amulet']};
 const RUNES=['might','swiftness','wisdom','fortitude','fortune','fury','warding','vitality'];
 const treasures=()=>root.WandererV012Treasures;
-function normalizeValuables(profile){
- if(!Array.isArray(profile.valuables))return;
- const used=new Set([...profile.stash,...Object.values(profile.equip).filter(Boolean),...(profile.expeditionOverflow||[]),...profile.valuables].map(item=>item?.id).filter(Boolean));
- let serial=0;
- profile.valuables=profile.valuables.map(item=>{
-  requireValue(plain(item)&&typeof item.worth==='number'&&Number.isFinite(item.worth)&&item.worth>=0,'valuable worth');
-  const normalized=treasures().normalize(item);
-  if(!normalized.id){do{normalized.id='legacy-valuable-'+serial++;}while(used.has(normalized.id));used.add(normalized.id);}
-  return normalized;
- });
-}
-function normalizePresentation(p){
- if(!p)return;
- for(const [owner,key] of [[p.realm,'treasures'],[p.summary,'treasuresKept'],[p.summary,'treasuresLost']]){
-  if(Array.isArray(owner?.[key]))owner[key]=owner[key].map(item=>treasures().normalize(item));
- }
-}
 const plain=x=>x!==null&&Object.prototype.toString.call(x)==='[object Object]';
-function requireValue(ok,message){if(!ok)throw Error('Invalid v0.12 save: '+message);}
+function requireValue(ok,message){if(!ok)throw Error('Invalid Expedition save: '+message);}
 function integer(x,min,max){return Number.isSafeInteger(x)&&x>=min&&x<=max;}
 function json(value){
  if(typeof value==='string')value=JSON.parse(value);
@@ -60,7 +43,7 @@ function profileCheck(p){
  consumablesCheck(p);
  requireValue(plain(p)&&Array.isArray(p.stash)&&plain(p.equip),'profile');
  if(p.crafting!==undefined)requireValue(root.WandererV013Crafting?.valid(p.crafting),'crafting progress');
- if(p.automaticTalents!==undefined){p.automaticTalents=root.WandererAutomaticTalents?.migrate?.(p.automaticTalents)||p.automaticTalents;requireValue(root.WandererAutomaticTalents?.valid(p.automaticTalents),'automatic talent progress');}
+ if(p.automaticTalents!==undefined){requireValue(root.WandererAutomaticTalents?.valid(p.automaticTalents),'automatic talent progress');}
  requireValue(p.run===null,'runtime must not be in permanent profile');
  for(const f of ['gold','fragments'])requireValue(integer(p[f],0,Number.MAX_SAFE_INTEGER),f);
  requireValue(integer(p.maxDungeon,1,200),'legacy dungeon progress');
@@ -114,31 +97,6 @@ function profileCheck(p){
   requireValue(integer(p.merchant.refreshCost,0,Number.MAX_SAFE_INTEGER),'Merchant refresh');
  }
  return p;
-}
-function normalizedLegacy(input){
- const p=json(input);requireValue(plain(p)&&Array.isArray(p.stash)&&plain(p.equip),'legacy profile');
- requireValue(p.run===null||p.run===undefined||plain(p.run),'legacy runtime');p.run=null;
- p.fragments=p.fragments??p.shards??0;p.gold=p.gold??0;p.maxDungeon=p.maxDungeon??1;
- p.characterId=p.characterId??'wanderer';p.stashCapacity=p.stashCapacity??40;
- if(p.merchant&&Array.isArray(p.merchant.stock)){p.merchant.sigils=p.merchant.sigils??['poison','bleed','crit','shield'];p.merchant.refreshCost=p.merchant.refreshCost??20;}
- p.runes=p.runes??[];p.runeSlots=p.runeSlots??[null,null,null];p.sigils=p.sigils??[];p.expeditionOverflow=p.expeditionOverflow??[];
- normalizeValuables(p);
- if(['Two-Handed','Bow','Staff'].includes(p.equip.weapon?.subtype)&&p.equip.offhand){p.stash.push(p.equip.offhand);p.equip.offhand=null;}
- const items=[...p.stash,...Object.values(p.equip).filter(Boolean),...p.expeditionOverflow];
- const used=new Set([...items,...p.runes,...p.sigils,...(p.pendingRuneReward?.options||[]),...(p.merchant?.stock||[])].map(i=>i?.id).filter(Boolean));let serial=0;
- for(const item of items){
-  requireValue(plain(item),'legacy item');
-  if(item.slot==='ring')item.slot='ring1';
-  if(!item.id){let candidate;do{candidate='legacy-item-'+serial++;}while(used.has(candidate));item.id=candidate;used.add(candidate);}
-  if(item.effect==='burst')item.effect='sunder';
-  item.rarity=({Comum:'Common',Incomum:'Uncommon',Raro:'Rare','Épico':'Epic',Lendário:'Legendary'})[item.rarity]||item.rarity||'Common';
-  item.subtype=item.subtype??({weapon:'Sword',offhand:'Shield',ring1:'Ring',ring2:'Ring',helm:'Helm',armor:'Armor',gloves:'Gloves',boots:'Boots',belt:'Belt',amulet:'Amulet'})[item.slot];
-  for(const f of STATS)if(item[f]!==undefined&&typeof item[f]==='string'&&item[f].trim()&&Number.isFinite(Number(item[f])))item[f]=Number(item[f]);
- }
- // Preserve existing item IDs, rolls, slot and ownership while unifying daggers.
-  for(const item of [...items,...(p.merchant?.stock||[])])if(item?.subtype==='Off-Hand Dagger')item.subtype='Daggers';
-  if(p.equip.ring){requireValue(!p.equip.ring1,'ambiguous legacy rings');p.equip.ring1=p.equip.ring;delete p.equip.ring;}
- return profileCheck(p);
 }
 function presentationCheck(p){
  requireValue(plain(p)&&p.version===1&&[null,'realm','summary'].includes(p.review),'result version/review');
@@ -203,12 +161,8 @@ function sessionCheck(s,p,e){
 function validate(input,binding){
  const s=json(input);requireValue(s.format===FORMAT&&s.schemaVersion===VERSION,'unsupported schema');
  bindingName(s.binding);if(binding!==undefined)requireValue(s.binding===binding,'foreign account/validation slot');
- requireValue(integer(s.revision,0,Number.MAX_SAFE_INTEGER)&&integer(s.idCounter,0,Number.MAX_SAFE_INTEGER),'revision/ID counter');normalizeValuables(s.profile);normalizePresentation(s.expedition?.session?.results);normalizePresentation(s.expedition?.presentation);profileCheck(s.profile);
- // Existing v0.12 profiles also need read-only dagger normalization.
- // json(input) cloned the whole save: never rewrite a user's stored payload during load.
- for(const item of [...s.profile.stash,...Object.values(s.profile.equip).filter(Boolean),...s.profile.expeditionOverflow,...(s.profile.merchant?.stock||[])])if(item?.subtype==='Off-Hand Dagger')item.subtype='Daggers';
+ requireValue(integer(s.revision,0,Number.MAX_SAFE_INTEGER)&&integer(s.idCounter,0,Number.MAX_SAFE_INTEGER),'revision/ID counter');profileCheck(s.profile);
  requireValue(s.identity===null||(plain(s.identity)&&typeof s.identity.uid==='string'&&s.identity.uid.length>0&&typeof s.identity.projectId==='string'&&s.identity.projectId.length>0&&typeof s.identity.nickname==='string'&&/^[A-Za-z0-9_]{3,20}$/.test(s.identity.nickname)),'identity');
- if(s.migration!==null)requireValue(plain(s.migration)&&s.migration.source==='classic-v092'&&s.migration.requiresApproval===true&&(s.migration.sourceRevision===null||integer(s.migration.sourceRevision,1,Number.MAX_SAFE_INTEGER)),'migration approval metadata');
  const e=s.expedition;requireValue(plain(e)&&integer(e.completed,0,Number.MAX_SAFE_INTEGER-1)&&(e.unlocked===e.completed+1||(e.completed===5&&e.unlocked===5))&&integer(e.attempts,0,Number.MAX_SAFE_INTEGER),'Expedition progress');
  requireValue(['new','active','victory','defeat','abandoned','interrupted','extracted','cancelled'].includes(e.lastOutcome)&&e.completed<=e.attempts,'outcome/attempt count');
  if(e.lastOutcome==='new')requireValue(e.attempts===0&&e.completed===0,'new profile progress');
@@ -219,25 +173,13 @@ function validate(input,binding){
  if(e.active!==null){const a=e.active;requireValue(e.attempts>0,'entry checkpoint');requireValue(plain(a)&&a.attempt===e.attempts&&integer(a.level,1,e.unlocked)&&integer(a.plane,1,24)&&integer(a.wave,0,3)&&['choice','combat'].includes(a.stage),'checkpoint');requireValue(e.lastOutcome==='active','active outcome');}
  if(e.session!==undefined&&e.session!==null)sessionCheck(e.session,s.profile,e);
  if(e.presentation!==undefined)presentationCheck(e.presentation);
- requireValue(plain(s.legacyHistory)&&integer(s.legacyHistory.maxDungeon,1,200),'legacy history');
  return s;
 }
 function create(profile,{binding='local',identity=null}={}){
- const p=normalizedLegacy(profile);
+ const p=json(profile);
+ p.expeditionOverflow??=[];
  return validate({format:FORMAT,schemaVersion:VERSION,binding,identity,revision:0,idCounter:0,profile:p,
-  legacyHistory:{maxDungeon:p.maxDungeon,onlineProgress:p.onlineProgress??null,attemptCompleted:p.attemptCompleted??false},
-  migration:null,expedition:{completed:0,unlocked:1,attempts:0,active:null,awardKeys:[],lastOutcome:'new'}},binding);
-}
-function migrateLegacy(input,{binding='local',identity=null,expectedRevision}={}){
- const archive=typeof input==='string'?input:JSON.stringify(json(input));let old=json(input),sourceRevision=null;requireValue(plain(old),'legacy object');
- if(old.format===FORMAT)return {save:validate(old,binding),archive:null,migrated:false};
- if('schemaVersion'in old){
-  requireValue(old.schemaVersion===1&&typeof old.payload==='string'&&integer(old.revision,1,Number.MAX_SAFE_INTEGER),'legacy cloud envelope');
-  sourceRevision=old.revision;if(expectedRevision!==undefined)requireValue(sourceRevision===expectedRevision,'source cloud conflict');old=json(old.payload);
- }
- requireValue(!('format'in old)&&!('schemaVersion'in old)&&!('version'in old),'unsupported legacy format/version; isolated prototypes require explicit conversion approval');
- const save=create(old,{binding,identity});save.migration={source:'classic-v092',sourceRevision,requiresApproval:true};
- return {save:validate(save,binding),archive,migrated:true};
+  expedition:{completed:0,unlocked:1,attempts:0,active:null,awardKeys:[],lastOutcome:'new'}},binding);
 }
 function recover(input,binding){
  const save=validate(input,binding),interrupted=!!save.expedition.active;
@@ -246,16 +188,16 @@ function recover(input,binding){
  return {save,interrupted};
 }
 function createStore(storage,binding='local'){
- const primary=key(binding),backup=primary+'_backup',source=primary+'_source';let observed,loaded=false;
+ const primary=key(binding),backup=primary+'_backup';let observed,loaded=false;
  function load(){const raw=storage.getItem(primary);const result=raw===null?null:validate(raw,binding);observed=raw;loaded=true;return result;}
- function commit(input,archive=null){
+ function commit(input){
   requireValue(loaded,'load before write');requireValue(storage.getItem(primary)===observed,'local revision conflict');
   const s=validate(input,binding),previous=observed===null?null:validate(observed,binding);
   requireValue(s.revision===(previous?.revision??0),'stale revision');
   requireValue(s.revision<Number.MAX_SAFE_INTEGER,'revision exhausted');
   if(previous){
    requireValue(JSON.stringify(s.identity)===JSON.stringify(previous.identity),'identity changed');
-   requireValue(JSON.stringify(s.legacyHistory)===JSON.stringify(previous.legacyHistory)&&s.profile.maxDungeon===previous.profile.maxDungeon&&JSON.stringify(s.profile.onlineProgress)===JSON.stringify(previous.profile.onlineProgress),'legacy history changed');
+   requireValue(s.profile.maxDungeon===previous.profile.maxDungeon&&JSON.stringify(s.profile.onlineProgress)===JSON.stringify(previous.profile.onlineProgress),'legacy history changed');
    const old=previous.expedition,next=s.expedition;
    requireValue(next.completed>=old.completed&&next.completed<=old.completed+1&&next.attempts>=old.attempts&&next.attempts<=old.attempts+1,'progress regression/jump');
    if(next.attempts===old.attempts)requireValue(old.awardKeys.every(k=>next.awardKeys.includes(k)),'reward ledger rollback');
@@ -269,12 +211,11 @@ function createStore(storage,binding='local'){
    if(next.lastOutcome==='extracted'&&old.lastOutcome!=='extracted')requireValue(old.active?.stage==='choice'&&old.active.plane>1&&old.session&&!old.session.entry&&!old.session.controller.rewardPending&&next.completed===old.completed&&JSON.stringify(s.profile.pendingRuneReward)===JSON.stringify(previous.profile.pendingRuneReward)&&JSON.stringify(s.profile.runes)===JSON.stringify(previous.profile.runes),'invalid extraction');
    if(next.completed>old.completed)requireValue(old.active?.plane===15&&old.active.wave===1&&old.active.level===next.completed&&next.lastOutcome==='victory'&&next.awardKeys.includes(next.attempts+':15:1'),'boss checkpoint required');
   }
-  if(archive!==null){const old=storage.getItem(source);requireValue(old===null||old===archive,'source archive already exists');if(old===null)storage.setItem(source,archive);}
   if(observed!==null)storage.setItem(backup,observed);
   s.revision++;const raw=JSON.stringify(s);storage.setItem(primary,raw);
   requireValue(storage.getItem(primary)===raw,'write verification');observed=raw;return s;
  }
  return Object.freeze({key:primary,load,commit,backup:()=>{const raw=storage.getItem(backup);return raw===null?null:validate(raw,binding);}});
 }
-root.WandererV012Save=Object.freeze({FORMAT,VERSION,PREFIX,key,validate,create,migrateLegacy,recover,createStore});
+root.WandererV012Save=Object.freeze({FORMAT,VERSION,PREFIX,key,validate,create,recover,createStore});
 })(globalThis);

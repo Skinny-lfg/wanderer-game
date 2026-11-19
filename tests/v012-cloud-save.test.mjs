@@ -10,7 +10,6 @@ globalThis.WandererV012Save=context.WandererV012Save;
 function initial(uid='alice'){
  return {format:'wanderer-expedition',schemaVersion:13,binding:uid,identity:null,revision:0,idCounter:0,
   profile:{attemptCompleted:false,characterId:'wanderer',stashCapacity:40,maxDungeon:1,chosen:1,fragments:0,gold:0,stash:[],equip:{},valuables:[],runes:[],runeSlots:[null,null,null],sigils:[],expeditionOverflow:[],run:null},
-  legacyHistory:{maxDungeon:1,onlineProgress:null,attemptCompleted:false},migration:null,
   expedition:{completed:0,unlocked:1,attempts:0,active:null,awardKeys:[],lastOutcome:'new'}};
 }
 function memory(){const m=new Map();return {getItem:k=>m.get(k)??null,setItem:(k,v)=>m.set(k,String(v)),removeItem:k=>m.delete(k)};}

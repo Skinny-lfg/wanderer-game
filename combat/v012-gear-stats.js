@@ -61,9 +61,10 @@ function totalStats(equipment,ownedRunes,equippedRuneIds,{isTwoHanded,FIELDS,ite
  s.spellPower=caster?Math.round(3+s.int*1.9+s.spellFlat):0;
  // Magic resources exist before percentage talents, including on physical weapons.
  const magic=PHASE1_PREVIEW&&(build?build.unlockedFamilies?.includes('magic'):state?.automaticTalents?.nodes?.includes('affinity_magic'));
- if(magic){s.mana=caster?s.mana:Math.max(30,Math.round(20+s.int*7+s.manaFlat));s.manaRegen=caster?s.manaRegen:+(1.5+s.int*.23).toFixed(1);s.spellPower=caster?s.spellPower:Math.round(3+s.int*1.9+s.spellFlat);s.phase2Magic=true;}
  const decay=PHASE1_PREVIEW&&(build?build.unlockedFamilies?.includes('decay'):state?.automaticTalents?.nodes?.includes('affinity_decay'));
- if(decay){s.mana=caster?s.mana:Math.max(30,Math.round(20+s.int*7+s.manaFlat));s.manaRegen=caster?s.manaRegen:+(1.5+s.int*.23).toFixed(1);s.spellPower=caster?s.spellPower:Math.round(3+s.int*1.9+s.spellFlat);s.phase2Decay=true;}
+ if(magic||decay){s.mana=caster?s.mana:Math.max(30,Math.round(20+s.int*7+s.manaFlat));s.manaRegen=caster?s.manaRegen:+(1.5+s.int*.23).toFixed(1);s.spellPower=caster?s.spellPower:Math.round(3+s.int*1.9+s.spellFlat);}
+ if(magic)s.phase2Magic=true;
+ if(decay)s.phase2Decay=true;
  s.blockChance=off?.subtype==='Shield'?Math.min(48,Math.round(13+s.end*.27+Math.max(0,off.tier||1)*.25+(main?.subtype==='Mace'?7:0))):0;
  s.crit=Math.min(55,s.crit+gearBonus('critBonus'));
  if(s.mana)s.manaRegen+=gearBonus('manaRegenBonus');

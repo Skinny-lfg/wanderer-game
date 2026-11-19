@@ -10,8 +10,8 @@ const fixture=String.raw`if(PHASE1_PREVIEW){
   for(const slot of SLOTS){const subtype=slot==='weapon'?'Sword':slot==='offhand'?'Shield':'random';state.equip[slot]=makeItem(80,slot,null,'loot',subtype,'Rare');}
   state.equip.weapon=makeItem(80,'weapon',null,'loot','Sword','Legendary');WandererEconomyV0101.upgradeLegendary(state.equip.weapon);
   state.runes=[makeRune('vitality',80)];state.runeSlots=[state.runes[0].id,null,null];state.stash.push(makeItem(80,'helm',null,'loot','Helm','Epic'));
-  const migration=WandererV012Save.migrateLegacy(JSON.stringify(state),{binding,identity:{uid:'fixture-old',projectId:'demo-wanderer',nickname:'old_player'}});
-  const store=WandererV012Save.createStore(localStorage,binding);store.load();store.commit(migration.save,migration.archive);
+  const initial=WandererV012Save.create(state,{binding,identity:{uid:'fixture-old',projectId:'demo-wanderer',nickname:'old_player'}});
+  const store=WandererV012Save.createStore(localStorage,binding);store.load();store.commit(initial);
  }
  phase1Init();
  globalThis.__saveAudit={
@@ -110,12 +110,12 @@ async function noRealWrites(page){
   after=await snapshot(page);assert.equal(after.runes.length,owned);assert.equal(after.unlocked,2);assert.deepEqual(after.onlineProgress,initial.onlineProgress);
   assert.equal(after.gold,before.gold);assert.equal(after.fragments,before.fragments);assert.deepEqual(after.picks,[]);
   await noRealWrites(page);assert.deepEqual(errors,[]);await context.close();
-  console.log('PASS Phase 5 '+width+'px: fixture migration, writer lock, browser restart, no reward replay, abandonment/defeat, 15 Planes/boss, history/gear preservation');
+  console.log('PASS Phase 5 '+width+'px: fixture creation, writer lock, browser restart, no reward replay, abandonment/defeat, 15 Planes/boss, history/gear preservation');
  }
  // New player: no migration, no inherited resources or unlocks; missing Web Locks and corrupt saves block safely.
  const context=await browser.newContext(),page=await prepare(context,base,1280);
  const freshUrl=base+'/?expeditionPhase1=1&expeditionSave=1&validationSlot=new';await ready(page,freshUrl);
- const fresh=await snapshot(page);assert.equal(fresh.gold,0);assert.equal(fresh.fragments,0);assert.equal(fresh.unlocked,1);assert.equal((await page.evaluate(()=>__saveAudit.stored())).migration,null);
+ const fresh=await snapshot(page);assert.equal(fresh.gold,0);assert.equal(fresh.fragments,0);assert.equal(fresh.unlocked,1);assert.equal((await page.evaluate(()=>__saveAudit.stored())).migration,undefined);
  await page.evaluate(()=>{localStorage.setItem(WandererGame.validationStatus().key,'{CORRUPT');});await page.reload();
  await page.getByRole('alert').waitFor();assert.equal(await page.evaluate(()=>WandererGame.validationStatus().blocked),true);
  assert.equal(await page.evaluate(()=>localStorage.getItem(WandererGame.validationStatus().key)),'{CORRUPT');await noRealWrites(page);
