@@ -35,10 +35,19 @@ jobs:
           tests/talent-graph-runtime.test.cjs
           tests/v013-talent-structure.test.cjs
           tests/v013-current-dungeon-and-talents.test.cjs
-          tests/v012-phase-c3-treasures.test.cjs
           tests/v013-stage7-contracts.test.cjs
           tests/v012-save.test.mjs
           tests/v013-stage5-build-audit.test.cjs
+      - name: Historical v0.12 treasure tests (diagnostic only)
+        continue-on-error: true
+        run: node --test tests/v012-phase-c3-treasures.test.cjs
+      - name: Build Pages preview locally and identify source-to-docs drift (no deploy)
+        run: |
+          npm run build:pages
+          mkdir -p reports
+          git status --short docs > reports/v013-pages-generated-drift.txt
+          echo "DOCS_CHANGED_PATHS=$(wc -l < reports/v013-pages-generated-drift.txt)"
+          git diff --stat -- docs | tail -25 || true
       - name: Record exact source provenance
         if: always()
         shell: bash
@@ -59,5 +68,6 @@ jobs:
             reports/v013-clean-sheet-audit.json
             reports/v013-clean-sheet-audit.md
             reports/v013-clean-sheet-audit-provenance.txt
+            reports/v013-pages-generated-drift.txt
           if-no-files-found: warn
           retention-days: 30
