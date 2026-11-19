@@ -16,7 +16,7 @@ const PROFILES=Object.freeze({
  balanced:{name:'Balanced',risk:0,targets:['bleeding_edge','deep_cuts','strong_heart','might','vitality'],families:['blood','aegis'],healAt:.53,retreatAt:.34,target:'mechanics',shop:true},
  daring:{name:'Daring',risk:1,targets:['quick_hands','double_strike','bleeding_edge','might','haste'],families:['fury','blood'],healAt:.35,retreatAt:.16,target:'focus',shop:true}
 });
-const DEFAULTS=Object.freeze({seeds:[9101,9201],profiles:['cautious','balanced'],maxLevel:8,maxAttempts:6,tickLimit:4500,maxRooms:34,output:'reports/v013-stage93-natural-e1-e8.json'});
+const DEFAULTS=Object.freeze({seeds:[9101,9201],profiles:['cautious','balanced'],maxLevel:8,maxAttempts:6,maxTotalAttempts:null,tickLimit:4500,maxRooms:34,output:'reports/v013-stage93-natural-e1-e8.json'});
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const round=(n,places=2)=>Number(Number(n).toFixed(places));
 function parseArgs(args=[]){
@@ -28,11 +28,12 @@ function parseArgs(args=[]){
   else if(k==='profiles'){v.profiles=[...new Set(value.split(','))];if(!v.profiles.length||v.profiles.some(x=>!PROFILES[x]))throw Error('Invalid profiles');}
   else if(k==='max-level'){v.maxLevel=Number(value);if(!Number.isInteger(v.maxLevel)||v.maxLevel<1||v.maxLevel>20)throw Error('Levels are E1–E20 only');}
   else if(k==='max-attempts'){v.maxAttempts=Number(value);if(!Number.isInteger(v.maxAttempts)||v.maxAttempts<1||v.maxAttempts>36)throw Error('Max attempts must be 1–36');}
+  else if(k==='max-total-attempts'){v.maxTotalAttempts=Number(value);if(!Number.isInteger(v.maxTotalAttempts)||v.maxTotalAttempts<1||v.maxTotalAttempts>400)throw Error('Total attempt budget must be 1–400');}
   else if(k==='tick-limit'){v.tickLimit=Number(value);if(!Number.isInteger(v.tickLimit)||v.tickLimit<100||v.tickLimit>100000)throw Error('Invalid tick limit');}
   else if(k==='out'&&value.endsWith('.json'))v.output=value;
   else throw Error('Unsupported option: '+arg);
  }
- const potential=v.seeds.length*v.profiles.length*v.maxAttempts*v.maxLevel;
+ const potential=v.seeds.length*v.profiles.length*Math.min(v.maxAttempts*v.maxLevel,v.maxTotalAttempts||Infinity);
  if(potential>(v.maxLevel<=8&&v.maxAttempts<=12?192:10000))throw Error('Natural cohort too large. Narrow the pilot.');
  return v;
 }
@@ -670,6 +671,10 @@ function simulateAccount(seed,id,opts,simulationOptions={}){
   if(!acc.reached.includes(level))acc.reached.push(level);
   let cleared=false;
   for(let attempt=1;attempt<=opts.maxAttempts;attempt++){
+   if(opts.maxTotalAttempts&&acc.attempts.length>=opts.maxTotalAttempts){
+    acc.stopReason='Total natural-attempt budget ('+opts.maxTotalAttempts+') exhausted at E'+level;
+    stopped=true;break;
+   }
    let entry={level,attempt,profile:id};
    try{
     const camp=prepareCamp(a,profile,level,decisionModel);
