@@ -1,7 +1,7 @@
 // Versioned, pure save policy and explicitly isolated validation storage. No Firebase/auth/DOM.
 (function(root){
 'use strict';
-const FORMAT='wanderer-expedition',VERSION=13,PREFIX='wanderer_v013_stage74_preview_v1_';
+const FORMAT='wanderer-expedition',VERSION=13,PREFIX='wanderer_v013_c2_clean_sheet_v1_';
 const SLOTS=['helm','amulet','armor','gloves','weapon','offhand','ring1','ring2','boots','belt'];
 const STATS=['atk','def','hp','spd','str','agi','int','end','cha','mana','spell','evasionRating'];
 const EFFECTS=['poison','bleed','crit','sunder','shield','regen','burn','slow','drain','nature','shock','tide','crystal'];
@@ -46,8 +46,7 @@ function profileCheck(p){
  if(p.automaticTalents!==undefined){requireValue(root.WandererAutomaticTalents?.valid(p.automaticTalents),'automatic talent progress');}
  requireValue(p.run===null,'runtime must not be in permanent profile');
  for(const f of ['gold','fragments'])requireValue(integer(p[f],0,Number.MAX_SAFE_INTEGER),f);
- requireValue(integer(p.maxDungeon,1,200),'legacy dungeon progress');
- if(p.chosen!==undefined)requireValue(integer(p.chosen,1,p.maxDungeon),'legacy selected dungeon');
+ requireValue(integer(p.maxDungeon,1,200),'profile progress');
  if(p.valuables!==undefined){requireValue(Array.isArray(p.valuables),'valuables');for(const v of p.valuables)requireValue(plain(v)&&typeof v.id==='string'&&v.id.length>0&&typeof v.name==='string'&&typeof v.worth==='number'&&Number.isFinite(v.worth)&&v.worth>=0&&treasures().CATALOG.some(t=>t.image===v.image),'valuable identity');}
  requireValue(integer(p.stashCapacity,1,5000)&&p.stash.length<=5000,'stash capacity');
  requireValue(Array.isArray(p.expeditionOverflow)&&p.expeditionOverflow.length<=120,'secured overflow');
@@ -184,7 +183,7 @@ function create(profile,{binding='local',identity=null}={}){
 function recover(input,binding){
  const save=validate(input,binding),interrupted=!!save.expedition.active;
  if(interrupted&&!save.expedition.session){save.expedition.active=null;save.expedition.lastOutcome='interrupted';}
- // Old checkpoints keep their safe interruption policy. Versioned sessions resume without enemy runtime.
+ // Current session checkpoints resume without enemy runtime.
  return {save,interrupted};
 }
 function createStore(storage,binding='local'){
@@ -197,14 +196,15 @@ function createStore(storage,binding='local'){
   requireValue(s.revision<Number.MAX_SAFE_INTEGER,'revision exhausted');
   if(previous){
    requireValue(JSON.stringify(s.identity)===JSON.stringify(previous.identity),'identity changed');
-   requireValue(s.profile.maxDungeon===previous.profile.maxDungeon&&JSON.stringify(s.profile.onlineProgress)===JSON.stringify(previous.profile.onlineProgress),'legacy history changed');
+   requireValue(s.profile.maxDungeon===previous.profile.maxDungeon&&JSON.stringify(s.profile.onlineProgress)===JSON.stringify(previous.profile.onlineProgress),'account history changed');
    const old=previous.expedition,next=s.expedition;
    requireValue(next.completed>=old.completed&&next.completed<=old.completed+1&&next.attempts>=old.attempts&&next.attempts<=old.attempts+1,'progress regression/jump');
    if(next.attempts===old.attempts)requireValue(old.awardKeys.every(k=>next.awardKeys.includes(k)),'reward ledger rollback');
    else requireValue(old.active===null&&next.active!==null&&next.awardKeys.length===0,'invalid new attempt');
    if(next.attempts===old.attempts&&old.session&&next.session){
     requireValue(JSON.stringify(old.session.home)===JSON.stringify(next.session.home),'home equipment changed');
-    if(old.session.controller.version===2)requireValue(integer(next.session.controller.rerolls,0,old.session.controller.rerolls),'reroll rollback');
+    requireValue(old.session.controller.version===2&&next.session.controller.version===2,'current checkpoint format');
+    requireValue(integer(next.session.controller.rerolls,0,old.session.controller.rerolls),'reroll rollback');
     const before=old.session.controller.rerollsByRealm,after=next.session.controller.rerollsByRealm;
     requireValue(Array.isArray(before)&&Array.isArray(after)&&before.length===15&&after.length===15&&after.every((row,i)=>Array.isArray(row)&&row.length===3&&row.every((n,j)=>integer(n,0,before[i][j]))),'reroll rollback');
    }

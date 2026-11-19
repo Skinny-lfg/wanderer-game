@@ -2,7 +2,7 @@
 export function createCloudSaveCoordinator({backend,uid,projectId,readSnapshot,applySnapshot,onStatus=()=>{},storage=null,delay=600}){
  if(!backend||!uid||!projectId||typeof readSnapshot!=='function')throw Error('Cloud save coordinator configuration is incomplete.');
  const memory=new Map();storage??={getItem:key=>memory.get(key)||null,setItem:(key,value)=>memory.set(key,value),removeItem:key=>memory.delete(key)};
- const key='wanderer_v013_stage74_cloud_outbox_'+uid;let revision=0,timer=null,chain=Promise.resolve(),closed=false,lastRaw='',sessionWrote=false;
+ const key='wanderer_v013_c2_clean_sheet_cloud_outbox_'+uid;let revision=0,timer=null,chain=Promise.resolve(),closed=false,lastRaw='',sessionWrote=false;
  const status=(value,error=null)=>{try{onStatus(value,error);}catch{}try{globalThis.dispatchEvent?.(new CustomEvent('wanderer:save-status',{detail:{state:value,error:error?.name||null}}));}catch{}};
  const valid=raw=>{const save=globalThis.WandererV012Save.validate(raw,uid);if(save.format!=='wanderer-expedition'||save.schemaVersion!==globalThis.WandererV012Save.VERSION)throw Error('Unsupported v0.12 save version.');const bytes=new TextEncoder().encode(JSON.stringify(save)).byteLength;if(bytes>680000)throw Error('Cloud save exceeds the safe 680,000-byte UTF-8 payload limit.');return save;};
  function queue(save,{immediate=false}={}){
@@ -29,13 +29,12 @@ export function createCloudSaveCoordinator({backend,uid,projectId,readSnapshot,a
   const record=await backend.readV012Save(uid);
   if(record){
    if(record.format!=='wanderer-expedition'||record.schemaVersion!==globalThis.WandererV012Save.VERSION||!Number.isSafeInteger(record.revision)||record.revision<1||typeof record.payload!=='string')throw Error('Cloud save envelope is invalid or unsupported.');
-   // One-time Stage 7.4 reset: only the dedicated development preview project.
-   // Keep the Firestore v012 document and schema envelope (rules still require v13);
-   // replace its payload atomically, preserving the owner profile and revision history.
-   if(projectId==='wanderer-development-8e3ee'&&initialSave?.previewGeneration==='stage74'){
+   // One-time clean-sheet C2 reset only on the dedicated development Firebase project.
+   // Preserve document ownership and revision integrity; never reset a production account.
+   if(projectId==='wanderer-development-8e3ee'&&initialSave?.previewGeneration==='c2-clean-sheet'){
     let previous;
     try{previous=JSON.parse(record.payload);}catch{previous=null;}
-    if(previous?.previewGeneration!=='stage74'){
+    if(previous?.previewGeneration!=='c2-clean-sheet'){
      const clean=valid(initialSave);clean.revision=record.revision;
      const result=await backend.writeV012Save(uid,clean,record.revision);
      revision=result.revision;sessionWrote=true;

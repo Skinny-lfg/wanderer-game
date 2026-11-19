@@ -79,10 +79,6 @@ function phase4Restore(session){
  if(session.build)WandererV012Buildcraft.validate(session.build);
  ports.phase6Run=session.integration||null;
  ports.phase1Build=session.build;if(ports.phase1Build){WandererV012Buildcraft.syncPermanent(ports.phase1Build,ports.state.automaticTalents,session.controller.freeBuild);if(ports.phase6Run?.effects.echo)ports.phase1Build.runtime.echo=ports.phase6Run.effects.echo;}ports.phase1Draft=session.controller.freeBuild?null:session.draft;ports.phase1Vitals=session.vitals;ports.phase1Clock=session.clock;
- // Older local checkpoints stored remaining Health/Mana doses separately.
- // Move those doses into Stash once; new checkpoints persist only zeroes.
- const legacySupplies=session.supplies||{health:0,mana:0};
- for(const kind of ['health','mana'])if(Number.isInteger(legacySupplies[kind])&&legacySupplies[kind]>0){ports.state.consumables??={};ports.state.consumables[kind]=Math.min(99999,(ports.state.consumables[kind]||0)+legacySupplies[kind]);}
  ports.phase3Supplies={health:0,mana:0};
  ports.phase3LootIds=new Set(session.lootIds);ports.phase4Home=session.home;ports.phase4Seed=session.seed;ports.phase4Prefix=session.prefix;ports.phase4Stamp=session.stamp;ports.uid=session.idCounter;ports.phase1Continuity=session.continuity;
  if(ports.phase1Build){if(!ports.phase1Controller.state.freeBuild)ports.phase1Build.families=ports.phase1Controller.state.families;if(ports.phase1Draft?.kind==='reward'){
@@ -143,7 +139,7 @@ function phase5Persist(){
   if(!ports.PHASE1_PREVIEW||!ports.phase5Ready||!ports.phase5Snapshot)return true;
   try{
    const pending=WandererV012Save.validate(phase5Capture(),ports.phase5Snapshot.binding);
-   globalThis.sessionStorage.setItem('wanderer_v013_stage74_local_preview',JSON.stringify(pending));
+   globalThis.sessionStorage.setItem('wanderer_v013_c2_clean_sheet_local_preview',JSON.stringify(pending));
    ports.phase5Snapshot=pending;return true;
   }catch(error){ports.phase5Fail(error);return false;}
  }
@@ -157,7 +153,7 @@ function phase5Init(){
   if(!ports.PHASE1_PREVIEW||globalThis.__WANDERER_CLOUD_ONLY__)return;
   try{
    if(!globalThis.WandererV012Save)throw Error('Local playtest save module is unavailable');
-   const binding='local-playtest',raw=globalThis.sessionStorage.getItem('wanderer_v013_stage74_local_preview');
+   const binding='local-playtest',raw=globalThis.sessionStorage.getItem('wanderer_v013_c2_clean_sheet_local_preview');
    if(raw){
     const recovered=WandererV012Save.recover(raw,binding);ports.phase5Snapshot=recovered.save;
     ports.state=JSON.parse(JSON.stringify(recovered.save.profile));ports.uid=Math.max(ports.uid,recovered.save.idCounter);

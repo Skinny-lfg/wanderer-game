@@ -60,20 +60,15 @@ const statsModule={};
 // Wanderer v0.12 — one calculation for derived character/equipment/rune stats.
 // Explicit dependencies preserve the native formulas and allow isolated testing.
 (function(root){'use strict';
-function gearEvasionRating(item,{ARMOR_SLOTS,RARITY,clamp}){
+function gearEvasionRating(item,{ARMOR_SLOTS}){
  if(!item||item.armorType!=='Leather'||!ARMOR_SLOTS.includes(item.slot))return 0;
- if(item.evasionRating!==undefined)return Number.isFinite(Number(item.evasionRating))?Math.max(0,Number(item.evasionRating)):0;
- // Read-only compatibility for pre-hotfix Leather, including reinforced Legendaries.
- const tier=clamp(Number(item.tier)||1,1,Number.MAX_SAFE_INTEGER),base=Math.round((2+Math.min(tier,200)*.91)*(RARITY[item.rarity]?.[1]||1));
- const scaled=item.tier>200?WandererV012CombatCore.gearStat(item.tier,base):base;
- const rank=item.rarity==='Legendary'?clamp(Number(item.upgradeRank)||0,0,10):0;
- return Math.round(scaled*(1+rank*.02)*100)/100;
+ // Fresh Leather stores Evasion Rating explicitly; there is no legacy recalculation.
+ const value=Number(item.evasionRating);
+ return Number.isFinite(value)&&value>0?value:0;
 }
 function itemStatValue(item,key,context){
  if(key==='evasionRating')return gearEvasionRating(item,context);
- const value=Number(item?.[key])||0;
- // Old Orbs retain their saved roll; new Orbs already store the B.4 value.
- return key==='spell'&&item?.slot==='offhand'&&item.subtype==='Orb'&&item.orbSpellB4!==true?Math.round(value*1.12):value;
+ return Number(item?.[key])||0;
 }
 function totalStats(equipment,ownedRunes,equippedRuneIds,{isTwoHanded,FIELDS,itemStatValue,RUNE_FAMILIES,runeValue,setCounts,setBonuses,state,PHASE1_PREVIEW,phase6Run}){
  const equipped=isTwoHanded(equipment.weapon)?{...equipment,offhand:null}:equipment;

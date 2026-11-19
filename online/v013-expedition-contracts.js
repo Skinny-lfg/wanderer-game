@@ -33,7 +33,7 @@ function blueprintChance(seed,card,id,due){
 }
 function canon(known){
  if(!Array.isArray(known)||new Set(known).size!==known.length||
-    known.some(id=>id!=='blue_offdagger'&&!C.RECIPES.some(r=>r.id===id&&r.rarity!=='Uncommon')))
+    known.some(id=>!C.RECIPES.some(r=>r.id===id&&r.rarity!=='Uncommon')))
   throw Error('Invalid Contract Blueprint collection');
  return [...known].sort();
 }
@@ -47,9 +47,9 @@ function blueprint(seed,card,known){
  const random=F.rng(seed,'contract_blueprint_v1_'+card.id);
  return pool[Math.floor(random()*pool.length)].id;
 }
-function plan(seed,card,known=[],legacy=false){
+function plan(seed,card,known=[]){
  const ids=offer(seed,card),knownRecipes=canon(known);
- const newBlueprint=blueprint(seed,card,knownRecipes,legacy),rewards={};
+ const newBlueprint=blueprint(seed,card,knownRecipes),rewards={};
  for(let i=0;i<ids.length;i++){
   const id=ids[i];
   rewards[id]=i===0&&newBlueprint?{kind:'blueprint_chance',recipeId:newBlueprint,chance:[.35,.45,.55][card.risk],fallbackEssence:ESSENCE[id][card.risk]}:reward(id,card.risk,card.family);
@@ -58,7 +58,7 @@ function plan(seed,card,known=[],legacy=false){
 }
 function label(prize){
  if(prize?.kind==='blueprint_chance'){
-  const r=(C.RECIPES.find(r=>r.id===prize.recipeId)||C.LEGACY_RECIPES.find(r=>r.id===prize.recipeId));
+  const r=C.RECIPES.find(r=>r.id===prize.recipeId);
   return Math.round(prize.chance*100)+'% chance: '+(r?r.rarity+' '+r.name:'Blueprint')+' · Otherwise +'+prize.fallbackEssence+' Essence';
  }
  if(prize?.kind==='blueprint'){
@@ -167,7 +167,7 @@ function validate(game){
    Number.isSafeInteger(paid.amount)&&paid.amount>=0&&paid.amount<=1;
  return false;
 }
-function matchesPlan(value,seed,card){const stored=JSON.stringify(value);return stored===JSON.stringify(plan(seed,card,value.knownRecipes))||stored===JSON.stringify(plan(seed,card,value.knownRecipes,true));}
+function matchesPlan(value,seed,card){const stored=JSON.stringify(value);return stored===JSON.stringify(plan(seed,card,value.knownRecipes));}
 function validateOffer(game){
  const d=game?.dungeon,card=d?.cards?.find(c=>c.id===d?.realm),o=d?.contractOffer;
  if(!o)return o===undefined;
