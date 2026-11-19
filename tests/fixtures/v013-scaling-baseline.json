@@ -718,5 +718,117 @@
    0
   ],
   "reserveEntries": 16
+ },
+ {
+  "level": 1,
+  "requested": 4,
+  "kind": "neutral",
+  "family": "aegis",
+  "risk": 0,
+  "seed": 512,
+  "node": 1,
+  "trait": null,
+  "condition": null,
+  "marked": false,
+  "stats": [
+   [
+    "minion",
+    63,
+    2,
+    1,
+    0,
+    2.1849999999999996
+   ],
+   [
+    "caster",
+    123,
+    5,
+    2,
+    0,
+    1.9779999999999998
+   ],
+   [
+    "minion",
+    63,
+    2,
+    1,
+    0,
+    2.1849999999999996
+   ],
+   [
+    "tank",
+    180,
+    4,
+    3,
+    0,
+    1.9779999999999998
+   ]
+  ],
+  "trace": "50e3b84b27f993a1f2dbe776282d90d8d84509c20d396bec20fc9fd5687f64f1",
+  "seconds": 32.78,
+  "damageTaken": 33,
+  "damageDealt": 429,
+  "status": "cleared",
+  "casts": [
+   6,
+   0
+  ],
+  "reserveEntries": 0
+ },
+ {
+  "level": 1,
+  "requested": 4,
+  "kind": "vanguard",
+  "family": "aegis",
+  "risk": 0,
+  "seed": 512,
+  "node": 2,
+  "trait": null,
+  "condition": null,
+  "marked": false,
+  "stats": [
+   [
+    "minion",
+    113,
+    3,
+    1,
+    0,
+    2.1849999999999996
+   ],
+   [
+    "tank",
+    180,
+    4,
+    3,
+    0,
+    1.9779999999999998
+   ],
+   [
+    "minion",
+    63,
+    2,
+    1,
+    0,
+    2.1849999999999996
+   ],
+   [
+    "caster",
+    123,
+    5,
+    2,
+    0,
+    1.9779999999999998
+   ]
+  ],
+  "trace": "dd8eece510abe5c015d4c0f623dc5d9e8530a9749f01db6240fe3f4eb1ce459d",
+  "seconds": 40.92,
+  "damageTaken": 60,
+  "damageDealt": 479,
+  "status": "cleared",
+  "casts": [
+   8,
+   0
+  ],
+  "reserveEntries": 0
  }
 ]
