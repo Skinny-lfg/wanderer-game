@@ -1,4 +1,4 @@
-name: Wanderer v0.13 C4 clean-sheet release gate (audit only; no deploy)
+name: Wanderer v0.13 C7 final clean-sheet release gate (audit only; no deploy)
 
 on:
   push:
@@ -8,6 +8,7 @@ on:
       - 'combat/**'
       - 'economy/**'
       - 'online/**'
+      - 'docs/**'
       - 'index.html'
       - 'preview/**'
       - 'tests/**'
@@ -36,6 +37,8 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+      # C7 static guards also parse live inline HTML JavaScript and disallow
+      # retired affinity/draft/reroll controllers via npm run test:v013:gate.
       - name: C6 final missing-import, old-route and orphan-asset source gate
         run: node scripts/v013-c6-final-audit.cjs
       - name: Current full v0.13 gameplay and simulation gate
