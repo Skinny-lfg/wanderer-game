@@ -1,4 +1,5 @@
 name: Wanderer Stage 5 — Native build/gear/respec baseline audit (no deploy)
+# Retry after resolving talent graph from the integrated VM.
 
 on:
   push:
