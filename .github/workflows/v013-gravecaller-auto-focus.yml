@@ -1,0 +1,38 @@
+name: Wanderer v0.13 — Gravecaller native auto-focus (no deploy)
+
+on:
+  pull_request:
+    paths:
+      - 'online/v013-elite-abilities.js'
+      - 'docs/online/v013-elite-abilities.js'
+      - 'combat/v012-combat-runtime.js'
+      - 'docs/combat/v012-combat-runtime.js'
+      - 'index.html'
+      - 'docs/index.html'
+      - 'scripts/v013-natural-progression.cjs'
+      - 'scripts/simulate-progression.cjs'
+      - 'tests/v013-gravecaller-auto-focus.test.cjs'
+      - 'tests/v013-stage82-elite-abilities.test.cjs'
+      - '.github/workflows/v013-gravecaller-auto-focus.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gravecaller-native-auto-focus:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Real native Gravecaller auto target, manual lock and ongoing combat policy regressions
+        run: >-
+          node --test
+          tests/v013-gravecaller-auto-focus.test.cjs
+          tests/v013-stage82-elite-abilities.test.cjs
+          tests/v013-gravecaller-target-study.test.cjs
