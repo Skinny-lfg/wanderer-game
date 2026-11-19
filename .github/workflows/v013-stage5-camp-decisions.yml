@@ -1,0 +1,87 @@
+name: Wanderer Stage 5 — Loot-aware Camp decision simulation (no deploy)
+on:
+  push:
+    branches:
+      - audit/v013
+    paths:
+      - '.github/workflows/v013-stage5-camp-decisions.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-camp-decision-comparison:
+    if: github.ref == 'refs/heads/audit/v013'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Native Forge and loot-aware decisions regressions
+        run: >-
+          node --test
+          tests/v013-stage5-camp-decisions.test.cjs
+          tests/v013-natural-progression.test.cjs
+          tests/v013-stage5-starter-comparison.test.cjs
+      - name: Compare legacy and improved policies, same native E1 accounts
+        run: node scripts/v013-stage5-decision-comparison.cjs
+      - name: Validate both arms and economic provenance
+        run: |
+          node <<'NODE'
+          const fs=require('node:fs');
+          const assert=require('node:assert/strict');
+          const r=JSON.parse(fs.readFileSync('reports/stage5-decision-comparison.json'));
+          assert.equal(r.paired.length,24);
+          assert.equal(r.legacy.summary.accounts,24);
+          assert.equal(r.riskAware.summary.accounts,24);
+          assert.equal(r.legacy.summary.errors,0);
+          assert.equal(r.riskAware.summary.errors,0);
+          assert.equal(r.oldSource,r.newSource,'Same native code; only policy changes');
+          assert.equal(r.legacy.summary.gearCrafted,0,'Old policy did not craft');
+          for(const run of r.riskAware.accounts){
+            for(const a of run.attempts){
+              for(const item of a.camp?.crafted||[]){
+                assert(item.fragmentsSpent>0&&item.essenceSpent>0,
+                  'No free equipment from Forge');
+              }
+              assert(a.after.gold>=0&&a.after.fragments>=0&&a.after.essence>=0,
+                'Native economy cannot have negative balances');
+            }
+          }
+          console.log('STAGE5_POLICY_VALIDATION='+JSON.stringify({
+            oldWins:r.legacy.summary.wins,newWins:r.riskAware.summary.wins,
+            oldCrafted:r.legacy.summary.gearCrafted,
+            newCrafted:r.riskAware.summary.gearCrafted,
+            newProtectedBagExits:r.riskAware.summary.protectedBagExits,
+            newNoBagEasyRisks:r.riskAware.summary.riskedEasyRoomWithoutBag
+          }));
+          NODE
+      - name: Record exact Git commit and source hashes
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p reports
+          {
+            echo "commit=${GITHUB_SHA}"
+            echo "branch=${GITHUB_REF}"
+            echo "node=$(node --version)"
+            sha256sum scripts/v013-natural-progression.cjs tests/v012-economy-harness.cjs scripts/v013-stage5-decision-comparison.cjs
+          } > reports/stage5-decision-comparison-provenance.txt
+      - name: Upload native reports and complete decision traces
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage5-camp-decision-comparison
+          path: |
+            reports/stage5-decision-comparison.json
+            reports/stage5-decision-comparison.md
+            reports/stage5-decision-comparison-provenance.txt
+          if-no-files-found: warn
+          retention-days: 30
