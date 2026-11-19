@@ -200,22 +200,10 @@ function phase1StartWave(resetScroll=false){
  if(roster&&theme.affinityArtPeers?.length)roster=rosterSystem.shareAffinityArt(roster,theme.affinityArtPeers,{seed:g.dungeon?.foundationManifest?.seed??0,realm:theme.id,node:g.selected.node??g.planeIndex});
  const actualBossStyle=last&&g.selected.boss&&g.version===2?WandererV012Expedition.bossForAffinity(g.selected.family)?.style:null;
  const spawn=index=>ports.enemyFor(r.tier,r.enc,{theme,mob:roster?.[index]||null,boss:last&&g.selected.boss,elite:last&&g.selected.elite&&!g.selected.boss,variant:actualBossStyle?ports.BOSS_ARCHETYPES.find(b=>b.style===actualBossStyle):null});
- const scale=totalCount>=6?{hp:(1.65+.045*(totalCount-6))/totalCount,atk:totalCount>=18?.12:.16}:null;
- const group=WandererV012CombatCore.createEnemyGroup(spawn,totalCount,{activeSlots:activeCount,scale,
+ const group=WandererV012CombatCore.createEnemyGroup(spawn,totalCount,{activeSlots:activeCount,
   ...(roster?{scaleFor:(enemy,count,base)=>rosterSystem.scaleFor(enemy,count,base)}:{})
  });
- // Give ordinary mobs time to show their attacks; keep their pressure lower.
- for(const enemy of group){
-  // Solo Elites are optional high-risk encounters, not easier normal Tanks.
-  // Attack pressure (not inflated HP) is the primary difficulty lever.
-  // Gravebound Bulwark is still slower/less damaging than other Elite roles,
-  // but can no longer be farmed as a harmless high-HP target.
-  const endurance=enemy.boss?1.8:enemy.miniboss?3.05:3;
-  enemy.hp=enemy.maxhp=Math.round(enemy.maxhp*endurance*(1+.10*(g.selected.risk||0)));
-  enemy.attackEvery*=1.15;
-  const threatScale=enemy.miniboss?(enemy.eliteType==='tank'?1.40:1.12):.65;
-  enemy.atk=Math.max(1,Math.round(enemy.atk*threatScale*(1+.12*(g.selected.risk||0))));
- }
+ WandererV012CombatCore.applyEncounterPressure(group,g.selected.risk||0);
  const traits=globalThis.WandererV013EncounterTraits;
  const modifiers=globalThis.WandererV013BossModifiers;
  const preparation=globalThis.WandererV013BossPreparation;
@@ -230,7 +218,9 @@ function phase1StartWave(resetScroll=false){
  const traitId=g.dungeon&&!g.selected.boss&&!g.selected.elite?g.selected.traitId:null;
  if(traitId&&traits?.applyGroup(traitId,group)){r.encounterTraitId=traitId;ports.addLog('Encounter trait: '+traits.get(traitId).name,'critical');}
  else r.encounterTraitId=null;
- if(g.dungeon&&g.selected.node===2&&group.length>1){const guard=group[0];guard.name+=' · Vanguard';guard.vanguard=true;guard.hp=guard.maxhp=Math.round(guard.maxhp*1.8);guard.atk=Math.ceil(guard.atk*1.2);ports.addLog(guard.name+' prepares the first strike.','critical');}
+ // Map node 2 currently grants Vanguard regardless of room identity.
+ const hasVanguard=g.dungeon&&g.selected.node===2&&group.length>1;
+ if(hasVanguard){const guard=group[0];guard.name+=' · Vanguard';guard.vanguard=true;guard.hp=guard.maxhp=Math.round(guard.maxhp*1.8);guard.atk=Math.ceil(guard.atk*1.2);ports.addLog(guard.name+' prepares the first strike.','critical');}
  if(last&&(g.selected.boss||g.selected.elite)){
   const baseEscorts=g.selected.escorts??(g.selected.boss?2:1);
   const escorted=g.selected.boss&&modifiers?modifiers.extraEscorts(bossIds,baseEscorts):baseEscorts;
@@ -238,8 +228,8 @@ function phase1StartWave(resetScroll=false){
   for(let i=0;i<escorts;i++){
    const escortMob=theme.mobs?.find(m=>m.role==='skirmisher')||theme.mobs?.find(m=>m.role!=='minion');
    const guard=ports.enemyFor(r.tier,r.enc,{theme,mob:escortMob||null,boss:false,elite:false});
-   guard.hp=guard.maxhp=Math.round(guard.maxhp*1.2);guard.atk=Math.round(guard.atk*.35);
-   guard.attackEvery*=1.3;guard.groupSlot=i+1;guard.groupClock=-(i+1)*.6;group.push(guard);
+   WandererV012CombatCore.applyEscortStats(guard);
+   guard.groupSlot=i+1;guard.groupClock=-(i+1)*.6;group.push(guard);
   }
  }
  if(conditions&&conditionCard){const applied=conditions.applyEncounter(r,group,g.selected,conditionCard,g.dungeon);if(applied&&(r.conditionMarked||g.selected.boss))ports.addLog('Expedition Condition: '+applied.name,'critical');}
