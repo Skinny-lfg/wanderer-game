@@ -16,6 +16,6 @@ jobs:
         shell: bash
         run: |
           echo '=== OLDER TALENT SCRIPT REFERENCES ==='
-          rg -n 'automatic-talents[.]js|v013-legacy-fixture[.]cjs|legacyTopology|legacyBasic|legacyFocused|legacyV14' --glob '*.js' --glob '*.mjs' --glob '*.cjs' --glob '*.html' --glob '*.yml' --glob '!docs/**' combat online preview index.html tests scripts .github || true
+          grep -R -n -E --include='*.js' --include='*.mjs' --include='*.cjs' --include='*.html' --include='*.yml' 'automatic-talents[.]js|v013-legacy-fixture[.]cjs|legacyTopology|legacyBasic|legacyFocused|legacyV14' combat online preview index.html tests scripts .github || true
           echo '=== ROUTE GENERATOR REFERENCES ==='
-          rg -n 'routeMap|routeMobCounts|rerollsByRealm|planAffinities|chooseInitial\(|phase1Controller[.](select|allowed|influence|reachable|reroll)\(' --glob '*.js' --glob '*.mjs' --glob '*.cjs' --glob '*.html' --glob '!docs/**' combat online preview index.html tests scripts | head -110 || true
+          grep -R -n -E --include='*.js' --include='*.mjs' --include='*.cjs' --include='*.html' 'routeMap|routeMobCounts|rerollsByRealm|planAffinities|chooseInitial\(|phase1Controller[.](select|allowed|influence|reachable|reroll)\(' combat online preview index.html tests scripts | head -110 || true
