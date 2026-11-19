@@ -1,0 +1,97 @@
+name: Wanderer Stage 5 — Starter gear A/B over repeated E1 attempts (no deploy)
+
+on:
+  push:
+    branches:
+      - audit/v013
+    paths:
+      - '.github/workflows/v013-stage5-starter-gear-compare.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wanderer-stage5-starter-comparison-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  starter-comparison:
+    if: github.ref == 'refs/heads/audit/v013'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+
+      - name: Validate exact starter-only override and native real-account continuation
+        run: >-
+          node --test
+          tests/v013-stage5-starter-comparison.test.cjs
+          tests/v013-natural-progression.test.cjs
+          tests/v013-stage5-natural-baseline.test.cjs
+
+      - name: Matched E1 comparison up to six legal attempts
+        run: node scripts/v013-stage5-starter-comparison.cjs
+
+      - name: Verify both cohort arms and source isolation
+        run: |
+          node <<'NODE'
+          const fs=require('node:fs');
+          const assert=require('node:assert/strict');
+          const file='reports/stage5-starter-comparison.json';
+          const r=JSON.parse(fs.readFileSync(file,'utf8'));
+          assert.equal(r.paired.matched,24);
+          assert.equal(r.control.summary.all.accounts,24);
+          assert.equal(r.adjusted.summary.all.accounts,24);
+          assert.equal(r.control.summary.all.errors,0);
+          assert.equal(r.adjusted.summary.all.errors,0);
+          assert.notEqual(r.starterSourceHashes.control,r.starterSourceHashes.adjusted);
+          assert.deepEqual(r.probes.control.items.map(i=>[i.atk,i.def,i.hp]),[[3,0,0],[0,1,0],[0,0,4]]);
+          assert.deepEqual(r.probes.adjusted.items.map(i=>[i.atk,i.def,i.hp]),[[4,0,0],[0,2,0],[0,0,8]]);
+          assert.equal(r.probes.adjusted.hero.maxhp-r.probes.control.hero.maxhp,4);
+          assert.equal(r.probes.adjusted.hero.defense-r.probes.control.hero.defense,1);
+          assert.equal(r.probes.adjusted.hero.attack-r.probes.control.hero.attack,1);
+          console.log('STAGE5_COMPARISON_VALID='+JSON.stringify({
+            pairs:r.paired.matched,
+            originalWins:r.control.summary.all.completedE1,
+            adjustedWins:r.adjusted.summary.all.completedE1,
+            originalE1Attempts:r.control.summary.all.attempts,
+            adjustedE1Attempts:r.adjusted.summary.all.attempts,
+            originalLossPct:r.control.summary.all.meanFirstFightLossPct,
+            adjustedLossPct:r.adjusted.summary.all.meanFirstFightLossPct,
+            starterRemainingOriginal:r.control.summary.all.meanStarterRemaining,
+            starterRemainingAdjusted:r.adjusted.summary.all.meanStarterRemaining
+          }));
+          NODE
+
+      - name: Store exact commit and source provenance
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p reports
+          {
+            echo "commit=${GITHUB_SHA}"
+            echo "branch=${GITHUB_REF}"
+            echo "node=$(node --version)"
+            sha256sum economy/v013-gear-rolls.js scripts/v013-natural-progression.cjs scripts/v013-stage5-starter-comparison.cjs
+          } > reports/stage5-starter-comparison-provenance.txt
+
+      - name: Upload A/B measurements and readable report (no deploy)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage5-starter-gear-comparison
+          path: |
+            reports/stage5-starter-comparison.json
+            reports/stage5-starter-comparison.md
+            reports/stage5-starter-comparison-summary.json
+            reports/stage5-starter-comparison-provenance.txt
+          if-no-files-found: warn
+          retention-days: 30
