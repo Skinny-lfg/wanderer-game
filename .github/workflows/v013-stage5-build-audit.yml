@@ -1,5 +1,5 @@
 name: Wanderer Stage 5 — Native build/gear/respec baseline audit (no deploy)
-# Retry after resolving talent graph from the integrated VM.
+# Tests now use the v15 integrated VM; cross-realm assertions are shape-safe.
 
 on:
   push:
