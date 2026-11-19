@@ -205,8 +205,7 @@ function createStore(storage,binding='local'){
     requireValue(JSON.stringify(old.session.home)===JSON.stringify(next.session.home),'home equipment changed');
     requireValue(old.session.controller.version===2&&next.session.controller.version===2,'current checkpoint format');
     requireValue(integer(next.session.controller.rerolls,0,old.session.controller.rerolls),'reroll rollback');
-    const before=old.session.controller.rerollsByRealm,after=next.session.controller.rerollsByRealm;
-    requireValue(Array.isArray(before)&&Array.isArray(after)&&before.length===15&&after.length===15&&after.every((row,i)=>Array.isArray(row)&&row.length===3&&row.every((n,j)=>integer(n,0,before[i][j]))),'reroll rollback');
+
    }
    if(next.lastOutcome==='extracted'&&old.lastOutcome!=='extracted')requireValue(old.active?.stage==='choice'&&old.active.plane>1&&old.session&&!old.session.entry&&!old.session.controller.rewardPending&&next.completed===old.completed&&JSON.stringify(s.profile.pendingRuneReward)===JSON.stringify(previous.profile.pendingRuneReward)&&JSON.stringify(s.profile.runes)===JSON.stringify(previous.profile.runes),'invalid extraction');
    if(next.completed>old.completed)requireValue(old.active?.plane===15&&old.active.wave===1&&old.active.level===next.completed&&next.lastOutcome==='victory'&&next.awardKeys.includes(next.attempts+':15:1'),'boss checkpoint required');

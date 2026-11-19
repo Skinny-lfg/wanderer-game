@@ -23,7 +23,7 @@ function create(themes,rng=Math.random){
  if(typeof rng!=='function')throw Error('Invalid RNG');
  const expeditionThemes=Object.entries(REALMS).map(([id,[family,name]])=>({...(themes.find(t=>t.id===id)||themes.find(t=>t.id==='forge')),id,name,family}));
  if(FAMILIES.some(f=>!expeditionThemes.some(t=>t.family===f)))throw Error('Missing themes for an affinity');
- const game={unlocked:1,expedition:0,planeIndex:0,stage:'camp',families:[],lastFamily:null,rooms:[],offers:[],selected:null,wave:0,history:[],initialFamily:null,rewardPending:null,rerollsByRealm:[],eventIds:[],affinityPlan:null,affinityPlanSeen:[false,false,false]};
+ const game={unlocked:1,expedition:0,planeIndex:0,stage:'camp',families:[],lastFamily:null,rooms:[],offers:[],selected:null,wave:0,history:[],initialFamily:null,rewardPending:null};
  let routeRng=rng,draftRng=rng;
  function start(level=1,options={}){
   if(options?.dungeon!==true)throw Error('Only the deterministic Dungeon is supported');
@@ -82,7 +82,7 @@ function create(themes,rng=Math.random){
   if(P&&manifest)for(const card of cards)P.planRoom(card,seed);
   if(B&&manifest)for(const card of cards)B.placeShrines(card,seed);
   if(T&&manifest)for(const card of cards)for(const {room,traitId} of T.assign(card,seed))card.nodes[room].traitId=traitId;
-  Object.assign(game,{version:2,expedition:level,planeIndex:1,stage:'choice',freeBuild:true,offers:[],selected:null,wave:0,history:[],rooms:[],rewardPending:null,families:[],initialFamily:null,lastFamily:null,rerolls:0,rerollsByRealm:Array.from({length:15},()=>[0,0,0]),bossId,encounterVersion:1,dungeon:{cards,realm:null,current:0,cleared:[0],visited:[0],scouted:[],discoveredSecrets:[],...(manifest?{foundationManifest:manifest}:{})}});
+  Object.assign(game,{version:2,expedition:level,planeIndex:1,stage:'choice',freeBuild:true,offers:[],selected:null,wave:0,history:[],rooms:[],rewardPending:null,families:[],initialFamily:null,lastFamily:null,rerolls:0,bossId,encounterVersion:1,dungeon:{cards,realm:null,current:0,cleared:[0],visited:[0],scouted:[],discoveredSecrets:[],...(manifest?{foundationManifest:manifest}:{})}});
    return game;
  }
  function realmMap(){return game.dungeon.cards.find(c=>c.id===game.dungeon.realm);}

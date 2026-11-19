@@ -123,7 +123,7 @@ function restoreCloudSave(save){
  ports.phase5Ready=true;ports.saveBlocked=false;ports.phase1Vitals=null;ports.phase1Build=null;ports.phase1Draft=null;
  if(recovered.save.expedition.presentation)ports.phase5Results=ports.phase4Clone(recovered.save.expedition.presentation);
  if(recovered.save.expedition.session)ports.phase4Restore(recovered.save.expedition.session);
- else {const g=ports.phase1Controller.state;Object.assign(g,{stage:'camp',expedition:recovered.save.expedition.unlocked,unlocked:recovered.save.expedition.unlocked,planeIndex:0,families:[],lastFamily:null,rooms:[],offers:[],selected:null,wave:0,history:[],initialFamily:null,rewardPending:null,rerollsByRealm:[],eventIds:[],affinityPlan:null,affinityPlanSeen:[false,false,false]});ports.phase5Results={version:1,complete:false,review:null,realm:null,summary:null,earned:[],gold:0,fragments:0};ports.state.run=null;ports.phase4Entry=null;ports.phase4Resume=false;ports.phase4Home=null;ports.phase4Seed=null;ports.phase4Prefix=null;ports.phase4WaveKeys=[];ports.view='phase1';}
+ else {const g=ports.phase1Controller.state;Object.assign(g,{stage:'camp',expedition:recovered.save.expedition.unlocked,unlocked:recovered.save.expedition.unlocked,planeIndex:0,families:[],lastFamily:null,rooms:[],offers:[],selected:null,wave:0,history:[],initialFamily:null,rewardPending:null});ports.phase5Results={version:1,complete:false,review:null,realm:null,summary:null,earned:[],gold:0,fragments:0};ports.state.run=null;ports.phase4Entry=null;ports.phase4Resume=false;ports.phase4Home=null;ports.phase4Seed=null;ports.phase4Prefix=null;ports.phase4WaveKeys=[];ports.view='phase1';}
  ports.render();
 }
 
