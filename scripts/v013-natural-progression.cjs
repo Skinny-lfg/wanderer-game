@@ -12,10 +12,24 @@ const I=globalThis.WandererV013MapIntelligence;
 require('../economy/v012-loot-rules.js');
 const LOOT=globalThis.WandererV012LootRules;
 const PROFILES=Object.freeze({
- cautious:{name:'Cautious',risk:0,targets:['strong_heart','guarded_block','renewal','guard','vitality','might'],families:['aegis','vitality'],healAt:.72,retreatAt:.5,target:'mechanics',shop:true},
- balanced:{name:'Balanced',risk:0,targets:['bleeding_edge','deep_cuts','strong_heart','might','vitality'],families:['blood','aegis'],healAt:.53,retreatAt:.34,target:'mechanics',shop:true},
- daring:{name:'Daring',risk:1,targets:['quick_hands','double_strike','bleeding_edge','might','haste'],families:['fury','blood'],healAt:.35,retreatAt:.16,target:'focus',shop:true}
+ cautious:{name:'Cautious',risk:0,targets:['strong_heart','guarded_block','renewal','guard','vitality','might'],families:['aegis','vitality'],preparedTargets:['last_bastion'],healAt:.72,retreatAt:.5,target:'mechanics',shop:true},
+ balanced:{name:'Balanced',risk:0,targets:['bleeding_edge','deep_cuts','strong_heart','might','vitality'],families:['blood','aegis'],preparedTargets:['red_guillotine'],healAt:.53,retreatAt:.34,target:'mechanics',shop:true},
+ daring:{name:'Daring',risk:1,targets:['quick_hands','double_strike','bleeding_edge','might','haste'],families:['fury','blood'],preparedTargets:['red_guillotine'],healAt:.35,retreatAt:.16,target:'focus',shop:true},
+ 'magic-fire':{name:'Fire Caster',risk:0,targets:['element_choice','arcane_focus','mana_spring','kindling','fire_spread'],families:['magic'],element:'fire',preparedTargets:[],healAt:.57,retreatAt:.36,target:'mechanics',shop:true},
+ 'magic-frost':{name:'Frost Caster',risk:0,targets:['element_choice','arcane_focus','mana_spring','deep_winter','frost_spread'],families:['magic'],element:'frost',preparedTargets:[],healAt:.62,retreatAt:.41,target:'mechanics',shop:true},
+ 'magic-lightning':{name:'Lightning Caster',risk:0,targets:['element_choice','arcane_focus','mana_spring','overcharge','storm_mastery'],families:['magic'],element:'lightning',preparedTargets:[],healAt:.54,retreatAt:.34,target:'mechanics',shop:true}
 });
+// A single deliberate retraining after two unsuccessful attempts at the same E.
+// Uses the game's free full reset; it never creates XP or talent points.
+const PIVOTS=Object.freeze({
+ cautious:{targets:['quick_hands','bleeding_edge','deep_cuts'],families:['fury','blood'],preparedTargets:['red_guillotine']},
+ balanced:{targets:['strong_heart','guarded_block','renewal'],families:['vitality','aegis'],preparedTargets:['last_bastion']},
+ daring:{targets:['guarded_block','barrier_pulse','strong_heart'],families:['aegis','vitality'],preparedTargets:['last_bastion']},
+ 'magic-fire':{targets:['element_choice','arcane_focus','mana_spring','deep_winter','frost_spread'],element:'frost'},
+ 'magic-frost':{targets:['element_choice','arcane_focus','mana_spring','overcharge','storm_mastery'],element:'lightning'},
+ 'magic-lightning':{targets:['element_choice','arcane_focus','mana_spring','kindling','fire_spread'],element:'fire'}
+});
+function pivotProfile(id){return {...PROFILES[id],...PIVOTS[id],variantId:id+'-pivot'};}
 const DEFAULTS=Object.freeze({seeds:[9101,9201],profiles:['cautious','balanced'],maxLevel:8,maxAttempts:6,maxTotalAttempts:null,tickLimit:4500,maxRooms:34,output:'reports/v013-stage93-natural-e1-e8.json'});
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const round=(n,places=2)=>Number(Number(n).toFixed(places));
@@ -46,7 +60,7 @@ function gearScore(item,profile){
   Number(item.agi||0)*1.3+Number(item.block||0)*2+Number(item.blockChance||0)*2+
   Number(item.evasionRating||0)*1.15+Number(item.wardBonus||0)*15+
   Number(item.manaRegenBonus||0)*10;
- const weapon=item.slot==='weapon'&&['Wand','Staff'].includes(item.subtype)&&profile.name!=='Daring'?-9:0;
+ const weapon=item.slot==='weapon'&&['Wand','Staff'].includes(item.subtype)&&profile.name!=='Daring'&&!profile.families.includes('magic')?-9:0;
  return round(s+Number(item.tier||1)*.5+(r[item.rarity]||0)*1.5+weapon);
 }
 function gearSnapshot(a){
@@ -82,24 +96,45 @@ function missingPath(T,progress,target){
 function spendEarnedTalents(a,profile){
  const T=a.talents,s=a.state(),before=s.automaticTalents;
  if(!T.valid(before))throw Error('Invalid natural talent account before spending');
- let progress=before;const bought=[];
- const targets=[...profile.targets,...profile.families.map(x=>'affinity_'+x),...profile.families.map(x=>'root_'+x),'vitality','might','haste'];
+ if(!a.talentActions?.available())throw Error('Talents may only be changed in Camp');
+ let progress=before;const bought=[],elements=[];
+ const targets=[...profile.targets,...(profile.preparedTargets||[]),...profile.families.map(x=>'affinity_'+x),...profile.families.map(x=>'root_'+x),'vitality','might','haste'];
+ function tuneElement(){
+  if(!profile.element||!progress.nodes.includes('element_choice')||progress.element===profile.element)return;
+  if(!a.talentActions.element(profile.element))throw Error('Native element choice rejected: '+profile.element);
+  progress=s.automaticTalents;elements.push(profile.element);
+ }
  for(let attempts=0;attempts<40&&T.earned(progress)>progress.nodes.length;attempts++){
+  tuneElement();
   let changed=false;
   for(const target of targets){
    const route=missingPath(T,progress,target);if(!route?.length)continue;
-   const next=T.allocate(progress,route[0]);
-   if(next){progress=next;bought.push(route[0]);changed=true;break;}
+   if(!a.talentActions.allocate(route[0]))continue;
+   progress=s.automaticTalents;bought.push(route[0]);changed=true;break;
   }
   if(!changed){
-   const alt=T.NODES.find(n=>!progress.nodes.includes(n.id)&&(!n.family||profile.families.includes(n.family))&&T.allocate(progress,n.id));
+   const alt=T.NODES.find(n=>!progress.nodes.includes(n.id)&&(!n.family||profile.families.includes(n.family))&&
+    (!n.element||n.element===(progress.element||'arcane'))&&T.allocate(progress,n.id));
    if(!alt)break;
-   progress=T.allocate(progress,alt.id);bought.push(alt.id);
+   if(!a.talentActions.allocate(alt.id))throw Error('Native talent allocation rejected '+alt.id);
+   progress=s.automaticTalents;bought.push(alt.id);
   }
  }
+ tuneElement();
  if(!T.valid(progress)||progress.xp!==before.xp)throw Error('Natural talent spending forged XP');
- s.automaticTalents=progress;
- return {bought,earned:T.earned(progress),spent:progress.nodes.length,xp:progress.xp};
+ return {bought,elements,earned:T.earned(progress),spent:progress.nodes.length,xp:progress.xp};
+}
+function prepareEarnedAbility(a,profile){
+ const T=a.talents,p=a.state().automaticTalents;
+ if(!T.valid(p))throw Error('Invalid talent progress for prepared ability');
+ const all=new Map(T.NODES.map(n=>[n.id,n]));
+ const available=p.nodes.filter(id=>all.get(id)?.advanced);
+ const preferred=(profile.preparedTargets||[]).find(id=>available.includes(id));
+ const chosen=preferred||available.find(id=>!all.get(id).family||profile.families.includes(all.get(id).family))||null;
+ if(chosen===p.prepared||(!chosen&&!p.prepared))return chosen;
+ if(!a.talentActions.prepare(chosen))throw Error('Native prepared ability rejected '+chosen);
+ if(a.state().automaticTalents.prepared!==chosen)throw Error('Native prepared ability did not persist');
+ return chosen;
 }
 function equipEarned(a,profile,between=false){
  const actions=[];
