@@ -1095,10 +1095,10 @@ function combatRunesMarkup(){
 }
 function phase3EnemyCombatMarkup(e,preview){return `<div class="combatant arenaSingleEnemy ${preview?'enemyPreview':''} ${e.miniboss?'eliteCombatant':''} role-${esc(e.eliteType||e.bossStyle||e.role||'skirmisher')}"><div class="combatStatuses enemyDebuffs" id="enemyDebuffs" tabindex="0" aria-label="Enemy effects; scroll down to view more" aria-live="off">${preview?'':enemyDebuffMarkup(e)}</div><div class="arenaSprite singleArenaSprite"><img id="enemyPortrait" src="${e.miniboss?(ELITE_ART[e.eliteType]||e.image):(e.image||(e.boss?ART.boss:ART.enemy))}" data-elite-type="${e.miniboss?e.eliteType||'':''}" data-boss-style="${e.boss?e.bossStyle:''}" data-attack-src="${e.miniboss?(ELITE_ATTACK_ART[e.eliteType]||''):e.boss?(BOSS_ATTACK_ART[e.bossStyle]||''):e.image||''}" data-idle-src="${e.miniboss?(ELITE_ART[e.eliteType]||e.image||''):e.boss?(e.image||''):''}" alt="${esc(e.name)}"><span class="arenaGroundShadow singleGroundShadow" aria-hidden="true"></span></div><strong class="combatEnemyName${e.boss?' bossName':e.miniboss?' eliteName':''}">${esc(e.name)}</strong><div class="enemyAbilityNotice" data-enemy-ability>${enemyAbilityMarkup(e,state.run?.combatSeconds||0)}</div><div class="arenaEnemyVitals">${enemyRoleBadge(e)}<div class="hpbar enemy" role="progressbar" aria-label="Enemy Health" aria-valuemin="0" aria-valuemax="${e.maxhp}" aria-valuenow="${Math.ceil(e.hp)}"><i id="enemyHpFill"></i></div></div><small id="enemyHpText"></small><small>ATK ${e.atk} · DEF <span id="enemyDefense">${e.def}</span></small><small>${!preview&&!e.boss&&!e.miniboss?(e.role==='minion'?'Minion':e.role==='tank'?'Tank':e.role==='caster'?'Caster':'Skirmisher')+' · '+(e.attackType==='spell'?'Spell':'Physical')+' · ':''}${e.bossStyle?'👑 '+(e.bossStyle==='guardian'?'Shield Guardian':e.bossStyle==='leech'?'Life Drain':'Enrage'):(e.effect?esc(ELEMENTS[e.effect].name):'Enemy')}</small></div>`;}
 function phase3CombatResourceSummary(r){const s=r.stats,element=phase1Build?.element,magic=s.caster||s.phase2Magic||s.phase2Decay;return magic?(s.caster?esc(s.main.subtype):'Magic')+(element?' · '+esc(element[0].toUpperCase()+element.slice(1)):'')+' · Spell Power '+formatItemStat(s.spellPower)+' · Mana Regen '+formatItemStat(s.manaRegen)+'/s':'Physical attacks';}
-function renderCombat(){if(PHASE1_PREVIEW)document.body.classList.add('phase3CombatView');wallet();const r=state.run;if(!r){view='tavern';render();return;}const t=phase2Theme(r.path),s=r.stats,preview=!r.enemy,e=r.enemy||{name:'Enemy unrevealed',image:ART.enemy,hp:1,maxhp:1,atk:'?',def:'?',baseDef:'?',barrier:0,effect:null,boss:false,bossStyle:null,bleedStacks:0,burnStacks:0,slowTime:0};html(`<div class="combatLayout"><section class="panel"><h1 class="a11yVisuallyHidden">Combat</h1><div class="topline"><div><h2 class="combatDungeonHeading">${affinityArt(t.effect)}<span class="combatDungeonName">${esc(t.name)}</span></h2><p class="muted small">D${r.tier} · ${r.status==='ready'?'Preparing Wave '+(r.enc+1)+'/'+r.planeWaves:'Wave '+r.enc+'/'+r.planeWaves+' · '+(r.status==='fight'?'Auto-combat':'Dungeon cleared')}</p></div></div><div class="scene" id="scene" style="--phase3-realm-image:url('${esc(dungeonImage(t))}')"><img class="phase3ArenaBackdrop" src="${esc(dungeonImage(t))}" alt="" aria-hidden="true" draggable="false">${phase3LootToastMarkup()}<div class="combatant"><div class="combatStatuses playerStatuses" id="heroStatuses" tabindex="0" aria-label="Player effects; scroll down to view more" aria-live="off">${playerStatusMarkup(r)}</div><div class="arenaSprite heroArenaSprite"><img id="heroPortrait" src="${heroFullImage()}" alt="Wanderer"><span class="arenaGroundShadow playerGroundShadow" aria-hidden="true"></span></div><strong id="heroName">${esc(globalThis.WandererNickname||"Wanderer")}</strong><div class="hpbar player" role="progressbar" aria-label="Player Health" aria-valuemin="0" aria-valuemax="${r.maxhp}" aria-valuenow="${Math.ceil(r.hp)}"><i id="heroHpFill"></i></div>${(s.caster||r.phase1Magic||s.phase2Decay)&&r.maxmp>0?'<div class="mpbar" id="heroMpBar" role="progressbar" aria-label="Mana" aria-valuemin="0" aria-valuemax="'+r.maxmp+'" aria-valuenow="'+Math.floor(r.mp)+'" title="Mana"><i id="heroMpFill"></i></div>':''}<small id="heroHpText"></small><small>ATK ${formatItemStat(s.attack)} · DEF ${formatItemStat(s.defense)}</small><small>Crit ${s.crit}% · SPD ${s.attacksPerSec.toFixed(2)}${s.blockChance?' · Block '+s.blockChance+'%':''}</small></div><div class="vs">VS</div>${r.enemies?.length>1?phase3GroupCombatMarkup(r):phase3EnemyCombatMarkup(e,preview)}</div><div id="combatActionBar" class="actionBar" aria-label="Automatic combat actions"></div><div class="small muted" style="margin:6px 0">${phase3CombatResourceSummary(r)} · Barrier <span id="barrierText">${Math.floor(r.barrier)}</span></div>${r.bossModifierIds?.length?`<p class="small muted">Boss properties: ${r.bossModifierIds.map(id=>esc(WandererV013BossModifiers.get(id)?.name||id)).join(' · ')}</p>`:''}${weaponTrait(s.main)?`<p class="weaponPassiveNote"><strong>Weapon passive</strong><span>${esc(weaponTrait(s.main))}</span></p>`:''}<div class="buttonRow combatActions" style="margin-top:5px"><button id="combatSpeed" class="ghost" aria-label="×${clockSpeed} Speed — change combat speed"><span class="combatSpeedValue">×${clockSpeed}</span><span class="combatSpeedWord"> Speed</span></button></div>${phase3CombatBuildMarkup()}${combatRunesMarkup()}<details class="combatStatDetails"><summary>Character stats &amp; bonus sources</summary>${phase3DetailedStatsMarkup(s)}</details></section><section class="panel combatExpeditionDetails"><details class="combatDetails"><summary>Loot &amp; combat log · ${r.loot.length+r.valuables.length} items</summary><h3 class="runLootHeading">Run Loot</h3><div class="combatLoot">${r.loot.map(o=>`<div class="lootCard" ${rarityFrame(o)}>${rarityArt(o,itemImg(o),o.name,'loot')}${affinityBadge(o)}<div class="micro" style="color:${rarityColor(o)}">E${o.tier} ${o.rarity}</div></div>`).join('')||'<p class="small muted">No equipment found yet.</p>'}</div><h3>Valuables</h3><div class="combatLoot c3CombatTreasures">${r.valuables.map(item=>`<div class="c3TreasureResult"><img class="c3TreasureImg" src="${WandererV012Treasures.image(item)}" alt=""><span>${esc(WandererV012Treasures.displayName(item))} · ${item.worth} Gold</span></div>`).join('')||'<p class="small muted">No valuables found yet.</p>'}</div><div class="rule"></div><h3>Expedition Log</h3><div class="log" id="expeditionLog"></div></details></section></div>`);$('combatSpeed').onclick=()=>{clockSpeed=clockSpeed===1?2:clockSpeed===2?4:1;if(r.status==='fight'){clearInterval(clock);clock=setInterval(()=>{if(document.visibilityState!=='hidden')updateFight();},110/clockSpeed)}renderCombat()};renderLog();updateBars();phase3BindGroupEnemyFocus();phase3SetMobIdle();if(isPhase1Run())phase1DecorateCombat();phase3BindPassiveInspect();if(globalThis.WandererArenaHud)WandererArenaHud.mount(r);if(r.status==='cleared'&&phase1Draft?.kind==='reward')phase6PassivePopup();}
+function renderCombat(){if(PHASE1_PREVIEW)document.body.classList.add('phase3CombatView');wallet();const r=state.run;if(!r){view='tavern';render();return;}const t=phase2Theme(r.path),s=r.stats,preview=!r.enemy,e=r.enemy||{name:'Enemy unrevealed',image:ART.enemy,hp:1,maxhp:1,atk:'?',def:'?',baseDef:'?',barrier:0,effect:null,boss:false,bossStyle:null,bleedStacks:0,burnStacks:0,slowTime:0};html(`<div class="combatLayout"><section class="panel"><h1 class="a11yVisuallyHidden">Combat</h1><div class="topline"><div><h2 class="combatDungeonHeading">${affinityArt(t.effect)}<span class="combatDungeonName">${esc(t.name)}</span></h2><p class="muted small">D${r.tier} · ${r.status==='ready'?'Preparing Wave '+(r.enc+1)+'/'+r.planeWaves:'Wave '+r.enc+'/'+r.planeWaves+' · '+(r.status==='fight'?'Auto-combat':'Dungeon cleared')}</p></div></div><div class="scene" id="scene" style="--phase3-realm-image:url('${esc(dungeonImage(t))}')"><img class="phase3ArenaBackdrop" src="${esc(dungeonImage(t))}" alt="" aria-hidden="true" draggable="false">${phase3LootToastMarkup()}<div class="combatant"><div class="combatStatuses playerStatuses" id="heroStatuses" tabindex="0" aria-label="Player effects; scroll down to view more" aria-live="off">${playerStatusMarkup(r)}</div><div class="arenaSprite heroArenaSprite"><img id="heroPortrait" src="${heroFullImage()}" alt="Wanderer"><span class="arenaGroundShadow playerGroundShadow" aria-hidden="true"></span></div><strong id="heroName">${esc(globalThis.WandererNickname||"Wanderer")}</strong><div class="hpbar player" role="progressbar" aria-label="Player Health" aria-valuemin="0" aria-valuemax="${r.maxhp}" aria-valuenow="${Math.ceil(r.hp)}"><i id="heroHpFill"></i></div>${(s.caster||r.phase1Magic||s.phase2Decay)&&r.maxmp>0?'<div class="mpbar" id="heroMpBar" role="progressbar" aria-label="Mana" aria-valuemin="0" aria-valuemax="'+r.maxmp+'" aria-valuenow="'+Math.floor(r.mp)+'" title="Mana"><i id="heroMpFill"></i></div>':''}<small id="heroHpText"></small><small>ATK ${formatItemStat(s.attack)} · DEF ${formatItemStat(s.defense)}</small><small>Crit ${s.crit}% · SPD ${s.attacksPerSec.toFixed(2)}${s.blockChance?' · Block '+s.blockChance+'%':''}</small></div><div class="vs">VS</div>${r.enemies?.length>1?phase3GroupCombatMarkup(r):phase3EnemyCombatMarkup(e,preview)}</div><div id="combatActionBar" class="actionBar" aria-label="Automatic combat actions"></div><div class="small muted" style="margin:6px 0">${phase3CombatResourceSummary(r)} · Barrier <span id="barrierText">${Math.floor(r.barrier)}</span></div>${r.bossModifierIds?.length?`<p class="small muted">Boss properties: ${r.bossModifierIds.map(id=>esc(WandererV013BossModifiers.get(id)?.name||id)).join(' · ')}</p>`:''}${weaponTrait(s.main)?`<p class="weaponPassiveNote"><strong>Weapon passive</strong><span>${esc(weaponTrait(s.main))}</span></p>`:''}<div class="buttonRow combatActions" style="margin-top:5px"><button id="combatSpeed" class="ghost" aria-label="×${clockSpeed} Speed — change combat speed"><span class="combatSpeedValue">×${clockSpeed}</span><span class="combatSpeedWord"> Speed</span></button></div>${phase3CombatBuildMarkup()}${combatRunesMarkup()}<details class="combatStatDetails"><summary>Character stats &amp; bonus sources</summary>${phase3DetailedStatsMarkup(s)}</details></section><section class="panel combatExpeditionDetails"><details class="combatDetails"><summary>Loot &amp; combat log · ${r.loot.length+r.valuables.length} items</summary><h3 class="runLootHeading">Run Loot</h3><div class="combatLoot">${r.loot.map(o=>`<div class="lootCard" ${rarityFrame(o)}>${rarityArt(o,itemImg(o),o.name,'loot')}${affinityBadge(o)}<div class="micro" style="color:${rarityColor(o)}">E${o.tier} ${o.rarity}</div></div>`).join('')||'<p class="small muted">No equipment found yet.</p>'}</div><h3>Valuables</h3><div class="combatLoot c3CombatTreasures">${r.valuables.map(item=>`<div class="c3TreasureResult"><img class="c3TreasureImg" src="${WandererV012Treasures.image(item)}" alt=""><span>${esc(WandererV012Treasures.displayName(item))} · ${item.worth} Gold</span></div>`).join('')||'<p class="small muted">No valuables found yet.</p>'}</div><div class="rule"></div><h3>Expedition Log</h3><div class="log" id="expeditionLog"></div></details></section></div>`);$('combatSpeed').onclick=()=>{clockSpeed=clockSpeed===1?2:clockSpeed===2?4:1;if(r.status==='fight'){clearInterval(clock);clock=setInterval(()=>{if(document.visibilityState!=='hidden')updateFight();},110/clockSpeed)}renderCombat()};renderLog();updateBars();phase3BindGroupEnemyFocus();phase3SetMobIdle();if(isPhase1Run())phase1DecorateCombat();phase3BindPassiveInspect();if(globalThis.WandererArenaHud)WandererArenaHud.mount(r);}
 
 /* Current Expedition state. Persistence is restricted to isolated validation slots. */
-let phase1Controller=null,phase1Vitals=null,phase1Build=null,phase1Draft=null,phase1Clock=0,phase3Supplies=null,phase1Continuity=null;
+let phase1Controller=null,phase1Vitals=null,phase1Build=null,phase1Clock=0,phase3Supplies=null,phase1Continuity=null;
 const isPhase1Run=()=>PHASE1_PREVIEW&&state.run?.phase1===true;
 
 
@@ -1146,7 +1146,7 @@ function phase6ValuablesMarkup(){
  return '<section class="panel inventoryValuables"><div class="topline"><div><h3>Valuables</h3><p class="small muted">'+valuables.length+' items · '+total+' Gold total</p></div><button type="button" class="primary tiny" id="phase6SellAllValuables" '+(valuables.length?'':'disabled')+'>Sell All Valuables</button></div><div class="valuables">'+(valuables.map(item=>'<div class="valuable"><span class="c3TreasureLabel"><img class="c3TreasureImg" src="'+WandererV012Treasures.image(item)+'" alt=""><span>'+esc(WandererV012Treasures.displayName(item))+'</span></span><b class="gold">'+(Number(item.worth)||0)+' Gold</b></div>').join('')||'<p class="small muted">No valuables in Stash.</p>')+'</div></section>';
 }
 function phase6CanSellValuables(){
- return !!state?.valuables?.length&&!state.run&&!phase1Draft&&!saveBlocked&&
+ return !!state?.valuables?.length&&!state.run&&!saveBlocked&&
   (!PHASE5_VALIDATION||phase5Ready)&&!phase5Results?.review&&
   (!PHASE1_PREVIEW||['camp','finished','failed'].includes(phase1Controller?.state.stage));
 }
@@ -1256,14 +1256,6 @@ function phase6EffectMarkup(){
  return active.length?'<section class="phase3ActiveBuffs"><h3>Active Buffs</h3><div class="phase3BuffList">'+active.join('')+'</div></section>':'';
 }
 
-function phase6BindBack(){if(phase1Controller.state.planeIndex!==1||phase6Run?.started)return;$('screen').insertAdjacentHTML('beforeend','<button id="initialBack" class="ghost">Back to Camp</button>');$('initialBack').onclick=phase6BackToCamp;}
-
-
-
-
-
-
-
 // Non-combat event rewards use the same in-memory validation slot and Expedition bag.
 
 
@@ -1309,7 +1301,7 @@ function phase1DecorateCombat(){
   const note=document.createElement('span');note.className='small muted';note.id='combatStatusNote';
   note.textContent=r.status==='fight'?(r.enemies?'Auto-combat · click or tap a mob to focus':'Auto-combat · one enemy at a time'):r.status==='cleared'?'Realm completed · review your log before leaving':'Encounter resolved';
   actions.prepend(note);
-  if(r.status==='cleared'&&!phase1Draft){
+  if(r.status==='cleared'){
     const highlight=document.createElement('p');highlight.className='small';highlight.textContent=encounterHighlight(r);
     if(arena)arena.before(highlight);
     const exit=document.createElement('button');exit.id='phase5ExitRealm';exit.className='primary';exit.textContent=g.dungeon?'Return to map':'EXIT REALM';exit.onclick=phase5ExitResult;
@@ -1348,7 +1340,7 @@ function phase3BindBag(){
  Q('[data-phase3-clear-new]').forEach(button=>button.onclick=()=>markAllAsSeen('bag'));
  Q('[data-phase3-loot]').forEach(button=>button.onclick=()=>{
   const item=phase3BagItems().find(o=>o.id===button.dataset.phase3Loot);if(!item)return;
-  const safe=phase3CanPrepare(),canDiscard=safe||phase3NeedsBagResolution()&&!state.run&&!phase1Draft,ring=['ring1','ring2'].includes(item.slot);
+  const safe=phase3CanPrepare(),canDiscard=safe||phase3NeedsBagResolution()&&!state.run,ring=['ring1','ring2'].includes(item.slot);
    if(canDiscard&&phase3BagItems().slice(PHASE3_BAG_CAPACITY).some(o=>o.id===item.id)){
     const name=o=>esc(o.name||WandererV012Treasures.displayName(o));
     const options=phase3BagItems().slice(0,PHASE3_BAG_CAPACITY).map(o=>'<option value="'+esc(o.id)+'">'+name(o)+'</option>').join('');
@@ -1478,7 +1470,7 @@ function phase3RememberUILocation(){
 function phase3RestoreUILocation(snapshot){
  if(!PHASE1_PREVIEW||!snapshot)return null;
  const outside=['camp','finished','failed'].includes(phase1Controller?.state.stage)&&
-  !state.run&&!phase1Draft;
+  !state.run;
  const valid=outside?['phase1','equipment','city-center','runes','talents']:['phase1'];
  if(typeof snapshot.view==='string'&&valid.includes(snapshot.view))view=snapshot.view;
  if(['blacksmith','merchant','apothecary'].includes(snapshot.cityTab))phase3CityTab=snapshot.cityTab;
@@ -1528,7 +1520,7 @@ function phase3CampMarkup(g,stats){
 function phase3Go(to){
  if(phase5Results?.review==='summary')return;
  const stage=phase1Controller?.state.stage;
- if(state.run||phase1Draft||phase3NeedsBagResolution()&&phase3ExpeditionActive()&&!['phase1','city-center'].includes(to))return;
+ if(state.run||phase3NeedsBagResolution()&&phase3ExpeditionActive()&&!['phase1','city-center'].includes(to))return;
  if(['finished','failed'].includes(stage)&&!phase5Results?.review&&phase3LootIds.size)phase3LootIds=new Set();
  const legal=phase3ExpeditionActive()&&phase1Controller.state.version===2?['phase1']:['phase1','equipment','runes','talents'];
  if(['camp','finished','failed'].includes(stage))legal.push('city-center');
@@ -1539,7 +1531,6 @@ function phase3RenderNav(){
  const el=$('nav');if(!el)return;
  if(state.run||phase1Controller?.state.stage==='combat'){el.innerHTML='<span class="small muted">⚔ Expedition encounter · Gear and potions locked</span>';return;}
  const stage=phase1Controller?.state.stage||'camp';
- if(phase1Draft){el.innerHTML='<span class="small muted">Finish the pending choice before continuing</span>';return;}
  const outside=['camp','finished','failed'].includes(stage);
  const between=phase3CanPrepare()&&phase1Controller.state.planeIndex>1;
  const destinations=[['phase1',between?'Between Realms':'Camp'],['equipment','Inventory'],['talents','Talents'],['city-center','City Center'],['runes','Shrine']],expeditionLocked=phase3ExpeditionActive()&&phase1Controller.state.version===2;
@@ -1586,52 +1577,6 @@ function phase2PassiveIcons(passive,showBadges=true){
  const ext=passive.requires.length?'webp':'png';
  return '<span class="phase2PassiveIcons"><img class="phase2PassiveIcon" src="assets/passives/'+id+'.'+ext+'" alt="" loading="lazy" decoding="async">'+(showBadges?badges:'')+'</span>';
 }
-function phase3AffinityChoiceMarkup(family){
- const names=WandererV012Expedition.FAMILY_NAMES,starter=family==='magic'?['kindling','deep_winter','overcharge']:[WandererV012Buildcraft.initialId(family)];
- const passives=starter.map(id=>WandererV012Buildcraft.CATALOG.find(p=>p.id===id)).filter(Boolean);
- const identity={blood:'Bleed and recovery',decay:'Rot and attrition',vitality:'Health and endurance',aegis:'Defense and Barrier',fury:'Speed and critical hits',magic:'Elemental casts and Mana'}[family];
- const detail=family==='magic'?'<p>Choose one of three elements in the next window.</p>':passives.map(p=>'<p><b>'+esc(p.name)+'</b> — '+phase3PassiveDescriptionHtml(p.description)+'</p>').join('');
- return '<article class="phase3AffinityChoice"><button type="button" class="phase1DraftCard" data-phase2-initial="'+family+'">'+phase2FamilyIcon(family)+'<strong>'+esc(names[family])+'</strong><span class="phase3AffinityIdentity">'+identity+'</span></button><details class="phase3AffinityPassiveDetails"><summary><span>'+(family==='magic'?'Choose element':'View passive')+'</span></summary><div class="phase3AffinityPassiveDescriptions">'+detail+'</div></details></article>';
-}
-function phase3OpenMagicElementDialog(dialog,onChoose,onBack){
- const elements=[['fire','Fire','Mana-funded Fire casts inflict Burn damage over time.'],['frost','Frost','Mana-funded Frost casts Chill foes. Chilled foes take a Spell Power burst every 4s.'],['lightning','Lightning','Mana-funded Lightning casts add Static. At 4 charges, Static deals bonus Spell Power damage.']];
- const cards=elements.map(([id,name,description])=>'<button type="button" class="phase1DraftCard phase3MagicElementChoice" data-initial-magic-element="'+id+'"><img class="magicChoiceIcon" src="assets/affinities/magic/'+id+'.png" alt="" loading="lazy" decoding="async"><strong>'+name+'</strong><span>'+description+'</span></button>').join('');
- const content=dialog.querySelector('.phase3InitialAffinityChoices'),intro=dialog.querySelector('.phase3InitialAffinityIntro'),actions=dialog.querySelector('.modalActions');
- content.hidden=true;intro.hidden=true;dialog.querySelector('[id^="modalTitle-"]').textContent='Choose a Magic element';
- dialog.dataset.initialMagicElement='1';dialog.classList.add('phase3MagicElementDialog');
- const step=document.createElement('div');step.className='phase3MagicStep';step.innerHTML='<p class="small muted">Choose Fire, Frost, or Lightning. Your choice is fixed for this Expedition.</p><div class="phase3MagicElementChoices">'+cards+'</div>';
- actions.before(step);
- const back=document.createElement('button');back.type='button';back.className='ghost';back.textContent='Back';back.dataset.magicBack='1';actions.prepend(back);
- const restore=()=>{step.remove();back.remove();delete dialog.dataset.initialMagicElement;dialog.classList.remove('phase3MagicElementDialog');content.hidden=false;intro.hidden=false;dialog.querySelector('[id^="modalTitle-"]').textContent='Choose your initial affinity';dialog.removeEventListener('cancel',escapeBack);onBack?.();};
- const escapeBack=event=>{event.preventDefault();restore();};
- back.onclick=restore;dialog.addEventListener('cancel',escapeBack);
- dialog.querySelectorAll('[data-initial-magic-element]').forEach(button=>button.onclick=()=>onChoose?.(button.dataset.initialMagicElement,dialog));
- dialog.querySelector('[data-initial-magic-element]')?.focus();
- return dialog;
-}
-function phase3OpenInitialAffinity(g){
- const existing=document.querySelector('dialog[data-initial-affinity]');if(existing)return existing;
- const choices=WandererV012Expedition.FAMILIES.map(phase3AffinityChoiceMarkup).join('');
- const dialog=showModal('Choose your initial affinity','<p class="small muted phase3InitialAffinityIntro">Expedition '+g.expedition+' · Choose one of the six affinities to begin.</p><div class="phase1DraftCards phase3AffinityChoices phase3InitialAffinityChoices">'+choices+'</div>');
- if(!dialog)return null;dialog.dataset.initialAffinity='1';dialog.classList.add('phase3InitialAffinityDialog');
- // Close/Escape cancels only the untouched initial-affinity step, returning to Camp.
- // Successful choices set initialFamily before their dialog closes and are unaffected.
- dialog.addEventListener('close',()=>{const current=phase1Controller?.state;if(current?.stage==='choice'&&current.planeIndex===1&&!current.initialFamily&&!current.freeBuild)phase6BackToCamp();});
- dialog.querySelectorAll('[data-phase2-initial]').forEach(button=>button.onclick=()=>{
-  const family=button.dataset.phase2Initial;
-  if(family==='magic'){
-   phase3OpenMagicElementDialog(dialog,(element,elementDialog)=>{
-    if(!phase2ChooseInitial('magic'))return;
-    if(!phase2ChooseElement(element))return;
-    elementDialog.close();phase2EnterInitialRealm();
-   },()=>button.focus());
-   return;
-  }
-  if(phase2ChooseInitial(family)){dialog.close();phase2EnterInitialRealm();}
- });
- return dialog;
-}
-
 function phase3CombatBuildMarkup(){
  const families=phase1Build?.unlockedFamilies||[];
  const icons='<section class="phase3CombatAffinityGroup"><h3>Affinities</h3><div class="phase3AffinityStrip">'+(families.map(f=>'<span title="'+esc(WandererV012Expedition.FAMILY_NAMES[f])+' affinity">'+phase2FamilyIcon(f)+'<b>'+esc(WandererV012Expedition.FAMILY_NAMES[f])+'</b></span>').join('')||'<span class="small muted">None</span>')+'</div></section>';
@@ -1876,38 +1821,15 @@ function renderPhase1(){
  if(phase4ClaimOverflow())phase5Persist();
  if(state.pendingRuneReward&&!state.run)showPendingRuneReward();
  if(phase6Run?.event&&!phase4Resume){phase6RenderEvent();return;}
- if(phase5Results.review){phase5RenderResult();if(phase1Controller.state.version===2&&phase1Draft?.kind==='reward')phase6PassivePopup();return;}
+ if(phase5Results.review){phase5RenderResult();return;}
   if(phase5Results.eventExitPending){
-   html('<section class="panel"><h2>Realm event completed</h2><p>The event is resolved. Your rewards have been secured.</p><button class="primary" id="phase5ExitEvent" '+(phase1Draft?'disabled':'')+'>EXIT REALM</button></section>');
+   html('<section class="panel"><h2>Realm event completed</h2><p>The event is resolved. Your rewards have been secured.</p><button class="primary" id="phase5ExitEvent">EXIT REALM</button></section>');
    $('phase5ExitEvent').onclick=phase5ExitResult;
-   if(phase1Draft?.kind==='reward')phase6PassivePopup();
    return;
   }
  if(phase4Resume){html('<section class="panel"><h2>Resume Realm</h2><p>This Realm restarts from its entry checkpoint with the same encounters and rolls. Partial rewards are not duplicated. Gear and choices remain locked until it is resolved.</p><button class="primary" id="phase4Resume">Resume Realm</button></section>');$('phase4Resume').onclick=phase4ResumeRealm;return;}
 
  const g=phase1Controller.state,stats=phase3Vitals();
- const familyLabel=f=>phase2FamilyIcon(f)+' '+WandererV012Expedition.FAMILY_NAMES[f];
- if(g.stage==='choice'&&!g.freeBuild&&!g.initialFamily){
-  html('<section class="panel phase3AffinityPending"><span class="eyebrow">Expedition '+g.expedition+' prepared</span><h1>Choose your initial affinity</h1><p class="small muted">Select one affinity to enter the first Realm. You can close the selection and return here without choosing.</p><button type="button" class="primary" id="phase3OpenInitialAffinity">Choose Initial Affinity</button></section>');
-  $('phase3OpenInitialAffinity').onclick=()=>phase3OpenInitialAffinity(g);phase6BindBack();phase3OpenInitialAffinity(g);return;
- }
- if(phase1Draft){
-  const d=phase1Draft,plane=d.plane||{family:d.family,name:'Initial affinity',plane:1};
-  const chosen=(phase1Build?.picks||[]).map(id=>WandererV012Buildcraft.CATALOG.find(x=>x.id===id)?.name).filter(Boolean);
-  const header=d.kind==='reward'
-   ?'<section class="panel phase3PassiveDraftPanel"><div class="phase3PassiveDraftHeader"><span class="eyebrow">Realm '+plane.plane+' cleared · Passive reward</span><h2>Choose one passive</h2><p class="phase3PassiveDraftContext"><b>Realm affinity:</b> '+familyLabel(plane.family)+' · Affinity abilities are already unlocked; choose one additional passive.</p><div class="phase1FamilyRow" aria-label="Unlocked affinities">'+g.families.map(f=>'<span>'+familyLabel(f)+'</span>').join('')+'</div><p class="phase3PassiveBuild"><b>Your build</b><span>'+esc(chosen.join(' · ')||'No passives selected yet')+'</span></p></div><div class="phase1DraftCards">'
-   :'<section class="panel"><span class="eyebrow">Wanderer v0.13 · Buildcraft</span><h2>'+(d.kind==='initial'?'Choose your Magic element':'Realm '+g.planeIndex+' · choose your Magic element')+'</h2><p class="small muted">'+familyLabel(plane.family)+' · Element stays fixed for this Expedition.</p><div class="phase1FamilyRow">'+g.families.map(f=>'<span>'+familyLabel(f)+'</span>').join('')+'</div><p class="small muted">Your build: '+esc(chosen.join(' · ')||'No passives selected yet')+'</p><div class="phase1DraftCards">';
-  if(d.step==='element'){
-   const cards=[['fire','Fire','Burn · lasting damage','burn'],['frost','Frost','Chill · slower enemy attacks','slow'],['lightning','Lightning','Shock · 4 charges trigger a burst','shock']];
-   html(header+cards.map(([id,name,desc,glyph])=>'<button class="phase1DraftCard" data-phase2-element="'+id+'"><span>'+'<img class="magicChoiceIcon" src="assets/affinities/magic/'+id+'.png" alt="" loading="lazy" decoding="async">'+'</span><strong>'+name+'</strong><small>'+desc+'</small></button>').join('')+'</div><p class="small muted">Element stays fixed for this Expedition. Staff and Wand amplify it.</p></section>');
-   Q('[data-phase2-element]').forEach(b=>b.onclick=()=>{if(phase2ChooseElement(b.dataset.phase2Element))phase2EnterInitialRealm();});
-  }else{
-   html(header+(d.options.length?d.options.map(p=>phase6PassiveCard(p,'data-phase2-passive')).join(''):'<button class="phase1DraftCard" data-passive-exhausted>No useful passive upgrades remain · CONTINUE EXPEDITION</button>')+'</div>'+(d.options.length>0&&d.options.length<3?'<p class="small muted">Only '+d.options.length+' eligible '+(d.options.length===1?'upgrade remains.':'upgrades remain.')+'</p>':'')+'<p class="small muted">Numeric passives: Rank 5 maximum. Unique talents: Rank 1.</p></section>');
-   Q('[data-phase2-passive]').forEach(b=>b.onclick=()=>phase2ChoosePassive(b.dataset.phase2Passive));
-   Q('[data-passive-exhausted]').forEach(b=>b.onclick=()=>phase2ChoosePassive(null));
-  }
-  if(d.kind==='initial')phase6BindBack();return;
- }
  if(phase3NeedsBagResolution()){
   html('<section class="panel"><h2>Resolve Expedition loot</h2><p>Your bag holds 12 items. Discard overflow before returning to Camp; no loot is discarded automatically.</p>'+phase3BagMarkup()+'</section>');phase3BindBag();return;
  }
@@ -1964,28 +1886,6 @@ function renderPhase1(){
 
 
 
-function phase6PassiveCard(p,attribute){
- const rank=WandererV012Buildcraft.ownedRank(phase1Build,p.id),category=p.category||'Passive';
- const preview=WandererV012Buildcraft.preview(phase1Build,p.id,phase2Stats());
- const labels={chance:'Chance',bleed:'Bleed',bleedBonus:'Bleed bonus',burst:'Bonus damage',enemyCap:'Enemy HP cap',threshold:'Threshold',hp:'Max HP',base:'Base damage',rot:'Rot',rotBonus:'Rot bonus',reduction:'Damage reduction',healingReduction:'Healing reduction',maxhp:'Max HP',heal:'Healing',defense:'Defense',block:'Block',barrier:'Barrier',speed:'Attack speed',crit:'Critical chance',power:'Power',regen:'Regeneration',burn:'Burn',cost:'Mana cost',normalCap:'Normal enemy cap',bossCap:'Boss cap',mana:'Mana',duration:'Duration',icd:'Cooldown',uses:'Uses',hits:'Hits',charges:'Charges'};
- const flat=new Set(['block','crit','cost','mana','duration','icd','uses','hits','charges']);
- const value=(key,n)=>flat.has(key)?`${Number(n.toFixed(2))}${['duration','icd'].includes(key)?'s':''}`:`${Number((n*100).toFixed(2))}%`;
- const changes=Object.entries(preview.after).filter(([key,n])=>Number.isFinite(n)&&n!==preview.before[key]).map(([key,n])=>{const tone=/^bleed/.test(key)?'bleed':/^rot/.test(key)?'rot':/^(?:barrier|block)/.test(key)?'barrier':/^(?:heal|regen)$/.test(key)?'heal':'';return '<span class="phase3PassivePreviewEntry'+(tone?' phase3PassivePreviewEntry--'+tone:'')+'">'+esc(labels[key]||'Effect')+': '+(rank&&Number.isFinite(preview.before[key])?esc(value(key,preview.before[key]))+' → ':'')+'<b class="'+(n>Number(preview.before[key]||0)?'phase3PassiveIncrease':'phase3PassiveValue')+'">'+esc(value(key,n))+'</b></span>';});
- const description=String(p.description).replace(/\bICD\b/gi,'cooldown').replace(/\bbounded\b/gi,'limited');
- return '<article class="phase3PassiveCard"><button type="button" class="phase1DraftCard phase3PassiveChoice" '+attribute+'="'+esc(p.id)+'">'+phase2PassiveIcons(p,false)+'<strong>'+esc(p.name)+'</strong><span class="phase3PassiveAffinity '+(p.requires?.length?'phase3PassiveHybrid':'')+'">'+esc(p.requires?.length?'HYBRID · '+p.requires.map(f=>WandererV012Expedition.FAMILY_NAMES[f]||f).join(' + '):(WandererV012Expedition.FAMILY_NAMES[p.family]||p.family))+'</span><span class="phase3PassiveType">'+esc(category)+'</span><span class="phase3PassiveDescription">'+phase3PassiveDescriptionHtml(description)+'</span>'+(changes.length?'<span class="phase3PassivePreview">'+changes.join('<span class="phase3PassiveSeparator"> · </span>')+'</span>':'')+'<span class="phase3PassiveRank">'+(p.max===1?'Unique':`Rank ${rank} → ${rank+1}/${p.max}`)+'</span></button></article>';
-}
-function phase6PassivePopup(){
- if(document.querySelector('dialog[data-realm-passive]'))return;
- const draft=phase1Draft;if(!draft||draft.kind!=='reward')return;
- const cards=draft.options||[];
- const contents=cards.length?cards.map(p=>phase6PassiveCard(p,'data-popup-passive')).join(''):'<p>No useful passive upgrades remain. Your current build has reached its available limits.</p><button class="primary" data-popup-exhausted>CONTINUE EXPEDITION</button>';
- const note=cards.length>0&&cards.length<3?'<p class="small muted">Only '+cards.length+' eligible '+(cards.length===1?'upgrade remains.':'upgrades remain.')+'</p>':'';
- const dialog=showModal(cards.length?'Choose one Realm passive':'Passive upgrades exhausted',note+'<div class="phase1DraftCards phase3PassiveChoices">'+contents+'</div>');
- if(!dialog||typeof dialog.querySelector!=='function'||typeof dialog.querySelectorAll!=='function')return;dialog.dataset.realmPassive='1';dialog.querySelector('[data-close]')?.remove();dialog.addEventListener('cancel',e=>e.preventDefault());
- dialog.querySelectorAll('[data-popup-passive]').forEach(button=>button.onclick=()=>{dialog.close();phase2ChoosePassive(button.dataset.popupPassive);});
- const exhausted=dialog.querySelector('[data-popup-exhausted]');if(exhausted)exhausted.onclick=()=>{dialog.close();phase2ChoosePassive(null);};
-}
-
 function phase5SummaryMarkup(r,title,realm){
  const gear=(items,label)=>items.length?'<section class="phase5GearGroup"><h3>'+label+' · '+items.length+'</h3><div class="phase5GearGrid">'+items.map(item=>{const image=itemImg(item);return '<div class="phase5GearItem">'+rarityArt(item,image,item.subtype,'loot')+'<div><b>'+esc(item.name)+'</b><small>E'+item.tier+' · '+esc(item.rarity)+'</small></div></div>';}).join('')+'</div></section>':'';
  const treasures=(items,label)=>items.length?'<section class="phase5GearGroup"><h3>'+label+' · '+items.length+'</h3><div class="phase5GearGrid">'+items.map(item=>'<div class="phase5GearItem c3TreasureResult"><img class="c3TreasureImg" src="'+WandererV012Treasures.image(item)+'" alt=""><div><b>'+esc(WandererV012Treasures.displayName(item))+'</b><small>'+(Number(item.worth)||0)+' Gold</small></div></div>').join('')+'</div></section>':'';
@@ -2014,7 +1914,7 @@ function phase5RealmResultMarkup(r,summary){
  const metrics=r.metrics||{},damage=[['Damage dealt',metrics.damageDealt],['Damage taken',metrics.damageTaken]].filter(([,value])=>Number.isFinite(value)&&value>0);
  const metric=(label,value)=>'<div class="phase5ResultMetric"><span>'+label+'</span><strong>'+value+'</strong></div>';
  return '<section class="panel phase5Result phase5VisualSummary phase5RealmResult"><div class="phase5ResultHeading"><span class="eyebrow">Expedition '+r.level+' · Realm '+r.plane+'</span><h1>'+(outcome?'REALM CLEARED':'YOU DIED')+'</h1><p>'+esc(r.name)+' · '+esc(WandererV012Expedition.FAMILY_NAMES[r.family]||r.family)+(outcome?' · Rewards secured':' · Final enemy: '+esc(r.enemy||'Unknown'))+'</p></div>'+
-  '<div class="phase5ResultActions phase5ResultActions--early"><button id="phase5ExitResult" class="primary" '+(phase1Controller.state.version===2&&phase1Draft?.kind==='reward'?'disabled':'')+'>EXIT REALM</button></div>'+
+  '<div class="phase5ResultActions phase5ResultActions--early"><button id="phase5ExitResult" class="primary" ''>EXIT REALM</button></div>'+
    '<div class="phase5ResultMetrics">'+metric('Combat time',Number(r.seconds).toFixed(1)+'s')+metric('Gold','+'+(Number(r.gold)||0))+metric('Fragments','+'+(Number(r.fragments)||0))+'</div><p class="small muted">Combat time excludes Camp and offline time.</p>'+
   (phase5Results.complete?'':'<p class="small muted">Older checkpoint: only activity recorded since this update is included.</p>')+
   (damage.length?'<p>'+esc(encounterHighlight(r))+'</p><section class="phase5DamageStats"><h2>Realm statistics</h2><div class="phase5ResultMetrics">'+damage.map(([label,value])=>metric(label,Math.round(value))).join('')+'</div></section>':'')+
@@ -2108,7 +2008,6 @@ const runtimeContext={
  get OFFHAND_TYPES(){return OFFHAND_TYPES;},
  get PHASE1_PREVIEW(){return PHASE1_PREVIEW;},
  get PHASE3_BAG_CAPACITY(){return PHASE3_BAG_CAPACITY;},
-  get phase6PassivePopup(){return phase6PassivePopup;},
  get PHASE5_VALIDATION(){return PHASE5_VALIDATION;},
  get RARITY(){return RARITY;},
  get RUNE_FAMILIES(){return RUNE_FAMILIES;},
@@ -2185,18 +2084,15 @@ const runtimeContext={
  get merchantTier(){return merchantTier;},
  get offerBossRunes(){return offerBossRunes;},
  get phase1Build(){return phase1Build;},set phase1Build(value){phase1Build=value;},
- get phase1Choose(){return phase1Choose;},
  get phase1Clock(){return phase1Clock;},set phase1Clock(value){phase1Clock=value;},
  get phase1Continuity(){return phase1Continuity;},set phase1Continuity(value){phase1Continuity=value;},
  get phase1Controller(){return phase1Controller;},set phase1Controller(value){phase1Controller=value;},
  get phase1Death(){return phase1Death;},
- get phase1Draft(){return phase1Draft;},set phase1Draft(value){phase1Draft=value;},
  get phase1Enter(){return phase1Enter;},
  get phase1StartWave(){return phase1StartWave;},
  get phase1Vitals(){return phase1Vitals;},set phase1Vitals(value){phase1Vitals=value;},
  get phase1WaveWon(){return phase1WaveWon;},
  get phase2Context(){return phase2Context;},
- get phase2EnterInitialRealm(){return phase2EnterInitialRealm;},
  get phase2Launch(){return phase2Launch;},
  get phase2MagicTick(){return phase2MagicTick;},
  get phase2Stats(){return phase2Stats;},
@@ -2250,7 +2146,6 @@ const runtimeContext={
  get phase3NotifyLoot(){return phase3NotifyLoot;},
  get phase3FlashPlayerDamage(){return phase3FlashPlayerDamage;},
  get phase6OpenEvent(){return phase6OpenEvent;},
- get phase6PassiveOptions(){return phase6PassiveOptions;},
  get phase6PotionInventory(){return phase6PotionInventory;},
  get phase6Proc(){return phase6Proc;},
  get phase6ReturnPotions(){return phase6ReturnPotions;},
@@ -2312,7 +2207,7 @@ const runtimeContext={
  get winEncounter(){return winEncounter;},
 };
 let {addLog,bossForTier,eliteArchetype,rollEliteArchetype,tryDodge,enemyFor,synchronizeDots,tickDots,setRuntime,setNow,activeLegendarySignatures,legendaryRuntime,legendaryHas,legendaryReady,legendaryEmpowered,legendaryProc,legendaryOnHit,legendaryExtend,legendaryAttackBonus,legendaryDefensiveEffects,legendaryRealmStart,legendaryTick,setReady,setBarrier,regenPerSecond,setHeal,setDelayEnemy,setDirectEnemyDamage,setOnAttack,setCombatExpire,setEnemyWeaken,setHeatTick,setSoulHeal,applyAffinity,weaponAttack,updateFight,phase2Context,phase2Stats,phase2WeaponAttack,phase2MagicTick,phase6Metric,phase6Proc,phase6CollectMetrics,phase6Stats,winEncounter,die}=WandererV012CombatRuntime.create(runtimeContext);
-let {phase5ReviewSummary,phase1Init,phase1Begin,phase2Theme,phase6AwardGear,phase6Buff,phase6OpenEvent,phase6EventChoice,phase6PassiveOptions,phase6BackToCamp,phase2EnterInitialRealm,phase2ChooseInitial,phase2ChooseElement,phase2ChoosePassive,phase1Choose,phase1Enter,phase2Launch,phase1StartWave,phase1WaveWon,phase1Death,phase1Abandon,phase6TickDurations,phase3ExpeditionActive,phase3CanPrepare,phase3IsBetweenPlanes,phase3Vitals,phase3Reroll,phase5Item,phase5RememberRealm,phase5MakeSummary,phase5ExitResult}=WandererV012ExpeditionRuntime.create(runtimeContext);
+let {phase5ReviewSummary,phase1Init,phase1Begin,phase2Theme,phase6AwardGear,phase6Buff,phase6OpenEvent,phase6EventChoice,phase6BackToCamp,phase1Enter,phase2Launch,phase1StartWave,phase1WaveWon,phase1Death,phase1Abandon,phase6TickDurations,phase3ExpeditionActive,phase3CanPrepare,phase3IsBetweenPlanes,phase3Vitals,phase5Item,phase5RememberRealm,phase5MakeSummary,phase5ExitResult}=WandererV012ExpeditionRuntime.create(runtimeContext);
 let {toggleEquipmentLock,chooseSubtype,economyTier,merchantTier,baseStatScore,offhandLocked,craftEquipment,reinforceEquipment,purchaseEquipment,sellValuables,markItemSeen,markAllAsSeen,comparisonEquip,stashItemCount,stashCapacity,stashUpgradeCost,stashHasRoom,upgradeStash,fresh,makeSlots,starter,legendaryMatches,legendaryFor,legendarySignature,makeItem,rarityOdds,rarityRoll,rollEquipmentSlot,merchantCost,saleFragments,rollShop,ensureMerchantStock,economyOwnedGear,economyOwnedItem,economyCanAct,refreshMerchantStock,equipItem,unequipItem,bulkSell,salvageOne,phase3BagItems,phase3BagOverflow,phase3NeedsBagResolution,phase3DiscardLoot,phase4ClaimOverflow,phase6PotionInventory,phase6SelectPotion,phase6StartPotions,phase6ReturnPotions,phase6UsePotion,phase6BuyPotion,phase6RerollPotions,unequipRune,salvageRune,salvageDuplicateRunes,equipRune,offerBossRunes,claimPendingRuneChoice,runeCheckpointLocked,phase3UsePotion,phase3ClampVitals}=WandererV012EquipmentRuntime.create(runtimeContext);
 let {settleContract,gameRandom,phase4Session,phase4CommitRealm,phase4LoseLoot,phase4Extract,phase4Restore,phase4ResumeRealm,phase5Capture,attachCloudSave,restoreCloudSave,phase5Persist,phase5Init,phase5Fail}=WandererV012PersistenceRuntime.create(runtimeContext);
 runtimeContext.attachCloudSave=attachCloudSave;runtimeContext.restoreCloudSave=restoreCloudSave;
