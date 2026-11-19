@@ -51,3 +51,13 @@ test('character picker removed and both camp and combat use dynamic images',()=>
   assert.ok(html.includes('id="heroPortrait" src="${heroFullImage()}"'));
   assert.ok(html.includes('class="model" src="${heroFullImage()}"'));
 });
+
+test('camp portrait is reduced and has ground-only shadow',()=>{
+  const css=fs.readFileSync(path.join(root,'online/v012-ui5-camp.css'),'utf8');
+  const tuned=css.slice(css.indexOf('/* v0.13: scaled equipment portrait'));
+  assert.ok(tuned.length>400,'portrait tuning CSS missing');
+  assert.match(tuned,/\.phase3CampCharacter \.paper>\.model\s*\{[^}]*scale\(\.80\)[^}]*filter:none/s,'portrait must shrink without silhouette drop-shadow');
+  assert.match(tuned,/\.phase3CampCharacter \.paper::before\s*\{[^}]*radial-gradient\(ellipse at center[^}]*pointer-events:none/s,'contact shadow should sit below boots');
+  assert.match(tuned,/top:calc\(var\(--camp-vitals-row\) \+ 4 \* var\(--camp-slot-row\) - 18px\)/,'shadow must track equipment grid, not viewport');
+  assert.match(tuned,/@media\(max-width:700px\)/,'mobile portrait sizing must be defined');
+});
