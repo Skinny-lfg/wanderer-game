@@ -1,0 +1,68 @@
+name: Wanderer Stage 9.9 — Gravecaller rebalancing evidence (no deploy)
+
+on:
+  pull_request:
+    paths:
+      - 'online/v013-elite-abilities.js'
+      - 'docs/online/v013-elite-abilities.js'
+      - 'combat/v012-combat-runtime.js'
+      - 'docs/combat/v012-combat-runtime.js'
+      - 'scripts/v013-stage98-balance-campaign.cjs'
+      - 'tests/v013-stage82-elite-abilities.test.cjs'
+      - 'tests/v013-stage98-balance-campaign.test.cjs'
+      - '.github/workflows/v013-stage99-gravecaller-balance.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  behavior-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Gravecaller mechanics and native paired fixture
+        run: >-
+          node --test
+          tests/v013-stage82-elite-abilities.test.cjs
+          tests/v013-stage98-balance-campaign.test.cjs
+          tests/v013-stage95-elite-parity.test.cjs
+
+  matched-elite-cohort:
+    needs: behavior-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        gear: [starter, common]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: 30 real Gravecaller versus Tank matched seeds — same cohort as Stage 9.8
+        run: >-
+          npm run diagnose:v013:stage98 --
+          --mode=elites --elite-type=gravecaller
+          --gear=${{ matrix.gear }} --target=30 --scan=3600
+          --seed-start=16001
+          --out=reports/stage99-gravecaller-${{ matrix.gear }}.json
+      - name: Preserve evidence and baseline-ready JSON
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage99-gravecaller-${{ matrix.gear }}
+          path: |
+            reports/stage99-gravecaller-${{ matrix.gear }}.json
+            reports/stage99-gravecaller-${{ matrix.gear }}.md
+          if-no-files-found: warn
+          retention-days: 60
