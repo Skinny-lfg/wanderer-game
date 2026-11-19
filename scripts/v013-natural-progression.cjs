@@ -144,8 +144,41 @@ function craftEarned(a,profile,level){
  }
  return actions;
 }
+// Free Stash capacity through actual Camp salvage, not state mutation.
+function consolidateStash(a,profile,reserve=4){
+ const s=a.state(),capacity=Number(s.stashCapacity);
+ const action={capacity,occupiedBefore:s.stash.length,overflowBefore:(s.expeditionOverflow||[]).length,
+  salvaged:0,fragmentsGained:0,claimedOverflow:0,occupiedAfter:null,overflowAfter:null};
+ if(!a.economyCanAct()||!Number.isInteger(capacity)||capacity<1)return action;
+ const overflow=(s.expeditionOverflow||[]).length;
+ const keepSpace=Math.min(Math.max(1,Math.floor(capacity/4)),Math.max(2,reserve));
+ const excess=Math.max(0,s.stash.length+overflow-(capacity-keepSpace));
+ if(excess>0){
+  const candidate=s.stash.filter(item=>item?.id&&!item.locked).sort((left,right)=>{
+   function priority(item){
+    const equipped=s.equip[item.slot];
+    const weakRelative=gearScore(item,profile)-gearScore(equipped,profile);
+    return weakRelative-(item.recoveryStarter?200:0)-(item.rarity==='Common'?10:0);
+   }
+   return priority(left)-priority(right);
+  });
+  const selected=candidate.slice(0,excess);
+  if(selected.length){
+   const before=s.fragments,ids=selected.map(item=>item.id);
+   const expected=selected.reduce((n,item)=>n+a.sale(item),0);
+   a.salvage(ids);
+   const found=ids.filter(id=>s.stash.some(item=>item.id===id));
+   if(found.length||s.fragments-before!==expected)
+    throw Error('Native Stash salvage transaction mismatch');
+   action.salvaged=selected.length;action.fragmentsGained=s.fragments-before;
+  }
+ }
+ if((s.expeditionOverflow||[]).length)action.claimedOverflow=a.claimOverflow();
+ action.occupiedAfter=s.stash.length;action.overflowAfter=(s.expeditionOverflow||[]).length;
+ return action;
+}
 function prepareCamp(a,profile,level,decisionModel='risk-aware'){
- const actions={talents:[],equipped:[],bought:[],crafted:[],potions:[],runes:[],soldTreasures:false,restocks:0,salvagedGrey:0,salvageFragments:0};
+ const actions={talents:[],equipped:[],bought:[],crafted:[],potions:[],runes:[],storage:[],soldTreasures:false,restocks:0,salvagedGrey:0,salvageFragments:0};
  const s=a.state();a.potions.inventory();
  if(s.pendingRuneReward?.options?.length){
   const options=s.pendingRuneReward.options;
@@ -154,6 +187,7 @@ function prepareCamp(a,profile,level,decisionModel='risk-aware'){
  }
  for(let i=0;i<3&&a.results().review;i++)a.exitResult();
  actions.soldTreasures=!!(s.valuables?.length&&a.treasures.sell());
+ if(decisionModel==='risk-aware')actions.storage.push(consolidateStash(a,profile));
  actions.equipped.push(...equipEarned(a,profile,false));
  // Native Camp decision: obsolete Expedition Grey gear funds the Forge.
  // Never sell starter, equipped or locked items or create resources artificially.
@@ -228,6 +262,10 @@ function prepareCamp(a,profile,level,decisionModel='risk-aware'){
   if((s.potionSelection||[]).length>=3)break;
   if(!(s.potionSelection||[]).includes(kind)&&(s.consumables?.[kind]||0)>0&&a.potions.select(kind))
    actions.potions.push({kind,owned:true});
+ }
+ if(decisionModel==='risk-aware'){
+  actions.storage.push(consolidateStash(a,profile));
+  actions.equipped.push(...equipEarned(a,profile,false));
  }
  actions.unspentGold=s.gold;
  actions.unspentFragments=s.fragments;
@@ -539,7 +577,10 @@ function playDungeon(a,level,profile,opts,decisionModel='risk-aware'){
  const c=a.controller(),g=c.state;
  if(g.unlocked<level)throw Error('Cannot bypass native unlock from E'+g.unlocked+' to E'+level);
  a.start(level,true);
- if(g.expedition!==level||g.stage!=='choice')throw Error('Native Expedition start rejected at E'+level);
+ if(g.expedition!==level||g.stage!=='choice')throw Error('Native Expedition start rejected at E'+level+' '+JSON.stringify({
+  stage:g.stage,unlocked:g.unlocked,stash:a.state().stash?.length,
+  stashCapacity:a.state().stashCapacity,overflow:a.state().expeditionOverflow?.length,
+  pendingRune:!!a.state().pendingRuneReward,review:!!a.results().review}));
  if(!g.dungeon?.cards?.length)throw Error('Natural Realm Cards were not generated');
  const card=choiceRealm(g.dungeon.cards,profile,gearSnapshot(a));
  c.chooseRealm(card.id);
@@ -808,6 +849,6 @@ function main(args=process.argv.slice(2)){
  return report;
 }
 module.exports={PROFILES,DEFAULTS,parseArgs,gearScore,gearSnapshot,spendEarnedTalents,equipEarned,
- prepareCamp,craftEarned,choiceRealm,pathLength,eliteOpportunity,selectRoom,evaluateRetreat,boonScore,chooseBoon,chooseContract,eventOptions,potionSlots,usePotionKind,usePotionsBetween,rerollPoorBoonAtShrine,
+ prepareCamp,craftEarned,consolidateStash,choiceRealm,pathLength,eliteOpportunity,selectRoom,evaluateRetreat,boonScore,chooseBoon,chooseContract,eventOptions,potionSlots,usePotionKind,usePotionsBetween,rerollPoorBoonAtShrine,
  fightNatural,resolveEvent,clearResults,playDungeon,simulateAccount,analyze,run,markdown,main};
 if(require.main===module)main();
