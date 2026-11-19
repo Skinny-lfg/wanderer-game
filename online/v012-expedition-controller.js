@@ -115,7 +115,7 @@ function create(themes,rng=Math.random){
    const nodes=kinds.map((kind,i)=>{
     const range=i===1?[1,1]:i===2?[2,4]:i===horde?[18,22]:routeRng()<.45?[6,12]:[2,4];
     const count=range[0]+Math.floor(routeRng()*(range[1]-range[0]+1));
-    return {kind,offset:Math.round((routeRng()-.5)*22),range,count,escorts:kind==='boss'?risk:kind==='elite'?Math.floor(routeRng()*(risk+1)):0,event:kind==='spring'?'restless_spring':kind==='event'?events.pop():null};
+    return {kind,...(kind==='combat'&&i===2?{vanguard:true}:{}),offset:Math.round((routeRng()-.5)*22),range,count,escorts:kind==='boss'?risk:kind==='elite'?Math.floor(routeRng()*(risk+1)):0,event:kind==='spring'?'restless_spring':kind==='event'?events.pop():null};
    });
    const edges=[],positions=[[50,50]],rotation=routeRng()*Math.PI*2;
    const place=(angle,radius)=>positions.push([50+radius*Math.cos(angle+rotation),50+radius*Math.sin(angle+rotation)]);
@@ -299,7 +299,7 @@ function create(themes,rng=Math.random){
      throw Error('Boon Shrine offer could not be generated');
    return true;
   }
-  const p={id:card.id,family:card.family,image:card.image,name:card.name,node:i,waves:n.event?0:1,boss,elite:boss||n.kind==='elite',event:n.event,mobCount:n.count,escorts:n.escorts,risk:card.risk,...(n.traitId?{traitId:n.traitId}:{})};
+  const p={id:card.id,family:card.family,image:card.image,name:card.name,node:i,waves:n.event?0:1,boss,elite:boss||n.kind==='elite',event:n.event,mobCount:n.count,escorts:n.escorts,risk:card.risk,...(n.vanguard?{vanguard:true}:{}),...(n.traitId?{traitId:n.traitId}:{})};
   game.planeIndex=boss?15:game.history.length+(game.history.length>=14?2:1);game.offers=[p];game.selected=p;return true;
  }
  function planAffinities(plan){
@@ -392,7 +392,7 @@ function create(themes,rng=Math.random){
       !integer(c.shortcut,0,size-2)||!integer(c.clueRoom,0,size-1)||
       c.edges.some(edge=>!Array.isArray(edge)||edge.length!==2||!integer(edge[0],0,size-1)||!integer(edge[1],0,size-1)||edge[0]===edge[1])||
       !unique(c.edges.map(([a,b])=>Math.min(a,b)+'-'+Math.max(a,b)))||
-      c.nodes.some(n=>!n||!['entrance','combat','elite','event','spring','boss','shrine'].includes(n.kind)||n.traitId!==undefined&&(!T?.get(n.traitId)||n.kind!=='combat'))||
+      c.nodes.some(n=>!n||n.vanguard!==undefined&&(n.vanguard!==true||n.kind!=='combat')||!['entrance','combat','elite','event','spring','boss','shrine'].includes(n.kind)||n.traitId!==undefined&&(!T?.get(n.traitId)||n.kind!=='combat'))||
       c.positions.some(v=>!Array.isArray(v)||v.length!==2||v.some(x=>!Number.isFinite(x))))throw Error('Invalid dungeon map topology');
   }
   const selectedCard=d.cards.find(c=>c.id===d.realm),size=selectedCard?.nodes?.length;
@@ -441,7 +441,7 @@ function create(themes,rng=Math.random){
   if(!Array.isArray(g.offers)||g.offers.length>1||g.offers.some(p=>!selectedCard||!integer(p.node,0,size-1)))throw Error('Invalid dungeon offers');
   if(g.selected!==null){
    const p=g.selected,node=selectedCard?.nodes[p?.node];
-   if(!node||g.offers.length!==1||g.offers[0].node!==p.node||p.id!==selectedCard.id||
+   if(!node||g.offers.length!==1||g.offers[0].node!==p.node||p.vanguard!==node.vanguard||g.offers[0].vanguard!==node.vanguard||p.id!==selectedCard.id||
      p.boss!==(node.kind==='boss')||p.elite!==(node.kind==='boss'||node.kind==='elite')||p.event!==(node.event||null))throw Error('Invalid dungeon selection');
   }else if(g.offers.length)throw Error('Invalid dungeon selection');
   if(g.stage==='combat'&&!g.selected)throw Error('Invalid dungeon combat');

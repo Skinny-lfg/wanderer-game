@@ -1974,7 +1974,7 @@ function bindDungeonRooms(g){
   const highlighted=path.slice(1).map((id,k)=>document.querySelector('[data-room-edge="'+path[k]+'-'+id+'"],[data-room-edge="'+id+'-'+path[k]+'"]')).filter(Boolean);
   for(const line of highlighted){line.classList.add('realmRouteSelected');line.style.stroke='#ff534d';}
   const route=path.map(j=>dungeonRoomLabel(c.nodes[j])).join(' → ');
-  const detail=cleared?'Cleared passage.':n.event?WandererV012IntegratedEvents.get(n.event)[1]:n.kind==='combat'?n.range[0]+'–'+n.range[1]+(i===2?' enemies · Vanguard prepares the opening strike':n.range[1]>=6?' fragile enemies · reinforcements':' enemies'):n.kind==='shrine'?'An ancient Boon Shrine. Choose one of three temporary powers, or leave without one.':dungeonRoomLabel(n)+' with '+n.escorts+' base guards';
+  const detail=cleared?'Cleared passage.':n.event?WandererV012IntegratedEvents.get(n.event)[1]:n.kind==='combat'?n.range[0]+'–'+n.range[1]+(n.vanguard?' enemies · Vanguard prepares the opening strike':n.range[1]>=6?' fragile enemies · reinforcements':' enemies'):n.kind==='shrine'?'An ancient Boon Shrine. Choose one of three temporary powers, or leave without one.':dungeonRoomLabel(n)+' with '+n.escorts+' base guards';
   const trait=n.traitId?WandererV013EncounterTraits.get(n.traitId):null;
   const hazard=trait?' · ⚔ '+trait.name+': '+({armored:'Higher Defense, lower Health',frenzied:'Faster attacks, lower Health',ambush:'First attacks arrive sooner',sigilbound:'Enemies begin shielded, but strike less hard',unhallowed_regrowth:'Enemies recover Health during longer battles',death_throes:'Dying enemies deal damage, capped per encounter'}[trait.id]||'Altered combat')+'. · +10% Fragments.':'';
   const omen=n.kind==='boss'?WandererV013BossModifiers.known(g,c.id):null;

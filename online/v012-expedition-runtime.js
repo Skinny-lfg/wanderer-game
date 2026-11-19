@@ -218,8 +218,7 @@ function phase1StartWave(resetScroll=false){
  const traitId=g.dungeon&&!g.selected.boss&&!g.selected.elite?g.selected.traitId:null;
  if(traitId&&traits?.applyGroup(traitId,group)){r.encounterTraitId=traitId;ports.addLog('Encounter trait: '+traits.get(traitId).name,'critical');}
  else r.encounterTraitId=null;
- // Map node 2 currently grants Vanguard regardless of room identity.
- const hasVanguard=g.dungeon&&g.selected.node===2&&group.length>1;
+ const hasVanguard=g.selected.vanguard===true&&group.length>1;
  if(hasVanguard){const guard=group[0];guard.name+=' · Vanguard';guard.vanguard=true;guard.hp=guard.maxhp=Math.round(guard.maxhp*1.8);guard.atk=Math.ceil(guard.atk*1.2);ports.addLog(guard.name+' prepares the first strike.','critical');}
  if(last&&(g.selected.boss||g.selected.elite)){
   const baseEscorts=g.selected.escorts??(g.selected.boss?2:1);

@@ -50,3 +50,24 @@ test('travelled passage records survive checkpoints; old checkpoints remain vali
  assert(c.visitRoom(1));assert.deepEqual(Array.from(c.state.dungeon.traversedEdges),['0-1']);const saved=clone(c.state);assert(c.restore(saved));assert.deepEqual(Array.from(c.state.dungeon.traversedEdges),['0-1']);
  const bad=clone(saved);bad.dungeon.traversedEdges.push('0-999');assert.throws(()=>c.restore(bad),/Invalid traversed/);
 });
+
+test('Vanguard travels with the generated encounter through restore, combat and simulation',()=>{
+ const sim=require('../scripts/simulate-progression.cjs');
+ function staged(node,vanguard){
+  const {a,c}=fresh(7301),card=c.state.dungeon.cards[0];
+  assert.deepEqual(Array.from(card.nodes.flatMap((n,i)=>n.vanguard?[i]:[])),[2]);
+  c.chooseRealm(card.id);
+  delete card.nodes[2].vanguard;
+  if(vanguard)card.nodes[node].vanguard=true;
+  assert(c.visitRoom(node));assert.equal(!!c.state.selected.vanguard,vanguard);
+  c.restore(clone(c.state));assert.equal(!!c.state.selected.vanguard,vanguard);
+  assert(a.enter());const r=a.encounter({count:4});
+  const stats={hp:r.enemy.maxhp,attack:r.enemy.atk,marked:!!r.enemy.vanguard};
+  assert.equal(sim.fight(a,c,1).vanguardEncounter,vanguard);
+  return stats;
+ }
+ const plain=staged(1,false),moved=staged(1,true);
+ assert.equal(moved.marked,true);assert.equal(moved.hp,Math.round(plain.hp*1.8));
+ assert.equal(moved.attack,Math.ceil(plain.attack*1.2));
+ assert.equal(staged(2,false).marked,false);
+});

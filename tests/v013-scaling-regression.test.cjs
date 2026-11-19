@@ -28,7 +28,7 @@ function observe([level,count,kind,family,risk,trait],i){
  if(kind==='neutral'||kind==='vanguard'){
   g.dungeon.foundationManifest.cards=g.dungeon.foundationManifest.cards.filter(m=>m.realmId!==card.id);
   a.state().run.conditionId=null;
-  if(kind==='vanguard')g.selected.node=2;
+  if(kind==='vanguard'){g.selected.node=2;g.selected.vanguard=card.nodes[2].vanguard;}
  }
  const r=a.encounter({count,boss:kind==='boss',elite:kind==='elite'});
  const enteredNode=g.selected.node;
