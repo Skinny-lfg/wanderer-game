@@ -36,6 +36,7 @@ test('a genuine death is recorded as a death, not as a 4500-tick timeout',()=>{
 });
 test('summary counts deaths, wins and timeouts independently',()=>{
  const opts={...defaults,mode:'dungeon',builds:['blood-fury','aegis-vitality'],levels:[1000]};const r=S.simulate(opts);
+ if(r.summary.errors)console.error('C5_DUNGEON_SIM_ERRORS='+JSON.stringify(r.rows.filter(x=>x.error)));
  assert.equal(r.summary.cases,2);assert.equal(r.summary.deaths,r.rows.filter(x=>x.stage==='failed').length);assert.equal(r.summary.wins,r.rows.filter(x=>x.won).length);assert.equal(r.summary.errors,0);assert.equal(r.summary.timeouts,0);
  assert.equal(r.summary.wins+r.summary.deaths,2,'every completed dungeon must record a win or a genuine defeat');
  assert.equal(r.assumptions.pointsAvailable,24);assert.match(r.assumptions.limits,/not all 15 Realms/);
