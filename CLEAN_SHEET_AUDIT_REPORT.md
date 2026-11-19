@@ -48,12 +48,13 @@ regeneration from the canonical source, not a blind function deletion.
 
 ## Current dependencies that must remain (even without historical saves)
 
-1. **`combat/automatic-talents.js`** is still needed by the active v15
-   graph's construction: `combat/talent-graph-runtime.js` calls
-   `G.createGraph(CATALOG, old.NODES)` and reads the source `ATTRIBUTES`.
-   Its *old runtime methods* are technical debt, but removing this whole file
-   would break the current graph. Split the node catalog into a v15-specific
-   immutable catalog before retiring the old generator/runtime.
+1. **`combat/talent-catalog.js`** now provides the active v15 node definitions
+   and `ATTRIBUTES` to `combat/talent-graph-runtime.js`. Stage C1 removed
+   the root game and Talent Tree iframe's dependency on
+   `combat/automatic-talents.js`. The historical runtime remains in the
+   repository solely for the legacy fixture and equivalence tests; it is not
+   loaded by the active UI. Delete it only after those historical tests are
+   retired or migrated.
 2. **`combat/talent-requirements.js`** is not loaded by the outer app's
    script tags, but is part of the embedded talent-rebuild preview and is
    read by `scripts/prepare-automatic-preview.mjs`. Not dead.
@@ -71,7 +72,7 @@ regeneration from the canonical source, not a blind function deletion.
 
 | Priority | Source | Finding | Required proof before removal |
 |---|---|---|---|
-| High | `combat/automatic-talents.js` | Old v8-style `create/valid/award/allocate/reset/path`, historical caps and manual attribute functions coexist with the catalog used by v15 | Extract live node catalog; compare all 343 IDs, prerequisite graph and gameplay outputs, then retest current game |
+| Medium | `combat/automatic-talents.js` | Historical v8-style runtime is no longer loaded by active v15; retained as golden-master fixture | Retire or migrate historical tests that still use it, then delete the obsolete runtime (do not regress current v15 graph) |
 | High | `combat/talent-graph-next.js` | Options `legacyTopology`, `legacyBasic`, `legacyFocused`, `legacyV14` exist for building old trees, no longer selected by the v15 runtime | Compare current graph serialization and current-target tests before deleting branches |
 | High | `economy/v013-crafting.js`, `online/v013-expedition-contracts.js` | `LEGACY_RECIPES` and explicit `legacy` plan support old recipe/contract variants | Verify new recipe discovery, current contract generation and reward validation first |
 | Medium | `combat/v012-gear-stats.js`, `online/pvp-stats.mjs` | Read-only old Leather evasion, pre-hotfix Orb and old gear effects paths | Native freshly rolled item tests, combat/PvP parity, equality of new equipment formulas |
@@ -156,9 +157,11 @@ release-coverage gap, not a gameplay regression verdict.
 
 ## Recommended next cleanup stages
 
-- **C1 — Graph catalog extraction:** decouple v15 generation from the
-  old `automatic-talents.js` runtime; remove obsolete graph options only
-  after node IDs and derived combat effects match exactly.
+- **C1 — Graph catalog extraction (completed):** v15 now reads
+  `combat/talent-catalog.js` directly and no longer loads the historical
+  automatic runtime. Full-node parity and representative combat output
+  comparisons passed. Pruning old-only graph options and deleting the
+  retained historical test fixture remain separate gated cleanup work.
 - **C2 — Economy and save aliases:** remove `LEGACY_RECIPES`, old treasure
   and gear compatibility branches, plus pre-v2 checkpoint paths in small
   independently tested commits. Keep **current** recovery and anti-duplication.
@@ -175,3 +178,13 @@ the active path, no old-only callbacks in the current UI, no stale test
 expectations masking current failures, a single authoritative generated
 preview, and all current gameplay/regression checks passing. We are not
 claiming that full definition is met yet.
+
+## Stage C1 verification — 19 November 2026
+
+- **Implementation:** commits `b4fb0d8`, `30a4ddf`, `f71c9f2` on `audit/v013`.
+- **Active graph source:** `combat/talent-catalog.js` builds the same legacy-source node list, then `combat/talent-graph-runtime.js` constructs the current v15 tree exclusively from it. Active root and iframe no longer include `automatic-talents.js`.
+- **Parity test:** `tests/v013-c1-catalog-equivalence.test.cjs` confirms source node equality, all **343** ordered v15 node definitions (including prerequisites and gameplay values), representative native combat stats and projections, and live script wiring.
+- **GitHub Actions verification:** [run 44595522594](https://github.com/Skinny-lfg/wanderer-game/actions/runs/44595522594) — successful on commit `f71c9f2191ea8b9e819bab2b67eb262d4e7c2490`. **62/62** native tests, **80/80** Talent Graph tests, and the real Chromium v15 browser smoke passed.
+- Historical v0.12 treasure tests remain **2/5 passing, 3/5 failing** and are explicitly diagnostic rather than release gating.
+- Ephemeral Pages regeneration reported **16 differing tracked `docs/` paths**, compared with 12 at the prior checkpoint. **Nothing in `docs/` was committed or deployed.** The checked-in preview still needs review and regeneration before release.
+- **No balancing, published-version, save-data, merge or deploy changes.** Full clean-sheet completion remains pending C2–C4 and obsolete test cleanup.
