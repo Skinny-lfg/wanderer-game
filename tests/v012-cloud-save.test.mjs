@@ -8,7 +8,7 @@ const context={console,Math,JSON,Object,Array,Set,Number,String,Error,RegExp,Dat
 vm.runInNewContext(readFileSync('online/v012-save.js','utf8'),context);
 globalThis.WandererV012Save=context.WandererV012Save;
 function initial(uid='alice'){
- return {format:'wanderer-expedition',schemaVersion:13,binding:uid,identity:null,revision:0,idCounter:0,
+ return {format:'wanderer-expedition',schemaVersion:13,saveGeneration:'c2-clean-sheet',binding:uid,identity:null,revision:0,idCounter:0,
   profile:{attemptCompleted:false,characterId:'wanderer',stashCapacity:40,maxDungeon:1,chosen:1,fragments:0,gold:0,stash:[],equip:{},valuables:[],runes:[],runeSlots:[null,null,null],sigils:[],expeditionOverflow:[],run:null},
   expedition:{completed:0,unlocked:1,attempts:0,active:null,awardKeys:[],lastOutcome:'new'}};
 }
@@ -62,8 +62,8 @@ test('diverged outbox is retained until an explicit cloud reload resolution',asy
  await coordinator.reloadCloud();assert.equal(applied.profile.gold,31);assert.equal(storage.getItem(key),null);
 });
 
-test('C2 clean-sheet resets stale development cloud saves once and preserves owner/revision',async()=>{
- const old=initial(),next=initial();old.profile.gold=999;next.previewGeneration='c2-clean-sheet';
+test('C2 resets old cloud generations exactly once while preserving owner/revision',async()=>{
+ const old=initial(),next=initial();old.profile.gold=999;delete old.saveGeneration;
  let record={payload:JSON.stringify(old),revision:4,schemaVersion:13,format:'wanderer-expedition'};
  let writes=0,lastSaved=null;
  const backend={
@@ -79,18 +79,27 @@ test('C2 clean-sheet resets stale development cloud saves once and preserves own
  const coordinator=create();
  await coordinator.initialize(next);
  assert.equal(writes,1);assert.equal(record.revision,5);
- assert.equal(lastSaved.previewGeneration,'c2-clean-sheet');assert.equal(applied.profile.gold,0);
+ assert.equal(lastSaved.saveGeneration,'c2-clean-sheet');assert.equal(applied.profile.gold,0);
  await coordinator.close();
  const again=create();await again.initialize(next);
  assert.equal(writes,1,'C2 clean-sheet cloud save must not reset repeatedly');
- assert.equal(applied.previewGeneration,'c2-clean-sheet');await again.close();
+ assert.equal(applied.saveGeneration,'c2-clean-sheet');await again.close();
 });
-test('C2 clean-sheet cloud reset is forbidden outside dedicated development project',async()=>{
- const old=initial(),next=initial();old.profile.gold=88;next.previewGeneration='c2-clean-sheet';
+test('C2 reset also replaces unsupported older cloud envelopes in production on deployment',async()=>{
+ const old=initial(),next=initial();old.profile.gold=88;delete old.saveGeneration;
  let writes=0,applied;
- const record={payload:JSON.stringify(old),revision:7,schemaVersion:13,format:'wanderer-expedition'};
- const backend={async readV012Save(){return record;},async writeV012Save(){writes++;throw Error('Must not reset production');}};
+ let record={payload:JSON.stringify(old),revision:7,schemaVersion:12,format:'wanderer-expedition'};
+ const backend={
+  async readV012Save(){return record;},
+  async writeV012Save(uid,save,expectedRevision){
+   assert.equal(uid,'alice');assert.equal(expectedRevision,7);
+   writes++;record={payload:JSON.stringify(save),revision:8,schemaVersion:13,format:'wanderer-expedition'};return record;
+  }
+ };
  const coordinator=createCloudSaveCoordinator({backend,uid:'alice',projectId:'production-project',readSnapshot:()=>next,applySnapshot:save=>{applied=save;},storage:memory()});
  await coordinator.initialize(next);
- assert.equal(writes,0);assert.equal(applied.profile.gold,88);await coordinator.close();
+ assert.equal(writes,1);assert.equal(record.revision,8);
+ assert.equal(applied.profile.gold,0);
+ assert.equal(applied.saveGeneration,'c2-clean-sheet');
+ await coordinator.close();
 });

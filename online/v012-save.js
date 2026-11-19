@@ -1,7 +1,7 @@
 // Versioned, pure save policy and explicitly isolated validation storage. No Firebase/auth/DOM.
 (function(root){
 'use strict';
-const FORMAT='wanderer-expedition',VERSION=13,PREFIX='wanderer_v013_c2_clean_sheet_v1_';
+const FORMAT='wanderer-expedition',VERSION=13,GENERATION='c2-clean-sheet',PREFIX='wanderer_v013_c2_clean_sheet_v1_';
 const SLOTS=['helm','amulet','armor','gloves','weapon','offhand','ring1','ring2','boots','belt'];
 const STATS=['atk','def','hp','spd','str','agi','int','end','cha','mana','spell','evasionRating'];
 const EFFECTS=['poison','bleed','crit','sunder','shield','regen','burn','slow','drain','nature','shock','tide','crystal'];
@@ -158,7 +158,7 @@ function sessionCheck(s,p,e){
  return s;
 }
 function validate(input,binding){
- const s=json(input);requireValue(s.format===FORMAT&&s.schemaVersion===VERSION,'unsupported schema');
+ const s=json(input);requireValue(s.format===FORMAT&&s.schemaVersion===VERSION&&s.saveGeneration===GENERATION,'unsupported schema or save generation');
  bindingName(s.binding);if(binding!==undefined)requireValue(s.binding===binding,'foreign account/validation slot');
  requireValue(integer(s.revision,0,Number.MAX_SAFE_INTEGER)&&integer(s.idCounter,0,Number.MAX_SAFE_INTEGER),'revision/ID counter');profileCheck(s.profile);
  requireValue(s.identity===null||(plain(s.identity)&&typeof s.identity.uid==='string'&&s.identity.uid.length>0&&typeof s.identity.projectId==='string'&&s.identity.projectId.length>0&&typeof s.identity.nickname==='string'&&/^[A-Za-z0-9_]{3,20}$/.test(s.identity.nickname)),'identity');
@@ -177,7 +177,7 @@ function validate(input,binding){
 function create(profile,{binding='local',identity=null}={}){
  const p=json(profile);
  p.expeditionOverflow??=[];
- return validate({format:FORMAT,schemaVersion:VERSION,binding,identity,revision:0,idCounter:0,profile:p,
+ return validate({format:FORMAT,schemaVersion:VERSION,saveGeneration:GENERATION,binding,identity,revision:0,idCounter:0,profile:p,
   expedition:{completed:0,unlocked:1,attempts:0,active:null,awardKeys:[],lastOutcome:'new'}},binding);
 }
 function recover(input,binding){
@@ -217,5 +217,5 @@ function createStore(storage,binding='local'){
  }
  return Object.freeze({key:primary,load,commit,backup:()=>{const raw=storage.getItem(backup);return raw===null?null:validate(raw,binding);}});
 }
-root.WandererV012Save=Object.freeze({FORMAT,VERSION,PREFIX,key,validate,create,recover,createStore});
+root.WandererV012Save=Object.freeze({FORMAT,VERSION,GENERATION,PREFIX,key,validate,create,recover,createStore});
 })(globalThis);

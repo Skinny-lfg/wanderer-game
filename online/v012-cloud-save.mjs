@@ -28,13 +28,15 @@ export function createCloudSaveCoordinator({backend,uid,projectId,readSnapshot,a
   status('saving');
   const record=await backend.readV012Save(uid);
   if(record){
-   if(record.format!=='wanderer-expedition'||record.schemaVersion!==globalThis.WandererV012Save.VERSION||!Number.isSafeInteger(record.revision)||record.revision<1||typeof record.payload!=='string')throw Error('Cloud save envelope is invalid or unsupported.');
-   // One-time clean-sheet C2 reset only on the dedicated development Firebase project.
-   // Preserve document ownership and revision integrity; never reset a production account.
-   if(projectId==='wanderer-development-8e3ee'&&initialSave?.previewGeneration==='c2-clean-sheet'){
+   if(!Number.isSafeInteger(record.revision)||record.revision<1||typeof record.payload!=='string')throw Error('Cloud save envelope is invalid.');
+   // Every account moves to the new clean-sheet generation exactly once when this code
+   // is deployed. A revision-checked write preserves identity and prevents races.
+   // This is intentionally not restricted to development: old saves are out of scope.
+   const generation=globalThis.WandererV012Save.GENERATION;
+   if(initialSave?.saveGeneration===generation){
     let previous;
     try{previous=JSON.parse(record.payload);}catch{previous=null;}
-    if(previous?.previewGeneration!=='c2-clean-sheet'){
+    if(previous?.saveGeneration!==generation||record.format!=='wanderer-expedition'||record.schemaVersion!==globalThis.WandererV012Save.VERSION){
      const clean=valid(initialSave);clean.revision=record.revision;
      const result=await backend.writeV012Save(uid,clean,record.revision);
      revision=result.revision;sessionWrote=true;
@@ -42,6 +44,7 @@ export function createCloudSaveCoordinator({backend,uid,projectId,readSnapshot,a
      await applySnapshot(clean);status('saved');return clean;
     }
    }
+   if(record.format!=='wanderer-expedition'||record.schemaVersion!==globalThis.WandererV012Save.VERSION)throw Error('Cloud save envelope is invalid or unsupported.');
    let cloud=valid(JSON.parse(record.payload));cloud.revision=0;revision=record.revision;
    const pendingRaw=storage?.getItem(key);
    if(pendingRaw){const pending=JSON.parse(pendingRaw);if(pending.uid!==uid||!Number.isSafeInteger(pending.baseRevision)||!pending.save)throw Error('Offline recovery copy is invalid; it has been retained.');const local=valid(pending.save);local.revision=0;

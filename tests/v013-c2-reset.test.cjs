@@ -50,6 +50,7 @@ test('C2: old or non-Dungeon checkpoint formats are rejected without mutation',(
 });
 test('C2: fresh local namespace ignores all old local save keys',()=>{
  assert.equal(S.VERSION,13); // Firestore rules still require the existing schema.
+ assert.equal(S.GENERATION,'c2-clean-sheet');
  assert.equal(S.PREFIX,'wanderer_v013_c2_clean_sheet_v1_');
  const storage=new Map([['wanderer_v013_stage74_preview_v1_alice','an-old-save']]);
  const db={getItem:key=>storage.get(key)??null,setItem:(key,v)=>storage.set(key,v),removeItem:key=>storage.delete(key)};
@@ -57,12 +58,17 @@ test('C2: fresh local namespace ignores all old local save keys',()=>{
  const a=create(9702,undefined,{}, {skipPersistence:true});
  const fresh=S.create({...a.state(),run:null},{binding:'alice'});
  assert.equal(S.validate(fresh,'alice').schemaVersion,13);
+ assert.equal(fresh.saveGeneration,'c2-clean-sheet');
  assert.throws(()=>S.validate({...fresh,schemaVersion:12},'alice'),/unsupported schema/);
+ assert.throws(()=>S.validate({...fresh,saveGeneration:'stage74'},'alice'),/unsupported schema/);
 });
-test('C2: cloud reset is only enabled in the development project',()=>{
- const account=fs.readFileSync('online/v012-account.mjs','utf8'),cloud=fs.readFileSync('online/v012-cloud-save.mjs','utf8');
- assert.match(account,/backend\.projectId==='wanderer-development-8e3ee'\)fresh\.previewGeneration='c2-clean-sheet'/);
- assert.match(cloud,/projectId==='wanderer-development-8e3ee'&&initialSave\?\.previewGeneration==='c2-clean-sheet'/);
- assert.doesNotMatch(cloud,/stage74_cloud_outbox|previewGeneration==='stage74'/);
+test('C2: cloud reset generation is universal, retaining owner/revision checks',()=>{
+ const cloud=fs.readFileSync('online/v012-cloud-save.mjs','utf8');
+ const account=fs.readFileSync('online/v012-account.mjs','utf8');
+ assert.match(cloud,/initialSave\?\.saveGeneration===generation/);
+ assert.match(cloud,/previous\?\.saveGeneration!==generation/);
+ assert.match(cloud,/backend\.writeV012Save\(uid,clean,record\.revision\)/);
+ assert.doesNotMatch(cloud,/projectId==='wanderer-development-8e3ee'/);
+ assert.doesNotMatch(account,/previewGeneration=/);
  assert.match(cloud,/wanderer_v013_c2_clean_sheet_cloud_outbox_/);
 });

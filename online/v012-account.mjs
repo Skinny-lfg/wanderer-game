@@ -160,8 +160,7 @@ async function activate(user){
    profileName=profile.nickname;paintName();
    const next=createCloudSaveCoordinator({backend,uid:user.uid,projectId:backend.projectId,readSnapshot:()=>game.cloudSnapshot(),applySnapshot:save=>game.restoreCloudSave(save),onStatus:saveState});
    const fresh=globalThis.WandererV012Save.create(game.newSave(),{binding:user.uid,identity:{uid:user.uid,projectId:backend.projectId,nickname:profile.nickname}});
-   // Stage C2 clean-sheet reset: one-time fresh profile on DEVELOPMENT Firebase only.
-   if(backend.projectId==='wanderer-development-8e3ee')fresh.previewGeneration='c2-clean-sheet';
+   // The save policy stamps the clean-sheet generation on every new account snapshot.
    const loaded=await next.initialize(fresh);
    if(backend.currentUser()?.uid!==user.uid){await next.close();return;}
    coordinator=next;game.restoreCloudSave(loaded);game.attachCloudSave(next);activeUid=user.uid;
