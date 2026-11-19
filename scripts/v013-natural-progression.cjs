@@ -645,8 +645,9 @@ function fightNatural(a,profile,tickLimit){
   if(focusedSummon)minionFocusSeconds+=Math.max(0,(r.combatSeconds||0)-tickStartedAt);
   minimum=Math.min(minimum,Math.max(0,r.hp)/(r.maxhp||1));
  }
- const stage=a.controller().state.stage;
+ const stage=a.controller().state.stage,preparedId=a.state().automaticTalents.prepared||null;
  return {
+  preparedId,preparedActivations:preparedId?Number(r.outerUses?.[preparedId]||0):0,
   kind:first?.boss?'boss':first?.miniboss?'elite':'combat',initialEnemies:initial,
   status:r.status,died:r.hp<=0||stage==='failed',
   won:r.status==='cleared'&&stage!=='failed',timedOut:r.status==='fight'&&ticks>=tickLimit,
@@ -913,6 +914,7 @@ function analyze(accounts,opts){
    talentResets:attempts.reduce((n,a)=>n+(a.camp?.resets?.length||0),0),
    elementalSelections:attempts.reduce((n,a)=>n+(a.camp?.elementChoices?.length||0),0),
    advancedPrepared:attempts.filter(a=>!!a.before?.prepared).length,
+   preparedActivations:attempts.reduce((n,a)=>n+(a.rooms||[]).reduce((m,r)=>m+(r.preparedActivations||0),0),0),
    strategyPivots:attempts.filter(a=>!!a.before?.strategy?.endsWith('-pivot')).length,
    observations:attempts.length?null:'not_reached; do not infer win rate'});
  }
