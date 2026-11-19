@@ -78,13 +78,7 @@
 .phase3IntegratedPreview .phase3Routes .phase1OfferBody strong{display:flex;align-items:center;gap:5px;line-height:1.25}
 .phase3IntegratedPreview .phase3Routes .phase1OfferBody strong img{width:28px;height:28px;min-height:0;flex:none;object-fit:contain}
 .phase3IntegratedPreview .phase3Routes .phase1OfferMeta{display:flex;flex-wrap:wrap;gap:5px}
-.phase3IntegratedPreview .phase3PassiveChoice{min-width:0;min-height:0;gap:7px;overflow-wrap:anywhere}
-.phase3IntegratedPreview .phase3PassiveChoice strong{font-size:17px;line-height:1.25}
-.phase3IntegratedPreview .phase3PassiveType,.phase3IntegratedPreview .phase3PassiveRank{font-size:11px;font-weight:700;color:#efca91}
-.phase3IntegratedPreview .phase3PassiveDescription,.phase3IntegratedPreview .phase3PassivePreview{font-size:12px;line-height:1.4;color:#e2d4cd}
-.phase3IntegratedPreview .phase3PassivePreview{padding-top:6px;border-top:1px solid #745363;color:#bfe2cf}
 .phase3IntegratedPreview dialog[data-realm-passive]{width:min(700px,calc(100vw - 24px));max-height:min(82dvh,720px);overflow-y:auto}
-.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveChoices{grid-template-columns:repeat(3,minmax(0,1fr))}
 .phase3IntegratedPreview .phase3CombatView .combatExpeditionDetails .phase3Bag{width:100%;max-width:296px;margin-inline:auto}
 .phase3IntegratedPreview .phase3CombatView .phase3BagGrid{grid-template-columns:repeat(6,minmax(0,1fr))}
 @media(max-width:1000px){
@@ -97,10 +91,6 @@
  .phase3IntegratedPreview .cityCenterSidebar{display:flex;flex-direction:column;gap:0}
  .phase3IntegratedPreview .phase3RealmActions{padding:6px;gap:6px}
  .phase3IntegratedPreview .phase3RealmActions button{font-size:12px;padding:8px 5px}
- .phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveChoices{grid-template-columns:repeat(2,minmax(0,1fr))}
- .phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveCard:last-child{grid-column:1/-1}
- .phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveCard .phase2PassiveIcons{min-height:68px}
- .phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveCard .phase2PassiveIcon{width:60px;height:60px}
  .phase3IntegratedPreview .phase3HeroColumn .paper{height:330px;min-height:330px}
  .phase3IntegratedPreview .phase3HeroColumn .paper .slotTile{width:45px;height:51px}
  .phase3IntegratedPreview .phase3PotionSlots{gap:4px}
@@ -326,16 +316,7 @@ dialog.merchantCompareDialog .compareCard>span:not(.eyebrow){font-size:14px;line
 dialog.merchantCompareDialog .comparisonTable table{font-size:14px}
 dialog.merchantCompareDialog .comparisonTable thead{font-size:12px}
 dialog.merchantCompareDialog .modalActions button{min-height:44px;min-width:84px}
-/* The six initial choices use the live passive catalogue without changing selection. */
-.phase3IntegratedPreview .phase3AffinityChoices{grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}
-.phase3IntegratedPreview .phase3AffinityChoice{min-width:0;background:#211720;border:1px solid #795565;border-radius:10px;overflow:hidden}
-.phase3IntegratedPreview .phase3AffinityChoice>.phase1DraftCard{width:100%;min-height:148px;border:0;border-radius:0;gap:5px;padding:8px 10px}
-.phase3IntegratedPreview .phase3AffinityChoice .affinityFamilyIcon{width:64px;height:64px;object-fit:contain}
-.phase3IntegratedPreview .phase3AffinityChoice strong{font-size:19px}
 .phase3IntegratedPreview .phase3AffinityAction{color:#f1cf8f;font-size:12px;margin-top:auto}
-.phase3IntegratedPreview .phase3AffinityChoice details{padding:0 8px 5px;border-top:0}
-.phase3IntegratedPreview .phase3AffinityChoice summary{cursor:pointer;color:#eed3a5;min-height:33px;padding:4px 0}
-.phase3IntegratedPreview .phase3AffinityChoice details p{font-size:12px;line-height:1.4;margin:7px 0}
 /* Visual Expedition summary; every value comes from the existing result. */
 .phase3IntegratedPreview .phase5VisualSummary{max-width:none}
 .phase3IntegratedPreview .phase5ResultHeading h1{margin:5px 0}
@@ -363,7 +344,7 @@ dialog.merchantCompareDialog .modalActions button{min-height:44px;min-width:84px
 .phase3IntegratedPreview .phase5PassiveChip img{width:25px;height:25px;object-fit:contain}
 .phase3IntegratedPreview .phase5LastLog .log{max-height:40vh;overflow-y:auto}
 @media(max-width:1199px){.phase3IntegratedPreview .cityCenterLayout .forgeCraftLayout{grid-template-columns:1fr}.phase3IntegratedPreview .cityCenterLayout .forgeCraftOdds .statsGrid{grid-template-columns:repeat(4,minmax(0,1fr))}.phase3IntegratedPreview .cityCenterLayout .merchantList{grid-template-columns:1fr}.phase3IntegratedPreview .cityCenterLayout .apothecaryPanel .shopGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:700px){.phase3IntegratedPreview .cityCenterLayout{grid-template-columns:1fr}.phase3IntegratedPreview .cityCenterNpcArt{min-height:104px}.phase3IntegratedPreview .cityCenterNpcArt img{width:88px;height:88px;flex:0 0 88px}.phase3IntegratedPreview .phase3AffinityChoices{grid-template-columns:1fr}.phase3IntegratedPreview .phase3AffinityChoice>.phase1DraftCard{min-height:0}.phase3IntegratedPreview .phase5ResultMetrics{grid-template-columns:repeat(2,minmax(0,1fr))}.phase3IntegratedPreview .phase5RewardGrid{grid-template-columns:1fr}.phase3IntegratedPreview .phase5ResultActions #phase5ExitResult{width:100%}}
+@media(max-width:700px){.phase3IntegratedPreview .cityCenterLayout{grid-template-columns:1fr}.phase3IntegratedPreview .cityCenterNpcArt{min-height:104px}.phase3IntegratedPreview .cityCenterNpcArt img{width:88px;height:88px;flex:0 0 88px}.phase3IntegratedPreview .phase5ResultMetrics{grid-template-columns:repeat(2,minmax(0,1fr))}.phase3IntegratedPreview .phase5RewardGrid{grid-template-columns:1fr}.phase3IntegratedPreview .phase5ResultActions #phase5ExitResult{width:100%}}
 @media(max-width:390px){.phase3IntegratedPreview .cityCenterLayout .merchantCardActions{grid-template-columns:repeat(2,minmax(0,1fr))}.phase3IntegratedPreview .cityCenterLayout .merchantPriceBlock{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:8px}.phase3IntegratedPreview .cityCenterLayout .merchantCardActions button{min-width:0;width:100%}dialog.merchantCompareDialog .merchantCompareSummary{grid-template-columns:1fr}dialog.merchantCompareDialog .merchantCompareSummary>p{grid-column:auto}.phase3IntegratedPreview .cityCenterLayout .forgeCraftLayout .filterBar{grid-template-columns:repeat(2,minmax(0,1fr))}.phase3IntegratedPreview .cityCenterLayout .forgeCraftLayout .filterBar label:nth-child(3){grid-column:1/-1}.phase3IntegratedPreview .cityCenterLayout .forgeCraftLayout .forgeGrid{grid-template-columns:88px minmax(0,1fr);gap:10px}.phase3IntegratedPreview .cityCenterLayout .forgeCraftLayout .craftHero{width:86px;height:104px}.phase3IntegratedPreview .cityCenterLayout .forgeCraftOdds .statsGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 /* Shrine artwork slot: existing environment art, with the live affinity choices beside it. */
@@ -373,10 +354,8 @@ dialog.merchantCompareDialog .modalActions button{min-height:44px;min-width:84px
 .phase3IntegratedPreview .phase3ShrineArtPlaceholder img{display:block;width:100%;height:100%;min-height:280px;object-fit:contain;object-position:center;opacity:.82}
 .phase3IntegratedPreview .phase3ShrineArtPlaceholder figcaption{position:absolute;z-index:1;bottom:12px;left:12px;color:#f1d6a1;font:700 12px var(--font-head);letter-spacing:.18em}
 .phase3IntegratedPreview .phase3ShrineContent{min-width:0}
-.phase3IntegratedPreview .phase3ShrineContent .phase3AffinityChoices{grid-template-columns:repeat(2,minmax(0,1fr))}
 @media(max-width:700px){
  .phase3IntegratedPreview .phase3ShrineLayout{grid-template-columns:minmax(0,1fr);gap:var(--space-3)}
  .phase3IntegratedPreview .phase3ShrineArtPlaceholder{height:clamp(120px,32vw,180px);min-height:0}
  .phase3IntegratedPreview .phase3ShrineArtPlaceholder img{min-height:0}
- .phase3IntegratedPreview .phase3ShrineContent .phase3AffinityChoices{grid-template-columns:minmax(0,1fr)}
 }

@@ -38,44 +38,10 @@ body.phase3IntegratedPreview .onlineBar [data-online-action="feedback"]{
 .wandererFeedbackDialog .feedbackActions button{min-height:39px}
 .wandererFeedbackDialog .feedbackActions button[disabled]{opacity:.5;cursor:wait}
 @media(max-width:600px){.wandererFeedbackDialog{padding:15px!important;max-height:86dvh}.wandererFeedbackDialog .feedbackActions{justify-content:stretch}.wandererFeedbackDialog .feedbackActions button{flex:1 1 auto}}
-
-/* Compact, equal-size copy in the 'View passive' affinity dropdown.
-   Keep gothic headings, emphasis and affinity identity color. */
-body.phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityPassiveDetails{max-height:130px}
-body.phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityPassiveDetails summary,
-body.phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityPassiveDetails p,
-body.phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityPassiveDescriptions :is(b,strong){
-  font-size:13px!important;line-height:1.28!important;
-}
-body.phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityPassiveDetails summary{
-  min-height:28px!important;padding:2px 0!important;gap:4px!important;
-}
-body.phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityPassiveDetails p{margin:3px 0!important}
-body.phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityPassiveDescriptions{padding:0 2px 4px}
-
-/* Passive cards: same reading size from title through effects and preview.
-   Weight and semantic colors remain different, without enlarging numbers. */
-body.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveChoice > :not(.phase2PassiveIcons),
-body.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveChoice .phase3PassivePreviewEntry,
-body.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveChoice .phase3PassiveEmphasis{
-  font-size:13px!important;line-height:1.32!important;
-}
-body.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveChoice > strong{font-weight:800!important}
-body.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveChoice .phase3PassiveDescription{font-weight:400!important;margin:1px 0!important}
-body.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveChoice .phase3PassivePreview{margin:1px 0!important}
 body.phase3IntegratedPreview .phase3PassiveEmphasis--bleed{color:#fa858b!important;font-weight:800!important}
 body.phase3IntegratedPreview .phase3PassiveEmphasis--barrier{color:#94cbfa!important;font-weight:800!important}
 body.phase3IntegratedPreview .phase3PassiveEmphasis--rot{color:#7dbd78!important;font-weight:800!important}
 body.phase3IntegratedPreview .phase3PassiveEmphasis--heal{color:#a2e8b1!important;font-weight:800!important}
-body.phase3IntegratedPreview :is(.phase3PassiveTooltip p,.phase3PassiveInline p,.phase3AffinityPassiveDescriptions p) .phase3PassiveEmphasis{
-  font-size:inherit!important;font-weight:800!important;
-}
-
-/* The preview labels use the same status language as passive descriptions. */
-body.phase3IntegratedPreview .phase3PassivePreviewEntry--bleed{color:#fa858b!important}
-body.phase3IntegratedPreview .phase3PassivePreviewEntry--barrier{color:#94cbfa!important}
-body.phase3IntegratedPreview .phase3PassivePreviewEntry--rot{color:#7dbd78!important}
-body.phase3IntegratedPreview .phase3PassivePreviewEntry--heal{color:#a2e8b1!important}
 
 
 /* Main hotfix: compact merchant/forge, passive drafts, arena and mobile Expedition. */
@@ -110,23 +76,6 @@ body.phase3IntegratedPreview dialog.merchantCompareDialog .compareCard,
 body.phase3IntegratedPreview dialog.itemDialog .compareCard {
   min-width:0!important;
   overflow-wrap:anywhere;
-}
-/* Passive draft: the family and rank provide context; category is duplicate noise. */
-body.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveType{
-  display:none!important;
-}
-body.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveChoice {
-  row-gap:4px!important;
-}
-body.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveRank{
-  margin-top:2px!important;
-}
-/* Initial affinity details should be secondary to the six affinity choices. */
-body.phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityPassiveDetails summary,
-body.phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityPassiveDetails p,
-body.phase3IntegratedPreview .phase3InitialAffinityDialog .phase3AffinityPassiveDescriptions :is(b,strong){
-  font-size:11.5px!important;
-  line-height:1.3!important;
 }
 /* Smaller status tokens; keep source images square and all labels readable. */
 body.phase3IntegratedPreview #scene .combatant > .combatStatuses {gap:4px!important;padding:3px 4px!important}

@@ -100,23 +100,6 @@ body.phase3IntegratedPreview .phase3BagGrid>.phase3BagEmpty{
 body.phase3IntegratedPreview .phase3BagGrid>.phase3BagItem .rarityImageFrame>img{
   object-fit:contain!important;max-width:100%!important;max-height:100%!important;
 }
-
-/* Passive popup: remove redundant tiny badges from the choices.
-   Hybrid is conveyed by a textual dual-affinity label instead. */
-body.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveAffinity{
-  display:inline-flex!important;align-items:center!important;gap:5px!important;
-  color:#d8c2a0!important;font-size:12px!important;line-height:1.2!important;
-  margin:1px 0!important;
-}
-body.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveAffinity.phase3PassiveHybrid{
-  color:#ffe0a3!important;font-weight:700!important;
-  padding:4px 7px!important;background:rgba(125,74,55,.24)!important;
-  border:1px solid rgba(203,146,83,.45)!important;
-}
-body.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveAffinity .affinityFamilyIcon,
-body.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveChoice .phase3PassiveAffinities{
-  display:none!important;
-}
 @media(max-width:700px){
   body.phase3IntegratedPreview dialog[data-realm-passive]{
     box-sizing:border-box!important;
@@ -126,43 +109,6 @@ body.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveChoice .ph
   }
   body.phase3IntegratedPreview dialog[data-realm-passive] h2{
     font-size:19px!important;line-height:1.12!important;margin:0 0 7px!important;
-  }
-  body.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveChoices{
-    display:grid!important;grid-template-columns:1fr!important;
-    gap:6px!important;margin:0!important;
-  }
-  body.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveCard{
-    min-width:0!important;grid-column:auto!important;
-  }
-  body.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveChoice{
-    box-sizing:border-box!important;min-height:0!important;
-    display:grid!important;grid-template-columns:58px minmax(0,1fr)!important;
-    grid-auto-rows:min-content!important;gap:2px 9px!important;
-    padding:7px 9px!important;text-align:left!important;
-  }
-  body.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveChoice>.phase2PassiveIcons{
-    grid-column:1!important;grid-row:1/7!important;align-self:center!important;
-    width:56px!important;height:56px!important;min-height:0!important;
-  }
-  body.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveChoice .phase2PassiveIcon{
-    width:56px!important;height:56px!important;object-fit:contain!important;
-  }
-  body.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveChoice>strong{
-    grid-column:2!important;font-size:15px!important;line-height:1.15!important;
-  }
-  body.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveChoice>:not(.phase2PassiveIcons){
-    grid-column:2!important;min-width:0;
-  }
-  body.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveDescription{
-    font-size:12px!important;line-height:1.24!important;margin:0!important;
-  }
-  body.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassivePreview{
-    font-size:11px!important;line-height:1.23!important;margin:0!important;
-    padding:3px 0 0!important;
-  }
-  body.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveType,
-  body.phase3IntegratedPreview dialog[data-realm-passive] .phase3PassiveRank{
-    font-size:10px!important;line-height:1.1!important;
   }
 }
 
