@@ -3,9 +3,7 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const N=require('../scripts/v013-natural-progression.cjs');
 const B=require('../scripts/v013-stage5-build-audit.cjs');
-require('../combat/v012-buildcraft.js');
-require('../combat/automatic-talents.js');
-const T=globalThis.WandererAutomaticTalents;
+const T=B.nativeTalentAPI;
 
 test('current target priorities omit real IDs for several deep skills',()=>{
  const ids=new Set(T.NODES.map(n=>n.id));
