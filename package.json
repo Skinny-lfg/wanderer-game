@@ -60,7 +60,9 @@
     "test:v013:stage95": "node --test tests/v013-stage95-elite-parity.test.cjs",
     "simulate:v013:elite-parity": "node scripts/v013-elite-tank-parity.cjs",
     "test:v013:stage96": "node --test tests/v013-stage96-grey-loot.test.cjs",
-    "simulate:v013:stage96": "node scripts/v013-natural-progression.cjs"
+    "simulate:v013:stage96": "node scripts/v013-natural-progression.cjs",
+    "test:v013:stage97": "node --test tests/v013-combat-balance-audit.test.cjs",
+    "diagnose:v013:stage97": "node scripts/v013-combat-balance-audit.cjs"
   },
   "dependencies": {
     "firebase": "11.10.0"
