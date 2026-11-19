@@ -7,6 +7,12 @@ on:
       - audit/v013
     paths:
       - '.github/workflows/v013-clean-sheet-audit.yml'
+      - 'combat/**'
+      - 'economy/**'
+      - 'online/**'
+      - 'scripts/prepare-automatic-preview.mjs'
+      - 'tests/v013-c2-reset.test.cjs'
+      - 'tests/v0120-evasion.test.cjs'
   workflow_dispatch:
 
 permissions:

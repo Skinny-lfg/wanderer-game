@@ -74,7 +74,6 @@ function phase4Extract(){
 }
 
 function phase4Restore(session){
- ports.state.valuables=(ports.state.valuables||[]).map(item=>root.WandererV012Treasures.normalize(item));
  ports.phase1Controller.restore(session.controller);
  if(session.build)WandererV012Buildcraft.validate(session.build);
  ports.phase6Run=session.integration||null;
@@ -95,7 +94,7 @@ function phase4Restore(session){
 
  }}
  if(session.results)ports.phase5Results=ports.phase4Clone(session.results);
- ports.state.run=session.clearedRun||null;if(ports.state.run?.valuables)ports.state.run.valuables=ports.state.run.valuables.map(item=>root.WandererV012Treasures.normalize(item));if(ports.state.run?.enemy)WandererV012Buildcraft.migrateEnemyDots(ports.state.run.enemy);ports.phase4WaveKeys=[];ports.phase4Resume=session.entry&&!session.clearedRun;
+ ports.state.run=session.clearedRun||null;if(ports.state.run?.valuables)if(ports.state.run?.enemy)WandererV012Buildcraft.migrateEnemyDots(ports.state.run.enemy);ports.phase4WaveKeys=[];ports.phase4Resume=session.entry&&!session.clearedRun;
  // Old playtest checkpoints may be waiting for a retired Realm draft. Keep
  // earned rewards and continue to the next Realm without granting a free pick.
  if(ports.phase1Draft?.kind==='reward'&&ports.phase1Controller.state.rewardPending){ports.phase1Controller.claimReward();ports.phase1Draft=null;}

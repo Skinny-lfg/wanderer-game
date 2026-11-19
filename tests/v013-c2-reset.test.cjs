@@ -34,6 +34,10 @@ test('C2: absent legacy Leather rating and Orb spell fields are never boosted',(
  const orb={slot:'offhand',subtype:'Orb',spell:20};
  assert.equal(G.itemStatValue(orb,'spell',context),20);
  assert.equal(G.itemStatValue({...orb,orbSpellB4:true},'spell',context),20);
+ const gearSource=fs.readFileSync('economy/v013-gear-rolls.js','utf8');
+ const equipmentSource=fs.readFileSync('economy/v012-equipment-runtime.js','utf8');
+ assert.doesNotMatch(gearSource,/orbSpellB4=true/);
+ assert.doesNotMatch(equipmentSource,/orbSpellB4=true/);
 });
 test('C2: old or non-Dungeon checkpoint formats are rejected without mutation',()=>{
  const a=create(9701,undefined,{}, {skipPersistence:true});a.start(1,true);
