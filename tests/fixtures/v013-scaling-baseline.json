@@ -1,0 +1,722 @@
+[
+ {
+  "level": 1,
+  "requested": 1,
+  "kind": "normal",
+  "family": "blood",
+  "risk": 0,
+  "seed": 502,
+  "node": 1,
+  "trait": null,
+  "condition": "carrion_swarm",
+  "marked": false,
+  "stats": [
+   [
+    "tank",
+    318,
+    8,
+    4,
+    0,
+    1.9779999999999998
+   ]
+  ],
+  "trace": "382bb05c2dbf6ffebb571d27405980e58472622a38f078afc83c0acb785ff5a7",
+  "seconds": 24.53,
+  "damageTaken": 32,
+  "damageDealt": 318,
+  "status": "cleared",
+  "casts": [
+   3,
+   0
+  ],
+  "reserveEntries": 0
+ },
+ {
+  "level": 1,
+  "requested": 4,
+  "kind": "normal",
+  "family": "aegis",
+  "risk": 1,
+  "seed": 509,
+  "node": 1,
+  "trait": "armored",
+  "condition": "veiled_passages",
+  "marked": false,
+  "stats": [
+   [
+    "skirmisher",
+    133,
+    5,
+    2,
+    0,
+    1.6329999999999998
+   ],
+   [
+    "caster",
+    124,
+    5,
+    2,
+    0,
+    1.9779999999999998
+   ],
+   [
+    "minion",
+    63,
+    2,
+    1,
+    0,
+    2.1849999999999996
+   ],
+   [
+    "tank",
+    182,
+    4,
+    4,
+    0,
+    1.9779999999999998
+   ]
+  ],
+  "trace": "35d0e9d0bafb2afa332f69827c4ed130ed1fc0621e17f342c7cebe3371f482f7",
+  "seconds": 40.26,
+  "damageTaken": 53,
+  "damageDealt": 502,
+  "status": "cleared",
+  "casts": [
+   10,
+   0
+  ],
+  "reserveEntries": 0
+ },
+ {
+  "level": 6,
+  "requested": 12,
+  "kind": "normal",
+  "family": "fury",
+  "risk": 2,
+  "seed": 517,
+  "node": 1,
+  "trait": "frenzied",
+  "condition": "carrion_swarm",
+  "marked": false,
+  "stats": [
+   [
+    "minion",
+    65,
+    3,
+    1,
+    0,
+    1.9
+   ],
+   [
+    "minion",
+    65,
+    3,
+    1,
+    0,
+    1.9
+   ],
+   [
+    "minion",
+    65,
+    3,
+    1,
+    0,
+    1.9
+   ],
+   [
+    "skirmisher",
+    178,
+    7,
+    5,
+    0,
+    1.42
+   ],
+   [
+    "minion",
+    65,
+    3,
+    1,
+    0,
+    1.9
+   ],
+   [
+    "minion",
+    65,
+    3,
+    1,
+    0,
+    1.9
+   ],
+   [
+    "minion",
+    65,
+    3,
+    1,
+    0,
+    1.9
+   ],
+   [
+    "minion",
+    65,
+    3,
+    1,
+    0,
+    1.9
+   ],
+   [
+    "minion",
+    65,
+    3,
+    1,
+    0,
+    1.9
+   ],
+   [
+    "minion",
+    65,
+    3,
+    1,
+    0,
+    1.9
+   ],
+   [
+    "minion",
+    65,
+    3,
+    1,
+    0,
+    1.9
+   ],
+   [
+    "minion",
+    65,
+    3,
+    1,
+    0,
+    1.9
+   ]
+  ],
+  "trace": "4c18802f011eef3316e2981b4bb107707a440017147e24c0644c92a2751231df",
+  "seconds": 49.83,
+  "damageTaken": 81,
+  "damageDealt": 893,
+  "status": "cleared",
+  "casts": [
+   3,
+   0
+  ],
+  "reserveEntries": 8
+ },
+ {
+  "level": 6,
+  "requested": 20,
+  "kind": "normal",
+  "family": "magic",
+  "risk": 1,
+  "seed": 504,
+  "node": 1,
+  "trait": "sigilbound",
+  "condition": "veiled_passages",
+  "marked": false,
+  "stats": [
+   [
+    "minion",
+    46,
+    2,
+    1,
+    6,
+    2.1849999999999996
+   ],
+   [
+    "minion",
+    46,
+    2,
+    1,
+    6,
+    2.1849999999999996
+   ],
+   [
+    "caster",
+    122,
+    5,
+    5,
+    15,
+    1.9779999999999998
+   ],
+   [
+    "skirmisher",
+    129,
+    5,
+    5,
+    15,
+    1.6329999999999998
+   ],
+   [
+    "minion",
+    46,
+    2,
+    1,
+    6,
+    2.1849999999999996
+   ],
+   [
+    "minion",
+    46,
+    2,
+    1,
+    6,
+    2.1849999999999996
+   ],
+   [
+    "minion",
+    46,
+    2,
+    1,
+    6,
+    2.1849999999999996
+   ],
+   [
+    "minion",
+    46,
+    2,
+    1,
+    6,
+    2.1849999999999996
+   ],
+   [
+    "minion",
+    46,
+    2,
+    1,
+    6,
+    2.1849999999999996
+   ],
+   [
+    "minion",
+    46,
+    2,
+    1,
+    6,
+    2.1849999999999996
+   ],
+   [
+    "minion",
+    46,
+    2,
+    1,
+    6,
+    2.1849999999999996
+   ],
+   [
+    "minion",
+    46,
+    2,
+    1,
+    6,
+    2.1849999999999996
+   ],
+   [
+    "minion",
+    46,
+    2,
+    1,
+    6,
+    2.1849999999999996
+   ],
+   [
+    "minion",
+    46,
+    2,
+    1,
+    6,
+    2.1849999999999996
+   ],
+   [
+    "minion",
+    46,
+    2,
+    1,
+    6,
+    2.1849999999999996
+   ],
+   [
+    "minion",
+    46,
+    2,
+    1,
+    6,
+    2.1849999999999996
+   ],
+   [
+    "minion",
+    46,
+    2,
+    1,
+    6,
+    2.1849999999999996
+   ],
+   [
+    "minion",
+    46,
+    2,
+    1,
+    6,
+    2.1849999999999996
+   ],
+   [
+    "minion",
+    46,
+    2,
+    1,
+    6,
+    2.1849999999999996
+   ],
+   [
+    "minion",
+    46,
+    2,
+    1,
+    6,
+    2.1849999999999996
+   ]
+  ],
+  "trace": "9c3c8952d3de2fb6e86907f7af4c990e645a32694e0f9596d9eaa32dfe6a0646",
+  "seconds": 82.39,
+  "damageTaken": 121,
+  "damageDealt": 1079,
+  "status": "cleared",
+  "casts": [
+   6,
+   0
+  ],
+  "reserveEntries": 16
+ },
+ {
+  "level": 1,
+  "requested": 1,
+  "kind": "elite",
+  "family": "decay",
+  "risk": 0,
+  "seed": 505,
+  "node": 1,
+  "trait": null,
+  "condition": "relentless_hunt",
+  "marked": false,
+  "stats": [
+   [
+    "ashen_executioner",
+    256,
+    16,
+    3,
+    0,
+    2.3574999999999995
+   ]
+  ],
+  "trace": "e9369bc0cbe02f00e770489d708f8200ca79f2caf956b7ad63625e7fc0fadd71",
+  "seconds": 17.82,
+  "damageTaken": 26,
+  "damageDealt": 256,
+  "status": "cleared",
+  "casts": [
+   2,
+   0
+  ],
+  "reserveEntries": 0
+ },
+ {
+  "level": 6,
+  "requested": 1,
+  "kind": "elite",
+  "family": "blood",
+  "risk": 2,
+  "seed": 510,
+  "node": 1,
+  "trait": null,
+  "condition": "sanguine_rite",
+  "marked": false,
+  "stats": [
+   [
+    "tank",
+    1248,
+    38,
+    9,
+    3,
+    2.2194999999999996
+   ]
+  ],
+  "trace": "19b6e2f92bbe876839d509373113c8223aece04a34502a153762d31b6082687e",
+  "seconds": 30.69,
+  "damageTaken": 248,
+  "damageDealt": 573,
+  "status": "died",
+  "casts": [
+   0,
+   0
+  ],
+  "reserveEntries": 0
+ },
+ {
+  "level": 1,
+  "requested": 1,
+  "kind": "boss",
+  "family": "vitality",
+  "risk": 0,
+  "seed": 510,
+  "node": 1,
+  "trait": null,
+  "condition": "veiled_passages",
+  "marked": false,
+  "stats": [
+   [
+    "devourer",
+    288,
+    17,
+    6,
+    0,
+    1.863
+   ],
+   [
+    "skirmisher",
+    92,
+    5,
+    3,
+    0,
+    1.8459999999999999
+   ]
+  ],
+  "trace": "121c5c831823455043e62ca745f83cdab2dcbe8bf54953d6ccc2f9da7d38056e",
+  "seconds": 37.51,
+  "damageTaken": 138,
+  "damageDealt": 472,
+  "status": "cleared",
+  "casts": [
+   0,
+   0
+  ],
+  "reserveEntries": 0
+ },
+ {
+  "level": 6,
+  "requested": 1,
+  "kind": "boss",
+  "family": "magic",
+  "risk": 2,
+  "seed": 526,
+  "node": 1,
+  "trait": null,
+  "condition": "blighted_ground",
+  "marked": false,
+  "stats": [
+   [
+    "conductor",
+    842,
+    55,
+    14,
+    0,
+    1.863
+   ],
+   [
+    "skirmisher",
+    224,
+    13,
+    7,
+    0,
+    1.8459999999999999
+   ]
+  ],
+  "trace": "f5610d4eabff6e9d42fcbe7a52830c443abd0d3bdd69d066efdcaaa07e83abcc",
+  "seconds": 12.21,
+  "damageTaken": 189,
+  "damageDealt": 186,
+  "status": "died",
+  "casts": [
+   0,
+   0
+  ],
+  "reserveEntries": 0
+ },
+ {
+  "level": 6,
+  "requested": 12,
+  "kind": "marked",
+  "family": "blood",
+  "risk": 1,
+  "seed": 511,
+  "node": 18,
+  "trait": "armored",
+  "condition": "carrion_swarm",
+  "marked": true,
+  "stats": [
+   [
+    "skirmisher",
+    119,
+    5,
+    6,
+    0,
+    1.6329999999999998
+   ],
+   [
+    "minion",
+    42,
+    2,
+    1,
+    0,
+    2.1849999999999996
+   ],
+   [
+    "caster",
+    112,
+    5,
+    6,
+    0,
+    1.9779999999999998
+   ],
+   [
+    "minion",
+    42,
+    2,
+    1,
+    0,
+    2.1849999999999996
+   ],
+   [
+    "minion",
+    42,
+    2,
+    1,
+    0,
+    2.1849999999999996
+   ],
+   [
+    "minion",
+    42,
+    2,
+    1,
+    0,
+    2.1849999999999996
+   ],
+   [
+    "minion",
+    42,
+    2,
+    1,
+    0,
+    2.1849999999999996
+   ],
+   [
+    "minion",
+    42,
+    2,
+    1,
+    0,
+    2.1849999999999996
+   ],
+   [
+    "minion",
+    42,
+    2,
+    1,
+    0,
+    2.1849999999999996
+   ],
+   [
+    "minion",
+    42,
+    2,
+    1,
+    0,
+    2.1849999999999996
+   ],
+   [
+    "minion",
+    42,
+    2,
+    1,
+    0,
+    2.1849999999999996
+   ],
+   [
+    "minion",
+    42,
+    2,
+    1,
+    0,
+    2.1849999999999996
+   ],
+   [
+    "minion",
+    42,
+    2,
+    1,
+    0,
+    2.1849999999999996
+   ],
+   [
+    "minion",
+    42,
+    2,
+    1,
+    0,
+    2.1849999999999996
+   ],
+   [
+    "minion",
+    42,
+    2,
+    1,
+    0,
+    2.1849999999999996
+   ],
+   [
+    "minion",
+    42,
+    2,
+    1,
+    0,
+    2.1849999999999996
+   ],
+   [
+    "minion",
+    42,
+    2,
+    1,
+    0,
+    2.1849999999999996
+   ],
+   [
+    "minion",
+    42,
+    2,
+    1,
+    0,
+    2.1849999999999996
+   ],
+   [
+    "minion",
+    42,
+    2,
+    1,
+    0,
+    2.1849999999999996
+   ],
+   [
+    "minion",
+    42,
+    2,
+    1,
+    0,
+    2.1849999999999996
+   ]
+  ],
+  "trace": "c3693d2db1b39f7350f7e656ba3882aa9aaaa85b6012f023e8d662202e567cd8",
+  "seconds": 50.38,
+  "damageTaken": 76,
+  "damageDealt": 988,
+  "status": "cleared",
+  "casts": [
+   3,
+   0
+  ],
+  "reserveEntries": 16
+ }
+]

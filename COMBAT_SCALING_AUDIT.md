@@ -12,3 +12,19 @@ R means JavaScript Math.round. Attack speed below is expressed as seconds per at
 8. **Affinity is dispatch, not a single coefficient.** online/v013-enemy-roster.js:41–65 weights specialists. online/v013-enemy-abilities.js:5–48,69–182 defines Blood (ward, empowered siphon, healing hex), Decay (ward, wound, weakening hex), Vitality (mend, siphon, mend), Aegis (ward, breaker, ward), Fury (rally, two charged strikes, rally), Magic (ward, mana strike, charged spell); minions have family pack passives. Boss effects respectively sacrifice/lifesteal, brood mitigation, death heal, ward cycle, interruptible strike/enrage, and Storm Node/discharge (online/v013-boss-abilities.js:6–144). These change encounter outcomes after spawn; keep them distinct from role budgets.
 
 **Classification.** Role, group size, encounter pressure, risk, trait, condition and skill are distinct active layers. Redundant work is the repeated HP/maxHP assignment and repeated derivation of the same risk factors per actor. Group-size budget is split across two owners. The apparent double 1.4 and post-Boss .65 are not removable identities. No compensatory multiplier is justified. Vanguard location, Boss pressure, Elite Tank pressure and lack of escort risk require balance/design decisions.
+
+## Measured baseline, before refactoring
+
+Fixed synthetic account, native fight, focus policy. HP/ATK/DEF/Barrier/interval are final initial stats for one actor of each distinct role and stat tuple. Complete ordered rosters, time, damage, casts, outcome and per-update trace digest are in tests/fixtures/v013-scaling-baseline.json. Measured risk is the selected card; controlled room injection may retain its original escort count.
+
+|E/seed|Encounter, requested count, family/risk, node|Trait / condition (marked?)|Actor and final HP/ATK/DEF/Barrier/seconds|
+|---|---|---|---|
+|1/502|normal / 1 / blood / 0 / 1|none / carrion_swarm / no|tank 318/8/4/0/1.978|
+|1/509|normal / 4 / aegis / 1 / 1|armored / veiled_passages / no|skirmisher 133/5/2/0/1.633; caster 124/5/2/0/1.978; minion 63/2/1/0/2.185; tank 182/4/4/0/1.978|
+|6/517|normal / 12 / fury / 2 / 1|frenzied / carrion_swarm / no|minion 65/3/1/0/1.9; skirmisher 178/7/5/0/1.42|
+|6/504|normal / 20 / magic / 1 / 1|sigilbound / veiled_passages / no|minion 46/2/1/6/2.185; caster 122/5/5/15/1.978; skirmisher 129/5/5/15/1.633|
+|1/505|elite / 1 / decay / 0 / 1|none / relentless_hunt / no|ashen_executioner 256/16/3/0/2.3575|
+|6/510|elite / 1 / blood / 2 / 1|none / sanguine_rite / no|tank 1248/38/9/3/2.2195|
+|1/510|boss / 1 / vitality / 0 / 1|none / veiled_passages / no|devourer 288/17/6/0/1.863; skirmisher 92/5/3/0/1.846|
+|6/526|boss / 1 / magic / 2 / 1|none / blighted_ground / no|conductor 842/55/14/0/1.863; skirmisher 224/13/7/0/1.846|
+|6/511|marked / 12 / blood / 1 / 18|armored / carrion_swarm / yes|skirmisher 119/5/6/0/1.633; minion 42/2/1/0/2.185; caster 112/5/6/0/1.978|
