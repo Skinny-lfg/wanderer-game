@@ -10,7 +10,7 @@ on:
       - 'online/**'
       - 'index.html'
       - 'preview/**'
-      - 'tests/v013-c4-*.cjs'
+      - 'tests/**'
       - 'scripts/v013-c4-*.cjs'
   workflow_dispatch:
 
@@ -119,25 +119,21 @@ jobs:
           fi
       - name: Real current Talent/Forge/Inventory/Dungeon browser tests
         run: npm run test:v013:browser
-      - name: Deep historical stage-4.5 browser scenarios (diagnostic; never presented as green if failed)
+      - name: Deep current v0.13 Chromium gameplay, Boss and extraction scenarios (mandatory)
         shell: bash
         run: |
+          set -euo pipefail
           mkdir -p reports/v013-c4
           for test in tests/v013-stage45-4-browser.cjs tests/v013-stage45-5-browser.cjs; do
             name="$(basename "$test" .cjs)"
-            set +e
-            node "$test" > "reports/v013-c4/$name.log" 2>&1
-            code=$?
-            set -e
-            printf '%s\n' "$code" > "reports/v013-c4/$name.exit"
-            echo "C4_DIAGNOSTIC_$name=$code"
-            tail -30 "reports/v013-c4/$name.log" || true
+            node "$test" 2>&1 | tee "reports/v013-c4/$name.log"
+            echo "C4_DEEP_BROWSER_PASS_$name=true"
           done
       - name: Browser evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: v013-c4-browser-and-legacy-diagnostics
+          name: v013-c4-deep-browser-evidence
           path: |
             reports/v013-c3-browser/
             reports/v013-c4/
@@ -165,8 +161,8 @@ jobs:
           --seeds=9101,9201
           --profiles=cautious,balanced
           --max-level=5
-          --max-attempts=3
-          --max-total-attempts=12
+          --max-attempts=8
+          --max-total-attempts=20
           --out=reports/v013-c4-natural-e5.json
       - name: Natural-account E1-E20 horizon pilot (report censored levels as censored)
         run: >-
@@ -174,8 +170,8 @@ jobs:
           --seeds=9101
           --profiles=daring
           --max-level=20
-          --max-attempts=3
-          --max-total-attempts=12
+          --max-attempts=12
+          --max-total-attempts=48
           --out=reports/v013-c4-natural-e20.json
       - name: Require exact canonical source/docs parity
         run: |
