@@ -12,7 +12,7 @@ const FAMILIES=A.ALL_BOSSES;
 const round=(x,d=2)=>Number(x.toFixed(d));
 const mean=a=>a.length?round(a.reduce((x,y)=>x+y,0)/a.length):null;
 function parseArgs(args=process.argv.slice(2)){
- const opts={mode:null,gear:'starter',target:30,seedStart:15000,scan:3600,
+ const opts={mode:null,gear:'starter',eliteType:null,target:30,seedStart:15000,scan:3600,
   affinity:'blood',seeds:30,builds:['blood-fury','aegis-vitality','magic-decay'],
   risks:[0,1,2],groupSizes:[3,12],profiles:['cautious','balanced'],
   maxAttempts:6,output:null,inputs:null};
@@ -22,6 +22,7 @@ function parseArgs(args=process.argv.slice(2)){
   const [,k,v]=m;
   if(k==='mode'&&['elites','bosses','builds','natural','summarize'].includes(v))opts.mode=v;
   else if(k==='gear'&&['starter','common'].includes(v))opts.gear=v;
+  else if(k==='elite-type'&&TYPES.includes(v))opts.eliteType=v;
   else if(k==='target'||k==='seed-start'||k==='scan'||k==='seeds'||k==='max-attempts'){
    opts[k==='seed-start'?'seedStart':k==='max-attempts'?'maxAttempts':k]=Number(v);
   }else if(k==='affinity'&&FAMILIES.includes(v))opts.affinity=v;
@@ -64,9 +65,10 @@ function integrity(result,errors=[],other=[]){
 }
 function runElites(opts,deps={}){
  const inspect=deps.scenario||C.scenario;
- const counts=Object.fromEntries(TYPES.map(t=>[t,0]));
- const pairs=[],errors=[];let skippedNotTank=0,skippedCapped=0,inspected=0;
- for(let offset=0;offset<opts.scan&&TYPES.some(t=>counts[t]<opts.target);offset++){
+ const chosen=opts.eliteType?[opts.eliteType]:TYPES;
+ const counts=Object.fromEntries(chosen.map(t=>[t,0]));
+ const pairs=[],errors=[];let skippedNotTank=0,skippedCapped=0,skippedOtherType=0,inspected=0;
+ for(let offset=0;offset<opts.scan&&chosen.some(t=>counts[t]<opts.target);offset++){
   const seed=opts.seedStart+offset;
   try{
    const tankPeek=inspect(seed,'tank',opts.gear,{inspectOnly:true});
@@ -75,6 +77,7 @@ function runElites(opts,deps={}){
    const elitePeek=inspect(seed,'elite',opts.gear,{inspectOnly:true});
    const type=elitePeek.initial.eliteType;
    if(!TYPES.includes(type))throw Error('Unknown native Elite archetype '+type);
+   if(!chosen.includes(type)){skippedOtherType++;continue;}
    if(counts[type]>=opts.target){skippedCapped++;continue;}
    const tank=inspect(seed,'tank',opts.gear);
    const elite=inspect(seed,'elite',opts.gear);
@@ -94,14 +97,14 @@ function runElites(opts,deps={}){
  }
  const analyzed=A.pairedGroups({pairs,errors,skippedNonTank:skippedNotTank});
  const groups=analyzed.groups.filter(g=>g.gear===opts.gear);
- const complete=TYPES.every(t=>counts[t]>=opts.target);
- const warnings=TYPES.filter(t=>counts[t]<opts.target).map(t=>'insufficient_'+t+'_'+counts[t]);
+ const complete=chosen.every(t=>counts[t]>=opts.target);
+ const warnings=chosen.filter(t=>counts[t]<opts.target).map(t=>'insufficient_'+t+'_'+counts[t]);
  const coverage={targetPerArchetype:opts.target,perArchetype:counts,
-  nativePairs:pairs.length,inspected,skippedNotTank,skippedCapped,
+  nativePairs:pairs.length,inspected,skippedNotTank,skippedCapped,skippedOtherType,
   completed:complete};
  const failure=errors.length||analyzed.invalidPairs.length?true:!complete;
  return {stage:'9.8',mode:'elites',gear:opts.gear,sourceSha256:S.sourceFingerprint().sha256,
-  input:{seedStart:opts.seedStart,scan:opts.scan,target:opts.target},
+  input:{seedStart:opts.seedStart,scan:opts.scan,target:opts.target,eliteType:opts.eliteType},
   coverage,groups,errors,invalidPairs:analyzed.invalidPairs,warnings,
   success:!failure,pairs,limits:['Only native true-roster solo Tanks paired to seeded Elite archetypes',
   'Player actions use the existing balanced native target policy, not human play',

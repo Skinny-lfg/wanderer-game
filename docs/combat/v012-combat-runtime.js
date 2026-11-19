@@ -208,7 +208,7 @@ function setDelayEnemy(r,seconds){
 }
 
 function setDirectEnemyDamage(r,amount,label){
- const enemy=r.enemy;let damage=Math.max(0,Math.round(amount*(root.WandererV013ExpeditionBoons?.factor(r)||1)*(root.WandererV013BossAbilities?.directFactor(r,enemy)||1)));
+ const enemy=r.enemy;let damage=Math.max(0,Math.round(amount*(root.WandererV013ExpeditionBoons?.factor(r)||1)*(root.WandererV013BossAbilities?.directFactor(r,enemy)||1)*(root.WandererV013EliteAbilities?.incomingFactor(r,enemy)||1)));
  if(enemy.barrier>0){const before=enemy.barrier,absorbed=Math.min(enemy.barrier,damage);enemy.barrier-=absorbed;damage-=absorbed;if(root.WandererV013BossAbilities?.barrierChanged(r,enemy,before,enemy.barrier))ports.addLog('⛨ Ward shattered · Vulnerable for 3s!','good');}
  ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,enemy.hp),damage));ports.phase6Proc(r,label);enemy.hp-=damage;if(damage>0){ports.addLog(label+' '+damage+' bonus damage','good');ports.floatText(damage,'enemy',false,'',enemy);}
  return damage;
@@ -341,7 +341,7 @@ function v013LightningChainFactors(){return ports.state.automaticTalents?.nodes?
 function groupSecondaryDamage(r,base,factors,label,physical=false){
  if(!r.enemies||r.enemies.length<2)return 0;
  const targets=r.enemies.filter(enemy=>enemy!==r.enemy&&enemy.hp>0).slice(0,factors.length);let hit=0;
- targets.forEach((enemy,i)=>{let amount=Math.max(1,Math.round((physical?Math.max(1,Math.round(r.stats.attack*({'Two-Handed':1.70,Sword:1.12,Mace:1.4,Bow:1.08,Daggers:.80}[r.stats.main?.subtype]||1))-WandererV012Buildcraft.enemyDefense(ports.phase1Build,enemy)):base)*factors[i]));if(enemy.baseDef>0&&enemy.def<enemy.baseDef)amount=Math.max(1,Math.round(amount*(1+(ports.phase1Build?.runtime?.talentBonuses?.sunderDamage||0))));amount=Math.max(1,Math.round(amount*(root.WandererV013ExpeditionBoons?.factor(r,true)||1)));const absorbed=Math.min(enemy.barrier||0,amount);enemy.barrier=Math.max(0,(enemy.barrier||0)-absorbed);amount-=absorbed;const actual=Math.min(Math.max(0,enemy.hp),amount);enemy.hp-=amount;if(actual>0)ports.floatText(actual,'enemy',false,'',enemy);ports.phase6Metric(r,'damageDealt',actual);hit++;});
+ targets.forEach((enemy,i)=>{let amount=Math.max(1,Math.round((physical?Math.max(1,Math.round(r.stats.attack*({'Two-Handed':1.70,Sword:1.12,Mace:1.4,Bow:1.08,Daggers:.80}[r.stats.main?.subtype]||1))-WandererV012Buildcraft.enemyDefense(ports.phase1Build,enemy)):base)*factors[i]));if(enemy.baseDef>0&&enemy.def<enemy.baseDef)amount=Math.max(1,Math.round(amount*(1+(ports.phase1Build?.runtime?.talentBonuses?.sunderDamage||0))));amount=Math.max(1,Math.round(amount*(root.WandererV013ExpeditionBoons?.factor(r,true)||1)*(root.WandererV013EliteAbilities?.incomingFactor(r,enemy)||1)));const absorbed=Math.min(enemy.barrier||0,amount);enemy.barrier=Math.max(0,(enemy.barrier||0)-absorbed);amount-=absorbed;const actual=Math.min(Math.max(0,enemy.hp),amount);enemy.hp-=amount;if(actual>0)ports.floatText(actual,'enemy',false,'',enemy);ports.phase6Metric(r,'damageDealt',actual);hit++;});
  if(hit&&label.includes('Piercing Arrow'))ports.phase6Metric(r,'pierced',hit);
  if(hit){ports.combatLinkEffect?.(r,label.includes('Chain Lightning')?'shock':label.includes('Piercing')?'pierce':label.includes('Cleave')?'cleave':'aoe',r.enemy,targets);
    ports.addLog(label+' hits '+hit+' additional '+(hit===1?'enemy':'enemies')+'.','good');}return hit;
@@ -429,7 +429,7 @@ function weaponAttack(r,offhandStrike=false){
   }}
   damage=Math.round(damage);
  }
- damage=Math.max(1,Math.round(damage*(root.WandererV013ExpeditionBoons?.factor(r)||1)*(root.WandererV013BossAbilities?.directFactor(r,e)||1)));
+ damage=Math.max(1,Math.round(damage*(root.WandererV013ExpeditionBoons?.factor(r)||1)*(root.WandererV013BossAbilities?.directFactor(r,e)||1)*(root.WandererV013EliteAbilities?.incomingFactor(r,e)||1)));
  const hpBefore=e.hp,barrierBefore=e.barrier;
  ports.animateStrike(kind,cast);
  if(e.barrier>0){const absorbed=Math.min(e.barrier,damage);e.barrier-=absorbed;damage-=absorbed;if(absorbed)ports.addLog('🛡 '+e.name+' absorbs '+absorbed+' damage','spell');if(root.WandererV013BossAbilities?.barrierChanged(r,e,barrierBefore,e.barrier))ports.addLog('⛨ Ward shattered · Vulnerable for 3s!','good');}
@@ -537,12 +537,17 @@ function updateFight(){
     const theme=ports.THEMES.find(t=>t.id===r.path)||ports.currentTheme();
     const mob=theme?.mobs?.find(m=>m.role==='minion');
     if(!mob)throw Error('Stage 8.2 summon requires a Realm Minion');
+    const spec=root.WandererV013EliteAbilities.DEFINITIONS.gravecaller;
+    const ledger=r.stage83EliteSummons??={summoned:0};
+    ledger.maxSummons=spec.maxSummons;
+    ledger.maxLivingMinions=spec.maxLiving;
     const created=root.WandererV013BossInfrastructure?.summon(r,event.enemy,event.count,
      ()=>ports.enemyFor(r.tier,r.enc,{theme,mob,boss:false,elite:false}),
-     {family:r.planeFamily||'decay',hpFactor:.42,atkFactor:.25,defFactor:.35,intervalFactor:1.35});
+     {family:r.planeFamily||'decay',hpFactor:spec.hpFactor,atkFactor:spec.atkFactor,defFactor:.35,intervalFactor:spec.intervalFactor});
     if(created?.spawned){
      ports.phase6Metric(r,'eliteSummons',created.spawned);
-     ports.addLog('☠ '+event.enemy.name+' summons '+created.spawned+' undead Minions!','critical');
+     ports.addLog('☠ '+event.enemy.name+' summons '+created.spawned+' undead Minions · 10% protection while they live!','critical');
+     ports.combatLinkEffect?.(r,'ward',event.enemy,[event.enemy]);
      ports.renderCombat();
     }else ports.addLog('☠ '+event.enemy.name+' cannot summon more Minions.','critical');
    }
@@ -602,9 +607,9 @@ function updateFight(){
 
   r.tDot-=1;
   const hasBleed=e.bleedStacks>0,hasBurn=e.burnStacks>0,hasDots=hasBleed||hasBurn;
-  if(hasDots){if(hasBleed)e.lastBleedTick=ports.setNow(r);const applied=Math.round(ports.tickDots(e)*(root.WandererV013ExpeditionBoons?.dotFactor(r)||1));if(hasBleed&&applied>=e.hp)e.v012DeathBleed=true;ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),applied));ports.phase6Metric(r,'periodicDamage',Math.min(Math.max(0,e.hp),applied));e.hp-=applied;ports.addLog('☠️ Damage over time: '+applied+' damage','spell');if(applied>0)ports.floatText(applied,'enemy',false,hasBleed&&hasBurn?'BLEED + BURN':hasBleed?'BLEED':'BURN',e);}
+  if(hasDots){if(hasBleed)e.lastBleedTick=ports.setNow(r);const applied=Math.round(ports.tickDots(e)*(root.WandererV013ExpeditionBoons?.dotFactor(r)||1)*(root.WandererV013EliteAbilities?.incomingFactor(r,e)||1));if(hasBleed&&applied>=e.hp)e.v012DeathBleed=true;ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),applied));ports.phase6Metric(r,'periodicDamage',Math.min(Math.max(0,e.hp),applied));e.hp-=applied;ports.addLog('☠️ Damage over time: '+applied+' damage','spell');if(applied>0)ports.floatText(applied,'enemy',false,hasBleed&&hasBurn?'BLEED + BURN':hasBleed?'BLEED':'BURN',e);}
   if(hasBurn)ports.setHeatTick(r,true);
-  if(r.enemies){for(const mob of r.enemies){if(mob===e||mob.hp<=0)continue;const bleeding=mob.bleedStacks>0,burning=mob.burnStacks>0;if(bleeding||burning){if(bleeding)mob.lastBleedTick=ports.setNow(r);const damage=Math.round(ports.tickDots(mob)*(root.WandererV013ExpeditionBoons?.dotFactor(r)||1));if(bleeding&&damage>=mob.hp)mob.v012DeathBleed=true;ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,mob.hp),damage));ports.phase6Metric(r,'periodicDamage',Math.min(Math.max(0,mob.hp),damage));mob.hp-=damage;if(damage>0)ports.floatText(damage,'enemy',false,bleeding?'BLEED':'BURN',mob);}if(mob.hp>0&&ports.phase1Build){r.enemy=mob;WandererV012Buildcraft.tickRot(ports.phase1Build,ports.phase2Context(r));}if(mob.slowTime>0)mob.slowTime=Math.max(0,mob.slowTime-1);}r.enemy=e;}
+  if(r.enemies){for(const mob of r.enemies){if(mob===e||mob.hp<=0)continue;const bleeding=mob.bleedStacks>0,burning=mob.burnStacks>0;if(bleeding||burning){if(bleeding)mob.lastBleedTick=ports.setNow(r);const damage=Math.round(ports.tickDots(mob)*(root.WandererV013ExpeditionBoons?.dotFactor(r)||1)*(root.WandererV013EliteAbilities?.incomingFactor(r,mob)||1));if(bleeding&&damage>=mob.hp)mob.v012DeathBleed=true;ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,mob.hp),damage));ports.phase6Metric(r,'periodicDamage',Math.min(Math.max(0,mob.hp),damage));mob.hp-=damage;if(damage>0)ports.floatText(damage,'enemy',false,bleeding?'BLEED':'BURN',mob);}if(mob.hp>0&&ports.phase1Build){r.enemy=mob;WandererV012Buildcraft.tickRot(ports.phase1Build,ports.phase2Context(r));}if(mob.slowTime>0)mob.slowTime=Math.max(0,mob.slowTime-1);}r.enemy=e;}
   if(s.bonus.regenBonus){const healed=ports.setHeal(r,ports.regenPerSecond(r.maxhp,s.bonus.regenBonus));if(healed>0)ports.addLog('💚 Regeneration +'+Math.round(healed)+' HP','good');}
   if(ports.isPhase1Run()&&ports.phase1Build)WandererV012Buildcraft.onSecond(ports.phase1Build,ports.phase2Context(r));
   if(e.slowTime>0)e.slowTime=Math.max(0,e.slowTime-1);
@@ -730,7 +735,7 @@ function phase2Context(r){
   ports.phase6Proc(r,kind+' application');const values=e.dots[kind]||(e.dots[kind]=[]);
   if(values.length>=12)values.shift();values.push({damage:Math.max(1,Math.round(kind==='bleed'?WandererV012Buildcraft.bleedDamage(ports.phase1Build,potency):potency*(ports.state.automaticTalents?.nodes?.includes('fire_focus')?1.35:1))),remaining:3});ports.synchronizeDots(e);
  },
- dotDamage(amount,label){const n=Math.max(0,Math.round(amount*(root.WandererV013ExpeditionBoons?.dotFactor(r)||1)));if(n){ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),n));ports.phase6Metric(r,'periodicDamage',Math.min(Math.max(0,e.hp),n));e.hp-=n;ports.addLog(label+' '+n+' damage','spell');ports.floatText(n,'enemy',false,'ROT',e);}},
+ dotDamage(amount,label){const n=Math.max(0,Math.round(amount*(root.WandererV013ExpeditionBoons?.dotFactor(r)||1)*(root.WandererV013EliteAbilities?.incomingFactor(r,e)||1)));if(n){ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),n));ports.phase6Metric(r,'periodicDamage',Math.min(Math.max(0,e.hp),n));e.hp-=n;ports.addLog(label+' '+n+' damage','spell');ports.floatText(n,'enemy',false,'ROT',e);}},
  damage(amount,label){return ports.setDirectEnemyDamage(r,amount,label);},
  areaDamage(amount,label){ports.setDirectEnemyDamage(r,amount,label);groupSecondaryDamage(r,amount,Array(Math.max(0,(r.enemies?.length||1)-1)).fill(1),label);},
  trigger(id){triggered(r,id);},
