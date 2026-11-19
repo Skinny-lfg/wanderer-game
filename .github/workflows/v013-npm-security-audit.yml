@@ -57,7 +57,7 @@ jobs:
           const fs = require('node:fs');
           const meta = JSON.parse(fs.readFileSync('firebase-browser-metafile.json', 'utf8'));
           const inputs = Object.keys(meta.inputs || {});
-          const dangerous = inputs.filter(x => /node_modules\\/(?:@grpc\\/grpc-js|tar|firebase-tools)(?:\\/|$)/.test(x));
+          const dangerous = inputs.filter(x => ['node_modules/@grpc/grpc-js/', 'node_modules/tar/', 'node_modules/firebase-tools/'].some(k => x.includes(k)));
           console.log('BROWSER_BUNDLE ' + JSON.stringify({inputs:inputs.length, dangerous, outputBytes:fs.statSync('/tmp/firebase-sdk-audit.mjs').size}));
           if (dangerous.length) process.exitCode = 1;
           NODE
