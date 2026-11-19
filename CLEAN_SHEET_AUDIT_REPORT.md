@@ -129,6 +129,31 @@ map/Forge assertions, while the default browser script now runs
 iframe. This narrower smoke is necessary but **not sufficient** browser
 coverage for a release.
 
+## Final verification checkpoint
+
+**Passed workflow:** https://github.com/Skinny-lfg/wanderer-game/actions/runs/44593156960
+(checked commit `4f03539992ee600a1ed16fa8d157f12fb07f4b0b`).
+Both workflow jobs completed **successfully**, with:
+
+- **58/58** targeted clean-sheet, fresh-account, native save/contract,
+  treasure and v15 build-audit tests passed.
+- **76/76** current talent graph tests passed.
+- Real Chrome/Playwright preview opened the v15 iframe and confirmed
+  **343 nodes**, **zero JavaScript errors**, and no manual attribute
+  controls or obsolete parent canvas.
+- `npm run build:pages` completed in an ephemeral runner, showing
+  **12 differing generated docs files**. This check did not commit or
+  publish those differences.
+- The old `tests/v012-phase-c3-treasures.test.cjs` diagnostic remained
+  **2/5 passing, 3/5 failing** because of old treasure/save fixtures
+  and changed drop behavior. It is explicitly outside the clean-sheet
+  release gate; it has not been represented as passing.
+
+The present default `npm run test:v013:browser` covers only the fresh
+v15 smoke. It does **not** yet replace the previous outdated deep browser
+scenarios for map, Forge, inventory or combat. Treat that as a
+release-coverage gap, not a gameplay regression verdict.
+
 ## Recommended next cleanup stages
 
 - **C1 — Graph catalog extraction:** decouple v15 generation from the
