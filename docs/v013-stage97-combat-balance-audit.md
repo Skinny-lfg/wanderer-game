@@ -79,4 +79,10 @@ ranges and preserve explicit configuration for future comparisons.
 6. Direct per-ability damage attribution and human dodge/reaction timing are
    not available from the existing native instrumentation.
 
+Preview parity: the audit verifies that 12 key external combat, talent, enemy and
+economy modules match between the source runtime and GitHub Pages docs/
+mirrors. A mismatch blocks a trustworthy report. The two index.html files
+can intentionally differ because of artwork/UI: the report flags this fact;
+external module parity alone does not prove identical inline HTML gameplay.
+
 No gameplay values, loot rules, saves, assets or Firebase state are changed.
