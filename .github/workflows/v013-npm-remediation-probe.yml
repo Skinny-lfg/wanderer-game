@@ -1,0 +1,78 @@
+name: Wanderer v0.13 npm remediation probe (no deploy)
+on:
+  push:
+    branches: [audit/v013]
+    paths: ['.github/workflows/v013-npm-remediation-probe.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    if: github.ref == 'refs/heads/audit/v013'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [safe-fix, cli-upgrade, full-upgrade]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Inspect available dependency versions and peer constraints
+        run: |
+          echo "REGISTRY Firebase $(npm view firebase version)"
+          echo "REGISTRY Tools $(npm view firebase-tools version)"
+          echo "REGISTRY Rules $(npm view @firebase/rules-unit-testing version)"
+          echo "RULES-LATEST-PEERS $(npm view @firebase/rules-unit-testing peerDependencies --json)"
+          echo "RULES-V5-PEERS $(npm view @firebase/rules-unit-testing@5 peerDependencies --json | tail -15)"
+      - name: Probe compatible changes in runner only
+        shell: bash
+        env:
+          VARIANT: ${{ matrix.variant }}
+        run: |
+          set -e
+          case "$VARIANT" in
+            safe-fix)
+              npm audit fix --package-lock-only --ignore-scripts || true
+              ;;
+            cli-upgrade)
+              npm install --package-lock-only --ignore-scripts --save-dev firebase-tools@15.37.0
+              npm audit fix --package-lock-only --ignore-scripts || true
+              ;;
+            full-upgrade)
+              npm install --package-lock-only --ignore-scripts --save firebase@12
+              npm install --package-lock-only --ignore-scripts --save-dev @firebase/rules-unit-testing@5 firebase-tools@15.37.0
+              npm audit fix --package-lock-only --ignore-scripts || true
+              ;;
+          esac
+          node <<'NODE'
+          const fs = require('fs');
+          const p=JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          const lock=JSON.parse(fs.readFileSync('package-lock.json', 'utf8'));
+          console.log('DEPENDENCY_VERSIONS ' + JSON.stringify({dependencies:p.dependencies,devDependencies:p.devDependencies,lockFirebase:lock.packages?.['node_modules/firebase']?.version,lockRules:lock.packages?.['node_modules/@firebase/rules-unit-testing']?.version,lockTools:lock.packages?.['node_modules/firebase-tools']?.version}));
+          NODE
+          npm audit --package-lock-only --json > /tmp/audit-full.json || true
+          npm audit --omit=dev --package-lock-only --json > /tmp/audit-prod.json || true
+          node <<'NODE'
+          const fs = require('fs');
+          for(const m of ['full','prod']){
+            const a=JSON.parse(fs.readFileSync('/tmp/audit-'+m+'.json','utf8'));
+            console.log('PROBE_AUDIT '+m+' '+JSON.stringify({counts:a.metadata?.vulnerabilities,packages:Object.entries(a.vulnerabilities||{}).map(([name,v])=>({name,severity:v.severity,fix:v.fixAvailable}))}));
+          }
+          NODE
+      - name: Confirm npm ci and browser bundle
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm run build:firebase
+      - name: Focused current game regression
+        run: |
+          npm run test:v013:gate
+          npm run test:v013:talent-graph
+      - name: Emulator rules only (no live Firebase connection)
+        run: |
+          npm run test:rules
