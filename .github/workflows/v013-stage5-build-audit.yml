@@ -1,0 +1,98 @@
+name: Wanderer Stage 5 — Native build/gear/respec baseline audit (no deploy)
+
+on:
+  push:
+    branches:
+      - audit/v013
+    paths:
+      - '.github/workflows/v013-stage5-build-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-baseline:
+    if: github.ref == 'refs/heads/audit/v013'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+
+      - name: Validate native graph, reset semantics and build instrumentation
+        run: >-
+          node --test
+          tests/v013-stage5-build-audit.test.cjs
+          tests/v013-natural-progression.test.cjs
+          tests/v013-stage5-camp-decisions.test.cjs
+
+      - name: Observe current heuristic builds through native E1-E20 accounts
+        run: >-
+          node scripts/v013-stage5-build-audit.cjs
+          --seeds=9101,9103,9105,9201
+          --profiles=cautious,balanced,daring
+          --max-level=20
+          --max-attempts=24
+          --max-total-attempts=85
+          --out=reports/stage5-build-audit.json
+
+      - name: Validate baseline is observational, not artificial respec
+        run: |
+          node <<'NODE'
+          const fs=require('node:fs'),assert=require('node:assert/strict');
+          const r=JSON.parse(fs.readFileSync('reports/stage5-build-audit.json','utf8'));
+          assert.equal(r.cohort.accounts,12);
+          assert.equal(r.cohort.errors,0);
+          assert.equal(r.resets,0,'No native respec policy exists yet');
+          assert(r.cohort.totalAttempts>0);
+          for(const profile of Object.values(r.currentPolicy))
+            assert(profile.unresolvedTalentIds.length>0,'Expected to observe baseline priority drift');
+          for(const a of r.accounts){
+            for(const x of a.chronological){
+              assert(x.gearBefore);
+              assert(x.gearAfter);
+              assert(x.talentNodes>=0);
+            }
+          }
+          console.log('STAGE5_BUILD_AUDIT_VALID='+JSON.stringify({
+            accounts:r.cohort.accounts,
+            attempts:r.cohort.totalAttempts,
+            resets:r.resets,
+            gearSwaps:r.gearEquips,
+            attributePointsSpent:r.attributePointsSpent,
+            E5:r.milestoneMatrix.E5.reached,
+            E10:r.milestoneMatrix.E10.reached,
+            E20:r.milestoneMatrix.E20.reached
+          }));
+          NODE
+
+      - name: Record exact source revision and hashes
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p reports
+          {
+            echo "commit=${GITHUB_SHA}"
+            echo "branch=${GITHUB_REF}"
+            echo "node=$(node --version)"
+            sha256sum scripts/v013-natural-progression.cjs scripts/v013-stage5-build-audit.cjs combat/automatic-talents.js economy/v013-gear-rolls.js
+          } > reports/stage5-build-audit-provenance.txt
+
+      - name: Upload full native account evidence (no deploy)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage5-build-audit-baseline
+          path: |
+            reports/stage5-build-audit.json
+            reports/stage5-build-audit.md
+            reports/stage5-build-audit-provenance.txt
+          retention-days: 30
+          if-no-files-found: warn
