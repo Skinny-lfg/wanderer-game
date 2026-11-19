@@ -13,7 +13,7 @@ test('current v15 affinity, Basic and Magic purchases use actual prerequisites a
  assert.equal(T.valid({...T.create(),treeVersion:12}),false);
 });
 test('v15 Magic attunement selects one mode and cannot retain skills from another mode',()=>{
- const p=buy(['affinity_magic']);
+ const p=buy(['element_choice']);
  const fire=T.selectElement(p,'fire');assert(fire&&T.valid(fire));
  const frost=T.selectElement(fire,'frost');assert(frost&&T.valid(frost));
  assert.notEqual(fire.element,frost.element);
