@@ -32,7 +32,7 @@ function enemyFor(level,enc,override=null){
  const atk=Math.max(1,Math.round(v.atk*mult*(elite?elite.atk:role==='minion'?.70:role==='skirmisher'?1.10:role==='caster'?1.08:role==='tank'?.90:1)));
  const defense=Math.max(0,Math.round(v.def*mult*(elite?elite.def:role==='tank'?1.35:role==='minion'?.55:1)));
  const barrier=variant?.style==='guardian'?Math.max(3,WandererV012CombatCore.enemyStat(level,Math.round(WandererV012CombatCore.referenceLevel(level)*.9))):elite?.id==='tank'?Math.max(1,WandererV012CombatCore.enemyStat(level,Math.round(1+WandererV012CombatCore.referenceLevel(level)*.3))):0;
- return {name:miniboss?elite.icon+' '+elite.name:mob.name,image:elite?ports.eliteArt(elite.id,mob.image):mob.image,role,bossStyle:variant?.style||null,attackType:['caster','gravecaller','rotbound_exarch'].includes(elite?.id)||['leech','conductor','devourer'].includes(variant?.style)||role==='caster'?'spell':'physical',
+ return {name:miniboss?elite.icon+' '+elite.name:mob.name,image:elite?ports.eliteArt(elite.id,mob.image):mob.image,role,bossStyle:variant?.style||null,attackType:['caster','gravecaller','oathbound_exarch'].includes(elite?.id)||['leech','conductor','devourer'].includes(variant?.style)||role==='caster'?'spell':'physical',
  miniboss,eliteType:elite?.id||null,archetypeName:elite?.name||null,hp,maxhp:hp,atk,def:defense,baseDef:defense,barrier,
  attackEvery:elite?elite.interval:role==='skirmisher'?1.42:role==='minion'?1.90:role==='tank'||role==='caster'?1.72:1.62,boss,effect:theme.effect,burn:0,bleed:0,
  burnStacks:0,bleedStacks:0,dots:{bleed:[],burn:[]},slowTime:0,enraged:false};
@@ -211,6 +211,24 @@ function setDelayEnemy(r,seconds){
  ports.addLog('⏳ Enemy attack delayed by '+seconds+'s','good');return true;
 }
 
+// Primary hits alone call this. Reflection cannot trigger another on-hit callback.
+function reflectThornbloom(r,enemy,hpLost){
+ const raw=root.WandererV013EliteAbilities?.thornbloomDamage(enemy,r.combatSeconds,hpLost,r.maxhp)||0;
+ if(!raw)return false;
+ const s=r.stats;
+ let incoming=raw;
+ if(ports.phase1Build)incoming=Math.min(raw,WandererV012Buildcraft.incoming(ports.phase1Build,ports.phase2Context(r),raw));
+ incoming=Math.max(0,Math.min(raw,incoming*(root.WandererV013ExpeditionBoons?.takenFactor(r)||1)));
+ const steadfast=r.barrier>0&&ports.phase1Build?.runtime?.specializations?.includes('steadfast_guard');
+ const chance=steadfast?Math.min(65,(s.blockChance||0)+15):s.blockChance||0;
+ if(chance&&ports.gameRandom()<chance/100)incoming*=1-(s.blockReduction||(steadfast?.35:0));
+ const absorbed=Math.min(r.barrier||0,incoming),hit=Math.min(r.hp,incoming-absorbed);
+ r.barrier-=absorbed;r.hp-=hit;
+ ports.phase6Metric(r,'absorbed',absorbed);ports.phase6Metric(r,'damageTaken',hit);
+ ports.phase6Metric(r,'thornbloomHits',1);ports.phase6Metric(r,'thornbloomDamage',hit);
+ ports.addLog('🌵 Thornbloom reflects '+hit.toFixed(1)+' damage'+(absorbed?' · Barrier '+absorbed.toFixed(1):''),'critical');
+ return resolveBossPulseLethal(r,s);
+}
 function setDirectEnemyDamage(r,amount,label){
  const enemy=r.enemy;let damage=Math.max(0,Math.round(amount*(root.WandererV013ExpeditionBoons?.factor(r)||1)*(root.WandererV013BossAbilities?.directFactor(r,enemy)||1)));
  if(enemy.barrier>0){const before=enemy.barrier,absorbed=Math.min(enemy.barrier,damage);enemy.barrier-=absorbed;damage-=absorbed;if(root.WandererV013BossAbilities?.barrierChanged(r,enemy,before,enemy.barrier))ports.addLog('⛨ Ward shattered · Vulnerable for 3s!','good');}
@@ -437,6 +455,7 @@ function weaponAttack(r,offhandStrike=false){
  if(e.barrier>0){const absorbed=Math.min(e.barrier,damage);e.barrier-=absorbed;damage-=absorbed;if(absorbed)ports.addLog('🛡 '+e.name+' absorbs '+absorbed+' damage','spell');if(root.WandererV013BossAbilities?.barrierChanged(r,e,barrierBefore,e.barrier))ports.addLog('⛨ Ward shattered · Vulnerable for 3s!','good');}
  const real=Math.max(0,Math.min(e.hp,damage));
  ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),damage));e.hp-=damage;ports.floatText(damage,'enemy',critical,'',e);
+ if(reflectThornbloom(r,e,real))return;
  if(r.guillotineSpore){const other=r.enemies?.find(m=>m!==e&&m.hp>0);if(e.hp<=0&&other){other.dots??={};other.dots.bleed??=[];other.dots.bleed.push({...r.guillotineSpore});ports.synchronizeDots(other);}delete r.guillotineSpore;}
  if(e.hp<=0&&r.enemies?.some(m=>m!==e&&m.hp>0)&&!r.swiftUsed&&signature('swiftness')){r.swiftUsed=true;r.tPlayer=Math.min(.9/r.stats.attacksPerSec,(r.tPlayer||0)+.3/r.stats.attacksPerSec);ports.addLog('Swiftness advanced your next attack.','good');}
  ports.legendaryOnHit(r,base,real);
@@ -574,14 +593,14 @@ function updateFight(){
    else if(event.type==='interrupted'||event.type==='disarmed'){ports.addLog('✓ '+event.enemy.name+' interrupted: '+event.ability,'good');ports.phase6Metric(r,'bossCastInterruptions',1);}
    else if(event.type==='ward'){ports.addLog('⛨ '+event.enemy.name+' restores '+event.barrier+' Barrier','spell');ports.phase6Metric(r,'bossWards',1);ports.combatLinkEffect?.(r,'ward',event.enemy,[event.enemy]);}
    else if(event.type==='charge')ports.addLog('♨ Furnace Strike charged · next hit empowered!','critical');
-   else if(event.type==='offering'){ports.addLog('🩸 Blood Thrall sacrificed · Boss recovers '+event.healed+' HP','critical');ports.phase6Metric(r,'bossHealing',event.healed);ports.combatLinkEffect?.(r,'siphon',event.minion,[event.enemy]);}
+   else if(event.type==='offering'){ports.addLog('🩸 Riftbound Vessel sacrificed · Boss recovers '+event.healed+' HP','critical');ports.phase6Metric(r,'bossHealing',event.healed);ports.combatLinkEffect?.(r,'siphon',event.minion,[event.enemy]);}
    else if(event.type==='pulse'){ports.combatLinkEffect?.(r,'shock',event.enemy,['hero']);ports.addLog('⚡ Arcane Convergence · '+event.damage+' damage'+(event.absorbed?' · '+event.absorbed+' absorbed':'')+'!','critical');ports.phase6Metric(r,'bossArcanePulses',1);ports.phase6Metric(r,'damageTaken',event.damage);ports.phase6Metric(r,'absorbed',event.absorbed);if(resolveBossPulseLethal(r,s))return;}
-   else if(event.type==='canceled')ports.addLog('⚡ Arcane Convergence canceled by the destroyed Storm Node.','good');
+   else if(event.type==='canceled')ports.addLog('⚡ Arcane Convergence canceled by the destroyed Convergence Anchor.','good');
    else if(event.type==='summon'){
     const theme=ports.THEMES.find(t=>t.id===r.path)||ports.currentTheme(),mob=theme?.mobs?.find(m=>m.role==='minion');
     if(!mob)throw Error('Stage 8.4 Boss summon requires a Realm Minion');
     const result=root.WandererV013BossAbilities.spawned(r,event,()=>ports.enemyFor(r.tier,r.enc,{theme,mob,boss:false,elite:false}));
-    if(result.spawned){ports.phase6Metric(r,'bossSummons',result.spawned);ports.addLog('☠ '+event.enemy.name+' summons '+result.spawned+' '+(event.kind==='blood'?'Blood Thrall':event.kind==='node'?'Storm Node':event.kind==='vitality'?'Bloomling':'Carrion Brood')+(result.spawned===1?'':'s')+'!','critical');ports.renderCombat();}
+    if(result.spawned){ports.phase6Metric(r,'bossSummons',result.spawned);ports.addLog('☠ '+event.enemy.name+' summons '+result.spawned+' '+(event.kind==='blood'?'Riftbound Vessel':event.kind==='node'?'Convergence Anchor':event.kind==='vitality'?'Heartroot Mawbud':'Carrion Broodling')+(result.spawned===1?'':'s')+'!','critical');ports.renderCombat();}
     else ports.addLog('☠ '+event.enemy.name+' has no reinforcement space.','critical');
    }
   }
@@ -612,9 +631,10 @@ function updateFight(){
  if(r.enemies){for(const mob of r.enemies){if(mob.hp<=0||mobWindups.has(mob))continue;const slow=mob.slowTime>0?1+(s.bonus.slowBonus||.22):1,lead=({berserker:.49,tank:.81,caster:.89,vampire:.67}[mob.eliteType]??.66);if(mob.groupClock>=Math.max(0,mob.attackEvery*slow-lead)){mobWindups.add(mob);r.enemy=mob;ports.animateEnemyWindup?.();}}r.enemy=e;}else if(!mobWindups.has(e)&&r.tEnemy>=Math.max(0,e.attackEvery*windupSlowed-impactLead)){mobWindups.add(e);ports.animateEnemyWindup?.();}
  if(s.caster||r.phase1Magic||s.phase2Decay)r.mp=Math.min(r.maxmp,r.mp+dt*s.manaRegen);
  if(ports.isPhase1Run())ports.phase2MagicTick(r);
+ if(r.hp<=0)return;
  if(e.hp<=0||hasUnsettledGroupDeaths(r)){ports.winEncounter(true);return;}
  const lt=ports.legendaryRuntime(r),haste=(ports.isPhase1Run()&&ports.phase1Build?WandererV012Buildcraft.speed(ports.phase1Build,ports.phase1Clock+r.combatSeconds):1)*(s.bonus.bleedHaste?1+Math.min(3,t.haste.length)*.05:1)*(1+((lt.natureHasteUntil||0)>ports.setNow(r)?.10:0)+((lt.thunderHasteUntil||0)>ports.setNow(r)?.12:0))*(root.WandererV013ExpeditionBoons?.speedFactor(r)||1);
- if(advancePlayerAttackClock(r,dt,s.attacksPerSec*haste)){r.autoUses=(r.autoUses||0)+1;ports.weaponAttack(r);if(e.hp<=0||hasUnsettledGroupDeaths(r)){ports.winEncounter(true);return;}}
+ if(advancePlayerAttackClock(r,dt,s.attacksPerSec*haste)){r.autoUses=(r.autoUses||0)+1;ports.weaponAttack(r);if(r.hp<=0)return;if(e.hp<=0||hasUnsettledGroupDeaths(r)){ports.winEncounter(true);return;}}
  if(r.bastionUntil&&ports.setNow(r)>=r.bastionUntil){r.barrier=Math.max(0,r.barrier-Math.max(0,r.bastionSize-(r.bastionAbsorbed||0)));ports.setHeal(r,Math.min(r.bastionSize,r.bastionAbsorbed||0)*.5,true);r.bastionUntil=0;}
  if(r.tDot>=1){if(r.pulses>0){r.pulses--;ports.setHeal(r,r.maxhp*.01*learned('second_pulse'));}
 
@@ -796,7 +816,9 @@ function phase2MagicTick(r){
  if(learned('spell_echo')||prepared('grave_bloom')){r.echoCount=((r.echoCount||0)+1)%3;if(!r.echoCount){if(learned('spell_echo'))spellDamage+=Math.max(1,Math.round(spellDamage*.1*learned('spell_echo')));if(prepared('grave_bloom')&&r.enemy.v012Rot?.length){const others=(r.enemies||[]).filter(m=>m!==r.enemy&&m.hp>0).slice(0,2);if(others.length)for(const m of others){m.v012Rot??=[];if(m.v012Rot.length<6)m.v012Rot.push({...r.enemy.v012Rot[0]});}else spellDamage+=r.enemy.v012Rot.reduce((sum,d)=>sum+d.damage,0);triggered(r,'grave_bloom');}}}
  const chainBase=spellDamage;
  if(r.enemy.baseDef>0&&r.enemy.def<r.enemy.baseDef)spellDamage=Math.max(1,Math.round(spellDamage*(1+(b.runtime.talentBonuses?.sunderDamage||0))));
+ const hpBefore=r.enemy.hp;
  ports.setDirectEnemyDamage(r,spellDamage,'✨ '+b.element);
+ if(reflectThornbloom(r,r.enemy,Math.min(hpBefore,hpBefore-r.enemy.hp)))return;
  WandererV012Buildcraft.onCast(b,ctx);groupElementalEffects(r,b);
  if(v013LightningChain(r))groupSecondaryDamage(r,chainBase,v013LightningChainFactors(),'⚡ Chain Lightning');
 }

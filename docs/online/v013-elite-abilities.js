@@ -3,7 +3,8 @@
 (function(root){'use strict';
 const DEFINITIONS=Object.freeze({
  gravecaller:Object.freeze({name:'Call of the Fallen',role:'Summoner',icon:'☠',description:'Channels a 1s interruptible ritual at 85% and 40% HP, summoning up to two undead Minions (four total, two alive). Each successful undead hit adds Deathbound Decay (up to 4 stacks, 4s), dealing damage every second until the summons die.',thresholds:Object.freeze([.85,.40]),summons:2,maxSummons:4,maxLiving:2,cast:1,hpFactor:.50,atkFactor:.35,intervalFactor:1.20}),
- rotbound_exarch:Object.freeze({name:'Rotward Benediction',role:'Support',icon:'✚',description:'Grants an ally or itself Barrier worth 15% max HP, up to three times, every 10s.',first:3,cooldown:10,cast:.75,maxCasts:3,barrier:.15}),
+ oathbound_exarch:Object.freeze({name:'Oathward Benediction',role:'Aegis Support',icon:'⛨',description:'An oath of Aegis grants an ally or itself Barrier worth 15% max HP, up to three times, every 10s.',first:3,cooldown:10,cast:.75,maxCasts:3,barrier:.15}),
+ briarspine_horror:Object.freeze({name:'Thornbloom',role:'Thorns',icon:'🌵',description:'Vitality: every 12s, prepares for 1s and reflects 15% of direct HP damage for 4s (1.5% of hero max HP per hit, 6% per bloom).',first:12,cooldown:12,cast:1}),
  ashen_executioner:Object.freeze({name:'Ashen Sentence',role:'Heavy Striker',icon:'⚒',description:'Prepares a 1.5s heavy strike every 10s; maximum 18% of hero max HP before Block/Barrier. Stun and delay interrupt.',first:3.5,cooldown:10,cast:1.5,multiplier:2.4,capFraction:.18})
 });
 function attach(enemy,now=0){
@@ -107,7 +108,11 @@ function tick(run,absoluteNow){
  if(s.castingUntil){
   if(now+1e-7<s.castingUntil)return [];
   s.castingUntil=0;s.castCount++;s.nextAt=now+spec.cooldown;
-  if(s.type==='rotbound_exarch'){
+  if(s.type==='briarspine_horror'){
+   s.bloomUntil=now+4;s.reflected=0;s.nextAt-=spec.cast;
+   return [{type:'activate',enemy,ability:spec.name}];
+  }
+  if(s.type==='oathbound_exarch'){
    const target=ally(run,enemy);
    if(!target){s.castCount--;s.nextAt=now+1;return [];}
    const cap=Math.max(1,Math.round(target.maxhp*spec.barrier));
@@ -119,9 +124,16 @@ function tick(run,absoluteNow){
   return [{type:'activate',enemy,ability:spec.name,target:null,result:0}];
  }
  if(now+1e-7<s.nextAt)return [];
- if(s.type==='rotbound_exarch'&&!ally(run,enemy)){s.nextAt=now+1;return [];}
+ if(s.type==='oathbound_exarch'&&!ally(run,enemy)){s.nextAt=now+1;return [];}
  s.castingUntil=now+spec.cast;s.status='Casting';s.statusUntil=0;
  return [{type:'prepare',enemy,ability:spec.name}];
+}
+function thornbloomDamage(enemy,now,directHpLoss,heroMaxHp){
+ const s=enemy?.stage82;
+ if(s?.type!=='briarspine_horror'||!(now<s.bloomUntil)||directHpLoss<=0)return 0;
+ const amount=Math.max(0,Math.min(directHpLoss*.15,heroMaxHp*.015,heroMaxHp*.06-s.reflected));
+ s.reflected+=amount;
+ return amount;
 }
 function consumeStrike(enemy,now){
  const s=enemy?.stage82,spec=DEFINITIONS[s?.type];
@@ -134,12 +146,13 @@ function status(enemy,now){
  const s=enemy?.stage82,spec=DEFINITIONS[s?.type];
  if(!spec||enemy.hp<=0)return null;
  if(s.castingUntil>now)return {kind:'casting',label:'Casting',detail:spec.name,remaining:s.castingUntil-now};
+ if(s.bloomUntil>now)return {kind:'guarding',label:'🌵 Thornbloom',detail:spec.description,remaining:s.bloomUntil-now};
  if(s.chargedUntil>now)return {kind:'enraged',label:'Heavy Strike',detail:spec.name,remaining:s.chargedUntil-now};
  if(s.statusUntil>now)return {kind:s.status==='Interrupted'?'interrupted':s.status==='Guarding'?'guarding':'casting',label:s.status,detail:spec.name,remaining:s.statusUntil-now};
  return null;
 }
 function info(enemy){const s=DEFINITIONS[enemy?.eliteType];return s?{name:s.role,icon:s.icon,description:s.description}:null;}
-const API=Object.freeze({DEFINITIONS,DEATHBOUND,attach,tick,interrupt,consumeStrike,status,info,livingSummons,applyDeathbound,tickDeathbound,deathboundStatus});
+const API=Object.freeze({DEFINITIONS,DEATHBOUND,thornbloomDamage,attach,tick,interrupt,consumeStrike,status,info,livingSummons,applyDeathbound,tickDeathbound,deathboundStatus});
 root.WandererV013EliteAbilities=API;
 if(typeof module==='object'&&module.exports)module.exports=API;
 })(globalThis);
