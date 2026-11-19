@@ -1064,19 +1064,10 @@ function phase3MobArenaPosition(enemy,index,count){
  return `--mob-x:${slot.x}%;--mob-y:${slot.y}%;--mob-scale:${enemy.role==='minion'?.83:enemy.role==='tank'?1.06:1};--mob-depth:${Math.round(10+slot.y)};`;
 }
 
-function phase3GravecallerTargetNote(r){
- return r?.gravecallerManualTarget?.hp>0&&r.enemies?.includes(r.gravecallerManualTarget)
-  ?'Manual focus · tap the selected enemy again to resume automatic Minion priority'
-  :'Auto-combat · Gravecaller Minions first · tap an enemy to override';
-}
 function phase3BindGroupEnemyFocus(){
  const group=$('groupEnemies');if(!group)return;
  group.querySelectorAll('[data-group-index]').forEach(item=>{item._enemyRef=state.run?.enemies?.[Number(item.dataset.groupIndex)];});
- const focus=item=>{const r=state.run,mob=r?.enemies?.[Number(item.dataset.groupIndex)];if(!r||r.status!=='fight'||!mob||mob.hp<=0)return;
-  if(r.encounterLeader?.eliteType==='gravecaller')r.gravecallerManualTarget=r.gravecallerManualTarget===mob?null:mob;
-  else if(r.enemy===mob)return;
-  if(r.enemy!==mob){r.enemy=mob;r.tEnemy=mob.groupClock;}
-  phase3RetargetGroup();};
+ const focus=item=>{const r=state.run,mob=r?.enemies?.[Number(item.dataset.groupIndex)];if(!r||r.status!=='fight'||!mob||mob.hp<=0||r.enemy===mob)return;r.enemy=mob;r.tEnemy=mob.groupClock;phase3RetargetGroup();};
  group.addEventListener('click',event=>{const item=event.target.closest('[data-group-index]');if(item)focus(item);});
  group.addEventListener('keydown',event=>{const item=event.target.closest('[data-group-index]');if(!item||!['Enter',' '].includes(event.key))return;event.preventDefault();focus(item);});
 }
@@ -1091,9 +1082,7 @@ function phase3RetargetGroup(){
  const r=state.run,group=document.getElementById('groupEnemies');if(!r?.enemies||!group?.isConnected)return false;
  for(const id of ['enemyPortrait','enemyDebuffs','enemyHpFill','enemyHpText','enemyDefense']){const el=document.getElementById(id);if(el)el.removeAttribute('id');}
  group.querySelectorAll('[data-group-index]').forEach(item=>{const i=Number(item.dataset.groupIndex),mob=r.enemies[i],portrait=item.querySelector('[data-group-portrait]');if(!mob||!portrait)return;const focused=mob===r.enemy;portrait.id=focused?'enemyPortrait':'arenaEnemyPortrait-'+i;item.classList.toggle('is-target',focused);item.setAttribute('aria-pressed',String(focused));item.setAttribute('aria-label',(focused?'Focused ':'Focus ')+mob.name+', '+Math.max(0,Math.ceil(mob.hp))+' of '+mob.maxhp+' health');item.tabIndex=mob.hp>0?0:-1;item.querySelector('.arenaTargetArrow').textContent=focused?'▼':'';item.querySelector('.arenaEnemyStatuses').id=focused?'enemyDebuffs':'';if(focused){item.querySelector('[role=progressbar] i').id='enemyHpFill';item.querySelector('[data-mob-hp]').id='enemyHpText';item.querySelector('[data-mob-defense]').id='enemyDefense';}});
- const note=document.getElementById('arenaGroupCounter');if(note){const reserve=r.groupReserve?.length||0;note.textContent=r.enemies.filter(enemy=>enemy.hp>0).length+' on field'+(reserve?' · '+reserve+' reinforcements':'');}
- const status=document.getElementById('combatStatusNote');if(status&&r.encounterLeader?.eliteType==='gravecaller')status.textContent=phase3GravecallerTargetNote(r);
- updateBars();return true;
+ const note=document.getElementById('arenaGroupCounter');if(note){const reserve=r.groupReserve?.length||0;note.textContent=r.enemies.filter(enemy=>enemy.hp>0).length+' on field'+(reserve?' · '+reserve+' reinforcements':'');}updateBars();return true;
 }
 
 function updateBars(){
@@ -1343,7 +1332,7 @@ function phase1DecorateCombat(){
   if(arena)arena.after(actions);
 
   const note=document.createElement('span');note.className='small muted';note.id='combatStatusNote';
-  note.textContent=r.status==='fight'?(r.encounterLeader?.eliteType==='gravecaller'?phase3GravecallerTargetNote(r):r.enemies?'Auto-combat · click or tap a mob to focus':'Auto-combat · one enemy at a time'):r.status==='cleared'?'Realm completed · review your log before leaving':'Encounter resolved';
+  note.textContent=r.status==='fight'?(r.enemies?'Auto-combat · click or tap a mob to focus':'Auto-combat · one enemy at a time'):r.status==='cleared'?'Realm completed · review your log before leaving':'Encounter resolved';
   actions.prepend(note);
   if(r.status==='cleared'&&!phase1Draft){
     const highlight=document.createElement('p');highlight.className='small';highlight.textContent=encounterHighlight(r);
