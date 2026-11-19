@@ -184,6 +184,67 @@ function craftEarned(a,profile,level){
  }
  return actions;
 }
+// Compare two legal native Camp investments using expected gear-score gain per
+// resource. Craft previews are estimates; named-tier upgrades are deterministic.
+// Decisions do not modify RNG, prices, drops or equipment ownership.
+function investEarnedGear(a,profile,level){
+ const outcome={crafted:[],upgraded:[]},forge=a.forge;
+ if(!forge||!a.economyCanAct())return outcome;
+ const efficiency=(gain,fragments,essence)=>gain/(Math.max(1,fragments)+4*Math.max(0,essence));
+ for(let attempt=0;attempt<2;attempt++){
+  const s=a.state(),options=[];
+  for(const recipe of forge.recipes){
+   const progress=forge.progress(recipe.id,level);
+   if(!progress?.ready)continue;
+   const preview=forge.preview(recipe.id,level);
+   if(!preview)continue;
+   const targets=['ring1','ring2'].includes(recipe.slot)?['ring1','ring2']:[recipe.slot];
+   const target=targets.map(slot=>({slot,gain:gearScore(preview,profile)-gearScore(s.equip[slot],profile)}))
+    .sort((x,y)=>y.gain-x.gain)[0];
+   if(target.gain<5)continue;
+   options.push({kind:'craft',recipe,target,gain:target.gain,fragments:progress.cost.fragments,
+    essence:progress.cost.essence,efficiency:efficiency(target.gain,progress.cost.fragments,progress.cost.essence)});
+  }
+  for(const item of [...s.stash,...Object.values(s.equip).filter(Boolean)]){
+   if(!item?.id)continue;
+   const preview=forge.tierPreview(item.id);
+   if(!preview?.ready)continue;
+   const equipped=Object.entries(s.equip).find(([,gear])=>gear?.id===item.id);
+   const current=equipped?item:s.equip[item.slot];
+   const gain=gearScore(preview.upgraded,profile)-gearScore(current,profile);
+   if(gain<3)continue;
+   options.push({kind:'upgrade',item,preview,gain,fragments:preview.cost.fragments,
+    essence:preview.cost.essence,efficiency:efficiency(gain,preview.cost.fragments,preview.cost.essence)});
+  }
+  options.sort((x,y)=>y.efficiency-x.efficiency||y.gain-x.gain||Number(x.kind==='craft')-Number(y.kind==='craft'));
+  const best=options[0];if(!best)break;
+  const before={fragments:s.fragments,essence:s.crafting.essence};
+  if(best.kind==='upgrade'){
+   const item=forge.tierUpgrade(best.item.id);
+   if(!item)throw Error('Native tier upgrade rejected after valid Camp preview');
+   if(item.id!==best.item.id||item.tier!==best.preview.target.minimum||
+      s.fragments!==before.fragments-best.fragments||
+      s.crafting.essence!==before.essence-best.essence)
+    throw Error('Native tier upgrade identity or materials mismatch');
+   const equipped=equipEarned(a,profile,false);
+   outcome.upgraded.push({id:item.id,name:item.name,slot:item.slot,
+    fromTier:best.item.tier,toTier:item.tier,fragmentsSpent:best.fragments,
+    essenceSpent:best.essence,expectedGain:round(best.gain),
+    equipped:!!Object.values(s.equip).find(e=>e?.id===item.id),equipmentChanges:equipped});
+  }else{
+   const item=forge.craft(best.recipe.id,level);
+   if(!item)throw Error('Native Forge craft rejected after valid Camp preview');
+   if(s.fragments!==before.fragments-best.fragments||
+      s.crafting.essence!==before.essence-best.essence)
+    throw Error('Native Forge crafting cost mismatch');
+   const equipped=equipEarned(a,profile,false);
+   outcome.crafted.push({recipe:best.recipe.id,item:item.name,slot:best.target.slot,
+    fragmentsSpent:best.fragments,essenceSpent:best.essence,
+    expectedGain:round(best.gain),equipped:equipped.some(x=>x.item===item.name)});
+  }
+ }
+ return outcome;
+}
 // Free Stash capacity through actual Camp salvage, not state mutation.
 function consolidateStash(a,profile,reserve=4){
  const s=a.state(),capacity=Number(s.stashCapacity);
@@ -217,8 +278,8 @@ function consolidateStash(a,profile,reserve=4){
  action.occupiedAfter=s.stash.length;action.overflowAfter=(s.expeditionOverflow||[]).length;
  return action;
 }
-function prepareCamp(a,profile,level,decisionModel='risk-aware'){
- const actions={talents:[],resets:[],equipped:[],bought:[],crafted:[],potions:[],runes:[],storage:[],soldTreasures:false,restocks:0,salvagedGrey:0,salvageFragments:0};
+function prepareCamp(a,profile,level,decisionModel='risk-aware',options={}){
+ const actions={talents:[],resets:[],elementChoices:[],prepared:null,equipped:[],bought:[],crafted:[],upgraded:[],potions:[],runes:[],storage:[],soldTreasures:false,restocks:0,salvagedGrey:0,salvageFragments:0};
  const s=a.state();a.potions.inventory();
  if(s.pendingRuneReward?.options?.length){
   const options=s.pendingRuneReward.options;
@@ -245,8 +306,22 @@ function prepareCamp(a,profile,level,decisionModel='risk-aware'){
    actions.salvagedGrey=surplus.length;actions.salvageFragments=received;
   }
  }
- actions.talents.push(...spendEarnedTalents(a,profile).bought);
- if(decisionModel==='risk-aware')actions.crafted.push(...craftEarned(a,profile,level));
+ if(options.resetReason){
+  const xpBefore=s.automaticTalents.xp,spentBefore=s.automaticTalents.nodes.length;
+  if(!a.talentActions.reset())throw Error('Native talent reset rejected at Camp');
+  if(s.automaticTalents.xp!==xpBefore||s.automaticTalents.nodes.length!==0)
+   throw Error('Native reset changed earned XP or retained talent nodes');
+  actions.resets.push({reason:options.resetReason,previousNodes:spentBefore,xpRetained:xpBefore});
+ }
+ const talentInvestment=spendEarnedTalents(a,profile);
+ actions.talents.push(...talentInvestment.bought);
+ actions.elementChoices.push(...talentInvestment.elements);
+ actions.prepared=prepareEarnedAbility(a,profile);
+ if(decisionModel==='risk-aware'){
+  const investment=investEarnedGear(a,profile,level);
+  actions.crafted.push(...investment.crafted);
+  actions.upgraded.push(...investment.upgraded);
+ }
  if(profile.shop&&a.economyCanAct()){
   // The game's first Apothecary visit constructs a native 4-item stock. No
   // custom availability odds, injected potions, discounted prices or free Gold.
