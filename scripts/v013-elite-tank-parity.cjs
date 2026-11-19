@@ -30,6 +30,10 @@ function scenario(seed,type,gear='starter',opts={}){
   attackEvery:leader.attackEvery,role:leader.role,eliteType:leader.eliteType||null,
   name:leader.name,stage82:!!leader.stage82,stage81:!!leader.stage81,
   playerHp:r.hp,playerMaxHp:r.maxhp,playerDefense:r.stats?.defense??null};
+ // Pre-screen *native* seed-generated roster/Elite type without simulating unwanted
+ // fights. Full matched comparisons still execute both original native fights.
+ if(opts.inspectOnly===true)return {seed,type,gear,family:card.family,initial:before,
+  gearFingerprint:gearFingerprint===JSON.stringify(a.state().equip),inspected:true};
  const fight=N.fightNatural(a,N.PROFILES.balanced,opts.tickLimit||4500);
  return {seed,type,gear,family:card.family,gearFingerprint:gearFingerprint===JSON.stringify(a.state().equip),
   identicalBaseVitals:statsBefore.maxhp===a.baseStats().maxhp,initial:before,
