@@ -85,8 +85,9 @@ test('Unmarked Elite gets better loot without pretending it prepares the boss or
  assert.equal(unmarked.breakdown.extractionUtility,0);
  assert.equal(unmarked.breakdown.bossPrepUtility,0);
  const first={...g,dungeon:{...g.dungeon,cleared:[0]}};
- assert.equal(N.eliteOpportunity(first,{objective:6},node,N.PROFILES.balanced,{hp:100,maxhp:100},{room:5}).loot.eliteDrop,1,
-  'first real Dungeon encounter has a guarantee for all room types');
+ const firstOffer=N.eliteOpportunity(first,{objective:6},node,N.PROFILES.balanced,{hp:100,maxhp:100},{room:5});
+ assert.equal(firstOffer.loot.eliteDrop,.60,'an Elite never receives a special first-room guaranteed drop');
+ assert.equal(firstOffer.loot.normalDrop,.38,'ordinary first-room loot follows actual Stage 9.6 odds');
 });
 
 test('Exact-kind potion selection never consumes another native dose on a failed request',()=>{
