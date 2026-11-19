@@ -283,3 +283,82 @@ body.phase3IntegratedPreview:has(.phase3Camp) .phase3Camp [role="progressbar"]{f
 /* Screen-reader-only page titles and section landmarks keep semantics without adding visual height. */
 .a11yVisuallyHidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
 .runesInventoryOnly .clearNewHeading h2{font-size:17px;margin:0 0 7px}
+
+
+/* v0.13 Camp portrait: grounded feet and restrained cinematic side lighting.
+   Presentation only: no gear, combat, character selection or inventory changes. */
+.phase3IntegratedPreview .phase3CampCharacter .paper{
+  isolation:isolate;
+}
+
+/* Backlighting sits behind the transparent character, never over the slots. */
+.phase3IntegratedPreview .phase3CampCharacter .paper::before{
+  content:"";
+  position:absolute;
+  z-index:0;
+  pointer-events:none;
+  top:28px;
+  left:50%;
+  width:calc(100% - 80px);
+  height:calc(var(--camp-vitals-row) + 4 * var(--camp-slot-row) - 72px);
+  transform:translateX(-50%);
+  background:
+    radial-gradient(ellipse at 13% 50%,rgba(110,153,200,.21) 0%,rgba(89,131,183,.07) 33%,transparent 68%),
+    radial-gradient(ellipse at 87% 60%,rgba(230,148,86,.18) 0%,rgba(203,115,64,.055) 33%,transparent 68%);
+  filter:blur(18px);
+  opacity:.82;
+}
+
+/* Keep both the existing Pages shadow span and the alternate source build
+   grounded, without duplicating shadows when the span is already present. */
+.phase3IntegratedPreview .phase3CampCharacter .paper>.characterGroundShadow,
+.phase3IntegratedPreview .phase3CampCharacter .paper:not(:has(>.characterGroundShadow))::after{
+  content:"";
+  display:block;
+  position:absolute;
+  z-index:0;
+  pointer-events:none;
+  left:50%;
+  top:calc(var(--camp-vitals-row) + 4 * var(--camp-slot-row) - 42px);
+  width:min(57%,260px);
+  height:38px;
+  transform:translate(-50%,-50%);
+  border:0;
+  border-radius:50%;
+  background:
+    radial-gradient(ellipse 33% 30% at 50% 50%,rgba(0,0,0,.66) 0%,rgba(0,0,0,.43) 52%,transparent 100%),
+    radial-gradient(ellipse 66% 73% at 50% 55%,rgba(0,0,0,.47) 0%,rgba(0,0,0,.20) 52%,transparent 100%);
+  filter:blur(3px);
+}
+
+/* Transparent-image alpha gives the edge glow a silhouette, not a rectangle. */
+.phase3IntegratedPreview .phase3CampCharacter .paper>.model{
+  z-index:1;
+  filter:
+    saturate(.87) brightness(.98) contrast(1.035)
+    drop-shadow(-4px 0 6px rgba(122,159,202,.16))
+    drop-shadow(4px 0 6px rgba(226,145,87,.14))
+    drop-shadow(0 5px 6px rgba(0,0,0,.48));
+}
+
+/* The character selection button remains above the decorative portrait. */
+.phase3IntegratedPreview .phase3CampCharacter .paper>.phase3CharacterPickerHitbox{
+  z-index:2;
+}
+
+@media(max-width:700px){
+  .phase3IntegratedPreview .phase3CampCharacter .paper::before{
+    top:33px;
+    width:calc(100% - 90px);
+    height:calc(var(--camp-vitals-row) + 4 * var(--camp-slot-row) - 78px);
+    filter:blur(15px);
+    opacity:.66;
+  }
+  .phase3IntegratedPreview .phase3CampCharacter .paper>.characterGroundShadow,
+  .phase3IntegratedPreview .phase3CampCharacter .paper:not(:has(>.characterGroundShadow))::after{
+    top:calc(var(--camp-vitals-row) + 4 * var(--camp-slot-row) - 35px);
+    width:min(54%,210px);
+    height:30px;
+    filter:blur(2.5px);
+  }
+}
