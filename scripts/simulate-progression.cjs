@@ -36,7 +36,8 @@ const BUILDS=Object.freeze([
  {id:'blood-decay',name:'Blood/Decay',weapon:'Two-Handed',families:['blood','decay'],skills:['bleeding_edge','deep_cuts','toxic_touch','virulent_rot','plague_spread']},
   {id:'aegis-sword',name:'Aegis/Vitality Sword & Shield',weapon:'Sword',families:['aegis','vitality'],skills:['guarded_block','barrier_pulse','strong_heart','renewal','sanctuary']},
   {id:'fury-bow',name:'Blood/Fury Archer',weapon:'Bow',families:['blood','fury'],skills:['bleeding_edge','deep_cuts','quick_hands','double_strike','crimson_rush']},
-  {id:'magic-storm',name:'Magic/Decay Lightning Staff',weapon:'Staff',families:['magic','decay'],skills:['arcane_focus','mana_spring','toxic_touch','virulent_rot','hex_bolt'],element:'lightning'}
+  {id:'magic-storm',name:'Magic/Decay Lightning Staff',weapon:'Staff',families:['magic','decay'],skills:['arcane_focus','mana_spring','toxic_touch','virulent_rot','hex_bolt'],element:'lightning'},
+  {id:'magic-frost',name:'Magic Frost Staff',weapon:'Staff',families:['magic'],skills:['arcane_focus','mana_spring','deep_winter'],element:'frost'}
 ]);
 const DEFAULTS=Object.freeze({mode:'encounter',levels:[1,5,15,35,70,100,250,1000],seeds:[9101,9102,9103],builds:BUILDS.map(b=>b.id),points:24,rarity:'Rare',gear:'current',runes:false,tickLimit:4500,
  affinities:[...AFFINITIES],risks:[1],groupSizes:[...GROUP_SIZES],roleEffects:[...ROLE_EFFECTS],boons:'none',contracts:'none',targetPolicy:'focus',output:'reports/v013-simulation-results.json'});
