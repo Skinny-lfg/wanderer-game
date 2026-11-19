@@ -8,9 +8,8 @@ const CATALOG=Object.freeze([
  {id:'ornate-chest',name:'Ornate Chest',worth:55,image:'assets/loot/treasure_ornate_chest.webp'}
 ].map(item=>Object.freeze(item)));
 const BY_ID=Object.freeze(Object.fromEntries(CATALOG.map(item=>[item.id,item])));
-const LEGACY=Object.freeze({'Antique Coins':'gem-pouch','Golden Chalice':'jeweled-chalice','Runic Gem':'gem-pouch','Ancient Idol':'golden-lion-statuette','Jeweled Crown':'royal-crown',...Object.fromEntries(CATALOG.map(item=>[item.name,item.id]))});
 function byDropId(value){const s=String(value||'');let h=2166136261;for(let i=0;i<s.length;i++)h=Math.imul(h^s.charCodeAt(i),16777619);return CATALOG[(h>>>0)%CATALOG.length];}
-function resolve(item){return BY_ID[item?.treasureType]||BY_ID[LEGACY[item?.name]]||CATALOG[0];}
+function resolve(item){return BY_ID[item?.treasureType]||CATALOG[0];}
 function displayName(item){return resolve(item).name;}
 function image(item){return resolve(item).image;}
 function normalize(item){const variant=resolve(item);return {...item,kind:'valuable',treasureType:variant.id,name:variant.name,image:variant.image};}
