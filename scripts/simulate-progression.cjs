@@ -133,7 +133,16 @@ function gearLevel(level,mode){
 }
 // Hash native rolled equipment without exposing player data; protects future balance comparisons.
 function equipmentFingerprint(a){
- return crypto.createHash('sha256').update(JSON.stringify(a.state().equip)).digest('hex');
+ // Item IDs include a Date.now() prefix in normal gameplay; never hash these
+ // ephemeral identifiers or identical seeded gear would appear different.
+ const gear=a.state().equip;
+ const rolls=Object.keys(gear).sort().map(slot=>{
+  const item=gear[slot];
+  if(!item)return [slot,null];
+  const {id,...stats}=item;
+  return [slot,stats];
+ });
+ return crypto.createHash('sha256').update(JSON.stringify(rolls)).digest('hex');
 }
 function prepare(level,build,seed,opts,desiredRisk=undefined,desiredFamily=undefined){
  if(desiredFamily!==undefined&&!AFFINITIES.includes(desiredFamily))throw Error('Unknown Boss Affinity '+desiredFamily);
