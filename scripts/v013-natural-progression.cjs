@@ -12,12 +12,16 @@ const I=globalThis.WandererV013MapIntelligence;
 require('../economy/v012-loot-rules.js');
 const LOOT=globalThis.WandererV012LootRules;
 const PROFILES=Object.freeze({
- cautious:{name:'Cautious',risk:0,targets:['strong_heart','guarded_block','renewal'],families:['aegis','vitality'],preparedTargets:['last_bastion'],healAt:.72,retreatAt:.5,target:'mechanics',shop:true},
- balanced:{name:'Balanced',risk:0,targets:['bleeding_edge','deep_cuts','strong_heart'],families:['blood','aegis'],preparedTargets:['red_guillotine'],healAt:.53,retreatAt:.34,target:'mechanics',shop:true},
- daring:{name:'Daring',risk:1,targets:['quick_hands','double_strike','bleeding_edge'],families:['fury','blood'],preparedTargets:['red_guillotine'],healAt:.35,retreatAt:.16,target:'focus',shop:true},
- 'magic-fire':{name:'Fire Caster',risk:0,targets:['element_choice','arcane_focus','mana_spring','kindling','fire_spread'],families:['magic'],element:'fire',preparedTargets:[],healAt:.57,retreatAt:.36,target:'mechanics',shop:true},
- 'magic-frost':{name:'Frost Caster',risk:0,targets:['element_choice','arcane_focus','mana_spring','deep_winter','frost_spread'],families:['magic'],element:'frost',preparedTargets:[],healAt:.62,retreatAt:.41,target:'mechanics',shop:true},
- 'magic-lightning':{name:'Lightning Caster',risk:0,targets:['element_choice','arcane_focus','mana_spring','overcharge','storm_mastery'],families:['magic'],element:'lightning',preparedTargets:[],healAt:.54,retreatAt:.34,target:'mechanics',shop:true}
+ cautious:{name:'Cautious',risk:0,targets:['strong_heart','guarded_block','renewal'],families:['aegis','vitality'],preparedTargets:['last_bastion'],armor:'Plate',weapons:['Mace','Sword'],style:'mixed',healAt:.72,retreatAt:.5,target:'mechanics',shop:true},
+ balanced:{name:'Balanced',risk:0,targets:['bleeding_edge','deep_cuts','strong_heart'],families:['blood','aegis'],preparedTargets:['red_guillotine'],armor:'Plate',weapons:['Sword','Mace'],style:'mixed',healAt:.53,retreatAt:.34,target:'mechanics',shop:true},
+ daring:{name:'Daring',risk:1,targets:['quick_hands','double_strike','bleeding_edge'],families:['fury','blood'],preparedTargets:['red_guillotine'],armor:'Leather',weapons:['Daggers','Bow'],style:'mixed',healAt:.35,retreatAt:.16,target:'focus',shop:true},
+ 'magic-fire':{name:'Fire Caster',risk:0,targets:['element_choice','arcane_focus','mana_spring','kindling','fire_spread'],families:['magic'],element:'fire',armor:'Cloth',weapons:['Wand','Staff'],style:'focused',preparedTargets:[],healAt:.57,retreatAt:.36,target:'mechanics',shop:true},
+ 'magic-frost':{name:'Frost Caster',risk:0,targets:['element_choice','arcane_focus','mana_spring','deep_winter','frost_spread'],families:['magic'],element:'frost',armor:'Cloth',weapons:['Wand','Staff'],style:'focused',preparedTargets:[],healAt:.62,retreatAt:.41,target:'mechanics',shop:true},
+ 'magic-lightning':{name:'Lightning Caster',risk:0,targets:['element_choice','arcane_focus','mana_spring','overcharge','storm_mastery'],families:['magic'],element:'lightning',armor:'Cloth',weapons:['Staff','Wand'],style:'focused',preparedTargets:[],healAt:.54,retreatAt:.34,target:'mechanics',shop:true},
+ 'plate-warden':{name:'Plate Warden',risk:0,targets:['guarded_block','barrier_pulse','steadfast_guard','strong_heart'],families:['aegis','vitality'],armor:'Plate',weapons:['Mace','Sword'],style:'focused',preparedTargets:['last_bastion'],healAt:.68,retreatAt:.46,target:'mechanics',shop:true},
+ 'leather-duelist':{name:'Leather Duelist',risk:1,targets:['quick_hands','double_strike','precision','bleeding_edge','crimson_rush'],families:['fury','blood'],armor:'Leather',weapons:['Daggers','Bow'],style:'mixed',preparedTargets:['red_guillotine'],healAt:.42,retreatAt:.25,target:'focus',shop:true},
+ 'cloth-battlemage':{name:'Cloth Battlemage',risk:0,targets:['element_choice','arcane_focus','mana_spring','runic_shield','guarded_block','arcane_bastion'],families:['magic','aegis'],element:'fire',armor:'Cloth',weapons:['Wand','Staff'],style:'mixed',preparedTargets:['arcane_bastion'],healAt:.61,retreatAt:.39,target:'mechanics',shop:true},
+ 'hexblade-hybrid':{name:'Hexblade Hybrid',risk:1,targets:['toxic_touch','arcane_focus','mana_spring','hex_bolt','element_choice','deep_winter'],families:['decay','magic'],element:'frost',armor:'Leather',weapons:['Daggers','Wand'],style:'mixed',preparedTargets:['grave_bloom'],healAt:.5,retreatAt:.29,target:'mechanics',shop:true}
 });
 // A single deliberate retraining after two unsuccessful attempts at the same E.
 // Uses the game's free full reset; it never creates XP or talent points.
@@ -51,17 +55,41 @@ function parseArgs(args=[]){
  if(potential>(v.maxLevel<=8&&v.maxAttempts<=12?192:10000))throw Error('Natural cohort too large. Narrow the pilot.');
  return v;
 }
+// Strategic valuation of actual item affixes; these are decision weights,
+// never invented gameplay stats. Archetype alignment matters but cannot turn a
+// Common E1 item into a forged higher-tier item.
 function gearScore(item,profile){
  if(!item)return -1;
- const r={Common:0,Uncommon:1,Rare:2,Epic:3,Legendary:4};
- const s=Number(item.atk||0)*2.8+Number(item.def||0)*3.2+Number(item.hp||0)*.24+
-  Number(item.spell||item.spellPower||0)*2.2+Number(item.attack||0)*2+Number(item.armor||0)*3+
-  Number(item.str||0)*2+Number(item.end||0)*2.5+Number(item.int||0)*1.5+
-  Number(item.agi||0)*1.3+Number(item.block||0)*2+Number(item.blockChance||0)*2+
-  Number(item.evasionRating||0)*1.15+Number(item.wardBonus||0)*15+
-  Number(item.manaRegenBonus||0)*10;
- const weapon=item.slot==='weapon'&&['Wand','Staff'].includes(item.subtype)&&profile.name!=='Daring'&&!profile.families.includes('magic')?-9:0;
- return round(s+Number(item.tier||1)*.5+(r[item.rarity]||0)*1.5+weapon);
+ const rarity={Common:0,Uncommon:1,Rare:2,Epic:3,Legendary:4};
+ const magic=profile.families.includes('magic'),agile=profile.armor==='Leather',
+  tank=profile.armor==='Plate';
+ const s=Number(item.atk||0)*(agile?3.4:magic?2.1:2.8)+
+  Number(item.def||0)*(tank?4.2:magic?2.1:3.2)+
+  Number(item.hp||0)*(tank?.32:.24)+
+  Number(item.spell||item.spellPower||0)*(magic?4.1:1.4)+
+  Number(item.attack||0)*2+Number(item.armor||0)*3+
+  Number(item.str||0)*(tank?3.3:magic?1.1:2)+
+  Number(item.end||0)*(tank?3.9:2.5)+
+  Number(item.int||0)*(magic?3.8:1.2)+
+  Number(item.agi||0)*(agile?3.7:1.3)+
+  Number(item.cha||0)*1.3+
+  Number(item.block||0)*(tank?3.6:2)+
+  Number(item.blockChance||0)*(tank?3.5:2)+
+  Number(item.evasionRating||0)*(agile?2.6:1.15)+
+  Number(item.wardBonus||0)*(magic?21:15)+
+  Number(item.manaRegenBonus||0)*(magic?15:8)+
+  Number(item.mana||0)*(magic?1.5:.45)+Number(item.spd||0)*(agile?2:1.4);
+ const armor=item.armorType||(['Cloth','Leather','Plate'].includes(item.subtype)?item.subtype:null);
+ const isArmor=['helm','armor','gloves','boots','belt'].includes(item.slot);
+ const alignment=isArmor&&armor===profile.armor?7:isArmor&&armor&&armor!==profile.armor?-3:0;
+ const weapon=item.slot==='weapon'&&profile.weapons?.includes(item.subtype)?9:
+  item.slot==='weapon'&&profile.weapons?.length?-5:0;
+ const focus=item.v013CraftFocus&&
+  ((profile.armor==='Cloth'&&item.v013CraftFocus==='spellweave')||
+   (profile.armor==='Leather'&&item.v013CraftFocus==='quickstep')||
+   (profile.armor==='Plate'&&item.v013CraftFocus==='bulwark'))?4:0;
+ return round(s+Number(item.tier||1)*.5+(rarity[item.rarity]||0)*1.5+
+  alignment+weapon+focus+Number(item.upgradeRank||0)*1.2);
 }
 function gearSnapshot(a){
  const items=Object.values(a.state().equip).filter(Boolean);
