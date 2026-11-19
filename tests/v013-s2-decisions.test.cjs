@@ -1,0 +1,164 @@
+'use strict';
+// Stage S2: fixtures provide controlled owned objects / materials solely to
+// exercise existing native game transactions. Natural cohorts earn everything.
+const test=require('node:test'),assert=require('node:assert/strict');
+const create=require('./v012-economy-harness.cjs');
+const N=require('../scripts/v013-natural-progression.cjs');
+const make=(seed=10401)=>create(seed,undefined,{}, {skipPersistence:true,now:1720000000000+seed});
+
+test('S2: diverse natural archetypes include focused and mixed Cloth/Leather/Plate plans',()=>{
+ for(const id of ['plate-warden','leather-duelist','cloth-battlemage','hexblade-hybrid','magic-fire','magic-frost','magic-lightning']){
+  const p=N.PROFILES[id];assert(p,id);
+  assert(['Cloth','Leather','Plate'].includes(p.armor));
+  assert(['mixed','focused'].includes(p.style));
+  assert(p.weapons.length>0);
+ }
+ const base={slot:'armor',rarity:'Uncommon',tier:2,def:8,hp:8,str:2,end:2,agi:2,int:2};
+ for(const armor of ['Plate','Leather','Cloth']){
+  const profile=Object.values(N.PROFILES).find(p=>p.armor===armor);
+  assert(N.gearScore({...base,armorType:armor},profile)>
+   N.gearScore({...base,armorType:({Plate:'Cloth',Leather:'Plate',Cloth:'Leather'})[armor]},profile));
+ }
+ const flame=N.PROFILES['magic-fire'];
+ assert(N.gearScore({slot:'weapon',subtype:'Wand',spell:8,int:2,rarity:'Common',tier:1},flame)>
+  N.gearScore({slot:'weapon',subtype:'Sword',spell:8,int:2,rarity:'Common',tier:1},flame));
+});
+
+test('S2: every native potion kind has a build-specific decision score',()=>{
+ const a=make(),all=a.potions.catalog;
+ assert.equal(all.length,13);
+ assert.equal(new Set(all.map(p=>p.id)).size,13);
+ for(const kind of all.map(p=>p.id)){
+  assert(Number.isFinite(N.potionScore(kind,N.PROFILES['magic-fire'])),kind);
+  assert(Number.isFinite(N.potionScore(kind,N.PROFILES['plate-warden'])),kind);
+ }
+ assert(N.potionScore('arcane',N.PROFILES['magic-fire'])>
+  N.potionScore('arcane',N.PROFILES['plate-warden']));
+ assert(N.potionScore('might',N.PROFILES['plate-warden'])>
+  N.potionScore('might',N.PROFILES['magic-fire']));
+ assert(N.potionScore('mana',N.PROFILES['magic-fire'])>
+  N.potionScore('mana',N.PROFILES['leather-duelist']));
+});
+
+test('S2: the actual three-slot potion API changes loadout without minting inventory',()=>{
+ const a=make(10402),s=a.state(),catalog=a.potions.catalog;
+ s.consumables=Object.fromEntries(catalog.map(p=>[p.id,1]));
+ const before=JSON.stringify(s.consumables);
+ const out=N.selectEarnedPotions(a,N.PROFILES['magic-frost']);
+ assert(out.some(x=>x.action==='loadout'));
+ assert.equal(s.potionSelection.length,3);
+ assert.equal(new Set(s.potionSelection).size,3);
+ assert.equal(JSON.stringify(s.consumables),before);
+ assert.equal(N.selectEarnedPotions(a,N.PROFILES['magic-frost']).length,0);
+});
+
+test('S2: Apothecary purchases and replacement offers use real gold costs',()=>{
+ const a=make(10403),s=a.state();
+ s.gold=120;s.apothecary={stock:[
+  {id:'offer-1',kind:'health',price:14},
+  {id:'offer-2',kind:'arcane',price:22},
+  {id:'offer-3',kind:'might',price:22},
+  {id:'offer-4',kind:'scout',price:22}],refreshCost:999};
+ const initial=s.gold;
+ const result=N.buyEarnedPotions(a,N.PROFILES['magic-fire'],1);
+ const buys=result.filter(x=>x.action==='buy');
+ assert(buys.length>=1);
+ assert.equal(initial-s.gold,buys.reduce((n,x)=>n+x.cost,0));
+ for(const p of buys)assert((s.consumables[p.kind]||0)>0);
+ assert(s.potionSelection.length<=3);
+ assert.equal(s.apothecary.stock.length,4);
+});
+
+test('S2: eight Rune families are scored and a claim selects strongest for the current style',()=>{
+ const a=make(10404);
+ const families=['might','swiftness','wisdom','fortitude','fortune','fury','warding','vitality'];
+ const runes=families.map((family,i)=>a.makeRune(family,10+i));
+ for(const rune of runes)assert(Number.isFinite(N.runeScore(rune,N.PROFILES['plate-warden'])));
+ assert.equal(N.chooseRuneReward(runes,N.PROFILES['magic-fire']).family,'wisdom');
+ assert.equal(N.chooseRuneReward(runes,N.PROFILES['leather-duelist']).family,'swiftness');
+});
+
+test('S2: only owned Rune IDs are equipped and duplicates recycled via native confirmation',()=>{
+ const a=make(10405),s=a.state();
+ s.runes=['might','wisdom','fortitude','fury','swiftness','vitality'].map((kind,i)=>a.makeRune(kind,10+i));
+ s.runes.push(a.makeRune('wisdom',2),a.makeRune('might',2));
+ const originalIds=new Set(s.runes.map(r=>r.id)),before=s.fragments,initial=s.runes.length;
+ const actions=N.manageEarnedRunes(a,N.PROFILES['magic-fire']);
+ assert(s.runeSlots.filter(Boolean).length===3);
+ for(const id of s.runeSlots)if(id)assert(originalIds.has(id));
+ assert.equal(new Set(s.runeSlots.map(id=>s.runes.find(r=>r.id===id)?.family)).size,3);
+ assert(actions.some(x=>x.action==='equip'));
+ assert(actions.some(x=>x.action==='recycle'));
+ assert(s.fragments>before);
+ assert(s.runes.length<initial);
+ for(const id of s.runeSlots)if(id)assert(s.runes.some(r=>r.id===id));
+});
+
+test('S2: native Forge Focus only applies to compatible armor and exact Essence cost',()=>{
+ const a=make(10406),s=a.state();
+ assert.deepEqual(Object.keys(a.forge.focuses).sort(),['bulwark','quickstep','spellweave']);
+ const id='green_armor_cloth';
+ assert.equal(a.forge.progress(id,1,'bulwark'),null);
+ const bare=a.forge.progress(id,1,'none'),withFocus=a.forge.progress(id,1,'spellweave');
+ assert(withFocus.cost.essence>bare.cost.essence);
+ s.fragments=withFocus.cost.fragments;s.crafting.essence=withFocus.cost.essence;
+ const preview=a.forge.preview(id,1,'spellweave');
+ assert(preview&&preview.v013CraftFocus==='spellweave');
+ const crafted=a.forge.craft(id,1,'spellweave');
+ assert(crafted&&crafted.v013CraftFocus==='spellweave');
+ assert.equal(s.fragments,0);assert.equal(s.crafting.essence,0);
+ assert(s.stash.some(x=>x.id===crafted.id));
+});
+
+test('S2: native reagent refinement consumes 6 Essence and 3 dry-room marks',()=>{
+ const a=make(10407),s=a.state();
+ assert.equal(a.forge.refine('magic'),false);
+ s.crafting.dryRooms.magic=3;s.crafting.essence=6;
+ const before=s.crafting.cores.magic;
+ assert.equal(a.forge.refine('magic'),true);
+ assert.equal(s.crafting.essence,0);
+ assert.equal(s.crafting.dryRooms.magic,0);
+ assert.equal(s.crafting.cores.magic,before+1);
+ assert.equal(a.forge.refine('magic'),false);
+});
+
+test('S2: Legendary reinforcement uses native price, +rank and permanent item identity',()=>{
+ const a=make(10408),s=a.state();
+ const legendary=a.makeItem(1,'weapon',null,'loot','Sword','Legendary');
+ assert.equal(legendary.rarity,'Legendary');
+ s.stash.push(legendary);
+ const id=legendary.id,price=a.forge.reinforceCost(id);
+ assert(price>0);
+ assert.equal(a.forge.reinforce(id),false,'resources are not free');
+ s.fragments=price;
+ assert.equal(a.forge.reinforce(id),true);
+ assert.equal(legendary.upgradeRank,1);
+ assert.equal(legendary.id,id);
+ assert.equal(s.fragments,0);
+});
+
+test('S2: Thornbloom target diversion only occurs during true reflect windows',()=>{
+ const thorn={id:'thorn',hp:50,miniboss:true,stage82:{type:'briarspine_horror',bloomUntil:20}};
+ const minion={id:'other',hp:20,role:'caster'};
+ const run={status:'fight',combatSeconds:15,enemy:thorn,encounterLeader:thorn,enemies:[thorn,minion]};
+ assert.equal(N.selectThornAwareTarget(run,N.PROFILES.cautious),minion);
+ run.combatSeconds=21;
+ assert.equal(N.selectThornAwareTarget(run,N.PROFILES.cautious),thorn);
+ run.combatSeconds=15;minion.hp=0;
+ assert.equal(N.selectThornAwareTarget(run,N.PROFILES.cautious),thorn);
+});
+
+test('S2: natural plate and magic account seeds start without fabricated XP, gear or resources',()=>{
+ const opts={...N.DEFAULTS,seeds:[20401],profiles:['plate-warden','magic-fire'],
+  maxLevel:1,maxAttempts:1,maxTotalAttempts:1};
+ const report=N.run(opts);
+ assert.equal(report.coverage.errors,0);
+ for(const account of report.accounts){
+  const attempt=account.attempts[0];
+  assert.equal(account.startXp,0);
+  assert.equal(attempt.before.xp,0);
+  assert.equal(attempt.camp.refined.length,0);
+  assert.equal(attempt.camp.reinforced.length,0);
+  assert.equal(attempt.camp.upgraded.length,0);
+ }
+});
