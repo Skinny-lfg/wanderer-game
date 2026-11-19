@@ -801,16 +801,26 @@ function rerollPoorBoonAtShrine(a,offer,profile,history){
  if(best&&boonScore(best,profile,context)>=12)return false;
  return usePotionKind(a,'fate','reroll_weak_boon_offer',history);
 }
+// The player can switch to another real enemy while Briarspine Horror's
+// Thornbloom reflection is active. This is a target decision, not an invulnerability
+// window, attack-speed change or artificial loss of DPS.
+function selectThornAwareTarget(run,profile){
+ const normal=S.selectTarget(run,profile.target),stage=normal?.stage82;
+ if(stage?.type!=='briarspine_horror'||!(stage.bloomUntil>(run.combatSeconds||0)))return normal;
+ return (run.enemies||[]).find(enemy=>enemy?.hp>0&&enemy!==normal&&
+  enemy.stage82?.type!=='briarspine_horror')||normal;
+}
 function fightNatural(a,profile,tickLimit){
  const r=a.state().run;
  if(!r||r.status!=='fight')throw Error('Combat entry missing');
  const startedAt=r.combatSeconds||0;
  const start=r.hp,first=r.encounterLeader||r.enemy,initial=r.totalMobCount||r.initialMobCount||r.enemies?.length||1;
- let ticks=0,switches=0,minionFocusSeconds=0,minionFocusSwitches=0,minimum=r.maxhp>0?r.hp/r.maxhp:0;
+ let ticks=0,switches=0,thornRedirects=0,minionFocusSeconds=0,minionFocusSwitches=0,minimum=r.maxhp>0?r.hp/r.maxhp:0;
  while(r.status==='fight'&&a.controller().state.stage==='combat'&&r.hp>0&&ticks<tickLimit){
   // A human needs time to notice add waves; target switches are throttled.
   if(ticks%8===0){
-   const next=S.selectTarget(r,profile.target);
+   const next=selectThornAwareTarget(r,profile),baseline=S.selectTarget(r,profile.target);
+   if(next!==baseline)thornRedirects++;
    if(a.selectCombatTarget(r,next)){switches++;
     if(next.stage83Summoned&&next.stage83Summoner==='elite')minionFocusSwitches++;}
   }
@@ -826,7 +836,7 @@ function fightNatural(a,profile,tickLimit){
   kind:first?.boss?'boss':first?.miniboss?'elite':'combat',initialEnemies:initial,
   status:r.status,died:r.hp<=0||stage==='failed',
   won:r.status==='cleared'&&stage!=='failed',timedOut:r.status==='fight'&&ticks>=tickLimit,
-  seconds:round((r.combatSeconds||0)-startedAt),updateCalls:ticks,targetSwitches:switches,minionFocusSwitches,
+  seconds:round((r.combatSeconds||0)-startedAt),updateCalls:ticks,targetSwitches:switches,thornRedirects,minionFocusSwitches,
   minionFocusSeconds:round(minionFocusSeconds),hpStart:round(start),hpEnd:round(Math.max(0,r.hp)),
   hpMax:round(r.maxhp),minHpPct:round(minimum*100,1),
   damageTaken:Math.round(r.metrics?.damageTaken||0),
@@ -1086,6 +1096,14 @@ function analyze(accounts,opts){
     (a.prepAtBoss?.markedElite||a.prepAtBoss?.reliquary)).length,
    gearUpgrades:attempts.reduce((n,a)=>n+(a.equipped?.length||0)+(a.camp?.equipped?.length||0),0),
    tierUpgrades:attempts.reduce((n,a)=>n+(a.camp?.upgraded?.length||0),0),
+   focusedCrafts:attempts.reduce((n,a)=>n+(a.camp?.crafted||[]).filter(x=>x.focus&&x.focus!=='none').length,0),
+   legendaryReinforcements:attempts.reduce((n,a)=>n+(a.camp?.reinforced?.length||0),0),
+   reagentRefinements:attempts.reduce((n,a)=>n+(a.camp?.refined?.length||0),0),
+   runeEquips:attempts.reduce((n,a)=>n+(a.camp?.runes||[]).filter(x=>x.action==='equip').length,0),
+   runesRecycled:attempts.reduce((n,a)=>n+(a.camp?.runes||[]).filter(x=>x.action==='recycle').reduce((m,x)=>m+x.count,0),0),
+   potionPurchases:attempts.reduce((n,a)=>n+(a.camp?.potions||[]).filter(x=>x.action==='buy').length,0),
+   potionKindsUsed:[...new Set(attempts.flatMap(a=>(a.potions||[]).map(x=>x.kind)))].sort(),
+   thornRedirects:attempts.reduce((n,a)=>n+(a.rooms||[]).reduce((m,r)=>m+(r.thornRedirects||0),0),0),
    talentResets:attempts.reduce((n,a)=>n+(a.camp?.resets?.length||0),0),
    elementalSelections:attempts.reduce((n,a)=>n+(a.camp?.elementChoices?.length||0),0),
    advancedPrepared:attempts.filter(a=>!!a.before?.prepared).length,
@@ -1159,7 +1177,7 @@ function main(args=process.argv.slice(2)){
  if(report.coverage.errors)process.exitCode=1;
  return report;
 }
-module.exports={PROFILES,PIVOTS,pivotProfile,DEFAULTS,parseArgs,gearScore,gearSnapshot,spendEarnedTalents,prepareEarnedAbility,equipEarned,
+module.exports={PROFILES,PIVOTS,pivotProfile,DEFAULTS,parseArgs,gearScore,gearSnapshot,runeScore,chooseRuneReward,manageEarnedRunes,potionScore,selectEarnedPotions,buyEarnedPotions,refineEarnedReagents,selectThornAwareTarget,spendEarnedTalents,prepareEarnedAbility,equipEarned,
  prepareCamp,craftEarned,investEarnedGear,consolidateStash,choiceRealm,pathLength,eliteOpportunity,selectRoom,evaluateRetreat,boonScore,chooseBoon,chooseContract,eventOptions,potionSlots,usePotionKind,usePotionsBetween,rerollPoorBoonAtShrine,
  fightNatural,resolveEvent,clearResults,playDungeon,simulateAccount,analyze,run,markdown,main};
 if(require.main===module)main();
