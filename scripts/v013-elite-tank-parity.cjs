@@ -34,10 +34,14 @@ function scenario(seed,type,gear='starter',opts={}){
  // fights. Full matched comparisons still execute both original native fights.
  if(opts.inspectOnly===true)return {seed,type,gear,family:card.family,initial:before,
   gearFingerprint:gearFingerprint===JSON.stringify(a.state().equip),inspected:true};
- const fight=N.fightNatural(a,N.PROFILES.balanced,opts.tickLimit||4500);
- return {seed,type,gear,family:card.family,gearFingerprint:gearFingerprint===JSON.stringify(a.state().equip),
+ const targetPolicy=opts.targetPolicy||N.PROFILES.balanced.target;
+ if(!['focus','mechanics','adds'].includes(targetPolicy))throw Error('Unsupported native target policy: '+targetPolicy);
+ const fight=N.fightNatural(a,{...N.PROFILES.balanced,target:targetPolicy},opts.tickLimit||4500);
+ return {seed,type,gear,targetPolicy,family:card.family,gearFingerprint:gearFingerprint===JSON.stringify(a.state().equip),
   identicalBaseVitals:statsBefore.maxhp===a.baseStats().maxhp,initial:before,
   ...fight,won:!!fight.won,enemyAbilityCasts:fight.enemyAbilityCasts||0,
+  eliteSummons:r.metrics?.eliteSummons||0,deathboundApplications:r.metrics?.deathboundApplications||0,
+  deathboundTicks:r.metrics?.deathboundTicks||0,deathboundDamage:r.metrics?.deathboundDamage||0,
   hpLossFraction:Number(((before.playerHp-fight.hpEnd)/before.playerMaxHp).toFixed(3))};
 }
 function compare(opts={}){
