@@ -1060,7 +1060,7 @@ function phase3MobArenaPosition(enemy,index,count){
 function phase3BindGroupEnemyFocus(){
  const group=$('groupEnemies');if(!group)return;
  group.querySelectorAll('[data-group-index]').forEach(item=>{item._enemyRef=state.run?.enemies?.[Number(item.dataset.groupIndex)];});
- const focus=item=>{const r=state.run,mob=r?.enemies?.[Number(item.dataset.groupIndex)];if(!r||r.status!=='fight'||!mob||mob.hp<=0||r.enemy===mob)return;r.enemy=mob;r.tEnemy=mob.groupClock;phase3RetargetGroup();};
+ const focus=item=>{const r=state.run,mob=r?.enemies?.[Number(item.dataset.groupIndex)];if(selectCombatTarget(r,mob))phase3RetargetGroup();};
  group.addEventListener('click',event=>{const item=event.target.closest('[data-group-index]');if(item)focus(item);});
  group.addEventListener('keydown',event=>{const item=event.target.closest('[data-group-index]');if(!item||!['Enter',' '].includes(event.key))return;event.preventDefault();focus(item);});
 }
@@ -1071,6 +1071,12 @@ function phase3RefreshGroupEnemies(){
  updateBars();return true;
 }
 
+function selectCombatTarget(run,enemy){
+ if(run?.status!=='fight'||!enemy||enemy.hp<=0||run.enemy===enemy||!run.enemies?.includes(enemy))return false;
+ run.enemy=enemy;
+ run.tEnemy=enemy.groupClock;
+ return true;
+}
 function phase3RetargetGroup(){
  const r=state.run,group=document.getElementById('groupEnemies');if(!r?.enemies||!group?.isConnected)return false;
  for(const id of ['enemyPortrait','enemyDebuffs','enemyHpFill','enemyHpText','enemyDefense']){const el=document.getElementById(id);if(el)el.removeAttribute('id');}

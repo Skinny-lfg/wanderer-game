@@ -64,7 +64,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
   start:phase1Begin,initial:phase2ChooseInitial,select:phase1Choose,enter:phase1Enter,passive:phase2ChoosePassive,element:phase2ChooseElement,
   passiveIcons:phase2PassiveIcons,initialPassive:WandererV012Buildcraft.initial,
   tick(...args){harnessCombatActive=true;try{return updateFight(...args);}finally{harnessCombatActive=false;}},streams:harnessStreams,potion:phase3UsePotion,reroll:phase3Reroll,win:phase1WaveWon,death:phase1Death,abandon:phase1Abandon,
-  now:setNow,ready:setReady,heal:setHeal,
+  selectCombatTarget,now:setNow,ready:setReady,heal:setHeal,
   bag:{items:phase3BagItems,overflow:phase3BagOverflow,capacity:()=>PHASE3_BAG_CAPACITY,discard:phase3DiscardLoot,active:phase3ExpeditionActive,
    mark(item,overflow=false){(overflow?state.expeditionOverflow:state.stash).push(item);phase3LootIds.add(item.id);},
    ids:()=>Array.from(phase3LootIds),markup:phase3BagMarkup,passives:phase3PassivesMarkup},
