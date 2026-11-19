@@ -4,6 +4,7 @@
 // encounters, instant-kill enemies or direct state mutation of rewards.
 const fs=require('node:fs');
 const path=require('node:path');
+const crypto=require('node:crypto');
 const create=require('../tests/v012-economy-harness.cjs');
 const S=require('./simulate-progression.cjs');
 require('../online/v013-map-intelligence.js');
@@ -402,17 +403,20 @@ function rerollPoorBoonAtShrine(a,offer,profile,history){
 function fightNatural(a,profile,tickLimit){
  const r=a.state().run;
  if(!r||r.status!=='fight')throw Error('Combat entry missing');
+ const startedAt=r.combatSeconds||0;
  const start=r.hp,first=r.encounterLeader||r.enemy,initial=r.totalMobCount||r.initialMobCount||r.enemies?.length||1;
- let ticks=0,switches=0,minionFocusTicks=0,minionFocusSwitches=0,minimum=r.maxhp>0?r.hp/r.maxhp:0;
+ let ticks=0,switches=0,minionFocusSeconds=0,minionFocusSwitches=0,minimum=r.maxhp>0?r.hp/r.maxhp:0;
  while(r.status==='fight'&&a.controller().state.stage==='combat'&&r.hp>0&&ticks<tickLimit){
   // A human needs time to notice add waves; target switches are throttled.
   if(ticks%8===0){
    const next=S.selectTarget(r,profile.target);
-   if(next&&next.hp>0&&next!==r.enemy){r.enemy=next;r.tEnemy=next.groupClock;switches++;
+   if(a.selectCombatTarget(r,next)){switches++;
     if(next.stage83Summoned&&next.stage83Summoner==='elite')minionFocusSwitches++;}
   }
-  if(r.enemy?.hp>0&&r.enemy.stage83Summoned&&r.enemy.stage83Summoner==='elite')minionFocusTicks++;
+  const focusedSummon=!!(r.enemy?.hp>0&&r.enemy.stage83Summoned&&r.enemy.stage83Summoner==='elite');
+  const tickStartedAt=r.combatSeconds||0;
   a.tick();ticks++;
+  if(focusedSummon)minionFocusSeconds+=Math.max(0,(r.combatSeconds||0)-tickStartedAt);
   minimum=Math.min(minimum,Math.max(0,r.hp)/(r.maxhp||1));
  }
  const stage=a.controller().state.stage;
@@ -420,8 +424,8 @@ function fightNatural(a,profile,tickLimit){
   kind:first?.boss?'boss':first?.miniboss?'elite':'combat',initialEnemies:initial,
   status:r.status,died:r.hp<=0||stage==='failed',
   won:r.status==='cleared'&&stage!=='failed',timedOut:r.status==='fight'&&ticks>=tickLimit,
-  seconds:round(ticks*.11),targetSwitches:switches,minionFocusSwitches,
-  minionFocusSeconds:round(minionFocusTicks*.11),hpStart:round(start),hpEnd:round(Math.max(0,r.hp)),
+  seconds:round((r.combatSeconds||0)-startedAt),updateCalls:ticks,targetSwitches:switches,minionFocusSwitches,
+  minionFocusSeconds:round(minionFocusSeconds),hpStart:round(start),hpEnd:round(Math.max(0,r.hp)),
   hpMax:round(r.maxhp),minHpPct:round(minimum*100,1),
   damageTaken:Math.round(r.metrics?.damageTaken||0),
   damageDealt:Math.round(r.metrics?.damageDealt||0),
@@ -656,7 +660,9 @@ function analyze(accounts,opts){
    observations:attempts.length?null:'not_reached; do not infer win rate'});
  }
  return {stage:'9.6',schemaVersion:5,engine:'v0.13 live native account, dungeon and combat runtime',
-  source:S.sourceFingerprint().sha256,settings:opts,
+  source:S.sourceFingerprint().sha256,
+  runnerSha256:crypto.createHash('sha256').update(fs.readFileSync(__filename)).digest('hex'),
+  settings:opts,
   integrity:{
    noFabricatedXp:true,noForcedEquipment:true,noForcedEncounter:true,
    noForcedLevelUnlock:true,noDamageOverride:true,
@@ -682,7 +688,8 @@ function run(opts=parseArgs()){
 function markdown(data){
  const out=['# Wanderer v0.13 — Stage 9.6: Grey loot, salvage and natural progression E1–E8','',
   '**One persistent native account from E1; XP, equipment, rewards, resources and unlocks are never fabricated.**',
-  '', 'Source hash: '+data.source,'', '## E1–E8 natural-account pilot','',
+  '', 'Engine fingerprint: '+data.source,'', 'Natural runner SHA-256: '+data.runnerSha256,'',
+  '## E1–E8 natural-account pilot','',
   '| E | Accounts reached | Attempts | Wins | Deaths | Extractions | Boss reached | Prepared bosses | Marked Elites | Elite fights | Elite wins | Elite drops | Grey drops | First-room drops | First rooms without gear | Grey salvaged | Forge Fragments from Grey | Reliquaries | Boons | Potions | Rooms won | Native XP | Gear changes | Errors |',
   '|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|'];
  for(const x of data.levels)out.push('| E'+x.level+' | '+x.accountsReached+' | '+x.attempts+' | '+x.wins+
