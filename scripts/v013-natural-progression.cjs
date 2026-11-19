@@ -225,7 +225,7 @@ function eliteOpportunity(game,card,node,profile,vitals,context={}){
  const weighted=rarities=>Object.entries(rarities).reduce((total,[r,prob])=>
   total+(quality[r]||0)*prob,0);
  const firstRoom=game.dungeon?.cleared?.length===1;
- const eliteDrop=firstRoom?1:elite.drop,normalDrop=firstRoom?1:normal.drop;
+ const eliteDrop=elite.drop,normalDrop=normal.drop;
  const eliteGear=eliteDrop*weighted(elite.rarities);
  const normalGear=normalDrop*weighted(normal.rarities);
  const equipment=context.equipment?Object.values(context.equipment).filter(Boolean):[];
@@ -535,13 +535,13 @@ function playDungeon(a,level,profile,opts){
    report.bossInitialHP=a.state().run?.enemies?.find(e=>e?.boss)?.maxhp||
     a.state().run?.enemy?.maxhp||null;
   }
-  // Record all actual native drops; first-room bonus is not ordinary Grey loot.
+  // Record every native drop, including the first room: there is no guaranteed gear.
   const wasFirstRoom=g.dungeon?.cleared?.length===1&&!g.selected.boss;
   const fight=fightNatural(a,profile,opts.tickLimit);
   const actualDrops=(a.state().run?.loot||[]).map(item=>
    ({slot:item.slot,rarity:item.rarity,subtype:item.subtype,source:item.source}));
   report.rooms.push({room:next.room,roomType:node.kind,...fight,
-   loot:actualDrops,firstGuaranteedRoom:!!wasFirstRoom,
+   loot:actualDrops,firstRoom:!!wasFirstRoom,
    ...(node.kind==='elite'?{marked:next.room===card.objective}:{})});
   if(fight.timedOut){report.error='Native combat timeout';break;}
   if(fight.died)break;
@@ -635,10 +635,11 @@ function analyze(accounts,opts){
     .reduce((k,x)=>k+(x.loot?.length||0),0),0),
    ordinaryGearDrops:attempts.reduce((n,a)=>n+(a.rooms||[]).filter(x=>x.roomType==='combat')
     .reduce((k,x)=>k+(x.loot?.length||0),0),0),
-   ordinaryGreyDrops:attempts.reduce((n,a)=>n+(a.rooms||[]).filter(x=>x.roomType==='combat'&&!x.firstGuaranteedRoom)
+   ordinaryGreyDrops:attempts.reduce((n,a)=>n+(a.rooms||[]).filter(x=>x.roomType==='combat')
     .reduce((k,x)=>k+(x.loot||[]).filter(item=>item.rarity==='Common').length,0),0),
-   guaranteedFirstGear:attempts.reduce((n,a)=>n+(a.rooms||[]).filter(x=>x.firstGuaranteedRoom)
+   firstRoomGearDrops:attempts.reduce((n,a)=>n+(a.rooms||[]).filter(x=>x.firstRoom)
     .reduce((k,x)=>k+(x.loot?.length||0),0),0),
+   firstRoomsWithoutGear:attempts.reduce((n,a)=>n+(a.rooms||[]).filter(x=>x.firstRoom&&x.won&&!(x.loot?.length)).length,0),
    campGreySalvaged:attempts.reduce((n,a)=>n+(a.camp?.salvagedGrey||0),0),
    forgeFragmentsFromGrey:attempts.reduce((n,a)=>n+(a.camp?.salvageFragments||0),0),
    nativeXpEarned:attempts.reduce((n,a)=>n+(a.xpEarned||0),0),
@@ -651,7 +652,7 @@ function analyze(accounts,opts){
    gearUpgrades:attempts.reduce((n,a)=>n+(a.equipped?.length||0)+(a.camp?.equipped?.length||0),0),
    observations:attempts.length?null:'not_reached; do not infer win rate'});
  }
- return {stage:'9.6',schemaVersion:4,engine:'v0.13 live native account, dungeon and combat runtime',
+ return {stage:'9.6',schemaVersion:5,engine:'v0.13 live native account, dungeon and combat runtime',
   source:S.sourceFingerprint().sha256,settings:opts,
   integrity:{
    noFabricatedXp:true,noForcedEquipment:true,noForcedEncounter:true,
@@ -679,10 +680,10 @@ function markdown(data){
  const out=['# Wanderer v0.13 — Stage 9.6: Grey loot, salvage and natural progression E1–E8','',
   '**One persistent native account from E1; XP, equipment, rewards, resources and unlocks are never fabricated.**',
   '', 'Source hash: '+data.source,'', '## E1–E8 natural-account pilot','',
-  '| E | Accounts reached | Attempts | Wins | Deaths | Extractions | Boss reached | Prepared bosses | Marked Elites | Elite fights | Elite wins | Elite drops | Grey drops | First guaranteed | Grey salvaged | Forge Fragments from Grey | Reliquaries | Boons | Potions | Rooms won | Native XP | Gear changes | Errors |',
-  '|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|'];
+  '| E | Accounts reached | Attempts | Wins | Deaths | Extractions | Boss reached | Prepared bosses | Marked Elites | Elite fights | Elite wins | Elite drops | Grey drops | First-room drops | First rooms without gear | Grey salvaged | Forge Fragments from Grey | Reliquaries | Boons | Potions | Rooms won | Native XP | Gear changes | Errors |',
+  '|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|',
  for(const x of data.levels)out.push('| E'+x.level+' | '+x.accountsReached+' | '+x.attempts+' | '+x.wins+
-  ' | '+x.deaths+' | '+x.extractions+' | '+x.bossReached+' | '+x.reachedBossWithPreparation+' | '+x.markedElitePreparations+' | '+x.eliteFights+' | '+x.eliteWins+' | '+x.eliteDrops+' | '+x.ordinaryGreyDrops+' | '+x.guaranteedFirstGear+' | '+x.campGreySalvaged+' | '+x.forgeFragmentsFromGrey+' | '+x.reliquaryPreparations+' | '+x.boonsSelected+' | '+x.potionsUsed+' | '+x.roomsWon+' | '+x.nativeXpEarned+' | '+x.gearUpgrades+' | '+x.errors+' |');
+  ' | '+x.deaths+' | '+x.extractions+' | '+x.bossReached+' | '+x.reachedBossWithPreparation+' | '+x.markedElitePreparations+' | '+x.eliteFights+' | '+x.eliteWins+' | '+x.eliteDrops+' | '+x.ordinaryGreyDrops+' | '+x.firstRoomGearDrops+' | '+x.firstRoomsWithoutGear+' | '+x.campGreySalvaged+' | '+x.forgeFragmentsFromGrey+' | '+x.reliquaryPreparations+' | '+x.boonsSelected+' | '+x.potionsUsed+' | '+x.roomsWon+' | '+x.nativeXpEarned+' | '+x.gearUpgrades+' | '+x.errors+' |');
  out.push('','## Account outcomes','');
  for(const a of data.accounts){
   out.push('- '+a.profile+' / seed '+a.seed+': unlocked E'+a.endLevel+'; '+a.attempts.length+' attempts; XP '+a.xp+
