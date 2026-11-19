@@ -1,0 +1,107 @@
+name: Wanderer Stage 5 — E1 natural survey (no deploy)
+
+# Follow-up to the successful four-account pilot; separate revision/evidence.
+on:
+  push:
+    branches:
+      - audit/v013
+    paths:
+      - '.github/workflows/v013-stage5-natural-e1-survey.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  e1-natural-survey:
+    if: github.ref == 'refs/heads/audit/v013'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+
+      - name: 20 independent seeds x 3 policies; real E1, one attempt, no fabricated progression
+        run: >-
+          npm run simulate:v013:natural-e1-e8 --
+          --seeds=9101,9102,9103,9104,9105,9106,9107,9108,9109,9110,9111,9112,9113,9114,9115,9116,9117,9118,9119,9120
+          --profiles=cautious,balanced,daring
+          --max-level=1
+          --max-attempts=1
+          --out=reports/stage5-e1-survey.json
+
+      - name: Summarize by decision policy without mistaking extraction for defeat
+        if: always()
+        run: |
+          node <<'NODE'
+          const fs=require('node:fs');
+          const file='reports/stage5-e1-survey.json';
+          if(!fs.existsSync(file)){console.error('Natural report missing');process.exitCode=1;}
+          else{
+            const r=JSON.parse(fs.readFileSync(file,'utf8'));
+            const avg=x=>x.length?Math.round(100*x.reduce((a,b)=>a+b,0)/x.length)/100:null;
+            const profiles={};
+            for(const id of ['cautious','balanced','daring']){
+              const accounts=r.accounts.filter(a=>a.profile===id),attempts=accounts.flatMap(a=>a.attempts);
+              const first=attempts.flatMap(a=>(a.rooms||[]).slice(0,1));
+              profiles[id]={
+                accounts:accounts.length,
+                bossWins:attempts.filter(x=>x.bossWon).length,
+                bossReached:attempts.filter(x=>x.bossReached).length,
+                deaths:attempts.filter(x=>x.status==='defeat').length,
+                extractions:attempts.filter(x=>x.status==='extracted').length,
+                errors:attempts.filter(x=>x.status==='error'||x.error).length,
+                meanRoomsWon:avg(attempts.map(x=>x.fightsWon||0)),
+                meanFirstFightHpLossPct:avg(first.map(x=>x.hpMax?100*(x.hpStart-x.hpEnd)/x.hpMax:0)),
+                meanFirstFightSeconds:avg(first.map(x=>x.seconds||0)),
+                firstFights:first.length,
+                naturalGearDrops:attempts.reduce((n,a)=>n+(a.rooms||[]).reduce((k,x)=>k+(x.loot||[]).length,0),0)
+              };
+            }
+            const summary={
+              status:'diagnostic_pilot_not_statistical_balance_verdict',
+              source:r.source,runnerSha256:r.runnerSha256,
+              seeds:[...new Set(r.accounts.map(a=>a.seed))],
+              coverage:r.coverage,
+              e1:r.levels[0],
+              profiles
+            };
+            fs.writeFileSync('reports/stage5-e1-survey-summary.json',JSON.stringify(summary,null,2)+'\n');
+            console.log('STAGE5_E1_SURVEY='+JSON.stringify(summary));
+            if(r.coverage.accounts!==60||summary.seeds.length!==20||r.coverage.errors!==0){
+              console.error('Survey integrity mismatch or native errors. Inspect uploaded artifacts.');
+              process.exitCode=1;
+            }
+          }
+          NODE
+
+      - name: Record commit, environment, and source identities
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p reports
+          {
+            echo "commit=${GITHUB_SHA}"
+            echo "branch=${GITHUB_REF}"
+            echo "node=$(node --version)"
+            sha256sum scripts/v013-natural-progression.cjs scripts/simulate-progression.cjs tests/v012-economy-harness.cjs
+          } > reports/stage5-e1-survey-provenance.txt
+
+      - name: Upload raw evidence and concise results only (no deployment)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage5-e1-natural-survey
+          path: |
+            reports/stage5-e1-survey.json
+            reports/stage5-e1-survey.md
+            reports/stage5-e1-survey-summary.json
+            reports/stage5-e1-survey-provenance.txt
+          if-no-files-found: warn
+          retention-days: 30
