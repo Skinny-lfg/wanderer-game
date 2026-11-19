@@ -1182,10 +1182,9 @@ function phase6EventChoiceLabel(eventId,choice,bag){
  const E=phase1Controller.state.expedition,v=phase3Vitals();let label=WandererV012IntegratedEvents.get(eventId)[3][choice].replace(/(\d+) \+ (\d+)×E/g,(_,a,b)=>String(+a+ +b*E)).replace(/(\d+) \+ E/g,(_,a)=>String(+a+E));
  if(eventId==='traveling_merchant'&&choice===0&&v.hp>=v.maxhp)label='Health is already full';
  if(eventId==='relic_collector'){const item=bag.find(i=>i.id===document.querySelector('#eventItem')?.value);label=item?'Sacrifice '+item.name+' for '+(choice===0?12+2*item.tier+' Gold':5+item.tier+' Fragments'):bag.length?'Select a Bag item · reward is '+(choice===0?'12 + 2×item E Gold':'5 + item E Fragments')+'; without a sacrifice: '+(choice===0?5+E+' Gold':3+E+' Fragments'):'No Bag item: take '+(choice===0?5+E+' Gold':3+E+' Fragments');}
- if(eventId==='bounty_writ'&&choice===0&&!phase1Controller.state.rooms.slice(phase1Controller.state.planeIndex).includes('elite'))label='No Elite remains: take '+(5+E)+' Fragments instead';
+ if(eventId==='bounty_writ'&&choice===0&&phase1Controller.state.dungeon?.cleared.includes(phase1Controller.realmMap().objective))label='Marked Elite already cleared: take '+(5+E)+' Fragments instead';
  if(eventId==='restless_spring'&&choice===0&&v.hp>=v.maxhp)label='Health is already full';
  if(eventId==='restless_spring'&&choice===1&&(v.maxmp===0||v.mp>=v.maxmp))label='Resource full or unavailable: take '+(3+E)+' Fragments instead';
- if(eventId==='oracle_of_paths'&&choice===0&&!phase1Controller.state.dungeon&&(phase1Controller.state.freeBuild?phase1Controller.state.rerolls>=3:phase1Controller.allowed().length===0))label='No eligible route choice';
  return label;
 }
 function phase6EventOptionPresentation(ev,choice,bag){
@@ -1201,9 +1200,9 @@ function phase6EventOptionPresentation(ev,choice,bag){
    if(choice===0)return option('Disrupt the seal','Disable '+(known?.name||'the known boss property')+' until the end of this Expedition',{cost:cost+' HP (15% max HP)',condition:v.hp<=cost?'You must survive the sacrifice.':'Once only — cannot be reversed.',unavailable:v.hp<=cost||!WandererV013BossPreparation.reliquaryCanDisrupt(phase1Controller.state)});
    return option('Recover supplies','Restore 15% max HP and 25% max Mana',{condition:'Does not weaken the boss.'});}
 
-  case 'bounty_writ':return choice===0?(phase1Controller.state.rooms.slice(phase1Controller.state.planeIndex).includes('elite')?option('Accept the bounty','Next Elite: +25% HP/Attack; +50% Gold/Fragments'):option('Take the safe reward','Gain '+(5+E)+' Fragments')):option('Pass the writ','Keep your current supplies');
+  case 'bounty_writ':return choice===0?(phase1Controller.state.dungeon&&!phase1Controller.state.dungeon.cleared.includes(phase1Controller.realmMap().objective)?option('Accept the bounty','Next Elite: +25% HP/Attack; +50% Gold/Fragments'):option('Take the safe reward','Gain '+(5+E)+' Fragments')):option('Pass the writ','Keep your current supplies');
   case 'restless_spring':return choice===0?option('Drink from the spring','Recover 35% HP',{condition:v.hp>=v.maxhp?'Health is already full.':'',unavailable:v.hp>=v.maxhp}):((v.maxmp===0||v.mp>=v.maxmp)?option('Take the spring’s offering','Gain '+(3+E)+' Fragments',{condition:v.maxmp===0?'This build has no Mana.':'Mana is already full.'}):option('Drink from the spring','Recover 40% Mana'));
-  case 'oracle_of_paths':if(choice===0){if(phase1Controller.state.dungeon){const p=phase1Controller.scoutPreview(2),bossHint=WandererV013BossPreparation.nextUnrevealed(phase1Controller.state);return option('Consult the Oracle','Reveal up to '+p.rooms.length+' nearby rooms'+(p.secret?' and a secret passage':'')+(bossHint?' and one unknown boss property':'')+'.',{condition:p.rooms.length||p.secret||bossHint?'':'No new rooms, passage or boss properties remain nearby.',unavailable:!p.rooms.length&&!p.secret&&!bossHint});}if(phase1Controller.state.freeBuild)return option('Restore a reroll','Restore one Realm reroll, up to 3.',{condition:phase1Controller.state.rerolls>=3?'Rerolls are already full.':'',unavailable:phase1Controller.state.rerolls>=3});return phase1Controller.allowed().length?option('Choose an Affinity','Guarantee it appears in the next non-boss offer',{condition:'Choose one currently allowed Affinity.'}):option('Choose an Affinity','No eligible Affinity remains.',{condition:'No eligible Affinity is available.',unavailable:true});}return option('Take Fragments','Gain '+(5+E)+' Fragments');
+  case 'oracle_of_paths':if(choice===0){const p=phase1Controller.scoutPreview(2),bossHint=WandererV013BossPreparation.nextUnrevealed(phase1Controller.state);return option('Consult the Oracle','Reveal up to '+p.rooms.length+' nearby rooms'+(p.secret?' and a secret passage':'')+(bossHint?' and one unknown boss property':'')+'.',{condition:p.rooms.length||p.secret||bossHint?'':'No new rooms, passage or boss properties remain nearby.',unavailable:!p.rooms.length&&!p.secret&&!bossHint});}return option('Take Fragments','Gain '+(5+E)+' Fragments');
   default:return option('Choose this option',phase6EventChoiceLabel(ev.id,choice,bag));
  }
 }
@@ -1214,9 +1213,6 @@ function phase6EventReason(ev,choice,values){
  if(ev.id==='cursed_altar'&&v.hp<=Math.ceil(v.maxhp*.2))return 'Current HP must be above '+Math.ceil(v.maxhp*.2)+' to pay the health cost and survive.';
  if(ev.id==='forgotten_reliquary'&&choice===0){const cost=Math.ceil(v.maxhp*.15);if(v.hp<=cost)return 'You need more than '+cost+' HP to survive the sacrifice.';if(!WandererV013BossPreparation.reliquaryCanDisrupt(phase1Controller.state))return 'The boss seal is already disrupted.';}
  if(ev.id==='oracle_of_paths'&&choice===0&&phase1Controller.state.dungeon){const p=phase1Controller.scoutPreview(2);if(!p.rooms.length&&!p.secret&&!WandererV013BossPreparation.nextUnrevealed(phase1Controller.state))return 'No new rooms, passages or boss properties remain to be revealed.';}
- if(ev.id==='oracle_of_paths'&&choice===0&&!phase1Controller.state.dungeon&&!phase1Controller.state.freeBuild&&!phase1Controller.allowed().length)return 'No eligible Affinity is available.';
- if(ev.id==='oracle_of_paths'&&choice===0&&!phase1Controller.state.dungeon&&!phase1Controller.state.freeBuild&&!values.family)return 'Choose an eligible Affinity.';
- if(ev.id==='oracle_of_paths'&&choice===0&&!phase1Controller.state.dungeon&&phase1Controller.state.freeBuild&&phase1Controller.state.rerolls>=3)return 'Realm rerolls are already full.';
  return '';
 }
 function phase6RenderEvent(){
@@ -1230,7 +1226,6 @@ function phase6RenderEvent(){
   if(selected===null){inputBox.hidden=true;inputBox.innerHTML='';requirement.textContent='Choose an option to review its requirements.';confirm.textContent='Confirm choice';confirm.disabled=true;$('eventCancel').disabled=true;return;}
   const rows=[];
   if(ev.id==='relic_collector')rows.push('<label>Sacrifice Bag item (optional)<select id="eventItem"><option value="">No item — use the fallback reward</option>'+bag.map(i=>'<option value="'+esc(i.id)+'">'+esc(i.name)+' · E'+i.tier+'</option>').join('')+'</select></label>');
-  if(ev.id==='oracle_of_paths'&&!phase1Controller.state.dungeon&&!phase1Controller.state.freeBuild&&selected===0)rows.push('<label>Affinity<select id="eventFamily"><option value="">Choose an allowed affinity</option>'+phase1Controller.allowed().map(f=>'<option value="'+esc(f)+'">'+esc(WandererV012Expedition.FAMILY_NAMES[f]||f)+'</option>').join('')+'</select></label>');
   inputBox.innerHTML=rows.join('');inputBox.hidden=!rows.length;
   const read=()=>({itemId:$('eventItem')?.value||'',family:$('eventFamily')?.value||''});
   const update=()=>{const values=read(),reason=phase6EventReason(ev,selected,values),presentation=phase6EventOptionPresentation(ev,selected,bag);requirement.textContent='Selected · '+presentation.action+'. '+(reason||'Ready to confirm.');requirement.classList.toggle('red',!!reason);confirm.textContent='Confirm Option '+(selected+1);confirm.disabled=!!reason;const card=document.querySelector('[data-event-select="'+selected+'"]');if(ev.id==='relic_collector'){card.querySelector('.eventOptionTitle').textContent=presentation.action;card.querySelector('.eventOptionBenefit').textContent=presentation.benefit;}};

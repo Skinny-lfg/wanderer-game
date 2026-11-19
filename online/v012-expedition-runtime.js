@@ -66,9 +66,9 @@ function phase6EventChoice(choice,itemId,passiveId,family,targetId){
    heal();ports.phase1Vitals.hp-=cost;
   }else if(choice===1){heal(.15,.25);}break;
  }
- case 'bounty_writ':if(choice===0){if(g.dungeon){if(!g.dungeon.cleared.includes(ports.phase1Controller.realmMap().objective))effects.bounty=true;else ports.state.fragments+=5+E;}else if(g.rooms.slice(g.planeIndex).includes('elite'))effects.bounty=true;else ports.state.fragments+=5+E;}break;
+ case 'bounty_writ':if(choice===0){if(!g.dungeon)return false;if(!g.dungeon.cleared.includes(ports.phase1Controller.realmMap().objective))effects.bounty=true;else ports.state.fragments+=5+E;}break;
  case 'restless_spring':if(choice===0){if(v.hp>=v.maxhp)return false;heal(.35);}else if(v.maxmp===0||v.mp>=v.maxmp)ports.state.fragments+=3+E;else heal(0,.4);break;
- case 'oracle_of_paths':if(choice===0){if(g.dungeon){ports.phase1Controller.scoutRooms(2);globalThis.WandererV013BossPreparation?.revealBoss(g);}else if(g.freeBuild){if(g.rerolls>=3)return false;g.rerolls++;}else{if(!ports.phase1Controller.allowed().includes(family))return false;ports.phase1Controller.influence(family);}}else ports.state.fragments+=5+E;break;
+ case 'oracle_of_paths':if(choice===0){if(!g.dungeon)return false;ports.phase1Controller.scoutRooms(2);globalThis.WandererV013BossPreparation?.revealBoss(g);}else ports.state.fragments+=5+E;break;
  default:return false;
  }}
  ports.phase6Run.events.push(g.planeIndex);ports.phase6Run.event=null;ports.phase4CommitRealm({awardXp:choice!==2});ports.phase1Controller.waveWon();

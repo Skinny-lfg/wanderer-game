@@ -32,3 +32,19 @@ test('current Dungeon owns event placement; retired 15-Realm event groups no lon
  assert.equal(scheduled.length,8);
  assert.equal(new Set(scheduled.map(e=>e.id)).size,8);
 });
+
+test('C6: Bounty Writ presentation follows the current Dungeon Elite objective, not old 15-Realm rooms',()=>{
+ const fs=require('node:fs'),vm=require('node:vm');
+ const html=fs.readFileSync('index.html','utf8');
+ const start=html.indexOf('function phase6EventOptionPresentation('),end=html.indexOf('\nfunction phase6EventReason(',start);
+ assert(start>0&&end>start);
+ const context={phase1Controller:{state:{expedition:3,dungeon:{cleared:[0]}},realmMap:()=>({objective:7})},
+  phase3Vitals:()=>({hp:80,maxhp:100,mp:10,maxmp:50}),document:{querySelector:()=>null},state:{gold:200}};
+ vm.runInNewContext(html.slice(start,end)+'\nthis.presentation=phase6EventOptionPresentation;',context);
+ const pending=context.presentation({id:'bounty_writ'},0,[]);
+ assert.match(pending.benefit,/Next Elite/);
+ context.phase1Controller.state.dungeon.cleared.push(7);
+ const finished=context.presentation({id:'bounty_writ'},0,[]);
+ assert.match(finished.benefit,/Fragments/);
+ assert(!html.includes('phase1Controller.allowed('),'retired legacy route methods must not be callable from active event UI');
+});
