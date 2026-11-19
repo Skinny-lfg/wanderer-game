@@ -40,11 +40,9 @@ miss dynamic code, DOM event handlers, generated previews and import graphs.
 | Incorrect manual-attribute metrics and obsolete migration assertions | Native simulator, build audit, tests, docs | No manual attribute allocation is playable |
 | Default browser test chain targeting retired Talent Tree | `package.json` | Replaced old UI browser checks with a browser test of the real v15 iframe |
 
-**Important exception:** `docs/index.html` still directly calls
-`forgePreviewImage` in its older Forge UI, although the root `index.html`
-does not. We deliberately did **not** delete that function from the docs
-mirror: it would break the existing checked-in preview. Proper resolution is
-regeneration from the canonical source, not a blind function deletion.
+**Resolved in C3:** `docs/index.html` and the dependent Pages files were regenerated
+from the current source; the old Forge UI exception is no longer applicable.
+The checked-in generated preview is now reproducible from the same builder.
 
 ## Current dependencies that must remain (even without historical saves)
 
@@ -65,8 +63,9 @@ regeneration from the canonical source, not a blind function deletion.
 4. **`online/v012-expedition-controller.js`**, `combat/v012-buildcraft.js`,
    equipment and combat runtimes still implement the current v0.13 game.
    Their filenames refer to code lineage, not runtime obsolescence.
-5. The **`docs/` tree is a generated Pages artifact**. Production/preview
-   paths must be rebuilt with `npm run build:pages`, not edited arbitrarily.
+5. The **`docs/` tree is a generated Pages artifact**. C3 synchronized the mirror
+   using `npm run build:pages` (22 paths updated), committed it to `audit/v013`
+   and verified a second build produced no changes. Source remains authoritative.
 
 ## Confirmed next candidates (not deleted automatically)
 
@@ -78,9 +77,9 @@ regeneration from the canonical source, not a blind function deletion.
 | Completed C2 (legacy stat shims) | `combat/v012-gear-stats.js`, `online/pvp-stats.mjs` | Removed historical Leather missing-rating fallback and pre-hotfix Orb multiplier | Current gear budget and direct stored stats preserved; further full combat/PvP reconciliation remains a release check |
 | Completed C2 (restore branch) | `online/v012-expedition-controller.js` | Only current deterministic Dungeon state can be restored; old 15-Realm checkpoints rejected | Current Dungeon checkpoint integrity tests passed; historical generation code may still need separate runtime pruning |
 | Medium | `online/v012-save.js`, `online/model.mjs`, cloud services | Some `maxDungeon`, `chosen`, `onlineProgress` naming is historical, but actively used by current profile/PvP plumbing | Cross-service schema inventory; do not rename/drop without current account and leaderboard tests |
-| Medium | `docs/` | **12 generated files differ** when rebuilding Pages from current source, including Forge UI, save runtime, gear stats and enemy abilities | Build on intended publish branch, review generated diff, commit output and recheck live preview |
-| Low | `online/v012-uiux-tuning.css` and related stylesheets | Selectors for old talent graph parent DOM may be unused after iframe adoption | Real browser computed-style inspection across viewport widths |
-| Low | `tests/v013-talent-tree-browser.cjs`, `tests/v013-clarity-browser.cjs` | Old Playwright scripts still target `.talentGraphViewport`, `.talentPreparation`, or direct manual attributes | Rewrite relevant modern assertions, or retire the files after current replacement test coverage |
+| Completed C3 | `docs/` | 22 generated paths updated from the canonical isolated preview | Commit `a923e69`; repeated build yielded no changes, without deploying |
+| Completed C3 (parent CSS) | `online/v012-uiux-tuning.css` | 74 obsolete inline Talent Tree selector lines removed (approximately 14 KB) | Preserved active XP, stat-color, route/Forge, and iframe-parent CSS; two browser viewport suites passed |
+| Completed C3 (retired browser files) | Four obsolete `tests/v013-*browser.cjs` files | Old parent talent, Forge and map selectors no longer match the current app | Deleted in `42ec916`; replaced by `tests/v013-c3-ui-browser.cjs` and the current v15 smoke |
 | Low | Historical reports, screenshots, old workflows | Thousands of assets/docs and many historical Stage workflows are not necessarily runtime dependencies | Identify referenced artifacts and workflow side effects; archive individually |
 
 A module can be indirectly imported or used by an iframe, CLI, cloud
@@ -123,12 +122,10 @@ the current UI**:
 - `tests/v013-clarity-browser.cjs` expects the old
   `.talentPreparation` manual attribute panel.
 
-These old browser files have **not** been made to pass or silently
-counted as green. They remain as historical sources to migrate the useful
-map/Forge assertions, while the default browser script now runs
-`tests/v013-clean-sheet-browser.cjs` against the actual active v15
-iframe. This narrower smoke is necessary but **not sufficient** browser
-coverage for a release.
+Those four obsolete browser files were **not** counted as passing tests. C3
+removed them after adding modern assertions for the actual v15 Talent Tree,
+Forge, Inventory and deterministic Dungeon map, with desktop/mobile Chromium.
+The original 2026-11-19 observations are kept above as audit provenance.
 
 ## Final verification checkpoint
 
@@ -150,10 +147,11 @@ Both workflow jobs completed **successfully**, with:
   and changed drop behavior. It is explicitly outside the clean-sheet
   release gate; it has not been represented as passing.
 
-The present default `npm run test:v013:browser` covers only the fresh
-v15 smoke. It does **not** yet replace the previous outdated deep browser
-scenarios for map, Forge, inventory or combat. Treat that as a
-release-coverage gap, not a gameplay regression verdict.
+The present default `npm run test:v013:browser` runs both the fresh v15 smoke
+and the C3 current UI regression in Chromium at 1280px and 390px. It verifies
+Forge crafting, Inventory popup, three Dungeon Card choices, two Contracts,
+visible fog-of-war nodes, zoom, room inspection and zero JavaScript errors.
+Long-form combat/boss/extraction and full breadth remain C4 release-gate work.
 
 ## Recommended next cleanup stages
 
@@ -167,9 +165,9 @@ release-coverage gap, not a gameplay regression verdict.
   shims and retired recipe IDs; reject non-Dungeon controller checkpoints.
   Require a fresh `c2-clean-sheet` save generation, preserve owner-bound revisions
   and modern restore/anti-duplication. No deployment or live data mutation.
-- **C3 — UI and CSS:** migrate remaining obsolete root UI/CSS to active v15
-  patterns, replace retired browser tests, then regenerate the `docs/`
-  preview from canonical source and compare visually on desktop/mobile.
+- **C3 — UI, CSS, browser and generated Pages (completed):** remove obsolete
+  inline-tree CSS and old browser scripts, replace with current desktop/mobile
+  tests, regenerate the isolated Pages mirror and prove a deterministic build.
 - **C4 — Release gate:** run current v0.13 native save, crafting, Talents,
   map, Boss/Elite, browser and simulator tests. Re-baseline after clean-sheet
   save format reset; then decide whether to merge or publish. Until then,
@@ -203,3 +201,12 @@ claiming that full definition is met yet.
 - **Historical tests:** the retired v0.12 treasure suite remains **2/5 passing, 3/5 failing**, intentionally non-gating. Legacy test assumptions are not carried forward as gameplay requirements.
 - **Generated docs:** ephemeral `npm run build:pages` found **21 changed `docs/` paths** against the checked-in preview. Generated files were **not committed or published**; resolve in Stage C3.
 - **Next:** Stage C3 for remaining old-only UI/JS/CSS, generated preview sync and modern browser coverage. Stage C4 for the complete current release gate. The old 15-Realm generator and historical talent test fixture need separate reachability-based deletion; C2 removed obsolete restore paths, not every old source declaration.
+
+## Stage C3 verification — 19 November 2026
+
+- **CSS:** commit `f26c8af` removed 74 historical CSS lines (around 14 KB) from `online/v012-uiux-tuning.css`. The current v15 Talent Tree renders in `preview/talent-rebuild/index.html`, not the retired parent `.talentGraphCanvas`. Preserved the current iframe container, XP, character stats, Forge, combat and route selectors; `tests/v013-c3-ui-static.test.cjs` enforces that separation.
+- **Real UI:** `tests/v013-c3-ui-browser.cjs` now runs alongside the clean-sheet browser smoke through `npm run test:v013:browser`. The test operates on a throwaway isolated preview without login/Firebase, across **1280×800** and **390×844**, and checks 343 v15 nodes, real `green_sword` forging, Inventory item dialog bounds, 3 risk cards, 2 optional Contracts, a current 18+ node Dungeon topology with 5 initially visible fog-of-war nodes, map zoom (100% → 120%), room inspection and **zero browser JavaScript errors**. Screenshots from both viewports are retained by CI as `v013-c3-responsive-browser`.
+- **Obsolete browser tests:** commit `42ec916` removed `tests/v013-talent-tree-browser.cjs`, `tests/v013-clarity-browser.cjs`, `tests/v013-pages-browser.cjs` and `tests/v013-cleanup-ui-browser.cjs`. These targeted retired selectors and were not run by the current npm test commands. Current behavioral coverage supersedes their UI-specific assumptions; deeper combat/extraction remain a separate C4 target.
+- **Generated Pages:** GitHub Actions [run 44604317041](https://github.com/Skinny-lfg/wanderer-game/actions/runs/44604317041) successfully ran current native and desktop/mobile browser gates, generated the canonical isolated mirror, and wrote the **22 changed `docs/` paths** as commit `a923e691f0eb3203754758d62e93fc32d6ee8ede` on `audit/v013`. A second generation produced `C3_DOCS_SOURCE_PARITY=true`, with no residual tracked/untracked docs changes. This was a branch-only Git commit, **not a Pages deploy**.
+- **Workflow safety:** the sync job runs only for `audit/v013`, only after both native and browser jobs pass, and has a narrowly scoped GitHub write permission. It never merges or publishes. Current production, saved user data and balance rules were not changed in C3.
+- **Remaining C4 gates:** run broader current 0.13 combat, Elite/Boss, economy and native/cloud regressions, long-form browser progression and simulations. Historical `combat/automatic-talents.js` fixtures, old graph generation options and potential additional unreachable code should be separately verified before removal. C3 does not claim that all old code has been eliminated.
