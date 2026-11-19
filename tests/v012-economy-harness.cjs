@@ -80,6 +80,23 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
    screen:()=>document.getElementById('screen').innerHTML},slots:SLOTS,types:TYPES,offhandTypes:OFFHAND_TYPES,
   equip:equipItem,unequip:unequipItem,sale:saleFragments,craftCost,merchantCost,
   rollShop,refresh:refreshMerchantStock,economyCanAct,offerBossRunes,claimRune:claimPendingRuneChoice,
+  // Simulator-only adapter for the exact v0.13 Forge rule and settlement used
+  // by renderV013Forge. Does not grant items or bypass costs/recipe unlocks.
+  forge:{
+   preview(id,tier,focus='none'){return WandererV013Crafting.previewCraft(id,tier,(...args)=>makeItem(...args,true),focus);},
+   progress(id,tier,focus='none'){return WandererV013Crafting.progress(state,id,tier,focus);},
+   recipes:WandererV013Crafting.RECIPES,
+   craft(id,tier,focus='none'){
+    if(!economyCanAct()||!stashHasRoom())return null;
+    const result=WandererV013Crafting.prepareCraft(state,id,tier,makeItem,focus);
+    if(!result)return null;
+    const before={fragments:state.fragments,crafting:state.crafting,stash:state.stash};
+    state.fragments=result.fragments;state.crafting=result.crafting;
+    state.stash=[...state.stash,result.item];
+    if(!phase5Persist()){Object.assign(state,before);return null;}
+    return result.item;
+   }
+  },
   runes:{unequip:unequipRune,salvage:salvageRune,recycle:salvageDuplicateRunes,equip:equipRune,confirm(){const fn=auditConfirmation;auditConfirmation=null;fn?.();}},
   runeValue,makeRune,validRune,safeRunes,safePendingRune,qualityOdds:WandererEconomyV0101.qualityOdds,rarityOdds,
   economy:WandererEconomyV0101,renderForge,renderMerchant,
