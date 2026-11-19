@@ -28,6 +28,19 @@ jobs:
         run: |
           npm run test:v013:sim
           node --test tests/v013-natural-progression.test.cjs tests/v013-stage94-human-decisions.test.cjs tests/v013-stage5-build-audit.test.cjs tests/v013-tier-upgrade.test.cjs
+      - name: Earned-account S2 pilot across all 10 archetypes (E1-E3, no synthetic progression)
+        run: |
+          node scripts/v013-natural-progression.cjs --seeds=22661 --profiles=cautious,balanced,daring,magic-fire,magic-frost,magic-lightning,plate-warden,leather-duelist,cloth-battlemage,hexblade-hybrid --max-level=3 --max-attempts=3 --max-total-attempts=6 --out=reports/v013-s2-pilot.json
+      - name: Preserve independent S2 natural pilot evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v013-s2-native-pilot
+          path: |
+            reports/v013-s2-pilot.json
+            reports/v013-s2-pilot.md
+          if-no-files-found: warn
+          retention-days: 30
       - name: Real browser versus VM runtime parity
         shell: bash
         run: |
