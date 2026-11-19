@@ -116,3 +116,24 @@ test('audit reports fingerprint drift as a quality failure even if fights succee
  });
  assert(result.failures.some(f=>f.startsWith('source_fingerprint_mismatch')));
 });
+
+test('combat/economy modules simulated from source match Pages mirror files',()=>{
+ const parity=A.previewRuntimeParity();
+ assert(parity.checkedModules>=10);
+ assert.deepEqual(parity.mismatches,[],
+  'A mismatch means the native simulator no longer validates the published preview runtime');
+ assert.equal(typeof parity.htmlDiffers,'boolean');
+});
+test('a live/preview combat module mismatch is a blocking data-quality failure',()=>{
+ const cfg=A.parseArgs(['--seeds=1','--builds=blood-fury','--affinities=blood',
+  '--risks=0','--group-sizes=3','--pairs=1','--scan=10']);
+ const result=A.run(cfg,{
+  simulate:opts=>({sourceSha256:'test',rows:[combat({mode:opts.mode})],summary:{errors:0}}),
+  compare:()=>({pairs:[],errors:[]}),
+  fingerprint:()=>({sha256:'test',files:['index.html']}),
+  previewParity:()=>({checkedModules:12,mismatches:['online/v013-elite-abilities.js'],
+   htmlDiffers:true})
+ });
+ assert(result.failures.some(x=>x.includes('preview_runtime_module_mismatch')));
+ assert.equal(result.previewRuntimeParity.mismatches.length,1);
+});
