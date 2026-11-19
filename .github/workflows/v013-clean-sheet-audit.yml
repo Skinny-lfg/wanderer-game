@@ -1,4 +1,5 @@
 name: Wanderer audit — Clean sheet dependency and obsolete-code scan (no deploy)
+# Revalidate source after deleting retired UI and v9-v14 talent migrator.
 
 on:
   push:
@@ -32,7 +33,10 @@ jobs:
           node --test
           tests/v013-dead-talent-cleanup.test.cjs
           tests/talent-graph-runtime.test.cjs
+          tests/v013-talent-structure.test.cjs
           tests/v013-current-dungeon-and-talents.test.cjs
+          tests/v012-phase-c3-treasures.test.cjs
+          tests/v013-stage7-contracts.test.cjs
           tests/v012-save.test.mjs
           tests/v013-stage5-build-audit.test.cjs
       - name: Record exact source provenance
