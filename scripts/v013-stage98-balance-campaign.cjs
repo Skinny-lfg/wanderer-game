@@ -92,7 +92,7 @@ function runElites(opts,deps={}){
    counts[type]++;
   }catch(e){errors.push({seed,error:e.message});}
  }
- const analyzed=A.pairedGroups({pairs,errors,skippedNonTank});
+ const analyzed=A.pairedGroups({pairs,errors,skippedNonTank:skippedNotTank});
  const groups=analyzed.groups.filter(g=>g.gear===opts.gear);
  const complete=TYPES.every(t=>counts[t]>=opts.target);
  const warnings=TYPES.filter(t=>counts[t]<opts.target).map(t=>'insufficient_'+t+'_'+counts[t]);
