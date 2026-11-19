@@ -3,7 +3,7 @@
 (function(root){'use strict';
 const DEFINITIONS=Object.freeze({
  gravecaller:Object.freeze({name:'Call of the Fallen',role:'Summoner',icon:'☠',description:'Summons two undead Minions once at 65% HP.',threshold:.65,summons:2}),
- rotbound_exarch:Object.freeze({name:'Rotward Benediction',role:'Support',icon:'✚',description:'Grants an ally Barrier worth 15% max HP, up to three times, every 10s.',first:3,cooldown:10,cast:.75,maxCasts:3,barrier:.15}),
+ rotbound_exarch:Object.freeze({name:'Rotward Benediction',role:'Support',icon:'✚',description:'Grants an ally or itself Barrier worth 15% max HP, up to three times, every 10s.',first:3,cooldown:10,cast:.75,maxCasts:3,barrier:.15}),
  ashen_executioner:Object.freeze({name:'Ashen Sentence',role:'Heavy Striker',icon:'⚒',description:'Prepares a 1.5s heavy strike every 10s; maximum 18% of hero max HP before Block/Barrier. Stun and delay interrupt.',first:3.5,cooldown:10,cast:1.5,multiplier:2.4,capFraction:.18})
 });
 function attach(enemy,now=0){
@@ -14,7 +14,7 @@ function attach(enemy,now=0){
 function active(run){return (run?.enemies?.length?run.enemies:run?.enemy?[run.enemy]:[]).filter(e=>e?.hp>0);}
 function ally(run,source){
  const rank={caster:0,skirmisher:1,tank:2,minion:3};
- return active(run).filter(e=>e!==source).sort((a,b)=>(rank[a.role]??4)-(rank[b.role]??4))[0]||null;
+ return active(run).filter(e=>e!==source).sort((a,b)=>(rank[a.role]??4)-(rank[b.role]??4))[0]||source;
 }
 function interrupt(enemy,run,reason='stun'){
  const s=enemy?.stage82;
@@ -48,7 +48,7 @@ function tick(run,absoluteNow){
    if(!target){s.castCount--;s.nextAt=now+1;return [];}
    const cap=Math.max(1,Math.round(target.maxhp*spec.barrier));
    const before=target.barrier||0;target.barrier=Math.max(before,cap);
-   target.stage81GuardUntil=now+1.8;s.status='Guarding';s.statusUntil=now+1.5;
+   target.stage81GuardUntil=now+1.8;s.status=target===enemy?'Self Ward':'Guarding';s.statusUntil=now+1.5;
    return [{type:'activate',enemy,ability:spec.name,target,result:target.barrier-before}];
   }
   s.chargedUntil=now+3.5;s.status='Heavy Strike';s.statusUntil=s.chargedUntil;
