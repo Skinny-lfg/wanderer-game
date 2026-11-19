@@ -81,3 +81,40 @@ distinct from real progression; do not change multipliers in this baseline stage
   natural encounters must never be mixed in one victory-rate estimate.
 - Full JSON, readable account report and concise cross-policy summary are
   uploaded as an artifact. This workflow cannot deploy.
+
+## Extended E1 survey — executed and validated
+
+- GitHub Actions run **44571595116** succeeded, revision
+  `399548a66269db9ced15192393b60d9d7cdc192b`.
+- 20 distinct seeds × 3 fixed decision policies = **60 E1 attempts**, **0 native
+  simulator errors**. These are 60 correlated policy trials, not 60 different
+  map seeds and not 60 human players.
+- Aggregate: **0 Boss victories, 41 deaths, 19 extractions**. Only 6 trials
+  reached a Boss and all 6 lost; 7 Elite encounters and 0 Elite victories.
+- First ordinary encounter always contained 1 enemy. **59/60** such opening
+  fights were won, but average HP lost was approximately **62% of maximum HP**
+  (cautious 61.93%, balanced 62.44%, daring 61.81%). First fights lasted on
+  average 30.4/30.01/28.97 native seconds respectively.
+- By profile (20 attempts each): cautious **7 deaths / 13 extractions**;
+  balanced **15 / 5**; daring **19 / 1**. Each reached 2 Boss fights, winning 0.
+- E1 aggregate: 66 ordinary rooms won, 17 ordinary gear drops (10 Common),
+  15 gear upgrades, 2,039 earned XP, 61 boon selections and **0 potion uses**.
+  No item drop was guaranteed. The zero-potion observation needs explanation
+  from actual availability and legal-use policies before proposing changes.
+- Full account and room evidence: workflow artifact
+  `stage5-e1-natural-survey`, including JSON, Markdown, per-policy summary,
+  runner hash and exact commit.
+
+**Interpretation:** The E1 opening fights are survivable, but apparently
+exhaust a large share of the starter's HP. This strongly warrants focused
+investigation of first-room threat versus starting power, regeneration,
+consumable availability, risk selection and routing. It does not distinguish
+inherent overtuning from suboptimal scripted decisions, nor prove a human
+victory rate. Do not change Boss/Elite coefficients or grant guaranteed loot
+based only on this survey.
+
+**Next diagnostic gate:** repeat a bounded set of fixed-seed **controlled**
+encounters using truly native starter gear (not the full-slot Common harness
+fixture). Record initial enemy composition, player stats, incoming-hit
+frequency, healing/Barrier, damage per attack, time, and recovery resources.
+Keep these controlled tests distinct from natural progression observations.
