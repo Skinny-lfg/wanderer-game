@@ -18,8 +18,6 @@ function passiveIds(v){if(!valid(v))throw Error('Invalid talent progress');retur
 function apply(stats,v){if(!valid(v))throw Error('Invalid talent progress');Object.assign(stats,B.apply(stats,graph,graphProgress(v)));return stats;}
 function bonuses(v){if(!valid(v))throw Error('Invalid talent progress');return B.bonuses(graph,graphProgress(v));}
 function attributeBonuses(v){if(!v)return {};const all=bonuses(v),out={};for(const key of ATTRIBUTES)if(all[key])out[key]=all[key];return out;}
-function attributePoints(v){return Math.max(0,Math.floor(v.xp/POINT_XP)-Object.values(v.attributes||{}).reduce((a,b)=>a+b,0));}
-function allocateAttribute(v,key){if(!valid(v)||!ATTRIBUTES.includes(key)||!attributePoints(v))return null;return {...v,attributes:{...v.attributes,[key]:(v.attributes?.[key]||0)+1}};}
-root.WandererAutomaticTalents=Object.freeze({NODES:graph,MAX_POINTS,POINT_XP,ATTRIBUTES,create,valid,migrate,earned,allocate,selectElement,award,reset,passiveIds,apply,bonuses,attributePoints,allocateAttribute,attributeBonuses,cap:()=>MAX_POINTS,graphProgress});
+root.WandererAutomaticTalents=Object.freeze({NODES:graph,MAX_POINTS,POINT_XP,ATTRIBUTES,create,valid,migrate,earned,allocate,selectElement,award,reset,passiveIds,apply,bonuses,attributeBonuses,cap:()=>MAX_POINTS,graphProgress});
 })(globalThis);
 
