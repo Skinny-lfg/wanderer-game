@@ -27,6 +27,19 @@ jobs:
           cache: npm
       - run: npm ci
 
+      - name: Diagnose true talent catalog from the integrated VM
+        run: |
+          node <<'NODE'
+          const create=require('./tests/v012-economy-harness.cjs');
+          const a=create(1234,undefined,{}, {skipPersistence:true,now:1720000001234});
+          const native=a.talents,host=globalThis.WandererAutomaticTalents;
+          console.log('NATIVE_TALENT_CATALOG='+JSON.stringify({
+            objectKeys:Object.keys(native),nodes:native.NODES.length,
+            names:native.NODES.filter(n=>/strong_heart|deep_cuts|quick_hands/.test(n.id)).map(n=>n.id),
+            hostNodes:host?.NODES?.length,hostBuildcraft:globalThis.WandererV012Buildcraft?.CATALOG?.length,
+            nativeCreate:native.create(),nativePath:native.path(native.create(),'passive_strong_heart')
+          }));
+          NODE
       - name: Validate native graph, reset semantics and build instrumentation
         run: >-
           node --test
