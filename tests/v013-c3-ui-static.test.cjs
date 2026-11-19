@@ -12,9 +12,10 @@ test('C3: obsolete parent inline tree renderer and its CSS are gone',()=>{
  assert.match(preview,/id="svg"/);
 });
 test('C3: current talent XP, stat colors, map and Forge CSS remain',()=>{
- for(const selector of ['.automaticTalentTree{margin-top:18px}','.automaticXpTrack','.stat-bonus','.stat-penalty','.routeBranchCanvas','.v013Forge','.routeMapViewport']){
+ for(const selector of ['.automaticTalentTree{margin-top:18px}','.automaticXpTrack','.stat-bonus','.stat-penalty','.v013Forge','.realmDialogImage']){
   assert(css.includes(selector),'Expected current CSS '+selector);
  }
+ for(const obsolete of ['.routeBranchCanvas','.routeMapViewport','.expeditionRouteMap','.routeLegend','.routeBranchNode'])assert(!css.includes(obsolete),'obsolete route CSS must stay deleted: '+obsolete);
  for(const selector of ['phase3RenderCityCenter','renderV013Forge','renderStash','WandererTreeAPI','data-dungeon-room']){
   assert(app.includes(selector),'Expected active UI '+selector);
  }
