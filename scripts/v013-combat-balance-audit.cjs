@@ -260,6 +260,27 @@ function compareBaseline(current,previous){
    ...(unmatched.length?['native_scenario_not_matched']:[])
   ]};
 }
+const PREVIEW_RUNTIME_MODULES=Object.freeze([
+ 'combat/v012-buildcraft.js','combat/automatic-talents.js',
+ 'combat/talent-graph-runtime.js','online/v012-expedition-runtime.js',
+ 'online/v013-boss-abilities.js','online/v013-boss-modifiers.js',
+ 'online/v013-boss-preparation.js','online/v013-enemy-abilities.js',
+ 'online/v013-elite-abilities.js','economy/v012-loot-rules.js',
+ 'economy/v013-crafting.js','economy/v013-gear-rolls.js'
+]);
+function previewRuntimeParity(root=path.resolve(__dirname,'..')){
+ const mismatches=[];
+ for(const name of PREVIEW_RUNTIME_MODULES){
+  const source=path.join(root,name),preview=path.join(root,'docs',name);
+  if(!fs.existsSync(source)||!fs.existsSync(preview)||
+    !fs.readFileSync(source).equals(fs.readFileSync(preview)))mismatches.push(name);
+ }
+ const sourceHtml=path.join(root,'index.html'),previewHtml=path.join(root,'docs/index.html');
+ return {checkedModules:PREVIEW_RUNTIME_MODULES.length,mismatches,
+  htmlDiffers:!fs.existsSync(sourceHtml)||!fs.existsSync(previewHtml)||
+   !fs.readFileSync(sourceHtml).equals(fs.readFileSync(previewHtml)),
+  note:'Core native combat/economy module parity only. The source and preview inline HTML may differ (art/layout); this audit cannot prove inline gameplay equivalence.'};
+}
 function expectedCases(cfg,mode){
  const per=mode==='bosses'?cfg.affinities.length*cfg.risks.length:
   mode==='enemies'?cfg.groupSizes.length:1;
@@ -270,6 +291,8 @@ function run(cfg=parseArgs(),deps={}){
  const runNatural=deps.runNatural||N.run;
  const source=deps.fingerprint?deps.fingerprint():S.sourceFingerprint();
  const runs=[],rows=[],issues=[],start=Date.now();
+ const preview=deps.previewParity?deps.previewParity():previewRuntimeParity();
+ if(preview.mismatches?.length)issues.push('preview_runtime_module_mismatch_'+preview.mismatches.join(','));
  for(const policy of cfg.policies)for(const mode of MODES){
   const opts={...S.DEFAULTS,mode,levels:cfg.levels,seeds:cfg.seeds,
    builds:cfg.builds,affinities:cfg.affinities,risks:cfg.risks,
@@ -317,6 +340,7 @@ function run(cfg=parseArgs(),deps={}){
    errors:errors.length,timeouts:timeouts.length,unresolved:unresolved.length,
    missingBosses,missingEliteTypes,matchedPairs:paired.matched,
    underpoweredCells:groups.filter(g=>g.independent<30).length},
+  previewRuntimeParity:preview,
   controlled:{runs,groups,rows},paired,
   natural:natural?{coverage:natural.coverage,levels:natural.levels,accounts:natural.accounts,
    note:'Native earned-account results only, not pooled with controlled encounter wins.'}:null,
@@ -329,7 +353,8 @@ function run(cfg=parseArgs(),deps={}){
    'Damage received on fatal hits is capped by actual remaining HP; high lethality is not captured by mean damage alone.',
    'Full E1–E8 progression needs a separate earned-account cohort; unreachable levels are censored, never zero wins.',
    '30 independent seeds per exact cell is a minimum diagnostic threshold, not a guarantee of statistical precision or a balance target.',
-   'Per-ability damage attribution and human dodge/timing are not provided by the native runtime counters.'
+   'Per-ability damage attribution and human dodge/timing are not provided by the native runtime counters.',
+   'Canonical index.html and GitHub Pages docs/index.html differ; matching external combat modules do not automatically prove identical inline HTML gameplay.'
   ],durationMs:Date.now()-start
  };
  if(cfg.baseline){
@@ -368,6 +393,7 @@ function markdown(r){
  lines.push('','Unobserved Boss affinities: '+(c.missingBosses.join(', ')||'none'),
   'Unobserved Elite types: '+(c.missingEliteTypes.join(', ')||'none'),
   'Underpowered controlled cells (<30 independent seeds): '+c.underpoweredCells,
+  'Preview combat module mirrors: '+r.previewRuntimeParity.checkedModules+' checked; mismatches: '+(r.previewRuntimeParity.mismatches.join(', ')||'none')+'; HTML differs: '+r.previewRuntimeParity.htmlDiffers,
   'Quality failures: '+(r.failures.join('; ')||'none'),'');
  if(r.natural)lines.push('## Natural earned-account pilot','',
   'Accounts: '+r.natural.coverage.accounts+', errors: '+r.natural.coverage.errors,
@@ -392,5 +418,5 @@ function main(args=process.argv.slice(2)){
  return report;
 }
 module.exports={ALL_BOSSES,ALL_ELITES,DEFAULTS,parseArgs,status,wilson,percentile,
- controlledGroups,pairedGroups,bootstrap95,scenarioKey,compareBaseline,run,markdown,main};
+ controlledGroups,pairedGroups,bootstrap95,scenarioKey,compareBaseline,previewRuntimeParity,run,markdown,main};
 if(require.main===module)main();
