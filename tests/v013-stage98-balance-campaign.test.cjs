@@ -11,7 +11,7 @@ test('Stage 9.8 dimensions are validated and prohibit unbounded native workloads
  for(const args of [
   [],['--mode=garbage'],['--mode=elites','--scan=10001'],
   ['--mode=elites','--target=0'],['--mode=bosses','--seeds=100'],
-  ['--mode=builds','--seeds=100'],['--mode=natural','--max-attempts=13'],
+  ['--mode=builds','--seeds=100','--group-sizes=3,12,20'],['--mode=natural','--max-attempts=13'],
   ['--mode=summarize'],['--mode=elites','--gear=gold'],
   ['--mode=elites','--out=unsafe.txt']
  ])assert.throws(()=>B.parseArgs(args),args.join(' '));
