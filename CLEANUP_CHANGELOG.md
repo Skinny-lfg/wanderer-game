@@ -17,3 +17,8 @@
 - tests/v012-economy-harness.cjs records executed bytes and exposes the shared target action; scripts/simulate-progression.cjs records ordered sources, replay settings, initial state digest, native elapsed time and target policy. Replaced inferred reinforcement counts with observed reserve actors.
 - index.html centralizes the existing player action; selection policy stays in the CLI.
 - tests/v013-runtime-parity.test.cjs covers ordered provenance, overrides, cross-engine snapshots and combat events. tests/v0120-results.test.cjs corrects three obsolete/invalid scenarios. No changes to the combat formulas.
+
+## Stage 4
+- combat/v012-combat-core.js owns default small and large group budgets, initial group pressure and escort stat adjustments. online/v012-expedition-runtime.js uses those rules in the same construction order, names the node-2 Vanguard predicate and keeps trait/condition attachment in place.
+- combat/v012-combat-runtime.js shares the rounded strike and floored HP cap between charged Elite and Boss strikes. No role, affinity, target policy or coefficient was changed.
+- COMBAT_SCALING_AUDIT.md records numeric origins, exceptions and open design decisions. tests/v013-scaling-regression.test.cjs compares the original executable's golden fixtures in tests/fixtures/v013-scaling-baseline.json.
