@@ -131,6 +131,10 @@ function gearLevel(level,mode){
  if(index<=0)return Math.max(1,level-1);
  return tiers[index-1].minimum;
 }
+// Hash native rolled equipment without exposing player data; protects future balance comparisons.
+function equipmentFingerprint(a){
+ return crypto.createHash('sha256').update(JSON.stringify(a.state().equip)).digest('hex');
+}
 function prepare(level,build,seed,opts,desiredRisk=undefined,desiredFamily=undefined){
  if(desiredFamily!==undefined&&!AFFINITIES.includes(desiredFamily))throw Error('Unknown Boss Affinity '+desiredFamily);
  if(desiredRisk!==undefined&&!RISKS.includes(desiredRisk))throw Error('Unknown Realm risk '+desiredRisk);
@@ -227,6 +231,7 @@ function encounter(level,build,seed,kind,opts,forcedTrait=undefined,forcedBossMo
  if(!['normal','boss','elite'].includes(kind))throw Error('Unknown controlled encounter '+kind);
  if(groupSize!==undefined&&(!Number.isSafeInteger(groupSize)||groupSize<2||groupSize>22||kind!=='normal'))throw Error('Invalid controlled group size');
  const {a,c,g,card,gearE,resolvedSeed,seedShift,allocatedPoints}=prepare(level,build,seed,opts,desiredRisk,forcedFamily);
+  const gearFingerprint=equipmentFingerprint(a);
  const candidate=card.edges.filter(([x])=>x===0).map(([,y])=>y).find(n=>card.nodes[n]?.kind==='combat');
  if(candidate===undefined)throw Error('No first-ring native combat encounter');
  if(forcedTrait!==undefined){if(kind!=='normal'||forcedTrait!==null&&!F.CATALOG.encounterTraits.some(x=>x.id===forcedTrait))throw Error('Unknown forced encounter trait');card.nodes[candidate].traitId=forcedTrait;}
@@ -248,7 +253,7 @@ function encounter(level,build,seed,kind,opts,forcedTrait=undefined,forcedBossMo
  const result=fight(a,c,opts.tickLimit,opts.targetPolicy);
  const mode=forcedBossMod!==undefined?'bossmods':forcedTrait!==undefined?'traits':opts.mode==='bosses'?'bosses':opts.mode==='enemies'?'enemies':opts.mode==='elites'?'elites':'encounter';
  const label=forcedBossMod!==undefined?(forcedBossMod||'baseline'):forcedTrait!==undefined?(forcedTrait||'baseline'):mode==='bosses'?card.family:mode==='enemies'?'swarm-'+count:kind;
- return {mode,kind:label,level,build:build.id,seed,resolvedSeed,seedShift,gearE,gearTier:P.gearTier(gearE).name,
+ return {mode,kind:label,level,build:build.id,seed,resolvedSeed,seedShift,gearE,gearFingerprint,gearTier:P.gearTier(gearE).name,
   gearRarity:opts.rarity,runes:opts.runes,pointsBudget:opts.points,pointsSpent:allocatedPoints,
   realm:card.name,affinity:card.family,risk:card.risk,nativeEncounter:kind,groupSize:count,unlocked:level,...result};
 }
@@ -257,6 +262,7 @@ function bossPreparationEncounter(level,build,seed,opts,strategy){
  // Controlled matched-seed native boss in a first-ring room. The selected Realm Card
  // is Dangerous so the marked Elite removes one guard rather than lowering Attack.
  const {a,c,g,card,gearE,resolvedSeed,seedShift,allocatedPoints}=prepare(level,build,seed,opts,1);
+  const gearFingerprint=equipmentFingerprint(a);
  const P4=globalThis.WandererV013BossPreparation;
  const state=g.dungeon.foundationState,manifest=g.dungeon.foundationManifest;
  const candidate=card.edges.filter(([x])=>x===0).map(([,y])=>y).find(n=>card.nodes[n]?.kind==='combat');
@@ -274,12 +280,13 @@ function bossPreparationEncounter(level,build,seed,opts,strategy){
  if(!c.visitRoom(candidate)||!a.enter())throw Error('Cannot enter prepared native boss');
  const run=a.encounter({count:1,boss:true});
  const result=fight(a,c,opts.tickLimit,opts.targetPolicy);
- return {mode:'bossprep',kind:strategy,level,build:build.id,seed,gearE,gearTier:P.gearTier(gearE).name,
+ return {mode:'bossprep',kind:strategy,level,build:build.id,seed,gearE,gearFingerprint,gearTier:P.gearTier(gearE).name,
   risk:card.risk,affinity:card.family,resolvedSeed,seedShift,preparationCostHp:sacrifice,pointsBudget:opts.points,pointsSpent:allocatedPoints,
   realm:card.name,unlocked:level,...result};
 }
 function dungeon(level,build,seed,opts,desiredRisk=undefined){
  const {a,c,g,card,gearE,resolvedSeed,seedShift,allocatedPoints}=prepare(level,build,seed,opts,desiredRisk);
+  const gearFingerprint=equipmentFingerprint(a);
  const conditionId=g.dungeon?.foundationState?.conditionId||null;
  const route=shortestRoute(card),events=[],rooms=[],initial={gold:a.state().gold,fragments:a.state().fragments,essence:a.state().crafting.essence,
   cores:{...a.state().crafting.cores},xp:a.state().automaticTalents.xp};
@@ -303,7 +310,7 @@ function dungeon(level,build,seed,opts,desiredRisk=undefined){
  }
  const s=a.state();
  const hpLast=rooms.at(-1),survival=rooms.length?hpLast.hpEnd/hpLast.hpMax:null;
- return {mode:desiredRisk===undefined?'dungeon':'conditions',kind:conditionId||'unknown',conditionId,conditionMarkedRooms:rooms.filter(r=>r.conditionMarked).length,conditionPassagesCrossed:g.dungeon?.conditionEdgesUsed?.length||0,level,build:build.id,seed,resolvedSeed,seedShift,gearE,gearTier:P.gearTier(gearE).name,gearRarity:opts.rarity,
+ return {mode:desiredRisk===undefined?'dungeon':'conditions',kind:conditionId||'unknown',conditionId,conditionMarkedRooms:rooms.filter(r=>r.conditionMarked).length,conditionPassagesCrossed:g.dungeon?.conditionEdgesUsed?.length||0,level,build:build.id,seed,resolvedSeed,seedShift,gearE,gearFingerprint,gearTier:P.gearTier(gearE).name,gearRarity:opts.rarity,
   pointsBudget:opts.points,pointsSpent:allocatedPoints,affinity:card.family,bossAffinity:card.family,bossName:A.profileFor(card.family).name,
   bossStyle:A.profileFor(card.family).style,boonsTaken:[...(g.dungeon?.foundationState?.boonIds||[])],contractId:g.dungeon?.foundationState?.contractId||null,
   contractReward:g.dungeon?.stage7RewardPaid||null,realm:card.name,risk:card.risk,route,rooms,events,stage:g.stage,won:g.stage==='finished',bossReached:rooms.some(r=>r.kind==='boss'),timedOut:rooms.some(r=>r.timedOut),error,seconds:+rooms.reduce((v,r)=>v+r.seconds,0).toFixed(2),damageDealt:rooms.reduce((v,r)=>v+r.damageDealt,0),damageTaken:rooms.reduce((v,r)=>v+r.damageTaken,0),manaSpent:rooms.reduce((v,r)=>v+r.manaSpent,0),minHpPct:rooms.length?Math.min(...rooms.map(r=>r.minHpPct)):null,lastHpPct:survival===null?null:+(100*survival).toFixed(1),goldNet:s.gold-initial.gold,fragmentsNet:s.fragments-initial.fragments,essenceNet:s.crafting.essence-initial.essence,coresNet:Object.fromEntries(Object.keys(initial.cores).map(k=>[k,(s.crafting.cores[k]||0)-(initial.cores[k]||0)])),
