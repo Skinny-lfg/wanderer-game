@@ -23,10 +23,24 @@ function waveLootOdds(wave,cha=5){
 
 // v0.13 Dungeon loot is separate from unchanged v0.12 live drop odds.
 // Common combat rewards must actually reach the 12-slot Expedition Bag.
+// Add a modest Common (grey) equipment stream in ordinary Dungeon combat.
+// Preserve the ABSOLUTE chance of every Uncommon+ rarity, including Rare/Epic,
+// by adding the new Common probability to the drop chance itself. Only one
+// equipment item can drop per encounter; Bag limits and loss on defeat stay native.
+// Legacy v0.12 tables, Elites, Bosses and the first-room guarantee are unchanged.
+const V013_GREY_EXTRA=Object.freeze([0,.10,.08,.06,0,0]);
+// Boss gear is likely but not guaranteed; risk/fortune caps remain below 100%.
+const V013_BASE_DROPS=Object.freeze([0,.28,.30,.32,.60,.85]);
 function v013DungeonWaveOdds(wave,cha=5){
  const legacy=waveLootOdds(wave,cha);
  const tier=Math.max(1,Math.min(5,Number(wave)||1));
- return {...legacy,drop:[0,.28,.30,.32,.60,1][tier]};
+ const drop=V013_BASE_DROPS[tier],greyExtra=V013_GREY_EXTRA[tier];
+ if(!greyExtra)return {...legacy,drop};
+ const total=drop+greyExtra,rarities={};
+ for(const [key,prob] of Object.entries(legacy.rarities)){
+  rarities[key]=(drop*prob+(key==='Common'?greyExtra:0))/total;
+ }
+ return {drop:total,rarities};
 }
 
 function randomFromOdds(odds,rng){

@@ -1,0 +1,45 @@
+name: Wanderer v0.13 Stage 9.6 - Grey loot Forge resources and natural progression (no deploy)
+on:
+  push:
+    branches:
+      - feature/v013-stage96-grey-loot-and-simulation-20261119
+  workflow_dispatch:
+jobs:
+  grey-loot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Native Grey loot and first guaranteed Bag / Forge salvage checks
+        run: npm run test:v013:stage96
+      - name: Full v0.13 regression including current character art and map
+        run: npm run test:v013
+      - name: Stage 9 native combat, loot routing and Elite parity checks
+        run: |
+          npm run test:v013:stage91
+          npm run test:v013:stage92
+          npm run test:v013:natural
+          npm run test:v013:human-decisions
+          npm run test:v013:stage95
+          npm run test:v013:gear
+      - name: Verify live and docs loot/Elite mirrors
+        run: |
+          node -e "const fs=require('fs');for(const p of ['economy/v012-loot-rules.js','online/v012-expedition-runtime.js','online/v013-elite-abilities.js']){if(fs.readFileSync(p,'utf8')!==fs.readFileSync('docs/'+p,'utf8'))throw Error('Live/docs mismatch '+p);}"
+      - name: Earned-account natural E1-E8 pilot
+        run: npm run simulate:v013:stage96 -- --seeds=9101,9201 --profiles=cautious,balanced --max-attempts=6 --out=reports/v013-stage96-grey-pilot.json
+      - name: Earned-account extended low-level Grey/Forge pilot
+        run: npm run simulate:v013:stage96 -- --seeds=9304 --profiles=cautious,balanced --max-attempts=12 --out=reports/v013-stage96-grey-extended.json
+      - name: Upload verified results, no site publication
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wanderer-stage96-grey-loot-and-forge
+          path: |
+            reports/v013-stage96-grey-pilot.json
+            reports/v013-stage96-grey-pilot.md
+            reports/v013-stage96-grey-extended.json
+            reports/v013-stage96-grey-extended.md
+          if-no-files-found: warn

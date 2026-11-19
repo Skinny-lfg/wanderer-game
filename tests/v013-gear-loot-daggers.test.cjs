@@ -73,19 +73,19 @@ test('actual native Rare accessories and Forge creations have variable stat layo
   assert(item[profile]>0,id);assert(primary.every(k=>k===profile||!item[k]),id);
  }
 });
-test('native Dungeon: first cleared room guarantees equipment in actual Expedition Bag and reward record',()=>{
- for(const seed of [22,901,18482]){
+test('native Dungeon: the first cleared room can drop zero items or a basic Grey, with matching Bag records',()=>{
+ for(const [seed,roll,expected] of [[22,0,1],[901,.999999,0]]){
   const a=create(seed,undefined,{}, {skipPersistence:true});
   a.setUnlocked(1);a.start(1,true);
   const c=a.controller(),card=c.state.dungeon.cards[0];
   c.chooseRealm(card.id);assert(c.visitRoom(1));assert(a.enter());
   const r=a.state().run;
   if(r.enemies)for(const enemy of r.enemies)enemy.hp=0;else r.enemy.hp=0;
-  a.win();
-  const items=a.bag.items().filter(item=>item.kind!=='valuable');
-  assert(items.length>=1,'first natural room should award equipment in Bag');
+  a.rng(roll);a.win();
+  const items=a.bag.items().filter(item=>item.kind!=='valuable'&&item.source==='loot');
+  assert.equal(items.length,expected,'first-room gear is probabilistic, never guaranteed');
   assert(items.every(item=>item.id&&a.results().earned.some(e=>e.id===item.id)));
-  assert(items.some(item=>item.rarity!=='Common'),'first item should improve on weak starter');
+  if(expected)assert.equal(items[0].rarity,'Common','basic Grey may drop even in first room');
  }
 });
 test('v0.13 loot rates are distinct from unchanged v0.12 live odds',()=>{
@@ -94,9 +94,9 @@ test('v0.13 loot rates are distinct from unchanged v0.12 live odds',()=>{
  const L=ctx.WandererV012LootRules;
  assert.equal(L.waveLootOdds(1).drop,.04);
  assert.equal(L.waveLootOdds(5).drop,.45);
- assert.equal(L.v013DungeonWaveOdds(1).drop,.28);
+ assert.equal(L.v013DungeonWaveOdds(1).drop,.38);
  assert.equal(L.v013DungeonWaveOdds(4).drop,.60);
- assert.equal(L.v013DungeonWaveOdds(5).drop,1);
+ assert.equal(L.v013DungeonWaveOdds(5).drop,.85);
 });
 test('paired Daggers: only two physical strikes across two attacks, off-hand half damage and half frequency',()=>{
  const a=create(6543,undefined,{}, {skipPersistence:true});

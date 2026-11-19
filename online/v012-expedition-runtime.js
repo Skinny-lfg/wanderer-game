@@ -206,10 +206,15 @@ function phase1StartWave(resetScroll=false){
  });
  // Give ordinary mobs time to show their attacks; keep their pressure lower.
  for(const enemy of group){
-  const endurance=enemy.boss||enemy.miniboss?1.8:3;
+  // Solo Elites are optional high-risk encounters, not easier normal Tanks.
+  // Attack pressure (not inflated HP) is the primary difficulty lever.
+  // Gravebound Bulwark is still slower/less damaging than other Elite roles,
+  // but can no longer be farmed as a harmless high-HP target.
+  const endurance=enemy.boss?1.8:enemy.miniboss?3.05:3;
   enemy.hp=enemy.maxhp=Math.round(enemy.maxhp*endurance*(1+.10*(g.selected.risk||0)));
   enemy.attackEvery*=1.15;
-  enemy.atk=Math.max(1,Math.round(enemy.atk*.65*(1+.12*(g.selected.risk||0))));
+  const threatScale=enemy.miniboss?(enemy.eliteType==='tank'?1.40:1.12):.65;
+  enemy.atk=Math.max(1,Math.round(enemy.atk*threatScale*(1+.12*(g.selected.risk||0))));
  }
  const traits=globalThis.WandererV013EncounterTraits;
  const modifiers=globalThis.WandererV013BossModifiers;
@@ -302,12 +307,14 @@ function phase1WaveWon(){
  ports.addLog('Realm rewards pending: +'+gold+' Gold · +'+fragments+' Fragments.','good');
  const stage=boss?5:elite?4:Math.min(3,1+Math.floor((g.planeIndex-1)/5));
  const odds=g.dungeon?WandererV012LootRules.v013DungeonWaveOdds(stage,r.stats.cha):ports.waveLootOdds(stage,r.stats.cha);
- odds.drop=Math.min(1,odds.drop*groupReward);if(ports.phase6Run?.effects.fortune)odds.drop=Math.min(1,odds.drop*1.25);
- // First native Dungeon encounter always yields an Uncommon-or-better item so the Bag is not empty.
- const firstRoom=g.dungeon&&g.dungeon.cleared?.length===1&&!g.selected.boss;
- if(firstRoom||ports.gameRandom()<odds.drop){
+ // All random Dungeon equipment rolls, including the first fight and Boss,
+ // must allow zero drops. Preserve legacy v0.12 odds outside the Dungeon.
+ const chanceCap=g.dungeon?.95:1;
+ odds.drop=Math.min(chanceCap,odds.drop*groupReward);
+ if(ports.phase6Run?.effects.fortune)odds.drop=Math.min(chanceCap,odds.drop*1.25);
+ if(ports.gameRandom()<odds.drop){
   const theme=ports.phase2Theme(r.path),pick=g.dungeon&&g.selected.node===ports.phase1Controller.realmMap().objective&&ports.gameRandom()<.55?(ports.phase1Controller.realmMap().favoured||{slot:'offhand',subtype:'Shield'}):ports.dungeonEquipmentPick(theme,[]);
-  const rolled=ports.randomFromOdds(odds.rarities),rarity=firstRoom&&rolled==='Common'?'Uncommon':rolled;
+  const rarity=ports.randomFromOdds(odds.rarities);
   const item=ports.makeItem(r.tier,pick.slot,theme.effect,'loot',pick.subtype,rarity);
   // Gear in the Bag is at risk; equipped gear survives failure.
   if(ports.stashHasRoom())ports.state.stash.push({...item,isNew:true});
