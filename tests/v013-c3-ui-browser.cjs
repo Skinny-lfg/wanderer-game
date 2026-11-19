@@ -21,7 +21,7 @@ const hook=`globalThis.__c3Audit={
   const g=phase1Controller.state;
   return {view,stage:g.stage,realm:g.dungeon?.realm??null,stash:state.stash.length,
    crafted:state.stash.filter(item=>!!item.recipeId).map(item=>({recipeId:item.recipeId,rarity:item.rarity})),
-   fragments:state.fragments,unlocked:g.unlocked,points:WandererAutomaticTalents.earned(state.automaticTalents)-state.automaticTalents.nodes.length};
+   fragments:state.fragments,unlocked:g.unlocked,dungeonNodes:g.dungeon?.realm?phase1Controller.realmMap()?.nodes.length:0,points:WandererAutomaticTalents.earned(state.automaticTalents)-state.automaticTalents.nodes.length};
  }
 };`;
 html=html.replace(boot,'phase1Init();\n'+hook+'\nconst phase3RestoredScroll');
@@ -96,7 +96,8 @@ const server=http.createServer((req,res)=>{
     assert.equal(await page.locator('[data-stage7-contract]').count(),2);
     await page.locator('#stage7SkipContract').click();
     await page.locator('[data-realm-viewport]').waitFor();
-    assert((await page.locator('[data-dungeon-room]').count())>=18);
+    assert((await page.evaluate(()=>__c3Audit.snapshot())).dungeonNodes>=18,'Current Dungeon card must contain 18-22 nodes');
+    assert((await page.locator('[data-dungeon-room]').count())>=2,'Fog initially exposes only reachable room nodes');
     assert.equal(await page.locator('[data-map-zoom-value]').innerText(),'100%');
     await page.locator('[data-map-zoom="in"]').click();
     assert.equal(await page.locator('[data-map-zoom-value]').innerText(),'120%');
