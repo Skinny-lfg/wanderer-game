@@ -728,7 +728,6 @@ function simulateAccount(seed,id,opts,simulationOptions={}){
      spent:a.state().automaticTalents.nodes.length,gear:gearSnapshot(a),gold:a.state().gold,
      fragments:a.state().fragments,essence:a.state().crafting?.essence||0,
      talentNodes:[...a.state().automaticTalents.nodes],
-     attributes:{...(a.state().automaticTalents.attributes||{})},
      element:a.state().automaticTalents.element||null,
      prepared:a.state().automaticTalents.prepared||null,
      unlocked:a.controller().state.unlocked};
@@ -740,8 +739,7 @@ function simulateAccount(seed,id,opts,simulationOptions={}){
       gold:a.state().gold,fragments:a.state().fragments,
       essence:a.state().crafting?.essence||0,
       talentNodes:[...a.state().automaticTalents.nodes],
-      attributes:{...(a.state().automaticTalents.attributes||{})},
-      element:a.state().automaticTalents.element||null,
+       element:a.state().automaticTalents.element||null,
       prepared:a.state().automaticTalents.prepared||null}};
     if(entry.status==='error'||entry.error){acc.stopReason='Simulator limitation at E'+level+': '+entry.error;stopped=true;}
     if(entry.bossWon){
