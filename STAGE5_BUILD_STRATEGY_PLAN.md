@@ -6,12 +6,14 @@ Branch: `audit/v013`. No gameplay balance changes authorized.
 ## Facts verified in the current implementation
 
 - The complete talent tree is exposed through the **integrated VM** `a.talents`
-  with valid node IDs like `passive_strong_heart`, `passive_quick_hands`,
-  and `passive_arcane_focus`. The existing natural-policy target lists use
-  several short identifiers without the `passive_` prefix, which do not
-  point to the intended nodes. The fallback chooses other valid nodes.
-- `T.path` / `T.allocate` enforce all prerequisite links, exclusions,
-  hybrid bridge requirements, rank requirements and actual earned point limits.
+  with real v15 IDs such as `strong_heart`, `quick_hands` and
+  `arcane_focus`. These names **are valid**. Some older CORE goals like
+  `might`, `guard` or `vitality` may be absent from v15, causing
+  fallback allocation. Check each declared target against the v15 catalog.
+- The active v15 runtime provides `T.NODES` and `T.allocate`, but **not**
+  `T.path`. The graph exposes `requires`, `prerequisites`, and
+  `anyRequires`; strategies must build a native-valid path themselves and
+  use `T.allocate` to enforce actual availability and point limits.
 - `T.reset` is available from Camp. It returns invested **talent nodes**
   to the pool while preserving accumulated XP and **allocated primary
   attributes**. Therefore switching from permanent Strength to Intellect
@@ -84,8 +86,8 @@ inability to reallocate permanent attribute points).
 
 - **Gate A:** audit current 3 heuristics using native VM, confirm zero resets
   and invalid priority IDs; verify snapshot correctness.
-- **Gate B:** implement a single build planner that uses native `T.path`,
-  `T.allocate`, `T.allocateAttribute` and slot-safe gear valuation.
+- **Gate B:** implement a single v15-aware build planner using native graph
+  prerequisites, `T.allocate`, `T.allocateAttribute` and slot-safe gear valuation.
   Add unit tests for every archetype + hybrid prerequisite and conflicting
   ability restrictions.
 - **Gate C:** 4 matched seeds × 4 clear archetypes × 2 talent-allocation
