@@ -12,6 +12,10 @@ on:
       - 'preview/**'
       - 'tests/**'
       - 'scripts/v013-c4-*.cjs'
+      - 'scripts/simulate-progression.cjs'
+      - 'scripts/prepare-automatic-preview.mjs'
+      - 'scripts/update-pages-preview.mjs'
+      - 'package.json'
   workflow_dispatch:
 
 permissions:
@@ -33,6 +37,8 @@ jobs:
       - run: npm ci
       - name: Current full v0.13 gameplay and simulation gate
         run: npm run test:v013:gate
+      - name: Verify current 343-node Talent Graph runtime and source catalog
+        run: npm run test:v013:talent-graph
       - name: Current combat, Elite, Boss, class, balance and natural-account suites
         run: >-
           node --test

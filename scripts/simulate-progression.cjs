@@ -470,13 +470,13 @@ function simulate(opts){
    talents:'Tree v15, synthetic fixed budget; real E1 starts with zero points. XP rewards in natural Dungeon are reported but cannot be spent during this single simulated route.',
    gearProgression:'Current native item tiers and stat rolls; equipment held constant throughout the scenario (no auto-equipping drops).',
    controlled:'Boss, modifier, elite and swarm diagnostics deliberately replace a first-ring encounter; native skills, defender AI, six-Boss lookup, status effects, damage, rewards and summon limits remain unmodified.',
-   dungeon:'Native three-card Realm and shortest accessible route; persistent HP/Mana and resource ledger, native Boon and Contract selection optional; not all 15 Realms or an account-level campaign.',
+   dungeon:'Native three-card Realm and shortest accessible route; persistent HP/Mana and resource ledger, native Boon and Contract selection optional; not an account-level campaign beyond one generated Dungeon route.',
    bossmods:'Only Boss-compatible properties are tested on each selected real Affinity Boss. Legacy Rift-only forced boss ID removed.',
    traits:'Controlled diagnostic: six native trait definitions are tested in a first-ring normal room; deliberately bypasses affinity and natural placement restrictions for matched comparisons.',
    bossprep:'Controlled Boss preparation: native Marked Elite and Reliquary effects are applied without traversing optional preparation rooms.',
    conditions:'Natural three-card risk choices with real Condition rules, path costs and roster; outcomes are observational rather than randomized.',
    visualVfx:'Present in browser but not simulated (visual-only, cannot change combat RNG or numbers).',
-   limits:'No automatic potions, conditional boon optimization, trading/crafting between rooms or adaptive player strategy beyond the specified target policy. Not a complete player-behavior model; not all 15 Realms and cross-Expedition build investments are modeled.',
+   limits:'No automatic potions, conditional boon optimization, trading/crafting between rooms or adaptive player strategy beyond the specified target policy. Not a complete player-behavior model; cross-Expedition build investments are not modeled.',
    warnings:notes},
   replay,replaySha256,fixtureOrigin:'synthetic loadout and unlocks; native generated realm; controlled encounters may replace room actors',sourceSha256:fingerprint.sha256,sourceModules:fingerprint.files,sourceManifest:fingerprint.manifest,durationMs:Date.now()-start,summary,rows};
 }
