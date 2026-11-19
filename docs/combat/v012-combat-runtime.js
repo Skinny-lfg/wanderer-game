@@ -600,6 +600,19 @@ function updateFight(){
   if(healed>0){ports.phase6Metric(r,'traitRegrowthHealing',healed);ports.addLog('Unhallowed Regrowth restores '+healed+' enemy HP.','critical');}
  }
  if(!ports.isPhase1Run()&&ports.state.onlineProgress?.timerMetric==='combat-v1'&&r.combatSeconds-(r.lastCombatCheckpoint||0)>=3){r.lastCombatCheckpoint=r.combatSeconds;ports.save();}
+ // Native auto-target assistance against Gravecaller only. Check at most
+ // once every 0.88 combat seconds; a player's explicit target takes priority.
+ // Simulators with an explicit target policy opt out to preserve A/B validity.
+ if(r.phase1&&root.WandererV013EliteAbilities?.preferredTarget&&
+    r.combatSeconds+1e-7>=(r.gravecallerAutoFocusAt||0)){
+  r.gravecallerAutoFocusAt=r.combatSeconds+.88;
+  const wanted=root.WandererV013EliteAbilities.preferredTarget(r);
+  if(wanted?.hp>0&&wanted!==r.enemy){
+   r.enemy=wanted;e=wanted;r.tEnemy=wanted.groupClock||0;
+   ports.phase6Metric(r,'gravecallerAutoTargetSwitches',1);
+   ports.phase3RetargetGroup?.();
+  }
+ }
  ports.setCombatExpire(r,dt);ports.legendaryTick(r,dt);
  // v0.13 keeps actors in their arena slots. Only their independent attack
  // clocks advance; enemy role affects attacks, never position or sprite scale.

@@ -30,6 +30,18 @@ function isDeathboundMinion(run,mob){
   mob.stage83Summoned&&mob.stage83Summoner==='elite'&&
   (run?.enemies||[]).includes(mob);
 }
+// Preferred *player* target during Gravecaller auto-combat. Do not
+// override deliberate clicks or externally controlled simulation policies.
+// Reserve minions cannot be attacked; the native engine must bring them on field.
+function preferredTarget(run){
+ const owner=deathboundOwner(run);
+ if(!owner||run.simulationTargetPolicy||!Array.isArray(run.enemies))return null;
+ const chosen=run.gravecallerManualTarget;
+ if(chosen?.hp>0&&run.enemies.includes(chosen))return null;
+ if(chosen)run.gravecallerManualTarget=null;
+ return run.enemies.find(e=>isDeathboundMinion(run,e))||
+  (owner.hp>0&&run.enemies.includes(owner)?owner:null);
+}
 function deathboundStatus(run){
  const state=run?.deathboundDecay,now=Number(run?.combatSeconds)||0;
  if(!state||!deathboundOwner(run)||!livingSummons(run)||now+1e-7>=state.expiresAt)return null;
@@ -139,7 +151,7 @@ function status(enemy,now){
  return null;
 }
 function info(enemy){const s=DEFINITIONS[enemy?.eliteType];return s?{name:s.role,icon:s.icon,description:s.description}:null;}
-const API=Object.freeze({DEFINITIONS,DEATHBOUND,attach,tick,interrupt,consumeStrike,status,info,livingSummons,applyDeathbound,tickDeathbound,deathboundStatus});
+const API=Object.freeze({DEFINITIONS,DEATHBOUND,attach,tick,interrupt,consumeStrike,status,info,livingSummons,preferredTarget,applyDeathbound,tickDeathbound,deathboundStatus});
 root.WandererV013EliteAbilities=API;
 if(typeof module==='object'&&module.exports)module.exports=API;
 })(globalThis);
