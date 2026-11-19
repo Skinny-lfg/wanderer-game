@@ -1,0 +1,86 @@
+name: Stage v0.13 portrait preview for GitHub Pages
+
+on:
+  push:
+    branches:
+      - release/v013-portraits-pages-20261119
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wanderer-v013-portraits-pages-20261119
+  cancel-in-progress: false
+
+jobs:
+  stage-pages:
+    if: contains(github.event.head_commit.message, '[publish-v013-preview]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout exact v0.13 publish source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Verify v0.13 gameplay and portraits
+        run: |
+          npm run test:v013:gate
+          node --test tests/v013-character-portraits.test.cjs
+      - name: Build isolated Pages website
+        run: npm run build:pages
+      - name: Verify built preview and optimized character assets
+        run: |
+          node <<'NODE'
+          const fs=require('node:fs');
+          const assert=require('node:assert/strict');
+          const html=fs.readFileSync('docs/index.html','utf8');
+          const save=fs.readFileSync('docs/online/v012-save.js','utf8');
+          const art=fs.readFileSync('docs/online/v013-character-art.js','utf8');
+          assert.match(html,/<title>Wanderer v0\.13<\/title>/);
+          assert.ok(html.includes('online/v013-character-art.js'));
+          assert.ok(html.includes('WandererCharacterArt?.imageForEquipment(state.equip)'));
+          assert.ok(!html.includes('phase3CharacterPickerHitbox'));
+          assert.ok(html.includes('globalThis.__WANDERER_CLOUD_ONLY__=false;'));
+          assert.ok(html.includes('const PHASE5_VALIDATION=true;'));
+          assert.ok(!/src="online\/(?:firebase-client|v012-auth-bootstrap|v012-account|v012-feedback|v012-leaderboard-ui)\./.test(html));
+          assert.ok(save.includes("PREFIX='wanderer_automatic_rpg_preview_v13_'"));
+          assert.ok(art.includes('function imageForEquipment'));
+          const dir='docs/assets/characters/loadouts';
+          const files=fs.readdirSync(dir).filter(n=>n.endsWith('.webp'));
+          assert.equal(files.length,28);
+          for(const name of files){const data=fs.readFileSync(dir+'/'+name);assert.equal(data.toString('ascii',0,4),'RIFF');assert.equal(data.toString('ascii',8,12),'WEBP');}
+          console.log('PASS: isolated v0.13 Pages build, dynamic character loadouts, 28 WebP, local-only saves');
+          NODE
+      - name: Stage fast-forward Pages commit without updating live branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/v013-portrait-pages"
+          cp -a docs/. "$RUNNER_TEMP/v013-portrait-pages/"
+          git reset --hard HEAD
+          git clean -fd docs
+          git fetch origin refs/heads/publish/automatic-rpg-preview
+          PAGES_OLD_SHA="$(git rev-parse FETCH_HEAD)"
+          git switch -c pages-portrait-release "$PAGES_OLD_SHA"
+          mkdir -p docs
+          rsync -a --delete "$RUNNER_TEMP/v013-portrait-pages/" docs/
+          printf '{"version":"v0.13","sourceCommit":"%s","saveNamespace":"wanderer_automatic_rpg_preview_v13_","firebase":"disabled","release":"dynamic-portraits"}\n' "$GITHUB_SHA" > docs/v013-build.json
+          touch docs/.nojekyll
+          git add -A docs
+          git diff --cached --quiet && { echo 'No Pages changes to stage'; exit 1; }
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m "pages: v0.13 portraits preview from $GITHUB_SHA"
+          echo "PAGES_OLD_SHA=$PAGES_OLD_SHA" >> "$GITHUB_STEP_SUMMARY"
+          echo "PAGES_NEW_SHA=$(git rev-parse HEAD)" >> "$GITHUB_STEP_SUMMARY"
+          git push origin HEAD:refs/heads/build/v013-portraits-pages-ready-20261119
+      - name: Staging summary
+        run: echo 'Built and staged Pages only; live publication requires separate verified fast-forward of publish/automatic-rpg-preview. Firebase and main untouched.' >> "$GITHUB_STEP_SUMMARY"
