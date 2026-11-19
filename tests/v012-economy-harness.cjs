@@ -59,6 +59,23 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
   potions:{supplies:()=>phase3Supplies,select:phase6SelectPotion,use:phase6UsePotion,inventory:phase6PotionInventory,start:phase6StartPotions,finish:phase6ReturnPotions,tick:phase6TickDurations,shop:(E=1,rng=gameRandom)=>WandererV012Consumables.shop(E,rng,makeId),buy:phase6BuyPotion,reroll:phase6RerollPotions},
   events:{open:phase6OpenEvent,choose:phase6EventChoice,run:()=>phase6Run},
   back:phase6BackToCamp,markAllSeen:markAllAsSeen,
+  // Mirrors the live Camp Talent Tree API transactions; neither XP nor points
+  // are injected. Valid only when the user could open the Talent Tree.
+  talentActions:{
+   available(){return ['camp','finished','failed'].includes(phase1Controller.state.stage)&&!state.run;},
+   allocate(id){if(!this.available())return false;const before=state.automaticTalents,next=WandererAutomaticTalents.allocate(before,id);if(!next)return false;state.automaticTalents=next;if(!phase5Persist()){state.automaticTalents=before;return false;}return true;},
+   prepare(id){if(!this.available())return false;const before=state.automaticTalents;
+    if(id&&(!before.nodes.includes(id)||!WandererAutomaticTalents.NODES.find(n=>n.id===id)?.advanced))return false;
+    const next={...before,prepared:id||null};if(!WandererAutomaticTalents.valid(next))return false;
+    state.automaticTalents=next;if(!phase5Persist()){state.automaticTalents=before;return false;}return true;
+   },
+   element(id){if(!this.available())return false;const before=state.automaticTalents,next=WandererAutomaticTalents.selectElement(before,id);
+    if(!next)return false;state.automaticTalents=next;if(!phase5Persist()){state.automaticTalents=before;return false;}return true;
+   },
+   reset(){if(!this.available())return false;const before=state.automaticTalents;
+    const next=WandererAutomaticTalents.reset(before);state.automaticTalents=next;if(!phase5Persist()){state.automaticTalents=before;return false;}return true;
+   }
+  },
   state:()=>state,results:()=>phase5Results,exitResult:phase5ExitResult,recordItem:item=>phase5Results.earned.push(phase5Item(item)),controller:()=>phase1Controller,build:()=>phase1Build,
   treasures:{bag:phase3BagMarkup,stash:phase6ValuablesMarkup,result(){phase5RenderResult();return $('screen').innerHTML;},combat(){auditCombat();return $('screen').innerHTML;},sell:sellValuables},
   start:phase1Begin,enter:phase1Enter,
@@ -86,6 +103,21 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
    preview(id,tier,focus='none'){return WandererV013Crafting.previewCraft(id,tier,(...args)=>makeItem(...args,true),focus);},
    progress(id,tier,focus='none'){return WandererV013Crafting.progress(state,id,tier,focus);},
    recipes:WandererV013Crafting.RECIPES,
+   // Match the live named-tier Forge upgrade: same preview/prepare, same
+   // ownership check, materials, unlock gate, item identity and rollback.
+   tierPreview(id){return WandererV013TierUpgrade.preview(state,id,phase1Controller.state.unlocked);},
+   tierUpgrade(id){
+    if(!economyCanAct())return null;
+    const result=WandererV013TierUpgrade.prepare(state,id,phase1Controller.state.unlocked);
+    if(!result)return null;
+    const before={fragments:state.fragments,crafting:state.crafting,stash:state.stash,equip:state.equip};
+    state.fragments=result.fragments;state.crafting=result.crafting;
+    if(result.location.kind==='stash')
+     state.stash=state.stash.map((x,i)=>i===result.location.index&&x.id===result.item.id?result.item:x);
+    else state.equip={...state.equip,[result.location.slot]:result.item};
+    if(!phase5Persist()){Object.assign(state,before);return null;}
+    return result.item;
+   },
    craft(id,tier,focus='none'){
     if(!economyCanAct()||!stashHasRoom())return null;
     const result=WandererV013Crafting.prepareCraft(state,id,tier,makeItem,focus);
@@ -133,7 +165,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
  };
  `;
  const main=source.match(/<script>([\s\S]*?)<\/script>/)?.[1];
- const files=['combat/expedition-progression.js','economy/v013-crafting.js','economy/v013-gear-rolls.js','online/v012-treasures.js','online/v012-save.js','economy/v0101.js','combat/legendary.js','combat/v012-combat-core.js','combat/v012-gear-stats.js','combat/v012-runes.js','economy/v012-loot-rules.js','combat/v012-buildcraft.js','combat/talent-catalog.js','combat/v013-expedition-foundation.js','online/v013-map-intelligence.js','online/v013-expedition-conditions.js','online/v013-expedition-boons.js','online/v013-expedition-contracts.js','online/v013-encounter-traits.js','online/v013-boss-modifiers.js','online/v013-boss-preparation.js','online/v013-enemy-roster.js','online/v013-enemy-abilities.js','online/v013-elite-abilities.js','online/v013-boss-infrastructure.js','online/v013-boss-abilities.js','online/v012-expedition-controller.js','online/v012-expedition-events.js','online/v012-consumables.js'];
+ const files=['combat/expedition-progression.js','economy/v013-crafting.js','economy/v013-gear-rolls.js','economy/v013-tier-upgrade.js','online/v012-treasures.js','online/v012-save.js','economy/v0101.js','combat/legendary.js','combat/v012-combat-core.js','combat/v012-gear-stats.js','combat/v012-runes.js','economy/v012-loot-rules.js','combat/v012-buildcraft.js','combat/talent-catalog.js','combat/v013-expedition-foundation.js','online/v013-map-intelligence.js','online/v013-expedition-conditions.js','online/v013-expedition-boons.js','online/v013-expedition-contracts.js','online/v013-encounter-traits.js','online/v013-boss-modifiers.js','online/v013-boss-preparation.js','online/v013-enemy-roster.js','online/v013-enemy-abilities.js','online/v013-elite-abilities.js','online/v013-boss-infrastructure.js','online/v013-boss-abilities.js','online/v012-expedition-controller.js','online/v012-expedition-events.js','online/v012-consumables.js'];
  files.push('combat/talent-graph-next.js','combat/talent-graph-bridge.js');
  files.push(...[...source.matchAll(/<script[^>]+src="([^"?]+-runtime\.js)(?:\?[^\"]*)?"/g)].map(m=>m[1]));
  const units=files.map(file=>({file,source:moduleOverrides[file]??fs.readFileSync(path.join(fixtureRoot,file),'utf8'),overridden:Object.hasOwn(moduleOverrides,file)}));
