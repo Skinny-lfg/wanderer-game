@@ -1,5 +1,7 @@
 # Wanderer v0.13 — Auditoria de cobertura do simulador (19/11/2026)
 
+> **Atualização Stage S1 (19/11/2026):** as lacunas prioritárias de upgrade permanente de tier, escolha de elementos Magic, preparação de talentos avançados e reset de talentos foram implementadas **no simulador** da `audit/v013` e verificadas em **56/56 testes**, incluindo Chromium/VM. Esta matriz documenta o estado **anterior à S1**; consultar [Relatório de implementação S1](v013-s1-native-simulator-parity.md) e [execução de testes](https://github.com/Skinny-lfg/wanderer-game/actions/runs/44631558946). Continuam por completar as lacunas S2/S3 de diversidade de decisões e cobertura estatística.
+
 **Branch:** `audit/v013`. **Objetivo:** confrontar as regras executáveis da versão atual com (A) motor de combate controlado `scripts/simulate-progression.cjs` e (B) agente persistente `scripts/v013-natural-progression.cjs`. Sem alterações a gameplay, coeficientes, `main`, Firebase ou saves. A verificação é por inspeção do código, cruzamento automático de módulos e testes existentes; **não é uma demonstração formal de cada estado possível**.
 
 ## Resultado executivo
