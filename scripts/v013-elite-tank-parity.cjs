@@ -90,6 +90,23 @@ function compare(opts={}){
   note:'Diagnostic only: forcibly swaps the first native room encounter to Elite; no natural player, no injected items, same native combat and RNG seed.',
   config:cfg,summary,errors,skippedNonTank:skipped,pairs};
 }
+// Coverage is a separate native sample: 24 paired fights need not randomly
+// contain every member of an eight-type roster. This does not inject Elite IDs,
+// reroll encounters or alter natural progression; each candidate is a seeded
+// native first-room spawn, inspected before fighting.
+function scanEliteCoverage({seedStart=9470,scan=500,expected=8}={}){
+ const counts={},errors=[];let inspected=0;
+ for(let seed=seedStart;seed<seedStart+scan;seed++){
+  try{
+   const x=scenario(seed,'elite','starter',{inspectOnly:true});
+   const id=x.initial.eliteType;
+   if(!id)throw Error('Native selected Elite has no archetype');
+   counts[id]=(counts[id]||0)+1;inspected++;
+   if(Object.keys(counts).length>=expected)break;
+  }catch(err){errors.push({seed,error:err.message});}
+ }
+ return {counts,inspected,errors,seedStart,scan,expected};
+}
 function markdown(out){
  const lines=['# Wanderer — Stage 9.5 controlled E1 Tank vs Elite 1v1','',
   'Same seed, actual native E1 room, same player starting HP and gear; only the selected room encounter is changed. **Not a natural progression success rate.**','',
@@ -99,7 +116,7 @@ function markdown(out){
   '| '+gear+' ('+r.pairs+' pairs) | '+r.tankWins+' | '+r.eliteWins+' | '+r.tankMeanDamageTaken+
   ' | '+r.eliteMeanDamageTaken+' | '+r.tankMeanSeconds+'s | '+r.eliteMeanSeconds+
   's | '+r.tankMeanAbilityCasts+' | '+r.eliteMeanAbilityCasts+' |');
- lines.push('','## Seven Elite archetypes (small subsets, not standalone win rates)','',
+ lines.push('','## Native Elite archetypes observed in this paired cohort (not all eight guaranteed)','',
   '| Gear | Elite | Pairs | Tank wins | Elite wins | Tank damage | Elite damage | Elite time |',
   '|---|---|---:|---:|---:|---:|---:|---:|');
  for(const [gear,block] of Object.entries(out.summary))
@@ -129,5 +146,5 @@ function main(args=process.argv.slice(2)){
  if(report.errors.length||Object.values(report.summary).some(x=>x.pairs<5))process.exitCode=1;
  return report;
 }
-module.exports={scenario,compare,markdown,main};
+module.exports={scenario,compare,scanEliteCoverage,markdown,main};
 if(require.main===module)main();
