@@ -142,3 +142,32 @@ test('Markdown serialization supports each individual cohort before final consol
  assert.match(B.markdown(samples[2]),/fury-bow/);
  assert.match(B.markdown(samples[3]),/1,2/);
 });
+
+test('native Boss seed search can be censored and replaced without forcing a Realm card',()=>{
+ const cfg=B.parseArgs(['--mode=bosses','--affinity=magic','--seeds=2',
+  '--seed-start=30001','--builds=blood-fury','--risks=1']);
+ const sim=o=>({sourceSha256:'native',
+  rows:o.seeds.map(seed=>seed===30001?{
+   mode:'bosses',level:1,build:'blood-fury',seed,risk:1,
+   kind:'magic',affinity:'magic',won:false,
+   error:'No natural Realm card matches magic and risk 1 within 48 deterministic seeds'
+  }:{
+   mode:'bosses',level:1,build:'blood-fury',seed,resolvedSeed:seed,
+   kind:'magic',affinity:'magic',bossAffinity:'magic',risk:1,
+   won:false,died:true,status:'died',seconds:30,
+   hpMax:100,mpMax:20,damageTaken:100,damageDealt:40,
+   minHpPct:0,pointsBudget:0,gearRarity:'Common',
+   targetPolicy:'mechanics'
+  })});
+ const r=B.runBosses(cfg,{simulate:sim});
+ assert.equal(r.success,true);
+ assert.equal(r.coverage.planned,2);
+ assert.equal(r.coverage.observed,2);
+ assert.equal(r.coverage.nativeAttempts,3);
+ assert.equal(r.coverage.skippedMissingNativeRealmCards,1);
+ assert.equal(r.coverage.resampledSeeds,1);
+ assert.equal(r.coverage.errors,0);
+ assert.deepEqual(r.rows.map(x=>x.seed),[30101,30201]);
+ assert.equal(r.skippedCards[0].seed,30001);
+ assert.equal(r.cells[0].independent,2);
+});
