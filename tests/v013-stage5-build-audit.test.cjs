@@ -5,16 +5,20 @@ const N=require('../scripts/v013-natural-progression.cjs');
 const B=require('../scripts/v013-stage5-build-audit.cjs');
 const T=B.nativeTalentAPI;
 
-test('current target priorities omit real IDs for several deep skills',()=>{
+test('S1 profiles only target actual v15 talent nodes and valid earned Magic branches',()=>{
  const ids=new Set(T.NODES.map(n=>n.id));
- assert(ids.has('strong_heart'));
- assert(!ids.has('passive_strong_heart'));
- assert(ids.has('deep_cuts'));
- assert(!ids.has('passive_deep_cuts'));
- assert(ids.has('quick_hands'));
- assert(!ids.has('passive_quick_hands'));
- for(const profile of Object.values(N.PROFILES)){
-  assert(profile.targets.some(id=>!ids.has(id)),'at least one invalid depth target');
+ for(const id of ['strong_heart','deep_cuts','quick_hands','element_choice','kindling','deep_winter','overcharge'])
+  assert(ids.has(id),'missing native talent: '+id);
+ for(const id of ['passive_strong_heart','passive_deep_cuts','passive_quick_hands','guard','might','haste','vitality'])
+  assert(!ids.has(id),'retired alias unexpectedly in native tree: '+id);
+ for(const [key,profile] of Object.entries(N.PROFILES)){
+  assert(profile.targets.length>0,key+' has no targets');
+  for(const id of [...profile.targets,...(profile.preparedTargets||[])])
+   assert(ids.has(id),key+' uses a nonexistent talent '+id);
+  if(profile.element){
+   assert(profile.targets.includes('element_choice'),key+' must unlock elemental mode');
+   assert(['fire','frost','lightning'].includes(profile.element));
+  }
  }
 });
 test('v15 reset refunds node investments without a manual primary-attribute mechanic',()=>{
