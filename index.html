@@ -205,6 +205,20 @@ function itemImg(o){
 
 function save(){phase5Persist();}
 
+function heroFullImage(){return 'assets/characters/full/'+(state.characterId||'wanderer')+'.webp';}
+// Optimized transparent elite WebP portraits with fallback art if loading fails.
+// Idle PNGs are frame 1 of the new attack GIFs, never legacy elite portraits.
+const ELITE_ART={tank:'assets/elites/animated/tank_idle.png',caster:'assets/elites/animated/caster_idle.png',vampire:'assets/elites/animated/vampire_idle.png',berserker:'assets/elites/animated/berserker_idle.png',gravecaller:'assets/elites/animated/caster_idle.png',rotbound_exarch:'assets/elites/animated/tank_idle.png',ashen_executioner:'assets/elites/animated/berserker_idle.png'};
+const ELITE_ATTACK_ART={tank:'assets/elites/animated/tank_attack.gif',caster:'assets/elites/animated/caster_attack.gif',vampire:'assets/elites/animated/vampire_attack.gif',berserker:'assets/elites/animated/berserker_attack.gif',gravecaller:'assets/elites/animated/caster_attack.gif',rotbound_exarch:'assets/elites/animated/tank_attack.gif',ashen_executioner:'assets/elites/animated/berserker_attack.gif'};
+const ELITE_ATTACK_IMPACT_MS={tank:810,caster:890,vampire:670,berserker:490};
+const ELITE_ATTACK_DURATION_MS={tank:1850,caster:1750,vampire:1800,berserker:1400};
+const eliteArtReady={};
+if(typeof Image!=='undefined'){
+ const brand=new Image();
+ brand.onload=()=>document.getElementById('brandLogo')?.classList.add('hasArt');
+ brand.src='assets/branding/wanderer-logo.webp';
+ for(const [id,src] of Object.entries(ELITE_ART)){const pic=new Image();pic.onload=()=>{eliteArtReady[id]=true};pic.src=src;}
+}
 function eliteArt(id,fallback){return eliteArtReady[id]?ELITE_ART[id]:fallback;}
 
 
@@ -225,6 +239,18 @@ function dungeonEquipmentOdds(theme,favored=[]){return WandererV012LootRules.dun
 function dungeonEquipmentPick(theme,favored=[]){return WandererV012LootRules.dungeonEquipmentPick(theme,favored,TYPES,OFFHAND_TYPES,gameRandom,sample);}
 
 
+/* Permanent chapter-boss runes. Separate inventory, not part of normal gear sets. */
+const RUNE_FAMILIES=WandererV012Runes.FAMILIES;
+function runeValue(family,tier){return WandererV012Runes.runeValue(family,tier);}
+function makeRune(family,tier){return WandererV012Runes.makeRune(family,tier,makeId,PHASE1_PREVIEW);}
+function validRune(r){return WandererV012Runes.validRune(r,DUNGEON_CAP,PHASE1_PREVIEW);}
+function safeRunes(raw){return WandererV012Runes.safeRunes(raw,DUNGEON_CAP,PHASE1_PREVIEW);}
+function safePendingRune(raw){return WandererV012Runes.safePendingRune(raw,DUNGEON_CAP,PHASE1_PREVIEW);}
+
+function runeLine(r){
+ const type=RUNE_FAMILIES.find(x=>x.id===r.family);
+ return '<span class="runeLine"><img class="runeIcon" src="assets/runes/'+type.id+'.png" alt="" width="40" height="40" decoding="async"><span class="runeText">'+esc(type.name)+' · '+(PHASE1_PREVIEW?'E':'D')+r.tier+' · +'+formatItemStat(runeValue(r.family,r.tier))+' '+({atkFlat:'Attack',defFlat:'Defense',hpFlat:'Health'}[type.field]||type.field.toUpperCase())+'</span></span>';
+}
 function runeSlotChoicesMarkup(rune,slots){
  if(!rune)return '';
  return '<div id="runeSlotPicker" class="runeSlotPicker" role="group" aria-label="Choose slot for '+esc(rune.name)+'">'+
