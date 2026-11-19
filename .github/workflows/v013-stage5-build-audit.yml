@@ -96,7 +96,7 @@ jobs:
             echo "commit=${GITHUB_SHA}"
             echo "branch=${GITHUB_REF}"
             echo "node=$(node --version)"
-            sha256sum scripts/v013-natural-progression.cjs scripts/v013-stage5-build-audit.cjs combat/automatic-talents.js economy/v013-gear-rolls.js
+            sha256sum scripts/v013-natural-progression.cjs scripts/v013-stage5-build-audit.cjs combat/talent-catalog.js economy/v013-gear-rolls.js
           } > reports/stage5-build-audit-provenance.txt
 
       - name: Upload full native account evidence (no deploy)

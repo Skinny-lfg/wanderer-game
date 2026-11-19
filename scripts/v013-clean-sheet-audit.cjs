@@ -53,7 +53,7 @@ const report={
  loadedScripts,findings,functionsDeclared: functions.length,oneReferenceCandidates:oneRefs,
  moduleReferences,
  safeguards:[
-  'v15 builds from combat/talent-catalog.js; keep the retired automatic-talents.js only as a golden-master test fixture until legacy tests are retired.',
+  'v15 builds solely from combat/talent-catalog.js and talent-graph-next.js; reject pre-v15 tree versions.',
   'Drop versioned migration only after confirming fresh-save semantics and tests.',
   'Current save validation, revision locks, anti-duplication, award ledger and checkpoint recovery are NOT save-migration.',
   'Dynamic globals, DOM events, assets and test harnesses need manual cross-check.',

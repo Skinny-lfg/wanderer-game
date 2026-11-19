@@ -1,7 +1,7 @@
 'use strict';
 const {test}=require('node:test');const assert=require('node:assert/strict');
-require('../combat/v012-buildcraft.js');require('../combat/automatic-talents.js');require('../combat/talent-graph-next.js');
-const G=WandererTalentGraph, graph=G.createGraph(WandererV012Buildcraft.CATALOG,WandererAutomaticTalents.NODES);
+require('../combat/v012-buildcraft.js');require('../combat/talent-catalog.js');require('../combat/talent-graph-next.js');
+const G=WandererTalentGraph, graph=G.createGraph(WandererV012Buildcraft.CATALOG,WandererTalentCatalog.NODES);
 const node=id=>graph.find(n=>n.id===id);
 function buy(p,id){const n=node(id);assert(n,id);for(const dep of [n.requires,...(n.prerequisites||[])].filter(Boolean))if(!p.ranks[dep])p=buy(p,dep);if(n.anyRequires&&!n.anyRequires.some(x=>p.ranks[x]))p=buy(p,n.anyRequires[0]);return G.allocate(graph,p,id);}
 const empty=()=>({points:1000,ranks:{}});

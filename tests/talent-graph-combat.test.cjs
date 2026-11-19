@@ -1,5 +1,5 @@
 'use strict';
-const {test}=require('node:test'),assert=require('node:assert/strict');require('../combat/v012-buildcraft.js');require('../combat/automatic-talents.js');require('../combat/talent-catalog.js');require('../combat/talent-graph-next.js');require('../combat/talent-graph-bridge.js');require('../combat/talent-graph-runtime.js');
+const {test}=require('node:test'),assert=require('node:assert/strict');require('../combat/v012-buildcraft.js');require('../combat/talent-catalog.js');require('../combat/talent-graph-next.js');require('../combat/talent-graph-bridge.js');require('../combat/talent-graph-runtime.js');
 const T=WandererAutomaticTalents,C=WandererV012Buildcraft;
 function buy(p,id){const n=T.NODES.find(x=>x.id===id);for(const d of [n.requires,...(n.prerequisites||[])].filter(Boolean))if(!p.nodes.includes(d))p=buy(p,d);if(n.anyRequires&&!n.anyRequires.some(d=>p.nodes.includes(d)))p=buy(p,n.anyRequires[0]);const next=T.allocate(p,id);assert(next,id);return next;}
 function build(ids,element='fire'){let p={...T.create(),xp:10000,...(element==='fire'||element==='frost'||element==='lightning'?{element}:{})};for(const id of ids)if(!p.nodes.includes(id))p=buy(p,id);if(element==='arcane')delete p.element;else p.element=element;const b=C.create();C.syncPermanent(b,p);return b;}

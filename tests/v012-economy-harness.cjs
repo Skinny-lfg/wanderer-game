@@ -1,7 +1,7 @@
 // Execute the actual integrated HTML runtime with an inert DOM, seeded RNG and manual clock.
 // Never boots account modules, reads local saves, or substitutes combat/loot formulas.
 const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
-require('../combat/v012-buildcraft.js');require('../combat/automatic-talents.js');
+require('../combat/v012-buildcraft.js');require('../combat/talent-catalog.js');require('../combat/talent-graph-next.js');require('../combat/talent-graph-bridge.js');require('../combat/talent-graph-runtime.js');
 const root=path.resolve(__dirname,'..');
 module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(root,'index.html'),'utf8'),moduleOverrides={},options={}){
  const boot='phase1Init();\nconst phase3RestoredScroll=phase3RestoreUILocation(phase3SavedUILocation);\nrender();';
@@ -133,7 +133,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
  };
  `;
  const main=source.match(/<script>([\s\S]*?)<\/script>/)?.[1];
- const files=['combat/expedition-progression.js','economy/v013-crafting.js','economy/v013-gear-rolls.js','online/v012-treasures.js','combat/automatic-talents.js','combat/automatic-talent-layout.js','online/v012-save.js','economy/v0101.js','combat/legendary.js','combat/v012-combat-core.js','combat/v012-gear-stats.js','combat/v012-runes.js','economy/v012-loot-rules.js','combat/v012-buildcraft.js','combat/talent-catalog.js','combat/v013-expedition-foundation.js','online/v013-map-intelligence.js','online/v013-expedition-conditions.js','online/v013-expedition-boons.js','online/v013-expedition-contracts.js','online/v013-encounter-traits.js','online/v013-boss-modifiers.js','online/v013-boss-preparation.js','online/v013-enemy-roster.js','online/v013-enemy-abilities.js','online/v013-elite-abilities.js','online/v013-boss-infrastructure.js','online/v013-boss-abilities.js','online/v012-expedition-controller.js','online/v012-expedition-events.js','online/v012-consumables.js'];
+ const files=['combat/expedition-progression.js','economy/v013-crafting.js','economy/v013-gear-rolls.js','online/v012-treasures.js','combat/automatic-talent-layout.js','online/v012-save.js','economy/v0101.js','combat/legendary.js','combat/v012-combat-core.js','combat/v012-gear-stats.js','combat/v012-runes.js','economy/v012-loot-rules.js','combat/v012-buildcraft.js','combat/talent-catalog.js','combat/v013-expedition-foundation.js','online/v013-map-intelligence.js','online/v013-expedition-conditions.js','online/v013-expedition-boons.js','online/v013-expedition-contracts.js','online/v013-encounter-traits.js','online/v013-boss-modifiers.js','online/v013-boss-preparation.js','online/v013-enemy-roster.js','online/v013-enemy-abilities.js','online/v013-elite-abilities.js','online/v013-boss-infrastructure.js','online/v013-boss-abilities.js','online/v012-expedition-controller.js','online/v012-expedition-events.js','online/v012-consumables.js'];
  files.push('combat/talent-graph-next.js','combat/talent-graph-bridge.js');
  files.push(...[...source.matchAll(/<script[^>]+src="([^"?]+-runtime\.js)(?:\?[^\"]*)?"/g)].map(m=>m[1]));
  const units=files.map(file=>({file,source:moduleOverrides[file]??fs.readFileSync(path.join(fixtureRoot,file),'utf8'),overridden:Object.hasOwn(moduleOverrides,file)}));

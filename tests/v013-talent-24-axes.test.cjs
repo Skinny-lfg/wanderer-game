@@ -2,10 +2,10 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 require('../combat/v012-buildcraft.js');
-require('../combat/automatic-talents.js');
+require('../combat/talent-catalog.js');
 require('../combat/automatic-talent-layout.js');
 
-const nodes=WandererAutomaticTalents.NODES;
+const nodes=WandererTalentCatalog.NODES;
 const layout=WandererTalentLayout.create(nodes);
 
 test('six affinity sectors contain four unique axes each, spaced 15 degrees apart',()=>{

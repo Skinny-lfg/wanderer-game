@@ -276,7 +276,7 @@ function compareBaseline(current,previous){
   ]};
 }
 const PREVIEW_RUNTIME_MODULES=Object.freeze([
- 'combat/v012-buildcraft.js','combat/automatic-talents.js',
+ 'combat/v012-buildcraft.js','combat/talent-catalog.js',
  'combat/talent-graph-runtime.js','online/v012-expedition-runtime.js',
  'online/v013-boss-abilities.js','online/v013-boss-modifiers.js',
  'online/v013-boss-preparation.js','online/v013-enemy-abilities.js',
