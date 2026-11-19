@@ -67,7 +67,8 @@ test('Gravecaller: Stun and attack delay interrupt ritual without consuming its 
  assert.equal(move(r,9).length,0,'a dead Gravecaller must not complete a new ritual');
 });
 test('Undead summon infrastructure respects max two alive and four total',()=>{
- const Infra=require('../online/v013-boss-infrastructure.js');
+ require('../online/v013-boss-infrastructure.js');
+ const Infra=globalThis.WandererV013BossInfrastructure;
  const e=elite('gravecaller'),r=run(e);r.encounterLeader=e;r.totalMobCount=1;
  r.stage83EliteSummons={summoned:0,maxSummons:4,maxLivingMinions:2};
  const factory=()=>({name:'Undead',role:'minion',hp:100,maxhp:100,atk:20,def:4,baseDef:4,attackEvery:2});
