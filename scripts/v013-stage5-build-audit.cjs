@@ -92,7 +92,6 @@ function account(a){
    gearAfter:classifyGear(entry.gearAfter,entry.after?.talentNodes||now),
    nativeOwnedTalentPoints:entry.before?.earned??null,
    talentNodes:now.length,
-   attributesAtEntry:entry.before?.attributes||{},
    deliberateStyleChoice:entry.camp?.buildStyle||null,
    status:entry.status};
  });
@@ -101,8 +100,7 @@ function account(a){
   return ['E'+level,entry?{
    reached:true,attemptNumber:attempts.indexOf(entry)+1,
    gear:classifyGear(entry.before?.gear,entry.before?.talentNodes||[]),
-   talent:talentDepth(entry.before?.talentNodes||[]),
-   attributes:entry.before?.attributes||{}
+   talent:talentDepth(entry.before?.talentNodes||[])
   }:{reached:false}];
  }));
  const finalNodes=a.talents||[];
@@ -116,7 +114,7 @@ function account(a){
   dominantArmorTransitions:changeRecords.filter((x,i)=>
    i&&x.gearBefore.dominantArmor!==changeRecords[i-1].gearAfter.dominantArmor).length,
   finalGear:classifyGear(a.finalGear,finalNodes),
-  finalTalent:talentDepth(finalNodes),attributePointsSpent:Object.values(attempts.at(-1)?.after?.attributes||{}).reduce((n,x)=>n+x,0),
+  finalTalent:talentDepth(finalNodes),
   chronological:changeRecords};
 }
 function summarize(raw){
@@ -130,8 +128,7 @@ function summarize(raw){
    synergyExamples:gear.flatMap(g=>g.matchingExamples).reduce((out,k)=>{out[k]=(out[k]||0)+1;return out;},{}),
    meanFamilyCount:avg(gear.map(g=>g.uniqueFamilies)),
    meanRouteDepth:avg(at.map(a=>a.checkpoint['E'+level].talent.deepestLegalRoute)),
-   meanTalentNodes:avg(at.map(a=>a.checkpoint['E'+level].talent.allocated)),
-   meanAttributePointsAllocated:avg(at.map(a=>Object.values(a.checkpoint['E'+level].attributes).reduce((n,x)=>n+x,0)))}];
+   meanTalentNodes:avg(at.map(a=>a.checkpoint['E'+level].talent.allocated))}];
  }));
  return {method:'Observational audit of current deterministic agents; no new build selection',
   engineFingerprint:raw.source,runnerHash:raw.runnerSha256,
@@ -147,7 +144,6 @@ function summarize(raw){
   gearEquips:accounts.reduce((n,a)=>n+a.actualGearEquipDecisions,0),
   weaponTransitions:accounts.reduce((n,a)=>n+a.dominantWeaponTransitions,0),
   armorTransitions:accounts.reduce((n,a)=>n+a.dominantArmorTransitions,0),
-  attributePointsSpent:accounts.reduce((n,a)=>n+a.attributePointsSpent,0),
   milestoneMatrix:matrix,
   accounts
  };
@@ -160,24 +156,23 @@ function markdown(r){
   '- Native talent resets recorded: '+r.resets,
   '- Equipment equip decisions: '+r.gearEquips,
   '- Weapon/armor transitions: '+r.weaponTransitions+' / '+r.armorTransitions,
-  '- Persistent attribute points allocated in these agents: '+r.attributePointsSpent,'',
+  '- Manual primary-attribute distribution: unavailable in the active v15 UI (not a simulator decision).','',
   '## Current declared talent goals and graph integrity',''];
  for(const [id,p] of Object.entries(r.currentPolicy))lines.push('- '+id+
   ': valid IDs ['+p.validTalentIds.join(', ')+']; unresolved IDs ['+
   p.unresolvedTalentIds.join(', ')+']; targeted deep skills ['+
   p.deepTargetIds.join(', ')+']');
  lines.push('','## Milestone equipment and talent snapshots','',
-  '| Milestone | Actual arrivals | Average talent nodes | Average legal path depth | Avg attribute points spent | Primary weapons |',
-  '|---|---:|---:|---:|---:|---|');
+  '| Milestone | Actual arrivals | Average talent nodes | Average legal path depth | Primary weapons |',
+  '|---|---:|---:|---:|---|');
  for(const [level,x] of Object.entries(r.milestoneMatrix)){
   lines.push('| '+level+' | '+x.reached+' | '+(x.meanTalentNodes??'—')+' | '+
-   (x.meanRouteDepth??'—')+' | '+(x.meanAttributePointsAllocated??'—')+
-   ' | '+Object.entries(x.weaponCounts).map(([k,v])=>k+': '+v).join(', ')+' |');
+   (x.meanRouteDepth??'—')+' | '+Object.entries(x.weaponCounts).map(([k,v])=>k+': '+v).join(', ')+' |');
  }
  lines.push('','## Conclusions and next experiments','',
   '- Existing gear scoring uses nearly fixed affix weights, regardless of chosen magic/strength/agility tree.',
   '- Current talent goals contain invalid IDs, so the fallback allocation does not test intended deep specializations.',
-  '- No adaptive respec policy is invoked. A natural talent reset preserves permanent attributes in current game rules; do not assume it can freely move Strength into Intellect.',
+  '- No adaptive respec policy is invoked. A native v15 reset refunds talent-tree nodes; there is no separate manual Strength/Intellect attribute-point allocation in the current UI.',
   '- Use the real T.path / T.allocate / T.reset, and native gear purchases and Forge, for controlled next-generation build agents.',
   '- Compare fixed focused builds, fixed multi-affinity builds, deep-rush vs broad early trees, and limited gear-triggered respec with the same seeds, budgets and risk exposure. Record switching costs and substitutions.',
   '- Do not infer human play or absolute balance from these baseline agents.','');
@@ -193,7 +188,7 @@ function run(args=process.argv.slice(2)){
  console.log('STAGE5_BUILD_AUDIT='+JSON.stringify({
   coverage:report.cohort,policy:report.currentPolicy,resets:report.resets,
   gearEquips:report.gearEquips,weaponTransitions:report.weaponTransitions,
-  armorTransitions:report.armorTransitions,attributePointsSpent:report.attributePointsSpent,
+  armorTransitions:report.armorTransitions,
   milestoneMatrix:report.milestoneMatrix
  }));
  if(report.cohort.errors)process.exitCode=1;
