@@ -279,6 +279,10 @@ function selectRoom(c,profile,vitals,context={}){
   else if(i!==boss&&slack<2)score+=8;
   if(type==='combat'){
    const count=Number(n.range?.[1]??n.count??4);
+   if(context.carriedBagItems===0&&hpRatio<.5){
+    if(count<=1)score-=20;else score+=Math.min(60,count*7);
+   }
+   if(context.carriedBagItems>0&&hpRatio<.72&&count>1)score+=22;
    if(count<=1)score-=18;
    else if(count<=4)score+=profile.name==='Daring'?1:7;
    else if(count<=12)score+=profile.name==='Daring'?12:22;
@@ -311,6 +315,34 @@ function selectRoom(c,profile,vitals,context={}){
  if(best)best.eligibleEliteAlternatives=options.filter(x=>x.type==='elite')
   .map(({room,cost,slack,score,elite})=>({room,cost,slack,score:round(score),...elite}));
  return best||null;
+}
+// Gold, Fragments and earned XP are already secured after completed rooms.
+// On death only physical Expedition Bag contents are lost.
+function evaluateRetreat({hp,maxhp,bag=[],next,profile,gold=0,fragments=0,essence=0,recentFights=[]}){
+ const hpRatio=maxhp>0?hp/maxhp:0,carried=bag.length;
+ const value=item=>item.kind==='valuable'?Math.max(1,Number(item.worth)||5):
+  Math.max(2,Number(item.tier||1)*2+Math.max(0,gearScore(item,profile))+
+  (item.rarity==='Rare'?10:item.rarity==='Epic'?22:item.rarity==='Uncommon'?5:0));
+ const bagValue=round(bag.reduce((n,item)=>n+value(item),0));
+ const safe=!!next&&['spring','shrine'].includes(next.type);
+ const visibleEnemies=next?.type==='combat'?Number(next.visibleMobRange?.[1]??4):0;
+ const solo=next?.type==='combat'&&visibleEnemies<=1;
+ const canInvest=gold>=20||fragments>=14&&essence>=4;
+ const prior=recentFights.filter(x=>x.hpMax>0).slice(-2);
+ const meanLoss=prior.length?prior.reduce((n,x)=>n+Math.max(0,(x.hpStart-x.hpEnd)/x.hpMax),0)/prior.length:0;
+ const dangerous=next?.type==='boss'||next?.type==='elite'||next?.type==='combat'&&visibleEnemies>1;
+ let extract=false,reason='continue';
+ if(!next){extract=true;reason='no_legal_path';}
+ else if(safe){reason='recover_at_safe_room';}
+ else if(carried&&hpRatio<Math.max(.52,profile.retreatAt+.10)){extract=true;reason='protect_carried_loot';}
+ else if(carried&&dangerous&&hpRatio<Math.min(.85,meanLoss+.12)){extract=true;reason='protect_bag_from_known_threat';}
+ else if(!carried&&hpRatio<profile.retreatAt){
+  if(solo&&hpRatio>=.16&&!canInvest)reason='risk_easy_room_no_bag';
+  else {extract=true;reason=canInvest?'return_to_camp_to_invest':'avoid_very_dangerous_room';}
+ }else if(!carried&&hpRatio<.32&&canInvest&&dangerous){extract=true;reason='return_to_camp_to_invest';}
+ return {extract,reason,hpRatio:round(hpRatio),bagItems:carried,bagValue,
+  gold,fragments,essence,canInvest,visibleNextKind:next?.type||null,
+  visibleEnemies,meanRecentHpLossPct:round(meanLoss*100)};
 }
 function boonScore(id,profile,context={}){
  const hp=context.vitals?.maxhp?context.vitals.hp/context.vitals.maxhp:1;
@@ -462,7 +494,7 @@ function clearResults(a){
   for(let i=0;i<3&&a.results().review;i++)a.exitResult();
  }
 }
-function playDungeon(a,level,profile,opts){
+function playDungeon(a,level,profile,opts,decisionModel='risk-aware'){
  const c=a.controller(),g=c.state;
  if(g.unlocked<level)throw Error('Cannot bypass native unlock from E'+g.unlocked+' to E'+level);
  a.start(level,true);
@@ -476,6 +508,7 @@ function playDungeon(a,level,profile,opts){
  const report={level,realm:card.id,affinity:card.family,risk:card.risk,contract,rooms:[],
   events:[],boons:[],potions:[],equipped:[],decisions:[],
   xpStart:a.state().automaticTalents.xp,goldStart:a.state().gold,
+  fragmentsStart:a.state().fragments,essenceStart:a.state().crafting?.essence||0,
   stepsStart:g.dungeon.steps,bossReached:false,extracted:false,status:null,error:null,
   prepAtBoss:null,prepFinal:null};
  for(let iteration=0;iteration<opts.maxRooms&&g.stage==='choice';iteration++){
@@ -500,26 +533,31 @@ function playDungeon(a,level,profile,opts){
     .sort((x,y)=>gearScore(x,profile)-gearScore(y,profile))[0];
    if(!spare||!a.bag.discard(spare.id))break;
   }
-  let next=selectRoom(c,profile,a.vitals(),{equipment:a.state().equip,
-   recentFights:report.rooms,cha:a.baseStats()?.cha??5});
+  const roomContext=()=>({equipment:a.state().equip,
+   recentFights:report.rooms,cha:a.baseStats()?.cha??5,
+   ...(decisionModel==='risk-aware'?{carriedBagItems:a.bag.items().length}:{})});
+  let next=selectRoom(c,profile,a.vitals(),roomContext());
   if(!next&&g.dungeon.steps<=4&&usePotionKind(a,'trail','restore_route_steps',report.potions))
-   next=selectRoom(c,profile,a.vitals(),{equipment:a.state().equip,
-   recentFights:report.rooms,cha:a.baseStats()?.cha??5});
+   next=selectRoom(c,profile,a.vitals(),roomContext());
   if(next){
    usePotionsBetween(a,profile,report.potions,next);
-   next=selectRoom(c,profile,a.vitals(),{equipment:a.state().equip,
-   recentFights:report.rooms,cha:a.baseStats()?.cha??5}); // Native scouting/step potions can change options.
+   next=selectRoom(c,profile,a.vitals(),roomContext()); // Native potions can change options.
   }
   const current=a.vitals(),ratio=current.maxhp>0?current.hp/current.maxhp:0;
-  const canRecoverWithoutFight=next&&['shrine','spring','event'].includes(next.type);
-  const tooInjured=ratio<profile.retreatAt&&report.rooms.length>0&&!canRecoverWithoutFight;
-  if(!next||tooInjured){
-   report.decisions.push({type:'extract',reason:next?'conserve_HP':'no_legal_path',
-    hpRatio:round(ratio),steps:g.dungeon.steps});
+  const decision=decisionModel==='legacy'
+   ?{extract:!next||ratio<profile.retreatAt&&report.rooms.length>0&&
+     !['shrine','spring','event'].includes(next.type),
+     reason:next?'legacy_hp_threshold':'no_legal_path',hpRatio:round(ratio)}
+   :evaluateRetreat({hp:current.hp,maxhp:current.maxhp,bag:a.bag.items(),next,profile,
+     gold:a.state().gold,fragments:a.state().fragments,
+     essence:a.state().crafting?.essence||0,recentFights:report.rooms});
+  if(decision.extract){
+   report.decisions.push({type:'extract',...decision,steps:g.dungeon.steps});
    if(a.checkpoint.extract()){report.extracted=true;break;}
    report.error='Native extraction rejected after route or HP decision';break;
   }
   report.decisions.push({type:'move',room:next.room,node:next.type,cost:next.cost,
+   ...(decisionModel==='risk-aware'?{riskAssessment:decision}:{}),
    visibleMobRange:next.visibleMobRange||null,stepsRemaining:g.dungeon.steps,
    hpRatio:round(ratio),slack:next.slack,objective:next.objective,reliquary:next.reliquary,
    elite:next.elite,eligibleEliteAlternatives:next.eligibleEliteAlternatives});
@@ -575,7 +613,7 @@ function playDungeon(a,level,profile,opts){
  return report;
 }
 function simulateAccount(seed,id,opts,simulationOptions={}){
- const profile=PROFILES[id];
+ const profile=PROFILES[id],decisionModel=simulationOptions.decisionModel||'risk-aware';
  const a=create(seed,undefined,simulationOptions.moduleOverrides||{}, {skipPersistence:true,now:1720000000000+seed});
  const initialGear=gearSnapshot(a);
  if(a.talents.earned(a.state().automaticTalents)!==0||
@@ -598,7 +636,7 @@ function simulateAccount(seed,id,opts,simulationOptions={}){
     const before={xp:a.state().automaticTalents.xp,earned:a.talents.earned(a.state().automaticTalents),
      spent:a.state().automaticTalents.nodes.length,gear:gearSnapshot(a),gold:a.state().gold,
      unlocked:a.controller().state.unlocked};
-    const encounter=playDungeon(a,level,profile,opts);
+    const encounter=playDungeon(a,level,profile,opts,decisionModel);
     if(encounter.xpEnd<before.xp)throw Error('Native earned XP decreased');
     entry={...entry,camp,before,...encounter,
      after:{xp:a.state().automaticTalents.xp,earned:a.talents.earned(a.state().automaticTalents),
@@ -683,7 +721,7 @@ function analyze(accounts,opts){
 function run(opts=parseArgs(),simulationOptions={}){
  const accounts=[];
  for(const seed of opts.seeds)for(const id of opts.profiles)accounts.push(simulateAccount(seed,id,opts,simulationOptions));
- return analyze(accounts,opts);
+ return analyze(accounts,{...opts,decisionModel:simulationOptions.decisionModel||'risk-aware'});
 }
 function markdown(data){
  const out=['# Wanderer v0.13 — Stage 9.6: Grey loot, salvage and natural progression E1–E8','',
@@ -723,6 +761,6 @@ function main(args=process.argv.slice(2)){
  return report;
 }
 module.exports={PROFILES,DEFAULTS,parseArgs,gearScore,gearSnapshot,spendEarnedTalents,equipEarned,
- prepareCamp,choiceRealm,pathLength,eliteOpportunity,selectRoom,boonScore,chooseBoon,chooseContract,eventOptions,potionSlots,usePotionKind,usePotionsBetween,rerollPoorBoonAtShrine,
+ prepareCamp,choiceRealm,pathLength,eliteOpportunity,selectRoom,evaluateRetreat,boonScore,chooseBoon,chooseContract,eventOptions,potionSlots,usePotionKind,usePotionsBetween,rerollPoorBoonAtShrine,
  fightNatural,resolveEvent,clearResults,playDungeon,simulateAccount,analyze,run,markdown,main};
 if(require.main===module)main();
