@@ -58,7 +58,9 @@
     "test:v013:human-decisions": "node --test tests/v013-stage94-human-decisions.test.cjs",
     "simulate:v013:human-e1-e8": "node scripts/v013-natural-progression.cjs",
     "test:v013:stage95": "node --test tests/v013-stage95-elite-parity.test.cjs",
-    "simulate:v013:elite-parity": "node scripts/v013-elite-tank-parity.cjs"
+    "simulate:v013:elite-parity": "node scripts/v013-elite-tank-parity.cjs",
+    "test:v013:stage96": "node --test tests/v013-stage96-grey-loot.test.cjs",
+    "simulate:v013:stage96": "node scripts/v013-natural-progression.cjs"
   },
   "dependencies": {
     "firebase": "11.10.0"
