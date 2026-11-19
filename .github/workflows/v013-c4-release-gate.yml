@@ -18,6 +18,7 @@ on:
       - 'scripts/prepare-automatic-preview.mjs'
       - 'scripts/update-pages-preview.mjs'
       - 'package.json'
+      - 'package-lock.json'
   workflow_dispatch:
 
 permissions:
