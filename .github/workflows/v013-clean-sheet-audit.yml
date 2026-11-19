@@ -96,5 +96,5 @@ jobs:
           else
             npx playwright install chromium
           fi
-      - name: Verify current v0.13 preview in browser, including live v15 talent interface
+      - name: Verify current cleanup UI and live v15 talent iframe in browser
         run: npm run test:v013:browser
