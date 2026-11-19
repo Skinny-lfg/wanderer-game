@@ -42,8 +42,9 @@ test('modern Dungeon physical Dodge logs avoidance without changing health or Ba
  assert(r?.enemy,'Current Dungeon encounter is loaded');
  const initial={hp:r.hp,barrier:r.barrier,enemyHp:r.enemy.hp};
  r.stats.evasionRating=100000;
+ const feedback=a.feedback(); // Activate the harness event collector before the Dodge.
  a.rng(0);
- const ok=a.gear.tryDodge(r,'physical'),feedback=a.feedback();
+ const ok=a.gear.tryDodge(r,'physical');
  assert.equal(ok,true);
  assert.equal(r.hp,initial.hp);
  assert.equal(r.barrier,initial.barrier);
