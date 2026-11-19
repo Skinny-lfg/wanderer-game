@@ -220,3 +220,11 @@ claiming that full definition is met yet.
 - **Natural pilot:** Cautious/Balanced **0 E1 wins in 32 attempts** (24 extracts, 8 deaths, 3 reaches to Boss). Daring **1 E1 win in 9 attempts**; then **0 E2 wins in 12 attempts**. These are real native-agent outcomes, *not* a representative human win rate. E5, E10 and E20 have **no observed attempts** and are not quantified.
 - **Decision:** Technical C4 gate **PASS**; release-quality recommendation **NO-GO pending analysis of the agent/progression bottleneck and final reachability review of old-only talent/route source**. No game balancing, production account mutation, merge or deployment in C4.
 - **Full standalone details:** [`reports/v013-c4-release-gate.md`](reports/v013-c4-release-gate.md).
+
+## Stage C5 verification — 19 November 2026: old generator and Talent modules retired
+
+- **Scope:** deleted the non-Dungeon 15-Realm generator and map UI, removed historical reroll/save assumptions, stripped v9–v14 graph modes, deleted `combat/automatic-talents.js`, `combat/automatic-talent-layout.js`, 10 obsolete Talent prototypes and 11 old-only fixture/tests. Migrated simulator/native harness and current tests to the v15 catalog and Dungeon, with a current-only static guard.
+- **Proof:** [C4 run 44611463018](https://github.com/Skinny-lfg/wanderer-game/actions/runs/44611463018) completed 4/4 jobs successfully on `bce286931b137132d62b76c9c1f679bed3f2bf59`. Native 272 + simulation 7 + graph 79 + independent 89 + integration 82; security 51 + Firebase emulators 11; current and deep Chromium journeys passed.
+- **Generated Pages:** [clean-sheet run 44611462918](https://github.com/Skinny-lfg/wanderer-game/actions/runs/44611462918) completed the static, Chromium and docs jobs successfully. The build explicitly deleted old generated Talent modules and confirmed zero residual `docs/` drift.
+- **Safety:** no merge, deploy, player data modification, save migration or balance changes. Active v15 graph code and current Dungeon/Firebase/anti-duplication behavior preserved.
+- **Complete details:** [`reports/v013-c5-legacy-removal.md`](reports/v013-c5-legacy-removal.md). C4 natural progression concerns remain separate from this technical cleanup.
