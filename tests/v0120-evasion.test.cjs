@@ -21,14 +21,17 @@ test('Leather rating scales with E# and rarity independently of Agility; DR and 
  for(const bad of [0,-1,NaN,Infinity])assert.equal(f(bad,5),0);
  const common=a.makeItem(5,'belt',null,'forge','Leather','Common'),epic=a.makeItem(5,'belt',null,'forge','Leather','Epic');assert(epic.evasionRating>common.evasionRating);
 });
-test('legacy Leather derives rating without changing saved item fields; old gear has zero Evasion',()=>{
- const a=create(),old=a.makeItem(5,'helm',null,'forge','Leather','Rare');delete old.evasionRating;
- const raw=JSON.stringify(old);assert(a.baseStats({helm:old}).evasionRating>0);assert.equal(JSON.stringify(old),raw);
- assert.equal(old.evasionRating,undefined);
- assert.equal(a.baseStats({helm:{...old,armorType:undefined}}).evasionRating,0);
- const legendary=a.makeItem(5,'armor',null,'loot','Leather','Legendary'),rating=legendary.evasionRating;
- a.economy.upgradeLegendary(legendary);assert.equal(legendary.evasionRating,Math.round(rating*1.02*100)/100);
- const legacy={...legendary};delete legacy.evasionRating;assert.equal(a.gear.gearEvasionRating(legacy),legendary.evasionRating);
+test('new Leather keeps its generated rating and no longer derives missing old ratings',()=>{
+ const a=create(),leather=a.makeItem(5,'helm',null,'forge','Leather','Rare'),rating=leather.evasionRating;
+ assert(rating>0);
+ const missing={...leather};delete missing.evasionRating;
+ assert.equal(a.baseStats({helm:missing}).evasionRating,0);
+ assert.equal(a.gear.gearEvasionRating(missing),0);
+ assert.equal(a.baseStats({helm:leather}).evasionRating,rating);
+ assert.equal(a.baseStats({helm:{...leather,armorType:undefined}}).evasionRating,0);
+ const legendary=a.makeItem(5,'armor',null,'loot','Leather','Legendary'),before=legendary.evasionRating;
+ a.economy.upgradeLegendary(legendary);
+ assert.equal(legendary.evasionRating,Math.round(before*1.02*100)/100);
 });
 test('native physical dodges cause zero damage, no Barrier loss or defensive/on-hit effects, and log DODGE',()=>{
  for(const elite of ['tank','vampire','berserker']){

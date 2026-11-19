@@ -35,6 +35,7 @@ jobs:
           tests/v013-clean-sheet-treasures.test.cjs
           tests/talent-graph-runtime.test.cjs
           tests/v013-c1-catalog-equivalence.test.cjs
+          tests/v013-c2-reset.test.cjs
           tests/v013-talent-structure.test.cjs
           tests/v013-current-dungeon-and-talents.test.cjs
           tests/v013-stage7-contracts.test.cjs
@@ -42,6 +43,8 @@ jobs:
           tests/v013-stage5-build-audit.test.cjs
       - name: Current native talent graph regression suite
         run: npm run test:v013:talent-graph
+      - name: C2 current crafting, contracts, gear, checkpoints and cloud reset
+        run: npm run test:v013:c2
       - name: Historical v0.12 treasure tests (diagnostic only)
         continue-on-error: true
         run: node --test tests/v012-phase-c3-treasures.test.cjs
