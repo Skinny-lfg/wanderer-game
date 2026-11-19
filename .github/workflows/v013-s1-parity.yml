@@ -20,7 +20,7 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - name: S1 contracts and legal native decisions
+      - name: S1 contracts, live talent activation sync and legal native decisions
         run: node --test tests/v013-s1-parity.test.cjs
       - name: Existing simulation, progression and talent gate
         run: |
