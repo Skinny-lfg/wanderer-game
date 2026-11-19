@@ -56,7 +56,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
   phase1Controller.setSimulationRandomStreams(route,draft);gameRandom=()=>harnessCombatActive?harnessCombatRandom():harnessControlRandom();
  }
  globalThis.audit={talents:WandererAutomaticTalents,measured,debug:()=>({phase5Ready,saveBlocked,message:phase5Message,validation:PHASE5_VALIDATION,preview:PHASE1_PREVIEW,active:phase3ExpeditionActive(),run:!!state.run,stage:phase1Controller?.state.stage}),
-  potions:{supplies:()=>phase3Supplies,select:phase6SelectPotion,use:phase6UsePotion,inventory:phase6PotionInventory,start:phase6StartPotions,finish:phase6ReturnPotions,tick:phase6TickDurations,shop:(E=1,rng=gameRandom)=>WandererV012Consumables.shop(E,rng,makeId),buy:phase6BuyPotion,reroll:phase6RerollPotions},
+  potions:{catalog:WandererV012Consumables.CATALOG,supplies:()=>phase3Supplies,select:phase6SelectPotion,use:phase6UsePotion,inventory:phase6PotionInventory,start:phase6StartPotions,finish:phase6ReturnPotions,tick:phase6TickDurations,shop:(E=1,rng=gameRandom)=>WandererV012Consumables.shop(E,rng,makeId),buy:phase6BuyPotion,reroll:phase6RerollPotions},
   events:{open:phase6OpenEvent,choose:phase6EventChoice,run:()=>phase6Run},
   back:phase6BackToCamp,markAllSeen:markAllAsSeen,
   // Mirrors the live Camp Talent Tree API transactions; neither XP nor points
@@ -102,7 +102,24 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
   forge:{
    preview(id,tier,focus='none'){return WandererV013Crafting.previewCraft(id,tier,(...args)=>makeItem(...args,true),focus);},
    progress(id,tier,focus='none'){return WandererV013Crafting.progress(state,id,tier,focus);},
-   recipes:WandererV013Crafting.RECIPES,
+   recipes:WandererV013Crafting.RECIPES,focuses:WandererV013Crafting.FOCUSES,
+   refine(family){
+    if(!economyCanAct())return false;
+    const before=state.crafting,next=WandererV013Crafting.refine(before,family);
+    if(!next)return false;
+    state.crafting=next;
+    if(!phase5Persist()){state.crafting=before;return false;}
+    return true;
+   },
+   reinforceCost(id){
+    const item=[...state.stash,...Object.values(state.equip).filter(Boolean)].find(x=>x?.id===id);
+    if(!item||item.rarity!=='Legendary'||(item.upgradeRank||0)>=10)return null;
+    return WandererEconomyV0101.upgradeCost(item.tier,item.upgradeRank||0);
+   },
+   reinforce(id){
+    const item=[...state.stash,...Object.values(state.equip).filter(Boolean)].find(x=>x?.id===id);
+    return !!item&&reinforceEquipment(item);
+   },
    // Match the live named-tier Forge upgrade: same preview/prepare, same
    // ownership check, materials, unlock gate, item identity and rollback.
    tierPreview(id){return WandererV013TierUpgrade.preview(state,id,phase1Controller.state.unlocked);},
