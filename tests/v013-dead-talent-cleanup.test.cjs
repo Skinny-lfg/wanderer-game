@@ -58,3 +58,14 @@ test('clean sheet rejects obsolete talent saves, keeps fresh v15 accounts',()=>{
  assert.equal(T.valid({treeVersion:10,xp:1200,nodes:['root_magic'],attributes:{int:2}}),false);
  assert.equal(T.valid(T.create()),true);
 });
+
+test('current character stats ignore retired manually allocated attribute fields',()=>{
+ const a=create(8810,undefined,{}, {skipPersistence:true,now:1720000008810});
+ const base=a.baseStats();
+ a.state().automaticTalents.attributes={str:40,agi:40,int:40,end:40,cha:40};
+ const after=a.baseStats();
+ for(const stat of ['str','agi','int','end','cha','attack','defense','maxhp'])
+  assert.equal(after[stat],base[stat],stat+' must only depend on gear and live talent nodes');
+ for(const p of ['combat/v012-gear-stats.js','docs/combat/v012-gear-stats.js'])
+  assert(!read(p).includes('automaticTalents?.attributes'),'legacy attribute projection present in '+p);
+});
