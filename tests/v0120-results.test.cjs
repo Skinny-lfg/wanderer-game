@@ -12,6 +12,14 @@ function begin(a,level=1,family='blood'){
  const offer=a.controller().state.offers.find(p=>p.family===family);
  assert(offer,`seeded ${family} Realm offer`);offer.waves=1;a.select(offer.id);assert.equal(a.enter(),true);
 }
+function clearEncounter(a){
+ const run=a.state().run;
+ for(let i=0;i<50&&run.status==='fight';i++){
+  run.enemy.hp=0;a.win();
+ }
+ assert.equal(run.status,'cleared');
+ a.flush();
+}
 function persistPresentation(profile,presentation){
  const save=Save.create(profile);save.expedition.presentation=plain(presentation);
  const restored=Save.validate(JSON.stringify(save));
@@ -19,20 +27,16 @@ function persistPresentation(profile,presentation){
  return restored;
 }
 
-test('Realm clear remains available through its passive choice and cannot pay twice',()=>{
- const a=create(501);begin(a);const state=a.state();state.run.combatSeconds=7.5;state.run.enemy.hp=0;a.win();a.flush();
+test('Realm clear settles automatically and cannot pay twice',()=>{
+ const a=create(501);begin(a);const state=a.state();state.run.combatSeconds=7.5;clearEncounter(a);
  const pending=a.results();
- // In v0.12 the reward draft owns the screen first; the Realm snapshot is
- // retained while review stays null so the result modal cannot cover the draft.
  assert.equal(pending.review,null);assert.equal(pending.realm.outcome,'cleared');assert.equal(pending.realm.seconds,7.5);
- assert.equal(a.draft().kind,'reward');const gold=state.gold,fragments=state.fragments,earned=JSON.stringify(pending.earned);
- assert.equal(a.exitResult(),false,'cannot leave before claiming the Realm reward');
- assert.equal(a.passive(a.draft().options[0].id),true);
+ assert.equal(a.draft(),null);assert.equal(a.controller().state.rewardPending,null);const gold=state.gold,fragments=state.fragments,earned=JSON.stringify(pending.earned);
  assert.equal(a.state().run.status,'cleared');assert.equal(a.exitResult(),true);
  assert.equal(a.results().realm.outcome,'cleared','result snapshot remains in memory until the next Expedition');
  assert.equal(a.exitResult(),false);a.win();
  assert.equal(state.gold,gold);assert.equal(state.fragments,fragments);assert.equal(JSON.stringify(a.results().earned),earned);
- assert.equal(a.build().picks.length,2);
+
  persistPresentation(state,a.results());
 });
 
@@ -53,8 +57,8 @@ test('Death summary keeps newly equipped loot and home gear, and reports only di
 });
 
 test('Extraction summary is a snapshot and grants no boss Rune or progression credit',()=>{
- const a=create(503);begin(a);a.state().run.enemy.hp=0;a.win();a.flush();
- assert.equal(a.passive(a.draft().options[0].id),true);assert.equal(a.exitResult(),true);
+ const a=create(503);begin(a);clearEncounter(a);
+ assert.equal(a.draft(),null);assert.equal(a.exitResult(),true);
  const before=plain(a.state()),earned=plain(a.results().earned);
  assert.equal(a.checkpoint.extract(),true);const result=a.results();
  assert.equal(result.review,'summary');assert.equal(result.summary.realms,1);assert.equal(result.summary.outcome,'extracted');
@@ -71,10 +75,10 @@ test('Expedition boss result preserves the actual Magic build and one-time Rune 
  // valid build state through the same buildcraft API before the synthetic boss.
  assert.equal(a.initialPassive(a.build(),'magic').id,'deep_winter');
  g.planeIndex=15;g.history=Array.from({length:14},(_,index)=>({plane:index+1}));
- const p=g.offers.find(offer=>offer.family==='magic');p.boss=true;p.waves=3;
+ const p=g.offers.find(offer=>offer.family==='magic');p.boss=true;p.waves=1;
  a.select(p.id);assert.equal(a.enter(),true);
- const run=a.state().run;g.wave=3;run.phase1Plane=15;run.enc=3;run.enemy.boss=true;run.enemy.hp=0;run.combatSeconds=4;
- a.win();a.flush();const result=a.results();
+ const run=a.state().run;run.combatSeconds=4;assert.equal(run.encounterLeader.boss,true);
+ clearEncounter(a);const result=a.results();
  assert.equal(result.review,'summary');assert.equal(result.summary.outcome,'victory');assert.equal(result.summary.realms,15);
  assert.equal(result.summary.seconds,4);assert.equal(result.summary.element,'frost');
  assert.deepEqual(Array.from(result.summary.picks),['deep_winter']);assert.equal(result.summary.runeTier,10);assert.equal(g.unlocked,11);
