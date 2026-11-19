@@ -60,6 +60,8 @@ test('S1: all three Magic elements require earned points, root/choice, and nativ
   assert(invested.elements.includes(element));
   assert(p.nodes.includes('affinity_magic'));
   assert.equal(a.talents.earned(p),100);
+  assert(a.start(1,true)!==false,'test fixture must start a native expedition');
+  assert.equal(a.build().element,element,'selected mode must reach native combat build');
  }
 });
 
@@ -78,6 +80,8 @@ test('S1: prepared abilities can only be selected after purchasing an advanced n
  assert(a.talents.valid(s.automaticTalents));
  assert.equal(a.talentActions.prepare('nonexistent'),false);
  assert.equal(s.automaticTalents.prepared,chosen);
+ assert(a.start(1,true)!==false);
+ assert.equal(a.build().runtime.prepared,chosen,'prepared ability must reach native combat runtime');
 });
 
 test('S1: free complete reset preserves earned XP, clears prepared choice and only works in Camp',()=>{
