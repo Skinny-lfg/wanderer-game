@@ -279,6 +279,8 @@ function encounter(level,build,seed,kind,opts,forcedTrait=undefined,forcedBossMo
  let controlledRoomAccess=false;
  if(!c.visitRoom(candidate)){
   if(!conditionTrial||marked===undefined)throw Error('Cannot enter controlled native combat encounter');
+  // Map routing requires the origin to have been visited, even if it is the target.
+  if(!g.dungeon.visited.includes(candidate))g.dungeon.visited.push(candidate);
   g.dungeon.current=candidate;
   controlledRoomAccess=true;
   if(!c.visitRoom(candidate))throw Error('Cannot stage marked native Condition room');
