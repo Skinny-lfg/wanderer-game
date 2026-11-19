@@ -421,7 +421,7 @@ function simulate(opts){
  if(['bosses','bossmods','enemies','roles','elites','encounter','traits','bossprep'].includes(opts.mode))notes.push('Controlled first-ring encounter injection: uses native combat but not natural room placement, 15-Realm progression or earned equipment.');
  if(['dungeon','conditions','both'].includes(opts.mode))notes.push('Natural Dungeon route uses shortest accessible path and explicit Boon/Contract selection policies; potions are not automatically spent.');
  if(opts.mode==='roles'){
-   const observed=new Set(rows.filter(r=>!r.error).map(r=>r.affinity+'|'+r.groupSize+'|'+r.roleEffect));
+   const observed=new Set(rows.filter(r=>!r.error).map(r=>r.affinity+'|'+r.requestedGroupSize+'|'+r.roleEffect));
    for(const affinity of opts.affinities)for(const count of opts.groupSizes)for(const effect of opts.roleEffects)if(!observed.has(affinity+'|'+count+'|'+effect))notes.push('Missing role scenario: '+affinity+' '+count+' enemies / '+effect);
    notes.push('Native roster is seeded, not forced. Validate per-role sampling before balance conclusions.');
    notes.push('Trait trials inject an Affinity-compatible native Trait into a controlled encounter. Condition trials select naturally marked rooms where available. Boss-only and passage-only Conditions have no ordinary-room combat effect. Natural co-occurrence is not implied.');
