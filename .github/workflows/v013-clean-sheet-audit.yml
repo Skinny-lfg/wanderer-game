@@ -96,5 +96,5 @@ jobs:
           else
             npx playwright install chromium
           fi
-      - name: Verify current cleanup UI and live v15 talent iframe in browser
+      - name: Verify current v15 iframe and new-game browser controls (clean-sheet smoke)
         run: npm run test:v013:browser
