@@ -765,7 +765,7 @@ const ELITE_ARCHETYPES={
  berserker:{id:'berserker',icon:'⚔️',name:'Bloodscar Ravager',role:'Berserker',risk:'Low health, high attack damage and quick strikes. Each hit is capped at 35% of your max HP.',hp:.72,atk:1.20,def:.86,interval:1.46},
  vampire:{id:'vampire',icon:'🩸',name:'Sanguine Wraith',role:'Vampire',risk:'Recovers HP when its attacks damage your health. Barrier and burst are useful.',hp:1.10,atk:1.02,def:1.00,interval:1.56},
  caster:{id:'caster',icon:'🔮',name:'Voidborne Hexer',role:'Caster',risk:'Successful hits weaken your direct damage by 20% for 3 combat seconds (7s between casts).',hp:.91,atk:.93,def:.90,interval:1.64},
- gravecaller:{id:'gravecaller',icon:'☠',name:'Gravecaller',role:'Summoner',risk:'Channels a 1s interruptible ritual at 85% and 40% HP, summoning up to 2 undead each time (4 total, 2 alive). Living undead protect the Gravecaller from 10% of incoming damage.',hp:1.03,atk:.75,def:.86,interval:1.8},
+ gravecaller:{id:'gravecaller',icon:'☠',name:'Gravecaller',role:'Summoner',risk:'Channels a 1s interruptible ritual at 85% and 40% HP, summoning up to 2 undead each time (4 total, 2 alive). Undead hits apply stacking Deathbound Decay (up to 4 stacks, 4s), damaging you each second until the summons die.',hp:1.03,atk:.75,def:.86,interval:1.8},
  rotbound_exarch:{id:'rotbound_exarch',icon:'✚',name:'Rotbound Exarch',role:'Support',risk:'Every 10s channels Barrier for an ally, or itself when alone, worth 15% max Health, up to 3 casts. Stun interrupts.',hp:1.23,atk:.67,def:1.12,interval:1.95},
  ashen_executioner:{id:'ashen_executioner',icon:'⚒',name:'Ashen Executioner',role:'Heavy Striker',risk:'Every 10s prepares 1.5s heavy strike, capped at 18% max HP before Block/Barrier. Stun and delay interrupt.',hp:1.05,atk:1.1,def:.91,interval:2.05}
 };
@@ -1021,6 +1021,8 @@ function playerStatusMarkup(r){
  if(r.secondWindUsed)items.push('<span class="debuff muted statusUsed">'+statusArt('second-wind-used')+' Second Wind used</span>');
  if((r.playerDebuffUntil||0)>now)items.push('<span class="debuff playerDebuff statusNegative">'+statusArt('weakened')+' Weakened −20% damage · '+Math.ceil(r.playerDebuffUntil-now)+'s</span>');
  if((r.playerHealingDebuffUntil||0)>now)items.push('<span class="debuff playerDebuff statusNegative">'+statusArt('healing-reduction')+' Healing −40% · '+Math.ceil(r.playerHealingDebuffUntil-now)+'s</span>');
+ const deathbound=globalThis.WandererV013EliteAbilities?.deathboundStatus(r);
+ if(deathbound)items.push('<span class="debuff playerDebuff statusNegative" title="Deathbound Ritual: kill summoned undead to remove Decay">'+statusArt('rot')+' Deathbound Decay ×'+deathbound.stacks+' · '+Math.ceil(deathbound.remaining)+'s</span>');
  // Future negative effects can be rendered here without changing combat layout.
  return items.join('');
 }

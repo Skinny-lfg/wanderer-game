@@ -2,7 +2,7 @@
 // No combat RNG is consumed; existing Elite mechanics remain unchanged.
 (function(root){'use strict';
 const DEFINITIONS=Object.freeze({
- gravecaller:Object.freeze({name:'Call of the Fallen',role:'Summoner',icon:'☠',description:'Channels a 1s interruptible ritual at 85% and 40% HP to summon up to two undead Minions (four total, maximum two alive). Alive summons reduce damage received by the Gravecaller by 10%.',thresholds:Object.freeze([.85,.40]),summons:2,maxSummons:4,maxLiving:2,cast:1,damageReduction:.10,hpFactor:.50,atkFactor:.35,intervalFactor:1.20}),
+ gravecaller:Object.freeze({name:'Call of the Fallen',role:'Summoner',icon:'☠',description:'Channels a 1s interruptible ritual at 85% and 40% HP, summoning up to two undead Minions (four total, two alive). Each successful undead hit adds Deathbound Decay (up to 4 stacks, 4s), dealing damage every second until the summons die.',thresholds:Object.freeze([.85,.40]),summons:2,maxSummons:4,maxLiving:2,cast:1,hpFactor:.50,atkFactor:.35,intervalFactor:1.20}),
  rotbound_exarch:Object.freeze({name:'Rotward Benediction',role:'Support',icon:'✚',description:'Grants an ally or itself Barrier worth 15% max HP, up to three times, every 10s.',first:3,cooldown:10,cast:.75,maxCasts:3,barrier:.15}),
  ashen_executioner:Object.freeze({name:'Ashen Sentence',role:'Heavy Striker',icon:'⚒',description:'Prepares a 1.5s heavy strike every 10s; maximum 18% of hero max HP before Block/Barrier. Stun and delay interrupt.',first:3.5,cooldown:10,cast:1.5,multiplier:2.4,capFraction:.18})
 });
@@ -17,12 +17,49 @@ function livingSummons(run){
  return [...(run?.enemies?.length?run.enemies:run?.enemy?[run.enemy]:[]),...(run?.groupReserve||[])]
   .filter(e=>e?.hp>0&&e.stage83Summoned&&e.stage83Summoner==='elite'&&e.role==='minion').length;
 }
-// Defensive identity: the Gravecaller is protected only while its summoned
-// undead remain alive; never affect other Elites, Bosses or ordinary Tanks.
-function incomingFactor(run,enemy){
- const spec=DEFINITIONS.gravecaller;
- return enemy?.hp>0&&enemy.miniboss&&enemy.eliteType==='gravecaller'&&livingSummons(run)>0?
-  1-spec.damageReduction:1;
+// Deathbound Ritual: only the Gravecaller's summoned undead can infect.
+// All timing is deterministic combat time; stacks cannot persist after the
+// last living summon dies, the owner dies or the combat finishes.
+const DEATHBOUND=Object.freeze({maxStacks:4,duration:4,tickSeconds:1,damagePerStack:.0075});
+function deathboundOwner(run){
+ const e=run?.encounterLeader||run?.enemies?.find(m=>m?.miniboss&&m?.eliteType==='gravecaller');
+ return run?.status==='fight'&&e?.hp>0&&e.miniboss&&e.eliteType==='gravecaller'?e:null;
+}
+function isDeathboundMinion(run,mob){
+ return !!deathboundOwner(run)&&mob?.hp>0&&mob.role==='minion'&&
+  mob.stage83Summoned&&mob.stage83Summoner==='elite'&&
+  (run?.enemies||[]).includes(mob);
+}
+function deathboundStatus(run){
+ const state=run?.deathboundDecay,now=Number(run?.combatSeconds)||0;
+ if(!state||!deathboundOwner(run)||!livingSummons(run)||now+1e-7>=state.expiresAt)return null;
+ return {stacks:state.stacks,remaining:Math.max(0,state.expiresAt-now)};
+}
+function applyDeathbound(run,mob,hit){
+ if(!(hit>0)||!isDeathboundMinion(run,mob))return null;
+ const now=Number(run.combatSeconds)||0;
+ const previous=deathboundStatus(run);
+ const state={stacks:Math.min(DEATHBOUND.maxStacks,(previous?.stacks||0)+1),
+  expiresAt:now+DEATHBOUND.duration,
+  nextAt:previous&&run.deathboundDecay.nextAt>now?
+   run.deathboundDecay.nextAt:now+DEATHBOUND.tickSeconds};
+ run.deathboundDecay=state;
+ return {stacks:state.stacks,remaining:DEATHBOUND.duration};
+}
+function tickDeathbound(run){
+ const current=run?.deathboundDecay;
+ if(!current)return null;
+ const status=deathboundStatus(run);
+ if(!status){delete run.deathboundDecay;return {ended:true,damage:0,absorbed:0};}
+ const now=Number(run.combatSeconds)||0;
+ if(now+1e-7<current.nextAt)return null;
+ current.nextAt=now+DEATHBOUND.tickSeconds;
+ const requested=Math.max(1,Math.round(run.maxhp*DEATHBOUND.damagePerStack*current.stacks));
+ const absorbed=Math.min(Math.max(0,run.barrier||0),requested);
+ run.barrier=Math.max(0,(run.barrier||0)-absorbed);
+ const damage=Math.min(Math.max(0,run.hp),Math.max(0,requested-absorbed));
+ run.hp-=damage;
+ return {stacks:current.stacks,damage,absorbed,remaining:status.remaining};
 }
 function ally(run,source){
  const rank={caster:0,skirmisher:1,tank:2,minion:3};
@@ -102,7 +139,7 @@ function status(enemy,now){
  return null;
 }
 function info(enemy){const s=DEFINITIONS[enemy?.eliteType];return s?{name:s.role,icon:s.icon,description:s.description}:null;}
-const API=Object.freeze({DEFINITIONS,attach,tick,interrupt,consumeStrike,status,info,livingSummons,incomingFactor});
+const API=Object.freeze({DEFINITIONS,DEATHBOUND,attach,tick,interrupt,consumeStrike,status,info,livingSummons,applyDeathbound,tickDeathbound,deathboundStatus});
 root.WandererV013EliteAbilities=API;
 if(typeof module==='object'&&module.exports)module.exports=API;
 })(globalThis);
