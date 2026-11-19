@@ -282,7 +282,7 @@ function encounter(level,build,seed,kind,opts,forcedTrait=undefined,forcedBossMo
  const label=forcedBossMod!==undefined?(forcedBossMod||'baseline'):forcedTrait!==undefined?(forcedTrait||'baseline'):mode==='bosses'?card.family:['enemies','roles'].includes(mode)?'swarm-'+count:kind;
  return {mode,kind:label,roleEffect:roleEffect||null,plannedConditionId:conditionPlan?.id||null,conditionNaturallyMarked:!!conditionPlan?.rooms?.includes(candidate),traitFixtureInjected:!!trialTraitId,level,build:build.id,seed,resolvedSeed,seedShift,gearE,gearFingerprint,gearTier:P.gearTier(gearE).name,
   gearRarity:opts.rarity,runes:opts.runes,pointsBudget:opts.points,pointsSpent:allocatedPoints,
-  realm:card.name,affinity:card.family,risk:card.risk,nativeEncounter:kind,groupSize:count,unlocked:level,...result};
+  realm:card.name,affinity:card.family,risk:card.risk,nativeEncounter:kind,requestedGroupSize:count,groupSize:result.initialEnemies,unlocked:level,...result};
 }
 function bossPreparationEncounter(level,build,seed,opts,strategy){
  if(!['baseline','marked_elite','reliquary','both'].includes(strategy))throw Error('Unknown boss preparation strategy');
