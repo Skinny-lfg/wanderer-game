@@ -2,16 +2,28 @@
 // No combat RNG is consumed; existing Elite mechanics remain unchanged.
 (function(root){'use strict';
 const DEFINITIONS=Object.freeze({
- gravecaller:Object.freeze({name:'Call of the Fallen',role:'Summoner',icon:'☠',description:'Summons two undead Minions once at 65% HP.',threshold:.65,summons:2}),
+ gravecaller:Object.freeze({name:'Call of the Fallen',role:'Summoner',icon:'☠',description:'Channels a 1s interruptible ritual at 85% and 40% HP to summon up to two undead Minions (four total, maximum two alive). Alive summons reduce damage received by the Gravecaller by 10%.',thresholds:Object.freeze([.85,.40]),summons:2,maxSummons:4,maxLiving:2,cast:1,damageReduction:.10,hpFactor:.50,atkFactor:.35,intervalFactor:1.20}),
  rotbound_exarch:Object.freeze({name:'Rotward Benediction',role:'Support',icon:'✚',description:'Grants an ally or itself Barrier worth 15% max HP, up to three times, every 10s.',first:3,cooldown:10,cast:.75,maxCasts:3,barrier:.15}),
  ashen_executioner:Object.freeze({name:'Ashen Sentence',role:'Heavy Striker',icon:'⚒',description:'Prepares a 1.5s heavy strike every 10s; maximum 18% of hero max HP before Block/Barrier. Stun and delay interrupt.',first:3.5,cooldown:10,cast:1.5,multiplier:2.4,capFraction:.18})
 });
 function attach(enemy,now=0){
  const spec=DEFINITIONS[enemy?.eliteType];
  if(!enemy?.miniboss||!spec||!Number.isFinite(now))return null;
- return enemy.stage82={type:enemy.eliteType,nextAt:now+(spec.first||0),castingUntil:0,chargedUntil:0,castCount:0,summoned:false,status:'',statusUntil:0};
+ return enemy.stage82={type:enemy.eliteType,nextAt:now+(spec.first||0),castingUntil:0,chargedUntil:0,castCount:0,summoned:false,summonPhase:0,status:'',statusUntil:0};
 }
 function active(run){return (run?.enemies?.length?run.enemies:run?.enemy?[run.enemy]:[]).filter(e=>e?.hp>0);}
+// Count only this encounter's living undead summons, including reserves.
+function livingSummons(run){
+ return [...(run?.enemies?.length?run.enemies:run?.enemy?[run.enemy]:[]),...(run?.groupReserve||[])]
+  .filter(e=>e?.hp>0&&e.stage83Summoned&&e.stage83Summoner==='elite'&&e.role==='minion').length;
+}
+// Defensive identity: the Gravecaller is protected only while its summoned
+// undead remain alive; never affect other Elites, Bosses or ordinary Tanks.
+function incomingFactor(run,enemy){
+ const spec=DEFINITIONS.gravecaller;
+ return enemy?.hp>0&&enemy.miniboss&&enemy.eliteType==='gravecaller'&&livingSummons(run)>0?
+  1-spec.damageReduction:1;
+}
 function ally(run,source){
  const rank={caster:0,skirmisher:1,tank:2,minion:3};
  return active(run).filter(e=>e!==source).sort((a,b)=>(rank[a.role]??4)-(rank[b.role]??4))[0]||source;
@@ -30,11 +42,26 @@ function tick(run,absoluteNow){
  if(!enemy)return [];
  const s=enemy.stage82,spec=DEFINITIONS[s.type],now=Number(run.combatSeconds)||0;
  if(s.type==='gravecaller'){
-  if(!s.summoned&&enemy.hp<=enemy.maxhp*spec.threshold){
-   s.summoned=true;s.status='Summoning';s.statusUntil=now+1.5;
-   return [{type:'summon',enemy,ability:spec.name,count:spec.summons}];
+  // Stuns interrupt an in-progress ritual, and a delayed retry retains
+  // the phase. A rapid HP drop never skips the 85% phase.
+  if((enemy.stunnedUntil||0)>absoluteNow){
+   const event=interrupt(enemy,run,'stun');return event?[event]:[];
   }
-  return [];
+  const phase=s.summonPhase??(s.summoned?1:0);
+  if(s.castingUntil){
+   if(now+1e-7<s.castingUntil)return [];
+   s.castingUntil=0;
+   const slots=Math.max(0,spec.maxLiving-livingSummons(run));
+   if(!slots){s.nextAt=now+.5;s.status='';return [];}
+   s.summonPhase=phase+1;s.summoned=true;s.castCount++;
+   s.status='Summoning';s.statusUntil=now+1;
+   return [{type:'summon',enemy,ability:spec.name,count:Math.min(spec.summons,slots),wave:s.summonPhase}];
+  }
+  if(phase>=spec.thresholds.length||now+1e-7<s.nextAt||
+     enemy.hp>enemy.maxhp*spec.thresholds[phase]||
+     livingSummons(run)>=spec.maxLiving)return [];
+  s.castingUntil=now+spec.cast;s.status='Casting';s.statusUntil=0;
+  return [{type:'prepare',enemy,ability:spec.name,wave:phase+1}];
  }
  if((enemy.stunnedUntil||0)>absoluteNow){
   const event=interrupt(enemy,run,'stun');return event?[event]:[];
@@ -75,7 +102,7 @@ function status(enemy,now){
  return null;
 }
 function info(enemy){const s=DEFINITIONS[enemy?.eliteType];return s?{name:s.role,icon:s.icon,description:s.description}:null;}
-const API=Object.freeze({DEFINITIONS,attach,tick,interrupt,consumeStrike,status,info});
+const API=Object.freeze({DEFINITIONS,attach,tick,interrupt,consumeStrike,status,info,livingSummons,incomingFactor});
 root.WandererV013EliteAbilities=API;
 if(typeof module==='object'&&module.exports)module.exports=API;
 })(globalThis);
