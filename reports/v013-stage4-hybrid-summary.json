@@ -1,0 +1,113 @@
+{
+  "stage": 4,
+  "branch": "audit/v013",
+  "validatedCodeCommit": "73486814b4520efa5cc5f7a6b4ac35f006b6b441",
+  "C7": {
+    "runId": 44735206786,
+    "conclusion": "success",
+    "jobs": 4,
+    "mainTests": {
+      "passed": 330,
+      "total": 330,
+      "failed": 0
+    }
+  },
+  "cleanSheet": {
+    "runId": 44734838503,
+    "conclusion": "success",
+    "jobs": 3,
+    "scope": "last source/runtime commit before the simulation guard-only change"
+  },
+  "artifact": {
+    "runId": 44735206786,
+    "artifactId": 14627823848,
+    "url": "https://github.com/Skinny-lfg/wanderer-game/actions/runs/44735206786/artifacts/14627823848"
+  },
+  "sourceSha256": "71b0a9d16f6e7af0b7cced145b5bd694b428fd6200c76f3855e5e63c0859212f",
+  "replaySha256": "7f8a8574a1b25d404ac9c06f17c46479a485029769279aa656e262c3ef8972a1",
+  "normal": {
+    "valid": 48,
+    "total": 48,
+    "errors": 0,
+    "timeouts": 0
+  },
+  "stress": {
+    "total": 96,
+    "wins": 77,
+    "deaths": 19,
+    "errors": 0,
+    "timeouts": 0,
+    "elite": {
+      "pure": 24,
+      "hybrid": 24,
+      "total": 48,
+      "wins": 48
+    },
+    "boss": {
+      "pure": {
+        "wins": 14,
+        "total": 24
+      },
+      "hybrid": {
+        "wins": 15,
+        "total": 24
+      }
+    }
+  },
+  "fervent": {
+    "before": "2% Max HP",
+    "after": "2% Max HP + 3% Attack Power",
+    "critOnly": true,
+    "cooldownSeconds": 4,
+    "healingPerSecond": [
+      {
+        "level": 5,
+        "before": 2.8,
+        "after": 2.86
+      },
+      {
+        "level": 35,
+        "before": 3.56,
+        "after": 3.75
+      }
+    ]
+  },
+  "links": [
+    {
+      "build": "blood-fury",
+      "skill": "crimson_rush",
+      "activations": 2
+    },
+    {
+      "build": "fury-vitality",
+      "skill": "fervent_life",
+      "activations": 6
+    },
+    {
+      "build": "vitality-aegis",
+      "skill": "sanctuary",
+      "activations": 34
+    },
+    {
+      "build": "aegis-magic",
+      "skill": "runic_shield",
+      "activations": 17
+    },
+    {
+      "build": "magic-decay",
+      "skill": "hex_bolt",
+      "activations": 10
+    },
+    {
+      "build": "decay-blood",
+      "skill": "plague_spread",
+      "transferredStacks": 18
+    }
+  ],
+  "limits": [
+    "Controlled native simulator; no earned progression",
+    "Only Aegis Normal-risk Boss archetype",
+    "Two seeds, E5/E35",
+    "Plague transfers are not Buildcraft activation counts"
+  ]
+}
