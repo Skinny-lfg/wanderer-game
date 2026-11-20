@@ -22,7 +22,7 @@ function fakeShard(seed,group){
  return {source:'combat-source',runnerSha256:'runner',agentStrategySha256:'agent',
   stage02:{seed,group,cohort:seed+'-'+group},
   settings:{seeds:[seed],profiles,maxLevel:20,maxAttempts:18,
-   maxTotalAttempts:360,decisionModel:'adaptive'},
+   maxTotalAttempts:360,tickLimit:12000,decisionModel:'adaptive'},
   integrity:{noFabricatedXp:true,noForcedEquipment:true,noForcedLevelUnlock:true,
    noForcedEncounter:true,noDamageOverride:true},
   coverage:{accounts:5,attempts:accounts.reduce((n,a)=>n+a.attempts.length,0),errors:0},
