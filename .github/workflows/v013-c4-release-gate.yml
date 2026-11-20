@@ -40,6 +40,15 @@ jobs:
       - run: npm ci
       # C7 static guards also parse live inline HTML JavaScript and disallow
       # retired affinity/draft/reroll controllers via npm run test:v013:gate.
+      - name: C9 function and export inventory (conservative; no automatic deletion)
+        run: node scripts/v013-c9-function-inventory.cjs --print-buildcraft
+      - name: C9 inventory artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v013-c9-function-inventory
+          path: reports/v013-c9-function-inventory.json
+          if-no-files-found: warn
       - name: C6 final missing-import, old-route and orphan-asset source gate
         run: node scripts/v013-c6-final-audit.cjs
       - name: Current full v0.13 gameplay and simulation gate
