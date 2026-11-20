@@ -87,7 +87,7 @@ test('real v15 Decay Toxic Touch scales Rot with hit and Spell Power; costs one 
 test('active Magic + Decay Hex Bolt uses Spell Power without consuming existing Rot stacks',()=>{
  const result=[];
  for(const power of [0,100]){
-  const b=build(['hex_bolt']),x=context({power,mp:0});
+  const b=build(['hex_bolt']),x=context({power,mp:20});
   x.enemy.v012Rot=[{damage:10,remaining:4,ticks:0}];
   x.c.funded=true;x.c.now=6;
   B.onCast(b,x.c);
@@ -96,7 +96,7 @@ test('active Magic + Decay Hex Bolt uses Spell Power without consuming existing 
   result.push(damage[2]);
   assert.equal(x.enemy.v012Rot.length,1);
  }
- assert.deepEqual(result,[10,35]);
+ assert.deepEqual(result,[10.25,35],'funded onCast keeps its existing minimum Spell Power of one');
 });
 test('Stage 3 generated Pages and active node descriptions have no retired fixed-HP regen and old Rot formula',()=>{
  for(const p of ['combat/talent-graph-next.js','combat/v012-buildcraft.js','combat/talent-catalog.js']){
