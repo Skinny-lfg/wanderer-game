@@ -1,6 +1,7 @@
 'use strict';
 // Stage 6.3 native combat, legal but synthetic 24-point builds, not earned E1 progression.
-const fs=require('node:fs'),path=require('node:path'),S=require('./simulate-progression.cjs');
+const fs=require('node:fs'),path=require('node:path');
+const S=require(process.env.STAGE63_NATIVE_ROOT?path.resolve(process.env.STAGE63_NATIVE_ROOT,'scripts/simulate-progression.cjs'):'./simulate-progression.cjs');
 const cases=[
  {mode:'arcane',skills:['element_choice','arcane_focus','mana_spring','arcane_resonance'],families:['magic'],weapons:['Sword','Mace','Daggers','Wand','Staff']},
  {mode:'fire',skills:['element_choice','arcane_focus','mana_spring','kindling'],families:['magic'],weapons:['Sword','Wand','Staff']},
@@ -27,8 +28,8 @@ function run({levels=[5,35],seeds=[9201,9202],tickLimit=2500}={}){
     won:r.won,died:r.died,timedOut:r.timedOut,seconds:r.seconds,damageDealt:r.damageDealt,
     damageTaken:r.damageTaken,dps:r.seconds>0?+(r.damageDealt/r.seconds).toFixed(2):0,
     hpMax:r.hpMax,hpEnd:r.hpEnd,mpMax:r.mpMax,mpEnd:r.mpEnd,manaSpent:r.manaSpent,
-    infusionActivations:r.infusionActivations,infusionHits:r.infusionHits,
-    infusionDamage:r.infusionDamage,fundedCasts:r.fundedCasts,
+    infusionActivations:Number(r.infusionActivations)||0,infusionHits:Number(r.infusionHits)||0,
+    infusionDamage:Number(r.infusionDamage)||0,fundedCasts:Number(r.fundedCasts)||0,
     gearFingerprint:r.gearFingerprint,pointsSpent:r.pointsSpent,
     realm:r.realm,risk:r.risk,groupSize:r.groupSize});
   }catch(err){errors.push({level,seed,build:build.id,error:err.stack||err.message});}
@@ -53,7 +54,7 @@ function run({levels=[5,35],seeds=[9201,9202],tickLimit=2500}={}){
    'Do not equate raw DPS with balance: survivability, resources, status and AoE matter.',
    'Preview branch only: no merge or deploy.'
   ],success:errors.length===0&&rows.length===levels.length*seeds.length*PROFILES.length};
- const file=path.resolve('reports/stage63-native-magic-matrix.json');
+ const file=path.resolve(process.env.STAGE63_REPORT_FILE||'reports/stage63-native-magic-matrix.json');
  fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file,JSON.stringify(report,null,2)+'\n');
  const md=['# Stage 6.3 — Native Magic weapon matrix','',
  '24 legal points, real Rare gear, deterministic seeds and Dangerous three-enemy encounters; NOT natural account progress.','',

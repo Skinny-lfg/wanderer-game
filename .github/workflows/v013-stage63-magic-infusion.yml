@@ -10,6 +10,7 @@ on:
       - 'combat/v012-buildcraft.js'
       - 'combat/talent-graph-next.js'
       - 'scripts/v013-stage63-native-magic-matrix.cjs'
+      - 'scripts/v013-stage63-native-magic-comparison.cjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -31,6 +32,7 @@ jobs:
         run: |
           node --test \
             tests/v013-stage63-magic-runtime.test.cjs \
+            tests/v013-stage63-native-magic-comparison.test.cjs \
             tests/talent-graph-combat.test.cjs \
             tests/talent-graph-runtime.test.cjs \
             tests/talent-graph-next.test.cjs \
@@ -40,15 +42,24 @@ jobs:
             tests/v013-offhand-stage2-gear.test.cjs \
             tests/v013-gravecaller-bound-souls.test.cjs
           git diff --check
-      - name: Native E5/E35 Magic caster and physical matrix
-        run: node scripts/v013-stage63-native-magic-matrix.cjs
+      - name: Matched E5/E35 Magic native baseline and new mechanics
+        run: |
+          git worktree add --detach "$RUNNER_TEMP/wanderer-before" 945a00c135c08253a1c8d8359b4b102e5296b4c4
+          ln -s "$GITHUB_WORKSPACE/node_modules" "$RUNNER_TEMP/wanderer-before/node_modules"
+          STAGE63_NATIVE_ROOT="$RUNNER_TEMP/wanderer-before" STAGE63_REPORT_FILE=reports/stage63-native-magic-baseline.json node scripts/v013-stage63-native-magic-matrix.cjs
+          node scripts/v013-stage63-native-magic-matrix.cjs
+          node scripts/v013-stage63-native-magic-comparison.cjs
       - name: Save native report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: stage63-native-magic-weapon-matrix
           path: |
+            reports/stage63-native-magic-baseline.json
+            reports/stage63-native-magic-baseline.md
             reports/stage63-native-magic-matrix.json
             reports/stage63-native-magic-matrix.md
+            reports/stage63-native-magic-comparison.json
+            reports/stage63-native-magic-comparison.md
           retention-days: 30
           if-no-files-found: warn
