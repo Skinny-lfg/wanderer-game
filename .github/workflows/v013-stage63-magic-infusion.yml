@@ -5,6 +5,11 @@ on:
     paths:
       - '.github/workflows/v013-stage63-magic-infusion.yml'
       - 'tests/v013-stage63-magic-runtime.test.cjs'
+      - 'tests/talent-graph-combat.test.cjs'
+      - 'combat/v012-combat-runtime.js'
+      - 'combat/v012-buildcraft.js'
+      - 'combat/talent-graph-next.js'
+      - 'scripts/v013-stage63-native-magic-matrix.cjs'
   workflow_dispatch:
 permissions:
   contents: read
