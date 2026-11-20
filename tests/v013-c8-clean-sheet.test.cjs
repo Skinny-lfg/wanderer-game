@@ -19,7 +19,7 @@ function bossPath(card){
   for(const n of M.neighbors(card,{discoveredSecrets:[],visited:[]},at))if(!seen.has(n)){seen.add(n);q.push([...path,n]);}
  }throw Error('Native Boss inaccessible');
 }
-function bossVictory(seed){
+function bossVictory(seed,options={}){
  const a=create(seed,undefined,{}, {skipPersistence:true});
  a.setup(35,'Sword','Legendary');a.setUnlocked(35);a.start(35,true);
  const c=a.controller(),g=c.state,card=g.dungeon.cards[0];c.chooseRealm(card.id);
@@ -27,6 +27,10 @@ function bossVictory(seed){
   assert.equal(c.visitRoom(node),true);assert.equal(a.enter(),true);
   if(a.events.run()?.event)assert.equal(a.events.choose(2),true);
   else {
+   if(options.forceBossOverflow&&card.nodes[node].kind==='boss'){
+    while(a.state().stash.length<40)a.state().stash.push(a.makeItem(1,'helm',null,'loot','Cloth','Common'));
+    a.rng(0); // deterministic valid loot roll; no guaranteed-drop gameplay change
+   }
    const r=a.state().run;assert.equal(r?.status,'fight');
    for(let i=0;r.status==='fight'&&i<100;i++){
     for(const mob of r.enemies?.length?r.enemies:[r.enemy])if(mob)mob.hp=0;
@@ -58,6 +62,17 @@ test('C8 end-of-run overflow cannot be claimed at full Stash and is settled once
  assert(s.expeditionOverflow.some(x=>x.id===secured.id));
  s.stash.splice(0,1);assert.equal(a.claimOverflow(),1);
  assert(s.stash.some(x=>x.id===secured.id));assert.equal(a.claimOverflow(),0);
+});
+test('C8 actual Boss loot enters overflow when Stash is full and cannot be claimed twice',()=>{
+ const {a}=bossVictory(90806,{forceBossOverflow:true}),s=a.state();
+ const earned=new Set(a.results().earned.map(x=>x.id));
+ const reward=s.expeditionOverflow.find(x=>earned.has(x.id));
+ assert(reward,'A native Boss loot roll must be secured in overflow rather than silently lost');
+ assert.equal(a.claimOverflow(),0,'Full Stash refuses claim');
+ s.stash.splice(0,1);assert.equal(a.claimOverflow(),1);
+ assert(s.stash.some(x=>x.id===reward.id));
+ assert(!s.expeditionOverflow.some(x=>x.id===reward.id));
+ assert.equal(a.claimOverflow(),0,'Claim cannot duplicate an existing item');
 });
 test('C8 native Boss victory offers and awards exactly one persistent-tier Rune choice',()=>{
  const {a,g}=bossVictory(90803),s=a.state(),reward=s.pendingRuneReward;
