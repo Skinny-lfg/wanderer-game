@@ -238,9 +238,12 @@ function craftEarned(a,profile,level){
 // RNG, inventory insertion and persistence; this agent cannot force a preferred roll.
 function investEarnedGear(a,profile,level){
  const outcome={crafted:[]},forge=a.forge;
- if(!forge||!a.economyCanAct())return outcome;
+ if(!forge||!a.economyCanAct()||forge.canCraft&&!forge.canCraft())return outcome;
  const efficiency=(gain,fragments,essence)=>gain/(Math.max(1,fragments)+4*Math.max(0,essence));
  for(let attempt=0;attempt<2;attempt++){
+  // Native craftRecipe rejects a full Stash even when progress().ready is
+  // true; don't treat that legal UI restriction as a broken economy.
+  if(forge.canCraft&&!forge.canCraft())break;
   const s=a.state(),options=[];
   for(const recipe of forge.recipes){
    const progress=forge.progress(recipe.id,level);
