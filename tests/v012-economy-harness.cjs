@@ -92,7 +92,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
   feedback:()=>auditFeedback={logs:[],floats:[]},rng:value=>{Math.random=()=>value;gameRandom=()=>value;},
   encounter({count=3,boss=false,elite=false}={}){const g=phase1Controller.state;Object.assign(g.selected,{mobCount:count,boss,elite:elite||boss});state.run.status="ready";phase1StartWave();return state.run;},
   stats:phase2Stats,baseStats:totalStats,statSources:stats=>WandererV012GearStats.breakdown(state.equip,state.runes,state.runeSlots,statContext(),stats),statMarkup:phase3StatValue,makeItem,
-  gear:{evasionChance,gearEvasionRating,tryDodge,enemyAttackType,statsWidget,itemComparison,setCounts,setBonuses,itemSource,itemImg,detailEffectHtml,affinityBadge,legendaryDescription,
+  gear:{evasionChance,gearEvasionRating,tryDodge,enemyAttackType,statsWidget,itemComparison,setCounts,setBonuses,itemSource,itemImg,detailEffectHtml,offhandEffectPanel,offhandComparePanel,gearTrend,comparisonWarning,legendaryDescription,
    weaponAttack,legendaryReady,legendaryAttackBonus,enemyDebuffMarkup,dungeonEquipmentOdds,placeholderIcon,renderStash,
    renderForge:()=>auditForge(),renderMerchant:()=>auditMerchant(),
    screen:()=>document.getElementById('screen').innerHTML},slots:SLOTS,types:TYPES,offhandTypes:OFFHAND_TYPES,

@@ -17,6 +17,38 @@ function power(s){
  const activeSpell=!!(s.caster||s.phase2Magic||s.phase2Decay||s.phase2Aegis||s.off?.subtype==='Orb');
  return Math.round(s.attack*2+s.defense*4+s.maxhp*.15+s.attacksPerSec*35+s.crit*1.2+s.blockChance*2+(activeSpell?Math.max(0,Number(s.spellPower)||0)*1.7:0));
 }
+// Read-only presentation of the actual native Off-Hand procs. This is NOT a
+// combat simulator and its values must never be added to the Gear Power score.
+function offhandEffect(item,stats=null){
+ if(item?.slot!=='offhand'||!['Orb','Tome','Charm'].includes(item.subtype))return null;
+ const hp=Math.max(0,Number(stats?.maxhp)||0),sp=Math.max(0,Number(stats?.spellPower)||0);
+ const ward=Math.max(0,Number(stats?.wardBonus)||0),known=!!stats;
+ const two=(n)=>Math.round(n*100)/100;
+ const type=item.subtype,trait=item.v013Trait||null;
+ if(type==='Orb'){
+  const amount=two((hp*.02+sp*.05)*(1+ward));
+  const castBarrier=two(hp*.02*(1+ward));
+  return {type,title:'Orb Ward',interval:6,unit:'Barrier',amount:known?amount:null,
+   description:'On a damaging main-hand attack or funded automatic Magic hit: 2% Max HP + 5% Spell Power Barrier (6s cooldown).',
+   condition:'Requires damage to enemy Health; Orb and Aegis Barrier stack without a cap and reset after combat.',
+   epic:trait==='ward'?'Arcane Ward: funded casts also grant 2% Max HP Barrier (separate 6s cooldown).':null,
+   epicAmount:trait==='ward'&&known?castBarrier:null,epicAvailable:trait!=='ward'||!known||Number(stats?.mana)>0};
+ }
+ if(type==='Tome'){
+  const amount=trait==='echoing_recall'?5:3;
+  return {type,title:'Tome Recall',interval:6,unit:'Mana',amount,
+   description:'Every 3 Mana-paid actions restores up to '+amount+' Mana (6s cooldown).',
+   condition:known&&!(Number(stats?.mana)>0)?'Inactive: this build has no Mana-paid actions.':'Requires paid actions and missing Mana; never exceeds Max Mana.',
+   epic:trait==='echoing_recall'?'Echoing Recall: upgraded from 3 to 5 Mana per successful Recall.':null,
+   epicAmount:null,epicAvailable:true};
+ }
+ const percent=trait==='heartbloom'?.02:.015;
+ return {type,title:'Charm Renewal',interval:8,unit:'HP',amount:known?two(hp*percent):null,
+  description:'Damaging main-hand hits heal '+(percent===.02?'2':'1.5')+'% Max HP while injured (8s cooldown).',
+  condition:'Blocked attacks, full Health and secondary dagger strikes do not trigger healing. Healing debuffs apply.',
+  epic:trait==='heartbloom'?'Heartbloom Renewal: upgraded from 1.5% to 2% Max HP.':null,
+  epicAmount:null,epicAvailable:true};
+}
 const WEAPON_INTERVALS=Object.freeze({Sword:1.6,Mace:2.2,Bow:2,Daggers:1.15,'Two-Handed':2.8,Staff:2.3,Wand:1.65});
 function attackSpeed(weapon,agility=5,speedRating=0,intellect=5){
  const agi=Math.max(0,agility-5),int=Math.max(0,intellect-5);
@@ -96,5 +128,5 @@ function breakdown(equipment,ownedRunes,equippedRuneIds,context,current=null){
  const rounded=n=>Math.round((Number(n)||0)*100)/100;
  return STAT_KEYS.map(key=>{const v=stages.map(s=>rounded(s[key]));return{key,base:v[0],equipment:rounded(v[1]-v[0]),runes:rounded(v[2]-v[1]),talents:rounded(v[3]-v[2]),temporary:rounded(v[4]-v[3]),total:v[4]};});
 }
-root.WandererV012GearStats=Object.freeze({gearEvasionRating,itemStatValue,totalStats,power,breakdown,STAT_KEYS,attackSpeed,WEAPON_INTERVALS});
+root.WandererV012GearStats=Object.freeze({gearEvasionRating,itemStatValue,totalStats,power,offhandEffect,breakdown,STAT_KEYS,attackSpeed,WEAPON_INTERVALS});
 })(globalThis);
