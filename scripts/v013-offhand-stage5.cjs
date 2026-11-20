@@ -88,10 +88,12 @@ function pairedReport(options={}){
     const r=S.encounter(20,c.build,seed,'boss',{...S.DEFAULTS,mode:'encounter',
       gear:'current',rarity:'Epic',points:18,runes:false,tickLimit:4500,
       targetPolicy:'mechanics',lockScenarioStreams:true,measure:true,offhandType:c.offhand,
-      ...(upgraded?{offhandEpicTrait:c.trait}:{})});
+      offhandEpicTrait:upgraded?c.trait:null});
     epicTrials.push({build:c.build.id,offhand:c.offhand,trait:upgraded?c.trait:'unmodified-epic',
      actualTrait:r.offhandTrait,seed,won:r.won,died:r.died,timedOut:r.timedOut,
      seconds:r.seconds,otherGearFingerprint:r.otherGearFingerprint,metrics:metrics(r)});
+    if(r.offhandTrait!==(upgraded?c.trait:null))
+     issues.push({kind:'epic_wrong_trait',offhand:c.offhand,seed,upgraded,actual:r.offhandTrait});
     if(r.timedOut)issues.push({kind:'epic_timeout',offhand:c.offhand,seed,upgraded});
    }catch(error){issues.push({kind:'epic_error',offhand:c.offhand,seed,upgraded,error:String(error.stack||error).slice(0,1200)});}
   }
@@ -146,13 +148,13 @@ function pairedReport(options={}){
    'Scenario streams, other equipment, generated Realm and opponent type are paired. The Off-Hand and its effects are the deliberate variables.',
    'Three seeds per build/level/kind: outcomes are exploratory, not statistically conclusive win rates.',
    'Elapsed seconds count only on wins when comparing speed. Early death is not faster progress.',
-   'Epic traits are explicit diagnostic fixtures, not items magically awarded to natural-account players.',
+   'Epic trait cases use a trait-free Epic control versus an otherwise identical guaranteed Epic recipe trait. They are diagnostic fixtures, not naturally earned items.',
    'Prepared-boss stress is a separate 216-fight high-investment cohort: native Epic gear, 24 synthetic Talent points, three Runes, marked Elite and Reliquary preparation. It does not represent earned progression.',
    'Real offhand proc telemetry is read from the combat engine; Gear Power is not used as a surrogate for combat performance.'
   ]};
 }
 function naturalReport(){
- const cfg=N.parseArgs(['--seeds=9101','--profiles=cautious,magic-fire,hexblade-hybrid,leather-duelist',
+ const cfg=N.parseArgs(['--seeds=9101,9201','--profiles=cautious,magic-fire,hexblade-hybrid,leather-duelist',
   '--max-level=20','--max-attempts=4','--max-total-attempts=12','--tick-limit=4500']);
  const data=N.run(cfg);
  const accounts=data.accounts.map(a=>{

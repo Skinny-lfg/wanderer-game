@@ -39,6 +39,11 @@ test('Stage 5 native simulator rejects illegal guaranteed traits and two-handed 
  const defaultOptions={...S.DEFAULTS,mode:'encounter',rarity:'Epic',points:0,lockScenarioStreams:true,tickLimit:500};
  assert.throws(()=>S.encounter(1,{...P.BUILDS[2],weapon:'Staff'},94101,'normal',{...defaultOptions,offhandType:'Orb'}),/Off-Hand not compatible/);
  assert.throws(()=>S.encounter(1,P.BUILDS[0],94101,'normal',{...defaultOptions,offhandType:'Charm',offhandEpicTrait:'echoing_recall'}),/Invalid controlled Epic trait/);
+ const clean=S.encounter(1,P.BUILDS[0],94101,'normal',{...defaultOptions,offhandType:'Orb',offhandEpicTrait:null});
+ assert.equal(clean.offhandTrait,null,'explicit trait-free Epic control has no random Arcane Ward');
+ const ward=S.encounter(1,P.BUILDS[0],94101,'normal',{...defaultOptions,offhandType:'Orb',offhandEpicTrait:'ward'});
+ assert.equal(ward.offhandTrait,'ward');
+ assert.equal(ward.otherGearFingerprint,clean.otherGearFingerprint,'Epic trait A/B holds every other equipment item fixed');
 });
 test('Stage 5 native gear decisions value active Mana only for Mana-capable profiles',()=>{
  const basic={slot:'offhand',rarity:'Epic',tier:20,spell:5,mana:20,manaRegenBonus:.5,hp:10,wardBonus:.03};

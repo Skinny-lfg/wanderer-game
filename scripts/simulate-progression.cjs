@@ -163,13 +163,15 @@ function prepare(level,build,seed,opts,desiredRisk=undefined,desiredFamily=undef
    if(['Bow','Staff','Two-Handed'].includes(build.weapon))throw Error('Off-Hand not compatible with two-handed weapon');
    if(!['Shield','Orb','Tome','Charm',null].includes(opts.offhandType))throw Error('Invalid controlled Off-Hand type');
    a.state().equip.offhand=opts.offhandType?a.makeItem(gearE,'offhand',null,'loot',opts.offhandType,opts.rarity):null;
-   if(opts.offhandEpicTrait){
+   if(Object.hasOwn(opts,'offhandEpicTrait')){
+    // null is a deliberate trait-free Epic control, not a random Epic roll.
     const allowed={Orb:'ward',Tome:'echoing_recall',Charm:'heartbloom'};
-    if(opts.rarity!=='Epic'||allowed[opts.offhandType]!==opts.offhandEpicTrait)
+    if(opts.rarity!=='Epic'||!Object.hasOwn(allowed,opts.offhandType)||
+      ![null,allowed[opts.offhandType]].includes(opts.offhandEpicTrait))
      throw Error('Invalid controlled Epic trait for '+opts.offhandType);
     a.state().equip.offhand.v013Trait=opts.offhandEpicTrait;
    }
-  }else if(opts.offhandEpicTrait)throw Error('Epic trait requires an explicit Off-Hand type');
+  }else if(Object.hasOwn(opts,'offhandEpicTrait'))throw Error('Epic trait requires an explicit Off-Hand type');
   // Stage 9.2 only: hold native route, draft, control and combat RNG streams fixed
   // AFTER gear rolls. Gear rarity must not silently change the test encounter.
   // Harness streams are deterministic test controls, not gameplay overrides.
