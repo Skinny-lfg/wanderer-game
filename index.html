@@ -681,6 +681,7 @@ function renderV013Forge(){
 function renderForge(){renderV013Forge();}
 let v013TierSelectedId=null;
 function renderV013TierUpgrade(){
+ const U=WandererV013TierUpgrade;
  const host=phase3ContentTarget||document.getElementById('blacksmithOperationContent')||document.getElementById('screen');if(!host||!state)return;
  const previous=host.querySelector('.v013TierUpgrade');if(previous)previous.remove();
  const unlocked=phase1Controller.state.unlocked;
