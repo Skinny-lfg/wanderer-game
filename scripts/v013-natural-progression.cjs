@@ -37,6 +37,16 @@ const PIVOTS=Object.freeze({
 function pivotProfile(id){return {...PROFILES[id],...PIVOTS[id],variantId:id+'-pivot'};}
 const DEFAULTS=Object.freeze({seeds:[9101,9201],profiles:['cautious','balanced'],maxLevel:8,maxAttempts:6,maxTotalAttempts:null,tickLimit:4500,maxRooms:34,output:'reports/v013-stage93-natural-e1-e8.json'});
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const POLICY_MODES=Object.freeze({
+ 'risk-aware':{realm:false,rooms:false,targets:false,retreat:false},
+ adaptive:{realm:true,rooms:true,targets:true,retreat:true},
+ 'adaptive-realms':{realm:true,rooms:false,targets:false,retreat:false},
+ 'adaptive-rooms':{realm:false,rooms:true,targets:false,retreat:false},
+ 'adaptive-targets':{realm:false,rooms:false,targets:true,retreat:false},
+ 'adaptive-retreat':{realm:false,rooms:false,targets:false,retreat:true},
+ legacy:{realm:false,rooms:false,targets:false,retreat:false}
+});
+function policyFlags(name){const flags=POLICY_MODES[name];if(!flags)throw Error('Unknown simulation decision policy: '+name);return flags;}
 const round=(n,places=2)=>Number(Number(n).toFixed(places));
 function parseArgs(args=[]){
  const v={...DEFAULTS,seeds:[...DEFAULTS.seeds],profiles:[...DEFAULTS.profiles]};
@@ -793,7 +803,7 @@ function fightNatural(a,profile,tickLimit,context={}){
  if(!r||r.status!=='fight')throw Error('Combat entry missing');
  const startedAt=r.combatSeconds||0;
  const start=r.hp,first=r.encounterLeader||r.enemy,initial=r.totalMobCount||r.initialMobCount||r.enemies?.length||1;
- const cap=context.capabilities||null,adaptive=context.decisionModel==='adaptive';
+ const cap=context.capabilities||null,adaptive=context.adaptiveTargets??context.decisionModel==='adaptive';
  let ticks=0,switches=0,thornRedirects=0,minionFocusSeconds=0,minionFocusSwitches=0,minimum=r.maxhp>0?r.hp/r.maxhp:0;
  const healthLost={boss:0,elite:0,minion:0,normal:0};
  const barrierLost={boss:0,elite:0,minion:0,normal:0};
@@ -880,7 +890,7 @@ function clearResults(a,profile){
  }
 }
 function playDungeon(a,level,profile,opts,decisionModel='risk-aware'){
- const c=a.controller(),g=c.state;
+ const c=a.controller(),g=c.state,flags=policyFlags(decisionModel);
  if(g.unlocked<level)throw Error('Cannot bypass native unlock from E'+g.unlocked+' to E'+level);
  a.start(level,true);
  if(g.expedition!==level||g.stage!=='choice')throw Error('Native Expedition start rejected at E'+level+' '+JSON.stringify({
@@ -888,7 +898,7 @@ function playDungeon(a,level,profile,opts,decisionModel='risk-aware'){
   stashCapacity:a.state().stashCapacity,overflow:a.state().expeditionOverflow?.length,
   pendingRune:!!a.state().pendingRuneReward,review:!!a.results().review}));
  if(!g.dungeon?.cards?.length)throw Error('Natural Realm Cards were not generated');
- const cap=decisionModel==='adaptive'?capabilities(a):null;
+ const cap=flags.realm?capabilities(a):null;
  // Rendered 3-card information only: one publicly known omen, condition,
  // affinity, risk and favoured loot. Never read the other hidden omens.
  const visible=Object.fromEntries(g.dungeon.cards.map(card=>{
@@ -904,7 +914,7 @@ function playDungeon(a,level,profile,opts,decisionModel='risk-aware'){
  if(offer)c.chooseContract(contract);
  const report={level,realm:card.id,affinity:card.family,risk:card.risk,contract,
   realmCondition:visible[card.id]?.conditionId||null,
-  initialCapabilities:cap||capabilities(a),
+  decisionModel,initialCapabilities:cap||capabilities(a),
   realmEvaluations:ranks.map(x=>({id:x.card.id,affinity:x.card.family,risk:x.card.risk,
    totalScore:x.score,baseScore:x.baseScore,...x.fit})),rooms:[],
   events:[],boons:[],potions:[],equipped:[],decisions:[],
@@ -935,7 +945,7 @@ function playDungeon(a,level,profile,opts,decisionModel='risk-aware'){
    if(!spare||!a.bag.discard(spare.id))break;
   }
   const roomContext=()=>({equipment:a.state().equip,
-   ...(decisionModel==='adaptive'?{capabilities:capabilities(a)}:{}),
+   ...(flags.rooms?{capabilities:capabilities(a)}:{}),
    recentFights:report.rooms,cha:a.baseStats()?.cha??5,
    ...(decisionModel!=='legacy'?{carriedBagItems:a.bag.items().length}:{})});
   let next=selectRoom(c,profile,a.vitals(),roomContext());
@@ -953,7 +963,7 @@ function playDungeon(a,level,profile,opts,decisionModel='risk-aware'){
    :evaluateRetreat({hp:current.hp,maxhp:current.maxhp,bag:a.bag.items(),next,profile,
      gold:a.state().gold,fragments:a.state().fragments,
      essence:a.state().crafting?.essence||0,recentFights:report.rooms,
-     capabilities:decisionModel==='adaptive'?capabilities(a):null});
+     capabilities:flags.retreat?capabilities(a):null});
   if(decision.extract){
    report.decisions.push({type:'extract',...decision,steps:g.dungeon.steps});
    if(a.checkpoint.extract()){report.extracted=true;break;}
@@ -961,7 +971,7 @@ function playDungeon(a,level,profile,opts,decisionModel='risk-aware'){
   }
   report.decisions.push({type:'move',room:next.room,node:next.type,cost:next.cost,
    ...(decisionModel!=='legacy'?{riskAssessment:decision}:{}),
-   ...(decisionModel==='adaptive'?{capabilities:capabilities(a)}:{}),
+   ...(flags.rooms?{capabilities:capabilities(a)}:{}),
    visibleMobRange:next.visibleMobRange||null,stepsRemaining:g.dungeon.steps,
    hpRatio:round(ratio),slack:next.slack,objective:next.objective,reliquary:next.reliquary,
    elite:next.elite,eligibleEliteAlternatives:next.eligibleEliteAlternatives});
@@ -986,7 +996,7 @@ function playDungeon(a,level,profile,opts,decisionModel='risk-aware'){
   }
   // Record every native drop, including the first room: there is no guaranteed gear.
   const wasFirstRoom=g.dungeon?.cleared?.length===1&&!g.selected.boss;
-  const fight=fightNatural(a,profile,opts.tickLimit,{decisionModel,capabilities:capabilities(a)});
+  const fight=fightNatural(a,profile,opts.tickLimit,{adaptiveTargets:flags.targets,capabilities:capabilities(a)});
   const actualDrops=(a.state().run?.loot||[]).map(item=>
    ({slot:item.slot,rarity:item.rarity,subtype:item.subtype,source:item.source}));
   report.rooms.push({room:next.room,roomType:node.kind,...fight,
@@ -1019,6 +1029,7 @@ function playDungeon(a,level,profile,opts,decisionModel='risk-aware'){
 }
 function simulateAccount(seed,id,opts,simulationOptions={}){
  const profile=PROFILES[id],decisionModel=simulationOptions.decisionModel||'adaptive';
+ policyFlags(decisionModel);
  const a=create(seed,undefined,simulationOptions.moduleOverrides||{}, {skipPersistence:true,now:1720000000000+seed});
  const initialGear=gearSnapshot(a);
  if(a.talents.earned(a.state().automaticTalents)!==0||
@@ -1198,6 +1209,6 @@ function main(args=process.argv.slice(2)){
  return report;
 }
 module.exports={PROFILES,PIVOTS,pivotProfile,DEFAULTS,parseArgs,gearScore,gearSnapshot,runeScore,chooseRuneReward,manageEarnedRunes,potionScore,selectEarnedPotions,buyEarnedPotions,refineEarnedReagents,selectThornAwareTarget,spendEarnedTalents,prepareEarnedAbility,equipEarned,
- prepareCamp,craftEarned,investEarnedGear,consolidateStash,capabilities,rankRealms,choiceRealm,pathLength,eliteOpportunity,selectRoom,evaluateRetreat,boonScore,chooseBoon,chooseContract,eventOptions,potionSlots,usePotionKind,usePotionsBetween,rerollPoorBoonAtShrine,
+ prepareCamp,craftEarned,investEarnedGear,consolidateStash,policyFlags,capabilities,rankRealms,choiceRealm,pathLength,eliteOpportunity,selectRoom,evaluateRetreat,boonScore,chooseBoon,chooseContract,eventOptions,potionSlots,usePotionKind,usePotionsBetween,rerollPoorBoonAtShrine,
  fightNatural,resolveEvent,clearResults,playDungeon,simulateAccount,analyze,run,markdown,main};
 if(require.main===module)main();
