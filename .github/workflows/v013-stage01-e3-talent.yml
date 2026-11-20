@@ -23,12 +23,17 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - name: Validate runner and original talent tests
+      - name: Talent graph, native stats and prepared Inventory regression
         run: |
           node --check scripts/v013-stage6-e3-repro.cjs
-          node --test tests/v013-natural-progression.test.cjs
-      - name: Reproduce historical Daring E3 failure (natural XP/gear)
-        run: node scripts/v013-stage6-e3-repro.cjs
+          node --test \
+            tests/v013-natural-progression.test.cjs \
+            tests/v013-stage01-prepared-stat-breakdown.test.cjs \
+            tests/v013-stage6-agent-strategy.test.cjs
+      - name: Re-run Daring 9701 all E1–E3 attempts with genuine XP and gear
+        run: |
+          node scripts/v013-stage6-e3-repro.cjs
+          node -e "const r=require('./reports/stage6-e3-repro.json');if(r.errors)throw Error('Native E3 talent error still occurs: '+JSON.stringify(r.attempts.filter(a=>a.error)));console.log('E3_NATIVE_TALENTS_VALIDATED='+JSON.stringify({attempts:r.attempts.length,unlocked:r.unlocked,errors:r.errors,stop:r.stop}));"
       - name: Preserve diagnostic state even if reproduction fails
         if: always()
         uses: actions/upload-artifact@v4
