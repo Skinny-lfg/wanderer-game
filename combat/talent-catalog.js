@@ -75,7 +75,7 @@ const outerSkills=[
  ['aegis','stored_impact','🔨','Stored Impact','Return half the damage absorbed by a broken barrier on your next attack.',1,'barrier_pulse'],
  ['vitality','second_pulse','💚','Second Pulse','Crossing below half Health heals 1% per rank each second for 3s, once per room.',5,'renewal'],
  ['vitality','deep_reserves','🌱','Deep Reserves','Store the first full-health heal each room, up to 8% Health.',1,'second_breath'],
- ['magic','spell_echo','✨','Spell Echo','Every third funded cast echoes for 10% damage per rank.',5,'arcane_focus'],
+ ['magic','spell_echo','✨','Spell Echo','Every third funded cast or Arcane Infusion hit echoes for 10% damage per rank.',5,'arcane_focus'],
  ['magic','last_spark','💠','Last Spark','The first cast each room that empties Mana always critically strikes.',1,'mana_spring'],
  ['decay','incubation','🦠','Incubation','Every third consecutive Rot tick deals 12% more damage per rank.',5,'toxic_touch'],
  ['decay','spore_mark','🪰','Spore Mark','Changing targets from Rot to a healthy enemy copies one Rot stack on hit. Cooldown 5s.',1,'wasting_curse']
@@ -85,7 +85,7 @@ const outerPairs=[
  ['turn_tide','⚔️','Turn the Tide','relentless','brace','Defending an elite or boss strike primes a riposte for 3s.'],
  ['last_bastion','🏰','Last Bastion','stored_impact','second_pulse','Prepared: once per expedition, survive lethal damage and gain Barrier for 4s. Recover half its absorbed damage.'],
  ['lifeweaver','🌙','Lifeweaver','deep_reserves','spell_echo','Overhealing charges a funded cast: +30% damage or restore 8% Health below half.'],
- ['grave_bloom','🕳️','Grave Bloom','spell_echo','incubation','Prepared: echoes spread Rot to two enemies, or deal a Rot tick against a lone enemy.'],
+ ['grave_bloom','🕳️','Grave Bloom','spell_echo','incubation','Prepared: every third funded cast or Arcane Infusion hit spreads Rot to two enemies, or deals one Rot tick against a lone enemy.'],
  ['septic_wound','🦂',"Reaper's Cadence",'incubation','open_wound','Prepared: attacks against enemies with Bleed and Rot deal damage equal to one tick of the strongest stack of each, capped at 4% enemy maximum Health (6s cooldown). Neither stack is consumed.']
 ];
 function outerNodes(){
