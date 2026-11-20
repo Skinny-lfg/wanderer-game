@@ -1,0 +1,51 @@
+name: Wanderer Stage 02 — Consolidate verified 50 accounts (no resimulation)
+
+on:
+  push:
+    branches: [audit/v013-stage6]
+    paths: ['.github/workflows/v013-stage02-consolidate-only.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  aggregate:
+    if: github.ref == 'refs/heads/audit/v013-stage6'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Unit-test source-provenance and E20 censoring
+        run: |
+          node --check scripts/v013-stage02-aggregate.cjs
+          node --test tests/v013-stage02-e20-audit.test.cjs
+      - name: Reuse ten completed native cohorts from revision 39f71f
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 44777864951
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          pattern: stage02-cohort-*
+          path: reports/stage02
+          merge-multiple: true
+      - name: Verify exact native files, all 50 accounts and E1–E20 funnel
+        run: |
+          node scripts/v013-stage02-aggregate.cjs \
+            reports/stage02 reports/stage02/stage02-report.json
+      - name: Store report without recreating player attempts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage02-e20-consolidated-report
+          path: reports/stage02/stage02-report.*
+          if-no-files-found: warn
+          retention-days: 30
+      - run: git diff --check
