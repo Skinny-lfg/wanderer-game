@@ -1,0 +1,63 @@
+name: Wanderer Stage 6 — Final tactical policy checkpoint (no deploy)
+
+on:
+  push:
+    branches: [audit/v013-stage6]
+    paths: ['.github/workflows/v013-stage6-final-checkpoint.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    if: github.ref == 'refs/heads/audit/v013-stage6'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Tactical agent, native accounts and stable Realm regressions
+        run: |
+          node --check scripts/v013-natural-progression.cjs
+          node --check scripts/v013-agent-strategy.cjs
+          node --check scripts/v013-stage6-agent-comparison.cjs
+          node --test \
+            tests/v013-stage6-agent-strategy.test.cjs \
+            tests/v013-natural-progression.test.cjs \
+            tests/v013-stable-realm-offers.test.cjs
+      - name: Final paired initial-seed E1/E2 adaptive vs baseline
+        run: |
+          node scripts/v013-stage6-agent-comparison.cjs \
+            --seeds=9701,9702,9703,9704 \
+            --profiles=balanced,plate-warden,leather-duelist,magic-lightning,hexblade-hybrid \
+            --max-level=2 --max-attempts=18 --max-total-attempts=36 \
+            --out=reports/stage6-final-compare.json
+      - name: Persist final 20-account comparison
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage6-final-compare
+          path: reports/stage6-final-compare.*
+          if-no-files-found: ignore
+      - name: Final isolated Duelist policy ablation
+        run: |
+          node scripts/v013-stage6-policy-ablation.cjs \
+            --seeds=9701,9702,9703,9704 \
+            --profiles=leather-duelist \
+            --max-level=2 --max-attempts=18 --max-total-attempts=36 \
+            --out=reports/stage6-final-ablation.json
+      - name: Persist final ablation
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage6-final-ablation
+          path: reports/stage6-final-ablation.*
+          if-no-files-found: ignore
+      - run: git diff --check
