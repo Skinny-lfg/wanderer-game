@@ -32,6 +32,14 @@ function forgeFixture(){
   },
   unlock(level){
    phase1Controller.state.unlocked=level;
+   if(phase5Snapshot?.expedition){
+    phase5Snapshot.expedition.completed=level-1;
+    phase5Snapshot.expedition.unlocked=level;
+    phase5Snapshot.expedition.attempts=level-1;
+    phase5Snapshot.expedition.active=null;
+    phase5Snapshot.expedition.awardKeys=[];
+    phase5Snapshot.expedition.lastOutcome=level>1?'victory':'new';
+   }
    phase3RenderCityCenter();
   },
   status(){
@@ -39,7 +47,9 @@ function forgeFixture(){
    return {weaponId:state.equip.weapon.id,weaponTier:state.equip.weapon.tier,
     weaponName:state.equip.weapon.name,legendaryId:legendary?.id,
     legendaryRank:legendary?.upgradeRank||0,fragments:state.fragments,
-    essence:state.crafting.essence,operation:phase3BlacksmithOperation};
+    essence:state.crafting.essence,operation:phase3BlacksmithOperation,
+    phase5Ready,saveBlocked,unlocked:phase1Controller.state.unlocked,
+    snapshotUnlocked:phase5Snapshot?.expedition?.unlocked};
   }
  };
 }
@@ -87,6 +97,7 @@ test('v0.13 Blacksmith: Tier and Legendary actions visible and executable in Chr
    assert.match(await page.locator('dialog[open]').innerText(),/Upgrade existing gear/);
    await page.locator('dialog[open] [data-confirm]').click();
    const after=await page.evaluate(()=>__forgeProbe.status());
+   console.log('TIER_CLICK_STATUS '+JSON.stringify({before,after,errors}));
    assert.equal(after.weaponId,before.weaponId,'Tier upgrade must preserve item ID');
    assert.equal(after.weaponTier,5,'Tier upgrade must reach unlocked E5');
    assert(after.fragments<before.fragments&&after.essence<before.essence,'Tier upgrade must spend materials');
