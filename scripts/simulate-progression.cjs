@@ -155,7 +155,7 @@ function prepare(level,build,seed,opts,desiredRisk=undefined,desiredFamily=undef
  for(let attempt=0;attempt<(desiredFamily?48:1);attempt++){
   const resolvedSeed=(seed+attempt)>>>0||1;
   // Freeze wall-clock-dependent IDs as well as native RNG for exact replay.
-   const a=create(resolvedSeed,undefined,{}, {recordModules:opts.recordModules,skipPersistence:true,now:1720000000000+resolvedSeed});
+   const a=create(resolvedSeed,undefined,{}, {recordModules:opts.recordModules,skipPersistence:true,measure:opts.measure===true,now:1720000000000+resolvedSeed});
   a.setup(gearE,build.weapon,opts.rarity);
   // Stage 9.2 only: hold native route, draft, control and combat RNG streams fixed
   // AFTER gear rolls. Gear rarity must not silently change the test encounter.
@@ -215,12 +215,15 @@ function combatSnapshot(a,c){
   stage:g.stage,run:r,results:a.results()
  }));
 }
-function fight(a,c,limit,targetPolicy='focus'){
+function fight(a,c,limit,targetPolicy='focus',measure=false){
  const r=a.state().run;
  if(!r||r.status!=='fight')throw Error('Expected native combat encounter');
  const initialStateSha256=crypto.createHash('sha256').update(JSON.stringify(combatSnapshot(a,c))).digest('hex');
  const vanguardEncounter=c.state.selected?.vanguard===true;
  const startedAt=r.combatSeconds||0;
+ const nativeBefore=measure?{...a.measured}:null;
+ const activationBefore=measure?Object.fromEntries(Object.entries(a.build()?.runtime?.passiveTelemetry||{}).map(([id,v])=>[id,v.activations||0])):null;
+ const startBarrier=measure?Number(r.barrier)||0:null;
  const startHp=r.hp,startMp=r.mp,startedTier=r.tier,leader=r.encounterLeader||r.enemy;
  const profile=A.profileForStyle(leader?.bossStyle),sourceActors=[...(r.enemies||[r.enemy]),...(r.groupReserve||[])].filter(Boolean);
  const initialRoles=Object.fromEntries(['minion','tank','skirmisher','caster','boss','elite'].map(role=>[role,sourceActors.filter(e=>(e.boss?'boss':e.miniboss?'elite':e.role)===role).length]));
@@ -235,6 +238,32 @@ function fight(a,c,limit,targetPolicy='focus'){
   a.tick();ticks++;for(const mob of r.enemies||[])unseenReserve.delete(mob);minimumHp=Math.min(minimumHp,Math.max(0,r.hp)/(r.maxhp||1));peakLiving=Math.max(peakLiving,(r.enemies||[r.enemy]).filter(e=>e?.hp>0).length+(r.groupReserve||[]).filter(e=>e?.hp>0).length);peakVisible=Math.max(peakVisible,(r.enemies||[r.enemy]).filter(e=>e?.hp>0).length);}
  const metrics=r.metrics||{},died=c.state.stage==='failed'||r.hp<=0,timedOut=!died&&r.status==='fight'&&ticks>=limit;
  const row={initialStateSha256,vanguardEncounter,targetPolicy,tier:startedTier,type:leader?.boss?'boss':leader?.miniboss?'elite':'combat',bossId:profile?.id||null,bossAffinity:profile?Object.keys(A.PROFILES).find(f=>A.PROFILES[f]===profile):null,bossName:profile?.name||null,bossStyle:leader?.bossStyle||null,eliteType:leader?.eliteType||null,initialRoles,roster,initialVisible,initialReserve,peakLivingEnemies:peakLiving,peakVisibleEnemies:peakVisible,targetPolicy,targetSwitches,traitId:r.encounterTraitId||null,traitRegrowthHealing:Math.round(metrics.traitRegrowthHealing||0),traitDeathPulse:Math.round(metrics.traitDeathPulse||0),bossModifierIds:[...(r.bossModifierIds||[])],bossPulseTriggers:Math.round(metrics.bossPulseTriggers||0),bossFrenzyTriggers:Math.round(metrics.bossFrenzyTriggers||0),bossPreparation:r.bossPreparation?JSON.parse(JSON.stringify(r.bossPreparation)):null,status:died?'died':timedOut?'timeout':r.status,timedOut,died,won:!died&&r.status==='cleared',seconds:+((r.combatSeconds||0)-startedAt).toFixed(6),updateCalls:ticks,ticks,hpStart:+startHp.toFixed(2),hpEnd:+Math.max(0,r.hp).toFixed(2),hpMax:r.maxhp,mpStart:+startMp.toFixed(2),mpEnd:+Math.max(0,r.mp).toFixed(2),mpMax:r.maxmp,minHpPct:+(minimumHp*100).toFixed(1),conditionId:r.conditionId||null,conditionMarked:!!r.conditionMarked,conditionBarrierGranted:Math.round(r.conditionBarrierGranted||0),conditionRiteTriggers:Math.round(metrics.conditionRiteTriggers||0),damageDealt:Math.round(metrics.damageDealt||0),damageTaken:Math.round(metrics.damageTaken||0),absorbed:Math.round(metrics.absorbed||0),manaSpent:Math.round(metrics.manaSpent||0),initialEnemies,enemies:r.totalMobCount||initialEnemies,reinforcementsSpawned:initialReserve-unseenReserve.size,bossSummons:Math.round(metrics.bossSummons||0),bossHealing:Math.round(metrics.bossHealing||0),bossMinionDeaths:Math.round(metrics.bossMinionDeaths||0),bossWards:Math.round(metrics.bossWards||0),bossArcanePulses:Math.round(metrics.bossArcanePulses||0),bossCastInterruptions:Math.round(metrics.bossCastInterruptions||0),bossNodeDestroyed:Math.round(metrics.bossNodeDestroyed||0),enemyAbilityCasts:Math.round(metrics.enemyAbilityCasts||0),thornbloomHits:metrics.thornbloomHits||0,thornbloomDamage:metrics.thornbloomDamage||0,eliteSummons:Math.round(metrics.eliteSummons||0),bossCastPreparations:Math.round(metrics.bossCastPreparations||0)};
+ if(measure){
+  const now=a.measured,telemetry=a.build()?.runtime?.passiveTelemetry||{},activations={};
+  for(const [id,data]of Object.entries(telemetry)){
+   const delta=(data.activations||0)-(activationBefore[id]||0);
+   if(delta>0)activations[id]=delta;
+  }
+  const v=n=>Number((Number(n)||0).toFixed(3));
+  row.affinityMetrics={
+   barrierAtEntry:v(startBarrier),
+   barrierGenerated:v(now.barrier-nativeBefore.barrier),
+   healingActual:v(now.healed-nativeBefore.healed),
+   dotDamageActual:v(metrics.periodicDamage||0),
+   manaSpent:v(metrics.manaSpent||0),
+   barrierAbsorbed:v(metrics.absorbed||0),
+   barrierAtExit:v(r.barrier),
+   spellPower:v(r.stats?.spellPower),
+   maxHealth:v(r.stats?.maxhp),
+   attackPower:v(r.stats?.attack),
+   manaRegenPerSecond:v(r.stats?.manaRegen),
+   passiveActivations:activations,
+   passiveTelemetryScope:'Buildcraft activated() only, not all passive and stat triggers',
+   barrierScope:'setBarrier() after entry; initial Barrier reported separately',
+   healingScope:'actual setHeal() increments; excludes wasted overhealing'
+  };
+  if(Object.values(row.affinityMetrics).some(x=>typeof x==='number'&&!Number.isFinite(x)))throw Error('Non-finite affinity diagnostic');
+ }
  return row;
 }
 function shortestRoute(card){
@@ -304,7 +333,7 @@ function encounter(level,build,seed,kind,opts,forcedTrait=undefined,forcedBossMo
  const run=a.encounter({count,boss:kind==='boss',elite:kind==='elite'});
  if(run.tier!==level)throw Error('Incorrect encounter tier '+run.tier+' vs '+level);
  if(kind==='boss'&&run.encounterLeader?.bossStyle!==A.profileFor(card.family).style)throw Error('Native Boss mismatch for '+card.family);
- const result=fight(a,c,opts.tickLimit,opts.targetPolicy);
+ const result=fight(a,c,opts.tickLimit,opts.targetPolicy,opts.measure===true);
  const mode=forcedBossMod!==undefined?'bossmods':forcedTrait!==undefined?'traits':opts.mode==='bosses'?'bosses':['enemies','roles'].includes(opts.mode)?opts.mode:opts.mode==='elites'?'elites':'encounter';
  const label=forcedBossMod!==undefined?(forcedBossMod||'baseline'):forcedTrait!==undefined?(forcedTrait||'baseline'):mode==='bosses'?card.family:['enemies','roles'].includes(mode)?'swarm-'+count:kind;
  return {mode,kind:label,roleEffect:roleEffect||null,plannedConditionId:conditionPlan?.id||null,conditionNaturallyMarked:!!conditionPlan?.rooms?.includes(candidate),controlledRoomAccess,traitFixtureInjected:!!trialTraitId,level,build:build.id,seed,resolvedSeed,seedShift,gearE,gearFingerprint,gearTier:P.gearTier(gearE).name,
@@ -333,7 +362,7 @@ function bossPreparationEncounter(level,build,seed,opts,strategy){
  }
  if(!c.visitRoom(candidate)||!a.enter())throw Error('Cannot enter prepared native boss');
  const run=a.encounter({count:1,boss:true});
- const result=fight(a,c,opts.tickLimit,opts.targetPolicy);
+ const result=fight(a,c,opts.tickLimit,opts.targetPolicy,opts.measure===true);
  return {mode:'bossprep',kind:strategy,level,build:build.id,seed,gearE,gearFingerprint,gearTier:P.gearTier(gearE).name,
   risk:card.risk,affinity:card.family,resolvedSeed,seedShift,preparationCostHp:sacrifice,pointsBudget:opts.points,pointsSpent:allocatedPoints,
   realm:card.name,unlocked:level,...result};
@@ -488,4 +517,4 @@ function main(args=process.argv.slice(2)){
  return report;
 }
 module.exports={combatSnapshot,fight,prepare,BUILDS,DEFAULTS,parseArgs,talentPlan,gearLevel,shortestRoute,selectTarget,encounter,bossPreparationEncounter,dungeon,simulate,sourceFingerprint,main};
-if(require.main===module)main();
+if(require.main===module){if(process.argv.includes('--mode=affinities'))require('./v013-affinity-baseline.cjs').main(process.argv.slice(2));else main();}
