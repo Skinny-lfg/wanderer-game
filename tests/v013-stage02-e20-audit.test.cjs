@@ -118,3 +118,39 @@ test('Native Forge preview alone is not permission to craft when Stash is full',
  assert.equal(st.fragments,before.fragments);
  assert.equal(st.crafting.essence,before.essence);
 });
+
+test('Lazy-module fingerprint variants do not invalidate identical native runner and agent bytes',()=>{
+ const shards=all();
+ shards[0].source='same-commit-but-a-different-loaded-module-graph';
+ const r=A.audit(shards);
+ assert.equal(r.coverage.accounts,50);
+ assert.equal(r.provenance.engineSourceVariants.length,2);
+});
+test('Source revision and five native file hashes must agree across all ten shards',()=>{
+ const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'stage02-provenance-'));
+ const shards=all();
+ const files=[
+  'scripts/v013-natural-progression.cjs',
+  'scripts/v013-agent-strategy.cjs',
+  'scripts/v013-stage02-run-cohort.cjs',
+  'scripts/v013-stage02-aggregate.cjs',
+  'combat/v012-gear-stats.js'
+ ];
+ const hashes=files.map((_,i)=>String(i+1).repeat(64));
+ try{
+  for(const d of shards){
+   d.runnerSha256=hashes[0];d.agentStrategySha256=hashes[1];
+   const lines=['revision='+'a'.repeat(40),'node=v22.23.5',
+    'cohort='+d.stage02.cohort,
+    ...files.map((f,i)=>hashes[i]+'  '+f)];
+   fs.writeFileSync(path.join(dir,'raw-'+d.stage02.cohort+'.provenance.txt'),lines.join('\n'));
+  }
+  const proof=A.verifyProvenance(dir,shards);
+  assert.equal(proof.verifiedFileHashes[files[0]],hashes[0]);
+  assert.equal(proof.gitRevision,'a'.repeat(40));
+  const changed=path.join(dir,'raw-9811-B.provenance.txt');
+  fs.writeFileSync(changed,fs.readFileSync(changed,'utf8').replace(hashes[4], 'f'.repeat(64)));
+  assert.throws(()=>A.verifyProvenance(dir,shards),/mixed Git revisions, Node versions or native code file hashes/);
+ }finally{fs.rmSync(dir,{recursive:true,force:true});}
+});
