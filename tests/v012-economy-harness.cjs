@@ -101,6 +101,9 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
   // Simulator-only adapter for the exact v0.13 Forge rule and settlement used
   // by renderV013Forge. Does not grant items or bypass costs/recipe unlocks.
   forge:{
+   // The native Forge requires BOTH recipe resources and free Stash space;
+   // preview/progress only check recipe/resources. Expose the read-only gate.
+   canCraft(){return economyCanAct()&&stashHasRoom();},
    preview(id,tier){return WandererV013Crafting.previewCraft(id,tier,(...args)=>makeItem(...args,true));},
    progress(id,tier){return WandererV013Crafting.progress(state,id,tier);},
    recipes:WandererV013Crafting.RECIPES,
