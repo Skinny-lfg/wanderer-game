@@ -126,14 +126,16 @@ test('Multi-Affinity progression and AoE/single-target hybrid are different dime
  assert.equal(cleave.role,'hybrid','both damage modes can occur within one Affinity');
  assert.equal(cleave.affinityComposition,'focused');
 });
-test('Single-target player finishes wounded enemies, only switches toward a caster when needed',()=>{
+test('Single-target player maintains deliberate focus on one enemy until death',()=>{
  const current={hp:15,maxhp:80,role:'tank'},caster={hp:40,maxhp:40,role:'caster'};
  const cap=build('Daggers',['double_strike','precision']);
  assert.equal(cap.focusReady,true);
  const run={status:'fight',enemy:current,enemies:[current,caster]};
  assert.equal(A.selectTarget(run,cap,caster),current);
  current.hp=80;
- assert.equal(A.selectTarget(run,cap,current),caster);
+ assert.equal(A.selectTarget(run,cap,current),current,'new target is not picked merely for being a caster');
+ current.hp=0;
+ assert.equal(A.selectTarget(run,cap,current),caster,'only living targets can be focused');
 });
 test('Read-only telemetry includes a native kill removed from active enemy roster',()=>{
  const focused={hp:60,boss:true},other={hp:18,role:'minion'};
