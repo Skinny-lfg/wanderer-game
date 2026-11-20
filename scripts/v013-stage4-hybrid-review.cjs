@@ -125,7 +125,7 @@ function markdown(report){
   '| Build | E | Heal/s before → after | Barrier delta | DoT delta | Mana delta |',
   '|---|---:|---:|---:|---:|---:|'];
  for(const g of report.normalGroups)lines.push('| '+[g.build,g.level,g.healingBefore+' → '+g.healingAfter,g.delta.meanBarrierGenerated,g.delta.meanDotPerSecond,g.delta.meanManaSpent].join(' | ')+' |');
- lines.push('','## Elite and Boss stress (4 seeds/level cases per build and kind)', '',
+ lines.push('','## Elite and Boss stress (two levels × two seeds = four cases per build/kind)', '',
   '| Build | Kind | W/L | Timeouts | Avg seconds | Avg min HP % | Actual healing | Barrier generated | DoT |',
   '|---|---|---:|---:|---:|---:|---:|---:|---:|');
  for(const g of report.stress.groups)lines.push('| '+[g.build,g.kind,g.wins+'/'+g.n,g.timeouts,g.meanSeconds,g.meanMinHpPct,g.meanHealing,g.meanBarrier,g.meanDot].join(' | ')+' |');
@@ -156,10 +156,8 @@ function run(output=OUTPUT){
  const pairs=verifyTalentGraph();
  const current=A.run(A.parseArgs(['--mode=affinities','--out=reports/v013-stage4-affinity-current.json']));
  const normalGroups=compare(current);
- const stage3Rows=fs.existsSync(path.resolve('reports/v013-stage3-affinity-comparison.json'))?
-  JSON.parse(fs.readFileSync(path.resolve('reports/v013-stage3-affinity-comparison.json'),'utf8')).rows:[];
- // The frozen aggregate is immutable. The marginal per-trigger reference is
- // optional and can be recorded independently from the verified Stage 3 artifact.
+ const stage3Rows=FROZEN.ferventLifeCases;
+ assert.equal(stage3Rows.length,4,'Frozen Fervent Life proc cases missing');
  const stressResults=stress(current);
  const summary={total:current.summary.total,valid:current.summary.valid,
   errors:current.summary.errors,timeouts:current.summary.timeouts,wins:current.summary.wins};

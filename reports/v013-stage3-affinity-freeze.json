@@ -374,5 +374,51 @@
       2,
       2
     ]
+  ],
+  "ferventLifeCases": [
+    {
+      "build": "fury-vitality",
+      "level": 5,
+      "seed": 9101,
+      "attackPower": 47,
+      "maxHealth": 331,
+      "healingActual": 72,
+      "passiveActivations": {
+        "fervent_life": 2
+      }
+    },
+    {
+      "build": "fury-vitality",
+      "level": 5,
+      "seed": 9201,
+      "attackPower": 38,
+      "maxHealth": 272,
+      "healingActual": 75.236,
+      "passiveActivations": {
+        "fervent_life": 3
+      }
+    },
+    {
+      "build": "fury-vitality",
+      "level": 35,
+      "seed": 9101,
+      "attackPower": 55,
+      "maxHealth": 376,
+      "healingActual": 102.93,
+      "passiveActivations": {
+        "fervent_life": 4
+      }
+    },
+    {
+      "build": "fury-vitality",
+      "level": 35,
+      "seed": 9201,
+      "attackPower": 45,
+      "maxHealth": 304,
+      "healingActual": 94.644,
+      "passiveActivations": {
+        "fervent_life": 4
+      }
+    }
   ]
 }

@@ -19,6 +19,7 @@ on:
       - 'scripts/v013-affinity-baseline.cjs'
       - 'scripts/v013-stage2-barrier-compare.cjs'
       - 'scripts/v013-stage3-coherence-compare.cjs'
+      - 'scripts/v013-stage4-hybrid-review.cjs'
       - 'scripts/prepare-automatic-preview.mjs'
       - 'scripts/update-pages-preview.mjs'
       - 'package.json'
@@ -81,6 +82,18 @@ jobs:
           path: |
             reports/v013-stage3-affinity-comparison.json
             reports/v013-stage3-affinity-comparison.md
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Stage 4 six adjacent hybrid links, paired Stage 3 baseline and Elite/Boss stress
+        run: npm run simulate:v013:affinities:stage4
+      - name: Stage 4 hybrid review evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v013-stage4-hybrid-review
+          path: |
+            reports/v013-stage4-hybrid-review.json
+            reports/v013-stage4-hybrid-review.md
           if-no-files-found: warn
           retention-days: 30
       - name: Verify current 343-node Talent Graph runtime and source catalog
