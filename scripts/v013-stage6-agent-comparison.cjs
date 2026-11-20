@@ -25,7 +25,16 @@ function summary(out){
   deaths:attempts.filter(t=>t.status==='defeat').length,
   observedNonfocusedNetHpLoss:round(sum(rooms,r=>r.observedNonFocusedHealthLost)),
   groups:group(rooms.filter(r=>r.roomType==='combat').map(r=>r.initialEnemies===1?'solo':r.initialEnemies<=4?'2-4':r.initialEnemies<=12?'5-12':'13+')),
-  actualRoles,byBossStyle:encounters(rooms.filter(r=>r.roomType==='boss'),'bossStyle'),
+  actualRoles,
+  affinityComposition:Object.fromEntries([...new Set(rooms.map(r=>r.capabilities?.affinityComposition||'unobserved'))].sort().map(k=>{
+   const selected=rooms.filter(r=>(r.capabilities?.affinityComposition||'unobserved')===k);
+   return [k,{fights:selected.length,wins:selected.filter(r=>r.won).length,
+    damageModes:Object.fromEntries([...new Set(selected.map(r=>r.capabilities?.role||'unknown'))].sort().map(role=>
+     [role,selected.filter(r=>r.capabilities?.role===role).length])),
+    synergyStages:Object.fromEntries([...new Set(selected.map(r=>r.capabilities?.synergyStage||'unknown'))].sort().map(stage=>
+     [stage,selected.filter(r=>r.capabilities?.synergyStage===stage).length]))}];
+  })),
+  byBossStyle:encounters(rooms.filter(r=>r.roomType==='boss'),'bossStyle'),
   byEliteType:encounters(rooms.filter(r=>r.roomType==='elite'),'eliteType'),
   byBossModifier:Object.fromEntries([...new Set(rooms.filter(r=>r.roomType==='boss')
    .flatMap(r=>r.bossModifiers||[]))].sort().map(id=>{
@@ -69,7 +78,7 @@ const md=['# Stage 6 — Native adaptive agent vs original risk-aware policy',''
  'Paired initial seeds and native account starts; future RNG and map paths may diverge. Not a human or controlled fight comparison.',
  '','| Metric | Original | Adaptive |','|---|---:|---:|',
  ...rows.map(([label,key])=>'| '+label+' | '+read(comparison.baseline,key)+' | '+read(comparison.adaptive,key)+' |'),
- '','Further data: JSON by Boss style, individual Boss modifier, role-versus-Boss matchup, Elite subtype, live build role and group-size selection.',
+ '','Further data: JSON by Boss style, individual Boss modifier, role-versus-Boss matchup, Elite subtype, live build role, independent affinity composition/synergy stage, and group-size selection.',
  '','Observational net HP loss on nonfocused enemies includes DoTs and secondary damage; heals and removed mobs may undercount it.',
  '','No gear, XP, damage or unlock is injected. Errors are never counted as deaths.',''];
 fs.writeFileSync(dest.replace(/\.json$/,'.md'),md.join('\n'));
