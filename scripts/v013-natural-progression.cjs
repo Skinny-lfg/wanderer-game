@@ -1131,7 +1131,7 @@ function analyze(accounts,opts){
  return {stage:'9.6',schemaVersion:5,engine:'v0.13 live native account, dungeon and combat runtime',
   source:S.sourceFingerprint().sha256,
   runnerSha256:crypto.createHash('sha256').update(fs.readFileSync(__filename)).digest('hex'),
-  settings:{...opts,decisionModel:accounts[0]?.attempts?.[0]?.rooms?.[0]?.strategy||'unobserved'},
+  settings:opts,
   integrity:{
    noFabricatedXp:true,noForcedEquipment:true,noForcedEncounter:true,
    noForcedLevelUnlock:true,noDamageOverride:true,
@@ -1153,7 +1153,7 @@ function analyze(accounts,opts){
 function run(opts=parseArgs(),simulationOptions={}){
  const accounts=[];
  for(const seed of opts.seeds)for(const id of opts.profiles)accounts.push(simulateAccount(seed,id,opts,simulationOptions));
- return analyze(accounts,{...opts,decisionModel:simulationOptions.decisionModel||'risk-aware'});
+ return analyze(accounts,{...opts,decisionModel:simulationOptions.decisionModel||'adaptive'});
 }
 function markdown(data){
  const out=['# Wanderer v0.13 — Stage 9.6: Grey loot, salvage and natural progression E1–E8','',
