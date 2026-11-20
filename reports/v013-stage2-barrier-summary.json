@@ -1,0 +1,71 @@
+{
+  "stage": "2",
+  "branch": "audit/v013",
+  "validatedCodeCommit": "5bb7a6079c1805e88e4d6fd5197d29c01095bca4",
+  "runId": 44730440325,
+  "scanRunId": 44730440361,
+  "artifactId": 14625987443,
+  "artifactUrl": "https://github.com/Skinny-lfg/wanderer-game/actions/runs/44730440325/artifacts/14625987443",
+  "sourceSha256": "fcb89647f4210753e3700fc36a90b22653073c89a8404ef08d0d60b02aa7b7fe",
+  "scenarios": {
+    "valid": 48,
+    "total": 48,
+    "errors": 0,
+    "timeouts": 0
+  },
+  "mainTests": {
+    "passed": 312,
+    "total": 312,
+    "failed": 0
+  },
+  "jobs": {
+    "C7": 4,
+    "cleanSheet": 3
+  },
+  "comparisons": [
+    {
+      "build": "aegis-magic",
+      "level": 5,
+      "initial": {
+        "before": 42,
+        "after": 49.52
+      },
+      "generated": {
+        "before": 129.33,
+        "after": 154.48
+      },
+      "absorbed": {
+        "before": 110.5,
+        "after": 110.5
+      }
+    },
+    {
+      "build": "aegis-magic",
+      "level": 35,
+      "initial": {
+        "before": 45.5,
+        "after": 53.9
+      },
+      "generated": {
+        "before": 160.65,
+        "after": 204.8
+      },
+      "absorbed": {
+        "before": 159.54,
+        "after": 161
+      }
+    }
+  ],
+  "invariants": [
+    "zero-Spell Power Aegis unchanged",
+    "non-Aegis pure builds unchanged",
+    "Ward Strength once",
+    "non-Aegis cap unchanged",
+    "Wand Orb unchanged",
+    "Pages source parity"
+  ],
+  "notes": [
+    "Controlled three-mob encounter, not natural account progression",
+    "Possible double wave-start grant during controlled fixture staging; avoid interpreting raw initial Barrier as one isolated event"
+  ]
+}
