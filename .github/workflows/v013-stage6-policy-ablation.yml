@@ -41,4 +41,15 @@ jobs:
           name: stage6-policy-ablation
           path: reports/stage6-policy-ablation.*
           if-no-files-found: ignore
+      - name: Controlled same-state Boss and Elite target comparisons
+        run: |
+          node --check scripts/v013-stage6-controlled-targets.cjs
+          node scripts/v013-stage6-controlled-targets.cjs reports/stage6-target-controlled.json
+      - name: Archive controlled combat comparisons
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage6-target-controlled
+          path: reports/stage6-target-controlled.*
+          if-no-files-found: ignore
       - run: git diff --check
