@@ -100,6 +100,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
   rollShop,refresh:refreshMerchantStock,economyCanAct,offerBossRunes,claimRune:claimPendingRuneChoice,
   // Simulator-only adapter for the exact v0.13 Forge rule and settlement used
   // by renderV013Forge. Does not grant items or bypass costs/recipe unlocks.
+  storage:{occupied:()=>stashItemCount(),capacity:()=>stashCapacity(),hasRoom:()=>stashHasRoom()},
   forge:{
    // The native Forge requires BOTH recipe resources and free Stash space;
    // preview/progress only check recipe/resources. Expose the read-only gate.
