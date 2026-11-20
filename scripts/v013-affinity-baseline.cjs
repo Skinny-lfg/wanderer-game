@@ -21,7 +21,7 @@ const BUILDS=Object.freeze([
  {id:'decay-blood',name:'Decay + Blood',weapon:'Daggers',families:['decay','blood'],skills:['affinity_decay','affinity_blood','toxic_touch','bleeding_edge','plague_spread']}
 ].map(x=>Object.freeze({...x,families:Object.freeze(x.families),skills:Object.freeze(x.skills)})));
 const DEFAULTS=Object.freeze({
- levels:[5,35],seeds:[9101,9201],points:72,rarity:'Rare',gear:'current',
+ levels:[5,35],seeds:[9101,9201],points:24,rarity:'Rare',gear:'current',
  runes:false,enemyAffinity:'aegis',risk:0,mobs:3,tickLimit:4500,
  targetPolicy:'focus',builds:BUILDS.map(x=>x.id),
  output:'reports/v013-stage1-affinity-baseline.json'
@@ -55,6 +55,7 @@ function parseArgs(args=[]){
   else if(key==='out'&&value.endsWith('.json')&&!path.isAbsolute(value)&&!value.includes('..'))cfg.output=value;
   else throw Error('Unsupported Stage 1 argument: '+arg);
  }
+ if(cfg.points!==24)throw Error('Stage 1 fixed-budget comparison requires exactly 24 actually allocated points');
  if(cfg.levels.length*cfg.seeds.length*cfg.builds.length>240)throw Error('Stage 1 pilot limited to 240 native encounters');
  return cfg;
 }
@@ -89,6 +90,7 @@ function run(cfg){
   const progress=S.talentPlan(build,cfg.points);
   const selected=build.families.filter(f=>progress.nodes.includes('affinity_'+f));
   if(selected.length!==build.families.length)throw Error('Unrepresented build '+build.id+': '+selected.join(','));
+  if(progress.nodes.length!==cfg.points)throw Error('Incomplete baseline allocation '+build.id+': '+progress.nodes.length+'/'+cfg.points);
   plans.set(build.id,{selectedAffinities:selected,pointsUsed:progress.nodes.length,chosen:progress.nodes,
    hybridSkillActive:build.families.length===2?build.skills.some(id=>!id.startsWith('affinity_')&&progress.nodes.includes(id)):null});
  }

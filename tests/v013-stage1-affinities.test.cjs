@@ -8,7 +8,7 @@ test('Stage 1 profiles cover six pure and six adjacent hybrid Affinities',()=>{
  assert.equal(A.BUILDS.filter(x=>x.families.length===2).length,6);
  const pure=new Set(A.BUILDS.filter(x=>x.families.length===1).map(x=>x.families[0]));
  assert.deepEqual([...pure].sort(),['aegis','blood','decay','fury','magic','vitality'].sort());
- for(const b of A.BUILDS){assert(b.skills.every(x=>S.talentPlan(b,72).nodes.includes(x)||x==='arcane_bastion'&&b.families.length===2),
+ for(const b of A.BUILDS){assert(b.skills.every(x=>S.talentPlan(b,24).nodes.includes(x)||x==='arcane_bastion'&&b.families.length===2),
   b.id+' has unavailable requested talent');}
 });
 test('Stage 1 CLI is bounded and remains separate from native progression mode',()=>{
@@ -17,11 +17,12 @@ test('Stage 1 CLI is bounded and remains separate from native progression mode',
  assert.equal(S.parseArgs(['--mode=encounter']).mode,'encounter');
 });
 test('Stage 1 reports real Aegis Barrier and Magic/Decay resources with fixed gear fingerprints',()=>{
- const cfg=A.parseArgs(['--levels=15','--seeds=9101','--builds=pure-aegis,aegis-magic,magic-decay','--points=72']);
+ const cfg=A.parseArgs(['--levels=15','--seeds=9101','--builds=pure-aegis,aegis-magic,magic-decay','--points=24']);
  const r=A.run(cfg);
  assert.equal(r.summary.errors,0,JSON.stringify(r.rows.filter(x=>x.error)));
  assert.equal(r.rows.length,3);
  for(const row of r.rows){
+  assert.equal(row.pointsSpent,24,'profile point budget must equal actual allocated points');
   assert(row.gearFingerprint?.length===64,'must preserve deterministic gear identity');
   assert(row.selectedAffinities.length===row.affinities.length,'all requested Affinities must be present');
   assert(['cleared','died'].includes(row.status),'native combat must finish');
