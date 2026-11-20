@@ -6,7 +6,8 @@ on:
       - '.github/workflows/v013-forge-ui-browser.yml'
       - 'tests/v013-forge-ui-browser.test.cjs'
       - 'index.html'
-      - 'online/v013-tier-upgrade-ui.js'
+      - 'economy/v013-gear-rolls.js'
+      - 'economy/v013-crafting.js'
   workflow_dispatch:
 permissions:
   contents: read
@@ -23,7 +24,7 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - name: Use real Chromium with visible Blacksmith controls
+      - name: Use real Chromium to craft randomized items in the Blacksmith
         run: |
           CHROME_BIN="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
           if [ -n "$CHROME_BIN" ]; then
@@ -36,7 +37,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: v013-blacksmith-ui-screenshots
+          name: v013-random-forge-ui-screenshots
           path: reports/v013-forge-ui-evidence/*.png
           if-no-files-found: warn
           retention-days: 14
