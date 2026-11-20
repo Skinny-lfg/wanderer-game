@@ -1,0 +1,43 @@
+name: Wanderer Stage 6 — Intermediate Boss tactical scenarios (no deploy)
+
+on:
+  push:
+    branches: [audit/v013-stage6]
+    paths: ['.github/workflows/v013-stage6-intermediate-scenarios.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  controlled:
+    if: github.ref == 'refs/heads/audit/v013-stage6'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Intermediate E1 Rare risk-0 native tactical combat
+        run: |
+          node scripts/v013-stage6-controlled-targets.cjs \
+            reports/stage6-intermediate-rare.json \
+            --level=1 --risk=0 --rarity=Rare --points=24
+      - name: Intermediate E5 Epic risk-1 native tactical combat
+        run: |
+          node scripts/v013-stage6-controlled-targets.cjs \
+            reports/stage6-intermediate-epic.json \
+            --level=5 --risk=1 --rarity=Epic --points=24
+      - name: Export paired combat comparisons
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage6-intermediate-targets
+          path: reports/stage6-intermediate-*
+          if-no-files-found: ignore
+      - run: git diff --check
