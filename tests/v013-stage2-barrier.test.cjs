@@ -1,6 +1,5 @@
 'use strict';
-// Stage 2: exact Aegis HP/SP formulas and native cap, without synthetic buffs
-// or changes to unrelated defensive sources.
+// Stage 2 generation coefficients remain exact; native Barrier is now uncapped.
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs');
 const create=require('./v012-economy-harness.cjs');
@@ -19,31 +18,28 @@ function combatContext(power=100){
   spendMana:amount=>{if(player.mp<amount)return false;player.mp-=amount;return true;}};
  return {player,enemy,events,c};
 }
-test('Stage 2 formulas keep zero-SP Aegis and non-Aegis caps identical to v0.13 baseline',()=>{
+test('Stage 2 Aegis HP/SP generation formulas remain unchanged after cap removal',()=>{
  for(const hp of [0,20,200,1000]){
   assert.equal(B.barrierAmount(hp,0,.05,.08),hp*.05);
-  assert.equal(B.barrierCap(hp,0,true),Math.max(8,Math.round(hp*.3)));
-  assert.equal(B.barrierCap(hp,300,false),Math.max(8,Math.round(hp*.3)));
  }
  assert.equal(B.barrierAmount(200,100,.05,.08),18);
  assert.equal(B.barrierAmount(200,100,.03,.06),12);
- assert.equal(B.barrierCap(200,100,true),85);
- assert.equal(B.barrierCap(200,100,false),60);
  assert.equal(B.barrierAmount(200,-50,.05,.08),10);
  assert(Number.isFinite(B.barrierAmount(0,0,.1,.2)));
 });
-test('Stage 2 native Barrier cap belongs to Aegis, remains bounded and applies Ward Strength once',()=>{
+test('Native Barrier adds without cap with or without Aegis, applying Ward Strength only once',()=>{
  const a=create(9101);
  a.state().automaticTalents=buy(['affinity_aegis']);
  const r={barrier:0,maxhp:200,stats:{spellPower:100,wardBonus:.2}};
  assert(Math.abs(a.grantBarrier(10,r)-12)<1e-8,'Ward Strength only once');
- assert.equal(a.grantBarrier(9999,r),73);
- assert.equal(r.barrier,85);
- assert.equal(a.grantBarrier(12,r),0);
+ assert(Math.abs(a.grantBarrier(9999,r)-9999*1.2)<1e-8);
+ assert(Math.abs(r.barrier-(12+9999*1.2))<1e-8);
+ assert(Math.abs(a.grantBarrier(12,r)-14.4)<1e-8);
  a.state().automaticTalents=buy(['affinity_magic']);
- const nonAegis={barrier:0,maxhp:200,stats:{spellPower:100,wardBonus:0}};
- assert.equal(a.grantBarrier(9999,nonAegis),60);
- assert.equal(nonAegis.barrier,60);
+ const other={barrier:0,maxhp:200,stats:{spellPower:100,wardBonus:0}};
+ assert.equal(a.grantBarrier(9999,other),9999);
+ assert.equal(other.barrier,9999);
+ assert.equal(B.barrierCap,undefined,'obsolete cap function is removed');
 });
 test('Stage 2 Barrier Pulse and Runic Shield scale with SP, respecting the original 6s/3s cooldowns',()=>{
  for(const power of [0,100]){
@@ -87,7 +83,7 @@ test('Stage 2 current Talent Tree tooltips describe HP plus Spell Power, not the
  const nodes=T.NODES;
  const aegis=nodes.find(n=>n.id==='affinity_aegis'),bastion=nodes.find(n=>n.id==='arcane_bastion');
  assert(aegis?.description?.includes('8% Spell Power'),'Aegis selection description must be accurate');
- assert(aegis.description.includes('25% Spell Power'),'Aegis cap must be discoverable');
+ assert(aegis.description.includes('stacks freely'),'Aegis tooltip must describe uncapped Barrier');
  assert(bastion?.description?.includes('6% Spell Power'),'Arcane Bastion description must reflect scaling');
 });
 
@@ -99,4 +95,5 @@ test('Stage 2 generated Pages mirrors and current tree descriptions have no stal
  assert(graph.includes('5% Max HP + 8% Spell Power'));
  assert(graph.includes('3% Max HP + 6% Spell Power'));
  assert(!graph.includes('grant 3% maximum Health as Barrier'));
+ assert(!graph.includes('total Barrier limit'));
 });

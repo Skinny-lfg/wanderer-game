@@ -109,8 +109,6 @@ function phase2Launch(plane){
  loot:[],valuables:[],gold:0,fragments:0,eliteType:ports.rollEliteArchetype(),
  boonIds:[...(ports.phase1Controller.state.dungeon?.foundationState?.boonIds||[])],playerHealingDebuffUntil:0,combatSeconds:0,setCooldowns:{...(ports.phase1Continuity?.setCooldowns||{})},secondWindUsed:ports.phase1Continuity?.secondWindUsed||false,
  legendaryState:ports.phase1Continuity?.legendaryState||null,legendaryCastCount:ports.phase1Continuity?.legendaryCastCount||0,legendaryAttackCount:ports.phase1Continuity?.legendaryAttackCount||0};
- if(ports.phase6Run?.effects.barrier){ports.setBarrier(ports.state.run,ports.state.run.maxhp*ports.phase6Run.effects.barrier);ports.phase6Run.effects.barrier=0;}
- ports.legendaryRealmStart(ports.state.run);
  ports.view='combat';ports.logEntries=[];ports.addLog('Expedition '+ports.state.run.tier+' · Realm '+ports.phase1Controller.state.planeIndex+' · '+plane.name,'good');ports.phase1StartWave(true);
 }
 
@@ -119,8 +117,12 @@ function phase1StartWave(resetScroll=false){
  const r=ports.state.run,g=ports.phase1Controller.state;
  if(!ports.isPhase1Run()||!g.selected||r.status==='fight')return;
  r.enc=g.wave;const last=g.wave===g.selected.waves;
+ // No Barrier is carried across encounters; entrance effects are new grants.
+ r.barrier=0;
+ if(ports.phase6Run?.effects.barrier){ports.setBarrier(r,r.maxhp*ports.phase6Run.effects.barrier);ports.phase6Run.effects.barrier=0;}
  if(ports.state.automaticTalents?.nodes?.includes('affinity_aegis'))ports.setBarrier(r,WandererV012Buildcraft.barrierAmount(r.maxhp,r.stats?.spellPower,.05,.08));
  const talentBarrier=ports.phase1Build?.runtime?.talentBonuses?.startBarrier||0;if(talentBarrier>0)ports.setBarrier(r,talentBarrier);
+ ports.legendaryRealmStart(r);
  const theme=ports.phase2Theme(g.selected.id);
  const conditions=globalThis.WandererV013ExpeditionConditions,conditionCard=g.dungeon&&ports.phase1Controller.realmMap();
  const conditionMitigation=(ports.phase6Run?.effects?.purifying?.remaining||0)>0 ? .5 : 0;
@@ -282,6 +284,8 @@ function phase1WaveWon(){
  r.status='cleared';
  ports.addLog(result.expeditionComplete?'Expedition boss defeated!':'Realm cleared. Select your next Realm.','good');
  ports.phase5RememberRealm(r,'cleared');
+ // Preserve completed-combat metrics, then immediately discard remaining Barrier.
+ r.barrier=0;
  ports.phase1Clock+=r.combatSeconds||0;
  ports.phase1Continuity=result.expeditionComplete?null:{setCooldowns:r.setCooldowns,secondWindUsed:r.secondWindUsed,legendaryState:r.legendaryState,legendaryCastCount:r.legendaryCastCount,legendaryAttackCount:r.legendaryAttackCount};
  ports.phase1Vitals=result.expeditionComplete?null:{hp:Math.max(1,r.hp),maxhp:r.maxhp,mp:Math.max(0,r.mp),maxmp:r.maxmp};

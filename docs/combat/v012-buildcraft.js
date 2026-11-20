@@ -87,7 +87,7 @@ const descriptions={
  iron_skin:'Defense +12% at Rank 1; smaller gains at higher ranks.',
  fortified:'Reduce incoming damage by 4% per rank, within the combined 28% cap.',
  guarded_block:'Raises Block chance, even without a shield. Total Block chance cannot exceed 65%.',
- barrier_pulse:'Gain Barrier every 6s: 3% Max HP + 6% Spell Power at rank 1 (+0.6% HP and +1.2% Spell Power per rank). Aegis Barrier cap: 30% HP + 25% Spell Power.',
+ barrier_pulse:'Gain Barrier every 6s: 3% Max HP + 6% Spell Power at rank 1 (+0.6% HP and +1.2% Spell Power per rank). Barrier stacks without a maximum and resets between encounters.',
  retaliation:'When Barrier absorbs damage, your next hit deals 30% more base hit damage (4s cooldown).',
  quick_hands:'Attack speed increases by 8% per rank.',
  precision:'Raises Critical chance; total Critical chance cannot exceed 65%.',
@@ -121,9 +121,6 @@ function rank(b,id){
 function barrierAmount(maxHealth,spellPower,healthFraction,spellFraction=0){
  const hp=Math.max(0,Number(maxHealth)||0),sp=Math.max(0,Number(spellPower)||0);
  return Math.max(0,hp*Math.max(0,Number(healthFraction)||0)+sp*Math.max(0,Number(spellFraction)||0));
-}
-function barrierCap(maxHealth,spellPower,hasAegis=false){
- return Math.max(8,Math.round(barrierAmount(maxHealth,spellPower,.30,hasAegis ? .25 : 0)));
 }
 function barrierSpellPower(c){return Math.max(0,Number(c?.power??c?.player?.stats?.spellPower)||0);}
 function values(id,r){const t=Math.max(0,r-1),sqrt=Math.sqrt(r);return ({
@@ -372,6 +369,6 @@ function validate(b){
 }
 function syncPermanent(b,progress,permanentAffinities=true){if(!b)return;if(!root.WandererAutomaticTalents)throw Error('Permanent talents unavailable');b.runtime.prepared=progress?.nodes?.includes(progress.prepared)?progress.prepared:null;b.runtime.specializations=[...(progress?.nodes||[])];if(permanentAffinities){b.runtime.permanentBuild=true;b.unlockedFamilies=FAMILIES.filter(f=>progress?.nodes?.includes('affinity_'+f));b.families=[...b.unlockedFamilies];b.element=b.unlockedFamilies.includes('magic')?(progress?.element||'arcane'):null;}const current=progress||root.WandererAutomaticTalents.create(),ids=root.WandererAutomaticTalents.passiveIds(current);b.runtime.talentBonuses=root.WandererAutomaticTalents.bonuses?.(current)||{};if(ids.length)b.runtime.permanentTalents=ids;else delete b.runtime.permanentTalents;}
 function clear(b){if(!b)return;b.picks.length=0;b.element=null;b.unlockedFamilies=[];b.families=[];b.cooldowns=Object.create(null);b.runtime={frenzyUntil:0,counterBlock:0,counterBarrier:0,spellblade:false,magicHits:0,staticCharges:0,adrenalineUntil:0,conduit:false,lastStand:false,lastSpellAt:-999};}
-root.WandererV012Buildcraft=Object.freeze({CATALOG,FAMILIES,ELEMENTS:elements,barrierAmount,barrierCap,create,ownedRank,rank,values,bleedDamage,elementalPower,applyRot,migrateEnemyDots,mods,onHeal,onAttack,onCast,onSecond,tickRot,incoming,onDefend,onKill,survive,speed,enemyHealMultiplier,enemyDefense,nextCost,resetWave,canCast,validate,syncPermanent,clear});
+root.WandererV012Buildcraft=Object.freeze({CATALOG,FAMILIES,ELEMENTS:elements,barrierAmount,create,ownedRank,rank,values,bleedDamage,elementalPower,applyRot,migrateEnemyDots,mods,onHeal,onAttack,onCast,onSecond,tickRot,incoming,onDefend,onKill,survive,speed,enemyHealMultiplier,enemyDefense,nextCost,resetWave,canCast,validate,syncPermanent,clear});
 })(globalThis);
 

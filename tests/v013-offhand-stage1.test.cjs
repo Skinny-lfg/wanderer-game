@@ -15,29 +15,57 @@ function fight(weapon,offhand,seed=27183){
  a.rng(.5);
  return {a,r};
 }
-test('Wand + Orb keeps one 2.5% HP Barrier proc per 6 seconds',()=>{
+test('Wand + Orb grants 2% Max HP + 5% Spell Power once per six seconds',()=>{
  const {a,r}=fight('Wand','Orb');
  assert.equal(r.stats.off?.subtype,'Orb');
  r.barrier=0;r.maxmp=r.mp=1000;
  a.gear.weaponAttack(r);
  const first=r.barrier;
- assert(Math.abs(first-r.maxhp*.025)<.001);
+ assert(Math.abs(first-(r.maxhp*.02+r.stats.spellPower*.05))<.001);
  r.combatSeconds+=1;a.gear.weaponAttack(r);
  assert.equal(r.barrier,first,'same cooldown stops repeated attacks');
  r.combatSeconds+=6;a.gear.weaponAttack(r);
  assert(Math.abs(r.barrier-first*2)<.001);
  assert.equal(r.metrics?.procs?.['Off-Hand: Orb Ward'],2);
 });
-test('Sword + Orb gains reduced Barrier only with an active Magic/Decay hybrid',()=>{
+test('Sword + Orb uses same formula without requiring Magic or Decay',()=>{
  const {a,r}=fight('Sword','Orb');
- r.barrier=0;r.stats.phase2Magic=false;r.stats.phase2Decay=false;
- a.gear.weaponAttack(r);assert.equal(r.barrier,0,'pure physical must not gain a free Ward');
- r.stats.phase2Decay=true;r.stats.spellPower=80;
- r.combatSeconds+=1;a.gear.weaponAttack(r);
- assert(Math.abs(r.barrier-r.maxhp*.015)<.001,'hybrid uses 1.5% HP');
+ r.barrier=0;r.stats.phase2Magic=false;r.stats.phase2Decay=false;r.stats.spellPower=0;
+ a.gear.weaponAttack(r);assert(Math.abs(r.barrier-r.maxhp*.02)<.001,'pure physical gains Orb Ward');
  const first=r.barrier;
  r.combatSeconds+=1;a.gear.weaponAttack(r);assert.equal(r.barrier,first);
- assert.equal(r.metrics?.procs?.['Off-Hand: Orb Ward'],1);
+ r.combatSeconds+=6;r.stats.spellPower=80;a.gear.weaponAttack(r);
+ assert(Math.abs(r.barrier-first-(r.maxhp*.02+4))<.001);
+ assert.equal(r.metrics?.procs?.['Off-Hand: Orb Ward'],2);
+});
+test('Aegis entrance Barrier and Sword + Orb Ward stack above 200% Max HP',()=>{
+ const a=create(44201,undefined,{}, {skipPersistence:true});
+ a.setup(35,'Sword','Rare');
+ a.state().equip.offhand=a.makeItem(35,'offhand',null,'loot','Orb','Rare');
+ a.state().automaticTalents=require('./v013-current-talent-helper.cjs').buy(['affinity_aegis']);
+ a.setUnlocked(35);a.start(35,true);
+ const c=a.controller(),card=c.state.dungeon.cards[0];
+ c.chooseRealm(card.id);assert(c.visitRoom(1));assert(a.enter());
+ const r=a.state().run;
+ assert.equal(r.stats.off?.subtype,'Orb');
+ assert(r.barrier>=r.maxhp*.05,'fresh Aegis Barrier granted at encounter entry');
+ r.enemy.hp=r.enemy.maxhp=1e8;r.enemy.def=r.enemy.baseDef=r.enemy.barrier=0;r.stats.crit=0;r.stats.wardBonus=0;
+ const before=r.barrier,expected=r.maxhp*.02+(r.stats.spellPower||0)*.05;
+ a.rng(.5);a.gear.weaponAttack(r);
+ assert(Math.abs(r.barrier-before-expected)<.001,'independent grants accumulate');
+ r.combatSeconds=7;r.barrier=r.maxhp*2;
+ a.gear.weaponAttack(r);
+ assert(r.barrier>r.maxhp*2,'no max Barrier cap even at 200% HP');
+});
+test('Barrier is cleared at encounter entry and immediately after victory',()=>{
+ const {a,r}=fight('Sword','Orb',99101);
+ r.barrier=r.maxhp*3;
+ a.encounter({count:1});
+ assert.equal(r.barrier,0,'next encounter cannot inherit any Barrier');
+ r.barrier=r.maxhp*2;
+ r.enemy.hp=0;if(r.enemies)for(const enemy of r.enemies)enemy.hp=0;r.groupReserve=[];
+ a.win();
+ assert.equal(r.barrier,0,'victory discards remaining Barrier');
 });
 test('Tome restores 3 Mana on the third paid Wand cast, not on free attacks',()=>{
  const {a,r}=fight('Wand','Tome');
@@ -80,6 +108,6 @@ test('Tome and Charm do not trigger the other Off-Hand procs',()=>{
 test('Stage 1 native runtime and generated Pages mirrors stay identical',()=>{
  const src=fs.readFileSync('combat/v012-combat-runtime.js','utf8');
  assert.equal(fs.readFileSync('docs/combat/v012-combat-runtime.js','utf8'),src);
- assert(src.includes("offhandPaidAction(r);ctx.power="),'automatic magic casts consume the same Tome/Orb hook');
+ assert(src.includes("offhandPaidAction(r);ctx.power="),'automatic Magic casts consume the same Tome hook');
  assert(src.includes("if(cost>0)offhandPaidAction(r)"),'Decay spendMana is funded too');
 });

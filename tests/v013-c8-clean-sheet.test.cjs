@@ -100,7 +100,7 @@ test('C8 dual Daggers produce one offhand strike per two primary strikes, withou
  assert.equal(feedback.floats.filter(x=>x.target==='enemy'&&typeof x.value==='number').length,4);
  assert(!feedback.logs.some(x=>/Double Strike/i.test(x.text)));
 });
-test('C8 Wand+Orb Barrier: six-second cooldown, cap and insufficient-Mana guard',()=>{
+test('C8 Wand+Orb Barrier: six-second cooldown, same formula and no cap',()=>{
  const {a,c}=setup(90805,5,'Wand'),r=firstCombat(a,c);
  assert.equal(r.stats.main.subtype,'Wand');assert.equal(r.stats.off?.subtype,'Orb');
  r.enemy.hp=r.enemy.maxhp=1000000;r.enemy.barrier=0;r.stats.crit=0;r.stats.bonus={};r.stats.spellPower=100;
@@ -108,10 +108,11 @@ test('C8 Wand+Orb Barrier: six-second cooldown, cap and insufficient-Mana guard'
  a.gear.weaponAttack(r);const first=r.barrier;assert(first>0);
  a.gear.weaponAttack(r);assert.equal(r.barrier,first);
  r.combatSeconds=6;a.gear.weaponAttack(r);assert(r.barrier>first);
- const cap=Math.max(8,Math.round(r.maxhp*.3));
- r.combatSeconds=12;r.barrier=cap-1;a.gear.weaponAttack(r);assert(r.barrier<=cap);
+ const expected=r.maxhp*.02+r.stats.spellPower*.05;
+ assert(Math.abs(first-expected)<.001);
+ r.combatSeconds=12;r.barrier=r.maxhp*2;a.gear.weaponAttack(r);assert(r.barrier>r.maxhp*2);
  r.combatSeconds=18;r.barrier=0;r.mp=0;r.wisdomUsed=true;
- a.gear.weaponAttack(r);assert.equal(r.barrier,0);
+ a.gear.weaponAttack(r);assert(r.barrier>0,'unfunded attacks that deal HP damage trigger Orb');
 });
 test('C8 current Camp rank milestone display does not use retired E225/E1025 tables',()=>{
  const src=fs.readFileSync('index.html','utf8');

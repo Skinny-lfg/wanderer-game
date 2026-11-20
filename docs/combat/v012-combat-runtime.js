@@ -169,12 +169,11 @@ function setReady(r,name,seconds){
 }
 
 function setBarrier(r,amount){
- const before=r.barrier;
- const aegis=ports.state?.automaticTalents?.nodes?.includes('affinity_aegis')||ports.phase1Build?.unlockedFamilies?.includes('aegis');
- const cap=WandererV012Buildcraft.barrierCap(r.maxhp,r.stats?.spellPower,!!aegis);
- if(before>=cap)return 0;
- r.barrier=Math.min(cap,before+Math.max(0,amount*(1+(r.stats?.wardBonus||0))));
- return Math.max(0,r.barrier-before);
+ // One shared uncapped Barrier pool. The next encounter clears any remainder.
+ const before=Math.max(0,Number(r.barrier)||0),value=Number(amount),ward=Number(r.stats?.wardBonus)||0;
+ const gained=Number.isFinite(value)&&value>0?Math.max(0,value*(1+ward)):0;
+ r.barrier=before+gained;
+ return gained;
 }
 
 function regenPerSecond(maxhp,rate=.006){return Math.max(0,maxhp)*Math.max(0,rate)}
@@ -355,12 +354,11 @@ function applyAffinity(effect,enemy,s,mult=1,baseDamage=0){
 // Secondary hits never invoke attack/cast/on-hit effects or create new chains.
 function signature(family){const id=ports.state.runeSlots?.[0];return !!id&&ports.state.runes?.some(r=>r.id===id&&r.family===family);}
 function v013Traits(){return [...new Set(Object.values(ports.state?.equip||{}).filter(Boolean).map(item=>item.v013Trait).filter(Boolean))];}
-// Off-Hand identities: one native cooldown per effect; all amounts use the
-// existing healing, Barrier and Mana rules (including caps and debuffs).
-function offhandOrbWard(r,wand=false){
- if(r.stats?.off?.subtype!=='Orb'||(!wand&&!r.stats.phase2Magic&&!r.stats.phase2Decay))return 0;
- if(!ports.setReady(r,'wandOrbBarrier',6))return 0;
- const gained=ports.setBarrier(r,r.maxhp*(wand?.025:.015));
+// Off-Hand identities: independent effects; every Orb uses one identical formula.
+function offhandOrbWard(r){
+ if(r.stats?.off?.subtype!=='Orb'||r.hp<=0)return 0;
+ if(!ports.setReady(r,'orbWard',6))return 0;
+ const gained=ports.setBarrier(r,WandererV012Buildcraft.barrierAmount(r.maxhp,r.stats?.spellPower,.02,.05));
  if(gained>0){
   ports.phase6Metric(r,'offhandOrbBarrier',gained);
   ports.phase6Proc(r,'Off-Hand: Orb Ward');
@@ -370,7 +368,6 @@ function offhandOrbWard(r,wand=false){
 }
 function offhandPaidAction(r){
  const type=r.stats?.off?.subtype;
- if(type==='Orb'){offhandOrbWard(r,r.stats?.main?.subtype==='Wand');return;}
  if(type!=='Tome')return;
  r.tomePaidActions=(r.tomePaidActions||0)+1;
  if(r.tomePaidActions%3!==0||!ports.setReady(r,'tomeRecall',6))return;
@@ -384,7 +381,7 @@ function offhandPaidAction(r){
 function offhandOnMainHit(r,hpDamage){
  if(hpDamage<=0||r.hp<=0)return;
  if(r.stats?.off?.subtype==='Orb'){
-  if(r.stats?.main?.subtype!=='Wand')offhandOrbWard(r);
+  offhandOrbWard(r);
  }else if(r.stats?.off?.subtype==='Charm'&&r.hp<r.maxhp&&ports.setReady(r,'charmRenewal',8)){
   const healed=ports.setHeal(r,r.maxhp*.015);
   if(healed>0){
@@ -856,6 +853,7 @@ function phase2MagicTick(r){
  if(r.enemy.baseDef>0&&r.enemy.def<r.enemy.baseDef)spellDamage=Math.max(1,Math.round(spellDamage*(1+(b.runtime.talentBonuses?.sunderDamage||0))));
  const hpBefore=r.enemy.hp;
  ports.setDirectEnemyDamage(r,spellDamage,'✨ '+b.element);
+ if(r.enemy.hp<hpBefore)offhandOrbWard(r);
  if(reflectThornbloom(r,r.enemy,Math.min(hpBefore,hpBefore-r.enemy.hp)))return;
  WandererV012Buildcraft.onCast(b,ctx);groupElementalEffects(r,b);
  if(v013LightningChain(r))groupSecondaryDamage(r,chainBase,v013LightningChainFactors(),'⚡ Chain Lightning');
