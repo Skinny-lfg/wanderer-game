@@ -1,0 +1,125 @@
+name: Wanderer v0.13 — Stage 02 E1–E20 natural 50-account pilot (no deploy)
+
+on:
+  push:
+    branches:
+      - audit/v013-stage6
+    paths:
+      - .github/workflows/v013-stage02-e20-pilot.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    if: github.ref == 'refs/heads/audit/v013-stage6'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Validate Stage 02 setup, E3 repair and native progression
+        run: |
+          node --check scripts/v013-stage02-run-cohort.cjs
+          node --check scripts/v013-stage02-aggregate.cjs
+          node --test \
+            tests/v013-stage02-e20-audit.test.cjs \
+            tests/v013-stage01-prepared-stat-breakdown.test.cjs \
+            tests/v013-natural-progression.test.cjs
+      - run: git diff --check
+
+  cohorts:
+    needs: validate
+    if: github.ref == 'refs/heads/audit/v013-stage6'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix:
+        seed: [9811, 9812, 9813, 9814, 9815]
+        group: [A, B]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Native E1–E20, five persistent accounts per cohort
+        env:
+          SEED: ${{ matrix.seed }}
+          GROUP: ${{ matrix.group }}
+        run: |
+          mkdir -p reports/stage02
+          node scripts/v013-stage02-run-cohort.cjs \
+            --seed="$SEED" --group="$GROUP" \
+            --out="reports/stage02/raw-$SEED-$GROUP.json"
+      - name: Record exact source revision
+        if: always()
+        env:
+          SEED: ${{ matrix.seed }}
+          GROUP: ${{ matrix.group }}
+        run: |
+          mkdir -p reports/stage02
+          {
+            echo "revision=$GITHUB_SHA"
+            echo "node=$(node --version)"
+            echo "cohort=$SEED-$GROUP"
+            sha256sum \
+              scripts/v013-natural-progression.cjs \
+              scripts/v013-agent-strategy.cjs \
+              scripts/v013-stage02-run-cohort.cjs \
+              scripts/v013-stage02-aggregate.cjs \
+              combat/v012-gear-stats.js
+          } > "reports/stage02/raw-$SEED-$GROUP.provenance.txt"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage02-cohort-${{ matrix.seed }}-${{ matrix.group }}
+          path: reports/stage02/raw-${{ matrix.seed }}-${{ matrix.group }}.*
+          if-no-files-found: warn
+          retention-days: 30
+
+  aggregate:
+    needs: [validate, cohorts]
+    if: always() && needs.validate.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Fetch all ten native account shards
+        uses: actions/download-artifact@v4
+        with:
+          pattern: stage02-cohort-*
+          path: reports/stage02
+          merge-multiple: true
+      - name: Reject incomplete cohorts and aggregate E1–E20
+        run: |
+          node scripts/v013-stage02-aggregate.cjs \
+            reports/stage02 reports/stage02/stage02-report.json
+      - name: Preserve full consolidated output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage02-e20-consolidated-report
+          path: reports/stage02/stage02-report.*
+          if-no-files-found: warn
+          retention-days: 30
+      - run: git diff --check
