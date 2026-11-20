@@ -94,22 +94,23 @@ test('S2: only owned Rune IDs are equipped and duplicates recycled via native co
  for(const id of s.runeSlots)if(id)assert(s.runes.some(r=>r.id===id));
 });
 
-test('S2: native Forge Focus only applies to compatible armor and exact Essence cost',()=>{
- const a=make(10406),s=a.state();
- assert.deepEqual(Object.keys(a.forge.focuses).sort(),['bulwark','quickstep','spellweave']);
- const id='green_armor_cloth';
- assert.equal(a.forge.progress(id,1,'bulwark'),null);
- const bare=a.forge.progress(id,1,'none'),withFocus=a.forge.progress(id,1,'spellweave');
- assert(withFocus.cost.essence>bare.cost.essence);
- s.fragments=withFocus.cost.fragments;s.crafting.essence=withFocus.cost.essence;
- const preview=a.forge.preview(id,1,'spellweave');
- assert(preview&&preview.v013CraftFocus==='spellweave');
- const crafted=a.forge.craft(id,1,'spellweave');
- assert(crafted&&crafted.v013CraftFocus==='spellweave');
+test('S2: native Forge uses the standard recipe cost and never forces armor attribute',()=>{
+ const a=make(10406),s=a.state(),id='green_gloves_plate';
+ assert.equal(a.forge.focuses,undefined);
+ assert.equal(a.forge.tierPreview,undefined);
+ assert.equal(a.forge.reinforce,undefined);
+ const price=a.forge.progress(id,1);assert(price);
+ s.fragments=price.cost.fragments;s.crafting.essence=price.cost.essence;
+ const preview=a.forge.preview(id,1);assert(preview);
+ assert.equal(preview.recipeId,id);
+ const crafted=a.forge.craft(id,1);
+ assert(crafted&&crafted.recipeId===id);
+ assert.equal(crafted.slot,'gloves');
+ assert.equal(crafted.armorType,'Plate');
+ assert.equal(crafted.v013CraftFocus,undefined);
  assert.equal(s.fragments,0);assert.equal(s.crafting.essence,0);
  assert(s.stash.some(x=>x.id===crafted.id));
 });
-
 test('S2: native reagent refinement consumes 6 Essence and 3 dry-room marks',()=>{
  const a=make(10407),s=a.state();
  assert.equal(a.forge.refine('magic'),false);
@@ -120,21 +121,6 @@ test('S2: native reagent refinement consumes 6 Essence and 3 dry-room marks',()=
  assert.equal(s.crafting.dryRooms.magic,0);
  assert.equal(s.crafting.cores.magic,before+1);
  assert.equal(a.forge.refine('magic'),false);
-});
-
-test('S2: Legendary reinforcement uses native price, +rank and permanent item identity',()=>{
- const a=make(10408),s=a.state();
- const legendary=a.makeItem(1,'weapon',null,'loot','Sword','Legendary');
- assert.equal(legendary.rarity,'Legendary');
- s.stash.push(legendary);
- const id=legendary.id,price=a.forge.reinforceCost(id);
- assert(price>0);
- assert.equal(a.forge.reinforce(id),false,'resources are not free');
- s.fragments=price;
- assert.equal(a.forge.reinforce(id),true);
- assert.equal(legendary.upgradeRank,1);
- assert.equal(legendary.id,id);
- assert.equal(s.fragments,0);
 });
 
 test('S2: Thornbloom target diversion only occurs during true reflect windows',()=>{
@@ -158,7 +144,7 @@ test('S2: natural plate and magic account seeds start without fabricated XP, gea
   assert.equal(account.startXp,0);
   assert.equal(attempt.before.xp,0);
   assert.equal(attempt.camp.refined.length,0);
-  assert.equal(attempt.camp.reinforced.length,0);
-  assert.equal(attempt.camp.upgraded.length,0);
+  assert.equal(Object.hasOwn(attempt.camp,'reinforced'),false);
+  assert.equal(Object.hasOwn(attempt.camp,'upgraded'),false);
  }
 });
