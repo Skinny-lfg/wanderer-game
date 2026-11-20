@@ -101,6 +101,10 @@ function groupRooms(rows,key){
     medianSeconds:median(get('seconds')),
     medianDamageTaken:median(get('damageTaken')),
     medianTargetSwitches:median(get('targetSwitches')),
+    totalTargetSwitches:sum(rs.map(x=>x.room),'targetSwitches'),
+    fightsWithTargetSwitch:rs.filter(x=>x.room.targetSwitches>0).length,
+    totalObservedBossSummons:sum(rs.map(x=>x.room),'bossSummons'),
+    maxPeakLiveEnemies:Math.max(0,...get('peakLiveEnemies')),
     observedNonFocusedHealthLoss:Math.round(sum(rs.map(x=>x.room),'observedNonFocusedHealthLost')*100)/100,
     note:'Net non-focused HP deltas are not source-attributed AoE damage'}];
   }));
@@ -173,6 +177,16 @@ function summarize(shards){
   return [policy,{pairs:pairs.length,E1:tally('E1'),E5:tally('E5'),
    E10:tally('E10'),E20:tally('E20')}];
  }));
+ // Repeat observations may come from one surviving build, not independent accounts.
+ const uniqueAccountsByRole=Object.fromEntries(C.POLICIES.map(p=>[p,
+  Object.fromEntries(['aoe','single-target','hybrid','defensive','developing']
+   .map(k=>[k,new Set(observations.filter(x=>x.policy===p&&role(x.room)===k)
+    .map(x=>x.seed+'/'+x.profile)).size]))]));
+ const uniqueAccountsByMixedStage=Object.fromEntries(C.POLICIES.map(p=>[p,
+  Object.fromEntries(['dual-affinity-only','mixed-skill-unlocked','prepared-mixed-ability']
+   .map(k=>[k,new Set(observations.filter(x=>x.policy===p&&
+    composition(x.room)==='mixed'&&mixed(x.room)===k)
+    .map(x=>x.seed+'/'+x.profile)).size]))]));
  const nativeBoss=observations.filter(x=>x.room.roomType==='boss');
  const nativeElite=observations.filter(x=>x.room.roomType==='elite');
  const many=observations.filter(x=>x.room.roomType==='combat'&&x.room.initialEnemies>1);
@@ -199,6 +213,7 @@ function summarize(shards){
   provenance:{runnerSha256:[...runners][0],agentSha256:[...agents][0]},
   byPolicy,paired,accounts:accounts.map(({initialGear,...rest})=>rest),
   nativeCombat:{
+   uniqueAccountsByRole,uniqueAccountsByMixedStage,
    byRole:groupRooms(observations,x=>x.policy+'/'+role(x.room)),
    groupsByRoleAndSize:groupRooms(many,x=>x.policy+'/'+role(x.room)+'/'+size(x.room.initialEnemies)+'/'+x.bucket),
    mixedByEarnedStage:groupRooms(mixedRows,x=>x.policy+'/'+mixed(x.room)+'/'+role(x.room)+'/'+x.bucket),
@@ -283,6 +298,8 @@ function main(argv=process.argv.slice(2)){
   coverage:result.coverage,byPolicy:Object.fromEntries(Object.entries(result.byPolicy)
    .map(([p,x])=>[p,{accounts:x.accounts,attempts:x.attempts,E1:x.E1,E5:x.E5,E10:x.E10,E20:x.E20,profiles:x.profiles}])),
   paired:result.paired,eliteRoutes:result.nativeCombat.eliteRoutes,
+  uniqueAccountsByRole:result.nativeCombat.uniqueAccountsByRole,
+  uniqueAccountsByMixedStage:result.nativeCombat.uniqueAccountsByMixedStage,
   nativeBossByStyle:Object.entries(result.nativeCombat.bossByTypeAndLevel)
    .filter(([k])=>k.startsWith('adaptive/')),
   provenance:{gitRevision:result.provenance.gitRevision,nodeVersion:result.provenance.nodeVersion}
