@@ -541,7 +541,7 @@ function weaponAttack(r,offhandStrike=false){
  if(cast&&v013LightningChain(r))groupSecondaryDamage(r,base,v013LightningChainFactors(),'⚡ Chain Lightning');
  if(s.counts.shield>=2){const gained=ports.setBarrier(r,Math.max(1,Math.round(r.maxhp*(s.bonus.shieldBonus||0))));if(gained>0)ports.addLog('🛡 Shield set: +'+Math.round(gained)+' Barrier','good');}
  if(!offhandStrike&&ports.isPhase1Run()&&ports.phase1Build){
-  const ctx=ports.phase2Context(r);ctx.power=r.stats.spellPower||0;ctx.offhand=false;
+  const ctx=ports.phase2Context(r);ctx.power=r.stats.spellPower||0;ctx.offhand=false;ctx.magical=cast;
   const bonus=WandererV012Buildcraft.onInfusionHit(ports.phase1Build,ctx);
   if(bonus>0){ports.phase6Metric(r,'infusionHits',1);ports.phase6Metric(r,'infusionDamage',bonus);}
  }
@@ -854,7 +854,7 @@ function phase2MagicTick(r){
  const ctx=ports.phase2Context(r);
  if(b.runtime.infusionEncounter!==ctx.waveKey){
   b.runtime.infusionEncounter=ctx.waveKey;b.runtime.infusionCharges=0;
-  b.runtime.infusionExpiresAt=0;b.runtime.infusionNextAt=-1;
+  b.runtime.infusionExpiresAt=0;b.runtime.infusionNextAt=-1;b.runtime.magicInfusionHits=0;
  }
  if(mode==='unattuned'||mode==='arcane'){
   if(!WandererV012Buildcraft.infusionReady(b,ctx.now))return;

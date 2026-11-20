@@ -408,6 +408,19 @@ function onInfusionHit(b,c){
  if(amount>0)c.damage(amount,'✨ Arcane Infusion');
  r.magicInfusionHits=(r.magicInfusionHits||0)+1;
  const e=c.enemy;
+ // Paid Arcane Infusion replaces spell triggers for physical and hybrid builds.
+ // Native Wand/Staff already process Spell Echo / Grave Bloom on their cast.
+ if(!c.magical&&r.magicInfusionHits%3===0){
+  const spellEchoRank=(r.specializations||[]).filter(id=>id==='spell_echo'||/^spell_echo_rank\d+$/.test(id)).length;
+  if(spellEchoRank)c.damage(Math.max(1,Math.round(amount*.10*spellEchoRank)),'✨ Spell Echo');
+  if(r.prepared==='grave_bloom'&&e.v012Rot?.length){
+   const others=(c.player?.enemies||[]).filter(m=>m!==e&&m.hp>0).slice(0,2);
+   if(others.length){
+    for(const m of others){m.v012Rot??=[];if(m.v012Rot.length<6)m.v012Rot.push({...e.v012Rot[0]});}
+   }else c.damage(e.v012Rot.reduce((sum,rot)=>sum+rot.damage,0),'☠ Grave Bloom');
+   activated(b,'grave_bloom');c.trigger?.('grave_bloom');
+  }
+ }
  // This hit is NOT an additional attack, spell, critical or off-hand proc.
  if(rank(b,'arcane_echo')&&r.magicInfusionHits%4===0&&activated(b,'arcane_echo'))
   c.damage(power*values('arcane_echo',rank(b,'arcane_echo')).power,'✨ Arcane Echo');

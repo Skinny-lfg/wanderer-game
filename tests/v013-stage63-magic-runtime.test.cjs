@@ -93,3 +93,27 @@ test('All production Magic Stage 6.3 modules match their GitHub Pages counterpar
  for(const path of ['combat/v012-combat-runtime.js','combat/v012-buildcraft.js','combat/talent-graph-next.js'])
   assert.equal(fs.readFileSync(path,'utf8'),fs.readFileSync('docs/'+path,'utf8'),path);
 });
+
+test('Spell Echo adds a third-hit echo on non-caster infused attacks, not extra casts',()=>{
+ const b=build(['spell_echo']),x=context();
+ B.activateInfusion(b,0);B.onInfusionHit(b,x.c);B.onInfusionHit(b,{...x.c,now:2});
+ assert(!x.events.some(e=>e.kind==='✨ Spell Echo'));
+ B.activateInfusion(b,6);B.onInfusionHit(b,{...x.c,now:6.5,magical:false});
+ assert.equal(x.events.filter(e=>e.kind==='✨ Spell Echo').length,1);
+});
+test('Prepared Grave Bloom activates on third infused main hit with Rot without element_choice',()=>{
+ const b=build(['grave_bloom']),x=context();b.runtime.prepared='grave_bloom';
+ x.enemy.v012Rot=[{damage:12,remaining:4}];
+ B.activateInfusion(b,0);B.onInfusionHit(b,x.c);B.onInfusionHit(b,{...x.c,now:2});
+ B.activateInfusion(b,6);B.onInfusionHit(b,{...x.c,now:6.5});
+ assert(x.events.some(e=>e.kind==='☠ Grave Bloom'));
+ assert(!b.runtime.specializations.includes('element_choice'));
+});
+test('Paid Wand/Staff attacks must not get an additional Spell Echo or Grave Bloom on the same infusion hit',()=>{
+ const b=build(['spell_echo','grave_bloom']),x=context();b.runtime.prepared='grave_bloom';
+ x.enemy.v012Rot=[{damage:12,remaining:4}];
+ B.activateInfusion(b,0);B.onInfusionHit(b,{...x.c,magical:true});
+ B.onInfusionHit(b,{...x.c,now:2,magical:true});
+ B.activateInfusion(b,6);B.onInfusionHit(b,{...x.c,now:6.5,magical:true});
+ assert(!x.events.some(e=>e.kind==='✨ Spell Echo'||e.kind==='☠ Grave Bloom'));
+});
