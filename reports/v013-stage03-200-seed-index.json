@@ -1,0 +1,222 @@
+{
+  "name": "Wanderer v0.13 Stage 03 — archived partial seed results",
+  "stage": "03",
+  "verified": true,
+  "sourceCommit": "f6713674f96758f86e74800b6f445bde33df2542",
+  "nodeVersion": "v22.23.5",
+  "executionRun": "https://github.com/Skinny-lfg/wanderer-game/actions/runs/44783769318",
+  "finalAnalysisRun": "https://github.com/Skinny-lfg/wanderer-game/actions/runs/44785096405",
+  "artifactRetentionDays": 30,
+  "explanation": "Each listed GitHub Actions artifact contains the native account trajectories and the SHA manifest for one seed. This permanent index survives artifact expiry; full 200-account JSON also available from the consolidated report.",
+  "totals": {
+    "seeds": 20,
+    "profilesPerSeed": 10,
+    "accounts": 200,
+    "attempts": 7545,
+    "technicalErrors": 0,
+    "clearedE1": 131,
+    "clearedE20": 71
+  },
+  "shards": [
+    {
+      "seed": 9901,
+      "accounts": 10,
+      "attempts": 289,
+      "clearedE1": 5,
+      "clearedE5": 3,
+      "clearedE20": 3,
+      "technicalErrors": 0,
+      "artifactName": "stage03-seed-9901"
+    },
+    {
+      "seed": 9902,
+      "accounts": 10,
+      "attempts": 477,
+      "clearedE1": 8,
+      "clearedE5": 5,
+      "clearedE20": 5,
+      "technicalErrors": 0,
+      "artifactName": "stage03-seed-9902"
+    },
+    {
+      "seed": 9903,
+      "accounts": 10,
+      "attempts": 291,
+      "clearedE1": 4,
+      "clearedE5": 3,
+      "clearedE20": 3,
+      "technicalErrors": 0,
+      "artifactName": "stage03-seed-9903"
+    },
+    {
+      "seed": 9904,
+      "accounts": 10,
+      "attempts": 285,
+      "clearedE1": 3,
+      "clearedE5": 3,
+      "clearedE20": 3,
+      "technicalErrors": 0,
+      "artifactName": "stage03-seed-9904"
+    },
+    {
+      "seed": 9905,
+      "accounts": 10,
+      "attempts": 369,
+      "clearedE1": 7,
+      "clearedE5": 2,
+      "clearedE20": 2,
+      "technicalErrors": 0,
+      "artifactName": "stage03-seed-9905"
+    },
+    {
+      "seed": 9906,
+      "accounts": 10,
+      "attempts": 319,
+      "clearedE1": 4,
+      "clearedE5": 3,
+      "clearedE20": 3,
+      "technicalErrors": 0,
+      "artifactName": "stage03-seed-9906"
+    },
+    {
+      "seed": 9907,
+      "accounts": 10,
+      "attempts": 475,
+      "clearedE1": 9,
+      "clearedE5": 4,
+      "clearedE20": 4,
+      "technicalErrors": 0,
+      "artifactName": "stage03-seed-9907"
+    },
+    {
+      "seed": 9908,
+      "accounts": 10,
+      "attempts": 358,
+      "clearedE1": 7,
+      "clearedE5": 3,
+      "clearedE20": 3,
+      "technicalErrors": 0,
+      "artifactName": "stage03-seed-9908"
+    },
+    {
+      "seed": 9909,
+      "accounts": 10,
+      "attempts": 383,
+      "clearedE1": 7,
+      "clearedE5": 3,
+      "clearedE20": 3,
+      "technicalErrors": 0,
+      "artifactName": "stage03-seed-9909"
+    },
+    {
+      "seed": 9910,
+      "accounts": 10,
+      "attempts": 490,
+      "clearedE1": 8,
+      "clearedE5": 5,
+      "clearedE20": 5,
+      "technicalErrors": 0,
+      "artifactName": "stage03-seed-9910"
+    },
+    {
+      "seed": 9911,
+      "accounts": 10,
+      "attempts": 281,
+      "clearedE1": 5,
+      "clearedE5": 2,
+      "clearedE20": 2,
+      "technicalErrors": 0,
+      "artifactName": "stage03-seed-9911"
+    },
+    {
+      "seed": 9912,
+      "accounts": 10,
+      "attempts": 362,
+      "clearedE1": 7,
+      "clearedE5": 3,
+      "clearedE20": 3,
+      "technicalErrors": 0,
+      "artifactName": "stage03-seed-9912"
+    },
+    {
+      "seed": 9913,
+      "accounts": 10,
+      "attempts": 452,
+      "clearedE1": 7,
+      "clearedE5": 4,
+      "clearedE20": 4,
+      "technicalErrors": 0,
+      "artifactName": "stage03-seed-9913"
+    },
+    {
+      "seed": 9914,
+      "accounts": 10,
+      "attempts": 301,
+      "clearedE1": 4,
+      "clearedE5": 3,
+      "clearedE20": 3,
+      "technicalErrors": 0,
+      "artifactName": "stage03-seed-9914"
+    },
+    {
+      "seed": 9915,
+      "accounts": 10,
+      "attempts": 530,
+      "clearedE1": 8,
+      "clearedE5": 6,
+      "clearedE20": 6,
+      "technicalErrors": 0,
+      "artifactName": "stage03-seed-9915"
+    },
+    {
+      "seed": 9916,
+      "accounts": 10,
+      "attempts": 326,
+      "clearedE1": 8,
+      "clearedE5": 3,
+      "clearedE20": 3,
+      "technicalErrors": 0,
+      "artifactName": "stage03-seed-9916"
+    },
+    {
+      "seed": 9917,
+      "accounts": 10,
+      "attempts": 463,
+      "clearedE1": 9,
+      "clearedE5": 5,
+      "clearedE20": 5,
+      "technicalErrors": 0,
+      "artifactName": "stage03-seed-9917"
+    },
+    {
+      "seed": 9918,
+      "accounts": 10,
+      "attempts": 342,
+      "clearedE1": 5,
+      "clearedE5": 4,
+      "clearedE20": 4,
+      "technicalErrors": 0,
+      "artifactName": "stage03-seed-9918"
+    },
+    {
+      "seed": 9919,
+      "accounts": 10,
+      "attempts": 377,
+      "clearedE1": 9,
+      "clearedE5": 3,
+      "clearedE20": 3,
+      "technicalErrors": 0,
+      "artifactName": "stage03-seed-9919"
+    },
+    {
+      "seed": 9920,
+      "accounts": 10,
+      "attempts": 375,
+      "clearedE1": 7,
+      "clearedE5": 4,
+      "clearedE20": 4,
+      "technicalErrors": 0,
+      "artifactName": "stage03-seed-9920"
+    }
+  ]
+}
