@@ -104,16 +104,7 @@ const descriptions={
  deep_winter:'Funded Frost casts Chill. Chilled foes take a Spell Power burst every 4s (18% at rank 1, +3 percentage points per rank; capped at 5% of normal foes’ Max HP or 1.5% of bosses’). Boss Chill lasts at most 1.2s.',
  overcharge:'Funded Lightning casts chain to two additional foes for 50% then 30% of the primary hit and add Static. Every 4 charges discharge for 32% Spell Power at rank 1 (+6 percentage points per rank), capped at 3.5% of the foe’s Max HP. Charges persist between Realms.'
 };
-const TAGS={
- PRODUCE_BLEED:['bleeding_edge','sanguine_fury','hex_bleed','crimson_pact','sanguine_reprisal'],CONSUMES_BLEED:['deep_cuts','executioner','blood_drinker','blood_ward','hemovore','plague_rupture','carrion_detonation','crimson_rush','reapers_cadence','hemal_sigil'],
- PRODUCE_ROT:['toxic_touch','toxic_precision'],CONSUMES_ROT:['virulent_rot','wasting_curse','wither','blight','plague_rupture','carrion_detonation','rot_recovery','rot_symbiosis','rot_ward','rot_husk','venom_shatter','hex_bolt','elemental_blight'],
- CRIT_SOURCE:['precision'],CRIT_PAYOFF:['sanguine_fury','brutal_crit','adrenaline','crimson_rush','toxic_precision','venom_shatter','plague_rupture','fervent_life','spell_surge'],
- BARRIER_SOURCE:['barrier_pulse','blood_ward','rot_ward','runic_shield','sanctuary','fervent_life'],BARRIER_PAYOFF:['retaliation','rot_husk','prismatic_rebound','guardians_oath','sanguine_reprisal'],
- HEAL_SOURCE:['renewal','life_bloom','second_breath','blood_drinker','hemovore','rot_recovery','rot_symbiosis','fervent_life'],HEAL_PAYOFF:['sanctuary','life_conduit'],
- FUNDED_CAST:['kindling','deep_winter','overcharge'],MAGIC_PAYOFF:['arcane_focus','mana_spring','efficient_cast','arcane_echo','elemental_force','hex_bleed','hemal_sigil','hex_bolt','elemental_blight','life_conduit','lifeweave','runic_shield','prismatic_rebound','spellblade','spell_surge'],
- BLOCK_SOURCE:['guarded_block'],BLOCK_PAYOFF:['counterstrike','iron_reversal','sanguine_reprisal']
-};
-const CATALOG=P.map(p=>Object.freeze({...p,description:descriptions[p.id]||p.description,tags:Object.freeze(Object.keys(TAGS).filter(tag=>TAGS[tag].includes(p.id)))}));
+const CATALOG=P.map(p=>Object.freeze({...p,description:descriptions[p.id]||p.description}));
 const BY_ID=Object.fromEntries(CATALOG.map(p=>[p.id,p]));
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 function create(){return {version:3,element:null,initialFamily:null,initialPassive:null,unlockedFamilies:[],picks:[],cooldowns:Object.create(null),runtime:{frenzyUntil:0,counterBlock:0,counterBarrier:0,spellblade:false,magicHits:0,staticCharges:0,adrenalineUntil:0,conduit:false,lastStand:false,lastSpellAt:-999}};}
@@ -138,17 +129,8 @@ function specialized(b,id){return b?.runtime?.specializations?.includes(id);}
 function bleedDamage(b,amount){return amount*(1+.15*rank(b,'deep_cuts')+(b?.runtime?.talentBonuses?.bleedBonus||0))*(specialized(b,'blood_focus')?1.25:1);}
 function elementalPower(b,power){return power*(1+.12*rank(b,'elemental_force'))*(b.runtime.conduit?1.10:1);}
 function hasFamily(b,family){return Array.isArray(b?.families)&&b.families.includes(family);}
-function element(b,id){if(!hasFamily(b,'magic')||!elements.includes(id)||b.element!==null)throw Error('Magic element already chosen or ineligible');b.element=id;return id;}
 function initialId(family,element){return family==='magic'?({fire:'kindling',frost:'deep_winter',lightning:'overcharge'})[element]:({blood:'bleeding_edge',decay:'toxic_touch',vitality:'strong_heart',aegis:'iron_skin',fury:'quick_hands'})[family];}
 // Unlock the enabling passive only after successfully clearing the first Realm of this family.
-function initial(b,family){
- if(!hasFamily(b,family)||family==='magic'&&!b.element)throw Error('Initial affinity unavailable');
- b.unlockedFamilies??=[];
- if(b.unlockedFamilies.includes(family))return null;
- const id=initialId(family,b.element);if(!BY_ID[id])throw Error('Unknown initial affinity');
- if(!b.initialFamily){b.initialFamily=family;b.initialPassive=id;}
- b.unlockedFamilies.push(family);b.picks.push(id);return BY_ID[id];
-}
 function ready(b,id,now,seconds){if((b.cooldowns[id]??-1e10)>now)return false;(b.cooldownPeriods??={})[id]=seconds;b.cooldowns[id]=now+seconds;return true;}
 function mods(b,base){
  const s={...base},h=rank(b,'strong_heart'),a=rank(b,'iron_skin'),q=rank(b,'quick_hands'),p=rank(b,'precision');
@@ -383,6 +365,6 @@ function validate(b){
 }
 function syncPermanent(b,progress,permanentAffinities=true){if(!b)return;if(!root.WandererAutomaticTalents)throw Error('Permanent talents unavailable');b.runtime.prepared=progress?.nodes?.includes(progress.prepared)?progress.prepared:null;b.runtime.specializations=[...(progress?.nodes||[])];if(permanentAffinities){b.runtime.permanentBuild=true;b.unlockedFamilies=FAMILIES.filter(f=>progress?.nodes?.includes('affinity_'+f));b.families=[...b.unlockedFamilies];b.element=b.unlockedFamilies.includes('magic')?(progress?.element||'arcane'):null;}const current=progress||root.WandererAutomaticTalents.create(),ids=root.WandererAutomaticTalents.passiveIds(current);b.runtime.talentBonuses=root.WandererAutomaticTalents.bonuses?.(current)||{};if(ids.length)b.runtime.permanentTalents=ids;else delete b.runtime.permanentTalents;}
 function clear(b){if(!b)return;b.picks.length=0;b.element=null;b.initialFamily=null;b.initialPassive=null;b.unlockedFamilies=[];b.families=[];b.cooldowns=Object.create(null);b.runtime={frenzyUntil:0,counterBlock:0,counterBarrier:0,spellblade:false,magicHits:0,staticCharges:0,adrenalineUntil:0,conduit:false,lastStand:false,lastSpellAt:-999};}
-root.WandererV012Buildcraft=Object.freeze({CATALOG,FAMILIES,ELEMENTS:elements,create,initial,initialId,ownedRank,rank,values,bleedDamage,elementalPower,applyRot,migrateEnemyDots,element,mods,onHeal,onAttack,onCast,onSecond,tickRot,incoming,onDefend,onKill,survive,speed,enemyHealMultiplier,enemyDefense,nextCost,resetWave,canCast,validate,syncPermanent,clear});
+root.WandererV012Buildcraft=Object.freeze({CATALOG,FAMILIES,ELEMENTS:elements,create,initialId,ownedRank,rank,values,bleedDamage,elementalPower,applyRot,migrateEnemyDots,mods,onHeal,onAttack,onCast,onSecond,tickRot,incoming,onDefend,onKill,survive,speed,enemyHealMultiplier,enemyDefense,nextCost,resetWave,canCast,validate,syncPermanent,clear});
 })(globalThis);
 
