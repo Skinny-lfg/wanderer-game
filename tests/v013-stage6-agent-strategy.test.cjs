@@ -93,3 +93,23 @@ test('Natural adaptive E1 uses real equipment, visible offers and native combat 
  assert.equal(attempt.before.xp,0);
  assert.equal(attempt.before.earned,0);
 });
+
+test('Controlled native Two-Handed combat actually produces measurable non-focused damage',()=>{
+ // Controlled fixture only, NOT a natural-account progression result.
+ const a=create(9477,undefined,{}, {skipPersistence:true});
+ a.setup(35,'Two-Handed','Legendary');
+ a.setUnlocked(35);
+ a.start(35,true);
+ const c=a.controller(),card=c.state.dungeon.cards[0];
+ c.chooseRealm(card.id);
+ assert(c.visitRoom(2),'native 2–4 enemy Vanguard room is reachable');
+ assert(a.enter());
+ const before=N.capabilities(a);
+ assert.equal(before.weapon,'Two-Handed');
+ assert(before.areaReady);
+ assert(a.state().run.totalMobCount>1,'native room must contain a group');
+ const fight=N.fightNatural(a,N.PROFILES.daring,4500,{decisionModel:'adaptive',capabilities:before});
+ assert(fight.updateCalls>0);
+ assert(fight.observedNonFocusedHealthLost>0,'native built-in Cleave must reach live non-focused enemies');
+ assert(fight.damageDealt>=fight.observedNonFocusedHealthLost);
+});
