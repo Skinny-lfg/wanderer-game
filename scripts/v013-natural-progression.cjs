@@ -19,6 +19,9 @@ const PROFILES=Object.freeze({
  'magic-fire':{name:'Fire Caster',risk:0,targets:['element_choice','arcane_focus','mana_spring','kindling','fire_spread'],families:['magic'],element:'fire',armor:'Cloth',weapons:['Wand','Staff'],style:'focused',preparedTargets:[],healAt:.57,retreatAt:.36,target:'mechanics',shop:true},
  'magic-frost':{name:'Frost Caster',risk:0,targets:['element_choice','arcane_focus','mana_spring','deep_winter','frost_spread'],families:['magic'],element:'frost',armor:'Cloth',weapons:['Wand','Staff'],style:'focused',preparedTargets:[],healAt:.62,retreatAt:.41,target:'mechanics',shop:true},
  'magic-lightning':{name:'Lightning Caster',risk:0,targets:['element_choice','arcane_focus','mana_spring','overcharge','storm_mastery'],families:['magic'],element:'lightning',armor:'Cloth',weapons:['Staff','Wand'],style:'focused',preparedTargets:[],healAt:.54,retreatAt:.34,target:'mechanics',shop:true},
+ 'magic-arcane':{name:'Arcane Caster',risk:0,targets:['element_choice','arcane_focus','mana_spring','arcane_resonance','arcane_surge','arcane_mastery'],families:['magic'],element:'arcane',armor:'Cloth',weapons:['Wand','Staff'],style:'focused',preparedTargets:[],healAt:.58,retreatAt:.37,target:'mechanics',shop:true},
+ 'magic-wand':{name:'Wand Specialist (Fire)',risk:0,targets:['element_choice','arcane_focus','mana_spring','kindling','fire_spread'],families:['magic'],element:'fire',armor:'Cloth',weapons:['Wand'],style:'focused',preparedTargets:[],healAt:.57,retreatAt:.36,target:'mechanics',shop:true},
+ 'magic-staff':{name:'Staff Specialist (Fire)',risk:0,targets:['element_choice','arcane_focus','mana_spring','kindling','fire_spread'],families:['magic'],element:'fire',armor:'Cloth',weapons:['Staff'],style:'focused',preparedTargets:[],healAt:.57,retreatAt:.36,target:'mechanics',shop:true},
  'plate-warden':{name:'Plate Warden',risk:0,targets:['guarded_block','barrier_pulse','steadfast_guard','strong_heart'],families:['aegis','vitality'],armor:'Plate',weapons:['Mace','Sword'],style:'focused',preparedTargets:['last_bastion'],healAt:.68,retreatAt:.46,target:'mechanics',shop:true},
  'leather-duelist':{name:'Leather Duelist',risk:1,targets:['quick_hands','bleeding_edge','blood_drinker','precision','double_strike','blood_harvest','crimson_rush'],families:['fury','blood'],armor:'Leather',weapons:['Daggers','Bow'],style:'mixed',preparedTargets:['red_guillotine'],healAt:.42,retreatAt:.25,target:'focus',shop:true},
  'cloth-battlemage':{name:'Cloth Battlemage',risk:0,targets:['element_choice','arcane_focus','mana_spring','runic_shield','guarded_block','arcane_bastion'],families:['magic','aegis'],element:'fire',armor:'Cloth',weapons:['Wand','Staff'],style:'mixed',preparedTargets:['arcane_bastion'],healAt:.61,retreatAt:.39,target:'mechanics',shop:true},
@@ -832,6 +835,9 @@ function fightNatural(a,profile,tickLimit,context={}){
  if(!r||r.status!=='fight')throw Error('Combat entry missing');
  const startedAt=r.combatSeconds||0;
  const start=r.hp,first=r.encounterLeader||r.enemy,initial=r.totalMobCount||r.initialMobCount||r.enemies?.length||1;
+ const mpStart=r.mp,maxmp=r.maxmp,metricsBefore=Object.fromEntries(['manaSpent','fundedCasts','infusionActivations','infusionHits','infusionDamage','unfundedCasterAttacks']
+  .map(key=>[key,Number(r.metrics?.[key])||0]));
+ const measured=key=>Math.max(0,(Number(r.metrics?.[key])||0)-metricsBefore[key]);
  const cap=context.capabilities||null,adaptive=context.adaptiveTargets??context.decisionModel==='adaptive';
  let ticks=0,switches=0,thornRedirects=0,minionFocusSeconds=0,minionFocusSwitches=0,minimum=r.maxhp>0?r.hp/r.maxhp:0;
  const healthLost={boss:0,elite:0,minion:0,normal:0};
@@ -883,6 +889,12 @@ function fightNatural(a,profile,tickLimit,context={}){
   hpMax:round(r.maxhp),minHpPct:round(minimum*100,1),
   damageTaken:Math.round(r.metrics?.damageTaken||0),
   damageDealt:Math.round(r.metrics?.damageDealt||0),
+  mpStart:round(mpStart),mpEnd:round(Math.max(0,r.mp)),mpMax:round(maxmp),
+  manaSpent:round(measured('manaSpent')),fundedCasts:Math.round(measured('fundedCasts')),
+  infusionActivations:Math.round(measured('infusionActivations')),
+  infusionHits:Math.round(measured('infusionHits')),
+  infusionDamage:Math.round(measured('infusionDamage')),
+  unfundedCasterAttacks:Math.round(measured('unfundedCasterAttacks')),
   // Observed per-tick NET HP/barrier deltas: NOT source-attributed AoE.
   // Healing within a tick and removed enemies can undercount these values.
   observedHealthLostByRole:Object.fromEntries(Object.entries(healthLost).map(([k,v])=>[k,round(v)])),
@@ -1207,7 +1219,8 @@ function analyze(accounts,opts){
    'Limited seeds, attempts and behavior profiles: pilot-only, not statistical balance rates.'
   ],coverage:{accounts:accounts.length,attempts:accounts.reduce((n,a)=>n+a.attempts.length,0),
     errors:accounts.flatMap(a=>a.attempts).filter(x=>x.error||x.status==='error').length,
-    completedE8:accounts.filter(a=>a.reached.includes(8)&&a.attempts.some(x=>x.level===8&&x.bossWon)).length},
+    completedE8:accounts.filter(a=>a.reached.includes(8)&&a.attempts.some(x=>x.level===8&&x.bossWon)).length,
+    completedE10:accounts.filter(a=>a.reached.includes(10)&&a.attempts.some(x=>x.level===10&&x.bossWon)).length},
   levels,accounts};
 }
 function run(opts=parseArgs(),simulationOptions={}){
@@ -1216,10 +1229,10 @@ function run(opts=parseArgs(),simulationOptions={}){
  return analyze(accounts,{...opts,decisionModel:simulationOptions.decisionModel||'adaptive'});
 }
 function markdown(data){
- const out=['# Wanderer v0.13 — Stage 9.6: Grey loot, salvage and natural progression E1–E8','',
+ const out=['# Wanderer v0.13 — Native Grey loot, salvage and progression E1–E'+data.settings.maxLevel,'',
   '**One persistent native account from E1; XP, equipment, rewards, resources and unlocks are never fabricated.**',
   '', 'Engine fingerprint: '+data.source,'', 'Natural runner SHA-256: '+data.runnerSha256,'',
-  '## E1–E8 natural-account pilot','',
+  '## E1–E'+data.settings.maxLevel+' natural-account pilot','',
   '| E | Accounts reached | Attempts | Wins | Deaths | Extractions | Boss reached | Prepared bosses | Marked Elites | Elite fights | Elite wins | Elite drops | Grey drops | First-room drops | First rooms without gear | Grey salvaged | Forge Fragments from Grey | Reliquaries | Boons | Potions | Rooms won | Native XP | Gear changes | Errors |',
   '|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|'];
  for(const x of data.levels)out.push('| E'+x.level+' | '+x.accountsReached+' | '+x.attempts+' | '+x.wins+
@@ -1249,7 +1262,7 @@ function main(args=process.argv.slice(2)){
  fs.mkdirSync(path.dirname(dest),{recursive:true});
  fs.writeFileSync(dest,JSON.stringify(report,null,2)+'\n');
  fs.writeFileSync(dest.replace(/\.json$/,'.md'),markdown(report));
- console.log('NATURAL_E1_E8='+JSON.stringify({source:report.source,coverage:report.coverage,levels:report.levels,
+ console.log('NATURAL_E1_E'+opts.maxLevel+'='+JSON.stringify({source:report.source,coverage:report.coverage,levels:report.levels,
   accounts:report.accounts.map(a=>({seed:a.seed,profile:a.profile,unlocked:a.endLevel,stop:a.stopReason}))}));
  if(report.coverage.errors)process.exitCode=1;
  return report;

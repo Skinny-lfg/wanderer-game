@@ -1,0 +1,145 @@
+name: Wanderer v0.13 — Stage 6.5 native E1-E10 progression (no deploy)
+on:
+  push:
+    branches: [audit/v013-stage6]
+    paths:
+      - '.github/workflows/v013-stage65-natural-e1-e10.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: Native E1 entry and E10 censoring tests, no forged rewards
+        run: |
+          node --check scripts/v013-natural-progression.cjs
+          node --check scripts/v013-stage65-e1-e10-report.cjs
+          node --test \
+            tests/v013-stage65-e1-e10.test.cjs \
+            tests/v013-natural-progression.test.cjs \
+            tests/v013-stage5-longitudinal.test.cjs \
+            tests/v013-stage64-mana-fallback.test.cjs
+          git diff --check
+  cohorts:
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        include:
+          - cohort: physical-tanks
+            profiles: balanced,plate-warden
+          - cohort: physical-hex
+            profiles: leather-duelist,hexblade-hybrid
+          - cohort: fire-frost
+            profiles: magic-fire,magic-frost
+          - cohort: lightning-arcane
+            profiles: magic-lightning,magic-arcane
+          - cohort: wand-staff
+            profiles: magic-wand,magic-staff
+          - cohort: hybrid-cautious
+            profiles: cloth-battlemage,cautious
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: Full native E1-E10 accounts with acquired gear, XP and native Boss unlocks
+        env:
+          COHORT: ${{ matrix.cohort }}
+          PROFILES: ${{ matrix.profiles }}
+        shell: bash
+        run: |
+          mkdir -p reports
+          set +e
+          node scripts/v013-natural-progression.cjs \
+            --seeds=9701,9702,9703,9704 \
+            --profiles="$PROFILES" \
+            --max-level=10 \
+            --max-attempts=18 \
+            --max-total-attempts=85 \
+            --out="reports/stage65-$COHORT.json" \
+            > "reports/stage65-$COHORT.stdout.txt" 2>&1
+          outcome=$?
+          set -e
+          echo "Native cohort $COHORT exit=$outcome"
+          echo "native_exit_code=$outcome" > "reports/stage65-$COHORT.status.txt"
+          if [ -f "reports/stage65-$COHORT.json" ]; then
+            node scripts/v013-stage65-e1-e10-report.cjs \
+              "reports/stage65-$COHORT.summary.json" \
+              "reports/stage65-$COHORT.json" || true
+            tail -c 2500 "reports/stage65-$COHORT.stdout.txt"
+          else
+            cat "reports/stage65-$COHORT.stdout.txt"
+            exit 1
+          fi
+      - name: Preserve source revision and shard provenance
+        if: always()
+        env:
+          COHORT: ${{ matrix.cohort }}
+        run: |
+          {
+            echo "commit=$GITHUB_SHA"
+            echo "node=$(node --version)"
+            echo "cohort=$COHORT"
+            sha256sum scripts/v013-natural-progression.cjs scripts/v013-stage65-e1-e10-report.cjs combat/v012-combat-runtime.js
+          } > "reports/stage65-$COHORT.provenance.txt"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage65-native-${{ matrix.cohort }}
+          path: reports/stage65-${{ matrix.cohort }}.*
+          retention-days: 30
+          if-no-files-found: warn
+  aggregate:
+    needs: cohorts
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage65-native-*
+          merge-multiple: true
+          path: reports
+      - name: Verify all 48 accounts and produce E1-E10 summary
+        run: |
+          node scripts/v013-stage65-e1-e10-report.cjs \
+            reports/stage65-e1-e10-summary.json \
+            reports/stage65-physical-tanks.json \
+            reports/stage65-physical-hex.json \
+            reports/stage65-fire-frost.json \
+            reports/stage65-lightning-arcane.json \
+            reports/stage65-wand-staff.json \
+            reports/stage65-hybrid-cautious.json
+      - name: Save combined audit and detailed original account traces
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage65-e1-e10-combined-report
+          path: |
+            reports/stage65-e1-e10-summary.json
+            reports/stage65-e1-e10-summary.md
+          retention-days: 30
+          if-no-files-found: warn
