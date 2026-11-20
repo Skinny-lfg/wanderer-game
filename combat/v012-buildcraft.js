@@ -124,7 +124,7 @@ function barrierAmount(maxHealth,spellPower,healthFraction,spellFraction=0){
  return Math.max(0,hp*Math.max(0,Number(healthFraction)||0)+sp*Math.max(0,Number(spellFraction)||0));
 }
 function barrierCap(maxHealth,spellPower,hasAegis=false){
- return Math.max(8,Math.round(barrierAmount(maxHealth,spellPower,.30,hasAegis?.25:0)));
+ return Math.max(8,Math.round(barrierAmount(maxHealth,spellPower,.30,hasAegis ? .25 : 0)));
 }
 function barrierSpellPower(c){return Math.max(0,Number(c?.power??c?.player?.stats?.spellPower)||0);}
 function values(id,r){const t=Math.max(0,r-1),sqrt=Math.sqrt(r);return ({

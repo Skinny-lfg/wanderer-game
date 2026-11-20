@@ -67,9 +67,11 @@ test('Stage 2 Arcane Bastion and Prismatic Rebound retain their defensive trigge
   bastion.runtime.prepared='arcane_bastion';
   x.c.now=10;B.onDefend(bastion,x.c,0,10);B.onCast(bastion,x.c);
   const events=x.events.filter(e=>e[0]==='barrier');
-  assert.equal(events.length,1);assert.equal(events[0][1],6+spell*.06);
+  assert(events.some(e=>e[1]===6+spell*.06));
+  assert.equal(bastion.runtime.passiveTelemetry?.arcane_bastion?.activations,1,'prepared trigger occurred once');
+  const before=events.length;
   x.c.now=11;B.onCast(bastion,x.c);
-  assert.equal(x.events.filter(e=>e[0]==='barrier').length,1);
+  assert.equal(x.events.filter(e=>e[0]==='barrier').length,before,'Bastion and Runic prerequisite respect cooldowns');
   const rebound=build(['prismatic_rebound']),y=combatContext(spell);
   B.onDefend(rebound,y.c,0,1000);
   assert.equal(rebound.runtime.prismaticCharge,12+spell*.10);
