@@ -123,8 +123,13 @@ function selectTarget(run,cap,baseline){
   return boss;
  }
  if(elite){
-  if(elite.eliteType==='gravecaller'&&minions.length&&cap?.area<1.8)
-   return minions[0]; // Stop Deathbound by manually focusing summoned undead.
+  // Gravecaller: only ACTUAL native summoned undead sustain Deathbound.
+  // Focusing a generic escort wastes boss DPS; even valid summons should
+  // become priority only after visible Deathbound pressure mounts.
+  const undead=minions.filter(m=>m.stage83Summoned&&m.stage83Summoner==='elite');
+  const stacks=Math.max(0,Number(run.deathboundDecay?.stacks)||0);
+  if(elite.eliteType==='gravecaller'&&undead.length&&cap?.area<1.8&&stacks>=3)
+   return undead[0];
   return elite;
  }
  const current=alive.includes(run.enemy)?run.enemy:null;
