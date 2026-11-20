@@ -20,6 +20,7 @@ on:
       - 'tests/v013-*.cjs'
       - 'CLEAN_SHEET_AUDIT_REPORT.md'
       - 'tests/v013-c3-*.cjs'
+      - 'tests/talent-graph-combat.test.cjs'
       - 'package.json'
   workflow_dispatch:
 
