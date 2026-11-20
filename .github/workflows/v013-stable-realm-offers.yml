@@ -39,12 +39,12 @@ jobs:
           node --check scripts/v013-natural-progression.cjs
           node --check scripts/v013-stage6-agent-comparison.cjs
           node --test tests/v013-stage6-agent-strategy.test.cjs
-      - name: Compare native player strategies (small paired-seed smoke)
+      - name: Compare E1/E2 agents across repeated paired seeds
         run: |
           node scripts/v013-stage6-agent-comparison.cjs \
-            --seeds=9421,9422 \
-            --profiles=balanced,magic-lightning \
-            --max-level=2 --max-attempts=3 --max-total-attempts=6 \
+            --seeds=9701,9702,9703,9704 \
+            --profiles=balanced,plate-warden,leather-duelist,magic-lightning,hexblade-hybrid \
+            --max-level=2 --max-attempts=18 --max-total-attempts=36 \
             --out=reports/stage6-agent-smoke.json
       - name: Archive diagnostic data even if a later check fails
         if: always()
