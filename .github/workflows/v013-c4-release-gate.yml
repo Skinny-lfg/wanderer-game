@@ -16,6 +16,7 @@ on:
       - 'scripts/simulate-progression.cjs'
       - 'scripts/v013-c6-final-audit.cjs'
       - 'scripts/v013-c9-function-inventory.cjs'
+      - 'scripts/v013-affinity-baseline.cjs'
       - 'scripts/prepare-automatic-preview.mjs'
       - 'scripts/update-pages-preview.mjs'
       - 'package.json'
@@ -56,6 +57,18 @@ jobs:
         run: node scripts/v013-c6-final-audit.cjs
       - name: Current full v0.13 gameplay and simulation gate
         run: npm run test:v013:gate
+      - name: Stage 1 pre-balance native Affinity baseline (6 pure / 6 hybrids)
+        run: npm run simulate:v013:affinities
+      - name: Stage 1 baseline evidence (raw seeded matrix and summary)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v013-stage1-affinity-baseline
+          path: |
+            reports/v013-stage1-affinity-baseline.json
+            reports/v013-stage1-affinity-baseline.md
+          if-no-files-found: warn
+          retention-days: 30
       - name: Verify current 343-node Talent Graph runtime and source catalog
         run: npm run test:v013:talent-graph
       - name: Current combat, Elite, Boss, class, balance and natural-account suites
