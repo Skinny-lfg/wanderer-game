@@ -5,10 +5,10 @@
   "kind": "normal",
   "family": "blood",
   "risk": 0,
-  "seed": 502,
+  "seed": 503,
   "node": 1,
   "trait": null,
-  "condition": "carrion_swarm",
+  "condition": "relentless_hunt",
   "marked": false,
   "stats": [
    [
@@ -20,9 +20,9 @@
     1.9779999999999998
    ]
   ],
-  "trace": "6bdab63c6ff86e06cd888faf71752d0006b5c705aaf4bb6d1a2b422939f93c08",
-  "seconds": 24.53,
-  "damageTaken": 32,
+  "trace": "24537926d0e9d76655698cf1b2b4e7b71c3a05b2808a9ab7766b73c616905b71",
+  "seconds": 22.55,
+  "damageTaken": 20,
   "damageDealt": 318,
   "status": "cleared",
   "casts": [
@@ -37,20 +37,12 @@
   "kind": "normal",
   "family": "aegis",
   "risk": 1,
-  "seed": 509,
+  "seed": 518,
   "node": 1,
   "trait": "armored",
   "condition": "veiled_passages",
   "marked": false,
   "stats": [
-   [
-    "skirmisher",
-    133,
-    5,
-    2,
-    0,
-    1.6329999999999998
-   ],
    [
     "caster",
     124,
@@ -58,6 +50,14 @@
     2,
     0,
     1.9779999999999998
+   ],
+   [
+    "skirmisher",
+    133,
+    5,
+    2,
+    0,
+    1.6329999999999998
    ],
    [
     "minion",
@@ -76,13 +76,13 @@
     1.9779999999999998
    ]
   ],
-  "trace": "35d0e9d0bafb2afa332f69827c4ed130ed1fc0621e17f342c7cebe3371f482f7",
-  "seconds": 40.26,
-  "damageTaken": 53,
+  "trace": "a86968f9ce98da6561756a5652dbd0ae97c33f17b74ae508410224d93a0847cf",
+  "seconds": 30.69,
+  "damageTaken": 34,
   "damageDealt": 502,
   "status": "cleared",
   "casts": [
-   10,
+   8,
    0
   ],
   "reserveEntries": 0
@@ -93,10 +93,10 @@
   "kind": "normal",
   "family": "fury",
   "risk": 2,
-  "seed": 517,
+  "seed": 514,
   "node": 1,
   "trait": "frenzied",
-  "condition": "carrion_swarm",
+  "condition": "sanguine_rite",
   "marked": false,
   "stats": [
    [
@@ -124,12 +124,12 @@
     1.9
    ],
    [
-    "skirmisher",
-    178,
+    "caster",
+    168,
     7,
     5,
     0,
-    1.42
+    1.72
    ],
    [
     "minion",
@@ -196,10 +196,10 @@
     1.9
    ]
   ],
-  "trace": "35a30dc160546a8f70834016eda65fe73a02e5e0e3e8176f1c7ed2f1d67b0955",
-  "seconds": 49.83,
-  "damageTaken": 81,
-  "damageDealt": 893,
+  "trace": "ee8268b95c2716dda45978b925ea0f63a7cf9ebc867a662d30a16d9496064ceb",
+  "seconds": 56.21,
+  "damageTaken": 187,
+  "damageDealt": 883,
   "status": "cleared",
   "casts": [
    3,
@@ -213,10 +213,10 @@
   "kind": "normal",
   "family": "magic",
   "risk": 1,
-  "seed": 504,
+  "seed": 506,
   "node": 1,
   "trait": "sigilbound",
-  "condition": "veiled_passages",
+  "condition": "blighted_ground",
   "marked": false,
   "stats": [
    [
@@ -234,6 +234,14 @@
     1,
     6,
     2.1849999999999996
+   ],
+   [
+    "tank",
+    178,
+    4,
+    6,
+    21,
+    1.9779999999999998
    ],
    [
     "caster",
@@ -244,14 +252,6 @@
     1.9779999999999998
    ],
    [
-    "skirmisher",
-    129,
-    5,
-    5,
-    15,
-    1.6329999999999998
-   ],
-   [
     "minion",
     46,
     2,
@@ -380,13 +380,13 @@
     2.1849999999999996
    ]
   ],
-  "trace": "26c1c8ec131b5b1191288710d01eb013364cbc9d08d838e64f9060e70adbef4d",
-  "seconds": 82.39,
-  "damageTaken": 121,
-  "damageDealt": 1079,
+  "trace": "8216712973aba422af241eedbde170a9e7ba4a76e553cbb0aa522add600c137d",
+  "seconds": 87.89,
+  "damageTaken": 116,
+  "damageDealt": 1128,
   "status": "cleared",
   "casts": [
-   6,
+   7,
    0
   ],
   "reserveEntries": 16
@@ -397,28 +397,28 @@
   "kind": "elite",
   "family": "decay",
   "risk": 0,
-  "seed": 505,
+  "seed": 507,
   "node": 1,
   "trait": null,
-  "condition": "relentless_hunt",
+  "condition": "veiled_passages",
   "marked": false,
   "stats": [
    [
-    "ashen_executioner",
-    256,
-    16,
-    3,
-    0,
-    2.3574999999999995
+    "tank",
+    427,
+    11,
+    4,
+    1,
+    2.2194999999999996
    ]
   ],
-  "trace": "e9369bc0cbe02f00e770489d708f8200ca79f2caf956b7ad63625e7fc0fadd71",
-  "seconds": 17.82,
-  "damageTaken": 26,
-  "damageDealt": 256,
+  "trace": "348ae4f44ec11a115b25af1b097946ee65fb2a7759ef72853f2db69e22fe377f",
+  "seconds": 23.76,
+  "damageTaken": 30,
+  "damageDealt": 427,
   "status": "cleared",
   "casts": [
-   2,
+   0,
    0
   ],
   "reserveEntries": 0
@@ -429,7 +429,7 @@
   "kind": "elite",
   "family": "blood",
   "risk": 2,
-  "seed": 510,
+  "seed": 506,
   "node": 1,
   "trait": null,
   "condition": "sanguine_rite",
@@ -444,10 +444,10 @@
     2.2194999999999996
    ]
   ],
-  "trace": "19b6e2f92bbe876839d509373113c8223aece04a34502a153762d31b6082687e",
-  "seconds": 30.69,
-  "damageTaken": 248,
-  "damageDealt": 573,
+  "trace": "a48464970d23429a689c3c291b8ea7763a751354ef29a0ec997525b6f3dc187b",
+  "seconds": 29.37,
+  "damageTaken": 219,
+  "damageDealt": 519,
   "status": "died",
   "casts": [
    0,
@@ -461,7 +461,7 @@
   "kind": "boss",
   "family": "vitality",
   "risk": 0,
-  "seed": 510,
+  "seed": 512,
   "node": 1,
   "trait": null,
   "condition": "veiled_passages",
@@ -484,9 +484,9 @@
     1.8459999999999999
    ]
   ],
-  "trace": "c33a36c69d6bd5a7fe452fe687d9d151970305e3383b2776f494322b2350121c",
-  "seconds": 37.51,
-  "damageTaken": 138,
+  "trace": "a5f1258149207fadcd7bf58a491c36957c5bce1d11577ab056b43eee247e2dbd",
+  "seconds": 32.45,
+  "damageTaken": 102,
   "damageDealt": 472,
   "status": "cleared",
   "casts": [
@@ -501,7 +501,7 @@
   "kind": "boss",
   "family": "magic",
   "risk": 2,
-  "seed": 526,
+  "seed": 510,
   "node": 1,
   "trait": null,
   "condition": "blighted_ground",
@@ -512,22 +512,14 @@
     842,
     55,
     14,
-    0,
+    126,
     1.863
-   ],
-   [
-    "skirmisher",
-    224,
-    13,
-    7,
-    0,
-    1.8459999999999999
    ]
   ],
-  "trace": "4c51c4f1cafb715b2945904326af06ad7026d7d1835a41cda3d513d7cbcd65dc",
-  "seconds": 12.21,
-  "damageTaken": 189,
-  "damageDealt": 186,
+  "trace": "0e8459c060cda1261c952238c2cc3b3b7f0fff2af585cb70362d0679f2b20eae",
+  "seconds": 12.54,
+  "damageTaken": 199,
+  "damageDealt": 108,
   "status": "died",
   "casts": [
    0,
@@ -542,182 +534,118 @@
   "family": "blood",
   "risk": 1,
   "seed": 511,
-  "node": 18,
+  "node": 16,
   "trait": "armored",
-  "condition": "carrion_swarm",
+  "condition": "relentless_hunt",
   "marked": true,
   "stats": [
    [
+    "minion",
+    61,
+    3,
+    1,
+    0,
+    1.9
+   ],
+   [
     "skirmisher",
-    119,
-    5,
+    167,
+    7,
     6,
     0,
-    1.6329999999999998
+    1.42
    ],
    [
     "minion",
-    42,
-    2,
+    61,
+    3,
     1,
     0,
-    2.1849999999999996
+    1.9
    ],
    [
     "caster",
-    112,
-    5,
+    158,
+    7,
     6,
     0,
-    1.9779999999999998
+    1.72
    ],
    [
     "minion",
-    42,
-    2,
+    61,
+    3,
     1,
     0,
-    2.1849999999999996
+    1.9
    ],
    [
     "minion",
-    42,
-    2,
+    61,
+    3,
     1,
     0,
-    2.1849999999999996
+    1.9
    ],
    [
     "minion",
-    42,
-    2,
+    61,
+    3,
     1,
     0,
-    2.1849999999999996
+    1.9
    ],
    [
     "minion",
-    42,
-    2,
+    61,
+    3,
     1,
     0,
-    2.1849999999999996
+    1.9
    ],
    [
     "minion",
-    42,
-    2,
+    61,
+    3,
     1,
     0,
-    2.1849999999999996
+    1.9
    ],
    [
     "minion",
-    42,
-    2,
+    61,
+    3,
     1,
     0,
-    2.1849999999999996
+    1.9
    ],
    [
     "minion",
-    42,
-    2,
+    61,
+    3,
     1,
     0,
-    2.1849999999999996
+    1.9
    ],
    [
     "minion",
-    42,
-    2,
+    61,
+    3,
     1,
     0,
-    2.1849999999999996
-   ],
-   [
-    "minion",
-    42,
-    2,
-    1,
-    0,
-    2.1849999999999996
-   ],
-   [
-    "minion",
-    42,
-    2,
-    1,
-    0,
-    2.1849999999999996
-   ],
-   [
-    "minion",
-    42,
-    2,
-    1,
-    0,
-    2.1849999999999996
-   ],
-   [
-    "minion",
-    42,
-    2,
-    1,
-    0,
-    2.1849999999999996
-   ],
-   [
-    "minion",
-    42,
-    2,
-    1,
-    0,
-    2.1849999999999996
-   ],
-   [
-    "minion",
-    42,
-    2,
-    1,
-    0,
-    2.1849999999999996
-   ],
-   [
-    "minion",
-    42,
-    2,
-    1,
-    0,
-    2.1849999999999996
-   ],
-   [
-    "minion",
-    42,
-    2,
-    1,
-    0,
-    2.1849999999999996
-   ],
-   [
-    "minion",
-    42,
-    2,
-    1,
-    0,
-    2.1849999999999996
+    1.9
    ]
   ],
-  "trace": "c3693d2db1b39f7350f7e656ba3882aa9aaaa85b6012f023e8d662202e567cd8",
-  "seconds": 50.38,
-  "damageTaken": 76,
-  "damageDealt": 988,
+  "trace": "019ebf49cfc18fcb2ebb30cd66eda90f01c4ce09a36e9d2fd3cac0544b69c241",
+  "seconds": 50.82,
+  "damageTaken": 82,
+  "damageDealt": 936,
   "status": "cleared",
   "casts": [
-   3,
+   5,
    0
   ],
-  "reserveEntries": 16
+  "reserveEntries": 8
  },
  {
   "level": 1,
@@ -725,12 +653,20 @@
   "kind": "neutral",
   "family": "aegis",
   "risk": 0,
-  "seed": 512,
+  "seed": 513,
   "node": 1,
   "trait": null,
   "condition": null,
   "marked": false,
   "stats": [
+   [
+    "skirmisher",
+    132,
+    5,
+    2,
+    0,
+    1.6329999999999998
+   ],
    [
     "minion",
     63,
@@ -748,14 +684,6 @@
     1.9779999999999998
    ],
    [
-    "minion",
-    63,
-    2,
-    1,
-    0,
-    2.1849999999999996
-   ],
-   [
     "tank",
     180,
     4,
@@ -764,13 +692,13 @@
     1.9779999999999998
    ]
   ],
-  "trace": "50e3b84b27f993a1f2dbe776282d90d8d84509c20d396bec20fc9fd5687f64f1",
-  "seconds": 32.78,
-  "damageTaken": 33,
-  "damageDealt": 429,
+  "trace": "0d8e8a2bf88a2ec5374983fdaef4f56cff7f282df6579a0a873ea3522ae55c7e",
+  "seconds": 39.6,
+  "damageTaken": 44,
+  "damageDealt": 498,
   "status": "cleared",
   "casts": [
-   6,
+   10,
    0
   ],
   "reserveEntries": 0
@@ -781,7 +709,7 @@
   "kind": "vanguard",
   "family": "aegis",
   "risk": 0,
-  "seed": 512,
+  "seed": 513,
   "node": 2,
   "trait": null,
   "condition": null,
@@ -796,10 +724,10 @@
     2.1849999999999996
    ],
    [
-    "tank",
-    180,
-    4,
-    3,
+    "caster",
+    123,
+    5,
+    2,
     0,
     1.9779999999999998
    ],
@@ -812,21 +740,21 @@
     2.1849999999999996
    ],
    [
-    "caster",
-    123,
-    5,
-    2,
+    "tank",
+    180,
+    4,
+    3,
     0,
     1.9779999999999998
    ]
   ],
-  "trace": "dd8eece510abe5c015d4c0f623dc5d9e8530a9749f01db6240fe3f4eb1ce459d",
-  "seconds": 40.92,
-  "damageTaken": 60,
+  "trace": "1c2419e8c86af6f53187904815ef97c038a860b953f1eaf8da21b92c8f7c9a58",
+  "seconds": 37.51,
+  "damageTaken": 35,
   "damageDealt": 479,
   "status": "cleared",
   "casts": [
-   8,
+   7,
    0
   ],
   "reserveEntries": 0

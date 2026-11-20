@@ -28,7 +28,7 @@ test('overflow loot equips without duplication and two-hand swaps obey global St
 });
 test('Forge, Merchant, salvage and stale inventory paths cannot spend or convert items during an Expedition',()=>{
  const a=create(11);preparation(a);const s=a.state();s.gold=s.fragments=10000;const item=loot(a),count=s.stash.length;
- assert.equal(a.economyCanAct(),false);a.craft(1,0,'belt','Leather');a.buy(0);a.salvage([item.id]);
+ assert.equal(a.economyCanAct(),false);a.craft(1,'belt','Leather');a.buy(0);a.salvage([item.id]);
  assert.equal(s.gold,10000);assert.equal(s.fragments,10000);assert.equal(s.stash.length,count);assert(s.stash.some(o=>o.id===item.id));
 });
 test('native Wave award populates the bag once; prior Expedition loot never enters the next bag',()=>{

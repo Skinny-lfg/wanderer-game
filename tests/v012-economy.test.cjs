@@ -4,23 +4,15 @@ function enter(a){if(!a.controller().state.initialFamily)a.initial('blood');if(a
 function complete(a){for(let n=0;n<70&&a.controller().state.stage!=='finished';n++){if(!a.state().run||a.state().run.status==='cleared')enter(a);const r=a.state().run;r.enemy.hp=0;a.win();a.flush();}assert.equal(a.controller().state.stage,'finished');}
 test('Forge and Merchant prices use Expedition unlocks without touching legacy progress',()=>{
  const a=create(14),s=a.state();a.setUnlocked(80);s.fragments=10000;s.gold=10000;
- a.craft(80,2,'armor','Armor');const crafted=s.stash.at(-1);
- assert.equal(crafted.tier,80);assert.equal(crafted.source,'forge');assert.notEqual(crafted.rarity,'Legendary');
- assert.equal(crafted.craftPrice,2430);assert.equal(s.fragments,7570);assert(a.sale(crafted)<=Math.floor(2430*.25));
- a.buy(0);assert.equal(s.stash.at(-1).tier,80);assert.equal(s.stash.at(-1).source,'merchant');
+ s.crafting.essence=4;const id='green_armor_plate',cost=a.forge.progress(id,80).cost;const crafted=a.forge.craft(id,80);
+ assert.equal(crafted.tier,70);assert.equal(crafted.source,'forge');assert.notEqual(crafted.rarity,'Legendary');
+ assert.equal(crafted.craftPrice,cost.fragments);assert.equal(s.fragments,10000-cost.fragments);assert(a.sale(crafted)<=Math.floor(cost.fragments*.25));
+ a.rollShop();a.buy(0);assert.equal(s.stash.at(-1).tier,70);assert.equal(s.stash.at(-1).source,'merchant');
  assert.equal(s.maxDungeon,1);assert.equal(s.onlineProgress.deepestCleared,0);
  const stock=s.merchant.stock.map(i=>i.id).join(),gold=s.gold;
  a.refresh('sigils');assert.equal(s.merchant.stock.map(i=>i.id).join(),stock);assert.equal(s.gold,gold);
  const sigils=s.merchant.sigils.join();a.refresh('gear');assert.equal(s.merchant.sigils.join(),sigils);
  assert.equal(a.build(),null,'gear Sigils do not grant temporary families');
-});
-test('live Masterwork odds match the mature economy helper rather than charging 3x for 2x odds',()=>{
- const a=create(91),base=a.rarityOdds(1,true),high=a.qualityOdds(base,1),master=a.qualityOdds(base,2);
- assert(master.Epic>high.Epic);assert(master.Rare>high.Rare);assert.equal(master.Legendary,0);
- assert(Math.abs(Object.values(master).reduce((n,v)=>n+v,0)-1)<1e-9);
- const vm=require('node:vm'),fs=require('node:fs'),ctx={};
- vm.runInNewContext(fs.readFileSync('economy/v0101.js','utf8'),ctx);
- assert.equal(JSON.stringify(master),JSON.stringify(ctx.WandererEconomyV0101.qualityOdds(base,2)));
 });
 test('stale vendor/crafting actions are blocked during routes, draft and combat; entry grants nothing',()=>{
  const a=create(19),s=a.state();s.fragments=s.gold=10000;a.rollShop();
@@ -69,7 +61,6 @@ test('endgame stays within existing gear/Rune tier cap and investment remains fi
  assert(s.pendingRuneReward.options.every(r=>r.tier===200&&a.validRune(r)));
  for(const tier of [1,20,80,200]){
   assert.equal(a.craftCost(tier),10+10*tier);
-  for(let rank=0;rank<10;rank++)assert(Number.isFinite(a.economy.upgradeCost(tier,rank)));
  }
 });
 

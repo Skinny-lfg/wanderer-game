@@ -13,10 +13,10 @@ test('D: enemy stats use E200 reference and only the approved post-200 multiplie
 
 test('D: Forge and boss Rune rewards accept Endless tiers',()=>{
  for(const level of [201,500,1000]){
-  const a=create(22);a.controller().state.unlocked=level;a.state().fragments=20000;
-  a.craft(level,0,'weapon','Sword');
-  assert.equal(a.state().stash.at(-1).tier,level);
-  assert.equal(a.state().stash.at(-1).craftPrice,a.craftCost(level));
+  const a=create(22);a.setUnlocked(level);a.state().fragments=20000;a.state().crafting.essence=4;
+  const price=a.forge.progress('green_sword',level).cost;a.forge.craft('green_sword',level);
+  assert.equal(a.state().stash.at(-1).tier,70);
+  assert.equal(a.state().stash.at(-1).craftPrice,price.fragments);
   a.offerBossRunes(level);
   assert.equal(a.state().pendingRuneReward.tier,level);
   assert.equal(a.state().pendingRuneReward.options.length,3);
@@ -32,7 +32,6 @@ test('D: gear and Runes scale once; costs continue; attack speed is not multipli
   if(level>200){assert.equal(item.atk,Math.round(base.atk*factor));assert.equal(item.str,Math.round(base.str*factor));assert.equal(rune.value,+(21*factor).toFixed(2));}
   if(level===200)assert.equal(item.atk,base.atk);
   assert.equal(item.spd,base.spd);assert.equal(a.craftCost(level),10+10*level);
-  assert.equal(a.economy.upgradeCost(level,0),25+4*level);
   assert.equal(item.tier,level);
  }
  const leather=a.makeItem(500,'armor',null,'loot','Leather','Epic');

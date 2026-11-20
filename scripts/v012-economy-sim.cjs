@@ -66,7 +66,6 @@ function run(options){
  a.setup(gearTier,options.weapon,options.rarity||'Rare');a.controller().state.unlocked=options.level;
  if(options.permanentBuild){
   const s=a.state(),item=a.makeItem(gearTier,'weapon',null,'loot',options.weapon,'Legendary');
-  for(let rank=0;rank<10;rank++)a.economy.upgradeLegendary(item);
   s.equip.weapon=item;
   s.runes=['fury','warding','vitality'].map(f=>a.makeRune(f,Math.max(10,Math.floor(gearTier/10)*10)));
   s.runeSlots=s.runes.map(r=>r.id);
@@ -84,13 +83,13 @@ function campaign(policy,seed){
   a.salvage(spare);salvaged+=s.fragments-before;a.claimOverflow();
   // Spend only earned resources, using native Forge / Merchant transaction handlers.
   if(['forge','both'].includes(policy)){
-   for(let count=0;count<4&&s.fragments>=a.craftCost(g.unlocked)&&s.stash.length<40;count++){
+   for(let count=0;count<4&&s.stash.length<40;count++){
     const slot=[...a.slots].filter(x=>x!=='offhand').sort((x,y)=>{
      const px=a.baseStats({...s.equip,[x]:null}).power,py=a.baseStats({...s.equip,[y]:null}).power;
      return py-px;
     })[0];
     const before=s.fragments;
-    a.craft(g.unlocked,0,slot,slot==='weapon'?'Sword':'random');
+    if(!a.craft(g.unlocked,slot,slot==='weapon'?'Sword':'random'))break;
     spentFragments+=before-s.fragments;crafts+=Number(s.fragments<before);equipBest(a,'Sword');
    }
   }

@@ -59,8 +59,8 @@ function economy(agent){const a=agent.a,s=a.state(),profile=agent.profile;
  }
  // Target a real Forge offer at the currently unlocked tier, never a future tier.
  const shouldCraft=profile==='B'?agent.attempt%2===0:profile==='A'?agent.attempt%4===0:agent.losses>=2&&agent.attempt%2===0;
- if(shouldCraft){const choices=profile==='B'?[['weapon','Bow'],['armor','Leather'],['gloves','Leather']]:[['weapon','Bow'],['armor','Leather']];const [slot,type]=choices[agent.attempt%choices.length];const quality=profile==='B'?1:0,cost=a.craftCost(a.controller().state.unlocked)*(1+quality);
-  if(s.fragments>=cost&&s.stash.length<35){const before=s.fragments,n=s.stash.length;a.craft(a.controller().state.unlocked,quality,slot,type);if(s.stash.length>n){agent.crafts++;agent.fragmentsSpent+=before-s.fragments;equipUpgrades(agent);}}
+ if(shouldCraft){const choices=profile==='B'?[['weapon','Bow'],['armor','Leather'],['gloves','Leather']]:[['weapon','Bow'],['armor','Leather']];const [slot,type]=choices[agent.attempt%choices.length];const tier=a.controller().state.unlocked;
+  if(s.stash.length<35){const before=s.fragments,n=s.stash.length;a.craft(tier,slot,type);if(s.stash.length>n){agent.crafts++;agent.fragmentsSpent+=before-s.fragments;equipUpgrades(agent);}}
  }
  // Sell unused gear through the real salvage action to keep Stash capacity free.
  if(s.stash.length){const ids=s.stash.filter(o=>!o.locked).map(o=>o.id),before=s.fragments;if(ids.length){a.salvage(ids);agent.salvages+=ids.length;agent.fragmentsEarned+=s.fragments-before;}}

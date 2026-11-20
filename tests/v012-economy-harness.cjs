@@ -103,34 +103,18 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
    preview(id,tier){return WandererV013Crafting.previewCraft(id,tier,(...args)=>makeItem(...args,true));},
    progress(id,tier){return WandererV013Crafting.progress(state,id,tier);},
    recipes:WandererV013Crafting.RECIPES,
-   refine(family){
-    if(!economyCanAct())return false;
-    const before=state.crafting,next=WandererV013Crafting.refine(before,family);
-    if(!next)return false;
-    state.crafting=next;
-    if(!phase5Persist()){state.crafting=before;return false;}
-    return true;
-   },
-   craft(id,tier){
-    if(!economyCanAct()||!stashHasRoom())return null;
-    const result=WandererV013Crafting.prepareCraft(state,id,tier,makeItem);
-    if(!result)return null;
-    const before={fragments:state.fragments,crafting:state.crafting,stash:state.stash};
-    state.fragments=result.fragments;state.crafting=result.crafting;
-    state.stash=[...state.stash,result.item];
-    if(!phase5Persist()){Object.assign(state,before);return null;}
-    return result.item;
-   }
+   refine:refineRecipe,
+   craft:craftRecipe
   },
   runes:{unequip:unequipRune,salvage:salvageRune,recycle:salvageDuplicateRunes,equip:equipRune,confirm(){const fn=auditConfirmation;auditConfirmation=null;fn?.();}},
-  runeValue,makeRune,validRune,safeRunes,safePendingRune,qualityOdds:WandererEconomyV0101.qualityOdds,rarityOdds,
-  economy:WandererEconomyV0101,renderForge,renderMerchant,
+  runeValue,makeRune,validRune,safeRunes,safePendingRune,rarityOdds,
+  renderForge,renderMerchant,
   vitals:phase3Vitals,setVitals:v=>{phase1Vitals=v;},setView:v=>{view=v;},
   claimOverflow:()=>typeof phase4ClaimOverflow==='function'?phase4ClaimOverflow():0,
   salvage(ids){chosenItems=new Set(ids);bulkSell();if(auditConfirmation){const fn=auditConfirmation;auditConfirmation=null;fn();}},
-  craft(tier,quality=0,slot='weapon',subtype='Sword'){
-   forgeTier=tier;forgeQuality=quality;forgeSlot=slot;forgeSubtype=subtype;
-   auditForge();$('craft').onclick();
+  craft(tier,slot='weapon',subtype='Sword'){
+   const recipe=WandererV013Crafting.RECIPES.find(r=>r.rarity==='Uncommon'&&r.slot===slot&&(subtype==='random'||r.subtype===subtype));
+   return recipe?craftRecipe(recipe.id,tier):null;
   },
   buy(index){auditMerchant();const buttons=Q('[data-buy]');buttons[index]?.onclick();if(auditConfirmation){const fn=auditConfirmation;auditConfirmation=null;fn();}},
   purchaseNative(index){const m=state.merchant,item=m?.stock?.[index];return !!item&&purchaseEquipment(m,index,item);},
@@ -158,7 +142,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
  };
  `;
  const main=source.match(/<script>([\s\S]*?)<\/script>/)?.[1];
- const files=['combat/expedition-progression.js','economy/v013-crafting.js','economy/v013-gear-rolls.js','online/v012-treasures.js','online/v012-save.js','economy/v0101.js','combat/legendary.js','combat/v012-combat-core.js','combat/v012-gear-stats.js','combat/v012-runes.js','economy/v012-loot-rules.js','combat/v012-buildcraft.js','combat/talent-catalog.js','combat/v013-expedition-foundation.js','online/v013-map-intelligence.js','online/v013-expedition-conditions.js','online/v013-expedition-boons.js','online/v013-expedition-contracts.js','online/v013-encounter-traits.js','online/v013-boss-modifiers.js','online/v013-boss-preparation.js','online/v013-enemy-roster.js','online/v013-enemy-abilities.js','online/v013-elite-abilities.js','online/v013-boss-infrastructure.js','online/v013-boss-abilities.js','online/v012-expedition-controller.js','online/v012-expedition-events.js','online/v012-consumables.js'];
+ const files=['combat/expedition-progression.js','economy/v013-crafting.js','economy/v013-gear-rolls.js','online/v012-treasures.js','online/v012-save.js','combat/legendary.js','combat/v012-combat-core.js','combat/v012-gear-stats.js','combat/v012-runes.js','economy/v012-loot-rules.js','combat/v012-buildcraft.js','combat/talent-catalog.js','combat/v013-expedition-foundation.js','online/v013-map-intelligence.js','online/v013-expedition-conditions.js','online/v013-expedition-boons.js','online/v013-expedition-contracts.js','online/v013-encounter-traits.js','online/v013-boss-modifiers.js','online/v013-boss-preparation.js','online/v013-enemy-roster.js','online/v013-enemy-abilities.js','online/v013-elite-abilities.js','online/v013-boss-infrastructure.js','online/v013-boss-abilities.js','online/v012-expedition-controller.js','online/v012-expedition-events.js','online/v012-consumables.js'];
  files.push('combat/talent-graph-next.js','combat/talent-graph-bridge.js');
  files.push(...[...source.matchAll(/<script[^>]+src="([^"?]+-runtime\.js)(?:\?[^\"]*)?"/g)].map(m=>m[1]));
  const units=files.map(file=>({file,source:moduleOverrides[file]??fs.readFileSync(path.join(fixtureRoot,file),'utf8'),overridden:Object.hasOwn(moduleOverrides,file)}));

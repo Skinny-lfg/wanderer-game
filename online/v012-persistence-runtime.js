@@ -161,14 +161,6 @@ function phase5Init(){
   navigator.locks.request(key,{ifAvailable:true},async lock=>{
    if(!lock){ports.phase5Fail(Error('This validation slot is already open in another tab'));return;}
    try{
-    const url=new URL(globalThis.location.href),resetMarker=key+'_rank_reset_1';
-    if(binding==='local'&&WandererV012Save.PREFIX==='wanderer_automatic_rpg_preview_v5_'&&url.searchParams.get('reset')==='ranks-1'){
-     if(!localStorage.getItem(resetMarker)){
-      for(const suffix of ['', '_backup','_source'])localStorage.removeItem(key+suffix);
-      localStorage.setItem(resetMarker,'1');
-     }
-     url.searchParams.delete('reset');history.replaceState(null,'',url);
-    }
     ports.phase5Store=WandererV012Save.createStore(localStorage,binding);ports.phase5Raw=localStorage.getItem(key);
     const stored=ports.phase5Store.load();
     if(stored){

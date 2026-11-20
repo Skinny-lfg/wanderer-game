@@ -18,6 +18,10 @@ function fixture(){
    document.getElementById('screen')?.removeAttribute('inert');
    return {fragments:state.fragments,essence:state.crafting.essence};
   },
+  learn(){
+   for(const id of ['blue_ring1_magic','epic_ember_branch'])state.crafting=WandererV013Crafting.discover(state.crafting,id);
+   state.crafting.cores.magic=3;state.crafting.dryRooms.magic=3;render();
+  },
   snapshot(){
    const item=state.stash.filter(x=>x.crafted).at(-1);
    return {fragments:state.fragments,essence:state.crafting.essence,
@@ -71,6 +75,22 @@ test('v013 native Forge: only randomized crafting, no obsolete upgrade or paid a
    assert(after.fragments<before.fragments&&after.essence<before.essence);
    assert.equal(await page.locator('dialog[open]').count(),1);
    await page.screenshot({path:path.join(out,'forge-crafted-'+width+'.png'),fullPage:true});
+   await page.keyboard.press('Escape');
+   assert.equal((await page.locator('#v013RecipeRarity option').allTextContents()).filter(r=>r==='Epic').length,0);
+   await page.evaluate(()=>__forgeProbe.learn());
+   for(const [rarity,slot,recipe] of [['Rare','ring1','blue_ring1_magic'],['Epic','weapon','epic_ember_branch']]){
+    await page.selectOption('#v013RecipeRarity',rarity);await page.selectOption('#v013RecipeSlot',slot);await page.selectOption('#v013Recipe',recipe);
+    if(rarity==='Epic'){
+     assert(await page.locator('#v013Craft').isDisabled());
+     const initial=await page.evaluate(()=>__forgeProbe.snapshot());
+     await page.getByRole('button',{name:/Refine 1 magic reagent/}).click();
+     assert.equal((await page.evaluate(()=>__forgeProbe.snapshot())).essence,initial.essence-6);
+    }
+    await page.locator('#v013Craft').click();const roll=(await page.evaluate(()=>__forgeProbe.snapshot())).craft;
+    assert.equal(roll.recipeId,recipe);assert.equal(roll.rarity,rarity);assert.equal(roll.slot,slot);
+    assert(roll.affixes.length>=(rarity==='Rare'?2:3)&&roll.affixes.length<=4);
+    await page.keyboard.press('Escape');
+   }
    assert.deepEqual(errors,[]);
    console.log('PASS v013 Forge '+width+'px: no obsolete operations, legal random gloves craft, native materials and UI');
    await ctx.close();

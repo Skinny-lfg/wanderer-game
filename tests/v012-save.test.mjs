@@ -4,7 +4,7 @@ const S=globalThis.WandererV012Save;
 function legacy(){return {characterId:'knight',maxDungeon:200,chosen:200,attemptCompleted:true,gold:1234,fragments:567,materials:{iron:9,cloth:3},
  onlineProgress:{attemptId:'old-attempt',deepestCleared:200,activeMs:9999,milestones:{200:{activeMs:8888}},timingEligible:true,timerMetric:'combat-v1'},
  stashCapacity:40,stash:[{id:'stored',name:'Legacy Helm',slot:'helm',subtype:'Helm',tier:180,rarity:'Epic',def:90,effect:'poison'}],
- equip:{weapon:{id:'legend',name:'Blade of the First Dawn',legendaryId:'blade-of-the-first-dawn',slot:'weapon',subtype:'Sword',tier:200,rarity:'Legendary',effect:'crit',atk:122,upgradeRank:10,upgradeBase:{atk:101.6666666667}}},
+ equip:{weapon:{id:'legend',name:'Blade of the First Dawn',legendaryId:'blade-of-the-first-dawn',slot:'weapon',subtype:'Sword',tier:200,rarity:'Legendary',effect:'crit',atk:122}},
  run:null,runes:[{id:'rune',name:'Rune of Fury',family:'fury',tier:200,value:63}],runeSlots:['rune',null,null],sigils:[{id:'sigil',affinity:'shock'}],merchant:null,valuables:[]};}
 function memory(){const data=new Map();return {data,getItem:k=>data.get(k)??null,setItem:(k,v)=>data.set(k,v)};}
 function merchantTwelve(){return ['weapon','offhand','weapon','offhand','helm','armor','gloves','boots','ring1','ring2','amulet','ring1'].map((slot,n)=>({

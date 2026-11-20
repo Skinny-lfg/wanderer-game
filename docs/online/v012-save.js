@@ -62,11 +62,7 @@ function profileCheck(p){
   for(const f of STATS)if(item[f]!==undefined)requireValue(typeof item[f]==='number'&&Number.isFinite(item[f]),'item '+f);
   if(item.effect!==undefined&&item.effect!==null)requireValue(EFFECTS.includes(item.effect),'item effect');
   if(item.magic!==undefined&&item.magic!==null)requireValue(EFFECTS.includes(item.magic),'item magic');
-  if(item.upgradeRank!==undefined){
-   requireValue(item.rarity==='Legendary'&&integer(item.upgradeRank,0,10),'Legendary rank');
-   if(item.upgradeRank>0)requireValue(plain(item.upgradeBase),'Legendary original stats');
-   if(item.upgradeBase)for(const [f,n]of Object.entries(item.upgradeBase))requireValue(STATS.includes(f)&&typeof n==='number'&&Number.isFinite(n)&&n>=0,'Legendary base');
-  }
+  requireValue(item.upgradeRank===undefined&&item.upgradeBase===undefined,'retired Legendary upgrade');
  }
  for(const item of [...p.stash,...Object.values(p.equip).filter(Boolean),...p.expeditionOverflow])itemCheck(item);
  for(const valuable of p.valuables||[]){requireValue(!ids.has(valuable.id),'duplicate valuable ID');ids.add(valuable.id);}

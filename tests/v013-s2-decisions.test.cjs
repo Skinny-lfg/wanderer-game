@@ -113,14 +113,16 @@ test('S2: native Forge uses the standard recipe cost and never forces armor attr
 });
 test('S2: native reagent refinement consumes 6 Essence and 3 dry-room marks',()=>{
  const a=make(10407),s=a.state();
- assert.equal(a.forge.refine('magic'),false);
+ assert.equal(a.forge.refine('epic_ember_branch'),false);
  s.crafting.dryRooms.magic=3;s.crafting.essence=6;
+ assert.equal(a.forge.refine('epic_ember_branch'),false,'needs an earned Epic blueprint');
+ s.crafting.learnedRecipes.push('epic_ember_branch');
  const before=s.crafting.cores.magic;
- assert.equal(a.forge.refine('magic'),true);
+ assert.equal(a.forge.refine('epic_ember_branch'),true);
  assert.equal(s.crafting.essence,0);
  assert.equal(s.crafting.dryRooms.magic,0);
  assert.equal(s.crafting.cores.magic,before+1);
- assert.equal(a.forge.refine('magic'),false);
+ assert.equal(a.forge.refine('epic_ember_branch'),false);
 });
 
 test('S2: Thornbloom target diversion only occurs during true reflect windows',()=>{

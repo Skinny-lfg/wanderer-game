@@ -32,7 +32,7 @@ test('legacy gear retains its data but grants neither affinities nor sets',()=>{
 });
 test('Belt crafts, equips, compares, unequips, drops and sells through existing systems',()=>{
  const a=create(5),s=a.state();s.fragments=1000;
- a.craft(1,0,'belt','Cloth');const belt=s.stash.at(-1);assert.equal(belt.slot,'belt');assert.equal(belt.armorType,'Cloth');
+ a.craft(1,'belt','Cloth');const belt=s.stash.at(-1);assert.equal(belt.slot,'belt');assert.equal(belt.armorType,'Cloth');
  const before=a.baseStats();a.equip(belt.id);assert.equal(s.equip.belt.id,belt.id);assert(a.baseStats().int>before.int);
  assert(!s.stash.some(i=>i.id===belt.id));a.unequip('belt');assert.equal(s.equip.belt,null);assert(s.stash.some(i=>i.id===belt.id));
  const fragments=s.fragments;a.salvage([belt.id]);assert(s.fragments>fragments);assert(!s.stash.some(i=>i.id===belt.id));

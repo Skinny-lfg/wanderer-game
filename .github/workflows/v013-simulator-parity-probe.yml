@@ -34,8 +34,8 @@ jobs:
           console.log('LIVE_SCRIPTS',live.length);
           console.log('SIM_VM_SCRIPTS',vm.size);
           console.log('OMITTED_LIVE_SCRIPTS',JSON.stringify(omitted));
-          console.log('TIER_UPGRADE_LOADED_IN_SIMULATOR',vm.has('economy/v013-tier-upgrade.js'));
-          if(!live.includes('economy/v013-tier-upgrade.js') || !live.includes('online/v013-tier-upgrade-ui.js'))throw Error('Current Forge tier upgrade is not available in browser');
+          for(const file of ['economy/v013-crafting.js','economy/v013-gear-rolls.js'])
+            if(!live.includes(file)||!vm.has(file))throw Error('Missing shared Forge module: '+file);
           NODE
       - name: Verify isolated engine tests and the browser vs VM trace
         shell: bash
@@ -49,5 +49,5 @@ jobs:
             npx playwright install chromium
           fi
           npm run test:v013:sim
-          node --test tests/v013-runtime-parity.test.cjs tests/v013-tier-upgrade.test.cjs
+          node --test tests/v013-runtime-parity.test.cjs tests/v013-gear-roll-diversity.test.cjs
           node --test tests/v013-natural-progression.test.cjs tests/v013-stage94-human-decisions.test.cjs

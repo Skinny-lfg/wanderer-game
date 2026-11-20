@@ -379,7 +379,7 @@ function refineEarnedReagents(a,profile,level){
   if((s.crafting.cores[family]||0)>=p.cost.cores)continue;
   if((s.crafting.dryRooms?.[family]||0)<3||s.crafting.essence<p.cost.essence+6)continue;
   const before={essence:s.crafting.essence,cores:s.crafting.cores[family]};
-  if(!forge.refine(family))throw Error('Native reagent refinement rejected after legal preview');
+  if(!forge.refine(recipe.id))throw Error('Native reagent refinement rejected after legal preview');
   if(s.crafting.essence!==before.essence-6||s.crafting.cores[family]!==before.cores+1)
    throw Error('Native reagent refinement settlement mismatch');
   out.push({family,recipe:recipe.id,essenceSpent:6,coresGained:1});

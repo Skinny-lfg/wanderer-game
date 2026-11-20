@@ -14,13 +14,13 @@ assert.equal(html.split(boot).length,2,'QA injection anchor must uniquely match 
 const hook=`globalThis.__c3Audit={
  fund(){
   if(phase1Controller.state.stage!=='camp'||state.run)throw Error('Test funding permitted in Camp only');
-  state.fragments=10000;state.gold=10000;state.crafting??=WandererV013Crafting.create();state.crafting.essence=1000;
+  state.fragments=10000;state.gold=10000;state.crafting??=WandererV013Crafting.create();state.crafting.essence=1000;state.runes=[makeRune("wisdom",1)];
   render();return true;
  },
  snapshot(){
   const g=phase1Controller.state;
-  return {view,stage:g.stage,realm:g.dungeon?.realm??null,stash:state.stash.length,
-   crafted:state.stash.filter(item=>!!item.recipeId).map(item=>({recipeId:item.recipeId,rarity:item.rarity})),
+  return {runeSlots:state.runeSlots,gold:state.gold,ids:state.stash.map(i=>i.id),equipped:Object.values(state.equip).filter(Boolean).map(i=>i.id),stock:state.merchant?.stock,potions:state.consumables,offers:state.apothecary?.stock,view,stage:g.stage,realm:g.dungeon?.realm??null,stash:state.stash.length,
+   crafted:state.stash.filter(item=>!!item.recipeId).map(item=>({id:item.id,recipeId:item.recipeId,rarity:item.rarity})),
    fragments:state.fragments,unlocked:g.unlocked,dungeonNodes:g.dungeon?.realm?phase1Controller.realmMap()?.nodes.length:0,points:WandererAutomaticTalents.earned(state.automaticTalents)-state.automaticTalents.nodes.length};
  }
 };`;
@@ -41,7 +41,7 @@ const server=http.createServer((req,res)=>{
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
  const url='http://127.0.0.1:'+server.address().port;
  let browser;
- const report=path.resolve('reports/v013-c3-browser');
+ const report=path.resolve(process.env.V013_UI_EVIDENCE_DIR||'reports/v013-c3-browser');
  fs.mkdirSync(report,{recursive:true});
  try{
   const launch={headless:true};if(process.env.CHROMIUM_PATH)launch.executablePath=process.env.CHROMIUM_PATH;
@@ -49,6 +49,7 @@ const server=http.createServer((req,res)=>{
   for(const [width,height] of [[1280,800],[390,844]]){
    const context=await browser.newContext({viewport:{width,height}}),page=await context.newPage();
    const errors=[];page.on('pageerror',error=>errors.push(error.message));
+   page.on('response',response=>{if(response.status()>=400)errors.push(response.status()+' '+response.url());});
    page.setDefaultTimeout(10000);
    try{
     await page.goto(url,{waitUntil:'load'});
@@ -76,10 +77,27 @@ const server=http.createServer((req,res)=>{
     assert(after.fragments<before.fragments);
     assert(after.crafted.some(item=>item.recipeId==='green_sword'&&item.rarity==='Uncommon'));
     await page.keyboard.press('Escape');
+    const snap=()=>page.evaluate(()=>__c3Audit.snapshot());
+    await page.locator('[data-city-tab="merchant"]').click();
+    const offer=page.locator('[data-buy]').first(),id=await offer.getAttribute('data-buy');
+    const merchant=await snap(),price=merchant.stock.find(i=>i.id===id).goldPrice;
+    await offer.click();await page.locator('dialog [data-confirm]').click();
+    assert((await snap()).ids.includes(id));assert.equal((await snap()).gold,merchant.gold-price);
+    await page.locator('[data-city-tab="apothecary"]').click();
+    const buy=page.locator('[data-potion-buy]').first(),pid=await buy.getAttribute('data-potion-buy');
+    const stock=await snap(),potion=stock.offers.find(i=>i.id===pid);
+    await buy.click();
+    const bought=await snap();
+    assert.equal(bought.gold,stock.gold-potion.price);
+    assert.equal(bought.potions[potion.kind],(stock.potions?.[potion.kind]||0)+1);
+    await page.reload();
+    const restored=await snap();assert.equal(restored.gold,bought.gold);
+    assert(restored.ids.includes(id));assert.deepEqual(restored.potions,bought.potions);
     // Inventory and equipment dialog share the actual equipment UI.
     await page.locator('[data-phase3-nav="equipment"]').click();
     await page.locator('.equipmentInventory').waitFor();
-    const crafted=page.locator('[data-item]').first();
+    const gearId=after.crafted.find(i=>i.recipeId==='green_sword').id;
+    const crafted=page.locator('[data-item="'+gearId+'"]');
     assert((await page.locator('[data-item]').count())>=1);
     await page.screenshot({path:path.join(report,'inventory-'+width+'.png')});
     await crafted.click();
@@ -87,7 +105,14 @@ const server=http.createServer((req,res)=>{
     await itemDialog.waitFor();
     const rect=await itemDialog.boundingBox();
     assert(rect&&rect.width<=width+2,'Item popup wider than viewport');
-    await page.keyboard.press('Escape');
+    await itemDialog.locator('#equipThis').click();assert((await snap()).equipped.includes(gearId));
+    await page.locator('[data-phase3-nav="runes"]').click();
+    const rune=page.locator('[data-rune-equip]').first(),runeId=await rune.getAttribute('data-rune-equip');
+    await rune.click();await page.locator('[data-rune-slot-choice="0"]').click();
+    assert.equal((await snap()).runeSlots[0],runeId);
+    await page.reload();assert.equal((await snap()).runeSlots[0],runeId);
+    assert((await snap()).equipped.includes(gearId));
+    await page.locator('[data-rune-remove="0"]').click();assert.equal((await snap()).runeSlots[0],null);
     // Current deterministic Dungeon: three risk cards, a contract and a map.
     await page.locator('[data-phase3-nav="phase1"]').click();
     await page.locator('[data-phase1-expedition]:visible').first().click();

@@ -25,7 +25,6 @@ function cleanItem(value,slot){
  if(value.rarity==='Legendary'){
   const id=safeId(value.legendaryId);
   if(id)item.legendaryId=id;
-  if(Number.isInteger(value.upgradeRank)&&value.upgradeRank>=0&&value.upgradeRank<=10)item.upgradeRank=value.upgradeRank;
  }
  if(value.crafted===true)item.crafted=true;
  return item;

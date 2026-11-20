@@ -18,7 +18,6 @@ function scenario(stage){
   phase1Controller:{state:{stage,unlocked:1}},
   phase1Draft:null,saveBlocked:false,
   DUNGEON_CAP:200,STASH_BASE_CAPACITY:40,STASH_MAX_CAPACITY:200,
-  forgeTier:1,forgeSlot:'armor',forgeSubtype:'Armor',forgeQuality:0,
   phase3NeedsBagResolution:()=>true,
   gameRandom:()=>.2,
   merchantCost:()=>40,
@@ -34,12 +33,10 @@ function scenario(stage){
 test('Finished Expedition permits crafting even if the old Bag had overflow',()=>{
  const x=scenario('finished');
  assert.equal(x.api.economyCanAct(),true);
- const before=x.port.state.fragments;
- const crafted=x.api.craftEquipment(14,null);
- assert.ok(crafted,'a real item must be crafted');
- assert.equal(x.port.state.fragments,before-14);
- assert.equal(x.port.state.stash.length,1);
- assert.equal(x.saved,1);
+ const a=require('./v012-economy-harness.cjs')(1);
+ a.controller().state.stage='finished';a.state().fragments=100;a.state().crafting.essence=4;
+ const before=a.state().stash.length,crafted=a.forge.craft('green_sword',1);
+ assert.ok(crafted);assert.equal(a.state().fragments,86);assert.equal(a.state().stash.length,before+1);
 });
 
 test('Failed Expedition permits merchant purchase with free Stash and enough Gold',()=>{
@@ -56,7 +53,7 @@ test('Failed Expedition permits merchant purchase with free Stash and enough Gol
 test('During a Realm and an active combat encounter the economy remains locked',()=>{
  for(const stage of ['choice','combat']){
   const x=scenario(stage);assert.equal(x.api.economyCanAct(),false);
-  assert.equal(x.api.craftEquipment(14,null),undefined);
+  assert.equal(x.api.purchaseEquipment(null,0,{}),false);
   assert.equal(x.saved,0);
  }
  const x=scenario('finished');x.port.state.run={id:'still-running'};
@@ -68,7 +65,8 @@ test('Full Stash still protects player loot and resources after a run',()=>{
  x.port.state.stash=Array.from({length:40},(_,i)=>({id:'gear'+i}));
  const before=x.port.state.fragments;
  assert.equal(x.api.stashHasRoom(),false);
- assert.equal(x.api.craftEquipment(14,null),undefined);
+ const item={id:'full',goldPrice:2},m=x.port.state.merchant={stock:[item]};
+ assert.equal(x.api.purchaseEquipment(m,0,item),false);assert.equal(x.port.state.gold,200);
  assert.equal(x.port.state.fragments,before);
  assert.equal(x.saved,0);
 });
@@ -77,7 +75,7 @@ test('Post-expedition UI keeps Inventory navigable and preserves separate Bag re
  assert.match(html,/if\(phase3NeedsBagResolution\(\)\&\&state\.run\)/);
  assert.match(html,/phase3NeedsBagResolution\(\)\&\&phase3ExpeditionActive\(\)/);
  assert.match(src,/function phase3NeedsBagResolution\(\)/);
- assert.match(html,/href="online\/v012-uiux-tuning\.css"/);
+ assert.match(html,/href="online\/v012-uiux-tuning\.css(?:\?[^"]*)?"/);
 });
 
 test('Button uses only three intended artwork layers and no hidden base background',()=>{

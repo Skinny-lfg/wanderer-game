@@ -58,14 +58,7 @@ body.phase3IntegratedPreview dialog.merchantCompareDialog[open] {
   overflow-x:hidden!important;
   overflow-y:auto!important;
 }
-body.phase3IntegratedPreview dialog.forgeResultDialog[open] {
-  box-sizing:border-box!important;
-  width:min(450px,calc(100vw - 24px))!important;
-  max-width:min(450px,calc(100vw - 24px))!important;
-  max-height:min(80dvh,660px)!important;
-  overflow-x:hidden!important;
-  overflow-y:auto!important;
-}
+
 body.phase3IntegratedPreview dialog.merchantCompareDialog .comparisonCards,
 body.phase3IntegratedPreview dialog.itemDialog .comparisonCards {
   display:grid!important;
@@ -139,10 +132,7 @@ body.phase3IntegratedPreview :is(.phase3Camp .phase3ExpeditionPanel,.phase3CampS
   body.phase3IntegratedPreview dialog.merchantCompareDialog[open]{
     width:calc(100vw - 18px)!important;max-width:calc(100vw - 18px)!important;
   }
-  body.phase3IntegratedPreview dialog.forgeResultDialog[open]{
-    width:min(450px,calc(100vw - 18px))!important;
-    max-width:min(450px,calc(100vw - 18px))!important;
-  }
+
 }
 
 

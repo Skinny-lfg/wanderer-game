@@ -11,16 +11,18 @@ const leaderboardSource=fs.readFileSync(path.join(root,'online/v012-leaderboard-
 const importLine="import {createBackend} from './firebase-client.mjs?v=v012-equipped-gear-1';";
 assert.equal(leaderboardSource.split(importLine).length,2,'Leaderboard must share the version-pinned backend');
 const fixtureSource=leaderboardSource.replace(importLine,'const createBackend=async()=>globalThis.__fakeBackend;');
+const feedbackSource=fs.readFileSync(path.join(root,'online/v012-feedback.mjs'),'utf8').replace(importLine,'const createBackend=async()=>globalThis.__fakeBackend;');
 const html='<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">'+
  '<link rel="stylesheet" href="/online/v012-required-auth.css"></head>'+
  '<body class="phase3IntegratedPreview">'+
- '<div id="onlineBar"><button type="button" data-online-action="leaderboard">Leaderboard</button></div>'+
+ '<div id="onlineBar"><button type="button" data-online-action="leaderboard">Leaderboard</button><button data-online-action="feedback">Feedback</button></div>'+
  '<button id="menuToggle" aria-expanded="true">Menu</button>'+
- '<script type="module" src="/online/v012-leaderboard-ui.mjs"></script></body></html>';
+ '<script type="module" src="/online/v012-leaderboard-ui.mjs"></script><script type="module" src="/online/v012-feedback.mjs"></script></body></html>';
 const mime={'.css':'text/css','.mjs':'text/javascript','.png':'image/png'};
 const server=http.createServer((req,res)=>{
  const rel=new URL(req.url,'http://local').pathname;
  if(rel==='/'){res.writeHead(200,{'Content-Type':'text/html'});return res.end(html);}
+ if(rel==='/online/v012-feedback.mjs'){res.writeHead(200,{'Content-Type':'text/javascript'});return res.end(feedbackSource);}
  if(rel==='/online/v012-leaderboard-ui.mjs'){res.writeHead(200,{'Content-Type':'text/javascript'});return res.end(fixtureSource);}
  const file=path.resolve(root,'.'+rel);
  if(!file.startsWith(root+path.sep)){res.writeHead(403);return res.end();}
@@ -40,6 +42,8 @@ const server=http.createServer((req,res)=>{
     globalThis.__profileAudit={calls:[],gearCalls:[]};
     globalThis.WandererGame={inspectLoadout:equipment=>'<h3>Equipment</h3><div class="publicGear">'+Object.values(equipment).filter(Boolean).map(item=>'<div class="publicGearItem">'+String(item.name).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')+' · E'+item.tier+'</div>').join('')+'</div>'};
     globalThis.__fakeBackend={
+     watchAuth(fn){queueMicrotask(()=>fn({uid:'viewer',isAnonymous:false}));return ()=>{};},
+     async submitV012Feedback(payload){globalThis.__profileAudit.submitted=payload;},
      currentUser:()=>({uid:'viewer',isAnonymous:false}),
      listV012CommunityScores:async()=>[
       {uid:'user_a',nickname:'alpha',best:18},
@@ -103,6 +107,14 @@ const server=http.createServer((req,res)=>{
    assert.deepEqual(await page.evaluate(()=>globalThis.__profileAudit.gearCalls),['user_a','user_b','user_c','user_x']);
    await page.keyboard.press('Escape');
    await page.waitForFunction(()=>!document.querySelector('dialog.v012LeaderboardDialog'));
+   await page.locator('[data-online-action="feedback"]').click();
+   await page.locator('textarea[name="description"]').fill('Local audit form validation');
+   await page.locator('[data-send-feedback]').click();
+   await page.waitForFunction(()=>document.querySelector('#wandererFeedbackStatus')?.dataset.status==='success');
+   assert.equal(await page.evaluate(()=>__profileAudit.submitted.description),'Local audit form validation');
+   assert.equal(await page.locator('textarea[name="description"]').inputValue(),'');
+   await page.locator('[data-close-feedback]').click();
+   assert.equal(await page.locator('.wandererFeedbackDialog').count(),0);
    assert.deepEqual(errors,[],'No uncaught browser errors');
    console.log('PASS read-only leaderboard player profile '+width+'px');
    await page.close();

@@ -9,34 +9,34 @@ const TRAITS=Object.freeze({
  efficient:Object.freeze({name:'Measured Casting',description:'Elemental casts cost 10% less Mana, saving at least 1 Mana per paid cast.'})
 });
 const recipes=[];
-function add(id,name,slot,subtype,rarity,family,attribute,trait=null){recipes.push(Object.freeze({id,name,slot,subtype,rarity,family,trait,description:trait?TRAITS[trait].description:'A '+rarity+' '+subtype+' with a weighted random selection of attributes. The recipe controls type and rarity, not the individual stat roll.',source:rarity==='Uncommon'?'Known Blueprint. Gather crafting materials from completed Realms.':'Earn this '+rarity+' Blueprint from an optional Dungeon Contract.'}));}
-const weapons=[['sword','Sword','blood','str','fury','agi'],['mace','Mace','aegis','str','vitality','end'],['bow','Bow','fury','agi','decay','agi'],['daggers','Daggers','fury','agi','blood','agi'],['greatsword','Two-Handed','blood','str','fury','str'],['staff','Staff','magic','int','vitality','int'],['wand','Wand','magic','int','aegis','int']];
-for(const [id,type,family,attribute,other,otherAttribute] of weapons){add('green_'+id,'Apprentice '+type,'weapon',type,'Uncommon',family,attribute);add('blue_'+id,({blood:'Crimson',decay:'Blighted',vitality:'Verdant',aegis:'Warded',fury:'Keen',magic:'Runic'}[family])+' '+type,'weapon',type,'Rare',family,attribute);add('blue_'+id+'_'+other,({blood:'Crimson',decay:'Blighted',vitality:'Verdant',aegis:'Warded',fury:'Keen',magic:'Runic'}[other])+' '+type,'weapon',type,'Rare',other,otherAttribute);}
+function add(id,name,slot,subtype,rarity,family,trait=null){recipes.push(Object.freeze({id,name,slot,subtype,rarity,family,trait,description:trait?TRAITS[trait].description:'A '+rarity+' '+subtype+' with a weighted random selection of attributes. The recipe controls type and rarity, not the individual stat roll.',source:rarity==='Uncommon'?'Known Blueprint. Gather crafting materials from completed Realms.':'Earn this '+rarity+' Blueprint from an optional Dungeon Contract.'}));}
+const weapons=[['sword','Sword','blood','fury'],['mace','Mace','aegis','vitality'],['bow','Bow','fury','decay'],['daggers','Daggers','fury','blood'],['greatsword','Two-Handed','blood','fury'],['staff','Staff','magic','vitality'],['wand','Wand','magic','aegis']];
+for(const [id,type,family,other] of weapons){add('green_'+id,'Apprentice '+type,'weapon',type,'Uncommon',family);add('blue_'+id,({blood:'Crimson',decay:'Blighted',vitality:'Verdant',aegis:'Warded',fury:'Keen',magic:'Runic'}[family])+' '+type,'weapon',type,'Rare',family);add('blue_'+id+'_'+other,({blood:'Crimson',decay:'Blighted',vitality:'Verdant',aegis:'Warded',fury:'Keen',magic:'Runic'}[other])+' '+type,'weapon',type,'Rare',other);}
 const armor=[['helm','Helm'],['armor','Armor'],['gloves','Gloves'],['boots','Boots'],['belt','Belt']];
-for(const [slot,label] of armor)for(const [type,family,attribute] of [['Plate','aegis','str'],['Leather','fury','agi'],['Cloth','magic','int']]){add('green_'+slot+'_'+type.toLowerCase(),'Apprentice '+type+' '+label,slot,type,'Uncommon',family,attribute);add('blue_'+slot+'_'+type.toLowerCase(),({Plate:'Bastion',Leather:'Tracker',Cloth:'Aetherweave'}[type])+' '+label,slot,type,'Rare',family,attribute);}
-for(const [id,slot,type,family,attribute] of [['shield','offhand','Shield','aegis','end'],['orb','offhand','Orb','magic','int'],['tome','offhand','Tome','magic','int'],['charm','offhand','Charm','vitality','int'],['amulet','amulet','Amulet','vitality','end'],['ring','ring1','Ring','fury','cha'],['ring2','ring2','Ring','fury','cha']])for(const rarity of ['Uncommon','Rare'])add((rarity==='Uncommon'?'green_':'blue_')+id,(rarity==='Uncommon'?'Apprentice ':'Artisan ')+type,slot,type,rarity,family,attribute);
-// Alternative recipes add attribute choices to weapons and jewellery; actual
+for(const [slot,label] of armor)for(const [type,family] of [['Plate','aegis'],['Leather','fury'],['Cloth','magic']]){add('green_'+slot+'_'+type.toLowerCase(),'Apprentice '+type+' '+label,slot,type,'Uncommon',family);add('blue_'+slot+'_'+type.toLowerCase(),({Plate:'Bastion',Leather:'Tracker',Cloth:'Aetherweave'}[type])+' '+label,slot,type,'Rare',family);}
+for(const [id,slot,type,family] of [['shield','offhand','Shield','aegis'],['orb','offhand','Orb','magic'],['tome','offhand','Tome','magic'],['charm','offhand','Charm','vitality'],['amulet','amulet','Amulet','vitality'],['ring','ring1','Ring','fury'],['ring2','ring2','Ring','fury']])for(const rarity of ['Uncommon','Rare'])add((rarity==='Uncommon'?'green_':'blue_')+id,(rarity==='Uncommon'?'Apprentice ':'Artisan ')+type,slot,type,rarity,family);
+// Alternative recipes vary by family; actual
 // Forge item affixes are independently rolled from the same v0.13 pools.
-for(const [id,name,subtype,family,attribute] of [
- ['sword_insight','Runic Sword','Sword','magic','int'],
- ['mace_guard','Warden Mace','Mace','vitality','end'],
- ['bow_might','War Bow','Bow','blood','str'],
- ['daggers_might','Butcher Daggers','Daggers','blood','str'],
- ['daggers_insight','Hex Daggers','Daggers','decay','int']
-])add('blue_'+id,name,'weapon',subtype,'Rare',family,attribute);
-for(const [family,attribute,label] of [
- ['blood','str','Crimson'],['fury','agi','Keen'],['magic','int','Runic'],
- ['vitality','end','Verdant'],['aegis','cha','Warded']
+for(const [id,name,subtype,family] of [
+ ['sword_insight','Runic Sword','Sword','magic'],
+ ['mace_guard','Warden Mace','Mace','vitality'],
+ ['bow_might','War Bow','Bow','blood'],
+ ['daggers_might','Butcher Daggers','Daggers','blood'],
+ ['daggers_insight','Hex Daggers','Daggers','decay']
+])add('blue_'+id,name,'weapon',subtype,'Rare',family);
+for(const [family,label] of [
+ ['blood','Crimson'],['fury','Keen'],['magic','Runic'],
+ ['vitality','Verdant'],['aegis','Warded']
 ])for(const [slot,type]of [['ring1','Ring'],['ring2','Ring'],['amulet','Amulet']])
- add('blue_'+slot+'_'+family,label+' '+type,slot,type,'Rare',family,attribute);
+ add('blue_'+slot+'_'+family,label+' '+type,slot,type,'Rare',family);
 for(const row of [
- ['oathkeeper','Oathkeeper','weapon','Mace','aegis','str','focused'],['wardens_promise',"Warden's Promise",'offhand','Shield','aegis','end','focused'],
- ['sanguine_edge','Sanguine Edge','weapon','Sword','blood','str','blood_transfer'],['gravecleaver','Gravecleaver','weapon','Two-Handed','blood','str','blood_transfer'],
- ['hunters_oath',"Hunter's Oath",'weapon','Bow','fury','agi','focused'],['silent_verdict','Silent Verdict','weapon','Daggers','fury','agi','focused'],
- ['ember_branch','Ember Branch','weapon','Staff','magic','int','conflagration'],['measured_staff','Measured Staff','weapon','Staff','magic','int','efficient'],
- ['lifewoven_wand','Lifewoven Wand','weapon','Wand','vitality','int','efficient'],['venomglass','Venomglass','weapon','Wand','decay','int','efficient'],
- ['warded_mantle','Warded Mantle','armor','Cloth','aegis','int','ward'],['aether_orb','Aether Orb','offhand','Orb','magic','int','ward']
-]){const [id,name,slot,type,family,attribute,trait]=row;add('epic_'+id,name,slot,type,'Epic',family,attribute,trait);}
+ ['oathkeeper','Oathkeeper','weapon','Mace','aegis','focused'],['wardens_promise',"Warden's Promise",'offhand','Shield','aegis','focused'],
+ ['sanguine_edge','Sanguine Edge','weapon','Sword','blood','blood_transfer'],['gravecleaver','Gravecleaver','weapon','Two-Handed','blood','blood_transfer'],
+ ['hunters_oath',"Hunter's Oath",'weapon','Bow','fury','focused'],['silent_verdict','Silent Verdict','weapon','Daggers','fury','focused'],
+ ['ember_branch','Ember Branch','weapon','Staff','magic','conflagration'],['measured_staff','Measured Staff','weapon','Staff','magic','efficient'],
+ ['lifewoven_wand','Lifewoven Wand','weapon','Wand','vitality','efficient'],['venomglass','Venomglass','weapon','Wand','decay','efficient'],
+ ['warded_mantle','Warded Mantle','armor','Cloth','aegis','ward'],['aether_orb','Aether Orb','offhand','Orb','magic','ward']
+]){const [id,name,slot,type,family,trait]=row;add('epic_'+id,name,slot,type,'Epic',family,trait);}
 // Only current blueprints are valid. Historical Off-Hand Dagger recipes are not part of the fresh collection.
 const RECIPES=Object.freeze(recipes);
 const byId=new Map(RECIPES.map(r=>[r.id,r]));
@@ -75,7 +75,6 @@ function craftItem(generated,r,price){
  // blueprint trait are guaranteed, but attributes never become predetermined.
  if(r.trait)item.v013Trait=r.trait;
  else delete item.v013Trait;
- delete item.v013CraftFocus;
  return item;
 }
 function previewCraft(id,tier,makePreview){
