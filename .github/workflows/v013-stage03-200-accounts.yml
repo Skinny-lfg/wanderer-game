@@ -1,4 +1,4 @@
-name: Wanderer Stage 03 — 200 native accounts E1–E20 (no deploy)
+name: Wanderer Stage 03 — 200 native accounts E1–E20, Stash-aware (no deploy)
 
 on:
   push:
