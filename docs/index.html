@@ -1604,7 +1604,7 @@ function renderRebuiltTalents(){
   element:id=>{const before=state.automaticTalents,next=system.selectElement(before,id);if(!next)return false;state.automaticTalents=next;if(!phase5Persist()){state.automaticTalents=before;return false;}return true;},
   reset:()=>{const before=state.automaticTalents;state.automaticTalents=system.reset(before);if(!phase5Persist()){state.automaticTalents=before;return false;}return true;}
  };
- html('<section class="panel automaticTalentTree" aria-label="Permanent talents"><h2>Talent Tree</h2><iframe title="Talent tree" src="preview/talent-rebuild/index.html?v=41cdeb1b6323" style="width:100%;height:min(78vh,850px);min-height:520px;border:1px solid #715742"></iframe></section>');
+ html('<section class="panel automaticTalentTree" aria-label="Permanent talents"><h2>Talent Tree</h2><iframe title="Talent tree" src="preview/talent-rebuild/index.html?v=74b4ab1dbb0a" style="width:100%;height:min(78vh,850px);min-height:520px;border:1px solid #715742"></iframe></section>');
 }
 
 function realmDifficulty(card){return ['Guarded','Dangerous','Brutal'][card.risk];}
