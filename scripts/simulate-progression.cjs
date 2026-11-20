@@ -27,6 +27,7 @@ const GROUP_SIZES=Object.freeze([3,12,20]);
 const ROLE_EFFECTS=Object.freeze(['baseline','trait','condition','both']);
 const RISKS=Object.freeze([0,1,2]);
 const T=globalThis.WandererAutomaticTalents;
+const AGENT=require('./v013-agent-strategy.cjs');
 const P=globalThis.WandererExpeditionProgression;
 const byNode=new Map(T.NODES.map(n=>[n.id,n]));
 const BUILDS=Object.freeze([
@@ -65,7 +66,7 @@ function parseArgs(args){
   else if(key==='role-effects'){result.roleEffects=[...new Set(value.split(','))];if(!result.roleEffects.length||result.roleEffects.some(x=>!ROLE_EFFECTS.includes(x)))throw Error('Invalid role effects: '+value);}
    else if(key==='boons'&&['none','first'].includes(value))result.boons=value;
   else if(key==='contracts'&&['none','first'].includes(value))result.contracts=value;
-  else if(key==='target-policy'&&['focus','mechanics','adds'].includes(value))result.targetPolicy=value;
+  else if(key==='target-policy'&&['focus','mechanics','adds','adaptive'].includes(value))result.targetPolicy=value;
   else if(key==='runes'&&['true','false'].includes(value))result.runes=value==='true';
   else if(key==='tick-limit'){result.tickLimit=Number(value);if(!finitePositive(result.tickLimit)||result.tickLimit>100000)throw Error('Invalid tick-limit: '+value);}
   else if(key==='out'&&value)result.output=value;
@@ -248,8 +249,21 @@ function fight(a,c,limit,targetPolicy='focus',measure=false){
  const initialVisible=(r.enemies||[r.enemy]).filter(e=>e?.hp>0).length,initialReserve=(r.groupReserve||[]).filter(e=>e?.hp>0).length;
  let peakLiving=sourceActors.filter(e=>e.hp>0).length,peakVisible=(r.enemies||[r.enemy]).filter(e=>e?.hp>0).length;
  let ticks=0,targetSwitches=0,minimumHp=r.maxhp>0?r.hp/r.maxhp:0;
+ const agentCapabilities=targetPolicy==='adaptive'?AGENT.classify({
+  equipment:a.state().equip,talents:a.state().automaticTalents,build:a.build(),stats:a.baseStats()}):null;
  while(r.status==='fight'&&c.state.stage==='combat'&&r.hp>0&&ticks<limit){
-  const next=selectTarget(r,targetPolicy);if(a.selectCombatTarget(r,next))targetSwitches++;
+  // For controlled policy comparisons, isolate agent clicks. All scenarios
+  // still run the identical native combat engine, enemy AI and damage rules.
+  if(targetPolicy==='adaptive'){
+   if(ticks%8===0){
+    const baseline=selectTarget(r,'mechanics');
+    const next=AGENT.selectTarget(r,agentCapabilities,baseline);
+    if(next&&a.selectCombatTarget(r,next))targetSwitches++;
+   }
+  }else{
+   const next=selectTarget(r,targetPolicy);
+   if(a.selectCombatTarget(r,next))targetSwitches++;
+  }
   a.tick();ticks++;for(const mob of r.enemies||[])unseenReserve.delete(mob);minimumHp=Math.min(minimumHp,Math.max(0,r.hp)/(r.maxhp||1));peakLiving=Math.max(peakLiving,(r.enemies||[r.enemy]).filter(e=>e?.hp>0).length+(r.groupReserve||[]).filter(e=>e?.hp>0).length);peakVisible=Math.max(peakVisible,(r.enemies||[r.enemy]).filter(e=>e?.hp>0).length);}
  const metrics=r.metrics||{},died=c.state.stage==='failed'||r.hp<=0,timedOut=!died&&r.status==='fight'&&ticks>=limit;
  const row={initialStateSha256,vanguardEncounter,targetPolicy,tier:startedTier,type:leader?.boss?'boss':leader?.miniboss?'elite':'combat',bossId:profile?.id||null,bossAffinity:profile?Object.keys(A.PROFILES).find(f=>A.PROFILES[f]===profile):null,bossName:profile?.name||null,bossStyle:leader?.bossStyle||null,eliteType:leader?.eliteType||null,initialRoles,roster,initialVisible,initialReserve,peakLivingEnemies:peakLiving,peakVisibleEnemies:peakVisible,targetPolicy,targetSwitches,traitId:r.encounterTraitId||null,traitRegrowthHealing:Math.round(metrics.traitRegrowthHealing||0),traitDeathPulse:Math.round(metrics.traitDeathPulse||0),bossModifierIds:[...(r.bossModifierIds||[])],bossPulseTriggers:Math.round(metrics.bossPulseTriggers||0),bossFrenzyTriggers:Math.round(metrics.bossFrenzyTriggers||0),bossPreparation:r.bossPreparation?JSON.parse(JSON.stringify(r.bossPreparation)):null,status:died?'died':timedOut?'timeout':r.status,timedOut,died,won:!died&&r.status==='cleared',seconds:+((r.combatSeconds||0)-startedAt).toFixed(6),updateCalls:ticks,ticks,hpStart:+startHp.toFixed(2),hpEnd:+Math.max(0,r.hp).toFixed(2),hpMax:r.maxhp,mpStart:+startMp.toFixed(2),mpEnd:+Math.max(0,r.mp).toFixed(2),mpMax:r.maxmp,minHpPct:+(minimumHp*100).toFixed(1),conditionId:r.conditionId||null,conditionMarked:!!r.conditionMarked,conditionBarrierGranted:Math.round(r.conditionBarrierGranted||0),conditionRiteTriggers:Math.round(metrics.conditionRiteTriggers||0),damageDealt:Math.round(metrics.damageDealt||0),damageTaken:Math.round(metrics.damageTaken||0),absorbed:Math.round(metrics.absorbed||0),manaSpent:Math.round(metrics.manaSpent||0),initialEnemies,enemies:r.totalMobCount||initialEnemies,reinforcementsSpawned:initialReserve-unseenReserve.size,bossSummons:Math.round(metrics.bossSummons||0),bossHealing:Math.round(metrics.bossHealing||0),bossMinionDeaths:Math.round(metrics.bossMinionDeaths||0),bossWards:Math.round(metrics.bossWards||0),bossArcanePulses:Math.round(metrics.bossArcanePulses||0),bossCastInterruptions:Math.round(metrics.bossCastInterruptions||0),bossNodeDestroyed:Math.round(metrics.bossNodeDestroyed||0),enemyAbilityCasts:Math.round(metrics.enemyAbilityCasts||0),thornbloomHits:metrics.thornbloomHits||0,thornbloomDamage:metrics.thornbloomDamage||0,eliteSummons:Math.round(metrics.eliteSummons||0),plagueSpreadTransfers:Math.round(metrics.plagueSpreadTransfers||0),bossCastPreparations:Math.round(metrics.bossCastPreparations||0)};
