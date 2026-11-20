@@ -113,3 +113,43 @@ test('Controlled native Two-Handed combat actually produces measurable non-focus
  assert(fight.observedNonFocusedHealthLost>0,'native built-in Cleave must reach live non-focused enemies');
  assert(fight.damageDealt>=fight.observedNonFocusedHealthLost);
 });
+
+test('Multi-Affinity progression and AoE/single-target hybrid are different dimensions',()=>{
+ const two=build('Wand',['affinity_magic','affinity_decay','hex_bolt'],{element:'frost'});
+ assert.equal(two.affinityComposition,'mixed');
+ assert.deepEqual(two.affinities,['magic','decay']);
+ assert.equal(two.synergyStage,'mixed-skill-unlocked');
+ assert.equal(two.role,'developing','owning a mixed Affinity skill does not invent multi-target damage');
+ const unformed=build('Wand',['root_magic','root_decay'],{element:'arcane'});
+ assert.equal(unformed.affinityComposition,'unformed','mere roots do not grant Affinity abilities');
+ const cleave=build('Two-Handed',['double_strike','affinity_blood']);
+ assert.equal(cleave.role,'hybrid','both damage modes can occur within one Affinity');
+ assert.equal(cleave.affinityComposition,'focused');
+});
+test('Single-target player finishes wounded enemies, only switches toward a caster when needed',()=>{
+ const current={hp:15,maxhp:80,role:'tank'},caster={hp:40,maxhp:40,role:'caster'};
+ const cap=build('Daggers',['double_strike','precision']);
+ assert.equal(cap.focusReady,true);
+ const run={status:'fight',enemy:current,enemies:[current,caster]};
+ assert.equal(A.selectTarget(run,cap,caster),current);
+ current.hp=80;
+ assert.equal(A.selectTarget(run,cap,current),caster);
+});
+test('Read-only telemetry includes a native kill removed from active enemy roster',()=>{
+ const focused={hp:60,boss:true},other={hp:18,role:'minion'};
+ const run={enemies:[focused,other]},before=A.snapshot(run);
+ other.hp=0;run.enemies.splice(1,1);
+ const value=A.changes(before,A.snapshot(run),focused);
+ assert.equal(value.nonFocusedHp,18);
+ assert.equal(value.roles.minion,18);
+ assert.equal(value.disappeared,1);
+});
+test('Decision-component isolation never grants AoE or alters native gear',()=>{
+ const original=N.policyFlags('risk-aware');
+ const modes=['adaptive-realms','adaptive-rooms','adaptive-targets','adaptive-retreat'];
+ const parts=['realm','rooms','targets','retreat'];
+ assert(parts.every((part,i)=>N.policyFlags(modes[i])[part]===true));
+ assert(parts.every(part=>original[part]===false));
+ assert(parts.every(part=>N.policyFlags('adaptive')[part]===true));
+ assert.throws(()=>N.policyFlags('everything-free'),/Unknown/);
+});
