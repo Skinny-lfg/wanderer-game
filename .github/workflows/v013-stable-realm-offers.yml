@@ -38,6 +38,7 @@ jobs:
           node --check scripts/v013-agent-strategy.cjs
           node --check scripts/v013-natural-progression.cjs
           node --check scripts/v013-stage6-agent-comparison.cjs
+          node --check scripts/v013-stage6-controlled-targets.cjs
           node --test tests/v013-stage6-agent-strategy.test.cjs
       - name: Compare E1/E2 agents across repeated paired seeds
         run: |
@@ -46,6 +47,18 @@ jobs:
             --profiles=balanced,plate-warden,leather-duelist,magic-lightning,hexblade-hybrid \
             --max-level=2 --max-attempts=18 --max-total-attempts=36 \
             --out=reports/stage6-agent-smoke.json
+      - name: Controlled guarded Epic Boss/Elite combat with identical native starts
+        run: |
+          node scripts/v013-stage6-controlled-targets.cjs \
+            reports/stage6-target-guarded.json \
+            --level=1 --risk=0 --rarity=Epic --points=24
+      - name: Archive guarded Boss diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage6-target-guarded
+          path: reports/stage6-target-guarded.*
+          if-no-files-found: ignore
       - name: Archive diagnostic data even if a later check fails
         if: always()
         uses: actions/upload-artifact@v4
