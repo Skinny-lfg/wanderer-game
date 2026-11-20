@@ -852,6 +852,10 @@ function phase2MagicTick(r){
  const b=ports.phase1Build,mode=WandererV012Buildcraft.magicMode(b);
  if(!mode)return;
  const ctx=ports.phase2Context(r);
+ if(b.runtime.infusionEncounter!==ctx.waveKey){
+  b.runtime.infusionEncounter=ctx.waveKey;b.runtime.infusionCharges=0;
+  b.runtime.infusionExpiresAt=0;b.runtime.infusionNextAt=-1;
+ }
  if(mode==='unattuned'||mode==='arcane'){
   if(!WandererV012Buildcraft.infusionReady(b,ctx.now))return;
   const config=WandererV012Buildcraft.infusionConfig(b);
