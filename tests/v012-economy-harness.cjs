@@ -52,8 +52,8 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
  let harnessCombatActive=false,harnessControlRandom=gameRandom,harnessCombatRandom=null;
  const harnessPrng=initial=>{let value=initial>>>0;return()=>((value=(Math.imul(value,1664525)+1013904223)>>>0)/4294967296);};
  function harnessStreams(routeSeed,draftSeed,controlSeed,combatSeed){
-  const route=harnessPrng(routeSeed),draft=harnessPrng(draftSeed);harnessControlRandom=harnessPrng(controlSeed);harnessCombatRandom=harnessPrng(combatSeed);
-  phase1Controller.setSimulationRandomStreams(route,draft);gameRandom=()=>harnessCombatActive?harnessCombatRandom():harnessControlRandom();
+  const route=harnessPrng(routeSeed);harnessControlRandom=harnessPrng(controlSeed);harnessCombatRandom=harnessPrng(combatSeed);
+  phase1Controller.setSimulationRandomStreams(route);gameRandom=()=>harnessCombatActive?harnessCombatRandom():harnessControlRandom();
  }
  globalThis.audit={talents:WandererAutomaticTalents,measured,debug:()=>({phase5Ready,saveBlocked,message:phase5Message,validation:PHASE5_VALIDATION,preview:PHASE1_PREVIEW,active:phase3ExpeditionActive(),run:!!state.run,stage:phase1Controller?.state.stage}),
   potions:{catalog:WandererV012Consumables.CATALOG,supplies:()=>phase3Supplies,select:phase6SelectPotion,use:phase6UsePotion,inventory:phase6PotionInventory,start:phase6StartPotions,finish:phase6ReturnPotions,tick:phase6TickDurations,shop:(E=1,rng=gameRandom)=>WandererV012Consumables.shop(E,rng,makeId),buy:phase6BuyPotion,reroll:phase6RerollPotions},

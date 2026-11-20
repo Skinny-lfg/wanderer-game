@@ -24,7 +24,7 @@ function create(themes,rng=Math.random){
  const expeditionThemes=Object.entries(REALMS).map(([id,[family,name]])=>({...(themes.find(t=>t.id===id)||themes.find(t=>t.id==='forge')),id,name,family}));
  if(FAMILIES.some(f=>!expeditionThemes.some(t=>t.family===f)))throw Error('Missing themes for an affinity');
  const game={unlocked:1,expedition:0,planeIndex:0,stage:'camp',families:[],lastFamily:null,rooms:[],offers:[],selected:null,wave:0,history:[],initialFamily:null,rewardPending:null};
- let routeRng=rng,draftRng=rng;
+ let routeRng=rng;
  function start(level=1,options={}){
   if(options?.dungeon!==true)throw Error('Only the deterministic Dungeon is supported');
   return startDungeon(level,options.targetFamily);
@@ -355,10 +355,9 @@ function restore(input){
  if(g.selected)game.selected=game.offers.find(p=>p.node===g.selected.node);
  return game;
 }
-function setSimulationRandomStreams(route,draft){if(typeof route!=='function'||typeof draft!=='function')throw Error('Simulation RNG streams must be functions');routeRng=route;draftRng=draft;}
- function passiveRandom(){return draftRng;}
+function setSimulationRandomStreams(route){if(typeof route!=='function')throw Error('Simulation route RNG must be a function');routeRng=route;}
  
- return Object.freeze({deferEvent,chooseRealm,offerContracts,chooseContract,offerBoons,chooseBoon,rerollBoon,scoutPotion,realmMap,visitRoom,travelPath,travelCost,exitCount,scoutPreview,scoutRooms,state:game,start,restore,enter,claimReward,waveWon,defeat,abandon,setSimulationRandomStreams,passiveRandom});
+ return Object.freeze({deferEvent,chooseRealm,offerContracts,chooseContract,offerBoons,chooseBoon,rerollBoon,scoutPotion,realmMap,visitRoom,travelPath,travelCost,exitCount,scoutPreview,scoutRooms,state:game,start,restore,enter,claimReward,waveWon,defeat,abandon,setSimulationRandomStreams});
 }
 root.WandererV012Expedition=Object.freeze({create,FAMILIES,FAMILY_NAMES,THEME_FAMILIES,REALMS,BOSSES,bossForAffinity});
 })(globalThis);

@@ -24,3 +24,14 @@ test('C9 native combat, v15 bridge and session validation entrypoints are retain
 test('C9 generated public Pages mirror equals runtime source',()=>{
  assert.equal(fs.readFileSync('docs/combat/v012-buildcraft.js','utf8'),source());
 });
+
+test('C9 deleted draft RNG and unused potion alias have no live exports or bindings',()=>{
+ const controller=fs.readFileSync('online/v012-expedition-controller.js','utf8');
+ const economy=fs.readFileSync('economy/v012-equipment-runtime.js','utf8');
+ const index=fs.readFileSync('index.html','utf8');
+ assert(!controller.includes('draftRng'));
+ assert(!controller.includes('passiveRandom'));
+ assert(!economy.includes('function phase3UsePotion'));
+ assert(!economy.includes('runeCheckpointLocked,phase3UsePotion'));
+ assert(!index.includes('phase3UsePotion'));
+});
