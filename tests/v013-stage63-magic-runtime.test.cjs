@@ -121,7 +121,7 @@ test('Paid Wand/Staff attacks must not get an additional Spell Echo or Grave Blo
 });
 
 test('Infusion has weapon-specific coefficients; Wand avoids double-scaling its funded spell',()=>{
- for(const [weapon,base,arcane] of [['Sword',.85,.95],['Mace',.85,.95],['Daggers',.85,.95],['Wand',.45,.55],['Staff',.80,.90]]){
+ for(const [weapon,base,arcane] of [['Sword',.85,.95],['Mace',.85,.95],['Daggers',.85,.95],['Wand',.35,.45],['Staff',.95,1.05]]){
   const plain=build(['affinity_magic']),special=build(['element_choice']);
   assert(Math.abs(B.infusionConfig(plain,weapon).power-base)<1e-9,weapon);
   assert(Math.abs(B.infusionConfig(special,weapon).power-arcane)<1e-9,weapon);
@@ -130,9 +130,9 @@ test('Infusion has weapon-specific coefficients; Wand avoids double-scaling its 
 test('All elemental affinities retain baseline Infusion with their own spell options',()=>{
  for(const mode of ['fire','frost','lightning']){
   const b=build(['element_choice'],mode),x=context();
-  assert.equal(B.infusionConfig(b,'Staff').power,.8);
+  assert.equal(B.infusionConfig(b,'Staff').power,.95);
   assert.equal(B.activateInfusion(b,0).cost,12);
-  assert.equal(B.onInfusionHit(b,{...x.c,weaponSubtype:'Staff'}),80);
+  assert.equal(B.onInfusionHit(b,{...x.c,weaponSubtype:'Staff'}),95);
  }
 });
 test('Funded Wand/Staff attacks cannot activate secondary Decay procs twice',()=>{

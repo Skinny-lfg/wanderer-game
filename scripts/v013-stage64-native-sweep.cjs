@@ -3,15 +3,15 @@
 // The game branch contains exactly one candidate, no runtime tuning switches.
 const fs=require('node:fs'),path=require('node:path'),cp=require('node:child_process');
 const variants=Object.freeze([
- {id:'low-mana',mana:10,arcaneMana:8,physical:.85,wand:.45,staff:.80,arcaneBonus:.10},
- {id:'high-mana',mana:16,arcaneMana:14,physical:.85,wand:.45,staff:.80,arcaneBonus:.10},
- {id:'staff-favor',mana:12,arcaneMana:10,physical:.85,wand:.35,staff:.95,arcaneBonus:.10}
+ {id:'low-mana',mana:10,arcaneMana:8,physical:.85,wand:.35,staff:.95,arcaneBonus:.10},
+ {id:'high-mana',mana:16,arcaneMana:14,physical:.85,wand:.35,staff:.95,arcaneBonus:.10},
+ {id:'prior-weapon',mana:12,arcaneMana:10,physical:.85,wand:.45,staff:.80,arcaneBonus:.10}
 ]);
-const chosen=Object.freeze({id:'stage64-default',mana:12,arcaneMana:10,physical:.85,wand:.45,staff:.80,arcaneBonus:.10});
+const chosen=Object.freeze({id:'stage64-default',mana:12,arcaneMana:10,physical:.85,wand:.35,staff:.95,arcaneBonus:.10});
 function patch(file,config){
  let s=fs.readFileSync(file,'utf8');
  const originalCost='const INFUSION_RULE=Object.freeze({duration:7,cooldown:6,charges:2,cost:12,arcaneCost:10});';
- const originalPower='const INFUSION_POWER=Object.freeze({physical:.85,Wand:.45,Staff:.80,arcaneBonus:.10});';
+ const originalPower='const INFUSION_POWER=Object.freeze({physical:.85,Wand:.35,Staff:.95,arcaneBonus:.10});';
  if(s.split(originalCost).length!==2||s.split(originalPower).length!==2)throw Error('Stage 6.4 production tuning source changed unexpectedly');
  s=s.replace(originalCost,'const INFUSION_RULE=Object.freeze({duration:7,cooldown:6,charges:2,cost:'+config.mana+',arcaneCost:'+config.arcaneMana+'});')
  .replace(originalPower,'const INFUSION_POWER=Object.freeze({physical:'+config.physical+',Wand:'+config.wand+',Staff:'+config.staff+',arcaneBonus:'+config.arcaneBonus+'});');

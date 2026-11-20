@@ -372,7 +372,7 @@ function syncPermanent(b,progress,permanentAffinities=true){if(!b)return;if(!roo
 // Weapon coefficients avoid double-scaling Wand/Staff's native magical casts.
 // Arcane focuses on the enchantment; elemental choices add funded spellcasting.
 const INFUSION_RULE=Object.freeze({duration:7,cooldown:6,charges:2,cost:12,arcaneCost:10});
-const INFUSION_POWER=Object.freeze({physical:.85,Wand:.45,Staff:.80,arcaneBonus:.10});
+const INFUSION_POWER=Object.freeze({physical:.85,Wand:.35,Staff:.95,arcaneBonus:.10});
 function magicMode(b){
  if(!b||!hasFamily(b,'magic'))return null;
  return specialized(b,'element_choice')?(b.element||'arcane'):'unattuned';

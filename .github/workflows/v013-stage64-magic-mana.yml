@@ -70,7 +70,7 @@ jobs:
             reports/stage64-native-comparison.md
             reports/stage64-native-low-mana.json
             reports/stage64-native-high-mana.json
-            reports/stage64-native-staff-favor.json
+            reports/stage64-native-prior-weapon.json
             reports/stage64-native-tuning-sweep.json
           retention-days: 30
           if-no-files-found: warn
