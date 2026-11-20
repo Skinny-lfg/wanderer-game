@@ -47,7 +47,7 @@ test('noncaster weapons can vary primary attributes; caster weapons never roll S
   for(const [slot,type] of [['weapon','Sword'],['weapon','Mace'],['weapon','Bow'],['weapon','Daggers'],['ring1','Ring'],['amulet','Amulet']]){
    const item=a.makeItem(15,slot,null,'loot',type,'Rare');
    for(const attr of primary)if(item[attr]>0)rolled[type].add(attr);
-   assert(!(item.atk>0&&item.spell>0),type+' must not have high Attack AND Spell Power on same roll');
+   assert(item.affixes.length>=2&&item.affixes.length<=4,type+' Rare stat count');
   }
   for(const type of ['Staff','Wand']){
    const item=a.makeItem(15,'weapon',null,'loot',type,'Epic');
@@ -66,11 +66,22 @@ test('actual native Rare accessories and Forge creations have variable stat layo
   crafted.add(positive(forge).sort().join(','));
  }
  assert(layouts.size>=3,'Ring pools need real variation');assert(crafted.size>=3,'Forge rolls must vary');
- for(const [id,profile]of [['blue_sword_insight','int'],['blue_mace_guard','end'],['blue_bow_might','str'],['blue_ring1_magic','int'],['blue_amulet_blood','str']]){
-  const recipe=C.RECIPES.find(r=>r.id===id);assert(recipe&&recipe.profile===profile,id);
-  const s=a.state();s.fragments=100000;s.crafting={...C.create(),essence:10000,cores:Object.fromEntries(C.FAMILIES.map(f=>[f,100])),realmFamilies:[...C.FAMILIES],bossFamilies:[...C.FAMILIES],learnedRecipes:C.RECIPES.filter(r=>r.rarity!=='Uncommon').map(r=>r.id)};
-  const item=C.prepareCraft(s,id,20,a.makeItem).item;
-  assert(item[profile]>0,id);assert(primary.every(k=>k===profile||!item[k]),id);
+ for(const id of ['blue_sword_insight','blue_mace_guard','blue_bow_might','blue_ring1_magic','blue_amulet_blood']){
+  const recipe=C.RECIPES.find(r=>r.id===id);assert(recipe&&recipe.rarity==='Rare',id);
+  const layouts=new Set(),attributes=new Set();
+  for(let n=0;n<12;n++){
+   const s=a.state();s.fragments=100000;
+   s.crafting={...C.create(),essence:10000,
+    cores:Object.fromEntries(C.FAMILIES.map(f=>[f,100])),
+    realmFamilies:[...C.FAMILIES],bossFamilies:[...C.FAMILIES],
+    learnedRecipes:C.RECIPES.filter(r=>r.rarity!=='Uncommon').map(r=>r.id)};
+   const item=C.prepareCraft(s,id,20,a.makeItem).item;
+   assert.equal(item.recipeId,id);assert.equal(item.rarity,'Rare');
+   layouts.add(positive(item).sort().join(','));
+   for(const attr of primary)if(item[attr]>0)attributes.add(attr);
+  }
+  assert(layouts.size>1,id+' should have multiple legitimate stats layouts');
+  assert(attributes.size>1,id+' is no longer locked to a single attribute profile');
  }
 });
 test('native Dungeon: the first cleared room can drop zero items or a basic Grey, with matching Bag records',()=>{
