@@ -21,12 +21,6 @@ function craftEquipment(cost,odds){
  o.craftPrice=cost;o.isNew=true;ports.state.stash.push(o);ports.save();return o;
 }
 
-function reinforceEquipment(selected){
- if(!ports.economyCanAct()||ports.economyOwnedItem(selected.id)!==selected||selected.rarity!=='Legendary'||(selected.upgradeRank||0)>=10)return false;
- const price=WandererEconomyV0101.upgradeCost(selected.tier,selected.upgradeRank||0);if(ports.state.fragments<price)return false;
- WandererEconomyV0101.upgradeLegendary(selected);ports.state.fragments-=price;ports.save();return true;
-}
-
 function purchaseEquipment(m,i,item){
  if(!ports.economyCanAct()||ports.state.merchant!==m||m.stock[i]?.id!==item.id||ports.state.gold<item.goldPrice)return false;
  if(!ports.stashHasRoom()){ports.bannerMessage('Stash full. Upgrade or salvage gear first.');return false;}
@@ -117,63 +111,24 @@ const experimentalTier=ports.PHASE1_PREVIEW&&root.WandererExpeditionProgression;
 const baseTier=experimentalTier&&tier>5?5:tier;
 const tierFactor=experimentalTier&&tier>5?root.WandererExpeditionProgression.gearTier(tier).multiplier/root.WandererExpeditionProgression.gearTier(5).multiplier:1;
 let mult=ports.RARITY[rarity][1],progressTier=WandererV012CombatCore.referenceLevel(baseTier),power=Math.round((2+progressTier*.91)*mult),o={id:preview?'forge-preview':ports.makeId(),slot,subtype,name:(preview?'Preview':source==='loot'&&subtype==='Sword'&&rarity==='Common'&&ports.gameRandom()<.25?'Old Sword':ports.sample(ports.NAMES[subtype]||ports.NAMES[slot]||['Ancient Gear'])),rarity,tier,atk:0,def:0,hp:0,spd:0,str:0,agi:0,int:0,end:0,cha:0,mana:0,spell:0,effect,magic:magic?effect:null,crafted:source==='forge',craftPrice:source==='forge'?ports.craftCost(tier):null,obtainedAt:preview?0:ports.PHASE1_PREVIEW&&ports.phase4Stamp?ports.phase4Stamp:Date.now(),locked:false,source};
-if(subtype==='Sword'){o.atk=power+3;o.str=1+Math.floor(progressTier*.20)}
-else if(subtype==='Mace'){o.atk=power+6;o.str=2+Math.floor(progressTier*.23);o.spd=-1}
-else if(subtype==='Bow'){o.atk=Math.round(power*1.18)+5;o.agi=2+Math.floor(progressTier*.21);o.spd=1}
-else if(subtype==='Daggers'){o.atk=power+1;o.agi=3+Math.floor(progressTier*.23);o.spd=2}
-else if(subtype==='Two-Handed'){o.atk=Math.round(power*1.75)+7;o.str=3+Math.floor(progressTier*.29);o.spd=-2}
-else if(subtype==='Staff'){o.atk=1;o.int=4+Math.floor(progressTier*.34);o.spell=Math.round(power*1.8)+8;o.mana=Math.round(power*2.4)}
-else if(subtype==='Wand'){o.atk=1;o.int=2+Math.floor(progressTier*.22);o.spell=Math.round(power*1.15)+2;o.mana=power}
-else if(subtype==='Shield'){o.def=power+2;o.hp=power*3;o.end=2+Math.floor(progressTier*.22)}
-else if(slot==='offhand'){o.spell=subtype==='Orb'?Math.round(power*1.12):power;o.int=1+Math.floor(progressTier*.2);o.mana=power}
-else if(slot==='armor'){o.def=power+3;o.hp=power*4;o.end=1+Math.floor(progressTier*.23)}
-else if(slot==='helm'||slot==='belt'){o.def=power+1;o.hp=power*2;o.end=1}
-else if(slot==='gloves'){o.str=1+Math.floor(progressTier*.2);o.agi=1+Math.floor(progressTier*.2);o.atk=Math.round(power*.55)}
-else if(slot==='boots'){o.agi=2+Math.floor(progressTier*.23);o.spd=1;o.hp=power}
-else if(slot==='amulet'){o.int=1+Math.floor(progressTier*.22);o.cha=1+Math.floor(progressTier*.18);o.hp=power*2}
-else if(['ring1','ring2'].includes(slot)){o.cha=1+Math.floor(progressTier*.25);o.atk=Math.round(power*.45);o.hp=power}
-// Apply only to the underlying gear budget, before rarity affixes and traits.
-const applyTierBudget=()=>{
- if(tierFactor===1)return;
- for(const field of ['atk','def','hp','str','agi','int','end','cha','mana','spell','evasionRating'])
-  if(Number.isFinite(o[field])&&o[field]>0)o[field]=Math.round(o[field]*tierFactor);
-};
-if(armorType){
- // Keep the existing primary-attribute budget; no new stat weights or scaling.
- const budget=o.str+o.agi+o.int+o.end;
- o.str=o.agi=o.int=o.end=0;
- o[{Cloth:'int',Leather:'agi',Plate:'str'}[armorType]]=budget;
- o.armorType=armorType;
- o.def=Math.max(1,Math.round((power+(slot==='armor'?3:0))*({Cloth:.45,Leather:.8,Plate:1.35}[armorType])));
- if(armorType==='Leather')o.evasionRating=power;
- if(armorType==='Plate')o.end=Math.max(1,Math.round(power*.18));
- applyTierBudget();
- const pools={Cloth:[['spell','manaRegenBonus','mana'],['hp','critBonus','wardBonus']],Leather:[['evasionRating','spd','critBonus'],['atk','hp','def']],Plate:[['end','atk','def'],['hp','critBonus','blockBonus']]};
- const [favoured,occasional]=pools[armorType].map(pool=>[...pool]);
- let seed=Array.from(slot+armorType+rarity+tier).reduce((n,ch)=>(Math.imul(n,31)+ch.charCodeAt(0))>>>0,1);
- const random=source==='forge'||preview?()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296):ports.gameRandom;
- o.affixes=[];
- for(let i=0;i<({Common:0,Uncommon:1,Rare:2,Epic:2,Legendary:2}[rarity]);i++){
-  const pool=random()<.75?favoured:occasional,key=pool.splice(Math.floor(random()*pool.length),1)[0];
-  const amount=key==='manaRegenBonus'?.4:key==='wardBonus'?.08:['critBonus','spd','blockBonus'].includes(key)?1:Math.max(1,Math.round(power*.35));
-  o[key]=(o[key]||0)+amount;o.affixes.push(key);
- }
+// Current unified affixes are rolled once for loot, Merchant and Forge.
+// Equipment class affects defense/evasion, not which attributes may appear.
+if(armorType)o.armorType=armorType;
+if(rarity==='Legendary'){
+ const identity=legendaryIdentity;
+ if(identity){o.legendaryId=identity.id;o.name=identity.name;}
+ o.legendaryPower=legendaryDefinition?legendaryDefinition.name+': '+legendaryDefinition.description:'';
 }
-else applyTierBudget();
-if(rarity==='Legendary'){const identity=legendaryIdentity;if(identity){o.legendaryId=identity.id;o.name=identity.name;}o.legendaryPower=legendaryDefinition?legendaryDefinition.name+': '+legendaryDefinition.description:'';o.atk+=subtype==='Sword'?progressTier+4:0;}
-if(!experimentalTier&&tier>200)for(const field of ['atk','def','hp','str','agi','int','end','cha','mana','spell','evasionRating'])if(typeof o[field]==='number'&&!(field==='atk'&&['Staff','Wand'].includes(subtype)))o[field]=WandererV012CombatCore.gearStat(tier,o[field]);
-if(ports.PHASE1_PREVIEW&&rarity!=='Common'){
- const profile=armorType?({Cloth:'int',Leather:'agi',Plate:'str'}[armorType]):['Staff','Wand','Orb'].includes(subtype)?'int':['Bow','Daggers','Off-Hand Dagger'].includes(subtype)?'agi':subtype==='Shield'?'end':['Amulet','Ring'].includes(subtype)?'cha':'str';
- o.craftingProfile=profile;o[profile]=(o[profile]||0)+(rarity==='Uncommon'?1:rarity==='Rare'?2:3);
- if(rarity==='Rare')o.hp+=Math.max(2,Math.round(power*.5));
- if(rarity==='Epic'){o.v013Trait=preview?'focused':['Staff','Wand','Orb'].includes(subtype)?ports.sample(['efficient','ward',...(subtype==='Staff'?['conflagration']:[])]):ports.sample(['focused','blood_transfer']);}
-}
-// v0.13: a rarity defines the overall budget, not four guaranteed attributes.
-// Actual crafting/loot rolls vary; preview rolls are deterministic examples.
-if(ports.PHASE1_PREVIEW&&root.WandererV013GearRolls){
- let x=Array.from(slot+subtype+(armorType||'')+rarity+tier).reduce((n,ch)=>(Math.imul(n,31)+ch.charCodeAt(0))>>>0,1);
- const previewRandom=()=>((x=(Math.imul(x,1664525)+1013904223)>>>0)/4294967296);
- root.WandererV013GearRolls.apply(o,Math.max(1,(2+progressTier*.91)*tierFactor),preview?previewRandom:ports.gameRandom);
+if(!root.WandererV013GearRolls)throw Error('Current equipment roll engine missing');
+let x=Array.from(slot+subtype+(armorType||'')+rarity+tier).reduce((n,ch)=>(Math.imul(n,31)+ch.charCodeAt(0))>>>0,1);
+const previewRandom=()=>((x=(Math.imul(x,1664525)+1013904223)>>>0)/4294967296);
+root.WandererV013GearRolls.apply(o,Math.max(1,(2+progressTier*.91)*tierFactor),preview?previewRandom:ports.gameRandom);
+if(rarity==='Epic'){
+ // Natural Epic loot/merchant gear still gets a live functional trait; Forge
+ // Epics retain their recipe's guaranteed trait during prepareCraft.
+ o.v013Trait=preview?'focused':['Staff','Wand','Orb'].includes(subtype)
+  ?ports.sample(['efficient','ward',...(subtype==='Staff'?['conflagration']:[])])
+  :ports.sample(['focused','blood_transfer']);
 }
 return o;}
 
@@ -505,7 +460,7 @@ function phase3ClampVitals(){
  }
 }
 function toggleEquipmentLock(item){item.locked=!item.locked;ports.save();}
-return {toggleEquipmentLock,chooseSubtype,economyTier,merchantTier,baseStatScore,offhandLocked,craftEquipment,reinforceEquipment,purchaseEquipment,sellValuables,markItemSeen,markAllAsSeen,comparisonEquip,stashItemCount,stashCapacity,stashUpgradeCost,stashHasRoom,upgradeStash,fresh,makeSlots,starter,legendaryMatches,legendaryFor,legendarySignature,makeItem,rarityOdds,rarityRoll,rollEquipmentSlot,merchantCost,saleFragments,rollShop,ensureMerchantStock,economyOwnedGear,economyOwnedItem,economyCanAct,refreshMerchantStock,equipItem,unequipItem,bulkSell,salvageOne,phase3BagItems,phase3BagOverflow,phase3NeedsBagResolution,phase3DiscardLoot,phase4ClaimOverflow,phase6PotionInventory,phase6SelectPotion,phase6StartPotions,phase6ReturnPotions,phase6UsePotion,phase6BuyPotion,phase6RerollPotions,unequipRune,salvageRune,salvageDuplicateRunes,equipRune,offerBossRunes,claimPendingRuneChoice,runeCheckpointLocked,phase3UsePotion,phase3ClampVitals};
+return {toggleEquipmentLock,chooseSubtype,economyTier,merchantTier,baseStatScore,offhandLocked,craftEquipment,purchaseEquipment,sellValuables,markItemSeen,markAllAsSeen,comparisonEquip,stashItemCount,stashCapacity,stashUpgradeCost,stashHasRoom,upgradeStash,fresh,makeSlots,starter,legendaryMatches,legendaryFor,legendarySignature,makeItem,rarityOdds,rarityRoll,rollEquipmentSlot,merchantCost,saleFragments,rollShop,ensureMerchantStock,economyOwnedGear,economyOwnedItem,economyCanAct,refreshMerchantStock,equipItem,unequipItem,bulkSell,salvageOne,phase3BagItems,phase3BagOverflow,phase3NeedsBagResolution,phase3DiscardLoot,phase4ClaimOverflow,phase6PotionInventory,phase6SelectPotion,phase6StartPotions,phase6ReturnPotions,phase6UsePotion,phase6BuyPotion,phase6RerollPotions,unequipRune,salvageRune,salvageDuplicateRunes,equipRune,offerBossRunes,claimPendingRuneChoice,runeCheckpointLocked,phase3UsePotion,phase3ClampVitals};
 }
 root.WandererV012EquipmentRuntime=Object.freeze({create});
 })(globalThis);
