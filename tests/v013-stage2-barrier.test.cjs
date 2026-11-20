@@ -81,3 +81,11 @@ test('Stage 2 Arcane Bastion and Prismatic Rebound retain their defensive trigge
   assert.equal(rebound.runtime.prismaticCharge,0,'rebound is consumed by next funded cast');
  }
 });
+
+test('Stage 2 current Talent Tree tooltips describe HP plus Spell Power, not the retired HP-only rule',()=>{
+ const nodes=T.NODES;
+ const aegis=nodes.find(n=>n.id==='affinity_aegis'),bastion=nodes.find(n=>n.id==='arcane_bastion');
+ assert(aegis?.description?.includes('8% Spell Power'),'Aegis selection description must be accurate');
+ assert(aegis.description.includes('25% Spell Power'),'Aegis cap must be discoverable');
+ assert(bastion?.description?.includes('6% Spell Power'),'Arcane Bastion description must reflect scaling');
+});
