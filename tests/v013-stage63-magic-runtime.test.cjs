@@ -22,9 +22,9 @@ function context(){
   mana:n=>events.push({type:'mana',n}),log:msg=>events.push({type:'log',msg})};
  return {events,enemy,player,c};
 }
-test('Magic root cannot cast an automatic projectile and has a funded 6 Mana infusion',()=>{
+test('Magic root cannot cast an automatic projectile and has a funded 12 Mana infusion',()=>{
  const b=build(['affinity_magic']);assert.equal(B.magicMode(b),'unattuned');
- assert.equal(B.infusionConfig(b).cost,6);assert.equal(B.infusionConfig(b).power,.85);
+ assert.equal(B.infusionConfig(b).cost,12);assert.equal(B.infusionConfig(b).power,.85);
  assert(B.infusionReady(b,0));assert.equal(B.activateInfusion(b,0).charges,2);
  assert(!B.infusionReady(b,2),'cannot overlap active charges');
  const x=context();assert.equal(B.onInfusionHit(b,x.c),85);
@@ -45,13 +45,15 @@ test('Infusion expires after seven combat seconds; unspent charges never transfe
  x.c.now=7;assert.equal(B.onInfusionHit(b,x.c),0);
  assert.equal(b.runtime.infusionCharges,0);assert(B.infusionReady(b,7));
 });
-test('Choosing Arcane makes infusion stronger and cheaper; the three elements replace it with spells',()=>{
+test('Choosing Arcane makes Infusion stronger and cheaper; elements retain it alongside spells',()=>{
  const basic=build(['affinity_magic']),arcane=build(['element_choice']);
  assert.equal(B.magicMode(basic),'unattuned');assert.equal(B.magicMode(arcane),'arcane');
- assert.equal(B.infusionConfig(arcane).cost,5);assert.equal(B.infusionConfig(arcane).power,.95);
+ assert.equal(B.infusionConfig(arcane).cost,10);assert.equal(B.infusionConfig(arcane).power,.95);
  for(const mode of ['fire','frost','lightning']){
   const b=build(['element_choice'],mode);assert.equal(B.magicMode(b),mode);
-  assert.equal(B.infusionConfig(b),null);assert.equal(B.infusionReady(b,0),false);
+  assert.equal(B.infusionConfig(b).cost,12);
+  assert.equal(B.infusionConfig(b).power,.85);
+  assert(B.infusionReady(b,0));
  }
 });
 test('Aegis Runic Shield triggers on paid enchantment activation but not repeatedly on its charges',()=>{
@@ -116,4 +118,30 @@ test('Paid Wand/Staff attacks must not get an additional Spell Echo or Grave Blo
  B.onInfusionHit(b,{...x.c,now:2,magical:true});
  B.activateInfusion(b,6);B.onInfusionHit(b,{...x.c,now:6.5,magical:true});
  assert(!x.events.some(e=>e.kind==='✨ Spell Echo'||e.kind==='☠ Grave Bloom'));
+});
+
+test('Infusion has weapon-specific coefficients; Wand avoids double-scaling its funded spell',()=>{
+ for(const [weapon,base,arcane] of [['Sword',.85,.95],['Mace',.85,.95],['Daggers',.85,.95],['Wand',.45,.55],['Staff',.80,.90]]){
+  const plain=build(['affinity_magic']),special=build(['element_choice']);
+  assert(Math.abs(B.infusionConfig(plain,weapon).power-base)<1e-9,weapon);
+  assert(Math.abs(B.infusionConfig(special,weapon).power-arcane)<1e-9,weapon);
+ }
+});
+test('All elemental affinities retain baseline Infusion with their own spell options',()=>{
+ for(const mode of ['fire','frost','lightning']){
+  const b=build(['element_choice'],mode),x=context();
+  assert.equal(B.infusionConfig(b,'Staff').power,.8);
+  assert.equal(B.activateInfusion(b,0).cost,12);
+  assert.equal(B.onInfusionHit(b,{...x.c,weaponSubtype:'Staff'}),80);
+ }
+});
+test('Funded Wand/Staff attacks cannot activate secondary Decay procs twice',()=>{
+ for(const weapon of ['Wand','Staff']){
+  const b=build(['hex_bolt','arcane_echo']),x=context();x.enemy.v012Rot=[{damage:7,remaining:3}];
+  B.activateInfusion(b,0);
+  const power=B.infusionConfig(b,weapon).power;
+  assert(Math.abs(B.onInfusionHit(b,{...x.c,weaponSubtype:weapon,magical:true})-100*power)<1e-8);
+  assert.equal(x.events.filter(e=>e.kind==='☠ Hex Bolt'||e.kind==='✨ Arcane Echo').length,0);
+  assert.equal(b.runtime.infusionCharges,1);
+ }
 });

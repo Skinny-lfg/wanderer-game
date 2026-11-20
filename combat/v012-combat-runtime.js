@@ -429,6 +429,7 @@ function weaponAttack(r,offhandStrike=false){
  if(caster&&r.mp>=cost){
   if(ports.legendaryHas('voidglass'))r.legendaryFundedCost=cost;
   ports.phase6Metric(r,'manaSpent',cost);ports.phase6Metric(r,'fundedCasts',1);r.mp-=cost;cast=true;element=null;
+  r.manaFallbackLogged=false;
   const factor=kind==='Staff'?1.32:1.05;
   damage=Math.max(1,Math.round((ports.phase1Build?.element?WandererV012Buildcraft.elementalPower(ports.phase1Build,s.spellPower):s.spellPower)*factor));
   if(element&&ports.isMagicOffhand(off)&&off.magic===element)damage=Math.round(damage*1.30);
@@ -436,6 +437,11 @@ function weaponAttack(r,offhandStrike=false){
  }else{
   const factor=kind==='Two-Handed'?1.70:kind==='Mace'?1.4:kind==='Bow'?1.08:kind==='Daggers'?.80:kind==='Sword'?1.12:caster?.55:1;
   damage=Math.max(1,Math.round(s.attack*factor)-Math.round(WandererV012Buildcraft.enemyDefense(ports.phase1Build,e)*(armorReady?.8:1)));
+  // Wand and Staff already auto-attack when Mana is insufficient.
+  // Their weak physical fallback cannot cast, use Magic status, or gain Infusion.
+  if(caster){ports.phase6Metric(r,'unfundedCasterAttacks',1);
+   if(!r.manaFallbackLogged){ports.addLog('No Mana: '+kind+' uses a weak physical attack.','spell');r.manaFallbackLogged=true;}
+  }
  }
  if(offhandStrike)damage=Math.max(1,Math.round(damage*.50));
  if(ports.state.automaticTalents?.nodes?.includes('single_target_mastery')&&(!r.groupReserve?.length&&(!r.enemies||r.enemies.filter(enemy=>enemy.hp>0).length===1)))damage=Math.max(1,Math.round(damage*1.15));
@@ -541,8 +547,8 @@ function weaponAttack(r,offhandStrike=false){
  if(cast&&v013LightningChain(r))groupSecondaryDamage(r,base,v013LightningChainFactors(),'⚡ Chain Lightning');
  if(s.counts.shield>=2){const gained=ports.setBarrier(r,Math.max(1,Math.round(r.maxhp*(s.bonus.shieldBonus||0))));if(gained>0)ports.addLog('🛡 Shield set: +'+Math.round(gained)+' Barrier','good');}
  if(!offhandStrike&&ports.isPhase1Run()&&ports.phase1Build){
-  const ctx=ports.phase2Context(r);ctx.power=r.stats.spellPower||0;ctx.offhand=false;ctx.magical=cast;
-  const bonus=WandererV012Buildcraft.onInfusionHit(ports.phase1Build,ctx);
+  const ctx=ports.phase2Context(r);ctx.power=r.stats.spellPower||0;ctx.offhand=false;ctx.magical=cast;ctx.weaponSubtype=kind;
+  const bonus=(!caster||cast)?WandererV012Buildcraft.onInfusionHit(ports.phase1Build,ctx):0;
   if(bonus>0){ports.phase6Metric(r,'infusionHits',1);ports.phase6Metric(r,'infusionDamage',bonus);}
  }
  if(!offhandStrike&&['Daggers','Off-Hand Dagger'].includes(off?.subtype)){
@@ -856,21 +862,23 @@ function phase2MagicTick(r){
   b.runtime.infusionEncounter=ctx.waveKey;b.runtime.infusionCharges=0;
   b.runtime.infusionExpiresAt=0;b.runtime.infusionNextAt=-1;b.runtime.magicInfusionHits=0;
  }
- if(mode==='unattuned'||mode==='arcane'){
-  if(!WandererV012Buildcraft.infusionReady(b,ctx.now))return;
-  const config=WandererV012Buildcraft.infusionConfig(b);
+ // Arcane Infusion stays available to every Magic element. It competes
+ // for the same Mana pool as weapon casts and elemental offhand spells.
+ if(WandererV012Buildcraft.infusionReady(b,ctx.now)){
+  const config=WandererV012Buildcraft.infusionConfig(b,r.stats.main?.subtype);
   const cost=v013FundedCost(WandererV012Buildcraft.nextCost(b,config.cost));
-  if(r.mp<cost)return;
-  r.mp-=cost;ports.phase6Metric(r,'manaSpent',cost);ports.phase6Metric(r,'infusionActivations',1);
-  offhandPaidAction(r);
-  WandererV012Buildcraft.activateInfusion(b,ctx.now);
-  ctx.funded=true;ctx.magicalAction='infusion';ctx.power=r.stats.spellPower||0;
-  WandererV012Buildcraft.onInfusionActivation(b,ctx);
-  return;
+  if(r.mp>=cost){
+   r.mp-=cost;ports.phase6Metric(r,'manaSpent',cost);ports.phase6Metric(r,'infusionActivations',1);
+   offhandPaidAction(r);
+   WandererV012Buildcraft.activateInfusion(b,ctx.now);
+   ctx.funded=true;ctx.magicalAction='infusion';ctx.power=r.stats.spellPower||0;
+   WandererV012Buildcraft.onInfusionActivation(b,ctx);
+   return;
+  }
  }
- // Fire, Frost and Lightning alone unlock automatic spells on physical weapons.
- // Wand/Staff cast through their own paid main attack, never twice.
- if(r.stats.caster||!WandererV012Buildcraft.canCast(b))return;
+ // Insufficient Mana for Infusion must not block a cheaper elemental cast.
+ // Only attuned Fire/Frost/Lightning cast extra spells with physical weapons.
+ if(mode==='unattuned'||mode==='arcane'||r.stats.caster||!WandererV012Buildcraft.canCast(b))return;
  if(ctx.now-b.runtime.lastSpellAt<2.5)return;
  const cost=v013FundedCost(WandererV012Buildcraft.nextCost(b,8));if(r.mp<cost)return;
  b.runtime.lastSpellAt=ctx.now;ports.phase6Metric(r,'manaSpent',cost);ports.phase6Metric(r,'fundedCasts',1);r.mp-=cost;offhandPaidAction(r);ctx.power=r.stats.spellPower;ctx.amp=1;ctx.funded=true;

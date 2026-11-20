@@ -368,17 +368,22 @@ function validate(b){
  return b;
 }
 function syncPermanent(b,progress,permanentAffinities=true){if(!b)return;if(!root.WandererAutomaticTalents)throw Error('Permanent talents unavailable');b.runtime.prepared=progress?.nodes?.includes(progress.prepared)?progress.prepared:null;b.runtime.specializations=[...(progress?.nodes||[])];if(permanentAffinities){b.runtime.permanentBuild=true;b.unlockedFamilies=FAMILIES.filter(f=>progress?.nodes?.includes('affinity_'+f));b.families=[...b.unlockedFamilies];b.element=b.unlockedFamilies.includes('magic')?(progress?.element||'arcane'):null;}const current=progress||root.WandererAutomaticTalents.create(),ids=root.WandererAutomaticTalents.passiveIds(current);b.runtime.talentBonuses=root.WandererAutomaticTalents.bonuses?.(current)||{};if(ids.length)b.runtime.permanentTalents=ids;else delete b.runtime.permanentTalents;}
-// Stage 6.3: Arcane is a paid enchantment, never a free offensive cast.
-// Selecting an element replaces it with paid elemental spells.
-const INFUSION_RULE=Object.freeze({duration:7,cooldown:6,charges:2});
+// Stage 6.4: all Magic attunements retain the funded Arcane Infusion.
+// Weapon coefficients avoid double-scaling Wand/Staff's native magical casts.
+// Arcane focuses on the enchantment; elemental choices add funded spellcasting.
+const INFUSION_RULE=Object.freeze({duration:7,cooldown:6,charges:2,cost:12,arcaneCost:10});
+const INFUSION_POWER=Object.freeze({physical:.85,Wand:.45,Staff:.80,arcaneBonus:.10});
 function magicMode(b){
  if(!b||!hasFamily(b,'magic'))return null;
  return specialized(b,'element_choice')?(b.element||'arcane'):'unattuned';
 }
-function infusionConfig(b){
+function infusionConfig(b,weaponSubtype=null){
  const mode=magicMode(b);
- return mode==='unattuned'||mode==='arcane'?
-  {...INFUSION_RULE,cost:mode==='arcane'?5:6,power:mode==='arcane'?.95:.85}:null;
+ if(!mode)return null;
+ const base=INFUSION_POWER[weaponSubtype]??INFUSION_POWER.physical;
+ return {duration:INFUSION_RULE.duration,cooldown:INFUSION_RULE.cooldown,
+  charges:INFUSION_RULE.charges,cost:mode==='arcane'?INFUSION_RULE.arcaneCost:INFUSION_RULE.cost,
+  power:base+(mode==='arcane'?INFUSION_POWER.arcaneBonus:0)};
 }
 function infusionReady(b,now){
  const r=b?.runtime,cfg=infusionConfig(b);
@@ -399,7 +404,7 @@ function onInfusionActivation(b,c){
  c.log?.('✨ Arcane Infusion · 2 charges');
 }
 function onInfusionHit(b,c){
- const cfg=infusionConfig(b),r=b?.runtime;
+ const cfg=infusionConfig(b,c.weaponSubtype),r=b?.runtime;
  if(!cfg||!r||c.offhand||!c.enemy||c.enemy.hp<=0||!(r.infusionCharges>0)||!Number.isFinite(c.now))return 0;
  if(c.now+1e-7>=r.infusionExpiresAt){r.infusionCharges=0;return 0;}
  r.infusionCharges--;
@@ -407,9 +412,12 @@ function onInfusionHit(b,c){
  const amount=Math.round(elementalPower(b,power)*cfg.power);
  if(amount>0)c.damage(amount,'✨ Arcane Infusion');
  r.magicInfusionHits=(r.magicInfusionHits||0)+1;
+ // A Wand/Staff funded attack already fires the native spell callbacks.
+ // The Infusion adds damage, but never duplicates Spell Echo, Decay or Aegis procs.
+ if(c.magical)return amount;
  const e=c.enemy;
- // Paid Arcane Infusion replaces spell triggers for physical and hybrid builds.
- // Native Wand/Staff already process Spell Echo / Grave Bloom on their cast.
+ // Physical main hits receive their own paid-enchantment hybrid triggers.
+ // Wand/Staff already handled those callbacks on their native funded cast.
  if(!c.magical&&r.magicInfusionHits%3===0){
   const spellEchoRank=(r.specializations||[]).filter(id=>id==='spell_echo'||/^spell_echo_rank\d+$/.test(id)).length;
   if(spellEchoRank)c.damage(Math.max(1,Math.round(amount*.10*spellEchoRank)),'✨ Spell Echo');

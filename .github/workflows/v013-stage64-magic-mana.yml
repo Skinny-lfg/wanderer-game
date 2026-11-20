@@ -1,0 +1,76 @@
+name: Wanderer v0.13 — Stage 6.4 Magic Mana and weapon balance
+on:
+  push:
+    branches: [audit/v013-stage6]
+    paths:
+      - '.github/workflows/v013-stage64-magic-mana.yml'
+      - 'combat/v012-buildcraft.js'
+      - 'combat/v012-combat-runtime.js'
+      - 'combat/talent-graph-next.js'
+      - 'combat/talent-catalog.js'
+      - 'tests/v013-stage64-mana-fallback.test.cjs'
+      - 'tests/v013-stage64-native-comparison.test.cjs'
+      - 'tests/v013-stage63-magic-runtime.test.cjs'
+      - 'tests/talent-graph-combat.test.cjs'
+      - 'scripts/simulate-progression.cjs'
+      - 'scripts/v013-stage64-native-magic-matrix.cjs'
+      - 'scripts/v013-stage64-native-comparison.cjs'
+      - 'scripts/v013-stage64-native-sweep.cjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  magic-mana-balance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: Live Magic behavior, low Mana attacks, hybrid effects and regressions
+        run: |
+          node --test \
+            tests/v013-stage64-mana-fallback.test.cjs \
+            tests/v013-stage64-native-comparison.test.cjs \
+            tests/v013-stage63-magic-runtime.test.cjs \
+            tests/v013-stage63-native-magic-comparison.test.cjs \
+            tests/talent-graph-combat.test.cjs \
+            tests/talent-graph-runtime.test.cjs \
+            tests/talent-graph-next.test.cjs \
+            tests/v013-stage61-arcane-infusion.test.cjs \
+            tests/v013-stage62-magic-attunement.test.cjs \
+            tests/v013-offhand-dagger-any-main.test.cjs \
+            tests/v013-offhand-stage2-gear.test.cjs \
+            tests/v013-gravecaller-bound-souls.test.cjs
+          git diff --check
+      - name: Native before-after comparison with fixed gear, roster and seeds
+        run: |
+          git worktree add --detach "$RUNNER_TEMP/wanderer-stage63" 7cfa96a198632c2d602ee8159c2ddc3d4f6975e8
+          ln -s "$GITHUB_WORKSPACE/node_modules" "$RUNNER_TEMP/wanderer-stage63/node_modules"
+          STAGE64_NATIVE_ROOT="$RUNNER_TEMP/wanderer-stage63" STAGE64_REPORT_FILE=reports/stage64-native-before.json node scripts/v013-stage64-native-magic-matrix.cjs
+          STAGE64_REPORT_FILE=reports/stage64-native-after.json node scripts/v013-stage64-native-magic-matrix.cjs
+          node scripts/v013-stage64-native-comparison.cjs
+      - name: Compare three alternative Mana and weapon coefficients in disposable worktrees
+        run: node scripts/v013-stage64-native-sweep.cjs
+      - name: Save full paired combat and Mana reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage64-magic-mana-weapon-balance
+          path: |
+            reports/stage64-native-before.json
+            reports/stage64-native-after.json
+            reports/stage64-native-comparison.json
+            reports/stage64-native-comparison.md
+            reports/stage64-native-low-mana.json
+            reports/stage64-native-high-mana.json
+            reports/stage64-native-staff-favor.json
+            reports/stage64-native-tuning-sweep.json
+          retention-days: 30
+          if-no-files-found: warn
