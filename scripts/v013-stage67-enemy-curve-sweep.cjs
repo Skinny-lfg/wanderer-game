@@ -42,14 +42,22 @@ function checkCurves(){
 function earlyHash(a){return hash(a.attempts.filter(t=>t.level<=5));}
 function summarize(report,id){
  const accounts=report.accounts;
- if(report.coverage?.errors)throw Error('Native runtime error in '+id);
+ // A genuine >4500-tick native encounter is a censored combat stalemate,
+ // NOT a combat death, a Boss victory, or a silent simulator pass.
+ const stalled=accounts.flatMap(account=>account.attempts.filter(t=>t.error||t.status==='error')
+  .map(t=>({seed:account.seed,profile:account.profile,level:t.level,attempt:t.attempt,
+   error:t.error,confirmed:(t.error==='Native combat timeout'&&(t.rooms||[]).some(r=>r.timedOut))})));
+ if(stalled.some(t=>!t.confirmed)||Number(report.coverage?.errors)!==stalled.length)
+  throw Error('Non-timeout native runtime error in '+id+': '+JSON.stringify(stalled));
  const seen=new Set();
  for(const a of accounts){
   const key=a.seed+':'+a.profile;
   if(seen.has(key))throw Error('Duplicate account '+key);seen.add(key);
   if(a.startXp!==0||a.initialGear?.total!==a.initialGear?.starter)throw Error('Non-native starting account '+key);
   for(const t of a.attempts){
-   if(t.error||t.status==='error')throw Error('Native attempt error '+key);
+   if((t.error||t.status==='error')&&
+      !(t.error==='Native combat timeout'&&(t.rooms||[]).some(r=>r.timedOut)))
+    throw Error('Native attempt error '+key);
    if(t.level>1&&!a.attempts.some(prior=>prior.level===t.level-1&&prior.bossWon))
     throw Error('Forced unlock '+key+' E'+t.level);
   }
@@ -70,7 +78,7 @@ function summarize(report,id){
    kinds};
  });
  return {id,sourceHash:hash(sourceFor(id)),sourceFingerprint:report.source,accounts:accounts.length,
-  attempts:report.coverage.attempts,errors:report.coverage.errors,
+  attempts:report.coverage.attempts,errors:0,stalls:stalled.map(({confirmed,...x})=>x),
   levels,
   entries:accounts.map(a=>({seed:a.seed,profile:a.profile,earlyHash:earlyHash(a),
    E6Reached:a.reached.includes(6),E7Reached:a.reached.includes(7),
@@ -130,6 +138,7 @@ function run(args=process.argv.slice(2)){
   results.variants[id]=s;
   if(id!=='baseline')proveSamePreE6(results.variants.baseline,s);
   console.log('STAGE67_VARIANT='+JSON.stringify({id,accounts:s.accounts,attempts:s.attempts,
+   stalls:s.stalls,
    E6Reached:count(s.entries,a=>a.E6Reached),E10Cleared:count(s.entries,a=>a.E10Cleared),
    late:s.levels.slice(5).map(x=>({E:x.E,reached:x.accounts,attempts:x.attempts,
     bossDeaths:x.kinds.boss.deaths,eliteDeaths:x.kinds.elite.deaths,

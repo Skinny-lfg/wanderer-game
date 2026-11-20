@@ -48,3 +48,20 @@ test('Stage 6.7 scripts are diagnostic-only and do not write gameplay source or 
    assert(!s.includes(forbidden),file+': '+forbidden);
  }
 });
+
+test('Real native 4500-tick stalemates are censored explicitly, never counted as death or win',()=>{
+ const timeout={level:10,attempt:5,status:'error',error:'Native combat timeout',bossWon:false,
+  rooms:[{roomType:'boss',timedOut:true,died:false,won:false,hpStart:150,hpEnd:140,hpMax:150,seconds:495}]};
+ const prior=Array.from({length:9},(_,i)=>({level:i+1,attempt:1,status:'victory',
+  bossWon:true,rooms:[]}));
+ const account={seed:9703,profile:'plate-warden',startXp:0,initialGear:{total:3,starter:3},
+  attempts:[...prior,timeout],reached:[1,2,3,4,5,6,7,8,9,10],endLevel:10};
+ const run={coverage:{attempts:10,errors:1},accounts:[account],source:'mock'};
+ // Synthetic unit fixture tests classification; actual cohorts are genuine native accounts.
+ const result=A.summarize(run,'mild');
+ assert.equal(result.errors,0);assert.equal(result.stalls.length,1);
+ assert.equal(result.levels[9].clears,0);assert.equal(result.levels[9].kinds.boss.deaths,0);
+ assert.equal(result.stalls[0].profile,'plate-warden');
+ timeout.error='Invalid talent progress';
+ assert.throws(()=>A.summarize(run,'mild'),/Non-timeout native runtime error/);
+});
