@@ -15,8 +15,9 @@ function validateCohort(data,seed,group){
  assert(profiles&&C.SEEDS.includes(seed),'unknown cohort '+id);
  assert(data.stage02?.cohort===id,'cohort label '+id);
  assert(data.settings?.maxLevel===20&&data.settings?.maxAttempts===18&&
-  data.settings?.maxTotalAttempts===360&&data.settings?.decisionModel==='adaptive',
-  'incorrect 20/18/360/adaptive policy '+id);
+  data.settings?.maxTotalAttempts===360&&data.settings?.tickLimit===12000&&
+  data.settings?.decisionModel==='adaptive',
+  'incorrect E20/18/360/12000/adaptive policy '+id);
  assert(data.settings.seeds.length===1&&data.settings.seeds[0]===seed,'seed config '+id);
  assert(data.accounts?.length===5&&data.coverage?.accounts===5,'five accounts required '+id);
  assert(data.integrity?.noFabricatedXp&&data.integrity?.noForcedEquipment&&
@@ -155,7 +156,7 @@ function audit(shards,options={}){
  const result={stage:'Stage 02 / 50 native accounts from E1 toward E20',
   provenance:{engineSource:[...refs][0],runnerSha256:[...runners][0],
    agentStrategySha256:[...strategies][0],seeds,groups,shards:scheduled,
-   attemptsPerLevel:18,totalAttemptsCap:360,policy:'adaptive'},
+   attemptsPerLevel:18,totalAttemptsCap:360,nativeTickLimit:12000,policy:'adaptive'},
   coverage:{accounts:rows.length,shards:shards.length,attempts:allAttempts.length,
    errors:issues.length,highestReached:Math.max(...rows.map(a=>a.highestReached)),
    highestCleared:Math.max(...rows.map(a=>a.highestCleared)),
