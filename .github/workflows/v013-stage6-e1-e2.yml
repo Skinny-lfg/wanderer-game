@@ -1,0 +1,92 @@
+name: Wanderer Stage 6 — E1/E2 natural progression diagnostic (no deploy)
+
+on:
+  push:
+    branches:
+      - audit/v013-stage6
+    paths:
+      - .github/workflows/v013-stage6-e1-e2.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    if: github.ref == 'refs/heads/audit/v013-stage6'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Validate native simulation regression
+        run: node --test tests/v013-natural-progression.test.cjs tests/v013-stage5-longitudinal.test.cjs
+      - name: Validate Stage 6 analyzer syntax
+        run: node --check scripts/v013-stage6-diagnostics.cjs
+
+  cohorts:
+    needs: validate
+    if: github.ref == 'refs/heads/audit/v013-stage6'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - cohort: A
+            seeds: '9701,9702,9703,9704'
+            profiles: 'cautious,balanced,magic-fire,leather-duelist,hexblade-hybrid'
+          - cohort: B
+            seeds: '9701,9702,9703,9704'
+            profiles: 'daring,plate-warden,magic-frost,magic-lightning,cloth-battlemage'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Execute genuine E1 to E3 native accounts
+        shell: bash
+        env:
+          COHORT: ${{ matrix.cohort }}
+          SEEDS: ${{ matrix.seeds }}
+          PROFILES: ${{ matrix.profiles }}
+        run: |
+          node scripts/v013-natural-progression.cjs \
+            --seeds="$SEEDS" \
+            --profiles="$PROFILES" \
+            --max-level=3 \
+            --max-attempts=18 \
+            --max-total-attempts=40 \
+            --out="reports/stage6-cohort-${COHORT}.json"
+          node scripts/v013-stage6-diagnostics.cjs \
+            "reports/stage6-cohort-${COHORT}.json" \
+            "reports/stage6-cohort-${COHORT}.summary.json"
+      - name: Capture exact revision and source fingerprints
+        if: always()
+        env:
+          COHORT: ${{ matrix.cohort }}
+        run: |
+          mkdir -p reports
+          {
+            echo "revision=$GITHUB_SHA"
+            echo "node=$(node --version)"
+            echo "cohort=$COHORT"
+            sha256sum scripts/v013-stage6-diagnostics.cjs scripts/v013-natural-progression.cjs scripts/simulate-progression.cjs
+          } > "reports/stage6-cohort-${COHORT}.provenance.txt"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage6-e1-e2-${{ matrix.cohort }}
+          path: reports/stage6-cohort-*
+          if-no-files-found: warn
+          retention-days: 30
