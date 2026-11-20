@@ -45,9 +45,14 @@ test('Insufficient Mana for the 12-Mana Infusion does not suppress an 8-Mana ele
  require('../combat/talent-graph-runtime.js');require('../combat/v012-combat-runtime.js');
  const T=globalThis.WandererAutomaticTalents,B=globalThis.WandererV012Buildcraft;
  let progress={...T.create(),xp:10000};
- for(const id of ['affinity_magic','element_choice']){
-  const n=T.allocate(progress,id);assert(n,id);progress=n;
+ function buy(id){
+  if(progress.nodes.includes(id))return;
+  const n=T.NODES.find(x=>x.id===id);assert(n,id);
+  for(const dep of [n.requires,...(n.prerequisites||[])].filter(Boolean))buy(dep);
+  if(n.anyRequires&&!n.anyRequires.some(dep=>progress.nodes.includes(dep)))buy(n.anyRequires[0]);
+  const next=T.allocate(progress,id);assert(next,id);progress=next;
  }
+ buy('element_choice');
  progress=T.selectElement(progress,'fire');assert(progress);
  const b=B.create();B.syncPermanent(b,progress);
  const e={hp:1000,maxhp:1000,def:0,baseDef:0,slowTime:0,dots:{burn:[]},v012Rot:[]};
