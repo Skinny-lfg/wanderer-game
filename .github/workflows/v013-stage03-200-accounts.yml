@@ -1,0 +1,122 @@
+name: Wanderer Stage 03 — 200 native accounts E1–E20 (no deploy)
+
+on:
+  push:
+    branches: [audit/v013-stage6]
+    paths: ['.github/workflows/v013-stage03-200-accounts.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    if: github.ref == 'refs/heads/audit/v013-stage6'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: Test 200 native account identities, unlocks, exports and provenance
+        run: |
+          node --check scripts/v013-stage03-run-seed.cjs
+          node --check scripts/v013-stage03-aggregate.cjs
+          node --test \
+            tests/v013-stage03-200-accounts.test.cjs \
+            tests/v013-stage01-prepared-stat-breakdown.test.cjs \
+            tests/v013-natural-progression.test.cjs \
+            tests/v013-stage6-agent-strategy.test.cjs
+      - run: git diff --check
+
+  cohort:
+    needs: validate
+    if: github.ref == 'refs/heads/audit/v013-stage6'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        seed: [9901, 9902, 9903, 9904, 9905, 9906, 9907, 9908, 9909, 9910, 9911, 9912, 9913, 9914, 9915, 9916, 9917, 9918, 9919, 9920]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: Natural E1–E20 with 10 profiles and persistent native resources
+        env:
+          SEED: ${{ matrix.seed }}
+        run: |
+          mkdir -p reports/stage03
+          node scripts/v013-stage03-run-seed.cjs \
+            --seed="$SEED" \
+            --out="reports/stage03/raw-$SEED.json"
+      - name: Preserve exact Git, Node patch and executable SHA audit
+        if: always()
+        env:
+          SEED: ${{ matrix.seed }}
+        run: |
+          mkdir -p reports/stage03
+          {
+            echo "revision=$GITHUB_SHA"
+            echo "node=$(node --version)"
+            echo "seed=$SEED"
+            sha256sum \
+              scripts/v013-natural-progression.cjs \
+              scripts/v013-agent-strategy.cjs \
+              scripts/v013-stage03-run-seed.cjs \
+              scripts/v013-stage03-aggregate.cjs \
+              tests/v012-economy-harness.cjs \
+              combat/v012-gear-stats.js
+          } > "reports/stage03/raw-$SEED.provenance.txt"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage03-seed-${{ matrix.seed }}
+          path: reports/stage03/raw-${{ matrix.seed }}.*
+          retention-days: 30
+          if-no-files-found: warn
+
+  consolidate:
+    needs: [validate, cohort]
+    if: always() && needs.validate.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: Retrieve all 20 original independent cohorts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: stage03-seed-*
+          path: reports/stage03
+          merge-multiple: true
+      - name: Reject missing shards, mixed versions and artificial progression
+        run: |
+          node scripts/v013-stage03-aggregate.cjs \
+            reports/stage03 reports/stage03/stage03-200-accounts.json
+      - name: Archive complete 200-account audit and all summary statistics
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage03-main-audit-consolidated
+          path: reports/stage03/stage03-200-accounts.*
+          retention-days: 30
+          if-no-files-found: warn
+      - run: git diff --check
