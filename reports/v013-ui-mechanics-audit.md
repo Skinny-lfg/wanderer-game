@@ -118,3 +118,14 @@ As 3 suites históricas foram revistas: **20 falhas antigas retiradas por obsole
 O teste de fecho de feedback passou a fazer parte do C7 obrigatório no navegador (21 cliques, Escape, submissão simulada, cooldown e rejeição anónima). O inventário estático da UI enumerou 56 marcadores de dados, 38 seletores ligados e 18 metadados; não identificou um controlo atual inteiramente sem handler na amostra analisada. Não equivale a testar todos os estados/combinações dinâmicas nem serviços reais.
 
 **Relatório de fecho:** [v013-c8-final.md](v013-c8-final.md). **Inventários complementares:** [retirada de testes históricos](v013-c8-historical-retirement.md) e [UI](v013-c8-ui-inventory.md). Não houve merge, deploy, alteração a `main` ou migração de saves. O commit destes relatórios é apenas documental e não substitui os testes sobre o código indicado.
+
+
+## C9 — auditoria final de código morto e exportações (20-11-2026)
+
+**Código validado:** `d8476d73bcfcc31b34b00e15cc2a99ffd1608e65` na branch `audit/v013`. [C7 final](https://github.com/Skinny-lfg/wanderer-game/actions/runs/44723190503) **4/4 jobs SUCCESS**; principais **301/301**, simulador 7/7, talentos 79/79, combate 94/94, integração 83/83, saves 51/51, emuladores 11/11 e Chromium/feedback/paridade `docs/` aprovados. O artefacto do run `v013-c9-function-inventory` contém o inventário integral em JSON e Markdown.
+
+Após quatro lotes de remoções, `combat/v012-buildcraft.js` passou de **52 755** para **42 064 bytes**; a API pública reduziu de **41 para 30** membros. Foram retirados os auxiliares de draft/seleção, a taxonomia de tags, setters de afinidade legados, RNG de drafts, alias de poções, compatibilidade de builds antigos e uma etiqueta histórica. O alias de poções tinha um **consumidor indireto no harness**: foi corrigido para usar a implementação atual, e não restabelecida a API antiga. Falhas intermédias por desatualização de `docs/` foram corrigidas e revalidadas no último C7.
+
+O inventário final catalogou **63 ficheiros da aplicação, 281 auxiliares, 1 668 entradas semelhantes a funções e 174 exportações**. Foram preservados `freeBuild` (estado atual do Dungeon), transformações de RNG relevantes à geração determinística, `ownedRank` (uso interno) e 19 candidatos com referências textuais únicas que não têm prova suficiente para eliminação. O scanner C6 encontrou **0 imports em falta, 0 referências a controladores retirados e 0 módulos órfãos** no seu âmbito. Isto **não equivale a garantir ausência absoluta de qualquer função oculta ou acesso dinâmico**.
+
+**Relatório detalhado:** [v013-c9-dead-code-audit.md](v013-c9-dead-code-audit.md). Sem alterações a `main`, merge ou deploy. O commit documental posterior não altera o código validado.
