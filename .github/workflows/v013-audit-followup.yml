@@ -1,0 +1,68 @@
+name: Wanderer v0.13 — audit follow-up (historical + feedback only)
+on:
+  push:
+    branches: [audit/v013]
+    paths:
+      - '.github/workflows/v013-audit-followup.yml'
+      - 'online/v012-feedback.mjs'
+      - 'tests/v013-feedback-close-browser.cjs'
+      - 'reports/v013-ui-mechanics-audit.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  historical-32:
+    if: github.ref == 'refs/heads/audit/v013'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Reproduce all three historical suites without hiding failures
+        shell: bash
+        run: |
+          mkdir -p reports/v013-audit-followup
+          set +e
+          node --test tests/v012-economy.test.cjs tests/v0120-equipment.test.cjs tests/v012-phase-d-endless.test.cjs > reports/v013-audit-followup/historical-32.tap 2>&1
+          rc=$?
+          set -e
+          echo "HISTORICAL_EXIT_CODE=$rc"
+          grep -E '(^|[[:space:]])(not ok|ok) [0-9]+|# (tests|pass|fail|cancelled|skipped)' reports/v013-audit-followup/historical-32.tap || true
+          echo "$rc" > reports/v013-audit-followup/historical-exit-code.txt
+      - name: Save full historical TAP failure diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v013-audit-historical-32
+          path: reports/v013-audit-followup/
+          retention-days: 14
+  feedback-browser:
+    if: github.ref == 'refs/heads/audit/v013'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Find Chromium
+        shell: bash
+        run: |
+          binary="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          if [ -n "$binary" ]; then
+            echo "CHROMIUM_PATH=$binary" >> "$GITHUB_ENV"
+          else
+            npx playwright install chromium
+          fi
+      - name: Test actual feedback module close, Escape, submission and authentication
+        run: node tests/v013-feedback-close-browser.cjs

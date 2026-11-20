@@ -56,8 +56,18 @@ function openFeedback(){
    send=dialog.querySelector('[data-send-feedback]'),copy=dialog.querySelector('[data-copy-feedback]');
  const message=(str,type)=>{status.textContent=str;status.dataset.status=type||'';};
  const setBusy=value=>{send.disabled=value;send.textContent=value?'Sending…':'Send report';};
- dialog.addEventListener('close',()=>{dialog.remove();previous?.isConnected&&previous.focus();});
- dialog.querySelector('[data-close-feedback]').addEventListener('click',()=>dialog.close());
+ let cleaned=false;
+ const cleanup=()=>{
+  if(cleaned)return;
+  cleaned=true;
+  dialog.remove();
+  if(previous?.isConnected)previous.focus();
+ };
+ dialog.addEventListener('close',cleanup);
+ dialog.querySelector('[data-close-feedback]').addEventListener('click',()=>{
+  dialog.close();
+  cleanup();
+ });
  copy.addEventListener('click',async ()=>{
   const report=copyText(form,context());
   try{await navigator.clipboard.writeText(report);message('Report copied. It has NOT been submitted.','success');}
