@@ -27,7 +27,7 @@ jobs:
         run: |
           node --check scripts/v013-stage6-policy-ablation.cjs
           node --test tests/v013-stage6-agent-strategy.test.cjs
-      - name: Isolate Duelist regression on four identical initial seeds
+      - name: Re-evaluate corrected focus targeting versus individual policies
         run: |
           node scripts/v013-stage6-policy-ablation.cjs \
             --seeds=9701,9702,9703,9704 \
