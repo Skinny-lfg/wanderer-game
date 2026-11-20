@@ -4,6 +4,9 @@ on:
     branches: [audit/v013-stage6]
     paths:
       - '.github/workflows/v013-stage67-curve-sweep.yml'
+      - 'scripts/v013-stage67-enemy-curve-sweep.cjs'
+      - 'scripts/v013-stage67-compare-curves.cjs'
+      - 'tests/v013-stage67-curves.test.cjs'
   workflow_dispatch:
 permissions:
   contents: read

@@ -118,12 +118,17 @@ function run(args=process.argv.slice(2)){
  for(const id of variants){
   const overrides=id==='baseline'?{}:{[PROGRESSION_FILE]:sourceFor(id)};
   const report=N.run(cfg.native,{moduleOverrides:overrides});
-  const s=summarize(report,id);
-  results.variants[id]=s;
-  if(id!=='baseline')proveSamePreE6(results.variants.baseline,s);
+  // Preserve the exact failed account state before any integrity gate throws.
   const raw=cfg.output+'-'+id+'.native.json';
   fs.mkdirSync(path.dirname(raw),{recursive:true});
   fs.writeFileSync(raw,JSON.stringify(report)+'\n');
+  const errors=report.accounts.flatMap(account=>account.attempts.filter(t=>t.error||t.status==='error')
+   .map(t=>({seed:account.seed,profile:account.profile,level:t.level,attempt:t.attempt,
+    error:t.error,diagnostic:t.diagnostic})));
+  if(errors.length)console.error('STAGE67_NATIVE_ERRORS='+JSON.stringify({id,errors}));
+  const s=summarize(report,id);
+  results.variants[id]=s;
+  if(id!=='baseline')proveSamePreE6(results.variants.baseline,s);
   console.log('STAGE67_VARIANT='+JSON.stringify({id,accounts:s.accounts,attempts:s.attempts,
    E6Reached:count(s.entries,a=>a.E6Reached),E10Cleared:count(s.entries,a=>a.E10Cleared),
    late:s.levels.slice(5).map(x=>({E:x.E,reached:x.accounts,attempts:x.attempts,
