@@ -22,9 +22,12 @@ test('Stage 7.1 Blueprints unlock only once and never just by clearing a Realm',
  assert.equal(C.discover(next,'green_sword'),null);
  assert(!C.valid({...next,learnedRecipes:['blue_sword','blue_sword']}));
 });
-test('Stage 7.1 UI only exposes preview Forge with named equipment tiers',()=>{
+test('Stage 7.1 v013 Blacksmith exposes Forge, named-tier upgrades and Legendary reinforcement as separate legal operations',()=>{
  const source=fs.readFileSync('index.html','utf8');
- assert(source.includes("if(PHASE1_PREVIEW){phase3BlacksmithOperation='forge';renderForge();}"));
+ assert(source.includes("['tier-upgrade','Upgrade Gear']"));
+ assert(source.includes("['reinforcement','Legendary Reinforcement']"));
+ assert(source.includes("if(phase3BlacksmithOperation==='forge')renderForge();else if(phase3BlacksmithOperation==='tier-upgrade')renderV013TierUpgrade();else renderForgeEconomyExtras();"));
+ assert(source.includes('function renderV013TierUpgrade()'));
  assert(source.includes('Known Blueprints:'));
  assert(!fs.readFileSync('online/v012-expedition-runtime.js','utf8').includes('targetRecipe'),'old tracked route targeting removed');
  assert(source.includes('Undiscovered Blueprints'));
