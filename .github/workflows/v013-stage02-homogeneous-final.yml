@@ -1,0 +1,97 @@
+name: Wanderer Stage 02 — Homogeneous E20 final report, replay one shard
+
+on:
+  push:
+    branches: [audit/v013-stage6]
+    paths: ['.github/workflows/v013-stage02-homogeneous-final.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  replay-one-shard:
+    if: github.ref == 'refs/heads/audit/v013-stage6'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 39f71feb9034df56c866a4fe484a5316f09c4b6a
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: Replay only the original 9812-B account cohort on Node 22.23.5
+        run: |
+          node scripts/v013-stage02-run-cohort.cjs \
+            --seed=9812 --group=B \
+            --out=reports/stage02/raw-9812-B.json
+      - name: Pin original code revision, runtime and native module SHA
+        run: |
+          {
+            echo "revision=$(git rev-parse HEAD)"
+            echo "node=$(node --version)"
+            echo "cohort=9812-B"
+            sha256sum \
+              scripts/v013-natural-progression.cjs \
+              scripts/v013-agent-strategy.cjs \
+              scripts/v013-stage02-run-cohort.cjs \
+              scripts/v013-stage02-aggregate.cjs \
+              combat/v012-gear-stats.js
+          } > reports/stage02/raw-9812-B.provenance.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage02-replayed-9812-B
+          path: reports/stage02/raw-9812-B.*
+          if-no-files-found: error
+          retention-days: 30
+
+  consolidate:
+    needs: replay-one-shard
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: Verify 50-account funnel and SHA provenance tests
+        run: |
+          node --check scripts/v013-stage02-aggregate.cjs
+          node --test tests/v013-stage02-e20-audit.test.cjs
+      - name: Reuse the ten completed original cohorts
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 44777864951
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          pattern: stage02-cohort-*
+          path: reports/stage02
+          merge-multiple: true
+      - name: Replace only the different Node-patch cohort
+        run: rm -f reports/stage02/raw-9812-B.*
+      - name: Recover same-revision, pinned-Node replay for 9812-B
+        uses: actions/download-artifact@v4
+        with:
+          name: stage02-replayed-9812-B
+          path: reports/stage02
+      - name: Enforce ten matching Git/Node/file-SHA cohorts and aggregate
+        run: |
+          node scripts/v013-stage02-aggregate.cjs \
+            reports/stage02 reports/stage02/stage02-report.json
+      - name: Publish the verified consolidated report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage02-e20-final-verified-report
+          path: reports/stage02/stage02-report.*
+          if-no-files-found: warn
+          retention-days: 30
+      - run: git diff --check
