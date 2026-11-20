@@ -177,11 +177,11 @@ test('ward grants reach their own strength without stripping stronger Barrier',(
   }
  }
 });
-test('hero Barrier stacks up to its cap and a grant never removes existing protection',()=>{
+test('hero Barrier stacks without a cap and never removes existing protection',()=>{
  require('../combat/v012-combat-runtime.js');
  const {setBarrier}=globalThis.WandererV012CombatRuntime.create({});
- for(const [before,after] of [[5,11],[28,30],[30,30],[42,42]]){
+ for(const before of [5,28,30,42,300]){
   const r={maxhp:100,barrier:before,stats:{wardBonus:.5}};
-  assert.equal(setBarrier(r,4),after-before);assert.equal(r.barrier,after);
+  assert.equal(setBarrier(r,4),6);assert.equal(r.barrier,before+6);
  }
 });
