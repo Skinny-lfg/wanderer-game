@@ -162,3 +162,17 @@ test('Decision-component isolation never grants AoE or alters native gear',()=>{
  assert(parts.every(part=>N.policyFlags('adaptive')[part]===true));
  assert.throws(()=>N.policyFlags('everything-free'),/Unknown/);
 });
+
+test('Native adaptive Duelist honours explicit focus against a regular group',()=>{
+ const a=create(9559,undefined,{}, {skipPersistence:true});
+ a.setup(10,'Daggers','Rare');a.setUnlocked(10);a.start(10,true);
+ const c=a.controller(),card=c.state.dungeon.cards[0];
+ c.chooseRealm(card.id);assert(c.visitRoom(2));assert(a.enter());
+ assert(a.state().run.totalMobCount>1);
+ const profile=N.PROFILES['leather-duelist'];
+ assert.equal(profile.target,'focus');
+ const fight=N.fightNatural(a,profile,4500,{decisionModel:'adaptive',capabilities:N.capabilities(a)});
+ assert.equal(fight.targetSwitches,0,
+  'manual agent clicks must not override a deliberate single-target build');
+ assert(fight.updateCalls>0);
+});
