@@ -1,0 +1,46 @@
+name: Wanderer Hexblade loadout — Sword with Dagger, Orb or Tome (simulation only)
+
+on:
+  push:
+    branches: [audit/v013-stage6]
+    paths: ['.github/workflows/v013-hexblade-loadout-audit.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validation:
+    if: github.ref == 'refs/heads/audit/v013-stage6'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: Validate Sword/Offhand native legality and no-stat-boost Hexblade preferences
+        run: |
+          node --check scripts/v013-natural-progression.cjs
+          node --test \
+            tests/v013-stage04-archetype-refinement.test.cjs \
+            tests/v013-natural-progression.test.cjs \
+            tests/v013-stage03-200-accounts.test.cjs
+      - run: git diff --check
+      - name: Exercise two native E1 start profiles on a historical seed
+        run: |
+          node scripts/v013-stage04-archetype-refinement.cjs \
+            --seed=11001 \
+            --out=reports/stage04/hexblade-loadout-11001.json
+      - name: Preserve native run for inspection
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hexblade-loadout-native-11001
+          path: reports/stage04/hexblade-loadout-11001.*
+          retention-days: 30
+          if-no-files-found: ignore
