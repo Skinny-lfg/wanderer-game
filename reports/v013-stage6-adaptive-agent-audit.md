@@ -1,60 +1,92 @@
-# Wanderer v0.13 — Stage 6: adaptive AoE / single-target / hybrid agents
+# Wanderer v0.13 — Stage 6 refined agents: AoE, focus and mixed Affinities
 
-Status: **implemented and regression-validated, balance conclusions NOT READY**.
-Branch: audit/v013-stage6. No merge, deployment, stat/balance change or synthetic inventory/XP/unlocks.
+**Status:** native simulation agent logic refined and regression-validated; **gameplay balance is NOT READY**.
+Working branch: \`audit/v013-stage6\`. The live game, main branch, published build and combat coefficients were not changed.
 
-## What changed
-- New pure decision module \`scripts/v013-agent-strategy.cjs\`, using **currently equipped** native items, earned v15 talent nodes, chosen element and native active build, rather than just profile names.
-- Observable role: AoE, single-target, hybrid, defensive, developing; continuous area, focus and defense scores, with named provenance for each recognized capacity.
-- Adaptive Realms use only the three visible cards: boss family, known omen #1, visible condition, risk and favored loot. Unknown omens are never consulted for decisions.
-- Adaptive room choices respect genuine paths, steps, visible mob ranges, current health and Bag; a character without earned AoE still avoids dangerous groups. No free rerolls.
-- Native target clicks (8-tick minimum interval): Blood Vessel, Stormglass Anchor, Carrion Brood, Heartroot Mawbud avoidance, Gravecaller adds, Thornbloom counterplay.
-- Native combat telemetry for Boss/Elite/minion/normal **observed net HP / Barrier losses** and non-focused target losses. These are NOT source-attributed AoE DPS: simultaneous healing, enemy removal, DOTs and reserve changes can bias observations.
-- New paired-initial-seed comparison script \`scripts/v013-stage6-agent-comparison.cjs\`: no forced encounters, gear, XP, damage, Boss wins or unlocks.
+## 1. Verified improvements
 
-## Validation
-GitHub Actions run: https://github.com/Skinny-lfg/wanderer-game/actions/runs/44766485534
-**59 passing, 0 failing tests** (50 prior regression tests + 9 agent tests); no errors during 373 baseline and 362 adaptive natural attempts.
-Includes a controlled (NOT natural) actual Two-Handed encounter test that observes real non-focused Cleave damage. Runtime and comparison scripts pass Node syntax checks.
+- \`scripts/v013-agent-strategy.cjs\`: classifies owned weapon, off-hand, armour, actual v15 talent nodes, selected element and active build. Reports four independent continuous values: area, focused damage, defence and real native talent investments.
+- Distinguishes **combat damage mode** (AoE, single-target, both, defensive, developing) from **Affinity composition** (no earned affinity, one earned affinity, two or more earned affinities) and **mixed synergy** (genuine cross-axis skill unlocked or still only potential).
+- \`scripts/v013-natural-progression.cjs\`: can use adaptive Realm choice with only publicly visible card information (Affinity/Boss, first revealed omen, condition, risk, item bias), adaptive legal room pathing, and current HP, Bag, available gear and real AoE capacity. No hidden modifier is consulted for selection.
+- Real native player-click target priorities for mechanics-aware profiles: Blood Vessel, Matriarch Brood, Stormglass Anchor, Heartroot Mawbud avoidance and situational Gravecaller Deathbound. Thornbloom remains a visible reactive counter.
+- Crucial correction: the agent **respects an explicitly selected focus target policy** (Daring/Leather Duelist) instead of silently replacing it with generic mechanics-first attacks. That was the principal cause of the observed Duelist regression.
+- Passive/read-only telemetry: net HP and Barrier lost by actual Boss, Elite, Minion and normal enemies, non-focused loss, newly observed enemies, target switches, subtype, modifiers and composition. It is **not source-attributed DPS**; DOTs, healing within a tick and reinforcements complicate attribution.
+- \`scripts/v013-stage6-agent-comparison.cjs\`: repeatable paired *initial* seeds with real account XP, legitimate loot, native gear, native talent purchases, no synthetic unlocks. Separate diagnostic \`scripts/v013-stage6-policy-ablation.cjs\` isolates each decision policy.
 
-## Paired-initial-seed natural E1–E2 pilot
-Seeds 9701–9704; five profiles (Balanced, Plate Warden, Leather Duelist, Magic Lightning, Hexblade Hybrid); 4 accounts per profile, 20 per policy; up to 18 attempts/level, native wins required for E2.
+## 2. Final natural E1–E2 comparison
 
-| Metric | Original risk-aware agent | New adaptive agent |
+**CI:** https://github.com/Skinny-lfg/wanderer-game/actions/runs/44769237928
+29 final relevant automated tests passed (0 failed). Additional 63 tests passed at the earlier full native/checkpoint run https://github.com/Skinny-lfg/wanderer-game/actions/runs/44768762731.
+
+Four seeds (9701–9704), five profiles, twenty independently created native accounts per policy. Up to 18 attempts per Expedition level and 36 total per account.
+
+| Metric | Risk-aware baseline | Refined adaptive |
 |---|---:|---:|
 | Accounts | 20 | 20 |
-| Total attempts | 373 | 362 |
-| E1 Boss clears (distinct accounts) | 13 | 13 |
-| E2 Boss clears (distinct accounts) | 9 | 10 |
-| Normal fights: solo | 353 | 341 |
-| Normal fights: 2–4 enemies | 183 | 191 |
-| Normal fights: 5–12 enemies | 17 | 31 |
-| Normal fights: 13+ enemies | 8 | 4 |
-| Native simulation errors | 0 | 0 |
+| Total attempts | 373 | 361 |
+| E1 cleared | 13/20 | **13/20** |
+| E2 cleared | 9/20 | **10/20** |
+| Errors | 0 | **0** |
 
-### Individual profiles: E1/E2 clears
+### Per profile: account-level clears
 
-| Profile | Original | Adaptive | Diagnosis |
-|---|---|---|---|
-| Balanced | 4/4 → 4/4 | 4/4 → 4/4 | Same clears; 58 vs 50 attempts |
-| Plate Warden | 4/4 → 4/4 | 4/4 → 4/4 | Same clears; 51 vs 46 attempts |
-| Leather Duelist | 3/4 → 1/4 | 1/4 → 0/4 | **Regression; investigate route/target policy before claiming improvement** |
-| Magic Lightning | 1/4 → 0/4 | 3/4 → 2/4 | Encouraging pilot, not proof |
-| Hexblade Hybrid | 1/4 → 0/4 | 1/4 → 0/4 | Still low progression |
+| Profile | Baseline E1/E2 | Adaptive E1/E2 |
+|---|---:|---:|
+| Balanced | 4/4 / 4/4 | 4/4 / 4/4 |
+| Plate Warden | 4/4 / 4/4 | 4/4 / 4/4 |
+| Leather Duelist | 3/4 / 1/4 | **3/4 / 1/4** |
+| Magic Lightning | 1/4 / 0/4 | 1/4 / **1/4** |
+| Hexblade Hybrid | 1/4 / 0/4 | 1/4 / 0/4 |
 
-The new agent changes real room decisions and preserves plausible progression, but **is not universally better** in this sample. Both policies start from the same native account seeds, but different actions alter the subsequent RNG streams/loot/path. Encounters within one account are not independent experimental observations.
+### Observable build-aware behaviour
 
-### Actual build coverage, not profile names
-- Original: 21 combat observations as AoE, 45 as hybrid, 32 as single-target, 236 as defensive, 468 as developing.
-- Adaptive: 15 as AoE, **zero as hybrid**, 106 as single-target, 278 as defensive, 436 as developing.
-- Therefore this E1–E2 pilot **does not substantiate balance or advantage claims for fully realized hybrid builds**. Absence of actual hybrid observations is a coverage gap, not evidence hybrid builds are bad.
-- Non-focused net HP loss is recorded, but is not necessarily proportional to actual DPS advantage.
+- AoE: grouped fights in **8/15 (53%)** adaptive observations versus **8/21 (38%)** baseline.
+- Both AoE + focused: grouped fights in **25/49 (51%)** adaptive observations versus **13/45 (29%)** baseline.
+- Predominantly single-target: grouped fights in **25/67 (37%)** adaptive observations versus **16/32 (50%)** baseline.
+- Mixed-Affinity ownership (two Affinities actually acquired) is observed in **49** adaptive fight records versus **68** baseline. But **zero acquired mixed-axis skills** appeared in this E1–E2 pilot; these are dual-affinity foundations, **not mature mixed-synergy builds**.
+- These are distinct distributions of naturally acquired equipment and XP under different policies, not a controlled test of *damage build strength*. Encounter observations within an account are correlated.
 
-## Remaining issues before balance
-1. Investigate Leather Duelist regression and unexpected absence of naturally realized hybrid capability; use per-account decisions to distinguish target switching, risk/route choices, equipment rarity and RNG divergence.
-2. Add controlled paired fights against each of the six Bosses and the distinct Elites using legal builds at the same genuine stats/gear (separate from natural-account progression); specifically AoE vs adds and prepared/unprepared Boss.
-3. Compare more seeds and higher Expedition levels only after the previously observed E3 talent-state exception is isolated. Do not hide a native game validity bug behind simulator retries.
-4. Measure source-attributed secondary damage in a separate **read-only** combat telemetry hook if exact AoE DPS is needed; current net-delta measure is explicitly approximate.
-5. Treat the Stage 6 pilot as policy verification, **not ready for gameplay buffs/nerfs**.
+### Why the Duelist originally regressed
 
-Only audit/v013-stage6 changed. main and production are unchanged.
+Policy ablation on the same four Duelist seeds:
+
+| Single intervention | E1 clears | E2 clears |
+|---|---:|---:|
+| Baseline | 3/4 | 1/4 |
+| Realm choice only | 3/4 | 1/4 |
+| Room choice only | 3/4 | 1/4 |
+| Target switching only, *before correction* | **1/4** | **0/4** |
+| All adaptive, *before correction* | **1/4** | **0/4** |
+| All adaptive, explicit focus preserved, *final* | **3/4** | **1/4** |
+
+The original reactive targeting overrode the explicit focus style. Protecting the focus policy restores baseline E1/E2 advancement while retaining AoE-aware routing. The ablation follows same initial seeds, but future RNG and earned resources diverge with actions.
+
+## 3. Controlled native Boss and Elite target policy experiments
+
+Synthetic but **native combat-executed** diagnostic fixtures, entirely separate from natural progression: fixed v15 24-point talent build, rolled equipment at the fixture tier, real 6 Affinity Bosses, and specifically selected 4 Elite types. Three target policies (focus, mechanics, adaptive), identical pre-fight native snapshot SHA for each matched policy set. Each fixture includes 60 matched scenario sets, **0 invalid pairings and 0 runtime errors**.
+
+| Controlled fixture | Boss wins per policy, out of 36 | Elite wins per policy, out of 24 |
+|---|---:|---:|
+| E5 Rare, Dangerous | 0/36 | 23/24 focus; 23/24 mechanics; 22/24 adaptive (before Gravecaller retarget correction) |
+| E1 Epic, Guarded | 36/36 | 24/24 |
+| E1 Rare, Guarded | 36/36 | 24/24 |
+| E5 Epic, Dangerous | 2/36 | 24/24 |
+
+CI:
+- https://github.com/Skinny-lfg/wanderer-game/actions/runs/44768335336
+- https://github.com/Skinny-lfg/wanderer-game/actions/runs/44768762731
+- https://github.com/Skinny-lfg/wanderer-game/actions/runs/44769342244
+
+**Important:** These controlled conditions are too polarised to establish an optimal Boss target policy. Mechanic-first clicks are exercised (and some Boss summons are prevented), but wins are nearly always identical. At E5 Epic Dangerous, all three policies won 2 of 36 Boss fights; at E1 Rare Guarded all three won 36 of 36. The game has not been changed or balanced from this test.
+
+## 4. Limitations and next verification stage
+
+1. E1–E2 does **not** provide enough earned XP to reliably observe complete mixed-axis abilities. Expand natural E3–E8 progression **after** investigating the historical E3 \`Invalid talent progress\` exception (seed 9701, Daring, attempt 14); do not suppress it by resetting the simulator.
+2. Test Boss and Elite abilities at genuinely intermediate difficulty and with realistic staged preparations, so target decisions have a measurable effect; current controlled extremes establish correct scenario pairing and safe execution, not balancing superiority.
+3. Add exact **source-tagged secondary damage** to simulation telemetry, if necessary; observed net loss is only an approximation, not a true AoE damage-source counter.
+4. Re-examine Gravecaller target switching: the controlled native sample suggests that refocusing summoned minions can increase damage taken under some conditions. Keep it a situational counter rather than unconditional targeting.
+5. More seeds and real playtesting are required. **No buffs or nerfs are justified by this small experiment.**
+
+**Native integrity:** no forced player XP, guaranteed loot, forced Boss victories, arbitrary enemy HP changes, or artificial Expedition unlocking in natural-account comparisons. Controlled Boss/Elite fixtures deliberately stage battles and fixed talent budgets and must not be presented as natural player progression.
+
+**No merge, deployment or published game changes.**
