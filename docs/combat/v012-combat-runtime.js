@@ -530,7 +530,7 @@ function weaponAttack(r,offhandStrike=false){
  if(ports.isPhase1Run()&&!offhandStrike){
    // Keep the purchased Fury Double Strike useful on the first main swing, but
    // never proc it on an offhand hit or the main swing that triggers the offhand.
-   const dual=kind==='Daggers'&&['Daggers','Off-Hand Dagger'].includes(off?.subtype);
+   const dual=['Daggers','Off-Hand Dagger'].includes(off?.subtype);
    ports.phase2WeaponAttack(r,base,critical,cast,dual&&(r.offhandCadence||0)===1);
   }
  if(!offhandStrike&&kind==='Two-Handed'){const factor=ports.state.automaticTalents?.nodes?.includes('cleave_mastery')?.6:.4;groupSecondaryDamage(r,base,[factor,factor],'⚔ Cleave',true);}
@@ -540,8 +540,8 @@ function weaponAttack(r,offhandStrike=false){
  if(!offhandStrike&&kind==='Mace'&&ports.state.automaticTalents?.nodes?.includes('mace_shockwave')){const secondary=r.enemies?.find(enemy=>enemy!==r.enemy&&enemy.hp>0);groupSecondaryDamage(r,base,[.3],'🔨 Concussive Swing',true);if(secondary&&secondary.hp>0)secondary.slowTime=Math.max(secondary.slowTime||0,1);}
  if(cast&&v013LightningChain(r))groupSecondaryDamage(r,base,v013LightningChainFactors(),'⚡ Chain Lightning');
  if(s.counts.shield>=2){const gained=ports.setBarrier(r,Math.max(1,Math.round(r.maxhp*(s.bonus.shieldBonus||0))));if(gained>0)ports.addLog('🛡 Shield set: +'+Math.round(gained)+' Barrier','good');}
- if(!offhandStrike&&weapon?.subtype==='Daggers'&&['Daggers','Off-Hand Dagger'].includes(off?.subtype)){
-  // Off-Hand swings at half the main-hand frequency: one strike for two main attacks.
+ if(!offhandStrike&&['Daggers','Off-Hand Dagger'].includes(off?.subtype)){
+  // Any one-handed main weapon can trigger a Dagger off-hand strike after every two main attacks. Its damage remains 50%.
   r.offhandCadence=((r.offhandCadence||0)+1)%2;
   if(r.offhandCadence===0&&e.hp>0){r.offhandStrikes=(r.offhandStrikes||0)+1;weaponAttack(r,true);}
  }
