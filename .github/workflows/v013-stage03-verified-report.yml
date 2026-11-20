@@ -1,0 +1,51 @@
+name: Wanderer Stage 03 — Re-audit Boss HP from 200 existing accounts
+
+on:
+  push:
+    branches: [audit/v013-stage6]
+    paths: ['.github/workflows/v013-stage03-verified-report.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  report:
+    if: github.ref == 'refs/heads/audit/v013-stage6'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: Test 200-account accounting and Boss versus player HP distinction
+        run: |
+          node --check scripts/v013-stage03-aggregate.cjs
+          node --test tests/v013-stage03-200-accounts.test.cjs
+      - name: Reuse exact completed native 200 accounts from original SHA
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 44783769318
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          pattern: stage03-seed-*
+          path: reports/stage03
+          merge-multiple: true
+      - name: Verify actual Git/Node/game hashes and re-evaluate 20 Expeditions
+        run: |
+          node scripts/v013-stage03-aggregate.cjs \
+            reports/stage03 reports/stage03/stage03-200-accounts.json
+      - name: Preserve verified revised full report without rerunning the game
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage03-200-accounts-verified-analysis
+          path: reports/stage03/stage03-200-accounts.*
+          retention-days: 30
+          if-no-files-found: warn
+      - run: git diff --check
