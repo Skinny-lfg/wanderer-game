@@ -25,7 +25,7 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - name: Validate Stage 02 native Forge capacity, combat horizon and E3 repair
+      - name: Verify real clamped Stash capacity, 12000 combat ticks and E3 regression
         run: |
           node --check scripts/v013-stage02-run-cohort.cjs
           node --check scripts/v013-stage02-aggregate.cjs
