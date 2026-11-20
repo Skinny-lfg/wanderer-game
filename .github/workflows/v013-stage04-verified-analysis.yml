@@ -1,0 +1,51 @@
+name: Wanderer Stage 04 — Verified re-analysis (no combat replay)
+
+on:
+  push:
+    branches: [audit/v013-stage6]
+    paths: ['.github/workflows/v013-stage04-verified-analysis.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  analyze:
+    if: github.ref == 'refs/heads/audit/v013-stage6'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: Validate real target-click telemetry and native mixed-build identities
+        run: |
+          node --check scripts/v013-stage04-aggregate.cjs
+          node --test tests/v013-stage04-targeted-audit.test.cjs
+      - name: Reuse all 36 completed original native policy cohorts
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 44787333743
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          pattern: stage04-native-*
+          path: reports/stage04
+          merge-multiple: true
+      - name: Check matched initial gear, native Boss wins and exact Git/Node/file SHA
+        run: |
+          node scripts/v013-stage04-aggregate.cjs \
+            reports/stage04 reports/stage04/stage04-targeted.json
+      - name: Archive revised evidence without altering or rerunning any account
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage04-targeted-360-verified-analysis
+          path: reports/stage04/stage04-targeted.*
+          retention-days: 30
+          if-no-files-found: warn
+      - run: git diff --check
