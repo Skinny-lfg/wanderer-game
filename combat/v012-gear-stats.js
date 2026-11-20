@@ -11,7 +11,12 @@ function itemStatValue(item,key,context){
  if(key==='evasionRating')return gearEvasionRating(item,context);
  return Number(item?.[key])||0;
 }
-function power(s){return Math.round(s.attack*2+s.defense*4+s.maxhp*.15+s.attacksPerSec*35+s.crit*1.2+s.blockChance*2+((s.caster||s.phase2Magic)?s.spellPower*1.7:0)+(s.synergyPower||0));}
+function power(s){
+ // A diagnostic gear score, not a damage or survivability forecast.
+ // Decay can use Spell Power with physical weapons; do not score it as zero.
+ const activeSpell=!!(s.caster||s.phase2Magic||s.phase2Decay);
+ return Math.round(s.attack*2+s.defense*4+s.maxhp*.15+s.attacksPerSec*35+s.crit*1.2+s.blockChance*2+(activeSpell?Math.max(0,Number(s.spellPower)||0)*1.7:0));
+}
 const WEAPON_INTERVALS=Object.freeze({Sword:1.6,Mace:2.2,Bow:2,Daggers:1.15,'Two-Handed':2.8,Staff:2.3,Wand:1.65});
 function attackSpeed(weapon,agility=5,speedRating=0,intellect=5){
  const agi=Math.max(0,agility-5),int=Math.max(0,intellect-5);
@@ -69,9 +74,6 @@ function totalStats(equipment,ownedRunes,equippedRuneIds,{isTwoHanded,FIELDS,ite
  s.wardBonus=Math.min(.3,Math.max(0,gearBonus('wardBonus')));
  if(off?.subtype==='Shield')s.blockChance=Math.min(48,s.blockChance+Math.min(8,Math.max(0,gearBonus('blockBonus'))));
  s.blockReduction=off?.subtype==='Shield'?(main?.subtype==='Mace'?.67:main?.subtype==='Sword'?.62:.58):0;
- // Cumulative tier estimates: 2 pieces = 12, 3 = 30, 5 = 54.
- s.synergyPower=0;
- s.power=Math.round(s.attack*2+s.defense*4+s.maxhp*.15+s.attacksPerSec*35+s.crit*1.2+s.blockChance*2+(caster?s.spellPower*1.7:0)+s.synergyPower);
  s.lootQuality=Math.min(10,Math.round(Math.max(0,s.cha-5)*.09*10)/10);
  if(state?.automaticTalents?.nodes?.length&&root.WandererAutomaticTalents)root.WandererAutomaticTalents.apply(s,state.automaticTalents);
  let result=s;

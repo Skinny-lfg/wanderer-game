@@ -46,3 +46,40 @@ test('fresh v15 talent progress never exposes historical attribute spending',()=
  assert.equal(typeof T.allocateAttribute,'undefined');
  assert(T.valid(p));
 });
+
+test('Stage 5 uses one Power estimator and counts active Decay Spell Power on physical weapons',()=>{
+ const a=create(3601);
+ for(const slot of Object.keys(a.state().equip))a.state().equip[slot]=null;
+ a.state().equip.weapon=a.makeItem(1,'weapon',null,'loot','Sword','Common');
+ a.state().automaticTalents=buy(['affinity_decay']);
+ const before=a.baseStats();
+ assert(before.phase2Decay&&before.spellPower>0&&!before.caster);
+ assert.equal(before.power,Math.round(before.attack*2+before.defense*4+before.maxhp*.15+before.attacksPerSec*35+before.crit*1.2+before.blockChance*2+before.spellPower*1.7));
+ a.state().equip.weapon.spell=(a.state().equip.weapon.spell||0)+20;
+ const after=a.baseStats();
+ assert.equal(after.spellPower-before.spellPower,20);
+ assert.equal(after.attack,before.attack);
+ assert(after.power>before.power,'Active Decay Spell Power must affect estimated Gear Power');
+ assert(a.gear.statsWidget(after).includes('Spell Power'),'Physical Decay must show active Spell Power');
+ assert(a.gear.statsWidget(after).includes('Mana regen'),'Physical Decay must show Mana regeneration');
+ a.state().automaticTalents=buy(['affinity_blood']);
+ const blood=a.baseStats();
+ assert.equal(blood.spellPower,0,'Unactivated spell stats must not inflate a physical Blood build');
+});
+test('Stage 5 explains stat limits accessibly and retains all Power sources',()=>{
+ const a=create(3602);a.state().automaticTalents=buy(['affinity_magic']);
+ const s=a.baseStats(),power=a.statMarkup('Gear Power',s,s.power);
+ assert(power.includes('data-stat="power"'));
+ assert(power.includes('tabindex="0"'));
+ assert(power.includes('not DPS or overall build strength'));
+ const spell=a.statMarkup('Spell Power',s,s.spellPower);
+ assert(spell.includes('data-stat="spellPower"'));
+ assert(spell.includes('Aegis Barrier'));
+ const fs=require('node:fs'),source=fs.readFileSync('index.html','utf8'),preview=fs.readFileSync('docs/index.html','utf8');
+ assert(source.includes('Stat guide'));
+ assert(preview.includes('Stat guide'));
+ assert(!source.includes('Base includes allocated attributes'));
+ const hash=require('node:crypto').createHash('sha256').update(fs.readFileSync('combat/v012-gear-stats.js')).digest('hex').slice(0,12);
+ assert(preview.includes('combat/v012-gear-stats.js?v='+hash),'Pages must bust cache for the changed Power estimator');
+ assert.equal(fs.readFileSync('docs/combat/v012-gear-stats.js','utf8'),fs.readFileSync('combat/v012-gear-stats.js','utf8'));
+});
