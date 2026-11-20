@@ -138,3 +138,14 @@ test('Natural Camp Stash consolidation counts native potion stack slots and pres
  assert(starterIds.every(id=>s.stash.some(x=>x.id===id)),
   'never consume recovery starter gear to free potion capacity');
 });
+
+test('Boss entry HP cannot be confused with native player maximum HP',()=>{
+ const shards=all(),encounter=shards[0].accounts[0].attempts[0];
+ encounter.bossInitialHP=684;
+ encounter.bossReached=true;
+ encounter.rooms=[{roomType:'boss',hpMax:220,won:true,bossStyle:'guardian'}];
+ const r=A.audit(shards);
+ assert.equal(r.perExpedition[0].bossInitialHPMedian,684);
+ assert.equal(r.perExpedition[0].playerMaxHPAtBossMedian,220);
+ assert.notEqual(r.perExpedition[0].bossInitialHPMedian,r.perExpedition[0].playerMaxHPAtBossMedian);
+});
