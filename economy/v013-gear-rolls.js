@@ -24,7 +24,9 @@ const WEIGHTED_PRIMARY=Object.freeze({
  'Two-Handed':[['str',46],['end',30],['int',16],['agi',8]],
  Wand:[['int',55],['cha',25],['end',20]],
  Staff:[['int',55],['cha',25],['end',20]],
- Orb:[['int',45],['cha',35],['end',20]],
+ Orb:[['int',52],['cha',30],['end',18]],
+ Tome:[['int',52],['cha',28],['end',20]],
+ Charm:[['end',40],['cha',22],['int',23],['str',15]],
  Shield:[['end',42],['str',27],['int',22],['cha',9]],
  Ring:[['str',20],['agi',20],['int',20],['end',20],['cha',20]],
  Amulet:[['str',20],['agi',20],['int',20],['end',20],['cha',20]],
@@ -41,12 +43,15 @@ const PROFILES=Object.freeze({
  'Two-Handed':{main:'atk',attrs:WEIGHTED_PRIMARY['Two-Handed'],extras:['hp','critBonus','def','spell']},
  Wand:{main:'spell',attrs:WEIGHTED_PRIMARY.Wand,extras:['mana','manaRegenBonus','wardBonus','hp']},
  Staff:{main:'spell',attrs:WEIGHTED_PRIMARY.Staff,extras:['mana','manaRegenBonus','wardBonus','hp']},
- Orb:{main:'spell',attrs:WEIGHTED_PRIMARY.Orb,extras:['mana','manaRegenBonus','wardBonus','hp']},
+ Orb:{main:'spell',attrs:WEIGHTED_PRIMARY.Orb,extras:['wardBonus','hp','mana','manaRegenBonus'],
+  extraWeights:{wardBonus:50,hp:16,mana:10,manaRegenBonus:8}},
  Shield:{main:'def',attrs:WEIGHTED_PRIMARY.Shield,extras:['hp','blockBonus','wardBonus','spell']},
  Ring:{main:null,attrs:WEIGHTED_PRIMARY.Ring,extras:['atk','spell','def','hp','mana','critBonus','spd','blockBonus','manaRegenBonus','wardBonus']},
  Amulet:{main:null,attrs:WEIGHTED_PRIMARY.Amulet,extras:['atk','spell','def','hp','mana','critBonus','spd','blockBonus','manaRegenBonus','wardBonus']},
- Tome:{main:'spell',attrs:WEIGHTED_PRIMARY.Orb,extras:['mana','manaRegenBonus','hp']},
- Charm:{main:'spell',attrs:WEIGHTED_PRIMARY.Orb,extras:['hp','mana','wardBonus']}
+ Tome:{main:'mana',attrs:WEIGHTED_PRIMARY.Tome,extras:['manaRegenBonus','spell','hp'],
+  extraWeights:{manaRegenBonus:55,spell:34,hp:12}},
+ Charm:{main:'hp',attrs:WEIGHTED_PRIMARY.Charm,extras:['def','spell','wardBonus','mana'],
+  extraWeights:{def:42,spell:30,wardBonus:14,mana:8}}
 });
 const ARMOR=Object.freeze({
  Plate:{main:'def',attrs:WEIGHTED_PRIMARY.Plate,extras:['hp','blockBonus','atk','spell','mana','critBonus']},
@@ -81,7 +86,9 @@ function apply(item,basePower,random){
   if(attrs.length)selected.push(weighted(attrs,random));
  }
  while(selected.length<number){
-  const available=[...spec.extras.map(k=>[k,1.6]),...spec.attrs].filter(([key])=>!selected.includes(key) && !(key==='atk'&&['Wand','Staff'].includes(item.subtype)));
+  // Off-Hand identities need meaningful access to their unique secondary stats;
+  // all other gear retains its existing 1.6-vs-primary affix weighting.
+  const available=[...spec.extras.map(k=>[k,spec.extraWeights?.[k]??1.6]),...spec.attrs].filter(([key])=>!selected.includes(key) && !(key==='atk'&&['Wand','Staff'].includes(item.subtype)));
   if(!available.length)break;
   selected.push(weighted(available,random));
  }
