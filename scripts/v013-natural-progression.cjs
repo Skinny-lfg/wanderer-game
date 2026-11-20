@@ -788,23 +788,42 @@ function selectThornAwareTarget(run,profile){
  return (run.enemies||[]).find(enemy=>enemy?.hp>0&&enemy!==normal&&
   enemy.stage82?.type!=='briarspine_horror')||normal;
 }
-function fightNatural(a,profile,tickLimit){
+function fightNatural(a,profile,tickLimit,context={}){
  const r=a.state().run;
  if(!r||r.status!=='fight')throw Error('Combat entry missing');
  const startedAt=r.combatSeconds||0;
  const start=r.hp,first=r.encounterLeader||r.enemy,initial=r.totalMobCount||r.initialMobCount||r.enemies?.length||1;
+ const cap=context.capabilities||null,adaptive=context.decisionModel==='adaptive';
  let ticks=0,switches=0,thornRedirects=0,minionFocusSeconds=0,minionFocusSwitches=0,minimum=r.maxhp>0?r.hp/r.maxhp:0;
+ const healthLost={boss:0,elite:0,minion:0,normal:0};
+ const barrierLost={boss:0,elite:0,minion:0,normal:0};
+ let nonFocusedHealthLost=0,observedNewEnemies=0,untrackedDisappeared=0,peakLiveEnemies=0;
  while(r.status==='fight'&&a.controller().state.stage==='combat'&&r.hp>0&&ticks<tickLimit){
-  // A human needs time to notice add waves; target switches are throttled.
+  // Target selection is an ordinary player click, at most once per 8 native ticks.
   if(ticks%8===0){
-   const next=selectThornAwareTarget(r,profile),baseline=S.selectTarget(r,profile.target);
-   if(next!==baseline)thornRedirects++;
-   if(a.selectCombatTarget(r,next)){switches++;
+   const baseline=S.selectTarget(r,profile.target);
+   let next=adaptive?AGENT.selectTarget(r,cap,baseline):selectThornAwareTarget(r,profile);
+   // Thornbloom counterplay uses live visible enemy status only.
+   if(next?.stage82?.type==='briarspine_horror'&&
+      next.stage82.bloomUntil>(r.combatSeconds||0)){
+    const safe=(r.enemies||[]).find(e=>e?.hp>0&&e!==next);
+    if(safe){next=safe;thornRedirects++;}
+   }else if(next!==baseline&&next?.stage82?.type==='briarspine_horror')thornRedirects++;
+   if(next&&a.selectCombatTarget(r,next)){switches++;
     if(next.stage83Summoned&&next.stage83Summoner==='elite')minionFocusSwitches++;}
   }
   const focusedSummon=!!(r.enemy?.hp>0&&r.enemy.stage83Summoned&&r.enemy.stage83Summoner==='elite');
+  const focused=r.enemy,before=AGENT.snapshot(r);
+  peakLiveEnemies=Math.max(peakLiveEnemies,[...before.values()].filter(e=>e.hp>0).length);
   const tickStartedAt=r.combatSeconds||0;
   a.tick();ticks++;
+  const change=AGENT.changes(before,AGENT.snapshot(r),focused);
+  for(const role of Object.keys(healthLost)){
+   healthLost[role]+=change.roles[role];barrierLost[role]+=change.wards[role];
+  }
+  nonFocusedHealthLost+=change.nonFocusedHp;
+  observedNewEnemies+=change.newEnemies;
+  untrackedDisappeared+=change.disappeared;
   if(focusedSummon)minionFocusSeconds+=Math.max(0,(r.combatSeconds||0)-tickStartedAt);
   minimum=Math.min(minimum,Math.max(0,r.hp)/(r.maxhp||1));
  }
@@ -812,6 +831,8 @@ function fightNatural(a,profile,tickLimit){
  return {
   preparedId,preparedActivations:preparedId?Number(r.outerUses?.[preparedId]||0):0,
   kind:first?.boss?'boss':first?.miniboss?'elite':'combat',initialEnemies:initial,
+  bossStyle:first?.boss?first.bossStyle:null,eliteType:first?.miniboss?first.eliteType:null,
+  strategy:adaptive?'adaptive':'baseline',capabilities:cap,
   status:r.status,died:r.hp<=0||stage==='failed',
   won:r.status==='cleared'&&stage!=='failed',timedOut:r.status==='fight'&&ticks>=tickLimit,
   seconds:round((r.combatSeconds||0)-startedAt),updateCalls:ticks,targetSwitches:switches,thornRedirects,minionFocusSwitches,
@@ -819,6 +840,12 @@ function fightNatural(a,profile,tickLimit){
   hpMax:round(r.maxhp),minHpPct:round(minimum*100,1),
   damageTaken:Math.round(r.metrics?.damageTaken||0),
   damageDealt:Math.round(r.metrics?.damageDealt||0),
+  // Observed per-tick NET HP/barrier deltas: NOT source-attributed AoE.
+  // Healing within a tick and removed enemies can undercount these values.
+  observedHealthLostByRole:Object.fromEntries(Object.entries(healthLost).map(([k,v])=>[k,round(v)])),
+  observedBarrierLostByRole:Object.fromEntries(Object.entries(barrierLost).map(([k,v])=>[k,round(v)])),
+  observedNonFocusedHealthLost:round(nonFocusedHealthLost),
+  observedNewEnemies,untrackedDisappeared,peakLiveEnemies,
   enemyAbilityCasts:r.metrics?.enemyAbilityCasts||0,
   bossSummons:r.metrics?.bossSummons||0
  };
