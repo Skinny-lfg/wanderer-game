@@ -54,12 +54,48 @@ const exportedMembers=buildcraftMembers.map(name=>{
 });
 const seen=new Set();
 const namedUnique=namedExports.filter(x=>{const key=x.file+':'+x.name+':'+x.kind;if(seen.has(key))return false;seen.add(key);return true;});
+// A cross-file identifier index avoids expensive repeated scans. It is a
+// conservative name-mention census, NOT a resolved JavaScript call graph.
+const fnNames=new Set(functions.map(f=>f.name));
+function namesIn(file,text){
+ const counts=new Map();
+ for(const m of text.matchAll(/\b[A-Za-z_$][\w$]*\b/g))
+  if(fnNames.has(m[0]))counts.set(m[0],(counts.get(m[0])||0)+1);
+ return {file,counts};
+}
+const liveCounts=virtual.map(v=>namesIn(v.file,v.source));
+const auxCounts=aux.map(f=>namesIn(f,code.get(f)));
+const functionReferences=functions.map(f=>{
+ const own=liveCounts.find(v=>v.file===f.file)?.counts.get(f.name)||0;
+ const otherLive=liveCounts.filter(v=>v.file!==f.file&&v.counts.has(f.name)).map(v=>({file:v.file,mentions:v.counts.get(f.name)}));
+ const auxiliary=auxCounts.filter(v=>v.counts.has(f.name)).map(v=>({file:v.file,mentions:v.counts.get(f.name)}));
+ return {...f,ownMentions:own,otherLive,auxiliary,
+  status:own<=1&&!otherLive.length&&!auxiliary.length?'UNREFERENCED_IDENTIFIER_CANDIDATE':'REVIEW_REFERENCES'};
+});
+const singleMentionCandidates=functionReferences.filter(f=>f.status==='UNREFERENCED_IDENTIFIER_CANDIDATE');
+const byName=new Map();
+for(const f of functions){let a=byName.get(f.name)||new Set();a.add(f.file);byName.set(f.name,a);}
+const sharedNames=[...byName.entries()].filter(([,a])=>a.size>1).map(([name,a])=>({name,files:[...a]})).sort((a,b)=>b.files.length-a.files.length);
+// Object exports in global namespace and CommonJS are distinct from ESM exports.
+const globalObjectMembers=[];
+for(const {file,source:content} of virtual){
+ for(const m of content.matchAll(/(?:root|globalThis|window)\.([A-Za-z_$][\w$]*)\s*=\s*Object\.freeze\s*\(\s*\{([^}\n]+)\}\s*\)/g)){
+  const members=m[2].split(',').map(z=>z.trim().split(':')[0]).filter(z=>/^[A-Za-z_$][\w$]*$/.test(z));
+  globalObjectMembers.push({file,object:m[1],members});
+ }
+ for(const m of content.matchAll(/\bmodule\.exports\s*=\s*\{([^}\n]+)\}/g)){
+  const members=m[1].split(',').map(z=>z.trim().split(':')[0]).filter(z=>/^[A-Za-z_$][\w$]*$/.test(z));
+  globalObjectMembers.push({file,object:'module.exports',members});
+ }
+}
+const retiredPathPattern=/\b(?:routeMap|routeEdges|routePositions|rerollsByRealm|freeBuild|legacyTopology|legacyBasic|legacyFocused|legacyV14)\b/g;
+const retiredPathMatches=virtual.flatMap(v=>[...v.source.matchAll(retiredPathPattern)].map(m=>({file:v.file,line:v.source.slice(0,m.index).split('\n').length,token:m[0]})));
 const inventory={
  schema:'c9-inventory-v1',sha:process.env.GITHUB_SHA||'local',
  scope:{liveFiles:live.length,auxFiles:aux.length,inlineBlocks:htmlScripts.length,
  note:'Heuristic inventory: dynamic references and aliases need manual proof before removal'},
- functions,namedExports:namedUnique,buildcraftExports:exportedMembers,
- candidates:exportedMembers.filter(x=>!x.runtimeReferences.length),
+ functions,functionReferences,namedExports:namedUnique,globalObjectMembers,sharedNames,retiredPathMatches,buildcraftExports:exportedMembers,
+ candidates:exportedMembers.filter(x=>!x.runtimeReferences.length),singleMentionCandidates,
  limitations:['Object methods and unusual arrow syntaxes may be under/over-counted',
  'Computed access window[string] and reflection cannot be ruled out statically',
  'Exported names without external refs may still be used internally',
@@ -71,10 +107,12 @@ fs.writeFileSync(out,JSON.stringify(inventory,null,2)+'\n');
 const summary={
  liveFiles:live.length,auxFiles:aux.length,inlineBlocks:htmlScripts.length,
  functionLike:functions.length,namedExports:namedUnique.length,
- buildcraftMembers:exportedMembers.length,
+ buildcraftMembers:exportedMembers.length,globalObjectExportGroups:globalObjectMembers.length,duplicateIdentifierGroups:sharedNames.length,singleMentionCandidates:singleMentionCandidates.length,retiredPathMatches:retiredPathMatches.slice(0,25),
  noCrossRuntimeReference:inventory.candidates.map(x=>({name:x.name,aux:x.auxReferences.map(y=>y.file)})),
  perDirectory:Object.fromEntries(['combat','economy','online','preview','index.html'].map(k=>[k,functions.filter(x=>x.file===k||x.file.startsWith(k+'/')).length]))
 };
 console.log('C9_FUNCTION_INVENTORY='+JSON.stringify(summary));
+console.log('C9_UNREFERENCED_FUNCTION_CANDIDATES='+JSON.stringify(singleMentionCandidates.slice(0,35).map(x=>({file:x.file,line:x.line,name:x.name,kind:x.kind}))));
+console.log('C9_SHARED_NAMES='+JSON.stringify(sharedNames.slice(0,12).map(x=>({name:x.name,files:x.files.slice(0,8)}))));
 if(process.argv.includes('--print-buildcraft'))console.log('C9_BUILDCRAFT_DETAILS='+JSON.stringify(exportedMembers));
 module.exports={inventory};
