@@ -426,7 +426,8 @@ function consolidateStash(a,profile,reserve=4){
  const keepSpace=Math.min(Math.max(1,Math.floor(capacity/4)),Math.max(2,reserve));
  const excess=Math.max(0,occupied+overflow-(capacity-keepSpace));
  if(excess>0){
-  const candidate=s.stash.filter(item=>item?.id&&!item.locked).sort((left,right)=>{
+  const candidate=s.stash.filter(item=>item?.id&&!item.locked&&
+   !item.startingGear&&!item.recoveryStarter).sort((left,right)=>{
    function priority(item){
     const equipped=s.equip[item.slot];
     const weakRelative=gearScore(item,profile)-gearScore(equipped,profile);
