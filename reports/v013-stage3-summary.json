@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "stage": "v013-stage3-vitality-decay",
+  "status": "validated",
+  "validatedCodeCommit": "3ee98385c4c40df2c63831aa7ec303ca0fef798c",
+  "branch": "audit/v013",
+  "runId": 44732589453,
+  "scanRunId": 44732589448,
+  "artifactId": 14627391073,
+  "sourceSha256": "cbe3167edf06a357c30dd059ca4f24b40d5b95955e664ce9188fb17a42c2d49e",
+  "replaySha256": "062f1861888bc5cff7029509604bd61b83d2fc7ddcd37bb846eee6e60c9a11c3",
+  "scenarios": {
+    "total": 48,
+    "valid": 48,
+    "errors": 0,
+    "timeouts": 0
+  },
+  "mainTests": {
+    "total": 320,
+    "passed": 320,
+    "failed": 0
+  },
+  "jobs": {
+    "C7": 4,
+    "cleanSheet": 3
+  },
+  "vitalityChanges": [
+    {
+      "build": "pure-vitality",
+      "level": 5,
+      "healBefore": 2.71,
+      "healAfter": 2.71,
+      "barrierDelta": 0
+    },
+    {
+      "build": "pure-vitality",
+      "level": 35,
+      "healBefore": 3.36,
+      "healAfter": 3.38,
+      "barrierDelta": 0
+    },
+    {
+      "build": "fury-vitality",
+      "level": 5,
+      "healBefore": 2.49,
+      "healAfter": 2.8,
+      "barrierDelta": 0
+    },
+    {
+      "build": "fury-vitality",
+      "level": 35,
+      "healBefore": 3.16,
+      "healAfter": 3.56,
+      "barrierDelta": 0
+    },
+    {
+      "build": "vitality-aegis",
+      "level": 5,
+      "healBefore": 0.38,
+      "healAfter": 0.37,
+      "barrierDelta": 0.49
+    },
+    {
+      "build": "vitality-aegis",
+      "level": 35,
+      "healBefore": 0.8,
+      "healAfter": 0.79,
+      "barrierDelta": 0.63
+    }
+  ],
+  "notes": [
+    "Toxic Precision was unreachable in v15 and its historical Buildcraft code was deleted",
+    "Active Decay coefficients remain unchanged; Toxic Touch and Hex Bolt are covered by tests",
+    "Controlled low-pressure encounters are not a global balance verdict"
+  ]
+}
