@@ -1,4 +1,5 @@
 name: Wanderer — Hexblade Sword/Offhand native 12-seed validation
+# Post-dagger-strike baseline rerun: observational only; no gameplay balance changes.
 
 on:
   push:
