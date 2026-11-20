@@ -38,7 +38,7 @@ test('Caster with depleted Mana cannot expend existing Infusion charges for free
   r.mp=0;const hit=a.gear.weaponAttack(r);
   assert.equal(hit,55,kind);assert.equal(b.runtime.infusionCharges,2,kind+' preserves unpaid charge');
   assert.equal(r.metrics?.infusionDamage||0,0);
- });
+ }
 });
 test('Insufficient Mana for the 12-Mana Infusion does not suppress an 8-Mana elemental cast',()=>{
  require('../combat/talent-catalog.js');require('../combat/talent-graph-next.js');require('../combat/talent-graph-bridge.js');
