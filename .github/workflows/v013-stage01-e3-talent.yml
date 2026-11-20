@@ -34,7 +34,7 @@ jobs:
         run: |
           node scripts/v013-stage6-e3-repro.cjs
           node -e "const r=require('./reports/stage6-e3-repro.json');if(r.errors)throw Error('Native E3 talent error still occurs: '+JSON.stringify(r.attempts.filter(a=>a.error)));console.log('E3_NATIVE_TALENTS_VALIDATED='+JSON.stringify({attempts:r.attempts.length,unlocked:r.unlocked,errors:r.errors,stop:r.stop}));"
-      - name: Extended stats, equipment and talent-tree regressions
+      - name: Extended stats, equipment, talent-tree and Pages cache regressions
         run: |
           node --test \
             tests/v013-stat-consistency.test.cjs \
