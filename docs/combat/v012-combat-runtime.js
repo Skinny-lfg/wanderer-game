@@ -540,6 +540,11 @@ function weaponAttack(r,offhandStrike=false){
  if(!offhandStrike&&kind==='Mace'&&ports.state.automaticTalents?.nodes?.includes('mace_shockwave')){const secondary=r.enemies?.find(enemy=>enemy!==r.enemy&&enemy.hp>0);groupSecondaryDamage(r,base,[.3],'🔨 Concussive Swing',true);if(secondary&&secondary.hp>0)secondary.slowTime=Math.max(secondary.slowTime||0,1);}
  if(cast&&v013LightningChain(r))groupSecondaryDamage(r,base,v013LightningChainFactors(),'⚡ Chain Lightning');
  if(s.counts.shield>=2){const gained=ports.setBarrier(r,Math.max(1,Math.round(r.maxhp*(s.bonus.shieldBonus||0))));if(gained>0)ports.addLog('🛡 Shield set: +'+Math.round(gained)+' Barrier','good');}
+ if(!offhandStrike&&ports.isPhase1Run()&&ports.phase1Build){
+  const ctx=ports.phase2Context(r);ctx.power=r.stats.spellPower||0;ctx.offhand=false;
+  const bonus=WandererV012Buildcraft.onInfusionHit(ports.phase1Build,ctx);
+  if(bonus>0){ports.phase6Metric(r,'infusionHits',1);ports.phase6Metric(r,'infusionDamage',bonus);}
+ }
  if(!offhandStrike&&['Daggers','Off-Hand Dagger'].includes(off?.subtype)){
   // Any one-handed main weapon can trigger a Dagger off-hand strike after every two main attacks. Its damage remains 50%.
   r.offhandCadence=((r.offhandCadence||0)+1)%2;
@@ -836,15 +841,32 @@ function phase2WeaponAttack(r,base,critical,cast,suppressDoubleStrike=false){
  if(!ports.isPhase1Run()||!ports.phase1Build)return;
  const ctx=ports.phase2Context(r);ctx.base=base;ctx.critical=critical;ctx.magical=cast;ctx.funded=!!cast;ctx.suppressDoubleStrike=!!suppressDoubleStrike;
  WandererV012Buildcraft.onAttack(ports.phase1Build,ctx);
- if(cast&&ports.phase1Build.element){
+ if(cast&&ports.phase1Build.element&&WandererV012Buildcraft.magicMode(ports.phase1Build)!=='unattuned'){
   ctx.power=r.stats.spellPower;ctx.amp=r.stats.main?.subtype==='Staff'?1.25:r.stats.main?.subtype==='Wand'?1.12:1;
   WandererV012Buildcraft.onCast(ports.phase1Build,ctx);groupElementalEffects(r,ports.phase1Build);
  }
 }
 
 function phase2MagicTick(r){
- if(!ports.isPhase1Run()||!WandererV012Buildcraft.canCast(ports.phase1Build)||r.stats.caster||r.status!=='fight')return;
- const ctx=ports.phase2Context(r),b=ports.phase1Build;
+ if(!ports.isPhase1Run()||r.status!=='fight')return;
+ const b=ports.phase1Build,mode=WandererV012Buildcraft.magicMode(b);
+ if(!mode)return;
+ const ctx=ports.phase2Context(r);
+ if(mode==='unattuned'||mode==='arcane'){
+  if(!WandererV012Buildcraft.infusionReady(b,ctx.now))return;
+  const config=WandererV012Buildcraft.infusionConfig(b);
+  const cost=v013FundedCost(WandererV012Buildcraft.nextCost(b,config.cost));
+  if(r.mp<cost)return;
+  r.mp-=cost;ports.phase6Metric(r,'manaSpent',cost);ports.phase6Metric(r,'infusionActivations',1);
+  offhandPaidAction(r);
+  WandererV012Buildcraft.activateInfusion(b,ctx.now);
+  ctx.funded=true;ctx.magicalAction='infusion';ctx.power=r.stats.spellPower||0;
+  WandererV012Buildcraft.onInfusionActivation(b,ctx);
+  return;
+ }
+ // Fire, Frost and Lightning alone unlock automatic spells on physical weapons.
+ // Wand/Staff cast through their own paid main attack, never twice.
+ if(r.stats.caster||!WandererV012Buildcraft.canCast(b))return;
  if(ctx.now-b.runtime.lastSpellAt<2.5)return;
  const cost=v013FundedCost(WandererV012Buildcraft.nextCost(b,8));if(r.mp<cost)return;
  b.runtime.lastSpellAt=ctx.now;ports.phase6Metric(r,'manaSpent',cost);ports.phase6Metric(r,'fundedCasts',1);r.mp-=cost;offhandPaidAction(r);ctx.power=r.stats.spellPower;ctx.amp=1;ctx.funded=true;
