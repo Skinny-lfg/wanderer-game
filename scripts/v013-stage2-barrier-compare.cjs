@@ -5,7 +5,7 @@ const A=require('./v013-affinity-baseline.cjs');
 const baselinePath=path.resolve(__dirname,'../reports/v013-stage1-affinity-summary.json');
 const defaultOut='reports/v013-stage2-affinity-comparison.json';
 const round=n=>Number(Number(n).toFixed(2));
-function compare(before,after){
+function compare(before,after,{postBarrierReset=false}={}){
  assert.equal(before.schemaVersion,1);
  assert.equal(after.summary.errors,0,'Stage 2 may not produce native errors');
  assert.equal(after.summary.timeouts,0,'Stage 2 may not produce timeouts');
@@ -21,6 +21,20 @@ function compare(before,after){
    delta:Object.fromEntries(metrics.map(k=>[k,round(now[k]-prev[k])]))};
  });
  const pick=id=>groups.filter(g=>g.build===id);
+ if(postBarrierReset){
+  // The immutable Stage 1 snapshot predates encounter-scoped, uncapped Barrier.
+  // Keep it as history, but do not reject the explicitly planned Barrier drift.
+  for(const r of groups){
+   assert.equal(r.delta.meanSpellPower,0,'Gear and talents must not change Spell Power');
+   for(const key of ['meanBarrierAtEntry','meanBarrierGenerated','meanBarrierAbsorbed']){
+    assert(Number.isFinite(r.after[key])&&r.after[key]>=0,'Invalid current Barrier metric: '+key);
+   }
+  }
+  assert(groups.some(r=>r.delta.meanBarrierAtEntry!==0||r.delta.meanBarrierGenerated!==0),
+   'Post-reset comparison should identify the deliberate Barrier change');
+  assert(pick('aegis-magic').every(r=>r.after.meanSpellPower>0),'Aegis/Magic still needs Spell Power');
+  return groups;
+ }
  for(const r of pick('pure-aegis')){
   assert.equal(r.before.meanSpellPower,0,'Physical Aegis has no Spell Power');
   assert.equal(r.delta.meanBarrierAtEntry,0,'Physical Aegis initial Barrier drift');
@@ -48,18 +62,18 @@ function markdown(out){
   '- The frozen Stage 1 report in reports/v013-stage1-affinity-summary.json is never overwritten.',
   '- Each run uses 12 legal 24-point builds, fixed E5/E35 levels, two seeds, current Rare gear, and controlled three-enemy Aegis normal rooms.',
   '- Gear is deterministic per build/weapon, not identical between all weapons.',
-  '- Actual Barrier granted may be capped. Changes in absorbed Barrier can alter duration and downstream resource metrics.',
-  '- Pure non-Aegis control builds must retain Barrier generation; physical Aegis with zero Spell Power must remain unchanged.',
+  '- Stage 1 is an immutable historical snapshot; Barrier no longer has a global cap and clears between encounters. Its metrics are intentionally NOT expected to match.',
+  '- Current 48-case scenarios retain zero errors/timeouts, original Spell Power and nonnegative native Barrier measurements.',
   '- The same encounter was easy (48/48 wins) before the change; do not interpret victory rate as balance approval.',
-  '- Wand + Orb remains unchanged. Aegis, Pulse, Runic Shield, Arcane Bastion and the Aegis global cap gain Spell Power scaling.',
+  '- Orb now has one 2% Max HP + 5% Spell Power effect for any weapon. The global Barrier cap is removed.',
   '');
  return lines.join('\n');
 }
 function run(out=defaultOut){
  const before=JSON.parse(fs.readFileSync(baselinePath,'utf8'));
  const cfg=A.parseArgs(['--mode=affinities','--out=reports/v013-stage2-affinity-current.json']);
- const after=A.run(cfg),groups=compare(before,after);
- const payload={schemaVersion:1,stage:'aegis-barrier-spellpower-stage2',baselineSource:before.sourceSha256,
+ const after=A.run(cfg),groups=compare(before,after,{postBarrierReset:true});
+ const payload={schemaVersion:1,stage:'aegis-barrier-spellpower-stage2',comparisonMode:'post-uncapped-encounter-reset',baselineSource:before.sourceSha256,
   currentSource:after.sourceSha256,currentReplay:after.replaySha256,settings:after.settings,
   summary:after.summary,groups,rows:after.rows};
  const dest=path.resolve(process.cwd(),out);

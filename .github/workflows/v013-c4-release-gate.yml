@@ -60,7 +60,7 @@ jobs:
         run: node scripts/v013-c6-final-audit.cjs
       - name: Current full v0.13 gameplay and simulation gate
         run: npm run test:v013:gate
-      - name: Stage 2 native Aegis/Spell Power paired comparison (frozen Stage 1 baseline)
+      - name: Stage 2 native Aegis/Spell Power historical comparison (uncapped Barrier is planned drift)
         run: node scripts/v013-stage2-barrier-compare.cjs
       - name: Stage 2 affinity comparison artifacts
         if: always()
@@ -72,7 +72,7 @@ jobs:
             reports/v013-stage2-affinity-comparison.md
           if-no-files-found: warn
           retention-days: 30
-      - name: Stage 3 native Vitality and Decay matched comparison (frozen Stage 2)
+      - name: Stage 3 native Vitality and Decay historical comparison (uncapped Barrier is planned drift)
         run: npm run simulate:v013:affinities:stage3
       - name: Stage 3 native affinity comparison evidence
         if: always()
@@ -84,7 +84,7 @@ jobs:
             reports/v013-stage3-affinity-comparison.md
           if-no-files-found: warn
           retention-days: 30
-      - name: Stage 4 six adjacent hybrid links, paired Stage 3 baseline and Elite/Boss stress
+      - name: Stage 4 six adjacent hybrid links and Elite/Boss stress (historical Barrier drift reported)
         run: npm run simulate:v013:affinities:stage4
       - name: Stage 4 hybrid review evidence
         if: always()
