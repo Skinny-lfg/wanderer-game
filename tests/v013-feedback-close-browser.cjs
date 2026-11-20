@@ -68,7 +68,20 @@ const server=http.createServer((req,res)=>{
   assert.equal(calls[0].screen,'Camp');
   await dialog.locator('[data-close-feedback]').click();
   assert.equal(await dialog.count(),0,'successful report can close immediately');
-  await page.evaluate(()=>window.__feedbackAnonymous=true);
+  // A successful submission deliberately activates a one-minute cooldown.
+  // Verify that policy, then reset it to isolate the anonymous-auth failure.
+  await open();await dialog.waitFor({state:'visible'});
+  await dialog.locator('textarea[name="description"]').fill('Another report must wait for the cooldown.');
+  await dialog.locator('[data-send-feedback]').click();
+  await page.waitForFunction(()=>document.querySelector('#wandererFeedbackStatus')?.dataset.status==='error');
+  assert.match(await dialog.locator('#wandererFeedbackStatus').innerText(),/wait one minute/i);
+  assert.equal((await page.evaluate(()=>window.__feedbackCalls)).length,1,'cooldown prevents duplicate submission');
+  await dialog.locator('[data-close-feedback]').click();
+  assert.equal(await dialog.count(),0);
+  await page.evaluate(()=>{
+   window.__feedbackAnonymous=true;
+   localStorage.removeItem('wanderer-feedback-last-sent-v012');
+  });
   await open();await dialog.waitFor({state:'visible'});
   await dialog.locator('textarea[name="description"]').fill('Anonymous reports must be refused.');
   await dialog.locator('[data-send-feedback]').click();
