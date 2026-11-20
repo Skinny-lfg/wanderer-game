@@ -2,6 +2,8 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const C=require('../scripts/v013-stage02-run-cohort.cjs');
 const A=require('../scripts/v013-stage02-aggregate.cjs');
+const N=require('../scripts/v013-natural-progression.cjs');
+const create=require('./v012-economy-harness.cjs');
 function fakeShard(seed,group){
  const profiles=C.GROUPS[group],accounts=profiles.map((profile,i)=>{
   const long=seed===9811&&group==='A'&&i===0;
@@ -35,7 +37,7 @@ test('Stage 02 cohort exactly partitions 50 persistent native accounts',()=>{
  for(const seed of C.SEEDS)for(const group of Object.keys(C.GROUPS)){
   const c=C.configuration(seed,group);
   assert.equal(c.maxLevel,20);assert.equal(c.maxAttempts,18);
-  assert.equal(c.maxTotalAttempts,360);assert.equal(c.profiles.length,5);
+  assert.equal(c.maxTotalAttempts,360);assert.equal(c.tickLimit,12000);assert.equal(c.profiles.length,5);
  }
  assert.throws(()=>C.configuration(1,'A'),/Unknown Stage 02 seed/);
  assert.throws(()=>C.configuration(9811,'missing'),/Unknown Stage 02 group/);
@@ -99,4 +101,19 @@ test('Attempts-to-clear statistics use winning accounts, not censored accounts',
  assert.equal(A.median([]),null);assert.equal(A.p90([]),null);
  assert.equal(A.median([5,1,2,4]),3);
  assert.equal(A.p90([1,2,3,4,5,6,7,8,9,10]),9);
+});
+
+test('Native Forge preview alone is not permission to craft when Stash is full',()=>{
+ const a=create(9814,undefined,{}, {skipPersistence:true});
+ const st=a.state(),cap=st.stashCapacity;
+ assert(a.forge.canCraft());
+ st.stashCapacity=1;
+ st.stash.push(a.makeItem(1,'helm',null,'loot','Helm','Common'));
+ assert.equal(a.forge.canCraft(),false,'native capacity restriction should match actual UI');
+ const before={fragments:st.fragments,essence:st.crafting.essence};
+ const result=N.investEarnedGear(a,N.PROFILES['plate-warden'],16);
+ assert.deepEqual(result,{crafted:[]});
+ assert.equal(st.fragments,before.fragments);
+ assert.equal(st.crafting.essence,before.essence);
+ st.stashCapacity=cap;
 });
