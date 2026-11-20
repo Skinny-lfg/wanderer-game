@@ -59,32 +59,44 @@ test('Vitality healing stays independent of Spell Power and existing Renewal/Lif
  near(B.values('renewal',1).heal,.0055);
  near(B.values('life_bloom',1).heal,.0025);
 });
-test('Toxic Precision crit Rot scales 6% base hit + 2% SP per tick without Mana; 2s cooldown persists',()=>{
- const b=build(['toxic_precision']),results=[];
- for(const power of [0,100,200]){
-  b.cooldowns=Object.create(null);
-  const x=context({power,critical:true,mp:0});
-  B.onAttack(b,x.c);
-  assert.equal(x.enemy.v012Rot.length,1,'crit must apply Rot with empty Mana');
-  results.push(x.enemy.v012Rot[0].damage);
-  x.c.now=1;B.onAttack(b,x.c);
-  assert.equal(x.enemy.v012Rot.length,1,'cooldown prevents second proc');
-  x.c.now=2;B.onAttack(b,x.c);
-  assert.equal(x.enemy.v012Rot.length,2,'proc available after two seconds');
-  x.c.critical=false;x.c.now=4;B.onAttack(b,x.c);
-  assert.equal(x.enemy.v012Rot.length,2,'non-critical strike cannot trigger precision');
- }
- assert.deepEqual(results,[6,8,10]);
- const b2=build(['toxic_precision']),x=context({power:100,critical:true,mp:0});
- for(let i=0;i<10;i++){x.c.now=i*2;B.onAttack(b2,x.c);}
- assert.equal(x.enemy.v012Rot.length,6,'Rot stack cap remains six');
+test('retired Toxic Precision is absent from current v15 and Buildcraft source, not a hidden passive',()=>{
+ assert(!T.NODES.some(n=>n.id==='toxic_precision'));
+ assert(!B.CATALOG.some(n=>n.id==='toxic_precision'));
+ assert(!fs.readFileSync('combat/v012-buildcraft.js','utf8').includes('toxic_precision'));
 });
-test('Toxic Precision and Toxic Touch still use separate applications and do not double spend Mana',()=>{
- const b=build(['toxic_precision']),x=context({mp:10,power:100,critical:true});
- x.c.random=()=>0;
- B.onAttack(b,x.c);
- assert.equal(x.enemy.v012Rot.length,2,'separate Toxic Touch and Precision applications');
- assert.equal(x.player.mp,9,'only Toxic Touch costs one Mana');
+test('real v15 Decay Toxic Touch scales Rot with hit and Spell Power; costs one Mana and retains cooldown',()=>{
+ const damage=[];
+ for(const power of [0,100,200]){
+  const b=build(['affinity_decay']),x=context({power,mp:10,base:100});
+  x.c.random=()=>0;
+  B.onAttack(b,x.c);
+  assert.equal(x.enemy.v012Rot.length,1);
+  assert.equal(x.player.mp,9,'one Mana for each successful application');
+  damage.push(x.enemy.v012Rot[0].damage);
+  x.c.now=1;B.onAttack(b,x.c);
+  assert.equal(x.enemy.v012Rot.length,1,'1.3s internal cooldown');
+  assert.equal(x.player.mp,9,'no Mana cost on cooldown');
+  x.c.now=1.3;B.onAttack(b,x.c);
+  assert.equal(x.enemy.v012Rot.length,2);
+  assert.equal(x.player.mp,8);
+  x.player.mp=0;x.c.now=3;B.onAttack(b,x.c);
+  assert.equal(x.enemy.v012Rot.length,2,'no free Rot at zero Mana');
+ }
+ assert.deepEqual(damage,[7,9,12]);
+});
+test('active Magic + Decay Hex Bolt uses Spell Power without consuming existing Rot stacks',()=>{
+ const result=[];
+ for(const power of [0,100]){
+  const b=build(['hex_bolt']),x=context({power,mp:0});
+  x.enemy.v012Rot=[{damage:10,remaining:4,ticks:0}];
+  x.c.funded=true;x.c.now=6;
+  B.onCast(b,x.c);
+  const damage=x.events.find(e=>e[0]==='damage'&&e[1].includes('Hex Bolt'));
+  assert(damage,'reachable Magic/Decay Hex Bolt triggered');
+  result.push(damage[2]);
+  assert.equal(x.enemy.v012Rot.length,1);
+ }
+ assert.deepEqual(result,[10,35]);
 });
 test('Stage 3 generated Pages and active node descriptions have no retired fixed-HP regen and old Rot formula',()=>{
  for(const p of ['combat/talent-graph-next.js','combat/v012-buildcraft.js','combat/talent-catalog.js']){
@@ -94,8 +106,8 @@ test('Stage 3 generated Pages and active node descriptions have no retired fixed
  const craft=fs.readFileSync('combat/v012-buildcraft.js','utf8');
  assert(tree.includes('0.15% maximum Health per combat second'));
  assert(!tree.includes('Regenerate 0.2 Health per second during combat.'));
- assert(craft.includes('6% base hit damage + 2% Spell Power'));
- assert(!craft.includes("applyRot(b,c,base*.06);"));
+ assert(craft.includes('6.5% base hit damage plus 2.5% Spell Power'));
+ assert(!craft.includes('toxic_precision'));
 });
 
 test('Stage 3 comparator validates frozen Stage 2 cohorts and rejects unrelated Affinity drift',()=>{

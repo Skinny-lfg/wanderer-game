@@ -36,13 +36,13 @@ function compare(before,after){
  const vitality=groups.filter(x=>VITALITY.includes(x.build));
  assert.equal(vitality.length,6);
  assert(vitality.some(x=>x.delta.meanHealingPerSecond!==0),'Vitality regeneration must change at least one native result');
- // No supported 24-point adjacent baseline profile acquires Toxic Precision
- // (a Decay/Fury hybrid). Its actual Rot magnitude and cooldown are covered
- // by the production Buildcraft tests in v013-stage3-vitality-decay.test.cjs.
+ // Toxic Precision was an unreachable Decay/Fury relic and is retired, not
+ // added to the six real adjacent combinations. Active Toxic Touch and
+ // Hex Bolt SP scaling are covered by production Buildcraft tests.
  return groups;
 }
 function markdown(result){
- const lines=['# Stage 3 — Vitality Max HP regeneration / Decay Toxic Precision','',
+ const lines=['# Stage 3 — Vitality Max HP regeneration / active Decay coherence','',
   'Native controlled-combat comparison against the frozen Stage 2 artifact.',
   '',
   '**Stage 2 fingerprint:** '+result.sourceBefore,
@@ -65,7 +65,7 @@ function markdown(result){
   '- Same E5/E35 levels, 9101/9201 seeds, 12 legal 24-point builds, Rare current gear, no Runes/Boons/Contracts, focus targets and three normal Aegis enemies.',
   '- Nine unaffected builds must have identical generated Barrier, actual healing, DoT, Mana and Spell Power metrics across all levels.',
   '- Vitality base regeneration now uses 0.15% Max HP/s plus tiered percentage nodes, with 0.35% Max HP/s pre-fork cap and Recovery/Reserve modifiers.',
-  '- Toxic Precision is a Decay + Fury hybrid outside these six adjacent combinations. The standard 48-case matrix does NOT measure its new 2% Spell Power contribution. Focused real production Buildcraft tests separately verify its effect, costs, cooldown and Rot stack caps.',
+  '- The retired Toxic Precision Decay/Fury passive was not reachable in v15 and its hidden runtime/catalogue path has been removed, not reintroduced. Active Toxic Touch (hit + Spell Power) and Magic/Decay Hex Bolt scaling are verified by production Buildcraft tests; no Decay coefficient was changed.',
   '- Changes in actual healing/s are limited by real damage taken, overheal, combat duration and different gear; these are observations, not theoretical healing potential.',
   '- The 48 encounters are intentionally easy and do not establish Elite/Boss balance. Stage 4+ should extend stress scenarios.',
   '');

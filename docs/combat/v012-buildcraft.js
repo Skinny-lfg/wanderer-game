@@ -45,7 +45,6 @@ const P=[
  ['blood','hex_bleed','Hex Bleed','Funded Magic hits inflict Bleed (3s cooldown).',['blood','magic']],
  ['decay','rot_recovery','Rot Recovery','The first rotted kill per encounter heals 4% max HP.',['decay','vitality']],
  ['decay','rot_ward','Rot Ward','Rot ticks grant Barrier every 5s.',['decay','aegis']],
- ['decay','toxic_precision','Toxic Precision','Critical hits inflict Rot dealing 6% base hit damage + 2% Spell Power per tick (2s cooldown; no Mana cost).',['decay','fury']],
  ['decay','hex_bolt','Hex Bolt','Funded spells against Rot deal 25% Spell Power plus one Rot tick (3s cooldown).',['decay','magic']],
  ['vitality','sanctuary','Sanctuary','Recovering Health grants Barrier equal to 20% of the heal.',['vitality','aegis']],
  ['vitality','fervent_life','Fervent Life','Critical strikes restore 2% maximum HP; overhealing grants Barrier (4s cooldown).',['vitality','fury']],
@@ -204,7 +203,6 @@ function onAttack(b,c){
  if(rank(b,'blood_drinker')&&e.bleedStacks>0&&ready(b,'bloodHeal',c.now,4)&&activated(b,'blood_drinker'))heal(b,c,Math.min(c.player.maxhp*values('blood_drinker',rank(b,'blood_drinker')).hp,base*values('blood_drinker',rank(b,'blood_drinker')).base));
  if(rank(b,'toxic_touch')&&(c.player?.mp||0)>=1&&(b.cooldowns.toxicTouch??-1e10)<=c.now&&c.random()<values('toxic_touch',rank(b,'toxic_touch')).chance&&spendDarkMana(c,1)&&ready(b,'toxicTouch',c.now,1.3)&&activated(b,'toxic_touch'))applyRot(b,c,base*.065+Math.max(0,c.power||0)*.025);
  if(rank(b,'blight')&&e.v012Rot?.length&&(c.player?.mp||0)>=3&&ready(b,'blight',c.now,7)&&spendDarkMana(c,3)&&activated(b,'blight'))c.damage(Math.min(base*.38+Math.max(0,c.power||0)*.35,e.maxhp*.025),'☠ Blight');
- if(rank(b,'toxic_precision')&&crit&&ready(b,'toxicPrecision',c.now,2)&&activated(b,'toxic_precision'))applyRot(b,c,base*.06+Math.max(0,c.power||0)*.02);
  if(rank(b,'plague_rupture')&&crit&&e.bleedStacks>0&&e.v012Rot?.length&&ready(b,'plagueRupture',c.now,8)&&activated(b,'plague_rupture'))c.damage(Math.min(base*.55,e.maxhp*.032),'🩸 Plague Rupture');
  if(rank(b,'crimson_rush')&&crit&&e.bleedStacks>0&&activated(b,'crimson_rush'))c.damage(base*.15,'🩸 Crimson Rush');
  if(rank(b,'brutal_crit')&&crit&&activated(b,'brutal_crit'))c.damage(base*Math.min(.65,.12*Math.sqrt(rank(b,'brutal_crit'))),'⚔ Brutal Critical');
