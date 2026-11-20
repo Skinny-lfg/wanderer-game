@@ -39,4 +39,4 @@ Permanent talents are rendered in the current `preview/talent-rebuild/index.html
 - Data-only markers like `data-target` are selectors used for VFX rather than independent gameplay features; a selector is not automatically a button.
 - The C6/clean-sheet static scanners found zero missing active imports and zero retired controller references in their observed scope. They do not establish universal dead-code elimination, so no module was removed from the playable runtime on a speculative basis.
 
-**Closure condition:** execute required C7 and the C8 test subset on the exact final code SHA. Keep any unable-to-test service or dynamically generated UI state explicitly unvalidated.
+**Closure verified:** Current-only UI guards ran within `npm run test:v013` (295/295 total) on `e9e590ba5ce62bca96e21e1001ca6088613106a7`; final C7 passed 4/4. Live service and full dynamic state coverage remain unvalidated.

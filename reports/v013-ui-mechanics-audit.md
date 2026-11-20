@@ -107,3 +107,14 @@ Os lotes C7 podem conter sobreposição de cobertura e não devem ser simplesmen
 5. **Dependências npm:** `npm ci` indicou 19 vulnerabilidades (14 moderadas, 5 altas) neste runner. Tratamento de dependências é escopo separado; não fazer `npm audit fix --force` indiscriminadamente.
 
 **Decisão:** C7, paridade de fonte/docs, emuladores, jornadas Chromium e feedback passaram no SHA de código indicado. As 20 falhas históricas estão individualmente triadas e preservadas como diagnóstico. A conclusão da UI é **nenhuma inacessibilidade confirmada no âmbito testado**, com lacunas específicas de cobertura assinaladas. `main`, deploy e Firebase de produção permaneceram intocados.
+
+
+## C8 — encerramento da última limpeza e cobertura (20-11-2026)
+
+**Código validado:** `e9e590ba5ce62bca96e21e1001ca6088613106a7`. [C7 final: 4/4 jobs aprovados](https://github.com/Skinny-lfg/wanderer-game/actions/runs/44718433135). [Scanner clean-sheet: 3/3 jobs aprovados](https://github.com/Skinny-lfg/wanderer-game/actions/runs/44718433114).
+
+As 3 suites históricas foram revistas: **20 falhas antigas retiradas por obsolescência/fixtures incompatíveis, 1 teste de passivos descontinuados também removido e 11 testes válidos preservados e integrados em `test:v013`**. C8 acrescentou **7 testes nativos** (Bag e derrota, overflow, loot real de Boss, Boss Rune, Dual Daggers, Wand/Orb, marcos atuais do Camp) e **3 guards de UI**. O último `npm run test:v013` terminou **295/295, 0 falhas, 0 skipped**; sim 7/7, talentos 79/79, combate 94/94, integração 83/83, saves/conta 51/51, emuladores 11/11, browser e paridade `docs/` passaram.
+
+O teste de fecho de feedback passou a fazer parte do C7 obrigatório no navegador (21 cliques, Escape, submissão simulada, cooldown e rejeição anónima). O inventário estático da UI enumerou 56 marcadores de dados, 38 seletores ligados e 18 metadados; não identificou um controlo atual inteiramente sem handler na amostra analisada. Não equivale a testar todos os estados/combinações dinâmicas nem serviços reais.
+
+**Relatório de fecho:** [v013-c8-final.md](v013-c8-final.md). **Inventários complementares:** [retirada de testes históricos](v013-c8-historical-retirement.md) e [UI](v013-c8-ui-inventory.md). Não houve merge, deploy, alteração a `main` ou migração de saves. O commit destes relatórios é apenas documental e não substitui os testes sobre o código indicado.

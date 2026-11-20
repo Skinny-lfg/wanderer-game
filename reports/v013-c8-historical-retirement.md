@@ -16,4 +16,4 @@ The removed intents are not silently discarded. C8 adds `tests/v013-c8-clean-she
 
 **This is not an assertion of full equivalence for all 20 obsolete historical fixtures.** The old exact E200 combat snapshots, legacy guaranteed Boss drop and E225 milestones are intentionally not reproduced because the mechanics no longer exist. The independent native tests preserve current gameplay invariants, not dead behaviour. Historical TAP remains available in the C7 follow-up artifact.
 
-**Required verification before closure:** `npm run test:v013:retained`, `npm run test:v013:c8`, full C7, and browser/CI checks on the final code SHA. Do not report green until verified.
+**Closure verified:** The 11 retained tests and all C8 cases ran inside the required `npm run test:v013` (295/295), with full C7 4/4 success on `e9e590ba5ce62bca96e21e1001ca6088613106a7`. The standalone npm scripts remain available for focused reruns; they were not claimed as separately executed.
