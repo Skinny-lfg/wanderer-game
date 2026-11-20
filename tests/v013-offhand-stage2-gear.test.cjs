@@ -93,7 +93,7 @@ test('Native Common Tome adds Mana on Wand; Common Charm adds HP on physical Swo
  assert(swordWithCharm.maxhp>swordBase.maxhp,'Charm improves physical builds without Magic/Decay');
 });
 
-test('Loot, Merchant and Forge use identical Off-Hand generators; no new Epic recipes',()=>{
+test('Loot, Merchant and Forge use identical Off-Hand generators; Stage 3 Epic recipes retain those rolls',()=>{
  const a=create(59109),Craft=globalThis.WandererV013Crafting;
  for(const type of TYPES)for(const source of ['loot','merchant','forge'])
   for(const rarity of ['Common','Uncommon','Rare','Epic']){
@@ -103,8 +103,9 @@ test('Loot, Merchant and Forge use identical Off-Hand generators; no new Epic re
    assert.equal(x.affixes[0],MAINS[type]);
    assert(x[MAINS[type]]>0);
   }
- assert(Craft.RECIPES.some(r=>r.id==='epic_aether_orb'));
- assert(!Craft.RECIPES.some(r=>r.rarity==='Epic'&&['Tome','Charm'].includes(r.subtype)),'Epic recipes belong to Stage 3');
+ for(const [id,subtype] of [['epic_aether_orb','Orb'],['epic_echoing_tome','Tome'],['epic_heartbloom_charm','Charm']]){
+  assert(Craft.RECIPES.some(r=>r.id===id&&r.subtype===subtype&&r.rarity==='Epic'),id);
+ }
 });
 
 test('Off-Hand Stage 2 source and generated Pages script remain identical',()=>{

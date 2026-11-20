@@ -371,7 +371,9 @@ function offhandPaidAction(r){
  if(type!=='Tome')return;
  r.tomePaidActions=(r.tomePaidActions||0)+1;
  if(r.tomePaidActions%3!==0||!ports.setReady(r,'tomeRecall',6))return;
- const restored=Math.max(0,Math.min(3,r.maxmp-r.mp));
+ // The Epic Tome upgrades the existing Recall, without adding a second proc.
+ const manaPerRecall=r.stats.off.v013Trait==='echoing_recall'?5:3;
+ const restored=Math.max(0,Math.min(manaPerRecall,r.maxmp-r.mp));
  if(restored<=0)return;
  r.mp+=restored;
  ports.phase6Metric(r,'offhandTomeMana',restored);
@@ -383,7 +385,8 @@ function offhandOnMainHit(r,hpDamage){
  if(r.stats?.off?.subtype==='Orb'){
   offhandOrbWard(r);
  }else if(r.stats?.off?.subtype==='Charm'&&r.hp<r.maxhp&&ports.setReady(r,'charmRenewal',8)){
-  const healed=ports.setHeal(r,r.maxhp*.015);
+  // The Epic Charm strengthens the same 8s Renewal; all healing debuffs apply.
+  const healed=ports.setHeal(r,r.maxhp*(r.stats.off.v013Trait==='heartbloom'?.02:.015));
   if(healed>0){
    ports.phase6Metric(r,'offhandCharmHealing',healed);
    ports.phase6Proc(r,'Off-Hand: Charm Renewal');

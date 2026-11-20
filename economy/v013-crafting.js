@@ -6,7 +6,9 @@ const TRAITS=Object.freeze({
  focused:Object.freeze({name:'Focused Edge',description:'Deal 10% more direct damage to the last enemy when no reinforcements remain.'}),
  ward:Object.freeze({name:'Arcane Ward',description:'Funded casts grant Barrier equal to 2% maximum Health, once every 6 seconds.'}),
  conflagration:Object.freeze({name:'Emberwake',description:'Funded Fire casts spread Burn to one additional enemy at 35% potency for up to 2 seconds.'}),
- efficient:Object.freeze({name:'Measured Casting',description:'Elemental casts cost 10% less Mana, saving at least 1 Mana per paid cast.'})
+ efficient:Object.freeze({name:'Measured Casting',description:'Elemental casts cost 10% less Mana, saving at least 1 Mana per paid cast.'}),
+ echoing_recall:Object.freeze({name:'Echoing Recall',description:'Tome Recall restores 5 Mana instead of 3 after every third Mana-paid action (6s cooldown, limited by Max Mana).'}),
+ heartbloom:Object.freeze({name:'Heartbloom Renewal',description:'Charm Renewal heals 2% Max HP instead of 1.5% after a damaging main-hand hit (8s cooldown; healing reduction applies).'})
 });
 const recipes=[];
 function add(id,name,slot,subtype,rarity,family,trait=null){recipes.push(Object.freeze({id,name,slot,subtype,rarity,family,trait,description:trait?TRAITS[trait].description:'A '+rarity+' '+subtype+' with a weighted random selection of attributes. The recipe controls type and rarity, not the individual stat roll.',source:rarity==='Uncommon'?'Known Blueprint. Gather crafting materials from completed Realms.':'Earn this '+rarity+' Blueprint from an optional Dungeon Contract.'}));}
@@ -35,7 +37,9 @@ for(const row of [
  ['hunters_oath',"Hunter's Oath",'weapon','Bow','fury','focused'],['silent_verdict','Silent Verdict','weapon','Daggers','fury','focused'],
  ['ember_branch','Ember Branch','weapon','Staff','magic','conflagration'],['measured_staff','Measured Staff','weapon','Staff','magic','efficient'],
  ['lifewoven_wand','Lifewoven Wand','weapon','Wand','vitality','efficient'],['venomglass','Venomglass','weapon','Wand','decay','efficient'],
- ['warded_mantle','Warded Mantle','armor','Cloth','aegis','ward'],['aether_orb','Aether Orb','offhand','Orb','magic','ward']
+ ['warded_mantle','Warded Mantle','armor','Cloth','aegis','ward'],['aether_orb','Aether Orb','offhand','Orb','magic','ward'],
+ ['echoing_tome','Echoing Tome','offhand','Tome','magic','echoing_recall'],
+ ['heartbloom_charm','Heartbloom Charm','offhand','Charm','vitality','heartbloom']
 ]){const [id,name,slot,type,family,trait]=row;add('epic_'+id,name,slot,type,'Epic',family,trait);}
 // Only current blueprints are valid. Historical Off-Hand Dagger recipes are not part of the fresh collection.
 const RECIPES=Object.freeze(recipes);
