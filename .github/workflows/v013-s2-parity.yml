@@ -22,7 +22,7 @@ jobs:
       - run: npm ci
       - name: S2 decisions, S1 transaction parity, eight-elite seed coverage and native Boss behaviors
         run: |
-          node --test tests/v013-s2-decisions.test.cjs tests/v013-s1-parity.test.cjs
+          node --test tests/v013-s2-decisions.test.cjs tests/v013-s1-parity.test.cjs tests/v013-gear-roll-diversity.test.cjs
           node --test tests/v013-stage82-elite-abilities.test.cjs tests/v013-stage95-elite-parity.test.cjs tests/v013-stage84-six-bosses.test.cjs
       - name: Existing natural progression and simulator regression
         run: |
