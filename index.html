@@ -375,14 +375,14 @@ function renderForgeEconomyExtras(){
  host.insertAdjacentHTML('beforeend','<div class="forgeEconomyGrid">'+legendaryPanel+'</div>');
  const legendDetails=$('forgeLegendaryPicker');
  if(legendDetails)legendDetails.ontoggle=ev=>{forgeLegendaryPickerOpen=ev.currentTarget.open;};
- host.querySelectorAll('[data-forge-legendary]').forEach(button=>button.onclick=()=>{forgeLegendaryId=button.dataset.forgeLegendary;renderForge();});
+ host.querySelectorAll('[data-forge-legendary]').forEach(button=>button.onclick=()=>{forgeLegendaryId=button.dataset.forgeLegendary;if(view==='city-center')phase3RenderCityCenter();else renderForge();});
  const upgradeBtn=$('upgradeLegendaryBtn');
  if(upgradeBtn)upgradeBtn.onclick=()=>{
   const selected=economyOwnedItem(forgeLegendaryId);
   if(!economyCanAct()||!selected||selected.rarity!=='Legendary'||(selected.upgradeRank||0)>=10)return;
   const cost=e.upgradeCost(selected.tier,selected.upgradeRank||0);if(state.fragments<cost)return;
   showConfirm('Reinforce Legendary','Spend '+cost+' Fragments to improve '+selected.name+' to +'+((selected.upgradeRank||0)+1)+'?'+(PHASE1_PREVIEW?' Permanent equipment is retained on defeat.':' You may lose the invested Fragments on death.'),()=>{
-   if(!reinforceEquipment(selected))return;renderForge();bannerMessage(selected.name+' reinforced to +'+selected.upgradeRank+'.');
+   if(!reinforceEquipment(selected))return;if(view==='city-center')phase3RenderCityCenter();else renderForge();bannerMessage(selected.name+' reinforced to +'+selected.upgradeRank+'.');
   },'Reinforce');
  };
 }
@@ -679,6 +679,42 @@ function renderV013Forge(){
  $('v013Craft').onclick=()=>{if(!economyCanAct()||!stashHasRoom())return;const result=c.prepareCraft(state,recipe.id,level,makeItem,v013CraftFocus);if(!result)return;const before={fragments:state.fragments,crafting:state.crafting,stash:state.stash};state.fragments=result.fragments;state.crafting=result.crafting;state.stash=[...state.stash,result.item];if(!phase5Persist()){Object.assign(state,before);return;}renderV013Forge();const dialog=showModal('Item Forged',previewItem(result.item,'forge')+'<p>Added to your Stash. Equip it from Inventory.</p>');phase3StyleGearDialog(dialog,result.item);};
 }
 function renderForge(){renderV013Forge();}
+let v013TierSelectedId=null;
+function renderV013TierUpgrade(){
+ const host=phase3ContentTarget||document.getElementById('blacksmithOperationContent')||document.getElementById('screen');if(!host||!state)return;
+ const previous=host.querySelector('.v013TierUpgrade');if(previous)previous.remove();
+ const unlocked=phase1Controller.state.unlocked;
+ const owned=[...state.stash,...Object.values(state.equip).filter(Boolean)].filter(x=>U.nextTier(x));
+ const unique=[...new Map(owned.map(x=>[x.id,x])).values()];
+ if(!unique.some(x=>x.id===v013TierSelectedId))v013TierSelectedId=unique[0]?.id||null;
+ const item=unique.find(x=>x.id===v013TierSelectedId),p=item&&U.preview(state,item.id,unlocked);
+ const busy=!economyCanAct(),req=p?.requirements||[];
+ const requirements=req.map(r=>'<span class="'+(r.have>=r.need?'is-met':'is-missing')+'">'+esc(r.name)+' <b>'+r.have+' / '+r.need+'</b></span>').join('');
+ const message=!p?'Find gear below Exalted to upgrade.':busy?'Finish your Expedition before using the Forge.':!p.ready?'Unlock Expedition E'+p.target.minimum+' and gather the listed materials.':'Ready: all requirements met.';
+ const body=p?'<div class="tierUpgradeComparison"><div><span class="eyebrow">Current · E'+item.tier+'</span><h3>'+esc(item.name)+'</h3><p>'+esc(itemStats(item))+'</p></div><div><span class="eyebrow">Upgrade · '+esc(p.target.name)+' · E'+p.target.minimum+'</span><h3>'+esc(p.upgraded.name)+'</h3><p>'+esc(itemStats(p.upgraded))+'</p></div></div><p class="small muted">Keeps the original item ID, rarity, name, special effects, traits and equipment slot. No rerolls; tier bonuses apply to base attributes, not ability effects.</p><div class="v013TierCosts" aria-label="Upgrade requirements">'+requirements+'</div><p role="status" class="small muted">'+esc(message)+'</p><button class="primary" type="button" id="v013UpgradeTier" '+(!p.ready||busy?'disabled':'')+'>Upgrade to '+esc(p.target.name)+' · '+p.cost.fragments+' Fragments + '+p.cost.essence+' Essence</button>':'<p class="small muted">'+esc(message)+'</p>';
+ const markup='<section class="panel v013TierUpgrade" aria-labelledby="v013TierTitle"><span class="eyebrow">Permanent equipment progression</span><h2 id="v013TierTitle">Upgrade existing gear</h2><p class="small muted">Improve an owned item, rather than crafting a replacement. Costs are fixed and displayed before confirmation.</p>'+(unique.length?'<label for="v013TierItem">Your item</label><select id="v013TierItem">'+unique.map(x=>'<option value="'+esc(x.id)+'" '+(x.id===v013TierSelectedId?'selected':'')+'>'+esc(x.name)+' · E'+x.tier+' · '+esc(x.rarity)+(state.stash.includes(x)?' · Stash':' · Equipped')+'</option>').join('')+'</select>':'')+body+'</section>';
+ host.insertAdjacentHTML('beforeend',markup);
+ const chooser=document.getElementById('v013TierItem');if(chooser)chooser.onchange=event=>{v013TierSelectedId=event.target.value;renderV013TierUpgrade();};
+ const button=document.getElementById('v013UpgradeTier');if(button)button.onclick=()=>{
+  const fresh=U.preview(state,v013TierSelectedId,phase1Controller.state.unlocked);
+  if(!fresh?.ready||!economyCanAct())return;
+  showConfirm('Upgrade existing gear','Spend '+fresh.cost.fragments+' Fragments and '+fresh.cost.essence+' Essence to upgrade '+fresh.upgraded.name+' to '+fresh.target.name+'? The item keeps its identity and effects.',()=>{
+   if(!economyCanAct())return;
+   const result=U.prepare(state,v013TierSelectedId,phase1Controller.state.unlocked);if(!result)return;
+   const before={fragments:state.fragments,crafting:state.crafting,stash:state.stash,equip:state.equip};
+   state.fragments=result.fragments;state.crafting=result.crafting;
+   if(result.location.kind==='stash'){
+    state.stash=state.stash.map((x,i)=>i===result.location.index&&x.id===result.item.id?result.item:x);
+   }else{
+    state.equip={...state.equip,[result.location.slot]:result.item};
+   }
+   if(!phase5Persist()){Object.assign(state,before);return;}
+   renderV013TierUpgrade();
+   const dialog=showModal('Equipment upgraded',previewItem(result.item,'forge')+'<p>Your equipment was upgraded permanently.</p>');
+   phase3StyleGearDialog(dialog,result.item);
+  },'Upgrade');
+ };
+}
 function renderMerchant(){
  if(view==='city-center'&&!phase3ContentTarget){phase3RenderCityCenter();return;}
  wallet();if(!state.merchant||!Array.isArray(state.merchant.stock))rollShop();else ensureMerchantStock();
@@ -1555,7 +1591,7 @@ function phase3RenderCityCenter(){
  $('screen').innerHTML='<section class="panel phase3CityCenter"><div class="topline"><div><span class="eyebrow">Wanderer v0.13 · City Center</span><h1>City Center</h1></div></div><div class="cityCenterLayout"><div class="cityCenterSidebar"><div class="cityCenterTabs" role="tablist" aria-label="City Center">'+options.map(([id,label])=>'<button type="button" role="tab" aria-selected="'+(phase3CityTab===id)+'" data-city-tab="'+id+'">'+label+'</button>').join('')+'</div><figure class="cityCenterNpcArt"><img src="'+cityArt[phase3CityTab][0]+'" alt="'+cityArt[phase3CityTab][1]+'" loading="lazy" decoding="async"><figcaption>'+options.find(o=>o[0]===phase3CityTab)[1]+'</figcaption></figure></div><div id="cityServiceContent"></div></div></section>';
  Q('[data-city-tab]').forEach(button=>button.onclick=()=>{phase3CityTab=button.dataset.cityTab;phase3RenderCityCenter();phase3RememberUILocation();});phase3BindTabKeyboard('[data-city-tab]');
  phase3ContentTarget=$('cityServiceContent');
- try{if(phase3CityTab==='blacksmith'){if(PHASE1_PREVIEW){phase3BlacksmithOperation='forge';renderForge();}else{phase3ContentTarget.innerHTML='<nav class="cityBlacksmithNav" role="tablist" aria-label="Blacksmith operations">'+[['forge','Forge'],['reinforcement','Legendary Reinforcement']].map(([id,label])=>'<button type="button" role="tab" aria-selected="'+(phase3BlacksmithOperation===id)+'" data-blacksmith-operation="'+id+'">'+label+'</button>').join('')+'</nav><div id="blacksmithOperationContent"></div>';Q('[data-blacksmith-operation]').forEach(button=>button.onclick=()=>{phase3BlacksmithOperation=button.dataset.blacksmithOperation;phase3RenderCityCenter();phase3RememberUILocation();});phase3BindTabKeyboard('[data-blacksmith-operation]');phase3ContentTarget=$('blacksmithOperationContent');if(phase3BlacksmithOperation==='forge')renderForge();else renderForgeEconomyExtras();}}else if(phase3CityTab==='merchant')renderMerchant();else phase6RenderApothecary();}finally{phase3ContentTarget=null;}
+ try{if(phase3CityTab==='blacksmith'){if(PHASE1_PREVIEW){const operations=[['forge','Forge'],['tier-upgrade','Upgrade Gear'],['reinforcement','Legendary Reinforcement']];if(!operations.some(([id])=>id===phase3BlacksmithOperation))phase3BlacksmithOperation='forge';phase3ContentTarget.innerHTML='<nav class="cityBlacksmithNav" role="tablist" aria-label="Blacksmith operations">'+operations.map(([id,label])=>'<button type="button" role="tab" aria-selected="'+(phase3BlacksmithOperation===id)+'" data-blacksmith-operation="'+id+'">'+label+'</button>').join('')+'</nav><div id="blacksmithOperationContent"></div>';Q('[data-blacksmith-operation]').forEach(button=>button.onclick=()=>{phase3BlacksmithOperation=button.dataset.blacksmithOperation;phase3RenderCityCenter();phase3RememberUILocation();});phase3BindTabKeyboard('[data-blacksmith-operation]');phase3ContentTarget=$('blacksmithOperationContent');if(phase3BlacksmithOperation==='forge')renderForge();else if(phase3BlacksmithOperation==='tier-upgrade')renderV013TierUpgrade();else renderForgeEconomyExtras();}else{phase3ContentTarget.innerHTML='<nav class="cityBlacksmithNav" role="tablist" aria-label="Blacksmith operations">'+[['forge','Forge'],['reinforcement','Legendary Reinforcement']].map(([id,label])=>'<button type="button" role="tab" aria-selected="'+(phase3BlacksmithOperation===id)+'" data-blacksmith-operation="'+id+'">'+label+'</button>').join('')+'</nav><div id="blacksmithOperationContent"></div>';Q('[data-blacksmith-operation]').forEach(button=>button.onclick=()=>{phase3BlacksmithOperation=button.dataset.blacksmithOperation;phase3RenderCityCenter();phase3RememberUILocation();});phase3BindTabKeyboard('[data-blacksmith-operation]');phase3ContentTarget=$('blacksmithOperationContent');if(phase3BlacksmithOperation==='forge')renderForge();else renderForgeEconomyExtras();}}else if(phase3CityTab==='merchant')renderMerchant();else phase6RenderApothecary();}finally{phase3ContentTarget=null;}
 }
 
 
@@ -2229,6 +2265,6 @@ document.addEventListener('visibilitychange',()=>{
  if(document.visibilityState==='hidden')phase3RememberUILocation();
 });
 })();
-</script><script src="online/v012-gothic-panels.js"></script><script src="online/v012-auth-bootstrap.js?v=v012-login-hotfix-2"></script><script type="module" src="online/v012-account.mjs?v=v012-equipped-gear-1"></script><script type="module" src="online/v012-feedback.mjs?v=v012-equipped-gear-1"></script><script type="module" src="online/v012-leaderboard-ui.mjs?v=v012-equipped-gear-1"></script><script src="online/v013-tier-upgrade-ui.js"></script></body></html>
+</script><script src="online/v012-gothic-panels.js"></script><script src="online/v012-auth-bootstrap.js?v=v012-login-hotfix-2"></script><script type="module" src="online/v012-account.mjs?v=v012-equipped-gear-1"></script><script type="module" src="online/v012-feedback.mjs?v=v012-equipped-gear-1"></script><script type="module" src="online/v012-leaderboard-ui.mjs?v=v012-equipped-gear-1"></script></body></html>
 
 
