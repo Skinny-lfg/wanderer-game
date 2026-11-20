@@ -26,7 +26,7 @@ function frozenGroups(){
   return [data.build+'|'+data.level,data];
  }));
 }
-function compare(current,{postBarrierReset=false}={}){
+function compare(current,{postBarrierReset=false,postOffhandReroll=false}={}){
  const before=frozenGroups(),settings={...current.settings};
  delete settings.output;
  assert.deepEqual(settings,FROZEN.settings,'Stage 4 must use exact Stage 3 scenarios');
@@ -40,7 +40,8 @@ function compare(current,{postBarrierReset=false}={}){
   assert.equal(g.n,old.n,'Seed count changed');
   const delta=Object.fromEntries(FIELDS.map(k=>[k,round(g[k]-old[k],2)]));
   if(postBarrierReset){
-   assert.equal(delta.meanSpellPower,0,'Gear/talent Spell Power drift: '+g.build+' E'+g.level);
+   if(postOffhandReroll)assert(Number.isFinite(g.meanSpellPower)&&g.meanSpellPower>=0,'Invalid current Spell Power: '+g.build+' E'+g.level);
+   else assert.equal(delta.meanSpellPower,0,'Gear/talent Spell Power drift: '+g.build+' E'+g.level);
    for(const k of ['meanBarrierAtEntry','meanBarrierGenerated','meanBarrierAbsorbed'])
     assert(Number.isFinite(g[k])&&g[k]>=0,'Invalid current Barrier metric: '+g.build+' '+k);
   }else if(g.build!=='fury-vitality'){
@@ -150,7 +151,7 @@ function markdown(report){
   '- Both levels E5/E35, seeds 9101/9201, Rare native gear, no Runes/Boons/Contracts, 24 talent points, native enemy AI.',
   '- Elite/Boss stress uses a controlled first-ring Aegis card at Normal risk and real enemy archetypes. This is not earned account progression.',
   '- A win rate over only four cases per build and kind is exploratory, not a balance verdict. Boss and Elite target policy is mechanics.',
-  '- Frozen Stage 3 is historical after the intentional uncapped Barrier/encounter reset. All 48 current Normal cases must be valid; Spell Power and cohort definitions remain unchanged.',
+  '- Frozen Stage 3 is historical after uncapped Barrier/reset and Off-Hand stat rerolls. All 48 current Normal cases must remain valid; Spell Power may change, but cohort definitions are unchanged.',
   '- The real Fervent Life proc remains critical-hit-only, retains its four-second cooldown, and overheal converts to the uncapped encounter-scoped Barrier pool.',
   '- Plague Spread is processed at the Dungeon enemy-death hook, not via Buildcraft. Native transfer counts measure copied Bleed/Rot statuses, not Buildcraft proc activations. Zero transfers may mean no eligible death/target in a sample.',
   '- Raw individual rows with deterministic item fingerprints and seed are included in the JSON artifact.',
@@ -160,7 +161,7 @@ function markdown(report){
 function run(output=OUTPUT){
  const pairs=verifyTalentGraph();
  const current=A.run(A.parseArgs(['--mode=affinities','--out=reports/v013-stage4-affinity-current.json']));
- const normalGroups=compare(current,{postBarrierReset:true});
+ const normalGroups=compare(current,{postBarrierReset:true,postOffhandReroll:true});
  const stage3Rows=FROZEN.ferventLifeCases;
  assert.equal(stage3Rows.length,4,'Frozen Fervent Life proc cases missing');
  const stressResults=stress(current);
@@ -176,7 +177,7 @@ function run(output=OUTPUT){
   'No real current-engine evidence for hybrid link '+link.id+': '+link.skill);
  const summary={total:current.summary.total,valid:current.summary.valid,
   errors:current.summary.errors,timeouts:current.summary.timeouts,wins:current.summary.wins};
- const outputData={schemaVersion:1,stage:'six-hybrid-affinity-review-stage4',comparisonMode:'post-uncapped-encounter-reset',stage3Source:FROZEN.sourceSha256,
+ const outputData={schemaVersion:1,stage:'six-hybrid-affinity-review-stage4',comparisonMode:'post-uncapped-barrier-and-offhand-reroll',stage3Source:FROZEN.sourceSha256,
   stage3Replay:FROZEN.replaySha256,currentSource:current.sourceSha256,currentReplay:current.replaySha256,
   settings:current.settings,pairs,linkObservations,normal:summary,normalGroups,stress:stressResults,normalPlagueSpreadTransfers,stressPlagueSpreadTransfers,
   marginalEstimates:marginalEstimate(stage3Rows)};

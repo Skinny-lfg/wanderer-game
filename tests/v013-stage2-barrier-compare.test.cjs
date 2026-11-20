@@ -24,3 +24,12 @@ test('Stage 2 comparison enforces benefit for Aegis + Magic and no unrelated dri
  const noGain=fixture();noGain.summary.groups.find(x=>x.build==='aegis-magic').meanBarrierAtEntry-=1;
  assert.throws(()=>Comparator.compare(baseline,noGain),/Aegis \+ Magic/);
 });
+
+test('Stage 2 historical comparison permits intentional Off-Hand Spell Power rerolls only with explicit new mode',()=>{
+ const drift=fixture();
+ drift.summary.groups.find(x=>x.build==='pure-magic').meanSpellPower+=2;
+ assert.throws(()=>Comparator.compare(baseline,drift,{postBarrierReset:true}),/Spell Power/);
+ assert.equal(Comparator.compare(baseline,drift,{postBarrierReset:true,postOffhandReroll:true}).length,24);
+ drift.summary.groups.find(x=>x.build==='pure-magic').meanSpellPower=NaN;
+ assert.throws(()=>Comparator.compare(baseline,drift,{postBarrierReset:true,postOffhandReroll:true}),/Invalid current Spell Power/);
+});

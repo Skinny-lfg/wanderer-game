@@ -5,7 +5,7 @@ const A=require('./v013-affinity-baseline.cjs');
 const baselinePath=path.resolve(__dirname,'../reports/v013-stage1-affinity-summary.json');
 const defaultOut='reports/v013-stage2-affinity-comparison.json';
 const round=n=>Number(Number(n).toFixed(2));
-function compare(before,after,{postBarrierReset=false}={}){
+function compare(before,after,{postBarrierReset=false,postOffhandReroll=false}={}){
  assert.equal(before.schemaVersion,1);
  assert.equal(after.summary.errors,0,'Stage 2 may not produce native errors');
  assert.equal(after.summary.timeouts,0,'Stage 2 may not produce timeouts');
@@ -25,7 +25,10 @@ function compare(before,after,{postBarrierReset=false}={}){
   // The immutable Stage 1 snapshot predates encounter-scoped, uncapped Barrier.
   // Keep it as history, but do not reject the explicitly planned Barrier drift.
   for(const r of groups){
-   assert.equal(r.delta.meanSpellPower,0,'Gear and talents must not change Spell Power');
+   // Stage 2 Off-Hand primary stats change SP (Orb/Spell, Tome/Mana, Charm/HP).
+   // This drift is intentional; the actual values must remain usable numbers.
+   if(postOffhandReroll)assert(Number.isFinite(r.after.meanSpellPower)&&r.after.meanSpellPower>=0,'Invalid current Spell Power');
+   else assert.equal(r.delta.meanSpellPower,0,'Gear and talents must not change Spell Power');
    for(const key of ['meanBarrierAtEntry','meanBarrierGenerated','meanBarrierAbsorbed']){
     assert(Number.isFinite(r.after[key])&&r.after[key]>=0,'Invalid current Barrier metric: '+key);
    }
@@ -63,7 +66,7 @@ function markdown(out){
   '- Each run uses 12 legal 24-point builds, fixed E5/E35 levels, two seeds, current Rare gear, and controlled three-enemy Aegis normal rooms.',
   '- Gear is deterministic per build/weapon, not identical between all weapons.',
   '- Stage 1 is an immutable historical snapshot; Barrier no longer has a global cap and clears between encounters. Its metrics are intentionally NOT expected to match.',
-  '- Current 48-case scenarios retain zero errors/timeouts, original Spell Power and nonnegative native Barrier measurements.',
+  '- All 48 current cases must be valid with zero errors/timeouts and finite nonnegative Barrier/Spell Power. Off-Hand rerolls intentionally alter Spell Power compared with the frozen snapshot.',
   '- The same encounter was easy (48/48 wins) before the change; do not interpret victory rate as balance approval.',
   '- Orb now has one 2% Max HP + 5% Spell Power effect for any weapon. The global Barrier cap is removed.',
   '');
@@ -72,8 +75,8 @@ function markdown(out){
 function run(out=defaultOut){
  const before=JSON.parse(fs.readFileSync(baselinePath,'utf8'));
  const cfg=A.parseArgs(['--mode=affinities','--out=reports/v013-stage2-affinity-current.json']);
- const after=A.run(cfg),groups=compare(before,after,{postBarrierReset:true});
- const payload={schemaVersion:1,stage:'aegis-barrier-spellpower-stage2',comparisonMode:'post-uncapped-encounter-reset',baselineSource:before.sourceSha256,
+ const after=A.run(cfg),groups=compare(before,after,{postBarrierReset:true,postOffhandReroll:true});
+ const payload={schemaVersion:1,stage:'aegis-barrier-spellpower-stage2',comparisonMode:'post-uncapped-barrier-and-offhand-reroll',baselineSource:before.sourceSha256,
   currentSource:after.sourceSha256,currentReplay:after.replaySha256,settings:after.settings,
   summary:after.summary,groups,rows:after.rows};
  const dest=path.resolve(process.cwd(),out);

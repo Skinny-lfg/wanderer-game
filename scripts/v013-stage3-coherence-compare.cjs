@@ -10,7 +10,7 @@ const FIELDS=Object.freeze(['meanHealingPerSecond','meanDotPerSecond','meanBarri
 const VITALITY=Object.freeze(['pure-vitality','fury-vitality','vitality-aegis']);
 const UNTOUCHED=Object.freeze(['pure-blood','pure-fury','pure-aegis','pure-magic','pure-decay','blood-fury','aegis-magic','magic-decay','decay-blood']);
 const round=n=>Number(Number(n).toFixed(2));
-function compare(before,after,{postBarrierReset=false}={}){
+function compare(before,after,{postBarrierReset=false,postOffhandReroll=false}={}){
  assert.equal(before.schemaVersion,1);
  assert.equal(before.cases.valid,48);
  assert.equal(after.summary.valid,48);
@@ -34,7 +34,8 @@ function compare(before,after,{postBarrierReset=false}={}){
   // New live Barrier rules alter encounter duration, healing and Mana use.
   // Frozen Stage 2 numbers remain visible, but are not equality contracts.
   for(const g of groups){
-   assert.equal(g.delta.meanSpellPower,0,'Unrelated gear/talent Spell Power drift: '+g.build);
+   if(postOffhandReroll)assert(Number.isFinite(g.after.meanSpellPower)&&g.after.meanSpellPower>=0,'Invalid current Spell Power: '+g.build);
+   else assert.equal(g.delta.meanSpellPower,0,'Unrelated gear/talent Spell Power drift: '+g.build);
    for(const k of ['meanBarrierAtEntry','meanBarrierGenerated','meanBarrierAbsorbed'])
     assert(Number.isFinite(g.after[k])&&g.after[k]>=0,'Invalid current Barrier: '+g.build+' '+k);
   }
@@ -71,7 +72,7 @@ function markdown(result){
  lines.push('','## Controls / interpretation','',
   '- Stage 2 frozen source and replay are sourced from C7 run 44730440325, artifact 14625987443.',
   '- Same E5/E35 levels, 9101/9201 seeds, 12 legal 24-point builds, Rare current gear, no Runes/Boons/Contracts, focus targets and three normal Aegis enemies.',
-  '- These frozen Stage 2 numbers are historical: uncapped Barrier and encounter resets intentionally alter survivability and resulting metrics. Spell Power and cohort definitions remain invariant.',
+  '- Frozen Stage 2 is historical: Barrier resets, uncapped Barrier and distinct Orb/Tome/Charm rolls intentionally affect survivability and Spell Power. Cohort definitions remain invariant.',
   '- Vitality base regeneration now uses 0.15% Max HP/s plus tiered percentage nodes, with 0.35% Max HP/s pre-fork cap and Recovery/Reserve modifiers.',
   '- The retired Toxic Precision Decay/Fury passive was not reachable in v15 and its hidden runtime/catalogue path has been removed, not reintroduced. Active Toxic Touch (hit + Spell Power) and Magic/Decay Hex Bolt scaling are verified by production Buildcraft tests; no Decay coefficient was changed.',
   '- Changes in actual healing/s are limited by real damage taken, overheal, combat duration and different gear; these are observations, not theoretical healing potential.',
@@ -81,8 +82,8 @@ function markdown(result){
 }
 function run(out=DEFAULT_OUT){
  const current=A.run(A.parseArgs(['--mode=affinities','--out=reports/v013-stage3-affinity-current.json']));
- const groups=compare(BEFORE,current,{postBarrierReset:true});
- const payload={schemaVersion:1,stage:'vitality-decay-coherence-stage3',comparisonMode:'post-uncapped-encounter-reset',sourceBefore:BEFORE.sourceSha256,
+ const groups=compare(BEFORE,current,{postBarrierReset:true,postOffhandReroll:true});
+ const payload={schemaVersion:1,stage:'vitality-decay-coherence-stage3',comparisonMode:'post-uncapped-barrier-and-offhand-reroll',sourceBefore:BEFORE.sourceSha256,
   sourceAfter:current.sourceSha256,replayAfter:current.replaySha256,
   frozenStage2:{validatedCommit:BEFORE.artifact.validatedCommit,runId:BEFORE.artifact.runId,artifactId:BEFORE.artifact.artifactId},
   settings:current.settings,summary:current.summary,groups,rows:current.rows};
