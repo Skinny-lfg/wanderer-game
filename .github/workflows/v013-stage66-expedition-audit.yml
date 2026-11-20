@@ -1,0 +1,73 @@
+name: Wanderer v0.13 — Stage 6.6 global Expedition difficulty audit
+on:
+  push:
+    branches: [audit/v013-stage6]
+    paths:
+      - '.github/workflows/v013-stage66-expedition-audit.yml'
+      - 'scripts/v013-stage66-expedition-audit.cjs'
+      - 'tests/v013-stage66-expedition-audit.test.cjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: Verify static scaling and fail-closed native data analysis
+        run: |
+          node --check scripts/v013-stage66-expedition-audit.cjs
+          node --test tests/v013-stage66-expedition-audit.test.cjs \
+            tests/v013-stage65-e1-e10.test.cjs
+          git diff --check
+      - name: Retrieve frozen Stage 6.5 native account traces from original run
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 44820875805
+          github-token: ${{ github.token }}
+          repository: Skinny-lfg/wanderer-game
+          pattern: stage65-native-*
+          merge-multiple: true
+          path: reports/stage66-native-traces
+      - name: Validate and diagnose 48 genuine E1–E10 accounts
+        run: |
+          for shard in physical-tanks physical-hex fire-frost lightning-arcane wand-staff hybrid-cautious; do
+            test -s "reports/stage66-native-traces/stage65-$shard.json"
+            grep -q '^native_exit_code=0$' "reports/stage66-native-traces/stage65-$shard.status.txt"
+          done
+          node scripts/v013-stage66-expedition-audit.cjs \
+            reports/stage66-global-expedition-difficulty.json \
+            reports/stage66-native-traces/stage65-physical-tanks.json \
+            reports/stage66-native-traces/stage65-physical-hex.json \
+            reports/stage66-native-traces/stage65-fire-frost.json \
+            reports/stage66-native-traces/stage65-lightning-arcane.json \
+            reports/stage66-native-traces/stage65-wand-staff.json \
+            reports/stage66-native-traces/stage65-hybrid-cautious.json
+      - name: Verify provenance and archive reproducible audit
+        if: always()
+        run: |
+          {
+            echo "diagnostic_commit=$GITHUB_SHA"
+            echo "native_source_run=44820875805"
+            echo "node=$(node --version)"
+            sha256sum scripts/v013-stage66-expedition-audit.cjs combat/expedition-progression.js combat/v012-combat-core.js
+          } > reports/stage66-provenance.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage66-global-difficulty-audit
+          path: |
+            reports/stage66-global-expedition-difficulty.json
+            reports/stage66-global-expedition-difficulty.md
+            reports/stage66-provenance.txt
+          retention-days: 30
+          if-no-files-found: warn
