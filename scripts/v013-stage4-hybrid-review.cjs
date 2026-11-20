@@ -162,11 +162,19 @@ function run(output=OUTPUT){
  const stressResults=stress(current);
  const normalPlagueSpreadTransfers=current.rows.filter(r=>r.build==='decay-blood').reduce((n,r)=>n+(r.plagueSpreadTransfers||0),0);
  const stressPlagueSpreadTransfers=stressResults.rows.filter(r=>r.build==='decay-blood').reduce((n,r)=>n+(r.plagueSpreadTransfers||0),0);
+ const linkObservations=pairs.map(p=>({
+  id:p.id,skill:p.skill,
+  observed:p.skill==='plague_spread'?normalPlagueSpreadTransfers+stressPlagueSpreadTransfers:
+   stressResults.groups.filter(g=>g.build===p.id).reduce((n,g)=>n+(g.passiveActivations[p.skill]||0),0),
+  metric:p.skill==='plague_spread'?'native transferred statuses':'Buildcraft activations'
+ }));
+ for(const link of linkObservations)assert(link.observed>0,
+  'No real current-engine evidence for hybrid link '+link.id+': '+link.skill);
  const summary={total:current.summary.total,valid:current.summary.valid,
   errors:current.summary.errors,timeouts:current.summary.timeouts,wins:current.summary.wins};
  const outputData={schemaVersion:1,stage:'six-hybrid-affinity-review-stage4',stage3Source:FROZEN.sourceSha256,
   stage3Replay:FROZEN.replaySha256,currentSource:current.sourceSha256,currentReplay:current.replaySha256,
-  settings:current.settings,pairs,normal:summary,normalGroups,stress:stressResults,normalPlagueSpreadTransfers,stressPlagueSpreadTransfers,
+  settings:current.settings,pairs,linkObservations,normal:summary,normalGroups,stress:stressResults,normalPlagueSpreadTransfers,stressPlagueSpreadTransfers,
   marginalEstimates:marginalEstimate(stage3Rows)};
  const digest=crypto.createHash('sha256').update(JSON.stringify({normalGroups,stress:stressResults.rows,pairs})).digest('hex');
  outputData.replaySha256=digest;
@@ -177,7 +185,7 @@ function run(output=OUTPUT){
  const log={out:output,normal:summary,stress:{total:stressResults.total,errors:stressResults.errors,
   timeouts:stressResults.timeouts,wins:stressResults.wins,deaths:stressResults.deaths},
   furyVitality:normalGroups.filter(g=>g.build==='fury-vitality').map(g=>({level:g.level,healingBefore:g.healingBefore,healingAfter:g.healingAfter,delta:g.delta})),
-  linkProcs:pairs.map(p=>({id:p.id,skill:p.skill,observed:p.skill==='plague_spread'?normalPlagueSpreadTransfers+stressPlagueSpreadTransfers:stressResults.groups.filter(g=>g.build===p.id).reduce((n,g)=>n+(g.passiveActivations[p.skill]||0),0),metric:p.skill==='plague_spread'?'native transferred statuses':'Buildcraft activations'})),
+  linkProcs:linkObservations,
   source:current.sourceSha256,replay:digest};
  console.log('STAGE4_HYBRID_REVIEW='+JSON.stringify(log));
  if(stressResults.errors||stressResults.timeouts)process.exitCode=1;
