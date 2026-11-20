@@ -812,7 +812,11 @@ function fightNatural(a,profile,tickLimit,context={}){
   // Target selection is an ordinary player click, at most once per 8 native ticks.
   if(ticks%8===0){
    const baseline=S.selectTarget(r,profile.target);
-   let next=adaptive?AGENT.selectTarget(r,cap,baseline):selectThornAwareTarget(r,profile);
+   // Respect the player's explicit single-target focus strategy. A smart
+   // agent must not silently override a chosen combat style merely because
+   // another target is dangerous. Mechanics-aware profiles remain reactive.
+   let next=adaptive&&profile.target!=='focus'
+    ?AGENT.selectTarget(r,cap,baseline):selectThornAwareTarget(r,profile);
    // Thornbloom counterplay uses live visible enemy status only.
    if(next?.stage82?.type==='briarspine_horror'&&
       next.stage82.bloomUntil>(r.combatSeconds||0)){
