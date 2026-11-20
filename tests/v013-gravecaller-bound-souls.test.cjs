@@ -10,9 +10,10 @@ test('Gravecaller has exact four-spawn cycle with no RNG or extra combat roll',(
  assert.equal(A.boundSoulVariant(4).name,'Hollow Soul');
  for(const bad of [-1,.5,NaN])assert.throws(()=>A.boundSoulVariant(bad));
  const runtime=fs.readFileSync('combat/v012-combat-runtime.js','utf8');
- assert(runtime.includes('boundSoulVariant(ledger.summoned)'));
+ assert(runtime.includes('boundSoulArchetype(ledger.summoned)'));
  assert(runtime.includes('const summoned=ports.enemyFor('));
- assert(runtime.includes('summoned.name=soul.name;summoned.image=soul.image;return summoned;'));
+ assert(runtime.includes("mob:soul,boss:false,elite:false"));
+ assert(!runtime.includes("Stage 8.2 summon requires a Realm Minion"));
 });
 test('All three local png assets exist, are mirrored into docs and have correct PNG signatures',()=>{
  for(let i=0;i<3;i++){
@@ -29,7 +30,7 @@ test('The original Realm minion is still used and changing identity does not cha
  for(let wave=0;wave<2;wave++){
   const original=Infra.summon(base,base.enemy,2,make,{family:'decay',hpFactor:.5,atkFactor:.35,defFactor:.35,intervalFactor:1.2});
   const renamed=Infra.summon(variant,variant.enemy,2,()=>{
-   const mob=make(),soul=A.boundSoulVariant(variant.stage83EliteSummons.summoned);
+   const mob=make(),soul=A.boundSoulArchetype(variant.stage83EliteSummons.summoned);
    mob.name=soul.name;mob.image=soul.image;return mob;
   },{family:'decay',hpFactor:.5,atkFactor:.35,defFactor:.35,intervalFactor:1.2});
   assert.deepEqual({spawned:renamed.spawned,field:renamed.field,reserve:renamed.reserve},{spawned:original.spawned,field:original.field,reserve:original.reserve});
@@ -43,6 +44,8 @@ test('The original Realm minion is still used and changing identity does not cha
   for(const r of [base,variant])for(const mob of r.enemies.filter(m=>m.stage83Summoned)){mob.hp=0;mob.groupDefeated=true;}
  }
  assert.equal(base.stage83EliteSummons.summoned,4);
+ for(let i=0;i<3;i++)assert.equal(A.boundSoulArchetype(i).summonKind,'bound_soul');
+ for(let i=0;i<3;i++)assert.notEqual(A.boundSoulArchetype(i).name,'Realm Minion');
  assert.equal(variant.stage83EliteSummons.summoned,4);
  assert.deepEqual(history,names);
 });

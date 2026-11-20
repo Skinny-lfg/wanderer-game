@@ -10,6 +10,12 @@ function boundSoulVariant(totalSummoned){
  if(!Number.isSafeInteger(totalSummoned)||totalSummoned<0)throw Error('Invalid Gravecaller summon ordinal');
  return BOUND_SOUL_VARIANTS[totalSummoned%BOUND_SOUL_VARIANTS.length];
 }
+// Separate summoned enemy archetype: no Realm mob name, portrait or ability descriptor.
+// Native Minion role/scaling, AI, attack cadence and Deathbound are deliberately preserved.
+function boundSoulArchetype(totalSummoned){
+ const variant=boundSoulVariant(totalSummoned);
+ return {name:variant.name,image:variant.image,role:'minion',summonFamily:'gravecaller',summonKind:'bound_soul'};
+}
 const DEFINITIONS=Object.freeze({
  gravecaller:Object.freeze({name:'Call of the Fallen',role:'Summoner',icon:'☠',description:'Channels a 1s interruptible ritual at 85% and 40% HP, summoning up to two bound souls (four total, two alive). Each successful bound soul hit adds Deathbound Decay (up to 4 stacks, 4s), dealing damage every second until the summons die.',thresholds:Object.freeze([.85,.40]),summons:2,maxSummons:4,maxLiving:2,cast:1,hpFactor:.50,atkFactor:.35,intervalFactor:1.20}),
  oathbound_exarch:Object.freeze({name:'Oathward Benediction',role:'Aegis Support',icon:'⛨',description:'An oath of Aegis grants an ally or itself Barrier worth 15% max HP, up to three times, every 10s.',first:3,cooldown:10,cast:.75,maxCasts:3,barrier:.15}),
@@ -161,7 +167,7 @@ function status(enemy,now){
  return null;
 }
 function info(enemy){const s=DEFINITIONS[enemy?.eliteType];return s?{name:s.role,icon:s.icon,description:s.description}:null;}
-const API=Object.freeze({DEFINITIONS,DEATHBOUND,boundSoulVariant,thornbloomDamage,attach,tick,interrupt,consumeStrike,status,info,livingSummons,applyDeathbound,tickDeathbound,deathboundStatus});
+const API=Object.freeze({DEFINITIONS,DEATHBOUND,boundSoulVariant,boundSoulArchetype,thornbloomDamage,attach,tick,interrupt,consumeStrike,status,info,livingSummons,applyDeathbound,tickDeathbound,deathboundStatus});
 root.WandererV013EliteAbilities=API;
 if(typeof module==='object'&&module.exports)module.exports=API;
 })(globalThis);

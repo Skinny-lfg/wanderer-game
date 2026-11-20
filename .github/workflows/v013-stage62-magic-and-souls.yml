@@ -1,0 +1,54 @@
+name: Wanderer v0.13 — Stage 6.2 magic candidate and dedicated souls
+on:
+  push:
+    branches: [audit/v013-stage6]
+    paths: ['.github/workflows/v013-stage62-magic-and-souls.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  stage62:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: Stage 6.2, Stage 6.1, dedicated Gravecaller and real talent tree regressions
+        run: |
+          node --test \
+            tests/v013-stage62-magic-attunement.test.cjs \
+            tests/v013-stage61-arcane-infusion.test.cjs \
+            tests/v013-gravecaller-bound-souls.test.cjs \
+            tests/v013-stage82-elite-abilities.test.cjs \
+            tests/talent-graph-next.test.cjs \
+            tests/talent-graph-runtime.test.cjs \
+            tests/talent-graph-combat.test.cjs
+          git diff --check
+      - name: Magic candidate coefficient sensitivity on native player stats
+        run: node scripts/v013-stage62-magic-attunement.cjs
+      - name: Gravecaller native combat parity vs prior branch
+        run: |
+          git worktree add --detach "$RUNNER_TEMP/wanderer-before" e3193ab7c33d68f4cc52ac0b91beaa4caf3a771b
+          ln -s "$GITHUB_WORKSPACE/node_modules" "$RUNNER_TEMP/wanderer-before/node_modules"
+          node scripts/v013-gravecaller-native-parity.cjs --root="$RUNNER_TEMP/wanderer-before" --out=reports/stage62-gravecaller-before.json
+          node scripts/v013-gravecaller-native-parity.cjs --root="$GITHUB_WORKSPACE" --out=reports/stage62-gravecaller-after.json
+          node -e "const assert=require('node:assert/strict'),fs=require('node:fs');const a=JSON.parse(fs.readFileSync('reports/stage62-gravecaller-before.json')),b=JSON.parse(fs.readFileSync('reports/stage62-gravecaller-after.json'));assert.deepEqual(b,a);console.log('STAGE62_GRAVECALLER_PARITY='+JSON.stringify({matches:a.length,seeds:a.map(x=>x.seed)}))"
+      - name: Persist Stage 6.2 evidence without deploy
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage62-magic-and-dedicated-soul-report
+          path: |
+            reports/stage62-magic-attunement.json
+            reports/stage62-magic-attunement.md
+            reports/stage62-gravecaller-before.json
+            reports/stage62-gravecaller-after.json
+          retention-days: 30
+          if-no-files-found: warn

@@ -570,7 +570,7 @@ function updateFight(){
  }
  const dt=.11,s=r.stats,t=ports.setRuntime(r);let e=r.enemy;
  r.combatSeconds=(r.combatSeconds||0)+dt;
- // The Gravecaller's summoned undead apply an encounter-local player DoT.
+ // The Gravecaller's dedicated bound souls apply an encounter-local player DoT.
  const deathbound=root.WandererV013EliteAbilities?.tickDeathbound(r);
  if(deathbound?.ended)ports.addLog('☠ Deathbound Decay fades as the bound souls vanish.','good');
  else if(deathbound){
@@ -605,16 +605,15 @@ function updateFight(){
      if(event.target&&event.result>0)ports.combatLinkEffect?.(r,'ward',event.enemy,[event.target]);
    }else if(event.type==='summon'){
     const theme=ports.THEMES.find(t=>t.id===r.path)||ports.currentTheme();
-    const mob=theme?.mobs?.find(m=>m.role==='minion');
-    if(!mob)throw Error('Stage 8.2 summon requires a Realm Minion');
     const spec=root.WandererV013EliteAbilities.DEFINITIONS.gravecaller;
     const ledger=r.stage83EliteSummons??={summoned:0};
     ledger.maxSummons=spec.maxSummons;
     ledger.maxLivingMinions=spec.maxLiving;
     const created=root.WandererV013BossInfrastructure?.summon(r,event.enemy,event.count,
-     ()=>{const summoned=ports.enemyFor(r.tier,r.enc,{theme,mob,boss:false,elite:false});
-      const soul=root.WandererV013EliteAbilities.boundSoulVariant(ledger.summoned);
-      summoned.name=soul.name;summoned.image=soul.image;return summoned;},
+     ()=>{const soul=root.WandererV013EliteAbilities.boundSoulArchetype(ledger.summoned);
+      const summoned=ports.enemyFor(r.tier,r.enc,{theme,mob:soul,boss:false,elite:false});
+      summoned.summonFamily=soul.summonFamily;summoned.summonKind=soul.summonKind;
+      return summoned;},
      {family:r.planeFamily||'decay',hpFactor:spec.hpFactor,atkFactor:spec.atkFactor,defFactor:.35,intervalFactor:spec.intervalFactor});
     if(created?.spawned){
      ports.phase6Metric(r,'eliteSummons',created.spawned);

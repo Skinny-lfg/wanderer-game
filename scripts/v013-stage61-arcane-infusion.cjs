@@ -7,7 +7,9 @@ const create=require('../tests/v012-economy-harness.cjs');
 const B=require('../tests/v013-current-talent-helper.cjs');
 const STEP=.02,EPS=1e-8;
 const FACTORS=Object.freeze({Sword:1.12,Mace:1.4,Daggers:.8,Bow:1.08,'Two-Handed':1.7,Wand:.55,Staff:.55});
-function simulate(input,variant='baseline'){
+function simulate(input,variant='baseline',candidate={}){
+ const config={costMana:6,cooldownSeconds:6,durationSeconds:7,charges:2,bonusSpellPowerFraction:.30,...candidate};
+ if(!(config.costMana>0&&config.costMana<=20&&config.cooldownSeconds>0&&config.cooldownSeconds<=30&&config.durationSeconds>0&&config.durationSeconds<=30&&Number.isInteger(config.charges)&&config.charges>=1&&config.charges<=6&&config.bonusSpellPowerFraction>=0&&config.bonusSpellPowerFraction<=2))throw Error('Invalid candidate coefficients');
  if(!['baseline','infusion'].includes(variant))throw Error('Unknown Stage 6.1 scenario');
  const s={...input},caster=['Wand','Staff'].includes(s.weapon);
  if(!(s.seconds>0&&s.seconds<=120&&s.speed>=0&&s.speed<=5&&s.spellPower>=0&&s.attack>=0&&s.maxMana>=0&&s.manaRegen>=0))throw Error('Invalid controlled input');
@@ -19,8 +21,8 @@ function simulate(input,variant='baseline'){
   const t=+(i*STEP).toFixed(5);
   if(i)mp=Math.min(s.maxMana,mp+s.manaRegen*STEP);
   if(variant==='infusion'&&charges>0&&t+EPS>=expires){output.expiredCharges+=charges;charges=0;}
-  if(variant==='infusion'&&t+EPS>=nextInfusion&&charges===0&&consume(6)){
-   charges=2;expires=t+7;nextInfusion=t+6;output.infusions++;
+  if(variant==='infusion'&&t+EPS>=nextInfusion&&charges===0&&consume(config.costMana)){
+   charges=config.charges;expires=t+config.durationSeconds;nextInfusion=t+config.cooldownSeconds;output.infusions++;
   }
   if(t+EPS>=nextAttack){
    nextAttack=t+interval;output.attacks++;
@@ -29,7 +31,7 @@ function simulate(input,variant='baseline'){
    else {mainDamage=Math.max(1,Math.round(s.attack*(FACTORS[s.weapon]||1)));if(caster)output.starvedWeaponAttacks++;}
    output.weaponDamage+=mainDamage;output.totalDamage+=mainDamage;
    if(variant==='infusion'&&charges>0&&t<expires-EPS){
-    const bonus=Math.round(s.spellPower*.30);
+    const bonus=Math.round(s.spellPower*config.bonusSpellPowerFraction);
     output.infusionDamage+=bonus;output.totalDamage+=bonus;charges--;output.empoweredMainHits++;
    }
    // Off-Hand Dagger is deliberately excluded from the proposed charge consumer.
