@@ -355,6 +355,45 @@ function applyAffinity(effect,enemy,s,mult=1,baseDamage=0){
 // Secondary hits never invoke attack/cast/on-hit effects or create new chains.
 function signature(family){const id=ports.state.runeSlots?.[0];return !!id&&ports.state.runes?.some(r=>r.id===id&&r.family===family);}
 function v013Traits(){return [...new Set(Object.values(ports.state?.equip||{}).filter(Boolean).map(item=>item.v013Trait).filter(Boolean))];}
+// Off-Hand identities: one native cooldown per effect; all amounts use the
+// existing healing, Barrier and Mana rules (including caps and debuffs).
+function offhandOrbWard(r,wand=false){
+ if(r.stats?.off?.subtype!=='Orb'||(!wand&&!r.stats.phase2Magic&&!r.stats.phase2Decay))return 0;
+ if(!ports.setReady(r,'wandOrbBarrier',6))return 0;
+ const gained=ports.setBarrier(r,r.maxhp*(wand?.025:.015));
+ if(gained>0){
+  ports.phase6Metric(r,'offhandOrbBarrier',gained);
+  ports.phase6Proc(r,'Off-Hand: Orb Ward');
+  ports.addLog('🔮 Orb Ward +'+Math.round(gained)+' Barrier','good');
+ }
+ return gained;
+}
+function offhandPaidAction(r){
+ const type=r.stats?.off?.subtype;
+ if(type==='Orb'){offhandOrbWard(r,r.stats?.main?.subtype==='Wand');return;}
+ if(type!=='Tome')return;
+ r.tomePaidActions=(r.tomePaidActions||0)+1;
+ if(r.tomePaidActions%3!==0||!ports.setReady(r,'tomeRecall',6))return;
+ const restored=Math.max(0,Math.min(3,r.maxmp-r.mp));
+ if(restored<=0)return;
+ r.mp+=restored;
+ ports.phase6Metric(r,'offhandTomeMana',restored);
+ ports.phase6Proc(r,'Off-Hand: Tome Recall');
+ ports.addLog('📖 Tome Recall +'+restored+' Mana','spell');
+}
+function offhandOnMainHit(r,hpDamage){
+ if(hpDamage<=0||r.hp<=0)return;
+ if(r.stats?.off?.subtype==='Orb'){
+  if(r.stats?.main?.subtype!=='Wand')offhandOrbWard(r);
+ }else if(r.stats?.off?.subtype==='Charm'&&r.hp<r.maxhp&&ports.setReady(r,'charmRenewal',8)){
+  const healed=ports.setHeal(r,r.maxhp*.015);
+  if(healed>0){
+   ports.phase6Metric(r,'offhandCharmHealing',healed);
+   ports.phase6Proc(r,'Off-Hand: Charm Renewal');
+   ports.addLog('💚 Charm Renewal +'+Math.round(healed)+' HP','good');
+  }
+ }
+}
 function v013FundedCost(baseCost){if(baseCost<=0)return 0;const adjusted=Math.max(1,Math.ceil(baseCost*(root.WandererV013ExpeditionBoons?.costFactor(ports.state.run)||1)));return v013Traits().includes('efficient')?Math.max(1,adjusted-Math.max(1,Math.floor(adjusted*.1))):adjusted;}
 function v013SpellMultiplier(r){const nodes=ports.state.automaticTalents?.nodes||[],element=ports.phase1Build?.element,enemy=r.enemy;return (element==='fire'&&nodes.includes('fire_focus')?.9:1)*(element==='frost'&&nodes.includes('frost_focus')&&enemy.slowTime>0?1.2:1)*(element==='lightning'&&nodes.includes('lightning_focus')?1.35:1)*(element==='fire'&&nodes.includes('living_inferno')&&enemy.dots?.burn?.length?1.25:1)*(element==='frost'&&nodes.includes('absolute_winter')&&enemy.slowTime>0?1.2:1)*(element==='lightning'&&nodes.includes('storm_conductor')?1.2:1);}
 function v013LightningChain(r){return ports.isPhase1Run()&&ports.phase1Build?.element==='lightning'&&(WandererV012Buildcraft.rank(ports.phase1Build,'overcharge')>0||ports.state.automaticTalents?.nodes?.includes('storm_mastery'))&&!ports.state.automaticTalents?.nodes?.includes('lightning_focus');}
@@ -418,10 +457,7 @@ function weaponAttack(r,offhandStrike=false){
  // Weapon identities: small sustain windows against burst without higher global damage.
  // Cooldowns run in combat seconds and persist across waves of one expedition.
 
- if(weapon?.subtype==='Wand'&&off?.subtype==='Orb'&&cast&&ports.setReady(r,'wandOrbBarrier',6)){
-  const gained=ports.setBarrier(r,r.maxhp*.025);
-  if(gained>0)ports.addLog('🔮 Orb Ward +'+Math.round(gained)+' Barrier','good');
- }
+ if(cast)offhandPaidAction(r);
  if(kind==='Mace'&&now>=(e.stunImmuneUntil||0)&&ports.gameRandom()<.25){
   e.stunnedUntil=now+(e.boss ? .4 : 1);e.stunImmuneUntil=now+4;ports.phase6Metric(r,'maceStuns',1);
   ports.floatText('STUN','enemy',false,'',e);ports.addLog('Stunned '+e.name,'good');
@@ -457,6 +493,7 @@ function weaponAttack(r,offhandStrike=false){
  const real=Math.max(0,Math.min(e.hp,damage));
  ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),damage));e.hp-=damage;ports.floatText(damage,'enemy',critical,'',e);
  if(reflectThornbloom(r,e,real))return;
+ if(!offhandStrike)offhandOnMainHit(r,real);
  if(r.guillotineSpore){const other=r.enemies?.find(m=>m!==e&&m.hp>0);if(e.hp<=0&&other){other.dots??={};other.dots.bleed??=[];other.dots.bleed.push({...r.guillotineSpore});ports.synchronizeDots(other);}delete r.guillotineSpore;}
  if(e.hp<=0&&r.enemies?.some(m=>m!==e&&m.hp>0)&&!r.swiftUsed&&signature('swiftness')){r.swiftUsed=true;r.tPlayer=Math.min(.9/r.stats.attacksPerSec,(r.tPlayer||0)+.3/r.stats.attacksPerSec);ports.addLog('Swiftness advanced your next attack.','good');}
  ports.legendaryOnHit(r,base,real);
@@ -771,7 +808,7 @@ function updateFight(){
 function phase2Context(r){
  const e=r.enemy,now=ports.setNow(r);
  return {player:r,enemy:e,traits:v013Traits(),now,random:ports.gameRandom,base:r.lastBaseHit||r.stats.attack,power:r.stats.spellPower||0,healTriggersPassives:true,healingMultiplier:(r.playerHealingDebuffUntil||0)>now?.6:1,waveKey:r.phase1Plane+':'+r.enc,
- spendMana(amount){const cost=Math.max(0,Math.ceil(amount*(root.WandererV013ExpeditionBoons?.costFactor(r)||1)));if(r.mp<cost)return false;r.mp-=cost;ports.phase6Metric(r,'manaSpent',cost);return true;},
+ spendMana(amount){const cost=Math.max(0,Math.ceil(amount*(root.WandererV013ExpeditionBoons?.costFactor(r)||1)));if(r.mp<cost)return false;r.mp-=cost;ports.phase6Metric(r,'manaSpent',cost);if(cost>0)offhandPaidAction(r);return true;},
  dot(kind,potency){
   if(!['bleed','burn'].includes(kind))return;
   ports.phase6Proc(r,kind+' application');const values=e.dots[kind]||(e.dots[kind]=[]);
@@ -809,7 +846,7 @@ function phase2MagicTick(r){
  const ctx=ports.phase2Context(r),b=ports.phase1Build;
  if(ctx.now-b.runtime.lastSpellAt<2.5)return;
  const cost=v013FundedCost(WandererV012Buildcraft.nextCost(b,8));if(r.mp<cost)return;
- b.runtime.lastSpellAt=ctx.now;ports.phase6Metric(r,'manaSpent',cost);ports.phase6Metric(r,'fundedCasts',1);r.mp-=cost;ctx.power=r.stats.spellPower;ctx.amp=1;ctx.funded=true;
+ b.runtime.lastSpellAt=ctx.now;ports.phase6Metric(r,'manaSpent',cost);ports.phase6Metric(r,'fundedCasts',1);r.mp-=cost;offhandPaidAction(r);ctx.power=r.stats.spellPower;ctx.amp=1;ctx.funded=true;
  ports.combatEffect('Wand',({fire:'burn',frost:'slow',lightning:'shock'})[b.element]);
  if(v013Traits().includes('ward')&&ports.setReady(r,'v013Ward',6))ports.setBarrier(r,r.maxhp*.02);
  let spellDamage=Math.max(1,Math.round(WandererV012Buildcraft.elementalPower(b,ctx.power)*.70*v013SpellMultiplier(r)));if(v013Traits().includes('focused')&&!r.groupReserve?.length&&(!r.enemies||r.enemies.filter(enemy=>enemy.hp>0).length===1))spellDamage=Math.max(1,Math.round(spellDamage*1.1));if(ports.state.automaticTalents?.nodes?.includes('single_target_mastery')&&!r.groupReserve?.length&&(!r.enemies||r.enemies.filter(enemy=>enemy.hp>0).length===1))spellDamage=Math.max(1,Math.round(spellDamage*1.15));
