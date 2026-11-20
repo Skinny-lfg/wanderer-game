@@ -25,7 +25,10 @@ test('Leather Duelist now develops native Blood sustain without any flat stat in
 test('Hexblade uses Arcane as the default Magic mode and native no-shield Aegis',()=>{
  const p=N.PROFILES['hexblade-hybrid'];
  assert.equal(p.armor,'Leather');assert.deepEqual(p.weapons,['Daggers','Wand']);
- assert.deepEqual(p.families,['decay','magic','aegis']);
+ assert.deepEqual(p.families,['decay','magic']);
+ assert(p.targets.includes('affinity_aegis'));
+ assert(p.targets.indexOf('affinity_aegis')<p.targets.indexOf('arcane_resonance'));
+ // The Aegis dip must not alter the Hexblade's preferred Realm affinities.
  assert(!Object.hasOwn(p,'element'),'no Frost override; native default is Arcane');
  assert(p.targets.includes('hex_bolt')&&p.preparedTargets.includes('grave_bloom'));
  assert(p.targets.includes('arcane_resonance'));
