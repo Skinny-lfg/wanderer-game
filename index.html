@@ -1559,7 +1559,7 @@ function phase3PassivesMarkup(inline=false,heading=true){
  for(const id of phase1Build?.runtime?.permanentTalents||[])if(!counts.has(id))counts.set(id,0);
  return '<section class="phase3CompactPassives" aria-label="Active Expedition abilities">'+(heading?'<h3>Active abilities'+(phase1Controller?.state.freeBuild?'':' · '+(phase1Build?.unlockedFamilies.length||0)+'/3 affinities')+'</h3>':'')+'<div class="phase3PassiveGrid">'+[...counts].map(([id,rank])=>{
   const p=WandererV012Buildcraft.CATALOG.find(x=>x.id===id);if(!p)return '';
-  const effective=WandererV012Buildcraft.rank(phase1Build,id);if(!effective)return '';rank=effective;const label=p.name+' · '+(p.max===1?'UNIQUE':'Rank '+rank+' / '+p.max)+(id===phase1Build.initialPassive?' · Initial passive':'');
+  const effective=WandererV012Buildcraft.rank(phase1Build,id);if(!effective)return '';rank=effective;const label=p.name+' · '+(p.max===1?'UNIQUE':'Rank '+rank+' / '+p.max);
   if(inline)return '<article class="phase3PassiveSlot phase3PassiveInline"><div>'+phase2PassiveIcons(p,false)+'<small>'+rank+'</small></div><b>'+esc(label)+'</b><p>'+phase3PassiveDescriptionHtml(p.description)+'</p></article>';
   return '<details class="phase3PassiveSlot" name="phase3PassiveInspect"><summary aria-label="'+esc(label)+'" title="'+esc(label+' · '+p.description)+'">'+phase2PassiveIcons(p)+'<small>'+rank+''+'</small></summary><div class="phase3PassiveTooltip"><b>'+esc(label)+'</b><p>'+phase3PassiveDescriptionHtml(p.description)+'</p></div></details>';
  }).join('')+'</div></section>';

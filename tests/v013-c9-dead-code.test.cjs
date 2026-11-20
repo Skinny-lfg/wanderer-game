@@ -35,3 +35,14 @@ test('C9 deleted draft RNG and unused potion alias have no live exports or bindi
  assert(!economy.includes('runeCheckpointLocked,phase3UsePotion'));
  assert(!index.includes('phase3UsePotion'));
 });
+
+test('C9 persistent Buildcraft rejects prior draft sessions, without changing current mechanics',()=>{
+ const s=source();
+ assert(!s.includes('function initialId('));
+ assert(!s.includes('initialFamily:null'));
+ assert(!s.includes('initialPassive:null'));
+ assert(s.includes("b.version!==3"));
+ assert(s.includes("Retired passive-draft state"));
+ assert(s.includes("Retired passive-draft pity"));
+ assert(!fs.readFileSync('index.html','utf8').includes('Initial passive'));
+});

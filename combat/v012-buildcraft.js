@@ -107,7 +107,7 @@ const descriptions={
 const CATALOG=P.map(p=>Object.freeze({...p,description:descriptions[p.id]||p.description}));
 const BY_ID=Object.fromEntries(CATALOG.map(p=>[p.id,p]));
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
-function create(){return {version:3,element:null,initialFamily:null,initialPassive:null,unlockedFamilies:[],picks:[],cooldowns:Object.create(null),runtime:{frenzyUntil:0,counterBlock:0,counterBarrier:0,spellblade:false,magicHits:0,staticCharges:0,adrenalineUntil:0,conduit:false,lastStand:false,lastSpellAt:-999}};}
+function create(){return {version:3,element:null,unlockedFamilies:[],picks:[],cooldowns:Object.create(null),runtime:{frenzyUntil:0,counterBlock:0,counterBarrier:0,spellblade:false,magicHits:0,staticCharges:0,adrenalineUntil:0,conduit:false,lastStand:false,lastSpellAt:-999}};}
 function ownedRank(b,id){return b?.picks?.filter(x=>x===id).length||0;}
 function rank(b,id){
  const p=BY_ID[id];if(!p)return 0;
@@ -129,8 +129,6 @@ function specialized(b,id){return b?.runtime?.specializations?.includes(id);}
 function bleedDamage(b,amount){return amount*(1+.15*rank(b,'deep_cuts')+(b?.runtime?.talentBonuses?.bleedBonus||0))*(specialized(b,'blood_focus')?1.25:1);}
 function elementalPower(b,power){return power*(1+.12*rank(b,'elemental_force'))*(b.runtime.conduit?1.10:1);}
 function hasFamily(b,family){return Array.isArray(b?.families)&&b.families.includes(family);}
-function initialId(family,element){return family==='magic'?({fire:'kindling',frost:'deep_winter',lightning:'overcharge'})[element]:({blood:'bleeding_edge',decay:'toxic_touch',vitality:'strong_heart',aegis:'iron_skin',fury:'quick_hands'})[family];}
-// Unlock the enabling passive only after successfully clearing the first Realm of this family.
 function ready(b,id,now,seconds){if((b.cooldowns[id]??-1e10)>now)return false;(b.cooldownPeriods??={})[id]=seconds;b.cooldowns[id]=now+seconds;return true;}
 function mods(b,base){
  const s={...base},h=rank(b,'strong_heart'),a=rank(b,'iron_skin'),q=rank(b,'quick_hands'),p=rank(b,'precision');
@@ -349,22 +347,20 @@ function nextCost(b,baseCost=8){return Math.max(Math.min(3,baseCost),baseCost-ra
 function resetWave(b,e){e.v012Rot=[];e.v012Shock=0;}
 function canCast(b){return !!b&&!!b.element&&(b.runtime?.permanentBuild&&b.unlockedFamilies?.includes('magic')||['kindling','deep_winter','overcharge','arcane_focus','arcane_echo','spell_surge','spellblade','hex_bolt','hex_bleed','hemal_sigil','elemental_blight','prismatic_rebound','runic_shield'].some(id=>rank(b,id)));}
 function validate(b){
- if(!b||![undefined,1,2,3].includes(b.version)||!Array.isArray(b.families)||b.families.length>(b.runtime?.permanentBuild?FAMILIES.length:3)||new Set(b.families).size!==b.families.length||!b.families.every(f=>FAMILIES.includes(f))||b.element!==null&&(!(elements.includes(b.element)||b.element==='arcane')||!hasFamily(b,'magic'))||!Array.isArray(b.picks)||b.picks.length>20)throw Error('Invalid saved build');
- if(!Array.isArray(b.unlockedFamilies))b.unlockedFamilies=[...new Set(b.picks.map(id=>BY_ID[id]?.family).filter(Boolean))];
- if(new Set(b.unlockedFamilies).size!==b.unlockedFamilies.length||!b.unlockedFamilies.every(f=>hasFamily(b,f)))throw Error('Invalid unlocked affinity');
+ if(!b||b.version!==3||!Array.isArray(b.families)||b.families.length>(b.runtime?.permanentBuild?FAMILIES.length:3)||new Set(b.families).size!==b.families.length||!b.families.every(f=>FAMILIES.includes(f))||b.element!==null&&(!(elements.includes(b.element)||b.element==='arcane')||!hasFamily(b,'magic'))||!Array.isArray(b.picks)||b.picks.length>20)throw Error('Invalid saved build');
+  if(!Array.isArray(b.unlockedFamilies)||new Set(b.unlockedFamilies).size!==b.unlockedFamilies.length||!b.unlockedFamilies.every(f=>hasFamily(b,f)))throw Error('Invalid unlocked affinity');
  for(const id of b.picks){const p=BY_ID[id];if(!p||!hasFamily(b,p.family)||!b.unlockedFamilies.includes(p.family)||p.requires.some(f=>!b.unlockedFamilies.includes(f))||p.element&&p.element!==b.element)throw Error('Invalid saved passive');}
- if(b.version>=3){const h=[...new Set(b.picks)].map(id=>BY_ID[id]).filter(p=>p?.requires.length);if(h.length>3||new Set(h.map(p=>[...p.requires].sort().join(':'))).size!==h.length)throw Error('Invalid hybrid combinations');}
- if(b.version>=3&&P.some(p=>ownedRank(b,p.id)>p.max))throw Error('Invalid passive rank');
- if(b.initialPassive!==null&&(b.initialPassive!==initialId(b.initialFamily,b.element)||!b.picks.includes(b.initialPassive)||!hasFamily(b,b.initialFamily)))throw Error('Invalid initial passive');
+ {const h=[...new Set(b.picks)].map(id=>BY_ID[id]).filter(p=>p?.requires.length);if(h.length>3||new Set(h.map(p=>[...p.requires].sort().join(':'))).size!==h.length)throw Error('Invalid hybrid combinations');}
+ if(P.some(p=>ownedRank(b,p.id)>p.max))throw Error('Invalid passive rank');
+ if(Object.hasOwn(b,'initialFamily')||Object.hasOwn(b,'initialPassive'))throw Error('Retired passive-draft state');
  if(!b.cooldowns||typeof b.cooldowns!=='object'||!Object.values(b.cooldowns).every(n=>typeof n==='number'&&Number.isFinite(n)&&n>=0)||!b.runtime||typeof b.runtime!=='object'||!['frenzyUntil','magicHits','lastSpellAt'].every(k=>typeof b.runtime[k]==='number'&&Number.isFinite(b.runtime[k]))||typeof b.runtime.lastStand!=='boolean')throw Error('Invalid saved cooldowns');
  if(b.runtime.permanentTalents!==undefined&&(!Array.isArray(b.runtime.permanentTalents)||!b.runtime.permanentTalents.every(id=>BY_ID[id]&&b.runtime.permanentTalents.filter(value=>value===id).length<=BY_ID[id].max)))throw Error('Invalid permanent talents');
- if(b.runtime.hybridPity!==undefined&&(!b.runtime.hybridPity||typeof b.runtime.hybridPity!=='object'||Object.entries(b.runtime.hybridPity).some(([key,n])=>!/^([a-z]+):([a-z]+)$/.test(key)||key!==key.split(':').sort().join(':')||!key.split(':').every(f=>FAMILIES.includes(f))||!Number.isInteger(n)||n<0||n>3)))throw Error('Invalid hybrid pity');
- if(b.runtime.staticCharges===undefined)b.runtime.staticCharges=0;
+ if(Object.hasOwn(b.runtime,'hybridPity'))throw Error('Retired passive-draft pity');
  if(!Number.isInteger(b.runtime.staticCharges)||b.runtime.staticCharges<0||b.runtime.staticCharges>3)throw Error('Invalid Static charges');
  return b;
 }
 function syncPermanent(b,progress,permanentAffinities=true){if(!b)return;if(!root.WandererAutomaticTalents)throw Error('Permanent talents unavailable');b.runtime.prepared=progress?.nodes?.includes(progress.prepared)?progress.prepared:null;b.runtime.specializations=[...(progress?.nodes||[])];if(permanentAffinities){b.runtime.permanentBuild=true;b.unlockedFamilies=FAMILIES.filter(f=>progress?.nodes?.includes('affinity_'+f));b.families=[...b.unlockedFamilies];b.element=b.unlockedFamilies.includes('magic')?(progress?.element||'arcane'):null;}const current=progress||root.WandererAutomaticTalents.create(),ids=root.WandererAutomaticTalents.passiveIds(current);b.runtime.talentBonuses=root.WandererAutomaticTalents.bonuses?.(current)||{};if(ids.length)b.runtime.permanentTalents=ids;else delete b.runtime.permanentTalents;}
-function clear(b){if(!b)return;b.picks.length=0;b.element=null;b.initialFamily=null;b.initialPassive=null;b.unlockedFamilies=[];b.families=[];b.cooldowns=Object.create(null);b.runtime={frenzyUntil:0,counterBlock:0,counterBarrier:0,spellblade:false,magicHits:0,staticCharges:0,adrenalineUntil:0,conduit:false,lastStand:false,lastSpellAt:-999};}
-root.WandererV012Buildcraft=Object.freeze({CATALOG,FAMILIES,ELEMENTS:elements,create,initialId,ownedRank,rank,values,bleedDamage,elementalPower,applyRot,migrateEnemyDots,mods,onHeal,onAttack,onCast,onSecond,tickRot,incoming,onDefend,onKill,survive,speed,enemyHealMultiplier,enemyDefense,nextCost,resetWave,canCast,validate,syncPermanent,clear});
+function clear(b){if(!b)return;b.picks.length=0;b.element=null;b.unlockedFamilies=[];b.families=[];b.cooldowns=Object.create(null);b.runtime={frenzyUntil:0,counterBlock:0,counterBarrier:0,spellblade:false,magicHits:0,staticCharges:0,adrenalineUntil:0,conduit:false,lastStand:false,lastSpellAt:-999};}
+root.WandererV012Buildcraft=Object.freeze({CATALOG,FAMILIES,ELEMENTS:elements,create,ownedRank,rank,values,bleedDamage,elementalPower,applyRot,migrateEnemyDots,mods,onHeal,onAttack,onCast,onSecond,tickRot,incoming,onDefend,onKill,survive,speed,enemyHealMultiplier,enemyDefense,nextCost,resetWave,canCast,validate,syncPermanent,clear});
 })(globalThis);
 
