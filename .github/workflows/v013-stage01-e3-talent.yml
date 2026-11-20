@@ -1,0 +1,39 @@
+name: Wanderer Stage 01 — E3 talent validity investigation (no deploy)
+
+on:
+  push:
+    branches: [audit/v013-stage6]
+    paths: ['.github/workflows/v013-stage01-e3-talent.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reproduce:
+    if: github.ref == 'refs/heads/audit/v013-stage6'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Validate runner and original talent tests
+        run: |
+          node --check scripts/v013-stage6-e3-repro.cjs
+          node --test tests/v013-natural-progression.test.cjs
+      - name: Reproduce historical Daring E3 failure (natural XP/gear)
+        run: node scripts/v013-stage6-e3-repro.cjs
+      - name: Preserve diagnostic state even if reproduction fails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage01-e3-reproduction
+          path: reports/stage6-e3-repro.json
+          if-no-files-found: warn
+      - run: git diff --check
