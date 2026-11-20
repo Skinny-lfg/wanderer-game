@@ -68,3 +68,17 @@ test('native game Forge, loot and Merchant share capped random affixes; no paid 
  assert.equal(crafted.v013CraftFocus,undefined);
  assert.equal(s.fragments,0);assert.equal(s.crafting.essence,0);
 });
+
+test('combat math caps cumulative equipment Crit/Block, Ward and Mana Regen even with extreme input',()=>{
+ const a=create(99171,undefined,{}, {skipPersistence:true});
+ const weapon={slot:'weapon',subtype:'Wand',tier:1,spell:7,int:3};
+ const offhand={slot:'offhand',subtype:'Shield',tier:1,def:4,end:3};
+ const armor={slot:'armor',subtype:'Armor',armorType:'Plate',tier:1,def:10,hp:12};
+ const equipment={weapon,offhand,armor};
+ const baseline=a.baseStats(equipment);
+ const boosted=a.baseStats({...equipment,armor:{...armor,critBonus:100,blockBonus:100,manaRegenBonus:100,wardBonus:100}});
+ assert(boosted.crit-baseline.crit<=8.001,'gear-only Crit cannot gain 100 percentage points');
+ assert(boosted.blockChance-baseline.blockChance<=8.001,'gear-only Block cannot gain 100 percentage points');
+ assert(boosted.manaRegen-baseline.manaRegen<=3.001,'gear-only Mana Regen remains flat bounded');
+ assert(boosted.wardBonus<=.300001,'gear Ward remains bounded');
+});
