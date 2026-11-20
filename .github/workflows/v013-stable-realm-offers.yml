@@ -33,5 +33,25 @@ jobs:
             tests/v013-current-dungeon-and-talents.test.cjs \
             tests/v013-natural-progression.test.cjs \
             tests/v012-save.test.mjs
+      - name: Validate live-build agent decisions and telemetry
+        run: |
+          node --check scripts/v013-agent-strategy.cjs
+          node --check scripts/v013-natural-progression.cjs
+          node --check scripts/v013-stage6-agent-comparison.cjs
+          node --test tests/v013-stage6-agent-strategy.test.cjs
+      - name: Compare native player strategies (small paired-seed smoke)
+        run: |
+          node scripts/v013-stage6-agent-comparison.cjs \
+            --seeds=9421,9422 \
+            --profiles=balanced,magic-lightning \
+            --max-level=2 --max-attempts=3 --max-total-attempts=6 \
+            --out=reports/stage6-agent-smoke.json
+      - name: Archive diagnostic data even if a later check fails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage6-agent-smoke
+          path: reports/stage6-agent-smoke.*
+          if-no-files-found: ignore
       - name: Verify no checkout changes
         run: git diff --exit-code --check
