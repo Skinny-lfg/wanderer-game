@@ -1,6 +1,7 @@
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict');
-const G=require('../economy/v013-gear-rolls.js');
+require('../economy/v013-gear-rolls.js');
+const G=globalThis.WandererV013GearRolls;
 const create=require('./v012-economy-harness.cjs');
 const rng=seed=>()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);
 const item=(subtype,rarity,tier=1,armorType=null)=>({slot:subtype==='Ring'?'ring1':subtype==='Amulet'?'amulet':armorType?'armor':'weapon',
