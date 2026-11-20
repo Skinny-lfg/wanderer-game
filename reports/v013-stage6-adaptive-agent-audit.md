@@ -1,17 +1,17 @@
 # Wanderer v0.13 — Stage 6 refined agents: AoE, focus and mixed Affinities
 
 **Status:** native simulation agent logic refined and regression-validated; **gameplay balance is NOT READY**.
-Working branch: \`audit/v013-stage6\`. The live game, main branch, published build and combat coefficients were not changed.
+Working branch: `audit/v013-stage6`. The live game, main branch, published build and combat coefficients were not changed.
 
 ## 1. Verified improvements
 
-- \`scripts/v013-agent-strategy.cjs\`: classifies owned weapon, off-hand, armour, actual v15 talent nodes, selected element and active build. Reports four independent continuous values: area, focused damage, defence and real native talent investments.
+- `scripts/v013-agent-strategy.cjs`: classifies owned weapon, off-hand, armour, actual v15 talent nodes, selected element and active build. Reports four independent continuous values: area, focused damage, defence and real native talent investments.
 - Distinguishes **combat damage mode** (AoE, single-target, both, defensive, developing) from **Affinity composition** (no earned affinity, one earned affinity, two or more earned affinities) and **mixed synergy** (genuine cross-axis skill unlocked or still only potential).
-- \`scripts/v013-natural-progression.cjs\`: can use adaptive Realm choice with only publicly visible card information (Affinity/Boss, first revealed omen, condition, risk, item bias), adaptive legal room pathing, and current HP, Bag, available gear and real AoE capacity. No hidden modifier is consulted for selection.
+- `scripts/v013-natural-progression.cjs`: can use adaptive Realm choice with only publicly visible card information (Affinity/Boss, first revealed omen, condition, risk, item bias), adaptive legal room pathing, and current HP, Bag, available gear and real AoE capacity. No hidden modifier is consulted for selection.
 - Real native player-click target priorities for mechanics-aware profiles: Blood Vessel, Matriarch Brood, Stormglass Anchor, Heartroot Mawbud avoidance and situational Gravecaller Deathbound. Thornbloom remains a visible reactive counter.
 - Crucial correction: the agent **respects an explicitly selected focus target policy** (Daring/Leather Duelist) instead of silently replacing it with generic mechanics-first attacks. That was the principal cause of the observed Duelist regression.
 - Passive/read-only telemetry: net HP and Barrier lost by actual Boss, Elite, Minion and normal enemies, non-focused loss, newly observed enemies, target switches, subtype, modifiers and composition. It is **not source-attributed DPS**; DOTs, healing within a tick and reinforcements complicate attribution.
-- \`scripts/v013-stage6-agent-comparison.cjs\`: repeatable paired *initial* seeds with real account XP, legitimate loot, native gear, native talent purchases, no synthetic unlocks. Separate diagnostic \`scripts/v013-stage6-policy-ablation.cjs\` isolates each decision policy.
+- `scripts/v013-stage6-agent-comparison.cjs`: repeatable paired *initial* seeds with real account XP, legitimate loot, native gear, native talent purchases, no synthetic unlocks. Separate diagnostic `scripts/v013-stage6-policy-ablation.cjs` isolates each decision policy.
 
 ## 2. Final natural E1–E2 comparison
 
@@ -81,7 +81,7 @@ CI:
 
 ## 4. Limitations and next verification stage
 
-1. E1–E2 does **not** provide enough earned XP to reliably observe complete mixed-axis abilities. Expand natural E3–E8 progression **after** investigating the historical E3 \`Invalid talent progress\` exception (seed 9701, Daring, attempt 14); do not suppress it by resetting the simulator.
+1. E1–E2 does **not** provide enough earned XP to reliably observe complete mixed-axis abilities. Expand natural E3–E8 progression **after** investigating the historical E3 `Invalid talent progress` exception (seed 9701, Daring, attempt 14); do not suppress it by resetting the simulator.
 2. Test Boss and Elite abilities at genuinely intermediate difficulty and with realistic staged preparations, so target decisions have a measurable effect; current controlled extremes establish correct scenario pairing and safe execution, not balancing superiority.
 3. Add exact **source-tagged secondary damage** to simulation telemetry, if necessary; observed net loss is only an approximation, not a true AoE damage-source counter.
 4. Re-examine Gravecaller target switching: the controlled native sample suggests that refocusing summoned minions can increase damage taken under some conditions. Keep it a situational counter rather than unconditional targeting.
