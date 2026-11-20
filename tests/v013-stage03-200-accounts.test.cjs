@@ -115,3 +115,26 @@ test('20 provenance manifests must match exact Git, Node patch and native file S
   assert.throws(()=>A.verifyProvenance(dir,shards),/source file hash drift/);
  }finally{fs.rmSync(dir,{recursive:true,force:true});}
 });
+
+test('Natural Camp Stash consolidation counts native potion stack slots and preserves starter gear',()=>{
+ const create=require('./v012-economy-harness.cjs');
+ const N=require('../scripts/v013-natural-progression.cjs');
+ const a=create(9902,undefined,{}, {skipPersistence:true});
+ const s=a.state(),capacity=a.storage.capacity();
+ // Unit fixture only: fill the genuine Stash with legally generated loot
+ // and a stack of carried potions. Natural cohorts never start with this.
+ s.consumables={health:3};s.potionSelection=[];
+ while(a.storage.occupied()<capacity)
+  s.stash.push(a.makeItem(1,'helm',null,'loot','Helm','Common'));
+ const starterIds=s.stash.filter(x=>x.startingGear||x.recoveryStarter).map(x=>x.id);
+ assert.equal(a.storage.occupied(),capacity);
+ assert.equal(s.stash.length<capacity,true,'potions, not gear alone, filled native Stash');
+ const before=s.fragments;
+ const report=N.consolidateStash(a,N.PROFILES['cloth-battlemage']);
+ assert(report.salvaged>0,'legitimate Camp salvage must free spaces');
+ assert(a.storage.hasRoom(),'next Expedition can legally begin with free Stash room');
+ assert(a.storage.occupied()<a.storage.capacity());
+ assert(s.fragments>=before);
+ assert(starterIds.every(id=>s.stash.some(x=>x.id===id)),
+  'never consume recovery starter gear to free potion capacity');
+});
