@@ -1,0 +1,79 @@
+name: Wanderer — Native Blood sustain and Arcane/Aegis archetype A/B
+
+on:
+  push:
+    branches: [audit/v013-stage6]
+    paths: ['.github/workflows/v013-archetype-refinement.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    if: github.ref == 'refs/heads/audit/v013-stage6'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: Validate native Talent Graph and two exact revised profile priorities
+        run: |
+          node --check scripts/v013-stage04-archetype-refinement.cjs
+          node --test tests/v013-stage04-archetype-refinement.test.cjs
+      - run: git diff --check
+
+  seeds:
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        seed: [11001, 11002, 11003, 11004, 11005, 11006, 11007, 11008, 11009, 11010, 11011, 11012]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: Run two new natural E1–E20 persistent characters, no stat overrides
+        env:
+          SEED: ${{ matrix.seed }}
+        run: |
+          mkdir -p reports/stage04
+          node scripts/v013-stage04-archetype-refinement.cjs \
+            --seed="$SEED" \
+            --out="reports/stage04/refinement-$SEED.json"
+      - name: Store runtime code SHA for seed comparison against frozen Stage04
+        if: always()
+        env:
+          SEED: ${{ matrix.seed }}
+        run: |
+          {
+            echo "revision=$GITHUB_SHA"
+            echo "node=$(node --version)"
+            echo "seed=$SEED"
+            sha256sum \
+              scripts/v013-natural-progression.cjs \
+              scripts/v013-agent-strategy.cjs \
+              tests/v012-economy-harness.cjs \
+              combat/v012-gear-stats.js
+          } > "reports/stage04/refinement-$SEED.provenance.txt"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: archetype-refinement-${{ matrix.seed }}
+          path: reports/stage04/refinement-${{ matrix.seed }}.*
+          retention-days: 30
+          if-no-files-found: warn
