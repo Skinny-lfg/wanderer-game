@@ -104,3 +104,20 @@ test('Hexblade evaluates native dagger half-stats in offhand and allows separate
  assert(N.gearScore(sword,p)>N.gearScore({...sword,subtype:'Mace'},p),
   'Sword belongs to the preferred Hexblade main-hand list');
 });
+
+test('Natural Hexblade agent can equip an earned dagger in offhand while retaining a stronger Sword',()=>{
+ const a=create(11011,undefined,{}, {skipPersistence:true});
+ const s=a.state(),profile=N.PROFILES['hexblade-hybrid'];
+ // Deterministic equipment fixture isolates the item-choice algorithm.
+ // Live cohorts still roll all earned gear through the native loot system.
+ const sword=a.makeItem(1,'weapon',null,'loot','Sword','Common');
+ sword.atk=45; sword.spell=12; sword.int=10;
+ const dagger=a.makeItem(1,'weapon',null,'loot','Daggers','Common');
+ dagger.atk=8;dagger.spell=5;dagger.int=4;
+ s.stash.push(sword,dagger);
+ const actions=N.equipEarned(a,profile,false);
+ assert.equal(s.equip.weapon?.id,sword.id,'keep the higher-value Sword in main hand');
+ assert.equal(s.equip.offhand?.id,dagger.id,'equip the naturally legal dagger into offhand');
+ assert(actions.some(x=>x.slot==='offhand'&&x.item===dagger.name),
+  'offhand investment must be explicitly tracked in the native ledger');
+});
