@@ -123,6 +123,13 @@ if(!root.WandererV013GearRolls)throw Error('Current equipment roll engine missin
 let x=Array.from(slot+subtype+(armorType||'')+rarity+tier).reduce((n,ch)=>(Math.imul(n,31)+ch.charCodeAt(0))>>>0,1);
 const previewRandom=()=>((x=(Math.imul(x,1664525)+1013904223)>>>0)/4294967296);
 root.WandererV013GearRolls.apply(o,Math.max(1,(2+progressTier*.91)*tierFactor),preview?previewRandom:ports.gameRandom);
+if(rarity==='Epic'){
+ // Natural Epic loot/merchant gear still gets a live functional trait; Forge
+ // Epics retain their recipe's guaranteed trait during prepareCraft.
+ o.v013Trait=preview?'focused':['Staff','Wand','Orb'].includes(subtype)
+  ?ports.sample(['efficient','ward',...(subtype==='Staff'?['conflagration']:[])])
+  :ports.sample(['focused','blood_transfer']);
+}
 return o;}
 
 function rarityOdds(tier,isCraft){if(ports.PHASE1_PREVIEW)return {Common:.75,Uncommon:.25,Rare:0,Epic:0,Legendary:0};let a={Common:.49,Uncommon:.30,Rare:.15,Epic:.045,Legendary:.015};
