@@ -2,6 +2,7 @@
 // Stage 2: exact Aegis HP/SP formulas and native cap, without synthetic buffs
 // or changes to unrelated defensive sources.
 const {test}=require('node:test'),assert=require('node:assert/strict');
+const fs=require('node:fs');
 const create=require('./v012-economy-harness.cjs');
 const {T,buy}=require('./v013-current-talent-helper.cjs');
 const B=globalThis.WandererV012Buildcraft;
@@ -88,4 +89,14 @@ test('Stage 2 current Talent Tree tooltips describe HP plus Spell Power, not the
  assert(aegis?.description?.includes('8% Spell Power'),'Aegis selection description must be accurate');
  assert(aegis.description.includes('25% Spell Power'),'Aegis cap must be discoverable');
  assert(bastion?.description?.includes('6% Spell Power'),'Arcane Bastion description must reflect scaling');
+});
+
+test('Stage 2 generated Pages mirrors and current tree descriptions have no stale HP-only Aegis logic',()=>{
+ for(const file of ['combat/v012-buildcraft.js','combat/v012-combat-runtime.js','combat/talent-graph-next.js','online/v012-expedition-runtime.js']){
+  assert.equal(fs.readFileSync('docs/'+file,'utf8'),fs.readFileSync(file,'utf8'),'Generated Pages mirror drift: '+file);
+ }
+ const graph=fs.readFileSync('docs/combat/talent-graph-next.js','utf8');
+ assert(graph.includes('5% Max HP + 8% Spell Power'));
+ assert(graph.includes('3% Max HP + 6% Spell Power'));
+ assert(!graph.includes('grant 3% maximum Health as Barrier'));
 });
