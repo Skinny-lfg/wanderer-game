@@ -61,10 +61,13 @@ function totalStats(equipment,ownedRunes,equippedRuneIds,{isTwoHanded,FIELDS,ite
  if(magic)s.phase2Magic=true;
  if(decay)s.phase2Decay=true;
  s.blockChance=off?.subtype==='Shield'?Math.min(48,Math.round(13+s.end*.27+Math.max(0,off.tier||1)*.25+(main?.subtype==='Mace'?7:0))):0;
- s.crit=Math.min(55,s.crit+gearBonus('critBonus'));
- if(s.mana)s.manaRegen+=gearBonus('manaRegenBonus');
- s.wardBonus=gearBonus('wardBonus');
- if(off?.subtype==='Shield')s.blockChance=Math.min(48,s.blockChance+gearBonus('blockBonus'));
+ // Flat-per-item bonuses must not scale into double-digit percentages at E200.
+ // These are equipment-only caps; talents, base attributes and Rune mechanics
+ // continue to use their existing formulas and global combat ceilings.
+ s.crit=Math.min(55,s.crit+Math.min(8,Math.max(0,gearBonus('critBonus'))));
+ if(s.mana)s.manaRegen+=Math.min(3,Math.max(0,gearBonus('manaRegenBonus')));
+ s.wardBonus=Math.min(.3,Math.max(0,gearBonus('wardBonus')));
+ if(off?.subtype==='Shield')s.blockChance=Math.min(48,s.blockChance+Math.min(8,Math.max(0,gearBonus('blockBonus'))));
  s.blockReduction=off?.subtype==='Shield'?(main?.subtype==='Mace'?.67:main?.subtype==='Sword'?.62:.58):0;
  // Cumulative tier estimates: 2 pieces = 12, 3 = 30, 5 = 54.
  s.synergyPower=0;
