@@ -8,13 +8,8 @@ const TRAITS=Object.freeze({
  conflagration:Object.freeze({name:'Emberwake',description:'Funded Fire casts spread Burn to one additional enemy at 35% potency for up to 2 seconds.'}),
  efficient:Object.freeze({name:'Measured Casting',description:'Elemental casts cost 10% less Mana, saving at least 1 Mana per paid cast.'})
 });
-const FOCUSES=Object.freeze({
- spellweave:Object.freeze({name:'Spellweave',subtype:'Cloth',description:'Adds Spell Power to the armor, improving caster builds.',essence:{Uncommon:2,Rare:6,Epic:18}}),
- quickstep:Object.freeze({name:'Quickstep Lining',subtype:'Leather',description:'Adds Evasion Rating, improving the chance to avoid physical attacks.',essence:{Uncommon:2,Rare:6,Epic:18}}),
- bulwark:Object.freeze({name:'Bulwark Rivets',subtype:'Plate',description:'Adds Defense and Health for a sturdier front line.',essence:{Uncommon:2,Rare:6,Epic:18}})
-});
 const recipes=[];
-function add(id,name,slot,subtype,rarity,family,attribute,trait=null){recipes.push(Object.freeze({id,name,slot,subtype,rarity,family,profile:attribute,trait,description:trait?TRAITS[trait].description:'A guaranteed '+rarity+' '+subtype+' with a '+({str:'Strength',agi:'Agility',int:'Intellect',end:'Endurance',cha:'Charisma'}[attribute])+' attribute profile.',source:rarity==='Uncommon'?'Known Blueprint. Gather crafting materials from completed Realms.':'Earn this '+rarity+' Blueprint from an optional Dungeon Contract.'}));}
+function add(id,name,slot,subtype,rarity,family,attribute,trait=null){recipes.push(Object.freeze({id,name,slot,subtype,rarity,family,trait,description:trait?TRAITS[trait].description:'A '+rarity+' '+subtype+' with a weighted random selection of attributes. The recipe controls type and rarity, not the individual stat roll.',source:rarity==='Uncommon'?'Known Blueprint. Gather crafting materials from completed Realms.':'Earn this '+rarity+' Blueprint from an optional Dungeon Contract.'}));}
 const weapons=[['sword','Sword','blood','str','fury','agi'],['mace','Mace','aegis','str','vitality','end'],['bow','Bow','fury','agi','decay','agi'],['daggers','Daggers','fury','agi','blood','agi'],['greatsword','Two-Handed','blood','str','fury','str'],['staff','Staff','magic','int','vitality','int'],['wand','Wand','magic','int','aegis','int']];
 for(const [id,type,family,attribute,other,otherAttribute] of weapons){add('green_'+id,'Apprentice '+type,'weapon',type,'Uncommon',family,attribute);add('blue_'+id,({blood:'Crimson',decay:'Blighted',vitality:'Verdant',aegis:'Warded',fury:'Keen',magic:'Runic'}[family])+' '+type,'weapon',type,'Rare',family,attribute);add('blue_'+id+'_'+other,({blood:'Crimson',decay:'Blighted',vitality:'Verdant',aegis:'Warded',fury:'Keen',magic:'Runic'}[other])+' '+type,'weapon',type,'Rare',other,otherAttribute);}
 const armor=[['helm','Helm'],['armor','Armor'],['gloves','Gloves'],['boots','Boots'],['belt','Belt']];
@@ -63,11 +58,38 @@ function refine(p,family){
  if(!FAMILIES.includes(family)||!(p.dryRooms?.[family]>=3)||p.essence<6||p.cores[family]>=LIMIT)return null;
  const next=clone(p);next.essence-=6;next.cores[family]++;next.dryRooms[family]=0;return next;
 }
-function validFocus(r,focus){return focus==='none'||(!!FOCUSES[focus]&&FOCUSES[focus].subtype===r?.subtype&&['helm','armor','gloves','boots','belt'].includes(r?.slot));}
-function focusCost(r,focus){return focus==='none'?0:(FOCUSES[focus]?.essence[r?.rarity]||0);}
-function progress(state,id,tier=1,focus='none'){const p=state?.crafting||create(),r=byId.get(id);checked(p);if(!r)return null;if(!validFocus(r,focus))return null;const price={...cost(id,tier),focus,focusEssence:focusCost(r,focus)};price.essence+=price.focusEssence;const requirements=[{key:'fragments',name:'Fragments',have:state?.fragments||0,need:price.fragments,source:'Combat rewards and salvaged equipment.'},{key:'essence',name:'Essence',have:p.essence,need:price.essence,source:price.focusEssence?'Complete Realms: 1 combat, 2 Elite, 5 boss. Includes '+price.focusEssence+' Essence for '+FOCUSES[focus].name+'.':'Complete Realms: 1 combat, 2 Elite, 5 boss.'}];if(price.cores)requirements.push({key:'cores',name:r.family[0].toUpperCase()+r.family.slice(1)+' Reagents',have:p.cores[r.family],need:price.cores,source:'Search '+r.family+' rooms. Elites have better odds; bosses guarantee one.'});const known=unlocked(p,id);return {recipe:r,cost:price,unlocked:known,ready:known&&requirements.every(x=>x.have>=x.need),requirements};}
-function craftItem(generated,r,price){if(!generated||typeof generated.id!=='string'||generated.slot!==r.slot||generated.rarity!==r.rarity)return null;const item={...generated,name:r.name,recipeId:r.id,craftingProfile:r.profile,tier:price.tier,crafted:true,craftPrice:price.fragments,source:'forge',isNew:true};const attrs=['str','agi','int','end','cha'],budget=attrs.reduce((sum,key)=>sum+Math.max(0,Number(item[key])||0),0);for(const key of attrs)item[key]=key===r.profile?Math.max(1,budget):0;if(r.trait)item.v013Trait=r.trait;else delete item.v013Trait;if(price.focus!=='none'){item.v013CraftFocus=price.focus;const base=Math.max(1,Number(item.def)||Number(item.hp)||1);if(price.focus==='spellweave')item.spell=(Number(item.spell)||0)+Math.max(1,Math.round(base*.3));else if(price.focus==='quickstep')item.evasionRating=(Number(item.evasionRating)||0)+Math.max(1,Math.round(base*.5));else if(price.focus==='bulwark'){item.def=(Number(item.def)||0)+Math.max(1,Math.round(base*.2));item.hp=(Number(item.hp)||0)+Math.max(1,Math.round(base*.15));}}else delete item.v013CraftFocus;return item;}
-function previewCraft(id,tier,makePreview,focus='none'){const r=byId.get(id);if(!r||typeof makePreview!=='function'||!validFocus(r,focus))return null;const price={...cost(id,tier),focus,focusEssence:focusCost(r,focus)};return craftItem(makePreview(price.tier,r.slot,null,'forge',r.subtype,r.rarity),r,price);}
-function prepareCraft(state,id,tier,makeItem,focus='none'){if(!state||!Number.isSafeInteger(state.fragments)||state.fragments<0||typeof makeItem!=='function')return null;const result=progress(state,id,tier,focus);if(!result?.ready)return null;const r=result.recipe,price=result.cost,item=craftItem(makeItem(price.tier,r.slot,null,'forge',r.subtype,r.rarity),r,price);if(!item)return null;const p=clone(state.crafting||create());p.essence-=price.essence;p.cores[r.family]-=price.cores;return {item,fragments:state.fragments-price.fragments,crafting:p};}
-root.WandererV013Crafting=Object.freeze({FAMILIES,RECIPES,TRAITS,FOCUSES,refine,create,valid,tierBand,cost,unlocked,discover,progress,award,previewCraft,prepareCraft});
+function progress(state,id,tier=1){
+ const p=state?.crafting||create(),r=byId.get(id);checked(p);if(!r)return null;
+ const price=cost(id,tier);
+ const requirements=[
+  {key:'fragments',name:'Fragments',have:state?.fragments||0,need:price.fragments,source:'Combat rewards and salvaged equipment.'},
+  {key:'essence',name:'Essence',have:p.essence,need:price.essence,source:'Crafting material from completed Realms; no extra Essence for particular stats.'}
+ ];
+ if(price.cores)requirements.push({key:'cores',name:r.family[0].toUpperCase()+r.family.slice(1)+' Reagents',have:p.cores[r.family],need:price.cores,source:'Search '+r.family+' rooms. Elites have better odds; bosses guarantee one.'});
+ return {recipe:r,cost:price,unlocked:unlocked(p,id),ready:unlocked(p,id)&&requirements.every(x=>x.have>=x.need),requirements};
+}
+function craftItem(generated,r,price){
+ if(!generated||typeof generated.id!=='string'||generated.slot!==r.slot||generated.rarity!==r.rarity)return null;
+ const item={...generated,name:r.name,recipeId:r.id,tier:price.tier,crafted:true,craftPrice:price.fragments,source:'forge',isNew:true};
+ // The same source roll is preserved for Forge, drops and Merchant: rarity and
+ // blueprint trait are guaranteed, but attributes never become predetermined.
+ if(r.trait)item.v013Trait=r.trait;
+ else delete item.v013Trait;
+ delete item.v013CraftFocus;
+ return item;
+}
+function previewCraft(id,tier,makePreview){
+ const r=byId.get(id);if(!r||typeof makePreview!=='function')return null;
+ const price=cost(id,tier);
+ return craftItem(makePreview(price.tier,r.slot,null,'forge',r.subtype,r.rarity),r,price);
+}
+function prepareCraft(state,id,tier,makeItem){
+ if(!state||!Number.isSafeInteger(state.fragments)||state.fragments<0||typeof makeItem!=='function')return null;
+ const result=progress(state,id,tier);if(!result?.ready)return null;
+ const r=result.recipe,price=result.cost,item=craftItem(makeItem(price.tier,r.slot,null,'forge',r.subtype,r.rarity),r,price);
+ if(!item)return null;
+ const p=clone(state.crafting||create());p.essence-=price.essence;p.cores[r.family]-=price.cores;
+ return {item,fragments:state.fragments-price.fragments,crafting:p};
+}
+root.WandererV013Crafting=Object.freeze({FAMILIES,RECIPES,TRAITS,refine,create,valid,tierBand,cost,unlocked,discover,progress,award,previewCraft,prepareCraft});
 })(globalThis);
