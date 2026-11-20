@@ -82,7 +82,7 @@ function stress(current){
     minHpPct:raw.minHpPct,damageDealt:raw.damageDealt,damageTaken:raw.damageTaken,
     attackPower:m.attackPower,spellPower:m.spellPower,barrierGenerated:m.barrierGenerated,
     barrierAbsorbed:m.barrierAbsorbed,healingActual:m.healingActual,dotDamageActual:m.dotDamageActual,
-    manaSpent:m.manaSpent,passiveActivations:m.passiveActivations||{},
+    manaSpent:m.manaSpent,plagueSpreadTransfers:raw.plagueSpreadTransfers||0,passiveActivations:m.passiveActivations||{},
     bossAffinity:raw.bossAffinity||null,bossStyle:raw.bossStyle||null,
     initialStateSha256:raw.initialStateSha256});
   }catch(e){
@@ -134,7 +134,8 @@ function markdown(report){
   '|---|---|---:|---:|');
  for(const p of report.pairs){
   const activations=report.stress.groups.filter(g=>g.build===p.id).reduce((n,g)=>n+(g.passiveActivations[p.skill]||0),0);
-  lines.push('| '+[p.first+' + '+p.second,p.skill,p.points,p.skill==='plague_spread'?'Not in Buildcraft telemetry (implemented at Dungeon kill hook)':activations].join(' | ')+' |');
+  const observation=p.skill==='plague_spread'?report.normalPlagueSpreadTransfers+' normal + '+report.stressPlagueSpreadTransfers+' stress transferred status stacks (native Dungeon kill hook)':activations;
+  lines.push('| '+[p.first+' + '+p.second,p.skill,p.points,observation].join(' | ')+' |');
  }
  lines.push('','## Fervent Life candidate — Stage 3 observed triggers','',
   '| E | Seed | Attack Power | Fervent procs | Extra heal ceiling at +3% AP |',
@@ -147,7 +148,7 @@ function markdown(report){
   '- A win rate over only four cases per build and kind is exploratory, not a balance verdict. Boss and Elite target policy is mechanics.',
   '- All unaffected 11 builds must match Stage 3 on native Normal encounters; Fury+Vitality is the only intended coefficient change.',
   '- The real Fervent Life proc remains critical-hit-only, retains its four-second cooldown, and overheal converts to Barrier under the existing cap.',
-  '- Plague Spread is processed at the Dungeon enemy-death hook, not via Buildcraft. Buildcraft telemetry cannot count it; do not call it inactive.',
+  '- Plague Spread is processed at the Dungeon enemy-death hook, not via Buildcraft. Native transfer counts measure copied Bleed/Rot statuses, not Buildcraft proc activations. Zero transfers may mean no eligible death/target in a sample.',
   '- Raw individual rows with deterministic item fingerprints and seed are included in the JSON artifact.',
   '');
  return lines.join('\n');
@@ -159,11 +160,13 @@ function run(output=OUTPUT){
  const stage3Rows=FROZEN.ferventLifeCases;
  assert.equal(stage3Rows.length,4,'Frozen Fervent Life proc cases missing');
  const stressResults=stress(current);
+ const normalPlagueSpreadTransfers=current.rows.filter(r=>r.build==='decay-blood').reduce((n,r)=>n+(r.plagueSpreadTransfers||0),0);
+ const stressPlagueSpreadTransfers=stressResults.rows.filter(r=>r.build==='decay-blood').reduce((n,r)=>n+(r.plagueSpreadTransfers||0),0);
  const summary={total:current.summary.total,valid:current.summary.valid,
   errors:current.summary.errors,timeouts:current.summary.timeouts,wins:current.summary.wins};
  const outputData={schemaVersion:1,stage:'six-hybrid-affinity-review-stage4',stage3Source:FROZEN.sourceSha256,
   stage3Replay:FROZEN.replaySha256,currentSource:current.sourceSha256,currentReplay:current.replaySha256,
-  settings:current.settings,pairs,normal:summary,normalGroups,stress:stressResults,
+  settings:current.settings,pairs,normal:summary,normalGroups,stress:stressResults,normalPlagueSpreadTransfers,stressPlagueSpreadTransfers,
   marginalEstimates:marginalEstimate(stage3Rows)};
  const digest=crypto.createHash('sha256').update(JSON.stringify({normalGroups,stress:stressResults.rows,pairs})).digest('hex');
  outputData.replaySha256=digest;
@@ -174,7 +177,7 @@ function run(output=OUTPUT){
  const log={out:output,normal:summary,stress:{total:stressResults.total,errors:stressResults.errors,
   timeouts:stressResults.timeouts,wins:stressResults.wins,deaths:stressResults.deaths},
   furyVitality:normalGroups.filter(g=>g.build==='fury-vitality').map(g=>({level:g.level,healingBefore:g.healingBefore,healingAfter:g.healingAfter,delta:g.delta})),
-  linkProcs:pairs.map(p=>({id:p.id,skill:p.skill,observed:stressResults.groups.filter(g=>g.build===p.id).reduce((n,g)=>n+(g.passiveActivations[p.skill]||0),0)})),
+  linkProcs:pairs.map(p=>({id:p.id,skill:p.skill,observed:p.skill==='plague_spread'?normalPlagueSpreadTransfers+stressPlagueSpreadTransfers:stressResults.groups.filter(g=>g.build===p.id).reduce((n,g)=>n+(g.passiveActivations[p.skill]||0),0),metric:p.skill==='plague_spread'?'native transferred statuses':'Buildcraft activations'})),
   source:current.sourceSha256,replay:digest};
  console.log('STAGE4_HYBRID_REVIEW='+JSON.stringify(log));
  if(stressResults.errors||stressResults.timeouts)process.exitCode=1;

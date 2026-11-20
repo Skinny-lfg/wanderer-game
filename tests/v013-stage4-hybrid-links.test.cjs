@@ -96,6 +96,7 @@ test('Stage 4 Plague Spread uses current Dungeon death hook, no duplicate Buildc
  const s=fs.readFileSync('online/v012-expedition-runtime.js','utf8');
  assert(s.includes("automaticTalents?.nodes?.includes('plague_spread')"));
  assert(s.includes("find(dot=>!dot.spread)"));
+ assert(s.includes("phase6Metric(r,'plagueSpreadTransfers',transferred)"),'Native transfers must be observable in simulation');
  assert(s.includes("combatLinkEffect?.(r,'bleed',enemy,[target])"));
  assert(s.includes("combatLinkEffect?.(r,'rot',enemy,[target])"));
  assert(!fs.readFileSync('combat/v012-buildcraft.js','utf8').includes("rank(b,'plague_spread')"),

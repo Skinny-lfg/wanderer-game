@@ -112,7 +112,7 @@ function run(cfg){
     barrierPerSecond:duration?round(m.barrierGenerated/duration,3):null,
     healingPerSecond:duration?round(m.healingActual/duration,3):null,
     dotPerSecond:duration?round(m.dotDamageActual/duration,3):null,
-    passiveActivations:m.passiveActivations,damageDealt:row.damageDealt,damageTaken:row.damageTaken,
+    passiveActivations:m.passiveActivations,plagueSpreadTransfers:row.plagueSpreadTransfers||0,damageDealt:row.damageDealt,damageTaken:row.damageTaken,
     nativeEncounter:{affinity:row.affinity,risk:row.risk,groupSize:row.groupSize,kind:row.nativeEncounter},
     initialStateSha256:row.initialStateSha256,
     ...(row.timedOut?{error:'Native combat timed out'}:{})
