@@ -25,7 +25,7 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - name: Validate Stage 02 setup, E3 repair and native progression
+      - name: Validate Stage 02 native Forge capacity, combat horizon and E3 repair
         run: |
           node --check scripts/v013-stage02-run-cohort.cjs
           node --check scripts/v013-stage02-aggregate.cjs
@@ -55,7 +55,7 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - name: Native E1–E20, five persistent accounts per cohort
+      - name: Native E1–E20 with 12000 combat ticks, five persistent accounts per cohort
         env:
           SEED: ${{ matrix.seed }}
           GROUP: ${{ matrix.group }}
