@@ -46,7 +46,7 @@ function summaries(rows,keys){
 function pairedReport(options={}){
  const small=options.mode==='smoke',levels=small?[LEVELS[1]]:LEVELS;
  const builds=small?[BUILDS[0]]:BUILDS,kinds=small?['normal']:KINDS,seeds=small?[SEEDS[0]]:SEEDS;
- const rows=[],pairs=[],issues=[],epicTrials=[];
+ const rows=[],pairs=[],issues=[],epicTrials=[],preparedBosses=[];
  for(const tier of levels)for(const build of builds)for(const kind of kinds)for(const seed of seeds){
   const cohort=[];
   for(const offhand of TYPES){
@@ -96,6 +96,34 @@ function pairedReport(options={}){
    }catch(error){issues.push({kind:'epic_error',offhand:c.offhand,seed,upgraded,error:String(error.stack||error).slice(0,1200)});}
   }
  }
+ if(!small){
+  // Separate high-investment, prepared-boss sensitivity run. These are
+  // controlled fixtures, NOT claimed as naturally earned E5/E10/E20 gear.
+  for(const tier of LEVELS.slice(1))for(const build of BUILDS)for(const seed of SEEDS){
+   const cohort=[];
+   for(const offhand of TYPES){
+    try{
+     const r=S.bossPreparationEncounter(tier.E,build,seed,{
+      ...S.DEFAULTS,mode:'bossprep',gear:'current',rarity:'Epic',points:24,
+      runes:true,lockScenarioStreams:true,measure:true,tickLimit:4500,
+      targetPolicy:'mechanics',offhandType:offhand
+     },'both');
+     const row={build:build.id,weapon:build.weapon,level:tier.E,
+      rarity:'Epic',points:24,kind:'prepared-boss',seed,offhand,
+      otherGearFingerprint:r.otherGearFingerprint,gearFingerprint:r.gearFingerprint,
+      affinity:r.affinity,realm:r.realm,groupSize:r.initialEnemies,
+      status:r.status,won:r.won,died:r.died,timedOut:r.timedOut,seconds:r.seconds,
+      damageDealt:r.damageDealt,damageTaken:r.damageTaken,absorbed:r.absorbed,
+      minHpPct:r.minHpPct,hpEnd:r.hpEnd,mpEnd:r.mpEnd,...metrics(r)};
+     cohort.push(row);preparedBosses.push(row);
+     if(r.timedOut||!r.won&&!r.died)issues.push({kind:'prepared_unresolved',build:build.id,E:tier.E,seed,offhand,status:r.status});
+    }catch(error){issues.push({kind:'prepared_error',build:build.id,E:tier.E,seed,offhand,error:String(error.stack||error).slice(0,1400)});}
+   }
+   if(cohort.length===4)for(const field of ['otherGearFingerprint','affinity','realm','groupSize'])
+    if(new Set(cohort.map(x=>x[field])).size!==1)
+     issues.push({kind:'prepared_unpaired_'+field,build:build.id,E:tier.E,seed,values:cohort.map(x=>x[field])});
+  }
+ }
  return {stage:'offhand-stage5',schemaVersion:1,mode:small?'smoke':'paired',
   source:S.sourceFingerprint().sha256,
   settings:{levels,builds:builds.map(x=>({id:x.id,weapon:x.weapon,families:x.families})),
@@ -104,10 +132,14 @@ function pairedReport(options={}){
   coverage:{expected:levels.length*builds.length*kinds.length*seeds.length*4,
    completed:rows.length,pairedGroups:pairs.length/3,
    wins:rows.filter(r=>r.won).length,deaths:rows.filter(r=>r.died).length,
-   timeouts:rows.filter(r=>r.timedOut).length,issues:issues.length},
+   timeouts:rows.filter(r=>r.timedOut).length,
+   preparedBosses:preparedBosses.length,preparedBossWins:preparedBosses.filter(r=>r.won).length,
+   issues:issues.length},
   groupSummaries:summaries(rows,['level','kind','offhand']),
   buildSummaries:summaries(rows,['build','offhand']),
-  pairs,epicTrials,issues,rows,
+  pairs,epicTrials,preparedBossSummaries:summaries(preparedBosses,['level','offhand']),
+  preparedBossBuildSummaries:summaries(preparedBosses,['build','offhand']),
+  preparedBosses,issues,rows,
   limitations:[
    'All four Off-Hand choices are controlled genuine native item rolls; not naturally earned loot.',
    'Only E1 uses a naturally accurate zero talent budget. E5/E10/E20 use fixed synthetic 4/10/18-point builds, not guaranteed earned XP.',
@@ -115,6 +147,7 @@ function pairedReport(options={}){
    'Three seeds per build/level/kind: outcomes are exploratory, not statistically conclusive win rates.',
    'Elapsed seconds count only on wins when comparing speed. Early death is not faster progress.',
    'Epic traits are explicit diagnostic fixtures, not items magically awarded to natural-account players.',
+   'Prepared-boss stress is a separate 216-fight high-investment cohort: native Epic gear, 24 synthetic Talent points, three Runes, marked Elite and Reliquary preparation. It does not represent earned progression.',
    'Real offhand proc telemetry is read from the combat engine; Gear Power is not used as a surrogate for combat performance.'
   ]};
 }
@@ -154,6 +187,13 @@ function markdown(report){
   lines.push('','## By build','','| Build/Off-Hand | N | Wins | Deaths | Win % | Barrier generated | Damage taken |',
    '|---|---:|---:|---:|---:|---:|---:|');
   for(const g of report.buildSummaries)lines.push('| '+g.label+' | '+g.n+' | '+g.wins+' | '+g.deaths+' | '+g.winPct+' | '+g.meanBarrierGenerated+' | '+g.meanDamageTaken+' |');
+  if(report.preparedBossSummaries?.length){
+   lines.push('','## High-investment prepared Boss stress (separate synthetic cohort)','',
+    '| E and Off-Hand | N | Wins | Deaths | Barrier absorbed | Orb Barrier | Tome Mana | Charm healing |',
+    '|---|---:|---:|---:|---:|---:|---:|---:|');
+   for(const g of report.preparedBossSummaries)
+    lines.push('| '+g.label+' | '+g.n+' | '+g.wins+' | '+g.deaths+' | '+g.meanAbsorbed+' | '+g.meanOrbBarrier+' | '+g.meanTomeMana+' | '+g.meanCharmHealing+' |');
+  }
  }else if(report.accounts){
   lines.push('## Earned accounts','','| Profile | Attempts | Highest E reached | Final Off-Hand | Off-Hand changes | Boss wins | Errors |',
   '|---|---:|---:|---|---:|---:|---:|');

@@ -363,7 +363,7 @@ function bossPreparationEncounter(level,build,seed,opts,strategy){
  // Controlled matched-seed native boss in a first-ring room. The selected Realm Card
  // is Dangerous so the marked Elite removes one guard rather than lowering Attack.
  const {a,c,g,card,gearE,resolvedSeed,seedShift,allocatedPoints}=prepare(level,build,seed,opts,1);
-  const gearFingerprint=equipmentFingerprint(a);
+ const gearFingerprint=equipmentFingerprint(a),otherGearFingerprint=equipmentFingerprint(a,{excludeOffhand:true});
  const P4=globalThis.WandererV013BossPreparation;
  const state=g.dungeon.foundationState,manifest=g.dungeon.foundationManifest;
  const candidate=card.edges.filter(([x])=>x===0).map(([,y])=>y).find(n=>card.nodes[n]?.kind==='combat');
@@ -381,7 +381,8 @@ function bossPreparationEncounter(level,build,seed,opts,strategy){
  if(!c.visitRoom(candidate)||!a.enter())throw Error('Cannot enter prepared native boss');
  const run=a.encounter({count:1,boss:true});
  const result=fight(a,c,opts.tickLimit,opts.targetPolicy,opts.measure===true);
- return {mode:'bossprep',kind:strategy,level,build:build.id,seed,gearE,gearFingerprint,gearTier:P.gearTier(gearE).name,
+ return {mode:'bossprep',kind:strategy,level,build:build.id,seed,gearE,gearFingerprint,otherGearFingerprint,
+  offhandType:a.state().equip.offhand?.subtype||null,offhandTrait:a.state().equip.offhand?.v013Trait||null,gearTier:P.gearTier(gearE).name,
   risk:card.risk,affinity:card.family,resolvedSeed,seedShift,preparationCostHp:sacrifice,pointsBudget:opts.points,pointsSpent:allocatedPoints,
   realm:card.name,unlocked:level,...result};
 }
