@@ -1,7 +1,8 @@
 'use strict';
 // Off-Hand Stage 2: real unified gear rolls, rarity budgets and derived stats.
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs');
-const G=require('../economy/v013-gear-rolls.js'),create=require('./v012-economy-harness.cjs');
+require('../economy/v013-gear-rolls.js');require('../economy/v013-crafting.js');
+const G=globalThis.WandererV013GearRolls,create=require('./v012-economy-harness.cjs');
 const rng=seed=>()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);
 const TYPES=['Orb','Tome','Charm'];
 const MAINS={Orb:'spell',Tome:'mana',Charm:'hp'};
@@ -68,7 +69,7 @@ test('Native Common Tome adds Mana on Wand; Common Charm adds HP on physical Swo
  const tome=a.makeItem(1,'offhand',null,'loot','Tome','Common');
  const charm=a.makeItem(1,'offhand',null,'loot','Charm','Common');
  const orb=a.makeItem(1,'offhand',null,'loot','Orb','Common');
- assert.deepEqual(tome.affixes,['mana']);assert.deepEqual(charm.affixes,['hp']);assert.deepEqual(orb.affixes,['spell']);
+ assert.deepEqual([...tome.affixes],['mana']);assert.deepEqual([...charm.affixes],['hp']);assert.deepEqual([...orb.affixes],['spell']);
  const wandBase=a.baseStats({weapon:wand}),wandWithTome=a.baseStats({weapon:wand,offhand:tome});
  assert(wandWithTome.mana>wandBase.mana,'Tome improves real Mana pool');
  const swordBase=a.baseStats({weapon:sword}),swordWithCharm=a.baseStats({weapon:sword,offhand:charm});
