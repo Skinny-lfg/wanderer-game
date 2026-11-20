@@ -97,3 +97,15 @@ test('Stage 3 generated Pages and active node descriptions have no retired fixed
  assert(craft.includes('6% base hit damage + 2% Spell Power'));
  assert(!craft.includes("applyRot(b,c,base*.06);"));
 });
+
+test('Stage 3 comparator validates frozen Stage 2 cohorts and rejects unrelated Affinity drift',()=>{
+ const C=require('../scripts/v013-stage3-coherence-compare.cjs');
+ const before=require('../reports/v013-stage2-affinity-freeze.json');
+ const groups=before.groups.map(g=>({...g}));
+ groups.find(g=>g.build==='pure-vitality').meanHealingPerSecond+=.3;
+ const current={settings:{...before.settings,output:'reports/current.json'},
+  summary:{valid:48,errors:0,timeouts:0,groups}};
+ assert.equal(C.compare(before,current).length,24);
+ groups.find(g=>g.build==='pure-fury').meanHealingPerSecond+=.1;
+ assert.throws(()=>C.compare(before,current),/Unrelated pure-fury/);
+});

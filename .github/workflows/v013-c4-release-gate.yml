@@ -18,6 +18,7 @@ on:
       - 'scripts/v013-c9-function-inventory.cjs'
       - 'scripts/v013-affinity-baseline.cjs'
       - 'scripts/v013-stage2-barrier-compare.cjs'
+      - 'scripts/v013-stage3-coherence-compare.cjs'
       - 'scripts/prepare-automatic-preview.mjs'
       - 'scripts/update-pages-preview.mjs'
       - 'package.json'
@@ -68,6 +69,18 @@ jobs:
           path: |
             reports/v013-stage2-affinity-comparison.json
             reports/v013-stage2-affinity-comparison.md
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Stage 3 native Vitality and Decay matched comparison (frozen Stage 2)
+        run: npm run simulate:v013:affinities:stage3
+      - name: Stage 3 native affinity comparison evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v013-stage3-affinity-comparison
+          path: |
+            reports/v013-stage3-affinity-comparison.json
+            reports/v013-stage3-affinity-comparison.md
           if-no-files-found: warn
           retention-days: 30
       - name: Verify current 343-node Talent Graph runtime and source catalog
