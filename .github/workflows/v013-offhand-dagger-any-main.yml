@@ -1,4 +1,4 @@
-name: Wanderer — Off-Hand Dagger strikes with every one-handed main weapon
+name: Wanderer — Native Off-Hand Dagger strikes (current v0.13 regression)
 
 on:
   push:
