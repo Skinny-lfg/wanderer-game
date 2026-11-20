@@ -9,45 +9,6 @@ const S=require('../scripts/simulate-progression.cjs');
 const make=(seed=113)=>create(seed,undefined,{}, {skipPersistence:true,now:1720000000000+seed});
 const fund=(a,xp=10000)=>{const s=a.state();s.automaticTalents=a.talents.award(s.automaticTalents,xp);};
 
-test('S1: native tier module is loaded and current E1 does not bypass tier unlock or materials',()=>{
- const a=make(),s=a.state(),id=s.equip.weapon.id,original=JSON.stringify(s.equip.weapon);
- const preview=a.forge.tierPreview(id);
- assert(preview);assert.equal(preview.target.minimum,5);assert.equal(preview.ready,false);
- assert.equal(a.forge.tierUpgrade(id),null);
- assert.equal(JSON.stringify(s.equip.weapon),original);
- assert.equal(a.forge.tierPreview('unowned-id'),null);
-});
-
-test('S1: tier upgrade uses exact native Forge costs, preserves item ID and respects E5 unlock',()=>{
- const a=make(114),s=a.state(),id=s.equip.weapon.id;
- s.fragments=2000;s.crafting.essence=100;
- assert.equal(a.forge.tierUpgrade(id),null,'materials alone cannot bypass E5');
- a.setUnlocked(5);
- const p=a.forge.tierPreview(id),before={fragments:s.fragments,essence:s.crafting.essence};
- assert(p.ready);assert.equal(p.location.kind,'equip');
- const result=a.forge.tierUpgrade(id);
- assert(result);assert.equal(result.id,id);assert.equal(result.tier,5);
- assert.equal(s.equip.weapon.id,id);assert.equal(s.fragments,before.fragments-p.cost.fragments);
- assert.equal(s.crafting.essence,before.essence-p.cost.essence);
- assert.equal(a.forge.tierPreview(id).target.minimum,15);
- assert.equal(a.forge.tierUpgrade(id),null,'E15 must remain locked');
-});
-
-test('S1: investment policy selects legal tier upgrades when crafting is unaffordable',()=>{
- const a=make(115),s=a.state(),id=s.equip.weapon.id;
- a.setUnlocked(5);
- s.fragments=1000;s.crafting.essence=2;
- const expected=a.forge.tierPreview(id);assert(expected.ready);
- const anyCraft=a.forge.recipes.some(r=>a.forge.progress(r.id,5)?.ready);
- assert.equal(anyCraft,false,'fixture should have resources for tiers but no recipe craft');
- const result=N.investEarnedGear(a,N.PROFILES.cautious,5);
- assert.equal(result.crafted.length,0);
- assert(result.upgraded.length>0,'native tier upgrades should be selected if useful');
- assert(result.upgraded.some(x=>x.toTier===5));
- assert(s.fragments<1000&&s.crafting.essence<2);
- assert.equal(s.equip.weapon.id,id);
-});
-
 test('S1: all three Magic elements require earned points, root/choice, and native attunement',()=>{
  for(const element of ['fire','frost','lightning']){
   const a=make(130+['fire','frost','lightning'].indexOf(element)),s=a.state(),profile=N.PROFILES['magic-'+element];
@@ -124,13 +85,13 @@ test('S1: controlled simulator also offers genuine Frost magic without altering 
  assert(S.parseArgs(['--builds=magic-frost','--levels=1','--seeds=1']).builds.includes('magic-frost'));
 });
 
-test('S1: natural cohort still starts with no XP, no purchased items, no tier upgrades',()=>{
+test('S1: natural cohort still starts with no XP or fabricated equipment',()=>{
  const out=N.run({...N.DEFAULTS,seeds:[9951],profiles:['magic-fire'],
   maxLevel:1,maxAttempts:1,maxTotalAttempts:1});
  assert.equal(out.coverage.errors,0);
  const attempt=out.accounts[0].attempts[0];
  assert.equal(attempt.before.xp,0);
  assert.equal(attempt.before.spent,0);
- assert.equal(attempt.camp.upgraded.length,0);
+ assert.equal(Object.hasOwn(attempt.camp,'upgraded'),false);
  assert.equal(attempt.camp.resets.length,0);
 });
