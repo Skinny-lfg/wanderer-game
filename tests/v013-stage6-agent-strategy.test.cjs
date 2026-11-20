@@ -63,8 +63,15 @@ test('Target selection handles live Gravecaller minions, Matriarch brood, Heartr
  const heart=boss('devourer');assert.equal(A.selectTarget({status:'fight',enemies:[heart,minion('vitality')]},cap,heart),heart);
  const storm=boss('conductor'),anchor={hp:10,role:'minion',stage84Node:true};
  assert.equal(A.selectTarget({status:'fight',enemies:[storm,anchor]},cap,storm),anchor);
- const elite={hp:90,miniboss:true,eliteType:'gravecaller'},summon={hp:16,role:'minion'};
- assert.equal(A.selectTarget({status:'fight',enemies:[elite,summon]},cap,elite),summon);
+ const elite={hp:90,miniboss:true,eliteType:'gravecaller'};
+ const escort={hp:16,role:'minion'},summon={hp:16,role:'minion',
+  stage83Summoned:true,stage83Summoner:'elite'};
+ const stage={status:'fight',enemies:[elite,escort,summon]};
+ assert.equal(A.selectTarget(stage,cap,elite),elite,
+  'generic minion is not the actual Deathbound source');
+ stage.deathboundDecay={stacks:3,expiresAt:10,nextAt:2};
+ assert.equal(A.selectTarget(stage,cap,elite),summon,
+  'observed 3-stack Deathbound justifies interrupting single-target focus');
 });
 test('Combat attribution uses observed net HP/barrier and does not mutate combat',()=>{
  const boss={hp:100,barrier:12,boss:true},add={hp:32,barrier:0,role:'minion'};
