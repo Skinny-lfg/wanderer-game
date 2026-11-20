@@ -86,7 +86,7 @@ test('Forged E-level unlock or native Boss victory is rejected',()=>{
 });
 test('Mixed runner revisions and duplicate accounts cannot enter consolidated report',()=>{
  const cohorts=all();cohorts[3].runnerSha256='new-runner';
- assert.throws(()=>A.audit(cohorts),/mixed source fingerprints/);
+ assert.throws(()=>A.audit(cohorts),/mixed runner\/agent hashes/);
  const same=all();same[0].accounts[0].profile=same[0].accounts[1].profile;
  assert.throws(()=>A.audit(same),/profile mismatch/);
 });
