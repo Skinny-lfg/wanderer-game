@@ -61,12 +61,23 @@ function parseArgs(args=[]){
 function gearScore(item,profile){
  if(!item)return -1;
  const rarity={Common:0,Uncommon:1,Rare:2,Epic:3,Legendary:4};
- const magic=profile.families.includes('magic'),agile=profile.armor==='Leather',
-  tank=profile.armor==='Plate';
+ const magic=profile.families.includes('magic'),decay=profile.families.includes('decay'),
+  aegis=profile.families.includes('aegis'),vitality=profile.families.includes('vitality'),
+  agile=profile.armor==='Leather',tank=profile.armor==='Plate';
+ const manaUser=magic||decay||(profile.weapons||[]).some(w=>w==='Wand'||w==='Staff');
+ const barrierUser=aegis||item.subtype==='Orb';
+ // Decision score, NOT a hidden native buff or DPS prediction. Off-Hand
+ // stat weights are counted only when the profile can use those resources.
+ const offhandUtility=item.slot!=='offhand'?0:{
+  Shield:(tank?14:7)+(aegis?4:0),
+  Orb:(aegis?16:magic?14:decay?12:7)+(item.v013Trait==='ward'&&manaUser?5:0),
+  Tome:manaUser?12+(magic?5:0)+(item.v013Trait==='echoing_recall'?5:0):-10,
+  Charm:11+(vitality?6:0)+(item.v013Trait==='heartbloom'?4:0)
+ }[item.subtype]||0;
  const s=Number(item.atk||0)*(agile?3.4:magic?2.1:2.8)+
   Number(item.def||0)*(tank?4.2:magic?2.1:3.2)+
   Number(item.hp||0)*(tank?.32:.24)+
-  Number(item.spell||item.spellPower||0)*(magic?4.1:1.4)+
+  Number(item.spell||item.spellPower||0)*(magic?4.1:barrierUser||decay?2.5:1.4)+
   Number(item.attack||0)*2+Number(item.armor||0)*3+
   Number(item.str||0)*(tank?3.3:magic?1.1:2)+
   Number(item.end||0)*(tank?3.9:2.5)+
@@ -76,16 +87,16 @@ function gearScore(item,profile){
   Number(item.block||0)*(tank?3.6:2)+
   Number(item.blockChance||0)*(tank?3.5:2)+
   Number(item.evasionRating||0)*(agile?2.6:1.15)+
-  Number(item.wardBonus||0)*(magic?21:15)+
-  Number(item.manaRegenBonus||0)*(magic?15:8)+
-  Number(item.mana||0)*(magic?1.5:.45)+Number(item.spd||0)*(agile?2:1.4);
+  Number(item.wardBonus||0)*(barrierUser?21:15)+
+  Number(item.manaRegenBonus||0)*(manaUser?15:0)+
+  Number(item.mana||0)*(manaUser?1.5:0)+Number(item.spd||0)*(agile?2:1.4);
  const armor=item.armorType||(['Cloth','Leather','Plate'].includes(item.subtype)?item.subtype:null);
  const isArmor=['helm','armor','gloves','boots','belt'].includes(item.slot);
  const alignment=isArmor&&armor===profile.armor?7:isArmor&&armor&&armor!==profile.armor?-3:0;
  const weapon=item.slot==='weapon'&&profile.weapons?.includes(item.subtype)?9:
   item.slot==='weapon'&&profile.weapons?.length?-5:0;
  return round(s+Number(item.tier||1)*.5+(rarity[item.rarity]||0)*1.5+
-  alignment+weapon+Number(item.critBonus||0)*(agile?2.5:1.8)+
+  alignment+weapon+offhandUtility+Number(item.critBonus||0)*(agile?2.5:1.8)+
   Number(item.blockBonus||0)*(tank?2.5:1.2));
 }
 function gearSnapshot(a){
@@ -94,7 +105,7 @@ function gearSnapshot(a){
   rarity:Object.fromEntries([...new Set(items.map(x=>x.rarity))].sort().map(r=>[r,items.filter(x=>x.rarity===r).length])),
   items:items.map(x=>({slot:x.slot,subtype:x.subtype,armorType:x.armorType||null,
    name:x.name,rarity:x.rarity,tier:x.tier,startingGear:!!x.startingGear,
-   source:x.source||null,crafted:!!x.crafted,recipeId:x.recipeId||null,
+   source:x.source||null,crafted:!!x.crafted,recipeId:x.recipeId||null,v013Trait:x.v013Trait||null,
    stats:Object.fromEntries(['atk','def','hp','spd','str','agi','int','end','cha','mana',
     'spell','evasionRating','critBonus','blockBonus','manaRegenBonus','wardBonus']
     .map(key=>[key,Number(x[key])||0]))}))};
@@ -175,7 +186,8 @@ function equipEarned(a,profile,between=false){
     // Do not delete a strong earned shield/secondary weapon to chase a tiny weapon score.
     if(gain<gearScore(a.state().equip.offhand,profile)*.6+5)continue;
    }
-   if(a.equip(item.id,target)){actions.push({slot:target,item:item.name,rarity:item.rarity,previous:prior?.name||null,gain:round(gain)});break;}
+   if(a.equip(item.id,target)){actions.push({slot:target,item:item.name,rarity:item.rarity,previous:prior?.name||null,gain:round(gain),
+    ...(target==='offhand'?{subtype:item.subtype,trait:item.v013Trait||null,previousSubtype:prior?.subtype||null}: {})});break;}
   }
  }
  return actions;

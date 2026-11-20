@@ -136,11 +136,11 @@ function gearLevel(level,mode){
  return tiers[index-1].minimum;
 }
 // Hash native rolled equipment without exposing player data; protects future balance comparisons.
-function equipmentFingerprint(a){
+function equipmentFingerprint(a,{excludeOffhand=false}={}){
  // Item IDs include a Date.now() prefix in normal gameplay; never hash these
  // ephemeral identifiers or identical seeded gear would appear different.
  const gear=a.state().equip;
- const rolls=Object.keys(gear).sort().map(slot=>{
+ const rolls=Object.keys(gear).sort().filter(slot=>!excludeOffhand||slot!=='offhand').map(slot=>{
   const item=gear[slot];
   if(!item)return [slot,null];
   const {id,...stats}=item;
@@ -157,6 +157,19 @@ function prepare(level,build,seed,opts,desiredRisk=undefined,desiredFamily=undef
   // Freeze wall-clock-dependent IDs as well as native RNG for exact replay.
    const a=create(resolvedSeed,undefined,{}, {recordModules:opts.recordModules,skipPersistence:true,measure:opts.measure===true,now:1720000000000+resolvedSeed});
   a.setup(gearE,build.weapon,opts.rarity);
+  if(Object.hasOwn(opts,'offhandType')){
+   // Controlled native gear roll, not an item earned in natural progression.
+   // Keep all non-Off-Hand equipment unchanged across the paired variants.
+   if(['Bow','Staff','Two-Handed'].includes(build.weapon))throw Error('Off-Hand not compatible with two-handed weapon');
+   if(!['Shield','Orb','Tome','Charm',null].includes(opts.offhandType))throw Error('Invalid controlled Off-Hand type');
+   a.state().equip.offhand=opts.offhandType?a.makeItem(gearE,'offhand',null,'loot',opts.offhandType,opts.rarity):null;
+   if(opts.offhandEpicTrait){
+    const allowed={Orb:'ward',Tome:'echoing_recall',Charm:'heartbloom'};
+    if(opts.rarity!=='Epic'||allowed[opts.offhandType]!==opts.offhandEpicTrait)
+     throw Error('Invalid controlled Epic trait for '+opts.offhandType);
+    a.state().equip.offhand.v013Trait=opts.offhandEpicTrait;
+   }
+  }else if(opts.offhandEpicTrait)throw Error('Epic trait requires an explicit Off-Hand type');
   // Stage 9.2 only: hold native route, draft, control and combat RNG streams fixed
   // AFTER gear rolls. Gear rarity must not silently change the test encounter.
   // Harness streams are deterministic test controls, not gameplay overrides.
@@ -252,6 +265,10 @@ function fight(a,c,limit,targetPolicy='focus',measure=false){
    dotDamageActual:v(metrics.periodicDamage||0),
    manaSpent:v(metrics.manaSpent||0),
    barrierAbsorbed:v(metrics.absorbed||0),
+   offhandOrbBarrier:v(metrics.offhandOrbBarrier||0),
+   offhandTomeMana:v(metrics.offhandTomeMana||0),
+   offhandCharmHealing:v(metrics.offhandCharmHealing||0),
+   offhandProcs:Object.fromEntries(Object.entries(metrics.procs||{}).filter(([name])=>name.startsWith('Off-Hand: '))),
    barrierAtExit:v(r.barrier),
    spellPower:v(r.stats?.spellPower),
    maxHealth:v(r.stats?.maxhp),
@@ -290,7 +307,7 @@ function encounter(level,build,seed,kind,opts,forcedTrait=undefined,forcedBossMo
  if(groupSize!==undefined&&(!Number.isSafeInteger(groupSize)||groupSize<1||groupSize>22||kind!=='normal'))throw Error('Invalid controlled group size');
  if(roleEffect!==undefined&&(!ROLE_EFFECTS.includes(roleEffect)||kind!=='normal'))throw Error('Invalid role effect');
  const {a,c,g,card,gearE,resolvedSeed,seedShift,allocatedPoints}=prepare(level,build,seed,opts,desiredRisk,forcedFamily);
-  const gearFingerprint=equipmentFingerprint(a);
+  const gearFingerprint=equipmentFingerprint(a),otherGearFingerprint=equipmentFingerprint(a,{excludeOffhand:true});
  const C=globalThis.WandererV013ExpeditionConditions;
  const conditionPlan=C?.forDungeon(card,g.dungeon)||null;
  // Marked Condition effects are tested in genuine marked rooms from the map.
@@ -338,6 +355,7 @@ function encounter(level,build,seed,kind,opts,forcedTrait=undefined,forcedBossMo
  const label=forcedBossMod!==undefined?(forcedBossMod||'baseline'):forcedTrait!==undefined?(forcedTrait||'baseline'):mode==='bosses'?card.family:['enemies','roles'].includes(mode)?'swarm-'+count:kind;
  return {mode,kind:label,roleEffect:roleEffect||null,plannedConditionId:conditionPlan?.id||null,conditionNaturallyMarked:!!conditionPlan?.rooms?.includes(candidate),controlledRoomAccess,traitFixtureInjected:!!trialTraitId,level,build:build.id,seed,resolvedSeed,seedShift,gearE,gearFingerprint,gearTier:P.gearTier(gearE).name,
   gearRarity:opts.rarity,runes:opts.runes,pointsBudget:opts.points,pointsSpent:allocatedPoints,
+  otherGearFingerprint,offhandType:a.state().equip.offhand?.subtype||null,offhandTrait:a.state().equip.offhand?.v013Trait||null,
   realm:card.name,affinity:card.family,risk:card.risk,nativeEncounter:kind,requestedGroupSize:count,groupSize:result.initialEnemies,unlocked:level,...result};
 }
 function bossPreparationEncounter(level,build,seed,opts,strategy){

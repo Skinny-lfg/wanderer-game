@@ -1,0 +1,75 @@
+name: Wanderer v0.13 Off-Hand Stage 5 — paired native combat and earned accounts (no deploy)
+
+on:
+  push:
+    branches: [audit/v013]
+    paths:
+      - '.github/workflows/v013-offhand-stage5.yml'
+      - 'scripts/v013-offhand-stage5.cjs'
+      - 'scripts/simulate-progression.cjs'
+      - 'scripts/v013-natural-progression.cjs'
+      - 'tests/v013-offhand-stage5-simulation.test.cjs'
+      - 'combat/**'
+      - 'economy/**'
+      - 'online/**'
+      - 'tests/v012-economy-harness.cjs'
+      - 'package.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-paired:
+    if: github.ref == 'refs/heads/audit/v013'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Native Stage 5 sampler and anti-fabrication tests
+        run: npm run test:v013:offhand-stage5
+      - name: Full paired Off-Hand matrix — E1, E5, E10, E20; normal, Elite, Boss
+        run: npm run simulate:v013:offhand-stage5
+      - name: Publish complete paired outcomes, including per-seed rows and Epic trait cases
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v013-offhand-stage5-paired
+          path: |
+            reports/v013-offhand-stage5-paired.json
+            reports/v013-offhand-stage5-paired.md
+          if-no-files-found: warn
+          retention-days: 30
+
+  earned-accounts:
+    if: github.ref == 'refs/heads/audit/v013'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Natural progression with real earned gear, XP, rooms and drops
+        run: npm run simulate:v013:offhand-natural
+      - name: Publish earned-account decisions and censored Expedition coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v013-offhand-stage5-natural
+          path: |
+            reports/v013-offhand-stage5-natural.json
+            reports/v013-offhand-stage5-natural.md
+          if-no-files-found: warn
+          retention-days: 30
