@@ -128,16 +128,17 @@ function selectTarget(run,cap,baseline){
   return elite;
  }
  const current=alive.includes(run.enemy)?run.enemy:null;
- // A high-focus build needs to FINISH a wounded opponent rather than
- // repeatedly restarting on newly visible casters or skirmishers.
- if(current&&cap?.focusReady&&current.hp<=current.maxhp*.65)return current;
- if(cap?.area>=1.8){
-  // Keeping a wounded lead target also enables ongoing DOT/chain pressure.
-  if(current&&current.hp<=current.maxhp*.38)return current;
+ // True single-target policy: keep the existing enemy until it dies.
+ // A speculative "caster first" switch in each encounter was isolated as
+ // the primary cause of Leather Duelist losses (1/4 vs 3/4 E1 clears).
+ // Boss mechanics above remain explicit, intentional exceptions.
+ if(!cap?.areaReady&&current)return current;
+ if(cap?.areaReady){
+  // Damage-over-time and secondary hits benefit from stable focus too.
+  if(current&&(cap.focusReady||current.hp<=current.maxhp*.45))return current;
   return alive.find(e=>e.role==='tank')||alive.find(e=>e.role==='caster')||current||alive[0];
  }
- return alive.find(e=>e.role==='caster')||alive.find(e=>e.role==='skirmisher')||
-  current||alive[0];
+ return alive.find(e=>e.role==='caster')||alive.find(e=>e.role==='skirmisher')||alive[0];
 }
 function snapshot(run){
  const out=new Map();
