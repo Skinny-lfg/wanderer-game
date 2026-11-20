@@ -4,6 +4,12 @@
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const round=x=>Math.round(x*100)/100;
 const BOSSES={blood:'leech',decay:'matriarch',vitality:'devourer',aegis:'guardian',fury:'berserker',magic:'conductor'};
+const FAMILIES=['blood','fury','vitality','aegis','magic','decay'];
+// Real earned mixed-axis nodes, not the mere intent to buy one in a profile.
+const MIXED_SKILLS=new Set(['crimson_rush','reapers_cadence','red_guillotine',
+ 'fervent_life','redline','fury_recovery','sanctuary','guardians_oath','last_bastion',
+ 'runic_shield','prismatic_rebound','arcane_bastion','hex_bolt','elemental_blight',
+ 'grave_bloom','plague_spread','carrion_detonation','septic_wound']);
 function classify({equipment={},talents={},build={},stats={}}={}){
  const owned=new Set(talents.nodes||[]),picked=new Set((build.picks||[]).map(x=>typeof x==='string'?x:x?.id));
  const has=id=>owned.has(id)||picked.has(id);
@@ -47,8 +53,17 @@ function classify({equipment={},talents={},build={},stats={}}={}){
  if(has('renewal'))add('defense',.8,'renewal');
  const areaReady=area>=1.8,focusReady=focus>=2.0;
  const role=areaReady&&focusReady?'hybrid':areaReady?'aoe':focusReady?'single-target':defense>=2?'defensive':'developing';
+ // A mixed-Affinity build is not necessarily AoE+single-target. Track both
+ // dimensions independently; unlocks alone never imply a working synergy.
+ const affinities=FAMILIES.filter(id=>owned.has('affinity_'+id));
+ const mixedSkills=[...owned].filter(id=>MIXED_SKILLS.has(id)).sort();
+ const preparedMixed=!!(talents.prepared&&mixedSkills.includes(talents.prepared));
+ const affinityComposition=affinities.length>=2?'mixed':affinities.length===1?'focused':'unformed';
+ const synergyStage=mixedSkills.length?preparedMixed?'prepared-mixed-ability':'mixed-skill-unlocked':
+  affinities.length>=2?'dual-affinity-only':'not-yet';
  return {role,area:round(area),focus:round(focus),defense:round(defense),
-  areaReady,focusReady,weapon:main,offhand,armor,element,earnedNodes:owned.size,sources};
+  areaReady,focusReady,weapon:main,offhand,armor,element,earnedNodes:owned.size,
+  affinities,affinityComposition,mixedSkills,synergyStage,preparedMixed,sources};
 }
 // Only uses card fields rendered by renderRealmCards: family, risk,
 // favoured gear, condition and *one* known omen. Remaining omens are hidden.
@@ -112,12 +127,17 @@ function selectTarget(run,cap,baseline){
    return minions[0]; // Stop Deathbound by manually focusing summoned undead.
   return elite;
  }
+ const current=alive.includes(run.enemy)?run.enemy:null;
+ // A high-focus build needs to FINISH a wounded opponent rather than
+ // repeatedly restarting on newly visible casters or skirmishers.
+ if(current&&cap?.focusReady&&current.hp<=current.maxhp*.65)return current;
  if(cap?.area>=1.8){
-  // Maximise value of non-recursive secondary hits on live enemies.
-  return alive.find(e=>e.role==='tank')||alive.find(e=>e.role==='caster')||alive[0];
+  // Keeping a wounded lead target also enables ongoing DOT/chain pressure.
+  if(current&&current.hp<=current.maxhp*.38)return current;
+  return alive.find(e=>e.role==='tank')||alive.find(e=>e.role==='caster')||current||alive[0];
  }
  return alive.find(e=>e.role==='caster')||alive.find(e=>e.role==='skirmisher')||
-  (baseline?.hp>0?baseline:alive[0]);
+  current||alive[0];
 }
 function snapshot(run){
  const out=new Map();
@@ -131,8 +151,11 @@ function changes(before,after,focused){
  const roles={boss:0,elite:0,minion:0,normal:0},wards={boss:0,elite:0,minion:0,normal:0};
  let nonFocusedHp=0,newEnemies=0,disappeared=0;
  for(const [enemy,prior]of before){
-  const end=after.get(enemy);
-  if(!end){disappeared++;continue;}
+  // The runtime can remove a defeated enemy from the active/reserve arrays
+  // within the same native tick. Its object still carries its observed final
+  // HP. Account for this instead of silently losing lethal secondary hits.
+  const end=after.get(enemy)||{hp:Math.max(0,enemy.hp||0),barrier:Math.max(0,enemy.barrier||0)};
+  if(!after.has(enemy))disappeared++;
   const lost=Math.max(0,prior.hp-end.hp),ward=Math.max(0,prior.barrier-end.barrier);
   roles[prior.role]+=lost;wards[prior.role]+=ward;
   if(enemy!==focused)nonFocusedHp+=lost;
