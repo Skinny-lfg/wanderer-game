@@ -80,7 +80,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
   treasures:{bag:phase3BagMarkup,stash:phase6ValuablesMarkup,result(){phase5RenderResult();return $('screen').innerHTML;},combat(){auditCombat();return $('screen').innerHTML;},sell:sellValuables},
   start:phase1Begin,enter:phase1Enter,
   passiveIcons:phase2PassiveIcons,initialPassive:WandererV012Buildcraft.initial,
-  tick(...args){harnessCombatActive=true;try{return updateFight(...args);}finally{harnessCombatActive=false;}},streams:harnessStreams,potion:phase3UsePotion,win:phase1WaveWon,death:phase1Death,abandon:phase1Abandon,
+  tick(...args){harnessCombatActive=true;try{return updateFight(...args);}finally{harnessCombatActive=false;}},streams:harnessStreams,potion:kind=>{const i=(phase6Run?.potions||[]).findIndex(p=>p.kind===kind&&!p.used);return i>=0&&phase6UsePotion(i);},win:phase1WaveWon,death:phase1Death,abandon:phase1Abandon,
   selectCombatTarget,now:setNow,ready:setReady,heal:setHeal,
   bag:{items:phase3BagItems,overflow:phase3BagOverflow,capacity:()=>PHASE3_BAG_CAPACITY,discard:phase3DiscardLoot,active:phase3ExpeditionActive,
    mark(item,overflow=false){(overflow?state.expeditionOverflow:state.stash).push(item);phase3LootIds.add(item.id);},
