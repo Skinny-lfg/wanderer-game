@@ -1,0 +1,42 @@
+name: Wanderer v0.13 — Blacksmith browser UI click-through (audit only)
+on:
+  push:
+    branches: [audit/v013]
+    paths:
+      - '.github/workflows/v013-forge-ui-browser.yml'
+      - 'tests/v013-forge-ui-browser.test.cjs'
+      - 'index.html'
+      - 'online/v013-tier-upgrade-ui.js'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  chromium-ui:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Use real Chromium with visible Blacksmith controls
+        run: |
+          CHROME_BIN="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          if [ -n "$CHROME_BIN" ]; then
+            export WANDERER_BROWSER="$CHROME_BIN"
+          else
+            npx playwright install chromium
+          fi
+          node --test tests/v013-forge-ui-browser.test.cjs
+      - name: Keep visual evidence for mobile and desktop
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v013-blacksmith-ui-screenshots
+          path: reports/v013-forge-ui-evidence/*.png
+          if-no-files-found: warn
+          retention-days: 14
