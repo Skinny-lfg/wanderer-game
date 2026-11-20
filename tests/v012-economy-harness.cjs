@@ -100,9 +100,9 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
   // Simulator-only adapter for the exact v0.13 Forge rule and settlement used
   // by renderV013Forge. Does not grant items or bypass costs/recipe unlocks.
   forge:{
-   preview(id,tier,focus='none'){return WandererV013Crafting.previewCraft(id,tier,(...args)=>makeItem(...args,true),focus);},
-   progress(id,tier,focus='none'){return WandererV013Crafting.progress(state,id,tier,focus);},
-   recipes:WandererV013Crafting.RECIPES,focuses:WandererV013Crafting.FOCUSES,
+   preview(id,tier){return WandererV013Crafting.previewCraft(id,tier,(...args)=>makeItem(...args,true));},
+   progress(id,tier){return WandererV013Crafting.progress(state,id,tier);},
+   recipes:WandererV013Crafting.RECIPES,
    refine(family){
     if(!economyCanAct())return false;
     const before=state.crafting,next=WandererV013Crafting.refine(before,family);
@@ -111,33 +111,9 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
     if(!phase5Persist()){state.crafting=before;return false;}
     return true;
    },
-   reinforceCost(id){
-    const item=[...state.stash,...Object.values(state.equip).filter(Boolean)].find(x=>x?.id===id);
-    if(!item||item.rarity!=='Legendary'||(item.upgradeRank||0)>=10)return null;
-    return WandererEconomyV0101.upgradeCost(item.tier,item.upgradeRank||0);
-   },
-   reinforce(id){
-    const item=[...state.stash,...Object.values(state.equip).filter(Boolean)].find(x=>x?.id===id);
-    return !!item&&reinforceEquipment(item);
-   },
-   // Match the live named-tier Forge upgrade: same preview/prepare, same
-   // ownership check, materials, unlock gate, item identity and rollback.
-   tierPreview(id){return WandererV013TierUpgrade.preview(state,id,phase1Controller.state.unlocked);},
-   tierUpgrade(id){
-    if(!economyCanAct())return null;
-    const result=WandererV013TierUpgrade.prepare(state,id,phase1Controller.state.unlocked);
-    if(!result)return null;
-    const before={fragments:state.fragments,crafting:state.crafting,stash:state.stash,equip:state.equip};
-    state.fragments=result.fragments;state.crafting=result.crafting;
-    if(result.location.kind==='stash')
-     state.stash=state.stash.map((x,i)=>i===result.location.index&&x.id===result.item.id?result.item:x);
-    else state.equip={...state.equip,[result.location.slot]:result.item};
-    if(!phase5Persist()){Object.assign(state,before);return null;}
-    return result.item;
-   },
-   craft(id,tier,focus='none'){
+   craft(id,tier){
     if(!economyCanAct()||!stashHasRoom())return null;
-    const result=WandererV013Crafting.prepareCraft(state,id,tier,makeItem,focus);
+    const result=WandererV013Crafting.prepareCraft(state,id,tier,makeItem);
     if(!result)return null;
     const before={fragments:state.fragments,crafting:state.crafting,stash:state.stash};
     state.fragments=result.fragments;state.crafting=result.crafting;
