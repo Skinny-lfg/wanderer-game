@@ -1,0 +1,44 @@
+name: Wanderer Stage 6 — Policy ablation (no deploy)
+
+on:
+  push:
+    branches: [audit/v013-stage6]
+    paths: ['.github/workflows/v013-stage6-policy-ablation.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    if: github.ref == 'refs/heads/audit/v013-stage6'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Syntax checks and tactical agent unit tests
+        run: |
+          node --check scripts/v013-stage6-policy-ablation.cjs
+          node --test tests/v013-stage6-agent-strategy.test.cjs
+      - name: Isolate Duelist regression on four identical initial seeds
+        run: |
+          node scripts/v013-stage6-policy-ablation.cjs \
+            --seeds=9701,9702,9703,9704 \
+            --profiles=leather-duelist \
+            --max-level=2 --max-attempts=18 --max-total-attempts=36 \
+            --out=reports/stage6-policy-ablation.json
+      - name: Archive ablation diagnosis
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage6-policy-ablation
+          path: reports/stage6-policy-ablation.*
+          if-no-files-found: ignore
+      - run: git diff --check
