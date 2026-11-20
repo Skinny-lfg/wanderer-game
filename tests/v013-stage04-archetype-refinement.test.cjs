@@ -24,7 +24,8 @@ test('Leather Duelist now develops native Blood sustain without any flat stat in
 });
 test('Hexblade uses Arcane as the default Magic mode and native no-shield Aegis',()=>{
  const p=N.PROFILES['hexblade-hybrid'];
- assert.equal(p.armor,'Leather');assert.deepEqual(p.weapons,['Daggers','Wand']);
+ assert.equal(p.armor,'Leather');assert.deepEqual(p.weapons,['Sword','Daggers','Wand']);
+ assert.deepEqual(p.offhands,['Daggers','Orb','Tome']);
  assert.deepEqual(p.families,['decay','magic']);
  assert(p.targets.includes('affinity_aegis'));
  assert(p.targets.indexOf('affinity_aegis')<p.targets.indexOf('arcane_resonance'));
@@ -60,4 +61,46 @@ test('Existing game Blood Drinker/Harvest and Aegis effects remain unchanged',()
  assert.match(harvest.description,/3%/);
  assert.match(graph.find(x=>x.id==='arcane_surge').description,/8%/);
  assert.match(graph.find(x=>x.id==='barrier_pulse').description,/Barrier/i);
+});
+
+test('Native Sword + Dagger, Orb or Tome offhand combinations are legal (compatibility fixtures only)',()=>{
+ const a=create(11004,undefined,{}, {skipPersistence:true});
+ const state=a.state();
+ // These items are legal preview fixtures, not gifted to natural progression agents.
+ const sword=a.makeItem(1,'weapon','Sword','loot','Sword','Common');
+ state.stash.push(sword);
+ assert(a.equip(sword.id,'weapon'),'native Sword equip rejected');
+ assert.equal(state.equip.weapon.subtype,'Sword');
+ const dagger=a.makeItem(1,'weapon','Daggers','loot','Daggers','Common');
+ state.stash.push(dagger);
+ assert(a.equip(dagger.id,'offhand'),'native off-hand Dagger equip rejected next to Sword');
+ assert.equal(state.equip.weapon.subtype,'Sword');
+ assert.equal(state.equip.offhand.subtype,'Daggers');
+ const orb=a.makeItem(1,'offhand','Orb','loot','Orb','Common');
+ state.stash.push(orb);
+ assert(a.equip(orb.id,'offhand'),'native off-hand Orb equip rejected next to Sword');
+ assert.equal(state.equip.offhand.subtype,'Orb');
+ const effect=a.gear.offhandEffectPanel;
+ assert(effect,'native offhand gear UI must exist');
+ const tome=a.makeItem(1,'offhand','Tome','loot','Tome','Common');
+ state.stash.push(tome);
+ assert(a.equip(tome.id,'offhand'),'native off-hand Tome equip rejected next to Sword');
+ assert.equal(state.equip.offhand.subtype,'Tome');
+ assert.equal(state.equip.weapon.subtype,'Sword');
+});
+test('Hexblade evaluates native dagger half-stats in offhand and allows separate main-hand choice',()=>{
+ const p=N.PROFILES['hexblade-hybrid'];
+ const dagger={slot:'weapon',subtype:'Daggers',rarity:'Common',tier:1,
+  atk:12,agi:3,int:4,spd:2,spell:5};
+ const main=N.gearScore(dagger,p,'weapon');
+ const off=N.gearScore(dagger,p,'offhand');
+ assert(Number.isFinite(main)&&Number.isFinite(off));
+ assert(main>off,'off-hand dagger must not get 100% main-hand stats or phantom dual attack');
+ assert(N.gearScore({...dagger,slot:'offhand'},p,'offhand')===off,
+  'native slot reassignment must not artificially change offensive stats');
+ const outsider=N.PROFILES.cautious;
+ assert.equal(outsider.offhands,undefined,'other profiles untouched');
+ const sword={slot:'weapon',subtype:'Sword',rarity:'Common',tier:1,atk:4};
+ assert(N.gearScore(sword,p)>N.gearScore({...sword,subtype:'Mace'},p),
+  'Sword belongs to the preferred Hexblade main-hand list');
 });
