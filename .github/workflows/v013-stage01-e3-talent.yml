@@ -34,6 +34,27 @@ jobs:
         run: |
           node scripts/v013-stage6-e3-repro.cjs
           node -e "const r=require('./reports/stage6-e3-repro.json');if(r.errors)throw Error('Native E3 talent error still occurs: '+JSON.stringify(r.attempts.filter(a=>a.error)));console.log('E3_NATIVE_TALENTS_VALIDATED='+JSON.stringify({attempts:r.attempts.length,unlocked:r.unlocked,errors:r.errors,stop:r.stop}));"
+      - name: Extended stats, equipment and talent-tree regressions
+        run: |
+          node --test \
+            tests/v013-stat-consistency.test.cjs \
+            tests/talent-graph-runtime.test.cjs \
+            tests/talent-graph-next.test.cjs \
+            tests/talent-graph-combat.test.cjs \
+            tests/v0120-equipment.test.cjs \
+            tests/v013-offhand-stage2-gear.test.cjs \
+            tests/v013-current-dungeon-and-talents.test.cjs
+      - name: Multi-build natural E1–E5 progression smoke
+        run: |
+          node --check scripts/v013-stage01-e3-e5-smoke.cjs
+          node scripts/v013-stage01-e3-e5-smoke.cjs
+      - name: Archive extended native progression
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage01-e3-e5-smoke
+          path: reports/stage01-e3-e5-smoke.json
+          if-no-files-found: warn
       - name: Preserve diagnostic state even if reproduction fails
         if: always()
         uses: actions/upload-artifact@v4
