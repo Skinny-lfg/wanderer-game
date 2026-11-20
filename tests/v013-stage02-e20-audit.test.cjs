@@ -105,15 +105,16 @@ test('Attempts-to-clear statistics use winning accounts, not censored accounts',
 
 test('Native Forge preview alone is not permission to craft when Stash is full',()=>{
  const a=create(9814,undefined,{}, {skipPersistence:true});
- const st=a.state(),cap=st.stashCapacity;
+ const st=a.state();
  assert(a.forge.canCraft());
- st.stashCapacity=1;
- st.stash.push(a.makeItem(1,'helm',null,'loot','Helm','Common'));
+ // Native stashCapacity() clamps to the game's minimum; setting it to 1
+ // cannot force a full Stash. Fill actual capacity using test-only items.
+ for(let n=0;n<100&&a.forge.canCraft();n++)
+  st.stash.push(a.makeItem(1,'helm',null,'loot','Helm','Common'));
  assert.equal(a.forge.canCraft(),false,'native capacity restriction should match actual UI');
  const before={fragments:st.fragments,essence:st.crafting.essence};
  const result=N.investEarnedGear(a,N.PROFILES['plate-warden'],16);
  assert.deepEqual(result,{crafted:[]});
  assert.equal(st.fragments,before.fragments);
  assert.equal(st.crafting.essence,before.essence);
- st.stashCapacity=cap;
 });
