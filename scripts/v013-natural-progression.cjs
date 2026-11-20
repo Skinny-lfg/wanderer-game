@@ -1084,7 +1084,18 @@ function simulateAccount(seed,id,opts,simulationOptions={}){
      if(a.controller().state.unlocked<level+1)throw Error('Native Boss won but next Expedition is not unlocked');
      cleared=true;
     }
-   }catch(err){entry.error=err.message;entry.status='error';acc.stopReason='Native runner error at E'+level+': '+err.message;stopped=true;}
+   }catch(err){
+    // Preserve the exact native state and call site for a failed attempt.
+    // This is read-only diagnosis, not a retry, save repair, reset or catch-up XP.
+    const progress=a.state().automaticTalents;
+    entry.error=err.message;entry.status='error';
+    entry.diagnostic={stack:String(err.stack||err).slice(0,4200),
+     talentValid:a.talents.valid(progress),
+     talentProgress:{...progress,nodes:[...(progress?.nodes||[])]},
+     priorAttempt:acc.attempts.at(-1)?{level:acc.attempts.at(-1).level,
+      attempt:acc.attempts.at(-1).attempt,status:acc.attempts.at(-1).status}:null};
+    acc.stopReason='Native runner error at E'+level+': '+err.message;stopped=true;
+   }
    acc.attempts.push(entry);
    if(cleared||stopped)break;
   }
