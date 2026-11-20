@@ -110,10 +110,9 @@ function audit(shards,options={}){
   refs.add(d.source);runners.add(d.runnerSha256);strategies.add(d.agentStrategySha256);
   accounts.push(...d.accounts);
  }
- // sourceFingerprint() enumerates *loaded* module children. A different
- // legitimate profile can lazy-load an extra module, changing this digest
- // without changing a single source file. Check identical fixed file hashes
- // in verifyProvenance() instead of rejecting the full native cohort.
+ // sourceFingerprint() includes process.version. The first pilot used
+ // floating Node 22; one shard ran v22.23.4, nine ran v22.23.5.
+ // File SHA, exact runtime and Git revision are verified separately.
  assert(runners.size===1&&strategies.size===1,'mixed runner/agent hashes');
  assert(accounts.length===seeds.length*groups.length*5,'missing native accounts');
  assert(new Set(accounts.map(a=>a.seed+'/'+a.profile)).size===accounts.length,'duplicate native account');
@@ -248,7 +247,7 @@ function verifyProvenance(dir,shards){
   'mixed Git revisions, Node versions or native code file hashes');
  return {gitRevision:[...revisions][0],nodeVersion:[...nodes][0],
   verifiedFileHashes:canonical,sourceFingerprintNote:
-  'sourceFingerprint may differ by profile-specific lazy module enumeration; the actual source files and Git revision are identical across shards.'};
+  'Opaque fingerprint includes process.version; native files, exact Node version and Git revision are required to agree across shards.'};
 }
 
 function main(argv=process.argv.slice(2)){
