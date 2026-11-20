@@ -129,7 +129,11 @@ function audit(shards){
    extractions:levelAttempts.filter(t=>t.status==='extracted').length,
    bossReached:levelAttempts.filter(t=>t.bossReached).length,
    bossFights:bossRooms.length,bossWins:bossRooms.filter(r=>r.won).length,
-   bossHP:median(bossRooms.map(r=>r.hpMax).filter(Number.isFinite)),
+   // The combat-room hpMax is the PLAYER HP. The actual native initial Boss
+   // HP is captured on the containing Expedition report at Boss entry.
+   bossInitialHPMedian:median(levelAttempts.filter(t=>t.bossReached)
+    .map(t=>t.bossInitialHP).filter(Number.isFinite)),
+   playerMaxHPAtBossMedian:median(bossRooms.map(r=>r.hpMax).filter(Number.isFinite)),
    elites:sum(levelAttempts,t=>(t.rooms||[]).filter(r=>r.roomType==='elite').length),
    eliteWins:sum(levelAttempts,t=>(t.rooms||[]).filter(r=>r.roomType==='elite'&&r.won).length),
    gearUpgrades:sum(levelAttempts,t=>(t.equipped||[]).length+(t.camp?.equipped||[]).length),
