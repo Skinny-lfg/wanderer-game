@@ -134,79 +134,10 @@ function values(id,r){const t=Math.max(0,r-1),sqrt=Math.sqrt(r);return ({
  quick_hands:{speed:.08*r},precision:{crit:Math.round(19*(1-Math.exp(-r/3)))},brutal_crit:{burst:Math.min(.65,.12*sqrt)},double_strike:{chance:Math.min(.60,.10*sqrt),burst:.30},adrenaline:{speed:.10+.025*t,duration:3,icd:3},
  arcane_focus:{power:.15*sqrt},mana_spring:{regen:.12*sqrt},efficient_cast:{cost:8-r},arcane_echo:{power:.25+.05*t,hits:4},elemental_force:{power:.12*r},kindling:{burn:.15*(1+.15*r)},deep_winter:{burst:.18+.03*t,bossCap:.015,normalCap:.05,icd:4},overcharge:{burst:.32+.06*t,enemyCap:.035,charges:4}
  })[id]||{};}
-function preview(b,id,base={}){
- const p=BY_ID[id],current=ownedRank(b,id),next=Math.min(p?.max||0,current+1),before=values(id,current),after=values(id,next);
- let useful=!!p&&current<p.max;
- if(id==='precision'&&(base.crit||0)>=65||id==='guarded_block'&&(base.blockChance||0)>=65||id==='quick_hands'&&(base.attacksPerSec||0)>=4.2)useful=false;
- const reduction=.04*rank(b,'fortified')+.04*rank(b,'wasting_curse')+.02*rank(b,'wither');
- if(['fortified','wasting_curse','wither'].includes(id)&&reduction>=.28&&id!=='wither')useful=false;
- if(base.maxhp&&['strong_heart','iron_skin','quick_hands','precision','guarded_block','arcane_focus','mana_spring'].includes(id)){const field={strong_heart:'maxhp',iron_skin:'defense',quick_hands:'attacksPerSec',precision:'crit',guarded_block:'blockChance',arcane_focus:'spellPower',mana_spring:'manaRegen'}[id],up={...b,picks:[...(b.picks||[]),id]};if(!(mods(up,base)[field]>mods(b,base)[field]))useful=false;}
- if(id==='adrenaline'&&base.maxhp){const speed=mods(b,base).attacksPerSec;if(Math.min(4.2,speed*(1+after.speed))<=Math.min(4.2,speed*(1+(current?before.speed:0))))useful=false;}
- const text=Object.entries(after).map(([key,v])=>key+': '+(current?Number((before[key]||0).toFixed(4))+' → ':'')+(typeof v==='number'?Number(v.toFixed(4)):v)).join(' · ');
- return {current,next,max:p?.max,useful,before,after,description:text};
-}
-function canModify(b,id,power,base={}){const p=BY_ID[id],n=ownedRank(b,id)+(b?.runtime?.permanentTalents?.filter(value=>value===id).length||0),current=rank(b,id);return !!p&&p.max===5&&n>0&&current>0&&clamp(n+power,0,p.max)!==current&&(power<0||preview(b,id,base).useful);}
 function specialized(b,id){return b?.runtime?.specializations?.includes(id);}
 function bleedDamage(b,amount){return amount*(1+.15*rank(b,'deep_cuts')+(b?.runtime?.talentBonuses?.bleedBonus||0))*(specialized(b,'blood_focus')?1.25:1);}
 function elementalPower(b,power){return power*(1+.12*rank(b,'elemental_force'))*(b.runtime.conduit?1.10:1);}
 function hasFamily(b,family){return Array.isArray(b?.families)&&b.families.includes(family);}
-function capabilities(b){
- const owns=id=>rank(b,id)>0,tag=t=>(TAGS[t]||[]).some(owns),stats=b.runtime.draftStats||{};
- const funded=b.unlockedFamilies?.includes('magic')&&(elements.includes(b.element)||b.element==='arcane')&&b.runtime.fundedAvailable!==false;
- const crit=stats.crit===undefined||stats.crit>0||owns('precision'),block=(stats.blockChance||0)>0||owns('guarded_block');
- const bleed=owns('bleeding_edge')||owns('sanguine_fury')&&crit||owns('crimson_pact')||owns('hex_bleed')&&funded||owns('sanguine_reprisal')&&(block||tag('BARRIER_SOURCE'));
- const rot=owns('toxic_touch')||owns('toxic_precision')&&crit;
- const barrier=owns('barrier_pulse')||owns('blood_ward')&&bleed||owns('rot_ward')&&rot||owns('runic_shield')&&funded||owns('fervent_life')&&crit||owns('sanctuary')&&tag('HEAL_SOURCE')||stats.main?.subtype==='Two-Handed'||stats.main?.subtype==='Staff';
- const heal=owns('renewal')||owns('life_bloom')||owns('second_breath')||owns('blood_drinker')&&bleed||owns('hemovore')&&bleed||owns('rot_recovery')&&rot||owns('rot_symbiosis')&&rot||owns('fervent_life')&&crit;
- return {bleed:!!bleed,rot:!!rot,crit:!!crit,block:!!block,barrier:!!barrier,heal:!!heal,funded:!!funded};
-}
-function functional(b,p){
- const c=capabilities(b),gates={
- deep_cuts:c.bleed,executioner:c.bleed,blood_drinker:c.bleed,sanguine_fury:c.crit,virulent_rot:c.rot,wasting_curse:c.rot,wither:c.rot,blight:c.rot,retaliation:c.barrier,brutal_crit:c.crit,adrenaline:c.crit,
- plague_rupture:c.bleed&&c.rot&&c.crit,carrion_detonation:c.bleed&&c.rot,blood_ward:c.bleed,sanguine_reprisal:c.block||c.barrier,hemovore:c.bleed,crimson_rush:c.crit&&c.bleed,reapers_cadence:c.bleed,hex_bleed:c.funded,hemal_sigil:c.funded&&c.bleed,
- rot_recovery:c.rot,rot_symbiosis:c.rot,rot_ward:c.rot,rot_husk:c.rot&&c.barrier,toxic_precision:c.crit,venom_shatter:c.rot&&c.crit,hex_bolt:c.rot&&c.funded,elemental_blight:c.rot&&c.funded,
- sanctuary:c.heal,guardians_oath:c.barrier,fervent_life:c.crit,life_conduit:c.heal&&c.funded,lifeweave:c.funded,counterstrike:c.block,iron_reversal:c.block,runic_shield:c.funded,prismatic_rebound:c.barrier&&c.funded,spellblade:c.funded,spell_surge:c.funded&&c.crit
- };
- if(p.family==='magic'&&!p.requires.length&&!c.funded)return false;
- return gates[p.id]!==false;
-}
-function eligible(b,family){
- if(!FAMILIES.includes(family)||!hasFamily(b,family)||family==='magic'&&!b.element||!b.unlockedFamilies?.includes(family))return [];
- const hybrids=[...new Set(b.picks)].map(id=>BY_ID[id]).filter(p=>p?.requires.length),pairs=new Set(hybrids.map(p=>[...p.requires].sort().join(':')));
- return CATALOG.filter(p=>p.family===family&&ownedRank(b,p.id)<p.max&&preview(b,p.id,b.runtime.draftStats||{}).useful&&functional(b,p)&&(!p.element||p.element===b.element)&&(!p.requires.length||(b.realmIndex||0)>=5&&hybrids.length<3&&!pairs.has([...p.requires].sort().join(':'))&&p.requires.every(f=>b.unlockedFamilies.includes(f))));
-}
-function synergy(b,p){
- const c=capabilities(b),tags=p.tags;
- return p.requires.length||tags.includes('CONSUMES_BLEED')&&c.bleed||tags.includes('CONSUMES_ROT')&&c.rot||tags.includes('CRIT_PAYOFF')&&c.crit||tags.includes('BARRIER_PAYOFF')&&c.barrier||tags.includes('HEAL_PAYOFF')&&c.heal||tags.includes('MAGIC_PAYOFF')&&c.funded||tags.includes('BLOCK_PAYOFF')&&c.block||ownedRank(b,p.id)>0;
-}
-function options(b,family,rng=Math.random){
- // Realm rewards are affinity-local. eligible() still admits hybrids whose
- // primary family is this Realm, provided every hybrid requirement is met.
- const pool=[...new Map(eligible(b,family).map(p=>[p.id,p])).values()];
- // An exhausted family cannot fabricate a useful pick. A zero-card reward is handled explicitly by the controller.
- if(pool.length===0)return [];
- const chosen=[],remaining=()=>pool.filter(p=>!chosen.some(o=>o.id===p.id)),pick=a=>a[Math.min(a.length-1,Math.floor(rng()*a.length))];
- const add=(p,category)=>{if(p)chosen.push({...p,category,pity:p.requires.length?due.includes([...p.requires].sort().join(':')):false,preview:preview(b,p.id,b.runtime.draftStats||{})});};
- const hybrids=pool.filter(p=>p.requires.length),pairs=[...new Set(hybrids.map(p=>[...p.requires].sort().join(':')))];
- const pity={...(b.runtime.hybridPity||{})},due=pairs.filter(pair=>(pity[pair]||0)>=2);
- let hybrid=null;if(due.length){const pair=pick(due);hybrid=pick(hybrids.filter(p=>[...p.requires].sort().join(':')===pair));}
- else if(hybrids.length&&rng()<.35)hybrid=pick(hybrids);
- // Reserve Synergy first internally so an Upgrade cannot consume the mandatory pity card.
- const reserved=hybrid?.id;
- add(pick(remaining().filter(p=>!p.requires.length&&ownedRank(b,p.id)>0&&p.id!==reserved)),'Upgrade');
- add(hybrid||pick(remaining().filter(p=>!p.requires.length&&synergy(b,p))),'Synergy');
- add(pick(remaining().filter(p=>!p.requires.length&&!ownedRank(b,p.id))),'Discovery');
- while(chosen.length<Math.min(3,pool.length)){let rest=remaining();const normal=rest.filter(p=>!p.requires.length);if(chosen.some(p=>p.requires.length)&&normal.length)rest=normal;const candidate=pick(rest);add(candidate,candidate.requires.length?'Synergy':ownedRank(b,candidate.id)?'Upgrade':'Discovery');}
- for(const pair of pairs)pity[pair]=chosen.some(p=>p.requires.length&&[...p.requires].sort().join(':')===pair)?0:Math.min(3,(pity[pair]||0)+1);
- for(let i=chosen.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[chosen[i],chosen[j]]=[chosen[j],chosen[i]];}
- // Commit counters only once the complete legal draft exists; the caller persists cards and RNG together.
- b.runtime.hybridPity=pity;return chosen;
-}
-function choose(b,family,id,offers){
- const p=BY_ID[id];
- if(!p||!b.unlockedFamilies?.includes(p.family)||!Array.isArray(offers)||!offers.some(x=>x.id===id)||!eligible(b,p.family).some(x=>x.id===id))throw Error('Passive unavailable');
- b.picks.push(id);return p;
-}
 function element(b,id){if(!hasFamily(b,'magic')||!elements.includes(id)||b.element!==null)throw Error('Magic element already chosen or ineligible');b.element=id;return id;}
 function initialId(family,element){return family==='magic'?({fire:'kindling',frost:'deep_winter',lightning:'overcharge'})[element]:({blood:'bleeding_edge',decay:'toxic_touch',vitality:'strong_heart',aegis:'iron_skin',fury:'quick_hands'})[family];}
 // Unlock the enabling passive only after successfully clearing the first Realm of this family.
@@ -452,6 +383,6 @@ function validate(b){
 }
 function syncPermanent(b,progress,permanentAffinities=true){if(!b)return;if(!root.WandererAutomaticTalents)throw Error('Permanent talents unavailable');b.runtime.prepared=progress?.nodes?.includes(progress.prepared)?progress.prepared:null;b.runtime.specializations=[...(progress?.nodes||[])];if(permanentAffinities){b.runtime.permanentBuild=true;b.unlockedFamilies=FAMILIES.filter(f=>progress?.nodes?.includes('affinity_'+f));b.families=[...b.unlockedFamilies];b.element=b.unlockedFamilies.includes('magic')?(progress?.element||'arcane'):null;}const current=progress||root.WandererAutomaticTalents.create(),ids=root.WandererAutomaticTalents.passiveIds(current);b.runtime.talentBonuses=root.WandererAutomaticTalents.bonuses?.(current)||{};if(ids.length)b.runtime.permanentTalents=ids;else delete b.runtime.permanentTalents;}
 function clear(b){if(!b)return;b.picks.length=0;b.element=null;b.initialFamily=null;b.initialPassive=null;b.unlockedFamilies=[];b.families=[];b.cooldowns=Object.create(null);b.runtime={frenzyUntil:0,counterBlock:0,counterBarrier:0,spellblade:false,magicHits:0,staticCharges:0,adrenalineUntil:0,conduit:false,lastStand:false,lastSpellAt:-999};}
-root.WandererV012Buildcraft=Object.freeze({CATALOG,FAMILIES,ELEMENTS:elements,create,initial,initialId,ownedRank,rank,values,preview,canModify,capabilities,functional,synergy,bleedDamage,elementalPower,applyRot,migrateEnemyDots,eligible,options,choose,element,mods,onHeal,onAttack,onCast,onSecond,tickRot,incoming,onDefend,onKill,survive,speed,enemyHealMultiplier,enemyDefense,nextCost,resetWave,canCast,validate,syncPermanent,clear});
+root.WandererV012Buildcraft=Object.freeze({CATALOG,FAMILIES,ELEMENTS:elements,create,initial,initialId,ownedRank,rank,values,bleedDamage,elementalPower,applyRot,migrateEnemyDots,element,mods,onHeal,onAttack,onCast,onSecond,tickRot,incoming,onDefend,onKill,survive,speed,enemyHealMultiplier,enemyDefense,nextCost,resetWave,canCast,validate,syncPermanent,clear});
 })(globalThis);
 
