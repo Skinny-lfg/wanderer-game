@@ -122,7 +122,11 @@ function totalStats(equipment,ownedRunes,equippedRuneIds,{isTwoHanded,FIELDS,ite
 const STAT_KEYS=Object.freeze(['str','agi','int','end','cha','attack','defense','maxhp','attacksPerSec','crit','blockChance','mana','manaRegen','spellPower','evasionRating','power']);
 function breakdown(equipment,ownedRunes,equippedRuneIds,context,current=null){
  const progress=context.state?.automaticTalents||root.WandererAutomaticTalents.create();
- const bare={...context,state:{...context.state,automaticTalents:{...progress,nodes:[]}},build:null,phase6Run:null};
+ // The talent-free breakdown is a temporary read-only projection.
+ // A prepared advanced ability requires its owning talent node. Removing
+ // nodes but retaining prepared made that projection invalid at E3+.
+ // The actual saved/player talent progress is never mutated here.
+ const bare={...context,state:{...context.state,automaticTalents:{...progress,nodes:[],prepared:null}},build:null,phase6Run:null};
  const clean=item=>item?{subtype:item.subtype,slot:item.slot,tier:item.tier}:null;
  const stages=[totalStats({weapon:clean(equipment.weapon),offhand:clean(equipment.offhand)},[],[],bare),totalStats(equipment,[],[],bare),totalStats(equipment,ownedRunes,equippedRuneIds,bare),totalStats(equipment,ownedRunes,equippedRuneIds,{...context,build:null,phase6Run:null}),current||totalStats(equipment,ownedRunes,equippedRuneIds,context)];
  const rounded=n=>Math.round((Number(n)||0)*100)/100;
