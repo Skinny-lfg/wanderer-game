@@ -24,7 +24,7 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - name: Unit-test source-provenance and E20 censoring
+      - name: Unit-test true code provenance, lazy-module variants and E20 censoring
         run: |
           node --check scripts/v013-stage02-aggregate.cjs
           node --test tests/v013-stage02-e20-audit.test.cjs
