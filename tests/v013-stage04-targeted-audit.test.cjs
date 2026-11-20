@@ -121,3 +121,28 @@ test('File SHA and exact Node patch are verified in all 36 shards',()=>{
   assert.throws(()=>A.verifyProvenance(dir,ds),/mixed Git revisions/);
  }finally{fs.rmSync(dir,{recursive:true,force:true});}
 });
+
+test('Boss/Elite target switches must be counted even when median is zero',()=>{
+ const rows=all();
+ const r=rows[0].accounts[1].attempts[1].rooms[0];
+ r.roomType='boss';r.bossStyle='leech';
+ r.targetSwitches=3;r.bossSummons=2;r.peakLiveEnemies=4;
+ const report=A.summarize(rows);
+ const b=report.nativeCombat.bossByTypeAndLevel['adaptive/leech/E1-E5'];
+ assert.equal(b.totalTargetSwitches,3);
+ assert.equal(b.fightsWithTargetSwitch,1);
+ assert.equal(b.totalObservedBossSummons,2);
+ assert.equal(b.maxPeakLiveEnemies,4);
+});
+test('Repeated fights from one character cannot inflate unique mixed-build coverage',()=>{
+ const rows=all();
+ const account=rows[0].accounts[1];
+ for(const t of account.attempts){
+  t.rooms[0].capabilities={role:'hybrid',affinityComposition:'mixed',
+   synergyStage:'prepared-mixed-ability'};
+ }
+ const r=A.summarize(rows);
+ assert.equal(r.nativeCombat.uniqueAccountsByMixedStage.adaptive['prepared-mixed-ability'],1);
+ assert.equal(r.nativeCombat.uniqueAccountsByRole.adaptive.hybrid,1);
+ assert.equal(r.nativeCombat.mixedByEarnedStage['adaptive/prepared-mixed-ability/hybrid/E1-E5'].fights,2);
+});
