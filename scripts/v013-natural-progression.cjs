@@ -40,6 +40,9 @@ const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const POLICY_MODES=Object.freeze({
  'risk-aware':{realm:false,rooms:false,targets:false,retreat:false},
  adaptive:{realm:true,rooms:true,targets:true,retreat:true},
+ // Native-account targeting/route ablations: all else remains identical.
+ 'adaptive-no-targets':{realm:true,rooms:true,targets:false,retreat:true},
+ 'adaptive-no-rooms':{realm:true,rooms:false,targets:true,retreat:true},
  'adaptive-realms':{realm:true,rooms:false,targets:false,retreat:false},
  'adaptive-rooms':{realm:false,rooms:true,targets:false,retreat:false},
  'adaptive-targets':{realm:false,rooms:false,targets:true,retreat:false},
