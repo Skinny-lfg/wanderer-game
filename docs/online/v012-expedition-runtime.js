@@ -119,7 +119,7 @@ function phase1StartWave(resetScroll=false){
  const r=ports.state.run,g=ports.phase1Controller.state;
  if(!ports.isPhase1Run()||!g.selected||r.status==='fight')return;
  r.enc=g.wave;const last=g.wave===g.selected.waves;
- if(ports.state.automaticTalents?.nodes?.includes('affinity_aegis'))ports.setBarrier(r,r.maxhp*.05);
+ if(ports.state.automaticTalents?.nodes?.includes('affinity_aegis'))ports.setBarrier(r,WandererV012Buildcraft.barrierAmount(r.maxhp,r.stats?.spellPower,.05,.08));
  const talentBarrier=ports.phase1Build?.runtime?.talentBonuses?.startBarrier||0;if(talentBarrier>0)ports.setBarrier(r,talentBarrier);
  const theme=ports.phase2Theme(g.selected.id);
  const conditions=globalThis.WandererV013ExpeditionConditions,conditionCard=g.dungeon&&ports.phase1Controller.realmMap();

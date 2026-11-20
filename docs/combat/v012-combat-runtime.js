@@ -170,7 +170,8 @@ function setReady(r,name,seconds){
 
 function setBarrier(r,amount){
  const before=r.barrier;
- const cap=Math.max(8,Math.round(r.maxhp*.3));
+ const aegis=ports.state?.automaticTalents?.nodes?.includes('affinity_aegis')||ports.phase1Build?.unlockedFamilies?.includes('aegis');
+ const cap=WandererV012Buildcraft.barrierCap(r.maxhp,r.stats?.spellPower,!!aegis);
  if(before>=cap)return 0;
  r.barrier=Math.min(cap,before+Math.max(0,amount*(1+(r.stats?.wardBonus||0))));
  return Math.max(0,r.barrier-before);
