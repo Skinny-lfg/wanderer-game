@@ -9,14 +9,14 @@ const GROUPS=Object.freeze({
  B:['daring','plate-warden','magic-frost','magic-lightning','cloth-battlemage']
 });
 const SEEDS=Object.freeze([9811,9812,9813,9814,9815]);
-const MAX_LEVEL=20,MAX_ATTEMPTS=18,MAX_TOTAL_ATTEMPTS=360;
+const MAX_LEVEL=20,MAX_ATTEMPTS=18,MAX_TOTAL_ATTEMPTS=360,MAX_COMBAT_TICKS=12000;
 function configuration(seed,group){
  if(!Number.isSafeInteger(seed)||!SEEDS.includes(seed))throw Error('Unknown Stage 02 seed: '+seed);
  if(!Object.hasOwn(GROUPS,group))throw Error('Unknown Stage 02 group: '+group);
  return N.parseArgs([
   '--seeds='+seed,'--profiles='+GROUPS[group].join(','),
   '--max-level='+MAX_LEVEL,'--max-attempts='+MAX_ATTEMPTS,
-  '--max-total-attempts='+MAX_TOTAL_ATTEMPTS,
+  '--max-total-attempts='+MAX_TOTAL_ATTEMPTS,'--tick-limit='+MAX_COMBAT_TICKS,
   '--out=reports/stage02/raw-'+seed+'-'+group+'.json'
  ]);
 }
@@ -31,7 +31,7 @@ function shard(seed,group){
   throw Error('Cohort label disagrees with native accounts');
  data.stage02={cohort:seed+'-'+group,seed,group,
   maxExpedition:MAX_LEVEL,maxAttemptsPerExpedition:MAX_ATTEMPTS,
-  maxAttemptsPerAccount:MAX_TOTAL_ATTEMPTS,
+  maxAttemptsPerAccount:MAX_TOTAL_ATTEMPTS,maxNativeCombatTicks:MAX_COMBAT_TICKS,
   decisionModel:'adaptive',genuineLevelUnlocksOnly:true,
   hadSimulationErrors:data.coverage.errors>0};
  return data;
@@ -69,4 +69,4 @@ function main(argv=process.argv.slice(2)){
  return brief;
 }
 if(require.main===module)main();
-module.exports={GROUPS,SEEDS,MAX_LEVEL,MAX_ATTEMPTS,MAX_TOTAL_ATTEMPTS,configuration,shard,main};
+module.exports={GROUPS,SEEDS,MAX_LEVEL,MAX_ATTEMPTS,MAX_TOTAL_ATTEMPTS,MAX_COMBAT_TICKS,configuration,shard,main};
