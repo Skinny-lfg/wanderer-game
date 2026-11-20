@@ -1,4 +1,4 @@
-name: Wanderer v0.13 — Blacksmith browser UI click-through (audit only)
+name: Wanderer v0.13 — Random Forge browser UI (audit only)
 on:
   push:
     branches: [audit/v013]
