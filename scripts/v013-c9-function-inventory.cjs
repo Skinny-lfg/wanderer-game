@@ -111,6 +111,47 @@ const summary={
  noCrossRuntimeReference:inventory.candidates.map(x=>({name:x.name,aux:x.auxReferences.map(y=>y.file)})),
  perDirectory:Object.fromEntries(['combat','economy','online','preview','index.html'].map(k=>[k,functions.filter(x=>x.file===k||x.file.startsWith(k+'/')).length]))
 };
+const perFile=[...new Set(functions.map(f=>f.file))].sort().map(file=>({file,functions:functions.filter(f=>f.file===file).length,exports:namedUnique.filter(e=>e.file===file).length}));
+const markdown=[
+ '# Wanderer C9 — Active Function and Export Inventory',
+ '',
+ 'This is a conservative static index, not a claim that all computed or asynchronous consumers are resolved.',
+ '',
+ 'Commit: '+inventory.sha,
+ 'Source JS/HTML files: '+live.length+'; auxiliary tests/scripts: '+aux.length,
+ 'Function-like entries: '+functions.length+'; named export entries: '+namedUnique.length,
+ 'Global object export groups: '+globalObjectMembers.length,
+ 'Function identifiers shared by multiple files: '+sharedNames.length+' (name collision is not duplicate logic)',
+ 'Possible single-mention functions: '+singleMentionCandidates.length,
+ '',
+ '## Function counts by source file',
+ '',
+ '| File | Function-like entries | Named exports |',
+ '|---|---:|---:|',
+ ...perFile.map(x=>'| '+x.file+' | '+x.functions+' | '+x.exports+' |'),
+ '',
+ '## Single-mention candidates (manual review required)',
+ '',
+ '| File | Line | Identifier | Pattern |',
+ '|---|---:|---|---|',
+ ...singleMentionCandidates.map(x=>'| '+x.file+' | '+x.line+' | '+x.name+' | '+x.kind+' |'),
+ '',
+ '## Legacy-route token occurrences',
+ '',
+ ...retiredPathMatches.map(x=>'- '+x.file+':'+x.line+' '+x.token),
+ '',
+ '## Findings and exclusions',
+ '',
+ '- Legacy passive draft offering was removed from Buildcraft; permanent talent/ability APIs remain.',
+ '- The freeBuild flag is the current Dungeon checkpoint marker, not a live alternate free-build mode.',
+ '- The 19 lexical single-mention candidates include Firebase methods and minified vendored SDK internals; no automatic removal is permitted.',
+ '- Common helper names such as create, tick and validate appear in independent module scopes; they are not evidence of duplicate mechanics.',
+ '- C6 verifies no missing live imports, no retired controller calls and no orphan modules under its conservative scanner.',
+ '',
+ 'All individual function-like declarations, lines, export groups and per-file identifier mentions are preserved in v013-c9-function-inventory.json.',
+ 'Computed property access, reflection, and ESM dynamic imports remain manual-review limitations.'
+];
+fs.writeFileSync(path.join(ROOT,'reports/v013-c9-function-inventory.md'),markdown.join('\n')+'\n');
 console.log('C9_FUNCTION_INVENTORY='+JSON.stringify(summary));
 console.log('C9_UNREFERENCED_FUNCTION_CANDIDATES='+JSON.stringify(singleMentionCandidates.slice(0,35).map(x=>({file:x.file,line:x.line,name:x.name,kind:x.kind}))));
 console.log('C9_SHARED_NAMES='+JSON.stringify(sharedNames.slice(0,12).map(x=>({name:x.name,files:x.files.slice(0,8)}))));

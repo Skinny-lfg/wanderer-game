@@ -48,7 +48,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: v013-c9-function-inventory
-          path: reports/v013-c9-function-inventory.json
+          path: |
+            reports/v013-c9-function-inventory.json
+            reports/v013-c9-function-inventory.md
           if-no-files-found: warn
       - name: C6 final missing-import, old-route and orphan-asset source gate
         run: node scripts/v013-c6-final-audit.cjs
