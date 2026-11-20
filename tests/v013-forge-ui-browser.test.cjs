@@ -76,6 +76,7 @@ test('v0.13 Blacksmith: Tier and Legendary actions visible and executable in Chr
    const tier=page.locator('.v013TierUpgrade');
    assert.equal(await tier.count(),1,'Tier section not displayed in active tab');
    assert.match(await tier.innerText(),/Upgrade existing gear/);
+   await page.locator('#v013TierItem').selectOption(initial.weaponId);
    assert.equal(await page.locator('#v013UpgradeTier').isDisabled(),true,'E1 must not upgrade to locked E5');
    await page.screenshot({path:path.join(out,'tier-locked-'+width+'.png'),fullPage:true});
 
