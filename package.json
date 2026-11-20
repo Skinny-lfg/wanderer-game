@@ -74,7 +74,8 @@
     "test:v013:c9": "node --test tests/v013-c9-dead-code.test.cjs",
     "simulate:v013:affinities": "node scripts/simulate-progression.cjs --mode=affinities",
     "test:v013:affinities": "node --test tests/v013-stage1-affinities.test.cjs",
-    "test:v013:stage2": "node --test tests/v013-stage2-barrier.test.cjs"
+    "test:v013:stage2": "node --test tests/v013-stage2-barrier.test.cjs",
+    "simulate:v013:affinities:compare": "node scripts/v013-stage2-barrier-compare.cjs"
   },
   "dependencies": {
     "firebase": "11.10.0"

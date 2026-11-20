@@ -24,7 +24,7 @@ const DEFAULTS=Object.freeze({
  levels:[5,35],seeds:[9101,9201],points:24,rarity:'Rare',gear:'current',
  runes:false,enemyAffinity:'aegis',risk:0,mobs:3,tickLimit:4500,
  targetPolicy:'focus',builds:BUILDS.map(x=>x.id),
- output:'reports/v013-stage1-affinity-baseline.json'
+ output:'reports/v013-affinity-current.json'
 });
 const round=(n,d=2)=>Number(Number(n).toFixed(d));
 function integers(value,name,min=1,max=10000){
@@ -140,12 +140,12 @@ function run(cfg){
    'Passive activations cover Buildcraft activated() only, not all passive stat nodes or uninstrumented specialisations.',
    'Mana spent is measured; total Mana restored is not instrumented in Stage 1. Mana start/end are available, but net change is not a restoration count.',
    'Real player potions, Boons, Contracts, manual skill decisions and adaptive target switching are disabled by the fixed diagnostic policy.',
-   'Stage 1 does not modify UI, gameplay coefficients, item generation, saves or stats; it establishes a baseline for stages 2-5.'
+   'The frozen original Stage 1 results live in reports/v013-stage1-affinity-summary.json. This diagnostic records the rules from the current source revision and must never overwrite the original.'
   ],summary,rows,durationMs:Date.now()-started};
 }
 function markdown(r){
- const lines=['# Wanderer v0.13 — Affinity Stage 1 baseline','',
-  'Native controlled-combat snapshot before the proposed Aegis/Vitality/Decay improvements.','',
+ const lines=['# Wanderer v0.13 — Current Affinity diagnostic','',
+  'Native controlled-combat snapshot at the current source revision. Original Stage 1 is frozen in the repository.','',
   '**Source SHA256:** '+r.sourceSha256,'**Replay SHA256:** '+r.replaySha256,
   '**Scenarios:** '+r.summary.valid+'/'+r.summary.total+' valid; '+r.summary.errors+' errors; '+r.summary.timeouts+' timeouts.','',
   '## Setup','',...Object.entries(r.settings).map(([k,v])=>'- '+k+': '+JSON.stringify(v)),'',

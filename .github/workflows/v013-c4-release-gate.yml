@@ -17,6 +17,7 @@ on:
       - 'scripts/v013-c6-final-audit.cjs'
       - 'scripts/v013-c9-function-inventory.cjs'
       - 'scripts/v013-affinity-baseline.cjs'
+      - 'scripts/v013-stage2-barrier-compare.cjs'
       - 'scripts/prepare-automatic-preview.mjs'
       - 'scripts/update-pages-preview.mjs'
       - 'package.json'
@@ -57,16 +58,16 @@ jobs:
         run: node scripts/v013-c6-final-audit.cjs
       - name: Current full v0.13 gameplay and simulation gate
         run: npm run test:v013:gate
-      - name: Stage 1 pre-balance native Affinity baseline (6 pure / 6 hybrids)
-        run: npm run simulate:v013:affinities
-      - name: Stage 1 baseline evidence (raw seeded matrix and summary)
+      - name: Stage 2 native Aegis/Spell Power paired comparison (frozen Stage 1 baseline)
+        run: node scripts/v013-stage2-barrier-compare.cjs
+      - name: Stage 2 affinity comparison artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: v013-stage1-affinity-baseline
+          name: v013-stage2-affinity-comparison
           path: |
-            reports/v013-stage1-affinity-baseline.json
-            reports/v013-stage1-affinity-baseline.md
+            reports/v013-stage2-affinity-comparison.json
+            reports/v013-stage2-affinity-comparison.md
           if-no-files-found: warn
           retention-days: 30
       - name: Verify current 343-node Talent Graph runtime and source catalog
