@@ -110,7 +110,11 @@ function audit(shards,options={}){
   refs.add(d.source);runners.add(d.runnerSha256);strategies.add(d.agentStrategySha256);
   accounts.push(...d.accounts);
  }
- assert(refs.size===1&&runners.size===1&&strategies.size===1,'mixed source fingerprints');
+ // sourceFingerprint() enumerates *loaded* module children. A different
+ // legitimate profile can lazy-load an extra module, changing this digest
+ // without changing a single source file. Check identical fixed file hashes
+ // in verifyProvenance() instead of rejecting the full native cohort.
+ assert(runners.size===1&&strategies.size===1,'mixed runner/agent hashes');
  assert(accounts.length===seeds.length*groups.length*5,'missing native accounts');
  assert(new Set(accounts.map(a=>a.seed+'/'+a.profile)).size===accounts.length,'duplicate native account');
  const rows=accounts.map(accountRow),allAttempts=accounts.flatMap(a=>a.attempts);
@@ -154,7 +158,7 @@ function audit(shards,options={}){
    resets:sum(arr,a=>a.talentResets),crafts:sum(arr,a=>a.crafts)}];
  }));
  const result={stage:'Stage 02 / 50 native accounts from E1 toward E20',
-  provenance:{engineSource:[...refs][0],runnerSha256:[...runners][0],
+  provenance:{engineSourceVariants:[...refs].sort(),runnerSha256:[...runners][0],
    agentStrategySha256:[...strategies][0],seeds,groups,shards:scheduled,
    attemptsPerLevel:18,totalAttemptsCap:360,nativeTickLimit:12000,policy:'adaptive'},
   coverage:{accounts:rows.length,shards:shards.length,attempts:allAttempts.length,
@@ -209,12 +213,51 @@ function markdown(r){
   '','Detailed combat, loot, gear and Camp actions remain in the ten original cohort JSON artifacts.',''];
  return lines.join('\n');
 }
+function verifyProvenance(dir,shards){
+ const required=[
+  'scripts/v013-natural-progression.cjs',
+  'scripts/v013-agent-strategy.cjs',
+  'scripts/v013-stage02-run-cohort.cjs',
+  'scripts/v013-stage02-aggregate.cjs',
+  'combat/v012-gear-stats.js'
+ ];
+ const revisions=new Set(),nodes=new Set(),fileSets=new Set();
+ let canonical=null;
+ for(const data of shards){
+  const id=data.stage02.cohort,file=path.join(dir,'raw-'+id+'.provenance.txt');
+  assert(fs.existsSync(file),'missing native source provenance '+id);
+  const lines=fs.readFileSync(file,'utf8').trim().split(/\r?\n/);
+  const rev=lines.find(x=>x.startsWith('revision='))?.slice(9);
+  const node=lines.find(x=>x.startsWith('node='))?.slice(5);
+  const cohort=lines.find(x=>x.startsWith('cohort='))?.slice(7);
+  assert(/^[0-9a-f]{40}$/.test(rev||'')&&cohort===id,'bad Git revision/cohort '+id);
+  revisions.add(rev);nodes.add(node);
+  const hashes=Object.fromEntries(lines.map(x=>/^([0-9a-f]{64})\s+(\S+)$/.exec(x))
+   .filter(Boolean).map(m=>[m[2],m[1]]));
+  assert(required.every(k=>/^[0-9a-f]{64}$/.test(hashes[k]||'')),
+   'missing native file SHA '+id);
+  assert(hashes['scripts/v013-natural-progression.cjs']===data.runnerSha256,
+   'actual runner bytes differ from cohort claimed hash '+id);
+  assert(hashes['scripts/v013-agent-strategy.cjs']===data.agentStrategySha256,
+   'actual agent bytes differ from cohort claimed hash '+id);
+  const subset=Object.fromEntries(required.map(k=>[k,hashes[k]]));
+  const fp=JSON.stringify(subset);fileSets.add(fp);
+  if(!canonical)canonical=subset;
+ }
+ assert(revisions.size===1&&nodes.size===1&&fileSets.size===1,
+  'mixed Git revisions, Node versions or native code file hashes');
+ return {gitRevision:[...revisions][0],nodeVersion:[...nodes][0],
+  verifiedFileHashes:canonical,sourceFingerprintNote:
+  'sourceFingerprint may differ by profile-specific lazy module enumeration; the actual source files and Git revision are identical across shards.'};
+}
+
 function main(argv=process.argv.slice(2)){
  const dir=path.resolve(argv[0]||'reports/stage02');
  const dest=path.resolve(argv[1]||'reports/stage02/stage02-report.json');
  const files=fs.readdirSync(dir).filter(n=>/^raw-\d+-[AB]\.json$/.test(n)).sort();
  const shards=files.map(n=>JSON.parse(fs.readFileSync(path.join(dir,n),'utf8')));
  const data=audit(shards);
+ Object.assign(data.provenance,verifyProvenance(dir,shards));
  fs.mkdirSync(path.dirname(dest),{recursive:true});
  fs.writeFileSync(dest,JSON.stringify(data,null,2)+'\n');
  fs.writeFileSync(dest.replace(/\.json$/,'.md'),markdown(data)+'\n');
@@ -227,4 +270,4 @@ function main(argv=process.argv.slice(2)){
  }));
 }
 if(require.main===module)main();
-module.exports={expected,validateCohort,stopClass,accountRow,audit,markdown,median,p90};
+module.exports={expected,validateCohort,stopClass,accountRow,audit,verifyProvenance,markdown,median,p90};
