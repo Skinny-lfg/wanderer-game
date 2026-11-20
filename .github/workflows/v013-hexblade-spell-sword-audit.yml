@@ -1,0 +1,98 @@
+name: Wanderer v0.13 — Hexblade Spell Sword and Dagger audit
+on:
+  push:
+    branches: [audit/v013-stage6]
+    paths: ['.github/workflows/v013-hexblade-spell-sword-audit.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    if: github.ref == 'refs/heads/audit/v013-stage6'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: Verify native item, offhand and agent invariants
+        run: |
+          node --test \
+            tests/v013-gear-roll-diversity.test.cjs \
+            tests/v013-offhand-dagger-any-main.test.cjs \
+            tests/v013-stage04-archetype-refinement.test.cjs \
+            tests/v013-offhand-stage2-gear.test.cjs
+      - name: Measure genuine seeded Sword affixes and Hexblade stat activation
+        run: |
+          node <<'NODE'
+          'use strict';
+          const assert=require('node:assert/strict'),fs=require('node:fs');
+          require('./economy/v013-gear-rolls.js');
+          const G=globalThis.WandererV013GearRolls;
+          const create=require('./tests/v012-economy-harness.cjs');
+          const B=require('./tests/v013-current-talent-helper.cjs');
+          const N=require('./scripts/v013-natural-progression.cjs');
+          const rng=seed=>()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);
+          const rarityRows=[];
+          let spellSword=null,hybridSword=null;
+          for(const rarity of ['Common','Uncommon','Rare','Epic','Legendary']){
+            const random=rng(20261120+rarity.length*1000),n=12000;
+            let spell=0,intellect=0,intSpell=0;
+            for(let i=0;i<n;i++){
+              const item=G.apply({slot:'weapon',subtype:'Sword',rarity,tier:35},35,random);
+              if(item.spell>0){spell++;spellSword??=item;}
+              if(item.int>0)intellect++;
+              if(item.int>0&&item.spell>0){intSpell++;hybridSword??=item;}
+            }
+            rarityRows.push({rarity,n,spell,intellect,intSpell,spellPct:+(spell*100/n).toFixed(2),intSpellPct:+(intSpell*100/n).toFixed(2)});
+          }
+          assert(rarityRows.filter(x=>['Common','Uncommon'].includes(x.rarity)).every(x=>x.spell===0));
+          assert(rarityRows.filter(x=>['Rare','Epic','Legendary'].includes(x.rarity)).every(x=>x.spell>0));
+          assert(hybridSword && hybridSword.atk>0 && hybridSword.int>0 && hybridSword.spell>0);
+          const a=create(59012,undefined,{}, {skipPersistence:true});
+          const neutral=a.baseStats({weapon:hybridSword});
+          a.state().automaticTalents=B.buy(['affinity_magic']);
+          const magic=a.baseStats({weapon:hybridSword});
+          const magicNoSpell=a.baseStats({weapon:{...hybridSword,spell:0}});
+          assert.equal(neutral.spellPower,0,'Sword alone does not unlock magic');
+          assert.equal(magic.caster,false,'Sword is a physical main hand, not a Wand cast');
+          assert(magic.mana>0 && magic.spellPower>magicNoSpell.spellPower);
+          a.state().automaticTalents=B.buy(['affinity_decay']);
+          const decay=a.baseStats({weapon:hybridSword});
+          assert(decay.mana>0 && decay.spellPower>0 && !decay.caster);
+          a.state().automaticTalents=B.buy(['affinity_aegis']);
+          const aegis=a.baseStats({weapon:hybridSword});
+          assert(aegis.spellPower>0 && aegis.mana===0);
+          const profile=N.PROFILES['hexblade-hybrid'];
+          assert.deepEqual(profile.weapons,['Sword','Daggers','Wand']);
+          assert(profile.offhands.includes('Daggers'));
+          const agentText=fs.readFileSync('./scripts/v013-natural-progression.cjs','utf8');
+          const output={kind:'controlled-measurement-not-natural-drop-odds',
+            rolls:rarityRows,
+            example: {rarity:hybridSword.rarity,atk:hybridSword.atk,int:hybridSword.int,spell:hybridSword.spell,affixes:hybridSword.affixes},
+            magic:{neutralSpellPower:neutral.spellPower,spellPower:magic.spellPower,withoutSwordSpell:magicNoSpell.spellPower,mana:magic.mana,caster:magic.caster},
+            decay:{spellPower:decay.spellPower,mana:decay.mana,caster:decay.caster},
+            aegis:{spellPower:aegis.spellPower,mana:aegis.mana},
+            agentHasOldNoStrikeAssumption:agentText.includes('Sword + Dagger has NO independent second strike')};
+          fs.mkdirSync('reports/stage6', {recursive:true});
+          fs.writeFileSync('reports/stage6/hexblade-spell-sword-audit.json',JSON.stringify(output,null,2)+'\n');
+          console.log('HEX_SWORD_AUDIT='+JSON.stringify(output));
+          NODE
+      - name: Native Hexblade E1 progression smoke on unchanged current agent
+        run: |
+          node scripts/v013-stage04-archetype-refinement.cjs \
+            --seed=11001 \
+            --out=reports/stage6/hexblade-postdagger-natural-11001.json
+      - name: Preserve diagnostics without modifying game or deploy
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hexblade-spell-sword-postdagger
+          path: reports/stage6/hexblade-*
+          retention-days: 30
+          if-no-files-found: ignore
