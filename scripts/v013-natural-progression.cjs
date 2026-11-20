@@ -903,6 +903,7 @@ function playDungeon(a,level,profile,opts,decisionModel='risk-aware'){
  const contract=chooseContract(offer,profile,card);
  if(offer)c.chooseContract(contract);
  const report={level,realm:card.id,affinity:card.family,risk:card.risk,contract,
+  realmCondition:visible[card.id]?.conditionId||null,
   initialCapabilities:cap||capabilities(a),
   realmEvaluations:ranks.map(x=>({id:x.card.id,affinity:x.card.family,risk:x.card.risk,
    totalScore:x.score,baseScore:x.baseScore,...x.fit})),rooms:[],
@@ -990,6 +991,7 @@ function playDungeon(a,level,profile,opts,decisionModel='risk-aware'){
    ({slot:item.slot,rarity:item.rarity,subtype:item.subtype,source:item.source}));
   report.rooms.push({room:next.room,roomType:node.kind,...fight,
    loot:actualDrops,firstRoom:!!wasFirstRoom,
+   ...(node.kind==='boss'?{bossModifiers:[...(report.bossInitialModifiers||[])]}:{}),
    ...(node.kind==='elite'?{marked:next.room===card.objective}:{})});
   if(fight.timedOut){report.error='Native combat timeout';break;}
   if(fight.died)break;
@@ -1131,6 +1133,7 @@ function analyze(accounts,opts){
  return {stage:'9.6',schemaVersion:5,engine:'v0.13 live native account, dungeon and combat runtime',
   source:S.sourceFingerprint().sha256,
   runnerSha256:crypto.createHash('sha256').update(fs.readFileSync(__filename)).digest('hex'),
+  agentStrategySha256:crypto.createHash('sha256').update(fs.readFileSync(path.join(__dirname,'v013-agent-strategy.cjs'))).digest('hex'),
   settings:opts,
   integrity:{
    noFabricatedXp:true,noForcedEquipment:true,noForcedEncounter:true,
