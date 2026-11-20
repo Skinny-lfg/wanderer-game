@@ -26,9 +26,30 @@ test('Blueprint progress reports locked recipes, costs and material sources',()=
  assert.equal(C.progress(s,undefined,3),null);
 });
 test('five-expedition item bands prevent automatic tier churn',()=>{assert.deepEqual([1,2,5,6,10,11,200,201].map(C.tierBand),[1,2,5,6,6,11,196,201]);assert.equal(C.cost('green_sword',6).fragments,C.cost('green_sword',10).fragments);assert.throws(()=>C.tierBand(0),/Invalid crafting tier/);});
-test('crafts are deterministic, choose profile, and deduct exact known cost without mutating the input',()=>{const s=state();s.crafting.essence=4;const before=JSON.stringify(s),result=C.prepareCraft(s,'green_sword',5,factory);assert(result);assert.equal(result.item.rarity,'Uncommon');assert.equal(result.item.name,'Apprentice Sword');assert.equal(result.item.tier,5);assert.equal(result.item.str,3);assert.equal(result.item.agi,0);assert.equal(result.item.crafted,true);assert.equal(result.fragments,s.fragments-C.cost('green_sword',5).fragments);assert.equal(result.crafting.essence,0);assert.equal(JSON.stringify(s),before);});
-test('armor infusions are optional, type-locked, deterministic, visible in costs, and applied exactly',()=>{const itemFactory=(tier,slot,_affinity,source,type,rarity)=>({id:'armor',tier,slot,subtype:type,source,rarity,str:2,agi:1,int:0,end:0,cha:0,def:20,hp:40,spell:2,evasionRating:7});const s=state();s.crafting.essence=6;const base=C.prepareCraft(s,'green_armor_cloth',1,itemFactory),progress=C.progress(s,'green_armor_cloth',1,'spellweave');assert.equal(base.item.v013CraftFocus,undefined);assert.equal(progress.cost.essence,6);assert.equal(progress.cost.focusEssence,2);const preview=C.previewCraft('green_armor_cloth',1,itemFactory,'spellweave'),crafted=C.prepareCraft(s,'green_armor_cloth',1,itemFactory,'spellweave');assert.equal(preview.spell,8);assert.equal(crafted.item.spell,preview.spell);assert.equal(crafted.item.v013CraftFocus,'spellweave');assert.equal(crafted.crafting.essence,0);assert.equal(C.progress(s,'green_armor_cloth',1,'quickstep'),null);assert.equal(C.previewCraft('green_sword',1,itemFactory,'bulwark'),null);});
-test('armor identities assign Plate to Strength and infusions to their intended item stats',()=>{const itemFactory=(tier,slot,_affinity,source,type,rarity)=>({id:'armor',tier,slot,subtype:type,source,rarity,str:2,agi:1,int:0,end:0,cha:0,def:20,hp:40,spell:2,evasionRating:7});const s=state();s.crafting.essence=6;const plate=C.prepareCraft(s,'green_armor_plate',1,itemFactory,'bulwark').item,leather=C.prepareCraft(s,'green_armor_leather',1,itemFactory,'quickstep').item,cloth=C.prepareCraft(s,'green_armor_cloth',1,itemFactory,'spellweave').item;assert.equal(plate.end,0);assert.equal(plate.str,3);assert.equal(plate.def,24);assert.equal(plate.hp,43);assert.equal(leather.evasionRating,17);assert.equal(cloth.spell,8);});
+test('crafted item preserves random attributes from the same native generator without forcing Strength',()=>{
+ const s=state();s.crafting.essence=4;const before=JSON.stringify(s);
+ const result=C.prepareCraft(s,'green_sword',5,factory);assert(result);
+ assert.equal(result.item.rarity,'Uncommon');assert.equal(result.item.name,'Apprentice Sword');
+ assert.equal(result.item.tier,5);assert.equal(result.item.str,2);assert.equal(result.item.agi,1);
+ assert.equal(result.item.crafted,true);
+ assert.equal(result.fragments,s.fragments-C.cost('green_sword',5).fragments);
+ assert.equal(result.crafting.essence,0);assert.equal(JSON.stringify(s),before);
+});
+test('Forge has no Essence-paid focus and recipe output does not alter rolled armor stats',()=>{
+ const itemFactory=(tier,slot,_affinity,source,type,rarity)=>({id:'armor',tier,slot,subtype:type,source,rarity,
+  armorType:type,str:1,agi:2,int:5,end:3,cha:0,def:20,hp:40,spell:2,evasionRating:7});
+ const s=state();s.crafting.essence=4;
+ assert.equal(C.FOCUSES,undefined);
+ const price=C.progress(s,'green_armor_plate',1).cost;
+ assert.equal(price.essence,4);
+ assert.equal(price.focusEssence,undefined);
+ const preview=C.previewCraft('green_armor_plate',1,itemFactory);
+ const crafted=C.prepareCraft(s,'green_armor_plate',1,itemFactory);
+ assert.equal(preview.int,5);assert.equal(preview.str,1);assert.equal(preview.agi,2);
+ assert.equal(crafted.item.int,5);assert.equal(crafted.item.spell,2);
+ assert.equal(crafted.item.v013CraftFocus,undefined);
+ assert.equal(crafted.crafting.essence,0);
+});
 test('insufficient resources, unknown or locked recipes never call the item factory',()=>{const s=state();let calls=0;const make=(...args)=>{calls++;return factory(...args);};assert.equal(C.prepareCraft(s,'green_sword',1,make),null);s.crafting.essence=1000;assert.equal(C.prepareCraft(s,'blue_sword',1,make),null);assert.equal(C.prepareCraft(s,'missing',1,make),null);s.fragments=0;assert.equal(C.prepareCraft(s,'green_sword',1,make),null);assert.equal(calls,0);});
 test('Epic recipes require affinity reagents and apply exactly their functional trait',()=>{const s=state();s.crafting=unlock(s.crafting,'blood');s.crafting=C.discover(s.crafting,'epic_sanguine_edge');s.crafting.essence=55;s.crafting.cores.blood=3;assert.equal(C.prepareCraft(s,'epic_sanguine_edge',1,factory),null);s.crafting.cores.blood=4;const result=C.prepareCraft(s,'epic_sanguine_edge',1,factory);assert(result);assert.equal(result.item.v013Trait,'blood_transfer');assert.equal(result.item.rarity,'Epic');assert.equal(result.crafting.cores.blood,0);assert.equal(result.crafting.essence,0);assert.equal(s.crafting.cores.blood,4);});
 test('refining respects family, cost and one conversion per drought',()=>{let p=C.create();p.essence=3;for(let i=0;i<3;i++)p=unlock(p,'blood');assert.equal(C.refine(p,'fury'),null);const next=C.refine(p,'blood');assert.equal(next.essence,0);assert.equal(next.cores.blood,1);assert.equal(C.refine(next,'blood'),null);assert.equal(p.cores.blood,0);assert(!C.valid({...p,dryRooms:{blood:4}}));});
