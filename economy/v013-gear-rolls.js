@@ -81,7 +81,7 @@ function apply(item,basePower,random){
   if(attrs.length)selected.push(weighted(attrs,random));
  }
  while(selected.length<number){
-  const available=[...spec.extras.map(k=>[k,1.6]),...spec.attrs].filter(([key])=>!selected.includes(key) && !(key==='atk'&&['Wand','Staff'].includes(item.subtype))];
+  const available=[...spec.extras.map(k=>[k,1.6]),...spec.attrs].filter(([key])=>!selected.includes(key) && !(key==='atk'&&['Wand','Staff'].includes(item.subtype)));
   if(!available.length)break;
   selected.push(weighted(available,random));
  }
