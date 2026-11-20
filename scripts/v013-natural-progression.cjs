@@ -415,13 +415,16 @@ function refineEarnedReagents(a,profile,level){
 }
 // Free Stash capacity through actual Camp salvage, not state mutation.
 function consolidateStash(a,profile,reserve=4){
- const s=a.state(),capacity=Number(s.stashCapacity);
- const action={capacity,occupiedBefore:s.stash.length,overflowBefore:(s.expeditionOverflow||[]).length,
+ const s=a.state(),capacity=a.storage?.capacity?.()??Number(s.stashCapacity);
+ // The actual native Stash counts equipped-potion stacks as well as items.
+ // Counting only gear misses a full Stash at later E levels.
+ const occupied=a.storage?.occupied?.()??s.stash.length;
+ const action={capacity,occupiedBefore:occupied,overflowBefore:(s.expeditionOverflow||[]).length,
   salvaged:0,fragmentsGained:0,claimedOverflow:0,occupiedAfter:null,overflowAfter:null};
  if(!a.economyCanAct()||!Number.isInteger(capacity)||capacity<1)return action;
  const overflow=(s.expeditionOverflow||[]).length;
  const keepSpace=Math.min(Math.max(1,Math.floor(capacity/4)),Math.max(2,reserve));
- const excess=Math.max(0,s.stash.length+overflow-(capacity-keepSpace));
+ const excess=Math.max(0,occupied+overflow-(capacity-keepSpace));
  if(excess>0){
   const candidate=s.stash.filter(item=>item?.id&&!item.locked).sort((left,right)=>{
    function priority(item){
@@ -443,7 +446,8 @@ function consolidateStash(a,profile,reserve=4){
   }
  }
  if((s.expeditionOverflow||[]).length)action.claimedOverflow=a.claimOverflow();
- action.occupiedAfter=s.stash.length;action.overflowAfter=(s.expeditionOverflow||[]).length;
+ action.occupiedAfter=a.storage?.occupied?.()??s.stash.length;
+ action.overflowAfter=(s.expeditionOverflow||[]).length;
  return action;
 }
 function prepareCamp(a,profile,level,decisionModel='risk-aware',options={}){
@@ -902,6 +906,8 @@ function playDungeon(a,level,profile,opts,decisionModel='risk-aware'){
  a.start(level,true);
  if(g.expedition!==level||g.stage!=='choice')throw Error('Native Expedition start rejected at E'+level+' '+JSON.stringify({
   stage:g.stage,unlocked:g.unlocked,stash:a.state().stash?.length,
+  nativeOccupied:a.storage?.occupied?.(),nativeCapacity:a.storage?.capacity?.(),
+  nativeHasRoom:a.storage?.hasRoom?.(),
   stashCapacity:a.state().stashCapacity,overflow:a.state().expeditionOverflow?.length,
   pendingRune:!!a.state().pendingRuneReward,review:!!a.results().review}));
  if(!g.dungeon?.cards?.length)throw Error('Natural Realm Cards were not generated');
