@@ -9,13 +9,20 @@ const Elites=['gravecaller','oathbound_exarch','briarspine_horror','ashen_execut
 const Policies=['focus','mechanics','adaptive'];
 const Seeds=[9761,9762];
 const Builds=['blood-fury','blood-decay','magic-storm'];
-const level=5,optsBase={...S.DEFAULTS,mode:'bosses',points:24,rarity:'Rare',
+const flags=Object.fromEntries(process.argv.slice(2).filter(x=>x.startsWith('--'))
+ .map(x=>x.slice(2).split('=')));
+const level=Number(flags.level||5),risk=Number(flags.risk??1),
+ rarity=flags.rarity||'Rare',points=Number(flags.points||24);
+if(![1,5,10].includes(level)||![0,1,2].includes(risk)||
+ !['Rare','Epic'].includes(rarity)||![24,36].includes(points))
+ throw Error('Controlled scenario uses E1/E5/E10, risk 0–2, Rare/Epic, 24/36 talent points');
+const optsBase={...S.DEFAULTS,mode:'bosses',points,rarity,
  lockScenarioStreams:true,tickLimit:4500};
 const rows=[];
 function runBoss(family,build,seed,policy){
  const opts={...optsBase,targetPolicy:policy};
  const result=S.encounter(level,build,seed,'boss',opts,
-  undefined,undefined,family,1);
+  undefined,undefined,family,risk);
  return {test:'boss',family,build:build.id,seed,policy,
   loadoutFingerprint:result.gearFingerprint,scenarioSeed:result.resolvedSeed,
   ...result};
@@ -76,21 +83,21 @@ function summarize(group){
 }
 const bossRows=rows.filter(r=>r.test==='boss'),eliteRows=rows.filter(r=>r.test==='elite');
 const report={
- fixture:'synthetic fixed E5 Rare gear, native 24-point valid talent graph, real native skill/combat execution',
+ fixture:'synthetic fixed E'+level+' '+rarity+' gear, native '+points+'-point valid talent graph, real native skill/combat execution',
  source:S.sourceFingerprint().sha256,
  limitation:'Controlled first-ring Boss/Elite substitution; no natural E1/E2 journey, XP/gear acquisition or 15-Realm route. Comparison isolates player target clicks only, not full strategy.',
  byBossAffinity:Object.fromEntries(Bosses.map(f=>[f,summarize(bossRows.filter(r=>r.family===f))])),
  byEliteType:Object.fromEntries(Elites.map(t=>[t,summarize(eliteRows.filter(r=>r.eliteType===t))])),
  bossSummary:summarize(bossRows),eliteSummary:summarize(eliteRows),
- replay:{level,rarity:'Rare',points:24,builds:Builds,seeds:Seeds,policies:Policies,risk:1},
+ replay:{level,rarity,points,builds:Builds,seeds:Seeds,policies:Policies,risk},
  pairs:{good:goodPairs,invalid:failedPairs,errors:pairErrors},
  rows
 };
-const file=path.resolve(process.argv[2]||'reports/stage6-target-controlled.json');
+const file=path.resolve(process.argv.find(x=>x.endsWith('.json'))||'reports/stage6-target-controlled.json');
 fs.mkdirSync(path.dirname(file),{recursive:true});
 fs.writeFileSync(file,JSON.stringify(report,null,2)+'\n');
 const md=['# Stage 6 — Controlled native tactical Boss / Elite comparison','',
- '**Fixture, not natural account progression**: E5, Rare rolled equipment, valid native 24-point graph; fixed same seed/initial scenario across target policies.',
+ '**Fixture, not natural account progression**: E'+level+', '+rarity+' rolled equipment, valid native '+points+'-point graph, risk '+risk+'; same initial scenario across target policies.',
  '',report.limitation,'','Paired scenarios with identical initial native state: '+goodPairs+'; invalid comparisons: '+failedPairs+'.','',
  '| Encounter | Policy | Fights | Wins | Deaths | Timeouts | Errors |',
  '|---|---|---:|---:|---:|---:|---:|'];
