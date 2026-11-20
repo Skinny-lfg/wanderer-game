@@ -22,7 +22,7 @@ const PROFILES=Object.freeze({
  'plate-warden':{name:'Plate Warden',risk:0,targets:['guarded_block','barrier_pulse','steadfast_guard','strong_heart'],families:['aegis','vitality'],armor:'Plate',weapons:['Mace','Sword'],style:'focused',preparedTargets:['last_bastion'],healAt:.68,retreatAt:.46,target:'mechanics',shop:true},
  'leather-duelist':{name:'Leather Duelist',risk:1,targets:['quick_hands','bleeding_edge','blood_drinker','precision','double_strike','blood_harvest','crimson_rush'],families:['fury','blood'],armor:'Leather',weapons:['Daggers','Bow'],style:'mixed',preparedTargets:['red_guillotine'],healAt:.42,retreatAt:.25,target:'focus',shop:true},
  'cloth-battlemage':{name:'Cloth Battlemage',risk:0,targets:['element_choice','arcane_focus','mana_spring','runic_shield','guarded_block','arcane_bastion'],families:['magic','aegis'],element:'fire',armor:'Cloth',weapons:['Wand','Staff'],style:'mixed',preparedTargets:['arcane_bastion'],healAt:.61,retreatAt:.39,target:'mechanics',shop:true},
- 'hexblade-hybrid':{name:'Hexblade Hybrid',risk:1,targets:['toxic_touch','arcane_focus','affinity_aegis','mana_spring','guarded_block','arcane_resonance','hex_bolt','barrier_pulse','arcane_surge','arcane_mastery'],families:['decay','magic'],armor:'Leather',weapons:['Daggers','Wand'],style:'mixed',preparedTargets:['grave_bloom'],healAt:.5,retreatAt:.29,target:'mechanics',shop:true}
+ 'hexblade-hybrid':{name:'Hexblade Hybrid',risk:1,targets:['toxic_touch','arcane_focus','affinity_aegis','mana_spring','guarded_block','arcane_resonance','hex_bolt','barrier_pulse','arcane_surge','arcane_mastery'],families:['decay','magic'],armor:'Leather',weapons:['Sword','Daggers','Wand'],offhands:['Daggers','Orb','Tome'],style:'mixed',preparedTargets:['grave_bloom'],healAt:.5,retreatAt:.29,target:'mechanics',shop:true}
 });
 // A single deliberate retraining after two unsuccessful attempts at the same E.
 // Uses the game's free full reset; it never creates XP or talent points.
@@ -72,8 +72,13 @@ function parseArgs(args=[]){
 // Strategic valuation of actual item affixes; these are decision weights,
 // never invented gameplay stats. Archetype alignment matters but cannot turn a
 // Common E1 item into a forged higher-tier item.
-function gearScore(item,profile){
+function gearScore(item,profile,targetSlot=item?.slot){
  if(!item)return -1;
+ // Native gear accepts Daggers in either hand. Off-hand offensive stats
+ // have 50% effect. Sword + Dagger has NO independent second strike.
+ const slot=targetSlot||item.slot;
+ const offDagger=slot==='offhand'&&['Daggers','Off-Hand Dagger'].includes(item.subtype);
+ const daggerFactor=offDagger?.5:1;
  const rarity={Common:0,Uncommon:1,Rare:2,Epic:3,Legendary:4};
  const magic=profile.families.includes('magic'),decay=profile.families.includes('decay'),
   aegis=profile.families.includes('aegis'),vitality=profile.families.includes('vitality'),
@@ -82,33 +87,37 @@ function gearScore(item,profile){
  const barrierUser=aegis||item.subtype==='Orb';
  // Decision score, NOT a hidden native buff or DPS prediction. Off-Hand
  // stat weights are counted only when the profile can use those resources.
- const offhandUtility=item.slot!=='offhand'?0:{
+ const offhandUtility=slot!=='offhand'?0:{
   Shield:(tank?14:7)+(aegis?4:0),
-  Orb:(aegis?16:magic?14:decay?12:7)+(item.v013Trait==='ward'&&manaUser?5:0),
-  Tome:manaUser?12+(magic?5:0)+(item.v013Trait==='echoing_recall'?5:0):-10,
-  Charm:11+(vitality?6:0)+(item.v013Trait==='heartbloom'?4:0)
+  Orb:(aegis?16:magic?14:decay?12:7)+(item.v013Trait==='ward'&&manaUser?5:0)
+   +(profile.offhands?.includes('Orb')?3:0),
+  Tome:(manaUser?12+(magic?5:0)+(item.v013Trait==='echoing_recall'?5:0):-10)
+   +(profile.offhands?.includes('Tome')?3:0),
+  Charm:11+(vitality?6:0)+(item.v013Trait==='heartbloom'?4:0),
+  Daggers:profile.offhands?.includes('Daggers')?6:0,
+  'Off-Hand Dagger':profile.offhands?.includes('Daggers')?6:0
  }[item.subtype]||0;
- const s=Number(item.atk||0)*(agile?3.4:magic?2.1:2.8)+
+ const s=Number(item.atk||0)*daggerFactor*(agile?3.4:magic?2.1:2.8)+
   Number(item.def||0)*(tank?4.2:magic?2.1:3.2)+
   Number(item.hp||0)*(tank?.32:.24)+
-  Number(item.spell||item.spellPower||0)*(magic?4.1:barrierUser||decay?2.5:1.4)+
+  Number(item.spell||item.spellPower||0)*daggerFactor*(magic?4.1:barrierUser||decay?2.5:1.4)+
   Number(item.attack||0)*2+Number(item.armor||0)*3+
-  Number(item.str||0)*(tank?3.3:magic?1.1:2)+
+  Number(item.str||0)*daggerFactor*(tank?3.3:magic?1.1:2)+
   Number(item.end||0)*(tank?3.9:2.5)+
-  Number(item.int||0)*(magic?3.8:1.2)+
-  Number(item.agi||0)*(agile?3.7:1.3)+
-  Number(item.cha||0)*1.3+
+  Number(item.int||0)*daggerFactor*(magic?3.8:1.2)+
+  Number(item.agi||0)*daggerFactor*(agile?3.7:1.3)+
+  Number(item.cha||0)*daggerFactor*1.3+
   Number(item.block||0)*(tank?3.6:2)+
   Number(item.blockChance||0)*(tank?3.5:2)+
   Number(item.evasionRating||0)*(agile?2.6:1.15)+
   Number(item.wardBonus||0)*(barrierUser?21:15)+
   Number(item.manaRegenBonus||0)*(manaUser?15:0)+
-  Number(item.mana||0)*(manaUser?1.5:0)+Number(item.spd||0)*(agile?2:1.4);
+  Number(item.mana||0)*(manaUser?1.5:0)+Number(item.spd||0)*daggerFactor*(agile?2:1.4);
  const armor=item.armorType||(['Cloth','Leather','Plate'].includes(item.subtype)?item.subtype:null);
- const isArmor=['helm','armor','gloves','boots','belt'].includes(item.slot);
+ const isArmor=['helm','armor','gloves','boots','belt'].includes(slot);
  const alignment=isArmor&&armor===profile.armor?7:isArmor&&armor&&armor!==profile.armor?-3:0;
- const weapon=item.slot==='weapon'&&profile.weapons?.includes(item.subtype)?9:
-  item.slot==='weapon'&&profile.weapons?.length?-5:0;
+ const weapon=slot==='weapon'&&profile.weapons?.includes(item.subtype)?9:
+  slot==='weapon'&&profile.weapons?.length?-5:0;
  return round(s+Number(item.tier||1)*.5+(rarity[item.rarity]||0)*1.5+
   alignment+weapon+offhandUtility+Number(item.critBonus||0)*(agile?2.5:1.8)+
   Number(item.blockBonus||0)*(tank?2.5:1.2));
@@ -192,10 +201,19 @@ function equipEarned(a,profile,between=false){
  // Rank visible native items, re-checking after each actual equip.
  const items=[...source].filter(x=>x?.slot&&x.id).sort((x,y)=>gearScore(y,profile)-gearScore(x,profile));
  for(const item of items){
-  const targets=['ring1','ring2'].includes(item.slot)?['ring1','ring2']:[item.slot];
-  for(const target of targets){
-   const prior=a.state().equip[target],gain=gearScore(item,profile)-gearScore(prior,profile);
+  const offhandDagger=profile.offhands?.includes('Daggers')&&
+   ['Daggers','Off-Hand Dagger'].includes(item.subtype);
+  // Daggers can be legally equipped in either hand. Compare both native
+  // slots, rather than always consuming the item in main hand first.
+  const targets=['ring1','ring2'].includes(item.slot)?['ring1','ring2']:
+   offhandDagger?['weapon','offhand']:[item.slot];
+  const options=targets.map(target=>{
+   const prior=a.state().equip[target];
+   return {target,prior,gain:gearScore(item,profile,target)-gearScore(prior,profile,target)};
+  }).sort((x,y)=>y.gain-x.gain);
+  for(const {target,prior,gain} of options){
    if(gain<2.5)continue;
+   if(target==='offhand'&&['Two-Handed','Bow','Staff'].includes(a.state().equip.weapon?.subtype))continue;
    if(item.slot==='weapon'&&['Two-Handed','Bow','Staff'].includes(item.subtype)&&a.state().equip.offhand){
     // Do not delete a strong earned shield/secondary weapon to chase a tiny weapon score.
     if(gain<gearScore(a.state().equip.offhand,profile)*.6+5)continue;
