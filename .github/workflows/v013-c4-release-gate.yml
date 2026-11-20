@@ -132,6 +132,8 @@ jobs:
           fi
       - name: Real current Talent/Forge/Inventory/Dungeon browser tests
         run: npm run test:v013:browser
+      - name: Feedback close, Escape, submission and cooldown browser regression
+        run: node tests/v013-feedback-close-browser.cjs
       - name: Deep current v0.13 Chromium gameplay, Boss and extraction scenarios (mandatory)
         shell: bash
         run: |
