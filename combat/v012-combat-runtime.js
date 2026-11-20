@@ -572,7 +572,7 @@ function updateFight(){
  r.combatSeconds=(r.combatSeconds||0)+dt;
  // The Gravecaller's summoned undead apply an encounter-local player DoT.
  const deathbound=root.WandererV013EliteAbilities?.tickDeathbound(r);
- if(deathbound?.ended)ports.addLog('☠ Deathbound Decay fades as the undead threat ends.','good');
+ if(deathbound?.ended)ports.addLog('☠ Deathbound Decay fades as the bound souls vanish.','good');
  else if(deathbound){
   ports.phase6Metric(r,'deathboundTicks',1);
   ports.phase6Metric(r,'deathboundDamage',deathbound.damage);
@@ -612,14 +612,16 @@ function updateFight(){
     ledger.maxSummons=spec.maxSummons;
     ledger.maxLivingMinions=spec.maxLiving;
     const created=root.WandererV013BossInfrastructure?.summon(r,event.enemy,event.count,
-     ()=>ports.enemyFor(r.tier,r.enc,{theme,mob,boss:false,elite:false}),
+     ()=>{const summoned=ports.enemyFor(r.tier,r.enc,{theme,mob,boss:false,elite:false});
+      const soul=root.WandererV013EliteAbilities.boundSoulVariant(ledger.summoned);
+      summoned.name=soul.name;summoned.image=soul.image;return summoned;},
      {family:r.planeFamily||'decay',hpFactor:spec.hpFactor,atkFactor:spec.atkFactor,defFactor:.35,intervalFactor:spec.intervalFactor});
     if(created?.spawned){
      ports.phase6Metric(r,'eliteSummons',created.spawned);
-     ports.addLog('☠ '+event.enemy.name+' summons '+created.spawned+' undead Minions · Deathbound Ritual active!','critical');
+     ports.addLog('☠ '+event.enemy.name+' summons '+created.spawned+' bound souls · Deathbound Ritual active!','critical');
      ports.combatLinkEffect?.(r,'rot',event.enemy,['hero']);
      ports.renderCombat();
-    }else ports.addLog('☠ '+event.enemy.name+' cannot summon more Minions.','critical');
+    }else ports.addLog('☠ '+event.enemy.name+' cannot summon more bound souls.','critical');
    }
   }
  }
