@@ -45,6 +45,12 @@ function profileCheck(p){
  if(p.crafting!==undefined)requireValue(root.WandererV013Crafting?.valid(p.crafting),'crafting progress');
  if(p.automaticTalents!==undefined){requireValue(root.WandererAutomaticTalents?.valid(p.automaticTalents),'automatic talent progress');}
  requireValue(p.run===null,'runtime must not be in permanent profile');
+ if(p.realmOfferSeeds!==undefined){
+  requireValue(plain(p.realmOfferSeeds)&&Object.keys(p.realmOfferSeeds).length<=20&&
+   Object.entries(p.realmOfferSeeds).every(([level,seed])=>
+    /^(?:[1-9]|1[0-9]|20)$/.test(level)&&integer(seed,0,4294967295)),
+   'pending Realm offers');
+ }
  for(const f of ['gold','fragments'])requireValue(integer(p[f],0,Number.MAX_SAFE_INTEGER),f);
  requireValue(integer(p.maxDungeon,1,200),'profile progress');
  if(p.valuables!==undefined){requireValue(Array.isArray(p.valuables),'valuables');for(const v of p.valuables)requireValue(plain(v)&&typeof v.id==='string'&&v.id.length>0&&typeof v.name==='string'&&typeof v.worth==='number'&&Number.isFinite(v.worth)&&v.worth>=0&&treasures().CATALOG.some(t=>t.image===v.image),'valuable identity');}
