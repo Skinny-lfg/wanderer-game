@@ -1,7 +1,9 @@
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),crypto=require('node:crypto');
-const A=require('../online/v013-elite-abilities.js');
-const Infra=require('../online/v013-boss-infrastructure.js');
+require('../online/v013-elite-abilities.js');
+const A=globalThis.WandererV013EliteAbilities;
+require('../online/v013-boss-infrastructure.js');
+const Infra=globalThis.WandererV013BossInfrastructure;
 const names=['Wailing Soul','Hollow Soul','Fractured Soul','Wailing Soul'];
 test('Gravecaller has exact four-spawn cycle with no RNG or extra combat roll',()=>{
  assert.deepEqual(Array.from({length:4},(_,i)=>A.boundSoulVariant(i).name),names);

@@ -2,7 +2,9 @@ name: Wanderer v0.13 — Stage 6.1 Arcane experiment and Gravecaller souls
 on:
   push:
     branches: [audit/v013-stage6]
-    paths: ['.github/workflows/v013-stage61-magic-gravecaller.yml']
+    paths:
+      - '.github/workflows/v013-stage61-magic-gravecaller.yml'
+      - 'tests/v013-gravecaller-bound-souls.test.cjs'
   workflow_dispatch:
 permissions:
   contents: read
