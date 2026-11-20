@@ -75,7 +75,7 @@ function apply(item,basePower,random){
  const spec=profileFor(item);if(!spec)throw Error('Unrecognised gear profile');
  for(const field of KEYS)if(Object.hasOwn(item,field))item[field]=0;
  const number=statCount(item.rarity,random);
- const main=spec.main||weighted(ACCESSORY_MAIN,random),selected=[main];
+ const main=spec.main||weighted(item.rarity==='Common'?ACCESSORY_MAIN.filter(([key])=>!PRIMARY.includes(key)):ACCESSORY_MAIN,random),selected=[main];
  if(number>1){
   const attrs=spec.attrs.filter(([key])=>!selected.includes(key));
   if(attrs.length)selected.push(weighted(attrs,random));
