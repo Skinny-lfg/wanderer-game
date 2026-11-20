@@ -66,7 +66,7 @@ function totalStats(equipment,ownedRunes,equippedRuneIds,{isTwoHanded,FIELDS,ite
  for(const key of ['str','agi','int','end','cha'])s[key]+=talentAttributes[key]||0;
  for(const [slot,item] of Object.entries(equipped))if(item)for(const [,key]of FIELDS){
  const dest={atk:'atkFlat',def:'defFlat',hp:'hpFlat',spd:'spdFlat',mana:'manaFlat',spell:'spellFlat'}[key]||key;
- // Off-Hand dagger: 50% offensive stats; its separate strike uses the same factor.
+ // Off-Hand Dagger contributes 50% of offensive item stats, independently of its separate 50%-damage strike.
  const offDagger=slot==='offhand'&&['Daggers','Off-Hand Dagger'].includes(item.subtype);
  const factor=offDagger&&['atk','str','agi','int','cha','spd','spell'].includes(key)?.5:1;
  s[dest]+=itemStatValue(item,key)*factor;
