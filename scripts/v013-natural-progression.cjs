@@ -7,6 +7,7 @@ const path=require('node:path');
 const crypto=require('node:crypto');
 const create=require('../tests/v012-economy-harness.cjs');
 const S=require('./simulate-progression.cjs');
+const AGENT=require('./v013-agent-strategy.cjs');
 require('../online/v013-map-intelligence.js');
 const I=globalThis.WandererV013MapIntelligence;
 require('../economy/v012-loot-rules.js');
@@ -442,7 +443,7 @@ function prepareCamp(a,profile,level,decisionModel='risk-aware',options={}){
  }
  for(let i=0;i<3&&a.results().review;i++)a.exitResult();
  actions.soldTreasures=!!(s.valuables?.length&&a.treasures.sell());
- if(decisionModel==='risk-aware')actions.storage.push(consolidateStash(a,profile));
+ if(decisionModel!=='legacy')actions.storage.push(consolidateStash(a,profile));
  actions.equipped.push(...equipEarned(a,profile,false));
  // Native Camp decision: obsolete Expedition Grey gear funds the Forge.
  // Never sell starter, equipped or locked items or create resources artificially.
@@ -471,7 +472,7 @@ function prepareCamp(a,profile,level,decisionModel='risk-aware',options={}){
  actions.talents.push(...talentInvestment.bought);
  actions.elementChoices.push(...talentInvestment.elements);
  actions.prepared=prepareEarnedAbility(a,profile);
- if(decisionModel==='risk-aware'){
+ if(decisionModel!=='legacy'){
   actions.runes.push(...manageEarnedRunes(a,profile));
   actions.refined.push(...refineEarnedReagents(a,profile,level));
   const investment=investEarnedGear(a,profile,level);
@@ -502,7 +503,7 @@ function prepareCamp(a,profile,level,decisionModel='risk-aware',options={}){
  }
  // Re-rank all genuinely owned doses and use the real 3-slot Camp UI API.
  actions.potions.push(...selectEarnedPotions(a,profile));
- if(decisionModel==='risk-aware'){
+ if(decisionModel!=='legacy'){
   actions.storage.push(consolidateStash(a,profile));
   actions.equipped.push(...equipEarned(a,profile,false));
  }
@@ -511,14 +512,22 @@ function prepareCamp(a,profile,level,decisionModel='risk-aware',options={}){
  actions.unspentEssence=s.crafting?.essence||0;
  return actions;
 }
-function choiceRealm(cards,profile,gear){
- const hasUpgrades=gear.starter<=1;
- const wanted=profile.risk===1&&hasUpgrades?1:0;
- const p=cards.map(card=>({card,score:Math.abs(card.risk-wanted)*12+
-  Math.max(0,card.risk-wanted)*10+
-  (profile.families.includes(card.family)?-3:0)+
-  (card.family==='vitality'?-1:0)})).sort((a,b)=>a.score-b.score);
- return p[0].card;
+function capabilities(a){
+ return AGENT.classify({equipment:a.state().equip,talents:a.state().automaticTalents,
+  build:a.build(),stats:a.baseStats()});
+}
+function rankRealms(cards,profile,gear,context={}){
+ const hasUpgrades=gear.starter<=1,wanted=profile.risk===1&&hasUpgrades?1:0;
+ return cards.map(card=>{
+  const base=Math.abs(card.risk-wanted)*12+Math.max(0,card.risk-wanted)*10+
+   (profile.families.includes(card.family)?-3:0)+(card.family==='vitality'?-1:0);
+  const visible=context.visible?.[card.id]||{};
+  const fit=AGENT.realmPreference(context.capabilities,card,visible);
+  return {card,score:round(base-fit.score),baseScore:base,fit};
+ }).sort((a,b)=>a.score-b.score||a.card.risk-b.card.risk);
+}
+function choiceRealm(cards,profile,gear,context={}){
+ return rankRealms(cards,profile,gear,context)[0].card;
 }
 function pathLength(card,d,start,dest){
  if(start===dest)return 0;
@@ -601,8 +610,15 @@ function selectRoom(c,profile,vitals,context={}){
     if(count<=1)score-=20;else score+=Math.min(60,count*7);
    }
    if(context.carriedBagItems>0&&hpRatio<.72&&count>1)score+=22;
-   if(count<=1)score-=18;
-   else if(count<=4)score+=profile.name==='Daring'?1:7;
+   if(count<=1)score-=context.capabilities?.areaReady?5:18;
+   else if(context.capabilities?.areaReady){
+    // Only earned AoE tools justify the risk of groups; their native
+    // combat and drop odds are untouched.
+    const base=count<=4?(profile.name==='Daring'?1:7):
+     count<=12?(profile.name==='Daring'?12:22):(profile.name==='Daring'?22:36);
+    score+=base*.18-AGENT.groupPreference(context.capabilities,count,{
+     hpRatio,bagItems:context.carriedBagItems||0});
+   }else if(count<=4)score+=profile.name==='Daring'?1:7;
    else if(count<=12)score+=profile.name==='Daring'?12:22;
    else score+=profile.name==='Daring'?22:36;
    if(hpRatio<.65&&count>1)score+=12;
@@ -636,7 +652,7 @@ function selectRoom(c,profile,vitals,context={}){
 }
 // Gold, Fragments and earned XP are already secured after completed rooms.
 // On death only physical Expedition Bag contents are lost.
-function evaluateRetreat({hp,maxhp,bag=[],next,profile,gold=0,fragments=0,essence=0,recentFights=[]}){
+function evaluateRetreat({hp,maxhp,bag=[],next,profile,gold=0,fragments=0,essence=0,recentFights=[],capabilities=null}){
  const hpRatio=maxhp>0?hp/maxhp:0,carried=bag.length;
  const value=item=>item.kind==='valuable'?Math.max(1,Number(item.worth)||5):
   Math.max(2,Number(item.tier||1)*2+Math.max(0,gearScore(item,profile))+
@@ -648,7 +664,11 @@ function evaluateRetreat({hp,maxhp,bag=[],next,profile,gold=0,fragments=0,essenc
  const canInvest=gold>=20||fragments>=14&&essence>=4;
  const prior=recentFights.filter(x=>x.hpMax>0).slice(-2);
  const meanLoss=prior.length?prior.reduce((n,x)=>n+Math.max(0,(x.hpStart-x.hpEnd)/x.hpMax),0)/prior.length:0;
- const dangerous=next?.type==='boss'||next?.type==='elite'||next?.type==='combat'&&visibleEnemies>1;
+ // Do not classify all groups as intrinsically dangerous when the character
+ // has real AoE capability and survived the latest fights comfortably.
+ const manageableGroup=capabilities?.areaReady&&hpRatio>.72&&meanLoss<.30&&visibleEnemies<=12;
+ const dangerous=next?.type==='boss'||next?.type==='elite'||
+  next?.type==='combat'&&visibleEnemies>1&&!manageableGroup;
  let extract=false,reason='continue';
  if(!next){extract=true;reason='no_legal_path';}
  else if(safe){reason='recover_at_safe_room';}
@@ -1133,6 +1153,6 @@ function main(args=process.argv.slice(2)){
  return report;
 }
 module.exports={PROFILES,PIVOTS,pivotProfile,DEFAULTS,parseArgs,gearScore,gearSnapshot,runeScore,chooseRuneReward,manageEarnedRunes,potionScore,selectEarnedPotions,buyEarnedPotions,refineEarnedReagents,selectThornAwareTarget,spendEarnedTalents,prepareEarnedAbility,equipEarned,
- prepareCamp,craftEarned,investEarnedGear,consolidateStash,choiceRealm,pathLength,eliteOpportunity,selectRoom,evaluateRetreat,boonScore,chooseBoon,chooseContract,eventOptions,potionSlots,usePotionKind,usePotionsBetween,rerollPoorBoonAtShrine,
+ prepareCamp,craftEarned,investEarnedGear,consolidateStash,capabilities,rankRealms,choiceRealm,pathLength,eliteOpportunity,selectRoom,evaluateRetreat,boonScore,chooseBoon,chooseContract,eventOptions,potionSlots,usePotionKind,usePotionsBetween,rerollPoorBoonAtShrine,
  fightNatural,resolveEvent,clearResults,playDungeon,simulateAccount,analyze,run,markdown,main};
 if(require.main===module)main();
