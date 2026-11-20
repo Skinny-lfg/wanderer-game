@@ -64,6 +64,23 @@ test('Off-Hand reroll respects the shared power budget and fixed secondary caps 
     }
 });
 
+test('Physical Sword + Orb and pure Aegis activate real Spell Power scaling without free Mana',()=>{
+ const a=create(59110),sword=a.makeItem(1,'weapon',null,'loot','Sword','Common');
+ const orb=a.makeItem(1,'offhand',null,'loot','Orb','Common');
+ const before=a.baseStats({weapon:sword});
+ const withOrb=a.baseStats({weapon:sword,offhand:orb});
+ assert.equal(before.spellPower,0,'ordinary physical builds do not gain unrelated Spell Power');
+ assert(withOrb.spellPower>0,'Orb on physical Sword must use its Spell Power stat');
+ assert.equal(withOrb.mana,0,'Orb does not unlock casting resources');
+ assert(withOrb.power>before.power,'Power diagnostic reflects the live Barrier stat');
+ const B=require('./v013-current-talent-helper.cjs');
+ a.state().automaticTalents=B.buy(['affinity_aegis']);
+ const aegisOnly=a.baseStats({weapon:sword}),aegisOrb=a.baseStats({weapon:sword,offhand:orb});
+ assert(aegisOnly.spellPower>0,'Aegis alone can scale Barrier from Spell Power gear');
+ assert(aegisOrb.spellPower>aegisOnly.spellPower,'Aegis + Orb stacks its Spell Power investment');
+ assert.equal(aegisOrb.mana,0,'Aegis + Orb is defensive, not a free Magic unlock');
+});
+
 test('Native Common Tome adds Mana on Wand; Common Charm adds HP on physical Sword',()=>{
  const a=create(59108),wand=a.makeItem(1,'weapon',null,'loot','Wand','Common'),sword=a.makeItem(1,'weapon',null,'loot','Sword','Common');
  const tome=a.makeItem(1,'offhand',null,'loot','Tome','Common');
