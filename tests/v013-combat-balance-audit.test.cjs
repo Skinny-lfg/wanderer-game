@@ -105,7 +105,8 @@ test('unit-sized audit uses isolated native input modes and exposes missing cove
    nativeEncounter:kind,eliteType:kind==='elite'?'vampire':null})],summary:{errors:0}};
  };
  const result=A.run(cfg,{simulate,compare:()=>({pairs:[],errors:[],skippedNonTank:3}),
-  fingerprint:()=>({sha256:'test-source',files:['index.html']})});
+  fingerprint:()=>({sha256:'test-source',files:['index.html']}),
+  previewParity:()=>({checkedModules:12,mismatches:[],htmlDiffers:false})});
  assert.equal(result.coverage.planned,3);
  assert.equal(result.coverage.observed,3);
  assert.equal(result.coverage.missingBosses.length,0);
