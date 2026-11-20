@@ -2,22 +2,27 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),create=require('./v012-economy-harness.cjs');
 require('../economy/v013-crafting.js');
 const C=globalThis.WandererV013Crafting;
-test('every Forge recipe previews the same guaranteed profile, rarity, tier and functional trait; stat values are sample rolls',()=>{
+test('all Forge recipes preview type, tier, rarity and Epic trait; attribute values are illustrative',()=>{
  const a=create(421,undefined,{}, {now:1700000000000});
  a.state().fragments=10000000;
- a.state().crafting={...C.create(),essence:1000000,cores:Object.fromEntries(C.FAMILIES.map(f=>[f,100])),realmFamilies:[...C.FAMILIES],bossFamilies:[...C.FAMILIES],learnedRecipes:C.RECIPES.filter(r=>r.rarity!=='Uncommon').map(r=>r.id)};
+ a.state().crafting={...C.create(),essence:1000000,
+  cores:Object.fromEntries(C.FAMILIES.map(f=>[f,100])),
+  realmFamilies:[...C.FAMILIES],bossFamilies:[...C.FAMILIES],
+  learnedRecipes:C.RECIPES.filter(r=>r.rarity!=='Uncommon').map(r=>r.id)};
  for(const tier of [1,6,201])for(const recipe of C.RECIPES){
-  const focus=recipe.slot==='armor'?({Cloth:'spellweave',Leather:'quickstep',Plate:'bulwark'}[recipe.subtype]):'none',before=JSON.stringify(a.state());
-  const preview=C.previewCraft(recipe.id,tier,(...args)=>a.makeItem(...args,true),focus);
-  assert(preview,recipe.id);assert.equal(JSON.stringify(a.state()),before,'preview must not mutate save');
-  const crafted=C.prepareCraft(a.state(),recipe.id,tier,a.makeItem,focus).item;
-  for(const key of ['armorType','v013Trait','v013CraftFocus','craftingProfile','tier','slot','subtype','rarity','recipeId'])
-   assert.equal(preview[key],crafted[key],recipe.id+' '+key);
-  const primary=['str','agi','int','end','cha'];
-  assert(preview[recipe.profile]>0,recipe.id+' preview should have guaranteed attribute focus');
-  assert(crafted[recipe.profile]>0,recipe.id+' crafting should have guaranteed attribute focus');
-  assert(primary.filter(k=>k!==recipe.profile).every(k=>!crafted[k]));
-  assert.equal(JSON.stringify(a.state()),before,'craft preparation is transactional');
+  const before=JSON.stringify(a.state());
+  const example=C.previewCraft(recipe.id,tier,(...args)=>a.makeItem(...args,true));
+  assert(example,recipe.id);
+  assert.equal(JSON.stringify(a.state()),before,'preview must not mutate save');
+  const result=C.prepareCraft(a.state(),recipe.id,tier,a.makeItem);
+  assert(result,recipe.id);
+  const actual=result.item;
+  for(const key of ['armorType','v013Trait','tier','slot','subtype','rarity','recipeId'])
+   assert.equal(example[key],actual[key],recipe.id+' '+key);
+  assert.equal(actual.v013CraftFocus,undefined);
+  assert.equal(recipe.profile,undefined,'recipes must not force primary stats');
+  assert(actual.affixes.length>=2&&actual.affixes.length<=5);
+  assert.equal(JSON.stringify(a.state()),before,'preparing a craft is transactional');
  }
 });
 test('browsing previews consumes neither gameplay RNG nor item IDs',()=>{
@@ -25,12 +30,15 @@ test('browsing previews consumes neither gameplay RNG nor item IDs',()=>{
  for(const recipe of C.RECIPES)C.previewCraft(recipe.id,1,(...args)=>a.makeItem(...args,true));
  assert.equal(JSON.stringify(a.makeItem(6,'weapon',null,'loot','random')),JSON.stringify(b.makeItem(6,'weapon',null,'loot','random')));
 });
-test('armor profiles stay coherent, while Plate chooses Endurance OR Strength instead of having both automatically',()=>{
- const a=create(423);
- for(const [type,keys]of [['Cloth',['int']],['Leather',['agi']],['Plate',['end','str']]]){
-  const item=a.makeItem(1,'armor',null,'forge',type,'Uncommon',true);
-  assert.equal(item.armorType,type);
-  assert(keys.some(k=>item[k]>0),type+' should have an allowed primary stat');
-  for(const other of ['str','agi','int','end'])if(!keys.includes(other))assert.equal(item[other],0,type+' should not grant '+other);
+test('armor type keeps its base defense while primary stats are free to vary',()=>{
+ const a=create(423),seen={Cloth:new Set(),Leather:new Set(),Plate:new Set()};
+ for(const type of Object.keys(seen)){
+  for(let i=0;i<150;i++){
+   const x=a.makeItem(20,'armor',null,'loot',type,'Rare');
+   assert.equal(x.armorType,type);assert(x.def>0);
+   for(const key of ['str','agi','int','end','cha'])if(x[key]>0)seen[type].add(key);
+  }
+  assert(seen[type].has('int'),type+' can roll Intellect');
+  assert(seen[type].size>=3,type+' rolls multiple primary types');
  }
 });
