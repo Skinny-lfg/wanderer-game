@@ -1,0 +1,37 @@
+name: Wanderer v0.13 — Stable Realm offers regression (no deploy)
+
+on:
+  push:
+    branches:
+      - audit/v013-stage6
+    paths:
+      - '.github/workflows/v013-stable-realm-offers.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    if: github.ref == 'refs/heads/audit/v013-stage6'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Realm offers, map integrity and persistence regressions
+        run: |
+          node --test \
+            tests/v013-stable-realm-offers.test.cjs \
+            tests/v013-dungeon-checkpoint-integrity.test.cjs \
+            tests/v013-current-dungeon-and-talents.test.cjs \
+            tests/v013-natural-progression.test.cjs \
+            tests/v012-save.test.mjs
+      - name: Verify no checkout changes
+        run: git diff --exit-code --check
