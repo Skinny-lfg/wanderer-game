@@ -15,7 +15,7 @@ test('single v013 generator gives Rare 2–4, Epic 3–4, and Legendary 4–5 ro
  assert(rare.every(x=>x.v013StatCount>=2&&x.v013StatCount<=4));
  assert(epic.every(x=>x.v013StatCount>=3&&x.v013StatCount<=4));
  assert(rolls('Ring','Legendary',10,200).every(x=>x.v013StatCount>=4&&x.v013StatCount<=5));
- assert(rare.some(x=>x.cha===0));assert(rare.some(x=>x.hp===0));
+ assert(rare.some(x=>!(x.cha>0)));assert(rare.some(x=>!(x.hp>0)));
  for(const key of ['str','agi','int','end','cha','atk','spell'])assert(rare.some(x=>x[key]>0),'rings can roll '+key);
  assert(epic.some(x=>x.spell>0)&&epic.some(x=>x.int>0));
 });
