@@ -89,7 +89,11 @@
     "audit:v013:stage610:benchmark": "node scripts/v013-stage610-coverage-benchmark.cjs --mode=benchmark --runs=2 --seed-start=9901 --out=reports/v013-stage610-e1-benchmark.json",
     "test:v013:stage611": "node --test tests/v013-stage611-legal-adaptive.test.cjs",
     "audit:v013:stage611:legal": "node scripts/v013-stage611-legal-adaptive.cjs --mode=legal --out=reports/v013-stage611-legal.json",
-    "audit:v013:stage611:pilot": "node scripts/v013-stage611-legal-adaptive.cjs --mode=campaign --sample-budget=4 --max-level=2 --max-attempts=2 --max-total-attempts=3 --out=reports/v013-stage611-pilot.json"
+    "audit:v013:stage611:pilot": "node scripts/v013-stage611-legal-adaptive.cjs --mode=campaign --sample-budget=4 --max-level=2 --max-attempts=2 --max-total-attempts=3 --out=reports/v013-stage611-pilot.json",
+    "test:v013:stage612": "node --test tests/v013-stage612-controlled-combat.test.cjs",
+    "audit:v013:stage612:pilot": "node scripts/v013-stage612-controlled-combat.cjs --mode=pilot --limit=18 --out=reports/v013-stage612-pilot.json",
+    "audit:v013:stage612:matrix": "node scripts/v013-stage612-controlled-combat.cjs --mode=matrix --limit=144 --out=reports/v013-stage612-matrix.json",
+    "audit:v013:stage612:pairs": "node scripts/v013-stage612-controlled-combat.cjs --mode=pairs --limit=48 --paired=10 --out=reports/v013-stage612-pairs.json"
   },
   "dependencies": {
     "firebase": "11.10.0"
