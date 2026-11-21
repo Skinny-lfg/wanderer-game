@@ -26,7 +26,7 @@ Run from the repository root with Node 22 and installed dependencies:
 
 The Stage 6.9 JSON files must first be obtained from the existing successful GitHub Actions artifacts. This stage does not claim they are present in every checkout.
 
-The CI workflow tests inventory + pairwise logic and **does not run a heavy benchmark on push**. An explicit manual workflow dispatch can run the bounded benchmark.
+The CI workflow tests inventory + pairwise logic and executes **only a bounded two-seed E1 native pilot on push**; no large campaign runs automatically. Manual workflow dispatch can repeat this small pilot.
 
 ## Acceptance criteria
 
