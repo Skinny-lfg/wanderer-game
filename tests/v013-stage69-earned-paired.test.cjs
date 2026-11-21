@@ -33,7 +33,7 @@ test('An unearned third Affinity cannot be granted by a diagnostic onCamp splice
  const cfg=N.parseArgs(['--seeds=9407','--profiles=smart-blood-fury-vitality',
   '--max-level=1','--max-attempts=1']);
  const a=N.simulateAccount(9407,'smart-blood-fury-vitality',cfg,{
-  probeLevel:1,onCamp({a})=>{
+  probeLevel:1,onCamp:({a})=>{
    assert.equal(a.talents.earned(a.state().automaticTalents),0);
    assert.equal(a.talentActions.allocate('affinity_vitality'),false);
    return {safety:'no-free-points'};
@@ -49,7 +49,7 @@ test('Earned Camp callback rejects attempts to mutate resources or grant gold',(
  const cfg=N.parseArgs(['--seeds=9408','--profiles=smart-blood-fury-vitality',
   '--max-level=1','--max-attempts=1']);
  const a=N.simulateAccount(9408,'smart-blood-fury-vitality',cfg,{
-  probeLevel:1,onCamp({a})=>{a.state().gold++;return {attempted:'free-gold'};}
+  probeLevel:1,onCamp:({a})=>{a.state().gold++;return {attempted:'free-gold'};}
  });
  assert.equal(a.attempts[0].status,'error');
  assert.match(a.attempts[0].error,/Earned checkpoint test changed equipment, resources, XP, unlocks/);
