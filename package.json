@@ -105,7 +105,11 @@
     "test:v013:stage614:retest": "node --test tests/v013-stage614-rerun-three.test.cjs",
     "audit:v013:stage614:retest:plan": "node scripts/v013-stage614-rerun-three.cjs --mode=plan --seeds-per-opponent=32 --out=reports/v013-stage614-retest-plan.json",
     "audit:v013:stage614:retest:pilot": "node scripts/v013-stage614-rerun-three.cjs --mode=pilot --seeds-per-opponent=4 --out=reports/v013-stage614-retest-pilot.json",
-    "audit:v013:stage614:retest:matrix": "node scripts/v013-stage614-rerun-three.cjs --mode=matrix --seeds-per-opponent=32 --out=reports/v013-stage614-retest-matrix.json"
+    "audit:v013:stage614:retest:matrix": "node scripts/v013-stage614-rerun-three.cjs --mode=matrix --seeds-per-opponent=32 --out=reports/v013-stage614-retest-matrix.json",
+    "test:v013:stage615": "node --test tests/v013-stage615-enemy-hierarchy.test.cjs",
+    "audit:v013:stage615:plan": "node scripts/v013-stage615-enemy-hierarchy.cjs --mode=plan --seeds-per-cell=8 --out=reports/v013-stage615-hierarchy-plan.json",
+    "audit:v013:stage615:pilot": "node scripts/v013-stage615-enemy-hierarchy.cjs --mode=pilot --seeds-per-cell=2 --out=reports/v013-stage615-hierarchy-pilot.json",
+    "audit:v013:stage615:matrix": "node scripts/v013-stage615-enemy-hierarchy.cjs --mode=matrix --seeds-per-cell=8 --out=reports/v013-stage615-hierarchy-matrix.json"
   },
   "dependencies": {
     "firebase": "11.10.0"
