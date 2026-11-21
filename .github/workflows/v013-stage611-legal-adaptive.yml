@@ -1,0 +1,74 @@
+name: Wanderer Stage 6.11 — Legal builds and adaptive earned accounts (NO DEPLOY)
+on:
+  push:
+    branches:
+      - audit/v013-stage611-legal-adaptive-20261121
+    paths:
+      - '.github/workflows/v013-stage611-legal-adaptive.yml'
+      - 'scripts/v013-stage611-legal-adaptive.cjs'
+      - 'tests/v013-stage611-legal-adaptive.test.cjs'
+      - 'package.json'
+  workflow_dispatch:
+    inputs:
+      pilot:
+        description: 'Execute four naturally earned E1–E2 account trials?'
+        type: boolean
+        default: true
+        required: true
+permissions:
+  contents: read
+jobs:
+  legal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: Native TalentGraph legality and strategic profile tests
+        run: |
+          node --check scripts/v013-stage611-legal-adaptive.cjs
+          node --check tests/v013-stage611-legal-adaptive.test.cjs
+          npm run test:v013:stage611
+          npm run test:v013:stage610
+          npm run audit:v013:stage611:legal
+          git diff --check
+      - name: Save truthful legal build coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage611-native-talent-legality
+          path: |
+            reports/v013-stage611-legal.json
+            reports/v013-stage611-legal.md
+          retention-days: 30
+  earned-pilot:
+    needs: legal
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.pilot == true)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: Four bounded native E1–E2 smart-agent accounts
+        run: npm run audit:v013:stage611:pilot
+      - name: Preserve native results and replay checkpoint
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage611-native-adaptive-earned-pilot
+          path: |
+            reports/v013-stage611-pilot.json
+            reports/v013-stage611-pilot.md
+          retention-days: 30
+          if-no-files-found: warn
