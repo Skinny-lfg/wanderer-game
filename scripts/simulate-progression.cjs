@@ -170,8 +170,14 @@ function prepare(level,build,seed,opts,desiredRisk=undefined,desiredFamily=undef
     if(opts.stage617RosterSource!==undefined&&(typeof opts.stage617RosterSource!=='string'||
        !opts.stage617RosterSource.includes('WandererV013EnemyRoster')))
       throw Error('Invalid Stage 6.17 test-only enemy roster source');
-    const overrides=opts.stage617RosterSource===undefined?{}:
-      {'online/v013-enemy-roster.js':opts.stage617RosterSource};
+    if(opts.stage619BaselineRuntime!==undefined&&
+      (typeof opts.stage619BaselineRuntime!=='string'||!opts.stage619BaselineRuntime.includes('function enemyFor(')||
+       !opts.stage619BaselineRuntime.includes('WandererV012CombatRuntime')))
+      throw Error('Invalid Stage 6.19 test-only native combat baseline');
+    const overrides={
+      ...(opts.stage617RosterSource===undefined?{}:{'online/v013-enemy-roster.js':opts.stage617RosterSource}),
+      ...(opts.stage619BaselineRuntime===undefined?{}:{'combat/v012-combat-runtime.js':opts.stage619BaselineRuntime})
+    };
     const a=create(resolvedSeed,undefined,overrides, {recordModules:opts.recordModules,skipPersistence:true,measure:opts.measure===true,now:1720000000000+resolvedSeed});
   a.setup(gearE,build.weapon,opts.rarity);
   // Roll real native gear at the same Expedition tier and requested rarity.
@@ -348,6 +354,12 @@ function resolveEvent(a){
 // is deliberately staged in a first-ring room. Use dungeon() for actual travel/extraction.
 function encounter(level,build,seed,kind,opts,forcedTrait=undefined,forcedBossMod=undefined,forcedFamily=undefined,desiredRisk=undefined,groupSize=undefined,roleEffect=undefined){
  if(!['normal','boss','elite'].includes(kind))throw Error('Unknown controlled encounter '+kind);
+ if(opts.stage619EliteType!==undefined&&
+   (kind!=='elite'||!['tank','berserker','vampire','caster','gravecaller',
+     'oathbound_exarch','briarspine_horror','ashen_executioner'].includes(opts.stage619EliteType)))
+  throw Error('Invalid Stage 6.19 test-only native Elite identity');
+ if(opts.stage619BaselineRuntime!==undefined&&kind!=='elite')
+  throw Error('Stage 6.19 baseline applies only to an Elite encounter');
  if(groupSize!==undefined&&(!Number.isSafeInteger(groupSize)||groupSize<1||groupSize>22||kind!=='normal'))throw Error('Invalid controlled group size');
  if(roleEffect!==undefined&&(!ROLE_EFFECTS.includes(roleEffect)||kind!=='normal'))throw Error('Invalid role effect');
  const {a,c,g,card,gearE,resolvedSeed,seedShift,allocatedPoints}=prepare(level,build,seed,opts,desiredRisk,forcedFamily);
@@ -390,8 +402,16 @@ function encounter(level,build,seed,kind,opts,forcedTrait=undefined,forcedBossMo
   if(!c.visitRoom(candidate))throw Error('Cannot stage marked native Condition room');
  }
  if(!a.enter())throw Error('Cannot enter controlled native combat encounter');
+ // Only in isolated native diagnostics: choose the actual named Elite before
+ // the native wave spawns. All abilities and combat formulas remain live.
+ if(opts.stage619EliteType!==undefined){
+  if(!a.state().run)throw Error('Cannot stage named native Elite without an active run');
+  a.state().run.eliteType=opts.stage619EliteType;
+ }
  const count=groupSize??(kind==='normal'?3:1);
  const run=a.encounter({count,boss:kind==='boss',elite:kind==='elite'});
+ if(opts.stage619EliteType!==undefined&&run.encounterLeader?.eliteType!==opts.stage619EliteType)
+  throw Error('Native forced Elite spawn differs from requested subtype');
  if(run.tier!==level)throw Error('Incorrect encounter tier '+run.tier+' vs '+level);
  if(kind==='boss'&&run.encounterLeader?.bossStyle!==A.profileFor(card.family).style)throw Error('Native Boss mismatch for '+card.family);
  const result=fight(a,c,opts.tickLimit,opts.targetPolicy,opts.measure===true);
