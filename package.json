@@ -82,7 +82,11 @@
     "simulate:v013:affinities:stage4": "node scripts/v013-stage4-hybrid-review.cjs",
     "test:v013:offhand-stage5": "node --test tests/v013-offhand-stage5-simulation.test.cjs",
     "simulate:v013:offhand-stage5": "node scripts/v013-offhand-stage5.cjs --mode=paired --out=reports/v013-offhand-stage5-paired.json",
-    "simulate:v013:offhand-natural": "node scripts/v013-offhand-stage5.cjs --mode=natural --out=reports/v013-offhand-stage5-natural.json"
+    "simulate:v013:offhand-natural": "node scripts/v013-offhand-stage5.cjs --mode=natural --out=reports/v013-offhand-stage5-natural.json",
+    "test:v013:stage610": "node --test tests/v013-stage610-coverage-benchmark.test.cjs",
+    "audit:v013:stage610:inventory": "node scripts/v013-stage610-coverage-benchmark.cjs --mode=inventory --out=reports/v013-stage610-inventory.json",
+    "audit:v013:stage610:plan": "node scripts/v013-stage610-coverage-benchmark.cjs --mode=plan --out=reports/v013-stage610-pairwise-plan.json",
+    "audit:v013:stage610:benchmark": "node scripts/v013-stage610-coverage-benchmark.cjs --mode=benchmark --runs=2 --seed-start=9901 --out=reports/v013-stage610-e1-benchmark.json"
   },
   "dependencies": {
     "firebase": "11.10.0"
