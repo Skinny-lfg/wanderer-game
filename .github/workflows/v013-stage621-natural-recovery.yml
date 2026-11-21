@@ -1,0 +1,44 @@
+name: Wanderer Stage 6.21 — Real earned E1-E3 recovery (NO DEPLOY)
+on:
+  push:
+    branches:
+      - audit/v013-stage621-natural-e1-recovery-20261121
+    paths:
+      - '.github/workflows/v013-stage621-natural-recovery.yml'
+      - 'scripts/v013-stage621-natural-recovery.cjs'
+      - 'scripts/v013-natural-progression.cjs'
+      - 'online/v012-expedition-runtime.js'
+      - 'combat/v012-combat-core.js'
+      - 'online/v013-boss-abilities.js'
+      - 'tests/v013-stage621-natural-recovery.test.cjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  natural:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22.23.5', cache: npm}
+      - run: npm ci
+      - name: Native syntax and Expedition progression guards
+        run: |
+          node --check scripts/v013-stage621-natural-recovery.cjs
+          node --test tests/v013-natural-progression.test.cjs tests/v013-stage611-legal-adaptive.test.cjs
+          node --test tests/v013-boss-preparation-runtime.test.cjs tests/v013-stage84-six-bosses.test.cjs
+          git diff --check
+      - name: Persistent fresh native E1-E3 accounts, no earned gear or level overrides
+        run: node scripts/v013-stage621-natural-recovery.cjs --mode=baseline --out=reports/v013-stage621-baseline.json --seeds=9701,9702 --profiles=cautious,balanced,magic-fire --max-level=3 --max-attempts=8 --max-total-attempts=16
+      - name: Save genuine account evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage621-baseline-native-earned-e1-e3
+          path: |
+            reports/v013-stage621-baseline.json
+            reports/v013-stage621-baseline.md
+          if-no-files-found: warn
+          retention-days: 30
