@@ -10,6 +10,10 @@ on:
       - 'online/v013-boss-abilities.js'
       - 'combat/v012-combat-runtime.js'
       - 'scripts/simulate-progression.cjs'
+      - 'docs/index.html'
+      - 'docs/combat/v012-combat-runtime.js'
+      - 'docs/online/v013-elite-abilities.js'
+      - 'docs/online/v013-enemy-roster.js'
   workflow_dispatch:
 permissions:
   contents: read
