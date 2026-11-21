@@ -72,3 +72,36 @@ jobs:
             reports/v013-stage611-pilot.md
           retention-days: 30
           if-no-files-found: warn
+
+  earned-medium:
+    name: Bounded 24-account native progression coverage
+    needs: earned-pilot
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: Real E1–E5 cohort (six smart profiles, four independent seeds, 24 accounts)
+        run: >-
+          node scripts/v013-stage611-legal-adaptive.cjs
+          --mode=campaign --sample-budget=24
+          --max-level=5 --max-attempts=6 --max-total-attempts=12
+          --seeds=9701,9702,9703,9704
+          --out=reports/v013-stage611-medium.json
+      - name: Preserve native coverage and reproducible inputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage611-native-earned-24-accounts
+          path: |
+            reports/v013-stage611-medium.json
+            reports/v013-stage611-medium.md
+          retention-days: 30
+          if-no-files-found: warn
