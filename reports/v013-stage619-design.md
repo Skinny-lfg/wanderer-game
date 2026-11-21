@@ -10,19 +10,19 @@ The key late-game progression problem is observed native player victory **63.5% 
 
 The real game now uses a single read-only, per-Elite progression table in `online/v013-elite-abilities.js`, applied only when the actual named Elite spawns in `combat/v012-combat-runtime.js`.
 
-- No effect at E1–E5. From E6 through E35, ramp linearly between 1.0 and the elite's cap. E35+ remains at the cap. This means the extra difficulty is earned with player progression; avoid exponential or endless runaway.
+- No effect at E1–E5. From E6 through E35, ramp linearly to each Elite's first individually set cap. From E36 through E70, add a second, independently tuned late-stage increase; the gains cap at E70. E1–E5 remains byte-for-byte identical in native fight stats and outputs. This avoids using excessive E35 difficulty to solve E70 triviality.
 - Individual maximum multiplicative HP/ATK/DEF gains relative to the **existing archetype's base coefficients**, not new absolute stats:
 
-| Elite | Max HP gain | Max ATK gain | Max DEF gain |
+| Elite | HP gain E35 / E70 | ATK gain E35 / E70 | DEF gain E35 / E70 |
 |---|---:|---:|---:|
-| Gravebound Bulwark | +55% | +23% | +10% |
-| Bloodscar Ravager | +38% | +17% | +4% |
-| Sanguine Wraith | +20% | +10% | +2% |
-| Voidborne Hexer | +52% | +22% | +8% |
-| Gravecaller | +16% | +10% | +3% |
-| Oathbound Exarch | +62% | +27% | +12% |
-| Briarspine Horror | +60% | +25% | +8% |
-| Ashen Executioner | +55% | +23% | +8% |
+| Gravebound Bulwark | +42% / +58% | +18% / +24% | +8% / +10% |
+| Bloodscar Ravager | +38% / +60% | +17% / +28% | +4% / +6% |
+| Sanguine Wraith | +20% / +48% | +10% / +24% | +2% / +5% |
+| Voidborne Hexer | +52% / +70% | +22% / +32% | +8% / +11% |
+| Gravecaller | +35% / +69% | +15% / +37% | +5% / +9% |
+| Oathbound Exarch | +62% / +97% | +27% / +45% | +12% / +18% |
+| Briarspine Horror | +73% / +123% | +30% / +50% | +10% / +16% |
+| Ashen Executioner | +55% / +80% | +23% / +37% | +8% / +11% |
 
 - Preserve all special abilities and interruptions for now. Stage 6.19 focuses on the scaling fault; **only after comparing all eight individual native combats** consider skill timing changes, to avoid confounding HP/ATK growth with ability scheduling.
 - HP/ATK/DEF scaling applies only when `enemy.miniboss` and is tied to the canonical eight Elite keys. **No changes to normal mobs, final Bosses, gear, skills, loot, art, Firebase or `main`.**
@@ -45,3 +45,7 @@ Each comparison matches the same hero's native rolled Rare equipment, valid Tale
 Pilot and full GitHub Actions success, successful native Unit tests for Stage 8.2 Elite abilities and Stage 8.4 Bosses, real-game small mob logic, E5 identical outcomes. Only then merge into canonical `audit/v013-stage6`. **NO DEPLOY**.
 
 The next Stage 6.20 must assess *prepared* final Boss fights separately. E1 earned account progression remains a distinct unresolved bottleneck.
+
+## Revised calibration after first complete native 1,536-fight run
+
+The initial E35 cap showed E70 remained trivial for several types (Briarspine 23/24 player wins, Gravecaller 24/24, Exarch 21/24). All original E5 results were exactly equal before/after, but forcing each subtype revealed substantial existing E5 disparity. The second pass adds **type-specific E35–E70 progression only**, not a new mechanic or blanket HP/ATK buff. The earlier full results are **not** evidence for this revised live code. A separate full CI rerun must pass before merging.
