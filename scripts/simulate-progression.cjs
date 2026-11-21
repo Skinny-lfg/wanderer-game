@@ -152,17 +152,35 @@ function equipmentFingerprint(a,{excludeOffhand=false}={}){
 function prepare(level,build,seed,opts,desiredRisk=undefined,desiredFamily=undefined){
  if(desiredFamily!==undefined&&!AFFINITIES.includes(desiredFamily))throw Error('Unknown Boss Affinity '+desiredFamily);
  if(desiredRisk!==undefined&&!RISKS.includes(desiredRisk))throw Error('Unknown Realm risk '+desiredRisk);
- const gearE=gearLevel(level,opts.gear),talents=talentPlan(build,opts.points);
+ const gearE=gearLevel(level,opts.gear);
+ // Stage 6.12 may supply a *native-validated* TalentGraph profile from the
+ // independent controlled-build planner. This does NOT represent earned XP.
+ const talents=opts.controlledTalents||talentPlan(build,opts.points);
+ if(opts.controlledTalents&&(!T.valid(talents)||
+     T.earned(talents)!==opts.points||talents.nodes.length>opts.points))
+  throw Error('Controlled talents must be a valid live v15 graph at exactly the requested point budget');
+ if(Object.hasOwn(opts,'armorType')&&!['Cloth','Leather','Plate'].includes(opts.armorType))
+  throw Error('Invalid controlled armor family');
  for(let attempt=0;attempt<(desiredFamily?48:1);attempt++){
   const resolvedSeed=(seed+attempt)>>>0||1;
   // Freeze wall-clock-dependent IDs as well as native RNG for exact replay.
    const a=create(resolvedSeed,undefined,{}, {recordModules:opts.recordModules,skipPersistence:true,measure:opts.measure===true,now:1720000000000+resolvedSeed});
   a.setup(gearE,build.weapon,opts.rarity);
+  // Roll real native gear at the same Expedition tier and requested rarity.
+  // Never manufacture numeric affixes or copy a ready-made test stat block.
+  if(opts.armorType){
+   for(const slot of ['helm','armor','gloves','boots','belt']){
+    const item=a.makeItem(gearE,slot,null,'loot',opts.armorType,opts.rarity);
+    if(item.slot!==slot||item.armorType!==opts.armorType)
+     throw Error('Native armor class roll rejected: '+slot+'/'+opts.armorType);
+    a.state().equip[slot]=item;
+   }
+  }
   if(Object.hasOwn(opts,'offhandType')){
    // Controlled native gear roll, not an item earned in natural progression.
    // Keep all non-Off-Hand equipment unchanged across the paired variants.
-   if(['Bow','Staff','Two-Handed'].includes(build.weapon))throw Error('Off-Hand not compatible with two-handed weapon');
-   if(!['Shield','Orb','Tome','Charm',null].includes(opts.offhandType))throw Error('Invalid controlled Off-Hand type');
+   if(['Bow','Staff','Two-Handed'].includes(build.weapon)&&opts.offhandType!==null)throw Error('Off-Hand not compatible with two-handed weapon');
+   if(!['Shield','Orb','Tome','Charm','Off-Hand Dagger',null].includes(opts.offhandType))throw Error('Invalid controlled Off-Hand type');
    a.state().equip.offhand=opts.offhandType?a.makeItem(gearE,'offhand',null,'loot',opts.offhandType,opts.rarity):null;
    if(Object.hasOwn(opts,'offhandEpicTrait')){
     // null is a deliberate trait-free Epic control, not a random Epic roll.
@@ -181,6 +199,8 @@ function prepare(level,build,seed,opts,desiredRisk=undefined,desiredFamily=undef
    a.streams(stream(0x1afc9081),stream(0x2b6e5d73),stream(0x3c8e193b),stream(0x4d29b145));
   }
   a.state().automaticTalents={...talents,nodes:[...talents.nodes]};
+  if(!T.valid(a.state().automaticTalents))
+   throw Error('Controlled native TalentGraph changed during fixture setup');
   if(opts.runes){const st=a.state();st.runes=['vitality','warding',build.weapon==='Wand'?'wisdom':'might'].map(k=>a.makeRune(k,gearE));st.runeSlots=st.runes.map(r=>r.id);}
   a.setUnlocked(level);a.start(level,true);
   const c=a.controller(),g=c.state;
@@ -372,6 +392,9 @@ function encounter(level,build,seed,kind,opts,forcedTrait=undefined,forcedBossMo
  return {mode,kind:label,roleEffect:roleEffect||null,plannedConditionId:conditionPlan?.id||null,conditionNaturallyMarked:!!conditionPlan?.rooms?.includes(candidate),controlledRoomAccess,traitFixtureInjected:!!trialTraitId,level,build:build.id,seed,resolvedSeed,seedShift,gearE,gearFingerprint,gearTier:P.gearTier(gearE).name,
   gearRarity:opts.rarity,runes:opts.runes,pointsBudget:opts.points,pointsSpent:allocatedPoints,
   otherGearFingerprint,offhandType:a.state().equip.offhand?.subtype||null,offhandTrait:a.state().equip.offhand?.v013Trait||null,
+  armorType:a.state().equip.armor?.armorType||null,
+  controlledTalentNodes:opts.controlledTalents?[...opts.controlledTalents.nodes]:null,
+  controlledTalentMode:opts.controlledTalents?(opts.controlledTalents.element||'arcane'):null,
   realm:card.name,affinity:card.family,risk:card.risk,nativeEncounter:kind,requestedGroupSize:count,groupSize:result.initialEnemies,unlocked:level,...result};
 }
 function bossPreparationEncounter(level,build,seed,opts,strategy){

@@ -1,0 +1,97 @@
+name: Wanderer Stage 6.12 — Controlled legal builds and native encounters (NO DEPLOY)
+on:
+  push:
+    branches:
+      - audit/v013-stage612-controlled-builds-20261121
+    paths:
+      - '.github/workflows/v013-stage612-controlled-builds.yml'
+      - 'scripts/simulate-progression.cjs'
+      - 'scripts/v013-stage612-controlled-combat.cjs'
+      - 'tests/v013-stage612-controlled-combat.test.cjs'
+      - 'package.json'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: Syntax and native legality tests
+        run: |
+          node --check scripts/v013-stage612-controlled-combat.cjs
+          node --check scripts/simulate-progression.cjs
+          node --check tests/v013-stage612-controlled-combat.test.cjs
+          npm run test:v013:stage612
+          npm run test:v013:stage611
+          npm run test:v013:stage610
+          git diff --check
+      - name: First 18 controlled native encounters
+        run: npm run audit:v013:stage612:pilot
+      - name: Preserve bounded native pilot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage612-controlled-native-pilot
+          path: |
+            reports/v013-stage612-pilot.json
+            reports/v013-stage612-pilot.md
+          retention-days: 30
+          if-no-files-found: warn
+  matrix:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: Sample 144 controlled combat matchups (all 48 archetypes requested)
+        run: npm run audit:v013:stage612:matrix
+      - name: Preserve actual native results and source fingerprints
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage612-native-144-controlled-matchups
+          path: |
+            reports/v013-stage612-matrix.json
+            reports/v013-stage612-matrix.md
+          retention-days: 30
+          if-no-files-found: warn
+  paired-offhands:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: Ten matched offhand swaps with fixed non-offhand gear
+        run: npm run audit:v013:stage612:pairs
+      - name: Preserve per-pair native equipment fingerprints
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage612-ten-matched-offhand-pairs
+          path: |
+            reports/v013-stage612-pairs.json
+          retention-days: 30
+          if-no-files-found: warn
