@@ -72,3 +72,13 @@ Across the 72 pairs, even where both builds won or both lost, **55** changed com
 ## Next engineering question (not a premature balance change)
 
 Run matched-seed, **single-legal-node/rank ablations** and sample more independently seeded Boss/Elite fights per exact matchup. Separately improve E1 progression reachability. Only thereafter target individual enemy health, attack frequency, passive effect strength and prepared abilities for balance. No group-wide buffs/nerfs were applied in this stage.
+
+## Integration checkpoint — Stage 6.13
+
+- Scoped PR #109 merged: https://github.com/Skinny-lfg/wanderer-game/pull/109
+- Merge commit: `53fcecffaac3d944f1efb4e3461b60e9abf8e7f1`
+- **Identical Git tree SHA:** reviewed candidate commit and actual merge both `b2f1076e289e0ceb5962dd8d45c1e20ac5be9978`. No Stage 6.13 code/artifact changes were lost during merge.
+- Final validation workflow (including 10/10 Stage 6.13 tests, 10/10 Stage 6.12, 8/8 Stage 6.11, 6/6 Stage 6.10, and 72/72 paired invariant checks): https://github.com/Skinny-lfg/wanderer-game/actions/runs/44892853328
+- Native evidence ZIP artifact: `stage613-matched-72-pairs-native` (72 pairs, 144 actual combats). The 12-pair pilot is a deterministic subset, **not additional independent evidence**.
+- All checked core Stage 9.7, Stage 5, Stage 4.5.5/4.5.6, integration, Gravecaller and browser suites passed on the checked Stage 6.13 source; historical Stage 9.8 high-volume campaign remained in progress and must not be claimed completed.
+- Canonical development branch stays `audit/v013-stage6`. Production `main` remained `7cd2a91f03844fe6586f84f11fa45723dd9a6001`; there was **no deploy**.
