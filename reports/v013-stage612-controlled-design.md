@@ -12,7 +12,7 @@ The matrix generator distinguishes:
 2. **Four controlled budgets:** 12/24/36/60 points, mapped for scenario setup to E5/E15/E35/E70. Both Talent points and Expedition unlock are synthetic test-fixture values, never player achievements.
 3. **Native rolled equipment:** seven weapon families, three armor classes (all five armor slots), five one-handed Off-Hand choices where physically possible, and a seeded rarity. Two-handed weapons have no Off-Hand.
 4. **Real native enemies:** normal, Elite and six Boss Affinities. The exact encounter is staged in a test room; it is *not* an organically reached boss.
-5. **Coverage-driven, bounded selection:** 576 designed archetype-budget-loadout candidates; choose a reproducible subset for real tests without pretending to test all possible combinations.
+5. **Coverage-driven, bounded selection:** 1,728 designed archetype-budget-loadout candidates; choose a reproducible subset for real tests without pretending to test all possible combinations.
 
 There are distinct planned and executed counts. The game-derived talent allocations are checked by the native TalentGraph `valid` and `allocate` APIs. Advanced abilities may be prepared if truly allocated in that controlled Talent snapshot. Duplicate node states are counted once for distinct-talent-state metrics even when multiple strategy labels exist.
 
@@ -39,8 +39,12 @@ From the repository root using Node 22:
 - A **structurally legal** allocation at 60 points is *not* proven attainable in the natural E1 campaign. E1–E5 player reachability remains Stage 6.11's separate evidence, where only eight earned points were observed.
 - Controlled gear uses the real rolled affixes at the selected level but is not loot obtained by playing. High-end gear is never assumed to be naturally found or purchased.
 - Boss/Elite tests use real actor ability definitions and native damage/stat calculations, but stage the selected enemy with the test harness rather than traversing the complete expedition.
-- A subset of the 576 designed candidates does **not** equal 576 completed battles; outcomes must be taken only from successfully completed native result rows.
+- A subset of the 1,728 designed candidates does **not** equal 1,728 completed battles; outcomes must be taken only from successfully completed native result rows.
 - Even 144 successes are insufficient to conclude global balance: there are many legal talents, gear rolls, Boons, potion choices, player decisions and difficulty levels left untested. Analyze stratified evidence and increase independent seeds before individual enemy balance changes.
 - No manual multiplier buff/nerf, no production deployment, no branch deletion, no Firebase or save changes.
 
 **Gate:** merge only if new Stage 6.12 and baseline Stage 6.10–6.11 tests pass, native controlled 18/144/matched pair workflows finish without timeouts/errors, and fingerprints and results are retained.
+
+## Stratification correction (before merge)
+
+The first executed 144-run matrix exposed a **design confound**: the scenario shortlist correlated Plate armor with Boss encounters. Raw Armor win rates from that initial matrix were therefore not fit for comparative balance analysis. The Stage 6.12 candidate generator was corrected to cross each gear variation independently with all three encounter classes (Normal, Elite, Boss), increasing the design pool from 576 to 1,728 proposed scenarios. The selector now explicitly balances the nine Armor × encounter strata and a dedicated regression test rejects missing/poorly represented strata. The corrected matrix is required to pass CI before merge. The earlier run is retained in GitHub Actions as a historical diagnostic, **not** a final balance result.
