@@ -11,7 +11,7 @@ const DEFAULTS=Object.freeze({mode:'pilot',seedsPerCell:2,seedStart:6170011,
  budgets:[12,24,36,60],risk:1,rarity:'Rare',tickLimit:4500,
  out:'reports/v013-stage617-roster-pilot.json'});
 const sourcePath=path.join(__dirname,'../online/v013-enemy-roster.js');
-const NATIVE_SOURCE=fs.readFileSync(sourcePath,'utf8');
+const LIVE_SOURCE=fs.readFileSync(sourcePath,'utf8');
 const sha=s=>crypto.createHash('sha256').update(s).digest('hex');
 const count=a=>a.length;
 function patchExactly(source,before,after){
@@ -22,6 +22,28 @@ const ROLE_RULE=String.raw`const normalCount=count===1?1:count<=4?count-(count==
    count>=18?2+(random()<.30?1:0):1+(random()<(count>=12?.30:.25)?1:0);`;
 const ROLE_TRIAL=String.raw`const normalCount=count===1?1:count<=4?count-(count===4&&random()<.5?2:1):
    count===6?3:count>=18?2+(random()<.30?1:0):1+(random()<(count>=12?.30:.25)?1:0);`;
+/* Preserve the Stage 6.17 baseline for reproducible diagnostics after the
+ * Stage 6.18 LIVE roster correction, without retaining an obsolete gameplay
+ * module. Only this audit runner reconstructs the original rule fragments. */
+const STAGE617_SCALING=`if(count>=6){
+  if(role==='minion')return {hp:baseHp*.95,atk:baseAtk*.92,def:count<=12?.25:.18};
+  return {hp:Math.min(.38,baseHp*1.85),atk:Math.min(.32,baseAtk*1.55),def:.66};
+ }`;
+function historicalBaseline(source){
+ if(source.includes(ROLE_RULE)&&source.includes(STAGE617_SCALING))return source;
+ const roleStart=source.indexOf(' // Stage 6.18: keep principal roles');
+ const roleEnd=source.indexOf(' const roles=Array(count)',roleStart);
+ if(roleStart<0||roleEnd<=roleStart)throw Error('Missing Stage 6.18 composition markers');
+ let restored=source.slice(0,roleStart)+' '+ROLE_RULE+'\n'+source.slice(roleEnd);
+ const scaleStart=restored.indexOf(' if(count>=6){');
+ const scaleEnd=restored.indexOf(" if(role==='minion')return {hp:baseHp*.95,atk:baseAtk*.90,def:.35};",scaleStart);
+ if(scaleStart<0||scaleEnd<=scaleStart)throw Error('Missing Stage 6.18 scaling markers');
+ restored=restored.slice(0,scaleStart)+' '+STAGE617_SCALING+'\n'+restored.slice(scaleEnd);
+ if(!restored.includes(ROLE_RULE)||!restored.includes(STAGE617_SCALING))throw Error('Stage 6.17 baseline reconstruction failed');
+ return restored;
+}
+const NATIVE_SOURCE=historicalBaseline(LIVE_SOURCE);
+
 function rosterSource(arm){
  if(!ARMS.includes(arm))throw Error('Unknown Stage 6.17 arm '+arm);
  if(arm==='four_native'||arm==='six_native')return NATIVE_SOURCE;
