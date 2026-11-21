@@ -14,7 +14,7 @@ Stage 6.16 observed six native mobs inflicting only ~22 median damage vs 98 for 
 - Eight: three principals and five Minions.
 - 9–12: three or four principals; 13–17: three/four; 18–22: three/four, with only the first four visible slots reserved for principal roles.
 - Preserves the Realm-specific weighted role distribution, deterministic RNG, existing unique mob names and art; no generic automatic enemy HP/ATK increases.
-- For principal roles in groups of size 6–12, interpolate per-mob scale **HP 0.47 → 0.34**, **ATK 0.38 → 0.28**, **DEF 0.70 → 0.64**. For 12–20, interpolate **HP 0.34 → 0.23**, **ATK 0.28 → 0.20**, **DEF 0.64 → 0.60**. Above twenty, clamp to the twenty-mob endpoint.
+- For principal roles in groups of size 6–12, interpolate per-mob scale **HP 0.53 → 0.40**, **ATK 0.45 → 0.34**, **DEF 0.70 → 0.64**. For 12–20, interpolate **HP 0.40 → 0.29**, **ATK 0.34 → 0.25**, **DEF 0.64 → 0.60**. Above twenty, clamp to the twenty-mob endpoint.
 - The original weak Minion scaling and all solo/small-group scales are unchanged.
 - No change to Elite/Boss mechanics, player progression, consumables, loot, UI, artwork or save migration.
 
@@ -33,3 +33,7 @@ The Stage 6.17 original live roster rule is reconstructed **only inside the test
 ## Status
 
 Gameplay implementation committed to a dedicated Stage 6.18 PR branch. Full results and verification will follow CI; this document deliberately claims no unexecuted outcomes.
+
+## Calibration note — first full checkpoint
+
+The first full matched 960-combat run completed successfully at https://github.com/Skinny-lfg/wanderer-game/actions/runs/44911608248, with 96/96 player equality checks and 4 earned-account E1/E2 smoke samples (11 native rooms). Four mobs were unchanged and showed 99 damage median; six rose from 22 to 57.5, eight from 25.5 to 69.5, twelve from 34 to 59.5 and twenty from 44 to 55.5. **One predeclared gate failed**: six/ four median damage = 58.1%, below 60%. E5 six survived 24/24, so a carefully constrained increase to **principal role** scaling (not Minions) was made as a second iteration. The latest source requires a fresh full CI check; do not report the earlier test as proof of the final tuning.
