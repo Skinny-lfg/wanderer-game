@@ -101,7 +101,11 @@
     "test:v013:stage614": "node --test tests/v013-stage614-single-node-ablation.test.cjs",
     "audit:v013:stage614:pilot": "node scripts/v013-stage614-single-node-ablation.cjs --mode=pilot --cases=6 --seeds-per-case=3 --out=reports/v013-stage614-pilot.json",
     "audit:v013:stage614:matrix": "node scripts/v013-stage614-single-node-ablation.cjs --mode=matrix --cases=24 --seeds-per-case=6 --out=reports/v013-stage614-matrix.json",
-    "audit:v013:stage614:plan": "node scripts/v013-stage614-single-node-ablation.cjs --mode=plan --cases=24 --seeds-per-case=6 --out=reports/v013-stage614-plan.json"
+    "audit:v013:stage614:plan": "node scripts/v013-stage614-single-node-ablation.cjs --mode=plan --cases=24 --seeds-per-case=6 --out=reports/v013-stage614-plan.json",
+    "test:v013:stage614:retest": "node --test tests/v013-stage614-rerun-three.test.cjs",
+    "audit:v013:stage614:retest:plan": "node scripts/v013-stage614-rerun-three.cjs --mode=plan --seeds-per-opponent=32 --out=reports/v013-stage614-retest-plan.json",
+    "audit:v013:stage614:retest:pilot": "node scripts/v013-stage614-rerun-three.cjs --mode=pilot --seeds-per-opponent=4 --out=reports/v013-stage614-retest-pilot.json",
+    "audit:v013:stage614:retest:matrix": "node scripts/v013-stage614-rerun-three.cjs --mode=matrix --seeds-per-opponent=32 --out=reports/v013-stage614-retest-matrix.json"
   },
   "dependencies": {
     "firebase": "11.10.0"
