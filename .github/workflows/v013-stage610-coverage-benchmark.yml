@@ -8,6 +8,17 @@ on:
       - 'scripts/v013-stage610-coverage-benchmark.cjs'
       - 'tests/v013-stage610-coverage-benchmark.test.cjs'
       - 'package.json'
+      - 'index.html'
+      - 'docs/index.html'
+      - 'online/v013-character-art.js'
+      - 'online/v013-portrait-integration.css'
+      - 'online/v012-ui5-camp.css'
+      - 'online/v012-ui6-unified-inventory.css'
+      - 'docs/online/v013-portrait-integration.css'
+      - 'docs/online/v013-character-art.js'
+      - 'tests/v013-character-portraits.test.cjs'
+      - 'assets/characters/loadouts/**'
+      - 'docs/assets/characters/loadouts/**'
   workflow_dispatch:
     inputs:
       benchmark:
@@ -36,6 +47,7 @@ jobs:
           node --check scripts/v013-stage610-coverage-benchmark.cjs
           node --check tests/v013-stage610-coverage-benchmark.test.cjs
           npm run test:v013:stage610
+          node --test tests/v013-character-portraits.test.cjs tests/v013-current-dungeon-and-talents.test.cjs
           npm run audit:v013:stage610:inventory
           npm run audit:v013:stage610:plan
           git diff --check
