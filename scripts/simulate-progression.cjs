@@ -164,7 +164,15 @@ function prepare(level,build,seed,opts,desiredRisk=undefined,desiredFamily=undef
  for(let attempt=0;attempt<(desiredFamily?48:1);attempt++){
   const resolvedSeed=(seed+attempt)>>>0||1;
   // Freeze wall-clock-dependent IDs as well as native RNG for exact replay.
-   const a=create(resolvedSeed,undefined,{}, {recordModules:opts.recordModules,skipPersistence:true,measure:opts.measure===true,now:1720000000000+resolvedSeed});
+   // Stage 6.17 diagnosis only: substitute the enemy roster module inside the
+    // isolated VM, never in gameplay files, to run native combat with one
+    // explicitly varied roster rule. All other native modules stay untouched.
+    if(opts.stage617RosterSource!==undefined&&(typeof opts.stage617RosterSource!=='string'||
+       !opts.stage617RosterSource.includes('WandererV013EnemyRoster')))
+      throw Error('Invalid Stage 6.17 test-only enemy roster source');
+    const overrides=opts.stage617RosterSource===undefined?{}:
+      {'online/v013-enemy-roster.js':opts.stage617RosterSource};
+    const a=create(resolvedSeed,undefined,overrides, {recordModules:opts.recordModules,skipPersistence:true,measure:opts.measure===true,now:1720000000000+resolvedSeed});
   a.setup(gearE,build.weapon,opts.rarity);
   // Roll real native gear at the same Expedition tier and requested rarity.
   // Never manufacture numeric affixes or copy a ready-made test stat block.
