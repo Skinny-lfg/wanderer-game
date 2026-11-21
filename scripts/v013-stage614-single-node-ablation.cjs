@@ -123,8 +123,11 @@ function selectCases(budgets=DEFAULTS.budgets,limit=DEFAULTS.cases){
   let best=null,max=-Infinity;
   for(const candidate of inventory.candidates){
    if(used.has(candidate.key))continue;
-   // Reserve every sixth comparison for a *native-legal* rank upgrade.
-   if(i%6===5&&candidate.rank<2)continue;
+   // Deliberately balance first-purchase nodes and real rank upgrades:
+   // one cannot take over the whole cohort just because it scores slightly
+   // better in a greedy pool of many rankable snapshots.
+   const requireRank=i%2===1;
+   if((candidate.rank>1)!==requireRank)continue;
    // Favor one distinct base ability per case; duplicate ranks are legal but
    // do not displace coverage of a genuinely different active skill.
    let score=novelty('base',candidate.base,210)+
@@ -165,6 +168,7 @@ function selectCases(budgets=DEFAULTS.budgets,limit=DEFAULTS.cases){
   budgets:distinct('budget'),encounters:distinct('encounter'),
   armor:distinct('armor'),weapons:distinct('weapon'),
   ranks:chosen.filter(x=>x.rank>1).length,
+  firstPurchases:chosen.filter(x=>x.rank===1).length,
   limitations:['The selection is deterministic and coverage-driven, not exhaustive.',
    'An ablation removes ONE native-legal purchase, leaving one point unspent in the baseline.',
    'Paired results share scenario setup; each independent seed may roll different gear or enemies.']};
@@ -350,7 +354,7 @@ function run(settings=DEFAULTS){
  let report={...input,source,options,planned:{sourceSnapshots:p.sourceSnapshots,
   eligible:p.eligible,rejections:p.rejections,caseCount:p.selected.length,
   distinctNodes:p.distinctNodes,families:p.families,budgets:p.budgets,
-  ranks:p.ranks,seedsPerCase:p.seedsPerCase},
+  ranks:p.ranks,firstPurchases:p.firstPurchases,seedsPerCase:p.seedsPerCase},
   completed:0,results:[],
   caveats:[
    'The baseline has ONE intentionally unspent point; withNode legally purchases exactly ONE terminal node/rank.',
