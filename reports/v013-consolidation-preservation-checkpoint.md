@@ -53,3 +53,23 @@ Some older divergent branches have historical commits now functionally replaced 
 3. Use source/Pages parity and native saved-state/loot/runtime tests on every change; never copy an older full HTML/runtime file over newer mechanics.
 4. Never merge old PRs solely to tidy their state. Close verified ancestor PRs with an audit comment and retain branch and commit SHA.
 5. No production deploy, no main rewrite, no deletions or force-push.
+
+## Final consolidated result — PR #106 merged
+
+**Integration merged successfully on 2026-11-21.**
+
+- Canonical development branch: \`audit/v013-stage6\`
+- GitHub merge commit: \`05aa9237c808f2a3fb7fddcf37b71613986a23f0\` ([PR #106](https://github.com/Skinny-lfg/wanderer-game/pull/106))
+- The merge commit **tree SHA exactly equals** the reviewed integration branch tree SHA: \`b2f67a0e5dada982c9fd5713e951d1c1b90796d8\`.
+- Parents: Stage 6.9 base \`c8952192290cc413ddcec776b97100c9a5767ce3\` and integration head \`d687e8657abc28db2fbc6624096006928b04f338\`.
+- **All 20 verified ancestor PRs closed** with individual comments, without merging them again or deleting source branches.
+- Remaining **10 open PRs**: 8 divergent v0.13 PRs (#90, #81, #80, #79, #78, #77, #54, #49), separate agent maintenance #34 and longstanding \`development\` PR #24.
+- \`main\` was checked and remained at \`7cd2a91f03844fe6586f84f11fa45723dd9a6001\` (v0.12); no deployment was initiated by this consolidation.
+
+### Successful validation on reviewed integration head
+
+GitHub Actions completed successfully for: Stage 6.10 native/pairwise/portrait checks, v0.13 integration, browser QA, Conditions and simulator, Stage 9.7 native combat evidence, Stage 4.5.5 release evidence, Stage 4.5.6 historical-regression classification, Gravecaller native A/B and Stage 9.8 deep balance campaign.
+
+**No production release is implied.** The prior legacy audit inventory remains separately documented even when the current test suite passes. Future artwork approval may still require manual visual review at mobile/desktop resolutions.
+
+**Next stage should start only from the canonical integrated HEAD, never a historical branch.**
