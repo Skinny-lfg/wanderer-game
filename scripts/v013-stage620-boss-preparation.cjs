@@ -43,7 +43,7 @@ function fight(row,strategy,settings=DEFAULTS){
  if(!STRATEGIES.includes(strategy)||!POLICIES.includes(row.policy))throw Error('Unknown Boss preparation arm');
  const opts={...H.nativeOptions(row,'boss',settingsSafe(settings)),
   mode:'bossprep',targetPolicy:row.policy};
- const x=S.bossPreparationEncounter(row.level,row.build,row.seed,opts,strategy);
+ const x=S.bossPreparationEncounter(row.level,row.build,row.seed,opts,strategy,row.realm);
  if(x.timedOut||!x.won&&!x.died||x.mode!=='bossprep'||x.kind!==strategy||
     x.affinity!==row.realm||x.bossAffinity!==row.realm||
     x.bossName!==BOSSES[row.realm]||x.bossId!==BOSSES_ID[row.realm]||
