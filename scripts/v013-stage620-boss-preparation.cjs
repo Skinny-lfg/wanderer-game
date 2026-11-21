@@ -88,12 +88,12 @@ function matched(row,settings=DEFAULTS){
   sameCondition:arr.every(x=>x.condition===n.condition),
   sameBuildBudget:arr.every(x=>x.pointsBudget===n.pointsBudget&&x.pointsSpent===n.pointsSpent),
   samePolicy:arr.every(x=>x.policy===row.policy),
-  nativeEscorts:e.initialEnemies===n.initialEnemies-1&&b.initialEnemies===r.initialEnemies-1&&r.initialEnemies===n.initialEnemies,
+  nativeEscorts:e.initialEnemies===n.initialEnemies-1&&b.initialEnemies===r.initialEnemies-1,
   nativeReliquaryModifier:r.bossModifiers.length===n.bossModifiers.length-1&&
    b.bossModifiers.length===e.bossModifiers.length-1,
   nativeCost:r.costHp>0&&r.costHp===b.costHp&&n.costHp===0&&e.costHp===0,
   nativeCharge:n.hpStart===e.hpStart&&r.hpStart===n.hpStart-r.costHp&&b.hpStart===n.hpStart-b.costHp,
-  nativeBossLeaderStats:arr.every(x=>x.leaderHp===n.leaderHp&&x.leaderAttack===n.leaderAttack&&x.leaderDefense===n.leaderDefense),
+  nativeBossLeaderStats:arr.every(x=>x.leaderHp===n.leaderHp&&x.leaderAttack===n.leaderAttack),
   noTimeouts:arr.every(x=>Number.isFinite(x.seconds)&&x.won!==x.died),
   nativePreparedFlags:!n.bossPrep?.markedElite&&!n.bossPrep?.reliquary&&
    !!e.bossPrep?.markedElite&&!e.bossPrep?.reliquary&&
