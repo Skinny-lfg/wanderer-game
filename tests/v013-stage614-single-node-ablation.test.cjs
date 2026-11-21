@@ -41,7 +41,8 @@ test('Six seeds per case, deterministic distinct seed coverage and representativ
  assert.equal(p.encounters.length,3);
  assert.equal(p.armor.length,3);
  assert.equal(p.weapons.length,7);
- assert(p.ranks>0);
+ assert.equal(p.ranks,12,'Six-seed cohort must include exactly twelve rank upgrades');
+ assert.equal(p.firstPurchases,12,'Other half must isolate first purchase of a new legal node');
  for(const c of p.selected){
   const rows=p.rows.filter(r=>r.caseId===c.caseId);
   assert.equal(rows.length,6);
