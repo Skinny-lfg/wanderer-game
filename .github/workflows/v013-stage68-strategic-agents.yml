@@ -1,0 +1,91 @@
+name: Wanderer Stage 6.8 — Strategic build agents (native only, no deploy)
+on:
+  push:
+    branches: [audit/v013-stage6]
+    paths:
+      - '.github/workflows/v013-stage68-strategic-agents.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: Legal native talent builds, actual effects, equipment and game regression
+        run: |
+          node --check scripts/v013-build-planner.cjs
+          node --check scripts/v013-natural-progression.cjs
+          node --test \
+            tests/v013-strategic-build-agents.test.cjs \
+            tests/v013-natural-progression.test.cjs \
+            tests/v013-stage65-e1-e10.test.cjs \
+            tests/talent-graph-runtime.test.cjs
+          git diff --check
+  cohorts:
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        include:
+          - cohort: physical
+            profiles: smart-blood-pure,smart-blood-fury,smart-blood-fury-vitality,smart-fury-blood-aegis
+          - cohort: magic
+            profiles: smart-magic-arcane-pure,smart-magic-fire-aegis,smart-magic-frost-vitality,smart-magic-lightning-pure
+          - cohort: alternatives
+            profiles: smart-fury-pure,smart-decay-magic-aegis,smart-aegis-vitality,smart-vitality-pure
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: Persist actual 2-seed E1–E5 cohorts, no XP/gear injection
+        env:
+          COHORT: ${{ matrix.cohort }}
+          PROFILES: ${{ matrix.profiles }}
+        run: |
+          mkdir -p reports
+          node scripts/v013-natural-progression.cjs \
+            --seeds=9701,9702 \
+            --profiles="$PROFILES" \
+            --max-level=5 \
+            --max-attempts=6 \
+            --max-total-attempts=22 \
+            --out="reports/stage68-$COHORT.json" \
+            > "reports/stage68-$COHORT.stdout.txt" 2>&1
+          tail -c 6000 "reports/stage68-$COHORT.stdout.txt"
+          test -s "reports/stage68-$COHORT.json"
+          git diff --exit-code -- combat/ online/ economy/
+      - name: Build integrity and reproducibility
+        if: always()
+        env:
+          COHORT: ${{ matrix.cohort }}
+        run: |
+          {
+            echo "revision=$GITHUB_SHA"
+            echo "cohort=$COHORT"
+            echo "node=$(node --version)"
+            sha256sum combat/talent-graph-next.js scripts/v013-build-planner.cjs scripts/v013-natural-progression.cjs
+          } > "reports/stage68-$COHORT.provenance.txt"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage68-smart-${{ matrix.cohort }}
+          path: reports/stage68-${{ matrix.cohort }}.*
+          retention-days: 30
+          if-no-files-found: warn

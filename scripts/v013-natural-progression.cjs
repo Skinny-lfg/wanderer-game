@@ -8,6 +8,7 @@ const crypto=require('node:crypto');
 const create=require('../tests/v012-economy-harness.cjs');
 const S=require('./simulate-progression.cjs');
 const AGENT=require('./v013-agent-strategy.cjs');
+const PLANNER=require('./v013-build-planner.cjs');
 require('../online/v013-map-intelligence.js');
 const I=globalThis.WandererV013MapIntelligence;
 require('../economy/v012-loot-rules.js');
@@ -25,7 +26,17 @@ const PROFILES=Object.freeze({
  'plate-warden':{name:'Plate Warden',risk:0,targets:['guarded_block','barrier_pulse','steadfast_guard','strong_heart'],families:['aegis','vitality'],armor:'Plate',weapons:['Mace','Sword'],style:'focused',preparedTargets:['last_bastion'],healAt:.68,retreatAt:.46,target:'mechanics',shop:true},
  'leather-duelist':{name:'Leather Duelist',risk:1,targets:['quick_hands','bleeding_edge','blood_drinker','precision','double_strike','blood_harvest','crimson_rush'],families:['fury','blood'],armor:'Leather',weapons:['Daggers','Bow'],style:'mixed',preparedTargets:['red_guillotine'],healAt:.42,retreatAt:.25,target:'focus',shop:true},
  'cloth-battlemage':{name:'Cloth Battlemage',risk:0,targets:['element_choice','arcane_focus','mana_spring','runic_shield','guarded_block','arcane_bastion'],families:['magic','aegis'],element:'fire',armor:'Cloth',weapons:['Wand','Staff'],style:'mixed',preparedTargets:['arcane_bastion'],healAt:.61,retreatAt:.39,target:'mechanics',shop:true},
- 'hexblade-hybrid':{name:'Hexblade Hybrid',risk:1,targets:['toxic_touch','arcane_focus','affinity_aegis','mana_spring','guarded_block','arcane_resonance','hex_bolt','barrier_pulse','arcane_surge','arcane_mastery'],families:['decay','magic'],armor:'Leather',weapons:['Sword','Daggers','Wand'],offhands:['Daggers','Orb','Tome'],style:'mixed',preparedTargets:['grave_bloom'],healAt:.5,retreatAt:.29,target:'mechanics',shop:true}
+ 'hexblade-hybrid':{name:'Hexblade Hybrid',risk:1,targets:['toxic_touch','arcane_focus','affinity_aegis','mana_spring','guarded_block','arcane_resonance','hex_bolt','barrier_pulse','arcane_surge','arcane_mastery'],families:['decay','magic'],armor:'Leather',weapons:['Sword','Daggers','Wand'],offhands:['Daggers','Orb','Tome'],style:'mixed',preparedTargets:['grave_bloom'],healAt:.5,retreatAt:.29,target:'mechanics',shop:true},
+ // New catalog-aware agents exist alongside old frozen Stage 6.5 profiles.
+ // Their point progression and gear are strictly earned, never injected.
+ ...Object.fromEntries(Object.entries(PLANNER.BUILDS).map(([id,build])=>[
+  'smart-'+id,Object.freeze({name:'Strategic '+id,plan:id,risk:build.primary==='fury'?1:0,
+   targets:[],families:[build.primary,...[build.secondary,build.third].filter(Boolean)],
+   preparedTargets:[...(build.milestones||[])],element:build.element||undefined,
+   armor:build.armor,weapons:[...build.weapons],style:build.mix?'mixed':'focused',
+   healAt:(build.primary==='aegis'||build.primary==='vitality')?0.69:0.59,retreatAt:.38,
+   target:build.primary==='fury'?'focus':'mechanics',shop:true})
+ ]))
 });
 // A single deliberate retraining after two unsuccessful attempts at the same E.
 // Uses the game's free full reset; it never creates XP or talent points.
@@ -121,9 +132,10 @@ function gearScore(item,profile,targetSlot=item?.slot){
  const alignment=isArmor&&armor===profile.armor?7:isArmor&&armor&&armor!==profile.armor?-3:0;
  const weapon=slot==='weapon'&&profile.weapons?.includes(item.subtype)?9:
   slot==='weapon'&&profile.weapons?.length?-5:0;
- return round(s+Number(item.tier||1)*.5+(rarity[item.rarity]||0)*1.5+
+ const baseline=round(s+Number(item.tier||1)*.5+(rarity[item.rarity]||0)*1.5+
   alignment+weapon+offhandUtility+Number(item.critBonus||0)*(agile?2.5:1.8)+
   Number(item.blockBonus||0)*(tank?2.5:1.2));
+ return profile.plan?PLANNER.evaluateGear(item,profile,baseline,slot):baseline;
 }
 function gearSnapshot(a){
  const items=Object.values(a.state().equip).filter(Boolean);
@@ -366,7 +378,8 @@ function potionScore(kind,profile,vitals={}){
   ironhide:plate?57:46,haste:leather?59:magic?45:49,
   fortune:52,barrier:plate?53:56,trail:48,scout:47,
   purifying:32,veilsight:51,fate:38};
- return score[kind]??-Infinity;
+ const base=score[kind]??-Infinity;
+ return profile.plan?PLANNER.potionPriority(kind,profile,base):base;
 }
 function selectEarnedPotions(a,profile){
  const s=a.state(),actions=[],v=a.vitals();
@@ -510,9 +523,47 @@ function prepareCamp(a,profile,level,decisionModel='risk-aware',options={}){
    throw Error('Native reset changed earned XP or retained talent nodes');
   actions.resets.push({reason:options.resetReason,previousNodes:spentBefore,xpRetained:xpBefore});
  }
- const talentInvestment=spendEarnedTalents(a,profile);
- actions.talents.push(...talentInvestment.bought);
- actions.elementChoices.push(...talentInvestment.elements);
+ if(profile.plan){
+  const plan=PLANNER.getPlan(profile.plan),xpBeforePlan=s.automaticTalents.xp;
+  // Element selection uses the exact native Camp action and refunds
+  // incompatible element nodes, never manually mutates the save.
+  if(plan.element&&s.automaticTalents.nodes.includes('element_choice')&&
+     (s.automaticTalents.element||'arcane')!==plan.element){
+   if(!a.talentActions.element(plan.element))throw Error('Smart agent native attunement rejected');
+   actions.elementChoices.push(plan.element);
+  }
+  const proposed=PLANNER.propose(a.talents,s.automaticTalents,profile.plan,
+   options.history||[],options.priorResets||0);
+  if(proposed.resetReason){
+   const beforeReset={xp:s.automaticTalents.xp,nodes:s.automaticTalents.nodes.length};
+   if(!a.talentActions.reset())throw Error('Strategic native reset rejected');
+   if(s.automaticTalents.xp!==beforeReset.xp||s.automaticTalents.nodes.length)
+    throw Error('Strategic native reset must preserve earned XP');
+   actions.resets.push({reason:proposed.resetReason,previousNodes:beforeReset.nodes,
+    xpRetained:beforeReset.xp});
+  }
+  for(const id of proposed.purchases){
+   if(!a.talentActions.allocate(id))throw Error('Strategic native talent buy rejected '+id);
+   actions.talents.push(id);
+   if(id==='element_choice'&&plan.element&&plan.element!=='arcane'&&
+      s.automaticTalents.element!==plan.element){
+    if(!a.talentActions.element(plan.element))throw Error('Strategic native element selection rejected');
+    actions.elementChoices.push(plan.element);
+   }
+  }
+  const actual=s.automaticTalents;
+  if(JSON.stringify(actual.nodes)!==JSON.stringify(proposed.expectedNodes)||
+     (actual.element||'arcane')!==proposed.expectedElement||
+     !a.talents.valid(actual)||actual.xp!==xpBeforePlan)
+   throw Error('Strategic planning/native Camp parity failure');
+  actions.plan={id:profile.plan,model:proposed.model,allowed:proposed.allowed,
+   pressure:proposed.pressure,milestone:proposed.milestone,
+   points:proposed.earned,spent:proposed.spent,reset:proposed.resetReason};
+ }else{
+  const talentInvestment=spendEarnedTalents(a,profile);
+  actions.talents.push(...talentInvestment.bought);
+  actions.elementChoices.push(...talentInvestment.elements);
+ }
  actions.prepared=prepareEarnedAbility(a,profile);
  if(decisionModel!=='legacy'){
   actions.runes.push(...manageEarnedRunes(a,profile));
@@ -1099,11 +1150,12 @@ function simulateAccount(seed,id,opts,simulationOptions={}){
    }
    let entry={level,attempt,profile:id};
    try{
-    const canPivot=!pivoted&&attempt>=3&&a.state().automaticTalents.nodes.length>=4&&
+    const canPivot=!profile.plan&&!!PIVOTS[id]&&!pivoted&&attempt>=3&&a.state().automaticTalents.nodes.length>=4&&
      acc.attempts.filter(x=>x.level===level&&!x.error&&x.status!=='error').length>=2;
     const nextProfile=canPivot?pivotProfile(id):activeProfile;
     const camp=prepareCamp(a,nextProfile,level,decisionModel,
-     canPivot?{resetReason:'two_undefeated_attempts_at_E'+level}:undefined);
+     canPivot?{resetReason:'two_undefeated_attempts_at_E'+level}:
+      profile.plan?{history:acc.attempts,priorResets:acc.attempts.reduce((n,t)=>n+(t.camp?.resets?.length||0),0)}:undefined);
     if(canPivot){if(camp.resets.length!==1)throw Error('Expected one native profile reset');activeProfile=nextProfile;pivoted=true;}
     const before={xp:a.state().automaticTalents.xp,earned:a.talents.earned(a.state().automaticTalents),
      spent:a.state().automaticTalents.nodes.length,gear:gearSnapshot(a),strategy:activeProfile.variantId||id,gold:a.state().gold,
