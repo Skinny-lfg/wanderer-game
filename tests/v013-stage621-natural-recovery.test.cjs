@@ -32,3 +32,17 @@ test('Actual persistent native candidate never forges items, XP or unlocks',()=>
   assert(run.accounts[0].attempts.every(a=>a.level===1&&a.before.earned<=a.after.earned));
  }
 });
+
+test('Per-Boss low-E experiment is independent of normal and Elite pressure and tapers before E35',()=>{
+ const source=C.bossCandidateSource();
+ const combined=C.combinedSource();
+ assert(source.includes("leech:{hp:.37,atk:.22},matriarch:{hp:.39,atk:.23}"));
+ assert(source.includes("earlyBossRamp=boss?Math.max(0,Math.min(1,(30-level)/29)):0;"));
+ assert(source.includes("1-earlyBossTuning.hp*earlyBossRamp"));
+ assert(source.includes("1-earlyBossTuning.atk*earlyBossRamp"));
+ assert(!source.includes("earlyNormalAttack"));
+ assert(combined.includes("earlyNormalAttack"));
+ assert(combined.includes("earlyBossTuning"));
+ assert.equal(C.parse(['--mode=boss-only']).mode,'boss-only');
+ assert.equal(C.parse(['--mode=combined']).mode,'combined');
+});
