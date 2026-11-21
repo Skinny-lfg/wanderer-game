@@ -30,7 +30,7 @@ test('Controlled advanced profile allocations are native-valid, not invented abi
 });
 test('Scenario design has 48 archetypes, four budgets and real controlled equipment constraints',()=>{
  const pool=M.candidates();
- assert.equal(pool.length,48*4*3);
+ assert.equal(pool.length,48*4*3*3);
  assert.equal(new Set(pool.map(x=>x.id)).size,pool.length);
  assert.equal(new Set(pool.map(x=>x.key)).size,48);
  assert.deepEqual([...new Set(pool.map(x=>x.points))].sort((a,b)=>a-b),[12,24,36,60]);
@@ -110,4 +110,18 @@ test('Native two-handed controlled fixture accepts an explicitly empty offhand',
  assert.equal(r.a.state().equip.weapon.subtype,'Two-Handed');
  assert.equal(r.a.state().equip.offhand,null);
  assert.equal(r.a.state().equip.armor.armorType,'Leather');
+});
+
+test('144 shortlist crosses every armor class with every native encounter category',()=>{
+ const p=M.chooseScenarios(M.candidates(),144);
+ assert.equal(p.selectedArchetypes,48);
+ assert.equal(Object.keys(p.opponentArmorCounts).length,9);
+ for(const role of ['normal','elite','boss'])
+  for(const armor of ['Cloth','Leather','Plate']){
+   const count=p.opponentArmorCounts[role+' / '+armor]||0;
+   assert(count>=6,'Not enough independent '+role+' vs '+armor+' observations: '+count);
+  }
+ const counts=Object.values(p.opponentArmorCounts);
+ assert(Math.max(...counts)-Math.min(...counts)<=20,
+  'Encounter/armor stratum too uneven to interpret direct pooled comparisons');
 });
