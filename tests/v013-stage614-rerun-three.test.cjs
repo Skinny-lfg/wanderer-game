@@ -50,8 +50,8 @@ test('All three native enemy variations preserve source build and equipment, plu
    assert.equal(x.armor,original.armor);
    assert.equal(x.offhand,original.offhand);
    assert.equal(x.level,original.source.level);
-   assert.equal(x.before,original.source.before);
-   assert.equal(x.after,original.source.after);
+   assert.deepEqual(x.before,original.source.before);
+   assert.deepEqual(x.after,original.source.after);
   }
  }
 });
