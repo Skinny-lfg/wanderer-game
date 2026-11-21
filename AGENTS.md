@@ -1,3 +1,18 @@
+## Current canonical v0.13 checkpoint — Stage 6.15 native enemy hierarchy (2026-11-21)
+
+- **Canonical development HEAD** is `audit/v013-stage6`; Stage 6.15 merged via PR #112 at `b28fade20a3b2d64c0fe56b52b5689ad99fefc37`. Original PR tree SHA and merge tree SHA were checked identical: `9fb65d8e7487f17f53865d1c004ca776422a2de0`, preserving all earlier v0.13 artwork, talents and Stage 6.11–6.14 implementations.
+- Most important evidence: **384 genuine matched native NORMAL 3-mob / ELITE / BOSS triples = 1,152 actual fights**. Each triple used exactly the **same native v15-legal TalentGraph, points, rolled equipment, Realm/Risk, starting seed/resolved seed, Condition and targeting policy**. All **384/384** strict player-fixture checks passed. Enemies intentionally differ by role; NEVER claim same enemy roster.
+- In this controlled Dangerous Risk/Rare synthetic-gear fixture: **Normal won 379/384 (98.7%)**, **Elite 346/384 (90.1%)**, **Boss 106/384 (27.6%)**. The matched Elite–Boss gap is **62.5 percentage points**; **240** Elite-win/Boss-loss cases, zero reverse.
+- Six native Boss families covered. Elite–Boss gap by Realm: Blood 67.2pp, Decay 70.3pp, Vitality 46.9pp, Aegis 60.9pp, Fury 53.1pp, Magic 76.6pp. E-tier controlled results: E5=Elite 63/96 vs Boss **0/96**, E15=93/96 vs **9/96**, E35=94/96 vs **40/96**, E70=96/96 vs **57/96**.
+- Observed Boss/Elite initial median HP ratio **1.236×**, attack ratio **1.465×**; Bosses spawned extra enemies in **241/384** fights. Do not infer exact causal contribution from these correlations. Eight native Elite type labels were observed, including generic `tank` and `caster` labels; **not** proof that all dedicated Elites were individually audited. Normal 3-mob rooms included at least one native Tank in 199/384 generated groups (not Tank-only duels).
+- **Most important caveat:** Stage 6.15 stages each Boss in a **first-ring combat fixture WITHOUT 15-Realm traversal or optional Boss preparation**; it likely overstates the difficulty of naturally prepared final Boss fights. Native XP and equipment access are synthetic. These percentages are NOT earned-account or full Expedition win probabilities.
+- Strong next test: matched **Boss unprepared vs legally prepared** (marked Elite/reliquary) per Realm, then isolate each specific Boss's minions, damage tempo and other mechanics before any per-Boss adjustments. Stage 6.11 natural E1 bottleneck remains separate and unresolved.
+- Validation: Stage 6.15 8/8 tests; Stage 6.14 follow-up 7/7, Stage 6.14 9/9, Stage 6.13 10/10, Stage 6.12 10/10, Stage 6.11 8/8, Stage 6.10 6/6; pilot 288 real fights and full 1,152 real fights passed. GitHub Actions: https://github.com/Skinny-lfg/wanderer-game/actions/runs/44899211176.
+- Full report `reports/v013-stage615-hierarchy-results.md`, source-of-truth raw native JSON GitHub Actions artifact `stage615-normal-elite-boss-384-matched-triples-1152-combats`. Stage 6.15 had **NO** buffs/nerfs, gameplay coefficients, enemy definitions, UI/art, saves, Firebase or deploy changes.
+- Production `main` verified remains `7cd2a91f03844fe6586f84f11fa45723dd9a6001`. Continue preserving one canonical development line and no force-push.
+
+---
+
 ## Current canonical v0.13 checkpoint — Three-case Stage 6.14 confirmation (2026-11-21)
 
 - PR #111 **merged** into the single canonical development branch `audit/v013-stage6` with merge commit `400b7dff5916e55778d5bb812264c3e581264f36`. Fetch current canonical HEAD before starting anything new. The reviewed and merged tree SHA is exactly `e87004f2b955ddf45b53ec4b1c70f68aa13ad6f9`.

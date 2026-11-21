@@ -108,3 +108,12 @@ Recommended narrow next research:
 - Full raw detailed native fight data in CI artifact `stage615-normal-elite-boss-384-matched-triples-1152-combats`, including initial enemy roster stats, Boss/Elite ability metrics and battle outcomes.
 
 No saves, AI/combat coefficient changes, player UI/art, Firebase, production `main` updates or deployments.
+
+## Verified canonical integration checkpoint
+
+- PR #112 was merged into the existing development branch `audit/v013-stage6`.
+- The exact native-tested PR HEAD tree matches the merge commit tree: `9fb65d8e7487f17f53865d1c004ca776422a2de0`; all existing Stage 6.11–6.14 logic and art remain part of the merged tree.
+- Merge SHA: `b28fade20a3b2d64c0fe56b52b5689ad99fefc37`.
+- Test evidence: https://github.com/Skinny-lfg/wanderer-game/actions/runs/44899211176 (Stage 6.15 8/8, Stage 6.14 9/9, Stage 6.14 retest 7/7, Stage 6.13 10/10, Stage 6.12 10/10, Stage 6.11 8/8 and Stage 6.10 6/6; 288-fight pilot and 1,152-fight native matrix).
+- This AGENTS.md/report integration marker is **docs-only** and does not alter any tested native code, game balance, saves or production artifacts.
+- Production `main` remained at `7cd2a91f03844fe6586f84f11fa45723dd9a6001` at verification.
