@@ -52,7 +52,7 @@ function fight(row,strategy,settings=DEFAULTS){
     x.targetPolicy!==row.policy||!Number.isFinite(x.hpStart)||
     !Number.isFinite(x.damageTaken)||!Number.isFinite(x.hpMax)||
     !Number.isFinite(x.preparationCostHp)||!Number.isFinite(x.initialEnemies))
-  throw Error('Unresolved or misclassified native Boss '+row.id+'/'+strategy);
+  throw Error('Unresolved or misclassified native Boss '+row.id+'/'+strategy+' '+JSON.stringify({timedOut:x.timedOut,won:x.won,died:x.died,mode:x.mode,kind:x.kind,affinity:x.affinity,bossAffinity:x.bossAffinity,bossName:x.bossName,bossId:x.bossId,type:x.type,level:x.level,risk:x.risk,pointsBudget:x.pointsBudget,pointsSpent:x.pointsSpent,targetPolicy:x.targetPolicy,hpStart:x.hpStart,preparationCostHp:x.preparationCostHp,initialEnemies:x.initialEnemies}));
  const leader=x.roster.find(e=>e.role==='boss');
  if(!leader||!Number.isFinite(leader.attack)||!Number.isFinite(leader.maxHp))
   throw Error('Native Boss leader absent '+row.id+'/'+strategy);
