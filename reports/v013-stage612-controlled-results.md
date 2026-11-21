@@ -21,6 +21,7 @@ The controlled fixture supplies the Talent budget, equipment and level access; i
 | Current strategic/route archetypes represented | **48 / 48** (21 smart strategies + 27 live route endpoints) |
 | Completed controlled native combats | **144** |
 | Distinct native-valid Talent allocations (nodes, mode, prepared) | **121** |
+| Live structural route endpoint targets actually allocated at least once | **27 / 27** |
 | Distinct legal Talent allocation + actual weapon + armor + Off-Hand loadouts | **142** |
 | Controlled Normal fights / wins | **48 / 44** |
 | Controlled Elite fights / wins | **48 / 34** |
@@ -32,7 +33,7 @@ The controlled fixture supplies the Talent budget, equipment and level access; i
 
 **By hypothetical point budget:** 12 points: 35 fights / 13 wins; 24 points: 36 / 22; 36 points: 37 / 24; 60 points: 36 / 25. These are mixed opponent/gear samples, not progression win rates.
 
-The six actual Boss styles observed were `berserker`, `conductor`, `devourer`, `guardian`, `leech`, `matriarch`. Eight Elite labels were observed, without claiming full Elite spawn roster coverage.
+Among 81 controlled route-template fights, the target skill was genuinely allocated in 68; in the other 13 (all at the 12-point budget), insufficient Talent points prevented the intended late skill. No target was faked or granted for free. Nevertheless, each of the 27 live structural endpoints was actually acquired in at least one legal controlled build.\n\nThe six actual Boss styles observed were `berserker`, `conductor`, `devourer`, `guardian`, `leech`, `matriarch`. Eight Elite labels were observed, without claiming full Elite spawn roster coverage.
 
 The scenario generator designs **1,728** archetype × point-budget × controlled gear × opponent candidates. The workflow executes a deterministic **144**, not all 1,728. Source and scenario fingerprints are retained in the complete GitHub Actions JSON artifact.
 
