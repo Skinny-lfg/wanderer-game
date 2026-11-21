@@ -179,7 +179,7 @@ function prepare(level,build,seed,opts,desiredRisk=undefined,desiredFamily=undef
   if(Object.hasOwn(opts,'offhandType')){
    // Controlled native gear roll, not an item earned in natural progression.
    // Keep all non-Off-Hand equipment unchanged across the paired variants.
-   if(['Bow','Staff','Two-Handed'].includes(build.weapon))throw Error('Off-Hand not compatible with two-handed weapon');
+   if(['Bow','Staff','Two-Handed'].includes(build.weapon)&&opts.offhandType!==null)throw Error('Off-Hand not compatible with two-handed weapon');
    if(!['Shield','Orb','Tome','Charm','Off-Hand Dagger',null].includes(opts.offhandType))throw Error('Invalid controlled Off-Hand type');
    a.state().equip.offhand=opts.offhandType?a.makeItem(gearE,'offhand',null,'loot',opts.offhandType,opts.rarity):null;
    if(Object.hasOwn(opts,'offhandEpicTrait')){
