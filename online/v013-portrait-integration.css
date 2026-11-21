@@ -1,0 +1,39 @@
+/* Consolidated paper-doll shadows, adapted to later Stage 6 lighting and saturation.
+   This only overrides portrait presentation, never combat, gear or saves. */
+.phase3IntegratedPreview .phase3CampCharacter .paper>.characterGroundShadow{
+ position:absolute;z-index:1;left:50%;top:calc(var(--camp-vitals-row) + 4 * var(--camp-slot-row) - 8px);
+ width:clamp(120px,48%,190px);height:26px;border-radius:50%;display:block;
+ transform:translate(-50%,-50%);pointer-events:none;box-shadow:none;
+ background:radial-gradient(ellipse at center,rgba(0,0,0,.55) 0%,rgba(0,0,0,.34) 24%,rgba(0,0,0,.13) 49%,rgba(0,0,0,.04) 70%,transparent 100%);
+ filter:blur(6px);
+}
+.phase3IntegratedPreview .phase3CampCharacter .paper>.model{
+ transform:translate(-50%,-18px) scale(.80);z-index:2;
+}
+.phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper>.characterGroundShadow{
+ position:absolute;z-index:1;display:block;pointer-events:none;left:50%;
+ top:calc(5 * var(--gear-row) - 11px);width:clamp(104px,48%,176px);
+ height:24px;border-radius:50%;transform:translate(-50%,-50%);box-shadow:none;
+ background:radial-gradient(ellipse at center,rgba(0,0,0,.55) 0%,rgba(0,0,0,.34) 24%,rgba(0,0,0,.13) 49%,rgba(0,0,0,.04) 70%,transparent 100%);filter:blur(6px);
+}
+.phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper>.model{
+ z-index:2!important;transform:translateY(-22px) scale(.80)!important;
+}
+.phase3IntegratedPreview .phase3BagInventory .equipmentLoadout .paper>.model{
+ z-index:2;object-position:center bottom;transform:translateY(-22px) scale(.80);
+ transform-origin:center bottom;
+}
+.phase3IntegratedPreview .phase3BagInventory .equipmentLoadout .paper>.characterGroundShadow{
+ display:block;position:absolute;z-index:1;pointer-events:none;left:50%;top:calc(100% - 20px);
+ width:clamp(105px,46%,174px);height:24px;border-radius:50%;
+ transform:translate(-50%,-50%);box-shadow:none;
+ background:radial-gradient(ellipse at center,rgba(0,0,0,.55) 0%,rgba(0,0,0,.34) 24%,rgba(0,0,0,.13) 49%,rgba(0,0,0,.04) 70%,transparent 100%);filter:blur(6px);
+}
+@media(max-width:700px){
+ .phase3IntegratedPreview .phase3CampCharacter .paper>.characterGroundShadow{
+  width:clamp(100px,44%,150px);height:20px;filter:blur(5px);
+ }
+ .phase3IntegratedPreview :is(.equipmentOverview,.phase3BetweenGear) .equipmentLoadout .paper>.characterGroundShadow{
+  width:clamp(95px,43%,144px);height:19px;filter:blur(5px);
+ }
+}
