@@ -384,7 +384,7 @@ function campaign(opts){
 function markdown(r){
  const out=['# Stage 6.11 — '+r.kind,'',
   '**No gameplay, economy, balance, Firebase or production changes.**','',
-  'Native source SHA-256: '+r.provenance?.sourceSha256||r.origin?.sourceSha256||'', ''];
+  'Native source SHA-256: '+(r.provenance?.sourceSha256||r.origin?.sourceSha256||'unknown'), ''];
  if(r.kind==='native-validated-talent-candidate-inventory'){
   out.push('Live targets: '+r.allTargets+' ('+r.coreRouteTargets+' route endpoints + agent milestones).',
    'Validated strategic profiles: '+r.profileCoverage.profiles,
