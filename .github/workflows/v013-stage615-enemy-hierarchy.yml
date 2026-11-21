@@ -1,0 +1,75 @@
+name: Wanderer Stage 6.15 — Native Enemy Hierarchy (Normal vs Elite vs Boss, NO DEPLOY)
+on:
+  push:
+    branches:
+      - audit/v013-stage615-enemy-hierarchy-20261121
+    paths:
+      - '.github/workflows/v013-stage615-enemy-hierarchy.yml'
+      - 'scripts/v013-stage615-enemy-hierarchy.cjs'
+      - 'tests/v013-stage615-enemy-hierarchy.test.cjs'
+      - 'package.json'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate-pilot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: Syntax and all Stage 6.10–6.15 native match validation tests
+        run: |
+          node --check scripts/v013-stage615-enemy-hierarchy.cjs
+          node --check tests/v013-stage615-enemy-hierarchy.test.cjs
+          npm run test:v013:stage615
+          npm run test:v013:stage614:retest
+          npm run test:v013:stage614
+          npm run test:v013:stage613
+          npm run test:v013:stage612
+          npm run test:v013:stage611
+          npm run test:v013:stage610
+          git diff --check
+      - name: Native matched hierarchy pilot — 96 triples × 3 true combat kinds = 288 fights
+        run: npm run audit:v013:stage615:pilot
+      - name: Save real native pilot results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage615-normal-elite-boss-96-triples-pilot
+          path: |
+            reports/v013-stage615-hierarchy-pilot.json
+            reports/v013-stage615-hierarchy-pilot.md
+          retention-days: 30
+          if-no-files-found: warn
+  full-hierarchy:
+    needs: validate-pilot
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: Native matched hierarchy — 6 Realms × 4 budgets × 2 builds × 8 seeds × 3 actual kinds = 1152 fights
+        run: npm run audit:v013:stage615:matrix
+      - name: Save full native enemy rosters/health/attack/abilities and paired combat results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage615-normal-elite-boss-384-matched-triples-1152-combats
+          path: |
+            reports/v013-stage615-hierarchy-matrix.json
+            reports/v013-stage615-hierarchy-matrix.md
+          retention-days: 30
+          if-no-files-found: warn
