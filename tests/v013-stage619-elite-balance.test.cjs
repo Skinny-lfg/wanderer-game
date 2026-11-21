@@ -13,9 +13,10 @@ test('Eight independent curves, finite, clamped, non-regressive, and strict iden
   for(const level of [1,5])assert.deepEqual(A.scalingFor(id,level),{hp:1,atk:1,def:1});
   const p15=A.scalingFor(id,15),p35=A.scalingFor(id,35),p70=A.scalingFor(id,70);
   for(const k of ['hp','atk','def']){
-   assert(p15[k]>1&&p15[k]<p35[k],'progressive E15');
-   assert(p35[k]>=p15[k]&&p35[k]===p70[k],'endgame cap');
-   assert(p35[k]<2,'no extreme stats');
+   assert(p15[k]>1&&p15[k]<p35[k],'progressive E15–E35');
+   assert(p70[k]>p35[k],'additional type-specific E35–E70 challenge');
+   assert(p70[k]<2.6,'no runaway scaling');
+   assert.equal(A.scalingFor(id,200)[k],p70[k],'endgame cap E70+');
   }
  }
  assert.throws(()=>A.scalingFor('not-an-elite',35),/Invalid/);
