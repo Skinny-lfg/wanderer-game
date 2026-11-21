@@ -1,0 +1,89 @@
+name: Wanderer Stage 6.10 — Coverage & native E1 benchmark (NO DEPLOY)
+on:
+  push:
+    branches:
+      - audit/v013-stage610-coverage-benchmark-20261121
+    paths:
+      - '.github/workflows/v013-stage610-coverage-benchmark.yml'
+      - 'scripts/v013-stage610-coverage-benchmark.cjs'
+      - 'tests/v013-stage610-coverage-benchmark.test.cjs'
+      - 'package.json'
+      - 'index.html'
+      - 'docs/index.html'
+      - 'online/v013-character-art.js'
+      - 'online/v013-portrait-integration.css'
+      - 'online/v012-ui5-camp.css'
+      - 'online/v012-ui6-unified-inventory.css'
+      - 'docs/online/v013-portrait-integration.css'
+      - 'docs/online/v013-character-art.js'
+      - 'tests/v013-character-portraits.test.cjs'
+      - 'tests/v013-c8-ui-wiring.test.cjs'
+      - 'assets/characters/loadouts/**'
+      - 'docs/assets/characters/loadouts/**'
+  workflow_dispatch:
+    inputs:
+      benchmark:
+        description: 'Also run the bounded real E1 native benchmark?'
+        type: boolean
+        required: true
+        default: false
+permissions:
+  contents: read
+jobs:
+  validate:
+    name: Structural catalogue, pairwise evidence and unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: Check syntax and evidence correctness
+        run: |
+          node --check scripts/v013-stage610-coverage-benchmark.cjs
+          node --check tests/v013-stage610-coverage-benchmark.test.cjs
+          npm run test:v013:stage610
+          node --test tests/v013-character-portraits.test.cjs tests/v013-c8-ui-wiring.test.cjs tests/v013-current-dungeon-and-talents.test.cjs
+          npm run audit:v013:stage610:inventory
+          npm run audit:v013:stage610:plan
+          git diff --check
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage610-structural-inventory-and-pairwise-plan
+          path: |
+            reports/v013-stage610-inventory.json
+            reports/v013-stage610-inventory.md
+            reports/v013-stage610-pairwise-plan.json
+            reports/v013-stage610-pairwise-plan.md
+          retention-days: 30
+  native-benchmark:
+    name: Bounded actual E1 native performance pilot
+    needs: validate
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.benchmark == true)
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: Two naturally earned E1 account attempts, no injection
+        run: npm run audit:v013:stage610:benchmark
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage610-native-e1-perf
+          path: |
+            reports/v013-stage610-e1-benchmark.json
+            reports/v013-stage610-e1-benchmark.md
+          retention-days: 30
+          if-no-files-found: warn

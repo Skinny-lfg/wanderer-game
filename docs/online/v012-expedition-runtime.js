@@ -23,7 +23,15 @@ function phase1Begin(level=1){
  if(ports.state.pendingRuneReward){ports.showPendingRuneReward();return;}
  if(ports.state.expeditionOverflow.length||!ports.stashHasRoom()){ports.bannerMessage('Claim secured loot and free Stash space before starting another Expedition.');return;}
  if(!['camp','finished','failed'].includes(ports.phase1Controller.state.stage)||!Number.isInteger(level)||level<1||level>ports.phase1Controller.state.unlocked)return false;
- ports.phase4Seed=Math.floor(Math.random()*4294967296)>>>0;ports.phase4Prefix=Date.now().toString(36);ports.phase4Stamp=null;ports.phase4Home=ports.phase4Clone(ports.state.equip);ports.phase4Entry=null;ports.phase4Resume=false;ports.phase4WaveKeys=[];
+ // Once Realm Cards have been offered at an Expedition level, Camp navigation
+ // must not become a free reroll. Retain the original entry RNG seed until a
+ // room is actually entered, including across save/reload and level switching.
+ ports.state.realmOfferSeeds??={};
+ const offerKey=String(level),previousSeed=ports.state.realmOfferSeeds[offerKey];
+ const offerSeed=Number.isSafeInteger(previousSeed)&&previousSeed>=0&&previousSeed<=0xffffffff?
+  previousSeed:Math.floor(Math.random()*4294967296)>>>0;
+ ports.state.realmOfferSeeds[offerKey]=offerSeed;
+ ports.phase4Seed=offerSeed;ports.phase4Prefix=Date.now().toString(36);ports.phase4Stamp=null;ports.phase4Home=ports.phase4Clone(ports.state.equip);ports.phase4Entry=null;ports.phase4Resume=false;ports.phase4WaveKeys=[];
  ports.phase5Results={version:1,complete:true,review:null,realm:null,summary:null,earned:[],gold:0,fragments:0,craftingStart:ports.phase4Clone(ports.state.crafting||WandererV013Crafting.create())};
  ports.phase1Controller.start(level,{dungeon:true});root.WandererV013MapFog?.reset();ports.phase6Run={version:1,event:null,events:[],effects:{},combats:0};ports.phase3LootIds=new Set();ports.phase3PotionCooldowns={health:0,mana:0};ports.phase1Vitals=null;ports.phase1Clock=0;ports.phase1Continuity=null;ports.phase3Supplies={health:0,mana:0};ports.phase1Build=WandererV012Buildcraft.create();WandererV012Buildcraft.syncPermanent(ports.phase1Build,ports.state.automaticTalents,true);ports.phase1Build.runtime.hybridRules=true;ports.state.run=null;ports.view='phase1';
  if(ports.PHASE1_PREVIEW){ports.phase5Snapshot.expedition.attempts++;ports.phase5Snapshot.expedition.awardKeys=[];ports.phase5Snapshot.expedition.lastOutcome='active';ports.phase5Persist();}
@@ -92,6 +100,9 @@ function phase1Enter(){
  if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked))return false;
  if(!ports.phase1Build||ports.state.run||!ports.phase1Controller.state.dungeon)return false;
  const plane=ports.phase1Controller.enter();
+ // The offer is consumed by the first actual room entry, not by viewing
+ // the three cards or selecting a Realm and returning to Camp.
+ if(ports.state.realmOfferSeeds)delete ports.state.realmOfferSeeds[String(ports.phase1Controller.state.expedition)];
  if(ports.phase5Persist())ports.phase2Launch(plane);
  return true;
 }

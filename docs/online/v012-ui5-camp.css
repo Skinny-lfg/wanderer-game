@@ -166,8 +166,8 @@ body.phase3IntegratedPreview #screen:has(.runesInventoryOnly)>#initialBack>.goth
 .phase3IntegratedPreview .phase3CampCharacter .paper{position:relative;display:grid;width:100%;max-width:620px;height:auto;min-height:0;aspect-ratio:auto;grid-template-columns:minmax(58px,.86fr) minmax(0,3.5fr) minmax(58px,.86fr);grid-template-rows:var(--camp-vitals-row) repeat(4,var(--camp-slot-row)) minmax(72px,auto);column-gap:var(--camp-column-gap);row-gap:0;justify-items:center;align-items:start;overflow:visible;margin:0 auto;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none}
 .phase3IntegratedPreview .phase3CampCharacter .paper>.model{position:absolute;z-index:0;top:24px;right:auto;bottom:auto;left:50%;width:calc(100% - 84px);max-width:none;height:calc(var(--camp-vitals-row) + 4 * var(--camp-slot-row) - 24px);object-fit:contain;object-position:center bottom;transform:translate(-50%,-18px) scale(.96);transform-origin:center bottom;filter:drop-shadow(0 7px 12px #000b);mask-image:none;opacity:1;pointer-events:none}
 .phase3IntegratedPreview .visuallyHidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
-.phase3IntegratedPreview .phase3CampCharacter .paper>.phase3CharacterPickerHitbox{position:absolute;z-index:1;top:calc(var(--camp-vitals-row) + 2px);bottom:calc(var(--camp-slot-row) + 2px);left:50%;width:min(38%,190px);min-height:44px;margin:0;padding:0;transform:translate(-50%,-18px);border:0;border-radius:0;background:transparent;box-shadow:none;cursor:pointer}
-.phase3IntegratedPreview .phase3CampCharacter .paper>.phase3CharacterPickerHitbox:hover{background:transparent;box-shadow:none}
+
+
 .phase3IntegratedPreview .phase3CampIdentity{grid-column:2;grid-row:1;position:relative;z-index:3;display:flex;width:100%;min-width:0;flex-direction:column;align-items:center;gap:3px;padding:2px 0 0;pointer-events:none}
 .phase3IntegratedPreview .phase3CampAccountName{max-width:100%;overflow:hidden;color:#f0ddb6;font:500 clamp(16px,1.2vw,18px)/1.1 var(--font-head);text-align:center;text-overflow:ellipsis;text-shadow:0 2px 5px #000;white-space:nowrap}
 .phase3IntegratedPreview .phase3CampCharacter .phase3CampHeroVitals{position:relative;z-index:3;width:100%;max-width:240px;margin:0}
@@ -341,10 +341,8 @@ body.phase3IntegratedPreview:has(.phase3Camp) .phase3Camp [role="progressbar"]{f
     drop-shadow(0 5px 6px rgba(0,0,0,.48));
 }
 
-/* The character selection button remains above the decorative portrait. */
-.phase3IntegratedPreview .phase3CampCharacter .paper>.phase3CharacterPickerHitbox{
-  z-index:2;
-}
+
+
 
 @media(max-width:700px){
   .phase3IntegratedPreview .phase3CampCharacter .paper::before{

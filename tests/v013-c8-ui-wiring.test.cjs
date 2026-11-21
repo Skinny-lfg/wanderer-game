@@ -23,7 +23,7 @@ test('C8 source has the current active navigation, loot, rune, vendor, map and b
  for(const id of [
   'between-tab','buy','city-tab','compare','dungeon-room','event-select',
   'inventory-jump','map-zoom','merchant-category','phase1-expedition',
-  'phase1-hero','phase3-equip','phase3-expedition-step','phase3-loot','phase3-nav',
+  'phase3-equip','phase3-expedition-step','phase3-loot','phase3-nav',
   'potion-buy','potion-inspect','potion-load','potion-use','realm-card',
   'rune-choice','rune-equip','rune-remove','rune-sell','rune-slot-choice',
   'scout','stage6-boon','stage7-contract','stage74-potion'
@@ -40,4 +40,12 @@ test('C8 account, feedback and leaderboard actions have explicit external entryp
   ['online/v012-leaderboard-ui.mjs','leaderboard']
  ]){const module=fs.readFileSync(path,'utf8');
    assert(module.includes('data-online-action="'+id+'"'),path+' must bind the matching header action');}
+});
+
+test('C8 gear-driven character portraits replace the retired manual skin selector',()=>{
+ const source=index();
+ assert(source.includes('globalThis.WandererCharacterArt?.imageForEquipment(state.equip)'));
+ assert(source.includes('online/v013-character-art.js?v=20261121'));
+ assert(!source.includes('data-phase1-hero='));
+ assert(!source.includes('phase3CharacterPickerHitbox'));
 });
