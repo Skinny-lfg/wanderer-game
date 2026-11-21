@@ -102,20 +102,23 @@ function candidates(budgets=DEFAULTS.budgets,seedStart=DEFAULTS.seedStart){
  const defs=archetypes(),out=[];
  if(!Array.isArray(budgets)||!budgets.length||budgets.some(x=>!Object.hasOwn(BUDGET_TO_E,x)))
   throw Error('Unsupported Stage 6.12 budgets');
+ // Each real enemy class is crossed with EACH generated equipment variant.
+ // Previous v1 accidentally tied Plate to Boss in the selected shortlist.
  for(const [i,a] of defs.entries())
   for(const [bi,budget] of unique(budgets).entries())
-   for(let variation=0;variation<3;variation++){
-    const gear=equipment(a,i,bi,variation);
-    const encounter=['normal','elite','boss'][(i+bi+variation)%3];
-    const affinity=AFFINITIES[(i+2*bi+variation)%AFFINITIES.length];
-    const risk=(i+bi+variation)%3;
-    const seed=seedStart+i*107+bi*17+variation;
-    const row={id:a.key+'|'+budget+'|'+variation,key:a.key,kind:a.kind,
-     archetypeId:a.id,points:budget,level:BUDGET_TO_E[budget],
-     variation,seed,encounter,affinity,risk,
-     rarity:'Rare',...gear};
-    out.push(row);
-   }
+   for(let variation=0;variation<3;variation++)
+    for(const encounter of ['normal','elite','boss']){
+     const gear=equipment(a,i,bi,variation);
+     const ki=['normal','elite','boss'].indexOf(encounter);
+     const affinity=AFFINITIES[(i+2*bi+variation+ki*3)%AFFINITIES.length];
+     const risk=(i+bi+ki)%3;
+     const seed=seedStart+i*131+bi*29+variation*5+ki;
+     const row={id:a.key+'|'+budget+'|'+variation+'|'+encounter,
+      key:a.key,kind:a.kind,archetypeId:a.id,points:budget,
+      level:BUDGET_TO_E[budget],variation,seed,encounter,affinity,risk,
+      rarity:'Rare',...gear};
+     out.push(row);
+    }
  return out;
 }
 function axes(row){
@@ -126,14 +129,18 @@ function axes(row){
   weaponArmor:row.weapon+' / '+row.armor,
   weaponOffhand:row.weapon+' / '+(row.offhand||'none'),
   archetypeBudget:row.key+' / '+row.points,
-  opponentRealm:row.encounter+' / '+row.affinity};
+  opponentRealm:row.encounter+' / '+row.affinity,
+  opponentArmor:row.encounter+' / '+row.armor,
+  opponentWeapon:row.encounter+' / '+row.weapon,
+  budgetOpponent:row.points+' / '+row.encounter};
 }
 function chooseScenarios(pool,limit){
  if(!Number.isSafeInteger(limit)||limit<1||limit>pool.length)throw Error('Invalid actual controlled fight budget');
  const selected=[],seen=new Set(),counts=new Map();
  const weights={archetype:300,archetypeBudget:24,kind:30,points:30,
-  weapon:35,armor:18,offhand:25,opponent:35,realm:30,risk:9,
-  budgetWeapon:6,weaponArmor:8,weaponOffhand:8,opponentRealm:20};
+  weapon:35,armor:18,offhand:25,opponent:40,realm:30,risk:9,
+  budgetWeapon:6,weaponArmor:8,weaponOffhand:8,opponentRealm:22,
+  opponentArmor:175,opponentWeapon:35,budgetOpponent:35};
  const covered={};
  const pairKeys=['points','weapon','armor','offhand','opponent','realm'];
  const pairs=x=>{
@@ -172,6 +179,8 @@ function chooseScenarios(pool,limit){
   plannedCoverage:Object.fromEntries(Object.entries(covered).map(([k,v])=>[k,[...v].sort()])),
   selectedArchetypes:unique(selected.map(x=>x.key)).length,
   plannedPairKeys:coveredPair.size,
+  opponentArmorCounts:Object.fromEntries(unique(selected.map(x=>x.encounter+' / '+x.armor))
+   .sort().map(k=>[k,selected.filter(x=>x.encounter+' / '+x.armor===k).length])),
   limitations:['Greedy finite subset, not exhaustive pairwise or triple-wise coverage.',
    'Scenario access is controlled; native Boss/Elite fights are not natural account progression.']};
 }
@@ -271,7 +280,8 @@ function run(settings=DEFAULTS){
  let report={stage:'6.12',kind:input.kind,configHash:input.configHash,settings,
   provenance:provenance(),design:{poolSize:plan.poolSize,selected:plan.selected.length,
    archetypes:archetypes().length,budgets:settings.budgets,
-   plannedCoverage:plan.plannedCoverage,plannedPairs:plan.plannedPairKeys},
+   plannedCoverage:plan.plannedCoverage,plannedPairs:plan.plannedPairKeys,
+   opponentArmorCounts:plan.opponentArmorCounts},
   plannedIds:input.plannedIds,results:[],completed:0,
   strictOrigin:'CONTROLLED synthetic Talent XP and native-rolled gear; not naturally earned accounts.',
   cautions:['Native combat and enemy AI only; map Boss/Elite room is controlled, not naturally traveled.',
