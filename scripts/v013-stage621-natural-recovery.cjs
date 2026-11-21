@@ -3,7 +3,7 @@
 // Two independent seeds and three different legal native agent strategies.
 const fs=require('node:fs'),path=require('node:path');
 const N=require('./v013-natural-progression.cjs');
-const MODES=new Set(['baseline','candidate','retest']);
+const MODES=new Set(['baseline','candidate','boss-only','combined','retest']);
 // Experimental, disposable source override uses the exact native combat runtime
 // through the existing harness. Promotion to gameplay happens only after A/B.
 const SOURCE_PATH='combat/v012-combat-runtime.js';
@@ -17,6 +17,38 @@ const EARLY_ATTACK=` // Stage 6.21 candidate: early normal-role attack pressure 
 function candidateSource(){
  if(LIVE_SOURCE.split(ORIGINAL_ATTACK).length!==2)throw Error('Stage 6.21 exact native attack formula has changed');
  return LIVE_SOURCE.replace(ORIGINAL_ATTACK,EARLY_ATTACK);
+}
+// Test-only Boss variant: TYPE-SPECIFIC reduction at E1, naturally tapers to 0
+// by E30. Bosses above E30 and all Elites remain byte-equivalent to live code.
+const ORIGINAL_HP=" const hp=Math.max(1,Math.round(v.hp*mult*(elite?elite.hp*eliteGrowth.hp:role==='minion'?.68:role==='tank'?1.32:role==='skirmisher'?.96:role==='caster'?.90:1)));";
+const EARLY_BOSS_STAT=` // Stage 6.21 experimental Boss early-ramp, never deployed untested.
+ const earlyBossTuning=boss?({
+  leech:{hp:.37,atk:.22},matriarch:{hp:.39,atk:.23},
+  guardian:{hp:.29,atk:.18},conductor:{hp:.28,atk:.18},
+  berserker:{hp:.18,atk:.11},devourer:{hp:.16,atk:.10}
+ }[variant?.style]||{hp:0,atk:0}):{hp:0,atk:0};
+ const earlyBossRamp=boss?Math.max(0,Math.min(1,(30-level)/29)):0;
+ const hp=Math.max(1,Math.round(v.hp*mult*(elite?elite.hp*eliteGrowth.hp:role==='minion'?.68:role==='tank'?1.32:role==='skirmisher'?.96:role==='caster'?.90:1)*(1-earlyBossTuning.hp*earlyBossRamp)));`;
+function bossCandidateSource(base=LIVE_SOURCE){
+ if(base.split(ORIGINAL_HP).length!==2||base.includes('earlyBossTuning'))
+  throw Error('Stage 6.21 exact native Boss HP formula has changed');
+ if(base.split(ORIGINAL_ATTACK).length!==2)
+  throw Error('Stage 6.21 exact native Boss ATK formula has changed');
+ return base.replace(ORIGINAL_HP,EARLY_BOSS_STAT).replace(ORIGINAL_ATTACK,
+  " const atk=Math.max(1,Math.round(v.atk*mult*(elite?elite.atk*eliteGrowth.atk:role==='minion'?.70:role==='skirmisher'?1.10:role==='caster'?1.08:role==='tank'?.90:1)*(1-earlyBossTuning.atk*earlyBossRamp)));");
+}
+function combinedSource(){
+ const bossSource=bossCandidateSource();
+ if(bossSource.split(ORIGINAL_ATTACK).length!==2)throw Error('Stage 6.21 combined anchor invalid');
+ const normalFactor=EARLY_ATTACK.replace(ORIGINAL_ATTACK.trim().replace(/^ /,''),'');
+ const originalAttack=" const atk=Math.max(1,Math.round(v.atk*mult*(elite?elite.atk*eliteGrowth.atk:role==='minion'?.70:role==='skirmisher'?1.10:role==='caster'?1.08:role==='tank'?.90:1)*(1-earlyBossTuning.atk*earlyBossRamp)));";
+ const replacement=` // Stage 6.21 targeted normal E1/E2 and type-specific early Boss candidate.
+ const earlyNormalAttack=!boss&&!miniboss&&level<=2?
+  (level===1?({tank:.86,skirmisher:.78,caster:.80,minion:.86}[role]||1):
+   ({tank:.95,skirmisher:.93,caster:.94,minion:.96}[role]||1)):1;
+ const atk=Math.max(1,Math.round(v.atk*mult*(elite?elite.atk*eliteGrowth.atk:role==='minion'?.70:role==='skirmisher'?1.10:role==='caster'?1.08:role==='tank'?.90:1)*(1-earlyBossTuning.atk*earlyBossRamp)*earlyNormalAttack));`;
+ if(bossSource.split(originalAttack).length!==2)throw Error('Stage 6.21 combined formula changed');
+ return bossSource.replace(originalAttack,replacement);
 }
 function accountDigest(account){
  const at=account.attempts||[];
@@ -93,7 +125,11 @@ function parse(argv=process.argv.slice(2)){
  return {...opts,native};
 }
 function main(argv=process.argv.slice(2)){
- const o=parse(argv),result=N.run(o.native,o.mode==='candidate'?{moduleOverrides:{[SOURCE_PATH]:candidateSource()}}:{});
+ const o=parse(argv),override=
+  o.mode==='candidate'?candidateSource():
+  o.mode==='boss-only'?bossCandidateSource():
+  o.mode==='combined'?combinedSource():null;
+ const result=N.run(o.native,override?{moduleOverrides:{[SOURCE_PATH]:override}}:{});
  const compact=summary(result),out=path.resolve(o.out);
  fs.mkdirSync(path.dirname(out),{recursive:true});
  fs.writeFileSync(out,JSON.stringify({stage:'6.21',mode:o.mode,source:result.source,settings:o.native,
@@ -132,4 +168,4 @@ function main(argv=process.argv.slice(2)){
  return result;
 }
 if(require.main===module){try{main();}catch(e){console.error('STAGE621_ERROR',e.stack||e);process.exitCode=1;}}
-module.exports={parse,summary,accountDigest,main,candidateSource,LIVE_SOURCE,ORIGINAL_ATTACK,EARLY_ATTACK};
+module.exports={parse,summary,accountDigest,main,candidateSource,bossCandidateSource,combinedSource,LIVE_SOURCE,ORIGINAL_ATTACK,EARLY_ATTACK};
