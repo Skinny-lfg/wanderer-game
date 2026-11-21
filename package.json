@@ -109,7 +109,10 @@
     "test:v013:stage615": "node --test tests/v013-stage615-enemy-hierarchy.test.cjs",
     "audit:v013:stage615:plan": "node scripts/v013-stage615-enemy-hierarchy.cjs --mode=plan --seeds-per-cell=8 --out=reports/v013-stage615-hierarchy-plan.json",
     "audit:v013:stage615:pilot": "node scripts/v013-stage615-enemy-hierarchy.cjs --mode=pilot --seeds-per-cell=2 --out=reports/v013-stage615-hierarchy-pilot.json",
-    "audit:v013:stage615:matrix": "node scripts/v013-stage615-enemy-hierarchy.cjs --mode=matrix --seeds-per-cell=8 --out=reports/v013-stage615-hierarchy-matrix.json"
+    "audit:v013:stage615:matrix": "node scripts/v013-stage615-enemy-hierarchy.cjs --mode=matrix --seeds-per-cell=8 --out=reports/v013-stage615-hierarchy-matrix.json",
+    "test:v013:stage616": "node --test tests/v013-stage616-encounter-types.test.cjs",
+    "audit:v013:stage616:pilot": "node scripts/v013-stage616-encounter-types.cjs --mode=pilot --seeds-per-cell=2 --out=reports/v013-stage616-encounter-pilot.json",
+    "audit:v013:stage616:matrix": "node scripts/v013-stage616-encounter-types.cjs --mode=matrix --seeds-per-cell=8 --out=reports/v013-stage616-encounter-matrix.json"
   },
   "dependencies": {
     "firebase": "11.10.0"

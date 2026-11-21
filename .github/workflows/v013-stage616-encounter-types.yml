@@ -1,0 +1,76 @@
+name: Wanderer Stage 6.16 — Real enemy types and solo/dual/triple/swarm groups (NO DEPLOY)
+on:
+  push:
+    branches:
+      - audit/v013-stage616-enemy-granular-20261121
+    paths:
+      - '.github/workflows/v013-stage616-encounter-types.yml'
+      - 'scripts/v013-stage616-encounter-types.cjs'
+      - 'tests/v013-stage616-encounter-types.test.cjs'
+      - 'package.json'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pilot-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: Syntax, Stage 6.16 tests, previous hierarchy and native unit regressions
+        run: |
+          node --check scripts/v013-stage616-encounter-types.cjs
+          node --check tests/v013-stage616-encounter-types.test.cjs
+          npm run test:v013:stage616
+          npm run test:v013:stage615
+          npm run test:v013:stage614:retest
+          npm run test:v013:stage614
+          npm run test:v013:stage613
+          npm run test:v013:stage612
+          npm run test:v013:stage611
+          npm run test:v013:stage610
+          git diff --check
+      - name: 96 actual native 10-way matched player scenarios = 960 combats
+        run: npm run audit:v013:stage616:pilot
+      - name: Save pilot real native battle evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage616-pilot-96-matched-ten-way-native-encounters
+          path: |
+            reports/v013-stage616-encounter-pilot.json
+            reports/v013-stage616-encounter-pilot.md
+          retention-days: 30
+          if-no-files-found: warn
+  full-matrix:
+    needs: pilot-validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: 384 native 10-way matched scenarios = 3840 combats, eight swarm sizes + Elite + Boss
+        run: npm run audit:v013:stage616:matrix
+      - name: Save full per-mob-name, per-role, per-group, per-Elite, per-Boss, per-E evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage616-full-3840-native-group-elite-boss-fights
+          path: |
+            reports/v013-stage616-encounter-matrix.json
+            reports/v013-stage616-encounter-matrix.md
+          retention-days: 30
+          if-no-files-found: warn
