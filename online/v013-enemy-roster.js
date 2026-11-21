@@ -68,7 +68,7 @@ function plan({seed,realm,family,node=0,count,catalog}){
   // Stage 6.18: first two principal roles differ, later roles can repeat
   // according to the Realm's identity (e.g. Aegis Tanks, Magic Casters).
   // Small groups retain their Stage 8.0 exact historical selection.
-  const role=chooseWeighted(weights,normalCount>=3&&count>=5&&used.length>=2?[]:used);
+  const role=chooseWeighted(weights,random,normalCount>=3&&count>=5&&used.length>=2?[]:used);
   roles[index]=role;used.push(role);
  }
  return roles.map(role=>{
