@@ -38,11 +38,15 @@ function pressure(history=[]){
  return {deaths,fights:fights.length,hardFights,hurt,
   needsSurvival:deaths>=1||hardFights>=2||fights.length>=3&&hurt/fights.length>=.45};
 }
-function activeFamilies(plan,earned,history=[]){
+function activeFamilies(plan,earned,history=[],progress=null){
  const wanted=[plan.primary],p=pressure(history);
  if(plan.secondary&&earned>=(plan.secondAt||12))wanted.push(plan.secondary);
+ // Once a genuinely earned third Affinity is unlocked, keep that investment
+ // eligible even when a later Expedition went better. Only an explicit,
+ // validated strategic reset may deliberately unlearn it.
+ const thirdAlreadyOwned=!!(plan.third&&progress?.nodes?.includes('affinity_'+plan.third));
  if(plan.third&&earned>=(plan.thirdAt||28)&&
-  (plan.model==='three'||plan.model==='adaptive'&&p.needsSurvival))wanted.push(plan.third);
+  (plan.model==='three'||plan.model==='adaptive'&&(p.needsSurvival||thirdAlreadyOwned)))wanted.push(plan.third);
  return {families:wanted,pressure:p};
 }
 const bases=nodes=>new Map(nodes.map(n=>[n.id,n]));
@@ -246,7 +250,7 @@ function fill(T,progress,plan,active,earned,milestone){
 function propose(T,progress,preset,history=[],resets=0){
  if(!T.valid(progress))throw Error('Agent received invalid genuine Talent state');
  const plan=typeof preset==='string'?getPlan(preset):preset;
- const earned=T.earned(progress),stage=activeFamilies(plan,earned,history);
+ const earned=T.earned(progress),stage=activeFamilies(plan,earned,history,progress);
  const milestone=candidateMilestone(T,progress,plan,stage.families,earned);
  let original=fill(T,progress,plan,stage.families,earned,milestone);
  let resetReason=null;

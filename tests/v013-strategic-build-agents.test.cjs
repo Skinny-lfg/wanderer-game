@@ -69,6 +69,18 @@ test('Third Affinity is conditional on actual recorded combat pressure, not auto
  const strict=PLANNER.propose(T,level,'blood-fury',history);
  assert.deepEqual(strict.allowed,['blood','fury']);
 });
+test('Adaptive third Affinity stays owned after short-term survival recovers',()=>{
+ const a=newAccount(),T=a.talents,initial=earned(a,33);
+ const injury=[{status:'defeat',rooms:[{hpMax:100,hpStart:100,hpEnd:0,minHpPct:0,damageTaken:100,died:true}]}];
+ const injured=PLANNER.propose(T,initial,'blood-fury-vitality',injury);
+ assert(injured.expectedNodes.includes('affinity_vitality'));
+ const owned={...initial,nodes:injured.expectedNodes};
+ assert(T.valid(owned));
+ const recovered=PLANNER.propose(T,owned,'blood-fury-vitality',[]);
+ assert(recovered.allowed.includes('vitality'));
+ assert(recovered.expectedNodes.includes('affinity_vitality'));
+ assert.equal(recovered.resetReason,null);
+});
 test('Magic agent chooses an actual available elemental mode through the real v15 API',()=>{
  const a=newAccount(),T=a.talents;let x=earned(a,22);
  const offer=PLANNER.propose(T,x,'magic-fire-aegis');
