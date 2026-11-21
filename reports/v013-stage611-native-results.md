@@ -47,3 +47,13 @@ Do not use the 5/27 Boss-win ratio as a globally representative win probability.
 5. Add genuine reachable E5–E10 native histories or mark late-game build, potion, respec and boss combinations as **not observed**.
 
 **No gameplay balance changes, forced loot/unlocks, legacy save repairs, Firebase changes or production release.**
+
+## Integration checkpoint — Stage 6.11 merged
+
+- Successfully merged via https://github.com/Skinny-lfg/wanderer-game/pull/107
+- Merge commit: 536603fe180cd77b7ee3def9d51caaf362ba947d
+- The merge commit tree SHA exactly matched the validated Stage 6.11 branch tree: acd940eaef9b07728d8cecfe4fe8ac2392bc4861
+- Source-validated GitHub Actions run: https://github.com/Skinny-lfg/wanderer-game/actions/runs/44887217170
+- Nine checked workflow suites on the same code source passed, including Stage 6.11 tests, E1–E5 native account evidence, browser QA, integration, historic regression audit and Stage 9.8 deep balance campaign.
+- Source code is kept on the existing audit/v013-stage6 branch. Production main remained at 7cd2a91f03844fe6586f84f11fa45723dd9a6001; no deploy or user save operation was performed.
+- Future work must read the latest audit/v013-stage6 HEAD and preserve this checkpoint.
