@@ -37,7 +37,7 @@ test('Stage 6.18 retains solo/dual/triple/four pre-existing native roles and sta
  for(const count of [1,2,3,4]){
   for(const role of updated.ROLES){
    const enemy={role},scale={hp:.5,atk:.4};
-   assert.deepEqual(updated.scaleFor(enemy,count,scale),original.scaleFor(enemy,count,scale));
+   assert.equal(JSON.stringify(updated.scaleFor(enemy,count,scale)),JSON.stringify(original.scaleFor(enemy,count,scale)));
   }
  }
 });
@@ -58,7 +58,7 @@ test('Stage 6.18 uses smooth principal stats only for six-plus mobs',()=>{
  const p={role:'tank'},m={role:'minion'},scale={hp:.2,atk:.16};
  const old6=original.scaleFor(p,6,scale),new6=updated.scaleFor(p,6,scale);
  assert(new6.hp>old6.hp&&new6.atk>old6.atk);
- assert.deepEqual(updated.scaleFor(m,6,scale),original.scaleFor(m,6,scale));
+ assert.equal(JSON.stringify(updated.scaleFor(m,6,scale)),JSON.stringify(original.scaleFor(m,6,scale)));
  for(const count of [6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22]){
   const x=updated.scaleFor(p,count,scale);
   assert(x.hp>.0&&x.atk>.0&&x.def>.0);
