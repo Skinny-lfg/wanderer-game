@@ -1,6 +1,29 @@
 // Wanderer v0.13 Stage 8.2 — three Elite abilities, based on combat seconds.
 // No combat RNG is consumed; existing Elite mechanics remain unchanged.
 (function(root){'use strict';
+// Stage 6.19: eight separate growth curves with an early (E6–E35) and
+// late (E36–E70) stage. Every Elite at E1–E5 is EXACTLY unchanged.
+// Extra late growth prevents Elites becoming harmless while gear progresses.
+const ELITE_SCALING=Object.freeze({
+ tank:Object.freeze({hp:.42,atk:.18,def:.08,lateHp:.16,lateAtk:.06,lateDef:.02}),
+ berserker:Object.freeze({hp:.38,atk:.17,def:.04,lateHp:.22,lateAtk:.11,lateDef:.02}),
+ vampire:Object.freeze({hp:.20,atk:.10,def:.02,lateHp:.28,lateAtk:.14,lateDef:.03}),
+ caster:Object.freeze({hp:.52,atk:.22,def:.08,lateHp:.18,lateAtk:.10,lateDef:.03}),
+ gravecaller:Object.freeze({hp:.35,atk:.15,def:.05,lateHp:.34,lateAtk:.22,lateDef:.04}),
+ oathbound_exarch:Object.freeze({hp:.62,atk:.27,def:.12,lateHp:.35,lateAtk:.18,lateDef:.06}),
+ briarspine_horror:Object.freeze({hp:.73,atk:.30,def:.10,lateHp:.50,lateAtk:.20,lateDef:.06}),
+ ashen_executioner:Object.freeze({hp:.55,atk:.23,def:.08,lateHp:.25,lateAtk:.14,lateDef:.03})
+});
+function scalingFor(type,level){
+ if(!Object.hasOwn(ELITE_SCALING,type)||!Number.isFinite(level)||level<1)
+  throw Error('Invalid Stage 6.19 Elite/Expedition scaling request');
+ const early=Math.max(0,Math.min(1,(level-5)/30));
+ const late=Math.max(0,Math.min(1,(level-35)/35));
+ const gain=ELITE_SCALING[type];
+ return {hp:1+gain.hp*early+gain.lateHp*late,
+  atk:1+gain.atk*early+gain.lateAtk*late,
+  def:1+gain.def*early+gain.lateDef*late};
+}
 const BOUND_SOUL_VARIANTS=Object.freeze([
  Object.freeze({name:'Wailing Soul',image:'assets/mobs/gravecaller/gravecaller_wailing_soul.png'}),
  Object.freeze({name:'Hollow Soul',image:'assets/mobs/gravecaller/gravecaller_hollow_soul.png'}),
@@ -167,7 +190,7 @@ function status(enemy,now){
  return null;
 }
 function info(enemy){const s=DEFINITIONS[enemy?.eliteType];return s?{name:s.role,icon:s.icon,description:s.description}:null;}
-const API=Object.freeze({DEFINITIONS,DEATHBOUND,boundSoulVariant,boundSoulArchetype,thornbloomDamage,attach,tick,interrupt,consumeStrike,status,info,livingSummons,applyDeathbound,tickDeathbound,deathboundStatus});
+const API=Object.freeze({ELITE_SCALING,scalingFor,DEFINITIONS,DEATHBOUND,boundSoulVariant,boundSoulArchetype,thornbloomDamage,attach,tick,interrupt,consumeStrike,status,info,livingSummons,applyDeathbound,tickDeathbound,deathboundStatus});
 root.WandererV013EliteAbilities=API;
 if(typeof module==='object'&&module.exports)module.exports=API;
 })(globalThis);
