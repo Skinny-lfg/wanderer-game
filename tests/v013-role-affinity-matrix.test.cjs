@@ -62,7 +62,10 @@ test('all seven weapon archetypes work with native talents and optional runes',(
    '--affinities=blood','--group-sizes=4','--role-effects=baseline',
    '--points='+points,'--runes='+runes,'--rarity='+rarity,'--tick-limit=900']);
   const result=S.simulate(o);
-  assert.equal(result.rows.length,7,label);
+  // Seven distinct weapon families are exercised by eight current native
+  // simulation archetypes (two different Staff talent paths).
+  assert.equal(result.rows.length,S.BUILDS.length,label);
+  assert.equal(new Set(result.rows.map(row=>S.BUILDS.find(b=>b.id===row.build)?.weapon)).size,7,label+' weapon families');
   assert.equal(result.summary.errors,0,label+': '+JSON.stringify(result.rows.filter(r=>r.error)));
   for(const row of result.rows){
    assert.equal(row.runes,runes);
