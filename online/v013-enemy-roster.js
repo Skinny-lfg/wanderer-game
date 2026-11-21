@@ -51,13 +51,26 @@ function plan({seed,realm,family,node=0,count,catalog}){
     !Number.isInteger(node)||node<0||!Number.isInteger(count)||count<1||count>22||
     !Array.isArray(catalog)||ROLES.some(role=>!catalog.some(m=>m.role===role)))throw Error('Invalid Stage 8.0 encounter roster');
  const random=F.rng(seed,'stage8_roster_'+realm+'_'+node+'_'+count);
+ // Stage 6.18: keep principal roles in the first four visible slots while
+ // swarms remain Minion-heavy; avoid the abrupt drop to ~1 principal at 6.
  const normalCount=count===1?1:count<=4?count-(count===4&&random()<.5?2:1):
-   count>=18?2+(random()<.30?1:0):1+(random()<(count>=12?.30:.25)?1:0);
+   count===5?2+(random()<.5?1:0):
+   count===6?2+(random()<.6?1:0):
+   count<=8?3:
+   count<=12?3+(random()<.25?1:0):
+   count<=17?3+(random()<.35?1:0):
+   3+(random()<.5?1:0);
  const roles=Array(count).fill('minion'),positions=Array.from({length:Math.min(count,4)},(_,i)=>i);
  for(let i=positions.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[positions[i],positions[j]]=[positions[j],positions[i]];}
  const selected=positions.slice(0,normalCount);
  const weights=FAMILY_WEIGHTS[family],used=[];
- for(const index of selected){const role=chooseWeighted(weights,random,used);roles[index]=role;used.push(role);}
+ for(const index of selected){
+  // Stage 6.18: first two principal roles differ, later roles can repeat
+  // according to the Realm's identity (e.g. Aegis Tanks, Magic Casters).
+  // Small groups retain their Stage 8.0 exact historical selection.
+  const role=chooseWeighted(weights,random,normalCount>=3&&count>=5&&used.length>=2?[]:used);
+  roles[index]=role;used.push(role);
+ }
  return roles.map(role=>{
   const candidates=catalog.filter(m=>m.role===role),chosen=candidates[Math.floor(random()*candidates.length)];
   return {name:chosen.name,image:chosen.image,role};
@@ -80,7 +93,15 @@ function scaleFor(enemy,count,base){
  const baseHp=base.hp,baseAtk=base.atk;
  if(count>=6){
   if(role==='minion')return {hp:baseHp*.95,atk:baseAtk*.92,def:count<=12?.25:.18};
-  return {hp:Math.min(.38,baseHp*1.85),atk:Math.min(.32,baseAtk*1.55),def:.66};
+  // Stage 6.18: explicit principal-role scales restore some real threat
+  // without copying full small-room stats onto 6+ foes. Gradually taper
+  // through larger swarms; never buff Minions, Elites or Bosses here.
+  const t=Math.max(0,Math.min(1,(count-6)/6));
+  const u=Math.max(0,Math.min(1,(count-12)/8));
+  const between=(a,b,f)=>a+(b-a)*f;
+  return count<=12?
+   {hp:between(.53,.40,t),atk:between(.45,.34,t),def:between(.70,.64,t)}:
+   {hp:between(.40,.29,u),atk:between(.34,.25,u),def:between(.64,.60,u)};
  }
  if(role==='minion')return {hp:baseHp*.95,atk:baseAtk*.90,def:.35};
  return {hp:Math.max(.57,baseHp*1.35),atk:Math.max(.50,baseAtk*1.35),def:.72};

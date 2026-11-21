@@ -1,0 +1,80 @@
+name: Wanderer Stage 6.18 — Live native mob balance (NO DEPLOY)
+on:
+  push:
+    branches:
+      - audit/v013-stage618-mob-balance-20261121
+    paths:
+      - '.github/workflows/v013-stage618-mob-balance.yml'
+      - 'online/v013-enemy-roster.js'
+      - 'scripts/v013-stage617-roster-ablation.cjs'
+      - 'scripts/v013-stage618-mob-implementation.cjs'
+      - 'tests/v013-stage80-enemy-roster.test.cjs'
+      - 'tests/v013-stage618-mob-implementation.test.cjs'
+      - 'reports/v013-stage618-mob-design.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pilot-and-regressions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: Native syntax, roster, Elite/Boss and historical baseline tests
+        run: |
+          node --check online/v013-enemy-roster.js
+          node --check scripts/v013-stage617-roster-ablation.cjs
+          node --check scripts/v013-stage618-mob-implementation.cjs
+          node --check tests/v013-stage618-mob-implementation.test.cjs
+          node --test tests/v013-stage80-enemy-roster.test.cjs tests/v013-stage617-roster-ablation.test.cjs tests/v013-stage618-mob-implementation.test.cjs
+          node --test tests/v013-stage81-enemy-abilities.test.cjs tests/v013-stage82-elite-abilities.test.cjs tests/v013-stage84-six-bosses.test.cjs
+          npm run test:v013:integration
+          git diff --check
+      - name: 48 matched hero sets × 5 group sizes × 2 roster versions = 480 real native fights
+        run: node scripts/v013-stage618-mob-implementation.cjs --mode=pilot --seeds-per-cell=1 --out=reports/v013-stage618-implementation-pilot.json
+      - name: Save pilot proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage618-pilot-480-native-before-after-fights
+          path: |
+            reports/v013-stage618-implementation-pilot.json
+            reports/v013-stage618-implementation-pilot.md
+          retention-days: 30
+          if-no-files-found: warn
+  full-and-natural:
+    needs: pilot-and-regressions
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: 96 matched hero sets × 5 group sizes × 2 roster versions = 960 real native fights
+        run: node scripts/v013-stage618-mob-implementation.cjs --mode=matrix --seeds-per-cell=2 --out=reports/v013-stage618-implementation-matrix.json
+      - name: Small real E1–E2 account progression smoke with earned loot and talents
+        run: node scripts/v013-stage611-legal-adaptive.cjs --mode=campaign --sample-budget=4 --max-level=2 --max-attempts=2 --max-total-attempts=3 --out=reports/v013-stage618-natural-e1-e2.json
+      - name: Save native and earned-account evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage618-full-960-native-mobs-and-earned-e1-e2
+          path: |
+            reports/v013-stage618-implementation-matrix.json
+            reports/v013-stage618-implementation-matrix.md
+            reports/v013-stage618-natural-e1-e2.json
+            reports/v013-stage618-natural-e1-e2.md
+          retention-days: 30
+          if-no-files-found: warn

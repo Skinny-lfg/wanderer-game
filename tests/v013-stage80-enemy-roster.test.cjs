@@ -45,13 +45,17 @@ test('Stage 8.0 small rooms contain one or two Minions, remaining normal classes
  for(const realm of Object.keys(families))for(let seed=0;seed<12;seed++)
   assert.notEqual(plan(realm,1,seed)[0].role,'minion','solo opponent stays a real normal creature');
 });
-test('Stage 8.0 12 and 18–22 swarms are mostly Minions with one to three dangerous normal enemies',()=>{
- for(const realm of Object.keys(families))for(const count of [8,12,18,20,22])for(let seed=8200;seed<8240;seed++){
+test('Stage 6.18 large groups taper principal roles smoothly and remain Minion-heavy',()=>{
+ for(const realm of Object.keys(families))for(const count of [5,6,8,12,18,20,22])for(let seed=8200;seed<8240;seed++){
   const group=plan(realm,count,seed),normal=group.map((x,i)=>({role:x.role,index:i})).filter(x=>x.role!=='minion');
-  assert(normal.length>0);
-  assert(count>=18?normal.length>=2&&normal.length<=3:normal.length>=1&&normal.length<=2);
-  assert(normal.every(x=>x.index<4),'strongest regular enemies must be visible in initial four slots');
-  assert(group.filter(x=>x.role==='minion').length>=count-3,'swarm must be mostly Minions');
+  const min=group.filter(x=>x.role==='minion').length;
+  assert.equal(group.length,count);
+  assert(count<=6?normal.length>=2&&normal.length<=3:
+   count===8?normal.length===3:normal.length>=3&&normal.length<=4,
+   realm+'/'+count+'/'+seed+' principal-role count drift');
+  assert(normal.every(x=>x.index<4),'principal enemies remain visible in the first four arena slots');
+  assert.equal(min,count-normal.length);
+  assert(count<=6||min>=count-4,'large swarms remain mostly Minions');
  }
 });
 test('Stage 8.0 seeded enemy selection is stable across reloads, order and independent RNG calls',()=>{
@@ -87,6 +91,18 @@ test('Stage 8.0 normal mobs retain real health, damage and defense while Minions
  assert.deepEqual(spawned.slice(0,4).map(m=>m.groupSlot),[0,1,2,3]);
  const legacy=Core.createEnemyGroup(()=>({hp:100,maxhp:100,atk:40,def:30,baseDef:30,attackEvery:2}),3);
  assert.equal(legacy[0].maxhp,50,'legacy unspecified role groups retain old scaling');
+});
+test('Stage 6.18 principal stat curve is smooth and preserves weaker Minions',()=>{
+ const regular={role:'tank'},minion={role:'minion'};
+ const at=n=>R.scaleFor(regular,n,{hp:(1.65+.045*(n-6))/n,atk:n>=18?.12:.16});
+ for(const n of [6,8,12,20,22]){
+  const x=at(n),m=R.scaleFor(minion,n,{hp:(1.65+.045*(n-6))/n,atk:n>=18?.12:.16});
+  assert(x.hp>m.hp&&x.atk>m.atk&&x.def>m.def);
+  assert(x.hp>0&&x.atk>0&&x.def>0);
+ }
+ assert(at(6).hp>at(8).hp&&at(8).hp>at(12).hp&&at(12).hp>at(20).hp);
+ assert(at(6).atk>at(8).atk&&at(8).atk>at(12).atk&&at(12).atk>at(20).atk);
+ assert.deepEqual(R.scaleFor(regular,1,{hp:1,atk:1}),null);
 });
 test('Stage 8.0 base UI uses visible class icons beside both group and solo health bars',()=>{
  assert(source.includes('enemyRoleBadge(enemy)'));
