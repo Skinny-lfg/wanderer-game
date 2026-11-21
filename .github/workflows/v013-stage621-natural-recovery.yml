@@ -34,6 +34,10 @@ jobs:
         run: node scripts/v013-stage621-natural-recovery.cjs --mode=baseline --out=reports/v013-stage621-baseline.json --seeds=9701,9702 --profiles=cautious,balanced,magic-fire --max-level=3 --max-attempts=8 --max-total-attempts=16
       - name: Identical initial accounts, alternative normal E1/E2 attack curve only (still genuine native)
         run: node scripts/v013-stage621-natural-recovery.cjs --mode=candidate --out=reports/v013-stage621-candidate.json --seeds=9701,9702 --profiles=cautious,balanced,magic-fire --max-level=3 --max-attempts=8 --max-total-attempts=16
+      - name: Same earned accounts with individual low-E Boss HP and attack counterfactual only
+        run: node scripts/v013-stage621-natural-recovery.cjs --mode=boss-only --out=reports/v013-stage621-boss-only.json --seeds=9701,9702 --profiles=cautious,balanced,magic-fire --max-level=3 --max-attempts=8 --max-total-attempts=16
+      - name: Same earned accounts with early normal-role and individual Boss counterfactual together
+        run: node scripts/v013-stage621-natural-recovery.cjs --mode=combined --out=reports/v013-stage621-combined.json --seeds=9701,9702 --profiles=cautious,balanced,magic-fire --max-level=3 --max-attempts=8 --max-total-attempts=16
       - name: Save genuine account evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -44,5 +48,9 @@ jobs:
             reports/v013-stage621-baseline.md
             reports/v013-stage621-candidate.json
             reports/v013-stage621-candidate.md
+            reports/v013-stage621-boss-only.json
+            reports/v013-stage621-boss-only.md
+            reports/v013-stage621-combined.json
+            reports/v013-stage621-combined.md
           if-no-files-found: warn
           retention-days: 30
