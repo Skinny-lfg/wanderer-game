@@ -100,8 +100,8 @@ function scaleFor(enemy,count,base){
   const u=Math.max(0,Math.min(1,(count-12)/8));
   const between=(a,b,f)=>a+(b-a)*f;
   return count<=12?
-   {hp:between(.47,.34,t),atk:between(.38,.28,t),def:between(.70,.64,t)}:
-   {hp:between(.34,.23,u),atk:between(.28,.20,u),def:between(.64,.60,u)};
+   {hp:between(.53,.40,t),atk:between(.45,.34,t),def:between(.70,.64,t)}:
+   {hp:between(.40,.29,u),atk:between(.34,.25,u),def:between(.64,.60,u)};
  }
  if(role==='minion')return {hp:baseHp*.95,atk:baseAtk*.90,def:.35};
  return {hp:Math.max(.57,baseHp*1.35),atk:Math.max(.50,baseAtk*1.35),def:.72};
