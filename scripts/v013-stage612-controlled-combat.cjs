@@ -167,7 +167,7 @@ function chooseScenarios(pool,limit){
   for(const p of pairs(winner))coveredPair.add(p);
  }
  for(const row of selected)
-  for(const [k,v]of Object.entries(axes(row)) (covered[k]??=new Set()).add(v);
+  for(const [k,v] of Object.entries(axes(row))) (covered[k]??=new Set()).add(v);
  return {poolSize:pool.length,selected,
   plannedCoverage:Object.fromEntries(Object.entries(covered).map(([k,v])=>[k,[...v].sort()])),
   selectedArchetypes:unique(selected.map(x=>x.key)).length,
