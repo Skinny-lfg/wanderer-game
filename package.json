@@ -93,7 +93,11 @@
     "test:v013:stage612": "node --test tests/v013-stage612-controlled-combat.test.cjs",
     "audit:v013:stage612:pilot": "node scripts/v013-stage612-controlled-combat.cjs --mode=pilot --limit=18 --out=reports/v013-stage612-pilot.json",
     "audit:v013:stage612:matrix": "node scripts/v013-stage612-controlled-combat.cjs --mode=matrix --limit=144 --out=reports/v013-stage612-matrix.json",
-    "audit:v013:stage612:pairs": "node scripts/v013-stage612-controlled-combat.cjs --mode=pairs --limit=48 --paired=10 --out=reports/v013-stage612-pairs.json"
+    "audit:v013:stage612:pairs": "node scripts/v013-stage612-controlled-combat.cjs --mode=pairs --limit=48 --paired=10 --out=reports/v013-stage612-pairs.json",
+    "test:v013:stage613": "node --test tests/v013-stage613-matched-talents.test.cjs",
+    "audit:v013:stage613:pilot": "node scripts/v013-stage613-matched-talents.cjs --mode=pilot --pairs=12 --out=reports/v013-stage613-pilot.json",
+    "audit:v013:stage613:matrix": "node scripts/v013-stage613-matched-talents.cjs --mode=matrix --pairs=72 --out=reports/v013-stage613-matrix.json",
+    "audit:v013:stage613:plan": "node scripts/v013-stage613-matched-talents.cjs --mode=plan --pairs=72 --out=reports/v013-stage613-plan.json"
   },
   "dependencies": {
     "firebase": "11.10.0"
