@@ -90,3 +90,13 @@ Run from the repository root:
 The final GitHub Actions workflow passed dedicated **9/9 Stage 6.14** tests, prior **10/10 Stage 6.13**, **10/10 Stage 6.12**, **8/8 Stage 6.11**, and **6/6 Stage 6.10** tests, plus native pilot and final 288-fight matrix. The complete final JSON and generated per-node Markdown are preserved in workflow artifact `stage614-24-nodes-144-pairs-288-native-fights`.
 
 **No live gameplay balance edit, no guaranteed loot, no production deploy, no save migration, no Firebase changes.**
+
+## Final merged development checkpoint
+
+- Scoped PR #110: https://github.com/Skinny-lfg/wanderer-game/pull/110
+- Merged commit: `0745d43493723d608f104aa5baa82a5c51eb0e87`
+- **Exact tree identity** between tested PR and merger: both tree SHA `58d34591c36c050125e94357965b01e96046c3c0`. Approved v0.13 art and all prior Stage 6.11–6.13 features remain preserved.
+- Passed final balanced Stage 6.14 CI: https://github.com/Skinny-lfg/wanderer-game/actions/runs/44896840431 — 9/9 Stage 6.14, 10/10 Stage 6.13, 10/10 Stage 6.12, 8/8 Stage 6.11, 6/6 Stage 6.10, the 18-pair pilot and 144-pair native matrix.
+- At time of merge the checked Stage 9.7, Stage 5, Stage 4.5.5, Stage 4.5.6, Gravecaller, integration and browser workflows were green; optional Stage 9.8 deep campaign remained in progress and is **not** claimed as passed.
+- Production `main` SHA `7cd2a91f03844fe6586f84f11fa45723dd9a6001` was unaffected. No live deploy, balance update, save change or Firebase operation.
+- This integration note and AGENTS.md header are documentation-only changes following the already tested commit tree.
