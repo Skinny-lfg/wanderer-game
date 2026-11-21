@@ -39,6 +39,14 @@ function historicalBaseline(source){
  const scaleEnd=restored.indexOf(" if(role==='minion')return {hp:baseHp*.95,atk:baseAtk*.90,def:.35};",scaleStart);
  if(scaleStart<0||scaleEnd<=scaleStart)throw Error('Missing Stage 6.18 scaling markers');
  restored=restored.slice(0,scaleStart)+' '+STAGE617_SCALING+'\n'+restored.slice(scaleEnd);
+ // Undo the Stage 6.18 affinity-weighted third/fourth role selection as well;
+ // historical cohorts must reproduce the byte-identical original game roster.
+ const chooserStart=restored.indexOf(' for(const index of selected){\n  // Stage 6.18: first two principal roles differ');
+ const chooserEnd=restored.indexOf(' return roles.map(role=>{',chooserStart);
+ if(chooserStart<0||chooserEnd<=chooserStart)throw Error('Missing Stage 6.18 weighted-role markers');
+ restored=restored.slice(0,chooserStart)+
+  ' for(const index of selected){const role=chooseWeighted(weights,random,used);roles[index]=role;used.push(role);}\n'+
+  restored.slice(chooserEnd);
  if(!restored.includes(ROLE_RULE)||!restored.includes(STAGE617_SCALING))throw Error('Stage 6.17 baseline reconstruction failed');
  return restored;
 }
