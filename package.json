@@ -97,7 +97,11 @@
     "test:v013:stage613": "node --test tests/v013-stage613-matched-talents.test.cjs",
     "audit:v013:stage613:pilot": "node scripts/v013-stage613-matched-talents.cjs --mode=pilot --pairs=12 --out=reports/v013-stage613-pilot.json",
     "audit:v013:stage613:matrix": "node scripts/v013-stage613-matched-talents.cjs --mode=matrix --pairs=72 --out=reports/v013-stage613-matrix.json",
-    "audit:v013:stage613:plan": "node scripts/v013-stage613-matched-talents.cjs --mode=plan --pairs=72 --out=reports/v013-stage613-plan.json"
+    "audit:v013:stage613:plan": "node scripts/v013-stage613-matched-talents.cjs --mode=plan --pairs=72 --out=reports/v013-stage613-plan.json",
+    "test:v013:stage614": "node --test tests/v013-stage614-single-node-ablation.test.cjs",
+    "audit:v013:stage614:pilot": "node scripts/v013-stage614-single-node-ablation.cjs --mode=pilot --cases=6 --seeds-per-case=3 --out=reports/v013-stage614-pilot.json",
+    "audit:v013:stage614:matrix": "node scripts/v013-stage614-single-node-ablation.cjs --mode=matrix --cases=24 --seeds-per-case=6 --out=reports/v013-stage614-matrix.json",
+    "audit:v013:stage614:plan": "node scripts/v013-stage614-single-node-ablation.cjs --mode=plan --cases=24 --seeds-per-case=6 --out=reports/v013-stage614-plan.json"
   },
   "dependencies": {
     "firebase": "11.10.0"
