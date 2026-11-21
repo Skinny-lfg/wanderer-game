@@ -6,6 +6,18 @@ const N=require('../scripts/v013-natural-progression.cjs');
 const newAccount=(seed=9101)=>create(seed,undefined,{}, {skipPersistence:true,now:1720000000000+seed});
 const earned=(a,points)=>a.talents.award(a.state().automaticTalents,points*100);
 const p=(id)=>N.PROFILES['smart-'+id];
+test('The first acquired build skill is functional, not a cosmetic stat detour',()=>{
+ const a=newAccount(),T=a.talents;
+ for(const [family,skill] of Object.entries(PLANNER.OPENING_SKILLS)){
+  const id={blood:'blood-pure',fury:'fury-pure',magic:'magic-arcane-pure',
+   vitality:'vitality-pure',aegis:'aegis-vitality',decay:'decay-magic-aegis'}[family];
+  const x=PLANNER.propose(T,earned(a,4),id);
+  assert(x.expectedNodes.includes('affinity_'+family),family+JSON.stringify(x));
+  assert(x.expectedNodes.includes(skill),family+JSON.stringify(x));
+  assert(T.valid({...earned(a,4),nodes:x.expectedNodes,...(x.expectedElement!=='arcane'?{element:x.expectedElement}:{})}));
+ }
+});
+
 test('Twelve explicit agent strategies represent pure, duo, mixed and adaptive third-affinity investments',()=>{
  assert.equal(Object.keys(PLANNER.BUILDS).length,12);
  for(const [id,b] of Object.entries(PLANNER.BUILDS)){

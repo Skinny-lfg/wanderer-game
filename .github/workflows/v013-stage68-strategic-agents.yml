@@ -4,6 +4,9 @@ on:
     branches: [audit/v013-stage6]
     paths:
       - '.github/workflows/v013-stage68-strategic-agents.yml'
+      - 'scripts/v013-build-planner.cjs'
+      - 'scripts/v013-natural-progression.cjs'
+      - 'tests/v013-strategic-build-agents.test.cjs'
   workflow_dispatch:
 permissions:
   contents: read

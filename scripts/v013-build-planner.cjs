@@ -17,6 +17,8 @@ const BUILDS=Object.freeze({
  'aegis-vitality':{primary:'aegis',secondary:'vitality',secondAt:13,model:'two',mix:true,weapons:['Mace','Sword'],armor:'Plate',milestones:['steadfast_guard','sanctuary','guardians_oath','last_bastion'],focus:'defense'},
  'vitality-pure':{primary:'vitality',model:'pure',weapons:['Mace','Sword'],armor:'Plate',milestones:['living_recovery','overflowing_life','heart_of_the_wild'],focus:'defense'}
 });
+const OPENING_SKILLS=Object.freeze({blood:'bleeding_edge',fury:'quick_hands',
+ vitality:'strong_heart',aegis:'guarded_block',magic:'arcane_focus',decay:'toxic_touch'});
 function getPlan(id){if(!Object.hasOwn(BUILDS,id))throw Error('Unknown strategic agent build '+id);return BUILDS[id];}
 function pressure(history=[]){
  const recent=history.slice(-3),fights=recent.flatMap(t=>t.rooms||[]).filter(f=>f?.hpMax>0);
@@ -183,6 +185,17 @@ function fill(T,progress,plan,active,earned,milestone){
     p=next;purchases.push(id);
    }
   }
+  // First build a real functioning basic ability, not a detour of harmless
+  // +1 attributes toward an expensive late-game milestone. This also applies
+  // when a secondary/tertiary Affinity becomes affordable.
+  if(ownedSet(p).has('affinity_'+family)&&!ownedSet(p).has(OPENING_SKILLS[family])){
+   const route=routeTo(T,p,OPENING_SKILLS[family],plan,active);
+   if(route)for(const id of route){
+    if(p.nodes.length>=earned)break;
+    const next=T.allocate(p,id);if(!next)break;
+    p=next;purchases.push(id);
+   }
+  }
  }
  if(active.includes('magic')&&!ownedSet(p).has('element_choice'))add('element_choice');
  if(active.includes('magic')&&plan.element&&plan.element!=='arcane'&&
@@ -288,5 +301,5 @@ function potionPriority(kind,profile,base,context={}){
  if(kind==='trail'&&threat==='boss')score-=18;
  return score;
 }
-module.exports={BUILDS,getPlan,pressure,activeFamilies,routeTo,scoreNode,
+module.exports={BUILDS,OPENING_SKILLS,getPlan,pressure,activeFamilies,routeTo,scoreNode,
  canOwnMilestone,candidateMilestone,propose,evaluateGear,potionPriority};
