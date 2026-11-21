@@ -1,6 +1,26 @@
 // Wanderer v0.13 Stage 8.2 — three Elite abilities, based on combat seconds.
 // No combat RNG is consumed; existing Elite mechanics remain unchanged.
 (function(root){'use strict';
+// Stage 6.19: individual endgame Elite scaling only. Existing E1–E5
+// attributes and every ability remain unchanged; gains reach their cap at E35.
+// Explicit individual coefficients avoid a blanket Elite buff that hurts E5.
+const ELITE_SCALING=Object.freeze({
+ tank:Object.freeze({hp:.55,atk:.23,def:.10}),
+ berserker:Object.freeze({hp:.38,atk:.17,def:.04}),
+ vampire:Object.freeze({hp:.20,atk:.10,def:.02}),
+ caster:Object.freeze({hp:.52,atk:.22,def:.08}),
+ gravecaller:Object.freeze({hp:.16,atk:.10,def:.03}),
+ oathbound_exarch:Object.freeze({hp:.62,atk:.27,def:.12}),
+ briarspine_horror:Object.freeze({hp:.60,atk:.25,def:.08}),
+ ashen_executioner:Object.freeze({hp:.55,atk:.23,def:.08})
+});
+function scalingFor(type,level){
+ if(!Object.hasOwn(ELITE_SCALING,type)||!Number.isFinite(level)||level<1)
+  throw Error('Invalid Stage 6.19 Elite/Expedition scaling request');
+ const ramp=Math.max(0,Math.min(1,(level-5)/30));
+ const gain=ELITE_SCALING[type];
+ return {hp:1+gain.hp*ramp,atk:1+gain.atk*ramp,def:1+gain.def*ramp};
+}
 const BOUND_SOUL_VARIANTS=Object.freeze([
  Object.freeze({name:'Wailing Soul',image:'assets/mobs/gravecaller/gravecaller_wailing_soul.png'}),
  Object.freeze({name:'Hollow Soul',image:'assets/mobs/gravecaller/gravecaller_hollow_soul.png'}),
@@ -167,7 +187,7 @@ function status(enemy,now){
  return null;
 }
 function info(enemy){const s=DEFINITIONS[enemy?.eliteType];return s?{name:s.role,icon:s.icon,description:s.description}:null;}
-const API=Object.freeze({DEFINITIONS,DEATHBOUND,boundSoulVariant,boundSoulArchetype,thornbloomDamage,attach,tick,interrupt,consumeStrike,status,info,livingSummons,applyDeathbound,tickDeathbound,deathboundStatus});
+const API=Object.freeze({ELITE_SCALING,scalingFor,DEFINITIONS,DEATHBOUND,boundSoulVariant,boundSoulArchetype,thornbloomDamage,attach,tick,interrupt,consumeStrike,status,info,livingSummons,applyDeathbound,tickDeathbound,deathboundStatus});
 root.WandererV013EliteAbilities=API;
 if(typeof module==='object'&&module.exports)module.exports=API;
 })(globalThis);
