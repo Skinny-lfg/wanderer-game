@@ -100,3 +100,14 @@ test('A matched offhand pair holds other native rolls and real encounter streams
  assert(r.results[0].sameNonOffhandGear&&r.results[0].sameResolvedSeed);
  assert.notEqual(r.results[0].controls[0].offhand,r.results[0].controls[1].offhand);
 });
+
+test('Native two-handed controlled fixture accepts an explicitly empty offhand',()=>{
+ const a=all.find(x=>x.key==='profile:blood-pure');
+ const progress=M.buildTalent(a,12);
+ const build={id:'two-hand-no-offhand',weapon:'Two-Handed',families:['blood'],skills:[]};
+ const r=S.prepare(5,build,612101,{mode:'encounter',gear:'current',rarity:'Rare',
+  points:12,controlledTalents:progress.talents,runes:false,offhandType:null,armorType:'Leather'});
+ assert.equal(r.a.state().equip.weapon.subtype,'Two-Handed');
+ assert.equal(r.a.state().equip.offhand,null);
+ assert.equal(r.a.state().equip.armor.armorType,'Leather');
+});
