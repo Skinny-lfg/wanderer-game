@@ -110,3 +110,10 @@ Bosses were increasingly beatable at higher synthetic E: E5 0/96, E15 7/96, E35 
 - Pilot 96 matched ten-way sets / 960 native combats **is a subset** of full 384 sets / 3,840 native combats.
 - Raw full 47.3 MB native JSON, plus per-name/relevant class Markdown in the `stage616-full-3840-native-group-elite-boss-fights` GitHub Actions artifact.
 - No game code, individual enemy roster stats, Boss skills, Talent weights, saves, art, Firebase or production `main` were changed. All changes are diagnostic simulator, tests, CI and documentation only.
+
+## Canonical integration verification
+
+- Native full GitHub Actions run `44901448572` completed successfully.
+- PR #113 was merged into `audit/v013-stage6` at `a56e2a6976e5076953bc03bfcef278ad3c978cbc`.
+- Exact tested Git tree remained unchanged by integration: `cfacb94f862c1f13e2b54cdc276a296065091aa2` for both reviewed PR HEAD and merge tree.
+- This follow-up checkpoint changes only `AGENTS.md` and the Stage 6.16 result documentation, not source code or tests. Production `main` remained unchanged at verification.
