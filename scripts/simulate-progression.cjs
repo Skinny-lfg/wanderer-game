@@ -425,11 +425,13 @@ function encounter(level,build,seed,kind,opts,forcedTrait=undefined,forcedBossMo
   controlledTalentMode:opts.controlledTalents?(opts.controlledTalents.element||'arcane'):null,
   realm:card.name,affinity:card.family,risk:card.risk,nativeEncounter:kind,requestedGroupSize:count,groupSize:result.initialEnemies,unlocked:level,...result};
 }
-function bossPreparationEncounter(level,build,seed,opts,strategy){
+function bossPreparationEncounter(level,build,seed,opts,strategy,forcedFamily=undefined){
  if(!['baseline','marked_elite','reliquary','both'].includes(strategy))throw Error('Unknown boss preparation strategy');
  // Controlled matched-seed native boss in a first-ring room. The selected Realm Card
  // is Dangerous so the marked Elite removes one guard rather than lowering Attack.
- const {a,c,g,card,gearE,resolvedSeed,seedShift,allocatedPoints}=prepare(level,build,seed,opts,1);
+ // Stage 6.20: optionally select the actual native Realm of the registered Boss.
+ // Old callers without a forcedFamily continue to use the original behavior.
+ const {a,c,g,card,gearE,resolvedSeed,seedShift,allocatedPoints}=prepare(level,build,seed,opts,1,forcedFamily);
  const gearFingerprint=equipmentFingerprint(a),otherGearFingerprint=equipmentFingerprint(a,{excludeOffhand:true});
  const P4=globalThis.WandererV013BossPreparation;
  const state=g.dungeon.foundationState,manifest=g.dungeon.foundationManifest;
