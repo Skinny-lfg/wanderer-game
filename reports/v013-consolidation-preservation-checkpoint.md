@@ -25,3 +25,31 @@
 * Once PR #106 validations are reviewed, merge into audit/v013-stage6; use a single canonical integration line and stop proliferating long-lived stage branches.
 
 Reference: https://github.com/Skinny-lfg/wanderer-game/pull/106
+
+## Audit of the 31 open Pull Requests before consolidation
+
+Compared each PR's HEAD to the Stage 6.10 branch using GitHub's ahead/behind history, not the PR title alone.
+
+- **20 PR heads are ancestors** with 0 commits ahead of the integration line: #105, #104, #62, #61, #60, #55, #53, #52, #51, #50, #48, #47, #46, #45, #44, #43, #42, #41, #40, #39. Once #106 is integrated these can be closed as already incorporated, **without deleting their branches**.
+- **8 diverged v0.13 PRs remain for selective semantic review**: #90 (visual integration), #81, #80, #79, #78, #77 (earlier diagnosis/progression hierarchy), #54 (older equipment alternative), #49 (alternate browser audit). They must not be mass-merged over later Stage 6 work or closed without assessing unique contributions.
+- **1 non-v0.13 separate maintenance PR**: #34, based on development, not the Stage 6 integration line. Keep independent.
+- **1 canonical integration PR**: #106.
+- **1 long-running development-to-main PR**: #24; unrelated to v0.13 consolidation and not targeted.
+
+Some older divergent branches have historical commits now functionally replaced by current code or by the 28 reintroduced WebP images. Git ancestry alone does not prove they are redundant.
+
+## Regression evidence and fixes
+
+- GitHub Actions Stage 6.10: native catalogue/pairwise test suite, 28 portraits and docs byte identity, current Talent v15 smoke, and bounded native E1 benchmark.
+- Existing pre-consolidation integration suites had two red checks: Pages' expedition runtime differed from the newer source, and the Gear Power estimator cache tag in docs/index.html was stale. Both were repaired by syncing current source to docs and using the real current source SHA-256 prefix.
+- A third check became red during the intentional removal of the manual hero picker; the C8 UI inventory test was updated to require equipment-driven portraits instead. This update does not suppress unrelated UI checks.
+- Source gameplay modules are preserved. Pages runtime mirror uses the exact source blob SHA.
+- Do not mark the entire v0.13 release ready solely from these scoped green tests. Confirm complete native gates, browser QA and compare against previous baseline before shipping.
+
+## Rules going forward
+
+1. The canonical integration target is audit/v013-stage6; Stage 6.10 is merged only after reviewed tests.
+2. Stop creating separate long-lived Stage branches. Future work starts from the integrated HEAD; one active PR per independent change, merged or consciously deferred before the next stage.
+3. Use source/Pages parity and native saved-state/loot/runtime tests on every change; never copy an older full HTML/runtime file over newer mechanics.
+4. Never merge old PRs solely to tidy their state. Close verified ancestor PRs with an audit comment and retain branch and commit SHA.
+5. No production deploy, no main rewrite, no deletions or force-push.
