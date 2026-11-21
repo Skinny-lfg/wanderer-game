@@ -14,7 +14,7 @@ Invalid removal (required prerequisite/gate, wrongly truncated rank, mode requir
 
 - Extract native-valid hypothetical TalentGraph allocations from the existing 48 strategic/route archetypes at point budgets **12/24/36/60**.
 - Identify independent *legal terminal purchases* and deduplicate repeated identical Talent snapshots. Include native rank upgrades when they are legal, not only new abilities.
-- Choose **24 distinct targets**, varying original Affinities, skill types, rank changes and E-level budgets. Candidate count and actual selected coverage are obtained from the engine, not guessed.
+- Choose **24 distinct targets** with a strict 12 first-purchase nodes / 12 genuine rank-upgrade split, varying original Affinities, skill types and E-level budgets. This corrects an exploratory first selection that was heavily biased toward rank upgrades (22/24); that initial outcome sample is not the accepted final report. Candidate count and actual selected coverage are obtained from the engine, not guessed.
 - Replay each target with **six independently seeded scenarios**; inside each seed, **both arms** hold all non-Talent settings equal. Across seeds, native item rolls and opponent rosters can vary; do not incorrectly describe them as identical across the whole cohort.
 - Pilot: six target cases × three seeds = **18 actual pairs / 36 native fights**. Final selected matrix: 24 targets × six seeds = **144 actual pairs / 288 native fights**, contingent on CI.
 - Use native `S.encounter`, actual AI, stats and game item affix generator. Target selection is a fixed `focus` policy, unlike the Stage 6.13 adaptive strategy, to reduce player-agent policy changes when Talents differ.
