@@ -8,6 +8,21 @@ test('Exact eight real native group sizes plus Elite and Boss are distinct',()=>
   ['normal-1','normal-2','normal-3','normal-4','normal-6','normal-8','normal-12','normal-20','elite','boss']);
  assert.equal(new Set(E.KINDS).size,10);
 });
+test('Stage 6.16 report maps all eight native Elite IDs to in-game names only for display',()=>{
+ const expected={
+  tank:'Gravebound Bulwark',
+  berserker:'Bloodscar Ravager',
+  vampire:'Sanguine Wraith',
+  caster:'Voidborne Hexer',
+  gravecaller:'Gravecaller',
+  oathbound_exarch:'Oathbound Exarch',
+  briarspine_horror:'Briarspine Horror',
+  ashen_executioner:'Ashen Executioner'
+ };
+ assert.deepEqual(E.ELITE_DISPLAY_NAMES,expected);
+ for(const [id,name] of Object.entries(expected))assert.equal(E.eliteDisplayName(id),name);
+ assert.equal(E.eliteDisplayName('unknown-native-id'),'unknown-native-id');
+});
 test('Pilot subset and 8-seed matrix cover six Realms, four legal E budgets, two profiles, eight sizes',()=>{
  const pilot=E.plan(E.DEFAULTS);
  const full=E.plan({...E.DEFAULTS,seedsPerCell:8});
