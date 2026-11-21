@@ -64,17 +64,17 @@ The new audit observed **43 distinct native solo mob names** across Realms, with
 | **Oathbound Exarch** | 52/53 | **98.1%** | Very easy |
 | **Briarspine Horror** | 57/60 | **95.0%** | Very easy |
 | **Ashen Executioner** | 35/38 | **92.1%** | Very easy |
-| Berserker | 48/53 | **90.6%** | Easy |
-| Tank (generic role subtype) | 35/40 | **87.5%** | Easy |
-| Caster (generic role subtype) | 42/49 | **85.7%** | Easy |
+| **Bloodscar Ravager** | 48/53 | **90.6%** | Easy |
+| **Gravebound Bulwark** | 35/40 | **87.5%** | Easy |
+| **Voidborne Hexer** | 42/49 | **85.7%** | Easy |
 | Gravecaller | 34/43 | **79.1%** | Above provisional target |
-| Vampire | 35/48 | **72.9%** | Closest to goal |
+| **Sanguine Wraith** | 35/48 | **72.9%** | Closest to goal |
 
-Four `v013-elite-abilities.js` dedicated Elite ability types are **Gravecaller, Oathbound Exarch, Briarspine Horror and Ashen Executioner**. `tank` and `caster` are generic role subtype labels, not additional dedicated names/artwork. Berserker and Vampire are also native archetype labels whose behavior must be evaluated from real abilities, not assumed dedicated Stage 8.2 skills. The cohort uses natural seed-generated Elite type assignment; subtypes have different counts and possible Realm/level distribution imbalance.
+All eight rows correspond to distinct named Elites in the game. Earlier report labels `tank`, `caster`, `berserker`, and `vampire` were internal archetype IDs, not the in-game display names. The Stage 8.2 module defines additional abilities for Gravecaller, Oathbound Exarch, Briarspine Horror, and Ashen Executioner; the other four Elites have their own pre-existing combat mechanics. The cohort uses natural seed-generated Elite type assignment; subtypes have different counts and possible Realm/level distribution imbalance.
 
 ### Why global Elite buffs would be a mistake
 
-- **At E5 / 12 synthetic points**, Elites were beaten **61/96 (63.5%)**, already *within* the user's rough 60–70% target. E5 native subtype differences were stark: Briarspine Horror 11/13 (84.6%), Oathbound Exarch 13/14 (92.9%), whereas Gravecaller 7/15 (46.7%) and Berserker 5/10 (50%). This is an important early-E exception to pooled ease.
+- **At E5 / 12 synthetic points**, Elites were beaten **61/96 (63.5%)**, already *within* the user's rough 60–70% target. E5 native subtype differences were stark: Briarspine Horror 11/13 (84.6%), Oathbound Exarch 13/14 (92.9%), whereas Gravecaller 7/15 (46.7%) and Bloodscar Ravager 5/10 (50%). This is an important early-E exception to pooled ease.
 - **At E15 / 24 synthetic points**, Elites were beaten **89/96 (92.7%)**.
 - **At E35 / 36 points**, **93/96 (96.9%)**.
 - **At E70 / 60 points**, **95/96 (99.0%)**.
@@ -99,7 +99,7 @@ Bosses were increasingly beatable at higher synthetic E: E5 0/96, E15 7/96, E35 
 ### Target hierarchy and next balance steps
 
 1. **Enemy group-generation balance before raw HP tweaks:** inspect `v013-enemy-roster.js` threshold 4→6 and mix of principal Tank/Caster/Skirmisher roles versus Minions. Hold mob count, hero, seed and Realm fixed for causal composition experiments; change one rule at a time, measure difficulty slope and native damage, not merely win %.
-2. **Elite progression scaling:** keep E5 survivable and maintain user's goal of ~60–70% in calibrated target encounters. Avoid raising every Elite equally; compare dedicated weak types first (Exarch, Briarspine, Executioner), and re-test Vampire/Gravecaller separately because E5 may already be challenging.
+2. **Elite progression scaling:** keep E5 survivable and maintain user's goal of ~60–70% in calibrated target encounters. Avoid raising every Elite equally; compare dedicated weak types first (Exarch, Briarspine, Executioner), and re-test Sanguine Wraith/Gravecaller separately because E5 may already be challenging.
 3. **Boss mechanics/preparation:** targeted unprepared vs prepared Boss experiments, six separate Boss identities; investigate damage cadence, minions, Barriers and distinct fight conditions. Do not buff players globally because it would make Elites/mobs even easier.
 4. **Earned progression validation:** current E level and high Talent budgets are synthetic, obtained without real loot or full Expedition; native game engine and actual enemy stats are real but no players earn these bundles automatically. Stage 6.11 natural-account E1 bottleneck must be independently resolved.
 
