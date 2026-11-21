@@ -49,9 +49,33 @@ function verifyAblation(before,after,target){
 }
 function legalCandidates(budgets=DEFAULTS.budgets){
  const entries=Q.talentInventory(budgets),rejections={invalidAfterRemoval:0,
-  protectedPrepared:0,invalidRepurchase:0,structuralOnly:0,duplicate:0};
+  protectedPrepared:0,invalidRepurchase:0,structuralOnly:0,duplicate:0,
+  unavailableRankUpgrade:0};
  const candidates=[],seen=new Set();
+ const add=(source,before,after,target)=>{
+  verifyAblation(before,after,target);
+  const base=nodeBase(target),node=NODES.get(base);
+  const token=sha([source.budget,before.nodes.slice().sort(),target,
+   source.element,source.prepared||null]);
+  if(seen.has(token)){rejections.duplicate++;return;}
+  seen.add(token);
+  candidates.push({key:token.slice(0,20),target,base,rank:ranks(target),
+   nodeKind:node.kind||'unknown',nodeName:node.name||base,
+   nodeFamily:node.family||source.primary,
+   budget:source.budget,spentAfter:after.nodes.length,
+   spentBefore:before.nodes.length,
+   sourceArchetype:source.archetype,sourceFamily:source.primary,
+   sourceAffinities:source.unlocked,prepared:source.prepared||null,
+   before,after,
+   beforeHash:sha({nodes:before.nodes,element:before.element||'arcane',
+    prepared:before.prepared||null}),
+   afterHash:sha({nodes:after.nodes,element:after.element||'arcane',
+    prepared:after.prepared||null})});
+ };
  for(const source of entries){
+  // Reuse a valid terminal purchase removal as a legal one-point-free
+  // baseline; the advanced/element/prepared state is held unchanged.
+  const baselines=[];
   for(const [i,target] of source.talents.nodes.entries()){
    const base=nodeBase(target),node=NODES.get(base);
    if(!node||base.startsWith('affinity_')||base==='element_choice'){
@@ -65,24 +89,26 @@ function legalCandidates(budgets=DEFAULTS.budgets){
    if(!recovered||!T.valid(recovered)||!compareNodes(recovered.nodes,source.talents.nodes)){
     rejections.invalidRepurchase++;continue;
    }
-   verifyAblation(before,source.talents,target);
-   const token=sha([source.budget,source.talents.nodes.slice().sort(),target,
-    source.element,source.prepared||null]);
-   if(seen.has(token)){rejections.duplicate++;continue;}
-   seen.add(token);
-   candidates.push({key:token.slice(0,20),target,base,rank:ranks(target),
-    nodeKind:node.kind||'unknown',nodeName:node.name||base,
-    nodeFamily:node.family||source.primary,
-    budget:source.budget,spentAfter:source.spent,
-    spentBefore:source.spent-1,
-    sourceArchetype:source.archetype,sourceFamily:source.primary,
-    sourceAffinities:source.unlocked,prepared:source.prepared||null,
-    before,after:source.talents,
-    beforeHash:sha({nodes:before.nodes,element:before.element||'arcane',
-     prepared:before.prepared||null}),
-    afterHash:sha({nodes:source.talents.nodes,element:source.element,
-     prepared:source.prepared||null})});
+   add(source,before,source.talents,target);
+   baselines.push(before);
   }
+  // The 48 live strategy snapshots often buy only rank 1. To test genuine
+  // rank 2/3, replay ONE unused point into a higher rank via the real
+  // native allocate() method, starting from a fully valid baseline above.
+  // No rank is directly edited, and no second point/node is changed.
+  const rankable=unique(source.talents.nodes.map(nodeBase)).filter(id=>{
+   const node=NODES.get(id);
+   return node&&Number(node.maxRank)>1&&!id.startsWith('affinity_');
+  });
+  for(const before of baselines)
+   for(const base of rankable){
+    const upgraded=T.allocate(before,base);
+    if(!upgraded||!T.valid(upgraded)||
+      upgraded.nodes.length!==before.nodes.length+1){rejections.unavailableRankUpgrade++;continue;}
+    const target=upgraded.nodes.at(-1);
+    if(nodeBase(target)!==base||ranks(target)<2){rejections.unavailableRankUpgrade++;continue;}
+    add(source,before,upgraded,target);
+   }
  }
  return {sourceSnapshots:entries.length,eligible:candidates.length,rejections,candidates};
 }
@@ -97,6 +123,8 @@ function selectCases(budgets=DEFAULTS.budgets,limit=DEFAULTS.cases){
   let best=null,max=-Infinity;
   for(const candidate of inventory.candidates){
    if(used.has(candidate.key))continue;
+   // Reserve every sixth comparison for a *native-legal* rank upgrade.
+   if(i%6===5&&candidate.rank<2)continue;
    // Favor one distinct base ability per case; duplicate ranks are legal but
    // do not displace coverage of a genuinely different active skill.
    let score=novelty('base',candidate.base,210)+
@@ -114,6 +142,7 @@ function selectCases(budgets=DEFAULTS.budgets,limit=DEFAULTS.cases){
     best=candidate;max=score;
    }
   }
+  if(!best)throw Error('No legal native Talent rank path for this selected case');
   const encounter=['normal','elite','boss'][i%3];
   const armor=ARMORS[Math.floor(i/3)%3];
   const weapon=WEAPONS[(i*5)%WEAPONS.length];
