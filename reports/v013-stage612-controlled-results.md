@@ -77,3 +77,14 @@ This removes the most obvious Armor/encounter confound. It does **not** remove e
 4. Only after those evidence gates should individual enemy Health, Defense, attack frequency, skills or prepared ability values be considered for balance adjustment.
 
 **No gameplay balance edits, no guaranteed loot or achievements, no deployment, no production `main` merge, no save migration.**
+
+## Final merge checkpoint — Stage 6.12
+
+- GitHub PR #108 was merged on 2026-11-21: https://github.com/Skinny-lfg/wanderer-game/pull/108
+- Merge commit: `b51975d2eac48247cccb41501b0dc18cd755de2b`
+- **Exact tree SHA match:** validated PR tree and merge commit tree were both `3120db28656daaf2ad6e21819877966ba1b50bd0`.
+- Final corrected native Stage 6.12 CI: https://github.com/Skinny-lfg/wanderer-game/actions/runs/44889277689
+- Historical role-affinity suite corrected and passed: https://github.com/Skinny-lfg/wanderer-game/actions/runs/44889544067
+- Other core release/integration/browser and targeted simulation gates passed on the checked source. Long-running older optional role large-sample and Stage 9.8 runs were queued at checkpoint, not reported as successful.
+- `main` production stayed at `7cd2a91f03844fe6586f84f11fa45723dd9a6001`; no user-save operation or deploy was performed.
+- This report and governance update are documentation-only; the merge tree above is the tested code/asset checkpoint.
