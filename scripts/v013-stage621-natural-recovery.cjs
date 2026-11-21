@@ -3,7 +3,21 @@
 // Two independent seeds and three different legal native agent strategies.
 const fs=require('node:fs'),path=require('node:path');
 const N=require('./v013-natural-progression.cjs');
-const MODES=new Set(['baseline','retest']);
+const MODES=new Set(['baseline','candidate','retest']);
+// Experimental, disposable source override uses the exact native combat runtime
+// through the existing harness. Promotion to gameplay happens only after A/B.
+const SOURCE_PATH='combat/v012-combat-runtime.js';
+const LIVE_SOURCE=fs.readFileSync(path.resolve(__dirname,'..',SOURCE_PATH),'utf8');
+const ORIGINAL_ATTACK=" const atk=Math.max(1,Math.round(v.atk*mult*(elite?elite.atk*eliteGrowth.atk:role==='minion'?.70:role==='skirmisher'?1.10:role==='caster'?1.08:role==='tank'?.90:1)));";
+const EARLY_ATTACK=` // Stage 6.21 candidate: early normal-role attack pressure only, no Boss/Elite changes.
+ const earlyNormalAttack=!boss&&!miniboss&&level<=2?
+  (level===1?({tank:.86,skirmisher:.78,caster:.80,minion:.86}[role]||1):
+   ({tank:.95,skirmisher:.93,caster:.94,minion:.96}[role]||1)):1;
+ const atk=Math.max(1,Math.round(v.atk*mult*(elite?elite.atk*eliteGrowth.atk:role==='minion'?.70:role==='skirmisher'?1.10:role==='caster'?1.08:role==='tank'?.90:1)*earlyNormalAttack));`;
+function candidateSource(){
+ if(LIVE_SOURCE.split(ORIGINAL_ATTACK).length!==2)throw Error('Stage 6.21 exact native attack formula has changed');
+ return LIVE_SOURCE.replace(ORIGINAL_ATTACK,EARLY_ATTACK);
+}
 function accountDigest(account){
  const at=account.attempts||[];
  return {seed:account.seed,profile:account.profile,reached:account.reached,unlocked:account.endLevel,
@@ -79,7 +93,7 @@ function parse(argv=process.argv.slice(2)){
  return {...opts,native};
 }
 function main(argv=process.argv.slice(2)){
- const o=parse(argv),result=N.run(o.native);
+ const o=parse(argv),result=N.run(o.native,o.mode==='candidate'?{moduleOverrides:{[SOURCE_PATH]:candidateSource()}}:{});
  const compact=summary(result),out=path.resolve(o.out);
  fs.mkdirSync(path.dirname(out),{recursive:true});
  fs.writeFileSync(out,JSON.stringify({stage:'6.21',mode:o.mode,source:result.source,settings:o.native,
@@ -118,4 +132,4 @@ function main(argv=process.argv.slice(2)){
  return result;
 }
 if(require.main===module){try{main();}catch(e){console.error('STAGE621_ERROR',e.stack||e);process.exitCode=1;}}
-module.exports={parse,summary,accountDigest,main};
+module.exports={parse,summary,accountDigest,main,candidateSource,LIVE_SOURCE,ORIGINAL_ATTACK,EARLY_ATTACK};
