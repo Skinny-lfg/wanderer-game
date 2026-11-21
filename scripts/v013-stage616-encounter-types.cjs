@@ -24,7 +24,7 @@ function settingsSafe(settings){
 }
 function plan(settings=DEFAULTS){
  const h=H.plan(settingsSafe(settings));
- if(h.rows.length!==48*settings.seedsPerCell)
+ if(h.rows.length!==H.FAMILIES.length*settings.budgets.length*2*settings.seedsPerCell)
   throw Error('Unexpected canonical six Realms/four budgets/two strategies cohort size');
  for(const row of h.rows)
   if(!T.valid(row.talents)||T.earned(row.talents)!==row.budget)
