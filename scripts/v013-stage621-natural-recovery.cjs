@@ -1,52 +1,58 @@
 'use strict';
 // Stage 6.21: genuine persistent account cohorts, never force loot/XP/unlock.
 // Two independent seeds and three different legal native agent strategies.
-const fs=require('node:fs'),path=require('node:path');
+const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const N=require('./v013-natural-progression.cjs');
 const MODES=new Set(['baseline','candidate','boss-only','combined','retest']);
-// Experimental, disposable source override uses the exact native combat runtime
-// through the existing harness. Promotion to gameplay happens only after A/B.
+// The historical runtime is reconstructed EXACTLY in the isolated test VM.
+// The live game only contains the approved Stage 6.21 six-Boss adjustment.
 const SOURCE_PATH='combat/v012-combat-runtime.js';
 const LIVE_SOURCE=fs.readFileSync(path.resolve(__dirname,'..',SOURCE_PATH),'utf8');
+const BEFORE_CORE=` const elite=miniboss?ports.eliteArchetype(ports.state.run):null;
+ // Stage 6.19: only named Elites get level-specific, archetype-specific
+ // growth. Normal mobs and Bosses continue to use their native formulas.
+ const eliteGrowth=elite?root.WandererV013EliteAbilities.scalingFor(elite.id,level):null;
+ const hp=Math.max(1,Math.round(v.hp*mult*(elite?elite.hp*eliteGrowth.hp:role==='minion'?.68:role==='tank'?1.32:role==='skirmisher'?.96:role==='caster'?.90:1)));
+ const atk=Math.max(1,Math.round(v.atk*mult*(elite?elite.atk*eliteGrowth.atk:role==='minion'?.70:role==='skirmisher'?1.10:role==='caster'?1.08:role==='tank'?.90:1)));`;
+const AFTER_CORE=` const elite=miniboss?ports.eliteArchetype(ports.state.run):null;
+ // Stage 6.19 Elite growth stays independent of Stage 6.21 early Boss tuning.
+ const eliteGrowth=elite?root.WandererV013EliteAbilities.scalingFor(elite.id,level):null;
+ const bossEarly=boss?root.WandererV013BossAbilities.earlyScale(variant.style,level):null;
+ const hp=Math.max(1,Math.round(v.hp*mult*(elite?elite.hp*eliteGrowth.hp:role==='minion'?.68:role==='tank'?1.32:role==='skirmisher'?.96:role==='caster'?.90:1)*(bossEarly?.hp??1)));
+ const atk=Math.max(1,Math.round(v.atk*mult*(elite?elite.atk*eliteGrowth.atk:role==='minion'?.70:role==='skirmisher'?1.10:role==='caster'?1.08:role==='tank'?.90:1)*(bossEarly?.atk??1)));`;
 const ORIGINAL_ATTACK=" const atk=Math.max(1,Math.round(v.atk*mult*(elite?elite.atk*eliteGrowth.atk:role==='minion'?.70:role==='skirmisher'?1.10:role==='caster'?1.08:role==='tank'?.90:1)));";
-const EARLY_ATTACK=` // Stage 6.21 candidate: early normal-role attack pressure only, no Boss/Elite changes.
+const LIVE_ATTACK=" const atk=Math.max(1,Math.round(v.atk*mult*(elite?elite.atk*eliteGrowth.atk:role==='minion'?.70:role==='skirmisher'?1.10:role==='caster'?1.08:role==='tank'?.90:1)*(bossEarly?.atk??1)));";
+const EARLY_NORMAL_DECL=` // Test-only normal E1/E2 role attack alternative, not deployed.
  const earlyNormalAttack=!boss&&!miniboss&&level<=2?
   (level===1?({tank:.86,skirmisher:.78,caster:.80,minion:.86}[role]||1):
-   ({tank:.95,skirmisher:.93,caster:.94,minion:.96}[role]||1)):1;
- const atk=Math.max(1,Math.round(v.atk*mult*(elite?elite.atk*eliteGrowth.atk:role==='minion'?.70:role==='skirmisher'?1.10:role==='caster'?1.08:role==='tank'?.90:1)*earlyNormalAttack));`;
-function candidateSource(){
- if(LIVE_SOURCE.split(ORIGINAL_ATTACK).length!==2)throw Error('Stage 6.21 exact native attack formula has changed');
- return LIVE_SOURCE.replace(ORIGINAL_ATTACK,EARLY_ATTACK);
+   ({tank:.95,skirmisher:.93,caster:.94,minion:.96}[role]||1)):1;`;
+const EARLY_ATTACK=EARLY_NORMAL_DECL+"\n"+ORIGINAL_ATTACK.replace(')));',')*earlyNormalAttack));');
+const LIVE_NORMAL_ATTACK=EARLY_NORMAL_DECL+"\n"+LIVE_ATTACK.replace(')));',')*earlyNormalAttack));');
+function gitBlobSha(text){
+ const bytes=Buffer.from(text);
+ return crypto.createHash('sha1').update(Buffer.from('blob '+bytes.length+'\\0')).update(bytes).digest('hex');
 }
-// Test-only Boss variant: TYPE-SPECIFIC reduction at E1, naturally tapers to 0
-// by E30. Bosses above E30 and all Elites remain byte-equivalent to live code.
-const ORIGINAL_HP=" const hp=Math.max(1,Math.round(v.hp*mult*(elite?elite.hp*eliteGrowth.hp:role==='minion'?.68:role==='tank'?1.32:role==='skirmisher'?.96:role==='caster'?.90:1)));";
-const EARLY_BOSS_STAT=` // Stage 6.21 experimental Boss early-ramp, never deployed untested.
- const earlyBossTuning=boss?({
-  leech:{hp:.37,atk:.22},matriarch:{hp:.39,atk:.23},
-  guardian:{hp:.29,atk:.18},conductor:{hp:.28,atk:.18},
-  berserker:{hp:.18,atk:.11},devourer:{hp:.16,atk:.10}
- }[variant?.style]||{hp:0,atk:0}):{hp:0,atk:0};
- const earlyBossRamp=boss?Math.max(0,Math.min(1,(30-level)/29)):0;
- const hp=Math.max(1,Math.round(v.hp*mult*(elite?elite.hp*eliteGrowth.hp:role==='minion'?.68:role==='tank'?1.32:role==='skirmisher'?.96:role==='caster'?.90:1)*(1-earlyBossTuning.hp*earlyBossRamp)));`;
-function bossCandidateSource(base=LIVE_SOURCE){
- if(base.split(ORIGINAL_HP).length!==2||base.includes('earlyBossTuning'))
-  throw Error('Stage 6.21 exact native Boss HP formula has changed');
- if(base.split(ORIGINAL_ATTACK).length!==2)
-  throw Error('Stage 6.21 exact native Boss ATK formula has changed');
- return base.replace(ORIGINAL_HP,EARLY_BOSS_STAT).replace(ORIGINAL_ATTACK,
-  " const atk=Math.max(1,Math.round(v.atk*mult*(elite?elite.atk*eliteGrowth.atk:role==='minion'?.70:role==='skirmisher'?1.10:role==='caster'?1.08:role==='tank'?.90:1)*(1-earlyBossTuning.atk*earlyBossRamp)));");
+const PRE_STAGE621_GIT_BLOB='6cf97b10add8610589e225bddbf6b7cc1ad10389';
+function baselineSource(){
+ if(LIVE_SOURCE.split(AFTER_CORE).length!==2)throw Error('Stage 6.21 live Boss formula moved');
+ const result=LIVE_SOURCE.replace(AFTER_CORE,BEFORE_CORE);
+ if(gitBlobSha(result)!==PRE_STAGE621_GIT_BLOB)
+  throw Error('Historical Stage 6.20 runtime no longer byte-identical');
+ return result;
+}
+function candidateSource(){
+ const base=baselineSource();
+ if(base.split(ORIGINAL_ATTACK).length!==2)throw Error('Historical native attack formula changed');
+ return base.replace(ORIGINAL_ATTACK,EARLY_ATTACK);
+}
+function bossCandidateSource(){
+ if(LIVE_SOURCE.split(AFTER_CORE).length!==2)throw Error('Current live Stage 6.21 Boss implementation missing');
+ return LIVE_SOURCE;
 }
 function combinedSource(){
  const bossSource=bossCandidateSource();
- const originalAttack=" const atk=Math.max(1,Math.round(v.atk*mult*(elite?elite.atk*eliteGrowth.atk:role==='minion'?.70:role==='skirmisher'?1.10:role==='caster'?1.08:role==='tank'?.90:1)*(1-earlyBossTuning.atk*earlyBossRamp)));";
- const replacement=` // Stage 6.21 targeted normal E1/E2 and type-specific early Boss candidate.
- const earlyNormalAttack=!boss&&!miniboss&&level<=2?
-  (level===1?({tank:.86,skirmisher:.78,caster:.80,minion:.86}[role]||1):
-   ({tank:.95,skirmisher:.93,caster:.94,minion:.96}[role]||1)):1;
- const atk=Math.max(1,Math.round(v.atk*mult*(elite?elite.atk*eliteGrowth.atk:role==='minion'?.70:role==='skirmisher'?1.10:role==='caster'?1.08:role==='tank'?.90:1)*(1-earlyBossTuning.atk*earlyBossRamp)*earlyNormalAttack));`;
- if(bossSource.split(originalAttack).length!==2)throw Error('Stage 6.21 combined formula changed');
- return bossSource.replace(originalAttack,replacement);
+ if(bossSource.split(LIVE_ATTACK).length!==2)throw Error('Current native Boss attack formula changed');
+ return bossSource.replace(LIVE_ATTACK,LIVE_NORMAL_ATTACK);
 }
 function accountDigest(account){
  const at=account.attempts||[];
@@ -123,14 +129,16 @@ function parse(argv=process.argv.slice(2)){
  return {...opts,native};
 }
 function main(argv=process.argv.slice(2)){
- const o=parse(argv),override=
-  o.mode==='candidate'?candidateSource():
-  o.mode==='boss-only'?bossCandidateSource():
-  o.mode==='combined'?combinedSource():null;
- const result=N.run(o.native,override?{moduleOverrides:{[SOURCE_PATH]:override}}:{});
+ const o=parse(argv),effectiveSource=
+   o.mode==='baseline'?baselineSource():
+   o.mode==='candidate'?candidateSource():
+   o.mode==='combined'?combinedSource():LIVE_SOURCE;
+ const overrides=effectiveSource===LIVE_SOURCE?{}:{moduleOverrides:{[SOURCE_PATH]:effectiveSource}};
+ const result=N.run(o.native,overrides);
+ const effectiveRuntimeGitBlob=gitBlobSha(effectiveSource);
  const compact=summary(result),out=path.resolve(o.out);
  fs.mkdirSync(path.dirname(out),{recursive:true});
- fs.writeFileSync(out,JSON.stringify({stage:'6.21',mode:o.mode,source:result.source,settings:o.native,
+ fs.writeFileSync(out,JSON.stringify({stage:'6.21',mode:o.mode,source:result.source,effectiveRuntimeGitBlob,settings:o.native,
   summary:compact,accounts:result.accounts},null,2)+'\n');
  fs.writeFileSync(out.replace(/\.json$/,'.md'),[
   '# Wanderer Stage 6.21 — persistent E1–E'+o.maxLevel+' native accounts',
@@ -153,7 +161,7 @@ function main(argv=process.argv.slice(2)){
   '',...compact.byAccount.map(a=>'- '+a.profile+', seed '+a.seed+': E'+a.unlocked+
    ', attempts '+a.attempts+', points '+a.spentTalents+', last stop: '+a.stop)
  ].join('\n')+'\n');
- console.log('STAGE621='+JSON.stringify({mode:o.mode,source:result.source,
+ console.log('STAGE621='+JSON.stringify({mode:o.mode,source:result.source,effectiveRuntimeGitBlob,
   ...Object.fromEntries(Object.entries(compact).filter(([k])=>k!=='byAccount')),
   byAccount:compact.byAccount.map(a=>({profile:a.profile,seed:a.seed,unlocked:a.unlocked,
    attempts:a.attempts,spentTalents:a.spentTalents,stop:a.stop,
@@ -166,4 +174,4 @@ function main(argv=process.argv.slice(2)){
  return result;
 }
 if(require.main===module){try{main();}catch(e){console.error('STAGE621_ERROR',e.stack||e);process.exitCode=1;}}
-module.exports={parse,summary,accountDigest,main,candidateSource,bossCandidateSource,combinedSource,LIVE_SOURCE,ORIGINAL_ATTACK,EARLY_ATTACK};
+module.exports={parse,summary,accountDigest,main,baselineSource,candidateSource,bossCandidateSource,combinedSource,LIVE_SOURCE,ORIGINAL_ATTACK,EARLY_ATTACK,gitBlobSha,PRE_STAGE621_GIT_BLOB};
