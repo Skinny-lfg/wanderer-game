@@ -28,10 +28,12 @@ const prefix=id=>id?.replace(/_rank\d+$/,'')||'';
 function familyPlan(target,provided={}){
  const node=graph.get(target);
  if(!node)throw Error('Unknown live target '+target);
- const pair=provided.pair||node.pair||null;
- const primary=provided.primary||pair?.[0]||node.family||'blood';
- const secondary=provided.secondary||pair?.[1]||null;
- const element=provided.element||node.element||'arcane';
+// Structural reachability is for the ACTUAL target family/pair, not the
+ // profile that once mentioned the ability (which may have 3 Affinities).
+ const pair=node.pair||provided.pair||null;
+ const primary=pair?.[0]||node.family||provided.primary||'blood';
+ const secondary=pair?.[1]||null;
+ const element=node.element||provided.element||'arcane';
  return {primary,secondary,mix:!!pair,model:pair?'mixed':provided.model||'focused',
   element,milestones:[target],focus:'legal-coverage'};
 }
