@@ -142,21 +142,61 @@ function enumerateLegal(budgets=DEFAULTS.budgets){
     rows.push(candidate(target,b,{rank:Math.min(3,graph.get(target.id).maxRank)}));
   }
  }
+ const profiles=enumerateProfiles(budgets);
  const count=status=>rows.filter(x=>x.status===status).length;
  const unresolved=unique(rows.filter(x=>x.reason).map(x=>x.target+': '+x.reason));
  return {stage:'6.11',kind:'native-validated-talent-candidate-inventory',
   provenance:provenance(),budgets:unique(budgets).sort((x,y)=>x-y),
   coreRouteTargets:coreCount,allTargets:targets.length,targetKinds:Object.fromEntries(
    unique(targets.map(x=>x.kind)).map(k=>[k,targets.filter(x=>x.kind===k).length])),
-  rowCount:rows.length,legal:count('native-legal'),budgetInsufficient:count('point-budget-insufficient'),
+  rowCount:rows.length,legal:count('native-legal'),budgetInsufficient:count('point-budget-insufficient'),profileCoverage:profiles,
   unresolved:count('unresolved-route'),unresolvedReasons:unresolved,rows,
   constraints:['Only actual graph targets and existing T.allocate/T.selectElement operations are used.',
+   '21 live strategic agent profiles are also checked at each budget, including adaptive hypothetical survival pressure when applicable.',
    'Each resulting synthetic structural snapshot passes T.valid with exactly the supplied point budget.',
    'These are selected route and rank candidates; NOT exhaustive legal allocations or guaranteed minimum paths.',
    'The talent-only point budget is intentionally synthetic. Only the separate native E1 account campaign supplies genuinely earned XP and gear.',
    'Missing/invalid/out-of-mode routes are reported as unresolved, never invented or counted as legal.',
    'Magic Arcane uses the current arcane_mastery route; the retired Magic focused path is not executed.']};
 }
+
+function profileCandidate(profileId,budget,{pressure=false}={}){
+ if(!Object.hasOwn(P.BUILDS,profileId)||!Number.isInteger(budget)||budget<0||budget>T.MAX_POINTS)
+  throw Error('Invalid profile or talent point budget');
+ const plan=P.getPlan(profileId),xp=budget*T.POINT_XP;
+ // Adversarial hypothetical history is only for exploring legal three-Affinity
+ // path decisions; it never enters or contaminates the native account runner.
+ const hypotheticalHistory=pressure?[{status:'defeat',rooms:[]}]:[];
+ const proposed=P.propose(T,T.award(T.create(),xp),profileId,hypotheticalHistory,0);
+ const progress={xp,nodes:[...proposed.expectedNodes],treeVersion:15};
+ if(proposed.expectedElement!=='arcane')progress.element=proposed.expectedElement;
+ if(!T.valid(progress))throw Error('Planner made an invalid native profile '+profileId+' at '+budget);
+ if(proposed.spent>budget||progress.nodes.length!==proposed.spent)
+  throw Error('Profile planner overspent genuine point budget '+profileId);
+ const actual=unique(progress.nodes.filter(x=>x.startsWith('affinity_')).map(x=>x.slice(9)));
+ if(actual.some(f=>!proposed.allowed.includes(f)))throw Error('Unapproved Affinity in legal profile '+profileId);
+ return {profile:profileId,budget,historyCase:pressure?'hypothetical-pressure':'neutral',
+  model:plan.model,primary:plan.primary,secondary:plan.secondary||null,third:plan.third||null,
+  allowedAffinities:proposed.allowed,actuallyUnlocked:actual,mixedEnabled:!!plan.mix,
+  eligibleThird:!!(plan.third&&proposed.allowed.includes(plan.third)),mode:proposed.expectedElement,
+  actualNodes:progress.nodes,spent:proposed.spent,unspent:budget-proposed.spent,
+  milestone:proposed.milestone,resetRecommended:proposed.resetReason,
+  valid:true,
+  caveat:'Hypothetical XP budget and optional simulated defeat pressure for legal talent-plan inspection ONLY; no account, gear or combat was simulated.'};
+}
+function enumerateProfiles(budgets=DEFAULTS.budgets){
+ const rows=[];
+ for(const id of Object.keys(P.BUILDS))for(const budget of unique(budgets).sort((a,b)=>a-b)){
+  rows.push(profileCandidate(id,budget));
+  if(P.BUILDS[id].third&&P.BUILDS[id].model==='adaptive')
+   rows.push(profileCandidate(id,budget,{pressure:true}));
+ }
+ return {profiles:Object.keys(P.BUILDS).length,rows:rows.length,
+  threeAffinityEligible:rows.filter(x=>x.eligibleThird).length,
+  threeAffinityActuallyUnlocked:rows.filter(x=>x.actuallyUnlocked.length===3).length,
+  mixedModels:rows.filter(x=>x.mixedEnabled).length,observations:rows};
+}
+
 function parse(args=[]){
  const v={...DEFAULTS,budgets:[...DEFAULTS.budgets],profiles:[...DEFAULTS.profiles],seeds:[...DEFAULTS.seeds]};
  const numbers=(s,min,max,label)=>{const x=unique(s.split(',').map(Number));if(!x.length||x.some(n=>!Number.isSafeInteger(n)||n<min||n>max))
@@ -345,6 +385,9 @@ function markdown(r){
   'Native source SHA-256: '+r.provenance?.sourceSha256||r.origin?.sourceSha256||'', ''];
  if(r.kind==='native-validated-talent-candidate-inventory'){
   out.push('Live targets: '+r.allTargets+' ('+r.coreRouteTargets+' route endpoints + agent milestones).',
+   'Validated strategic profiles: '+r.profileCoverage.profiles,
+   'Legal profile snapshots: '+r.profileCoverage.rows,
+   'Three-Affinity actual legal snapshots: '+r.profileCoverage.threeAffinityActuallyUnlocked,
    'Point budgets: '+r.budgets.join(', '),
    'Candidate rows: '+r.rowCount,'Native legal targets: '+r.legal,
    'Under budget: '+r.budgetInsufficient,'Unresolved (NOT tested): '+r.unresolved,'',
@@ -374,5 +417,6 @@ function main(args=process.argv.slice(2)){
  return r;
 }
 if(require.main===module){try{main();}catch(err){console.error('STAGE611_ERROR:',err.stack||err);process.exitCode=1;}}
-module.exports={DEFAULTS,pathTargets,familyPlan,legalRoute,candidate,enumerateLegal,parse,
+module.exports={DEFAULTS,pathTargets,familyPlan,legalRoute,candidate,enumerateLegal,
+ profileCandidate,enumerateProfiles,parse,
  provenance,accountAxes,verifyAccount,chooseAdaptiveJob,campaign,markdown,main};
