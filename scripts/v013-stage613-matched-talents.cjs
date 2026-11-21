@@ -108,6 +108,7 @@ function choosePairs(budgets=DEFAULTS.budgets,limit=DEFAULTS.pairs,seedStart=DEF
    archetypes:[best.left.archetype,best.right.archetype],
    kind:best.kind,budget:best.budget,spent:best.spent,level:E_BY_BUDGET[best.budget],
    seed:seedStart+i*37,encounter,armor,weapon,offhand,affinity,rarity:'Rare',
+   backgroundFamily:best.left.primary,
    changed:best.diff,left:best.left,right:best.right,score:+score.toFixed(3)};
   picked.push(row);selected.add(best.id);
   for(const [k,v] of [['archetype',best.left.archetype],['archetype',best.right.archetype],
@@ -135,7 +136,7 @@ function fixture(row,talent){
  // EXACT SAME complete Buildcraft descriptor for both variants. Only
  // controlledTalents below differs across each trial arm.
  const build={id:'stage613-controlled-same-build',weapon:row.weapon,
-  families:['blood'],skills:[]};
+  families:[row.backgroundFamily||row.left.primary],skills:[]};
  return {level:row.level,build,seed:row.seed,encounter:row.encounter,
   options:{mode:row.encounter==='boss'?'bosses':'encounter',
    points:row.budget,rarity:row.rarity,gear:'current',
@@ -198,6 +199,7 @@ function pairedResult(row,{tickLimit=DEFAULTS.tickLimit}={}){
  return {scenarioId:row.id,designId:row.designId,kind:row.kind,
   level:row.level,budget:row.budget,spent:row.spent,
   seed:row.seed,weapon:row.weapon,armor:row.armor,offhand:row.offhand,
+  backgroundFamily:row.backgroundFamily,
   opponent:row.encounter,affinity:row.affinity,changed:row.changed,
   sameSetup:true,checks,fullGearFingerprint:left.native.gearFingerprint,
   opponentRosterSha256:sha(left.native.roster),
@@ -327,7 +329,7 @@ function main(argv=process.argv.slice(2)){
    counts:p.counts,distinctArchetypes:p.distinctArchetypes,
    selected:p.selected.map(x=>({id:x.id,budget:x.budget,spent:x.spent,
     archetypes:x.archetypes,kind:x.kind,seed:x.seed,encounter:x.encounter,armor:x.armor,
-    weapon:x.weapon,affinity:x.affinity}))};
+    weapon:x.weapon,affinity:x.affinity,backgroundFamily:x.backgroundFamily}))};
   atomicWrite(opts.out,out);console.log('STAGE613_PLAN='+JSON.stringify({
    eligible:out.eligible,selected:out.plannedPairs,distinctArchetypes:out.distinctArchetypes,counts:out.counts}));
   return out;
