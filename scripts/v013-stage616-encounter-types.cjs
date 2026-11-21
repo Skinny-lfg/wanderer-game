@@ -8,6 +8,18 @@ const S=require('./simulate-progression.cjs');
 const T=globalThis.WandererAutomaticTalents;
 const ALL_GROUPS=Object.freeze([1,2,3,4,6,8,12,20]);
 const KINDS=Object.freeze([...ALL_GROUPS.map(n=>'normal-'+n),'elite','boss']);
+// Display labels only; stable native IDs remain unchanged for combat and raw JSON.
+const ELITE_DISPLAY_NAMES=Object.freeze({
+ tank:'Gravebound Bulwark',
+ berserker:'Bloodscar Ravager',
+ vampire:'Sanguine Wraith',
+ caster:'Voidborne Hexer',
+ gravecaller:'Gravecaller',
+ oathbound_exarch:'Oathbound Exarch',
+ briarspine_horror:'Briarspine Horror',
+ ashen_executioner:'Ashen Executioner'
+});
+const eliteDisplayName=id=>ELITE_DISPLAY_NAMES[id]||id;
 const DEFAULTS=Object.freeze({mode:'pilot',seedsPerCell:2,seedStart:6160011,
  budgets:[12,24,36,60],risk:1,rarity:'Rare',tickLimit:4500,
  out:'reports/v013-stage616-encounter-pilot.json',resume:false});
@@ -267,10 +279,10 @@ function table(report){
  '|---:|---:|---:|---:|---:|---:|---:|'];
  for(const x of s.perGroup)
   rows.push('| '+x.size+' | '+x.wins+'/'+x.n+' | '+x.winPct+'% | '+x.meanMinions+' | '+x.meanTanks+' | '+x.meanCasters+' | '+x.medianPlayerDamageTaken+' |');
- rows.push('','## Elite labels observed (not all are dedicated named Elites)','',
-  '| Native Elite type | Wins | Win % |', '|---|---:|---:|');
+ rows.push('','## Eight named Elites observed (display names)','',
+  '| Elite | Wins | Win % |', '|---|---:|---:|');
  for(const [name,x]of Object.entries(s.byElite))
-  rows.push('| '+name+' | '+x.wins+'/'+x.n+' | '+x.winPct+'% |');
+  rows.push('| '+eliteDisplayName(name)+' | '+x.wins+'/'+x.n+' | '+x.winPct+'% |');
  rows.push('','## Real native Boss identities (UNPREPARED first-ring fixtures)','',
   '| Native Boss id | Wins | Win % |','|---|---:|---:|');
  for(const [name,x]of Object.entries(s.byBoss))
@@ -306,12 +318,12 @@ function main(argv=process.argv.slice(2)){
  console.log('STAGE616='+JSON.stringify({mode:o.mode,completed:s.matchedSets,
   nativeFights:s.actualFights,verified:s.matchedVerified,
   bySize:Object.fromEntries(s.perGroup.map(x=>[x.size,x.wins+'/'+x.n+' ('+x.winPct+'%)'])),
-  elites:Object.fromEntries(Object.entries(s.byElite).map(([k,v])=>[k,v.wins+'/'+v.n+' ('+v.winPct+'%)'])),
+  elites:Object.fromEntries(Object.entries(s.byElite).map(([k,v])=>[eliteDisplayName(k),v.wins+'/'+v.n+' ('+v.winPct+'%)'])),
   bosses:Object.fromEntries(Object.entries(s.byBoss).map(([k,v])=>[k,v.wins+'/'+v.n+' ('+v.winPct+'%)'])),
   soloRoles:Object.fromEntries(Object.entries(s.bySoloRole).map(([k,v])=>[k,v.wins+'/'+v.n+' ('+v.winPct+'%)'])),
   distinctSoloNames:Object.keys(s.bySoloName).length,out:o.out}));
  return r;
 }
 if(require.main===module){try{main();}catch(e){console.error('STAGE616_ERROR',e.stack||e);process.exitCode=1;}}
-module.exports={ALL_GROUPS,KINDS,DEFAULTS,settingsSafe,plan,nativeFight,verify,matched,
+module.exports={ALL_GROUPS,KINDS,ELITE_DISPLAY_NAMES,eliteDisplayName,DEFAULTS,settingsSafe,plan,nativeFight,verify,matched,
  collect,summary,provenance,reportInput,guardCheckpoint,run,parse,table,main};
