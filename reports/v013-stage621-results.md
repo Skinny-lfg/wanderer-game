@@ -50,7 +50,7 @@ Four **fresh** accounts (seeds 9701 and 9702 × cautious/balanced) with maximum 
 | E6 | 1 | 2 | 2 | **1** | 0 | 1 |
 | E7–E15 | 1 per E | 1 per E | 1 per E | **1 per E** | 0 | 0 |
 
-**All three accounts not reaching E5 are censored, not losses at E5 or E15.** The survivor's E5/E15 wins are **genuine** but represent only **one survivor-selected account** and cannot determine a calibrated win percentage for the population at those levels. At E5 and E15, the native attempt records each include a Boon and a legitimately used potion; the account brought its earned gear and persistent talents. The unselected or failed build routes were not given artificial gear/XP to reach E5 or E15.
+**All three accounts not reaching E5 are censored, not losses at E5 or E15.** The survivor's E5/E15 wins are **genuine** but represent only **one survivor-selected account** and cannot determine a calibrated win percentage for the population at those levels. At **E5**, the single Boss entry was **genuinely prepared by defeating the marked Elite** (no Reliquary), and won; across its two E5 attempts, the account selected **four Boons**, used **one potion**, and made two real gear upgrades. At **E15**, the single Boss entry had **both marked-Elite and Reliquary preparation**, and the winning attempt included **one earned Boon, one legally used potion and one gear upgrade**. The account brought its earned persistent gear and Talents in both cases. The unselected or failed build routes were not given artificial gear/XP to reach E5 or E15.
 
 Account outcomes:
 - Seed 9701 / cautious: E4 unlocked; unable to beat E4 in 18 attempts.
@@ -63,7 +63,7 @@ Full native traces archived in artifact `stage621-real-native-earned-e1-to-e15-a
 ## Findings and next decision
 
 1. **Early Boss pressure, not just normal-room damage, was the clearest immediate fix** for the E1→E2 gate in tested accounts. The correction works in native code and leaves E35/E70 gameplay Boss power unchanged.
-2. **E4 is the new dominant bottleneck** for this small cohort: 50 attempts for three accounts, only one Boss victory out of 13 entered Boss encounters and 31 extractions. The severe per-attempt challenge of E4 needs focused diagnosis by Boss identity, affixes, escorts, and gear before another numeric change.
+2. **E4 is the new dominant bottleneck** for this small cohort: 50 attempts for three accounts, only one Boss victory out of 13 entered Boss encounters (five of those 13 had legitimate marked-Elite or Reliquary preparation) and 31 extractions. The severe per-attempt challenge of E4 needs focused diagnosis by Boss identity, affixes, escorts, and gear before another numeric change.
 3. **Late levels may be too easy for survivor builds**, but E7–E15 observations are 1/1 per level from the same well-equipped survivor and absolutely do **not** justify increasing all late Boss HP/Attack or declaring final balance.
 4. **E1 normal-room attrition is still high** (~52% first fight), and Magic Fire did not clear E1 within the 8-attempt comparison. However its normal-mob HP/Attack experiment did not improve E2 reach and increased Elite deaths, so further global early mob nerfs were rejected.
 5. Next focused stage should study E3–E5 natural blockers and preserve the user's hierarchy Boss > Elite > Tank > regular. Correct by named Boss/encounter where evidence supports it, not by broad group modifiers. Any claims of naturally prepared Boss odds need more truly independent seeds with complete preparation and earned potion/boon access.
