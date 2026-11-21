@@ -1,0 +1,78 @@
+name: Wanderer Stage 6.19 — Individual Elite growth with native before-after comparisons (NO DEPLOY)
+on:
+  push:
+    branches:
+      - audit/v013-stage619-elite-scaling-20261121
+    paths:
+      - '.github/workflows/v013-stage619-elites.yml'
+      - 'combat/v012-combat-runtime.js'
+      - 'online/v013-elite-abilities.js'
+      - 'scripts/simulate-progression.cjs'
+      - 'scripts/v013-stage619-elite-balance.cjs'
+      - 'tests/v013-stage619-elite-balance.test.cjs'
+      - 'tests/v013-stage82-elite-abilities.test.cjs'
+      - 'reports/v013-stage619-design.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pilot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: Syntax, all eight curves, E5 parity, Elite/Boss/mob native regressions
+        run: |
+          node --check online/v013-elite-abilities.js
+          node --check combat/v012-combat-runtime.js
+          node --check scripts/simulate-progression.cjs
+          node --check scripts/v013-stage619-elite-balance.cjs
+          node --check tests/v013-stage619-elite-balance.test.cjs
+          node --test tests/v013-stage619-elite-balance.test.cjs tests/v013-stage82-elite-abilities.test.cjs tests/v013-stage84-six-bosses.test.cjs
+          node --test tests/v013-stage80-enemy-roster.test.cjs tests/v013-stage616-encounter-types.test.cjs
+          npm run test:v013:integration
+          git diff --check
+      - name: 48 matched native heroes x eight named Elites x original/new = 768 fights
+        run: node scripts/v013-stage619-elite-balance.cjs --mode=pilot --seeds-per-cell=1 --out=reports/v013-stage619-elites-pilot.json
+      - name: Save pilot evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage619-pilot-768-native-eight-elite-fights
+          path: |
+            reports/v013-stage619-elites-pilot.json
+            reports/v013-stage619-elites-pilot.md
+          retention-days: 30
+          if-no-files-found: warn
+  full:
+    needs: pilot
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: 96 matched native heroes x eight Elites x original/new = 1536 fights
+        run: node scripts/v013-stage619-elite-balance.cjs --mode=matrix --seeds-per-cell=2 --out=reports/v013-stage619-elites-matrix.json
+      - name: Save full per-Elite and per-E evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage619-full-1536-native-eight-elite-fights
+          path: |
+            reports/v013-stage619-elites-matrix.json
+            reports/v013-stage619-elites-matrix.md
+          retention-days: 30
+          if-no-files-found: warn
