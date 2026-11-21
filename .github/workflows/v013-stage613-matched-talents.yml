@@ -1,0 +1,72 @@
+name: Wanderer Stage 6.13 — Matched Talent-only native combat (NO DEPLOY)
+on:
+  push:
+    branches:
+      - audit/v013-stage613-matched-talents-20261121
+    paths:
+      - '.github/workflows/v013-stage613-matched-talents.yml'
+      - 'scripts/v013-stage613-matched-talents.cjs'
+      - 'tests/v013-stage613-matched-talents.test.cjs'
+      - 'package.json'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate-pilot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: Native paired integrity and Stage 6.10–6.13 regression suite
+        run: |
+          node --check scripts/v013-stage613-matched-talents.cjs
+          node --check tests/v013-stage613-matched-talents.test.cjs
+          npm run test:v013:stage613
+          npm run test:v013:stage612
+          npm run test:v013:stage611
+          npm run test:v013:stage610
+          git diff --check
+      - name: Actual 12-pair / 24-fight native smoke and all guardrail checks
+        run: npm run audit:v013:stage613:pilot
+      - name: Retain native paired smoke evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage613-matched-12-pair-pilot
+          path: |
+            reports/v013-stage613-pilot.json
+            reports/v013-stage613-pilot.md
+          retention-days: 30
+          if-no-files-found: warn
+  matched-matrix:
+    needs: validate-pilot
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: Exactly 72 real paired native comparisons / 144 fights
+        run: npm run audit:v013:stage613:matrix
+      - name: Preserve complete paired combat states and source fingerprints
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage613-matched-72-pairs-native
+          path: |
+            reports/v013-stage613-matrix.json
+            reports/v013-stage613-matrix.md
+          retention-days: 30
+          if-no-files-found: warn
