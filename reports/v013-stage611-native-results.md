@@ -17,8 +17,8 @@
 
 ## Actual earned E1–E5 native adaptive campaign
 
-**CI run:** https://github.com/Skinny-lfg/wanderer-game/actions/runs/44887124494  
-**Head SHA for this recorded dataset:** 46fe23ef0e92670da00198bcd4d757271ed1a979  
+**CI run:** https://github.com/Skinny-lfg/wanderer-game/actions/runs/44887217170  
+**Head SHA for this recorded dataset:** 2a3878383a0084240a5bbff09ca720322b67f209  
 **Archived artifact:** stage611-native-earned-24-accounts (native 5.24 MB JSON, ZIP).
 
 - 24 native accounts = 6 smart strategies × **4 unique shared seeds** (9701–9704); 24 accounts are **not** 24 independent RNG seeds.
