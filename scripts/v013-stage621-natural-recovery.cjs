@@ -30,7 +30,7 @@ const EARLY_ATTACK=EARLY_NORMAL_DECL+"\n"+ORIGINAL_ATTACK.replace(')));',')*earl
 const LIVE_NORMAL_ATTACK=EARLY_NORMAL_DECL+"\n"+LIVE_ATTACK.replace(')));',')*earlyNormalAttack));');
 function gitBlobSha(text){
  const bytes=Buffer.from(text);
- return crypto.createHash('sha1').update(Buffer.from('blob '+bytes.length+'\\0')).update(bytes).digest('hex');
+ return crypto.createHash('sha1').update(Buffer.from('blob '+bytes.length+'\0')).update(bytes).digest('hex');
 }
 const PRE_STAGE621_GIT_BLOB='6cf97b10add8610589e225bddbf6b7cc1ad10389';
 function baselineSource(){
