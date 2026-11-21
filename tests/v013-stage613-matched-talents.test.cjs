@@ -97,3 +97,20 @@ test('Invalid CLI budget and prohibited unbounded workloads are rejected',()=>{
  const v=Q.parse(['--mode=matrix','--pairs=72','--budgets=24,36','--seed-start=613444']);
  assert.equal(v.pairs,72);assert.deepEqual(v.budgets,[24,36]);
 });
+
+test('Full 72-pair plan prevents armor-vs-enemy confounding and covers all catalog dimensions',()=>{
+ const plan=Q.choosePairs([12,24,36,60],72,613001),rows=plan.selected;
+ assert.equal(rows.length,72);
+ assert.equal(plan.distinctArchetypes,48);
+ assert.equal(plan.eligible,3637,'Live native graph/profile drift must trigger a review');
+ assert.deepEqual([...new Set(rows.map(x=>x.weapon))].sort(),
+  ['Bow','Daggers','Mace','Staff','Sword','Two-Handed','Wand'].sort());
+ assert.equal(new Set(rows.map(x=>x.affinity)).size,6);
+ assert.equal(new Set(rows.map(x=>x.budget)).size,4);
+ for(const encounter of ['normal','elite','boss'])
+  for(const armor of ['Cloth','Leather','Plate']){
+   assert.equal(rows.filter(x=>x.encounter===encounter&&x.armor===armor).length,8,
+    encounter+'/'+armor+' should use eight pairs exactly');
+  }
+ assert(rows.filter(x=>x.left.primary===x.right.primary).length>=60);
+});
