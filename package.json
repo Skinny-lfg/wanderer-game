@@ -86,7 +86,10 @@
     "test:v013:stage610": "node --test tests/v013-stage610-coverage-benchmark.test.cjs",
     "audit:v013:stage610:inventory": "node scripts/v013-stage610-coverage-benchmark.cjs --mode=inventory --out=reports/v013-stage610-inventory.json",
     "audit:v013:stage610:plan": "node scripts/v013-stage610-coverage-benchmark.cjs --mode=plan --out=reports/v013-stage610-pairwise-plan.json",
-    "audit:v013:stage610:benchmark": "node scripts/v013-stage610-coverage-benchmark.cjs --mode=benchmark --runs=2 --seed-start=9901 --out=reports/v013-stage610-e1-benchmark.json"
+    "audit:v013:stage610:benchmark": "node scripts/v013-stage610-coverage-benchmark.cjs --mode=benchmark --runs=2 --seed-start=9901 --out=reports/v013-stage610-e1-benchmark.json",
+    "test:v013:stage611": "node --test tests/v013-stage611-legal-adaptive.test.cjs",
+    "audit:v013:stage611:legal": "node scripts/v013-stage611-legal-adaptive.cjs --mode=legal --out=reports/v013-stage611-legal.json",
+    "audit:v013:stage611:pilot": "node scripts/v013-stage611-legal-adaptive.cjs --mode=campaign --sample-budget=4 --max-level=2 --max-attempts=2 --max-total-attempts=3 --out=reports/v013-stage611-pilot.json"
   },
   "dependencies": {
     "firebase": "11.10.0"
