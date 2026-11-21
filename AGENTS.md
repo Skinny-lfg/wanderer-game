@@ -1,3 +1,18 @@
+## Current canonical v0.13 checkpoint — Three-case Stage 6.14 confirmation (2026-11-21)
+
+- PR #111 **merged** into the single canonical development branch `audit/v013-stage6` with merge commit `400b7dff5916e55778d5bb812264c3e581264f36`. Fetch current canonical HEAD before starting anything new. The reviewed and merged tree SHA is exactly `e87004f2b955ddf45b53ec4b1c70f68aa13ad6f9`.
+- Retested **exact** original Stage 6.14 legal states `unbreakable` (rank 1, ablation-016), `arcane_focus` (rank 1, ablation-012) and `brace_rank2` (ablation-011). All recovered by immutable TalentGraph state hashes, real v15 `allocate` and valid point budgets. Only one node/rank changes within each replay; baseline leaves one of the same synthetic available points unused.
+- **9 preregistered native enemy strata × 32 new distinct seeds**, **288 genuine matched pairs / 576 real native fights**, **288/288 gear, opponent, seed, native Conditions and Buildcraft matching checks passed**. The 36-pair pilot is a subset, NOT additional independent evidence.
+- Native result categories: 145 both-win, 112 both-lose, **31 node-only-win**, 0 baseline-only-win. These gains split across **Unbreakable +18** in three enemy strata, **Arcane Focus +13** in three strata; **Brace rank 2 changed no victories** across 96 new pairs but changed some Barrier and remaining HP measures. Strictly context-specific; not global talent strength rankings.
+- **Selection bias:** these 3 skills were originally chosen because their 6-seed initial results had positive flips. The new cohort seeds were declared in advance and independent but cannot fully eliminate discovery bias.
+- All synthetic Talent XP, item rolls, chosen E progression and opponents remain *controlled diagnostic fixtures*, NOT natural earned account progression. The baseline and treated arms spend DIFFERENT points by exactly one, intentionally. Do not describe this as a same-spent-points comparison.
+- Retest 7/7 unit tests and Stage 6.14 9/9, Stage 6.13 10/10, Stage 6.12 10/10, Stage 6.11 8/8, Stage 6.10 6/6 tests passed. Final full-native CI https://github.com/Skinny-lfg/wanderer-game/actions/runs/44897838733. Latest checked Stage 4.5.5/4.5.6, integration, browser, Stage 5, Stage 9.7 and Gravecaller workflows passed. Optional older Stage 9.8 high-volume audit was still in progress at check.
+- The production `main` stays at `7cd2a91f03844fe6586f84f11fa45723dd9a6001` (v0.12). No balancing constants, player saves, browser UI/art, Firebase or deployments were changed. Do not force-push or move this work to main.
+- Full per-opponent results: `reports/v013-stage614-three-case-retest-results.md`, design and native artifact stored in the PR #111 GitHub Actions run.
+- Further work should investigate **mechanic activation and opportunity cost against an alternative legally allocated point**, ideally with earned E1 progression separately; no immediate buffs/nerfs from these outcomes.
+
+---
+
 ## Current canonical v0.13 checkpoint — Stage 6.14 (2026-11-21)
 
 - Latest merged Stage: **6.14** through PR #110 into `audit/v013-stage6`, merge commit `0745d43493723d608f104aa5baa82a5c51eb0e87`. Always fetch current `audit/v013-stage6` HEAD before starting another stage.

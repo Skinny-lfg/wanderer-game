@@ -98,3 +98,13 @@ The engine recorded actual generated/absorbed Barrier, effective healing, DoT, c
 - Full native JSON and per-stratum Markdown retained as GitHub Actions artifact `stage614-retest-three-full-288-pairs-576-fights`.
 
 **No gameplay coefficients, enemy data, saved game state, player accounts, UI/art, Firebase or production `main` were changed by the retest.**
+
+## Canonical integration checkpoint (verified after execution)
+
+- Feature PR: https://github.com/Skinny-lfg/wanderer-game/pull/111 — **merged** on 2026-11-21.
+- Integration merge commit: `400b7dff5916e55778d5bb812264c3e581264f36`.
+- Checked Git object trees for the exact reviewed PR candidate and merge: **identical** tree SHA `e87004f2b955ddf45b53ec4b1c70f68aa13ad6f9`; no code/results were lost or silently replaced in merge.
+- Full native 288-pair/576-combat and 36-pair pilot workflow **success**: https://github.com/Skinny-lfg/wanderer-game/actions/runs/44897838733.
+- Dedicated 7/7 retest tests and prior Stage 6.10–6.14 suites passed. The latest feature tree's native integration, Stage 5, Stage 9.7, Stage 4.5.5, Stage 4.5.6, Gravecaller and browser QA also reported success. Optional Stage 9.8 large-sample campaign was in progress at the last review, not claimed validated.
+- Source branch preserved: `audit/v013-stage6`; player-facing production `main` remains `7cd2a91f03844fe6586f84f11fa45723dd9a6001`.
+- This integration checkpoint and the `AGENTS.md` header are **documentation only**, applied after the already validated merge. No gameplay changes, save conversions, Firebase operations or deployment occurred.
