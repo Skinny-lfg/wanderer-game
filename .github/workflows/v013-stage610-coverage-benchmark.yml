@@ -49,9 +49,9 @@ jobs:
             reports/v013-stage610-pairwise-plan.md
           retention-days: 30
   native-benchmark:
-    name: Opt-in actual E1 native performance pilot
+    name: Bounded actual E1 native performance pilot
     needs: validate
-    if: github.event_name == 'workflow_dispatch' && inputs.benchmark == true
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.benchmark == true)
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
