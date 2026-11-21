@@ -7,6 +7,7 @@ const BUILDS=Object.freeze({
  'blood-pure':{primary:'blood',model:'pure',weapons:['Sword','Two-Handed'],armor:'Leather',milestones:['blood_harvest','crimson_feast','heart_of_carnage'],focus:'bleed'},
  'blood-fury':{primary:'blood',secondary:'fury',secondAt:12,model:'two',mix:true,weapons:['Sword','Two-Handed'],armor:'Leather',milestones:['blood_harvest','crimson_rush','reapers_cadence'],focus:'bleed'},
  'blood-fury-vitality':{primary:'blood',secondary:'fury',third:'vitality',secondAt:12,thirdAt:28,model:'adaptive',mix:true,weapons:['Sword','Two-Handed'],armor:'Leather',milestones:['blood_harvest','crimson_rush','fervent_life','reapers_cadence'],focus:'bleed'},
+ 'blood-fury-vitality-no-mixed':{primary:'blood',secondary:'fury',third:'vitality',secondAt:12,thirdAt:28,model:'three',mix:false,weapons:['Sword','Two-Handed'],armor:'Leather',milestones:['blood_harvest','crimson_feast','battle_tempo','living_recovery','heart_of_carnage'],focus:'bleed'},
  'fury-blood-aegis':{primary:'fury',secondary:'blood',third:'aegis',secondAt:12,thirdAt:30,model:'adaptive',mix:true,weapons:['Daggers','Bow'],armor:'Leather',milestones:['battle_tempo','crimson_rush','relentless_assault'],focus:'speed'},
  'fury-pure':{primary:'fury',model:'pure',weapons:['Daggers','Bow'],armor:'Leather',milestones:['battle_tempo','relentless_assault','unchained_fury'],focus:'speed'},
  'magic-arcane-pure':{primary:'magic',model:'pure',element:'arcane',weapons:['Wand','Staff'],armor:'Cloth',milestones:['arcane_resonance','arcane_surge','arcane_mastery'],focus:'spell'},
@@ -58,9 +59,9 @@ function excludes(node,owned,graph){
  for(const id of owned){if(graph.get(id)?.excludes?.includes(node.id))return true;}
  return false;
 }
-function usable(n,active,mode){return !!n&&(!n.family||active.includes(n.family))&&
- (!n.element||n.element===mode)&&(!n.pair||n.pair.every(f=>active.includes(f)))&&
- (!n.kind||n.kind!=='mixed'||n.pair?.every(f=>active.includes(f)));}
+function usable(n,active,mode,plan){return !!n&&(!n.family||active.includes(n.family))&&
+ (!n.element||n.element===mode)&&(!n.pair||(!!plan.mix&&n.pair.every(f=>active.includes(f))))&&
+ (n.kind!=='mixed'||!!plan.mix&&n.pair?.every(f=>active.includes(f)));}
 function scoreNode(n,plan,active,context={}){
  const p=plan.primary,s=plan.secondary,mode=plan.element||'arcane',focus=plan.focus;
  let score=n.family===p?4:n.family===s?2.8:1.6;
@@ -110,7 +111,7 @@ function routeTo(T,progress,target,plan,active){
  function build(id,owned,visiting){
   if(owned.has(id))return [];
   const node=graph.get(id);
-  if(!usable(node,active,mode)||excludes(node,owned,graph)||visiting.has(id))return null;
+  if(!usable(node,active,mode,plan)||excludes(node,owned,graph)||visiting.has(id))return null;
   const local=new Set(owned),next=new Set(visiting);next.add(id);
   let route=[];
   const addRoute=r=>{if(!r)return false;for(const step of r)if(!local.has(step)){local.add(step);route.push(step);}return true;};
@@ -153,7 +154,7 @@ function canOwnMilestone(T,progress,plan,active,id){
 function candidateMilestone(T,progress,plan,active,earned){
  // Most advanced affordable goal, resolving its actual prerequisites.
  const goals=(plan.milestones||[]).filter(id=>{
-  const n=T.NODES.find(x=>x.id===id);return usable(n,active,plan.element||'arcane');
+  const n=T.NODES.find(x=>x.id===id);return usable(n,active,plan.element||'arcane',plan);
  });
  return goals.map((id,index)=>({id,index,cost:canOwnMilestone(T,progress,plan,active,id)}))
   .filter(x=>x.cost<=earned)
@@ -161,7 +162,7 @@ function candidateMilestone(T,progress,plan,active,earned){
 }
 function bestAvailable(T,progress,plan,active){
  const owned=ownedSet(progress),graph=bases(T.NODES),mode=plan.element||'arcane';
- const choices=T.NODES.filter(n=>usable(n,active,mode)&&!excludes(n,owned,graph)&&
+ const choices=T.NODES.filter(n=>usable(n,active,mode,plan)&&!excludes(n,owned,graph)&&
   !owned.has(n.id)&&(!n.requires||owned.has(n.requires))&&
   (!n.prerequisites||n.prerequisites.every(x=>owned.has(x)))&&
   (!n.anyRequires||n.anyRequires.some(x=>owned.has(x))))
@@ -220,7 +221,7 @@ function fill(T,progress,plan,active,earned,milestone){
  // An explicit next skill path is preferred to blind stat accumulation.
  const aspirational=(plan.milestones||[]).filter(id=>{
   const n=T.NODES.find(x=>x.id===id);
-  return usable(n,active,plan.element||'arcane')&&!ownedSet(p).has(id);
+  return usable(n,active,plan.element||'arcane',plan)&&!ownedSet(p).has(id);
  }).map((id,i)=>({id,i,cost:routeTo(T,p,id,plan,active)?.length??Infinity}))
  .filter(x=>Number.isFinite(x.cost))
  .sort((a,b)=>a.i-b.i||a.cost-b.cost);

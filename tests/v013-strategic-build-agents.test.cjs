@@ -19,7 +19,7 @@ test('The first acquired build skill is functional, not a cosmetic stat detour',
 });
 
 test('Twelve explicit agent strategies represent pure, duo, mixed and adaptive third-affinity investments',()=>{
- assert.equal(Object.keys(PLANNER.BUILDS).length,20);
+ assert.equal(Object.keys(PLANNER.BUILDS).length,21);
  for(const [id,b] of Object.entries(PLANNER.BUILDS)){
   assert(p(id),'missing agent '+id);assert.equal(p(id).plan,id);
   assert(PLANNER.getPlan(id).milestones.length>0);
@@ -68,6 +68,20 @@ test('Third Affinity is conditional on actual recorded combat pressure, not auto
  assert(injured.expectedNodes.includes('affinity_vitality'),JSON.stringify(injured));
  const strict=PLANNER.propose(T,level,'blood-fury',history);
  assert.deepEqual(strict.allowed,['blood','fury']);
+});
+test('Three real Affinities without mixed paths stay fully non-Mixed at 33 earned points',()=>{
+ const a=newAccount(),T=a.talents,progress=earned(a,33);
+ const plan=PLANNER.propose(T,progress,'blood-fury-vitality-no-mixed',[]);
+ assert.deepEqual(plan.allowed,['blood','fury','vitality']);
+ for(const family of plan.allowed)assert(plan.expectedNodes.includes('affinity_'+family),family);
+ const byId=new Map(T.NODES.map(n=>[n.id,n]));
+ for(const id of plan.expectedNodes){
+  const node=byId.get(id);
+  assert(node,'Missing real graph node '+id);
+  assert.notEqual(node.kind,'mixed',id);
+  assert(!node.pair,'No mixed-path stat nodes permitted: '+id);
+ }
+ assert.equal(T.valid({...progress,nodes:plan.expectedNodes}),true);
 });
 test('Adaptive third Affinity stays owned after short-term survival recovers',()=>{
  const a=newAccount(),T=a.talents,initial=earned(a,33);

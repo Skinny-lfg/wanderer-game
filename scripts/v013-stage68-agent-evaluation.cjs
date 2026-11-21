@@ -109,7 +109,7 @@ function markdown(r){
 function main(args=process.argv.slice(2)){
  const [output,...paths]=args;
  if(!output?.endsWith('.json')||paths.length!==5)throw Error('Expected OUT.json and five native strategic account report files');
- const r=evaluate(paths.map(p=>JSON.parse(fs.readFileSync(p,'utf8'))),{expectedAccounts:80});
+ const r=evaluate(paths.map(p=>JSON.parse(fs.readFileSync(p,'utf8'))),{expectedAccounts:84});
  fs.mkdirSync(path.dirname(output),{recursive:true});
  fs.writeFileSync(output,JSON.stringify(r,null,2)+'\n');
  fs.writeFileSync(output.replace(/\.json$/,'.md'),markdown(r));

@@ -45,7 +45,7 @@ jobs:
       matrix:
         include:
           - cohort: physical
-            profiles: smart-blood-pure,smart-blood-fury,smart-blood-fury-vitality,smart-fury-blood-aegis
+            profiles: smart-blood-pure,smart-blood-fury,smart-blood-fury-vitality,smart-blood-fury-vitality-no-mixed,smart-fury-blood-aegis
           - cohort: magic
             profiles: smart-magic-arcane-pure,smart-magic-fire-aegis,smart-magic-frost-vitality,smart-magic-lightning-pure
           - cohort: alternatives
@@ -114,7 +114,7 @@ jobs:
           pattern: stage68-smart-*
           merge-multiple: true
           path: reports
-      - name: Audit exact native skill, Affinity, gear and potion trajectories of all 80 accounts
+      - name: Audit exact native skill, Affinity, gear and potion trajectories of all 84 accounts
         run: |
           node scripts/v013-stage68-agent-evaluation.cjs \
             reports/stage68-strategic-global.json \
