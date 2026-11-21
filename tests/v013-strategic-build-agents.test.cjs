@@ -11,10 +11,10 @@ test('The first acquired build skill is functional, not a cosmetic stat detour',
  for(const [family,skill] of Object.entries(PLANNER.OPENING_SKILLS)){
   const id={blood:'blood-pure',fury:'fury-pure',magic:'magic-arcane-pure',
    vitality:'vitality-pure',aegis:'aegis-vitality',decay:'decay-magic-aegis'}[family];
-  const x=PLANNER.propose(T,earned(a,4),id);
+  const x=PLANNER.propose(T,earned(a,5),id);
   assert(x.expectedNodes.includes('affinity_'+family),family+JSON.stringify(x));
   assert(x.expectedNodes.includes(skill),family+JSON.stringify(x));
-  assert(T.valid({...earned(a,4),nodes:x.expectedNodes,...(x.expectedElement!=='arcane'?{element:x.expectedElement}:{})}));
+  assert(T.valid({...earned(a,5),nodes:x.expectedNodes,...(x.expectedElement!=='arcane'?{element:x.expectedElement}:{})}));
  }
 });
 
