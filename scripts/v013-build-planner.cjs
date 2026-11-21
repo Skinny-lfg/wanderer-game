@@ -15,7 +15,17 @@ const BUILDS=Object.freeze({
  'magic-lightning-pure':{primary:'magic',model:'pure',element:'lightning',weapons:['Staff','Wand'],armor:'Cloth',milestones:['overcharge','storm_mastery','chain_discharge'],focus:'spell'},
  'decay-magic-aegis':{primary:'decay',secondary:'magic',third:'aegis',secondAt:13,thirdAt:29,model:'three',mix:true,element:'arcane',weapons:['Wand','Sword'],armor:'Leather',milestones:['lingering_rot','hex_bolt','elemental_blight','grave_bloom'],focus:'rot'},
  'aegis-vitality':{primary:'aegis',secondary:'vitality',secondAt:13,model:'two',mix:true,weapons:['Mace','Sword'],armor:'Plate',milestones:['steadfast_guard','sanctuary','guardians_oath','last_bastion'],focus:'defense'},
- 'vitality-pure':{primary:'vitality',model:'pure',weapons:['Mace','Sword'],armor:'Plate',milestones:['living_recovery','overflowing_life','heart_of_the_wild'],focus:'defense'}
+ 'vitality-pure':{primary:'vitality',model:'pure',weapons:['Mace','Sword'],armor:'Plate',milestones:['living_recovery','overflowing_life','heart_of_the_wild'],focus:'defense'},
+ // Controlled weapon and potion-preparation preferences. All share the
+ // SAME legal talent plans; no loadout is granted, dropped or forced.
+ 'blood-sword':{primary:'blood',model:'pure',weapons:['Sword'],armor:'Leather',milestones:['blood_harvest','crimson_feast','heart_of_carnage'],focus:'bleed'},
+ 'blood-two-handed':{primary:'blood',model:'pure',weapons:['Two-Handed'],armor:'Leather',milestones:['blood_harvest','crimson_feast','heart_of_carnage'],focus:'bleed'},
+ 'fury-daggers':{primary:'fury',model:'pure',weapons:['Daggers'],armor:'Leather',milestones:['battle_tempo','relentless_assault','unchained_fury'],focus:'speed'},
+ 'fury-bow':{primary:'fury',model:'pure',weapons:['Bow'],armor:'Leather',milestones:['battle_tempo','relentless_assault','unchained_fury'],focus:'speed'},
+ 'magic-wand':{primary:'magic',model:'pure',element:'arcane',weapons:['Wand'],armor:'Cloth',milestones:['arcane_resonance','arcane_surge','arcane_mastery'],focus:'spell'},
+ 'magic-staff':{primary:'magic',model:'pure',element:'arcane',weapons:['Staff'],armor:'Cloth',milestones:['arcane_resonance','arcane_surge','arcane_mastery'],focus:'spell'},
+ 'magic-wand-offense':{primary:'magic',model:'pure',element:'arcane',weapons:['Wand'],armor:'Cloth',milestones:['arcane_resonance','arcane_surge','arcane_mastery'],focus:'spell',potionPolicy:'offense'},
+ 'magic-wand-defense':{primary:'magic',model:'pure',element:'arcane',weapons:['Wand'],armor:'Cloth',milestones:['arcane_resonance','arcane_surge','arcane_mastery'],focus:'spell',potionPolicy:'defense'}
 });
 const OPENING_SKILLS=Object.freeze({blood:'bleeding_edge',fury:'quick_hands',
  vitality:'strong_heart',aegis:'guarded_block',magic:'arcane_focus',decay:'toxic_touch'});
@@ -299,6 +309,13 @@ function potionPriority(kind,profile,base,context={}){
  if(kind==='purifying'&&context.condition)score+=24;
  if(kind==='fortune'&&threat==='boss')score-=20;
  if(kind==='trail'&&threat==='boss')score-=18;
+ if(plan.potionPolicy==='offense'){
+  if(['arcane','might','haste'].includes(kind))score+=28;
+  if(['barrier','ironhide'].includes(kind))score-=15;
+ }else if(plan.potionPolicy==='defense'){
+  if(['barrier','ironhide'].includes(kind))score+=40;
+  if(['arcane','might','haste'].includes(kind))score-=16;
+ }
  return score;
 }
 module.exports={BUILDS,OPENING_SKILLS,getPlan,pressure,activeFamilies,routeTo,scoreNode,

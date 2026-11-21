@@ -19,7 +19,7 @@ test('The first acquired build skill is functional, not a cosmetic stat detour',
 });
 
 test('Twelve explicit agent strategies represent pure, duo, mixed and adaptive third-affinity investments',()=>{
- assert.equal(Object.keys(PLANNER.BUILDS).length,12);
+ assert.equal(Object.keys(PLANNER.BUILDS).length,20);
  for(const [id,b] of Object.entries(PLANNER.BUILDS)){
   assert(p(id),'missing agent '+id);assert.equal(p(id).plan,id);
   assert(PLANNER.getPlan(id).milestones.length>0);
@@ -79,6 +79,20 @@ test('Magic agent chooses an actual available elemental mode through the real v1
  assert(T.valid(x));
  const arcane=PLANNER.propose(T,earned(a,22),'magic-arcane-pure');
  assert.equal(arcane.expectedElement,'arcane');
+});
+test('Matched weapon / pre-Boss potion variants differ in preferences but keep identical talent objectives',()=>{
+ const sword=p('blood-sword'),two=p('blood-two-handed'),wand=p('magic-wand'),staff=p('magic-staff');
+ assert.deepEqual(PLANNER.getPlan(sword.plan).milestones,PLANNER.getPlan(two.plan).milestones);
+ assert.deepEqual(PLANNER.getPlan(wand.plan).milestones,PLANNER.getPlan(staff.plan).milestones);
+ const item=(subtype)=>({slot:'weapon',subtype,atk:5,spell:5,rarity:'Uncommon',tier:1});
+ assert(N.gearScore(item('Sword'),sword)>N.gearScore(item('Sword'),two));
+ assert(N.gearScore(item('Two-Handed'),two)>N.gearScore(item('Two-Handed'),sword));
+ assert(N.gearScore(item('Wand'),wand)>N.gearScore(item('Wand'),staff));
+ assert(N.gearScore(item('Staff'),staff)>N.gearScore(item('Staff'),wand));
+ const offense=p('magic-wand-offense'),defense=p('magic-wand-defense');
+ assert.deepEqual(PLANNER.getPlan(offense.plan).milestones,PLANNER.getPlan(defense.plan).milestones);
+ assert(N.potionScore('arcane',offense)>N.potionScore('arcane',defense));
+ assert(N.potionScore('barrier',defense)>N.potionScore('barrier',offense));
 });
 test('Native Camp actually executes one planned build and preserves XP',()=>{
  const a=newAccount(9111),T=a.talents,s=a.state();
