@@ -64,7 +64,13 @@ function plan({seed,realm,family,node=0,count,catalog}){
  for(let i=positions.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[positions[i],positions[j]]=[positions[j],positions[i]];}
  const selected=positions.slice(0,normalCount);
  const weights=FAMILY_WEIGHTS[family],used=[];
- for(const index of selected){const role=chooseWeighted(weights,random,used);roles[index]=role;used.push(role);}
+ for(const index of selected){
+  // Stage 6.18: first two principal roles differ, later roles can repeat
+  // according to the Realm's identity (e.g. Aegis Tanks, Magic Casters).
+  // Small groups retain their Stage 8.0 exact historical selection.
+  const role=chooseWeighted(weights,normalCount>=3&&count>=5&&used.length>=2?[]:used);
+  roles[index]=role;used.push(role);
+ }
  return roles.map(role=>{
   const candidates=catalog.filter(m=>m.role===role),chosen=candidates[Math.floor(random()*candidates.length)];
   return {name:chosen.name,image:chosen.image,role};
