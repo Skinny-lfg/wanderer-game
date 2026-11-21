@@ -39,8 +39,6 @@ function bossCandidateSource(base=LIVE_SOURCE){
 }
 function combinedSource(){
  const bossSource=bossCandidateSource();
- if(bossSource.split(ORIGINAL_ATTACK).length!==2)throw Error('Stage 6.21 combined anchor invalid');
- const normalFactor=EARLY_ATTACK.replace(ORIGINAL_ATTACK.trim().replace(/^ /,''),'');
  const originalAttack=" const atk=Math.max(1,Math.round(v.atk*mult*(elite?elite.atk*eliteGrowth.atk:role==='minion'?.70:role==='skirmisher'?1.10:role==='caster'?1.08:role==='tank'?.90:1)*(1-earlyBossTuning.atk*earlyBossRamp)));";
  const replacement=` // Stage 6.21 targeted normal E1/E2 and type-specific early Boss candidate.
  const earlyNormalAttack=!boss&&!miniboss&&level<=2?
