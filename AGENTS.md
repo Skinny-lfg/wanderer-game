@@ -1,3 +1,15 @@
+## Current canonical v0.13 checkpoint — Stage 6.17 native mob roster ablation (2026-11-21)
+
+- **Stage 6.17 PR #114 merged** into the single canonical `audit/v013-stage6` development branch, merge SHA `1e575800ee416bf5825eac1c5f50f600158437db`. Real native test workflow https://github.com/Skinny-lfg/wanderer-game/actions/runs/44908515780 **SUCCESS** (pilot and full).
+- **192 strictly matched native hero states × five arms = 960 genuine fights**, 192/192 gear/Talents/seed/Realm/risk/Condition checks passed; 480 pilot subset, not additional samples.
+- Four native mobs: **188/192 (97.9%)** player wins, damage median **98**; six native mobs: **192/192 (100%)** wins, damage **24**. Composition-only six with 3 principal roles: **192/192**, damage **44.5**; small-group scaling-only six: **192/192**, damage **48**; both rules: **176/192 (91.7%)**, damage **119.5**.
+- **Crucial E5 warning:** combined six-mob fix causes **15/48 defeats (68.8% player wins)** vs **4/48 defeats (91.7% wins)** against four unchanged mobs; Magic combined overall only **78.1%** wins. Do **not** copy full combined formula directly to gameplay without calibration, and do not blanket-buff all mobs.
+- **Stage 6.18 must be implementation-oriented**, not more unbounded auditing: tune an intermediate principal role / Minion composition and smooth threshold scaling, guard E1/E2 earned-account survivability, E5/Magic, and regression sizes 1/2/3/4/6/8/12/20 before committing any live `online/v013-enemy-roster.js` change. Elites provisional ~60–70% benchmark does NOT apply to normal mobs.
+- All Stage 6.17 variants are isolated **diagnostic VM-only module replacements**; the actual roster/ability/game files, HP/ATK, player talents, art, saves, Firebase and production `main` were unchanged. Permanent `reports/v013-stage617-roster-results.md` and `reports/v013-stage617-roster-design.md`; full CI artifact `stage617-full-960-native-4to6-ablation-fights`.
+- **Eight real named Elites** (correct former internal labels): Gravebound Bulwark (`tank`), Bloodscar Ravager (`berserker`), Sanguine Wraith (`vampire`), Voidborne Hexer (`caster`), Gravecaller, Oathbound Exarch, Briarspine Horror, Ashen Executioner. Do not misreport `tank`/`caster` as non-Elite generic mobs in Stage 6.16 results.
+
+---
+
 ## Current canonical v0.13 checkpoint — Stage 6.16 granular mobs/Elites/Bosses (2026-11-21)
 
 - **PR #113 merged** into the one canonical `audit/v013-stage6` development line; merge commit `a56e2a6976e5076953bc03bfcef278ad3c978cbc`. The reviewed feature/merge tree SHA matched exactly `cfacb94f862c1f13e2b54cdc276a296065091aa2`, preserving all previous stages and approved art. Fetch current branch SHA before continuing.
