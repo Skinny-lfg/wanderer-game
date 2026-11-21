@@ -32,6 +32,8 @@ jobs:
           git diff --check
       - name: Persistent fresh native E1-E3 accounts, no earned gear or level overrides
         run: node scripts/v013-stage621-natural-recovery.cjs --mode=baseline --out=reports/v013-stage621-baseline.json --seeds=9701,9702 --profiles=cautious,balanced,magic-fire --max-level=3 --max-attempts=8 --max-total-attempts=16
+      - name: Identical initial accounts, alternative normal E1/E2 attack curve only (still genuine native)
+        run: node scripts/v013-stage621-natural-recovery.cjs --mode=candidate --out=reports/v013-stage621-candidate.json --seeds=9701,9702 --profiles=cautious,balanced,magic-fire --max-level=3 --max-attempts=8 --max-total-attempts=16
       - name: Save genuine account evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -40,5 +42,7 @@ jobs:
           path: |
             reports/v013-stage621-baseline.json
             reports/v013-stage621-baseline.md
+            reports/v013-stage621-candidate.json
+            reports/v013-stage621-candidate.md
           if-no-files-found: warn
           retention-days: 30
