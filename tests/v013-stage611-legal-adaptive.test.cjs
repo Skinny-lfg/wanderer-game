@@ -90,3 +90,13 @@ test('Native runner evidence guards reject synthetic or inconsistent accounts',(
   initialGear:{total:1,starter:1},attempts:[{error:'forced loot'}]},
  'smart-blood-pure',1),/produced an error/);
 });
+
+test('Historical smart-profile tertiary milestone uses the real target native Affinity/pair',()=>{
+ const v=H.candidate('living_recovery',100);
+ assert.equal(v.primary,'vitality');
+ assert.equal(v.status,'native-legal');
+ const mixed=H.candidate('fervent_life',100);
+ assert.equal(mixed.primary,'fury');
+ assert.equal(mixed.secondary,'vitality');
+ assert.equal(mixed.status,'native-legal');
+});
