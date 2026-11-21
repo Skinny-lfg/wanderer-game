@@ -1157,6 +1157,31 @@ function simulateAccount(seed,id,opts,simulationOptions={}){
      canPivot?{resetReason:'two_undefeated_attempts_at_E'+level}:
       profile.plan?{history:acc.attempts,priorResets:acc.attempts.reduce((n,t)=>n+(t.camp?.resets?.length||0),0)}:undefined);
     if(canPivot){if(camp.resets.length!==1)throw Error('Expected one native profile reset');activeProfile=nextProfile;pivoted=true;}
+    // Optional Stage 6.9 diagnostic splice: can only execute real Camp
+    // transactions (talent reset/allocate/prepare). Hard-gate every resource,
+    // inventory, earned XP and native Expedition unlock against mutation.
+    let earnedProbe=null;
+    if(typeof simulationOptions.onCamp==='function'){
+     const state=a.state(),fixed=JSON.stringify({
+      xp:state.automaticTalents.xp,gold:state.gold,fragments:state.fragments,
+      essence:state.crafting?.essence||0,equip:state.equip,stash:state.stash,
+      consumables:state.consumables,potionSelection:state.potionSelection,
+      runes:state.runes,runeSlots:state.runeSlots,expeditionOverflow:state.expeditionOverflow,
+      unlocked:a.controller().state.unlocked
+     });
+     earnedProbe=simulationOptions.onCamp({a,seed,profile:nextProfile,level,attempt,
+      previousAttempts:acc.attempts,camp});
+     const afterState=a.state();
+     const remaining=JSON.stringify({
+      xp:afterState.automaticTalents.xp,gold:afterState.gold,fragments:afterState.fragments,
+      essence:afterState.crafting?.essence||0,equip:afterState.equip,stash:afterState.stash,
+      consumables:afterState.consumables,potionSelection:afterState.potionSelection,
+      runes:afterState.runes,runeSlots:afterState.runeSlots,expeditionOverflow:afterState.expeditionOverflow,
+      unlocked:a.controller().state.unlocked
+     });
+     if(remaining!==fixed||!a.talents.valid(afterState.automaticTalents))
+      throw Error('Earned checkpoint test changed equipment, resources, XP, unlocks or invalid talents');
+    }
     const before={xp:a.state().automaticTalents.xp,earned:a.talents.earned(a.state().automaticTalents),
      spent:a.state().automaticTalents.nodes.length,gear:gearSnapshot(a),strategy:activeProfile.variantId||id,gold:a.state().gold,
      fragments:a.state().fragments,essence:a.state().crafting?.essence||0,
@@ -1166,7 +1191,7 @@ function simulateAccount(seed,id,opts,simulationOptions={}){
      unlocked:a.controller().state.unlocked};
     const encounter=playDungeon(a,level,activeProfile,opts,decisionModel);
     if(encounter.xpEnd<before.xp)throw Error('Native earned XP decreased');
-    entry={...entry,camp,before,...encounter,
+    entry={...entry,camp,before,...(earnedProbe?{earnedProbe}:{}),...encounter,
      after:{xp:a.state().automaticTalents.xp,earned:a.talents.earned(a.state().automaticTalents),
       spent:a.state().automaticTalents.nodes.length,unlocked:a.controller().state.unlocked,
       gold:a.state().gold,fragments:a.state().fragments,
@@ -1192,6 +1217,12 @@ function simulateAccount(seed,id,opts,simulationOptions={}){
     acc.stopReason='Native runner error at E'+level+': '+err.message;stopped=true;
    }
    acc.attempts.push(entry);
+   // Only for isolated matched combat probes: stop after a single native
+   // attempt at the specified reachable E. No level is unlocked artificially.
+   if(simulationOptions.probeLevel===level&&attempt===1){
+    acc.stopReason='Matched earned-account probe completed at E'+level;
+    stopped=true;
+   }
    if(cleared||stopped)break;
   }
   if(!cleared&&!stopped){acc.stopReason='E'+level+' unbeaten after '+opts.maxAttempts+' native attempts';stopped=true;}

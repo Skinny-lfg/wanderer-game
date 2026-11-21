@@ -1,0 +1,131 @@
+name: Wanderer Stage 6.9 — Matched native earned build benchmarks (NO DEPLOY)
+on:
+  push:
+    branches: [audit/v013-stage6]
+    paths:
+      - '.github/workflows/v013-stage69-earned-builds.yml'
+      - 'scripts/v013-stage69-earned-paired.cjs'
+      - 'scripts/v013-stage69-earned-aggregate.cjs'
+      - 'tests/v013-stage69-earned-paired.test.cjs'
+      - 'scripts/v013-natural-progression.cjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: Prove legal Camp respec, no fake XP, no gear change and prior runner parity
+        run: |
+          node --check scripts/v013-natural-progression.cjs
+          node --check scripts/v013-stage69-earned-paired.cjs
+          node --check scripts/v013-stage69-earned-aggregate.cjs
+          node --test \
+            tests/v013-stage69-earned-paired.test.cjs \
+            tests/v013-strategic-build-agents.test.cjs \
+            tests/v013-natural-progression.test.cjs \
+            tests/talent-graph-runtime.test.cjs
+          git diff --check
+  trials:
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        seed: [9701, 9702, 9703, 9704]
+        level: [5, 8, 10]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: Run five talent-only matched replays on one identical genuinely earned account
+        env:
+          SEED: ${{ matrix.seed }}
+          LEVEL: ${{ matrix.level }}
+        run: |
+          mkdir -p reports
+          node scripts/v013-stage69-earned-paired.cjs \
+            --seed="$SEED" --level="$LEVEL" \
+            --out="reports/stage69-e$LEVEL-$SEED.json" \
+            | tee "reports/stage69-e$LEVEL-$SEED.stdout.txt"
+          test -s "reports/stage69-e$LEVEL-$SEED.json"
+          git diff --exit-code -- combat/ economy/ online/ index.html
+      - name: Store provenance and native replay traces
+        if: always()
+        env:
+          SEED: ${{ matrix.seed }}
+          LEVEL: ${{ matrix.level }}
+        run: |
+          {
+            echo "revision=$GITHUB_SHA"
+            echo "native_seed=$SEED"
+            echo "earned_checkpoint_exp_level=$LEVEL"
+            echo "node=$(node --version)"
+            sha256sum scripts/v013-stage69-earned-paired.cjs \
+              scripts/v013-natural-progression.cjs scripts/v013-build-planner.cjs \
+              combat/talent-graph-runtime.js
+          } > "reports/stage69-e$LEVEL-$SEED.provenance.txt"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage69-e${{ matrix.level }}-${{ matrix.seed }}
+          path: reports/stage69-e${{ matrix.level }}-${{ matrix.seed }}.*
+          retention-days: 30
+          if-no-files-found: warn
+  aggregate:
+    needs: trials
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage69-e*
+          merge-multiple: true
+          path: reports
+      - name: Require all 12 earned account checkpoints and compare only matched first encounters
+        run: |
+          node scripts/v013-stage69-earned-aggregate.cjs \
+            reports/stage69-global-earned-benchmark.json \
+            reports/stage69-e5-9701.json \
+            reports/stage69-e5-9702.json \
+            reports/stage69-e5-9703.json \
+            reports/stage69-e5-9704.json \
+            reports/stage69-e8-9701.json \
+            reports/stage69-e8-9702.json \
+            reports/stage69-e8-9703.json \
+            reports/stage69-e8-9704.json \
+            reports/stage69-e10-9701.json \
+            reports/stage69-e10-9702.json \
+            reports/stage69-e10-9703.json \
+            reports/stage69-e10-9704.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage69-global-earned-build-comparison
+          path: |
+            reports/stage69-global-earned-benchmark.json
+            reports/stage69-global-earned-benchmark.md
+          retention-days: 30
+          if-no-files-found: warn
