@@ -188,7 +188,7 @@ test('Stage 7 cannot be paid on a forged completion or a duplicated reward recor
  const wrong=clone(g);
  wrong.dungeon.stage7RewardPaid={id:'marked_chambers',kind:'essence',essence:100};
  assert.throws(()=>c.restore(wrong),/Invalid/);
- complete(env,'pathfinder');
+ complete(env,'marked_chambers');
  K.settle(g,a.state(),a.results(),'extracted');
  const copy=clone(g);copy.dungeon.stage7RewardPaid.kind=copy.dungeon.stage7RewardPaid.kind==='blueprint'?'essence':'blueprint';
  assert.throws(()=>c.restore(copy),/Invalid/);
@@ -297,7 +297,7 @@ test('Monster Hunt only counts actual enemies killed in completed combat rooms',
  complete({g,d,card},'monster_hunt');
  assert.equal(K.progress(g).done,true);
 });
-test('Skirmish and Shrine contracts require actual completed encounters or selected Shrine Boons',()=>{
+test('Skirmish and marked chamber contracts require actual completed rooms',()=>{
  for(const id of ['skirmish_clear','marked_chambers']){
   const env=chosen(11500,id),{g,d,card}=env;
   d.scouted.push(1,2);
