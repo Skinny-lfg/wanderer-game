@@ -8,28 +8,28 @@ const CATALOG=F.CATALOG.contracts;
 const get=id=>F.lookup('contracts',id);
 const DESCRIPTIONS=Object.freeze({
  bounty_writ:{icon:'⚔',objective:'Defeat the marked Elite',detail:'Claim the optional marked Elite on the map. Its existing reagent reward is separate.'},
- pathfinder:{icon:'🧭',objective:'Clear rooms in two distinct map sectors',detail:'Complete an encounter or event in two different passages. Scouting alone does not count.'},
  purification:{icon:'✦',objective:'Disrupt a boss seal at the Forgotten Reliquary',detail:'Reach the Reliquary and sacrifice Health to disable one boss modifier.'},
  oath_of_defiance:{icon:'🛡',objective:'Defeat the final boss without disrupting its seal',detail:'Leave every boss modifier intact. Marked Elite preparation is allowed.'},
  monster_hunt:{icon:'⚔',objective:'Defeat monsters in ordinary combat rooms',detail:'Only actual kills from completed fights count. Bosses, Elites and scouting do not count.'},
  skirmish_clear:{icon:'🗡',objective:'Clear 3 ordinary combat rooms',detail:'Complete three non-Elite, non-Boss combat encounters. Visiting or scouting is not enough.'},
- shrine_oath:{icon:'✧',objective:'Accept a Boon at a discovered Shrine',detail:'Find a Boon Shrine and select one Boon during the Expedition.'}
+ marked_chambers:{icon:'🎯',objective:'Clear both marked combat rooms',detail:'Two specific chambers in different passages are marked on your map. Clear BOTH, even if you would normally avoid their encounters.'}
 });
-// The prize for each offered Contract is seeded independently of map/combat
-// RNG. A Blueprint is a chance for ONE exclusive prize, never an extra reward.
-const PRIZE_KINDS=Object.freeze(['gold','essence','fragments','reagent','potion']);
-const ESSENCE=Object.freeze({bounty_writ:[4,7,11],pathfinder:[4,7,11],
- purification:[4,7,11],oath_of_defiance:[4,7,11],
- monster_hunt:[4,7,11],skirmish_clear:[4,7,11],shrine_oath:[4,7,11]});
+// Every Contract offers exactly ONE guaranteed prize. A Blueprint is a
+// rare standalone offer, not an extra chance attached to currency/potions.
+const BASIC_PRIZES=Object.freeze(['gold','essence','fragments','reagent','potion']);
+const BLUEPRINT_OFFER_RATE=Object.freeze([.05,.07,.10]); // Guarded / Dangerous / Brutal
+const ESSENCE=Object.freeze({bounty_writ:[4,7,11],purification:[4,7,11],
+ oath_of_defiance:[4,7,11],monster_hunt:[4,7,11],
+ skirmish_clear:[4,7,11],marked_chambers:[4,7,11]});
 const REWARDS=ESSENCE;
 const KILL_TARGETS=Object.freeze([6,8,10]);
 function targetFor(id,risk){
- return id==='monster_hunt'?KILL_TARGETS[risk]:id==='skirmish_clear'?3:id==='pathfinder'?2:1;
+ return id==='monster_hunt'?KILL_TARGETS[risk]:id==='skirmish_clear'||id==='marked_chambers'?id==='skirmish_clear'?3:2:1;
 }
 function reward(id,risk,family='blood',seed=0,cardId='default',avoidKind=null){
  if(!get(id)||![0,1,2].includes(risk)||!C.FAMILIES.includes(family))throw Error('Invalid Contract reward');
- const kinds=PRIZE_KINDS.filter(kind=>kind!==avoidKind);
- const roll=F.rng(seed,'contract_prize_v2_'+cardId+'_'+id);
+ const kinds=BASIC_PRIZES.filter(kind=>kind!==avoidKind);
+ const roll=F.rng(seed,'contract_prize_v3_'+cardId+'_'+id);
  const kind=kinds[Math.floor(roll()*kinds.length)];
  if(kind==='gold')return {kind,gold:[28,45,70][risk]};
  if(kind==='essence')return {kind,essence:ESSENCE[id][risk]};
@@ -38,8 +38,8 @@ function reward(id,risk,family='blood',seed=0,cardId='default',avoidKind=null){
  const potions=['ironhide','purifying','fate'];
  return {kind:'potion',potion:potions[Math.floor(roll()*potions.length)],amount:1};
 }
-function blueprintChance(seed,card,id,due){
- return F.rng(seed,'contract_blueprint_chance_v2_'+card.id+'_'+id)()<due.chance;
+function blueprintOffer(seed,card,id){
+ return F.rng(seed,'contract_guaranteed_blueprint_v3_'+card.id+'_'+id)()<BLUEPRINT_OFFER_RATE[card.risk];
 }
 function canon(known){
  if(!Array.isArray(known)||new Set(known).size!==known.length||
@@ -54,30 +54,31 @@ function blueprint(seed,card,known,id='default'){
  const fallback=card.risk===0?[]:candidates.filter(r=>r.rarity!==preferred);
  const pool=available.length?available:fallback;
  if(!pool.length)return null;
- const random=F.rng(seed,'contract_blueprint_v2_'+card.id+'_'+id);
+ const random=F.rng(seed,'contract_blueprint_v3_'+card.id+'_'+id);
  return pool[Math.floor(random()*pool.length)].id;
 }
 function plan(seed,card,known=[]){
- const ids=offer(seed,card),knownRecipes=canon(known),reserved=[...knownRecipes],rewards={};
- let lastKind=null;
+ const ids=offer(seed,card),knownRecipes=canon(known),rewards={};
+ const targets=ids.includes('marked_chambers')?markedRooms(seed,card):[];
+ let lastKind=null,usedBlueprint=false;
  for(const id of ids){
-  const fallback=reward(id,card.risk,card.family,seed,card.id,lastKind);
-  lastKind=fallback.kind;
-  const recipeId=blueprint(seed,card,reserved,id);
-  if(recipeId){
-   reserved.push(recipeId);
-   rewards[id]={kind:'blueprint_chance',recipeId,chance:[.20,.30,.40][card.risk],fallback};
-  }else rewards[id]=fallback;
+  const basic=reward(id,card.risk,card.family,seed,card.id,lastKind);
+  const recipeId=!usedBlueprint?blueprint(seed,card,knownRecipes,id):null;
+  if(recipeId&&blueprintOffer(seed,card,id)){
+   // Once a Blueprint is offered, completing its objective guarantees it.
+   rewards[id]={kind:'blueprint',recipeId};
+   usedBlueprint=true;
+  }else{
+   rewards[id]=basic;
+   lastKind=basic.kind;
+  }
  }
- return {ids,knownRecipes,rewards};
+ return {ids,knownRecipes,rewards,markedRooms:targets};
 }
 function label(prize){
- if(prize?.kind==='blueprint_chance'){
-  const r=C.RECIPES.find(r=>r.id===prize.recipeId);
-  return Math.round(prize.chance*100)+'% chance: '+(r?r.rarity+' '+r.name:'Blueprint')+' · Otherwise '+label(prize.fallback);
- }
  if(prize?.kind==='blueprint'){
-  const r=C.RECIPES.find(r=>r.id===prize.recipeId);return r?r.rarity+' Blueprint · '+r.name:'Unknown Blueprint';
+  const r=C.RECIPES.find(r=>r.id===prize.recipeId);
+  return r?'Guaranteed '+r.rarity+' Blueprint · '+r.name:'Guaranteed Blueprint';
  }
  if(prize?.kind==='essence')return '+'+prize.essence+' Essence';
  if(prize?.kind==='gold')return '+'+prize.gold+' Gold';
