@@ -340,7 +340,7 @@ function main(argv=process.argv.slice(2)){
   const dir=path.resolve(ROOT,args.inputs);
   const files=fs.readdirSync(dir).filter(f=>/^v013-stage623-seed\d+\.json$/.test(f)).sort();
   if(!files.length)throw Error('No Stage 6.23 shard JSON files');
-  out=aggregate(files.map(f=>JSON.parse(fs.readFileSync(path.join(dir,f),'utf8')))));
+  out=aggregate(files.map(f=>JSON.parse(fs.readFileSync(path.join(dir,f),'utf8'))));
  }
  const file=write(args.out,out);
  if(!out.summary.coverage.allChecksPassed||out.summary.coverage.errors)
