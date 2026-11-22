@@ -22,13 +22,14 @@ test('Eight independent curves, finite, clamped, non-regressive, and strict iden
  assert.throws(()=>A.scalingFor('not-an-elite',35),/Invalid/);
  assert.throws(()=>A.scalingFor('tank',NaN),/Invalid/);
 });
-test('Historical combat runtime is reconstructed exactly from the canonical prior commit',()=>{
- const oldSha='904063a3a86437d363cdc10a1e961d997fd8ccc5';
- // Git blob SHA uses "blob <bytes>\\0" + exact source, not plain SHA256.
- const bytes=Buffer.from(E.BASELINE_RUNTIME,'utf8');
- const gitBlob=crypto.createHash('sha1').update(Buffer.from('blob '+bytes.length+'\0')).update(bytes).digest('hex');
- assert.equal(gitBlob,oldSha,'the before arm must be the exact previous runtime');
+test('Stage 6.19 A/B changes only Elite extra growth in the CURRENT native combat runtime',()=>{
+ const extra=' const eliteGrowth=elite?root.WandererV013EliteAbilities.scalingFor(elite.id,level):null;';
+ const baseline=' const eliteGrowth=elite?{hp:1,atk:1,def:1}:null;';
+ assert.equal(E.LIVE_RUNTIME.split(extra).length,2);
+ assert.equal(E.BASELINE_RUNTIME,E.LIVE_RUNTIME.replace(extra,baseline));
  assert.notEqual(E.SOURCE_HASH.before,E.SOURCE_HASH.after);
+ assert(E.BASELINE_RUNTIME.includes('root.WandererV013BossAbilities.earlyScale'));
+ assert(E.BASELINE_RUNTIME.includes('Math.round(hit*.33)'),'preserves approved Wraith lifesteal fix');
 });
 test('Registered pilot/matrix cover all eight per Elite with legally constructed player Talents',()=>{
  const pilot=E.plan(E.DEFAULTS),full=E.plan({...E.DEFAULTS,seedsPerCell:2});

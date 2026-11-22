@@ -1,0 +1,119 @@
+name: Wanderer Stage 6.24B — E1-E5 native base corrections (NO DEPLOY)
+on:
+  push:
+    branches: [audit/v013-stage624b-e1-e5-calibration-20261122]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Native unit regressions, preview parity, C6, full gate
+        run: |
+          node --test tests/v013-stage624b-balance.test.cjs tests/v013-stage82-elite-abilities.test.cjs tests/v013-stage80-enemy-roster.test.cjs tests/v013-stage619-elite-balance.test.cjs tests/v013-stage623-earned-matched-enemies.test.cjs tests/v013-stage624-e1-e5-baseline.test.cjs
+          npm run test:v013:gate
+          node scripts/v013-c6-final-audit.cjs
+          npm run build:pages
+          git diff --exit-code -- docs/index.html docs/online/v013-elite-abilities.js docs/online/v013-enemy-roster.js docs/combat/v012-combat-runtime.js
+          git diff --check
+  cohort:
+    needs: validate
+    runs-on: ubuntu-latest
+    name: Real E1-E5 natural gameplay with 13 matched opponents, seed ${{ matrix.seed }}
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [9701,9702,9703,9704]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Zero-XP native account earned Camp versus Tank, all Elites, Boss and 3/6/12 groups
+        run: >-
+          node scripts/v013-stage624-e1-e5-baseline.cjs
+          --seed=${{ matrix.seed }}
+          --out=reports/v013-stage624-seed${{ matrix.seed }}.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage624b-final-earned-seed-${{ matrix.seed }}
+          path: reports/v013-stage624-seed${{ matrix.seed }}.json
+          if-no-files-found: error
+          retention-days: 30
+  high-level:
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: All eight native Elites, every Affinity and legal E5/E15/E35/E70 gear/Talents
+        run: >-
+          node scripts/v013-stage619-elite-balance.cjs
+          --mode=pilot --seeds-per-cell=1
+          --out=reports/v013-stage624b-high-level.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage624b-final-high-level
+          path: |
+            reports/v013-stage624b-high-level.json
+            reports/v013-stage624b-high-level.md
+          if-no-files-found: error
+          retention-days: 30
+  aggregate:
+    needs: [cohort,high-level]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage624b-final-earned-seed-*
+          path: reports/stage624b-earned-shards
+          merge-multiple: true
+      - name: Accept complete E1-E5 earned account and all native enemy cohorts
+        run: |
+          node scripts/v013-stage624-e1-e5-baseline.cjs --mode=aggregate --inputs=reports/stage624b-earned-shards --out=reports/v013-stage624b-final.json
+          node - <<'NODE'
+          const r=require('./reports/v013-stage624b-final.json'),c=r.coverage;
+          if(c.seeds!==4||c.shards!==4||c.accounts!==12||c.errors||!c.allMatched||
+           c.checkpoints<40||c.fights!==c.checkpoints*13||r.byLevel.length!==5||
+           r.byLevel.some(x=>x.accounts<1||x.tank.n!==x.accounts||
+            x.elites.n!==x.accounts*8||x.boss.n!==x.accounts||
+            [3,6,12].some(n=>x.groups[n].n!==x.accounts)))
+            throw Error('Stage 6.24B natural E1–E5 regression coverage invalid');
+          console.log('STAGE624B_ACCEPTED='+JSON.stringify({coverage:c,byLevel:r.byLevel.map(x=>({
+           E:x.E,characters:x.accounts,HP:x.player.maxhp,ATK:x.player.attack,
+           eliteWins:x.elites.wins+'/'+x.elites.n,tankWins:x.tank.wins+'/'+x.tank.n,
+           bossUnprepared:x.boss.wins+'/'+x.boss.n,
+           group3:x.groups[3].wins+'/'+x.groups[3].n,
+           group6:x.groups[6].wins+'/'+x.groups[6].n,
+           group12:x.groups[12].wins+'/'+x.groups[12].n,
+           eliteById:Object.fromEntries(Object.entries(x.eliteById).map(([id,a])=>[id,a.wins+'/'+a.n])),
+           naturalBoss:x.natural.bossWon+'/'+x.natural.bossEntered}))}));
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage624b-final-native-result
+          path: |
+            reports/v013-stage624b-final.json
+            reports/v013-stage624b-final.md
+          if-no-files-found: error
+          retention-days: 30

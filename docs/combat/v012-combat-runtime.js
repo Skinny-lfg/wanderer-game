@@ -796,7 +796,7 @@ function updateFight(){
    }
    if(e.eliteType==='vampire'){
     const multiplier=ports.isPhase1Run()&&ports.phase1Build?WandererV012Buildcraft.enemyHealMultiplier(ports.phase1Build,e):1;
-    const heal=Math.floor(Math.min(Math.max(0,e.maxhp-e.hp),Math.max(1,Math.round(hit*.38)),Math.max(1,Math.round(e.maxhp*.06)))*multiplier);
+    const heal=Math.floor(Math.min(Math.max(0,e.maxhp-e.hp),Math.max(1,Math.round(hit*.33)),Math.max(1,Math.round(e.maxhp*.055)))*multiplier);
     if(heal>0){e.hp+=heal;ports.addLog('🩸 Vampire drains '+heal+' HP','spell');enemyAbilityVfx='EliteVampire';}
    }
    if(e.eliteType==='caster'&&ports.setNow(r)>=(r.nextCasterHexAt||0)){

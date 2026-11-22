@@ -1,6 +1,6 @@
 'use strict';
-// Stage 6.19: each named Elite is tested explicitly against the historical
-// native runtime and the same genuine game runtime with per-Elite scaling.
+// Stage 6.19: each named Elite is tested explicitly against the current
+// native runtime with per-Elite additional growth disabled/enabled.
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const H=require('./v013-stage615-enemy-hierarchy.cjs');
 const S=require('./simulate-progression.cjs');
@@ -14,19 +14,14 @@ const DEFAULTS=Object.freeze({mode:'pilot',seedsPerCell:1,seedStart:6190011,
  out:'reports/v013-stage619-elites-pilot.json'});
 const sha=s=>crypto.createHash('sha256').update(s).digest('hex');
 const LIVE_RUNTIME=fs.readFileSync(path.resolve(__dirname,'../combat/v012-combat-runtime.js'),'utf8');
-const OLD_BLOCK=String.raw` const elite=miniboss?ports.eliteArchetype(ports.state.run):null;
- const hp=Math.max(1,Math.round(v.hp*mult*(elite?elite.hp:role==='minion'?.68:role==='tank'?1.32:role==='skirmisher'?.96:role==='caster'?.90:1)));
- const atk=Math.max(1,Math.round(v.atk*mult*(elite?elite.atk:role==='minion'?.70:role==='skirmisher'?1.10:role==='caster'?1.08:role==='tank'?.90:1)));
- const defense=Math.max(0,Math.round(v.def*mult*(elite?elite.def:role==='tank'?1.35:role==='minion'?.55:1)));`;
-const NEW_BLOCK=String.raw` const elite=miniboss?ports.eliteArchetype(ports.state.run):null;
- // Stage 6.19: only named Elites get level-specific, archetype-specific
- // growth. Normal mobs and Bosses continue to use their native formulas.
- const eliteGrowth=elite?root.WandererV013EliteAbilities.scalingFor(elite.id,level):null;
- const hp=Math.max(1,Math.round(v.hp*mult*(elite?elite.hp*eliteGrowth.hp:role==='minion'?.68:role==='tank'?1.32:role==='skirmisher'?.96:role==='caster'?.90:1)));
- const atk=Math.max(1,Math.round(v.atk*mult*(elite?elite.atk*eliteGrowth.atk:role==='minion'?.70:role==='skirmisher'?1.10:role==='caster'?1.08:role==='tank'?.90:1)));
- const defense=Math.max(0,Math.round(v.def*mult*(elite?elite.def*eliteGrowth.def:role==='tank'?1.35:role==='minion'?.55:1)));`;
-if(LIVE_RUNTIME.split(NEW_BLOCK).length!==2)throw Error('Live native Elite progression changed; refuse stale before/after comparison');
-const BASELINE_RUNTIME=LIVE_RUNTIME.replace(NEW_BLOCK,OLD_BLOCK);
+// Native Stage 6.19 growth A/B on the CURRENT combat runtime. The historical
+// 6.19 pre-change runtime cannot be replayed against later Boss/Elite fixes.
+// Toggle only the optional growth factor while retaining every other mechanic.
+const EXTRA_GROWTH_LINE=' const eliteGrowth=elite?root.WandererV013EliteAbilities.scalingFor(elite.id,level):null;';
+const BASE_GROWTH_LINE=' const eliteGrowth=elite?{hp:1,atk:1,def:1}:null;';
+if(LIVE_RUNTIME.split(EXTRA_GROWTH_LINE).length!==2)
+ throw Error('Native Stage 6.19 Elite growth line changed; refuse stale controlled comparison');
+const BASELINE_RUNTIME=LIVE_RUNTIME.replace(EXTRA_GROWTH_LINE,BASE_GROWTH_LINE);
 const SOURCE_HASH=Object.freeze({before:sha(BASELINE_RUNTIME),after:sha(LIVE_RUNTIME)});
 const med=a=>{const x=a.filter(Number.isFinite).slice().sort((a,b)=>a-b),i=x.length>>1;
  return !x.length?null:x.length%2?x[i]:(x[i-1]+x[i])/2;};
