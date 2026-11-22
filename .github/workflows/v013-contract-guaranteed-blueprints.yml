@@ -1,8 +1,9 @@
-name: Wanderer v0.13 — Guaranteed Blueprint and marked combat Contracts (NO DEPLOY)
+name: Wanderer v0.13 — Contracts objective and reward regression (NO DEPLOY)
 on:
   push:
     branches:
       - feature/v013-contract-marked-rooms-guaranteed-blueprints-20261122
+      - feature/v013-contract-boon-collector-20261122
     paths:
       - '.github/workflows/v013-contract-guaranteed-blueprints.yml'
       - 'combat/v013-expedition-foundation.js'
@@ -40,7 +41,7 @@ jobs:
           cmp online/v013-expedition-contracts.js docs/online/v013-expedition-contracts.js
           cmp online/v013-expedition-contracts.css docs/online/v013-expedition-contracts.css
           git diff --check
-      - name: Six Contracts, deterministic rare Blueprint and marked-map routes
+      - name: Seven Contracts, Boon Shrine objectives, Blueprint and marked-map routes
         run: |
           node --test tests/v013-stage7-contracts.test.cjs
           node --test tests/v013-map-intelligence.test.cjs tests/v013-boss-preparation-runtime.test.cjs

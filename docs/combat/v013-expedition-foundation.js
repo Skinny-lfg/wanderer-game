@@ -48,7 +48,8 @@ const CONTRACTS=[
  row('oath_of_defiance','Oath of Defiance',AFFINITIES,{disabledBossProperties:0}),
  row('monster_hunt','Monster Hunt',AFFINITIES,{kills:6}),
  row('skirmish_clear','Skirmish Orders',AFFINITIES,{clearedRooms:3}),
- row('marked_chambers','Marked Chambers',AFFINITIES,{markedRooms:2})
+ row('marked_chambers','Marked Chambers',AFFINITIES,{markedRooms:2}),
+ row('boon_collector','Boon Collector',AFFINITIES,{selectedBoons:2})
 ];
 const ROOMS=[
  row('forgotten_reliquary','Forgotten Reliquary',AFFINITIES,{sacrificePlayerMaxHpPct:.15,healPlayerMaxHpPct:.15,restorePlayerMaxMpPct:.25,maxBossModifiersDisabled:1})

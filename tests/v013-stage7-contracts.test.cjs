@@ -2,9 +2,10 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 require('../combat/v013-expedition-foundation.js');
 require('../online/v013-map-intelligence.js');
+require('../online/v013-expedition-boons.js');
 require('../economy/v013-crafting.js');
 require('../online/v013-expedition-contracts.js');
-const F=globalThis.WandererV013ExpeditionFoundation,K=globalThis.WandererV013ExpeditionContracts,C=globalThis.WandererV013Crafting;
+const F=globalThis.WandererV013ExpeditionFoundation,K=globalThis.WandererV013ExpeditionContracts,C=globalThis.WandererV013Crafting,B=globalThis.WandererV013ExpeditionBoons;
 const create=require('./v012-economy-harness.cjs'),clone=x=>JSON.parse(JSON.stringify(x));
 function fresh(seed=7711,risk=0){
  const a=create(seed,undefined,{}, {skipPersistence:true});
@@ -29,6 +30,15 @@ function complete(env,id){
   const targets=d.stage72RewardPlan.markedRooms;
   assert.equal(targets.length,2);
   for(const node of targets){d.cleared.push(node);d.visited.push(node);g.history.push({node,event:null,boss:false,elite:false});}
+ }else if(id==='boon_collector'){
+  const chosen=[];
+  for(const [round,room] of card.boonShrines.entries()){
+   d.cleared.push(room);d.visited.push(room);
+   const boon=B.offer(d.foundationManifest.seed,d.realm,round,[],chosen)[0];
+   d.foundationState=F.applyDecision(d.foundationState,{type:'choose_boon',id:boon,room,families:[]},d.foundationManifest);
+   chosen.push(boon);
+  }
+  assert(B.validateOffer(d,g));
  }else if(id==='purification'){
   d.foundationState=F.applyDecision(d.foundationState,{type:'prepare_boss',source:'reliquary'},d.foundationManifest);
   d.disabledBossModifierId=d.foundationState.bossModifierIds[0];
@@ -49,8 +59,8 @@ function complete(env,id){
   assert(count>=required);
  }else throw Error('Unknown synthetic completion');
 }
-test('Stage 7.7 offers six comprehensible Contracts and exclusive guaranteed reward types',()=>{
- assert.deepEqual(K.CATALOG.map(c=>c.id),['bounty_writ','purification','oath_of_defiance','monster_hunt','skirmish_clear','marked_chambers']);
+test('Stage 7.8 offers seven comprehensible Contracts and exclusive guaranteed reward types',()=>{
+ assert.deepEqual(K.CATALOG.map(c=>c.id),['bounty_writ','purification','oath_of_defiance','monster_hunt','skirmish_clear','marked_chambers','boon_collector']);
  const kinds=new Set();
  for(const entry of K.CATALOG)for(let risk=0;risk<=2;risk++)for(let seed=1;seed<=20;seed++){
   const prize=K.reward(entry.id,risk,'blood',seed,'test');
@@ -120,6 +130,37 @@ test('Marked Chambers are specific separated native combat rooms; visiting/scout
  d.cleared.push(targets[1]);g.history.push({node:targets[1],event:null,boss:false,elite:false});
  assert.deepEqual(K.progress(g),{current:2,target:2,done:true});
  assert(K.validate(g));
+});
+test('Boon Collector requires two actual Boons selected in distinct Shrines',()=>{
+ const env=chosen(7741,'boon_collector'),{g,d,card,a}=env,[first,second]=card.boonShrines;
+ assert(card.nodes[first].kind==='shrine'&&card.nodes[second].kind==='shrine');
+ assert(K.boonShrineRouteSteps(card)<=card.stepLimit);
+ assert.deepEqual(K.progress(g),{current:0,target:2,done:false});
+ d.scouted.push(first,second);d.visited.push(first,second);
+ assert.equal(K.progress(g).current,0,'visiting or scouting must not count');
+ d.cleared.push(first);
+ assert.equal(K.progress(g).current,0,'clearing a Shrine without selecting does not count');
+ const one=B.offer(d.foundationManifest.seed,d.realm,0,[],[])[0];
+ d.foundationState=F.applyDecision(d.foundationState,{type:'choose_boon',id:one,room:first,families:[]},d.foundationManifest);
+ assert.deepEqual(K.progress(g),{current:1,target:2,done:false});
+ assert.equal(K.settle(g,a.state(),a.results(),'extracted'),null);
+ d.cleared.push(second);
+ const two=B.offer(d.foundationManifest.seed,d.realm,1,[],[one])[0];
+ d.foundationState=F.applyDecision(d.foundationState,{type:'choose_boon',id:two,room:second,families:[]},d.foundationManifest);
+ assert.notEqual(one,two);
+ assert(B.validateOffer(d,g));
+ assert.deepEqual(K.progress(g),{current:2,target:2,done:true});
+ assert(K.validate(g));
+ assert(K.settle(g,a.state(),a.results(),'extracted'));
+ assert.equal(K.settle(g,a.state(),a.results(),'extracted'),null);
+ assert.equal(K.inspect(g).status,'completed');
+});
+test('Boon Collector cannot be offered if both Shrines are unreachable',()=>{
+ const {card}=fresh(7731,2),blocked=clone(card);
+ assert.equal(K.eligible(card,'boon_collector'),K.boonShrineRouteSteps(card)<=card.stepLimit);
+ blocked.stepLimit=0;assert.equal(K.eligible(blocked,'boon_collector'),false);
+ blocked.stepLimit=card.stepLimit;blocked.edges=[];
+ assert.equal(K.eligible(blocked,'boon_collector'),false);
 });
 test('Bounty Writ pays only one Contract reward; automatic Elite reagent stays separate',()=>{
  const env=chosen(7780,'bounty_writ'),{a,g,d,card}=env;
@@ -308,7 +349,7 @@ test('Skirmish and marked chamber contracts require actual completed rooms',()=>
  }
 });
 test('Contract completed before extraction grants nothing on death or abandonment',()=>{
- for(const id of ['bounty_writ','monster_hunt','skirmish_clear','marked_chambers']){
+ for(const id of ['bounty_writ','monster_hunt','skirmish_clear','marked_chambers','boon_collector']){
   const env=chosen(11600,id),{g,a}=env;
   complete(env,id);
   const prior=clone(a.state());
