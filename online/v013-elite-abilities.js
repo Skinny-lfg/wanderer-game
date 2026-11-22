@@ -40,9 +40,9 @@ function boundSoulArchetype(totalSummoned){
  return {name:variant.name,image:variant.image,role:'minion',summonFamily:'gravecaller',summonKind:'bound_soul'};
 }
 const DEFINITIONS=Object.freeze({
- gravecaller:Object.freeze({name:'Call of the Fallen',role:'Summoner',icon:'☠',description:'Channels a 1s interruptible ritual at 85% and 40% HP, summoning up to two bound souls (four total, two alive). Each successful bound soul hit adds Deathbound Decay (up to 4 stacks, 4s), dealing damage every second until the summons die.',thresholds:Object.freeze([.85,.40]),summons:2,maxSummons:4,maxLiving:2,cast:1,hpFactor:.50,atkFactor:.35,intervalFactor:1.20}),
+ gravecaller:Object.freeze({name:'Call of the Fallen',role:'Summoner',icon:'☠',description:'Channels a 1s interruptible ritual at 85% and 40% HP, summoning up to two bound souls (four total, two alive). Each successful bound soul hit adds Deathbound Decay (up to 4 stacks, 4s), dealing damage every second until the summons die.',thresholds:Object.freeze([.85,.40]),summons:2,maxSummons:4,maxLiving:2,cast:1,hpFactor:.48,atkFactor:.34,intervalFactor:1.20}),
  oathbound_exarch:Object.freeze({name:'Oathward Benediction',role:'Aegis Support',icon:'⛨',description:'An oath of Aegis grants an ally or itself Barrier worth 15% max HP, up to three times, every 10s.',first:3,cooldown:10,cast:.75,maxCasts:3,barrier:.15}),
- briarspine_horror:Object.freeze({name:'Thornbloom',role:'Thorns',icon:'🌵',description:'Vitality: every 12s, prepares for 1s and reflects 15% of direct HP damage for 4s (1.5% of hero max HP per hit, 6% per bloom).',first:12,cooldown:12,cast:1}),
+ briarspine_horror:Object.freeze({name:'Thornbloom',role:'Thorns',icon:'🌵',description:'Vitality: first at 9s, then every 12s; prepares for 1s and reflects 15% of direct HP damage for 4s (1.5% of hero max HP per hit, 6% per bloom).',first:9,cooldown:12,cast:1}),
  ashen_executioner:Object.freeze({name:'Ashen Sentence',role:'Heavy Striker',icon:'⚒',description:'Prepares a 1.5s heavy strike every 10s; maximum 18% of hero max HP before Block/Barrier. Stun and delay interrupt.',first:3.5,cooldown:10,cast:1.5,multiplier:2.4,capFraction:.18})
 });
 function attach(enemy,now=0){
@@ -59,7 +59,7 @@ function livingSummons(run){
 // Deathbound Ritual: only the Gravecaller's bound souls can infect.
 // All timing is deterministic combat time; stacks cannot persist after the
 // last living summon dies, the owner dies or the combat finishes.
-const DEATHBOUND=Object.freeze({maxStacks:4,duration:4,tickSeconds:1,damagePerStack:.0075});
+const DEATHBOUND=Object.freeze({maxStacks:4,duration:4,tickSeconds:1,damagePerStack:.0070});
 function deathboundOwner(run){
  const e=run?.encounterLeader||run?.enemies?.find(m=>m?.miniboss&&m?.eliteType==='gravecaller');
  return run?.status==='fight'&&e?.hp>0&&e.miniboss&&e.eliteType==='gravecaller'?e:null;

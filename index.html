@@ -706,11 +706,11 @@ function estimateEnemy(level,n=1){return WandererV012CombatCore.estimateEnemy(le
 const ELITE_ARCHETYPES={
  tank:{id:'tank',icon:'🛡️',name:'Gravebound Bulwark',role:'Tank',risk:'High health, low damage. HP hits reduce your healing by 40% for 5s (refreshes on each hit).',hp:1.75,atk:.65,def:1.22,interval:1.93},
  berserker:{id:'berserker',icon:'⚔️',name:'Bloodscar Ravager',role:'Berserker',risk:'Low health, high attack damage and quick strikes. Each hit is capped at 35% of your max HP.',hp:.72,atk:1.20,def:.86,interval:1.46},
- vampire:{id:'vampire',icon:'🩸',name:'Sanguine Wraith',role:'Vampire',risk:'Recovers HP when its attacks damage your health. Barrier and burst are useful.',hp:1.10,atk:1.02,def:1.00,interval:1.56},
+ vampire:{id:'vampire',icon:'🩸',name:'Sanguine Wraith',role:'Vampire',risk:'Recovers HP when its attacks damage your health. Barrier and burst are useful.',hp:1.01,atk:.98,def:1.00,interval:1.56},
  caster:{id:'caster',icon:'🔮',name:'Voidborne Hexer',role:'Caster',risk:'Successful hits weaken your direct damage by 20% for 3 combat seconds (7s between casts).',hp:.91,atk:.93,def:.90,interval:1.64},
- gravecaller:{id:'gravecaller',icon:'☠',name:'Gravecaller',role:'Summoner',risk:'Channels a 1s interruptible ritual at 85% and 40% HP, summoning up to 2 bound souls each time (4 total, 2 alive). Bound soul hits apply stacking Deathbound Decay (up to 4 stacks, 4s), damaging you each second until the summons die.',hp:1.03,atk:.75,def:.86,interval:1.8},
+ gravecaller:{id:'gravecaller',icon:'☠',name:'Gravecaller',role:'Summoner',risk:'Channels a 1s interruptible ritual at 85% and 40% HP, summoning up to 2 bound souls each time (4 total, 2 alive). Bound soul hits apply stacking Deathbound Decay (up to 4 stacks, 4s), damaging you each second until the summons die.',hp:1.00,atk:.735,def:.86,interval:1.8},
  oathbound_exarch:{id:'oathbound_exarch',icon:'⛨',name:'Oathbound Exarch',role:'Support',risk:'Aegis oath: every 10s channels Barrier for an ally, or itself when alone, worth 15% max Health, up to 3 casts. Stun interrupts.',hp:1.23,atk:.67,def:1.12,interval:1.95},
- briarspine_horror:{id:'briarspine_horror',icon:'🌵',name:'Briarspine Horror',role:'Thorns',risk:'Vitality · Thornbloom reflects direct hits during its four-second guard.',hp:1.12,atk:.78,def:1.00,interval:1.90},
+ briarspine_horror:{id:'briarspine_horror',icon:'🌵',name:'Briarspine Horror',role:'Thorns',risk:'Vitality · Thornbloom reflects direct hits during its four-second guard.',hp:1.20,atk:.84,def:1.00,interval:1.90},
  ashen_executioner:{id:'ashen_executioner',icon:'⚒',name:'Ashen Executioner',role:'Heavy Striker',risk:'Every 10s prepares 1.5s heavy strike, capped at 18% max HP before Block/Barrier. Stun and delay interrupt.',hp:1.05,atk:1.1,def:.91,interval:2.05}
 };
 const BOSS_ARCHETYPES=['guardian','leech','berserker','matriarch','devourer','conductor'].map(style=>{

@@ -195,30 +195,11 @@ function prepare(level,build,seed,opts,desiredRisk=undefined,desiredFamily=undef
       (typeof opts.stage619BaselineRuntime!=='string'||!opts.stage619BaselineRuntime.includes('function enemyFor(')||
        !opts.stage619BaselineRuntime.includes('WandererV012CombatRuntime')))
       throw Error('Invalid Stage 6.19 test-only native combat baseline');
-    // Stage 6.24B: isolated candidate/base A/B on the same genuinely earned
-    // hero. These sources only enter the disposable VM. No gameplay override,
-    // item injection, altered Talent XP or artificial Expedition unlock.
-    const nativeParts={
-      stage624IndexSource:['<script>','const ELITE_ARCHETYPES='],
-      stage624EliteSource:['WandererV013EliteAbilities','function scalingFor('],
-      stage624RosterSource:['WandererV013EnemyRoster','function scaleFor('],
-      stage624RuntimeSource:['WandererV012CombatRuntime','function enemyFor(']
-    };
-    for(const [key,tokens] of Object.entries(nativeParts))if(opts[key]!==undefined&&
-      (typeof opts[key]!=='string'||tokens.some(token=>!opts[key].includes(token))))
-      throw Error('Invalid Stage 6.24B isolated source '+key);
     const overrides={
       ...(opts.stage617RosterSource===undefined?{}:{'online/v013-enemy-roster.js':opts.stage617RosterSource}),
-      ...(opts.stage619BaselineRuntime===undefined?{}:{'combat/v012-combat-runtime.js':opts.stage619BaselineRuntime}),
-      ...(opts.stage624EliteSource===undefined?{}:{'online/v013-elite-abilities.js':opts.stage624EliteSource}),
-      ...(opts.stage624RosterSource===undefined?{}:{'online/v013-enemy-roster.js':opts.stage624RosterSource}),
-      ...(opts.stage624RuntimeSource===undefined?{}:{'combat/v012-combat-runtime.js':opts.stage624RuntimeSource})
+      ...(opts.stage619BaselineRuntime===undefined?{}:{'combat/v012-combat-runtime.js':opts.stage619BaselineRuntime})
     };
-    if((opts.stage624RosterSource!==undefined&&opts.stage617RosterSource!==undefined)||
-       (opts.stage624RuntimeSource!==undefined&&opts.stage619BaselineRuntime!==undefined))
-      throw Error('Conflicting native VM overrides');
-    const a=create(resolvedSeed,opts.stage624IndexSource,overrides,
-      {recordModules:opts.recordModules,skipPersistence:true,measure:opts.measure===true,now:1720000000000+resolvedSeed});
+    const a=create(resolvedSeed,undefined,overrides, {recordModules:opts.recordModules,skipPersistence:true,measure:opts.measure===true,now:1720000000000+resolvedSeed});
   if(earned){
    // Clone complete items, their original ID/affix/trait and real earned runes.
    // The later arena-style encounter is deliberately staged, never played

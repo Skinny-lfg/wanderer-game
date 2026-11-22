@@ -57,16 +57,16 @@ test('Deathbound Ritual: only live summoned undead infect the player on successf
  assert.equal(A.deathboundStatus(r).stacks,1);
  move(r,.8);assert.equal(A.tickDeathbound(r),null);
  move(r,1);const first=A.tickDeathbound(r);
- assert.deepEqual({damage:first.damage,absorbed:first.absorbed,stacks:first.stacks},{damage:8,absorbed:0,stacks:1});
- assert.equal(r.hp,992);
+ assert.deepEqual({damage:first.damage,absorbed:first.absorbed,stacks:first.stacks},{damage:7,absorbed:0,stacks:1});
+ assert.equal(r.hp,993);
  r.barrier=12;
  move(r,1.1);
  for(let i=0;i<8;i++)A.applyDeathbound(r,undead,10);
  assert.equal(A.deathboundStatus(r).stacks,4,'stacks capped at four');
  move(r,2.1);const second=A.tickDeathbound(r);
  assert.equal(second.absorbed,12);
- assert.equal(second.damage,18);
- assert.equal(r.hp,974);
+ assert.equal(second.damage,16);
+ assert.equal(r.hp,977);
  assert.equal(r.barrier,0);
  undead.hp=0;
  assert.equal(A.deathboundStatus(r),null,'last undead death cancels active Decay immediately');
@@ -116,13 +116,13 @@ test('Undead summon infrastructure respects max two alive and four total',()=>{
  const e=elite('gravecaller'),r=run(e);r.encounterLeader=e;r.totalMobCount=1;
  r.stage83EliteSummons={summoned:0,maxSummons:4,maxLivingMinions:2};
  const factory=()=>({name:'Undead',role:'minion',hp:100,maxhp:100,atk:20,def:4,baseDef:4,attackEvery:2});
- const opts={family:'decay',hpFactor:.50,atkFactor:.35,defFactor:.35,intervalFactor:1.20};
+ const opts={family:'decay',hpFactor:.48,atkFactor:.34,defFactor:.35,intervalFactor:1.20};
  const first=Infra.summon(r,e,2,factory,opts);
  assert.equal(first.spawned,2);
  assert.equal(r.stage83EliteSummons.summoned,2);
  const spawned=r.enemies.filter(x=>x.stage83Summoned);
  assert.equal(spawned.length,2);
- assert.equal(spawned[0].maxhp,50);
+ assert.equal(spawned[0].maxhp,48);
  assert.equal(spawned[0].atk,7);
  assert.equal(spawned[0].attackEvery,2.4);
  assert.equal(Infra.summon(r,e,2,factory,opts).spawned,0,'two alive cap');
@@ -205,15 +205,15 @@ test('Stage 8.2 is loaded in the arena with all eight Elites registered',()=>{
  const encounter=fs.readFileSync('online/v012-expedition-runtime.js','utf8');
  assert(encounter.includes('if(last&&g.selected.elite&&!g.selected.boss)globalThis.WandererV013EliteAbilities?.attach'));
 });
-test('Thornbloom starts at 12s, telegraphs for 1s and protects for 4s with per-hit and cycle caps',()=>{
+test('Thornbloom starts at 9s, telegraphs for 1s and protects for 4s with per-hit and cycle caps',()=>{
  const e=elite('briarspine_horror'),r=run(e);A.attach(e);
- assert.deepEqual(move(r,11.99),[]);assert.equal(move(r,12)[0].type,'prepare');
- assert.equal(A.status(e,12.5).label,'Casting');assert.equal(A.thornbloomDamage(e,12.9,1000,1000),0);
- assert.equal(move(r,13)[0].type,'activate');
- assert.equal(A.thornbloomDamage(e,13,20,1000),3);
- assert.deepEqual(Array.from({length:5},()=>A.thornbloomDamage(e,14,900,1000)),[15,15,15,12,0]);
- assert.equal(A.status(e,17),null);assert.equal(A.thornbloomDamage(e,17,900,1000),0);
- assert.equal(move(r,24)[0].type,'prepare');move(r,25);assert.equal(A.thornbloomDamage(e,25,900,1000),15);
+ assert.deepEqual(move(r,8.99),[]);assert.equal(move(r,9)[0].type,'prepare');
+ assert.equal(A.status(e,9.5).label,'Casting');assert.equal(A.thornbloomDamage(e,9.9,1000,1000),0);
+ assert.equal(move(r,10)[0].type,'activate');
+ assert.equal(A.thornbloomDamage(e,10,20,1000),3);
+ assert.deepEqual(Array.from({length:5},()=>A.thornbloomDamage(e,11,900,1000)),[15,15,15,12,0]);
+ assert.equal(A.status(e,14),null);assert.equal(A.thornbloomDamage(e,14,900,1000),0);
+ assert.equal(move(r,21)[0].type,'prepare');move(r,22);assert.equal(A.thornbloomDamage(e,22,900,1000),15);
 });
 
 function horrorFixture(build){
