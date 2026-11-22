@@ -1,0 +1,97 @@
+name: Wanderer Stage 6.24A — Native E1-E5 baseline all enemies and players (NO DEPLOY)
+on:
+  push:
+    branches:
+      - audit/v013-stage624-e1-e5-foundation-20261122
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Validate scaling audit without changing native runtime
+        run: |
+          node --check scripts/v013-stage624-e1-e5-baseline.cjs
+          node --test tests/v013-stage624-e1-e5-baseline.test.cjs tests/v013-stage623-earned-matched-enemies.test.cjs
+          npm run test:v013:gate
+          node scripts/v013-c6-final-audit.cjs
+          npm run build:pages
+          if [ -n "$(git status --porcelain -- docs)" ]; then
+            echo "Native runtime preview drift"
+            exit 1
+          fi
+          git diff --check
+  cohort:
+    needs: validate
+    name: Real E1-E5 player + all native enemies, seed ${{ matrix.seed }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [9701, 9702, 9703, 9704]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Observe 3 genuine persistent native accounts and 13 fights per earned Camp checkpoint
+        run: >-
+          node scripts/v013-stage624-e1-e5-baseline.cjs
+          --mode=cohort --seed=${{ matrix.seed }}
+          --out=reports/v013-stage624-seed${{ matrix.seed }}.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage624-earned-seed-${{ matrix.seed }}
+          path: reports/v013-stage624-seed${{ matrix.seed }}.json
+          retention-days: 30
+          if-no-files-found: error
+  aggregate:
+    needs: cohort
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage624-earned-seed-*
+          path: reports/stage624-shards
+          merge-multiple: true
+      - name: Aggregate all 5 native levels, real player state, normals, eight named Elites, Boss and 3/6/12 groups
+        run: |
+          node scripts/v013-stage624-e1-e5-baseline.cjs --mode=aggregate --inputs=reports/stage624-shards --out=reports/v013-stage624-baseline.json
+          node - <<'NODE'
+          const r=require('./reports/v013-stage624-baseline.json'),c=r.coverage;
+          if(c.seeds!==4||c.shards!==4||c.accounts!==12||c.errors||!c.allMatched||
+             c.checkpoints<15||c.fights!==c.checkpoints*13||r.byLevel.length!==5||
+             r.byLevel.some(x=>x.accounts<1||x.tank.n!==x.accounts||
+               x.elites.n!==x.accounts*8||x.boss.n!==x.accounts||
+               [3,6,12].some(group=>x.groups[group].n!==x.accounts)))
+           throw Error('Stage 6.24 baseline coverage / matching incomplete');
+          console.log('STAGE624_ACCEPTED='+JSON.stringify({coverage:c,levels:r.byLevel.map(x=>({
+           E:x.E,players:x.accounts,HP:x.player.maxhp,ATK:x.player.attack,
+           boss:x.boss.wins+'/'+x.boss.n,elites:x.elites.wins+'/'+x.elites.n,
+           groups:[3,6,12].map(g=>x.groups[g].wins+'/'+x.groups[g].n)
+          }))}));
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage624-e1-e5-all-combat-baseline
+          path: |
+            reports/v013-stage624-baseline.json
+            reports/v013-stage624-baseline.md
+          retention-days: 30
+          if-no-files-found: error
