@@ -113,6 +113,12 @@ function eligible(card,id){
  if(id==='bounty_writ')return card.nodes[normal]?.kind==='elite'&&reachable(card,normal)<=card.stepLimit;
  if(id==='pathfinder')return [1,2,3,4].filter(i=>card.nodes[i]&&reachable(card,i)<=card.stepLimit).length>=2&&card.stepLimit>=3;
  if(id==='purification')return card.nodes[normal]?.event==='forgotten_reliquary'&&reachable(card,normal)<=card.stepLimit;
+ if(id==='monster_hunt'||id==='skirmish_clear'){
+  const rooms=card.nodes.map((node,i)=>({node,i})).filter(({node,i})=>node.kind==='combat'&&reachable(card,i)<=card.stepLimit);
+  return id==='skirmish_clear'?rooms.length>=3:
+   rooms.reduce((sum,{node})=>sum+(Number.isInteger(node.count)?node.count:0),0)>=KILL_TARGETS[card.risk];
+ }
+ if(id==='shrine_oath')return Array.isArray(card.boonShrines)&&card.boonShrines.some(i=>reachable(card,i)<=card.stepLimit);
  return id==='oath_of_defiance'&&card.nodes[normal]?.kind==='boss'&&reachable(card,normal)<=card.stepLimit;
 }
 function offer(seed,card){
@@ -133,6 +139,15 @@ function progress(game){
   target=2;const cleared=new Set(d.cleared||[]),visited=new Set((game.history||[]).filter(entry=>cleared.has(entry.node)).map(entry=>sector(card,entry.node)).filter(n=>n!==null));current=Math.min(target,visited.size);
  }else if(id==='purification')current=Number(!!s.bossPreparation.reliquary&&d.disabledBossModifierId===s.bossModifierIds[0]);
  else if(id==='oath_of_defiance')current=Number(game.stage==='finished'&&d.cleared.includes(card.nodes.length-1)&&!s.bossPreparation.reliquary);
+ else if(id==='monster_hunt'||id==='skirmish_clear'){
+  target=targetFor(id,card.risk);
+  const cleared=new Set(d.cleared||[]),rooms=(game.history||[]).filter(h=>
+   cleared.has(h.node)&&card.nodes[h.node]?.kind==='combat'&&!h.boss&&!h.elite&&!h.event);
+  const value=id==='monster_hunt'?
+   rooms.reduce((n,h)=>n+(Number.isSafeInteger(h.monstersDefeated)&&h.monstersDefeated>=0&&h.monstersDefeated<=32?h.monstersDefeated:0),0):
+   new Set(rooms.map(h=>h.node)).size;
+  current=Math.min(target,value);
+ }else if(id==='shrine_oath')current=Number(s.decisions.some(x=>x.type==='choose_boon'&&card.boonShrines?.includes(x.room)));
  return {current,target,done:current===target};
 }
 function inspect(game,outcome=null){
@@ -168,17 +183,19 @@ function validate(game){
     !paid&&s.completedObjectives.length||!due)return false;
  if(!paid)return true;
  if(s.completedObjectives.length!==1||s.completedObjectives[0]!==initial.id||paid.id!==initial.id||!progress(game)?.done)return false;
- const expected=due.kind==='blueprint_chance'?(blueprintChance(d.foundationManifest.seed,card,initial.id,due)?'blueprint':'essence'):due.kind;
+ const expected=due.kind==='blueprint_chance'?
+  (blueprintChance(d.foundationManifest.seed,card,initial.id,due)?'blueprint':due.fallback.kind):due.kind;
+ const actual=due.kind==='blueprint_chance'&&expected!=='blueprint'?due.fallback:due;
  if(paid.kind!==expected)return false;
  const only=(keys)=>Object.keys(paid).every(key=>['id','kind',...keys].includes(key));
  if(expected==='blueprint')return only(['recipeId'])&&paid.recipeId===due.recipeId;
  if(expected==='essence')return only(['essence'])&&Number.isSafeInteger(paid.essence)&&paid.essence>=0&&
-   paid.essence<=(due.kind==='blueprint_chance'?due.fallbackEssence:due.essence);
- if(expected==='gold')return only(['gold'])&&Number.isSafeInteger(paid.gold)&&paid.gold>=0&&paid.gold<=due.gold;
- if(expected==='fragments')return only(['fragments'])&&Number.isSafeInteger(paid.fragments)&&paid.fragments>=0&&paid.fragments<=due.fragments;
+   paid.essence<=actual.essence;
+ if(expected==='gold')return only(['gold'])&&Number.isSafeInteger(paid.gold)&&paid.gold>=0&&paid.gold<=actual.gold;
+ if(expected==='fragments')return only(['fragments'])&&Number.isSafeInteger(paid.fragments)&&paid.fragments>=0&&paid.fragments<=actual.fragments;
  if(expected==='reagent')return only(['family','amount'])&&paid.family===card.family&&
-   Number.isSafeInteger(paid.amount)&&paid.amount>=0&&paid.amount<=due.amount;
- if(expected==='potion')return only(['potion','amount'])&&paid.potion===due.potion&&
+   Number.isSafeInteger(paid.amount)&&paid.amount>=0&&paid.amount<=actual.amount;
+ if(expected==='potion')return only(['potion','amount'])&&paid.potion===actual.potion&&
    Number.isSafeInteger(paid.amount)&&paid.amount>=0&&paid.amount<=1;
  return false;
 }
@@ -190,36 +207,40 @@ function validateOffer(game){
  try{return matchesPlan(o,d.foundationManifest.seed,card);}
  catch{return false;}
 }
-function settle(game,profile,results){
+function settle(game,profile,results,outcome){
  const d=game?.dungeon,s=d?.foundationState,card=d?.cards?.find(c=>c.id===d.realm),id=s?.contractId;
+ // Completion alone never pays: extract alive or defeat the final Boss.
+ if(!((outcome==='extracted'&&game?.stage==='choice')||
+      (outcome==='victory'&&game?.stage==='finished')))return null;
  if(!d||!card||!get(id)||d.stage7RewardPaid||!progress(game)?.done||!validate(game))return null;
  if(!C.valid(profile?.crafting))throw Error('Invalid Contract wallet');
  const prize=d.stage72RewardPlan?.rewards?.[id];if(!prize)return null;
  const next=F.applyDecision(s,{type:'complete_contract',id},d.foundationManifest);
- const kind=prize.kind==='blueprint_chance'?
-  (blueprintChance(d.foundationManifest.seed,card,id,prize)?'blueprint':'essence'):prize.kind;
+ const due=prize.kind==='blueprint_chance'?
+  (blueprintChance(d.foundationManifest.seed,card,id,prize)?{kind:'blueprint',recipeId:prize.recipeId}:prize.fallback):prize;
+ const kind=due.kind;
  let paid={id,kind};
  if(kind==='blueprint'){
-  const discovered=C.discover(profile.crafting,prize.recipeId);
+  const discovered=C.discover(profile.crafting,due.recipeId);
   if(!discovered)return null;
-  profile.crafting=discovered;paid.recipeId=prize.recipeId;
+  profile.crafting=discovered;paid.recipeId=due.recipeId;
  }else if(kind==='essence'){
-  const amount=prize.kind==='blueprint_chance'?prize.fallbackEssence:prize.essence;
+  const amount=due.essence;
   paid.essence=Math.min(amount,Math.max(0,1000000000-profile.crafting.essence));
   profile.crafting.essence+=paid.essence;
  }else if(kind==='gold'){
-  paid.gold=Math.min(prize.gold,Math.max(0,Number.MAX_SAFE_INTEGER-profile.gold));
+  paid.gold=Math.min(due.gold,Math.max(0,Number.MAX_SAFE_INTEGER-profile.gold));
   profile.gold+=paid.gold;
  }else if(kind==='fragments'){
-  paid.fragments=Math.min(prize.fragments,Math.max(0,Number.MAX_SAFE_INTEGER-profile.fragments));
+  paid.fragments=Math.min(due.fragments,Math.max(0,Number.MAX_SAFE_INTEGER-profile.fragments));
   profile.fragments+=paid.fragments;
  }else if(kind==='reagent'){
-  paid.family=card.family;paid.amount=Math.min(prize.amount,Math.max(0,1000000000-profile.crafting.cores[card.family]));
+  paid.family=card.family;paid.amount=Math.min(due.amount,Math.max(0,1000000000-profile.crafting.cores[card.family]));
   profile.crafting.cores[card.family]+=paid.amount;
  }else if(kind==='potion'){
   profile.consumables??={};
-  paid.potion=prize.potion;paid.amount=Math.min(1,Math.max(0,99999-(profile.consumables[prize.potion]||0)));
-  profile.consumables[prize.potion]=(profile.consumables[prize.potion]||0)+paid.amount;
+  paid.potion=due.potion;paid.amount=Math.min(due.amount,Math.max(0,99999-(profile.consumables[due.potion]||0)));
+  profile.consumables[due.potion]=(profile.consumables[due.potion]||0)+paid.amount;
  }else return null;
  // Include optional currency in the existing Expedition result totals once.
  if(results&&kind==='gold')results.gold=(results.gold||0)+paid.gold;
