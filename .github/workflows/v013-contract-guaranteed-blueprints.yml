@@ -1,0 +1,49 @@
+name: Wanderer v0.13 — Guaranteed Blueprint and marked combat Contracts (NO DEPLOY)
+on:
+  push:
+    branches:
+      - feature/v013-contract-marked-rooms-guaranteed-blueprints-20261122
+    paths:
+      - '.github/workflows/v013-contract-guaranteed-blueprints.yml'
+      - 'combat/v013-expedition-foundation.js'
+      - 'online/v013-expedition-contracts.js'
+      - 'online/v013-expedition-contracts.css'
+      - 'tests/v013-stage7-contracts.test.cjs'
+      - 'index.html'
+      - 'docs/index.html'
+      - 'docs/combat/v013-expedition-foundation.js'
+      - 'docs/online/v013-expedition-contracts.js'
+      - 'docs/online/v013-expedition-contracts.css'
+      - 'reports/v013-contracts-guaranteed-blueprints-marked-chambers.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: Native module and preview parity checks
+        run: |
+          node --check combat/v013-expedition-foundation.js
+          node --check online/v013-expedition-contracts.js
+          node --check tests/v013-stage7-contracts.test.cjs
+          cmp combat/v013-expedition-foundation.js docs/combat/v013-expedition-foundation.js
+          cmp online/v013-expedition-contracts.js docs/online/v013-expedition-contracts.js
+          cmp online/v013-expedition-contracts.css docs/online/v013-expedition-contracts.css
+          git diff --check
+      - name: Six Contracts, deterministic rare Blueprint and marked-map routes
+        run: |
+          node --test tests/v013-stage7-contracts.test.cjs
+          node --test tests/v013-map-intelligence.test.cjs tests/v013-boss-preparation-runtime.test.cjs
+          node --test tests/v013-stage74-potions.test.cjs tests/v013-natural-progression.test.cjs
+      - name: v0.13 native integration regression suite
+        run: npm run test:v013:integration

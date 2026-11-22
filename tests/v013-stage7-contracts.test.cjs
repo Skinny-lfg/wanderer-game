@@ -12,7 +12,7 @@ function fresh(seed=7711,risk=0){
  const c=a.controller(),card=c.state.dungeon.cards[risk];c.chooseRealm(card.id);
  return {a,c,card,g:c.state,d:c.state.dungeon};
 }
-function chosen(seed=7720,id='pathfinder'){
+function chosen(seed=7720,id='marked_chambers'){
  for(let x=seed;x<seed+70;x++){
   const env=fresh(x),offer=env.c.offerContracts();
   if(offer.ids.includes(id)){env.c.chooseContract(id);return env;}
@@ -24,9 +24,11 @@ function complete(env,id){
  if(id==='bounty_writ'){
   d.foundationState=F.applyDecision(d.foundationState,{type:'prepare_boss',source:'markedElite'},d.foundationManifest);
   d.cleared.push(card.objective);d.visited.push(card.objective);
- }else if(id==='pathfinder'){
-  // Actual controller history, not scouted/forged visit counters.
-  for(const node of [1,2]){d.cleared.push(node);d.visited.push(node);g.history.push({node,event:null,boss:false});}
+ }else if(id==='marked_chambers'){
+  // Real-room completion evidence for both deterministic targets, not scouting.
+  const targets=d.stage72RewardPlan.markedRooms;
+  assert.equal(targets.length,2);
+  for(const node of targets){d.cleared.push(node);d.visited.push(node);g.history.push({node,event:null,boss:false,elite:false});}
  }else if(id==='purification'){
   d.foundationState=F.applyDecision(d.foundationState,{type:'prepare_boss',source:'reliquary'},d.foundationManifest);
   d.disabledBossModifierId=d.foundationState.bossModifierIds[0];
@@ -45,31 +47,22 @@ function complete(env,id){
    if(count>=required)break;
   }
   assert(count>=required);
- }else if(id==='shrine_oath'){
-  const shrine=card.boonShrines.find(n=>K.reachable(card,n)<=card.stepLimit);
-  assert(Number.isInteger(shrine));
-  d.cleared.push(shrine);d.visited.push(shrine);
-  g.history.push({node:shrine,event:'boon_shrine'});
-  d.foundationState=F.applyDecision(d.foundationState,{type:'choose_boon',room:shrine,id:'blood_tribute',families:['blood']},d.foundationManifest);
  }else throw Error('Unknown synthetic completion');
 }
-test('Stage 7.6 offers seven feasible lore Contracts and deterministic varied exclusive rewards',()=>{
- assert.deepEqual(K.CATALOG.map(c=>c.id),['bounty_writ','pathfinder','purification','oath_of_defiance','monster_hunt','skirmish_clear','shrine_oath']);
- const types=new Set();
- for(const entry of K.CATALOG)for(let risk=0;risk<=2;risk++){
-  const prize=K.reward(entry.id,risk,'blood');
-  types.add(prize.kind);assert(K.DESCRIPTIONS[entry.id]?.objective);
+test('Stage 7.7 offers six comprehensible Contracts and exclusive guaranteed reward types',()=>{
+ assert.deepEqual(K.CATALOG.map(c=>c.id),['bounty_writ','purification','oath_of_defiance','monster_hunt','skirmish_clear','marked_chambers']);
+ const kinds=new Set();
+ for(const entry of K.CATALOG)for(let risk=0;risk<=2;risk++)for(let seed=1;seed<=20;seed++){
+  const prize=K.reward(entry.id,risk,'blood',seed,'test');
+  kinds.add(prize.kind);assert(K.DESCRIPTIONS[entry.id]?.objective);
+  assert.notEqual(prize.kind,'blueprint_chance');
  }
- assert(types.size>=4,'seeded contracts should cover multiple resource types');
- assert([...types].every(kind=>['gold','essence','fragments','reagent','potion'].includes(kind)));
+ assert.deepEqual([...kinds].sort(),['essence','fragments','gold','potion','reagent']);
+ const env=fresh(7111,2),seed=env.d.foundationManifest.seed,p=K.plan(seed,env.card,[]);
+ assert.equal(p.ids.length,2);assert.deepEqual(p,K.plan(seed,env.card,[]));
+ assert(p.ids.every(id=>['gold','essence','fragments','reagent','potion','blueprint'].includes(p.rewards[id].kind)));
+ assert(p.ids.every(id=>p.rewards[id].fallback===undefined&&p.rewards[id].chance===undefined));
  assert.throws(()=>K.reward('fake',1),/Invalid/);
- const env=fresh(7111,2),p=K.plan(env.d.foundationManifest.seed,env.card,[]);
- assert.equal(p.ids.length,2);assert.deepEqual(p,K.plan(env.d.foundationManifest.seed,env.card,[]));
- assert.equal(p.rewards[p.ids[0]].kind,'blueprint_chance');
- assert.equal(p.rewards[p.ids[0]].chance,.40);
- assert.equal(p.rewards[p.ids[1]].kind,'blueprint_chance','both choices may offer a unique recipe');
- assert.notEqual(p.rewards[p.ids[0]].recipeId,p.rewards[p.ids[1]].recipeId);
- assert.notEqual(p.rewards[p.ids[0]].fallback.kind,p.rewards[p.ids[1]].fallback.kind);
 });
 test('Stage 7 generates two distinct feasible options on all real three-card maps, independently of other RNG',()=>{
  const {d}=fresh(7001);
@@ -113,17 +106,20 @@ test('Stage 7 contract selection is replay-safe; forged options and alternate se
  assert.throws(()=>c.restore(wrong),/Invalid/);
  assert.equal(c.state.dungeon.foundationState.contractId,o.ids[0]);
 });
-test('Stage 7 Pathfinder counts two completed sectors, not scouting or manually added visited rooms',()=>{
- const env=chosen(7720,'pathfinder'),{g,d}=env;
- d.scouted.push(1,2);d.visited.push(1,2);
+test('Marked Chambers are specific separated native combat rooms; visiting/scouting never completes them',()=>{
+ const env=chosen(7720,'marked_chambers'),{g,d,card}=env,targets=d.stage72RewardPlan.markedRooms;
+ assert.equal(targets.length,2);
+ assert(targets.every(i=>card.nodes[i].kind==='combat'));
+ assert.notEqual(K.sector(card,targets[0]),K.sector(card,targets[1]));
  assert.deepEqual(K.progress(g),{current:0,target:2,done:false});
- d.scouted.length=0;d.visited.length=1;
- d.cleared.push(1);d.visited.push(1);g.history.push({node:1,event:null});
+ d.scouted.push(...targets);d.visited.push(...targets);
+ assert.equal(K.progress(g).current,0);
+ d.cleared.push(targets[0]);assert.equal(K.progress(g).current,0,'cleared flags without native history are insufficient');
+ g.history.push({node:targets[0],event:null,boss:false,elite:false});
  assert.deepEqual(K.progress(g),{current:1,target:2,done:false});
- d.cleared.push(5);d.visited.push(5);g.history.push({node:5,event:null});
- assert.equal(K.progress(g).current,1,'same passage must not double count');
- d.cleared.push(2);d.visited.push(2);g.history.push({node:2,event:null});
- assert.equal(K.progress(g).done,true);
+ d.cleared.push(targets[1]);g.history.push({node:targets[1],event:null,boss:false,elite:false});
+ assert.deepEqual(K.progress(g),{current:2,target:2,done:true});
+ assert(K.validate(g));
 });
 test('Bounty Writ pays only one Contract reward; automatic Elite reagent stays separate',()=>{
  const env=chosen(7780,'bounty_writ'),{a,g,d,card}=env;
@@ -153,7 +149,7 @@ test('Every accepted Contract pays one validated receipt for its prize kind',()=
   complete(env,id);assert(K.progress(g).done);assert(K.validate(g));
   const before=clone(a.state()),paid=K.settle(g,a.state(),a.results(),g.stage==='finished'?'victory':'extracted');
   assert(paid);
-  const kind=prize.kind==='blueprint_chance'?(K.blueprintChance(d.foundationManifest.seed,card,id,prize)?'blueprint':prize.fallback.kind):prize.kind;
+  const kind=prize.kind;
   assert.equal(paid.kind,kind);
   if(kind==='blueprint')assert(C.unlocked(a.state().crafting,paid.recipeId));
   if(kind==='essence')assert.equal(a.state().crafting.essence-before.crafting.essence,paid.essence);
@@ -188,11 +184,11 @@ test('Stage 7 incomplete, abandoned and ignored contracts grant no extra resourc
  assert.equal(K.settle(other.g,other.a.state(),other.a.results()),null);
 });
 test('Stage 7 cannot be paid on a forged completion or a duplicated reward record',()=>{
- const env=chosen(8003,'pathfinder'),{c,g,d,a}=env;
+ const env=chosen(8003,'marked_chambers'),{c,g,d,a}=env;
  const wrong=clone(g);
- wrong.dungeon.stage7RewardPaid={id:'pathfinder',kind:'essence',essence:100};
+ wrong.dungeon.stage7RewardPaid={id:'marked_chambers',kind:'essence',essence:100};
  assert.throws(()=>c.restore(wrong),/Invalid/);
- complete(env,'pathfinder');
+ complete(env,'marked_chambers');
  K.settle(g,a.state(),a.results(),'extracted');
  const copy=clone(g);copy.dungeon.stage7RewardPaid.kind=copy.dungeon.stage7RewardPaid.kind==='blueprint'?'essence':'blueprint';
  assert.throws(()=>c.restore(copy),/Invalid/);
@@ -217,31 +213,35 @@ test('Stage 7 native abandonment records failed or ignored contracts in the real
  assert.equal(declined.a.results().summary?.contract?.status,'ignored');
 });
 
-test('Blueprint chance matches Realm affinity and difficulty and has exclusive fallback',()=>{
+test('Blueprint is a rare standalone offer which becomes a guaranteed prize on safe exit',()=>{
  for(const risk of [0,1,2]){
-  const {d,card}=fresh(9941+risk,risk),offer=K.plan(d.foundationManifest.seed,card,[]),prize=offer.rewards[offer.ids[0]];
-  assert.equal(prize.kind,'blueprint_chance');
-  assert.equal(prize.chance,[.20,.30,.40][risk]);
-  assert(prize.fallback&&['gold','essence','fragments','reagent','potion'].includes(prize.fallback.kind));
-  const recipe=C.RECIPES.find(r=>r.id===prize.recipeId);
-  assert(recipe);assert.equal(recipe.family,card.family);assert.equal(recipe.rarity,risk===2?'Epic':'Rare');
-  assert.match(K.label(prize),/chance/);
+  const {card}=fresh(9941+risk,risk);let found=null;
+  for(let seed=1;seed<1200;seed++){
+   const plan=K.plan(seed,card,[]),id=plan.ids.find(i=>plan.rewards[i].kind==='blueprint');
+   if(id){found={id,prize:plan.rewards[id],seed,plan};break;}
+  }
+  assert(found,'no Blueprint offer found at risk '+risk);
+  assert.equal(found.prize.kind,'blueprint');
+  assert.equal(found.plan.ids.filter(i=>found.plan.rewards[i].kind==='blueprint').length,1);
+  assert(K.blueprintOffer(found.seed,card,found.id));
+  assert.equal(K.label(found.prize).includes('Guaranteed'),true);
+  assert(!('fallback'in found.prize)&&!('chance'in found.prize));
+  const recipe=C.RECIPES.find(r=>r.id===found.prize.recipeId);
+  assert(recipe);assert.equal(recipe.family,card.family);
+  assert.equal(recipe.rarity,risk===2?'Epic':'Rare');
  }
 });
-test('No duplicate Blueprints are offered and exhausted collections yield simple rewards',()=>{
- const env=fresh(9518,2),{d,card}=env,seed=d.foundationManifest.seed;
- const all=C.RECIPES.filter(r=>r.family===card.family&&r.rarity!=='Uncommon').map(r=>r.id);
- const initial=K.plan(seed,card,[]);
- assert.equal(initial.rewards[initial.ids[0]].kind,'blueprint_chance');
- const next=K.plan(seed,card,[initial.rewards[initial.ids[0]].recipeId]);
- assert.equal(next.rewards[next.ids[0]].kind,'blueprint_chance');
- assert.notEqual(next.rewards[next.ids[0]].recipeId,initial.rewards[initial.ids[0]].recipeId);
- const finished=K.plan(seed,card,all);
- assert(finished.ids.every(id=>finished.rewards[id].kind!=='blueprint_chance'));
- assert.throws(()=>K.plan(seed,card,['unknown']),/Invalid/);
+test('Exhausted Blueprint collection forces ordinary standalone rewards and no duplicate recipes',()=>{
+ const {card}=fresh(9518,2),all=C.RECIPES.filter(r=>r.family===card.family&&r.rarity!=='Uncommon').map(r=>r.id);
+ for(let seed=9518;seed<9550;seed++){
+  const p=K.plan(seed,card,all);
+  assert(p.ids.every(id=>p.rewards[id].kind!=='blueprint'));
+  const p2=K.plan(seed,card,[]);assert(p2.ids.filter(id=>p2.rewards[id].kind==='blueprint').length<=1);
+ }
+ assert.throws(()=>K.plan(9518,card,['unknown']),/Invalid/);
 });
 test('Stage 7.2 canonical reward plan cannot be replaced, increased or changed in a checkpoint',()=>{
- const env=chosen(9813,'pathfinder'),{c,g,d}=env;
+ const env=chosen(9813,'marked_chambers'),{c,g,d}=env;
  const base=clone(g),selected=d.foundationState.contractId,prize=d.stage72RewardPlan.rewards[selected];
  const mutations=[
   state=>{state.dungeon.stage72RewardPlan.rewards[selected]={kind:'essence',essence:9999};},
@@ -258,14 +258,14 @@ test('Stage 7.2 canonical reward plan cannot be replaced, increased or changed i
  tampered.dungeon.contractOffer.rewards[o.ids[0]]={kind:'essence',essence:9999};
  assert.throws(()=>offered.c.restore(tampered),/Invalid/);
 });
-test('A winning Blueprint chance cannot duplicate a Blueprint already learned before settlement',()=>{
+test('A selected guaranteed Blueprint cannot be paid twice or granted if already learned before settlement',()=>{
  let env;
- for(let seed=8100;seed<8350;seed++){
-  const candidate=fresh(seed),offer=candidate.c.offerContracts(),id=offer.ids[0],prize=offer.rewards[id];
-  if(prize.kind!=='blueprint_chance'||!K.blueprintChance(candidate.d.foundationManifest.seed,candidate.card,id,prize))continue;
-  candidate.c.chooseContract(id);env={...candidate,id,prize};break;
+ for(let seed=8100;seed<8600;seed++){
+  const candidate=fresh(seed),offer=candidate.c.offerContracts(),id=offer.ids.find(i=>offer.rewards[i].kind==='blueprint');
+  if(!id)continue;
+  candidate.c.chooseContract(id);env={...candidate,id,prize:offer.rewards[id]};break;
  }
- assert(env);
+ assert(env,'no rare Blueprint offer discovered across natural seeded maps');
  complete(env,env.id);
  const {a,g,d,prize}=env;
  a.state().crafting=C.discover(a.state().crafting,prize.recipeId);
@@ -297,8 +297,8 @@ test('Monster Hunt only counts actual enemies killed in completed combat rooms',
  complete({g,d,card},'monster_hunt');
  assert.equal(K.progress(g).done,true);
 });
-test('Skirmish and Shrine contracts require actual completed encounters or selected Shrine Boons',()=>{
- for(const id of ['skirmish_clear','shrine_oath']){
+test('Skirmish and marked chamber contracts require actual completed rooms',()=>{
+ for(const id of ['skirmish_clear','marked_chambers']){
   const env=chosen(11500,id),{g,d,card}=env;
   d.scouted.push(1,2);
   assert.equal(K.progress(g).current,0);
@@ -308,7 +308,7 @@ test('Skirmish and Shrine contracts require actual completed encounters or selec
  }
 });
 test('Contract completed before extraction grants nothing on death or abandonment',()=>{
- for(const id of ['bounty_writ','monster_hunt','skirmish_clear','shrine_oath']){
+ for(const id of ['bounty_writ','monster_hunt','skirmish_clear','marked_chambers']){
   const env=chosen(11600,id),{g,a}=env;
   complete(env,id);
   const prior=clone(a.state());
@@ -324,5 +324,68 @@ test('Contract completed before extraction grants nothing on death or abandonmen
   const received=K.settle(g,a.state(),a.results(),'extracted');
   assert(received,'alive extraction must grant exactly one contract prize');
   assert.equal(K.settle(g,a.state(),a.results(),'extracted'),null);
+ }
+});
+
+test('Marked Chambers targets are individually reachable on real map and jointly fit conservative step budget',()=>{
+ let eligibleCount=0;
+ for(const risk of [0,1,2])for(let seed=9201;seed<9210;seed++){
+  const {card,d}=fresh(seed,risk),eligible=K.eligible(card,'marked_chambers');
+  const targets=K.markedRooms(d.foundationManifest.seed,card);
+  if(!eligible){assert.deepEqual(targets,[]);continue;}
+  eligibleCount++;
+  assert.equal(targets.length,2);
+  assert.deepEqual(targets,K.markedRooms(d.foundationManifest.seed,card));
+  assert(targets.every(i=>i>=5&&i<=16&&card.nodes[i].kind==='combat'));
+  assert.notEqual(K.sector(card,targets[0]),K.sector(card,targets[1]));
+  const [a,b]=targets.map(i=>K.reachable(card,i));
+  assert(Number.isFinite(a)&&Number.isFinite(b));
+  assert(a+Math.min(2,a)+b<=card.stepLimit-1,
+   'two marked branches need ' +(a+Math.min(2,a)+b)+' steps for risk '+risk);
+ }
+ assert(eligibleCount>=12,'marked contract should be viable on a meaningful fraction of generated maps');
+});
+test('A guaranteed Blueprint is actually awarded as the single complete Contract payout',()=>{
+ let found;
+ for(let seed=11100;seed<11320;seed++){
+  const env=fresh(seed),offer=env.c.offerContracts(),id=offer.ids.find(i=>offer.rewards[i].kind==='blueprint');
+  if(!id)continue;
+  env.c.chooseContract(id);found={...env,id,recipeId:offer.rewards[id].recipeId};break;
+ }
+ assert(found,'expected one rare guaranteed Blueprint among real random offers');
+ complete(found,found.id);
+ const before=clone(found.a.state());
+ assert.equal(K.settle(found.g,found.a.state(),found.a.results(),'defeat'),null);
+ const paid=K.settle(found.g,found.a.state(),found.a.results(),found.g.stage==='finished'?'victory':'extracted');
+ assert.equal(paid.kind,'blueprint');assert.equal(paid.recipeId,found.recipeId);
+ assert(C.unlocked(found.a.state().crafting,paid.recipeId));
+ assert.equal(found.a.state().gold,before.gold);
+ assert.equal(found.a.state().fragments,before.fragments);
+ assert.equal(found.a.state().crafting.essence,before.crafting.essence);
+ assert.equal(K.settle(found.g,found.a.state(),found.a.results(),'extracted'),null);
+ assert(K.validate(found.g));
+});
+test('Standalone reward pool uses low blueprint-offer rates and no legacy secondary rolls',()=>{
+ assert.deepEqual(K.BLUEPRINT_OFFER_RATE,[.05,.07,.10]);
+ const {card}=fresh(9790,1);
+ let blueprintOffers=0;
+ for(let seed=1;seed<=450;seed++){
+  const x=K.plan(seed,card,[]);
+  assert(x.ids.every(id=>!['blueprint_chance','blueprint_offer'].includes(x.rewards[id].kind)));
+  assert(x.ids.every(id=>!('fallback' in x.rewards[id])&&!('chance' in x.rewards[id])));
+  blueprintOffers+=x.ids.filter(id=>x.rewards[id].kind==='blueprint').length;
+  assert(x.ids.filter(id=>x.rewards[id].kind==='blueprint').length<=1);
+ }
+ assert(blueprintOffers>0&&blueprintOffers<95,'Blueprint rewards must remain uncommon on seeded maps');
+});
+test('Map and offers explicitly communicate real target rooms and no hidden Blueprint fallback',()=>{
+ const fs=require('node:fs');
+ for(const file of ['index.html','docs/index.html']){
+  const html=fs.readFileSync(file,'utf8');
+  assert(html.includes('data-contract-target='));
+  assert(html.includes('contractTargets.includes(i)'));
+  assert(html.includes('🎯 Contract target'));
+  assert(html.includes('rare Blueprint offer is guaranteed'));
+  assert(!html.includes('If the Blueprint roll fails'));
  }
 });

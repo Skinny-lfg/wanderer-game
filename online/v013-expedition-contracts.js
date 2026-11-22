@@ -8,28 +8,28 @@ const CATALOG=F.CATALOG.contracts;
 const get=id=>F.lookup('contracts',id);
 const DESCRIPTIONS=Object.freeze({
  bounty_writ:{icon:'⚔',objective:'Defeat the marked Elite',detail:'Claim the optional marked Elite on the map. Its existing reagent reward is separate.'},
- pathfinder:{icon:'🧭',objective:'Clear rooms in two distinct map sectors',detail:'Complete an encounter or event in two different passages. Scouting alone does not count.'},
  purification:{icon:'✦',objective:'Disrupt a boss seal at the Forgotten Reliquary',detail:'Reach the Reliquary and sacrifice Health to disable one boss modifier.'},
  oath_of_defiance:{icon:'🛡',objective:'Defeat the final boss without disrupting its seal',detail:'Leave every boss modifier intact. Marked Elite preparation is allowed.'},
  monster_hunt:{icon:'⚔',objective:'Defeat monsters in ordinary combat rooms',detail:'Only actual kills from completed fights count. Bosses, Elites and scouting do not count.'},
  skirmish_clear:{icon:'🗡',objective:'Clear 3 ordinary combat rooms',detail:'Complete three non-Elite, non-Boss combat encounters. Visiting or scouting is not enough.'},
- shrine_oath:{icon:'✧',objective:'Accept a Boon at a discovered Shrine',detail:'Find a Boon Shrine and select one Boon during the Expedition.'}
+ marked_chambers:{icon:'🎯',objective:'Clear both marked combat rooms',detail:'Two specific chambers in different passages are marked on your map. Clear BOTH, even if you would normally avoid their encounters.'}
 });
-// The prize for each offered Contract is seeded independently of map/combat
-// RNG. A Blueprint is a chance for ONE exclusive prize, never an extra reward.
-const PRIZE_KINDS=Object.freeze(['gold','essence','fragments','reagent','potion']);
-const ESSENCE=Object.freeze({bounty_writ:[4,7,11],pathfinder:[4,7,11],
- purification:[4,7,11],oath_of_defiance:[4,7,11],
- monster_hunt:[4,7,11],skirmish_clear:[4,7,11],shrine_oath:[4,7,11]});
+// Every Contract offers exactly ONE guaranteed prize. A Blueprint is a
+// rare standalone offer, not an extra chance attached to currency/potions.
+const BASIC_PRIZES=Object.freeze(['gold','essence','fragments','reagent','potion']);
+const BLUEPRINT_OFFER_RATE=Object.freeze([.05,.07,.10]); // Guarded / Dangerous / Brutal
+const ESSENCE=Object.freeze({bounty_writ:[4,7,11],purification:[4,7,11],
+ oath_of_defiance:[4,7,11],monster_hunt:[4,7,11],
+ skirmish_clear:[4,7,11],marked_chambers:[4,7,11]});
 const REWARDS=ESSENCE;
 const KILL_TARGETS=Object.freeze([6,8,10]);
 function targetFor(id,risk){
- return id==='monster_hunt'?KILL_TARGETS[risk]:id==='skirmish_clear'?3:id==='pathfinder'?2:1;
+ return id==='monster_hunt'?KILL_TARGETS[risk]:id==='skirmish_clear'||id==='marked_chambers'?id==='skirmish_clear'?3:2:1;
 }
 function reward(id,risk,family='blood',seed=0,cardId='default',avoidKind=null){
  if(!get(id)||![0,1,2].includes(risk)||!C.FAMILIES.includes(family))throw Error('Invalid Contract reward');
- const kinds=PRIZE_KINDS.filter(kind=>kind!==avoidKind);
- const roll=F.rng(seed,'contract_prize_v2_'+cardId+'_'+id);
+ const kinds=BASIC_PRIZES.filter(kind=>kind!==avoidKind);
+ const roll=F.rng(seed,'contract_prize_v3_'+cardId+'_'+id);
  const kind=kinds[Math.floor(roll()*kinds.length)];
  if(kind==='gold')return {kind,gold:[28,45,70][risk]};
  if(kind==='essence')return {kind,essence:ESSENCE[id][risk]};
@@ -38,8 +38,8 @@ function reward(id,risk,family='blood',seed=0,cardId='default',avoidKind=null){
  const potions=['ironhide','purifying','fate'];
  return {kind:'potion',potion:potions[Math.floor(roll()*potions.length)],amount:1};
 }
-function blueprintChance(seed,card,id,due){
- return F.rng(seed,'contract_blueprint_chance_v2_'+card.id+'_'+id)()<due.chance;
+function blueprintOffer(seed,card,id){
+ return F.rng(seed,'contract_guaranteed_blueprint_v3_'+card.id+'_'+id)()<BLUEPRINT_OFFER_RATE[card.risk];
 }
 function canon(known){
  if(!Array.isArray(known)||new Set(known).size!==known.length||
@@ -54,30 +54,31 @@ function blueprint(seed,card,known,id='default'){
  const fallback=card.risk===0?[]:candidates.filter(r=>r.rarity!==preferred);
  const pool=available.length?available:fallback;
  if(!pool.length)return null;
- const random=F.rng(seed,'contract_blueprint_v2_'+card.id+'_'+id);
+ const random=F.rng(seed,'contract_blueprint_v3_'+card.id+'_'+id);
  return pool[Math.floor(random()*pool.length)].id;
 }
 function plan(seed,card,known=[]){
- const ids=offer(seed,card),knownRecipes=canon(known),reserved=[...knownRecipes],rewards={};
- let lastKind=null;
+ const ids=offer(seed,card),knownRecipes=canon(known),rewards={};
+ const targets=ids.includes('marked_chambers')?markedRooms(seed,card):[];
+ let lastKind=null,usedBlueprint=false;
  for(const id of ids){
-  const fallback=reward(id,card.risk,card.family,seed,card.id,lastKind);
-  lastKind=fallback.kind;
-  const recipeId=blueprint(seed,card,reserved,id);
-  if(recipeId){
-   reserved.push(recipeId);
-   rewards[id]={kind:'blueprint_chance',recipeId,chance:[.20,.30,.40][card.risk],fallback};
-  }else rewards[id]=fallback;
+  const basic=reward(id,card.risk,card.family,seed,card.id,lastKind);
+  const recipeId=!usedBlueprint?blueprint(seed,card,knownRecipes,id):null;
+  if(recipeId&&blueprintOffer(seed,card,id)){
+   // Once a Blueprint is offered, completing its objective guarantees it.
+   rewards[id]={kind:'blueprint',recipeId};
+   usedBlueprint=true;
+  }else{
+   rewards[id]=basic;
+   lastKind=basic.kind;
+  }
  }
- return {ids,knownRecipes,rewards};
+ return {ids,knownRecipes,rewards,markedRooms:targets};
 }
 function label(prize){
- if(prize?.kind==='blueprint_chance'){
-  const r=C.RECIPES.find(r=>r.id===prize.recipeId);
-  return Math.round(prize.chance*100)+'% chance: '+(r?r.rarity+' '+r.name:'Blueprint')+' · Otherwise '+label(prize.fallback);
- }
  if(prize?.kind==='blueprint'){
-  const r=C.RECIPES.find(r=>r.id===prize.recipeId);return r?r.rarity+' Blueprint · '+r.name:'Unknown Blueprint';
+  const r=C.RECIPES.find(r=>r.id===prize.recipeId);
+  return r?'Guaranteed '+r.rarity+' Blueprint · '+r.name:'Guaranteed Blueprint';
  }
  if(prize?.kind==='essence')return '+'+prize.essence+' Essence';
  if(prize?.kind==='gold')return '+'+prize.gold+' Gold';
@@ -107,18 +108,64 @@ function sector(card,id){
  const link=card.edges.find(([a,b])=>(a===id&&b>=13&&b<=16)||(b===id&&a>=13&&a<=16));
  return link?(link[0]===id?link[1]:link[0])-13:null;
 }
+// Select two actual ordinary combat chambers on distinct passages. The
+// conservative route budget counts both branches plus up to two return steps
+// through already-cleared rooms; no secret shortcuts or free travel required.
+function markedCandidates(card){
+ if(!card||!Array.isArray(card.nodes)||!Number.isInteger(card.stepLimit))return [];
+ const rooms=card.nodes.map((n,i)=>({n,i,path:shortestPath(card,i)})).filter(({n,i,path})=>
+  n.kind==='combat'&&i>=5&&i<=16&&path.length>=3&&path.length<=6&&
+  path.length-1<=card.stepLimit-2);
+ const pairs=[];
+ for(let a=0;a<rooms.length;a++)for(let b=a+1;b<rooms.length;b++){
+  const first=rooms[a],second=rooms[b];
+  if(sector(card,first.i)===sector(card,second.i))continue;
+  const distanceA=first.path.length-1,distanceB=second.path.length-1;
+  // Pay a small return traversal penalty before entering the other branch.
+  const upperBound=distanceA+Math.min(2,distanceA)+distanceB;
+  if(upperBound>card.stepLimit-1)continue;
+  pairs.push({ids:[first.i,second.i],distance:distanceA+distanceB,
+   diversity:Math.abs((first.n.range?.[1]||1)-(second.n.range?.[1]||1))+
+    Number(!!first.n.traitId!==!!second.n.traitId)});
+ }
+ return pairs;
+}
+function shortestPath(card,target){
+ if(!Number.isInteger(target)||target<0||target>=card.nodes.length)return [];
+ const queue=[[0]],seen=new Set([0]);
+ for(const path of queue){
+  const last=path.at(-1);
+  if(last===target)return path;
+  for(const [a,b]of card.edges){
+   if(root.WandererV013MapIntelligence?.secretEdge?.(card,a,b))continue;
+   const next=a===last?b:b===last?a:null;
+   if(next!==null&&!seen.has(next)){seen.add(next);queue.push([...path,next]);}
+  }
+ }
+ return [];
+}
+function markedRooms(seed,card){
+ const options=markedCandidates(card);
+ if(!options.length)return [];
+ // Prefer a meaningful side detour and different enemy groups, but keep
+ // seeded choice among the best candidates rather than the same path always.
+ options.sort((a,b)=>b.distance-a.distance||b.diversity-a.diversity||
+  a.ids[0]-b.ids[0]||a.ids[1]-b.ids[1]);
+ const best=options.filter(x=>x.distance>=options[0].distance-1).slice(0,12);
+ const rng=F.rng(seed,'contract_marked_rooms_v1_'+card.id);
+ return [...best[Math.floor(rng()*best.length)].ids];
+}
 function eligible(card,id){
  const normal=id==='bounty_writ'?card?.objective:id==='purification'?card?.reliquaryRoom:card?.nodes?.length-1;
  if(!get(id)||!card||!Number.isInteger(card.stepLimit)||!Number.isInteger(card.risk))return false;
  if(id==='bounty_writ')return card.nodes[normal]?.kind==='elite'&&reachable(card,normal)<=card.stepLimit;
- if(id==='pathfinder')return [1,2,3,4].filter(i=>card.nodes[i]&&reachable(card,i)<=card.stepLimit).length>=2&&card.stepLimit>=3;
  if(id==='purification')return card.nodes[normal]?.event==='forgotten_reliquary'&&reachable(card,normal)<=card.stepLimit;
  if(id==='monster_hunt'||id==='skirmish_clear'){
   const rooms=card.nodes.map((node,i)=>({node,i})).filter(({node,i})=>node.kind==='combat'&&reachable(card,i)<=card.stepLimit);
   return id==='skirmish_clear'?rooms.length>=3:
    rooms.reduce((sum,{node})=>sum+(Number.isInteger(node.count)?node.count:0),0)>=KILL_TARGETS[card.risk];
  }
- if(id==='shrine_oath')return Array.isArray(card.boonShrines)&&card.boonShrines.some(i=>reachable(card,i)<=card.stepLimit);
+ if(id==='marked_chambers')return markedCandidates(card).length>0;
  return id==='oath_of_defiance'&&card.nodes[normal]?.kind==='boss'&&reachable(card,normal)<=card.stepLimit;
 }
 function offer(seed,card){
@@ -135,8 +182,10 @@ function progress(game){
  if(!get(id)||!card)return null;
  let current=0,target=1;
  if(id==='bounty_writ')current=Number(!!s.bossPreparation.markedElite&&d.cleared.includes(card.objective));
- else if(id==='pathfinder'){
-  target=2;const cleared=new Set(d.cleared||[]),visited=new Set((game.history||[]).filter(entry=>cleared.has(entry.node)).map(entry=>sector(card,entry.node)).filter(n=>n!==null));current=Math.min(target,visited.size);
+ else if(id==='marked_chambers'){
+  target=2;
+  const marked=d.stage72RewardPlan?.markedRooms||[],cleared=new Set(d.cleared||[]);
+  current=marked.filter(node=>cleared.has(node)&&(game.history||[]).some(h=>h.node===node&&!h.boss&&!h.elite&&!h.event)).length;
  }else if(id==='purification')current=Number(!!s.bossPreparation.reliquary&&d.disabledBossModifierId===s.bossModifierIds[0]);
  else if(id==='oath_of_defiance')current=Number(game.stage==='finished'&&d.cleared.includes(card.nodes.length-1)&&!s.bossPreparation.reliquary);
  else if(id==='monster_hunt'||id==='skirmish_clear'){
@@ -147,7 +196,7 @@ function progress(game){
    rooms.reduce((n,h)=>n+(Number.isSafeInteger(h.monstersDefeated)&&h.monstersDefeated>=0&&h.monstersDefeated<=32?h.monstersDefeated:0),0):
    new Set(rooms.map(h=>h.node)).size;
   current=Math.min(target,value);
- }else if(id==='shrine_oath')current=Number(s.decisions.some(x=>x.type==='choose_boon'&&card.boonShrines?.includes(x.room)));
+ }
  return {current,target,done:current===target};
 }
 function inspect(game,outcome=null){
@@ -183,9 +232,8 @@ function validate(game){
     !paid&&s.completedObjectives.length||!due)return false;
  if(!paid)return true;
  if(s.completedObjectives.length!==1||s.completedObjectives[0]!==initial.id||paid.id!==initial.id||!progress(game)?.done)return false;
- const expected=due.kind==='blueprint_chance'?
-  (blueprintChance(d.foundationManifest.seed,card,initial.id,due)?'blueprint':due.fallback.kind):due.kind;
- const actual=due.kind==='blueprint_chance'&&expected!=='blueprint'?due.fallback:due;
+ const expected=due.kind;
+ const actual=due;
  if(paid.kind!==expected)return false;
  const only=(keys)=>Object.keys(paid).every(key=>['id','kind',...keys].includes(key));
  if(expected==='blueprint')return only(['recipeId'])&&paid.recipeId===due.recipeId;
@@ -216,8 +264,7 @@ function settle(game,profile,results,outcome){
  if(!C.valid(profile?.crafting))throw Error('Invalid Contract wallet');
  const prize=d.stage72RewardPlan?.rewards?.[id];if(!prize)return null;
  const next=F.applyDecision(s,{type:'complete_contract',id},d.foundationManifest);
- const due=prize.kind==='blueprint_chance'?
-  (blueprintChance(d.foundationManifest.seed,card,id,prize)?{kind:'blueprint',recipeId:prize.recipeId}:prize.fallback):prize;
+ const due=prize;
  const kind=due.kind;
  let paid={id,kind};
  if(kind==='blueprint'){
@@ -248,7 +295,7 @@ function settle(game,profile,results,outcome){
  d.foundationState=next;d.stage7RewardPaid=paid;
  return {...paid,name:get(id).name};
 }
-const API=Object.freeze({CATALOG,DESCRIPTIONS,REWARDS,get,reward,plan,label,blueprintChance,reachable,sector,eligible,offer,decision,progress,inspect,validate,validateOffer,settle});
+const API=Object.freeze({CATALOG,DESCRIPTIONS,REWARDS,BASIC_PRIZES,BLUEPRINT_OFFER_RATE,get,reward,plan,label,blueprintOffer,blueprint,reachable,sector,markedCandidates,markedRooms,eligible,offer,decision,progress,inspect,validate,validateOffer,settle});
 root.WandererV013ExpeditionContracts=API;
 if(typeof module==='object'&&module.exports)module.exports=API;
 })(globalThis);
