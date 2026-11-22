@@ -7,11 +7,11 @@ test('Native Stage 6.24B proposal replaces only known E1-onward coefficients, al
  const x=B.candidate();
  assert.equal(Object.keys(x.files).length,4);
  assert.equal(Object.keys(x.hashes).length,4);
- assert.match(x.files['index.html'],/hp:\.98,atk:\.72,def:\.86/);
+ assert.match(x.files['index.html'],/hp:1\.00,atk:\.735,def:\.86/);
  assert.match(x.files['index.html'],/hp:1\.20,atk:\.84,def:1\.00/);
- assert.match(x.files['online/v013-elite-abilities.js'],/damagePerStack:\.0066/);
- assert.match(x.files['online/v013-elite-abilities.js'],/hpFactor:\.46,atkFactor:\.33/);
- assert.match(x.files['online/v013-enemy-roster.js'],/between\(\.56,\.43,t\)/);
+ assert.match(x.files['online/v013-elite-abilities.js'],/damagePerStack:\.0070/);
+ assert.match(x.files['online/v013-elite-abilities.js'],/hpFactor:\.48,atkFactor:\.34/);
+ assert.match(x.files['online/v013-enemy-roster.js'],/between\(\.53,\.445,t\)/);
  assert.match(x.files['combat/v012-combat-runtime.js'],/Math\.round\(hit\*\.33\)/);
  assert.throws(()=>B.replaceOnce('abc','xx','y','test'),/drift/);
  assert.throws(()=>B.replaceOnce('xx xx','xx','y','test'),/drift/);

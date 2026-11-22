@@ -19,19 +19,19 @@ function candidate(){
   'index.html':[
    
    ['hp:1.10,atk:1.02,def:1.00','hp:1.01,atk:.98,def:1.00'],
-   ['hp:1.03,atk:.75,def:.86','hp:.98,atk:.72,def:.86'],
+   ['hp:1.03,atk:.75,def:.86','hp:1.00,atk:.735,def:.86'],
    ['hp:1.12,atk:.78,def:1.00','hp:1.20,atk:.84,def:1.00'],
    
   ],
   'online/v013-elite-abilities.js':[
-   ['cast:1,hpFactor:.50,atkFactor:.35','cast:1,hpFactor:.46,atkFactor:.33'],
-   ['damagePerStack:.0075','damagePerStack:.0066'],
+   ['cast:1,hpFactor:.50,atkFactor:.35','cast:1,hpFactor:.48,atkFactor:.34'],
+   ['damagePerStack:.0075','damagePerStack:.0070'],
    ["description:'Vitality: every 12s, prepares","description:'Vitality: first at 9s, then every 12s; prepares"],
    ['first:12,cooldown:12,cast:1','first:9,cooldown:12,cast:1']
   ],
   'online/v013-enemy-roster.js':[
-   ['between(.53,.40,t),atk:between(.45,.34,t)','between(.56,.43,t),atk:between(.47,.37,t)'],
-   ['between(.40,.29,u),atk:between(.34,.25,u)','between(.43,.31,u),atk:between(.37,.28,u)'],
+   ['between(.53,.40,t),atk:between(.45,.34,t)','between(.53,.445,t),atk:between(.45,.385,t)'],
+   ['between(.40,.29,u),atk:between(.34,.25,u)','between(.445,.32,u),atk:between(.385,.29,u)'],
   ],
   'combat/v012-combat-runtime.js':[
    ['Math.round(hit*.38)),Math.max(1,Math.round(e.maxhp*.06))','Math.round(hit*.33)),Math.max(1,Math.round(e.maxhp*.055))']
