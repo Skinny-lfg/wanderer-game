@@ -10,26 +10,36 @@ const DESCRIPTIONS=Object.freeze({
  bounty_writ:{icon:'⚔',objective:'Defeat the marked Elite',detail:'Claim the optional marked Elite on the map. Its existing reagent reward is separate.'},
  pathfinder:{icon:'🧭',objective:'Clear rooms in two distinct map sectors',detail:'Complete an encounter or event in two different passages. Scouting alone does not count.'},
  purification:{icon:'✦',objective:'Disrupt a boss seal at the Forgotten Reliquary',detail:'Reach the Reliquary and sacrifice Health to disable one boss modifier.'},
- oath_of_defiance:{icon:'🛡',objective:'Defeat the final boss without disrupting its seal',detail:'Leave every boss modifier intact. Marked Elite preparation is allowed.'}
+ oath_of_defiance:{icon:'🛡',objective:'Defeat the final boss without disrupting its seal',detail:'Leave every boss modifier intact. Marked Elite preparation is allowed.'},
+ monster_hunt:{icon:'⚔',objective:'Defeat monsters in ordinary combat rooms',detail:'Only actual kills from completed fights count. Bosses, Elites and scouting do not count.'},
+ skirmish_clear:{icon:'🗡',objective:'Clear 3 ordinary combat rooms',detail:'Complete three non-Elite, non-Boss combat encounters. Visiting or scouting is not enough.'},
+ shrine_oath:{icon:'✧',objective:'Accept a Boon at a discovered Shrine',detail:'Find a Boon Shrine and select one Boon during the Expedition.'}
 });
-// Contract rewards are exclusive. A Blueprint offer must be earned and known
-// before settlement; a duplicate Blueprint is not converted to free currency.
-const ESSENCE=Object.freeze({
- bounty_writ:[3,5,7],pathfinder:[3,5,8],
- purification:[5,8,11],oath_of_defiance:[6,10,14]
-});
+// The prize for each offered Contract is seeded independently of map/combat
+// RNG. A Blueprint is a chance for ONE exclusive prize, never an extra reward.
+const PRIZE_KINDS=Object.freeze(['gold','essence','fragments','reagent','potion']);
+const ESSENCE=Object.freeze({bounty_writ:[4,7,11],pathfinder:[4,7,11],
+ purification:[4,7,11],oath_of_defiance:[4,7,11],
+ monster_hunt:[4,7,11],skirmish_clear:[4,7,11],shrine_oath:[4,7,11]});
 const REWARDS=ESSENCE;
-// One reward per Contract. Simple prizes are deterministic and risk-scaled.
-function reward(id,risk,family='blood'){
+const KILL_TARGETS=Object.freeze([6,8,10]);
+function targetFor(id,risk){
+ return id==='monster_hunt'?KILL_TARGETS[risk]:id==='skirmish_clear'?3:id==='pathfinder'?2:1;
+}
+function reward(id,risk,family='blood',seed=0,cardId='default',avoidKind=null){
  if(!get(id)||![0,1,2].includes(risk)||!C.FAMILIES.includes(family))throw Error('Invalid Contract reward');
- if(id==='bounty_writ')return {kind:'gold',gold:[18,28,40][risk]};
- if(id==='pathfinder')return {kind:'fragments',fragments:[6,10,16][risk]};
- if(id==='purification')return {kind:'reagent',family,amount:[1,1,2][risk]};
- if(id==='oath_of_defiance')return {kind:'potion',potion:['ironhide','purifying','fate'][risk],amount:1};
- return {kind:'essence',essence:ESSENCE[id][risk]};
+ const kinds=PRIZE_KINDS.filter(kind=>kind!==avoidKind);
+ const roll=F.rng(seed,'contract_prize_v2_'+cardId+'_'+id);
+ const kind=kinds[Math.floor(roll()*kinds.length)];
+ if(kind==='gold')return {kind,gold:[28,45,70][risk]};
+ if(kind==='essence')return {kind,essence:ESSENCE[id][risk]};
+ if(kind==='fragments')return {kind,fragments:[8,14,23][risk]};
+ if(kind==='reagent')return {kind,family,amount:[1,1,2][risk]};
+ const potions=['ironhide','purifying','fate'];
+ return {kind:'potion',potion:potions[Math.floor(roll()*potions.length)],amount:1};
 }
 function blueprintChance(seed,card,id,due){
- return F.rng(seed,'contract_blueprint_chance_v1_'+card.id+'_'+id)()<due.chance;
+ return F.rng(seed,'contract_blueprint_chance_v2_'+card.id+'_'+id)()<due.chance;
 }
 function canon(known){
  if(!Array.isArray(known)||new Set(known).size!==known.length||
@@ -37,29 +47,34 @@ function canon(known){
   throw Error('Invalid Contract Blueprint collection');
  return [...known].sort();
 }
-function blueprint(seed,card,known){
+function blueprint(seed,card,known,id='default'){
  const candidates=C.RECIPES.filter(r=>r.family===card.family&&!known.includes(r.id)&&r.rarity!=='Uncommon');
  const preferred=card.risk===2?'Epic':'Rare';
  const available=candidates.filter(r=>r.rarity===preferred);
  const fallback=card.risk===0?[]:candidates.filter(r=>r.rarity!==preferred);
  const pool=available.length?available:fallback;
  if(!pool.length)return null;
- const random=F.rng(seed,'contract_blueprint_v1_'+card.id);
+ const random=F.rng(seed,'contract_blueprint_v2_'+card.id+'_'+id);
  return pool[Math.floor(random()*pool.length)].id;
 }
 function plan(seed,card,known=[]){
- const ids=offer(seed,card),knownRecipes=canon(known);
- const newBlueprint=blueprint(seed,card,knownRecipes),rewards={};
- for(let i=0;i<ids.length;i++){
-  const id=ids[i];
-  rewards[id]=i===0&&newBlueprint?{kind:'blueprint_chance',recipeId:newBlueprint,chance:[.35,.45,.55][card.risk],fallbackEssence:ESSENCE[id][card.risk]}:reward(id,card.risk,card.family);
+ const ids=offer(seed,card),knownRecipes=canon(known),reserved=[...knownRecipes],rewards={};
+ let lastKind=null;
+ for(const id of ids){
+  const fallback=reward(id,card.risk,card.family,seed,card.id,lastKind);
+  lastKind=fallback.kind;
+  const recipeId=blueprint(seed,card,reserved,id);
+  if(recipeId){
+   reserved.push(recipeId);
+   rewards[id]={kind:'blueprint_chance',recipeId,chance:[.20,.30,.40][card.risk],fallback};
+  }else rewards[id]=fallback;
  }
  return {ids,knownRecipes,rewards};
 }
 function label(prize){
  if(prize?.kind==='blueprint_chance'){
   const r=C.RECIPES.find(r=>r.id===prize.recipeId);
-  return Math.round(prize.chance*100)+'% chance: '+(r?r.rarity+' '+r.name:'Blueprint')+' · Otherwise +'+prize.fallbackEssence+' Essence';
+  return Math.round(prize.chance*100)+'% chance: '+(r?r.rarity+' '+r.name:'Blueprint')+' · Otherwise '+label(prize.fallback);
  }
  if(prize?.kind==='blueprint'){
   const r=C.RECIPES.find(r=>r.id===prize.recipeId);return r?r.rarity+' Blueprint · '+r.name:'Unknown Blueprint';
