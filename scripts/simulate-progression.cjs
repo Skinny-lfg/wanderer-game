@@ -12,6 +12,8 @@ require('../combat/talent-graph-bridge.js');
 require('../combat/talent-graph-runtime.js');
 require('../combat/expedition-progression.js');
 require('../combat/v013-expedition-foundation.js');
+require('../economy/v013-crafting.js');
+require('../online/v013-expedition-contracts.js');
 require('../online/v013-expedition-conditions.js');
 require('../online/v013-boss-modifiers.js');
 require('../online/v013-boss-preparation.js');
@@ -20,6 +22,7 @@ require('../online/v013-boss-abilities.js');
 require('../online/v013-enemy-abilities.js');
 require('../online/v013-elite-abilities.js');
 const F=globalThis.WandererV013ExpeditionFoundation;
+const K=globalThis.WandererV013ExpeditionContracts;
 const A=globalThis.WandererV013BossAbilities;
 const M=globalThis.WandererV013BossModifiers;
 const AFFINITIES=Object.freeze(Object.keys(A.PROFILES));
@@ -479,12 +482,15 @@ function dungeon(level,build,seed,opts,desiredRisk=undefined){
    if(a.state().run?.status==='cleared'||a.results().eventExitPending||a.results().review){if(!a.exitResult())throw Error('Failed to exit resolved room '+node);}
   }catch(e){error=e.message;break;}
  }
- const s=a.state();
+ const s=a.state(),contractProgress=K.progress(g),
+  contractResult=K.inspect(g,g.stage==='finished'?'victory':g.stage==='failed'?'defeat':null);
  const hpLast=rooms.at(-1),survival=rooms.length?hpLast.hpEnd/hpLast.hpMax:null;
  return {mode:desiredRisk===undefined?'dungeon':'conditions',kind:conditionId||'unknown',conditionId,conditionMarkedRooms:rooms.filter(r=>r.conditionMarked).length,conditionPassagesCrossed:g.dungeon?.conditionEdgesUsed?.length||0,level,build:build.id,seed,resolvedSeed,seedShift,gearE,gearFingerprint,gearTier:P.gearTier(gearE).name,gearRarity:opts.rarity,
   pointsBudget:opts.points,pointsSpent:allocatedPoints,affinity:card.family,bossAffinity:card.family,bossName:A.profileFor(card.family).name,
   bossStyle:A.profileFor(card.family).style,boonsTaken:[...(g.dungeon?.foundationState?.boonIds||[])],contractId:g.dungeon?.foundationState?.contractId||null,
-  contractReward:g.dungeon?.stage7RewardPaid||null,realm:card.name,risk:card.risk,route,rooms,events,stage:g.stage,won:g.stage==='finished',bossReached:rooms.some(r=>r.kind==='boss'),timedOut:rooms.some(r=>r.timedOut),error,seconds:+rooms.reduce((v,r)=>v+r.seconds,0).toFixed(2),damageDealt:rooms.reduce((v,r)=>v+r.damageDealt,0),damageTaken:rooms.reduce((v,r)=>v+r.damageTaken,0),manaSpent:rooms.reduce((v,r)=>v+r.manaSpent,0),minHpPct:rooms.length?Math.min(...rooms.map(r=>r.minHpPct)):null,lastHpPct:survival===null?null:+(100*survival).toFixed(1),goldNet:s.gold-initial.gold,fragmentsNet:s.fragments-initial.fragments,essenceNet:s.crafting.essence-initial.essence,coresNet:Object.fromEntries(Object.keys(initial.cores).map(k=>[k,(s.crafting.cores[k]||0)-(initial.cores[k]||0)])),
+  contractReward:g.dungeon?.stage7RewardPaid||null,contractProgress,contractResult,
+  contractOutcome:g.stage==='finished'?'victory':g.stage==='failed'?'defeat':'unfinished',
+  realm:card.name,risk:card.risk,route,rooms,events,stage:g.stage,won:g.stage==='finished',bossReached:rooms.some(r=>r.kind==='boss'),timedOut:rooms.some(r=>r.timedOut),error,seconds:+rooms.reduce((v,r)=>v+r.seconds,0).toFixed(2),damageDealt:rooms.reduce((v,r)=>v+r.damageDealt,0),damageTaken:rooms.reduce((v,r)=>v+r.damageTaken,0),manaSpent:rooms.reduce((v,r)=>v+r.manaSpent,0),minHpPct:rooms.length?Math.min(...rooms.map(r=>r.minHpPct)):null,lastHpPct:survival===null?null:+(100*survival).toFixed(1),goldNet:s.gold-initial.gold,fragmentsNet:s.fragments-initial.fragments,essenceNet:s.crafting.essence-initial.essence,coresNet:Object.fromEntries(Object.keys(initial.cores).map(k=>[k,(s.crafting.cores[k]||0)-(initial.cores[k]||0)])),
   talentXpNet:s.automaticTalents.xp-initial.xp,enemyAbilityCasts:rooms.reduce((n,x)=>n+x.enemyAbilityCasts,0),
   bossSummons:rooms.reduce((n,x)=>n+x.bossSummons,0),bossHealing:rooms.reduce((n,x)=>n+x.bossHealing,0),
   eliteSummons:rooms.reduce((n,x)=>n+x.eliteSummons,0),stepsLeft:g.dungeon?.steps};
@@ -567,7 +573,7 @@ function simulate(opts){
  if(opts.mode==='bosses'&&opts.affinities.some(x=>!summary.exposures.bossAffinities.includes(x)))notes.push('Not every requested Boss Affinity entered combat. Check errors and scenario seed search.');
  if(opts.points>0)notes.push('Fixed '+opts.points+'-point Talent Tree debug build is synthetic at all E levels, not earned account XP. Compare an explicit --points=0 baseline for E1.');
  if(['bosses','bossmods','enemies','roles','elites','encounter','traits','bossprep'].includes(opts.mode))notes.push('Controlled first-ring encounter injection: uses native combat but not natural room placement, 15-Realm progression or earned equipment.');
- if(['dungeon','conditions','both'].includes(opts.mode))notes.push('Natural Dungeon route uses shortest accessible path and explicit Boon/Contract selection policies; potions are not automatically spent.');
+ if(['dungeon','conditions','both'].includes(opts.mode))notes.push('Dungeon diagnostic follows the shortest native path toward the Boss. It can select a Contract, but does NOT plan side-objective completion or guaranteed Boon collection. Use the earned-account simulation to study Contract-aware routing, safe extraction and actual payouts.');
  if(opts.mode==='roles'){
    const observed=new Set(rows.filter(r=>!r.error).map(r=>r.affinity+'|'+r.requestedGroupSize+'|'+r.roleEffect));
    for(const affinity of opts.affinities)for(const count of opts.groupSizes)for(const effect of opts.roleEffects)if(!observed.has(affinity+'|'+count+'|'+effect))notes.push('Missing role scenario: '+affinity+' '+count+' enemies / '+effect);

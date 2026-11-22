@@ -1,0 +1,72 @@
+name: Wanderer v0.13 — Simulator sync, native Contract ledger and Stage 6 regressions (NO DEPLOY)
+on:
+  push:
+    branches:
+      - feature/v013-simulation-sync-contracts-20261122
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  simulator-native:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Simulator agents, recorded native Contract ledger and campaign tests
+        run: >-
+          node --test
+          tests/v013-simulation.test.cjs
+          tests/v013-natural-progression.test.cjs
+          tests/v013-stage7-contracts.test.cjs
+          tests/v013-c2-reset.test.cjs
+          tests/v013-dungeon-checkpoint-integrity.test.cjs
+      - name: Latest native mobs, individual Elites, six prepared Bosses and E1-E15 progression
+        run: >-
+          node --test
+          tests/v013-stage618-mob-implementation.test.cjs
+          tests/v013-stage619-current-regression.test.cjs
+          tests/v013-stage620-boss-preparation.test.cjs
+          tests/v013-stage621-natural-recovery.test.cjs
+      - name: Entire current native v0.13 regression gate
+        run: npm run test:v013:gate
+      - name: Run controlled native Dungeon/Contract diagnostic
+        run: >-
+          node scripts/simulate-progression.cjs
+          --mode=dungeon --levels=5 --seeds=9101,9102
+          --builds=blood-fury --points=0 --contracts=first --boons=first
+          --out=reports/v013-simulator-sync-controlled.json
+      - name: Run earned-account Contract-aware E1-E2 pilot
+        run: >-
+          node scripts/v013-natural-progression.cjs
+          --seeds=9101,9201 --profiles=cautious,balanced
+          --max-level=2 --max-attempts=2 --max-total-attempts=4
+          --out=reports/v013-simulator-sync-natural.json
+      - name: Verify no broken references and exactly matching generated preview
+        shell: bash
+        run: |
+          node scripts/v013-c6-final-audit.cjs
+          npm run build:pages
+          if [ -n "$(git status --porcelain -- docs)" ]; then
+            echo 'Source/docs preview drift'
+            git status --short -- docs
+            exit 1
+          fi
+      - name: Upload reproducible native simulator evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v013-simulator-contract-ledger-evidence
+          path: |
+            reports/v013-simulator-sync-controlled.json
+            reports/v013-simulator-sync-natural.json
+            reports/v013-simulator-sync-natural.md
+            reports/v013-c6-final-static-audit.json
+          if-no-files-found: warn
+          retention-days: 30
