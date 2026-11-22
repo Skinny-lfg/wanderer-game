@@ -12,7 +12,8 @@ const DESCRIPTIONS=Object.freeze({
  oath_of_defiance:{icon:'🛡',objective:'Defeat the final boss without disrupting its seal',detail:'Leave every boss modifier intact. Marked Elite preparation is allowed.'},
  monster_hunt:{icon:'⚔',objective:'Defeat monsters in ordinary combat rooms',detail:'Only actual kills from completed fights count. Bosses, Elites and scouting do not count.'},
  skirmish_clear:{icon:'🗡',objective:'Clear 3 ordinary combat rooms',detail:'Complete three non-Elite, non-Boss combat encounters. Visiting or scouting is not enough.'},
- marked_chambers:{icon:'🎯',objective:'Clear both marked combat rooms',detail:'Two specific chambers in different passages are marked on your map. Clear BOTH, even if you would normally avoid their encounters.'}
+ marked_chambers:{icon:'🎯',objective:'Clear both marked combat rooms',detail:'Two specific chambers in different passages are marked on your map. Clear BOTH, even if you would normally avoid their encounters.'},
+ boon_collector:{icon:'✨',objective:'Choose 2 Boons during this Expedition',detail:'Find both Boon Shrines and choose a different Boon in each. Revealing or skipping a Shrine does not count.'}
 });
 // Every Contract offers exactly ONE guaranteed prize. A Blueprint is a
 // rare standalone offer, not an extra chance attached to currency/potions.
@@ -20,11 +21,11 @@ const BASIC_PRIZES=Object.freeze(['gold','essence','fragments','reagent','potion
 const BLUEPRINT_OFFER_RATE=Object.freeze([.05,.07,.10]); // Guarded / Dangerous / Brutal
 const ESSENCE=Object.freeze({bounty_writ:[4,7,11],purification:[4,7,11],
  oath_of_defiance:[4,7,11],monster_hunt:[4,7,11],
- skirmish_clear:[4,7,11],marked_chambers:[4,7,11]});
+ skirmish_clear:[4,7,11],marked_chambers:[4,7,11],boon_collector:[4,7,11]});
 const REWARDS=ESSENCE;
 const KILL_TARGETS=Object.freeze([6,8,10]);
 function targetFor(id,risk){
- return id==='monster_hunt'?KILL_TARGETS[risk]:id==='skirmish_clear'||id==='marked_chambers'?id==='skirmish_clear'?3:2:1;
+ return id==='monster_hunt'?KILL_TARGETS[risk]:id==='skirmish_clear'?3:id==='marked_chambers'||id==='boon_collector'?2:1;
 }
 function reward(id,risk,family='blood',seed=0,cardId='default',avoidKind=null){
  if(!get(id)||![0,1,2].includes(risk)||!C.FAMILIES.includes(family))throw Error('Invalid Contract reward');
@@ -130,9 +131,9 @@ function markedCandidates(card){
  }
  return pairs;
 }
-function shortestPath(card,target){
- if(!Number.isInteger(target)||target<0||target>=card.nodes.length)return [];
- const queue=[[0]],seen=new Set([0]);
+function shortestPath(card,target,start=0){
+ if(!Number.isInteger(target)||target<0||target>=card.nodes.length||!Number.isInteger(start)||start<0||start>=card.nodes.length)return [];
+ const queue=[[start]],seen=new Set([start]);
  for(const path of queue){
   const last=path.at(-1);
   if(last===target)return path;
@@ -155,6 +156,17 @@ function markedRooms(seed,card){
  const rng=F.rng(seed,'contract_marked_rooms_v1_'+card.id);
  return [...best[Math.floor(rng()*best.length)].ids];
 }
+// A conservative shortest route through both natural Boon Shrines.
+// Only real, non-secret edges count; travel discounts are not assumed.
+function boonShrineRouteSteps(card){
+ const rooms=card?.boonShrines;
+ if(!Array.isArray(rooms)||rooms.length!==2||rooms[0]===rooms[1]||
+    rooms.some(id=>!Number.isInteger(id)||card.nodes?.[id]?.kind!=='shrine'))return Infinity;
+ const first=shortestPath(card,rooms[0]).length-1,second=shortestPath(card,rooms[1]).length-1;
+ const link=shortestPath(card,rooms[1],rooms[0]).length-1;
+ if(first<0||second<0||link<0)return Infinity;
+ return Math.min(first,second)+link;
+}
 function eligible(card,id){
  const normal=id==='bounty_writ'?card?.objective:id==='purification'?card?.reliquaryRoom:card?.nodes?.length-1;
  if(!get(id)||!card||!Number.isInteger(card.stepLimit)||!Number.isInteger(card.risk))return false;
@@ -166,6 +178,7 @@ function eligible(card,id){
    rooms.reduce((sum,{node})=>sum+(Number.isInteger(node.count)?node.count:0),0)>=KILL_TARGETS[card.risk];
  }
  if(id==='marked_chambers')return markedCandidates(card).length>0;
+ if(id==='boon_collector')return boonShrineRouteSteps(card)<=card.stepLimit;
  return id==='oath_of_defiance'&&card.nodes[normal]?.kind==='boss'&&reachable(card,normal)<=card.stepLimit;
 }
 function offer(seed,card){
@@ -182,6 +195,13 @@ function progress(game){
  if(!get(id)||!card)return null;
  let current=0,target=1;
  if(id==='bounty_writ')current=Number(!!s.bossPreparation.markedElite&&d.cleared.includes(card.objective));
+ else if(id==='boon_collector'){
+  target=2;
+  const shrineRooms=new Set(card.boonShrines||[]),cleared=new Set(d.cleared||[]),visited=new Set(d.visited||[]);
+  const chosen=(s.decisions||[]).filter(a=>a.type==='choose_boon'&&shrineRooms.has(a.room)&&
+   cleared.has(a.room)&&visited.has(a.room)&&s.boonIds.includes(a.id));
+  current=Math.min(target,new Set(chosen.map(a=>a.room)).size);
+ }
  else if(id==='marked_chambers'){
   target=2;
   const marked=d.stage72RewardPlan?.markedRooms||[],cleared=new Set(d.cleared||[]);
@@ -295,7 +315,7 @@ function settle(game,profile,results,outcome){
  d.foundationState=next;d.stage7RewardPaid=paid;
  return {...paid,name:get(id).name};
 }
-const API=Object.freeze({CATALOG,DESCRIPTIONS,REWARDS,BASIC_PRIZES,BLUEPRINT_OFFER_RATE,get,reward,plan,label,blueprintOffer,blueprint,reachable,sector,markedCandidates,markedRooms,eligible,offer,decision,progress,inspect,validate,validateOffer,settle});
+const API=Object.freeze({CATALOG,DESCRIPTIONS,REWARDS,BASIC_PRIZES,BLUEPRINT_OFFER_RATE,get,reward,plan,label,blueprintOffer,blueprint,reachable,sector,markedCandidates,markedRooms,boonShrineRouteSteps,eligible,offer,decision,progress,inspect,validate,validateOffer,settle});
 root.WandererV013ExpeditionContracts=API;
 if(typeof module==='object'&&module.exports)module.exports=API;
 })(globalThis);

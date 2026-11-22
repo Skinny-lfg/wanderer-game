@@ -82,7 +82,7 @@ test('native controller integrates route, scouting and the deterministic foundat
 });
 test('index loads foundation and intelligence before expedition controller and hides secret SVG links',()=>{
  const html=fs.readFileSync('index.html','utf8');
- const f=html.indexOf('src="combat/v013-expedition-foundation.js"');
+ const f=html.indexOf('src="combat/v013-expedition-foundation.js');
  const i=html.indexOf('src="online/v013-map-intelligence.js"');
  const c=html.indexOf('src="online/v012-expedition-controller.js"');
  assert(f>0&&i>f&&c>i);
