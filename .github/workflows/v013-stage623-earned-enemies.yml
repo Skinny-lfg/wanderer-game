@@ -1,0 +1,97 @@
+name: Wanderer Stage 6.23 — Earned E4-E5 matched native Tank Elite Boss (NO DEPLOY)
+on:
+  push:
+    branches:
+      - audit/v013-stage623-earned-matched-enemies-20261122
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Verify real earned checkpoint adapter, native three-class parity and regressions
+        run: |
+          node --check scripts/v013-stage623-earned-matched-enemies.cjs
+          node --check scripts/simulate-progression.cjs
+          node --test tests/v013-stage623-earned-matched-enemies.test.cjs tests/v013-stage615-enemy-hierarchy.test.cjs tests/v013-natural-progression.test.cjs
+          node --test tests/v013-stage619-current-regression.test.cjs tests/v013-stage620-boss-preparation.test.cjs tests/v013-stage621-natural-recovery.test.cjs
+          npm run test:v013:gate
+          node scripts/v013-c6-final-audit.cjs
+          npm run build:pages
+          if [ -n "$(git status --porcelain -- docs)" ]; then
+            echo "Native preview/source drift"
+            exit 1
+          fi
+          git diff --check
+  cohort:
+    name: Earned E4-E5 matched fights — seed ${{ matrix.seed }}
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [9701, 9702, 9703, 9704]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Earn persistent natural equipment and Talents, then matched Tank / eight named Elites / Boss
+        run: >-
+          node scripts/v013-stage623-earned-matched-enemies.cjs
+          --mode=cohort --seeds=${{ matrix.seed }}
+          --profiles=cautious,balanced,smart-blood-fury-vitality
+          --max-attempts=12 --max-total-attempts=60 --trials=1
+          --out=reports/v013-stage623-seed${{ matrix.seed }}.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage623-earned-seed-${{ matrix.seed }}
+          path: |
+            reports/v013-stage623-seed${{ matrix.seed }}.json
+            reports/v013-stage623-seed${{ matrix.seed }}.md
+          retention-days: 30
+          if-no-files-found: error
+  aggregate:
+    name: Validate matched earned E4-E5 enemy classes across seeds
+    needs: cohort
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage623-earned-seed-*
+          path: reports/stage623-shards
+          merge-multiple: true
+      - name: Reject source/checkpoint duplication, mismatched player state, unresolved combats
+        run: |
+          node scripts/v013-stage623-earned-matched-enemies.cjs --mode=aggregate --inputs=reports/stage623-shards --out=reports/v013-stage623-combined.json
+          node - <<'NODE'
+          const r=require('./reports/v013-stage623-combined.json'),c=r.summary.coverage;
+          if(c.accounts!==12||c.shards!==4||c.distinctSeeds!==4||c.errors||!c.allChecksPassed||
+             c.matchedScenarios<1||c.actualNativeFights!==c.matchedScenarios*10)
+            throw Error('Stage 6.23 matching or coverage incomplete');
+          console.log('STAGE623_VERIFIED='+JSON.stringify({coverage:c,level4:r.summary.level4,level5:r.summary.level5}));
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage623-native-matched-e4-e5-results
+          path: |
+            reports/v013-stage623-combined.json
+            reports/v013-stage623-combined.md
+          retention-days: 30
+          if-no-files-found: error

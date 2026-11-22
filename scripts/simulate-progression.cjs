@@ -156,9 +156,27 @@ function prepare(level,build,seed,opts,desiredRisk=undefined,desiredFamily=undef
  if(desiredFamily!==undefined&&!AFFINITIES.includes(desiredFamily))throw Error('Unknown Boss Affinity '+desiredFamily);
  if(desiredRisk!==undefined&&!RISKS.includes(desiredRisk))throw Error('Unknown Realm risk '+desiredRisk);
  const gearE=gearLevel(level,opts.gear);
+ // Stage 6.23: isolated earned-account COMBAT fixture. Data must come from
+ // a native onCamp checkpoint (E already unlocked); never reroll, synthesize
+ // affixes, grant Talents or pretend this is a naturally reached Boss room.
+ const earned=opts.earnedCheckpoint||null;
+ if(earned){
+  if(earned.level!==level||earned.unlocked<level||
+     !earned.equip||!earned.equip.weapon||
+     !earned.automaticTalents||!T.valid(earned.automaticTalents)||
+     T.earned(earned.automaticTalents)!==opts.points||
+     !Array.isArray(earned.runes)||!Array.isArray(earned.runeSlots)||
+     opts.runes||Object.hasOwn(opts,'armorType')||
+     Object.hasOwn(opts,'offhandType')||Object.hasOwn(opts,'offhandEpicTrait')||
+     build.weapon!==earned.equip.weapon.subtype)
+   throw Error('Invalid earned native Stage 6.23 checkpoint');
+ }
  // Stage 6.12 may supply a *native-validated* TalentGraph profile from the
  // independent controlled-build planner. This does NOT represent earned XP.
- const talents=opts.controlledTalents||talentPlan(build,opts.points);
+ const talents=earned?earned.automaticTalents:opts.controlledTalents||talentPlan(build,opts.points);
+ if(earned&&opts.controlledTalents&&
+    JSON.stringify(opts.controlledTalents)!==JSON.stringify(talents))
+  throw Error('Earned Talents cannot be replaced in a matched Stage 6.23 fixture');
  if(opts.controlledTalents&&(!T.valid(talents)||
      T.earned(talents)!==opts.points||talents.nodes.length>opts.points))
   throw Error('Controlled talents must be a valid live v15 graph at exactly the requested point budget');
@@ -182,10 +200,17 @@ function prepare(level,build,seed,opts,desiredRisk=undefined,desiredFamily=undef
       ...(opts.stage619BaselineRuntime===undefined?{}:{'combat/v012-combat-runtime.js':opts.stage619BaselineRuntime})
     };
     const a=create(resolvedSeed,undefined,overrides, {recordModules:opts.recordModules,skipPersistence:true,measure:opts.measure===true,now:1720000000000+resolvedSeed});
-  a.setup(gearE,build.weapon,opts.rarity);
+  if(earned){
+   // Clone complete items, their original ID/affix/trait and real earned runes.
+   // The later arena-style encounter is deliberately staged, never played
+   // as a claim of a naturally traversed Expedition.
+   a.state().equip=JSON.parse(JSON.stringify(earned.equip));
+   a.state().runes=JSON.parse(JSON.stringify(earned.runes));
+   a.state().runeSlots=[...earned.runeSlots];
+  }else a.setup(gearE,build.weapon,opts.rarity);
   // Roll real native gear at the same Expedition tier and requested rarity.
   // Never manufacture numeric affixes or copy a ready-made test stat block.
-  if(opts.armorType){
+  if(!earned&&opts.armorType){
    for(const slot of ['helm','armor','gloves','boots','belt']){
     const item=a.makeItem(gearE,slot,null,'loot',opts.armorType,opts.rarity);
     if(item.slot!==slot||item.armorType!==opts.armorType)
@@ -193,7 +218,7 @@ function prepare(level,build,seed,opts,desiredRisk=undefined,desiredFamily=undef
     a.state().equip[slot]=item;
    }
   }
-  if(Object.hasOwn(opts,'offhandType')){
+  if(!earned&&Object.hasOwn(opts,'offhandType')){
    // Controlled native gear roll, not an item earned in natural progression.
    // Keep all non-Off-Hand equipment unchanged across the paired variants.
    if(['Bow','Staff','Two-Handed'].includes(build.weapon)&&opts.offhandType!==null)throw Error('Off-Hand not compatible with two-handed weapon');
@@ -207,7 +232,7 @@ function prepare(level,build,seed,opts,desiredRisk=undefined,desiredFamily=undef
      throw Error('Invalid controlled Epic trait for '+opts.offhandType);
     a.state().equip.offhand.v013Trait=opts.offhandEpicTrait;
    }
-  }else if(Object.hasOwn(opts,'offhandEpicTrait'))throw Error('Epic trait requires an explicit Off-Hand type');
+  }else if(!earned&&Object.hasOwn(opts,'offhandEpicTrait'))throw Error('Epic trait requires an explicit Off-Hand type');
   // Stage 9.2 only: hold native route, draft, control and combat RNG streams fixed
   // AFTER gear rolls. Gear rarity must not silently change the test encounter.
   // Harness streams are deterministic test controls, not gameplay overrides.
