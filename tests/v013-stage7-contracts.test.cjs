@@ -326,3 +326,66 @@ test('Contract completed before extraction grants nothing on death or abandonmen
   assert.equal(K.settle(g,a.state(),a.results(),'extracted'),null);
  }
 });
+
+test('Marked Chambers targets are individually reachable on real map and jointly fit conservative step budget',()=>{
+ let eligibleCount=0;
+ for(const risk of [0,1,2])for(let seed=9201;seed<9210;seed++){
+  const {card,d}=fresh(seed,risk),eligible=K.eligible(card,'marked_chambers');
+  const targets=K.markedRooms(d.foundationManifest.seed,card);
+  if(!eligible){assert.deepEqual(targets,[]);continue;}
+  eligibleCount++;
+  assert.equal(targets.length,2);
+  assert.deepEqual(targets,K.markedRooms(d.foundationManifest.seed,card));
+  assert(targets.every(i=>i>=5&&i<=16&&card.nodes[i].kind==='combat'));
+  assert.notEqual(K.sector(card,targets[0]),K.sector(card,targets[1]));
+  const [a,b]=targets.map(i=>K.reachable(card,i));
+  assert(Number.isFinite(a)&&Number.isFinite(b));
+  assert(a+Math.min(2,a)+b<=card.stepLimit-1,
+   'two marked branches need ' +(a+Math.min(2,a)+b)+' steps for risk '+risk);
+ }
+ assert(eligibleCount>=12,'marked contract should be viable on a meaningful fraction of generated maps');
+});
+test('A guaranteed Blueprint is actually awarded as the single complete Contract payout',()=>{
+ let found;
+ for(let seed=11100;seed<11320;seed++){
+  const env=fresh(seed),offer=env.c.offerContracts(),id=offer.ids.find(i=>offer.rewards[i].kind==='blueprint');
+  if(!id)continue;
+  env.c.chooseContract(id);found={...env,id,recipeId:offer.rewards[id].recipeId};break;
+ }
+ assert(found,'expected one rare guaranteed Blueprint among real random offers');
+ complete(found,found.id);
+ const before=clone(found.a.state());
+ assert.equal(K.settle(found.g,found.a.state(),found.a.results(),'defeat'),null);
+ const paid=K.settle(found.g,found.a.state(),found.a.results(),found.g.stage==='finished'?'victory':'extracted');
+ assert.equal(paid.kind,'blueprint');assert.equal(paid.recipeId,found.recipeId);
+ assert(C.unlocked(found.a.state().crafting,paid.recipeId));
+ assert.equal(found.a.state().gold,before.gold);
+ assert.equal(found.a.state().fragments,before.fragments);
+ assert.equal(found.a.state().crafting.essence,before.crafting.essence);
+ assert.equal(K.settle(found.g,found.a.state(),found.a.results(),'extracted'),null);
+ assert(K.validate(found.g));
+});
+test('Standalone reward pool uses low blueprint-offer rates and no legacy secondary rolls',()=>{
+ assert.deepEqual(K.BLUEPRINT_OFFER_RATE,[.05,.07,.10]);
+ const {card}=fresh(9790,1);
+ let blueprintOffers=0;
+ for(let seed=1;seed<=450;seed++){
+  const x=K.plan(seed,card,[]);
+  assert(x.ids.every(id=>!['blueprint_chance','blueprint_offer'].includes(x.rewards[id].kind)));
+  assert(x.ids.every(id=>!('fallback' in x.rewards[id])&&!('chance' in x.rewards[id])));
+  blueprintOffers+=x.ids.filter(id=>x.rewards[id].kind==='blueprint').length;
+  assert(x.ids.filter(id=>x.rewards[id].kind==='blueprint').length<=1);
+ }
+ assert(blueprintOffers>0&&blueprintOffers<95,'Blueprint rewards must remain uncommon on seeded maps');
+});
+test('Map and offers explicitly communicate real target rooms and no hidden Blueprint fallback',()=>{
+ const fs=require('node:fs');
+ for(const file of ['index.html','docs/index.html']){
+  const html=fs.readFileSync(file,'utf8');
+  assert(html.includes('data-contract-target='));
+  assert(html.includes('contractTargets.includes(i)'));
+  assert(html.includes('🎯 Contract target'));
+  assert(html.includes('rare Blueprint offer is guaranteed'));
+  assert(!html.includes('If the Blueprint roll fails'));
+ }
+});
