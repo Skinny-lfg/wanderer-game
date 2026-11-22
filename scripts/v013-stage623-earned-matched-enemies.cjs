@@ -259,7 +259,7 @@ function summarize(result){
     actualNativeFights:rows.length*(2+ELITES.length),
     matchedScenarios:rows.length,allChecksPassed:rows.every(x=>x.samePlayerAndRealm&&
      Object.values(x.checks).every(group=>Object.values(group).every(Boolean))),
-    elapsedNativeScenarioSeeds:rows.map(x=>x.arenaSeed),
+    elapsedNativeScenarioSeeds:rows.map(x=>x.arenaSeed)},
     level4:levelStats[0],level5:levelStats[1]},
   cautions:[
    'All gear, runes, XP and Talents come from naturally progressed E1 accounts, but isolated Boss/Elite/Tank rooms are deliberately staged for causal enemy-class comparison',
