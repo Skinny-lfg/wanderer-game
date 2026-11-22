@@ -290,7 +290,15 @@ function phase1WaveWon(){
   ports.addLog('◆ '+treasure.name+' · '+treasure.worth+' Gold when extracted.','good');
  }
  r.status='ready';
+ const completedNode=g.selected?.node;
  const result=ports.phase1Controller.waveWon();
+ // A Monster Hunt counts only enemies from genuinely completed ordinary
+ // fights. Record the actual native enemy count, not map scouting or offers.
+ if(!boss&&!elite&&g.dungeon&&Number.isSafeInteger(r.totalMobCount)&&r.totalMobCount>0){
+  const entry=g.history.at(-1);
+  if(entry?.node===completedNode&&!entry.boss&&!entry.elite&&!entry.event)
+   entry.monstersDefeated=Math.min(32,r.totalMobCount);
+ }
  ports.phase4CommitRealm({awardXp:true});ports.phase6CollectMetrics(r);ports.phase6TickDurations();
  r.status='cleared';
  ports.addLog(result.expeditionComplete?'Expedition boss defeated!':'Realm cleared. Select your next Realm.','good');
@@ -304,7 +312,7 @@ function phase1WaveWon(){
   ports.phase5Results.review='summary';
   ports.phase5PersonalBest=Math.max(ports.phase5PersonalBest,r.tier);
   ports.phase6ReturnPotions('victory');
-  ports.settleContract();ports.phase5MakeSummary('victory');
+  ports.settleContract('victory');ports.phase5MakeSummary('victory');
   WandererV012Buildcraft.clear(ports.phase1Build);ports.phase1Build=null;
   if(ports.PHASE1_PREVIEW){ports.phase5Snapshot.expedition.completed=Math.max(ports.phase5Snapshot.expedition.completed,r.tier);ports.phase5Snapshot.expedition.lastOutcome='victory';}
   // Keep classic Rune tiers and three-choice UI: only complete milestone bosses, never Elites.
