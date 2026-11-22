@@ -1401,10 +1401,6 @@ function phase3BindHeader(){
  Q('[data-online-action="account"]').forEach(b=>{b.textContent='Account';b.onclick=null;});
  Q('[data-online-action="leaderboard"]').forEach(b=>b.onclick=()=>{bar?.classList.remove('menuOpen');menu?.setAttribute('aria-expanded','false');phase5Leaderboard();});
 }
-function phase3Account(){
- if(PHASE5_VALIDATION&&(!phase5Ready||saveBlocked))return;
- showModal('Character','<p class="small muted">'+phase3SaveStatus()+'</p><p>The portrait follows your equipped weapon and off-hand. You can change equipment in the Inventory or Equipment tabs.</p>');
-}
 function phase3BindPaper(){
  Q('[data-eqslot]').forEach(button=>button.onclick=()=>{
   const slot=button.dataset.eqslot;
