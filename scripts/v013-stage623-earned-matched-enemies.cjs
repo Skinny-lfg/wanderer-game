@@ -5,10 +5,14 @@
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const N=require('./v013-natural-progression.cjs');
 const S=require('./simulate-progression.cjs');
-const E=require('./v013-stage619-elite-balance.cjs');
 const ROOT=path.resolve(__dirname,'..');
 const FAMILIES=Object.freeze(['blood','decay','vitality','aegis','fury','magic']);
-const ELITES=[...E.IDS];
+const ELITES=Object.freeze(['tank','berserker','vampire','caster','gravecaller',
+ 'oathbound_exarch','briarspine_horror','ashen_executioner']);
+const ELITE_NAMES=Object.freeze({tank:'Gravebound Bulwark',berserker:'Bloodscar Ravager',
+ vampire:'Sanguine Wraith',caster:'Voidborne Hexer',gravecaller:'Gravecaller',
+ oathbound_exarch:'Oathbound Exarch',briarspine_horror:'Briarspine Horror',
+ ashen_executioner:'Ashen Executioner'});
 const hash=v=>crypto.createHash('sha256').update(typeof v==='string'?v:JSON.stringify(v)).digest('hex');
 const pct=(n,d)=>d?Number((n*100/d).toFixed(1)):null;
 const median=arr=>{const v=arr.filter(Number.isFinite).sort((a,b)=>a-b);return v.length?v.length%2?v[(v.length-1)/2]:(v[v.length/2-1]+v[v.length/2])/2:null;};
@@ -74,8 +78,7 @@ function collect(seed,profiles=['cautious','balanced','smart-blood-fury-vitality
  const natural=N.run(cfg,{onCamp:probe=>{
    const snap=checkpoint(probe);
    if(snap){
-    const key=probe.seed+'|'+probe.profile.plan+'|'+probe.level+'|'+probe.attempt;
-    // Profile aliases/plan IDs are never used as a match key.
+    // Use the stable native profile name, including any natural pivot.
     found.set(probe.seed+'|'+probe.level+'|'+probe.attempt+'|'+(probe.profile.name||''),snap);
    }
  }});
@@ -307,7 +310,7 @@ function markdown(report){
   out.push('','## E'+x.level+' — eight native Elite archetypes','',
    '| Elite | Fights | Elite victories | Player defeated Tank but lost Elite | Player defeated Boss but lost Elite | Player defeated Elite but lost Boss | Median damage taken |',
    '|---|---:|---:|---:|---:|---:|---:|');
-  for(const id of ELITES){const r=x.eliteById[id];out.push('| '+(E.NAMES[id]||id)+' | '+r.n+
+  for(const id of ELITES){const r=x.eliteById[id];out.push('| '+(ELITE_NAMES[id]||id)+' | '+r.n+
    ' | '+r.eliteWins+' | '+r.tankBeatenEliteLost+' | '+r.bossBeatenEliteLost+
    ' | '+r.eliteBeatenBossLost+' | '+(r.damageMedian??'n/a')+' |');}
   out.push('','Boss affinity counts (only naturally generated risk-1 cards in controlled fixtures): '+JSON.stringify(x.bossByAffinity),
@@ -329,10 +332,10 @@ function main(argv=process.argv.slice(2)){
   if(args.native.seeds.length!==1)throw Error('A Stage 6.23 executable cohort must have one natural seed');
   const r=collect(args.native.seeds[0],args.native.profiles,args.maxAttempts,args.maxTotalAttempts);
   if(r.source!==S.sourceFingerprint().sha256)throw Error('Changed native fingerprint between account and combat');
-  const series=r.snapshots.flatMap(s=>Array.from({length:args.trials},(_,i)=>series(s,i)));
+  const matches=r.snapshots.flatMap(s=>Array.from({length:args.trials},(_,i)=>series(s,i)));
   out=summarize({stage:'6.23',mode:'cohort',source:r.source,settings:args.native,
     coverage:{...r.coverage,realCheckpoints:r.snapshots.length,distinctSeeds:1},
-    accounts:r.accounts,snapshots:r.snapshots,series});
+    accounts:r.accounts,snapshots:r.snapshots,series:matches});
  }else{
   const dir=path.resolve(ROOT,args.inputs);
   const files=fs.readdirSync(dir).filter(f=>/^v013-stage623-seed\d+\.json$/.test(f)).sort();
@@ -352,5 +355,5 @@ function main(argv=process.argv.slice(2)){
    bossEliteInversions:r.bossEliteInversions}))(out.summary.level5)}));
  return out;
 }
-module.exports={ELITES,FAMILIES,parse,checkpoint,collect,model,options,duel,short,verify,series,summarize,aggregate,markdown,main};
+module.exports={ELITES,ELITE_NAMES,FAMILIES,parse,checkpoint,collect,model,options,duel,short,verify,series,summarize,aggregate,markdown,main};
 if(require.main===module){try{main();}catch(e){console.error('STAGE623_ERROR '+(e.stack||e));process.exitCode=1;}}
