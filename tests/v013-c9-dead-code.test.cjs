@@ -46,3 +46,8 @@ test('C9 persistent Buildcraft rejects prior draft sessions, without changing cu
  assert(s.includes("Retired passive-draft pity"));
  assert(!fs.readFileSync('index.html','utf8').includes('Initial passive'));
 });
+
+test('C9 retired Account modal helper is absent from canonical and generated UI',()=>{
+ assert(!fs.readFileSync('index.html','utf8').includes('function phase3Account('));
+ assert(!fs.readFileSync('docs/index.html','utf8').includes('function phase3Account('));
+});
