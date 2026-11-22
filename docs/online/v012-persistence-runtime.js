@@ -46,7 +46,7 @@ function phase4LoseLoot(){
  ports.phase3LootIds=new Set();ports.phase4Home=null;
 }
 
-function settleContract(){
+function settleContract(outcome){
  const g=ports.phase1Controller.state,d=g.dungeon,card=d&&ports.phase1Controller.realmMap();
  if(!card)return;
  // Stage 4.5 Marked Elite settlement is independent from Stage 7's optional contract.
@@ -54,7 +54,7 @@ function settleContract(){
  if(card.objective!==undefined&&!d.contractPaid&&d.cleared.includes(card.objective)){
   d.contractPaid=true;ports.state.crafting.cores[card.family]++;ports.state.crafting.essence+=2+card.risk*2;
  }
- const paid=root.WandererV013ExpeditionContracts?.settle(g,ports.state,ports.phase5Results);
+ const paid=root.WandererV013ExpeditionContracts?.settle(g,ports.state,ports.phase5Results,outcome);
  if(paid)ports.bannerMessage(paid.name+' completed · '+root.WandererV013ExpeditionContracts.label(paid)+'.');
  return paid||null;
 }
@@ -65,7 +65,7 @@ function phase4Extract(){
  const outside=ports.phase3BagOverflow();
  if(outside>0){ports.bannerMessage('Cannot extract: resolve '+outside+' item'+(outside===1?'':'s')+' outside the Expedition Bag first.');return false;}
  ports.phase6ReturnPotions('extracted');
- settleContract();ports.phase5MakeSummary('extracted');ports.phase5Results.review='summary';
+ settleContract('extracted');ports.phase5MakeSummary('extracted');ports.phase5Results.review='summary';
  ports.phase1Controller.abandon();if(ports.phase1Build)WandererV012Buildcraft.clear(ports.phase1Build);
  ports.phase1Build=null;ports.phase1Vitals=null;ports.phase1Continuity=null;ports.state.run=null;ports.phase5Results.eventExitPending=false;ports.phase3LootIds=new Set();ports.phase4Home=null;ports.phase4Seed=null;ports.phase4Prefix=null;ports.phase4Entry=null;ports.phase4WaveKeys=[];
  if(ports.PHASE1_PREVIEW)ports.phase5Snapshot.expedition.lastOutcome='extracted';

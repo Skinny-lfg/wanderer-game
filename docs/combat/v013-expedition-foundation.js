@@ -46,7 +46,10 @@ const CONTRACTS=[
  row('bounty_writ','Bounty Writ',AFFINITIES,{target:'marked_elite'}),
  row('pathfinder','Pathfinder',AFFINITIES,{distinctSectors:2}),
  row('purification','Purification',AFFINITIES,{disables:1}),
- row('oath_of_defiance','Oath of Defiance',AFFINITIES,{disabledBossProperties:0})
+ row('oath_of_defiance','Oath of Defiance',AFFINITIES,{disabledBossProperties:0}),
+ row('monster_hunt','Monster Hunt',AFFINITIES,{kills:6}),
+ row('skirmish_clear','Skirmish Orders',AFFINITIES,{clearedRooms:3}),
+ row('shrine_oath','Shrine Oath',AFFINITIES,{selectedBoons:1})
 ];
 const ROOMS=[
  row('forgotten_reliquary','Forgotten Reliquary',AFFINITIES,{sacrificePlayerMaxHpPct:.15,healPlayerMaxHpPct:.15,restorePlayerMaxMpPct:.25,maxBossModifiersDisabled:1})

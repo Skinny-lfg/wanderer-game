@@ -1,0 +1,56 @@
+name: Wanderer v0.13 — Contracts expansion and extraction-only rewards (NO DEPLOY)
+on:
+  push:
+    branches:
+      - feature/v013-contracts-extraction-rewards-20261122
+    paths:
+      - '.github/workflows/v013-contracts-expanded.yml'
+      - 'combat/v013-expedition-foundation.js'
+      - 'online/v013-expedition-contracts.js'
+      - 'online/v012-expedition-runtime.js'
+      - 'online/v012-persistence-runtime.js'
+      - 'tests/v013-stage7-contracts.test.cjs'
+      - 'index.html'
+      - 'docs/index.html'
+      - 'docs/combat/v013-expedition-foundation.js'
+      - 'docs/online/v013-expedition-contracts.js'
+      - 'docs/online/v012-expedition-runtime.js'
+      - 'docs/online/v012-persistence-runtime.js'
+      - 'reports/v013-contracts-reward-expansion.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.5'
+          cache: npm
+      - run: npm ci
+      - name: Syntax and preview integrity
+        run: |
+          node --check combat/v013-expedition-foundation.js
+          node --check online/v013-expedition-contracts.js
+          node --check online/v012-expedition-runtime.js
+          node --check online/v012-persistence-runtime.js
+          node --check tests/v013-stage7-contracts.test.cjs
+          cmp combat/v013-expedition-foundation.js docs/combat/v013-expedition-foundation.js
+          cmp online/v013-expedition-contracts.js docs/online/v013-expedition-contracts.js
+          cmp online/v012-expedition-runtime.js docs/online/v012-expedition-runtime.js
+          cmp online/v012-persistence-runtime.js docs/online/v012-persistence-runtime.js
+          git diff --check
+      - name: Seven Contracts, rewards, safety and native checkpoint regressions
+        run: |
+          node --test tests/v013-stage7-contracts.test.cjs
+          node --test tests/v013-dungeon-checkpoint-integrity.test.cjs tests/v013-boss-preparation-runtime.test.cjs
+          node --test tests/v013-stage74-potions.test.cjs
+          npm run test:v013:integration
+      - name: Original natural account and map regressions
+        run: |
+          node --test tests/v013-natural-progression.test.cjs tests/v013-map-intelligence.test.cjs
