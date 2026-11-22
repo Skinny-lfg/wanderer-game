@@ -113,11 +113,12 @@ function presentationCheck(p){
   requireValue(r.outcome!=='victory'||(r.realmMap?integer(r.realms,2,24):r.realms===15),'victory result');requireValue((r.runeTier===null||r.outcome==='victory')&&(r.runeName===undefined||r.runeTier!==null&&typeof r.runeName==='string'),'Rune result');
   for(const key of ['treasuresKept','treasuresLost'])if(r[key]!==undefined)requireValue(Array.isArray(r[key])&&r[key].length<=120&&r[key].every(treasure),'Expedition treasures');
   if(r.contract!==undefined&&r.contract!==null){
-   const c=r.contract,validIds=['bounty_writ','pathfinder','purification','oath_of_defiance'],statuses=['offered','active','ready','completed','failed','ignored'];
+   const c=r.contract,validIds=['bounty_writ','purification','oath_of_defiance','monster_hunt','skirmish_clear','marked_chambers','boon_collector'],statuses=['offered','active','ready','completed','failed','ignored'];
+   const maxObjective=c.id==='monster_hunt'?10:c.id==='skirmish_clear'?3:c.id==='marked_chambers'||c.id==='boon_collector'?2:1;
    requireValue(plain(c)&&statuses.includes(c.status)&&
     (c.id===null||validIds.includes(c.id))&&
     typeof c.name==='string'&&c.name.length<=100&&
-    integer(c.progress,0,2)&&integer(c.target,0,2)&&c.progress<=c.target&&
+    integer(c.progress,0,maxObjective)&&integer(c.target,0,maxObjective)&&c.progress<=c.target&&
     integer(c.essence,0,30)&&integer(c.fragments,0,30)&&
     (c.recipeId===null||typeof c.recipeId==='string'&&c.recipeId.length<=100)&&
     (c.kind===null||['blueprint','essence','gold','fragments','reagent','potion'].includes(c.kind))&&
@@ -128,7 +129,7 @@ function presentationCheck(p){
       c.paid.id===c.id&&c.paid.kind===c.kind&&
       (c.paid.recipeId??null)===c.recipeId&&
       (c.paid.essence||0)===c.essence&&(c.paid.fragments||0)===c.fragments&&
-      (c.kind!=='gold'||integer(c.paid.gold,0,40))&&
+      (c.kind!=='gold'||integer(c.paid.gold,0,70))&&
       (c.kind!=='reagent'||['blood','decay','vitality','aegis','fury','magic'].includes(c.paid.family)&&integer(c.paid.amount,0,2))&&
       (c.kind!=='potion'||POTIONS.includes(c.paid.potion)&&integer(c.paid.amount,0,1))),'Expedition Contract summary');
   }

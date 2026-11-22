@@ -72,3 +72,26 @@ test('C2: cloud reset generation is universal, retaining owner/revision checks',
  assert.doesNotMatch(account,/previewGeneration=/);
  assert.match(cloud,/wanderer_v013_c2_clean_sheet_cloud_outbox_/);
 });
+
+
+test('C2 current Contract summaries validate all seven IDs, 10 kills and up to 70 Gold',()=>{
+ const a=create(9703,undefined,{}, {skipPersistence:true});
+ const saved=S.create({...a.state(),run:null},{binding:'contract-qa'});
+ const ids=K.CATALOG.map(x=>x.id);
+ assert.deepEqual(ids,['bounty_writ','purification','oath_of_defiance','monster_hunt','skirmish_clear','marked_chambers','boon_collector']);
+ const build=(id,gold=70)=>{
+  const target=id==='monster_hunt'?10:id==='skirmish_clear'?3:['marked_chambers','boon_collector'].includes(id)?2:1;
+  const c={id,name:id,status:'completed',progress:target,target,essence:0,fragments:0,recipeId:null,kind:'gold',paid:{id,kind:'gold',gold}};
+  return {...saved,expedition:{...saved.expedition,presentation:{version:1,review:'summary',realm:null,earned:[],gold:0,fragments:0,
+   summary:{realmMap:true,level:1,realms:4,outcome:'extracted',seconds:12,gold:0,fragments:0,
+    families:[],picks:[],kept:[],lost:[],discarded:[],runeTier:null,contract:c}}}};
+ };
+ for(const id of ids){
+  const input=build(id),out=S.validate(input,'contract-qa');
+  assert.equal(out.expedition.presentation.summary.contract.id,id);
+ }
+ const forgedGold=build('monster_hunt',71);
+ assert.throws(()=>S.validate(forgedGold,'contract-qa'),/Expedition Contract summary/);
+ const retired=build('bounty_writ');retired.expedition.presentation.summary.contract.id='pathfinder';
+ assert.throws(()=>S.validate(retired,'contract-qa'),/Expedition Contract summary/);
+});

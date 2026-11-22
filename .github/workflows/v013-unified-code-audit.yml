@@ -47,7 +47,7 @@ jobs:
         run: >-
           node --test
           tests/v013-stage618-mob-implementation.test.cjs
-          tests/v013-stage619-elite-balance.test.cjs
+          tests/v013-stage619-current-regression.test.cjs
           tests/v013-stage620-boss-preparation.test.cjs
           tests/v013-stage621-natural-recovery.test.cjs
           tests/v013-stage7-contracts.test.cjs
