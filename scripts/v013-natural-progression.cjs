@@ -829,6 +829,23 @@ function chooseContract(offer,profile,card){
   .sort((a,b)=>contractScore(b,offer.rewards[b],profile,card)-
     contractScore(a,offer.rewards[a],profile,card)||a.localeCompare(b))[0]||null;
 }
+// Never treat a completed Contract as paid until a successful native exit.
+// Saving a guaranteed rare Blueprint can justify a conservative extraction.
+function contractExitDecision(game,next,vitals){
+ const d=game?.dungeon,id=d?.foundationState?.contractId,p=K.progress(game);
+ if(game?.stage!=='choice'||game.planeIndex<=1||!id||!p?.done)return null;
+ const prize=d.stage72RewardPlan?.rewards?.[id];
+ if(!prize)return null;
+ const hpRatio=vitals.maxhp>0?vitals.hp/vitals.maxhp:0;
+ const dangerous=['boss','elite'].includes(next?.type)||
+  next?.type==='combat'&&Number(next.visibleMobRange?.[1]||1)>1;
+ if(prize.kind==='blueprint'&&(hpRatio<.88||
+   next?.type==='boss'&&hpRatio<.95))
+  return {extract:true,reason:'secure_guaranteed_blueprint'};
+ if(dangerous&&hpRatio<.65)
+  return {extract:true,reason:'secure_completed_contract'};
+ return null;
+}
 function eventOptions(id,v,profile,context={}){
  const ratio=v.maxhp?v.hp/v.maxhp:1;
  if(id==='forgotten_reliquary'){
@@ -1088,7 +1105,7 @@ function playDungeon(a,level,profile,opts,decisionModel='risk-aware'){
    next=selectRoom(c,profile,a.vitals(),roomContext()); // Native potions can change options.
   }
   const current=a.vitals(),ratio=current.maxhp>0?current.hp/current.maxhp:0;
-  const decision=decisionModel==='legacy'
+  const baseline=decisionModel==='legacy'
    ?{extract:!next||ratio<profile.retreatAt&&report.rooms.length>0&&
      !['shrine','spring','event'].includes(next.type),
      reason:next?'legacy_hp_threshold':'no_legal_path',hpRatio:round(ratio)}
@@ -1096,6 +1113,8 @@ function playDungeon(a,level,profile,opts,decisionModel='risk-aware'){
      gold:a.state().gold,fragments:a.state().fragments,
      essence:a.state().crafting?.essence||0,recentFights:report.rooms,
      capabilities:flags.retreat?capabilities(a):null});
+  const secure=contractExitDecision(g,next,current);
+  const decision=secure?{...baseline,...secure}:baseline;
   if(decision.extract){
    report.decisions.push({type:'extract',...decision,steps:g.dungeon.steps});
    if(a.checkpoint.extract()){report.extracted=true;break;}
@@ -1405,6 +1424,6 @@ function main(args=process.argv.slice(2)){
  return report;
 }
 module.exports={PROFILES,PIVOTS,pivotProfile,DEFAULTS,parseArgs,gearScore,gearSnapshot,runeScore,chooseRuneReward,manageEarnedRunes,potionScore,selectEarnedPotions,buyEarnedPotions,refineEarnedReagents,selectThornAwareTarget,spendEarnedTalents,prepareEarnedAbility,equipEarned,
- prepareCamp,craftEarned,investEarnedGear,consolidateStash,policyFlags,capabilities,rankRealms,choiceRealm,pathLength,eliteOpportunity,selectRoom,evaluateRetreat,boonScore,chooseBoon,contractScore,chooseContract,eventOptions,potionSlots,usePotionKind,usePotionsBetween,rerollPoorBoonAtShrine,
+ prepareCamp,craftEarned,investEarnedGear,consolidateStash,policyFlags,capabilities,rankRealms,choiceRealm,pathLength,eliteOpportunity,selectRoom,evaluateRetreat,boonScore,chooseBoon,contractScore,chooseContract,contractExitDecision,eventOptions,potionSlots,usePotionKind,usePotionsBetween,rerollPoorBoonAtShrine,
  fightNatural,resolveEvent,clearResults,playDungeon,simulateAccount,analyze,run,markdown,main};
 if(require.main===module)main();

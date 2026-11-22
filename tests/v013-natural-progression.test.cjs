@@ -40,6 +40,18 @@ test('Contract marked rooms guide legal travel decisions without altering the Du
  assert.deepEqual(d.cleared,[0]);
  assert.equal(d.steps,14);
 });
+test('Completed native Contract can prompt legal early extraction to secure a guaranteed Blueprint',()=>{
+ const card={id:'sample',risk:0,nodes:[{kind:'entrance'},{kind:'combat'},{kind:'boss'}],edges:[[0,1],[1,2]]};
+ const g={stage:'choice',planeIndex:3,history:[{node:1,boss:false,elite:false,event:null,monstersDefeated:6}],
+  dungeon:{realm:'sample',cards:[card],cleared:[0,1],visited:[0,1],
+   foundationState:{contractId:'monster_hunt'},stage72RewardPlan:{rewards:{monster_hunt:{kind:'blueprint',recipeId:'recipe-fixture'}}}}};
+ assert.equal(N.contractExitDecision(g,{type:'boss'},{hp:70,maxhp:100}).reason,'secure_guaranteed_blueprint');
+ assert.equal(N.contractExitDecision(g,{type:'spring'},{hp:100,maxhp:100}),null);
+ assert.equal(N.contractExitDecision({...g,planeIndex:1},{type:'boss'},{hp:70,maxhp:100}),null);
+ assert.equal(N.contractExitDecision({...g,stage:'failed'},{type:'boss'},{hp:70,maxhp:100}),null);
+ g.history[0].monstersDefeated=5;
+ assert.equal(N.contractExitDecision(g,{type:'boss'},{hp:70,maxhp:100}),null,'incomplete objectives are not paid');
+});
 test('Natural gear score values measured item attributes, not fabricated rarity rewards',()=>{
  const p=N.PROFILES.cautious;
  const starter={slot:'weapon',rarity:'Common',tier:1,atk:3};
