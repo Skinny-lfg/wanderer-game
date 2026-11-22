@@ -62,7 +62,7 @@ function checkpoint({a,seed,profile,level,attempt}){
  const equip=Object.values(state.equip).filter(Boolean);
  if(!equip.length||!state.equip.weapon||
   equip.some(x=>!x.id||!x.slot||!x.rarity)||
-  state.runeSlots.some(id=>!state.runes.some(r=>r.id===id)))
+  state.runeSlots.some(id=>id!==null&&id!==undefined&&!state.runes.some(r=>r.id===id)))
   throw Error('Invalid actual earned equipment or equipped runes');
  return {seed,profileId:profile.variantId||null,level,attempt,state,
   talentsEarned:a.talents.earned(p),equipmentPieces:equip.length,

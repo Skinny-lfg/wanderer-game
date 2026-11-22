@@ -31,6 +31,17 @@ test('Native earned Camp checkpoint is read-only and accepts only genuine E4/E5 
  assert.equal(C.checkpoint({...p,level:1}),null);
  assert.equal(JSON.stringify(a.state()),before);
 });
+test('Null empty rune slots are valid native inventory state in an isolated read-only Camp fixture',()=>{
+ const a=create(6230146,undefined,{}, {skipPersistence:true,now:1720006230146});
+ // Unit-only setup: stage an E4 unlock to check serialization; never an earned-account observation.
+ a.setUnlocked(4);
+ const previous=JSON.stringify(a.state()),slots=a.state().runeSlots;
+ assert(slots.some(id=>id===null));
+ const cp=C.checkpoint({a,seed:6230146,profile:N.PROFILES.cautious,level:4,attempt:1});
+ assert.equal(cp.level,4);
+ assert.deepEqual(cp.state.runeSlots,JSON.parse(JSON.stringify(slots)));
+ assert.equal(JSON.stringify(a.state()),previous,'Diagnostic capture cannot mutate the account');
+});
 test('Native simulation adapter strictly requires the exact earned gear/Talent signature',()=>{
  const e=earned(),build={id:'stage623-earned-smoke',weapon:e.equip.weapon.subtype,families:['blood'],skills:[]};
  const opts={mode:'encounter',points:globalThis.WandererAutomaticTalents.earned(e.automaticTalents),
