@@ -1,0 +1,94 @@
+name: Wanderer v0.13 — Stage 6.22 Earned E3-E5 bottleneck diagnosis (NO DEPLOY)
+on:
+  push:
+    branches:
+      - audit/v013-stage622-e3-e5-bottleneck-20261122
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    name: Verify native E3-E5 audit, save integrity and Stages 6.18-6.21
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Validate diagnostic integrity, live earned progression and native enemies
+        run: |
+          node --check scripts/v013-stage622-e3-e5-audit.cjs
+          node --test tests/v013-stage622-e3-e5.test.cjs tests/v013-natural-progression.test.cjs tests/v013-stage621-natural-recovery.test.cjs
+          node --test tests/v013-stage618-mob-implementation.test.cjs tests/v013-stage619-current-regression.test.cjs tests/v013-stage620-boss-preparation.test.cjs tests/v013-stage621-natural-recovery.test.cjs
+          npm run test:v013:gate
+          node scripts/v013-c6-final-audit.cjs
+          npm run build:pages
+          if [ -n "$(git status --porcelain -- docs)" ]; then
+            echo "Preview/source drift"
+            exit 1
+          fi
+          git diff --check
+  cohort:
+    name: Native fresh E1-E5 account cohort seed ${{ matrix.seed }}
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [9701, 9702, 9703, 9704]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Native E1-E5 fresh persistent players, real gear, Talents, Bosses, potions, Boons
+        run: >-
+          node scripts/v013-stage622-e3-e5-audit.cjs
+          --mode=cohort --seeds=${{ matrix.seed }}
+          --profiles=cautious,balanced,smart-blood-fury-vitality
+          --max-level=5 --max-attempts=12 --max-total-attempts=60
+          --out=reports/v013-stage622-seed${{ matrix.seed }}.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage622-seed-${{ matrix.seed }}
+          path: |
+            reports/v013-stage622-seed${{ matrix.seed }}.json
+            reports/v013-stage622-seed${{ matrix.seed }}.md
+          if-no-files-found: error
+          retention-days: 30
+  aggregate:
+    name: Cross-seed E3-E5 bottleneck and Boss-family audit
+    needs: cohort
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage622-seed-*
+          path: reports/stage622-shards
+          merge-multiple: true
+      - name: Aggregate ONLY actual earned accounts from identical runtime and disjoint seed/profile keys
+        run: |
+          node scripts/v013-stage622-e3-e5-audit.cjs --mode=aggregate --inputs=reports/stage622-shards --out=reports/v013-stage622-combined.json
+          node - <<'NODE'
+          const r=require('./reports/v013-stage622-combined.json');
+          if(r.coverage.accounts!==12||r.coverage.distinctSeeds!==4||r.coverage.shards!==4||r.coverage.errors!==0)throw Error('Native stage 6.22 coverage or error gate');
+          console.log('STAGE622_VERIFIED_COMBINED='+JSON.stringify({coverage:r.coverage,level4:r.byLevel[3],level5:r.byLevel[4]}));
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage622-earned-e3-e5-combined-audit
+          path: |
+            reports/v013-stage622-combined.json
+            reports/v013-stage622-combined.md
+          retention-days: 30
