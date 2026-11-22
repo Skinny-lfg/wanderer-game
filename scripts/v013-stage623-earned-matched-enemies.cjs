@@ -82,7 +82,14 @@ function collect(seed,profiles=['cautious','balanced','smart-blood-fury-vitality
     found.set(probe.seed+'|'+probe.level+'|'+probe.attempt+'|'+(probe.profile.name||''),snap);
    }
  }});
- if(natural.coverage.errors)throw Error('Natural-account progression had engine errors');
+ if(natural.coverage.errors){
+  const details=natural.accounts.flatMap(ac=>(ac.attempts||[])
+   .filter(x=>x.error||x.status==='error')
+   .map(x=>({seed:ac.seed,profile:ac.profile,level:x.level,attempt:x.attempt,
+    error:x.error,stack:x.diagnostic?.stack||null})));
+  throw Error('Natural-account progression had '+natural.coverage.errors+
+   ' runner errors: '+JSON.stringify(details).slice(0,4800));
+ }
  const snapshots=[];
  for(const ac of natural.accounts){
   if(!ac.attempts.every(a=>!a.error))throw Error('Native account attempt failed');
