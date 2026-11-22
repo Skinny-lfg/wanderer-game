@@ -1,3 +1,15 @@
+## Checkpoint canónico da v0.13 — 22 de novembro de 2026 (revisão dos 7 Contracts)
+
+- A versão de desenvolvimento consolidada é `audit/v013-stage6`, espelhada integralmente em `playtest/v013-complete`. A referência anterior está no commit `f4fe3d83d5a647be1b33dc154953bdf813c28a17`; qualquer nova revisão deve avançar **ambos** após CI verde, sem tocar em `main`, GitHub Pages de produção ou Firebase.
+- **Catálogo atual: 7 Contracts.** Bounty Writ, Purification, Oath of Defiance, Monster Hunt (6/8/10 mobs), Skirmish Orders (3 salas), Marked Chambers (2 salas marcadas) e **Boon Collector (escolher 2 Boons diferentes nos 2 Shrines de uma só Expedition)**. `pathfinder` e `shrine_oath` foram retirados.
+- A seleção continua a oferecer exatamente **2 Contracts**, dos quais se pode aceitar 1. Cada opção mostra uma recompensa fixa e única: Gold, Essence, Fragments, Reagent, Potion ou **Blueprint Rare/Epic garantida** quando essa for a recompensa sorteada (5/7/10% por opção conforme o risco, no máximo 1 Blueprint entre as 2 opções). Não existe rolagem de Blueprint extra nem fallback.
+- Uma recompensa de Contract só é liquidada após concluir o objetivo **e extrair com vida ou vencer o Boss final**. Morrer/abandonar perde o prémio; os recibos não se podem duplicar.
+- **Boon Collector** conta só decisões nativas `choose_boon` ligadas às duas salas Shrine realmente visitadas/limpas. Um Shrine descoberto, saltado ou sem seleção não conta; a oferta verifica se a deslocação por ambos é possível dentro do limite de passos.
+- A PR [#121](https://github.com/Skinny-lfg/wanderer-game/pull/121) foi integrada e validada em [CI 45042117841](https://github.com/Skinny-lfg/wanderer-game/actions/runs/45042117841). Alterações posteriores têm de repetir as baterias completas. A v0.13 é **clean sheet**: não reintroduzir migrações para saves/drafts históricos, mas manter persistência e checkpoints correntes.
+- O texto abaixo documenta checkpoints **históricos** de novembro. Quando divergir deste cabeçalho, prevalece o catálogo e a implementação atuais.
+
+---
+
 ## Current canonical v0.13 checkpoint — guaranteed Blueprint Contract prizes and marked chambers (2026-11-22)
 
 - **PR #120 merged** into canonical development branch `audit/v013-stage6`, merge SHA `78341c3094db21c21d83310fa95f7009a5fe1b74`, **NO deploy to `main`, production or Firebase**. All approved previous v0.13 gameplay and Stage 6.18–6.21 combat tuning are retained.

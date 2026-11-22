@@ -1,0 +1,256 @@
+name: Wanderer v0.13 unified code audit and regression (NO DEPLOY)
+
+on:
+  push:
+    branches: [audit/v013-consolidation-code-review-20261122]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  current-native:
+    if: github.ref == 'refs/heads/audit/v013-consolidation-code-review-20261122'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      # C7 static guards also parse live inline HTML JavaScript and disallow
+      # retired affinity/draft/reroll controllers via npm run test:v013:gate.
+      - name: Clean sheet static candidate sweep (diagnostic)
+        run: node scripts/v013-clean-sheet-audit.cjs
+      - name: C9 function and export inventory (conservative; no automatic deletion)
+        run: node scripts/v013-c9-function-inventory.cjs --print-buildcraft
+      - name: C9 inventory artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v013-c9-function-inventory
+          path: |
+            reports/v013-c9-function-inventory.json
+            reports/v013-c9-function-inventory.md
+            reports/v013-clean-sheet-audit.json
+            reports/v013-clean-sheet-audit.md
+            reports/v013-c6-final-static-audit.json
+            reports/v013-c6-final-static-audit.md
+          if-no-files-found: warn
+      - name: C6 final missing-import, old-route and orphan-asset source gate
+        run: node scripts/v013-c6-final-audit.cjs
+      - name: All approved Stage 6.18–6.21 and Contract tests
+        run: >-
+          node --test
+          tests/v013-stage618-mob-implementation.test.cjs
+          tests/v013-stage619-elite-balance.test.cjs
+          tests/v013-stage620-boss-preparation.test.cjs
+          tests/v013-stage621-natural-recovery.test.cjs
+          tests/v013-stage7-contracts.test.cjs
+      - name: Current full v0.13 gameplay and simulation gate
+        run: npm run test:v013:gate
+      - name: Stage 2 native Aegis/Spell Power historical comparison (uncapped Barrier is planned drift)
+        run: node scripts/v013-stage2-barrier-compare.cjs
+      - name: Stage 2 affinity comparison artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v013-stage2-affinity-comparison
+          path: |
+            reports/v013-stage2-affinity-comparison.json
+            reports/v013-stage2-affinity-comparison.md
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Stage 3 native Vitality and Decay historical comparison (uncapped Barrier is planned drift)
+        run: npm run simulate:v013:affinities:stage3
+      - name: Stage 3 native affinity comparison evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v013-stage3-affinity-comparison
+          path: |
+            reports/v013-stage3-affinity-comparison.json
+            reports/v013-stage3-affinity-comparison.md
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Stage 4 six adjacent hybrid links and Elite/Boss stress (historical Barrier drift reported)
+        run: npm run simulate:v013:affinities:stage4
+      - name: Stage 4 hybrid review evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v013-stage4-hybrid-review
+          path: |
+            reports/v013-stage4-hybrid-review.json
+            reports/v013-stage4-hybrid-review.md
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Verify current 343-node Talent Graph runtime and source catalog
+        run: npm run test:v013:talent-graph
+      - name: Current combat, Elite, Boss, class, balance and natural-account suites
+        run: >-
+          node --test
+          tests/v013-stage82-elite-abilities.test.cjs
+          tests/v013-stage83-boss-infrastructure.test.cjs
+          tests/v013-stage84-six-bosses.test.cjs
+          tests/v013-stage85-combat-links.test.cjs
+          tests/v013-stage94-human-decisions.test.cjs
+          tests/v013-stage95-elite-parity.test.cjs
+          tests/v013-stage96-grey-loot.test.cjs
+          tests/v013-combat-balance-audit.test.cjs
+          tests/v013-stage98-balance-campaign.test.cjs
+          tests/v013-gravecaller-target-study.test.cjs
+          tests/v013-natural-progression.test.cjs
+      - name: Current post-stage-4.5 integration and economy regressions
+        run: >-
+          node --test
+          tests/v013-stage45-6-combat-contract.test.cjs
+          tests/v013-stage45-6-prepared-cadence.test.cjs
+          tests/v013-stage45-6-economy-p0.test.cjs
+          tests/v013-stage45-6-dodge-p0.test.cjs
+          tests/v013-stage45-6-legendary-p0.test.cjs
+          tests/v013-stage45-6-extraction-p0.test.cjs
+          tests/v013-stage45-6-event-contract.test.cjs
+          tests/v013-stage45-6-encounter-matrix.test.cjs
+          tests/v013-full-expedition-integration.test.cjs
+          tests/v013-stat-consistency.test.cjs
+          tests/v013-encounter-traits-runtime.test.cjs
+          tests/v013-boss-modifiers-runtime.test.cjs
+          tests/v013-boss-preparation-runtime.test.cjs
+          tests/v013-dungeon-checkpoint-integrity.test.cjs
+
+  security-account:
+    if: github.ref == 'refs/heads/audit/v013-consolidation-code-review-20261122'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm ci
+      - name: Strict save-generation, cloud conflict, account and checkpoint tests
+        run: >-
+          node --test
+          tests/v012-save.test.mjs
+          tests/v012-cloud-save.test.mjs
+          tests/v013-c2-reset.test.cjs
+          tests/v013-dungeon-checkpoint-integrity.test.cjs
+          tests/v013-current-dungeon-and-talents.test.cjs
+          tests/v013-c3-ui-static.test.cjs
+      - name: Firestore authorization and Auth/Firestore emulator regressions
+        run: npm run test:rules
+
+  browser-journey:
+    if: github.ref == 'refs/heads/audit/v013-consolidation-code-review-20261122'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Use Chromium available on runner
+        shell: bash
+        run: |
+          CHROME_BIN="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          if [ -n "$CHROME_BIN" ]; then
+            echo "CHROMIUM_PATH=$CHROME_BIN" >> "$GITHUB_ENV"
+            "$CHROME_BIN" --version
+          else
+            npx playwright install chromium
+          fi
+      - name: Real current Talent/Forge/Inventory/Dungeon browser tests
+        run: npm run test:v013:browser
+      - name: Feedback close, Escape, submission and cooldown browser regression
+        run: node tests/v013-feedback-close-browser.cjs
+      - name: Deep current v0.13 Chromium gameplay, Boss and extraction scenarios (mandatory)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports/v013-c4
+          for test in tests/v013-stage45-4-browser.cjs tests/v013-stage45-5-browser.cjs; do
+            name="$(basename "$test" .cjs)"
+            node "$test" 2>&1 | tee "reports/v013-c4/$name.log"
+            echo "C4_DEEP_BROWSER_PASS_$name=true"
+          done
+      - name: Browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v013-c4-deep-browser-evidence
+          path: |
+            reports/v013-c3-browser/
+            reports/v013-c4/
+            reports/stage45-4-browser/
+            reports/stage45-5-browser/
+          if-no-files-found: warn
+          retention-days: 14
+
+  natural-and-source-parity:
+    if: github.ref == 'refs/heads/audit/v013-consolidation-code-review-20261122'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Natural-account E1-E5 progression pilot (no forced wins, gear or XP)
+        run: >-
+          node scripts/v013-natural-progression.cjs
+          --seeds=9101,9201
+          --profiles=cautious,balanced
+          --max-level=5
+          --max-attempts=8
+          --max-total-attempts=20
+          --out=reports/v013-c4-natural-e5.json
+      - name: Natural-account E1-E20 horizon pilot (report censored levels as censored)
+        run: >-
+          node scripts/v013-natural-progression.cjs
+          --seeds=9101
+          --profiles=daring
+          --max-level=20
+          --max-attempts=12
+          --max-total-attempts=48
+          --out=reports/v013-c4-natural-e20.json
+      - name: Require exact canonical source/docs parity
+        run: |
+          npm run build:pages
+          if [ -n "$(git status --porcelain -- docs)" ]; then
+            echo "::error::Source and generated Pages preview are inconsistent"
+            git status --short docs
+            exit 1
+          fi
+          echo "C4_SOURCE_DOCS_PARITY=true"
+      - name: Store natural progression data (not a balance approval)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v013-c4-natural-progression-and-parity
+          path: |
+            reports/v013-c4-natural-e5.json
+            reports/v013-c4-natural-e5.md
+            reports/v013-c4-natural-e20.json
+            reports/v013-c4-natural-e20.md
+          if-no-files-found: warn
+          retention-days: 30

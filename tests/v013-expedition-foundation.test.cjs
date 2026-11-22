@@ -10,10 +10,12 @@ const makeCards=()=>[
 const manifest=(seed=123,style='guardian')=>F.createManifest(makeCards(),{seed,expeditionLevel:70,bossStyle:style});
 test('approved lore catalogues contain stable unique IDs, names and numeric parameters',()=>{
  assert.equal(F.validateCatalog(),true);
- assert.deepEqual(Object.fromEntries(Object.entries(F.CATALOG).map(([k,x])=>[k,x.length])),{conditions:6,encounterTraits:6,bossModifiers:6,boons:6,contracts:4,rooms:1});
+ assert.deepEqual(Object.fromEntries(Object.entries(F.CATALOG).map(([k,x])=>[k,x.length])),{conditions:6,encounterTraits:6,bossModifiers:6,boons:6,contracts:7,rooms:1});
  assert.equal(F.lookup('conditions','sanguine_rite').name,'Sanguine Rite');
  assert.equal(F.lookup('rooms','forgotten_reliquary').name,'Forgotten Reliquary');
  assert.equal(F.lookup('contracts','oath_of_defiance').name,'Oath of Defiance');
+ assert.equal(F.lookup('contracts','boon_collector').params.selectedBoons,2);
+ assert.equal(F.lookup('contracts','marked_chambers').params.markedRooms,2);
  assert.equal(F.lookup('bad','no'),null);
  assert(Object.isFrozen(F.CATALOG.conditions[0].params));
  assert(Object.isFrozen(F.CATALOG.conditions[0].families));
