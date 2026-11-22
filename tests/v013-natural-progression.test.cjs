@@ -14,6 +14,32 @@ test('Natural E1–E8 defaults remain bounded and opt-in E20 is supported',()=>{
  assert.throws(()=>N.parseArgs(['--profiles=synthetic']),/Invalid profiles/);
  assert.throws(()=>N.parseArgs(['--seeds=1,2,3,4,5,6,7,8,9','--profiles=cautious,balanced,daring']),/cohort/);
 });
+test('Stage 7.8 agent uses only current Contract offers and their fixed prize',()=>{
+ const profile=N.PROFILES.balanced,card={risk:1};
+ const offer={ids:['monster_hunt','marked_chambers'],
+  rewards:{monster_hunt:{kind:'gold',gold:45},
+   marked_chambers:{kind:'blueprint',recipeId:'rare-test-recipe'}}};
+ assert.equal(N.chooseContract(offer,profile,card),'marked_chambers');
+ assert(N.contractScore('boon_collector',{kind:'essence',essence:7},profile,card)>0);
+ assert.equal(N.contractScore('pathfinder',{kind:'gold',gold:45},profile,card),-Infinity);
+ assert.equal(N.contractScore('shrine_oath',{kind:'gold',gold:45},profile,card),-Infinity);
+ assert.equal(N.chooseContract({ids:['pathfinder'],rewards:{}},profile,card),null);
+});
+test('Contract marked rooms guide legal travel decisions without altering the Dungeon',()=>{
+ const card={id:'route-test',nodes:[{kind:'entrance'},{kind:'combat',count:1,range:[1,1]},
+  {kind:'combat',count:1,range:[1,1]},{kind:'boss'},{kind:'combat',count:1}],
+  edges:[[0,1],[0,2],[1,3],[2,3],[3,4]],boonShrines:[]};
+ const d={realm:card.id,cards:[card],current:0,visited:[0],cleared:[0],scouted:[],
+  steps:14,discoveredSecrets:[]},g={stage:'choice',history:[],dungeon:d};
+ const c={state:g,realmMap:()=>card,travelPath:i=>[1,2].includes(i)?[0,i]:[],
+  travelCost:path=>path.length-1};
+ assert.equal(N.selectRoom(c,N.PROFILES.balanced,{hp:100,maxhp:100}).room,1);
+ d.foundationState={contractId:'marked_chambers',bossPreparation:{},boonIds:[],decisions:[]};
+ d.stage72RewardPlan={markedRooms:[2,4]};
+ assert.equal(N.selectRoom(c,N.PROFILES.balanced,{hp:100,maxhp:100}).room,2);
+ assert.deepEqual(d.cleared,[0]);
+ assert.equal(d.steps,14);
+});
 test('Natural gear score values measured item attributes, not fabricated rarity rewards',()=>{
  const p=N.PROFILES.cautious;
  const starter={slot:'weapon',rarity:'Common',tier:1,atk:3};
@@ -84,6 +110,20 @@ test('One true E1 account run completes by victory, defeat or extraction without
  assert.equal(r.before.xp,0);assert.equal(r.before.earned,0);
  assert(r.xpEnd>=r.xpStart);
  assert(r.gearAfter.items.every(i=>i.rarity!==null));
+ assert.equal(r.contractOptions.length,2);
+ assert(r.contract&&r.contractOptions.includes(r.contract));
+ assert(['gold','essence','fragments','reagent','potion','blueprint'].includes(r.contractPrize.kind));
+ assert.equal(r.contractCompleted,!!r.contractProgress?.done);
+ assert.equal(r.contractPayoutSecured,!!r.contractPaid);
+ assert(r.contractProgress.current<=r.contractProgress.target);
+ if(r.contractPaid){
+  assert(['victory','extracted'].includes(r.status));
+  assert.equal(r.contractResult.status,'completed');
+  assert.equal(r.contractPaid.id,r.contract);
+ }else assert.notEqual(r.contractResult.status,'completed');
+ assert.equal(result.levels[0].contractsSelected,1);
+ assert.equal(result.levels[0].contractsPaid,Number(r.contractPayoutSecured));
+ assert.equal(result.levels[0].blueprintsSecured,Number(r.contractPaid?.kind==='blueprint'));
 });
 
 test('Successful native extraction is never counted as a defeat despite controller abandoned stage',()=>{

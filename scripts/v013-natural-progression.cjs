@@ -13,6 +13,9 @@ require('../online/v013-map-intelligence.js');
 const I=globalThis.WandererV013MapIntelligence;
 require('../economy/v012-loot-rules.js');
 const LOOT=globalThis.WandererV012LootRules;
+// Native Stage 7 ledger and objective progress, read-only in the simulation.
+require('../online/v013-expedition-contracts.js');
+const K=globalThis.WandererV013ExpeditionContracts;
 const PROFILES=Object.freeze({
  cautious:{name:'Cautious',risk:0,targets:['strong_heart','guarded_block','renewal'],families:['aegis','vitality'],preparedTargets:['last_bastion'],armor:'Plate',weapons:['Mace','Sword'],style:'mixed',healAt:.72,retreatAt:.5,target:'mechanics',shop:true},
  balanced:{name:'Balanced',risk:0,targets:['bleeding_edge','deep_cuts','strong_heart'],families:['blood','aegis'],preparedTargets:['red_guillotine'],armor:'Plate',weapons:['Sword','Mace'],style:'mixed',healAt:.53,retreatAt:.34,target:'mechanics',shop:true},
@@ -729,6 +732,19 @@ function selectRoom(c,profile,vitals,context={}){
    if(hpRatio<Math.max(.58,profile.retreatAt+.08))score+=22;
   }
   if(type==='boss')score+=hpRatio<.7?16:1;
+  // The map decision sees only an ACCEPTED Contract and reachable target rooms.
+  // Bonuses guide travel but never forge completed fights, Boons or prizes.
+  const contractId=d.foundationState?.contractId,progress=K.progress(g);
+  if(contractId&&progress&&!progress.done){
+   const marked=d.stage72RewardPlan?.markedRooms||[];
+   if(contractId==='boon_collector'&&type==='shrine'&&card.boonShrines?.includes(i))score-=25;
+   if(contractId==='marked_chambers'&&type==='combat'&&marked.includes(i))score-=23;
+   if(contractId==='skirmish_clear'&&type==='combat')score-=12;
+   if(contractId==='monster_hunt'&&type==='combat')score-=Math.min(18,7+Number(n.count||0));
+   if(contractId==='bounty_writ'&&type==='elite'&&i===card.objective)score-=19;
+   if(contractId==='purification'&&type==='event'&&i===card.reliquaryRoom&&hpRatio>.83)score-=17;
+   if(contractId==='oath_of_defiance'&&type==='boss'&&hpRatio>.72)score-=6;
+  }
   const objective=i===card.objective&&!prep.markedElite&&type==='elite';
   const reliquary=i===card.reliquaryRoom&&!prep.reliquary&&n?.event==='forgotten_reliquary';
   if(reliquary)score+=hpRatio>.83&&slack>=0?-15:12;
@@ -793,11 +809,25 @@ function chooseBoon(offer,profile,context={}){
  const ids=offer.ids||[];
  return [...ids].sort((a,b)=>boonScore(b,profile,context)-boonScore(a,profile,context)||a.localeCompare(b))[0]||null;
 }
+// Rank only the two real options and their precommitted, SINGLE prize.
+// A Blueprint offered here is guaranteed on completion + safe settlement.
+function contractScore(id,prize,profile,card){
+ if(!K.get(id)||!prize||!card)return -Infinity;
+ const loot={blueprint:35,reagent:13,essence:11,gold:10,fragments:9,potion:7};
+ const base={bounty_writ:7,purification:8,oath_of_defiance:-6,
+  monster_hunt:13,skirmish_clear:11,marked_chambers:5,boon_collector:14};
+ let score=(loot[prize.kind]||0)+(base[id]||0);
+ if(id==='bounty_writ')score+=profile.name==='Daring'?6:profile.name==='Cautious'?-12:0;
+ if(id==='purification')score+=profile.name==='Cautious'?-6:2;
+ if(id==='oath_of_defiance')score+=profile.name==='Cautious'?-8:-2;
+ if(['monster_hunt','skirmish_clear','boon_collector'].includes(id))score-=card.risk*2;
+ return score;
+}
 function chooseContract(offer,profile,card){
  if(!offer?.ids?.length)return null;
- const rank={pathfinder:24,purification:profile.name==='Cautious'?8:17,
-  bounty_writ:profile.name==='Daring'?15:4,oath_of_defiance:5};
- return [...offer.ids].sort((a,b)=>(rank[b]||0)-(rank[a]||0))[0]||null;
+ return [...offer.ids].filter(id=>K.get(id)&&offer.rewards?.[id])
+  .sort((a,b)=>contractScore(b,offer.rewards[b],profile,card)-
+    contractScore(a,offer.rewards[a],profile,card)||a.localeCompare(b))[0]||null;
 }
 function eventOptions(id,v,profile,context={}){
  const ratio=v.maxhp?v.hp/v.maxhp:1;
@@ -960,7 +990,9 @@ function resolveEvent(a,profile){
  const event=a.events.run()?.event;
  if(!event)return null;
  const g=a.controller().state,prior=g.dungeon?.foundationState?.bossPreparation||{};
- const v=a.vitals(),options=eventOptions(event.id,v,profile,{reliquaryCompleted:prior.reliquary});
+ const v=a.vitals(),oath=g.dungeon?.foundationState?.contractId==='oath_of_defiance';
+ const options=oath&&event.id==='forgotten_reliquary'?[1,2]:
+  eventOptions(event.id,v,profile,{reliquaryCompleted:prior.reliquary});
  for(const choice of options){
   const bag=a.bag.items().filter(i=>i.kind!=='valuable'),unused=bag.at(-1);
   const target=Object.values(a.state().equip).filter(Boolean).at(-1);
@@ -1009,8 +1041,10 @@ function playDungeon(a,level,profile,opts,decisionModel='risk-aware'){
  c.chooseRealm(card.id);
  const offer=c.offerContracts(a.state().crafting?.learnedRecipes||[]);
  const contract=chooseContract(offer,profile,card);
+ const contractPrize=contract?JSON.parse(JSON.stringify(offer.rewards[contract])):null;
  if(offer)c.chooseContract(contract);
  const report={level,realm:card.id,affinity:card.family,risk:card.risk,contract,
+  contractOptions:offer?.ids||[],contractPrize,
   realmCondition:visible[card.id]?.conditionId||null,
   decisionModel,initialCapabilities:cap||capabilities(a),
   realmEvaluations:ranks.map(x=>({id:x.card.id,affinity:x.card.family,risk:x.card.risk,
@@ -1114,6 +1148,17 @@ function playDungeon(a,level,profile,opts,decisionModel='risk-aware'){
  // Native extraction uses controller.abandon(), marking the session as failed.
  // Trust explicit native extraction success over the controller's terminal flag.
  report.status=g.stage==='finished'?'victory':report.extracted?'extracted':report.error?'error':g.stage==='failed'?'defeat':g.stage;
+ const terminal=['victory','extracted','defeat'].includes(report.status)?report.status:null;
+ report.contractProgress=K.progress(g);
+ report.contractResult=K.inspect(g,terminal);
+ report.contractPaid=g.dungeon?.stage7RewardPaid?JSON.parse(JSON.stringify(g.dungeon.stage7RewardPaid)):null;
+ report.contractCompleted=!!report.contractProgress?.done;
+ report.contractPayoutSecured=!!report.contractPaid;
+ if(report.contractPaid&&(!['victory','extracted'].includes(report.status)||
+   !report.contractCompleted||report.contractPaid.id!==contract))
+  throw Error('Contract reward without a valid native completion and safe exit');
+ if(contract&&(report.contractResult?.status==='completed')!==!!report.contractPaid)
+  throw Error('Contract summary and native receipt disagree');
  report.xpEnd=a.state().automaticTalents.xp;
  report.xpEarned=report.xpEnd-report.xpStart;
  report.goldEnd=a.state().gold;
@@ -1264,6 +1309,13 @@ function analyze(accounts,opts){
    nativeXpEarned:attempts.reduce((n,a)=>n+(a.xpEarned||0),0),
    potionsUsed:attempts.reduce((n,a)=>n+(a.potions?.length||0),0),
    boonsSelected:attempts.reduce((n,a)=>n+(a.boons?.length||0),0),
+   contractsSelected:attempts.filter(a=>!!a.contract).length,
+   contractsReady:attempts.filter(a=>a.contractCompleted).length,
+   contractsPaid:attempts.filter(a=>a.contractPayoutSecured).length,
+   contractsForfeited:attempts.filter(a=>a.contractCompleted&&!a.contractPayoutSecured&&a.status==='defeat').length,
+   blueprintsSecured:attempts.filter(a=>a.contractPaid?.kind==='blueprint').length,
+   contractRewardKinds:Object.fromEntries(['gold','essence','fragments','reagent','potion','blueprint']
+    .map(kind=>[kind,attempts.filter(a=>a.contractPaid?.kind===kind).length])),
    markedElitePreparations:attempts.filter(a=>a.prepFinal?.markedElite).length,
    reliquaryPreparations:attempts.filter(a=>a.prepFinal?.reliquary).length,
    reachedBossWithPreparation:attempts.filter(a=>a.bossReached&&
@@ -1330,6 +1382,8 @@ function markdown(data){
   '- Native Grey loot, gear swaps, real Camp salvage into Forge Fragments, XP awards, talents, Contracts, Boon Shrines, events, Gold shops and potions are tracked without injecting inventory.',
   '- Combat target switching has a reaction delay; map traversal uses native movement and step costs; hidden room types are not peeked for room selection.',
   '- Boon decisions are ranked by actual trade-offs, not chosen blindly by Affinity; native Fate rerolls are conditional.',
+  '- The agent selects one of the two feasible Contracts using their displayed single-prize offers; native objective progress, Boss/extraction payout and death forfeiture are recorded without fake awards.',
+  '- Marked Chambers, two real Shrine Boons, normal combat targets, Elite and Reliquary influence reachable routing. A chosen Oath never intentionally disables a Boss seal.',
   '- Native potions are purchased with earned Gold, used by exact kind only at legal map windows, and conserved before safe rooms.',
   '- S1: the Camp compares crafting previews with real named-tier upgrade requirements and never bypasses materials or Expedition unlocks.',
   '- S1: earned talents can select Fire/Frost/Lightning, choose an owned advanced prepared skill, and reset (without losing XP) once after two failed attempts when at least four talent nodes exist.',
@@ -1351,6 +1405,6 @@ function main(args=process.argv.slice(2)){
  return report;
 }
 module.exports={PROFILES,PIVOTS,pivotProfile,DEFAULTS,parseArgs,gearScore,gearSnapshot,runeScore,chooseRuneReward,manageEarnedRunes,potionScore,selectEarnedPotions,buyEarnedPotions,refineEarnedReagents,selectThornAwareTarget,spendEarnedTalents,prepareEarnedAbility,equipEarned,
- prepareCamp,craftEarned,investEarnedGear,consolidateStash,policyFlags,capabilities,rankRealms,choiceRealm,pathLength,eliteOpportunity,selectRoom,evaluateRetreat,boonScore,chooseBoon,chooseContract,eventOptions,potionSlots,usePotionKind,usePotionsBetween,rerollPoorBoonAtShrine,
+ prepareCamp,craftEarned,investEarnedGear,consolidateStash,policyFlags,capabilities,rankRealms,choiceRealm,pathLength,eliteOpportunity,selectRoom,evaluateRetreat,boonScore,chooseBoon,contractScore,chooseContract,eventOptions,potionSlots,usePotionKind,usePotionsBetween,rerollPoorBoonAtShrine,
  fightNatural,resolveEvent,clearResults,playDungeon,simulateAccount,analyze,run,markdown,main};
 if(require.main===module)main();

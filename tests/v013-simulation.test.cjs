@@ -28,6 +28,18 @@ test('native dungeon routes record real survival and do not reset HP across enco
  assert(result.rooms.length>0);assert(result.stage==='failed'||result.bossReached,'native route must end by death or reach the boss');
  for(let i=1;i<result.rooms.length;i++)assert(result.rooms[i].hpStart<=result.rooms[i-1].hpEnd+20,'HP was unexpectedly reset');
  assert.equal(result.rooms[0].tier,100);
+ assert.equal(result.contractOutcome,result.stage==='failed'?'defeat':result.stage==='finished'?'victory':'unfinished');
+ assert.equal(result.contractProgress,null,'default short-path diagnostic does not select a Contract');
+});
+test('Native short-path diagnostic reports genuine Contract progress and payouts',()=>{
+ const opts={...defaults,mode:'dungeon',contracts:'first',boons:'first',points:0};
+ const r=S.dungeon(5,S.BUILDS[0],9101,opts);
+ assert.equal(r.error,null);
+ assert(r.contractId);
+ assert.equal(typeof r.contractProgress.current,'number');
+ assert.equal(r.contractResult.id,r.contractId);
+ assert.equal(r.contractReward?.id||null,r.contractResult.status==='completed'?r.contractId:null);
+ if(r.contractReward)assert.equal(r.contractOutcome,'victory');
 });
 test('a genuine death is recorded as a death, not as a 4500-tick timeout',()=>{
  const result=S.dungeon(1000,S.BUILDS[0],9101,defaults);
