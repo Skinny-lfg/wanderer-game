@@ -45,6 +45,12 @@ function profileCheck(p){
  if(p.crafting!==undefined)requireValue(root.WandererV013Crafting?.valid(p.crafting),'crafting progress');
  if(p.automaticTalents!==undefined){requireValue(root.WandererAutomaticTalents?.valid(p.automaticTalents),'automatic talent progress');}
  requireValue(p.run===null,'runtime must not be in permanent profile');
+ if(p.realmOfferSeeds!==undefined){
+  requireValue(plain(p.realmOfferSeeds)&&Object.keys(p.realmOfferSeeds).length<=20&&
+   Object.entries(p.realmOfferSeeds).every(([level,seed])=>
+    /^(?:[1-9]|1[0-9]|20)$/.test(level)&&integer(seed,0,4294967295)),
+   'pending Realm offers');
+ }
  for(const f of ['gold','fragments'])requireValue(integer(p[f],0,Number.MAX_SAFE_INTEGER),f);
  requireValue(integer(p.maxDungeon,1,200),'profile progress');
  if(p.valuables!==undefined){requireValue(Array.isArray(p.valuables),'valuables');for(const v of p.valuables)requireValue(plain(v)&&typeof v.id==='string'&&v.id.length>0&&typeof v.name==='string'&&typeof v.worth==='number'&&Number.isFinite(v.worth)&&v.worth>=0&&treasures().CATALOG.some(t=>t.image===v.image),'valuable identity');}
@@ -107,11 +113,12 @@ function presentationCheck(p){
   requireValue(r.outcome!=='victory'||(r.realmMap?integer(r.realms,2,24):r.realms===15),'victory result');requireValue((r.runeTier===null||r.outcome==='victory')&&(r.runeName===undefined||r.runeTier!==null&&typeof r.runeName==='string'),'Rune result');
   for(const key of ['treasuresKept','treasuresLost'])if(r[key]!==undefined)requireValue(Array.isArray(r[key])&&r[key].length<=120&&r[key].every(treasure),'Expedition treasures');
   if(r.contract!==undefined&&r.contract!==null){
-   const c=r.contract,validIds=['bounty_writ','pathfinder','purification','oath_of_defiance'],statuses=['offered','active','ready','completed','failed','ignored'];
+   const c=r.contract,validIds=['bounty_writ','purification','oath_of_defiance','monster_hunt','skirmish_clear','marked_chambers','boon_collector'],statuses=['offered','active','ready','completed','failed','ignored'];
+   const maxObjective=c.id==='monster_hunt'?10:c.id==='skirmish_clear'?3:c.id==='marked_chambers'||c.id==='boon_collector'?2:1;
    requireValue(plain(c)&&statuses.includes(c.status)&&
     (c.id===null||validIds.includes(c.id))&&
     typeof c.name==='string'&&c.name.length<=100&&
-    integer(c.progress,0,2)&&integer(c.target,0,2)&&c.progress<=c.target&&
+    integer(c.progress,0,maxObjective)&&integer(c.target,0,maxObjective)&&c.progress<=c.target&&
     integer(c.essence,0,30)&&integer(c.fragments,0,30)&&
     (c.recipeId===null||typeof c.recipeId==='string'&&c.recipeId.length<=100)&&
     (c.kind===null||['blueprint','essence','gold','fragments','reagent','potion'].includes(c.kind))&&
@@ -122,7 +129,7 @@ function presentationCheck(p){
       c.paid.id===c.id&&c.paid.kind===c.kind&&
       (c.paid.recipeId??null)===c.recipeId&&
       (c.paid.essence||0)===c.essence&&(c.paid.fragments||0)===c.fragments&&
-      (c.kind!=='gold'||integer(c.paid.gold,0,40))&&
+      (c.kind!=='gold'||integer(c.paid.gold,0,70))&&
       (c.kind!=='reagent'||['blood','decay','vitality','aegis','fury','magic'].includes(c.paid.family)&&integer(c.paid.amount,0,2))&&
       (c.kind!=='potion'||POTIONS.includes(c.paid.potion)&&integer(c.paid.amount,0,1))),'Expedition Contract summary');
   }
