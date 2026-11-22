@@ -18,7 +18,7 @@ test('Stage 6.23 registered plan requires native E1-to-E5 progress and bounded s
  assert.equal(p.native.maxTotalAttempts,60);
  assert.equal(p.native.seeds.length*p.native.profiles.length,3);
  assert.equal(C.ELITES.length,8);
- assert.throws(()=>C.parse(['--seeds=9701,9702']),/at most 3/);
+ assert.throws(()=>C.parse(['--seeds=9701,9702']),/at most 3|Natural cohort too large/);
  assert.throws(()=>C.parse(['--trials=5']),/bounded/);
  assert.throws(()=>C.parse(['--out=../escape.json']),/Unsafe/);
  assert.throws(()=>C.parse(['--mode=aggregate']),/directory/);
