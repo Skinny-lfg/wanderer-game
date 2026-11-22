@@ -10,6 +10,7 @@ on:
       - 'online/v013-expedition-contracts.js'
       - 'online/v013-expedition-contracts.css'
       - 'tests/v013-stage7-contracts.test.cjs'
+      - 'tests/v013-map-intelligence.test.cjs'
       - 'index.html'
       - 'docs/index.html'
       - 'docs/combat/v013-expedition-foundation.js'
