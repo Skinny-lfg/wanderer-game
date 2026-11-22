@@ -6,6 +6,9 @@ const path=require('node:path');
 const crypto=require('node:crypto');
 const N=require('./v013-natural-progression.cjs');
 const S=require('./simulate-progression.cjs');
+// The simulator uses this inside its isolated VM; the read-only curve auditor
+// loads the same canonical pure helper into Node for numeric inspection.
+require('../combat/v012-combat-core.js');
 const C=require('./v013-stage623-earned-matched-enemies.cjs');
 const levels=[1,2,3,4,5];
 const traceLevels=[1,2,3,4,5,6,10,14,15,16,20,34,35,36,50,69,70,71,100,200];
