@@ -4,6 +4,7 @@ on:
     branches: [balance/stage-6.40-e1-calibration]
     paths:
       - '.github/workflows/v013-stage643-aoe-behavior.yml'
+      - 'tests/v013-stage643-aoe-mechanics.test.cjs'
   workflow_dispatch:
 permissions:
   contents: read
