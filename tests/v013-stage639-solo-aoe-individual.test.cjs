@@ -81,6 +81,12 @@ test('Stage6.39: complete real 100 profiles x 5 seeds and AoE observational cave
   '--inputs=../../bad','--max-total-attempts=61','--mode=bad'])
   assert.throws(()=>A.options([s]));
  assert.throws(()=>A.aggregate([]),/Missing/);
+ const historical=require('../scripts/v013-stage634-natural-rates.cjs');
+ assert.equal(typeof historical.summaryAccount,'function');
+ assert.equal(typeof historical.rate,'function');
+ const diagnostic=fs.readFileSync('scripts/v013-stage639-aoe-diagnostic.cjs','utf8');
+ assert(diagnostic.includes('R.summaryAccount(natural,id,profile,cfg.seed)'));
+ assert(diagnostic.includes('const data=R.rate(rooms)'));
  const src=fs.readFileSync('scripts/v013-natural-progression.cjs','utf8');
  assert(src.includes('aoePotential,aoeTalentIds:aoePrepared'));
  assert(src.includes('secondaryTargetDamage:Math.round(measured'));
