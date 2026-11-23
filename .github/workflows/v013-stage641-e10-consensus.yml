@@ -1,0 +1,98 @@
+name: Wanderer Stage 6.41 — E10 earned specialization reference (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths:
+      - '.github/workflows/v013-stage641-e10-consensus.yml'
+      - 'scripts/v013-stage641-e10-consensus.cjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: stage641-e10-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Native syntax and Stage 6.40 targeted regressions
+        run: |
+          node --check scripts/v013-stage641-e10-consensus.cjs
+          node --test tests/v013-stage640-e1-groups.test.cjs tests/v013-stage640-elite-identity.test.cjs
+          git diff --check
+  cohort:
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 85
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include:
+          - { id: 'balanced', seed: 9861 }
+          - { id: 'balanced', seed: 9863 }
+          - { id: 'hexblade-hybrid', seed: 9861 }
+          - { id: 'hexblade-hybrid', seed: 9863 }
+          - { id: 'leather-duelist', seed: 9861 }
+          - { id: 'leather-duelist', seed: 9863 }
+          - { id: 'smart-blood-pure', seed: 9861 }
+          - { id: 'smart-blood-pure', seed: 9863 }
+          - { id: 'smart-fury-bow', seed: 9861 }
+          - { id: 'smart-fury-bow', seed: 9863 }
+          - { id: 'magic-fire', seed: 9861 }
+          - { id: 'magic-fire', seed: 9863 }
+          - { id: 'magic-lightning', seed: 9861 }
+          - { id: 'magic-lightning', seed: 9863 }
+          - { id: 'plate-warden', seed: 9861 }
+          - { id: 'plate-warden', seed: 9863 }
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: E1-born real account to E10 and 42 same-gear controlled fights
+        env:
+          ID: ${{ matrix.id }}
+          SEED: ${{ matrix.seed }}
+        run: |
+          mkdir -p reports/stage641
+          node scripts/v013-stage641-e10-consensus.cjs "$ID" "$SEED" "reports/stage641/stage641-$ID-$SEED.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage641-e10-${{ matrix.id }}-${{ matrix.seed }}
+          path: reports/stage641/*.json
+          if-no-files-found: warn
+          retention-days: 30
+  aggregate:
+    needs: cohort
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage641-e10-*
+          merge-multiple: true
+          path: reports/stage641
+      - name: Combine earned-build readiness and all eight Elite / six Boss identities
+        run: node scripts/v013-stage641-e10-consensus.cjs --aggregate reports/stage641
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage641-e10-consensus-pilot
+          path: |
+            reports/stage641/stage641-summary.json
+            reports/stage641/stage641-summary.md
+          if-no-files-found: warn
+          retention-days: 30
