@@ -956,7 +956,24 @@ function fightNatural(a,profile,tickLimit,context={}){
  if(!r||r.status!=='fight')throw Error('Combat entry missing');
  const startedAt=r.combatSeconds||0;
  const start=r.hp,first=r.encounterLeader||r.enemy,initial=r.totalMobCount||r.initialMobCount||r.enemies?.length||1;
- const mpStart=r.mp,maxmp=r.maxmp,metricsBefore=Object.fromEntries(['manaSpent','fundedCasts','infusionActivations','infusionHits','infusionDamage','unfundedCasterAttacks']
+ const fullInitialRoster=[...(r.enemies?.length?r.enemies:[r.enemy]),...(r.groupReserve||[])];
+ const initialMinions=fullInitialRoster.filter(e=>e?.role==='minion').length;
+ const initialNormals=fullInitialRoster.filter(e=>e&&!e.boss&&!e.miniboss&&e.role!=='minion').length;
+ const initialRoleCounts=Object.fromEntries(['minion','tank','skirmisher','caster'].map(role=>
+  [role,fullInitialRoster.filter(e=>e?.role===role).length]));
+ const aoeNodes=['fan_of_blades','cleave_mastery','bow_pierce','mace_shockwave','sword_sweep','overcharge','storm_mastery','fire_spread','frost_spread','plague_spread'];
+ const actualNodes=[...(a.state().automaticTalents?.nodes||[])];
+ const actualWeapon=a.state().equip?.weapon?.subtype||null,actualOffhand=a.state().equip?.offhand?.subtype||null;
+ const actualElement=a.state().automaticTalents?.element||null;
+ const aoePrepared=actualNodes.filter(id=>aoeNodes.includes(id));
+ const aoeFromWeapon=actualWeapon==='Two-Handed'||actualWeapon==='Bow'||
+  actualWeapon==='Daggers'&&actualNodes.includes('fan_of_blades')||
+  actualWeapon==='Mace'&&actualNodes.includes('mace_shockwave')||
+  actualWeapon==='Sword'&&actualOffhand==='Shield'&&actualNodes.includes('sword_sweep')||
+  ['Wand','Staff'].includes(actualWeapon)&&actualElement==='lightning'&&
+   (actualNodes.includes('overcharge')||actualNodes.includes('storm_mastery'))&&!actualNodes.includes('lightning_focus');
+ const aoePotential=!!(aoeFromWeapon||aoePrepared.some(id=>['fire_spread','plague_spread'].includes(id)));
+ const mpStart=r.mp,maxmp=r.maxmp,metricsBefore=Object.fromEntries(['secondaryTargetDamage','secondaryTargetHits','manaSpent','fundedCasts','infusionActivations','infusionHits','infusionDamage','unfundedCasterAttacks']
   .map(key=>[key,Number(r.metrics?.[key])||0]));
  const measured=key=>Math.max(0,(Number(r.metrics?.[key])||0)-metricsBefore[key]);
  const cap=context.capabilities||null,adaptive=context.adaptiveTargets??context.decisionModel==='adaptive';
@@ -1001,6 +1018,10 @@ function fightNatural(a,profile,tickLimit,context={}){
  return {
   preparedId,preparedActivations:preparedId?Number(r.outerUses?.[preparedId]||0):0,
   kind:first?.boss?'boss':first?.miniboss?'elite':'combat',initialEnemies:initial,
+  initialMinions,initialNormals,initialRoleCounts,
+  aoePotential,aoeTalentIds:aoePrepared,actualWeapon,actualOffhand,actualElement,
+  secondaryTargetDamage:Math.round(measured('secondaryTargetDamage')),
+  secondaryTargetHits:Math.round(measured('secondaryTargetHits')),
   bossStyle:first?.boss?first.bossStyle:null,eliteType:first?.miniboss?first.eliteType:null,
   strategy:adaptive?'adaptive':'baseline',capabilities:cap,
   status:r.status,died:r.hp<=0||stage==='failed',

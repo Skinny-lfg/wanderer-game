@@ -51,6 +51,26 @@ function applyEncounterPressure(group,risk){
   enemy.atk=Math.max(1,Math.round(enemy.atk*pressure*attackRisk));
  }
 }
+// Stage 6.39: a single normal enemy is an actual encounter, not a weak
+// fraction of a four-actor room. Explicit SOLO-ONLY identity reinforcement;
+// there is no group-wide weakening and no level-specific breakpoint.
+const SOLO_NORMAL_BASE=Object.freeze({
+ tank:Object.freeze({hp:1.28,atk:1.15}),
+ skirmisher:Object.freeze({hp:1.36,atk:1.20}),
+ caster:Object.freeze({hp:1.34,atk:1.18})
+});
+function applySoloNormalReinforcement(group){
+ if(!Array.isArray(group)||group.length!==1)return {affected:0};
+ const e=group[0];
+ if(!e||e.boss||e.miniboss||!Object.hasOwn(SOLO_NORMAL_BASE,e.role))return {affected:0};
+ if(e.soloNormalReinforcementApplied)throw Error('Solo normal reinforcement applied twice');
+ const b=SOLO_NORMAL_BASE[e.role];
+ e.maxhp=Math.max(1,Math.round(e.maxhp*b.hp));
+ e.hp=e.maxhp;
+ e.atk=Math.max(1,Math.round(e.atk*b.atk));
+ e.soloNormalReinforcementApplied=true;
+ return {affected:1};
+}
 // Stage 6.38 — normal-room Minions are intentionally fragile trash mobs.
 // Only normal room encounters call this once, AFTER Risk and BEFORE Traits,
 // making small groups safer too. Boss/Elite special summons do NOT use it.
@@ -160,5 +180,5 @@ function applyExpeditionModifiers(stats,e){
  if(e.attack)s.attack*=1+e.attack;if(e.defense)s.defense*=1+e.defense;
  return s;
 }
-root.WandererV012CombatCore=Object.freeze({evasionChance,enemyAttackType,referenceLevel,enemyStat,gearStat,endlessWeaponDamageBonus,estimateEnemy,createEnemyGroup,applyEncounterPressure,applyNormalRoomMinionProfile,NORMAL_ROOM_MINION_PROFILE,applyMinionEscortRelief,MINION_ESCORT_RELIEF,livingEnemies,nextGroupTarget,groupComplete,affinityProcChance,applyExpeditionModifiers});
+root.WandererV012CombatCore=Object.freeze({evasionChance,enemyAttackType,referenceLevel,enemyStat,gearStat,endlessWeaponDamageBonus,estimateEnemy,createEnemyGroup,applyEncounterPressure,applySoloNormalReinforcement,SOLO_NORMAL_BASE,applyNormalRoomMinionProfile,NORMAL_ROOM_MINION_PROFILE,applyMinionEscortRelief,MINION_ESCORT_RELIEF,livingEnemies,nextGroupTarget,groupComplete,affinityProcChance,applyExpeditionModifiers});
 })(globalThis);
