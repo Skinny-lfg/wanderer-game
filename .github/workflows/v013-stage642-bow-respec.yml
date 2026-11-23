@@ -1,0 +1,77 @@
+name: Stage 6.42 — E10 legal Bow Deep Pierce respec (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths:
+      - '.github/workflows/v013-stage642-bow-respec.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Validate new Bow pathway and native benchmark
+        run: |
+          node --check scripts/v013-stage642-e10-bow-respec.cjs
+          node --test tests/v013-stage642-aoe-readiness.test.cjs tests/talent-graph-next.test.cjs
+  cohort:
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 85
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45272938568
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: stage642-snapshot-smart-fury-bow
+          path: reports/stage642-bow
+      - name: Replay same exact 50 E10 seeds on original vs legal Deep Pierce respec
+        env:
+          SHARD: ${{ matrix.shard }}
+        run: |
+          node scripts/v013-stage642-e10-bow-respec.cjs sample "$SHARD" reports/stage642-bow/smart-fury-bow.json "reports/stage642-bow/bow-respec-$SHARD.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage642-bow-respec-${{ matrix.shard }}
+          path: reports/stage642-bow/bow-respec-*.json
+          retention-days: 30
+          if-no-files-found: error
+  aggregate:
+    needs: cohort
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage642-bow-respec-*
+          merge-multiple: true
+          path: reports/stage642-bow
+      - name: Summarize 300 matched before and 300 after native E10 fights
+        run: node scripts/v013-stage642-e10-bow-respec.cjs aggregate reports/stage642-bow reports/stage642-bow/respec-summary.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage642-bow-respec-summary
+          path: reports/stage642-bow/respec-summary.json
+          retention-days: 30
