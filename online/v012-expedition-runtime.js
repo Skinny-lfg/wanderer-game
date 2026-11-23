@@ -151,6 +151,11 @@ function phase1StartWave(resetScroll=false){
  const spawn=index=>ports.enemyFor(r.tier,r.enc,{theme,mob:roster?.[index]||null,boss:last&&g.selected.boss,elite:last&&g.selected.elite&&!g.selected.boss,variant:actualBossStyle?ports.BOSS_ARCHETYPES.find(b=>b.style===actualBossStyle):null});
  const group=WandererV012CombatCore.createEnemyGroup(spawn,totalCount,{activeSlots:activeCount});
  WandererV012CombatCore.applyEncounterPressure(group,g.selected.risk||0);
+ // Stage 6.37: full HP/ATK for Minions, conditional relief for non-Minions
+ // ONLY in normal mixed 5+ groups; also count reserve Minions.
+ // A stat-only calibration deliberately isolates identity coefficients.
+ if(!statOnly&&!g.selected.boss&&!g.selected.elite)
+  WandererV012CombatCore.applyMinionEscortRelief(group);
  const traits=globalThis.WandererV013EncounterTraits;
  const modifiers=globalThis.WandererV013BossModifiers;
  const preparation=globalThis.WandererV013BossPreparation;
