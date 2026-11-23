@@ -26,9 +26,19 @@ test('E1 relief includes reserve Minions and keeps principal HP budgets', () => 
   assert.deepEqual(group.filter(e => e.role !== 'minion').map(e => e.maxhp), [146, 154, 213]);
 });
 
-test('the same E2 roster retains its Stage 6.39 attack and HP', () => {
-  const legacy = { caster: [7, 163], skirmisher: [7, 174], tank: [6, 239], minion: [4, 64] };
-  for (const enemy of mixedRoom(2)) {
-    assert.deepEqual([enemy.atk, enemy.maxhp], legacy[enemy.role]);
+test('E2 gradually retains group relief rather than jumping to unreduced Stage 6.39 pressure', () => {
+  const unreduced = { caster: [7, 163], skirmisher: [7, 174], tank: [6, 239], minion: [4, 64] };
+  const group = mixedRoom(2);
+  assert.equal(group.length, 8);
+  assert.equal(group.filter(enemy => enemy.role === 'minion').length, 5);
+  for (const enemy of group) {
+    assert(enemy.atk >= 1 && enemy.atk <= unreduced[enemy.role][0]);
+    if (enemy.role === 'minion') {
+      assert(enemy.maxhp < unreduced.minion[1]);
+    } else {
+      // This continuity pass changes attack pressure, not principal HP/DEF.
+      assert.equal(enemy.maxhp, unreduced[enemy.role][1]);
+    }
   }
+  assert(group.some(enemy => enemy.atk < unreduced[enemy.role][0]));
 });
