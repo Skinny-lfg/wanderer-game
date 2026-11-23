@@ -1,0 +1,55 @@
+name: Stage 6.43 — native active ability reachability audit (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths:
+      - '.github/workflows/v013-stage643-ability-reachability.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Report what active v15 actually exposes versus referenced combat abilities
+        run: |
+          node <<'JS'
+          const fs=require('fs');
+          require('./scripts/v013-natural-progression.cjs');
+          const T=globalThis.WandererAutomaticTalents;
+          const live=new Set(T.NODES.map(n=>n.id));
+          const files=['combat/v012-combat-runtime.js','combat/v012-buildcraft.js',
+           'online/v012-expedition-runtime.js'];
+          const pattern=/\b(?:learned|prepared|specialized|rank)\(\s*(?:b\s*,\s*)?['"]([a-z][a-z0-9_]+)['"]|(?:automaticTalents\??\.nodes|\bnodes|\btalents)\??\.includes\(['"]([a-z][a-z0-9_]+)['"]/g;
+          const found=[];
+          for(const file of files){
+           const src=fs.readFileSync(file,'utf8');
+           for(const m of src.matchAll(pattern)){
+            const id=m[1]||m[2];const line=src.slice(0,m.index).split('\n').length;
+            found.push({file,line,id,existsInV15:live.has(id)});
+           }
+          }
+          const distinct=new Map();
+          for(const x of found)if(!distinct.has(x.id))distinct.set(x.id,x);
+          const absent=[...distinct.values()].filter(x=>!x.existsInV15);
+          const groups=Object.fromEntries(files.map(file=>[file,absent.filter(x=>x.file===file)]));
+          const out={nodeCount:live.size,totalReferences:found.length,distinct:distinct.size,
+           refsAbsentFromV15:absent.length,missing:absent,groups,
+           caveat:'Reference is not proof that a code path is reachable; legacy conditions need individual call-path proof before removal.'};
+          fs.mkdirSync('reports/stage643-audit',{recursive:true});
+          fs.writeFileSync('reports/stage643-audit/reachability.json',JSON.stringify(out,null,2)+'\n');
+          console.log('STAGE643_REACHABILITY='+JSON.stringify({nodeCount:out.nodeCount,
+           distinct:out.distinct,absent:out.refsAbsentFromV15,missing:absent}));
+          const required=['bow_pierce','fan_of_blades','cleave_mastery','mace_shockwave','sword_sweep','single_target_mastery','overcharge','storm_mastery','plague_spread','grave_bloom','stored_force','living_recovery'];
+          const lost=required.filter(id=>!live.has(id));if(lost.length)throw Error('Unreachable critical combat skills: '+lost);
+          JS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage643-native-ability-reachability
+          path: reports/stage643-audit/reachability.json
