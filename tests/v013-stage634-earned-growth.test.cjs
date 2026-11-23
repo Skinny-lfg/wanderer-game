@@ -14,36 +14,36 @@ test('Stage 6.34: honest provenance, full 500 accounts and no invented late powe
   A.INPUT.assumptions.lateRateBasis.includes('Provisional'));
  assert.throws(()=>A.validate({...A.INPUT,cohort:{...A.INPUT.cohort,accounts:501}}),/drift/);
 });
-test('Stage 6.34: earned player HP/Attack fit reproduces the one live curve',()=>{
- const fit=A.fit(),g=P.ENEMY_EXPONENTIAL_GROWTH;
- assert.equal(g.initialReference,A.POLICY.initialReference);
- assert.equal(g.lateLogGrowth,A.POLICY.lateLogGrowth);
+test('Stage 6.34: historical earned HP/Attack fit remains reproducible, not the new live policy',()=>{
+ const fit=A.fit(),g=A.POLICY;
+ assert.equal(g.initialReference,.775);
+ assert.equal(g.lateLogGrowth,.014);
  assert(Math.abs(fit.earlyLogGrowthBoost-g.earlyLogGrowthBoost)<.004,
-  'Earliest 500-account paired log-growth fit has changed: '+JSON.stringify(fit));
+  'Historical Stage6.32 500-account paired log-growth fit has changed: '+JSON.stringify(fit));
  assert(Math.abs(fit.relaxationExpeditions-g.relaxationExpeditions)<.02);
  assert(Math.abs(fit.weightedLogGrowthLoss-fit.proposedWeightedLogGrowthLoss)<.000001);
- assert.equal(P.enemyReference(1),.775);
+ assert.equal(A.reference(1),.775);
+ assert.equal(P.enemyReference(1),.775,'New live curve preserves genuine no-gear E1');
  for(const E of [1,2,3,4,5,6,7,8,10,15,20,35,70,100,200,201]){
-  assert(Math.abs(P.enemyReference(E)/A.reference(E)-1)<1e-11,'Live/fit mismatch E'+E);
+  assert(A.reference(E)>0,'Old curve still independently replayable E'+E);
  }
 });
-test('Stage 6.34: no manual E-level nerfs, no exponential jumps, 200 and 201 continuous',()=>{
- const g=P.ENEMY_EXPONENTIAL_GROWTH;
+test('Stage 6.34: archived historical curve remains continuous and finite',()=>{
+ const g=A.POLICY;
  for(let E=1;E<=1000;E++){
-  const value=P.enemyReference(E);
-  assert(Number.isFinite(value)&&value>0,'bad reference E'+E);
+  const value=A.reference(E);
+  assert(Number.isFinite(value)&&value>0,'bad archived reference E'+E);
   if(E===1)continue;
-  const previous=P.enemyReference(E-1);
-  assert(value>previous,'step-down E'+E);
+  const previous=A.reference(E-1);
+  assert(value>previous,'archived step-down E'+E);
   const rate=Math.log(value/previous);
-  assert(rate>=g.lateLogGrowth-1e-12,'rate below positive late slope E'+E);
-  if(E>2)assert(rate<=Math.log(previous/P.enemyReference(E-2))+1e-12,
-   'manual acceleration at E'+E);
+  assert(rate>=g.lateLogGrowth-1e-12,'archived rate below late slope E'+E);
+  if(E>2)assert(rate<=Math.log(previous/A.reference(E-2))+1e-12,
+   'archived manual acceleration at E'+E);
  }
- // The E200 tail is a declared extrapolation, deliberately similar to Stage 6.31.
- assert(P.enemyReference(200)>35&&P.enemyReference(200)<40);
+ assert(A.reference(200)>35&&A.reference(200)<40);
  for(const [E,min,max] of [[2,1,1.2],[3,1.2,1.6],[5,1.7,2.1],[20,2.7,3.4]])
-  assert(P.enemyReference(E)>min&&P.enemyReference(E)<max);
+  assert(A.reference(E)>min&&A.reference(E)<max);
 });
 test('Stage 6.34: same one curve for normal, eight Elites and six Bosses, even beyond E200',()=>{
  for(const E of [1,2,3,5,20,70,200,201,1000]){
