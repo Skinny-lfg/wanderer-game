@@ -50,8 +50,8 @@ function parse(args=process.argv.slice(2)){
   throw Error('Invalid Stage6.28 sample bounds');
  return cfg;
 }
-function checkpoint({a,seed,profile,level,attempt}){
- if(!LEVELS.includes(level)||attempt!==1)return null;
+function checkpoint({a,seed,profile,level,attempt},extraCheckpointLevels=[]){
+ if(!(LEVELS.includes(level)||extraCheckpointLevels.includes(level))||attempt!==1)return null;
  const s=a.state(),p=s.automaticTalents,g=a.controller().state;
  if(g.unlocked!==level||!T.valid(p)||T.earned(p)!==Math.min(100,Math.floor(p.xp/100)))
   throw Error('Stage6.28 does not accept unearned or invalid Camp checkpoint');
@@ -81,7 +81,7 @@ function collect(cfg,{moduleOverrides=null,allowNativeCombatTimeouts=false}={}){
   maxTotalAttempts:cfg.maxTotalAttempts};
  const natural=N.run(opts,{decisionModel:'adaptive',
   ...(moduleOverrides?{moduleOverrides}:{}),onCamp:probe=>{
-  const c=checkpoint(probe);if(c){
+  const c=checkpoint(probe,cfg.extraCheckpointLevels||[]);if(c){
    const key=c.level;
    if(snapshots.has(key))throw Error('Duplicate E'+key+' natural Camp checkpoint');
    snapshots.set(key,c);
@@ -111,7 +111,8 @@ function collect(cfg,{moduleOverrides=null,allowNativeCombatTimeouts=false}={}){
    JSON.stringify(first.before.talentNodes)!==JSON.stringify(c.state.automaticTalents.nodes))
    throw Error('Natural E'+E+' checkpoint drifted from actual first attempt');
  }
- const reached=LEVELS.filter(E=>snapshots.has(E));
+ const reached=[...new Set([...LEVELS,...(cfg.extraCheckpointLevels||[])])]
+  .sort((a,b)=>a-b).filter(E=>snapshots.has(E));
  if(reached.length===0||reached[0]!==1)throw Error('No E1 snapshot');
  const checkpoints=reached.map(E=>snapshots.get(E));
  return {account,checkpoints,natural,nativeCombatTimeouts};
