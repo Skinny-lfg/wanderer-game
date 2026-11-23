@@ -1,0 +1,96 @@
+name: Stage 6.44 — Legal Bow Piercing Respec E10 (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths:
+      - '.github/workflows/v013-stage644-bow-respec.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  bow:
+    runs-on: ubuntu-latest
+    timeout-minutes: 85
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        shard: [0, 1]
+        variant: [respecBow, 'respecBow+bow1', 'respecBow+bow1+bowNoTalent', 'respecBow+bow1+status35', 'respecBow+bow1+status50', 'respecBow+bow1+status65']
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45272938568
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: stage642-snapshot-smart-fury-bow
+          path: reports/stage644/bow-snapshots
+      - name: Earned E10 Bow + legal reset, 50 matched RNG seeds per shard
+        env:
+          VARIANT: ${{ matrix.variant }}
+          SHARD: ${{ matrix.shard }}
+        run: |
+          mkdir -p reports/stage644/bow-shards
+          node scripts/v013-stage644-e10-lab.cjs "$VARIANT" smart-fury-bow "$SHARD" reports/stage644/bow-snapshots/smart-fury-bow.json "reports/stage644/bow-shards/bow-$VARIANT-$SHARD.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage644-bow-${{ matrix.variant }}-${{ matrix.shard }}
+          path: reports/stage644/bow-shards/*.json
+          retention-days: 30
+          if-no-files-found: error
+  aggregate:
+    needs: bow
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage644-bow-*
+          merge-multiple: true
+          path: reports/stage644/bow-shards
+      - name: Verify legality and compare same Bow E10 actors across 100 seeds
+        run: |
+          node <<'JS'
+          const fs=require('fs'),p='reports/stage644/bow-shards';
+          const files=fs.readdirSync(p).filter(x=>x.endsWith('.json'));
+          if(files.length!==12)throw Error('Expected 12 Bow shards, got '+files.length);
+          const parts=files.map(f=>JSON.parse(fs.readFileSync(p+'/'+f,'utf8')));
+          const variants=[...new Set(parts.map(x=>x.variant))],summary=[];
+          if(variants.length!==6)throw Error('Missing experiment variant');
+          const baselineParts=parts.filter(x=>x.variant==='respecBow');
+          if(baselineParts.length!==2)throw Error('Missing legal Bow baseline');
+          const baseline=baselineParts.flatMap(x=>x.rows);
+          for(const variant of variants){
+            const pieces=parts.filter(x=>x.variant===variant);
+            if(pieces.length!==2)throw Error('Missing two matched shards '+variant);
+            const actors=pieces[0].entrants;
+            if(JSON.stringify(actors)!==JSON.stringify(pieces[1].entrants))throw Error('Different legal Bow entrants');
+            if(!actors.every(a=>a.weapon==='Bow'&&a.active.includes('bow_pierce')))throw Error('Bow skill not earned legally');
+            const rows=pieces.flatMap(x=>x.rows);
+            for(const r of rows){
+              const b=baseline.find(x=>x.seed===r.seed&&x.size===r.size&&x.naturalSeed===r.naturalSeed);
+              if(!b||r.gear!==b.gear||r.xp!==b.xp||r.roster!==b.roster)throw Error('Combat roster or earned gear drift '+variant);
+            }
+            summary.push({variant,actors:actors.map(({seed,weapon,points,active})=>({seed,weapon,points,active})),
+              groups:[1,4,8,12].map(size=>{const a=rows.filter(r=>r.size===size);
+                if(a.length!==100)throw Error('Not 100 samples for '+variant+'/'+size);
+                return {size,n:a.length,wins:a.filter(x=>x.won).length,
+                 timeouts:a.filter(x=>x.timeout).length,secondary:a.reduce((n,x)=>n+x.secondary,0),
+                 meanTaken:Math.round(a.reduce((n,x)=>n+x.taken,0)/a.length)};})});
+          }
+          const result={stage:'6.44',kind:'legal-earned-Bow-respec',note:'Legally reset and purchased from earned XP, same real gear and matched seeds, source patches only inside CI',summary};
+          fs.writeFileSync('reports/stage644/bow-legal-results.json',JSON.stringify(result,null,2)+'\n');
+          console.log('STAGE644_LEGAL_BOW='+JSON.stringify(summary));
+          JS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage644-bow-legal-100seed
+          path: reports/stage644/bow-legal-results.json
+          retention-days: 30
