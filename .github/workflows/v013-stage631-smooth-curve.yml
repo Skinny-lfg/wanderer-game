@@ -1,0 +1,134 @@
+name: Wanderer Stage 6.31 — curva exponencial suave E1–E200 (NO DEPLOY)
+on:
+  push:
+    branches: [balance/v013-stage631-uniform-exponential-target-audit-20261123]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: stage631-smooth-exponential
+  cancel-in-progress: true
+jobs:
+  preflight:
+    name: No-E35-step continuous curve, native E2/E3/E5, full regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: No manual level jumps and 6 realms across 34 valid builds
+        run: |
+          node --check combat/expedition-progression.js
+          node --check scripts/v013-stage631-smooth-curve.cjs
+          node --test tests/v013-stage631-smooth-curve.test.cjs tests/expedition-progression-model.test.cjs tests/v013-stage624c-progression.test.cjs
+          git diff --check
+      - name: Full v0.13 native regression suite
+        run: npm test
+  pilot:
+    name: Real natural E1–E20 ${{ matrix.batch }} seed ${{ matrix.seed }} old/new
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 110
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        batch: [legacy-defense, legacy-casters, strategic-pure, strategic-hybrid, strategic-weapon]
+        seed: [9861, 9863]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Match old/new native E1 accounts with earned XP and gear
+        run: >-
+          node scripts/v013-stage631-smooth-curve.cjs
+          --mode=pilot
+          --batch=${{ matrix.batch }}
+          --seed=${{ matrix.seed }}
+          --max-total-attempts=360
+          --out=reports/v013-stage631-pilot-${{ matrix.batch }}-${{ matrix.seed }}.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage631-pilot-${{ matrix.batch }}-${{ matrix.seed }}
+          path: reports/v013-stage631-pilot-${{ matrix.batch }}-${{ matrix.seed }}.json
+          retention-days: 40
+          if-no-files-found: warn
+  deep:
+    name: E2/E3 six Realms + 8 Elites + 6 Bosses / ${{ matrix.profile }}
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 110
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        seed: [9861]
+        profile:
+          - smart-blood-pure
+          - smart-fury-pure
+          - smart-magic-arcane-pure
+          - smart-magic-lightning-pure
+          - smart-vitality-pure
+          - smart-decay-magic-aegis
+          - smart-aegis-vitality
+          - cloth-battlemage
+          - leather-duelist
+          - magic-fire
+          - hexblade-hybrid
+          - smart-blood-fury-vitality
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Real E1-born checkpoints E2/E3/E5 and named native encounters by Realm
+        run: >-
+          node scripts/v013-stage631-smooth-curve.cjs
+          --mode=deep
+          --profile=${{ matrix.profile }}
+          --seed=${{ matrix.seed }}
+          --max-total-attempts=360
+          --out=reports/v013-stage631-deep-${{ matrix.profile }}-${{ matrix.seed }}.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage631-deep-${{ matrix.profile }}-${{ matrix.seed }}
+          path: reports/v013-stage631-deep-${{ matrix.profile }}-${{ matrix.seed }}.json
+          retention-days: 40
+          if-no-files-found: warn
+  aggregate:
+    name: Report E2/E3 win-rate targets for 6 Realms and native E200
+    needs: [pilot,deep]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage631-*
+          merge-multiple: true
+          path: reports/stage631-shards
+      - name: Check exact 34-profile × 2-seed coverage and all 12 deep runs
+        run: >-
+          node scripts/v013-stage631-smooth-curve.cjs
+          --mode=aggregate
+          --inputs=reports/stage631-shards
+          --out=reports/v013-stage631-aggregate.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage631-smooth-exponential-six-realms-report
+          path: |
+            reports/v013-stage631-aggregate.json
+            reports/v013-stage631-aggregate.md
+          retention-days: 45

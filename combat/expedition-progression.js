@@ -12,31 +12,30 @@ const tiers=Object.freeze([
 ]);
 function checked(level){if(!Number.isSafeInteger(level)||level<1)throw Error('Invalid Expedition Level');return level;}
 function gearTier(level){checked(level);for(let i=tiers.length-1;i>=0;i--)if(level>=tiers[i].minimum)return tiers[i];}
-// Stage 6.30 — E1–E5 now grow exponentially too (slightly softer opening).
-// One anchored progression: E5 remains EXACTLY 5. A small exponential
-// early arc replaces the old linear 1/2/3/4/5; the E5 tangent is carried
-// into the late curve as a nondecreasing saturating shoulder.
-// This avoids either a hard E5→E6 transition or a temporary level where
-// enemy HP/ATK would DECREASE. The late exponential acceleration from Stage
-// 6.29 is unchanged; the shared reference affects all native enemy roles.
-// Early example: E1 ≈ 0.78 instead of 1, E2 ≈ 1.65 instead of 2.
-// No build, gear, rarity, Elite or Boss ability coefficients are changed.
-const ENEMY_EXPONENTIAL_GROWTH=Object.freeze({rate:.015,weight:2,earlyRate:.12,shoulderLevels:.4});
+// Stage 6.31 — one SMOOTH exponentially compounded progression for all E>=1.
+// The per-Expedition percentage growth changes smoothly; it is NOT a fixed %.
+// Both the reference and its growth-rate derivative are continuous through
+// E2/E3/E5/E35/E36/E70/E200. No piecewise level, clamp, local nerf or step.
+// Provisional smooth E1-based calibration: E2/E3 match prior native targets,
+// E5 is eased without an E5 breakpoint, and E200 retains late pressure.
+// This is not proof that
+// the target player win rates (normal 80–90%, Elite 60–70%, Boss 35–45%)
+// are met by the current agents. Player gear and XP are separate models.
+// Initial growth is brisker and relaxes smoothly toward the positive late
+// rate. The entire expression is an exponential for every Expedition.
+const ENEMY_EXPONENTIAL_GROWTH=Object.freeze({
+ initialReference:.775,
+ lateLogGrowth:.009901141066605541,
+ earlyLogGrowthBoost:1.9367547131703917,
+ relaxationExpeditions:2.0572942012233146
+});
 function enemyReference(level){
  checked(level);
- const {rate,weight,earlyRate,shoulderLevels}=ENEMY_EXPONENTIAL_GROWTH;
- const early=E=>5*Math.expm1(earlyRate*E)/Math.expm1(earlyRate*5);
- if(level<5)return early(level);
- if(level===5)return 5;
- const x=level-5;
- // Stage6.29's late curve, continuous in value at the E5 anchor.
- const base=5+Math.log1p(x/5)+weight*(Math.expm1(rate*x)-rate*x);
- // Exact left derivative at E5. The log baseline's right derivative is 1/5.
- // Preserve the tangent with a saturating, strictly increasing shoulder.
- // No special E6 multiplicator and no late-game artificial step.
- const tangent=5*earlyRate*Math.exp(earlyRate*5)/Math.expm1(earlyRate*5);
- const shoulder=(tangent-1/5)*shoulderLevels*(-Math.expm1(-x/shoulderLevels));
- const reference=base+shoulder;
+ const {initialReference,lateLogGrowth,earlyLogGrowthBoost,relaxationExpeditions}=ENEMY_EXPONENTIAL_GROWTH;
+ const x=level-1;
+ const logGrowth=lateLogGrowth*x+
+  earlyLogGrowthBoost*(-Math.expm1(-x/relaxationExpeditions));
+ const reference=initialReference*Math.exp(logGrowth);
  if(!Number.isFinite(reference))throw Error('Expedition enemy reference exceeds finite range at E'+level);
  return reference;
 }
