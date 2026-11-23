@@ -1,0 +1,54 @@
+name: Wanderer Stage 6.42 — recover censored E10 run without replaying 17 accounts (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths:
+      - '.github/workflows/v013-stage642-e10-recovery.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 95
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Assert native E10 timeout censoring compiles
+        run: |
+          node --check scripts/v013-stage641-e10-consensus.cjs
+          node --test tests/v013-stage642-single-budget.test.cjs
+      - name: Fetch unchanged E10 outcomes from successful original jobs
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 45269240361
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          pattern: stage642-e10-*
+          merge-multiple: true
+          path: reports/stage641
+      - name: Count and validate 17 recovered profiles
+        run: |
+          node - <<'JS'
+          const fs=require('fs'),p='reports/stage641';
+          const files=fs.readdirSync(p).filter(x=>/^stage641-.*\.json$/.test(x));
+          if(files.length!==17)throw Error('Expected 17 existing real E10 outcomes, received '+files.length);
+          console.log('STAGE642_RECOVERED_ORIGINALS='+files.length);
+          JS
+      - name: Replay only the censored Plate Warden account (real E1→E10)
+        run: node scripts/v013-stage641-e10-consensus.cjs plate-warden 9863 reports/stage641/stage641-plate-warden-9863.json
+      - name: Aggregate all 18 genuine earned accounts; retain native timeout censoring
+        run: node scripts/v013-stage641-e10-consensus.cjs --aggregate reports/stage641
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage642-e10-v25-recovered-summary
+          path: |
+            reports/stage641/stage641-summary.json
+            reports/stage641/stage641-summary.md
+            reports/stage641/stage641-plate-warden-9863.json
+          if-no-files-found: warn
+          retention-days: 30
