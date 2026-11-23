@@ -62,11 +62,11 @@ const NORMAL_ROOM_BUDGET=Object.freeze({
   skirmisher:Object.freeze({hp:1.36,atk:1.20}),
   caster:Object.freeze({hp:1.34,atk:1.18})
  }),
- minion:Object.freeze({hp:.38,atk:.60,def:.55,interval:1.18}),
+ minion:Object.freeze({hp:.42,atk:.60,def:.55,interval:1.18}),
  // One persistent mixed-roster offset and one E1 relief component; both
  // are resolved here in the same native budget rather than multiplied later.
- escortHpPerMinion:.040,escortHpEarly:.015,
- escortAtkPerMinion:.035,escortAtkEarly:.010,
+ escortHpPerMinion:.028,escortHpEarly:.015,
+ escortAtkPerMinion:.024,escortAtkEarly:.010,
  escortDefPerMinion:.020,escortDefEarly:.005,
  minEscortHp:.38,minEscortAtk:.50,minEscortDef:.65,
  earlyDecay:.50
