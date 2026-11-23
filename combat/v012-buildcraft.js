@@ -285,13 +285,16 @@ function tickRot(b,c){
  const e=migrateEnemyDots(c.enemy);
  if(e.v012Rot?.length){
   const rot=e.v012Rot;
+  const baseRot=rot.reduce((sum,s)=>sum+s.damage,0);
+  const secondaryRot=rot.reduce((sum,s)=>sum+((s.spread||s.secondaryOrigin)?s.damage:0),0);
+  const secondaryFraction=baseRot>0?secondaryRot/baseRot:0;
   const nodes=b.runtime.specializations||[],incubationRank=nodes.filter(id=>id==='incubation'||id.startsWith('incubation_rank')).length;
   e.incubationTicks=(e.incubationTicks||0)+1;
   const damage=Math.round(rot.reduce((sum,s)=>sum+s.damage,0)*(e.incubationTicks%3===0?1+.12*incubationRank+(specialized(b,'plagueheart')?.35:0):1));
   if(rot.every(s=>s.remaining<=1))e.incubationTicks=0;
   e.v012Rot=rot.map(s=>({...s,remaining:s.remaining-1,ticks:(s.ticks||0)+1})).filter(s=>s.remaining>0);
   if(c.enemy.hp>0&&damage>=c.enemy.hp)c.enemy.v012DeathRot=true;
-  c.dotDamage(damage,'☠ Rot');
+  c.dotDamage(damage,'☠ Rot',secondaryFraction);
   if(rank(b,'rot_ward')&&ready(b,'rotWard',c.now,5)&&activated(b,'rot_ward'))c.barrier(c.player.maxhp*.018);
   if(rank(b,'rot_symbiosis')&&ready(b,'rotSymbiosis',c.now,6)&&activated(b,'rot_symbiosis'))heal(b,c,c.player.maxhp*.018);
  }
@@ -424,7 +427,7 @@ function onInfusionHit(b,c){
   if(r.prepared==='grave_bloom'&&e.v012Rot?.length){
    const others=(c.player?.enemies||[]).filter(m=>m!==e&&m.hp>0).slice(0,2);
    if(others.length){
-    for(const m of others){m.v012Rot??=[];if(m.v012Rot.length<6)m.v012Rot.push({...e.v012Rot[0]});}
+    for(const m of others){m.v012Rot??=[];if(m.v012Rot.length<6)m.v012Rot.push({...e.v012Rot[0],secondaryOrigin:'grave_bloom'});}
    }else c.damage(e.v012Rot.reduce((sum,rot)=>sum+rot.damage,0),'☠ Grave Bloom');
    activated(b,'grave_bloom');c.trigger?.('grave_bloom');
   }
