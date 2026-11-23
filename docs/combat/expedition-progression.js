@@ -64,12 +64,12 @@ const ELITE_IDENTITIES=Object.freeze([
  'tank','berserker','vampire','caster','gravecaller','oathbound_exarch',
  'briarspine_horror','ashen_executioner'
 ]);
-// Stage 6.33 is an experimental stat-only BALANCE BRANCH, not deployed.
-// Enemy active/special abilities, Traits, Conditions and Boss modifiers
-// are isolated from encounters during base calibration; their source remains
-// available for a separately measured reintroduction in a later stage.
-// Risk tier and encounter counts remain gameplay choices.
-const CALIBRATION_STAT_ONLY=true;
+// Stage 6.33: production keeps actual enemy mechanics and ordinary game
+// integration tests. A separate disposable simulator VM changes this one
+// constant to true ONLY for stat-only base calibration. No special abilities,
+// encounter Traits/Conditions or Boss modifiers in that isolated VM.
+// Risk tiers and encounter counts remain choices in both modes.
+const CALIBRATION_STAT_ONLY=false;
 function enemyScaling(level,kind,identity=null){
  checked(level);
  if(kind==='normal'&&(identity===null||Object.hasOwn(NORMAL_BASE,identity)))return UNITY;
