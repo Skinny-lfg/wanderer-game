@@ -1,0 +1,51 @@
+name: Wanderer Stage 6.39 — recover 500 successful E1-born cohort artifacts (NO RESIMULATION)
+on:
+  push:
+    branches: [balance/v013-stage639-aoe-solo-individual-calibration-20261123]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  aggregate_recovered:
+    name: Aggregate original 100 successful native shards from run 45217628500
+    if: contains(github.event.head_commit.message, '[recover-stage639]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Verify fixed aggregate parser and source integrity
+        run: |
+          node --check scripts/v013-stage639-aoe-diagnostic.cjs
+          node --test tests/v013-stage639-solo-aoe-individual.test.cjs tests/v013-stage639-earned-aoe-comparison.test.cjs
+      - name: Download 100 already-finished native E1-born cohort shards from original run
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 45217628500
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          pattern: stage639-cohort-*
+          merge-multiple: true
+          path: reports/stage639-shards
+      - name: Require exactly 100 real native shard files, no extras
+        run: |
+          count=$(find reports/stage639-shards -maxdepth 1 -name 'v013-stage639-diagnostic-*-*.json' -type f | wc -l)
+          echo "Original successful Stage6.39 shards: $count"
+          test "$count" -eq 100
+      - name: Recompute account, AoE, eight Elite and six Boss rates (no replay of 500 fights)
+        run: >-
+          node scripts/v013-stage639-aoe-diagnostic.cjs
+          --mode=aggregate --inputs=reports/stage639-shards
+          --out=reports/v013-stage639-aggregate.json
+      - name: Reject incomplete/mixed-source/censored-as-win or non-real native data
+        run: |
+          node -e "const d=require('./reports/v013-stage639-aggregate.json');if(d.stage!=='6.39'||d.cohort.accounts!==500||d.levels.length!==5||d.levels[0].accountsReached!==500||Object.keys(d.levels[0].byElite).length!==8||Object.keys(d.levels[0].byBoss).length!==6||d.levels.some(r=>!r.groups.swarm||!r.groups.small))process.exit(1)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage639-recovered-500-native-aoe-solo-eight-elites-six-bosses
+          path: |
+            reports/v013-stage639-aggregate.json
+            reports/v013-stage639-aggregate.md
+          retention-days: 45
