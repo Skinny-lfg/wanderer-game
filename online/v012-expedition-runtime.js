@@ -244,12 +244,13 @@ function phase1WaveWon(){
        transferredTick+=tick;transferred++;ports.combatLinkEffect?.(r,'rot',enemy,[target]);
       }
      }
-     // Contagion deals one transferred tick immediately on an active recipient.
+     // Contagion detonates three transferred ticks immediately on an active recipient.
      // Reserve units retain their transferred DOT but cannot die before spawning.
      if(transferredTick>0&&r.enemies.includes(target)&&target.hp>0){
-      const absorbed=Math.min(target.barrier||0,transferredTick);
+      const burst=Math.max(1,Math.round(transferredTick*3));
+      const absorbed=Math.min(target.barrier||0,burst);
       target.barrier=Math.max(0,(target.barrier||0)-absorbed);
-      const dealt=Math.min(target.hp,transferredTick-absorbed);
+      const dealt=Math.min(target.hp,burst-absorbed);
       if(dealt>0){target.hp-=dealt;ports.phase6Metric(r,'damageDealt',dealt);ports.phase6Metric(r,'secondaryTargetDamage',dealt);ports.phase6Metric(r,'secondaryDotDamage',dealt);ports.phase6Metric(r,'secondaryTargetHits',1);ports.phase6Metric(r,'plagueSpreadBursts',1);ports.floatText(dealt,'enemy',false,'ROT + BLEED',target);}
      }
     }
