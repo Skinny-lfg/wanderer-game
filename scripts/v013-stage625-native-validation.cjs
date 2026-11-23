@@ -21,15 +21,46 @@ function fullTalentBuild(row){
  const id=row.sourceArchetype.slice('profile:'.length),plan=B.getPlan(id);
  const profile=L.profileCandidate(id,T.MAX_POINTS,{
   pressure:plan.model==='adaptive'&&T.MAX_POINTS>=(plan.thirdAt||1000)});
- const talents={xp:T.MAX_POINTS*T.POINT_XP,nodes:[...profile.actualNodes],treeVersion:15};
+ let talents={xp:T.MAX_POINTS*T.POINT_XP,nodes:[...profile.actualNodes],treeVersion:15};
  if(profile.mode!=='arcane')talents.element=profile.mode;
- const byId=new Map(T.NODES.map(n=>[n.id,n]));
- const advanced=talents.nodes.filter(id=>byId.get(id.replace(/_rank\d+$/,''))?.advanced);
+ if(!T.valid(talents))throw Error('Invalid native v15 starting profile '+id);
+ const graph=new Map(T.NODES.map(n=>[n.id,n])),active=[...new Set([
+  plan.primary,plan.secondary,plan.third].filter(Boolean))];
+ const survival=[...new Set([...active,'vitality','aegis'])];
+ const all=H.FAMILIES;
+ // The native strategy planner can stop well below cap. Complete the remaining
+ // legal choices using native T.allocate, not fabricated XP or direct node edits.
+ // Keep a focused build in its chosen affinities while legal options remain.
+ while(talents.nodes.length<T.MAX_POINTS){
+  const owned=new Set(talents.nodes.map(id=>id.replace(/_rank\d+$/,'')));
+  let best=null;
+  for(const families of [active,survival,all]){
+   for(const n of T.NODES){
+    if(n.family&&!families.includes(n.family)||
+      n.element&&n.element!==(talents.element||'arcane')||
+      n.pair&&(!plan.mix||n.pair.some(f=>!families.includes(f)))||
+      n.excludes?.some(id=>owned.has(id))||
+      [...owned].some(id=>graph.get(id)?.excludes?.includes(n.id)))continue;
+    const next=T.allocate(talents,n.id);
+    if(!next)continue;
+    const score=B.scoreNode(n,plan,families,{needsSurvival:true})+
+      (n.family===plan.primary?14:n.family===plan.secondary?9:
+       n.family===plan.third?7:families===all?-5:0)+
+      (n.kind==='affinity'&&n.family!==plan.primary&&n.family!==plan.secondary?-18:0);
+    if(!best||score>best.score||score===best.score&&n.id<best.id)
+     best={id:n.id,score,next};
+   }
+   if(best)break;
+  }
+  if(!best)throw Error('Cannot spend full native v15 100 points in build '+id+
+    '; spent='+talents.nodes.length);
+  talents=best.next;
+ }
+ const advanced=talents.nodes.map(id=>id.replace(/_rank\d+$/,'')).filter(id=>graph.get(id)?.advanced);
  if(advanced.length)talents.prepared=(plan.milestones||[]).find(id=>advanced.includes(id))||advanced.at(-1);
- if(!T.valid(talents)||T.earned(talents)!==100||talents.nodes.length<=60||
-  profile.spent!==talents.nodes.length)
-  throw Error('Invalid or underinvested native 100-point Talent allocation '+id);
- return {...row,budget:100,spent:talents.nodes.length,talents,
+ if(!T.valid(talents)||T.earned(talents)!==100||talents.nodes.length!==100)
+  throw Error('Invalid final native 100-point Talent allocation '+id);
+ return {...row,budget:100,spent:100,talents,
   talentHash:crypto.createHash('sha256').update(JSON.stringify({
    nodes:talents.nodes,mode:profile.mode,prepared:talents.prepared||null})).digest('hex')};
 }
