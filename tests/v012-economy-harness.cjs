@@ -64,6 +64,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
   talentActions:{
    available(){return ['camp','finished','failed'].includes(phase1Controller.state.stage)&&!state.run;},
    allocate(id){if(!this.available())return false;const before=state.automaticTalents,next=WandererAutomaticTalents.allocate(before,id);if(!next)return false;state.automaticTalents=next;if(!phase5Persist()){state.automaticTalents=before;return false;}return true;},
+   attribute(key){if(!this.available())return false;const before=state.automaticTalents,next=WandererAutomaticTalents.allocateAttribute(before,key);if(!next)return false;state.automaticTalents=next;if(!phase5Persist()){state.automaticTalents=before;return false;}return true;},
    prepare(id){if(!this.available())return false;const before=state.automaticTalents;
     if(id&&(!before.nodes.includes(id)||!WandererAutomaticTalents.NODES.find(n=>n.id===id)?.advanced))return false;
     const next={...before,prepared:id||null};if(!WandererAutomaticTalents.valid(next))return false;

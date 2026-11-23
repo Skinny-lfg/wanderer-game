@@ -43,10 +43,33 @@ function showRequirements(progress){
  if(progress.points!==null&&route.steps.length>progress.points){const p=document.createElement('p');p.textContent='Need '+(route.steps.length-progress.points)+' more point(s) to complete this route.';area.append(p);}
  for(const id of route.steps)nodes.querySelector(`[data-id="${id}"]`)?.classList.add('planned');for(const [from,to] of route.edges)for(const edge of links.querySelectorAll('[data-from][data-to]'))if(edge.dataset.from===from&&edge.dataset.to===to)edge.classList.add('planned');
 }
-const action=document.createElement('button'),prepare=document.createElement('button'),status=document.createElement('p');let elementSummary=null,elementHint=null,elementButtons=[];
+const action=document.createElement('button'),prepare=document.createElement('button'),status=document.createElement('p');
+const attributeButtons=new Map();let attributeSummary=null,elementSummary=null,elementHint=null,elementButtons=[];
 if(api){const aside=document.querySelector('aside'),details=document.querySelector('#requirements');aside.querySelector('small').textContent='PERMANENT TALENTS';action.textContent='Invest 1 point';prepare.textContent='Prepare ability';aside.insertBefore(status,details);aside.insertBefore(action,details);aside.insertBefore(prepare,details);action.onclick=()=>{if(selected&&api.allocate(selected.id))refresh();};prepare.onclick=()=>{if(selected&&api.prepare(selected.id))refresh();};
- const reset=document.createElement('button');reset.textContent='Reset talents';reset.onclick=()=>{if(confirm('Reset all allocated talent points?')&&api.reset())refresh();};document.querySelector('aside').append(reset);}
-function refresh(){const p=api?api.snapshot():{ranks:{},points:null};showRequirements(p);if(!api)return;for(const edge of links.querySelectorAll('[data-from][data-to]'))edge.classList.toggle('owned',!!p.ranks[edge.dataset.to]&&(edge.dataset.from==='@core'||!!p.ranks[edge.dataset.from]));for(const n of graph){const element=nodes.querySelector(`[data-id="${n.id}"]`);element?.classList.toggle('owned',!!p.ranks[n.id]);}const rank=selected?(p.ranks[selected.id]||0):0;status.textContent=`${p.points} points available`+(selected?` · Rank ${rank}/${selected.maxRank||1}`:'');action.disabled=!selected||p.points<1||rank>=(selected.maxRank||1)||!G.requirements(selected,p.ranks);prepare.hidden=!selected?.advanced;prepare.disabled=!rank;}
+ const panel=document.createElement('section');panel.className='post100Attributes';panel.setAttribute('aria-label','Permanent attribute points after the Talent Tree cap');
+ const heading=document.createElement('h3');heading.textContent='Beyond 100 Talent Points';
+ const hint=document.createElement('p');hint.textContent='Earn one permanent main-stat point for every 100 XP after the first 10,000 XP. Resetting talents keeps these attributes.';
+ attributeSummary=document.createElement('p');attributeSummary.className='post100Counter';
+ const choices=document.createElement('div');choices.className='post100Choices';
+ const labels={str:'Strength',agi:'Agility',int:'Intellect',end:'Endurance',cha:'Charisma'};
+ for(const [key,title] of Object.entries(labels)){
+  const button=document.createElement('button');button.type='button';button.dataset.attribute=key;
+  button.title='Spend one permanent attribute point on '+title;
+  button.addEventListener('click',()=>{if(api.attribute(key))refresh();});
+  attributeButtons.set(key,button);choices.append(button);
+ }
+ panel.append(heading,hint,attributeSummary,choices);aside.insertBefore(panel,details);
+ const reset=document.createElement('button');reset.textContent='Reset talents';reset.onclick=()=>{if(confirm('Reset all allocated talent points? Your permanent attribute points will stay.')&&api.reset())refresh();};document.querySelector('aside').append(reset);
+}
+function refresh(){const p=api?api.snapshot():{ranks:{},points:null};showRequirements(p);if(!api)return;for(const edge of links.querySelectorAll('[data-from][data-to]'))edge.classList.toggle('owned',!!p.ranks[edge.dataset.to]&&(edge.dataset.from==='@core'||!!p.ranks[edge.dataset.from]));for(const n of graph){const element=nodes.querySelector(`[data-id="${n.id}"]`);element?.classList.toggle('owned',!!p.ranks[n.id]);}const rank=selected?(p.ranks[selected.id]||0):0;status.textContent=`Level ${p.level} · ${p.points} Talent points · ${p.attributePoints} Attribute points`+(selected?` · Rank ${rank}/${selected.maxRank||1}`:'');
+ action.disabled=!selected||p.points<1||rank>=(selected.maxRank||1)||!G.requirements(selected,p.ranks);
+ prepare.hidden=!selected?.advanced;prepare.disabled=!rank;
+ if(attributeSummary)attributeSummary.textContent=`${p.attributePoints} available · ${p.attributeTotal} earned after cap`;
+ for(const [key,button] of attributeButtons){
+  button.disabled=p.attributePoints<1;
+  button.textContent=`+${key.toUpperCase()} · ${p.attributes?.[key]||0} invested`;
+ }
+}
 refresh();
 let view={x:-1650,y:-1650,w:3300,h:3300};function render(){const width=viewport.clientWidth,height=viewport.clientHeight;if(!width||!height)return;const ratio=width/height;view.h=view.w/ratio;svg.setAttribute('viewBox',`${view.x} ${view.y} ${view.w} ${view.h}`)}function centre(x,y,w){const width=Math.max(1,viewport.clientWidth),height=Math.max(1,viewport.clientHeight);view.w=w;view.x=x-w/2;view.y=y-w/width*height/2;render()}function zoom(f){const x=view.x+view.w/2,y=view.y+view.h/2;centre(x,y,Math.max(300,Math.min(4800,view.w*f)))}document.querySelector('#in').onclick=()=>zoom(.75);document.querySelector('#out').onclick=()=>zoom(1.33);document.querySelector('#fit').onclick=()=>centre(0,0,Math.max(3300,3300*(viewport.clientHeight>0?viewport.clientWidth/viewport.clientHeight:1)));document.querySelector('#home').onclick=()=>centre(0,0,900);
 for(const f of families){const b=document.createElement('button');b.textContent=f[0].toUpperCase()+f.slice(1);b.onclick=()=>{const p=polar(angle(f),720);centre(p.x,p.y,(f==='magic'||f==='vitality')?1850:1150)};document.querySelector('#families').append(b)}

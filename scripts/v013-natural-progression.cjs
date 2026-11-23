@@ -201,6 +201,28 @@ function spendEarnedTalents(a,profile){
  if(!T.valid(progress)||progress.xp!==before.xp)throw Error('Natural talent spending forged XP');
  return {bought,elements,earned:T.earned(progress),spent:progress.nodes.length,xp:progress.xp};
 }
+function spendEarnedAttributes(a,profile){
+ const T=a.talents,s=a.state(),before=s.automaticTalents;
+ if(!T.valid(before)||!a.talentActions?.available())throw Error('Attributes require valid Camp state');
+ const first=profile.families[0]||'blood';
+ const rotations={
+  blood:['str','str','end','str','cha'],
+  fury:['agi','agi','str','agi','cha'],
+  vitality:['end','end','str','end','cha'],
+  aegis:['end','end','int','end','str'],
+  magic:['int','int','end','int','cha'],
+  decay:['int','int','agi','int','end']};
+ const order=rotations[first]||rotations.blood;
+ const choices=[];
+ while(T.availableAttributes(s.automaticTalents)>0){
+  const spent=T.spentAttributes(s.automaticTalents),key=order[spent%order.length];
+  if(!a.talentActions.attribute(key))throw Error('Native attribute purchase rejected '+key);
+  choices.push(key);
+ }
+ if(s.automaticTalents.xp!==before.xp||!T.valid(s.automaticTalents))
+  throw Error('Natural attribute spending forged XP or state');
+ return {chosen:choices,spent:T.spentAttributes(s.automaticTalents),unspent:T.availableAttributes(s.automaticTalents)};
+}
 function prepareEarnedAbility(a,profile){
  const T=a.talents,p=a.state().automaticTalents;
  if(!T.valid(p))throw Error('Invalid talent progress for prepared ability');
@@ -492,7 +514,7 @@ function consolidateStash(a,profile,reserve=4){
  return action;
 }
 function prepareCamp(a,profile,level,decisionModel='risk-aware',options={}){
- const actions={talents:[],resets:[],elementChoices:[],prepared:null,equipped:[],bought:[],crafted:[],refined:[],potions:[],runes:[],storage:[],soldTreasures:false,restocks:0,salvagedGrey:0,salvageFragments:0};
+ const actions={talents:[],attributes:[],resets:[],elementChoices:[],prepared:null,equipped:[],bought:[],crafted:[],refined:[],potions:[],runes:[],storage:[],soldTreasures:false,restocks:0,salvagedGrey:0,salvageFragments:0};
  const s=a.state();a.potions.inventory();
  if(s.pendingRuneReward?.options?.length){
   const options=s.pendingRuneReward.options;
@@ -567,6 +589,7 @@ function prepareCamp(a,profile,level,decisionModel='risk-aware',options={}){
   actions.talents.push(...talentInvestment.bought);
   actions.elementChoices.push(...talentInvestment.elements);
  }
+ actions.attributes.push(...spendEarnedAttributes(a,profile).chosen);
  actions.prepared=prepareEarnedAbility(a,profile);
  if(decisionModel!=='legacy'){
   actions.runes.push(...manageEarnedRunes(a,profile));
@@ -1247,7 +1270,10 @@ function simulateAccount(seed,id,opts,simulationOptions={}){
       throw Error('Earned checkpoint test changed equipment, resources, XP, unlocks or invalid talents');
     }
     const before={xp:a.state().automaticTalents.xp,earned:a.talents.earned(a.state().automaticTalents),
-     spent:a.state().automaticTalents.nodes.length,gear:gearSnapshot(a),strategy:activeProfile.variantId||id,gold:a.state().gold,
+     spent:a.state().automaticTalents.nodes.length,
+     attributeEarned:a.talents.attributeBudget(a.state().automaticTalents),
+     attributeSpent:a.talents.spentAttributes(a.state().automaticTalents),
+     attributes:a.talents.attributes(a.state().automaticTalents),gear:gearSnapshot(a),strategy:activeProfile.variantId||id,gold:a.state().gold,
      fragments:a.state().fragments,essence:a.state().crafting?.essence||0,
      talentNodes:[...a.state().automaticTalents.nodes],
      element:a.state().automaticTalents.element||null,
@@ -1257,7 +1283,10 @@ function simulateAccount(seed,id,opts,simulationOptions={}){
     if(encounter.xpEnd<before.xp)throw Error('Native earned XP decreased');
     entry={...entry,camp,before,...(earnedProbe?{earnedProbe}:{}),...encounter,
      after:{xp:a.state().automaticTalents.xp,earned:a.talents.earned(a.state().automaticTalents),
-      spent:a.state().automaticTalents.nodes.length,unlocked:a.controller().state.unlocked,
+      spent:a.state().automaticTalents.nodes.length,
+      attributeEarned:a.talents.attributeBudget(a.state().automaticTalents),
+      attributeSpent:a.talents.spentAttributes(a.state().automaticTalents),
+      attributes:a.talents.attributes(a.state().automaticTalents),unlocked:a.controller().state.unlocked,
       gold:a.state().gold,fragments:a.state().fragments,
       essence:a.state().crafting?.essence||0,
       talentNodes:[...a.state().automaticTalents.nodes],
@@ -1333,6 +1362,7 @@ function analyze(accounts,opts){
    campGreySalvaged:attempts.reduce((n,a)=>n+(a.camp?.salvagedGrey||0),0),
    forgeFragmentsFromGrey:attempts.reduce((n,a)=>n+(a.camp?.salvageFragments||0),0),
    nativeXpEarned:attempts.reduce((n,a)=>n+(a.xpEarned||0),0),
+   permanentAttributePointsSpent:attempts.reduce((n,a)=>n+(a.camp?.attributes?.length||0),0),
    potionsUsed:attempts.reduce((n,a)=>n+(a.potions?.length||0),0),
    boonsSelected:attempts.reduce((n,a)=>n+(a.boons?.length||0),0),
    contractsSelected:attempts.filter(a=>!!a.contract).length,
@@ -1430,7 +1460,7 @@ function main(args=process.argv.slice(2)){
  if(report.coverage.errors)process.exitCode=1;
  return report;
 }
-module.exports={PROFILES,PIVOTS,pivotProfile,DEFAULTS,parseArgs,gearScore,gearSnapshot,runeScore,chooseRuneReward,manageEarnedRunes,potionScore,selectEarnedPotions,buyEarnedPotions,refineEarnedReagents,selectThornAwareTarget,spendEarnedTalents,prepareEarnedAbility,equipEarned,
+module.exports={PROFILES,PIVOTS,pivotProfile,DEFAULTS,parseArgs,spendEarnedAttributes,gearScore,gearSnapshot,runeScore,chooseRuneReward,manageEarnedRunes,potionScore,selectEarnedPotions,buyEarnedPotions,refineEarnedReagents,selectThornAwareTarget,spendEarnedTalents,prepareEarnedAbility,equipEarned,
  prepareCamp,craftEarned,investEarnedGear,consolidateStash,policyFlags,capabilities,rankRealms,choiceRealm,pathLength,eliteOpportunity,selectRoom,evaluateRetreat,boonScore,chooseBoon,contractScore,chooseContract,contractExitDecision,eventOptions,potionSlots,usePotionKind,usePotionsBetween,rerollPoorBoonAtShrine,
  fightNatural,resolveEvent,clearResults,playDungeon,simulateAccount,analyze,run,markdown,main};
 if(require.main===module)main();

@@ -40,10 +40,13 @@ test('negative equipment attributes remain visually distinct',()=>{
  assert(markup.includes('stat-penalty'));
  assert(markup.includes('data-stat="attacksPerSec"'));
 });
-test('fresh v15 talent progress never exposes historical attribute spending',()=>{
+test('fresh v15 talent progress has no attribute currency until 100 Talent points are earned',()=>{
  const p=T.create();assert.equal(p.treeVersion,15);
- assert.equal(typeof T.attributePoints,'undefined');
- assert.equal(typeof T.allocateAttribute,'undefined');
+ assert.equal(T.attributeBudget(p),0);
+ assert.equal(T.availableAttributes(p),0);
+ assert.equal(T.allocateAttribute(p,'str'),null);
+ assert.equal(T.attributeBudget(T.award(p,10000)),0);
+ assert.equal(T.attributeBudget(T.award(p,10100)),1);
  assert(T.valid(p));
 });
 

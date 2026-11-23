@@ -1507,7 +1507,8 @@ function phase3RenderNav(){
  const resultLocked=phase5Results?.review==='summary';
  const talent=state.automaticTalents||WandererAutomaticTalents.create();
  const talentUnspent=Math.max(0,WandererAutomaticTalents.earned(talent)-talent.nodes.length);
- el.innerHTML='<div class="phase3Nav">'+destinations.map(([id,label])=>{const locked=resultLocked||id==='city-center'&&!outside||expeditionLocked&&id!=='phase1'||phase3NeedsBagResolution()&&phase3ExpeditionActive()&&!['phase1','city-center'].includes(id),title=resultLocked?'Return to Camp to leave the completed Expedition':locked?'Available at Camp':'';const badge=id==='talents'&&talentUnspent>0?'<span class="talentUnspentBadge" title="'+talentUnspent+' unspent talent points" aria-hidden="true">'+talentUnspent+'</span>':'';return '<button type="button" class="tiny '+(view===id?'primary':'ghost')+'" data-phase3-nav="'+id+'" '+(locked?'disabled title="'+title+'" aria-disabled="true"':'')+'>'+label+badge+'</button>';}).join('')+'</div>';
+ const attributeUnspent=WandererAutomaticTalents.availableAttributes(talent),totalUnspent=talentUnspent+attributeUnspent;
+ el.innerHTML='<div class="phase3Nav">'+destinations.map(([id,label])=>{const locked=resultLocked||id==='city-center'&&!outside||expeditionLocked&&id!=='phase1'||phase3NeedsBagResolution()&&phase3ExpeditionActive()&&!['phase1','city-center'].includes(id),title=resultLocked?'Return to Camp to leave the completed Expedition':locked?'Available at Camp':'';const badge=id==='talents'&&totalUnspent>0?'<span class="talentUnspentBadge" title="'+talentUnspent+' talent and '+attributeUnspent+' attribute points unspent" aria-hidden="true">'+totalUnspent+'</span>':'';return '<button type="button" class="tiny '+(view===id?'primary':'ghost')+'" data-phase3-nav="'+id+'" '+(locked?'disabled title="'+title+'" aria-disabled="true"':'')+'>'+label+badge+'</button>';}).join('')+'</div>';
  Q('[data-phase3-nav]').forEach(button=>button.onclick=()=>phase3Go(button.dataset.phase3Nav));
 }
 
@@ -1574,7 +1575,7 @@ function phase3PassivesMarkup(inline=false,heading=true){
 
 function automaticXpBar(){
  const system=globalThis.WandererAutomaticTalents,progress=state.automaticTalents||system.create(),earned=Math.floor(progress.xp/system.POINT_XP),current=progress.xp%system.POINT_XP;
- return '<span class="automaticXp"><span>Level '+(earned+1)+' · '+(current+' / '+system.POINT_XP+' XP')+'</span><span class="automaticXpTrack" role="progressbar" aria-label="Experience to next level" aria-valuemin="0" aria-valuemax="'+system.POINT_XP+'" aria-valuenow="'+current+'"><span style="width:'+(current/system.POINT_XP*100)+'%"></span></span></span>';
+ return '<span class="automaticXp"><span>Level '+(earned+1)+' · '+(current+' / '+system.POINT_XP+' XP')+(earned>=system.MAX_POINTS?' · Attribute growth':' · Talent growth')+'</span><span class="automaticXpTrack" role="progressbar" aria-label="Experience to next level" aria-valuemin="0" aria-valuemax="'+system.POINT_XP+'" aria-valuenow="'+current+'"><span style="width:'+(current/system.POINT_XP*100)+'%"></span></span></span>';
 }
 function renderAutomaticTalents(){
  if(!['camp','finished','failed'].includes(phase1Controller?.state.stage)||state.run){
@@ -1587,8 +1588,9 @@ function renderRebuiltTalents(){
  if(!state.automaticTalents)state.automaticTalents=system.create();
  if(!system.valid(state.automaticTalents)){html('<section class="panel"><h2>Talent Tree</h2><p>Talent progress is incompatible with the new tree.</p></section>');return;}
  globalThis.WandererTreeAPI={
-  snapshot:()=>{const p=state.automaticTalents;return {ranks:system.graphProgress(p).ranks,points:system.earned(p)-p.nodes.length,element:p.element||'arcane'};},
+  snapshot:()=>{const p=state.automaticTalents;return {ranks:system.graphProgress(p).ranks,points:system.earned(p)-p.nodes.length,element:p.element||'arcane',level:Math.floor(p.xp/system.POINT_XP)+1,attributePoints:system.availableAttributes(p),attributes:system.attributes(p),attributeTotal:system.attributeBudget(p)};},
   allocate:id=>{const before=state.automaticTalents,next=system.allocate(before,id);if(!next)return false;state.automaticTalents=next;if(!phase5Persist()){state.automaticTalents=before;return false;}return true;},
+  attribute:key=>{const before=state.automaticTalents,next=system.allocateAttribute(before,key);if(!next)return false;state.automaticTalents=next;if(!phase5Persist()){state.automaticTalents=before;return false;}return true;},
   prepare:id=>{const before=state.automaticTalents;if(id&&(!before.nodes.includes(id)||!system.NODES.find(n=>n.id===id)?.advanced))return false;state.automaticTalents={...before,prepared:id||null};if(!phase5Persist()){state.automaticTalents=before;return false;}return true;},
   element:id=>{const before=state.automaticTalents,next=system.selectElement(before,id);if(!next)return false;state.automaticTalents=next;if(!phase5Persist()){state.automaticTalents=before;return false;}return true;},
   reset:()=>{const before=state.automaticTalents;state.automaticTalents=system.reset(before);if(!phase5Persist()){state.automaticTalents=before;return false;}return true;}

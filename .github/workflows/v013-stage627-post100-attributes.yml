@@ -1,0 +1,91 @@
+name: Wanderer Stage 6.27 — Post-100 Talent/Attribute progression (NO DEPLOY)
+on:
+  push:
+    branches: [feature/v013-post100-attributes-20261123]
+  workflow_dispatch:
+concurrency:
+  group: wanderer-stage627-postcap
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  preflight:
+    name: Permanent stats, UI, native save and regression tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Validate syntax and post-cap native integration
+        run: |
+          node --check combat/talent-graph-runtime.js
+          node --check preview/talent-rebuild/prototype.js
+          node --check scripts/v013-stage627-postcap-natural.cjs
+          node --test tests/v013-post100-attributes.test.cjs tests/talent-graph-runtime.test.cjs tests/v013-current-dungeon-and-talents.test.cjs tests/v013-natural-progression.test.cjs
+          git diff --check
+      - name: Existing full v0.13 regression gate
+        run: npm test
+  natural:
+    name: Earned E1–E200 (${{ matrix.profile }}) without injected points
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [cautious, balanced]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Follow one persistent native E1 account beyond 100 Talent points
+        run: >-
+          node scripts/v013-stage627-postcap-natural.cjs
+          --seed=9861
+          --profile=${{ matrix.profile }}
+          --max-level=200
+          --max-total-attempts=360
+          --out=reports/v013-stage627-${{ matrix.profile }}.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage627-earned-postcap-${{ matrix.profile }}
+          path: reports/v013-stage627-${{ matrix.profile }}*.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  browser:
+    name: Validate desktop/mobile post-cap Talent Tree UI
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Use installed Chrome or fetch Playwright Chromium
+        shell: bash
+        run: |
+          CHROME_BIN="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          if [ -n "$CHROME_BIN" ]; then
+            echo "CHROMIUM_PATH=$CHROME_BIN" >> "$GITHUB_ENV"
+            "$CHROME_BIN" --version
+          else
+            npx playwright install chromium
+          fi
+      - name: Test Talent Atlas attribute assignment, persistence, respec and mobile layout
+        run: node tests/v013-post100-tree-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage627-postcap-ui
+          path: reports/v013-stage627-browser/
+          if-no-files-found: warn
+          retention-days: 30
