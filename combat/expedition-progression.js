@@ -62,12 +62,12 @@ const NORMAL_BASE=Object.freeze({
 // Six Boss identity bases replace the former E1 protection + 2x generic
 // boss multiplier. Their raw coefficients no longer depend on Expedition E.
 const BOSS_BASE=Object.freeze({
- leech:Object.freeze({hp:1.26,atk:1.56,def:2,interval:1.62}),
+ leech:Object.freeze({hp:1.31,atk:1.62,def:2,interval:1.62}),
  matriarch:Object.freeze({hp:1.22,atk:1.54,def:2,interval:1.62}),
- guardian:Object.freeze({hp:1.42,atk:1.64,def:2,interval:1.62}),
- conductor:Object.freeze({hp:1.44,atk:1.64,def:2,interval:1.62}),
- berserker:Object.freeze({hp:1.64,atk:1.78,def:2,interval:1.62}),
- devourer:Object.freeze({hp:1.68,atk:1.80,def:2,interval:1.62})
+ guardian:Object.freeze({hp:1.58,atk:1.75,def:2,interval:1.62}),
+ conductor:Object.freeze({hp:1.38,atk:1.59,def:2,interval:1.62}),
+ berserker:Object.freeze({hp:1.43,atk:1.58,def:2,interval:1.62}),
+ devourer:Object.freeze({hp:1.85,atk:1.91,def:2,interval:1.62})
 });
 const ELITE_IDENTITIES=Object.freeze([
  'tank','berserker','vampire','caster','gravecaller','oathbound_exarch',
