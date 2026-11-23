@@ -124,6 +124,7 @@ function phase2Launch(plane){
 }
 
 function phase1StartWave(resetScroll=false){
+ const statOnly=globalThis.WandererExpeditionProgression?.CALIBRATION_STAT_ONLY===true;
  if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked))return false;
  const r=ports.state.run,g=ports.phase1Controller.state;
  if(!ports.isPhase1Run()||!g.selected||r.status==='fight')return;
@@ -138,7 +139,7 @@ function phase1StartWave(resetScroll=false){
  const conditions=globalThis.WandererV013ExpeditionConditions,conditionCard=g.dungeon&&ports.phase1Controller.realmMap();
  const conditionMitigation=(ports.phase6Run?.effects?.purifying?.remaining||0)>0 ? .5 : 0;
  r.conditionMitigation=conditionMitigation;
- const totalCount=last&&(g.selected.boss||g.selected.elite)?1:(conditions&&conditionCard?conditions.countFor(g.selected,conditionCard,g.dungeon,conditionMitigation):(g.selected.mobCount||3)),activeCount=Math.min(4,totalCount);
+ const totalCount=last&&(g.selected.boss||g.selected.elite)?1:(!statOnly&&conditions&&conditionCard?conditions.countFor(g.selected,conditionCard,g.dungeon,conditionMitigation):(g.selected.mobCount||3)),activeCount=Math.min(4,totalCount);
  const rosterSystem=globalThis.WandererV013EnemyRoster;
  const hasRoster=!!(rosterSystem&&!g.selected.boss&&!g.selected.elite&&theme?.mobs?.length);
  let roster=hasRoster?rosterSystem.plan({
@@ -148,25 +149,23 @@ function phase1StartWave(resetScroll=false){
  if(roster&&theme.affinityArtPeers?.length)roster=rosterSystem.shareAffinityArt(roster,theme.affinityArtPeers,{seed:g.dungeon?.foundationManifest?.seed??0,realm:theme.id,node:g.selected.node??g.planeIndex});
  const actualBossStyle=last&&g.selected.boss&&g.version===2?WandererV012Expedition.bossForAffinity(g.selected.family)?.style:null;
  const spawn=index=>ports.enemyFor(r.tier,r.enc,{theme,mob:roster?.[index]||null,boss:last&&g.selected.boss,elite:last&&g.selected.elite&&!g.selected.boss,variant:actualBossStyle?ports.BOSS_ARCHETYPES.find(b=>b.style===actualBossStyle):null});
- const group=WandererV012CombatCore.createEnemyGroup(spawn,totalCount,{activeSlots:activeCount,
-  ...(roster?{scaleFor:(enemy,count,base)=>rosterSystem.scaleFor(enemy,count,base)}:{})
- });
+ const group=WandererV012CombatCore.createEnemyGroup(spawn,totalCount,{activeSlots:activeCount});
  WandererV012CombatCore.applyEncounterPressure(group,g.selected.risk||0);
  const traits=globalThis.WandererV013EncounterTraits;
  const modifiers=globalThis.WandererV013BossModifiers;
  const preparation=globalThis.WandererV013BossPreparation;
  const plannedBossIds=g.dungeon&&g.selected.boss&&modifiers?(preparation?preparation.effectiveModifiers(g):modifiers.selection(g)):[];
  // Manifest compatibility: properties planned for the legacy global boss are applied only if valid for the chosen Affinity Boss.
- const bossIds=plannedBossIds;
+ const bossIds=statOnly?[]:plannedBossIds;
  if(bossIds.length&&!modifiers.check(bossIds,actualBossStyle||group[0].bossStyle,g.dungeon?.foundationState?.conditionId))throw Error('Incompatible Boss modifiers for selected Affinity');
  r.bossModifierIds=[];
- if(g.selected.boss&&modifiers){if(!modifiers.activate(r,group[0],bossIds))throw Error('Boss modifiers failed to apply');
+ if(!statOnly&&g.selected.boss&&modifiers){if(!modifiers.activate(r,group[0],bossIds))throw Error('Boss modifiers failed to apply');
   if(preparation){const factor=preparation.bossAttackFactor(g);group[0].atk=Math.max(1,Math.round(group[0].atk*factor));r.bossPreparation={...preparation.status(g)};if(factor<1)ports.addLog('Marked Elite defeated: boss attacks weakened by 10%.','good');}
   if(bossIds.length)ports.addLog('Boss properties: '+bossIds.map(id=>modifiers.get(id).name).join(' · '),'critical');}
- const traitId=g.dungeon&&!g.selected.boss&&!g.selected.elite?g.selected.traitId:null;
+ const traitId=!statOnly&&g.dungeon&&!g.selected.boss&&!g.selected.elite?g.selected.traitId:null;
  if(traitId&&traits?.applyGroup(traitId,group)){r.encounterTraitId=traitId;ports.addLog('Encounter trait: '+traits.get(traitId).name,'critical');}
  else r.encounterTraitId=null;
- const hasVanguard=g.selected.vanguard===true&&group.length>1;
+ const hasVanguard=!statOnly&&g.selected.vanguard===true&&group.length>1;
  if(hasVanguard){const guard=group[0];guard.name+=' · Vanguard';guard.vanguard=true;guard.hp=guard.maxhp=Math.round(guard.maxhp*1.8);guard.atk=Math.ceil(guard.atk*1.2);ports.addLog(guard.name+' prepares the first strike.','critical');}
  if(last&&(g.selected.boss||g.selected.elite)){
   const baseEscorts=g.selected.escorts??(g.selected.boss?2:1);
@@ -175,23 +174,22 @@ function phase1StartWave(resetScroll=false){
   for(let i=0;i<escorts;i++){
    const escortMob=theme.mobs?.find(m=>m.role==='skirmisher')||theme.mobs?.find(m=>m.role!=='minion');
    const guard=ports.enemyFor(r.tier,r.enc,{theme,mob:escortMob||null,boss:false,elite:false});
-   WandererV012CombatCore.applyEscortStats(guard);
    guard.groupSlot=i+1;guard.groupClock=-(i+1)*.6;group.push(guard);
   }
  }
- if(conditions&&conditionCard){const applied=conditions.applyEncounter(r,group,g.selected,conditionCard,g.dungeon);if(applied&&(r.conditionMarked||g.selected.boss))ports.addLog('Expedition Condition: '+applied.name,'critical');}
+ if(!statOnly&&conditions&&conditionCard){const applied=conditions.applyEncounter(r,group,g.selected,conditionCard,g.dungeon);if(applied&&(r.conditionMarked||g.selected.boss))ports.addLog('Expedition Condition: '+applied.name,'critical');}
  // Stage 8.1 abilities support normal Elite escorts; Stage 8.2 owns the Elite leader.
- if(!g.selected.boss)globalThis.WandererV013EnemyAbilities?.attach(group,g.selected.family||'blood',r.combatSeconds||0);
- if(last&&g.selected.elite&&!g.selected.boss)globalThis.WandererV013EliteAbilities?.attach(group[0],r.combatSeconds||0);
+ if(!statOnly&&!g.selected.boss)globalThis.WandererV013EnemyAbilities?.attach(group,g.selected.family||'blood',r.combatSeconds||0);
+ if(!statOnly&&last&&g.selected.elite&&!g.selected.boss)globalThis.WandererV013EliteAbilities?.attach(group[0],r.combatSeconds||0);
  const fieldCount=Math.min(4,group.length);
  group[0].groupSlot=0;
  for(const enemy of group)enemy.groupClock=traits?traits.initialClock(enemy,enemy.groupSlot):Math.max(0,enemy.attackEvery-(.9+enemy.groupSlot*.3));
  r.initialMobCount=group.length;r.totalMobCount=group.length;r.enemies=fieldCount>1?group.slice(0,fieldCount):undefined;r.groupReserve=group.slice(fieldCount);if(fieldCount===1)delete r.enemies;r.enemy=group[0];r.encounterLeader=last&&(g.selected.boss||g.selected.elite)?group[0]:null;
- if(last&&g.selected.boss)globalThis.WandererV013BossInfrastructure?.attach(r,group[0]);
- r.phase6Bounty=false;if(r.enemy.miniboss&&ports.phase6Run?.effects.bounty){r.phase6Bounty=true;ports.phase6Run.effects.bounty=false;r.enemy.hp=r.enemy.maxhp=Math.ceil(r.enemy.maxhp*1.25);r.enemy.atk=Math.ceil(r.enemy.atk*1.25);}
+ if(!statOnly&&last&&g.selected.boss)globalThis.WandererV013BossInfrastructure?.attach(r,group[0]);
+ r.phase6Bounty=false;if(!statOnly&&r.enemy.miniboss&&ports.phase6Run?.effects.bounty){r.phase6Bounty=true;ports.phase6Run.effects.bounty=false;r.enemy.hp=r.enemy.maxhp=Math.ceil(r.enemy.maxhp*1.25);r.enemy.atk=Math.ceil(r.enemy.atk*1.25);}
  r.tPlayer=r.tDot=0;r.tEnemy=r.enemy.groupClock;r.setTemp=null;r.boonRotboundTriggers=0;r.playerDebuffUntil=0;
  r.playerHealingDebuffUntil=0;r.nextCasterHexAt=0;ports.setRuntime(r);r.status='fight';
- if(last&&g.selected.boss)globalThis.WandererV013BossAbilities?.attach(r);
+ if(!statOnly&&last&&g.selected.boss)globalThis.WandererV013BossAbilities?.attach(r);
  if(ports.phase1Build)for(const enemy of r.enemies||[r.enemy])WandererV012Buildcraft.resetWave(ports.phase1Build,enemy);
  ports.addLog('Encounter: '+r.enemy.name+' · '+totalCount+' enemies');
  if(r.groupReserve?.length)ports.addLog(r.groupReserve.length+' reinforcements will fill the four arena positions.','good');
