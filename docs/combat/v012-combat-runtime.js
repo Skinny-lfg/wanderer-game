@@ -451,7 +451,7 @@ function v013LightningChainDamage(r,base){
  const factors=v013LightningChainFactors(),serial=(r.lightningChainSerial||0)+1;
  r.lightningChainSerial=serial;
  // One extra bounce per preceding additional active target: 1, 3 or 5-6 jumps.
- const count=Math.min(factors.length,others.length*2-1);
+ const count=others.length>=3?factors.length:Math.min(factors.length,others.length*2-1);
  let hit=0;
  for(let i=0;i<count;i++){
   const target=others[i%others.length];
@@ -925,6 +925,8 @@ function phase2Context(r){
  dotDamage(amount,label,secondaryFraction=0){const n=Math.max(0,Math.round(amount*(root.WandererV013ExpeditionBoons?.dotFactor(r)||1)));if(n){const applied=Math.min(Math.max(0,e.hp),n);ports.phase6Metric(r,'damageDealt',applied);ports.phase6Metric(r,'periodicDamage',applied);if(secondaryFraction>0&&applied>0){const attributed=Math.min(applied,Math.round(applied*Math.min(1,secondaryFraction)));if(attributed>0){ports.phase6Metric(r,'secondaryTargetDamage',attributed);ports.phase6Metric(r,'secondaryDotDamage',attributed);ports.phase6Metric(r,'secondaryTargetHits',1);}}e.hp-=n;ports.addLog(label+' '+n+' damage','spell');ports.floatText(n,'enemy',false,'ROT',e);}},
  damage(amount,label){return ports.setDirectEnemyDamage(r,amount,label);},
  areaDamage(amount,label){ports.setDirectEnemyDamage(r,amount,label);groupSecondaryDamage(r,amount,Array(Math.max(0,(r.enemies?.length||1)-1)).fill(1),label);},
+ secondaryHit(enemy,amount){return r.enemies?.includes(enemy)?v013SecondaryHit(r,enemy,amount):0;},
+ synchronizeDots(enemy){ports.synchronizeDots(enemy);},
  trigger(id){triggered(r,id);},
  heal(amount){return ports.setHeal(r,amount);},
  barrier(amount){return ports.setBarrier(r,amount);},
