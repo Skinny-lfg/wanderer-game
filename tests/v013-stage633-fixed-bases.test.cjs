@@ -5,11 +5,17 @@ require('../combat/expedition-progression.js');
 require('../combat/v012-combat-core.js');
 const P=globalThis.WandererExpeditionProgression;
 const C=globalThis.WandererV012CombatCore;
+const POLICY_SOURCE=fs.readFileSync('combat/expedition-progression.js','utf8');
+const STAT_ONLY_SOURCE=POLICY_SOURCE.replace('const CALIBRATION_STAT_ONLY=false;',
+ 'const CALIBRATION_STAT_ONLY=true;');
+if(STAT_ONLY_SOURCE===POLICY_SOURCE)throw Error('Native calibration toggle not found');
 const S=require('../scripts/simulate-progression.cjs');
 const NORMAL=['minion','tank','skirmisher','caster'];
 const BOSSES=['leech','matriarch','guardian','conductor','berserker','devourer'];
 test('Stage 6.33: fixed identity bases with one common smooth Expedition reference',()=>{
- assert(P.CALIBRATION_STAT_ONLY);
+ assert.equal(P.CALIBRATION_STAT_ONLY,false,'live game keeps native abilities');
+ assert(STAT_ONLY_SOURCE.includes('const CALIBRATION_STAT_ONLY=true;'));
+ assert(STAT_ONLY_SOURCE.includes('function enemyScaling('));
  assert.deepEqual(Object.keys(P.NORMAL_BASE).sort(),NORMAL.sort());
  assert.deepEqual(Object.keys(P.BOSS_BASE).sort(),BOSSES.sort());
  assert.equal(P.ELITE_IDENTITIES.length,8);
@@ -39,7 +45,7 @@ test('Stage 6.33: count never changes HP/ATK/DEF, including first four and reser
  assert.equal(C.applyEscortStats,undefined);
 });
 function native(E,groupSize,realm='aegis',risk=0,boss=false,elite=false){
- const opts={...S.DEFAULTS,points:0};
+ const opts={...S.DEFAULTS,points:0,stage624cProgressionSource:STAT_ONLY_SOURCE};
  const {a,c,g,card}=S.prepare(E,S.BUILDS[1],633000+E*37+groupSize,opts,risk,realm);
  const node=card.edges.filter(([from])=>from===0).map(([,to])=>to).find(id=>card.nodes[id]?.kind==='combat');
  assert.notEqual(node,undefined);
