@@ -408,15 +408,80 @@ function offhandOnMainHit(r,hpDamage){
 function v013FundedCost(baseCost){if(baseCost<=0)return 0;const adjusted=Math.max(1,Math.ceil(baseCost*(root.WandererV013ExpeditionBoons?.costFactor(ports.state.run)||1)));return v013Traits().includes('efficient')?Math.max(1,adjusted-Math.max(1,Math.floor(adjusted*.1))):adjusted;}
 function v013SpellMultiplier(r){const nodes=ports.state.automaticTalents?.nodes||[],element=ports.phase1Build?.element,enemy=r.enemy;return (element==='fire'&&nodes.includes('fire_focus')?.9:1)*(element==='frost'&&nodes.includes('frost_focus')&&enemy.slowTime>0?1.2:1)*(element==='lightning'&&nodes.includes('lightning_focus')?1.35:1)*(element==='fire'&&nodes.includes('living_inferno')&&enemy.dots?.burn?.length?1.25:1)*(element==='frost'&&nodes.includes('absolute_winter')&&enemy.slowTime>0?1.2:1)*(element==='lightning'&&nodes.includes('storm_conductor')?1.2:1);}
 function v013LightningChain(r){return ports.isPhase1Run()&&ports.phase1Build?.element==='lightning'&&(WandererV012Buildcraft.rank(ports.phase1Build,'overcharge')>0||ports.state.automaticTalents?.nodes?.includes('storm_mastery'))&&!ports.state.automaticTalents?.nodes?.includes('lightning_focus');}
-function v013LightningChainFactors(){return ports.state.automaticTalents?.nodes?.includes('storm_mastery')?[.68,.52,.36]:[.60,.43,.28];}
+function v013LightningChainFactors(){
+ // Five ordinary jumps, six with Storm Mastery. With at most four live arena
+ // slots, the later jumps revisit earlier targets instead of hitting reserves.
+ return ports.state.automaticTalents?.nodes?.includes('storm_mastery')
+  ?[.68,.53,.40,.29,.21,.15]:[.60,.45,.33,.23,.16];
+}
+function v013SecondaryHit(r,enemy,amount){
+ if(!enemy||enemy.hp<=0)return 0;
+ let remaining=Math.max(1,Math.round(amount*(root.WandererV013ExpeditionBoons?.factor(r,true)||1)));
+ const absorbed=Math.min(enemy.barrier||0,remaining);
+ enemy.barrier=Math.max(0,(enemy.barrier||0)-absorbed);
+ remaining-=absorbed;
+ const actual=Math.min(Math.max(0,enemy.hp),remaining);
+ enemy.hp-=remaining;
+ if(actual>0)ports.floatText(actual,'enemy',false,'',enemy);
+ ports.phase6Metric(r,'damageDealt',actual);
+ ports.phase6Metric(r,'secondaryTargetDamage',actual);
+ if(actual>0)ports.phase6Metric(r,'secondaryTargetHits',1);
+ return actual;
+}
 function groupSecondaryDamage(r,base,factors,label,physical=false){
  if(!r.enemies||r.enemies.length<2)return 0;
  const targets=r.enemies.filter(enemy=>enemy!==r.enemy&&enemy.hp>0).slice(0,factors.length);let hit=0;
- targets.forEach((enemy,i)=>{let amount=Math.max(1,Math.round((physical?Math.max(1,Math.round(r.stats.attack*({'Two-Handed':1.70,Sword:1.12,Mace:1.4,Bow:1.08,Daggers:.80}[r.stats.main?.subtype]||1))-WandererV012Buildcraft.enemyDefense(ports.phase1Build,enemy)):base)*factors[i]));if(enemy.baseDef>0&&enemy.def<enemy.baseDef)amount=Math.max(1,Math.round(amount*(1+(ports.phase1Build?.runtime?.talentBonuses?.sunderDamage||0))));amount=Math.max(1,Math.round(amount*(root.WandererV013ExpeditionBoons?.factor(r,true)||1)));const absorbed=Math.min(enemy.barrier||0,amount);enemy.barrier=Math.max(0,(enemy.barrier||0)-absorbed);amount-=absorbed;const actual=Math.min(Math.max(0,enemy.hp),amount);enemy.hp-=amount;if(actual>0)ports.floatText(actual,'enemy',false,'',enemy);ports.phase6Metric(r,'damageDealt',actual);ports.phase6Metric(r,'secondaryTargetDamage',actual);hit++;});
- if(hit)ports.phase6Metric(r,'secondaryTargetHits',hit);
+ for(const [i,enemy] of targets.entries()){
+  let amount=Math.max(1,Math.round((physical
+   ?Math.max(1,Math.round(r.stats.attack*({'Two-Handed':1.70,Sword:1.12,Mace:1.4,Bow:1.08,Daggers:.80}[r.stats.main?.subtype]||1))-WandererV012Buildcraft.enemyDefense(ports.phase1Build,enemy))
+   :base)*factors[i]));
+  if(enemy.baseDef>0&&enemy.def<enemy.baseDef)amount=Math.max(1,Math.round(amount*(1+(ports.phase1Build?.runtime?.talentBonuses?.sunderDamage||0))));
+  v013SecondaryHit(r,enemy,amount);
+  hit++;
+ }
  if(hit&&label.includes('Piercing Arrow'))ports.phase6Metric(r,'pierced',hit);
- if(hit){ports.combatLinkEffect?.(r,label.includes('Chain Lightning')?'shock':label.includes('Piercing')?'pierce':label.includes('Cleave')?'cleave':'aoe',r.enemy,targets);
-   ports.addLog(label+' hits '+hit+' additional '+(hit===1?'enemy':'enemies')+'.','good');}return hit;
+ if(hit){ports.combatLinkEffect?.(r,label.includes('Piercing')?'pierce':label.includes('Cleave')?'cleave':'aoe',r.enemy,targets);
+   ports.addLog(label+' hits '+hit+' additional '+(hit===1?'enemy':'enemies')+'.','good');}
+ return hit;
+}
+function v013LightningChainDamage(r,base){
+ if(!r.enemies||r.enemies.length<2)return 0;
+ const source=r.enemy,others=r.enemies.filter(enemy=>enemy!==source&&enemy.hp>0);
+ if(!others.length)return 0;
+ const factors=v013LightningChainFactors(),serial=(r.lightningChainSerial||0)+1;
+ r.lightningChainSerial=serial;
+ // One extra bounce per preceding additional active target: 1, 3 or 5-6 jumps.
+ const count=Math.min(factors.length,others.length*2-1);
+ let hit=0;
+ for(let i=0;i<count;i++){
+  const target=others[i%others.length];
+  if(target.hp<=0)continue;
+  let damage=Math.max(1,Math.round(base*factors[i]));
+  if(target.baseDef>0&&target.def<target.baseDef)damage=Math.max(1,Math.round(damage*(1+(ports.phase1Build?.runtime?.talentBonuses?.sunderDamage||0))));
+  const dealt=v013SecondaryHit(r,target,damage);
+  if(dealt<=0)continue;
+  hit++;
+  ports.phase6Metric(r,'lightningChainJumps',1);
+  ports.combatLinkEffect?.(r,'shock',i===0?source:others[(i-1)%others.length],[target]);
+  const now=r.combatSeconds||0,mark=target.v013LightningMark;
+  // A mark can detonate only on a later CHAIN. Multiple jumps in one cast
+  // cannot recursively explode their own freshly applied marks.
+  if(mark&&mark.expiresAt>now&&mark.serial!==serial){
+   const burst=Math.max(1,Math.round(base*.42));
+   const applied=v013SecondaryHit(r,target,target.boss?Math.min(burst,target.maxhp*.025):burst);
+   let splash=0;
+   for(const other of r.enemies.filter(e=>e!==target&&e.hp>0).slice(0,2)){
+    splash+=v013SecondaryHit(r,other,other.boss?Math.min(burst*.45,other.maxhp*.025):burst*.45);
+    ports.combatLinkEffect?.(r,'shock',target,[other]);
+   }
+   ports.phase6Metric(r,'lightningMarksDetonated',1);
+   ports.phase6Metric(r,'lightningMarkDamage',applied+splash);
+   ports.addLog('⚡ Static Mark detonates on '+target.name+'.','spell');
+  }
+  target.v013LightningMark={serial,expiresAt:now+8};
+  ports.phase6Metric(r,'lightningMarksApplied',1);
+ }
+ return hit;
 }
 function v013GraveBloomPulse(r,enemy,spellPower){
  if(!prepared('grave_bloom')||!enemy||enemy.hp<=0)return 0;
@@ -575,7 +640,7 @@ function weaponAttack(r,offhandStrike=false){
  if(!offhandStrike&&kind==='Bow')groupSecondaryDamage(r,base,ports.state.automaticTalents?.nodes?.includes('bow_pierce')?[.60,.42,.28]:[.42,.24],'🏹 Piercing Arrow',true);
  if(!offhandStrike&&kind==='Sword'&&off?.subtype==='Shield'&&ports.state.automaticTalents?.nodes?.includes('sword_sweep'))groupSecondaryDamage(r,base,[.25],'⚔ Shielded Sweep',true);
  if(!offhandStrike&&kind==='Mace'&&ports.state.automaticTalents?.nodes?.includes('mace_shockwave')){const secondary=r.enemies?.find(enemy=>enemy!==r.enemy&&enemy.hp>0);groupSecondaryDamage(r,base,[.3],'🔨 Concussive Swing',true);if(secondary&&secondary.hp>0)secondary.slowTime=Math.max(secondary.slowTime||0,1);}
- if(cast&&v013LightningChain(r))groupSecondaryDamage(r,base,v013LightningChainFactors(),'⚡ Chain Lightning');
+ if(cast&&v013LightningChain(r))v013LightningChainDamage(r,base);
  if(s.counts.shield>=2){const gained=ports.setBarrier(r,Math.max(1,Math.round(r.maxhp*(s.bonus.shieldBonus||0))));if(gained>0)ports.addLog('🛡 Shield set: +'+Math.round(gained)+' Barrier','good');}
  if(!offhandStrike&&ports.isPhase1Run()&&ports.phase1Build){
   const ctx=ports.phase2Context(r);ctx.power=r.stats.spellPower||0;ctx.offhand=false;ctx.magical=cast;ctx.weaponSubtype=kind;
@@ -925,7 +990,7 @@ function phase2MagicTick(r){
  if(r.enemy.hp<hpBefore)offhandOrbWard(r);
  if(reflectThornbloom(r,r.enemy,Math.min(hpBefore,hpBefore-r.enemy.hp)))return;
  WandererV012Buildcraft.onCast(b,ctx);groupElementalEffects(r,b);
- if(v013LightningChain(r))groupSecondaryDamage(r,chainBase,v013LightningChainFactors(),'⚡ Chain Lightning');
+ if(v013LightningChain(r))v013LightningChainDamage(r,chainBase);
 }
 
 function phase6Metric(r,key,n){if(!r?.phase1||!Number.isFinite(n)||n<0)return;r.metrics??={};r.metrics[key]=(r.metrics[key]||0)+n;}
