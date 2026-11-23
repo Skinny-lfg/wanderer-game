@@ -36,6 +36,8 @@ jobs:
             tests/v013-stage641-build-readiness.test.cjs
           git diff --check
   early:
+    # Pause E1/E2 calibration; Stage 6.42 is E10-only.
+    if: false
     needs: preflight
     runs-on: ubuntu-latest
     timeout-minutes: 110
@@ -58,10 +60,7 @@ jobs:
           if-no-files-found: warn
   e10:
     needs: preflight
-    # Briarspine final E1 budget: 1.53 HP / .97 ATK / 1.93 interval; measure Thornbloom sensitivity.
-    # The Briarspine correction changes only E1..E9 opening budgets; reuse
-    # the already verified E10 matrix unless an explicit full-E10 run is requested.
-    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-e10]')
+    # Current run: native earned E10 cohorts only. No E1–E9 calibration.
     runs-on: ubuntu-latest
     timeout-minutes: 90
     strategy:
