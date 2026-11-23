@@ -30,7 +30,12 @@ jobs:
           git diff --check
       - name: Full active v0.13 native regression
         run: npm test
-      - name: Stage 6.33 E1-born calibration smoke
+      - name: Stage 6.33 native earned-account stat-only calibration smoke
+        run: >-
+          node scripts/v013-stage633-stat-only.cjs
+          --seed=6331 --max-level=2 --max-attempts=6 --max-total-attempts=18
+          --out=reports/v013-stage633-stat-only-smoke.json
+      - name: Stage 6.32 ability-enabled live mode remains runnable
         run: >-
           node scripts/v013-stage632-player-power.cjs
           --mode=cohort --batch=0 --seed=9861 --take=1
@@ -40,6 +45,8 @@ jobs:
         if: always()
         with:
           name: stage633-native-calibration-smoke
-          path: reports/v013-stage632-cohort-stage633-smoke.json
+          path: |
+            reports/v013-stage633-stat-only-smoke.json
+            reports/v013-stage632-cohort-stage633-smoke.json
           retention-days: 35
           if-no-files-found: warn
