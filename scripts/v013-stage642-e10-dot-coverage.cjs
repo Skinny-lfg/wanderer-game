@@ -53,7 +53,8 @@ function sample(id,seed){
   const seedFight=6425000+seed*19+trial*727;
   const r=D.native(snap,{id:'normal-'+size,type:'normal',realm:family,size},seedFight);
   result.encounters.push({trial,size,won:!!r.won,died:!!r.died,timeout:!!r.timedOut,
-   secondaryDamage:r.secondaryTargetDamage||0,secondaryHits:r.secondaryTargetHits||0,
+   secondaryDamage:r.secondaryTargetDamage||0,secondaryDotDamage:r.secondaryDotDamage||0,
+   plagueSpreadTransfers:r.plagueSpreadTransfers||0,secondaryHits:r.secondaryTargetHits||0,
    totalDamage:r.damageDealt||0,periodicDamage:r.periodicDamage||0,
    seconds:r.seconds,initialRoles:r.initialRoles||{}});
  }
@@ -68,7 +69,9 @@ if(require.main===module){
   console.log('STAGE642_DOT_E10='+JSON.stringify({id,seed,entered:r.reachedE10,
    exp:r.highestUnlocked,attempts:r.attempts,points:r.checkpoint?.points,
    plague:r.checkpoint?.hasPlagueSpread,bloom:r.checkpoint?.hasGraveBloom,
-   totalSecondary:r.encounters.reduce((sum,x)=>sum+x.secondaryDamage,0)}));
+   totalSecondary:r.encounters.reduce((sum,x)=>sum+x.secondaryDamage,0),
+   secondaryDot:r.encounters.reduce((sum,x)=>sum+x.secondaryDotDamage,0),
+   spreadTransfers:r.encounters.reduce((sum,x)=>sum+x.plagueSpreadTransfers,0)}));
  }catch(e){console.error('STAGE642_DOT_ERROR '+String(e.stack||e));process.exitCode=1;}
 }
 module.exports={VARIANTS,SEEDS,SIZES,sample};
