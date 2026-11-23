@@ -114,7 +114,9 @@ function main(){
  const S=require('./simulate-progression.cjs');
  const source=S.sourceFingerprint().sha256;
  const entrants=players.map(x=>{
-  const s=x.snapshot,progress=s.state.automaticTalents;
+  let s=x.snapshot;
+  if(variant.split('+').includes('respecBow'))s=require('./v013-stage642-e10-bow-respec.cjs').makeRespec(s);
+  const progress=s.state.automaticTalents;
   if(!T.valid(progress))throw Error('Invalid earned v15 build');
   return {seed:x.seed,s,weapon:s.state.equip.weapon?.subtype||null,
    offhand:s.state.equip.offhand?.subtype||null,prepared:progress.prepared,
