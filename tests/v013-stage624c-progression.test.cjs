@@ -81,7 +81,9 @@ test('Early six-Boss protection remains identical E1-E30, later individual growt
  }
 });
 test('Native reference/gear policy matches E1–E5 and still progresses beyond E200',()=>{
- assert.deepEqual([1,2,3,4,5].map(P.enemyReference),[1,2,3,4,5]);
+ assert.equal(P.enemyReference(5),5);
+ for(const E of [1,2,3,4])assert(P.enemyReference(E)<E&&P.enemyReference(E)>0,
+  'Stage 6.30 early exponential must be slightly easier than previous linear E'+E);
  assert.deepEqual([1,5,15,35,70,100,200,201,1000].map(x=>P.gearTier(x).id),
  ['adventurer','veteran','ascendant','ancient','exalted','exalted','exalted','exalted','exalted']);
  assert(P.enemyReference(201)>P.enemyReference(200));

@@ -74,7 +74,7 @@ function checkpoint({a,seed,profile,level,attempt}){
    .map(r=>[r,gear.filter(x=>x.rarity===r).length])),
   fingerprint:SHA(state)};
 }
-function collect(cfg,{moduleOverrides=null}={}){
+function collect(cfg,{moduleOverrides=null,allowNativeCombatTimeouts=false}={}){
  const snapshots=new Map();
  const opts={...N.DEFAULTS,seeds:[cfg.seed],profiles:[cfg.profile],
   maxLevel:cfg.maxLevel,maxAttempts:cfg.maxAttempts,
@@ -87,11 +87,19 @@ function collect(cfg,{moduleOverrides=null}={}){
    snapshots.set(key,c);
   }
  }});
- if(natural.coverage.errors){
-  const errs=natural.accounts.flatMap(a=>a.attempts.filter(x=>x.error)
-   .map(x=>({E:x.level,error:x.error,stack:x.diagnostic?.stack?.slice(0,1000)})));
-  throw Error('Native natural-account failures '+JSON.stringify(errs));
- }
+ const naturalErrors=natural.accounts.flatMap(a=>a.attempts.filter(x=>x.error)
+  .map(x=>({E:x.level,attempt:x.attempt,error:x.error,
+   stack:x.diagnostic?.stack?.slice(0,1000)})));
+ const nativeCombatTimeouts=naturalErrors.filter(x=>x.error==='Native combat timeout');
+ if(natural.coverage.errors&&(!allowNativeCombatTimeouts||
+  naturalErrors.some(x=>x.error!=='Native combat timeout')||
+  naturalErrors.length!==natural.coverage.errors))
+  throw Error('Native natural-account failures '+JSON.stringify(naturalErrors));
+ // A bounded unresolved encounter is CENSORED in optional Stage6.30 studies.
+ // Never count it as a victory, defeat, successful unlock or engine regression.
+ if(nativeCombatTimeouts.length&&
+  nativeCombatTimeouts.some(x=>!Number.isInteger(x.E)||x.E<1))
+  throw Error('Native timeout missing Expedition identity');
  const account=natural.accounts[0];
  if(natural.accounts.length!==1||account.seed!==cfg.seed||account.profile!==cfg.profile)
   throw Error('Unexpected natural cohort composition');
@@ -106,7 +114,7 @@ function collect(cfg,{moduleOverrides=null}={}){
  const reached=LEVELS.filter(E=>snapshots.has(E));
  if(reached.length===0||reached[0]!==1)throw Error('No E1 snapshot');
  const checkpoints=reached.map(E=>snapshots.get(E));
- return {account,checkpoints,natural};
+ return {account,checkpoints,natural,nativeCombatTimeouts};
 }
 function build(snap){
  const fam=snap.state.automaticTalents.nodes
@@ -222,7 +230,8 @@ function scenarios(snap){
 }
 function audit(cfg){
  if(T.MAX_POINTS!==100||T.POINT_XP!==100)throw Error('Unexpected native Talent XP cap');
- const source=S.sourceFingerprint().sha256,{account,checkpoints,natural}=collect(cfg);
+ const source=S.sourceFingerprint().sha256,{account,checkpoints,natural,nativeCombatTimeouts}=collect(cfg,
+  {allowNativeCombatTimeouts:cfg.allowNativeCombatTimeouts===true});
  if(natural.source!==source)throw Error('Natural and combat runtime source mismatch');
  const rows=[],tanks=[];
  for(const snap of checkpoints){
@@ -264,6 +273,7 @@ function audit(cfg){
    counterfactualFights:rows.filter(r=>r.noStats).length,
    searchedSoloTankFights:tanks.reduce((n,x)=>n+x.scanned,0),
    missingTanks:tanks.filter(x=>!x.found).length,
+   naturalCombatTimeouts:nativeCombatTimeouts.length,
    errors:0},
   limits:[
    'Natural account progression is genuinely earned from E1, and missed Expeditions are censored.',
@@ -273,6 +283,7 @@ function audit(cfg){
    'Only one encounter seed per Level/character and 1–3 trials; small per-Boss sample sizes cannot set final tuning.',
    'Normal solo is not a Tank. Solo Tank appears only when native role matches; missing ones are unsampled.',
    'Native agent policies are deterministic heuristics, not verified real-player decisions.',
+   'Optional bounded natural combat timeouts are CENSORED, not wins, losses, or game engine errors.',
    'Rarity distribution is actually earned. This study does not substitute arbitrary Epic gear for starter/loot gear.'
   ]};
  return out;

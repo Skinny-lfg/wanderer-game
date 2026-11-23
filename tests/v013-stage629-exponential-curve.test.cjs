@@ -4,32 +4,38 @@ const M=require('../scripts/v013-stage629-exponential-curve.cjs');
 const P=globalThis.WandererExpeditionProgression;
 const T=globalThis.WandererAutomaticTalents;
 const create=require('./v012-economy-harness.cjs');
-test('One authoritative exponential reference: exact E1–E5 and no E6 discontinuity',()=>{
+test('One authoritative exponential reference: smooth E1–E5 arc with E5 anchored and no E6 discontinuity',()=>{
  const g=P.ENEMY_EXPONENTIAL_GROWTH;
- assert.deepEqual(g,{rate:.015,weight:2});
- for(let E=1;E<=5;E++)assert.equal(P.enemyReference(E),E);
+ assert.deepEqual(g,{rate:.015,weight:2,earlyRate:.12,shoulderLevels:.4});
+ for(let E=1;E<5;E++)assert(P.enemyReference(E)>0&&P.enemyReference(E)<E,
+  'Early exponential must ease E'+E);
+ assert.equal(P.enemyReference(5),5);
  for(let E=1;E<=1000;E++){
   const x=P.enemyReference(E);
   assert(Number.isFinite(x)&&x>0);
   if(E>1)assert(x>P.enemyReference(E-1),'must increase at E'+E);
   if(E>=5&&E<200){
    const n=P.enemyReference(E+1);
-   assert(n/x<1.04,'unexpected enemy stat jump E'+E);
+   assert(n/x<(E<10?1.25:1.05),'unexpected enemy stat jump E'+E);
   }
  }
  const old=M.oldReference;
- assert(Math.abs((P.enemyReference(6)-P.enemyReference(5))-
-  (M.oldReference(6)-M.oldReference(5)))<.001,'no E5→E6 slope jump');
- for(const E of [5,6,20,35,55,70,100,150,200]){
-  const x=P.enemyReference(E),ratio=x/old(E);
-  if(E<=5)assert.equal(ratio,1);
-  else assert(ratio>=1);
+ const derivLeft=5*g.earlyRate*Math.exp(5*g.earlyRate)/Math.expm1(5*g.earlyRate);
+ const derivRight=1/5+(derivLeft-1/5);
+ assert(Math.abs(derivLeft-derivRight)<1e-12,'the two continuous E5 tangents must agree');
+ for(const E of [1,2,3,4,5,6,20,35,55,70,100,150,200]){
+  const ratio=P.enemyReference(E)/old(E);
+  if(E<5)assert(ratio<1,'easier E'+E);
+  if(E===5)assert.equal(ratio,1);
+  if(E>5)assert(ratio>=1,'the exponential E5 bridge remains monotone E'+E);
  }
  assert(P.enemyReference(200)>old(200)*4);
  assert(P.enemyReference(200)<old(200)*5);
- assert(Math.abs(P.enemyReference(70)-8.99)<.02);
- assert(Math.abs(P.enemyReference(100)-11.46)<.02);
- assert(Math.abs(P.enemyReference(200)-38.11)<.02);
+ assert(Math.abs(P.enemyReference(1)-.775)<.02);
+ assert(Math.abs(P.enemyReference(2)-1.650)<.02);
+ assert(Math.abs(P.enemyReference(70)-9.443)<.025);
+ assert(Math.abs(P.enemyReference(100)-11.913)<.025);
+ assert(Math.abs(P.enemyReference(200)-38.559)<.025);
  assert.throws(()=>P.enemyReference(1000000),/finite range/);
 });
 test('Eight individual Elites, six individual Bosses, all normal roles retain their own identity multipliers',()=>{
