@@ -1,5 +1,5 @@
 'use strict';
-// Stage 5: native real-account progression, with optional E1–E20 horizon.
+// Stage 5 native real-account progression; Stage 6.26 audit extends the horizon to E200.
 // Absolutely no synthetic talent XP, fabricated gear, forced unlocks, forced
 // encounters, instant-kill enemies or direct state mutation of rewards.
 const fs=require('node:fs');
@@ -75,7 +75,7 @@ function parseArgs(args=[]){
   const [,k,value]=m;
   if(k==='seeds'){v.seeds=[...new Set(value.split(',').map(Number))];if(!v.seeds.length||v.seeds.some(x=>!Number.isSafeInteger(x)||x<1))throw Error('Invalid seeds');}
   else if(k==='profiles'){v.profiles=[...new Set(value.split(','))];if(!v.profiles.length||v.profiles.some(x=>!PROFILES[x]))throw Error('Invalid profiles');}
-  else if(k==='max-level'){v.maxLevel=Number(value);if(!Number.isInteger(v.maxLevel)||v.maxLevel<1||v.maxLevel>20)throw Error('Levels are E1–E20 only');}
+  else if(k==='max-level'){v.maxLevel=Number(value);if(!Number.isInteger(v.maxLevel)||v.maxLevel<1||v.maxLevel>200)throw Error('Levels are E1–E200 only');}
   else if(k==='max-attempts'){v.maxAttempts=Number(value);if(!Number.isInteger(v.maxAttempts)||v.maxAttempts<1||v.maxAttempts>36)throw Error('Max attempts must be 1–36');}
   else if(k==='max-total-attempts'){v.maxTotalAttempts=Number(value);if(!Number.isInteger(v.maxTotalAttempts)||v.maxTotalAttempts<1||v.maxTotalAttempts>400)throw Error('Total attempt budget must be 1–400');}
   else if(k==='tick-limit'){v.tickLimit=Number(value);if(!Number.isInteger(v.tickLimit)||v.tickLimit<100||v.tickLimit>100000)throw Error('Invalid tick limit');}
@@ -1281,6 +1281,13 @@ function simulateAccount(seed,id,opts,simulationOptions={}){
     acc.stopReason='Native runner error at E'+level+': '+err.message;stopped=true;
    }
    acc.attempts.push(entry);
+   // Stage 6.26: stop an intact native account after the attempt that genuinely
+   // reached 10,000 XP; no synthetic awards/unlocks and no replay of that attempt.
+   if(simulationOptions.stopAtTalentCap===true&&
+     a.talents.earned(a.state().automaticTalents)>=a.talents.cap()){
+    acc.stopReason='Native 100-point Talent cap reached at E'+level;
+    stopped=true;
+   }
    // Only for isolated matched combat probes: stop after a single native
    // attempt at the specified reachable E. No level is unlocked artificially.
    if(simulationOptions.probeLevel===level&&attempt===1){
