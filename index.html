@@ -704,12 +704,12 @@ function estimateEnemy(level,n=1){return WandererV012CombatCore.estimateEnemy(le
 
 /* Eight native Elite identities: fixed E1 bases and unique mechanics. */
 const ELITE_ARCHETYPES={
- tank:{id:'tank',icon:'🛡️',name:'Gravebound Bulwark',role:'Tank',risk:'High health, low damage. HP hits reduce your healing by 40% for 5s (refreshes on each hit).',hp:2.10,atk:0.85,def:1.19,interval:1.85},
+ tank:{id:'tank',icon:'🛡️',name:'Gravebound Bulwark',role:'Tank',risk:'High health, low damage. HP hits reduce your healing by 40% for 5s (refreshes on each hit).',hp:2.26,atk:0.96,def:1.19,interval:1.85},
  berserker:{id:'berserker',icon:'⚔️',name:'Bloodscar Ravager',role:'Berserker',risk:'Low health, high attack damage and quick strikes. Each hit is capped at 35% of your max HP.',hp:1.10,atk:1.55,def:0.9,interval:1.46},
  vampire:{id:'vampire',icon:'🩸',name:'Sanguine Wraith',role:'Vampire',risk:'Recovers HP when its attacks damage your health. Barrier and burst are useful.',hp:1.40,atk:1.30,def:1.04,interval:1.56},
  caster:{id:'caster',icon:'🔮',name:'Voidborne Hexer',role:'Caster',risk:'Successful hits weaken your direct damage by 20% for 3 combat seconds (7s between casts).',hp:1.43,atk:1.30,def:0.92,interval:1.64},
- gravecaller:{id:'gravecaller',icon:'☠',name:'Gravecaller',role:'Summoner',risk:'Channels a 1s interruptible ritual at 85% and 40% HP, summoning up to 2 bound souls each time (4 total, 2 alive). Bound soul hits apply stacking Deathbound Decay (up to 4 stacks, 4s), damaging you each second until the summons die.',hp:1.30,atk:0.84,def:0.86,interval:1.8},
- oathbound_exarch:{id:'oathbound_exarch',icon:'⛨',name:'Oathbound Exarch',role:'Support',risk:'Aegis oath: every 10s channels Barrier for an ally, or itself when alone, worth 15% max Health, up to 3 casts. Stun interrupts.',hp:1.70,atk:0.98,def:1.18,interval:1.95},
+ gravecaller:{id:'gravecaller',icon:'☠',name:'Gravecaller',role:'Summoner',risk:'Channels a 1s interruptible ritual at 85% and 40% HP, summoning up to 2 bound souls each time (4 total, 2 alive). Bound soul hits apply stacking Deathbound Decay (up to 4 stacks, 4s), damaging you each second until the summons die.',hp:1.66,atk:1.03,def:0.92,interval:1.75},
+ oathbound_exarch:{id:'oathbound_exarch',icon:'⛨',name:'Oathbound Exarch',role:'Support',risk:'Aegis oath: every 10s channels Barrier for an ally, or itself when alone, worth 15% max Health, up to 3 casts. Stun interrupts.',hp:1.84,atk:1.07,def:1.18,interval:1.95},
  briarspine_horror:{id:'briarspine_horror',icon:'🌵',name:'Briarspine Horror',role:'Thorns',risk:'Vitality · Thornbloom reflects direct hits during its four-second guard.',hp:1.75,atk:1.20,def:1.04,interval:1.72},
  ashen_executioner:{id:'ashen_executioner',icon:'⚒',name:'Ashen Executioner',role:'Heavy Striker',risk:'Every 10s prepares 1.5s heavy strike, capped at 18% max HP before Block/Barrier. Stun and delay interrupt.',hp:1.60,atk:1.49,def:0.93,interval:1.95}
 };
