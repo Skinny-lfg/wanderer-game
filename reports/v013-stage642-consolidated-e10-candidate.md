@@ -74,3 +74,41 @@ These samples are small, encounters are not individually paired between full Exp
 - Run full 500-account E1–E2 and fresh E10 population regression on GitHub Actions, archiving JSON.
 - If the bigger sample finds strong AoE or early-progression regressions, **revise the existing canonical budgets** — never add a separate emergency multiplier or an E2-only special case.
 - After accepted E1–E10: inspect E20/E35/E70/E200 with one continuous enemy reference.
+
+
+---
+
+## Validação final em GitHub Actions — 520 contas E1/E2 (Stage 6.42)
+
+Execução verificada: https://github.com/Skinny-lfg/wanderer-game/actions/runs/45264815615 — preflight e progressão completa concluídos com sucesso; não houve merge nem deploy. O ensaio corresponde ao commit `5b33f6f2f0944084504c1854883dc98dedf2d694`. O histórico de simulações com outros coeficientes serve apenas como investigação, **não** como resultado do código final.
+
+| Combate | E1 | E2 |
+|---|---:|---:|
+| Normais agregados | 5374/6691 (80,3%) | 1386/1474 (94,0%) |
+| Elites agregados | 473/644 (73,4%) | 293/329 (89,1%) |
+| Bosses agregados | 192/540 (35,6%) | 171/218 (78,4%) |
+
+### Elites E1, individualmente
+
+| Elite | Vitórias |
+|---|---:|
+| Tank | 14/25 (56,0%) |
+| Berserker | 44/70 (62,9%) |
+| Vampire | 68/103 (66,0%) |
+| Caster | 65/100 (65,0%) |
+| Gravecaller | 88/113 (77,9%) |
+| Oathbound Exarch | 28/40 (70,0%) |
+| Briarspine Horror | 119/126 (94,4%) |
+| Ashen Executioner | 47/67 (70,1%) |
+
+**Bloqueio real:** Briarspine Horror é muito sensível aos coeficientes nativos de abertura. Com a mesma estrutura de orçamento, `hp:1.55, atk:.98, interval:1.92` resultou em 53/154 vitórias (34,4%); com `hp:1.53, atk:.97, interval:1.93`, resultou em 119/126 (94,4%). Não são confrontos individualmente emparelhados e os denominadores mudam após progressão natural, mas a variação é demasiado grande para se continuar a perseguir percentagens apenas com microalterações de atributos. **Auditar Thornbloom, duração/ativações, combate antes/depois do guard, número de ciclos e a relação entre HP do Elite e Gear/DPS disponível.** Não adicionar um novo nerf contextual por Expedition ou multiplicador de emergência.
+
+Na E2, as altas taxas de sucesso dos jogadores que lá chegam representam uma população sobrevivente/mais equipada. A função de progressão já é contínua; **continuidade matemática não equivale a dificuldade equilibrada**. Validar transições em personagens emparelhadas antes de alterar `enemyReference(E)`, para não prejudicar E10–E200 inadvertidamente.
+
+### Benchmark E10 — não reinterpretar o número de sobreviventes
+
+A execução completa mais recente de E10 anterior a esta correção de abertura foi https://github.com/Skinny-lfg/wanderer-game/actions/runs/45260060456: 14/18 chegaram à E10 e seis tinham AoE real. O jogador venceu 92,9–100% contra os oito Elites individuais e 71,4–96,4% contra os seis Bosses na amostra controlada desses sobreviventes. Isso **não comprova** que todos os encontros sejam fáceis para um jogador em progressão natural; estes agentes tinham até 24 tentativas por Expedition e há viés de sobrevivência. A correção final de Briarspine afeta as Expeditions anteriores à E10, não os coeficientes da E10 para uma mesma personagem, mas pode alterar *quem* chega à E10.
+
+### Decisão
+
+**Stage 6.42: consolidação de código e telemetria realizada, mas balanceamento global ainda NÃO APROVADO.** A E1 está próxima das metas agregadas para normais e Bosses, mas há outliers individuais nos Elites; a E2 continua muito mais fácil para os sobreviventes. Os testes de regressão dirigidos passaram no CI e os resultados dos 520 percursos ficaram arquivados. Preservar esta branch isolada, sem merge/deploy, e resolver a sensibilidade de Thornbloom e as diferenças por tipo de build com testes emparelhados; alterar os coeficientes canónicos existentes, nunca reintroduzir camadas de escalabilidade.
