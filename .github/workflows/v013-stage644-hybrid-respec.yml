@@ -1,0 +1,91 @@
+name: Stage 6.44 — Legal Blood-Decay Rupture and Physical Grave Bloom E10 (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths:
+      - '.github/workflows/v013-stage644-hybrid-respec.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 85
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        shard: [0, 1]
+        variant: [respecCarrion, 'respecCarrion+rupture', respecBloomPhysical, 'respecBloomPhysical+bloomFixed']
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45272938568
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: stage642-snapshot-decay-blood-spread
+          path: reports/stage644/hybrid-snapshots
+      - name: Legally respec earned E10 Sword hero and replay 100 matched seeds
+        env:
+          VARIANT: ${{ matrix.variant }}
+          SHARD: ${{ matrix.shard }}
+        run: |
+          mkdir -p reports/stage644/hybrid-shards
+          node scripts/v013-stage644-e10-lab.cjs "$VARIANT" decay-blood-spread "$SHARD" reports/stage644/hybrid-snapshots/decay-blood-spread.json "reports/stage644/hybrid-shards/$VARIANT-$SHARD.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage644-hybrid-${{ matrix.variant }}-${{ matrix.shard }}
+          path: reports/stage644/hybrid-shards/*.json
+          retention-days: 30
+          if-no-files-found: error
+  aggregate:
+    needs: replay
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage644-hybrid-*
+          merge-multiple: true
+          path: reports/stage644/hybrid-shards
+      - name: Verify E10 talent eligibility and compare exact seeds, gear, enemy rosters
+        run: |
+          node <<'JS'
+          const fs=require('fs'),dir='reports/stage644/hybrid-shards';
+          const files=fs.readdirSync(dir).filter(x=>x.endsWith('.json'));
+          if(files.length!==8)throw Error('Missing hybrid test shards');
+          const parts=files.map(x=>JSON.parse(fs.readFileSync(dir+'/'+x,'utf8')));
+          const variants=['respecCarrion','respecCarrion+rupture','respecBloomPhysical','respecBloomPhysical+bloomFixed'];
+          const summary=[];
+          for(const variant of variants){
+            const cohorts=parts.filter(x=>x.variant===variant);
+            if(cohorts.length!==2)throw Error('Missing hybrid scenario '+variant);
+            const actors=cohorts[0].entrants,skill=variant.startsWith('respecCarrion')?'carrion_detonation':'grave_bloom';
+            if(!actors.length||JSON.stringify(actors)!==JSON.stringify(cohorts[1].entrants)||
+             !actors.every(a=>a.weapon==='Sword'&&a.active.includes(skill)))throw Error('Invalid legal hybrid actor');
+            const baseline=variant.startsWith('respecCarrion')?'respecCarrion':'respecBloomPhysical';
+            const old=parts.filter(x=>x.variant===baseline).flatMap(x=>x.rows);
+            const rows=cohorts.flatMap(x=>x.rows);
+            for(const r of rows){const b=old.find(x=>x.seed===r.seed&&x.size===r.size&&x.naturalSeed===r.naturalSeed);
+              if(!b||r.roster!==b.roster||r.gear!==b.gear||r.xp!==b.xp)throw Error('Roster, earned XP or gear drift '+variant);}
+            summary.push({variant,actors:actors.map(({seed,weapon,offhand,points,active,prepared})=>({seed,weapon,offhand,points,active,prepared})),
+             groups:[1,4,8,12].map(size=>{const rr=rows.filter(x=>x.size===size);
+              if(rr.length!==100)throw Error('Missing 100 combat seeds for '+variant+'/'+size);
+              return {size,n:rr.length,wins:rr.filter(x=>x.won).length,
+               secondary:rr.reduce((n,x)=>n+x.secondary,0),timeouts:rr.filter(x=>x.timeout).length};})});
+          }
+          fs.writeFileSync('reports/stage644/hybrid-results.json',JSON.stringify({stage:'6.44',legalRespec:true,note:'Counterfactual legal spend of earned E10 XP on real physical Sword, no fabricated equipment',summary},null,2)+'\n');
+          console.log('STAGE644_HYBRID_RESPEC='+JSON.stringify(summary));
+          JS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage644-hybrid-results
+          path: reports/stage644/hybrid-results.json
+          retention-days: 30
