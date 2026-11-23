@@ -4,6 +4,9 @@ on:
     branches: [balance/stage-6.40-e1-calibration]
     paths:
       - '.github/workflows/v013-stage642-consensus.yml'
+      - 'combat/v012-combat-core.js'
+      - 'combat/expedition-progression.js'
+      - 'index.html'
   workflow_dispatch:
 permissions:
   contents: read
