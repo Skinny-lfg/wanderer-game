@@ -70,15 +70,18 @@ const BOSS_BASE=Object.freeze({
  devourer:Object.freeze({hp:1.85,atk:1.91,def:2,interval:1.62})
 });
 // Sparse opening-Expedition adjustments retain each leader's native abilities.
+// Stage 6.40 candidate: E1 Elite budgets remain individual and explicit.
+// Normal progression uses index.html's bases; the opening budgets are NOT
+// blanket multipliers. See the Stage 6.40 candidate diagnostics for rates.
 const FIRST_EXPEDITION_ELITES=Object.freeze({
- tank:{hp:1.57},
+ tank:{hp:1.78,atk:.75,interval:1.85},
  berserker:{atk:1.01,interval:1.65},
  vampire:{atk:.84},
- caster:{atk:1.00},
- gravecaller:{hp:.94},
- oathbound_exarch:{hp:1.18},
- briarspine_horror:{hp:1.50,interval:1.79},
- ashen_executioner:{atk:1.00,interval:2.27}
+ caster:{hp:1.07,atk:1.07},
+ gravecaller:{hp:1.04},
+ oathbound_exarch:{hp:1.18,atk:.87},
+ briarspine_horror:{hp:1.80,atk:1.18,interval:1.72},
+ ashen_executioner:{hp:1.16,atk:1.00,interval:2.27}
 });
 const FIRST_EXPEDITION_BOSSES=Object.freeze({
  leech:{hp:1.77,interval:1.43},
