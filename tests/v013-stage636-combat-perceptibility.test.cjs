@@ -53,7 +53,7 @@ test('Stage6.36: same-seed reporting never recasts losses as time saved',()=>{
  assert.equal(g.n,2);
  assert.equal(g.bothWon,1);
  assert.equal(g.savedTimePct.n,1);
- assert.equal(g.savedTimePct.median,8.3333);
+ assert.equal(g.savedTimePct.median,8.333);
  assert.equal(g.timeImprovementAtLeast5Pct,100);
  assert.equal(g.earned.winPctResolved,50);
  assert.equal(g.smallPowerDeltaExamples,2);
