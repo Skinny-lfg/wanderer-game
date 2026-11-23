@@ -16,16 +16,18 @@ function gearTier(level){checked(level);for(let i=tiers.length-1;i>=0;i--)if(lev
 // The per-Expedition percentage growth changes smoothly; it is NOT a fixed %.
 // Both the reference and its growth-rate derivative are continuous through
 // E2/E3/E5/E35/E36/E70/E200. No piecewise level, clamp, local nerf or step.
-// Provisional E1-based calibration for native simulations, not proof that
+// Provisional smooth E1-based calibration: E2/E3 match prior native targets,
+// E5 is eased without an E5 breakpoint, and E200 retains late pressure.
+// This is not proof that
 // the target player win rates (normal 80–90%, Elite 60–70%, Boss 35–45%)
 // are met by the current agents. Player gear and XP are separate models.
 // Initial growth is brisker and relaxes smoothly toward the positive late
 // rate. The entire expression is an exponential for every Expedition.
 const ENEMY_EXPONENTIAL_GROWTH=Object.freeze({
  initialReference:.775,
- lateLogGrowth:.0105,
- earlyLogGrowthBoost:1.8321,
- relaxationExpeditions:5.8622
+ lateLogGrowth:.009901141066605541,
+ earlyLogGrowthBoost:1.9367547131703917,
+ relaxationExpeditions:2.0572942012233146
 });
 function enemyReference(level){
  checked(level);
