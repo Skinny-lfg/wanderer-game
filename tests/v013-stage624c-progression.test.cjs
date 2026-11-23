@@ -48,7 +48,7 @@ test('Elite curve continuous through E6, E35, E70, E200 and E201; E5 exact nativ
  }
  assert.equal(P.eliteProgress(5),0);assert.equal(P.eliteProgress(70),1);
  assert(P.eliteProgress(201)>P.eliteProgress(200));
- assert(P.eliteProgress(100000)<90/65,'bounded but never clamped after E70');
+ assert(P.eliteProgress(100000)<95/65,'bounded but never clamped after E70');
 });
 test('Six Boss reductions identical to Stage 6.21 at all levels, no global Boss buffs',()=>{
  for(const style of BOSSES)for(const level of [1,2,3,4,5,6,15,29,30,31,35,70,200,201,1000]){

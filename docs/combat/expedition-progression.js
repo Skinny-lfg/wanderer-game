@@ -42,13 +42,13 @@ const BOSS_PROTECTION=Object.freeze({
  devourer:Object.freeze({hp:.16,atk:.10})
 });
 // One continuous, monotonic rational curve, no E6/E36/E70/E200 step:
-// E1–E5 = 0; E70 = 1; E200 ≈ 1.227; asymptotically approaches 90/65.
+// E1–E5 = 0; E70 = 1; E200 ≈ 1.267; asymptotically approaches 95/65.
 // The continuing tail gives post-E70 Elites some pressure without compounding
 // an additional late-game modifier on top of this function.
 function eliteProgress(level){
  checked(level);
  const x=Math.max(0,level-5);
- return x/(x+25)/(65/(65+25));
+ return x/(x+30)/(65/(65+30));
 }
 function enemyScaling(level,kind,identity=null){
  checked(level);
