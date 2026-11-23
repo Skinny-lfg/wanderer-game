@@ -408,7 +408,7 @@ function offhandOnMainHit(r,hpDamage){
 function v013FundedCost(baseCost){if(baseCost<=0)return 0;const adjusted=Math.max(1,Math.ceil(baseCost*(root.WandererV013ExpeditionBoons?.costFactor(ports.state.run)||1)));return v013Traits().includes('efficient')?Math.max(1,adjusted-Math.max(1,Math.floor(adjusted*.1))):adjusted;}
 function v013SpellMultiplier(r){const nodes=ports.state.automaticTalents?.nodes||[],element=ports.phase1Build?.element,enemy=r.enemy;return (element==='fire'&&nodes.includes('fire_focus')?.9:1)*(element==='frost'&&nodes.includes('frost_focus')&&enemy.slowTime>0?1.2:1)*(element==='lightning'&&nodes.includes('lightning_focus')?1.35:1)*(element==='fire'&&nodes.includes('living_inferno')&&enemy.dots?.burn?.length?1.25:1)*(element==='frost'&&nodes.includes('absolute_winter')&&enemy.slowTime>0?1.2:1)*(element==='lightning'&&nodes.includes('storm_conductor')?1.2:1);}
 function v013LightningChain(r){return ports.isPhase1Run()&&ports.phase1Build?.element==='lightning'&&(WandererV012Buildcraft.rank(ports.phase1Build,'overcharge')>0||ports.state.automaticTalents?.nodes?.includes('storm_mastery'))&&!ports.state.automaticTalents?.nodes?.includes('lightning_focus');}
-function v013LightningChainFactors(){return ports.state.automaticTalents?.nodes?.includes('storm_mastery')?[.5,.3,.2]:[.5,.3];}
+function v013LightningChainFactors(){return ports.state.automaticTalents?.nodes?.includes('storm_mastery')?[.68,.52,.36]:[.60,.43,.28];}
 function groupSecondaryDamage(r,base,factors,label,physical=false){
  if(!r.enemies||r.enemies.length<2)return 0;
  const targets=r.enemies.filter(enemy=>enemy!==r.enemy&&enemy.hp>0).slice(0,factors.length);let hit=0;
@@ -418,10 +418,31 @@ function groupSecondaryDamage(r,base,factors,label,physical=false){
  if(hit){ports.combatLinkEffect?.(r,label.includes('Chain Lightning')?'shock':label.includes('Piercing')?'pierce':label.includes('Cleave')?'cleave':'aoe',r.enemy,targets);
    ports.addLog(label+' hits '+hit+' additional '+(hit===1?'enemy':'enemies')+'.','good');}return hit;
 }
+function v013GraveBloomPulse(r,enemy,spellPower){
+ if(!prepared('grave_bloom')||!enemy||enemy.hp<=0)return 0;
+ enemy.v012Rot??=[];
+ // Grave Bloom must not be inert just because its third cast has no pre-existing Rot.
+ if(!enemy.v012Rot.length)enemy.v012Rot.push({damage:Math.max(1,Math.round(spellPower*.16)),remaining:3,ticks:0});
+ const rot=enemy.v012Rot.find(dot=>dot.damage>0);
+ if(!rot)return 0;
+ const targets=(r.enemies||[]).filter(target=>target!==enemy&&target.hp>0).slice(0,2);
+ if(!targets.length){triggered(r,'grave_bloom');return rot.damage;}
+ const factors=[];
+ for(const target of targets){
+  target.v012Rot??=[];
+  if(target.v012Rot.length>=6)continue;
+  target.v012Rot.push({damage:Math.max(1,Math.round(rot.damage*.75)),remaining:Math.min(3,rot.remaining),ticks:0,secondaryOrigin:'grave_bloom'});
+  ports.combatLinkEffect?.(r,'rot',enemy,[target]);
+  factors.push(factors.length===0?.75:.55);
+ }
+ if(factors.length)groupSecondaryDamage(r,rot.damage,factors,'☠ Grave Bloom');
+ triggered(r,'grave_bloom');
+ return 0;
+}
 function groupElementalEffects(r,b){
  if(!r.enemies||!b)return;const nodes=ports.state.automaticTalents?.nodes||[],targets=r.enemies.filter(enemy=>enemy!==r.enemy&&enemy.hp>0).slice(0,2);
- if(b.element==='fire'&&nodes.includes('fire_spread')){const burn=r.enemy.dots?.burn?.at(-1);if(burn)for(const enemy of targets){enemy.dots.burn??=[];if(enemy.dots.burn.length<12){enemy.dots.burn.push({damage:Math.max(1,Math.round(burn.damage*.5)),remaining:Math.min(2,burn.remaining),spread:true});ports.combatLinkEffect?.(r,'burn',r.enemy,[enemy]);}ports.synchronizeDots(enemy);}}
- if(b.element==='fire'&&v013Traits().includes('conflagration')){const burn=r.enemy.dots?.burn?.at(-1),enemy=r.enemies.filter(enemy=>enemy!==r.enemy&&enemy.hp>0)[nodes.includes('fire_spread')?2:0];if(burn&&enemy){enemy.dots.burn??=[];if(enemy.dots.burn.length<12){enemy.dots.burn.push({damage:Math.max(1,Math.round(burn.damage*.35)),remaining:Math.min(2,burn.remaining),spread:true});ports.combatLinkEffect?.(r,'burn',r.enemy,[enemy]);}ports.synchronizeDots(enemy);}}
+ if(b.element==='fire'&&nodes.includes('fire_spread')){const burn=r.enemy.dots?.burn?.at(-1);if(burn){let spread=0;for(const enemy of targets){enemy.dots.burn??=[];if(enemy.dots.burn.length<12){enemy.dots.burn.push({damage:Math.max(1,Math.round(burn.damage*.65)),remaining:Math.min(3,burn.remaining),spread:true});ports.combatLinkEffect?.(r,'burn',r.enemy,[enemy]);spread++;}ports.synchronizeDots(enemy);}if(spread)groupSecondaryDamage(r,burn.damage,[.55,.40].slice(0,spread),'🔥 Wildfire');}}
+ if(b.element==='fire'&&v013Traits().includes('conflagration')){const burn=r.enemy.dots?.burn?.at(-1),enemy=r.enemies.filter(enemy=>enemy!==r.enemy&&enemy.hp>0)[nodes.includes('fire_spread')?2:0];if(burn&&enemy){enemy.dots.burn??=[];if(enemy.dots.burn.length<12){enemy.dots.burn.push({damage:Math.max(1,Math.round(burn.damage*.50)),remaining:Math.min(3,burn.remaining),spread:true});ports.combatLinkEffect?.(r,'burn',r.enemy,[enemy]);}ports.synchronizeDots(enemy);}}
  if(b.element==='frost'&&nodes.includes('frost_spread'))for(const enemy of targets){enemy.slowTime=Math.max(enemy.slowTime||0,2);ports.combatLinkEffect?.(r,'frost',r.enemy,[enemy]);}
 }
 function hasUnsettledGroupDeaths(r){return !!r.enemies?.some(enemy=>enemy.hp<=0&&!enemy.groupDefeated);}
@@ -499,9 +520,7 @@ function weaponAttack(r,offhandStrike=false){
   if(r.storedImpact){damage+=r.storedImpact;r.storedImpact=0;}
   if(r.riposteUntil>now){damage+=s.attack*.75;r.riposteUntil=0;triggered(r,'turn_tide');}
   if(cast&&r.lifeCharge){r.lifeCharge=false;if(r.hp<r.maxhp*.5)ports.setHeal(r,r.maxhp*.08,true);else damage*=1.3;triggered(r,'lifeweaver');}
-  if(cast&&(learned('spell_echo')||prepared('grave_bloom'))){r.echoCount=((r.echoCount||0)+1)%3;if(!r.echoCount){const echo=learned('spell_echo')?Math.max(1,Math.round(damage*.1*learned('spell_echo'))):0;damage+=echo;if(echo)ports.floatText(echo,'enemy',false,'ECHO',e);
-   if(prepared('grave_bloom')&&e.v012Rot?.length){const others=(r.enemies||[]).filter(m=>m!==e&&m.hp>0).slice(0,2);if(others.length)for(const m of others){m.v012Rot??=[];if(m.v012Rot.length<6){m.v012Rot.push({...e.v012Rot[0],secondaryOrigin:'grave_bloom'});ports.combatLinkEffect?.(r,'rot',e,[m]);}}else damage+=e.v012Rot.reduce((sum,d)=>sum+d.damage,0);triggered(r,'grave_bloom');}
-  }}
+  if(cast&&(learned('spell_echo')||prepared('grave_bloom'))){r.echoCount=((r.echoCount||0)+1)%3;if(!r.echoCount){const echo=learned('spell_echo')?Math.max(1,Math.round(damage*.1*learned('spell_echo'))):0;damage+=echo;if(echo)ports.floatText(echo,'enemy',false,'ECHO',e);damage+=v013GraveBloomPulse(r,e,s.spellPower||0);}}
   damage=Math.round(damage);
  }
  damage=Math.max(1,Math.round(damage*(root.WandererV013ExpeditionBoons?.factor(r)||1)*(root.WandererV013BossAbilities?.directFactor(r,e)||1)));
@@ -553,7 +572,7 @@ function weaponAttack(r,offhandStrike=false){
   }
  if(!offhandStrike&&kind==='Two-Handed'){const factor=ports.state.automaticTalents?.nodes?.includes('cleave_mastery')?.6:.4;groupSecondaryDamage(r,base,[factor,factor],'⚔ Cleave',true);}
  if(!offhandStrike&&kind==='Daggers'&&ports.state.automaticTalents?.nodes?.includes('fan_of_blades'))groupSecondaryDamage(r,base,[.22,.22],'🗡 Fan of Blades',true);
- if(!offhandStrike&&kind==='Bow')groupSecondaryDamage(r,base,[ports.state.automaticTalents?.nodes?.includes('bow_pierce')?.55:.35],'🏹 Piercing Arrow',true);
+ if(!offhandStrike&&kind==='Bow')groupSecondaryDamage(r,base,ports.state.automaticTalents?.nodes?.includes('bow_pierce')?[.60,.42,.28]:[.42,.24],'🏹 Piercing Arrow',true);
  if(!offhandStrike&&kind==='Sword'&&off?.subtype==='Shield'&&ports.state.automaticTalents?.nodes?.includes('sword_sweep'))groupSecondaryDamage(r,base,[.25],'⚔ Shielded Sweep',true);
  if(!offhandStrike&&kind==='Mace'&&ports.state.automaticTalents?.nodes?.includes('mace_shockwave')){const secondary=r.enemies?.find(enemy=>enemy!==r.enemy&&enemy.hp>0);groupSecondaryDamage(r,base,[.3],'🔨 Concussive Swing',true);if(secondary&&secondary.hp>0)secondary.slowTime=Math.max(secondary.slowTime||0,1);}
  if(cast&&v013LightningChain(r))groupSecondaryDamage(r,base,v013LightningChainFactors(),'⚡ Chain Lightning');
@@ -898,7 +917,7 @@ function phase2MagicTick(r){
  if(v013Traits().includes('ward')&&ports.setReady(r,'v013Ward',6))ports.setBarrier(r,r.maxhp*.02);
  let spellDamage=Math.max(1,Math.round(WandererV012Buildcraft.elementalPower(b,ctx.power)*.70*v013SpellMultiplier(r)));if(v013Traits().includes('focused')&&!r.groupReserve?.length&&(!r.enemies||r.enemies.filter(enemy=>enemy.hp>0).length===1))spellDamage=Math.max(1,Math.round(spellDamage*1.1));if(ports.state.automaticTalents?.nodes?.includes('single_target_mastery')&&!r.groupReserve?.length&&(!r.enemies||r.enemies.filter(enemy=>enemy.hp>0).length===1))spellDamage=Math.max(1,Math.round(spellDamage*1.15));
  if(r.lifeCharge&&prepared('lifeweaver')){r.lifeCharge=false;if(r.hp<r.maxhp*.5)ports.setHeal(r,r.maxhp*.08,true);else spellDamage=Math.round(spellDamage*1.3);triggered(r,'lifeweaver');}
- if(learned('spell_echo')||prepared('grave_bloom')){r.echoCount=((r.echoCount||0)+1)%3;if(!r.echoCount){if(learned('spell_echo'))spellDamage+=Math.max(1,Math.round(spellDamage*.1*learned('spell_echo')));if(prepared('grave_bloom')&&r.enemy.v012Rot?.length){const others=(r.enemies||[]).filter(m=>m!==r.enemy&&m.hp>0).slice(0,2);if(others.length)for(const m of others){m.v012Rot??=[];if(m.v012Rot.length<6)m.v012Rot.push({...r.enemy.v012Rot[0],secondaryOrigin:'grave_bloom'});}else spellDamage+=r.enemy.v012Rot.reduce((sum,d)=>sum+d.damage,0);triggered(r,'grave_bloom');}}}
+ if(learned('spell_echo')||prepared('grave_bloom')){r.echoCount=((r.echoCount||0)+1)%3;if(!r.echoCount){if(learned('spell_echo'))spellDamage+=Math.max(1,Math.round(spellDamage*.1*learned('spell_echo')));spellDamage+=v013GraveBloomPulse(r,r.enemy,ctx.power||0);}}
  const chainBase=spellDamage;
  if(r.enemy.baseDef>0&&r.enemy.def<r.enemy.baseDef)spellDamage=Math.max(1,Math.round(spellDamage*(1+(b.runtime.talentBonuses?.sunderDamage||0))));
  const hpBefore=r.enemy.hp;
