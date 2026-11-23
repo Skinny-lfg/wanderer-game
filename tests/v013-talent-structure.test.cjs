@@ -10,10 +10,10 @@ test('current tree contains 343 unique v15 nodes, with all six affinity roots',(
   assert(T.NODES.some(n=>n.id==='affinity_'+family));
  }
 });
-test('fresh account has zero talent points and no manual primary-stat allocation',()=>{
+test('fresh account has no post-cap attributes until 100 Talent points have been earned',()=>{
  const p=T.create();assert.equal(p.treeVersion,15);assert.equal(T.earned(p),0);
- assert.equal(typeof T.attributePoints,'undefined');
- assert.equal(typeof T.allocateAttribute,'undefined');
+ assert.equal(T.availableAttributes(p),0);
+ assert.equal(T.allocateAttribute(p,'agi'),null);
  assert.equal(T.allocate(p,'root_blood'),null);
  assert.equal(T.valid({...p,starterPoints:2}),false);
  let earned=T.award(p,100);
