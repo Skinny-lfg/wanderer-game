@@ -158,6 +158,26 @@ function phase1StartWave(resetScroll=false){
   WandererV012CombatCore.applySoloNormalReinforcement(group);
   WandererV012CombatCore.applyNormalRoomMinionProfile(group);
   WandererV012CombatCore.applyMinionEscortRelief(group);
+  if(r.tier===1 && group.length>1){
+   const extraEnemies=group.length-1;
+   // Pairs need little relief. In larger rooms, reserves extend exposure
+   // even though only four enemies can attack at once.
+   const pressurePerEnemy=group.length===2 ? 0.2 : group.length<=4 ? 0.75 : 1;
+   const pressure=1 + extraEnemies * pressurePerEnemy;
+   const minions=group.filter(enemy=>enemy.role==='minion').length;
+   for(const enemy of group){
+    const minion=enemy.role==='minion';
+    const attackDivisor=pressure+(minion ? minions/2 : 0);
+    enemy.atk=Math.max(1,Math.round(enemy.atk/attackDivisor));
+    if(minion){
+     // Dense reinforcement waves otherwise keep even low-damage
+     // Minions on screen for many consecutive basic attacks.
+     const hpDivisor=minions>=4 ? attackDivisor : Math.sqrt(attackDivisor);
+     enemy.maxhp=Math.max(1,Math.round(enemy.maxhp/hpDivisor));
+     enemy.hp=Math.min(enemy.hp,enemy.maxhp);
+    }
+   }
+  }
  }
  const traits=globalThis.WandererV013EncounterTraits;
  const modifiers=globalThis.WandererV013BossModifiers;

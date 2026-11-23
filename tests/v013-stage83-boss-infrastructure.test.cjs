@@ -33,6 +33,21 @@ test('Summons occupy four visible slots, then bounded reserve, without duplicate
  assert.equal(r.encounterLeader,e);
  assert(r.groupReserve.every(x=>x.stage83Summoner==='boss'&&x.role==='minion'));
 });
+test('Opening Expedition weakens new summons according to living and arriving Minions',()=>{
+ function wave(tier,escorts,count){
+  const e=boss('matriarch'),r=run(e,escorts);
+  Object.assign(r,{phase1:true,tier});
+  assert.equal(B.summon(r,e,count,minion).spawned,count);
+  return [...r.enemies,...r.groupReserve].find(x=>x.stage83Summoned);
+ }
+ const single=wave(1,[],1),pair=wave(1,[],2),withEscort=wave(1,[guard('minion')],1);
+ const later=wave(2,[],2),reference=wave(3,[guard('minion')],1);
+ for(const stat of ['atk','maxhp']){
+  assert(pair[stat]<single[stat]&&single[stat]<later[stat]);
+  assert.equal(pair[stat],withEscort[stat]);
+  assert.equal(later[stat],reference[stat]);
+ }
+});
 test('Summon limits persist across deaths, preventing infinite reinforcements',()=>{
  const e=boss(),r=run(e);
  assert.equal(B.summon(r,e,4,minion).spawned,4);

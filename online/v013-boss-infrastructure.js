@@ -43,6 +43,10 @@ function summon(run,source,count,makeMinion,options={}){
  const allowed=Math.max(0,Math.min(count,(ledger.maxSummons??LIMITS.maxSummons)-ledger.summoned,
     (ledger.maxLivingMinions??LIMITS.maxLivingMinions)-livingMinions,
     LIMITS.maxEncounterEnemies-(run.totalMobCount??current.length)));
+ const openingWave=run.phase1&&run.tier===1;
+ const waveSize=livingMinions+allowed;
+ const openingHp=openingWave?(waveSize>=2?.70:.84):1;
+ const openingAtk=openingWave?(waveSize>=2?.65:.80):1;
  const hpFactor=Number.isFinite(options.hpFactor)?Math.max(.1,Math.min(1,options.hpFactor)):.42;
  const atkFactor=Number.isFinite(options.atkFactor)?Math.max(.1,Math.min(1,options.atkFactor)):.25;
  const defFactor=Number.isFinite(options.defFactor)?Math.max(.1,Math.min(1,options.defFactor)):.35;
@@ -61,8 +65,8 @@ function summon(run,source,count,makeMinion,options={}){
   if(!mob||mob.boss||mob.miniboss||mob.role!=='minion'||!Number.isFinite(mob.maxhp)||mob.maxhp<=0||
       !Number.isFinite(mob.atk)||mob.atk<0||!Number.isFinite(mob.attackEvery)||mob.attackEvery<=0)
    throw Error('Stage 8.3 requires valid summoned Minions');
-  mob.maxhp=Math.max(1,Math.round(mob.maxhp*hpFactor));mob.hp=mob.maxhp;
-  mob.atk=mob.atk===0?0:Math.max(1,Math.round(mob.atk*atkFactor));
+  mob.maxhp=Math.max(1,Math.round(mob.maxhp*hpFactor*openingHp));mob.hp=mob.maxhp;
+  mob.atk=mob.atk===0?0:Math.max(1,Math.round(mob.atk*atkFactor*openingAtk));
   const originalDefense=mob.def||0,originalBase=mob.baseDef??originalDefense;
   mob.def=Math.max(0,Math.round(originalDefense*defFactor));
   mob.baseDef=Math.max(0,Math.round(originalBase*defFactor));

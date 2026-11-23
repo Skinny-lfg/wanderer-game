@@ -203,7 +203,7 @@ test('Stage 8.2 is loaded in the arena with all eight Elites registered',()=>{
  assert(combat.includes('heroMaxHp*strike.capFraction'),'Shared charged strike helper caps damage against hero maximum Health');
  assert(combat.includes('WandererV013EliteAbilities?.interrupt'));
  const encounter=fs.readFileSync('online/v012-expedition-runtime.js','utf8');
- assert(encounter.includes('if(last&&g.selected.elite&&!g.selected.boss)globalThis.WandererV013EliteAbilities?.attach'));
+ assert(encounter.includes('if(!statOnly&&last&&g.selected.elite&&!g.selected.boss)globalThis.WandererV013EliteAbilities?.attach'));
 });
 test('Thornbloom starts at 9s, telegraphs for 1s and protects for 4s with per-hit and cycle caps',()=>{
  const e=elite('briarspine_horror'),r=run(e);A.attach(e);

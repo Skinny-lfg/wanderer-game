@@ -69,6 +69,28 @@ const BOSS_BASE=Object.freeze({
  berserker:Object.freeze({hp:1.43,atk:1.58,def:2,interval:1.62}),
  devourer:Object.freeze({hp:1.85,atk:1.91,def:2,interval:1.62})
 });
+// Sparse opening-Expedition adjustments retain each leader's native abilities.
+const FIRST_EXPEDITION_ELITES=Object.freeze({
+ tank:{hp:1.57},
+ berserker:{atk:1.01,interval:1.65},
+ vampire:{atk:.84},
+ caster:{atk:1.00},
+ gravecaller:{hp:.94},
+ oathbound_exarch:{hp:1.18},
+ briarspine_horror:{hp:1.50,interval:1.79},
+ ashen_executioner:{atk:1.00,interval:2.27}
+});
+const FIRST_EXPEDITION_BOSSES=Object.freeze({
+ leech:{hp:1.77,interval:1.43},
+ matriarch:{hp:1.66,atk:1.78},
+ guardian:{hp:1.68,interval:1.56},
+ conductor:{hp:1.55,atk:1.76},
+ berserker:{atk:1.60,interval:1.61}
+});
+function firstExpeditionLeader(base,style,elite){
+ const override=style?FIRST_EXPEDITION_BOSSES[style]:FIRST_EXPEDITION_ELITES[elite];
+ return override?{...base,...override}:base;
+}
 const ELITE_IDENTITIES=Object.freeze([
  'tank','berserker','vampire','caster','gravecaller','oathbound_exarch',
  'briarspine_horror','ashen_executioner'
@@ -88,6 +110,6 @@ function enemyScaling(level,kind,identity=null){
 }
 root.WandererExpeditionProgression=Object.freeze({
  tiers,gearTier,enemyReference,ENEMY_EXPONENTIAL_GROWTH,
- NORMAL_BASE,BOSS_BASE,ELITE_IDENTITIES,CALIBRATION_STAT_ONLY,enemyScaling
+ NORMAL_BASE,BOSS_BASE,ELITE_IDENTITIES,CALIBRATION_STAT_ONLY,enemyScaling,firstExpeditionLeader
 });
 })(globalThis);
