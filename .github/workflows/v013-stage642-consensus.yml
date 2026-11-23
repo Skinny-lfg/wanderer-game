@@ -45,14 +45,14 @@ jobs:
       - uses: actions/setup-node@v4
         with: {node-version: '22', cache: npm}
       - run: npm ci
-      - name: Real E1-E2 100 strategies × 5 seeds with genuine earned XP/gear
+      - name: Real E1-E2 full current strategy catalog × 5 seeds with earned XP/gear
         run: |
           mkdir -p reports/stage642
-          node scripts/v013-stage640-calibration.cjs reports/stage642/e1-e2-500.json . full | tee reports/stage642/e1-e2-summary.txt
+          node scripts/v013-stage640-calibration.cjs reports/stage642/e1-e2-catalog.json . full | tee reports/stage642/e1-e2-summary.txt
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: stage642-e1-e2-500
+          name: stage642-e1-e2-full-catalog
           path: reports/stage642/*
           retention-days: 30
           if-no-files-found: warn
