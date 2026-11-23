@@ -7,7 +7,7 @@ const V=require('./v013-stage637-natural-rates.cjs');
 const OLD=Object.freeze({
  run:45199904168,artifact:14830604150,
  levels:[
-  {E:1,solo:[4139,4327],small:[540,2077],swarm:[0,581],elite:[808,1328],boss:[232,583]},
+  {E:1,solo:[4142,4327],small:[540,2077],swarm:[0,581],elite:[808,1328],boss:[232,583]},
   {E:2,small:[265,720],swarm:[2,141]},
   {E:3,small:[292,454],swarm:[8,91]},
   {E:4,small:[243,329],swarm:[26,97]},
