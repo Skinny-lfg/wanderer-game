@@ -49,3 +49,18 @@ Lightning is now an E10 group-capable AoE specialization in this limited sample;
 - Classify every orphan active-code reference: intentionally retired versus active-but-inaccessible. Avoid reviving all 45 legacy signatures.
 - Test Aegis `stored_force`, weapon forks and a selected Vitality AoE design on genuinely earned E10 characters before treating them as production-balanced.
 - Do **not** merge or deploy while these classifications and normal-encounter balancing remain unresolved.
+
+
+## Five-tick Contagion retune: verified final Stage 6.43 candidate
+
+Native workflow https://github.com/Skinny-lfg/wanderer-game/actions/runs/45282354553: **8/8 jobs successful**, **900 real combat fights** with exact matched E10 earned states and 100 combat seeds per group. Comparing three→five transferred DOT ticks in the **same existing Contagion handler**:
+
+| E10 build | 4 mobs (3→5 ticks) | 8 mobs (3→5 ticks) | 12 mobs (3→5 ticks) |
+|---|---:|---:|---:|
+| Decay + Blood | 63%→**65%** | 26%→**34%** | 38%→**49%** |
+| Blood Pure control | 86%→86% | 79%→79% | 79%→79% |
+| Lightning control | 78%→78% | 93%→93% | 76%→76% |
+
+Measured secondary damage Decay + Blood rose by 10,629→15,847 (4), 21,209→31,045 (8), and 34,743→48,713 (12). The two unchanged controls demonstrate the adjustment did not independently alter the Lightning or Blood Pure cohorts. **Still not sufficient for 8-mob rooms**; further blind multiplication of the death-only burst is not a good fix. If a stronger Decay/Blood AoE is desired, evaluate replacing its *on-kill-only* trigger with a bounded, earlier DOT-combination propagation action rather than adding a second proc layer.
+
+Final candidate Source fingerprint `f0f4be9d74a1c93f9f12f360439d08334312c8975498b4eea953162f9827d612`; previous candidate `1ae0bf22ce2625b8914d27cfce03f874ec22087131d4a90c05f41be6415e06af`. No E1/E2 rescaling, no merge and no deploy.
