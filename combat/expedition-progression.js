@@ -80,7 +80,7 @@ const OPENING_ELITE_BASE=Object.freeze({
  caster:{hp:1.07,atk:1.07,def:.92,interval:1.64},
  gravecaller:{hp:1.04,atk:.76,def:.86,interval:1.80},
  oathbound_exarch:{hp:1.18,atk:.87,def:1.18,interval:1.95},
- briarspine_horror:{hp:1.55,atk:.98,def:1.04,interval:1.92},
+ briarspine_horror:{hp:1.50,atk:.95,def:1.04,interval:1.95},
  ashen_executioner:{hp:1.16,atk:1.00,def:.93,interval:2.27}
 });
 const OPENING_BOSS_BASE=Object.freeze({
