@@ -62,11 +62,11 @@ const NORMAL_ROOM_BUDGET=Object.freeze({
   skirmisher:Object.freeze({hp:1.36,atk:1.20}),
   caster:Object.freeze({hp:1.34,atk:1.18})
  }),
- minion:Object.freeze({hp:.42,atk:.60,def:.55,interval:1.18}),
+ minion:Object.freeze({hp:.42,openingHp:.38,atk:.60,def:.55,interval:1.18}),
  // One persistent mixed-roster offset and one E1 relief component; both
  // are resolved here in the same native budget rather than multiplied later.
- escortHpPerMinion:.028,escortHpEarly:.015,
- escortAtkPerMinion:.024,escortAtkEarly:.010,
+ escortHpPerMinion:.028,escortHpEarly:.027,
+ escortAtkPerMinion:.024,escortAtkEarly:.021,
  escortDefPerMinion:.020,escortDefEarly:.005,
  minEscortHp:.38,minEscortAtk:.50,minEscortDef:.65,
  earlyDecay:.50
@@ -101,7 +101,7 @@ function applyNormalRoomBudget(group,expedition){
    hp=solo.hp+.20*(1-opening);atk=solo.atk+.08*(1-opening);}}
   else if(e.role==='minion'){
    const divisor=pressure+minions*.5*opening;
-   hp=c.minion.hp/(minions>=4?divisor:Math.sqrt(divisor));
+   hp=(c.minion.hp+(c.minion.openingHp-c.minion.hp)*opening)/(minions>=4?divisor:Math.sqrt(divisor));
    atk=c.minion.atk/divisor;def=c.minion.def;interval=c.minion.interval;
   }else{hp=escort.hp;atk=escort.atk/pressure;def=escort.def;}
   e.maxhp=Math.max(1,Math.round(e.maxhp*hp));
