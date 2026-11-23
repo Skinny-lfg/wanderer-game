@@ -1,4 +1,4 @@
-name: Stage 6.41 — native simulator source snapshot (NO DEPLOY)
+name: Stage 6.42 — current native simulator source snapshot (NO DEPLOY)
 on:
   push:
     branches: [balance/stage-6.40-e1-calibration]
@@ -16,11 +16,11 @@ jobs:
         with: {persist-credentials: false}
       - name: Archive tested source files only, excluding user data and credentials
         run: |
-          git archive --format=zip --output=/tmp/stage641-native-source.zip HEAD combat economy online scripts tests index.html package.json package-lock.json
-          unzip -t /tmp/stage641-native-source.zip | tail -1
-          sha256sum /tmp/stage641-native-source.zip
+          git archive --format=zip --output=/tmp/stage642-current-native-source.zip HEAD combat economy online scripts tests index.html package.json package-lock.json
+          unzip -t /tmp/stage642-current-native-source.zip | tail -1
+          sha256sum /tmp/stage642-current-native-source.zip
       - uses: actions/upload-artifact@v4
         with:
-          name: stage641-native-source
-          path: /tmp/stage641-native-source.zip
+          name: stage642-current-native-source
+          path: /tmp/stage642-current-native-source.zip
           retention-days: 7
