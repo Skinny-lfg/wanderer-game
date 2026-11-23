@@ -43,7 +43,7 @@ jobs:
           if-no-files-found: warn
   census:
     name: Native 5 profiles · batch ${{ matrix.batch }} · seed ${{ matrix.seed }}
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-stage632-full]')
     needs: preflight
     runs-on: ubuntu-latest
     timeout-minutes: 110
@@ -74,7 +74,7 @@ jobs:
           if-no-files-found: warn
   aggregate:
     name: Verify all 500 accounts; publish paired growth distributions
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-stage632-full]')
     needs: census
     runs-on: ubuntu-latest
     timeout-minutes: 30
