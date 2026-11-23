@@ -61,7 +61,7 @@ test('Stage6.36: same-seed reporting never recasts losses as time saved',()=>{
 test('Stage6.36: one player natural snapshot and all live enemy abilities remain enabled',()=>{
  const native=fs.readFileSync('combat/expedition-progression.js','utf8');
  assert(native.includes('const CALIBRATION_STAT_ONLY=false;'));
- assert(native.includes('lateLogGrowth:.014'));
+ assert(native.includes('lateLogGrowth:.0125')); // Stage6.38 continuous-tail candidate, E1 unchanged
  const script=fs.readFileSync('scripts/v013-stage636-combat-perceptibility.cjs','utf8');
  assert(script.includes("D.checkpoint(probe,LEVELS)"));
  assert(script.includes('D.native(snap,scenario,seed,false)'));
