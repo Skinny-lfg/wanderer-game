@@ -456,6 +456,19 @@ function encounter(level,build,seed,kind,opts,forcedTrait=undefined,forcedBossMo
  const label=forcedBossMod!==undefined?(forcedBossMod||'baseline'):forcedTrait!==undefined?(forcedTrait||'baseline'):mode==='bosses'?card.family:['enemies','roles'].includes(mode)?'swarm-'+count:kind;
  return {mode,kind:label,roleEffect:roleEffect||null,plannedConditionId:conditionPlan?.id||null,conditionNaturallyMarked:!!conditionPlan?.rooms?.includes(candidate),controlledRoomAccess,traitFixtureInjected:!!trialTraitId,level,build:build.id,seed,resolvedSeed,seedShift,gearE,gearFingerprint,gearTier:P.gearTier(gearE).name,
   gearRarity:opts.rarity,runes:opts.runes,pointsBudget:opts.points,pointsSpent:allocatedPoints,
+  // Stage 6.28: level/XP no longer stop at the 100-point Talent cap.
+  // The native combat actor already receives these exact permanent main stats
+  // through automaticTalents and v012-gear-stats; surface them as evidence.
+  // An earnedCheckpoint keeps its actual XP, gear, runes and allocations.
+  // A controlledTalent fixture may contain synthetic XP; never relabel as earned.
+  characterLevel:Math.floor(a.state().automaticTalents.xp/T.POINT_XP)+1,
+  talentXp:a.state().automaticTalents.xp,
+  talentPointsEarned:T.earned(a.state().automaticTalents),
+  permanentAttributesEarned:T.attributeBudget(a.state().automaticTalents),
+  permanentAttributesSpent:T.spentAttributes(a.state().automaticTalents),
+  permanentAttributes:T.attributes(a.state().automaticTalents),
+  heroBaseStats:Object.fromEntries(['str','agi','int','end','cha','attack','defense','maxhp',
+   'spellPower','attacksPerSec','crit','blockChance','power'].map(key=>[key,a.baseStats()[key]??null])),
   otherGearFingerprint,offhandType:a.state().equip.offhand?.subtype||null,offhandTrait:a.state().equip.offhand?.v013Trait||null,
   armorType:a.state().equip.armor?.armorType||null,
   controlledTalentNodes:opts.controlledTalents?[...opts.controlledTalents.nodes]:null,
