@@ -12,31 +12,21 @@ const tiers=Object.freeze([
 ]);
 function checked(level){if(!Number.isSafeInteger(level)||level<1)throw Error('Invalid Expedition Level');return level;}
 function gearTier(level){checked(level);for(let i=tiers.length-1;i>=0;i--)if(level>=tiers[i].minimum)return tiers[i];}
-// Stage 6.30 — E1–E5 now grow exponentially too (slightly softer opening).
-// One anchored progression: E5 remains EXACTLY 5. A small exponential
-// early arc replaces the old linear 1/2/3/4/5; the E5 tangent is carried
-// into the late curve as a nondecreasing saturating shoulder.
-// This avoids either a hard E5→E6 transition or a temporary level where
-// enemy HP/ATK would DECREASE. The late exponential acceleration from Stage
-// 6.29 is unchanged; the shared reference affects all native enemy roles.
-// Early example: E1 ≈ 0.78 instead of 1, E2 ≈ 1.65 instead of 2.
-// No build, gear, rarity, Elite or Boss ability coefficients are changed.
-const ENEMY_EXPONENTIAL_GROWTH=Object.freeze({rate:.015,weight:2,earlyRate:.12,shoulderLevels:.4});
+// Stage 6.31 — ONE geometric growth factor across every Expedition E>=1.
+// There is NO E5 anchor, tangent bridge, cap, level breakpoint or log tail.
+// Keep the Stage6.30 E1 reference (~0.775), and for this *test candidate*
+// hold E200 near the earlier late-stage reference (~38.559). The resulting
+// per-Expedition factor is constant: ~+1.98% at EVERY Expedition, including
+// E2, E3, E5, E70 and E200. This is not a claim of balanced player win rates.
+// All eight Elite / six Boss identity factors remain unchanged.
+const ENEMY_EXPONENTIAL_GROWTH=Object.freeze({
+ initialReference:.775,
+ growthPerExpedition:Math.pow(38.559/.775,1/199)
+});
 function enemyReference(level){
  checked(level);
- const {rate,weight,earlyRate,shoulderLevels}=ENEMY_EXPONENTIAL_GROWTH;
- const early=E=>5*Math.expm1(earlyRate*E)/Math.expm1(earlyRate*5);
- if(level<5)return early(level);
- if(level===5)return 5;
- const x=level-5;
- // Stage6.29's late curve, continuous in value at the E5 anchor.
- const base=5+Math.log1p(x/5)+weight*(Math.expm1(rate*x)-rate*x);
- // Exact left derivative at E5. The log baseline's right derivative is 1/5.
- // Preserve the tangent with a saturating, strictly increasing shoulder.
- // No special E6 multiplicator and no late-game artificial step.
- const tangent=5*earlyRate*Math.exp(earlyRate*5)/Math.expm1(earlyRate*5);
- const shoulder=(tangent-1/5)*shoulderLevels*(-Math.expm1(-x/shoulderLevels));
- const reference=base+shoulder;
+ const {initialReference,growthPerExpedition}=ENEMY_EXPONENTIAL_GROWTH;
+ const reference=initialReference*Math.pow(growthPerExpedition,level-1);
  if(!Number.isFinite(reference))throw Error('Expedition enemy reference exceeds finite range at E'+level);
  return reference;
 }
