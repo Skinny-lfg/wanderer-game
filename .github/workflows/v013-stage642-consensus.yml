@@ -58,7 +58,7 @@ jobs:
           if-no-files-found: warn
   e10:
     needs: preflight
-    # Briarspine 1.35 HP / .85 ATK / 2.05 interval: E1/E2 rerun only.
+    # Briarspine absolute E1 budget interpolated to 1.55 HP / .98 ATK / 1.92 interval.
     # The Briarspine correction changes only E1..E9 opening budgets; reuse
     # the already verified E10 matrix unless an explicit full-E10 run is requested.
     if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-e10]')
