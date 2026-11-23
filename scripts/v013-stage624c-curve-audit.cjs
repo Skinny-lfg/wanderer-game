@@ -99,7 +99,7 @@ function compare(row,kind,id){
   identity:before.eliteType===after.eliteType&&before.bossId===after.bossId&&
     before.affinity===after.affinity&&before.roster[0]?.role===after.roster[0]?.role,
   classified:before.roster.length===after.roster.length,
-  nonEliteUnchanged:kind==='elite'||JSON.stringify(before)===JSON.stringify(after),
+  nonEliteUnchanged:kind==='elite'||kind==='boss'&&row.level>30||JSON.stringify(before)===JSON.stringify(after),
   e5Exact:row.level!==5||JSON.stringify(before)===JSON.stringify(after)
  };
  if(Object.values(parities).some(v=>!v))throw Error('Native matched invariants fail '+row.id+'/'+kind+'/'+id+': '+JSON.stringify(parities));
@@ -142,7 +142,9 @@ function summarize(shards){
    elites:outcome(elves),
    byElite:Object.fromEntries(IDS.map(id=>[id,outcome(elves.filter(x=>x.id===id))])),
    normal:outcome(shard.rows.filter(x=>x.kind==='normal')),
-   bosses:outcome(shard.rows.filter(x=>x.kind==='boss'))});
+   bosses:outcome(shard.rows.filter(x=>x.kind==='boss')),
+   byBoss:Object.fromEntries(['blood','decay','vitality','aegis','fury','magic']
+    .map(f=>[f,outcome(shard.rows.filter(x=>x.kind==='boss'&&x.realm===f))]))});
  }
  if(levels.size!==LEVELS.length||LEVELS.some(x=>!levels.has(x)))throw Error('Incomplete E5-E200 native audit');
  return {stage:'6.24C',mode:'aggregate',sources:SOURCES,

@@ -34,27 +34,41 @@ test('Elite curve continuous through E6, E35, E70, E200 and E201; E5 exact nativ
    }
    last=val;
   }
-  const gains=P.ELITE_GROWTH[id],p70=P.enemyScaling(70,'elite',id);
+  const gains=P.ELITE_GROWTH[id],p200=P.enemyScaling(200,'elite',id);
   for(const key of ['hp','atk','def']){
-   assert(Math.abs(p70[key]-(1+gains[key]))<1e-12,id+' E70 '+key);
-   assert(P.enemyScaling(6,'elite',id)[key]<p70[key]);
-   assert(P.enemyScaling(200,'elite',id)[key]>p70[key]);
-   assert(P.enemyScaling(201,'elite',id)[key]>P.enemyScaling(200,'elite',id)[key]);
+   assert(Math.abs(p200[key]-(1+gains[key]))<1e-12,id+' E200 '+key);
+   assert(P.enemyScaling(6,'elite',id)[key]<p200[key]);
+   assert(P.enemyScaling(70,'elite',id)[key]<p200[key]);
+   assert(P.enemyScaling(201,'elite',id)[key]>p200[key]);
    for(const edge of [5,14,15,34,35,69,70,199,200]){
     const prev=P.enemyScaling(edge,'elite',id)[key],next=P.enemyScaling(edge+1,'elite',id)[key];
     assert(next/prev<1.05,'Unintended abrupt jump E'+edge+'→'+(edge+1)+' '+id+'/'+key);
    }
   }
  }
- assert.equal(P.eliteProgress(5),0);assert.equal(P.eliteProgress(70),1);
+ assert.equal(P.eliteProgress(5),0);assert.equal(P.eliteProgress(200),1);
  assert(P.eliteProgress(201)>P.eliteProgress(200));
- assert(P.eliteProgress(100000)<95/65,'bounded but never clamped after E70');
+ assert(P.eliteProgress(100000)<215/195,'bounded but never clamped after E200');
 });
-test('Six Boss reductions identical to Stage 6.21 at all levels, no global Boss buffs',()=>{
- for(const style of BOSSES)for(const level of [1,2,3,4,5,6,15,29,30,31,35,70,200,201,1000]){
+test('Early six-Boss protection remains identical E1-E30, later individual growth is smooth',()=>{
+ assert.equal(Object.keys(P.BOSS_GROWTH).length,6);
+ assert.equal(new Set(Object.values(P.BOSS_GROWTH).map(JSON.stringify)).size,6);
+ for(const style of BOSSES)for(const level of [1,2,3,4,5,6,15,20,29,30,31,35,70,200,201,1000]){
   const p=P.BOSS_PROTECTION[style],q=Math.max(0,Math.min(1,(30-level)/29));
+  const growth=P.BOSS_GROWTH[style],late=P.bossProgress(level);
   assert.deepEqual(P.enemyScaling(level,'boss',style),
+   {hp:1-p.hp*q+growth.hp*late,atk:1-p.atk*q+growth.atk*late,def:1});
+  if(level<=30)assert.deepEqual(P.enemyScaling(level,'boss',style),
    {hp:1-p.hp*q,atk:1-p.atk*q,def:1});
+ }
+ for(const style of BOSSES){
+  assert(P.enemyScaling(70,'boss',style).hp>1);
+  assert(P.enemyScaling(200,'boss',style).hp>P.enemyScaling(70,'boss',style).hp);
+  for(const edge of [30,34,35,69,70,199,200]){
+   const a=P.enemyScaling(edge,'boss',style),b=P.enemyScaling(edge+1,'boss',style);
+   assert(b.hp/a.hp<1.03,'Boss HP has abrupt jump E'+edge+'/'+style);
+   assert(b.atk/a.atk<1.03,'Boss ATK has abrupt jump E'+edge+'/'+style);
+  }
  }
  for(const level of [1,2,5,15,70,100,200,201]){
   assert.deepEqual(P.enemyScaling(level,'normal','tank'),{hp:1,atk:1,def:1});

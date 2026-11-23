@@ -118,14 +118,15 @@ jobs:
             throw Error('Incomplete Stage 6.24C native evidence');
           if(a.results.find(x=>x.E===5).elites.oldWins!==a.results.find(x=>x.E===5).elites.newWins)
            throw Error('Stage 6.24C changed E5 Elite win rate');
-          if(a.results.some(x=>x.bosses.oldWins!==x.bosses.newWins||
-           x.normal.oldWins!==x.normal.newWins))
-           throw Error('Stage 6.24C changed Boss or normal roles');
+          if(a.results.some(x=>x.normal.oldWins!==x.normal.newWins||
+           x.E<=30&&x.bosses.oldWins!==x.bosses.newWins))
+           throw Error('Stage 6.24C changed normal mobs or protected early Bosses');
           console.log('STAGE624C_ACCEPTED='+JSON.stringify({
            coverage:a.coverage,natural:n.coverage,
            results:a.results.map(x=>({E:x.E,elites:x.elites,
             normal:x.normal,bosses:x.bosses,
-            byElite:Object.fromEntries(Object.entries(x.byElite).map(([id,v])=>[id,v.oldWins+'/'+v.n+'→'+v.newWins+'/'+v.n]))}))}));
+            byElite:Object.fromEntries(Object.entries(x.byElite).map(([id,v])=>[id,v.oldWins+'/'+v.n+'→'+v.newWins+'/'+v.n])),
+            byBoss:Object.fromEntries(Object.entries(x.byBoss).map(([id,v])=>[id,v.oldWins+'/'+v.n+'→'+v.newWins+'/'+v.n]))}))}));
           NODE
       - uses: actions/upload-artifact@v4
         with:

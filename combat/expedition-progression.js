@@ -16,19 +16,30 @@ function gearTier(level){checked(level);for(let i=tiers.length-1;i>=0;i--)if(lev
 // the logarithmic tail is unbounded but grows ever more slowly beyond E200.
 function enemyReference(level){checked(level);return level<=5?level:5*(1+.2*Math.log1p((level-5)/5));}
 const UNITY=Object.freeze({hp:1,atk:1,def:1});
-// Target individual added pressure at E70, expressed relative to each Elite's
+// Target individual added pressure at E200, expressed relative to each Elite's
 // own BASE archetype (NOT the gear, rarity, risk, role or ability multipliers).
-// E70 Briarspine is deliberately lower than the obsolete two-ramp profile:
+// Briarspine's growth is deliberately lower than the obsolete two-ramp profile:
 // synthetic Rare-geared E70 players previously only won 5/12 encounters.
 const ELITE_GROWTH=Object.freeze({
  tank:Object.freeze({hp:.58,atk:.24,def:.10}),
- berserker:Object.freeze({hp:.60,atk:.28,def:.06}),
- vampire:Object.freeze({hp:.48,atk:.24,def:.05}),
- caster:Object.freeze({hp:.70,atk:.32,def:.11}),
- gravecaller:Object.freeze({hp:.69,atk:.37,def:.09}),
- oathbound_exarch:Object.freeze({hp:.97,atk:.45,def:.18}),
- briarspine_horror:Object.freeze({hp:.95,atk:.38,def:.12}),
- ashen_executioner:Object.freeze({hp:.80,atk:.37,def:.11})
+ berserker:Object.freeze({hp:.58,atk:.27,def:.06}),
+ vampire:Object.freeze({hp:.48,atk:.23,def:.05}),
+ caster:Object.freeze({hp:.70,atk:.31,def:.11}),
+ gravecaller:Object.freeze({hp:.67,atk:.36,def:.09}),
+ oathbound_exarch:Object.freeze({hp:.94,atk:.43,def:.17}),
+ briarspine_horror:Object.freeze({hp:.85,atk:.34,def:.11}),
+ ashen_executioner:Object.freeze({hp:.77,atk:.35,def:.11})
+});
+// Six independent late-Boss pressures compensate for the Exalted gear ceiling.
+// E1–E30 stay exactly as Stage 6.21; after E30 the single policy increases
+// difficulty smoothly by identity, not by a blanket Boss multiplier.
+const BOSS_GROWTH=Object.freeze({
+ leech:Object.freeze({hp:.24,atk:.13}),
+ matriarch:Object.freeze({hp:.27,atk:.12}),
+ guardian:Object.freeze({hp:.20,atk:.12}),
+ conductor:Object.freeze({hp:.25,atk:.13}),
+ berserker:Object.freeze({hp:.22,atk:.14}),
+ devourer:Object.freeze({hp:.24,atk:.11})
 });
 // Stage 6.21's six individualized E1 Boss protections are preserved byte-for-
 // byte in their computed values through E30. Moving them here removes a second
@@ -42,13 +53,19 @@ const BOSS_PROTECTION=Object.freeze({
  devourer:Object.freeze({hp:.16,atk:.10})
 });
 // One continuous, monotonic rational curve, no E6/E36/E70/E200 step:
-// E1–E5 = 0; E70 = 1; E200 ≈ 1.267; asymptotically approaches 95/65.
+// E1–E5 = 0; E200 = 1; E70 ≈ .84; asymptotically approaches 215/195.
 // The continuing tail gives post-E70 Elites some pressure without compounding
 // an additional late-game modifier on top of this function.
 function eliteProgress(level){
  checked(level);
  const x=Math.max(0,level-5);
- return x/(x+30)/(65/(65+30));
+ return x/(x+20)/(195/(195+20));
+}
+// C1-continuous at E30: the square removes any sudden late Boss jump.
+function bossProgress(level){
+ checked(level);
+ const x=Math.max(0,level-30);
+ return Math.pow(x/(x+30),2)/Math.pow(170/200,2);
 }
 function enemyScaling(level,kind,identity=null){
  checked(level);
@@ -64,15 +81,16 @@ function enemyScaling(level,kind,identity=null){
   return {hp:1+gain.hp*progress,atk:1+gain.atk*progress,def:1+gain.def*progress};
  }
  if(kind==='boss'){
-  const protection=BOSS_PROTECTION[identity];
-  if(!protection)throw Error('Invalid Boss scaling style '+identity);
-  const early=Math.max(0,Math.min(1,(30-level)/29));
-  return {hp:1-protection.hp*early,atk:1-protection.atk*early,def:1};
+  const protection=BOSS_PROTECTION[identity],late=BOSS_GROWTH[identity];
+  if(!protection||!late)throw Error('Invalid Boss scaling style '+identity);
+  const early=Math.max(0,Math.min(1,(30-level)/29)),progress=bossProgress(level);
+  return {hp:1-protection.hp*early+late.hp*progress,
+   atk:1-protection.atk*early+late.atk*progress,def:1};
  }
  throw Error('Invalid native enemy class '+kind);
 }
 root.WandererExpeditionProgression=Object.freeze({
- tiers,gearTier,enemyReference,enemyScaling,eliteProgress,
- ELITE_GROWTH,BOSS_PROTECTION
+ tiers,gearTier,enemyReference,enemyScaling,eliteProgress,bossProgress,
+ ELITE_GROWTH,BOSS_PROTECTION,BOSS_GROWTH
 });
 })(globalThis);
