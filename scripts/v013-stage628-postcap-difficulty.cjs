@@ -153,7 +153,7 @@ function native(snap,scenario,seed,without=false){
   x.talentXp!==snap.xp||x.talentPointsEarned!==snap.talentEarned||
   x.permanentAttributesEarned!==snap.attributeEarned||
   x.permanentAttributesSpent!==(without?0:snap.attributeSpent)||
-  x.permanentAttributes[strKey()]!==((without?{}:snap.attributes).str||0)||
+  x.permanentAttributes.str!==(without?0:(snap.attributes.str||0))||
   x.affinity!==scenario.realm||x.risk!==1||
   x.offhandType!==(snap.state.equip.offhand?.subtype||null)||
   JSON.stringify(x.controlledTalentNodes)!==JSON.stringify(snap.state.automaticTalents.nodes)||
@@ -165,7 +165,6 @@ function native(snap,scenario,seed,without=false){
   throw Error('A Tank must be an actual native solo Tank, not an arbitrary mob');
  return x;
 }
-function strKey(){return 'str';}
 function paired(snap,scenario,seed){
  const enhanced=native(snap,scenario,seed,false);
  const baseline=snap.attributeSpent>0?native(snap,scenario,seed,true):null;
@@ -224,16 +223,17 @@ function audit(cfg){
     rows.push(paired(snap,scenario,initialSeed));
    // A Tank is an actual native solo role, not automatically every solo.
    // Record missing matched tanks as UNSAMPLED, never invent or force a role.
-   let found=null;
+   let found=null,scanned=0;
    for(let scan=0;scan<14;scan++){
+    scanned++;
     const trialSeed=initialSeed+scan*83;
     const candidate=native(snap,{id:'tank',type:'normal',size:1,realm:scenarios(snap)[0].realm},trialSeed);
     if(candidate.initialRoles?.tank===1){found=trialSeed;break;}
    }
    if(found!==null){
     const sample=paired(snap,{id:'solo-tank',type:'tank',size:1,realm:scenarios(snap)[0].realm},found);
-    rows.push(sample);tanks.push({E:snap.level,seed:found,found:true});
-   }else tanks.push({E:snap.level,seed:initialSeed,found:false});
+    rows.push(sample);tanks.push({E:snap.level,seed:found,found:true,scanned});
+   }else tanks.push({E:snap.level,seed:initialSeed,found:false,scanned});
   }
  }
  const out={stage:'6.28',kind:'earned-Camp-checkpoints-matched-native-enemy-matrix',
@@ -250,8 +250,9 @@ function audit(cfg){
   coverage:{nativeAccountAttempts:account.attempts.length,
    checkpoints:checkpoints.length,encounters:rows.length,
    nativeFights:rows.length+rows.filter(r=>r.noStats).length+
-     tanks.reduce((n,x)=>n+(x.found?0:14),0),
+     tanks.reduce((n,x)=>n+x.scanned,0),
    counterfactualFights:rows.filter(r=>r.noStats).length,
+   searchedSoloTankFights:tanks.reduce((n,x)=>n+x.scanned,0),
    missingTanks:tanks.filter(x=>!x.found).length,
    errors:0},
   limits:[
