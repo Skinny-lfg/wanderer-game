@@ -1,0 +1,107 @@
+name: Wanderer Stage 6.35 — actual player growth E1–E200 (NO DEPLOY)
+on:
+  push:
+    branches: [balance/v013-stage635-native-player-envelope-20261123]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: stage635-growth-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  preflight:
+    name: Native growth instrument, clean regression and earned E1–E2 smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Compile and validate continuous growth instrument
+        run: |
+          node --check scripts/v013-stage635-native-player-envelope.cjs
+          node --test tests/v013-stage635-native-player-envelope.test.cjs tests/v013-stage634-earned-growth.test.cjs tests/v013-stage634-natural-rates.test.cjs tests/v013-stage633-fixed-bases.test.cjs
+          git diff --check
+      - name: Full v0.13 regression with all normal gameplay abilities
+        run: npm test
+      - name: Earned account smoke — native progression from E1
+        run: >-
+          node scripts/v013-stage635-native-player-envelope.cjs
+          --batch=0 --seed=9861 --take=1 --max-level=2
+          --max-attempts=6 --max-total-attempts=12
+          --out=reports/v013-stage635-smoke.json
+      - name: Check smoke authenticity and typed metrics
+        run: |
+          node -e "const d=require('./reports/v013-stage635-smoke.json');if(d.accounts.length!==1||d.accounts[0].checkpoints[0].E!==1||!Number.isFinite(d.accounts[0].checkpoints[0].metrics.power))process.exit(1)"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage635-native-growth-smoke
+          path: reports/v013-stage635-smoke.json
+          retention-days: 45
+          if-no-files-found: warn
+  census:
+    name: Earned E1–E200 · 5 profiles batch ${{ matrix.batch }} · seed ${{ matrix.seed }}
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-stage635-full]')
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 115
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        batch: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+        seed: [9861, 9863, 9865, 9867, 9869]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Native first-Camp stats and actual equipment (no fabricated power/gear)
+        run: >-
+          node scripts/v013-stage635-native-player-envelope.cjs
+          --batch=${{ matrix.batch }} --seed=${{ matrix.seed }}
+          --take=5 --max-level=200 --max-attempts=12 --max-total-attempts=400
+          --out=reports/v013-stage635-cohort-${{ matrix.batch }}-${{ matrix.seed }}.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage635-cohort-${{ matrix.batch }}-${{ matrix.seed }}
+          path: reports/v013-stage635-cohort-${{ matrix.batch }}-${{ matrix.seed }}.json
+          retention-days: 45
+          if-no-files-found: warn
+  aggregate:
+    name: Exactly 500 original E1-born accounts, growth by E, build and rarity
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-stage635-full]')
+    needs: census
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage635-cohort-*
+          merge-multiple: true
+          path: reports/stage635-shards
+      - name: Reject missing, duplicate or non-earned player data
+        run: >-
+          node scripts/v013-stage635-native-player-envelope.cjs
+          --mode=aggregate --inputs=reports/stage635-shards
+          --out=reports/v013-stage635-aggregate.json
+      - name: Validate real-coverage gaps and expose family comparisons
+        run: |
+          node -e "const d=require('./reports/v013-stage635-aggregate.json');if(d.cohort.accounts!==500||d.transitions.length!==199||d.levels.length!==200||d.levels[0].observed!==500)process.exit(1)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage635-native-player-growth-e1-e200-100x5
+          path: |
+            reports/v013-stage635-aggregate.json
+            reports/v013-stage635-aggregate.md
+          retention-days: 45
