@@ -1,0 +1,107 @@
+name: Wanderer Stage 6.37 — principal mobs by Minions, E1 Elite bases (NO DEPLOY)
+on:
+  push:
+    branches: [balance/v013-stage637-minion-dependent-principals-elites-e1-20261123]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: stage637-e1-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  preflight:
+    name: Live Minion roster, Elite E1 budgets, full v0.13 regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Verify native 5+ mixed rooms and 8 Elite identities at E1/E200
+        run: |
+          node --check scripts/v013-stage637-natural-rates.cjs
+          node --test tests/v013-stage637-minion-principal-elite-bases.test.cjs tests/v013-stage637-natural-rates.test.cjs tests/v013-stage633-fixed-bases.test.cjs tests/v013-stage634-earned-growth.test.cjs tests/v013-stage634-natural-rates.test.cjs
+          git diff --check
+      - name: Entire native and UI v0.13 regression
+        run: npm test
+      - name: Single actual E1-born legal progression with new Elite bases
+        run: >-
+          node scripts/v013-stage637-natural-rates.cjs
+          --batch=0 --seed=9861 --take=1 --max-level=2
+          --max-attempts=6 --max-total-attempts=12
+          --out=reports/v013-stage637-smoke.json
+      - name: Reject made-up progress, Elite identities or synthetic player source
+        run: |
+          node -e "const d=require('./reports/v013-stage637-smoke.json');if(d.stage!=='6.37'||d.accounts.length!==1||!d.accounts[0].reached.includes(1)||d.accounts[0].rooms.some(x=>x.kind==='elite'&&!x.eliteType))process.exit(1)"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage637-native-smoke
+          path: reports/v013-stage637-smoke.json
+          retention-days: 45
+          if-no-files-found: warn
+  cohort:
+    name: Stage6.37 native 100×5 · five strategies batch ${{ matrix.batch }} / seed ${{ matrix.seed }}
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-stage637-full]')
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 115
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        batch: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+        seed: [9861, 9863, 9865, 9867, 9869]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Natural earned E1–E5 fights with actual minion room composition and 8 Elite bases
+        run: >-
+          node scripts/v013-stage637-natural-rates.cjs
+          --batch=${{ matrix.batch }} --seed=${{ matrix.seed }}
+          --take=5 --max-level=5 --max-attempts=12 --max-total-attempts=60
+          --out=reports/v013-stage637-cohort-${{ matrix.batch }}-${{ matrix.seed }}.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage637-cohort-${{ matrix.batch }}-${{ matrix.seed }}
+          path: reports/v013-stage637-cohort-${{ matrix.batch }}-${{ matrix.seed }}.json
+          retention-days: 45
+          if-no-files-found: warn
+  aggregate:
+    name: Exactly 500 naturally progressed E1-born accounts and per-Elite E1–E5 rates
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-stage637-full]')
+    needs: cohort
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage637-cohort-*
+          merge-multiple: true
+          path: reports/stage637-shards
+      - name: Reject duplicated, incomplete or mixed-fingerprint earned simulations
+        run: >-
+          node scripts/v013-stage637-natural-rates.cjs
+          --mode=aggregate --inputs=reports/stage637-shards
+          --out=reports/v013-stage637-aggregate.json
+      - name: Check full cohort and eight E1 identity rates
+        run: |
+          node -e "const d=require('./reports/v013-stage637-aggregate.json');if(d.cohort.accounts!==500||d.levels.length!==5||d.levels[0].accountsReached!==500||Object.keys(d.levels[0].byElite).length!==8)process.exit(1)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage637-minion-group-e1-elites-e5-native-100x5
+          path: |
+            reports/v013-stage637-aggregate.json
+            reports/v013-stage637-aggregate.md
+          retention-days: 45
