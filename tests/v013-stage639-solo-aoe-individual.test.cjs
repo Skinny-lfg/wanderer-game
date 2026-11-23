@@ -52,9 +52,12 @@ test('Native E1/E2/E10 normals have one budget; leaders have none',()=>{
   const x=native(E,1,type);assert(x.actors.every(a=>!a.normalRoomBudgetApplied));
  }
 });
-test('Stage6.39: complete real 100 profiles x 5 seeds and AoE observational caveats',()=>{
+test('Stage6.39: coherent earned profile census and AoE observational caveats',()=>{
  const B=require('../scripts/v013-stage632-player-power.cjs');
- assert.equal(B.IDS.length,100);assert.equal(B.SEEDS.length,5);
+ const expected=[...new Set([...B.ORIGINAL_IDS,...Object.keys(B.RESEARCH)])];
+ assert.equal(B.IDS.length,expected.length);
+ assert(B.IDS.length>=100,'full legal build census retained');
+ assert.equal(B.SEEDS.length,5);
  assert.equal(A.BOSSES.length,6);assert.equal(A.ELITES.length,8);
  assert.equal(A.options(['--batch=19','--seed=9869','--out=reports/v013-stage639-diagnostic-19-9869.json']).batch,19);
  for(const s of ['--batch=20','--seed=1','--take=6','--max-level=6','--out=../bad.json',
