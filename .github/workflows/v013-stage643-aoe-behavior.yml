@@ -1,0 +1,120 @@
+name: Stage 6.43 — Lightning Marks / Blood-Decay AoE native E10 validation (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths:
+      - '.github/workflows/v013-stage643-aoe-behavior.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: stage643-aoe-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Native AoE rules, TalentGraph, mark UI and regression preflight
+        run: |
+          node --check combat/v012-combat-runtime.js
+          node --check combat/v012-buildcraft.js
+          node --check online/v012-expedition-runtime.js
+          node --test tests/v013-stage643-aoe-mechanics.test.cjs tests/v013-stage642-aoe-readiness.test.cjs tests/v013-stage642-single-budget.test.cjs tests/talent-graph-next.test.cjs tests/talent-graph-runtime.test.cjs tests/talent-graph-bridge.test.cjs tests/talent-graph-combat.test.cjs tests/v013-talent-structure.test.cjs
+          git diff --check
+  replay:
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 85
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        profile: [magic-lightning, decay-blood-spread, smart-blood-pure, plate-warden, magic-fire]
+        shard: [0, 1]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45272938568
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: stage642-snapshot-${{ matrix.profile }}
+          path: reports/stage643/snapshots
+      - name: E10 fixed earned states and matched 50 combat seeds per shard / group
+        env:
+          PROFILE: ${{ matrix.profile }}
+          SHARD: ${{ matrix.shard }}
+        run: |
+          mkdir -p reports/stage643/shards
+          node scripts/v013-stage642-e10-100seed.cjs replay "$PROFILE" "$SHARD" "reports/stage643/snapshots/$PROFILE.json" "reports/stage643/shards/stage642-$PROFILE-shard-$SHARD.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage643-${{ matrix.profile }}-${{ matrix.shard }}
+          path: reports/stage643/shards/*.json
+          retention-days: 30
+          if-no-files-found: error
+  aggregate:
+    needs: replay
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage643-*
+          merge-multiple: true
+          path: reports/stage643/shards
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45276225810
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: stage642-aoe-3300-before-after
+          path: reports/stage643/before
+      - name: Aggregate new 1,500 native E10 fights against the last verified AoE candidate
+        run: |
+          node <<'JS'
+          const fs=require('fs'),root='reports/stage643',old=JSON.parse(fs.readFileSync(root+'/before/stage642-aoe-summary.json','utf8'));
+          const files=fs.readdirSync(root+'/shards').filter(f=>/^stage642-.*-shard-[01]\.json$/.test(f));
+          const parts=files.map(f=>JSON.parse(fs.readFileSync(root+'/shards/'+f,'utf8')));
+          const profiles=['magic-lightning','decay-blood-spread','smart-blood-pure','plate-warden','magic-fire'];
+          if(parts.length!==profiles.length*2)throw Error('Missing paired shards');
+          const fingerprint=new Set(parts.map(x=>x.source));
+          if(fingerprint.size!==1||fingerprint.has(old.source))throw Error('Incorrect source fingerprint');
+          const results=profiles.map(id=>{
+           const shards=parts.filter(p=>p.profileId===id);
+           if(shards.length!==2||shards[0].nEarnedSnapshots!==shards[1].nEarnedSnapshots)throw Error('Shard drift '+id);
+           const prior=old.profiles.find(x=>x.id===id),rows=shards.flatMap(x=>x.rows);
+           if(!prior||JSON.stringify(prior.snapshots)!==JSON.stringify(shards[0].snapshots))throw Error('Hero drift '+id);
+           return {id,groups:[4,8,12].map(size=>{
+            const sample=rows.filter(x=>x.size===size),previous=prior.groups.find(x=>x.size===size);
+            if(sample.length!==100||previous.attempted!==100)throw Error('Missing 100 samples '+id+'/'+size);
+            return {size,beforeWins:previous.wins,afterWins:sample.filter(x=>x.won).length,
+             timeouts:sample.filter(x=>x.timedOut).length,beforeSecondary:previous.totalSecondaryDamage,
+             afterSecondary:sample.reduce((a,x)=>a+x.secondaryDamage,0),
+             afterTransfers:sample.reduce((a,x)=>a+x.plagueTransfers,0)};
+           })};
+          });
+          const out={source:[...fingerprint][0],beforeSource:old.source,profiles:results,
+           caveat:'Same RNG seeds and 1–2 earned E10 snapshots per build; not independent player builds.'};
+          fs.writeFileSync(root+'/aoe-results.json',JSON.stringify(out,null,2)+'\n');
+          console.log('STAGE643_AOE_RESULTS='+JSON.stringify(out));
+          JS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage643-e10-aoe-results
+          path: reports/stage643/aoe-results.json
+          retention-days: 30
