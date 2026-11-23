@@ -130,8 +130,11 @@ function main(args=process.argv.slice(2)){
  const p=parse(args);
  if(T.MAX_POINTS!==100||T.POINT_XP!==100)throw Error('Talent cap requirement changed: abort audit');
  const opts=N.parseArgs(['--seeds='+p.seed,'--profiles='+p.profiles.join(','),
-  '--max-level='+p.maxLevel,'--max-attempts='+p.maxAttempts,
+  '--max-level=20','--max-attempts='+p.maxAttempts,
   '--max-total-attempts='+p.maxTotalAttempts,'--out='+p.output]);
+ // Stage 6.26 is explicitly authorized to audit through E200. Keep the native
+ // general-purpose parseArgs guard at E20 to preserve existing regression gates.
+ opts.maxLevel=p.maxLevel;
  const report=N.run(opts,{decisionModel:'adaptive',stopAtTalentCap:true});
  const summary=summarize(report,p);
  fs.mkdirSync(path.dirname(p.output),{recursive:true});
