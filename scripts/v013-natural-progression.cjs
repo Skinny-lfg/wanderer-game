@@ -1284,7 +1284,7 @@ function simulateAccount(seed,id,opts,simulationOptions={}){
    // Stage 6.26: stop an intact native account after the attempt that genuinely
    // reached 10,000 XP; no synthetic awards/unlocks and no replay of that attempt.
    if(simulationOptions.stopAtTalentCap===true&&
-     a.talents.earned(a.state().automaticTalents)>=a.talents.cap()){
+     a.talents.earned(a.state().automaticTalents)>=100){
     acc.stopReason='Native 100-point Talent cap reached at E'+level;
     stopped=true;
    }
