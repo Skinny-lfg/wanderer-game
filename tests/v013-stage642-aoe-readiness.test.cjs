@@ -49,7 +49,11 @@ test('Stage 6.42: only one shared runtime implementation for increased AoE and n
  const runtime=read('combat/v012-combat-runtime.js');
  const expedition=read('online/v012-expedition-runtime.js');
  assert(runtime.includes("kind==='Bow')groupSecondaryDamage(r,base,ports.state.automaticTalents?.nodes?.includes('bow_pierce')?[.60,.42,.28]:[.42,.24]"));
- assert(runtime.includes("v013LightningChainFactors(){return ports.state.automaticTalents?.nodes?.includes('storm_mastery')?[.68,.52,.36]:[.60,.43,.28]"));
+ assert(runtime.includes("function v013LightningChainDamage(r,base){"));
+ assert(runtime.includes("function v013LightningChainFactors(){"));
+ assert(runtime.includes("lightningMarksDetonated"));
+ assert(runtime.includes("[.68,.53,.40,.29,.21,.15]"));
+ assert(runtime.includes("[.60,.45,.33,.23,.16]"));
  assert(runtime.includes("function v013GraveBloomPulse("));
  assert(!runtime.includes("prepared('grave_bloom')&&e.v012Rot?.length"));
  assert(expedition.includes("ports.phase6Metric(r,'plagueSpreadBursts',1)"));
