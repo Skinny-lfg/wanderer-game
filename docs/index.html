@@ -929,6 +929,7 @@ function enemyDebuffMarkup(e){
  }
  if(state.run?.phase1&&e.v012Rot?.length)items.push('<span class="debuff statusNegative">'+statusArt('rot')+' Rot ×'+e.v012Rot.length+'/6</span>');
  if(state.run?.phase1&&e.v012Shock>0)items.push('<span class="debuff statusNegative">'+statusArt('shock')+' Shock '+e.v012Shock+'/4</span>');
+ if(state.run?.phase1&&e.v013LightningMark?.expiresAt>(state.run.combatSeconds||0))items.push('<span class="debuff statusNegative" title="A future Lightning chain detonates this mark and damages nearby enemies">'+statusArt('shock')+' Static Mark · '+Math.ceil(e.v013LightningMark.expiresAt-(state.run.combatSeconds||0))+'s</span>');
  const lt=state.run?.legendaryState;if(lt?.enemy===e){if(lt.markUntil>setNow(state.run))items.push('<span class="debuff statusNegative">'+statusArt('dawn-mark')+' Dawn Mark</span>');if(lt.weaken)items.push('<span class="debuff statusNegative">'+statusArt('next-attack-weakened')+' Next attack weakened</span>');}
  if(e.slowTime>0)items.push('<span class="debuff statusNegative" title="Frost reduces the enemy attack speed">'+statusArt('chilled')+' Frost · Chilled '+Math.ceil(e.slowTime)+'s</span>');
  if(e.def<e.baseDef)items.push('<span class="debuff statusNegative">'+statusArt('sunder')+' Sunder −'+(e.baseDef-e.def)+' DEF</span>');
