@@ -149,16 +149,25 @@ function native(snap,scenario,seed,without=false){
  const kind=scenario.type==='normal'||scenario.type==='tank'?'normal':scenario.type;
  const x=S.encounter(snap.level,build(snap),seed,kind,opts,undefined,undefined,
   scenario.realm,1,kind==='normal'?scenario.size:undefined);
- if(x.level!==snap.level||x.nativeEncounter!==kind||x.pointsBudget!==snap.talentEarned||
-  x.talentXp!==snap.xp||x.talentPointsEarned!==snap.talentEarned||
-  x.permanentAttributesEarned!==snap.attributeEarned||
-  x.permanentAttributesSpent!==(without?0:snap.attributeSpent)||
-  x.permanentAttributes.str!==(without?0:(snap.attributes.str||0))||
-  x.affinity!==scenario.realm||x.risk!==1||
-  x.offhandType!==(snap.state.equip.offhand?.subtype||null)||
-  JSON.stringify(x.controlledTalentNodes)!==JSON.stringify(snap.state.automaticTalents.nodes)||
-  x.heroBaseStats.attack===undefined)
-  throw Error('Invalid native earned-stat opponent fixture '+scenario.id+' E'+snap.level);
+ const checks={
+  level:x.level===snap.level,kind:x.nativeEncounter===kind,
+  talentBudget:x.pointsBudget===snap.talentEarned,
+  earnedXP:x.talentXp===snap.xp,earnedTalents:x.talentPointsEarned===snap.talentEarned,
+  earnedStatBudget:x.permanentAttributesEarned===snap.attributeEarned,
+  spentStats:x.permanentAttributesSpent===(without?0:snap.attributeSpent),
+  allocatedSTR:x.permanentAttributes.str===(without?0:(snap.attributes.str||0)),
+  nativeAffinity:x.affinity===scenario.realm,nativeRisk:x.risk===1,
+  nativeOffhand:x.offhandType===(snap.state.equip.offhand?.subtype||null),
+  treeUnchanged:JSON.stringify(x.controlledTalentNodes)===JSON.stringify(snap.state.automaticTalents.nodes),
+  statProjection:Number.isFinite(x.heroBaseStats.attack)
+ };
+ const failures=Object.entries(checks).filter(([,ok])=>!ok).map(([key])=>key);
+ if(failures.length)throw Error('Invalid native earned-stat fixture '+scenario.id+' E'+snap.level+
+  ': '+failures.join(', ')+'; actual='+JSON.stringify({level:x.level,kind:x.nativeEncounter,
+   budget:x.pointsBudget,XP:x.talentXp,earned:x.talentPointsEarned,
+   attrBudget:x.permanentAttributesEarned,attrSpent:x.permanentAttributesSpent,
+   attrs:x.permanentAttributes,affinity:x.affinity,risk:x.risk,
+   offhand:x.offhandType,stats:x.heroBaseStats}).slice(0,850));
  if(scenario.type==='elite'&&x.eliteType!==scenario.id)throw Error('Wrong native named Elite');
  if(kind==='normal'&&x.initialEnemies!==scenario.size)throw Error('Wrong normal group size');
  if(scenario.type==='tank'&&x.initialRoles?.tank!==1)
