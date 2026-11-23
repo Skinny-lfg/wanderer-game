@@ -102,7 +102,7 @@ function patch(mode){
 function main(){
  const [variant,profile,shardText,capturePath,out]=process.argv.slice(2);
  const shard=Number(shardText);
- if(!/^[a-z0-9+-]+$/.test(variant)||!Number.isInteger(shard)||shard<0||shard>1)throw Error('Bad variant/shard');
+ if(!/^[A-Za-z0-9+-]+$/.test(variant)||!Number.isInteger(shard)||shard<0||shard>1)throw Error('Bad variant/shard');
  const capture=JSON.parse(fs.readFileSync(capturePath,'utf8'));
  if(capture.profileId!==profile||capture.phase!=='capture')throw Error('Wrong earned snapshots');
  const players=capture.accounts.filter(x=>x.snapshot);
