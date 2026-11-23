@@ -136,13 +136,20 @@ function main(){
    s={...s,talentSpent:purchased.nodes.length,
     state:{...s.state,automaticTalents:purchased}};
   }
-  const special=variant.split('+').find(x=>x==='respecCleave'||x==='respecMace');
+  const special=variant.split('+').find(x=>['respecCleave','respecMace','respecSword','respecFan'].includes(x));
   if(special){
    const T=globalThis.WandererAutomaticTalents,P=require('./v013-build-planner.cjs');
-   const chosen=special==='respecCleave'?
-    {family:'blood',weapon:'Two-Handed',skill:'cleave_mastery',focus:'bleed'}:
-    {family:'aegis',weapon:'Mace',skill:'mace_shockwave',focus:'defense'};
-   if(s.state.equip.weapon?.subtype!==chosen.weapon)throw Error('Wrong original earned weapon '+special);
+   const variants={
+    respecCleave:{family:'blood',weapon:'Two-Handed',skill:'cleave_mastery',focus:'bleed'},
+    respecMace:{family:'aegis',weapon:'Mace',skill:'mace_shockwave',focus:'defense'},
+    respecSword:{family:'aegis',weapon:'Sword',offhand:'Shield',skill:'sword_sweep',focus:'defense'},
+    respecFan:{family:'fury',weapon:'Daggers',skill:'fan_of_blades',focus:'speed'}
+   };
+   const chosen=variants[special];
+   if(s.state.equip.weapon?.subtype!==chosen.weapon||chosen.offhand&&s.state.equip.offhand?.subtype!==chosen.offhand){
+    if(special==='respecSword'||special==='respecFan')return null;
+    throw Error('Wrong original earned weapon '+special);
+   }
    const reset=T.reset(s.state.automaticTalents);
    const proposed=P.propose(T,reset,{primary:chosen.family,model:'pure',mix:false,
     weapons:[chosen.weapon],armor:chosen.family==='aegis'?'Plate':'Leather',
