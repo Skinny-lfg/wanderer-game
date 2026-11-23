@@ -72,7 +72,7 @@ function sample(shard,snapFile,out){
 function aggregate(dir,out){
  const files=fs.readdirSync(dir).filter(x=>/^bow-respec-[01]\.json$/.test(x));
  assert(files.length===2,'Need both replay shards');
- const pieces=files.map(f=>JSON.parse(fs.readFileSync(path.join(dir,f),'utf8'))));
+ const pieces=files.map(f=>JSON.parse(fs.readFileSync(path.join(dir,f),'utf8')));
  assert(new Set(pieces.map(x=>x.source)).size===1&&new Set(pieces.map(x=>x.shard)).size===2,'Mixed source or shard');
  const rows=pieces.flatMap(p=>p.rows);
  const groups=SIZES.map(size=>{
