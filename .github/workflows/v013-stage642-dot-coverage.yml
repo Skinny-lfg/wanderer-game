@@ -4,6 +4,9 @@ on:
     branches: [balance/stage-6.40-e1-calibration]
     paths:
       - '.github/workflows/v013-stage642-dot-coverage.yml'
+      - 'scripts/v013-stage642-e10-dot-coverage.cjs'
+      - 'combat/v012-combat-runtime.js'
+      - 'combat/v012-buildcraft.js'
   workflow_dispatch:
 permissions:
   contents: read
@@ -19,6 +22,8 @@ jobs:
       - run: npm ci
       - run: |
           node --check scripts/v013-stage642-e10-dot-coverage.cjs
+          node --check combat/v012-combat-runtime.js
+          node --check combat/v012-buildcraft.js
           node --test tests/v013-stage641-build-readiness.test.cjs
   cohorts:
     needs: preflight
@@ -73,6 +78,8 @@ jobs:
            points:x.checkpoint?.points||0,weapon:x.checkpoint?.weapon||null,
            plagueSpread:x.checkpoint?.hasPlagueSpread||false,graveBloom:x.checkpoint?.hasGraveBloom||false,
            secondaryDamage:x.encounters.reduce((sum,y)=>sum+y.secondaryDamage,0),
+           secondaryDotDamage:x.encounters.reduce((sum,y)=>sum+y.secondaryDotDamage,0),
+           plagueSpreadTransfers:x.encounters.reduce((sum,y)=>sum+y.plagueSpreadTransfers,0),
            groupWins:x.encounters.filter(y=>y.won).length,groupFights:x.encounters.length,
            stopped:x.stopReason}));
           fs.writeFileSync(p+'/stage642-dot-summary.json',JSON.stringify({source:inputs[0].source,rows},null,2)+'\n');
