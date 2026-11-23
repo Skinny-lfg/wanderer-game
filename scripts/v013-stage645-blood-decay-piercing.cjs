@@ -141,12 +141,17 @@ function respec(s,cfg){
   orderedMilestones:true};
  let p=T.reset(s.state.automaticTalents);
  for(const goal of plan.milestones){
-  const route=P.allocateRoute(T,p,goal,plan,families);
-  if(!route.feasible){
+  const steps=P.routeTo(T,p,goal,plan,families);
+  let candidate=p;
+  if(steps)for(const id of steps){
+   candidate=T.allocate(candidate,id);
+   if(!candidate)break;
+  }
+  if(!steps||!candidate||!candidate.nodes.includes(goal)){
    if(goal==='carrion_detonation'||goal==='plague_spread'||goal==='bow_pierce')return null;
    continue;
   }
-  p=route.progress;
+  p=candidate;
  }
  // Fill unused earned points using existing planner without changing build families.
  const filled=P.propose(T,p,plan,[],2);
