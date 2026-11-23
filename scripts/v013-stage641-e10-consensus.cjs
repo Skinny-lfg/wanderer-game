@@ -12,9 +12,18 @@ const S=require('./simulate-progression.cjs');
 const PROFILES=Object.freeze({
   balanced:'hybrid', 'hexblade-hybrid':'hybrid',
   'leather-duelist':'single-target', 'smart-blood-pure':'single-target',
-  'smart-fury-bow':'aoe', 'magic-fire':'aoe',
+  'smart-fury-bow':'aoe', 'smart-blood-two-handed':'aoe', 'magic-fire':'aoe',
   'magic-lightning':'aoe', 'plate-warden':'hybrid'
 });
+// Stage 6.41 research-only policies: safer early routing and stable specialization,
+// while ALL equipment, XP, talents and Expedition unlocks are genuinely earned.
+const CALIBRATED_PROFILES=Object.freeze(Object.fromEntries(Object.keys(PROFILES).map(id=>{
+ const base=P.PROFILES[id];
+ const overrides=id==='magic-fire'?{plan:'magic-fire-pure',element:'fire'}:
+  id==='magic-lightning'?{plan:'magic-lightning-pure',element:'lightning'}:{};
+ return [id,Object.freeze({...base,...overrides,risk:0,healAt:.70,retreatAt:.45,
+  target:'mechanics',shop:true,researchGearPreference:true})];
+})));
 const SEEDS=Object.freeze([9861,9863]);
 const SIZES=Object.freeze([1,2,3,4,5,8,12]);
 const ELITES=Object.freeze(['tank','berserker','vampire','caster','gravecaller','oathbound_exarch','briarspine_horror','ashen_executioner']);
@@ -32,8 +41,8 @@ function sample(id,seed){
  let snapshot=null;
  const account=N.simulateAccount(seed,id,{
   ...N.DEFAULTS,seeds:[seed],profiles:[id],maxLevel:10,
-  maxAttempts:12,maxTotalAttempts:120
- },{researchProfiles:P.PROFILES,decisionModel:'adaptive',onCamp:probe=>{
+  maxAttempts:24,maxTotalAttempts:240
+ },{researchProfiles:CALIBRATED_PROFILES,decisionModel:'adaptive',onCamp:probe=>{
   if(probe.level!==10||probe.attempt!==1)return;
   if(snapshot)throw Error('Repeated E10 Camp checkpoint');
   snapshot=D.checkpoint(probe,[10]);
@@ -53,7 +62,7 @@ function sample(id,seed){
   gearPieces:snapshot.equipPieces,rarity:snapshot.equippedRarity,
   stats:snapshot.statSnapshot,fingerprint:snapshot.fingerprint,
   aoePotential:skill.aoePotential,aoeNodes:skill.aoeNodes,
-  weapon:skill.weapon,element:skill.element};
+  weapon:skill.weapon,element:skill.element,talentNodes:[...snapshot.state.automaticTalents.nodes]};
  const first=snapshot.state.automaticTalents.nodes.find(x=>x.startsWith('affinity_'));
  const realm=first?first.slice(9):'blood';
  const scenarios=[...SIZES.map(size=>({id:'normal-'+size,type:'normal',realm,size})),
@@ -67,7 +76,10 @@ function sample(id,seed){
    output.rooms.push({trial,encounter:scenario.id,kind:scenario.type,size:scenario.size||1,
     identity:scenario.type==='normal'?null:scenario.id,realm:scenario.realm,
     won:!!r.won,died:!!r.died,seconds:r.seconds,
-    taken:r.damageTaken,secondary:r.secondaryTargetDamage,
+    taken:r.damageTaken,secondary:r.secondaryTargetDamage,secondaryDot:r.secondaryDotDamage||0,
+    damage:r.damageDealt,fundedCasts:r.fundedCasts,manaSpent:r.manaSpent,
+    hits:r.secondaryTargetHits,bossSummons:r.bossSummons,eliteSummons:r.eliteSummons,
+    enemyAbilityCasts:r.enemyAbilityCasts,
     elite:r.eliteType||null,boss:r.bossStyle||null,
     roles:r.initialRoles||{},heroStats:r.heroBaseStats,
     gear:r.gearFingerprint});
@@ -91,16 +103,22 @@ function aggregate(dir){
  const groups=SIZES.map(size=>({size,
   all:rate(rows.filter(x=>x.kind==='normal'&&x.size===size)),
   aoe:rate(rows.filter(x=>x.kind==='normal'&&x.size===size&&x.actual==='aoe-capable')),
-  noAoe:rate(rows.filter(x=>x.kind==='normal'&&x.size===size&&x.actual==='no-aoe'))}));
+  noAoe:rate(rows.filter(x=>x.kind==='normal'&&x.size===size&&x.actual==='no-aoe')),
+  secondaryDamage:rows.filter(x=>x.kind==='normal'&&x.size===size).reduce((sum,x)=>sum+(x.secondary||0),0),
+  secondaryDotDamage:rows.filter(x=>x.kind==='normal'&&x.size===size).reduce((sum,x)=>sum+(x.secondaryDot||0),0)}));
  const identities=kind=>(kind==='elite'?ELITES:BOSSES).map(id=>({
   id, ...rate(rows.filter(x=>x.kind===kind&&x.identity===(kind==='boss'?'boss-'+id:id)))}));
  const result={stage:'6.41',source:data[0].source,accounts:data.length,reachedE10:reached.length,
   aoeAtE10:reached.filter(x=>x.checkpoint.aoePotential).length,
+  aoeObservedAtE10:reached.filter(x=>x.checkpoint.aoePotential&&
+   x.rooms.some(r=>r.kind==='normal'&&r.size>1&&r.secondary>0)).length,
   minE10SamplesForFinalTuning:12,
   maturity:reached.map(x=>({id:x.id,seed:x.seed,intended:x.intended,
    actual:x.checkpoint.aoePotential?'aoe-capable':'no-aoe',
    points:x.checkpoint.talentSpent,gear:x.checkpoint.gearPieces,
-   weapon:x.checkpoint.weapon,rarity:x.checkpoint.rarity,stats:x.checkpoint.stats})),
+   weapon:x.checkpoint.weapon,rarity:x.checkpoint.rarity,stats:x.checkpoint.stats,
+   nodes:x.checkpoint.talentNodes,element:x.checkpoint.element,
+   observedSecondary:x.rooms.filter(r=>r.kind==='normal'&&r.size>1).reduce((sum,r)=>sum+(r.secondary||0),0)})),
   groups,elites:identities('elite'),bosses:identities('boss'),
   missing:data.filter(x=>!x.reachedE10).map(x=>({id:x.id,seed:x.seed,endLevel:x.endLevel,
    attempts:x.attempts,reason:x.stopReason})),
@@ -108,20 +126,22 @@ function aggregate(dir){
    'Controlled first-ring Risk 1 encounters are not natural Expedition success rates.',
    'Two repeats per identity per reached account are a pilot, not independent player samples.',
    'Actual AoE classification is based on equipped gear and earned talents; intended specialization may not be online.',
+   'Observed secondary target damage separately validates actual AoE during controlled fights.',
+   'Optimized research agents allow 24 attempts per Expedition; do not compare E10 reach directly to the 12-attempt baseline.',
    'Do not change enemy stats based on sparse per-identity samples or a survivor-selected cohort.']};
  const lines=['# Stage 6.41 — E10 reference / consensus pilot','',
   'Native source: '+result.source,
-  'Accounts: '+result.accounts+'; reached E10: '+result.reachedE10+'; actual AoE available: '+result.aoeAtE10,'',
-  '| Enemies | All | AoE equipped | No AoE |','|---:|---:|---:|---:|',
-  ...groups.map(g=>'| '+g.size+' | '+g.all.wins+'/'+g.all.n+' | '+g.aoe.wins+'/'+g.aoe.n+' | '+g.noAoe.wins+'/'+g.noAoe.n+' |'),
+  'Accounts: '+result.accounts+'; reached E10: '+result.reachedE10+'; actual AoE available: '+result.aoeAtE10+'; observed AoE damage: '+result.aoeObservedAtE10,'',
+  '| Enemies | All | AoE equipped | No AoE | Secondary damage (including Burn) |','|---:|---:|---:|---:|---:|',
+  ...groups.map(g=>'| '+g.size+' | '+g.all.wins+'/'+g.all.n+' | '+g.aoe.wins+'/'+g.aoe.n+' | '+g.noAoe.wins+'/'+g.noAoe.n+' | '+g.secondaryDamage+' (Burn '+g.secondaryDotDamage+') |'),
   '','## Elites','| Name | Wins |','|---|---:|',
   ...result.elites.map(x=>'| '+x.id+' | '+x.wins+'/'+x.n+' |'),
   '','## Bosses','| Name | Wins |','|---|---:|',
   ...result.bosses.map(x=>'| '+x.id+' | '+x.wins+'/'+x.n+' |'),
-  '','## Maturity','| Profile | Seed | Intended | Actual | Points | Gear | Weapon |',
-  '|---|---:|---|---|---:|---:|---|',
+  '','## Maturity','| Profile | Seed | Intended | Actual | Points | Gear | Weapon | Secondary damage |',
+  '|---|---:|---|---|---:|---:|---|---:|',
   ...result.maturity.map(x=>'| '+x.id+' | '+x.seed+' | '+x.intended+' | '+x.actual+
-   ' | '+x.points+' | '+x.gear+' | '+x.weapon+' |'),
+   ' | '+x.points+' | '+x.gear+' | '+x.weapon+' | '+x.observedSecondary+' |'),
   '','## Not reached E10',...result.missing.map(x=>'- '+x.id+' / '+x.seed+
    ': E'+x.endLevel+' after '+x.attempts+' attempts ('+x.reason+')'),
   '','## Interpretation',...result.caveats.map(x=>'- '+x),''];
@@ -129,7 +149,7 @@ function aggregate(dir){
  fs.writeFileSync(path.join(dir,'stage641-summary.md'),lines.join('\n'));
  console.log('STAGE641_E10_SUMMARY='+JSON.stringify({source:result.source,
   accounts:result.accounts,reachedE10:result.reachedE10,
-  aoeAtE10:result.aoeAtE10,groups:result.groups,elites:result.elites,bosses:result.bosses,
+  aoeAtE10:result.aoeAtE10,aoeObservedAtE10:result.aoeObservedAtE10,groups:result.groups,elites:result.elites,bosses:result.bosses,
   missing:result.missing}));
 }
 if(require.main===module){
@@ -148,4 +168,4 @@ if(require.main===module){
   }
  }catch(e){console.error('STAGE641_ERROR '+String(e.stack||e));process.exitCode=1;}
 }
-module.exports={PROFILES,SEEDS,SIZES,ELITES,BOSSES,sample,aggregate,rate};
+module.exports={PROFILES,CALIBRATED_PROFILES,SEEDS,SIZES,ELITES,BOSSES,sample,aggregate,rate};
