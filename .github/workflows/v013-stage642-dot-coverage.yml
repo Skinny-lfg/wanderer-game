@@ -1,0 +1,85 @@
+name: Wanderer Stage 6.42 — E10 native Rot/Bleed spread coverage (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths:
+      - '.github/workflows/v013-stage642-dot-coverage.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: |
+          node --check scripts/v013-stage642-e10-dot-coverage.cjs
+          node --test tests/v013-stage641-build-readiness.test.cjs
+  cohorts:
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include:
+          - { build: 'decay-blood-spread', seed: 9861 }
+          - { build: 'decay-blood-spread', seed: 9863 }
+          - { build: 'magic-decay-bloom', seed: 9861 }
+          - { build: 'magic-decay-bloom', seed: 9863 }
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Genuine E1-born to E10 DoT spread progression and native matched fights
+        env:
+          BUILD: \${{ matrix.build }}
+          SEED: \${{ matrix.seed }}
+        run: |
+          mkdir -p reports/stage642-dot
+          node scripts/v013-stage642-e10-dot-coverage.cjs "$BUILD" "$SEED" "reports/stage642-dot/$BUILD-$SEED.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage642-dot-\${{ matrix.build }}-\${{ matrix.seed }}
+          path: reports/stage642-dot/*.json
+          if-no-files-found: warn
+          retention-days: 30
+  aggregate:
+    needs: cohorts
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage642-dot-*
+          merge-multiple: true
+          path: reports/stage642-dot
+      - name: Summarize real E10 achieved kits and measured secondary damage
+        run: |
+          node <<'JS'
+          const fs=require('fs'),p='reports/stage642-dot';
+          const inputs=fs.readdirSync(p).filter(x=>x.endsWith('.json')).map(x=>JSON.parse(fs.readFileSync(p+'/'+x,'utf8')));
+          if(inputs.length!==4||new Set(inputs.map(x=>x.id+'|'+x.seed)).size!==4||new Set(inputs.map(x=>x.source)).size!==1)throw Error('Incomplete E10 DoT cohort or mixed revisions');
+          const rows=inputs.map(x=>({id:x.id,seed:x.seed,reachedE10:x.reachedE10,level:x.highestUnlocked,
+           points:x.checkpoint?.points||0,weapon:x.checkpoint?.weapon||null,
+           plagueSpread:x.checkpoint?.hasPlagueSpread||false,graveBloom:x.checkpoint?.hasGraveBloom||false,
+           secondaryDamage:x.encounters.reduce((sum,y)=>sum+y.secondaryDamage,0),
+           groupWins:x.encounters.filter(y=>y.won).length,groupFights:x.encounters.length,
+           stopped:x.stopReason}));
+          fs.writeFileSync(p+'/stage642-dot-summary.json',JSON.stringify({source:inputs[0].source,rows},null,2)+'\n');
+          console.log('STAGE642_DOT_SUMMARY='+JSON.stringify(rows));
+          JS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage642-dot-summary
+          path: reports/stage642-dot/stage642-dot-summary.json
+          retention-days: 30
