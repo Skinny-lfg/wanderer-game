@@ -1,0 +1,130 @@
+name: Wanderer Stage 6.42 — one-budget E1-E10 native calibration (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths:
+      - '.github/workflows/v013-stage642-consensus.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: stage642-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Syntax and migrated no-stacking regression tests
+        run: |
+          node --check combat/v012-combat-core.js
+          node --check combat/expedition-progression.js
+          node --check online/v012-expedition-runtime.js
+          node --check scripts/v013-stage641-e10-consensus.cjs
+          node --test \
+            tests/v013-stage637-minion-principal-elite-bases.test.cjs \
+            tests/v013-stage638-minion-three-phase.test.cjs \
+            tests/v013-stage639-solo-aoe-individual.test.cjs \
+            tests/v013-stage640-e1-groups.test.cjs \
+            tests/v013-stage640-elite-identity.test.cjs \
+            tests/v013-stage642-single-budget.test.cjs \
+            tests/v013-stage641-build-readiness.test.cjs
+          git diff --check
+  early:
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 110
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Real E1-E2 100 strategies × 5 seeds with genuine earned XP/gear
+        run: |
+          mkdir -p reports/stage642
+          node scripts/v013-stage640-calibration.cjs reports/stage642/e1-e2-500.json . full | tee reports/stage642/e1-e2-summary.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage642-e1-e2-500
+          path: reports/stage642/*
+          retention-days: 30
+          if-no-files-found: warn
+  e10:
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include:
+          - { id: 'balanced', seed: 9861 }
+          - { id: 'balanced', seed: 9863 }
+          - { id: 'hexblade-hybrid', seed: 9861 }
+          - { id: 'hexblade-hybrid', seed: 9863 }
+          - { id: 'leather-duelist', seed: 9861 }
+          - { id: 'leather-duelist', seed: 9863 }
+          - { id: 'smart-blood-pure', seed: 9861 }
+          - { id: 'smart-blood-pure', seed: 9863 }
+          - { id: 'smart-blood-two-handed', seed: 9861 }
+          - { id: 'smart-blood-two-handed', seed: 9863 }
+          - { id: 'smart-fury-bow', seed: 9861 }
+          - { id: 'smart-fury-bow', seed: 9863 }
+          - { id: 'magic-fire', seed: 9861 }
+          - { id: 'magic-fire', seed: 9863 }
+          - { id: 'magic-lightning', seed: 9861 }
+          - { id: 'magic-lightning', seed: 9863 }
+          - { id: 'plate-warden', seed: 9861 }
+          - { id: 'plate-warden', seed: 9863 }
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Native earned E10 42 encounters with each real Camp checkpoint
+        env:
+          ID: ${{ matrix.id }}
+          SEED: ${{ matrix.seed }}
+        run: |
+          mkdir -p reports/stage642/e10
+          node scripts/v013-stage641-e10-consensus.cjs "$ID" "$SEED" "reports/stage642/e10/stage641-$ID-$SEED.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage642-e10-${{ matrix.id }}-${{ matrix.seed }}
+          path: reports/stage642/e10/*.json
+          retention-days: 30
+          if-no-files-found: warn
+  e10-summary:
+    needs: e10
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage642-e10-*
+          merge-multiple: true
+          path: reports/stage641
+      - name: Archive exact E10 results by group, Elite and Boss
+        run: node scripts/v013-stage641-e10-consensus.cjs --aggregate reports/stage641
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage642-e10-summary
+          path: |
+            reports/stage641/stage641-summary.json
+            reports/stage641/stage641-summary.md
+          retention-days: 30
+          if-no-files-found: warn
