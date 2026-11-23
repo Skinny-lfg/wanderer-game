@@ -58,16 +58,16 @@ function applyEncounterPressure(group,risk){
 // E1 protection decreases smoothly as earned equipment and skills mature.
 const NORMAL_ROOM_BUDGET=Object.freeze({
  solo:Object.freeze({
-  tank:Object.freeze({hp:1.28,atk:1.15}),
-  skirmisher:Object.freeze({hp:1.36,atk:1.20}),
-  caster:Object.freeze({hp:1.34,atk:1.18})
+  tank:Object.freeze({hp:1.28,atk:1.15,matureHp:1.90,matureAtk:1.40}),
+  skirmisher:Object.freeze({hp:1.36,atk:1.20,matureHp:2.00,matureAtk:1.43}),
+  caster:Object.freeze({hp:1.34,atk:1.18,matureHp:1.98,matureAtk:1.42})
  }),
- minion:Object.freeze({hp:.42,openingHp:.38,atk:.60,def:.55,interval:1.18}),
+ minion:Object.freeze({hp:.75,openingHp:.38,atk:.83,openingAtk:.60,def:.70,openingDef:.55,interval:1.18}),
  // One persistent mixed-roster offset and one E1 relief component; both
  // are resolved here in the same native budget rather than multiplied later.
- escortHpPerMinion:.028,escortHpEarly:.027,
- escortAtkPerMinion:.024,escortAtkEarly:.021,
- escortDefPerMinion:.020,escortDefEarly:.005,
+ escortHpPerMinion:.015,escortHpEarly:.040,
+ escortAtkPerMinion:.014,escortAtkEarly:.031,
+ escortDefPerMinion:.012,escortDefEarly:.013,
  minEscortHp:.38,minEscortAtk:.50,minEscortDef:.65,
  earlyDecay:.50
 });
@@ -98,11 +98,11 @@ function applyNormalRoomBudget(group,expedition){
    throw Error('Unexpected normal-room role '+e.role);
   let hp=1,atk=1,def=1,interval=1;
   if(n===1){const solo=c.solo[e.role];if(solo){
-   hp=solo.hp+.20*(1-opening);atk=solo.atk+.08*(1-opening);}}
+   hp=solo.hp+(solo.matureHp-solo.hp)*(1-opening);atk=solo.atk+(solo.matureAtk-solo.atk)*(1-opening);}}
   else if(e.role==='minion'){
    const divisor=pressure+minions*.5*opening;
    hp=(c.minion.hp+(c.minion.openingHp-c.minion.hp)*opening)/(minions>=4?divisor:Math.sqrt(divisor));
-   atk=c.minion.atk/divisor;def=c.minion.def;interval=c.minion.interval;
+   atk=(c.minion.atk+(c.minion.openingAtk-c.minion.atk)*opening)/divisor;def=c.minion.def+(c.minion.openingDef-c.minion.def)*opening;interval=c.minion.interval;
   }else{hp=escort.hp;atk=escort.atk/pressure;def=escort.def;}
   e.maxhp=Math.max(1,Math.round(e.maxhp*hp));
   e.hp=e.maxhp;
