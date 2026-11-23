@@ -23,7 +23,7 @@ const BUILDS=Object.freeze({
  'blood-sword':{primary:'blood',model:'pure',weapons:['Sword'],armor:'Leather',milestones:['blood_harvest','crimson_feast','heart_of_carnage'],focus:'bleed'},
  'blood-two-handed':{primary:'blood',model:'pure',weapons:['Two-Handed'],armor:'Leather',milestones:['blood_harvest','crimson_feast','heart_of_carnage'],focus:'bleed'},
  'fury-daggers':{primary:'fury',model:'pure',weapons:['Daggers'],armor:'Leather',milestones:['battle_tempo','relentless_assault','unchained_fury'],focus:'speed'},
- 'fury-bow':{primary:'fury',model:'pure',weapons:['Bow'],armor:'Leather',milestones:['battle_tempo','relentless_assault','unchained_fury'],focus:'speed'},
+ 'fury-bow':{primary:'fury',model:'pure',weapons:['Bow'],armor:'Leather',milestones:['bow_pierce','battle_tempo','relentless_assault'],focus:'speed',orderedMilestones:true},
  'magic-wand':{primary:'magic',model:'pure',element:'arcane',weapons:['Wand'],armor:'Cloth',milestones:['arcane_resonance','arcane_surge','arcane_mastery'],focus:'spell'},
  'magic-staff':{primary:'magic',model:'pure',element:'arcane',weapons:['Staff'],armor:'Cloth',milestones:['arcane_resonance','arcane_surge','arcane_mastery'],focus:'spell'},
  'magic-wand-offense':{primary:'magic',model:'pure',element:'arcane',weapons:['Wand'],armor:'Cloth',milestones:['arcane_resonance','arcane_surge','arcane_mastery'],focus:'spell',potionPolicy:'offense'},
