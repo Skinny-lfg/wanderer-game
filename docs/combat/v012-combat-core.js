@@ -51,95 +51,68 @@ function applyEncounterPressure(group,risk){
   enemy.atk=Math.max(1,Math.round(enemy.atk*pressure*attackRisk));
  }
 }
-// Stage 6.39: a single normal enemy is an actual encounter, not a weak
-// fraction of a four-actor room. Explicit SOLO-ONLY identity reinforcement;
-// there is no group-wide weakening and no level-specific breakpoint.
-const SOLO_NORMAL_BASE=Object.freeze({
- tank:Object.freeze({hp:1.28,atk:1.15}),
- skirmisher:Object.freeze({hp:1.36,atk:1.20}),
- caster:Object.freeze({hp:1.34,atk:1.18})
+// Stage 6.42 — one authoritative normal-room stat budget, applied ONCE.
+// Replaces Stage 6.37 escort relief, Stage 6.38 Minion profile,
+// Stage 6.39 solo reinforcement and Stage 6.40 additive opening-pressure
+// adjustments. Risk is applied before this; no separate stage/group rebuffs.
+// E1 protection decreases smoothly as earned equipment and skills mature.
+const NORMAL_ROOM_BUDGET=Object.freeze({
+ solo:Object.freeze({
+  tank:Object.freeze({hp:1.28,atk:1.15}),
+  skirmisher:Object.freeze({hp:1.36,atk:1.20}),
+  caster:Object.freeze({hp:1.34,atk:1.18})
+ }),
+ minion:Object.freeze({hp:.38,atk:.60,def:.55,interval:1.18}),
+ // One persistent mixed-roster offset and one E1 relief component; both
+ // are resolved here in the same native budget rather than multiplied later.
+ escortHpPerMinion:.040,escortHpEarly:.015,
+ escortAtkPerMinion:.035,escortAtkEarly:.010,
+ escortDefPerMinion:.020,escortDefEarly:.005,
+ minEscortHp:.38,minEscortAtk:.50,minEscortDef:.65,
+ earlyDecay:.50
 });
-function applySoloNormalReinforcement(group){
- if(!Array.isArray(group)||group.length!==1)return {affected:0};
- const e=group[0];
- if(!e||e.boss||e.miniboss||!Object.hasOwn(SOLO_NORMAL_BASE,e.role))return {affected:0};
- if(e.soloNormalReinforcementApplied)throw Error('Solo normal reinforcement applied twice');
- const b=SOLO_NORMAL_BASE[e.role];
- e.maxhp=Math.max(1,Math.round(e.maxhp*b.hp));
- e.hp=e.maxhp;
- e.atk=Math.max(1,Math.round(e.atk*b.atk));
- e.soloNormalReinforcementApplied=true;
- return {affected:1};
-}
-// Stage 6.38 — normal-room Minions are intentionally fragile trash mobs.
-// Only normal room encounters call this once, AFTER Risk and BEFORE Traits,
-// making small groups safer too. Boss/Elite special summons do NOT use it.
-// This changes each Minion's own native role profile, not a blanket group
-// debuff or a dynamic handicap that fluctuates as Minions die.
-const NORMAL_ROOM_MINION_PROFILE=Object.freeze({
- hp:.38,atk:.60,def:.55,attackInterval:1.18
-});
-function applyNormalRoomMinionProfile(group){
- if(!Array.isArray(group)||group.some(e=>!e||
-  !Number.isFinite(e.maxhp)||!Number.isFinite(e.atk)||
-  !Number.isFinite(e.def)||!Number.isFinite(e.attackEvery)))
-  throw Error('Invalid normal room Minion profile group');
- if(group.some(e=>e.boss||e.miniboss))return {affected:0};
- let affected=0;
- for(const e of group){
-  if(e.role!=='minion')continue;
-  if(e.normalRoomMinionProfileApplied)throw Error('Normal Minion profile applied twice');
-  const b=NORMAL_ROOM_MINION_PROFILE;
-  e.maxhp=Math.max(1,Math.round(e.maxhp*b.hp));
-  e.hp=Math.min(e.hp,e.maxhp);
-  e.atk=Math.max(1,Math.round(e.atk*b.atk));
-  e.def=Math.max(0,Math.round(e.def*b.def));
-  e.baseDef=Math.max(0,Math.round(e.baseDef*b.def));
-  e.attackEvery*=b.attackInterval;
-  e.normalRoomMinionProfileApplied=true;
-  affected++;
- }
- return {affected};
-}
-// Stage 6.37: a large mixed room taxes ONLY its principal mobs for the number
-// of Minions in its complete initial roster (including reserve slots).
-// The minions themselves keep FULL native HP/ATK/DEF and combat timings.
-// Solo/small rooms, all-principal groups, Bosses and Elites stay unchanged.
-// This is a single encounter-time change, NOT a new level scaling curve.
-const MINION_ESCORT_RELIEF=Object.freeze({
- minimumGroupSize:5, hpLossPerMinion:.055, atkLossPerMinion:.045,
- defLossPerMinion:.025, minHpFactor:.38, minAtkFactor:.50, minDefFactor:.65
-});
-function applyMinionEscortRelief(group){
- if(!Array.isArray(group)||!group.length||group.some(e=>!e||!Number.isFinite(e.maxhp)||
-  !Number.isFinite(e.atk)||!Number.isFinite(e.def)||!Number.isFinite(e.baseDef)))
-  throw Error('Invalid native Minion escort group');
- const minions=group.filter(e=>e.role==='minion'&&!e.boss&&!e.miniboss).length;
- const zero=Object.freeze({hp:1,atk:1,def:1});
- if(group.length<MINION_ESCORT_RELIEF.minimumGroupSize||minions===0||
-  group.some(e=>e.boss||e.miniboss))return {minions,affected:0,factors:zero};
- const cfg=MINION_ESCORT_RELIEF;
- const factors={
-  hp:Math.max(cfg.minHpFactor,1-minions*cfg.hpLossPerMinion),
-  atk:Math.max(cfg.minAtkFactor,1-minions*cfg.atkLossPerMinion),
-  def:Math.max(cfg.minDefFactor,1-minions*cfg.defLossPerMinion)
+function applyNormalRoomBudget(group,expedition){
+ if(!Array.isArray(group)||!Number.isSafeInteger(expedition)||expedition<1||
+  group.length<1||group.length>22||group.some(e=>!e||
+   !Number.isFinite(e.maxhp)||!Number.isFinite(e.atk)||
+   !Number.isFinite(e.def)||!Number.isFinite(e.baseDef)||
+   !Number.isFinite(e.attackEvery)||e.maxhp<=0||e.attackEvery<=0))
+  throw Error('Invalid native normal-room budget');
+ if(group.some(e=>e.boss||e.miniboss))return {affected:0,minions:0};
+ if(group.some(e=>e.normalRoomBudgetApplied))throw Error('Normal-room budget applied twice');
+ const n=group.length,c=NORMAL_ROOM_BUDGET;
+ const minions=group.filter(e=>e.role==='minion').length;
+ const opening=Math.exp(-c.earlyDecay*(expedition-1));
+ const perEnemy=n===2?.20:n<=4?.75:1;
+ const pressure=n===1?1:1+(n-1)*perEnemy*opening;
+ const escorts=n>=5?minions:0;
+ // The old independent escort pass was removed. The single role budget
+ // approaches a modest, fixed E10+ offset, not a 50% HP/ATK discount.
+ const escort={
+  hp:Math.max(c.minEscortHp,1-escorts*(c.escortHpPerMinion+c.escortHpEarly*opening)),
+  atk:Math.max(c.minEscortAtk,1-escorts*(c.escortAtkPerMinion+c.escortAtkEarly*opening)),
+  def:Math.max(c.minEscortDef,1-escorts*(c.escortDefPerMinion+c.escortDefEarly*opening))
  };
- let affected=0;
  for(const e of group){
-  if(e.role==='minion')continue;
-  // Called once after native Risk 0–2 modifiers. No second group multiplier.
-  if(e.minionEscortReliefApplied)throw Error('Minion escort relief applied twice');
-  if(!['tank','skirmisher','caster'].includes(e.role))
-   throw Error('Unexpected principal role in native mixed room '+e.role);
-  e.maxhp=Math.max(1,Math.round(e.maxhp*factors.hp));
-  e.hp=Math.min(e.hp,e.maxhp);
-  e.atk=Math.max(1,Math.round(e.atk*factors.atk));
-  e.def=Math.max(0,Math.round(e.def*factors.def));
-  e.baseDef=Math.max(0,Math.round(e.baseDef*factors.def));
-  e.minionEscortReliefApplied=true;
-  affected++;
+  if(!['minion','tank','skirmisher','caster'].includes(e.role))
+   throw Error('Unexpected normal-room role '+e.role);
+  let hp=1,atk=1,def=1,interval=1;
+  if(n===1){const solo=c.solo[e.role];if(solo){
+   hp=solo.hp+.20*(1-opening);atk=solo.atk+.08*(1-opening);}}
+  else if(e.role==='minion'){
+   const divisor=pressure+minions*.5*opening;
+   hp=c.minion.hp/(minions>=4?divisor:Math.sqrt(divisor));
+   atk=c.minion.atk/divisor;def=c.minion.def;interval=c.minion.interval;
+  }else{hp=escort.hp;atk=escort.atk/pressure;def=escort.def;}
+  e.maxhp=Math.max(1,Math.round(e.maxhp*hp));
+  e.hp=e.maxhp;
+  e.atk=Math.max(1,Math.round(e.atk*atk));
+  e.def=Math.max(0,Math.round(e.def*def));
+  e.baseDef=Math.max(0,Math.round(e.baseDef*def));
+  e.attackEvery*=interval;
+  e.normalRoomBudgetApplied=true;
  }
- return {minions,affected,factors};
+ return {affected:n,minions,expedition,opening,pressure,escort};
 }
 // Stage 6.33: a Tank in a 22-enemy swarm is exactly the same Tank as
 // the one in a solo room (at the same E and risk). Never divide HP/ATK/DEF
@@ -180,5 +153,5 @@ function applyExpeditionModifiers(stats,e){
  if(e.attack)s.attack*=1+e.attack;if(e.defense)s.defense*=1+e.defense;
  return s;
 }
-root.WandererV012CombatCore=Object.freeze({evasionChance,enemyAttackType,referenceLevel,enemyStat,gearStat,endlessWeaponDamageBonus,estimateEnemy,createEnemyGroup,applyEncounterPressure,applySoloNormalReinforcement,SOLO_NORMAL_BASE,applyNormalRoomMinionProfile,NORMAL_ROOM_MINION_PROFILE,applyMinionEscortRelief,MINION_ESCORT_RELIEF,livingEnemies,nextGroupTarget,groupComplete,affinityProcChance,applyExpeditionModifiers});
+root.WandererV012CombatCore=Object.freeze({evasionChance,enemyAttackType,referenceLevel,enemyStat,gearStat,endlessWeaponDamageBonus,estimateEnemy,createEnemyGroup,applyEncounterPressure,applyNormalRoomBudget,NORMAL_ROOM_BUDGET,livingEnemies,nextGroupTarget,groupComplete,affinityProcChance,applyExpeditionModifiers});
 })(globalThis);
