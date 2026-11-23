@@ -1,0 +1,143 @@
+name: Stage 6.42 — E10 100 RNG samples per build and group size (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths:
+      - '.github/workflows/v013-stage642-e10-100seed.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Validate 100-seed runner and existing single-budget architecture
+        run: |
+          node --check scripts/v013-stage642-e10-100seed.cjs
+          node --test tests/v013-stage642-single-budget.test.cjs
+          node - <<'JS'
+          const x=require('./scripts/v013-stage642-e10-100seed.cjs');
+          if(x.N!==100||x.SHARDS!==2||JSON.stringify(x.GROUP_SIZES)!=='[4,8,12]'||x.PROFILES.length!==11)throw Error('Wrong E10 cohort design');
+          console.log('STAGE642_100SEED_PREFLIGHT_OK');
+          JS
+  capture:
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix:
+        profile:
+          - 'balanced'
+          - 'hexblade-hybrid'
+          - 'leather-duelist'
+          - 'smart-blood-pure'
+          - 'smart-blood-two-handed'
+          - 'smart-fury-bow'
+          - 'magic-fire'
+          - 'magic-lightning'
+          - 'plate-warden'
+          - 'decay-blood-spread'
+          - 'magic-decay-bloom'
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/checkout@v4
+        with:
+          ref: 449940d08be86de09f7688f0e2a98d4497817b98
+          path: stage642-baseline
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Capture up to two genuine E10 Camp checkpoint states from fixed Stage 6.41
+        env:
+          PROFILE: ${{ matrix.profile }}
+        run: |
+          mkdir -p reports/stage642-large/snapshots
+          node scripts/v013-stage642-e10-100seed.cjs capture "$PROFILE" stage642-baseline "reports/stage642-large/snapshots/$PROFILE.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage642-snapshot-${{ matrix.profile }}
+          path: reports/stage642-large/snapshots/*.json
+          retention-days: 30
+          if-no-files-found: error
+  replay:
+    needs: capture
+    runs-on: ubuntu-latest
+    timeout-minutes: 80
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        profile:
+          - 'balanced'
+          - 'hexblade-hybrid'
+          - 'leather-duelist'
+          - 'smart-blood-pure'
+          - 'smart-blood-two-handed'
+          - 'smart-fury-bow'
+          - 'magic-fire'
+          - 'magic-lightning'
+          - 'plate-warden'
+          - 'decay-blood-spread'
+          - 'magic-decay-bloom'
+        shard: [0, 1]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: stage642-snapshot-${{ matrix.profile }}
+          path: reports/stage642-large/snapshots
+      - name: Run 50 matched combat RNG seeds at E10 against 4, 8 and 12 mobs
+        env:
+          PROFILE: ${{ matrix.profile }}
+          SHARD: ${{ matrix.shard }}
+        run: |
+          mkdir -p reports/stage642-large/shards
+          node scripts/v013-stage642-e10-100seed.cjs replay "$PROFILE" "$SHARD" "reports/stage642-large/snapshots/$PROFILE.json" "reports/stage642-large/shards/stage642-$PROFILE-shard-$SHARD.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage642-100seed-${{ matrix.profile }}-${{ matrix.shard }}
+          path: reports/stage642-large/shards/*.json
+          retention-days: 30
+          if-no-files-found: error
+  aggregate:
+    needs: replay
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage642-100seed-*
+          merge-multiple: true
+          path: reports/stage642-large/shards
+      - name: Produce per-build 100-seed rates with 95 percent Wilson intervals
+        run: |
+          node scripts/v013-stage642-e10-100seed.cjs aggregate reports/stage642-large/shards reports/stage642-large/stage642-e10-100seed-summary.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage642-e10-100seed-summary
+          path: |
+            reports/stage642-large/stage642-e10-100seed-summary.json
+            reports/stage642-large/stage642-e10-100seed-summary.csv
+          if-no-files-found: error
+          retention-days: 30
