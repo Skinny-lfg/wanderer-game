@@ -228,20 +228,29 @@ function phase1WaveWon(){
     const bleed=enemy.dots?.bleed?.find(dot=>!dot.spread),rot=enemy.v012Rot?.find(dot=>!dot.spread);
     let transferred=0;
     for(const target of r.enemies.filter(mob=>mob.hp>0).concat(r.groupReserve||[]).slice(0,2)){
+     let transferredTick=0;
      if(bleed){
       target.dots??={};target.dots.bleed??=[];
       if(target.dots.bleed.length<12){
-       target.dots.bleed.push({damage:Math.max(1,Math.round(bleed.damage*.5)),remaining:Math.min(2,bleed.remaining),spread:true});
-       transferred++;ports.combatLinkEffect?.(r,'bleed',enemy,[target]);
+       const tick=Math.max(1,Math.round(bleed.damage*.5));target.dots.bleed.push({damage:tick,remaining:Math.min(2,bleed.remaining),spread:true});
+       transferredTick+=tick;transferred++;ports.combatLinkEffect?.(r,'bleed',enemy,[target]);
       }
       ports.synchronizeDots(target);
      }
      if(rot){
       target.v012Rot??=[];
       if(target.v012Rot.length<6){
-       target.v012Rot.push({damage:Math.max(1,Math.round(rot.damage*.5)),remaining:Math.min(2,rot.remaining),ticks:0,spread:true});
-       transferred++;ports.combatLinkEffect?.(r,'rot',enemy,[target]);
+       const tick=Math.max(1,Math.round(rot.damage*.5));target.v012Rot.push({damage:tick,remaining:Math.min(2,rot.remaining),ticks:0,spread:true});
+       transferredTick+=tick;transferred++;ports.combatLinkEffect?.(r,'rot',enemy,[target]);
       }
+     }
+     // Contagion deals one transferred tick immediately on an active recipient.
+     // Reserve units retain their transferred DOT but cannot die before spawning.
+     if(transferredTick>0&&r.enemies.includes(target)&&target.hp>0){
+      const absorbed=Math.min(target.barrier||0,transferredTick);
+      target.barrier=Math.max(0,(target.barrier||0)-absorbed);
+      const dealt=Math.min(target.hp,transferredTick-absorbed);
+      if(dealt>0){target.hp-=dealt;ports.phase6Metric(r,'damageDealt',dealt);ports.phase6Metric(r,'secondaryTargetDamage',dealt);ports.phase6Metric(r,'secondaryDotDamage',dealt);ports.phase6Metric(r,'secondaryTargetHits',1);ports.phase6Metric(r,'plagueSpreadBursts',1);ports.floatText(dealt,'enemy',false,'ROT + BLEED',target);}
      }
     }
     if(transferred>0)ports.phase6Metric(r,'plagueSpreadTransfers',transferred);
