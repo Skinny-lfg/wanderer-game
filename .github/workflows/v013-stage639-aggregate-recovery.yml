@@ -35,7 +35,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p reports/stage639-shards
-          mapfile -t shards < <(gh api --paginate 'repos/Skinny-lfg/wanderer-game/actions/runs/45217628500/artifacts?per_page=100' --jq '.artifacts[] | select(.name|startswith("stage639-cohort-")) | "\\(.id) \\(.name)"')
+          mapfile -t shards < <(gh api --paginate 'repos/Skinny-lfg/wanderer-game/actions/runs/45217628500/artifacts?per_page=100' --jq '.artifacts[] | select(.name|startswith("stage639-cohort-")) | "\(.id) \(.name)"')
           echo "Cohort artifacts visible across all API pages: ${#shards[@]}"
           test "${#shards[@]}" -eq 100
           recovered=0
