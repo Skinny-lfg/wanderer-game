@@ -1,0 +1,108 @@
+name: Stage 6.44 — Earned E10 Dagger Fan of Blades (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths:
+      - '.github/workflows/v013-stage644-dagger-capture.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 105
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Capture four genuinely E1-born E10 candidate characters who equipped Daggers
+        run: |
+          mkdir -p reports/stage644
+          node scripts/v013-stage644-dagger-capture.cjs reports/stage644/dagger-capture.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage644-dagger-earned-e10
+          path: reports/stage644/dagger-capture.json
+          retention-days: 30
+          if-no-files-found: error
+  fight:
+    needs: capture
+    runs-on: ubuntu-latest
+    timeout-minutes: 85
+    strategy:
+      max-parallel: 6
+      fail-fast: false
+      matrix:
+        shard: [0, 1]
+        variant: [respecFan, 'respecFan+noFan', 'respecFan+status50']
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: stage644-dagger-earned-e10
+          path: reports/stage644/dagger-snapshots
+      - name: Legally repurchase Fan of Blades, compare with no ability or 50-percent status propagation
+        env:
+          VARIANT: ${{ matrix.variant }}
+          SHARD: ${{ matrix.shard }}
+        run: |
+          mkdir -p reports/stage644/dagger-shards
+          node scripts/v013-stage644-e10-lab.cjs "$VARIANT" smart-fury-daggers "$SHARD" reports/stage644/dagger-snapshots/dagger-capture.json "reports/stage644/dagger-shards/$VARIANT-$SHARD.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage644-daggers-${{ matrix.variant }}-${{ matrix.shard }}
+          path: reports/stage644/dagger-shards/*.json
+          retention-days: 30
+          if-no-files-found: error
+  aggregate:
+    needs: fight
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage644-daggers-*
+          merge-multiple: true
+          path: reports/stage644/dagger-shards
+      - name: Validate legal Fan of Blades and 100 matched combat seeds
+        run: |
+          node <<'JS'
+          const fs=require('fs'),p='reports/stage644/dagger-shards';
+          const files=fs.readdirSync(p).filter(x=>x.endsWith('.json'));
+          if(files.length!==6)throw Error('Expected 6 Dagger shards, found '+files.length);
+          const samples=files.map(x=>JSON.parse(fs.readFileSync(p+'/'+x,'utf8')));
+          const baseline=samples.filter(x=>x.variant==='respecFan').flatMap(x=>x.rows);
+          if(baseline.length!==400)throw Error('Missing baseline');
+          const summary=[];
+          for(const v of ['respecFan','respecFan+noFan','respecFan+status50']){
+            const parts=samples.filter(x=>x.variant===v);
+            if(parts.length!==2)throw Error('Missing experiment '+v);
+            const actors=parts[0].entrants;
+            if(JSON.stringify(actors)!==JSON.stringify(parts[1].entrants)||
+              !actors.every(x=>x.weapon==='Daggers'&&x.active.includes('fan_of_blades')))throw Error('Illegal Fan of Blades E10 actor');
+            const rows=parts.flatMap(x=>x.rows);
+            for(const r of rows){const b=baseline.find(x=>x.seed===r.seed&&x.size===r.size&&x.naturalSeed===r.naturalSeed);
+              if(!b||r.roster!==b.roster||r.gear!==b.gear||r.xp!==b.xp)throw Error('Unmatched enemy XP gear');}
+            summary.push({variant:v,actors:actors.map(({seed,weapon,offhand,points,active})=>({seed,weapon,offhand,points,active})),
+             groups:[1,4,8,12].map(size=>{const r=rows.filter(x=>x.size===size);
+               if(r.length!==100)throw Error('Expected 100 combats per variant and group');
+               return {size,n:r.length,wins:r.filter(x=>x.won).length,
+                secondary:r.reduce((a,x)=>a+x.secondary,0),timeouts:r.filter(x=>x.timeout).length};})});
+          }
+          fs.writeFileSync('reports/stage644/dagger-results.json',JSON.stringify({stage:'6.44',kind:'earned-E10-Daggers-legal-FanOfBlades',summary},null,2)+'\n');
+          console.log('STAGE644_DAGGERS='+JSON.stringify(summary));
+          JS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage644-daggers-results
+          path: reports/stage644/dagger-results.json
+          retention-days: 30
