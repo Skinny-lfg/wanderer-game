@@ -1,0 +1,110 @@
+name: Stage 6.43 — Contagion five-tick retune paired E10 (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths: ['.github/workflows/v013-stage643-contagion-retune.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Recheck native marks, DoT transfer, v15 routes and docs mirrors
+        run: |
+          node --test tests/v013-stage643-aoe-mechanics.test.cjs tests/v013-stage642-aoe-readiness.test.cjs tests/talent-graph-next.test.cjs
+          git diff --check
+  replay:
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 85
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        profile: [decay-blood-spread, smart-blood-pure, magic-lightning]
+        shard: [0, 1]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45272938568
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: stage642-snapshot-${{ matrix.profile }}
+          path: reports/stage643-retune/snapshots
+      - name: Replay 50 matched native combat seeds per shard and group
+        env:
+          PROFILE: ${{ matrix.profile }}
+          SHARD: ${{ matrix.shard }}
+        run: |
+          mkdir -p reports/stage643-retune/shards
+          node scripts/v013-stage642-e10-100seed.cjs replay "$PROFILE" "$SHARD" "reports/stage643-retune/snapshots/$PROFILE.json" "reports/stage643-retune/shards/stage642-$PROFILE-shard-$SHARD.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage643-retune-${{ matrix.profile }}-${{ matrix.shard }}
+          path: reports/stage643-retune/shards/*.json
+          if-no-files-found: error
+          retention-days: 30
+  aggregate:
+    needs: replay
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage643-retune-*
+          merge-multiple: true
+          path: reports/stage643-retune/shards
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45281842171
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: stage643-e10-aoe-results
+          path: reports/stage643-retune/before
+      - name: Check identical checkpoints and compare 900 matched E10 fights
+        run: |
+          node <<'JS'
+          const fs=require('fs'),dir='reports/stage643-retune';
+          const before=JSON.parse(fs.readFileSync(dir+'/before/aoe-results.json','utf8'));
+          const names=['decay-blood-spread','smart-blood-pure','magic-lightning'];
+          const parts=fs.readdirSync(dir+'/shards').filter(x=>/^stage642-.*-shard-[01]\.json$/.test(x))
+           .map(x=>JSON.parse(fs.readFileSync(dir+'/shards/'+x,'utf8')));
+          if(parts.length!==6)throw Error('Missing six 50-seed shards');
+          const sources=new Set(parts.map(x=>x.source));
+          if(sources.size!==1||sources.has(before.source))throw Error('Mixed/old combat source');
+          const groups=names.map(id=>{
+           const pair=parts.filter(x=>x.profileId===id),prior=before.profiles.find(p=>p.id===id);
+           if(pair.length!==2||!prior||JSON.stringify(pair[0].snapshots)!==JSON.stringify(pair[1].snapshots))throw Error('Snapshot drift '+id);
+           return {id,results:[4,8,12].map(size=>{
+            const r=pair.flatMap(p=>p.rows).filter(x=>x.size===size);
+            const prev=prior.groups.find(g=>g.size===size);
+            if(r.length!==100||!prev||r.some(x=>x.timedOut))throw Error('Incomplete 100 matched '+id+'/'+size);
+            return {size,before:prev.afterWins,after:r.filter(x=>x.won).length,
+             beforeSecondary:prev.afterSecondary,afterSecondary:r.reduce((a,x)=>a+x.secondaryDamage,0)};
+           })};
+          });
+          const out={stage:'6.43',condition:'five transferred DOT ticks',beforeSource:before.source,source:[...sources][0],groups};
+          fs.writeFileSync(dir+'/result.json',JSON.stringify(out,null,2)+'\n');
+          console.log('STAGE643_CONTAGION_RETUNE='+JSON.stringify(out));
+          JS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage643-five-tick-contagion
+          path: reports/stage643-retune/result.json
+          retention-days: 30
