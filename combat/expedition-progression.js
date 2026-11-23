@@ -21,7 +21,7 @@ function gearTier(level){checked(level);for(let i=tiers.length-1;i>=0;i--)if(lev
 // 6.29 is unchanged; the shared reference affects all native enemy roles.
 // Early example: E1 ≈ 0.78 instead of 1, E2 ≈ 1.65 instead of 2.
 // No build, gear, rarity, Elite or Boss ability coefficients are changed.
-const ENEMY_EXPONENTIAL_GROWTH=Object.freeze({rate:.015,weight:2,earlyRate:.12,shoulderLevels:1});
+const ENEMY_EXPONENTIAL_GROWTH=Object.freeze({rate:.015,weight:2,earlyRate:.12,shoulderLevels:.4});
 function enemyReference(level){
  checked(level);
  const {rate,weight,earlyRate,shoulderLevels}=ENEMY_EXPONENTIAL_GROWTH;
