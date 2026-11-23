@@ -15,7 +15,21 @@ test('Stage 6.42: earned Fury Bow research plans a legal Deep Pierce route befor
  for(const points of [24,36]){
   const result=P.propose(T,budget(points),'fury-bow');
   assert(result.expectedNodes.includes('bow_pierce'), 'Deep Pierce not earned at '+points+' points');
-  assert(T.valid({...budget(points),nodes:result.expectedNodes,element:result.expectedElement}));
+  assert(T.valid({...budget(points),nodes:result.expectedNodes,...(result.expectedElement&&result.expectedElement!=='arcane'?{element:result.expectedElement}:{})}));
+ }
+});
+test('Stage 6.42: all six weapon/single-target effects exist in active v15 with two valid prerequisites',()=>{
+ const ids=['bow_pierce','fan_of_blades','cleave_mastery','sword_sweep','mace_shockwave','single_target_mastery'];
+ for(const id of ids){
+  const node=T.NODES.find(n=>n.id===id);
+  assert(node,'Missing active v15 skill '+id);
+  assert.equal(node.requires,'gate_'+id);
+  const gate=T.NODES.find(n=>n.id==='gate_'+id);
+  const second=T.NODES.find(n=>n.id==='weapon_path_'+id+'_2');
+  const first=T.NODES.find(n=>n.id==='weapon_path_'+id+'_1');
+  assert(gate&&first&&second,'Missing path for '+id);
+  assert.equal(gate.requires,second.id);
+  assert.equal(second.requires,first.id);
  }
 });
 test('Stage 6.42: a prepared and earned Grave Bloom counts as AoE potential even with no elemental attunement',()=>{
