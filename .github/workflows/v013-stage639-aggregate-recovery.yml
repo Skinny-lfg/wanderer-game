@@ -29,6 +29,33 @@ jobs:
           pattern: stage639-cohort-*
           merge-multiple: true
           path: reports/stage639-shards
+      - name: Page through original run artifacts and recover any missing cohort ZIPs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          mkdir -p reports/stage639-shards
+          mapfile -t shards < <(gh api --paginate 'repos/Skinny-lfg/wanderer-game/actions/runs/45217628500/artifacts?per_page=100' --jq '.artifacts[] | select(.name|startswith("stage639-cohort-")) | "\\(.id) \\(.name)"')
+          echo "Cohort artifacts visible across all API pages: ${#shards[@]}"
+          test "${#shards[@]}" -eq 100
+          recovered=0
+          for entry in "${shards[@]}"; do
+            read -r artifact_id artifact_name <<< "$entry"
+            suffix="${artifact_name#stage639-cohort-}"
+            target="reports/stage639-shards/v013-stage639-diagnostic-${suffix}.json"
+            if [ -f "$target" ]; then continue; fi
+            archive="$(mktemp /tmp/stage639-recover-XXXXXXXX.zip)"
+            curl --fail --silent --show-error --location --retry 3 --max-time 180 \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H 'Accept: application/vnd.github+json' \
+              "https://api.github.com/repos/Skinny-lfg/wanderer-game/actions/artifacts/${artifact_id}/zip" \
+              --output "$archive"
+            unzip -j -o "$archive" -d reports/stage639-shards >/dev/null
+            rm -f "$archive"
+            test -f "$target"
+            recovered=$((recovered+1))
+          done
+          echo "Recovered missing complete native cohorts: $recovered"
       - name: Require exactly 100 real native shard files, no extras
         run: |
           count=$(find reports/stage639-shards -maxdepth 1 -name 'v013-stage639-diagnostic-*-*.json' -type f | wc -l)
