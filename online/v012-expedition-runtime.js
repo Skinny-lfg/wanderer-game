@@ -151,39 +151,10 @@ function phase1StartWave(resetScroll=false){
  const spawn=index=>ports.enemyFor(r.tier,r.enc,{theme,mob:roster?.[index]||null,boss:last&&g.selected.boss,elite:last&&g.selected.elite&&!g.selected.boss,variant:actualBossStyle?ports.BOSS_ARCHETYPES.find(b=>b.style===actualBossStyle):null});
  const group=WandererV012CombatCore.createEnemyGroup(spawn,totalCount,{activeSlots:activeCount});
  WandererV012CombatCore.applyEncounterPressure(group,g.selected.risk||0);
- // Stage 6.37: full HP/ATK for Minions, conditional relief for non-Minions
- // ONLY in normal mixed 5+ groups; also count reserve Minions.
- // A stat-only calibration deliberately isolates identity coefficients.
- if(!statOnly&&!g.selected.boss&&!g.selected.elite){
-  WandererV012CombatCore.applySoloNormalReinforcement(group);
-  WandererV012CombatCore.applyNormalRoomMinionProfile(group);
-  WandererV012CombatCore.applyMinionEscortRelief(group);
-  if(group.length>1){
-   const extraEnemies=group.length-1;
-   // Stage 6.40 continuity: taper the E1 group relief smoothly instead
-   // of dropping it entirely at E2. Preserve E1 unchanged (weight = 1).
-   // Later expeditions approach native attributes continuously as gear
-   // and AoE become available; solo encounters receive no extra relief.
-   const openingRelief=Math.exp(-0.5*Math.max(0,r.tier-1));
-   // Pairs need little relief. In larger rooms, reserves extend exposure
-   // even though only four enemies can attack at once.
-   const pressurePerEnemy=group.length===2 ? 0.2 : group.length<=4 ? 0.75 : 1;
-   const pressure=1 + extraEnemies * pressurePerEnemy * openingRelief;
-   const minions=group.filter(enemy=>enemy.role==='minion').length;
-   for(const enemy of group){
-    const minion=enemy.role==='minion';
-    const attackDivisor=pressure+(minion ? minions/2 * openingRelief : 0);
-    enemy.atk=Math.max(1,Math.round(enemy.atk/attackDivisor));
-    if(minion){
-     // Dense reinforcement waves otherwise keep even low-damage
-     // Minions on screen for many consecutive basic attacks.
-     const hpDivisor=minions>=4 ? attackDivisor : Math.sqrt(attackDivisor);
-     enemy.maxhp=Math.max(1,Math.round(enemy.maxhp/hpDivisor));
-     enemy.hp=Math.min(enemy.hp,enemy.maxhp);
-    }
-   }
-  }
- }
+ // All normal-room identity and group pressure is budgeted exactly once.
+ // Risk remains a separate player-selected encounter difficulty choice.
+ if(!statOnly&&!g.selected.boss&&!g.selected.elite)
+  WandererV012CombatCore.applyNormalRoomBudget(group,r.tier);
  const traits=globalThis.WandererV013EncounterTraits;
  const modifiers=globalThis.WandererV013BossModifiers;
  const preparation=globalThis.WandererV013BossPreparation;
