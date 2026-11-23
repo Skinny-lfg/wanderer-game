@@ -58,6 +58,9 @@ jobs:
           if-no-files-found: warn
   e10:
     needs: preflight
+    # The Briarspine correction changes only E1..E9 opening budgets; reuse
+    # the already verified E10 matrix unless an explicit full-E10 run is requested.
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-e10]')
     runs-on: ubuntu-latest
     timeout-minutes: 90
     strategy:
