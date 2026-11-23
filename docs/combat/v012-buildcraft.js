@@ -37,7 +37,7 @@ const P=[
  ['magic','elemental_force','Elemental Force','Increase Magic status potency by 15% per rank.'],
  ['magic','kindling','Kindling','Fire Burn gains 20% potency per rank.',[],'fire'],
  ['magic','deep_winter','Deep Winter','Funded Frost casts Chill; chilled foes take a bounded 18% Spell Power burst every 4s. Boss Chill lasts at most 1.2s.',[],'frost'],
- ['magic','overcharge','Overcharge','Funded Lightning casts chain to two additional foes for 50% then 30% of the primary hit and add Static. Four player charges discharge; charges persist between Realms.',[],'lightning'],
+ ['magic','overcharge','Overcharge','Funded Lightning casts chain to up to three additional foes for 60%, 43%, then 28% of the primary hit and add Static. Four player charges discharge; charges persist between Realms.',[],'lightning'],
  ['blood','plague_rupture','Plague Rupture','Bleed + Rot unleash a burst on critical hits (8s cooldown).',['blood','decay']],
  ['blood','blood_ward','Blood Ward','Bleeding enemies generate Barrier every 5s.',['blood','aegis']],
  ['blood','hemovore','Hemovore','The first bleeding kill per encounter heals 4% max HP.',['blood','vitality']],
@@ -101,7 +101,7 @@ const descriptions={
  elemental_force:'Funded Magic casts and Arcane Infusion gain 12% power per rank.',
  kindling:'Funded Fire casts apply Burn.',
  deep_winter:'Funded Frost casts Chill. Chilled foes take a Spell Power burst every 4s (18% at rank 1, +3 percentage points per rank; capped at 5% of normal foes’ Max HP or 1.5% of bosses’). Boss Chill lasts at most 1.2s.',
- overcharge:'Funded Lightning casts chain to two additional foes for 50% then 30% of the primary hit and add Static. Every 4 charges discharge for 32% Spell Power at rank 1 (+6 percentage points per rank), capped at 3.5% of the foe’s Max HP. Charges persist between Realms.'
+ overcharge:'Funded Lightning casts chain to up to three additional foes for 60%, 43%, then 28% of the primary hit and add Static. Every 4 charges discharge for 32% Spell Power at rank 1 (+6 percentage points per rank), capped at 3.5% of the foe’s Max HP. Charges persist between Realms.'
 };
 const CATALOG=P.map(p=>Object.freeze({...p,description:descriptions[p.id]||p.description}));
 const BY_ID=Object.fromEntries(CATALOG.map(p=>[p.id,p]));
@@ -424,11 +424,13 @@ function onInfusionHit(b,c){
  if(!c.magical&&r.magicInfusionHits%3===0){
   const spellEchoRank=(r.specializations||[]).filter(id=>id==='spell_echo'||/^spell_echo_rank\d+$/.test(id)).length;
   if(spellEchoRank)c.damage(Math.max(1,Math.round(amount*.10*spellEchoRank)),'✨ Spell Echo');
-  if(r.prepared==='grave_bloom'&&e.v012Rot?.length){
-   const others=(c.player?.enemies||[]).filter(m=>m!==e&&m.hp>0).slice(0,2);
-   if(others.length){
-    for(const m of others){m.v012Rot??=[];if(m.v012Rot.length<6)m.v012Rot.push({...e.v012Rot[0],secondaryOrigin:'grave_bloom'});}
-   }else c.damage(e.v012Rot.reduce((sum,rot)=>sum+rot.damage,0),'☠ Grave Bloom');
+  if(r.prepared==='grave_bloom'){
+   e.v012Rot??=[];
+   if(!e.v012Rot.length)e.v012Rot.push({damage:Math.max(1,Math.round(power*.16)),remaining:3,ticks:0});
+   const source=e.v012Rot.find(dot=>dot.damage>0),others=(c.player?.enemies||[]).filter(m=>m!==e&&m.hp>0).slice(0,2);
+   if(source&&others.length){
+    for(const m of others){m.v012Rot??=[];if(m.v012Rot.length<6)m.v012Rot.push({damage:Math.max(1,Math.round(source.damage*.75)),remaining:Math.min(3,source.remaining),ticks:0,secondaryOrigin:'grave_bloom'});}
+   }else if(source)c.damage(source.damage,'☠ Grave Bloom');
    activated(b,'grave_bloom');c.trigger?.('grave_bloom');
   }
  }
