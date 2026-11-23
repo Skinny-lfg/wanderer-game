@@ -1,0 +1,148 @@
+name: Wanderer Stage 6.42 — AoE mechanics paired E10 3300-fight comparison (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths:
+      - '.github/workflows/v013-stage642-aoe-mechanics.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: stage642-aoe-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Static syntax and existing native mechanics regression tests
+        run: |
+          node --check combat/v012-combat-runtime.js
+          node --check combat/v012-buildcraft.js
+          node --check online/v012-expedition-runtime.js
+          node --check scripts/v013-stage642-e10-100seed.cjs
+          node --test tests/v013-stage642-single-budget.test.cjs tests/v013-stage641-build-readiness.test.cjs tests/v013-stage639-earned-aoe-comparison.test.cjs tests/v013-stage64-mana-fallback.test.cjs
+      - name: Assert exact production/docs mirrors for every changed mechanic
+        run: |
+          cmp combat/v012-combat-runtime.js docs/combat/v012-combat-runtime.js
+          cmp combat/v012-buildcraft.js docs/combat/v012-buildcraft.js
+          cmp combat/talent-catalog.js docs/combat/talent-catalog.js
+          cmp online/v012-expedition-runtime.js docs/online/v012-expedition-runtime.js
+          git diff --check
+  replay:
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 80
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        profile:
+          - 'balanced'
+          - 'hexblade-hybrid'
+          - 'leather-duelist'
+          - 'smart-blood-pure'
+          - 'smart-blood-two-handed'
+          - 'smart-fury-bow'
+          - 'magic-fire'
+          - 'magic-lightning'
+          - 'plate-warden'
+          - 'decay-blood-spread'
+          - 'magic-decay-bloom'
+        shard: [0, 1]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45272938568
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: stage642-snapshot-${{ matrix.profile }}
+          path: reports/stage642-aoe/snapshots
+      - name: Replay exact earned E10 snapshots against NEW AoE mechanics (50 matched RNG seeds)
+        env:
+          PROFILE: ${{ matrix.profile }}
+          SHARD: ${{ matrix.shard }}
+        run: |
+          mkdir -p reports/stage642-aoe/shards
+          node scripts/v013-stage642-e10-100seed.cjs replay "$PROFILE" "$SHARD" "reports/stage642-aoe/snapshots/$PROFILE.json" "reports/stage642-aoe/shards/stage642-$PROFILE-shard-$SHARD.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage642-aoe-${{ matrix.profile }}-${{ matrix.shard }}
+          path: reports/stage642-aoe/shards/*.json
+          if-no-files-found: error
+          retention-days: 30
+  aggregate:
+    needs: replay
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage642-aoe-*
+          merge-multiple: true
+          path: reports/stage642-aoe/shards
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45272938568
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: stage642-e10-100seed-summary
+          path: reports/stage642-aoe/original
+      - name: Aggregate 3300 fights on new mechanics and compare same earned players/seeds
+        run: |
+          node scripts/v013-stage642-e10-100seed.cjs aggregate reports/stage642-aoe/shards reports/stage642-aoe/stage642-aoe-summary.json
+          node <<'JS'
+          const fs=require('fs'),dir='reports/stage642-aoe';
+          const old=JSON.parse(fs.readFileSync(dir+'/original/stage642-e10-100seed-summary.json','utf8'));
+          const now=JSON.parse(fs.readFileSync(dir+'/stage642-aoe-summary.json','utf8'));
+          if(old.profiles.length!==11||now.profiles.length!==11||old.source===now.source)throw Error('Invalid before/after comparison provenance');
+          if(old.baselineRef!==now.baselineRef)throw Error('Earned checkpoint source drift');
+          const rows=now.profiles.map(p=>{
+           const b=old.profiles.find(x=>x.id===p.id);
+           if(!b||b.nEarnedSnapshots!==p.nEarnedSnapshots||JSON.stringify(b.snapshots)!==JSON.stringify(p.snapshots))throw Error('Mismatched earned E10 hero: '+p.id);
+           return {id:p.id,checkpointCount:p.nEarnedSnapshots,
+            groups:p.groups.map(g=>{
+             const x=b.groups.find(x=>x.size===g.size);
+             if(!x||x.attempted!==g.attempted||x.attempted!==100)throw Error('Incomplete matched group '+p.id+'/'+g.size);
+             return {size:g.size,before:x.winPct,after:g.winPct,delta:g.winPct-x.winPct,afterWins:g.wins,afterTimeouts:g.timeouts,
+              beforeSecondary:x.totalSecondaryDamage,afterSecondary:g.totalSecondaryDamage};
+            })};
+          });
+          const diff={stage:'6.42',oldSource:old.source,newSource:now.source,baselineRef:now.baselineRef,rows,
+           interpretation:'Matched 100 combat RNG seeds per group & intended build using 1–2 fixed E10 entrants; not 100 independent characters.'};
+          fs.writeFileSync(dir+'/stage642-aoe-before-after.json',JSON.stringify(diff,null,2)+'\n');
+          const md=['# Stage 6.42 — AoE changes, 3300 matched E10 fights','',
+           'Old: '+old.source,'New: '+now.source,'',
+           '| Intended build | E10 states | 4 mobs before→after | 8 mobs before→after | 12 mobs before→after |',
+           '|---|---:|---:|---:|---:|',
+           ...rows.map(x=>'| '+x.id+' | '+x.checkpointCount+' | '+x.groups.map(g=>g.before+'% → '+g.after+'% ('+(g.delta>=0?'+':'')+g.delta.toFixed(1)+' pp)').join(' | ')+' |'),
+           '','100 combat seeds per group per build, same E10 states, Blood realm Risk 1. Zero/low AoE does not prove a mechanic is broken without examining cast and survivability telemetry.',''];
+          fs.writeFileSync(dir+'/stage642-aoe-before-after.md',md.join('\n'));
+          console.log('STAGE642_AOE_MATCHED='+JSON.stringify({oldSource:old.source,newSource:now.source,
+           rows:rows.map(x=>({id:x.id,groups:x.groups.map(g=>({size:g.size,before:g.before,after:g.after,delta:g.delta,secondaryBefore:g.beforeSecondary,secondaryAfter:g.afterSecondary}))}))}));
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage642-aoe-3300-before-after
+          path: |
+            reports/stage642-aoe/stage642-aoe-summary.json
+            reports/stage642-aoe/stage642-aoe-summary.csv
+            reports/stage642-aoe/stage642-aoe-before-after.json
+            reports/stage642-aoe/stage642-aoe-before-after.md
+          if-no-files-found: error
+          retention-days: 30
