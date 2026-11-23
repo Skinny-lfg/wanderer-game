@@ -26,16 +26,16 @@ function endlessWeaponDamageBonus(level,main,off){
   weapon==='Wand'&&offhand==='Orb'?.15:0;
  return maximum*progress;
 }
-function estimateEnemy(level,n=1){
- const boss=n===5&&level%10===0,reference=referenceLevel(level);
+// All native enemies use the SAME E reference independent of room number or
+// how many other enemies are present. Identity budgets are assigned by enemyFor.
+function estimateEnemy(level){
+ const reference=referenceLevel(level);
  const base={hp:27+reference*14,atk:4+reference*3,def:1+reference*.62};
- if(boss)return {hp:enemyStat(level,Math.round(base.hp*1.38)),atk:enemyStat(level,Math.round(base.atk*1.28)),def:enemyStat(level,Math.round(base.def))};
- const stage=Math.max(1,Math.min(4,n));
- const hpFactor=[1,1.12,1.24,1.48][stage-1],atkFactor=[1,1.08,1.16,1.25][stage-1],defFactor=[1,1.06,1.12,1.22][stage-1];
- return {hp:enemyStat(level,Math.round(Math.round(base.hp*1.4)*1.4*hpFactor)),atk:enemyStat(level,Math.round(Math.round(base.atk*1.25)*1.4*atkFactor)),def:enemyStat(level,Math.round(Math.round(base.def*1.2)*1.4*defFactor))};
+ return {hp:enemyStat(level,Math.round(Math.round(base.hp*1.4)*1.4)),
+  atk:enemyStat(level,Math.round(Math.round(base.atk*1.25)*1.4)),
+  def:enemyStat(level,Math.round(Math.round(base.def*1.2)*1.4))};
 }
 
-// Initial room actors receive risk once. Escorts are added after this step.
 function applyEncounterPressure(group,risk){
  const hpRisk=1+.10*risk,attackRisk=1+.12*risk;
  for(const enemy of group){
@@ -51,38 +51,33 @@ function applyEncounterPressure(group,risk){
   enemy.atk=Math.max(1,Math.round(enemy.atk*pressure*attackRisk));
  }
 }
-function applyEscortStats(enemy){
- enemy.hp=enemy.maxhp=Math.round(enemy.maxhp*1.2);
- enemy.atk=Math.round(enemy.atk*.35);
- enemy.attackEvery*=1.3;
-}
-function expeditionGroupScale(count){
- if(count>=6)return {hp:(1.65+.045*(count-6))/count,atk:count>=18?.12:.16};
- return {1:{hp:1,atk:1},2:{hp:.7,atk:.65},3:{hp:.5,atk:.45},4:{hp:.4,atk:.35}}[count];
-}
-
-// Encounter count may exceed the four visible arena slots. Every mob keeps its own state.
-// Large hordes use an explicit per-mob scale and fill empty slots as enemies die.
+// Stage 6.33: a Tank in a 22-enemy swarm is exactly the same Tank as
+// the one in a solo room (at the same E and risk). Never divide HP/ATK/DEF
+// by group size or scale escorts separately. Only active slots and attack
+// clocks differ; pending enemies keep their native full stats.
 function createEnemyGroup(spawn,count,options={}){
- if(typeof spawn!=='function'||!Number.isInteger(count)||count<1||count>22||!options||typeof options!=='object')throw Error('Invalid enemy group');
+ if(typeof spawn!=='function'||!Number.isInteger(count)||count<1||count>22||
+    !options||typeof options!=='object')throw Error('Invalid enemy group');
+ if(Object.hasOwn(options,'scale')||Object.hasOwn(options,'scaleFor'))
+  throw Error('Group-size stat scaling was removed in Stage 6.33');
  const activeSlots=options.activeSlots??Math.min(4,count);
- if(!Number.isInteger(activeSlots)||activeSlots<1||activeSlots>4||activeSlots>count)throw Error('Invalid active mob slots');
- const scale=options.scale||expeditionGroupScale(count);
- if(!scale||!Number.isFinite(scale.hp)||!Number.isFinite(scale.atk)||scale.hp<=0||scale.atk<=0)throw Error('Invalid enemy group scale');
- const seen=new Set();return Array.from({length:count},(_,index)=>{
-  const enemy=spawn(index);if(!enemy||seen.has(enemy)||!Number.isFinite(enemy.maxhp)||!Number.isFinite(enemy.atk)||!Number.isFinite(enemy.attackEvery)||enemy.maxhp<=0||enemy.atk<0||enemy.attackEvery<=0)throw Error('Invalid enemy');seen.add(enemy);
+ if(!Number.isInteger(activeSlots)||activeSlots<1||activeSlots>4||activeSlots>count)
+  throw Error('Invalid active mob slots');
+ const seen=new Set();
+ return Array.from({length:count},(_,index)=>{
+  const enemy=spawn(index);
+  if(!enemy||seen.has(enemy)||!Number.isFinite(enemy.maxhp)||!Number.isFinite(enemy.atk)||
+     !Number.isFinite(enemy.attackEvery)||enemy.maxhp<=0||enemy.atk<0||enemy.attackEvery<=0)
+   throw Error('Invalid enemy');
+  seen.add(enemy);
   if(count>1&&(enemy.boss||enemy.miniboss))throw Error('Bosses and elites must be solo');
   if(count===1)return enemy;
-  const roleScale=typeof options.scaleFor==='function'?options.scaleFor(enemy,count,scale,index):null;
-  const adjusted=roleScale||scale;
-  if(!Number.isFinite(adjusted.hp)||adjusted.hp<=0||!Number.isFinite(adjusted.atk)||adjusted.atk<=0||
-     roleScale&&(!Number.isFinite(roleScale.def)||roleScale.def<=0))throw Error('Invalid enemy role scale');
-  enemy.maxhp=Math.max(1,Math.round(enemy.maxhp*adjusted.hp));enemy.hp=enemy.maxhp;enemy.atk=enemy.atk===0?0:Math.max(1,Math.round(enemy.atk*adjusted.atk));
-  const defenseScale=roleScale?.def??(count<=4?.45:count===12?.22:.15);
-  enemy.def=Math.max(0,Math.round((enemy.def||0)*defenseScale));if(Number.isFinite(enemy.baseDef))enemy.baseDef=Math.max(0,Math.round(enemy.baseDef*defenseScale));
-  enemy.groupSlot=index%activeSlots;enemy.groupClock=-(enemy.groupSlot*enemy.attackEvery/activeSlots);return enemy;
+  enemy.groupSlot=index%activeSlots;
+  enemy.groupClock=-(enemy.groupSlot*enemy.attackEvery/activeSlots);
+  return enemy;
  });
 }
+
 function livingEnemies(enemies){return enemies.filter(enemy=>enemy.hp>0);}
 function nextGroupTarget(enemies){return enemies.find(enemy=>enemy.hp>0)||null;}
 function groupComplete(enemies){return enemies.length>0&&enemies.every(enemy=>enemy.hp<=0);}
@@ -95,5 +90,5 @@ function applyExpeditionModifiers(stats,e){
  if(e.attack)s.attack*=1+e.attack;if(e.defense)s.defense*=1+e.defense;
  return s;
 }
-root.WandererV012CombatCore=Object.freeze({evasionChance,enemyAttackType,referenceLevel,enemyStat,gearStat,endlessWeaponDamageBonus,estimateEnemy,createEnemyGroup,applyEncounterPressure,applyEscortStats,livingEnemies,nextGroupTarget,groupComplete,affinityProcChance,applyExpeditionModifiers});
+root.WandererV012CombatCore=Object.freeze({evasionChance,enemyAttackType,referenceLevel,enemyStat,gearStat,endlessWeaponDamageBonus,estimateEnemy,createEnemyGroup,applyEncounterPressure,livingEnemies,nextGroupTarget,groupComplete,affinityProcChance,applyExpeditionModifiers});
 })(globalThis);
