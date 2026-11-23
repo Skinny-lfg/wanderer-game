@@ -62,11 +62,11 @@ const NORMAL_BASE=Object.freeze({
 // Six Boss identity bases replace the former E1 protection + 2x generic
 // boss multiplier. Their raw coefficients no longer depend on Expedition E.
 const BOSS_BASE=Object.freeze({
- leech:Object.freeze({hp:1.38,atk:1.65,def:2,interval:1.62}),
- matriarch:Object.freeze({hp:1.65,atk:1.90,def:2,interval:1.62}),
- guardian:Object.freeze({hp:1.90,atk:2.00,def:2,interval:1.62}),
- conductor:Object.freeze({hp:1.75,atk:1.93,def:2,interval:1.62}),
- berserker:Object.freeze({hp:1.43,atk:1.75,def:2,interval:1.62}),
+ leech:Object.freeze({hp:1.50,atk:1.75,def:2,interval:1.57}),
+ matriarch:Object.freeze({hp:1.94,atk:2.12,def:2,interval:1.56}),
+ guardian:Object.freeze({hp:2.04,atk:2.10,def:2,interval:1.60}),
+ conductor:Object.freeze({hp:1.89,atk:2.05,def:2,interval:1.58}),
+ berserker:Object.freeze({hp:1.66,atk:1.93,def:2,interval:1.57}),
  devourer:Object.freeze({hp:1.85,atk:1.91,def:2,interval:1.62})
 });
 // Stage 6.42: two absolute leader budgets, not a buff layered on top
