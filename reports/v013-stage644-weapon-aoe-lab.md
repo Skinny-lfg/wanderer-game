@@ -80,7 +80,7 @@ Direct functional checks demonstrate secondary AoE from Bow, Two-Handed, Daggers
 
 ## Outstanding weapon-specific E10 experiments
 
-- Sword+Shield: legal purchased `sword_sweep` vs mechanical ablation and 50% status trial: [run 45289298780](https://github.com/Skinny-lfg/wanderer-game/actions/runs/45289298780). Initially pending as this report was composed; update only with confirmed job results.
+- Sword+Shield: legal purchased `sword_sweep`, 100 combat seeds/group, [run 45289298780](https://github.com/Skinny-lfg/wanderer-game/actions/runs/45289298780) **success**. Only **one independently earned eligible E10 hero** (Sword+Shield, 17 spent points). Skill disabled vs enabled: 4 mobs **50%→62%**, 8 mobs **0%→8%**, 12 mobs **0%→7%**. Extra 50% status bridge did not change results (Aegis-only actor, no Blood/Decay/Fury proc access). Secondary damage with Shielded Sweep: 4/8/12 **23,165 / 33,159 / 39,541**, versus zero with skill disabled. Improves performance, remains very weak against 8/12.
 - Daggers: obtain natural E1-born E10 Daggers users, then legal `fan_of_blades` vs mechanical ablation and 50% status bridge: [run 45289345976](https://github.com/Skinny-lfg/wanderer-game/actions/runs/45289345976). Different capture provenance; **do not mix the cohort with prior frozen-Stage6.42 baselines**.
 - Universal status fidelity must be audited against the full active talent ranks, skills, weapons, effects, cooldowns and scaling before any production change. 
 - Full Grave Bloom unified resolver, Carrion charge contribution from secondary attacks, sustained DoT/rot-tick telemetry, boss/elite testing and final E10 balancing remain **not yet approved**.
