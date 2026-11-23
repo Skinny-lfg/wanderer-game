@@ -7,6 +7,7 @@ on:
       - 'tests/v013-stage642-aoe-readiness.test.cjs'
       - 'scripts/v013-build-planner.cjs'
       - 'scripts/v013-stage639-earned-aoe-comparison.cjs'
+      - 'combat/talent-graph-next.js'
   workflow_dispatch:
 permissions:
   contents: read
@@ -24,5 +25,5 @@ jobs:
         run: |
           node --check scripts/v013-build-planner.cjs
           node --check scripts/v013-stage639-earned-aoe-comparison.cjs
-          node --test tests/v013-stage642-aoe-readiness.test.cjs tests/v013-stage641-build-readiness.test.cjs tests/v013-stage642-single-budget.test.cjs
+          node --test tests/v013-stage642-aoe-readiness.test.cjs tests/v013-stage641-build-readiness.test.cjs tests/v013-stage642-single-budget.test.cjs tests/talent-graph-next.test.cjs tests/talent-graph-runtime.test.cjs tests/talent-graph-bridge.test.cjs tests/talent-graph-combat.test.cjs tests/v013-talent-structure.test.cjs tests/v013-dead-talent-cleanup.test.cjs
           git diff --check
