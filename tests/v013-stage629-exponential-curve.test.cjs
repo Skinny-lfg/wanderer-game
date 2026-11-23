@@ -18,7 +18,8 @@ test('One authoritative exponential reference: exact E1–E5 and no E6 discontin
   }
  }
  const old=M.oldReference;
- assert(Math.abs(P.enemyReference(5.001)-(5+.2*.001))<.0001,'first derivative at E5');
+ assert(Math.abs((P.enemyReference(6)-P.enemyReference(5))-
+  (M.oldReference(6)-M.oldReference(5)))<.001,'no E5→E6 slope jump');
  for(const E of [5,6,20,35,55,70,100,150,200]){
   const x=P.enemyReference(E),ratio=x/old(E);
   if(E<=5)assert.equal(ratio,1);
