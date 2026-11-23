@@ -12,22 +12,20 @@ const tiers=Object.freeze([
 ]);
 function checked(level){if(!Number.isSafeInteger(level)||level<1)throw Error('Invalid Expedition Level');return level;}
 function gearTier(level){checked(level);for(let i=tiers.length-1;i>=0;i--)if(level>=tiers[i].minimum)return tiers[i];}
-// Stage 6.31 — one SMOOTH exponentially compounded progression for all E>=1.
-// The per-Expedition percentage growth changes smoothly; it is NOT a fixed %.
-// Both the reference and its growth-rate derivative are continuous through
-// E2/E3/E5/E35/E36/E70/E200. No piecewise level, clamp, local nerf or step.
-// Provisional smooth E1-based calibration: E2/E3 match prior native targets,
-// E5 is eased without an E5 breakpoint, and E200 retains late pressure.
-// This is not proof that
-// the target player win rates (normal 80–90%, Elite 60–70%, Boss 35–45%)
-// are met by the current agents. Player gear and XP are separate models.
-// Initial growth is brisker and relaxes smoothly toward the positive late
-// rate. The entire expression is an exponential for every Expedition.
+// Stage 6.34 — single continuous exponential shared by every normal, Elite
+// and Boss identity. Early shape fitted to 500 actually-earned E1-born accounts
+// (Stage 6.32, run 45174790906, 3156 checkpoints). Weighted paired log-growth
+// of player raw Max HP and Attack from E1→E20, never unpaired level averages.
+// This is not a win-rate fit: native fights must independently validate targets.
+// Stage 6.32 observed only 102/500 accounts at E20. The positive late slope
+// is a DECLARED extrapolation E20→E200; do not claim it was measured.
+// No discontinuities, gear-tier breakpoints, manual changes or level clamps.
+// Recompute parameters with scripts/v013-stage634-player-growth-fit.cjs.
 const ENEMY_EXPONENTIAL_GROWTH=Object.freeze({
  initialReference:.775,
- lateLogGrowth:.009901141066605541,
- earlyLogGrowthBoost:1.9367547131703917,
- relaxationExpeditions:2.0572942012233146
+ lateLogGrowth:.014, // provisional extrapolation; not identified from E1-E20
+ earlyLogGrowthBoost:1.07777514,
+ relaxationExpeditions:2.75370775
 });
 function enemyReference(level){
  checked(level);
