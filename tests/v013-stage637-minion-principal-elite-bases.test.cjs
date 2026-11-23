@@ -8,14 +8,14 @@ const C=globalThis.WandererV012CombatCore;
 const P=globalThis.WandererExpeditionProgression;
 const S=require('../scripts/simulate-progression.cjs');
 const originals={
- tank:{hp:1.88,atk:.76,def:1.26},
- berserker:{hp:.80,atk:1.30,def:.88},
- vampire:{hp:1.12,atk:1.10,def:1.03},
+ tank:{hp:1.52,atk:.65,def:1.19},
+ berserker:{hp:.89,atk:1.37,def:.90},
+ vampire:{hp:1.19,atk:1.16,def:1.04},
  caster:{hp:1.02,atk:1.03,def:.92},
- gravecaller:{hp:1.12,atk:.82,def:.88},
- oathbound_exarch:{hp:1.36,atk:.77,def:1.15},
- briarspine_horror:{hp:1.33,atk:.95,def:1.03},
- ashen_executioner:{hp:1.18,atk:1.22,def:.93}
+ gravecaller:{hp:1.04,atk:.76,def:.86},
+ oathbound_exarch:{hp:1.50,atk:.87,def:1.18},
+ briarspine_horror:{hp:1.39,atk:1.01,def:1.04},
+ ashen_executioner:{hp:1.16,atk:1.20,def:.93}
 };
 const mob=(role='tank')=>({role,name:role,atk:40,def:20,baseDef:20,hp:200,maxhp:200,attackEvery:1.72});
 const group=(principal,minions)=>[
