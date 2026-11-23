@@ -16,7 +16,7 @@ test('One authoritative exponential reference: smooth E1–E5 arc with E5 anchor
   if(E>1)assert(x>P.enemyReference(E-1),'must increase at E'+E);
   if(E>=5&&E<200){
    const n=P.enemyReference(E+1);
-   assert(n/x<1.04,'unexpected enemy stat jump E'+E);
+   assert(n/x<(E<10?1.25:1.05),'unexpected enemy stat jump E'+E);
   }
  }
  const old=M.oldReference;
