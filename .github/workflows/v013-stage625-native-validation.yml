@@ -29,7 +29,8 @@ jobs:
             const p=v.options(E,rarity);
             if(p.rows.length!==48||new Set(p.rows.map(x=>x.seed)).size!==48||
               new Set(p.rows.map(x=>x.realm)).size!==6||
-              p.rows.some(x=>x.budget!==(E===35?36:60)))
+              p.rows.some(x=>x.budget!==(E===35?36:E===70?60:100))||
+              (E===200&&p.rows.some(x=>x.talents.nodes.length<=60)))
               throw Error('Invalid controlled Stage 6.25 '+E+'/'+rarity);
           }
           console.log('STAGE625_PREFLIGHT: 6 legal controlled cohorts, no gameplay changes');
