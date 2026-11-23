@@ -158,7 +158,7 @@ function main(){
   return {seed:x.seed,s,weapon:s.state.equip.weapon?.subtype||null,
    offhand:s.state.equip.offhand?.subtype||null,prepared:progress.prepared,
    points:s.talentSpent,active:progress.nodes.filter(n=>['bow_pierce','cleave_mastery','fan_of_blades','sword_sweep','mace_shockwave','carrion_detonation','grave_bloom','plague_spread'].includes(n))};
- });
+ }).filter(Boolean);
  if(!entrants.length)throw Error('No legally affordable mixed E10 candidate');
  const rows=[];
  for(let n=0;n<N;n++){
