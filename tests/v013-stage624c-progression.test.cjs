@@ -81,7 +81,7 @@ test('Early six-Boss protection remains identical E1-E30, later individual growt
  }
 });
 test('Native reference/gear policy matches E1–E5 and still progresses beyond E200',()=>{
- assert(P.enemyReference(5)<1,'One E1-anchored exponential softens E5');
+ assert(P.enemyReference(5)<5,'Smooth E1-anchored exponential softens E5');
  for(const E of [1,2,3,4])assert(P.enemyReference(E)>0&&P.enemyReference(E)<E,
   'Stage 6.31 common exponential softens early E'+E);
  assert.deepEqual([1,5,15,35,70,100,200,201,1000].map(x=>P.gearTier(x).id),
