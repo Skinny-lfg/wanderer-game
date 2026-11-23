@@ -204,7 +204,7 @@ function spendEarnedTalents(a,profile){
 function spendEarnedAttributes(a,profile){
  const T=a.talents,s=a.state(),before=s.automaticTalents;
  if(!T.valid(before)||!a.talentActions?.available())throw Error('Attributes require valid Camp state');
- const first=profile.families[0]||'blood',second=profile.families[1]||null;
+ const first=profile.families[0]||'blood';
  const rotations={
   blood:['str','str','end','str','cha'],
   fury:['agi','agi','str','agi','cha'],
@@ -1270,7 +1270,10 @@ function simulateAccount(seed,id,opts,simulationOptions={}){
       throw Error('Earned checkpoint test changed equipment, resources, XP, unlocks or invalid talents');
     }
     const before={xp:a.state().automaticTalents.xp,earned:a.talents.earned(a.state().automaticTalents),
-     spent:a.state().automaticTalents.nodes.length,gear:gearSnapshot(a),strategy:activeProfile.variantId||id,gold:a.state().gold,
+     spent:a.state().automaticTalents.nodes.length,
+     attributeEarned:a.talents.attributeBudget(a.state().automaticTalents),
+     attributeSpent:a.talents.spentAttributes(a.state().automaticTalents),
+     attributes:a.talents.attributes(a.state().automaticTalents),gear:gearSnapshot(a),strategy:activeProfile.variantId||id,gold:a.state().gold,
      fragments:a.state().fragments,essence:a.state().crafting?.essence||0,
      talentNodes:[...a.state().automaticTalents.nodes],
      element:a.state().automaticTalents.element||null,
@@ -1280,7 +1283,10 @@ function simulateAccount(seed,id,opts,simulationOptions={}){
     if(encounter.xpEnd<before.xp)throw Error('Native earned XP decreased');
     entry={...entry,camp,before,...(earnedProbe?{earnedProbe}:{}),...encounter,
      after:{xp:a.state().automaticTalents.xp,earned:a.talents.earned(a.state().automaticTalents),
-      spent:a.state().automaticTalents.nodes.length,unlocked:a.controller().state.unlocked,
+      spent:a.state().automaticTalents.nodes.length,
+      attributeEarned:a.talents.attributeBudget(a.state().automaticTalents),
+      attributeSpent:a.talents.spentAttributes(a.state().automaticTalents),
+      attributes:a.talents.attributes(a.state().automaticTalents),unlocked:a.controller().state.unlocked,
       gold:a.state().gold,fragments:a.state().fragments,
       essence:a.state().crafting?.essence||0,
       talentNodes:[...a.state().automaticTalents.nodes],
@@ -1356,6 +1362,7 @@ function analyze(accounts,opts){
    campGreySalvaged:attempts.reduce((n,a)=>n+(a.camp?.salvagedGrey||0),0),
    forgeFragmentsFromGrey:attempts.reduce((n,a)=>n+(a.camp?.salvageFragments||0),0),
    nativeXpEarned:attempts.reduce((n,a)=>n+(a.xpEarned||0),0),
+   permanentAttributePointsSpent:attempts.reduce((n,a)=>n+(a.camp?.attributes?.length||0),0),
    potionsUsed:attempts.reduce((n,a)=>n+(a.potions?.length||0),0),
    boonsSelected:attempts.reduce((n,a)=>n+(a.boons?.length||0),0),
    contractsSelected:attempts.filter(a=>!!a.contract).length,
