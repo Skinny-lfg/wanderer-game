@@ -51,6 +51,36 @@ function applyEncounterPressure(group,risk){
   enemy.atk=Math.max(1,Math.round(enemy.atk*pressure*attackRisk));
  }
 }
+// Stage 6.38 — normal-room Minions are intentionally fragile trash mobs.
+// Only normal room encounters call this once, AFTER Risk and BEFORE Traits,
+// making small groups safer too. Boss/Elite special summons do NOT use it.
+// This changes each Minion's own native role profile, not a blanket group
+// debuff or a dynamic handicap that fluctuates as Minions die.
+const NORMAL_ROOM_MINION_PROFILE=Object.freeze({
+ hp:.38,atk:.60,def:.55,attackInterval:1.18
+});
+function applyNormalRoomMinionProfile(group){
+ if(!Array.isArray(group)||group.some(e=>!e||
+  !Number.isFinite(e.maxhp)||!Number.isFinite(e.atk)||
+  !Number.isFinite(e.def)||!Number.isFinite(e.attackEvery)))
+  throw Error('Invalid normal room Minion profile group');
+ if(group.some(e=>e.boss||e.miniboss))return {affected:0};
+ let affected=0;
+ for(const e of group){
+  if(e.role!=='minion')continue;
+  if(e.normalRoomMinionProfileApplied)throw Error('Normal Minion profile applied twice');
+  const b=NORMAL_ROOM_MINION_PROFILE;
+  e.maxhp=Math.max(1,Math.round(e.maxhp*b.hp));
+  e.hp=Math.min(e.hp,e.maxhp);
+  e.atk=Math.max(1,Math.round(e.atk*b.atk));
+  e.def=Math.max(0,Math.round(e.def*b.def));
+  e.baseDef=Math.max(0,Math.round(e.baseDef*b.def));
+  e.attackEvery*=b.attackInterval;
+  e.normalRoomMinionProfileApplied=true;
+  affected++;
+ }
+ return {affected};
+}
 // Stage 6.37: a large mixed room taxes ONLY its principal mobs for the number
 // of Minions in its complete initial roster (including reserve slots).
 // The minions themselves keep FULL native HP/ATK/DEF and combat timings.
@@ -130,5 +160,5 @@ function applyExpeditionModifiers(stats,e){
  if(e.attack)s.attack*=1+e.attack;if(e.defense)s.defense*=1+e.defense;
  return s;
 }
-root.WandererV012CombatCore=Object.freeze({evasionChance,enemyAttackType,referenceLevel,enemyStat,gearStat,endlessWeaponDamageBonus,estimateEnemy,createEnemyGroup,applyEncounterPressure,applyMinionEscortRelief,MINION_ESCORT_RELIEF,livingEnemies,nextGroupTarget,groupComplete,affinityProcChance,applyExpeditionModifiers});
+root.WandererV012CombatCore=Object.freeze({evasionChance,enemyAttackType,referenceLevel,enemyStat,gearStat,endlessWeaponDamageBonus,estimateEnemy,createEnemyGroup,applyEncounterPressure,applyNormalRoomMinionProfile,NORMAL_ROOM_MINION_PROFILE,applyMinionEscortRelief,MINION_ESCORT_RELIEF,livingEnemies,nextGroupTarget,groupComplete,affinityProcChance,applyExpeditionModifiers});
 })(globalThis);
