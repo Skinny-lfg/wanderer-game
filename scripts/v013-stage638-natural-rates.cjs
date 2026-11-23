@@ -13,6 +13,16 @@ const OLD=Object.freeze({
   {E:4,small:[243,329],swarm:[26,97]},
   {E:5,small:[257,346],swarm:[15,71],elite:[169,172],boss:[139,144]}
  ]});
+function options(argv=process.argv.slice(2)){
+ const requested=argv.find(a=>a.startsWith('--out='))?.slice(6);
+ if(requested&&!/^reports\/v013-stage638-[a-z0-9-]+\.json$/.test(requested))
+  throw Error('Unsafe Stage6.38 output path');
+ const cfg=V.options(argv.map(a=>a.startsWith('--out=')?
+  '--out=reports/v013-stage637-validated.json':a));
+ if(requested)cfg.out=requested;
+ else cfg.out='reports/v013-stage638-cohort-0.json';
+ return cfg;
+}
 function cohort(cfg){
  const d=V.cohort(cfg);
  if(d.stage!=='6.37'||d.kind!=='cohort')throw Error('Unexpected native Stage6.37 source');
@@ -64,7 +74,7 @@ function markdown(d){
  return out.join('\n');
 }
 function main(argv=process.argv.slice(2)){
- const cfg=V.options(argv),d=cfg.mode==='cohort'?cohort(cfg):aggregate(
+ const cfg=options(argv),d=cfg.mode==='cohort'?cohort(cfg):aggregate(
   fs.readdirSync(cfg.inputs).filter(n=>/^v013-stage638-cohort-\d+-\d+\.json$/.test(n))
    .map(n=>JSON.parse(fs.readFileSync(path.join(cfg.inputs,n),'utf8'))));
  fs.mkdirSync(path.dirname(cfg.out),{recursive:true});
@@ -74,5 +84,5 @@ function main(argv=process.argv.slice(2)){
   {n:d.accounts.length,complete:d.complete,seed:cfg.seed,batch:cfg.batch}));
  return d;
 }
-module.exports={OLD,cohort,aggregate,markdown,main};
+module.exports={OLD,options,cohort,aggregate,markdown,main};
 if(require.main===module){try{main();}catch(e){console.error('STAGE638_ERROR '+String(e.stack||e));process.exitCode=1;}}
