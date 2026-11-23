@@ -116,6 +116,26 @@ function main(){
  const entrants=players.map(x=>{
   let s=x.snapshot;
   if(variant.split('+').includes('respecBow'))s=require('./v013-stage642-e10-bow-respec.cjs').makeRespec(s);
+  const mixedTrial=variant.split('+').find(x=>x==='respecCarrion'||x==='respecBloomPhysical');
+  if(mixedTrial){
+   const T=globalThis.WandererAutomaticTalents,P=require('./v013-build-planner.cjs');
+   const bloom=mixedTrial==='respecBloomPhysical',ability=bloom?'grave_bloom':'carrion_detonation';
+   if(s.state.equip.weapon?.subtype!=='Sword')throw Error('Physical mixed test needs genuinely earned Sword');
+   const original=T.reset(s.state.automaticTalents);
+   const proposed=P.propose(T,original,{primary:bloom?'magic':'decay',
+    secondary:bloom?'decay':'blood',secondAt:1,model:'two',mix:true,
+    element:'arcane',weapons:['Sword'],armor:'Leather',
+    milestones:[ability],orderedMilestones:true,focus:'rot'});
+   const purchased={...original,nodes:proposed.expectedNodes,
+    prepared:bloom?'grave_bloom':null};
+   if(!purchased.nodes.includes(ability)){
+    console.log('STAGE644_UNAFFORDABLE='+JSON.stringify({ability,seed:x.seed,earned:T.earned(original)}));
+    return null;
+   }
+   if(!T.valid(purchased))throw Error('Illegal mixed respec '+ability);
+   s={...s,talentSpent:purchased.nodes.length,
+    state:{...s.state,automaticTalents:purchased}};
+  }
   const special=variant.split('+').find(x=>x==='respecCleave'||x==='respecMace');
   if(special){
    const T=globalThis.WandererAutomaticTalents,P=require('./v013-build-planner.cjs');
@@ -139,6 +159,7 @@ function main(){
    offhand:s.state.equip.offhand?.subtype||null,prepared:progress.prepared,
    points:s.talentSpent,active:progress.nodes.filter(n=>['bow_pierce','cleave_mastery','fan_of_blades','sword_sweep','mace_shockwave','carrion_detonation','grave_bloom','plague_spread'].includes(n))};
  });
+ if(!entrants.length)throw Error('No legally affordable mixed E10 candidate');
  const rows=[];
  for(let n=0;n<N;n++){
   const i=shard*N+n,actor=entrants[i%entrants.length],seed=6430000+i*101;
