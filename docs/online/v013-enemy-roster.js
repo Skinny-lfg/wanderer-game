@@ -87,26 +87,8 @@ function shareAffinityArt(roster,peerCatalog,{seed,realm,node=0}={}){
   return {...enemy,image:choices[Math.floor(random()*choices.length)].image};
  });
 }
-function scaleFor(enemy,count,base){
- const role=enemy?.role;
- if(!ROLES.includes(role)||count<=1)return null;
- const baseHp=base.hp,baseAtk=base.atk;
- if(count>=6){
-  if(role==='minion')return {hp:baseHp*.95,atk:baseAtk*.92,def:count<=12?.25:.18};
-  // Stage 6.18: explicit principal-role scales restore some real threat
-  // without copying full small-room stats onto 6+ foes. Gradually taper
-  // through larger swarms; never buff Minions, Elites or Bosses here.
-  const t=Math.max(0,Math.min(1,(count-6)/6));
-  const u=Math.max(0,Math.min(1,(count-12)/8));
-  const between=(a,b,f)=>a+(b-a)*f;
-  return count<=12?
-   {hp:between(.53,.43,t),atk:between(.45,.37,t),def:between(.70,.64,t)}:
-   {hp:between(.43,.31,u),atk:between(.37,.28,u),def:between(.64,.60,u)};
- }
- if(role==='minion')return {hp:baseHp*.95,atk:baseAtk*.90,def:.35};
- return {hp:Math.max(.57,baseHp*1.35),atk:Math.max(.50,baseAtk*1.35),def:.72};
-}
-const API=Object.freeze({ROLES,CATALOG,FAMILY_WEIGHTS,catalogFor,plan,shareAffinityArt,scaleFor});
+
+const API=Object.freeze({ROLES,CATALOG,FAMILY_WEIGHTS,catalogFor,plan,shareAffinityArt});
 root.WandererV013EnemyRoster=API;
 if(typeof module==='object'&&module.exports)module.exports=API;
 })(globalThis);

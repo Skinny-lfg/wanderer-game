@@ -22,25 +22,28 @@ function tryDodge(run,type){
  ports.floatText('DODGE','hero');return true;
 }
 
+function statOnly(){return root.WandererExpeditionProgression?.CALIBRATION_STAT_ONLY===true;}
 function enemyFor(level,enc,override=null){
- const theme=override?.theme||ports.currentTheme(),boss=override?!!override.boss:enc===5&&level%10===0,miniboss=override?!boss&&!!override.elite:enc===4,v=ports.estimateEnemy(level,Math.min(5,enc)),mult=boss?2:1;
+ const theme=override?.theme||ports.currentTheme(),boss=override?!!override.boss:enc===5&&level%10===0,miniboss=override?!boss&&!!override.elite:enc===4;
+ const v=ports.estimateEnemy(level,1); // never vary the stat budget by room index
  const variant=boss?(override?.variant||ports.bossForTier(level)):null;
  const mob=boss?{name:variant.name,image:variant.image}:override?.mob||ports.sample(theme.mobs);
  const role=boss?'boss':miniboss?'miniboss':(['minion','tank','skirmisher','caster'].includes(mob.role)?mob.role:'skirmisher');
  const elite=miniboss?ports.eliteArchetype(ports.state.run):null;
- // Stage 6.24C: one level/identity scaling authority for all native actors.
- // Each class factor is applied exactly once, after its original archetype
- // budget; risk, traits, minions, wards and abilities keep their own owners.
- const scale=root.WandererExpeditionProgression.enemyScaling(
-  level,boss?'boss':miniboss?'elite':'normal',
-  boss?variant.style:miniboss?elite.id:role);
- const hp=Math.max(1,Math.round(v.hp*mult*(elite?elite.hp:role==='minion'?.68:role==='tank'?1.32:role==='skirmisher'?.96:role==='caster'?.90:1)*scale.hp));
- const atk=Math.max(1,Math.round(v.atk*mult*(elite?elite.atk:role==='minion'?.70:role==='skirmisher'?1.10:role==='caster'?1.08:role==='tank'?.90:1)*scale.atk));
- const defense=Math.max(0,Math.round(v.def*mult*(elite?elite.def:role==='tank'?1.35:role==='minion'?.55:1)*scale.def));
- const barrier=variant?.style==='guardian'?Math.max(3,WandererV012CombatCore.enemyStat(level,Math.round(WandererV012CombatCore.referenceLevel(level)*.9))):elite?.id==='tank'?Math.max(1,WandererV012CombatCore.enemyStat(level,Math.round(1+WandererV012CombatCore.referenceLevel(level)*.3))):0;
+ const P=root.WandererExpeditionProgression;
+ const base=boss?P.BOSS_BASE[variant.style]:elite||P.NORMAL_BASE[role];
+ if(!base)throw Error('Missing fixed native enemy budget '+role+'/'+variant?.style);
+ // The sole Expedition-based growth enters through estimateEnemy's shared
+ // enemyReference(E). Identity bases are literal coefficients, not E ramps.
+ const hp=Math.max(1,Math.round(v.hp*base.hp));
+ const atk=Math.max(1,Math.round(v.atk*base.atk));
+ const defense=Math.max(0,Math.round(v.def*base.def));
+ const barrier=statOnly()?0:
+  variant?.style==='guardian'?Math.max(3,WandererV012CombatCore.enemyStat(level,Math.round(WandererV012CombatCore.referenceLevel(level)*.9))):
+  elite?.id==='tank'?Math.max(1,WandererV012CombatCore.enemyStat(level,Math.round(1+WandererV012CombatCore.referenceLevel(level)*.3))):0;
  return {name:miniboss?elite.icon+' '+elite.name:mob.name,image:elite?ports.eliteArt(elite.id,mob.image):mob.image,role,bossStyle:variant?.style||null,attackType:['caster','gravecaller','oathbound_exarch'].includes(elite?.id)||['leech','conductor','devourer'].includes(variant?.style)||role==='caster'?'spell':'physical',
  miniboss,eliteType:elite?.id||null,archetypeName:elite?.name||null,hp,maxhp:hp,atk,def:defense,baseDef:defense,barrier,
- attackEvery:elite?elite.interval:role==='skirmisher'?1.42:role==='minion'?1.90:role==='tank'||role==='caster'?1.72:1.62,boss,effect:theme.effect,burn:0,bleed:0,
+ attackEvery:base.interval,boss,effect:theme.effect,burn:0,bleed:0,
  burnStacks:0,bleedStacks:0,dots:{bleed:[],burn:[]},slowTime:0,enraged:false};
 }
 
@@ -718,18 +721,18 @@ function updateFight(){
   let raw=Math.max(Math.ceil(e.atk*.24),Math.round(e.atk*(1-Math.min(.75,s.defense/(s.defense+e.atk*1.35)))));
   if(stage81Strike||stage81Pack!==1)raw=Math.max(1,Math.round(raw*(1+(stage81Strike?.bonus||0))*stage81Pack));
   const armorPrevented=Math.max(0,e.atk-raw);
-  if(e.effect==='burn')raw+=WandererV012CombatCore.enemyStat(r.tier,Math.round(WandererV012CombatCore.referenceLevel(r.tier)*.3));
-  if(e.effect==='sunder')raw+=WandererV012CombatCore.enemyStat(r.tier,Math.round(WandererV012CombatCore.referenceLevel(r.tier)*.2));
-  if(e.bossStyle==='berserker'&&e.hp<e.maxhp*.5){
+  if(!statOnly()&&e.effect==='burn')raw+=WandererV012CombatCore.enemyStat(r.tier,Math.round(WandererV012CombatCore.referenceLevel(r.tier)*.3));
+  if(!statOnly()&&e.effect==='sunder')raw+=WandererV012CombatCore.enemyStat(r.tier,Math.round(WandererV012CombatCore.referenceLevel(r.tier)*.2));
+  if(!statOnly()&&e.bossStyle==='berserker'&&e.hp<e.maxhp*.5){
    raw=Math.round(raw*1.35);
    if(!e.enraged){e.enraged=true;ports.addLog('🔥 Ember Sovereign enrages below half HP!','critical');enemyAbilityVfx='BossEmber';}
   }
-  if(e.eliteType==='berserker'&&e.hp<e.maxhp*.5)raw=Math.round(raw*1.08);
+  if(!statOnly()&&e.eliteType==='berserker'&&e.hp<e.maxhp*.5)raw=Math.round(raw*1.08);
   const weaker=ports.setEnemyWeaken(r);
   if(weaker)raw=Math.max(1,Math.round(raw*(1-weaker)));
   // Elite Berserker cannot one-shot a full-health player with one direct hit.
   // Cap before Block/Barrier so defensive investment still matters.
-  if(e.eliteType==='berserker')raw=Math.min(raw,Math.max(1,Math.floor(r.maxhp*.35)));
+  if(!statOnly()&&e.eliteType==='berserker')raw=Math.min(raw,Math.max(1,Math.floor(r.maxhp*.35)));
   if(stage82Strike)raw=cappedStrikeDamage(raw,stage82Strike,r.maxhp);
    if(stage84Strike)raw=cappedStrikeDamage(raw,stage84Strike,r.maxhp);
    raw=Math.max(0,Math.round(raw*(root.WandererV013BossAbilities?.incomingFactor(r,e,r.combatSeconds)||1)));
@@ -792,22 +795,22 @@ function updateFight(){
     const effect=stage81.onHit(e,r,hit,ports.setNow(r),stage81Strike);
     if(effect>0)ports.addLog('✦ '+e.name+' · '+(stage81Strike.secondary==='siphon'?'Siphon +'+effect+' HP':stage81Strike.secondary==='mana'?'Mana −'+effect:'Healing wound'),'spell');
    }
-   if(e.eliteType==='tank'){
+   if(!statOnly()&&e.eliteType==='tank'){
     const newWound=(r.playerHealingDebuffUntil||0)<=ports.setNow(r);
     r.playerHealingDebuffUntil=ports.setNow(r)+5;
     if(newWound)ports.addLog('🛡️ Tank applies Healing Reduction: −40% healing for 5s!','critical');
    }
-   if(e.eliteType==='vampire'){
+   if(!statOnly()&&e.eliteType==='vampire'){
     const multiplier=ports.isPhase1Run()&&ports.phase1Build?WandererV012Buildcraft.enemyHealMultiplier(ports.phase1Build,e):1;
     const heal=Math.floor(Math.min(Math.max(0,e.maxhp-e.hp),Math.max(1,Math.round(hit*.33)),Math.max(1,Math.round(e.maxhp*.055)))*multiplier);
     if(heal>0){e.hp+=heal;ports.addLog('🩸 Vampire drains '+heal+' HP','spell');enemyAbilityVfx='EliteVampire';}
    }
-   if(e.eliteType==='caster'&&ports.setNow(r)>=(r.nextCasterHexAt||0)){
+   if(!statOnly()&&e.eliteType==='caster'&&ports.setNow(r)>=(r.nextCasterHexAt||0)){
     r.playerDebuffUntil=ports.setNow(r)+3;r.nextCasterHexAt=ports.setNow(r)+7;
     ports.addLog('🔮 Caster applies Weakened: -20% direct damage for 3s!','spell');enemyAbilityVfx='EliteCaster';
    }
   }
-  if(e.bossStyle==='leech'&&hit>0){const multiplier=ports.isPhase1Run()&&ports.phase1Build?WandererV012Buildcraft.enemyHealMultiplier(ports.phase1Build,e):1;const heal=Math.floor(Math.min(e.maxhp-e.hp,Math.round(hit*.18))*multiplier);e.hp+=heal;if(heal){ports.addLog('🌑 Rift Harbinger drains '+heal+' HP','spell');enemyAbilityVfx='BossRift';}}
+  if(!statOnly()&&e.bossStyle==='leech'&&hit>0){const multiplier=ports.isPhase1Run()&&ports.phase1Build?WandererV012Buildcraft.enemyHealMultiplier(ports.phase1Build,e):1;const heal=Math.floor(Math.min(e.maxhp-e.hp,Math.round(hit*.18))*multiplier);e.hp+=heal;if(heal){ports.addLog('🌑 Rift Harbinger drains '+heal+' HP','spell');enemyAbilityVfx='BossRift';}}
   // Guardian Barrier is restored only by the Stage 8.4 timed Ward Cycle.
   ports.legendaryDefensiveEffects(r,damageBlocked,hit,blocked,barrierBeforeHit>0&&r.barrier<=0);
   if(ports.isPhase1Run()&&ports.phase1Build)WandererV012Buildcraft.onDefend(ports.phase1Build,{...ports.phase2Context(r),barrierBroken},damageBlocked,blocked);

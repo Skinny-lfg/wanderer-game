@@ -76,34 +76,29 @@ test('Stage 8.0 affinity weighting makes Aegis tank-heavy and Fury skirmisher-he
  assert(aegisTank>furyTank*2);
  assert(furySkirmish>aegisSkirmish*1.5);
 });
-test('Stage 8.0 normal mobs retain real health, damage and defense while Minions scale down in hordes',()=>{
+test('Stage 6.33 role compositions remain deterministic but group size cannot mutate stats',()=>{
  const mobs=plan('ward',12,8350);
  const spawned=Core.createEnemyGroup(i=>({
   ...mobs[i],hp:100,maxhp:100,atk:40,def:30,baseDef:30,attackEvery:2,
   boss:false,miniboss:false
- }),12,{activeSlots:4,scale:{hp:.16,atk:.16},scaleFor:(mob,count,base)=>R.scaleFor(mob,count,base)});
- const normal=spawned.find(m=>m.role!=='minion'),small=spawned.find(m=>m.role==='minion');
- assert(normal&&small);
- assert(normal.maxhp>=small.maxhp*1.8,'normal mob must withstand appreciably more punishment');
- assert(normal.atk>=small.atk*1.6,'normal mob must be higher pressure than a Minion');
- assert(normal.def>=small.def*2,'Tanks/casters/skirmishers keep defense scale');
- assert.equal(spawned.length,12);
+ }),12,{activeSlots:4});
+ assert(spawned.some(m=>m.role==='minion'));
+ assert(spawned.some(m=>m.role!=='minion'));
+ assert(spawned.every(m=>m.maxhp===100&&m.atk===40&&m.def===30));
  assert.deepEqual(spawned.slice(0,4).map(m=>m.groupSlot),[0,1,2,3]);
- const legacy=Core.createEnemyGroup(()=>({hp:100,maxhp:100,atk:40,def:30,baseDef:30,attackEvery:2}),3);
- assert.equal(legacy[0].maxhp,50,'legacy unspecified role groups retain old scaling');
+ const solo=Core.createEnemyGroup(()=>({hp:100,maxhp:100,atk:40,def:30,baseDef:30,attackEvery:2}),1);
+ assert.deepEqual(solo[0].maxhp,spawned[0].maxhp);
+ assert.equal(R.scaleFor,undefined,'obsolete role scaling must be deleted');
 });
-test('Stage 6.18 principal stat curve is smooth and preserves weaker Minions',()=>{
- const regular={role:'tank'},minion={role:'minion'};
- const at=n=>R.scaleFor(regular,n,{hp:(1.65+.045*(n-6))/n,atk:n>=18?.12:.16});
- for(const n of [6,8,12,20,22]){
-  const x=at(n),m=R.scaleFor(minion,n,{hp:(1.65+.045*(n-6))/n,atk:n>=18?.12:.16});
-  assert(x.hp>m.hp&&x.atk>m.atk&&x.def>m.def);
-  assert(x.hp>0&&x.atk>0&&x.def>0);
+test('Stage 6.33 normal roster composition still contains principal roles and Minions',()=>{
+ for(const count of [1,3,6,8,12,20,22]){
+  const p=plan('ward',count,8350);
+  assert.equal(p.length,count);
+  assert(p.every(x=>R.ROLES.includes(x.role)));
+  if(count>4)assert(p.filter(x=>x.role==='minion').length>=count-4);
  }
- assert(at(6).hp>at(8).hp&&at(8).hp>at(12).hp&&at(12).hp>at(20).hp);
- assert(at(6).atk>at(8).atk&&at(8).atk>at(12).atk&&at(12).atk>at(20).atk);
- assert.deepEqual(R.scaleFor(regular,1,{hp:1,atk:1}),null);
 });
+
 test('Stage 8.0 base UI uses visible class icons beside both group and solo health bars',()=>{
  assert(source.includes('enemyRoleBadge(enemy)'));
  assert(source.includes('enemyRoleBadge(e)'));
