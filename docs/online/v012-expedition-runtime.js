@@ -158,16 +158,21 @@ function phase1StartWave(resetScroll=false){
   WandererV012CombatCore.applySoloNormalReinforcement(group);
   WandererV012CombatCore.applyNormalRoomMinionProfile(group);
   WandererV012CombatCore.applyMinionEscortRelief(group);
-  if(r.tier===1 && group.length>1){
+  if(group.length>1){
    const extraEnemies=group.length-1;
+   // Stage 6.40 continuity: taper the E1 group relief smoothly instead
+   // of dropping it entirely at E2. Preserve E1 unchanged (weight = 1).
+   // Later expeditions approach native attributes continuously as gear
+   // and AoE become available; solo encounters receive no extra relief.
+   const openingRelief=Math.exp(-0.5*Math.max(0,r.tier-1));
    // Pairs need little relief. In larger rooms, reserves extend exposure
    // even though only four enemies can attack at once.
    const pressurePerEnemy=group.length===2 ? 0.2 : group.length<=4 ? 0.75 : 1;
-   const pressure=1 + extraEnemies * pressurePerEnemy;
+   const pressure=1 + extraEnemies * pressurePerEnemy * openingRelief;
    const minions=group.filter(enemy=>enemy.role==='minion').length;
    for(const enemy of group){
     const minion=enemy.role==='minion';
-    const attackDivisor=pressure+(minion ? minions/2 : 0);
+    const attackDivisor=pressure+(minion ? minions/2 * openingRelief : 0);
     enemy.atk=Math.max(1,Math.round(enemy.atk/attackDivisor));
     if(minion){
      // Dense reinforcement waves otherwise keep even low-damage
