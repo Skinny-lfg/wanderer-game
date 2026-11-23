@@ -1,0 +1,105 @@
+name: Wanderer Stage 6.36 — real gear benefit and perceptible combat change (NO DEPLOY)
+on:
+  push:
+    branches: [balance/v013-stage636-perceptible-gear-combat-20261123]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: stage636-perceptibility-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  preflight:
+    name: Verify matched natural E1-born gear states and unchanged native combat
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Syntax and invariants
+        run: |
+          node --check scripts/v013-stage636-combat-perceptibility.cjs
+          node --test tests/v013-stage636-combat-perceptibility.test.cjs tests/v013-stage635-native-player-envelope.test.cjs tests/v013-stage634-earned-growth.test.cjs tests/v013-stage634-natural-rates.test.cjs tests/v013-stage633-fixed-bases.test.cjs
+          git diff --check
+      - name: Full native v0.13 regression
+        run: npm test
+      - name: One E1-born natural account, original vs one real unequipped item
+        run: >-
+          node scripts/v013-stage636-combat-perceptibility.cjs
+          --batch=0 --max-level=5 --max-attempts=12 --max-total-attempts=24
+          --out=reports/v013-stage636-smoke.json
+      - name: Validate first natural checkpoint and paired combat if E2 reached
+        run: |
+          node -e "const d=require('./reports/v013-stage636-smoke.json');if(d.stage!=='6.36'||d.id!=='smart-blood-pure'||d.rows.some(x=>!x.enemyIdentityMatched||!x.nativeAccountState||!x.comparativeItemRemoval))process.exit(1)"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage636-earned-gear-smoke
+          path: reports/v013-stage636-smoke.json
+          retention-days: 45
+          if-no-files-found: warn
+  census:
+    name: Native matched legal growth · account batch ${{ matrix.batch }}
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-stage636-full]')
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        batch: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: E1-born real Camp → matched combat E2 to E200 if unlocked
+        run: >-
+          node scripts/v013-stage636-combat-perceptibility.cjs
+          --batch=${{ matrix.batch }} --max-level=200
+          --max-attempts=12 --max-total-attempts=400
+          --out=reports/v013-stage636-cohort-${{ matrix.batch }}.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage636-cohort-${{ matrix.batch }}
+          path: reports/v013-stage636-cohort-${{ matrix.batch }}.json
+          retention-days: 45
+          if-no-files-found: warn
+  aggregate:
+    name: All 24 earned accounts and actual combat-time/gear results
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-stage636-full]')
+    needs: census
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage636-cohort-*
+          merge-multiple: true
+          path: reports/stage636-shards
+      - name: Validate 24 native cohorts, source identity and comparable initial enemies
+        run: >-
+          node scripts/v013-stage636-combat-perceptibility.cjs
+          --mode=aggregate --inputs=reports/stage636-shards
+          --out=reports/v013-stage636-aggregate.json
+      - name: Require full provenance for each replay
+        run: |
+          node -e "const d=require('./reports/v013-stage636-aggregate.json');if(d.coverage.accounts!==24||d.coverage.nativeReplays!==d.coverage.nativeCombatPairs*2||d.coverage.mixedRosterPairs!==0)process.exit(1)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage636-native-gear-perceptibility-e2-e200
+          path: |
+            reports/v013-stage636-aggregate.json
+            reports/v013-stage636-aggregate.md
+          retention-days: 45
