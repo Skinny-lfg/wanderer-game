@@ -41,15 +41,15 @@ jobs:
       - run: npm ci
       - name: Genuine E1-born to E10 DoT spread progression and native matched fights
         env:
-          BUILD: \${{ matrix.build }}
-          SEED: \${{ matrix.seed }}
+          BUILD: ${{ matrix.build }}
+          SEED: ${{ matrix.seed }}
         run: |
           mkdir -p reports/stage642-dot
           node scripts/v013-stage642-e10-dot-coverage.cjs "$BUILD" "$SEED" "reports/stage642-dot/$BUILD-$SEED.json"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: stage642-dot-\${{ matrix.build }}-\${{ matrix.seed }}
+          name: stage642-dot-${{ matrix.build }}-${{ matrix.seed }}
           path: reports/stage642-dot/*.json
           if-no-files-found: warn
           retention-days: 30
