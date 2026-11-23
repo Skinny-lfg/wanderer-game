@@ -278,10 +278,15 @@ function propose(T,progress,preset,history=[],resets=0){
 function evaluateGear(item,profile,baseScore,target='weapon'){
  if(!profile?.plan)return baseScore;
  const plan=getPlan(profile.plan),weapon=item?.subtype||null,slot=target||item?.slot,
-  magic=plan.primary==='magic'||plan.secondary==='magic',tank=plan.armor==='Plate';
+  magic=plan.primary==='magic'||plan.secondary==='magic',
+  // Research cohorts deliberately compare alternate gear preferences. Keep
+  // the production scoring policy unchanged unless this opt-in is present.
+  preferredArmor=profile.researchGearPreference===true?profile.armor:plan.armor,
+  preferredWeapons=profile.researchGearPreference===true?profile.weapons:plan.weapons,
+  tank=preferredArmor==='Plate';
  let value=baseScore;
  if(slot==='weapon'){
-  if(plan.weapons.includes(weapon))value+=28;
+  if(preferredWeapons.includes(weapon))value+=28;
   else value-=magic?22:12;
   if(weapon==='Staff'&&magic)value+=4;
   if(weapon==='Wand'&&magic)value+=4;
@@ -293,7 +298,7 @@ function evaluateGear(item,profile,baseScore,target='weapon'){
   if(weapon==='Charm'&&plan.secondary==='vitality')value+=11;
  }else if(['armor','helm','gloves','boots','belt'].includes(slot)){
   const armor=item?.armorType||item?.subtype;
-  if(armor===plan.armor)value+=11;
+  if(armor===preferredArmor)value+=11;
   else if(['Plate','Leather','Cloth'].includes(armor))value-=8;
  }
  // Candidate score is never a claim of simulated DPS: legal native items and
