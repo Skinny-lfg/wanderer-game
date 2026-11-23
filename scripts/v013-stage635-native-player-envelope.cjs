@@ -240,7 +240,7 @@ function main(args=process.argv.slice(2)){
  const cfg=settings(args);
  const result=cfg.mode==='cohort'?cohort(cfg):aggregate(
   fs.readdirSync(cfg.inputs).filter(x=>/^v013-stage635-cohort-\d+-\d+\.json$/.test(x))
-   .map(name=>JSON.parse(fs.readFileSync(path.join(cfg.inputs,name),'utf8')))));
+   .map(name=>JSON.parse(fs.readFileSync(path.join(cfg.inputs,name),'utf8'))));
  fs.mkdirSync(path.dirname(cfg.out),{recursive:true});
  fs.writeFileSync(cfg.out,JSON.stringify(result,null,2)+'\n');
  if(cfg.mode==='aggregate')fs.writeFileSync(cfg.out.replace(/\.json$/,'.md'),markdown(result)+'\n');
