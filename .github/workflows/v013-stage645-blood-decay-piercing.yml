@@ -1,0 +1,150 @@
+name: Stage 6.45 — Blood-Decay charge and single-extra Piercing E10 (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths:
+      - '.github/workflows/v013-stage645-blood-decay-piercing.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: stage645-e10-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Native regression gate and syntax of every isolated experimental patch
+        run: |
+          node --check scripts/v013-stage645-blood-decay-piercing.cjs
+          node --test tests/v013-stage643-aoe-mechanics.test.cjs tests/v013-stage642-aoe-readiness.test.cjs
+          for variant in bow-current bow-80 bow-100 bow-100-status bow-armor mixed-current mixed-status mixed-fast mixed-heavy mixed-spread mixed-bow-current mixed-bow-pierce; do
+            node scripts/v013-stage645-blood-decay-piercing.cjs "$variant" --preflight
+            git restore -- combat/v012-combat-runtime.js combat/v012-buildcraft.js docs/combat/v012-combat-runtime.js docs/combat/v012-buildcraft.js scripts/simulate-progression.cjs
+          done
+          git diff --check
+  replay:
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 85
+    strategy:
+      fail-fast: false
+      max-parallel: 10
+      matrix:
+        shard: [0, 1]
+        trial:
+          - {profile: smart-fury-bow, variant: bow-current}
+          - {profile: smart-fury-bow, variant: bow-80}
+          - {profile: smart-fury-bow, variant: bow-100}
+          - {profile: smart-fury-bow, variant: bow-100-status}
+          - {profile: smart-fury-bow, variant: bow-armor}
+          - {profile: smart-blood-two-handed, variant: mixed-current}
+          - {profile: smart-blood-two-handed, variant: mixed-status}
+          - {profile: smart-blood-two-handed, variant: mixed-fast}
+          - {profile: smart-blood-two-handed, variant: mixed-heavy}
+          - {profile: smart-blood-two-handed, variant: mixed-spread}
+          - {profile: decay-blood-spread, variant: mixed-current}
+          - {profile: decay-blood-spread, variant: mixed-fast}
+          - {profile: decay-blood-spread, variant: mixed-spread}
+          - {profile: smart-fury-bow, variant: mixed-bow-current}
+          - {profile: smart-fury-bow, variant: mixed-bow-pierce}
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45272938568
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: stage642-snapshot-${{ matrix.trial.profile }}
+          path: reports/stage645/snapshots
+      - name: Native 50 matched seeds per shard and 1, 4, 8, 12 enemies
+        env:
+          PROFILE: ${{ matrix.trial.profile }}
+          VARIANT: ${{ matrix.trial.variant }}
+          SHARD: ${{ matrix.shard }}
+        run: |
+          mkdir -p reports/stage645/shards
+          node scripts/v013-stage645-blood-decay-piercing.cjs "$VARIANT" "$PROFILE" "$SHARD" "reports/stage645/snapshots/$PROFILE.json" "reports/stage645/shards/$PROFILE-$VARIANT-$SHARD.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage645-${{ matrix.trial.profile }}-${{ matrix.trial.variant }}-${{ matrix.shard }}
+          path: reports/stage645/shards/*.json
+          if-no-files-found: error
+          retention-days: 30
+  aggregate:
+    needs: replay
+    if: always() && needs.replay.result != 'skipped' && needs.replay.result != 'cancelled'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage645-*
+          merge-multiple: true
+          path: reports/stage645/shards
+      - name: Validate legal actors, identical enemy roster and gear and summarize matched fights
+        run: |
+          node <<'JS'
+          const fs=require('node:fs'),dir='reports/stage645/shards';
+          const files=fs.readdirSync(dir).filter(x=>x.endsWith('.json'));
+          const parts=files.map(x=>JSON.parse(fs.readFileSync(dir+'/'+x,'utf8')));
+          const expected={
+            'smart-fury-bow':['bow-current','bow-80','bow-100','bow-100-status','bow-armor','mixed-bow-current','mixed-bow-pierce'],
+            'smart-blood-two-handed':['mixed-current','mixed-status','mixed-fast','mixed-heavy','mixed-spread'],
+            'decay-blood-spread':['mixed-current','mixed-fast','mixed-spread']};
+          const summary=[],missing=[];
+          const sum=(a,f)=>a.reduce((n,x)=>n+(f(x)||0),0);
+          const mean=(a,f)=>a.length?Math.round(sum(a,f)/a.length*100)/100:null;
+          for(const [profile,variants] of Object.entries(expected))for(const variant of variants){
+            const baseVariant=variant.startsWith('mixed-bow')?'mixed-bow-current':variant.startsWith('bow')?'bow-current':'mixed-current';
+            const p=parts.filter(x=>x.profile===profile&&x.variant===variant);
+            const b=parts.filter(x=>x.profile===profile&&x.variant===baseVariant);
+            if(p.length!==2||b.length!==2){missing.push({profile,variant,shards:p.length,baselineShards:b.length});continue;}
+            if(new Set(p.map(x=>x.shard)).size!==2||JSON.stringify(p[0].entries)!==JSON.stringify(p[1].entries)||JSON.stringify(p[0].entries)!==JSON.stringify(b[0].entries))throw Error('Actor or shard drift '+profile+'/'+variant);
+            const rows=p.flatMap(x=>x.rows),old=b.flatMap(x=>x.rows);
+            for(const r of rows){
+              const matched=old.find(x=>x.seed===r.seed&&x.size===r.size&&x.actor===r.actor);
+              if(!matched||r.roster!==matched.roster||r.gear!==matched.gear||r.xp!==matched.xp)throw Error('Enemy, XP or gear drift '+profile+'/'+variant);
+            }
+            const groups=[1,4,8,12].map(size=>{
+              const rr=rows.filter(x=>x.size===size),resolved=rr.filter(x=>!x.timeout);
+              if(rr.length!==100||new Set(rr.map(x=>x.seed)).size!==100)throw Error('Incomplete 100-seed comparison');
+              const wins=resolved.filter(x=>x.won).length;
+              const effects={};
+              for(const r of rr)for(const [k,v] of Object.entries(r.effects))effects[k]=(effects[k]||0)+v;
+              return {size,n:rr.length,wins,losses:resolved.length-wins,timeouts:rr.length-resolved.length,
+                winPct:resolved.length?Math.round(1000*wins/resolved.length)/10:null,
+                secondary:sum(rr,x=>x.secondary),secondaryDot:sum(rr,x=>x.dot),
+                damage:sum(rr,x=>x.damage),meanTaken:mean(rr,x=>x.taken),meanSeconds:mean(rr,x=>x.seconds),
+                meanFirstKill:mean(rr.filter(x=>x.firstKill!==null&&Number.isFinite(x.firstKill)),x=>x.firstKill),
+                firstKillCount:rr.filter(x=>x.firstKill!==null&&Number.isFinite(x.firstKill)).length,
+                meanMana:mean(rr,x=>x.mana),meanReinforcements:mean(rr,x=>x.reinforcements),
+                nativeCarrion:sum(rr,x=>x.nativePassives.carrion_detonation),effects};
+            });
+            summary.push({profile,variant,actors:p[0].entries.map(({seed,weapon,offhand,points,nodes})=>({seed,weapon,offhand,points,
+              carrion:nodes.includes('carrion_detonation'),contagion:nodes.includes('plague_spread'),pierce:nodes.includes('bow_pierce'),
+              cleave:nodes.includes('cleave_mastery'),affinities:nodes.filter(x=>x.startsWith('affinity_'))})),groups});
+          }
+          const result={stage:'6.45',testOnly:true,method:'100 matched combat seeds, earned gear and XP, native E10 first-ring encounters, legal counterfactual respec, no enemy tuning',summary,missing};
+          fs.mkdirSync('reports/stage645',{recursive:true});
+          fs.writeFileSync('reports/stage645/stage645-results.json',JSON.stringify(result,null,2)+'\n');
+          console.log('STAGE645_MATRIX='+JSON.stringify(result));
+          if(missing.length)console.log('STAGE645_MISSING='+JSON.stringify(missing));
+          JS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage645-e10-blood-decay-piercing
+          path: reports/stage645/stage645-results.json
+          retention-days: 30
