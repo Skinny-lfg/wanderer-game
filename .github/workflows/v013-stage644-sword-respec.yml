@@ -1,0 +1,91 @@
+name: Stage 6.44 — Legal Sword Shield Sweep E10 (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths:
+      - '.github/workflows/v013-stage644-sword-respec.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  fight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 85
+    strategy:
+      max-parallel: 6
+      fail-fast: false
+      matrix:
+        shard: [0, 1]
+        variant: [respecSword, 'respecSword+noSword', 'respecSword+status50']
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45272938568
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: stage642-snapshot-balanced
+          path: reports/stage644/sword-snapshots
+      - name: Respec earned Sword Shield E10 and replay same combat seeds
+        env:
+          VARIANT: ${{ matrix.variant }}
+          SHARD: ${{ matrix.shard }}
+        run: |
+          mkdir -p reports/stage644/sword-shards
+          node scripts/v013-stage644-e10-lab.cjs "$VARIANT" balanced "$SHARD" reports/stage644/sword-snapshots/balanced.json "reports/stage644/sword-shards/$VARIANT-$SHARD.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage644-sword-${{ matrix.variant }}-${{ matrix.shard }}
+          path: reports/stage644/sword-shards/*.json
+          retention-days: 30
+          if-no-files-found: error
+  aggregate:
+    needs: fight
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage644-sword-*
+          merge-multiple: true
+          path: reports/stage644/sword-shards
+      - name: Validate earned Sword Shield loadout and matched 100 E10 seeds
+        run: |
+          node <<'JS'
+          const fs=require('fs'),p='reports/stage644/sword-shards';
+          const files=fs.readdirSync(p).filter(x=>x.endsWith('.json'));
+          if(files.length!==6)throw Error('Missing 6 Sword shards');
+          const samples=files.map(x=>JSON.parse(fs.readFileSync(p+'/'+x,'utf8')));
+          const baseline=samples.filter(x=>x.variant==='respecSword').flatMap(x=>x.rows);
+          if(baseline.length!==400)throw Error('Missing 100 baseline rows per size');
+          const summary=[];
+          for(const v of ['respecSword','respecSword+noSword','respecSword+status50']){
+            const parts=samples.filter(x=>x.variant===v);
+            if(parts.length!==2)throw Error('Missing Sword test '+v);
+            const actors=parts[0].entrants;
+            if(JSON.stringify(actors)!==JSON.stringify(parts[1].entrants)||
+               !actors.every(a=>a.weapon==='Sword'&&a.offhand==='Shield'&&a.active.includes('sword_sweep')))throw Error('Invalid earned Sword + Shield skill');
+            const rows=parts.flatMap(x=>x.rows);
+            for(const r of rows){
+              const b=baseline.find(x=>x.seed===r.seed&&x.size===r.size&&x.naturalSeed===r.naturalSeed);
+              if(!b||r.roster!==b.roster||r.xp!==b.xp||r.gear!==b.gear)throw Error('Unmatched enemy, XP or gear');
+            }
+            summary.push({variant:v,actors:actors.map(({seed,weapon,offhand,points,active})=>({seed,weapon,offhand,points,active})),
+             groups:[1,4,8,12].map(size=>{const r=rows.filter(x=>x.size===size);if(r.length!==100)throw Error('Not 100 fights '+v+'/'+size);
+               return {size,n:r.length,wins:r.filter(x=>x.won).length,secondary:r.reduce((a,x)=>a+x.secondary,0),
+                timeouts:r.filter(x=>x.timeout).length};})});
+          }
+          fs.writeFileSync('reports/stage644/sword-results.json',JSON.stringify({stage:'6.44',kind:'legal-Sword-Shield-AoE-E10',summary},null,2)+'\n');
+          console.log('STAGE644_SWORD='+JSON.stringify(summary));
+          JS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage644-sword-results
+          path: reports/stage644/sword-results.json
+          retention-days: 30
