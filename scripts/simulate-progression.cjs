@@ -195,9 +195,18 @@ function prepare(level,build,seed,opts,desiredRisk=undefined,desiredFamily=undef
       (typeof opts.stage619BaselineRuntime!=='string'||!opts.stage619BaselineRuntime.includes('function enemyFor(')||
        !opts.stage619BaselineRuntime.includes('WandererV012CombatRuntime')))
       throw Error('Invalid Stage 6.19 test-only native combat baseline');
+    // Stage 6.24C controlled before/after: only the single native
+    // progression policy changes in an isolated VM. Actor identity, player
+    // gear, Talents, RNG, map and combat engine remain exactly the same.
+    if(opts.stage624cProgressionSource!==undefined&&
+       (typeof opts.stage624cProgressionSource!=='string'||
+        !opts.stage624cProgressionSource.includes('function enemyScaling(')||
+        !opts.stage624cProgressionSource.includes('WandererExpeditionProgression')))
+      throw Error('Invalid isolated Stage 6.24C native progression source');
     const overrides={
       ...(opts.stage617RosterSource===undefined?{}:{'online/v013-enemy-roster.js':opts.stage617RosterSource}),
-      ...(opts.stage619BaselineRuntime===undefined?{}:{'combat/v012-combat-runtime.js':opts.stage619BaselineRuntime})
+      ...(opts.stage619BaselineRuntime===undefined?{}:{'combat/v012-combat-runtime.js':opts.stage619BaselineRuntime}),
+      ...(opts.stage624cProgressionSource===undefined?{}:{'combat/expedition-progression.js':opts.stage624cProgressionSource})
     };
     const a=create(resolvedSeed,undefined,overrides, {recordModules:opts.recordModules,skipPersistence:true,measure:opts.measure===true,now:1720000000000+resolvedSeed});
   if(earned){

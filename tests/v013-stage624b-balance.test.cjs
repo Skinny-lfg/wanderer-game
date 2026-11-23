@@ -5,7 +5,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),crypto=require('node:crypto');
 require('../scripts/simulate-progression.cjs');
 require('../online/v013-enemy-roster.js');
-const R=globalThis.WandererV013EnemyRoster,A=globalThis.WandererV013EliteAbilities;
+const R=globalThis.WandererV013EnemyRoster,A=globalThis.WandererV013EliteAbilities,P=globalThis.WandererExpeditionProgression;
 const sha=s=>crypto.createHash('sha256').update(s).digest('hex').slice(0,12);
 const read=p=>fs.readFileSync(p,'utf8');
 test('Stage 6.24B changes native initial archetype bases (not E6-only multipliers)',()=>{
@@ -20,9 +20,9 @@ test('Stage 6.24B changes native initial archetype bases (not E6-only multiplier
   assert(!docs.includes(old),'old preview base remains: '+old);
  }
  for(const type of ['gravecaller','vampire','briarspine_horror']){
-  assert.deepEqual(A.scalingFor(type,1),{hp:1,atk:1,def:1});
-  assert.deepEqual(A.scalingFor(type,5),{hp:1,atk:1,def:1});
-  assert(A.scalingFor(type,6).hp>1,'Stage 6.19 extra curve not silently removed before 6.24C');
+  assert.deepEqual(P.enemyScaling(1,'elite',type),{hp:1,atk:1,def:1});
+  assert.deepEqual(P.enemyScaling(5,'elite',type),{hp:1,atk:1,def:1});
+  assert(P.enemyScaling(6,'elite',type).hp>1,'Stage 6.24C unified curve starts smoothly after E5');
  }
 });
 test('Gravecaller bound souls and Deathbound remain native, with adjusted base pressure',()=>{

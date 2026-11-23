@@ -1,0 +1,137 @@
+name: Wanderer Stage 6.24C — One continuous native Expedition balance model (NO DEPLOY)
+on:
+  push:
+    branches: [audit/v013-stage624c-continuous-scaling-20261123]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Single source of truth, E1-E200+ continuity, old mechanic deletion and native E5 parity
+        run: |
+          node --check combat/expedition-progression.js
+          node --check combat/v012-combat-runtime.js
+          node --check scripts/v013-stage624c-curve-audit.cjs
+          node --check scripts/simulate-progression.cjs
+          node --test tests/v013-stage624c-progression.test.cjs tests/v013-stage624b-balance.test.cjs tests/v013-stage624-e1-e5-baseline.test.cjs tests/expedition-progression-model.test.cjs tests/v013-stage82-elite-abilities.test.cjs tests/v013-stage84-six-bosses.test.cjs
+          npm run test:v013:gate
+          npm run test:v013:c2
+          node scripts/v013-c6-final-audit.cjs
+          npm run build:pages
+          git diff --exit-code -- docs/index.html docs/combat/expedition-progression.js docs/combat/v012-combat-runtime.js docs/online/v013-elite-abilities.js docs/online/v013-boss-abilities.js
+          git diff --check
+  natural:
+    needs: validate
+    name: Earned E1-E5 account regression seed ${{ matrix.seed }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [9701,9702,9703,9704]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Native real players with earned XP gear Talents and all 13 enemies
+        run: >-
+          node scripts/v013-stage624-e1-e5-baseline.cjs
+          --seed=${{ matrix.seed }}
+          --out=reports/v013-stage624c-natural-${{ matrix.seed }}.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage624c-natural-${{ matrix.seed }}
+          path: reports/v013-stage624c-natural-${{ matrix.seed }}.json
+          if-no-files-found: error
+          retention-days: 30
+  curves:
+    needs: validate
+    name: Paired native Elite Boss solo and player E${{ matrix.level }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        level: [5,15,35,70,100,200]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Same v15 Talents Rare gear native RNG versus legacy and continuous scaling
+        run: >-
+          node scripts/v013-stage624c-curve-audit.cjs
+          --mode=level
+          --level=${{ matrix.level }}
+          --out=reports/stage624c-level${{ matrix.level }}.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage624c-level-${{ matrix.level }}
+          path: reports/stage624c-level${{ matrix.level }}.json
+          if-no-files-found: error
+          retention-days: 30
+  aggregate:
+    needs: [natural,curves]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage624c-level-*
+          path: reports/stage624c-shards
+          merge-multiple: true
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage624c-natural-*
+          path: reports/stage624c-naturals
+          merge-multiple: true
+      - name: Audited 6-level paired native matrix and 4 independent earned cohorts
+        run: |
+          node scripts/v013-stage624c-curve-audit.cjs --mode=aggregate --inputs=reports/stage624c-shards --out=reports/v013-stage624c-comparison.json
+          node scripts/v013-stage624-e1-e5-baseline.cjs --mode=aggregate --inputs=reports/stage624c-naturals --out=reports/v013-stage624c-natural-combined.json
+          node - <<'NODE'
+          const a=require('./reports/v013-stage624c-comparison.json');
+          const n=require('./reports/v013-stage624c-natural-combined.json');
+          if(a.coverage.levels.length!==6||a.coverage.heroes!==72||
+           a.coverage.pairs!==720||a.coverage.fights!==1440||
+           !a.coverage.allNativeMatched||a.coverage.errors||
+           n.coverage.seeds!==4||n.coverage.accounts!==12||
+           n.coverage.errors||n.coverage.checkpoints<45||!n.coverage.allMatched)
+            throw Error('Incomplete Stage 6.24C native evidence');
+          if(a.results.find(x=>x.E===5).elites.oldWins!==a.results.find(x=>x.E===5).elites.newWins)
+           throw Error('Stage 6.24C changed E5 Elite win rate');
+          if(a.results.some(x=>x.bosses.oldWins!==x.bosses.newWins||
+           x.normal.oldWins!==x.normal.newWins))
+           throw Error('Stage 6.24C changed Boss or normal roles');
+          console.log('STAGE624C_ACCEPTED='+JSON.stringify({
+           coverage:a.coverage,natural:n.coverage,
+           results:a.results.map(x=>({E:x.E,elites:x.elites,
+            normal:x.normal,bosses:x.bosses,
+            byElite:Object.fromEntries(Object.entries(x.byElite).map(([id,v])=>[id,v.oldWins+'/'+v.n+'→'+v.newWins+'/'+v.n]))}))}));
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage624c-aggregate-native-evidence
+          path: |
+            reports/v013-stage624c-comparison.json
+            reports/v013-stage624c-natural-combined.json
+          if-no-files-found: error
+          retention-days: 30
