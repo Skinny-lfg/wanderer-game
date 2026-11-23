@@ -43,6 +43,20 @@ function createGraph(catalog,definitionNodes=[]){
   const sides=[first,second].map((family,side)=>{const base=tier===1?`outer_${family}_${side===0?1:-1}_2`:`mixed_path_${first}_${second}_${family}_${tier-1}`;const alternative=BASICS[family][(side?0:3)+tier-1];return stat(`mixed_path_${first}_${second}_${family}_${tier}`,family,null,{tier,anyRequires:[base,...(previous?[previous]:[]),alternative],pair:[first,second]});});
   previous=skill(abilities[tier-1],'mixed',first,tier,null,{pair:[first,second],prerequisites:sides,...(tier===3?{anyRequires:[abilities[0],abilities[1]]}:{})});
  }}
+ // Stage 6.42: attach real v15 weapon branches to existing abilities, without
+ // reviving dead v12 fork nodes. Each option has two earned nodes before the effect.
+ for(const [family,id,parent] of [
+  ['fury','bow_pierce','precision'],
+  ['fury','fan_of_blades','double_strike'],
+  ['blood','cleave_mastery','bleeding_edge'],
+  ['aegis','sword_sweep','iron_skin'],
+  ['aegis','mace_shockwave','barrier_pulse'],
+  ['fury','single_target_mastery','quick_hands']
+ ]){
+  const first=stat('weapon_path_'+id+'_1',family,parent,{tier:2,weaponFork:id});
+  const second=stat('weapon_path_'+id+'_2',family,first,{tier:3,weaponFork:id});
+  skill(id,'weapon',family,3,second,{weaponFork:id});
+ }
  // Elemental specializations have their own paths, separate from the Magic focused axis.
  for(const [element,ids] of Object.entries(ELEMENTS)){let parent='affinity_magic',previous=null;for(let tier=1;tier<=ids.length;tier++){const id=ids[tier-1];if(nodes.some(n=>n.id===id))continue;
   if(tier===1){const alternatives={fire:'basic_path_magic_0_1',frost:'focus_path_magic_1',lightning:'basic_path_magic_1_1'};parent=stat(`element_junction_${element}`,'magic',null,{element,tier,anyRequires:[parent,alternatives[element]]});}
