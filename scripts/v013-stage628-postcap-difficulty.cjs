@@ -74,12 +74,13 @@ function checkpoint({a,seed,profile,level,attempt}){
    .map(r=>[r,gear.filter(x=>x.rarity===r).length])),
   fingerprint:SHA(state)};
 }
-function collect(cfg){
+function collect(cfg,{moduleOverrides=null}={}){
  const snapshots=new Map();
  const opts={...N.DEFAULTS,seeds:[cfg.seed],profiles:[cfg.profile],
   maxLevel:cfg.maxLevel,maxAttempts:cfg.maxAttempts,
   maxTotalAttempts:cfg.maxTotalAttempts};
- const natural=N.run(opts,{decisionModel:'adaptive',onCamp:probe=>{
+ const natural=N.run(opts,{decisionModel:'adaptive',
+  ...(moduleOverrides?{moduleOverrides}:{}),onCamp:probe=>{
   const c=checkpoint(probe);if(c){
    const key=c.level;
    if(snapshots.has(key))throw Error('Duplicate E'+key+' natural Camp checkpoint');
