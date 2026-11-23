@@ -38,7 +38,7 @@ test('Stage 7.1 v013 Blacksmith exposes one randomized Forge without retired upg
  assert(source.includes("Example stat roll · '+esc(WandererExpeditionProgression.gearTier(price.tier).name)+'"));
 });
 
-test('Camp shows a level stepper and never counts attributes as Talent tab notifications',()=>{
+test('Camp counts both unspent Talent and post-cap Attribute points without granting them early',()=>{
  const source=fs.readFileSync('index.html','utf8');
  assert(source.includes('data-phase3-expedition-step="-1"'));
  assert(source.includes('data-phase3-expedition-step="1"'));
@@ -49,6 +49,7 @@ test('Camp shows a level stepper and never counts attributes as Talent tab notif
  const T=create(7102).talents;
  const gained=T.award(T.create(),100);
  assert.equal(T.earned(gained),1);
- assert.equal(typeof T.attributePoints,'undefined','Talent XP is not a manual attribute-point currency');
+ assert.equal(T.attributeBudget(gained),0,'attributes cannot be assigned before 100 Talent points');
+ assert.equal(T.attributeBudget(T.award(gained,10000)),1,'post-100 XP grants one permanent stat');
  assert.equal(T.earned(gained)-gained.nodes.length,1,'Talent tab notification gains exactly one per level');
 });
