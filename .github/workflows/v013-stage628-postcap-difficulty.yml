@@ -1,0 +1,98 @@
+name: Wanderer Stage 6.28 — earned post-100 difficulty curve (NO DEPLOY)
+on:
+  push:
+    branches: [audit/v013-stage628-postcap-difficulty-20261123]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: stage628-earned-postcap-curve
+  cancel-in-progress: true
+jobs:
+  preflight:
+    name: Native stat audit, full game regressions and anti-forgery
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Validate audit scripts, legal points and actual native combat
+        run: |
+          node --check scripts/simulate-progression.cjs
+          node --check scripts/v013-stage628-postcap-difficulty.cjs
+          node --test tests/v013-stage628-postcap-difficulty.test.cjs tests/v013-post100-attributes.test.cjs tests/talent-graph-runtime.test.cjs
+          git diff --check
+      - name: Full existing v0.13 gameplay regression suite
+        run: npm test
+  natural:
+    name: Native E1-E200 / ${{ matrix.profile }} / seed ${{ matrix.seed }}
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include:
+          - {seed: 9861, profile: cautious}
+          - {seed: 9863, profile: cautious}
+          - {seed: 9861, profile: balanced}
+          - {seed: 9863, profile: balanced}
+          - {seed: 9863, profile: daring}
+          - {seed: 9861, profile: magic-fire}
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Run native earned character and matched opponents with optional no-stat counterfactual
+        run: >-
+          node scripts/v013-stage628-postcap-difficulty.cjs
+          --seed=${{ matrix.seed }}
+          --profile=${{ matrix.profile }}
+          --max-level=200
+          --max-total-attempts=360
+          --trials=1
+          --out=reports/v013-stage628-postcap-${{ matrix.seed }}-${{ matrix.profile }}.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage628-${{ matrix.seed }}-${{ matrix.profile }}
+          path: |
+            reports/v013-stage628-postcap-${{ matrix.seed }}-${{ matrix.profile }}.json
+            reports/v013-stage628-postcap-${{ matrix.seed }}-${{ matrix.profile }}.md
+          retention-days: 30
+          if-no-files-found: warn
+  aggregate:
+    name: Aggregate real E1-E200 curve, six Bosses and eight named Elites
+    needs: natural
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage628-*
+          merge-multiple: true
+          path: reports/stage628-shards
+      - name: Aggregate valid distinct real-account cohorts and report per-E win curves
+        run: >-
+          node scripts/v013-stage628-postcap-difficulty.cjs
+          --mode=aggregate
+          --inputs=reports/stage628-shards
+          --out=reports/v013-stage628-aggregate.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage628-aggregate-report
+          path: |
+            reports/v013-stage628-aggregate.json
+            reports/v013-stage628-aggregate.md
+          retention-days: 45
