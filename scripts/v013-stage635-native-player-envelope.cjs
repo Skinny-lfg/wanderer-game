@@ -119,7 +119,7 @@ function cohort(cfg){
 function difference(a,b){
  // Positive increases, negatives and zero are ALL retained. Zero denominator
  // cannot yield a percent; distribution excludes these as missing, not 0%.
- return valid(a)&&valid(b)&&a>0?100*(b/a-1):null;
+ return valid(a)&&valid(b)&&a>0?round(100*(b/a-1),6):null;
 }
 function paired(a,b){
  if(a.E+1!==b.E)throw Error('Nonconsecutive native checkpoint pair');
