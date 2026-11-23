@@ -12,9 +12,28 @@ const tiers=Object.freeze([
 ]);
 function checked(level){if(!Number.isSafeInteger(level)||level<1)throw Error('Invalid Expedition Level');return level;}
 function gearTier(level){checked(level);for(let i=tiers.length-1;i>=0;i--)if(level>=tiers[i].minimum)return tiers[i];}
-// One native HP/ATK/DEF reference for all encounter kinds. E1–E5 unchanged;
-// the logarithmic tail is unbounded but grows ever more slowly beyond E200.
-function enemyReference(level){checked(level);return level<=5?level:5*(1+.2*Math.log1p((level-5)/5));}
+// Stage 6.29 — the original logarithmic reference eventually made all
+// encounters trivial while earned Talents, gear and post-100 Attributes grew.
+// Keep E1–E5 EXACT. Beyond E5, add an exponential acceleration to the old
+// reference, subtracting its constant/linear Taylor terms so both the value
+// AND its first derivative are continuous at E5 (no sudden E6 jump).
+// The same reference feeds native normal, Tank, Elite and Boss HP/ATK/DEF.
+// Individual Elite/Boss identity modifiers continue to apply ONCE after it.
+// Conservative first calibration, not a per-build buff or hidden difficulty step.
+// E35≈7.18, E70≈8.99, E100≈11.46, E150≈19.66, E200≈38.11.
+const ENEMY_EXPONENTIAL_GROWTH=Object.freeze({rate:.015,weight:2});
+function enemyReference(level){
+ checked(level);
+ if(level<=5)return level;
+ const x=level-5,{rate,weight}=ENEMY_EXPONENTIAL_GROWTH;
+ const base=5+Math.log1p(x/5);
+ const extra=weight*(Math.expm1(rate*x)-rate*x);
+ // Endless Expeditions eventually exceed all safe finite stat budgets even
+ // with logarithmic growth. Refuse silent Infinity from an invalid progression.
+ const reference=base+extra;
+ if(!Number.isFinite(reference))throw Error('Expedition enemy reference exceeds finite range at E'+level);
+ return reference;
+}
 const UNITY=Object.freeze({hp:1,atk:1,def:1});
 // Target individual added pressure at E200, expressed relative to each Elite's
 // own BASE archetype (NOT the gear, rarity, risk, role or ability multipliers).
@@ -92,7 +111,7 @@ function enemyScaling(level,kind,identity=null){
  throw Error('Invalid native enemy class '+kind);
 }
 root.WandererExpeditionProgression=Object.freeze({
- tiers,gearTier,enemyReference,enemyScaling,eliteProgress,bossProgress,
+ tiers,gearTier,enemyReference,ENEMY_EXPONENTIAL_GROWTH,enemyScaling,eliteProgress,bossProgress,
  ELITE_GROWTH,BOSS_PROTECTION,BOSS_GROWTH
 });
 })(globalThis);
