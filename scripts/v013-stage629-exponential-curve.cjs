@@ -76,16 +76,25 @@ function pick(scenario,snap,seed,legacy){
  const x=S.encounter(snap.level,D.build(snap),seed,kind,opts,undefined,undefined,
   scenario.realm,1,kind==='normal'?scenario.size:undefined);
  const expected=T.attributes(snap.state.automaticTalents);
- if(x.timedOut||!x.won&&!x.died||
-  x.talentXp!==snap.xp||x.talentPointsEarned!==snap.talentEarned||
-  x.permanentAttributesSpent!==snap.attributeSpent||
-  Object.entries(expected).some(([k,v])=>x.permanentAttributes[k]!==v)||
-  x.affinity!==scenario.realm||x.risk!==1||
-  x.nativeEncounter!==kind||
-  scenario.type==='elite'&&x.eliteType!==scenario.id||
-  kind==='normal'&&x.initialEnemies!==scenario.size)
-  throw Error('Invalid Stage6.29 native earned fight '+snap.profile+'/E'+snap.level+
-   '/'+scenario.id+'/'+(legacy?'old':'new'));
+ const checks={
+  resolved:!!x.won||!!x.died||!!x.timedOut,
+  xp:x.talentXp===snap.xp,talentEarned:x.talentPointsEarned===snap.talentEarned,
+  attributeSpent:x.permanentAttributesSpent===snap.attributeSpent,
+  attributes:Object.entries(expected).every(([k,v])=>x.permanentAttributes[k]===v),
+  realm:x.affinity===scenario.realm,risk:x.risk===1,
+  kind:x.nativeEncounter===kind,
+  elite:scenario.type!=='elite'||x.eliteType===scenario.id,
+  normal:kind!=='normal'||x.initialEnemies===scenario.size
+ };
+ const fail=Object.entries(checks).filter(([,ok])=>!ok).map(([key])=>key);
+ if(fail.length)throw Error('Invalid Stage6.29 native earned fight '+snap.profile+
+  '/E'+snap.level+'/'+scenario.id+'/'+(legacy?'old':'new')+
+  ': '+fail.join(',')+'; '+JSON.stringify({status:x.status,won:x.won,died:x.died,
+   timedOut:x.timedOut,level:x.level,role:x.roster?.[0]?.role,
+   xp:x.talentXp,snapshotXp:snap.xp,attr:x.permanentAttributesSpent,
+   expectedAttr:snap.attributeSpent,affinity:x.affinity,expectedRealm:scenario.realm,
+   risk:x.risk,encounter:x.nativeEncounter,initialEnemies:x.initialEnemies,
+   expectedEnemies:scenario.size}).slice(0,850));
  return x;
 }
 function tiny(x){
