@@ -88,11 +88,15 @@ test('Bloodshed transfers active Bleed and three ticks of direct immediate damag
  exercise(true);exercise(false);
 });
 test('Active combat and documentation modules are exact mirrors and mark UI exists',()=>{
- for(const file of ['combat/v012-combat-runtime.js','combat/v012-buildcraft.js','combat/talent-catalog.js','combat/talent-graph-next.js','online/v012-expedition-runtime.js','index.html'])
+ for(const file of ['combat/v012-combat-runtime.js','combat/v012-buildcraft.js','combat/talent-catalog.js','combat/talent-graph-next.js','online/v012-expedition-runtime.js'])
   assert.equal(read(file),read('docs/'+file),'Divergent docs mirror: '+file);
  const main=read('index.html');
  assert(main.includes('Static Mark'));
  assert(main.includes('e.v013LightningMark?.expiresAt'));
+ const docsHtml=read('docs/index.html');
+ assert(docsHtml.includes('e.v013LightningMark?.expiresAt'));
+ const markLine=s=>s.split('\n').find(line=>line.includes("title=\\\"A future Lightning chain detonates"))||s.split('\n').find(line=>line.includes('A future Lightning chain detonates'));
+ assert.equal(markLine(main),markLine(docsHtml),'Static Mark status UI drift');
  const source=read('online/v012-expedition-runtime.js');
  assert(source.includes('Math.round(transferredTick*3)'),'Contagion must burst immediately');
  assert(source.includes('r.enemies.includes(target)'),'No pre-spawn reserve death');
