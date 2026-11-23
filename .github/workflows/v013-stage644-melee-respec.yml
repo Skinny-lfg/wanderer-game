@@ -1,0 +1,101 @@
+name: Stage 6.44 — Legal Cleave and Mace AoE Respec E10 (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths:
+      - '.github/workflows/v013-stage644-melee-respec.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  fight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 85
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        shard: [0, 1]
+        trial:
+          - {profile: smart-blood-two-handed, variant: respecCleave}
+          - {profile: smart-blood-two-handed, variant: 'respecCleave+noCleave'}
+          - {profile: smart-blood-two-handed, variant: 'respecCleave+status50'}
+          - {profile: plate-warden, variant: respecMace}
+          - {profile: plate-warden, variant: 'respecMace+noMace'}
+          - {profile: plate-warden, variant: 'respecMace+status50'}
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45272938568
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: stage642-snapshot-${{ matrix.trial.profile }}
+          path: reports/stage644/melee-snapshots
+      - name: Legally repurchase AoE talent and replay matched E10 encounters
+        env:
+          PROFILE: ${{ matrix.trial.profile }}
+          VARIANT: ${{ matrix.trial.variant }}
+          SHARD: ${{ matrix.shard }}
+        run: |
+          mkdir -p reports/stage644/melee-shards
+          node scripts/v013-stage644-e10-lab.cjs "$VARIANT" "$PROFILE" "$SHARD" "reports/stage644/melee-snapshots/$PROFILE.json" "reports/stage644/melee-shards/$PROFILE-$VARIANT-$SHARD.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage644-melee-${{ matrix.trial.profile }}-${{ matrix.trial.variant }}-${{ matrix.shard }}
+          path: reports/stage644/melee-shards/*.json
+          retention-days: 30
+          if-no-files-found: error
+  aggregate:
+    needs: fight
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage644-melee-*
+          merge-multiple: true
+          path: reports/stage644/melee-shards
+      - name: Matched 100-seed AoE legal skill analysis
+        run: |
+          node <<'JS'
+          const fs=require('fs'),dir='reports/stage644/melee-shards';
+          const files=fs.readdirSync(dir).filter(x=>x.endsWith('.json'));
+          if(files.length!==12)throw Error('Expected 12 melee shards, got '+files.length);
+          const parts=files.map(x=>JSON.parse(fs.readFileSync(dir+'/'+x,'utf8')));
+          const profiles=['smart-blood-two-handed','plate-warden'],summary=[];
+          for(const profile of profiles){
+            const t=parts.filter(x=>x.profile===profile),baseVariant=profile==='plate-warden'?'respecMace':'respecCleave';
+            const base=t.filter(x=>x.variant===baseVariant);
+            if(base.length!==2)throw Error('Missing eligible baseline for '+profile);
+            const baseRows=base.flatMap(x=>x.rows);
+            for(const variant of [...new Set(t.map(x=>x.variant))]){
+              const shards=t.filter(x=>x.variant===variant);
+              if(shards.length!==2)throw Error('Missing trial '+profile+'/'+variant);
+              const actors=shards[0].entrants,needed=profile==='plate-warden'?'mace_shockwave':'cleave_mastery';
+              if(JSON.stringify(actors)!==JSON.stringify(shards[1].entrants)||
+                 !actors.every(a=>a.active.includes(needed)))throw Error('Legally purchased ability absent '+profile+'/'+variant);
+              const rows=shards.flatMap(x=>x.rows);
+              for(const row of rows){const old=baseRows.find(x=>x.seed===row.seed&&x.size===row.size&&x.naturalSeed===row.naturalSeed);
+                if(!old||old.roster!==row.roster||old.gear!==row.gear||old.xp!==row.xp)throw Error('XP, gear or roster drift');}
+              summary.push({profile,variant,actors:actors.map(({seed,weapon,offhand,points,active})=>({seed,weapon,offhand,points,active})),
+               groups:[1,4,8,12].map(size=>{const r=rows.filter(x=>x.size===size);
+                if(r.length!==100)throw Error('Expected 100 matched fights');
+                return {size,n:r.length,wins:r.filter(x=>x.won).length,
+                 secondary:r.reduce((n,x)=>n+x.secondary,0),timeouts:r.filter(x=>x.timeout).length};})});
+            }
+          }
+          fs.writeFileSync('reports/stage644/melee-results.json',JSON.stringify({stage:'6.44',legalRespec:true,summary},null,2)+'\n');
+          console.log('STAGE644_MELEE_RESPEC='+JSON.stringify(summary));
+          JS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage644-melee-legal-results
+          path: reports/stage644/melee-results.json
+          retention-days: 30
