@@ -346,7 +346,19 @@ function onKill(b,c){
  if(specialized(b,'fury_momentum'))b.runtime.momentumUntil=c.now+4;
  if(specialized(b,'blood_transfer')||c.traits?.includes('blood_transfer')){
   const dot=c.enemy.dots?.bleed?.find(d=>!d.transferred&&!d.spread),target=c.player.enemies?.find(e=>e!==c.enemy&&e.hp>0)||c.player.groupReserve?.[0];
-  if(dot&&target){target.dots??={};target.dots.bleed??=[];if(target.dots.bleed.length<12){target.dots.bleed.push({...dot,damage:Math.max(1,Math.round(dot.damage*.5)),remaining:Math.min(3,dot.remaining),transferred:true});target.bleedStacks=target.dots.bleed.length;}}
+  if(dot&&target){
+   target.dots??={};target.dots.bleed??=[];
+   if(target.dots.bleed.length<12){
+    const tick=Math.max(1,Math.round(dot.damage*.5));
+    target.dots.bleed.push({...dot,damage:tick,remaining:Math.min(3,dot.remaining),transferred:true});
+    target.bleedStacks=target.dots.bleed.length;
+    c.synchronizeDots?.(target);
+    // Bloodshed bursts on a live recipient, but waiting reinforcements only
+    // receive the transferred Bleed and cannot be damaged before arrival.
+    if(c.player.enemies?.includes(target)&&target.hp>0)
+     if((c.secondaryHit?.(target,Math.round(tick*3))||0)>0)c.trigger?.('blood_transfer_burst');
+   }
+  }
  }
  const key=c.waveKey??c.enemy;if(c.waveComplete!==false&&rank(b,'second_breath')&&b.runtime.lastWaveHeal!==key){b.runtime.lastWaveHeal=key;activated(b,'second_breath');heal(b,c,c.player.maxhp*values('second_breath',rank(b,'second_breath')).heal);}
 }
