@@ -12,28 +12,39 @@ const tiers=Object.freeze([
 ]);
 function checked(level){if(!Number.isSafeInteger(level)||level<1)throw Error('Invalid Expedition Level');return level;}
 function gearTier(level){checked(level);for(let i=tiers.length-1;i>=0;i--)if(level>=tiers[i].minimum)return tiers[i];}
-// Stage 6.34 — single continuous exponential shared by every normal, Elite
-// and Boss identity. Early shape fitted to 500 actually-earned E1-born accounts
-// (Stage 6.32, run 45174790906, 3156 checkpoints). Weighted paired log-growth
-// of player raw Max HP and Attack from E1→E20, never unpaired level averages.
-// This is not a win-rate fit: native fights must independently validate targets.
-// Stage 6.32 observed only 102/500 accounts at E20. The positive late slope
-// is a DECLARED extrapolation E20→E200; do not claim it was measured.
-// No discontinuities, gear-tier breakpoints, manual changes or level clamps.
-// Recompute parameters with scripts/v013-stage634-player-growth-fit.cjs.
+// Stage 6.38 — a SINGLE C-infinity shared enemy growth function with two
+// smooth transitions: rapid early growth, a medium gear-acquisition phase,
+// then one steady exponential tail. These are calibration CANDIDATE rates.
+// The centers E4/E9 are not abrupt gear-tier triggers; the soft transition
+// width makes every real-valued Expedition derivative continuous.
+// Stage 6.35's 500 real accounts show fast gear growth through E7/E8,
+// settling around E9–E12. Do not equate UI Power with actual combat DPS.
+// No E-by-E buffs, nerfs, identity-specific curves, hard caps or gear edits.
 const ENEMY_EXPONENTIAL_GROWTH=Object.freeze({
  initialReference:.775,
- lateLogGrowth:.014, // provisional extrapolation; not identified from E1-E20
- earlyLogGrowthBoost:1.07777514,
- relaxationExpeditions:2.75370775
+ earlyLogGrowth:.34,      // log slope when a fresh character lacks gear
+ middleLogGrowth:.09,     // continuing acquisition of the first gear set
+ lateLogGrowth:.0125,     // steady E10+ log slope; still provisional
+ earlyTransitionExpedition:4,
+ lateTransitionExpedition:9,
+ earlyTransitionWidth:1.0,
+ lateTransitionWidth:1.4
 });
+function stableSoftplus(value){
+ return value>30?value:value < -30?Math.exp(value):Math.log1p(Math.exp(value));
+}
+// Integral from 0 to x of 1/(1+exp((t-center)/width)) dt.
+// Positive, smooth, naturally saturates; no special E4/E9 branches.
+function softElapsed(x,center,width){
+ return width*(stableSoftplus(center/width)-stableSoftplus((center-x)/width));
+}
 function enemyReference(level){
  checked(level);
- const {initialReference,lateLogGrowth,earlyLogGrowthBoost,relaxationExpeditions}=ENEMY_EXPONENTIAL_GROWTH;
- const x=level-1;
- const logGrowth=lateLogGrowth*x+
-  earlyLogGrowthBoost*(-Math.expm1(-x/relaxationExpeditions));
- const reference=initialReference*Math.exp(logGrowth);
+ const c=ENEMY_EXPONENTIAL_GROWTH,x=level-1;
+ const logGrowth=c.lateLogGrowth*x+
+  (c.middleLogGrowth-c.lateLogGrowth)*softElapsed(x,c.lateTransitionExpedition-1,c.lateTransitionWidth)+
+  (c.earlyLogGrowth-c.middleLogGrowth)*softElapsed(x,c.earlyTransitionExpedition-1,c.earlyTransitionWidth);
+ const reference=c.initialReference*Math.exp(logGrowth);
  if(!Number.isFinite(reference))throw Error('Expedition enemy reference exceeds finite range at E'+level);
  return reference;
 }
