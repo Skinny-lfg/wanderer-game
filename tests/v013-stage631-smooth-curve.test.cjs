@@ -78,7 +78,7 @@ test('Stage6.31: Preview matches native code and hash, E1–E5 equipment budget 
  for(let i=1;i<previous.length;i++)assert(previous[i]>previous[i-1]);
 });
 function fixture(E){
- const a=create(63114,undefined,{}, {skipPersistence:true});
+ const a=create(63114,undefined,{}, {skipPersistence:true,now:1720000063114});
  const state=a.state(),talent=T.create();
  return {level:E,seed:63114,profile:'Labeled unit test fixture',xp:0,talentEarned:0,
   attributeEarned:0,attributeSpent:0,attributes:T.attributes(talent),
