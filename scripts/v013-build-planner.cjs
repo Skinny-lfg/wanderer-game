@@ -11,9 +11,10 @@ const BUILDS=Object.freeze({
  'fury-blood-aegis':{primary:'fury',secondary:'blood',third:'aegis',secondAt:12,thirdAt:30,model:'adaptive',mix:true,weapons:['Daggers','Bow'],armor:'Leather',milestones:['battle_tempo','crimson_rush','relentless_assault'],focus:'speed'},
  'fury-pure':{primary:'fury',model:'pure',weapons:['Daggers','Bow'],armor:'Leather',milestones:['battle_tempo','relentless_assault','unchained_fury'],focus:'speed'},
  'magic-arcane-pure':{primary:'magic',model:'pure',element:'arcane',weapons:['Wand','Staff'],armor:'Cloth',milestones:['arcane_resonance','arcane_surge','arcane_mastery'],focus:'spell'},
+ 'magic-fire-pure':{primary:'magic',model:'pure',element:'fire',weapons:['Wand','Staff'],armor:'Cloth',milestones:['kindling','fire_spread','combustion'],focus:'spell',orderedMilestones:true},
  'magic-fire-aegis':{primary:'magic',secondary:'aegis',secondAt:14,model:'two',mix:true,element:'fire',weapons:['Wand','Staff'],armor:'Cloth',milestones:['kindling','runic_shield','fire_spread','arcane_bastion'],focus:'spell'},
  'magic-frost-vitality':{primary:'magic',secondary:'vitality',secondAt:14,model:'two',mix:false,element:'frost',weapons:['Staff','Wand'],armor:'Cloth',milestones:['deep_winter','frost_spread','living_recovery'],focus:'spell'},
- 'magic-lightning-pure':{primary:'magic',model:'pure',element:'lightning',weapons:['Staff','Wand'],armor:'Cloth',milestones:['overcharge','storm_mastery','chain_discharge'],focus:'spell'},
+ 'magic-lightning-pure':{primary:'magic',model:'pure',element:'lightning',weapons:['Staff','Wand'],armor:'Cloth',milestones:['overcharge','storm_mastery','chain_discharge'],focus:'spell',orderedMilestones:true},
  'decay-magic-aegis':{primary:'decay',secondary:'magic',third:'aegis',secondAt:13,thirdAt:29,model:'three',mix:true,element:'arcane',weapons:['Wand','Sword'],armor:'Leather',milestones:['lingering_rot','hex_bolt','elemental_blight','grave_bloom'],focus:'rot'},
  'aegis-vitality':{primary:'aegis',secondary:'vitality',secondAt:13,model:'two',mix:true,weapons:['Mace','Sword'],armor:'Plate',milestones:['steadfast_guard','sanctuary','guardians_oath','last_bastion'],focus:'defense'},
  'vitality-pure':{primary:'vitality',model:'pure',weapons:['Mace','Sword'],armor:'Plate',milestones:['living_recovery','overflowing_life','heart_of_the_wild'],focus:'defense'},
@@ -156,6 +157,12 @@ function candidateMilestone(T,progress,plan,active,earned){
  const goals=(plan.milestones||[]).filter(id=>{
   const n=T.NODES.find(x=>x.id===id);return usable(n,active,plan.element||'arcane',plan);
  });
+ if(plan.orderedMilestones){
+  const next=goals.find(id=>!ownedSet(progress).has(id));
+  if(!next)return null;
+  const cost=canOwnMilestone(T,progress,plan,active,next);
+  return cost<=earned?{id:next,index:goals.indexOf(next),cost}:null;
+ }
  return goals.map((id,index)=>({id,index,cost:canOwnMilestone(T,progress,plan,active,id)}))
   .filter(x=>x.cost<=earned)
   .sort((a,b)=>b.cost-a.cost||a.index-b.index)[0]||null;
@@ -227,8 +234,11 @@ function fill(T,progress,plan,active,earned,milestone){
  .sort((a,b)=>a.i-b.i||a.cost-b.cost);
  for(let loops=0;loops<100&&p.nodes.length<earned;loops++){
   const remaining=earned-p.nodes.length;
-  const nextGoal=aspirational.find(x=>!ownedSet(p).has(x.id)&&
-   (routeTo(T,p,x.id,plan,active)?.length||Infinity)<=remaining);
+  const nextGoal=plan.orderedMilestones?
+   (aspirational[0]&&!ownedSet(p).has(aspirational[0].id)&&
+    (routeTo(T,p,aspirational[0].id,plan,active)?.length||Infinity)<=remaining?aspirational[0]:null):
+   aspirational.find(x=>!ownedSet(p).has(x.id)&&
+    (routeTo(T,p,x.id,plan,active)?.length||Infinity)<=remaining);
   if(nextGoal){if(add(nextGoal.id))continue;}
   // Progress toward a known skill if close; prefer a legal best available
   // node when the goal is still too remote.
