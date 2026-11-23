@@ -1,0 +1,96 @@
+name: Wanderer Stage 6.29 — Exponential enemy growth E1-E200 (NO DEPLOY)
+on:
+  push:
+    branches: [balance/v013-stage629-exponential-growth-20261123]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: stage629-exponential-enemy-growth
+  cancel-in-progress: true
+jobs:
+  preflight:
+    name: Native exponential curve integrity, E1-E5 parity and v0.13 regressions
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Syntax and native matched old/new combat tests
+        run: |
+          node --check combat/expedition-progression.js
+          node --check scripts/v013-stage629-exponential-curve.cjs
+          node --test tests/v013-stage629-exponential-curve.test.cjs tests/expedition-progression-model.test.cjs tests/v013-stage624c-progression.test.cjs tests/v013-stage628-postcap-difficulty.test.cjs
+          git diff --check
+      - name: All existing game regression tests
+        run: npm test
+  pairs:
+    name: Real E1-E200 curve pair ${{ matrix.seed }} / ${{ matrix.profile }}
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include:
+          - {seed: 9861, profile: cautious}
+          - {seed: 9863, profile: cautious}
+          - {seed: 9861, profile: balanced}
+          - {seed: 9863, profile: daring}
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Compare actual new/existing native curves on earned E1 characters and same heroes E1-E200
+        run: >-
+          node scripts/v013-stage629-exponential-curve.cjs
+          --seed=${{ matrix.seed }}
+          --profile=${{ matrix.profile }}
+          --max-level=200
+          --max-total-attempts=360
+          --trials=1
+          --out=reports/v013-stage629-${{ matrix.seed }}-${{ matrix.profile }}.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage629-${{ matrix.seed }}-${{ matrix.profile }}
+          path: |
+            reports/v013-stage629-${{ matrix.seed }}-${{ matrix.profile }}.json
+            reports/v013-stage629-${{ matrix.seed }}-${{ matrix.profile }}.md
+          retention-days: 40
+          if-no-files-found: warn
+  aggregate:
+    name: Old versus exponential encounter curve and genuine E1-E200 progression
+    needs: pairs
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage629-*
+          merge-multiple: true
+          path: reports/stage629-shards
+      - name: Aggregate four independent account/seed A/B comparisons and enemy identities
+        run: >-
+          node scripts/v013-stage629-exponential-curve.cjs
+          --mode=aggregate
+          --inputs=reports/stage629-shards
+          --out=reports/v013-stage629-aggregate.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage629-exponential-curve-report
+          path: |
+            reports/v013-stage629-aggregate.json
+            reports/v013-stage629-aggregate.md
+          retention-days: 45
