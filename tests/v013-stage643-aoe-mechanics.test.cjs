@@ -98,6 +98,6 @@ test('Active combat and documentation modules are exact mirrors and mark UI exis
  const markLine=s=>s.split('\n').find(line=>line.includes("title=\\\"A future Lightning chain detonates"))||s.split('\n').find(line=>line.includes('A future Lightning chain detonates'));
  assert.equal(markLine(main),markLine(docsHtml),'Static Mark status UI drift');
  const source=read('online/v012-expedition-runtime.js');
- assert(source.includes('Math.round(transferredTick*3)'),'Contagion must burst immediately');
+ assert(source.includes('Math.round(transferredTick*5)'),'Contagion must burst immediately');
  assert(source.includes('r.enemies.includes(target)'),'No pre-spawn reserve death');
 });
