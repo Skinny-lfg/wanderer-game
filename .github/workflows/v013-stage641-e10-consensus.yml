@@ -24,7 +24,7 @@ jobs:
       - name: Native syntax and Stage 6.40 targeted regressions
         run: |
           node --check scripts/v013-stage641-e10-consensus.cjs
-          node --test tests/v013-stage640-e1-groups.test.cjs tests/v013-stage640-elite-identity.test.cjs
+          node --test tests/v013-stage640-e1-groups.test.cjs tests/v013-stage640-elite-identity.test.cjs tests/v013-stage641-build-readiness.test.cjs tests/v013-stage639-earned-aoe-comparison.test.cjs tests/v013-stage64-mana-fallback.test.cjs
           git diff --check
   cohort:
     needs: preflight
@@ -45,6 +45,8 @@ jobs:
           - { id: 'smart-blood-pure', seed: 9863 }
           - { id: 'smart-fury-bow', seed: 9861 }
           - { id: 'smart-fury-bow', seed: 9863 }
+          - { id: 'smart-blood-two-handed', seed: 9861 }
+          - { id: 'smart-blood-two-handed', seed: 9863 }
           - { id: 'magic-fire', seed: 9861 }
           - { id: 'magic-fire', seed: 9863 }
           - { id: 'magic-lightning', seed: 9861 }
