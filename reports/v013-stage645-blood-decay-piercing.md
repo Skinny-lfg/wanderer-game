@@ -37,3 +37,33 @@ Zero timeouts in the above shards. Both characters used Bow with legally purchas
 [Stage 6.45 corrected run](https://github.com/Skinny-lfg/wanderer-game/actions/runs/45291521700): 15 planned configurations, each 100 combat seeds per size (6,000 planned fights). Completion and results not yet verified when this checkpoint was recorded. The aggregate explicitly reports any missing/unaﬀordable cohorts and checks matched actor/talent, gear, roster and XP provenance. Compare marks, burst frequency, burst damage, secondary Bleed/Rot applications, first kill timing and survival, not only win rate.
 
 **No merge, no deploy, no production combat balance modification.**
+
+## Final verified results and design decision (2026-11-23)
+
+[Corrected run 45291521700](https://github.com/Skinny-lfg/wanderer-game/actions/runs/45291521700): **32/32 jobs successful; all 15 configurations present; 6,000 matched native fights; zero timeouts.** 100 combat seeds per group, with two earned E10 actors per profile (not 100 independently progressed accounts).
+
+**User design decision:** Bow Piercing with purchased talent is to hit exactly one additional enemy at 100% secondary damage and transport eligible build statuses. Do not restore three extra targets. The untalented coefficient and secondary status tuning still need explicit calibration. This approves the design direction, not a production implementation or release; the current gameplay modules remain unchanged by this lab.
+
+| Bow variant | 1 | 4 | 8 | 12 |
+|---|---:|---:|---:|---:|
+| Existing | 95% | 54% | 26% | 49% |
+| One extra 80% | 95% | 47% | 3% | 18% |
+| One extra 100% | 95% | 54% | 13% | 25% |
+| One extra 100% + status | 95% | 59% | 17% | 28% |
+| One extra + armor penetration + status | 95% | 56% | 11% | 28% |
+
+| Matched mixed build variant | 1 | 4 | 8 | 12 |
+|---|---:|---:|---:|---:|
+| Sword + Tome current Carrion + Contagion | 100% | 79% | 53% | 66% |
+| Sword + Tome fast Carrion + spread | 100% | 92% | 96% | 84% |
+| Two-Handed current Carrion + Contagion | 67% | 50% | 46% | 41% |
+| Two-Handed status only | 67% | 53% | 47% | 40% |
+| Two-Handed fast Carrion + status | 69% | 65% | 52% | 45% |
+| Two-Handed heavy Carrion + status | 68% | 61% | 50% | 41% |
+| Two-Handed fast Carrion + spread | 69% | 67% | 57% | 51% |
+| Mixed Bow current | 75% | 34% | 1% | 4% |
+| Mixed Bow one extra 100% + fast Carrion + spread + status | 77% | 57% | 45% | 48% |
+
+Sword + Tome fast spread, 8 foes: 307 bursts, 772 Bleed and 773 Rot spread applications. All compared mixed actors legally own Carrion and Contagion; the mixed Bow actors also own Deep Pierce. Only one Two-Handed actor owns Sweeping Force. The mixed Bow comparison combines several changes and is not an isolated causal estimate of Piercing. Fast-spread Carrion is a promising candidate, not approved balance. The tested secondary bridge covers native Bleeding Edge, Toxic Touch and Fury Sunder; full weapon affix/status coverage remains to be verified.
+
+No merge or deploy. Next: verify elites and bosses under the new player mechanics, complete the orphan talent audit, validate larger independent player-state samples, and only then tune E10 enemy identities and continuous E1–E200 progression.
