@@ -77,7 +77,7 @@ function patch(mode){
  if(arms.includes('rupture')){
   const before=[
    "if(rank(b,'carrion_detonation')&&e.bleedStacks>0&&e.v012Rot?.length&&ready(b,'carrionDetonation',c.now,8)&&activated(b,'carrion_detonation')){",
-   '   const bleed=e.dots?.bleed?.shift();e.bleedStacks=e.dots?.bleed?.length||0;e.bleed=(e.dots?.bleed||[]).reduce((n,d)=>n+d.damage,0);const rot=e.v012Rot.shift();const owed=(bleed?bleed.damage*bleed.remaining:0)+rot.damage*rot.remaining;c.damage(owed+Math.min(base*.25,e.maxhp*.02),\'☠ Carrion Detonation\');',
+   '  const bleed=e.dots?.bleed?.shift();e.bleedStacks=e.dots?.bleed?.length||0;e.bleed=(e.dots?.bleed||[]).reduce((n,d)=>n+d.damage,0);const rot=e.v012Rot.shift();const owed=(bleed?bleed.damage*bleed.remaining:0)+rot.damage*rot.remaining;c.damage(owed+Math.min(base*.25,e.maxhp*.02),\'☠ Carrion Detonation\');',
    ' }'].join('\n');
   const after=[
    "if(rank(b,'carrion_detonation')&&e.bleedStacks>0&&e.v012Rot?.length){",
