@@ -58,7 +58,7 @@ jobs:
           if-no-files-found: warn
   e10:
     needs: preflight
-    # Briarspine final E1 absolute budget: 1.50 HP / .95 ATK / 1.95 interval.
+    # Briarspine final E1 budget: 1.53 HP / .97 ATK / 1.93 interval; measure Thornbloom sensitivity.
     # The Briarspine correction changes only E1..E9 opening budgets; reuse
     # the already verified E10 matrix unless an explicit full-E10 run is requested.
     if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-e10]')
