@@ -38,3 +38,5 @@ São confrontos de primeira sala com equipamento inicial. A seleção de salas, 
 Os quatro papéis nativos são Minion, Tank, Skirmisher e Caster. O ajuste preserva HP e defesa dos três principais, reduz o seu ataque conforme o tamanho do grupo e diminui adicionalmente o HP e ataque dos Minions conforme a sua abundância. Os Minions em reserva recebem o mesmo tratamento dos iniciais. Os invocados pelos líderes têm uma regra própria dependente da vaga.
 
 Num grupo fixo de oito na E1, os cinco Minions passaram de 57 HP e 3 ATK para 18 HP e 1 ATK. Caster, Skirmisher e Tank conservaram respetivamente 146, 154 e 213 HP. O mesmo teste na E2 reproduziu todos os valores da base, incluindo as reservas. A taxa de vitórias natural da E2 pode variar porque chegam lá personagens diferentes.
+
+> **Nota posterior — candidato de continuidade E1→E2:** o parágrafo anterior refere-se ao ensaio original do Stage 6.40, antes de introduzir a redução gradual de pressão para E2+. Já não descreve o comportamento do código atual da branch. Os novos resultados estão pendentes; consultar [`v013-stage640-e2-continuity-candidate.md`](v013-stage640-e2-continuity-candidate.md).
