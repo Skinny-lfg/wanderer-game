@@ -1,0 +1,159 @@
+{
+  "stage": "6.34",
+  "inputStage": "6.32",
+  "inputGitHubRun": 45174790906,
+  "inputGitHubArtifact": 14819297712,
+  "inputNativeSourceSHA256": "53d39d733e18103d1c6e00ae254672e51c5141b6dd66d24d4a3663f78a4abdee",
+  "inputFullAggregateSHA256": "f2071426ff284f1cdcec6603bdf39e272e21673c09bf784c060804248a8159bb",
+  "cohort": {
+    "profiles": 100,
+    "seeds": 5,
+    "accounts": 500,
+    "reachedE2": 398,
+    "reachedE20": 102,
+    "checkpoints": 3156
+  },
+  "methodology": "Median percent change from paired native E1-born accounts that reached both E and E+1. Weight by paired sample size. Offensive proxy = actual Attack stat, not observed DPS against changing enemies. HP = raw Max HP, not invented EHP. Future E20-E200 is not validated by these accounts.",
+  "transitions": [
+    {
+      "from": 1,
+      "to": 2,
+      "paired": 398,
+      "medianHpPct": 14.286,
+      "medianAttackPct": 11.111
+    },
+    {
+      "from": 2,
+      "to": 3,
+      "paired": 280,
+      "medianHpPct": 9.449,
+      "medianAttackPct": 12.25
+    },
+    {
+      "from": 3,
+      "to": 4,
+      "paired": 177,
+      "medianHpPct": 11.511,
+      "medianAttackPct": 13.333
+    },
+    {
+      "from": 4,
+      "to": 5,
+      "paired": 141,
+      "medianHpPct": 9.392,
+      "medianAttackPct": 8.889
+    },
+    {
+      "from": 5,
+      "to": 6,
+      "paired": 131,
+      "medianHpPct": 4.633,
+      "medianAttackPct": 6.977
+    },
+    {
+      "from": 6,
+      "to": 7,
+      "paired": 123,
+      "medianHpPct": 1.307,
+      "medianAttackPct": 2.326
+    },
+    {
+      "from": 7,
+      "to": 8,
+      "paired": 116,
+      "medianHpPct": 0.463,
+      "medianAttackPct": 1.926
+    },
+    {
+      "from": 8,
+      "to": 9,
+      "paired": 116,
+      "medianHpPct": 0,
+      "medianAttackPct": 0
+    },
+    {
+      "from": 9,
+      "to": 10,
+      "paired": 115,
+      "medianHpPct": 0.385,
+      "medianAttackPct": 0
+    },
+    {
+      "from": 10,
+      "to": 11,
+      "paired": 113,
+      "medianHpPct": 0,
+      "medianAttackPct": 0
+    },
+    {
+      "from": 11,
+      "to": 12,
+      "paired": 111,
+      "medianHpPct": 0.398,
+      "medianAttackPct": 0
+    },
+    {
+      "from": 12,
+      "to": 13,
+      "paired": 111,
+      "medianHpPct": 0,
+      "medianAttackPct": 0
+    },
+    {
+      "from": 13,
+      "to": 14,
+      "paired": 106,
+      "medianHpPct": 0,
+      "medianAttackPct": 0
+    },
+    {
+      "from": 14,
+      "to": 15,
+      "paired": 105,
+      "medianHpPct": 0.295,
+      "medianAttackPct": 2.273
+    },
+    {
+      "from": 15,
+      "to": 16,
+      "paired": 103,
+      "medianHpPct": 0,
+      "medianAttackPct": 1.22
+    },
+    {
+      "from": 16,
+      "to": 17,
+      "paired": 103,
+      "medianHpPct": 0,
+      "medianAttackPct": 0
+    },
+    {
+      "from": 17,
+      "to": 18,
+      "paired": 103,
+      "medianHpPct": 0.469,
+      "medianAttackPct": 0
+    },
+    {
+      "from": 18,
+      "to": 19,
+      "paired": 102,
+      "medianHpPct": 0,
+      "medianAttackPct": 0
+    },
+    {
+      "from": 19,
+      "to": 20,
+      "paired": 102,
+      "medianHpPct": 0,
+      "medianAttackPct": 0
+    }
+  ],
+  "assumptions": {
+    "initialReference": 0.775,
+    "lateLogGrowth": 0.014,
+    "lateRateBasis": "Provisional design parameter. Stage 6.32 contains no E20-E200 earned account power measurements. Maintains approximately Stage 6.31 E200 enemy reference while fitting early native progression.",
+    "objective": "Weighted squared differences between median log-growth in player HP/Attack and continuous growth in enemy HP=(27+14*reference) and enemy ATK=(4+3*reference). Different defensive/offensive classes remain calibrated only by native combat tests.",
+    "limitations": "Not a win-rate calibration, not a PvP or fair-play population sample. Cannot infer Boss/Elite target percentages from player power growth alone."
+  }
+}

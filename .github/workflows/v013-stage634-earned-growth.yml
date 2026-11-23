@@ -1,0 +1,112 @@
+name: Wanderer Stage 6.34 — player-power fitted common enemy curve (NO DEPLOY)
+on:
+  push:
+    branches: [balance/v013-stage634-earned-growth-curve-20261123]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: stage634-growth-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
+jobs:
+  preflight:
+    name: Native curve, provenance, regression, early encounter smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 85
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Read 500 accounts and verify curve fit/provenance
+        run: |
+          node --check scripts/v013-stage634-player-growth-fit.cjs
+          node --check scripts/v013-stage634-natural-rates.cjs
+          node --check combat/expedition-progression.js
+          node --test tests/v013-stage634-earned-growth.test.cjs tests/v013-stage634-natural-rates.test.cjs tests/v013-stage633-fixed-bases.test.cjs
+          node scripts/v013-stage634-player-growth-fit.cjs --out=reports/v013-stage634-fit-diagnostic.json
+          git diff --check
+      - name: Full v0.13 regression (original active gameplay abilities retained)
+        run: npm test
+      - name: E1-born live natural Stage 6.34 account, E1–E2
+        run: >-
+          node scripts/v013-stage634-natural-rates.cjs
+          --mode=cohort --batch=0 --seed=9861 --take=1
+          --max-level=2 --max-attempts=6 --max-total-attempts=12
+          --out=reports/v013-stage634-smoke.json
+      - name: Isolated Stage 6.33 stat-only companion, still compatible with Stage 6.34
+        run: >-
+          node scripts/v013-stage633-stat-only.cjs
+          --seed=6331 --max-level=2 --max-attempts=6 --max-total-attempts=18
+          --out=reports/v013-stage633-stat-only-stage634.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage634-fit-and-native-smoke
+          path: |
+            reports/v013-stage634-fit-diagnostic.json
+            reports/v013-stage634-smoke.json
+            reports/v013-stage633-stat-only-stage634.json
+          retention-days: 45
+          if-no-files-found: warn
+  census:
+    name: E1-born 5 profiles · batch ${{ matrix.batch }} · seed ${{ matrix.seed }}
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-stage634-full]')
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 110
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        batch: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+        seed: [9861, 9863, 9865, 9867, 9869]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Native E1–E5 encounters, only earned XP, Talents, equipment and unlocks
+        run: >-
+          node scripts/v013-stage634-natural-rates.cjs
+          --mode=cohort --batch=${{ matrix.batch }} --seed=${{ matrix.seed }}
+          --max-level=5 --max-attempts=12 --max-total-attempts=60
+          --out=reports/v013-stage634-cohort-${{ matrix.batch }}-${{ matrix.seed }}.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage634-cohort-${{ matrix.batch }}-${{ matrix.seed }}
+          path: reports/v013-stage634-cohort-${{ matrix.batch }}-${{ matrix.seed }}.json
+          retention-days: 45
+          if-no-files-found: warn
+  aggregate:
+    name: Verify 500 native accounts; aggregate normal, Elite, Boss win percentages
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-stage634-full]')
+    needs: census
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage634-cohort-*
+          merge-multiple: true
+          path: reports/stage634-shards
+      - name: Reject missing/duplicate or invented account records
+        run: >-
+          node scripts/v013-stage634-natural-rates.cjs
+          --mode=aggregate --inputs=reports/stage634-shards
+          --out=reports/v013-stage634-early-aggregate.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage634-earned-native-win-rates-100x5
+          path: |
+            reports/v013-stage634-early-aggregate.json
+            reports/v013-stage634-early-aggregate.md
+          retention-days: 45
