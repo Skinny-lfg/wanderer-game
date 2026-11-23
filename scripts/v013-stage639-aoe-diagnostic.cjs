@@ -85,7 +85,7 @@ function cohort(cfg){
 }
 function average(xs){return xs.length?Number((xs.reduce((a,b)=>a+b,0)/xs.length).toFixed(3)):null;}
 function byRooms(rooms){
- const data=V.rate(rooms);
+ const data=R.rate(rooms);
  return {...data,aoePotential:rooms.filter(x=>x.aoePotential).length,
   observedAoERooms:rooms.filter(x=>x.secondaryTargetDamage>0).length,
   meanSecondaryDamage:average(rooms.map(x=>x.secondaryTargetDamage)),
