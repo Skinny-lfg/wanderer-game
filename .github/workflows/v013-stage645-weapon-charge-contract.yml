@@ -1,0 +1,24 @@
+name: Stage 6.45 — Actual weapon-hit charge and status contracts (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths:
+      - '.github/workflows/v013-stage645-weapon-charge-contract.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: |
+          node --check scripts/v013-stage645-blood-decay-piercing.cjs
+          node --test tests/v013-stage645-weapon-charge.test.cjs
+          cmp combat/v012-combat-runtime.js docs/combat/v012-combat-runtime.js
+          cmp combat/v012-buildcraft.js docs/combat/v012-buildcraft.js
+          git diff --check
