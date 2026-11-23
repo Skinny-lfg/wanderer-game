@@ -46,6 +46,11 @@ test('Elite curve continuous through E6, E35, E70, E200 and E201; E5 exact nativ
    }
   }
  }
+ const br=P.ELITE_GROWTH.briarspine_horror;
+ assert.equal(br.shape,1.18,'Briarspine growth is individually eased, not a blanket level coefficient');
+ assert(P.enemyScaling(70,'elite','briarspine_horror').hp>1.85);
+ assert(P.enemyScaling(70,'elite','briarspine_horror').hp<2.05);
+ assert(P.enemyScaling(6,'elite','briarspine_horror').hp<1.05);
  assert.equal(P.eliteProgress(5),0);assert.equal(P.eliteProgress(200),1);
  assert(P.eliteProgress(201)>P.eliteProgress(200));
  assert(P.eliteProgress(100000)<215/195,'bounded but never clamped after E200');

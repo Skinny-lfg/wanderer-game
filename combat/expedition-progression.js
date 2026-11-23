@@ -27,7 +27,7 @@ const ELITE_GROWTH=Object.freeze({
  caster:Object.freeze({hp:.70,atk:.31,def:.11}),
  gravecaller:Object.freeze({hp:.67,atk:.36,def:.09}),
  oathbound_exarch:Object.freeze({hp:.94,atk:.43,def:.17}),
- briarspine_horror:Object.freeze({hp:.85,atk:.34,def:.11}),
+ briarspine_horror:Object.freeze({hp:1.11,atk:.39,def:.12,shape:1.18}),
  ashen_executioner:Object.freeze({hp:.77,atk:.35,def:.11})
 });
 // Six independent late-Boss pressures compensate for the Exalted gear ceiling.
@@ -77,7 +77,9 @@ function enemyScaling(level,kind,identity=null){
  if(kind==='elite'){
   const gain=ELITE_GROWTH[identity];
   if(!gain)throw Error('Invalid Elite scaling identity '+identity);
-  const progress=eliteProgress(level);
+  // Elite-specific easing is continuous and single-sourced: Briarspine's
+  // Thornbloom comes online early, but its endgame budget ramps more gradually.
+  const progress=Math.pow(eliteProgress(level),gain.shape||1);
   return {hp:1+gain.hp*progress,atk:1+gain.atk*progress,def:1+gain.def*progress};
  }
  if(kind==='boss'){
