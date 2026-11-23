@@ -103,17 +103,26 @@ function capture(a){
   attempts:attempt.length,xp:a.xp,stop:a.stopReason||null,
   finalGear:a.finalGear,byE:exp,bands:D.windows(attempt)};
 }
+function timeoutClassification(result,seed,id){
+ const errors=result.accounts.flatMap(a=>a.attempts.filter(x=>x.error)
+  .map(x=>({E:x.level,attempt:x.attempt,error:x.error})));
+ const nativeTimeouts=errors.filter(x=>x.error==='Native combat timeout');
+ const unexpected=errors.filter(x=>x.error!=='Native combat timeout');
+ if(unexpected.length||errors.length!==result.coverage.errors)
+  throw Error('Unexpected native error for '+id+' seed '+seed+': '+JSON.stringify(errors));
+ return nativeTimeouts;
+}
 function runAccount(seed,id,maxLevel,cfg,source){
  const opts={...N.DEFAULTS,seeds:[seed],profiles:[id],
   maxLevel,maxAttempts:cfg.maxAttempts,maxTotalAttempts:cfg.maxTotalAttempts};
  const result=N.run(opts,{decisionModel:'adaptive',
   ...(source?{moduleOverrides:{'combat/expedition-progression.js':source}}:{})});
- if(result.coverage.errors)throw Error('Native errors for '+id+' seed'+seed+
-  ': '+JSON.stringify(result.accounts[0].attempts.filter(x=>x.error).slice(0,3)));
+ const timeouts=timeoutClassification(result,seed,id);
  const a=result.accounts[0];
  if(result.accounts.length!==1||a.seed!==seed||a.profile!==id)
   throw Error('Wrong real account '+id+' '+seed);
- return capture(a);
+ // A capped native fight is not a victory or defeat; censor any unreached E.
+ return {...capture(a),nativeCombatTimeouts:timeouts};
 }
 function pilot(cfg){
  validate();
@@ -131,13 +140,16 @@ function pilot(cfg){
  }
  return {stage:'6.30',kind:'pilot',settings:cfg,sources:{old:hash(BASELINE),new:hash(SOURCE)},
   coverage:{profiles:accounts.length,accounts:accounts.length*2,
-   attempts:accounts.reduce((n,x)=>n+x.before.attempts+x.after.attempts,0),errors:0},
+   attempts:accounts.reduce((n,x)=>n+x.before.attempts+x.after.attempts,0),
+   nativeCombatTimeouts:accounts.reduce((n,x)=>n+x.before.nativeCombatTimeouts.length+
+     x.after.nativeCombatTimeouts.length,0),errors:0},
   reference:curve(),accounts};
 }
 function deep(cfg){
  validate();
  const r=D.audit({seed:cfg.seed,profile:cfg.profile,maxLevel:200,
-  maxAttempts:cfg.maxAttempts,maxTotalAttempts:cfg.maxTotalAttempts,trials:cfg.trials});
+  maxAttempts:cfg.maxAttempts,maxTotalAttempts:cfg.maxTotalAttempts,trials:cfg.trials,
+  allowNativeCombatTimeouts:true});
  const checkpoints=r.checkpoints.map(c=>{
   const kinds=['normal','tank','elite','boss'];
   const fights=r.matchedFights.filter(x=>x.E===c.level);
@@ -156,7 +168,8 @@ function deep(cfg){
  return {stage:'6.30',kind:'deep',settings:cfg,
   sources:{old:hash(BASELINE),new:hash(SOURCE)},
   coverage:{profiles:1,accounts:1,attempts:r.account.attempts,
-   fights:r.coverage.encounters,errors:r.coverage.errors},
+   fights:r.coverage.encounters,nativeCombatTimeouts:r.coverage.naturalCombatTimeouts,
+   errors:r.coverage.errors},
   account:r.account,
   profile:{id:cfg.profile,meta:N.PROFILES[cfg.profile]},
   checkpoints,naturalBands:r.naturalWindowDifficulty};
@@ -210,7 +223,10 @@ function aggregate(files){
   reference:curve(),coverage:{
    profiles:PROFILES.length,seeds:2,pilotPairs:pilots.length,pilotNativeAccounts:pilots.length*2,
    pilotAttempts:pilots.reduce((n,x)=>n+x.before.attempts+x.after.attempts,0),
+   pilotNativeTimeouts:pilots.reduce((n,x)=>n+x.before.nativeCombatTimeouts.length+
+     x.after.nativeCombatTimeouts.length,0),
    deepProfiles:deeps.length,deepAttempts:deeps.reduce((n,x)=>n+x.coverage.attempts,0),
+   deepNativeTimeouts:deeps.reduce((n,x)=>n+x.coverage.nativeCombatTimeouts,0),
    deepE200:deeps.filter(x=>x.checkpoints.some(c=>c.E===200)).length,
    deepControlledFights:deeps.reduce((n,x)=>n+x.coverage.fights,0),errors:0},
   early,deepByE,
@@ -218,7 +234,8 @@ function aggregate(files){
    id:x.id,seed:x.seed,spec:x.spec,
    oldE:x.before.reach,newE:x.after.reach,oldBossWins:x.before.bossWins,
    newBossWins:x.after.bossWins,oldAttempts:x.before.attempts,newAttempts:x.after.attempts,
-   oldStop:x.before.stop,newStop:x.after.stop})),
+   oldStop:x.before.stop,newStop:x.after.stop,
+   oldTimeouts:x.before.nativeCombatTimeouts,newTimeouts:x.after.nativeCombatTimeouts})),
   deep:deeps.map(x=>({id:x.profile.id,seed:x.settings.seed,
    account:x.account,checkpoints:x.checkpoints,naturalBands:x.naturalBands})),
   limits:['Native E1–E20 accounts start at zero XP with real loot, Camp, Talents and resources.',
@@ -227,6 +244,7 @@ function aggregate(files){
    'E200 snapshots are recorded only if naturally reached; no XP/gear synthesis.',
    'Full Expedition boss victories differ from controlled first-ring Boss fights without preparation.',
    'Agents are heuristic, not population estimates; two seeds do not give robust probabilities.',
+   'Bounded native combat timeouts are explicitly recorded and their missing future Expeditions censored, never treated as win/loss or silently discarded.',
    'Only the shared enemy-reference curve was edited; no build or individual boss coefficient changes.']};
 }
 function fmt(x){return x.n?x.wins+'/'+x.n+' ('+x.winPct+'%)':'—';}
@@ -286,5 +304,5 @@ function main(argv=process.argv.slice(2)){
  return r;
 }
 module.exports={BATCHES,PROFILES,DEEP,SOURCE,BASELINE,baselineSource,parse,validate,
- oldValue,curve,capture,runAccount,pilot,deep,aggregate,markdown,main};
+ oldValue,curve,capture,timeoutClassification,runAccount,pilot,deep,aggregate,markdown,main};
 if(require.main===module){try{main();}catch(e){console.error('STAGE630_ERROR '+String(e.stack||e));process.exitCode=1;}}
