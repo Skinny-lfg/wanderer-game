@@ -126,7 +126,7 @@ function breakdown(equipment,ownedRunes,equippedRuneIds,context,current=null){
  // A prepared advanced ability requires its owning talent node. Removing
  // nodes but retaining prepared made that projection invalid at E3+.
  // The actual saved/player talent progress is never mutated here.
- const bare={...context,state:{...context.state,automaticTalents:{...progress,nodes:[],prepared:null}},build:null,phase6Run:null};
+ const bare={...context,state:{...context.state,automaticTalents:{...progress,nodes:[],prepared:null,attributes:{}}},build:null,phase6Run:null};
  const clean=item=>item?{subtype:item.subtype,slot:item.slot,tier:item.tier}:null;
  const stages=[totalStats({weapon:clean(equipment.weapon),offhand:clean(equipment.offhand)},[],[],bare),totalStats(equipment,[],[],bare),totalStats(equipment,ownedRunes,equippedRuneIds,bare),totalStats(equipment,ownedRunes,equippedRuneIds,{...context,build:null,phase6Run:null}),current||totalStats(equipment,ownedRunes,equippedRuneIds,context)];
  const rounded=n=>Math.round((Number(n)||0)*100)/100;
