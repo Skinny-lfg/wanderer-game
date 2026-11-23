@@ -452,6 +452,7 @@ function encounter(level,build,seed,kind,opts,forcedTrait=undefined,forcedBossMo
  if(run.tier!==level)throw Error('Incorrect encounter tier '+run.tier+' vs '+level);
  if(kind==='boss'&&run.encounterLeader?.bossStyle!==A.profileFor(card.family).style)throw Error('Native Boss mismatch for '+card.family);
  const result=fight(a,c,opts.tickLimit,opts.targetPolicy,opts.measure===true);
+ const baseStats=a.baseStats();
  const mode=forcedBossMod!==undefined?'bossmods':forcedTrait!==undefined?'traits':opts.mode==='bosses'?'bosses':['enemies','roles'].includes(opts.mode)?opts.mode:opts.mode==='elites'?'elites':'encounter';
  const label=forcedBossMod!==undefined?(forcedBossMod||'baseline'):forcedTrait!==undefined?(forcedTrait||'baseline'):mode==='bosses'?card.family:['enemies','roles'].includes(mode)?'swarm-'+count:kind;
  return {mode,kind:label,roleEffect:roleEffect||null,plannedConditionId:conditionPlan?.id||null,conditionNaturallyMarked:!!conditionPlan?.rooms?.includes(candidate),controlledRoomAccess,traitFixtureInjected:!!trialTraitId,level,build:build.id,seed,resolvedSeed,seedShift,gearE,gearFingerprint,gearTier:P.gearTier(gearE).name,
@@ -468,7 +469,7 @@ function encounter(level,build,seed,kind,opts,forcedTrait=undefined,forcedBossMo
   permanentAttributesSpent:T.spentAttributes(a.state().automaticTalents),
   permanentAttributes:T.attributes(a.state().automaticTalents),
   heroBaseStats:Object.fromEntries(['str','agi','int','end','cha','attack','defense','maxhp',
-   'spellPower','attacksPerSec','crit','blockChance','power'].map(key=>[key,a.baseStats()[key]??null])),
+   'spellPower','attacksPerSec','crit','blockChance','power'].map(key=>[key,baseStats[key]??null])),
   otherGearFingerprint,offhandType:a.state().equip.offhand?.subtype||null,offhandTrait:a.state().equip.offhand?.v013Trait||null,
   armorType:a.state().equip.armor?.armorType||null,
   controlledTalentNodes:opts.controlledTalents?[...opts.controlledTalents.nodes]:null,
