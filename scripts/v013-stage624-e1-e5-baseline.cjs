@@ -63,10 +63,10 @@ function formulas(){
  const rows=[];
  for(const level of traceLevels){
   const namedElites={};
-  for(const id of C.ELITES)namedElites[id]=elite.scalingFor(id,level);
+  for(const id of C.ELITES)namedElites[id]=progress.enemyScaling(level,'elite',id);
   const namedBosses={};
   for(const value of Object.values(boss.PROFILES)){
-   namedBosses[value.id]=boss.earlyScale(value.style,level);
+   namedBosses[value.id]=progress.enemyScaling(level,'boss',value.style);
   }
   rows.push({level,reference:progress.enemyReference(level),
    gearTier:progress.gearTier(level).id,normalBase:core.estimateEnemy(level,1),

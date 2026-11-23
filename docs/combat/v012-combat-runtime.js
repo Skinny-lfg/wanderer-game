@@ -28,12 +28,15 @@ function enemyFor(level,enc,override=null){
  const mob=boss?{name:variant.name,image:variant.image}:override?.mob||ports.sample(theme.mobs);
  const role=boss?'boss':miniboss?'miniboss':(['minion','tank','skirmisher','caster'].includes(mob.role)?mob.role:'skirmisher');
  const elite=miniboss?ports.eliteArchetype(ports.state.run):null;
- // Stage 6.19 Elite growth stays independent of Stage 6.21 early Boss tuning.
- const eliteGrowth=elite?root.WandererV013EliteAbilities.scalingFor(elite.id,level):null;
- const bossEarly=boss?root.WandererV013BossAbilities.earlyScale(variant.style,level):null;
- const hp=Math.max(1,Math.round(v.hp*mult*(elite?elite.hp*eliteGrowth.hp:role==='minion'?.68:role==='tank'?1.32:role==='skirmisher'?.96:role==='caster'?.90:1)*(bossEarly?.hp??1)));
- const atk=Math.max(1,Math.round(v.atk*mult*(elite?elite.atk*eliteGrowth.atk:role==='minion'?.70:role==='skirmisher'?1.10:role==='caster'?1.08:role==='tank'?.90:1)*(bossEarly?.atk??1)));
- const defense=Math.max(0,Math.round(v.def*mult*(elite?elite.def*eliteGrowth.def:role==='tank'?1.35:role==='minion'?.55:1)));
+ // Stage 6.24C: one level/identity scaling authority for all native actors.
+ // Each class factor is applied exactly once, after its original archetype
+ // budget; risk, traits, minions, wards and abilities keep their own owners.
+ const scale=root.WandererExpeditionProgression.enemyScaling(
+  level,boss?'boss':miniboss?'elite':'normal',
+  boss?variant.style:miniboss?elite.id:role);
+ const hp=Math.max(1,Math.round(v.hp*mult*(elite?elite.hp:role==='minion'?.68:role==='tank'?1.32:role==='skirmisher'?.96:role==='caster'?.90:1)*scale.hp));
+ const atk=Math.max(1,Math.round(v.atk*mult*(elite?elite.atk:role==='minion'?.70:role==='skirmisher'?1.10:role==='caster'?1.08:role==='tank'?.90:1)*scale.atk));
+ const defense=Math.max(0,Math.round(v.def*mult*(elite?elite.def:role==='tank'?1.35:role==='minion'?.55:1)*scale.def));
  const barrier=variant?.style==='guardian'?Math.max(3,WandererV012CombatCore.enemyStat(level,Math.round(WandererV012CombatCore.referenceLevel(level)*.9))):elite?.id==='tank'?Math.max(1,WandererV012CombatCore.enemyStat(level,Math.round(1+WandererV012CombatCore.referenceLevel(level)*.3))):0;
  return {name:miniboss?elite.icon+' '+elite.name:mob.name,image:elite?ports.eliteArt(elite.id,mob.image):mob.image,role,bossStyle:variant?.style||null,attackType:['caster','gravecaller','oathbound_exarch'].includes(elite?.id)||['leech','conductor','devourer'].includes(variant?.style)||role==='caster'?'spell':'physical',
  miniboss,eliteType:elite?.id||null,archetypeName:elite?.name||null,hp,maxhp:hp,atk,def:defense,baseDef:defense,barrier,

@@ -29,7 +29,8 @@ test('Stage 6.24A traces all native enemy types, gear thresholds and levels with
  const rift=(E)=>r.rows.find(x=>x.level===E).bossExtras.rift.hp;
  assert(rift(1)<rift(5));
  assert(rift(5)<rift(35));
- assert.equal(rift(35),1);
+ assert.equal(globalThis.WandererExpeditionProgression.enemyScaling(30,'boss','leech').hp,1);
+ assert(rift(35)>1,'Stage 6.24C grows Boss strength smoothly above E30');
 });
 test('CLI refuses unbounded/unsafe content and changes no game files',()=>{
  assert.equal(A.parse(['--seed=9701']).seed,9701);

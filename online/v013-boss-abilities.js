@@ -11,24 +11,6 @@ const PROFILES=Object.freeze({
  fury:Object.freeze({id:'ember',style:'berserker',name:'Ember Sovereign',location:"Ember Sovereign's Throne",icon:'♨',description:'Furnace Strike: every 12s, prepares a heavy attack for 1.5s. Can be interrupted; retains the Enrage below 50% HP.',image:'assets/bosses/v013/ember-sovereign.png',attack:'assets/bosses/v013/ember-sovereign.png'}),
  magic:Object.freeze({id:'stormglass',style:'conductor',name:'Stormglass Conductor',location:"Stormglass Spire",icon:'⚡',description:'Arcane Convergence: channels for 2s every 12s, dealing 7% of hero max HP before Boon mitigation and Barrier. At 65% HP calls a Convergence Anchor; breaking it cancels the next discharge and weakens the boss.',image:'assets/bosses/v013/stormglass-conductor.png',attack:'assets/bosses/v013/stormglass-conductor.png'})
 });
-// Stage 6.21: targeted early Expedition Boss pressure, calibrated against
-// persistent earned E1–E3 accounts. These are independent per-Boss base-stat
-// reductions, fully gone at E30; late E35/E70 Bosses remain unchanged.
-const EARLY_BOSS_PRESSURE=Object.freeze({
- leech:Object.freeze({hp:.37,atk:.22}),
- matriarch:Object.freeze({hp:.39,atk:.23}),
- guardian:Object.freeze({hp:.29,atk:.18}),
- conductor:Object.freeze({hp:.28,atk:.18}),
- berserker:Object.freeze({hp:.18,atk:.11}),
- devourer:Object.freeze({hp:.16,atk:.10})
-});
-function earlyScale(style,level){
- if(!Number.isFinite(level)||level<1)throw Error('Invalid Stage 6.21 Boss level');
- const pressure=EARLY_BOSS_PRESSURE[style];
- if(!pressure)throw Error('Unknown Stage 6.21 Boss style '+style);
- const phase=Math.max(0,Math.min(1,(30-level)/29));
- return {hp:1-pressure.hp*phase,atk:1-pressure.atk*phase};
-}
 const byStyle=Object.freeze(Object.fromEntries(Object.values(PROFILES).map(x=>[x.style,x])));
 function profileFor(family){return PROFILES[family]||null;}
 function profileForStyle(style){return byStyle[style]||null;}
@@ -171,7 +153,7 @@ function status(enemy,r,now){
  if(s.style==='matriarch'&&livingMinions(r)>=2)return {kind:'guarding',label:'Brood Guard',detail:'15% less direct damage while 2+ Carrion Broodlings are alive',remaining:0};
  return null;
 }
-const API=Object.freeze({PROFILES,EARLY_BOSS_PRESSURE,earlyScale,profileFor,profileForStyle,attach,tick,spawned,onDeath,barrierChanged,
+const API=Object.freeze({PROFILES,profileFor,profileForStyle,attach,tick,spawned,onDeath,barrierChanged,
  directFactor,incomingFactor,chargedStrike,interruptCharge,livingMinions,status});
 root.WandererV013BossAbilities=API;
 if(typeof module==='object'&&module.exports)module.exports=API;
