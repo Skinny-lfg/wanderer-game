@@ -1,0 +1,83 @@
+name: Stage 6.42 — Lightning mana versus Chain Discharge E10 test (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths:
+      - '.github/workflows/v013-stage642-e10-lightning-mana.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  native:
+    runs-on: ubuntu-latest
+    timeout-minutes: 85
+    strategy:
+      fail-fast: false
+      matrix: {shard: [0, 1]}
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45272938568
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: stage642-snapshot-magic-lightning
+          path: reports/stage642-lightning
+      - name: E10 paired legal Lightning Talent respec for mana sustain
+        env:
+          SHARD: ${{ matrix.shard }}
+        run: |
+          node <<'JS'
+          const fs=require('fs');
+          require('./scripts/v013-natural-progression.cjs');
+          const T=globalThis.WandererAutomaticTalents;
+          const P=require('./scripts/v013-build-planner.cjs');
+          const D=require('./scripts/v013-stage628-postcap-difficulty.cjs');
+          const sample=JSON.parse(fs.readFileSync('reports/stage642-lightning/magic-lightning.json','utf8'));
+          const snapshots=sample.accounts.filter(a=>a.snapshot);
+          if(snapshots.length!==1||snapshots[0].snapshot.state.equip.weapon.subtype!=='Staff')throw Error('Unexpected genuine Lightning E10 checkpoint count or weapon');
+          const before=snapshots[0].snapshot,progress=before.state.automaticTalents;
+          const cfg={...P.BUILDS['magic-lightning-pure'],milestones:['overcharge','mana_spring','storm_mastery'],orderedMilestones:true};
+          const planned=P.propose(T,T.reset(progress),cfg);
+          const afterProgress={...T.reset(progress),nodes:planned.expectedNodes,element:'lightning'};
+          if(!T.valid(afterProgress)||afterProgress.xp!==progress.xp||
+             !['overcharge','storm_mastery','mana_spring'].every(x=>afterProgress.nodes.includes(x)))
+           throw Error('Lightning mana respec not legal/fully funded');
+          const after={...before,state:{...before.state,automaticTalents:afterProgress},talentSpent:afterProgress.nodes.length};
+          const sizes=[4,8,12],shard=Number(process.env.SHARD),rows=[];
+          for(let j=0;j<50;j++){
+           const k=shard*50+j,seed=6430000+k*101;
+           for(const size of sizes){
+            const scenario={id:'normal-'+size,type:'normal',size,realm:'blood'};
+            const a=D.native(before,scenario,seed),b=D.native(after,scenario,seed);
+            if(JSON.stringify(a.roster)!==JSON.stringify(b.roster)||a.gearFingerprint!==b.gearFingerprint)throw Error('Roster/gear drift');
+            if(!([a,b].every(x=>x.won||x.died||x.timedOut)))throw Error('Unresolved Lightning fight');
+            rows.push({size,k,oldWon:a.won,newWon:b.won,oldDamage:a.damageDealt,newDamage:b.damageDealt,
+             oldSecondary:a.secondaryTargetDamage,newSecondary:b.secondaryTargetDamage,
+             oldMana:a.manaSpent,newMana:b.manaSpent,oldCasts:a.fundedCasts,newCasts:b.fundedCasts,
+             oldTaken:a.damageTaken,newTaken:b.damageTaken,oldTime:a.timedOut,newTime:b.timedOut});
+           }
+          }
+          const result={shard,oldTalentNodes:progress.nodes,newTalentNodes:afterProgress.nodes,earnedXP:before.xp,
+           gear:before.fingerprint,groups:sizes.map(size=>{
+            const v=rows.filter(x=>x.size===size);
+            const sum=k=>v.reduce((a,x)=>a+(x[k]||0),0);
+            return {size,n:v.length,winsBefore:sum('oldWon'),winsAfter:sum('newWon'),
+             secondaryBefore:sum('oldSecondary'),secondaryAfter:sum('newSecondary'),
+             castsBefore:sum('oldCasts'),castsAfter:sum('newCasts'),
+             manaBefore:sum('oldMana'),manaAfter:sum('newMana'),
+             damageBefore:sum('oldDamage'),damageAfter:sum('newDamage'),
+             timeoutsBefore:sum('oldTime'),timeoutsAfter:sum('newTime')};
+           })};
+          console.log('STAGE642_LIGHTNING_MANA='+JSON.stringify(result));
+          fs.writeFileSync('reports/stage642-lightning/respec-'+shard+'.json',JSON.stringify(result,null,2)+'\n');
+          JS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage642-lightning-mana-${{ matrix.shard }}
+          path: reports/stage642-lightning/respec-*.json
+          retention-days: 30
