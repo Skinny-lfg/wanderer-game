@@ -1,0 +1,139 @@
+name: Stage 6.44 — Isolated E10 Weapon AoE Lab (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths:
+      - '.github/workflows/v013-stage644-weapon-lab.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: stage644-lab-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Native integrity and syntax gate
+        run: |
+          node --check scripts/v013-stage644-e10-lab.cjs
+          node --test tests/v013-stage643-aoe-mechanics.test.cjs tests/v013-stage642-aoe-readiness.test.cjs
+          git diff --check
+  replay:
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 85
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        shard: [0, 1]
+        trial:
+          - {profile: smart-fury-bow, variant: current}
+          - {profile: smart-fury-bow, variant: bow1}
+          - {profile: smart-fury-bow, variant: 'bow1+bowNoTalent'}
+          - {profile: smart-fury-bow, variant: 'bow1+status35'}
+          - {profile: smart-fury-bow, variant: 'bow1+status50'}
+          - {profile: smart-fury-bow, variant: 'bow1+status65'}
+          - {profile: smart-blood-two-handed, variant: current}
+          - {profile: smart-blood-two-handed, variant: noCleave}
+          - {profile: smart-blood-two-handed, variant: status50}
+          - {profile: plate-warden, variant: current}
+          - {profile: plate-warden, variant: noMace}
+          - {profile: plate-warden, variant: status50}
+          - {profile: balanced, variant: current}
+          - {profile: balanced, variant: noSword}
+          - {profile: balanced, variant: status50}
+          - {profile: decay-blood-spread, variant: current}
+          - {profile: decay-blood-spread, variant: status50}
+          - {profile: decay-blood-spread, variant: rupture}
+          - {profile: decay-blood-spread, variant: 'rupture+status50'}
+          - {profile: magic-decay-bloom, variant: current}
+          - {profile: magic-decay-bloom, variant: bloomFixed}
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45272938568
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: stage642-snapshot-${{ matrix.trial.profile }}
+          path: reports/stage644/snapshots
+      - name: Matched first-ring E10 native fights
+        env:
+          PROFILE: ${{ matrix.trial.profile }}
+          VARIANT: ${{ matrix.trial.variant }}
+          SHARD: ${{ matrix.shard }}
+        run: |
+          mkdir -p reports/stage644/shards
+          node scripts/v013-stage644-e10-lab.cjs "$VARIANT" "$PROFILE" "$SHARD" "reports/stage644/snapshots/$PROFILE.json" "reports/stage644/shards/$PROFILE-$VARIANT-$SHARD.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage644-${{ matrix.trial.profile }}-${{ matrix.trial.variant }}-${{ matrix.shard }}
+          path: reports/stage644/shards/*.json
+          retention-days: 30
+          if-no-files-found: error
+  aggregate:
+    needs: replay
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage644-*
+          merge-multiple: true
+          path: reports/stage644/shards
+      - name: Matched E10 comparison, eligibility and reproducibility
+        run: |
+          node <<'JS'
+          const fs=require('node:fs'),dir='reports/stage644/shards';
+          const files=fs.readdirSync(dir).filter(f=>f.endsWith('.json'));
+          if(files.length!==42)throw Error('Expected 42 sharded sample files, got '+files.length);
+          const parts=files.map(f=>JSON.parse(fs.readFileSync(dir+'/'+f,'utf8')));
+          const byKey=new Map();
+          for(const p of parts){const key=p.profile+'|'+p.variant;if(!byKey.has(key))byKey.set(key,[]);byKey.get(key).push(p);}
+          const all=[];
+          for(const [key,shards] of byKey){
+            if(shards.length!==2||new Set(shards.map(x=>x.shard)).size!==2)throw Error('Missing/duplicate shards '+key);
+            if(JSON.stringify(shards[0].entrants)!==JSON.stringify(shards[1].entrants))throw Error('Entrant drift '+key);
+            const rows=shards.flatMap(x=>x.rows),profile=shards[0].profile,variant=shards[0].variant;
+            const groups=[1,4,8,12].map(size=>{const r=rows.filter(x=>x.size===size);
+              if(r.length!==100||new Set(r.map(x=>x.seed)).size!==100)throw Error('Missing matched seed '+key+'/'+size);
+              return {size,n:r.length,wins:r.filter(x=>x.won).length,timeouts:r.filter(x=>x.timeout).length,
+                secondary:r.reduce((n,x)=>n+x.secondary,0),meanTaken:Math.round(r.reduce((n,x)=>n+x.taken,0)/r.length),
+                meanDuration:Math.round(r.reduce((n,x)=>n+x.seconds,0)/r.length*10)/10};});
+            all.push({profile,variant,entrants:shards[0].entrants,groups,source:shards[0].source});
+          }
+          for(const a of all){
+            const b=all.find(x=>x.profile===a.profile&&x.variant==='current');
+            if(!b||JSON.stringify(a.entrants)!==JSON.stringify(b.entrants))throw Error('Different earned hero '+a.profile);
+            const rs=parts.filter(p=>p.profile===a.profile&&p.variant===a.variant).flatMap(p=>p.rows);
+            const base=parts.filter(p=>p.profile===a.profile&&p.variant==='current').flatMap(p=>p.rows);
+            for(const r of rs){const q=base.find(x=>x.seed===r.seed&&x.size===r.size&&x.naturalSeed===r.naturalSeed);
+              if(!q||r.roster!==q.roster||r.gear!==q.gear||r.xp!==q.xp)throw Error('Roster, gear, XP drift '+a.profile+'/'+a.variant+'/'+r.size);}
+          }
+          const summary={stage:'6.44',notProduction:true,independentEarnedE10PlayersPerProfile:2,
+            warnings:['100 combat seeds, not 100 independently earned heroes','Ablations preserve spent points: mechanical test, not a legal respec','Skill must be present in entrants to claim an ability-level gain'],all};
+          fs.writeFileSync('reports/stage644/stage644-results.json',JSON.stringify(summary,null,2)+'\n');
+          console.log('STAGE644_MATRIX='+JSON.stringify(all.map(x=>({profile:x.profile,variant:x.variant,
+            actors:x.entrants.map(a=>({weapon:a.weapon,offhand:a.offhand,owned:a.active,prepared:a.prepared})),
+            groups:x.groups.map(g=>({size:g.size,wins:g.wins,secondary:g.secondary,meanTaken:g.meanTaken}))}))));
+          JS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage644-e10-weapon-matrix
+          path: reports/stage644/stage644-results.json
+          retention-days: 30
