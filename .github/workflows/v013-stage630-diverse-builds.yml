@@ -1,0 +1,134 @@
+name: Wanderer Stage 6.30 — early exponential and 34 diverse builds (NO DEPLOY)
+on:
+  push:
+    branches: [balance/v013-stage630-early-exponential-diverse-builds-20261123]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: stage630-diverse-exponential
+  cancel-in-progress: true
+jobs:
+  preflight:
+    name: Early curve E1-E5, 34 profiles, native E5 A/B and all regressions
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Validate curve, native E5 parity and all 34 build specifications
+        run: |
+          node --check combat/expedition-progression.js
+          node --check scripts/v013-stage630-diverse-builds.cjs
+          node --test tests/v013-stage630-diverse-builds.test.cjs tests/expedition-progression-model.test.cjs tests/v013-stage624c-progression.test.cjs tests/v013-stage629-exponential-curve.test.cjs
+          git diff --check
+      - name: Full native game regression suite
+        run: npm test
+  early:
+    name: E1-E20 real ${{ matrix.batch }} seed ${{ matrix.seed }} old/new
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 110
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        batch: [legacy-defense, legacy-casters, strategic-pure, strategic-hybrid, strategic-weapon]
+        seed: [9861, 9863]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Native E1-to-E20 old and new curve on each earned account
+        run: >-
+          node scripts/v013-stage630-diverse-builds.cjs
+          --mode=pilot
+          --batch=${{ matrix.batch }}
+          --seed=${{ matrix.seed }}
+          --max-total-attempts=360
+          --out=reports/v013-stage630-${{ matrix.batch }}-${{ matrix.seed }}-pilot.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage630-pilot-${{ matrix.batch }}-${{ matrix.seed }}
+          path: reports/v013-stage630-${{ matrix.batch }}-${{ matrix.seed }}-pilot.json
+          retention-days: 40
+          if-no-files-found: warn
+  deep:
+    name: E1-E200 earned ${{ matrix.profile }} ${{ matrix.seed }}
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 110
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        seed: [9861]
+        profile:
+          - smart-blood-pure
+          - smart-fury-pure
+          - smart-magic-arcane-pure
+          - smart-magic-lightning-pure
+          - smart-vitality-pure
+          - smart-decay-magic-aegis
+          - smart-aegis-vitality
+          - cloth-battlemage
+          - leather-duelist
+          - magic-fire
+          - hexblade-hybrid
+          - smart-blood-fury-vitality
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Earn real gear, XP, talents, attributes and test named native enemies
+        run: >-
+          node scripts/v013-stage630-diverse-builds.cjs
+          --mode=deep
+          --profile=${{ matrix.profile }}
+          --seed=${{ matrix.seed }}
+          --max-total-attempts=360
+          --out=reports/v013-stage630-${{ matrix.profile }}-${{ matrix.seed }}-deep.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage630-deep-${{ matrix.profile }}-${{ matrix.seed }}
+          path: reports/v013-stage630-${{ matrix.profile }}-${{ matrix.seed }}-deep.json
+          retention-days: 40
+          if-no-files-found: warn
+  aggregate:
+    name: Aggregate 34-build ×2-seed early A/B and 12 E200 earned accounts
+    needs: [early, deep]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage630-*
+          merge-multiple: true
+          path: reports/stage630-shards
+      - name: Strict aggregate with full seed/strategy coverage and censorship safeguards
+        run: >-
+          node scripts/v013-stage630-diverse-builds.cjs
+          --mode=aggregate
+          --inputs=reports/stage630-shards
+          --out=reports/v013-stage630-aggregate.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage630-full-34-build-curve
+          path: |
+            reports/v013-stage630-aggregate.json
+            reports/v013-stage630-aggregate.md
+          retention-days: 45
