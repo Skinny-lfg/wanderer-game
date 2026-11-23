@@ -138,3 +138,4 @@ jobs:
           path: reports/stage644/stage644-results.json
           retention-days: 30
 # Stage 6.44 corrected Carrion comparison anchor; no game source patch committed.
+# Accept mixed-case scenario IDs (e.g. noCleave, bowNoTalent).
