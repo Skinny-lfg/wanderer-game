@@ -1213,7 +1213,12 @@ function playDungeon(a,level,profile,opts,decisionModel='risk-aware'){
  return report;
 }
 function simulateAccount(seed,id,opts,simulationOptions={}){
- const profile=PROFILES[id],decisionModel=simulationOptions.decisionModel||'adaptive';
+ // Stage 6.32: read-only research cohorts may pass an explicit, validated agent
+ // profile. Native game rewards, talents, equipment and combat are unchanged.
+ const profile=simulationOptions.researchProfiles?.[id]||PROFILES[id],decisionModel=simulationOptions.decisionModel||'adaptive';
+ if(!profile||!profile.name||!Array.isArray(profile.families)||!profile.families.length||
+  !['Cloth','Leather','Plate'].includes(profile.armor)||!Array.isArray(profile.weapons)||!profile.weapons.length||
+  (profile.plan&&!Object.hasOwn(PLANNER.BUILDS,profile.plan)))throw Error('Invalid earned research profile '+id);
  policyFlags(decisionModel);
  const a=create(seed,undefined,simulationOptions.moduleOverrides||{}, {skipPersistence:true,now:1720000000000+seed});
  const initialGear=gearSnapshot(a);
