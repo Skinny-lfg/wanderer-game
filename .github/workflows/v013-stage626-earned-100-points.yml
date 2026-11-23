@@ -1,0 +1,94 @@
+name: Wanderer Stage 6.26 — Natural Expedition to 100 Talent Points (NO DEPLOY)
+on:
+  push:
+    branches: [audit/v013-stage626-earned-100-points-20261123]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Validate 100-point XP arithmetic and native progression safeguards
+        run: |
+          node --check scripts/v013-natural-progression.cjs
+          node --check scripts/v013-stage626-earned-100-points.cjs
+          node - <<'NODE'
+          const N=require('./scripts/v013-natural-progression.cjs');
+          const X=require('./scripts/v013-stage626-earned-100-points.cjs');
+          const T=globalThis.WandererAutomaticTalents;
+          if(T.MAX_POINTS!==100||T.POINT_XP!==100||T.earned(T.award(T.create(),10000))!==100)
+           throw Error('Wrong native 100-point Talent XP requirement');
+          const o=N.parseArgs(['--max-level=20','--max-attempts=24','--max-total-attempts=220']);
+          if(o.maxLevel!==20||X.parse([]).maxLevel!==200)
+           throw Error('Natural E200 horizon unavailable');
+          console.log('STAGE626_CAP_PREFLIGHT=100 points at 10000 native earned XP');
+          NODE
+          node --test tests/v013-natural-progression.test.cjs tests/v013-stage624c-progression.test.cjs
+          git diff --check
+  natural:
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [9861,9862,9863,9864]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Start E1 with zero XP; stop only after genuinely earning 10,000 XP
+        run: >-
+          node scripts/v013-stage626-earned-100-points.cjs
+          --seed=${{ matrix.seed }}
+          --profiles=cautious,balanced,daring
+          --max-level=200
+          --max-attempts=24
+          --max-total-attempts=220
+          --out=reports/v013-stage626-seed${{ matrix.seed }}.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage626-natural-${{ matrix.seed }}
+          path: |
+            reports/v013-stage626-seed${{ matrix.seed }}.json
+            reports/v013-stage626-seed${{ matrix.seed }}-raw.json
+          if-no-files-found: warn
+          retention-days: 30
+  aggregate:
+    needs: natural
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage626-natural-*
+          path: reports/stage626-shards
+          merge-multiple: true
+      - name: Calculate first Expedition with 100 real earned Talent points and censoring
+        run: >-
+          node scripts/v013-stage626-earned-100-points.cjs
+          --aggregate-dir=reports/stage626-shards
+          --out=reports/v013-stage626-aggregate.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage626-natural-100-point-aggregate
+          path: |
+            reports/v013-stage626-aggregate.json
+            reports/v013-stage626-aggregate.md
+          if-no-files-found: error
+          retention-days: 30

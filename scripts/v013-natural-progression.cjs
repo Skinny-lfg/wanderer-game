@@ -1281,6 +1281,13 @@ function simulateAccount(seed,id,opts,simulationOptions={}){
     acc.stopReason='Native runner error at E'+level+': '+err.message;stopped=true;
    }
    acc.attempts.push(entry);
+   // Stage 6.26: stop an intact native account after the attempt that genuinely
+   // reached 10,000 XP; no synthetic awards/unlocks and no replay of that attempt.
+   if(simulationOptions.stopAtTalentCap===true&&
+     a.talents.earned(a.state().automaticTalents)>=100){
+    acc.stopReason='Native 100-point Talent cap reached at E'+level;
+    stopped=true;
+   }
    // Only for isolated matched combat probes: stop after a single native
    // attempt at the specified reachable E. No level is unlocked artificially.
    if(simulationOptions.probeLevel===level&&attempt===1){
