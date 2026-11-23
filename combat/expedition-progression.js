@@ -12,21 +12,28 @@ const tiers=Object.freeze([
 ]);
 function checked(level){if(!Number.isSafeInteger(level)||level<1)throw Error('Invalid Expedition Level');return level;}
 function gearTier(level){checked(level);for(let i=tiers.length-1;i>=0;i--)if(level>=tiers[i].minimum)return tiers[i];}
-// Stage 6.31 — ONE geometric growth factor across every Expedition E>=1.
-// There is NO E5 anchor, tangent bridge, cap, level breakpoint or log tail.
-// Keep the Stage6.30 E1 reference (~0.775), and for this *test candidate*
-// hold E200 near the earlier late-stage reference (~38.559). The resulting
-// per-Expedition factor is constant: ~+1.98% at EVERY Expedition, including
-// E2, E3, E5, E70 and E200. This is not a claim of balanced player win rates.
-// All eight Elite / six Boss identity factors remain unchanged.
+// Stage 6.31 — one SMOOTH exponentially compounded progression for all E>=1.
+// The per-Expedition percentage growth changes smoothly; it is NOT a fixed %.
+// Both the reference and its growth-rate derivative are continuous through
+// E2/E3/E5/E35/E36/E70/E200. No piecewise level, clamp, local nerf or step.
+// Provisional E1-based calibration for native simulations, not proof that
+// the target player win rates (normal 80–90%, Elite 60–70%, Boss 35–45%)
+// are met by the current agents. Player gear and XP are separate models.
+// Initial growth is brisker and relaxes smoothly toward the positive late
+// rate. The entire expression is an exponential for every Expedition.
 const ENEMY_EXPONENTIAL_GROWTH=Object.freeze({
  initialReference:.775,
- growthPerExpedition:Math.pow(38.559/.775,1/199)
+ lateLogGrowth:.0105,
+ earlyLogGrowthBoost:1.8321,
+ relaxationExpeditions:5.8622
 });
 function enemyReference(level){
  checked(level);
- const {initialReference,growthPerExpedition}=ENEMY_EXPONENTIAL_GROWTH;
- const reference=initialReference*Math.pow(growthPerExpedition,level-1);
+ const {initialReference,lateLogGrowth,earlyLogGrowthBoost,relaxationExpeditions}=ENEMY_EXPONENTIAL_GROWTH;
+ const x=level-1;
+ const logGrowth=lateLogGrowth*x+
+  earlyLogGrowthBoost*(-Math.expm1(-x/relaxationExpeditions));
+ const reference=initialReference*Math.exp(logGrowth);
  if(!Number.isFinite(reference))throw Error('Expedition enemy reference exceeds finite range at E'+level);
  return reference;
 }
