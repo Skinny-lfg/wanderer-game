@@ -32,11 +32,11 @@ function enemyFor(level,enc,override=null){
  const elite=miniboss?ports.eliteArchetype(ports.state.run):null;
  const P=root.WandererExpeditionProgression;
  const identity=boss?P.BOSS_BASE[variant.style]:elite||P.NORMAL_BASE[role];
- const openingLeader=level===1&&ports.state.run?.phase1&&(boss||miniboss)&&!statOnly();
- const base=openingLeader?P.firstExpeditionLeader(identity,variant?.style,elite?.id):identity;
+ const eligible=ports.state.run?.phase1&&(boss||miniboss)&&!statOnly();
+ const base=eligible?P.leaderIdentityBudget(identity,level,variant?.style,elite?.id):identity;
  if(!base)throw Error('Missing fixed native enemy budget '+role+'/'+variant?.style);
- // The sole Expedition-based growth enters through estimateEnemy's shared
- // enemyReference(E). Identity bases are literal coefficients, not E ramps.
+ // One shared enemyReference(E) grows every role. The leader-only identity
+ // interpolation changes the matchup without multiplying native stats twice.
  const hp=Math.max(1,Math.round(v.hp*base.hp));
  const atk=Math.max(1,Math.round(v.atk*base.atk));
  const defense=Math.max(0,Math.round(v.def*base.def));
