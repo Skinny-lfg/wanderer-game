@@ -47,12 +47,12 @@ jobs:
         run: >-
           node scripts/v013-stage624-e1-e5-baseline.cjs
           --seed=${{ matrix.seed }}
-          --out=reports/v013-stage624c-natural-${{ matrix.seed }}.json
+          --out=reports/v013-stage624-seed${{ matrix.seed }}.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: stage624c-natural-${{ matrix.seed }}
-          path: reports/v013-stage624c-natural-${{ matrix.seed }}.json
+          path: reports/v013-stage624-seed${{ matrix.seed }}.json
           if-no-files-found: error
           retention-days: 30
   curves:
