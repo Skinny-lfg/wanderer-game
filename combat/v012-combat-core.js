@@ -51,6 +51,46 @@ function applyEncounterPressure(group,risk){
   enemy.atk=Math.max(1,Math.round(enemy.atk*pressure*attackRisk));
  }
 }
+// Stage 6.37: a large mixed room taxes ONLY its principal mobs for the number
+// of Minions in its complete initial roster (including reserve slots).
+// The minions themselves keep FULL native HP/ATK/DEF and combat timings.
+// Solo/small rooms, all-principal groups, Bosses and Elites stay unchanged.
+// This is a single encounter-time change, NOT a new level scaling curve.
+const MINION_ESCORT_RELIEF=Object.freeze({
+ minimumGroupSize:5, hpLossPerMinion:.055, atkLossPerMinion:.045,
+ defLossPerMinion:.025, minHpFactor:.38, minAtkFactor:.50, minDefFactor:.65
+});
+function applyMinionEscortRelief(group){
+ if(!Array.isArray(group)||!group.length||group.some(e=>!e||!Number.isFinite(e.maxhp)||
+  !Number.isFinite(e.atk)||!Number.isFinite(e.def)||!Number.isFinite(e.baseDef)))
+  throw Error('Invalid native Minion escort group');
+ const minions=group.filter(e=>e.role==='minion'&&!e.boss&&!e.miniboss).length;
+ const zero=Object.freeze({hp:1,atk:1,def:1});
+ if(group.length<MINION_ESCORT_RELIEF.minimumGroupSize||minions===0||
+  group.some(e=>e.boss||e.miniboss))return {minions,affected:0,factors:zero};
+ const cfg=MINION_ESCORT_RELIEF;
+ const factors={
+  hp:Math.max(cfg.minHpFactor,1-minions*cfg.hpLossPerMinion),
+  atk:Math.max(cfg.minAtkFactor,1-minions*cfg.atkLossPerMinion),
+  def:Math.max(cfg.minDefFactor,1-minions*cfg.defLossPerMinion)
+ };
+ let affected=0;
+ for(const e of group){
+  if(e.role==='minion')continue;
+  // Called once after native Risk 0–2 modifiers. No second group multiplier.
+  if(e.minionEscortReliefApplied)throw Error('Minion escort relief applied twice');
+  if(!['tank','skirmisher','caster'].includes(e.role))
+   throw Error('Unexpected principal role in native mixed room '+e.role);
+  e.maxhp=Math.max(1,Math.round(e.maxhp*factors.hp));
+  e.hp=Math.min(e.hp,e.maxhp);
+  e.atk=Math.max(1,Math.round(e.atk*factors.atk));
+  e.def=Math.max(0,Math.round(e.def*factors.def));
+  e.baseDef=Math.max(0,Math.round(e.baseDef*factors.def));
+  e.minionEscortReliefApplied=true;
+  affected++;
+ }
+ return {minions,affected,factors};
+}
 // Stage 6.33: a Tank in a 22-enemy swarm is exactly the same Tank as
 // the one in a solo room (at the same E and risk). Never divide HP/ATK/DEF
 // by group size or scale escorts separately. Only active slots and attack
@@ -90,5 +130,5 @@ function applyExpeditionModifiers(stats,e){
  if(e.attack)s.attack*=1+e.attack;if(e.defense)s.defense*=1+e.defense;
  return s;
 }
-root.WandererV012CombatCore=Object.freeze({evasionChance,enemyAttackType,referenceLevel,enemyStat,gearStat,endlessWeaponDamageBonus,estimateEnemy,createEnemyGroup,applyEncounterPressure,livingEnemies,nextGroupTarget,groupComplete,affinityProcChance,applyExpeditionModifiers});
+root.WandererV012CombatCore=Object.freeze({evasionChance,enemyAttackType,referenceLevel,enemyStat,gearStat,endlessWeaponDamageBonus,estimateEnemy,createEnemyGroup,applyEncounterPressure,applyMinionEscortRelief,MINION_ESCORT_RELIEF,livingEnemies,nextGroupTarget,groupComplete,affinityProcChance,applyExpeditionModifiers});
 })(globalThis);
