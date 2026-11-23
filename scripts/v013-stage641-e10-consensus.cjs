@@ -68,14 +68,14 @@ function sample(id,seed){
  const scenarios=[...SIZES.map(size=>({id:'normal-'+size,type:'normal',realm,size})),
   ...ELITES.map(identity=>({id:identity,type:'elite',realm})),
   ...BOSSES.map(family=>({id:'boss-'+family,type:'boss',realm:family}))];
- for(let trial=0;trial<2;trial++){
+ encounters: for(let trial=0;trial<2;trial++){
   const fightSeed=6410000+seed*19+trial*727;
   for(const scenario of scenarios){
    const r=D.native(snapshot,scenario,fightSeed);
-   if(r.timedOut||(!r.won&&!r.died))throw Error('Unresolved E10 fight '+id+' '+seed+' '+scenario.id);
+   if(!r.timedOut&&!r.won&&!r.died)throw Error('Inconsistent native E10 outcome '+id+' '+seed+' '+scenario.id);
    output.rooms.push({trial,encounter:scenario.id,kind:scenario.type,size:scenario.size||1,
     identity:scenario.type==='normal'?null:scenario.id,realm:scenario.realm,
-    won:!!r.won,died:!!r.died,seconds:r.seconds,
+    won:!!r.won,died:!!r.died,timeout:!!r.timedOut,seconds:r.seconds,
     taken:r.damageTaken,secondary:r.secondaryTargetDamage,secondaryDot:r.secondaryDotDamage||0,
     damage:r.damageDealt,fundedCasts:r.fundedCasts,manaSpent:r.manaSpent,
     hits:r.secondaryTargetHits,bossSummons:r.bossSummons,eliteSummons:r.eliteSummons,
@@ -83,9 +83,17 @@ function sample(id,seed){
     elite:r.eliteType||null,boss:r.bossStyle||null,
     roles:r.initialRoles||{},heroStats:r.heroBaseStats,
     gear:r.gearFingerprint});
+   if(r.timedOut){
+    // A fight that exhausts the native tick budget is censored, never a loss.
+    // Preserve the partial observed matrix and stop expensive further replays.
+    output.censoredAt=scenario.id;
+    output.censoredTrial=trial;
+    output.censoredReason='Native controlled encounter exceeded tick limit';
+    break encounters;
+   }
   }
  }
- if(output.rooms.length!==42)throw Error('Incomplete E10 native room matrix');
+ if(!output.censoredAt&&output.rooms.length!==42)throw Error('Incomplete E10 native room matrix');
  return output;
 }
 function aggregate(dir){
@@ -110,6 +118,8 @@ function aggregate(dir){
   id, ...rate(rows.filter(x=>x.kind===kind&&x.identity===(kind==='boss'?'boss-'+id:id)))}));
  const result={stage:'6.41',source:data[0].source,accounts:data.length,reachedE10:reached.length,
   aoeAtE10:reached.filter(x=>x.checkpoint.aoePotential).length,
+  censoredControlledAccounts:reached.filter(x=>x.censoredAt).map(x=>({id:x.id,seed:x.seed,
+   encounter:x.censoredAt,trial:x.censoredTrial,observedFights:x.rooms.length})),
   aoeObservedAtE10:reached.filter(x=>x.checkpoint.aoePotential&&
    x.rooms.some(r=>r.kind==='normal'&&r.size>1&&r.secondary>0)).length,
   minE10SamplesForFinalTuning:12,
@@ -131,7 +141,7 @@ function aggregate(dir){
    'Do not change enemy stats based on sparse per-identity samples or a survivor-selected cohort.']};
  const lines=['# Stage 6.41 — E10 reference / consensus pilot','',
   'Native source: '+result.source,
-  'Accounts: '+result.accounts+'; reached E10: '+result.reachedE10+'; actual AoE available: '+result.aoeAtE10+'; observed AoE damage: '+result.aoeObservedAtE10,'',
+  'Accounts: '+result.accounts+'; reached E10: '+result.reachedE10+'; actual AoE available: '+result.aoeAtE10+'; observed AoE damage: '+result.aoeObservedAtE10+'; censored controlled accounts: '+result.censoredControlledAccounts.length,'',
   '| Enemies | All | AoE equipped | No AoE | Secondary damage (including Burn) |','|---:|---:|---:|---:|---:|',
   ...groups.map(g=>'| '+g.size+' | '+g.all.wins+'/'+g.all.n+' | '+g.aoe.wins+'/'+g.aoe.n+' | '+g.noAoe.wins+'/'+g.noAoe.n+' | '+g.secondaryDamage+' (Burn '+g.secondaryDotDamage+') |'),
   '','## Elites','| Name | Wins |','|---|---:|',
@@ -149,7 +159,8 @@ function aggregate(dir){
  fs.writeFileSync(path.join(dir,'stage641-summary.md'),lines.join('\n'));
  console.log('STAGE641_E10_SUMMARY='+JSON.stringify({source:result.source,
   accounts:result.accounts,reachedE10:result.reachedE10,
-  aoeAtE10:result.aoeAtE10,aoeObservedAtE10:result.aoeObservedAtE10,groups:result.groups,elites:result.elites,bosses:result.bosses,
+  aoeAtE10:result.aoeAtE10,aoeObservedAtE10:result.aoeObservedAtE10,
+  censoredControlledAccounts:result.censoredControlledAccounts,groups:result.groups,elites:result.elites,bosses:result.bosses,
   missing:result.missing}));
 }
 if(require.main===module){
