@@ -301,7 +301,7 @@ function main(argv=process.argv.slice(2)){
   const dir=path.resolve(opts.inputs);
   const names=fs.readdirSync(dir).filter(f=>/^v013-stage629-\d+-[a-z-]+\.json$/.test(f));
   if(!names.length)throw Error('No Stage6.29 cohort shards');
-  result=summarize(names.map(f=>JSON.parse(fs.readFileSync(path.join(dir,f),'utf8')))));
+  result=summarize(names.map(f=>JSON.parse(fs.readFileSync(path.join(dir,f),'utf8'))));
   output(opts.out,result);
   fs.writeFileSync(opts.out.replace(/\.json$/,'.md'),markdown(result)+'\n');
   console.log('STAGE629_AGG='+JSON.stringify({coverage:result.coverage,
