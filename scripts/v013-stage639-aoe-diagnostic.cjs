@@ -5,6 +5,7 @@ const fs=require('node:fs'),path=require('node:path');
 const N=require('./v013-natural-progression.cjs');
 const B=require('./v013-stage632-player-power.cjs');
 const V=require('./v013-stage637-natural-rates.cjs');
+const R=require('./v013-stage634-natural-rates.cjs');
 const S=require('./simulate-progression.cjs');
 const ELITES=[...V.E];
 const BOSSES=['leech','matriarch','devourer','guardian','berserker','conductor'];
@@ -63,7 +64,7 @@ function cohort(cfg){
    ...N.DEFAULTS,seeds:[cfg.seed],profiles:[id],maxLevel:cfg.maxLevel,
    maxAttempts:cfg.maxAttempts,maxTotalAttempts:cfg.maxTotalAttempts
   },{researchProfiles:B.PROFILES,decisionModel:'adaptive'});
-  const acc=V.summaryAccount(natural,id,profile,cfg.seed);
+  const acc=R.summaryAccount(natural,id,profile,cfg.seed);
   const actual=natural.attempts.flatMap(a=>(a.rooms||[]).map(r=>packRoom(a,r)));
   if(acc.rooms.length!==actual.length||
     actual.some((r,i)=>r.E!==acc.rooms[i].E||r.enemies!==acc.rooms[i].enemies||
