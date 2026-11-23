@@ -4,6 +4,7 @@ on:
     branches: [balance/stage-6.40-e1-calibration]
     paths:
       - '.github/workflows/v013-stage642-bow-respec.yml'
+      - 'scripts/v013-stage642-e10-bow-respec.cjs'
   workflow_dispatch:
 permissions:
   contents: read
