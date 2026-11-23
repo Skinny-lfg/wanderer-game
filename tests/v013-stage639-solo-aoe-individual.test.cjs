@@ -5,43 +5,33 @@ require('../combat/v012-combat-core.js');
 const P=globalThis.WandererExpeditionProgression,C=globalThis.WandererV012CombatCore;
 const S=require('../scripts/simulate-progression.cjs');
 const A=require('../scripts/v013-stage639-aoe-diagnostic.cjs');
-const newBosses={
- leech:{hp:1.31,atk:1.62,def:2},
- matriarch:{hp:1.22,atk:1.54,def:2},
- guardian:{hp:1.58,atk:1.75,def:2},
- conductor:{hp:1.38,atk:1.59,def:2},
- berserker:{hp:1.43,atk:1.58,def:2},
- devourer:{hp:1.85,atk:1.91,def:2}
-};
 function make(role='tank'){return {role,maxhp:100,hp:100,atk:30,def:10,baseDef:10,attackEvery:1.6};}
-test('Stage6.39: strictly solo normal role buffs, never Minions, groups or Bosses',()=>{
- for(const [role,coeff]of Object.entries(C.SOLO_NORMAL_BASE)){
-  const e=make(role),d=C.applySoloNormalReinforcement([e]);
-  assert.equal(d.affected,1);assert.equal(e.maxhp,Math.round(100*coeff.hp));
-  assert.equal(e.hp,e.maxhp);assert.equal(e.atk,Math.round(30*coeff.atk));
-  assert.equal(e.def,10);assert.equal(e.attackEvery,1.6);
-  assert.throws(()=>C.applySoloNormalReinforcement([e]),/twice/);
-  const g=Array.from({length:7},()=>make(role)),before=JSON.stringify(g);
-  assert.equal(C.applySoloNormalReinforcement(g).affected,0);
-  assert.equal(JSON.stringify(g),before);
+test('Stage 6.42: one budget handles solo regulars and never Bosses or Elites',()=>{
+ for(const role of ['tank','skirmisher','caster']){
+  const e=make(role),r=C.applyNormalRoomBudget([e],1),opening=C.NORMAL_ROOM_BUDGET.solo[role];
+  assert.equal(r.affected,1);assert.equal(e.maxhp,Math.round(100*opening.hp));
+  assert.equal(e.atk,Math.round(30*opening.atk));assert.equal(e.hp,e.maxhp);
+  assert.throws(()=>C.applyNormalRoomBudget([e],1),/twice/);
  }
- for(const special of ['minion','boss','miniboss']){
-  const e=make('minion');
-  if(special!=='minion')e[special]=true;
-  const before=JSON.stringify(e);
-  assert.equal(C.applySoloNormalReinforcement([e]).affected,0);
+ for(const type of ['boss','miniboss']){
+  const e=make('tank');e[type]=true;
+  const before=JSON.stringify(e);assert.equal(C.applyNormalRoomBudget([e],1).affected,0);
   assert.equal(JSON.stringify(e),before);
  }
 });
-test('Stage6.39: six individual Boss E1 identities and shared strictly continuous growth',()=>{
- assert.deepEqual(Object.keys(P.BOSS_BASE).sort(),Object.keys(newBosses).sort());
- for(const [id,coeff] of Object.entries(newBosses)){
-  const b=P.BOSS_BASE[id];
-  assert.equal(b.hp,coeff.hp);assert.equal(b.atk,coeff.atk);assert.equal(b.def,coeff.def);
-  for(const E of [1,2,5,10,20,70,200])assert.deepEqual(P.enemyScaling(E,'boss',id),{hp:1,atk:1,def:1});
+test('Six direct mature Boss budgets smoothly interpolate E1 to E10',()=>{
+ assert.equal(Object.keys(P.BOSS_BASE).length,6);
+ for(const [id,b] of Object.entries(P.BOSS_BASE)){
+  const opening=P.OPENING_BOSS_BASE[id];assert(opening);
+  assert.equal(P.leaderIdentityBudget(b,1,id,null).hp,opening.hp);
+  assert.strictEqual(P.leaderIdentityBudget(b,10,id,null),b);
+  for(let E=2;E<=9;E++){
+   const v=P.leaderIdentityBudget(b,E,id,null);
+   for(const stat of ['hp','atk','def','interval'])
+    assert(v[stat]>=Math.min(opening[stat],b[stat])-1e-10&&v[stat]<=Math.max(opening[stat],b[stat])+1e-10);
+  }
+  assert.deepEqual(P.enemyScaling(10,'boss',id),{hp:1,atk:1,def:1});
  }
- for(let E=2;E<=200;E++)assert(P.enemyReference(E)>P.enemyReference(E-1));
- assert.equal(P.enemyReference(1),.775);
 });
 function native(E,n,type='normal'){
  const settings={...S.DEFAULTS,points:0,gear:'current',runes:false};
@@ -53,23 +43,13 @@ function native(E,n,type='normal'){
  const actors=[...(r.enemies?.length?r.enemies:[r.enemy]),...(r.groupReserve||[])];
  return {r,actors};
 }
-test('Stage6.39: actual E1/E5/E10 solo normal receives identity boost and groups do not',()=>{
- for(const E of [1,5,10]){
-  const s=native(E,1),roles=s.actors.map(x=>x.role);
-  assert.equal(s.actors.length,1);
-  assert(['tank','skirmisher','caster'].includes(roles[0]),'solo enemy principal');
-  assert.equal(s.actors[0].soloNormalReinforcementApplied,true);
-  for(const size of [2,4,6,12]){
-   const x=native(E,size);assert.equal(x.actors.length,size);
-   for(const a of x.actors)assert.equal(a.soloNormalReinforcementApplied,undefined);
-  }
+test('Native E1/E2/E10 normals have one budget; leaders have none',()=>{
+ for(const E of [1,2,10])for(const size of [1,2,4,8]){
+  const group=native(E,size);assert.equal(group.actors.length,size);
+  assert(group.actors.every(x=>x.normalRoomBudgetApplied));
  }
-});
-test('Stage6.39: no solo normal reinforcement on native Elite/Boss',()=>{
- for(const typ of ['elite','boss'])for(const E of [1,5]){
-  const x=native(E,1,typ);
-  assert.equal(x.actors.length,1);
-  assert.equal(x.actors[0].soloNormalReinforcementApplied,undefined);
+ for(const type of ['boss','elite'])for(const E of [1,10]){
+  const x=native(E,1,type);assert(x.actors.every(a=>!a.normalRoomBudgetApplied));
  }
 });
 test('Stage6.39: complete real 100 profiles x 5 seeds and AoE observational caveats',()=>{
