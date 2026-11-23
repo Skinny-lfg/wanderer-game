@@ -154,8 +154,10 @@ function phase1StartWave(resetScroll=false){
  // Stage 6.37: full HP/ATK for Minions, conditional relief for non-Minions
  // ONLY in normal mixed 5+ groups; also count reserve Minions.
  // A stat-only calibration deliberately isolates identity coefficients.
- if(!statOnly&&!g.selected.boss&&!g.selected.elite)
+ if(!statOnly&&!g.selected.boss&&!g.selected.elite){
+  WandererV012CombatCore.applyNormalRoomMinionProfile(group);
   WandererV012CombatCore.applyMinionEscortRelief(group);
+ }
  const traits=globalThis.WandererV013EncounterTraits;
  const modifiers=globalThis.WandererV013BossModifiers;
  const preparation=globalThis.WandererV013BossPreparation;
