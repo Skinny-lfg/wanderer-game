@@ -1,0 +1,27 @@
+name: Stage 6.44 — Native Weapon AoE Mechanics Contract (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths:
+      - '.github/workflows/v013-stage644-weapon-contract.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Test isolated weapon and Grave Bloom scenarios
+        run: |
+          node --check scripts/v013-stage644-e10-lab.cjs
+          node --check tests/v013-stage644-weapon-lab.test.cjs
+          node --test tests/v013-stage644-weapon-lab.test.cjs
+          cmp combat/v012-combat-runtime.js docs/combat/v012-combat-runtime.js
+          cmp combat/v012-buildcraft.js docs/combat/v012-buildcraft.js
+          git diff --check
