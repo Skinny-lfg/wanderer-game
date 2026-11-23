@@ -21,7 +21,7 @@ test('S1 profiles only target actual v15 talent nodes and valid earned Magic bra
   }
  }
 });
-test('v15 reset refunds node investments without a manual primary-attribute mechanic',()=>{
+test('v15 reset refunds talent nodes while preserving earned permanent post-cap attributes',()=>{
  let p={...T.create(),xp:1000};
  p=T.allocate(p,'root_blood');
  assert(p);
@@ -30,9 +30,15 @@ test('v15 reset refunds node investments without a manual primary-attribute mech
  assert.equal(q.xp,p.xp);
  assert.equal(T.earned(q),T.earned(p));
  assert.equal(T.valid(q),true);
- assert.equal(Object.hasOwn(q,'attributes'),false);
- assert.equal(typeof T.attributePoints,'undefined');
- assert.equal(typeof T.allocateAttribute,'undefined');
+ assert.deepEqual(q.attributes,{});
+ assert.equal(T.attributeBudget(q),0);
+ let beyond=T.award(q,9200);
+ beyond=T.allocateAttribute(beyond,'end');
+ assert(beyond);
+ const retained=T.reset(beyond);
+ assert.equal(retained.attributes.end,1);
+ assert.equal(retained.xp,beyond.xp);
+ assert(T.valid(retained));
 });
 test('classify natural physical, caster, agility and multi-affinity loadouts',()=>{
  const item=(slot,subtype,armorType,stats={})=>({slot,subtype,armorType,stats});
