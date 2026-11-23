@@ -96,3 +96,15 @@ test('Stage6.30 API rejects unknown profiles and unsafe output, never synthesize
  assert.throws(()=>C.parse(['--max-total-attempts=10000']));
  assert.throws(()=>C.aggregate([]),/Missing/);
 });
+
+test('Bounded native unresolved combat is censored, non-timeout engine faults still fail',()=>{
+ const v={coverage:{errors:1},accounts:[{attempts:[
+  {level:5,attempt:2,error:'Native combat timeout'}]}]};
+ assert.deepEqual(C.timeoutClassification(v,9861,'balanced'),
+  [{E:5,attempt:2,error:'Native combat timeout'}]);
+ assert.throws(()=>C.timeoutClassification({...v,accounts:[{attempts:[
+  {level:5,attempt:2,error:'Invariant broken'}]}]},9861,'balanced'),
+  /Unexpected native error/);
+ assert.throws(()=>C.timeoutClassification({...v,coverage:{errors:2}},9861,'balanced'),
+  /Unexpected native error/);
+});
