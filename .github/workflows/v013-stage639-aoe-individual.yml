@@ -1,0 +1,107 @@
+name: Wanderer Stage 6.39 — actual AoE groups, solo normals, individual Elite/Boss calibration
+on:
+  push:
+    branches: [balance/v013-stage639-aoe-solo-individual-calibration-20261123]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: stage639-aoe-calibration-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  preflight:
+    name: Solo/Elite/Boss native tests plus full v0.13 regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 110
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Validate individual identity coefficients and actual native encounter spawning
+        run: |
+          node --check scripts/v013-stage639-aoe-diagnostic.cjs
+          node --test tests/v013-stage639-solo-aoe-individual.test.cjs tests/v013-stage638-minion-three-phase.test.cjs tests/v013-stage638-natural-rates.test.cjs tests/v013-stage637-minion-principal-elite-bases.test.cjs tests/v013-stage634-earned-growth.test.cjs tests/v013-stage636-combat-perceptibility.test.cjs tests/v013-stage633-fixed-bases.test.cjs
+          git diff --check
+      - name: Complete v0.13 native and UI regression
+        run: npm test
+      - name: Genuine AoE-traced E1-born character smoke
+        run: >-
+          node scripts/v013-stage639-aoe-diagnostic.cjs
+          --batch=0 --seed=9861 --take=1 --max-level=2
+          --max-attempts=6 --max-total-attempts=12
+          --out=reports/v013-stage639-smoke.json
+      - name: Validate AoE provenance and no synthetic E unlock
+        run: |
+          node -e "const d=require('./reports/v013-stage639-smoke.json');if(d.stage!=='6.39'||d.accounts.length!==1||!d.accounts[0].reached.includes(1)||d.accounts[0].rooms.some(r=>!Number.isInteger(r.initialMinions)||typeof r.aoePotential!=='boolean'||!Number.isFinite(r.secondaryTargetDamage)))process.exit(1)"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage639-native-aoe-smoke
+          path: reports/v013-stage639-smoke.json
+          retention-days: 45
+          if-no-files-found: warn
+  cohort:
+    name: Stage6.39 earned AoE + Elite/Boss batch ${{ matrix.batch }} / seed ${{ matrix.seed }}
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-stage639-full]')
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        batch: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+        seed: [9861, 9863, 9865, 9867, 9869]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Native real E1-born E1–E5 fights, actual AoE/weapon/skills/Minions/per-Boss
+        run: >-
+          node scripts/v013-stage639-aoe-diagnostic.cjs
+          --batch=${{ matrix.batch }} --seed=${{ matrix.seed }}
+          --take=5 --max-level=5 --max-attempts=12 --max-total-attempts=60
+          --out=reports/v013-stage639-diagnostic-${{ matrix.batch }}-${{ matrix.seed }}.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage639-cohort-${{ matrix.batch }}-${{ matrix.seed }}
+          path: reports/v013-stage639-diagnostic-${{ matrix.batch }}-${{ matrix.seed }}.json
+          retention-days: 45
+          if-no-files-found: warn
+  aggregate:
+    name: Exactly 500 E1-born, native AoE-vs-ST groups and 14 enemy identities
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-stage639-full]')
+    needs: cohort
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage639-cohort-*
+          merge-multiple: true
+          path: reports/stage639-shards
+      - name: Reject duplicate, incomplete, synthetic or mixed native E1-born reports
+        run: >-
+          node scripts/v013-stage639-aoe-diagnostic.cjs
+          --mode=aggregate --inputs=reports/stage639-shards
+          --out=reports/v013-stage639-aggregate.json
+      - name: Verify 500 accounts, 8 Elites, 6 Bosses, AoE data and E1–E5
+        run: |
+          node -e "const d=require('./reports/v013-stage639-aggregate.json');if(d.cohort.accounts!==500||d.levels.length!==5||d.levels[0].accountsReached!==500||Object.keys(d.levels[0].byElite).length!==8||Object.keys(d.levels[0].byBoss).length!==6||!d.levels[0].groups.swarm.aoe)process.exit(1)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage639-real-500-aoe-groups-solo-8elites-6bosses
+          path: |
+            reports/v013-stage639-aggregate.json
+            reports/v013-stage639-aggregate.md
+          retention-days: 45
