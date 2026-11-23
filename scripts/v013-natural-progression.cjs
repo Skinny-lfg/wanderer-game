@@ -956,6 +956,11 @@ function fightNatural(a,profile,tickLimit,context={}){
  if(!r||r.status!=='fight')throw Error('Combat entry missing');
  const startedAt=r.combatSeconds||0;
  const start=r.hp,first=r.encounterLeader||r.enemy,initial=r.totalMobCount||r.initialMobCount||r.enemies?.length||1;
+ const fullInitialRoster=[...(r.enemies?.length?r.enemies:[r.enemy]),...(r.groupReserve||[])];
+ const initialMinions=fullInitialRoster.filter(e=>e?.role==='minion').length;
+ const initialNormals=fullInitialRoster.filter(e=>e&&!e.boss&&!e.miniboss&&e.role!=='minion').length;
+ const initialRoleCounts=Object.fromEntries(['minion','tank','skirmisher','caster'].map(role=>
+  [role,fullInitialRoster.filter(e=>e?.role===role).length]));
  const aoeNodes=['fan_of_blades','cleave_mastery','bow_pierce','mace_shockwave','sword_sweep','overcharge','storm_mastery','fire_spread','frost_spread','plague_spread'];
  const actualNodes=[...(a.state().automaticTalents?.nodes||[])];
  const actualWeapon=a.state().equip?.weapon?.subtype||null,actualOffhand=a.state().equip?.offhand?.subtype||null;
@@ -1013,6 +1018,7 @@ function fightNatural(a,profile,tickLimit,context={}){
  return {
   preparedId,preparedActivations:preparedId?Number(r.outerUses?.[preparedId]||0):0,
   kind:first?.boss?'boss':first?.miniboss?'elite':'combat',initialEnemies:initial,
+  initialMinions,initialNormals,initialRoleCounts,
   aoePotential,aoeTalentIds:aoePrepared,actualWeapon,actualOffhand,actualElement,
   secondaryTargetDamage:Math.round(measured('secondaryTargetDamage')),
   secondaryTargetHits:Math.round(measured('secondaryTargetHits')),
