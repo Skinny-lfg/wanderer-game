@@ -155,6 +155,7 @@ function phase1StartWave(resetScroll=false){
  // ONLY in normal mixed 5+ groups; also count reserve Minions.
  // A stat-only calibration deliberately isolates identity coefficients.
  if(!statOnly&&!g.selected.boss&&!g.selected.elite){
+  WandererV012CombatCore.applySoloNormalReinforcement(group);
   WandererV012CombatCore.applyNormalRoomMinionProfile(group);
   WandererV012CombatCore.applyMinionEscortRelief(group);
  }
