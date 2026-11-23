@@ -62,37 +62,43 @@ const NORMAL_BASE=Object.freeze({
 // Six Boss identity bases replace the former E1 protection + 2x generic
 // boss multiplier. Their raw coefficients no longer depend on Expedition E.
 const BOSS_BASE=Object.freeze({
- leech:Object.freeze({hp:1.31,atk:1.62,def:2,interval:1.62}),
- matriarch:Object.freeze({hp:1.22,atk:1.54,def:2,interval:1.62}),
- guardian:Object.freeze({hp:1.58,atk:1.75,def:2,interval:1.62}),
- conductor:Object.freeze({hp:1.38,atk:1.59,def:2,interval:1.62}),
- berserker:Object.freeze({hp:1.43,atk:1.58,def:2,interval:1.62}),
+ leech:Object.freeze({hp:1.38,atk:1.65,def:2,interval:1.62}),
+ matriarch:Object.freeze({hp:1.65,atk:1.90,def:2,interval:1.62}),
+ guardian:Object.freeze({hp:1.90,atk:2.00,def:2,interval:1.62}),
+ conductor:Object.freeze({hp:1.75,atk:1.93,def:2,interval:1.62}),
+ berserker:Object.freeze({hp:1.43,atk:1.75,def:2,interval:1.62}),
  devourer:Object.freeze({hp:1.85,atk:1.91,def:2,interval:1.62})
 });
-// Sparse opening-Expedition adjustments retain each leader's native abilities.
-// Stage 6.40 candidate: E1 Elite budgets remain individual and explicit.
-// Normal progression uses index.html's bases; the opening budgets are NOT
-// blanket multipliers. See the Stage 6.40 candidate diagnostics for rates.
-const FIRST_EXPEDITION_ELITES=Object.freeze({
- tank:{hp:1.78,atk:.75,interval:1.85},
- berserker:{atk:1.01,interval:1.65},
- vampire:{atk:.84},
- caster:{hp:1.07,atk:1.07},
- gravecaller:{hp:1.04},
- oathbound_exarch:{hp:1.18,atk:.87},
- briarspine_horror:{hp:1.80,atk:1.18,interval:1.72},
- ashen_executioner:{hp:1.16,atk:1.00,interval:2.27}
+// Stage 6.42: two absolute leader budgets, not a buff layered on top
+// of E1/E10 values. One smooth interpolation bridges the opening's
+// limited gear and talents to mature E10 builds; E11+ stays fixed.
+// Retires the abrupt E1-only overrides responsible for E1→E2 jumps.
+const OPENING_ELITE_BASE=Object.freeze({
+ tank:{hp:1.78,atk:.75,def:1.19,interval:1.85},
+ berserker:{hp:.89,atk:1.01,def:.90,interval:1.65},
+ vampire:{hp:1.19,atk:.84,def:1.04,interval:1.56},
+ caster:{hp:1.07,atk:1.07,def:.92,interval:1.64},
+ gravecaller:{hp:1.04,atk:.76,def:.86,interval:1.80},
+ oathbound_exarch:{hp:1.18,atk:.87,def:1.18,interval:1.95},
+ briarspine_horror:{hp:1.80,atk:1.18,def:1.04,interval:1.72},
+ ashen_executioner:{hp:1.16,atk:1.00,def:.93,interval:2.27}
 });
-const FIRST_EXPEDITION_BOSSES=Object.freeze({
- leech:{hp:1.77,interval:1.43},
- matriarch:{hp:1.66,atk:1.78},
- guardian:{hp:1.68,interval:1.56},
- conductor:{hp:1.55,atk:1.76},
- berserker:{atk:1.60,interval:1.61}
+const OPENING_BOSS_BASE=Object.freeze({
+ leech:{hp:1.77,atk:1.62,def:2,interval:1.43},
+ matriarch:{hp:1.66,atk:1.78,def:2,interval:1.62},
+ guardian:{hp:1.68,atk:1.75,def:2,interval:1.56},
+ conductor:{hp:1.55,atk:1.76,def:2,interval:1.62},
+ berserker:{hp:1.43,atk:1.60,def:2,interval:1.61},
+ devourer:{hp:1.85,atk:1.91,def:2,interval:1.62}
 });
-function firstExpeditionLeader(base,style,elite){
- const override=style?FIRST_EXPEDITION_BOSSES[style]:FIRST_EXPEDITION_ELITES[elite];
- return override?{...base,...override}:base;
+function leaderIdentityBudget(mature,expedition,style,eliteId){
+ checked(expedition);
+ const opening=style?OPENING_BOSS_BASE[style]:OPENING_ELITE_BASE[eliteId];
+ if(!opening||expedition>=10)return mature;
+ const t=(expedition-1)/9,weight=t*t*(3-2*t),out={...mature};
+ for(const stat of ['hp','atk','def','interval'])
+  out[stat]=opening[stat]*(1-weight)+mature[stat]*weight;
+ return out;
 }
 const ELITE_IDENTITIES=Object.freeze([
  'tank','berserker','vampire','caster','gravecaller','oathbound_exarch',
@@ -113,6 +119,7 @@ function enemyScaling(level,kind,identity=null){
 }
 root.WandererExpeditionProgression=Object.freeze({
  tiers,gearTier,enemyReference,ENEMY_EXPONENTIAL_GROWTH,
- NORMAL_BASE,BOSS_BASE,ELITE_IDENTITIES,CALIBRATION_STAT_ONLY,enemyScaling,firstExpeditionLeader
+ NORMAL_BASE,BOSS_BASE,ELITE_IDENTITIES,CALIBRATION_STAT_ONLY,enemyScaling,
+ OPENING_ELITE_BASE,OPENING_BOSS_BASE,leaderIdentityBudget
 });
 })(globalThis);
