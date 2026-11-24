@@ -1,0 +1,69 @@
+name: Decay consolidated — native gameplay validation (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths: ['combat/v012-buildcraft.js','combat/talent-graph-next.js','combat/talent-graph-runtime.js','tests/v013-stage647d8-decay.test.cjs','scripts/v013-decay-consolidated.cjs','.github/workflows/v013-decay-consolidated.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node --test tests/v013-stage647d8-decay.test.cjs tests/v013-stage3-vitality-decay.test.cjs tests/talent-graph-combat.test.cjs
+      - run: node scripts/v013-decay-consolidated.cjs smoke
+  regression:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: npm test
+  cohort:
+    needs: [gate, regression]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        id: ["cycle-daggers", "focus-daggers", "cycle-sword", "focus-sword", "cycle-twohand", "focus-twohand", "cycle-bow", "focus-bow", "cycle-wand", "focus-wand", "cycle-staff", "focus-staff", "blood-daggers", "blood-twohand", "magic-sword", "magic-wand"]
+        revision: [before, after]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - if: matrix.revision == 'before'
+        run: |
+          cp scripts/v013-decay-consolidated.cjs /tmp/decay-consolidated.cjs
+          git checkout f7ab60cf27a666f2497f3c2d6b86f132401f72b8
+          cp /tmp/decay-consolidated.cjs scripts/v013-decay-consolidated.cjs
+      - run: npm ci
+      - run: node scripts/v013-decay-consolidated.cjs run "${{ matrix.id }}"
+      - run: mkdir -p results/${{ matrix.revision }} && cp reports/decay-consolidated/*.json results/${{ matrix.revision }}/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: decay-consolidated-${{ matrix.revision }}-${{ matrix.id }}
+          path: results/
+  aggregate:
+    needs: cohort
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: decay-consolidated-*
+          path: reports/decay-consolidated
+          merge-multiple: true
+      - run: node scripts/v013-decay-consolidated.cjs aggregate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: decay-consolidated-report
+          path: reports/v013-decay-consolidated.json

@@ -64,21 +64,21 @@ test('retired Toxic Precision is absent from current v15 and Buildcraft source, 
  assert(!B.CATALOG.some(n=>n.id==='toxic_precision'));
  assert(!fs.readFileSync('combat/v012-buildcraft.js','utf8').includes('toxic_precision'));
 });
-test('real v15 Decay Toxic Touch scales Rot with hit and Spell Power; costs one Mana and retains cooldown',()=>{
+test('real v15 Decay Toxic Touch scales Rot with hit and Spell Power; costs four Mana and retains cooldown',()=>{
  const damage=[];
  for(const power of [0,100,200]){
   const b=build(['affinity_decay']),x=context({power,mp:10,base:100});
   x.c.random=()=>0;
   B.onAttack(b,x.c);
   assert.equal(x.enemy.v012Rot.length,1);
-  assert.equal(x.player.mp,9,'one Mana for each successful application');
+  assert.equal(x.player.mp,6,'four Mana for each successful application');
   damage.push(x.enemy.v012Rot[0].damage);
   x.c.now=1;B.onAttack(b,x.c);
   assert.equal(x.enemy.v012Rot.length,1,'1.3s internal cooldown');
-  assert.equal(x.player.mp,9,'no Mana cost on cooldown');
+  assert.equal(x.player.mp,6,'no Mana cost on cooldown');
   x.c.now=1.3;B.onAttack(b,x.c);
   assert.equal(x.enemy.v012Rot.length,2);
-  assert.equal(x.player.mp,8);
+  assert.equal(x.player.mp,2);
   x.player.mp=0;x.c.now=3;B.onAttack(b,x.c);
   assert.equal(x.enemy.v012Rot.length,2,'no free Rot at zero Mana');
  }
@@ -106,7 +106,7 @@ test('Stage 3 generated Pages and active node descriptions have no retired fixed
  const craft=fs.readFileSync('combat/v012-buildcraft.js','utf8');
  assert(tree.includes('0.15% maximum Health per combat second'));
  assert(!tree.includes('Regenerate 0.2 Health per second during combat.'));
- assert(craft.includes('6.5% base hit damage plus 2.5% Spell Power'));
+ assert(craft.includes('4% of base weapon damage plus Spell Power combined'));
  assert(!craft.includes('toxic_precision'));
 });
 
