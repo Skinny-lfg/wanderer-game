@@ -1,0 +1,57 @@
+name: Stage 6.48C.2E.1 — Mana calibration and funded Plagueheart (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths: ['.github/workflows/v013-stage648c2e1-mana-calibration.yml','scripts/v013-stage648c2e1-mana-calibration.cjs','tests/v013-stage648c2e1-mana-calibration.test.cjs']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node --test tests/v013-stage648c2e1-mana-calibration.test.cjs tests/v013-stage648c2e-rot-mana.test.cjs
+      - run: node scripts/v013-stage648c2e1-mana-calibration.cjs smoke
+  cohort:
+    needs: gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        id: ["decay-daggers", "decay-sword", "decay-twohand", "decay-bow", "decay-wand", "decay-staff", "arcane-sword", "arcane-wand", "arcane-staff", "fire-sword", "fire-wand", "fire-staff", "frost-sword", "frost-wand", "frost-staff", "lightning-sword", "lightning-wand", "lightning-staff", "focus-daggers", "focus-sword", "focus-twohand", "focus-bow", "focus-wand", "focus-staff", "hybrid-blood-daggers", "hybrid-blood-twohand", "hybrid-magic-sword", "hybrid-magic-wand"]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node scripts/v013-stage648c2e1-mana-calibration.cjs run "${{ matrix.id }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage648c2e1-${{ matrix.id }}
+          path: reports/stage648c2e1/*.json
+  aggregate:
+    needs: cohort
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage648c2e1-*
+          path: reports/stage648c2e1
+          merge-multiple: true
+      - run: node scripts/v013-stage648c2e1-mana-calibration.cjs aggregate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage648c2e1-report
+          path: reports/v013-stage648c2e1-mana-calibration.json
