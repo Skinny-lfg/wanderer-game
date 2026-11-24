@@ -1,0 +1,86 @@
+name: Stage 6.47D.5 — Architecture integration (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths: ['.github/workflows/v013-stage647d5-architecture.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  contracts:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node --test tests/v013-stage647d5-architecture.test.cjs tests/v013-stage647c-native-grave-bloom.test.cjs tests/v013-capture-assistance.test.cjs
+      - run: git diff --exit-code
+  regression:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: npm test
+      - run: git diff --exit-code
+  browser:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Capture actual game tab and test locked nodes
+        run: |
+          node <<'JS'
+          const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
+          const {execFileSync}=require('node:child_process'),{chromium}=require('playwright');
+          (async()=>{
+           const prefix='Isolated automatic RPG preview: ',output=execFileSync(process.execPath,['scripts/prepare-automatic-preview.mjs'],{encoding:'utf8'}).trim();
+           assert(output.startsWith(prefix));const root=path.resolve(output.slice(prefix.length));
+           const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.webp':'image/webp','.svg':'image/svg+xml','.woff2':'font/woff2','.woff':'font/woff','.ttf':'font/ttf','.gif':'image/gif'};
+           const server=http.createServer((req,res)=>{
+            const u=new URL(req.url,'http://127.0.0.1'),f=path.resolve(root,'.'+(u.pathname==='/'?'/index.html':decodeURIComponent(u.pathname)));
+            if(!f.startsWith(root+path.sep))return res.writeHead(403).end();
+            fs.readFile(f,(err,data)=>{if(err)return res.writeHead(404).end();res.writeHead(200,{'Content-Type':mime[path.extname(f)]||'application/octet-stream'}).end(data);});
+           });
+           await new Promise(r=>server.listen(0,'127.0.0.1',r));
+           const browser=await chromium.launch({headless:true});
+           try{
+            const page=await browser.newPage({viewport:{width:1920,height:1080},deviceScaleFactor:1}),errors=[];
+            page.on('pageerror',e=>errors.push(e.message));
+            await page.goto('http://127.0.0.1:'+server.address().port,{waitUntil:'load'});
+            await page.getByRole('button',{name:'Talents',exact:true}).click();
+            const frame=page.frameLocator('iframe[title="Talent tree"]');
+            await frame.locator('#nodes .node').first().waitFor({timeout:30000});
+            assert.equal(await page.evaluate(()=>WandererAutomaticTalents.NODES.length),419);
+            assert.equal(await frame.locator('#nodes .node').count(),419);
+            assert.equal(await frame.locator('#nodes .node.pending-talent').count(),52);
+            fs.mkdirSync('reports/stage647d5',{recursive:true});
+            await frame.getByRole('button',{name:'Full tree',exact:true}).click();
+            await page.screenshot({path:'reports/stage647d5/full.png',animations:'disabled'});
+            await frame.getByRole('button',{name:'Magic',exact:true}).click();
+            await frame.locator('[data-id="arcane_nova"]').click();
+            assert((await frame.locator('#description').innerText()).includes('COMING SOON'));
+            assert(await frame.getByRole('button',{name:'Invest 1 point',exact:true}).isDisabled());
+            assert((await frame.locator('#requirements').innerText()).includes('6 points'));
+            await page.screenshot({path:'reports/stage647d5/magic.png',animations:'disabled'});
+            await frame.getByRole('button',{name:'Aegis',exact:true}).click();
+            await frame.locator('[data-id="ward_echo"]').click();
+            assert(await frame.getByRole('button',{name:'Invest 1 point',exact:true}).isDisabled());
+            await page.screenshot({path:'reports/stage647d5/aegis.png',animations:'disabled'});
+            assert.deepEqual(errors,[]);
+            console.log('STAGE647D5_BROWSER_OK');
+           }finally{await browser.close();await new Promise(r=>server.close(r));}
+          })().catch(e=>{console.error(e);process.exitCode=1;});
+          JS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage647d5-native-talent-tree
+          path: reports/stage647d5/*.png
