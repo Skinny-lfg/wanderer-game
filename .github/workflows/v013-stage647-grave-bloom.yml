@@ -1,0 +1,96 @@
+name: Stage 6.47 — Shared Grave Bloom candidate lab (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths: ['.github/workflows/v013-stage647-grave-bloom.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Validate both isolated source transformations
+        env:
+          STAGE647_ISOLATED: '1'
+        run: |
+          for v in baseline balanced strong; do
+            node scripts/v013-stage647-grave-bloom-lab.cjs "$v" --preflight
+            git restore -- combat/v012-combat-runtime.js combat/v012-buildcraft.js docs/combat/v012-combat-runtime.js docs/combat/v012-buildcraft.js scripts/simulate-progression.cjs
+          done
+          git diff --exit-code
+  replay:
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        shard: [0, 1]
+        variant: [baseline, balanced, strong]
+        profile: [magic-decay-bloom, decay-blood-spread]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45272938568
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: stage642-snapshot-${{ matrix.profile }}
+          path: reports/stage647/snapshots
+      - name: Native matched encounters with legal prepared Grave Bloom
+        env:
+          STAGE647_ISOLATED: '1'
+          PROFILE: ${{ matrix.profile }}
+          VARIANT: ${{ matrix.variant }}
+          SHARD: ${{ matrix.shard }}
+        run: |
+          node scripts/v013-stage647-grave-bloom-lab.cjs "$VARIANT" "$PROFILE" "$SHARD" "reports/stage647/snapshots/$PROFILE.json" "reports/stage647/shards/$PROFILE-$VARIANT-$SHARD.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage647-${{ matrix.profile }}-${{ matrix.variant }}-${{ matrix.shard }}
+          path: reports/stage647/shards/*.json
+          if-no-files-found: error
+  aggregate:
+    needs: replay
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage647-*
+          merge-multiple: true
+          path: reports/stage647/shards
+      - run: |
+          node <<'JS'
+          const fs=require('node:fs'),dir='reports/stage647/shards',parts=fs.readdirSync(dir).map(f=>JSON.parse(fs.readFileSync(dir+'/'+f)));
+          if(parts.length!==12)throw Error('Incomplete matrix');
+          const summary=[];
+          for(const profile of ['magic-decay-bloom','decay-blood-spread'])for(const variant of ['baseline','balanced','strong']){
+            const p=parts.filter(x=>x.profile===profile&&x.variant===variant),b=parts.filter(x=>x.profile===profile&&x.variant==='baseline');
+            if(p.length!==2||b.length!==2||JSON.stringify(p[0].entrants)!==JSON.stringify(b[0].entrants)||JSON.stringify(p[0].entrants)!==JSON.stringify(p[1].entrants))throw Error('Actor drift');
+            const rows=p.flatMap(x=>x.rows),old=b.flatMap(x=>x.rows);
+            for(const r of rows){const m=old.find(x=>x.seed===r.seed&&x.actor===r.actor&&x.size===r.size);if(!m||m.roster!==r.roster||m.gear!==r.gear||m.xp!==r.xp)throw Error('Mismatch '+profile);}
+            const groups=[1,4,8,12].map(size=>{
+              const a=rows.filter(x=>x.size===size),sum=f=>a.reduce((n,x)=>n+(f(x)||0),0),effects={};
+              if(a.length!==100||new Set(a.map(x=>x.seed)).size!==100)throw Error('Missing seeds');
+              for(const r of a)for(const [k,v] of Object.entries(r.effects))effects[k]=(effects[k]||0)+v;
+              return {size,n:a.length,wins:a.filter(x=>x.won).length,timeouts:a.filter(x=>x.timeout).length,secondary:sum(x=>x.secondary),dot:sum(x=>x.dot),funded:sum(x=>x.funded),infusion:sum(x=>x.infusion),mana:sum(x=>x.mana),effects};
+            });
+            summary.push({profile,variant,actors:p[0].entrants.map(x=>({seed:x.seed,weapon:x.weapon,offhand:x.offhand,points:x.points})),groups});
+          }
+          fs.writeFileSync('reports/stage647/results.json',JSON.stringify(summary,null,2));
+          console.log('STAGE647_MATRIX='+JSON.stringify(summary));
+          JS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage647-results
+          path: reports/stage647/results.json
