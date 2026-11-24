@@ -42,12 +42,12 @@ test('every stat slot has one direct stat; skill gates are relevant and attribut
   assert.equal(fields.filter(k=>n[k]!==undefined).length,1,n.id);
   for(const k of ['attribute','attributeValue','flatSpeed','flatMana','flatRegen','startBarrier'])assert.equal(n[k],undefined,n.id);
  }
- for(const [id,key] of Object.entries({precision:'critChance',brutal_crit:'critChance',adrenaline:'critChance',sanguine_fury:'critChance',crimson_rush:'critChance',fervent_life:'critChance',quick_hands:'pctSpeed',guarded_block:'guardChance',retaliation:'guardChance',barrier_pulse:'barrierPower',blood_drinker:'healingPower',efficient_cast:'manaCostReduction',blight:'pctSpell',wasting_curse:'rotDefense',ward_echo:'barrierPower'})){
+ for(const [id,key] of Object.entries({precision:'critChance',brutal_crit:'critChance',adrenaline:'critChance',sanguine_fury:'critChance',crimson_rush:'critChance',fervent_life:'critChance',quick_hands:'pctSpeed',guarded_block:'guardChance',retaliation:'barrierPower',barrier_pulse:'barrierPower',blood_drinker:'healingPower',efficient_cast:'manaCostReduction',blight:'pctSpell',wasting_curse:'rotDefense',arcane_echo:'pctSpell',spell_echo:'pctSpell',crimson_feast:'pctSpeed',relentless:'pctSpeed',guardians_oath:'healingPower',stored_force:'guardChance',fury_recovery:'pctLife',ward_echo:'pctArmor'})){
   assert(graph.find(n=>n.id==='gate_'+id)?.[key]>0,id);
  }
  for(const key of ['pctAttack','pctSpell','rotBonus','pctMana','pctRegen','manaCostReduction'])assert(graph.some(n=>n.family==='decay'&&n[key]>0),key);
  assert(graph.some(n=>n.family==='aegis'&&n.pctSpell>0));
- assert(graph.some(n=>n.family==='fury'&&n.flatAvoid>0));
+ assert(graph.some(n=>n.family==='fury'&&n.flatAvoid>0));assert(graph.some(n=>n.family==='decay'&&n.flatAvoid>0));
 });
 test('Guard works without shield, and new stat caps and bonuses are direct',()=>{
  const graph=[{id:'a',guardChance:2,barrierPower:.04,healingPower:.02,manaCostReduction:.40}],p={points:1,ranks:{a:1}};

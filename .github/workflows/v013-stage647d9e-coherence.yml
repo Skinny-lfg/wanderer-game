@@ -37,3 +37,5 @@ jobs:
         with:
           name: coherence-${{ matrix.profile }}
           path: reports/coherence-*
+
+# Refined gates based on actual triggers rather than thematic affinity.

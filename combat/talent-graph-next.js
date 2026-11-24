@@ -9,13 +9,13 @@ const NEW_MIXED={fury_recovery:{name:'Fury Recovery',icon:'❤',description:'Pre
 const STAT_NAMES={pctAttack:'Attack Power',pctArmor:'Defense',pctLife:'Maximum HP',pctSpell:'Spell Power',pctSpeed:'Attack Speed',pctMana:'Maximum Mana',pctRegen:'Mana Regeneration',critChance:'Critical Chance',flatAvoid:'Evasion Rating',guardChance:'Guard Chance',barrierPower:'Barrier Power',healingPower:'Healing Power',manaCostReduction:'Mana Cost Reduction',bleedBonus:'Bleed Damage',rotBonus:'Rot Damage',rotDefense:'enemy Defense reduction while Rot is active',sunderDamage:'damage against Sundered enemies',healthRegen:'Max HP regeneration per second'};
 const ROOT_STAT={blood:'pctAttack',fury:'pctAttack',vitality:'pctLife',aegis:'pctArmor',magic:'pctSpell',decay:'pctAttack'};
 const SKILL_STAT={
- bleeding_edge:'bleedBonus',deep_cuts:'bleedBonus',executioner:'pctAttack',blood_drinker:'healingPower',sanguine_fury:'critChance',blood_transfer:'bleedBonus',blood_harvest:'healingPower',crimson_feast:'healingPower',heart_of_carnage:'pctAttack',accelerated_bleeding:'bleedBonus',cleave_mastery:'pctAttack',sanguine_reserve:'healingPower',
- quick_hands:'pctSpeed',precision:'critChance',brutal_crit:'critChance',double_strike:'pctSpeed',adrenaline:'critChance',relentless:'sunderDamage',battle_tempo:'pctSpeed',relentless_assault:'sunderDamage',unchained_fury:'pctAttack',fan_of_blades:'pctSpeed',bow_pierce:'pctAttack',single_target_mastery:'pctAttack',
- strong_heart:'pctLife',renewal:'healthRegen',last_stand:'pctLife',second_breath:'healingPower',life_bloom:'healingPower',second_pulse:'healthRegen',living_recovery:'healingPower',overflowing_life:'barrierPower',heart_of_the_wild:'pctLife',vital_pulse:'pctLife',living_force:'healingPower',grasping_roots:'pctLife',
- guarded_block:'guardChance',barrier_pulse:'barrierPower',brace:'pctArmor',iron_skin:'pctArmor',fortified:'pctArmor',retaliation:'guardChance',steadfast_guard:'guardChance',stored_force:'pctArmor',unbreakable:'barrierPower',ward_echo:'barrierPower',sword_sweep:'pctArmor',mace_shockwave:'pctArmor',
+ bleeding_edge:'bleedBonus',deep_cuts:'bleedBonus',executioner:'pctAttack',blood_drinker:'healingPower',sanguine_fury:'critChance',blood_transfer:'bleedBonus',blood_harvest:'healingPower',crimson_feast:'pctSpeed',heart_of_carnage:'pctAttack',accelerated_bleeding:'bleedBonus',cleave_mastery:'pctAttack',sanguine_reserve:'healingPower',
+ quick_hands:'pctSpeed',precision:'critChance',brutal_crit:'critChance',double_strike:'pctSpeed',adrenaline:'critChance',relentless:'pctSpeed',battle_tempo:'pctSpeed',relentless_assault:'sunderDamage',unchained_fury:'pctAttack',fan_of_blades:'pctSpeed',bow_pierce:'pctAttack',single_target_mastery:'pctAttack',
+ strong_heart:'pctLife',renewal:'healthRegen',last_stand:'pctLife',second_breath:'pctLife',life_bloom:'healingPower',second_pulse:'healingPower',living_recovery:'healingPower',overflowing_life:'barrierPower',heart_of_the_wild:'pctLife',vital_pulse:'pctLife',living_force:'healingPower',grasping_roots:'pctLife',
+ guarded_block:'guardChance',barrier_pulse:'barrierPower',brace:'pctArmor',iron_skin:'pctArmor',fortified:'pctArmor',retaliation:'barrierPower',steadfast_guard:'guardChance',stored_force:'guardChance',unbreakable:'barrierPower',ward_echo:'pctArmor',sword_sweep:'pctAttack',mace_shockwave:'pctAttack',
  arcane_focus:'pctSpell',mana_spring:'pctRegen',efficient_cast:'manaCostReduction',arcane_echo:'pctSpell',elemental_force:'pctSpell',spell_echo:'pctSpell',arcane_resonance:'pctSpell',arcane_surge:'pctRegen',arcane_mastery:'pctSpell',arcane_nova:'pctSpell',mana_convergence:'pctMana',kindling:'pctSpell',fire_spread:'pctSpell',combustion:'pctSpell',controlled_burn:'pctSpell',cinder_focus:'pctSpell',deep_winter:'pctSpell',frost_spread:'pctSpell',shatter:'pctSpell',frost_resonance:'pctSpell',glacial_echo:'pctSpell',overcharge:'pctSpell',storm_mastery:'pctSpell',chain_discharge:'pctSpell',static_focus:'pctSpell',storm_conductor:'pctSpell',
  toxic_touch:'rotBonus',virulent_rot:'rotBonus',blight:'pctSpell',wasting_curse:'rotDefense',wither:'rotBonus',incubation:'rotBonus',lingering_rot:'rotBonus',corruption_cycle:'pctSpell',plagueheart:'rotBonus',contagious_touch:'rotBonus',corruption_nova:'rotBonus',soul_drain:'manaCostReduction',
- crimson_rush:'critChance',reapers_cadence:'sunderDamage',red_guillotine:'pctAttack',fervent_life:'critChance',redline:'pctSpeed',fury_recovery:'healingPower',sanctuary:'barrierPower',guardians_oath:'guardChance',last_bastion:'barrierPower',runic_shield:'pctSpell',prismatic_rebound:'barrierPower',arcane_bastion:'pctSpell',hex_bolt:'pctSpell',elemental_blight:'pctSpell',grave_bloom:'pctSpell',plague_spread:'rotBonus',carrion_detonation:'pctAttack',septic_wound:'rotBonus'
+ crimson_rush:'critChance',reapers_cadence:'sunderDamage',red_guillotine:'bleedBonus',fervent_life:'critChance',redline:'pctAttack',fury_recovery:'pctLife',sanctuary:'barrierPower',guardians_oath:'healingPower',last_bastion:'barrierPower',runic_shield:'pctSpell',prismatic_rebound:'barrierPower',arcane_bastion:'pctSpell',hex_bolt:'pctSpell',elemental_blight:'pctSpell',grave_bloom:'pctSpell',plague_spread:'rotBonus',carrion_detonation:'pctAttack',septic_wound:'rotBonus'
 };
 const LANES={
  blood:[['pctAttack','bleedBonus','pctAttack'],['healingPower','critChance','pctSpeed']],
@@ -23,7 +23,7 @@ const LANES={
  vitality:[['pctLife','healthRegen','pctLife'],['healingPower','healingPower','healthRegen']],
  aegis:[['guardChance','barrierPower','pctArmor'],['pctArmor','pctLife','guardChance']],
  magic:[['pctSpell','pctRegen','manaCostReduction'],['pctSpell','pctSpell','pctMana']],
- decay:[['pctAttack','rotBonus','pctSpell'],['rotDefense','pctRegen','rotBonus']]
+ decay:[['pctAttack','rotBonus','pctSpell'],['flatAvoid','pctRegen','flatAvoid']]
 };
 const FOCUS_STAT={
  blood:[['bleedBonus','healingPower','critChance'],['pctSpeed','critChance','pctAttack']],
@@ -38,7 +38,7 @@ const OUTER_STAT={
  fury:{'-1':['critChance','pctAttack'],'1':['pctSpeed','flatAvoid']},
  vitality:{'-1':['healingPower','pctLife'],'1':['pctLife','barrierPower']},
  aegis:{'-1':['pctLife','guardChance'],'1':['pctSpell','barrierPower']},
- magic:{'-1':['pctSpell','barrierPower'],'1':['pctSpell','pctRegen']},
+ magic:{'-1':['pctSpell','barrierPower'],'1':['critChance','pctRegen']},
  decay:{'-1':['pctSpell','pctMana'],'1':['pctAttack','rotBonus']}
 };
 // Per-node values by layer; primary attributes remain rare +1 choices.
@@ -148,9 +148,9 @@ function createGraph(catalog,definitionNodes=[]){
   'decay_blood':{decay:['pctAttack','rotBonus','pctAttack'],blood:['pctAttack','bleedBonus','critChance']}
  };
  const gateOverrides={
-  gate_arcane_echo:'critChance',gate_spell_echo:'critChance',gate_storm_mastery:'pctSpell',
-  gate_reapers_cadence:'bleedBonus',gate_fury_recovery:'critChance',gate_sanctuary:'barrierPower',
-  gate_guardians_oath:'guardChance',gate_mana_convergence:'manaCostReduction'
+  gate_storm_mastery:'pctSpell',
+  gate_reapers_cadence:'bleedBonus',gate_sanctuary:'barrierPower',
+  gate_mana_convergence:'manaCostReduction'
  };
  function statKey(n){
   const t=Math.min(3,Math.max(1,n.tier||1))-1,f=n.family,l=n.lane||0,id=n.id;
