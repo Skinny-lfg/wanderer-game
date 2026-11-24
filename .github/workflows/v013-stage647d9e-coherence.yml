@@ -15,7 +15,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: {node-version: '22', cache: npm}
       - run: npm ci
-      - run: node --test tests/talent-graph-bridge.test.cjs tests/talent-graph-combat.test.cjs tests/v013-stage647d9-magic.test.cjs tests/v013-stage647d8-decay.test.cjs tests/v013-stage647d7-vitality-aegis.test.cjs tests/v013-stage647d6-blood-fury.test.cjs tests/v013-stage647d5-architecture.test.cjs
+      - run: node --test tests/v013-stage647d9e-stat-identity.test.cjs tests/talent-graph-bridge.test.cjs tests/talent-graph-combat.test.cjs tests/v013-stage647d9-magic.test.cjs tests/v013-stage647d8-decay.test.cjs tests/v013-stage647d7-vitality-aegis.test.cjs tests/v013-stage647d6-blood-fury.test.cjs tests/v013-stage647d5-architecture.test.cjs
       - run: npm test
       - run: git diff --exit-code
   progression:
