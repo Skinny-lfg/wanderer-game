@@ -4,12 +4,13 @@ Isolated visual/remote-development sandbox, based on the consolidated browser ch
 
 ## Run
 
-Use Godot 4.4.1 Standard (pinned CI reference; newer Godot 4 versions are not yet validated). Import this directory's project.godot and press F6/F5 (F5 runs the main scene). Click an enemy to select it. The four static enemy images, dungeon backdrop and hero are existing assets copied by blob from the browser snapshot; their orientation and composition have not been visually approved. The hero is a placeholder, not new rear-view art.
+Use Godot 4.4.1 Standard (pinned CI reference; newer Godot 4 versions are not yet validated). Import this directory's project.godot and press F6/F5 (F5 runs the main scene). F5 starts the Camp. Navigate using the bottom tabs or keys 1–6; Escape returns to Camp. Click an enemy on the Combat screen to select it. The four static enemy images, dungeon backdrop and hero are existing assets copied by blob from the browser snapshot; their orientation and composition have not been visually approved. The hero is a placeholder, not new rear-view art.
 
 CLI:
 ```sh
 godot --headless --path godot-prototype --import
 godot --headless --path godot-prototype --script res://tests/arena_smoke.gd
+godot --headless --path godot-prototype --script res://tests/shell_smoke.gd
 ```
 
 ## Architecture and migration boundaries
@@ -26,7 +27,10 @@ godot --headless --path godot-prototype --script res://tests/arena_smoke.gd
 
 ## Milestones
 
-G0: import, run, and select four targets; verify remotely with CI.
-G1: screenshot capture in a virtual display, then visual approval with rear-view hero, perspective and real sprites.
-G2: export stable data catalogs and establish deterministic JS/GDScript comparison fixtures.
-G3: port an approved combat slice only after browser mechanics are frozen.
+G0: isolated arena foundation and remote smoke.
+G1: game shell, six independent screen scenes, native navigation and screenshot pipeline. Five screens are non-interactive presentation mockups; Combat retains G0 selection. Sample items, talent nodes and Codex are not authoritative gameplay. Desktop layout reference: 1280x720. No visual approval yet.
+G2: reusable UI components and visual design system; validate scaling and layouts.
+G3–G8: Camp, Inventory, Talents, Expedition, Combat, animation and transitions.
+G9–G10: only after browser rules are frozen, port and compare mechanics.
+
+Screenshot capture uses a graphical backend, not headless mode. CI uploads the six PNGs as `godot-g1-screenshots`. To capture locally with the graphical Godot executable: `godot --path godot-prototype --script res://tests/capture_screens.gd`.
