@@ -1,0 +1,4 @@
+'use strict';
+const {test}=require('node:test'),assert=require('node:assert/strict'),O=require('../scripts/v013-offense-e10.cjs'),G=require('../scripts/v013-global-e10.cjs');
+test('18 original pure builds, 8 matched encounters, no defensive affinity',()=>{assert.equal(O.IDS.length,18);assert.equal(O.SC.length,8);for(const id of O.IDS){const p=G.profile(id);assert.equal(p.families.length,1);assert.equal(p.t.nodes.length,30);assert(!p.t.nodes.includes('affinity_vitality'));assert(!p.t.nodes.includes('affinity_aegis'));}});
+test('native doubled AP/SP leaves other entry stats and all paired encounter fields unchanged',()=>{for(const id of ['blood-sword','fury-bow','decay-cycle-wand','decay-focus-staff']){const {rows}=O.pair(id,O.SC[0],0);assert.equal(rows.double.stats.attack,rows.pure.stats.attack*2);}});
