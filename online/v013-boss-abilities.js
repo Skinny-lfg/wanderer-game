@@ -20,7 +20,7 @@ function attach(r){
  const e=leader(r),p=profileForStyle(e?.bossStyle);
  if(!e||!r?.bossInfrastructure||!p||r.status!=='fight')return null;
  const now=Number(r.combatSeconds)||0;
- const s=r.stage84Boss={style:p.style,affinity:Object.keys(PROFILES).find(k=>PROFILES[k]===p),thresholds:[],nextAt:now+12,wardAt:now+12,vulnerableUntil:0,
+ const s=r.stage84Boss={style:p.style,affinity:Object.keys(PROFILES).find(k=>PROFILES[k]===p),thresholds:[],triggeredThresholds:[],nextAt:now+12,wardAt:now+12,vulnerableUntil:0,
   weakUntil:0,cancelNext:false,thrallSerial:0,nodeCreated:false};
  const config=p.style==='devourer'?{maxSummons:4,maxTotalHealing:.15,healOnMinionDeath:.05}:
   p.style==='leech'?{maxSummons:2,maxTotalHealing:.20}:
@@ -103,9 +103,10 @@ function tick(r,absoluteNow,infraEvents=[]){
    }
    s.nextAt=now+12;
   }else if(event.id.startsWith('summon_')){
+   if(!s.thresholds.includes(event.id))s.thresholds.push(event.id);
    const kind=s.style==='leech'?'blood':s.style==='devourer'?'vitality':'decay';
    events.push({type:'summon',enemy:e,ability:p.name,kind,count:s.style==='leech'?1:2});s.nextAt=now+1.5;
-  }else if(event.id==='storm_node'){s.nodeCreated=true;events.push({type:'summon',enemy:e,ability:'Convergence Anchor',kind:'node',count:1});s.nextAt=now+1.5;}
+  }else if(event.id==='storm_node'){if(!s.thresholds.includes(event.id))s.thresholds.push(event.id);s.nodeCreated=true;events.push({type:'summon',enemy:e,ability:'Convergence Anchor',kind:'node',count:1});s.nextAt=now+1.5;}
  }
  if(s.style==='guardian'&&now+1e-7>=s.wardAt){
   s.wardAt=now+12;
@@ -121,15 +122,18 @@ function tick(r,absoluteNow,infraEvents=[]){
    events.push({type:'offering',enemy:e,ability:'Blood Offering',minion:mob,healed});
   }
  }
- if((e.stunnedUntil||0)>absoluteNow||r.bossInfrastructure?.cast)return events;
  const thresholdPlans=s.style==='leech'?[[.70,'summon_70',1],[.35,'summon_35',1]]:
   s.style==='matriarch'?[[.75,'summon_75',2],[.40,'summon_40',2]]:
   s.style==='devourer'?[[.70,'summon_70',2],[.35,'summon_35',2]]:
   s.style==='conductor'?[[.65,'storm_node',1]]:[];
- for(const [fraction,id,count] of thresholdPlans){
-  if(e.hp>e.maxhp*fraction||s.thresholds.includes(id))continue;
+ // Crossing an HP threshold latches its mechanic, even if a later heal raises HP.
+ // Only a successfully completed cast consumes it; interrupted attempts keep their native retry cooldown.
+ for(const [fraction,id] of thresholdPlans)if(e.hp<=e.maxhp*fraction&&!s.triggeredThresholds.includes(id))s.triggeredThresholds.push(id);
+ if((e.stunnedUntil||0)>absoluteNow||r.bossInfrastructure?.cast)return events;
+ for(const [,id,count] of thresholdPlans){
+  if(!s.triggeredThresholds.includes(id)||s.thresholds.includes(id))continue;
   if(I.prepare(r,{id,name:id==='storm_node'?'Convergence Anchor':p.name+' · '+(s.style==='leech'?'Blood Offering':s.style==='devourer'?'Death Bloom':'Brood of Decay'),cast:.75,cooldown:3,maxUses:1})){
-   s.thresholds.push(id);events.push({type:'prepare',enemy:e,ability:id==='storm_node'?'Convergence Anchor':p.name+' · Summoning',count});return events;
+   events.push({type:'prepare',enemy:e,ability:id==='storm_node'?'Convergence Anchor':p.name+' · Summoning',count});return events;
   }
  }
  if(now+1e-7<s.nextAt)return events;

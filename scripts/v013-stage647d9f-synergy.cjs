@@ -305,9 +305,9 @@ function run(id,trials=TRIALS){
  for(let i=0;i<trials&&snaps.length;i++){
   const a=snaps[i%snaps.length],seed=64791000+i*101;
   for(const sc of scenarios){
-   const r=D.native(a.snapshot,sc,seed);
+   let r;try{r=D.native(a.snapshot,sc,seed);}catch(error){write(out,{id,source,accounts,rows,complete:false,failure:{trial:i,scenario:sc.id,seed,naturalSeed:a.seed,error:String(error)}});throw error;}
    assert(r.won||r.died||r.timedOut,'unresolved native encounter');
-   rows.push({trial:i,naturalSeed:a.seed,scenario:sc.id,kind:sc.type,seed:r.resolvedSeed,won:!!r.won,died:!!r.died,timeout:!!r.timedOut,seconds:r.seconds,hpEnd:r.hpEnd,hpMax:r.hpMax,damage:r.damageDealt,taken:r.damageTaken,secondary:r.secondaryTargetDamage,secondaryDot:r.secondaryDotDamage,funded:r.fundedCasts,unfunded:r.unfundedCasterAttacks,manaSpent:r.manaSpent,stats:r.heroBaseStats,metrics:r.affinityMetrics,gear:r.gearFingerprint});
+   rows.push({trial:i,naturalSeed:a.seed,scenario:sc.id,kind:sc.type,baseSeed:seed,seed:r.resolvedSeed,seedShift:r.seedShift,bossSummons:r.bossSummons,bossHealing:r.bossHealing,bossCastInterruptions:r.bossCastInterruptions,won:!!r.won,died:!!r.died,timeout:!!r.timedOut,seconds:r.seconds,hpEnd:r.hpEnd,hpMax:r.hpMax,damage:r.damageDealt,taken:r.damageTaken,secondary:r.secondaryTargetDamage,secondaryDot:r.secondaryDotDamage,funded:r.fundedCasts,unfunded:r.unfundedCasterAttacks,manaSpent:r.manaSpent,stats:r.heroBaseStats,metrics:r.affinityMetrics,gear:r.gearFingerprint});
   }
   if(i%10===9)write(out,{id,source,accounts,rows,complete:false});
  }

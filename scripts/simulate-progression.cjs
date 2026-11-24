@@ -182,8 +182,16 @@ function prepare(level,build,seed,opts,desiredRisk=undefined,desiredFamily=undef
   throw Error('Controlled talents must be a valid live v15 graph at exactly the requested point budget');
  if(Object.hasOwn(opts,'armorType')&&!['Cloth','Leather','Plate'].includes(opts.armorType))
   throw Error('Invalid controlled armor family');
- for(let attempt=0;attempt<(desiredFamily?48:1);attempt++){
-  const resolvedSeed=(seed+attempt)>>>0||1;
+ // Adjacent seeds can produce correlated realm drafts. Preserve the historical first 48 attempts,
+ // then use a deterministic avalanche of the original seed and attempt index.
+ const realmSeed=attempt=>{
+  if(attempt<48)return (seed+attempt)>>>0||1;
+  let x=(seed^Math.imul(attempt+1,0x9e3779b9))>>>0;
+  x=Math.imul(x^(x>>>16),0x85ebca6b);x=Math.imul(x^(x>>>13),0xc2b2ae35);
+  return (x^(x>>>16))>>>0||1;
+ };
+ for(let attempt=0;attempt<(desiredFamily?256:1);attempt++){
+  const resolvedSeed=realmSeed(attempt);
   // Freeze wall-clock-dependent IDs as well as native RNG for exact replay.
    // Stage 6.17 diagnosis only: substitute the enemy roster module inside the
     // isolated VM, never in gameplay files, to run native combat with one
@@ -271,7 +279,7 @@ function prepare(level,build,seed,opts,desiredRisk=undefined,desiredFamily=undef
   if(!boss||boss.style!==F.BOSS_STYLE_BY_AFFINITY[card.family])throw Error('Boss roster drift for '+card.family);
   return {a,c,g,card,gearE,resolvedSeed,seedShift:attempt,plannedPoints:opts.points,allocatedPoints:talents.nodes.length};
  }
- throw Error('No natural Realm card matches '+desiredFamily+' and risk '+desiredRisk+' within 48 deterministic seeds');
+ throw Error('No natural Realm card matches '+desiredFamily+' and risk '+desiredRisk+' within 256 deterministic seeds (base '+seed+')');
 }
 // Controlled player clicks. Does not change native AI, stats, status effects or RNG.
 function selectTarget(run,policy='focus'){

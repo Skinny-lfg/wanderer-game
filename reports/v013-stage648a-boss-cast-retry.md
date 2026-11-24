@@ -1,0 +1,7 @@
+# Stage 6.48A — Threshold cast retry and E10 replay selection
+
+Prior run 45424715554 passed all 609 regression executions and E10 smoke. Matrix failed on natural Realm matching during late replay, not necessarily combat. Example: all five Balanced/Plate Warden seeds reached E10, while Blood Two-Handed and Fury Bow reached none (E6–E8). Do not mix old and new combat results. No final rank ordering.
+
+Boss: crossing HP threshold latches it even if healed afterwards. Completion, not cast start, consumes threshold; interrupted cast uses existing 3s retry cooldown. Four affected bosses: Blood Offering, Brood of Decay, Death Bloom, Convergence Anchor. Existing summon caps, spell duration, heal amounts, normal damage/HP and Stun remain unchanged. Normal periodic casts already retry; intentional Arcane Convergence cancellation from destroying its Anchor stays unchanged. Tests cover all four threshold bosses, repeated interruption and no duplication. Threshold cast success consumes event even if summon capacity subsequently limits spawning (existing cap behavior).
+
+Replay: preserve first 48 sequential seeds, then use deterministic mixed seeds up to 256 attempts. Native Realm and risk still required; no forced card rewrite. Report base seed, actual seed, shift, boss summons/healing/interruption and exact failed replay location. Rerun 42 profiles on new fingerprint; 210 intended natural accounts, up to 88,200 E10 fights, no forced gear or unlocks. Previous results historical only. No deployment.

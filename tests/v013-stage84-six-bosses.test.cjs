@@ -154,3 +154,32 @@ test('Summoned entities expose their display names and real PNG poses',()=>{
   for(const file of poses)assert.equal(fs.readFileSync(file).subarray(1,4).toString(),'PNG');
  }
 });
+
+for(const [style,fraction,id,count] of [['leech',.70,'summon_70',1],['matriarch',.75,'summon_75',2],['devourer',.70,'summon_70',2],['conductor',.65,'storm_node',1]]){
+ test(style+' interrupted threshold retries after 3s, even after healing, and completes only once',()=>{
+  const r=run(style),e=r.enemy;e.hp=Math.floor(e.maxhp*(fraction-.01));
+  assert(step(r,0).some(x=>x.type==='prepare'));assert.equal(r.bossInfrastructure.cast.id,id);
+  assert(!r.stage84Boss.thresholds.includes(id));
+  e.stunnedUntil=.6;assert(step(r,.2).some(x=>x.type==='interrupted'));
+  assert.equal(r.bossInfrastructure.uses[id],undefined);
+  assert(r.stage84Boss.triggeredThresholds.includes(id));assert(!r.stage84Boss.thresholds.includes(id));
+  e.hp=e.maxhp;assert(!step(r,3.19).some(x=>x.type==='prepare'));
+  assert(step(r,3.21).some(x=>x.type==='prepare'));assert.equal(r.bossInfrastructure.cast.id,id);
+  const summon=step(r,3.97).find(x=>x.type==='summon');assert(summon);
+  assert.equal(A.spawned(r,summon,newMinion).spawned,count);
+  assert(r.stage84Boss.thresholds.includes(id));assert.equal(r.bossInfrastructure.uses[id],1);
+  e.hp=Math.floor(e.maxhp*(fraction-.01));assert(!step(r,8).some(x=>x.type==='prepare'));
+  assert.equal(r.bossInfrastructure.summoned,count);
+ });
+}
+test('Blood threshold can be interrupted repeatedly without consuming an invocation',()=>{
+ const r=run('leech');r.enemy.hp=690;
+ assert(step(r,0).some(x=>x.type==='prepare'));
+ r.combatSeconds=.2;assert(I.interrupt(r,'delay'));
+ assert(step(r,3.21).some(x=>x.type==='prepare'));
+ r.enemy.stunnedUntil=3.8;assert(step(r,3.4).some(x=>x.type==='interrupted'));
+ assert.deepEqual(r.stage84Boss.thresholds,[]);assert.equal(r.bossInfrastructure.summoned,0);
+ assert(step(r,6.41).some(x=>x.type==='prepare'));
+ const summon=step(r,7.17).find(x=>x.type==='summon');assert(summon);assert.equal(A.spawned(r,summon,newMinion).spawned,1);
+ assert.deepEqual(r.stage84Boss.thresholds,['summon_70']);
+});
