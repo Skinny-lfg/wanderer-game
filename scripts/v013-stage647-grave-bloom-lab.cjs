@@ -67,7 +67,7 @@ function install(variant){
  const out=transform(read(a),read(b),scenarios[variant]);
  if(scenarios[variant])for(const [p,s] of [[a,out.runtime],[b,out.build]])for(const prefix of ['', 'docs/'])fs.writeFileSync(path.join(root,prefix+p),s);
  const p='scripts/simulate-progression.cjs',s=read(p);
- fs.writeFileSync(path.join(root,p),one(s,'const row={firstKillSeconds,','const row={graveBloomMetrics:Object.fromEntries(Object.entries(metrics).filter(([k])=>k.startsWith("graveBloom"))),firstKillSeconds,','telemetry'));
+ fs.writeFileSync(path.join(root,p),one(s,'const row={weaponStatusMetrics:','const row={graveBloomMetrics:Object.fromEntries(Object.entries(metrics).filter(([k])=>k.startsWith("graveBloom"))),weaponStatusMetrics:','telemetry'));
  return hash(out.runtime+out.build);
 }
 function respec(s,profile){
