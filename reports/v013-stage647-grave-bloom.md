@@ -30,3 +30,18 @@ Raw secondary burst cap: 22% normal / 7% elite / 3.5% boss maximum Health, befor
 - Initial preflight failed on a stale telemetry anchor, corrected before combat. Do not claim any replay result from that run.
 - Candidate laboratory only: no production gameplay modification, merge or deploy yet. Choose the coefficient set based on resolved matched data and then validate the integrated native code.
 
+
+## Verified results — 2,400 native fights
+
+[Run 45356315942](https://github.com/Skinny-lfg/wanderer-game/actions/runs/45356315942) completed successfully, 14/14 jobs, zero timeouts. Same two legally respecced E10 actors per profile, matched combat seeds/gear/XP/roster; not 100 independently progressed characters. Wand + Tome and Staff have 25 points each; physical Sword + Tome actors have 37 and 24 points. Both profiles are Magic + Decay with legally prepared Grave Bloom, regardless of original snapshot profile name.
+
+| Profile / variant | 1 | 4 | 8 | 12 |
+|---|---:|---:|---:|---:|
+| Wand/Staff baseline | 100% | 65% | 16% | 21% |
+| Wand/Staff Balanced | 100% | 72% | 47% | 42% |
+| Wand/Staff Strong | 100% | 72% | 50% | 43% |
+| Sword + Tome baseline | 98% | 39% | 0% | 0% |
+| Sword + Tome Balanced | 98% | 41% | 0% | 2% |
+| Sword + Tome Strong | 98% | 43% | 1% | 3% |
+
+In eight-enemy fights, Strong magical actors activated Grave Bloom 365 times, dealt 55,598 immediate secondary damage and copied Rot 972 times. Physical actors activated 255 times, dealt 28,706 immediate secondary damage and copied Rot 761 times. **Secondary DOT damage was recorded as zero in every variant**, despite the copy counters; the copy counters do not establish actual Rot tick damage. The native tickRot/context source has secondary attribution, but the cause of the observed zero is not yet established. Audit the live tick/settlement path and attribution with a focused reproducible native encounter before modifying coefficients. The small Strong vs Balanced win-rate differences do not justify selecting the larger coefficients yet. Investigate paid-action cadence, mana uptime, spell power, actual damage/survival and secondary Rot tick execution separately. No gameplay promotion, merge or deploy.
