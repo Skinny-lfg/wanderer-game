@@ -2,7 +2,7 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const {rotSource,manaRuntime,weaponBase,magicTalent,ROT}=require('../scripts/v013-stage648c2e-rot-mana.cjs');
 const {T,buy}=require('./v013-current-talent-helper.cjs');
-test('all research sources compile and four Magic profiles allocate legally',()=>{for(const m of ROT)new Function(rotSource(m));new Function(manaRuntime());for(const m of ['arcane','fire','frost','lightning'])assert(T.valid(magicTalent(m)));});
+test('all research sources compile and four Magic profiles allocate legally',()=>{for(const m of ROT)new Function(rotSource(m));new Function(manaRuntime());for(const m of ['arcane','fire','frost','lightning']){const t=magicTalent(m);assert(T.valid(t));assert.equal(t.nodes.length,24);assert.equal(t.element,m==='arcane'?undefined:m);assert(t.nodes.includes('element_choice'));}});
 test('nominal weapon potency distinguishes weapons',()=>{const s={attack:40,spellPower:25};assert.equal(weaponBase({...s,main:{subtype:'Daggers'}}),32);assert.equal(weaponBase({...s,main:{subtype:'Two-Handed'}}),68);assert.equal(weaponBase({...s,main:{subtype:'Staff'}}),33);});
 function fixture(mode,weapon='Daggers'){
  const root={WandererAutomaticTalents:T};new Function('globalThis',rotSource(mode))(root);

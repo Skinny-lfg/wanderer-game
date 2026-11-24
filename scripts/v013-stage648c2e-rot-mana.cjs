@@ -38,7 +38,7 @@ function manaRuntime(){
 }
 function magicTalent(element){
  const skill={arcane:'arcane_resonance',fire:'kindling',frost:'deep_winter',lightning:'overcharge'}[element];
- let t=buy(['arcane_focus','mana_spring','element_choice',skill],{xp:POINTS*T.POINT_XP,element});
+ let t=buy(['arcane_focus','mana_spring','element_choice',skill],{xp:POINTS*T.POINT_XP,element:element==='arcane'?undefined:element});
  for(let pass=0;pass<POINTS&&t.nodes.length<POINTS;pass++){
   let changed=false;for(const n of T.NODES){if(t.nodes.length>=POINTS)break;if(n.family!=='magic'||t.nodes.includes(n.id)||n.element&&n.element!==element||n.advanced)continue;const next=T.allocate(t,n.id);if(next){t=next;changed=true;}}
   if(!changed)break;
