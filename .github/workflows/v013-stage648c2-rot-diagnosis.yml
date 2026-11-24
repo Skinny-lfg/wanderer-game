@@ -2,7 +2,7 @@ name: Stage 6.48C.2 — Rot stack lifetime and trigger ablation (NO DEPLOY)
 on:
   push:
     branches: [balance/stage-6.40-e1-calibration]
-    paths: ['.github/workflows/v013-stage648c2-rot-diagnosis.yml']
+    paths: ['.github/workflows/v013-stage648c2-rot-diagnosis.yml', 'tests/v013-stage648c2-rot-diagnosis.test.cjs']
   workflow_dispatch:
 permissions:
   contents: read

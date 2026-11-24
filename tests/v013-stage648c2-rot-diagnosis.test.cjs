@@ -1,9 +1,9 @@
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const {diagnosticSource,MODES}=require('../scripts/v013-stage648c2-rot-diagnosis.cjs');
-const {buy}=require('./v013-current-talent-helper.cjs');
+const {T,buy}=require('./v013-current-talent-helper.cjs');
 function fixture(mode,ids){
- const root={};new Function('globalThis',diagnosticSource(mode))(root);
+ const root={WandererAutomaticTalents:T};new Function('globalThis',diagnosticSource(mode))(root);
  const B=root.WandererV012Buildcraft,b=B.create();B.syncPermanent(b,buy(ids));
  const e={hp:10000,maxhp:10000,v012Rot:[],dots:{bleed:[],burn:[]}},r={hp:100,maxhp:100,mp:100,maxmp:100,enemies:[e],stats:{spellPower:100}},m={};
  const c={enemy:e,player:r,now:1,base:100,power:100,random:()=>0,log(){},dot(){},chill(){},heal(){return 0;},barrier(){},damage(n){e.hp-=n;},dotDamage(n){e.hp-=n;},metric(k,n){m[k]=(m[k]||0)+n;},mana(n){r.mp=Math.min(r.maxmp,r.mp+n);},waveKey:'one'};
