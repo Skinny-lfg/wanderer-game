@@ -276,14 +276,30 @@ function capture(id,seed){
  if(errors.some(x=>x.error!=='Native combat timeout'))throw Error('Capture error '+JSON.stringify(errors));
  return {seed,endLevel:account.endLevel,attempts:account.attempts.length,stopReason:account.stopReason,errors,snapshot:snap,capability:cap};
 }
-function smoke(){selftest();const a=capture('balanced',9863);assert(a.snapshot,'Smoke capture did not reach E10; do not launch expensive matrix');const r=D.native(a.snapshot,{id:'normal-1',type:'normal',realm:'blood',size:1},64791000);assert(r.won||r.died||r.timedOut);console.log('SMOKE_E10='+JSON.stringify({seed:a.seed,points:a.snapshot.talentSpent,weapon:a.snapshot.state.equip.weapon?.subtype,won:r.won,died:r.died,timeout:r.timedOut}));}
+function smoke(){
+ selftest();
+ const attempts=[];
+ let a=null;
+ for(const seed of [9863,9861,9862,9864,9865]){
+  const candidate=capture('balanced',seed);
+  attempts.push({seed,E:candidate.endLevel,errors:candidate.errors,reached:!!candidate.snapshot});
+  if(candidate.snapshot){a=candidate;break;}
+ }
+ console.log('SMOKE_CAPTURE='+JSON.stringify(attempts));
+ assert(a?.snapshot,'No genuine E10 Camp capture in smoke cohort; do not launch expensive matrix');
+ const cases=[{id:'normal-1',type:'normal',realm:'blood',size:1},{id:'normal-8',type:'normal',realm:'blood',size:8},{id:'tank',type:'elite',realm:'blood'},{id:'boss-blood',type:'boss',realm:'blood'}];
+ const results=cases.map((sc,i)=>{const r=D.native(a.snapshot,sc,64791000+i*101);assert(r.won||r.died||r.timedOut,'unresolved native replay '+sc.id);return {id:sc.id,won:r.won,died:r.died,timeout:r.timedOut,seconds:r.seconds};});
+ assert(results.every(r=>!r.timeout),'Native smoke replay timeout; inspect before full matrix');
+ console.log('SMOKE_E10='+JSON.stringify({seed:a.seed,points:a.snapshot.talentSpent,weapon:a.snapshot.state.equip.weapon?.subtype,results}));
+}
 function run(id,trials=TRIALS){
  assert(PROFILES.includes(id));assert(Number.isInteger(trials)&&trials>=1&&trials<=100);
  selftest();
- const accounts=SEEDS.map(seed=>capture(id,seed)),snaps=accounts.filter(x=>x.snapshot);
- const source=S.sourceFingerprint().sha256,rows=[];
- const scenarios=[...SIZES.map(size=>({id:'normal-'+size,type:'normal',size,realm:'blood'})),...D.ELITES.map(id=>({id,type:'elite',realm:'blood'})),...D.FAMILIES.map(f=>({id:'boss-'+f,type:'boss',realm:f}))];
+ const accounts=[],source=S.sourceFingerprint().sha256,rows=[];
  const dir='reports/stage647d9f',out=dir+'/'+id+'.json';
+ for(const seed of SEEDS){accounts.push(capture(id,seed));write(out,{id,source,accounts,rows,complete:false});}
+ const snaps=accounts.filter(x=>x.snapshot);
+ const scenarios=[...SIZES.map(size=>({id:'normal-'+size,type:'normal',size,realm:'blood'})),...D.ELITES.map(id=>({id,type:'elite',realm:'blood'})),...D.FAMILIES.map(f=>({id:'boss-'+f,type:'boss',realm:f}))];
  write(out,{id,source,accounts,rows,complete:false});
  console.log('CAPTURE='+JSON.stringify({id,accounts:accounts.map(a=>({seed:a.seed,endLevel:a.endLevel,attempts:a.attempts,reached:!!a.snapshot,stopReason:a.stopReason,errors:a.errors,weapon:a.snapshot?.state.equip.weapon?.subtype,points:a.snapshot?.talentSpent}))}));
  for(let i=0;i<trials&&snaps.length;i++){
@@ -300,14 +316,16 @@ function run(id,trials=TRIALS){
 }
 function aggregate(){
  const dir='reports/stage647d9f',data=fs.readdirSync(dir).filter(f=>f.endsWith('.json')).map(f=>JSON.parse(fs.readFileSync(path.join(dir,f),'utf8')));
- assert.equal(new Set(data.map(x=>x.source)).size,1,'source mismatch');
+ assert(data.length,'No cohort artifacts');assert.equal(new Set(data.map(x=>x.source)).size,1,'source mismatch');
+ assert.equal(new Set(data.map(x=>x.id)).size,data.length,'duplicate cohort artifacts');
+ for(const x of data)if(x.complete){assert.equal(x.accounts.length,SEEDS.length,'incomplete capture '+x.id);assert.equal(x.rows.length,x.accounts.some(a=>a.snapshot)?x.trials*x.scenarioCount:0,'incomplete replay '+x.id);}
  const mean=(a,k)=>{const v=a.map(x=>x[k]).filter(Number.isFinite);return v.length?v.reduce((s,n)=>s+n,0)/v.length:null;};
  function rate(a){
   const valid=a.filter(x=>x.won||x.died),w=valid.filter(x=>x.won).length;
   return {n:a.length,resolved:valid.length,wins:w,winPct:valid.length?100*w/valid.length:null,timeouts:a.filter(x=>x.timeout).length,meanSeconds:mean(valid,'seconds'),meanTaken:mean(valid,'taken'),meanSecondary:mean(valid,'secondary'),meanFunded:mean(valid,'funded'),meanUnfunded:mean(valid,'unfunded')};
  }
  const profiles=data.map(x=>({id:x.id,complete:x.complete,accounts:x.accounts.map(({snapshot,capability,...a})=>({...a,checkpoint:snapshot?{xp:snapshot.xp,points:snapshot.talentSpent,weapon:snapshot.state.equip.weapon?.subtype,offhand:snapshot.state.equip.offhand?.subtype||null,armor:snapshot.state.equip.armor?.armorType||null,rarity:snapshot.equippedRarity,stats:snapshot.statSnapshot,nodes:snapshot.state.automaticTalents.nodes,element:snapshot.state.automaticTalents.element,prepared:snapshot.state.automaticTalents.prepared,legendary:Object.values(snapshot.state.equip).filter(i=>i?.legendaryId).map(i=>i.legendaryId),capability}:null})),scenarios:Object.fromEntries([...new Set(x.rows.map(r=>r.scenario))].map(k=>[k,rate(x.rows.filter(r=>r.scenario===k))])),byType:Object.fromEntries(['normal','elite','boss'].map(k=>[k,rate(x.rows.filter(r=>r.kind===k))]))}));
- const rows=data.flatMap(x=>x.rows),result={stage:'6.47D.9F',source:data[0].source,requestedProfiles:PROFILES,missingProfiles:PROFILES.filter(p=>!data.some(x=>x.id===p&&x.complete)),captures:profiles.flatMap(x=>x.accounts).length,reachedE10:profiles.flatMap(x=>x.accounts).filter(a=>a.checkpoint).length,nativeFights:rows.length,profiles,allByScenario:Object.fromEntries([...new Set(rows.map(r=>r.scenario))].map(k=>[k,rate(rows.filter(r=>r.scenario===k))]))};
+ const rows=data.flatMap(x=>x.rows),result={stage:'6.47D.9F',source:data[0].source,requestedProfiles:PROFILES,missingProfiles:PROFILES.filter(p=>!data.some(x=>x.id===p&&x.complete)),profilesWithoutE10:profiles.filter(p=>!p.accounts.some(a=>a.checkpoint)).map(p=>p.id),captures:profiles.flatMap(x=>x.accounts).length,reachedE10:profiles.flatMap(x=>x.accounts).filter(a=>a.checkpoint).length,nativeFights:rows.length,profiles,allByScenario:Object.fromEntries([...new Set(rows.map(r=>r.scenario))].map(k=>[k,rate(rows.filter(r=>r.scenario===k))]))};
  write('reports/v013-stage647d9f-synergy.json',result);
  console.log('STAGE647D9F='+JSON.stringify({...result,profiles:profiles.map(p=>({id:p.id,complete:p.complete,accounts:p.accounts.map(a=>({seed:a.seed,E:a.endLevel,reached:!!a.checkpoint,weapon:a.checkpoint?.weapon,offhand:a.checkpoint?.offhand,points:a.checkpoint?.points,errors:a.errors})),byType:p.byType,scenarios:p.scenarios}))}));
  if(result.missingProfiles.length)throw Error('Incomplete cohort matrix: '+result.missingProfiles.join(', '));

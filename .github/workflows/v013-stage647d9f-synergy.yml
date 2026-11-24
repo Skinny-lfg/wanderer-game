@@ -1,4 +1,4 @@
-name: Stage 6.47D.9F — Current builds and E10 synergy audit (NO DEPLOY)
+name: Stage 6.47D.9F.2 — E10 synergy matrix validation (NO DEPLOY)
 on:
   push:
     branches: [balance/stage-6.40-e1-calibration]
@@ -16,7 +16,7 @@ jobs:
         with: {node-version: '22', cache: npm}
       - run: npm ci
       - run: node scripts/v013-stage647d9f-synergy.cjs selftest
-      - run: node --test tests/v013-stage647d9f1-synergy.test.cjs tests/v013-stage647d9e-stat-identity.test.cjs
+      - run: node --test tests/v013-stage647d9f1-synergy.test.cjs tests/v013-stage647d9e-stat-identity.test.cjs tests/talent-graph-combat.test.cjs
       - run: npm test
       - run: node scripts/v013-stage647d9f-synergy.cjs smoke
   cohort:
@@ -57,6 +57,7 @@ jobs:
           merge-multiple: true
       - run: node scripts/v013-stage647d9f-synergy.cjs aggregate
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: stage647d9f-synergy-report
           path: reports/v013-stage647d9f-synergy.json
