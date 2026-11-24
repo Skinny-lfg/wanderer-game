@@ -60,7 +60,7 @@ function excludes(node,owned,graph){
  for(const id of owned){if(graph.get(id)?.excludes?.includes(node.id))return true;}
  return false;
 }
-function usable(n,active,mode,plan){return !!n&&(!n.family||active.includes(n.family))&&
+function usable(n,active,mode,plan){return !!n&&!n.pending&&(!n.family||active.includes(n.family))&&
  (!n.element||n.element===mode)&&(!n.pair||(!!plan.mix&&n.pair.every(f=>active.includes(f))))&&
  (n.kind!=='mixed'||!!plan.mix&&n.pair?.every(f=>active.includes(f)));}
 function scoreNode(n,plan,active,context={}){

@@ -77,6 +77,34 @@ function createGraph(catalog,definitionNodes=[]){
  {
   for(const family of FAMILIES)for(const lane of [0,1]){const path='basic_path_'+family+'_'+lane+'_3',idx=nodes.findIndex(n=>n.id===path),n=nodes[idx],first=BASICS[family][lane*3],second=BASICS[family][lane*3+1],side=family==='magic'?'magic_side_'+lane+'_2':'focus_branch_'+family+'_'+lane+'_2',detour='basic_detour_'+family+'_'+lane;stat(detour,family,'gate_'+second,{lane,tier:3,basicDetour:true,prerequisites:[side]});nodes[idx]=Object.freeze({...n,anyRequires:[second,detour]});}
  }
+
+ // Stage 6.47D.5: actual v15 structural expansion. Unimplemented paths are
+ // explicit locked candidates; the runtime must not accept their points.
+ const NORMAL_SLOTS={"blood":["accelerated_bleeding","cleave_mastery","sanguine_reserve"],"fury":["fan_of_blades","bow_pierce","single_target_mastery"],"vitality":["vital_pulse","living_force","grasping_roots"],"aegis":["ward_echo","sword_sweep","mace_shockwave"],"decay":["contagious_touch","corruption_nova","soul_drain"]},ADAPTIVE_SLOTS={"arcane":["arcane_nova","mana_convergence"],"fire":["controlled_burn","cinder_focus"],"frost":["frost_resonance","glacial_echo"],"lightning":["static_focus","storm_conductor"]},DESIGN={"accelerated_bleeding":"Same total Bleed damage over 75% of its normal duration.","sanguine_reserve":"Effective healing builds a reserve for a primary-target Bleed burst.","vital_pulse":"Every 4 seconds, deal damage equal to 2% Max HP to active enemies.","living_force":"Store 20% effective healing; at 5% Max HP, release damage on the next attack.","grasping_roots":"Every 8 seconds, deal HP-based damage and briefly slow enemy attacks.","ward_echo":"Periodic damage while Barrier exists, based on Max HP and Defense.","contagious_touch":"Third primary Rot application spreads one stack to two active enemies at half potency; global cooldown.","corruption_nova":"One bounded pulse based on active Rot every 6 seconds.","soul_drain":"Four primary paid Rot applications recover 2 Mana; global 5-second cooldown.","arcane_nova":"Paid Infusion hits two secondary enemies for 35% damage, instead of Grave Bloom on that charge.","mana_convergence":"Below 30% Mana, recover 4 Mana on a paid cast, once every 8 seconds.","controlled_burn":"Concentrate Burn on the primary target at a cost to propagated Burn.","cinder_focus":"Primary Burn burst against an isolated enemy; no extra targets.","frost_resonance":"Bounded Frost pulse against other chilled active foes.","glacial_echo":"Chilled-target Frost hits trigger a bounded burst with cooldown.","static_focus":"Concentrate chain damage on the primary target at the expense of secondary damage.","storm_conductor":"Bounded primary discharge against an isolated enemy; no extra jumps."};
+ const patchNode=(id,change)=>{const i=nodes.findIndex(n=>n.id===id);if(i<0)throw Error('Missing architecture node '+id);nodes[i]=Object.freeze({...nodes[i],...change});};
+ const alternative=(id,alt)=>{const n=nodes.find(x=>x.id===id);patchNode(id,{requires:null,anyRequires:[...new Set([n.requires,...(n.anyRequires||[]),alt].filter(Boolean))]});};
+ for(const [family,slots] of Object.entries(NORMAL_SLOTS))for(const [slot,id] of slots.entries()){
+  const lane=slot===1?1:0,parent=slot===0?'affinity_'+family:'basic_path_'+family+'_'+lane+'_1';
+  const existing=nodes.some(n=>n.id===id),first='weapon_path_'+id+'_1',second='weapon_path_'+id+'_2';
+  if(existing){patchNode(first,{requires:parent,atlasSlot:slot,atlasStep:0});patchNode(second,{atlasSlot:slot,atlasStep:1});patchNode('gate_'+id,{atlasSlot:slot,atlasStep:2});patchNode(id,{atlasSlot:slot,atlasStep:3});}
+  else{
+   const meta={pending:true,atlasSlot:slot,weaponFork:id};
+   stat(first,family,parent,{...meta,tier:1,atlasStep:0});
+   stat(second,family,first,{...meta,tier:1,atlasStep:1});
+   stat('gate_'+id,family,second,{...meta,tier:1,atlasStep:2,gateFor:id});
+   add({id,kind:'extension',family,tier:1,requires:'gate_'+id,name:id.split('_').map(s=>s[0].toUpperCase()+s.slice(1)).join(' '),description:DESIGN[id],maxRank:1,effectId:id,...meta,atlasStep:3});
+  }
+  if(slot===0)for(const side of [0,1])alternative('focus_branch_'+family+'_'+side+'_1',id);
+  else{alternative('basic_path_'+family+'_'+lane+'_2',id);alternative('focus_branch_'+family+'_'+lane+'_2',id);}
+ }
+ // A shared side stat already costs 4 points; one mode-specific stat gate and
+ // the ability make the requested six-point path. Do not duplicate paid stats.
+ for(const [element,slots] of Object.entries(ADAPTIVE_SLOTS))for(const [lane,id] of slots.entries()){
+  const meta={pending:true,adaptive:true,element,lane,tier:1};
+  stat('gate_'+id,'magic','magic_side_'+lane+'_1',{...meta,prerequisites:['element_choice'],gateFor:id,atlasStep:0});
+  add({id,kind:'adaptive',family:'magic',requires:'gate_'+id,name:id.split('_').map(s=>s[0].toUpperCase()+s.slice(1)).join(' '),description:DESIGN[id],maxRank:1,effectId:id,...meta,atlasStep:1});
+  alternative('magic_side_'+lane+'_2',id);
+ }
  const ids=new Set(nodes.map(n=>n.id));for(const n of nodes)for(const id of [...(n.requires?[n.requires]:[]),...(n.prerequisites||[]),...(n.anyRequires||[])])if(!ids.has(id))throw Error('Missing prerequisite '+id);
  return Object.freeze(nodes);
 }

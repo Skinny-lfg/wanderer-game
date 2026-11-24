@@ -22,14 +22,17 @@ function valid(v){
  }
  const rs=ranks(v),mode=v.element||'arcane';
  return !!rs&&G.valid(graph,{points:points(v),ranks:rs})&&
-  Object.keys(rs).every(id=>!byId.get(id)?.element||byId.get(id).element===mode)&&
+  Object.keys(rs).every(id=>!byId.get(id)?.pending&&(!byId.get(id)?.element||byId.get(id).element===mode))&&
   (!v.prepared||!!rs[v.prepared]&&!!byId.get(v.prepared)?.advanced);
 }
 function create(){return {xp:0,nodes:[],treeVersion:15,attributes:{}};}
 
 function earned(v){if(!valid(v))throw Error('Invalid talent progress');return points(v);}
-function allocate(v,id){if(!valid(v))return null;const m=id.match(/^(.*)_rank\d+$/),base=m?m[1]:id,node=byId.get(base);if(node?.element&&node.element!==(v.element||'arcane'))return null;const rs=ranks(v),p=G.allocate(graph,{points:points(v),ranks:rs},base);if(!p)return null;const rank=p.ranks[base];return {...v,nodes:[...v.nodes,rank===1?base:base+'_rank'+rank]};}
-function selectElement(v,mode){if(!valid(v)||!v.nodes.includes('element_choice')||!['arcane','fire','frost','lightning'].includes(mode))return null;if(mode===(v.element||'arcane'))return v;const next={...v,nodes:v.nodes.filter(id=>{const base=id.replace(/_rank\d+$/,'');return !byId.get(base)?.element;})};if(mode==='arcane')delete next.element;else next.element=mode;if(next.prepared&&!next.nodes.includes(next.prepared))next.prepared=null;return valid(next)?next:null;}
+function allocate(v,id){if(!valid(v))return null;const m=id.match(/^(.*)_rank\d+$/),base=m?m[1]:id,node=byId.get(base);if(node?.pending||node?.element&&node.element!==(v.element||'arcane'))return null;const rs=ranks(v),p=G.allocate(graph,{points:points(v),ranks:rs},base);if(!p)return null;const rank=p.ranks[base];return {...v,nodes:[...v.nodes,rank===1?base:base+'_rank'+rank]};}
+function selectElement(v,mode){if(!valid(v)||!v.nodes.includes('element_choice')||!['arcane','fire','frost','lightning'].includes(mode))return null;if(mode===(v.element||'arcane'))return v;const next={...v,nodes:v.nodes.filter(id=>{const base=id.replace(/_rank\d+$/,'');return !byId.get(base)?.element;})};if(mode==='arcane')delete next.element;else next.element=mode;
+ // Refund dependent nodes only when their remaining routes are no longer legal.
+ let changed=true;while(changed){const rs=ranks(next);const filtered=next.nodes.filter(id=>G.requirements(byId.get(id.replace(/_rank\d+$/,'')),rs));changed=filtered.length!==next.nodes.length;next.nodes=filtered;}
+ if(next.prepared&&!next.nodes.includes(next.prepared))next.prepared=null;return valid(next)?next:null;}
 function award(v,amount){
  if(!valid(v)||!Number.isSafeInteger(amount)||amount<0)throw Error('Invalid experience award');
  return {...v,xp:Math.min(Number.MAX_SAFE_INTEGER,v.xp+amount)};

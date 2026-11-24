@@ -4,8 +4,8 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),fs=requir
 const {T,buy}=require('./v013-current-talent-helper.cjs');
 const C=globalThis.WandererTalentCatalog,G=globalThis.WandererTalentGraph,B=globalThis.WandererTalentGraphBridge;
 const graph=G.createGraph(globalThis.WandererV012Buildcraft.CATALOG,C.NODES);
-test('C1 clean sheet: source catalog uniquely generates the current 367-node v15 graph',()=>{
- assert.equal(graph.length,367);assert.equal(T.NODES.length,367);
+test('C1 clean sheet: source catalog uniquely generates the current 419-node v15 graph',()=>{
+ assert.equal(graph.length,419);assert.equal(T.NODES.length,419);
  assert.deepEqual(JSON.parse(JSON.stringify(graph)),JSON.parse(JSON.stringify(T.NODES)));
  assert.equal(new Set(graph.map(n=>n.id)).size,graph.length);
  assert(C.ATTRIBUTES&&typeof C.ATTRIBUTES==='object');
