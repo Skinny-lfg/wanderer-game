@@ -422,8 +422,8 @@ function onCast(b,c){
  if(c.proc||c.extra||c.recursive||c.funded!==true||!hasFamily(b,'magic')||!(elements.includes(b.element)||b.element==='arcane'))return;
  const wasChilled=c.enemy.slowTime>0,wasBurning=(c.enemy.dots?.burn||[]).some(d=>d.remaining>0);manaConvergence(b,c);
  // These advanced elemental choices supply their own trigger when taken alone.
- if(b.element==='fire'&&(specialized(b,'combustion')||specialized(b,'living_inferno')||specialized(b,'fire_spread'))&&!c.enemy.dots?.burn?.length&&!rank(b,'kindling')&&!specialized(b,'kindling_flame'))c.dot('burn',Math.max(1,c.power)*.08);
- if(b.element==='frost'&&(specialized(b,'shatter')||specialized(b,'absolute_winter'))&&!(c.enemy.slowTime>0)&&!rank(b,'deep_winter')&&!specialized(b,'deep_chill'))c.chill(c.enemy.boss?1.2:3.5);
+ if(b.element==='fire'&&(specialized(b,'combustion')||specialized(b,'living_inferno')||specialized(b,'fire_spread')||adaptive(b,'cinder_focus','fire')||adaptive(b,'controlled_burn','fire'))&&!c.enemy.dots?.burn?.length&&!rank(b,'kindling')&&!specialized(b,'kindling_flame'))c.dot('burn',Math.max(1,c.power)*.08,{controlledBurn:adaptive(b,'controlled_burn','fire')});
+ if(b.element==='frost'&&(specialized(b,'shatter')||specialized(b,'absolute_winter')||adaptive(b,'frost_resonance','frost')||adaptive(b,'glacial_echo','frost'))&&!(c.enemy.slowTime>0)&&!rank(b,'deep_winter')&&!specialized(b,'deep_chill'))c.chill(c.enemy.boss?1.2:3.5);
  const multiplier=b.element==='fire'&&specialized(b,'living_inferno')&&c.enemy.dots?.burn?.length?1.25:b.element==='frost'&&specialized(b,'absolute_winter')&&c.enemy.slowTime>0?1.2:1;
  const power=elementalPower(b,Math.max(1,c.power))*(c.amp||1)*multiplier;b.runtime.conduit=false;
  const e=c.enemy; b.runtime.magicHits++;
