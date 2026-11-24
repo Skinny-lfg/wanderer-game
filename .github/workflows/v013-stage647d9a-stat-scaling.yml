@@ -1,0 +1,46 @@
+name: Stage 6.47D.9A — Stat node scaling audit (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths: ['.github/workflows/v013-stage647d9a-stat-scaling.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  cohort:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [smart-blood-pure, smart-fury-bow, smart-vitality-pure, smart-aegis-vitality, smart-magic-arcane-pure, smart-decay-magic-aegis]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node scripts/v013-stage647d9a-stat-scaling.cjs selftest
+      - run: node scripts/v013-stage647d9a-stat-scaling.cjs cohort ${{ matrix.profile }} 9861 200
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stat-scaling-${{ matrix.profile }}
+          path: reports/stage647d9a/*.json
+  aggregate:
+    needs: cohort
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stat-scaling-*
+          path: reports/stage647d9a
+          merge-multiple: true
+      - run: node scripts/v013-stage647d9a-stat-scaling.cjs aggregate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage647d9a-stat-scaling
+          path: reports/v013-stage647d9a-stat-scaling.json
