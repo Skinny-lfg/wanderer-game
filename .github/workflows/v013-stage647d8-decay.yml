@@ -1,0 +1,29 @@
+name: Stage 6.47D.8 — Decay (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths: ['.github/workflows/v013-stage647d8-decay.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  contracts:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node --test tests/v013-stage647d8-decay.test.cjs tests/v013-stage647d7-vitality-aegis.test.cjs tests/v013-stage647d6-blood-fury.test.cjs tests/v013-stage647d5-architecture.test.cjs tests/v013-stage647c-native-grave-bloom.test.cjs tests/v013-stage642-aoe-readiness.test.cjs
+      - run: git diff --exit-code
+  regression:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: npm test
+      - run: git diff --exit-code
