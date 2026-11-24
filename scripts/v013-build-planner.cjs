@@ -73,22 +73,24 @@ function scoreNode(n,plan,active,context={}){
  else if(n.kind==='element')score+=9+(n.tier||1);
  else if(n.kind==='basic')score+=9.5+(n.tier||1);
  else if(n.kind==='stat')score+=2.2+(n.tier||1)*.55;
+ // Relative stat-node value: percentage points on a normalized reference,
+ // not legacy flat units. HP uses a 250-point reference to retain its role weight.
  const ability=n.description||'';
  if(focus==='spell'||focus==='rot'){
-  score+=(n.flatSpell||0)*1.9+(n.flatRegen||0)*13+(n.flatMana||0)*.65+(n.spell||0)*30;
+  score+=(n.pctSpell||0)*100*1.9+(n.flatRegen||0)*13+(n.flatMana||0)*.65+(n.spell||0)*30;
   if(/Mana|Spell|Arcane|Rot|cast|Intellect/i.test(ability))score+=2.5;
   if(/Attack Power|Strength|Endurance/i.test(ability))score-=1;
   if(n.attribute==='int')score+=3.1;
  }
  if(focus==='bleed'||focus==='speed'){
-  score+=(n.flatAttack||0)*1.8+(n.flatSpeed||0)*65+(n.attack||0)*30;
+  score+=(n.pctAttack||0)*100*1.8+(n.flatSpeed||0)*65+(n.attack||0)*30;
   if(/Bleed|Sunder|attack speed|Attack Power|Strength|Agility|critical/i.test(ability))score+=2.6;
   if(n.attribute==='str'||n.attribute==='agi')score+=3;
  }
  if(focus==='defense'||active.includes('aegis')||active.includes('vitality')){
-  score+=(n.flatLife||0)*.35+(n.flatArmor||0)*1.2+(n.startBarrier||0)*1.5+
+  score+=(n.pctLife||0)*250*.35+(n.pctArmor||0)*100*1.2+(n.startBarrier||0)*1.5+
    (n.healthRegen||0)*1200;
-  if(/Barrier|Defense|Regenerat|Health|Endurance|block/i.test(ability))score+=2.4;
+  if(/Barrier|Armor|Defense|Regenerat|Health|Endurance|block/i.test(ability))score+=2.4;
   if(n.attribute==='end')score+=3;
  }
  // Strategically important eventual skills, not a random walk down graph order.
