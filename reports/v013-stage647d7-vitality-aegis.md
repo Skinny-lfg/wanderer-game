@@ -13,4 +13,4 @@ Gameplay commit: 3232cbc7f1126cd9a1ec61e98c1809696d7c603e. Existing balance bran
 - Retaliation and Fortified positions unchanged until matched tests justify a swap.
 
 ## Validation
-CI run 45395882254 contains targeted native contracts and full regression; inspect actual job results before claiming completion. Stage 6.42 AoE safeguards run 45395783104 succeeded. Simulator native output now includes defensiveTalentMetrics; no fresh matched E10 defensive balance comparison performed. Canonical files and docs mirrors updated. New numeric choices are provisional calibration defaults. 
+CI run 45395882254: both jobs completed successfully. Targeted contracts 29/29; full npm test 380 + 8 + 84 + 79 = 551/551, zero failures. Stage 6.42 AoE safeguards run 45395783104 succeeded. Simulator native output now includes defensiveTalentMetrics; no fresh matched E10 defensive balance comparison performed. Canonical files and docs mirrors updated. New numeric choices are provisional calibration defaults. 
