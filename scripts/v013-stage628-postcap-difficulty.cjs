@@ -68,7 +68,7 @@ function checkpoint({a,seed,profile,level,attempt},extraCheckpointLevels=[]){
   attributeEarned:T.attributeBudget(p),attributeSpent:T.spentAttributes(p),
   attributes:T.attributes(p),
   statSnapshot:Object.fromEntries(['str','agi','int','end','cha','attack','defense',
-   'maxhp','attacksPerSec','spellPower','power'].map(k=>[k,stats[k]??null])),
+   'maxhp','attacksPerSec','spellPower','crit','blockChance','blockReduction','evasionRating','mana','manaRegen','wardBonus','barrierPower','healingPower','manaCostReduction','power'].map(k=>[k,stats[k]??null])),
   equipPieces:gear.length,starterPieces:gear.filter(x=>x.startingGear).length,
   equippedRarity:Object.fromEntries([...new Set(gear.map(x=>x.rarity))]
    .map(r=>[r,gear.filter(x=>x.rarity===r).length])),

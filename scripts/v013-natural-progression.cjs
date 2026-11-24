@@ -90,6 +90,44 @@ function parseArgs(args=[]){
 // Strategic valuation of actual item affixes; these are decision weights,
 // never invented gameplay stats. Archetype alignment matters but cannot turn a
 // Common E1 item into a forged higher-tier item.
+// Optional 9F research policy uses actual equipped stats/owned nodes as decision context.
+// Scoring remains a heuristic and never changes native gear or grants a legendary.
+function synergyGearBonus(item,profile,slot){
+ const c=profile.synergyContext||{},stats=c.stats||{},owned=new Set(c.nodes||[]);
+ const families=profile.families||[],has=f=>owned.has('affinity_'+f)||families.includes(f);
+ const weapon=slot==='weapon'?item.subtype:c.weapon,off=slot==='offhand'?item.subtype:c.offhand;
+ const caster=['Staff','Wand'].includes(weapon),rot=has('decay'),magic=has('magic'),aegis=has('aegis'),blood=has('blood'),fury=has('fury'),vitality=has('vitality');
+ const spellUser=caster||rot||magic||aegis||off==='Orb',manaUser=caster||rot||magic;
+ const hasGuard=off==='Shield'||stats.blockChance>0||aegis;
+ const critSynergy=blood||fury||owned.has('sanguine_fury')||owned.has('brutal_crit')||owned.has('adrenaline');
+ let value=0;
+ // Ordinary gear Block affix is actually shield-gated in native gear stats.
+ value+=Number(item.blockBonus||0)*(off==='Shield'?aegis?2.5:1: -2);
+ value+=Number(item.critBonus||0)*(critSynergy&&stats.crit<95?2.2:stats.crit>=100?-2:.25);
+ value+=Number(item.spell||0)*(spellUser?(rot?1.8:aegis?1.1:.4):-1.4);
+ value+=Number(item.manaRegenBonus||0)*(manaUser?8:-15);
+ value+=Number(item.wardBonus||0)*(aegis||off==='Orb'?36:0);
+ value+=Number(item.spd||0)*(fury||blood?1.8:0);
+ if(slot==='offhand'&&off==='Shield'&&aegis)value+=5;
+ if(slot==='offhand'&&off==='Tome'&&manaUser)value+=4;
+ if(slot==='offhand'&&off==='Orb'&&spellUser)value+=4;
+ if(slot==='offhand'&&off==='Charm'&&(blood||vitality))value+=5;
+ // Signature value is provisional and conditional, not rarity-only or a claimed DPS estimate.
+ const signature={
+  'crimson-fang':blood?14:7,'chalice-hollow-king':blood?12:0,
+  gravewake:rot?14:5,'eye-of-morrow':rot?13:0,
+  'verdant-oath':vitality?14:8,'heartroot-carapace':vitality?12:7,
+  oathwall:hasGuard?14:0,'veil-thousand-seals':aegis?12:7,
+  kingsbreaker:fury?14:9,'tempest-talon':critSynergy?14:4,
+  astrafall:caster?14:0,voidglass:caster?14:0
+ };
+ if(item.rarity==='Legendary')value+=signature[item.legendaryId]||0;
+ return value;
+}
+function refreshSynergyContext(a,profile){
+ if(!profile.synergyAudit)return;
+ const s=a.state();profile.synergyContext={stats:a.baseStats(),nodes:[...s.automaticTalents.nodes],weapon:s.equip.weapon?.subtype,offhand:s.equip.offhand?.subtype};
+}
 function gearScore(item,profile,targetSlot=item?.slot){
  if(!item)return -1;
  // Native gear accepts Daggers in either hand. Off-hand offensive stats
@@ -139,7 +177,8 @@ function gearScore(item,profile,targetSlot=item?.slot){
  const baseline=round(s+Number(item.tier||1)*.5+(rarity[item.rarity]||0)*1.5+
   alignment+weapon+offhandUtility+Number(item.critBonus||0)*(agile?2.5:1.8)+
   Number(item.blockBonus||0)*(tank?2.5:1.2));
- return profile.plan?PLANNER.evaluateGear(item,profile,baseline,slot):baseline;
+ const adjusted=baseline+(profile.synergyAudit?synergyGearBonus(item,profile,slot):0);
+ return profile.plan?PLANNER.evaluateGear(item,profile,adjusted,slot):adjusted;
 }
 function gearSnapshot(a){
  const items=Object.values(a.state().equip).filter(Boolean);
@@ -147,7 +186,7 @@ function gearSnapshot(a){
   rarity:Object.fromEntries([...new Set(items.map(x=>x.rarity))].sort().map(r=>[r,items.filter(x=>x.rarity===r).length])),
   items:items.map(x=>({slot:x.slot,subtype:x.subtype,armorType:x.armorType||null,
    name:x.name,rarity:x.rarity,tier:x.tier,startingGear:!!x.startingGear,
-   source:x.source||null,crafted:!!x.crafted,recipeId:x.recipeId||null,v013Trait:x.v013Trait||null,
+   source:x.source||null,crafted:!!x.crafted,recipeId:x.recipeId||null,v013Trait:x.v013Trait||null,legendaryId:x.legendaryId||null,
    stats:Object.fromEntries(['atk','def','hp','spd','str','agi','int','end','cha','mana',
     'spell','evasionRating','critBonus','blockBonus','manaRegenBonus','wardBonus']
     .map(key=>[key,Number(x[key])||0]))}))};
@@ -191,8 +230,10 @@ function spendEarnedTalents(a,profile){
    progress=s.automaticTalents;bought.push(route[0]);changed=true;break;
   }
   if(!changed){
-   const alt=T.NODES.find(n=>!progress.nodes.includes(n.id)&&(!n.family||profile.families.includes(n.family))&&
+   const legal=T.NODES.filter(n=>!progress.nodes.includes(n.id)&&(!n.family||profile.families.includes(n.family))&&
     (!n.element||n.element===(progress.element||'arcane'))&&T.allocate(progress,n.id));
+   if(profile.synergyAudit){const focus={blood:'bleed',fury:'speed',magic:'spell',decay:'rot',aegis:'defense',vitality:'defense'}[profile.families[0]],plan={primary:profile.families[0],secondary:profile.families[1],focus,element:profile.element,mix:profile.families.length>1,milestones:profile.targets||[],statContext:profile.synergyContext?.stats||{}};legal.sort((a,b)=>PLANNER.scoreNode(b,plan,profile.families)-PLANNER.scoreNode(a,plan,profile.families)||a.id.localeCompare(b.id));}
+   const alt=legal[0];
    if(!alt)break;
    if(!a.talentActions.allocate(alt.id))throw Error('Native talent allocation rejected '+alt.id);
    progress=s.automaticTalents;bought.push(alt.id);
@@ -516,7 +557,7 @@ function consolidateStash(a,profile,reserve=4){
 }
 function prepareCamp(a,profile,level,decisionModel='risk-aware',options={}){
  const actions={talents:[],attributes:[],resets:[],elementChoices:[],prepared:null,equipped:[],bought:[],crafted:[],refined:[],potions:[],runes:[],storage:[],soldTreasures:false,restocks:0,salvagedGrey:0,salvageFragments:0};
- const s=a.state();a.potions.inventory();
+ const s=a.state();a.potions.inventory();refreshSynergyContext(a,profile);
  if(s.pendingRuneReward?.options?.length){
   const options=s.pendingRuneReward.options;
   const choice=chooseRuneReward(options,profile);
@@ -559,7 +600,7 @@ function prepareCamp(a,profile,level,decisionModel='risk-aware',options={}){
    actions.elementChoices.push(plan.element);
   }
   const proposed=PLANNER.propose(a.talents,s.automaticTalents,profile.plan,
-   options.history||[],options.priorResets||0);
+   options.history||[],options.priorResets||0,profile.synergyAudit?profile.synergyContext?.stats:null);
   if(proposed.resetReason){
    const beforeReset={xp:s.automaticTalents.xp,nodes:s.automaticTalents.nodes.length};
    if(!a.talentActions.reset())throw Error('Strategic native reset rejected');
@@ -591,7 +632,7 @@ function prepareCamp(a,profile,level,decisionModel='risk-aware',options={}){
   actions.elementChoices.push(...talentInvestment.elements);
  }
  actions.attributes.push(...spendEarnedAttributes(a,profile).chosen);
- actions.prepared=prepareEarnedAbility(a,profile);
+ actions.prepared=prepareEarnedAbility(a,profile);refreshSynergyContext(a,profile);
  if(decisionModel!=='legacy'){
   actions.runes.push(...manageEarnedRunes(a,profile));
   actions.refined.push(...refineEarnedReagents(a,profile,level));
@@ -1239,7 +1280,7 @@ function playDungeon(a,level,profile,opts,decisionModel='risk-aware',captureMode
 function simulateAccount(seed,id,opts,simulationOptions={}){
  // Stage 6.32: read-only research cohorts may pass an explicit, validated agent
  // profile. Native game rewards, talents, equipment and combat are unchanged.
- const profile=simulationOptions.researchProfiles?.[id]||PROFILES[id],decisionModel=simulationOptions.decisionModel||'adaptive';
+ const sourceProfile=simulationOptions.researchProfiles?.[id]||PROFILES[id],profile=sourceProfile?.synergyAudit?{...sourceProfile}:sourceProfile,decisionModel=simulationOptions.decisionModel||'adaptive';
  if(!profile||!profile.name||!Array.isArray(profile.families)||!profile.families.length||
   !['Cloth','Leather','Plate'].includes(profile.armor)||!Array.isArray(profile.weapons)||!profile.weapons.length||
   (profile.plan&&!Object.hasOwn(PLANNER.BUILDS,profile.plan)))throw Error('Invalid earned research profile '+id);
@@ -1269,7 +1310,7 @@ function simulateAccount(seed,id,opts,simulationOptions={}){
    }
    let entry={level,attempt,profile:id};
    try{
-    const canPivot=!profile.plan&&!!PIVOTS[id]&&!pivoted&&attempt>=3&&a.state().automaticTalents.nodes.length>=4&&
+    const canPivot=!profile.fixedResearchBuild&&!profile.plan&&!!PIVOTS[id]&&!pivoted&&attempt>=3&&a.state().automaticTalents.nodes.length>=4&&
      acc.attempts.filter(x=>x.level===level&&!x.error&&x.status!=='error').length>=2;
     const nextProfile=canPivot?pivotProfile(id):activeProfile;
     const camp=prepareCamp(a,nextProfile,level,decisionModel,
@@ -1493,7 +1534,7 @@ function main(args=process.argv.slice(2)){
  if(report.coverage.errors)process.exitCode=1;
  return report;
 }
-module.exports={PROFILES,PIVOTS,pivotProfile,DEFAULTS,parseArgs,spendEarnedAttributes,gearScore,gearSnapshot,runeScore,chooseRuneReward,manageEarnedRunes,potionScore,selectEarnedPotions,buyEarnedPotions,refineEarnedReagents,selectThornAwareTarget,spendEarnedTalents,prepareEarnedAbility,equipEarned,
+module.exports={PROFILES,PIVOTS,pivotProfile,DEFAULTS,parseArgs,synergyGearBonus,spendEarnedAttributes,gearScore,gearSnapshot,runeScore,chooseRuneReward,manageEarnedRunes,potionScore,selectEarnedPotions,buyEarnedPotions,refineEarnedReagents,selectThornAwareTarget,spendEarnedTalents,prepareEarnedAbility,equipEarned,
  prepareCamp,craftEarned,investEarnedGear,consolidateStash,policyFlags,capabilities,rankRealms,choiceRealm,pathLength,eliteOpportunity,selectRoom,evaluateRetreat,boonScore,chooseBoon,contractScore,chooseContract,contractExitDecision,eventOptions,potionSlots,usePotionKind,usePotionsBetween,rerollPoorBoonAtShrine,
  fightNatural,resolveEvent,clearResults,playDungeon,simulateAccount,analyze,run,markdown,main};
 if(require.main===module)main();

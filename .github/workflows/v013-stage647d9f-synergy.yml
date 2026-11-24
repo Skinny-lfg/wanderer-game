@@ -1,0 +1,58 @@
+name: Stage 6.47D.9F — Current builds and E10 synergy audit (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths: ['.github/workflows/v013-stage647d9f-synergy.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node scripts/v013-stage647d9f-synergy.cjs selftest
+      - run: npm test
+  cohort:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [cautious, balanced, plate-warden, cloth-battlemage, leather-duelist, hexblade-hybrid, smart-blood-pure, smart-blood-two-handed, smart-fury-bow, smart-fury-daggers, smart-vitality-pure, smart-aegis-vitality, smart-magic-arcane-pure, smart-magic-fire-pure, magic-frost, smart-magic-lightning-pure, smart-decay-magic-aegis, decay-blood-spread]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node scripts/v013-stage647d9f-synergy.cjs run ${{ matrix.profile }} 100
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: synergy-${{ matrix.profile }}
+          path: reports/stage647d9f/*.json
+  aggregate:
+    needs: [regression, cohort]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: synergy-*
+          path: reports/stage647d9f
+          merge-multiple: true
+      - run: node scripts/v013-stage647d9f-synergy.cjs aggregate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage647d9f-synergy-report
+          path: reports/v013-stage647d9f-synergy.json

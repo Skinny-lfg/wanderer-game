@@ -75,7 +75,16 @@ function scoreNode(n,plan,active,context={}){
  else if(n.kind==='stat')score+=2.2+(n.tier||1)*.55;
  // Relative stat-node value: percentage points on a normalized reference,
  // not legacy flat units. HP uses a 250-point reference to retain its role weight.
- const ability=n.description||'';
+ const ability=n.description||'',stats=plan.statContext;
+ if(stats&&n.kind==='stat'){
+  const cap=(v,max)=>Math.max(0,Math.min(1,(max-(Number(v)||0))/(max*.15)));
+  if(n.critChance)score+=n.critChance*(cap(stats.crit,100)-.5)*2;
+  if(n.guardChance)score+=n.guardChance*(cap(stats.blockChance,65)-.5)*3;
+  if(n.pctSpeed)score+=n.pctSpeed*(cap(stats.attacksPerSec,4.2)-.5)*100;
+  if(n.manaCostReduction)score+=n.manaCostReduction*(cap(stats.manaCostReduction,.25)-.5)*140;
+  if(!stats.mana&&(n.pctMana||n.pctRegen||n.manaCostReduction)&&!active.some(f=>f==='magic'||f==='decay'))score-=5;
+  if(stats.spellPower>0&&n.pctSpell)score+=Math.min(3,stats.spellPower*n.pctSpell*.12);
+ }
  if(focus==='spell'||focus==='rot'){
   score+=(n.pctSpell||0)*100*1.9+((n.pctRegen||0)*5+(n.flatRegen||0))*13+((n.pctMana||0)*100+(n.flatMana||0))*.65+(n.critChance||0)*.8+(n.manaCostReduction||0)*200+(n.spell||0)*30;
   if(/Mana|Spell|Arcane|Rot|cast|Intellect/i.test(ability))score+=2.5;
@@ -260,9 +269,9 @@ function fill(T,progress,plan,active,earned,milestone){
  }
  return {progress:p,purchases,goals};
 }
-function propose(T,progress,preset,history=[],resets=0){
+function propose(T,progress,preset,history=[],resets=0,statContext=null){
  if(!T.valid(progress))throw Error('Agent received invalid genuine Talent state');
- const plan=typeof preset==='string'?getPlan(preset):preset;
+ const rawPlan=typeof preset==='string'?getPlan(preset):preset,plan=statContext?{...rawPlan,statContext}:rawPlan;
  const earned=T.earned(progress),stage=activeFamilies(plan,earned,history,progress);
  const milestone=candidateMilestone(T,progress,plan,stage.families,earned);
  let original=fill(T,progress,plan,stage.families,earned,milestone);

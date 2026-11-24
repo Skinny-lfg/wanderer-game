@@ -15,7 +15,7 @@ function classify({equipment={},talents={},build={},stats={}}={}){
  const has=id=>owned.has(id)||picked.has(id);
  const main=equipment.weapon?.subtype||null,offhand=equipment.offhand?.subtype||null;
  const element=talents.element||build.element||null;
- const magical=['Staff','Wand'].includes(main);
+ const magical=['Staff','Wand'].includes(main),fundedMagic=magical||owned.has('affinity_magic')&&Number(stats.mana)>0;
  const armor=equipment.armor?.armorType||equipment.armor?.subtype||null;
  let area=0,focus=1,defense=0;const sources=[];
  function add(type,amount,label){if(type==='area')area+=amount;else if(type==='focus')focus+=amount;else defense+=amount;sources.push({kind:type,value:amount,source:label});}
@@ -26,11 +26,21 @@ function classify({equipment={},talents={},build={},stats={}}={}){
  if(main==='Daggers'&&has('fan_of_blades'))add('area',2.3,'fan of blades');
  if(main==='Mace'&&has('mace_shockwave'))add('area',1.9,'mace shockwave');
  if(main==='Sword'&&offhand==='Shield'&&has('sword_sweep'))add('area',1.6,'shielded sweep');
- if(magical&&element==='lightning'&&has('overcharge')&&!has('lightning_focus'))add('area',3.3,'funded chain lightning');
- if(magical&&element==='lightning'&&has('storm_mastery')&&!has('lightning_focus'))add('area',1.2,'storm mastery chain extension');
- if(magical&&element==='fire'&&has('fire_spread'))add('area',2.8,'funded wildfire burn');
- if(magical&&element==='frost'&&has('frost_spread'))add('area',1.9,'funded winter field chill');
+ if(fundedMagic&&element==='lightning'&&has('overcharge')&&!has('lightning_focus'))add('area',3.3,'funded chain lightning');
+ if(fundedMagic&&element==='lightning'&&has('storm_mastery')&&!has('lightning_focus'))add('area',1.2,'storm mastery chain extension');
+ if(fundedMagic&&element==='fire'&&has('fire_spread'))add('area',2.8,'funded wildfire burn');
+ if(fundedMagic&&element==='frost'&&has('frost_spread'))add('area',1.9,'funded winter field chill');
  if(has('plague_spread'))add('area',1.6,'on-kill contagion');
+ if(has('vital_pulse'))add('area',2.2,'vital pulse');
+ if(has('grasping_roots'))add('area',1.8,'grasping roots');
+ if(has('ward_echo')&&(offhand==='Orb'||has('affinity_aegis')||has('barrier_pulse')))add('area',1.9,'barrier-enabled ward echo');
+ if(has('affinity_decay')&&Number(stats.mana)>0&&!has('carrion_detonation')&&talents.prepared!=='grave_bloom'){
+  if(has('contagious_touch'))add('area',1.4,'paid Rot contagion');
+  if(has('corruption_nova'))add('area',1.8,'corruption nova');
+ }
+ if(has('carrion_detonation')&&has('affinity_blood')&&has('affinity_decay')&&!magical)add('area',2,'charged carrion detonation');
+ if(fundedMagic&&element==='arcane'&&has('arcane_nova')&&talents.prepared!=='grave_bloom')add('area',1.8,'arcane infusion nova');
+ if(fundedMagic&&element==='frost'&&has('frost_resonance'))add('area',1.2,'frost resonance');
  if(has('grave_bloom')&&talents.prepared==='grave_bloom')add('area',1.6,'prepared grave bloom');
  if(has('single_target_mastery'))add('focus',2.1,'single-target mastery');
  if(has('lightning_focus')&&element==='lightning')add('focus',2.1,'focused discharge');
@@ -51,6 +61,9 @@ function classify({equipment={},talents={},build={},stats={}}={}){
  if(has('runic_shield'))add('defense',1.4,'runic shield');
  if(has('strong_heart'))add('defense',.9,'strong heart');
  if(has('renewal'))add('defense',.8,'renewal');
+ if(stats.blockChance>0)add('defense',Math.min(2,stats.blockChance*(stats.blockReduction||.35)/12),'actual Guard chance and strength');
+ if(stats.barrierPower>0&&(offhand==='Orb'||has('affinity_aegis')||has('overflowing_life')))add('defense',Math.min(1.2,stats.barrierPower*3),'active Barrier Power');
+ if(stats.healingPower>0&&(has('affinity_blood')||has('affinity_vitality')||offhand==='Charm'))add('defense',Math.min(1,stats.healingPower*3),'active Healing Power');
  const areaReady=area>=1.8,focusReady=focus>=2.0;
  const role=areaReady&&focusReady?'hybrid':areaReady?'aoe':focusReady?'single-target':defense>=2?'defensive':'developing';
  // A mixed-Affinity build is not necessarily AoE+single-target. Track both
