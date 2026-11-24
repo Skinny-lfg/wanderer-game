@@ -101,10 +101,11 @@ function synergyGearBonus(item,profile,slot){
  const hasGuard=off==='Shield'||stats.blockChance>0||aegis;
  const critSynergy=blood||fury||owned.has('sanguine_fury')||owned.has('brutal_crit')||owned.has('adrenaline');
  let value=0;
- // Ordinary gear Block affix is actually shield-gated in native gear stats.
- value+=Number(item.blockBonus||0)*(off==='Shield'?aegis?2.5:1: -2);
+ // Guard gear contributes only after Shield or an actual talent unlock enables Guard.
+ value+=Number(item.blockBonus||0)*(hasGuard?(off==='Shield'?2.5:1.7):-2);
  value+=Number(item.critBonus||0)*(critSynergy&&stats.crit<95?2.2:stats.crit>=100?-2:.25);
- value+=Number(item.spell||0)*(spellUser?(rot?1.8:aegis?1.1:.4):-1.4);
+ value+=Number(item.spell||0)*(spellUser?(rot?2.1:aegis?1.1:.4):-1.4);
+ if(rot){const physical=!caster;value+=Number(item.atk||0)*(physical?2.2:.15)+Number(item.str||0)*(physical?1.3:0)+Number(item.int||0)*1.8+Number(item.mana||0)*.35;}
  value+=Number(item.manaRegenBonus||0)*(manaUser?8:-15);
  value+=Number(item.wardBonus||0)*(aegis||off==='Orb'?36:0);
  value+=Number(item.spd||0)*(fury||blood?1.8:0);
@@ -112,6 +113,7 @@ function synergyGearBonus(item,profile,slot){
  if(slot==='offhand'&&off==='Tome'&&manaUser)value+=4;
  if(slot==='offhand'&&off==='Orb'&&spellUser)value+=4;
  if(slot==='offhand'&&off==='Charm'&&(blood||vitality))value+=5;
+ if(slot==='offhand'&&profile.offhands?.length)value+=profile.offhands.includes(off)?15:-8;
  // Signature value is provisional and conditional, not rarity-only or a claimed DPS estimate.
  const signature={
   'crimson-fang':blood?14:7,'chalice-hollow-king':blood?12:0,
@@ -119,7 +121,7 @@ function synergyGearBonus(item,profile,slot){
   'verdant-oath':vitality?14:8,'heartroot-carapace':vitality?12:7,
   oathwall:hasGuard?14:0,'veil-thousand-seals':aegis?12:7,
   kingsbreaker:fury?14:9,'tempest-talon':critSynergy?14:4,
-  astrafall:caster?14:0,voidglass:caster?14:0
+  astrafall:caster||magic?14:0,voidglass:caster||magic?14:0
  };
  if(item.rarity==='Legendary')value+=signature[item.legendaryId]||0;
  return value;
@@ -382,10 +384,10 @@ function investEarnedGear(a,profile,level){
 // always come from the production game.
 function runeScore(rune,profile){
  if(!rune)return -Infinity;
- const magic=profile.families.includes('magic'),leather=profile.armor==='Leather',plate=profile.armor==='Plate';
- const affinity={might:plate?5.2:leather?2.2:1.4,
+ const magic=profile.families.includes('magic'),leather=profile.armor==='Leather',plate=profile.armor==='Plate',rot=profile.synergyAudit&&profile.families.includes('decay');
+ const affinity={might:rot&&!(profile.weapons||[]).every(w=>['Staff','Wand'].includes(w))?5:plate?5.2:leather?2.2:1.4,
   swiftness:leather?5.2:magic?1.8:2.1,
-  wisdom:magic?6:1.1,
+  wisdom:magic||rot?6:1.1,
   fortitude:plate?5.1:leather?2.3:3.6,
   fortune:2.1,fury:magic?2.5:leather?4.8:3.4,
   warding:plate?5:magic?3.2:3.1,vitality:plate?5.1:4.2};

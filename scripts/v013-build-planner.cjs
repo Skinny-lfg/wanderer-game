@@ -88,7 +88,8 @@ function scoreNode(n,plan,active,context={}){
  if(focus==='spell'||focus==='rot'){
   score+=(n.pctSpell||0)*100*1.9+((n.pctRegen||0)*5+(n.flatRegen||0))*13+((n.pctMana||0)*100+(n.flatMana||0))*.65+(n.critChance||0)*.8+(n.manaCostReduction||0)*200+(n.spell||0)*30;
   if(/Mana|Spell|Arcane|Rot|cast|Intellect/i.test(ability))score+=2.5;
-  if(/Attack Power|Strength|Endurance/i.test(ability))score-=1;
+  if(focus==='rot'&&stats){const physical=!(plan.weapons||[]).every(w=>['Staff','Wand'].includes(w));score+=(n.pctAttack||0)*(physical?170:35)+(n.rotBonus||0)*180+(n.pctSpeed||0)*(physical?80:25);if(physical&&/Attack Power/i.test(ability))score+=2.5;}
+  else if(/Attack Power|Strength|Endurance/i.test(ability))score-=1;
   if(n.attribute==='int')score+=3.1;
  }
  if(focus==='bleed'||focus==='speed'){

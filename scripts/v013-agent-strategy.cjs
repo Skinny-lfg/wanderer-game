@@ -11,6 +11,7 @@ const MIXED_SKILLS=new Set(['crimson_rush','reapers_cadence','red_guillotine',
  'runic_shield','prismatic_rebound','arcane_bastion','hex_bolt','elemental_blight',
  'grave_bloom','plague_spread','carrion_detonation','septic_wound']);
 function classify({equipment={},talents={},build={},stats={}}={}){
+ build=build||{};talents=talents||{};
  const owned=new Set(talents.nodes||[]),picked=new Set((build.picks||[]).map(x=>typeof x==='string'?x:x?.id));
  const has=id=>owned.has(id)||picked.has(id);
  const main=equipment.weapon?.subtype||null,offhand=equipment.offhand?.subtype||null;

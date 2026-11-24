@@ -115,6 +115,8 @@ function totalStats(equipment,ownedRunes,equippedRuneIds,{isTwoHanded,FIELDS,ite
  if(state?.automaticTalents?.nodes?.length&&root.WandererAutomaticTalents)root.WandererAutomaticTalents.apply(s,state.automaticTalents);
  let result=s;
  if(PHASE1_PREVIEW&&root.WandererV012Buildcraft){let active=build;if(!active){active=root.WandererV012Buildcraft.create();root.WandererV012Buildcraft.syncPermanent(active,state?.automaticTalents||root.WandererAutomaticTalents.create());}result=root.WandererV012Buildcraft.mods(active,result);}
+ // A shieldless character must unlock Guard before gear can improve it.
+ if(off?.subtype!=='Shield'&&result.blockChance>0){result.blockChance=Math.min(65,result.blockChance+Math.min(8,Math.max(0,gearBonus('blockBonus'))));result.blockReduction=.35;}
  if(PHASE1_PREVIEW&&phase6Run?.effects)result=root.WandererV012CombatCore.applyExpeditionModifiers(result,phase6Run.effects);
  result.attacksPerSec=Math.min(4.2,result.attacksPerSec);result.crit=Math.min(100,Math.max(0,result.crit||0));result.power=power(result);
  return result;

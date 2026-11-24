@@ -11,8 +11,8 @@ const DEFINITIONS={
  "veil-thousand-seals":{affinity:"aegis",name:"Veil of a Thousand Seals",cooldown:8,description:"Gain 4% Max HP Barrier at Realm start (6% with Aegis); with Sword + Shield, gain 2.5% (4% with Aegis). Its absorption empowers the next attack by 30% base damage (45% with Aegis)."},
  "kingsbreaker":{affinity:"fury",name:"Kingsbreaker",cooldown:4,description:"An eligible attack gains 80% base damage (110% with Fury)."},
  "tempest-talon":{affinity:"fury",name:"Tempest Talon",cooldown:6,description:"Critical hit deals 25% extra base damage (35% with Fury)."},
- "astrafall":{affinity:"magic",name:"Astrafall",cooldown:4,description:"Every 2 Mana-funded casts echo 75% Spell Power (100% with Magic)."},
- "voidglass":{affinity:"magic",name:"Voidglass",cooldown:3,description:"Every 2 Mana-funded casts deal 90% Spell Power (120% with Magic) and refund 25% Mana cost (30% with Magic)."}
+ "astrafall":{affinity:"magic",name:"Astrafall",cooldown:4,description:"Every 2 paid Magic actions (weapon cast, elemental cast or Infusion activation) echo 75% Spell Power (100% with Magic)."},
+ "voidglass":{affinity:"magic",name:"Voidglass",cooldown:3,description:"Every 2 paid Magic actions (weapon cast, elemental cast or Infusion activation) deal 90% Spell Power (120% with Magic) and refund 25% of the triggering Mana cost (30% with Magic)."}
 
 };
 const GENERIC_IDS=[];

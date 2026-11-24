@@ -364,7 +364,7 @@ function fight(a,c,limit,targetPolicy='focus',measure=false){
    criticalChance:v(r.stats?.crit),guardChance:v(r.stats?.blockChance),guardStrength:v(r.stats?.blockReduction),
    barrierPower:v(r.stats?.barrierPower),healingPower:v(r.stats?.healingPower),manaCostReduction:v(r.stats?.manaCostReduction),
    criticalDisplayEvents:v(now.crit-nativeBefore.crit),guardLogEvents:v(now.blocks-nativeBefore.blocks),attackCalls:v(now.attacks-nativeBefore.attacks),
-   manaStarvedSeconds:v(metrics.manaStarvedSeconds||0),legendaryProcs:Object.fromEntries(Object.entries(metrics.procs||{}).filter(([name])=>name.startsWith('Legendary: '))),
+   manaStarvedSeconds:v(metrics.manaStarvedSeconds||0),spellCriticalHits:v(metrics.spellCriticalHits||0),eligibleSpellCriticalRolls:v(metrics.eligibleSpellCriticalRolls||0),legendaryProcs:Object.fromEntries(Object.entries(metrics.procs||{}).filter(([name])=>name.startsWith('Legendary: '))),
    passiveActivations:activations,
    passiveTelemetryScope:'Buildcraft activated() only, not all passive and stat triggers',
    barrierScope:'setBarrier() after entry; initial Barrier reported separately',

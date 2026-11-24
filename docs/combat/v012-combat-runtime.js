@@ -156,16 +156,30 @@ function legendaryExtend(e,type){
 function legendaryAttackBonus(r,base,critical,cast){
  const t=ports.legendaryRuntime(r),e=r.enemy,now=ports.setNow(r);let added=0;
  r.legendaryAttackCount=(r.legendaryAttackCount||0)+1;
- if(cast)r.legendaryCastCount=(r.legendaryCastCount||0)+1;
  if(t.verdantReady){added+=Math.round(base*t.verdantReady);t.verdantReady=0;}
  if(t.veilReady){added+=Math.round(base*t.veilReady);t.veilReady=0;}
  if(ports.legendaryHas('verdant-oath')&&ports.legendaryProc(r,'verdant-oath')){ports.setHeal(r,r.maxhp*(ports.legendaryEmpowered(r,'verdant-oath')?.012:.008));t.verdantReady=ports.legendaryEmpowered(r,'verdant-oath')?.90:.60;}
  if(e.v012Rot?.length&&ports.legendaryHas('eye-of-morrow')&&ports.legendaryProc(r,'eye-of-morrow'))added+=Math.min(Math.round(base*(ports.legendaryEmpowered(r,'eye-of-morrow')?.85:.60)),Math.round(e.maxhp*(e.boss?.015:.025)));
  if(ports.legendaryHas('kingsbreaker')&&ports.legendaryProc(r,'kingsbreaker'))added+=Math.round(base*(ports.legendaryEmpowered(r,'kingsbreaker')?1.10:.80));
  if(critical&&ports.legendaryHas('tempest-talon')&&ports.legendaryProc(r,'tempest-talon'))added+=Math.round(base*(ports.legendaryEmpowered(r,'tempest-talon')?.35:.25));
- if(cast&&ports.legendaryHas('astrafall')){t.astraCasts=Math.min(2,(t.astraCasts||0)+1);if(t.astraCasts>=2&&ports.legendaryProc(r,'astrafall')){t.astraCasts=0;added+=Math.round(r.stats.spellPower*(ports.legendaryEmpowered(r,'astrafall')?1:.75));}}
- if(cast&&ports.legendaryHas('voidglass')){t.voidCasts=Math.min(2,(t.voidCasts||0)+1);if(t.voidCasts>=2&&ports.legendaryProc(r,'voidglass')){t.voidCasts=0;added+=Math.round(r.stats.spellPower*(ports.legendaryEmpowered(r,'voidglass')?1.20:.90));r.mp=Math.min(r.maxmp,r.mp+(r.legendaryFundedCost||0)*(ports.legendaryEmpowered(r,'voidglass')?.30:.25));}}
+ if(cast)added+=legendaryFundedBonus(r,r.legendaryFundedCost||0);
  return added;
+}
+// Count exactly one funded action: main weapon cast, autonomous elemental cast or paid Infusion activation.
+function legendaryFundedBonus(r,cost){
+ if(!(cost>0))return 0;
+ const t=ports.legendaryRuntime(r);let added=0;r.legendaryCastCount=(r.legendaryCastCount||0)+1;
+ if(ports.legendaryHas('astrafall')){t.astraCasts=Math.min(2,(t.astraCasts||0)+1);if(t.astraCasts>=2&&ports.legendaryProc(r,'astrafall')){t.astraCasts=0;added+=Math.round(r.stats.spellPower*(ports.legendaryEmpowered(r,'astrafall')?1:.75));}}
+ if(ports.legendaryHas('voidglass')){t.voidCasts=Math.min(2,(t.voidCasts||0)+1);if(t.voidCasts>=2&&ports.legendaryProc(r,'voidglass')){t.voidCasts=0;added+=Math.round(r.stats.spellPower*(ports.legendaryEmpowered(r,'voidglass')?1.20:.90));r.mp=Math.min(r.maxmp,r.mp+cost*(ports.legendaryEmpowered(r,'voidglass')?.30:.25));}}
+ return added;
+}
+function paidMagicLegendary(r,cost){const extra=legendaryFundedBonus(r,cost);if(extra>0&&r.enemy.hp>0)ports.setDirectEnemyDamage(r,extra,'✨ Funded legendary echo');return extra;}
+function spellCriticalDamage(r,amount){
+ const raw=Math.max(0,Number(amount)||0),chance=Math.min(100,Math.max(0,Number(r.stats?.crit)||0));
+ if(raw<=0||chance===0)return raw;
+ ports.phase6Metric(r,'eligibleSpellCriticalRolls',1);
+ if(chance===100||ports.gameRandom()<chance/100){ports.phase6Metric(r,'spellCriticalHits',1);return Math.round(raw*1.5);}
+ return raw;
 }
 function legendaryOnHit(r,base,real){
  if(real<=0)return;
@@ -590,7 +604,7 @@ function weaponAttack(r,offhandStrike=false){
  let damage=0,element=null,cast=false;
  if(caster&&r.mp<cost&&!r.wisdomUsed&&signature('wisdom')){r.wisdomUsed=true;r.mp=cost;ports.addLog('Wisdom funded the missing Mana.','spell');}
  if(caster&&r.mp>=cost){
-  if(ports.legendaryHas('voidglass'))r.legendaryFundedCost=cost;
+  r.legendaryFundedCost=cost;
   ports.phase6Metric(r,'manaSpent',cost);ports.phase6Metric(r,'fundedCasts',1);r.mp-=cost;cast=true;element=null;
   r.manaFallbackLogged=false;
   const factor=kind==='Staff'?1.32:1.05;
@@ -1008,6 +1022,7 @@ function phase2Context(r){
   if(controlled)ports.phase6Metric(r,'controlled_burnApplications',1);ports.synchronizeDots(e);
  },
  dotDamage(amount,label,secondaryFraction=0){const n=Math.max(0,Math.round(amount*(root.WandererV013ExpeditionBoons?.dotFactor(r)||1)));if(n){const applied=Math.min(Math.max(0,e.hp),n);ports.phase6Metric(r,'damageDealt',applied);ports.phase6Metric(r,'periodicDamage',applied);if(secondaryFraction>0&&applied>0){const attributed=Math.min(applied,Math.round(applied*Math.min(1,secondaryFraction)));if(attributed>0){ports.phase6Metric(r,'secondaryTargetDamage',attributed);ports.phase6Metric(r,'secondaryDotDamage',attributed);ports.phase6Metric(r,'secondaryTargetHits',1);}}e.hp-=n;ports.addLog(label+' '+n+' damage','spell');ports.floatText(n,'enemy',false,'ROT',e);}},
+ magicCriticalDamage(amount){return spellCriticalDamage(r,amount);},
  damage(amount,label){return ports.setDirectEnemyDamage(r,amount,label);},
  areaDamage(amount,label){ports.setDirectEnemyDamage(r,amount,label);groupSecondaryDamage(r,amount,Array(Math.max(0,(r.enemies?.length||1)-1)).fill(1),label);},
  talentPulseDamage(enemy,amount,id){return talentPulseDamage(r,enemy,amount,id);},
@@ -1059,6 +1074,7 @@ function phase2MagicTick(r){
    WandererV012Buildcraft.activateInfusion(b,ctx.now);
    ctx.funded=true;ctx.magicalAction='infusion';ctx.power=r.stats.spellPower||0;
    WandererV012Buildcraft.onInfusionActivation(b,ctx);
+   paidMagicLegendary(r,cost);
    return;
   }
  }
@@ -1076,7 +1092,8 @@ function phase2MagicTick(r){
  const chainBase=spellDamage;
  if(r.enemy.baseDef>0&&r.enemy.def<r.enemy.baseDef)spellDamage=Math.max(1,Math.round(spellDamage*(1+(b.runtime.talentBonuses?.sunderDamage||0))));
  const hpBefore=r.enemy.hp;
- ports.setDirectEnemyDamage(r,spellDamage,'✨ '+b.element);
+ ports.setDirectEnemyDamage(r,spellCriticalDamage(r,spellDamage),'✨ '+b.element);
+ if(r.enemy.hp>0)paidMagicLegendary(r,cost);else legendaryFundedBonus(r,cost);
  if(r.enemy.hp<hpBefore)offhandOrbWard(r);
  if(reflectThornbloom(r,r.enemy,Math.min(hpBefore,hpBefore-r.enemy.hp)))return;
  WandererV012Buildcraft.onCast(b,ctx);groupElementalEffects(r,b);
@@ -1094,7 +1111,7 @@ function phase6Stats(stats){return ports.phase6Run?WandererV012CombatCore.applyE
 function winEncounter(){ports.phase1WaveWon();}
 
 function die(){ports.phase1Death();}
-return {addLog,bossForTier,eliteArchetype,rollEliteArchetype,tryDodge,enemyFor,synchronizeDots,tickDots,advanceAcceleratedBleed,focusedWeaponDamage,enemySlowFactor,talentPulseDamage,controlledSpreadBase,v013LightningChainDamage,groupElementalEffects,setRuntime,setNow,advancePlayerAttackClock,activeLegendarySignatures,legendaryRuntime,legendaryHas,legendaryReady,legendaryEmpowered,legendaryProc,legendaryOnHit,legendaryExtend,legendaryAttackBonus,legendaryDefensiveEffects,legendaryRealmStart,legendaryTick,setReady,setBarrier,regenPerSecond,setHeal,setDelayEnemy,setDirectEnemyDamage,setOnAttack,setCombatExpire,setEnemyWeaken,setHeatTick,setSoulHeal,applyAffinity,weaponAttack,updateFight,phase2Context,phase2Stats,phase2WeaponAttack,phase2MagicTick,phase6Metric,phase6Proc,phase6CollectMetrics,phase6Stats,winEncounter,die};
+return {legendaryFundedBonus,spellCriticalDamage,addLog,bossForTier,eliteArchetype,rollEliteArchetype,tryDodge,enemyFor,synchronizeDots,tickDots,advanceAcceleratedBleed,focusedWeaponDamage,enemySlowFactor,talentPulseDamage,controlledSpreadBase,v013LightningChainDamage,groupElementalEffects,setRuntime,setNow,advancePlayerAttackClock,activeLegendarySignatures,legendaryRuntime,legendaryHas,legendaryReady,legendaryEmpowered,legendaryProc,legendaryOnHit,legendaryExtend,legendaryAttackBonus,legendaryDefensiveEffects,legendaryRealmStart,legendaryTick,setReady,setBarrier,regenPerSecond,setHeal,setDelayEnemy,setDirectEnemyDamage,setOnAttack,setCombatExpire,setEnemyWeaken,setHeatTick,setSoulHeal,applyAffinity,weaponAttack,updateFight,phase2Context,phase2Stats,phase2WeaponAttack,phase2MagicTick,phase6Metric,phase6Proc,phase6CollectMetrics,phase6Stats,winEncounter,die};
 }
 root.WandererV012CombatRuntime=Object.freeze({create});
 })(globalThis);

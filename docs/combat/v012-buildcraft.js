@@ -659,11 +659,12 @@ function onInfusionHit(b,c){
   const targets=adaptiveTargets(c).filter(t=>t!==c.enemy).slice(0,2);
   if(targets.length){activated(b,'arcane_nova');c.metric?.('arcane_novaActivations',1);c.metric?.('arcane_novaTargets',targets.length);for(const t of targets)adaptiveDamage(c,t,amount*.35,'arcane_nova');c.link?.('arcane',c.enemy,targets);}
  }
- if(amount>0&&c.enemy.hp>0)c.damage(amount,'✨ Arcane Infusion');
+ const directAmount=amount>0&&c.enemy.hp>0?(c.magicCriticalDamage?c.magicCriticalDamage(amount):amount):0;
+ if(directAmount>0)c.damage(directAmount,'✨ Arcane Infusion');
  r.magicInfusionHits=(r.magicInfusionHits||0)+1;
  // A Wand/Staff funded attack already fires the native spell callbacks.
  // The Infusion adds damage, but never duplicates Spell Echo, Decay or Aegis procs.
- if(c.magical)return amount;
+ if(c.magical)return directAmount;
  const e=c.enemy;
  // Physical main hits receive their own paid-enchantment hybrid triggers.
  // Wand/Staff already handled those callbacks on their native funded cast.
@@ -672,7 +673,7 @@ function onInfusionHit(b,c){
   if(spellEchoRank)c.damage(Math.max(1,Math.round(amount*.10*spellEchoRank)),'✨ Spell Echo');
 
  }
- // This hit is NOT an additional attack, spell, critical or off-hand proc.
+ // Infusion direct damage can crit, but is NOT a second attack, paid action or proc trigger.
  if(rank(b,'arcane_echo')&&r.magicInfusionHits%4===0&&activated(b,'arcane_echo'))
   c.damage(power*values('arcane_echo',rank(b,'arcane_echo')).power,'✨ Arcane Echo');
  if(rank(b,'hex_bolt')&&e.v012Rot?.length&&ready(b,'hexBolt',c.now,3)&&activated(b,'hex_bolt'))
@@ -687,7 +688,7 @@ function onInfusionHit(b,c){
   c.damage(power*.30,'⛨ Arcane Bastion');c.barrier(barrierAmount(c.player.maxhp,barrierSpellPower(c),.03,.06));
  }
  if(magicMode(b)==='arcane'&&specialized(b,'arcane_mastery')&&ready(b,'arcaneMasteryMana',c.now,5))c.mana(2);
- return amount;
+ return directAmount;
 }
 function clear(b){if(!b)return;b.picks.length=0;b.element=null;b.unlockedFamilies=[];b.families=[];b.cooldowns=Object.create(null);b.runtime={frenzyUntil:0,counterBlock:0,counterBarrier:0,spellblade:false,magicHits:0,staticCharges:0,adrenalineUntil:0,conduit:false,lastStand:false,lastSpellAt:-999};}
 root.WandererV012Buildcraft=Object.freeze({CATALOG,FAMILIES,ELEMENTS:elements,barrierAmount,create,ownedRank,rank,values,bleedDamage,elementalPower,applyRot,migrateEnemyDots,mods,onHeal,onSecondaryWeaponStatus,onAttack,onCast,onSecond,tickRot,incoming,onDefend,onKill,survive,speed,enemyHealMultiplier,enemyDefense,nextCost,resetWave,canCast,magicMode,infusionConfig,infusionReady,activateInfusion,onInfusionActivation,onInfusionHit,validate,syncPermanent,clear});

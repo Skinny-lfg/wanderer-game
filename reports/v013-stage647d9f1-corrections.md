@@ -1,0 +1,10 @@
+# 9F.1 — Mechanics corrections and larger E10 cohort
+
+Prior run 45421267420 failed 16/18 cohort jobs due to Camp classification reading null build.picks; two succeeded without usable full population coverage. Regression and incomplete aggregate succeeded. Corrected null normalization; test explicit null and real E10 Camp capture + one native replay before matrix. Aggregate now fails on missing or incomplete shards. Existing source curve relief remains capture-only (E1 50%, smooth to unchanged E10+).
+
+Guard: shieldless gear bonus applies after a real talent unlock gives nonzero Guard, with 35% strength, same +8 equipment cap and 65% global cap; Shield behavior unchanged. No free Guard from an otherwise inert affix.
+Magic: direct primary autonomous elemental casts and consumed Arcane Infusion damage gain 150% crit using existing Critical Chance; normal weapon crit remains unchanged; unboosted secondary chain/nova, DoTs, capped special effects and proc-generated damage do not independently crit; no recursive on-crit triggers from extra spell crits. Telemetry records extra spell rolls/hits.
+Astrafall/Voidglass: single shared paid-action counter for weapon casts, autonomous elemental casts and paid Infusion activations. No count for each consumed charge, DoT or free proc. Extra damage on triggering action; actual paid cost refund. Existing two-action threshold, cooldown and affinity coefficients unchanged.
+Decay: gear scoring distinguishes caster/physical path, values both Attack and Spell Power plus Mana; Rune choices and available talent scores adapt. Explicit offhand preferences remain preferences, not forced equipment. No new XP, loot or unlock grants.
+
+42 intended profiles x 5 independent progression seeds = 210 accounts. 100 encounters per profile per 21 scenarios (seven sizes, eight Elites, six Bosses): up to 88200 native E10 fights. Some profiles may not obtain intended gear or reach E10; actual equipment and skill coverage reported, no assumption of independent 100-player sample. No merge/deploy. Tests pending.
