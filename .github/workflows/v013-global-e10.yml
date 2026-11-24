@@ -1,0 +1,55 @@
+name: Global balance E10 — consolidated baseline (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths: ['scripts/v013-global-e10.cjs','tests/v013-global-e10.test.cjs','.github/workflows/v013-global-e10.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node --test tests/v013-global-e10.test.cjs
+      - run: node scripts/v013-global-e10.cjs smoke
+  cohort:
+    needs: gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        id: ["blood-daggers", "blood-sword", "blood-twohand", "fury-daggers", "fury-bow", "fury-twohand", "vitality-sword", "vitality-mace", "vitality-wand", "aegis-sword", "aegis-mace", "aegis-orb", "decay-cycle-daggers", "decay-focus-daggers", "decay-cycle-sword", "decay-focus-sword", "decay-cycle-twohand", "decay-focus-twohand", "decay-cycle-bow", "decay-focus-bow", "decay-cycle-wand", "decay-focus-wand", "decay-cycle-staff", "decay-focus-staff", "magic-arcane-sword", "magic-arcane-wand", "magic-arcane-staff", "magic-fire-sword", "magic-fire-wand", "magic-fire-staff", "magic-frost-sword", "magic-frost-wand", "magic-frost-staff", "magic-lightning-sword", "magic-lightning-wand", "magic-lightning-staff", "hybrid-blood-fury", "hybrid-fury-vitality", "hybrid-vitality-aegis", "hybrid-aegis-magic", "hybrid-magic-decay", "hybrid-decay-blood"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node scripts/v013-global-e10.cjs run "${{ matrix.id }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: global-e10-${{ matrix.id }}
+          path: reports/global-e10/*.json
+  aggregate:
+    needs: cohort
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: global-e10-*
+          path: reports/global-e10
+          merge-multiple: true
+      - run: node scripts/v013-global-e10.cjs aggregate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: global-e10-report
+          path: reports/v013-global-e10.json
