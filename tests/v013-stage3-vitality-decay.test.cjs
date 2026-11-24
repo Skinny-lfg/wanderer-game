@@ -82,7 +82,17 @@ test('real v15 Decay Toxic Touch scales Rot with hit and Spell Power; costs four
   x.player.mp=0;x.c.now=3;B.onAttack(b,x.c);
   assert.equal(x.enemy.v012Rot.length,2,'no free Rot at zero Mana');
  }
- assert.deepEqual(damage,[7,9,12]);
+ assert.deepEqual(damage,[4,8,12],'4% of the nominal base weapon hit plus Spell Power, without early rounding');
+});
+test('Rot uses nominal weapon coefficients and retains fractional primary stack potency',()=>{
+ const cases=[['Daggers',40,25,2.28],['Two-Handed',40,25,3.72],['Wand',40,25,2.05],['Staff',40,25,2.32]];
+ for(const [subtype,attack,spellPower,expected] of cases){
+  const b=build(['affinity_decay']),x=context({power:spellPower,mp:10,base:999});
+  Object.assign(x.player.stats,{attack,spellPower,main:{subtype}});
+  x.c.random=()=>0;B.onAttack(b,x.c);
+  near(x.enemy.v012Rot[0].damage,expected);
+  assert.equal(x.player.mp,6);
+ }
 });
 test('active Magic + Decay Hex Bolt uses Spell Power without consuming existing Rot stacks',()=>{
  const result=[];

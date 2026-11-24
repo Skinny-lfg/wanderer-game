@@ -2,7 +2,7 @@ name: Decay consolidated — native gameplay validation (NO DEPLOY)
 on:
   push:
     branches: [balance/stage-6.40-e1-calibration]
-    paths: ['combat/v012-buildcraft.js','combat/talent-graph-next.js','combat/talent-graph-runtime.js','tests/v013-stage647d8-decay.test.cjs','scripts/v013-decay-consolidated.cjs','.github/workflows/v013-decay-consolidated.yml']
+    paths: ['combat/v012-buildcraft.js','combat/talent-graph-next.js','combat/talent-graph-runtime.js','tests/v013-stage647d8-decay.test.cjs','tests/v013-stage3-vitality-decay.test.cjs','tests/talent-graph-combat.test.cjs','scripts/v013-decay-consolidated.cjs','.github/workflows/v013-decay-consolidated.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -35,6 +35,7 @@ jobs:
         revision: [before, after]
     steps:
       - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
       - uses: actions/setup-node@v4
         with: {node-version: '22', cache: npm}
       - if: matrix.revision == 'before'
