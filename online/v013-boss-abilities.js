@@ -89,6 +89,7 @@ function tick(r,absoluteNow,infraEvents=[]){
  for(const event of infraEvents){
   if(event.type==='interrupted'){events.push(event);continue;}
   if(event.type!=='ready')continue;
+  if(s.thresholds.includes(event.id))continue; // A completed threshold cannot emit a second summon.
   if(event.id==='furnace_strike'){
    e.stage84Charge={until:now+3.5};
    events.push({type:'charge',enemy:e,ability:'Furnace Strike'});s.nextAt=now+12;

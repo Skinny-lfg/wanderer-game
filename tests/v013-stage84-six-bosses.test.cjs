@@ -168,7 +168,16 @@ for(const [style,fraction,id,count] of [['leech',.70,'summon_70',1],['matriarch'
   const summon=step(r,3.97).find(x=>x.type==='summon');assert(summon);
   assert.equal(A.spawned(r,summon,newMinion).spawned,count);
   assert(r.stage84Boss.thresholds.includes(id));assert.equal(r.bossInfrastructure.uses[id],1);
-  e.hp=Math.floor(e.maxhp*(fraction-.01));assert(!step(r,8).some(x=>x.type==='prepare'));
+  e.hp=Math.floor(e.maxhp*(fraction-.01));
+  const later=step(r,8);
+  assert(!later.some(x=>x.type==='summon'));
+  if(style==='conductor'){
+   assert(later.some(x=>x.type==='prepare'));
+   assert.equal(r.bossInfrastructure.cast.id,'arcane_convergence');
+  }else assert(!later.some(x=>x.type==='prepare'));
+  const repeated=A.tick(r,8,[{type:'ready',id}]);
+  assert(!repeated.some(x=>x.type==='summon'));
+  assert.equal(r.bossInfrastructure.uses[id],1);
   assert.equal(r.bossInfrastructure.summoned,count);
  });
 }

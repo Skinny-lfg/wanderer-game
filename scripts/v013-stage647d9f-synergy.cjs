@@ -261,6 +261,7 @@ function selftest(){
  console.log('STAGE647D9F_CURVE='+JSON.stringify(Array.from({length:10},(_,i)=>({E:i+1,original:a.enemyReference(i+1),capture:b.enemyReference(i+1)}))));
 }
 function profile(id){
+ assert(PROFILES.includes(id),'Unknown campaign profile: '+id);
  const base=N.PROFILES[id]||(CUSTOM[id]?{name:id,style:'focused',...CUSTOM[id]}:null)||{name:'Physical Decay + Blood',families:['decay','blood'],targets:['toxic_touch','bleeding_edge','plague_spread','contagious_touch','septic_wound'],preparedTargets:['septic_wound'],armor:'Leather',weapons:['Sword','Daggers'],style:'mixed',target:'mechanics',shop:true};
  return {...base,synergyAudit:true,fixedResearchBuild:true,researchGearPreference:true,risk:0,healAt:.70,retreatAt:.43,target:'mechanics',shop:true};
 }
@@ -297,7 +298,13 @@ function run(id,trials=TRIALS){
  selftest();
  const accounts=[],source=S.sourceFingerprint().sha256,rows=[];
  const dir='reports/stage647d9f',out=dir+'/'+id+'.json';
- for(const seed of SEEDS){accounts.push(capture(id,seed));write(out,{id,source,accounts,rows,complete:false});}
+ for(const seed of SEEDS){
+  let account;
+  try{account=capture(id,seed);}
+  catch(error){write(out,{id,source,accounts,rows,complete:false,failure:{phase:'capture',naturalSeed:seed,error:String(error)}});throw error;}
+  accounts.push(account);
+  write(out,{id,source,accounts,rows,complete:false});
+ }
  const snaps=accounts.filter(x=>x.snapshot);
  const scenarios=[...SIZES.map(size=>({id:'normal-'+size,type:'normal',size,realm:'blood'})),...D.ELITES.map(id=>({id,type:'elite',realm:'blood'})),...D.FAMILIES.map(f=>({id:'boss-'+f,type:'boss',realm:f}))];
  write(out,{id,source,accounts,rows,complete:false});
@@ -318,14 +325,33 @@ function aggregate(){
  const dir='reports/stage647d9f',data=fs.readdirSync(dir).filter(f=>f.endsWith('.json')).map(f=>JSON.parse(fs.readFileSync(path.join(dir,f),'utf8')));
  assert(data.length,'No cohort artifacts');assert.equal(new Set(data.map(x=>x.source)).size,1,'source mismatch');
  assert.equal(new Set(data.map(x=>x.id)).size,data.length,'duplicate cohort artifacts');
- for(const x of data)if(x.complete){assert.equal(x.accounts.length,SEEDS.length,'incomplete capture '+x.id);assert.equal(x.rows.length,x.accounts.some(a=>a.snapshot)?x.trials*x.scenarioCount:0,'incomplete replay '+x.id);}
+ for(const x of data){
+  assert(PROFILES.includes(x.id),'unknown cohort '+x.id);
+  if(!x.complete)continue;
+  assert.deepEqual(x.accounts.map(a=>a.seed).sort((a,b)=>a-b),SEEDS,'invalid capture seeds '+x.id);
+  const actors=x.accounts.filter(a=>a.snapshot);
+  const scenarios=new Set([...SIZES.map(n=>'normal-'+n),...D.ELITES,...D.FAMILIES.map(f=>'boss-'+f)]);
+  assert(Number.isInteger(x.trials)&&x.trials>=1&&x.trials<=TRIALS,'invalid trials '+x.id);
+  assert.equal(x.scenarioCount,scenarios.size,'invalid scenario count '+x.id);
+  assert.equal(x.rows.length,actors.length?x.trials*scenarios.size:0,'incomplete replay '+x.id);
+  const seen=new Set();
+  for(const row of x.rows){
+   assert(Number.isInteger(row.trial)&&row.trial>=0&&row.trial<x.trials&&scenarios.has(row.scenario),'unknown replay cell '+x.id);
+   const key=row.trial+'/'+row.scenario;
+   assert(!seen.has(key),'duplicate replay '+x.id+' '+key);
+   seen.add(key);
+   assert.equal(row.naturalSeed,actors[row.trial%actors.length].seed,'wrong E10 actor '+key);
+   assert.equal([row.won,row.died,row.timeout].filter(v=>v===true).length,1,'invalid outcome '+key);
+  }
+ }
+ assert(new Set(data.filter(x=>x.complete).map(x=>x.trials)).size<=1,'mixed trial budgets');
  const mean=(a,k)=>{const v=a.map(x=>x[k]).filter(Number.isFinite);return v.length?v.reduce((s,n)=>s+n,0)/v.length:null;};
  function rate(a){
   const valid=a.filter(x=>x.won||x.died),w=valid.filter(x=>x.won).length;
   return {n:a.length,resolved:valid.length,wins:w,winPct:valid.length?100*w/valid.length:null,timeouts:a.filter(x=>x.timeout).length,meanSeconds:mean(valid,'seconds'),meanTaken:mean(valid,'taken'),meanSecondary:mean(valid,'secondary'),meanFunded:mean(valid,'funded'),meanUnfunded:mean(valid,'unfunded')};
  }
- const profiles=data.map(x=>({id:x.id,complete:x.complete,accounts:x.accounts.map(({snapshot,capability,...a})=>({...a,checkpoint:snapshot?{xp:snapshot.xp,points:snapshot.talentSpent,weapon:snapshot.state.equip.weapon?.subtype,offhand:snapshot.state.equip.offhand?.subtype||null,armor:snapshot.state.equip.armor?.armorType||null,rarity:snapshot.equippedRarity,stats:snapshot.statSnapshot,nodes:snapshot.state.automaticTalents.nodes,element:snapshot.state.automaticTalents.element,prepared:snapshot.state.automaticTalents.prepared,legendary:Object.values(snapshot.state.equip).filter(i=>i?.legendaryId).map(i=>i.legendaryId),capability}:null})),scenarios:Object.fromEntries([...new Set(x.rows.map(r=>r.scenario))].map(k=>[k,rate(x.rows.filter(r=>r.scenario===k))])),byType:Object.fromEntries(['normal','elite','boss'].map(k=>[k,rate(x.rows.filter(r=>r.kind===k))]))}));
- const rows=data.flatMap(x=>x.rows),result={stage:'6.47D.9F',source:data[0].source,requestedProfiles:PROFILES,missingProfiles:PROFILES.filter(p=>!data.some(x=>x.id===p&&x.complete)),profilesWithoutE10:profiles.filter(p=>!p.accounts.some(a=>a.checkpoint)).map(p=>p.id),captures:profiles.flatMap(x=>x.accounts).length,reachedE10:profiles.flatMap(x=>x.accounts).filter(a=>a.checkpoint).length,nativeFights:rows.length,profiles,allByScenario:Object.fromEntries([...new Set(rows.map(r=>r.scenario))].map(k=>[k,rate(rows.filter(r=>r.scenario===k))]))};
+ const profiles=data.map(x=>({id:x.id,complete:x.complete,failure:x.failure||null,accounts:x.accounts.map(({snapshot,capability,...a})=>({...a,checkpoint:snapshot?{xp:snapshot.xp,points:snapshot.talentSpent,weapon:snapshot.state.equip.weapon?.subtype,offhand:snapshot.state.equip.offhand?.subtype||null,armor:snapshot.state.equip.armor?.armorType||null,rarity:snapshot.equippedRarity,stats:snapshot.statSnapshot,nodes:snapshot.state.automaticTalents.nodes,element:snapshot.state.automaticTalents.element,prepared:snapshot.state.automaticTalents.prepared,legendary:Object.values(snapshot.state.equip).filter(i=>i?.legendaryId).map(i=>i.legendaryId),capability}:null})),scenarios:Object.fromEntries([...new Set(x.rows.map(r=>r.scenario))].map(k=>[k,rate(x.rows.filter(r=>r.scenario===k))])),byType:Object.fromEntries(['normal','elite','boss'].map(k=>[k,rate(x.rows.filter(r=>r.kind===k))]))}));
+ const rows=data.filter(x=>x.complete).flatMap(x=>x.rows),result={stage:'6.47D.9F',source:data[0].source,requestedProfiles:PROFILES,missingProfiles:PROFILES.filter(p=>!data.some(x=>x.id===p&&x.complete)),profilesWithoutE10:profiles.filter(p=>p.complete&&!p.accounts.some(a=>a.checkpoint)).map(p=>p.id),captures:profiles.flatMap(x=>x.accounts).length,reachedE10:profiles.flatMap(x=>x.accounts).filter(a=>a.checkpoint).length,nativeFights:rows.length,profiles,allByScenario:Object.fromEntries([...new Set(rows.map(r=>r.scenario))].map(k=>[k,rate(rows.filter(r=>r.scenario===k))]))};
  write('reports/v013-stage647d9f-synergy.json',result);
  console.log('STAGE647D9F='+JSON.stringify({...result,profiles:profiles.map(p=>({id:p.id,complete:p.complete,accounts:p.accounts.map(a=>({seed:a.seed,E:a.endLevel,reached:!!a.checkpoint,weapon:a.checkpoint?.weapon,offhand:a.checkpoint?.offhand,points:a.checkpoint?.points,errors:a.errors})),byType:p.byType,scenarios:p.scenarios}))}));
  if(result.missingProfiles.length)throw Error('Incomplete cohort matrix: '+result.missingProfiles.join(', '));
