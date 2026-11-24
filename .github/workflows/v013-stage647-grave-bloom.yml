@@ -94,3 +94,5 @@ jobs:
         with:
           name: stage647-results
           path: reports/stage647/results.json
+
+# Telemetry anchor fixed to the Stage 6.46 native row.
