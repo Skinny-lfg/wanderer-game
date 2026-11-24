@@ -23,13 +23,7 @@ test('Mode-specific six-point branches use the shared side stat and a mode gate'
 });
 test('All proposed talent paths are now implemented and none remain pending',()=>{
  assert.equal(graph.length,419);assert.equal(graph.filter(n=>n.pending).length,0);
- for(const n of graph.filter(n=>n.pending)){
-  const mode=n.element||'arcane',p={...T.create(),xp:10000,...(mode==='arcane'?{}:{element:mode})};
-  const steps=route(modeGraph(mode),n.id),active=steps.filter(id=>!byId.get(id).pending);
-  for(const id of active){const next=T.allocate(p,id);if(next)Object.assign(p,next);}
-  assert.equal(T.allocate(p,n.id),null);
-  assert(!T.valid({...p,nodes:steps}));
- }
+
 });
 test('All pre-existing active nodes remain reachable with the current runtime, correct element, and no pending purchases',()=>{
  for(const n of graph.filter(n=>!n.pending)){

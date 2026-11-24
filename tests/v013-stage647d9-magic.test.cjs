@@ -7,7 +7,7 @@ function fixture(mode,ids){
  const p=buy(ids,{element:mode==='arcane'?undefined:mode}),b=B.create();B.syncPermanent(b,p);
  const enemies=Array.from({length:4},()=>({hp:10000,maxhp:10000,barrier:0,slowTime:0,dots:{bleed:[],burn:[]},v012Rot:[]}));
  const reserve={hp:10000,maxhp:10000},r={hp:100,maxhp:200,mp:20,maxmp:100,enemy:enemies[0],enemies,groupReserve:[reserve],stats:{spellPower:100,bonus:{}},combatSeconds:0};
- const metrics={},hits=[],ports={state:{automaticTalents:p,run:r},phase1Build:b,isPhase1Run:()=>true,phase6Metric(r,k,n){metrics[k]=(metrics[k]||0)+n;},phase6Proc(){},floatText(){},addLog(){},synchronizeDots(e){runtime.synchronizeDots(e)},setDirectEnemyDamage(r,n,label){return runtime.setDirectEnemyDamage(r,n,label);}};
+ const metrics={},hits=[],ports={state:{automaticTalents:p,run:r,equip:{test:{v013Trait:'conflagration'}}},phase1Build:b,isPhase1Run:()=>true,setNow:()=>1,gameRandom:()=>.999,phase6Metric(r,k,n){metrics[k]=(metrics[k]||0)+n;},phase6Proc(){},floatText(){},addLog(){},synchronizeDots(e){runtime.synchronizeDots(e)},setDirectEnemyDamage(r,n,label){return runtime.setDirectEnemyDamage(r,n,label);}};
  const runtime=WandererV012CombatRuntime.create(ports);
  const c={player:r,enemy:r.enemy,now:1,waveKey:'one',power:100,base:100,amp:1,funded:true,weaponSubtype:'Sword',random:()=>.999,log(){},trigger(){},link(){},mana(n){r.mp=Math.min(r.maxmp,r.mp+n);},dot(kind,n,opts={}){const raw=Math.max(1,Math.round(n));c.enemy.dots[kind].push({damage:opts.controlledBurn?Math.round(raw*1.25):raw,remaining:3,...(opts.controlledBurn?{controlledBase:raw}:{})});},chill(n){c.enemy.slowTime=n;},damage(n,label){hits.push({target:c.enemy,n,id:label});return runtime.setDirectEnemyDamage(r,n,label);},talentPulseDamage(t,n,id){hits.push({target:t,n,id});return runtime.talentPulseDamage(r,t,n,id);},metric(k,n){metrics[k]=(metrics[k]||0)+n;},heal(){return 0;},barrier(){}};
  return {p,b,r,c,enemies,reserve,metrics,hits,runtime};
@@ -22,8 +22,8 @@ test('Every adaptive talent costs six points, and wrong mode cannot purchase it'
 test('Attunement switch refunds dependent shared nodes without an alternative, preserves independently owned routes',()=>{
  let p=buy(['arcane_nova']);p=T.allocate(p,'magic_side_0_2');assert(p);assert(T.valid(p));
  let next=T.selectElement(p,'fire');assert(next);assert(!next.nodes.includes('magic_side_0_2'));assert(!next.nodes.includes('arcane_nova'));assert(next.nodes.includes('magic_side_0_1'));
- let q=buy(['arcane_nova','arcane_resonance']);q=T.allocate(q,'magic_side_0_2');assert(q);
- next=T.selectElement(q,'fire');assert(next);assert(T.valid(next));assert.equal(next.xp,q.xp);
+ let q=buy(['arcane_nova','magic_bridge_0_2']);q=T.allocate(q,'magic_side_0_2');assert(q);
+ next=T.selectElement(q,'fire');assert(next);assert(T.valid(next));assert.equal(next.xp,q.xp);assert(next.nodes.includes('magic_side_0_2'));
 });
 test('Arcane Nova spends actual Infusion charges, hits at most two active targets, never combines with Bloom',()=>{
  const h=fixture('arcane',['arcane_nova']);B.activateInfusion(h.b,0);const amount=B.onInfusionHit(h.b,h.c);
@@ -50,6 +50,17 @@ test('Controlled Burn has native primary potency and reduced original spread bas
  h.c.now=7;B.onCast(h.b,h.c);assert.equal(h.metrics.cinder_focusActivations,undefined);
  h.enemies.slice(1).forEach(e=>e.hp=0);B.onCast(h.b,h.c);assert.equal(h.metrics.cinder_focusActivations,undefined);
  h.r.groupReserve=[];B.onCast(h.b,h.c);assert.equal(h.metrics.cinder_focusActivations,1);
+});
+test('Native standalone adaptive Burn cannot feed Conflagration',()=>{
+ const h=fixture('fire',['controlled_burn','cinder_focus']);
+ // Use the actual native context.dot rather than the fixture's simplified dot.
+ const ctx=h.runtime.phase2Context(h.r);
+ B.onCast(h.b,{...ctx,funded:true,power:100,amp:1});
+ const burn=h.enemies[0].dots.burn.at(-1);
+ assert(burn.primaryOnly);assert.equal(burn.damage,Math.round(burn.controlledBase*1.25));
+ // Inject equipment trait in runtime state through fixture.
+ h.runtime.groupElementalEffects(h.r,h.b);
+ assert(h.enemies.slice(1).every(e=>e.dots.burn.length===0));
 });
 test('Static Focus reduces secondary damage, retains jump count and does not generate marks on extra targets',()=>{
  const a=fixture('lightning',['storm_mastery']),b=fixture('lightning',['storm_mastery','static_focus']);

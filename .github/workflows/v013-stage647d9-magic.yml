@@ -27,3 +27,5 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: git diff --exit-code
+
+# Verify revised Storm Conductor contract and standalone Fire provenance.
