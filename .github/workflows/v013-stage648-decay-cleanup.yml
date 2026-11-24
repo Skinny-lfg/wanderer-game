@@ -1,0 +1,23 @@
+name: Stage 6.48C.2D cleanup — retired Decay and graph parity (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths: ['combat/v012-buildcraft.js','combat/v012-combat-runtime.js','combat/talent-catalog.js','tests/v013-stage648-decay-cleanup.test.cjs','.github/workflows/v013-stage648-decay-cleanup.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false, fetch-depth: 0}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node --test tests/v013-stage648-decay-cleanup.test.cjs tests/v013-stage647d8-decay.test.cjs tests/v013-stage648c2-rot-diagnosis.test.cjs tests/v013-stage648c2b-persistent-corruption.test.cjs tests/v013-stage648c2c-offensive-scaling.test.cjs tests/v013-stage648c2d-decay-rework.test.cjs
+      - run: npm test
+      - run: node scripts/v013-stage648c2d-decay-rework.cjs smoke
+      - name: Remaining retired identifier references (review only)
+        if: always()
+        run: git grep -n -E 'rot_focus|spore_mark|venom_shatter|rot_recovery|rot_ward|rot_symbiosis' -- combat docs/combat online scripts tests || true

@@ -493,7 +493,7 @@ function v013CarrionDetonation(r,enemy,real){
   ports.phase6Metric(r,"carrionBurstDamage",Math.max(0,before-Math.max(0,target.hp)));
   if(target!==enemy&&target.hp>0){
    if(sourceBleed){target.dots??={};target.dots.bleed??=[];if(target.dots.bleed.length<12){target.dots.bleed.push({damage:Math.max(1,Math.round(sourceBleed.damage*.5)),remaining:Math.min(3,sourceBleed.remaining),spread:true,secondaryOrigin:"carrion"});ports.synchronizeDots(target);ports.phase6Metric(r,"carrionSpreadBleed",1);}}
-   if(sourceRot){target.v012Rot??=[];const max=b.runtime?.specializations?.includes("rot_focus")?3:6;if(target.v012Rot.length<max){target.v012Rot.push({damage:Math.max(1,Math.round(sourceRot.damage*.5)),remaining:Math.min(3,sourceRot.remaining),ticks:0,spread:true,secondaryOrigin:"carrion"});ports.phase6Metric(r,"carrionSpreadRot",1);}}
+   if(sourceRot){target.v012Rot??=[];const max=6;if(target.v012Rot.length<max){target.v012Rot.push({damage:Math.max(1,Math.round(sourceRot.damage*.5)),remaining:Math.min(3,sourceRot.remaining),ticks:0,spread:true,secondaryOrigin:"carrion"});ports.phase6Metric(r,"carrionSpreadRot",1);}}
   }
  }
 }
@@ -654,7 +654,6 @@ function weaponAttack(r,offhandStrike=false){
   const previous=lastStruck.get(r);
   if(previous!==e){
    if(!(previous?.hp<=0&&r.aim===3&&learned('follow_through')))r.aim=0;
-   if(previous?.v012Rot?.length&&!e.v012Rot?.length&&learned('spore_mark')&&ports.setReady(r,'sporeMark',5)){e.v012Rot=[{...previous.v012Rot[0],primaryPaid:false,transferred:true}];ports.combatLinkEffect?.(r,'rot',previous,[e]);}
   }
   lastStruck.set(r,e);
   const bleed=e.dots?.bleed||[];

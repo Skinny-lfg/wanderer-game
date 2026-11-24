@@ -43,9 +43,10 @@ test('cap detonation requires primary stacks, finite burst, native mana/cooldown
   h.B.onAttack(h.b,h.c);assert.equal(h.m.corruptionCycleActivations,1);
  }
 });
-test('Concentrated Corruption uses its own three-primary-stack cap',()=>{
+test('only the live six-stack cap can activate Cycle',()=>{
  const h=fixture('cap-one',['toxic_touch','corruption_cycle']);
- h.b.runtime.specializations.push('rot_focus');
  h.e.v012Rot=Array.from({length:3},()=>({damage:10,remaining:4,primaryPaid:true}));
- h.B.onAttack(h.b,h.c);assert.equal(h.m.corruptionCycleActivations,1);assert.equal(h.e.v012Rot.length,2);
+ h.B.onAttack(h.b,h.c);assert.equal(h.m.corruptionCycleActivations||0,0);
+ h.e.v012Rot.push(...Array.from({length:3},()=>({damage:10,remaining:4,primaryPaid:true})));
+ h.B.onAttack(h.b,h.c);assert.equal(h.m.corruptionCycleActivations,1);assert.equal(h.e.v012Rot.length,5);
 });

@@ -27,9 +27,7 @@ const FORKS=Object.freeze([
  {id:'fork_frost_int_1',name:'Intellect',family:'magic',attribute:'int',requires:'passive_deep_winter',forkAnchor:'passive_deep_winter',forkStep:1,description:'+1 Intellect.'},
  {id:'fork_frost_int_2',name:'Intellect',family:'magic',attribute:'int',requires:'fork_frost_int_1',forkAnchor:'passive_deep_winter',forkStep:2,description:'+1 Intellect.'},
  {id:'frost_spread',excludes:['frost_focus'],name:'Winter Field',family:'magic',requires:'fork_frost_int_2',forkAnchor:'passive_deep_winter',forkStep:3,description:'Funded Frost casts Chill up to two additional enemies for two seconds.'},
- {id:'fork_plague_agi_1',name:'Agility',family:'decay',attribute:'agi',requires:'passive_toxic_touch',forkAnchor:'passive_toxic_touch',forkStep:1,description:'+1 Agility.'},
- {id:'fork_plague_agi_2',name:'Agility',family:'decay',attribute:'agi',requires:'fork_plague_agi_1',forkAnchor:'passive_toxic_touch',forkStep:2,description:'+1 Agility.'},
- {id:'plague_spread',excludes:['rot_focus'],name:'Contagion',family:'decay',requires:'fork_plague_agi_2',forkAnchor:'passive_toxic_touch',forkStep:3,description:'On kill, spread one active Bleed and Rot at 50% strength to up to two enemies. Active recipients take five transferred ticks instantly; effects cannot spread again.'},
+ {id:'plague_spread',name:'Contagion',family:'decay',requires:'passive_toxic_touch',description:'On kill, spread one active Bleed and Rot at 50% strength to up to two enemies. Active recipients take five transferred ticks instantly; effects cannot spread again.'},
  {id:'fork_bow_agi_1',name:'Agility',family:'fury',attribute:'agi',requires:'passive_precision',forkAnchor:'passive_precision',forkStep:1,description:'+1 Agility.'},
  {id:'fork_bow_agi_2',name:'Agility',family:'fury',attribute:'agi',requires:'fork_bow_agi_1',forkAnchor:'passive_precision',forkStep:2,description:'+1 Agility.'},
  {id:'bow_pierce',name:'Piercing',family:'fury',requires:'fork_bow_agi_2',forkAnchor:'passive_precision',forkStep:3,description:'Bow hits one additional foe for 100% instead of 66% damage. Secondary weapon hits apply eligible statuses at reduced chance and potency.'},
@@ -47,7 +45,6 @@ const FORKS=Object.freeze([
  {id:'single_target_mastery',excludes:['fury_momentum'],name:'Focused Assault',family:'fury',requires:'fork_focus_agi_2',forkAnchor:'passive_quick_hands',forkStep:3,description:'Deal 15% more direct physical weapon damage (not spells or caster fallback attacks) when one enemy remains and no reinforcements are waiting.'}
 ,{"id":"blood_focus","name":"Hemorrhage","family":"blood","requires":"passive_deep_cuts","forkAnchor":"passive_deep_cuts","forkStep":3,"forkSide":-1,"excludes":["blood_transfer"],"description":"Bleed deals 25% more damage; direct attacks deal 10% less."},
 {"id":"blood_transfer","name":"Bloodshed","family":"blood","requires":"passive_deep_cuts","forkAnchor":"passive_deep_cuts","forkStep":3,"forkSide":1,"excludes":["blood_focus"],"description":"On death, transfer one Bleed at 50% strength to one living enemy or waiting reinforcement. Active recipients take three transferred ticks instantly. Transferred Bleeds cannot transfer again."},
-{"id":"rot_focus","name":"Concentrated Corruption","family":"decay","requires":"passive_toxic_touch","forkAnchor":"passive_toxic_touch","forkStep":3,"forkSide":-1,"excludes":["plague_spread"],"description":"Rot stacks deal 60% more damage but are limited to three stacks."},
 {"id":"vitality_recovery","name":"Recovery","family":"vitality","requires":"passive_strong_heart","forkAnchor":"passive_strong_heart","forkStep":4,"forkSide":-1,"excludes":["vitality_reserve"],"description":"Regeneration heals 25% more; maximum Health is reduced by 10%."},
 {"id":"vitality_reserve","name":"Endurance","family":"vitality","requires":"passive_strong_heart","forkAnchor":"passive_strong_heart","forkStep":3,"forkSide":1,"excludes":["vitality_recovery"],"description":"Gain 20% maximum Health; regeneration heals 25% less."},
 {"id":"aegis_bulwark","name":"Bulwark","family":"aegis","requires":"passive_fortified","forkAnchor":"passive_fortified","forkStep":4,"forkSide":-1,"excludes":["aegis_reprisal"],"description":"Gain 18% Defense; direct attacks deal 10% less damage."},
@@ -59,7 +56,7 @@ const FORKS=Object.freeze([
 ].map(Object.freeze));
 // Intentional routes: the first rank opens the next ability; optional ranks stay on a side branch.
 const ROUTES={blood:[['bleeding_edge','deep_cuts','executioner'],['blood_drinker'],['sanguine_fury']],decay:[['toxic_touch','virulent_rot','blight'],['wasting_curse'],['wither']],vitality:[['strong_heart','life_bloom'],['renewal'],['second_breath','last_stand']],aegis:[['iron_skin','fortified'],['guarded_block','retaliation'],['barrier_pulse']],fury:[['quick_hands','adrenaline'],['precision','brutal_crit'],['double_strike']],magic:[['arcane_focus','arcane_echo'],['mana_spring','elemental_force'],['efficient_cast']]};
-const CHOICES=[['deep_cuts','str','blood_style','blood_focus','blood_transfer'],['toxic_touch','agi','plague','rot_focus','plague_spread'],['strong_heart','end','vitality_style','vitality_recovery','vitality_reserve'],['fortified','end','aegis_style','aegis_bulwark','aegis_reprisal'],['quick_hands','agi','focus','single_target_mastery','fury_momentum'],['kindling','int','fire','fire_focus','fire_spread'],['deep_winter','int','frost','frost_focus','frost_spread'],['overcharge','int','storm','lightning_focus','storm_mastery']];
+const CHOICES=[['deep_cuts','str','blood_style','blood_focus','blood_transfer'],['strong_heart','end','vitality_style','vitality_recovery','vitality_reserve'],['fortified','end','aegis_style','aegis_bulwark','aegis_reprisal'],['quick_hands','agi','focus','single_target_mastery','fury_momentum'],['kindling','int','fire','fire_focus','fire_spread'],['deep_winter','int','frost','frost_focus','frost_spread'],['overcharge','int','storm','lightning_focus','storm_mastery']];
 const ATTRIBUTES=Object.freeze(['str','agi','int','end','cha']);
 const OLD_ROOTS={blood:'might',decay:'might',vitality:'vitality',aegis:'vitality',fury:'haste',magic:'haste'};
 const POINT_XP=100,MAX_POINTS=100,ROOTS={blood:'might',decay:'haste',vitality:'vitality',aegis:'vitality',fury:'haste',magic:'haste'};
@@ -78,7 +75,6 @@ const outerSkills=[
  ['magic','spell_echo','✨','Spell Echo','Every third funded cast or Arcane Infusion hit echoes for 10% damage per rank.',5,'arcane_focus'],
  ['magic','last_spark','💠','Last Spark','The first cast each room that empties Mana always critically strikes.',1,'mana_spring'],
  ['decay','incubation','🦠','Incubation','Every third consecutive Rot tick deals 12% more damage per rank.',5,'toxic_touch'],
- ['decay','spore_mark','🪰','Spore Mark','Changing targets from Rot to a healthy enemy copies one Rot stack on hit. Cooldown 5s.',1,'wasting_curse']
 ];
 const outerPairs=[
  ['red_guillotine','🪓','Red Guillotine','relentless','open_wound','Prepared: every fourth strike consumes up to three Bleeds for their remaining damage. A kill spreads one stack.'],

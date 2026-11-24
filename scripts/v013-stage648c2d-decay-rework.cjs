@@ -35,8 +35,8 @@ function formulaSource(mode){
  if(mode.startsWith('cap-')){
   // Only paid primary stacks qualify; propagated / free stacks cannot fund the burst.
   s=replace(s,'const stacks=e.v012Rot?.length||0;const m=','const stacks=(e.v012Rot||[]).filter(primaryPaidRot).length;const m=');
-  s=replace(s,'else if(stacks<3)m(', "else if(stacks<(specialized(b,'rot_focus')?3:6))m(");
-  s=replace(s,'e.v012Rot?.length>=3',"(e.v012Rot||[]).filter(primaryPaidRot).length>=(specialized(b,'rot_focus')?3:6)");
+  s=replace(s,'else if(stacks<3)m(', "else if(stacks<6)m(");
+  s=replace(s,'e.v012Rot?.length>=3',"(e.v012Rot||[]).filter(primaryPaidRot).length>=6");
   const old="const rot=e.v012Rot.shift(),remaining=rot.damage*rot.remaining,raw=remaining+Math.max(0,c.power||0)*.20;";
   const consume=mode==='cap-none'?0:mode==='cap-three'?3:1;
   const code="const paid=e.v012Rot.filter(primaryPaidRot),spent=paid.slice(0,"+consume+");"+

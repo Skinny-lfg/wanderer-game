@@ -43,8 +43,6 @@ const P=[
  ['blood','hemovore','Hemovore','The first bleeding kill per encounter heals 4% max HP.',['blood','vitality']],
  ['blood','crimson_rush','Crimson Rush','Critical strikes against bleeding foes deal 15% bonus damage.',['blood','fury']],
  ['blood','hex_bleed','Hex Bleed','Funded Magic hits inflict Bleed (3s cooldown).',['blood','magic']],
- ['decay','rot_recovery','Rot Recovery','The first rotted kill per encounter heals 4% max HP.',['decay','vitality']],
- ['decay','rot_ward','Rot Ward','Rot ticks grant Barrier every 5s.',['decay','aegis']],
  ['decay','hex_bolt','Hex Bolt','Funded spells or Arcane Infusion hits against Rot deal 25% Spell Power plus one Rot tick (3s cooldown).',['decay','magic']],
  ['vitality','sanctuary','Sanctuary','Recovering Health grants Barrier equal to 20% of the heal.',['vitality','aegis']],
  ['vitality','fervent_life','Fervent Life','Critical strikes restore 2% Max HP + 3% Attack Power; overhealing grants Barrier (4s cooldown).',['vitality','fury']],
@@ -57,9 +55,7 @@ const P=[
  ['blood','sanguine_reprisal','Sanguine Reprisal','Blocking or absorbing Barrier charges a counter-bleed.',['blood','aegis']],
  ['blood','reapers_cadence','Rupture','Attacks against enemies with Bleed and Fury Sunder deal damage equal to two ticks of the strongest Bleed, capped at 3% enemy maximum Health (5s cooldown). Bleed is not consumed.',['blood','fury']],
  ['blood','hemal_sigil','Hemal Sigil','Magic converts Bleed into elemental Fire, Frost or Lightning effects.',['blood','magic']],
- ['decay','rot_symbiosis','Rot Symbiosis','Rot ticks recover a little HP (6s cooldown).',['decay','vitality']],
  ['decay','rot_husk','Rot Husk','Breaking a Barrier while Rot is active grants a small new ward.',['decay','aegis']],
- ['decay','venom_shatter','Venom Shatter','Critical hits consume Rot for a bounded burst (5s cooldown).',['decay','fury']],
  ['decay','elemental_blight','Elemental Blight','Fire consumes Rot for damage, Frost extends it, Lightning consumes it for damage, and Arcane deals damage based on active Rot without consuming it (7s cooldown).',['decay','magic']],
  ['vitality','guardians_oath',"Guardian's Oath",'When your Barrier breaks, restore 4.5% maximum Health once per encounter.',['vitality','aegis']],
  ['vitality','redline','Redline','Below half Health, attacks deal 33% bonus damage every 8s, but you take 10% more damage for 3s.',['vitality','fury']],
@@ -177,7 +173,7 @@ function decayOwnAoE(b){return !specialized(b,'carrion_detonation')&&!rank(b,'ca
 function decayTargets(c){return (c.player.enemies||[c.enemy]).filter(e=>e&&e.hp>0&&!e.stage84Node).slice(0,4);}
 function paidRotApplied(b,c,d){
  if(!primaryPaidRot(d)||c.player.hp<=0||c.enemy.hp<=0)return;
- const state=decayState(c),cap=specialized(b,'rot_focus')?3:6;
+ const state=decayState(c),cap=6;
  c.metric?.('decayPrimaryPaidApplications',1);
  if(specialized(b,'contagious_touch')&&decayOwnAoE(b)){
   state.contagion=Math.min(3,state.contagion+1);
@@ -222,8 +218,8 @@ function corruptionNova(b,c){
 function applyRot(b,c,power,origin=null){
  const e=c.enemy;if(!e||e.hp<=0)return;
  const stacks=e.v012Rot||(e.v012Rot=[]);
- if(stacks.length>=(specialized(b,'rot_focus')?3:6))stacks.shift();
- const d={ticks:0,damage:Math.max(1,Math.round(power*(1+.15*rank(b,'virulent_rot')+(b.runtime.talentBonuses?.rotBonus||0))*(specialized(b,'rot_focus')?1.6:1))),remaining:specialized(b,'lingering_rot')?5:4,...(origin==='paid_primary_toxic_touch'?{primaryPaid:true}:{})};
+ if(stacks.length>=6)stacks.shift();
+ const d={ticks:0,damage:Math.max(1,Math.round(power*(1+.15*rank(b,'virulent_rot')+(b.runtime.talentBonuses?.rotBonus||0)))),remaining:specialized(b,'lingering_rot')?5:4,...(origin==='paid_primary_toxic_touch'?{primaryPaid:true}:{})};
  stacks.push(d);
  c.log('☠ Rot '+stacks.length+'/6');
  if(d.primaryPaid)paidRotApplied(b,c,d);
@@ -368,9 +364,6 @@ function onAttack(b,c){
  }
  if(rank(b,'reapers_cadence')&&e.furySunder>0&&e.dots?.bleed?.length&&ready(b,'reapersCadence',c.now,5)&&activated(b,'reapers_cadence'))c.damage(Math.min(2*Math.max(...e.dots.bleed.map(dot=>dot.damage||0)),e.maxhp*.03),'🩸 Rupture');
  if(b.runtime.prepared==='septic_wound'&&e.dots?.bleed?.length&&e.v012Rot?.length&&ready(b,'reaperFinal',c.now,6)&&activated(b,'septic_wound')){c.damage(Math.min(Math.max(...e.dots.bleed.map(dot=>dot.damage||0))+Math.max(...e.v012Rot.map(dot=>dot.damage||0)),e.maxhp*.04),"☠ Reaper's Cadence");c.trigger?.('septic_wound');}
- if(rank(b,'venom_shatter')&&crit&&e.v012Rot?.length&&ready(b,'venomShatter',c.now,5)&&activated(b,'venom_shatter')){
-  const rot=e.v012Rot.shift();c.damage(rot.damage*rot.remaining+Math.min(base*.20,e.maxhp*.015),'☠ Venom Shatter');
- }
  if(rank(b,'redline')&&c.player.hp<=c.player.maxhp*.5&&ready(b,'redline',c.now,8)&&activated(b,'redline')){
   c.damage(base*.33,'🩸 Redline');b.runtime.redlineUntil=c.now+3;
  }
@@ -485,8 +478,6 @@ function tickRot(b,c){
   if(!e.v012Rot.length)e.carrionCharge=0;
   if(c.enemy.hp>0&&damage>=c.enemy.hp)c.enemy.v012DeathRot=true;
   c.dotDamage(damage,'☠ Rot',secondaryFraction);
-  if(rank(b,'rot_ward')&&ready(b,'rotWard',c.now,5)&&activated(b,'rot_ward'))c.barrier(c.player.maxhp*.018);
-  if(rank(b,'rot_symbiosis')&&ready(b,'rotSymbiosis',c.now,6)&&activated(b,'rot_symbiosis'))heal(b,c,c.player.maxhp*.018);
  }
 }
 function onSecond(b,c){
@@ -543,7 +534,6 @@ function onDefend(b,c,blocked,barrierAbsorbed){
 function onKill(b,c){
  const waveKey=c.waveKey??c.enemy;
  if(rank(b,'hemovore')&&b.runtime.hemovoreEncounter!==waveKey&&(c.enemy.bleedStacks>0||c.enemy.v012DeathBleed)&&activated(b,'hemovore')){b.runtime.hemovoreEncounter=waveKey;heal(b,c,c.player.maxhp*.04);}
- if(rank(b,'rot_recovery')&&b.runtime.rotRecoveryEncounter!==waveKey&&(c.enemy.v012Rot?.length||c.enemy.v012DeathRot)&&activated(b,'rot_recovery')){b.runtime.rotRecoveryEncounter=waveKey;heal(b,c,c.player.maxhp*.04);}
  if(specialized(b,'blood_harvest')&&(c.enemy.bleedStacks>0||c.enemy.v012DeathBleed))heal(b,c,c.player.maxhp*.03);
  if(specialized(b,'fury_momentum'))b.runtime.momentumUntil=c.now+4;
  if(specialized(b,'blood_transfer')||c.traits?.includes('blood_transfer')){
@@ -625,7 +615,7 @@ function onInfusionActivation(b,c){
 function graveBloomInfusion(b,c){
  if(b?.runtime?.prepared!=='grave_bloom'||!specialized(b,'grave_bloom')||c.proc||c.extra||c.recursive||c.offhand)return 0;
  const e=c.enemy,power=Math.max(0,Number(c.power)||0);if(!e||e.hp<=0||!(power>0))return 0;
- const cap=specialized(b,'rot_focus')?3:6;
+ const cap=6;
  for(let i=0;i<2;i++){applyRot(b,c,power*.16);c.metric?.("graveBloomSeeds",1);}
  const rot=(e.v012Rot||[]).filter(d=>d.remaining>0&&d.damage>0);
  if(!rot.length)return 0;
