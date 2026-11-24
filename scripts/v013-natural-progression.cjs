@@ -7,6 +7,7 @@ const path=require('node:path');
 const crypto=require('node:crypto');
 const create=require('../tests/v012-economy-harness.cjs');
 const S=require('./simulate-progression.cjs');
+const CAPTURE=require('./v013-capture-assistance.cjs');
 const AGENT=require('./v013-agent-strategy.cjs');
 const PLANNER=require('./v013-build-planner.cjs');
 require('../online/v013-map-intelligence.js');
@@ -954,6 +955,7 @@ function selectThornAwareTarget(run,profile){
 function fightNatural(a,profile,tickLimit,context={}){
  const r=a.state().run;
  if(!r||r.status!=='fight')throw Error('Combat entry missing');
+ const scaler=CAPTURE.createScaler(context.level||r.tier||1,context.captureMode||'natural');scaler.apply(r);
  const startedAt=r.combatSeconds||0;
  const start=r.hp,first=r.encounterLeader||r.enemy,initial=r.totalMobCount||r.initialMobCount||r.enemies?.length||1;
  const fullInitialRoster=[...(r.enemies?.length?r.enemies:[r.enemy]),...(r.groupReserve||[])];
@@ -1004,6 +1006,7 @@ function fightNatural(a,profile,tickLimit,context={}){
   peakLiveEnemies=Math.max(peakLiveEnemies,[...before.values()].filter(e=>e.hp>0).length);
   const tickStartedAt=r.combatSeconds||0;
   a.tick();ticks++;
+  scaler.apply(r); // Newly materialized summons, at the next simulation tick boundary.
   const change=AGENT.changes(before,AGENT.snapshot(r),focused);
   for(const role of Object.keys(healthLost)){
    healthLost[role]+=change.roles[role];barrierLost[role]+=change.wards[role];
@@ -1042,7 +1045,7 @@ function fightNatural(a,profile,tickLimit,context={}){
   observedHealthLostByRole:Object.fromEntries(Object.entries(healthLost).map(([k,v])=>[k,round(v)])),
   observedBarrierLostByRole:Object.fromEntries(Object.entries(barrierLost).map(([k,v])=>[k,round(v)])),
   observedNonFocusedHealthLost:round(nonFocusedHealthLost),
-  observedNewEnemies,untrackedDisappeared,peakLiveEnemies,
+  observedNewEnemies,untrackedDisappeared,peakLiveEnemies,captureAssistance:{...scaler.metrics},
   enemyAbilityCasts:r.metrics?.enemyAbilityCasts||0,
   bossSummons:r.metrics?.bossSummons||0
  };
@@ -1078,7 +1081,7 @@ function clearResults(a,profile){
   for(let i=0;i<3&&a.results().review;i++)a.exitResult();
  }
 }
-function playDungeon(a,level,profile,opts,decisionModel='risk-aware'){
+function playDungeon(a,level,profile,opts,decisionModel='risk-aware',captureMode='natural'){
  const c=a.controller(),g=c.state,flags=policyFlags(decisionModel);
  if(g.unlocked<level)throw Error('Cannot bypass native unlock from E'+g.unlocked+' to E'+level);
  a.start(level,true);
@@ -1191,7 +1194,7 @@ function playDungeon(a,level,profile,opts,decisionModel='risk-aware'){
   }
   // Record every native drop, including the first room: there is no guaranteed gear.
   const wasFirstRoom=g.dungeon?.cleared?.length===1&&!g.selected.boss;
-  const fight=fightNatural(a,profile,opts.tickLimit,{adaptiveTargets:flags.targets,capabilities:capabilities(a)});
+  const fight=fightNatural(a,profile,opts.tickLimit,{adaptiveTargets:flags.targets,capabilities:capabilities(a),level,captureMode});
   const actualDrops=(a.state().run?.loot||[]).map(item=>
    ({slot:item.slot,rarity:item.rarity,subtype:item.subtype,source:item.source}));
   report.rooms.push({room:next.room,roomType:node.kind,...fight,
@@ -1241,13 +1244,16 @@ function simulateAccount(seed,id,opts,simulationOptions={}){
   !['Cloth','Leather','Plate'].includes(profile.armor)||!Array.isArray(profile.weapons)||!profile.weapons.length||
   (profile.plan&&!Object.hasOwn(PLANNER.BUILDS,profile.plan)))throw Error('Invalid earned research profile '+id);
  policyFlags(decisionModel);
+ const capturePolicy=CAPTURE.policy(simulationOptions.captureMode||'natural');
+ const stopAtCamp=simulationOptions.stopAtCampLevel;
+ if(stopAtCamp!==undefined&&(!Number.isInteger(stopAtCamp)||stopAtCamp<1||stopAtCamp>opts.maxLevel||typeof simulationOptions.onCamp!=='function'))throw Error('Capture stop requires valid Camp callback');
  const a=create(seed,undefined,simulationOptions.moduleOverrides||{}, {skipPersistence:true,now:1720000000000+seed});
  const initialGear=gearSnapshot(a);
  if(a.talents.earned(a.state().automaticTalents)!==0||
     !initialGear.items.length||initialGear.items.some(x=>!x.startingGear))
   throw Error('New account must start with native weak equipment and zero earned talents');
  const acc={seed,profile:id,initialGear,startXp:a.state().automaticTalents.xp,
-  attempts:[],reached:[1],endLevel:null,stopReason:null};
+  attempts:[],reached:[1],endLevel:null,stopReason:null,capturePolicy:{...capturePolicy}};
  let stopped=false,activeProfile=profile,pivoted=false;
  for(let level=1;level<=opts.maxLevel&&!stopped;level++){
   if(a.controller().state.unlocked<level){
@@ -1295,6 +1301,7 @@ function simulateAccount(seed,id,opts,simulationOptions={}){
      if(remaining!==fixed||!a.talents.valid(afterState.automaticTalents))
       throw Error('Earned checkpoint test changed equipment, resources, XP, unlocks or invalid talents');
     }
+    if(stopAtCamp===level&&attempt===1){acc.stopReason='Reached requested native Camp E'+level;stopped=true;cleared=true;break;}
     const before={xp:a.state().automaticTalents.xp,earned:a.talents.earned(a.state().automaticTalents),
      spent:a.state().automaticTalents.nodes.length,
      attributeEarned:a.talents.attributeBudget(a.state().automaticTalents),
@@ -1305,7 +1312,7 @@ function simulateAccount(seed,id,opts,simulationOptions={}){
      element:a.state().automaticTalents.element||null,
      prepared:a.state().automaticTalents.prepared||null,
      unlocked:a.controller().state.unlocked};
-    const encounter=playDungeon(a,level,activeProfile,opts,decisionModel);
+    const encounter=playDungeon(a,level,activeProfile,opts,decisionModel,capturePolicy.mode);
     if(encounter.xpEnd<before.xp)throw Error('Native earned XP decreased');
     entry={...entry,camp,before,...(earnedProbe?{earnedProbe}:{}),...encounter,
      after:{xp:a.state().automaticTalents.xp,earned:a.talents.earned(a.state().automaticTalents),

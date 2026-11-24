@@ -311,6 +311,7 @@ function tickRot(b,c){
   const baseRot=rot.reduce((sum,s)=>sum+s.damage,0);
   const secondaryRot=rot.reduce((sum,s)=>sum+((s.spread||s.secondaryOrigin)?s.damage:0),0);
   const secondaryFraction=baseRot>0?secondaryRot/baseRot:0;
+  const bloomRot=rot.filter(s=>s.secondaryOrigin==='grave_bloom');if(bloomRot.length){c.metric?.('graveBloomRotTicks',bloomRot.length);c.metric?.('graveBloomRotRawTickDamage',bloomRot.reduce((n,s)=>n+s.damage,0));}
   const nodes=b.runtime.specializations||[],incubationRank=nodes.filter(id=>id==='incubation'||id.startsWith('incubation_rank')).length;
   e.incubationTicks=(e.incubationTicks||0)+1;
   const damage=Math.round(rot.reduce((sum,s)=>sum+s.damage,0)*(e.incubationTicks%3===0?1+.12*incubationRank+(specialized(b,'plagueheart')?.35:0):1));
@@ -442,6 +443,32 @@ function onInfusionActivation(b,c){
  if(rank(b,'spellblade')&&activated(b,'spellblade'))b.runtime.spellblade=true;
  c.log?.('✨ Arcane Infusion · 2 charges');
 }
+// Exactly once per actually consumed paid Infusion charge, independent of weapon.
+function graveBloomInfusion(b,c){
+ if(b?.runtime?.prepared!=='grave_bloom'||!specialized(b,'grave_bloom')||c.proc||c.extra||c.recursive||c.offhand)return 0;
+ const e=c.enemy,power=Math.max(0,Number(c.power)||0);if(!e||e.hp<=0||!(power>0))return 0;
+ const cap=specialized(b,'rot_focus')?3:6;
+ for(let i=0;i<2;i++){applyRot(b,c,power*.16);c.metric?.("graveBloomSeeds",1);}
+ const rot=(e.v012Rot||[]).filter(d=>d.remaining>0&&d.damage>0);
+ if(!rot.length)return 0;
+ const total=rot.reduce((n,d)=>n+d.damage,0),limit=e.maxhp*(e.boss?.035:e.miniboss?.07:.22);
+ const amount=Math.max(1,Math.round(Math.min(limit,total*1)));
+ activated(b,'grave_bloom');c.trigger?.('grave_bloom');c.metric?.('graveBloomActivations',1);c.metric?.('graveBloomStackCount',rot.length);
+ const before=e.hp;c.damage(amount,"☠ Grave Bloom");
+ c.metric?.('graveBloomBurstDamage',Math.max(0,before-Math.max(0,e.hp)));
+ const sources=rot.filter(d=>!d.spread&&!d.transferred).sort((a,b)=>b.damage-a.damage).slice(0,2);
+ const targets=(c.player?.enemies||[]).filter(t=>t!==e&&t.hp>0).slice(0,2);
+ for(const target of targets){
+  target.v012Rot??=[];
+  for(const source of sources){
+   if(target.v012Rot.length>=cap)break;
+   target.v012Rot.push({damage:Math.max(1,Math.round(source.damage*.75)),remaining:Math.min(3,source.remaining),ticks:0,spread:true,secondaryOrigin:"grave_bloom"});
+   c.metric?.('graveBloomSpread',1);
+  }
+  c.link?.('rot',e,[target]);
+ }
+ return amount;
+}
 function onInfusionHit(b,c){
  const cfg=infusionConfig(b,c.weaponSubtype),r=b?.runtime;
  if(!cfg||!r||c.offhand||!c.enemy||c.enemy.hp<=0||!(r.infusionCharges>0)||!Number.isFinite(c.now))return 0;
@@ -449,7 +476,8 @@ function onInfusionHit(b,c){
  r.infusionCharges--;
  const power=Math.max(0,Number(c.power)||0);
  const amount=Math.round(elementalPower(b,power)*cfg.power);
- if(amount>0)c.damage(amount,'✨ Arcane Infusion');
+ graveBloomInfusion(b,c);
+ if(amount>0&&c.enemy.hp>0)c.damage(amount,'✨ Arcane Infusion');
  r.magicInfusionHits=(r.magicInfusionHits||0)+1;
  // A Wand/Staff funded attack already fires the native spell callbacks.
  // The Infusion adds damage, but never duplicates Spell Echo, Decay or Aegis procs.
@@ -460,15 +488,7 @@ function onInfusionHit(b,c){
  if(!c.magical&&r.magicInfusionHits%3===0){
   const spellEchoRank=(r.specializations||[]).filter(id=>id==='spell_echo'||/^spell_echo_rank\d+$/.test(id)).length;
   if(spellEchoRank)c.damage(Math.max(1,Math.round(amount*.10*spellEchoRank)),'✨ Spell Echo');
-  if(r.prepared==='grave_bloom'){
-   e.v012Rot??=[];
-   if(!e.v012Rot.length)e.v012Rot.push({damage:Math.max(1,Math.round(power*.16)),remaining:3,ticks:0});
-   const source=e.v012Rot.find(dot=>dot.damage>0),others=(c.player?.enemies||[]).filter(m=>m!==e&&m.hp>0).slice(0,2);
-   if(source&&others.length){
-    for(const m of others){m.v012Rot??=[];if(m.v012Rot.length<6)m.v012Rot.push({damage:Math.max(1,Math.round(source.damage*.75)),remaining:Math.min(3,source.remaining),ticks:0,secondaryOrigin:'grave_bloom'});}
-   }else if(source)c.damage(source.damage,'☠ Grave Bloom');
-   activated(b,'grave_bloom');c.trigger?.('grave_bloom');
-  }
+
  }
  // This hit is NOT an additional attack, spell, critical or off-hand proc.
  if(rank(b,'arcane_echo')&&r.magicInfusionHits%4===0&&activated(b,'arcane_echo'))

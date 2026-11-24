@@ -40,7 +40,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
   tickDots=(...args)=>{const n=dotNative(...args);measured.dot+=n;return n;};
   setDirectEnemyDamage=(...args)=>{const n=directNative(...args);measured.burst=Math.max(measured.burst,n);return n;};
   weaponAttack=(...args)=>{measured.attacks++;return attackNative(...args);};
-  phase2Context=(...args)=>{const c=contextNative(...args),native=c.dotDamage;c.dotDamage=(n,label)=>{measured.dot+=Math.min(Math.max(0,c.enemy.hp),Math.round(n));return native(n,label);};return c;};
+  phase2Context=(...args)=>{const c=contextNative(...args),native=c.dotDamage;c.dotDamage=(...args)=>{measured.dot+=Math.min(Math.max(0,c.enemy.hp),Math.round(args[0]));return native(...args);};return c;};
   floatText=(value,target,critical)=>{if(target==='enemy'&&critical)measured.crit++;};
   animateEnemyStrike=()=>{measured.incoming++;};
   addLog=text=>{if(text.includes('BLOCK!'))measured.blocks++;if(text.includes('Barrier absorbs '))measured.absorbed+=Number(text.match(/absorbs ([0-9.]+)/)?.[1]||0);};
