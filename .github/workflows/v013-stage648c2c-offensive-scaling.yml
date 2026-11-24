@@ -1,0 +1,57 @@
+name: Stage 6.48C.2C — Attack Speed vs Offensive Power (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths: ['.github/workflows/v013-stage648c2c-offensive-scaling.yml','scripts/v013-stage648c2c-offensive-scaling.cjs','tests/v013-stage648c2c-offensive-scaling.test.cjs']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node --test tests/v013-stage648c2c-offensive-scaling.test.cjs tests/v013-stage648c2b-persistent-corruption.test.cjs
+      - run: node scripts/v013-stage648c2c-offensive-scaling.cjs smoke
+  cohort:
+    needs: gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        id: [blood-daggers, blood-sword, blood-twohand, blood-bow, blood-wand, blood-staff, decay-daggers, decay-sword, decay-twohand, decay-bow, decay-wand, decay-staff, persistent-daggers, persistent-sword, persistent-twohand, persistent-bow, persistent-wand, persistent-staff]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node scripts/v013-stage648c2c-offensive-scaling.cjs run ${{ matrix.id }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage648c2c-${{ matrix.id }}
+          path: reports/stage648c2c/*.json
+  aggregate:
+    needs: cohort
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage648c2c-*
+          path: reports/stage648c2c
+          merge-multiple: true
+      - run: node scripts/v013-stage648c2c-offensive-scaling.cjs aggregate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage648c2c-report
+          path: reports/v013-stage648c2c-offensive-scaling.json

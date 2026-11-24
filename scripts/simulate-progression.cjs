@@ -213,7 +213,9 @@ function prepare(level,build,seed,opts,desiredRisk=undefined,desiredFamily=undef
       throw Error('Invalid isolated Stage 6.24C native progression source');
     if(opts.stage648b1ExpeditionSource!==undefined&&(typeof opts.stage648b1ExpeditionSource!=='string'||!opts.stage648b1ExpeditionSource.includes('function phase1WaveWon(')))throw Error('Invalid Stage 6.48B.1 VM-only expedition source');
     if(opts.stage648c1BuildcraftSource!==undefined&&(typeof opts.stage648c1BuildcraftSource!=='string'||!opts.stage648c1BuildcraftSource.includes('WandererV012Buildcraft')))throw Error('Invalid Stage 6.48C.1 diagnostic buildcraft source');
+    if(opts.stage648c2cGearStatsSource!==undefined&&(typeof opts.stage648c2cGearStatsSource!=='string'||!opts.stage648c2cGearStatsSource.includes('WandererV012GearStats')))throw Error('Invalid Stage 6.48C.2C isolated stat source');
     const overrides={
+      ...(opts.stage648c2cGearStatsSource===undefined?{}:{'combat/v012-gear-stats.js':opts.stage648c2cGearStatsSource}),
       ...(opts.stage648c1BuildcraftSource===undefined?{}:{'combat/v012-buildcraft.js':opts.stage648c1BuildcraftSource}),
       ...(opts.stage648b1ExpeditionSource===undefined?{}:{'online/v012-expedition-runtime.js':opts.stage648b1ExpeditionSource}),
       ...(opts.stage617RosterSource===undefined?{}:{'online/v013-enemy-roster.js':opts.stage617RosterSource}),
