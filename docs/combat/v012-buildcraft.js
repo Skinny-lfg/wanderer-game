@@ -173,7 +173,15 @@ function applyRot(b,c,power){
  stacks.push({ticks:0,damage:Math.max(1,Math.round(power*(1+.15*rank(b,'virulent_rot')+(b.runtime.talentBonuses?.rotBonus||0))*(specialized(b,'rot_focus')?1.6:1))),remaining:specialized(b,'lingering_rot')?5:4});
  c.log('☠ Rot '+stacks.length+'/6');
 }
+function sanguineReserve(b,c){
+ const r=c.player,key=c.waveKey??c.enemy;
+ if(r.sanguineReserveWave!==key){r.sanguineReserveWave=key;r.sanguineReserve=0;}
+ return r;
+}
 function onHeal(b,c,healed){
+ if(healed>0&&specialized(b,'sanguine_reserve')){
+  const r=sanguineReserve(b,c);r.sanguineReserve=Math.min(r.maxhp*.05,(r.sanguineReserve||0)+healed*.25);
+ }
  if(healed>0&&specialized(b,'overflowing_life'))c.barrier(Math.min(healed*.15,c.player.maxhp*.10));
  if(healed>0&&rank(b,'sanctuary')&&ready(b,'sanctuary',c.now,1)){activated(b,'sanctuary');c.barrier(healed*.20);}
  if(healed>0&&rank(b,'life_conduit')&&ready(b,'life_conduit',c.now,3)){activated(b,'life_conduit');c.mana(4);b.runtime.conduit=true;}
@@ -209,6 +217,15 @@ function onSecondaryWeaponStatus(b,c,q=.5,p=.5){
 function onAttack(b,c){
  if(c.proc||c.extra||c.recursive)return;
  const e=c.enemy,base=Math.max(1,c.base||1),crit=!!c.critical;
+ if(specialized(b,'sanguine_reserve')&&!c.magical&&!c.offhand){
+  const r=sanguineReserve(b,c),limit=r.maxhp*.05;
+  const live=(r.enemies||[e]).filter(x=>x.hp>0);
+  const dots=(e.dots?.bleed||[]).filter(d=>d.remaining>0&&!d.spread&&!d.transferred&&!d.secondaryOrigin);
+  if(e.hp>0&&limit>0&&r.sanguineReserve>=limit-1e-8&&live.length===1&&!r.groupReserve?.length&&dots.length&&ready(b,'sanguineReserve',c.now,4)){
+   r.sanguineReserve=0;const amount=Math.min(limit,Math.max(...dots.map(d=>d.damage)),e.maxhp*(e.boss?.005:e.miniboss?.01:.025));
+   if(amount>0){activated(b,'sanguine_reserve');c.damage(amount,'🩸 Sanguine Reserve');c.metric?.('sanguineReserveBursts',1);}
+  }
+ }
  if(rank(b,'second_breath')&&ready(b,'vitalityStrike',c.now,6)&&activated(b,'second_breath'))c.damage(Math.min(c.player.maxhp*.01,e.maxhp*.025),'💚 Vital Strike');
  if(b.runtime.prepared==='fury_recovery'&&c.player.hp>0&&c.player.hp<c.player.maxhp*.35&&b.runtime.furyRecoveryWave!==(c.waveKey??e)){b.runtime.furyRecoveryWave=c.waveKey??e;b.runtime.furyRecoveryUntil=c.now+4;activated(b,'fury_recovery');heal(b,c,c.player.maxhp*.08);c.log('❤ Fury Recovery');}
  if(specialized(b,'affinity_fury')&&e.baseDef>0&&c.now>=(e.nextFurySunder||0)&&c.random()<.15){const baseDef=e.baseDef,applied=e.furySunder||0,reduction=Math.max(0,Math.min(baseDef*.04,baseDef*.20-applied,e.def-baseDef*.25));if(reduction>0){e.def-=reduction;e.furySunder=applied+reduction;e.nextFurySunder=c.now+1;c.log('⚔ Sunder: enemy Defense reduced.');}}

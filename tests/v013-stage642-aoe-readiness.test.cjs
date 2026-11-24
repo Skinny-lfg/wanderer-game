@@ -54,7 +54,8 @@ test('Stage 6.42: only one shared runtime implementation for increased AoE and n
  assert(runtime.includes("lightningMarksDetonated"));
  assert(runtime.includes("[.68,.53,.40,.29,.21,.15]"));
  assert(runtime.includes("[.60,.45,.33,.23,.16]"));
- assert(runtime.includes("function v013GraveBloomPulse("));
+ assert(!runtime.includes("function v013GraveBloomPulse("));
+ assert(read("combat/v012-buildcraft.js").includes("function graveBloomInfusion("));
  assert(!runtime.includes("prepared('grave_bloom')&&e.v012Rot?.length"));
  assert(expedition.includes("ports.phase6Metric(r,'plagueSpreadBursts',1)"));
  assert(expedition.includes("r.enemies.includes(target)"),'Reserve must not be killed before spawning');
