@@ -1,0 +1,90 @@
+name: Stage 6.48C.1 — Agent identity and talent trigger diagnosis (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths: ['.github/workflows/v013-stage648c1-identity-trigger.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node --test tests/v013-stage648c1-identity.test.cjs tests/v013-stage647d8-decay.test.cjs tests/v013-natural-progression.test.cjs
+  trigger:
+    needs: gate
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: synergy-decay-wand
+          path: input/earned
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 45430920656
+      - uses: actions/download-artifact@v4
+        with:
+          name: stage648b2-decay-wand
+          path: input/baseline
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 45446227838
+      - run: node scripts/v013-stage648c1-identity-trigger.cjs diagnose
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage648c1-trigger
+          path: reports/stage648c1-trigger.json
+  cohort:
+    needs: gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      max-parallel: 11
+      matrix:
+        profile: [smart-fury-daggers, smart-fury-bow, smart-blood-two-handed, decay-two-handed, decay-wand, decay-staff, decay-daggers, magic-daggers-infusion, aegis-mace-shield, aegis-wand-orb, vitality-staff]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: synergy-${{ matrix.profile }}
+          path: input/earned
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 45430920656
+      - run: node scripts/v013-stage648c1-identity-trigger.cjs capture ${{ matrix.profile }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage648c1-capture-${{ matrix.profile }}
+          path: reports/stage648c1/*.json
+  aggregate:
+    needs: [gate, cohort, trigger]
+    if: ${{ always() && needs.gate.result == 'success' }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage648c1-capture-*
+          path: reports/stage648c1
+          merge-multiple: true
+      - run: node scripts/v013-stage648c1-identity-trigger.cjs aggregate
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage648c1-summary
+          path: reports/v013-stage648c1-identity-summary.json

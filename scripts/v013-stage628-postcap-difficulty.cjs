@@ -157,6 +157,7 @@ function native(snap,scenario,seed,without=false){
  const opts=fixtures(snap,without);
  if(scenario.researchRosterSource!==undefined)opts.stage617RosterSource=scenario.researchRosterSource;
  if(scenario.researchExpeditionSource!==undefined)opts.stage648b1ExpeditionSource=scenario.researchExpeditionSource;
+ if(scenario.researchBuildcraftSource!==undefined)opts.stage648c1BuildcraftSource=scenario.researchBuildcraftSource;
  if(scenario.type==='elite')opts.stage619EliteType=scenario.id;
  const kind=scenario.type==='normal'||scenario.type==='tank'?'normal':scenario.type;
  const x=S.encounter(snap.level,build(snap),seed,kind,opts,undefined,undefined,

@@ -182,6 +182,24 @@ function gearScore(item,profile,targetSlot=item?.slot){
  const adjusted=baseline+(profile.synergyAudit?synergyGearBonus(item,profile,slot):0);
  return profile.plan?PLANNER.evaluateGear(item,profile,adjusted,slot):adjusted;
 }
+// Stage 6.48C.1: research-only identity priority, not a gameplay stat.
+function identityMatch(item,profile,slot){
+ if(!profile.strictResearchIdentity)return null;
+ const choices=slot==='weapon'?profile.weapons:slot==='offhand'?profile.offhands:
+  ['helm','armor','gloves','boots','belt'].includes(slot)?[profile.armor]:null;
+ if(!choices?.length)return null;
+ const type=slot==='offhand'&&item?.subtype==='Off-Hand Dagger'?'Daggers':
+  ['helm','armor','gloves','boots','belt'].includes(slot)?item?.armorType||item?.subtype:item?.subtype;
+ return !!item&&choices.includes(type);
+}
+function identityGain(item,prior,profile,slot){
+ const gain=gearScore(item,profile,slot)-gearScore(prior,profile,slot);
+ const next=identityMatch(item,profile,slot),before=identityMatch(prior,profile,slot);
+ if(next===false&&before===true)return -1000000;
+ if(next===true&&before!==true)return Math.max(10,gain);
+ return gain;
+}
+function identityPurchase(item,profile,slot){return identityMatch(item,profile,slot)!==false;}
 function gearSnapshot(a){
  const items=Object.values(a.state().equip).filter(Boolean);
  return {total:items.length,starter:items.filter(x=>x.startingGear).length,
@@ -290,17 +308,17 @@ function equipEarned(a,profile,between=false){
   // Daggers can be legally equipped in either hand. Compare both native
   // slots, rather than always consuming the item in main hand first.
   const targets=['ring1','ring2'].includes(item.slot)?['ring1','ring2']:
-   offhandDagger?['weapon','offhand']:[item.slot];
+   offhandDagger?(profile.strictResearchIdentity&&item.subtype==='Off-Hand Dagger'?['offhand']:['weapon','offhand']):[item.slot];
   const options=targets.map(target=>{
    const prior=a.state().equip[target];
-   return {target,prior,gain:gearScore(item,profile,target)-gearScore(prior,profile,target)};
+   return {target,prior,gain:identityGain(item,prior,profile,target)};
   }).sort((x,y)=>y.gain-x.gain);
   for(const {target,prior,gain} of options){
    if(gain<2.5)continue;
    if(target==='offhand'&&['Two-Handed','Bow','Staff'].includes(a.state().equip.weapon?.subtype))continue;
-   if(item.slot==='weapon'&&['Two-Handed','Bow','Staff'].includes(item.subtype)&&a.state().equip.offhand){
+   if(target==='weapon'&&['Two-Handed','Bow','Staff'].includes(item.subtype)&&a.state().equip.offhand){
     // Do not delete a strong earned shield/secondary weapon to chase a tiny weapon score.
-    if(gain<gearScore(a.state().equip.offhand,profile)*.6+5)continue;
+    if(!(identityMatch(item,profile,'weapon')===true&&identityMatch(prior,profile,'weapon')!==true)&&gain<gearScore(a.state().equip.offhand,profile)*.6+5)continue;
    }
    if(a.equip(item.id,target)){actions.push({slot:target,item:item.name,rarity:item.rarity,previous:prior?.name||null,gain:round(gain),
     ...(target==='offhand'?{subtype:item.subtype,trait:item.v013Trait||null,previousSubtype:prior?.subtype||null}: {})});break;}
@@ -319,9 +337,9 @@ function craftEarned(a,profile,level){
    const preview=forge.preview(recipe.id,level);
    if(!preview)return null;
    const targets=['ring1','ring2'].includes(recipe.slot)?['ring1','ring2']:[recipe.slot];
-   const best=targets.map(slot=>({slot,gain:gearScore(preview,profile)-gearScore(state.equip[slot],profile)}))
+   const best=targets.filter(slot=>identityPurchase(preview,profile,slot)).map(slot=>({slot,gain:identityGain(preview,state.equip[slot],profile,slot)}))
     .sort((a,b)=>b.gain-a.gain)[0];
-   return {...best,recipe,fragments:progress.cost.fragments};
+   return best?{...best,recipe,fragments:progress.cost.fragments}:null;
   }).filter(Boolean).filter(x=>x.gain>=5)
    .sort((a,b)=>b.gain-a.gain||a.fragments-b.fragments);
   const best=candidates[0];if(!best)break;
@@ -356,9 +374,9 @@ function investEarnedGear(a,profile,level){
    const example=forge.preview(recipe.id,level);
    if(!example)continue;
    const targets=['ring1','ring2'].includes(recipe.slot)?['ring1','ring2']:[recipe.slot];
-   const target=targets.map(slot=>({slot,gain:gearScore(example,profile)-gearScore(s.equip[slot],profile)}))
+   const target=targets.filter(slot=>identityPurchase(example,profile,slot)).map(slot=>({slot,gain:identityGain(example,s.equip[slot],profile,slot)}))
     .sort((x,y)=>y.gain-x.gain)[0];
-   if(target.gain<5)continue;
+   if(!target||target.gain<5)continue;
    options.push({recipe,target,gain:target.gain,fragments:progress.cost.fragments,
     essence:progress.cost.essence,efficiency:efficiency(target.gain,progress.cost.fragments,progress.cost.essence)});
   }
@@ -536,7 +554,7 @@ function consolidateStash(a,profile,reserve=4){
    !item.startingGear&&!item.recoveryStarter).sort((left,right)=>{
    function priority(item){
     const equipped=s.equip[item.slot];
-    const weakRelative=gearScore(item,profile)-gearScore(equipped,profile);
+    const weakRelative=identityGain(item,equipped,profile,item.slot);
     return weakRelative-(item.recoveryStarter?200:0)-(item.rarity==='Common'?10:0);
    }
    return priority(left)-priority(right);
@@ -574,7 +592,7 @@ function prepareCamp(a,profile,level,decisionModel='risk-aware',options={}){
  if(a.economyCanAct()){
   const surplus=s.stash.filter(item=>item.source==='loot'&&item.rarity==='Common'&&
    !item.locked&&!item.recoveryStarter&&item.id&&
-   gearScore(item,profile)+2.5<=gearScore(s.equip[item.slot],profile));
+   identityGain(item,s.equip[item.slot],profile,item.slot)<=-2.5);
   if(surplus.length){
    const ids=surplus.map(item=>item.id),expected=surplus.reduce((sum,item)=>sum+a.sale(item),0);
    const before=s.fragments;
@@ -653,8 +671,8 @@ function prepareCamp(a,profile,level,decisionModel='risk-aware',options={}){
   const reserve=decisionModel==='legacy'?(owns('health')?0:14):
    owns('health')||!healthOffer?0:healthOffer.price;
   const candidates=(s.merchant?.stock||[]).map((item,index)=>({item,index,
-   gain:gearScore(item,profile)-gearScore(s.equip[item?.slot],profile)}))
-   .filter(x=>x.item?.goldPrice<=s.gold-reserve&&x.gain>(decisionModel==='legacy'?8:5))
+   gain:identityGain(item,s.equip[item?.slot],profile,item?.slot)}))
+    .filter(x=>identityPurchase(x.item,profile,x.item?.slot)&&x.item?.goldPrice<=s.gold-reserve&&x.gain>(decisionModel==='legacy'?8:5))
    .sort((x,y)=>y.gain-x.gain||x.item.goldPrice-y.item.goldPrice);
   for(const {item,index} of candidates.slice(0,decisionModel==='legacy'?1:2)){
    if(s.gold<item.goldPrice+reserve||s.merchant?.stock?.[index]?.id!==item.id)continue;
@@ -1536,7 +1554,7 @@ function main(args=process.argv.slice(2)){
  if(report.coverage.errors)process.exitCode=1;
  return report;
 }
-module.exports={PROFILES,PIVOTS,pivotProfile,DEFAULTS,parseArgs,synergyGearBonus,spendEarnedAttributes,gearScore,gearSnapshot,runeScore,chooseRuneReward,manageEarnedRunes,potionScore,selectEarnedPotions,buyEarnedPotions,refineEarnedReagents,selectThornAwareTarget,spendEarnedTalents,prepareEarnedAbility,equipEarned,
+module.exports={PROFILES,PIVOTS,pivotProfile,DEFAULTS,parseArgs,synergyGearBonus,spendEarnedAttributes,gearScore,identityMatch,identityGain,identityPurchase,gearSnapshot,runeScore,chooseRuneReward,manageEarnedRunes,potionScore,selectEarnedPotions,buyEarnedPotions,refineEarnedReagents,selectThornAwareTarget,spendEarnedTalents,prepareEarnedAbility,equipEarned,
  prepareCamp,craftEarned,investEarnedGear,consolidateStash,policyFlags,capabilities,rankRealms,choiceRealm,pathLength,eliteOpportunity,selectRoom,evaluateRetreat,boonScore,chooseBoon,contractScore,chooseContract,contractExitDecision,eventOptions,potionSlots,usePotionKind,usePotionsBetween,rerollPoorBoonAtShrine,
  fightNatural,resolveEvent,clearResults,playDungeon,simulateAccount,analyze,run,markdown,main};
 if(require.main===module)main();
