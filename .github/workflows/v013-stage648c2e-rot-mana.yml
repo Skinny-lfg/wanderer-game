@@ -1,0 +1,57 @@
+name: Stage 6.48C.2E — Rot foundation and Mana audit (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths: ['.github/workflows/v013-stage648c2e-rot-mana.yml','scripts/v013-stage648c2e-rot-mana.cjs','tests/v013-stage648c2e-rot-mana.test.cjs']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node --test tests/v013-stage648c2e-rot-mana.test.cjs tests/v013-stage648c2b-persistent-corruption.test.cjs tests/v013-stage648c2d-decay-rework.test.cjs
+      - run: node scripts/v013-stage648c2e-rot-mana.cjs smoke
+  cohort:
+    needs: gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        id: ["rot:native", "rot:persistent", "rot:rot3", "rot:rot4", "rot:rot5", "rot:persistent-no-cycle", "rot:rot4-no-cycle", "mana:decay-daggers", "mana:newdecay-daggers", "mana:decay-sword", "mana:newdecay-sword", "mana:decay-twohand", "mana:newdecay-twohand", "mana:decay-bow", "mana:newdecay-bow", "mana:decay-wand", "mana:newdecay-wand", "mana:decay-staff", "mana:newdecay-staff", "mana:arcane-sword", "mana:arcane-wand", "mana:arcane-staff", "mana:fire-sword", "mana:fire-wand", "mana:fire-staff", "mana:frost-sword", "mana:frost-wand", "mana:frost-staff", "mana:lightning-sword", "mana:lightning-wand", "mana:lightning-staff"]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node scripts/v013-stage648c2e-rot-mana.cjs run "${{ matrix.id }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage648c2e-${{ strategy.job-index }}
+          path: reports/stage648c2e/*.json
+  aggregate:
+    needs: cohort
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage648c2e-*
+          path: reports/stage648c2e
+          merge-multiple: true
+      - run: node scripts/v013-stage648c2e-rot-mana.cjs aggregate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage648c2e-report
+          path: reports/v013-stage648c2e-rot-mana.json
