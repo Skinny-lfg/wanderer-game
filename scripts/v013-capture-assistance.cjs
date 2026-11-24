@@ -19,8 +19,8 @@ function createScaler(level,mode='natural'){
    seen.add(e);
    const max=e.maxhp,ratio=Math.min(1,e.hp/max);
    e.maxhp=Math.max(1,Math.round(max*p.hp));e.hp=Math.max(1,Math.round(e.maxhp*ratio));
-   if(Number.isFinite(e.atk))e.atk=Math.max(1,Math.round(e.atk*p.attack));
-   if(Number.isFinite(e.baseAtk))e.baseAtk=Math.max(1,Math.round(e.baseAtk*p.attack));
+   if(Number.isFinite(e.atk))e.atk=e.atk===0?0:Math.max(1,Math.round(e.atk*p.attack));
+   if(Number.isFinite(e.baseAtk))e.baseAtk=e.baseAtk===0?0:Math.max(1,Math.round(e.baseAtk*p.attack));
    metrics.scaledActors++;
   }
  }
