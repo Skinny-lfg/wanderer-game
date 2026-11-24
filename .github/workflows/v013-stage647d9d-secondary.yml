@@ -1,0 +1,39 @@
+name: Stage 6.47D.9D — Secondary stats and critical chance (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths: ['.github/workflows/v013-stage647d9d-secondary.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node --test tests/talent-graph-bridge.test.cjs tests/talent-graph-combat.test.cjs tests/v012-buildcraft.test.cjs tests/v013-stage647d9-magic.test.cjs tests/v013-stage647d8-decay.test.cjs tests/v013-stage647d7-vitality-aegis.test.cjs tests/v013-stage647d6-blood-fury.test.cjs tests/v013-stage647d5-architecture.test.cjs tests/v013-strategic-build-agents.test.cjs
+      - run: npm test
+      - run: git diff --exit-code
+  progression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [smart-blood-pure, smart-fury-bow, smart-vitality-pure, smart-aegis-vitality, smart-magic-arcane-pure, smart-decay-magic-aegis, cautious, balanced, plate-warden, cloth-battlemage, leather-duelist, hexblade-hybrid]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node scripts/v013-natural-progression.cjs --profiles=${{ matrix.profile }} --seeds=9861,9862,9863 --max-level=10 --max-attempts=12 --out=reports/secondary-${{ matrix.profile }}.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: secondary-${{ matrix.profile }}
+          path: reports/secondary-*

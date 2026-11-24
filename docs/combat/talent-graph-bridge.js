@@ -13,7 +13,11 @@ function project(graph,progress,element='fire',prepared=null){
 function apply(stats,graph,progress){
  if(!root.WandererTalentGraph.valid(graph,progress))throw Error('Invalid talent progress');
  const result={...stats};let spell=0,health=0,speed=0;
- for(const n of graph){const rank=progress.ranks[n.id]||0;if(!rank)continue;for(const [property,dest] of [['flatAttack','attack'],['flatArmor','defense'],['flatLife','maxhp'],['flatAvoid','evasionRating'],['flatSpell','spellPower'],['flatRegen','manaRegen'],['flatMana','mana'],['flatSpeed','attacksPerSec']])if(n[property])result[dest]=(result[dest]||0)+n[property]*rank;spell+=(n.spell||0)*rank;health+=(n.health||0)*rank;speed+=(n.speed||0)*rank;}
+ const percentFields=[['pctAttack','attack'],['pctArmor','defense'],['pctLife','maxhp'],['pctSpell','spellPower'],['pctSpeed','attacksPerSec'],['pctMana','mana'],['pctRegen','manaRegen']],percent={attack:0,defense:0,maxhp:0,spellPower:0,attacksPerSec:0,mana:0,manaRegen:0};let critChance=0;
+ for(const n of graph){const rank=progress.ranks[n.id]||0;if(!rank)continue;for(const [property,dest] of [['flatAvoid','evasionRating'],['flatRegen','manaRegen'],['flatMana','mana']])if(n[property])result[dest]=(result[dest]||0)+n[property]*rank;for(const [property,dest] of percentFields)percent[dest]+=(n[property]||0)*rank;critChance+=(n.critChance||0)*rank;spell+=(n.spell||0)*rank;health+=(n.health||0)*rank;speed+=(n.speed||0)*rank;}
+ // Additive percentages use the same pre-graph stat, never compound per node.
+ for(const [,dest] of percentFields)if(percent[dest])result[dest]=(result[dest]||0)+(stats[dest]||0)*percent[dest];
+ if(critChance)result.crit=Math.min(100,Math.max(0,(stats.crit||0)+critChance));
  result.spellPower=Math.round((result.spellPower||0)*(1+spell));if(health)result.maxhp=Math.round(result.maxhp*(1+health));if(speed)result.attacksPerSec*=1+speed;if(Number.isFinite(result.attacksPerSec))result.attacksPerSec=Math.min(4.2,result.attacksPerSec);return result;
 }
 function bonuses(graph,progress){if(!root.WandererTalentGraph.valid(graph,progress))throw Error('Invalid talent progress');const out={};for(const n of graph){const rank=progress.ranks[n.id]||0;if(!rank)continue;if(n.attribute)out[n.attribute]=(out[n.attribute]||0)+(n.attributeValue||1)*rank;for(const key of ['bleedBonus','rotBonus','rotDefense','sunderDamage','startBarrier','healthRegen'])if(n[key])out[key]=(out[key]||0)+n[key]*rank;}return out;}

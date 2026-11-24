@@ -26,7 +26,7 @@ const P=[
  ['aegis','barrier_pulse','Barrier Pulse','Gain Barrier equal to 3% Max HP + 6% Spell Power every 6 combat seconds at rank 1.'],
  ['aegis','retaliation','Retaliation','Absorbed Barrier empowers the next hit by 30% base damage (4s cooldown).'],
  ['fury','quick_hands','Quick Hands','Increase attack speed by 8% per rank.'],
- ['fury','precision','Precision','Increase Critical chance by 6 percentage points per rank (65% cap).'],
+ ['fury','precision','Precision','Increase Critical Chance with diminishing returns per rank (100% total cap).'],
  ['fury','brutal_crit','Brutal Critical','Critical strikes add 12% of base hit damage per rank.'],
  ['fury','double_strike','Double Strike','10% chance per rank for one non-recursive 30% bonus hit.'],
  ['fury','adrenaline','Adrenaline','Critical strikes grant 10% attack speed for 3s (3s cooldown).'],
@@ -90,7 +90,7 @@ const descriptions={
  barrier_pulse:'Gain Barrier every 6s: 3% Max HP + 6% Spell Power at rank 1 (+0.6% HP and +1.2% Spell Power per rank). Barrier stacks without a maximum and resets between encounters.',
  retaliation:'When Barrier absorbs damage, your next hit deals 30% more base hit damage (4s cooldown).',
  quick_hands:'Attack speed increases by 8% per rank.',
- precision:'Raises Critical chance; total Critical chance cannot exceed 65%.',
+ precision:'Gain Critical Chance with diminishing returns: approximately +5 percentage points at rank 1, up to +19 points asymptotically. Total Critical Chance cannot exceed 100%.',
  brutal_crit:'Critical hits add 12% base damage at Rank 1; smaller gains at higher ranks. Bonus damage cannot trigger passives.',
  double_strike:'Each hit has a 10% chance at Rank 1 to deal one extra hit for 30% base damage; chance gains get smaller at higher ranks. Extra hits cannot trigger passives.',
  adrenaline:'Critical hits grant 10% attack speed at rank 1 (+2.5 percentage points per rank) for 3s (3s cooldown).',
@@ -141,7 +141,7 @@ function mods(b,base){
  s.maxhp=Math.round(s.maxhp*(1+.10*Math.sqrt(h)));
  s.defense=Math.round(s.defense*(1+.12*Math.sqrt(a)));
  s.attacksPerSec=Math.min(4.2,s.attacksPerSec*(1+.08*q));
- s.crit=Math.min(65,s.crit+Math.round(19*(1-Math.exp(-p/3))));
+ s.crit=Math.min(100,Math.max(0,(s.crit||0)+Math.round(19*(1-Math.exp(-p/3)))));
  if(b.unlockedFamilies?.includes('magic')){
   // Do not change s.caster: Staff/Wand keep their original funded-attack path.
   s.mana=Math.max(30,Math.round(s.mana||20+s.int*7+s.manaFlat));

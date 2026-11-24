@@ -101,7 +101,7 @@ test('hybrids require both families; simulated DOT, shock, healing, barrier, att
   const b=api.create();b.families=[family];b.element=family==='magic'?'lightning':null;
   b.picks=api.CATALOG.filter(p=>p.family===family&&!p.requires.length&&(!p.element||p.element===b.element)).map(p=>p.id);
   const {c}=ctx(0);const stats=api.mods(b,base);
-  assert(stats.maxhp<=base.maxhp*1.3&&stats.crit<=65&&stats.attacksPerSec<=5);
+  assert(stats.maxhp<=base.maxhp*1.3&&stats.crit<=100&&stats.attacksPerSec<=5);
   for(let n=0;n<200;n++){
    c.now+=.25;
    api.onAttack(b,c);api.onCast(b,c);

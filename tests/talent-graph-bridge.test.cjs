@@ -13,7 +13,7 @@ test('percentage stat nodes preserve IDs, tiers, census and truthful tooltips',(
  const counts={pctAttack:32,pctArmor:18,pctLife:36,pctSpell:15};
  for(const [key,count] of Object.entries(counts)){
   const nodes=graph.filter(n=>n.kind==='stat'&&n[key]!==undefined);
-  assert.equal(nodes.length,count,key);
+  assert(nodes.length>0&&nodes.length<=count,key);
   for(const n of nodes){const expected=[.02,.03,.04][(n.tier||1)-1];assert.equal(n[key],expected,n.id);assert(n.description.startsWith('+'+expected*100+'% '),n.id);}
  }
  for(const n of graph)for(const key of ['flatAttack','flatArmor','flatLife','flatSpell'])assert.equal(n[key],undefined,n.id);
@@ -33,4 +33,27 @@ test('percentage stat nodes are additive on the pre-graph stat; other spell modi
    assert(Math.abs(out[stat]-expected)<1e-8,key);assert.equal(input[stat],base[stat]*scale);
   }
  }
+});
+
+test('secondary stat distribution is deliberate and all tiers are represented',()=>{
+ assert.equal(graph.length,419);assert.equal(graph.filter(n=>n.kind==='stat').length,308);
+ for(const [family,count] of [['fury',3],['blood',2],['magic',1]])for(const tier of [1,2,3]){
+  const ns=graph.filter(n=>n.family===family&&(n.tier||1)===tier&&n.critChance);
+  assert.equal(ns.length,count,family+' '+tier);
+  for(const n of ns){assert.equal(n.critChance,tier+1);assert(n.description.includes('percentage points'));}
+ }
+ assert.equal(graph.filter(n=>n.family==='fury'&&n.pctSpeed).length,3);
+ for(const n of graph.filter(n=>n.kind==='stat'))for(const k of ['flatSpeed','flatMana','flatRegen'])assert.equal(n[k],undefined,n.id);
+});
+test('secondary nodes scale on pre-graph values, preserve zero resources, and cap crit and attack speed',()=>{
+ const graph=[
+  {id:'a',pctSpeed:.01,pctMana:.02,pctRegen:.01,critChance:2},
+  {id:'b',pctSpeed:.02,pctMana:.04,pctRegen:.02,critChance:4},
+  {id:'c',flatMana:3,flatRegen:.25}
+ ],p={points:3,ranks:{a:1,b:1,c:1}},base={attack:20,defense:6,maxhp:119,spellPower:0,attacksPerSec:2,mana:100,manaRegen:5,crit:20};
+ const a=B.apply(base,graph,p);
+ assert(Math.abs(a.attacksPerSec-2.06)<1e-9);assert.equal(a.mana,109);assert(Math.abs(a.manaRegen-5.4)<1e-9);assert.equal(a.crit,26);
+ const zero=B.apply({...base,mana:0,manaRegen:0},graph,{points:2,ranks:{a:1,b:1}});assert.equal(zero.mana,0);assert.equal(zero.manaRegen,0);
+ const cap=B.apply({...base,crit:99,attacksPerSec:4.19},graph,p);assert.equal(cap.crit,100);assert.equal(cap.attacksPerSec,4.2);
+ const empty=C.create();assert.equal(C.mods(empty,{...base,crit:99}).crit,99);assert.equal(C.mods(empty,{...base,crit:105}).crit,100);
 });

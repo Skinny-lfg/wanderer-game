@@ -77,13 +77,13 @@ function scoreNode(n,plan,active,context={}){
  // not legacy flat units. HP uses a 250-point reference to retain its role weight.
  const ability=n.description||'';
  if(focus==='spell'||focus==='rot'){
-  score+=(n.pctSpell||0)*100*1.9+(n.flatRegen||0)*13+(n.flatMana||0)*.65+(n.spell||0)*30;
+  score+=(n.pctSpell||0)*100*1.9+((n.pctRegen||0)*5+(n.flatRegen||0))*13+((n.pctMana||0)*100+(n.flatMana||0))*.65+(n.critChance||0)*.8+(n.spell||0)*30;
   if(/Mana|Spell|Arcane|Rot|cast|Intellect/i.test(ability))score+=2.5;
   if(/Attack Power|Strength|Endurance/i.test(ability))score-=1;
   if(n.attribute==='int')score+=3.1;
  }
  if(focus==='bleed'||focus==='speed'){
-  score+=(n.pctAttack||0)*100*1.8+(n.flatSpeed||0)*65+(n.attack||0)*30;
+  score+=(n.pctAttack||0)*100*1.8+(n.pctSpeed||0)*1.3*65+(n.critChance||0)*1.6+(n.attack||0)*30;
   if(/Bleed|Sunder|attack speed|Attack Power|Strength|Agility|critical/i.test(ability))score+=2.6;
   if(n.attribute==='str'||n.attribute==='agi')score+=3;
  }

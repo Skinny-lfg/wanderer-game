@@ -87,7 +87,7 @@ function totalStats(equipment,ownedRunes,equippedRuneIds,{isTwoHanded,FIELDS,ite
  s.rawAttackSpeed=attackSpeed(main?.subtype,s.agi,s.spdFlat,s.int);
  s.attacksPerSec=s.rawAttackSpeed;
  const critRating=Math.max(0,s.cha-5)/Math.sqrt(Math.max(1,main?.tier||1));
- s.crit=Math.min(55,Math.max(9,Math.round((9+41*(1-Math.exp(-critRating/25))+counts.crit*2+(sets.values.critBonus||0))/Math.sqrt(Math.max(1,s.rawAttackSpeed/1.3)))));
+ s.crit=Math.min(100,Math.max(9,Math.round((9+41*(1-Math.exp(-critRating/25))+counts.crit*2+(sets.values.critBonus||0))/Math.sqrt(Math.max(1,s.rawAttackSpeed/1.3)))));
  s.mana=caster?Math.round(20+s.int*7+s.manaFlat):0;
  s.manaRegen=caster?+(1.5+s.int*.23).toFixed(1):0;
  s.spellPower=caster?Math.round(3+s.int*1.9+s.spellFlat):0;
@@ -106,7 +106,7 @@ function totalStats(equipment,ownedRunes,equippedRuneIds,{isTwoHanded,FIELDS,ite
  // Flat-per-item bonuses must not scale into double-digit percentages at E200.
  // These are equipment-only caps; talents, base attributes and Rune mechanics
  // continue to use their existing formulas and global combat ceilings.
- s.crit=Math.min(55,s.crit+Math.min(8,Math.max(0,gearBonus('critBonus'))));
+ s.crit=Math.min(100,s.crit+Math.min(8,Math.max(0,gearBonus('critBonus'))));
  if(s.mana)s.manaRegen+=Math.min(3,Math.max(0,gearBonus('manaRegenBonus')));
  s.wardBonus=Math.min(.3,Math.max(0,gearBonus('wardBonus')));
  if(off?.subtype==='Shield')s.blockChance=Math.min(48,s.blockChance+Math.min(8,Math.max(0,gearBonus('blockBonus'))));
@@ -116,7 +116,7 @@ function totalStats(equipment,ownedRunes,equippedRuneIds,{isTwoHanded,FIELDS,ite
  let result=s;
  if(PHASE1_PREVIEW&&root.WandererV012Buildcraft){let active=build;if(!active){active=root.WandererV012Buildcraft.create();root.WandererV012Buildcraft.syncPermanent(active,state?.automaticTalents||root.WandererAutomaticTalents.create());}result=root.WandererV012Buildcraft.mods(active,result);}
  if(PHASE1_PREVIEW&&phase6Run?.effects)result=root.WandererV012CombatCore.applyExpeditionModifiers(result,phase6Run.effects);
- result.attacksPerSec=Math.min(4.2,result.attacksPerSec);result.power=power(result);
+ result.attacksPerSec=Math.min(4.2,result.attacksPerSec);result.crit=Math.min(100,Math.max(0,result.crit||0));result.power=power(result);
  return result;
 }
 const STAT_KEYS=Object.freeze(['str','agi','int','end','cha','attack','defense','maxhp','attacksPerSec','crit','blockChance','mana','manaRegen','spellPower','evasionRating','power']);
