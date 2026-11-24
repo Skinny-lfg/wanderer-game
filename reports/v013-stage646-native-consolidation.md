@@ -1,6 +1,6 @@
 # Stage 6.46 — Consolidated Piercing, weapon status propagation, Carrion
 
-**Status: implemented on isolated balance branch, validation pending. No merge or deploy.**
+**Status: implemented and matched E10 replay verified; full corrected regression pending. No merge or deploy.**
 - Gameplay commit: [f83412f](https://github.com/Skinny-lfg/wanderer-game/commit/f83412fd055b7b7d95617ae333e0fb9e9ef03ea5).
 - Source: [Stage 6.45 verified research](v013-stage645-blood-decay-piercing.md), 6,000 matched native fights. The user explicitly selected single-extra 100% Piercing plus statuses.
 - Native E10 and full npm regression: [run 45353646342](https://github.com/Skinny-lfg/wanderer-game/actions/runs/45353646342).
@@ -25,3 +25,18 @@ Four legal E10 cohorts, each 100 seeds for 1/4/8/12 normal enemies (1,600 fights
 - Validate Thornbloom, wards, boss-specific caps and summons with Carrion before approving leader balance.
 - Stage 6.47: Grave Bloom redesign and consistent funded cast / Arcane Infusion activation. Do not automatically advance before reviewing Stage 6.46.
 
+
+## Verified native E10 results
+
+[Replay and matched aggregate, run 45353646342](https://github.com/Skinny-lfg/wanderer-game/actions/runs/45353646342): all eight replay shards and aggregation passed, **1,600 fights, zero timeouts**. Same two legally earned E10 actors per cohort, same talent allocations, gear, XP and encounter rosters as the selected 6.45 experiments.
+
+| Cohort | 1 mob | 4 mobs | 8 mobs | 12 mobs |
+|---|---:|---:|---:|---:|
+| Fury Bow | 95→95% | 59→59% | 17→17% | 28→28% |
+| Blood/Decay/Fury Bow | 77→77% | 57→57% | 45→42% | 48→47% |
+| Blood/Decay Two-Handed | 69→69% | 67→66% | 57→56% | 51→51% |
+| Blood/Decay Sword + Tome | 100→100% | 92→92% | 96→96% | 84→84% |
+
+The small differences are consistent with the native charge-expiration safeguard; no new numerical tuning was performed. The Sword + Tome cohort matched the experimental outcomes exactly. Its eight-mob group retained 307 Carrion bursts. **Equipment status counters were zero across these four sampled cohorts**, so the matched replay does not establish E10 balance for the additional equipment-affix propagation feature. Functional contracts cover the status bridge; actual eligible earned affix cohorts still need targeted integration tests.
+
+The directed native mechanics and mirror checks passed. The original full npm regression failed on two stale C1 assertions (343 vs 367 graph nodes; unversioned script src). Both assertions were updated, preserving their original invariants. [Corrected CI run 45353809961](https://github.com/Skinny-lfg/wanderer-game/actions/runs/45353809961) is pending final confirmation. Do not claim full regression success until that run is verified.
