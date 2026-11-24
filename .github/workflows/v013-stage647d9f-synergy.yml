@@ -1,4 +1,4 @@
-name: Stage 6.48A — Boss cast retry and E10 synergy matrix (NO DEPLOY)
+name: Stage 6.48A.1 — Audited E10 balance matrix (NO DEPLOY)
 on:
   push:
     branches: [balance/stage-6.40-e1-calibration]
@@ -17,7 +17,7 @@ jobs:
       - run: npm ci
       - run: node scripts/v013-stage647d9f-synergy.cjs selftest
       - run: node --test tests/v013-stage647d9f1-synergy.test.cjs tests/v013-stage647d9e-stat-identity.test.cjs tests/talent-graph-combat.test.cjs
-      - run: node --test tests/v013-stage83-boss-infrastructure.test.cjs tests/v013-stage84-six-bosses.test.cjs
+      - run: node --test tests/v013-stage83-boss-infrastructure.test.cjs tests/v013-stage84-six-bosses.test.cjs tests/v013-stage648a1-audit.test.cjs
       - run: npm test
       - run: node scripts/v013-stage647d9f-synergy.cjs smoke
   cohort:
