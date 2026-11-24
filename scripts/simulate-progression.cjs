@@ -214,12 +214,16 @@ function prepare(level,build,seed,opts,desiredRisk=undefined,desiredFamily=undef
     if(opts.stage648b1ExpeditionSource!==undefined&&(typeof opts.stage648b1ExpeditionSource!=='string'||!opts.stage648b1ExpeditionSource.includes('function phase1WaveWon(')))throw Error('Invalid Stage 6.48B.1 VM-only expedition source');
     if(opts.stage648c1BuildcraftSource!==undefined&&(typeof opts.stage648c1BuildcraftSource!=='string'||!opts.stage648c1BuildcraftSource.includes('WandererV012Buildcraft')))throw Error('Invalid Stage 6.48C.1 diagnostic buildcraft source');
     if(opts.stage648c2cGearStatsSource!==undefined&&(typeof opts.stage648c2cGearStatsSource!=='string'||!opts.stage648c2cGearStatsSource.includes('WandererV012GearStats')))throw Error('Invalid Stage 6.48C.2C isolated stat source');
+    if(opts.stage648c2eManaRuntimeSource!==undefined){
+      if(opts.stage648ManaAudit!==true||opts.stage619BaselineRuntime!==undefined||typeof opts.stage648c2eManaRuntimeSource!=='string'||!opts.stage648c2eManaRuntimeSource.includes('WandererV012CombatRuntime')||!opts.stage648c2eManaRuntimeSource.includes('stage648ManaRegenActual'))throw Error('Invalid Stage 6.48C.2E observer-only combat runtime source');
+    }
     const overrides={
       ...(opts.stage648c2cGearStatsSource===undefined?{}:{'combat/v012-gear-stats.js':opts.stage648c2cGearStatsSource}),
       ...(opts.stage648c1BuildcraftSource===undefined?{}:{'combat/v012-buildcraft.js':opts.stage648c1BuildcraftSource}),
       ...(opts.stage648b1ExpeditionSource===undefined?{}:{'online/v012-expedition-runtime.js':opts.stage648b1ExpeditionSource}),
       ...(opts.stage617RosterSource===undefined?{}:{'online/v013-enemy-roster.js':opts.stage617RosterSource}),
       ...(opts.stage619BaselineRuntime===undefined?{}:{'combat/v012-combat-runtime.js':opts.stage619BaselineRuntime}),
+      ...(opts.stage648c2eManaRuntimeSource===undefined?{}:{'combat/v012-combat-runtime.js':opts.stage648c2eManaRuntimeSource}),
       ...(opts.stage624cProgressionSource===undefined?{}:{'combat/expedition-progression.js':opts.stage624cProgressionSource})
     };
     const a=create(resolvedSeed,undefined,overrides, {recordModules:opts.recordModules,skipPersistence:true,measure:opts.measure===true,now:1720000000000+resolvedSeed});

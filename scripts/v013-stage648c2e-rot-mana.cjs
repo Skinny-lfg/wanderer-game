@@ -6,7 +6,7 @@ const W={daggers:['Daggers','Off-Hand Dagger','Leather'],sword:['Sword','Shield'
 const ROT=['native','persistent','rot3','rot4','rot5','persistent-no-cycle','rot4-no-cycle'],MAGIC=['arcane','fire','frost','lightning'];
 const MANA=[...Object.keys(W).flatMap(w=>['decay-'+w,'newdecay-'+w]),...MAGIC.flatMap(m=>['sword','wand','staff'].map(w=>m+'-'+w))];
 const IDS=[...ROT.map(m=>'rot:'+m),...MANA.map(m=>'mana:'+m)];
-const SC=[{id:'solo',kind:'normal',size:1},{id:'group4',kind:'normal',size:4},{id:'group8',kind:'normal',size:8},{id:'boss',kind:'boss',size:1}],N=50,POINTS=24;
+const SC=[{id:'solo',kind:'normal',size:1},{id:'group4',kind:'normal',size:4},{id:'group8',kind:'normal',size:8},{id:'boss',kind:'boss'}],N=50,POINTS=24;
 const RT=fs.readFileSync('combat/v012-combat-runtime.js','utf8');
 function rep(s,a,b){assert.equal(s.split(a).length,2,'anchor '+a.slice(0,100));return s.replace(a,b);}
 function weaponBase(stats){
@@ -48,7 +48,7 @@ function magicTalent(element){
 function cell(w,mode,sc,i,audit=false){
  const [weapon,offhandType,armorType]=W[w],family=MAGIC.includes(mode)?'magic':'decay',t=family==='magic'?magicTalent(mode):C.talent('decay');
  const build={id:'controlled-'+family+'-'+w,weapon,families:[family],skills:[],...(family==='magic'?{element:mode}:{})};
- const opts={mode:'encounter',points:POINTS,gear:'current',rarity:'Rare',runes:false,contracts:'none',targetPolicy:'mechanics',measure:true,tickLimit:6500,lockScenarioStreams:true,controlledTalents:t,armorType,offhandType,...(family==='decay'?{stage648c1BuildcraftSource:rotSource(mode)}:{}),...(audit?{stage619BaselineRuntime:manaRuntime(),stage648ManaAudit:true}:{})};
+ const opts={mode:'encounter',points:POINTS,gear:'current',rarity:'Rare',runes:false,contracts:'none',targetPolicy:'mechanics',measure:true,tickLimit:6500,lockScenarioStreams:true,controlledTalents:t,armorType,offhandType,...(family==='decay'?{stage648c1BuildcraftSource:rotSource(mode)}:{}),...(audit?{stage648c2eManaRuntimeSource:manaRuntime(),stage648ManaAudit:true}:{})};
  const x=S.encounter(10,build,64823000+i*101,sc.kind,opts,undefined,undefined,'blood',1,sc.size);
  assert.equal(x.pointsSpent,POINTS);assert.equal(x.offhandType,offhandType);assert.deepEqual(x.controlledTalentNodes,t.nodes);assert(x.won||x.died||x.timedOut);
  const d=x.decayTalentMetrics||{},m=x.affinityMetrics||{},ledger=x.manaAudit;
@@ -60,8 +60,8 @@ function parity(a,b){pair(a,b);for(const k of ['won','died','timeout','seconds',
 function write(p,x){fs.mkdirSync(path.dirname(p),{recursive:true});fs.writeFileSync(p,JSON.stringify(x,null,2)+'\n');}
 function run(id,smoke=false){
  assert(IDS.includes(id));const [kind,key]=id.split(':'),rows=[];
- const variants=kind==='rot'?(smoke?['daggers','twohand','wand']:Object.keys(W)).map(w=>[w,key]):[[key.split('-')[1],key.startsWith('newdecay-')?'rot4':key.startsWith('decay-')?'native':key.split('-')[0]]];
- for(const [w,mode] of variants)for(const sc of (smoke?SC.slice(0,1):SC))for(let i=0;i<(smoke?1:N);i++){
+ const variants=kind==='rot'?Object.keys(W).map(w=>[w,key]):[[key.split('-')[1],key.startsWith('newdecay-')?'rot4':key.startsWith('decay-')?'native':key.split('-')[0]]];
+ for(const [w,mode] of variants)for(const sc of SC)for(let i=0;i<(smoke?1:N);i++){
   const row=cell(w,mode,sc,i,kind==='mana');rows.push(row);
   if(smoke&&kind==='mana')parity(cell(w,mode,sc,i,false),row);
  }
@@ -87,5 +87,5 @@ function aggregate(){
  console.log('STAGE648C2E_ROT='+JSON.stringify({fights:all.filter(x=>x.id.startsWith('rot:')).reduce((n,x)=>n+x.rows.length,0),modes:Object.fromEntries(Object.entries(report.rot).map(([k,v])=>[k,{overall:v.overall,weapons:Object.fromEntries(Object.entries(v.byWeapon).map(([w,a])=>[w,{wins:a.wins,dps:a.dps,rotDps:a.rotDps,appsPerMinute:a.appsPerMinute,meanStack:a.meanStack,meanPrimaryStacks:a.meanPrimaryStacks,cap:a.cap,cycle:a.cycle}])),scenarios:Object.fromEntries(Object.entries(v.byScenario).map(([k,a])=>[k,{n:a.n,wins:a.wins}]))}]))}));
  console.log('STAGE648C2E_MANA='+JSON.stringify({fights:all.filter(x=>x.id.startsWith('mana:')).reduce((n,x)=>n+x.rows.length,0),profiles:Object.fromEntries(Object.entries(report.mana).map(([k,v])=>[k,v.overall]))}));
 }
-if(require.main===module){const [cmd,id]=process.argv.slice(2);if(cmd==='run')run(id);else if(cmd==='smoke'){for(const m of ROT)run('rot:'+m,true);for(const m of ['decay-daggers','newdecay-twohand','arcane-wand','fire-sword','frost-staff','lightning-wand'])run('mana:'+m,true);}else if(cmd==='aggregate')aggregate();else throw Error('Unknown command');}
-module.exports={rotSource,manaRuntime,weaponBase,magicTalent,ROT,IDS,cell};
+if(require.main===module){const [cmd,id]=process.argv.slice(2);if(cmd==='run')run(id);else if(cmd==='smoke'){for(const id of IDS)run(id,true);}else if(cmd==='aggregate')aggregate();else throw Error('Unknown command');}
+module.exports={rotSource,manaRuntime,weaponBase,magicTalent,ROT,IDS,SC,cell};
