@@ -1,0 +1,57 @@
+name: Stage 6.48C.2E.2 — Cycle and proc Plagueheart (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths: ['.github/workflows/v013-stage648c2e2-cycle-plagueheart.yml','scripts/v013-stage648c2e2-cycle-plagueheart.cjs','tests/v013-stage648c2e2-cycle-plagueheart.test.cjs']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node --test tests/v013-stage648c2e2-cycle-plagueheart.test.cjs tests/v013-stage648c2e1-mana-calibration.test.cjs tests/v013-stage648c2e-rot-mana.test.cjs
+      - run: node scripts/v013-stage648c2e2-cycle-plagueheart.cjs smoke
+  cohort:
+    needs: gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        id: ["cycle-daggers", "cycle-sword", "cycle-twohand", "cycle-bow", "cycle-wand", "cycle-staff", "focus-daggers", "focus-sword", "focus-twohand", "focus-bow", "focus-wand", "focus-staff", "hybrid-blood-daggers", "hybrid-blood-twohand", "hybrid-magic-sword", "hybrid-magic-wand"]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node scripts/v013-stage648c2e2-cycle-plagueheart.cjs run "${{ matrix.id }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage648c2e2-${{ matrix.id }}
+          path: reports/stage648c2e2/*.json
+  aggregate:
+    needs: cohort
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage648c2e2-*
+          path: reports/stage648c2e2
+          merge-multiple: true
+      - run: node scripts/v013-stage648c2e2-cycle-plagueheart.cjs aggregate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage648c2e2-report
+          path: reports/v013-stage648c2e2-cycle-plagueheart.json
