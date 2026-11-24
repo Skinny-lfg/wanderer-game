@@ -1,0 +1,55 @@
+name: Offensive scaling and equipment E10 (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths: ['scripts/v013-equipment-e10.cjs','tests/v013-equipment-e10.test.cjs','.github/workflows/v013-equipment-e10.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node --test tests/v013-equipment-e10.test.cjs
+      - run: node scripts/v013-equipment-e10.cjs smoke
+  cohort:
+    needs: gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        id: ["blood-daggers", "blood-sword", "blood-twohand", "fury-daggers", "fury-bow", "fury-twohand", "decay-cycle-daggers", "decay-focus-daggers", "decay-cycle-sword", "decay-focus-sword", "decay-cycle-twohand", "decay-focus-twohand", "decay-cycle-bow", "decay-focus-bow", "decay-cycle-wand", "decay-focus-wand", "decay-cycle-staff", "decay-focus-staff"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node scripts/v013-equipment-e10.cjs run "${{ matrix.id }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: equipment-e10-${{ matrix.id }}
+          path: reports/equipment-e10/*.json
+  aggregate:
+    needs: cohort
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: equipment-e10-*
+          path: reports/equipment-e10
+          merge-multiple: true
+      - run: node scripts/v013-equipment-e10.cjs aggregate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: equipment-e10-report
+          path: reports/v013-equipment-e10.json

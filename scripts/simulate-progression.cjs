@@ -140,11 +140,11 @@ function gearLevel(level,mode){
  return tiers[index-1].minimum;
 }
 // Hash native rolled equipment without exposing player data; protects future balance comparisons.
-function equipmentFingerprint(a,{excludeOffhand=false}={}){
+function equipmentFingerprint(a,{excludeOffhand=false,excludeArmor=false}={}){
  // Item IDs include a Date.now() prefix in normal gameplay; never hash these
  // ephemeral identifiers or identical seeded gear would appear different.
  const gear=a.state().equip;
- const rolls=Object.keys(gear).sort().filter(slot=>!excludeOffhand||slot!=='offhand').map(slot=>{
+ const rolls=Object.keys(gear).sort().filter(slot=>(!excludeOffhand||slot!=='offhand')&&(!excludeArmor||!['helm','armor','gloves','boots','belt'].includes(slot))).map(slot=>{
   const item=gear[slot];
   if(!item)return [slot,null];
   const {id,...stats}=item;
@@ -177,6 +177,7 @@ function prepare(level,build,seed,opts,desiredRisk=undefined,desiredFamily=undef
  if(earned&&opts.controlledTalents&&
     JSON.stringify(opts.controlledTalents)!==JSON.stringify(talents))
   throw Error('Earned Talents cannot be replaced in a matched Stage 6.23 fixture');
+ if(opts.stageE10ArmorVariant!==undefined&&(earned||!opts.armorType||!['Cloth','Leather','Plate'].includes(opts.stageE10ArmorVariant)))throw Error('Invalid isolated armor variant');
  if(opts.controlledTalents&&(!T.valid(talents)||
      T.earned(talents)!==opts.points||talents.nodes.length>opts.points))
   throw Error('Controlled talents must be a valid live v15 graph at exactly the requested point budget');
@@ -260,6 +261,14 @@ function prepare(level,build,seed,opts,desiredRisk=undefined,desiredFamily=undef
     a.state().equip.offhand.v013Trait=opts.offhandEpicTrait;
    }
   }else if(!earned&&Object.hasOwn(opts,'offhandEpicTrait'))throw Error('Epic trait requires an explicit Off-Hand type');
+  // Diagnostic: roll alternate armor after baseline gear, preserving all other items.
+  if(opts.stageE10ArmorVariant&&opts.stageE10ArmorVariant!==opts.armorType){
+   for(const slot of ['helm','armor','gloves','boots','belt']){
+    const item=a.makeItem(gearE,slot,null,'loot',opts.stageE10ArmorVariant,opts.rarity);
+    if(item.slot!==slot||item.armorType!==opts.stageE10ArmorVariant)throw Error('Native alternate armor roll rejected '+slot);
+    a.state().equip[slot]=item;
+   }
+  }
   // Stage 9.2 only: hold native route, draft, control and combat RNG streams fixed
   // AFTER gear rolls. Gear rarity must not silently change the test encounter.
   // Harness streams are deterministic test controls, not gameplay overrides.
@@ -438,7 +447,7 @@ function encounter(level,build,seed,kind,opts,forcedTrait=undefined,forcedBossMo
  // Native victory can grant 15–45 XP and must not overwrite fixture provenance.
  const entrantTalentProgress=a.state().automaticTalents;
  const combatEntryStats=a.baseStats();
-  const gearFingerprint=equipmentFingerprint(a),otherGearFingerprint=equipmentFingerprint(a,{excludeOffhand:true});
+  const gearFingerprint=equipmentFingerprint(a),otherGearFingerprint=equipmentFingerprint(a,{excludeOffhand:true}),nonArmorGearFingerprint=equipmentFingerprint(a,{excludeArmor:true});
  const C=globalThis.WandererV013ExpeditionConditions;
  const conditionPlan=C?.forDungeon(card,g.dungeon)||null;
  // Marked Condition effects are tested in genuine marked rooms from the map.
@@ -508,7 +517,7 @@ function encounter(level,build,seed,kind,opts,forcedTrait=undefined,forcedBossMo
   permanentAttributes:T.attributes(entrantTalentProgress),
   heroBaseStats:Object.fromEntries(['str','agi','int','end','cha','attack','defense','maxhp',
    'spellPower','attacksPerSec','crit','blockChance','blockReduction','evasionRating','mana','manaRegen','wardBonus','barrierPower','healingPower','manaCostReduction','power'].map(key=>[key,baseStats[key]??null])),
-  otherGearFingerprint,offhandType:a.state().equip.offhand?.subtype||null,offhandTrait:a.state().equip.offhand?.v013Trait||null,
+  otherGearFingerprint,nonArmorGearFingerprint,offhandType:a.state().equip.offhand?.subtype||null,offhandTrait:a.state().equip.offhand?.v013Trait||null,
   armorType:a.state().equip.armor?.armorType||null,
   controlledTalentNodes:opts.controlledTalents?[...opts.controlledTalents.nodes]:null,
   controlledTalentMode:opts.controlledTalents?(opts.controlledTalents.element||'arcane'):null,
