@@ -429,7 +429,7 @@ function offhandOnMainHit(r,hpDamage){
  }
 }
 function v013FundedCost(baseCost){if(baseCost<=0)return 0;const adjusted=Math.max(1,Math.ceil(baseCost*(root.WandererV013ExpeditionBoons?.costFactor(ports.state.run)||1)));return v013Traits().includes('efficient')?Math.max(1,adjusted-Math.max(1,Math.floor(adjusted*.1))):adjusted;}
-function v013SpellMultiplier(r){const nodes=ports.state.automaticTalents?.nodes||[],element=ports.phase1Build?.element,enemy=r.enemy;return (element==='fire'&&nodes.includes('fire_focus')?.9:1)*(element==='frost'&&nodes.includes('frost_focus')&&enemy.slowTime>0?1.2:1)*(element==='lightning'&&nodes.includes('lightning_focus')?1.35:1)*(element==='fire'&&nodes.includes('living_inferno')&&enemy.dots?.burn?.length?1.25:1)*(element==='frost'&&nodes.includes('absolute_winter')&&enemy.slowTime>0?1.2:1)*(element==='lightning'&&nodes.includes('storm_conductor')?1.2:1);}
+function v013SpellMultiplier(r){const nodes=ports.state.automaticTalents?.nodes||[],element=ports.phase1Build?.element,enemy=r.enemy;return (element==='fire'&&nodes.includes('fire_focus')?.9:1)*(element==='frost'&&nodes.includes('frost_focus')&&enemy.slowTime>0?1.2:1)*(element==='lightning'&&nodes.includes('lightning_focus')?1.35:1)*(element==='fire'&&nodes.includes('living_inferno')&&enemy.dots?.burn?.length?1.25:1)*(element==='frost'&&nodes.includes('absolute_winter')&&enemy.slowTime>0?1.2:1);}
 function v013LightningChain(r){return ports.isPhase1Run()&&ports.phase1Build?.element==='lightning'&&(WandererV012Buildcraft.rank(ports.phase1Build,'overcharge')>0||ports.state.automaticTalents?.nodes?.includes('storm_mastery'))&&!ports.state.automaticTalents?.nodes?.includes('lightning_focus');}
 function v013LightningChainFactors(){
  // Five ordinary jumps, six with Storm Mastery. With at most four live arena
@@ -524,6 +524,9 @@ function v013LightningChainDamage(r,base){
  const source=r.enemy,others=r.enemies.filter(enemy=>enemy!==source&&enemy.hp>0);
  if(!others.length)return 0;
  const factors=v013LightningChainFactors(),serial=(r.lightningChainSerial||0)+1;
+ const focused=learned('static_focus')&&ports.phase1Build?.element==='lightning';
+ const scale=focused?.75:1;let diverted=0;
+ const concentrate=(target,raw)=>{if(focused&&target!==source){diverted+=raw*.25;return raw*scale;}return raw;};
  r.lightningChainSerial=serial;
  // One extra bounce per preceding additional active target: 1, 3 or 5-6 jumps.
  const count=others.length>=3?factors.length:Math.min(factors.length,others.length*2-1);
@@ -533,7 +536,7 @@ function v013LightningChainDamage(r,base){
   if(target.hp<=0)continue;
   let damage=Math.max(1,Math.round(base*factors[i]));
   if(target.baseDef>0&&target.def<target.baseDef)damage=Math.max(1,Math.round(damage*(1+(ports.phase1Build?.runtime?.talentBonuses?.sunderDamage||0))));
-  const dealt=v013SecondaryHit(r,target,damage);
+  const dealt=v013SecondaryHit(r,target,concentrate(target,damage));
   if(dealt<=0)continue;
   hit++;
   ports.phase6Metric(r,'lightningChainJumps',1);
@@ -543,10 +546,10 @@ function v013LightningChainDamage(r,base){
   // cannot recursively explode their own freshly applied marks.
   if(mark&&mark.expiresAt>now&&mark.serial!==serial){
    const burst=Math.max(1,Math.round(base*.42));
-   const applied=v013SecondaryHit(r,target,target.boss?Math.min(burst,target.maxhp*.025):burst);
+   const applied=v013SecondaryHit(r,target,concentrate(target,target.boss?Math.min(burst,target.maxhp*.025):burst));
    let splash=0;
    for(const other of r.enemies.filter(e=>e!==target&&e.hp>0).slice(0,2)){
-    splash+=v013SecondaryHit(r,other,other.boss?Math.min(burst*.45,other.maxhp*.025):burst*.45);
+    splash+=v013SecondaryHit(r,other,concentrate(other,other.boss?Math.min(burst*.45,other.maxhp*.025):burst*.45));
     ports.combatLinkEffect?.(r,'shock',target,[other]);
    }
    ports.phase6Metric(r,'lightningMarksDetonated',1);
@@ -556,12 +559,17 @@ function v013LightningChainDamage(r,base){
   target.v013LightningMark={serial,expiresAt:now+8};
   ports.phase6Metric(r,'lightningMarksApplied',1);
  }
+ if(focused&&source.hp>0&&diverted>0){
+  const raw=Math.min(diverted,base*.30,source.maxhp*(source.boss?.0075:source.miniboss?.015:.04));
+  const actual=talentPulseDamage(r,source,raw,'static_focus');ports.phase6Metric(r,'static_focusActivations',1);ports.phase6Metric(r,'static_focusDamage',actual);
+ }
  return hit;
 }
+function controlledSpreadBase(burn,enabled){return enabled?(burn.controlledBase??burn.damage)*.75:burn.damage;}
 function groupElementalEffects(r,b){
  if(!r.enemies||!b)return;const nodes=ports.state.automaticTalents?.nodes||[],targets=r.enemies.filter(enemy=>enemy!==r.enemy&&enemy.hp>0).slice(0,2);
- if(b.element==='fire'&&nodes.includes('fire_spread')){const burn=r.enemy.dots?.burn?.at(-1);if(burn){let spread=0;for(const enemy of targets){enemy.dots.burn??=[];if(enemy.dots.burn.length<12){enemy.dots.burn.push({damage:Math.max(1,Math.round(burn.damage*.65)),remaining:Math.min(3,burn.remaining),spread:true});ports.combatLinkEffect?.(r,'burn',r.enemy,[enemy]);spread++;}ports.synchronizeDots(enemy);}if(spread)groupSecondaryDamage(r,burn.damage,[.55,.40].slice(0,spread),'🔥 Wildfire');}}
- if(b.element==='fire'&&v013Traits().includes('conflagration')){const burn=r.enemy.dots?.burn?.at(-1),enemy=r.enemies.filter(enemy=>enemy!==r.enemy&&enemy.hp>0)[nodes.includes('fire_spread')?2:0];if(burn&&enemy){enemy.dots.burn??=[];if(enemy.dots.burn.length<12){enemy.dots.burn.push({damage:Math.max(1,Math.round(burn.damage*.50)),remaining:Math.min(3,burn.remaining),spread:true});ports.combatLinkEffect?.(r,'burn',r.enemy,[enemy]);}ports.synchronizeDots(enemy);}}
+ if(b.element==='fire'&&nodes.includes('fire_spread')){const burn=r.enemy.dots?.burn?.at(-1);if(burn){const spreadBase=controlledSpreadBase(burn,nodes.includes('controlled_burn'));let spread=0;for(const enemy of targets){enemy.dots.burn??=[];if(enemy.dots.burn.length<12){enemy.dots.burn.push({damage:Math.max(1,Math.round(spreadBase*.65)),remaining:Math.min(3,burn.remaining),spread:true});ports.combatLinkEffect?.(r,'burn',r.enemy,[enemy]);spread++;}ports.synchronizeDots(enemy);}if(spread)groupSecondaryDamage(r,spreadBase,[.55,.40].slice(0,spread),'🔥 Wildfire');}}
+ if(b.element==='fire'&&v013Traits().includes('conflagration')){const burn=r.enemy.dots?.burn?.at(-1),enemy=r.enemies.filter(enemy=>enemy!==r.enemy&&enemy.hp>0)[nodes.includes('fire_spread')?2:0];if(burn&&enemy){enemy.dots.burn??=[];if(enemy.dots.burn.length<12){enemy.dots.burn.push({damage:Math.max(1,Math.round(controlledSpreadBase(burn,nodes.includes('controlled_burn'))*.50)),remaining:Math.min(3,burn.remaining),spread:true});ports.combatLinkEffect?.(r,'burn',r.enemy,[enemy]);}ports.synchronizeDots(enemy);}}
  if(b.element==='frost'&&nodes.includes('frost_spread'))for(const enemy of targets){enemy.slowTime=Math.max(enemy.slowTime||0,2);ports.combatLinkEffect?.(r,'frost',r.enemy,[enemy]);}
 }
 function hasUnsettledGroupDeaths(r){return !!r.enemies?.some(enemy=>enemy.hp<=0&&!enemy.groupDefeated);}
@@ -732,7 +740,7 @@ function enemySlowFactor(enemy,stats,now){
 function talentPulseDamage(r,enemy,amount,id){
  if(!enemy||enemy.hp<=0||enemy.stage84Node||!((r.enemies||[r.enemy]).includes(enemy))||!(amount>0))return 0;
  const old=r.enemy,before=enemy.hp,secondary=enemy!==old;
- try{r.enemy=enemy;ports.setDirectEnemyDamage(r,amount,({vital_pulse:'💚 Vital Pulse',living_force:'💚 Living Force',grasping_roots:'🌿 Grasping Roots',ward_echo:'🛡 Ward Echo',corruption_nova:'☠ Corruption Nova'})[id]||id);}
+ try{r.enemy=enemy;ports.setDirectEnemyDamage(r,amount,({vital_pulse:'💚 Vital Pulse',living_force:'💚 Living Force',grasping_roots:'🌿 Grasping Roots',ward_echo:'🛡 Ward Echo',corruption_nova:'☠ Corruption Nova',arcane_nova:'✨ Arcane Nova',frost_resonance:'❄ Frost Resonance',glacial_echo:'❄ Glacial Echo',cinder_focus:'🔥 Cinder Focus',static_focus:'⚡ Static Focus',storm_conductor:'⚡ Storm Conductor'})[id]||id);}
  finally{r.enemy=old;}
  const actual=Math.max(0,before-Math.max(0,enemy.hp));
  if(secondary&&actual>0){ports.phase6Metric(r,'secondaryTargetDamage',actual);ports.phase6Metric(r,'secondaryTargetHits',1);}
@@ -990,10 +998,13 @@ function phase2Context(r){
  const e=r.enemy,now=ports.setNow(r);
  return {player:r,enemy:e,traits:v013Traits(),now,random:ports.gameRandom,base:r.lastBaseHit||r.stats.attack,power:r.stats.spellPower||0,healTriggersPassives:true,healingMultiplier:(r.playerHealingDebuffUntil||0)>now?.6:1,waveKey:r.phase1Plane+':'+r.enc,
  spendMana(amount){const cost=Math.max(0,Math.ceil(amount*(root.WandererV013ExpeditionBoons?.costFactor(r)||1)));if(r.mp<cost)return false;r.mp-=cost;ports.phase6Metric(r,'manaSpent',cost);if(cost>0)offhandPaidAction(r);return true;},
- dot(kind,potency){
+ dot(kind,potency,options={}){
   if(!['bleed','burn'].includes(kind))return;
   ports.phase6Proc(r,kind+' application');const values=e.dots[kind]||(e.dots[kind]=[]);
-  if(values.length>=12)values.shift();values.push({damage:Math.max(1,Math.round(kind==='bleed'?WandererV012Buildcraft.bleedDamage(ports.phase1Build,potency):potency*(ports.state.automaticTalents?.nodes?.includes('fire_focus')?1.35:1))),remaining:3});ports.synchronizeDots(e);
+  if(values.length>=12)values.shift();const raw=Math.max(1,Math.round(kind==='bleed'?WandererV012Buildcraft.bleedDamage(ports.phase1Build,potency):potency*(ports.state.automaticTalents?.nodes?.includes('fire_focus')?1.35:1)));
+  const controlled=kind==='burn'&&options.controlledBurn===true;
+  values.push({damage:controlled?Math.max(1,Math.round(raw*1.25)):raw,remaining:3,...(controlled?{controlledBase:raw}:{})});
+  if(controlled)ports.phase6Metric(r,'controlled_burnApplications',1);ports.synchronizeDots(e);
  },
  dotDamage(amount,label,secondaryFraction=0){const n=Math.max(0,Math.round(amount*(root.WandererV013ExpeditionBoons?.dotFactor(r)||1)));if(n){const applied=Math.min(Math.max(0,e.hp),n);ports.phase6Metric(r,'damageDealt',applied);ports.phase6Metric(r,'periodicDamage',applied);if(secondaryFraction>0&&applied>0){const attributed=Math.min(applied,Math.round(applied*Math.min(1,secondaryFraction)));if(attributed>0){ports.phase6Metric(r,'secondaryTargetDamage',attributed);ports.phase6Metric(r,'secondaryDotDamage',attributed);ports.phase6Metric(r,'secondaryTargetHits',1);}}e.hp-=n;ports.addLog(label+' '+n+' damage','spell');ports.floatText(n,'enemy',false,'ROT',e);}},
  damage(amount,label){return ports.setDirectEnemyDamage(r,amount,label);},
@@ -1082,7 +1093,7 @@ function phase6Stats(stats){return ports.phase6Run?WandererV012CombatCore.applyE
 function winEncounter(){ports.phase1WaveWon();}
 
 function die(){ports.phase1Death();}
-return {addLog,bossForTier,eliteArchetype,rollEliteArchetype,tryDodge,enemyFor,synchronizeDots,tickDots,advanceAcceleratedBleed,focusedWeaponDamage,enemySlowFactor,talentPulseDamage,setRuntime,setNow,advancePlayerAttackClock,activeLegendarySignatures,legendaryRuntime,legendaryHas,legendaryReady,legendaryEmpowered,legendaryProc,legendaryOnHit,legendaryExtend,legendaryAttackBonus,legendaryDefensiveEffects,legendaryRealmStart,legendaryTick,setReady,setBarrier,regenPerSecond,setHeal,setDelayEnemy,setDirectEnemyDamage,setOnAttack,setCombatExpire,setEnemyWeaken,setHeatTick,setSoulHeal,applyAffinity,weaponAttack,updateFight,phase2Context,phase2Stats,phase2WeaponAttack,phase2MagicTick,phase6Metric,phase6Proc,phase6CollectMetrics,phase6Stats,winEncounter,die};
+return {addLog,bossForTier,eliteArchetype,rollEliteArchetype,tryDodge,enemyFor,synchronizeDots,tickDots,advanceAcceleratedBleed,focusedWeaponDamage,enemySlowFactor,talentPulseDamage,controlledSpreadBase,v013LightningChainDamage,groupElementalEffects,setRuntime,setNow,advancePlayerAttackClock,activeLegendarySignatures,legendaryRuntime,legendaryHas,legendaryReady,legendaryEmpowered,legendaryProc,legendaryOnHit,legendaryExtend,legendaryAttackBonus,legendaryDefensiveEffects,legendaryRealmStart,legendaryTick,setReady,setBarrier,regenPerSecond,setHeal,setDelayEnemy,setDirectEnemyDamage,setOnAttack,setCombatExpire,setEnemyWeaken,setHeatTick,setSoulHeal,applyAffinity,weaponAttack,updateFight,phase2Context,phase2Stats,phase2WeaponAttack,phase2MagicTick,phase6Metric,phase6Proc,phase6CollectMetrics,phase6Stats,winEncounter,die};
 }
 root.WandererV012CombatRuntime=Object.freeze({create});
 })(globalThis);

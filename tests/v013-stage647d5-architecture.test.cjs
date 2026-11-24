@@ -21,8 +21,8 @@ test('Mode-specific six-point branches use the shared side stat and a mode gate'
   assert.equal(route(g,'magic_side_'+lane+'_2').length,6);
  }
 });
-test('Pending effects and their stat gates cannot be bought or injected into a valid save',()=>{
- assert.equal(graph.length,419);assert.equal(graph.filter(n=>n.pending).length,16);
+test('All proposed talent paths are now implemented and none remain pending',()=>{
+ assert.equal(graph.length,419);assert.equal(graph.filter(n=>n.pending).length,0);
  for(const n of graph.filter(n=>n.pending)){
   const mode=n.element||'arcane',p={...T.create(),xp:10000,...(mode==='arcane'?{}:{element:mode})};
   const steps=route(modeGraph(mode),n.id),active=steps.filter(id=>!byId.get(id).pending);

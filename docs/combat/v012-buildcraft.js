@@ -381,23 +381,62 @@ function onAttack(b,c){
   b.runtime.spellSurge=true;b.runtime.spellSurgeArmedAt=c.now;
  }
 }
+// Adaptive talents are strictly scoped to the purchased Attunement.
+function adaptive(b,id,mode){return magicMode(b)===mode&&specialized(b,id);}
+function adaptiveTargets(c){return (c.player.enemies||[c.enemy]).filter(e=>e&&e.hp>0&&!e.stage84Node).slice(0,4);}
+function isolated(c){return adaptiveTargets(c).length===1&&!c.player.groupReserve?.length;}
+function adaptiveDamage(c,target,raw,id,normal=.04,elite=.015,boss=.0075){
+ if(!target||target.hp<=0||target.stage84Node||!(raw>0))return 0;
+ const amount=Math.min(raw,target.maxhp*(target.boss?boss:target.miniboss?elite:normal));
+ if(!(amount>0))return 0;
+ const actual=c.talentPulseDamage?c.talentPulseDamage(target,amount,id):target===c.enemy?c.damage(amount,id):c.secondaryHit?.(target,amount);
+ if(Number.isFinite(actual)&&actual>0)c.metric?.(id+'Damage',actual);
+ return actual||0;
+}
+function manaConvergence(b,c){
+ if(!adaptive(b,'mana_convergence','arcane')||c.funded!==true||c.proc||c.extra||c.recursive||c.offhand||!(c.player.maxmp>0)||!(c.player.mp<c.player.maxmp*.30)||!ready(b,'manaConvergence',c.now,8))return;
+ const before=c.player.mp;c.mana(4);activated(b,'mana_convergence');c.metric?.('mana_convergenceActivations',1);c.metric?.('mana_convergenceMana',Math.max(0,c.player.mp-before));
+}
+function adaptiveCast(b,c,power,wasChilled,wasBurning){
+ const e=c.enemy;if(!e||e.hp<=0)return;
+ if(adaptive(b,'frost_resonance','frost')&&wasChilled){
+  const targets=adaptiveTargets(c).filter(t=>t!==e&&t.slowTime>0).slice(0,2);
+  if(targets.length&&ready(b,'frostResonance',c.now,4)){
+   activated(b,'frost_resonance');c.metric?.('frost_resonanceActivations',1);
+   for(const target of targets)adaptiveDamage(c,target,power*.25,'frost_resonance');
+   c.metric?.('frost_resonanceTargets',targets.length);
+  }
+ }
+ if(adaptive(b,'glacial_echo','frost')&&wasChilled&&ready(b,'glacialEcho',c.now,5)){
+  activated(b,'glacial_echo');c.metric?.('glacial_echoActivations',1);adaptiveDamage(c,e,power*.30,'glacial_echo');
+ }
+ if(adaptive(b,'cinder_focus','fire')&&wasBurning&&isolated(c)&&ready(b,'cinderFocus',c.now,5)){
+  const burn=(e.dots?.burn||[]).filter(d=>!d.spread&&!d.secondaryOrigin&&d.remaining>0);
+  if(burn.length){activated(b,'cinder_focus');c.metric?.('cinder_focusActivations',1);adaptiveDamage(c,e,Math.max(...burn.map(d=>d.damage)),'cinder_focus',.025,.01,.005);}
+ }
+ if(adaptive(b,'storm_conductor','lightning')&&isolated(c)&&ready(b,'stormConductor',c.now,5)){
+  activated(b,'storm_conductor');c.metric?.('storm_conductorActivations',1);adaptiveDamage(c,e,power*.30,'storm_conductor');
+ }
+}
 function onCast(b,c){
  if(c.proc||c.extra||c.recursive||c.funded!==true||!hasFamily(b,'magic')||!(elements.includes(b.element)||b.element==='arcane'))return;
+ const wasChilled=c.enemy.slowTime>0,wasBurning=(c.enemy.dots?.burn||[]).some(d=>d.remaining>0);manaConvergence(b,c);
  // These advanced elemental choices supply their own trigger when taken alone.
  if(b.element==='fire'&&(specialized(b,'combustion')||specialized(b,'living_inferno')||specialized(b,'fire_spread'))&&!c.enemy.dots?.burn?.length&&!rank(b,'kindling')&&!specialized(b,'kindling_flame'))c.dot('burn',Math.max(1,c.power)*.08);
  if(b.element==='frost'&&(specialized(b,'shatter')||specialized(b,'absolute_winter'))&&!(c.enemy.slowTime>0)&&!rank(b,'deep_winter')&&!specialized(b,'deep_chill'))c.chill(c.enemy.boss?1.2:3.5);
- const multiplier=b.element==='fire'&&specialized(b,'living_inferno')&&c.enemy.dots?.burn?.length?1.25:b.element==='frost'&&specialized(b,'absolute_winter')&&c.enemy.slowTime>0?1.2:b.element==='lightning'&&specialized(b,'storm_conductor')?1.2:1;
+ const multiplier=b.element==='fire'&&specialized(b,'living_inferno')&&c.enemy.dots?.burn?.length?1.25:b.element==='frost'&&specialized(b,'absolute_winter')&&c.enemy.slowTime>0?1.2:1;
  const power=elementalPower(b,Math.max(1,c.power))*(c.amp||1)*multiplier;b.runtime.conduit=false;
  const e=c.enemy; b.runtime.magicHits++;
  if(b.element==='arcane'&&specialized(b,'arcane_mastery')&&ready(b,'arcaneMasteryMana',c.now,5))c.mana(2);
  if(b.runtime.prepared==='arcane_bastion'&&b.runtime.arcaneBastionReady&&ready(b,'arcaneBastion',c.now,6)){b.runtime.arcaneBastionReady=false;activated(b,'arcane_bastion');c.damage(power*.30,'⛨ Arcane Bastion');c.barrier(barrierAmount(c.player.maxhp,barrierSpellPower(c),.03,.06));}
- if(b.element==='fire'&&specialized(b,'kindling_flame'))c.dot('burn',power*.08);
+ if(b.element==='fire'&&specialized(b,'kindling_flame'))c.dot('burn',power*.08,{controlledBurn:adaptive(b,'controlled_burn','fire')});
+ if(adaptive(b,'controlled_burn','fire')&&!rank(b,'kindling')&&!specialized(b,'kindling_flame')&&!(e.dots?.burn||[]).some(d=>d.remaining>0&&!d.spread&&!d.secondaryOrigin))c.dot('burn',power*.08,{controlledBurn:true});
  if(b.element==='fire'&&specialized(b,'combustion')&&e.dots?.burn?.length&&ready(b,'combustion',c.now,4))c.damage(power*.20,'💥 Combustion');
  if(b.element==='frost'&&specialized(b,'shatter')&&e.slowTime>0&&ready(b,'shatter',c.now,4))c.damage(power*.25,'💠 Shatter');
  if(b.element==='frost'&&specialized(b,'deep_chill'))c.chill(e.boss?1.2:Math.min(5,Math.max(3.5,e.slowTime||0)+.5));
  if(b.element==='lightning'&&specialized(b,'static_charge'))c.damage(power*.10,'⚡ Static Charge');
  if(b.element==='lightning'&&specialized(b,'chain_discharge')&&b.runtime.magicHits%4===0)c.damage(power*.35,'🔗 Chain Discharge');
- if(b.element==='fire'&&rank(b,'kindling')&&activated(b,'kindling'))c.dot('burn',power*values('kindling',rank(b,'kindling')).burn);
+ if(b.element==='fire'&&rank(b,'kindling')&&activated(b,'kindling'))c.dot('burn',power*values('kindling',rank(b,'kindling')).burn,{controlledBurn:adaptive(b,'controlled_burn','fire')});
  else if(b.element==='frost'&&rank(b,'deep_winter')&&activated(b,'deep_winter')){
   if(e.slowTime>0&&ready(b,'winterBurst',c.now,4))c.damage(Math.min(power*values('deep_winter',rank(b,'deep_winter')).burst,e.maxhp*(e.boss?.015:.05)),'❄ Winter Fracture');
   c.chill(e.boss?1.2:Math.min(5,3.5*(c.amp||1)));
@@ -428,6 +467,7 @@ function onCast(b,c){
   b.runtime.spellSurge=false;c.damage(power*.3,'✨ Spell Surge');
  }
  if(rank(b,'spellblade')&&activated(b,'spellblade'))b.runtime.spellblade=true;
+ adaptiveCast(b,c,power,wasChilled,wasBurning);
 }
 function tickRot(b,c){
  const e=migrateEnemyDots(c.enemy);
@@ -574,7 +614,8 @@ function activateInfusion(b,now){
  return cfg;
 }
 function onInfusionActivation(b,c){
- if(!infusionConfig(b)||c.funded!==true||c.magicalAction!=='infusion')return;
+ if(!infusionConfig(b)||c.funded!==true||c.magicalAction!=='infusion'||c.proc||c.extra||c.recursive||c.offhand)return;
+ manaConvergence(b,c);
  if(rank(b,'runic_shield')&&ready(b,'runicShield',c.now,3)&&activated(b,'runic_shield'))
   c.barrier(barrierAmount(c.player.maxhp,barrierSpellPower(c),.02,.08));
  if(rank(b,'spellblade')&&activated(b,'spellblade'))b.runtime.spellblade=true;
@@ -608,12 +649,16 @@ function graveBloomInfusion(b,c){
 }
 function onInfusionHit(b,c){
  const cfg=infusionConfig(b,c.weaponSubtype),r=b?.runtime;
- if(!cfg||!r||c.offhand||!c.enemy||c.enemy.hp<=0||!(r.infusionCharges>0)||!Number.isFinite(c.now))return 0;
+ if(!cfg||!r||c.offhand||c.proc||c.extra||c.recursive||!c.enemy||c.enemy.hp<=0||!(r.infusionCharges>0)||!Number.isFinite(c.now))return 0;
  if(c.now+1e-7>=r.infusionExpiresAt){r.infusionCharges=0;return 0;}
  r.infusionCharges--;
  const power=Math.max(0,Number(c.power)||0);
  const amount=Math.round(elementalPower(b,power)*cfg.power);
- graveBloomInfusion(b,c);
+ const bloom=graveBloomInfusion(b,c);
+ if(!bloom&&adaptive(b,'arcane_nova','arcane')&&amount>0){
+  const targets=adaptiveTargets(c).filter(t=>t!==c.enemy).slice(0,2);
+  if(targets.length){activated(b,'arcane_nova');c.metric?.('arcane_novaActivations',1);c.metric?.('arcane_novaTargets',targets.length);for(const t of targets)adaptiveDamage(c,t,amount*.35,'arcane_nova');c.link?.('arcane',c.enemy,targets);}
+ }
  if(amount>0&&c.enemy.hp>0)c.damage(amount,'✨ Arcane Infusion');
  r.magicInfusionHits=(r.magicInfusionHits||0)+1;
  // A Wand/Staff funded attack already fires the native spell callbacks.
