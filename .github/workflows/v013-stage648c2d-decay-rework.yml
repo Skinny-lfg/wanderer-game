@@ -1,0 +1,57 @@
+name: Stage 6.48C.2D.1 — Decay scaling, cadence and cap burst (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths: ['.github/workflows/v013-stage648c2d-decay-rework.yml','scripts/v013-stage648c2d-decay-rework.cjs','tests/v013-stage648c2d-decay-rework.test.cjs']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node --test tests/v013-stage648c2d-decay-rework.test.cjs tests/v013-stage648c2b-persistent-corruption.test.cjs
+      - run: node scripts/v013-stage648c2d-decay-rework.cjs smoke
+  cohort:
+    needs: gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        id: [native, persistent, max, sum, hybrid, clock, cap-one, cap-three, cap-none, cap-one-speed, cap-one-attack, cap-one-spell]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node scripts/v013-stage648c2d-decay-rework.cjs run ${{ matrix.id }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage648c2d-${{ matrix.id }}
+          path: reports/stage648c2d/*.json
+  aggregate:
+    needs: cohort
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage648c2d-*
+          path: reports/stage648c2d
+          merge-multiple: true
+      - run: node scripts/v013-stage648c2d-decay-rework.cjs aggregate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage648c2d-report
+          path: reports/v013-stage648c2d-decay-rework.json
