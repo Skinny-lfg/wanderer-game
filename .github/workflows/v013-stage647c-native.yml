@@ -1,0 +1,89 @@
+name: Stage 6.47C — Native Grave Bloom and capture isolation (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths: ['.github/workflows/v013-stage647c-native.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node --test tests/v013-stage647c-native-grave-bloom.test.cjs tests/v013-capture-assistance.test.cjs tests/v013-stage646-weapon-charge.test.cjs
+      - run: npm test
+      - run: git diff --exit-code
+  historical:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [magic-decay-bloom, decay-blood-spread]
+        shard: [0, 1]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45272938568
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: stage642-snapshot-${{ matrix.profile }}
+          path: reports/stage647c/historical
+      - run: node scripts/v013-stage647c-native-replay.cjs "$PROFILE" historical "$SHARD" "reports/stage647c/historical/$PROFILE.json" "reports/stage647c/replay/$PROFILE-$SHARD.json"
+        env:
+          PROFILE: ${{ matrix.profile }}
+          SHARD: ${{ matrix.shard }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage647c-native-${{ matrix.profile }}-${{ matrix.shard }}
+          path: reports/stage647c/replay/*.json
+  aggregate:
+    needs: historical
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage647c-native-*
+          merge-multiple: true
+          path: current
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45361087909
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          pattern: stage647b-*-two-two-full-*
+          merge-multiple: true
+          path: prior
+      - run: |
+          node <<'JS'
+          const fs=require('node:fs'),read=d=>fs.readdirSync(d).filter(x=>x.endsWith('.json')).map(x=>JSON.parse(fs.readFileSync(d+'/'+x)));
+          const current=read('current'),prior=read('prior'),summary=[];
+          if(current.length!==4||prior.length!==4)throw Error('Missing paired shards '+current.length+'/'+prior.length);
+          for(const profile of ['magic-decay-bloom','decay-blood-spread']){
+            const p=current.filter(x=>x.profile===profile),old=prior.filter(x=>x.profile===profile);
+            const a=p.flatMap(x=>x.rows),b=old.flatMap(x=>x.rows);
+            if(a.length!==400||b.length!==400)throw Error('Missing trials');
+            if(p[0].source!==p[1].source)throw Error('Source drift');
+            for(const r of a){const m=b.find(x=>x.seed===r.seed&&x.actor===r.actor&&x.size===r.size);if(!m||m.roster!==r.roster||m.gear!==r.gear||m.xp!==r.xp)throw Error('Paired actor mismatch');}
+            const groups=[1,4,8,12].map(size=>{
+              const rows=a.filter(x=>x.size===size),base=b.filter(x=>x.size===size);
+              return {size,n:rows.length,wins:rows.filter(x=>x.won).length,priorWins:base.filter(x=>x.won).length,timeouts:rows.filter(x=>x.timeout).length,changed:rows.filter(x=>x.won!==base.find(y=>y.seed===x.seed&&y.actor===x.actor).won).length,secondaryDot:rows.reduce((n,x)=>n+(x.dot||0),0),ticks:rows.reduce((n,x)=>n+(x.effects.graveBloomRotTicks||0),0),bursts:rows.reduce((n,x)=>n+(x.effects.graveBloomActivations||0),0)};
+            });
+            if(groups.slice(1).every(g=>g.secondaryDot===0))throw Error('Rot attribution still missing');
+            summary.push({profile,groups});
+          }
+          console.log('STAGE647C_NATIVE='+JSON.stringify(summary));
+          fs.writeFileSync('stage647c-native.json',JSON.stringify(summary,null,2));
+          JS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage647c-native-results
+          path: stage647c-native.json
