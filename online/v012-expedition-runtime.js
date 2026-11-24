@@ -185,7 +185,14 @@ function phase1StartWave(resetScroll=false){
  // Stage 8.1 abilities support normal Elite escorts; Stage 8.2 owns the Elite leader.
  if(!statOnly&&!g.selected.boss)globalThis.WandererV013EnemyAbilities?.attach(group,g.selected.family||'blood',r.combatSeconds||0);
  if(!statOnly&&last&&g.selected.elite&&!g.selected.boss)globalThis.WandererV013EliteAbilities?.attach(group[0],r.combatSeconds||0);
+ // Preserve native actor identities, budgets and attached effects; vary only the
+ // normal encounter's initial field and FIFO reinforcement order. Vanguard stays first.
  const fieldCount=Math.min(4,group.length);
+ if(hasRoster&&group.length>4){
+  const ordered=rosterSystem.orderForArena(group,{seed:g.dungeon?.foundationManifest?.seed??0,realm:theme.id,node:g.selected.node??g.planeIndex,keepFirst:hasVanguard});
+  group.splice(0,group.length,...ordered);
+  group.forEach((enemy,i)=>{enemy.groupSlot=i<fieldCount?i:-1;});
+ }
  group[0].groupSlot=0;
  for(const enemy of group)enemy.groupClock=traits?traits.initialClock(enemy,enemy.groupSlot):Math.max(0,enemy.attackEvery-(.9+enemy.groupSlot*.3));
  r.initialMobCount=group.length;r.totalMobCount=group.length;r.enemies=fieldCount>1?group.slice(0,fieldCount):undefined;r.groupReserve=group.slice(fieldCount);if(fieldCount===1)delete r.enemies;r.enemy=group[0];r.encounterLeader=last&&(g.selected.boss||g.selected.elite)?group[0]:null;

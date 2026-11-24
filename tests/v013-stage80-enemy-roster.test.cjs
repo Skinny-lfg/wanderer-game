@@ -39,21 +39,19 @@ test('Stage 8.0 small rooms contain one or two Minions, remaining normal classes
  for(const realm of Object.keys(families))for(const count of [2,3,4])for(let seed=8100;seed<8130;seed++){
   const group=plan(realm,count,seed),minions=group.filter(x=>x.role==='minion').length;
   assert(group.length===count);
-  assert(minions===1||count===4&&minions===2,realm+'/'+count+': invalid Minion count');
+  assert.equal(minions,count===4?2:1,realm+'/'+count+': invalid Minion count');
   assert(group.every(x=>x.name&&x.image));
  }
  for(const realm of Object.keys(families))for(let seed=0;seed<12;seed++)
   assert.notEqual(plan(realm,1,seed)[0].role,'minion','solo opponent stays a real normal creature');
 });
-test('Stage 6.18 large groups taper principal roles smoothly and remain Minion-heavy',()=>{
- for(const realm of Object.keys(families))for(const count of [5,6,8,12,18,20,22])for(let seed=8200;seed<8240;seed++){
+test('Stage 6.48B.2 principal counts remain within the agreed composition bands',()=>{
+ for(const realm of Object.keys(families))for(const count of [5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22])for(let seed=8200;seed<8240;seed++){
   const group=plan(realm,count,seed),normal=group.map((x,i)=>({role:x.role,index:i})).filter(x=>x.role!=='minion');
   const min=group.filter(x=>x.role==='minion').length;
   assert.equal(group.length,count);
-  assert(count<=6?normal.length>=2&&normal.length<=3:
-   count===8?normal.length===3:normal.length>=3&&normal.length<=4,
+  assert(count===5?normal.length===2:count<=12?normal.length>=2&&normal.length<=3:normal.length>=3&&normal.length<=4,
    realm+'/'+count+'/'+seed+' principal-role count drift');
-  assert(normal.every(x=>x.index<4),'principal enemies remain visible in the first four arena slots');
   assert.equal(min,count-normal.length);
   assert(count<=6||min>=count-4,'large swarms remain mostly Minions');
  }
@@ -131,4 +129,23 @@ test('paired Affinity Realms share artwork without changing the encounter roster
   }
   assert(shared>0,realm+' must use artwork from its affinity partner');assert(images.size>=3,realm+' should offer more than two distinct appearances');
  }
+});
+
+test('Stage 6.48B.2 distributes existing actors across field and reserve without stat mutation',()=>{
+ let reservePrincipals=0,firstPrincipals=0;
+ for(const realm of Object.keys(families))for(const count of [1,2,3,4,5,8,12,17,22])for(let seed=0;seed<40;seed++){
+  const group=plan(realm,count,seed).map((e,i)=>({...e,id:i,maxhp:100+i,atk:10+i,def:i}));
+  const args={seed,realm,node:2},before=JSON.stringify(group),out=R.orderForArena(group,args);
+  assert.equal(JSON.stringify(group),before);
+  assert.deepEqual(out.slice().sort((a,b)=>a.id-b.id),group);
+  assert.deepEqual(R.orderForArena(group,args),out);
+  assert.equal(new Set(out).size,count);
+  if(count<=4)assert.deepEqual(out,group);
+  if(count>4){
+   if(out.slice(4).some(e=>e.role!=='minion'))reservePrincipals++;
+   if(out.slice(0,4).some(e=>e.role!=='minion'))firstPrincipals++;
+   assert.equal(R.orderForArena(group,{...args,keepFirst:true})[0],group[0]);
+  }
+ }
+ assert(reservePrincipals>0&&firstPrincipals>0);
 });

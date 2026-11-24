@@ -1,0 +1,87 @@
+name: Stage 6.48B.2 — Native randomized roster calibration (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths: ['.github/workflows/v013-stage648b2-roster-calibration.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: synergy-balanced
+          path: input/earned
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 45430920656
+      - uses: actions/download-artifact@v4
+        with:
+          name: stage648b1-balanced
+          path: input/baseline
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 45443121512
+      - run: node --test tests/v013-stage80-enemy-roster.test.cjs tests/v013-current-groups.test.cjs tests/v013-stage640-e1-groups.test.cjs
+      - run: npm test
+      - run: node scripts/v013-stage648b2-roster-calibration.cjs smoke
+  cohort:
+    needs: smoke
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      max-parallel: 15
+      matrix:
+        profile: [cautious, balanced, plate-warden, cloth-battlemage, leather-duelist, hexblade-hybrid, smart-blood-pure, smart-fury-daggers, smart-vitality-pure, smart-aegis-vitality, smart-magic-arcane-pure, smart-magic-fire-pure, magic-frost, smart-magic-lightning-pure, smart-decay-magic-aegis, smart-blood-sword, smart-blood-fury, smart-blood-fury-vitality, smart-blood-fury-vitality-no-mixed, smart-fury-blood-aegis, smart-fury-pure, smart-magic-fire-aegis, smart-magic-frost-vitality, smart-magic-wand, smart-magic-staff, smart-magic-wand-offense, smart-magic-wand-defense, decay-wand, decay-two-handed, aegis-sword-shield, aegis-mace-shield, aegis-wand-orb, vitality-sword-charm, vitality-staff, magic-sword-infusion]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: synergy-${{ matrix.profile }}
+          path: input/earned
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 45430920656
+      - uses: actions/download-artifact@v4
+        with:
+          name: stage648b1-${{ matrix.profile }}
+          path: input/baseline
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 45443121512
+      - run: node scripts/v013-stage648b2-roster-calibration.cjs run ${{ matrix.profile }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage648b2-${{ matrix.profile }}
+          path: reports/stage648b2/*.json
+  aggregate:
+    needs: [smoke, cohort]
+    if: ${{ always() && needs.smoke.result == 'success' }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage648b2-*
+          path: reports/stage648b2
+          merge-multiple: true
+      - run: node scripts/v013-stage648b2-roster-calibration.cjs aggregate
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage648b2-report
+          path: reports/v013-stage648b2-roster-calibration.json

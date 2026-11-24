@@ -51,15 +51,13 @@ function plan({seed,realm,family,node=0,count,catalog}){
     !Number.isInteger(node)||node<0||!Number.isInteger(count)||count<1||count>22||
     !Array.isArray(catalog)||ROLES.some(role=>!catalog.some(m=>m.role===role)))throw Error('Invalid Stage 8.0 encounter roster');
  const random=F.rng(seed,'stage8_roster_'+realm+'_'+node+'_'+count);
- // Stage 6.18: keep principal roles in the first four visible slots while
- // swarms remain Minion-heavy; avoid the abrupt drop to ~1 principal at 6.
- const normalCount=count===1?1:count<=4?count-(count===4&&random()<.5?2:1):
-   count===5?2+(random()<.5?1:0):
-   count===6?2+(random()<.6?1:0):
-   count<=8?3:
-   count<=12?3+(random()<.25?1:0):
-   count<=17?3+(random()<.35?1:0):
-   3+(random()<.5?1:0);
+ // Composition and spawn order are separate: keep the historical role RNG
+ // stream stable whenever the principal count stays the same.
+ const countRoll=count===4||count===5||count===6||count>=9?random():
+  count>=7?F.rng(seed,'stage648b2_count_'+realm+'_'+node+'_'+count)():0;
+ const normalCount=count===1?1:count<=3?count-1:count<=5?2:
+  count===6?2+(countRoll<.4?1:0):count<=12?2+(countRoll<.5?1:0):
+  count<=17?3+(countRoll<.35?1:0):3+(countRoll<.5?1:0);
  const roles=Array(count).fill('minion'),positions=Array.from({length:Math.min(count,4)},(_,i)=>i);
  for(let i=positions.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[positions[i],positions[j]]=[positions[j],positions[i]];}
  const selected=positions.slice(0,normalCount);
@@ -76,6 +74,15 @@ function plan({seed,realm,family,node=0,count,catalog}){
   return {name:chosen.name,image:chosen.image,role};
  });
 }
+// Stage 6.48B.2: order already-created actors, not their stat rolls.
+function orderForArena(group,{seed,realm,node=0,keepFirst=false}){
+ const list=group.slice(),locked=keepFirst?1:0;
+ if(list.length>4){
+  const random=F.rng(seed,'stage648b1_schedule_'+realm+'_'+node+'_'+list.length);
+  for(let i=list.length-1;i>locked;i--){const j=locked+Math.floor(random()*(i-locked+1));[list[i],list[j]]=[list[j],list[i]];}
+ }
+ return list;
+}
 // Choose only artwork from the paired Realm, without consuming combat or roster RNG.
 function shareAffinityArt(roster,peerCatalog,{seed,realm,node=0}={}){
  if(!Array.isArray(roster)||!Array.isArray(peerCatalog)||roster.length<2||!Number.isSafeInteger(seed)||!CATALOG[realm])return roster;
@@ -88,7 +95,7 @@ function shareAffinityArt(roster,peerCatalog,{seed,realm,node=0}={}){
  });
 }
 
-const API=Object.freeze({ROLES,CATALOG,FAMILY_WEIGHTS,catalogFor,plan,shareAffinityArt});
+const API=Object.freeze({ROLES,CATALOG,FAMILY_WEIGHTS,catalogFor,plan,orderForArena,shareAffinityArt});
 root.WandererV013EnemyRoster=API;
 if(typeof module==='object'&&module.exports)module.exports=API;
 })(globalThis);
