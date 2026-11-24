@@ -44,3 +44,5 @@ jobs:
         with:
           name: stage647d9a-stat-scaling
           path: reports/v013-stage647d9a-stat-scaling.json
+
+# Run corrected diagnostic host reference imports.

@@ -2,6 +2,7 @@
 // Diagnostic-only projections on naturally earned Camp checkpoints.
 const assert=require('node:assert/strict'),fs=require('node:fs');
 const N=require('./v013-natural-progression.cjs'),S=require('./simulate-progression.cjs'),D=require('./v013-stage628-postcap-difficulty.cjs');
+require('../combat/expedition-progression.js');require('../combat/v012-combat-core.js');
 const T=globalThis.WandererAutomaticTalents;
 const LEVELS=[1,10,20,50,100,200],PROFILES=['smart-blood-pure','smart-fury-bow','smart-vitality-pure','smart-aegis-vitality','smart-magic-arcane-pure','smart-decay-magic-aegis'];
 const FIELDS={flatAttack:'attack',flatArmor:'defense',flatLife:'maxhp',flatSpell:'spellPower'};
