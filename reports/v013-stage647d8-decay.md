@@ -12,4 +12,4 @@ Gameplay commit a5ce44567fbee3c5b969a5d1fd06e9ce5483e64c. Same balance branch on
 - Native simulation rows export decayTalentMetrics. No new matched E10 win-rate claims.
 
 ## Validation
-CI run 45396486176 triggered; inspect final jobs before claiming validation. Targeted contract fixtures use actual buildcraft and combat resolver with injected ports. Full npm test and architecture regression run separately. No new browser capture or matched E10 comparison in this stage.
+CI run 45396486176: both jobs completed successfully. Targeted contracts 37/37; full npm test 380 + 8 + 84 + 79 = 551/551, zero failures. Targeted contract fixtures use actual buildcraft and combat resolver with injected ports. Full npm test and architecture regression run separately. No new browser capture or matched E10 comparison in this stage.
