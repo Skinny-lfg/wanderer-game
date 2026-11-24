@@ -1,0 +1,115 @@
+name: Stage 6.46 — Consolidated native player mechanics (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths:
+      - '.github/workflows/v013-stage646-native-validation.yml'
+      - 'tests/v013-stage646-weapon-charge.test.cjs'
+      - 'scripts/v013-stage646-native-replay.cjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Actual native mechanics and mirrors
+        run: |
+          node --test tests/v013-stage646-weapon-charge.test.cjs tests/v013-stage642-aoe-readiness.test.cjs tests/v013-stage643-aoe-mechanics.test.cjs
+          for f in v012-buildcraft.js v012-combat-runtime.js talent-catalog.js talent-graph-next.js; do cmp "combat/$f" "docs/combat/$f"; done
+          git diff --exit-code
+      - name: Full current npm regression suite
+        run: npm test
+  replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        shard: [0, 1]
+        trial:
+          - {profile: smart-fury-bow, variant: bow-100-status}
+          - {profile: smart-fury-bow, variant: mixed-bow-pierce}
+          - {profile: smart-blood-two-handed, variant: mixed-spread}
+          - {profile: decay-blood-spread, variant: mixed-spread}
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45272938568
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: stage642-snapshot-${{ matrix.trial.profile }}
+          path: reports/stage646/snapshots
+      - name: Replay actual consolidated engine (50 seeds per shard)
+        env:
+          PROFILE: ${{ matrix.trial.profile }}
+          VARIANT: ${{ matrix.trial.variant }}
+          SHARD: ${{ matrix.shard }}
+        run: |
+          mkdir -p reports/stage646/shards
+          node scripts/v013-stage646-native-replay.cjs "$PROFILE" "$VARIANT" "$SHARD" "reports/stage646/snapshots/$PROFILE.json" "reports/stage646/shards/$PROFILE-$VARIANT-$SHARD.json"
+          git diff --exit-code
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage646-${{ matrix.trial.profile }}-${{ matrix.trial.variant }}-${{ matrix.shard }}
+          path: reports/stage646/shards/*.json
+          if-no-files-found: error
+  aggregate:
+    needs: replay
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage646-*
+          merge-multiple: true
+          path: reports/stage646/shards
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45291521700
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          pattern: stage645-*
+          merge-multiple: true
+          path: reports/stage646/baseline
+      - name: Strict matched E10 comparison with the isolated Stage 6.45 variants
+        run: |
+          node <<'JS'
+          const fs=require('node:fs');
+          const read=dir=>fs.readdirSync(dir).filter(f=>f.endsWith('.json')).map(f=>JSON.parse(fs.readFileSync(dir+'/'+f)));
+          const samples=read('reports/stage646/shards'),old=read('reports/stage646/baseline').filter(x=>Array.isArray(x.rows)&&x.stage==='6.45');
+          if(samples.length!==8||new Set(samples.map(x=>x.source)).size!==1)throw Error('Missing shards or source drift');
+          const sum=(a,f)=>a.reduce((n,x)=>n+(f(x)||0),0),summary=[];
+          for(const [profile,variant] of [['smart-fury-bow','bow-100-status'],['smart-fury-bow','mixed-bow-pierce'],['smart-blood-two-handed','mixed-spread'],['decay-blood-spread','mixed-spread']]){
+           const p=samples.filter(x=>x.profile===profile&&x.variant===variant),b=old.filter(x=>x.profile===profile&&x.variant===variant);
+           if(p.length!==2||b.length!==2)throw Error('Incomplete cohort '+profile+'/'+variant);
+           const rows=p.flatMap(x=>x.rows),base=b.flatMap(x=>x.rows);
+           if(JSON.stringify(p[0].entries)!==JSON.stringify(p[1].entries))throw Error('Actor drift');
+           for(const a of rows){const prior=base.find(x=>x.actor===a.actor&&x.seed===a.seed&&x.size===a.size);if(!prior||prior.roster!==a.roster||prior.gear!==a.gear||prior.xp!==a.xp)throw Error('Unmatched seed/gear/XP/roster '+profile);}
+           if(JSON.stringify(p[0].entries.map(x=>[x.seed,x.nodes]))!==JSON.stringify(b[0].entries.map(x=>[x.seed,x.nodes])))throw Error('Talent drift');
+           summary.push({profile,variant,actors:p[0].entries.map(x=>({seed:x.seed,weapon:x.weapon,points:x.points})),groups:[1,4,8,12].map(size=>{
+            const a=rows.filter(x=>x.size===size),prior=base.filter(x=>x.size===size);
+            if(a.length!==100||prior.length!==100||new Set(a.map(x=>x.seed)).size!==100)throw Error('Invalid 100-seed coverage');
+            return {size,n:a.length,beforeWins:prior.filter(x=>x.won).length,wins:a.filter(x=>x.won).length,timeouts:a.filter(x=>x.timeout).length,
+              bursts:sum(a,x=>x.effects.carrionBursts),secondary:sum(a,x=>x.secondary),dot:sum(a,x=>x.dot),equipmentStatus:sum(a,x=>x.effects.secondaryEquipmentStatusApplied)};
+           })});
+          }
+          fs.writeFileSync('reports/stage646/results.json',JSON.stringify({stage:'6.46',source:samples[0].source,summary},null,2)+'\n');
+          console.log('STAGE646_MATRIX='+JSON.stringify(summary));
+          JS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage646-native-results
+          path: reports/stage646/results.json
+          retention-days: 30
