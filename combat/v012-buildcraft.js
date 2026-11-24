@@ -82,7 +82,7 @@ const descriptions={
  strong_heart:'Max Health +10% at Rank 1; smaller gains at higher ranks.',
  renewal:'Heal 0.55% Max HP per second at Rank 1; smaller gains at higher ranks. Healing reduction applies.',
  last_stand:'Once per Expedition, survive a lethal hit and recover 6% Max HP.',
- second_breath:'Heal after each completed encounter: 1.5% Max HP at rank 1 (+0.4 percentage points per rank). Attacks deal bonus damage equal to 1% Max Health, capped at 2.5% enemy Max Health, every 6 seconds.',
+ second_breath:'Heal after each completed encounter: 1.5% Max HP at rank 1 (+0.4 percentage points per rank).',
  life_bloom:'Each combat second, restore 0.25% Max HP and 1.5 Mana at rank 1; gains become smaller at higher ranks, up to 0.6% Health and 3.4 Mana.',
  iron_skin:'Defense +12% at Rank 1; smaller gains at higher ranks.',
  fortified:'Reduce incoming damage by 4% per rank, within the combined 28% cap.',
@@ -178,7 +178,45 @@ function sanguineReserve(b,c){
  if(r.sanguineReserveWave!==key){r.sanguineReserveWave=key;r.sanguineReserve=0;}
  return r;
 }
+// New defensive offense is encounter-local; never stores overheal or Barrier.
+function livingForceState(c){
+ const r=c.player,key=c.waveKey??c.enemy;
+ if(r.livingForceWave!==key){r.livingForceWave=key;r.livingForceCharge=0;}
+ return r;
+}
+function defensivePulse(b,c,id,interval,raw,control=false){
+ if(!specialized(b,id)||c.player.hp<=0)return;
+ const r=c.player,elapsed=Number(r.combatSeconds??c.now)||0;
+ const key=c.waveKey??c.enemy;
+ r.defensivePulseClock??={};
+ if(r.defensivePulseClock.wave!==key)r.defensivePulseClock={wave:key};
+ const clock=r.defensivePulseClock;
+ if(clock[id]===undefined)clock[id]=interval;
+ if(elapsed+1e-8<clock[id])return;
+ // A missed ward pulse is not banked. At most one activation per clock interval.
+ clock[id]=(Math.floor(elapsed/interval)+1)*interval;
+ if(id==='ward_echo'&&!(r.barrier>0))return;
+ const targets=(r.enemies||[c.enemy]).filter(e=>e&&e.hp>0&&!e.stage84Node).slice(0,4);
+ if(!targets.length||!(raw>0))return;
+ activated(b,id);c.metric?.(id+'Activations',1);
+ for(const target of targets){
+  const cap=target.maxhp*(target.boss?.005:target.miniboss?.0125:.04);
+  const amount=Math.min(raw,cap);if(!(amount>0))continue;
+  const actual=c.talentPulseDamage?c.talentPulseDamage(target,amount,id):target===c.enemy?c.damage(amount,id):c.secondaryHit?.(target,amount);
+  if(Number.isFinite(actual)&&actual>0)c.metric?.(id+'Damage',actual);
+  c.metric?.(id+'Targets',1);
+  if(control&&target.hp>0&&!target.boss&&!target.miniboss){
+   target.graspingRootsUntil=Math.max(target.graspingRootsUntil||0,c.now+2);
+   c.metric?.('grasping_rootsControlled',1);
+  }
+ }
+}
 function onHeal(b,c,healed){
+ if(healed>0&&specialized(b,'living_force')){
+  const r=livingForceState(c),cap=r.maxhp*.05;
+  r.livingForceCharge=Math.min(cap,(r.livingForceCharge||0)+healed*.20);
+  c.metric?.('livingForceEffectiveHealing',healed);
+ }
  if(healed>0&&specialized(b,'sanguine_reserve')){
   const r=sanguineReserve(b,c);r.sanguineReserve=Math.min(r.maxhp*.05,(r.sanguineReserve||0)+healed*.25);
  }
@@ -226,7 +264,15 @@ function onAttack(b,c){
    if(amount>0){activated(b,'sanguine_reserve');c.damage(amount,'🩸 Sanguine Reserve');c.metric?.('sanguineReserveBursts',1);}
   }
  }
- if(rank(b,'second_breath')&&ready(b,'vitalityStrike',c.now,6)&&activated(b,'second_breath'))c.damage(Math.min(c.player.maxhp*.01,e.maxhp*.025),'💚 Vital Strike');
+ if(specialized(b,'living_force')&&!c.offhand&&e.hp>0){
+  const r=livingForceState(c),threshold=r.maxhp*.05;
+  if(threshold>0&&r.livingForceCharge>=threshold-1e-8&&ready(b,'livingForce',c.now,4)){
+   r.livingForceCharge=0;activated(b,'living_force');
+   const amount=Math.min(threshold,e.maxhp*(e.boss?.01:e.miniboss?.02:.05));
+   const actual=c.talentPulseDamage?c.talentPulseDamage(e,amount,'living_force'):c.damage(amount,'💚 Living Force');
+   c.metric?.('living_forceActivations',1);if(Number.isFinite(actual)&&actual>0)c.metric?.('living_forceDamage',actual);
+  }
+ }
  if(b.runtime.prepared==='fury_recovery'&&c.player.hp>0&&c.player.hp<c.player.maxhp*.35&&b.runtime.furyRecoveryWave!==(c.waveKey??e)){b.runtime.furyRecoveryWave=c.waveKey??e;b.runtime.furyRecoveryUntil=c.now+4;activated(b,'fury_recovery');heal(b,c,c.player.maxhp*.08);c.log('❤ Fury Recovery');}
  if(specialized(b,'affinity_fury')&&e.baseDef>0&&c.now>=(e.nextFurySunder||0)&&c.random()<.15){const baseDef=e.baseDef,applied=e.furySunder||0,reduction=Math.max(0,Math.min(baseDef*.04,baseDef*.20-applied,e.def-baseDef*.25));if(reduction>0){e.def-=reduction;e.furySunder=applied+reduction;e.nextFurySunder=c.now+1;c.log('⚔ Sunder: enemy Defense reduced.');}}
  if(['battle_tempo','relentless_assault','unchained_fury'].some(id=>specialized(b,id))){b.runtime.battleTempo=Math.min(5,(b.runtime.battleTempo||0)+1);if(specialized(b,'relentless_assault')&&e.furySunder>0&&ready(b,'relentlessAssault',c.now,3))c.damage(base*.20,'🗡 Relentless Assault');if(specialized(b,'unchained_fury')){b.runtime.furyHits=(b.runtime.furyHits||0)+1;if(b.runtime.furyHits%5===0)b.runtime.unchainedUntil=c.now+3;if(b.runtime.unchainedUntil>c.now)c.damage(base*.25,'🔥 Unchained Fury');}}
@@ -354,6 +400,10 @@ function onSecond(b,c){
  if(rank(b,'renewal')&&activated(b,'renewal'))heal(b,c,c.player.maxhp*values('renewal',rank(b,'renewal')).heal*recovery);
  if(rank(b,'life_bloom')&&activated(b,'life_bloom')){heal(b,c,c.player.maxhp*values('life_bloom',rank(b,'life_bloom')).heal*recovery);c.mana(values('life_bloom',rank(b,'life_bloom')).mana);}
  if(rank(b,'barrier_pulse')&&ready(b,'barrierPulse',c.now,6)&&activated(b,'barrier_pulse')){const v=values('barrier_pulse',rank(b,'barrier_pulse'));c.barrier(barrierAmount(c.player.maxhp,barrierSpellPower(c),v.barrier,v.spellBarrier));}
+ // One pulse per interval, at most four living arena enemies, no weapon/status procs.
+ defensivePulse(b,c,'vital_pulse',4,c.player.maxhp*.02);
+ defensivePulse(b,c,'grasping_roots',8,c.player.maxhp*.015,true);
+ defensivePulse(b,c,'ward_echo',4,c.player.maxhp*.01+Math.max(0,Number(c.player.stats?.defense)||0)*.15);
  if(rank(b,'blood_ward')&&e.bleedStacks>0&&ready(b,'bloodWard',c.now,5)&&activated(b,'blood_ward'))c.barrier(c.player.maxhp*.022);
  if(rank(b,'lifeweave')&&c.player.mp<c.player.maxmp*.30&&c.player.hp>c.player.maxhp*.20&&ready(b,'lifeweave',c.now,8)&&activated(b,'lifeweave')){
   c.player.hp=Math.max(1,c.player.hp-c.player.maxhp*.03);c.mana(10);
@@ -366,7 +416,15 @@ function incoming(b,c,raw){
 function onDefend(b,c,blocked,barrierAbsorbed){
  if(b.runtime.prepared==='arcane_bastion'&&barrierAbsorbed>0)b.runtime.arcaneBastionReady=true;
  if(blocked>0&&specialized(b,'steadfast_guard')){b.runtime.steadfastStacks=Math.min(3,(b.runtime.steadfastUntil>c.now?b.runtime.steadfastStacks||0:0)+1);b.runtime.steadfastUntil=c.now+5;}
- if(specialized(b,'stored_force')){const threshold=c.player.maxhp*.25;b.runtime.storedForce=Math.min(threshold,(b.runtime.storedForce||0)+Math.max(0,blocked+barrierAbsorbed)*.30);if(threshold>0&&b.runtime.storedForce>=threshold){b.runtime.storedForce=0;if(c.areaDamage)c.areaDamage(threshold,'🔨 Stored Force');else c.damage(threshold,'🔨 Stored Force');}}
+ if(specialized(b,'stored_force')){
+  const threshold=c.player.maxhp*.25,generated=Math.max(0,blocked+barrierAbsorbed)*.30,before=b.runtime.storedForce||0;
+  b.runtime.storedForce=Math.min(threshold,before+generated);
+  c.metric?.('storedForceChargeGenerated',generated);c.metric?.('storedForceChargeAccepted',Math.max(0,b.runtime.storedForce-before));
+  if(threshold>0&&b.runtime.storedForce>=threshold){
+   b.runtime.storedForce=0;activated(b,'stored_force');c.metric?.('storedForceActivations',1);c.metric?.('storedForceRawBurst',threshold);
+   if(c.areaDamage)c.areaDamage(threshold,'🔨 Stored Force');else c.damage(threshold,'🔨 Stored Force');
+  }
+ }
  if(blocked>0&&specialized(b,'aegis_reprisal')&&ready(b,'specialReprisal',c.now,3))b.runtime.specialReprisal=true;
  const broken=c.barrierBroken??(barrierAbsorbed>0&&c.player.barrier<=0);
  if(blocked>0&&rank(b,'counterstrike'))b.runtime.counterBlock=1;

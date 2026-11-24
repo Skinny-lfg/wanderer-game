@@ -724,6 +724,20 @@ function resolveBossPulseLethal(r,s){
  ports.die();return true;
 }
 
+// Root control is independent of Chill; use the stronger slow, not their product.
+function enemySlowFactor(enemy,stats,now){
+ const chill=enemy.slowTime>0?1+(stats.bonus.slowBonus||.22):1;
+ return Math.max(chill,(enemy.graspingRootsUntil||0)>now&&!enemy.boss&&!enemy.miniboss?1.15:1);
+}
+function talentPulseDamage(r,enemy,amount,id){
+ if(!enemy||enemy.hp<=0||enemy.stage84Node||!((r.enemies||[r.enemy]).includes(enemy))||!(amount>0))return 0;
+ const old=r.enemy,before=enemy.hp,secondary=enemy!==old;
+ try{r.enemy=enemy;ports.setDirectEnemyDamage(r,amount,({vital_pulse:'💚 Vital Pulse',living_force:'💚 Living Force',grasping_roots:'🌿 Grasping Roots',ward_echo:'🛡 Ward Echo'})[id]||id);}
+ finally{r.enemy=old;}
+ const actual=Math.max(0,before-Math.max(0,enemy.hp));
+ if(secondary&&actual>0){ports.phase6Metric(r,'secondaryTargetDamage',actual);ports.phase6Metric(r,'secondaryTargetHits',1);}
+ return actual;
+}
 function updateFight(){
  if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked)){clearInterval(ports.clock);return;}
  const r=ports.state.run;if(!r||r.status!=='fight'){clearInterval(ports.clock);return;}
@@ -829,9 +843,9 @@ function updateFight(){
  if(r.enemies)for(const mob of r.enemies)if(mob.hp>0&&!mob.stage84Node)mob.groupClock+=(mob.stunnedUntil>ports.setNow(r)?0:dt);
  if(r.enemies)r.tEnemy=e.groupClock;else r.tEnemy+=(e.stunnedUntil>ports.setNow(r)?0:dt);r.tDot+=dt;
  // Align Elite contact frames with the original hit tick at normal playback speed.
- const windupSlowed=e.slowTime>0?1+(s.bonus.slowBonus||.22):1;
+ const windupSlowed=enemySlowFactor(e,s,ports.setNow(r));
  const impactLead=({berserker:.49,tank:.81,caster:.89,vampire:.67}[e.eliteType]??(e.boss?{guardian:.85,leech:.86,berserker:.71}[e.bossStyle]:null)??.66);
- if(r.enemies){for(const mob of r.enemies){if(mob.hp<=0||mobWindups.has(mob))continue;const slow=mob.slowTime>0?1+(s.bonus.slowBonus||.22):1,lead=({berserker:.49,tank:.81,caster:.89,vampire:.67}[mob.eliteType]??.66);if(mob.groupClock>=Math.max(0,mob.attackEvery*slow-lead)){mobWindups.add(mob);r.enemy=mob;ports.animateEnemyWindup?.();}}r.enemy=e;}else if(!mobWindups.has(e)&&r.tEnemy>=Math.max(0,e.attackEvery*windupSlowed-impactLead)){mobWindups.add(e);ports.animateEnemyWindup?.();}
+ if(r.enemies){for(const mob of r.enemies){if(mob.hp<=0||mobWindups.has(mob))continue;const slow=enemySlowFactor(mob,s,ports.setNow(r)),lead=({berserker:.49,tank:.81,caster:.89,vampire:.67}[mob.eliteType]??.66);if(mob.groupClock>=Math.max(0,mob.attackEvery*slow-lead)){mobWindups.add(mob);r.enemy=mob;ports.animateEnemyWindup?.();}}r.enemy=e;}else if(!mobWindups.has(e)&&r.tEnemy>=Math.max(0,e.attackEvery*windupSlowed-impactLead)){mobWindups.add(e);ports.animateEnemyWindup?.();}
  if(s.caster||r.phase1Magic||s.phase2Decay)r.mp=Math.min(r.maxmp,r.mp+dt*s.manaRegen);
  advanceAcceleratedBleed(r,dt);
  if(e.hp<=0||hasUnsettledGroupDeaths(r)){ports.winEncounter(true);return;}
@@ -853,9 +867,9 @@ function updateFight(){
   if(e.slowTime>0)e.slowTime=Math.max(0,e.slowTime-1);
   if(e.hp<=0||hasUnsettledGroupDeaths(r)){ports.winEncounter();return;}
  }
- const target=e,attacker=r.enemies?.find(mob=>mob.hp>0&&!mob.stage84Node&&!(mob.stunnedUntil>ports.setNow(r))&&mob.groupClock>=mob.attackEvery*(mob.slowTime>0?1+(s.bonus.slowBonus||.22):1));
+ const target=e,attacker=r.enemies?.find(mob=>mob.hp>0&&!mob.stage84Node&&!(mob.stunnedUntil>ports.setNow(r))&&mob.groupClock>=mob.attackEvery*enemySlowFactor(mob,s,ports.setNow(r)));
  if(attacker){e=attacker;r.enemy=e;r.tEnemy=e.groupClock;}
- const slowed=e.slowTime>0?1+(s.bonus.slowBonus||.22):1;
+ const slowed=enemySlowFactor(e,s,ports.setNow(r));
  if(!(e.stunnedUntil>ports.setNow(r))&&(!r.enemies||attacker)&&r.tEnemy>=e.attackEvery*slowed){
   r.tEnemy=0;if(r.enemies)e.groupClock=0;mobWindups.delete(e);
   let enemyAbilityVfx=null;
@@ -984,6 +998,7 @@ function phase2Context(r){
  dotDamage(amount,label,secondaryFraction=0){const n=Math.max(0,Math.round(amount*(root.WandererV013ExpeditionBoons?.dotFactor(r)||1)));if(n){const applied=Math.min(Math.max(0,e.hp),n);ports.phase6Metric(r,'damageDealt',applied);ports.phase6Metric(r,'periodicDamage',applied);if(secondaryFraction>0&&applied>0){const attributed=Math.min(applied,Math.round(applied*Math.min(1,secondaryFraction)));if(attributed>0){ports.phase6Metric(r,'secondaryTargetDamage',attributed);ports.phase6Metric(r,'secondaryDotDamage',attributed);ports.phase6Metric(r,'secondaryTargetHits',1);}}e.hp-=n;ports.addLog(label+' '+n+' damage','spell');ports.floatText(n,'enemy',false,'ROT',e);}},
  damage(amount,label){return ports.setDirectEnemyDamage(r,amount,label);},
  areaDamage(amount,label){ports.setDirectEnemyDamage(r,amount,label);groupSecondaryDamage(r,amount,Array(Math.max(0,(r.enemies?.length||1)-1)).fill(1),label);},
+ talentPulseDamage(enemy,amount,id){return talentPulseDamage(r,enemy,amount,id);},
  metric(key,n){ports.phase6Metric(r,key,n);},
  link(kind,source,targets){ports.combatLinkEffect?.(r,kind,source,targets);},
  secondaryHit(enemy,amount){return r.enemies?.includes(enemy)?v013SecondaryHit(r,enemy,amount):0;},
@@ -1067,7 +1082,7 @@ function phase6Stats(stats){return ports.phase6Run?WandererV012CombatCore.applyE
 function winEncounter(){ports.phase1WaveWon();}
 
 function die(){ports.phase1Death();}
-return {addLog,bossForTier,eliteArchetype,rollEliteArchetype,tryDodge,enemyFor,synchronizeDots,tickDots,advanceAcceleratedBleed,focusedWeaponDamage,setRuntime,setNow,advancePlayerAttackClock,activeLegendarySignatures,legendaryRuntime,legendaryHas,legendaryReady,legendaryEmpowered,legendaryProc,legendaryOnHit,legendaryExtend,legendaryAttackBonus,legendaryDefensiveEffects,legendaryRealmStart,legendaryTick,setReady,setBarrier,regenPerSecond,setHeal,setDelayEnemy,setDirectEnemyDamage,setOnAttack,setCombatExpire,setEnemyWeaken,setHeatTick,setSoulHeal,applyAffinity,weaponAttack,updateFight,phase2Context,phase2Stats,phase2WeaponAttack,phase2MagicTick,phase6Metric,phase6Proc,phase6CollectMetrics,phase6Stats,winEncounter,die};
+return {addLog,bossForTier,eliteArchetype,rollEliteArchetype,tryDodge,enemyFor,synchronizeDots,tickDots,advanceAcceleratedBleed,focusedWeaponDamage,enemySlowFactor,talentPulseDamage,setRuntime,setNow,advancePlayerAttackClock,activeLegendarySignatures,legendaryRuntime,legendaryHas,legendaryReady,legendaryEmpowered,legendaryProc,legendaryOnHit,legendaryExtend,legendaryAttackBonus,legendaryDefensiveEffects,legendaryRealmStart,legendaryTick,setReady,setBarrier,regenPerSecond,setHeal,setDelayEnemy,setDirectEnemyDamage,setOnAttack,setCombatExpire,setEnemyWeaken,setHeatTick,setSoulHeal,applyAffinity,weaponAttack,updateFight,phase2Context,phase2Stats,phase2WeaponAttack,phase2MagicTick,phase6Metric,phase6Proc,phase6CollectMetrics,phase6Stats,winEncounter,die};
 }
 root.WandererV012CombatRuntime=Object.freeze({create});
 })(globalThis);
