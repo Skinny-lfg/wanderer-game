@@ -1,0 +1,18 @@
+name: Stage 6.47C — Final capture boundary contracts (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths: ['.github/workflows/v013-stage647c-capture-contract.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: node --test tests/v013-capture-assistance.test.cjs tests/v013-stage647c-native-grave-bloom.test.cjs
+      - run: git diff --exit-code
