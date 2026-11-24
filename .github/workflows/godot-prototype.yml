@@ -1,0 +1,32 @@
+name: Godot prototype smoke
+on:
+  push:
+    branches: [experiment/godot-foundation]
+    paths:
+      - 'godot-prototype/**'
+      - '.github/workflows/godot-prototype.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  smoke:
+    if: github.ref == 'refs/heads/experiment/godot-foundation'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned Godot
+        run: |
+          curl --fail --location --retry 3 -o /tmp/godot.zip https://github.com/godotengine/godot-builds/releases/download/4.4.1-stable/Godot_v4.4.1-stable_linux.x86_64.zip
+          unzip -q /tmp/godot.zip -d /tmp/godot-bin
+          chmod +x /tmp/godot-bin/Godot_v4.4.1-stable_linux.x86_64
+      - name: Import assets and run smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          GODOT=/tmp/godot-bin/Godot_v4.4.1-stable_linux.x86_64
+          "$GODOT" --headless --path godot-prototype --import 2>&1 | tee /tmp/godot-import.log
+          ! grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-import.log
+          "$GODOT" --headless --path godot-prototype --script res://tests/arena_smoke.gd 2>&1 | tee /tmp/godot-smoke.log
+          ! grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-smoke.log
+          grep -F 'PASS: arena loaded; four enemies; valid and invalid target selection' /tmp/godot-smoke.log

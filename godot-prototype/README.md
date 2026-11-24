@@ -1,0 +1,32 @@
+# Wanderer — Godot experiment
+
+Isolated visual/remote-development sandbox, based on the consolidated browser checkpoint `258b2953ee7ef07a5e62862759be3a162b1e4a93` (Stage 6.24C). Not a migration, release or replacement of the current browser game. Later browser balance work is deliberately not ported.
+
+## Run
+
+Use Godot 4.4.1 Standard (pinned CI reference; newer Godot 4 versions are not yet validated). Import this directory's project.godot and press F6/F5 (F5 runs the main scene). Click an enemy to select it. The four static enemy images, dungeon backdrop and hero are existing assets copied by blob from the browser snapshot; their orientation and composition have not been visually approved. The hero is a placeholder, not new rear-view art.
+
+CLI:
+```sh
+godot --headless --path godot-prototype --import
+godot --headless --path godot-prototype --script res://tests/arena_smoke.gd
+```
+
+## Architecture and migration boundaries
+
+- scenes/: presentation only, later arena, camp, inventory, talent tree.
+- scripts/: prototype presentation/input; later separate domain logic from rendering.
+- assets/: small curated copies of existing art. Do not copy the entire browser asset library yet.
+- tests/: Godot runtime smoke tests; later deterministic fixtures.
+- Future data/: versioned engine-neutral JSON catalogs with stable IDs, exported from the canonical browser sources.
+- Future domain/: combat rules, equipment, talents, economy, expedition and persistence, independent of scenes.
+- Browser sources remain authoritative until migration is separately approved: combat/, economy/, online/, assets/, scripts/, tests/. In particular, combat/v012-combat-core.js and combat/v012-combat-runtime.js are reference implementations, not scripts Godot can directly run.
+- Do not maintain two live implementations while the browser combat is changing. Freeze a later approved browser commit before translating mechanics; compare deterministic input/output traces including RNG, tick order, targeting, damage, buffs and rewards. No balance adjustments in a migration.
+- No Firebase or production changes. No merge to main or canonical browser/playtest branches.
+
+## Milestones
+
+G0: import, run, and select four targets; verify remotely with CI.
+G1: screenshot capture in a virtual display, then visual approval with rear-view hero, perspective and real sprites.
+G2: export stable data catalogs and establish deterministic JS/GDScript comparison fixtures.
+G3: port an approved combat slice only after browser mechanics are frozen.
