@@ -6,19 +6,52 @@ const FOCUSED={blood:['blood_harvest','crimson_feast','heart_of_carnage'],fury:[
 const MIXED=[['blood','fury','crimson_rush','reapers_cadence','red_guillotine'],['fury','vitality','fervent_life','redline','fury_recovery'],['vitality','aegis','sanctuary','guardians_oath','last_bastion'],['aegis','magic','runic_shield','prismatic_rebound','arcane_bastion'],['magic','decay','hex_bolt','elemental_blight','grave_bloom'],['decay','blood','plague_spread','carrion_detonation','septic_wound']];
 const ELEMENTS={fire:['kindling','fire_spread','combustion'],frost:['deep_winter','frost_spread','shatter'],lightning:['overcharge','storm_mastery','chain_discharge']};
 const NEW_MIXED={fury_recovery:{name:'Fury Recovery',icon:'❤',description:'Prepared: once per encounter, attacking below 35% Health restores 8% maximum Health and grants 12% attack speed for 4 seconds.'},arcane_bastion:{name:'Arcane Bastion',icon:'⛨',description:'Prepared: absorbing damage with Barrier charges the next funded cast or Arcane Infusion hit to deal 30% Spell Power and grant Barrier equal to 3% Max HP + 6% Spell Power (6s cooldown).'}};
-const STATS={blood:[['pctAttack',.02,'Attack Power'],['bleedBonus',.02,'Bleed damage'],['pctSpeed',.01,'Attack Speed']],fury:[['flatAvoid',2,'Evasion'],['pctAttack',.02,'Attack Power'],['sunderDamage',.02,'damage against Sundered enemies']],aegis:[['pctArmor',.02,'Armor'],['startBarrier',1,'Barrier at the start of each encounter'],['pctLife',.02,'Health']],vitality:[['pctLife',.02,'Health'],['healthRegen',.0005,'Max HP regeneration per second']],magic:[['pctSpell',.02,'Spell Power'],['pctRegen',.01,'Mana Regeneration'],['pctMana',.02,'Maximum Mana']],decay:[['flatAvoid',2,'Evasion'],['rotBonus',.02,'Rot damage'],['rotDefense',.02,'enemy Defense reduction while Rot is active'],['pctRegen',.01,'Mana Regeneration']]};
+const STAT_NAMES={pctAttack:'Attack Power',pctArmor:'Defense',pctLife:'Maximum HP',pctSpell:'Spell Power',pctSpeed:'Attack Speed',pctMana:'Maximum Mana',pctRegen:'Mana Regeneration',critChance:'Critical Chance',flatAvoid:'Evasion Rating',guardChance:'Guard Chance',barrierPower:'Barrier Power',healingPower:'Healing Power',manaCostReduction:'Mana Cost Reduction',bleedBonus:'Bleed Damage',rotBonus:'Rot Damage',rotDefense:'enemy Defense reduction while Rot is active',sunderDamage:'damage against Sundered enemies',healthRegen:'Max HP regeneration per second'};
+const ROOT_STAT={blood:'pctAttack',fury:'pctAttack',vitality:'pctLife',aegis:'pctArmor',magic:'pctSpell',decay:'pctAttack'};
+const SKILL_STAT={
+ bleeding_edge:'bleedBonus',deep_cuts:'bleedBonus',executioner:'pctAttack',blood_drinker:'healingPower',sanguine_fury:'critChance',blood_transfer:'bleedBonus',blood_harvest:'healingPower',crimson_feast:'healingPower',heart_of_carnage:'pctAttack',accelerated_bleeding:'bleedBonus',cleave_mastery:'pctAttack',sanguine_reserve:'healingPower',
+ quick_hands:'pctSpeed',precision:'critChance',brutal_crit:'critChance',double_strike:'pctSpeed',adrenaline:'critChance',relentless:'sunderDamage',battle_tempo:'pctSpeed',relentless_assault:'sunderDamage',unchained_fury:'pctAttack',fan_of_blades:'pctSpeed',bow_pierce:'pctAttack',single_target_mastery:'pctAttack',
+ strong_heart:'pctLife',renewal:'healthRegen',last_stand:'pctLife',second_breath:'healingPower',life_bloom:'healingPower',second_pulse:'healthRegen',living_recovery:'healingPower',overflowing_life:'barrierPower',heart_of_the_wild:'pctLife',vital_pulse:'pctLife',living_force:'healingPower',grasping_roots:'pctLife',
+ guarded_block:'guardChance',barrier_pulse:'barrierPower',brace:'pctArmor',iron_skin:'pctArmor',fortified:'pctArmor',retaliation:'guardChance',steadfast_guard:'guardChance',stored_force:'pctArmor',unbreakable:'barrierPower',ward_echo:'barrierPower',sword_sweep:'pctArmor',mace_shockwave:'pctArmor',
+ arcane_focus:'pctSpell',mana_spring:'pctRegen',efficient_cast:'manaCostReduction',arcane_echo:'pctSpell',elemental_force:'pctSpell',spell_echo:'pctSpell',arcane_resonance:'pctSpell',arcane_surge:'pctRegen',arcane_mastery:'pctSpell',arcane_nova:'pctSpell',mana_convergence:'pctMana',kindling:'pctSpell',fire_spread:'pctSpell',combustion:'pctSpell',controlled_burn:'pctSpell',cinder_focus:'pctSpell',deep_winter:'pctSpell',frost_spread:'pctSpell',shatter:'pctSpell',frost_resonance:'pctSpell',glacial_echo:'pctSpell',overcharge:'pctSpell',storm_mastery:'pctSpell',chain_discharge:'pctSpell',static_focus:'pctSpell',storm_conductor:'pctSpell',
+ toxic_touch:'rotBonus',virulent_rot:'rotBonus',blight:'pctSpell',wasting_curse:'rotDefense',wither:'rotBonus',incubation:'rotBonus',lingering_rot:'rotBonus',corruption_cycle:'pctSpell',plagueheart:'rotBonus',contagious_touch:'rotBonus',corruption_nova:'rotBonus',soul_drain:'manaCostReduction',
+ crimson_rush:'critChance',reapers_cadence:'sunderDamage',red_guillotine:'pctAttack',fervent_life:'critChance',redline:'pctSpeed',fury_recovery:'healingPower',sanctuary:'barrierPower',guardians_oath:'guardChance',last_bastion:'barrierPower',runic_shield:'pctSpell',prismatic_rebound:'barrierPower',arcane_bastion:'pctSpell',hex_bolt:'pctSpell',elemental_blight:'pctSpell',grave_bloom:'pctSpell',plague_spread:'rotBonus',carrion_detonation:'pctAttack',septic_wound:'rotBonus'
+};
+const LANES={
+ blood:[['pctAttack','bleedBonus','pctAttack'],['healingPower','critChance','pctSpeed']],
+ fury:[['pctSpeed','critChance','critChance'],['pctSpeed','critChance','sunderDamage']],
+ vitality:[['pctLife','healthRegen','pctLife'],['healingPower','healingPower','healthRegen']],
+ aegis:[['guardChance','barrierPower','pctArmor'],['pctArmor','pctLife','guardChance']],
+ magic:[['pctSpell','pctRegen','manaCostReduction'],['pctSpell','pctSpell','pctMana']],
+ decay:[['pctAttack','rotBonus','pctSpell'],['rotDefense','pctRegen','rotBonus']]
+};
+const FOCUS_STAT={
+ blood:[['bleedBonus','healingPower','critChance'],['pctSpeed','critChance','pctAttack']],
+ fury:[['sunderDamage','flatAvoid','flatAvoid'],['critChance','pctAttack','sunderDamage']],
+ vitality:[['healthRegen','pctLife','healingPower'],['healingPower','pctArmor','barrierPower']],
+ aegis:[['guardChance','pctArmor','barrierPower'],['pctLife','pctSpell','guardChance']],
+ magic:[['pctSpell','pctRegen','manaCostReduction'],['pctMana','critChance','pctSpell']],
+ decay:[['pctAttack','rotDefense','rotDefense'],['pctSpell','manaCostReduction','pctSpell']]
+};
+const OUTER_STAT={
+ blood:{'-1':['pctAttack','bleedBonus'],'1':['critChance','pctSpeed']},
+ fury:{'-1':['critChance','pctAttack'],'1':['pctSpeed','flatAvoid']},
+ vitality:{'-1':['healingPower','pctLife'],'1':['pctLife','barrierPower']},
+ aegis:{'-1':['pctLife','guardChance'],'1':['pctSpell','barrierPower']},
+ magic:{'-1':['pctSpell','barrierPower'],'1':['pctSpell','pctRegen']},
+ decay:{'-1':['pctSpell','pctMana'],'1':['pctAttack','rotBonus']}
+};
 // Per-node values by layer; primary attributes remain rare +1 choices.
-const STAT_LAYERS={pctSpeed:[.01,.015,.02],critChance:[2,3,4],pctAttack:[.02,.03,.04],pctArmor:[.02,.03,.04],pctLife:[.02,.03,.04],flatAvoid:[2,3,4],pctSpell:[.02,.03,.04],pctRegen:[.01,.015,.02],pctMana:[.02,.03,.04],bleedBonus:[.02,.025,.03],rotBonus:[.02,.025,.03],rotDefense:[.02,.025,.03],sunderDamage:[.02,.025,.03],startBarrier:[1,2,3],healthRegen:[.0005,.00075,.001]};
-const ATTRIBUTE={blood:['str','Strength'],fury:['agi','Agility'],aegis:['end','Endurance'],vitality:['end','Endurance'],magic:['int','Intellect'],decay:['agi','Agility']};
+const STAT_LAYERS={pctSpeed:[.01,.015,.02],critChance:[2,3,4],pctAttack:[.02,.03,.04],pctArmor:[.02,.03,.04],pctLife:[.02,.03,.04],flatAvoid:[2,3,4],pctSpell:[.02,.03,.04],pctRegen:[.01,.015,.02],pctMana:[.02,.03,.04],guardChance:[1,1.5,2],barrierPower:[.02,.03,.04],healingPower:[.01,.015,.02],manaCostReduction:[.01,.015,.02],bleedBonus:[.02,.025,.03],rotBonus:[.02,.025,.03],rotDefense:[.02,.025,.03],sunderDamage:[.02,.025,.03],healthRegen:[.0005,.00075,.001]};
 const AFFINITY={blood:{description:'Attacks have a 42% chance to inflict Bleed. Bleed damage scales with the attack hit before critical damage (0.9s between primary applications). Secondary weapon hits have half chance and potency, with separate per-target cooldowns.'},fury:{description:'Direct attacks have a 15% chance to apply Sunder, reducing enemy base Defense by 4% per application, up to 20% from Fury (1s cooldown per enemy).'},aegis:{description:'Gain 5% Max HP + 8% Spell Power as Barrier at each encounter start. Barrier from Aegis, Orb and other sources stacks freely; remaining Barrier disappears after every encounter.'},vitality:{healthRegen:.0015,description:'Regenerate 0.15% maximum Health per combat second. Your basic regeneration is capped at 0.35% maximum Health per second before Recovery/Reserve specialisations.'},magic:{spell:.08,description:'Increase Spell Power by 8%. Spend 12 Mana for Arcane Infusion: empower the next 2 main attacks (6s cooldown, 7s duration). +85% Spell Power per hit with physical weapons, +35% with Wand, +95% with Staff. Elemental attunements keep Infusion and unlock elemental casts.'},decay:{description:'Your attacks can inflict Rot by spending 1 Mana. Rot damage scales with the hit and Spell Power. Unlock Mana, Mana Regeneration and Spell Power with any weapon for dark abilities. Secondary weapon hits have half application chance and potency, with separate per-target cooldowns and normal Mana costs.'}};
 const ARCANE={arcane_resonance:{name:'Arcane Resonance',description:'Increase Spell Power by 5% and maximum Mana by 3.',spell:.05,flatMana:3},arcane_surge:{name:'Arcane Surge',description:'Increase Spell Power by 8% and Mana Regeneration by 0.25 per second.',spell:.08,flatRegen:.25},arcane_mastery:{name:'Arcane Mastery',description:'Increase Spell Power by 12%. Arcane Infusion hits or paid Arcane weapon casts restore 2 Mana every 5 seconds.',spell:.12}};
 const STANDALONE={corruption_cycle:'On attack against at least three Rot stacks, spend 4 Mana to consume one stack and deal its remaining damage plus 20% Spell Power (5s cooldown).',fury_momentum:'Kills grant 15% attack speed for four seconds.',relentless_assault:'Attacks against Sundered enemies deal 20% bonus damage every 3 seconds.',unchained_fury:'Every fifth consecutive attack opens a 3-second window in which attacks deal 25% bonus damage.',combustion:'Fire casts apply Burn if needed; casts against burning enemies deal 20% Spell Power bonus damage every 4 seconds.',living_inferno:'Fire casts apply Burn if needed and deal 25% more damage against burning enemies.',shatter:'Frost casts apply Chill if needed; casts against chilled foes deal 25% Spell Power bonus damage every 4 seconds.',absolute_winter:'Frost casts apply Chill if needed and deal 20% more damage against chilled enemies.',storm_mastery:'Funded Lightning chains bounce up to six times for 68%, 53%, 40%, 29%, 21%, 15% damage. Returning chains detonate prior Static Marks.',fire_spread:'Funded Fire casts spread Burn to two additional foes at 65% strength for up to three seconds and deal immediate splash.'};
 function createGraph(catalog,definitionNodes=[]){
  const BASICS=root.WandererTalentGraph.BASICS;
  const FAMILIES=root.WandererTalentGraph.FAMILIES,MIXED=root.WandererTalentGraph.MIXED,ELEMENTS=root.WandererTalentGraph.ELEMENTS;
- const byPassive=new Map((catalog||[]).map(p=>[p.id,p])),byLegacy=new Map(definitionNodes.map(n=>[n.id,n])),nodes=[],attributeCounts={};let rotDefenseCount=0;
+ const byPassive=new Map((catalog||[]).map(p=>[p.id,p])),byLegacy=new Map(definitionNodes.map(n=>[n.id,n])),nodes=[];
  const add=n=>{if(nodes.some(x=>x.id===n.id))throw Error('Duplicate node '+n.id);nodes.push(Object.freeze(n));return n.id;};
- const stat=(id,family,requires,extra={})=>{let hash=0;for(const ch of id)hash=(hash*31+ch.charCodeAt(0))>>>0;const isRoot=id.startsWith('root_'),charisma=id==='outer_magic_1_1',attribute=!isRoot&&hash%13===0&&(attributeCounts[family]||0)<3,primary=charisma?['cha','Charisma']:ATTRIBUTE[family];if(attribute||charisma){if(!charisma)attributeCounts[family]=(attributeCounts[family]||0)+1;const amount=extra.tier===3?2:1;return add({id,kind:'stat',family,name:primary[1],description:'+'+amount+' '+primary[1]+'.',attribute:primary[0],attributeValue:amount,requires,...extra});}let choice=STATS[family][isRoot?0:hash%STATS[family].length];if(choice[0]==='rotDefense'){if(rotDefenseCount>=5)choice=STATS.decay[hash%2];else rotDefenseCount++;}const [key,baseValue,name]=choice,layer=Math.min(3,Math.max(1,Number.isInteger(extra.tier)?extra.tier:1)),value=STAT_LAYERS[key]?STAT_LAYERS[key][layer-1]:baseValue,display=['pctSpeed','pctRegen','pctMana','pctAttack','pctArmor','pctLife','pctSpell','bleedBonus','rotBonus','rotDefense','sunderDamage','healthRegen'].includes(key)?Number((value*100).toFixed(4))+'%':String(value),description=key==='rotDefense'?display+' less enemy Defense while Rot is active (maximum 10%).':'+'+display+' '+name+'.';return add({id,kind:'stat',family,name,description,[key]:value,requires,...extra});};
+ const stat=(id,family,requires,extra={})=>add({id,kind:'stat',family,requires,...extra});
  const skill=(id,kind,family,tier,requires,extra={})=>{const p=byPassive.get(id),old=byLegacy.get(id),special=NEW_MIXED[id],arcane=ARCANE[id],starter=['bleeding_edge','toxic_touch'].includes(id),{prerequisites,anyRequires,...meta}=extra;
   const gate=stat('gate_'+id,family,requires,{gateFor:id,tier,...(prerequisites?{prerequisites}:{}),...(anyRequires?{anyRequires}:{})});
   return add({id,kind,family,tier,requires:gate,maxRank:starter?p.max-1:(p?.max||old?.maxRank||1),name:special?.name||(id==='storm_mastery'?'Storm Mastery':null)||arcane?.name||p?.name||old?.name||id.split('_').map(s=>s[0].toUpperCase()+s.slice(1)).join(' '),description:starter?(id==='bleeding_edge'?'Increase the affinity Bleed application chance by 4 percentage points per rank. Bleed damage scales with the triggering hit before critical damage.':'Increase the affinity Rot application chance by 4 percentage points per rank. Each application costs 1 Mana and scales with the triggering hit and Spell Power.'):special?.description||STANDALONE[id]||arcane?.description||p?.description||old?.description||'',...(arcane?{spell:arcane.spell,...(arcane.flatMana?{flatMana:arcane.flatMana}:{}),...(arcane.flatRegen?{flatRegen:arcane.flatRegen}:{})}:p?{passiveId:id}:{effectId:id}),...((special?.icon||old?.icon)?{icon:special?.icon||old.icon}:{}),...((special||old?.advanced)?{advanced:true}:{}),...meta});};
@@ -105,25 +138,49 @@ function createGraph(catalog,definitionNodes=[]){
   add({id,kind:'adaptive',family:'magic',requires:'gate_'+id,name:id.split('_').map(s=>s[0].toUpperCase()+s.slice(1)).join(' '),description:DESIGN[id],maxRank:1,effectId:id,...meta,atlasStep:1});
   alternative('magic_side_'+lane+'_2',id);
  }
- // Deliberate secondary-stat allocation; do not rehash existing stat pools.
- // Keep root identities, primary attributes, all IDs and prerequisites.
- const assign=(family,tier,key,label,count,preferred,priority=[])=>{
-  const eligible=nodes.filter(n=>n.kind==='stat'&&n.family===family&&!n.pending&&!n.attribute&&!n.id.startsWith('root_')&&(n.tier||1)===tier&&!n.critChance&&(key!=='pctSpeed'||!n.pctSpeed));
-  const order=n=>{const p=priority.indexOf(n.id);return p>=0?-100+p:preferred.findIndex(k=>n[k]!==undefined)<0?100:preferred.findIndex(k=>n[k]!==undefined);};
-  eligible.sort((a,b)=>order(a)-order(b)||a.id.localeCompare(b.id));
-  if(eligible.length<count)throw Error('Insufficient secondary stat slots '+family+' '+tier+' '+key);
-  for(const n of eligible.slice(0,count)){
-   const i=nodes.indexOf(n),next={...n};
-   for(const k of Object.keys(STAT_LAYERS))delete next[k];
-   const value=STAT_LAYERS[key][tier-1],display=key==='critChance'?value+'%':Number((value*100).toFixed(4))+'%';
-   nodes[i]=Object.freeze({...next,name:label,description:'+'+display+' '+label+(key==='critChance'?' (percentage points).':'.'),[key]:value});
-  }
+ // Assign final live nodes only, after all architecture transformations.
+ const pairStats={
+  'blood_fury':{blood:['critChance','bleedBonus','pctAttack'],fury:['critChance','sunderDamage','pctAttack']},
+  'fury_vitality':{fury:['critChance','pctSpeed','critChance'],vitality:['healingPower','pctLife','healingPower']},
+  'vitality_aegis':{vitality:['barrierPower','pctLife','healingPower'],aegis:['barrierPower','guardChance','pctArmor']},
+  'aegis_magic':{aegis:['pctSpell','barrierPower','pctArmor'],magic:['pctSpell','barrierPower','pctSpell']},
+  'magic_decay':{magic:['pctSpell','pctRegen','manaCostReduction'],decay:['pctSpell','pctRegen','pctSpell']},
+  'decay_blood':{decay:['pctAttack','rotBonus','pctAttack'],blood:['pctAttack','bleedBonus','critChance']}
  };
- for(const tier of [1,2,3]){
-  assign('fury',tier,'critChance','Critical Chance',3,['sunderDamage','flatAvoid','pctAttack'],['gate_precision','gate_brutal_crit','gate_adrenaline']);
-  assign('blood',tier,'critChance','Critical Chance',2,['bleedBonus','pctSpeed','pctAttack'],['gate_sanguine_fury','gate_crimson_rush']);
-  assign('magic',tier,'critChance','Critical Chance',1,['pctMana','pctRegen','pctSpell']);
-  assign('fury',tier,'pctSpeed','Attack Speed',1,['sunderDamage','flatAvoid','pctAttack'],['gate_quick_hands']);
+ const gateOverrides={
+  gate_arcane_echo:'critChance',gate_spell_echo:'critChance',gate_storm_mastery:'pctSpell',
+  gate_reapers_cadence:'bleedBonus',gate_fury_recovery:'critChance',gate_sanctuary:'barrierPower',
+  gate_guardians_oath:'guardChance',gate_mana_convergence:'manaCostReduction'
+ };
+ function statKey(n){
+  const t=Math.min(3,Math.max(1,n.tier||1))-1,f=n.family,l=n.lane||0,id=n.id;
+  if(n.gateFor){const k=gateOverrides[id]||SKILL_STAT[n.gateFor];if(!k)throw Error('Missing skill stat '+n.gateFor);return k;}
+  if(id.startsWith('root_'))return ROOT_STAT[f];
+  if(n.outerSide!==undefined)return OUTER_STAT[f][n.outerSide][n.outerStep-1];
+  if(n.pair&&id.startsWith('mixed_path_'))return pairStats[n.pair.join('_')][f][t];
+  if(n.weaponFork){
+   const k=SKILL_STAT[n.weaponFork];if(!k)throw Error('Missing weapon stat '+n.weaponFork);
+   if(n.weaponFork==='sanguine_reserve')return id.endsWith('_1')?'pctLife':'healingPower';
+   if(n.weaponFork==='soul_drain')return id.endsWith('_1')?'pctRegen':'manaCostReduction';
+   if(n.weaponFork==='ward_echo')return id.endsWith('_1')?'pctSpell':'barrierPower';
+   if(n.weaponFork==='bow_pierce')return id.endsWith('_1')?'pctAttack':'critChance';
+   if(n.weaponFork==='fan_of_blades')return id.endsWith('_1')?'flatAvoid':'pctSpeed';
+   return k;
+  }
+  if(id.startsWith('basic_path_')||id.startsWith('basic_detour_'))return LANES[f][l][t];
+  if(id.startsWith('focus_branch_')||id.startsWith('focus_bridge_')||n.magicShared)return FOCUS_STAT[f][l][t];
+  if(n.element)return 'pctSpell';
+  throw Error('No intentional stat assignment for '+id);
+ }
+ let rotDefenseCount=0;
+ for(let i=0;i<nodes.length;i++){
+  const n=nodes[i];if(n.kind!=='stat')continue;
+  let key=statKey(n);if(key==='rotDefense'&&++rotDefenseCount>5)key='rotBonus';
+  const tier=Math.min(3,Math.max(1,n.tier||1)),value=STAT_LAYERS[key][tier-1],label=STAT_NAMES[key];
+  const points=['critChance','guardChance'].includes(key),rating=key==='flatAvoid';
+  const display=rating?String(value):points?value+'%':Number((value*100).toFixed(4))+'%';
+  const description=key==='rotDefense'?display+' less enemy Defense while Rot is active (maximum 10%).':'+'+display+' '+label+(points?' (percentage points).':'.');
+  nodes[i]=Object.freeze({...n,name:label,description,[key]:value});
  }
  const ids=new Set(nodes.map(n=>n.id));for(const n of nodes)for(const id of [...(n.requires?[n.requires]:[]),...(n.prerequisites||[]),...(n.anyRequires||[])])if(!ids.has(id))throw Error('Missing prerequisite '+id);
  return Object.freeze(nodes);

@@ -22,7 +22,7 @@ function power(s){
 function offhandEffect(item,stats=null){
  if(item?.slot!=='offhand'||!['Orb','Tome','Charm'].includes(item.subtype))return null;
  const hp=Math.max(0,Number(stats?.maxhp)||0),sp=Math.max(0,Number(stats?.spellPower)||0);
- const ward=Math.max(0,Number(stats?.wardBonus)||0),known=!!stats;
+ const ward=Math.max(0,(Number(stats?.wardBonus)||0)+(Number(stats?.barrierPower)||0)),known=!!stats;
  const two=(n)=>Math.round(n*100)/100;
  const type=item.subtype,trait=item.v013Trait||null;
  if(type==='Orb'){
@@ -108,7 +108,7 @@ function totalStats(equipment,ownedRunes,equippedRuneIds,{isTwoHanded,FIELDS,ite
  // continue to use their existing formulas and global combat ceilings.
  s.crit=Math.min(100,s.crit+Math.min(8,Math.max(0,gearBonus('critBonus'))));
  if(s.mana)s.manaRegen+=Math.min(3,Math.max(0,gearBonus('manaRegenBonus')));
- s.wardBonus=Math.min(.3,Math.max(0,gearBonus('wardBonus')));
+ s.wardBonus=Math.min(.3,Math.max(0,gearBonus('wardBonus')));s.barrierPower=0;s.healingPower=0;s.manaCostReduction=0;
  if(off?.subtype==='Shield')s.blockChance=Math.min(48,s.blockChance+Math.min(8,Math.max(0,gearBonus('blockBonus'))));
  s.blockReduction=off?.subtype==='Shield'?(main?.subtype==='Mace'?.67:main?.subtype==='Sword'?.62:.58):0;
  s.lootQuality=Math.min(10,Math.round(Math.max(0,s.cha-5)*.09*10)/10);
@@ -119,7 +119,7 @@ function totalStats(equipment,ownedRunes,equippedRuneIds,{isTwoHanded,FIELDS,ite
  result.attacksPerSec=Math.min(4.2,result.attacksPerSec);result.crit=Math.min(100,Math.max(0,result.crit||0));result.power=power(result);
  return result;
 }
-const STAT_KEYS=Object.freeze(['str','agi','int','end','cha','attack','defense','maxhp','attacksPerSec','crit','blockChance','mana','manaRegen','spellPower','evasionRating','power']);
+const STAT_KEYS=Object.freeze(['str','agi','int','end','cha','attack','defense','maxhp','attacksPerSec','crit','blockChance','mana','manaRegen','spellPower','evasionRating','barrierPower','healingPower','manaCostReduction','power']);
 function breakdown(equipment,ownedRunes,equippedRuneIds,context,current=null){
  const progress=context.state?.automaticTalents||root.WandererAutomaticTalents.create();
  // The talent-free breakdown is a temporary read-only projection.

@@ -192,7 +192,7 @@ function legendaryRealmStart(r){
 function legendaryTick(r,dt){
  const t=ports.legendaryRuntime(r);
  ports.legendaryRealmStart(r);
- if(ports.legendaryHas('heartroot-carapace')&&r.hp>0&&r.hp<r.maxhp*.7){const budget=Math.max(0,r.maxhp*.10-(t.heartrootHealed||0));if(budget>0){const healed=ports.setHeal(r,Math.min(budget,r.maxhp*(ports.legendaryEmpowered(r,'heartroot-carapace')?.003:.002)*dt));if(healed>0){t.heartrootHealed=(t.heartrootHealed||0)+healed;ports.phase6Proc(r,'Legendary: heartroot-carapace');}}}
+ if(ports.legendaryHas('heartroot-carapace')&&r.hp>0&&r.hp<r.maxhp*.7){const budget=Math.max(0,r.maxhp*.10-(t.heartrootHealed||0));if(budget>0){const healed=ports.setHeal(r,Math.min(budget/(1+Math.max(0,Number(r.stats?.healingPower)||0)),r.maxhp*(ports.legendaryEmpowered(r,'heartroot-carapace')?.003:.002)*dt));if(healed>0){t.heartrootHealed=(t.heartrootHealed||0)+healed;ports.phase6Proc(r,'Legendary: heartroot-carapace');}}}
 }
 
 
@@ -204,7 +204,7 @@ function setReady(r,name,seconds){
 
 function setBarrier(r,amount){
  // One shared uncapped Barrier pool. The next encounter clears any remainder.
- const before=Math.max(0,Number(r.barrier)||0),value=Number(amount),ward=Number(r.stats?.wardBonus)||0;
+ const before=Math.max(0,Number(r.barrier)||0),value=Number(amount),ward=(Number(r.stats?.wardBonus)||0)+(Number(r.stats?.barrierPower)||0);
  const gained=Number.isFinite(value)&&value>0?Math.max(0,value*(1+ward)):0;
  r.barrier=before+gained;
  return gained;
@@ -218,7 +218,7 @@ function setHeal(r,amount,reserveRelease=false){
  const healingReduced=(r.playerHealingDebuffUntil||0)>ports.setNow(r);
  const bossHealingFactor=globalThis.WandererV013BossModifiers?.healingFactor(r)??1;
  const conditionHealingFactor=globalThis.WandererV013ExpeditionConditions?.healingFactor(r)??1;
- const heal=Math.max(0,Number(amount)||0)*(healingReduced ? 0.60 : 1)*bossHealingFactor*conditionHealingFactor,before=r.hp;
+ const heal=Math.max(0,Number(amount)||0)*(reserveRelease?1:1+Math.max(0,Number(r.stats?.healingPower)||0))*(healingReduced ? 0.60 : 1)*bossHealingFactor*conditionHealingFactor,before=r.hp;
  r.hp=Math.min(r.maxhp,r.hp+heal);
  const actual=r.hp-before,overheal=heal-actual;if(!reserveRelease&&overheal>0){if(prepared('lifeweaver'))r.lifeCharge=true;if(before>=r.maxhp&&learned('deep_reserves')&&!r.reserveSaved){r.reserveSaved=true;r.deepReserve=Math.min(overheal,r.maxhp*.08);}}ports.phase6Metric(r,'healing',actual);
  if(!reserveRelease&&heal>0&&ports.legendaryReady(r,'charm-of-the-dawnstar'))ports.legendaryRuntime(r).reserve=Math.min(r.maxhp*.04,heal);
@@ -226,7 +226,7 @@ function setHeal(r,amount,reserveRelease=false){
   const temp=ports.setRuntime(r),second=Math.floor(ports.setNow(r));
   if(temp.regenBarrierSecond!==second){temp.regenBarrierSecond=second;temp.regenBarrierSecondTotal=0;}
   const allowed=Math.max(0,Math.min(overheal*.25,r.maxhp*.01-temp.regenBarrierSecondTotal,r.maxhp*.1-temp.regenBarrier));
-  if(allowed>0){const gained=ports.setBarrier(r,allowed);temp.regenBarrier+=gained;temp.regenBarrierSecondTotal+=gained;}
+  if(allowed>0){const ward=1+Math.max(0,(Number(r.stats?.wardBonus)||0)+(Number(r.stats?.barrierPower)||0));const gained=ports.setBarrier(r,allowed/ward);temp.regenBarrier+=gained;temp.regenBarrierSecondTotal+=gained;}
  }
  if(actual>0&&ports.isPhase1Run()&&ports.phase1Build)WandererV012Buildcraft.onHeal(ports.phase1Build,ports.phase2Context(r),actual);
  return actual;
@@ -428,7 +428,8 @@ function offhandOnMainHit(r,hpDamage){
   }
  }
 }
-function v013FundedCost(baseCost){if(baseCost<=0)return 0;const adjusted=Math.max(1,Math.ceil(baseCost*(root.WandererV013ExpeditionBoons?.costFactor(ports.state.run)||1)));return v013Traits().includes('efficient')?Math.max(1,adjusted-Math.max(1,Math.floor(adjusted*.1))):adjusted;}
+function talentManaCost(amount,r){if(amount<=0)return 0;const reduction=Math.min(.25,Math.max(0,Number(r?.stats?.manaCostReduction)||0));return Math.max(1,Math.round(amount*(1-reduction)*100)/100);}
+function v013FundedCost(baseCost,r=ports.state.run){if(baseCost<=0)return 0;const adjusted=Math.max(1,Math.ceil(baseCost*(root.WandererV013ExpeditionBoons?.costFactor(r)||1))),cost=v013Traits().includes('efficient')?Math.max(1,adjusted-Math.max(1,Math.floor(adjusted*.1))):adjusted;return talentManaCost(cost,r);}
 function v013SpellMultiplier(r){const nodes=ports.state.automaticTalents?.nodes||[],element=ports.phase1Build?.element,enemy=r.enemy;return (element==='fire'&&nodes.includes('fire_focus')?.9:1)*(element==='frost'&&nodes.includes('frost_focus')&&enemy.slowTime>0?1.2:1)*(element==='lightning'&&nodes.includes('lightning_focus')?1.35:1)*(element==='fire'&&nodes.includes('living_inferno')&&enemy.dots?.burn?.length?1.25:1)*(element==='frost'&&nodes.includes('absolute_winter')&&enemy.slowTime>0?1.2:1);}
 function v013LightningChain(r){return ports.isPhase1Run()&&ports.phase1Build?.element==='lightning'&&(WandererV012Buildcraft.rank(ports.phase1Build,'overcharge')>0||ports.state.automaticTalents?.nodes?.includes('storm_mastery'))&&!ports.state.automaticTalents?.nodes?.includes('lightning_focus');}
 function v013LightningChainFactors(){
@@ -585,7 +586,7 @@ function weaponAttack(r,offhandStrike=false){
  // An Off-Hand Dagger uses the same physical scaling as Daggers, before its 50% penalty.
  const kind=weapon?.subtype==='Off-Hand Dagger'?'Daggers':weapon?.subtype||'Unarmed',baseCost=kind==='Staff'?13:kind==='Wand'?9:0;
  const normalCost=baseCost&&ports.isPhase1Run()&&ports.phase1Build?.element?WandererV012Buildcraft.nextCost(ports.phase1Build,baseCost):baseCost;
- const cost=v013FundedCost(normalCost);
+ const cost=v013FundedCost(normalCost,r);
  let damage=0,element=null,cast=false;
  if(caster&&r.mp<cost&&!r.wisdomUsed&&signature('wisdom')){r.wisdomUsed=true;r.mp=cost;ports.addLog('Wisdom funded the missing Mana.','spell');}
  if(caster&&r.mp>=cost){
@@ -839,7 +840,7 @@ function updateFight(){
    if(resolveBossPulseLethal(r,s))return;
   }
  }
- if(s.caster&&r.mp<v013FundedCost(s.main.subtype==='Staff'?13:9))ports.phase6Metric(r,'manaStarvedSeconds',dt);
+ if(s.caster&&r.mp<v013FundedCost(s.main.subtype==='Staff'?13:9,r))ports.phase6Metric(r,'manaStarvedSeconds',dt);
  if(r.encounterTraitId==='unhallowed_regrowth'&&globalThis.WandererV013EncounterTraits){
   const healed=globalThis.WandererV013EncounterTraits.regenTick(r);
   if(healed>0){ports.phase6Metric(r,'traitRegrowthHealing',healed);ports.addLog('Unhallowed Regrowth restores '+healed+' enemy HP.','critical');}
@@ -996,8 +997,8 @@ function updateFight(){
 
 function phase2Context(r){
  const e=r.enemy,now=ports.setNow(r);
- return {player:r,enemy:e,traits:v013Traits(),now,random:ports.gameRandom,base:r.lastBaseHit||r.stats.attack,power:r.stats.spellPower||0,healTriggersPassives:true,healingMultiplier:(r.playerHealingDebuffUntil||0)>now?.6:1,waveKey:r.phase1Plane+':'+r.enc,
- spendMana(amount){const cost=Math.max(0,Math.ceil(amount*(root.WandererV013ExpeditionBoons?.costFactor(r)||1)));if(r.mp<cost)return false;r.mp-=cost;ports.phase6Metric(r,'manaSpent',cost);if(cost>0)offhandPaidAction(r);return true;},
+ return {player:r,enemy:e,traits:v013Traits(),now,random:ports.gameRandom,base:r.lastBaseHit||r.stats.attack,power:r.stats.spellPower||0,healTriggersPassives:true,healingMultiplier:((r.playerHealingDebuffUntil||0)>now?.6:1)*(1+Math.max(0,Number(r.stats?.healingPower)||0))*(root.WandererV013BossModifiers?.healingFactor(r)??1)*(root.WandererV013ExpeditionConditions?.healingFactor(r)??1),waveKey:r.phase1Plane+':'+r.enc,
+ spendMana(amount){const cost=talentManaCost(Math.max(0,Math.ceil(amount*(root.WandererV013ExpeditionBoons?.costFactor(r)||1))),r);if(r.mp<cost)return false;r.mp-=cost;ports.phase6Metric(r,'manaSpent',cost);if(cost>0)offhandPaidAction(r);return true;},
  dot(kind,potency,options={}){
   if(!['bleed','burn'].includes(kind))return;
   ports.phase6Proc(r,kind+' application');const values=e.dots[kind]||(e.dots[kind]=[]);
@@ -1051,7 +1052,7 @@ function phase2MagicTick(r){
  // for the same Mana pool as weapon casts and elemental offhand spells.
  if(WandererV012Buildcraft.infusionReady(b,ctx.now)){
   const config=WandererV012Buildcraft.infusionConfig(b,r.stats.main?.subtype);
-  const cost=v013FundedCost(WandererV012Buildcraft.nextCost(b,config.cost));
+  const cost=v013FundedCost(WandererV012Buildcraft.nextCost(b,config.cost),r);
   if(r.mp>=cost){
    r.mp-=cost;ports.phase6Metric(r,'manaSpent',cost);ports.phase6Metric(r,'infusionActivations',1);
    offhandPaidAction(r);
@@ -1065,7 +1066,7 @@ function phase2MagicTick(r){
  // Only attuned Fire/Frost/Lightning cast extra spells with physical weapons.
  if(mode==='unattuned'||mode==='arcane'||r.stats.caster||!WandererV012Buildcraft.canCast(b))return;
  if(ctx.now-b.runtime.lastSpellAt<2.5)return;
- const cost=v013FundedCost(WandererV012Buildcraft.nextCost(b,8));if(r.mp<cost)return;
+ const cost=v013FundedCost(WandererV012Buildcraft.nextCost(b,8),r);if(r.mp<cost)return;
  b.runtime.lastSpellAt=ctx.now;ports.phase6Metric(r,'manaSpent',cost);ports.phase6Metric(r,'fundedCasts',1);r.mp-=cost;offhandPaidAction(r);ctx.power=r.stats.spellPower;ctx.amp=1;ctx.funded=true;
  ports.combatEffect('Wand',({fire:'burn',frost:'slow',lightning:'shock'})[b.element]);
  if(v013Traits().includes('ward')&&ports.setReady(r,'v013Ward',6))ports.setBarrier(r,r.maxhp*.02);

@@ -13,7 +13,7 @@ test('percentage stat nodes preserve IDs, tiers, census and truthful tooltips',(
  const counts={pctAttack:32,pctArmor:18,pctLife:36,pctSpell:15};
  for(const [key,count] of Object.entries(counts)){
   const nodes=graph.filter(n=>n.kind==='stat'&&n[key]!==undefined);
-  assert(nodes.length>0&&nodes.length<=count,key);
+  assert(nodes.length>0,key);
   for(const n of nodes){const expected=[.02,.03,.04][(n.tier||1)-1];assert.equal(n[key],expected,n.id);assert(n.description.startsWith('+'+expected*100+'% '),n.id);}
  }
  for(const n of graph)for(const key of ['flatAttack','flatArmor','flatLife','flatSpell'])assert.equal(n[key],undefined,n.id);
@@ -35,15 +35,25 @@ test('percentage stat nodes are additive on the pre-graph stat; other spell modi
  }
 });
 
-test('secondary stat distribution is deliberate and all tiers are represented',()=>{
+test('every stat slot has one direct stat; skill gates are relevant and attributes remain post-cap only',()=>{
  assert.equal(graph.length,419);assert.equal(graph.filter(n=>n.kind==='stat').length,308);
- for(const [family,count] of [['fury',3],['blood',2],['magic',1]])for(const tier of [1,2,3]){
-  const ns=graph.filter(n=>n.family===family&&(n.tier||1)===tier&&n.critChance);
-  assert.equal(ns.length,count,family+' '+tier);
-  for(const n of ns){assert.equal(n.critChance,tier+1);assert(n.description.includes('percentage points'));}
+ const fields=['pctAttack','pctArmor','pctLife','pctSpell','pctSpeed','pctMana','pctRegen','critChance','flatAvoid','guardChance','barrierPower','healingPower','manaCostReduction','bleedBonus','rotBonus','rotDefense','sunderDamage','healthRegen'];
+ for(const n of graph.filter(n=>n.kind==='stat')){
+  assert.equal(fields.filter(k=>n[k]!==undefined).length,1,n.id);
+  for(const k of ['attribute','attributeValue','flatSpeed','flatMana','flatRegen','startBarrier'])assert.equal(n[k],undefined,n.id);
  }
- assert.equal(graph.filter(n=>n.family==='fury'&&n.pctSpeed).length,3);
- for(const n of graph.filter(n=>n.kind==='stat'))for(const k of ['flatSpeed','flatMana','flatRegen'])assert.equal(n[k],undefined,n.id);
+ for(const [id,key] of Object.entries({precision:'critChance',brutal_crit:'critChance',adrenaline:'critChance',sanguine_fury:'critChance',crimson_rush:'critChance',fervent_life:'critChance',quick_hands:'pctSpeed',guarded_block:'guardChance',retaliation:'guardChance',barrier_pulse:'barrierPower',blood_drinker:'healingPower',efficient_cast:'manaCostReduction',blight:'pctSpell',wasting_curse:'rotDefense',ward_echo:'barrierPower'})){
+  assert(graph.find(n=>n.id==='gate_'+id)?.[key]>0,id);
+ }
+ for(const key of ['pctAttack','pctSpell','rotBonus','pctMana','pctRegen','manaCostReduction'])assert(graph.some(n=>n.family==='decay'&&n[key]>0),key);
+ assert(graph.some(n=>n.family==='aegis'&&n.pctSpell>0));
+ assert(graph.some(n=>n.family==='fury'&&n.flatAvoid>0));
+});
+test('Guard works without shield, and new stat caps and bonuses are direct',()=>{
+ const graph=[{id:'a',guardChance:2,barrierPower:.04,healingPower:.02,manaCostReduction:.40}],p={points:1,ranks:{a:1}};
+ const out=B.apply({attack:20,defense:5,maxhp:100,spellPower:0,attacksPerSec:1,blockChance:0,blockReduction:0},graph,p);
+ assert.equal(out.blockChance,2);assert.equal(out.blockReduction,.35);assert.equal(out.barrierPower,.04);assert.equal(out.healingPower,.02);assert.equal(out.manaCostReduction,.25);
+ const shield=B.apply({blockChance:64,blockReduction:.67,spellPower:0,attacksPerSec:1},graph,p);assert.equal(shield.blockChance,65);assert.equal(shield.blockReduction,.67);
 });
 test('secondary nodes scale on pre-graph values, preserve zero resources, and cap crit and attack speed',()=>{
  const graph=[

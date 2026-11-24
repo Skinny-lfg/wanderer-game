@@ -77,18 +77,18 @@ function scoreNode(n,plan,active,context={}){
  // not legacy flat units. HP uses a 250-point reference to retain its role weight.
  const ability=n.description||'';
  if(focus==='spell'||focus==='rot'){
-  score+=(n.pctSpell||0)*100*1.9+((n.pctRegen||0)*5+(n.flatRegen||0))*13+((n.pctMana||0)*100+(n.flatMana||0))*.65+(n.critChance||0)*.8+(n.spell||0)*30;
+  score+=(n.pctSpell||0)*100*1.9+((n.pctRegen||0)*5+(n.flatRegen||0))*13+((n.pctMana||0)*100+(n.flatMana||0))*.65+(n.critChance||0)*.8+(n.manaCostReduction||0)*200+(n.spell||0)*30;
   if(/Mana|Spell|Arcane|Rot|cast|Intellect/i.test(ability))score+=2.5;
   if(/Attack Power|Strength|Endurance/i.test(ability))score-=1;
   if(n.attribute==='int')score+=3.1;
  }
  if(focus==='bleed'||focus==='speed'){
-  score+=(n.pctAttack||0)*100*1.8+(n.pctSpeed||0)*1.3*65+(n.critChance||0)*1.6+(n.attack||0)*30;
+  score+=(n.pctAttack||0)*100*1.8+(n.pctSpeed||0)*1.3*65+(n.critChance||0)*1.6+(n.healingPower||0)*100+(n.attack||0)*30;
   if(/Bleed|Sunder|attack speed|Attack Power|Strength|Agility|critical/i.test(ability))score+=2.6;
   if(n.attribute==='str'||n.attribute==='agi')score+=3;
  }
  if(focus==='defense'||active.includes('aegis')||active.includes('vitality')){
-  score+=(n.pctLife||0)*250*.35+(n.pctArmor||0)*100*1.2+(n.startBarrier||0)*1.5+
+  score+=(n.pctLife||0)*250*.35+(n.pctArmor||0)*100*1.2+(n.guardChance||0)*2+(n.barrierPower||0)*150+(n.healingPower||0)*180+(n.pctSpell||0)*80+
    (n.healthRegen||0)*1200;
   if(/Barrier|Armor|Defense|Regenerat|Health|Endurance|block/i.test(ability))score+=2.4;
   if(n.attribute==='end')score+=3;
