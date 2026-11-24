@@ -1,0 +1,19 @@
+name: Stage 6.47 — Grave Bloom contracts (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths: ['.github/workflows/v013-stage647-grave-bloom-contract.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: |
+          node --test tests/v013-stage647-grave-bloom-lab.test.cjs
+          git diff --exit-code
