@@ -27,7 +27,7 @@ test('all arms compile and only paid primary stacks survive repeated ticks',()=>
 test('native cap and per-application damage are preserved',()=>{
  const a=fixture('baseline',['toxic_touch']),b=fixture('persistent',['toxic_touch']);
  for(const h of [a,b])for(let i=0;i<9;i++)h.B.applyRot(h.b,h.c,20+i,'paid_primary_toxic_touch');
- assert.deepEqual(b.e.v012Rot,a.e.v012Rot);assert.equal(b.e.v012Rot.length,6);assert.equal(b.m.persistentPrimaryCapReached,1);
+ assert.deepEqual(b.e.v012Rot,a.e.v012Rot);assert.equal(b.e.v012Rot.length,6);assert.equal(b.m.decayPrimaryPaidPersistentPrimaryCapReached,1);
 });
 test('Cycle order isolated and three-stack burst is finite with unchanged mana and cooldown',()=>{
  for(const mode of ['persistent','persistent-after','persistent-burst']){
@@ -38,7 +38,7 @@ test('Cycle order isolated and three-stack burst is finite with unchanged mana a
   assert.equal(h.e.v012Rot.length,mode==='persistent'?3:mode==='persistent-after'?2:0);
   assert.equal(h.r.mp,mode==='persistent'?99:95);
   if(mode!=='persistent')assert.equal(h.b.cooldowns.corruptionCycle,6);
-  if(mode==='persistent-burst'){assert.equal(h.m.persistentBurstStacksConsumed,3);assert(Number.isFinite(h.m.corruptionCycleRawBurst));}
+  if(mode==='persistent-burst'){assert.equal(h.m.decayPrimaryPaidPersistentBurstStacksConsumed,3);assert(Number.isFinite(h.m.corruptionCycleRawBurst));}
  }
  const h=fixture('persistent-burst',['toxic_touch','corruption_cycle']);
  h.c.random=()=>1;h.e.v012Rot=Array.from({length:3},()=>({damage:10,remaining:5,primaryPaid:true}));
