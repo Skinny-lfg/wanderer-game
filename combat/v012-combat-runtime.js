@@ -69,6 +69,7 @@ function tickDots(enemy){
  enemy.dots[key]=active.filter(d=>d.remaining>0);
  }
  ports.synchronizeDots(enemy);
+ if(!enemy.bleedStacks)enemy.carrionCharge=0;
  return total;
 }
 
@@ -321,20 +322,20 @@ function setSoulHeal(r,effectiveBonusDamage){
  }
 }
 
-function applyAffinity(effect,enemy,s,mult=1,baseDamage=0){
+function applyAffinity(effect,enemy,s,mult=1,baseDamage=0,statusScale=1){
  if(!effect)return;
  const bonus=s.bonus||{},ratios={bleed:.18,burn:.17};
  const r=ports.state.run;
  if(ratios[effect]){
   if(!enemy.dots)enemy.dots={bleed:[],burn:[]};
   const src=enemy.dots[effect]||[];
-  const potency=Math.max(1,Math.round((baseDamage||s.spellPower||s.attack||5)*ratios[effect]*mult*(1+(bonus[effect+'Bonus']||0))));
+  const potency=Math.max(1,Math.round((baseDamage||s.spellPower||s.attack||5)*ratios[effect]*mult*statusScale*(1+(bonus[effect+'Bonus']||0))));
   if(src.length>=12)src.shift();
   src.push({damage:effect==='bleed'&&ports.phase1Build?Math.max(1,Math.round(WandererV012Buildcraft.bleedDamage(ports.phase1Build,potency))):potency,remaining:3});enemy.dots[effect]=src;ports.synchronizeDots(enemy);
   return;
  }
- if(effect==='slow')enemy.slowTime=Math.max(enemy.slowTime,2.9);
- if(effect==='sunder')enemy.def=Math.max(Math.round(enemy.baseDef*.25),enemy.def-Math.max(1,Math.round(enemy.baseDef*(bonus.sunderBonus||.1))));
+ if(effect==='slow')enemy.slowTime=Math.max(enemy.slowTime||0,2.9*statusScale);
+ if(effect==='sunder')enemy.def=Math.max(Math.round(enemy.baseDef*.25),enemy.def-Math.max(1,Math.round(enemy.baseDef*(bonus.sunderBonus||.1)*statusScale)));
  if(!r)return;
  if(effect==='drain'){
   const healed=ports.setHeal(r,Math.max(1,Math.round((baseDamage||s.spellPower||s.attack||5)*.16*mult*(1+(bonus.drainBonus||0)))));
@@ -428,6 +429,57 @@ function v013SecondaryHit(r,enemy,amount){
  if(actual>0)ports.phase6Metric(r,'secondaryTargetHits',1);
  return actual;
 }
+function v013CarrionDetonation(r,enemy,real){
+ const b=ports.phase1Build;
+ if(!ports.isPhase1Run()||!b||!WandererV012Buildcraft.rank(b,'carrion_detonation')||!(real>0))return;
+ const bleed=(enemy.dots?.bleed||[]).filter(d=>d.remaining>0),rot=(enemy.v012Rot||[]).filter(d=>d.remaining>0);
+ if(!bleed.length||!rot.length){enemy.carrionCharge=0;return;}
+ const now=ports.setNow(r);
+ if(now<(enemy.carrionReady||0))return;
+ const threshold=Math.max(10,r.stats.attack*1.5);
+ if(!(enemy.carrionCharge>0))ports.phase6Metric(r,"carrionMarks",1);
+ enemy.carrionCharge=(enemy.carrionCharge||0)+real;
+ ports.phase6Metric(r,"carrionChargeDamage",real);
+ if(enemy.carrionCharge<threshold)return;
+ enemy.carrionCharge=0;enemy.carrionReady=now+1.5;
+ ports.phase6Metric(r,"carrionBursts",1);
+ ports.phase6Proc(r,'Carrion Detonation: burst');
+ const amount=threshold*0.75;
+ const live=(r.enemies||[r.enemy]).filter(e=>e&&e.hp>0);
+ const sourceBleed=bleed.filter(d=>!d.spread&&!d.transferred).sort((a,b)=>b.damage-a.damage)[0];
+ const sourceRot=rot.filter(d=>!d.spread&&!d.transferred).sort((a,b)=>b.damage-a.damage)[0];
+ for(const target of live){
+  const before=target.hp,cap=target.maxhp*(target.boss?.04:target.miniboss?.08:.25);
+  const burst=Math.max(1,Math.min(cap,amount*(target===enemy?.35:1)));
+  if(target===enemy){const prev=r.enemy;try{r.enemy=target;ports.setDirectEnemyDamage(r,burst,"Carrion Detonation");}finally{r.enemy=prev;}}
+  else v013SecondaryHit(r,target,burst);
+  ports.phase6Metric(r,"carrionBurstDamage",Math.max(0,before-Math.max(0,target.hp)));
+  if(target!==enemy&&target.hp>0){
+   if(sourceBleed){target.dots??={};target.dots.bleed??=[];if(target.dots.bleed.length<12){target.dots.bleed.push({damage:Math.max(1,Math.round(sourceBleed.damage*.5)),remaining:Math.min(3,sourceBleed.remaining),spread:true,secondaryOrigin:"carrion"});ports.synchronizeDots(target);ports.phase6Metric(r,"carrionSpreadBleed",1);}}
+   if(sourceRot){target.v012Rot??=[];const max=b.runtime?.specializations?.includes("rot_focus")?3:6;if(target.v012Rot.length<max){target.v012Rot.push({damage:Math.max(1,Math.round(sourceRot.damage*.5)),remaining:Math.min(3,sourceRot.remaining),ticks:0,spread:true,secondaryOrigin:"carrion"});ports.phase6Metric(r,"carrionSpreadRot",1);}}
+  }
+ }
+}
+function v013SecondaryWeaponStatus(r,e,base,real){
+ if(!ports.isPhase1Run()||!ports.phase1Build||!(real>0))return;
+ if(!e.bleedStacks||!e.v012Rot?.length)e.carrionCharge=0;
+ if(e.hp>0){
+  const previous=r.enemy;
+  try{r.enemy=e;const ctx=phase2Context(r);ctx.base=base;ctx.metric=(key,n)=>ports.phase6Metric(r,key,n);WandererV012Buildcraft.onSecondaryWeaponStatus(ports.phase1Build,ctx,.5,.5);}
+  finally{r.enemy=previous;}
+  const s=r.stats,kind=s.main?.subtype;
+  // Enemy-facing status affixes only; no self-heals, Barrier or recursive damage procs.
+  const apply=(effect,chance,mult)=>{
+   if(!['bleed','burn','slow','sunder'].includes(effect)||ports.gameRandom()>=chance*.5)return;
+   ports.applyAffinity(effect,e,s,mult,real,.5);
+   const d=e.dots?.[effect]?.at(-1);if(d&&['bleed','burn'].includes(effect))d.secondaryOrigin='weapon';
+   ports.phase6Metric(r,'secondaryEquipmentStatusApplied',1);
+  };
+  apply(s.main?.effect,Math.min(1,ports.affinityProcChance(kind)),kind==='Two-Handed'?1.7:kind==='Daggers'?.7:1);
+  if(ports.isMagicOffhand(s.off)&&s.off?.magic)apply(s.off.magic,.45,.85);
+ }
+ v013CarrionDetonation(r,e,real);
+}
 function groupSecondaryDamage(r,base,factors,label,physical=false){
  if(!r.enemies||r.enemies.length<2)return 0;
  const targets=r.enemies.filter(enemy=>enemy!==r.enemy&&enemy.hp>0).slice(0,factors.length);let hit=0;
@@ -436,7 +488,8 @@ function groupSecondaryDamage(r,base,factors,label,physical=false){
    ?Math.max(1,Math.round(r.stats.attack*({'Two-Handed':1.70,Sword:1.12,Mace:1.4,Bow:1.08,Daggers:.80}[r.stats.main?.subtype]||1))-WandererV012Buildcraft.enemyDefense(ports.phase1Build,enemy))
    :base)*factors[i]));
   if(enemy.baseDef>0&&enemy.def<enemy.baseDef)amount=Math.max(1,Math.round(amount*(1+(ports.phase1Build?.runtime?.talentBonuses?.sunderDamage||0))));
-  v013SecondaryHit(r,enemy,amount);
+  const actual=v013SecondaryHit(r,enemy,amount);
+  if(physical)v013SecondaryWeaponStatus(r,enemy,amount,actual);
   hit++;
  }
  if(hit&&label.includes('Piercing Arrow'))ports.phase6Metric(r,'pierced',hit);
@@ -517,6 +570,7 @@ function prepared(id){return ports.state.automaticTalents?.prepared===id&&learne
 function triggered(r,id){r.outerUses??={};r.outerUses[id]=(r.outerUses[id]||0)+1;ports.phase6Proc(r,id);}
 function weaponAttack(r,offhandStrike=false){
  const s=r.stats,e=r.enemy,weapon=offhandStrike?s.off:s.main,off=s.off,caster=!offhandStrike&&s.caster,now=ports.setNow(r),temp=ports.setRuntime(r);
+ if(!e.bleedStacks||!e.v012Rot?.length)e.carrionCharge=0;
  const lt=ports.legendaryRuntime(r),focus=!!lt.focusReady,armorReady=!!lt.armorReady;lt.focusReady=false;lt.armorReady=false;
  // An Off-Hand Dagger uses the same physical scaling as Daggers, before its 50% penalty.
  const kind=weapon?.subtype==='Off-Hand Dagger'?'Daggers':weapon?.subtype||'Unarmed',baseCost=kind==='Staff'?13:kind==='Wand'?9:0;
@@ -635,9 +689,10 @@ function weaponAttack(r,offhandStrike=false){
    const dual=['Daggers','Off-Hand Dagger'].includes(off?.subtype);
    ports.phase2WeaponAttack(r,base,critical,cast,dual&&(r.offhandCadence||0)===1);
   }
+ if(!cast)v013CarrionDetonation(r,e,real);
  if(!offhandStrike&&kind==='Two-Handed'){const factor=ports.state.automaticTalents?.nodes?.includes('cleave_mastery')?.6:.4;groupSecondaryDamage(r,base,[factor,factor],'⚔ Cleave',true);}
  if(!offhandStrike&&kind==='Daggers'&&ports.state.automaticTalents?.nodes?.includes('fan_of_blades'))groupSecondaryDamage(r,base,[.22,.22],'🗡 Fan of Blades',true);
- if(!offhandStrike&&kind==='Bow')groupSecondaryDamage(r,base,ports.state.automaticTalents?.nodes?.includes('bow_pierce')?[.60,.42,.28]:[.42,.24],'🏹 Piercing Arrow',true);
+ if(!offhandStrike&&kind==='Bow')groupSecondaryDamage(r,base,ports.state.automaticTalents?.nodes?.includes('bow_pierce')?[1]:[.66],'🏹 Piercing Arrow',true);
  if(!offhandStrike&&kind==='Sword'&&off?.subtype==='Shield'&&ports.state.automaticTalents?.nodes?.includes('sword_sweep'))groupSecondaryDamage(r,base,[.25],'⚔ Shielded Sweep',true);
  if(!offhandStrike&&kind==='Mace'&&ports.state.automaticTalents?.nodes?.includes('mace_shockwave')){const secondary=r.enemies?.find(enemy=>enemy!==r.enemy&&enemy.hp>0);groupSecondaryDamage(r,base,[.3],'🔨 Concussive Swing',true);if(secondary&&secondary.hp>0)secondary.slowTime=Math.max(secondary.slowTime||0,1);}
  if(cast&&v013LightningChain(r))v013LightningChainDamage(r,base);
@@ -788,7 +843,7 @@ function updateFight(){
   const hasBleed=e.bleedStacks>0,hasBurn=e.burnStacks>0,hasDots=hasBleed||hasBurn;
   if(hasDots){if(hasBleed)e.lastBleedTick=ports.setNow(r);const applied=Math.round(ports.tickDots(e)*(root.WandererV013ExpeditionBoons?.dotFactor(r)||1));if(hasBleed&&applied>=e.hp)e.v012DeathBleed=true;ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),applied));ports.phase6Metric(r,'periodicDamage',Math.min(Math.max(0,e.hp),applied));e.hp-=applied;ports.addLog('☠️ Damage over time: '+applied+' damage','spell');if(applied>0)ports.floatText(applied,'enemy',false,hasBleed&&hasBurn?'BLEED + BURN':hasBleed?'BLEED':'BURN',e);}
   if(hasBurn)ports.setHeatTick(r,true);
-  if(r.enemies){for(const mob of r.enemies){if(mob===e||mob.hp<=0)continue;const bleeding=mob.bleedStacks>0,burning=mob.burnStacks>0;if(bleeding||burning){if(bleeding)mob.lastBleedTick=ports.setNow(r);const spreadBase=[...(mob.dots?.burn||[]),...(mob.dots?.bleed||[])].filter(dot=>dot.spread).reduce((sum,dot)=>sum+dot.damage,0);const rawDots=ports.tickDots(mob);const damage=Math.round(rawDots*(root.WandererV013ExpeditionBoons?.dotFactor(r)||1));if(bleeding&&damage>=mob.hp)mob.v012DeathBleed=true;const applied=Math.min(Math.max(0,mob.hp),damage);ports.phase6Metric(r,'damageDealt',applied);ports.phase6Metric(r,'periodicDamage',applied);if(spreadBase>0&&rawDots>0&&applied>0){const contribution=Math.min(applied,Math.round(applied*spreadBase/rawDots));ports.phase6Metric(r,'secondaryTargetDamage',contribution);ports.phase6Metric(r,'secondaryDotDamage',contribution);ports.phase6Metric(r,'secondaryTargetHits',Number(contribution>0));}mob.hp-=damage;if(damage>0)ports.floatText(damage,'enemy',false,bleeding?'BLEED':'BURN',mob);}if(mob.hp>0&&ports.phase1Build){r.enemy=mob;WandererV012Buildcraft.tickRot(ports.phase1Build,ports.phase2Context(r));}if(mob.slowTime>0)mob.slowTime=Math.max(0,mob.slowTime-1);}r.enemy=e;}
+  if(r.enemies){for(const mob of r.enemies){if(mob===e||mob.hp<=0)continue;const bleeding=mob.bleedStacks>0,burning=mob.burnStacks>0;if(bleeding||burning){if(bleeding)mob.lastBleedTick=ports.setNow(r);const spreadBase=[...(mob.dots?.burn||[]),...(mob.dots?.bleed||[])].filter(dot=>dot.spread||dot.secondaryOrigin).reduce((sum,dot)=>sum+dot.damage,0);const rawDots=ports.tickDots(mob);const damage=Math.round(rawDots*(root.WandererV013ExpeditionBoons?.dotFactor(r)||1));if(bleeding&&damage>=mob.hp)mob.v012DeathBleed=true;const applied=Math.min(Math.max(0,mob.hp),damage);ports.phase6Metric(r,'damageDealt',applied);ports.phase6Metric(r,'periodicDamage',applied);if(spreadBase>0&&rawDots>0&&applied>0){const contribution=Math.min(applied,Math.round(applied*spreadBase/rawDots));ports.phase6Metric(r,'secondaryTargetDamage',contribution);ports.phase6Metric(r,'secondaryDotDamage',contribution);ports.phase6Metric(r,'secondaryTargetHits',Number(contribution>0));}mob.hp-=damage;if(damage>0)ports.floatText(damage,'enemy',false,bleeding?'BLEED':'BURN',mob);}if(mob.hp>0&&ports.phase1Build){r.enemy=mob;WandererV012Buildcraft.tickRot(ports.phase1Build,ports.phase2Context(r));}if(mob.slowTime>0)mob.slowTime=Math.max(0,mob.slowTime-1);}r.enemy=e;}
   if(s.bonus.regenBonus){const healed=ports.setHeal(r,ports.regenPerSecond(r.maxhp,s.bonus.regenBonus));if(healed>0)ports.addLog('💚 Regeneration +'+Math.round(healed)+' HP','good');}
   if(ports.isPhase1Run()&&ports.phase1Build)WandererV012Buildcraft.onSecond(ports.phase1Build,ports.phase2Context(r));
   if(e.slowTime>0)e.slowTime=Math.max(0,e.slowTime-1);

@@ -48,7 +48,7 @@ test('Stage 6.42: only one shared runtime implementation for increased AoE and n
   assert.equal(read(p),read('docs/'+p),'Mirror mismatch: '+p);
  const runtime=read('combat/v012-combat-runtime.js');
  const expedition=read('online/v012-expedition-runtime.js');
- assert(runtime.includes("kind==='Bow')groupSecondaryDamage(r,base,ports.state.automaticTalents?.nodes?.includes('bow_pierce')?[.60,.42,.28]:[.42,.24]"));
+ assert(runtime.includes("kind==='Bow')groupSecondaryDamage(r,base,ports.state.automaticTalents?.nodes?.includes('bow_pierce')?[1]:[.66]"));
  assert(runtime.includes("function v013LightningChainDamage(r,base){"));
  assert(runtime.includes("function v013LightningChainFactors(){"));
  assert(runtime.includes("lightningMarksDetonated"));

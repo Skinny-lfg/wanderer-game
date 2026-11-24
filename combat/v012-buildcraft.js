@@ -52,7 +52,7 @@ const P=[
  ['aegis','counterstrike','Counterstrike','Blocking grants one 18% base-hit counterstrike.',['aegis','fury']],
  ['aegis','runic_shield','Runic Shield','Funded Magic spells or Arcane Infusion activations grant 2% Max HP + 8% Spell Power as Barrier (3s cooldown).',['aegis','magic']],
  ['fury','spellblade','Spellblade','Each funded cast or Arcane Infusion activation empowers the next weapon hit, including Staff and Wand, by 15%.',['fury','magic']],
- ['blood','carrion_detonation','Carrion Detonation','Consume one Bleed and one Rot to deal their remaining damage plus a small bonus (8s cooldown).',['blood','decay']],
+ ['blood','carrion_detonation','Carrion Detonation','Weapon hits charge an enemy affected by Bleed and Rot using actual Health damage. At 150% Attack Power, release a burst equal to 75% of the threshold (35% on the marked foe), spreading weaker Bleed and Rot to active nearby foes. 1.5s cooldown per enemy.',['blood','decay']],
  ['blood','crimson_pact','Crimson Pact','Pay 2% max HP to inflict an immediate empowered Bleed (8s cooldown; requires more than 20% HP).',['blood','vitality']],
  ['blood','sanguine_reprisal','Sanguine Reprisal','Blocking or absorbing Barrier charges a counter-bleed.',['blood','aegis']],
  ['blood','reapers_cadence','Rupture','Attacks against enemies with Bleed and Fury Sunder deal damage equal to two ticks of the strongest Bleed, capped at 3% enemy maximum Health (5s cooldown). Bleed is not consumed.',['blood','fury']],
@@ -181,6 +181,31 @@ function onHeal(b,c,healed){
 function heal(b,c,amount){const healed=c.heal(Math.max(0,amount))||0;if(!c.healTriggersPassives)onHeal(b,c,healed);return healed;}
 function activated(b,id){b.runtime.passiveTelemetry??={};const t=b.runtime.passiveTelemetry[id]??={activations:0,combatSeconds:0};t.activations++;return true;}
 function spendDarkMana(c,amount){if(c.spendMana)return c.spendMana(amount);if(!Number.isFinite(c.player?.mp)||c.player.mp<amount)return false;c.player.mp-=amount;return true;}
+function onSecondaryWeaponStatus(b,c,q=.5,p=.5){
+ const e=c.enemy,base=Math.max(0,c.base||0);
+ if(!e||e.hp<=0||base<=0)return;
+ const br=rank(b,'bleeding_edge'),rr=rank(b,'toxic_touch');
+ if(br){
+  const v=values('bleeding_edge',br);
+  if(c.now>=(e.secondaryBleedReady||0)&&c.random()<v.chance*q){
+   c.dot('bleed',base*v.bleed*p);e.secondaryBleedReady=c.now+v.icd;
+   const d=e.dots?.bleed?.at(-1);if(d)d.secondaryOrigin='weapon';
+   c.metric?.('secondaryBleedApplied',1);
+  }
+ }
+ if(rr){
+  const v=values('toxic_touch',rr);
+  if(c.now>=(e.secondaryRotReady||0)&&c.random()<v.chance*q&&spendDarkMana(c,1)){
+   applyRot(b,c,(base*v.rot+Math.max(0,c.power||0)*.025)*p);e.secondaryRotReady=c.now+v.icd;
+   const d=e.v012Rot?.at(-1);if(d)d.secondaryOrigin='weapon';
+   c.metric?.('secondaryRotApplied',1);
+  }
+ }
+ if(specialized(b,'affinity_fury')&&e.baseDef>0&&c.now>=(e.nextFurySunder||0)&&c.random()<.15*q){
+  const def=e.baseDef,old=e.furySunder||0,n=Math.max(0,Math.min(def*.04*p,def*.20-old,e.def-def*.25));
+  if(n>0){e.def-=n;e.furySunder=old+n;e.nextFurySunder=c.now+1;c.metric?.('secondarySunderApplied',1);}
+ }
+}
 function onAttack(b,c){
  if(c.proc||c.extra||c.recursive)return;
  const e=c.enemy,base=Math.max(1,c.base||1),crit=!!c.critical;
@@ -209,9 +234,7 @@ function onAttack(b,c){
  if(rank(b,'counterstrike')&&b.runtime.counterBlock&&activated(b,'counterstrike')){b.runtime.counterBlock=0;c.damage(base*.18,'🛡 Counterstrike');}
  if(rank(b,'retaliation')&&b.runtime.counterBarrier&&activated(b,'retaliation')){b.runtime.counterBarrier=0;c.damage(base*.30,'🛡 Retaliation');}
  if(rank(b,'spellblade')&&b.runtime.spellblade&&activated(b,'spellblade')){b.runtime.spellblade=false;c.damage(base*.15,'✨ Spellblade');}
- if(rank(b,'carrion_detonation')&&e.bleedStacks>0&&e.v012Rot?.length&&ready(b,'carrionDetonation',c.now,8)&&activated(b,'carrion_detonation')){
-  const bleed=e.dots?.bleed?.shift();e.bleedStacks=e.dots?.bleed?.length||0;e.bleed=(e.dots?.bleed||[]).reduce((n,d)=>n+d.damage,0);const rot=e.v012Rot.shift();const owed=(bleed?bleed.damage*bleed.remaining:0)+rot.damage*rot.remaining;c.damage(owed+Math.min(base*.25,e.maxhp*.02),'☠ Carrion Detonation');
- }
+ 
  if(rank(b,'crimson_pact')&&c.player.hp>c.player.maxhp*.20&&ready(b,'crimsonPact',c.now,8)&&activated(b,'crimson_pact')){
   c.player.hp=Math.max(1,c.player.hp-c.player.maxhp*.02);c.dot('bleed',base*.32);
  }
@@ -293,6 +316,7 @@ function tickRot(b,c){
   const damage=Math.round(rot.reduce((sum,s)=>sum+s.damage,0)*(e.incubationTicks%3===0?1+.12*incubationRank+(specialized(b,'plagueheart')?.35:0):1));
   if(rot.every(s=>s.remaining<=1))e.incubationTicks=0;
   e.v012Rot=rot.map(s=>({...s,remaining:s.remaining-1,ticks:(s.ticks||0)+1})).filter(s=>s.remaining>0);
+  if(!e.v012Rot.length)e.carrionCharge=0;
   if(c.enemy.hp>0&&damage>=c.enemy.hp)c.enemy.v012DeathRot=true;
   c.dotDamage(damage,'☠ Rot',secondaryFraction);
   if(rank(b,'rot_ward')&&ready(b,'rotWard',c.now,5)&&activated(b,'rot_ward'))c.barrier(c.player.maxhp*.018);
@@ -464,6 +488,6 @@ function onInfusionHit(b,c){
  return amount;
 }
 function clear(b){if(!b)return;b.picks.length=0;b.element=null;b.unlockedFamilies=[];b.families=[];b.cooldowns=Object.create(null);b.runtime={frenzyUntil:0,counterBlock:0,counterBarrier:0,spellblade:false,magicHits:0,staticCharges:0,adrenalineUntil:0,conduit:false,lastStand:false,lastSpellAt:-999};}
-root.WandererV012Buildcraft=Object.freeze({CATALOG,FAMILIES,ELEMENTS:elements,barrierAmount,create,ownedRank,rank,values,bleedDamage,elementalPower,applyRot,migrateEnemyDots,mods,onHeal,onAttack,onCast,onSecond,tickRot,incoming,onDefend,onKill,survive,speed,enemyHealMultiplier,enemyDefense,nextCost,resetWave,canCast,magicMode,infusionConfig,infusionReady,activateInfusion,onInfusionActivation,onInfusionHit,validate,syncPermanent,clear});
+root.WandererV012Buildcraft=Object.freeze({CATALOG,FAMILIES,ELEMENTS:elements,barrierAmount,create,ownedRank,rank,values,bleedDamage,elementalPower,applyRot,migrateEnemyDots,mods,onHeal,onSecondaryWeaponStatus,onAttack,onCast,onSecond,tickRot,incoming,onDefend,onKill,survive,speed,enemyHealMultiplier,enemyDefense,nextCost,resetWave,canCast,magicMode,infusionConfig,infusionReady,activateInfusion,onInfusionActivation,onInfusionHit,validate,syncPermanent,clear});
 })(globalThis);
 

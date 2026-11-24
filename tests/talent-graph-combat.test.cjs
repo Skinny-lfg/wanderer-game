@@ -52,8 +52,7 @@ test('catalogue mixed skills trigger their combat effect when purchased alone',(
   ['sanctuary',(b,c)=>C.onHeal(b,c,20),'barrier'],
   ['guardians_oath',(b,c)=>{c.player.barrier=0;C.onDefend(b,c,0,10)},'heal'],
   ['hex_bolt',(b,c)=>C.onCast(b,c),'Hex Bolt'],
-  ['elemental_blight',(b,c)=>C.onCast(b,c),'Blight'],
-  ['carrion_detonation',(b,c)=>{c.enemy.dots.bleed.push({damage:10,remaining:3});C.onAttack(b,c)},'Carrion Detonation']
+  ['elemental_blight',(b,c)=>C.onCast(b,c),'Blight']
  ];
  for(const [id,run,expected] of cases){const b=build([id]),{c,events}=context();run(b,c);assert(events.some(e=>e[0]===expected||e[0]==='damage'&&e[1].includes(expected)),id);}
 });
