@@ -1,0 +1,83 @@
+name: Stage 6.48C.2B — Persistent Corruption (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths: ['.github/workflows/v013-stage648c2b-persistent-corruption.yml', 'tests/v013-stage648c2b-persistent-corruption.test.cjs']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: synergy-decay-wand
+          path: input/earned
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 45430920656
+      - uses: actions/download-artifact@v4
+        with:
+          name: stage648b2-decay-wand
+          path: input/baseline
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 45446227838
+      - run: node --test tests/v013-stage648c2b-persistent-corruption.test.cjs tests/v013-stage647d8-decay.test.cjs tests/v013-stage648c1-identity.test.cjs
+      - run: node scripts/v013-stage648c2b-persistent-corruption.cjs smoke
+  arm:
+    needs: gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [baseline, persistent, persistent-after, persistent-burst]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: synergy-decay-wand
+          path: input/earned
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 45430920656
+      - uses: actions/download-artifact@v4
+        with:
+          name: stage648b2-decay-wand
+          path: input/baseline
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 45446227838
+      - run: node scripts/v013-stage648c2b-persistent-corruption.cjs run ${{ matrix.mode }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage648c2b-${{ matrix.mode }}
+          path: reports/stage648c2b/*.json
+  aggregate:
+    needs: arm
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage648c2b-*
+          path: reports/stage648c2b
+          merge-multiple: true
+      - run: node scripts/v013-stage648c2b-persistent-corruption.cjs aggregate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage648c2b-report
+          path: reports/v013-stage648c2b-persistent-corruption.json
