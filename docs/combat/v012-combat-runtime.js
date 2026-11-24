@@ -631,7 +631,7 @@ function weaponAttack(r,offhandStrike=false){
   const previous=lastStruck.get(r);
   if(previous!==e){
    if(!(previous?.hp<=0&&r.aim===3&&learned('follow_through')))r.aim=0;
-   if(previous?.v012Rot?.length&&!e.v012Rot?.length&&learned('spore_mark')&&ports.setReady(r,'sporeMark',5)){e.v012Rot=[{...previous.v012Rot[0]}];ports.combatLinkEffect?.(r,'rot',previous,[e]);}
+   if(previous?.v012Rot?.length&&!e.v012Rot?.length&&learned('spore_mark')&&ports.setReady(r,'sporeMark',5)){e.v012Rot=[{...previous.v012Rot[0],primaryPaid:false,transferred:true}];ports.combatLinkEffect?.(r,'rot',previous,[e]);}
   }
   lastStruck.set(r,e);
   const bleed=e.dots?.bleed||[];
@@ -732,7 +732,7 @@ function enemySlowFactor(enemy,stats,now){
 function talentPulseDamage(r,enemy,amount,id){
  if(!enemy||enemy.hp<=0||enemy.stage84Node||!((r.enemies||[r.enemy]).includes(enemy))||!(amount>0))return 0;
  const old=r.enemy,before=enemy.hp,secondary=enemy!==old;
- try{r.enemy=enemy;ports.setDirectEnemyDamage(r,amount,({vital_pulse:'💚 Vital Pulse',living_force:'💚 Living Force',grasping_roots:'🌿 Grasping Roots',ward_echo:'🛡 Ward Echo'})[id]||id);}
+ try{r.enemy=enemy;ports.setDirectEnemyDamage(r,amount,({vital_pulse:'💚 Vital Pulse',living_force:'💚 Living Force',grasping_roots:'🌿 Grasping Roots',ward_echo:'🛡 Ward Echo',corruption_nova:'☠ Corruption Nova'})[id]||id);}
  finally{r.enemy=old;}
  const actual=Math.max(0,before-Math.max(0,enemy.hp));
  if(secondary&&actual>0){ports.phase6Metric(r,'secondaryTargetDamage',actual);ports.phase6Metric(r,'secondaryTargetHits',1);}
