@@ -1,0 +1,47 @@
+name: Stage 6.47D.9B — Matched flat vs percentage scaling (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths: ['.github/workflows/v013-stage647d9b-stat-scaling.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  cohort:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [smart-blood-pure, smart-fury-bow, smart-vitality-pure, smart-aegis-vitality, smart-magic-arcane-pure, smart-decay-magic-aegis, cautious, balanced, plate-warden, cloth-battlemage, leather-duelist, hexblade-hybrid]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node scripts/v013-stage647d9b-stat-scaling.cjs selftest
+      - run: node scripts/v013-stage647d9b-stat-scaling.cjs cohort ${{ matrix.profile }} 9861 200 25 5
+      - uses: actions/upload-artifact@v4
+        with:
+          name: matched-scaling-${{ matrix.profile }}
+          path: reports/stage647d9b/*.json
+  aggregate:
+    needs: cohort
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: matched-scaling-*
+          path: reports/stage647d9b
+          merge-multiple: true
+      - run: node scripts/v013-stage647d9b-stat-scaling.cjs aggregate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage647d9b-stat-scaling
+          path: reports/v013-stage647d9b-stat-scaling.json
