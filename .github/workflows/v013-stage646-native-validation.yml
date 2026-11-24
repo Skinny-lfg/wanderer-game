@@ -113,3 +113,5 @@ jobs:
           name: stage646-native-results
           path: reports/stage646/results.json
           retention-days: 30
+
+# Revalidate the updated 367-node catalog and cache-versioned source assertions.
