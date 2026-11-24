@@ -1,0 +1,125 @@
+name: Stage 6.47C — Independent E10 capture cohorts (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths: ['.github/workflows/v013-stage647c-capture.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        profile: [magic-decay-bloom, magic-decay-infusion]
+        mode: [assisted, natural]
+        shard: [0, 1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node scripts/v013-stage647c-capture.cjs "$PROFILE" "$MODE" "$SHARD" "reports/stage647c/capture/$PROFILE-$MODE-$SHARD.json"
+        env:
+          PROFILE: ${{ matrix.profile }}
+          MODE: ${{ matrix.mode }}
+          SHARD: ${{ matrix.shard }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage647c-capture-${{ matrix.profile }}-${{ matrix.mode }}-${{ matrix.shard }}
+          path: reports/stage647c/capture/*.json
+  coverage:
+    needs: capture
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage647c-capture-*
+          merge-multiple: true
+          path: captures
+      - run: |
+          node <<'JS'
+          const fs=require('node:fs'),parts=fs.readdirSync('captures').map(f=>JSON.parse(fs.readFileSync('captures/'+f)));
+          if(parts.length!==20)throw Error('Missing capture shards');
+          const summary=[];
+          for(const profile of ['magic-decay-bloom','magic-decay-infusion'])for(const mode of ['assisted','natural']){
+            const p=parts.filter(x=>x.profileId===profile&&x.captureMode===mode),accounts=p.flatMap(x=>x.accounts);
+            if(p.length!==5||accounts.length!==10||new Set(accounts.map(x=>x.seed)).size!==10)throw Error('Missing or duplicate accounts');
+            if(accounts.some(x=>x.error))throw Error('Native capture errors '+JSON.stringify(accounts.filter(x=>x.error).map(({seed,error})=>({seed,error}))));
+            if(new Set(p.map(x=>x.source)).size!==1)throw Error('Capture source drift');
+            const snapshots=accounts.filter(x=>x.snapshot);
+            if(snapshots.some(x=>x.snapshot.level!==10||x.snapshot.state.unlocked!==10))throw Error('Invalid capture');
+            if(mode==='natural'&&accounts.some(x=>x.scaledActors!==0))throw Error('Natural cohort scaled');
+            summary.push({profile,mode,attempted:accounts.length,reached:snapshots.length,actors:snapshots.map(x=>({seed:x.seed,weapon:x.weapon,offhand:x.offhand,points:x.points,attempts:x.attempts,scaledActors:x.scaledActors})),failed:accounts.filter(x=>!x.snapshot).map(x=>({seed:x.seed,level:x.endLevel,reason:x.stopReason}))});
+          }
+          console.log('CAPTURE647C_COVERAGE='+JSON.stringify(summary));
+          fs.writeFileSync('capture-summary.json',JSON.stringify(summary,null,2));
+          JS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage647c-capture-coverage
+          path: capture-summary.json
+  replay:
+    needs: coverage
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [magic-decay-bloom, magic-decay-infusion]
+        mode: [assisted, natural]
+        shard: [0, 1]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage647c-capture-${{ matrix.profile }}-${{ matrix.mode }}-*
+          merge-multiple: true
+          path: captures
+      - run: node scripts/v013-stage647c-native-replay.cjs "$PROFILE" "$MODE" "$SHARD" captures "reports/stage647c/cohort/$PROFILE-$MODE-$SHARD.json"
+        env:
+          PROFILE: ${{ matrix.profile }}
+          MODE: ${{ matrix.mode }}
+          SHARD: ${{ matrix.shard }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage647c-cohort-${{ matrix.profile }}-${{ matrix.mode }}-${{ matrix.shard }}
+          path: reports/stage647c/cohort/*.json
+  summary:
+    needs: replay
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage647c-cohort-*
+          merge-multiple: true
+          path: replays
+      - run: |
+          node <<'JS'
+          const fs=require('node:fs'),parts=fs.readdirSync('replays').map(f=>JSON.parse(fs.readFileSync('replays/'+f))),summary=[];
+          if(parts.length!==8)throw Error('Incomplete replay');
+          for(const profile of ['magic-decay-bloom','magic-decay-infusion'])for(const mode of ['assisted','natural']){
+            const p=parts.filter(x=>x.profile===profile&&x.mode===mode);
+            if(p.length!==2||JSON.stringify(p[0].actors)!==JSON.stringify(p[1].actors)||p[0].source!==p[1].source)throw Error('Replay drift');
+            const rows=p.flatMap(x=>x.rows),actors=p[0].actors;
+            const groups=[1,4,8,12].map(size=>{
+              const a=rows.filter(x=>x.size===size);
+              if(a.length!==(actors.length?100:0))throw Error('Missing samples');
+              return {size,n:a.length,wins:a.filter(x=>x.won).length,timeouts:a.filter(x=>x.timeout).length,secondaryDot:a.reduce((n,x)=>n+(x.dot||0),0)};
+            });
+            summary.push({profile,mode,attemptedAccounts:p[0].attemptedAccounts,eligibleActors:actors.length,actors:actors.map(({seed,weapon,offhand,points})=>({seed,weapon,offhand,points})),groups});
+          }
+          console.log('CAPTURE647C_MATRIX='+JSON.stringify(summary));
+          fs.writeFileSync('capture-matrix.json',JSON.stringify(summary,null,2));
+          JS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage647c-cohort-results
+          path: capture-matrix.json
