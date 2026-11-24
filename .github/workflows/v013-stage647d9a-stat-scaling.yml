@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        profile: [smart-blood-pure, smart-fury-bow, smart-vitality-pure, smart-aegis-vitality, smart-magic-arcane-pure, smart-decay-magic-aegis]
+        profile: [smart-blood-pure, smart-fury-bow, smart-vitality-pure, smart-aegis-vitality, smart-magic-arcane-pure, smart-decay-magic-aegis, cautious, balanced, plate-warden, cloth-battlemage, leather-duelist, hexblade-hybrid]
     steps:
       - uses: actions/checkout@v4
         with: {persist-credentials: false}

@@ -4,7 +4,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs');
 const N=require('./v013-natural-progression.cjs'),S=require('./simulate-progression.cjs'),D=require('./v013-stage628-postcap-difficulty.cjs');
 require('../combat/expedition-progression.js');require('../combat/v012-combat-core.js');
 const T=globalThis.WandererAutomaticTalents;
-const LEVELS=[1,10,20,50,100,200],PROFILES=['smart-blood-pure','smart-fury-bow','smart-vitality-pure','smart-aegis-vitality','smart-magic-arcane-pure','smart-decay-magic-aegis'];
+const LEVELS=[1,2,5,10,20,50,100,200],PROFILES=['smart-blood-pure','smart-fury-bow','smart-vitality-pure','smart-aegis-vitality','smart-magic-arcane-pure','smart-decay-magic-aegis','cautious','balanced','plate-warden','cloth-battlemage','leather-duelist','hexblade-hybrid'];
 const FIELDS={flatAttack:'attack',flatArmor:'defense',flatLife:'maxhp',flatSpell:'spellPower'};
 const OTHER=['flatAvoid','flatRegen','flatMana','flatSpeed','startBarrier','healthRegen','bleedBonus','rotBonus','rotDefense','sunderDamage','attribute'];
 const MODES=['current','flat5-defense','percent-only','hybrid-low','hybrid-full'];
