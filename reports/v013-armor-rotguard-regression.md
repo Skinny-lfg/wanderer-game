@@ -1,0 +1,2 @@
+# Regression follow-up
+Run 45580892587 completed 38/39 jobs; aggregate succeeded, 63,200 isolated fights and 960 expedition trials. Regression npm test first suite 379/382 passed. Correct outdated 3/s gear-only Mana regen expectation to 6/s (12/s full Cloth), update 419 to 420 nodes for Rotguard, refresh changed script asset cache versions including talent preview. No change to combat math; wrapper constant aligns with already implemented 45% cap. Regression-only workflow avoids rerunning campaign. Further failures, if any, must be reviewed before approval.

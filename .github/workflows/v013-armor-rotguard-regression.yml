@@ -1,0 +1,19 @@
+name: Armor and Rotguard — regression only (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths: ['.github/workflows/v013-armor-rotguard-regression.yml','tests/v013-gear-roll-diversity.test.cjs','tests/v013-talent-structure.test.cjs']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: npm test
+      - run: node --test tests/v013-armor-rotguard.test.cjs tests/v0120-evasion.test.cjs

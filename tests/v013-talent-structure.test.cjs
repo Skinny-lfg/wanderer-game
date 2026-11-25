@@ -2,9 +2,9 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const {T,buy}=require('./v013-current-talent-helper.cjs');
 const G=globalThis.WandererTalentGraph;
-test('current tree contains 419 unique v15 nodes, with all six affinity roots',()=>{
- assert.equal(T.NODES.length,419);
- assert.equal(new Set(T.NODES.map(n=>n.id)).size,419);
+test('current tree contains 420 unique v15 nodes, with all six affinity roots',()=>{
+ assert.equal(T.NODES.length,420);
+ assert.equal(new Set(T.NODES.map(n=>n.id)).size,420);
  for(const family of ['blood','fury','aegis','vitality','magic','decay']){
   assert(T.NODES.some(n=>n.id==='root_'+family));
   assert(T.NODES.some(n=>n.id==='affinity_'+family));

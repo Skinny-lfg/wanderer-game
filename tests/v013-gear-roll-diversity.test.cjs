@@ -79,6 +79,9 @@ test('combat math caps cumulative equipment Crit/Block, Ward and Mana Regen even
  const boosted=a.baseStats({...equipment,armor:{...armor,critBonus:100,blockBonus:100,manaRegenBonus:100,wardBonus:100}});
  assert(boosted.crit-baseline.crit<=8.001,'gear-only Crit cannot gain 100 percentage points');
  assert(boosted.blockChance-baseline.blockChance<=8.001,'gear-only Block cannot gain 100 percentage points');
- assert(boosted.manaRegen-baseline.manaRegen<=3.001,'gear-only Mana Regen remains flat bounded');
+ assert(Math.abs(boosted.manaRegen-baseline.manaRegen-6)<.001,'gear-only Mana Regen is capped at six without Cloth');
+ const cloth={...armor,armorType:'Cloth'},fullCloth={weapon,offhand,...Object.fromEntries(['helm','armor','gloves','boots','belt'].map(slot=>[slot,{...cloth,slot}]))};
+ const clothBaseline=a.baseStats(fullCloth),clothBoosted=a.baseStats({...fullCloth,armor:{...fullCloth.armor,manaRegenBonus:100}});
+ assert(Math.abs(clothBoosted.manaRegen-clothBaseline.manaRegen-12)<.001,'five Cloth pieces double the capped gear regeneration to twelve');
  assert(boosted.wardBonus<=.300001,'gear Ward remains bounded');
 });
