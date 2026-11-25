@@ -3,6 +3,9 @@ const FRAME = preload("res://ui/assets/resources/g22f/portrait_frame.png")
 const BADGE = preload("res://ui/assets/resources/g22f/level_badge.png")
 var portrait: Texture2D
 var level: int = 1
+var portrait_region = Rect2(0, 0, 1, 1)
+var badge_pulse: float = 1.0
+var level_motion: Tween
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -11,7 +14,19 @@ func _ready() -> void:
 
 func set_identity(image: Texture2D, new_level: int) -> void:
 	portrait = image
+	var changed = new_level > level
 	level = maxi(1, new_level)
+	if level_motion != null and level_motion.is_valid():
+		level_motion.kill()
+	_set_badge_pulse(1.0)
+	if changed and is_inside_tree():
+		level_motion = create_tween()
+		level_motion.tween_method(_set_badge_pulse, 1.0, 1.12, 0.12)
+		level_motion.tween_method(_set_badge_pulse, 1.12, 1.0, 0.25)
+	queue_redraw()
+
+func _set_badge_pulse(value: float) -> void:
+	badge_pulse = value
 	queue_redraw()
 
 func _draw() -> void:
@@ -29,10 +44,10 @@ func _draw() -> void:
 			var angle = TAU * float(i) / 64.0
 			var direction = Vector2(cos(angle), sin(angle))
 			points.append(center + direction * radius)
-			uv.append(Vector2(0.5, 0.5) + direction * crop * 0.5)
+			uv.append(portrait_region.position + portrait_region.size * (Vector2(0.5, 0.5) + direction * crop * 0.5))
 		draw_polygon(points, PackedColorArray([Color.WHITE]), uv, portrait)
 	draw_texture_rect(FRAME, Rect2(origin, Vector2.ONE * side), false)
-	var badge_side = side * 0.36
+	var badge_side = side * 0.36 * badge_pulse
 	var badge_center = center + Vector2(0, side * 0.45)
 	draw_texture_rect(BADGE, Rect2(badge_center - Vector2.ONE * badge_side * 0.5, Vector2.ONE * badge_side), false)
 	var font = get_theme_default_font()

@@ -14,9 +14,14 @@ func _run() -> void:
 		_fail("Portrait aperture must be transparent")
 		return
 	for texture in Bar.FILLS.values():
-		if texture.get_size() != Vector2(256, 64):
+		if texture.get_size() != Vector2(768, 64):
 			_fail("Fill dimensions")
 			return
+		var img: Image = texture.get_image()
+		for y in range(img.get_height()):
+			if img.get_pixel(0, y) != img.get_pixel(img.get_width() - 1, y):
+				_fail("Fill texture is not seamless")
+				return
 	var gallery = load("res://ui/showcase/ui_gallery.tscn").instantiate()
 	root.add_child(gallery)
 	await process_frame
@@ -44,6 +49,18 @@ func _run() -> void:
 			if point.x < 0.0 or point.x > 300.0 or point.y < 0.0 or point.y > 24.0:
 				_fail("Fill outside track")
 				return
+	health.set_amount(100, 100, false)
+	health.set_amount(65, 100, true)
+	if not is_equal_approx(health.shown_ratio, 0.65) or not is_equal_approx(health.trail_ratio, 1.0):
+		_fail("Damage trail initial state")
+		return
+	await create_timer(0.65).timeout
+	if not is_equal_approx(health.trail_ratio, 0.65):
+		_fail("Damage trail did not drain")
+		return
+	if gallery.resource_portrait.portrait_region.size.x >= 0.5:
+		_fail("Face crop missing")
+		return
 	barrier.set_amount(0, 300, false)
 	if barrier.visible:
 		_fail("Barrier zero must hide")

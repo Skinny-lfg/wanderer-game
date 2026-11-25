@@ -12,6 +12,9 @@ var resource_kind: String = "Health"
 var current: float = 100.0
 var maximum: float = 100.0
 var shown_ratio: float = 1.0
+var trail_ratio: float = 1.0
+const DAMAGE_HOLD = 0.16
+const DAMAGE_DRAIN = 0.38
 var show_value: bool = true
 var hide_empty: bool = false
 var motion: Tween
@@ -27,17 +30,51 @@ func fraction() -> float:
 	return clampf(current / maximum, 0.0, 1.0) if maximum > 0.0 else 0.0
 
 func set_amount(value: float, capacity: float, animate: bool = true) -> void:
+	var previous = fraction()
 	maximum = maxf(0.0, capacity)
 	current = clampf(value, 0.0, maximum)
 	if motion != null and motion.is_valid():
 		motion.kill()
 	var target = fraction()
-	_sync_visibility()
-	if animate and is_inside_tree() and visible:
-		motion = create_tween()
-		motion.tween_method(_display_ratio, shown_ratio, target, 0.22).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	else:
+	var damage = (resource_kind == "Health" or resource_kind == "Barrier") and target < previous
+	if not animate or not is_inside_tree():
 		_display_ratio(target)
+		_display_trail(target)
+		_sync_visibility()
+		return
+	if hide_empty and (target > 0.0 or (damage and previous > 0.0)):
+		show()
+	motion = create_tween()
+	if damage:
+		var old = maxf(previous, maxf(shown_ratio, trail_ratio))
+		_display_ratio(target)
+		_display_trail(old)
+		motion.tween_interval(DAMAGE_HOLD)
+		motion.tween_method(_display_trail, old, target, DAMAGE_DRAIN).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	else:
+		_display_trail(target)
+		motion.tween_method(_display_ratio, shown_ratio, target, 0.28).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	motion.tween_callback(_finish_animation)
+
+func set_exp_wrap(value: float, capacity: float) -> void:
+	if motion != null and motion.is_valid():
+		motion.kill()
+	maximum = maxf(0.0, capacity)
+	current = clampf(value, 0.0, maximum)
+	if not is_inside_tree():
+		_display_ratio(fraction())
+		_display_trail(fraction())
+		return
+	motion = create_tween()
+	motion.tween_method(_display_ratio, shown_ratio, 1.0, 0.18)
+	motion.tween_callback(_display_ratio.bind(0.0))
+	motion.tween_method(_display_ratio, 0.0, fraction(), 0.28).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	motion.tween_callback(_finish_animation)
+
+func _finish_animation() -> void:
+	_display_ratio(fraction())
+	_display_trail(fraction())
+	_sync_visibility()
 
 func _sync_visibility() -> void:
 	if hide_empty:
@@ -45,6 +82,10 @@ func _sync_visibility() -> void:
 
 func _display_ratio(value: float) -> void:
 	shown_ratio = clampf(value, 0.0, 1.0)
+	queue_redraw()
+
+func _display_trail(value: float) -> void:
+	trail_ratio = clampf(value, 0.0, 1.0)
 	queue_redraw()
 
 func _clip_x(points: PackedVector2Array, boundary: float, keep_left: bool) -> PackedVector2Array:
@@ -88,11 +129,18 @@ func _draw() -> void:
 	draw_texture_rect_region(FRAME, Rect2(0, 0, cap, h), Rect2(0, 0, 40, 64))
 	draw_texture_rect_region(FRAME, Rect2(cap, 0, w - cap * 2.0, h), Rect2(40, 0, 432, 64))
 	draw_texture_rect_region(FRAME, Rect2(w - cap, 0, cap, h), Rect2(472, 0, 40, 64))
+	# Only the lost segment is white, never the remaining colored health.
+	if (resource_kind == "Health" or resource_kind == "Barrier") and trail_ratio > shown_ratio + 0.00001:
+		var inset = h * 0.17
+		var start_white = lerpf(inset, w - inset, shown_ratio)
+		var white = _clip_x(fill_shape(size, trail_ratio), start_white, false)
+		if white.size() >= 3:
+			draw_colored_polygon(white, Color("#f3eee8"))
 	var points = fill_shape(size, shown_ratio)
 	var fill: Texture2D = FILLS.get(resource_kind, FILLS["Health"])
 	if points.size() >= 3:
 		var inset = h * 0.17
-		var tile_width = maxf(8.0, (h - inset * 2.0) * 4.0)
+		var tile_width = maxf(8.0, (h - inset * 2.0) * fill.get_width() / float(fill.get_height()))
 		var start = inset
 		var end = lerpf(inset, w - inset, shown_ratio)
 		while start < end:

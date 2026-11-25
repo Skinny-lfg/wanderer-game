@@ -15,6 +15,7 @@ const ResourceBar = preload("res://ui/components/hud/resource_bar.gd")
 const PortraitMedallion = preload("res://ui/components/hud/portrait_medallion.gd")
 const CATEGORIES = ["Foundations", "Buttons", "Panels", "Navigation", "Item Slots", "Tooltips", "Resource Bars"]
 var resource_samples: Dictionary = {}
+var resource_sliders: Dictionary = {}
 var resource_portrait: Control
 var active_category: String = ""
 var category_buttons: Dictionary = {}
@@ -100,9 +101,10 @@ func _ready() -> void:
 	header.add_child(gallery_zoom)
 	var fit = Button.new()
 	fit.text = "Fit screen"
+	_gallery_button_style(fit)
 	fit.pressed.connect(_fit_gallery_window)
 	header.add_child(fit)
-	frame.add_child(_label("STYLIZED GOTHIC     •     G2.2F / RESOURCE BARS", 15, Tokens.GOLD))
+	frame.add_child(_label("STYLIZED GOTHIC     •     G2.2F.1 / RESOURCE FEEDBACK", 15, Tokens.GOLD))
 	frame.add_child(HSeparator.new())
 	var layout = _row(frame)
 	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -111,6 +113,7 @@ func _ready() -> void:
 	for category in CATEGORIES:
 		var button = TabScene.instantiate()
 		button.text = category
+		_gallery_button_style(button)
 		button.pressed.connect(show_category.bind(category))
 		sidebar.add_child(button)
 		category_buttons[category] = button
@@ -411,12 +414,12 @@ func _frame_sample(host: Node, key: String, caption_text: String, extent: Vector
 		content.add_child(sub)
 	if ornament != "":
 		var crest = TextureRect.new()
-		crest.texture = frame_pack.textures[ornament]
+		crest.texture = preload("res://ui/assets/frames/g22b/featured_compass.svg") if key == "featured" else frame_pack.textures[ornament]
 		crest.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		crest.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		crest.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		crest.size = Vector2(120, 52)
-		crest.position = Vector2((extent.x - 120) * 0.5, 0)
+		crest.size = Vector2(100, 42) if key == "featured" else Vector2(120, 52)
+		crest.position = Vector2((extent.x - crest.size.x) * 0.5, 22.0 - crest.size.y * 0.5)
 		holder.add_child(crest)
 
 func _art_sample(host: Node, key: String, caption_text: String, extent: Vector2) -> void:
@@ -815,11 +818,29 @@ func _tooltips() -> void:
 		extra.add_child(card)
 	_note("Comparison values are demonstration data. Live inventory, positioning and combat mechanics are not connected.")
 
+# Workshop utility controls, not the artistic button samples.
+func _gallery_button_style(button: Button) -> void:
+	for state in ["normal", "hover", "pressed", "hover_pressed", "disabled", "focus"]:
+		var style = StyleBoxFlat.new()
+		style.bg_color = Color("#191c23") if state == "normal" else Color("#29251f")
+		if state == "disabled":
+			style.bg_color = Color("#15171b")
+		style.set_border_width_all(1)
+		style.border_color = Color("#b08a50") if state in ["pressed", "hover_pressed", "focus"] else Color("#625b50")
+		style.set_corner_radius_all(3)
+		style.content_margin_left = 12
+		style.content_margin_right = 12
+		style.content_margin_top = 7
+		style.content_margin_bottom = 7
+		if state == "focus":
+			style.draw_center = false
+		button.add_theme_stylebox_override(state, style)
+
 func _resource_sample(host: Node, kind: String, amount: float, capacity: float, width: float, height: float, values: bool = true) -> Control:
 	var bar = ResourceBar.new()
 	bar.resource_kind = kind
 	bar.custom_minimum_size = Vector2(width, height)
-	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bar.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	bar.show_value = values
 	host.add_child(bar)
 	bar.set_amount(amount, capacity, false)
@@ -827,14 +848,16 @@ func _resource_sample(host: Node, kind: String, amount: float, capacity: float, 
 
 func _resource_bars() -> void:
 	resource_samples.clear()
-	_note("G2.2F — seven independent PNGs. No resource icons. Preview values only.")
+	resource_sliders.clear()
+	_note("Seamless fills, animated loss trails and face portrait. Preview values only.")
 	var hud = _row(body)
 	resource_portrait = PortraitMedallion.new()
 	hud.add_child(resource_portrait)
+	resource_portrait.portrait_region = Rect2(0.365, 0.0, 0.27, 0.27)
 	resource_portrait.set_identity(preload("res://assets/arena/wanderer.webp"), 24)
 	var stack = _vbox(hud, 5)
 	stack.custom_minimum_size.x = 470
-	stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	stack.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	resource_samples["Health"] = _resource_sample(stack, "Health", 2400, 2840, 470, 30)
 	resource_samples["Mana"] = _resource_sample(stack, "Mana", 520, 600, 470, 26)
 	resource_samples["Barrier"] = _resource_sample(stack, "Barrier", 180, 300, 470, 24)
@@ -843,8 +866,8 @@ func _resource_bars() -> void:
 	var controls = _row(body)
 	for action in ["Damage", "Heal", "Cast", "Barrier", "Gain EXP", "Reset"]:
 		var button = _button(controls, action, "Button")
-		painted_pack.apply_to(button, "secondary")
-		button.custom_minimum_size.x = 108
+		_gallery_button_style(button)
+		button.custom_minimum_size = Vector2(100, 36)
 		button.pressed.connect(_resource_action.bind(action))
 	_note("Adjust values or try the actions. Barrier disappears at zero. The level badge is dynamic.")
 	for kind in ["Health", "Mana", "Barrier", "EXP"]:
@@ -860,6 +883,7 @@ func _resource_bars() -> void:
 		slider.custom_minimum_size.x = 260
 		slider.value_changed.connect(_resource_percent.bind(kind))
 		row.add_child(slider)
+		resource_sliders[kind] = slider
 	_note("Enemy nameplate / compact health — no portrait required.")
 	var enemy = _vbox(body, 3)
 	enemy.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
@@ -901,10 +925,14 @@ func _resource_action(action: String) -> void:
 			if next >= exp.maximum:
 				resource_portrait.set_identity(resource_portrait.portrait, resource_portrait.level + 1)
 				next -= exp.maximum
-			exp.set_amount(next, exp.maximum)
+				exp.set_exp_wrap(next, exp.maximum)
+			else:
+				exp.set_amount(next, exp.maximum)
 		"Reset":
 			health.set_amount(2400, 2840)
 			mana.set_amount(520, 600)
 			barrier.set_amount(180, 300)
 			exp.set_amount(420, 1000)
 			resource_portrait.set_identity(resource_portrait.portrait, 24)
+	for kind in resource_sliders:
+		resource_sliders[kind].set_value_no_signal(resource_samples[kind].fraction() * 100.0)
