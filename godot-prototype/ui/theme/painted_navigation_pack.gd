@@ -1,5 +1,9 @@
 extends RefCounted
 const Normalize = preload("res://ui/theme/asset_normalization.gd")
+const Modular = preload("res://ui/theme/modular_frame.gd")
+const CORNER = Vector2i(32, 12)
+const SAMPLE = Vector2i(16, 8)
+var modular_textures: Dictionary = {}
 const ART_DIR = "res://ui/assets/navigation/g22c"
 const STATES = ["normal", "hover", "active", "pressed", "disabled"]
 const IDS = ["camp", "inventory", "talents", "city", "shrine"]
@@ -17,6 +21,7 @@ func expected_sizes() -> Dictionary:
 
 func load_pack(directory: String = ART_DIR) -> bool:
 	textures.clear()
+	modular_textures.clear()
 	problem = ""
 	var pending: Dictionary = {}
 	var sizes = expected_sizes()
@@ -36,13 +41,23 @@ func load_pack(directory: String = ART_DIR) -> bool:
 		elif name.begins_with("icon_"):
 			img = Normalize.fit_icon(img, Vector2i(30, 30), 26)
 		pending[name] = ImageTexture.create_from_image(img)
+	for state in STATES:
+		var key = "tab_" + state
+		var atlas = Modular.build(pending[key], CORNER, SAMPLE)
+		if atlas == null:
+			problem = "Invalid modular tab: " + key
+			modular_textures.clear()
+			return false
+		modular_textures[key] = atlas
 	textures = pending
 	return true
 
 func is_ready() -> bool:
-	return textures.size() == 11
+	return textures.size() == 11 and modular_textures.size() == 5
 
-func style_for(state: String) -> StyleBoxTexture:
+func style_for(state: String, legacy: bool = false) -> StyleBoxTexture:
+	if not legacy:
+		return Modular.style(modular_textures["tab_" + state], CORNER, Vector4(20, 5, 20, 5))
 	var box = StyleBoxTexture.new()
 	box.texture = textures["tab_" + state]
 	# Fixed aspect sample at 180x46. Margins protect edge shapes for small width changes.

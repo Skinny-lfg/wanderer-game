@@ -1,5 +1,13 @@
 extends RefCounted
 const Normalize = preload("res://ui/theme/asset_normalization.gd")
+const Modular = preload("res://ui/theme/modular_frame.gd")
+const CORNERS = {
+	"standard": Vector2i(36, 32), "featured": Vector2i(45, 42),
+	"modal": Vector2i(46, 36), "tooltip": Vector2i(30, 27),
+	"compact": Vector2i(30, 27), "focused": Vector2i(32, 28), "disabled": Vector2i(32, 28)
+}
+const SAMPLE = Vector2i(20, 12)
+var modular_textures: Dictionary = {}
 ## G2.2B art candidate: resizable frame bodies and separately anchored ornaments.
 const ART_DIR = "res://ui/assets/frames/g22b"
 const SIZES = {
@@ -22,6 +30,7 @@ var problem: String = ""
 
 func load_pack(directory: String = ART_DIR) -> bool:
 	textures.clear()
+	modular_textures.clear()
 	problem = ""
 	var pending: Dictionary = {}
 	for name in SIZES:
@@ -37,15 +46,26 @@ func load_pack(directory: String = ART_DIR) -> bool:
 		if name == "tooltip":
 			image = Normalize.padded(image, 3)
 		pending[name] = ImageTexture.create_from_image(image)
+	for key in CORNERS:
+		var atlas = Modular.build(pending[key], CORNERS[key], SAMPLE)
+		if atlas == null:
+			problem = "Invalid modular frame: " + key
+			modular_textures.clear()
+			return false
+		modular_textures[key] = atlas
 	textures = pending
 	return true
 
 func is_ready() -> bool:
-	return textures.size() == SIZES.size()
+	return textures.size() == SIZES.size() and modular_textures.size() == CORNERS.size()
 
-func style_for(name: String) -> StyleBoxTexture:
+func style_for(name: String, legacy: bool = false) -> StyleBoxTexture:
 	if not is_ready() or not MARGINS.has(name):
 		return null
+	if not legacy:
+		var corner: Vector2i = CORNERS[name]
+		# Content must stay inside the fixed corner region, including long tooltips.
+		return Modular.style(modular_textures[name], corner, Vector4(corner.x, corner.y, corner.x, corner.y))
 	var margin: Vector4 = MARGINS[name]
 	if name == "tooltip":
 		margin += Vector4(3, 3, 3, 3)

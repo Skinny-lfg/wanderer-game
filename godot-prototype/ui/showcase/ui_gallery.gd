@@ -95,7 +95,7 @@ func _ready() -> void:
 	fit.text = "Fit screen"
 	fit.pressed.connect(_fit_gallery_window)
 	header.add_child(fit)
-	frame.add_child(_label("STYLIZED GOTHIC     •     G2.2E / TOOLTIP ART STUDY", 15, Tokens.GOLD))
+	frame.add_child(_label("STYLIZED GOTHIC     •     G2.2E.1 / MODULAR FRAME ARCHITECTURE", 15, Tokens.GOLD))
 	frame.add_child(HSeparator.new())
 	var layout = _row(frame)
 	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -256,7 +256,15 @@ func _buttons() -> void:
 				node.focus_mode = Control.FOCUS_NONE
 			buttons.append(node)
 		demo_buttons[family] = buttons
-	_note("Nine-slice starting margins: 59 / 16 px in source; 42 / 11 px at logical scale. Focus is provisional. Gameplay is not connected.")
+	_note("Modular atlas: fixed corners, repeating edge and center tiles. Focus is provisional. Gameplay is not connected.")
+
+	if use_painted:
+		_note("Resize study — same modular primary button at three widths.")
+		var widths = _row(body)
+		for width in [160, 264, 420]:
+			var button = _button(widths, str(width) + " px", "PrimaryButton")
+			button.custom_minimum_size = Vector2(width, 54)
+			painted_pack.apply_to(button, "primary")
 
 func _select_button_pack(index: int) -> void:
 	prefer_painted = index == 0
@@ -309,7 +317,19 @@ func _panels() -> void:
 	_art_sample(dividers, "divider_horizontal", "Horizontal divider", Vector2(290, 44))
 	_art_sample(dividers, "section_ornament", "Section ornament", Vector2(290, 55))
 	_art_sample(dividers, "divider_vertical", "Vertical divider", Vector2(26, 175))
-	_note("Initial nine-slice margins and extracted art are candidates, not final approval. No game screens changed.")
+	_note("Modular corners and tile patterns are art candidates, not final approval. No game screens changed.")
+
+	_note("Resize comparison — left: legacy stretched center/edges; right: modular fixed corners and repeated tiles.")
+	for extent in [Vector2(300, 112), Vector2(420, 200), Vector2(300, 360)]:
+		var comparison = _row(body)
+		for legacy in [true, false]:
+			var panel = PanelContainer.new()
+			panel.custom_minimum_size = extent
+			panel.add_theme_stylebox_override("panel", frame_pack.style_for("tooltip", legacy))
+			comparison.add_child(panel)
+			var label = _label(("Legacy" if legacy else "Modular") + "  " + str(int(extent.x)) + " x " + str(int(extent.y)), 15)
+			label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			panel.add_child(label)
 
 func _frame_sample(host: Node, key: String, caption_text: String, extent: Vector2, detail: String, ornament: String = "") -> void:
 	var column = _vbox(host, 5)
@@ -423,6 +443,14 @@ func _navigation() -> void:
 		col.add_child(caption)
 	_note("Talent notification is a sample count, not actual available talent points. Expedition and Combat remain contextual.")
 	_navigation_ornament()
+
+	_note("Resize study — modular tab at compact, normal and wide widths.")
+	var widths = _row(body)
+	for width in [90, 180, 300]:
+		var tab = TabScene.instantiate()
+		navigation_pack.apply_to(tab, "inventory", width == 90)
+		tab.custom_minimum_size.x = width
+		widths.add_child(tab)
 
 func _navigation_ornament() -> void:
 	var ornament = TextureRect.new()

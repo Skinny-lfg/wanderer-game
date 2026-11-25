@@ -120,3 +120,11 @@ jobs:
           "$GODOT" --headless --path godot-prototype --script res://tests/painted_tooltips_smoke.gd 2>&1 | tee /tmp/godot-tooltips.log
           ! grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-tooltips.log
           grep -F 'PASS: G2.2E painted compact, legendary, comparison and hover tooltip' /tmp/godot-tooltips.log
+      - name: Modular frames actual artwork smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          GODOT=/tmp/godot-bin/Godot_v4.4.1-stable_linux.x86_64
+          "$GODOT" --headless --path godot-prototype --script res://tests/modular_frames_smoke.gd 2>&1 | tee /tmp/godot-modular.log
+          ! grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-modular.log
+          grep -F 'PASS: G2.2E.1 28 modular atlases, fixed corner pixels, mirrored tile joins and legacy comparison' /tmp/godot-modular.log

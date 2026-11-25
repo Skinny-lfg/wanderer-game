@@ -1,0 +1,7 @@
+# G2.2E.1 — Modular Frame Architecture
+
+The workshop now generates compact nine-region atlases from approved originals at load time. It preserves the four corner crops exactly at logical texture scale; horizontal and vertical borders repeat mirrored sampled strips and the center is independently sampled/mirrored in both axes. Godot StyleBoxTexture TILE mode repeats without scaling the tile. Original PNGs and legacy style construction remain available. This is not a claim that the legacy art is seamless at every corner-to-edge join: sample choices and corner extents are provisional; baked ornamentation outside protected corners may be omitted or repeated. Future purpose-built assets should provide clean separate edges, corners, backgrounds and independent ornament sprites.
+
+16 button states + 7 resizable frame families + 5 navigation states = 28 modular atlases. Tooltips reuse modular frame families. Fixed-aspect portraits/banners, slot frames, existing independent crest art and original SVG fallback are unchanged. Gallery-only, no game screen or mechanics changes.
+
+F6 -> Panels: compare legacy and modular tooltip frames at 300x112, 420x200, 300x360. Buttons and Navigation include width studies. Tests compare corner pixels and mirrored joins for all 28 original assets, check both tile modes and legacy style. Visual validation of corner-to-edge transitions and ornament proportions is still required.

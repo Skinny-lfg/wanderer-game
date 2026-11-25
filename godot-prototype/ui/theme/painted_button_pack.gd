@@ -1,4 +1,8 @@
 extends RefCounted
+const Modular = preload("res://ui/theme/modular_frame.gd")
+const CORNER = Vector2i(48, 16)
+const SAMPLE = Vector2i(24, 8)
+var modular_textures: Dictionary = {}
 ## G2.2A local artwork candidate. No game state or scene theme mutation.
 const ART_DIR = "res://ui/assets/buttons/g22a"
 const VARIANTS = ["primary", "secondary", "danger", "ghost"]
@@ -10,6 +14,7 @@ var problem: String = ""
 
 func load_pack(directory: String = ART_DIR) -> bool:
 	textures.clear()
+	modular_textures.clear()
 	problem = ""
 	var pending: Dictionary = {}
 	for variant in VARIANTS:
@@ -28,13 +33,22 @@ func load_pack(directory: String = ART_DIR) -> bool:
 			# so the corner geometry is not squashed at the recommended button height.
 			image.resize(LOGICAL_SIZE.x, LOGICAL_SIZE.y, Image.INTERPOLATE_LANCZOS)
 			pending[name] = ImageTexture.create_from_image(image)
+	for key in pending:
+		var atlas = Modular.build(pending[key], CORNER, SAMPLE)
+		if atlas == null:
+			problem = "Invalid modular button: " + key
+			modular_textures.clear()
+			return false
+		modular_textures[key] = atlas
 	textures = pending
 	return true
 
 func is_ready() -> bool:
-	return textures.size() == 16
+	return textures.size() == 16 and modular_textures.size() == 16
 
-func style_for(variant: String, state: String) -> StyleBoxTexture:
+func style_for(variant: String, state: String, legacy: bool = false) -> StyleBoxTexture:
+	if not legacy:
+		return Modular.style(modular_textures[variant + "_" + state], CORNER, Vector4(39, 8, 39, 8))
 	var box = StyleBoxTexture.new()
 	box.texture = textures[variant + "_" + state]
 	box.texture_margin_left = 42

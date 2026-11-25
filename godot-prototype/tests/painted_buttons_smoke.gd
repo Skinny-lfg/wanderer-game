@@ -44,10 +44,10 @@ func _run() -> void:
 		var live = samples[0]
 		for state in Pack.STATES:
 			var box = live.get_theme_stylebox(state)
-			if not box is StyleBoxTexture or box.texture.get_size() != Vector2(264, 54):
+			if not box is StyleBoxTexture or box.texture.get_size() != Vector2(Pack.CORNER * 2 + Pack.SAMPLE * 2):
 				_fail("Painted style not connected: " + variant + "/" + state)
 				return
-			if box.texture_margin_left != 42 or box.texture_margin_top != 11:
+			if box.texture_margin_left != Pack.CORNER.x or box.texture_margin_top != Pack.CORNER.y or box.axis_stretch_horizontal != StyleBoxTexture.AXIS_STRETCH_MODE_TILE or box.axis_stretch_vertical != StyleBoxTexture.AXIS_STRETCH_MODE_TILE:
 				_fail("Unexpected margins")
 				return
 	gallery.prefer_painted = false
