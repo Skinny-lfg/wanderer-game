@@ -642,7 +642,7 @@ func _tooltip_card(kind: String, compare: bool = false) -> PanelContainer:
 	node.description = ""
 	node.primary_value = "24–32"
 	node.primary_label = "Attack Damage"
-	node.attributes = [{"label": "Agility", "value": "+8"}, {"label": "Critical Rating", "value": "+5"}]
+	node.attributes.assign([{"label": "Agility", "value": "+8"}, {"label": "Critical Rating", "value": "+5"}])
 	if kind == "common":
 		rarity_index = 1
 		node.item_name = "Old Iron Blade"
@@ -658,7 +658,7 @@ func _tooltip_card(kind: String, compare: bool = false) -> PanelContainer:
 		node.stat_lines = PackedStringArray(["+16 Maximum Health", "+4 Defense", "+6 Endurance"])
 		node.primary_value = ""
 		node.primary_label = ""
-		node.attributes = [{"label": "Maximum Health", "value": "+16"}, {"label": "Defense", "value": "+4"}, {"label": "Endurance", "value": "+6"}]
+		node.attributes.assign([{"label": "Maximum Health", "value": "+16"}, {"label": "Defense", "value": "+4"}, {"label": "Endurance", "value": "+6"}])
 		node.unique_title = "Oathkeeper"
 		node.unique_effect = "On block, gain a brief protective ward."
 		node.description = "A relic of a forgotten oath."
@@ -667,13 +667,13 @@ func _tooltip_card(kind: String, compare: bool = false) -> PanelContainer:
 		node.item_name = "Iron Fang"
 		node.stat_lines = PackedStringArray(["20–28 Attack Damage", "+5 Agility", "+7 Critical Rating"])
 		node.primary_value = "20–28"
-		node.attributes = [{"label": "Agility", "value": "+5"}, {"label": "Critical Rating", "value": "+7"}]
+		node.attributes.assign([{"label": "Agility", "value": "+5"}, {"label": "Critical Rating", "value": "+7"}])
 		node.equipped_caption = true
 		node.description = ""
 	elif compare:
 		node.comparison_title = "CHANGE VS IRON FANG"
 		node.comparison_lines = PackedStringArray(["+4 minimum / maximum damage", "+3 Agility", "-2 Critical Rating"])
-		node.changes = [{"label": "Attack Damage", "value": "+4 / +4", "delta": 4}, {"label": "Agility", "value": "+3", "delta": 3}, {"label": "Critical Rating", "value": "−2", "delta": -2}]
+		node.changes.assign([{"label": "Attack Damage", "value": "+4 / +4", "delta": 4}, {"label": "Agility", "value": "+3", "delta": 3}, {"label": "Critical Rating", "value": "−2", "delta": -2}])
 	node.rarity = rarity_index
 	if prefer_tooltips and frame_pack.is_ready() and slot_pack.is_ready():
 		node.detailed = kind == "legendary"
