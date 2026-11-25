@@ -12,7 +12,7 @@ const PROFILES = [
 	{"name": "C — Minimal", "family": "Inter Medium", "heights": [26, 26, 26, 8], "weight": 500, "alignment": HORIZONTAL_ALIGNMENT_RIGHT, "scale": 0.66, "outline": 2},
 	{"name": "Previous — G2.2F.2", "family": "Original theme font", "heights": [30, 26, 24, 16], "weight": 400, "alignment": HORIZONTAL_ALIGNMENT_CENTER, "scale": 0.53, "outline": 3}
 ]
-const DEFAULT_INDEX = 1
+const DEFAULT_INDEX = 2
 var cached_fonts: Dictionary = {}
 
 func font_for(index: int) -> Font:
