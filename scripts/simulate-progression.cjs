@@ -6,6 +6,7 @@ const path=require('node:path');
 const crypto=require('node:crypto');
 const create=require('../tests/v012-economy-harness.cjs');
 require('../combat/v012-buildcraft.js');
+require('../combat/v012-runes.js'); // Register the dependency before fingerprinting, not on the first Rune fixture.
 require('../combat/talent-catalog.js');
 require('../combat/talent-graph-next.js');
 require('../combat/talent-graph-bridge.js');
@@ -285,7 +286,7 @@ function prepare(level,build,seed,opts,desiredRisk=undefined,desiredFamily=undef
   if(!T.valid(a.state().automaticTalents))
    throw Error('Controlled native TalentGraph changed during fixture setup');
   if(opts.anchorRuneFixture!==undefined){
-   require('../combat/v012-runes.js');const specs=opts.anchorRuneFixture,R=globalThis.WandererV012Runes;
+   const specs=opts.anchorRuneFixture,R=globalThis.WandererV012Runes;
    if(opts.runes||!Array.isArray(specs)||specs.length>3||new Set(specs.map(r=>r.family)).size!==specs.length||specs.some(r=>!R.FAMILIES.some(f=>f.id===r.family)||!R.RARITIES.includes(r.rarity)||!Number.isSafeInteger(r.tier)||r.tier<1||r.tier>level))throw Error('Invalid controlled Anchor Rune fixture');
    const st=a.state();st.runes=specs.map(r=>a.makeRune(r.family,r.tier,r.rarity));st.runeSlots=[null,null,null];
    for(let i=0;i<st.runes.length;i++)if(!a.runes.equip(st.runes[i].id,i))throw Error('Native Shrine rejected controlled Anchor Rune');

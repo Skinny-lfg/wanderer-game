@@ -1,0 +1,62 @@
+name: Anchor Runes Summary Recovery (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths:
+      - '.github/workflows/v013-anchor-rune-recovery.yml'
+      - 'scripts/v013-anchor-rune-recover.cjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  recover-original-results:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Download completed run, not a new simulation
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: '45592535013'
+          pattern: anchor-*
+          path: reports/anchor-rune-scaling
+          merge-multiple: true
+      - name: Verify exact original workflow and artifact provenance
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api repos/${{ github.repository }}/actions/runs/45592535013 > reports/anchor-rune-scaling/original-run.json
+          gh api 'repos/${{ github.repository }}/actions/runs/45592535013/artifacts?per_page=100' > reports/anchor-rune-scaling/original-artifacts.json
+          node scripts/v013-anchor-rune-recover.cjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: anchor-rune-recovered-summary
+          path: |
+            reports/anchor-rune-scaling/summary.json
+            reports/anchor-rune-scaling/summary.md
+            reports/anchor-rune-scaling/original-run.json
+            reports/anchor-rune-scaling/original-artifacts.json
+          if-no-files-found: error
+  fingerprint-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - name: Verify the simulator fingerprint remains stable across Rune fixtures
+        run: |
+          node - <<'NODE'
+          const assert=require('node:assert/strict');
+          const S=require('./scripts/simulate-progression.cjs');
+          const A=require('./scripts/v013-anchor-rune-scaling.cjs');
+          const before=S.sourceFingerprint().sha256;
+          A.paired('blood','normal-1',0,A.arms('blood').slice(0,2));
+          assert.equal(S.sourceFingerprint().sha256,before);
+          console.log('FINGERPRINT_STABLE='+before);
+          NODE
