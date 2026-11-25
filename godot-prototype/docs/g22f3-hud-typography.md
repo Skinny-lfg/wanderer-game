@@ -4,4 +4,4 @@ F6 → Resource Bars → HUD style. Four selectable profiles: A Classic RPG (Cin
 
 User visual review: Minimal selected for readability. All comparison profiles remain available; no changes to the selected design beyond making it the default.
 
-Follow-up visual refinement: EXP width 352 px (approximately 75% of the 470 px main bars), horizontally centered in every profile. Heights, text, textures and animations remain unchanged.
+Follow-up visual refinement: EXP width 446.5 px (95% of the 470 px main bars), horizontally centered in every profile. Heights, text, textures and animations remain unchanged.
