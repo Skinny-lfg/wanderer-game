@@ -50,3 +50,7 @@ The gallery now supports the local 16-PNG button art pack at `godot-prototype/ui
 ## G2.2B — Painted panels and frames
 
 Extract `wanderer_g22b_gallery_assets.zip` into the repository root (folder structure included). Gallery F6 → Panels → G2.2B Painted PNG → Reload artwork. The 14 PNGs live at `godot-prototype/ui/assets/frames/g22b/`. Seven frame styles use initial nine-slice settings, banner and portrait retain aspect ratio, and crest overlays retain their independent size. Scroll for all examples. Original SVG comparison stays available. Art pack is supplied separately; CI synthetic fixtures validate integration until real PNGs are committed. No theme application to the game screens yet.
+
+## G2.2C — Navigation art
+
+Extract the supplied `wanderer_g22c_gallery_assets.zip` into the repository root. Gallery F6 → Navigation → G2.2C Painted PNG → Reload artwork. Eleven PNGs at `godot-prototype/ui/assets/navigation/g22c/`: five aligned tab backgrounds, five separate section icons and an ornament reused from G2.2B. Live five-tab exclusive selection, compact icon-only variant, sample talent-count badge, fixed state samples and SVG comparison. Nine-slice margins are initial candidates. The real game shell and other categories are unchanged. CI tests the loader with synthetic assets and validates actual files if installed. 

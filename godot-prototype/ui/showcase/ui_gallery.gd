@@ -2,6 +2,7 @@ extends Control
 const Tokens = preload("res://ui/theme/tokens.gd")
 const PaintedPack = preload("res://ui/theme/painted_button_pack.gd")
 const FramePack = preload("res://ui/theme/painted_frame_pack.gd")
+const NavigationPack = preload("res://ui/theme/painted_navigation_pack.gd")
 const ButtonScene = preload("res://ui/components/navigation/gothic_button.tscn")
 const TabScene = preload("res://ui/components/navigation/gothic_tab.tscn")
 const PanelScene = preload("res://ui/components/surfaces/gothic_panel.tscn")
@@ -17,6 +18,10 @@ var scroll: ScrollContainer
 var feedback: Label
 var painted_pack = PaintedPack.new()
 var frame_pack = FramePack.new()
+var navigation_pack = NavigationPack.new()
+var prefer_navigation: bool = true
+var navigation_status: Label
+var demo_tabs: Array[Button] = []
 var prefer_frames: bool = true
 var frame_status: Label
 var demo_panels: Array[PanelContainer] = []
@@ -61,7 +66,7 @@ func _ready() -> void:
 		outer.add_theme_constant_override("margin_" + side, 24)
 	var frame = _vbox(outer, 14)
 	frame.add_child(_heading("WANDERER  /  UI WORKSHOP"))
-	frame.add_child(_label("STYLIZED GOTHIC     •     G2.2B / FRAME ART STUDY", 15, Tokens.GOLD))
+	frame.add_child(_label("STYLIZED GOTHIC     •     G2.2C / NAVIGATION ART STUDY", 15, Tokens.GOLD))
 	frame.add_child(HSeparator.new())
 	var layout = _row(frame)
 	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -90,6 +95,7 @@ func _ready() -> void:
 	frame.add_child(feedback)
 	painted_pack.load_pack()
 	frame_pack.load_pack()
+	navigation_pack.load_pack()
 	show_category("Foundations")
 
 func show_category(category: String) -> bool:
@@ -311,6 +317,112 @@ func _panels_original() -> void:
 	_button(actions, "Cancel", "Button")
 
 func _navigation() -> void:
+	demo_tabs.clear()
+	var toolbar = _row(body)
+	var selector = OptionButton.new()
+	selector.add_item("G2.2C Painted PNG")
+	selector.add_item("G2.1 Original SVG")
+	selector.select(0 if prefer_navigation else 1)
+	selector.item_selected.connect(_select_navigation_pack)
+	toolbar.add_child(selector)
+	var reload = Button.new()
+	reload.text = "Reload artwork"
+	reload.pressed.connect(_reload_navigation)
+	toolbar.add_child(reload)
+	var use_painted = prefer_navigation and navigation_pack.is_ready()
+	navigation_status = _label("11 / 11 PNGs loaded" if use_painted else "Original SVG active", 15, Tokens.GOLD)
+	toolbar.add_child(navigation_status)
+	if not use_painted:
+		if prefer_navigation:
+			_note("Navigation pack not installed: " + navigation_pack.problem + ". Extract G2.2C ZIP at repository root.")
+		_navigation_original()
+		return
+	_note("Main navigation — click a tab to change selection. The five tabs form a shared rail.")
+	_navigation_rail(body, false)
+	_note("Compact icon-only alternative")
+	_navigation_rail(body, true)
+	_note("State samples — fixed visual states for comparison")
+	var row = _row(body)
+	row.add_theme_constant_override("separation", 5)
+	for state in NavigationPack.STATES:
+		var col = _vbox(row, 4)
+		var node = TabScene.instantiate()
+		navigation_pack.apply_to(node, "inventory")
+		node.custom_minimum_size.x = 170
+		node.disabled = state == "disabled"
+		var style = navigation_pack.style_for(state)
+		for key in ["normal", "hover", "pressed", "hover_pressed", "disabled"]:
+			node.add_theme_stylebox_override(key, style)
+		node.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		node.focus_mode = Control.FOCUS_NONE
+		col.add_child(node)
+		var caption = _label(state.capitalize(), 14, Tokens.MUTED)
+		caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		col.add_child(caption)
+	_note("Talent notification is a sample count, not actual available talent points. Expedition and Combat remain contextual.")
+	_navigation_ornament()
+
+func _navigation_ornament() -> void:
+	var ornament = TextureRect.new()
+	ornament.texture = navigation_pack.textures["rail_ornament"]
+	ornament.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	ornament.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	ornament.custom_minimum_size = Vector2(250, 44)
+	body.add_child(ornament)
+
+func _navigation_rail(host: Node, compact: bool) -> void:
+	var rail = PanelContainer.new()
+	var surface = StyleBoxFlat.new()
+	surface.bg_color = Color("#18191e")
+	surface.border_color = Color("#756044")
+	surface.border_width_top = 1
+	surface.border_width_bottom = 1
+	rail.add_theme_stylebox_override("panel", surface)
+	host.add_child(rail)
+	var row = _row(rail)
+	row.add_theme_constant_override("separation", 0)
+	var group = ButtonGroup.new()
+	group.allow_unpress = false
+	for id in NavigationPack.IDS:
+		var tab = TabScene.instantiate()
+		tab.button_group = group
+		navigation_pack.apply_to(tab, id, compact)
+		row.add_child(tab)
+		tab.pressed.connect(func(): feedback.text = "Preview navigation: " + id)
+		if id == "inventory":
+			tab.button_pressed = true
+		if not compact:
+			demo_tabs.append(tab)
+		if id == "talents":
+			var badge = Label.new()
+			badge.text = "3"
+			badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			badge.add_theme_font_size_override("font_size", 13)
+			badge.add_theme_color_override("font_color", Color("#fff0d4"))
+			var style = StyleBoxFlat.new()
+			style.bg_color = Color("#9e302b")
+			style.border_color = Color("#df9963")
+			style.set_border_width_all(1)
+			style.set_corner_radius_all(9)
+			badge.add_theme_stylebox_override("normal", style)
+			badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			tab.add_child(badge)
+			badge.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+			badge.offset_left = -23
+			badge.offset_right = -4
+			badge.offset_top = 1
+			badge.offset_bottom = 20
+
+func _select_navigation_pack(index: int) -> void:
+	prefer_navigation = index == 0
+	call_deferred("show_category", "Navigation")
+
+func _reload_navigation() -> void:
+	navigation_pack.load_pack()
+	prefer_navigation = true
+	call_deferred("show_category", "Navigation")
+
+func _navigation_original() -> void:
 	_note("Five permanent Camp tabs. Expedition and Combat are contextual screens, not tabs.")
 	var row = _row(body)
 	var group = ButtonGroup.new()
