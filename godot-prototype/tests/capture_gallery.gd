@@ -26,5 +26,5 @@ func _run() -> void:
 			push_error("Cannot save gallery screenshot")
 			quit(1)
 			return
-	print("PASS: captured six gothic gallery categories")
+	print("PASS: captured seven gothic gallery categories")
 	quit(0)

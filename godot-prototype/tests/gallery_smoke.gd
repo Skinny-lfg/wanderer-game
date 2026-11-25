@@ -10,7 +10,7 @@ func _run() -> void:
 	var gallery = load("res://ui/showcase/ui_gallery.tscn").instantiate()
 	root.add_child(gallery)
 	await process_frame
-	if gallery.active_category != "Foundations" or gallery.category_buttons.size() != 6:
+	if gallery.active_category != "Foundations" or gallery.category_buttons.size() != 7:
 		_fail("Gallery did not initialize")
 		return
 	for category in gallery.CATEGORIES:
@@ -41,5 +41,5 @@ func _run() -> void:
 	if gallery.show_category("invalid") or gallery.active_category != "Item Slots":
 		_fail("Invalid category changed state")
 		return
-	print("PASS: gothic gallery six categories and component states")
+	print("PASS: gothic gallery seven categories and component states")
 	quit(0)

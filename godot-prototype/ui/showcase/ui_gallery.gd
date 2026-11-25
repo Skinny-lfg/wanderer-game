@@ -11,7 +11,11 @@ const SlotScene = preload("res://ui/components/inventory/item_slot.tscn")
 const TooltipScene = preload("res://ui/components/inventory/item_tooltip.tscn")
 const ITEM = preload("res://assets/shell/dagger.png")
 const BAG_ART = [ITEM, preload("res://assets/shell/helmet.png"), preload("res://assets/shell/chest.png"), preload("res://assets/shell/boots.png"), preload("res://assets/shell/gloves.png"), preload("res://assets/shell/ring.png"), preload("res://assets/shell/charm.png"), preload("res://assets/shell/shield.png")]
-const CATEGORIES = ["Foundations", "Buttons", "Panels", "Navigation", "Item Slots", "Tooltips"]
+const ResourceBar = preload("res://ui/components/hud/resource_bar.gd")
+const PortraitMedallion = preload("res://ui/components/hud/portrait_medallion.gd")
+const CATEGORIES = ["Foundations", "Buttons", "Panels", "Navigation", "Item Slots", "Tooltips", "Resource Bars"]
+var resource_samples: Dictionary = {}
+var resource_portrait: Control
 var active_category: String = ""
 var category_buttons: Dictionary = {}
 var body: VBoxContainer
@@ -98,7 +102,7 @@ func _ready() -> void:
 	fit.text = "Fit screen"
 	fit.pressed.connect(_fit_gallery_window)
 	header.add_child(fit)
-	frame.add_child(_label("STYLIZED GOTHIC     •     G2.2E.7 / SIMPLIFIED PNG ART", 15, Tokens.GOLD))
+	frame.add_child(_label("STYLIZED GOTHIC     •     G2.2F / RESOURCE BARS", 15, Tokens.GOLD))
 	frame.add_child(HSeparator.new())
 	var layout = _row(frame)
 	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -111,7 +115,7 @@ func _ready() -> void:
 		sidebar.add_child(button)
 		category_buttons[category] = button
 	sidebar.add_child(_label("NEXT IN THE KIT", 13, Tokens.GOLD))
-	var next = _label("Resource bars / talents\nRunes / map / combat HUD\nFeedback / settings", 14, Tokens.MUTED)
+	var next = _label("Talents / runes\nMap / combat HUD\nFeedback / settings", 14, Tokens.MUTED)
 	sidebar.add_child(next)
 	var right = _vbox(layout, 10)
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -181,6 +185,7 @@ func show_category(category: String) -> bool:
 		"Navigation": _navigation()
 		"Item Slots": _slots()
 		"Tooltips": _tooltips()
+		"Resource Bars": _resource_bars()
 	feedback.text = "Independent design gallery — no game state"
 	return true
 
@@ -809,3 +814,97 @@ func _tooltips() -> void:
 		card.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 		extra.add_child(card)
 	_note("Comparison values are demonstration data. Live inventory, positioning and combat mechanics are not connected.")
+
+func _resource_sample(host: Node, kind: String, amount: float, capacity: float, width: float, height: float, values: bool = true) -> Control:
+	var bar = ResourceBar.new()
+	bar.resource_kind = kind
+	bar.custom_minimum_size = Vector2(width, height)
+	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bar.show_value = values
+	host.add_child(bar)
+	bar.set_amount(amount, capacity, false)
+	return bar
+
+func _resource_bars() -> void:
+	resource_samples.clear()
+	_note("G2.2F — seven independent PNGs. No resource icons. Preview values only.")
+	var hud = _row(body)
+	resource_portrait = PortraitMedallion.new()
+	hud.add_child(resource_portrait)
+	resource_portrait.set_identity(preload("res://assets/arena/wanderer.webp"), 24)
+	var stack = _vbox(hud, 5)
+	stack.custom_minimum_size.x = 470
+	stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	resource_samples["Health"] = _resource_sample(stack, "Health", 2400, 2840, 470, 30)
+	resource_samples["Mana"] = _resource_sample(stack, "Mana", 520, 600, 470, 26)
+	resource_samples["Barrier"] = _resource_sample(stack, "Barrier", 180, 300, 470, 24)
+	resource_samples["Barrier"].hide_empty = true
+	resource_samples["EXP"] = _resource_sample(stack, "EXP", 420, 1000, 470, 16, false)
+	var controls = _row(body)
+	for action in ["Damage", "Heal", "Cast", "Barrier", "Gain EXP", "Reset"]:
+		var button = _button(controls, action, "Button")
+		painted_pack.apply_to(button, "secondary")
+		button.custom_minimum_size.x = 108
+		button.pressed.connect(_resource_action.bind(action))
+	_note("Adjust values or try the actions. Barrier disappears at zero. The level badge is dynamic.")
+	for kind in ["Health", "Mana", "Barrier", "EXP"]:
+		var row = _row(body)
+		var label = _label(kind, 14)
+		label.custom_minimum_size.x = 85
+		row.add_child(label)
+		var slider = HSlider.new()
+		slider.min_value = 0
+		slider.max_value = 100
+		slider.step = 1
+		slider.value = resource_samples[kind].fraction() * 100.0
+		slider.custom_minimum_size.x = 260
+		slider.value_changed.connect(_resource_percent.bind(kind))
+		row.add_child(slider)
+	_note("Enemy nameplate / compact health — no portrait required.")
+	var enemy = _vbox(body, 3)
+	enemy.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	enemy.add_child(_label("Bandit Marauder  •  Lv. 18", 16))
+	_resource_sample(enemy, "Health", 72, 100, 250, 16, false)
+	_note("Fill stress study — full, partial, low, critical, empty.")
+	for percent in [100, 67, 25, 8, 0]:
+		var row = _row(body)
+		var label = _label(str(percent) + "%", 14)
+		label.custom_minimum_size.x = 58
+		row.add_child(label)
+		_resource_sample(row, "Health", percent, 100, 270, 24, true)
+	_note("Fixed proportions at different widths and heights: compact / standard / wide.")
+	var widths = _row(body)
+	_resource_sample(widths, "Mana", 65, 100, 110, 12, false)
+	_resource_sample(widths, "Mana", 65, 100, 220, 16, false)
+	_resource_sample(widths, "Mana", 65, 100, 360, 30, true)
+	_note("Workshop only. No live character, combat, experience or progression mechanics connected.")
+
+func _resource_percent(percent: float, kind: String) -> void:
+	var bar = resource_samples[kind]
+	bar.set_amount(bar.maximum * percent / 100.0, bar.maximum)
+
+func _resource_action(action: String) -> void:
+	var health = resource_samples["Health"]
+	var mana = resource_samples["Mana"]
+	var barrier = resource_samples["Barrier"]
+	var exp = resource_samples["EXP"]
+	match action:
+		"Damage":
+			var absorbed = minf(barrier.current, 250.0)
+			barrier.set_amount(barrier.current - absorbed, barrier.maximum)
+			health.set_amount(health.current - (250.0 - absorbed), health.maximum)
+		"Heal": health.set_amount(health.current + 350.0, health.maximum)
+		"Cast": mana.set_amount(mana.current - 85.0, mana.maximum)
+		"Barrier": barrier.set_amount(barrier.current + 90.0, barrier.maximum)
+		"Gain EXP":
+			var next = exp.current + 180.0
+			if next >= exp.maximum:
+				resource_portrait.set_identity(resource_portrait.portrait, resource_portrait.level + 1)
+				next -= exp.maximum
+			exp.set_amount(next, exp.maximum)
+		"Reset":
+			health.set_amount(2400, 2840)
+			mana.set_amount(520, 600)
+			barrier.set_amount(180, 300)
+			exp.set_amount(420, 1000)
+			resource_portrait.set_identity(resource_portrait.portrait, 24)

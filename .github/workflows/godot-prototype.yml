@@ -63,7 +63,7 @@ jobs:
           GODOT=/tmp/godot-bin/Godot_v4.4.1-stable_linux.x86_64
           "$GODOT" --headless --path godot-prototype --script res://tests/gallery_smoke.gd 2>&1 | tee /tmp/godot-gallery.log
           ! grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-gallery.log
-          grep -F 'PASS: gothic gallery six categories and component states' /tmp/godot-gallery.log
+          grep -F 'PASS: gothic gallery seven categories and component states' /tmp/godot-gallery.log
       - name: Capture Gothic gallery
         shell: bash
         run: |
@@ -71,8 +71,8 @@ jobs:
           GODOT=/tmp/godot-bin/Godot_v4.4.1-stable_linux.x86_64
           LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a -s '-screen 0 1600x900x24' "$GODOT" --path godot-prototype --rendering-method gl_compatibility --resolution 1280x720 --audio-driver Dummy --script res://tests/capture_gallery.gd 2>&1 | tee /tmp/godot-gallery-capture.log
           ! grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-gallery-capture.log
-          grep -F 'PASS: captured six gothic gallery categories' /tmp/godot-gallery-capture.log
-          for screen in foundations buttons panels navigation item_slots tooltips; do
+          grep -F 'PASS: captured seven gothic gallery categories' /tmp/godot-gallery-capture.log
+          for screen in foundations buttons panels navigation item_slots tooltips resource_bars; do
             test -s "godot-prototype/captures/gallery/$screen.png"
           done
       - uses: actions/upload-artifact@v4
@@ -128,3 +128,11 @@ jobs:
           "$GODOT" --headless --path godot-prototype --script res://tests/modular_frames_smoke.gd 2>&1 | tee /tmp/godot-modular.log
           ! grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-modular.log
           grep -F 'PASS: G2.2E.1B 28 continuous atlases, matched seams and protected outer art' /tmp/godot-modular.log
+      - name: Resource bars smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          GODOT=/tmp/godot-bin/Godot_v4.4.1-stable_linux.x86_64
+          "$GODOT" --headless --path godot-prototype --script res://tests/resource_bars_smoke.gd 2>&1 | tee /tmp/godot-resource-bars.log
+          ! grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-resource-bars.log
+          grep -F 'PASS: G2.2F seven PNGs, resource values, fill bounds, barrier visibility and level preview' /tmp/godot-resource-bars.log

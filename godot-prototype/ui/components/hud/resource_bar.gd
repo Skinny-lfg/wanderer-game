@@ -1,0 +1,114 @@
+extends Control
+## Horizontal modular resource bar. Three full-height regions preserve the
+## pointed caps at each chosen bar height. The fill is tiled and clipped.
+const FRAME = preload("res://ui/assets/resources/g22f/resource_frame.png")
+const FILLS = {
+	"Health": preload("res://ui/assets/resources/g22f/fill_health.png"),
+	"Mana": preload("res://ui/assets/resources/g22f/fill_mana.png"),
+	"Barrier": preload("res://ui/assets/resources/g22f/fill_barrier.png"),
+	"EXP": preload("res://ui/assets/resources/g22f/fill_exp.png")
+}
+var resource_kind: String = "Health"
+var current: float = 100.0
+var maximum: float = 100.0
+var shown_ratio: float = 1.0
+var show_value: bool = true
+var hide_empty: bool = false
+var motion: Tween
+
+func _ready() -> void:
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	custom_minimum_size.x = maxf(custom_minimum_size.x, 48.0)
+	resized.connect(queue_redraw)
+	_sync_visibility()
+	queue_redraw()
+
+func fraction() -> float:
+	return clampf(current / maximum, 0.0, 1.0) if maximum > 0.0 else 0.0
+
+func set_amount(value: float, capacity: float, animate: bool = true) -> void:
+	maximum = maxf(0.0, capacity)
+	current = clampf(value, 0.0, maximum)
+	if motion != null and motion.is_valid():
+		motion.kill()
+	var target = fraction()
+	_sync_visibility()
+	if animate and is_inside_tree() and visible:
+		motion = create_tween()
+		motion.tween_method(_display_ratio, shown_ratio, target, 0.22).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	else:
+		_display_ratio(target)
+
+func _sync_visibility() -> void:
+	if hide_empty:
+		visible = current > 0.0 and maximum > 0.0
+
+func _display_ratio(value: float) -> void:
+	shown_ratio = clampf(value, 0.0, 1.0)
+	queue_redraw()
+
+func _clip_x(points: PackedVector2Array, boundary: float, keep_left: bool) -> PackedVector2Array:
+	var result = PackedVector2Array()
+	if points.is_empty():
+		return result
+	var prev = points[points.size() - 1]
+	var prev_inside = prev.x <= boundary if keep_left else prev.x >= boundary
+	for point in points:
+		var inside = point.x <= boundary if keep_left else point.x >= boundary
+		if inside != prev_inside:
+			var amount = (boundary - prev.x) / (point.x - prev.x)
+			result.append(prev.lerp(point, amount))
+		if inside:
+			result.append(point)
+		prev = point
+		prev_inside = inside
+	return result
+
+func fill_shape(extent: Vector2, ratio: float) -> PackedVector2Array:
+	var h = extent.y
+	var w = extent.x
+	var cap = minf(h * 0.625, w * 0.25)
+	var inset = h * 0.17
+	var left = inset
+	var right = w - inset
+	var top = inset
+	var bottom = h - inset
+	if ratio <= 0.0 or right <= left or bottom <= top:
+		return PackedVector2Array()
+	var shoulder = minf(cap * 0.78, (right - left) * 0.25)
+	var points = PackedVector2Array([Vector2(left, h * 0.5), Vector2(left + shoulder, top), Vector2(right - shoulder, top), Vector2(right, h * 0.5), Vector2(right - shoulder, bottom), Vector2(left + shoulder, bottom)])
+	return _clip_x(points, lerpf(left, right, clampf(ratio, 0.0, 1.0)), true)
+
+func _draw() -> void:
+	var w = size.x
+	var h = size.y
+	if w < 2.0 or h < 2.0:
+		return
+	var cap = minf(h * 0.625, w * 0.25)
+	draw_texture_rect_region(FRAME, Rect2(0, 0, cap, h), Rect2(0, 0, 40, 64))
+	draw_texture_rect_region(FRAME, Rect2(cap, 0, w - cap * 2.0, h), Rect2(40, 0, 432, 64))
+	draw_texture_rect_region(FRAME, Rect2(w - cap, 0, cap, h), Rect2(472, 0, 40, 64))
+	var points = fill_shape(size, shown_ratio)
+	var fill: Texture2D = FILLS.get(resource_kind, FILLS["Health"])
+	if points.size() >= 3:
+		var inset = h * 0.17
+		var tile_width = maxf(8.0, (h - inset * 2.0) * 4.0)
+		var start = inset
+		var end = lerpf(inset, w - inset, shown_ratio)
+		while start < end:
+			var finish = minf(start + tile_width, end)
+			var clipped = _clip_x(_clip_x(points, start, false), finish, true)
+			if clipped.size() >= 3 and finish - start > 0.001:
+				var uv = PackedVector2Array()
+				for point in clipped:
+					uv.append(Vector2(clampf((point.x - start) / tile_width, 0.0, 1.0), clampf((point.y - inset) / (h - inset * 2.0), 0.0, 1.0)))
+				draw_polygon(clipped, PackedColorArray([Color.WHITE]), uv, fill)
+			start = finish
+	if show_value and h >= 16.0:
+		var font = get_theme_default_font()
+		var font_size = maxi(11, roundi(h * 0.53))
+		var label = "%d / %d" % [roundi(current), roundi(maximum)]
+		var extent = font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size)
+		var at = Vector2((w - extent.x) * 0.5, (h - font.get_height(font_size)) * 0.5 + font.get_ascent(font_size))
+		draw_string_outline(font, at, label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 3, Color("#151217"))
+		draw_string(font, at, label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color("#f2e8d6"))
