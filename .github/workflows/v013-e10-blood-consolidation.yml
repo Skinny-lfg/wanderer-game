@@ -18,6 +18,9 @@ jobs:
       - run: npm ci
       - run: node --test tests/v013-stage647d6-blood-fury.test.cjs tests/v013-balance-criteria.test.cjs
       - run: node scripts/v013-e10-blood-consolidation.cjs smoke
+      - run: node scripts/v013-e10-blood-consolidation.cjs process-smoke
+        env:
+          BLOOD_CONSOLIDATION_OUT: ${{ runner.temp }}/blood-consolidation-process-smoke
   cohort:
     needs: gate
     runs-on: ubuntu-latest

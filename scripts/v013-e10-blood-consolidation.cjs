@@ -7,7 +7,7 @@ for(const [id,w,skills] of CUSTOM)G.P[id]={id,families:['blood'],w,skills,role:'
 const IDS=['blood-daggers','blood-sword','blood-twohand',...CUSTOM.map(x=>x[0])];
 const ABILITIES=['bleeding_edge','deep_cuts','executioner','blood_drinker','sanguine_fury','blood_transfer','blood_harvest','crimson_feast','heart_of_carnage','accelerated_bleeding','cleave_mastery','sanguine_reserve'];
 const N=100,SC=['normal-1','normal-4','normal-8','normal-12','elite','boss'],F=['blood','decay','vitality','aegis','fury','magic'],ELITES=G.SC.filter(x=>x.kind==='elite').map(x=>x.elite);
-const OUT='reports/e10-blood-consolidation';
+const OUT=process.env.BLOOD_CONSOLIDATION_OUT||'reports/e10-blood-consolidation';
 const B=fs.readFileSync('combat/v012-buildcraft.js','utf8'),R=fs.readFileSync('combat/v012-combat-runtime.js','utf8');
 function rep(s,a,b){assert.equal(s.split(a).length,2,'missing/ambiguous source anchor '+a);return s.replace(a,b);}
 function owned(p,id){return p.t.nodes.includes(id);}
@@ -124,7 +124,7 @@ const EXPECTED={'blood-daggers':[291,41,27],'blood-sword':[360,65,47],'blood-two
 function compare(a,b){for(const k of Object.keys(a))if(!['metrics','abilityMetrics'].includes(k))assert.deepEqual(a[k],b[k],'observer drift '+k);}
 function summarize(rows){
  const sums={};for(const r of rows)for(const [k,v] of Object.entries(r.metrics)){assert(Number.isFinite(v)&&v>=0,k);if(k==='peakStacks')sums[k]=Math.max(sums[k]||0,v);else sums[k]=(sums[k]||0)+v;}
- const sum=k=>sums[k]||0, n=rows.length;const metrics={...sums,capEntries:sum('capEntries'),uniqueCapEnemies:sum('uniqueCapEnemies'),expiredToZeroAlive:sum('expiredToZeroAlive'),expiredToZeroLethal:sum('expiredToZeroLethal'),expiredStacks:sum('expiredStacks'),enemiesBled:sum('enemiesBled'),fightsAtCap:rows.filter(r=>r.metrics.capEntries>0).length,fightsWithExpiry:rows.filter(r=>r.metrics.expiredToZeroAlive>0).length,meanStacks:sum('stackSeconds')/Math.max(1e-12,sum('observedEnemySeconds')),meanWhileBleeding:sum('stackSeconds')/Math.max(1e-12,sum('bleedingEnemySeconds')),uptimePct:100*sum('bleedingEnemySeconds')/Math.max(1e-12,sum('observedEnemySeconds')),histogram:Array.from({length:13},(_,i)=>sum('hist_'+i))};
+ const sum=k=>sums[k]||0, n=rows.length;const metrics={...sums,peakStacks:sum('peakStacks'),capEntries:sum('capEntries'),uniqueCapEnemies:sum('uniqueCapEnemies'),expiredToZeroAlive:sum('expiredToZeroAlive'),expiredToZeroLethal:sum('expiredToZeroLethal'),expiredStacks:sum('expiredStacks'),enemiesBled:sum('enemiesBled'),fightsAtCap:rows.filter(r=>r.metrics.capEntries>0).length,fightsWithExpiry:rows.filter(r=>r.metrics.expiredToZeroAlive>0).length,meanStacks:sum('stackSeconds')/Math.max(1e-12,sum('observedEnemySeconds')),meanWhileBleeding:sum('stackSeconds')/Math.max(1e-12,sum('bleedingEnemySeconds')),uptimePct:100*sum('bleedingEnemySeconds')/Math.max(1e-12,sum('observedEnemySeconds')),histogram:Array.from({length:13},(_,i)=>sum('hist_'+i))};
  assert(metrics.uniqueCapEnemies<=metrics.enemiesBled);assert(metrics.uniqueCapEnemies<=metrics.capEntries);assert(metrics.expiredToZeroAlive+metrics.expiredToZeroLethal<=metrics.expiredStacks);
  assert(Math.abs(metrics.histogram.reduce((a,b)=>a+b,0)-sum('observedEnemySeconds'))<1e-5*Math.max(1,sum('observedEnemySeconds')));
  const wins=rows.filter(r=>r.won).length,sec=rows.reduce((a,r)=>a+r.seconds,0),sumRow=k=>rows.reduce((a,r)=>a+(Number(r[k])||0),0);const abilityMetrics={},abilityFights={};for(const r of rows)for(const [k,v] of Object.entries(r.abilityMetrics)){if(Number.isFinite(v)){abilityMetrics[k]=(abilityMetrics[k]||0)+v;if(v>0)abilityFights[k]=(abilityFights[k]||0)+1;}}const passiveActivations={};for(const r of rows)for(const [k,v] of Object.entries(r.passives))passiveActivations[k]=(passiveActivations[k]||0)+v;return {n,wins,winPct:100*wins/n,abilityMetrics,abilityFights,passiveActivations,dotDps:sumRow('dotDamage')/sec,dps:sumRow('damage')/sec,hps:sumRow('healed')/sec,secondaryDps:sumRow('secondary')/sec,takenPerSecond:sumRow('taken')/sec,timeouts:sumRow('timeout'),meanSeconds:sec/n,metrics};
@@ -133,19 +133,44 @@ function summarize(rows){
 function paired(a,b){for(const k of ['sc','seed','resolved','realm','gear','roster','roles','trait','condition','bossMods','elite','boss','stats'])assert.deepEqual(a[k],b[k],'pair drift '+k);}
 function group(rows){return Object.fromEntries(['all','normal',...SC].map(sc=>{const r=summarize(rows.filter(r=>sc==='all'||(sc==='normal'?r.sc.startsWith('normal'):r.sc===sc)));return [sc,{...r,balance:Balance.classify(sc,r.winPct,r.n)}];}));}
 
-function run(id,mode,n=N){
- const p=G.profile(id),aa=arms(p,mode),variants={};
- for(const arm of aa){
-  const rows=[];for(const sc of SC)for(let i=0;i<n;i++){
-   const a=cell(p,sc,i,mode,arm);if(arm==='native'&&mode==='old'&&i===0)compare(a,cell(p,sc,i,mode,null));rows.push(a);
-  }
-  if(arm!=='native')for(let i=0;i<rows.length;i++)paired(variants.native.rows[i],rows[i]);
-  const grouped=group(rows);if(mode==='old')assert(grouped.all.metrics.peakStacks<=12);
-  if(mode==='old'&&arm==='native'&&n===N)assert.deepEqual(['normal','elite','boss'].map(k=>grouped[k].wins),EXPECTED[id],'old baseline drift');
-  variants[arm]={rows,grouped};
-  console.log('BLOOD_CONSOLIDATION_ARM='+JSON.stringify({id,mode,arm,n:rows.length,winPct:grouped.all.winPct}));
+
+// Each arm runs in a fresh Node process, releasing its VM contexts and telemetry
+// regardless of simulator/harness cache lifetime. Never reduce seeds to avoid OOM.
+function runArm(id,mode,arm,n,destination){
+ const p=G.profile(id);assert(arms(p,mode).includes(arm));assert(Number.isInteger(n)&&n>0&&n<=N);
+ const rows=[];
+ for(const sc of SC)for(let i=0;i<n;i++){
+  const a=cell(p,sc,i,mode,arm);
+  if(arm==='native'&&mode==='old'&&i===0)compare(a,cell(p,sc,i,mode,null));
+  rows.push(a);
  }
- fs.mkdirSync(OUT,{recursive:true});fs.writeFileSync(path.join(OUT,id+'-'+mode+'.json'),JSON.stringify({id,mode,n,source:S.sourceFingerprint().sha256,nodes:p.t.nodes,variants}));
+ const grouped=group(rows);
+ if(mode==='old')assert(grouped.all.metrics.peakStacks<=12,'old cap exceeded: '+id+'/'+arm+'/'+grouped.all.metrics.peakStacks);
+ if(mode==='old'&&arm==='native'&&n===N)assert.deepEqual(['normal','elite','boss'].map(k=>grouped[k].wins),EXPECTED[id],'old baseline drift');
+ assert.equal(rows.length,n*SC.length);
+ fs.writeFileSync(destination,JSON.stringify({id,mode,arm,n,source:S.sourceFingerprint().sha256,rows,grouped}));
+ console.log('BLOOD_CONSOLIDATION_ARM='+JSON.stringify({id,mode,arm,n:rows.length,winPct:grouped.all.winPct,peak:grouped.all.metrics.peakStacks,heapMB:Math.round(process.memoryUsage().heapUsed/1048576)}));
+}
+function run(id,mode,n=N){
+ const p=G.profile(id),aa=arms(p,mode),variants={},source=S.sourceFingerprint().sha256;
+ const {spawnSync}=require('node:child_process'),os=require('node:os');
+ const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'blood-consolidation-'));
+ try{
+  for(const arm of aa){
+   const file=path.join(tmp,arm+'.json');
+   const child=spawnSync(process.execPath,['--max-old-space-size=4096',__filename,'arm',id,mode,arm,String(n),file],{stdio:'inherit'});
+   if(child.error)throw child.error;
+   assert.equal(child.status,0,'arm subprocess failed: '+id+'/'+mode+'/'+arm+' signal='+child.signal);
+   const x=JSON.parse(fs.readFileSync(file,'utf8'));
+   assert.equal(x.id,id);assert.equal(x.mode,mode);assert.equal(x.arm,arm);assert.equal(x.n,n);assert.equal(x.source,source);
+   assert.equal(x.rows.length,n*SC.length);
+   assert.equal(new Set(x.rows.map(r=>r.sc+'/'+r.seed)).size,x.rows.length);
+   if(arm!=='native')for(let i=0;i<x.rows.length;i++)paired(variants.native.rows[i],x.rows[i]);
+   variants[arm]={rows:x.rows,grouped:x.grouped};
+   fs.unlinkSync(file);
+  }
+  fs.mkdirSync(OUT,{recursive:true});fs.writeFileSync(path.join(OUT,id+'-'+mode+'.json'),JSON.stringify({id,mode,n,source,nodes:p.t.nodes,variants}));
+ }finally{fs.rmSync(tmp,{recursive:true,force:true});}
 }
 function unit(){
  const env={WandererV012Buildcraft:{migrateEnemyDots(){}}};
@@ -157,8 +182,12 @@ function unit(){
  advance(1.5);e.dots.bleed.push({damage:20,remaining:3});runtime.synchronizeDots(e);advance(2);assert.equal(e.hp,9980);advance(2.5);assert.equal(e.hp,9960);
  advance(4);assert.equal(e.dots.bleed.length,2);advance(5.5);assert.equal(e.dots.bleed.length,0);
 }
+function zeroRegression(){
+ const x=summarize([{metrics:{observedEnemySeconds:1,hist_0:1},abilityMetrics:{},passives:{},seconds:1,won:false}]);
+ assert.equal(x.metrics.peakStacks,0);assert(x.metrics.peakStacks<=12);assert.equal(x.metrics.uptimePct,0);
+}
 function smoke(){
- unit();const covered=new Set();
+ unit();zeroRegression();const covered=new Set();
  for(const id of IDS){const p=G.profile(id);for(const mode of Object.keys(CONFIG)){
   for(const arm of arms(p,mode)){sources(mode,arm);covered.add(arm);}
   for(const sc of ['normal-1','normal-4','elite','boss']){
@@ -200,4 +229,5 @@ function aggregate(){
  const planned=IDS.reduce((n,id)=>n+Object.keys(CONFIG).reduce((s,m)=>s+arms(G.profile(id),m).length,0)*N*SC.length,0);assert.equal(n,planned);
  fs.writeFileSync(path.join(OUT,'summary.json'),JSON.stringify({n,config:CONFIG,criteria:Balance.TARGETS,profiles}));console.log('BLOOD_CONSOLIDATION_OVERVIEW='+JSON.stringify({n,config:CONFIG,criteria:Balance.TARGETS,profiles:profiles.length}));
 }
-const [cmd,id,mode]=process.argv.slice(2);if(cmd==='smoke')smoke();else if(cmd==='run')run(id,mode);else if(cmd==='aggregate')aggregate();else throw Error('unknown command');
+const [cmd,id,mode,arm,n,destination]=process.argv.slice(2);
+if(cmd==='smoke')smoke();else if(cmd==='run')run(id,mode);else if(cmd==='arm')runArm(id,mode,arm,Number(n),destination);else if(cmd==='process-smoke'){zeroRegression();run('blood-daggers','old',1);run('blood-daggers','new',1);}else if(cmd==='aggregate')aggregate();else throw Error('unknown command');
