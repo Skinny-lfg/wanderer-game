@@ -35,8 +35,31 @@ func _run() -> void:
 			if tooltip == null or not tooltip.organized or not tooltip.simple_surface or tooltip.painted_style == null:
 				_fail("Integrated tooltip missing")
 				return
+			if not tooltip.compact_preview:
+				tooltip.free()
+				_fail("Inventory tooltip should use compact fixture layout")
+				return
+			root.add_child(tooltip)
+			await process_frame
+			await process_frame
+			if tooltip.get_combined_minimum_size().y > 265 or tooltip.get_combined_minimum_size().x > 480:
+				tooltip.free()
+				_fail("Common inventory tooltip exceeds compact bounds")
+				return
 			tooltip.free()
 			var inventory = shell.current_screen
+			var stash_surface_size: Vector2 = inventory.collection_surface.size
+			if inventory.advanced_group.visible or not inventory.basic_group.visible:
+				_fail("Character details must start closed")
+				return
+			inventory.stats_toggle.button_pressed = true
+			if not inventory.advanced_group.visible or inventory.basic_group.visible:
+				_fail("Character details overlay failed to open")
+				return
+			inventory.stats_toggle.button_pressed = false
+			if inventory.advanced_group.visible or not inventory.basic_group.visible:
+				_fail("Character details overlay failed to close")
+				return
 			if inventory.equipped_slots.size() != 10 or inventory.potion_slots.size() != 3 or inventory.stash_slots.size() != 40 or inventory.stash_items.size() != 24:
 				_fail("Inventory fixture does not match v0.13 capacities")
 				return
@@ -46,14 +69,17 @@ func _run() -> void:
 				_fail("Potion filter preview failed")
 				return
 			inventory._inventory_collection(1)
-			if inventory.stash_grid.visible or not inventory.collection_host.visible or not inventory.stash_count.text.begins_with("2 valuables"):
+			if inventory.stash_grid.visible or not inventory.collection_host.visible or not inventory.stash_count.text.begins_with("2 valuables") or inventory.collection_surface.size.y >= stash_surface_size.y:
 				_fail("Valuables collection preview failed")
 				return
 			inventory._inventory_collection(2)
-			if not inventory.stash_count.text.begins_with("3 / 300"):
+			if not inventory.stash_count.text.begins_with("3 / 300") or inventory.collection_surface.size.y >= stash_surface_size.y:
 				_fail("Anchor Rune collection preview failed")
 				return
 			inventory._inventory_collection(0)
+			if inventory.collection_surface.size != stash_surface_size:
+				_fail("Stash surface did not restore")
+				return
 			inventory.stash_filter.select(0)
 			inventory._inventory_filter_changed(0)
 		for other in shell.IDS:

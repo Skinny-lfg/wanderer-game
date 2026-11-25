@@ -8,6 +8,8 @@ var ornament: Texture2D
 var detailed: bool = false
 var organized: bool = false
 var simple_surface: bool = false
+# Inventory fixture uses short bounded copy; avoid zero-width wrap feedback in native tooltips.
+var compact_preview: bool = false
 var primary_value: String = ""
 var primary_label: String = ""
 var attributes: Array[Dictionary] = []
@@ -55,7 +57,7 @@ func _ready() -> void:
 
 func _wrap_label(value: String, color: Color, font_size: int) -> Label:
 	var label = _label(value, color, font_size)
-	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.autowrap_mode = TextServer.AUTOWRAP_OFF if compact_preview else TextServer.AUTOWRAP_WORD_SMART
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	return label
 

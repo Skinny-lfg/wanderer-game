@@ -32,6 +32,8 @@ var stash_slots: Array[Button] = []
 var stash_items: Array[Dictionary] = []
 var stash_grid: Control
 var collection_host: Control
+var collection_surface: Panel
+var stats_toggle: Button
 var inventory_tabs: Array[Button] = []
 var stash_filter: OptionButton
 var stash_sort: OptionButton
@@ -157,7 +159,7 @@ func _slot(pos: Vector2, size_px: float, item_index: int = -1, equipped: bool = 
 	var category: String = ITEM_TYPES[item_index] if item_index >= 0 else ""
 	return kit.slot(self, pos, size_px, art, rarity, equipped, item_name, category)
 
-# G2.3B.1: independent visual fixture, not a game-state implementation.
+# G2.3B.3: inventory composition; independent visual fixture, not gameplay.
 func _inventory_button(host: Node, value: String, at: Vector2, extent: Vector2, selected: bool = false) -> Button:
 	var button = Button.new()
 	button.text = value
@@ -203,9 +205,41 @@ func _inventory_art(index: int) -> Texture2D:
 func _inventory_item_name(index: int) -> String:
 	return "Ironbound Belt" if index == 8 else str(ITEM_NAMES[index])
 
+func _inventory_tab(host: Node, value: String, at: Vector2, extent: Vector2) -> Button:
+	var button = Button.new()
+	button.text = value
+	button.toggle_mode = true
+	button.add_theme_font_size_override("font_size", 15)
+	for state in ["normal", "hover", "pressed", "hover_pressed", "focus"]:
+		var style = StyleBoxFlat.new()
+		style.bg_color = Color(0.06, 0.06, 0.075, 0.0)
+		if state != "normal":
+			style.border_width_bottom = 2
+			style.border_color = GOLD if state in ["pressed", "hover_pressed"] else MUTED
+			style.bg_color = Color(0.06, 0.06, 0.075, 0.36)
+		button.add_theme_stylebox_override(state, style)
+	button.add_theme_color_override("font_color", MUTED)
+	button.add_theme_color_override("font_pressed_color", GOLD)
+	host.add_child(button)
+	button.position = at
+	button.size = extent
+	return button
+
+func _inventory_tooltip(art: Texture2D, rarity: int, equipped: bool, item_name: String, category: String) -> Control:
+	var tooltip = kit.make_tooltip(art, rarity, equipped, item_name, category)
+	tooltip.compact_preview = true
+	return tooltip
+
+func _inventory_slot(host: Node, at: Vector2, side: float, art: Texture2D = null, rarity: int = 1, equipped: bool = false, item_name: String = "", category: String = "") -> Button:
+	var slot = kit.slot(host, at, side, art, rarity, equipped, item_name, category)
+	if art != null:
+		slot.preview_tooltip_factory = _inventory_tooltip.bind(art, rarity, equipped, item_name, category)
+	return slot
+
 func _inventory() -> void:
-	_background(CAMP, 0.58)
-	# One compact header; the original five bottom navigation tabs stay intact.
+	_background(CAMP, 0.51)
+	# One shared environment; darken only the header and the compact stat strip.
+	_rect(Vector2(0, 0), Vector2(1280, 90), Color(0.035, 0.035, 0.045, 0.55))
 	_text("Inventory", Vector2(32, 15), Vector2(335, 48), 32, IVORY, true)
 	_text("Wanderer  •  Level 24", Vector2(34, 62), Vector2(330, 22), 14, MUTED)
 	kit.resource(self, "Health", Vector2(390, 19), Vector2(250, 18), 2400, 2840)
@@ -213,125 +247,145 @@ func _inventory() -> void:
 	kit.resource(self, "EXP", Vector2(392.5, 63), Vector2(245, 7), 420, 1000, false)
 	_text("Gold  12,480     Fragments  620     Essence  34", Vector2(711, 24), Vector2(535, 25), 15, GOLD)
 	_text("Reagents  18  •  Sample values", Vector2(711, 53), Vector2(535, 23), 13, MUTED)
-	_line(Vector2(32, 92), Vector2(1248, 92), Color("65543e"))
-	# The hero is not inside a heavy framed box.
-	_text("Equipment", Vector2(34, 104), Vector2(370, 30), 21, IVORY, true)
+	# Character, equipment and key stats form a single unframed composition.
+	_text("Equipment", Vector2(34, 98), Vector2(240, 28), 21, IVORY, true)
+	_text("Gear Power", Vector2(366, 97), Vector2(96, 27), 13, MUTED)
+	_text("3,860", Vector2(465, 94), Vector2(100, 32), 24, GOLD)
 	var shadow = GradientTexture2D.new()
 	var gradient = Gradient.new()
-	gradient.colors = PackedColorArray([Color(0, 0, 0, 0.72), Color(0, 0, 0, 0)])
+	gradient.colors = PackedColorArray([Color(0, 0, 0, 0.75), Color(0, 0, 0, 0)])
 	shadow.gradient = gradient
 	shadow.fill = GradientTexture2D.FILL_RADIAL
 	shadow.fill_from = Vector2(0.5, 0.5)
 	shadow.fill_to = Vector2(1, 0.5)
 	shadow.width = 256
 	shadow.height = 64
-	_art(shadow, Vector2(103, 491), Vector2(240, 45), true)
-	_art(HERO, Vector2(95, 143), Vector2(265, 382))
+	_art(shadow, Vector2(158, 442), Vector2(270, 43), true)
+	_art(HERO, Vector2(108, 112), Vector2(365, 365))
 	for i in range(10):
-		var x: float = 35.0 if i < 5 else 354.0
-		var y: float = 141.0 + float(i % 5) * 76.0
+		var x: float = 44.0 if i < 5 else 497.0
+		var y: float = 132.0 + float(i % 5) * 67.0
 		var art_index: int = EQUIPMENT_ART[i]
 		var rarity: int = [1, 3, 2, 1, 3, 4, 3, 2, 3, 2][i]
-		var slot = kit.slot(self, Vector2(x, y), 56, _inventory_art(art_index), rarity, true, _inventory_item_name(art_index), EQUIPMENT_LABELS[i])
+		var slot = _inventory_slot(self, Vector2(x, y), 54, _inventory_art(art_index), rarity, true, _inventory_item_name(art_index), EQUIPMENT_LABELS[i])
 		slot.name = "Equipment_" + str(i)
 		equipped_slots.append(slot)
-		_text(EQUIPMENT_LABELS[i], Vector2(x - 10, y + 56), Vector2(76, 17), 11, MUTED, false, true)
-	_text("Potion loadout", Vector2(35, 532), Vector2(380, 22), 14, GOLD)
-	for i in range(3):
-		var art: Texture2D = POTION_ART[i] if i < 2 else null
-		var slot = kit.slot(self, Vector2(126 + i * 61, 557), 50, art, 1, i < 2, POTION_NAMES[i], "Potion")
-		potion_slots.append(slot)
-		slot.name = "Potion_" + str(i)
-	# Stats are compact and use the existing Simple frame, not Standard.
-	kit.panel(self, Vector2(431, 104), Vector2(247, 516))
-	_text("Stats & Attributes", Vector2(445, 116), Vector2(220, 30), 19, IVORY, true)
-	_text("Gear Power", Vector2(445, 155), Vector2(120, 20), 13, MUTED)
-	var power = _text("3,860", Vector2(557, 149), Vector2(106, 30), 23, GOLD)
-	power.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_line(Vector2(445, 183), Vector2(663, 183), Color("514638"))
+		_text(EQUIPMENT_LABELS[i], Vector2(x - 11, y + 53), Vector2(76, 16), 10, IVORY, false, true)
 	basic_group = Control.new()
+	basic_group.name = "CoreStats"
 	add_child(basic_group)
-	basic_group.position = Vector2(445, 191)
-	basic_group.size = Vector2(219, 369)
+	basic_group.position = Vector2(34, 478)
+	basic_group.size = Vector2(555, 75)
+	basic_group.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var strip = ColorRect.new()
+	strip.color = Color(0.045, 0.047, 0.06, 0.72)
+	strip.size = basic_group.size
+	strip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	basic_group.add_child(strip)
 	var basic = [["Attack", "420"], ["Defense", "376"], ["Health", "2,840"], ["Hits / sec", "1.42"], ["Critical chance", "18.5%"], ["Guard", "24%"]]
 	for i in range(basic.size()):
-		_inventory_stat(basic_group, basic[i][0], basic[i][1], i * 24)
-	_inventory_label(basic_group, "PRIMARY ATTRIBUTES", Vector2(0, 158), Vector2(219, 20), 12, GOLD)
-	var attributes = [["Strength", "148"], ["Agility", "96"], ["Intellect", "72"], ["Endurance", "134"], ["Charisma", "56"]]
-	for i in range(attributes.size()):
-		_inventory_stat(basic_group, attributes[i][0], attributes[i][1], 183 + i * 25)
-	_inventory_label(basic_group, "Gear Power is a stat estimate.", Vector2(0, 321), Vector2(219, 18), 11, MUTED)
+		var x: float = 12.0 + float(i % 3) * 184.0
+		var y: float = 5.0 + float(floori(float(i) / 3.0)) * 33.0
+		_inventory_label(basic_group, basic[i][0], Vector2(x, y), Vector2(114, 25), 12, MUTED)
+		var amount = _inventory_label(basic_group, basic[i][1], Vector2(x + 112, y), Vector2(45, 25), 15, IVORY)
+		amount.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_text("Potions", Vector2(34, 574), Vector2(95, 26), 14, GOLD)
+	for i in range(3):
+		var art: Texture2D = POTION_ART[i] if i < 2 else null
+		var slot = _inventory_slot(self, Vector2(119 + i * 52, 561), 47, art, 1, i < 2, POTION_NAMES[i], "Potion")
+		potion_slots.append(slot)
+		slot.name = "Potion_" + str(i)
+	# Attributes and advanced stats are a temporary overlay, never a third column.
 	advanced_group = Control.new()
+	advanced_group.name = "DetailsOverlay"
 	add_child(advanced_group)
-	advanced_group.position = basic_group.position
-	advanced_group.size = basic_group.size
+	advanced_group.position = Vector2(34, 126)
+	advanced_group.size = Vector2(555, 427)
+	advanced_group.mouse_filter = Control.MOUSE_FILTER_STOP
+	kit.panel(advanced_group, Vector2.ZERO, advanced_group.size)
+	_inventory_label(advanced_group, "Character details", Vector2(22, 14), Vector2(480, 28), 21, GOLD)
+	var attributes = [["Strength", "148"], ["Agility", "96"], ["Intellect", "72"], ["Endurance", "134"], ["Charisma", "56"]]
+	var attribute_column = Control.new()
+	advanced_group.add_child(attribute_column)
+	attribute_column.position = Vector2(22, 60)
+	attribute_column.size = Vector2(219, 320)
+	_inventory_label(attribute_column, "PRIMARY ATTRIBUTES", Vector2.ZERO, Vector2(219, 20), 12, GOLD)
+	for i in range(attributes.size()):
+		_inventory_stat(attribute_column, attributes[i][0], attributes[i][1], 28 + i * 26)
+	_inventory_label(attribute_column, "BONUS SOURCES", Vector2(0, 180), Vector2(219, 20), 12, GOLD)
+	_inventory_label(attribute_column, "Base · Equipment · Runes", Vector2(0, 207), Vector2(219, 20), 12, MUTED)
+	_inventory_label(attribute_column, "Talents · Temporary effects", Vector2(0, 232), Vector2(219, 20), 12, MUTED)
+	_inventory_label(attribute_column, "Gear Power is a stat estimate.", Vector2(0, 290), Vector2(219, 20), 11, MUTED)
+	var detail_column = Control.new()
+	advanced_group.add_child(detail_column)
+	detail_column.position = Vector2(292, 60)
+	detail_column.size = Vector2(238, 320)
+	_inventory_label(detail_column, "ADVANCED STATS", Vector2.ZERO, Vector2(219, 20), 12, GOLD)
 	var advanced = [["Evasion rating", "32"], ["Evasion vs E10", "8.4%"], ["Mana", "600"], ["Mana Regen", "4.2/s"], ["Spell Power", "84"], ["Barrier Power", "+12%"], ["Healing Power", "+5%"], ["Mana Cost Reduction", "8%"], ["Bonus Crit Damage", "+7%"], ["DoT Damage Bonus", "+6%"]]
 	for i in range(advanced.size()):
-		_inventory_stat(advanced_group, advanced[i][0], advanced[i][1], i * 24)
-	_inventory_label(advanced_group, "Bonus sources", Vector2(0, 256), Vector2(219, 20), 13, GOLD)
-	_inventory_label(advanced_group, "Base · Equipment · Runes", Vector2(0, 280), Vector2(219, 20), 12, MUTED)
-	_inventory_label(advanced_group, "Talents · Temporary effects", Vector2(0, 300), Vector2(219, 20), 12, MUTED)
+		_inventory_stat(detail_column, advanced[i][0], advanced[i][1], 28 + i * 26)
 	advanced_group.hide()
-	var stats_toggle = _inventory_button(self, "Advanced stats", Vector2(445, 574), Vector2(219, 32))
+	stats_toggle = _inventory_button(self, "Character details", Vector2(403, 570), Vector2(186, 34))
 	stats_toggle.toggle_mode = true
 	stats_toggle.toggled.connect(func(on: bool):
 		basic_group.visible = not on
 		advanced_group.visible = on
-		stats_toggle.text = "Basic stats" if on else "Advanced stats"
+		stats_toggle.text = "Close details" if on else "Character details"
 	)
 	# Stash, valuables and Anchor Runes are separate collections.
-	kit.panel(self, Vector2(691, 104), Vector2(557, 516))
+	collection_surface = kit.panel(self, Vector2(625, 145), Vector2(623, 479))
+	collection_surface.name = "CollectionSurface"
 	for i in range(3):
-		var tab = _inventory_button(self, ["Stash", "Valuables", "Anchor Runes"][i], Vector2(705 + i * 176, 116), Vector2(170, 32))
+		var tab = _inventory_tab(self, ["Stash", "Valuables", "Anchor Runes"][i], Vector2(635 + i * 160, 102), Vector2(150, 34))
 		tab.toggle_mode = true
 		tab.pressed.connect(_inventory_collection.bind(i))
 		inventory_tabs.append(tab)
-	stash_count = _text("24 / 40 slots", Vector2(706, 157), Vector2(280, 22), 15, IVORY)
-	var expand = _inventory_button(self, "Expand +10 · 60 Gold", Vector2(1025, 153), Vector2(207, 29))
+	stash_count = _text("24 / 40 slots", Vector2(646, 153), Vector2(280, 22), 15, IVORY)
+	var expand = _inventory_button(self, "Expand +10 · 60 Gold", Vector2(1023, 151), Vector2(207, 29))
 	expand.disabled = true
 	expand.tooltip_text = "Preview only — no Gold is spent."
 	stash_controls.append(expand)
-	stash_filter = _inventory_option(self, ["All slots", "Potions", "Rings", "Helm", "Amulet", "Armor", "Gloves", "Weapon", "Off-Hand", "Boots", "Belt"], Vector2(706, 191), Vector2(145, 30))
-	stash_sort = _inventory_option(self, ["Expedition tier", "Date looted", "Fragment value", "Item power", "Estimated stat gain"], Vector2(857, 191), Vector2(206, 30))
-	stash_order = _inventory_option(self, ["High / newest", "Low / oldest"], Vector2(1069, 191), Vector2(163, 30))
+	stash_filter = _inventory_option(self, ["All slots", "Potions", "Rings", "Helm", "Amulet", "Armor", "Gloves", "Weapon", "Off-Hand", "Boots", "Belt"], Vector2(646, 187), Vector2(158, 30))
+	stash_sort = _inventory_option(self, ["Expedition tier", "Date looted", "Fragment value", "Item power", "Estimated stat gain"], Vector2(811, 187), Vector2(219, 30))
+	stash_order = _inventory_option(self, ["High / newest", "Low / oldest"], Vector2(1037, 187), Vector2(193, 30))
 	for option in [stash_filter, stash_sort, stash_order]:
 		option.item_selected.connect(_inventory_filter_changed)
 		stash_controls.append(option)
 	stash_grid = Control.new()
 	stash_grid.name = "StashGrid"
 	add_child(stash_grid)
-	stash_grid.position = Vector2(708, 232)
-	stash_grid.size = Vector2(524, 310)
+	stash_grid.position = Vector2(647, 226)
+	stash_grid.size = Vector2(584, 326)
 	for i in range(21):
 		var idx: int = i % 9
 		stash_items.append({"art": _inventory_art(idx), "name": _inventory_item_name(idx), "slot": ["Helm", "Armor", "Gloves", "Boots", "Off-Hand", "Weapon", "Rings", "Amulet", "Belt"][idx], "rarity": (i * 3 + floori(float(i) / 8.0)) % 6, "quantity": 1, "tier": 1 + i % 5, "date": i, "fragments": 4 + i * 2, "power": 12 + i * 3})
 	for i in range(3):
 		stash_items.append({"art": POTION_ART[i], "name": POTION_NAMES[i], "slot": "Potions", "rarity": 1, "quantity": [12, 7, 3][i], "tier": 1, "date": 21 + i, "fragments": 0, "power": 0})
 	for i in range(40):
-		var slot = kit.slot(stash_grid, Vector2((i % 8) * 65, floori(float(i) / 8.0) * 62), 59)
+		var slot = kit.slot(stash_grid, Vector2((i % 8) * 73, floori(float(i) / 8.0) * 65), 63)
 		slot.name = "Stash_" + str(i)
 		slot.toggle_mode = true
 		slot.pressed.connect(_inventory_slot_clicked.bind(i))
 		stash_slots.append(slot)
-	stash_multi = _inventory_button(self, "Select multiple", Vector2(706, 551), Vector2(133, 30))
+	stash_multi = _inventory_button(self, "Select multiple", Vector2(646, 560), Vector2(133, 30))
 	stash_multi.toggle_mode = true
 	stash_multi.toggled.connect(func(_on: bool): _clear_preview_selection())
-	var clear = _inventory_button(self, "Clear filters", Vector2(845, 551), Vector2(108, 30))
+	var clear = _inventory_button(self, "Clear filters", Vector2(786, 560), Vector2(108, 30))
 	clear.pressed.connect(func():
 		stash_filter.select(0)
 		stash_sort.select(0)
 		stash_order.select(0)
 		_inventory_filter_changed(0)
 	)
-	salvage_button = _inventory_button(self, "Salvage selected", Vector2(1067, 551), Vector2(165, 30))
+	salvage_button = _inventory_button(self, "Salvage selected", Vector2(1065, 560), Vector2(165, 30))
 	salvage_button.disabled = true
 	salvage_button.tooltip_text = "Presentation only — no items are destroyed."
-	selection_caption = _text("Hover to inspect · sample items", Vector2(706, 589), Vector2(520, 20), 12, MUTED)
+	selection_caption = _text("Hover to inspect · sample items", Vector2(646, 594), Vector2(520, 20), 12, MUTED)
 	stash_controls.append_array([stash_multi, clear, salvage_button, selection_caption])
 	collection_host = Control.new()
 	add_child(collection_host)
-	collection_host.position = Vector2(706, 195)
-	collection_host.size = Vector2(526, 400)
+	collection_host.position = Vector2(646, 187)
+	collection_host.size = Vector2(584, 400)
 	inventory_slots.append_array(equipped_slots)
 	inventory_slots.append_array(potion_slots)
 	inventory_slots.append_array(stash_slots)
@@ -368,7 +422,7 @@ func _inventory_filter_changed(_index: int) -> void:
 			slot.rarity = item["rarity"]
 			slot.quantity = item["quantity"]
 			slot.tooltip_text = item["name"]
-			slot.preview_tooltip_factory = kit.make_tooltip.bind(item["art"], item["rarity"], false, item["name"], item["slot"])
+			slot.preview_tooltip_factory = _inventory_tooltip.bind(item["art"], item["rarity"], false, item["name"], item["slot"])
 		slot.queue_redraw()
 	stash_count.text = "24 / 40 slots" if filter == "All slots" else "%d matching · 24 / 40 slots" % visible_items.size()
 
@@ -393,6 +447,8 @@ func _inventory_slot_clicked(index: int) -> void:
 
 func _inventory_collection(index: int) -> void:
 	collection_index = index
+	collection_surface.size = [Vector2(623, 479), Vector2(455, 250), Vector2(520, 310)][index]
+	collection_host.size = collection_surface.size - Vector2(42, 42)
 	for i in range(inventory_tabs.size()):
 		inventory_tabs[i].set_pressed_no_signal(i == index)
 	for control in stash_controls:
@@ -408,19 +464,20 @@ func _inventory_collection(index: int) -> void:
 	if index == 1:
 		stash_count.text = "2 valuables · 140 Gold total"
 		for i in range(2):
-			kit.slot(collection_host, Vector2(0, i * 84), 66, TREASURE_ART[i], 1, false, ["Jeweled Chalice", "Gem Pouch"][i], "Valuable")
-			_inventory_label(collection_host, ["Jeweled Chalice", "Gem Pouch"][i], Vector2(80, i * 84 + 9), Vector2(350, 24), 15)
-			_inventory_label(collection_host, ["100 Gold", "40 Gold"][i], Vector2(80, i * 84 + 35), Vector2(350, 22), 13, GOLD)
-		var sell = _inventory_button(collection_host, "Sell all valuables", Vector2(0, 184), Vector2(190, 32))
+			_inventory_slot(collection_host, Vector2(0, i * 72), 57, TREASURE_ART[i], 1, false, ["Jeweled Chalice", "Gem Pouch"][i], "Valuable")
+			_inventory_label(collection_host, ["Jeweled Chalice", "Gem Pouch"][i], Vector2(72, i * 72 + 5), Vector2(220, 24), 15)
+			var price = _inventory_label(collection_host, ["100 Gold", "40 Gold"][i], Vector2(292, i * 72 + 5), Vector2(110, 24), 14, GOLD)
+			price.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		var sell = _inventory_button(collection_host, "Sell all valuables", Vector2(0, 151), Vector2(190, 32))
 		sell.disabled = true
+		sell.tooltip_text = "Preview only — no items are sold."
 	else:
 		stash_count.text = "3 / 300 Anchor Runes"
-		_inventory_label(collection_host, "Equip or recycle runes at the Shrine.", Vector2(0, 0), Vector2(510, 25), 14, MUTED)
 		for i in range(3):
-			kit.slot(collection_host, Vector2(0, 42 + i * 79), 62, RUNE_ART[i], 2 + i % 2, false, ["Rune of Might", "Rune of Warding", "Rune of Wisdom"][i], "Anchor Rune")
-			_inventory_label(collection_host, ["Rune of Might", "Rune of Warding", "Rune of Wisdom"][i], Vector2(75, 49 + i * 79), Vector2(400, 23), 15)
-			_inventory_label(collection_host, ["+3 Strength", "+6.75 Defense", "+3 Intellect"][i], Vector2(75, 74 + i * 79), Vector2(400, 20), 13, MUTED)
-		_inventory_label(collection_host, "3 bound slots are managed at the Shrine.", Vector2(0, 302), Vector2(510, 25), 13, GOLD)
+			_inventory_slot(collection_host, Vector2(0, i * 66), 55, RUNE_ART[i], 2 + i % 2, false, ["Rune of Might", "Rune of Warding", "Rune of Wisdom"][i], "Anchor Rune")
+			_inventory_label(collection_host, ["Rune of Might", "Rune of Warding", "Rune of Wisdom"][i], Vector2(70, i * 66 + 4), Vector2(390, 23), 15)
+			_inventory_label(collection_host, ["+3 Strength", "+6.75 Defense", "+3 Intellect"][i], Vector2(70, i * 66 + 29), Vector2(390, 20), 13, GOLD)
+		_inventory_label(collection_host, "Equip or recycle at the Shrine · 3 bound slots", Vector2(0, 207), Vector2(478, 24), 13, MUTED)
 
 func _talents() -> void:
 	_background(REALMS, 0.86)
