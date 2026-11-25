@@ -104,7 +104,7 @@ func _ready() -> void:
 	_gallery_button_style(fit)
 	fit.pressed.connect(_fit_gallery_window)
 	header.add_child(fit)
-	frame.add_child(_label("STYLIZED GOTHIC     •     G2.2F.1 / RESOURCE FEEDBACK", 15, Tokens.GOLD))
+	frame.add_child(_label("STYLIZED GOTHIC     •     G2.2F.2 / RESOURCE FILL REDESIGN", 15, Tokens.GOLD))
 	frame.add_child(HSeparator.new())
 	var layout = _row(frame)
 	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -849,7 +849,7 @@ func _resource_sample(host: Node, kind: String, amount: float, capacity: float, 
 func _resource_bars() -> void:
 	resource_samples.clear()
 	resource_sliders.clear()
-	_note("Seamless fills, animated loss trails and face portrait. Preview values only.")
+	_note("Organic seamless fills, animated loss trails and face portrait. Preview values only.")
 	var hud = _row(body)
 	resource_portrait = PortraitMedallion.new()
 	hud.add_child(resource_portrait)

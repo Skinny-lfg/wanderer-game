@@ -1,0 +1,3 @@
+# G2.2F.2 — Resource Fill Redesign
+
+Replaces four 768×64 resource-fill PNGs with artwork sampled from the approved visual direction (organic luminous veins, richer resource colors and a shaded surface). Text and borders excluded. Native samples approximately 203–259 pixels wide and 15–19 pixels high, resampled to existing export dimensions. Both horizontal edges are feathered to produce a repeating tile with exactly matching first and last columns. Two-repeat preview inspected before upload. Existing resource track, portrait, sizing, damage trail and animation implementation unchanged. Gallery-only; no gameplay changes. Existing smoke tests check PNG dimensions and exact horizontal edge equality. Visual quality at actual HUD sizes still requires review.
