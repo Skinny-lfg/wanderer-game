@@ -21,7 +21,6 @@ const runeFixture=['clarity','efficiency','abyss'].map(family=>({family,tier:5,r
 const M=[{id:'current'},{id:'old-regen',regen:true},{id:'old-costs',costs:true},{id:'old-both',regen:true,costs:true},{id:'runes',runes:true},{id:'gear-regen-runes',runes:true,extraAffix:2}];
 const U=[{id:'pure'},{id:'blood'},{id:'vitality'},{id:'aegis'},{id:'blood-vitality'}];
 const SUPPORT={blood:['blood_drinker','bleeding_edge'],vitality:['strong_heart','renewal'],aegis:['guarded_block','barrier_pulse']};
-const optional={blood:['blood_harvest','crimson_rush','deep_cuts'],vitality:['fervent_life','living_recovery','last_stand'],aegis:['iron_skin','fortified','steadfast_guard']};
 const profileCache=new Map();
 function profile(id,arm){
  const key=id+'/'+arm.id;if(profileCache.has(key))return profileCache.get(key);
@@ -31,17 +30,23 @@ function profile(id,arm){
  const mandatory=support.flatMap(f=>SUPPORT[f]);
  const supportPath=buy(mandatory,{xp:POINTS*T.POINT_XP});
  const coreCount=POINTS-supportPath.nodes.length;
- assert(coreCount>=p.skills.length&&coreCount>0,id+' insufficient offensive budget');
+ assert(coreCount>0,id+'/'+arm.id+' insufficient offensive budget');
  // Same native offensive route and skill order; reserve room for mandatory sustain.
  const core=p.t.nodes.slice(0,coreCount);
  let t={...p.t,nodes:[...core]};assert(T.valid(t));
- for(const skill of p.skills)assert(core.includes(skill),id+' core lost '+skill);
+ // A hybrid is allowed to sacrifice nonessential Fury talents for support.
+ // The weapon-defining skill must remain; the other Fury skill losses are
+ // explicit output, not a silently relaxed equal-budget requirement.
+ const weaponSkill=p.skills[0];
+ assert(core.includes(weaponSkill),id+'/'+arm.id+' lost weapon identity '+weaponSkill);
+ const retainedOffense=p.skills.filter(skill=>core.includes(skill));
+ const sacrificedOffense=p.skills.filter(skill=>!core.includes(skill));
  for(const node of supportPath.nodes){const next=T.allocate(t,node);assert(next,id+' support '+node);t=next;}
  assert.equal(t.nodes.length,POINTS);
  assert(T.valid(t));for(const skill of mandatory)assert(t.nodes.includes(skill));
  const families=['fury',...support];
  assert.deepEqual(Array.from(t.nodes.filter(n=>n.startsWith('affinity_'))).sort(),families.map(f=>'affinity_'+f).sort());
- const result={...p,families,t,coreCount,supportSkills:mandatory};profileCache.set(key,result);return result;
+ const result={...p,families,t,coreCount,supportSkills:mandatory,weaponSkill,retainedOffense,sacrificedOffense};profileCache.set(key,result);return result;
 }
 function arms(id){return MAGIC.includes(id)?M:U;}
 function opts(p,a,mode){
@@ -86,12 +91,12 @@ function run(id){
  assert(IDS.includes(id));const cases=[];for(const sc of SC)for(let i=0;i<N;i++)cases.push(trial(id,sc,i));
  const routes=MAGIC.includes(id)?Object.fromEntries(M.map(a=>[a.id,Array.from({length:ROUTES},(_,i)=>route(id,a,i))])):null;
  if(routes)for(const a of M.slice(1))for(let i=0;i<ROUTES;i++)for(const k of ['i','gear','realm','route'])assert.deepEqual(routes[a.id][i][k],routes.current[i][k],id+'/'+a.id+' route '+k);
- const result={id,source:S.sourceFingerprint().sha256,profiles:Object.fromEntries(arms(id).map(a=>{const p=profile(id,a);return [a.id,{nodes:p.t.nodes,families:p.families,coreCount:p.coreCount,supportSkills:p.supportSkills}];})),cases,routes};
+ const result={id,source:S.sourceFingerprint().sha256,profiles:Object.fromEntries(arms(id).map(a=>{const p=profile(id,a);return [a.id,{nodes:p.t.nodes,families:p.families,coreCount:p.coreCount??POINTS,supportSkills:p.supportSkills??[],retainedOffense:p.retainedOffense??p.skills,sacrificedOffense:p.sacrificedOffense??[],weaponSkill:p.weaponSkill??p.skills[0]}];})),cases,routes};
  write(id+'.json',result);console.log('MANA_SURVIVAL_SHARD='+JSON.stringify({id,n:cases.length*arms(id).length,all:grouped(id,cases).all,routes:routes&&Object.fromEntries(Object.entries(routes).map(([k,rs])=>[k,routeSummary(rs)]))}));
 }
 function smoke(){
  new Function(oldCosts);new Function(gearSource(true,2));
- for(const id of IDS){for(const a of arms(id))profile(id,a);trial(id,'normal-1',0);}
+ for(const id of IDS){for(const a of arms(id)){const p=profile(id,a);if(FURY.includes(id))console.log('FURY_LEGAL_PLAN='+JSON.stringify({id,arm:a.id,points:p.t.nodes.length,coreCount:p.coreCount??POINTS,supportSkills:p.supportSkills??[],retainedOffense:p.retainedOffense??p.skills,sacrificedOffense:p.sacrificedOffense??[],nodes:p.t.nodes}));}trial(id,'normal-1',0);}
  for(const sc of SC)trial('magic-lightning-staff',sc,1);
  const rs=M.map(a=>route('magic-fire-wand',a,0));for(const r of rs){assert(!r.error,r.error);assert.deepEqual(r.route,rs[0].route);assert.equal(r.gear,rs[0].gear);}
  console.log('MANA_SURVIVAL_SMOKE_OK');
