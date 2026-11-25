@@ -13,14 +13,52 @@ const ENEMY_NAMES = ["Berserker", "Caster", "Tank", "Vampire"]
 const ENEMY_FEET = [Vector2(300, 420), Vector2(515, 365), Vector2(765, 365), Vector2(980, 420)]
 const HERO_FEET = Vector2(640, 635)
 var selected: int = -1
+var kit: RefCounted
+var resource_hud: Control
+var enemy_bars: Array[Control] = []
+var target_label: Label
 
 func _ready() -> void:
+	if kit != null:
+		_build_preview_hud()
 	queue_redraw()
+
+func _build_preview_hud() -> void:
+	var overlay = Control.new()
+	overlay.name = "CombatUI"
+	overlay.theme = kit.theme
+	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(overlay)
+	resource_hud = kit.hud(overlay, Vector2(20, 478), 315)
+	target_label = Label.new()
+	target_label.text = "Select an enemy"
+	target_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	target_label.position = Vector2(30, 24)
+	target_label.add_theme_font_size_override("font_size", 18)
+	overlay.add_child(target_label)
+	for i in range(ENEMIES.size()):
+		var rect = _sprite_rect(ENEMIES[i], ENEMY_FEET[i], Vector2(210, 250))
+		var at = Vector2(ENEMY_FEET[i].x - 75, rect.position.y - 36)
+		var name = Label.new()
+		name.text = ENEMY_NAMES[i]
+		name.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		name.add_theme_font_size_override("font_size", 14)
+		name.add_theme_constant_override("outline_size", 4)
+		name.add_theme_color_override("font_outline_color", Color("#111217"))
+		overlay.add_child(name)
+		name.position = at
+		name.size = Vector2(150, 20)
+		var bar = kit.resource(overlay, "Health", at + Vector2(0, 21), Vector2(150, 12), [72, 100, 85, 60][i], 100, false)
+		enemy_bars.append(bar)
+
 
 func select_target(index: int) -> bool:
 	if index < 0 or index >= ENEMIES.size():
 		return false
 	selected = index
+	if is_instance_valid(target_label):
+		target_label.text = "Target: " + str(ENEMY_NAMES[selected]) + "  •  Preview"
 	queue_redraw()
 	return true
 
@@ -58,6 +96,8 @@ func _draw() -> void:
 		draw_texture_rect(ENEMIES[i], _sprite_rect(ENEMIES[i], feet, Vector2(210, 250)), false)
 	_draw_shadow(HERO_FEET, 82.0)
 	draw_texture_rect(HERO, _sprite_rect(HERO, HERO_FEET, Vector2(250, 300)), false)
+	if kit != null:
+		return
 	var font := ThemeDB.fallback_font
 	draw_string(font, Vector2(30, 42), "WANDERER / ARENA PROTOTYPE", HORIZONTAL_ALIGNMENT_LEFT, -1, 25, Color(0.91, 0.80, 0.58))
 	var status := "Select an enemy" if selected == -1 else "Target: " + str(ENEMY_NAMES[selected])

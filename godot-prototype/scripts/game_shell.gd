@@ -23,8 +23,13 @@ var buttons: Dictionary = {}
 var navigation: Panel
 var actions: HBoxContainer
 var camp_actions: HBoxContainer
+const GameKit = preload("res://ui/theme/game_ui_kit.gd")
+var kit: RefCounted
+var combat_hud: Control
 
 func _ready() -> void:
+	kit = GameKit.new()
+	theme = kit.theme
 	content = Control.new()
 	content.name = "ScreenHost"
 	content.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -89,6 +94,8 @@ func _build_navigation() -> void:
 		button.add_theme_stylebox_override("focus", focus_style)
 		button.pressed.connect(show_page.bind(str(IDS[i])))
 		row.add_child(button)
+		kit.navigation.apply_to(button, IDS[i])
+		button.add_theme_font_size_override("font_size", 17)
 		buttons[IDS[i]] = button
 
 func show_page(page_id: String) -> bool:
@@ -100,6 +107,7 @@ func show_page(page_id: String) -> bool:
 			content.remove_child(current_screen)
 			current_screen.queue_free()
 		current_screen = SCENES[index].instantiate()
+		current_screen.kit = kit
 		content.add_child(current_screen)
 		if current_screen is Control:
 			current_screen.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -131,12 +139,13 @@ func _action(text: String, destination: String, host: HBoxContainer, primary: bo
 	button.add_theme_stylebox_override("hover", _style(Color("584126"), Color("e6bc7c"), 2))
 	button.pressed.connect(show_page.bind(destination))
 	host.add_child(button)
+	kit.buttons.apply_to(button, "primary" if primary else "secondary")
 	return button
 
 func _build_context_actions() -> void:
 	camp_actions = HBoxContainer.new()
 	camp_actions.name = "CampActions"
-	camp_actions.position = Vector2(52, 540)
+	camp_actions.position = Vector2(48, 544)
 	camp_actions.add_theme_constant_override("separation", 12)
 	add_child(camp_actions)
 	_action("Begin Expedition", "expedition", camp_actions, true)
