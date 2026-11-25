@@ -45,7 +45,8 @@ save=save.replace("PREFIX='wanderer_v013_c2_clean_sheet_v1_'","PREFIX='wanderer_
 await writeFile(savePath,save);
 const saveHash=createHash('sha256').update(save).digest('hex').slice(0,12);
 let finalHtml=await readFile(join(output,'index.html'),'utf8');
-if(!finalHtml.includes('src="online/v012-save.js"'))throw Error('Preview blocked: save script not found');
-finalHtml=finalHtml.replace('src="online/v012-save.js"','src="online/v012-save.js?v='+saveHash+'"');
+const saveScript=/src="online\/v012-save\.js(?:\?v=[^"]+)?"/;
+if(!saveScript.test(finalHtml))throw Error('Preview blocked: save script not found');
+finalHtml=finalHtml.replace(saveScript,'src="online/v012-save.js?v='+saveHash+'"');
 await writeFile(join(output,'index.html'),finalHtml);
 console.log('Isolated automatic RPG preview: '+output);
