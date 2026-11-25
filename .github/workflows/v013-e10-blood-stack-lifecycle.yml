@@ -1,0 +1,61 @@
+name: E10 Blood Stack Lifecycle (NO DEPLOY)
+on:
+  push:
+    branches: [audit/e10-blood-stack-lifecycle]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node --test tests/v013-stage647d6-blood-fury.test.cjs
+      - run: node scripts/v013-e10-blood-stack-lifecycle.cjs smoke
+  cohort:
+    needs: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        build: [blood-daggers, blood-sword, blood-twohand, blood-bow, blood-mace, blood-sword-reserve, blood-daggers-crit, blood-twohand-transfer]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node scripts/v013-e10-blood-stack-lifecycle.cjs run "${{ matrix.build }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: blood-stack-${{ matrix.build }}
+          path: reports/e10-blood-stack-lifecycle/*.json
+          if-no-files-found: error
+  summary:
+    needs: cohort
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: blood-stack-*
+          path: reports/e10-blood-stack-lifecycle
+          merge-multiple: true
+      - run: node scripts/v013-e10-blood-stack-lifecycle.cjs aggregate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: blood-stack-summary
+          path: reports/e10-blood-stack-lifecycle/summary.json
+          if-no-files-found: error

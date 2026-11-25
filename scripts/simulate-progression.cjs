@@ -398,6 +398,7 @@ function fight(a,c,limit,targetPolicy='focus',measure=false,resourceAudit=false)
    if(delta>0)activations[id]=delta;
   }
   const v=n=>Number((Number(n)||0).toFixed(3));
+  row.bloodStackAudit=r.bloodStackAudit||{};
   row.bloodAuditMetrics=Object.fromEntries(Object.entries(metrics).filter(([k])=>k.startsWith('bloodAudit_')));
   row.affinityMetrics={
    barrierAtEntry:v(startBarrier),
