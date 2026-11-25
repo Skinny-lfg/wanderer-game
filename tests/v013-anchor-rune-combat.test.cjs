@@ -5,10 +5,13 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const create=require('./v012-economy-harness.cjs');
 require('../combat/v012-runes.js');
 const R=globalThis.WandererV012Runes;
-function encounter(family,weapon='Sword',shield=false){
+function encounter(family,weapon='Sword',shield=false,armored=false){
  const a=create(9181,undefined,{}, {skipPersistence:true}),s=a.state();
  a.setup(1,weapon,'Common');
  for(const key of Object.keys(s.equip))if(key!=='weapon'&&!(shield&&key==='offhand'))s.equip[key]=null;
+ // Controlled defense budget, identical in both arms: the percent rune must
+ // exceed the integer damage rounding threshold without altering gameplay.
+ if(armored){const item=a.makeItem(1,'armor',null,'loot','Plate','Common');item.def=50;s.equip.armor=item;}
  if(shield&&s.equip.offhand?.subtype!=='Shield')s.equip.offhand=a.makeItem(1,'offhand',null,'loot','Shield','Common');
  if(family){const rune=a.makeRune(family,1,'Legendary');s.runes.push(rune);assert(a.runes.equip(rune.id,0));}
  a.start(1,true);const c=a.controller();c.chooseRealm(c.state.dungeon.cards[0].id);assert(c.visitRoom(1));assert(a.enter());
@@ -16,7 +19,7 @@ function encounter(family,weapon='Sword',shield=false){
  r.tPlayer=0;r.tEnemy=0;r.tDot=0;r.playerAttackPeriod=undefined;
  a.rng(.999999);return {a,r,e};
 }
-function pair(family,weapon='Sword',shield=false){return [encounter(null,weapon,shield),encounter(family,weapon,shield)];}
+function pair(family,weapon='Sword',shield=false){return [encounter(null,weapon,shield,family==='bulwark'),encounter(family,weapon,shield,family==='bulwark')];}
 function hit(x,roll=.999999){x.a.rng(roll);const hp=x.e.hp;x.a.gear.weaponAttack(x.r);return hp-x.e.hp;}
 function incoming(x,roll=.999999){x.a.rng(roll);x.e.attackEvery=1;x.e.groupClock=1;x.r.tEnemy=1;const hp=x.r.hp;x.a.tick();return hp-x.r.hp;}
 function period(x){x.a.tick();return x.r.playerAttackPeriod;}
@@ -27,7 +30,7 @@ for(const family of ['might','fury','assault'])audit(family,()=>{const [base,boo
 for(const family of ['swiftness','haste'])audit(family,()=>{const [base,boost]=pair(family);assert(period(boost)<period(base),'native auto-attack period');});
 audit('wisdom',()=>{const [base,boost]=pair('wisdom','Wand');assert(boost.r.maxmp>base.r.maxmp);assert(hit(boost)>hit(base));});
 for(const family of ['fortitude','vitality','heart'])audit(family,()=>{const [base,boost]=pair(family);assert(boost.r.maxhp>base.r.maxhp);assert.equal(boost.r.hp,boost.r.maxhp);});
-for(const family of ['warding','bulwark'])audit(family,()=>{const [base,boost]=pair(family);assert(incoming(boost)<incoming(base),'damage actually received');});
+for(const family of ['warding','bulwark'])audit(family,()=>{const [base,boost]=pair(family);assert(boost.r.stats.defense>base.r.stats.defense);const before=incoming(base),after=incoming(boost);assert(after<before,'damage actually received: '+before+' -> '+after);});
 for(const family of ['fortune','execution'])audit(family,()=>{const [base,boost]=pair(family);assert(boost.r.stats.crit>base.r.stats.crit);const roll=(base.r.stats.crit+boost.r.stats.crit)/200;assert(hit(boost,roll)>hit(base,roll));});
 audit('devastation',()=>{const [base,boost]=pair('devastation');assert(hit(boost,0)>hit(base,0));const [caster,amplified]=pair('devastation','Wand');caster.a.rng(0);amplified.a.rng(0);assert(amplified.a.combatContext(amplified.r).magicCriticalDamage(100)>caster.a.combatContext(caster.r).magicCriticalDamage(100));});
 audit('archmage',()=>{const [base,boost]=pair('archmage','Wand');assert(hit(boost)>hit(base));});
