@@ -22,7 +22,7 @@ function bossPath(card){
 function bossVictory(seed,options={}){
  const a=create(seed,undefined,{}, {skipPersistence:true});
  const tier=options.tier||35;a.setup(tier,'Sword','Legendary');a.setUnlocked(tier);if(options.runeCount)for(let i=0;i<options.runeCount;i++)a.state().runes.push(a.makeRune('might',1));a.start(tier,true);
- const c=a.controller(),g=c.state,card=g.dungeon.cards[options.cardIndex||0];c.chooseRealm(card.id);
+ const c=a.controller(),g=c.state,card=options.family?g.dungeon.cards.find(card=>card.family===options.family):g.dungeon.cards[options.cardIndex||0];if(!card)return null;c.chooseRealm(card.id);
  for(const node of bossPath(card).slice(1)){
   assert.equal(c.visitRoom(node),true);assert.equal(a.enter(),true);
   if(a.events.run()?.event)assert.equal(a.events.choose(2),true);
@@ -41,7 +41,7 @@ function bossVictory(seed,options={}){
   }
  }
  assert.equal(g.stage,'finished');assert.equal(a.results().summary?.outcome,'victory');
- return {a,c,g};
+ return {a,c,g,card};
 }
 test('C8 death destroys earned Bag items and restores the entrance loadout after an equipment swap',()=>{
  const {a,c}=setup(90801),s=a.state(),home=s.equip.weapon;
@@ -80,6 +80,17 @@ test('C8 native Boss victory awards exactly one persistent-tier Rune without aut
  const rune=s.runes[0];assert.equal(rune.tier,35);assert(a.validRune(rune));
  assert(s.runeSlots.every(id=>id===null));assert.equal(g.unlocked,36);
  assert.equal(a.results().summary.runeTier,35);assert(a.results().summary.runeName.includes(rune.name));
+});
+test('C8 each of the six native Boss affinities yields one direct Anchor Rune',()=>{
+ for(const family of ['blood','decay','vitality','aegis','fury','magic']){
+  let victory=null;
+  for(let seed=90800;seed<90900&&!victory;seed++)victory=bossVictory(seed,{family});
+  assert(victory,'No native Realm card for '+family);
+  const {a,card}=victory,s=a.state();assert.equal(card.family,family);
+  assert.equal(s.runes.length,1,family);assert.equal(s.runes[0].tier,35);
+  assert(a.validRune(s.runes[0]));assert.equal(s.pendingRuneReward,null);
+  assert(s.runeSlots.every(id=>id===null));
+ }
 });
 test('C8 native Boss victory fills the reserved last Rune Bag slot without losing the drop',()=>{
  const {a}=bossVictory(90803,{runeCount:299}),s=a.state();
