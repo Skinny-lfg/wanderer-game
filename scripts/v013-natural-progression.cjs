@@ -276,7 +276,8 @@ function spendEarnedAttributes(a,profile){
   aegis:['end','end','int','end','str'],
   magic:['int','int','end','int','cha'],
   decay:['int','int','agi','int','end']};
- const order=rotations[first]||rotations.blood;
+ const caster=['Wand','Staff'].includes(profile.weapons?.[0]);
+ const order=first==='decay'&&!caster?['str','int','end','int',profile.weapons?.[0]==='Daggers'?'agi':'str']:rotations[first]||rotations.blood;
  const choices=[];
  while(T.availableAttributes(s.automaticTalents)>0){
   const spent=T.spentAttributes(s.automaticTalents),key=order[spent%order.length];
@@ -401,7 +402,7 @@ function investEarnedGear(a,profile,level){
 }
 // Native Anchor Rune valuation is a build policy, never an additional combat stat.
 // All 23 families use canonical magnitude divided by their own Common Adventurer baseline.
-function runeScore(rune,profile){
+function runeScore(rune,profile,context=null){
  if(!rune)return -Infinity;
  const f=RUNES.FAMILIES.find(x=>x.id===rune.family);if(!f)return -Infinity;
  const families=profile.families||[],magic=families.includes('magic'),decay=families.includes('decay'),aegis=families.includes('aegis'),blood=families.includes('blood'),vitality=families.includes('vitality'),fury=families.includes('fury'),leather=profile.armor==='Leather',plate=profile.armor==='Plate',caster=(profile.weapons||[]).some(w=>['Wand','Staff'].includes(w));
@@ -409,15 +410,42 @@ function runeScore(rune,profile){
  const weights={might:caster?1:plate?5:3,swiftness:leather?5:2,wisdom:spell?5:1,fortitude:plate?5:3,fortune:2,fury:caster?2:4,warding:plate?5:3,vitality:4,
  execution:fury?6:3,devastation:fury?6:3,haste:fury||blood?6:3,assault:caster?2:5,archmage:spell?6:0,abyss:mana?5:0,clarity:mana?6:0,efficiency:mana?5:0,corruption:blood||decay||profile.element==='fire'?6:1,bastion:aegis||decay?6:1,renewal:vitality?6:blood?4:2,phantom:leather?6:3,bulwark:plate?6:3,heart:vitality||aegis?6:4,guard:guard?6:0};
  const magnitude=RUNES.runeValue(f.id,rune.tier,RUNES.rarity(rune))/f.base;
- return round((weights[f.id]||0)*magnitude,3);
+ if(!context)return round((weights[f.id]||0)*magnitude,3);
+ const {base,projected,nodes,weapon,offhand,evasionGain}=context,owned=new Set(nodes||[]),has=id=>owned.has(id);
+ const actualDecay=has('affinity_decay')&&['toxic_touch','blight','corruption_cycle','corruption_nova','rotguard','grave_bloom'].some(has);
+ const actualBlood=has('affinity_blood')||has('bleeding_edge'),actualFire=has('affinity_magic')&&context.element==='fire';
+ const actualCaster=['Wand','Staff'].includes(weapon),actualMana=base.mana>0,actualBarrier=offhand==='Orb'||has('affinity_aegis')||has('rotguard')||has('runic_shield')||has('overflowing_life');
+ const actualHeal=has('affinity_vitality')||has('blood_drinker')||has('blood_harvest')||offhand==='Charm';
+ const actualCycle=has('corruption_cycle'),actualOverflow=has('corruption_nova');
+ const key={atkFlat:'attack',defFlat:'defense',hpFlat:'maxhp'}[f.field]||f.field;
+ const delta=Number(projected[key])-Number(base[key]);
+ if(!(delta>0))return 0;
+ const expected=RUNES.runeValue(f.id,rune.tier,RUNES.rarity(rune));
+ const effective=f.kind==='percent'?delta/Math.max(.01,Number(base[key])*expected):f.kind==='flat'&&['atkFlat','defFlat','hpFlat'].includes(f.field)?1:delta/Math.max(.00001,expected);
+ const efficiency=Math.min(1,Math.max(0,effective));
+ if(['abyss','clarity','efficiency'].includes(f.id)&&!actualMana)return 0;
+ if(f.id==='archmage'&&!(actualCaster||actualDecay||has('affinity_magic')||actualBarrier))return 0;
+ if(f.id==='bastion'&&!actualBarrier||f.id==='renewal'&&!actualHeal||f.id==='corruption'&&!(actualDecay||actualBlood||actualFire))return 0;
+ if(f.id==='phantom'&&!(evasionGain>0))return 0;
+ if(f.id==='corruption')weights.corruption=actualDecay?8:actualBlood||actualFire?6:0;
+ if(actualDecay){weights.wisdom=7;weights.archmage=7;weights.might=actualCaster?1:6;weights.fury=actualCaster?1:6;weights.assault=actualCaster?1:6;weights.haste=actualCycle?6:4;weights.clarity=actualCycle||actualOverflow?8:6;weights.efficiency=actualCycle||actualOverflow?7:5;weights.abyss=5;}
+ if(actualCaster){weights.fury=1;weights.might=1;weights.assault=1;}
+ if(f.id==='phantom')return round(weights.phantom*magnitude*Math.min(1,evasionGain/Math.max(.01,expected*.4)),3);
+ return round((weights[f.id]||0)*magnitude*efficiency,3);
 }
 function manageEarnedRunes(a,profile,{equip=true}={}){
  const s=a.state(),actions=[];
  if(!a.economyCanAct())return actions;
- const base=a.baseStats(s.equip,[],[]);
- const eligible=r=>{const family=RUNES.FAMILIES.find(x=>x.id===r.family);if(!family)return false;const key={atkFlat:'attack',defFlat:'defense',hpFlat:'maxhp'}[family.field]||family.field;const projected=a.baseStats(s.equip,[r],[r.id]);return Number(projected[key])>Number(base[key]);};
- const available=(equip?[...s.runes]:[]).filter(r=>r?.id&&runeScore(r,profile)>0&&eligible(r)).sort((x,y)=>
-  runeScore(y,profile)-runeScore(x,profile)||y.tier-x.tier);
+ const base=a.baseStats(s.equip,[],[]),nodes=s.automaticTalents.nodes,weapon=s.equip.weapon?.subtype,offhand=s.equip.offhand?.subtype;
+ const level=Math.max(1,a.controller().state.unlocked||1),scores=new Map();
+ const score=r=>{
+  if(scores.has(r.id))return scores.get(r.id);
+  const projected=a.baseStats(s.equip,[r],[r.id]);
+  const evasionGain=a.gear.evasionChance(projected.evasionRating,level)-a.gear.evasionChance(base.evasionRating,level);
+  const result=runeScore(r,profile,{base,projected,nodes,weapon,offhand,element:s.automaticTalents.element,evasionGain});
+  scores.set(r.id,result);return result;
+ };
+ const available=(equip?[...s.runes]:[]).filter(r=>r?.id&&score(r)>0).sort((x,y)=>score(y)-score(x)||y.tier-x.tier||x.id.localeCompare(y.id));
  const used=new Set(),desired=[];
  for(const rune of available){
   if(used.has(rune.family))continue;
@@ -427,7 +455,7 @@ function manageEarnedRunes(a,profile,{equip=true}={}){
  for(let i=0;i<3;i++){
   const current=s.runeSlots[i],wanted=desired[i]?.id||null;
   if(current===wanted)continue;
-  if(current!==null&&!desired.some(r=>r.id===current)){
+  if(current!==null){
    if(!a.runes.unequip(i))throw Error('Native Rune unequip rejected in Camp');
    actions.push({action:'unequip',slot:i,id:current});
   }
@@ -436,8 +464,9 @@ function manageEarnedRunes(a,profile,{equip=true}={}){
   const rune=desired[i];
   if(s.runeSlots[i]===rune.id)continue;
   if(!a.runes.equip(rune.id,i))throw Error('Native Rune equip rejected in Camp');
-  actions.push({action:'equip',slot:i,id:rune.id,family:rune.family,score:runeScore(rune,profile)});
+  actions.push({action:'equip',slot:i,id:rune.id,family:rune.family,score:score(rune),rarity:RUNES.rarity(rune),tier:rune.tier,value:RUNES.runeValue(rune.family,rune.tier,RUNES.rarity(rune))});
  }
+ if(JSON.stringify(s.runeSlots)!==JSON.stringify(Array.from({length:3},(_,i)=>desired[i]?.id||null)))throw Error('Native Rune final slot mismatch');
  // Native recycling never destroys an equipped or strongest rune per family.
  if(s.runes.length>5){
   const before={count:s.runes.length,fragments:s.fragments};
@@ -645,7 +674,6 @@ function prepareCamp(a,profile,level,decisionModel='risk-aware',options={}){
  actions.attributes.push(...spendEarnedAttributes(a,profile).chosen);
  actions.prepared=prepareEarnedAbility(a,profile);refreshSynergyContext(a,profile);
  if(decisionModel!=='legacy'){
-  actions.runes.push(...manageEarnedRunes(a,profile,{equip:options.equipEarnedRunes!==false}));
   actions.refined.push(...refineEarnedReagents(a,profile,level));
   const investment=investEarnedGear(a,profile,level);
   actions.crafted.push(...investment.crafted);
@@ -679,6 +707,7 @@ function prepareCamp(a,profile,level,decisionModel='risk-aware',options={}){
   actions.storage.push(consolidateStash(a,profile));
   actions.equipped.push(...equipEarned(a,profile,false));
  }
+ if(decisionModel!=='legacy')actions.runes.push(...manageEarnedRunes(a,profile,{equip:options.equipEarnedRunes!==false}));
  actions.unspentGold=s.gold;
  actions.unspentFragments=s.fragments;
  actions.unspentEssence=s.crafting?.essence||0;
@@ -870,13 +899,16 @@ function evaluateRetreat({hp,maxhp,bag=[],next,profile,gold=0,fragments=0,essenc
 function boonScore(id,profile,context={}){
  const hp=context.vitals?.maxhp?context.vitals.hp/context.vitals.maxhp:1;
  const mana=context.vitals?.maxmp??0,steps=context.steps??10;
- const blood=profile.families.includes('blood'),decay=profile.families.includes('decay');
+ const blood=context.owned?context.owned.includes('affinity_blood'):profile.families.includes('blood'),decay=context.owned?context.owned.includes('affinity_decay'):profile.families.includes('decay');
+ const rotReady=context.owned?decay&&['toxic_touch','blight','corruption_cycle','corruption_nova','rotguard','grave_bloom'].some(x=>context.owned.includes(x)):decay;
+ const fireReady=context.owned?context.owned.includes('affinity_magic')&&context.element==='fire':profile.element==='fire';
+ const dotReady=context.bleedReady||blood||rotReady||fireReady;
  switch(id){
   case 'bastion_oath':return 28+(hp<.75?9:0)-(profile.name==='Daring'?3:0);
-  case 'predators_focus':return 26+(context.bossSoon?5:0);
-  case 'blood_tribute':return blood?20+(context.bleedReady?6:0):2;
-  case 'rotbound_echo':return decay||context.bleedReady?18:2;
-  case 'aetherbound_pact':return mana>0?22:0;
+  case 'predators_focus':return 26+(context.bossSoon?5:0)-(context.cap?.areaReady?9:0);
+  case 'blood_tribute':return dotReady?24:2;
+  case 'rotbound_echo':return dotReady?18+(context.cap?.areaReady?4:0):2;
+  case 'aetherbound_pact':return mana>0?22-(context.vitals?.mp/mana<.35?12:0):0;
   case 'wayfarers_bargain':return steps<=4&&hp>.7?24:steps<7&&hp>.85?16:-8;
   default:return 0;
  }
@@ -990,7 +1022,7 @@ function usePotionsBetween(a,profile,history,next){
 function rerollPoorBoonAtShrine(a,offer,profile,history){
  const g=a.controller().state;
  const context={vitals:a.vitals(),steps:g.dungeon.steps,
-  bleedReady:a.state().automaticTalents.nodes.includes('affinity_blood')};
+  bleedReady:a.state().automaticTalents.nodes.includes('affinity_blood'),owned:[...a.state().automaticTalents.nodes],element:a.state().automaticTalents.element,cap:capabilities(a)};
  const best=chooseBoon(offer,profile,context);
  if(best&&boonScore(best,profile,context)>=12)return false;
  return usePotionKind(a,'fate','reroll_weak_boon_offer',history);
@@ -1015,7 +1047,7 @@ function fightNatural(a,profile,tickLimit,context={}){
  const initialNormals=fullInitialRoster.filter(e=>e&&!e.boss&&!e.miniboss&&e.role!=='minion').length;
  const initialRoleCounts=Object.fromEntries(['minion','tank','skirmisher','caster'].map(role=>
   [role,fullInitialRoster.filter(e=>e?.role===role).length]));
- const aoeNodes=['fan_of_blades','cleave_mastery','bow_pierce','mace_shockwave','sword_sweep','overcharge','storm_mastery','fire_spread','frost_spread','plague_spread'];
+ const aoeNodes=['fan_of_blades','cleave_mastery','bow_pierce','mace_shockwave','sword_sweep','overcharge','storm_mastery','fire_spread','frost_spread','plague_spread','contagious_touch','corruption_nova'];
  const actualNodes=[...(a.state().automaticTalents?.nodes||[])];
  const actualWeapon=a.state().equip?.weapon?.subtype||null,actualOffhand=a.state().equip?.offhand?.subtype||null;
  const actualElement=a.state().automaticTalents?.element||null;
@@ -1026,10 +1058,12 @@ function fightNatural(a,profile,tickLimit,context={}){
   actualWeapon==='Sword'&&actualOffhand==='Shield'&&actualNodes.includes('sword_sweep')||
   ['Wand','Staff'].includes(actualWeapon)&&actualElement==='lightning'&&
    (actualNodes.includes('overcharge')||actualNodes.includes('storm_mastery'))&&!actualNodes.includes('lightning_focus');
- const aoePotential=!!(aoeFromWeapon||aoePrepared.some(id=>['fire_spread','plague_spread'].includes(id)));
+ const aoePotential=!!(aoeFromWeapon||aoePrepared.some(id=>['fire_spread','plague_spread','contagious_touch','corruption_nova'].includes(id)));
  const mpStart=r.mp,maxmp=r.maxmp,metricsBefore=Object.fromEntries(['secondaryTargetDamage','secondaryTargetHits','manaSpent','fundedCasts','infusionActivations','infusionHits','infusionDamage','unfundedCasterAttacks']
   .map(key=>[key,Number(r.metrics?.[key])||0]));
  const measured=key=>Math.max(0,(Number(r.metrics?.[key])||0)-metricsBefore[key]);
+ const decayKeys=['decayPrimaryPaidApplications','anchorSpreadSource_ability_cycle','anchorSpreadSource_ability_overflow','anchorSpreadSource_ability_blight','anchorSpreadCycleCasts','anchorSpreadCycleSeedOnly','corruptionCycleActivations','corruptionCycleDamage','corruptionCycleMana','anchorSpreadOverflowCasts','anchorSpreadOverflowSeedOnly','corruptionOverflowActivations','anchorSpreadOverflowPrimary','anchorSpreadOverflowSecondary','anchorSpreadOverflowBudget','corruptionOverflowMana','contagiousTouchSpread','soulDrainMana','decayPrimaryPaidTotalRotDamage','rotguardReactiveRot'];
+ const decayBefore=Object.fromEntries(decayKeys.map(k=>[k,Number(r.metrics?.[k])||0]));
  const cap=context.capabilities||null,adaptive=context.adaptiveTargets??context.decisionModel==='adaptive';
  let ticks=0,switches=0,thornRedirects=0,minionFocusSeconds=0,minionFocusSwitches=0,minimum=r.maxhp>0?r.hp/r.maxhp:0;
  const healthLost={boss:0,elite:0,minion:0,normal:0};
@@ -1043,7 +1077,7 @@ function fightNatural(a,profile,tickLimit,context={}){
    // agent must not silently override a chosen combat style merely because
    // another target is dangerous. Mechanics-aware profiles remain reactive.
    let next=adaptive&&profile.target!=='focus'
-    ?AGENT.selectTarget(r,cap,baseline):selectThornAwareTarget(r,profile);
+    ?AGENT.selectTarget(r,cap?{...cap,rotCycleReady:(a.build()?.cooldowns?.corruptionCycle??Infinity)<=(r.combatSeconds||0)}:null,baseline):selectThornAwareTarget(r,profile);
    // Thornbloom counterplay uses live visible enemy status only.
    if(next?.stage82?.type==='briarspine_horror'&&
       next.stage82.bloomUntil>(r.combatSeconds||0)){
@@ -1075,6 +1109,7 @@ function fightNatural(a,profile,tickLimit,context={}){
   kind:first?.boss?'boss':first?.miniboss?'elite':'combat',initialEnemies:initial,
   initialMinions,initialNormals,initialRoleCounts,
   aoePotential,aoeTalentIds:aoePrepared,actualWeapon,actualOffhand,actualElement,
+  decayMetrics:Object.fromEntries(decayKeys.map(k=>[k,Math.max(0,(Number(r.metrics?.[k])||0)-decayBefore[k])])),
   secondaryTargetDamage:Math.round(measured('secondaryTargetDamage')),
   secondaryTargetHits:Math.round(measured('secondaryTargetHits')),
   bossStyle:first?.boss?first.bossStyle:null,eliteType:first?.miniboss?first.eliteType:null,
@@ -1173,7 +1208,7 @@ function playDungeon(a,level,profile,opts,decisionModel='risk-aware',captureMode
    rerollPoorBoonAtShrine(a,offer,profile,report.potions);
    offer=g.dungeon.boonOffer;
    const context={vitals:a.vitals(),steps:g.dungeon.steps,bossSoon:g.dungeon.steps<=5,
-    bleedReady:a.state().automaticTalents.nodes.includes('affinity_blood')};
+    bleedReady:a.state().automaticTalents.nodes.includes('affinity_blood'),owned:[...a.state().automaticTalents.nodes],element:a.state().automaticTalents.element,cap:capabilities(a)};
    const boon=chooseBoon(offer,profile,context);
    c.chooseBoon(boon);
    report.boons.push({id:boon,room:offer.room,score:boonScore(boon,profile,context)});

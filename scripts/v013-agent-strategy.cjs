@@ -36,8 +36,10 @@ function classify({equipment={},talents={},build={},stats={}}={}){
  if(has('grasping_roots'))add('area',1.8,'grasping roots');
  if(has('ward_echo')&&(offhand==='Orb'||has('affinity_aegis')||has('barrier_pulse')))add('area',1.9,'barrier-enabled ward echo');
  if(has('affinity_decay')&&Number(stats.mana)>0&&!has('carrion_detonation')&&talents.prepared!=='grave_bloom'){
-  if(has('contagious_touch'))add('area',1.4,'paid Rot contagion');
-  if(has('corruption_nova'))add('area',1.8,'corruption nova');
+  if(has('contagious_touch')&&has('toxic_touch'))add('area',2.1,'persistent full-potency Rot contagion');
+  if(has('corruption_nova')){add('area',1.9,'shared Overflow pulse');add('focus',1.3,'independent Overflow');}
+  if(has('corruption_cycle'))add('focus',2.2,'independent Cycle burst');
+  if(has('blight'))add('focus',.8,'independent Blight Rot');
  }
  if(has('carrion_detonation')&&has('affinity_blood')&&has('affinity_decay')&&!magical)add('area',2,'charged carrion detonation');
  if(fundedMagic&&element==='arcane'&&has('arcane_nova')&&talents.prepared!=='grave_bloom')add('area',1.8,'arcane infusion nova');
@@ -61,6 +63,7 @@ function classify({equipment={},talents={},build={},stats={}}={}){
  if(has('barrier_pulse'))add('defense',1.2,'barrier pulse');
  if(has('runic_shield'))add('defense',1.4,'runic shield');
  if(has('strong_heart'))add('defense',.9,'strong heart');
+ if(has('affinity_decay')&&(has('toxic_touch')||has('blight')||has('corruption_cycle')||has('corruption_nova'))){if(has('wasting_curse'))add('defense',.8,'Rot damage reduction');if(has('wither'))add('defense',.5,'Rot attack reduction');}
  if(has('renewal'))add('defense',.8,'renewal');
  if(stats.blockChance>0)add('defense',Math.min(2,stats.blockChance*(stats.blockReduction||.35)/12),'actual Guard chance and strength');
  if(stats.barrierPower>0&&(offhand==='Orb'||has('affinity_aegis')||has('overflowing_life')))add('defense',Math.min(1.2,stats.barrierPower*3),'active Barrier Power');
@@ -77,7 +80,7 @@ function classify({equipment={},talents={},build={},stats={}}={}){
   affinities.length>=2?'dual-affinity-only':'not-yet';
  return {role,area:round(area),focus:round(focus),defense:round(defense),
   areaReady,focusReady,weapon:main,offhand,armor,element,earnedNodes:owned.size,
-  affinities,affinityComposition,mixedSkills,synergyStage,preparedMixed,sources};
+  affinities,affinityComposition,mixedSkills,synergyStage,preparedMixed,sources,rotCycle:has('corruption_cycle'),rotOverflow:has('corruption_nova'),rotBlight:has('blight'),rotContagion:has('contagious_touch')&&has('toxic_touch')};
 }
 // Only uses card fields rendered by renderRealmCards: family, risk,
 // favoured gear, condition and *one* known omen. Remaining omens are hidden.
@@ -151,6 +154,16 @@ function selectTarget(run,cap,baseline){
  // A speculative "caster first" switch in each encounter was isolated as
  // the primary cause of Leather Duelist losses (1/4 vs 3/4 E1 clears).
  // Boss mechanics above remain explicit, intentional exceptions.
+ // Use visible accumulated stacks and the actual skill cooldown; don't
+ // sacrifice a near-dead enemy, boss/elite mechanics, or swap on every tick.
+ if(cap?.rotCycle&&run.mp>=10&&current&&current.hp>current.maxhp*.45){
+  const eligible=e=>(e.v012Rot||[]).filter(d=>d.remaining>0&&d.damage>0&&(d.primaryPaid||d.spread||d.transferred||d.abilityOrigin)).length;
+  const ready=cap.rotCycleReady===true;
+  if(ready&&eligible(current)===0){
+   const prepared=alive.filter(e=>e!==current&&eligible(e)>=1).sort((a,b)=>eligible(b)-eligible(a)||a.hp-b.hp)[0];
+   if(prepared)return prepared;
+  }
+ }
  if(!cap?.areaReady&&current)return current;
  if(cap?.areaReady){
   // Damage-over-time and secondary hits benefit from stable focus too.

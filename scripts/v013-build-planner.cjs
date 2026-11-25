@@ -3,7 +3,12 @@
 // Pure analysis using the live TalentGraph v15 API; never creates account XP,
 // items, unlocks, or changes gameplay. Execution uses real Camp actions.
 const ALL_FAMILIES=Object.freeze(['blood','fury','vitality','aegis','magic','decay']);
+const DECAY_WEAPONS={twohand:['Two-Handed','Plate'],staff:['Staff','Cloth'],daggers:['Daggers','Leather'],wand:['Wand','Cloth']};
 const BUILDS=Object.freeze({
+ ...Object.fromEntries(Object.entries(DECAY_WEAPONS).flatMap(([id,[weapon,armor]])=>
+ ['cycle','overflow','hybrid'].map(role=>['decay-'+role+'-'+id,{primary:'decay',model:'pure',weapons:[weapon],armor,focus:'rot',decayRole:role,
+ milestones:['blight',...(role==='overflow'?['corruption_nova','contagious_touch']:role==='cycle'?['corruption_cycle','contagious_touch']:['corruption_cycle','corruption_nova','contagious_touch'])],orderedMilestones:true}]))),
+ 'decay-plagueheart':{primary:'decay',model:'pure',weapons:['Wand','Staff'],armor:'Cloth',focus:'rot',decayRole:'plagueheart',milestones:['blight','contagious_touch','plagueheart','soul_drain'],orderedMilestones:true},
  'blood-pure':{primary:'blood',model:'pure',weapons:['Sword','Two-Handed'],armor:'Leather',milestones:['blood_harvest','crimson_feast','heart_of_carnage'],focus:'bleed'},
  'blood-fury':{primary:'blood',secondary:'fury',secondAt:12,model:'two',mix:true,weapons:['Sword','Two-Handed'],armor:'Leather',milestones:['blood_harvest','crimson_rush','reapers_cadence'],focus:'bleed'},
  'blood-fury-vitality':{primary:'blood',secondary:'fury',third:'vitality',secondAt:12,thirdAt:28,model:'adaptive',mix:true,weapons:['Sword','Two-Handed'],armor:'Leather',milestones:['blood_harvest','crimson_rush','fervent_life','reapers_cadence'],focus:'bleed'},
@@ -60,7 +65,8 @@ function excludes(node,owned,graph){
  for(const id of owned){if(graph.get(id)?.excludes?.includes(node.id))return true;}
  return false;
 }
-function usable(n,active,mode,plan){return !!n&&!n.pending&&(!n.family||active.includes(n.family))&&
+function usable(n,active,mode,plan){return !!n&&!n.pending&&
+ !(plan.decayRole&&((n.id==='corruption_cycle'&&!['cycle','hybrid'].includes(plan.decayRole))||(n.id==='corruption_nova'&&!['overflow','hybrid'].includes(plan.decayRole))||(n.id==='plagueheart'&&plan.decayRole!=='plagueheart')))&&(!n.family||active.includes(n.family))&&
  (!n.element||n.element===mode)&&(!n.pair||(!!plan.mix&&n.pair.every(f=>active.includes(f))))&&
  (n.kind!=='mixed'||!!plan.mix&&n.pair?.every(f=>active.includes(f)));}
 function scoreNode(n,plan,active,context={}){
@@ -107,6 +113,7 @@ function scoreNode(n,plan,active,context={}){
  const rank=(plan.milestones||[]).indexOf(n.id);
  if(rank>=0)score+=8-Math.min(5,rank);
  if(n.gateFor&&plan.milestones?.includes(n.gateFor))score+=1.5;
+ if(focus==='rot'&&['toxic_touch','blight','virulent_rot','contagious_touch','corruption_cycle','corruption_nova','soul_drain','wasting_curse','wither'].includes(n.id))score+=3;
  if(n.kind==='stat'&&n.id.startsWith('outer_')&&!plan.mix)score-=3;
  if(n.gateFor&&!plan.milestones?.includes(n.gateFor))score-=1.5;
  if(n.kind==='stat'&&n.id.startsWith('root_'))score+=3;
@@ -315,7 +322,8 @@ function evaluateGear(item,profile,baseScore,target='weapon'){
   if(weapon==='Bow'&&plan.focus==='speed')value+=2;
  }else if(slot==='offhand'){
   if(weapon==='Orb'&&magic)value+=15;
-  if(weapon==='Tome'&&magic)value+=10;
+  if(weapon==='Tome'&&(magic||plan.focus==='rot'))value+=10;
+  if(plan.focus==='rot'&&preferredWeapons.includes('Daggers')&&['Daggers','Off-Hand Dagger'].includes(weapon))value+=15;
   if(weapon==='Shield'&&tank)value+=14;
   if(weapon==='Charm'&&plan.secondary==='vitality')value+=11;
  }else if(['armor','helm','gloves','boots','belt'].includes(slot)){
