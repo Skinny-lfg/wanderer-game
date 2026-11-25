@@ -58,3 +58,7 @@ Extract the supplied `wanderer_g22c_gallery_assets.zip` into the repository root
 ## G2.2D — Painted item slots
 
 The ten approved PNGs are committed at `godot-prototype/ui/assets/inventory/g22d/`. Pull the branch, open the gallery (F6), choose Item Slots and G2.2D Painted PNG. The preview has six rarities, four interaction states, a 48-slot bag with 30 sample items and selectable 48/64/80 px sizes, and equipped samples. Original slots remain selectable. Only the gallery opts into the painted textures; gameplay remains unchanged.
+
+## Gallery display (macOS / Windows)
+
+Run `ui/showcase/ui_gallery.tscn` directly (F6). The standalone gallery uses a 1440×900 logical canvas with an adaptive window sized to 90% of the available monitor, capped at 2560×1600. The header offers UI 85–150% zoom and Fit screen. Content can scroll horizontally and vertically at high zoom. If editor game embedding restricts the window size, run the scene in a separate window. The main project viewport and automated screenshot dimensions are unchanged.

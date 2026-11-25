@@ -26,6 +26,10 @@ var prefer_slots: bool = true
 var slot_status: Label
 var bag_slots: Array[Button] = []
 var bag_size: int = 64
+var gallery_zoom: OptionButton
+const GALLERY_BASE_SIZE = Vector2i(1440, 900)
+const GALLERY_MAX_WINDOW = Vector2i(2560, 1600)
+const GALLERY_ZOOM = [0.85, 1.0, 1.15, 1.3, 1.5]
 var prefer_navigation: bool = true
 var navigation_status: Label
 var demo_tabs: Array[Button] = []
@@ -72,7 +76,20 @@ func _ready() -> void:
 	for side in ["left", "right", "top", "bottom"]:
 		outer.add_theme_constant_override("margin_" + side, 24)
 	var frame = _vbox(outer, 14)
-	frame.add_child(_heading("WANDERER  /  UI WORKSHOP"))
+	var header = _row(frame)
+	var workshop_title = _heading("WANDERER  /  UI WORKSHOP")
+	workshop_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header.add_child(workshop_title)
+	gallery_zoom = OptionButton.new()
+	for factor in GALLERY_ZOOM:
+		gallery_zoom.add_item("UI " + str(roundi(factor * 100.0)) + "%")
+	gallery_zoom.select(1)
+	gallery_zoom.item_selected.connect(_set_gallery_zoom)
+	header.add_child(gallery_zoom)
+	var fit = Button.new()
+	fit.text = "Fit screen"
+	fit.pressed.connect(_fit_gallery_window)
+	header.add_child(fit)
 	frame.add_child(_label("STYLIZED GOTHIC     •     G2.2D.4 / ASSET NORMALIZATION", 15, Tokens.GOLD))
 	frame.add_child(HSeparator.new())
 	var layout = _row(frame)
@@ -93,7 +110,7 @@ func _ready() -> void:
 	title_label = _heading("")
 	right.add_child(title_label)
 	scroll = ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	right.add_child(scroll)
 	body = _vbox(scroll, 18)
@@ -105,6 +122,38 @@ func _ready() -> void:
 	navigation_pack.load_pack()
 	slot_pack.load_pack()
 	show_category("Foundations")
+	call_deferred("_configure_gallery_window")
+
+func _is_standalone_gallery() -> bool:
+	return get_tree().current_scene == self and DisplayServer.get_name() != "headless"
+
+func _configure_gallery_window() -> void:
+	# Keep game shell and programmatic screenshot/smoke test window sizes unchanged.
+	if not _is_standalone_gallery():
+		return
+	var window = get_window()
+	window.content_scale_size = GALLERY_BASE_SIZE
+	window.content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS
+	window.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_EXPAND
+	window.content_scale_factor = 1.0
+	_fit_gallery_window()
+
+func _set_gallery_zoom(index: int) -> void:
+	if _is_standalone_gallery() and index >= 0 and index < GALLERY_ZOOM.size():
+		get_window().content_scale_factor = GALLERY_ZOOM[index]
+
+func _fit_gallery_window() -> void:
+	if not _is_standalone_gallery():
+		return
+	var window = get_window()
+	var usable = DisplayServer.screen_get_usable_rect(window.current_screen)
+	if not usable.has_area():
+		return
+	var target = Vector2i(Vector2(usable.size) * 0.90)
+	target.x = mini(target.x, GALLERY_MAX_WINDOW.x)
+	target.y = mini(target.y, GALLERY_MAX_WINDOW.y)
+	window.size = target
+	window.position = usable.position + Vector2i(Vector2(usable.size - target) * 0.5)
 
 func show_category(category: String) -> bool:
 	if not CATEGORIES.has(category):
