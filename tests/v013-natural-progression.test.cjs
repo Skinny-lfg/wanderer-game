@@ -150,4 +150,26 @@ test('Successful native extraction is never counted as a defeat despite controll
  assert.equal(out.accounts[0].endLevel,1,'extraction must not unlock E2');
 });
 
-test('Anchor Rune agent uses actual loadout eligibility, unique families and earned magnitude',()=>{const a=create(9108),s=a.state();a.setup(1,'Sword','Common');s.runes=['archmage','abyss','clarity','efficiency','guard','execution','assault','haste'].map(id=>a.makeRune(id,1,'Legendary'));const weaker=a.makeRune('execution',70,'Common');s.runes.push(weaker);N.manageEarnedRunes(a,N.PROFILES.daring);const owned=s.runeSlots.filter(Boolean).map(id=>s.runes.find(r=>r.id===id));assert.equal(owned.length,3);assert(owned.some(r=>r.family==='execution'&&r.id!==weaker.id));assert(owned.some(r=>r.family==='assault'));assert(owned.some(r=>r.family==='haste'));assert(owned.every(r=>!['archmage','abyss','clarity','efficiency'].includes(r.family)));assert.equal(new Set(owned.map(r=>r.family)).size,3);});
+test('Anchor Rune agent uses actual loadout eligibility, unique families and earned magnitude',()=>{
+ const a=create(9108),s=a.state(),profile=N.PROFILES.daring;
+ a.setup(1,'Sword','Common');
+ s.runes=['archmage','abyss','clarity','efficiency','guard','execution','assault','haste'].map(id=>a.makeRune(id,1,'Legendary'));
+ const weaker=a.makeRune('execution',70,'Common');s.runes.push(weaker);
+ const base=a.baseStats(s.equip,[],[]),level=Math.max(1,a.controller().state.unlocked||1);
+ const rank=r=>{const projected=a.baseStats(s.equip,[r],[r.id]);return N.runeScore(r,profile,{base,projected,nodes:s.automaticTalents.nodes,weapon:s.equip.weapon?.subtype,offhand:s.equip.offhand?.subtype,element:s.automaticTalents.element,evasionGain:a.gear.evasionChance(projected.evasionRating,level)-a.gear.evasionChance(base.evasionRating,level)});};
+ const eligible=s.runes.filter(r=>rank(r)>0).sort((x,y)=>rank(y)-rank(x)||y.tier-x.tier||x.id.localeCompare(y.id));
+ const expected=[];for(const r of eligible){if(expected.some(x=>x.family===r.family))continue;expected.push(r);if(expected.length===3)break;}
+ const assault=s.runes.find(r=>r.family==='assault'),guard=s.runes.find(r=>r.family==='guard');
+ assert(rank(assault)>0,'physical AP rune remains useful');
+ if(base.blockChance>0){assert(rank(guard)>0,'actual Guard is useful even for a planned Leather/Fury profile');}else{assert.equal(rank(guard),0);}
+ assert(rank(s.runes.find(r=>r.family==='execution'&&r.id!==weaker.id))>rank(weaker));
+ const diagnostic={weapon:s.equip.weapon?.subtype,offhand:s.equip.offhand?.subtype,guard:base.blockChance,scores:eligible.map(r=>({family:r.family,score:rank(r)})),expected:expected.map(r=>r.family)};
+ console.log('ANCHOR_AGENT_RANK='+JSON.stringify(diagnostic));
+ N.manageEarnedRunes(a,profile);
+ const owned=s.runeSlots.filter(Boolean).map(id=>s.runes.find(r=>r.id===id));
+ assert.equal(owned.length,3);assert.deepEqual(owned.map(r=>r.id),expected.map(r=>r.id));
+ assert(owned.some(r=>r.family==='execution'&&r.id!==weaker.id));
+ assert(owned.every(r=>!['archmage','abyss','clarity','efficiency'].includes(r.family)));
+ assert.equal(new Set(owned.map(r=>r.family)).size,3);
+ assert.equal(N.manageEarnedRunes(a,profile).filter(x=>x.action==='equip'||x.action==='unequip').length,0,'unchanged loadout must not churn slots');
+});

@@ -2,7 +2,7 @@ name: Decay natural E1-E10 and Anchor agent validation (NO DEPLOY)
 on:
   push:
     branches: [balance/stage-6.40-e1-calibration]
-    paths: ['scripts/v013-decay-natural-e10.cjs','.github/workflows/v013-decay-natural-e10.yml','tests/v013-decay-natural-agent.test.cjs']
+    paths: ['scripts/v013-decay-natural-e10.cjs','.github/workflows/v013-decay-natural-e10.yml','tests/v013-decay-natural-agent.test.cjs','tests/v013-natural-progression.test.cjs','tests/v013-strategic-build-agents.test.cjs','scripts/v013-natural-progression.cjs','scripts/v013-build-planner.cjs','scripts/v013-agent-strategy.cjs']
   workflow_dispatch:
 permissions:
   contents: read
