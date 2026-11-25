@@ -1,0 +1,54 @@
+name: E10 Mana and Survival — Magic and Fury (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths: ['scripts/v013-e10-mana-survival.cjs','.github/workflows/v013-e10-mana-survival.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node scripts/v013-e10-mana-survival.cjs smoke
+  cohort:
+    needs: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        id: [magic-arcane-wand, magic-arcane-staff, magic-fire-wand, magic-fire-staff, magic-frost-wand, magic-frost-staff, magic-lightning-wand, magic-lightning-staff, fury-daggers, fury-bow, fury-twohand]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node scripts/v013-e10-mana-survival.cjs run "${{ matrix.id }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mana-survival-${{ matrix.id }}
+          path: reports/e10-mana-survival/*.json
+  summary:
+    needs: cohort
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: mana-survival-*
+          path: reports/e10-mana-survival
+          merge-multiple: true
+      - run: node scripts/v013-e10-mana-survival.cjs aggregate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: e10-mana-survival-summary
+          path: reports/e10-mana-survival/summary.json
