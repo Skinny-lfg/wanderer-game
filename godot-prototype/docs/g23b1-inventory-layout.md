@@ -1,0 +1,7 @@
+# G2.3B.1 — Inventory layout redesign
+
+Source snapshot: browser audit/e10-blood-consolidation-ability-impact, 7f2a6b0bc184df67e8bf074d811f2e3d63d6b7d2, index.html (SLOTS, renderStash, phase3DetailedStatsMarkup, phase6LoadoutMarkup, anchorRuneBagMarkup), economy/v012-equipment-runtime.js and combat/v012-runes.js. Read-only reference. No browser changes.
+
+F5 → Inventory: compact header, original bottom navigation, unframed character and shadow, 10 equipment positions (incl. belt and second ring), 3 potion positions, basic and advanced stats with the five actual attributes, 40-slot stash, existing Simple panels, separate Valuables and Anchor Rune collection views. The 24 occupied fixture slots include 21 gear items and three potion stacks. Filters, sorting, collection switching and selection operate on mock data only; all economic actions (expansion, salvage, selling) are disabled. Estimated stat gain uses a dummy preview score, not the browser formula. No real equip, lock, compare or protection state transitions; the existing hover tooltip remains generic. Additional detail actions and actual comparison states belong to future visual iterations, not game implementation. All example values are illustrative.
+
+Nine existing browser assets copied byte-for-byte by Git blob SHA (belt, three potions, two treasures, three rune icons). No new generated art, no new font or frame. Other screens and F6 unchanged. Fixed 1280×720 logical target. CI smoke extended for layout counts, filter and collection states; visual review required.

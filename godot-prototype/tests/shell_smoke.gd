@@ -28,7 +28,7 @@ func _run() -> void:
 			return
 		if id == "inventory":
 			var slots: Array = shell.current_screen.inventory_slots
-			if slots.size() != 56 or slots[0].painted_textures.size() != 10 or not slots[0].equipped or slots[0].painted_key() != "rarity_common":
+			if slots.size() != 53 or slots[0].painted_textures.size() != 10 or not slots[0].equipped or slots[0].painted_key() != "rarity_common":
 				_fail("Integrated equipment and bag slots missing")
 				return
 			var tooltip: Control = slots[0]._make_custom_tooltip("preview")
@@ -36,6 +36,26 @@ func _run() -> void:
 				_fail("Integrated tooltip missing")
 				return
 			tooltip.free()
+			var inventory = shell.current_screen
+			if inventory.equipped_slots.size() != 10 or inventory.potion_slots.size() != 3 or inventory.stash_slots.size() != 40 or inventory.stash_items.size() != 24:
+				_fail("Inventory fixture does not match v0.13 capacities")
+				return
+			inventory.stash_filter.select(1)
+			inventory._inventory_filter_changed(1)
+			if inventory.stash_slots[0].item_art == null or inventory.stash_slots[3].item_art != null:
+				_fail("Potion filter preview failed")
+				return
+			inventory._inventory_collection(1)
+			if inventory.stash_grid.visible or not inventory.collection_host.visible or not inventory.stash_count.text.begins_with("2 valuables"):
+				_fail("Valuables collection preview failed")
+				return
+			inventory._inventory_collection(2)
+			if not inventory.stash_count.text.begins_with("3 / 300"):
+				_fail("Anchor Rune collection preview failed")
+				return
+			inventory._inventory_collection(0)
+			inventory.stash_filter.select(0)
+			inventory._inventory_filter_changed(0)
 		for other in shell.IDS:
 			if shell.buttons[other].button_pressed != (other == id):
 				_fail("Active navigation state invalid")
