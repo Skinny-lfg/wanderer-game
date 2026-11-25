@@ -36,7 +36,7 @@ test('percentage stat nodes are additive on the pre-graph stat; other spell modi
 });
 
 test('every stat slot has one direct stat; skill gates are relevant and attributes remain post-cap only',()=>{
- assert.equal(graph.length,419);assert.equal(graph.filter(n=>n.kind==='stat').length,308);
+ assert.equal(graph.length,420);assert.equal(graph.filter(n=>n.kind==='stat').length,308);
  const fields=['pctAttack','pctArmor','pctLife','pctSpell','pctSpeed','pctMana','pctRegen','critChance','flatAvoid','guardChance','barrierPower','healingPower','manaCostReduction','bleedBonus','rotBonus','rotDefense','sunderDamage','healthRegen'];
  for(const n of graph.filter(n=>n.kind==='stat')){
   assert.equal(fields.filter(k=>n[k]!==undefined).length,1,n.id);

@@ -110,7 +110,7 @@ function totalStats(equipment,ownedRunes,equippedRuneIds,{isTwoHanded,FIELDS,ite
  // continue to use their existing formulas and global combat ceilings.
  s.crit=Math.min(100,s.crit+Math.min(8,Math.max(0,gearBonus('critBonus'))));
  if(s.mana)s.manaRegen+=Math.min(6,Math.max(0,gearBonus('manaRegenBonus')))*(1+clothFraction);
- s.wardBonus=Math.min(.3,Math.max(0,gearBonus('wardBonus')));s.barrierPower=0;s.healingPower=0;s.manaCostReduction=0;
+ s.wardBonus=Math.min(.3,Math.max(0,gearBonus('wardBonus')));s.barrierPower=0;s.healingPower=0;s.manaCostReduction=0;s.critDamage=0;s.dotPower=0;
  if(off?.subtype==='Shield')s.blockChance=Math.min(48,s.blockChance+Math.min(8,Math.max(0,gearBonus('blockBonus'))));
  s.blockReduction=off?.subtype==='Shield'?(main?.subtype==='Mace'?.67:main?.subtype==='Sword'?.62:.58):0;
  s.lootQuality=Math.min(10,Math.round(Math.max(0,s.cha-5)*.09*10)/10);
@@ -121,7 +121,7 @@ function totalStats(equipment,ownedRunes,equippedRuneIds,{isTwoHanded,FIELDS,ite
  // A shieldless character must unlock Guard before gear can improve it.
  if(off?.subtype!=='Shield'&&result.blockChance>0){result.blockChance=Math.min(65,result.blockChance+Math.min(8,Math.max(0,gearBonus('blockBonus'))));result.blockReduction=.35;}
  if(PHASE1_PREVIEW&&phase6Run?.effects)result=root.WandererV012CombatCore.applyExpeditionModifiers(result,phase6Run.effects);
- result.attacksPerSec=Math.min(4.2,result.attacksPerSec);result.crit=Math.min(100,Math.max(0,result.crit||0));result.power=power(result);
+ result.manaCostReduction=Math.min(.25,Math.max(0,result.manaCostReduction||0));result.blockChance=Math.min(65,Math.max(0,result.blockChance||0));result.attacksPerSec=Math.min(4.2,result.attacksPerSec);result.crit=Math.min(100,Math.max(0,result.crit||0));result.power=power(result);
  return result;
 }
 const STAT_KEYS=Object.freeze(['str','agi','int','end','cha','attack','defense','maxhp','attacksPerSec','crit','blockChance','mana','manaRegen','spellPower','evasionRating','barrierPower','healingPower','manaCostReduction','critDamage','dotPower','power']);
