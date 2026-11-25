@@ -10,7 +10,7 @@ const gear=fs.readFileSync('combat/v012-gear-stats.js','utf8'),runtime=fs.readFi
 function rep(s,a,b){assert.equal(s.split(a).length,2,'missing or ambiguous source anchor: '+a);return s.replace(a,b);}
 let observer=rep(runtime,"  const attackType=ports.enemyAttackType(e);","  const attackType=ports.enemyAttackType(e);\n  ports.phase6Metric(r,'auditEnemyAttacks',1);ports.phase6Metric(r,attackType==='physical'?'auditPhysicalAttacks':'auditNonPhysicalAttacks',1);ports.phase6Metric(r,'auditPreAvoidDamage',raw);");
 observer=rep(observer,"   ports.phase6Metric(r,'dodges',1);","   ports.phase6Metric(r,'dodges',1);ports.phase6Metric(r,'auditDodgePrevented',raw);");
-const noDodge=rep(observer,"  const chance=type==='physical'?ports.evasionChance(run.stats.evasionRating||0,run.tier):0;","  const chance=0;");
+const noDodge=rep(observer," const chance=type==='physical'?ports.evasionChance(run.stats.evasionRating||0,run.tier):0;"," const chance=0;");
 const beforeTalent=" if(state?.automaticTalents?.nodes?.length&&root.WandererAutomaticTalents)root.WandererAutomaticTalents.apply(s,state.automaticTalents);";
 const beforeMods=" let result=s;";
 const afterMods=" // A shieldless character must unlock Guard before gear can improve it.";
