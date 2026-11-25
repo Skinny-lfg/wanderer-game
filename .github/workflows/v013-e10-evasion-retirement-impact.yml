@@ -1,0 +1,139 @@
+name: E10 Evasion Retirement Impact (NO DEPLOY)
+on:
+  push:
+    branches: [audit/e10-evasion-retirement-impact]
+    paths:
+      - 'scripts/v013-e10-evasion-retirement-impact.cjs'
+      - '.github/workflows/v013-e10-evasion-retirement-impact.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 8
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Prepare exact before version
+        run: |
+          git diff --exit-code 8381b97eb0c47e319187b343b2a9591ead90438f HEAD -- combat scripts/simulate-progression.cjs scripts/v013-global-e10.cjs tests/v013-current-talent-helper.cjs package.json package-lock.json
+          git worktree add --detach "$RUNNER_TEMP/evasion-before" 2246a9c791d48e4753071465bb8afcc2099f2ea2
+          cp "scripts/v013-e10-evasion-retirement-impact.cjs" "$RUNNER_TEMP/evasion-before/scripts/v013-e10-evasion-retirement-impact.cjs"
+          ln -s "$GITHUB_WORKSPACE/node_modules" "$RUNNER_TEMP/evasion-before/node_modules"
+          git -C "$RUNNER_TEMP/evasion-before" rev-parse HEAD
+      - run: npm run test:v013:talent-graph
+      - run: node --test tests/v0120-evasion.test.cjs
+      - name: Paired smoke across affected builds and control
+        run: |
+          export AUDIT_OUT="$RUNNER_TEMP/smoke-impact"
+          for profile in "fury-daggers Plate" "decay-cycle-daggers Leather" "decay-cycle-wand Cloth" "magic-fire-wand Cloth"; do
+            read -r build armor <<< "$profile"
+            (cd "$RUNNER_TEMP/evasion-before" && node scripts/v013-e10-evasion-retirement-impact.cjs run "$build" "$armor" before 1)
+            node scripts/v013-e10-evasion-retirement-impact.cjs run "$build" "$armor" after 1
+            node scripts/v013-e10-evasion-retirement-impact.cjs pair "$build" "$armor" 1
+          done
+  cohort:
+    needs: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      max-parallel: 16
+      matrix:
+        include:
+          - build: fury-daggers
+            armor: Cloth
+          - build: fury-daggers
+            armor: Leather
+          - build: fury-daggers
+            armor: Plate
+          - build: fury-bow
+            armor: Cloth
+          - build: fury-bow
+            armor: Leather
+          - build: fury-bow
+            armor: Plate
+          - build: fury-twohand
+            armor: Cloth
+          - build: fury-twohand
+            armor: Leather
+          - build: fury-twohand
+            armor: Plate
+          - build: blood-daggers
+            armor: Cloth
+          - build: blood-daggers
+            armor: Leather
+          - build: blood-daggers
+            armor: Plate
+          - build: decay-cycle-daggers
+            armor: Cloth
+          - build: decay-cycle-daggers
+            armor: Leather
+          - build: decay-cycle-daggers
+            armor: Plate
+          - build: decay-cycle-wand
+            armor: Cloth
+          - build: vitality-mace
+            armor: Plate
+          - build: aegis-mace
+            armor: Plate
+          - build: magic-fire-wand
+            armor: Cloth
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 8
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Prepare exact before version
+        run: |
+          git diff --exit-code 8381b97eb0c47e319187b343b2a9591ead90438f HEAD -- combat scripts/simulate-progression.cjs scripts/v013-global-e10.cjs tests/v013-current-talent-helper.cjs package.json package-lock.json
+          git worktree add --detach "$RUNNER_TEMP/evasion-before" 2246a9c791d48e4753071465bb8afcc2099f2ea2
+          cp "scripts/v013-e10-evasion-retirement-impact.cjs" "$RUNNER_TEMP/evasion-before/scripts/v013-e10-evasion-retirement-impact.cjs"
+          ln -s "$GITHUB_WORKSPACE/node_modules" "$RUNNER_TEMP/evasion-before/node_modules"
+          git -C "$RUNNER_TEMP/evasion-before" rev-parse HEAD
+      - name: Run identical scenarios before, without talent Evasion, and after
+        env:
+          BUILD: ${{ matrix.build }}
+          ARMOR: ${{ matrix.armor }}
+        run: |
+          export AUDIT_OUT="$GITHUB_WORKSPACE/reports/e10-evasion-retirement-impact"
+          (cd "$RUNNER_TEMP/evasion-before" && node scripts/v013-e10-evasion-retirement-impact.cjs run "$BUILD" "$ARMOR" before)
+          node scripts/v013-e10-evasion-retirement-impact.cjs run "$BUILD" "$ARMOR" after
+          node scripts/v013-e10-evasion-retirement-impact.cjs pair "$BUILD" "$ARMOR"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: evasion-impact-${{ matrix.build }}-${{ matrix.armor }}
+          path: reports/e10-evasion-retirement-impact/*-paired.json
+          if-no-files-found: error
+  summary:
+    needs: cohort
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: evasion-impact-*
+          path: reports/e10-evasion-retirement-impact
+          merge-multiple: true
+      - run: node scripts/v013-e10-evasion-retirement-impact.cjs aggregate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: e10-evasion-retirement-summary
+          path: reports/e10-evasion-retirement-impact/summary.json
+          if-no-files-found: error
