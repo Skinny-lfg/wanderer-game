@@ -104,3 +104,11 @@ jobs:
           "$GODOT" --headless --path godot-prototype --script res://tests/painted_navigation_smoke.gd 2>&1 | tee /tmp/godot-navigation.log
           ! grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-navigation.log
           grep -F 'PASS: G2.2C five tabs, icons, exclusive selection and SVG fallback' /tmp/godot-navigation.log
+      - name: Painted inventory slots smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          GODOT=/tmp/godot-bin/Godot_v4.4.1-stable_linux.x86_64
+          "$GODOT" --headless --path godot-prototype --script res://tests/painted_slots_smoke.gd 2>&1 | tee /tmp/godot-slots.log
+          ! grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-slots.log
+          grep -F 'PASS: G2.2D ten actual textures, rarity states, 48-slot bag and original comparison' /tmp/godot-slots.log

@@ -54,3 +54,7 @@ Extract `wanderer_g22b_gallery_assets.zip` into the repository root (folder stru
 ## G2.2C — Navigation art
 
 Extract the supplied `wanderer_g22c_gallery_assets.zip` into the repository root. Gallery F6 → Navigation → G2.2C Painted PNG → Reload artwork. Eleven PNGs at `godot-prototype/ui/assets/navigation/g22c/`: five aligned tab backgrounds, five separate section icons and an ornament reused from G2.2B. Live five-tab exclusive selection, compact icon-only variant, sample talent-count badge, fixed state samples and SVG comparison. Nine-slice margins are initial candidates. The real game shell and other categories are unchanged. CI tests the loader with synthetic assets and validates actual files if installed. 
+
+## G2.2D — Painted item slots
+
+The ten approved PNGs are committed at `godot-prototype/ui/assets/inventory/g22d/`. Pull the branch, open the gallery (F6), choose Item Slots and G2.2D Painted PNG. The preview has six rarities, four interaction states, a 48-slot bag with 30 sample items and selectable 48/64/80 px sizes, and equipped samples. Original slots remain selectable. Only the gallery opts into the painted textures; gameplay remains unchanged.

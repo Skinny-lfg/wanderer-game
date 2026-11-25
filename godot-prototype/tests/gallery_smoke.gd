@@ -25,8 +25,8 @@ func _run() -> void:
 				return
 	gallery.show_category("Item Slots")
 	await process_frame
-	var rarity_row = gallery.body.get_child(1)
-	var state_row = gallery.body.get_child(2)
+	var rarity_row = gallery.body.get_child(2)
+	var state_row = gallery.body.get_child(3)
 	if rarity_row.get_child_count() != 6 or state_row.get_child_count() != 5:
 		_fail("Slot fixtures missing")
 		return
@@ -34,6 +34,9 @@ func _run() -> void:
 	var selected = state_row.get_child(1).get_child(0)
 	if not locked.disabled or not selected.button_pressed:
 		_fail("Native slot states invalid")
+		return
+	if gallery.bag_slots.size() != 48:
+		_fail("Dense inventory preview missing")
 		return
 	if gallery.show_category("invalid") or gallery.active_category != "Item Slots":
 		_fail("Invalid category changed state")

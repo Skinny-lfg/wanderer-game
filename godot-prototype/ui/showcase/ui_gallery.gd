@@ -3,12 +3,14 @@ const Tokens = preload("res://ui/theme/tokens.gd")
 const PaintedPack = preload("res://ui/theme/painted_button_pack.gd")
 const FramePack = preload("res://ui/theme/painted_frame_pack.gd")
 const NavigationPack = preload("res://ui/theme/painted_navigation_pack.gd")
+const SlotPack = preload("res://ui/theme/painted_slot_pack.gd")
 const ButtonScene = preload("res://ui/components/navigation/gothic_button.tscn")
 const TabScene = preload("res://ui/components/navigation/gothic_tab.tscn")
 const PanelScene = preload("res://ui/components/surfaces/gothic_panel.tscn")
 const SlotScene = preload("res://ui/components/inventory/item_slot.tscn")
 const TooltipScene = preload("res://ui/components/inventory/item_tooltip.tscn")
 const ITEM = preload("res://assets/shell/dagger.png")
+const BAG_ART = [ITEM, preload("res://assets/shell/helmet.png"), preload("res://assets/shell/chest.png"), preload("res://assets/shell/boots.png"), preload("res://assets/shell/gloves.png"), preload("res://assets/shell/ring.png"), preload("res://assets/shell/charm.png"), preload("res://assets/shell/shield.png")]
 const CATEGORIES = ["Foundations", "Buttons", "Panels", "Navigation", "Item Slots", "Tooltips"]
 var active_category: String = ""
 var category_buttons: Dictionary = {}
@@ -19,6 +21,11 @@ var feedback: Label
 var painted_pack = PaintedPack.new()
 var frame_pack = FramePack.new()
 var navigation_pack = NavigationPack.new()
+var slot_pack = SlotPack.new()
+var prefer_slots: bool = true
+var slot_status: Label
+var bag_slots: Array[Button] = []
+var bag_size: int = 64
 var prefer_navigation: bool = true
 var navigation_status: Label
 var demo_tabs: Array[Button] = []
@@ -66,7 +73,7 @@ func _ready() -> void:
 		outer.add_theme_constant_override("margin_" + side, 24)
 	var frame = _vbox(outer, 14)
 	frame.add_child(_heading("WANDERER  /  UI WORKSHOP"))
-	frame.add_child(_label("STYLIZED GOTHIC     •     G2.2C / NAVIGATION ART STUDY", 15, Tokens.GOLD))
+	frame.add_child(_label("STYLIZED GOTHIC     •     G2.2D / ITEM SLOT ART STUDY", 15, Tokens.GOLD))
 	frame.add_child(HSeparator.new())
 	var layout = _row(frame)
 	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -96,6 +103,7 @@ func _ready() -> void:
 	painted_pack.load_pack()
 	frame_pack.load_pack()
 	navigation_pack.load_pack()
+	slot_pack.load_pack()
 	show_category("Foundations")
 
 func show_category(category: String) -> bool:
@@ -449,12 +457,36 @@ func _slot(host: Node, rarity: int, art: Texture2D, label: String, equipped: boo
 	slot.locked = locked
 	slot.quantity = quantity
 	slot.button_pressed = selected
+	if prefer_slots and slot_pack.is_ready():
+		slot.painted_textures = slot_pack.textures
 	column.add_child(slot)
 	column.add_child(_label(label, 14, Tokens.MUTED))
 	return slot
 
 func _slots() -> void:
-	_note("One item-slot scene; six rarity treatments and real selectable states.")
+	bag_slots.clear()
+	var toolbar = _row(body)
+	var selector = OptionButton.new()
+	selector.add_item("G2.2D Painted PNG")
+	selector.add_item("G2.1 Original slots")
+	selector.select(0 if prefer_slots else 1)
+	selector.item_selected.connect(func(index: int):
+		prefer_slots = index == 0
+		call_deferred("show_category", "Item Slots")
+	)
+	toolbar.add_child(selector)
+	var reload = Button.new()
+	reload.text = "Reload artwork"
+	reload.pressed.connect(func():
+		slot_pack.load_pack()
+		prefer_slots = true
+		call_deferred("show_category", "Item Slots")
+	)
+	toolbar.add_child(reload)
+	var use_painted = prefer_slots and slot_pack.is_ready()
+	slot_status = _label("10 / 10 PNGs loaded" if use_painted else "Original slots active", 15, Tokens.GOLD)
+	toolbar.add_child(slot_status)
+	_note("Six rarity treatments — move the mouse over a slot or click to select. " + ("" if use_painted or not prefer_slots else slot_pack.problem))
 	var row = _row(body)
 	for i in range(6):
 		_slot(row, i, ITEM, Tokens.RARITY_NAMES[i])
@@ -464,7 +496,46 @@ func _slots() -> void:
 	_slot(states, 4, ITEM, "Equipped", true)
 	_slot(states, 2, ITEM, "Stacked", false, false, 12)
 	_slot(states, 1, ITEM, "Locked", false, true)
-	_note("E = equipped; LOCK = unavailable. Rarity is not communicated by color alone in this gallery.")
+	_note("Dense bag preview — 30 sample items in 48 slots. Existing item art, not real inventory data.")
+	var sizes = _row(body)
+	sizes.add_child(_label("Slot size", 15))
+	var choice = OptionButton.new()
+	for px in [48, 64, 80]:
+		choice.add_item(str(px) + " px", px)
+	choice.select([48, 64, 80].find(bag_size))
+	choice.item_selected.connect(func(index: int):
+		bag_size = choice.get_item_id(index)
+		for node in bag_slots:
+			node.custom_minimum_size = Vector2(bag_size, bag_size)
+			node.queue_redraw()
+	)
+	sizes.add_child(choice)
+	var grid = GridContainer.new()
+	grid.columns = 8
+	grid.add_theme_constant_override("h_separation", 4)
+	grid.add_theme_constant_override("v_separation", 4)
+	grid.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	body.add_child(grid)
+	var group = ButtonGroup.new()
+	group.allow_unpress = true
+	var rarities = [0, 1, 1, 2, 1, 3, 2, 4, 1, 0, 2, 1, 3, 2, 5, 1, 0, 2, 3, 1, 4, 2, 1, 0, 3, 2, 1, 5, 4, 2]
+	for i in range(48):
+		var node = SlotScene.instantiate()
+		node.custom_minimum_size = Vector2(bag_size, bag_size)
+		node.button_group = group
+		if i < rarities.size():
+			node.rarity = rarities[i]
+			node.item_art = BAG_ART[i % BAG_ART.size()]
+			node.quantity = 12 if i == 11 else 1
+		if use_painted:
+			node.painted_textures = slot_pack.textures
+		grid.add_child(node)
+		bag_slots.append(node)
+	_note("Equipped preview — larger slots with selection emphasis; tooltip ornamentation belongs to G2.2E.")
+	var gear = _row(body)
+	for i in range(8):
+		_slot(gear, 1 + i % 5, BAG_ART[i], ["Weapon", "Head", "Chest", "Feet", "Hands", "Ring", "Charm", "Shield"][i], true)
+	_note("Independent gallery only. No inventory data, gameplay or game-screen theme changes.")
 
 func _tooltips() -> void:
 	_note("Sample content rendered by a reusable tooltip scene. These numbers are not Wanderer stats.")
