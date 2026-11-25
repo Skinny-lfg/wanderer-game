@@ -1,0 +1,117 @@
+{
+  "stage": "G2.2B",
+  "source": "Wanderer generated artboard; manually masked crops and reconstructed straight border spans",
+  "nine_slice": {
+    "standard": [
+      24,
+      24,
+      24,
+      24
+    ],
+    "featured": [
+      25,
+      22,
+      25,
+      22
+    ],
+    "modal": [
+      35,
+      24,
+      35,
+      24
+    ],
+    "tooltip": [
+      22,
+      19,
+      22,
+      19
+    ],
+    "compact": [
+      22,
+      20,
+      22,
+      20
+    ],
+    "focused": [
+      23,
+      20,
+      23,
+      20
+    ],
+    "disabled": [
+      23,
+      20,
+      23,
+      20
+    ]
+  },
+  "fixed_aspect": [
+    "banner",
+    "portrait"
+  ],
+  "overlays": [
+    "crest",
+    "modal_crest",
+    "divider_horizontal",
+    "divider_vertical",
+    "section_ornament"
+  ],
+  "files": {
+    "banner": [
+      584,
+      115
+    ],
+    "compact": [
+      228,
+      94
+    ],
+    "crest": [
+      97,
+      54
+    ],
+    "disabled": [
+      264,
+      99
+    ],
+    "divider_horizontal": [
+      366,
+      45
+    ],
+    "divider_vertical": [
+      45,
+      366
+    ],
+    "featured": [
+      363,
+      180
+    ],
+    "focused": [
+      265,
+      101
+    ],
+    "modal": [
+      395,
+      181
+    ],
+    "modal_crest": [
+      141,
+      62
+    ],
+    "portrait": [
+      228,
+      263
+    ],
+    "section_ornament": [
+      327,
+      60
+    ],
+    "standard": [
+      354,
+      183
+    ],
+    "tooltip": [
+      274,
+      84
+    ]
+  }
+}
