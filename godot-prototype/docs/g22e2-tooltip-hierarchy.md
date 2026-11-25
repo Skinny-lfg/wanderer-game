@@ -1,0 +1,3 @@
+# G2.2E.2 — Tooltip hierarchy
+
+Default gallery candidate: compact no-portrait Common/Rare tooltips, large primary weapon damage value, explicit labeled attribute rows, detailed Legendary with smaller portrait and crest, named unique effect and lore, equipped caption and aligned positive/negative deltas. The gallery selector retains the previous painted layout and original fallback. All data and effects are illustrative. Existing approved modular artwork is reused; no new art or gameplay changes. Also explicitly bypass color interpolation at endpoint weights in modular atlases to address the prior tooltip seam smoke failure (new CI must verify).

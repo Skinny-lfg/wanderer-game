@@ -6,6 +6,14 @@ var portrait_frame: Texture2D
 var portrait_art: Texture2D
 var ornament: Texture2D
 var detailed: bool = false
+var organized: bool = false
+var primary_value: String = ""
+var primary_label: String = ""
+var attributes: Array[Dictionary] = []
+var changes: Array[Dictionary] = []
+var unique_title: String = "Unique effect"
+var equipped_caption: bool = false
+var sections: Dictionary = {}
 var comparison_title: String = ""
 var comparison_lines: PackedStringArray = PackedStringArray()
 var unique_effect: String = ""
@@ -25,7 +33,10 @@ func _label(value: String, color: Color, font_size: int) -> Label:
 
 func _ready() -> void:
 	if painted_style != null:
-		_build_painted()
+		if organized:
+			_build_organized()
+		else:
+			_build_painted()
 		return
 	var stack = VBoxContainer.new()
 	stack.add_theme_constant_override("separation", 7)
@@ -122,3 +133,92 @@ func _build_painted() -> void:
 	if not description.is_empty():
 		_separator(stack)
 		stack.add_child(_wrap_label(description, Tokens.MUTED, 13))
+
+func _section(host: Node, key: String, separation: int = 4) -> VBoxContainer:
+	var group = VBoxContainer.new()
+	group.add_theme_constant_override("separation", separation)
+	host.add_child(group)
+	sections[key] = group
+	return group
+
+func _aligned_stat(host: Node, label_text: String, value: String, value_color: Color) -> void:
+	var row = HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	host.add_child(row)
+	var name = _wrap_label(label_text, Tokens.IVORY, 15)
+	row.add_child(name)
+	var amount = _label(value, value_color, 15)
+	amount.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	row.add_child(amount)
+
+func _build_organized() -> void:
+	# Reuse the approved modular art; smaller content padding is independent
+	# of the texture slice margins and still leaves room for the bevel.
+	var style = painted_style.duplicate() as StyleBoxTexture
+	if not detailed:
+		style.content_margin_left = 22
+		style.content_margin_right = 22
+		style.content_margin_top = 18
+		style.content_margin_bottom = 18
+	add_theme_stylebox_override("panel", style)
+	custom_minimum_size.x = 330 if detailed else 270
+	var accent: Color = Tokens.RARITY_COLORS[rarity]
+	var stack = VBoxContainer.new()
+	stack.add_theme_constant_override("separation", 8)
+	add_child(stack)
+	content_stack = stack
+	var header = _section(stack, "header", 3)
+	if detailed and ornament != null:
+		var crest = TextureRect.new()
+		crest.texture = ornament
+		crest.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		crest.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		crest.custom_minimum_size = Vector2(0, 22)
+		header.add_child(crest)
+	if equipped_caption:
+		header.add_child(_label("CURRENTLY EQUIPPED", Tokens.MUTED, 11))
+	var title_row = HBoxContainer.new()
+	title_row.add_theme_constant_override("separation", 8)
+	header.add_child(title_row)
+	if detailed:
+		title_row.add_child(_portrait(60))
+	var names = VBoxContainer.new()
+	names.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	names.add_theme_constant_override("separation", 3)
+	title_row.add_child(names)
+	names.add_child(_wrap_label(item_name, accent, 21 if detailed else 19))
+	names.add_child(_wrap_label(Tokens.RARITY_NAMES[rarity] + " / " + category, Tokens.MUTED, 13))
+	_separator(stack)
+	if not primary_value.is_empty() and not primary_label.is_empty():
+		var primary = _section(stack, "primary", 1)
+		primary.add_child(_label(primary_value, Tokens.IVORY, 30))
+		primary.add_child(_wrap_label(primary_label, Tokens.MUTED, 13))
+	if not attributes.is_empty():
+		if sections.has("primary"):
+			_separator(stack)
+		var modifiers = _section(stack, "attributes")
+		modifiers.add_child(_label("ATTRIBUTES", Tokens.MUTED, 11))
+		for entry in attributes:
+			_aligned_stat(modifiers, str(entry.get("label", "")), str(entry.get("value", "")), Tokens.IVORY)
+	elif not sections.has("primary"):
+		# Generic callers can still provide the original unstructured stat lines.
+		var modifiers = _section(stack, "attributes")
+		for entry in stat_lines:
+			modifiers.add_child(_wrap_label(entry, Tokens.IVORY, 15))
+	if not unique_effect.is_empty():
+		_separator(stack)
+		var effect = _section(stack, "unique")
+		effect.add_child(_wrap_label(unique_title, accent, 16))
+		effect.add_child(_wrap_label(unique_effect, Tokens.IVORY, 14))
+	if not changes.is_empty():
+		_separator(stack)
+		var comparison = _section(stack, "comparison")
+		comparison.add_child(_wrap_label(comparison_title, Tokens.MUTED, 11))
+		for entry in changes:
+			var delta: float = float(entry.get("delta", 0.0))
+			var color = Color("#8bc88b") if delta > 0 else (Color("#dc817b") if delta < 0 else Tokens.MUTED)
+			_aligned_stat(comparison, str(entry.get("label", "")), str(entry.get("value", "")), color)
+	if not description.is_empty():
+		_separator(stack)
+		var lore = _section(stack, "description")
+		lore.add_child(_wrap_label(description, Tokens.MUTED, 13))

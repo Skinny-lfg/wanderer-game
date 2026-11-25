@@ -33,8 +33,19 @@ static func _background(image: Image, corner: Vector2i) -> Color:
 static func _join_weight(distance: int, span: int) -> float:
 	# Spread the transition over the inner part of the fixed corner.
 	# The last texel exactly equals its neighbouring profile.
+	if distance >= span - 1:
+		return 1.0
 	var feather = maxi(3, roundi(span * 0.60))
 	return smoothstep(0.0, 1.0, clampf(float(distance - (span - feather)) / float(feather - 1), 0.0, 1.0))
+
+# Bypass floating-point lerp at endpoints so RGBA8 quantization cannot introduce
+# a one-byte mismatch between logically identical adjacent atlas pixels.
+static func _mix(a: Color, b: Color, weight: float) -> Color:
+	if weight <= 0.0:
+		return a
+	if weight >= 1.0:
+		return b
+	return a.lerp(b, weight)
 
 static func build_panel(source: Texture2D, corner: Vector2i, sample: Vector2i) -> Texture2D:
 	var image = source.get_image()
@@ -75,13 +86,13 @@ static func build_panel(source: Texture2D, corner: Vector2i, sample: Vector2i) -
 				var sy = dy if top_half else h - 1 - dy
 				var hp = top[dy] if top_half else bottom[dy]
 				var vp = left[dx] if left_half else right[dx]
-				var upper = image.get_pixel(sx, sy).lerp(hp, fx)
-				var lower = vp.lerp(background, fx)
-				color = upper.lerp(lower, fy)
+				var upper = _mix(image.get_pixel(sx, sy), hp, fx)
+				var lower = _mix(vp, background, fx)
+				color = _mix(upper, lower, fy)
 			elif not inside_y:
-				color = (top[dy] if top_half else bottom[dy]).lerp(background, fy)
+				color = _mix(top[dy] if top_half else bottom[dy], background, fy)
 			elif not inside_x:
-				color = (left[dx] if left_half else right[dx]).lerp(background, fx)
+				color = _mix(left[dx] if left_half else right[dx], background, fx)
 			atlas.set_pixel(x, y, color)
 	return ImageTexture.create_from_image(atlas)
 
@@ -105,7 +116,7 @@ static func build_strip(source: Texture2D, cap: int, tile_width: int) -> Texture
 			var color = profile
 			if d < cap:
 				var sx = d if x < aw / 2 else w - 1 - d
-				color = image.get_pixel(sx, y).lerp(profile, _join_weight(d, cap))
+				color = _mix(image.get_pixel(sx, y), profile, _join_weight(d, cap))
 			atlas.set_pixel(x, y, color)
 	return ImageTexture.create_from_image(atlas)
 
