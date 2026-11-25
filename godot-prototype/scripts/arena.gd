@@ -17,6 +17,7 @@ var kit: RefCounted
 var resource_hud: Control
 var enemy_bars: Array[Control] = []
 var target_label: Label
+var visible_regions: Dictionary = {}
 
 func _ready() -> void:
 	if kit != null:
@@ -29,16 +30,18 @@ func _build_preview_hud() -> void:
 	overlay.theme = kit.theme
 	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(overlay)
-	resource_hud = kit.hud(overlay, Vector2(20, 478), 315)
+	resource_hud = kit.hud(overlay, Vector2(36, 483), 265)
 	target_label = Label.new()
 	target_label.text = "Select an enemy"
 	target_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	target_label.position = Vector2(30, 24)
+	target_label.position = Vector2(70, 31)
+	target_label.add_theme_font_override("font", kit.heading_font)
+	target_label.add_theme_color_override("font_color", Color("d0ad72"))
 	target_label.add_theme_font_size_override("font_size", 18)
 	overlay.add_child(target_label)
 	for i in range(ENEMIES.size()):
 		var rect = _sprite_rect(ENEMIES[i], ENEMY_FEET[i], Vector2(210, 250))
-		var at = Vector2(ENEMY_FEET[i].x - 75, rect.position.y - 36)
+		var at = Vector2(ENEMY_FEET[i].x - 62, rect.position.y - 31)
 		var name = Label.new()
 		name.text = ENEMY_NAMES[i]
 		name.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -48,8 +51,8 @@ func _build_preview_hud() -> void:
 		name.add_theme_color_override("font_outline_color", Color("#111217"))
 		overlay.add_child(name)
 		name.position = at
-		name.size = Vector2(150, 20)
-		var bar = kit.resource(overlay, "Health", at + Vector2(0, 21), Vector2(150, 12), [72, 100, 85, 60][i], 100, false)
+		name.size = Vector2(124, 20)
+		var bar = kit.resource(overlay, "Health", at + Vector2(0, 21), Vector2(124, 9), [72, 100, 85, 60][i], 100, false)
 		enemy_bars.append(bar)
 
 
@@ -69,11 +72,33 @@ func _unhandled_input(event: InputEvent) -> void:
 				select_target(i)
 				break
 
+# Ground and hit-test against visible artwork rather than transparent padding.
+func _visible_region(texture: Texture2D) -> Rect2:
+	if not visible_regions.has(texture):
+		var image: Image = texture.get_image()
+		var bounds = Rect2(Vector2.ZERO, texture.get_size())
+		if image != null and not image.is_empty():
+			if image.is_compressed():
+				image.decompress()
+			if not image.is_compressed():
+				var used: Rect2i = image.get_used_rect()
+				if used.has_area():
+					bounds = Rect2(used)
+		visible_regions[texture] = bounds
+	return visible_regions[texture]
+
 func _sprite_rect(texture: Texture2D, feet: Vector2, limit: Vector2) -> Rect2:
-	var original := texture.get_size()
-	var scale_factor := minf(limit.x / original.x, limit.y / original.y)
-	var extent := original * scale_factor
+	var original: Vector2 = _visible_region(texture).size
+	var scale_factor: float = minf(limit.x / original.x, limit.y / original.y)
+	var extent: Vector2 = original * scale_factor
 	return Rect2(feet - Vector2(extent.x * 0.5, extent.y), extent)
+
+func _draw_target_ring(feet: Vector2, radius: float) -> void:
+	var points = PackedVector2Array()
+	for i in range(65):
+		var angle: float = TAU * float(i) / 64.0
+		points.append(feet + Vector2(cos(angle) * radius, sin(angle) * radius * 0.25))
+	draw_polyline(points, Color(0.95, 0.72, 0.25, 0.90), 2.0, true)
 
 func _draw_shadow(feet: Vector2, radius: float) -> void:
 	for i in range(10, 0, -1):
@@ -82,7 +107,7 @@ func _draw_shadow(feet: Vector2, radius: float) -> void:
 			var angle := TAU * float(j) / 40.0
 			var t := float(i) / 10.0
 			points.append(feet + Vector2(cos(angle) * radius * t, sin(angle) * radius * 0.24 * t))
-		draw_colored_polygon(points, Color(0.0, 0.0, 0.0, 0.045))
+		draw_colored_polygon(points, Color(0.0, 0.0, 0.0, 0.072))
 
 func _draw() -> void:
 	draw_texture_rect(BACKGROUND, Rect2(0, 0, 1280, 720), false)
@@ -92,10 +117,10 @@ func _draw() -> void:
 		var feet: Vector2 = ENEMY_FEET[i]
 		_draw_shadow(feet, 75.0)
 		if selected == i:
-			draw_arc(feet, 53.0, 0.0, TAU, 64, Color(0.95, 0.72, 0.25), 3.0, true)
-		draw_texture_rect(ENEMIES[i], _sprite_rect(ENEMIES[i], feet, Vector2(210, 250)), false)
+			_draw_target_ring(feet, 60.0)
+		draw_texture_rect_region(ENEMIES[i], _sprite_rect(ENEMIES[i], feet, Vector2(210, 250)), _visible_region(ENEMIES[i]))
 	_draw_shadow(HERO_FEET, 82.0)
-	draw_texture_rect(HERO, _sprite_rect(HERO, HERO_FEET, Vector2(250, 300)), false)
+	draw_texture_rect_region(HERO, _sprite_rect(HERO, HERO_FEET, Vector2(250, 300)), _visible_region(HERO))
 	if kit != null:
 		return
 	var font := ThemeDB.fallback_font

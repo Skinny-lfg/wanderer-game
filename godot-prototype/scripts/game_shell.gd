@@ -146,13 +146,17 @@ func _action(text: String, destination: String, host: HBoxContainer, primary: bo
 	button.add_theme_stylebox_override("hover", _style(Color("584126"), Color("e6bc7c"), 2))
 	button.pressed.connect(show_page.bind(destination))
 	host.add_child(button)
-	kit.buttons.apply_to(button, "primary" if primary else "secondary")
+	if primary:
+		kit.buttons.apply_to(button, "primary")
+	else:
+		button.add_theme_stylebox_override("normal", _style(Color(0.06, 0.07, 0.08, 0.65), Color(0.57, 0.48, 0.34, 0.25), 1))
+		button.add_theme_stylebox_override("hover", _style(Color(0.15, 0.12, 0.08, 0.65), Color("c29b61"), 1))
 	return button
 
 func _build_context_actions() -> void:
 	camp_actions = HBoxContainer.new()
 	camp_actions.name = "CampActions"
-	camp_actions.position = Vector2(48, 544)
+	camp_actions.position = Vector2(88, 539)
 	camp_actions.add_theme_constant_override("separation", 12)
 	add_child(camp_actions)
 	_action("Begin Expedition", "expedition", camp_actions, true)
@@ -161,8 +165,8 @@ func _build_context_actions() -> void:
 	actions.name = "ContextActions"
 	add_child(actions)
 	actions.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
-	actions.offset_left = 48
-	actions.offset_right = -48
+	actions.offset_left = 70
+	actions.offset_right = -70
 	actions.offset_top = -62
 	actions.offset_bottom = -12
 	actions.add_theme_constant_override("separation", 14)

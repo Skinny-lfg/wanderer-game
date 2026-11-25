@@ -26,6 +26,23 @@ func _run() -> void:
 		if not shell.buttons[id].get_theme_stylebox("normal") is StyleBoxFlat or shell.buttons[id].icon == null:
 			_fail("Minimal navigation must retain original icons")
 			return
+		if id == "talents":
+			if shell.current_screen.get_node_or_null("TalentCore") == null:
+				_fail("Talent composition core missing")
+				return
+			for i in range(18):
+				if shell.current_screen.get_node_or_null("PreviewTalent_" + str(i)) == null:
+					_fail("Talent preview node missing")
+					return
+		if id == "shrine":
+			for i in range(3):
+				if shell.current_screen.get_node_or_null("BoundRune_" + str(i)) == null:
+					_fail("Shrine bound slot missing")
+					return
+			for i in range(6):
+				if shell.current_screen.get_node_or_null("AvailableRune_" + str(i)) == null:
+					_fail("Shrine available rune slot missing")
+					return
 		if id == "inventory":
 			var slots: Array = shell.current_screen.inventory_slots
 			if slots.size() != 53 or slots[0].painted_textures.size() != 10 or not slots[0].equipped or slots[0].painted_key() != "rarity_common":

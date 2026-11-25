@@ -134,26 +134,62 @@ func _background(texture: Texture2D, shade: float) -> void:
 	_art(texture, Vector2.ZERO, Vector2(1280, 648), true)
 	_rect(Vector2.ZERO, Vector2(1280, 648), Color(0.025, 0.03, 0.045, shade))
 
-func _header(kicker: String, title: String, subtitle: String) -> void:
-	_text(kicker.to_upper(), Vector2(48, 28), Vector2(900, 20), 13, GOLD)
-	_text(title, Vector2(45, 49), Vector2(1150, 59), 43, IVORY, true)
-	_text(subtitle, Vector2(48, 110), Vector2(1150, 24), 16, MUTED)
-	_line(Vector2(48, 146), Vector2(1232, 146), Color("63543d"))
-	_text("G2.3A  /  UI PREVIEW", Vector2(1005, 30), Vector2(240, 20), 13, GOLD)
+# Shared quiet composition for the remaining prototype screens.
+# Inventory keeps its approved independent layout.
+func _scene_fade(at: Vector2, extent: Vector2, from: Vector2, to: Vector2, start: Color, finish: Color) -> void:
+	var gradient = Gradient.new()
+	gradient.colors = PackedColorArray([start, finish])
+	var texture = GradientTexture2D.new()
+	texture.gradient = gradient
+	texture.fill = GradientTexture2D.FILL_LINEAR
+	texture.fill_from = from
+	texture.fill_to = to
+	texture.width = maxi(1, roundi(extent.x))
+	texture.height = maxi(1, roundi(extent.y))
+	_art(texture, at, extent, true)
+
+func _cinematic_scene(texture: Texture2D, shade: float, dark_left: bool = false) -> void:
+	_background(texture, shade)
+	var clear = Color(0.025, 0.028, 0.035, 0.0)
+	var dark = Color(0.025, 0.028, 0.035, 0.94)
+	_scene_fade(Vector2.ZERO, Vector2(1280, 648), Vector2(0.5, 0.08), Vector2(0.5, 0.68), dark, clear)
+	_scene_fade(Vector2.ZERO, Vector2(1280, 648), Vector2(0.5, 0.64), Vector2(0.5, 1.0), clear, dark)
+	if dark_left:
+		_scene_fade(Vector2.ZERO, Vector2(1280, 648), Vector2(0.08, 0.5), Vector2(0.60, 0.5), dark, clear)
+
+func _scene_heading(title: String, subtitle: String = "") -> void:
+	_text(title, Vector2(70, 22), Vector2(1140, 48), 34, IVORY, true)
+	if not subtitle.is_empty():
+		_text(subtitle, Vector2(72, 66), Vector2(1138, 19), 12, MUTED)
+	_line(Vector2(70, 94), Vector2(1210, 94), Color(0.57, 0.48, 0.34, 0.30))
+
+func _scene_footer(value: String) -> void:
+	_text(value, Vector2(70, 616), Vector2(1140, 20), 12, MUTED)
 
 func _camp() -> void:
-	_background(CAMP, 0.29)
-	_rect(Vector2.ZERO, Vector2(580, 648), Color(0.04, 0.045, 0.06, 0.72))
-	_header("Wanderer / Refuge", "The Camp", "A moment of rest between expeditions")
-	kit.panel(self, Vector2(38, 168), Vector2(540, 214), "standard")
-	_text("THE WANDERER", Vector2(58, 184), Vector2(500, 24), 15, GOLD)
-	kit.hud(self, Vector2(52, 211), 350)
-	kit.panel(self, Vector2(38, 396), Vector2(540, 128))
-	_text("Prepare for the journey", Vector2(58, 410), Vector2(490, 34), 24, IVORY, true)
-	_text("Visit the city, prepare equipment and bind runes.", Vector2(58, 455), Vector2(490, 24), 15, MUTED)
-	_text("Choose your next realm when ready.", Vector2(58, 481), Vector2(490, 24), 15, MUTED)
-	_art(HERO, Vector2(630, 158), Vector2(540, 465))
-	_text("Visual preview • sample character values", Vector2(48, 610), Vector2(510, 22), 13, MUTED)
+	_cinematic_scene(CAMP, 0.32, true)
+	_scene_heading("The Camp", "Wanderer · Level 24")
+	# A single character, not a portrait repeated beside the illustration.
+	_art(HERO, Vector2(690, 112), Vector2(435, 498))
+	_text("The Wanderer", Vector2(86, 175), Vector2(460, 45), 29, IVORY, true)
+	var hud = Control.new()
+	hud.name = "ResourceHUD"
+	hud.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(hud)
+	hud.position = Vector2(88, 240)
+	hud.size = Vector2(420, 145)
+	for i in range(3):
+		var kind: String = ["Health", "Mana", "Barrier"][i]
+		_inventory_label(hud, kind, Vector2(0, i * 36), Vector2(78, 23), 13, MUTED)
+		var bar = kit.resource(hud, kind, Vector2(82, i * 36), Vector2(320, 22), [2400, 520, 180][i], [2840, 600, 300][i])
+		if kind == "Barrier":
+			bar.hide_empty = true
+	_inventory_label(hud, "Experience", Vector2(0, 110), Vector2(78, 20), 12, MUTED)
+	kit.resource(hud, "EXP", Vector2(84, 115), Vector2(314, 8), 420, 1000, false)
+	_line(Vector2(88, 411), Vector2(490, 411), Color(0.57, 0.48, 0.34, 0.27))
+	_text("Prepare for the next expedition", Vector2(88, 431), Vector2(480, 37), 24, IVORY, true)
+	_text("Visit the city, prepare equipment and bind runes.", Vector2(90, 478), Vector2(490, 24), 14, MUTED)
+	_scene_footer("Visual preview · sample character values")
 
 func _slot(pos: Vector2, size_px: float, item_index: int = -1, equipped: bool = false, rarity: int = 1) -> Button:
 	var art: Texture2D = ITEMS[item_index] if item_index >= 0 else null
@@ -597,62 +633,84 @@ func _inventory_collection(index: int) -> void:
 			_inventory_label(collection_host, ["+3 Strength", "+6.75 Defense", "+3 Intellect"][i], Vector2(70, i * 66 + 29), Vector2(390, 20), 13, GOLD)
 		_inventory_label(collection_host, "Equip or recycle at the Shrine · 3 bound slots", Vector2(0, 207), Vector2(478, 24), 13, MUTED)
 
+func _talent_marker(at: Vector2, diameter: float, tint: Color, central: bool = false) -> Panel:
+	var node = Panel.new()
+	var style = StyleBoxFlat.new()
+	style.bg_color = tint.darkened(0.83)
+	style.border_color = tint if central else tint.darkened(0.12)
+	style.set_border_width_all(2 if central else 1)
+	style.set_corner_radius_all(roundi(diameter * 0.5))
+	node.add_theme_stylebox_override("panel", style)
+	node.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(node)
+	node.position = at - Vector2.ONE * diameter * 0.5
+	node.size = Vector2.ONE * diameter
+	return node
+
 func _talents() -> void:
-	_background(REALMS, 0.86)
-	_header("Wanderer / Affinities", "The Talent Tree", "Radial composition study — not the current talent graph")
-	kit.panel(self, Vector2(38, 158), Vector2(1204, 468))
-	var center = Vector2(640, 392)
-	_panel(center - Vector2(35, 35), Vector2(70, 70), Color("221e19"), GOLD)
-	_text("W", center - Vector2(35, 25), Vector2(70, 50), 32, GOLD, true, true)
+	_cinematic_scene(REALMS, 0.84)
+	_scene_heading("The Talent Tree", "Six Affinities")
+	# Same six branches and three illustrative nodes per branch; no real tree port.
+	var center = Vector2(640, 358)
+	var points: Array[Vector2] = []
+	var colors: Array[Color] = []
 	for i in range(6):
-		var angle = -PI / 2.0 + TAU * float(i) / 6.0
-		var dir = Vector2(cos(angle) * 1.6, sin(angle))
+		var angle: float = -PI / 2.0 + TAU * float(i) / 6.0
+		var direction = Vector2(cos(angle) * 1.45, sin(angle))
 		var tint = Color(AFFINITY_COLORS[i])
-		var previous = center + dir * 35
+		var previous = center + direction * 24.0
 		for j in range(3):
-			var point = center + dir * (65 + j * 43)
-			_line(previous, point, tint.darkened(0.30), 2)
-			_panel(point - Vector2(14, 14), Vector2(28, 28), tint.darkened(0.72), tint)
+			var point = center + direction * (60.0 + j * 43.0)
+			_line(previous, point, Color(tint.r, tint.g, tint.b, 0.54), 1.5)
+			points.append(point)
+			colors.append(tint)
 			previous = point
-		var endpoint = center + dir * 204
-		_line(previous, endpoint, tint, 2)
-		_text(AFFINITIES[i], endpoint - Vector2(75, 15), Vector2(150, 32), 20, tint, true, true)
-	_text("Illustrative nodes only — no points can be spent", Vector2(48, 610), Vector2(1000, 24), 14, MUTED)
+		var endpoint = center + direction * 205.0
+		_line(previous, center + direction * 173.0, Color(tint.r, tint.g, tint.b, 0.55), 1.5)
+		_text(AFFINITIES[i], endpoint - Vector2(85, 15), Vector2(170, 30), 23, tint, true, true)
+	# Nodes are rendered after every connection.
+	for i in range(points.size()):
+		var marker = _talent_marker(points[i], 23.0 if i % 3 != 2 else 32.0, colors[i])
+		marker.name = "PreviewTalent_" + str(i)
+	var core = _talent_marker(center, 63.0, GOLD, true)
+	core.name = "TalentCore"
+	_text("W", center - Vector2(32, 23), Vector2(64, 46), 30, GOLD, true, true)
+	_scene_footer("Illustrative nodes only — no points can be spent")
 
 func _expedition() -> void:
-	_background(REALMS, 0.38)
-	_rect(Vector2(0, 0), Vector2(440, 648), Color(0.03, 0.035, 0.05, 0.88))
-	_header("Wanderer / Beyond the veil", "Expedition", "The next journey starts here")
-	kit.panel(self, Vector2(38, 160), Vector2(380, 436), "standard")
-	_text("REALMS", Vector2(60, 178), Vector2(350, 28), 15, GOLD)
+	_cinematic_scene(REALMS, 0.31, true)
+	_scene_heading("Expedition", "Beyond the veil")
+	_text("Realms", Vector2(92, 133), Vector2(340, 34), 24, IVORY, true)
 	for i in range(6):
-		var y = 222 + i * 57
-		_line(Vector2(52, y), Vector2(385, y), Color("504838"))
-		_text(AFFINITIES[i], Vector2(55, y + 8), Vector2(325, 38), 25, Color(AFFINITY_COLORS[i]), true)
-	_text("Into the unknown", Vector2(470, 490), Vector2(750, 58), 43, IVORY, true, true)
-	_text("Realm selection  /  Contracts  /  Exploration", Vector2(470, 556), Vector2(750, 24), 16, GOLD, false, true)
-	_text("Preview only — no expedition can begin", Vector2(50, 610), Vector2(400, 24), 13, MUTED)
+		var y: float = 183.0 + i * 58.0
+		var tint = Color(AFFINITY_COLORS[i])
+		_rect(Vector2(92, y + 13), Vector2(3, 17), tint)
+		_text(AFFINITIES[i], Vector2(113, y), Vector2(310, 41), 25, tint, true)
+		if i < 5:
+			_line(Vector2(92, y + 48), Vector2(392, y + 48), Color(0.57, 0.48, 0.34, 0.15))
+	_text("Into the unknown", Vector2(510, 488), Vector2(680, 58), 39, IVORY, true, true)
+	_text("Realm selection · Contracts · Exploration", Vector2(510, 551), Vector2(680, 26), 14, MUTED, false, true)
+	_scene_footer("Preview only — no expedition can begin")
 
 func _codex() -> void:
-	_background(REALMS, 0.91)
-	_header("Wanderer / Archives", "The Codex", "A future archive of the world and its inhabitants")
-	kit.panel(self, Vector2(38, 160), Vector2(320, 466), "standard")
-	kit.panel(self, Vector2(790, 160), Vector2(450, 466))
-	_text("BESTIARY", Vector2(52, 190), Vector2(270, 30), 16, GOLD)
-	_text("Elites", Vector2(52, 228), Vector2(320, 44), 31, IVORY, true)
-	_text("Bosses", Vector2(52, 279), Vector2(320, 44), 25, MUTED, true)
-	_text("Creatures", Vector2(52, 325), Vector2(320, 44), 25, MUTED, true)
-	_line(Vector2(370, 177), Vector2(370, 612), Color("554934"))
-	_art(preload("res://assets/arena/tank.png"), Vector2(405, 175), Vector2(380, 440))
-	_text("The Tank", Vector2(815, 215), Vector2(420, 60), 41, IVORY, true)
-	_line(Vector2(817, 282), Vector2(1210, 282), Color("554934"))
-	_text("ELITE / SAMPLE ENTRY", Vector2(817, 301), Vector2(400, 27), 15, GOLD)
-	_text("Illustration and archive layout only.", Vector2(817, 349), Vector2(430, 28), 18, MUTED)
-	_text("No discovery, stats or lore data yet.", Vector2(817, 383), Vector2(430, 28), 17, MUTED)
+	_cinematic_scene(REALMS, 0.87)
+	_scene_heading("The Codex", "Archives · Bestiary")
+	_text("Bestiary", Vector2(85, 158), Vector2(230, 38), 23, GOLD, true)
+	_text("Elites", Vector2(86, 216), Vector2(230, 39), 27, IVORY, true)
+	_line(Vector2(86, 258), Vector2(243, 258), Color(0.57, 0.48, 0.34, 0.45))
+	_text("Bosses", Vector2(86, 279), Vector2(230, 38), 23, MUTED, true)
+	_text("Creatures", Vector2(86, 335), Vector2(230, 38), 23, MUTED, true)
+	_art(preload("res://assets/arena/tank.png"), Vector2(315, 127), Vector2(425, 461))
+	_text("The Tank", Vector2(790, 221), Vector2(410, 58), 40, IVORY, true)
+	_text("ELITE · SAMPLE ENTRY", Vector2(792, 283), Vector2(400, 23), 13, GOLD)
+	_line(Vector2(792, 323), Vector2(1190, 323), Color(0.57, 0.48, 0.34, 0.32))
+	_text("Illustration and archive layout only.", Vector2(792, 347), Vector2(410, 30), 16, MUTED)
+	_text("No discovery, stats or lore data yet.", Vector2(792, 380), Vector2(410, 30), 15, MUTED)
+	_scene_footer("Bestiary preview")
 
 func _city() -> void:
-	_background(CAMP, 0.78)
-	_header("Wanderer / Settlement", "City Center", "Services — presentation study")
+	_cinematic_scene(CAMP, 0.76)
+	_scene_heading("City Center", "The settlement")
 	var art = [
 		preload("res://assets/shell/blacksmith.png"),
 		preload("res://assets/shell/merchant.png"),
@@ -660,25 +718,33 @@ func _city() -> void:
 	]
 	var titles = ["Blacksmith", "Merchant", "Apothecary"]
 	var subtitles = ["Forge and craft", "Trade equipment", "Prepare remedies"]
+	# Existing individual illustrations, no fake continuous street or new art.
 	for i in range(3):
-		var x = 48 + i * 400
-		kit.panel(self, Vector2(x, 160), Vector2(384, 466), "standard")
-		_art(art[i], Vector2(x + 20, 178), Vector2(344, 350))
-		_line(Vector2(x, 538), Vector2(x + 384, 538), Color("7b6547"))
-		_text(titles[i], Vector2(x, 548), Vector2(384, 42), 30, IVORY, true, true)
-		_text(subtitles[i], Vector2(x, 594), Vector2(384, 25), 16, MUTED, false, true)
+		var x: float = 70.0 + i * 390.0
+		_art(art[i], Vector2(x, 139), Vector2(360, 370))
+		_text(titles[i], Vector2(x, 525), Vector2(360, 44), 30, IVORY, true, true)
+		_text(subtitles[i], Vector2(x, 574), Vector2(360, 25), 14, MUTED, false, true)
+	_scene_footer("Services · presentation preview")
 
 func _shrine() -> void:
-	_background(REALMS, 0.80)
-	_header("Wanderer / Runes", "The Shrine", "Permanent runes — illustrative layout, no effects")
-	_art(preload("res://assets/shell/shrine.png"), Vector2(48, 160), Vector2(500, 465))
-	kit.panel(self, Vector2(580, 160), Vector2(662, 466), "standard")
-	_text("BOUND RUNES", Vector2(600, 183), Vector2(600, 36), 25, GOLD, true)
+	_cinematic_scene(REALMS, 0.80)
+	_scene_heading("The Shrine", "Anchor Runes")
+	# The altar is the main focus; bound slots sit at the base of the illustration.
+	_art(preload("res://assets/shell/shrine.png"), Vector2(120, 111), Vector2(580, 401))
+	_text("Bound Runes", Vector2(144, 490), Vector2(540, 34), 23, GOLD, true, true)
 	for i in range(3):
-		_slot(Vector2(604 + i * 126, 236), 104)
-		_text("Slot " + str(i + 1), Vector2(604 + i * 126, 344), Vector2(104, 25), 15, MUTED, false, true)
-	_line(Vector2(604, 391), Vector2(1220, 391), Color("65533e"))
-	_text("Choose a rune from your bag", Vector2(604, 410), Vector2(600, 40), 27, IVORY, true)
+		var x: float = 281.0 + i * 95.0
+		var bound = _slot(Vector2(x, 531), 72)
+		bound.name = "BoundRune_" + str(i)
+		bound.tooltip_text = "Bound rune slot " + str(i + 1) + " · preview"
+	_text("Available runes", Vector2(780, 180), Vector2(410, 38), 28, IVORY, true)
+	_text("Choose a rune from your bag", Vector2(782, 228), Vector2(420, 27), 14, MUTED)
+	_line(Vector2(782, 274), Vector2(1192, 274), Color(0.57, 0.48, 0.34, 0.30))
 	for i in range(6):
-		_slot(Vector2(604 + i * 72, 466), 64)
-	_text("Illustrative slots — final rune rules are not ported.", Vector2(604, 560), Vector2(600, 28), 15, MUTED)
+		var x: float = 782.0 + float(i % 3) * 85.0
+		var y: float = 299.0 + floori(float(i) / 3.0) * 85.0
+		var rune = _slot(Vector2(x, y), 68)
+		rune.name = "AvailableRune_" + str(i)
+		rune.minimal_inventory = true
+	_text("Illustrative slots — no rune effects yet.", Vector2(782, 487), Vector2(420, 24), 13, MUTED)
+	_scene_footer("Permanent runes · presentation preview")
