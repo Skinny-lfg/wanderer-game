@@ -1,6 +1,7 @@
 extends Control
 const Tokens = preload("res://ui/theme/tokens.gd")
 const PaintedPack = preload("res://ui/theme/painted_button_pack.gd")
+const FramePack = preload("res://ui/theme/painted_frame_pack.gd")
 const ButtonScene = preload("res://ui/components/navigation/gothic_button.tscn")
 const TabScene = preload("res://ui/components/navigation/gothic_tab.tscn")
 const PanelScene = preload("res://ui/components/surfaces/gothic_panel.tscn")
@@ -15,6 +16,10 @@ var title_label: Label
 var scroll: ScrollContainer
 var feedback: Label
 var painted_pack = PaintedPack.new()
+var frame_pack = FramePack.new()
+var prefer_frames: bool = true
+var frame_status: Label
+var demo_panels: Array[PanelContainer] = []
 var prefer_painted: bool = true
 var active_pack_label: Label
 var demo_buttons: Dictionary = {}
@@ -56,7 +61,7 @@ func _ready() -> void:
 		outer.add_theme_constant_override("margin_" + side, 24)
 	var frame = _vbox(outer, 14)
 	frame.add_child(_heading("WANDERER  /  UI WORKSHOP"))
-	frame.add_child(_label("STYLIZED GOTHIC     •     G2.2A / BUTTON ART STUDY", 15, Tokens.GOLD))
+	frame.add_child(_label("STYLIZED GOTHIC     •     G2.2B / FRAME ART STUDY", 15, Tokens.GOLD))
 	frame.add_child(HSeparator.new())
 	var layout = _row(frame)
 	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -84,6 +89,7 @@ func _ready() -> void:
 	feedback = _label("Independent design gallery — no game state", 14, Tokens.MUTED)
 	frame.add_child(feedback)
 	painted_pack.load_pack()
+	frame_pack.load_pack()
 	show_category("Foundations")
 
 func show_category(category: String) -> bool:
@@ -195,6 +201,97 @@ func _reload_painted() -> void:
 	call_deferred("show_category", "Buttons")
 
 func _panels() -> void:
+	demo_panels.clear()
+	var toolbar = _row(body)
+	var selector = OptionButton.new()
+	selector.add_item("G2.2B Painted PNG")
+	selector.add_item("G2.1 Original SVG")
+	selector.select(0 if prefer_frames else 1)
+	selector.item_selected.connect(_select_frame_pack)
+	toolbar.add_child(selector)
+	var reload = Button.new()
+	reload.text = "Reload artwork"
+	reload.pressed.connect(_reload_frames)
+	toolbar.add_child(reload)
+	var use_painted = prefer_frames and frame_pack.is_ready()
+	frame_status = _label("14 / 14 PNGs loaded" if use_painted else "Original SVG active", 15, Tokens.GOLD)
+	toolbar.add_child(frame_status)
+	if not use_painted:
+		if prefer_frames:
+			_note("Frame pack not installed: " + frame_pack.problem + ". Extract G2.2B ZIP at repository root.")
+		_panels_original()
+		return
+	_note("Painted frames / scroll to inspect all samples. Center ornaments stay at a fixed size.")
+	var first = _row(body)
+	_frame_sample(first, "standard", "Standard", Vector2(285, 140), "Everyday content")
+	_frame_sample(first, "featured", "Featured", Vector2(285, 140), "Important rewards", "crest")
+	_frame_sample(first, "modal", "Modal", Vector2(330, 140), "Confirm or cancel", "modal_crest")
+	var second = _row(body)
+	_frame_sample(second, "tooltip", "Tooltip", Vector2(300, 112), "Item information")
+	_frame_sample(second, "compact", "Compact", Vector2(220, 96), "Counters")
+	_frame_sample(second, "standard", "Wide standard", Vector2(380, 112), "Same texture, wider")
+	var states = _row(body)
+	_frame_sample(states, "standard", "Normal", Vector2(255, 100), "")
+	_frame_sample(states, "focused", "Focused", Vector2(255, 100), "")
+	_frame_sample(states, "disabled", "Disabled", Vector2(255, 100), "")
+	var art = _row(body)
+	_art_sample(art, "portrait", "Portrait / fixed aspect", Vector2(190, 220))
+	_art_sample(art, "banner", "Banner / fixed aspect", Vector2(530, 110))
+	var dividers = _row(body)
+	_art_sample(dividers, "divider_horizontal", "Horizontal divider", Vector2(290, 44))
+	_art_sample(dividers, "section_ornament", "Section ornament", Vector2(290, 55))
+	_art_sample(dividers, "divider_vertical", "Vertical divider", Vector2(26, 175))
+	_note("Initial nine-slice margins and extracted art are candidates, not final approval. No game screens changed.")
+
+func _frame_sample(host: Node, key: String, caption_text: String, extent: Vector2, detail: String, ornament: String = "") -> void:
+	var column = _vbox(host, 5)
+	var holder = Control.new()
+	holder.custom_minimum_size = extent + Vector2(0, 22)
+	column.add_child(holder)
+	var panel = PanelScene.instantiate()
+	panel.position = Vector2(0, 22)
+	panel.size = extent
+	holder.add_child(panel)
+	frame_pack.apply_to(panel, key)
+	demo_panels.append(panel)
+	var content = _vbox(panel, 4)
+	var label = _label(caption_text, 19)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	content.add_child(label)
+	if detail != "":
+		var sub = _label(detail, 14, Tokens.MUTED)
+		sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		content.add_child(sub)
+	if ornament != "":
+		var crest = TextureRect.new()
+		crest.texture = frame_pack.textures[ornament]
+		crest.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		crest.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		crest.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		crest.size = Vector2(120, 52)
+		crest.position = Vector2((extent.x - 120) * 0.5, 0)
+		holder.add_child(crest)
+
+func _art_sample(host: Node, key: String, caption_text: String, extent: Vector2) -> void:
+	var column = _vbox(host, 5)
+	var picture = TextureRect.new()
+	picture.texture = frame_pack.textures[key]
+	picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	picture.custom_minimum_size = extent
+	column.add_child(picture)
+	column.add_child(_label(caption_text, 14, Tokens.MUTED))
+
+func _select_frame_pack(index: int) -> void:
+	prefer_frames = index == 0
+	call_deferred("show_category", "Panels")
+
+func _reload_frames() -> void:
+	frame_pack.load_pack()
+	prefer_frames = true
+	call_deferred("show_category", "Panels")
+
+func _panels_original() -> void:
 	_note("The same nine-slice frame stretches without deforming its bevels or angular corners.")
 	var row = _row(body)
 	for width in [230, 460]:

@@ -88,3 +88,11 @@ jobs:
           "$GODOT" --headless --path godot-prototype --script res://tests/painted_buttons_smoke.gd 2>&1 | tee /tmp/godot-painted.log
           ! grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-painted.log
           grep -F 'PASS: G2.2A missing-pack fallback, synthetic sixteen-PNG load, native state wiring, SVG comparison' /tmp/godot-painted.log
+      - name: Painted frames integration smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          GODOT=/tmp/godot-bin/Godot_v4.4.1-stable_linux.x86_64
+          "$GODOT" --headless --path godot-prototype --script res://tests/painted_frames_smoke.gd 2>&1 | tee /tmp/godot-frames.log
+          ! grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-frames.log
+          grep -F 'PASS: G2.2B frame loading, nine-slice samples, fixed-aspect art and SVG comparison' /tmp/godot-frames.log

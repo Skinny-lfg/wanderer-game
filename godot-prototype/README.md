@@ -46,3 +46,7 @@ Gallery smoke: `godot --headless --path godot-prototype --script res://tests/gal
 ## G2.2A — Painted buttons preview
 
 The gallery now supports the local 16-PNG button art pack at `godot-prototype/ui/assets/buttons/g22a/` (repository-root relative). Extract the supplied installation ZIP into the repository root. Open the gallery with F6, choose Buttons and select G2.2A Painted PNG; click Reload artwork if necessary. The original G2.1 SVG option remains available. A missing/incomplete pack falls back to SVG and explicitly reports that it is missing. Source PNGs are 371×76, resized in memory to 264×54 for initial nine-slice settings. Actual art is not in this commit; CI uses synthetic PNG fixtures to validate wiring, not the appearance of the real assets. No game screen changes.
+
+## G2.2B — Painted panels and frames
+
+Extract `wanderer_g22b_gallery_assets.zip` into the repository root (folder structure included). Gallery F6 → Panels → G2.2B Painted PNG → Reload artwork. The 14 PNGs live at `godot-prototype/ui/assets/frames/g22b/`. Seven frame styles use initial nine-slice settings, banner and portrait retain aspect ratio, and crest overlays retain their independent size. Scroll for all examples. Original SVG comparison stays available. Art pack is supplied separately; CI synthetic fixtures validate integration until real PNGs are committed. No theme application to the game screens yet.
