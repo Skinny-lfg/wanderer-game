@@ -24,7 +24,10 @@ function bossVictory(seed,options={}){
  const tier=options.tier||35;a.setup(tier,'Sword','Legendary');a.setUnlocked(tier);if(options.runeCount)for(let i=0;i<options.runeCount;i++)a.state().runes.push(a.makeRune('might',1));a.start(tier,true);
  const c=a.controller(),g=c.state,card=options.family?g.dungeon.cards.find(card=>card.family===options.family):g.dungeon.cards[options.cardIndex||0];if(!card)return null;c.chooseRealm(card.id);
  for(const node of bossPath(card).slice(1)){
-  assert.equal(c.visitRoom(node),true);assert.equal(a.enter(),true);
+  assert.equal(c.visitRoom(node),true);
+  if(g.dungeon.boonOffer){assert.equal(c.chooseBoon(null),null);continue;}
+  if(g.dungeon.cleared.includes(node))continue;
+  assert.equal(a.enter(),true);
   if(a.events.run()?.event)assert.equal(a.events.choose(2),true);
   else {
    if(options.forceBossOverflow&&card.nodes[node].kind==='boss'){
