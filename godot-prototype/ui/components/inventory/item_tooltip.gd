@@ -18,6 +18,7 @@ var comparison_title: String = ""
 var comparison_lines: PackedStringArray = PackedStringArray()
 var unique_effect: String = ""
 var content_stack: VBoxContainer
+var edge_ornament: Sprite2D
 @export var item_name: String = "Forgotten Blade"
 @export_range(0, 5) var rarity: int = 3
 @export var category: String = "One-handed sword"
@@ -152,11 +153,29 @@ func _aligned_stat(host: Node, label_text: String, value: String, value_color: C
 	amount.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	row.add_child(amount)
 
+func _position_edge_ornament() -> void:
+	if is_instance_valid(edge_ornament):
+		edge_ornament.position = Vector2(size.x * 0.5, 10.0)
+
+func _attach_edge_ornament() -> void:
+	if rarity != 5 or ornament == null:
+		return
+	# A Sprite2D is not a Control, so PanelContainer does not allocate a row
+	# for the crest. It follows the upper edge as the window changes size.
+	edge_ornament = Sprite2D.new()
+	edge_ornament.name = "TopEdgeOrnament"
+	edge_ornament.texture = ornament
+	var scale_factor = 58.0 / maxf(1.0, ornament.get_width())
+	edge_ornament.scale = Vector2.ONE * scale_factor
+	add_child(edge_ornament)
+	resized.connect(_position_edge_ornament)
+	_position_edge_ornament()
+
 func _build_organized() -> void:
 	var style = painted_style.duplicate() as StyleBoxTexture
 	style.content_margin_left = 22
 	style.content_margin_right = 22
-	style.content_margin_top = 20
+	style.content_margin_top = 29 if rarity == 5 and ornament != null else 20
 	style.content_margin_bottom = 20
 	add_theme_stylebox_override("panel", style)
 	custom_minimum_size.x = 310 if detailed else 280
@@ -168,42 +187,39 @@ func _build_organized() -> void:
 	var header = _section(stack, "header", 3)
 	if equipped_caption:
 		header.add_child(_label("CURRENTLY EQUIPPED", Tokens.MUTED, 11))
-	header.add_child(_wrap_label(item_name, accent, 21 if detailed else 19))
-	header.add_child(_wrap_label(Tokens.RARITY_NAMES[rarity] + " / " + category, Tokens.MUTED, 13))
-	_separator(stack)
-	var has_primary = not primary_value.is_empty() and not primary_label.is_empty()
-	var overview = HBoxContainer.new()
-	overview.add_theme_constant_override("separation", 8)
-	stack.add_child(overview)
-	var overview_text = VBoxContainer.new()
-	overview_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	overview_text.alignment = BoxContainer.ALIGNMENT_CENTER
-	overview.add_child(overview_text)
-	if has_primary:
-		var primary = _section(overview_text, "primary", 1)
-		primary.add_child(_label(primary_value, Tokens.IVORY, 30))
-		primary.add_child(_wrap_label(primary_label, Tokens.MUTED, 13))
-	elif not attributes.is_empty():
-		var modifiers = _section(overview_text, "attributes")
-		modifiers.add_child(_label("ATTRIBUTES", Tokens.MUTED, 11))
-		for entry in attributes:
-			_aligned_stat(modifiers, str(entry.get("label", "")), str(entry.get("value", "")), Tokens.IVORY)
-	else:
-		var modifiers = _section(overview_text, "attributes")
-		for entry in stat_lines:
-			modifiers.add_child(_wrap_label(entry, Tokens.IVORY, 15))
+	var title_row = HBoxContainer.new()
+	title_row.add_theme_constant_override("separation", 8)
+	header.add_child(title_row)
 	if portrait_art != null:
-		var art = _portrait(76 if detailed else 64, false)
+		var art = _portrait(64 if detailed else 54, false)
 		art.name = "UnframedArtwork"
 		art.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		overview.add_child(art)
+		title_row.add_child(art)
 		sections["artwork"] = art
-	if has_primary and not attributes.is_empty():
-		_separator(stack)
+	var names = VBoxContainer.new()
+	names.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	names.alignment = BoxContainer.ALIGNMENT_CENTER
+	names.add_theme_constant_override("separation", 3)
+	title_row.add_child(names)
+	names.add_child(_wrap_label(item_name, accent, 21 if detailed else 19))
+	names.add_child(_wrap_label(Tokens.RARITY_NAMES[rarity] + " / " + category, Tokens.MUTED, 13))
+	_separator(stack)
+	var has_primary = not primary_value.is_empty() and not primary_label.is_empty()
+	if has_primary:
+		var primary = _section(stack, "primary", 1)
+		primary.add_child(_label(primary_value, Tokens.IVORY, 30))
+		primary.add_child(_wrap_label(primary_label, Tokens.MUTED, 13))
+	if not attributes.is_empty():
+		if has_primary:
+			_separator(stack)
 		var modifiers = _section(stack, "attributes")
 		modifiers.add_child(_label("ATTRIBUTES", Tokens.MUTED, 11))
 		for entry in attributes:
 			_aligned_stat(modifiers, str(entry.get("label", "")), str(entry.get("value", "")), Tokens.IVORY)
+	elif not has_primary:
+		var modifiers = _section(stack, "attributes")
+		for entry in stat_lines:
+			modifiers.add_child(_wrap_label(entry, Tokens.IVORY, 15))
 	if not unique_effect.is_empty():
 		var line = ColorRect.new()
 		line.color = accent.darkened(0.45)
@@ -225,3 +241,4 @@ func _build_organized() -> void:
 		_separator(stack)
 		var lore = _section(stack, "description")
 		lore.add_child(_wrap_label(description, Tokens.MUTED, 13))
+	_attach_edge_ornament()

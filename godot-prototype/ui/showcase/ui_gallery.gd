@@ -96,7 +96,7 @@ func _ready() -> void:
 	fit.text = "Fit screen"
 	fit.pressed.connect(_fit_gallery_window)
 	header.add_child(fit)
-	frame.add_child(_label("STYLIZED GOTHIC     •     G2.2E.3 / UNFRAMED ITEM ART", 15, Tokens.GOLD))
+	frame.add_child(_label("STYLIZED GOTHIC     •     G2.2E.4 / RARITY TOOLTIP SURFACES", 15, Tokens.GOLD))
 	frame.add_child(HSeparator.new())
 	var layout = _row(frame)
 	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -650,6 +650,18 @@ func _tooltip_card(kind: String, compare: bool = false) -> PanelContainer:
 		node.primary_value = "18–24"
 		node.attributes.clear()
 		node.description = ""
+	elif kind == "grey":
+		rarity_index = 0
+		node.item_name = "Worn Dagger"
+		node.primary_value = "8–12"
+		node.stat_lines = PackedStringArray(["8–12 Attack Damage"])
+		node.attributes.clear()
+	elif kind == "epic":
+		rarity_index = 4
+		node.item_name = "Nightpiercer"
+		node.primary_value = "32–40"
+		node.stat_lines = PackedStringArray(["32–40 Attack Damage", "+12 Agility", "+8 Critical Rating"])
+		node.attributes.assign([{"label": "Agility", "value": "+12"}, {"label": "Critical Rating", "value": "+8"}])
 	elif kind == "legendary":
 		rarity_index = 5
 		node.item_name = "Oathbound Relic"
@@ -678,10 +690,10 @@ func _tooltip_card(kind: String, compare: bool = false) -> PanelContainer:
 	if prefer_tooltips and frame_pack.is_ready() and slot_pack.is_ready():
 		node.detailed = kind == "legendary"
 		node.organized = organized_tooltips
-		node.painted_style = frame_pack.style_for("featured" if node.detailed and not organized_tooltips else "tooltip")
+		node.painted_style = frame_pack.tooltip_style(rarity_index) if organized_tooltips else frame_pack.style_for("featured" if node.detailed else "tooltip")
 		node.portrait_art = art
 		node.portrait_frame = slot_pack.textures[SlotPack.RARITIES[rarity_index]]
-		if node.detailed and not organized_tooltips:
+		if node.detailed:
 			node.ornament = frame_pack.textures["crest"]
 	return node
 
@@ -689,7 +701,7 @@ func _tooltips() -> void:
 	demo_tooltips.clear()
 	var toolbar = _row(body)
 	var selector = OptionButton.new()
-	selector.add_item("G2.2E.3 Unframed Art")
+	selector.add_item("G2.2E.4 Rarity Surfaces")
 	selector.add_item("G2.2E Previous")
 	selector.add_item("G2.1 Original")
 	selector.select((0 if organized_tooltips else 1) if prefer_tooltips else 2)
@@ -711,7 +723,7 @@ func _tooltips() -> void:
 	var painted = prefer_tooltips and frame_pack.is_ready() and slot_pack.is_ready()
 	tooltip_status = _label("Painted assets active" if painted else "Original active", 15, Tokens.GOLD)
 	toolbar.add_child(tooltip_status)
-	_note("Unframed item artwork / unified tooltip frame. All values and effects are illustrative.")
+	_note("Unframed header art / rarity-colored surfaces / Legendary edge ornament. All values and effects are illustrative.")
 	var cards = _row(body)
 	var basic = _tooltip_card("common")
 	var rare = _tooltip_card("rare")
@@ -742,4 +754,10 @@ func _tooltips() -> void:
 		tooltip_comparison.add_child(card)
 		demo_tooltips.append(card)
 	compare_button.toggled.connect(func(enabled: bool): tooltip_comparison.visible = enabled)
+	_note("Additional rarity previews — Grey and Epic.")
+	var extra = _row(body)
+	for kind in ["grey", "epic"]:
+		var card = _tooltip_card(kind)
+		card.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+		extra.add_child(card)
 	_note("Comparison values are demonstration data. Live inventory, positioning and combat mechanics are not connected.")

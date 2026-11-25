@@ -8,6 +8,8 @@ const CORNERS = {
 }
 const SAMPLE = Vector2i(20, 12)
 var modular_textures: Dictionary = {}
+var rarity_tooltip_textures: Dictionary = {}
+const Tokens = preload("res://ui/theme/tokens.gd")
 ## G2.2B art candidate: resizable frame bodies and separately anchored ornaments.
 const ART_DIR = "res://ui/assets/frames/g22b"
 const SIZES = {
@@ -31,6 +33,7 @@ var problem: String = ""
 func load_pack(directory: String = ART_DIR) -> bool:
 	textures.clear()
 	modular_textures.clear()
+	rarity_tooltip_textures.clear()
 	problem = ""
 	var pending: Dictionary = {}
 	for name in SIZES:
@@ -87,3 +90,16 @@ func apply_to(panel: PanelContainer, name: String) -> bool:
 		return false
 	panel.add_theme_stylebox_override("panel", style)
 	return true
+
+# The rarity tint is applied only to the central surface and its existing
+# continuous inner blends, not by modulating the metal frame or text.
+static func rarity_surface(rarity: int) -> Color:
+	return Color("#151619").lerp(Tokens.RARITY_COLORS[clampi(rarity, 0, 5)], 0.17 if rarity < 2 else 0.20)
+
+func tooltip_style(rarity: int) -> StyleBoxTexture:
+	if not is_ready():
+		return null
+	var index = clampi(rarity, 0, 5)
+	if not rarity_tooltip_textures.has(index):
+		rarity_tooltip_textures[index] = Modular.build_panel(textures["tooltip"], CORNERS["tooltip"], SAMPLE, rarity_surface(index))
+	return Modular.style(rarity_tooltip_textures[index], CORNERS["tooltip"], Vector4(22, 20, 22, 20))

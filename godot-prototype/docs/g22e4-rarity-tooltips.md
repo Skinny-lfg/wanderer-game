@@ -1,0 +1,3 @@
+# G2.2E.4 — Rarity tooltip surfaces
+
+Unframed transparent art is placed to the left of the name and category. Stats regain full card width. All six rarities have a distinct dark tinted central background, generated from the existing continuous modular panel with unchanged exterior art and slice geometry. Legendary-only crest is a separate fixed-size Sprite2D anchored to the top edge; it consumes no header row. Gallery includes Grey and Epic samples, retains previous painted and original layouts, and uses illustrative stats. Smoke checks header artwork, rarity surfaces and edge ornament. No gameplay changes or new PNGs.

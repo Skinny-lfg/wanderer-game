@@ -47,7 +47,7 @@ static func _mix(a: Color, b: Color, weight: float) -> Color:
 		return b
 	return a.lerp(b, weight)
 
-static func build_panel(source: Texture2D, corner: Vector2i, sample: Vector2i) -> Texture2D:
+static func build_panel(source: Texture2D, corner: Vector2i, sample: Vector2i, surface: Color = Color(0, 0, 0, 0)) -> Texture2D:
 	var image = source.get_image()
 	if image == null or image.is_empty():
 		return null
@@ -58,7 +58,7 @@ static func build_panel(source: Texture2D, corner: Vector2i, sample: Vector2i) -
 		return null
 	var aw = (corner.x + sample.x) * 2
 	var ah = (corner.y + sample.y) * 2
-	var background = _background(image, corner)
+	var background = surface if surface.a >= 1.0 else _background(image, corner)
 	var top: Array[Color] = []
 	var bottom: Array[Color] = []
 	var left: Array[Color] = []

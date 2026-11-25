@@ -23,7 +23,7 @@ func _run() -> void:
 		if not card.get_theme_stylebox("panel") is StyleBoxTexture or card.portrait_art == null or card.content_stack == null:
 			_fail("Painted card missing art or content")
 			return
-	if common.detailed or rare.detailed or not legendary.detailed or legendary.ornament != null or legendary.unique_effect.is_empty():
+	if common.detailed or rare.detailed or not legendary.detailed or legendary.ornament == null or legendary.unique_effect.is_empty():
 		_fail("Compact versus legendary treatment failed")
 		return
 	for card in gallery.demo_tooltips:
@@ -31,11 +31,29 @@ func _run() -> void:
 			_fail("Unframed artwork missing")
 			return
 		var art: Control = card.sections["artwork"]
-		if art.get_child_count() != 1 or not art.get_child(0) is TextureRect or art.get_child(0).name != "ItemArtwork":
+		if not card.sections["header"].is_ancestor_of(art) or art.get_child_count() != 1 or not art.get_child(0) is TextureRect or art.get_child(0).name != "ItemArtwork":
 			_fail("Item artwork must be visible without a slot frame")
 			return
-	if legendary.get_theme_stylebox("panel").texture != rare.get_theme_stylebox("panel").texture:
-		_fail("Legendary should use the same neutral frame")
+	if legendary.edge_ornament == null or rare.edge_ornament != null or common.edge_ornament != null:
+		_fail("Legendary-only edge ornament missing")
+		return
+	if not is_equal_approx(legendary.edge_ornament.position.x, legendary.size.x * 0.5) or not is_equal_approx(legendary.edge_ornament.position.y, 10.0):
+		_fail("Legendary ornament not attached to upper edge")
+		return
+	var seen: Array[Color] = []
+	for index in range(6):
+		var style: StyleBoxTexture = gallery.frame_pack.tooltip_style(index)
+		var surface = style.texture.get_image()
+		var color = surface.get_pixel(surface.get_width() / 2, surface.get_height() / 2)
+		if seen.has(color):
+			_fail("Rarity surfaces should be distinct")
+			return
+		seen.append(color)
+		if style.texture_margin_left != 30:
+			_fail("Rarity tint changed frame geometry")
+			return
+	if legendary.get_theme_stylebox("panel").texture == rare.get_theme_stylebox("panel").texture:
+		_fail("Different rarities should have distinct backgrounds")
 		return
 	if comparison.comparison_lines.size() != 3 or not comparison.comparison_lines[2].begins_with("-"):
 		_fail("Comparison sample missing")
