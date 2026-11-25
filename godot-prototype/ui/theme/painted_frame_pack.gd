@@ -10,7 +10,7 @@ const SAMPLE = Vector2i(20, 12)
 var modular_textures: Dictionary = {}
 var rarity_tooltip_textures: Dictionary = {}
 var simple_tooltip_textures: Dictionary = {}
-const SIMPLE_TOOLTIP_CORNER = Vector2i(16, 16)
+const SimpleFrame = preload("res://ui/theme/simple_frame.gd")
 const Tokens = preload("res://ui/theme/tokens.gd")
 ## G2.2B art candidate: resizable frame bodies and separately anchored ornaments.
 const ART_DIR = "res://ui/assets/frames/g22b"
@@ -106,7 +106,7 @@ func tooltip_style(rarity: int, simple: bool = true) -> StyleBoxTexture:
 	if simple:
 		if not simple_tooltip_textures.has(index):
 			simple_tooltip_textures[index] = _simple_tooltip_atlas(index)
-		return Modular.style(simple_tooltip_textures[index], SIMPLE_TOOLTIP_CORNER, Vector4(15, 15, 15, 15))
+		return SimpleFrame.style_from_atlas(simple_tooltip_textures[index])
 	if not rarity_tooltip_textures.has(index):
 		rarity_tooltip_textures[index] = Modular.build_panel(textures["tooltip"], CORNERS["tooltip"], SAMPLE, rarity_surface(index))
 	return Modular.style(rarity_tooltip_textures[index], CORNERS["tooltip"], Vector4(22, 20, 22, 20))
@@ -118,26 +118,6 @@ static func simple_rarity_surface(rarity: int) -> Color:
 	return Color("#111217").lerp(Tokens.RARITY_COLORS[index], 0.045 if index < 2 else 0.08)
 
 static func _simple_tooltip_atlas(rarity: int) -> Texture2D:
-	var image = Image.create(40, 40, false, Image.FORMAT_RGBA8)
-	image.fill(Color(0, 0, 0, 0))
-	var background = simple_rarity_surface(rarity)
 	var border = Color("#786751") if rarity != 5 else Color("#b08a50")
 	var inner_line = Color("#3c342b") if rarity != 5 else Color("#594529")
-	var top = 10 if rarity == 5 else 2
-	for y in range(40):
-		for x in range(40):
-			var left = x - 2
-			var right = 37 - x
-			var upper = y - top
-			var lower = 37 - y
-			var d = float(mini(mini(left, right), mini(upper, lower)))
-			d = minf(d, float(mini(mini(left + upper, right + upper), mini(left + lower, right + lower)) - 4) / sqrt(2.0))
-			if d < 0.0:
-				continue
-			var color = background
-			if d < 1.0:
-				color = border
-			elif d < 2.0:
-				color = inner_line
-			image.set_pixel(x, y, color)
-	return ImageTexture.create_from_image(image)
+	return SimpleFrame.build_atlas(simple_rarity_surface(rarity), border, inner_line, 10 if rarity == 5 else 2)

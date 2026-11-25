@@ -97,7 +97,7 @@ func _ready() -> void:
 	fit.text = "Fit screen"
 	fit.pressed.connect(_fit_gallery_window)
 	header.add_child(fit)
-	frame.add_child(_label("STYLIZED GOTHIC     •     G2.2E.5 / SIMPLE TOOLTIP FRAMES", 15, Tokens.GOLD))
+	frame.add_child(_label("STYLIZED GOTHIC     •     G2.2E.6 / REUSABLE SIMPLE FRAME", 15, Tokens.GOLD))
 	frame.add_child(HSeparator.new())
 	var layout = _row(frame)
 	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -278,8 +278,37 @@ func _reload_painted() -> void:
 	prefer_painted = true
 	call_deferred("show_category", "Buttons")
 
+const SimpleFrame = preload("res://ui/theme/simple_frame.gd")
+var simple_frame_samples: Array[PanelContainer] = []
+
+func _simple_frame_sample(host: Node, label_text: String, detail: String, extent: Vector2, style: StyleBoxTexture) -> void:
+	var panel = PanelContainer.new()
+	panel.custom_minimum_size = extent
+	panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	SimpleFrame.apply_to(panel, style)
+	host.add_child(panel)
+	simple_frame_samples.append(panel)
+	var content = _vbox(panel, 3)
+	content.add_child(_label(label_text, 18))
+	if not detail.is_empty():
+		content.add_child(_label(detail, 14, Tokens.MUTED))
+
+func _simple_frame_study() -> void:
+	_note("Simple Frame — shared nine-slice for everyday information. No shadow, fixed corners, configurable surface and border.")
+	var neutral = SimpleFrame.make_style()
+	var sizes = _row(body)
+	_simple_frame_sample(sizes, "Materials", "Compact counter", Vector2(180, 70), neutral)
+	_simple_frame_sample(sizes, "Contract details", "Wide information panel", Vector2(360, 100), neutral)
+	_simple_frame_sample(sizes, "Equipment", "Tall information panel", Vector2(220, 190), neutral)
+	var variants = _row(body)
+	_simple_frame_sample(variants, "Neutral", "Default", Vector2(210, 85), neutral)
+	_simple_frame_sample(variants, "Selected", "Subtle emphasis", Vector2(210, 85), SimpleFrame.make_style(Color("#211c17"), Color("#b08a50"), Color("#594529")))
+	_simple_frame_sample(variants, "Disabled", "Muted", Vector2(210, 85), SimpleFrame.make_style(Color("#17181c"), Color("#515158"), Color("#29292e")))
+	_note("Atlas: 40 × 40 px / 16 px fixed corners / 8 px center and edge spans. Same frame is used by the current Tooltips.")
+
 func _panels() -> void:
 	demo_panels.clear()
+	simple_frame_samples.clear()
 	var toolbar = _row(body)
 	var selector = OptionButton.new()
 	selector.add_item("G2.2B Painted PNG")
@@ -299,6 +328,7 @@ func _panels() -> void:
 			_note("Frame pack not installed: " + frame_pack.problem + ". Extract G2.2B ZIP at repository root.")
 		_panels_original()
 		return
+	_simple_frame_study()
 	_note("Painted frames / scroll to inspect all samples. Center ornaments stay at a fixed size.")
 	var first = _row(body)
 	_frame_sample(first, "standard", "Standard", Vector2(285, 140), "Everyday content")
