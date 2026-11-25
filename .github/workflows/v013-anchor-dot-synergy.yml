@@ -1,0 +1,34 @@
+name: Anchor Runes DoT Synergy Comparison (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths: ['scripts/v013-anchor-dot-synergy.cjs','.github/workflows/v013-anchor-dot-synergy.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        family: [blood, decay, magic, phantom]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: '45592535013'
+          pattern: anchor-controlled-*
+          path: reports/original-anchor
+          merge-multiple: true
+      - run: node scripts/v013-anchor-dot-synergy.cjs ${{ matrix.family }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: anchor-dot-${{ matrix.family }}
+          path: reports/anchor-dot-synergy/*.json
