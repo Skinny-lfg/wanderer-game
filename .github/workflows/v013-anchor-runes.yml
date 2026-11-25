@@ -2,7 +2,7 @@ name: Anchor Runes native integration (NO DEPLOY)
 on:
   push:
     branches: [balance/stage-6.40-e1-calibration]
-    paths: ['.github/workflows/v013-anchor-runes.yml','tests/v012-complete-runes.test.cjs','tests/v0120-rune-checkpoint.test.cjs','tests/v013-c8-clean-sheet.test.cjs','scripts/v013-natural-progression.cjs','scripts/simulate-progression.cjs','combat/v012-runes.js','combat/v012-gear-stats.js','economy/v012-equipment-runtime.js','online/v012-expedition-runtime.js','online/v012-persistence-runtime.js','online/v012-save.js','tests/v013-natural-progression.test.cjs','tests/v012-economy-harness.cjs','tests/v013-c8-ui-wiring.test.cjs']
+    paths: ['.github/workflows/v013-anchor-runes.yml','tests/v012-complete-runes.test.cjs','tests/v0120-rune-checkpoint.test.cjs','tests/v013-c8-clean-sheet.test.cjs','scripts/v013-natural-progression.cjs','scripts/simulate-progression.cjs','combat/v012-runes.js','combat/v012-gear-stats.js','economy/v012-equipment-runtime.js','online/v012-expedition-runtime.js','online/v012-persistence-runtime.js','online/v012-save.js','tests/v013-natural-progression.test.cjs','tests/v012-economy-harness.cjs','tests/v013-c8-ui-wiring.test.cjs','tests/v013-anchor-rune-combat.test.cjs']
   workflow_dispatch:
 permissions:
   contents: read
@@ -15,7 +15,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: {node-version: '22', cache: npm}
       - run: npm ci
-      - run: node --test tests/v012-complete-runes.test.cjs tests/v0120-rune-checkpoint.test.cjs tests/v013-armor-rotguard.test.cjs
+      - run: node --test tests/v012-complete-runes.test.cjs tests/v0120-rune-checkpoint.test.cjs tests/v013-armor-rotguard.test.cjs tests/v013-anchor-rune-combat.test.cjs
   regression:
     runs-on: ubuntu-24.04
     timeout-minutes: 45
