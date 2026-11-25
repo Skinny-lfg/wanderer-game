@@ -218,7 +218,12 @@ function prepare(level,build,seed,opts,desiredRisk=undefined,desiredFamily=undef
     if(opts.stage648c2eManaRuntimeSource!==undefined){
       if(opts.stage648ManaAudit!==true||opts.stage619BaselineRuntime!==undefined||typeof opts.stage648c2eManaRuntimeSource!=='string'||!opts.stage648c2eManaRuntimeSource.includes('WandererV012CombatRuntime')||!opts.stage648c2eManaRuntimeSource.includes('stage648ManaRegenActual'))throw Error('Invalid Stage 6.48C.2E observer-only combat runtime source');
     }
+    // Explicit VM-only armor/Mana candidate sources, never used by normal gameplay.
+    if(opts.stageArmorCoreSource!==undefined&&(typeof opts.stageArmorCoreSource!=='string'||!opts.stageArmorCoreSource.includes('WandererV012CombatCore')))throw Error('Invalid armor diagnostic core');
+    if(opts.stageArmorRuntimeSource!==undefined&&(opts.stage619BaselineRuntime!==undefined||opts.stage648c2eManaRuntimeSource!==undefined||typeof opts.stageArmorRuntimeSource!=='string'||!opts.stageArmorRuntimeSource.includes('WandererV012CombatRuntime')))throw Error('Invalid armor diagnostic runtime');
     const overrides={
+      ...(opts.stageArmorCoreSource===undefined?{}:{'combat/v012-combat-core.js':opts.stageArmorCoreSource}),
+      ...(opts.stageArmorRuntimeSource===undefined?{}:{'combat/v012-combat-runtime.js':opts.stageArmorRuntimeSource}),
       ...(opts.stage648c2cGearStatsSource===undefined?{}:{'combat/v012-gear-stats.js':opts.stage648c2cGearStatsSource}),
       ...(opts.stage648c1BuildcraftSource===undefined?{}:{'combat/v012-buildcraft.js':opts.stage648c1BuildcraftSource}),
       ...(opts.stage648b1ExpeditionSource===undefined?{}:{'online/v012-expedition-runtime.js':opts.stage648b1ExpeditionSource}),
