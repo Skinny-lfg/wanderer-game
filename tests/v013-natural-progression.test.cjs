@@ -167,7 +167,7 @@ test('Anchor Rune agent uses actual loadout eligibility, unique families and ear
  console.log('ANCHOR_AGENT_RANK='+JSON.stringify(diagnostic));
  N.manageEarnedRunes(a,profile);
  const owned=s.runeSlots.filter(Boolean).map(id=>s.runes.find(r=>r.id===id));
- assert.equal(owned.length,3);assert.deepEqual(owned.map(r=>r.id),expected.map(r=>r.id));
+ assert.equal(owned.length,3);assert.deepEqual(Array.from(owned,r=>r.id),Array.from(expected,r=>r.id));
  assert(owned.some(r=>r.family==='execution'&&r.id!==weaker.id));
  assert(owned.every(r=>!['archmage','abyss','clarity','efficiency'].includes(r.family)));
  assert.equal(new Set(owned.map(r=>r.family)).size,3);
