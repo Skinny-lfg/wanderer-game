@@ -73,7 +73,7 @@ func _ready() -> void:
 		outer.add_theme_constant_override("margin_" + side, 24)
 	var frame = _vbox(outer, 14)
 	frame.add_child(_heading("WANDERER  /  UI WORKSHOP"))
-	frame.add_child(_label("STYLIZED GOTHIC     •     G2.2D / ITEM SLOT ART STUDY", 15, Tokens.GOLD))
+	frame.add_child(_label("STYLIZED GOTHIC     •     G2.2D.4 / ASSET NORMALIZATION", 15, Tokens.GOLD))
 	frame.add_child(HSeparator.new())
 	var layout = _row(frame)
 	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -486,7 +486,7 @@ func _slots() -> void:
 	var use_painted = prefer_slots and slot_pack.is_ready()
 	slot_status = _label("10 / 10 PNGs loaded" if use_painted else "Original slots active", 15, Tokens.GOLD)
 	toolbar.add_child(slot_status)
-	_note("Six rarity treatments — move the mouse over a slot or click to select. " + ("" if use_painted or not prefer_slots else slot_pack.problem))
+	_note("Normalized slot bodies and common safe area — hover or click to select. " + ("" if use_painted or not prefer_slots else slot_pack.problem))
 	var row = _row(body)
 	for i in range(6):
 		_slot(row, i, ITEM, Tokens.RARITY_NAMES[i])

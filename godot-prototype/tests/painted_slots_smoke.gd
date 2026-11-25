@@ -1,5 +1,6 @@
 extends SceneTree
 const Pack = preload("res://ui/theme/painted_slot_pack.gd")
+const Normalize = preload("res://ui/theme/asset_normalization.gd")
 func _initialize() -> void:
 	call_deferred("_run")
 
@@ -37,18 +38,34 @@ func _run() -> void:
 	if first.painted_key() != "rarity_grey" or first.painted_key(true) != "slot_hover":
 		_fail("Rarity or hover state failed")
 		return
-	for sample in [[48.0, 0.74], [64.0, 0.74], [80.0, 0.73]]:
-		if not is_equal_approx(first._painted_art_fit_ratio(sample[0]), sample[1]):
-			_fail("Unexpected item art fit ratio")
+	for texture in pack.textures.values():
+		var used: Rect2i = texture.get_image().get_used_rect()
+		if used.position.x < 4 or used.position.y < 4 or used.end.x > 252 or used.end.y > 252:
+			_fail("Normalized slot lacks transparent guard")
 			return
+	for node in gallery.bag_slots:
+		if node.item_art == null:
+			continue
+		var source: Rect2i = node.painted_art_bounds()
+		if not source.has_area():
+			_fail("Missing alpha bounds")
+			return
+		for side in [48.0, 64.0, 80.0]:
+			var extent = Vector2(side, side)
+			var safe = Normalize.slot_safe_rect(extent)
+			var dest: Rect2 = node.painted_art_rect(extent)
+			if not safe.grow(0.01).encloses(dest) or not is_equal_approx(dest.size.aspect(), Vector2(source.size).aspect()):
+				_fail("Item exceeded safe area or changed aspect")
+				return
+	var reference: Rect2 = first.painted_art_rect(Vector2(64, 64))
 	first.equipped = true
-	if not is_equal_approx(first._painted_art_fit_ratio(64.0), 0.74):
-		_fail("Equipped state should preserve item size")
+	if first.painted_art_rect(Vector2(64, 64)) != reference:
+		_fail("Equipped state changed item geometry")
 		return
 	first.equipped = false
 	first.button_pressed = true
-	if not is_equal_approx(first._painted_art_fit_ratio(48.0), 0.74):
-		_fail("Selected state should preserve item size")
+	if first.painted_art_rect(Vector2(64, 64)) != reference:
+		_fail("Selected state changed item geometry")
 		return
 	if first.painted_key() != "slot_selected":
 		_fail("Selection state failed")

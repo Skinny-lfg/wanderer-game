@@ -1,4 +1,5 @@
 extends RefCounted
+const Normalize = preload("res://ui/theme/asset_normalization.gd")
 ## G2.2B art candidate: resizable frame bodies and separately anchored ornaments.
 const ART_DIR = "res://ui/assets/frames/g22b"
 const SIZES = {
@@ -33,6 +34,8 @@ func load_pack(directory: String = ART_DIR) -> bool:
 			problem = "Invalid frame texture: " + name
 			return false
 		image.convert(Image.FORMAT_RGBA8)
+		if name == "tooltip":
+			image = Normalize.padded(image, 3)
 		pending[name] = ImageTexture.create_from_image(image)
 	textures = pending
 	return true
@@ -44,6 +47,8 @@ func style_for(name: String) -> StyleBoxTexture:
 	if not is_ready() or not MARGINS.has(name):
 		return null
 	var margin: Vector4 = MARGINS[name]
+	if name == "tooltip":
+		margin += Vector4(3, 3, 3, 3)
 	var style = StyleBoxTexture.new()
 	style.texture = textures[name]
 	style.texture_margin_left = margin.x

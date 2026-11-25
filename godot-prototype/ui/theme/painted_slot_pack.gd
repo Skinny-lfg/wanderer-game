@@ -1,4 +1,5 @@
 extends RefCounted
+const Normalize = preload("res://ui/theme/asset_normalization.gd")
 const ART_DIR = "res://ui/assets/inventory/g22d"
 const RARITIES = ["rarity_grey", "rarity_common", "rarity_uncommon", "rarity_rare", "rarity_epic", "rarity_legendary"]
 const STATES = ["slot_empty", "slot_hover", "slot_selected", "slot_locked"]
@@ -19,7 +20,7 @@ func load_pack(directory: String = ART_DIR) -> bool:
 			problem = "Invalid slot texture: " + key
 			return false
 		img.convert(Image.FORMAT_RGBA8)
-		pending[key] = ImageTexture.create_from_image(img)
+		pending[key] = ImageTexture.create_from_image(Normalize.normalize_slot(img))
 	textures = pending
 	return true
 

@@ -1,4 +1,5 @@
 extends RefCounted
+const Normalize = preload("res://ui/theme/asset_normalization.gd")
 const ART_DIR = "res://ui/assets/navigation/g22c"
 const STATES = ["normal", "hover", "active", "pressed", "disabled"]
 const IDS = ["camp", "inventory", "talents", "city", "shrine"]
@@ -30,9 +31,10 @@ func load_pack(directory: String = ART_DIR) -> bool:
 			return false
 		img.convert(Image.FORMAT_RGBA8)
 		if name.begins_with("tab_"):
+			img = Normalize.padded(img, 3)
 			img.resize(180, 46, Image.INTERPOLATE_LANCZOS)
 		elif name.begins_with("icon_"):
-			img.resize(30, 30, Image.INTERPOLATE_LANCZOS)
+			img = Normalize.fit_icon(img, Vector2i(30, 30), 26)
 		pending[name] = ImageTexture.create_from_image(img)
 	textures = pending
 	return true

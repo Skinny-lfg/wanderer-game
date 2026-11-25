@@ -1,6 +1,9 @@
 extends Button
 const Tokens = preload("res://ui/theme/tokens.gd")
 const PaintedSlots = preload("res://ui/theme/painted_slot_pack.gd")
+const Normalize = preload("res://ui/theme/asset_normalization.gd")
+var _cached_art: Texture2D
+var _cached_bounds: Rect2i
 # Opt-in for the gallery; other consumers keep the original visual treatment.
 var painted_textures: Dictionary = {}
 @export var item_art: Texture2D
@@ -65,10 +68,18 @@ func painted_key(hover: bool = false) -> String:
 		return "slot_empty"
 	return PaintedSlots.RARITIES[rarity]
 
-func _painted_art_fit_ratio(side: float) -> float:
-	# Keep the painted bevel visible even on dense 48px grids.
-	# Selection and equipment change the frame, not the item silhouette.
-	return 0.74 if side <= 66.0 else 0.73
+func painted_art_bounds() -> Rect2i:
+	if item_art != _cached_art:
+		_cached_art = item_art
+		_cached_bounds = Rect2i()
+		if item_art != null:
+			var image = item_art.get_image()
+			if image != null and not image.is_empty():
+				_cached_bounds = image.get_used_rect()
+	return _cached_bounds
+
+func painted_art_rect(slot_extent: Vector2) -> Rect2:
+	return Normalize.fit_rect(Vector2(painted_art_bounds().size), Normalize.slot_safe_rect(slot_extent))
 
 func _draw_painted() -> void:
 	var side = minf(size.x, size.y)
@@ -81,11 +92,9 @@ func _draw_painted() -> void:
 	if locked:
 		return
 	if item_art != null:
-		var art_size = item_art.get_size()
-		var fit_ratio = _painted_art_fit_ratio(side)
-		var factor = minf(side * fit_ratio / art_size.x, side * fit_ratio / art_size.y)
-		art_size *= factor
-		draw_texture_rect(item_art, Rect2((size - art_size) * 0.5, art_size), false)
+		var bounds = painted_art_bounds()
+		if bounds.has_area():
+			draw_texture_rect_region(item_art, painted_art_rect(size), Rect2(bounds))
 		# Preserve a rarity cue when a gold interaction state replaces the base.
 		if key.begins_with("slot_"):
 			draw_rect(Rect2(origin + Vector2(side * 0.37, side * 0.87), Vector2(side * 0.26, 2)), Tokens.RARITY_COLORS[rarity])

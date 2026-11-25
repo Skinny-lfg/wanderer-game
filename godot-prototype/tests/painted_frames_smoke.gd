@@ -54,6 +54,10 @@ func _run() -> void:
 		if not pack.load_pack():
 			_fail("Real art pack invalid: " + pack.problem)
 			return
+		var tooltip_image: Image = pack.textures["tooltip"].get_image()
+		if tooltip_image.get_size() != Pack.SIZES["tooltip"] + Vector2i(6, 6) or tooltip_image.get_used_rect().position.y < 3:
+			_fail("Tooltip transparent guard missing")
+			return
 		print("REAL: 14 actual frame textures loaded")
 	print("PASS: G2.2B frame loading, nine-slice samples, fixed-aspect art and SVG comparison")
 	quit(0)

@@ -55,6 +55,12 @@ func _run() -> void:
 		if not pack.load_pack():
 			_fail("Actual navigation art failed: " + pack.problem)
 			return
+		for id in Pack.IDS:
+			var icon_image: Image = pack.textures["icon_" + id].get_image()
+			var bounds: Rect2i = icon_image.get_used_rect()
+			if not bounds.has_area() or maxi(bounds.size.x, bounds.size.y) != 26:
+				_fail("Navigation icon normalization failed")
+				return
 		print("REAL: 11 navigation textures loaded")
 	print("PASS: G2.2C five tabs, icons, exclusive selection and SVG fallback")
 	quit(0)
