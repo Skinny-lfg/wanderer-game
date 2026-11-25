@@ -130,7 +130,7 @@ function phase1StartWave(resetScroll=false){
  if(!ports.isPhase1Run()||!g.selected||r.status==='fight')return;
  r.enc=g.wave;const last=g.wave===g.selected.waves;
  // No Barrier is carried across encounters; entrance effects are new grants.
- r.barrier=0;
+ r.barrier=0;delete r.rotguard;delete r.rotguardStarted;
  if(ports.phase6Run?.effects.barrier){ports.setBarrier(r,r.maxhp*ports.phase6Run.effects.barrier);ports.phase6Run.effects.barrier=0;}
  if(ports.state.automaticTalents?.nodes?.includes('affinity_aegis'))ports.setBarrier(r,WandererV012Buildcraft.barrierAmount(r.maxhp,r.stats?.spellPower,.05,.08));
  const talentBarrier=ports.phase1Build?.runtime?.talentBonuses?.startBarrier||0;if(talentBarrier>0)ports.setBarrier(r,talentBarrier);

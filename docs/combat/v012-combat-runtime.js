@@ -216,11 +216,29 @@ function setReady(r,name,seconds){
  (r.cooldownPeriods??={})[name]=seconds;timers[name]=now+seconds;return true;
 }
 
+// Rotguard is the first-consumed portion of the shared Barrier pool.
+function reconcileRotguard(r){
+ const g=r.rotguard;if(!g)return 0;
+ const total=Math.max(0,Number(r.barrier)||0);
+ g.remaining=Math.max(0,Math.min(total,g.remaining-Math.max(0,g.observed-total)));
+ g.observed=total;return g.remaining;
+}
+function startRotguard(r){
+ if(!ports.isPhase1Run()||!ports.state.automaticTalents?.nodes?.includes('rotguard')||r.rotguardStarted)return;
+ r.rotguardStarted=true;
+ const cost=Math.max(0,Math.min(r.mp,Math.floor(r.mp*.5)));if(!cost)return;
+ r.mp-=cost;ports.phase6Metric(r,'manaSpent',cost);ports.phase6Metric(r,'rotguardMana',cost);
+ const gained=ports.setBarrier(r,cost);
+ r.rotguard={remaining:gained,observed:r.barrier};
+ ports.phase6Metric(r,'rotguardBarrier',gained);ports.phase6Proc(r,'Rotguard');
+ ports.addLog('☠ Rotguard: '+cost+' Mana → '+Math.round(gained)+' Barrier','spell');
+}
 function setBarrier(r,amount){
+ reconcileRotguard(r);
  // One shared uncapped Barrier pool. The next encounter clears any remainder.
  const before=Math.max(0,Number(r.barrier)||0),value=Number(amount),ward=(Number(r.stats?.wardBonus)||0)+(Number(r.stats?.barrierPower)||0);
  const gained=Number.isFinite(value)&&value>0?Math.max(0,value*(1+ward)):0;
- r.barrier=before+gained;
+ r.barrier=before+gained;if(r.rotguard)r.rotguard.observed=r.barrier;
  return gained;
 }
 
@@ -443,6 +461,7 @@ function offhandOnMainHit(r,hpDamage){
  }
 }
 function talentManaCost(amount,r){if(amount<=0)return 0;const reduction=Math.min(.25,Math.max(0,Number(r?.stats?.manaCostReduction)||0));return Math.max(1,Math.round(amount*(1-reduction)*100)/100);}
+function elementManaCost(b,kind,base){const mode=WandererV012Buildcraft.magicMode(b),row=({"arcane":[9,13,10,0],"frost":[10,15,12,8],"fire":[13,18,18,12],"lightning":[14,20,20,14]})[mode];return row?.[{Wand:0,Staff:1,infusion:2,automatic:3}[kind]]??base;}
 function v013FundedCost(baseCost,r=ports.state.run){if(baseCost<=0)return 0;const adjusted=Math.max(1,Math.ceil(baseCost*(root.WandererV013ExpeditionBoons?.costFactor(r)||1))),cost=v013Traits().includes('efficient')?Math.max(1,adjusted-Math.max(1,Math.floor(adjusted*.1))):adjusted;return talentManaCost(cost,r);}
 function v013SpellMultiplier(r){const nodes=ports.state.automaticTalents?.nodes||[],element=ports.phase1Build?.element,enemy=r.enemy;return (element==='fire'&&nodes.includes('fire_focus')?.9:1)*(element==='frost'&&nodes.includes('frost_focus')&&enemy.slowTime>0?1.2:1)*(element==='lightning'&&nodes.includes('lightning_focus')?1.35:1)*(element==='fire'&&nodes.includes('living_inferno')&&enemy.dots?.burn?.length?1.25:1)*(element==='frost'&&nodes.includes('absolute_winter')&&enemy.slowTime>0?1.2:1);}
 function v013LightningChain(r){return ports.isPhase1Run()&&ports.phase1Build?.element==='lightning'&&(WandererV012Buildcraft.rank(ports.phase1Build,'overcharge')>0||ports.state.automaticTalents?.nodes?.includes('storm_mastery'))&&!ports.state.automaticTalents?.nodes?.includes('lightning_focus');}
@@ -598,7 +617,7 @@ function weaponAttack(r,offhandStrike=false){
  if(!e.bleedStacks||!e.v012Rot?.length)e.carrionCharge=0;
  const lt=ports.legendaryRuntime(r),focus=!!lt.focusReady,armorReady=!!lt.armorReady;lt.focusReady=false;lt.armorReady=false;
  // An Off-Hand Dagger uses the same physical scaling as Daggers, before its 50% penalty.
- const kind=weapon?.subtype==='Off-Hand Dagger'?'Daggers':weapon?.subtype||'Unarmed',baseCost=kind==='Staff'?13:kind==='Wand'?9:0;
+ const kind=weapon?.subtype==='Off-Hand Dagger'?'Daggers':weapon?.subtype||'Unarmed',baseCost=elementManaCost(ports.phase1Build,kind,kind==='Staff'?13:kind==='Wand'?9:0);
  const normalCost=baseCost&&ports.isPhase1Run()&&ports.phase1Build?.element?WandererV012Buildcraft.nextCost(ports.phase1Build,baseCost):baseCost;
  const cost=v013FundedCost(normalCost,r);
  let damage=0,element=null,cast=false;
@@ -769,6 +788,7 @@ function updateFight(){
   ports.state.onlineProgress.activeMs+=110/ports.clockSpeed;
  }
  const dt=.11,s=r.stats,t=ports.setRuntime(r);let e=r.enemy;
+ startRotguard(r);reconcileRotguard(r);
  r.combatSeconds=(r.combatSeconds||0)+dt;
  // The Gravecaller's dedicated bound souls apply an encounter-local player DoT.
  const deathbound=root.WandererV013EliteAbilities?.tickDeathbound(r);
@@ -853,7 +873,7 @@ function updateFight(){
    if(resolveBossPulseLethal(r,s))return;
   }
  }
- if(s.caster&&r.mp<v013FundedCost(s.main.subtype==='Staff'?13:9,r))ports.phase6Metric(r,'manaStarvedSeconds',dt);
+ if(s.caster&&r.mp<v013FundedCost(ports.isPhase1Run()&&ports.phase1Build?.element?WandererV012Buildcraft.nextCost(ports.phase1Build,elementManaCost(ports.phase1Build,s.main.subtype,s.main.subtype==='Staff'?13:9)):elementManaCost(ports.phase1Build,s.main.subtype,s.main.subtype==='Staff'?13:9),r))ports.phase6Metric(r,'manaStarvedSeconds',dt);
  if(r.encounterTraitId==='unhallowed_regrowth'&&globalThis.WandererV013EncounterTraits){
   const healed=globalThis.WandererV013EncounterTraits.regenTick(r);
   if(healed>0){ports.phase6Metric(r,'traitRegrowthHealing',healed);ports.addLog('Unhallowed Regrowth restores '+healed+' enemy HP.','critical');}
@@ -950,7 +970,9 @@ function updateFight(){
     if(e.hp<=0){ports.winEncounter();return;}
    }
   }
+  const rotguardBefore=reconcileRotguard(r);
   const barrierBeforeHit=r.barrier,blocked=Math.min(r.barrier,raw);r.barrier-=blocked;
+  reconcileRotguard(r);
   const barrierBroken=barrierBeforeHit>0&&r.barrier<=0;let hit=Math.max(0,raw-blocked);
   if(barrierBroken&&learned('stored_impact'))r.storedImpact=Math.round(blocked*.5);
   if(special&&(blocked||damageBlocked)&&prepared('turn_tide'))r.riposteUntil=ports.setNow(r)+3;
@@ -994,6 +1016,7 @@ function updateFight(){
   }
   if(!statOnly()&&e.bossStyle==='leech'&&hit>0){const multiplier=ports.isPhase1Run()&&ports.phase1Build?WandererV012Buildcraft.enemyHealMultiplier(ports.phase1Build,e):1;const heal=Math.floor(Math.min(e.maxhp-e.hp,Math.round(hit*.18))*multiplier);e.hp+=heal;if(heal){ports.addLog('🌑 Rift Harbinger drains '+heal+' HP','spell');enemyAbilityVfx='BossRift';}}
   // Guardian Barrier is restored only by the Stage 8.4 timed Ward Cycle.
+  if(rotguardBefore>0&&blocked>0&&r.hp>0&&ports.phase1Build)WandererV012Buildcraft.rotguardRetaliate(ports.phase1Build,ports.phase2Context(r));
   ports.legendaryDefensiveEffects(r,damageBlocked,hit,blocked,barrierBeforeHit>0&&r.barrier<=0);
   if(ports.isPhase1Run()&&ports.phase1Build)WandererV012Buildcraft.onDefend(ports.phase1Build,{...ports.phase2Context(r),barrierBroken},damageBlocked,blocked);
   if(s.bonus.lastBastion&&r.barrier>=r.maxhp*.1&&ports.setReady(r,'lastBastion',12))t.lastBastionReady=true;
@@ -1066,7 +1089,7 @@ function phase2MagicTick(r){
  // for the same Mana pool as weapon casts and elemental offhand spells.
  if(WandererV012Buildcraft.infusionReady(b,ctx.now)){
   const config=WandererV012Buildcraft.infusionConfig(b,r.stats.main?.subtype);
-  const cost=v013FundedCost(WandererV012Buildcraft.nextCost(b,config.cost),r);
+  const cost=v013FundedCost(WandererV012Buildcraft.nextCost(b,elementManaCost(b,'infusion',config.cost)),r);
   if(r.mp>=cost){
    r.mp-=cost;ports.phase6Metric(r,'manaSpent',cost);ports.phase6Metric(r,'infusionActivations',1);
    offhandPaidAction(r);
@@ -1081,7 +1104,7 @@ function phase2MagicTick(r){
  // Only attuned Fire/Frost/Lightning cast extra spells with physical weapons.
  if(mode==='unattuned'||mode==='arcane'||r.stats.caster||!WandererV012Buildcraft.canCast(b))return;
  if(ctx.now-b.runtime.lastSpellAt<2.5)return;
- const cost=v013FundedCost(WandererV012Buildcraft.nextCost(b,8),r);if(r.mp<cost)return;
+ const cost=v013FundedCost(WandererV012Buildcraft.nextCost(b,elementManaCost(b,'automatic',8)),r);if(r.mp<cost)return;
  b.runtime.lastSpellAt=ctx.now;ports.phase6Metric(r,'manaSpent',cost);ports.phase6Metric(r,'fundedCasts',1);r.mp-=cost;offhandPaidAction(r);ctx.power=r.stats.spellPower;ctx.amp=1;ctx.funded=true;
  ports.combatEffect('Wand',({fire:'burn',frost:'slow',lightning:'shock'})[b.element]);
  if(v013Traits().includes('ward')&&ports.setReady(r,'v013Ward',6))ports.setBarrier(r,r.maxhp*.02);

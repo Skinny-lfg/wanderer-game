@@ -224,14 +224,20 @@ function rotPotency(c){return .04*(rotWeaponBase(c)+Math.max(0,Number(c.player?.
 function applyRot(b,c,power,origin=null){
  const e=c.enemy;if(!e||e.hp<=0)return;
  const stacks=e.v012Rot||(e.v012Rot=[]);
+ if(origin==='rotguard'&&stacks.length>=6)return;
  if(stacks.length>=6)stacks.shift();
  const primary=origin==='paid_primary_toxic_touch'||origin==='paid_primary_cycle_extra';
  const potency=power*(1+.15*rank(b,'virulent_rot')+(b.runtime.talentBonuses?.rotBonus||0));
- const d={ticks:0,damage:primary||origin==='weapon'?Math.max(0,potency):Math.max(1,Math.round(potency)),remaining:primary?4:(specialized(b,'lingering_rot')?6:4),...(primary?{primaryPaid:true}:{}),...(origin==='weapon'?{secondaryOrigin:'weapon'}:{})};
+ const d={ticks:0,damage:primary||origin==='weapon'||origin==='rotguard'?Math.max(0,potency):Math.max(1,Math.round(potency)),remaining:primary?4:(specialized(b,'lingering_rot')?6:4),...(primary?{primaryPaid:true}:{}),...(origin==='weapon'?{secondaryOrigin:'weapon'}:{}),...(origin==='rotguard'?{reactive:true}:{})};
  stacks.push(d);
  c.log('☠ Rot '+stacks.length+'/6');
  if(origin==='paid_primary_toxic_touch')paidRotApplied(b,c,d);
  if(origin==='paid_primary_cycle_extra')c.metric?.('decayPrimaryPaidExtraStacks',1);
+}
+function rotguardRetaliate(b,c){
+ const e=c.enemy;if(!specialized(b,'rotguard')||!e||e.hp<=0||e.stage84Node||c.player.hp<=0||(e.v012Rot||[]).length>=6||c.now<(e.rotguardNextAt||0)||c.random()>=.30)return false;
+ e.rotguardNextAt=c.now+2;
+ applyRot(b,c,rotPotency(c)*.5,'rotguard');c.metric?.('rotguardReactiveRot',1);c.trigger?.('rotguard');return true;
 }
 function corruptionCycle(b,c){
  if(!specialized(b,'corruption_cycle')||c.enemy.hp<=0||c.player.hp<=0)return;
@@ -705,6 +711,6 @@ function onInfusionHit(b,c){
  return directAmount;
 }
 function clear(b){if(!b)return;b.picks.length=0;b.element=null;b.unlockedFamilies=[];b.families=[];b.cooldowns=Object.create(null);b.runtime={frenzyUntil:0,counterBlock:0,counterBarrier:0,spellblade:false,magicHits:0,staticCharges:0,adrenalineUntil:0,conduit:false,lastStand:false,lastSpellAt:-999};}
-root.WandererV012Buildcraft=Object.freeze({CATALOG,FAMILIES,ELEMENTS:elements,barrierAmount,create,ownedRank,rank,values,bleedDamage,elementalPower,applyRot,migrateEnemyDots,mods,onHeal,onSecondaryWeaponStatus,onAttack,onCast,onSecond,tickRot,incoming,onDefend,onKill,survive,speed,enemyHealMultiplier,enemyDefense,nextCost,resetWave,canCast,magicMode,infusionConfig,infusionReady,activateInfusion,onInfusionActivation,onInfusionHit,validate,syncPermanent,clear});
+root.WandererV012Buildcraft=Object.freeze({CATALOG,FAMILIES,ELEMENTS:elements,barrierAmount,create,ownedRank,rank,values,bleedDamage,elementalPower,applyRot,rotguardRetaliate,migrateEnemyDots,mods,onHeal,onSecondaryWeaponStatus,onAttack,onCast,onSecond,tickRot,incoming,onDefend,onKill,survive,speed,enemyHealMultiplier,enemyDefense,nextCost,resetWave,canCast,magicMode,infusionConfig,infusionReady,activateInfusion,onInfusionActivation,onInfusionHit,validate,syncPermanent,clear});
 })(globalThis);
 

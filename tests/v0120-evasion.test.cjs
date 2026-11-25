@@ -28,12 +28,12 @@ test('v13 Leather rolls use an explicit optional Evasion stat, not legacy fallba
  }
 });
 
-test('dodge chance is finite, diminishing, capped at 30%, and weaker against higher E',()=>{
+test('dodge chance is finite, diminishing, capped at 45%, and weaker against higher E',()=>{
  const a=create(556,undefined,{}, {skipPersistence:true}),f=a.gear.evasionChance;
- assert(f(20,5)>f(10,5));
- assert(f(30,5)-f(20,5)<f(20,5)-f(10,5));
+ assert(f(2,5)>f(1,5));
+ assert(f(3,5)-f(2,5)<f(2,5)-f(1,5));
  assert(f(10,200)<f(10,5));
- assert.equal(f(Number.MAX_VALUE,1),.30);
+ assert.equal(f(Number.MAX_VALUE,1),.45);
  for(const bad of [0,-1,NaN,Infinity])assert.equal(f(bad,5),0);
 });
 

@@ -8,7 +8,8 @@ const rows=[[[171.6,753],[234,828],[288.6,913],[113.1,963]],[[362.7,1108],[401.7
 for(const n of graph){
  const f=n.family,skill=n.gateFor?byId.get(n.gateFor):n;
  let xy=null;
- if(n.adaptive){const sign=n.lane===0?-1:1;xy=n.atlasStep===0?[sign*190,1040]:[sign*240,1310];}
+ if(n.rotguardBranch)xy=[-240,1170];
+ else if(n.adaptive){const sign=n.lane===0?-1:1;xy=n.atlasStep===0?[sign*190,1040]:[sign*240,1310];}
  else if(n.atlasSlot!==undefined){const slot=n.atlasSlot,step=n.atlasStep;xy=slot===0?[0,[673,753,833,923][step]]:[(slot===1?1:-1)*[180,190,210,240][step],[835,915,995,1080][step]];}
  else if(n.kind==='mixed'||n.id.startsWith('mixed_path_')||skill.kind==='mixed'){
   const pair=skill.pair,a=angle(pair[0])+Math.PI/6,t=skill.tier;

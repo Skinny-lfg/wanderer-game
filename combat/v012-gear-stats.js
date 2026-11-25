@@ -78,6 +78,7 @@ function totalStats(equipment,ownedRunes,equippedRuneIds,{isTwoHanded,FIELDS,ite
  for(const id of runeSlots){const rune=runeItems.find(r=>r.id===id),type=RUNE_FAMILIES.find(x=>x.id===rune?.family);if(!rune||!type||usedFamilies.has(type.id))continue;usedFamilies.add(type.id);s[type.field]+=runeValue(type.id,rune.tier)*(PHASE1_PREVIEW&&phase6Run?.effects.runeBoost?.remaining>0?1.20:1);}
  // Read-only combat projection: legacy effects remain in stored items, but are inactive.
  const main=equipped.weapon?{...equipped.weapon,effect:null,magic:null}:null,off=equipped.offhand?{...equipped.offhand,effect:null,magic:null}:null,caster=!!main&&['Staff','Wand'].includes(main.subtype);
+ const clothFraction=Object.values(equipped).filter(item=>item?.armorType==='Cloth'&&['helm','armor','gloves','boots','belt'].includes(item.slot)).length/5;
  const gearBonus=key=>Object.values(equipped).reduce((sum,item)=>sum+(Number(item?.[key])||0),0);
  const counts=setCounts(equipped),sets=setBonuses(counts);
  s.caster=caster;s.main=main;s.off=off;s.sets=sets.list;s.bonus=sets.values;s.counts=counts;
@@ -89,16 +90,17 @@ function totalStats(equipment,ownedRunes,equippedRuneIds,{isTwoHanded,FIELDS,ite
  const critRating=Math.max(0,s.cha-5)/Math.sqrt(Math.max(1,main?.tier||1));
  s.crit=Math.min(100,Math.max(9,Math.round((9+41*(1-Math.exp(-critRating/25))+counts.crit*2+(sets.values.critBonus||0))/Math.sqrt(Math.max(1,s.rawAttackSpeed/1.3)))));
  s.mana=caster?Math.round(20+s.int*7+s.manaFlat):0;
- s.manaRegen=caster?+(1.5+s.int*.23).toFixed(1):0;
+ s.manaRegen=caster?+(1+s.int*.15).toFixed(1):0;
  s.spellPower=caster?Math.round(3+s.int*1.9+s.spellFlat):0;
  // Magic resources exist before percentage talents, including on physical weapons.
  const magic=PHASE1_PREVIEW&&(build?build.unlockedFamilies?.includes('magic'):state?.automaticTalents?.nodes?.includes('affinity_magic'));
  const decay=PHASE1_PREVIEW&&(build?build.unlockedFamilies?.includes('decay'):state?.automaticTalents?.nodes?.includes('affinity_decay'));
  const aegis=PHASE1_PREVIEW&&(build?build.unlockedFamilies?.includes('aegis'):state?.automaticTalents?.nodes?.includes('affinity_aegis'));
- if(magic||decay){s.mana=caster?s.mana:Math.max(30,Math.round(20+s.int*7+s.manaFlat));s.manaRegen=caster?s.manaRegen:+(1.5+s.int*.23).toFixed(1);}
+ if(magic||decay){s.mana=caster?s.mana:Math.max(30,Math.round(20+s.int*7+s.manaFlat));s.manaRegen=caster?s.manaRegen:+(1+s.int*.15).toFixed(1);}
  // Orb Ward and Aegis Barrier use Spell Power with physical weapons, but neither
  // unlocks Mana or spellcasting in the absence of Magic/Decay.
  if(magic||decay||aegis||off?.subtype==='Orb')s.spellPower=caster?s.spellPower:Math.round(3+s.int*1.9+s.spellFlat);
+ if(s.mana){s.mana=Math.round(s.mana*(1+.4*clothFraction));s.spellPower=Math.round(s.spellPower*(1+.4*clothFraction));}
  if(magic)s.phase2Magic=true;
  if(decay)s.phase2Decay=true;
  if(aegis)s.phase2Aegis=true;
@@ -107,7 +109,7 @@ function totalStats(equipment,ownedRunes,equippedRuneIds,{isTwoHanded,FIELDS,ite
  // These are equipment-only caps; talents, base attributes and Rune mechanics
  // continue to use their existing formulas and global combat ceilings.
  s.crit=Math.min(100,s.crit+Math.min(8,Math.max(0,gearBonus('critBonus'))));
- if(s.mana)s.manaRegen+=Math.min(3,Math.max(0,gearBonus('manaRegenBonus')));
+ if(s.mana)s.manaRegen+=Math.min(6,Math.max(0,gearBonus('manaRegenBonus')))*(1+clothFraction);
  s.wardBonus=Math.min(.3,Math.max(0,gearBonus('wardBonus')));s.barrierPower=0;s.healingPower=0;s.manaCostReduction=0;
  if(off?.subtype==='Shield')s.blockChance=Math.min(48,s.blockChance+Math.min(8,Math.max(0,gearBonus('blockBonus'))));
  s.blockReduction=off?.subtype==='Shield'?(main?.subtype==='Mace'?.67:main?.subtype==='Sword'?.62:.58):0;

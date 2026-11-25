@@ -138,6 +138,7 @@ function createGraph(catalog,definitionNodes=[]){
   add({id,kind:'adaptive',family:'magic',requires:'gate_'+id,name:id.split('_').map(s=>s[0].toUpperCase()+s.slice(1)).join(' '),description:DESIGN[id],maxRank:1,effectId:id,...meta,atlasStep:1});
   alternative('magic_side_'+lane+'_2',id);
  }
+ add({id:'rotguard',kind:'extension',family:'decay',tier:1,requires:'soul_drain',name:'Rotguard',description:'At encounter start spend 50% of current Mana (rounded down) to gain equal Barrier, modified by Barrier Power. While this portion absorbs damage, the attacker has a 30% chance to receive a finite Rot stack at half normal potency (2s per enemy). Does not count as a paid primary application or replace existing stacks at the cap.',maxRank:1,effectId:'rotguard',rotguardBranch:true});
  // Assign final live nodes only, after all architecture transformations.
  const pairStats={
   'blood_fury':{blood:['critChance','bleedBonus','pctAttack'],fury:['critChance','sunderDamage','pctAttack']},

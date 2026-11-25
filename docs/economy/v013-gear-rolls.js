@@ -56,7 +56,7 @@ const PROFILES=Object.freeze({
 const ARMOR=Object.freeze({
  Plate:{main:'def',attrs:WEIGHTED_PRIMARY.Plate,extras:['hp','blockBonus','atk','spell','mana','critBonus']},
  Leather:{main:'def',attrs:WEIGHTED_PRIMARY.Leather,extras:['hp','evasionRating','spd','critBonus','atk','spell']},
- Cloth:{main:'def',attrs:WEIGHTED_PRIMARY.Cloth,extras:['hp','spell','mana','manaRegenBonus','wardBonus','atk']}
+ Cloth:{main:'def',attrs:WEIGHTED_PRIMARY.Cloth,extras:['hp','spell','mana','manaRegenBonus','wardBonus','atk'],extraWeights:{spell:6,mana:5,manaRegenBonus:10,wardBonus:2}}
 });
 const ordinaryArmor=Object.freeze({
  helm:{main:'def',attrs:WEIGHTED_PRIMARY.Plate,extras:['hp','wardBonus','spell']},
