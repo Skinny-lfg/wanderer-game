@@ -1,0 +1,56 @@
+name: Anchor Rot Persistence and Weapon Comparison (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths: ['scripts/v013-anchor-rot-persistence.cjs','.github/workflows/v013-anchor-rot-persistence.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node scripts/v013-anchor-rot-persistence.cjs smoke
+      - run: npm run test:v013:sim
+  compare:
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [decay-cycle-only-twohand, decay-cycle-only-staff, decay-cycle-daggers]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node scripts/v013-anchor-rot-persistence.cjs ${{ matrix.profile }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: anchor-persistence-${{ matrix.profile }}
+          path: reports/anchor-rot-persistence/*.json
+  summary:
+    needs: compare
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: anchor-persistence-*
+          path: reports/anchor-rot-persistence
+          merge-multiple: true
+      - run: node scripts/v013-anchor-rot-persistence.cjs aggregate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: anchor-persistence-summary
+          path: reports/anchor-rot-persistence/summary.json
