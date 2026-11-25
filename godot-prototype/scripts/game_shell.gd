@@ -57,9 +57,9 @@ func _build_navigation() -> void:
 	add_child(bar)
 	bar.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
 	bar.offset_top = -72
-	bar.add_theme_stylebox_override("panel", _style(Color("101216"), Color("504631")))
+	bar.add_theme_stylebox_override("panel", _style(Color("0c0e11"), Color("504631")))
 	var edge = ColorRect.new()
-	edge.color = Color("6c5739")
+	edge.color = Color(0.57, 0.48, 0.34, 0.33)
 	edge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	bar.add_child(edge)
 	edge.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
@@ -68,14 +68,14 @@ func _build_navigation() -> void:
 	row.add_theme_constant_override("separation", 4)
 	bar.add_child(row)
 	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	row.offset_left = 42
-	row.offset_right = -42
-	row.offset_top = 7
-	row.offset_bottom = -7
+	row.offset_left = 68
+	row.offset_right = -68
+	row.offset_top = 10
+	row.offset_bottom = -10
 	for i in range(IDS.size()):
 		var button = Button.new()
 		button.name = "Nav_" + str(IDS[i])
-		button.text = str(MARKS[i]) + "   " + str(TITLES[i])
+		button.text = str(TITLES[i])
 		button.tooltip_text = str(i + 1) + " — " + str(TITLES[i])
 		button.toggle_mode = true
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -83,10 +83,10 @@ func _build_navigation() -> void:
 		button.add_theme_color_override("font_color", Color("b3a89a"))
 		button.add_theme_color_override("font_hover_color", Color("f3dfb0"))
 		button.add_theme_color_override("font_pressed_color", Color("f3d399"))
-		button.add_theme_stylebox_override("normal", _style(Color("15171a"), Color("15171a")))
-		button.add_theme_stylebox_override("hover", _style(Color("29251f"), Color("98764a"), 1))
-		button.add_theme_stylebox_override("pressed", _style(Color("282219"), Color("d8ad6b"), 3))
-		button.add_theme_stylebox_override("hover_pressed", _style(Color("30291e"), Color("d8ad6b"), 3))
+		button.add_theme_stylebox_override("normal", _style(Color(0, 0, 0, 0), Color(0, 0, 0, 0)))
+		button.add_theme_stylebox_override("hover", _style(Color(0.15, 0.12, 0.08, 0.22), Color("98764a"), 1))
+		button.add_theme_stylebox_override("pressed", _style(Color(0.14, 0.10, 0.06, 0.26), Color("d8ad6b"), 2))
+		button.add_theme_stylebox_override("hover_pressed", _style(Color(0.15, 0.12, 0.08, 0.30), Color("d8ad6b"), 2))
 		var focus_style = StyleBoxFlat.new()
 		focus_style.bg_color = Color(0, 0, 0, 0)
 		focus_style.border_color = Color("9a7951")
@@ -94,8 +94,13 @@ func _build_navigation() -> void:
 		button.add_theme_stylebox_override("focus", focus_style)
 		button.pressed.connect(show_page.bind(str(IDS[i])))
 		row.add_child(button)
-		kit.navigation.apply_to(button, IDS[i])
-		button.add_theme_font_size_override("font_size", 17)
+		button.icon = kit.navigation.textures.get("icon_" + str(IDS[i]))
+		button.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		button.vertical_icon_alignment = VERTICAL_ALIGNMENT_CENTER
+		button.add_theme_constant_override("h_separation", 9)
+		button.add_theme_font_override("font", kit.heading_font)
+		button.add_theme_font_size_override("font_size", 18)
+		button.custom_minimum_size = Vector2(156, 44)
 		buttons[IDS[i]] = button
 
 func show_page(page_id: String) -> bool:

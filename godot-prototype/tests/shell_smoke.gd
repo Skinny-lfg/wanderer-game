@@ -23,8 +23,8 @@ func _run() -> void:
 		if shell.active_page != id or shell.content.get_child_count() != 1 or not shell.navigation.visible:
 			_fail("Screen transition failed: " + id)
 			return
-		if not shell.buttons[id].get_theme_stylebox("normal") is StyleBoxTexture:
-			_fail("Navigation must use painted art")
+		if not shell.buttons[id].get_theme_stylebox("normal") is StyleBoxFlat or shell.buttons[id].icon == null:
+			_fail("Minimal navigation must retain original icons")
 			return
 		if id == "inventory":
 			var slots: Array = shell.current_screen.inventory_slots
@@ -62,6 +62,13 @@ func _run() -> void:
 				return
 			if inventory.equipped_slots.size() != 10 or inventory.potion_slots.size() != 3 or inventory.stash_slots.size() != 40 or inventory.stash_items.size() != 24:
 				_fail("Inventory fixture does not match v0.13 capacities")
+				return
+			for cell in inventory.stash_slots:
+				if not cell.minimal_inventory:
+					_fail("Stash cells must use quiet inventory presentation")
+					return
+			if inventory.equipped_slots[0].minimal_inventory or inventory.get_node_or_null("HealthBar") != null or inventory.get_node_or_null("ManaBar") != null or inventory.get_node_or_null("EXPBar") != null:
+				_fail("Equipment treatment or inventory-only HUD reduction failed")
 				return
 			inventory.stash_filter.select(1)
 			inventory._inventory_filter_changed(1)

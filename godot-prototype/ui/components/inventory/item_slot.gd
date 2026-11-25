@@ -6,6 +6,8 @@ var _cached_art: Texture2D
 var _cached_bounds: Rect2i
 # Opt-in for the gallery; other consumers keep the original visual treatment.
 var painted_textures: Dictionary = {}
+# Opt-in: a quiet stash cell, with no repeated ornamental art.
+var minimal_inventory: bool = false
 # Optional custom tooltip factory, supplied only by the workshop preview.
 var preview_tooltip_factory: Callable
 @export var item_art: Texture2D
@@ -27,6 +29,9 @@ func _ready() -> void:
 	focus_exited.connect(queue_redraw)
 
 func _draw() -> void:
+	if minimal_inventory:
+		_draw_minimal_inventory()
+		return
 	if painted_textures.size() == 10:
 		_draw_painted()
 		return
@@ -58,6 +63,40 @@ func _draw() -> void:
 		draw_string(font, Vector2(w - 20, 21), "E", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Tokens.GOLD)
 	if locked:
 		draw_string(font, Vector2(w * 0.5 - 23, h - 9), "LOCK", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Tokens.MUTED)
+
+func _draw_minimal_inventory() -> void:
+	var side: float = minf(size.x, size.y)
+	if side <= 2.0:
+		return
+	var origin: Vector2 = (size - Vector2.ONE * side) * 0.5
+	var bounds: Rect2 = Rect2(origin + Vector2.ONE, Vector2.ONE * (side - 2.0))
+	var accent: Color = Tokens.RARITY_COLORS[rarity] if item_art != null else Color("33353a")
+	var edge: Color = accent.darkened(0.30) if item_art != null else Color("303136")
+	var highlighted: bool = button_pressed or is_hovered() or has_focus()
+	if locked:
+		edge = Color("37383b")
+	elif highlighted:
+		edge = accent.lightened(0.25) if item_art != null else Tokens.GOLD
+	var fill: Color = Color("17191d") if item_art != null else Color(0.07, 0.075, 0.085, 0.40)
+	if highlighted:
+		fill = fill.lerp(Color("393126"), 0.30)
+	draw_rect(bounds, fill)
+	draw_rect(bounds, edge, false, 1.5 if highlighted else 1.0)
+	if item_art == null or locked:
+		return
+	var source: Rect2i = painted_art_bounds()
+	if source.has_area():
+		var safe = Rect2(origin + Vector2.ONE * (side * 0.09), Vector2.ONE * (side * 0.82))
+		var destination: Rect2 = Normalize.fit_rect(Vector2(source.size), safe)
+		draw_texture_rect_region(item_art, destination, Rect2(source))
+	if quantity > 1:
+		var font: Font = get_theme_default_font()
+		var font_size: int = maxi(10, roundi(side * 0.21))
+		var value: String = str(quantity)
+		var width: float = font.get_string_size(value, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+		var at: Vector2 = origin + Vector2(side - width - 4.0, side - 5.0)
+		draw_string_outline(font, at, value, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 3, Color("101115"))
+		draw_string(font, at, value, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Tokens.IVORY)
 
 func painted_key(hover: bool = false) -> String:
 	if locked:
