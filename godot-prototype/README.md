@@ -42,3 +42,7 @@ G1R: corrected navigation and recorded the proposed UI kit in `docs/ui-kit-plan.
 Open `res://ui/showcase/ui_gallery.tscn` in the Godot editor and press F6. F5 still launches the original game shell. Six interactive categories: Foundations, Buttons, Panels, Navigation, Item Slots and Tooltips. Theme: `ui/theme/stylized_gothic_theme.tres`; original procedural SVG nine-slice textures; system-font fallback pending font selection. No other themes are implemented because Stylized Gothic was selected. No gameplay wiring or migration of existing screens yet. Other UI kit families remain on the G2 backlog. Desktop 1280×720 reference; visual approval and other resolution checks pending.
 
 Gallery smoke: `godot --headless --path godot-prototype --script res://tests/gallery_smoke.gd`. Rendered PNGs are uploaded to CI artifact `godot-g21-gothic-gallery`.
+
+## G2.2A — Painted buttons preview
+
+The gallery now supports the local 16-PNG button art pack at `godot-prototype/ui/assets/buttons/g22a/` (repository-root relative). Extract the supplied installation ZIP into the repository root. Open the gallery with F6, choose Buttons and select G2.2A Painted PNG; click Reload artwork if necessary. The original G2.1 SVG option remains available. A missing/incomplete pack falls back to SVG and explicitly reports that it is missing. Source PNGs are 371×76, resized in memory to 264×54 for initial nine-slice settings. Actual art is not in this commit; CI uses synthetic PNG fixtures to validate wiring, not the appearance of the real assets. No game screen changes.

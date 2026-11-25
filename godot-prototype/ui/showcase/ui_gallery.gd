@@ -1,5 +1,6 @@
 extends Control
 const Tokens = preload("res://ui/theme/tokens.gd")
+const PaintedPack = preload("res://ui/theme/painted_button_pack.gd")
 const ButtonScene = preload("res://ui/components/navigation/gothic_button.tscn")
 const TabScene = preload("res://ui/components/navigation/gothic_tab.tscn")
 const PanelScene = preload("res://ui/components/surfaces/gothic_panel.tscn")
@@ -13,6 +14,10 @@ var body: VBoxContainer
 var title_label: Label
 var scroll: ScrollContainer
 var feedback: Label
+var painted_pack = PaintedPack.new()
+var prefer_painted: bool = true
+var active_pack_label: Label
+var demo_buttons: Dictionary = {}
 
 func _label(value: String, font_size: int = 17, color: Color = Tokens.IVORY) -> Label:
 	var label = Label.new()
@@ -51,7 +56,7 @@ func _ready() -> void:
 		outer.add_theme_constant_override("margin_" + side, 24)
 	var frame = _vbox(outer, 14)
 	frame.add_child(_heading("WANDERER  /  UI WORKSHOP"))
-	frame.add_child(_label("STYLIZED GOTHIC     •     G2.1 / COMPONENT STUDY", 15, Tokens.GOLD))
+	frame.add_child(_label("STYLIZED GOTHIC     •     G2.2A / BUTTON ART STUDY", 15, Tokens.GOLD))
 	frame.add_child(HSeparator.new())
 	var layout = _row(frame)
 	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -78,6 +83,7 @@ func _ready() -> void:
 	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	feedback = _label("Independent design gallery — no game state", 14, Tokens.MUTED)
 	frame.add_child(feedback)
+	painted_pack.load_pack()
 	show_category("Foundations")
 
 func show_category(category: String) -> bool:
@@ -132,16 +138,61 @@ func _button(host: Node, value: String, variant: String, disabled: bool = false)
 	return node
 
 func _buttons() -> void:
-	_note("Interact to inspect hover, pressed and keyboard focus. Disabled is a real native state.")
-	for entry in [["PrimaryButton", "Begin Expedition"], ["Button", "Equip Item"], ["DangerButton", "Abandon"]]:
+	demo_buttons.clear()
+	var toolbar = _row(body)
+	var selector = OptionButton.new()
+	selector.add_item("G2.2A Painted PNG")
+	selector.add_item("G2.1 Original SVG")
+	selector.select(0 if prefer_painted else 1)
+	selector.item_selected.connect(_select_button_pack)
+	toolbar.add_child(selector)
+	var reload = Button.new()
+	reload.text = "Reload artwork"
+	reload.pressed.connect(_reload_painted)
+	toolbar.add_child(reload)
+	active_pack_label = _label("", 15, Tokens.GOLD)
+	toolbar.add_child(active_pack_label)
+	var use_painted = prefer_painted and painted_pack.is_ready()
+	active_pack_label.text = "16 / 16 PNGs loaded" if use_painted else "Original SVG active"
+	if prefer_painted and not use_painted:
+		_note("Painted artwork not installed: " + painted_pack.problem + ". Extract the G2.2A ZIP into the repository root and click Reload artwork.")
+	else:
+		_note("Live buttons show hover, held press and focus. The other columns show fixed state samples.")
+	var header = _row(body)
+	for heading in ["Live / Normal", "Hover sample", "Pressed sample", "Disabled"]:
+		var label = _label(heading, 14, Tokens.MUTED)
+		label.custom_minimum_size.x = 208
+		header.add_child(label)
+	for entry in [["primary", "PrimaryButton", "Begin Expedition"], ["secondary", "Button", "Equip Item"], ["danger", "DangerButton", "Abandon"], ["ghost", "Button", "View Details"]]:
 		var row = _row(body)
-		var live = _button(row, entry[1], entry[0])
-		live.custom_minimum_size.x = 235
-		_button(row, "Disabled", entry[0], true)
-		var toggle = _button(row, "Selected", entry[0])
-		toggle.toggle_mode = true
-		toggle.button_pressed = true
-	_note("Three action hierarchies use a shared button scene and theme variations.")
+		var family: String = entry[0]
+		var buttons: Array[Button] = []
+		for state in ["normal", "hover", "pressed", "disabled"]:
+			var node = _button(row, entry[2], entry[1], state == "disabled")
+			node.custom_minimum_size = Vector2(208, 54)
+			if use_painted:
+				painted_pack.apply_to(node, family)
+			elif family == "ghost":
+				node.modulate = Color(0.72, 0.72, 0.72)
+			if state == "hover" or state == "pressed":
+				var sample_style = node.get_theme_stylebox(state)
+				for override_state in ["normal", "hover", "pressed", "hover_pressed", "disabled"]:
+					node.add_theme_stylebox_override(override_state, sample_style)
+				node.mouse_filter = Control.MOUSE_FILTER_IGNORE
+				node.focus_mode = Control.FOCUS_NONE
+			buttons.append(node)
+		demo_buttons[family] = buttons
+	_note("Nine-slice starting margins: 59 / 16 px in source; 42 / 11 px at logical scale. Focus is provisional. Gameplay is not connected.")
+
+func _select_button_pack(index: int) -> void:
+	prefer_painted = index == 0
+	# Defer because the emitting OptionButton is rebuilt by show_category.
+	call_deferred("show_category", "Buttons")
+
+func _reload_painted() -> void:
+	painted_pack.load_pack()
+	prefer_painted = true
+	call_deferred("show_category", "Buttons")
 
 func _panels() -> void:
 	_note("The same nine-slice frame stretches without deforming its bevels or angular corners.")

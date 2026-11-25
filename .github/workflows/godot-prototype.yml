@@ -80,3 +80,11 @@ jobs:
           name: godot-g21-gothic-gallery
           path: godot-prototype/captures/gallery/*.png
           if-no-files-found: error
+      - name: Painted button integration smoke (synthetic fixtures)
+        shell: bash
+        run: |
+          set -euo pipefail
+          GODOT=/tmp/godot-bin/Godot_v4.4.1-stable_linux.x86_64
+          "$GODOT" --headless --path godot-prototype --script res://tests/painted_buttons_smoke.gd 2>&1 | tee /tmp/godot-painted.log
+          ! grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-painted.log
+          grep -F 'PASS: G2.2A missing-pack fallback, synthetic sixteen-PNG load, native state wiring, SVG comparison' /tmp/godot-painted.log
