@@ -1,0 +1,65 @@
+name: E10 Blood Mechanic Scaling (NO DEPLOY)
+on:
+  push:
+    branches: [audit/e10-blood-mechanic-scaling]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node --test tests/v013-stage647d6-blood-fury.test.cjs tests/v013-balance-criteria.test.cjs
+      - run: node scripts/v013-e10-blood-mechanic-scaling.cjs smoke
+  cohort:
+    needs: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    strategy:
+      fail-fast: false
+      max-parallel: 16
+      matrix:
+        build: [blood-daggers, blood-sword, blood-twohand, blood-bow, blood-mace, blood-sword-reserve, blood-daggers-crit, blood-twohand-transfer]
+        group: [0, 1, 2, 3]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node scripts/v013-e10-blood-mechanic-scaling.cjs run "${{ matrix.build }}" "${{ matrix.group }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: blood-scaling-${{ matrix.build }}-${{ matrix.group }}
+          path: reports/e10-blood-mechanic-scaling/*.json
+          if-no-files-found: error
+  summary:
+    needs: cohort
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: blood-scaling-*
+          path: reports/e10-blood-mechanic-scaling
+          merge-multiple: true
+      - run: node --max-old-space-size=6144 scripts/v013-e10-blood-mechanic-scaling.cjs aggregate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: blood-mechanic-scaling-summary
+          path: reports/e10-blood-mechanic-scaling/summary.json
+          if-no-files-found: error
