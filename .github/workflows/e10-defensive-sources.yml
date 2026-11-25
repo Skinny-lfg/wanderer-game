@@ -1,0 +1,91 @@
+name: E10 Defensive Source Audit
+on:
+  workflow_dispatch:
+  push:
+    branches: [audit/e10-defensive-sources]
+    paths:
+      - 'scripts/v013-e10-defensive-sources.cjs'
+      - '.github/workflows/e10-defensive-sources.yml'
+permissions:
+  contents: read
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node --test tests/v0120-evasion.test.cjs
+      - run: node scripts/v013-e10-defensive-sources.cjs smoke
+  cohort:
+    needs: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - build: vitality-sword
+            armor: Plate
+          - build: vitality-mace
+            armor: Plate
+          - build: vitality-mace
+            armor: Leather
+          - build: vitality-wand
+            armor: Cloth
+          - build: aegis-sword
+            armor: Plate
+          - build: aegis-mace
+            armor: Plate
+          - build: aegis-mace
+            armor: Leather
+          - build: aegis-orb
+            armor: Cloth
+          - build: hybrid-vitality-aegis
+            armor: Plate
+          - build: hybrid-aegis-magic
+            armor: Cloth
+          - build: hybrid-fury-vitality
+            armor: Plate
+          - build: blood-daggers
+            armor: Leather
+          - build: magic-fire-wand
+            armor: Cloth
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node scripts/v013-e10-defensive-sources.cjs run "${{ matrix.build }}" "${{ matrix.armor }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: defensive-source-${{ matrix.build }}-${{ matrix.armor }}
+          path: reports/e10-defensive-sources/*.json
+          if-no-files-found: error
+  summary:
+    needs: cohort
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: defensive-source-*
+          path: reports/e10-defensive-sources
+          merge-multiple: true
+      - run: node scripts/v013-e10-defensive-sources.cjs aggregate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: e10-defensive-source-summary
+          path: reports/e10-defensive-sources/summary.json
+          if-no-files-found: error
