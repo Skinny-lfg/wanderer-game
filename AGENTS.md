@@ -1,6 +1,6 @@
 ## Current balance reference — E10 (2026-11-25)
 
-- User-approved tolerance: 7.5 percentage points beyond each endpoint of the existing ideal ranges. Normal 80–90% ideal / 72.5–97.5% acceptable; Elite 60–70% / 52.5–77.5%; Boss 35–45% / 27.5–52.5%.
+- User-approved central win-rate targets: Normal 85%, Elite 70%, Boss 50%. Acceptable tolerance is **±12.5 percentage points from each central target**: Normal 72.5–97.5%, Elite 57.5–82.5%, Boss 37.5–62.5%, inclusive. The existing narrower ideal-band convention remains ±5 pp around the new centers (80–90%, 65–75%, 45–55%). Never add 12.5 pp to the ideal-band endpoints.
 - Use `scripts/v013-balance-criteria.cjs` in future simulation summaries, rather than hardcoded thresholds. These are directional aggregate natural-progression references, not hard per-build quotas; optimized and specialist builds may differ. No automatic changes to gameplay or enemy stats. E10 is the current controlled calibration reference. Historical reports retain their original provenance.
 
 ---

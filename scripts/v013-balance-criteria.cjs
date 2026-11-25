@@ -1,10 +1,10 @@
 'use strict';
 // User-approved reference bands for aggregate player win rates, in percentage points.
 // Diagnostic guidance, not a hard per-build quota or an automatic gameplay change.
-const TOLERANCE_PP=7.5;
-const TARGETS=Object.freeze(Object.fromEntries(Object.entries({
- normal:[80,90],elite:[60,70],boss:[35,45]
-}).map(([kind,[min,max]])=>[kind,Object.freeze({idealMin:min,idealMax:max,acceptableMin:Math.max(0,min-TOLERANCE_PP),acceptableMax:Math.min(100,max+TOLERANCE_PP)})])));
+// Tolerance is measured from the central target, NOT from the edges of the ideal band.
+const TOLERANCE_PP=12.5,IDEAL_HALF_WIDTH_PP=5;
+const CENTERS=Object.freeze({normal:85,elite:70,boss:50});
+const TARGETS=Object.freeze(Object.fromEntries(Object.entries(CENTERS).map(([kind,target])=>[kind,Object.freeze({target,idealMin:Math.max(0,target-IDEAL_HALF_WIDTH_PP),idealMax:Math.min(100,target+IDEAL_HALF_WIDTH_PP),acceptableMin:Math.max(0,target-TOLERANCE_PP),acceptableMax:Math.min(100,target+TOLERANCE_PP)})])));
 function kindOf(value){
  if(typeof value!=='string')return null;
  for(const kind of Object.keys(TARGETS))if(value===kind||value.startsWith(kind+'-'))return kind;
@@ -22,4 +22,4 @@ function summarize(rows,winPct){
  const kinds=new Set(rows.map(r=>kindOf(r.sc)||kindOf(r.kind)||kindOf(r.roomType)));
  return classify(kinds.size===1?[...kinds][0]:null,winPct,rows.length);
 }
-module.exports={TOLERANCE_PP,TARGETS,kindOf,classify,summarize};
+module.exports={TOLERANCE_PP,IDEAL_HALF_WIDTH_PP,CENTERS,TARGETS,kindOf,classify,summarize};
