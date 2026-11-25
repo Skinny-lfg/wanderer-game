@@ -79,7 +79,7 @@ test('C8 actual Boss loot enters overflow when Stash is full and cannot be claim
 });
 test('C8 native Boss victory awards exactly one persistent-tier Rune without auto-equip',()=>{
  const {a,g}=bossVictory(90803),s=a.state();
- assert.equal(s.pendingRuneReward,null);assert.equal(s.runes.length,1);
+ assert(!Object.hasOwn(s,'pendingRuneReward'));assert.equal(s.runes.length,1);
  const rune=s.runes[0];assert.equal(rune.tier,35);assert(a.validRune(rune));
  assert(s.runeSlots.every(id=>id===null));assert.equal(g.unlocked,36);
  assert.equal(a.results().summary.runeTier,35);assert(a.results().summary.runeName.includes(rune.name));
@@ -91,7 +91,7 @@ test('C8 each of the six native Boss affinities yields one direct Anchor Rune',(
   assert(victory,'No native Realm card for '+family);
   const {a,card}=victory,s=a.state();assert.equal(card.family,family);
   assert.equal(s.runes.length,1,family);assert.equal(s.runes[0].tier,35);
-  assert(a.validRune(s.runes[0]));assert.equal(s.pendingRuneReward,null);
+  assert(a.validRune(s.runes[0]));assert(!Object.hasOwn(s,'pendingRuneReward'));
   assert(s.runeSlots.every(id=>id===null));
  }
 });

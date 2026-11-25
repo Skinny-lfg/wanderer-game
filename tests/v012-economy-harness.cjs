@@ -7,7 +7,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
  const boot='phase1Init();\nconst phase3RestoredScroll=phase3RestoreUILocation(phase3SavedUILocation);\nrender();';
  if(!source.includes(boot))throw Error('Integrated bootstrap not found');
  let next=seed>>>0;const math=Object.create(Math);math.random=()=>{next=(Math.imul(next,1664525)+1013904223)>>>0;return next/4294967296;};
- const callbacks=[],nodes=new Map(),isolatedSessionStorage=options.sessionStorage??new Map(),fixtureRoot=options.root||root;
+ const callbacks=[],nodes=new Map(),isolatedSessionStorage=options.sessionStorage??new Map(),isolatedLocalStorage=options.validationStorage??options.localStorage??new Map(),fixtureRoot=options.root||root;
  const node=()=>({innerHTML:'',textContent:'',style:{},dataset:{},classList:{add(){},remove(){}},focus(){},querySelectorAll:()=>[],before(){},close(){}});
  const getNode=id=>{if(!nodes.has(id))nodes.set(id,node());return nodes.get(id);};
  const queryAll=selector=>{
@@ -18,10 +18,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
  };
  const sandbox={Math:math,...(options.now===undefined?{}:{Date:class extends Date{static now(){return options.now;}}}),URL,URLSearchParams,location:{href:'http://localhost/?expeditionPhase1=1',search:'?expeditionPhase1=1'},history:{replaceState(){}},console,
   document:{body:node(),visibilityState:'visible',getElementById:getNode,querySelector:()=>null,querySelectorAll:queryAll,createElement:node,addEventListener(){}},
-  localStorage:options.validationStorage?{getItem:key=>options.validationStorage.get(String(key))??null,setItem:(key,value)=>options.validationStorage.set(String(key),String(value)),removeItem:key=>options.validationStorage.delete(String(key))}:{getItem(){throw Error('Unexpected real save read');},setItem(){throw Error('Unexpected real save write');}},
-  // The local preview deliberately persists only to sessionStorage. Keep that
-  // slot isolated per harness; omitting it makes preview startup fail closed
-  // and blocks otherwise valid economy actions in unit fixtures.
+  localStorage:{getItem:key=>isolatedLocalStorage.get(String(key))??null,setItem:(key,value)=>isolatedLocalStorage.set(String(key),String(value)),removeItem:key=>isolatedLocalStorage.delete(String(key))},
   sessionStorage:{getItem(key){return isolatedSessionStorage.has(String(key))?isolatedSessionStorage.get(String(key)):null;},setItem(key,value){isolatedSessionStorage.set(String(key),String(value));},removeItem(key){isolatedSessionStorage.delete(String(key));}},
   setTimeout:fn=>{callbacks.push(fn);return callbacks.length;},clearTimeout(){},setInterval:()=>0,clearInterval(){}};
  sandbox.window=sandbox;sandbox.addEventListener=()=>{};
@@ -29,7 +26,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
  const inject=String.raw`
  const auditForge=renderForge,auditMerchant=renderMerchant,auditCombat=renderCombat;
  let auditConfirmation=null,auditFeedback=null;
- showConfirm=(title,body,fn)=>{auditConfirmation=fn;};showModal=()=>document.createElement('dialog');showPendingRuneReward=()=>{};
+ showConfirm=(title,body,fn)=>{auditConfirmation=fn;};showModal=()=>document.createElement('dialog');
  render=renderCombat=renderPhase1=renderForge=renderMerchant=wallet=bannerMessage=animateStrike=animateDefense=animateEnemyStrike=updateBars=resetDungeonEntryScroll=()=>{};
  addLog=(text,type)=>{if(auditFeedback)auditFeedback.logs.push({text,type});};floatText=(value,target,critical,source)=>{if(auditFeedback)auditFeedback.floats.push({value,target,...(source?{source}:{})});};
  const measured={healed:0,barrier:0,absorbed:0,dot:0,burst:0,crit:0,attacks:0,blocks:0,incoming:0};
@@ -98,7 +95,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
    renderForge:()=>auditForge(),renderMerchant:()=>auditMerchant(),
    screen:()=>document.getElementById('screen').innerHTML},slots:SLOTS,types:TYPES,offhandTypes:OFFHAND_TYPES,
   equip:equipItem,unequip:unequipItem,sale:saleFragments,craftCost,merchantCost,
-  rollShop,refresh:refreshMerchantStock,economyCanAct,offerBossRunes,claimRune:claimPendingRuneChoice,
+  rollShop,refresh:refreshMerchantStock,economyCanAct,offerBossRunes,
   // Simulator-only adapter for the exact v0.13 Forge rule and settlement used
   // by renderV013Forge. Does not grant items or bypass costs/recipe unlocks.
   storage:{occupied:()=>stashItemCount(),capacity:()=>stashCapacity(),hasRoom:()=>stashHasRoom()},
@@ -113,7 +110,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
    craft:craftRecipe
   },
   runes:{unequip:unequipRune,salvage:salvageRune,recycle:salvageDuplicateRunes,equip:equipRune,confirm(){const fn=auditConfirmation;auditConfirmation=null;fn?.();}},
-  runeValue,makeRune,validRune,safeRunes,safePendingRune,rarityOdds,
+  runeValue,makeRune,validRune,safeRunes,rarityOdds,
   renderForge,renderMerchant,
   vitals:phase3Vitals,setVitals:v=>{phase1Vitals=v;},setView:v=>{view=v;},
   claimOverflow:()=>typeof phase4ClaimOverflow==='function'?phase4ClaimOverflow():0,

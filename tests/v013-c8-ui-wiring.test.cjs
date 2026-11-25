@@ -18,14 +18,14 @@ test('C8 inventory classifies every data attribute in the live UI as linked or p
  for(const id of metadata)assert(attrs.includes(id),'Presentation marker deleted; review C8 inventory: '+id);
  assert(attrs.includes('online-action'));
 });
-test('C8 source has the current active navigation, loot, rune, vendor, map and boss-choice entrypoints',()=>{
+test('C8 source has the current active navigation, loot, rune, vendor, map and direct-rune entrypoints',()=>{
  const source=index();
  for(const id of [
   'between-tab','buy','city-tab','compare','dungeon-room','event-select',
   'inventory-jump','map-zoom','merchant-category','phase1-expedition',
   'phase3-equip','phase3-expedition-step','phase3-loot','phase3-nav',
   'potion-buy','potion-inspect','potion-load','potion-use','realm-card',
-  'rune-choice','rune-equip','rune-remove','rune-sell','rune-slot-choice',
+  'rune-equip','rune-remove','rune-sell','rune-slot-choice',
   'scout','stage6-boon','stage7-contract','stage74-potion'
  ]){assert(source.includes('data-'+id+'='),'Action disappeared from markup: '+id);
      assert(source.includes('[data-'+id),'No query/binding for action: '+id);}
@@ -49,3 +49,5 @@ test('C8 gear-driven character portraits replace the retired manual skin selecto
  assert(!source.includes('data-phase1-hero='));
  assert(!source.includes('phase3CharacterPickerHitbox'));
 });
+
+test('C8 retired choice dialog is absent',()=>{const source=index();assert(!source.includes('data-rune-choice'));assert(!source.includes('showPendingRuneReward'));});

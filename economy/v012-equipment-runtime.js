@@ -57,7 +57,7 @@ function stashHasRoom(){return stashItemCount()<ports.stashCapacity()}
 
 function upgradeStash(){if(ports.state.run||ports.stashCapacity()>=ports.STASH_MAX_CAPACITY||ports.state.gold<ports.stashUpgradeCost())return;const cost=ports.stashUpgradeCost();ports.state.gold-=cost;ports.state.stashCapacity=Math.min(ports.STASH_MAX_CAPACITY,ports.stashCapacity()+ports.STASH_UPGRADE_STEP);ports.save();ports.renderStash();ports.bannerMessage('Stash expanded by '+ports.STASH_UPGRADE_STEP+' slots for '+cost+' Gold.');}
 
-function fresh(){ports.state={attemptCompleted:false,characterId:'wanderer',onlineProgress:{attemptId:ports.makeId(),deepestCleared:0,activeMs:0,timerMetric:'combat-v1',timingEligible:true,milestones:{}},stashCapacity:ports.STASH_BASE_CAPACITY,confirmNormalDungeons:true,maxDungeon:1,chosen:1,selectedPath:null,legendaryHuntId:null,protectedItemIds:[],runes:[],runeSlots:[null,null,null],pendingRuneReward:null,fragments:0,gold:0,stash:[ports.starter()],equip:ports.makeSlots(),valuables:[],offersByLevel:{},merchant:null,sigils:[],run:null};}
+function fresh(){ports.state={attemptCompleted:false,characterId:'wanderer',onlineProgress:{attemptId:ports.makeId(),deepestCleared:0,activeMs:0,timerMetric:'combat-v1',timingEligible:true,milestones:{}},stashCapacity:ports.STASH_BASE_CAPACITY,confirmNormalDungeons:true,maxDungeon:1,chosen:1,selectedPath:null,legendaryHuntId:null,protectedItemIds:[],runes:[],runeSlots:[null,null,null],fragments:0,gold:0,stash:[ports.starter()],equip:ports.makeSlots(),valuables:[],offersByLevel:{},merchant:null,sigils:[],run:null};}
 
 function makeSlots(){return Object.fromEntries(ports.SLOTS.map(s=>[s,null]))}
 
@@ -360,11 +360,11 @@ function unequipRune(index){
 function salvageRune(id){
  if(ports.runeCheckpointLocked())return false;
  if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked))return false;
- if(ports.state.run||ports.state.pendingRuneReward&&!ports.PHASE1_PREVIEW||ports.state.runeSlots.includes(id))return false;
+ if(ports.state.run||ports.state.runeSlots.includes(id))return false;
  const rune=ports.state.runes.find(r=>r.id===id),value=rune&&ports.runeSalvageValue(rune);
  if(!value)return false;
  ports.showConfirm('Recycle Rune','Recycle '+rune.name+' (D'+rune.tier+') for '+value+' Fragments? This cannot be undone.',()=>{
-  if(ports.runeCheckpointLocked()||ports.state.run||ports.state.pendingRuneReward&&!ports.PHASE1_PREVIEW||ports.state.runeSlots.includes(id))return;
+  if(ports.runeCheckpointLocked()||ports.state.run||ports.state.runeSlots.includes(id))return;
   const index=ports.state.runes.findIndex(r=>r.id===id);if(index<0)return;
   const current=ports.state.runes[index],reward=ports.runeSalvageValue(current);if(!reward)return;
   ports.state.runes.splice(index,1);ports.state.fragments+=reward;
@@ -376,11 +376,11 @@ function salvageRune(id){
 function salvageDuplicateRunes(){
  if(ports.runeCheckpointLocked())return false;
  if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked))return false;
- if(ports.state.run||ports.state.pendingRuneReward&&!ports.PHASE1_PREVIEW)return false;
+ if(ports.state.run)return false;
  const candidates=ports.duplicateRuneCandidates();if(!candidates.length)return false;
  const ids=new Set(candidates.map(r=>r.id)),amount=candidates.reduce((sum,r)=>sum+ports.runeSalvageValue(r),0);
  ports.showConfirm('Recycle Spare Runes','Recycle '+candidates.length+' spare rune(s) for '+amount+' Fragments? The strongest rune in each family and equipped runes remain safe.',()=>{
-  if(ports.runeCheckpointLocked()||ports.state.run||ports.state.pendingRuneReward&&!ports.PHASE1_PREVIEW)return;
+  if(ports.runeCheckpointLocked()||ports.state.run)return;
   const safe=new Set(ports.duplicateRuneCandidates().map(r=>r.id));
   const toRecycle=ports.state.runes.filter(r=>ids.has(r.id)&&safe.has(r.id));
   if(!toRecycle.length)return;
@@ -412,12 +412,6 @@ function offerBossRunes(tier,affinity){
  const api=root.WandererV012Runes;if(ports.state.runes.length>=api.CAPACITY)throw Error('Anchor Rune capacity reached');
  const rune=api.rollBoss(tier,affinity,ports.gameRandom,ports.makeId);rune.isNew=true;ports.state.runes.push(rune);return rune;
 }
-// Only used to settle an already pending legacy reward; new Bosses never offer choices.
-function claimPendingRuneChoice(id){
- const picked=ports.state.pendingRuneReward?.options.find(r=>r.id===id);if(!picked||ports.state.runes.length>=root.WandererV012Runes.CAPACITY)return false;
- const rune=root.WandererV012Runes.makeRune(picked.family,picked.tier,()=>picked.id,true,root.WandererV012Runes.rarity(picked));rune.isNew=true;ports.state.runes.push(rune);ports.state.pendingRuneReward=null;ports.save();ports.render();return true;
-}
-
 function runeCheckpointLocked(){return ports.PHASE1_PREVIEW&&(ports.phase4Resume||ports.phase1Controller?.state.version===2&&ports.phase3ExpeditionActive());}
 
 function phase3ClampVitals(){
@@ -432,7 +426,7 @@ function phase3ClampVitals(){
  }
 }
 function toggleEquipmentLock(item){item.locked=!item.locked;ports.save();}
-return {toggleEquipmentLock,chooseSubtype,economyTier,merchantTier,baseStatScore,offhandLocked,purchaseEquipment,sellValuables,markItemSeen,markAllAsSeen,comparisonEquip,stashItemCount,stashCapacity,stashUpgradeCost,stashHasRoom,upgradeStash,fresh,makeSlots,starter,legendaryMatches,legendaryFor,legendarySignature,makeItem,rarityOdds,rarityRoll,rollEquipmentSlot,merchantCost,saleFragments,rollShop,ensureMerchantStock,economyOwnedGear,economyOwnedItem,economyCanAct,refreshMerchantStock,equipItem,unequipItem,bulkSell,salvageOne,phase3BagItems,phase3BagOverflow,phase3NeedsBagResolution,phase3DiscardLoot,phase4ClaimOverflow,phase6PotionInventory,phase6SelectPotion,phase6StartPotions,phase6ReturnPotions,phase6UsePotion,phase6BuyPotion,phase6RerollPotions,unequipRune,salvageRune,salvageDuplicateRunes,equipRune,offerBossRunes,claimPendingRuneChoice,runeCheckpointLocked,phase3ClampVitals};
+return {toggleEquipmentLock,chooseSubtype,economyTier,merchantTier,baseStatScore,offhandLocked,purchaseEquipment,sellValuables,markItemSeen,markAllAsSeen,comparisonEquip,stashItemCount,stashCapacity,stashUpgradeCost,stashHasRoom,upgradeStash,fresh,makeSlots,starter,legendaryMatches,legendaryFor,legendarySignature,makeItem,rarityOdds,rarityRoll,rollEquipmentSlot,merchantCost,saleFragments,rollShop,ensureMerchantStock,economyOwnedGear,economyOwnedItem,economyCanAct,refreshMerchantStock,equipItem,unequipItem,bulkSell,salvageOne,phase3BagItems,phase3BagOverflow,phase3NeedsBagResolution,phase3DiscardLoot,phase4ClaimOverflow,phase6PotionInventory,phase6SelectPotion,phase6StartPotions,phase6ReturnPotions,phase6UsePotion,phase6BuyPotion,phase6RerollPotions,unequipRune,salvageRune,salvageDuplicateRunes,equipRune,offerBossRunes,runeCheckpointLocked,phase3ClampVitals};
 }
 root.WandererV012EquipmentRuntime=Object.freeze({create});
 })(globalThis);

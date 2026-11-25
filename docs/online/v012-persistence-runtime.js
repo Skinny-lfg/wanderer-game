@@ -1,6 +1,8 @@
 // v0.12 persistence runtime. Canonical state transitions; UI effects are injected.
 (function(root){'use strict';
 function create(ports){
+const PREVIEW_SAVE_KEY='wanderer_v013_c2_clean_sheet_local_preview';
+let previewObserved=null;
 function gameRandom(){
  if(!ports.PHASE1_PREVIEW||ports.phase4Seed===null)return Math.random();
  ports.phase4Seed=(Math.imul(ports.phase4Seed,1664525)+1013904223)>>>0;return ports.phase4Seed/4294967296;
@@ -122,7 +124,9 @@ function phase5Persist(){
   if(!ports.PHASE1_PREVIEW||!ports.phase5Ready||!ports.phase5Snapshot)return true;
   try{
    const pending=WandererV012Save.validate(phase5Capture(),ports.phase5Snapshot.binding);
-   globalThis.sessionStorage.setItem('wanderer_v013_c2_clean_sheet_local_preview',JSON.stringify(pending));
+   const storage=globalThis.localStorage;
+   if(storage.getItem(PREVIEW_SAVE_KEY)!==previewObserved)throw Error('Local playtest save changed in another tab');
+   const raw=JSON.stringify(pending);storage.setItem(PREVIEW_SAVE_KEY,raw);previewObserved=raw;
    ports.phase5Snapshot=pending;return true;
   }catch(error){ports.phase5Fail(error);return false;}
  }
@@ -136,11 +140,13 @@ function phase5Init(){
   if(!ports.PHASE1_PREVIEW||globalThis.__WANDERER_CLOUD_ONLY__)return;
   try{
    if(!globalThis.WandererV012Save)throw Error('Local playtest save module is unavailable');
-   const binding='local-playtest',raw=globalThis.sessionStorage.getItem('wanderer_v013_c2_clean_sheet_local_preview');
+   const binding='local-playtest';
+   previewObserved=globalThis.localStorage.getItem(PREVIEW_SAVE_KEY);
+   const raw=previewObserved??globalThis.sessionStorage.getItem(PREVIEW_SAVE_KEY);
    if(raw){
     const recovered=WandererV012Save.recover(raw,binding);ports.phase5Snapshot=recovered.save;
     ports.state=JSON.parse(JSON.stringify(recovered.save.profile));ports.uid=Math.max(ports.uid,recovered.save.idCounter);
-    for(const item of [...ports.state.stash,...Object.values(ports.state.equip).filter(Boolean),...ports.state.expeditionOverflow,...ports.state.runes,...ports.state.sigils,...(ports.state.merchant?.stock||[]),...(ports.state.pendingRuneReward?.options||[])]){
+    for(const item of [...ports.state.stash,...Object.values(ports.state.equip).filter(Boolean),...ports.state.expeditionOverflow,...ports.state.runes,...ports.state.sigils,...(ports.state.merchant?.stock||[])]){
      const match=String(item.id).match(/^[a-z0-9]+-([a-z0-9]+)$/),number=match?parseInt(match[1],36):0;
      if(Number.isSafeInteger(number))ports.uid=Math.max(ports.uid,number);
     }
@@ -149,7 +155,9 @@ function phase5Init(){
     if(recovered.save.expedition.presentation)ports.phase5Results=ports.phase4Clone(recovered.save.expedition.presentation);
     if(recovered.save.expedition.session)ports.phase4Restore(recovered.save.expedition.session);
    }else ports.phase5Snapshot=WandererV012Save.create({...ports.state,run:null},{binding});
-   ports.phase5Ready=true;ports.saveBlocked=false;phase5Persist();
+   ports.phase5Ready=true;ports.saveBlocked=false;
+   if(phase5Persist())globalThis.sessionStorage.removeItem(PREVIEW_SAVE_KEY);
+   globalThis.addEventListener('storage',event=>{if(event.key===PREVIEW_SAVE_KEY&&ports.phase5Ready&&event.newValue!==previewObserved)ports.phase5Fail(Error('Local playtest save changed in another tab'));});
   }catch(error){ports.phase5Fail(error);}
   return;
  }
@@ -167,7 +175,7 @@ function phase5Init(){
      const recovered=WandererV012Save.recover(stored,binding);ports.phase5Snapshot=recovered.save;
      ports.state=JSON.parse(JSON.stringify(recovered.save.profile));ports.uid=Math.max(ports.uid,recovered.save.idCounter);
      // Also avoid collisions with IDs from an older classic session imported as a copy.
-     for(const item of [...ports.state.stash,...Object.values(ports.state.equip).filter(Boolean),...ports.state.expeditionOverflow,...ports.state.runes,...ports.state.sigils,...(ports.state.merchant?.stock||[]),...(ports.state.pendingRuneReward?.options||[])]){
+     for(const item of [...ports.state.stash,...Object.values(ports.state.equip).filter(Boolean),...ports.state.expeditionOverflow,...ports.state.runes,...ports.state.sigils,...(ports.state.merchant?.stock||[])]){
       const match=String(item.id).match(/^[a-z0-9]+-([a-z0-9]+)$/);const number=match?parseInt(match[1],36):0;
       if(Number.isSafeInteger(number))ports.uid=Math.max(ports.uid,number);
      }

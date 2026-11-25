@@ -77,12 +77,10 @@ function profileCheck(p){
  const runeIds=new Set();
  function runeCheck(r){requireValue(plain(r)&&typeof r.id==='string'&&!ids.has(r.id)&&!runeIds.has(r.id)&&integer(r.tier,1,Number.MAX_SAFE_INTEGER)&&(r.progression==='expedition'||r.tier>=10&&r.tier%10===0)&&RUNES.includes(r.family)&&(r.rarity===undefined||RUNE_RARITIES.includes(r.rarity))&&(r.anchorVersion===undefined||r.anchorVersion===1),'Rune identity');runeIds.add(r.id);}
  p.runes.forEach(runeCheck);
+ // Prior direct-drop saves carried a null field; strip only that obsolete marker.
+ requireValue(p.pendingRuneReward==null,'retired Rune reward');delete p.pendingRuneReward;
  const equippedFamilies=new Set(),equippedIds=new Set();
  for(const id of p.runeSlots){if(id===null)continue;const rune=p.runes.find(r=>r.id===id);requireValue(rune&&!equippedIds.has(id)&&!equippedFamilies.has(rune.family),'Rune slot ownership');equippedIds.add(id);equippedFamilies.add(rune.family);}
- if(p.pendingRuneReward){
-  const reward=p.pendingRuneReward;requireValue(integer(reward.tier,1,Number.MAX_SAFE_INTEGER)&&Array.isArray(reward.options)&&reward.options.length===3,'Rune reward');
-  reward.options.forEach(runeCheck);requireValue(reward.options.every(r=>r.tier===reward.tier)&&new Set(reward.options.map(r=>r.family)).size===3,'Rune offer');
- }
  requireValue(Array.isArray(p.sigils)&&p.sigils.length<=100,'Sigils');const sigilIds=new Set();
  for(const sigil of p.sigils){requireValue(plain(sigil)&&typeof sigil.id==='string'&&sigil.id.length>0&&!ids.has(sigil.id)&&!runeIds.has(sigil.id)&&!sigilIds.has(sigil.id)&&EFFECTS.includes(sigil.affinity),'Sigil');sigilIds.add(sigil.id);}
  requireValue(['wanderer','ranger','knight','spellblade','duelist'].includes(p.characterId),'character');
@@ -209,7 +207,7 @@ function createStore(storage,binding='local'){
     requireValue(integer(next.session.controller.rerolls,0,old.session.controller.rerolls),'reroll rollback');
 
    }
-   if(next.lastOutcome==='extracted'&&old.lastOutcome!=='extracted')requireValue(old.active?.stage==='choice'&&old.active.plane>1&&old.session&&!old.session.entry&&!old.session.controller.rewardPending&&next.completed===old.completed&&JSON.stringify(s.profile.pendingRuneReward)===JSON.stringify(previous.profile.pendingRuneReward)&&JSON.stringify(s.profile.runes)===JSON.stringify(previous.profile.runes),'invalid extraction');
+   if(next.lastOutcome==='extracted'&&old.lastOutcome!=='extracted')requireValue(old.active?.stage==='choice'&&old.active.plane>1&&old.session&&!old.session.entry&&!old.session.controller.rewardPending&&next.completed===old.completed&&JSON.stringify(s.profile.runes)===JSON.stringify(previous.profile.runes),'invalid extraction');
    if(next.completed>old.completed)requireValue(old.active?.plane===15&&old.active.wave===1&&old.active.level===next.completed&&next.lastOutcome==='victory'&&next.awardKeys.includes(next.attempts+':15:1'),'boss checkpoint required');
   }
   if(observed!==null)storage.setItem(backup,observed);

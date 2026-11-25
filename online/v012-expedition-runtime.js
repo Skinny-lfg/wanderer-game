@@ -20,7 +20,6 @@ function phase1Begin(level=1){
  if(!ports.PHASE1_PREVIEW)return;
  if(ports.phase3NeedsBagResolution()){ports.bannerMessage('Discard overflow loot before starting another Expedition.');return false;}
  ports.phase4ClaimOverflow();
- if(ports.state.pendingRuneReward){ports.showPendingRuneReward();return;}
  if(ports.state.runes.length>=root.WandererV012Runes.CAPACITY){ports.bannerMessage('Recycle an Anchor Rune at the Shrine before starting.');return false;}
  if(ports.state.expeditionOverflow.length||!ports.stashHasRoom()){ports.bannerMessage('Claim secured loot and free Stash space before starting another Expedition.');return;}
  if(!['camp','finished','failed'].includes(ports.phase1Controller.state.stage)||!Number.isInteger(level)||level<1||level>ports.phase1Controller.state.unlocked)return false;

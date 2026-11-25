@@ -411,14 +411,12 @@ function runeScore(rune,profile){
  const magnitude=RUNES.runeValue(f.id,rune.tier,RUNES.rarity(rune))/f.base;
  return round((weights[f.id]||0)*magnitude,3);
 }
-function chooseRuneReward(options,profile){
- return (options||[]).filter(x=>x?.id).sort((x,y)=>
-  runeScore(y,profile)-runeScore(x,profile)||y.tier-x.tier)[0]||null;
-}
 function manageEarnedRunes(a,profile){
  const s=a.state(),actions=[];
  if(!a.economyCanAct())return actions;
- const available=[...s.runes].filter(r=>r?.id&&runeScore(r,profile)>0).sort((x,y)=>
+ const base=a.baseStats(s.equip,[],[]);
+ const eligible=r=>{const family=RUNES.FAMILIES.find(x=>x.id===r.family);if(!family)return false;const key={atkFlat:'attack',defFlat:'defense',hpFlat:'maxhp'}[family.field]||family.field;const projected=a.baseStats(s.equip,[r],[r.id]);return Number(projected[key])>Number(base[key]);};
+ const available=[...s.runes].filter(r=>r?.id&&runeScore(r,profile)>0&&eligible(r)).sort((x,y)=>
   runeScore(y,profile)-runeScore(x,profile)||y.tier-x.tier);
  const used=new Set(),desired=[];
  for(const rune of available){
@@ -576,11 +574,6 @@ function consolidateStash(a,profile,reserve=4){
 function prepareCamp(a,profile,level,decisionModel='risk-aware',options={}){
  const actions={talents:[],attributes:[],resets:[],elementChoices:[],prepared:null,equipped:[],bought:[],crafted:[],refined:[],potions:[],runes:[],storage:[],soldTreasures:false,restocks:0,salvagedGrey:0,salvageFragments:0};
  const s=a.state();a.potions.inventory();refreshSynergyContext(a,profile);
- if(s.pendingRuneReward?.options?.length){
-  const options=s.pendingRuneReward.options;
-  const choice=chooseRuneReward(options,profile);
-  if(a.claimRune(choice.id))actions.runes.push(choice.name||choice.id);
- }
  for(let i=0;i<3&&a.results().review;i++)a.exitResult();
  actions.soldTreasures=!!(s.valuables?.length&&a.treasures.sell());
  if(decisionModel!=='legacy')actions.storage.push(consolidateStash(a,profile));
@@ -1132,11 +1125,6 @@ function clearResults(a,profile){
   if(!a.exitResult())break;
  }
  if(c.state.stage==='finished'||c.state.stage==='failed'){
-  if(a.state().pendingRuneReward?.options?.length){
-   const opts=a.state().pendingRuneReward.options;
-   const option=chooseRuneReward(opts,profile||PROFILES.cautious);
-   a.claimRune(option.id);
-  }
   for(let i=0;i<3&&a.results().review;i++)a.exitResult();
  }
 }
@@ -1149,7 +1137,7 @@ function playDungeon(a,level,profile,opts,decisionModel='risk-aware',captureMode
   nativeOccupied:a.storage?.occupied?.(),nativeCapacity:a.storage?.capacity?.(),
   nativeHasRoom:a.storage?.hasRoom?.(),
   stashCapacity:a.state().stashCapacity,overflow:a.state().expeditionOverflow?.length,
-  pendingRune:!!a.state().pendingRuneReward,review:!!a.results().review}));
+  review:!!a.results().review}));
  if(!g.dungeon?.cards?.length)throw Error('Natural Realm Cards were not generated');
  const cap=flags.realm?capabilities(a):null;
  // Rendered 3-card information only: one publicly known omen, condition,
@@ -1552,7 +1540,7 @@ function main(args=process.argv.slice(2)){
  if(report.coverage.errors)process.exitCode=1;
  return report;
 }
-module.exports={PROFILES,PIVOTS,pivotProfile,DEFAULTS,parseArgs,synergyGearBonus,spendEarnedAttributes,gearScore,identityMatch,identityGain,identityPurchase,gearSnapshot,runeScore,chooseRuneReward,manageEarnedRunes,potionScore,selectEarnedPotions,buyEarnedPotions,refineEarnedReagents,selectThornAwareTarget,spendEarnedTalents,prepareEarnedAbility,equipEarned,
+module.exports={PROFILES,PIVOTS,pivotProfile,DEFAULTS,parseArgs,synergyGearBonus,spendEarnedAttributes,gearScore,identityMatch,identityGain,identityPurchase,gearSnapshot,runeScore,manageEarnedRunes,potionScore,selectEarnedPotions,buyEarnedPotions,refineEarnedReagents,selectThornAwareTarget,spendEarnedTalents,prepareEarnedAbility,equipEarned,
  prepareCamp,craftEarned,investEarnedGear,consolidateStash,policyFlags,capabilities,rankRealms,choiceRealm,pathLength,eliteOpportunity,selectRoom,evaluateRetreat,boonScore,chooseBoon,contractScore,chooseContract,contractExitDecision,eventOptions,potionSlots,usePotionKind,usePotionsBetween,rerollPoorBoonAtShrine,
  fightNatural,resolveEvent,clearResults,playDungeon,simulateAccount,analyze,run,markdown,main};
 if(require.main===module)main();
