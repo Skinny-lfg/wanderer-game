@@ -1,0 +1,3 @@
+# G2.2E.7 — Simplified PNG art
+
+19 actual PNG assets. Ten 256x256 inventory frames use the cropped empty slot from the generated UI study, consistent silhouette, color variants, internal details and existing lock art. Nine 40x40 panel atlases use a thin shaded metal edge and uniform background (neutral, selected, disabled, six rarities). Fixed 16 px corners; repeating edges/center. Legacy art retained. Gear safe area 58% (from 66%). Compact tabs center icons. Simple, Standard and Featured are recommended; Modal and other variants optional; resize studies collapsed. Tooltip hierarchy and gameplay unchanged. Tests check actual PNG assets, seams, silhouettes, gear sizes and alignment. Visual approval pending.

@@ -3,7 +3,7 @@ extends RefCounted
 const SLOT_CANVAS = Vector2i(256, 256)
 const SLOT_BODY = 224.0
 const SLOT_GUARD = 4.0
-const SLOT_SAFE_FRACTION = 0.66
+const SLOT_SAFE_FRACTION = 0.58
 
 static func padded(source: Image, guard: int) -> Image:
 	var out = Image.create(source.get_width() + guard * 2, source.get_height() + guard * 2, false, Image.FORMAT_RGBA8)

@@ -38,8 +38,12 @@ func _run() -> void:
 	if first.painted_key() != "rarity_grey" or first.painted_key(true) != "slot_hover":
 		_fail("Rarity or hover state failed")
 		return
+	var silhouette: Rect2i = pack.textures["rarity_common"].get_image().get_used_rect()
 	for texture in pack.textures.values():
 		var used: Rect2i = texture.get_image().get_used_rect()
+		if used != silhouette:
+			_fail("Simple slot silhouettes differ")
+			return
 		if used.position.x < 4 or used.position.y < 4 or used.end.x > 252 or used.end.y > 252:
 			_fail("Normalized slot lacks transparent guard")
 			return
@@ -58,6 +62,9 @@ func _run() -> void:
 				_fail("Item exceeded safe area or changed aspect")
 				return
 	var reference: Rect2 = first.painted_art_rect(Vector2(64, 64))
+	if maxf(reference.size.x, reference.size.y) > 64.0 * 0.58 + 0.01:
+		_fail("Gear exceeds reduced art area")
+		return
 	var original_rarity: int = first.rarity
 	for rarity_index in range(6):
 		first.rarity = rarity_index

@@ -16,7 +16,11 @@ func _run() -> void:
 		_fail("Missing pack should fall back")
 		return
 	# Independent of a loaded painted pack.
-	var simple = SimpleFrame.make_style()
+	var simple = SimpleFrame.png_style("neutral")
+	for key in ["neutral", "selected", "disabled", "rarity_0", "rarity_1", "rarity_2", "rarity_3", "rarity_4", "rarity_5"]:
+		if SimpleFrame.png_atlas(key) == null:
+			_fail("Actual simple frame PNG missing: " + key)
+			return
 	var atlas = simple.texture.get_image()
 	if atlas.get_size() != SimpleFrame.ATLAS_SIZE or simple.texture_margin_left != 16 or simple.texture_margin_right != 16 or simple.texture_margin_top != 16 or simple.texture_margin_bottom != 16:
 		_fail("Reusable frame geometry invalid")

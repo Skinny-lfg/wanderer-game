@@ -23,6 +23,7 @@ var frame_pack = FramePack.new()
 var navigation_pack = NavigationPack.new()
 var slot_pack = SlotPack.new()
 var prefer_slots: bool = true
+var prefer_simple_slots: bool = true
 var slot_status: Label
 var bag_slots: Array[Button] = []
 var bag_size: int = 64
@@ -97,7 +98,7 @@ func _ready() -> void:
 	fit.text = "Fit screen"
 	fit.pressed.connect(_fit_gallery_window)
 	header.add_child(fit)
-	frame.add_child(_label("STYLIZED GOTHIC     •     G2.2E.6 / REUSABLE SIMPLE FRAME", 15, Tokens.GOLD))
+	frame.add_child(_label("STYLIZED GOTHIC     •     G2.2E.7 / SIMPLIFIED PNG ART", 15, Tokens.GOLD))
 	frame.add_child(HSeparator.new())
 	var layout = _row(frame)
 	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -184,9 +185,12 @@ func show_category(category: String) -> bool:
 	return true
 
 func _note(value: String) -> void:
+	_note_in(body, value)
+
+func _note_in(host: Node, value: String) -> void:
 	var label = _label(value, 15, Tokens.MUTED)
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	body.add_child(label)
+	host.add_child(label)
 
 func _foundations() -> void:
 	_note("Angular ironwork, painted bevels, aged gold and readable ivory. First visual candidate.")
@@ -294,17 +298,17 @@ func _simple_frame_sample(host: Node, label_text: String, detail: String, extent
 		content.add_child(_label(detail, 14, Tokens.MUTED))
 
 func _simple_frame_study() -> void:
-	_note("Simple Frame — shared nine-slice for everyday information. No shadow, fixed corners, configurable surface and border.")
-	var neutral = SimpleFrame.make_style()
+	_note("Simple Frame — real PNG nine-slice for everyday information. No shadow, fixed corners.")
+	var neutral = SimpleFrame.png_style("neutral")
 	var sizes = _row(body)
 	_simple_frame_sample(sizes, "Materials", "Compact counter", Vector2(180, 70), neutral)
 	_simple_frame_sample(sizes, "Contract details", "Wide information panel", Vector2(360, 100), neutral)
 	_simple_frame_sample(sizes, "Equipment", "Tall information panel", Vector2(220, 190), neutral)
 	var variants = _row(body)
 	_simple_frame_sample(variants, "Neutral", "Default", Vector2(210, 85), neutral)
-	_simple_frame_sample(variants, "Selected", "Subtle emphasis", Vector2(210, 85), SimpleFrame.make_style(Color("#211c17"), Color("#b08a50"), Color("#594529")))
-	_simple_frame_sample(variants, "Disabled", "Muted", Vector2(210, 85), SimpleFrame.make_style(Color("#17181c"), Color("#515158"), Color("#29292e")))
-	_note("Atlas: 40 × 40 px / 16 px fixed corners / 8 px center and edge spans. Same frame is used by the current Tooltips.")
+	_simple_frame_sample(variants, "Selected", "Subtle emphasis", Vector2(210, 85), SimpleFrame.png_style("selected"))
+	_simple_frame_sample(variants, "Disabled", "Muted", Vector2(210, 85), SimpleFrame.png_style("disabled"))
+	_note("Recommended: Simple for everyday details, Standard for major windows, Featured for important rewards. Other frames are optional.")
 
 func _panels() -> void:
 	demo_panels.clear()
@@ -334,26 +338,32 @@ func _panels() -> void:
 	_frame_sample(first, "standard", "Standard", Vector2(285, 140), "Everyday content")
 	_frame_sample(first, "featured", "Featured", Vector2(285, 140), "Important rewards", "crest")
 	_frame_sample(first, "modal", "Modal", Vector2(330, 140), "Confirm or cancel", "modal_crest")
-	var second = _row(body)
+	var variants_toggle = CheckButton.new()
+	variants_toggle.text = "Show optional frames and resize studies"
+	body.add_child(variants_toggle)
+	var archive = _vbox(body)
+	variants_toggle.toggled.connect(func(enabled: bool): archive.visible = enabled)
+	archive.visible = false
+	var second = _row(archive)
 	_frame_sample(second, "tooltip", "Tooltip", Vector2(300, 112), "Item information")
 	_frame_sample(second, "compact", "Compact", Vector2(220, 96), "Counters")
 	_frame_sample(second, "standard", "Wide standard", Vector2(380, 112), "Same texture, wider")
-	var states = _row(body)
+	var states = _row(archive)
 	_frame_sample(states, "standard", "Normal", Vector2(255, 100), "")
 	_frame_sample(states, "focused", "Focused", Vector2(255, 100), "")
 	_frame_sample(states, "disabled", "Disabled", Vector2(255, 100), "")
-	var art = _row(body)
+	var art = _row(archive)
 	_art_sample(art, "portrait", "Portrait / fixed aspect", Vector2(190, 220))
 	_art_sample(art, "banner", "Banner / fixed aspect", Vector2(530, 110))
-	var dividers = _row(body)
+	var dividers = _row(archive)
 	_art_sample(dividers, "divider_horizontal", "Horizontal divider", Vector2(290, 44))
 	_art_sample(dividers, "section_ornament", "Section ornament", Vector2(290, 55))
 	_art_sample(dividers, "divider_vertical", "Vertical divider", Vector2(26, 175))
-	_note("Modular panels with matching corner-to-edge profiles and quiet interiors. No game screens changed.")
+	_note_in(archive, "Modular panels with matching corner-to-edge profiles and quiet interiors. No game screens changed.")
 
-	_note("Resize comparison — left: legacy stretched center/edges; right: modular frame with quiet interior.")
+	_note_in(archive, "Resize comparison — left: legacy stretched center/edges; right: modular frame with quiet interior.")
 	for extent in [Vector2(300, 112), Vector2(420, 200), Vector2(300, 360)]:
-		var comparison = _row(body)
+		var comparison = _row(archive)
 		for legacy in [true, false]:
 			var panel = PanelContainer.new()
 			panel.custom_minimum_size = extent
@@ -363,9 +373,9 @@ func _panels() -> void:
 			label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			panel.add_child(label)
 
-	_note("All seven frame families — tall and wide stress samples.")
+	_note_in(archive, "All seven frame families — tall and wide stress samples.")
 	for key in FramePack.CORNERS:
-		var row = _row(body)
+		var row = _row(archive)
 		for extent in [Vector2(240, 150), Vector2(400, 100)]:
 			var panel = PanelContainer.new()
 			panel.custom_minimum_size = extent
@@ -593,18 +603,22 @@ func _slots() -> void:
 	bag_slots.clear()
 	var toolbar = _row(body)
 	var selector = OptionButton.new()
-	selector.add_item("G2.2D Painted PNG")
+	selector.add_item("G2.2E.7 Simple PNG")
+	selector.add_item("G2.2D Previous PNG")
 	selector.add_item("G2.1 Original slots")
-	selector.select(0 if prefer_slots else 1)
+	selector.select((0 if prefer_simple_slots else 1) if prefer_slots else 2)
 	selector.item_selected.connect(func(index: int):
-		prefer_slots = index == 0
+		prefer_slots = index != 2
+		prefer_simple_slots = index == 0
+		if prefer_slots:
+			slot_pack.load_pack(SlotPack.ART_DIR if prefer_simple_slots else SlotPack.LEGACY_DIR)
 		call_deferred("show_category", "Item Slots")
 	)
 	toolbar.add_child(selector)
 	var reload = Button.new()
 	reload.text = "Reload artwork"
 	reload.pressed.connect(func():
-		slot_pack.load_pack()
+		slot_pack.load_pack(SlotPack.ART_DIR if prefer_simple_slots else SlotPack.LEGACY_DIR)
 		prefer_slots = true
 		call_deferred("show_category", "Item Slots")
 	)
@@ -612,7 +626,7 @@ func _slots() -> void:
 	var use_painted = prefer_slots and slot_pack.is_ready()
 	slot_status = _label("10 / 10 PNGs loaded" if use_painted else "Original slots active", 15, Tokens.GOLD)
 	toolbar.add_child(slot_status)
-	_note("Normalized slot bodies and common safe area — hover or click to select. " + ("" if use_painted or not prefer_slots else slot_pack.problem))
+	_note("Uniform square silhouette, smaller gear art and internal rarity details — hover or click to select. " + ("" if use_painted or not prefer_slots else slot_pack.problem))
 	var row = _row(body)
 	for i in range(6):
 		_slot(row, i, ITEM, Tokens.RARITY_NAMES[i])

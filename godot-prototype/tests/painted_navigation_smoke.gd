@@ -46,6 +46,12 @@ func _run() -> void:
 			if gallery.demo_tabs[j].button_pressed != (i == j):
 				_fail("Exclusive selection failed")
 				return
+	var compact = Button.new()
+	if not pack.apply_to(compact, "camp", true) or compact.icon_alignment != HORIZONTAL_ALIGNMENT_CENTER or compact.vertical_icon_alignment != VERTICAL_ALIGNMENT_CENTER or not compact.text.is_empty():
+		compact.free()
+		_fail("Compact navigation icon not centered")
+		return
+	compact.free()
 	gallery.prefer_navigation = false
 	gallery.show_category("Navigation")
 	if gallery.navigation_status.text != "Original SVG active":

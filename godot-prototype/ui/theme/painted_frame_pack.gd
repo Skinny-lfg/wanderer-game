@@ -118,6 +118,9 @@ static func simple_rarity_surface(rarity: int) -> Color:
 	return Color("#111217").lerp(Tokens.RARITY_COLORS[index], 0.045 if index < 2 else 0.08)
 
 static func _simple_tooltip_atlas(rarity: int) -> Texture2D:
+	var atlas = SimpleFrame.png_atlas("rarity_" + str(rarity))
+	if atlas != null:
+		return atlas
 	var border = Color("#786751") if rarity != 5 else Color("#b08a50")
 	var inner_line = Color("#3c342b") if rarity != 5 else Color("#594529")
 	return SimpleFrame.build_atlas(simple_rarity_surface(rarity), border, inner_line, 10 if rarity == 5 else 2)

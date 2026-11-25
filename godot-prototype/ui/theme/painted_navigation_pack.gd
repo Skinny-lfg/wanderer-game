@@ -78,6 +78,9 @@ func apply_to(button: Button, id: String, compact: bool = false) -> bool:
 	button.custom_minimum_size = Vector2(90 if compact else 180, 46)
 	button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	button.icon = textures["icon_" + id]
+	button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER if compact else HORIZONTAL_ALIGNMENT_LEFT
+	button.vertical_icon_alignment = VERTICAL_ALIGNMENT_CENTER
+	button.expand_icon = false
 	button.text = "" if compact else LABELS[IDS.find(id)]
 	button.tooltip_text = LABELS[IDS.find(id)]
 	button.add_theme_constant_override("h_separation", 7)

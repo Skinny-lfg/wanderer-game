@@ -5,6 +5,7 @@ extends RefCounted
 const Modular = preload("res://ui/theme/modular_frame.gd")
 const CORNER = Vector2i(16, 16)
 const ATLAS_SIZE = Vector2i(40, 40)
+const PNG_DIR = "res://ui/assets/frames/g22e_simple"
 const MIN_FRAME_SIZE = Vector2(32, 32)
 const NEUTRAL_SURFACE = Color("#17181c")
 const NEUTRAL_BORDER = Color("#786751")
@@ -44,3 +45,16 @@ static func make_style(surface: Color = NEUTRAL_SURFACE, border: Color = NEUTRAL
 static func apply_to(panel: PanelContainer, style: StyleBoxTexture) -> void:
 	panel.custom_minimum_size = panel.custom_minimum_size.max(MIN_FRAME_SIZE)
 	panel.add_theme_stylebox_override("panel", style)
+
+static func png_atlas(key: String) -> Texture2D:
+	var image = Image.new()
+	var path = PNG_DIR.path_join(key + ".png")
+	if image.load(ProjectSettings.globalize_path(path)) != OK or image.get_size() != ATLAS_SIZE:
+		return null
+	return ImageTexture.create_from_image(image)
+
+static func png_style(key: String, padding: Vector4 = DEFAULT_PADDING) -> StyleBoxTexture:
+	var atlas = png_atlas(key)
+	if atlas == null:
+		return make_style(NEUTRAL_SURFACE, NEUTRAL_BORDER, NEUTRAL_INNER_LINE, padding)
+	return style_from_atlas(atlas, padding)
