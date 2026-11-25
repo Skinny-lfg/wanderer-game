@@ -62,7 +62,7 @@ func _draw() -> void:
 func painted_key(hover: bool = false) -> String:
 	if locked:
 		return "slot_locked"
-	if button_pressed or equipped:
+	if button_pressed:
 		return "slot_selected"
 	if hover:
 		return "slot_hover"
@@ -108,8 +108,6 @@ func _draw_painted() -> void:
 		var pos = origin + Vector2(side * 0.84 - count_width, side * 0.85)
 		draw_string_outline(font, pos, count_text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 3, Color("#111218"))
 		draw_string(font, pos, count_text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Tokens.IVORY)
-	if equipped:
-		draw_string(font, origin + Vector2(side * 0.72, side * 0.24), "E", HORIZONTAL_ALIGNMENT_LEFT, -1, maxi(10, roundi(side * 0.17)), Tokens.GOLD)
 
 func _make_custom_tooltip(_for_text: String) -> Object:
 	if preview_tooltip_factory.is_valid():

@@ -11,7 +11,7 @@ func _fail(message: String) -> void:
 	push_error(message)
 	quit(1)
 
-func _check(source: Texture2D, box: StyleBoxTexture, corner: Vector2i, sample: Vector2i) -> bool:
+func _check(source: Texture2D, box: StyleBoxTexture, corner: Vector2i, sample: Vector2i, quiet: bool = false) -> bool:
 	if box == null or box.texture == null:
 		return false
 	if box.axis_stretch_horizontal != StyleBoxTexture.AXIS_STRETCH_MODE_TILE or box.axis_stretch_vertical != StyleBoxTexture.AXIS_STRETCH_MODE_TILE:
@@ -28,8 +28,25 @@ func _check(source: Texture2D, box: StyleBoxTexture, corner: Vector2i, sample: V
 		for x in range(2):
 			var start = Vector2i(0 if x == 0 else original.get_width() - corner.x, 0 if y == 0 else original.get_height() - corner.y)
 			var end = Vector2i(0 if x == 0 else atlas.get_width() - corner.x, 0 if y == 0 else atlas.get_height() - corner.y)
-			if original.get_region(Rect2i(start, corner)).get_data() != atlas.get_region(Rect2i(end, corner)).get_data():
-				return false
+			if not quiet:
+				if original.get_region(Rect2i(start, corner)).get_data() != atlas.get_region(Rect2i(end, corner)).get_data():
+					return false
+			else:
+				# Panel feathering must never modify the outer corner/silhouette.
+				for py in range(corner.y):
+					for px in range(corner.x):
+						var dx = px if x == 0 else corner.x - 1 - px
+						var dy = py if y == 0 else corner.y - 1 - py
+						if dx <= corner.x - 10 or dy <= corner.y - 10:
+							var offset = Vector2i(px, py)
+							if original.get_pixelv(start + offset) != atlas.get_pixelv(end + offset):
+								return false
+	if quiet:
+		var background = atlas.get_pixel(corner.x, corner.y)
+		for py in range(corner.y - 1, atlas.get_height() - corner.y + 1):
+			for px in range(corner.x - 1, atlas.get_width() - corner.x + 1):
+				if atlas.get_pixel(px, py) != background:
+					return false
 	# Mirrored tile joins must match exactly, on both axes.
 	for y in range(atlas.get_height()):
 		if atlas.get_pixel(corner.x + sample.x - 1, y) != atlas.get_pixel(corner.x + sample.x, y):
@@ -52,7 +69,7 @@ func _run() -> void:
 				_fail("Modular button failed: " + family + "/" + state)
 				return
 	for key in Frames.CORNERS:
-		if not _check(frames.textures[key], frames.style_for(key), Frames.CORNERS[key], Frames.SAMPLE):
+		if not _check(frames.textures[key], frames.style_for(key), Frames.CORNERS[key], Frames.SAMPLE, true):
 			_fail("Modular frame failed: " + key)
 			return
 		if frames.style_for(key, true).axis_stretch_horizontal != StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH:

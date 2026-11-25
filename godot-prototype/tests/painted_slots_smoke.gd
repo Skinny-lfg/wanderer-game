@@ -58,6 +58,17 @@ func _run() -> void:
 				_fail("Item exceeded safe area or changed aspect")
 				return
 	var reference: Rect2 = first.painted_art_rect(Vector2(64, 64))
+	var original_rarity: int = first.rarity
+	for rarity_index in range(6):
+		first.rarity = rarity_index
+		first.equipped = false
+		var normal_key: String = first.painted_key()
+		var hover_key: String = first.painted_key(true)
+		first.equipped = true
+		if first.painted_key() != Pack.RARITIES[rarity_index] or first.painted_key() != normal_key or first.painted_key(true) != hover_key:
+			_fail("Equipped slot must use the same rarity and hover frame as a normal slot")
+			return
+	first.rarity = original_rarity
 	first.equipped = true
 	if first.painted_art_rect(Vector2(64, 64)) != reference:
 		_fail("Equipped state changed item geometry")

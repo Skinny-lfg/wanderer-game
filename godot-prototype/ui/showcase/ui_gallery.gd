@@ -95,7 +95,7 @@ func _ready() -> void:
 	fit.text = "Fit screen"
 	fit.pressed.connect(_fit_gallery_window)
 	header.add_child(fit)
-	frame.add_child(_label("STYLIZED GOTHIC     •     G2.2E.1 / MODULAR FRAME ARCHITECTURE", 15, Tokens.GOLD))
+	frame.add_child(_label("STYLIZED GOTHIC     •     G2.2E.1A / FRAME SURFACE REFINEMENT", 15, Tokens.GOLD))
 	frame.add_child(HSeparator.new())
 	var layout = _row(frame)
 	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -317,9 +317,9 @@ func _panels() -> void:
 	_art_sample(dividers, "divider_horizontal", "Horizontal divider", Vector2(290, 44))
 	_art_sample(dividers, "section_ornament", "Section ornament", Vector2(290, 55))
 	_art_sample(dividers, "divider_vertical", "Vertical divider", Vector2(26, 175))
-	_note("Modular corners and tile patterns are art candidates, not final approval. No game screens changed.")
+	_note("Modular fixed corners, quiet panel interiors and feathered inner transitions. No game screens changed.")
 
-	_note("Resize comparison — left: legacy stretched center/edges; right: modular fixed corners and repeated tiles.")
+	_note("Resize comparison — left: legacy stretched center/edges; right: modular frame with quiet interior.")
 	for extent in [Vector2(300, 112), Vector2(420, 200), Vector2(300, 360)]:
 		var comparison = _row(body)
 		for legacy in [true, false]:
@@ -328,6 +328,18 @@ func _panels() -> void:
 			panel.add_theme_stylebox_override("panel", frame_pack.style_for("tooltip", legacy))
 			comparison.add_child(panel)
 			var label = _label(("Legacy" if legacy else "Modular") + "  " + str(int(extent.x)) + " x " + str(int(extent.y)), 15)
+			label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			panel.add_child(label)
+
+	_note("All seven frame families — tall and wide stress samples.")
+	for key in FramePack.CORNERS:
+		var row = _row(body)
+		for extent in [Vector2(240, 150), Vector2(400, 100)]:
+			var panel = PanelContainer.new()
+			panel.custom_minimum_size = extent
+			panel.add_theme_stylebox_override("panel", frame_pack.style_for(key))
+			row.add_child(panel)
+			var label = _label(key.capitalize(), 15)
 			label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			panel.add_child(label)
 
@@ -613,7 +625,7 @@ func _slots() -> void:
 			node.painted_textures = slot_pack.textures
 		grid.add_child(node)
 		bag_slots.append(node)
-	_note("Equipped preview — larger slots with selection emphasis; tooltip ornamentation belongs to G2.2E.")
+	_note("Equipped preview — normal rarity frames, no permanent selection glow.")
 	var gear = _row(body)
 	for i in range(8):
 		_slot(gear, 1 + i % 5, BAG_ART[i], ["Weapon", "Head", "Chest", "Feet", "Hands", "Ring", "Charm", "Shield"][i], true)

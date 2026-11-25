@@ -47,7 +47,7 @@ func load_pack(directory: String = ART_DIR) -> bool:
 			image = Normalize.padded(image, 3)
 		pending[name] = ImageTexture.create_from_image(image)
 	for key in CORNERS:
-		var atlas = Modular.build(pending[key], CORNERS[key], SAMPLE)
+		var atlas = Modular.build(pending[key], CORNERS[key], SAMPLE, true)
 		if atlas == null:
 			problem = "Invalid modular frame: " + key
 			modular_textures.clear()
