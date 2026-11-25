@@ -159,7 +159,7 @@ function nodes(){
   
   if(!node.attribute)return Object.freeze(node);
   const step=node.pathStep||node.bridgeStep||node.forkStep||1;
-  const options={str:[['flatAttack',2,'Attack Power'],['flatArmor',2,'Armor']],end:[['flatArmor',2,'Armor'],['flatLife',5,'Health']],agi:[['flatAttack',2,'Attack Power'],['flatAvoid',2,'Evasion rating']],int:[['flatSpell',2,'Spell Power'],['flatRegen',.25,'Mana per second']],cha:[['flatLife',5,'Health'],['flatAttack',2,'Attack Power']]};
+  const options={str:[['flatAttack',2,'Attack Power'],['flatArmor',2,'Armor']],end:[['flatArmor',2,'Armor'],['flatLife',5,'Health']],agi:[['flatAttack',2,'Attack Power'],['flatAttack',2,'Attack Power']],int:[['flatSpell',2,'Spell Power'],['flatRegen',.25,'Mana per second']],cha:[['flatLife',5,'Health'],['flatAttack',2,'Attack Power']]};
   const [key,value,label]=(options[node.attribute]||options.str)[(step-1)%2];
   return Object.freeze({...node,attribute:null,[key]:value,name:label,description:'+'+value+' '+label+'.'});
  }));}return cachedNodes;

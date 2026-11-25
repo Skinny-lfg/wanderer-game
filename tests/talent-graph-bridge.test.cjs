@@ -37,7 +37,7 @@ test('percentage stat nodes are additive on the pre-graph stat; other spell modi
 
 test('every stat slot has one direct stat; skill gates are relevant and attributes remain post-cap only',()=>{
  assert.equal(graph.length,420);assert.equal(graph.filter(n=>n.kind==='stat').length,308);
- const fields=['pctAttack','pctArmor','pctLife','pctSpell','pctSpeed','pctMana','pctRegen','critChance','flatAvoid','guardChance','barrierPower','healingPower','manaCostReduction','bleedBonus','rotBonus','rotDefense','sunderDamage','healthRegen'];
+ const fields=['pctAttack','pctArmor','pctLife','pctSpell','pctSpeed','pctMana','pctRegen','critChance','guardChance','barrierPower','healingPower','manaCostReduction','bleedBonus','rotBonus','rotDefense','sunderDamage','healthRegen'];
  for(const n of graph.filter(n=>n.kind==='stat')){
   assert.equal(fields.filter(k=>n[k]!==undefined).length,1,n.id);
   for(const k of ['attribute','attributeValue','flatSpeed','flatMana','flatRegen','startBarrier'])assert.equal(n[k],undefined,n.id);
@@ -47,7 +47,7 @@ test('every stat slot has one direct stat; skill gates are relevant and attribut
  }
  for(const key of ['pctAttack','pctSpell','rotBonus','pctMana','pctRegen','manaCostReduction'])assert(graph.some(n=>n.family==='decay'&&n[key]>0),key);
  assert(graph.some(n=>n.family==='aegis'&&n.pctSpell>0));
- assert(graph.some(n=>n.family==='fury'&&n.flatAvoid>0));assert(graph.some(n=>n.family==='decay'&&n.flatAvoid>0));
+ assert(graph.every(n=>!Object.hasOwn(n,'flatAvoid')));
 });
 test('Guard works without shield, and new stat caps and bonuses are direct',()=>{
  const graph=[{id:'a',guardChance:2,barrierPower:.04,healingPower:.02,manaCostReduction:.40}],p={points:1,ranks:{a:1}};
@@ -66,4 +66,20 @@ test('secondary nodes scale on pre-graph values, preserve zero resources, and ca
  const zero=B.apply({...base,mana:0,manaRegen:0},graph,{points:2,ranks:{a:1,b:1}});assert.equal(zero.mana,0);assert.equal(zero.manaRegen,0);
  const cap=B.apply({...base,crit:99,attacksPerSec:4.19},graph,p);assert.equal(cap.crit,100);assert.equal(cap.attacksPerSec,4.2);
  const empty=C.create();assert.equal(C.mods(empty,{...base,crit:99}).crit,99);assert.equal(C.mods(empty,{...base,crit:105}).crit,100);
+});
+
+test('Evasion retirement preserves every approved slot and never changes equipment or rune rating',()=>{
+ const expected={"outer_fury_1_2":["pctAttack",0.02],"weapon_path_fan_of_blades_1":["pctAttack",0.03],"focus_branch_fury_0_2":["pctSpeed",0.015],"focus_bridge_fury_0_2":["pctSpeed",0.015],"focus_branch_fury_0_3":["sunderDamage",0.03],"focus_bridge_fury_0_3":["sunderDamage",0.03],"basic_path_decay_1_1":["pctMana",0.02],"basic_path_decay_1_3":["pctRegen",0.02],"basic_detour_decay_1":["pctRegen",0.02]};
+ for(const [id,[key,value]] of Object.entries(expected)){
+  const n=node(id);assert(n,id);assert.equal(n[key],value,id);assert.equal(n.flatAvoid,undefined,id);
+  const progress=buy({points:100,ranks:{}},id);assert(progress,id);
+  const prior={...progress,ranks:{...progress.ranks}};delete prior.ranks[id];
+  const base={attack:100,defense:100,maxhp:100,mana:100,manaRegen:10,spellPower:100,attacksPerSec:1,evasionRating:12};
+  const full=B.apply(base,graph,progress),without=B.apply(base,graph,prior);
+  assert.equal(full.evasionRating,12,id);assert.equal(without.evasionRating,12,id);
+  const direct={pctAttack:'attack',pctSpeed:'attacksPerSec',pctMana:'mana',pctRegen:'manaRegen'}[key];
+  if(direct)assert(Math.abs(full[direct]-without[direct]-base[direct]*value)<1e-8,id);else assert(Math.abs((B.bonuses(graph,progress)[key]||0)-(B.bonuses(graph,prior)[key]||0)-value)<1e-8,id);
+ }
+ assert.equal(B.apply({evasionRating:0},graph,{points:0,ranks:{}}).evasionRating,0);
+ const obsolete=[{id:'legacy',flatAvoid:99}];assert.equal(B.apply({evasionRating:12},obsolete,{points:1,ranks:{legacy:1}}).evasionRating,12);
 });

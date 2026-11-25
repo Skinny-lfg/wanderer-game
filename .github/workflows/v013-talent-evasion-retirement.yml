@@ -1,0 +1,26 @@
+name: E10 Talent Evasion Retirement
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths:
+      - '.github/workflows/v013-talent-evasion-retirement.yml'
+      - 'combat/talent-graph-next.js'
+      - 'combat/talent-graph-bridge.js'
+      - 'combat/talent-catalog.js'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run test:v013:talent-graph
+      - run: node --test tests/v0120-evasion.test.cjs
+      - run: npm test
