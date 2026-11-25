@@ -66,18 +66,9 @@ func painted_key(hover: bool = false) -> String:
 	return PaintedSlots.RARITIES[rarity]
 
 func _painted_art_fit_ratio(side: float) -> float:
-	var ratio: float
-	if side <= 50.0:
-		ratio = 0.82
-	elif side <= 66.0:
-		ratio = 0.77
-	else:
-		ratio = 0.73
-	if equipped:
-		ratio += 0.02
-	elif button_pressed:
-		ratio += 0.01
-	return ratio
+	# Keep the painted bevel visible even on dense 48px grids.
+	# Selection and equipment change the frame, not the item silhouette.
+	return 0.74 if side <= 66.0 else 0.73
 
 func _draw_painted() -> void:
 	var side = minf(size.x, size.y)
