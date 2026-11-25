@@ -7,6 +7,7 @@ on:
       - 'combat/talent-graph-next.js'
       - 'combat/talent-graph-bridge.js'
       - 'combat/talent-catalog.js'
+      - 'docs/combat/talent-*.js'
   workflow_dispatch:
 permissions:
   contents: read
