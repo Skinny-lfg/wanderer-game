@@ -41,6 +41,15 @@ func _run() -> void:
 	for index in range(4):
 		gallery._set_resource_profile(index)
 		await process_frame
+		await process_frame
+		var xp_bar: Control = gallery.resource_samples["EXP"]
+		var hp_bar: Control = health
+		if not is_equal_approx(xp_bar.size.x, 352.0) or not is_equal_approx(hp_bar.size.x, 470.0):
+			_fail("EXP must be shorter than the main resource bars")
+			return
+		if absf((xp_bar.position.x + xp_bar.size.x * 0.5) - (hp_bar.position.x + hp_bar.size.x * 0.5)) > 1.0:
+			_fail("EXP must be horizontally centered")
+			return
 		var profile: Dictionary = Profiles.PROFILES[index]
 		for i in range(Profiles.KINDS.size()):
 			var sample = gallery.resource_samples[Profiles.KINDS[i]]
