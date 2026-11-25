@@ -2,6 +2,7 @@ extends Control
 const FRAME = preload("res://ui/assets/resources/g22f/portrait_frame.png")
 const BADGE = preload("res://ui/assets/resources/g22f/level_badge.png")
 var portrait: Texture2D
+var value_font: Font
 var level: int = 1
 var portrait_region = Rect2(0, 0, 1, 1)
 var badge_pulse: float = 1.0
@@ -50,7 +51,7 @@ func _draw() -> void:
 	var badge_side = side * 0.36 * badge_pulse
 	var badge_center = center + Vector2(0, side * 0.45)
 	draw_texture_rect(BADGE, Rect2(badge_center - Vector2.ONE * badge_side * 0.5, Vector2.ONE * badge_side), false)
-	var font = get_theme_default_font()
+	var font: Font = value_font if value_font != null else get_theme_default_font()
 	var font_size = maxi(12, roundi(badge_side * 0.35))
 	var label = str(level)
 	var text_size = font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size)

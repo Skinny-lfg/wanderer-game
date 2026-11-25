@@ -16,6 +16,11 @@ var trail_ratio: float = 1.0
 const DAMAGE_HOLD = 0.16
 const DAMAGE_DRAIN = 0.38
 var show_value: bool = true
+var value_font: Font
+var value_alignment: int = HORIZONTAL_ALIGNMENT_CENTER
+var value_scale: float = 0.53
+var value_outline: int = 3
+var group_values: bool = false
 var hide_empty: bool = false
 var motion: Tween
 
@@ -120,6 +125,35 @@ func fill_shape(extent: Vector2, ratio: float) -> PackedVector2Array:
 	var points = PackedVector2Array([Vector2(left, h * 0.5), Vector2(left + shoulder, top), Vector2(right - shoulder, top), Vector2(right, h * 0.5), Vector2(right - shoulder, bottom), Vector2(left + shoulder, bottom)])
 	return _clip_x(points, lerpf(left, right, clampf(ratio, 0.0, 1.0)), true)
 
+func set_value_style(font: Font, alignment: int, scale_factor: float, outline: int, grouped: bool = true) -> void:
+	value_font = font
+	value_alignment = alignment
+	value_scale = scale_factor
+	value_outline = outline
+	group_values = grouped
+	queue_redraw()
+
+func _format_amount(amount: float) -> String:
+	var digits = str(roundi(amount))
+	if not group_values:
+		return digits
+	var result = ""
+	for i in range(digits.length()):
+		if i > 0 and (digits.length() - i) % 3 == 0:
+			result += ","
+		result += digits[i]
+	return result
+
+func value_text() -> String:
+	return _format_amount(current) + " / " + _format_amount(maximum)
+
+func value_font_size(font: Font, label: String, extent: Vector2) -> int:
+	var pixels = clampi(roundi(extent.y * value_scale), 9, 24)
+	var max_width = maxf(1.0, extent.x - extent.y * 1.25 - 8.0)
+	while pixels > 9 and (font.get_height(pixels) > extent.y - 3.0 or font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, pixels).x > max_width):
+		pixels -= 1
+	return pixels
+
 func _draw() -> void:
 	var w = size.x
 	var h = size.y
@@ -153,10 +187,13 @@ func _draw() -> void:
 				draw_polygon(clipped, PackedColorArray([Color.WHITE]), uv, fill)
 			start = finish
 	if show_value and h >= 16.0:
-		var font = get_theme_default_font()
-		var font_size = maxi(11, roundi(h * 0.53))
-		var label = "%d / %d" % [roundi(current), roundi(maximum)]
+		var font: Font = value_font if value_font != null else get_theme_default_font()
+		var label = value_text()
+		var font_size = value_font_size(font, label, size)
 		var extent = font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size)
-		var at = Vector2((w - extent.x) * 0.5, (h - font.get_height(font_size)) * 0.5 + font.get_ascent(font_size))
-		draw_string_outline(font, at, label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 3, Color("#151217"))
-		draw_string(font, at, label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color("#f2e8d6"))
+		var x = (w - extent.x) * 0.5
+		if value_alignment == HORIZONTAL_ALIGNMENT_RIGHT:
+			x = maxf(cap + 4.0, w - cap - 7.0 - extent.x)
+		var at = Vector2(x, (h - font.get_height(font_size)) * 0.5 + font.get_ascent(font_size))
+		draw_string_outline(font, at, label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, value_outline, Color("#151217"))
+		draw_string(font, at, label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color("#fff3df"))

@@ -1,6 +1,7 @@
 extends SceneTree
 const Bar = preload("res://ui/components/hud/resource_bar.gd")
 const Portrait = preload("res://ui/components/hud/portrait_medallion.gd")
+const Profiles = preload("res://ui/theme/resource_hud_profiles.gd")
 func _initialize() -> void:
 	call_deferred("_run")
 func _fail(message: String) -> void:
@@ -32,6 +33,39 @@ func _run() -> void:
 		return
 	var health = gallery.resource_samples["Health"]
 	var barrier = gallery.resource_samples["Barrier"]
+	if gallery.resource_profile_index != Profiles.DEFAULT_INDEX or gallery.resource_profile_selector.item_count != 4:
+		_fail("HUD profile selector missing")
+		return
+	var initial_health: float = health.current
+	var initial_ratio: float = health.shown_ratio
+	for index in range(4):
+		gallery._set_resource_profile(index)
+		await process_frame
+		var profile: Dictionary = Profiles.PROFILES[index]
+		for i in range(Profiles.KINDS.size()):
+			var sample = gallery.resource_samples[Profiles.KINDS[i]]
+			if sample.custom_minimum_size.y != float(profile["heights"][i]) or sample.value_alignment != int(profile["alignment"]):
+				_fail("HUD profile dimensions or alignment")
+				return
+			if index < 3:
+				if not sample.value_font is FontVariation or sample.value_font.base_font != Profiles.FONTS[index]:
+					_fail("Bundled HUD font missing")
+					return
+				var weight_tag = TextServerManager.get_primary_interface().name_to_tag("wght")
+				if sample.value_font.variation_opentype.get(weight_tag) != profile["weight"]:
+					_fail("HUD font weight mismatch")
+					return
+			elif sample.value_font != null:
+				_fail("Previous typography missing")
+				return
+		if health.current != initial_health or health.shown_ratio != initial_ratio or gallery.resource_portrait.level != 24:
+			_fail("HUD switch changed resource state")
+			return
+		if index < 3 and health.value_text() != "2,400 / 2,840":
+			_fail("Grouped resource values missing")
+			return
+	gallery._set_resource_profile(Profiles.DEFAULT_INDEX)
+	await process_frame
 	health.set_amount(100, 0, false)
 	if health.fraction() != 0.0 or health.shown_ratio != 0.0 or not health.fill_shape(Vector2(300, 24), 0).is_empty():
 		_fail("Empty/zero maximum handling")

@@ -14,6 +14,12 @@ const BAG_ART = [ITEM, preload("res://assets/shell/helmet.png"), preload("res://
 const ResourceBar = preload("res://ui/components/hud/resource_bar.gd")
 const PortraitMedallion = preload("res://ui/components/hud/portrait_medallion.gd")
 const CATEGORIES = ["Foundations", "Buttons", "Panels", "Navigation", "Item Slots", "Tooltips", "Resource Bars"]
+const HUDProfiles = preload("res://ui/theme/resource_hud_profiles.gd")
+var hud_profiles = HUDProfiles.new()
+var resource_profile_index: int = HUDProfiles.DEFAULT_INDEX
+var resource_profile_selector: OptionButton
+var resource_profile_note: Label
+var resource_previews: Array[Control] = []
 var resource_samples: Dictionary = {}
 var resource_sliders: Dictionary = {}
 var resource_portrait: Control
@@ -104,7 +110,7 @@ func _ready() -> void:
 	_gallery_button_style(fit)
 	fit.pressed.connect(_fit_gallery_window)
 	header.add_child(fit)
-	frame.add_child(_label("STYLIZED GOTHIC     •     G2.2F.2 / RESOURCE FILL REDESIGN", 15, Tokens.GOLD))
+	frame.add_child(_label("STYLIZED GOTHIC     •     G2.2F.3 / TYPOGRAPHY & HUD PROPORTIONS", 15, Tokens.GOLD))
 	frame.add_child(HSeparator.new())
 	var layout = _row(frame)
 	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -844,20 +850,36 @@ func _resource_sample(host: Node, kind: String, amount: float, capacity: float, 
 	bar.show_value = values
 	host.add_child(bar)
 	bar.set_amount(amount, capacity, false)
+	resource_previews.append(bar)
 	return bar
 
 func _resource_bars() -> void:
 	resource_samples.clear()
 	resource_sliders.clear()
-	_note("Organic seamless fills, animated loss trails and face portrait. Preview values only.")
+	resource_previews.clear()
+	_note("Compare fonts and proportions without changing resource values or animations.")
+	var profile_row = _row(body)
+	profile_row.add_child(_label("HUD style", 15))
+	resource_profile_selector = OptionButton.new()
+	_gallery_button_style(resource_profile_selector)
+	for profile in HUDProfiles.PROFILES:
+		resource_profile_selector.add_item(str(profile["name"]))
+	resource_profile_selector.select(resource_profile_index)
+	resource_profile_selector.item_selected.connect(_set_resource_profile)
+	profile_row.add_child(resource_profile_selector)
+	resource_profile_note = _label("", 14, Tokens.MUTED)
+	resource_profile_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.add_child(resource_profile_note)
 	var hud = _row(body)
 	resource_portrait = PortraitMedallion.new()
+	resource_portrait.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	hud.add_child(resource_portrait)
 	resource_portrait.portrait_region = Rect2(0.365, 0.0, 0.27, 0.27)
 	resource_portrait.set_identity(preload("res://assets/arena/wanderer.webp"), 24)
 	var stack = _vbox(hud, 5)
 	stack.custom_minimum_size.x = 470
 	stack.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	stack.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	resource_samples["Health"] = _resource_sample(stack, "Health", 2400, 2840, 470, 30)
 	resource_samples["Mana"] = _resource_sample(stack, "Mana", 520, 600, 470, 26)
 	resource_samples["Barrier"] = _resource_sample(stack, "Barrier", 180, 300, 470, 24)
@@ -902,6 +924,24 @@ func _resource_bars() -> void:
 	_resource_sample(widths, "Mana", 65, 100, 220, 16, false)
 	_resource_sample(widths, "Mana", 65, 100, 360, 30, true)
 	_note("Workshop only. No live character, combat, experience or progression mechanics connected.")
+	_set_resource_profile(resource_profile_index)
+
+func _set_resource_profile(index: int) -> void:
+	if index < 0 or index >= HUDProfiles.PROFILES.size():
+		return
+	resource_profile_index = index
+	var profile: Dictionary = HUDProfiles.PROFILES[index]
+	var font: Font = hud_profiles.font_for(index)
+	var heights: Array = profile["heights"]
+	for bar in resource_previews:
+		bar.set_value_style(font, int(profile["alignment"]), float(profile["scale"]), int(profile["outline"]), index != 3)
+	for i in range(HUDProfiles.KINDS.size()):
+		var bar = resource_samples[HUDProfiles.KINDS[i]]
+		bar.custom_minimum_size.y = float(heights[i])
+	resource_portrait.value_font = font
+	resource_portrait.queue_redraw()
+	resource_profile_selector.select(index)
+	resource_profile_note.text = "%s  •  HP %d / Mana %d / Barrier %d / EXP %d px  •  %s values" % [profile["family"], heights[0], heights[1], heights[2], heights[3], "Right-aligned" if index == 2 else "Centered"]
 
 func _resource_percent(percent: float, kind: String) -> void:
 	var bar = resource_samples[kind]
