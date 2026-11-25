@@ -1,0 +1,54 @@
+name: E10 Evasion Formula and Armor Identity (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths: ['scripts/v013-e10-evasion-identity.cjs','.github/workflows/v013-e10-evasion-identity.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node scripts/v013-e10-evasion-identity.cjs smoke
+  cohort:
+    needs: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        id: [blood-daggers, blood-twohand, fury-daggers, fury-bow, fury-twohand, decay-cycle-daggers, decay-cycle-wand, vitality-mace, aegis-mace, magic-fire-wand, magic-lightning-staff, hybrid-blood-fury]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node scripts/v013-e10-evasion-identity.cjs run "${{ matrix.id }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: evasion-identity-${{ matrix.id }}
+          path: reports/e10-evasion-identity/*.json
+  summary:
+    needs: cohort
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: evasion-identity-*
+          path: reports/e10-evasion-identity
+          merge-multiple: true
+      - run: node scripts/v013-e10-evasion-identity.cjs aggregate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: e10-evasion-identity-summary
+          path: reports/e10-evasion-identity/summary.json
