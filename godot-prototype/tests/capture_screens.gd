@@ -13,7 +13,7 @@ func _run() -> void:
 		push_error("Cannot create capture directory")
 		quit(1)
 		return
-	for id in shell.IDS:
+	for id in shell.ALL_IDS:
 		shell.show_page(id)
 		await process_frame
 		await process_frame
@@ -28,5 +28,5 @@ func _run() -> void:
 			quit(1)
 			return
 		print("CAPTURE: " + id)
-	print("PASS: captured six screens")
+	print("PASS: captured eight screens")
 	quit(0)

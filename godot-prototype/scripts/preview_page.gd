@@ -32,6 +32,8 @@ func _ready() -> void:
 		"talents": _talents()
 		"expedition": _expedition()
 		"codex": _codex()
+		"city": _city()
+		"shrine": _shrine()
 
 func _rect(pos: Vector2, extent: Vector2, color: Color) -> ColorRect:
 	var node = ColorRect.new()
@@ -105,15 +107,13 @@ func _camp() -> void:
 	_background(CAMP, 0.35)
 	_rect(Vector2(0, 0), Vector2(460, 648), Color(0.04, 0.045, 0.06, 0.78))
 	_header("Wanderer / Refuge", "The Camp", "A moment of rest between expeditions")
-	_text("SERVICES", Vector2(50, 184), Vector2(320, 25), 14, GOLD)
-	for i in range(3):
-		var y = 222 + i * 98
-		_line(Vector2(52, y), Vector2(384, y), Color("574c3c"))
-		_text(["Blacksmith", "Merchant", "Apothecary"][i], Vector2(55, y + 10), Vector2(350, 35), 30, IVORY, true)
-		_text(["Forge and craft", "Trade supplies", "Prepare remedies"][i], Vector2(56, y + 48), Vector2(330, 22), 15, MUTED)
+	_text("PREPARE FOR THE JOURNEY", Vector2(52, 192), Vector2(395, 30), 15, GOLD)
+	_text("Rest. Equip. Venture forth.", Vector2(52, 235), Vector2(400, 46), 27, IVORY, true)
+	_text("Visit the city and bind your runes", Vector2(52, 294), Vector2(400, 26), 17, MUTED)
+	_text("before choosing your next realm.", Vector2(52, 321), Vector2(400, 26), 17, MUTED)
 	_art(HERO, Vector2(545, 155), Vector2(450, 470))
 	_text("THE WANDERER", Vector2(545, 604), Vector2(450, 24), 16, GOLD, false, true)
-	_text("Services are visual placeholders", Vector2(50, 600), Vector2(420, 20), 13, MUTED)
+	_text("Preview navigation only — no run starts", Vector2(52, 600), Vector2(420, 20), 13, MUTED)
 
 func _slot(pos: Vector2, size_px: float, item_index: int = -1) -> void:
 	var extent = Vector2(size_px, size_px)
@@ -168,7 +168,7 @@ func _expedition() -> void:
 		_text(AFFINITIES[i], Vector2(55, y + 8), Vector2(325, 38), 25, Color(AFFINITY_COLORS[i]), true)
 	_text("Into the unknown", Vector2(470, 490), Vector2(750, 58), 43, IVORY, true, true)
 	_text("Realm selection  /  Contracts  /  Exploration", Vector2(470, 556), Vector2(750, 24), 16, GOLD, false, true)
-	_text("Visual study — no expedition can begin", Vector2(50, 610), Vector2(400, 24), 13, MUTED)
+	_text("Preview only — no expedition can begin", Vector2(50, 610), Vector2(400, 24), 13, MUTED)
 
 func _codex() -> void:
 	_background(REALMS, 0.91)
@@ -184,3 +184,34 @@ func _codex() -> void:
 	_text("ELITE / SAMPLE ENTRY", Vector2(817, 301), Vector2(400, 27), 15, GOLD)
 	_text("Illustration and archive layout only.", Vector2(817, 349), Vector2(430, 28), 18, MUTED)
 	_text("No discovery, stats or lore data yet.", Vector2(817, 383), Vector2(430, 28), 17, MUTED)
+
+func _city() -> void:
+	_background(CAMP, 0.78)
+	_header("Wanderer / Settlement", "City Center", "Services — presentation study")
+	var art = [
+		preload("res://assets/shell/blacksmith.png"),
+		preload("res://assets/shell/merchant.png"),
+		preload("res://assets/shell/apothecary.png")
+	]
+	var titles = ["Blacksmith", "Merchant", "Apothecary"]
+	var subtitles = ["Forge and craft", "Trade equipment", "Prepare remedies"]
+	for i in range(3):
+		var x = 48 + i * 400
+		_art(art[i], Vector2(x, 168), Vector2(384, 366))
+		_line(Vector2(x, 538), Vector2(x + 384, 538), Color("7b6547"))
+		_text(titles[i], Vector2(x, 548), Vector2(384, 42), 30, IVORY, true, true)
+		_text(subtitles[i], Vector2(x, 594), Vector2(384, 25), 16, MUTED, false, true)
+
+func _shrine() -> void:
+	_background(REALMS, 0.80)
+	_header("Wanderer / Runes", "The Shrine", "Permanent runes — illustrative layout, no effects")
+	_art(preload("res://assets/shell/shrine.png"), Vector2(48, 160), Vector2(500, 465))
+	_text("BOUND RUNES", Vector2(600, 183), Vector2(600, 36), 25, GOLD, true)
+	for i in range(3):
+		_slot(Vector2(604 + i * 126, 236), 104)
+		_text("Slot " + str(i + 1), Vector2(604 + i * 126, 344), Vector2(104, 25), 15, MUTED, false, true)
+	_line(Vector2(604, 391), Vector2(1220, 391), Color("65533e"))
+	_text("Choose a rune from your bag", Vector2(604, 410), Vector2(600, 40), 27, IVORY, true)
+	for i in range(6):
+		_slot(Vector2(604 + i * 72, 466), 64)
+	_text("Illustrative slots — final rune rules are not ported.", Vector2(604, 560), Vector2(600, 28), 15, MUTED)

@@ -2,13 +2,16 @@ extends Control
 ## Presentation-only navigation. No browser game state is loaded.
 signal page_changed(page_id: String)
 
-const IDS = ["camp", "inventory", "talents", "expedition", "combat", "codex"]
-const TITLES = ["Camp", "Inventory", "Talents", "Expedition", "Combat", "Codex"]
-const MARKS = ["I", "II", "III", "IV", "V", "VI"]
+const IDS = ["camp", "inventory", "talents", "city", "shrine"]
+const ALL_IDS = ["camp", "inventory", "talents", "city", "shrine", "expedition", "combat", "codex"]
+const TITLES = ["Camp", "Inventory", "Talents", "City Center", "Shrine"]
+const MARKS = ["I", "II", "III", "IV", "V"]
 const SCENES = [
 	preload("res://scenes/screens/camp.tscn"),
 	preload("res://scenes/screens/inventory.tscn"),
 	preload("res://scenes/screens/talents.tscn"),
+	preload("res://scenes/screens/city.tscn"),
+	preload("res://scenes/screens/shrine.tscn"),
 	preload("res://scenes/screens/expedition.tscn"),
 	preload("res://scenes/arena.tscn"),
 	preload("res://scenes/screens/codex.tscn")
@@ -17,6 +20,9 @@ var active_page: String = ""
 var current_screen: Node
 var content: Control
 var buttons: Dictionary = {}
+var navigation: Panel
+var actions: HBoxContainer
+var camp_actions: HBoxContainer
 
 func _ready() -> void:
 	content = Control.new()
@@ -25,6 +31,7 @@ func _ready() -> void:
 	add_child(content)
 	content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_build_navigation()
+	_build_context_actions()
 	show_page("camp")
 
 func _style(bg: Color, edge: Color, bottom: int = 0) -> StyleBoxFlat:
@@ -41,6 +48,7 @@ func _style(bg: Color, edge: Color, bottom: int = 0) -> StyleBoxFlat:
 func _build_navigation() -> void:
 	var bar = Panel.new()
 	bar.name = "Navigation"
+	navigation = bar
 	add_child(bar)
 	bar.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
 	bar.offset_top = -72
@@ -84,7 +92,7 @@ func _build_navigation() -> void:
 		buttons[IDS[i]] = button
 
 func show_page(page_id: String) -> bool:
-	var index = IDS.find(page_id)
+	var index = ALL_IDS.find(page_id)
 	if index == -1:
 		return false
 	if active_page != page_id:
@@ -99,13 +107,60 @@ func show_page(page_id: String) -> bool:
 		page_changed.emit(page_id)
 	for id in IDS:
 		buttons[id].set_pressed_no_signal(id == active_page)
+	navigation.visible = IDS.has(active_page)
+	camp_actions.visible = active_page == "camp"
+	_refresh_context_actions()
 	return true
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode >= KEY_1 and event.keycode <= KEY_6:
+		if navigation.visible and event.keycode >= KEY_1 and event.keycode <= KEY_5:
 			show_page(str(IDS[event.keycode - KEY_1]))
 			get_viewport().set_input_as_handled()
 		elif event.keycode == KEY_ESCAPE:
-			show_page("camp")
+			show_page("expedition" if active_page == "combat" else "camp")
 			get_viewport().set_input_as_handled()
+
+func _action(text: String, destination: String, host: HBoxContainer, primary: bool = false) -> Button:
+	var button = Button.new()
+	button.text = text
+	button.custom_minimum_size = Vector2(156, 46)
+	button.add_theme_font_size_override("font_size", 17)
+	button.add_theme_color_override("font_color", Color("ead8b6"))
+	button.add_theme_stylebox_override("normal", _style(Color("49341d") if primary else Color("1b1d22"), Color("c29b61"), 2))
+	button.add_theme_stylebox_override("hover", _style(Color("584126"), Color("e6bc7c"), 2))
+	button.pressed.connect(show_page.bind(destination))
+	host.add_child(button)
+	return button
+
+func _build_context_actions() -> void:
+	camp_actions = HBoxContainer.new()
+	camp_actions.name = "CampActions"
+	camp_actions.position = Vector2(52, 540)
+	camp_actions.add_theme_constant_override("separation", 12)
+	add_child(camp_actions)
+	_action("Begin Expedition", "expedition", camp_actions, true)
+	_action("Codex", "codex", camp_actions)
+	actions = HBoxContainer.new()
+	actions.name = "ContextActions"
+	add_child(actions)
+	actions.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
+	actions.offset_left = 48
+	actions.offset_right = -48
+	actions.offset_top = -62
+	actions.offset_bottom = -12
+	actions.add_theme_constant_override("separation", 14)
+
+func _refresh_context_actions() -> void:
+	for child in actions.get_children():
+		actions.remove_child(child)
+		child.queue_free()
+	actions.visible = not IDS.has(active_page)
+	match active_page:
+		"expedition":
+			_action("Return to Camp", "camp", actions)
+			_action("Preview Encounter", "combat", actions, true)
+		"combat":
+			_action("Return to Expedition Preview", "expedition", actions)
+		"codex":
+			_action("Return to Camp", "camp", actions)

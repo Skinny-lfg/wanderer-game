@@ -37,8 +37,8 @@ jobs:
           GODOT=/tmp/godot-bin/Godot_v4.4.1-stable_linux.x86_64
           "$GODOT" --headless --path godot-prototype --script res://tests/shell_smoke.gd 2>&1 | tee /tmp/godot-shell.log
           ! grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-shell.log
-          grep -F 'PASS: six navigation scenes; active tab state; arena preserved' /tmp/godot-shell.log
-      - name: Capture six rendered screens
+          grep -F 'PASS: five camp tabs; contextual expedition and combat; secondary codex' /tmp/godot-shell.log
+      - name: Capture eight rendered screens
         shell: bash
         run: |
           set -euo pipefail
@@ -47,12 +47,12 @@ jobs:
           GODOT=/tmp/godot-bin/Godot_v4.4.1-stable_linux.x86_64
           LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a -s '-screen 0 1600x900x24' "$GODOT" --path godot-prototype --rendering-method gl_compatibility --resolution 1280x720 --audio-driver Dummy --script res://tests/capture_screens.gd 2>&1 | tee /tmp/godot-captures.log
           ! grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-captures.log
-          grep -F 'PASS: captured six screens' /tmp/godot-captures.log
-          for screen in camp inventory talents expedition combat codex; do
+          grep -F 'PASS: captured eight screens' /tmp/godot-captures.log
+          for screen in camp inventory talents city shrine expedition combat codex; do
             test -s "godot-prototype/captures/$screen.png"
           done
       - uses: actions/upload-artifact@v4
         with:
-          name: godot-g1-screenshots
+          name: godot-g1r-screenshots
           path: godot-prototype/captures/*.png
           if-no-files-found: error
