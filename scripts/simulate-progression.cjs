@@ -222,7 +222,9 @@ function prepare(level,build,seed,opts,desiredRisk=undefined,desiredFamily=undef
     // Explicit VM-only armor/Mana candidate sources, never used by normal gameplay.
     if(opts.stageArmorCoreSource!==undefined&&(typeof opts.stageArmorCoreSource!=='string'||!opts.stageArmorCoreSource.includes('WandererV012CombatCore')))throw Error('Invalid armor diagnostic core');
     if(opts.stageArmorRuntimeSource!==undefined&&(opts.stage619BaselineRuntime!==undefined||opts.stage648c2eManaRuntimeSource!==undefined||typeof opts.stageArmorRuntimeSource!=='string'||!opts.stageArmorRuntimeSource.includes('WandererV012CombatRuntime')))throw Error('Invalid armor diagnostic runtime');
+    if(opts.anchorSpreadResearch!==undefined&&(opts.anchorSpreadResearch!==true||opts.mode!=='encounter'||typeof opts.anchorSpreadBoonSource!=='string'||!opts.anchorSpreadBoonSource.includes('WandererV013ExpeditionBoons')||typeof opts.anchorSpreadBoon!=='boolean'))throw Error('Invalid isolated DoT spread study');
     const overrides={
+      ...(opts.anchorSpreadResearch===true?{'online/v013-expedition-boons.js':opts.anchorSpreadBoonSource}:{}),
       ...(opts.stageArmorCoreSource===undefined?{}:{'combat/v012-combat-core.js':opts.stageArmorCoreSource}),
       ...(opts.stageArmorRuntimeSource===undefined?{}:{'combat/v012-combat-runtime.js':opts.stageArmorRuntimeSource}),
       ...(opts.stage648c2cGearStatsSource===undefined?{}:{'combat/v012-gear-stats.js':opts.stage648c2cGearStatsSource}),
@@ -506,11 +508,17 @@ function encounter(level,build,seed,kind,opts,forcedTrait=undefined,forcedBossMo
  }
  const count=groupSize??(kind==='normal'?3:1);
  const run=a.encounter({count,boss:kind==='boss',elite:kind==='elite'});
+ if(opts.anchorSpreadResearch===true){
+  if(run.boonIds?.length)throw Error('Unexpected pre-existing Boons in spread fixture');
+  // Controlled-only: Rotbound Echo has no entry stat or resource effects. Never used by natural accounts.
+  run.boonIds=opts.anchorSpreadBoon?['rotbound_echo']:[];
+ }
  if(opts.stage619EliteType!==undefined&&run.encounterLeader?.eliteType!==opts.stage619EliteType)
   throw Error('Native forced Elite spawn differs from requested subtype');
  if(run.tier!==level)throw Error('Incorrect encounter tier '+run.tier+' vs '+level);
  if(kind==='boss'&&run.encounterLeader?.bossStyle!==A.profileFor(card.family).style)throw Error('Native Boss mismatch for '+card.family);
  const result=fight(a,c,opts.tickLimit,opts.targetPolicy,opts.measure===true,opts.stage648ManaAudit===true);
+ if(opts.anchorSpreadResearch===true)result.anchorSpreadMetrics=Object.fromEntries(Object.entries(run.metrics||{}).filter(([k])=>k.startsWith('anchorSpread')));
  const baseStats=combatEntryStats;
  const mode=forcedBossMod!==undefined?'bossmods':forcedTrait!==undefined?'traits':opts.mode==='bosses'?'bosses':['enemies','roles'].includes(opts.mode)?opts.mode:opts.mode==='elites'?'elites':'encounter';
  const label=forcedBossMod!==undefined?(forcedBossMod||'baseline'):forcedTrait!==undefined?(forcedTrait||'baseline'):mode==='bosses'?card.family:['enemies','roles'].includes(mode)?'swarm-'+count:kind;
