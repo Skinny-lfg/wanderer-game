@@ -39,6 +39,11 @@ var demo_panels: Array[PanelContainer] = []
 var prefer_painted: bool = true
 var active_pack_label: Label
 var demo_buttons: Dictionary = {}
+var prefer_tooltips: bool = true
+var tooltip_status: Label
+var demo_tooltips: Array[PanelContainer] = []
+var demo_tooltip_slot: Button
+var tooltip_comparison: HBoxContainer
 
 func _label(value: String, font_size: int = 17, color: Color = Tokens.IVORY) -> Label:
 	var label = Label.new()
@@ -90,7 +95,7 @@ func _ready() -> void:
 	fit.text = "Fit screen"
 	fit.pressed.connect(_fit_gallery_window)
 	header.add_child(fit)
-	frame.add_child(_label("STYLIZED GOTHIC     •     G2.2D.4 / ASSET NORMALIZATION", 15, Tokens.GOLD))
+	frame.add_child(_label("STYLIZED GOTHIC     •     G2.2E / TOOLTIP ART STUDY", 15, Tokens.GOLD))
 	frame.add_child(HSeparator.new())
 	var layout = _row(frame)
 	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -586,15 +591,98 @@ func _slots() -> void:
 		_slot(gear, 1 + i % 5, BAG_ART[i], ["Weapon", "Head", "Chest", "Feet", "Hands", "Ring", "Charm", "Shield"][i], true)
 	_note("Independent gallery only. No inventory data, gameplay or game-screen theme changes.")
 
+func _tooltip_card(kind: String, compare: bool = false) -> PanelContainer:
+	var node = TooltipScene.instantiate()
+	var rarity_index = 3
+	var art: Texture2D = ITEM
+	node.item_name = "Forgotten Blade"
+	node.category = "Dagger"
+	node.stat_lines = PackedStringArray(["24–32 Attack Damage", "+8 Agility", "+5 Critical Rating"])
+	node.description = "Illustrative item — no gameplay data."
+	if kind == "common":
+		rarity_index = 1
+		node.item_name = "Old Iron Blade"
+		node.stat_lines = PackedStringArray(["18–24 Attack Damage"])
+		node.description = ""
+	elif kind == "legendary":
+		rarity_index = 5
+		node.item_name = "Oathbound Relic"
+		node.category = "Amulet"
+		art = BAG_ART[6]
+		node.stat_lines = PackedStringArray(["+16 Maximum Health", "+4 Defense", "+6 Endurance"])
+		node.unique_effect = "On block, gain a brief protective ward. Example text only."
+		node.description = "A relic of a forgotten oath."
+	elif kind == "equipped":
+		rarity_index = 2
+		node.item_name = "Iron Fang"
+		node.stat_lines = PackedStringArray(["20–28 Attack Damage", "+5 Agility", "+7 Critical Rating"])
+		node.description = "Currently equipped — example."
+	elif compare:
+		node.comparison_title = "CHANGE VS IRON FANG"
+		node.comparison_lines = PackedStringArray(["+4 minimum / maximum damage", "+3 Agility", "-2 Critical Rating"])
+	node.rarity = rarity_index
+	if prefer_tooltips and frame_pack.is_ready() and slot_pack.is_ready():
+		node.detailed = kind == "legendary"
+		node.painted_style = frame_pack.style_for("featured" if node.detailed else "tooltip")
+		node.portrait_art = art
+		node.portrait_frame = slot_pack.textures[SlotPack.RARITIES[rarity_index]]
+		if node.detailed:
+			node.ornament = frame_pack.textures["crest"]
+	return node
+
 func _tooltips() -> void:
-	_note("Sample content rendered by a reusable tooltip scene. These numbers are not Wanderer stats.")
-	var row = _row(body)
-	var first = TooltipScene.instantiate()
-	row.add_child(first)
-	var second = TooltipScene.instantiate()
-	second.item_name = "Oathbound Relic"
-	second.rarity = 5
-	second.category = "Amulet"
-	second.stat_lines = PackedStringArray(["+16 Maximum Health", "+4 Defense", "Sample unique effect"])
-	row.add_child(second)
-	_note("Comparison, positioning and live item data will be implemented in a later UI-kit stage.")
+	demo_tooltips.clear()
+	var toolbar = _row(body)
+	var selector = OptionButton.new()
+	selector.add_item("G2.2E Painted UI")
+	selector.add_item("G2.1 Original")
+	selector.select(0 if prefer_tooltips else 1)
+	selector.item_selected.connect(func(index: int):
+		prefer_tooltips = index == 0
+		call_deferred("show_category", "Tooltips")
+	)
+	toolbar.add_child(selector)
+	var reload = Button.new()
+	reload.text = "Reload artwork"
+	reload.pressed.connect(func():
+		frame_pack.load_pack()
+		slot_pack.load_pack()
+		prefer_tooltips = true
+		call_deferred("show_category", "Tooltips")
+	)
+	toolbar.add_child(reload)
+	var painted = prefer_tooltips and frame_pack.is_ready() and slot_pack.is_ready()
+	tooltip_status = _label("Painted assets active" if painted else "Original active", 15, Tokens.GOLD)
+	toolbar.add_child(tooltip_status)
+	_note("Compact bag tooltip / detailed legendary inspection — example values, not live game stats.")
+	var cards = _row(body)
+	var basic = _tooltip_card("common")
+	var rare = _tooltip_card("rare")
+	var legendary = _tooltip_card("legendary")
+	for card in [basic, rare, legendary]:
+		card.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+		cards.add_child(card)
+		demo_tooltips.append(card)
+	var interactions = _row(body)
+	var hover_column = _vbox(interactions, 4)
+	demo_tooltip_slot = SlotScene.instantiate()
+	demo_tooltip_slot.item_art = ITEM
+	demo_tooltip_slot.rarity = 3
+	if painted:
+		demo_tooltip_slot.painted_textures = slot_pack.textures
+		demo_tooltip_slot.preview_tooltip_factory = func(): return _tooltip_card("rare")
+	hover_column.add_child(demo_tooltip_slot)
+	hover_column.add_child(_label("Hover to inspect", 14, Tokens.MUTED))
+	var compare_button = CheckButton.new()
+	compare_button.text = "Compare equipped item"
+	compare_button.button_pressed = true
+	interactions.add_child(compare_button)
+	tooltip_comparison = _row(body)
+	var equipped = _tooltip_card("equipped")
+	var candidate = _tooltip_card("rare", true)
+	for card in [equipped, candidate]:
+		card.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+		tooltip_comparison.add_child(card)
+		demo_tooltips.append(card)
+	compare_button.toggled.connect(func(enabled: bool): tooltip_comparison.visible = enabled)
+	_note("Comparison values are demonstration data. Live inventory, positioning and combat mechanics are not connected.")

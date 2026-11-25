@@ -6,6 +6,8 @@ var _cached_art: Texture2D
 var _cached_bounds: Rect2i
 # Opt-in for the gallery; other consumers keep the original visual treatment.
 var painted_textures: Dictionary = {}
+# Optional custom tooltip factory, supplied only by the workshop preview.
+var preview_tooltip_factory: Callable
 @export var item_art: Texture2D
 @export_range(0, 5) var rarity: int = 1
 @export var quantity: int = 1
@@ -108,3 +110,8 @@ func _draw_painted() -> void:
 		draw_string(font, pos, count_text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Tokens.IVORY)
 	if equipped:
 		draw_string(font, origin + Vector2(side * 0.72, side * 0.24), "E", HORIZONTAL_ALIGNMENT_LEFT, -1, maxi(10, roundi(side * 0.17)), Tokens.GOLD)
+
+func _make_custom_tooltip(_for_text: String) -> Object:
+	if preview_tooltip_factory.is_valid():
+		return preview_tooltip_factory.call()
+	return null

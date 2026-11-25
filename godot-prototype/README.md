@@ -62,3 +62,7 @@ The ten approved PNGs are committed at `godot-prototype/ui/assets/inventory/g22d
 ## Gallery display (macOS / Windows)
 
 Run `ui/showcase/ui_gallery.tscn` directly (F6). The standalone gallery uses a 1440×900 logical canvas with an adaptive window sized to 90% of the available monitor, capped at 2560×1600. The header offers UI 85–150% zoom and Fit screen. Content can scroll horizontally and vertically at high zoom. If editor game embedding restricts the window size, run the scene in a separate window. The main project viewport and automated screenshot dimensions are unchanged.
+
+## G2.2E — Tooltips & item inspection
+
+F6 → Tooltips. Reuses approved G2.2B painted panels/crest and G2.2D rarity frames with normalized original gear art. Compact Common/Rare cards, detailed Legendary card, interactive hover sample, side-by-side equipped comparison with example positive/negative changes, and original style comparison. Values and effects are illustrative; no live game mechanics or inventory data connected. No new PNGs are required.

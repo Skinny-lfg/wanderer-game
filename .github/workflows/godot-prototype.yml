@@ -112,3 +112,11 @@ jobs:
           "$GODOT" --headless --path godot-prototype --script res://tests/painted_slots_smoke.gd 2>&1 | tee /tmp/godot-slots.log
           ! grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-slots.log
           grep -F 'PASS: G2.2D ten actual textures, rarity states, 48-slot bag and original comparison' /tmp/godot-slots.log
+      - name: Painted tooltips smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          GODOT=/tmp/godot-bin/Godot_v4.4.1-stable_linux.x86_64
+          "$GODOT" --headless --path godot-prototype --script res://tests/painted_tooltips_smoke.gd 2>&1 | tee /tmp/godot-tooltips.log
+          ! grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-tooltips.log
+          grep -F 'PASS: G2.2E painted compact, legendary, comparison and hover tooltip' /tmp/godot-tooltips.log
