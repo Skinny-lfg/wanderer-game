@@ -111,16 +111,16 @@ func tooltip_style(rarity: int, simple: bool = true) -> StyleBoxTexture:
 		rarity_tooltip_textures[index] = Modular.build_panel(textures["tooltip"], CORNERS["tooltip"], SAMPLE, rarity_surface(index))
 	return Modular.style(rarity_tooltip_textures[index], CORNERS["tooltip"], Vector4(22, 20, 22, 20))
 
-# A clean, purpose-built nine-slice: thin chamfered bronze outline, uniform
+# A clean, purpose-built nine-slice: thin chamfered rarity outline, uniform
 # interior, no bevel shading or shadow. The Legendary top has room for its crest.
 static func simple_rarity_surface(rarity: int) -> Color:
 	var index = clampi(rarity, 0, 5)
 	return Color("#111217").lerp(Tokens.RARITY_COLORS[index], 0.045 if index < 2 else 0.08)
 
 static func _simple_tooltip_atlas(rarity: int) -> Texture2D:
-	var atlas = SimpleFrame.png_atlas("rarity_" + str(rarity))
-	if atlas != null:
-		return atlas
-	var border = Color("#786751") if rarity != 5 else Color("#b08a50")
-	var inner_line = Color("#3c342b") if rarity != 5 else Color("#594529")
-	return SimpleFrame.build_atlas(simple_rarity_surface(rarity), border, inner_line, 10 if rarity == 5 else 2)
+	var index = clampi(rarity, 0, 5)
+	var accent: Color = Tokens.RARITY_COLORS[index]
+	var background = simple_rarity_surface(index)
+	# The same rarity token drives item name and frame; keep the inner edge muted.
+	# Build the existing nine-slice geometry instead of loading the old bronze PNG.
+	return SimpleFrame.build_atlas(background, accent, background.lerp(accent, 0.28), 10 if index == 5 else 2)

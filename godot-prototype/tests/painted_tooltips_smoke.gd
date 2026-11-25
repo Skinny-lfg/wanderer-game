@@ -1,4 +1,5 @@
 extends SceneTree
+const Tokens = preload("res://ui/theme/tokens.gd")
 func _initialize() -> void:
 	call_deferred("_run")
 
@@ -49,6 +50,12 @@ func _run() -> void:
 			_fail("Rarity surfaces should be distinct")
 			return
 		seen.append(color)
+		# Straight left border uses the exact rarity token (RGBA8 tolerance).
+		var edge = surface.get_pixel(2, 20)
+		var expected: Color = Tokens.RARITY_COLORS[index]
+		if absf(edge.r - expected.r) > 0.005 or absf(edge.g - expected.g) > 0.005 or absf(edge.b - expected.b) > 0.005 or edge.a < 0.99:
+			_fail("Tooltip frame does not match rarity: " + str(index))
+			return
 		if style.texture_margin_left != 16 or style.texture_margin_top != 16:
 			_fail("Simple frame has incorrect slice geometry")
 			return
