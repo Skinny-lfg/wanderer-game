@@ -1,0 +1,66 @@
+name: E10 Evasion Source Audit
+on:
+  workflow_dispatch:
+  push:
+    branches: [audit/e10-evasion-sources]
+    paths:
+      - 'scripts/v013-e10-evasion-sources.cjs'
+      - '.github/workflows/e10-evasion-sources.yml'
+permissions:
+  contents: read
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node --test tests/v0120-evasion.test.cjs
+      - run: node scripts/v013-e10-evasion-sources.cjs smoke
+  cohort:
+    needs: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        build: [fury-daggers, fury-bow, fury-twohand, blood-daggers, decay-cycle-daggers]
+        armor: [Cloth, Leather, Plate]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node scripts/v013-e10-evasion-sources.cjs run "${{ matrix.build }}" "${{ matrix.armor }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: evasion-source-${{ matrix.build }}-${{ matrix.armor }}
+          path: reports/e10-evasion-sources/*.json
+          if-no-files-found: error
+  summary:
+    needs: cohort
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: evasion-source-*
+          path: reports/e10-evasion-sources
+          merge-multiple: true
+      - run: node scripts/v013-e10-evasion-sources.cjs aggregate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: e10-evasion-source-summary
+          path: reports/e10-evasion-sources/summary.json
+          if-no-files-found: error
