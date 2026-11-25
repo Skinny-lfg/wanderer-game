@@ -1,0 +1,54 @@
+name: E10 Defensive Synergies and Drain (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths: ['scripts/v013-e10-defensive-drain.cjs','.github/workflows/v013-e10-defensive-drain.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node scripts/v013-e10-defensive-drain.cjs smoke
+  cohort:
+    needs: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        id: [magic-fire-wand, magic-fire-staff, magic-lightning-wand, magic-lightning-staff, fury-daggers, fury-bow, fury-twohand, blood-daggers, blood-bow, blood-twohand, audit-twohand]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node scripts/v013-e10-defensive-drain.cjs run "${{ matrix.id }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: defensive-drain-${{ matrix.id }}
+          path: reports/e10-defensive-drain/*.json
+  summary:
+    needs: cohort
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: defensive-drain-*
+          path: reports/e10-defensive-drain
+          merge-multiple: true
+      - run: node scripts/v013-e10-defensive-drain.cjs aggregate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: e10-defensive-drain-summary
+          path: reports/e10-defensive-drain/summary.json

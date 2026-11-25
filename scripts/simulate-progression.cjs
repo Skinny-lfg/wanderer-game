@@ -418,6 +418,7 @@ function fight(a,c,limit,targetPolicy='focus',measure=false,resourceAudit=false)
    barrierPower:v(r.stats?.barrierPower),healingPower:v(r.stats?.healingPower),manaCostReduction:v(r.stats?.manaCostReduction),
    criticalDisplayEvents:v(now.crit-nativeBefore.crit),guardLogEvents:v(now.blocks-nativeBefore.blocks),attackCalls:v(now.attacks-nativeBefore.attacks),
    manaStarvedSeconds:v(metrics.manaStarvedSeconds||0),spellCriticalHits:v(metrics.spellCriticalHits||0),eligibleSpellCriticalRolls:v(metrics.eligibleSpellCriticalRolls||0),legendaryProcs:Object.fromEntries(Object.entries(metrics.procs||{}).filter(([name])=>name.startsWith('Legendary: '))),
+   defensiveAudit:Object.fromEntries(['auditEnemyAttacks','auditPhysicalAttacks','auditNonPhysicalAttacks','auditPreAvoidDamage','auditDodgePrevented','dodges','parries','armor','shield'].map(k=>[k,v(metrics[k]||0)])),
    passiveActivations:activations,
    passiveTelemetryScope:'Buildcraft activated() only, not all passive and stat triggers',
    barrierScope:'setBarrier() after entry; initial Barrier reported separately',
@@ -592,7 +593,7 @@ function dungeon(level,build,seed,opts,desiredRisk=undefined){
    }
    if(!a.enter())throw Error('Native entry rejected for room '+node);
    if(a.events.run()?.event){events.push(a.events.run().event.id);resolveEvent(a);continue;}
-   const entry=fight(a,c,opts.tickLimit,opts.targetPolicy);rooms.push({room:node,kind:card.nodes[node].kind,...entry});
+   const entry=fight(a,c,opts.tickLimit,opts.targetPolicy,opts.measure===true);rooms.push({room:node,kind:card.nodes[node].kind,...entry});
    if(entry.timedOut||g.stage==='failed')break;
    if(a.state().run?.status==='cleared'||a.results().eventExitPending||a.results().review){if(!a.exitResult())throw Error('Failed to exit resolved room '+node);}
   }catch(e){error=e.message;break;}
