@@ -1,0 +1,68 @@
+name: E10 Blood Ability Redesign (NO DEPLOY)
+on:
+  push:
+    branches: [audit/e10-blood-ability-redesign]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node --test tests/v013-stage647d6-blood-fury.test.cjs tests/v013-balance-criteria.test.cjs
+      - run: node scripts/v013-e10-blood-ability-redesign.cjs smoke
+      - run: node scripts/v013-e10-blood-ability-redesign.cjs process-smoke
+        env:
+          BLOOD_CONSOLIDATION_OUT: ${{ runner.temp }}/blood-redesign-process-smoke
+  cohort:
+    needs: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      max-parallel: 16
+      matrix:
+        build: [blood-daggers, blood-sword, blood-twohand, blood-bow, blood-mace, blood-sword-reserve, blood-daggers-crit, blood-twohand-transfer, blood-bow-reserve, blood-twohand-reserve]
+        mode: [new]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node scripts/v013-e10-blood-ability-redesign.cjs run "${{ matrix.build }}" "${{ matrix.mode }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: blood-redesign-${{ matrix.build }}-${{ matrix.mode }}
+          path: reports/e10-blood-ability-redesign/*.json
+          if-no-files-found: error
+  summary:
+    needs: cohort
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: blood-redesign-*
+          path: reports/e10-blood-ability-redesign
+          merge-multiple: true
+      - run: node --max-old-space-size=6144 scripts/v013-e10-blood-ability-redesign.cjs aggregate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: blood-redesign-summary
+          path: reports/e10-blood-ability-redesign/summary.json
+          if-no-files-found: error
