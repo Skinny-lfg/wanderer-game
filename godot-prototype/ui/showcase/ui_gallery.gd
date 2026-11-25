@@ -41,6 +41,7 @@ var active_pack_label: Label
 var demo_buttons: Dictionary = {}
 var prefer_tooltips: bool = true
 var organized_tooltips: bool = true
+var simple_tooltips: bool = true
 var tooltip_status: Label
 var demo_tooltips: Array[PanelContainer] = []
 var demo_tooltip_slot: Button
@@ -96,7 +97,7 @@ func _ready() -> void:
 	fit.text = "Fit screen"
 	fit.pressed.connect(_fit_gallery_window)
 	header.add_child(fit)
-	frame.add_child(_label("STYLIZED GOTHIC     •     G2.2E.4 / RARITY TOOLTIP SURFACES", 15, Tokens.GOLD))
+	frame.add_child(_label("STYLIZED GOTHIC     •     G2.2E.5 / SIMPLE TOOLTIP FRAMES", 15, Tokens.GOLD))
 	frame.add_child(HSeparator.new())
 	var layout = _row(frame)
 	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -690,7 +691,8 @@ func _tooltip_card(kind: String, compare: bool = false) -> PanelContainer:
 	if prefer_tooltips and frame_pack.is_ready() and slot_pack.is_ready():
 		node.detailed = kind == "legendary"
 		node.organized = organized_tooltips
-		node.painted_style = frame_pack.tooltip_style(rarity_index) if organized_tooltips else frame_pack.style_for("featured" if node.detailed else "tooltip")
+		node.simple_surface = organized_tooltips and simple_tooltips
+		node.painted_style = frame_pack.tooltip_style(rarity_index, simple_tooltips) if organized_tooltips else frame_pack.style_for("featured" if node.detailed else "tooltip")
 		node.portrait_art = art
 		node.portrait_frame = slot_pack.textures[SlotPack.RARITIES[rarity_index]]
 		if node.detailed:
@@ -701,13 +703,15 @@ func _tooltips() -> void:
 	demo_tooltips.clear()
 	var toolbar = _row(body)
 	var selector = OptionButton.new()
-	selector.add_item("G2.2E.4 Rarity Surfaces")
+	selector.add_item("G2.2E.5 Simple Frame")
+	selector.add_item("G2.2E.4 Painted Frame")
 	selector.add_item("G2.2E Previous")
 	selector.add_item("G2.1 Original")
-	selector.select((0 if organized_tooltips else 1) if prefer_tooltips else 2)
+	selector.select(((0 if simple_tooltips else 1) if organized_tooltips else 2) if prefer_tooltips else 3)
 	selector.item_selected.connect(func(index: int):
-		prefer_tooltips = index != 2
-		organized_tooltips = index == 0
+		prefer_tooltips = index != 3
+		organized_tooltips = index < 2
+		simple_tooltips = index == 0
 		call_deferred("show_category", "Tooltips")
 	)
 	toolbar.add_child(selector)
@@ -723,7 +727,7 @@ func _tooltips() -> void:
 	var painted = prefer_tooltips and frame_pack.is_ready() and slot_pack.is_ready()
 	tooltip_status = _label("Painted assets active" if painted else "Original active", 15, Tokens.GOLD)
 	toolbar.add_child(tooltip_status)
-	_note("Unframed header art / rarity-colored surfaces / Legendary edge ornament. All values and effects are illustrative.")
+	_note("Unframed header art / subtle rarity tint / simple shadow-free frame. All values and effects are illustrative.")
 	var cards = _row(body)
 	var basic = _tooltip_card("common")
 	var rare = _tooltip_card("rare")

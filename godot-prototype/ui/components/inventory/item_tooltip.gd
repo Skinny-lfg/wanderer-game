@@ -7,6 +7,7 @@ var portrait_art: Texture2D
 var ornament: Texture2D
 var detailed: bool = false
 var organized: bool = false
+var simple_surface: bool = false
 var primary_value: String = ""
 var primary_label: String = ""
 var attributes: Array[Dictionary] = []
@@ -155,7 +156,7 @@ func _aligned_stat(host: Node, label_text: String, value: String, value_color: C
 
 func _position_edge_ornament() -> void:
 	if is_instance_valid(edge_ornament):
-		edge_ornament.position = Vector2(size.x * 0.5, 10.0)
+		edge_ornament.position = Vector2(size.x * 0.5, 12.0 if simple_surface else 10.0)
 
 func _attach_edge_ornament() -> void:
 	if rarity != 5 or ornament == null:
@@ -165,7 +166,7 @@ func _attach_edge_ornament() -> void:
 	edge_ornament = Sprite2D.new()
 	edge_ornament.name = "TopEdgeOrnament"
 	edge_ornament.texture = ornament
-	var scale_factor = 58.0 / maxf(1.0, ornament.get_width())
+	var scale_factor = (40.0 if simple_surface else 58.0) / maxf(1.0, ornament.get_width())
 	edge_ornament.scale = Vector2.ONE * scale_factor
 	add_child(edge_ornament)
 	resized.connect(_position_edge_ornament)
@@ -173,10 +174,10 @@ func _attach_edge_ornament() -> void:
 
 func _build_organized() -> void:
 	var style = painted_style.duplicate() as StyleBoxTexture
-	style.content_margin_left = 22
-	style.content_margin_right = 22
-	style.content_margin_top = 29 if rarity == 5 and ornament != null else 20
-	style.content_margin_bottom = 20
+	style.content_margin_left = 16 if simple_surface else 22
+	style.content_margin_right = 16 if simple_surface else 22
+	style.content_margin_top = (25 if simple_surface else 29) if rarity == 5 and ornament != null else (15 if simple_surface else 20)
+	style.content_margin_bottom = 15 if simple_surface else 20
 	add_theme_stylebox_override("panel", style)
 	custom_minimum_size.x = 310 if detailed else 280
 	var accent: Color = Tokens.RARITY_COLORS[rarity]

@@ -9,6 +9,8 @@ const CORNERS = {
 const SAMPLE = Vector2i(20, 12)
 var modular_textures: Dictionary = {}
 var rarity_tooltip_textures: Dictionary = {}
+var simple_tooltip_textures: Dictionary = {}
+const SIMPLE_TOOLTIP_CORNER = Vector2i(16, 16)
 const Tokens = preload("res://ui/theme/tokens.gd")
 ## G2.2B art candidate: resizable frame bodies and separately anchored ornaments.
 const ART_DIR = "res://ui/assets/frames/g22b"
@@ -34,6 +36,7 @@ func load_pack(directory: String = ART_DIR) -> bool:
 	textures.clear()
 	modular_textures.clear()
 	rarity_tooltip_textures.clear()
+	simple_tooltip_textures.clear()
 	problem = ""
 	var pending: Dictionary = {}
 	for name in SIZES:
@@ -96,10 +99,45 @@ func apply_to(panel: PanelContainer, name: String) -> bool:
 static func rarity_surface(rarity: int) -> Color:
 	return Color("#151619").lerp(Tokens.RARITY_COLORS[clampi(rarity, 0, 5)], 0.17 if rarity < 2 else 0.20)
 
-func tooltip_style(rarity: int) -> StyleBoxTexture:
+func tooltip_style(rarity: int, simple: bool = true) -> StyleBoxTexture:
 	if not is_ready():
 		return null
 	var index = clampi(rarity, 0, 5)
+	if simple:
+		if not simple_tooltip_textures.has(index):
+			simple_tooltip_textures[index] = _simple_tooltip_atlas(index)
+		return Modular.style(simple_tooltip_textures[index], SIMPLE_TOOLTIP_CORNER, Vector4(15, 15, 15, 15))
 	if not rarity_tooltip_textures.has(index):
 		rarity_tooltip_textures[index] = Modular.build_panel(textures["tooltip"], CORNERS["tooltip"], SAMPLE, rarity_surface(index))
 	return Modular.style(rarity_tooltip_textures[index], CORNERS["tooltip"], Vector4(22, 20, 22, 20))
+
+# A clean, purpose-built nine-slice: thin chamfered bronze outline, uniform
+# interior, no bevel shading or shadow. The Legendary top has room for its crest.
+static func simple_rarity_surface(rarity: int) -> Color:
+	var index = clampi(rarity, 0, 5)
+	return Color("#111217").lerp(Tokens.RARITY_COLORS[index], 0.045 if index < 2 else 0.08)
+
+static func _simple_tooltip_atlas(rarity: int) -> Texture2D:
+	var image = Image.create(40, 40, false, Image.FORMAT_RGBA8)
+	image.fill(Color(0, 0, 0, 0))
+	var background = simple_rarity_surface(rarity)
+	var border = Color("#786751") if rarity != 5 else Color("#b08a50")
+	var inner_line = Color("#3c342b") if rarity != 5 else Color("#594529")
+	var top = 10 if rarity == 5 else 2
+	for y in range(40):
+		for x in range(40):
+			var left = x - 2
+			var right = 37 - x
+			var upper = y - top
+			var lower = 37 - y
+			var d = float(mini(mini(left, right), mini(upper, lower)))
+			d = minf(d, float(mini(mini(left + upper, right + upper), mini(left + lower, right + lower)) - 4) / sqrt(2.0))
+			if d < 0.0:
+				continue
+			var color = background
+			if d < 1.0:
+				color = border
+			elif d < 2.0:
+				color = inner_line
+			image.set_pixel(x, y, color)
+	return ImageTexture.create_from_image(image)

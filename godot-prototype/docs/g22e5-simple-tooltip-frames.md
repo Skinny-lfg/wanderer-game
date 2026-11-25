@@ -1,0 +1,3 @@
+# G2.2E.5 — Simple tooltip frames
+
+A dedicated procedural 40x40 nine-slice with thin chamfered bronze outline, no shadow or bevel and a uniformly dark central surface. Rarity tint reduced from 17–20% to 4.5–8%. Legendary keeps a fixed small crest centered on the upper edge with dedicated clearance. Original item art, text hierarchy and comparisons unchanged. The gallery selector keeps the previous painted rarity treatment for comparison. Existing panel art and all gameplay remain untouched. Tests verify dark distinct surfaces, flat interiors and fixed modular margins.

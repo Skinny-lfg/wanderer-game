@@ -37,7 +37,7 @@ func _run() -> void:
 	if legendary.edge_ornament == null or rare.edge_ornament != null or common.edge_ornament != null:
 		_fail("Legendary-only edge ornament missing")
 		return
-	if not is_equal_approx(legendary.edge_ornament.position.x, legendary.size.x * 0.5) or not is_equal_approx(legendary.edge_ornament.position.y, 10.0):
+	if not is_equal_approx(legendary.edge_ornament.position.x, legendary.size.x * 0.5) or not is_equal_approx(legendary.edge_ornament.position.y, 12.0):
 		_fail("Legendary ornament not attached to upper edge")
 		return
 	var seen: Array[Color] = []
@@ -49,7 +49,22 @@ func _run() -> void:
 			_fail("Rarity surfaces should be distinct")
 			return
 		seen.append(color)
-		if style.texture_margin_left != 30:
+		if style.texture_margin_left != 16 or style.texture_margin_top != 16:
+			_fail("Simple frame has incorrect slice geometry")
+			return
+		if maxf(color.r, maxf(color.g, color.b)) > 0.16:
+			_fail("Tooltip background is too bright")
+			return
+		# Away from the thin border, there must be no interior shadow or bevel.
+		for y in range(13, 35):
+			for x in range(9, 31):
+				if surface.get_pixel(x, y) != color:
+					_fail("Simple tooltip interior must be uniform")
+					return
+		if style.axis_stretch_horizontal != StyleBoxTexture.AXIS_STRETCH_MODE_TILE:
+			_fail("Simple frame must remain modular")
+			return
+		if gallery.frame_pack.tooltip_style(index, false).texture_margin_left != 30:
 			_fail("Rarity tint changed frame geometry")
 			return
 	if legendary.get_theme_stylebox("panel").texture == rare.get_theme_stylebox("panel").texture:
@@ -75,6 +90,12 @@ func _run() -> void:
 		_fail("Custom hover tooltip failed")
 		return
 	hover.free()
+	gallery.simple_tooltips = false
+	gallery.show_category("Tooltips")
+	await process_frame
+	if not gallery.demo_tooltips[0].organized or gallery.demo_tooltips[0].simple_surface or gallery.demo_tooltips[0].get_theme_stylebox("panel").texture_margin_left != 30:
+		_fail("Painted rarity frame comparison missing")
+		return
 	gallery.organized_tooltips = false
 	gallery.show_category("Tooltips")
 	await process_frame
