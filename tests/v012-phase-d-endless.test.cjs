@@ -16,10 +16,12 @@ test('D: Forge and boss Rune rewards accept Endless tiers',()=>{
   const price=a.forge.progress('green_sword',level).cost;a.forge.craft('green_sword',level);
   assert.equal(a.state().stash.at(-1).tier,70);
   assert.equal(a.state().stash.at(-1).craftPrice,price.fragments);
-  a.offerBossRunes(level);
-  assert.equal(a.state().pendingRuneReward.tier,level);
-  assert.equal(a.state().pendingRuneReward.options.length,3);
-  assert(a.state().pendingRuneReward.options.every(r=>r.tier===level&&r.value>0));
+  const rune=a.offerBossRunes(level);
+  assert.equal(a.state().pendingRuneReward,null);
+  assert.equal(a.state().runes.length,1);
+  assert.equal(a.state().runes[0].id,rune.id);
+  assert.equal(rune.tier,level);assert(rune.value>0);
+  assert(a.state().runeSlots.every(id=>id===null));
  }
 });
 

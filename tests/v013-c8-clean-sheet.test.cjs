@@ -21,8 +21,8 @@ function bossPath(card){
 }
 function bossVictory(seed,options={}){
  const a=create(seed,undefined,{}, {skipPersistence:true});
- a.setup(35,'Sword','Legendary');a.setUnlocked(35);a.start(35,true);
- const c=a.controller(),g=c.state,card=g.dungeon.cards[0];c.chooseRealm(card.id);
+ const tier=options.tier||35;a.setup(tier,'Sword','Legendary');a.setUnlocked(tier);if(options.runeCount)for(let i=0;i<options.runeCount;i++)a.state().runes.push(a.makeRune('might',1));a.start(tier,true);
+ const c=a.controller(),g=c.state,card=g.dungeon.cards[options.cardIndex||0];c.chooseRealm(card.id);
  for(const node of bossPath(card).slice(1)){
   assert.equal(c.visitRoom(node),true);assert.equal(a.enter(),true);
   if(a.events.run()?.event)assert.equal(a.events.choose(2),true);
@@ -74,15 +74,18 @@ test('C8 actual Boss loot enters overflow when Stash is full and cannot be claim
  assert(!s.expeditionOverflow.some(x=>x.id===reward.id));
  assert.equal(a.claimOverflow(),0,'Claim cannot duplicate an existing item');
 });
-test('C8 native Boss victory offers and awards exactly one persistent-tier Rune choice',()=>{
- const {a,g}=bossVictory(90803),s=a.state(),reward=s.pendingRuneReward;
- assert(reward);assert.equal(reward.tier,35);assert.equal(reward.options.length,3);
- assert.equal(new Set(reward.options.map(r=>r.family)).size,3);
- assert(reward.options.every(r=>r.tier===35&&a.validRune(r)));
- const chosen=reward.options[0],before=s.runes.length;
- assert.equal(a.claimRune(chosen.id),true);assert.equal(a.claimRune(chosen.id),false);
- assert.equal(s.pendingRuneReward,null);assert.equal(s.runes.length,before+1);
- assert(s.runeSlots.includes(chosen.id));assert.equal(g.unlocked,36);
+test('C8 native Boss victory awards exactly one persistent-tier Rune without auto-equip',()=>{
+ const {a,g}=bossVictory(90803),s=a.state();
+ assert.equal(s.pendingRuneReward,null);assert.equal(s.runes.length,1);
+ const rune=s.runes[0];assert.equal(rune.tier,35);assert(a.validRune(rune));
+ assert(s.runeSlots.every(id=>id===null));assert.equal(g.unlocked,36);
+ assert.equal(a.results().summary.runeTier,35);assert(a.results().summary.runeName.includes(rune.name));
+});
+test('C8 native Boss victory fills the reserved last Rune Bag slot without losing the drop',()=>{
+ const {a}=bossVictory(90803,{runeCount:299}),s=a.state();
+ assert.equal(s.runes.length,300);assert.equal(s.runes.at(-1).tier,35);
+ assert.equal(new Set(s.runes.map(r=>r.id)).size,300);
+ assert(s.runeSlots.every(id=>id===null));
 });
 test('C8 dual Daggers produce one offhand strike per two primary strikes, without recursion',()=>{
  const a=create(90804,undefined,{}, {skipPersistence:true}),s=a.state();

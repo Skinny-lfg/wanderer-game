@@ -284,7 +284,7 @@ function prepare(level,build,seed,opts,desiredRisk=undefined,desiredFamily=undef
   a.state().automaticTalents={...talents,nodes:[...talents.nodes]};
   if(!T.valid(a.state().automaticTalents))
    throw Error('Controlled native TalentGraph changed during fixture setup');
-  if(opts.runes){const st=a.state();st.runes=['vitality','warding',build.weapon==='Wand'?'wisdom':'might'].map(k=>a.makeRune(k,gearE));st.runeSlots=st.runes.map(r=>r.id);}
+  if(opts.runes){const st=a.state(),families=build.families||[];const picks=families.includes('magic')?['archmage','clarity','efficiency']:families.includes('aegis')?['bastion','bulwark','guard']:families.includes('decay')?['corruption','abyss','bastion']:['execution','haste',families.includes('blood')?'corruption':'devastation'];st.runes=picks.map(k=>a.makeRune(k,gearE,opts.rarity));st.runeSlots=st.runes.map(r=>r.id);}
   a.setUnlocked(level);a.start(level,true);
   const c=a.controller(),g=c.state;
   if(g.expedition!==level||!g.dungeon?.cards?.length)throw Error('Current native v0.13 Dungeon unavailable at E'+level);

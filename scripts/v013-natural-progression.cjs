@@ -14,6 +14,8 @@ require('../online/v013-map-intelligence.js');
 const I=globalThis.WandererV013MapIntelligence;
 require('../economy/v012-loot-rules.js');
 const LOOT=globalThis.WandererV012LootRules;
+require('../combat/v012-runes.js');
+const RUNES=globalThis.WandererV012Runes;
 // Native Stage 7 ledger and objective progress, read-only in the simulation.
 require('../online/v013-expedition-contracts.js');
 const K=globalThis.WandererV013ExpeditionContracts;
@@ -397,21 +399,17 @@ function investEarnedGear(a,profile,level){
  }
  return outcome;
 }
-// Eight native Rune families. Valuation is build policy, not an additional
-// player stat. The actual Rune values, slot cap, duplicates and transactions
-// always come from the production game.
+// Native Anchor Rune valuation is a build policy, never an additional combat stat.
+// All 23 families use canonical magnitude divided by their own Common Adventurer baseline.
 function runeScore(rune,profile){
  if(!rune)return -Infinity;
- const magic=profile.families.includes('magic'),leather=profile.armor==='Leather',plate=profile.armor==='Plate',rot=profile.synergyAudit&&profile.families.includes('decay');
- const affinity={might:rot&&!(profile.weapons||[]).every(w=>['Staff','Wand'].includes(w))?5:plate?5.2:leather?2.2:1.4,
-  swiftness:leather?5.2:magic?1.8:2.1,
-  wisdom:magic||rot?6:1.1,
-  fortitude:plate?5.1:leather?2.3:3.6,
-  fortune:2.1,fury:magic?2.5:leather?4.8:3.4,
-  warding:plate?5:magic?3.2:3.1,vitality:plate?5.1:4.2};
- const base={fury:3,warding:2,vitality:10}[rune.family]||1;
- const normalized=Number(rune.value||0)/base;
- return round((affinity[rune.family]||0)*(1+Math.max(0,normalized)*.08),3);
+ const f=RUNES.FAMILIES.find(x=>x.id===rune.family);if(!f)return -Infinity;
+ const families=profile.families||[],magic=families.includes('magic'),decay=families.includes('decay'),aegis=families.includes('aegis'),blood=families.includes('blood'),vitality=families.includes('vitality'),fury=families.includes('fury'),leather=profile.armor==='Leather',plate=profile.armor==='Plate',caster=(profile.weapons||[]).some(w=>['Wand','Staff'].includes(w));
+ const mana=magic||decay||caster,spell=mana||aegis||(profile.offhands||[]).includes('Orb'),guard=aegis||(profile.weapons||[]).some(w=>['Sword','Mace'].includes(w));
+ const weights={might:caster?1:plate?5:3,swiftness:leather?5:2,wisdom:spell?5:1,fortitude:plate?5:3,fortune:2,fury:caster?2:4,warding:plate?5:3,vitality:4,
+ execution:fury?6:3,devastation:fury?6:3,haste:fury||blood?6:3,assault:caster?2:5,archmage:spell?6:0,abyss:mana?5:0,clarity:mana?6:0,efficiency:mana?5:0,corruption:blood||decay||profile.element==='fire'?6:1,bastion:aegis||decay?6:1,renewal:vitality?6:blood?4:2,phantom:leather?6:3,bulwark:plate?6:3,heart:vitality||aegis?6:4,guard:guard?6:0};
+ const magnitude=RUNES.runeValue(f.id,rune.tier,RUNES.rarity(rune))/f.base;
+ return round((weights[f.id]||0)*magnitude,3);
 }
 function chooseRuneReward(options,profile){
  return (options||[]).filter(x=>x?.id).sort((x,y)=>
@@ -420,7 +418,7 @@ function chooseRuneReward(options,profile){
 function manageEarnedRunes(a,profile){
  const s=a.state(),actions=[];
  if(!a.economyCanAct())return actions;
- const available=[...s.runes].filter(r=>r?.id).sort((x,y)=>
+ const available=[...s.runes].filter(r=>r?.id&&runeScore(r,profile)>0).sort((x,y)=>
   runeScore(y,profile)-runeScore(x,profile)||y.tier-x.tier);
  const used=new Set(),desired=[];
  for(const rune of available){
