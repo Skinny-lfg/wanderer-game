@@ -1,0 +1,68 @@
+name: E10 Blood Individual Ability Audit (NO DEPLOY)
+on:
+  push:
+    branches: [audit/e10-blood-individual-abilities]
+    paths:
+      - 'scripts/v013-e10-blood-individual.cjs'
+      - 'scripts/simulate-progression.cjs'
+      - '.github/workflows/v013-e10-blood-individual.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node --test tests/v013-stage647d6-blood-fury.test.cjs tests/v013-balance-criteria.test.cjs tests/v013-global-e10.test.cjs
+      - run: npm run test:v013:talent-graph
+      - run: node scripts/v013-e10-blood-individual.cjs plan
+      - run: node scripts/v013-e10-blood-individual.cjs smoke
+  cohort:
+    needs: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        build: [blood-daggers, blood-sword, blood-twohand, blood-bow, blood-mace, blood-sword-reserve, blood-daggers-crit, blood-twohand-transfer]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node scripts/v013-e10-blood-individual.cjs run "${{ matrix.build }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: blood-audit-${{ matrix.build }}
+          path: reports/e10-blood-individual/*.json
+          if-no-files-found: error
+  summary:
+    needs: cohort
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: blood-audit-*
+          path: reports/e10-blood-individual
+          merge-multiple: true
+      - run: node scripts/v013-e10-blood-individual.cjs aggregate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: e10-blood-ability-summary
+          path: reports/e10-blood-individual/summary.json
+          if-no-files-found: error
