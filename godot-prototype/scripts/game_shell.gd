@@ -65,7 +65,8 @@ func _build_navigation() -> void:
 	edge.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
 	edge.offset_bottom = 1
 	var row = HBoxContainer.new()
-	row.add_theme_constant_override("separation", 4)
+	row.add_theme_constant_override("separation", 32)
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	bar.add_child(row)
 	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	row.offset_left = 68
@@ -78,7 +79,7 @@ func _build_navigation() -> void:
 		button.text = str(TITLES[i])
 		button.tooltip_text = str(i + 1) + " — " + str(TITLES[i])
 		button.toggle_mode = true
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		button.add_theme_font_size_override("font_size", 19)
 		button.add_theme_color_override("font_color", Color("b3a89a"))
 		button.add_theme_color_override("font_hover_color", Color("f3dfb0"))
@@ -100,7 +101,8 @@ func _build_navigation() -> void:
 		button.add_theme_constant_override("h_separation", 9)
 		button.add_theme_font_override("font", kit.heading_font)
 		button.add_theme_font_size_override("font_size", 18)
-		button.custom_minimum_size = Vector2(156, 44)
+		var label_width: float = kit.heading_font.get_string_size(button.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 18).x
+		button.custom_minimum_size = Vector2(ceilf(label_width) + 72.0, 44)
 		buttons[IDS[i]] = button
 
 func show_page(page_id: String) -> bool:

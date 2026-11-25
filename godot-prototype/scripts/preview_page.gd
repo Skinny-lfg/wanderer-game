@@ -36,6 +36,8 @@ var collection_surface: Panel
 var stats_toggle: Button
 var inventory_tabs: Array[Button] = []
 var stash_filter: OptionButton
+var stash_filter_toggle: Button
+var stash_filter_panel: Control
 var stash_sort: OptionButton
 var stash_order: OptionButton
 var stash_controls: Array[Control] = []
@@ -186,7 +188,9 @@ func _inventory_button(host: Node, value: String, at: Vector2, extent: Vector2, 
 
 func _inventory_option(host: Node, values: Array, at: Vector2, extent: Vector2) -> OptionButton:
 	var option = OptionButton.new()
-	option.add_theme_font_size_override("font_size", 12)
+	option.add_theme_font_size_override("font_size", 13)
+	option.fit_to_longest_item = false
+	option.clip_text = true
 	for state in ["normal", "hover", "pressed", "disabled"]:
 		option.add_theme_stylebox_override(state, _quiet_control_style(state in ["hover", "pressed"], state == "disabled"))
 	for value in values:
@@ -262,9 +266,10 @@ func _inventory_background() -> void:
 		if not image.is_compressed():
 			var aspect: float = float(image.get_height()) / float(image.get_width())
 			image.resize(160, maxi(1, roundi(160.0 * aspect)), Image.INTERPOLATE_LANCZOS)
+			image.adjust_bcs(1.0, 1.0, 0.48)
 			image.resize(1280, maxi(1, roundi(1280.0 * aspect)), Image.INTERPOLATE_CUBIC)
 			var background = _art(ImageTexture.create_from_image(image), Vector2.ZERO, Vector2(1280, 648), true)
-			background.modulate = Color(0.53, 0.53, 0.53)
+			background.modulate = Color(0.46, 0.46, 0.46)
 	_rect(Vector2.ZERO, Vector2(1280, 648), Color(0.025, 0.028, 0.035, 0.54))
 	var vignette = GradientTexture2D.new()
 	var fade = Gradient.new()
@@ -301,13 +306,13 @@ func _inventory_resource(value: String, name_text: String, at: Vector2, tint: Co
 
 func _inventory() -> void:
 	_inventory_background()
-	_text("I N V E N T O R Y", Vector2(42, 19), Vector2(485, 42), 31, IVORY, true)
-	_text("W A N D E R E R   ·   LEVEL 24", Vector2(44, 61), Vector2(430, 20), 12, MUTED)
-	_inventory_resource("12,480", "Gold", Vector2(750, 24), GOLD)
-	_inventory_resource("620", "Fragments", Vector2(889, 24), Color("8aafcd"))
-	_inventory_resource("34", "Essence", Vector2(1020, 24), Color("a58ac0"))
-	_inventory_resource("18", "Reagents", Vector2(1144, 24), Color("8eaa81"))
-	_line(Vector2(43, 88), Vector2(1235, 88), Color(0.57, 0.48, 0.34, 0.30))
+	_text("I N V E N T O R Y", Vector2(70, 19), Vector2(485, 42), 31, IVORY, true)
+	_text("W A N D E R E R   ·   LEVEL 24", Vector2(72, 61), Vector2(430, 20), 12, MUTED)
+	_inventory_resource("12,480", "Gold", Vector2(760, 24), GOLD)
+	_inventory_resource("620", "Fragments", Vector2(875, 24), Color("8aafcd"))
+	_inventory_resource("34", "Essence", Vector2(990, 24), Color("a58ac0"))
+	_inventory_resource("18", "Reagents", Vector2(1105, 24), Color("8eaa81"))
+	_line(Vector2(70, 88), Vector2(1210, 88), Color(0.57, 0.48, 0.34, 0.30))
 	# Character remains the focus, with no labels competing below occupied slots.
 	var shadow = GradientTexture2D.new()
 	var gradient = Gradient.new()
@@ -318,36 +323,57 @@ func _inventory() -> void:
 	shadow.fill_to = Vector2(1, 0.5)
 	shadow.width = 256
 	shadow.height = 64
-	_art(shadow, Vector2(163, 434), Vector2(270, 46), true)
-	_art(HERO, Vector2(125, 95), Vector2(375, 380))
+	_art(shadow, Vector2(183, 465), Vector2(260, 42), true)
+	_art(HERO, Vector2(104, 90), Vector2(420, 410))
 	for i in range(10):
-		var x: float = 75.0 if i < 5 else 505.0
-		var y: float = 119.0 + float(i % 5) * 70.0
+		var x: float = 115.0 if i < 5 else 460.0
+		var y: float = 125.0 + float(i % 5) * 72.0
 		var art_index: int = EQUIPMENT_ART[i]
 		var rarity: int = [1, 3, 2, 1, 3, 4, 3, 2, 3, 2][i]
-		var equipment_slot = _inventory_slot(self, Vector2(x, y), 57, _inventory_art(art_index), rarity, true, _inventory_item_name(art_index), EQUIPMENT_LABELS[i])
+		var equipment_slot = _inventory_slot(self, Vector2(x, y), 61, _inventory_art(art_index), rarity, true, _inventory_item_name(art_index), EQUIPMENT_LABELS[i])
 		equipment_slot.name = "Equipment_" + str(i)
 		equipped_slots.append(equipment_slot)
-	_text("G E A R   P O W E R", Vector2(125, 468), Vector2(207, 28), 13, MUTED, true)
-	_text("3,860", Vector2(338, 460), Vector2(155, 38), 29, GOLD, true)
-	_line(Vector2(75, 499), Vector2(562, 499), Color(0.57, 0.48, 0.34, 0.35))
+	var power_row = HBoxContainer.new()
+	power_row.name = "GearPowerGroup"
+	power_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	power_row.add_theme_constant_override("separation", 14)
+	power_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(power_row)
+	power_row.position = Vector2(115, 497)
+	power_row.size = Vector2(406, 32)
+	var power_title = Label.new()
+	power_title.text = "G E A R   P O W E R"
+	power_title.add_theme_font_override("font", serif)
+	power_title.add_theme_font_size_override("font_size", 12)
+	power_title.add_theme_color_override("font_color", MUTED)
+	power_row.add_child(power_title)
+	var power_value = Label.new()
+	power_value.text = "3,860"
+	power_value.add_theme_font_override("font", serif)
+	power_value.add_theme_font_size_override("font_size", 26)
+	power_value.add_theme_color_override("font_color", GOLD)
+	power_row.add_child(power_value)
+	_line(Vector2(115, 533), Vector2(521, 533), Color(0.57, 0.48, 0.34, 0.35))
 	basic_group = Control.new()
 	basic_group.name = "CoreStats"
 	add_child(basic_group)
-	basic_group.position = Vector2(75, 508)
-	basic_group.size = Vector2(487, 68)
+	basic_group.position = Vector2(91, 539)
+	basic_group.size = Vector2(456, 57)
 	basic_group.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var basic = [["Attack", "420"], ["Defense", "376"], ["Health", "2,840"], ["Hits / sec", "1.42"], ["Critical chance", "18.5%"], ["Guard", "24%"]]
-	for i in range(basic.size()):
-		var x: float = float(i % 3) * 163.0
-		var y: float = float(floori(float(i) / 3.0)) * 32.0
-		_inventory_label(basic_group, basic[i][0], Vector2(x, y), Vector2(106, 26), 12, MUTED)
-		var amount = _inventory_label(basic_group, basic[i][1], Vector2(x + 104, y), Vector2(48, 26), 16, IVORY)
-		amount.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_text("Potions", Vector2(75, 598), Vector2(72, 26), 12, MUTED)
+	# Three aligned groups: primary value above, secondary stat below.
+	for i in range(3):
+		var x: float = float(i) * 152.0
+		var title = _inventory_label(basic_group, basic[i][0], Vector2(x, 0), Vector2(152, 15), 11, MUTED)
+		title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		var amount = _inventory_label(basic_group, basic[i][1], Vector2(x, 16), Vector2(152, 24), 19, IVORY)
+		amount.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		var secondary = _inventory_label(basic_group, str(basic[i + 3][0]) + "  " + str(basic[i + 3][1]), Vector2(x, 42), Vector2(152, 16), 11, MUTED)
+		secondary.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_text("Potions", Vector2(115, 611), Vector2(67, 23), 12, MUTED)
 	for i in range(3):
 		var art: Texture2D = POTION_ART[i] if i < 2 else null
-		var potion_slot = _inventory_slot(self, Vector2(149 + i * 43, 586), 39, art, 1, i < 2, POTION_NAMES[i], "Potion")
+		var potion_slot = _inventory_slot(self, Vector2(183 + i * 40, 602), 35, art, 1, i < 2, POTION_NAMES[i], "Potion")
 		potion_slot.minimal_inventory = true
 		potion_slots.append(potion_slot)
 		potion_slot.name = "Potion_" + str(i)
@@ -355,7 +381,7 @@ func _inventory() -> void:
 	advanced_group = Control.new()
 	advanced_group.name = "DetailsOverlay"
 	add_child(advanced_group)
-	advanced_group.position = Vector2(34, 126)
+	advanced_group.position = Vector2(52, 111)
 	advanced_group.size = Vector2(555, 427)
 	advanced_group.mouse_filter = Control.MOUSE_FILTER_STOP
 	kit.panel(advanced_group, Vector2.ZERO, advanced_group.size)
@@ -381,7 +407,7 @@ func _inventory() -> void:
 	for i in range(advanced.size()):
 		_inventory_stat(detail_column, advanced[i][0], advanced[i][1], 28 + i * 26)
 	advanced_group.hide()
-	stats_toggle = _inventory_button(self, "Character details", Vector2(390, 591), Vector2(172, 31))
+	stats_toggle = _inventory_button(self, "Character details", Vector2(373, 605), Vector2(148, 29))
 	stats_toggle.toggle_mode = true
 	stats_toggle.toggled.connect(func(on: bool):
 		basic_group.visible = not on
@@ -389,65 +415,95 @@ func _inventory() -> void:
 		stats_toggle.text = "Close details" if on else "Character details"
 	)
 	# Stash, valuables and Anchor Runes are separate collections.
-	collection_surface = _panel(Vector2(625, 145), Vector2(623, 479), Color(0.035, 0.038, 0.045, 0.36), Color(0.40, 0.36, 0.29, 0.13))
+	collection_surface = _panel(Vector2(685, 156), Vector2(525, 477), Color(0.035, 0.038, 0.045, 0.36), Color(0.40, 0.36, 0.29, 0.13))
 	collection_surface.name = "CollectionSurface"
 	for i in range(3):
-		var tab = _inventory_tab(self, ["Stash", "Valuables", "Anchor Runes"][i], Vector2(643 + i * 185, 103), Vector2(174, 34))
+		var tab = _inventory_tab(self, ["Stash", "Valuables", "Anchor Runes"][i], Vector2(691 + i * 172, 109), Vector2(164, 34))
 		tab.toggle_mode = true
 		tab.pressed.connect(_inventory_collection.bind(i))
 		inventory_tabs.append(tab)
-	_line(Vector2(643, 139), Vector2(1215, 139), Color(0.57, 0.48, 0.34, 0.26))
-	stash_count = _text("24 / 40 slots", Vector2(646, 153), Vector2(122, 26), 15, IVORY)
-	var expand = _inventory_button(self, "Expand +10 · 60 Gold", Vector2(1037, 590), Vector2(193, 27))
+	_line(Vector2(691, 147), Vector2(1207, 147), Color(0.57, 0.48, 0.34, 0.26))
+	stash_count = _text("24 / 40 slots", Vector2(702, 166), Vector2(262, 28), 15, IVORY)
+	var expand = _inventory_button(self, "Expand +10 · 60 Gold", Vector2(1009, 601), Vector2(181, 28))
 	expand.disabled = true
 	expand.tooltip_text = "Preview only — no Gold is spent."
 	stash_controls.append(expand)
-	stash_filter = _inventory_option(self, ["All slots", "Potions", "Rings", "Helm", "Amulet", "Armor", "Gloves", "Weapon", "Off-Hand", "Boots", "Belt"], Vector2(772, 151), Vector2(132, 29))
-	stash_sort = _inventory_option(self, ["Expedition tier", "Date looted", "Fragment value", "Item power", "Estimated stat gain"], Vector2(911, 151), Vector2(177, 29))
-	stash_order = _inventory_option(self, ["High / newest", "Low / oldest"], Vector2(1095, 151), Vector2(135, 29))
-	for option in [stash_filter, stash_sort, stash_order]:
-		option.item_selected.connect(_inventory_filter_changed)
-		stash_controls.append(option)
+	# Filtering is contextual, so the inventory has no competing dropdown row.
+	stash_filter_toggle = _inventory_button(self, "Filter & sort", Vector2(1034, 165), Vector2(156, 30))
+	stash_filter_toggle.toggle_mode = true
+	stash_filter_toggle.toggled.connect(_set_stash_filters_open)
+	stash_controls.append(stash_filter_toggle)
 	stash_grid = Control.new()
 	stash_grid.name = "StashGrid"
 	add_child(stash_grid)
-	stash_grid.position = Vector2(647, 198)
-	stash_grid.size = Vector2(584, 343)
+	stash_grid.position = Vector2(702, 213)
+	stash_grid.size = Vector2(497, 311)
 	for i in range(21):
 		var idx: int = i % 9
 		stash_items.append({"art": _inventory_art(idx), "name": _inventory_item_name(idx), "slot": ["Helm", "Armor", "Gloves", "Boots", "Off-Hand", "Weapon", "Rings", "Amulet", "Belt"][idx], "rarity": (i * 3 + floori(float(i) / 8.0)) % 6, "quantity": 1, "tier": 1 + i % 5, "date": i, "fragments": 4 + i * 2, "power": 12 + i * 3})
 	for i in range(3):
 		stash_items.append({"art": POTION_ART[i], "name": POTION_NAMES[i], "slot": "Potions", "rarity": 1, "quantity": [12, 7, 3][i], "tier": 1, "date": 21 + i, "fragments": 0, "power": 0})
 	for i in range(40):
-		var slot = kit.slot(stash_grid, Vector2((i % 8) * 73, floori(float(i) / 8.0) * 69), 63)
+		var slot = kit.slot(stash_grid, Vector2((i % 8) * 63, floori(float(i) / 8.0) * 64), 55)
 		slot.minimal_inventory = true
 		slot.name = "Stash_" + str(i)
 		slot.toggle_mode = true
 		slot.pressed.connect(_inventory_slot_clicked.bind(i))
 		stash_slots.append(slot)
-	stash_multi = _inventory_button(self, "Select multiple", Vector2(646, 548), Vector2(133, 30))
+	stash_multi = _inventory_button(self, "Select multiple", Vector2(702, 548), Vector2(137, 30))
 	stash_multi.toggle_mode = true
 	stash_multi.toggled.connect(func(_on: bool): _clear_preview_selection())
-	var clear = _inventory_button(self, "Clear filters", Vector2(786, 548), Vector2(108, 30))
+	salvage_button = _inventory_button(self, "Salvage selected", Vector2(1031, 548), Vector2(159, 30))
+	salvage_button.disabled = true
+	salvage_button.tooltip_text = "Presentation only — no items are destroyed."
+	selection_caption = _text("Preview · sample items", Vector2(702, 603), Vector2(302, 22), 12, MUTED)
+	stash_controls.append_array([stash_multi, salvage_button, selection_caption])
+	collection_host = Control.new()
+	add_child(collection_host)
+	collection_host.position = Vector2(702, 207)
+	collection_host.size = Vector2(497, 400)
+	_build_stash_filter_panel()
+	inventory_slots.append_array(equipped_slots)
+	inventory_slots.append_array(potion_slots)
+	inventory_slots.append_array(stash_slots)
+	_inventory_collection(0)
+
+func _build_stash_filter_panel() -> void:
+	# Add after the grid so the overlay receives input above it.
+	stash_filter_panel = Panel.new()
+	stash_filter_panel.name = "StashFilterPanel"
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color("15171b")
+	style.border_color = Color("756249")
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(3)
+	stash_filter_panel.add_theme_stylebox_override("panel", style)
+	stash_filter_panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(stash_filter_panel)
+	stash_filter_panel.position = Vector2(903, 203)
+	stash_filter_panel.size = Vector2(287, 244)
+	_inventory_label(stash_filter_panel, "Item category", Vector2(16, 10), Vector2(250, 19), 12, MUTED)
+	stash_filter = _inventory_option(stash_filter_panel, ["All slots", "Potions", "Rings", "Helm", "Amulet", "Armor", "Gloves", "Weapon", "Off-Hand", "Boots", "Belt"], Vector2(16, 31), Vector2(255, 29))
+	_inventory_label(stash_filter_panel, "Sort by", Vector2(16, 69), Vector2(250, 19), 12, MUTED)
+	stash_sort = _inventory_option(stash_filter_panel, ["Expedition tier", "Date looted", "Fragment value", "Item power", "Estimated stat gain"], Vector2(16, 90), Vector2(255, 29))
+	_inventory_label(stash_filter_panel, "Order", Vector2(16, 128), Vector2(250, 19), 12, MUTED)
+	stash_order = _inventory_option(stash_filter_panel, ["High / newest", "Low / oldest"], Vector2(16, 149), Vector2(255, 29))
+	for option in [stash_filter, stash_sort, stash_order]:
+		option.item_selected.connect(_inventory_filter_changed)
+	var clear = _inventory_button(stash_filter_panel, "Clear filters", Vector2(16, 196), Vector2(122, 30))
 	clear.pressed.connect(func():
 		stash_filter.select(0)
 		stash_sort.select(0)
 		stash_order.select(0)
 		_inventory_filter_changed(0)
 	)
-	salvage_button = _inventory_button(self, "Salvage selected", Vector2(1065, 548), Vector2(165, 30))
-	salvage_button.disabled = true
-	salvage_button.tooltip_text = "Presentation only — no items are destroyed."
-	selection_caption = _text("Preview · sample items", Vector2(646, 594), Vector2(385, 20), 12, MUTED)
-	stash_controls.append_array([stash_multi, clear, salvage_button, selection_caption])
-	collection_host = Control.new()
-	add_child(collection_host)
-	collection_host.position = Vector2(646, 187)
-	collection_host.size = Vector2(584, 400)
-	inventory_slots.append_array(equipped_slots)
-	inventory_slots.append_array(potion_slots)
-	inventory_slots.append_array(stash_slots)
-	_inventory_collection(0)
+	var close = _inventory_button(stash_filter_panel, "Done", Vector2(153, 196), Vector2(118, 30))
+	close.pressed.connect(_set_stash_filters_open.bind(false))
+	stash_filter_panel.hide()
+
+func _set_stash_filters_open(on: bool) -> void:
+	stash_filter_toggle.set_pressed_no_signal(on)
+	stash_filter_panel.visible = on and collection_index == 0
 
 func _clear_preview_selection() -> void:
 	selected_preview.clear()
@@ -482,7 +538,8 @@ func _inventory_filter_changed(_index: int) -> void:
 			slot.tooltip_text = item["name"]
 			slot.preview_tooltip_factory = _inventory_tooltip.bind(item["art"], item["rarity"], false, item["name"], item["slot"])
 		slot.queue_redraw()
-	stash_count.text = "24 / 40 slots" if filter == "All slots" else "%d matching" % visible_items.size()
+	stash_count.text = "24 / 40 slots" if filter == "All slots" else "%d matching · 24 / 40" % visible_items.size()
+	stash_filter_toggle.text = "Filter & sort" if filter == "All slots" and stash_sort.selected == 0 and stash_order.selected == 0 else "Filter & sort  •"
 	stash_count.tooltip_text = "24 / 40 slots occupied"
 
 func _inventory_slot_clicked(index: int) -> void:
@@ -506,9 +563,10 @@ func _inventory_slot_clicked(index: int) -> void:
 
 func _inventory_collection(index: int) -> void:
 	collection_index = index
-	stash_count.size.x = 122 if index == 0 else 410
-	collection_surface.size = [Vector2(623, 479), Vector2(455, 250), Vector2(520, 310)][index]
-	collection_host.size = collection_surface.size - Vector2(42, 42)
+	stash_count.size.x = 262 if index == 0 else 460
+	collection_surface.size = [Vector2(525, 477), Vector2(455, 265), Vector2(525, 325)][index]
+	collection_host.size = collection_surface.size - Vector2(34, 51)
+	_set_stash_filters_open(false)
 	for i in range(inventory_tabs.size()):
 		inventory_tabs[i].set_pressed_no_signal(i == index)
 	for control in stash_controls:

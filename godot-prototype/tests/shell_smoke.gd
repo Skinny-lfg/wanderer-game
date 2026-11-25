@@ -70,13 +70,32 @@ func _run() -> void:
 			if inventory.equipped_slots[0].minimal_inventory or inventory.get_node_or_null("HealthBar") != null or inventory.get_node_or_null("ManaBar") != null or inventory.get_node_or_null("EXPBar") != null:
 				_fail("Equipment treatment or inventory-only HUD reduction failed")
 				return
+			if inventory.stash_filter_panel.visible or inventory.stash_filter_toggle.button_pressed:
+				_fail("Filter menu must start closed")
+				return
+			inventory.stash_filter_toggle.button_pressed = true
+			await process_frame
+			if not inventory.stash_filter_panel.visible:
+				_fail("Filter menu failed to open")
+				return
+			var filter_rect: Rect2 = inventory.stash_filter.get_rect()
+			var sort_rect: Rect2 = inventory.stash_sort.get_rect()
+			var order_rect: Rect2 = inventory.stash_order.get_rect()
+			if filter_rect.intersects(sort_rect) or sort_rect.intersects(order_rect) or order_rect.end.x > inventory.stash_filter_panel.size.x:
+				_fail("Filter options overlap or overflow")
+				return
+			var last_cell: Rect2 = inventory.stash_slots[39].get_global_rect()
+			var grid_rect: Rect2 = inventory.stash_grid.get_global_rect()
+			if not grid_rect.encloses(last_cell):
+				_fail("Stash grid exceeds intended bounds")
+				return
 			inventory.stash_filter.select(1)
 			inventory._inventory_filter_changed(1)
 			if inventory.stash_slots[0].item_art == null or inventory.stash_slots[3].item_art != null:
 				_fail("Potion filter preview failed")
 				return
 			inventory._inventory_collection(1)
-			if inventory.stash_grid.visible or not inventory.collection_host.visible or not inventory.stash_count.text.begins_with("2 valuables") or inventory.collection_surface.size.y >= stash_surface_size.y:
+			if inventory.stash_filter_panel.visible or inventory.stash_filter_toggle.button_pressed or inventory.stash_grid.visible or not inventory.collection_host.visible or not inventory.stash_count.text.begins_with("2 valuables") or inventory.collection_surface.size.y >= stash_surface_size.y:
 				_fail("Valuables collection preview failed")
 				return
 			inventory._inventory_collection(2)
