@@ -95,7 +95,7 @@ func _ready() -> void:
 	fit.text = "Fit screen"
 	fit.pressed.connect(_fit_gallery_window)
 	header.add_child(fit)
-	frame.add_child(_label("STYLIZED GOTHIC     •     G2.2E.1A / FRAME SURFACE REFINEMENT", 15, Tokens.GOLD))
+	frame.add_child(_label("STYLIZED GOTHIC     •     G2.2E.1B / CONTINUOUS SURFACES", 15, Tokens.GOLD))
 	frame.add_child(HSeparator.new())
 	var layout = _row(frame)
 	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -256,7 +256,7 @@ func _buttons() -> void:
 				node.focus_mode = Control.FOCUS_NONE
 			buttons.append(node)
 		demo_buttons[family] = buttons
-	_note("Modular atlas: fixed corners, repeating edge and center tiles. Focus is provisional. Gameplay is not connected.")
+	_note("Modular strip: full-height end decorations, continuous background profile. Focus is provisional. Gameplay is not connected.")
 
 	if use_painted:
 		_note("Resize study — same modular primary button at three widths.")
@@ -317,7 +317,7 @@ func _panels() -> void:
 	_art_sample(dividers, "divider_horizontal", "Horizontal divider", Vector2(290, 44))
 	_art_sample(dividers, "section_ornament", "Section ornament", Vector2(290, 55))
 	_art_sample(dividers, "divider_vertical", "Vertical divider", Vector2(26, 175))
-	_note("Modular fixed corners, quiet panel interiors and feathered inner transitions. No game screens changed.")
+	_note("Modular panels with matching corner-to-edge profiles and quiet interiors. No game screens changed.")
 
 	_note("Resize comparison — left: legacy stretched center/edges; right: modular frame with quiet interior.")
 	for extent in [Vector2(300, 112), Vector2(420, 200), Vector2(300, 360)]:

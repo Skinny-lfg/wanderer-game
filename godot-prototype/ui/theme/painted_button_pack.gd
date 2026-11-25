@@ -1,7 +1,7 @@
 extends RefCounted
 const Modular = preload("res://ui/theme/modular_frame.gd")
-const CORNER = Vector2i(48, 16)
-const SAMPLE = Vector2i(24, 8)
+const CORNER = Vector2i(48, 0)
+const TILE_WIDTH = 48
 var modular_textures: Dictionary = {}
 ## G2.2A local artwork candidate. No game state or scene theme mutation.
 const ART_DIR = "res://ui/assets/buttons/g22a"
@@ -34,7 +34,7 @@ func load_pack(directory: String = ART_DIR) -> bool:
 			image.resize(LOGICAL_SIZE.x, LOGICAL_SIZE.y, Image.INTERPOLATE_LANCZOS)
 			pending[name] = ImageTexture.create_from_image(image)
 	for key in pending:
-		var atlas = Modular.build(pending[key], CORNER, SAMPLE)
+		var atlas = Modular.build_strip(pending[key], CORNER.x, TILE_WIDTH)
 		if atlas == null:
 			problem = "Invalid modular button: " + key
 			modular_textures.clear()
@@ -75,6 +75,7 @@ func apply_to(button: Button, variant: String) -> bool:
 	focus.set_expand_margin_all(2)
 	button.add_theme_stylebox_override("focus", focus)
 	button.custom_minimum_size.y = 54
+	button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	button.add_theme_color_override("font_color", Color("#eadbc0"))
 	button.add_theme_color_override("font_hover_color", Color("#fff1cd"))
 	button.add_theme_color_override("font_pressed_color", Color("#eadbc0"))

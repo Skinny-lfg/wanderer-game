@@ -127,4 +127,4 @@ jobs:
           GODOT=/tmp/godot-bin/Godot_v4.4.1-stable_linux.x86_64
           "$GODOT" --headless --path godot-prototype --script res://tests/modular_frames_smoke.gd 2>&1 | tee /tmp/godot-modular.log
           ! grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-modular.log
-          grep -F 'PASS: G2.2E.1 28 modular atlases, fixed corner pixels, mirrored tile joins and legacy comparison' /tmp/godot-modular.log
+          grep -F 'PASS: G2.2E.1B 28 continuous atlases, matched seams and protected outer art' /tmp/godot-modular.log

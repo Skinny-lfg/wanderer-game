@@ -1,0 +1,5 @@
+# G2.2E.1B — Continuous surfaces
+
+Mac review showed visible rectangular tonal changes in the inner frame areas and repeated/misaligned side details in buttons. Replaces the tiny mirrored samples and rectangular feathering with continuous profiles. All 16 button states and 5 tab states now use full-height end caps with a horizontally uniform, vertically shaded strip sampled from the original. These controls are designed for width changes at their native logical heights (54/46); vertical scaling is not a supported art layout. The 7 panel families use averaged edge profiles and a single quiet background; corner blends end at the exact matching adjacent profile. Outer unblended regions remain sourced from approved PNGs; some inner painted detail is intentionally softened. Tooltip cards use these same panels. Slots, portrait/banner and independent ornaments are untouched.
+
+Tests verify every panel join, flat center, unblended exterior pixels, strip seam columns, fixed-height end regions and legacy comparison for all 28 assets. Original PNGs remain intact. Visual review remains necessary: mathematical seam equality does not establish final aesthetic quality.

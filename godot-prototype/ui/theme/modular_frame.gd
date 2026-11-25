@@ -1,53 +1,112 @@
 extends RefCounted
-## Build a compact nine-region atlas from legacy painted art. The four corners
-## are copied verbatim by default; edge and center tiles are mirrored for repeat continuity.
-## Panel surfaces may feather only the innermost corner/edge pixels into a quiet background.
-## The sample coordinates are provisional art-direction choices, not an automatic
-## ornament detector. Keep large unique ornaments as separate fixed-size sprites.
+## Continuous-profile modular art. Panel corners blend into matching edge
+## profiles and one quiet interior. Fixed-height controls use full-height
+## end caps and a continuous horizontal profile, not split side ornaments.
 
-static func _copy(source: Image, atlas: Image, region: Rect2i, at: Vector2i) -> void:
-	atlas.blit_rect(source, region, at)
+static func _row_average(image: Image, y: int, left: int, right: int) -> Color:
+	var total = Color(0, 0, 0, 0)
+	for x in range(left, right):
+		total += image.get_pixel(x, y)
+	return total / float(maxi(1, right - left))
 
-static func _tile(source: Image, atlas: Image, region: Rect2i, at: Vector2i, repeat_x: bool, repeat_y: bool) -> void:
-	var part = source.get_region(region)
-	for y in range(2 if repeat_y else 1):
-		for x in range(2 if repeat_x else 1):
-			var piece = part.duplicate() as Image
-			if x == 1:
-				piece.flip_x()
-			if y == 1:
-				piece.flip_y()
-			atlas.blit_rect(piece, Rect2i(Vector2i.ZERO, region.size), at + Vector2i(x * region.size.x, y * region.size.y))
+static func _column_average(image: Image, x: int, top: int, bottom: int) -> Color:
+	var total = Color(0, 0, 0, 0)
+	for y in range(top, bottom):
+		total += image.get_pixel(x, y)
+	return total / float(maxi(1, bottom - top))
 
-static func build(source: Texture2D, corner: Vector2i, sample: Vector2i, quiet_surface: bool = false) -> Texture2D:
+static func _background(image: Image, corner: Vector2i) -> Color:
+	var total = Color(0, 0, 0, 0)
+	var count = 0
+	for y in range(corner.y, image.get_height() - corner.y):
+		for x in range(corner.x, image.get_width() - corner.x):
+			var pixel = image.get_pixel(x, y)
+			if pixel.a >= 0.95:
+				total += pixel
+				count += 1
+	if count == 0:
+		return Color("#201d1b")
+	var color = total / float(count)
+	color.a = 1.0
+	return color
+
+static func _join_weight(distance: int, span: int) -> float:
+	# Spread the transition over the inner part of the fixed corner.
+	# The last texel exactly equals its neighbouring profile.
+	var feather = maxi(3, roundi(span * 0.60))
+	return smoothstep(0.0, 1.0, clampf(float(distance - (span - feather)) / float(feather - 1), 0.0, 1.0))
+
+static func build_panel(source: Texture2D, corner: Vector2i, sample: Vector2i) -> Texture2D:
 	var image = source.get_image()
 	if image == null or image.is_empty():
 		return null
 	image.convert(Image.FORMAT_RGBA8)
 	var w = image.get_width()
 	var h = image.get_height()
-	if corner.x <= 0 or corner.y <= 0 or sample.x <= 0 or sample.y <= 0 or w < corner.x * 2 + sample.x or h < corner.y * 2 + sample.y:
+	if corner.x < 3 or corner.y < 3 or sample.x <= 0 or sample.y <= 0 or w <= corner.x * 2 or h <= corner.y * 2:
 		return null
-	# Select a quarter of the available span, away from common center crests.
-	var sx = corner.x + (w - corner.x * 2 - sample.x) / 4
-	var sy = corner.y + (h - corner.y * 2 - sample.y) / 4
-	var tw = sample.x * 2
-	var th = sample.y * 2
-	var ax = corner.x + tw
-	var ay = corner.y + th
-	var atlas = Image.create(corner.x * 2 + tw, corner.y * 2 + th, false, Image.FORMAT_RGBA8)
-	atlas.fill(Color(0, 0, 0, 0))
-	_copy(image, atlas, Rect2i(0, 0, corner.x, corner.y), Vector2i.ZERO)
-	_copy(image, atlas, Rect2i(w - corner.x, 0, corner.x, corner.y), Vector2i(ax, 0))
-	_copy(image, atlas, Rect2i(0, h - corner.y, corner.x, corner.y), Vector2i(0, ay))
-	_copy(image, atlas, Rect2i(w - corner.x, h - corner.y, corner.x, corner.y), Vector2i(ax, ay))
-	_tile(image, atlas, Rect2i(sx, 0, sample.x, corner.y), Vector2i(corner.x, 0), true, false)
-	_tile(image, atlas, Rect2i(sx, h - corner.y, sample.x, corner.y), Vector2i(corner.x, ay), true, false)
-	_tile(image, atlas, Rect2i(0, sy, corner.x, sample.y), Vector2i(0, corner.y), false, true)
-	_tile(image, atlas, Rect2i(w - corner.x, sy, corner.x, sample.y), Vector2i(ax, corner.y), false, true)
-	_tile(image, atlas, Rect2i(sx, sy, sample.x, sample.y), corner, true, true)
-	if quiet_surface:
-		_quiet_surface(atlas, image, corner)
+	var aw = (corner.x + sample.x) * 2
+	var ah = (corner.y + sample.y) * 2
+	var background = _background(image, corner)
+	var top: Array[Color] = []
+	var bottom: Array[Color] = []
+	var left: Array[Color] = []
+	var right: Array[Color] = []
+	for d in range(corner.y):
+		top.append(_row_average(image, d, corner.x, w - corner.x))
+		bottom.append(_row_average(image, h - 1 - d, corner.x, w - corner.x))
+	for d in range(corner.x):
+		left.append(_column_average(image, d, corner.y, h - corner.y))
+		right.append(_column_average(image, w - 1 - d, corner.y, h - corner.y))
+	var atlas = Image.create(aw, ah, false, Image.FORMAT_RGBA8)
+	for y in range(ah):
+		var top_half = y < ah / 2
+		var dy = mini(y, ah - 1 - y)
+		var inside_y = dy >= corner.y
+		var fy = 1.0 if inside_y else _join_weight(dy, corner.y)
+		for x in range(aw):
+			var left_half = x < aw / 2
+			var dx = mini(x, aw - 1 - x)
+			var inside_x = dx >= corner.x
+			var fx = 1.0 if inside_x else _join_weight(dx, corner.x)
+			var color = background
+			if not inside_x and not inside_y:
+				var sx = dx if left_half else w - 1 - dx
+				var sy = dy if top_half else h - 1 - dy
+				var hp = top[dy] if top_half else bottom[dy]
+				var vp = left[dx] if left_half else right[dx]
+				var upper = image.get_pixel(sx, sy).lerp(hp, fx)
+				var lower = vp.lerp(background, fx)
+				color = upper.lerp(lower, fy)
+			elif not inside_y:
+				color = (top[dy] if top_half else bottom[dy]).lerp(background, fy)
+			elif not inside_x:
+				color = (left[dx] if left_half else right[dx]).lerp(background, fx)
+			atlas.set_pixel(x, y, color)
+	return ImageTexture.create_from_image(atlas)
+
+static func build_strip(source: Texture2D, cap: int, tile_width: int) -> Texture2D:
+	var image = source.get_image()
+	if image == null or image.is_empty():
+		return null
+	image.convert(Image.FORMAT_RGBA8)
+	var w = image.get_width()
+	var h = image.get_height()
+	if cap < 3 or tile_width <= 0 or w <= cap * 2:
+		return null
+	var aw = cap * 2 + tile_width
+	var atlas = Image.create(aw, h, false, Image.FORMAT_RGBA8)
+	for y in range(h):
+		# One continuous vertical shading profile preserves hover/pressed colors
+		# and highlights but removes the rectangular sampled background patches.
+		var profile = _row_average(image, y, cap, w - cap)
+		for x in range(aw):
+			var d = mini(x, aw - 1 - x)
+			var color = profile
+			if d < cap:
+				var sx = d if x < aw / 2 else w - 1 - d
+				color = image.get_pixel(sx, y).lerp(profile, _join_weight(d, cap))
+			atlas.set_pixel(x, y, color)
 	return ImageTexture.create_from_image(atlas)
 
 static func style(atlas: Texture2D, corner: Vector2i, padding: Vector4) -> StyleBoxTexture:
@@ -62,35 +121,5 @@ static func style(atlas: Texture2D, corner: Vector2i, padding: Vector4) -> Style
 	box.content_margin_right = padding.z
 	box.content_margin_bottom = padding.w
 	box.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_TILE
-	box.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_TILE
+	box.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_TILE if corner.y > 0 else StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
 	return box
-
-# A deliberately plain panel interior prevents the mirrored leather grain from
-# reading as a checkerboard at large sizes. Feather only the interior-side
-# pixels of each border/corner; preserve the external metal silhouette.
-static func _quiet_surface(atlas: Image, source: Image, corner: Vector2i) -> void:
-	var total = Color(0, 0, 0, 0)
-	var count = 0
-	var inner = Rect2i(corner, source.get_size() - corner * 2)
-	for y in range(inner.position.y, inner.end.y):
-		for x in range(inner.position.x, inner.end.x):
-			var pixel = source.get_pixel(x, y)
-			if pixel.a >= 0.95:
-				total += pixel
-				count += 1
-	var background = Color("#201d1b")
-	if count > 0:
-		background = total / float(count)
-		background.a = 1.0
-	var feather = 10.0
-	var w = atlas.get_width()
-	var h = atlas.get_height()
-	for y in range(h):
-		var dy = mini(y, h - 1 - y)
-		var fy = clampf((float(dy) - (corner.y - feather)) / (feather - 1.0), 0.0, 1.0)
-		for x in range(w):
-			var dx = mini(x, w - 1 - x)
-			var fx = clampf((float(dx) - (corner.x - feather)) / (feather - 1.0), 0.0, 1.0)
-			var weight = smoothstep(0.0, 1.0, minf(fx, fy))
-			if weight > 0.0:
-				atlas.set_pixel(x, y, atlas.get_pixel(x, y).lerp(background, weight))

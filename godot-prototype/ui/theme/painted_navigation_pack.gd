@@ -1,8 +1,9 @@
 extends RefCounted
 const Normalize = preload("res://ui/theme/asset_normalization.gd")
 const Modular = preload("res://ui/theme/modular_frame.gd")
-const CORNER = Vector2i(32, 12)
-const SAMPLE = Vector2i(16, 8)
+const CORNER = Vector2i(32, 0)
+const TILE_WIDTH = 32
+const LOGICAL_SIZE = Vector2i(180, 46)
 var modular_textures: Dictionary = {}
 const ART_DIR = "res://ui/assets/navigation/g22c"
 const STATES = ["normal", "hover", "active", "pressed", "disabled"]
@@ -43,7 +44,7 @@ func load_pack(directory: String = ART_DIR) -> bool:
 		pending[name] = ImageTexture.create_from_image(img)
 	for state in STATES:
 		var key = "tab_" + state
-		var atlas = Modular.build(pending[key], CORNER, SAMPLE)
+		var atlas = Modular.build_strip(pending[key], CORNER.x, TILE_WIDTH)
 		if atlas == null:
 			problem = "Invalid modular tab: " + key
 			modular_textures.clear()
@@ -75,6 +76,7 @@ func apply_to(button: Button, id: String, compact: bool = false) -> bool:
 	if not is_ready() or not IDS.has(id):
 		return false
 	button.custom_minimum_size = Vector2(90 if compact else 180, 46)
+	button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	button.icon = textures["icon_" + id]
 	button.text = "" if compact else LABELS[IDS.find(id)]
 	button.tooltip_text = LABELS[IDS.find(id)]
