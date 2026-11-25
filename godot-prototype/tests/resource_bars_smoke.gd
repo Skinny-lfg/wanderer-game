@@ -44,7 +44,7 @@ func _run() -> void:
 		await process_frame
 		var xp_bar: Control = gallery.resource_samples["EXP"]
 		var hp_bar: Control = health
-		if not is_equal_approx(xp_bar.size.x, 446.5) or not is_equal_approx(hp_bar.size.x, 470.0):
+		if absf(xp_bar.size.x - 460.6) > 1.0 or not is_equal_approx(hp_bar.size.x, 470.0):
 			_fail("EXP must be shorter than the main resource bars")
 			return
 		if absf((xp_bar.position.x + xp_bar.size.x * 0.5) - (hp_bar.position.x + hp_bar.size.x * 0.5)) > 1.0:

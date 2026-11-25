@@ -884,7 +884,7 @@ func _resource_bars() -> void:
 	resource_samples["Mana"] = _resource_sample(stack, "Mana", 520, 600, 470, 26)
 	resource_samples["Barrier"] = _resource_sample(stack, "Barrier", 180, 300, 470, 24)
 	resource_samples["Barrier"].hide_empty = true
-	resource_samples["EXP"] = _resource_sample(stack, "EXP", 420, 1000, 446.5, 16, false)
+	resource_samples["EXP"] = _resource_sample(stack, "EXP", 420, 1000, 460.6, 16, false)
 	resource_samples["EXP"].size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	var controls = _row(body)
 	for action in ["Damage", "Heal", "Cast", "Barrier", "Gain EXP", "Reset"]:
