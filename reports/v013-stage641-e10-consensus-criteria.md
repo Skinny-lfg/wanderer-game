@@ -18,7 +18,7 @@ E10 is the intended reference *only if* real E1-born characters have earned enou
 
 These ranges are **design guidance**, not statistical predictions. A build only counts as AoE-specialized after its actually equipped and earned kit demonstrates meaningful secondary-target damage; lacking AoE at E10 is a maturity finding. Large swarms (8/12+) require separate evaluation and need not achieve exactly the same success rate as 5-mob encounters.
 
-Natural progression (mixed population) targets: normals roughly 80–90%, Elites 60–70%, Bosses 35–45%. For an initial candidate, **±10 percentage points around aggregate targets** is a practical discussion band; individual identities can vary more when their mechanics favour different builds. Prioritize outliers >15 pp instead of microtuning 2–3 pp differences.
+Natural progression (mixed population) targets: normals roughly 80–90%, Elites 60–70%, Bosses 35–45%. As of 2026-11-25, the user-approved tolerance is **7.5 percentage points outside each end of the existing ideal ranges**, not around their midpoints. Normal ideal 80–90%, acceptable 72.5–97.5%; Elite ideal 60–70%, acceptable 52.5–77.5%; Boss ideal 35–45%, acceptable 27.5–52.5%. Boundaries are inclusive. Use `scripts/v013-balance-criteria.cjs` for future summaries: ideal, acceptable (outside ideal but inside tolerance), below, above, no-data, or not-applicable. This is diagnostic guidance for aggregate natural-progression rates; optimized or deliberately specialized builds may legitimately exceed or fall below it. Do not automatically tune individual encounters from these labels. Mixed enemy-class rates have no single applicable band. Preserve the specialized group-size guidance above and the raw samples.
 
 ## Evaluation gates
 

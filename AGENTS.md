@@ -1,3 +1,10 @@
+## Current balance reference — E10 (2026-11-25)
+
+- User-approved tolerance: 7.5 percentage points beyond each endpoint of the existing ideal ranges. Normal 80–90% ideal / 72.5–97.5% acceptable; Elite 60–70% / 52.5–77.5%; Boss 35–45% / 27.5–52.5%.
+- Use `scripts/v013-balance-criteria.cjs` in future simulation summaries, rather than hardcoded thresholds. These are directional aggregate natural-progression references, not hard per-build quotas; optimized and specialist builds may differ. No automatic changes to gameplay or enemy stats. E10 is the current controlled calibration reference. Historical reports retain their original provenance.
+
+---
+
 ## Checkpoint canónico da v0.13 — 22 de novembro de 2026 (revisão dos 7 Contracts)
 
 - A versão de desenvolvimento consolidada é `audit/v013-stage6`, espelhada integralmente em `playtest/v013-complete`. A referência anterior está no commit `f4fe3d83d5a647be1b33dc154953bdf813c28a17`; qualquer nova revisão deve avançar **ambos** após CI verde, sem tocar em `main`, GitHub Pages de produção ou Firebase.

@@ -1,0 +1,18 @@
+name: Balance criteria regression (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths: ['scripts/v013-balance-criteria.cjs','tests/v013-balance-criteria.test.cjs','.github/workflows/v013-balance-criteria.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  criteria:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: node --test tests/v013-balance-criteria.test.cjs
+      - run: node --check scripts/v013-global-e10.cjs
+      - run: node --check scripts/v013-decay-natural-e10.cjs
