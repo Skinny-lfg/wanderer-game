@@ -619,7 +619,7 @@ function infusionConfig(b,weaponSubtype=null){
  if(!mode)return null;
  const base=INFUSION_POWER[weaponSubtype]??INFUSION_POWER.physical;
  return {duration:INFUSION_RULE.duration,cooldown:INFUSION_RULE.cooldown,
-  charges:INFUSION_RULE.charges,cost:mode==='arcane'?INFUSION_RULE.arcaneCost:INFUSION_RULE.cost,
+  charges:INFUSION_RULE.charges,cost:({fire:18,lightning:20,arcane:10,frost:12})[mode]??INFUSION_RULE.cost,
   power:base+(mode==='arcane'?INFUSION_POWER.arcaneBonus:0)};
 }
 function infusionReady(b,now){
