@@ -19,7 +19,7 @@ test('The first acquired build skill is functional, not a cosmetic stat detour',
 });
 
 test('Twelve explicit agent strategies represent pure, duo, mixed and adaptive third-affinity investments',()=>{
- assert.equal(Object.keys(PLANNER.BUILDS).length,21);
+ assert.equal(Object.keys(PLANNER.BUILDS).length,34);
  for(const [id,b] of Object.entries(PLANNER.BUILDS)){
   assert(p(id),'missing agent '+id);assert.equal(p(id).plan,id);
   assert(PLANNER.getPlan(id).milestones.length>0);

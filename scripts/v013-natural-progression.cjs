@@ -430,6 +430,11 @@ function runeScore(rune,profile,context=null){
  if(f.id==='corruption')weights.corruption=actualDecay?8:actualBlood||actualFire?6:0;
  if(actualDecay){weights.wisdom=7;weights.archmage=7;weights.might=actualCaster?1:6;weights.fury=actualCaster?1:6;weights.assault=actualCaster?1:6;weights.haste=actualCycle?6:4;weights.clarity=actualCycle||actualOverflow?8:6;weights.efficiency=actualCycle||actualOverflow?7:5;weights.abyss=5;}
  if(actualCaster){weights.fury=1;weights.might=1;weights.assault=1;}
+ if(base.blockChance>0)weights.guard=6;
+ if(actualMana){weights.abyss=Math.max(4,weights.abyss);weights.clarity=Math.max(5,weights.clarity);weights.efficiency=Math.max(4,weights.efficiency);}
+ if(actualBarrier)weights.bastion=6;
+ if(actualHeal)weights.renewal=6;
+ if(projected.spellPower>base.spellPower&&(actualCaster||actualDecay||has('affinity_magic')||actualBarrier))weights.archmage=6;
  if(f.id==='phantom')return round(weights.phantom*magnitude*Math.min(1,evasionGain/Math.max(.01,expected*.4)),3);
  return round((weights[f.id]||0)*magnitude*efficiency,3);
 }
@@ -1077,7 +1082,7 @@ function fightNatural(a,profile,tickLimit,context={}){
    // agent must not silently override a chosen combat style merely because
    // another target is dangerous. Mechanics-aware profiles remain reactive.
    let next=adaptive&&profile.target!=='focus'
-    ?AGENT.selectTarget(r,cap?{...cap,rotCycleReady:(a.build()?.cooldowns?.corruptionCycle??Infinity)<=(r.combatSeconds||0)}:null,baseline):selectThornAwareTarget(r,profile);
+    ?AGENT.selectTarget(r,cap?{...cap,rotCycleReady:(a.build()?.cooldowns?.corruptionCycle??-Infinity)<=(r.combatSeconds||0)}:null,baseline):selectThornAwareTarget(r,profile);
    // Thornbloom counterplay uses live visible enemy status only.
    if(next?.stage82?.type==='briarspine_horror'&&
       next.stage82.bloomUntil>(r.combatSeconds||0)){

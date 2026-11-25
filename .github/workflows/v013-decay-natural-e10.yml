@@ -1,0 +1,57 @@
+name: Decay natural E1-E10 and Anchor agent validation (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths: ['scripts/v013-decay-natural-e10.cjs','.github/workflows/v013-decay-natural-e10.yml','tests/v013-decay-natural-agent.test.cjs']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node --test tests/v013-stage647d8-decay.test.cjs tests/v013-anchor-rune-combat.test.cjs tests/v013-natural-progression.test.cjs tests/v013-strategic-build-agents.test.cjs tests/v013-decay-natural-agent.test.cjs
+      - run: npm run test:v013:sim
+      - run: node scripts/v013-decay-natural-e10.cjs smoke
+  cohort:
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [smart-decay-cycle-twohand, smart-decay-cycle-staff, smart-decay-cycle-daggers, smart-decay-cycle-wand, smart-decay-overflow-twohand, smart-decay-overflow-staff, smart-decay-overflow-daggers, smart-decay-overflow-wand, smart-decay-hybrid-twohand, smart-decay-hybrid-staff, smart-decay-hybrid-daggers, smart-decay-hybrid-wand, smart-decay-plagueheart, smart-decay-magic-aegis, smart-blood-pure, smart-fury-pure, smart-vitality-pure, smart-aegis-vitality, smart-magic-fire-pure, smart-magic-lightning-pure, smart-magic-arcane-pure, smart-magic-frost-vitality]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node scripts/v013-decay-natural-e10.cjs "${{ matrix.profile }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: natural-rot-${{ matrix.profile }}
+          path: reports/decay-natural-e10/*.json
+  summary:
+    needs: cohort
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: natural-rot-*
+          path: reports/decay-natural-e10
+          merge-multiple: true
+      - run: node scripts/v013-decay-natural-e10.cjs aggregate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: decay-natural-e10-summary
+          path: reports/decay-natural-e10/summary.json
