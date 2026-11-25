@@ -166,7 +166,7 @@ function prepare(level,build,seed,opts,desiredRisk=undefined,desiredFamily=undef
      !earned.automaticTalents||!T.valid(earned.automaticTalents)||
      T.earned(earned.automaticTalents)!==opts.points||
      !Array.isArray(earned.runes)||!Array.isArray(earned.runeSlots)||
-     opts.runes||Object.hasOwn(opts,'armorType')||
+     opts.runes||opts.anchorRuneFixture!==undefined||Object.hasOwn(opts,'armorType')||
      Object.hasOwn(opts,'offhandType')||Object.hasOwn(opts,'offhandEpicTrait')||
      build.weapon!==earned.equip.weapon.subtype)
    throw Error('Invalid earned native Stage 6.23 checkpoint');
@@ -284,6 +284,12 @@ function prepare(level,build,seed,opts,desiredRisk=undefined,desiredFamily=undef
   a.state().automaticTalents={...talents,nodes:[...talents.nodes]};
   if(!T.valid(a.state().automaticTalents))
    throw Error('Controlled native TalentGraph changed during fixture setup');
+  if(opts.anchorRuneFixture!==undefined){
+   require('../combat/v012-runes.js');const specs=opts.anchorRuneFixture,R=globalThis.WandererV012Runes;
+   if(opts.runes||!Array.isArray(specs)||specs.length>3||new Set(specs.map(r=>r.family)).size!==specs.length||specs.some(r=>!R.FAMILIES.some(f=>f.id===r.family)||!R.RARITIES.includes(r.rarity)||!Number.isSafeInteger(r.tier)||r.tier<1||r.tier>level))throw Error('Invalid controlled Anchor Rune fixture');
+   const st=a.state();st.runes=specs.map(r=>a.makeRune(r.family,r.tier,r.rarity));st.runeSlots=[null,null,null];
+   for(let i=0;i<st.runes.length;i++)if(!a.runes.equip(st.runes[i].id,i))throw Error('Native Shrine rejected controlled Anchor Rune');
+  }
   if(opts.runes){const st=a.state(),families=build.families||[];const picks=families.includes('magic')?['archmage','clarity','efficiency']:families.includes('aegis')?['bastion','bulwark','guard']:families.includes('decay')?['corruption','abyss','bastion']:['execution','haste',families.includes('blood')?'corruption':'devastation'];st.runes=picks.map(k=>a.makeRune(k,gearE,opts.rarity));st.runeSlots=st.runes.map(r=>r.id);}
   a.setUnlocked(level);a.start(level,true);
   const c=a.controller(),g=c.state;

@@ -1,0 +1,86 @@
+name: Anchor Runes Scaling and Build Synergy (NO DEPLOY)
+on:
+  push:
+    branches: [balance/stage-6.40-e1-calibration]
+    paths:
+      - 'scripts/v013-anchor-rune-scaling.cjs'
+      - '.github/workflows/v013-anchor-rune-scaling.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: anchor-scaling-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node scripts/v013-anchor-rune-scaling.cjs smoke
+      - run: npm run test:v013:sim
+      - run: npm run test:v013:natural
+      - uses: actions/upload-artifact@v4
+        with:
+          name: anchor-scale
+          path: reports/anchor-rune-scaling/scale.json
+  controlled:
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        family: [blood, decay, vitality, aegis, fury, magic]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node scripts/v013-anchor-rune-scaling.cjs controlled ${{ matrix.family }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: anchor-controlled-${{ matrix.family }}
+          path: reports/anchor-rune-scaling/controlled-*.json
+  natural:
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        family: [blood, decay, vitality, aegis, fury, magic]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - run: node scripts/v013-anchor-rune-scaling.cjs natural ${{ matrix.family }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: anchor-natural-${{ matrix.family }}
+          path: reports/anchor-rune-scaling/natural-*.json
+  summary:
+    needs: [controlled, natural]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: anchor-*
+          path: reports/anchor-rune-scaling
+          merge-multiple: true
+      - run: node scripts/v013-anchor-rune-scaling.cjs aggregate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: anchor-rune-summary
+          path: reports/anchor-rune-scaling/summary.json

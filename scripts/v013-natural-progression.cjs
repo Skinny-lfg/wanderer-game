@@ -411,12 +411,12 @@ function runeScore(rune,profile){
  const magnitude=RUNES.runeValue(f.id,rune.tier,RUNES.rarity(rune))/f.base;
  return round((weights[f.id]||0)*magnitude,3);
 }
-function manageEarnedRunes(a,profile){
+function manageEarnedRunes(a,profile,{equip=true}={}){
  const s=a.state(),actions=[];
  if(!a.economyCanAct())return actions;
  const base=a.baseStats(s.equip,[],[]);
  const eligible=r=>{const family=RUNES.FAMILIES.find(x=>x.id===r.family);if(!family)return false;const key={atkFlat:'attack',defFlat:'defense',hpFlat:'maxhp'}[family.field]||family.field;const projected=a.baseStats(s.equip,[r],[r.id]);return Number(projected[key])>Number(base[key]);};
- const available=[...s.runes].filter(r=>r?.id&&runeScore(r,profile)>0&&eligible(r)).sort((x,y)=>
+ const available=(equip?[...s.runes]:[]).filter(r=>r?.id&&runeScore(r,profile)>0&&eligible(r)).sort((x,y)=>
   runeScore(y,profile)-runeScore(x,profile)||y.tier-x.tier);
  const used=new Set(),desired=[];
  for(const rune of available){
@@ -645,7 +645,7 @@ function prepareCamp(a,profile,level,decisionModel='risk-aware',options={}){
  actions.attributes.push(...spendEarnedAttributes(a,profile).chosen);
  actions.prepared=prepareEarnedAbility(a,profile);refreshSynergyContext(a,profile);
  if(decisionModel!=='legacy'){
-  actions.runes.push(...manageEarnedRunes(a,profile));
+  actions.runes.push(...manageEarnedRunes(a,profile,{equip:options.equipEarnedRunes!==false}));
   actions.refined.push(...refineEarnedReagents(a,profile,level));
   const investment=investEarnedGear(a,profile,level);
   actions.crafted.push(...investment.crafted);
@@ -1320,8 +1320,7 @@ function simulateAccount(seed,id,opts,simulationOptions={}){
      acc.attempts.filter(x=>x.level===level&&!x.error&&x.status!=='error').length>=2;
     const nextProfile=canPivot?pivotProfile(id):activeProfile;
     const camp=prepareCamp(a,nextProfile,level,decisionModel,
-     canPivot?{resetReason:'two_undefeated_attempts_at_E'+level}:
-      profile.plan?{history:acc.attempts,priorResets:acc.attempts.reduce((n,t)=>n+(t.camp?.resets?.length||0),0)}:undefined);
+     {...(canPivot?{resetReason:'two_undefeated_attempts_at_E'+level}:profile.plan?{history:acc.attempts,priorResets:acc.attempts.reduce((n,t)=>n+(t.camp?.resets?.length||0),0)}:{}),equipEarnedRunes:simulationOptions.equipEarnedRunes!==false});
     if(canPivot){if(camp.resets.length!==1)throw Error('Expected one native profile reset');activeProfile=nextProfile;pivoted=true;}
     // Optional Stage 6.9 diagnostic splice: can only execute real Camp
     // transactions (talent reset/allocate/prepare). Hard-gate every resource,
@@ -1358,7 +1357,8 @@ function simulateAccount(seed,id,opts,simulationOptions={}){
      talentNodes:[...a.state().automaticTalents.nodes],
      element:a.state().automaticTalents.element||null,
      prepared:a.state().automaticTalents.prepared||null,
-     unlocked:a.controller().state.unlocked};
+     unlocked:a.controller().state.unlocked,runeBag:a.state().runes.map(r=>({...r})),runeSlots:[...a.state().runeSlots]};
+    if(simulationOptions.equipEarnedRunes===false&&before.runeSlots.some(Boolean))throw Error('No-rune policy equipped a rune');
     const encounter=playDungeon(a,level,activeProfile,opts,decisionModel,capturePolicy.mode);
     if(encounter.xpEnd<before.xp)throw Error('Native earned XP decreased');
     entry={...entry,camp,before,...(earnedProbe?{earnedProbe}:{}),...encounter,
@@ -1371,7 +1371,7 @@ function simulateAccount(seed,id,opts,simulationOptions={}){
       essence:a.state().crafting?.essence||0,
       talentNodes:[...a.state().automaticTalents.nodes],
        element:a.state().automaticTalents.element||null,
-      prepared:a.state().automaticTalents.prepared||null}};
+      prepared:a.state().automaticTalents.prepared||null,runeBag:a.state().runes.map(r=>({...r})),runeSlots:[...a.state().runeSlots]}};
     if(entry.status==='error'||entry.error){acc.stopReason='Simulator limitation at E'+level+': '+entry.error;stopped=true;}
     if(entry.bossWon){
      if(a.controller().state.unlocked<level+1)throw Error('Native Boss won but next Expedition is not unlocked');
@@ -1412,6 +1412,7 @@ function simulateAccount(seed,id,opts,simulationOptions={}){
  acc.talents=a.state().automaticTalents.nodes;
  acc.finalGear=gearSnapshot(a);
  acc.gold=a.state().gold;acc.fragments=a.state().fragments;
+ acc.runeBag=a.state().runes.map(r=>({...r}));acc.runeSlots=[...a.state().runeSlots];
  return acc;
 }
 function analyze(accounts,opts){
