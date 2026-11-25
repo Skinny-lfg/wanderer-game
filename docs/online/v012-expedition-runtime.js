@@ -21,6 +21,7 @@ function phase1Begin(level=1){
  if(ports.phase3NeedsBagResolution()){ports.bannerMessage('Discard overflow loot before starting another Expedition.');return false;}
  ports.phase4ClaimOverflow();
  if(ports.state.pendingRuneReward){ports.showPendingRuneReward();return;}
+ if(ports.state.runes.length>=root.WandererV012Runes.CAPACITY){ports.bannerMessage('Recycle an Anchor Rune at the Shrine before starting.');return false;}
  if(ports.state.expeditionOverflow.length||!ports.stashHasRoom()){ports.bannerMessage('Claim secured loot and free Stash space before starting another Expedition.');return;}
  if(!['camp','finished','failed'].includes(ports.phase1Controller.state.stage)||!Number.isInteger(level)||level<1||level>ports.phase1Controller.state.unlocked)return false;
  // Once Realm Cards have been offered at an Expedition level, Camp navigation
@@ -334,9 +335,8 @@ function phase1WaveWon(){
   ports.settleContract('victory');ports.phase5MakeSummary('victory');
   WandererV012Buildcraft.clear(ports.phase1Build);ports.phase1Build=null;
   if(ports.PHASE1_PREVIEW){ports.phase5Snapshot.expedition.completed=Math.max(ports.phase5Snapshot.expedition.completed,r.tier);ports.phase5Snapshot.expedition.lastOutcome='victory';}
-  // Keep classic Rune tiers and three-choice UI: only complete milestone bosses, never Elites.
-  if(g.version===2||r.tier%10===0)ports.offerBossRunes(r.tier);
-  if(ports.state.pendingRuneReward)ports.phase5Results.summary.runeTier=ports.state.pendingRuneReward.tier;
+  // Guaranteed loot after final Boss victory; never auto-equip.
+  const rune=ports.offerBossRunes(r.tier,r.planeFamily||g.selected?.family);ports.phase5Results.summary.runeTier=rune.tier;ports.phase5Results.summary.runeName=rune.name+' · '+rune.rarity;
   // Existing stock is retained; new progression does not grant free vendor rerolls.
   if(ports.state.merchant)ports.state.merchant.refreshCost=16+ports.merchantTier()*4;
  }

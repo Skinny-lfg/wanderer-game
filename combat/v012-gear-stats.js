@@ -74,8 +74,8 @@ function totalStats(equipment,ownedRunes,equippedRuneIds,{isTwoHanded,FIELDS,ite
  s.evasionRating=Math.min(Number.MAX_SAFE_INTEGER,s.evasionRating);
  const runeItems=ownedRunes===null?(typeof state==='undefined'?[]:state.runes||[]):ownedRunes;
  const runeSlots=equippedRuneIds===null?(typeof state==='undefined'?[]:state.runeSlots||[]):equippedRuneIds;
- const usedFamilies=new Set();
- for(const id of runeSlots){const rune=runeItems.find(r=>r.id===id),type=RUNE_FAMILIES.find(x=>x.id===rune?.family);if(!rune||!type||usedFamilies.has(type.id))continue;usedFamilies.add(type.id);s[type.field]+=runeValue(type.id,rune.tier)*(PHASE1_PREVIEW&&phase6Run?.effects.runeBoost?.remaining>0?1.20:1);}
+ const usedFamilies=new Set(),anchorBonuses=[];
+ for(const id of runeSlots){const rune=runeItems.find(r=>r.id===id),type=RUNE_FAMILIES.find(x=>x.id===rune?.family);if(!rune||!type||usedFamilies.has(type.id))continue;usedFamilies.add(type.id);const value=runeValue(type.id,rune.tier,root.WandererV012Runes.rarity(rune))*(PHASE1_PREVIEW&&phase6Run?.effects.runeBoost?.remaining>0?1.20:1);if(Object.hasOwn(s,type.field)&&type.kind==='flat')s[type.field]+=value;else anchorBonuses.push({type,value});}
  // Read-only combat projection: legacy effects remain in stored items, but are inactive.
  const main=equipped.weapon?{...equipped.weapon,effect:null,magic:null}:null,off=equipped.offhand?{...equipped.offhand,effect:null,magic:null}:null,caster=!!main&&['Staff','Wand'].includes(main.subtype);
  const clothFraction=Object.values(equipped).filter(item=>item?.armorType==='Cloth'&&['helm','armor','gloves','boots','belt'].includes(item.slot)).length/5;
@@ -114,6 +114,7 @@ function totalStats(equipment,ownedRunes,equippedRuneIds,{isTwoHanded,FIELDS,ite
  if(off?.subtype==='Shield')s.blockChance=Math.min(48,s.blockChance+Math.min(8,Math.max(0,gearBonus('blockBonus'))));
  s.blockReduction=off?.subtype==='Shield'?(main?.subtype==='Mace'?.67:main?.subtype==='Sword'?.62:.58):0;
  s.lootQuality=Math.min(10,Math.round(Math.max(0,s.cha-5)*.09*10)/10);
+ for(const {type,value} of anchorBonuses){const key=type.field;if(['mana','manaRegen','manaCostReduction'].includes(key)&&!s.mana||key==='spellPower'&&!s.spellPower||key==='blockChance'&&!s.blockChance)continue;if(type.kind==='percent')s[key]=(s[key]||0)*(1+value);else s[key]=(s[key]||0)+value;}
  if(state?.automaticTalents?.nodes?.length&&root.WandererAutomaticTalents)root.WandererAutomaticTalents.apply(s,state.automaticTalents);
  let result=s;
  if(PHASE1_PREVIEW&&root.WandererV012Buildcraft){let active=build;if(!active){active=root.WandererV012Buildcraft.create();root.WandererV012Buildcraft.syncPermanent(active,state?.automaticTalents||root.WandererAutomaticTalents.create());}result=root.WandererV012Buildcraft.mods(active,result);}
@@ -123,7 +124,7 @@ function totalStats(equipment,ownedRunes,equippedRuneIds,{isTwoHanded,FIELDS,ite
  result.attacksPerSec=Math.min(4.2,result.attacksPerSec);result.crit=Math.min(100,Math.max(0,result.crit||0));result.power=power(result);
  return result;
 }
-const STAT_KEYS=Object.freeze(['str','agi','int','end','cha','attack','defense','maxhp','attacksPerSec','crit','blockChance','mana','manaRegen','spellPower','evasionRating','barrierPower','healingPower','manaCostReduction','power']);
+const STAT_KEYS=Object.freeze(['str','agi','int','end','cha','attack','defense','maxhp','attacksPerSec','crit','blockChance','mana','manaRegen','spellPower','evasionRating','barrierPower','healingPower','manaCostReduction','critDamage','dotPower','power']);
 function breakdown(equipment,ownedRunes,equippedRuneIds,context,current=null){
  const progress=context.state?.automaticTalents||root.WandererAutomaticTalents.create();
  // The talent-free breakdown is a temporary read-only projection.

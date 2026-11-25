@@ -408,25 +408,14 @@ function equipRune(id,index){
  slots[index]=id;ports.state.runeSlots=slots;ports.phase3ClampVitals();ports.save();return true;
 }
 
-function offerBossRunes(tier){
- if(ports.state.pendingRuneReward)return;
- const pool=ports.RUNE_FAMILIES.map(x=>x.id),options=[];
- for(let i=0;i<3;i++)options.push(ports.makeRune(pool.splice(ports.roll(0,pool.length-1),1)[0],tier));
- ports.state.pendingRuneReward={tier,options};
+function offerBossRunes(tier,affinity){
+ const api=root.WandererV012Runes;if(ports.state.runes.length>=api.CAPACITY)throw Error('Anchor Rune capacity reached');
+ const rune=api.rollBoss(tier,affinity,ports.gameRandom,ports.makeId);rune.isNew=true;ports.state.runes.push(rune);return rune;
 }
-
+// Only used to settle an already pending legacy reward; new Bosses never offer choices.
 function claimPendingRuneChoice(id){
- const reward=ports.state.pendingRuneReward;
- if(ports.PHASE1_PREVIEW&&ports.state.runes.length>=300){ports.bannerMessage('Recycle a spare Rune before claiming; existing Runes are preserved.');return false;}
- const picked=reward?.options.find(r=>r.id===id);
- if(!picked)return false;
- picked.isNew=true;ports.state.runes.push(picked);ports.state.pendingRuneReward=null;
- if(ports.PHASE1_PREVIEW&&ports.phase5Results.summary?.outcome==='victory'&&ports.phase5Results.summary.runeTier===picked.tier)ports.phase5Results.summary.runeName=picked.name;
- const free=ports.state.runeSlots.indexOf(null);
- if(free>=0&&!ports.state.runeSlots.some(other=>ports.state.runes.find(r=>r.id===other)?.family===picked.family))ports.state.runeSlots[free]=picked.id;
- ports.save();ports.render();
- ports.bannerMessage('Permanent rune claimed: '+picked.name+' (D'+picked.tier+').');
- return true;
+ const picked=ports.state.pendingRuneReward?.options.find(r=>r.id===id);if(!picked||ports.state.runes.length>=root.WandererV012Runes.CAPACITY)return false;
+ const rune=root.WandererV012Runes.makeRune(picked.family,picked.tier,()=>picked.id,true,root.WandererV012Runes.rarity(picked));rune.isNew=true;ports.state.runes.push(rune);ports.state.pendingRuneReward=null;ports.save();ports.render();return true;
 }
 
 function runeCheckpointLocked(){return ports.PHASE1_PREVIEW&&(ports.phase4Resume||ports.phase1Controller?.state.version===2&&ports.phase3ExpeditionActive());}

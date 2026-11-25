@@ -1,47 +1,19 @@
-// Wanderer v0.12 — canonical Rune definitions, reward values and validation.
-// Pure module: no DOM, storage, Firebase or player-state mutation.
+// Anchor Runes: fixed family/rarity/category values, guaranteed final Boss loot.
 (function(root){'use strict';
-const FAMILIES=[
- {id:'might',name:'Rune of Might',field:'str',icon:'⚔️'},
- {id:'swiftness',name:'Rune of Swiftness',field:'agi',icon:'💨'},
- {id:'wisdom',name:'Rune of Wisdom',field:'int',icon:'✨'},
- {id:'fortitude',name:'Rune of Fortitude',field:'end',icon:'🛡️'},
- {id:'fortune',name:'Rune of Fortune',field:'cha',icon:'🍀'},
- {id:'fury',name:'Rune of Force',field:'atkFlat',icon:'🔥'},
- {id:'warding',name:'Rune of Warding',field:'defFlat',icon:'🔰'},
- {id:'vitality',name:'Rune of Vitality',field:'hpFlat',icon:'❤️'}
-];
-function runeValue(family,tier){const base=+(1+Math.min(tier,200)/10).toFixed(2),value=family==='fury'?base*3:family==='warding'?base*2:family==='vitality'?base*10:base;return tier>200?+(value*(1+.0048*(tier-200))).toFixed(2):value;}
-function makeRune(family,tier,makeId,expedition=true){
- const type=FAMILIES.find(x=>x.id===family);
- return {id:makeId(),family,tier,...(expedition?{progression:'expedition'}:{}),value:runeValue(family,tier),name:type.name};
-}
-function validRune(r,maxTier=Number.MAX_SAFE_INTEGER,expedition=true){
- return r&&typeof r==='object'&&FAMILIES.some(x=>x.id===r.family)&&Number.isInteger(r.tier)&&r.tier>=1&&r.tier<=maxTier&&(r.progression==='expedition'&&expedition||r.tier>=10&&r.tier%10===0)&&typeof r.id==='string'&&r.id.length>0&&r.id.length<120;
-}
-function safeRunes(raw,maxTier=Number.MAX_SAFE_INTEGER,expedition=true){
- const seen=new Set();
- return (Array.isArray(raw)?raw:[]).filter(r=>validRune(r,maxTier,expedition)).filter(r=>{if(seen.has(r.id))return false;seen.add(r.id);return true}).slice(0,300).map(r=>({id:r.id,family:r.family,tier:r.tier,...(r.progression==='expedition'?{progression:r.progression}:{}),value:runeValue(r.family,r.tier),name:FAMILIES.find(x=>x.id===r.family).name,isNew:r.isNew===true}));
-}
-function safePendingRune(raw,maxTier=Number.MAX_SAFE_INTEGER,expedition=true){
- const tier=Number(raw?.tier),options=Array.isArray(raw?.options)?raw.options:[];
- if(!Number.isInteger(tier)||tier<1||tier>maxTier||!expedition&&(tier<10||tier%10!==0)||options.length!==3)return null;
- if(options.some(r=>!validRune(r,maxTier,expedition)||r.tier!==tier)||new Set(options.map(r=>r.family)).size!==3)return null;
- return {tier,options:safeRunes(options,maxTier,expedition)};
-}
-function runeSalvageValue(r,maxTier=Number.MAX_SAFE_INTEGER,expedition=true){
- const tier=Number(r?.tier);
- if(!Number.isInteger(tier)||tier<1||tier>maxTier||!expedition&&(tier<10||tier%10!==0))return 0;
- return 5+2*Math.floor(tier/10);
-}
-function duplicateRuneCandidates(runes=[],runeSlots=[],maxTier=Number.MAX_SAFE_INTEGER,expedition=true){
- const equipped=new Set(runeSlots||[]),strongest=new Map();
- for(const r of runes||[]){
-  if(!runeSalvageValue(r,maxTier,expedition))continue;
-  const old=strongest.get(r.family);
-  if(!old||r.tier>old.tier)strongest.set(r.family,r);
- }
- return (runes||[]).filter(r=>!equipped.has(r.id)&&strongest.get(r.family)?.id!==r.id&&runeSalvageValue(r,maxTier,expedition)>0);
-}
-root.WandererV012Runes=Object.freeze({FAMILIES,runeValue,makeRune,validRune,safeRunes,safePendingRune,runeSalvageValue,duplicateRuneCandidates});
+const FAMILIES=Object.freeze([["might","Might","str",2,"flat","might","fury"],["swiftness","Swiftness","agi",2,"flat","swiftness","fury"],["wisdom","Wisdom","int",2,"flat","wisdom","magic"],["fortitude","Fortitude","end",2,"flat","fortitude","vitality"],["fortune","Fortune","cha",2,"flat","fortune","fury"],["fury","Force","atkFlat",4,"flat","fury","fury"],["warding","Warding","defFlat",3,"flat","warding","aegis"],["vitality","Vitality","hpFlat",12,"flat","vitality","vitality"],["execution","Execution","crit",3,"points","fury","fury"],["devastation","Devastation","critDamage",0.07,"fraction","fury","fury"],["haste","Haste","attacksPerSec",0.035,"percent","swiftness","fury"],["assault","Assault","attack",0.04,"percent","might","fury"],["archmage","Archmage","spellPower",0.05,"percent","wisdom","magic"],["abyss","Abyss","mana",0.07,"percent","wisdom","decay"],["clarity","Clarity","manaRegen",0.2,"flat","wisdom","magic"],["efficiency","Efficiency","manaCostReduction",0.025,"fraction","wisdom","magic"],["corruption","Corruption","dotPower",0.06,"fraction","fury","decay"],["bastion","Bastion","barrierPower",0.06,"fraction","warding","aegis"],["renewal","Renewal","healingPower",0.05,"fraction","vitality","vitality"],["phantom","Phantom","evasionRating",2,"flat","swiftness","fury"],["bulwark","Bulwark","defense",0.05,"percent","warding","aegis"],["heart","Heart","maxhp",0.05,"percent","vitality","blood"],["guard","Guard","blockChance",2,"points","warding","aegis"]].map(([id,label,field,base,kind,art,affinity])=>Object.freeze({id,name:'Rune of '+label,field,base,kind,art,affinity})));
+const RARITIES=Object.freeze(['Common','Uncommon','Rare','Epic','Legendary']),MULT=[1,1.5,2.25,3.25,4];
+const TIERS=[['Adventurer',1,1],['Veteran',5,1.15],['Ascendant',15,1.30],['Ancient',35,1.45],['Exalted',70,1.60]];
+const CAPACITY=300;
+function category(tier){return [...TIERS].reverse().find(x=>tier>=x[1])||TIERS[0];}
+function rarity(r){return r?.rarity??'Common';}
+function runeValue(family,tier,quality='Common'){const f=FAMILIES.find(x=>x.id===family),i=RARITIES.indexOf(quality);if(!f||i<0||!Number.isSafeInteger(tier)||tier<1)return 0;return +(f.base*MULT[i]*category(tier)[2]).toFixed(4);}
+function makeRune(family,tier,makeId,expedition=true,quality='Common'){const f=FAMILIES.find(x=>x.id===family);if(!f||!RARITIES.includes(quality))throw Error('Invalid Anchor Rune');return {id:makeId(),family,tier,progression:'expedition',rarity:quality,value:runeValue(family,tier,quality),name:f.name,anchorVersion:1};}
+function validRune(r,maxTier=Number.MAX_SAFE_INTEGER){return !!(r&&typeof r.id==='string'&&r.id.length>0&&r.id.length<120&&FAMILIES.some(x=>x.id===r.family)&&Number.isSafeInteger(r.tier)&&r.tier>=1&&r.tier<=maxTier&&RARITIES.includes(rarity(r))&&(r.anchorVersion===undefined||r.anchorVersion===1));}
+function safeRunes(raw,maxTier=Number.MAX_SAFE_INTEGER){const seen=new Set();return (Array.isArray(raw)?raw:[]).filter(r=>validRune(r,maxTier)&&!seen.has(r.id)&&seen.add(r.id)).slice(0,CAPACITY).map(r=>({...makeRune(r.family,r.tier,()=>r.id,true,rarity(r)),isNew:r.isNew===true}));}
+function safePendingRune(raw,maxTier=Number.MAX_SAFE_INTEGER){if(!raw||!Array.isArray(raw.options)||raw.options.length!==3||!Number.isSafeInteger(raw.tier))return null;const options=safeRunes(raw.options,maxTier);return options.length===3&&options.every(r=>r.tier===raw.tier)?{tier:raw.tier,options}:null;}
+function rollBoss(tier,affinity,random,makeId){const weights=FAMILIES.map(f=>f.affinity===affinity?3:1),total=weights.reduce((a,b)=>a+b,0);let roll=random()*total,index=0;for(;index<weights.length-1;index++){roll-=weights[index];if(roll<0)break;}const x=random(),quality=x<.40?'Common':x<.70?'Uncommon':x<.90?'Rare':x<.985?'Epic':'Legendary';return makeRune(FAMILIES[index].id,tier,makeId,true,quality);}
+function runeSalvageValue(r,maxTier=Number.MAX_SAFE_INTEGER){return validRune(r,maxTier)?(5+2*RARITIES.indexOf(rarity(r)))*Math.round(category(r.tier)[2]*2)/2:0;}
+function duplicateRuneCandidates(runes=[],slots=[],maxTier=Number.MAX_SAFE_INTEGER){const equipped=new Set(slots),best=new Map(),value=r=>runeValue(r.family,r.tier,rarity(r));for(const r of runes)if(validRune(r,maxTier)&&(!best.has(r.family)||value(r)>value(best.get(r.family))||value(r)===value(best.get(r.family))&&equipped.has(r.id)))best.set(r.family,r);return runes.filter(r=>validRune(r,maxTier)&&!equipped.has(r.id)&&best.get(r.family)?.id!==r.id);}
+function description(r){const f=FAMILIES.find(x=>x.id===r.family);if(!f)return '';const v=runeValue(r.family,r.tier,rarity(r)),labels={str:'Strength',agi:'Agility',int:'Intellect',end:'Endurance',cha:'Charisma',atkFlat:'Attack',defFlat:'Defense',hpFlat:'HP',crit:'Critical Chance',critDamage:'Critical Damage',attacksPerSec:'Attack Speed',attack:'Attack Power',spellPower:'Spell Power',mana:'Max Mana',manaRegen:'Mana Regen',manaCostReduction:'Mana Cost Reduction',dotPower:'DoT Damage',barrierPower:'Barrier Power',healingPower:'Healing Power',evasionRating:'Evasion Rating',defense:'Defense',maxhp:'Max HP',blockChance:'Guard Chance'};return '+'+Number((['percent','fraction'].includes(f.kind)?100*v:v).toFixed(2))+(['percent','fraction','points'].includes(f.kind)?'%':f.field==='manaRegen'?'/s':'')+' '+labels[f.field];}
+root.WandererV012Runes=Object.freeze({FAMILIES,RARITIES,CAPACITY,category,rarity,runeValue,makeRune,validRune,safeRunes,safePendingRune,rollBoss,runeSalvageValue,duplicateRuneCandidates,description});
 })(globalThis);

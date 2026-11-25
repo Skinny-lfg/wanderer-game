@@ -6,7 +6,7 @@ const SLOTS=['helm','amulet','armor','gloves','weapon','offhand','ring1','ring2'
 const STATS=['atk','def','hp','spd','str','agi','int','end','cha','mana','spell','evasionRating'];
 const EFFECTS=['poison','bleed','crit','sunder','shield','regen','burn','slow','drain','nature','shock','tide','crystal'];
 const MERCHANT_CATEGORY_SLOTS={weapons:['weapon','offhand'],armor:['helm','armor','gloves','boots','belt'],accessories:['ring1','ring2','amulet']};
-const RUNES=['might','swiftness','wisdom','fortitude','fortune','fury','warding','vitality'];
+const RUNES=["might","swiftness","wisdom","fortitude","fortune","fury","warding","vitality","execution","devastation","haste","assault","archmage","abyss","clarity","efficiency","corruption","bastion","renewal","phantom","bulwark","heart","guard"];const RUNE_RARITIES=['Common','Uncommon','Rare','Epic','Legendary'];
 const treasures=()=>root.WandererV012Treasures;
 const plain=x=>x!==null&&Object.prototype.toString.call(x)==='[object Object]';
 function requireValue(ok,message){if(!ok)throw Error('Invalid Expedition save: '+message);}
@@ -75,7 +75,7 @@ function profileCheck(p){
  for(const [slot,item]of Object.entries(p.equip))if(item)requireValue(item.slot===slot,'equipped slot mismatch');
  requireValue(Array.isArray(p.runes)&&p.runes.length<=300&&Array.isArray(p.runeSlots)&&p.runeSlots.length===3,'Runes');
  const runeIds=new Set();
- function runeCheck(r){requireValue(plain(r)&&typeof r.id==='string'&&!ids.has(r.id)&&!runeIds.has(r.id)&&integer(r.tier,1,Number.MAX_SAFE_INTEGER)&&(r.progression==='expedition'||r.tier>=10&&r.tier%10===0)&&RUNES.includes(r.family),'Rune identity');runeIds.add(r.id);}
+ function runeCheck(r){requireValue(plain(r)&&typeof r.id==='string'&&!ids.has(r.id)&&!runeIds.has(r.id)&&integer(r.tier,1,Number.MAX_SAFE_INTEGER)&&(r.progression==='expedition'||r.tier>=10&&r.tier%10===0)&&RUNES.includes(r.family)&&(r.rarity===undefined||RUNE_RARITIES.includes(r.rarity))&&(r.anchorVersion===undefined||r.anchorVersion===1),'Rune identity');runeIds.add(r.id);}
  p.runes.forEach(runeCheck);
  const equippedFamilies=new Set(),equippedIds=new Set();
  for(const id of p.runeSlots){if(id===null)continue;const rune=p.runes.find(r=>r.id===id);requireValue(rune&&!equippedIds.has(id)&&!equippedFamilies.has(rune.family),'Rune slot ownership');equippedIds.add(id);equippedFamilies.add(rune.family);}
