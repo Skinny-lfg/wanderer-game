@@ -53,7 +53,7 @@ test('Corruption Rune powers Cycle stack component once, not direct AP/SP',()=>{
  const c={player:r,enemy:e,now:1,base:100,power:50,random:()=>.9999,waveKey:'dot',log(){},dot(){},damage(n){e.hp-=n;},dotDamage(n){e.hp-=n;},metric(k,n){metrics[k]=(metrics[k]||0)+n;},heal(){return 0;},barrier(){},mana(n){r.mp+=n;}};
  for(let i=0;i<3;i++)B.applyRot(b,c,10,'paid_primary_cycle_extra');
  const stored=e.v012Rot.reduce((n,d)=>n+d.damage,0);B.onAttack(b,c);
- assert.equal(metrics.corruptionCycleStacksConsumed,3);assert.equal(e.v012Rot.length,0);assert(Math.abs(metrics.corruptionCycleRawBurst-(stored*6+30))<1e-8);
+ assert.equal(metrics.corruptionCycleStacksConsumed,3);assert.equal(e.v012Rot.length,2);assert(Math.abs(metrics.corruptionCycleRawBurst-(stored*6+30))<1e-8);
  return {stored,burst:metrics.corruptionCycleRawBurst};};
  const a=result(0),b=result(.24);assert(Math.abs(b.stored-a.stored*1.24)<1e-8);assert(Math.abs(b.burst-(a.burst-30)*1.24-30)<1e-8);
 });
@@ -63,5 +63,5 @@ test('Corruption Rune does not rescale copied stacks or already snapshotted peri
  const before=x.e.hp;ctx.dotDamage(100,'already stored Rot');assert.equal(before-x.e.hp,100);
  const b=B.create();B.syncPermanent(b,buy(['contagious_touch']));const target={hp:10000,maxhp:10000,v012Rot:[]};x.r.enemies=[x.e,target];
  B.applyRot(b,ctx,100,'paid_primary_toxic_touch');B.applyRot(b,ctx,100,'paid_primary_toxic_touch');
- assert.equal(target.v012Rot.length,1);assert(Math.abs(target.v012Rot[0].damage-x.e.v012Rot[0].damage*.65)<1e-8);
+ assert.equal(target.v012Rot.length,1);assert(Math.abs(target.v012Rot[0].damage-x.e.v012Rot[0].damage)<1e-8);
 });

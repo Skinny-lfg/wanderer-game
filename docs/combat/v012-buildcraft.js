@@ -74,7 +74,7 @@ const descriptions={
  virulent_rot:'New Rot stacks deal 15% more damage per rank.',
  wasting_curse:'Rotted enemies deal 4% less damage per rank. Combined damage reduction cannot exceed 28%.',
  wither:'Rotted foes heal 20% less at rank 1 (+10% per rank) and deal 2% less attack damage per rank. Player healing is unaffected.',
- blight:'On hit against Rot, spend 8 Mana to deal 38% base hit damage plus 35% Spell Power, capped at 2.5% enemy Max HP (7s cooldown).',
+ blight:'On hit, spend 8 Mana to apply one persistent Rot stack and deal 38% base hit damage plus 35% Spell Power, capped at 2.5% enemy Max HP (7s cooldown).',
  strong_heart:'Max Health +10% at Rank 1; smaller gains at higher ranks.',
  renewal:'Heal 0.55% Max HP per second at Rank 1; smaller gains at higher ranks. Healing reduction applies.',
  last_stand:'Once per Expedition, survive a lethal hit and recover 6% Max HP.',
@@ -164,6 +164,7 @@ function migrateEnemyDots(enemy){
 }
 // Paid main Toxic Touch stacks persist. A Cycle bonus stack shares provenance, not a second paid-action credit.
 function primaryPaidRot(d){return d?.primaryPaid===true&&!d.spread&&!d.transferred&&!d.secondaryOrigin&&d.remaining>0&&d.damage>0;}
+function burstEligibleRot(d){return d?.remaining>0&&d.damage>0&&(primaryPaidRot(d)||d.spread===true||d.transferred===true||!!d.abilityOrigin); }
 function decayState(c){
  const r=c.player,key=c.waveKey??c.enemy;
  if(!r.decayTalentState||r.decayTalentState.wave!==key)r.decayTalentState={wave:key,contagion:0,soul:0,nextNova:6};
@@ -182,7 +183,7 @@ function paidRotApplied(b,c,d){
    if(targets.length&&ready(b,'contagiousTouch',c.now,3)){
     state.contagion=0;activated(b,'contagious_touch');c.metric?.('contagiousTouchActivations',1);
     for(const target of targets){
-     target.v012Rot??=[];target.v012Rot.push({damage:d.damage*.65,remaining:specialized(b,'lingering_rot')?6:4,ticks:0,spread:true,secondaryOrigin:'contagious_touch'});
+     target.v012Rot??=[];target.v012Rot.push({damage:d.damage,remaining:specialized(b,'lingering_rot')?6:4,ticks:0,spread:true,secondaryOrigin:'contagious_touch'});c.metric?.('anchorSpreadContagiousTouch',1);c.metric?.('anchorSpreadContagiousTouchPotency',target.v012Rot.at(-1).damage);
      c.metric?.('contagiousTouchSpread',1);
     }
     c.link?.('rot',c.enemy,targets);
@@ -200,20 +201,29 @@ function paidRotApplied(b,c,d){
 // Reuse the existing Corruption Nova graph id; its visible name is Corruption Overflow.
 function corruptionOverflow(b,c){
  if(!specialized(b,'corruption_nova')||!decayOwnAoE(b)||c.player.hp<=0||c.enemy.hp<=0)return;
- const source=c.enemy,stacks=(source.v012Rot||[]).filter(primaryPaidRot),targets=decayTargets(c).filter(e=>e!==source).slice(0,3);
- if(stacks.length<6||!targets.length||(b.cooldowns.corruptionOverflow??-1e10)>c.now)return;
+ const source=c.enemy;
+ if((b.cooldowns.corruptionOverflow??-1e10)>c.now)return;
+ const targets=decayTargets(c).filter(e=>e!==source&&(e.v012Rot||[]).some(d=>d.remaining>0&&d.damage>0)).slice(0,3);
  const before=c.player.mp;if(!spendDarkMana(c,6))return;
- ready(b,'corruptionOverflow',c.now,4);activated(b,'corruption_nova');
+ ready(b,'corruptionOverflow',c.now,4);activated(b,'corruption_nova');c.metric?.('anchorSpreadOverflowCasts',1);applyRot(b,c,rotPotency(c),'ability_overflow');const stacks=(source.v012Rot||[]).filter(burstEligibleRot);if(stacks.length<3){c.metric?.('anchorSpreadOverflowSeedOnly',1);c.metric?.('corruptionOverflowMana',Math.max(0,before-c.player.mp));return;}
+ c.metric?.('anchorSpreadOverflowPrepared',stacks.filter(d=>!primaryPaidRot(d)).length);
  c.metric?.('corruptionOverflowActivations',1);c.metric?.('corruptionOverflowMana',Math.max(0,before-c.player.mp));
- const raw=stacks.reduce((n,d)=>n+d.damage,0)*3;
- for(const target of targets){
-  const amount=Math.min(raw,target.maxhp*(target.boss?.01:target.miniboss?.02:.06));
-  if(!(amount>0))continue;
-  const actual=c.talentPulseDamage?c.talentPulseDamage(target,amount,'corruption_nova'):c.secondaryHit?.(target,amount);
-  if(Number.isFinite(actual)&&actual>0)c.metric?.('corruptionOverflowDamage',actual);
-  c.metric?.('corruptionOverflowTargets',1);
+ const raw=stacks.reduce((n,d)=>n+d.damage,0)*2,hp=source.hp;
+ c.damage(raw,'☠ Corruption Overflow');
+ const actual=Math.max(0,hp-Math.max(0,source.hp)),budget=Math.floor(actual);
+ c.metric?.('anchorSpreadOverflowPrimary',actual);c.metric?.('corruptionOverflowDamage',actual);
+ if(targets.length){
+  c.metric?.('anchorSpreadOverflowBudget',budget);
+  const per=Math.floor(budget/targets.length),rest=budget%targets.length;
+  for(const [i,target] of targets.entries()){
+   const share=per+(i<rest?1:0),amount=Math.min(share,target.maxhp*(target.boss?.01:target.miniboss?.02:.06));
+   if(!(amount>0))continue;
+   const dealt=c.talentPulseDamage?c.talentPulseDamage(target,amount,'corruption_nova'):c.secondaryHit?.(target,amount);
+   if(Number.isFinite(dealt)&&dealt>0){c.metric?.('anchorSpreadOverflowSecondary',dealt);c.metric?.('corruptionOverflowDamage',dealt);}
+   c.metric?.('corruptionOverflowTargets',1);
+  }
+  c.link?.('rot',source,targets);
  }
- c.link?.('rot',source,targets);
 }
 function rotWeaponBase(c){
  const s=c.player?.stats||{},kind=s.main?.subtype,sp=Math.max(0,Number(s.spellPower??c.power)||0),ap=Math.max(0,Number(s.attack)||0);
@@ -228,10 +238,10 @@ function applyRot(b,c,power,origin=null){
  const stacks=e.v012Rot||(e.v012Rot=[]);
  if(origin==='rotguard'&&stacks.length>=6)return;
  if(stacks.length>=6)stacks.shift();
- const primary=origin==='paid_primary_toxic_touch'||origin==='paid_primary_cycle_extra';
+ const primary=origin==='paid_primary_toxic_touch'||origin==='paid_primary_cycle_extra',ability=typeof origin==='string'&&origin.startsWith('ability_');
  const potency=power*(1+.15*rank(b,'virulent_rot')+(b.runtime.talentBonuses?.rotBonus||0));
- const d={ticks:0,damage:dotPotency(primary||origin==='weapon'||origin==='rotguard'?Math.max(0,potency):Math.max(1,Math.round(potency)),c.player?.stats),remaining:primary?4:(specialized(b,'lingering_rot')?6:4),...(primary?{primaryPaid:true}:{}),...(origin==='weapon'?{secondaryOrigin:'weapon'}:{}),...(origin==='rotguard'?{reactive:true}:{})};
- stacks.push(d);
+ const d={ticks:0,damage:dotPotency(primary||ability||origin==='weapon'||origin==='rotguard'?Math.max(0,potency):Math.max(1,Math.round(potency)),c.player?.stats),remaining:primary||ability?4:(specialized(b,'lingering_rot')?6:4),...(primary?{primaryPaid:true}:{}),...(ability?{abilityOrigin:origin}:{}),...(origin==='weapon'?{secondaryOrigin:'weapon'}:{}),...(origin==='rotguard'?{reactive:true}:{})};
+ stacks.push(d);if(ability)c.metric?.('anchorSpreadSource_'+origin,1);
  c.log('☠ Rot '+stacks.length+'/6');
  if(origin==='paid_primary_toxic_touch')paidRotApplied(b,c,d);
  if(origin==='paid_primary_cycle_extra')c.metric?.('decayPrimaryPaidExtraStacks',1);
@@ -242,19 +252,21 @@ function rotguardRetaliate(b,c){
  applyRot(b,c,rotPotency(c)*.5,'rotguard');c.metric?.('rotguardReactiveRot',1);c.trigger?.('rotguard');return true;
 }
 function corruptionCycle(b,c){
- if(!specialized(b,'corruption_cycle')||c.enemy.hp<=0||c.player.hp<=0)return;
- const e=c.enemy,stacks=(e.v012Rot||[]).filter(primaryPaidRot);
- if(stacks.length<3||(b.cooldowns.corruptionCycle??-1e10)>c.now)return;
- // If Overflow is owned, build toward the six-stack AoE threshold first.
- if(specialized(b,'corruption_nova')&&decayOwnAoE(b)&&decayTargets(c).some(x=>x!==e)&&stacks.length<6)return;
+ if(!specialized(b,'corruption_cycle')||c.enemy.hp<=0||c.player.hp<=0||(b.cooldowns.corruptionCycle??-1e10)>c.now)return;
  const before=c.player.mp;if(!spendDarkMana(c,10))return;
- const stats=c.player.stats||{},speed=Math.max(.01,Number(stats.attacksPerSec)||.7),cd=Math.max(2.5,Math.min(10,3.5/speed));
- ready(b,'corruptionCycle',c.now,cd);
+ const e=c.enemy,stats=c.player.stats||{},speed=Math.max(.01,Number(stats.attacksPerSec)||.7),cd=Math.max(2.5,Math.min(10,3.5/speed));
+ ready(b,'corruptionCycle',c.now,cd);activated(b,'corruption_cycle');
+ c.metric?.('anchorSpreadCycleCasts',1);c.metric?.('corruptionCycleMana',Math.max(0,before-c.player.mp));
+ for(let i=0;i<2;i++)applyRot(b,c,rotPotency(c),'ability_cycle');
+ const stacks=(e.v012Rot||[]).filter(burstEligibleRot);
+ if(stacks.length<3){c.metric?.('anchorSpreadCycleSeedOnly',1);return;}
  const consumed=stacks.slice(0,3),remove=new Set(consumed);e.v012Rot=e.v012Rot.filter(d=>!remove.has(d));
+ c.metric?.('anchorSpreadCycleConsumed',consumed.filter(d=>d.spread||d.transferred).length);
  const remaining=consumed.reduce((n,d)=>n+d.damage*6,0),raw=remaining+.2*Math.max(0,Number(stats.attack??c.base)||0)+.2*Math.max(0,Number(stats.spellPower??c.power)||0),hp=e.hp;
- c.damage(raw,'🦠 Corruption Cycle');activated(b,'corruption_cycle');
- c.metric?.('corruptionCycleActivations',1);c.metric?.('corruptionCycleMana',Math.max(0,before-c.player.mp));c.metric?.('corruptionCycleConsumedRawRot',remaining);c.metric?.('corruptionCycleRawBurst',raw);c.metric?.('corruptionCycleDamage',Math.max(0,hp-Math.max(0,e.hp)));c.metric?.('corruptionCycleStacksConsumed',consumed.length);
+ c.damage(raw,'🦠 Corruption Cycle');
+ c.metric?.('corruptionCycleActivations',1);c.metric?.('corruptionCycleConsumedRawRot',remaining);c.metric?.('corruptionCycleRawBurst',raw);c.metric?.('corruptionCycleDamage',Math.max(0,hp-Math.max(0,e.hp)));c.metric?.('corruptionCycleStacksConsumed',consumed.length);
 }
+
 function sanguineReserve(b,c){
  const r=c.player,key=c.waveKey??c.enemy;
  if(r.sanguineReserveWave!==key){r.sanguineReserveWave=key;r.sanguineReserve=0;}
@@ -367,9 +379,10 @@ function onAttack(b,c){
  }
  if(rank(b,'executioner')&&e.bleedStacks>0&&e.hp<=e.maxhp*.30&&ready(b,'execute',c.now,6)&&activated(b,'executioner'))c.damage(Math.min(base*.32,e.maxhp*.025),'🩸 Execute');
  if(rank(b,'blood_drinker')&&e.bleedStacks>0&&ready(b,'bloodHeal',c.now,4)&&activated(b,'blood_drinker'))heal(b,c,Math.min(c.player.maxhp*values('blood_drinker',rank(b,'blood_drinker')).hp,base*values('blood_drinker',rank(b,'blood_drinker')).base));
- if(e.hp>0&&rank(b,'toxic_touch')&&(b.cooldowns.toxicTouch??-1e10)<=c.now&&c.random()<values('toxic_touch',rank(b,'toxic_touch')).chance&&spendDarkMana(c,4)&&ready(b,'toxicTouch',c.now,1.3)&&activated(b,'toxic_touch')){const potency=rotPotency(c);applyRot(b,c,potency,'paid_primary_toxic_touch');if(specialized(b,'corruption_cycle'))applyRot(b,c,potency,'paid_primary_cycle_extra');corruptionOverflow(b,c);}
+ if(e.hp>0&&rank(b,'toxic_touch')&&(b.cooldowns.toxicTouch??-1e10)<=c.now&&c.random()<values('toxic_touch',rank(b,'toxic_touch')).chance&&spendDarkMana(c,4)&&ready(b,'toxicTouch',c.now,1.3)&&activated(b,'toxic_touch')){const potency=rotPotency(c);applyRot(b,c,potency,'paid_primary_toxic_touch'); }
+ corruptionOverflow(b,c);
  corruptionCycle(b,c);
- if(e.hp>0&&rank(b,'blight')&&e.v012Rot?.length&&(b.cooldowns.blight??-1e10)<=c.now&&spendDarkMana(c,8)&&ready(b,'blight',c.now,7)&&activated(b,'blight'))c.damage(Math.min(base*.38+Math.max(0,c.power||0)*.35,e.maxhp*.025),'☠ Blight');
+ if(e.hp>0&&rank(b,'blight')&&(b.cooldowns.blight??-1e10)<=c.now&&spendDarkMana(c,8)&&ready(b,'blight',c.now,7)&&activated(b,'blight')){applyRot(b,c,rotPotency(c),'ability_blight');c.damage(Math.min(base*.38+Math.max(0,c.power||0)*.35,e.maxhp*.025),'☠ Blight');}
  if(rank(b,'plague_rupture')&&crit&&e.bleedStacks>0&&e.v012Rot?.length&&ready(b,'plagueRupture',c.now,8)&&activated(b,'plague_rupture'))c.damage(Math.min(base*.55,e.maxhp*.032),'🩸 Plague Rupture');
  if(rank(b,'crimson_rush')&&crit&&e.bleedStacks>0&&activated(b,'crimson_rush'))c.damage(base*.15,'🩸 Crimson Rush');
  if(rank(b,'brutal_crit')&&crit&&activated(b,'brutal_crit'))c.damage(base*Math.min(.65,.12*Math.sqrt(rank(b,'brutal_crit'))),'⚔ Brutal Critical');
@@ -505,8 +518,9 @@ function tickRot(b,c){
   }
   const damage=Math.round(baseRot*(e.incubationTicks%3===0?1+.12*incubationRank:1)+bonus);
   c.metric?.('decayPrimaryPaidRotTicks',1);c.metric?.('decayPrimaryPaidRotStackSum',rot.length);
-  if(rot.every(s=>!primaryPaidRot(s)&&s.remaining<=1))e.incubationTicks=0;
-  e.v012Rot=rot.map(s=>({...s,remaining:primaryPaidRot(s)?s.remaining:s.remaining-1,ticks:(s.ticks||0)+1})).filter(s=>s.remaining>0);
+  if(rot.every(s=>!burstEligibleRot(s)&&s.remaining<=1))e.incubationTicks=0;
+  c.metric?.('anchorSpreadExpired',rot.filter(s=>s.spread&&s.remaining<=1&&!burstEligibleRot(s)).length);
+ e.v012Rot=rot.map(s=>({...s,remaining:burstEligibleRot(s)?s.remaining:s.remaining-1,ticks:(s.ticks||0)+1})).filter(s=>s.remaining>0);
   if(!e.v012Rot.length)e.carrionCharge=0;
   
   const before=e.hp;c.dotDamage(damage,'☠ Rot',secondaryFraction);if(before>0&&e.hp<=0)e.v012DeathRot=true;c.metric?.('decayPrimaryPaidTotalRotDamage',Math.max(0,before-Math.max(0,e.hp)));
@@ -713,6 +727,6 @@ function onInfusionHit(b,c){
  return directAmount;
 }
 function clear(b){if(!b)return;b.picks.length=0;b.element=null;b.unlockedFamilies=[];b.families=[];b.cooldowns=Object.create(null);b.runtime={frenzyUntil:0,counterBlock:0,counterBarrier:0,spellblade:false,magicHits:0,staticCharges:0,adrenalineUntil:0,conduit:false,lastStand:false,lastSpellAt:-999};}
-root.WandererV012Buildcraft=Object.freeze({CATALOG,FAMILIES,ELEMENTS:elements,barrierAmount,create,ownedRank,rank,values,bleedDamage,elementalPower,dotPotency,applyRot,rotguardRetaliate,migrateEnemyDots,mods,onHeal,onSecondaryWeaponStatus,onAttack,onCast,onSecond,tickRot,incoming,onDefend,onKill,survive,speed,enemyHealMultiplier,enemyDefense,nextCost,resetWave,canCast,magicMode,infusionConfig,infusionReady,activateInfusion,onInfusionActivation,onInfusionHit,validate,syncPermanent,clear});
+root.WandererV012Buildcraft=Object.freeze({CATALOG,FAMILIES,ELEMENTS:elements,barrierAmount,create,ownedRank,rank,values,bleedDamage,elementalPower,dotPotency,applyRot,corruptionOverflow,rotguardRetaliate,migrateEnemyDots,mods,onHeal,onSecondaryWeaponStatus,onAttack,onCast,onSecond,tickRot,incoming,onDefend,onKill,survive,speed,enemyHealMultiplier,enemyDefense,nextCost,resetWave,canCast,magicMode,infusionConfig,infusionReady,activateInfusion,onInfusionActivation,onInfusionHit,validate,syncPermanent,clear});
 })(globalThis);
 
