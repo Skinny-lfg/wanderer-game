@@ -65,6 +65,20 @@ func painted_key(hover: bool = false) -> String:
 		return "slot_empty"
 	return PaintedSlots.RARITIES[rarity]
 
+func _painted_art_fit_ratio(side: float) -> float:
+	var ratio: float
+	if side <= 50.0:
+		ratio = 0.82
+	elif side <= 66.0:
+		ratio = 0.77
+	else:
+		ratio = 0.73
+	if equipped:
+		ratio += 0.02
+	elif button_pressed:
+		ratio += 0.01
+	return ratio
+
 func _draw_painted() -> void:
 	var side = minf(size.x, size.y)
 	if side <= 0:
@@ -77,7 +91,8 @@ func _draw_painted() -> void:
 		return
 	if item_art != null:
 		var art_size = item_art.get_size()
-		var factor = minf(side * 0.69 / art_size.x, side * 0.69 / art_size.y)
+		var fit_ratio = _painted_art_fit_ratio(side)
+		var factor = minf(side * fit_ratio / art_size.x, side * fit_ratio / art_size.y)
 		art_size *= factor
 		draw_texture_rect(item_art, Rect2((size - art_size) * 0.5, art_size), false)
 		# Preserve a rarity cue when a gold interaction state replaces the base.

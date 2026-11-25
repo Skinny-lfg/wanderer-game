@@ -37,7 +37,19 @@ func _run() -> void:
 	if first.painted_key() != "rarity_grey" or first.painted_key(true) != "slot_hover":
 		_fail("Rarity or hover state failed")
 		return
+	for sample in [[48.0, 0.82], [64.0, 0.77], [80.0, 0.73]]:
+		if not is_equal_approx(first._painted_art_fit_ratio(sample[0]), sample[1]):
+			_fail("Unexpected item art fit ratio")
+			return
+	first.equipped = true
+	if not is_equal_approx(first._painted_art_fit_ratio(64.0), 0.79):
+		_fail("Equipped fit bonus failed")
+		return
+	first.equipped = false
 	first.button_pressed = true
+	if not is_equal_approx(first._painted_art_fit_ratio(48.0), 0.83):
+		_fail("Selected fit bonus failed")
+		return
 	if first.painted_key() != "slot_selected":
 		_fail("Selection state failed")
 		return
