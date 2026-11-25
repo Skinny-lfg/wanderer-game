@@ -36,3 +36,9 @@ G9–G10: only after browser rules are frozen, port and compare mechanics.
 Screenshot capture uses a graphical backend, not headless mode. CI uploads the eight PNGs as `godot-g1-screenshots`. To capture locally with the graphical Godot executable: `godot --path godot-prototype --script res://tests/capture_screens.gd`.
 
 G1R: corrected navigation and recorded the proposed UI kit in `docs/ui-kit-plan.md`. No final art or reusable G2 component implementation is implied.
+
+## G2.1 — Stylized Gothic UI workshop
+
+Open `res://ui/showcase/ui_gallery.tscn` in the Godot editor and press F6. F5 still launches the original game shell. Six interactive categories: Foundations, Buttons, Panels, Navigation, Item Slots and Tooltips. Theme: `ui/theme/stylized_gothic_theme.tres`; original procedural SVG nine-slice textures; system-font fallback pending font selection. No other themes are implemented because Stylized Gothic was selected. No gameplay wiring or migration of existing screens yet. Other UI kit families remain on the G2 backlog. Desktop 1280×720 reference; visual approval and other resolution checks pending.
+
+Gallery smoke: `godot --headless --path godot-prototype --script res://tests/gallery_smoke.gd`. Rendered PNGs are uploaded to CI artifact `godot-g21-gothic-gallery`.

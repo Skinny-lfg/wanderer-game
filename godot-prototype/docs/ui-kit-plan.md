@@ -65,3 +65,6 @@ Each reusable component gets its own scene and/or script, explicit properties an
 3. Check keyboard focus, 1280×720 and 1920×1080, long labels, readable contrast, no clipping. Other aspect ratios are a subsequent check, not validated.
 4. Reuse assets and test native UI state, not fabricated combat or economy data.
 5. G3–G8 apply kit screen by screen; only G9+ ports mechanics and compares against frozen browser commit.
+
+## G2.1 decision
+Stylized Gothic selected as the sole direction: angular silhouettes, dark iron and painted bevels, restrained aged gold, readable ivory. Initial SVG frame assets and theme are first-pass vector material studies, not final painted art. The standalone gallery covers six core categories; later categories and font licensing are deferred. No game screen theme migration until visual approval. 

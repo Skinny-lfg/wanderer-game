@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Theme" path="res://ui/theme/stylized_gothic_theme.tres" id="1"]
+
+[node name="GothicPanel" type="PanelContainer"]
+theme = ExtResource("1")

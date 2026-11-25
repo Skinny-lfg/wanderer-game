@@ -56,3 +56,27 @@ jobs:
           name: godot-g1r-screenshots
           path: godot-prototype/captures/*.png
           if-no-files-found: error
+      - name: Gothic UI gallery smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          GODOT=/tmp/godot-bin/Godot_v4.4.1-stable_linux.x86_64
+          "$GODOT" --headless --path godot-prototype --script res://tests/gallery_smoke.gd 2>&1 | tee /tmp/godot-gallery.log
+          ! grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-gallery.log
+          grep -F 'PASS: gothic gallery six categories and component states' /tmp/godot-gallery.log
+      - name: Capture Gothic gallery
+        shell: bash
+        run: |
+          set -euo pipefail
+          GODOT=/tmp/godot-bin/Godot_v4.4.1-stable_linux.x86_64
+          LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a -s '-screen 0 1600x900x24' "$GODOT" --path godot-prototype --rendering-method gl_compatibility --resolution 1280x720 --audio-driver Dummy --script res://tests/capture_gallery.gd 2>&1 | tee /tmp/godot-gallery-capture.log
+          ! grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-gallery-capture.log
+          grep -F 'PASS: captured six gothic gallery categories' /tmp/godot-gallery-capture.log
+          for screen in foundations buttons panels navigation item_slots tooltips; do
+            test -s "godot-prototype/captures/gallery/$screen.png"
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: godot-g21-gothic-gallery
+          path: godot-prototype/captures/gallery/*.png
+          if-no-files-found: error

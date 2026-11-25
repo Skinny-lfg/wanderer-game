@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://ui/components/inventory/item_slot.gd" id="1"]
+[ext_resource type="Theme" path="res://ui/theme/stylized_gothic_theme.tres" id="2"]
+
+[node name="ItemSlot" type="Button"]
+custom_minimum_size = Vector2(76, 76)
+theme = ExtResource("2")
+toggle_mode = true
+script = ExtResource("1")
