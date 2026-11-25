@@ -23,8 +23,19 @@ func _run() -> void:
 		if not card.get_theme_stylebox("panel") is StyleBoxTexture or card.portrait_art == null or card.content_stack == null:
 			_fail("Painted card missing art or content")
 			return
-	if common.detailed or rare.detailed or not legendary.detailed or legendary.ornament == null or legendary.unique_effect.is_empty():
+	if common.detailed or rare.detailed or not legendary.detailed or legendary.ornament != null or legendary.unique_effect.is_empty():
 		_fail("Compact versus legendary treatment failed")
+		return
+	for card in gallery.demo_tooltips:
+		if not card.sections.has("artwork"):
+			_fail("Unframed artwork missing")
+			return
+		var art: Control = card.sections["artwork"]
+		if art.get_child_count() != 1 or not art.get_child(0) is TextureRect or art.get_child(0).name != "ItemArtwork":
+			_fail("Item artwork must be visible without a slot frame")
+			return
+	if legendary.get_theme_stylebox("panel").texture != rare.get_theme_stylebox("panel").texture:
+		_fail("Legendary should use the same neutral frame")
 		return
 	if comparison.comparison_lines.size() != 3 or not comparison.comparison_lines[2].begins_with("-"):
 		_fail("Comparison sample missing")
@@ -49,7 +60,7 @@ func _run() -> void:
 	gallery.organized_tooltips = false
 	gallery.show_category("Tooltips")
 	await process_frame
-	if gallery.demo_tooltips[0].organized or gallery.demo_tooltips[0].painted_style == null:
+	if gallery.demo_tooltips[0].organized or gallery.demo_tooltips[0].painted_style == null or gallery.demo_tooltips[2].ornament == null:
 		_fail("Previous painted comparison missing")
 		return
 	gallery.prefer_tooltips = false

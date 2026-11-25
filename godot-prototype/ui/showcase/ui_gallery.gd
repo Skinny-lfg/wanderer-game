@@ -96,7 +96,7 @@ func _ready() -> void:
 	fit.text = "Fit screen"
 	fit.pressed.connect(_fit_gallery_window)
 	header.add_child(fit)
-	frame.add_child(_label("STYLIZED GOTHIC     •     G2.2E.2 / TOOLTIP HIERARCHY", 15, Tokens.GOLD))
+	frame.add_child(_label("STYLIZED GOTHIC     •     G2.2E.3 / UNFRAMED ITEM ART", 15, Tokens.GOLD))
 	frame.add_child(HSeparator.new())
 	var layout = _row(frame)
 	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -678,10 +678,10 @@ func _tooltip_card(kind: String, compare: bool = false) -> PanelContainer:
 	if prefer_tooltips and frame_pack.is_ready() and slot_pack.is_ready():
 		node.detailed = kind == "legendary"
 		node.organized = organized_tooltips
-		node.painted_style = frame_pack.style_for("featured" if node.detailed else "tooltip")
+		node.painted_style = frame_pack.style_for("featured" if node.detailed and not organized_tooltips else "tooltip")
 		node.portrait_art = art
 		node.portrait_frame = slot_pack.textures[SlotPack.RARITIES[rarity_index]]
-		if node.detailed:
+		if node.detailed and not organized_tooltips:
 			node.ornament = frame_pack.textures["crest"]
 	return node
 
@@ -689,7 +689,7 @@ func _tooltips() -> void:
 	demo_tooltips.clear()
 	var toolbar = _row(body)
 	var selector = OptionButton.new()
-	selector.add_item("G2.2E.2 Organized")
+	selector.add_item("G2.2E.3 Unframed Art")
 	selector.add_item("G2.2E Previous")
 	selector.add_item("G2.1 Original")
 	selector.select((0 if organized_tooltips else 1) if prefer_tooltips else 2)
@@ -711,7 +711,7 @@ func _tooltips() -> void:
 	var painted = prefer_tooltips and frame_pack.is_ready() and slot_pack.is_ready()
 	tooltip_status = _label("Painted assets active" if painted else "Original active", 15, Tokens.GOLD)
 	toolbar.add_child(tooltip_status)
-	_note("Compact bag tooltip / detailed legendary inspection. All values and effects are illustrative.")
+	_note("Unframed item artwork / unified tooltip frame. All values and effects are illustrative.")
 	var cards = _row(body)
 	var basic = _tooltip_card("common")
 	var rare = _tooltip_card("rare")

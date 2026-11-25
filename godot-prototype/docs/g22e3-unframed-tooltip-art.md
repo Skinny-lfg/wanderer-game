@@ -1,0 +1,3 @@
+# G2.2E.3 — Unframed item artwork
+
+Workshop revision following visual review. Render original transparent item art directly, using normalized alpha bounds (no inventory-slot texture) on the right of the primary damage or amulet stats. All organized cards share the compact neutral tooltip frame. Legendary identity comes from rarity-colored name and unique effect, larger artwork and optional lore; remove the separate crest and heavy Featured panel in organized mode. Previous painted layout and original fallback remain available. No new PNGs, live inventory or gameplay changes. Smoke coverage checks art-only holder, shared frame and previous layout.

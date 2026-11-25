@@ -64,11 +64,11 @@ func _separator(host: Node) -> void:
 	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	host.add_child(line)
 
-func _portrait(side: int) -> Control:
+func _portrait(side: int, framed: bool = true) -> Control:
 	var holder = Control.new()
 	holder.custom_minimum_size = Vector2(side, side)
 	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	if portrait_frame != null:
+	if framed and portrait_frame != null:
 		var frame = TextureRect.new()
 		frame.texture = portrait_frame
 		frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -80,8 +80,9 @@ func _portrait(side: int) -> Control:
 		var image = portrait_art.get_image()
 		if image != null and not image.is_empty():
 			image.convert(Image.FORMAT_RGBA8)
-			var normalized = Normalize.fit_icon(image, Vector2i(128, 128), 84)
+			var normalized = Normalize.fit_icon(image, Vector2i(128, 128), 84 if framed else 116)
 			var art = TextureRect.new()
+			art.name = "ItemArtwork"
 			art.texture = ImageTexture.create_from_image(normalized)
 			art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 			art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -152,63 +153,65 @@ func _aligned_stat(host: Node, label_text: String, value: String, value_color: C
 	row.add_child(amount)
 
 func _build_organized() -> void:
-	# Reuse the approved modular art; smaller content padding is independent
-	# of the texture slice margins and still leaves room for the bevel.
 	var style = painted_style.duplicate() as StyleBoxTexture
-	if not detailed:
-		style.content_margin_left = 22
-		style.content_margin_right = 22
-		style.content_margin_top = 18
-		style.content_margin_bottom = 18
+	style.content_margin_left = 22
+	style.content_margin_right = 22
+	style.content_margin_top = 20
+	style.content_margin_bottom = 20
 	add_theme_stylebox_override("panel", style)
-	custom_minimum_size.x = 330 if detailed else 270
+	custom_minimum_size.x = 310 if detailed else 280
 	var accent: Color = Tokens.RARITY_COLORS[rarity]
 	var stack = VBoxContainer.new()
 	stack.add_theme_constant_override("separation", 8)
 	add_child(stack)
 	content_stack = stack
 	var header = _section(stack, "header", 3)
-	if detailed and ornament != null:
-		var crest = TextureRect.new()
-		crest.texture = ornament
-		crest.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		crest.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		crest.custom_minimum_size = Vector2(0, 22)
-		header.add_child(crest)
 	if equipped_caption:
 		header.add_child(_label("CURRENTLY EQUIPPED", Tokens.MUTED, 11))
-	var title_row = HBoxContainer.new()
-	title_row.add_theme_constant_override("separation", 8)
-	header.add_child(title_row)
-	if detailed:
-		title_row.add_child(_portrait(60))
-	var names = VBoxContainer.new()
-	names.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	names.add_theme_constant_override("separation", 3)
-	title_row.add_child(names)
-	names.add_child(_wrap_label(item_name, accent, 21 if detailed else 19))
-	names.add_child(_wrap_label(Tokens.RARITY_NAMES[rarity] + " / " + category, Tokens.MUTED, 13))
+	header.add_child(_wrap_label(item_name, accent, 21 if detailed else 19))
+	header.add_child(_wrap_label(Tokens.RARITY_NAMES[rarity] + " / " + category, Tokens.MUTED, 13))
 	_separator(stack)
-	if not primary_value.is_empty() and not primary_label.is_empty():
-		var primary = _section(stack, "primary", 1)
+	var has_primary = not primary_value.is_empty() and not primary_label.is_empty()
+	var overview = HBoxContainer.new()
+	overview.add_theme_constant_override("separation", 8)
+	stack.add_child(overview)
+	var overview_text = VBoxContainer.new()
+	overview_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	overview_text.alignment = BoxContainer.ALIGNMENT_CENTER
+	overview.add_child(overview_text)
+	if has_primary:
+		var primary = _section(overview_text, "primary", 1)
 		primary.add_child(_label(primary_value, Tokens.IVORY, 30))
 		primary.add_child(_wrap_label(primary_label, Tokens.MUTED, 13))
-	if not attributes.is_empty():
-		if sections.has("primary"):
-			_separator(stack)
+	elif not attributes.is_empty():
+		var modifiers = _section(overview_text, "attributes")
+		modifiers.add_child(_label("ATTRIBUTES", Tokens.MUTED, 11))
+		for entry in attributes:
+			_aligned_stat(modifiers, str(entry.get("label", "")), str(entry.get("value", "")), Tokens.IVORY)
+	else:
+		var modifiers = _section(overview_text, "attributes")
+		for entry in stat_lines:
+			modifiers.add_child(_wrap_label(entry, Tokens.IVORY, 15))
+	if portrait_art != null:
+		var art = _portrait(76 if detailed else 64, false)
+		art.name = "UnframedArtwork"
+		art.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		overview.add_child(art)
+		sections["artwork"] = art
+	if has_primary and not attributes.is_empty():
+		_separator(stack)
 		var modifiers = _section(stack, "attributes")
 		modifiers.add_child(_label("ATTRIBUTES", Tokens.MUTED, 11))
 		for entry in attributes:
 			_aligned_stat(modifiers, str(entry.get("label", "")), str(entry.get("value", "")), Tokens.IVORY)
-	elif not sections.has("primary"):
-		# Generic callers can still provide the original unstructured stat lines.
-		var modifiers = _section(stack, "attributes")
-		for entry in stat_lines:
-			modifiers.add_child(_wrap_label(entry, Tokens.IVORY, 15))
 	if not unique_effect.is_empty():
-		_separator(stack)
+		var line = ColorRect.new()
+		line.color = accent.darkened(0.45)
+		line.custom_minimum_size.y = 1
+		line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		stack.add_child(line)
 		var effect = _section(stack, "unique")
-		effect.add_child(_wrap_label(unique_title, accent, 16))
+		effect.add_child(_wrap_label(unique_title, accent, 17))
 		effect.add_child(_wrap_label(unique_effect, Tokens.IVORY, 14))
 	if not changes.is_empty():
 		_separator(stack)
