@@ -16,7 +16,9 @@ test('explicit agent goals match their own live affinity and element scope',()=>
   if(p.plan)continue;
   for(const id of [...(p.targets||[]),...(p.preparedTargets||[])]){
    const n=map.get(id);assert(n&&!n.pending,name+': '+id);assert(!n.family||p.families.includes(n.family),name+': '+id);
-   assert(!n.pair||n.pair.every(f=>p.families.includes(f)),name+': '+id);
+   assert(!n.pair||p.style!=='focused'&&n.pair.every(f=>p.families.includes(f)),name+': '+id);
+   const plan={primary:p.families[0],secondary:p.families[1],mix:p.style!=='focused',element:p.element||'arcane'};
+   assert(B.routeTo(T,T.create(),id,plan,p.families)?.length,name+': unreachable '+id);
    assert(!n.element||n.element===(p.element||'arcane'),name+': '+id);
   }
  }

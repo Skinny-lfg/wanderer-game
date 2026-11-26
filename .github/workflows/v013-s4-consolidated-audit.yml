@@ -18,7 +18,7 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-      - run: npm ci
+      - run: npm ci --prefer-offline --fetch-retries=1 --fetch-timeout=30000
       - name: Current native gate
         run: npm test
       - name: Current strategic agents and R7 regressions
