@@ -471,7 +471,7 @@ function onSecond(b,c){
  b.runtime.passiveTelemetry??={};for(const id of new Set([...b.picks,...(b.runtime.permanentTalents||[])])){if(!rank(b,id))continue;const t=b.runtime.passiveTelemetry[id]??={activations:0,combatSeconds:0};t.combatSeconds++;}
  const e=migrateEnemyDots(c.enemy);if(e.hp>0)tickRot(b,c);
  // Root Radiance and stat-node regeneration are fractional Max HP per second.
- // The 0.35% base cap applies before mutually exclusive Recovery/Reserve multipliers.
+ // The 0.35% base cap applies before separate healing effects.
  const basicRegenRate=Math.min(.0035,Math.max(0,Number(b.runtime.talentBonuses?.healthRegen)||0));
  if(basicRegenRate>0)heal(b,c,c.player.maxhp*basicRegenRate);
  if(specialized(b,'living_recovery')&&c.player.hp<c.player.maxhp*.5)heal(b,c,c.player.maxhp*.005);

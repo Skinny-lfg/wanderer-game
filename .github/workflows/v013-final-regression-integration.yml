@@ -51,6 +51,9 @@ jobs:
           CHROME_BIN="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
           if [ -n "$CHROME_BIN" ]; then export WANDERER_BROWSER="$CHROME_BIN"; else npx playwright install chromium; fi
           node --test tests/v013-runtime-parity.test.cjs
+      - name: Install bundled Playwright Chromium for UI smoke
+        if: always()
+        run: npx playwright install chromium
       - name: Browser clean sheet smoke
         if: always()
         shell: bash
@@ -68,7 +71,14 @@ jobs:
       - name: Canonical runtime consumers and mirrored modules
         shell: bash
         run: |
-          for f in combat/*.js economy/*.js online/*.js; do if [ -f "docs/$f" ]; then cmp "$f" "docs/$f" || exit 1; fi; done
+          for f in combat/*.js economy/*.js online/*.js; do
+            if [ ! -f "docs/$f" ]; then continue; fi
+            if [ "$f" = online/v012-save.js ]; then
+              sed "s/PREFIX='wanderer_v013_c2_clean_sheet_v1_'/PREFIX='wanderer_automatic_rpg_preview_c2_v1_'/" "$f" | cmp - "docs/$f"
+            else
+              cmp "$f" "docs/$f"
+            fi
+          done
           echo "=== remaining canonical talent ID references in runtime ==="
           git grep -nE 'toxic_touch|relentless_assault|arcane_echo|fury_recovery|storm_mastery|spell_echo|crimson_feast' -- combat economy online index.html || true
           echo "=== shared trait and enemy domain references (review only) ==="

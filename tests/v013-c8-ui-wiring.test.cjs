@@ -45,7 +45,7 @@ test('C8 account, feedback and leaderboard actions have explicit external entryp
 test('C8 gear-driven character portraits replace the retired manual skin selector',()=>{
  const source=index();
  assert(source.includes('globalThis.WandererCharacterArt?.imageForEquipment(state.equip)'));
- assert(source.includes('online/v013-character-art.js?v=20261121'));
+ assert.match(source,/online\/v013-character-art\.js\?v=[0-9a-f]{12}/);
  assert(!source.includes('data-phase1-hero='));
  assert(!source.includes('phase3CharacterPickerHitbox'));
 });

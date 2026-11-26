@@ -10,6 +10,7 @@ const FIELDS=Object.freeze(['meanHealingPerSecond','meanDotPerSecond','meanBarri
 const RADIANCE=Object.freeze(['pure-radiance','fury-radiance','radiance-aegis']);
 const UNTOUCHED=Object.freeze(['pure-blood','pure-fury','pure-aegis','pure-arcane','pure-decay','blood-fury','aegis-arcane','arcane-decay','decay-blood']);
 const round=n=>Number(Number(n).toFixed(2));
+const historicalCohort=id=>({'pure-vitality':'pure-radiance','pure-magic':'pure-arcane','fury-vitality':'fury-radiance','vitality-aegis':'radiance-aegis','aegis-magic':'aegis-arcane','magic-decay':'arcane-decay'})[id]||id;
 function compare(before,after,{postBarrierReset=false,postOffhandReroll=false}={}){
  assert.equal(before.schemaVersion,1);
  assert.equal(before.cases.valid,48);
@@ -18,8 +19,8 @@ function compare(before,after,{postBarrierReset=false,postOffhandReroll=false}={
  assert.equal(after.summary.timeouts,0,'Native Stage 3 timeouts');
  assert.equal(after.summary.groups.length,24);
  const settings={...after.settings};delete settings.output;
- assert.deepEqual(settings,before.settings,'Builds, seeds, gear, points or scenario changed');
- const index=new Map(before.groups.map(g=>[g.build+'|'+g.level,g]));
+ assert.deepEqual(settings,{...before.settings,builds:before.settings.builds.map(historicalCohort)},'Builds, seeds, gear, points or scenario changed');
+ const index=new Map(before.groups.map(g=>[historicalCohort(g.build)+'|'+g.level,g]));
  assert.equal(index.size,before.groups.length);
  const groups=after.summary.groups.map(g=>{
   const previous=index.get(g.build+'|'+g.level);

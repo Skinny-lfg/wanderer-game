@@ -29,7 +29,7 @@ test('Radiance v15 root and basic stat nodes use percentage Max HP, with visible
  const b=build(['affinity_radiance']);
  near(b.runtime.talentBonuses.healthRegen,.0015);
 });
-test('Radiance regen scales with Max HP, is capped before fork modifiers and respects effective healing',()=>{
+test('Radiance base regen scales with Max HP, is capped, and Living Recovery adds separate healing',()=>{
  const b=build(['affinity_radiance']);
  const smaller=context({hp:50,maxhp:200}),larger=context({hp:50,maxhp:600});
  B.onSecond(b,smaller.c);
@@ -41,12 +41,11 @@ test('Radiance regen scales with Max HP, is capped before fork modifiers and res
  capBuild.runtime.talentBonuses.healthRegen=.01; // Stress a valid aggregate above the cap.
  const cap=context({hp:10,maxhp:1000});B.onSecond(capBuild,cap.c);
  near(cap.events.find(x=>x[0]==='healed')[1],3.5);
- capBuild.runtime.specializations=['radiance_recovery'];
- const boost=context({hp:10,maxhp:1000});B.onSecond(capBuild,boost.c);
- near(boost.events.find(x=>x[0]==='healed')[1],3.5*1.25);
- capBuild.runtime.specializations=['radiance_reserve'];
- const reserve=context({hp:10,maxhp:1000});B.onSecond(capBuild,reserve.c);
- near(reserve.events.find(x=>x[0]==='healed')[1],3.5*.75);
+ const recovery=build(['living_recovery']);
+ recovery.runtime.talentBonuses.healthRegen=.01;
+ const boost=context({hp:10,maxhp:1000});B.onSecond(recovery,boost.c);
+ assert(boost.events.some(x=>x[0]==='healed'&&Math.abs(x[1]-5)<1e-8),'Living Recovery is a separate 0.5% heal');
+ assert(!T.NODES.some(n=>['radiance_recovery','radiance_reserve'].includes(n.id)));
  const full=context({hp:1000,maxhp:1000});B.onSecond(capBuild,full.c);
  assert.equal(full.events.find(x=>x[0]==='healed')[1],0,'no overhealing counted as actual healing');
 });
@@ -123,9 +122,10 @@ test('Stage 3 generated Pages and active node descriptions have no retired fixed
 test('Stage 3 comparator validates frozen Stage 2 cohorts and rejects unrelated Affinity drift',()=>{
  const C=require('../scripts/v013-stage3-coherence-compare.cjs');
  const before=require('../reports/v013-stage2-affinity-freeze.json');
- const groups=before.groups.map(g=>({...g}));
+ const cohort=id=>id.replaceAll('vitality','radiance').replaceAll('magic','arcane');
+ const groups=before.groups.map(g=>({...g,build:cohort(g.build)}));
  groups.find(g=>g.build==='pure-radiance').meanHealingPerSecond+=.3;
- const current={settings:{...before.settings,output:'reports/current.json'},
+ const current={settings:{...before.settings,builds:before.settings.builds.map(cohort),output:'reports/current.json'},
   summary:{valid:48,errors:0,timeouts:0,groups}};
  assert.equal(C.compare(before,current).length,24);
  groups.find(g=>g.build==='pure-fury').meanHealingPerSecond+=.1;

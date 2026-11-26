@@ -69,13 +69,14 @@ test('S2: Apothecary purchases and replacement offers use real gold costs',()=>{
  assert.equal(s.apothecary.stock.length,4);
 });
 
-test('S2: eight Rune families are scored and a claim selects strongest for the current style',()=>{
+test('S2: rune scoring favors relevant stats; boss rewards no longer use a selection dialog',()=>{
  const a=make(10404);
  const families=['might','swiftness','wisdom','fortitude','fortune','fury','warding','radiance'];
  const runes=families.map((family,i)=>a.makeRune(family,10+i));
  for(const rune of runes)assert(Number.isFinite(N.runeScore(rune,N.PROFILES['plate-warden'])));
- assert.equal(N.chooseRuneReward(runes,N.PROFILES['arcane-fire']).family,'wisdom');
- assert.equal(N.chooseRuneReward(runes,N.PROFILES['leather-duelist']).family,'swiftness');
+ const wisdom=a.makeRune('wisdom',10),swiftness=a.makeRune('swiftness',10);
+ assert(N.runeScore(wisdom,N.PROFILES['arcane-fire'])>N.runeScore(swiftness,N.PROFILES['arcane-fire']));
+ assert(N.runeScore(swiftness,N.PROFILES['leather-duelist'])>N.runeScore(wisdom,N.PROFILES['leather-duelist']));
 });
 
 test('S2: only owned Rune IDs are equipped and duplicates recycled via native confirmation',()=>{

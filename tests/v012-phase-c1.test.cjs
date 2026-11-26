@@ -25,7 +25,7 @@ for(const [id,weapon,slot,family]of entries){test(`${id} activates with and with
   else if(id==='heartroot-carapace'||id==='oathwall'||id==='veil-thousand-seals')a.tick();
   else {r.tPlayer=100;a.tick();}
   assert((id==='veil-thousand-seals'?r.metrics?.procs?.['Legendary: veil-thousand-seals: barrier']:count(r,id))>0,`${id} ${empowered?'with':'without'} ${family}`);
-  const before=count(r,id);if(id==='heartroot-carapace')assert(r.hp>r.maxhp*.5);else if(id!=='veil-thousand-seals'){if(id==='oathwall')r.tEnemy=100;r.enemy.groupClock=100;else if(id==='astrafall'||id==='voidglass')r.legendaryCastCount=1;else r.tPlayer=100;a.tick();assert.equal(count(r,id),before,`${id} cooldown`);}
+  const before=count(r,id);if(id==='heartroot-carapace')assert(r.hp>r.maxhp*.5);else if(id!=='veil-thousand-seals'){if(id==='oathwall')enemyReady(a,r);else if(id==='astrafall'||id==='voidglass')r.legendaryCastCount=1;else r.tPlayer=100;a.tick();assert.equal(count(r,id),before,`${id} cooldown`);}
  }
 });}
 test('only the twelve current Legendary identities drop in every slot',()=>{

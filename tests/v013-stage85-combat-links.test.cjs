@@ -91,9 +91,9 @@ test('native hooks, docs and preview content hashing are wired and mirrored',()=
  }
  const combat=fs.readFileSync('combat/v012-combat-runtime.js','utf8');
  const expedition=fs.readFileSync('online/v012-expedition-runtime.js','utf8');
- assert(combat.includes("label.includes('Chain Lightning')?'shock'"));
+ assert(combat.includes("combatLinkEffect?.(r,'shock',i===0?source:others[(i-1)%others.length],[target])"));
  assert(combat.includes("event.label==='Guarding'?'ward'"));
- assert(combat.includes("combatLinkEffect?.(r,'rot',previous,[e])"));
+ assert(combat.includes("combatLinkEffect?.(r,'rot',e,['hero'])"));
  assert(expedition.includes("combatLinkEffect?.(r,'bleed',enemy,[target])"));
  assert(expedition.includes("combatLinkEffect?.(r,'rot',enemy,[target])"));
  assert(fs.readFileSync('scripts/prepare-automatic-preview.mjs','utf8').includes("'online/v013-combat-links.js'"));

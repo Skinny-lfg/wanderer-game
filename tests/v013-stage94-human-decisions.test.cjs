@@ -15,9 +15,12 @@ test('Boon policy considers costs, survival, mana and late Expedition step press
    N.boonScore('blood_tribute',cautious,weak));
 });
 test('Contracts select only legitimately offered objectives, prioritizing attainable partial rewards',()=>{
- const ids=['pathfinder','oath_of_defiance'];
- assert.equal(N.chooseContract({ids},N.PROFILES.cautious,{}),'pathfinder');
- assert.equal(N.chooseContract({ids:['oath_of_defiance']},N.PROFILES.cautious,{}),'oath_of_defiance');
+ const ids=['skirmish_clear','oath_of_defiance'],card={risk:0};
+ const rewards={skirmish_clear:{kind:'essence',essence:4},oath_of_defiance:{kind:'essence',essence:4}};
+ assert.equal(N.chooseContract({ids,rewards},N.PROFILES.cautious,card),'skirmish_clear');
+ assert.equal(N.chooseContract({ids:['oath_of_defiance'],rewards},N.PROFILES.cautious,card),'oath_of_defiance');
+ assert.equal(N.chooseContract({ids:['pathfinder'],rewards:{pathfinder:{kind:'gold',gold:28}}},N.PROFILES.cautious,card),null);
+ assert.equal(N.chooseContract({ids},N.PROFILES.cautious,card),null,'No prize offer means no legal contract');
  assert.equal(N.chooseContract(null,N.PROFILES.balanced,{}),null);
 });
 test('Reliquary health sacrifice is used only above safe HP threshold',()=>{
