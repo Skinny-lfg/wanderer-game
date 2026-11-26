@@ -7,6 +7,9 @@ var camera: Camera3D
 var fighter_roots: Array[Node3D] = []
 var fighter_sprites: Array[Sprite3D] = []
 var fighter_heights: Array[float] = []
+var fighter_ground_heights: Array[float] = []
+var rear_wanderer: Texture2D
+var side_wanderer: Texture2D
 var mode_buttons: Array[Button] = []
 var mode_hint: Label
 var hud: CanvasLayer
@@ -98,6 +101,12 @@ func _ready() -> void:
 	_fighter("oathbound_exarch.png", "berserker.png", 3.0)
 	_fighter("gravecaller.png", "caster.png", 2.8)
 	_fighter("ashen_executioner.png", "vampire.png", 2.9)
+	side_wanderer = fighter_sprites[0].texture
+	for candidate in [UPDATED + "wanderer_back.webp", UPDATED + "wanderer_back.png", SPRITES + "wanderer_back.webp", SPRITES + "wanderer_back.png"]:
+		if ResourceLoader.exists(candidate):
+			rear_wanderer = load(candidate) as Texture2D
+			if rear_wanderer != null:
+				break
 	_load_grave_animation()
 	_build_hud()
 	_set_view(0)
@@ -132,18 +141,26 @@ func _set_view(index: int) -> void:
 			positions = [Vector3(-5.0, 0, 1.4), Vector3(0.7, 0, -1.7), Vector3(5.4, 0, -1.7), Vector3(2.2, 0, 3.1), Vector3(6.5, 0, 3.1)]
 		1:
 			camera.projection = Camera3D.PROJECTION_PERSPECTIVE
-			camera.fov = 48.0
-			camera.position = Vector3(-8.8, 3.9, 12.8)
-			aim = Vector3(0.5, 1.45, 0.0)
-			positions = [Vector3(-4.4, 0, 2.4), Vector3(0.0, 0, -2.7), Vector3(4.2, 0, -3.4), Vector3(1.0, 0, 2.7), Vector3(6.0, 0, 1.7)]
+			camera.fov = 43.0
+			camera.position = Vector3(0, 2.9, 13.0)
+			aim = Vector3(0, 2.2, -2.0)
+			# Foreground hero and a single readable enemy line across the far lane.
+			positions = [Vector3(-2.75, 0, 6.1), Vector3(-1.9, 0, -2.2), Vector3(1.1, 0, -2.5), Vector3(4.1, 0, -2.2), Vector3(7.1, 0, -2.5)]
 	camera.look_at(aim)
+	var hero := fighter_sprites[0]
+	var hero_texture := rear_wanderer if index == 1 and rear_wanderer != null else side_wanderer
+	if hero_texture != null:
+		hero.texture = hero_texture
+		fighter_ground_heights[0] = _ground_sprite(hero, fighter_heights[0])
 	for i in range(fighter_roots.size()):
 		if i >= positions.size():
 			break
 		fighter_roots[i].position = positions[i]
 		var sprite := fighter_sprites[i]
 		sprite.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
-		sprite.position = Vector3(0, 0.012, 0)
+		var visual_scale := 1.12 if index == 1 and i == 0 else 1.0
+		sprite.scale = Vector3.ONE * visual_scale
+		sprite.position = Vector3(0, fighter_ground_heights[i] * visual_scale + 0.015, 0)
 	for i in range(mode_buttons.size()):
 		mode_buttons[i].set_pressed_no_signal(i == index)
 	if mode_hint != null:
@@ -401,9 +418,8 @@ func _load_grave_animation() -> void:
 		var grave := fighter_sprites[3]
 		grave.texture = grave_idle_frames[0]
 		grave.pixel_size = fighter_heights[3] / 640.0
-		grave.centered = false
-		# Fixed common canvas pivot measured from idle frame zero.
-		grave.offset = Vector2(-319.0, -619.0)
+		# Keep a common centered canvas and a fixed world-space ground height.
+		fighter_ground_heights[3] = _ground_sprite(grave, fighter_heights[3])
 		grave.scale = Vector3.ONE
 
 func _trigger_grave_attack() -> void:
@@ -502,25 +518,37 @@ func _fighter(filename: String, fallback: String, height: float) -> void:
 		if tex != null:
 			sprite.texture = tex
 			sprite.pixel_size = height / float(tex.get_height())
-			# Bottom-anchor the visible alpha bounds, not the transparent canvas.
-			var image := tex.get_image()
-			var bounds := Rect2i(0, 0, tex.get_width(), tex.get_height())
-			if image != null and not image.is_empty():
-				if image.is_compressed():
-					image.decompress()
-				var used := image.get_used_rect()
-				if used.has_area():
-					bounds = used
-			sprite.centered = false
-			sprite.offset = Vector2(-float(bounds.position.x) - float(bounds.size.x) * 0.5, -float(bounds.end.y))
+
 	else:
 		missing.append(filename)
 	sprite.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
 	sprite.shaded = false
 	# Keep painted character colors readable independently of the dark environment.
 	sprite.modulate = Color(1.0, 0.98, 0.95, 1.0)
-	sprite.position = Vector3(0, 0.012, 0)
+	var ground_height := _ground_sprite(sprite, height)
+	sprite.position = Vector3(0, ground_height + 0.015, 0)
 	root.add_child(sprite)
 	fighter_roots.append(root)
 	fighter_sprites.append(sprite)
 	fighter_heights.append(height)
+	fighter_ground_heights.append(ground_height)
+
+func _ground_sprite(sprite: Sprite3D, height: float) -> float:
+	# Centered sprite geometry avoids signed offset conventions entirely.
+	sprite.centered = true
+	sprite.offset = Vector2.ZERO
+	if sprite.texture == null:
+		return height * 0.5
+	var tex := sprite.texture
+	var canvas_height := float(tex.get_height())
+	sprite.pixel_size = height / maxf(canvas_height, 1.0)
+	var bottom := canvas_height
+	var image := tex.get_image()
+	if image != null and not image.is_empty():
+		if image.is_compressed():
+			image.decompress()
+		var bounds := image.get_used_rect()
+		if bounds.has_area():
+			bottom = float(bounds.end.y)
+	return maxf(0.0, (bottom - canvas_height * 0.5) * sprite.pixel_size)
+
