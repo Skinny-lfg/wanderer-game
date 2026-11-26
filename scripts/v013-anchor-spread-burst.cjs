@@ -13,7 +13,7 @@ edit("const variants={base:overlay(false),full:overlay(true)};",`function burstR
  b=replace(b,"function decayState(c){","function burstEligibleRot(d){return d?.remaining>0&&d.damage>0&&(primaryPaidRot(d)||d.spread===true||d.transferred===true); }\\nfunction decayState(c){");
  assert.equal(b.split('.filter(primaryPaidRot)').length,3);
  b=b.replaceAll('.filter(primaryPaidRot)','.filter(burstEligibleRot)');
- // Overflow can use a fully prepared target on the next genuine attack without first rolling Toxic Touch.
+ // Overflow can use a fully prepared target on the next genuine attack without first rolling Corrupting Touch.
  b=replace(b,'corruptionOverflow(b,c);}' ,' }');
  b=replace(b,' corruptionCycle(b,c);',' corruptionOverflow(b,c);\\n corruptionCycle(b,c);');
  // Observer-only metrics distinguish detonation of propagated stacks.

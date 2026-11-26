@@ -10,7 +10,7 @@ const P=[
  ['blood','executioner','Executioner','Strike a bleeding foe at 30% HP or less for 150% of one combined Bleed tick (4s cooldown; no consumption).'],
  ['blood','blood_drinker','Blood Drinker','Hits on a bleeding foe heal up to 1.5% maximum HP (4s cooldown).'],
  ['blood','sanguine_fury','Sanguine Fury','Critical hits inflict Bleed; damage against bleeding foes increases by 8%.'],
- ['decay','toxic_touch','Toxic Touch','Hits may apply one Rot stack (1.3s cooldown).'],
+ ['decay','toxic_touch','Corrupting Touch','Hits may apply one Rot stack (1.3s cooldown).'],
  ['decay','virulent_rot','Virulent Rot','Rot ticks deal 18% more damage per rank.'],
  ['decay','wasting_curse','Wasting Curse','Rotted enemies deal 8% less damage per rank.'],
  ['decay','wither','Withering Hex','Rot reduces healing by 35% and direct attack damage by 3% per rank (70% healing cap).'],
@@ -33,12 +33,12 @@ const P=[
  ['arcane','arcane_focus','Arcane Focus','Increase Spell Power, including Arcane.'],
  ['arcane','mana_spring','Mana Spring','Increase Mana regeneration by 18% per rank.'],
  ['arcane','efficient_cast','Efficient Casting','Reduce elemental cast cost by 12% per rank.'],
- ['arcane','arcane_echo','Arcane Echo','Every fourth elemental hit echoes for 25% Spell Power (no recursion).'],
+ ['arcane','arcane_echo','Elemental Echo','Every fourth elemental hit echoes for 25% Spell Power (no recursion).'],
  ['arcane','elemental_force','Elemental Force','Increase Magic status potency by 15% per rank.'],
  ['arcane','kindling','Kindling','Fire Burn gains 20% potency per rank.',[],'fire'],
  ['arcane','deep_winter','Deep Winter','Funded Frost casts Chill; chilled foes take a bounded 18% Spell Power burst every 4s. Boss Chill lasts at most 1.2s.',[],'frost'],
  ['arcane','overcharge','Overcharge','Funded Lightning casts bounce up to five times for 60%, 45%, 33%, 23%, then 16% of the primary hit. Each jump leaves a Static Mark that detonates when a later chain revisits. Four player charges discharge; charges persist between Realms.',[],'lightning'],
- ['blood','crimson_rush','Crimson Rush','Critical strikes against bleeding foes deal 15% bonus damage.',['blood','fury']],
+ ['blood','crimson_rush','Crimson Onslaught','Critical strikes against bleeding foes deal 15% bonus damage.',['blood','fury']],
  ['decay','hex_bolt','Hex Bolt','Funded spells or Arcane Infusion hits against Rot deal 25% Spell Power plus one Rot tick (3s cooldown).',['decay','arcane']],
  ['radiance','sanctuary','Sanctuary','Recovering Health grants Barrier equal to 20% of the heal.',['radiance','aegis']],
  ['radiance','fervent_life','Fervent Life','Critical strikes restore 2% Max HP + 3% Attack Power; overhealing grants Barrier (4s cooldown).',['radiance','fury']],
@@ -148,7 +148,7 @@ function migrateEnemyDots(enemy){
  delete enemy.poison;delete enemy.poisonStacks;
  return enemy;
 }
-// Paid main Toxic Touch stacks persist. A Cycle bonus stack shares provenance, not a second paid-action credit.
+// Paid main Corrupting Touch stacks persist. A Cycle bonus stack shares provenance, not a second paid-action credit.
 function primaryPaidRot(d){return d?.primaryPaid===true&&!d.spread&&!d.transferred&&!d.secondaryOrigin&&d.remaining>0&&d.damage>0;}
 function burstEligibleRot(d){return d?.remaining>0&&d.damage>0&&(primaryPaidRot(d)||d.spread===true||d.transferred===true||!!d.abilityOrigin); }
 function decayState(c){
@@ -337,9 +337,9 @@ function onAttack(b,c){
    c.metric?.('living_forceActivations',1);if(Number.isFinite(actual)&&actual>0)c.metric?.('living_forceDamage',actual);
   }
  }
- if(b.runtime.prepared==='fury_recovery'&&c.player.hp>0&&c.player.hp<c.player.maxhp*.35&&b.runtime.furyRecoveryWave!==(c.waveKey??e)){b.runtime.furyRecoveryWave=c.waveKey??e;b.runtime.furyRecoveryUntil=c.now+4;activated(b,'fury_recovery');heal(b,c,c.player.maxhp*.08);c.log('❤ Fury Recovery');}
+ if(b.runtime.prepared==='fury_recovery'&&c.player.hp>0&&c.player.hp<c.player.maxhp*.35&&b.runtime.furyRecoveryWave!==(c.waveKey??e)){b.runtime.furyRecoveryWave=c.waveKey??e;b.runtime.furyRecoveryUntil=c.now+4;activated(b,'fury_recovery');heal(b,c,c.player.maxhp*.08);c.log('❤ Defiant Surge');}
  if(specialized(b,'affinity_fury')&&e.baseDef>0&&c.now>=(e.nextFurySunder||0)&&c.random()<.15){const baseDef=e.baseDef,applied=e.furySunder||0,reduction=Math.max(0,Math.min(baseDef*.04,baseDef*.20-applied,e.def-baseDef*.25));if(reduction>0){e.def-=reduction;e.furySunder=applied+reduction;e.nextFurySunder=c.now+1;c.log('⚔ Sunder: enemy Defense reduced.');}}
- if(['battle_tempo','relentless_assault','unchained_fury'].some(id=>specialized(b,id))){b.runtime.battleTempo=Math.min(5,(b.runtime.battleTempo||0)+1);if(specialized(b,'relentless_assault')&&e.furySunder>0&&ready(b,'relentlessAssault',c.now,3))c.damage(base*.20,'🗡 Relentless Assault');if(specialized(b,'unchained_fury')){b.runtime.furyHits=(b.runtime.furyHits||0)+1;if(b.runtime.furyHits%5===0)b.runtime.unchainedUntil=c.now+3;if(b.runtime.unchainedUntil>c.now)c.damage(base*.25,'🔥 Unchained Fury');}}
+ if(['battle_tempo','relentless_assault','unchained_fury'].some(id=>specialized(b,id))){b.runtime.battleTempo=Math.min(5,(b.runtime.battleTempo||0)+1);if(specialized(b,'relentless_assault')&&e.furySunder>0&&ready(b,'relentlessAssault',c.now,3))c.damage(base*.20,'🗡 Sundering Assault');if(specialized(b,'unchained_fury')){b.runtime.furyHits=(b.runtime.furyHits||0)+1;if(b.runtime.furyHits%5===0)b.runtime.unchainedUntil=c.now+3;if(b.runtime.unchainedUntil>c.now)c.damage(base*.25,'🔥 Unchained Fury');}}
  if(e.bleedStacks>0&&specialized(b,'crimson_feast')){b.runtime.crimsonHits=(b.runtime.crimsonHits||0)+1;if(b.runtime.crimsonHits%3===0)c.damage(base*.45,'🫀 Third Cut');}
  if(e.bleedStacks>0&&c.player.hp<c.player.maxhp*.5&&specialized(b,'heart_of_carnage')&&ready(b,'heartCarnage',c.now,3))c.damage(base*(e.hp<e.maxhp*.5?.60:.40),'🩸 Heart of Carnage');
  if(b.runtime.specialReprisal&&e.hp>0){b.runtime.specialReprisal=false;c.damage(base*.25,'🛡 Reprisal');}
@@ -355,7 +355,7 @@ function onAttack(b,c){
  corruptionOverflow(b,c);
  corruptionCycle(b,c);
  if(e.hp>0&&rank(b,'blight')&&(b.cooldowns.blight??-1e10)<=c.now&&spendDarkMana(c,8)&&ready(b,'blight',c.now,7)&&activated(b,'blight')){applyRot(b,c,rotPotency(c),'ability_blight');c.damage(Math.min(base*.38+Math.max(0,c.power||0)*.35,e.maxhp*.025),'☠ Blight');}
- if(rank(b,'crimson_rush')&&crit&&e.bleedStacks>0&&activated(b,'crimson_rush'))c.damage(base*.15,'🩸 Crimson Rush');
+ if(rank(b,'crimson_rush')&&crit&&e.bleedStacks>0&&activated(b,'crimson_rush'))c.damage(base*.15,'🩸 Crimson Onslaught');
  if(rank(b,'brutal_crit')&&crit&&activated(b,'brutal_crit'))c.damage(base*Math.min(.65,.12*Math.sqrt(rank(b,'brutal_crit'))),'⚔ Brutal Critical');
  if(rank(b,'double_strike')&&!c.suppressDoubleStrike&&c.random()<Math.min(.60,.10*Math.sqrt(rank(b,'double_strike')))&&activated(b,'double_strike'))c.damage(base*.30,'🗡 Extra Strike');
  if(rank(b,'fervent_life')&&crit&&ready(b,'ferventLife',c.now,4)&&activated(b,'fervent_life')){const attack=Number(c.player?.stats?.attack);const amount=c.player.maxhp*.02+(Number.isFinite(attack)?Math.max(0,attack)*.03:0),restorable=amount*(c.healingMultiplier??1),actual=heal(b,c,amount);if(actual<restorable)c.barrier((restorable-actual)*.5);}
@@ -431,7 +431,7 @@ function onCast(b,c){
   b.runtime.staticCharges=Math.min(4,(b.runtime.staticCharges||0)+1);
   if(b.runtime.staticCharges===4){b.runtime.staticCharges=0;c.damage(Math.min(power*values('overcharge',rank(b,'overcharge')).burst,e.maxhp*.035),'⚡ Static Discharge');}
  }
- if(rank(b,'arcane_echo')&&b.runtime.magicHits%4===0&&activated(b,'arcane_echo'))c.damage(power*values('arcane_echo',rank(b,'arcane_echo')).power,'✨ Arcane Echo');
+ if(rank(b,'arcane_echo')&&b.runtime.magicHits%4===0&&activated(b,'arcane_echo'))c.damage(power*values('arcane_echo',rank(b,'arcane_echo')).power,'✨ Elemental Echo');
  if(rank(b,'hex_bolt')&&e.v012Rot?.length&&ready(b,'hexBolt',c.now,3)&&activated(b,'hex_bolt'))c.damage(power*.25+c.enemy.v012Rot.reduce((n,r)=>n+r.damage,0),'☠ Hex Bolt');
  if(rank(b,'runic_shield')&&ready(b,'runicShield',c.now,3)&&activated(b,'runic_shield'))c.barrier(barrierAmount(c.player.maxhp,barrierSpellPower(c),.02,.08));
  if(rank(b,'elemental_blight')&&e.v012Rot?.length&&ready(b,'elementalBlight',c.now,7)&&activated(b,'elemental_blight')){
@@ -657,7 +657,7 @@ function onInfusionHit(b,c){
  }
  // Infusion direct damage can crit, but is NOT a second attack, paid action or proc trigger.
  if(rank(b,'arcane_echo')&&r.magicInfusionHits%4===0&&activated(b,'arcane_echo'))
-  c.damage(power*values('arcane_echo',rank(b,'arcane_echo')).power,'✨ Arcane Echo');
+  c.damage(power*values('arcane_echo',rank(b,'arcane_echo')).power,'✨ Elemental Echo');
  if(rank(b,'hex_bolt')&&e.v012Rot?.length&&ready(b,'hexBolt',c.now,3)&&activated(b,'hex_bolt'))
   c.damage(power*.25+e.v012Rot.reduce((n,rot)=>n+rot.damage,0),'☠ Hex Bolt');
  if(rank(b,'elemental_blight')&&e.v012Rot?.length&&ready(b,'elementalBlight',c.now,7)&&activated(b,'elemental_blight'))

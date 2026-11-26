@@ -141,7 +141,7 @@ test('Funded Wand/Staff attacks cannot activate secondary Decay procs twice',()=
   B.activateInfusion(b,0);
   const power=B.infusionConfig(b,weapon).power;
   assert(Math.abs(B.onInfusionHit(b,{...x.c,weaponSubtype:weapon,magical:true})-100*power)<1e-8);
-  assert.equal(x.events.filter(e=>e.kind==='☠ Hex Bolt'||e.kind==='✨ Arcane Echo').length,0);
+  assert.equal(x.events.filter(e=>e.kind==='☠ Hex Bolt'||e.kind==='✨ Elemental Echo').length,0);
   assert.equal(b.runtime.infusionCharges,1);
  }
 });

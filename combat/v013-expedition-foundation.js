@@ -52,7 +52,7 @@ const CONTRACTS=[
  row('boon_collector','Boon Collector',AFFINITIES,{selectedBoons:2})
 ];
 const ROOMS=[
- row('forgotten_reliquary','Forgotten Reliquary',AFFINITIES,{sacrificePlayerMaxHpPct:.15,healPlayerMaxHpPct:.15,restorePlayerMaxMpPct:.25,maxBossModifiersDisabled:1})
+ row('forgotten_reliquary','Severance Spire',AFFINITIES,{sacrificePlayerMaxHpPct:.15,healPlayerMaxHpPct:.15,restorePlayerMaxMpPct:.25,maxBossModifiersDisabled:1})
 ];
 const CATALOG=Object.freeze({conditions:CONDITIONS,encounterTraits:ENCOUNTER_TRAITS,bossModifiers:BOSS_MODIFIERS,boons:BOONS,contracts:CONTRACTS,rooms:ROOMS});
 function freezeDeep(value){if(value&&typeof value==='object'){Object.values(value).forEach(freezeDeep);Object.freeze(value);}return value;}
@@ -152,7 +152,7 @@ function applyDecision(state,decision,manifest){
  }else if(decision.type==='choose_boon'||decision.type==='skip_boon'){
   if(!Number.isInteger(decision.room)||decision.room<1||decision.room>=DIFFICULTIES[c.risk].rooms||
      next.decisions.some(x=>(x.type==='choose_boon'||x.type==='skip_boon')&&x.room===decision.room))
-     throw Error('Invalid or repeated Boon Shrine resolution');
+     throw Error('Invalid or repeated Echo Font resolution');
   if(decision.type==='choose_boon'){
    const boon=lookup('boons',decision.id);
    if(!boon||next.boonIds.length>=2||next.boonIds.includes(decision.id)||

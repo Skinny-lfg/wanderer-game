@@ -81,7 +81,7 @@ function phase6EventChoice(choice,itemId,passiveId,family,targetId){
  }}
  ports.phase6Run.events.push(g.planeIndex);ports.phase6Run.event=null;ports.phase4CommitRealm({awardXp:choice!==2});ports.phase1Controller.waveWon();
  ports.phase5Results.gold+=Math.max(0,ports.state.gold-beforeGold);ports.phase5Results.fragments+=Math.max(0,ports.state.fragments-beforeFragments);
- const eventText=choice===2?'Event passed.':ev.id==='forgotten_reliquary'?(choice===0?'Forgotten Reliquary: disabled the known boss property at a cost of 15% maximum HP.':'Forgotten Reliquary: recovered Health and Mana.'):ev.id==='forgotten_arsenal'?(choice===0?'Recovered 6 Essence.':'Took provisions to restore up to 2 steps.'):WandererV012IntegratedEvents.get(ev.id)[3][choice].replace(/(\d+) \+ (\d+)×E/g,(_,a,b)=>String(+a+ +b*E)).replace(/(\d+) \+ E/g,(_,a)=>String(+a+E));
+ const eventText=choice===2?'Event passed.':ev.id==='forgotten_reliquary'?(choice===0?'Severance Spire: disabled the known boss property at a cost of 15% maximum HP.':'Severance Spire: recovered Health and Mana.'):ev.id==='forgotten_arsenal'?(choice===0?'Recovered 6 Essence.':'Took provisions to restore up to 2 steps.'):WandererV012IntegratedEvents.get(ev.id)[3][choice].replace(/(\d+) \+ (\d+)×E/g,(_,a,b)=>String(+a+ +b*E)).replace(/(\d+) \+ E/g,(_,a)=>String(+a+E));
  ports.phase5RememberRealm({tier:E,phase1Plane:g.planeIndex-1,planeName:p.name,planeFamily:p.family,combatSeconds:0,gold:Math.max(0,ports.state.gold-beforeGold),fragments:Math.max(0,ports.state.fragments-beforeFragments),loot,realmLog:[{text:eventText,kind:'good'}]},'cleared');
  ports.phase5Results.review=null;ports.phase5Results.eventExitPending=true;
  ports.phase1Controller.claimReward();

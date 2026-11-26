@@ -15,9 +15,9 @@ test('Stage 6.16 report maps all eight native Elite IDs to in-game names only fo
   vampire:'The Thirst',
   caster:'Lantern-Eye',
   gravecaller:'Gravecaller',
-  oathbound_exarch:'The Shepherd',
+  the_shepherd:'The Shepherd',
   the_gilded:'The Gilded',
-  ashen_executioner:'Ashen Executioner'
+  the_headsman:'The Headsman'
  };
  assert.deepEqual(E.ELITE_DISPLAY_NAMES,expected);
  for(const [id,name] of Object.entries(expected))assert.equal(E.eliteDisplayName(id),name);

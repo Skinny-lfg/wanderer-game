@@ -79,9 +79,9 @@ const OPENING_ELITE_BASE=Object.freeze({
  vampire:{hp:1.19,atk:.84,def:1.04,interval:1.56},
  caster:{hp:1.07,atk:1.07,def:.92,interval:1.64},
  gravecaller:{hp:1.04,atk:.76,def:.86,interval:1.80},
- oathbound_exarch:{hp:1.18,atk:.87,def:1.18,interval:1.95},
+ the_shepherd:{hp:1.18,atk:.87,def:1.18,interval:1.95},
  the_gilded:{hp:1.53,atk:.97,def:1.04,interval:1.93},
- ashen_executioner:{hp:1.16,atk:1.00,def:.93,interval:2.27}
+ the_headsman:{hp:1.16,atk:1.00,def:.93,interval:2.27}
 });
 const OPENING_BOSS_BASE=Object.freeze({
  leech:{hp:1.77,atk:1.62,def:2,interval:1.43},
@@ -101,8 +101,8 @@ function leaderIdentityBudget(mature,expedition,style,eliteId){
  return out;
 }
 const ELITE_IDENTITIES=Object.freeze([
- 'tank','berserker','vampire','caster','gravecaller','oathbound_exarch',
- 'the_gilded','ashen_executioner'
+ 'tank','berserker','vampire','caster','gravecaller','the_shepherd',
+ 'the_gilded','the_headsman'
 ]);
 // Stage 6.33: production keeps actual enemy mechanics and ordinary game
 // integration tests. A separate disposable simulator VM changes this one

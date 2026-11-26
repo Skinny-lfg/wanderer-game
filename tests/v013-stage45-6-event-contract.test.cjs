@@ -5,7 +5,7 @@ require('../online/v012-expedition-controller.js');
 const catalog=globalThis.WandererV012IntegratedEvents.CATALOG;
 const fs=require('node:fs');
 
-test('v0.13 event catalog intentionally adds the optional Forgotten Reliquary without duplicating IDs',()=>{
+test('v0.13 event catalog intentionally adds the optional Severance Spire without duplicating IDs',()=>{
  assert.equal(catalog.length,9,'Eight scheduled events plus one v0.13 optional Reliquary');
  assert.equal(new Set(catalog.map(e=>e.id)).size,9,'Event identities must remain unique');
  const relic=catalog.find(e=>e.id==='forgotten_reliquary');

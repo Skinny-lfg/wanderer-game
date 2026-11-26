@@ -7,7 +7,7 @@ function mob(name,role='skirmisher',hp=100){return {name,role,hp,maxhp:100,barri
 function run(...enemies){return {enemy:enemies[0],enemies,status:'fight',combatSeconds:0,maxhp:1000,hp:1000};}
 function move(r,t){r.combatSeconds=t;return A.tick(r,t);}
 test('Four Stage 8.2 roles are defined and normal/boss enemies are excluded',()=>{
- assert.deepEqual(Object.keys(A.DEFINITIONS),['gravecaller','oathbound_exarch','the_gilded','ashen_executioner']);
+ assert.deepEqual(Object.keys(A.DEFINITIONS),['gravecaller','the_shepherd','the_gilded','the_headsman']);
  for(const id of Object.keys(A.DEFINITIONS))assert(A.info(elite(id)).description);
  assert.equal(A.attach(mob('normal')),null);
  assert.equal(A.attach({...elite('gravecaller'),miniboss:false,boss:true}),null);
@@ -136,7 +136,7 @@ test('Undead summon infrastructure respects max two alive and four total',()=>{
  assert.equal(live.length,2);
 });
 test('Exarch shields a living ally by at most 15% max HP, three times with real 10s cooldown',()=>{
- const e=elite('oathbound_exarch'),friend=mob('escort','caster'),r=run(e,friend);A.attach(e);
+ const e=elite('the_shepherd'),friend=mob('escort','caster'),r=run(e,friend);A.attach(e);
  assert.equal(move(r,2).length,0);
  assert.equal(move(r,3)[0].type,'prepare');
  assert.equal(A.status(e,3.1).kind,'casting');
@@ -150,7 +150,7 @@ test('Exarch shields a living ally by at most 15% max HP, three times with real 
  assert.equal(move(r,100).length,0);
 });
 test('Exarch shields itself when alone, then prioritizes a living ally',()=>{
- const e=elite('oathbound_exarch'),r=run(e);A.attach(e);
+ const e=elite('the_shepherd'),r=run(e);A.attach(e);
  assert.equal(move(r,4)[0].type,'prepare');assert.equal(e.barrier,0);
  const first=move(r,4.75)[0];assert.equal(first.type,'activate');assert.equal(first.target,e);
  assert.equal(e.barrier,15);assert.equal(e.stage82.castCount,1);
@@ -161,7 +161,7 @@ test('Exarch shields itself when alone, then prioritizes a living ally',()=>{
  assert.equal(friend.barrier,15);assert.equal(e.stage82.castCount,2);
 });
 test('Executioner: 1.5s telegraph, one 2.4x strike with 18% cap; stun and attack delay interrupt',()=>{
- const e=elite('ashen_executioner'),r=run(e);A.attach(e);
+ const e=elite('the_headsman'),r=run(e);A.attach(e);
  assert.equal(move(r,3.49).length,0);
  assert.equal(move(r,3.5)[0].type,'prepare');
  assert.equal(move(r,4.99).length,0);
@@ -183,7 +183,7 @@ test('Stage 8.2 is loaded in the arena with all eight Elites registered',()=>{
   const html=fs.readFileSync(p,'utf8');
   assert(html.includes('online/v013-elite-abilities.js'));
   assert(html.includes('WandererV013EliteAbilities?.status(enemy,now)'));
-  for(const id of ['tank','berserker','vampire','caster','gravecaller','oathbound_exarch','the_gilded','ashen_executioner']){
+  for(const id of ['tank','berserker','vampire','caster','gravecaller','the_shepherd','the_gilded','the_headsman']){
    assert(html.includes(id+":{id:'"+id+"'"),p+' missing '+id);
    assert.match(html,new RegExp(id+":'assets/(elites|mobs)/animated/"));
   }

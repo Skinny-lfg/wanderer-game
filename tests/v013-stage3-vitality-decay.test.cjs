@@ -64,7 +64,7 @@ test('retired Toxic Precision is absent from current v15 and Buildcraft source, 
  assert(!B.CATALOG.some(n=>n.id==='toxic_precision'));
  assert(!fs.readFileSync('combat/v012-buildcraft.js','utf8').includes('toxic_precision'));
 });
-test('real v15 Decay Toxic Touch scales Rot with hit and Spell Power; costs four Mana and retains cooldown',()=>{
+test('real v15 Decay Corrupting Touch scales Rot with hit and Spell Power; costs four Mana and retains cooldown',()=>{
  const damage=[];
  for(const power of [0,100,200]){
   const b=build(['affinity_decay']),x=context({power,mp:10,base:100});

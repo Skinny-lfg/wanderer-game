@@ -1556,7 +1556,7 @@ function markdown(data){
  }
  out.push('','## How to interpret','',
   '- Attempts only happen at an **actually unlocked** Expedition. Unreached E levels are censored and have no win rate.',
-  '- Native Grey loot, gear swaps, real Camp salvage into Forge Fragments, XP awards, talents, Contracts, Boon Shrines, events, Gold shops and potions are tracked without injecting inventory.',
+  '- Native Grey loot, gear swaps, real Camp salvage into Forge Fragments, XP awards, talents, Contracts, Echo Fonts, events, Gold shops and potions are tracked without injecting inventory.',
   '- Combat target switching has a reaction delay; map traversal uses native movement and step costs; hidden room types are not peeked for room selection.',
   '- Boon decisions are ranked by actual trade-offs, not chosen blindly by Affinity; native Fate rerolls are conditional.',
   '- The agent selects one of the two feasible Contracts using their displayed single-prize offers; native objective progress, Boss/extraction payout and death forfeiture are recorded without fake awards.',
@@ -1565,7 +1565,7 @@ function markdown(data){
   '- S1: the Camp compares crafting previews with real named-tier upgrade requirements and never bypasses materials or Expedition unlocks.',
   '- S1: earned talents can select Fire/Frost/Lightning, choose an owned advanced prepared skill, and reset (without losing XP) once after two failed attempts when at least four talent nodes exist.',
   '- Elite route scores compare native Elite 60% loot odds to ordinary room odds, including extra Grey loot, Gold/Fragments, Marked Elite rewards and Boss preparation; they never guarantee a drop.',
-  '- Boss preparation is earned via the real marked Elite and Forgotten Reliquary; both are separately counted, including preparation at Boss entry.',
+  '- Boss preparation is earned via the real marked Elite and Severance Spire; both are separately counted, including preparation at Boss entry.',
   '- A win requires the real Boss at its natural map location. Extracting saves resources but **does not unlock E+1**.',
   '- The policy is more human-like than synthetic cohorts, but **not** a validated model of how actual players play.',
   '- Review full JSON per account and investigate runtime errors separately from player deaths before balancing.', '');

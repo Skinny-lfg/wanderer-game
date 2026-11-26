@@ -16,7 +16,7 @@ function fixture(ids=[]){
  return {p,b,r,c,enemies,reserve,metrics,hits,runtime,at,attack,paid};
 }
 test('Decay extension nodes retain legal access and Overflow reuses Nova id',()=>{for(const [id,cost] of [['contagious_touch',6],['corruption_nova',7],['soul_drain',7]])assert.equal(buy([id]).nodes.length,cost);assert.equal(T.NODES.find(n=>n.id==='corruption_nova').name,'Corruption Overflow');});
-test('Toxic Touch costs four Mana, persists for six ticks, caps at six, and preserves finite secondary Rot',()=>{const h=fixture(['toxic_touch']);h.attack(1);assert.equal(h.r.mp,96);assert.equal(h.metrics.decayPrimaryPaidApplications,1);const stack=h.enemies[0].v012Rot[0];assert(stack.primaryPaid);for(let i=0;i<7;i++){h.at(2+i);B.tickRot(h.b,h.c);}assert.equal(h.enemies[0].v012Rot.length,1);for(let i=0;i<7;i++)h.paid(10+i);assert.equal(h.enemies[0].v012Rot.length,6);h.c.enemy=h.enemies[1];h.at(20);B.onSecondaryWeaponStatus(h.b,h.c);assert.equal(h.enemies[1].v012Rot[0].secondaryOrigin,'weapon');for(let i=0;i<4;i++)B.tickRot(h.b,h.c);assert.equal(h.enemies[1].v012Rot.length,0);});
+test('Corrupting Touch costs four Mana, persists for six ticks, caps at six, and preserves finite secondary Rot',()=>{const h=fixture(['toxic_touch']);h.attack(1);assert.equal(h.r.mp,96);assert.equal(h.metrics.decayPrimaryPaidApplications,1);const stack=h.enemies[0].v012Rot[0];assert(stack.primaryPaid);for(let i=0;i<7;i++){h.at(2+i);B.tickRot(h.b,h.c);}assert.equal(h.enemies[0].v012Rot.length,1);for(let i=0;i<7;i++)h.paid(10+i);assert.equal(h.enemies[0].v012Rot.length,6);h.c.enemy=h.enemies[1];h.at(20);B.onSecondaryWeaponStatus(h.b,h.c);assert.equal(h.enemies[1].v012Rot[0].secondaryOrigin,'weapon');for(let i=0;i<4;i++)B.tickRot(h.b,h.c);assert.equal(h.enemies[1].v012Rot.length,0);});
 test('Contagious Touch spreads to three active targets, not reserve or full targets; Soul Drain credits only paid primary actions',()=>{const h=fixture(['contagious_touch','soul_drain']);h.paid(1);h.paid(2);assert.equal(h.metrics.contagiousTouchSpread,3);assert.equal(h.enemies[1].v012Rot[0].damage,h.enemies[0].v012Rot[0].damage);assert.equal(h.reserve.v012Rot.length,0);h.paid(3);h.paid(4);assert.equal(h.metrics.soulDrainMana,4);});
 test('Overflow independently seeds Rot, checks three stacks, splits damage and does not consume',()=>{
  for(const count of [0,1,2,3]){
@@ -39,7 +39,7 @@ test('Cycle pays independently, adds two persistent Rot, consumes three only whe
  for(let i=0;i<8;i++){h.at(3+i);B.tickRot(h.b,h.c);}assert.equal(h.enemies[0].v012Rot.length,2);
  h.attack(11);assert.equal(h.enemies[0].v012Rot.length,1);assert.equal(h.metrics.corruptionCycleStacksConsumed,3);assert.equal(h.metrics.corruptionCycleMana,20);assert.equal(h.r.mp,80);
 });
-test('Blight seeds persistent Rot on a clean enemy without Toxic Touch credit',()=>{
+test('Blight seeds persistent Rot on a clean enemy without Corrupting Touch credit',()=>{
  const h=fixture(['blight']);h.c.random=()=>.9999;h.attack(1);
  assert.equal(h.metrics.anchorSpreadSource_ability_blight,1);assert.equal(h.enemies[0].v012Rot.length,1);assert.equal(h.r.mp,92);assert.equal(h.metrics.decayPrimaryPaidApplications||0,0);
 });

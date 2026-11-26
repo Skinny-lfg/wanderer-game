@@ -9,7 +9,7 @@ const THEME_FAMILIES=Object.freeze({
  void:'decay',ward:'aegis',grove:'radiance',shrine:'radiance',storm:'arcane',
  drowned:'aegis',quarry:'aegis',bloodscar:'blood'
 });
-const REALMS=Object.freeze({forge:['blood','Crimson Dominion'],bloodscar:['blood','Bloodscar Wastes'],temple:['decay','Venomreach'],void:['decay','Umbral Hollow'],grove:['radiance','Verdant Wilds'],shrine:['radiance','Everroot Vale'],ward:['aegis','Warded Marches'],drowned:['aegis','Drowned Bastion'],crypt:['fury','Gravewind Barrens'],bastion:['fury','Ironbound Frontier'],ash:['arcane','Ashen Aether'],storm:['arcane','Stormglass Beyond']});
+const REALMS=Object.freeze({forge:['blood','Bloodhallow · Crimson Dominion'],bloodscar:['blood','Bloodhallow · Bloodscar Wastes'],temple:['decay','Noxfen · Venomreach'],void:['decay','Noxfen · Umbral Hollow'],grove:['radiance','Verdant Wilds'],shrine:['radiance','Everroot Vale'],ward:['aegis','Tideward · Warded Marches'],drowned:['aegis','Tideward · Drowned Bastion'],crypt:['fury','Rustlands · Gravewind Barrens'],bastion:['fury','Rustlands · Ironbound Frontier'],ash:['arcane','Sigilfall · Ashen Aether'],storm:['arcane','Sigilfall · Stormglass Beyond']});
 const BOSSES=Object.freeze([{id:'guardian',name:"Abyssal Guardian’s Citadel",style:'guardian',affinity:'aegis'},{id:'rift',name:"Harbinger’s Rift",style:'leech',affinity:'blood'},{id:'ember',name:"The Chainbreaker’s Throne",style:'berserker',affinity:'fury'},{id:'carrion',name:"Matriarch’s Brood",style:'matriarch',affinity:'decay'},{id:'heartroot',name:"Heartroot’s Hollow",style:'devourer',affinity:'radiance'},{id:'stormglass',name:"Stormglass Spire",style:'conductor',affinity:'arcane'}]);
 const bossForAffinity=family=>BOSSES.find(b=>b.affinity===family);
 const I=root.WandererV013MapIntelligence,F=root.WandererV013ExpeditionFoundation,T=root.WandererV013EncounterTraits,P=root.WandererV013BossPreparation,C=root.WandererV013ExpeditionConditions,B=root.WandererV013ExpeditionBoons,K=root.WandererV013ExpeditionContracts;
@@ -125,7 +125,7 @@ function create(themes,rng=Math.random){
   const d=game.dungeon,o=d?.boonOffer;
   if(!o||game.stage!=='choice'||game.selected||game.rewardPending||
     id!==null&&!o.ids.includes(id)||d.contractOffer||!B?.validateOffer(d,game))
-    throw Error('Boon Shrine selection unavailable');
+    throw Error('Echo Font selection unavailable');
   const next=F.applyDecision(d.foundationState,id===null?
     {type:'skip_boon',room:o.room}:
     {type:'choose_boon',id,room:o.room,families:o.families},d.foundationManifest);
@@ -229,7 +229,7 @@ function create(themes,rng=Math.random){
    game.history.push({plane:game.planeIndex,id:card.id,name:card.name,family:card.family,image:card.image,
      node:i,waves:0,boss:false,elite:false,event:'boon_shrine',mobCount:0,escorts:0,risk:card.risk});
    if(!offerBoons(families)&&d.foundationState.boonIds.length<2)
-     throw Error('Boon Shrine offer could not be generated');
+     throw Error('Echo Font offer could not be generated');
    return true;
   }
   const p={id:card.id,family:card.family,image:card.image,name:card.name,node:i,waves:n.event?0:1,boss,elite:boss||n.kind==='elite',event:n.event,mobCount:n.count,escorts:n.escorts,risk:card.risk,...(n.vanguard?{vanguard:true}:{}),...(n.traitId?{traitId:n.traitId}:{})};
@@ -305,7 +305,7 @@ function create(themes,rng=Math.random){
      F.lookup('conditions',v.conditionId).conflicts?.some(id=>v.bossModifierIds.includes(id))||
      v.bossStyle!==bossForAffinity(v.family).style||v.bossModifierIds.some(id=>F.lookup('bossModifiers',id).conflicts?.includes(v.conditionId)||F.lookup('bossModifiers',id).excludeBossStyles?.includes(v.bossStyle)))||
     new Set(manifest.cards.map(c=>c.conditionId)).size!==3)throw Error('Invalid dungeon manifest');
-  if(!B||d.cards.some(card=>!B.validateTopology(card,manifest.seed)))throw Error('Invalid deterministic Boon Shrines');
+  if(!B||d.cards.some(card=>!B.validateTopology(card,manifest.seed)))throw Error('Invalid deterministic Echo Fonts');
   const expectedManifest=F.createManifest(d.cards,{seed:manifest.seed,expeditionLevel:g.expedition,bossStyle:manifest.bossStyle});
   if(JSON.stringify(expectedManifest)!==JSON.stringify(manifest))throw Error('Invalid deterministic dungeon manifest');
   if(d.realm===null){

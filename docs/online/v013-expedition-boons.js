@@ -53,13 +53,13 @@ const WINDOWS=Object.freeze([[4,5,6],[9,10,11,12]]);
 const FALLBACK=Object.freeze([[7,8],[13,14,15,16]]);
 function placeShrines(card,seed){
  if(!card?.nodes||!F.DIFFICULTIES[card.risk]||!Number.isInteger(seed)||seed<0||seed>0xffffffff||
-    card.boonShrines!==undefined)throw Error('Invalid Boon Shrine map');
+    card.boonShrines!==undefined)throw Error('Invalid Echo Font map');
  const chosen=[];
  for(let round=0;round<2;round++){
   const find=slots=>slots.filter(id=>card.nodes[id]?.kind==='combat'&&id!==card.clueRoom&&
     !chosen.includes(id));
   const candidates=find(WINDOWS[round]),pool=candidates.length?candidates:find(FALLBACK[round]);
-  if(!pool.length)throw Error('No room for Boon Shrine');
+  if(!pool.length)throw Error('No room for Echo Font');
   const random=F.rng(seed,'boon_shrine_v1_'+card.id+'_'+round);
   const room=pool[Math.floor(random()*pool.length)];
   card.nodes[room].kind='shrine';chosen.push(room);

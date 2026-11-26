@@ -189,7 +189,7 @@ async function main(){
   assert.equal(Number(await page.locator('.realmFogCurrent').getAttribute('data-fog-revealed')),nextFogCount,'Reload restores revealed locations from real expedition state');
   assert.equal(await page.locator('[data-room-edge="0-1"]').getAttribute('stroke-dasharray'),'none','Travelled passage must remain solid after reload');
   await page.screenshot({path:path.join(out,'09-map-restored-desktop.png'),fullPage:true});
-  // Visit the *naturally generated* Forgotten Reliquary by real map clicks, rather than
+  // Visit the *naturally generated* Severance Spire by real map clicks, rather than
   // replacing the node. No travel, event or boss properties are modified by the hook.
   const targetRoom=resumed.cards[1].reliquary;
   const route=await page.evaluate(target=>__stage454.pathToRoom(target),targetRoom);
@@ -203,7 +203,7 @@ async function main(){
    if(label==='Travel here')continue;
    if(await page.locator('.phase6Event').count()){
     if(node===targetRoom){
-     assert.match(await page.locator('.phase6Event h2').innerText(),/Forgotten Reliquary/);
+     assert.match(await page.locator('.phase6Event h2').innerText(),/Severance Spire/);
      const before=await page.evaluate(()=>__stage454.snapshot());
      const expected=Math.ceil(before.maxHp*.15);
      await page.locator('[data-event-select="0"]').click();

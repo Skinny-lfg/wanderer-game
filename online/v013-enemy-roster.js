@@ -4,6 +4,14 @@
 const F=root.WandererV013ExpeditionFoundation;
 if(!F)throw Error('Stage 8.0 requires the Expedition foundation');
 const ROLES=Object.freeze(['minion','tank','skirmisher','caster']);
+const ARCHETYPES=Object.freeze({
+ blood:{"minion":"Tithe Wretch","tank":"Veinbound Colossus","skirmisher":"Court Butcher","caster":"Hematurge"},
+ decay:{"minion":"Carrion Tick","tank":"Mireback Toad","skirmisher":"Blight Mantis","caster":"Plague Croaker"},
+ radiance:{"minion":"The Unfinished","tank":"Reliquary","skirmisher":"Sunscour","caster":"Cantor"},
+ aegis:{"minion":"Brine Whelp","tank":"Breakwater Sentinel","skirmisher":"Reefstalker","caster":"Tidecaller"},
+ fury:{"minion":"Scrap Crawler","tank":"Ironmaw Brute","skirmisher":"Sandknife","caster":"Warhowler"},
+ arcane:{"minion":"Rune Wisp","tank":"Sigil Golem","skirmisher":"Void Strider","caster":"Violet Seer"}
+});
 const FAMILY_WEIGHTS=Object.freeze({
  blood:Object.freeze({tank:1,skirmisher:5,caster:2}),
  decay:Object.freeze({tank:1,skirmisher:3,caster:4}),
@@ -70,7 +78,7 @@ function plan({seed,realm,family,node=0,count,catalog}){
  }
  return roles.map(role=>{
   const candidates=catalog.filter(m=>m.role===role),chosen=candidates[Math.floor(random()*candidates.length)];
-  return {name:chosen.name,image:chosen.image,role};
+  return {name:ARCHETYPES[family][role],image:chosen.image,role};
  });
 }
 // Stage 6.48B.2: order already-created actors, not their stat rolls.

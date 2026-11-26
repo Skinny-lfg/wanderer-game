@@ -32,18 +32,18 @@ function affinityArt(effect,item=false){const i=AFFINITY_ART.indexOf(effect);if(
 const RARITY={Common:['#aab2bc',1,1],Uncommon:['#76d69b',1.25,1.5],Rare:['#77baff',1.57,2.4],Epic:['#d0a2fa',2.1,3.9],Legendary:['#ffc36a',2.6,6]};
 // Twelve active Realms; stable IDs preserve historical loot metadata.
 const THEMES=[
- ['temple','Venomreach','poison','assets/dungeons/backgrounds/temple.webp','Blight Mantis'],
- ['forge','Crimson Dominion','bleed','assets/dungeons/backgrounds/forge.webp','Crimson Courtier'],
- ['bloodscar','Bloodscar Wastes','bleed','assets/dungeons/backgrounds/quarry.webp','Sanguine Leech'],
- ['crypt','Gravewind Barrens','crit','assets/dungeons/backgrounds/crypt.webp','Carrion Harrier'],
- ['bastion','Ironbound Frontier','sunder','assets/dungeons/backgrounds/bastion.webp','Chainmaw Brute'],
- ['ash','Ashen Aether','burn','assets/dungeons/backgrounds/ash.webp','Cinder Hexer'],
- ['void','Umbral Hollow','drain','assets/dungeons/backgrounds/void.webp','Hollow Shade'],
- ['ward','Warded Marches','shield','assets/dungeons/backgrounds/ward.webp','Sigil Squire'],
+ ['temple','Noxfen · Venomreach','poison','assets/dungeons/backgrounds/temple.webp','Blight Mantis'],
+ ['forge','Bloodhallow · Crimson Dominion','bleed','assets/dungeons/backgrounds/forge.webp','Crimson Courtier'],
+ ['bloodscar','Bloodhallow · Bloodscar Wastes','bleed','assets/dungeons/backgrounds/quarry.webp','Sanguine Leech'],
+ ['crypt','Rustlands · Gravewind Barrens','crit','assets/dungeons/backgrounds/crypt.webp','Carrion Harrier'],
+ ['bastion','Rustlands · Ironbound Frontier','sunder','assets/dungeons/backgrounds/bastion.webp','Chainmaw Brute'],
+ ['ash','Sigilfall · Ashen Aether','burn','assets/dungeons/backgrounds/ash.webp','Cinder Hexer'],
+ ['void','Noxfen · Umbral Hollow','drain','assets/dungeons/backgrounds/void.webp','Hollow Shade'],
+ ['ward','Tideward · Warded Marches','shield','assets/dungeons/backgrounds/ward.webp','Sigil Squire'],
  ['grove','Verdant Wilds','nature','assets/dungeons/backgrounds/grove.webp','Thornback Stag'],
  ['shrine','Everroot Vale','regen','assets/dungeons/backgrounds/shrine.webp','Cantor'],
- ['storm','Stormglass Beyond','shock','assets/dungeons/backgrounds/storm.webp','Shardspark Moth'],
- ['drowned','Drowned Bastion','tide','assets/dungeons/backgrounds/drowned.webp','Barnacle Legionnaire'],
+ ['storm','Sigilfall · Stormglass Beyond','shock','assets/dungeons/backgrounds/storm.webp','Shardspark Moth'],
+ ['drowned','Tideward · Drowned Bastion','tide','assets/dungeons/backgrounds/drowned.webp','Barnacle Legionnaire'],
 ].map(([id,name,effect,image,enemy])=>({id,name,effect,image,enemy}));
 // Normal-mob combat roles follow the reviewed animated attack assets.
 // Tank: sustained body/armor; Skirmisher: claw, bite, leap or weapon strike;
@@ -208,8 +208,8 @@ function save(){phase5Persist();}
 function heroFullImage(){return globalThis.WandererCharacterArt?.imageForEquipment(state.equip)||'assets/characters/full/wanderer.webp';}
 // Optimized transparent elite WebP portraits with fallback art if loading fails.
 // Idle PNGs are frame 1 of the new attack GIFs, never legacy elite portraits.
-const ELITE_ART={tank:'assets/elites/animated/tank_idle.png',caster:'assets/elites/animated/caster_idle.png',vampire:'assets/elites/animated/vampire_idle.png',berserker:'assets/elites/animated/berserker_idle.png',gravecaller:'assets/elites/animated/caster_idle.png',the_gilded:'assets/mobs/animated/rootbound_hermit_staff_spell_original_768x896.png',oathbound_exarch:'assets/elites/animated/tank_idle.png',ashen_executioner:'assets/elites/animated/berserker_idle.png'};
-const ELITE_ATTACK_ART={tank:'assets/elites/animated/tank_attack.gif',caster:'assets/elites/animated/caster_attack.gif',vampire:'assets/elites/animated/vampire_attack.gif',berserker:'assets/elites/animated/berserker_attack.gif',gravecaller:'assets/elites/animated/caster_attack.gif',the_gilded:'assets/mobs/animated/rootbound_hermit_staff_spell_original_768x896.gif',oathbound_exarch:'assets/elites/animated/tank_attack.gif',ashen_executioner:'assets/elites/animated/berserker_attack.gif'};
+const ELITE_ART={tank:'assets/elites/animated/tank_idle.png',caster:'assets/elites/animated/caster_idle.png',vampire:'assets/elites/animated/vampire_idle.png',berserker:'assets/elites/animated/berserker_idle.png',gravecaller:'assets/elites/animated/caster_idle.png',the_gilded:'assets/mobs/animated/rootbound_hermit_staff_spell_original_768x896.png',the_shepherd:'assets/elites/animated/tank_idle.png',the_headsman:'assets/elites/animated/berserker_idle.png'};
+const ELITE_ATTACK_ART={tank:'assets/elites/animated/tank_attack.gif',caster:'assets/elites/animated/caster_attack.gif',vampire:'assets/elites/animated/vampire_attack.gif',berserker:'assets/elites/animated/berserker_attack.gif',gravecaller:'assets/elites/animated/caster_attack.gif',the_gilded:'assets/mobs/animated/rootbound_hermit_staff_spell_original_768x896.gif',the_shepherd:'assets/elites/animated/tank_attack.gif',the_headsman:'assets/elites/animated/berserker_attack.gif'};
 const ELITE_ATTACK_IMPACT_MS={tank:810,caster:890,vampire:670,berserker:490};
 const ELITE_ATTACK_DURATION_MS={tank:1850,caster:1750,vampire:1800,berserker:1400};
 const eliteArtReady={};
@@ -691,9 +691,9 @@ const ELITE_ARCHETYPES={
  vampire:{id:'vampire',icon:'🩸',name:'The Thirst',role:'Vampire',risk:'Recovers HP when its attacks damage your health. Barrier and burst are useful.',hp:1.55,atk:1.38,def:1.04,interval:1.56},
  caster:{id:'caster',icon:'🔮',name:'Lantern-Eye',role:'Caster',risk:'Successful hits weaken your direct damage by 20% for 3 combat seconds (7s between casts).',hp:1.53,atk:1.35,def:0.92,interval:1.64},
  gravecaller:{id:'gravecaller',icon:'☠',name:'Gravecaller',role:'Summoner',risk:'Channels a 1s interruptible ritual at 85% and 40% HP, summoning up to 2 bound souls each time (4 total, 2 alive). Bound soul hits apply stacking Deathbound Decay (up to 4 stacks, 4s), damaging you each second until the summons die.',hp:1.91,atk:1.12,def:0.92,interval:1.75},
- oathbound_exarch:{id:'oathbound_exarch',icon:'⛨',name:'The Shepherd',role:'Support',risk:'Aegis oath: every 10s channels Barrier for an ally, or itself when alone, worth 15% max Health, up to 3 casts. Stun interrupts.',hp:1.98,atk:1.12,def:1.18,interval:1.95},
+ the_shepherd:{id:'the_shepherd',icon:'⛨',name:'The Shepherd',role:'Support',risk:'Aegis oath: every 10s channels Barrier for an ally, or itself when alone, worth 15% max Health, up to 3 casts. Stun interrupts.',hp:1.98,atk:1.12,def:1.18,interval:1.95},
  the_gilded:{id:'the_gilded',icon:'☀',name:'The Gilded',role:'Reflection',risk:'Radiance · Solar Rebuke reflects direct hits during its four-second guard.',hp:1.84,atk:1.23,def:1.04,interval:1.72},
- ashen_executioner:{id:'ashen_executioner',icon:'⚒',name:'Ashen Executioner',role:'Heavy Striker',risk:'Every 10s prepares 1.5s heavy strike, capped at 18% max HP before Block/Barrier. Stun and delay interrupt.',hp:1.75,atk:1.58,def:0.93,interval:1.95}
+ the_headsman:{id:'the_headsman',icon:'⚒',name:'The Headsman',role:'Heavy Striker',risk:'Every 10s prepares 1.5s heavy strike, capped at 18% max HP before Block/Barrier. Stun and delay interrupt.',hp:1.75,atk:1.58,def:0.93,interval:1.95}
 };
 const BOSS_ARCHETYPES=['guardian','leech','berserker','matriarch','devourer','conductor'].map(style=>{
  const profile=WandererV013BossAbilities.profileForStyle(style);
@@ -1064,7 +1064,7 @@ let phase6Run=null;
 
 const PHASE6_POTION_ART={trail:'assets/potions/potion_haste.webp',scout:'assets/potions/potion_fortune.webp',health:'assets/potions/potion_health_standard.webp',mana:'assets/potions/potion_mana_standard.webp',might:'assets/potions/potion_might.webp',arcane:'assets/potions/potion_arcane.webp',ironhide:'assets/potions/potion_ironhide.webp',haste:'assets/potions/potion_haste.webp',fortune:'assets/potions/potion_fortune.webp',barrier:'assets/potions/potion_barrier.webp',purifying:'assets/potions/potion_ironhide.webp',veilsight:'assets/potions/potion_fortune.webp',fate:'assets/potions/potion_arcane.webp'};
 function phase6PotionImage(id){return PHASE6_POTION_ART[id]||'assets/potions/potion-fallback.svg'}
-function phase6PotionDescription(id){return ({scout:'Reveal the route to a hidden Shrine, treasure or threat.',trail:'Recover up to two spent steps.',health:'Restore 35% of Max HP.',mana:'Restore 40% of Max Mana.',might:'+10% Attack for the next 3 combat encounters.',arcane:'+10% Spell Damage for the next 3 combat encounters.',ironhide:'+10% Defense for the next 3 combat encounters.',haste:'+8% Attack Speed for the next 3 combat encounters.',fortune:'+25% relative equipment drop chance for this Expedition (capped at 100%).',barrier:'Gain Barrier equal to 15% Max HP. Limit: 30% Max HP (Aegis: +25% Spell Power).',purifying:'Halve combat Condition penalties for the next 2 encounters.',veilsight:'Reveal both hidden Boon Shrines and the paths leading to them.',fate:'Reroll the current Boon Shrine offer once. Use at a Shrine.'})[id]||''}
+function phase6PotionDescription(id){return ({scout:'Reveal the route to a hidden Shrine, treasure or threat.',trail:'Recover up to two spent steps.',health:'Restore 35% of Max HP.',mana:'Restore 40% of Max Mana.',might:'+10% Attack for the next 3 combat encounters.',arcane:'+10% Spell Damage for the next 3 combat encounters.',ironhide:'+10% Defense for the next 3 combat encounters.',haste:'+8% Attack Speed for the next 3 combat encounters.',fortune:'+25% relative equipment drop chance for this Expedition (capped at 100%).',barrier:'Gain Barrier equal to 15% Max HP. Limit: 30% Max HP (Aegis: +25% Spell Power).',purifying:'Halve combat Condition penalties for the next 2 encounters.',veilsight:'Reveal both hidden Echo Fonts and the paths leading to them.',fate:'Reroll the current Echo Font offer once. Use at a Shrine.'})[id]||''}
 function phase6PotionStacksMarkup(){
  const stock=state.consumables||{},C=WandererV012Consumables.CATALOG;
  return C.flatMap(p=>{
@@ -1109,7 +1109,7 @@ function phase6BindPotions(){
  Q('[data-potion-use]').forEach(b=>b.onclick=()=>{
   const i=Number(b.dataset.potionUse),kind=phase6Run?.potions?.[i]?.kind||state.potionSelection?.[i];
   if(kind!=='scout')return phase6UsePotion(i);
-  const dialog=showModal('Scout a room','<button data-scout="shrine">Boon Shrine</button> <button data-scout="treasure">Treasure</button> <button data-scout="threat">Elite or boss</button>');
+  const dialog=showModal('Scout a room','<button data-scout="shrine">Echo Font</button> <button data-scout="treasure">Treasure</button> <button data-scout="threat">Elite or boss</button>');
   dialog.querySelectorAll('[data-scout]').forEach(choice=>choice.onclick=()=>{dialog.close();phase6UsePotion(i,choice.dataset.scout);});
  });
 }
@@ -1589,7 +1589,7 @@ function renderRebuiltTalents(){
 function realmDifficulty(card){return ['Guarded','Dangerous','Brutal'][card.risk];}
 function dungeonRoomLabel(n){
  if(n.kind==='combat')return n.range[1]===1?'Solo':n.range[1]<=4?'Patrol':'Fragile swarm';
- if(n.event==='forgotten_reliquary')return 'Forgotten Reliquary';
+ if(n.event==='forgotten_reliquary')return 'Severance Spire';
  return {entrance:'Entrance',boss:'Boss',elite:'Elite',spring:'Spring',event:'Event',shrine:'✦ Shrine'}[n.kind];
 }
 function dungeonMapMarkup(g){
@@ -1680,7 +1680,7 @@ function renderStage6BoonOffer(g){
  const fateIndex=(carried||[]).findIndex(p=>p.kind==='fate'&&!p.used);
  const fateControl=!offer.rerolled&&fateIndex>=0?'<button type="button" id="stage74RerollBoon" class="ghost">Use Fate Distillate · Reroll 3 Boons</button>':
    offer.rerolled?'<p class="small muted">Fate Distillate used · This Shrine cannot be rerolled again.</p>':'';
- html('<section class="panel stage6BoonOffer" aria-labelledby="stage6BoonHeading"><span class="eyebrow">Expedition '+g.expedition+' · Shrine '+(offer.round+1)+' of 2</span><h1 id="stage6BoonHeading">Boon Shrine Discovered</h1><p class="small muted">Choose one of three temporary powers or leave this Shrine untouched. Each choice has a trade-off. You can discover up to two Boons per Dungeon.</p><p class="stage6BoonSummary">Active Boons: '+esc(selectedNames.join(' · ')||'None')+'</p><div class="stage6BoonChoices">'+offer.ids.map(id=>{
+ html('<section class="panel stage6BoonOffer" aria-labelledby="stage6BoonHeading"><span class="eyebrow">Expedition '+g.expedition+' · Shrine '+(offer.round+1)+' of 2</span><h1 id="stage6BoonHeading">Echo Font Discovered</h1><p class="small muted">Choose one of three temporary powers or leave this Shrine untouched. Each choice has a trade-off. You can discover up to two Boons per Dungeon.</p><p class="stage6BoonSummary">Active Boons: '+esc(selectedNames.join(' · ')||'None')+'</p><div class="stage6BoonChoices">'+offer.ids.map(id=>{
   const boon=B.get(id),guide=B.GUIDE[id],matched=boon.families.some(f=>familySet.has(f))&&id!=='wayfarers_bargain';
   return '<button type="button" class="stage6BoonCard" data-stage6-boon="'+esc(id)+'"><span class="stage6BoonIcon" aria-hidden="true">'+esc(guide.icon)+'</span><strong>'+esc(boon.name)+'</strong>'+(matched?'<small class="stage6BoonSynergy">Synergy with your build</small>':'')+'<span class="stage6BoonBenefit">'+esc(guide.benefit)+'</span><span class="stage6BoonCost">'+esc(guide.cost)+'</span></button>';
  }).join('')+'</div><p class="small muted">Shrines are hidden until their passages are explored. Skipping a Shrine is permanent for this Expedition.</p><button type="button" id="stage73SkipBoon" class="ghost">Leave Shrine without a Boon</button>'+fateControl+'</section>');
@@ -1691,7 +1691,7 @@ function renderStage6BoonOffer(g){
    phase1Controller.chooseBoon(id);
    if(!phase5Persist()){for(const key of Object.keys(g.dungeon))delete g.dungeon[key];Object.assign(g.dungeon,old);return;}
    phase3ClampVitals();render();
-  }catch(error){bannerMessage('Boon Shrine choice rejected: '+error.message);}
+  }catch(error){bannerMessage('Echo Font choice rejected: '+error.message);}
  };
  Q('[data-stage6-boon]').forEach(button=>button.onclick=()=>resolve(button.dataset.stage6Boon));
  $('stage73SkipBoon').onclick=()=>resolve(null);
@@ -1744,7 +1744,7 @@ function bindDungeonRooms(g){
    if(!phase6UsePotion(i,'shrine'))bannerMessage('Potion cannot be used now or its target is already known.');
    return;
   }
-  const dialog=showModal('Scout a room','<button type="button" data-scout="shrine">Boon Shrine</button> <button type="button" data-scout="treasure">Treasure</button> <button type="button" data-scout="threat">Elite or boss</button>');
+  const dialog=showModal('Scout a room','<button type="button" data-scout="shrine">Echo Font</button> <button type="button" data-scout="treasure">Treasure</button> <button type="button" data-scout="threat">Elite or boss</button>');
   dialog.querySelectorAll('[data-scout]').forEach(choice=>choice.onclick=()=>{
    dialog.close();if(!phase6UsePotion(i,choice.dataset.scout))bannerMessage('No unknown destination of that type. Potion retained.');
   });
@@ -1760,7 +1760,7 @@ function bindDungeonRooms(g){
   const highlighted=path.slice(1).map((id,k)=>document.querySelector('[data-room-edge="'+path[k]+'-'+id+'"],[data-room-edge="'+id+'-'+path[k]+'"]')).filter(Boolean);
   for(const line of highlighted){line.classList.add('realmRouteSelected');line.style.stroke='#ff534d';}
   const route=path.map(j=>dungeonRoomLabel(c.nodes[j])).join(' → ');
-  const detail=cleared?'Cleared passage.':n.event?WandererV012IntegratedEvents.get(n.event)[1]:n.kind==='combat'?n.range[0]+'–'+n.range[1]+(n.vanguard?' enemies · Vanguard prepares the opening strike':n.range[1]>=6?' fragile enemies · reinforcements':' enemies'):n.kind==='shrine'?'An ancient Boon Shrine. Choose one of three temporary powers, or leave without one.':dungeonRoomLabel(n)+' with '+n.escorts+' base guards';
+  const detail=cleared?'Cleared passage.':n.event?WandererV012IntegratedEvents.get(n.event)[1]:n.kind==='combat'?n.range[0]+'–'+n.range[1]+(n.vanguard?' enemies · Vanguard prepares the opening strike':n.range[1]>=6?' fragile enemies · reinforcements':' enemies'):n.kind==='shrine'?'An ancient Echo Font. Choose one of three temporary powers, or leave without one.':dungeonRoomLabel(n)+' with '+n.escorts+' base guards';
   const trait=n.traitId?WandererV013EncounterTraits.get(n.traitId):null;
   const hazard=trait?' · ⚔ '+trait.name+': '+({armored:'Higher Defense, lower Health',frenzied:'Faster attacks, lower Health',ambush:'First attacks arrive sooner',sigilbound:'Enemies begin shielded, but strike less hard',unhallowed_regrowth:'Enemies recover Health during longer battles',death_throes:'Dying enemies deal damage, capped per encounter'}[trait.id]||'Altered combat')+'. · +10% Fragments.':'';
   const omen=n.kind==='boss'?WandererV013BossModifiers.known(g,c.id):null;

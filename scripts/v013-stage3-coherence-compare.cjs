@@ -46,7 +46,7 @@ function compare(before,after,{postBarrierReset=false,postOffhandReroll=false}={
  assert.equal(radiance.length,6);
  assert(radiance.some(x=>x.delta.meanHealingPerSecond!==0),'Radiance regeneration must change at least one native result');
  // Toxic Precision was an unreachable Decay/Fury relic and is retired, not
- // added to the six real adjacent combinations. Active Toxic Touch and
+ // added to the six real adjacent combinations. Active Corrupting Touch and
  // Hex Bolt SP scaling are covered by production Buildcraft tests.
  return groups;
 }
@@ -74,7 +74,7 @@ function markdown(result){
   '- Same E5/E35 levels, 9101/9201 seeds, 12 legal 24-point builds, Rare current gear, no Runes/Boons/Contracts, focus targets and three normal Aegis enemies.',
   '- Frozen Stage 2 is historical: Barrier resets, uncapped Barrier and distinct Orb/Tome/Charm rolls intentionally affect survivability and Spell Power. Cohort definitions remain invariant.',
   '- Radiance base regeneration now uses 0.15% Max HP/s plus tiered percentage nodes, with 0.35% Max HP/s pre-fork cap and Recovery/Reserve modifiers.',
-  '- The retired Toxic Precision Decay/Fury passive was not reachable in v15 and its hidden runtime/catalogue path has been removed, not reintroduced. Active Toxic Touch (hit + Spell Power) and Arcane/Decay Hex Bolt scaling are verified by production Buildcraft tests; no Decay coefficient was changed.',
+  '- The retired Toxic Precision Decay/Fury passive was not reachable in v15 and its hidden runtime/catalogue path has been removed, not reintroduced. Active Corrupting Touch (hit + Spell Power) and Arcane/Decay Hex Bolt scaling are verified by production Buildcraft tests; no Decay coefficient was changed.',
   '- Changes in actual healing/s are limited by real damage taken, overheal, combat duration and different gear; these are observations, not theoretical healing potential.',
   '- The 48 encounters are intentionally easy and do not establish Elite/Boss balance. Stage 4+ should extend stress scenarios.',
   '');

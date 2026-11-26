@@ -10,7 +10,7 @@ function fixture(mode,ids){
  return {B,b,e,r,c,m};
 }
 test('all four diagnostic variants compile, baseline trigger remains unchanged',()=>{for(const mode of MODES)new Function(diagnosticSource(mode));});
-test('checking after Toxic Touch can consume the third stack on that same attack; no threshold, cost or cooldown changes',()=>{
+test('checking after Corrupting Touch can consume the third stack on that same attack; no threshold, cost or cooldown changes',()=>{
  for(const mode of ['baseline','after']){
   const h=fixture(mode,['toxic_touch','corruption_cycle']);
   h.e.v012Rot=[{damage:10,remaining:4,primaryPaid:true},{damage:10,remaining:4,primaryPaid:true}];

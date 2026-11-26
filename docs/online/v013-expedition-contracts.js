@@ -8,12 +8,12 @@ const CATALOG=F.CATALOG.contracts;
 const get=id=>F.lookup('contracts',id);
 const DESCRIPTIONS=Object.freeze({
  bounty_writ:{icon:'⚔',objective:'Defeat the marked Elite',detail:'Claim the optional marked Elite on the map. Its existing reagent reward is separate.'},
- purification:{icon:'✦',objective:'Disrupt a boss seal at the Forgotten Reliquary',detail:'Reach the Reliquary and sacrifice Health to disable one boss modifier.'},
+ purification:{icon:'✦',objective:'Disrupt a boss seal at the Severance Spire',detail:'Reach the Reliquary and sacrifice Health to disable one boss modifier.'},
  oath_of_defiance:{icon:'🛡',objective:'Defeat the final boss without disrupting its seal',detail:'Leave every boss modifier intact. Marked Elite preparation is allowed.'},
  monster_hunt:{icon:'⚔',objective:'Defeat monsters in ordinary combat rooms',detail:'Only actual kills from completed fights count. Bosses, Elites and scouting do not count.'},
  skirmish_clear:{icon:'🗡',objective:'Clear 3 ordinary combat rooms',detail:'Complete three non-Elite, non-Boss combat encounters. Visiting or scouting is not enough.'},
  marked_chambers:{icon:'🎯',objective:'Clear both marked combat rooms',detail:'Two specific chambers in different passages are marked on your map. Clear BOTH, even if you would normally avoid their encounters.'},
- boon_collector:{icon:'✨',objective:'Choose 2 Boons during this Expedition',detail:'Find both Boon Shrines and choose a different Boon in each. Revealing or skipping a Shrine does not count.'}
+ boon_collector:{icon:'✨',objective:'Choose 2 Boons during this Expedition',detail:'Find both Echo Fonts and choose a different Boon in each. Revealing or skipping a Shrine does not count.'}
 });
 // Every Contract offers exactly ONE guaranteed prize. A Blueprint is a
 // rare standalone offer, not an extra chance attached to currency/potions.
@@ -156,7 +156,7 @@ function markedRooms(seed,card){
  const rng=F.rng(seed,'contract_marked_rooms_v1_'+card.id);
  return [...best[Math.floor(rng()*best.length)].ids];
 }
-// A conservative shortest route through both natural Boon Shrines.
+// A conservative shortest route through both natural Echo Fonts.
 // Only real, non-secret edges count; travel discounts are not assumed.
 function boonShrineRouteSteps(card){
  const rooms=card?.boonShrines;

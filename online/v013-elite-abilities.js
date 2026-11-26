@@ -18,9 +18,9 @@ function boundSoulArchetype(totalSummoned){
 }
 const DEFINITIONS=Object.freeze({
  gravecaller:Object.freeze({name:'Call of the Fallen',role:'Summoner',icon:'☠',description:'Channels a 1s interruptible ritual at 85% and 40% HP, summoning up to two bound souls (four total, two alive). Each successful bound soul hit adds Deathbound Decay (up to 4 stacks, 4s), dealing damage every second until the summons die.',thresholds:Object.freeze([.85,.40]),summons:2,maxSummons:4,maxLiving:2,cast:1,hpFactor:.48,atkFactor:.34,intervalFactor:1.20}),
- oathbound_exarch:Object.freeze({name:'Intercession',role:'Aegis Support',icon:'⛨',description:'An oath of Aegis grants an ally or itself Barrier worth 15% max HP, up to three times, every 10s.',first:3,cooldown:10,cast:.75,maxCasts:3,barrier:.15}),
+ the_shepherd:Object.freeze({name:'Intercession',role:'Aegis Support',icon:'⛨',description:'An oath of Aegis grants an ally or itself Barrier worth 15% max HP, up to three times, every 10s.',first:3,cooldown:10,cast:.75,maxCasts:3,barrier:.15}),
  the_gilded:Object.freeze({name:'Solar Rebuke',role:'Reflection',icon:'☀',description:'Radiance: first at 9s, then every 12s; prepares for 1s and reflects 15% of direct HP damage for 4s (1.5% of hero max HP per hit, 6% per window).',first:9,cooldown:12,cast:1}),
- ashen_executioner:Object.freeze({name:'Ashen Sentence',role:'Heavy Striker',icon:'⚒',description:'Prepares a 1.5s heavy strike every 10s; maximum 18% of hero max HP before Block/Barrier. Stun and delay interrupt.',first:3.5,cooldown:10,cast:1.5,multiplier:2.4,capFraction:.18})
+ the_headsman:Object.freeze({name:'Ashen Sentence',role:'Heavy Striker',icon:'⚒',description:'Prepares a 1.5s heavy strike every 10s; maximum 18% of hero max HP before Block/Barrier. Stun and delay interrupt.',first:3.5,cooldown:10,cast:1.5,multiplier:2.4,capFraction:.18})
 });
 function attach(enemy,now=0){
  const spec=DEFINITIONS[enemy?.eliteType];
@@ -127,7 +127,7 @@ function tick(run,absoluteNow){
    s.rebukeUntil=now+4;s.reflected=0;s.nextAt-=spec.cast;
    return [{type:'activate',enemy,ability:spec.name}];
   }
-  if(s.type==='oathbound_exarch'){
+  if(s.type==='the_shepherd'){
    const target=ally(run,enemy);
    if(!target){s.castCount--;s.nextAt=now+1;return [];}
    const cap=Math.max(1,Math.round(target.maxhp*spec.barrier));
@@ -139,7 +139,7 @@ function tick(run,absoluteNow){
   return [{type:'activate',enemy,ability:spec.name,target:null,result:0}];
  }
  if(now+1e-7<s.nextAt)return [];
- if(s.type==='oathbound_exarch'&&!ally(run,enemy)){s.nextAt=now+1;return [];}
+ if(s.type==='the_shepherd'&&!ally(run,enemy)){s.nextAt=now+1;return [];}
  s.castingUntil=now+spec.cast;s.status='Casting';s.statusUntil=0;
  return [{type:'prepare',enemy,ability:spec.name}];
 }
@@ -152,7 +152,7 @@ function solarRebukeDamage(enemy,now,directHpLoss,heroMaxHp){
 }
 function consumeStrike(enemy,now){
  const s=enemy?.stage82,spec=DEFINITIONS[s?.type];
- if(!spec||s.type!=='ashen_executioner'||!s.chargedUntil)return null;
+ if(!spec||s.type!=='the_headsman'||!s.chargedUntil)return null;
  if(s.chargedUntil<=now){s.chargedUntil=0;return null;}
  s.chargedUntil=0;s.status='';s.statusUntil=0;
  return {multiplier:spec.multiplier,capFraction:spec.capFraction,ability:spec.name};

@@ -15,9 +15,9 @@ const ELITE_DISPLAY_NAMES=Object.freeze({
  vampire:'The Thirst',
  caster:'Lantern-Eye',
  gravecaller:'Gravecaller',
- oathbound_exarch:'The Shepherd',
+ the_shepherd:'The Shepherd',
  the_gilded:'The Gilded',
- ashen_executioner:'Ashen Executioner'
+ the_headsman:'The Headsman'
 });
 const eliteDisplayName=id=>ELITE_DISPLAY_NAMES[id]||id;
 const DEFAULTS=Object.freeze({mode:'pilot',seedsPerCell:2,seedStart:6160011,

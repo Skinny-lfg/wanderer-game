@@ -2999,7 +2999,7 @@
     "browser": "PASS 390px/1280px",
     "simulationsRerun": false,
     "changes": [
-      "Toxic Touch only Rot",
+      "Corrupting Touch only Rot",
       "Toxic Precision only Rot",
       "Toxic Fang uses canonical Rot",
       "legacy enemy Poison converts once with six-stack cap"

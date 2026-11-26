@@ -294,7 +294,7 @@
         "🗡 Double Strike!": 14,
         "✨ fire": 14,
         "burn application": 14,
-        "✨ Arcane Echo": 1
+        "✨ Elemental Echo": 1
       },
       "picks": [
         "renewal",
@@ -1085,7 +1085,7 @@
         "⚡ Static Discharge": 2,
         "⚔ Brutal Critical": 3,
         "✨ Spell Surge": 2,
-        "✨ Arcane Echo": 1
+        "✨ Elemental Echo": 1
       },
       "picks": [
         "double_strike",
@@ -1392,7 +1392,7 @@
         "☠ Blight": 2,
         "✨ lightning": 8,
         "⚡ Static Discharge": 2,
-        "✨ Arcane Echo": 1
+        "✨ Elemental Echo": 1
       },
       "picks": [
         "virulent_rot",
@@ -1585,7 +1585,7 @@
       "staticDischarges": 0,
       "procs": {
         "✨ frost": 14,
-        "✨ Arcane Echo": 3
+        "✨ Elemental Echo": 3
       },
       "picks": [
         "barrier_pulse",
@@ -3298,7 +3298,7 @@
       "staticDischarges": 0,
       "procs": {
         "burn application": 34,
-        "✨ Arcane Echo": 3
+        "✨ Elemental Echo": 3
       },
       "picks": [
         "renewal",
@@ -3815,7 +3815,7 @@
         "🛡 Retaliation": 12,
         "✨ fire": 15,
         "burn application": 15,
-        "✨ Arcane Echo": 1
+        "✨ Elemental Echo": 1
       },
       "picks": [
         "renewal",
@@ -4262,7 +4262,7 @@
         "✨ fire": 18,
         "burn application": 18,
         "🛡 Retaliation": 5,
-        "✨ Arcane Echo": 1
+        "✨ Elemental Echo": 1
       },
       "picks": [
         "renewal",
@@ -6281,7 +6281,7 @@
       "procs": {
         "✨ frost": 25,
         "❄ Winter Fracture": 2,
-        "✨ Arcane Echo": 3,
+        "✨ Elemental Echo": 3,
         "💠 Prismatic Rebound": 5
       },
       "picks": [
@@ -7238,7 +7238,7 @@
       "procs": {
         "✨ fire": 25,
         "burn application": 25,
-        "✨ Arcane Echo": 5
+        "✨ Elemental Echo": 5
       },
       "picks": [
         "mana_spring",
@@ -7508,7 +7508,7 @@
         "🗡 Double Strike!": 17,
         "✨ fire": 13,
         "burn application": 13,
-        "✨ Arcane Echo": 2
+        "✨ Elemental Echo": 2
       },
       "picks": [
         "renewal",
@@ -9178,7 +9178,7 @@
         "✨ fire": 17,
         "burn application": 17,
         "🗡 Double Strike!": 24,
-        "✨ Arcane Echo": 2
+        "✨ Elemental Echo": 2
       },
       "picks": [
         "mana_spring",
@@ -9279,7 +9279,7 @@
       "staticDischarges": 0,
       "procs": {
         "❄ Winter Fracture": 8,
-        "✨ Arcane Echo": 1
+        "✨ Elemental Echo": 1
       },
       "picks": [
         "arcane_focus",
@@ -12124,7 +12124,7 @@
         "✨ fire": 25,
         "burn application": 25,
         "🛡 Retaliation": 6,
-        "✨ Arcane Echo": 2
+        "✨ Elemental Echo": 2
       },
       "picks": [
         "renewal",

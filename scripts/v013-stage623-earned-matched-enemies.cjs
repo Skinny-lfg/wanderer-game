@@ -8,11 +8,11 @@ const S=require('./simulate-progression.cjs');
 const ROOT=path.resolve(__dirname,'..');
 const FAMILIES=Object.freeze(['blood','decay','radiance','aegis','fury','arcane']);
 const ELITES=Object.freeze(['tank','berserker','vampire','caster','gravecaller',
- 'oathbound_exarch','the_gilded','ashen_executioner']);
+ 'the_shepherd','the_gilded','the_headsman']);
 const ELITE_NAMES=Object.freeze({tank:'The Pallbearer',berserker:'Raker',
  vampire:'The Thirst',caster:'Lantern-Eye',gravecaller:'Gravecaller',
- oathbound_exarch:'The Shepherd',the_gilded:'The Gilded',
- ashen_executioner:'Ashen Executioner'});
+ the_shepherd:'The Shepherd',the_gilded:'The Gilded',
+ the_headsman:'The Headsman'});
 const hash=v=>crypto.createHash('sha256').update(typeof v==='string'?v:JSON.stringify(v)).digest('hex');
 const pct=(n,d)=>d?Number((n*100/d).toFixed(1)):null;
 const median=arr=>{const v=arr.filter(Number.isFinite).sort((a,b)=>a-b);return v.length?v.length%2?v[(v.length-1)/2]:(v[v.length/2-1]+v[v.length/2])/2:null;};

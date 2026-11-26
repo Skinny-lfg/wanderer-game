@@ -25,7 +25,7 @@ test('Class setup is deterministic, boss/elite unaffected, Minions never cast',(
  const units=[mob('minion'),mob('tank'),mob('skirmisher'),mob('caster'),
   {...mob('tank','Elite'),miniboss:true},{...mob('caster','Boss'),boss:true}];
  A.attach(units,'aegis',2);
- assert.equal(units[0].stage81.passive,'Ward Pack');
+ assert.equal(units[0].stage81.passive,'Shoal Assault');
  assert.equal(units[1].stage81.nextAt,2+A.TIMINGS.tank.first+.3);
  assert.equal(units[2].stage81.nextAt,2+A.TIMINGS.skirmisher.first+.6);
  assert.equal(units[3].stage81.nextAt,2+A.TIMINGS.caster.first);

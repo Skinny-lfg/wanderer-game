@@ -34,7 +34,7 @@ function move(s,path,reliquaryChoice=0,oracleChoice=2){
   assert.equal(before-g.dungeon.steps,planned,'charge precisely the shown step cost');
   s.costs.push(planned);
   if(g.dungeon.boonOffer){
-   assert.equal(c.chooseBoon(null),null,'native optional Boon Shrine can be declined');
+   assert.equal(c.chooseBoon(null),null,'native optional Echo Font can be declined');
    s.events.push({room,event:'boon_shrine',choice:'skip'});continue;
   }
   if(g.dungeon.cleared.includes(room))continue;

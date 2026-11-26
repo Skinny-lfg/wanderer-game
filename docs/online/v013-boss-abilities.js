@@ -163,6 +163,9 @@ function tick(r,absoluteNow,infraEvents=[]){
  return events;
 }
 function status(enemy,r,now){
+ if(enemy?.stage84Minion==='radiance'&&enemy.hp>0&&r?.status==='fight'&&enemy.fragmentReturnAt!=null){
+  return {kind:'casting',label:'Returning',detail:'Destroy this fragment to prevent recovery.',remaining:Math.max(0,enemy.fragmentReturnAt-now)};
+ }
  const s=state(r);if(!enemy?.boss||enemy!==leader(r)||!s)return null;
  if(s.style==='guardian'&&s.vulnerableUntil>now)return {kind:'interrupted',label:'Vulnerable',detail:'Ward Cycle interrupted · Barrier unavailable',remaining:s.vulnerableUntil-now};
  if(s.style==='conductor'&&s.weakUntil>now)return {kind:'interrupted',label:'Weakened',detail:'Convergence Anchor destroyed: −20% damage',remaining:s.weakUntil-now};

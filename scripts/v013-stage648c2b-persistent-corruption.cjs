@@ -22,7 +22,7 @@ function diagnosticSource(mode){
  // Instrument the pre-existing primary paid application, not free/secondary Rot.
  s=replace(s," if(d.primaryPaid)paidRotApplied(b,c,d);"," if(d.primaryPaid){c.metric?.('decayPrimaryPaidDiagnosticAppliedWithStacks'+Math.min(6,stacks.length),1);c.metric?.('decayPrimaryPaidDiagnosticRawPerStack',d.damage);c.metric?.('decayPrimaryPaidDiagnosticScheduledTicks',d.remaining);paidRotApplied(b,c,d);}");
  // Keep a finite original tick budget as the legacy detonation/transfer reference.
- // Only paid primary Toxic Touch stacks stop expiring. Never use Infinity.
+ // Only paid primary Corrupting Touch stacks stop expiring. Never use Infinity.
  if(persistent){
   s=replace(s,"if(rot.every(s=>s.remaining<=1))e.incubationTicks=0;","if(rot.every(s=>!primaryPaidRot(s)&&s.remaining<=1))e.incubationTicks=0;");
   s=replace(s,"remaining:s.remaining-1,ticks:(s.ticks||0)+1","remaining:primaryPaidRot(s)?s.remaining:s.remaining-1,ticks:(s.ticks||0)+1");

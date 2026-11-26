@@ -5,7 +5,7 @@ const fs=require('node:fs'),path=require('node:path');
 const S=require('./simulate-progression.cjs');
 const A=require('./v013-agent-strategy.cjs');
 const Bosses=['blood','decay','radiance','aegis','fury','arcane'];
-const Elites=['gravecaller','oathbound_exarch','the_gilded','ashen_executioner'];
+const Elites=['gravecaller','the_shepherd','the_gilded','the_headsman'];
 const Policies=['focus','mechanics','adaptive'];
 const Seeds=[9761,9762];
 const Builds=['blood-fury','blood-decay','arcane-storm'];

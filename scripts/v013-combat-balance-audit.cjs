@@ -7,7 +7,7 @@ const C=require('./v013-elite-tank-parity.cjs');
 const N=require('./v013-natural-progression.cjs');
 const MODES=['bosses','enemies','elites'];
 const ALL_BOSSES=['aegis','blood','decay','fury','arcane','radiance'];
-const ALL_ELITES=['tank','caster','vampire','berserker','gravecaller','oathbound_exarch','the_gilded','ashen_executioner'];
+const ALL_ELITES=['tank','caster','vampire','berserker','gravecaller','the_shepherd','the_gilded','the_headsman'];
 const DEFAULTS=Object.freeze({
  levels:[1],seeds:[9101,9201],builds:['blood-fury','aegis-radiance','arcane-decay'],
  affinities:[...ALL_BOSSES],risks:[1],groupSizes:[3,12,20],

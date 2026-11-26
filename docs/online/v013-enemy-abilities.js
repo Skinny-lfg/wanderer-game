@@ -9,38 +9,38 @@ const DEFINITIONS=Object.freeze({
   caster:{name:'Blood Brand',type:'healing_hex',description:'Channels a short reduction to player healing'}
  }),
  decay:Object.freeze({
-  tank:{name:'Rotward',type:'ward',power:.09,description:'Shields a nearby ally against decay'},
-  skirmisher:{name:'Toxic Feint',type:'strike',power:.12,secondary:'wound',description:'Next strike causes a short healing wound'},
-  caster:{name:'Blight Hex',type:'weakening_hex',description:'Channels Weakened on the player'}
+  tank:{name:'Carapace Ward',type:'ward',power:.09,description:'Grants Barrier to a nearby ally'},
+  skirmisher:{name:'Toxic Feint',type:'strike',power:.12,secondary:'wound',description:'The next strike briefly reduces healing received'},
+  caster:{name:'Spore Hex',type:'weakening_hex',description:'Channels Weakened on the player'}
  }),
  radiance:Object.freeze({
   tank:{name:'Heartwood Mend',type:'mend',power:.055,description:'Restores a wounded ally'},
-  skirmisher:{name:'Thorn Lunge',type:'strike',power:.13,secondary:'siphon',description:'Next strike gains strength and restores health'},
+  skirmisher:{name:'Searing Strike',type:'strike',power:.13,description:'The next strike deals additional direct damage'},
   caster:{name:'Bloom Chant',type:'mend',power:.07,description:'Heals a wounded ally after channeling'}
  }),
  aegis:Object.freeze({
-  tank:{name:'Warding Sigil',type:'ward',power:.12,description:'Protects a vulnerable ally with Barrier'},
-  skirmisher:{name:'Runic Breaker',type:'strike',power:.14,description:'Empowers its next strike against the hero'},
-  caster:{name:'Aegis Chant',type:'ward',power:.10,description:'Channels an ally Barrier'}
+  tank:{name:'Shellward',type:'ward',power:.12,description:'Protects a vulnerable ally with Barrier'},
+  skirmisher:{name:'Riptide Strike',type:'strike',power:.14,description:'Empowers its next strike against the hero'},
+  caster:{name:'Tidal Ward',type:'ward',power:.10,description:'Channels an ally Barrier'}
  }),
  fury:Object.freeze({
   tank:{name:'War Cry',type:'rally',power:.11,description:'Empowers the next strike of an ally'},
   skirmisher:{name:'Frenzied Flurry',type:'strike',power:.12,count:2,description:'Two brief empowered strikes'},
-  caster:{name:'Ember Invocation',type:'rally',power:.12,description:'Channels an empowered allied attack'}
+  caster:{name:'Warhowl',type:'rally',power:.12,description:'Channels an empowered allied attack'}
  }),
  arcane:Object.freeze({
-  tank:{name:'Prismatic Ward',type:'ward',power:.10,description:'Protects an ally with a short Arcane Ward'},
-  skirmisher:{name:'Sparkstep',type:'strike',power:.13,secondary:'mana',description:'Next strike can burn a little Mana'},
-  caster:{name:'Arcane Convergence',type:'strike',power:.19,secondary:'mana',description:'Channels a stronger magical next strike'}
+  tank:{name:'Runic Ward',type:'ward',power:.10,description:'Protects an ally with a short Arcane Ward'},
+  skirmisher:{name:'Glyphstrike',type:'strike',power:.13,secondary:'mana',description:'The next strike drains Mana'},
+  caster:{name:'Rune Surge',type:'strike',power:.19,secondary:'mana',description:'Channels a stronger magical next strike'}
  })
 });
 const PASSIVES=Object.freeze({
  blood:{name:'Crimson Pack',bonus:.05,description:'Swarm pressure improves melee attacks'},
  decay:{name:'Blight Swarm',bonus:.04,description:'Swarm pressure improves attacks'},
  radiance:{name:'Living Swarm',bonus:.03,description:'Swarm pressure improves attacks'},
- aegis:{name:'Ward Pack',bonus:.03,description:'Swarm pressure improves attacks'},
+ aegis:{name:'Shoal Assault',bonus:.03,description:'Swarm pressure improves attacks'},
  fury:{name:'Feral Swarm',bonus:.07,description:'Swarm pressure improves attacks'},
- arcane:{name:'Spark Swarm',bonus:.05,description:'Swarm pressure improves attacks'}
+ arcane:{name:'Sigil Resonance',bonus:.05,description:'Swarm pressure improves attacks'}
 });
 const TIMINGS=Object.freeze({
  tank:{first:2.6,cooldown:7.0,cast:.65},

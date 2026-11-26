@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),create=require('./v012-economy-harness.cjs');const {api,build,context}=require('./v012-affinity-fixture.cjs');
-test('Decay Toxic Touch ranks increase chance, produce only Rot, and respect cooldown and six stacks',()=>{
+test('Decay Corrupting Touch ranks increase chance, produce only Rot, and respect cooldown and six stacks',()=>{
  let chance=0;for(let rank=1;rank<=5;rank++){const b=build(Array(rank).fill('toxic_touch'),['decay']),{c,calls}=context(b);c.enemy.v012Rot=[];const next=api.values('toxic_touch',rank).chance;assert(next>chance);chance=next;assert(!('poison'in api.values('toxic_touch',rank)));c.random=()=>next-.001;api.onAttack(b,c);assert.equal(c.enemy.v012Rot.length,1);api.onAttack(b,c);assert.equal(c.enemy.v012Rot.length,1);assert(!calls.some(x=>x[0]==='poison'));c.now=2;c.random=()=>next+.001;api.onAttack(b,c);assert.equal(c.enemy.v012Rot.length,1);c.random=()=>0;for(let n=1;n<=10;n++){c.now=4+n*2;api.onAttack(b,c);}assert.equal(c.enemy.v012Rot.length,6);assert(c.enemy.v012Rot.every(s=>s.remaining===4));}
 });
 test('Decay Toxic Precision produces only Rot from real crits and Virulent Rot scales both producers',()=>{

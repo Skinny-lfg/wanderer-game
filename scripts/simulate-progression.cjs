@@ -452,7 +452,7 @@ function encounter(level,build,seed,kind,opts,forcedTrait=undefined,forcedBossMo
  if(!['normal','boss','elite'].includes(kind))throw Error('Unknown controlled encounter '+kind);
  if(opts.stage619EliteType!==undefined&&
    (kind!=='elite'||!['tank','berserker','vampire','caster','gravecaller',
-     'oathbound_exarch','the_gilded','ashen_executioner'].includes(opts.stage619EliteType)))
+     'the_shepherd','the_gilded','the_headsman'].includes(opts.stage619EliteType)))
   throw Error('Invalid Stage 6.19 test-only native Elite identity');
  if(opts.stage619BaselineRuntime!==undefined&&kind!=='elite')
   throw Error('Stage 6.19 baseline applies only to an Elite encounter');
