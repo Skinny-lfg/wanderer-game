@@ -1,0 +1,31 @@
+name: v0.13 consolidated - canonical talent ID audit
+on:
+  push:
+    branches: [release/v013-consolidated]
+    paths: ['.github/workflows/v013-canonical-talent-id-audit.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inventory:
+    if: github.ref == 'refs/heads/release/v013-consolidated'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Inventory all actual talent ID consumers (no writes)
+        shell: bash
+        run: |
+          PATTERN='blood_transfer|toxic_touch|(^|[^a-zA-Z0-9_])blight([^a-zA-Z0-9_]|$)|relentless_assault|arcane_echo|crimson_rush|fury_recovery|storm_mastery|spell_echo|crimson_feast|bloodTransfer|toxicTouch|relentlessAssault|arcaneEcho|crimsonRush|furyRecovery|stormMastery|spellEcho|crimsonFeast'
+          git grep -ilE "$PATTERN" -- '*.js' '*.cjs' '*.mjs' '*.html' '*.json' '*.yml' '*.yaml' ':!docs/**' ':!reports/**' ':!**/vendor/**' ':!**/assets/**' ':!package-lock.json' ':!.github/workflows/v013-canonical-talent-id-audit.yml' > /tmp/paths || true
+          echo "MATCHING_FILES=$(wc -l < /tmp/paths)"
+          cat /tmp/paths
+          echo "=== SHARED / AMBIGUOUS KEYS ==="
+          git grep -inE 'blood_transfer|crimson_rush|(^|[^a-zA-Z0-9_])blight([^a-zA-Z0-9_]|$)' -- combat economy online index.html preview scripts tests ':!**/vendor/**' ':!**/assets/**' | cut -c1-500 || true
+          echo "=== REPORT DATA CONSUMERS ==="
+          git grep -ilE "$PATTERN" -- 'reports/*.json' 'tests/fixtures/**' || true
+          echo "=== MIRROR PARITY ==="
+          for f in combat/talent-{catalog,graph-next,graph-bridge,graph-runtime}.js combat/v012-{buildcraft,combat-runtime}.js; do cmp "$f" "docs/$f"; done
+          echo "AUDITED_COMMIT=$GITHUB_SHA"
