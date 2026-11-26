@@ -53,7 +53,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
   phase1Controller.setSimulationRandomStreams(route);gameRandom=()=>harnessCombatActive?harnessCombatRandom():harnessControlRandom();
  }
  globalThis.audit={talents:WandererAutomaticTalents,measured,debug:()=>({phase5Ready,saveBlocked,message:phase5Message,validation:PHASE5_VALIDATION,preview:PHASE1_PREVIEW,active:phase3ExpeditionActive(),run:!!state.run,stage:phase1Controller?.state.stage}),
-  potions:{catalog:WandererV012Consumables.CATALOG,supplies:()=>phase3Supplies,select:phase6SelectPotion,use:phase6UsePotion,inventory:phase6PotionInventory,start:phase6StartPotions,finish:phase6ReturnPotions,tick:phase6TickDurations,shop:(E=1,rng=gameRandom)=>WandererV012Consumables.shop(E,rng,makeId),buy:phase6BuyPotion,reroll:phase6RerollPotions},
+  potions:{catalog:WandererV012Consumables.CATALOG,supplies:()=>phase3Supplies,select:phase6SelectPotion,use:phase6UsePotion,inventory:phase6PotionInventory,start:phase6StartPotions,finish:phase6ReturnPotions,tick:phase6TickDurations,shop:(E=1,rng=gameRandom)=>WandererV012Consumables.shop(E,rng,makeId),buy:phase6BuyPotion,craft:phase6CraftPotion,progress:id=>WandererV012Consumables.craftProgress(state,id,stashHasRoom()),craftMarkup:id=>{phase6PotionRecipe=id;return phase6PotionCraftMarkup();},failPersistence:()=>{phase5Persist=()=>false;},reroll:phase6RerollPotions},
   events:{open:phase6OpenEvent,choose:phase6EventChoice,run:()=>phase6Run},
   back:phase6BackToCamp,markAllSeen:markAllAsSeen,
   // Mirrors the live Camp Talent Tree API transactions; neither XP nor points
