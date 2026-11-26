@@ -1,3 +1,11 @@
+## Wanderer — mandatory art reference (G2.4A.2)
+
+- Before any Wanderer art/image generation, editing, UI asset design, visual integration, character/item/environment/VFX or sprite work, read [`docs/art/WANDERER_ART_STYLE_GUIDE.md`](docs/art/WANDERER_ART_STYLE_GUIDE.md) and consult its approved elite reference images when accessible.
+- Preserve the approved G2.3B UI composition; apply the style guide's detail hierarchy and report missing visual references. The guide is provisional pending G2.4A.3–A.4 validation; do not replace approved assets or alter gameplay without explicit approval.
+- This art-only instruction applies to the Godot experiment branch; it does not change browser release governance or authorize deployment.
+
+---
+
 ## Checkpoint canónico da v0.13 — 22 de novembro de 2026 (revisão dos 7 Contracts)
 
 - A versão de desenvolvimento consolidada é `audit/v013-stage6`, espelhada integralmente em `playtest/v013-complete`. A referência anterior está no commit `f4fe3d83d5a647be1b33dc154953bdf813c28a17`; qualquer nova revisão deve avançar **ambos** após CI verde, sem tocar em `main`, GitHub Pages de produção ou Firebase.
