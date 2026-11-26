@@ -211,6 +211,11 @@ const decisionQuality=p=>p?.agentDecisionQuality==='b12c2-v1';
 // B1.2C.3 isolates the off-hand compatibility gate from other B1.2C.2 changes.
 const compatibilityGuard=p=>decisionQuality(p)||p?.agentCompatibilityOnly===true;
 const adaptiveCommitment=p=>p?.adaptiveEquipment==='b12c4-v1';
+// Pure B1.2C.5 factors: keep all extra F target enumeration and
+// purchase rechecks off. The legacy F bundle remains unchanged.
+const softIdentityEnabled=p=>adaptiveCommitment(p)||['identity','both'].includes(p?.decisionIsolation);
+const handPairEnabled=p=>adaptiveCommitment(p)||['hands','both'].includes(p?.decisionIsolation);
+const isolatedAdaptive=p=>softIdentityEnabled(p)||handPairEnabled(p);
 // Add bounded identity preference to B's existing score; never prohibit
 // otherwise legal gear. Count only actually owned native nodes, not goals.
 function commitmentWeight(profile){
@@ -221,7 +226,7 @@ function commitmentWeight(profile){
  return points<=5?0:points<=10?5:points<=20?10:15;
 }
 function commitmentBonus(item,profile,slot,weapon=null){
- if(!item)return 0;
+ if(!item||profile.decisionIsolation==='hands')return 0;
  const weight=commitmentWeight(profile),type=item.subtype==='Off-Hand Dagger'?'Daggers':item.subtype;
  if(slot==='weapon')return profile.weapons.includes(type)?weight:0;
  if(['helm','armor','gloves','boots','belt'].includes(slot))return (item.armorType||item.subtype)===profile.armor?weight*.4:0;
@@ -252,7 +257,20 @@ function adaptiveGearGain(item,profile,slot,equip){
   +commitmentBonus(item,profile,slot)-commitmentBonus(prior,profile,slot);
 }
 function refreshAdaptiveNodes(a,profile){
- if(adaptiveCommitment(profile))profile.adaptiveNodes=[...(a.state().automaticTalents?.nodes||[])];
+ if(isolatedAdaptive(profile))profile.adaptiveNodes=[...(a.state().automaticTalents?.nodes||[])];
+}
+// For pure cells, non-hand slots retain B's score unless the identity
+// factor is active. No global context refresh, extra target or merchant recheck.
+function isolatedGearGain(item,profile,slot,equip){
+ if(handPairEnabled(profile)&&(slot==='weapon'||slot==='offhand'))return adaptiveGearGain(item,profile,slot,equip);
+ const prior=equip?.[slot],gain=identityGain(item,prior,profile,slot);
+ if(!softIdentityEnabled(profile))return gain;
+ const weapon=equip?.weapon;
+ return gain+commitmentBonus(item,profile,slot,weapon)-commitmentBonus(prior,profile,slot,weapon);
+}
+function merchantDecisionTargets(item,profile){
+ if(profile.decisionIsolation==='ring'&&['ring1','ring2'].includes(item?.slot))return ['ring1','ring2'];
+ return adaptiveCommitment(profile)?adaptiveTargets(item,profile):decisionQuality(profile)?gearDecisionTargets(item,profile):[item?.slot];
 }
 function adaptiveTargets(item,profile){
  if(['ring1','ring2'].includes(item.slot))return ['ring1','ring2'];
@@ -276,6 +294,7 @@ function investmentAllowed(item,profile,slot,equip){
 function investmentGain(item,profile,slot,equip){
  if(!investmentAllowed(item,profile,slot,equip))return -Infinity;
  if(adaptiveCommitment(profile))return adaptiveGearGain(item,profile,slot,equip);
+ if(isolatedAdaptive(profile))return isolatedGearGain(item,profile,slot,equip);
  const prior=equip?.[slot],gain=identityGain(item,prior,profile,slot);
  // Same displacement check as equipEarned; a deliberate identity transition
  // can replace a temporary off-hand, but a tiny stat upgrade may not.
@@ -387,12 +406,12 @@ function equipEarned(a,profile,between=false){
    offhandDagger?(profile.strictResearchIdentity&&item.subtype==='Off-Hand Dagger'?['offhand']:['weapon','offhand']):[item.slot];
   const options=targets.map(target=>{
    const prior=a.state().equip[target];
-   return {target,prior,gain:adaptiveCommitment(profile)?adaptiveGearGain(item,profile,target,a.state().equip):identityGain(item,prior,profile,target)};
+   return {target,prior,gain:adaptiveCommitment(profile)?adaptiveGearGain(item,profile,target,a.state().equip):isolatedAdaptive(profile)?isolatedGearGain(item,profile,target,a.state().equip):identityGain(item,prior,profile,target)};
   }).sort((x,y)=>y.gain-x.gain);
   for(const {target,prior,gain} of options){
    if(gain<2.5)continue;
    if(target==='offhand'&&['Two-Handed','Bow','Staff'].includes(a.state().equip.weapon?.subtype))continue;
-   if(!adaptiveCommitment(profile)&&target==='weapon'&&['Two-Handed','Bow','Staff'].includes(item.subtype)&&a.state().equip.offhand){
+   if(!handPairEnabled(profile)&&target==='weapon'&&['Two-Handed','Bow','Staff'].includes(item.subtype)&&a.state().equip.offhand){
     // Do not delete a strong earned shield/secondary weapon to chase a tiny weapon score.
     if(!(identityMatch(item,profile,'weapon')===true&&identityMatch(prior,profile,'weapon')!==true)&&gain<gearScore(a.state().equip.offhand,profile)*.6+5)continue;
    }
@@ -801,7 +820,7 @@ function prepareCamp(a,profile,level,decisionModel='risk-aware',options={}){
   const reserve=decisionModel==='legacy'?(owns('health')?0:14):
    owns('health')||!healthOffer?0:healthOffer.price;
   const candidates=(s.merchant?.stock||[]).map((item,index)=>{
-   const slots=adaptiveCommitment(profile)?adaptiveTargets(item,profile):decisionQuality(profile)?gearDecisionTargets(item,profile):[item?.slot];
+   const slots=merchantDecisionTargets(item,profile);
    const best=slots.map(slot=>({slot,gain:investmentGain(item,profile,slot,s.equip)})).sort((a,b)=>b.gain-a.gain)[0];
    return {item,index,...best};
   }).filter(x=>Number.isFinite(x.gain)&&x.item?.goldPrice<=s.gold-reserve&&x.gain>(decisionModel==='legacy'?8:5))
@@ -1736,7 +1755,7 @@ function main(args=process.argv.slice(2)){
  if(report.coverage.errors)process.exitCode=1;
  return report;
 }
-module.exports={PROFILES,PIVOTS,pivotProfile,DEFAULTS,parseArgs,commitmentWeight,commitmentBonus,handPairScore,adaptiveGearGain,adaptiveTargets,gearDecisionTargets,investmentAllowed,investmentGain,synergyGearBonus,spendEarnedAttributes,gearScore,identityMatch,identityGain,identityPurchase,gearSnapshot,runeScore,manageEarnedRunes,potionScore,selectEarnedPotions,buyEarnedPotions,craftEarnedPotions,recordAutomaticPotions,refineEarnedReagents,selectThornAwareTarget,spendEarnedTalents,prepareEarnedAbility,equipEarned,
+module.exports={PROFILES,PIVOTS,pivotProfile,DEFAULTS,parseArgs,softIdentityEnabled,handPairEnabled,isolatedGearGain,merchantDecisionTargets,commitmentWeight,commitmentBonus,handPairScore,adaptiveGearGain,adaptiveTargets,gearDecisionTargets,investmentAllowed,investmentGain,synergyGearBonus,spendEarnedAttributes,gearScore,identityMatch,identityGain,identityPurchase,gearSnapshot,runeScore,manageEarnedRunes,potionScore,selectEarnedPotions,buyEarnedPotions,craftEarnedPotions,recordAutomaticPotions,refineEarnedReagents,selectThornAwareTarget,spendEarnedTalents,prepareEarnedAbility,equipEarned,
  prepareCamp,craftEarned,investEarnedGear,gearInvestmentCandidates,consolidateStash,policyFlags,capabilities,rankRealms,choiceRealm,pathLength,eliteOpportunity,selectRoom,evaluateRetreat,boonScore,chooseBoon,contractScore,chooseContract,contractExitDecision,eventOptions,potionSlots,usePotionKind,usePotionsBetween,rerollPoorBoonAtShrine,
  fightNatural,resolveEvent,clearResults,playDungeon,simulateAccount,analyze,run,markdown,main};
 if(require.main===module)main();
