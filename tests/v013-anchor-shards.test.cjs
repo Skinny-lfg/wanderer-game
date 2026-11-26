@@ -35,3 +35,20 @@ test('native harness encounter reward and save/checkpoint preservation',()=>{
  const cp=a.checkpoint.capture();assert.deepEqual(JSON.parse(JSON.stringify(cp.profile.anchorCollection)),JSON.parse(JSON.stringify(c)));a.checkpoint.restore(cp);
  assert(A.validCollection(a.state().anchorCollection));a.abandon();assert.equal(a.state().anchorCollection.expedition,null);assert.equal(A.bag(a.state().anchorCollection).secured.length,0);
 });
+
+test('native local save keeps an at-risk shard across reload, then extraction secures it exactly once',()=>{
+ const create=require('./v012-economy-harness.cjs'),storage=new Map(),options={localStorage:storage};
+ let a=create(871,undefined,{},options);a.setup(50,'Sword','Epic');a.start(1,true);
+ let g=a.controller(),card=g.state.dungeon.cards[0];g.chooseRealm(card.id);
+ const room=card.edges.filter(([from])=>from===0).map(([,to])=>to).find(i=>card.nodes[i].kind==='combat');
+ assert(g.visitRoom(room));assert(a.enter());const r=a.state().run;for(const mob of r.enemies||[r.enemy])mob.hp=0;r.groupReserve=[];a.win();
+ let c=a.state().anchorCollection;assert(c&&A.validCollection(c));
+ // Guarantee a physical shard fixture in the already completed native room;
+ // actual RNG and drop policy are exercised independently above.
+ if(!c.expedition.pending)c.expedition.pending=A.get(card.family).shards[0].id;
+ const id=c.expedition.pending;assert(a.exitResult());assert([...storage.values()].some(raw=>typeof raw==='string'&&raw.includes(id)));
+ a=create(871,undefined,{},options);assert.equal(a.state().anchorCollection.expedition.pending,id);
+ assert(a.checkpoint.extract(),'native extraction must settle the physical shard');
+ assert.equal(a.state().anchorCollection.expedition,null);assert(A.bag(a.state().anchorCollection).secured.some(s=>s.id===id));
+ a=create(871,undefined,{},options);assert.equal(a.state().anchorCollection.expedition,null);assert.equal(A.bag(a.state().anchorCollection).secured.filter(s=>s.id===id).length,1);
+});

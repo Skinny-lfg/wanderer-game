@@ -1,8 +1,8 @@
-name: v0.13 Anchor Realms - A1 campaign foundation
+name: v0.13 Anchor Realms - A2 shards and persistence
 on:
   push:
     branches: [release/v013-consolidated]
-    paths: ['online/v013-anchor-campaign.js','docs/online/v013-anchor-campaign.js','tests/v013-anchor-campaign.test.cjs','.github/workflows/v013-anchor-campaign-foundation.yml']
+    paths: ['online/v013-anchor-campaign.js','docs/online/v013-anchor-campaign.js','tests/v013-anchor-campaign.test.cjs','tests/v013-anchor-shards.test.cjs','.github/workflows/v013-anchor-campaign-foundation.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -17,4 +17,24 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node --test tests/v013-anchor-campaign.test.cjs tests/v013-anchor-shards.test.cjs tests/v013-anchor-rune-combat.test.cjs tests/v013-current-dungeon-and-talents.test.cjs
+      - run: node --test tests/v013-anchor-campaign.test.cjs tests/v013-anchor-shards.test.cjs tests/v013-anchor-rune-combat.test.cjs tests/v013-current-dungeon-and-talents.test.cjs tests/v013-dungeon-checkpoint-integrity.test.cjs tests/v013-full-expedition-integration.test.cjs tests/v013-c2-reset.test.cjs tests/v012-cloud-save.test.mjs
+
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Real browser parity and local preview smoke
+        shell: bash
+        run: |
+          CHROME_BIN="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          if [ -n "$CHROME_BIN" ]; then export WANDERER_BROWSER="$CHROME_BIN" CHROMIUM_PATH="$CHROME_BIN"; else npx playwright install chromium; fi
+          node --test tests/v013-runtime-parity.test.cjs
+          npm run test:v013:browser

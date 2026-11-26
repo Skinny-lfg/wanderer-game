@@ -173,7 +173,7 @@ function validate(input,binding){
  if(e.active!==null){const a=e.active;requireValue(e.attempts>0,'entry checkpoint');requireValue(plain(a)&&a.attempt===e.attempts&&integer(a.level,1,e.unlocked)&&integer(a.plane,1,24)&&integer(a.wave,0,3)&&['choice','combat'].includes(a.stage),'checkpoint');requireValue(e.lastOutcome==='active','active outcome');}
  if(e.session!==undefined&&e.session!==null)sessionCheck(e.session,s.profile,e);
  const shardExp=s.profile.anchorCollection?.expedition;
- if(shardExp){const d=e.session?.controller?.dungeon;requireValue(e.active&&d&&d.foundationManifest?.seed===shardExp.seed&&d.cards?.find(c=>c.id===d.realm)?.family===shardExp.family,'Runestone Shard expedition provenance');}
+ if(shardExp){const d=e.session?.controller?.dungeon;requireValue(e.active&&d&&d.foundationManifest?.seed===shardExp.seed&&d.cards?.find(c=>c.id===d.realm)?.family===shardExp.family&&shardExp.seen.every(n=>d.cleared.includes(n)&&['combat','elite','boss'].includes(d.cards.find(c=>c.id===d.realm)?.nodes[n]?.kind)),'Runestone Shard expedition provenance');}
  if(e.presentation!==undefined)presentationCheck(e.presentation);
  return s;
 }
