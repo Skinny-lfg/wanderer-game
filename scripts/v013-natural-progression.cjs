@@ -16,6 +16,8 @@ require('../economy/v012-loot-rules.js');
 const LOOT=globalThis.WandererV012LootRules;
 require('../combat/v012-runes.js');
 const RUNES=globalThis.WandererV012Runes;
+require('../online/v012-consumables.js');
+const POTIONS=globalThis.WandererV012Consumables;
 // Native Stage 7 ledger and objective progress, read-only in the simulation.
 require('../online/v013-expedition-contracts.js');
 const K=globalThis.WandererV013ExpeditionContracts;
@@ -365,7 +367,7 @@ function craftEarned(a,profile,level){
 function investEarnedGear(a,profile,level){
  const outcome={crafted:[]},forge=a.forge;
  if(!forge||!a.economyCanAct()||forge.canCraft&&!forge.canCraft())return outcome;
- const efficiency=(gain,fragments,essence)=>gain/(Math.max(1,fragments)+4*Math.max(0,essence));
+ const efficiency=(gain,fragments,essence,reagents)=>gain/(Math.max(1,fragments)+4*Math.max(0,essence)+12*Object.values(reagents||{}).reduce((a,b)=>a+b,0));
  for(let attempt=0;attempt<2;attempt++){
   // Native craftRecipe rejects a full Stash even when progress().ready is
   // true; don't treat that legal UI restriction as a broken economy.
@@ -381,20 +383,20 @@ function investEarnedGear(a,profile,level){
     .sort((x,y)=>y.gain-x.gain)[0];
    if(!target||target.gain<5)continue;
    options.push({recipe,target,gain:target.gain,fragments:progress.cost.fragments,
-    essence:progress.cost.essence,efficiency:efficiency(target.gain,progress.cost.fragments,progress.cost.essence)});
+    essence:progress.cost.essence,reagents:progress.cost.reagents,efficiency:efficiency(target.gain,progress.cost.fragments,progress.cost.essence,progress.cost.reagents)});
   }
   options.sort((x,y)=>y.efficiency-x.efficiency||y.gain-x.gain);
   const best=options[0];if(!best)break;
-  const before={fragments:s.fragments,essence:s.crafting.essence};
+  const before={fragments:s.fragments,essence:s.crafting.essence,cores:{...s.crafting.cores}};
   const item=forge.craft(best.recipe.id,level);
   if(!item)throw Error('Native Forge craft rejected after valid Camp preview');
   if(s.fragments!==before.fragments-best.fragments||
-     s.crafting.essence!==before.essence-best.essence)
+     s.crafting.essence!==before.essence-best.essence||Object.keys(before.cores).some(f=>s.crafting.cores[f]!==before.cores[f]-(best.reagents[f]||0)))
    throw Error('Native Forge cost mismatch');
   const actual=gearScore(item,profile)-gearScore(s.equip[best.target.slot],profile);
   const equipped=equipEarned(a,profile,false);
   outcome.crafted.push({recipe:best.recipe.id,item:item.name,slot:best.target.slot,
-   fragmentsSpent:best.fragments,essenceSpent:best.essence,
+   fragmentsSpent:best.fragments,essenceSpent:best.essence,reagentsSpent:{...best.reagents},
    estimatedGain:round(best.gain),actualRolledGain:round(actual),
    equipped:equipped.some(x=>x.item===item.name)});
  }
@@ -484,34 +486,57 @@ function manageEarnedRunes(a,profile,{equip=true}={}){
  }
  return actions;
 }
-// Score every one of the game's 13 named potions; no custom stock odds or
-// invented inventory. A potion still only activates in native legal windows.
+// Agent scores are heuristics, not combat formulas. All doses and prices are native.
 function potionScore(kind,profile,vitals={}){
- const magic=profile.families.includes('arcane'),leather=profile.armor==='Leather',plate=profile.armor==='Plate';
- const hpRatio=vitals.maxhp?Math.max(0,vitals.hp)/vitals.maxhp:1,
-  manaRatio=vitals.maxmp?Math.max(0,vitals.mp)/vitals.maxmp:1;
- const score={health:hpRatio<.65?92:75,mana:magic?(manaRatio<.5?70:51):12,
-  might:magic?13:plate?54:48,arcane:magic?62:20,
-  ironhide:plate?57:46,haste:leather?59:magic?45:49,
-  fortune:52,barrier:plate?53:56,trail:48,scout:47,
-  purifying:32,veilsight:51,fate:38};
+ const families=profile.families||[],magic=families.includes('arcane'),dot=families.some(f=>['blood','decay'].includes(f)),manaUser=magic||families.includes('decay')||profile.weapons?.some(w=>['Wand','Staff'].includes(w)),leather=profile.armor==='Leather',plate=profile.armor==='Plate';
+ const hpRatio=vitals.maxhp?Math.max(0,vitals.hp)/vitals.maxhp:1, manaRatio=vitals.maxmp?Math.max(0,vitals.mp)/vitals.maxmp:1;
+ const score={health:hpRatio<.65?92:75,mana:manaUser?(manaRatio<.5?70:51):12,
+  might:magic?13:plate?54:48,arcane:manaUser?62:20,ironhide:plate?57:46,haste:leather?59:magic?45:49,
+  fortune:52,barrier:plate?53:56,trail:48,scout:47,purifying:32,veilsight:51,fate:38,
+  wisdom:48,prospector:43,rejuvenation:manaUser?79:55,withering:dot?65:12,precision:leather?62:49,
+  phantom:leather?63:36,executioner:64,renewal:hpRatio<.75?78:60};
  const base=score[kind]??-Infinity;
  return profile.plan?PLANNER.potionPriority(kind,profile,base):base;
 }
 function selectEarnedPotions(a,profile){
  const s=a.state(),actions=[],v=a.vitals();
- const available=Object.keys(s.consumables||{}).filter(kind=>
-  (s.consumables[kind]||0)>0&&a.potions.catalog.some(entry=>entry.id===kind));
- const wanted=available.sort((x,y)=>potionScore(y,profile,v)-potionScore(x,profile,v))
-  .slice(0,3);
- if((s.potionSelection||[]).join('|')===wanted.join('|'))return actions;
- for(const kind of [...s.potionSelection||[]]){
-  if(!a.potions.select(kind,true))throw Error('Native potion loadout removal rejected '+kind);
+ const available=POTIONS.CATALOG.map(p=>p.id).filter(kind=>(s.consumables?.[kind]||0)>0&&potionScore(kind,profile,v)>0);
+ const wanted=available.sort((x,y)=>potionScore(y,profile,v)-potionScore(x,profile,v)||x.localeCompare(y)).slice(0,3);
+ const before=[...(s.potionSelection||[])],kept=new Set();
+ // Do not churn retained doses or bypass the native full-Stash removal gate.
+ for(const kind of before){
+  if(wanted.includes(kind)&&!kept.has(kind)){kept.add(kind);continue;}
+  a.potions.select(kind,true);
  }
  for(const kind of wanted){
-  if(!a.potions.select(kind))throw Error('Native potion loadout selection rejected '+kind);
+  if((s.potionSelection||[]).length>=3)break;
+  if(!(s.potionSelection||[]).includes(kind))a.potions.select(kind);
  }
- actions.push({action:'loadout',kinds:[...s.potionSelection]});
+ if(JSON.stringify(before)!==JSON.stringify(s.potionSelection))actions.push({action:'loadout',kinds:[...s.potionSelection]});
+ return actions;
+}
+function craftEarnedPotions(a,profile){
+ const s=a.state(),actions=[];
+ if(!profile.shop||!a.economyCanAct()||!a.potions.progress||!a.potions.craft)return actions;
+ // Forge is considered first in Camp. Keep a small material reserve for permanent gear;
+ // cheap missing emergency healing can take precedence over that reserve.
+ for(let i=0;i<2;i++){
+  const candidates=POTIONS.CATALOG.filter(p=>!(s.consumables?.[p.id]>0)).map(p=>{
+   const project=a.potions.progress(p.id),score=potionScore(p.id,profile,a.vitals());
+   if(!project?.ready||score<35)return null;
+   const cost=project.recipe,emergency=p.id==='health';
+   if(!emergency&&s.crafting.essence-cost.essence<4)return null;
+   if(Object.entries(cost.reagents).some(([f,n])=>s.crafting.cores[f]-n<1))return null;
+   return {id:p.id,cost,score};
+  }).filter(Boolean);
+  // Rank by the correct candidate's own native cost, then stable ID.
+  candidates.sort((x,y)=>y.score/(y.cost.essence+4*Object.keys(y.cost.reagents).length)-x.score/(x.cost.essence+4*Object.keys(x.cost.reagents).length)||x.id.localeCompare(y.id));
+  const best=candidates[0];if(!best)break;
+  const before={essence:s.crafting.essence,cores:{...s.crafting.cores},gold:s.gold,fragments:s.fragments,count:s.consumables?.[best.id]||0};
+  if(!a.potions.craft(best.id))break;
+  if(s.crafting.essence!==before.essence-best.cost.essence||s.gold!==before.gold||s.fragments!==before.fragments||s.consumables[best.id]!==before.count+1||Object.keys(before.cores).some(f=>s.crafting.cores[f]!==before.cores[f]-(best.cost.reagents[f]||0)))throw Error('Native potion craft cost mismatch');
+  actions.push({action:'craft',kind:best.id,essenceSpent:best.cost.essence,reagentsSpent:{...best.cost.reagents}});
+ }
  return actions;
 }
 function buyEarnedPotions(a,profile,level){
@@ -519,9 +544,8 @@ function buyEarnedPotions(a,profile,level){
  if(!profile.shop||!a.economyCanAct())return actions;
  if(!s.apothecary)s.apothecary=a.potions.shop(level);
  const owned=kind=>(s.consumables?.[kind]||0)>0;
- const wantedKind=profile.families.includes('arcane')?'mana':'health';
  // Only buy available offers at their actual dynamic prices; replacement
- // stock is drawn by the native Apothecary and may contain any of 13 types.
+ // stock is drawn by the native Apothecary and may contain any of the current native potion types.
  for(let n=0;n<3;n++){
   const offers=(s.apothecary?.stock||[]).filter(p=>p.price<=s.gold&&!owned(p.kind))
    .map(p=>({...p,score:potionScore(p.kind,profile,a.vitals())}))
@@ -549,21 +573,18 @@ function buyEarnedPotions(a,profile,level){
 function refineEarnedReagents(a,profile,level){
  const s=a.state(),out=[],forge=a.forge;
  if(!forge||!a.economyCanAct())return out;
- // Refine only to clear a real material bottleneck for an already learned
- // Epic recipe; ordinary reagent gain remains tied to completed encounters.
- const epic=forge.recipes.filter(r=>r.rarity==='Epic'&&
-  (profile.families.includes(r.family)||r.subtype===profile.armor));
+ // Forge-only refinement for learned Epic recipes, each missing family checked
+ // against the actual multi-Reagent cost; no separate Apothecary conversion.
+ const epic=forge.recipes.filter(r=>r.rarity==='Epic'&&(profile.families.includes(r.family)||r.subtype===profile.armor));
  for(const recipe of epic){
-  const p=forge.progress(recipe.id,level);if(!p?.unlocked||!p.cost.cores)continue;
-  const family=recipe.family;
-  if((s.crafting.cores[family]||0)>=p.cost.cores)continue;
-  if((s.crafting.dryRooms?.[family]||0)<3||s.crafting.essence<p.cost.essence+6)continue;
-  const before={essence:s.crafting.essence,cores:s.crafting.cores[family]};
-  if(!forge.refine(recipe.id))throw Error('Native reagent refinement rejected after legal preview');
-  if(s.crafting.essence!==before.essence-6||s.crafting.cores[family]!==before.cores+1)
-   throw Error('Native reagent refinement settlement mismatch');
-  out.push({family,recipe:recipe.id,essenceSpent:6,coresGained:1});
-  break;
+  const p=forge.progress(recipe.id,level);if(!p?.unlocked||s.fragments<p.cost.fragments||s.crafting.essence<p.cost.essence+6)continue;
+  for(const [family,need] of Object.entries(p.cost.reagents||{})){
+   if(s.crafting.cores[family]>=need||(s.crafting.dryRooms?.[family]||0)<3)continue;
+   const before={essence:s.crafting.essence,cores:{...s.crafting.cores}};
+   if(!forge.refine(recipe.id,family))continue;
+   if(s.crafting.essence!==before.essence-6||Object.keys(before.cores).some(f=>s.crafting.cores[f]!==before.cores[f]+(f===family?1:0)))throw Error('Native reagent refinement settlement mismatch');
+   out.push({family,recipe:recipe.id,essenceSpent:6,coresGained:1});return out;
+  }
  }
  return out;
 }
@@ -683,6 +704,7 @@ function prepareCamp(a,profile,level,decisionModel='risk-aware',options={}){
   const investment=investEarnedGear(a,profile,level);
   actions.crafted.push(...investment.crafted);
  }
+ if(decisionModel!=='legacy')actions.potions.push(...craftEarnedPotions(a,profile));
  actions.potions.push(...buyEarnedPotions(a,profile,level));
  if(profile.shop&&a.economyCanAct()){
   const owns=kind=>(s.consumables?.[kind]||0)>0;
@@ -716,6 +738,7 @@ function prepareCamp(a,profile,level,decisionModel='risk-aware',options={}){
  actions.unspentGold=s.gold;
  actions.unspentFragments=s.fragments;
  actions.unspentEssence=s.crafting?.essence||0;
+ actions.unspentReagents={...s.crafting?.cores};
  return actions;
 }
 function capabilities(a){
@@ -983,11 +1006,16 @@ function usePotionKind(a,kind,reason,history,mode){
  history.push({kind,slot:index,reason});
  return true;
 }
+function recordAutomaticPotions(a,history){
+ const run=a.events.run?.();if(!run?.started)return;
+ for(const [slot,p] of (run.potions||[]).entries())if(p.used&&POTIONS.AUTO.includes(p.kind)&&!history.some(x=>x.automatic&&x.slot===slot))
+  history.push({kind:p.kind,slot,reason:'native_expedition_start',automatic:true});
+}
 function usePotionsBetween(a,profile,history,next){
  const v=a.vitals(),g=a.controller().state,d=g.dungeon;
  if(!next||!d?.realm)return false;
  const ratio=v.maxhp>0?v.hp/v.maxhp:1,mpRatio=v.maxmp?v.mp/v.maxmp:1;
- const magic=profile.families.includes('arcane');
+ const magic=profile.families.includes('arcane'),dot=profile.families.some(f=>['blood','decay'].includes(f));
  const dangerous=next.type==='boss'||next.type==='elite'||
   next.type==='combat'&&(Number(next.visibleMobRange?.[1]??4)>3);
  let changed=false;
@@ -1004,12 +1032,23 @@ function usePotionsBetween(a,profile,history,next){
   changed=usePotionKind(a,'trail','avoid_exhausting_map_steps',history)||changed;
  // Potions are never used mid-fight: the real runtime only accepts them at
  // map utility windows, shrine decisions or valid inter-plane preparations.
- if(ratio<profile.healAt&&!['shrine','spring'].includes(next.type)&&
-  (dangerous||next.type==='combat'||ratio<.4))
-  changed=usePotionKind(a,'health','low_hp_before_threat',history)||changed;
- if(mpRatio<.35&&v.maxmp>0&&dangerous)
+ const safe=['shrine','spring'].includes(next.type);
+ if(!safe&&ratio<profile.healAt&&mpRatio<.65&&v.maxmp>0)
+  changed=usePotionKind(a,'rejuvenation','missing_hp_and_mana',history)||changed;
+ let current=a.vitals();
+ if(current.hp/current.maxhp<profile.healAt&&!safe&&(dangerous||next.type==='combat'||ratio<.4)){
+  if(usePotionKind(a,'health','low_hp_before_threat',history))changed=true;
+  else if(usePotionKind(a,'rejuvenation','low_hp_before_threat',history))changed=true;
+  else if(dangerous&&usePotionKind(a,'renewal','sustain_next_encounter',history))changed=true;
+ }
+ current=a.vitals();
+ if(current.maxmp>0&&current.mp/current.maxmp<.35&&dangerous)
   changed=usePotionKind(a,'mana','low_mana_before_threat',history)||changed;
  if(dangerous&&ratio>.32){
+  if(dot)changed=usePotionKind(a,'withering','dot_preparation',history)||changed;
+  if(profile.armor==='Leather')changed=usePotionKind(a,'phantom','physical_evasion_preparation',history)||changed;
+  changed=usePotionKind(a,'precision','critical_preparation',history)||changed;
+  if(['boss','elite'].includes(next.type))changed=usePotionKind(a,'executioner','leader_damage_preparation',history)||changed;
   const defensive=next.type==='boss'?'barrier':'ironhide';
   changed=usePotionKind(a,defensive,'prepare_for_'+next.type,history)||changed;
   if(next.type==='boss'){
@@ -1210,7 +1249,7 @@ function playDungeon(a,level,profile,opts,decisionModel='risk-aware',captureMode
   if(g.stage!=='choice')break;
   if(g.dungeon.boonOffer){
    let offer=g.dungeon.boonOffer;
-   rerollPoorBoonAtShrine(a,offer,profile,report.potions);
+   rerollPoorBoonAtShrine(a,offer,profile,report.potions);recordAutomaticPotions(a,report.potions);
    offer=g.dungeon.boonOffer;
    const context={vitals:a.vitals(),steps:g.dungeon.steps,bossSoon:g.dungeon.steps<=5,
     bleedReady:a.state().automaticTalents.nodes.includes('affinity_blood'),owned:[...a.state().automaticTalents.nodes],element:a.state().automaticTalents.element,cap:capabilities(a)};
@@ -1235,7 +1274,7 @@ function playDungeon(a,level,profile,opts,decisionModel='risk-aware',captureMode
   if(!next&&g.dungeon.steps<=4&&usePotionKind(a,'trail','restore_route_steps',report.potions))
    next=selectRoom(c,profile,a.vitals(),roomContext());
   if(next){
-   usePotionsBetween(a,profile,report.potions,next);
+   usePotionsBetween(a,profile,report.potions,next);recordAutomaticPotions(a,report.potions);
    next=selectRoom(c,profile,a.vitals(),roomContext()); // Native potions can change options.
   }
   const current=a.vitals(),ratio=current.maxhp>0?current.hp/current.maxhp:0;
@@ -1264,6 +1303,7 @@ function playDungeon(a,level,profile,opts,decisionModel='risk-aware',captureMode
   if(g.dungeon.boonOffer)continue;
   const node=card.nodes[next.room];
   if(!a.enter()){report.error='Native room entry rejected '+next.room;break;}
+  recordAutomaticPotions(a,report.potions);
   if(a.events.run()?.event){
    const event=resolveEvent(a,profile);
    report.events.push({room:next.room,...event});
@@ -1296,6 +1336,7 @@ function playDungeon(a,level,profile,opts,decisionModel='risk-aware',captureMode
   if(a.checkpoint.extract())report.extracted=true;
   else report.error='Iteration cap reached without a legal native extraction';
  }
+ recordAutomaticPotions(a,report.potions);
  report.prepFinal=JSON.parse(JSON.stringify(g.dungeon?.foundationState?.bossPreparation||{}));
  clearResults(a,profile);
  // Native extraction uses controller.abandon(), marking the session as failed.
@@ -1369,7 +1410,7 @@ function simulateAccount(seed,id,opts,simulationOptions={}){
     if(typeof simulationOptions.onCamp==='function'){
      const state=a.state(),fixed=JSON.stringify({
       xp:state.automaticTalents.xp,gold:state.gold,fragments:state.fragments,
-      essence:state.crafting?.essence||0,equip:state.equip,stash:state.stash,
+      essence:state.crafting?.essence||0,crafting:state.crafting,apothecary:state.apothecary,equip:state.equip,stash:state.stash,
       consumables:state.consumables,potionSelection:state.potionSelection,
       runes:state.runes,runeSlots:state.runeSlots,expeditionOverflow:state.expeditionOverflow,
       unlocked:a.controller().state.unlocked
@@ -1379,7 +1420,7 @@ function simulateAccount(seed,id,opts,simulationOptions={}){
      const afterState=a.state();
      const remaining=JSON.stringify({
       xp:afterState.automaticTalents.xp,gold:afterState.gold,fragments:afterState.fragments,
-      essence:afterState.crafting?.essence||0,equip:afterState.equip,stash:afterState.stash,
+      essence:afterState.crafting?.essence||0,crafting:afterState.crafting,apothecary:afterState.apothecary,equip:afterState.equip,stash:afterState.stash,
       consumables:afterState.consumables,potionSelection:afterState.potionSelection,
       runes:afterState.runes,runeSlots:afterState.runeSlots,expeditionOverflow:afterState.expeditionOverflow,
       unlocked:a.controller().state.unlocked
@@ -1393,7 +1434,7 @@ function simulateAccount(seed,id,opts,simulationOptions={}){
      attributeEarned:a.talents.attributeBudget(a.state().automaticTalents),
      attributeSpent:a.talents.spentAttributes(a.state().automaticTalents),
      attributes:a.talents.attributes(a.state().automaticTalents),gear:gearSnapshot(a),strategy:activeProfile.variantId||id,gold:a.state().gold,
-     fragments:a.state().fragments,essence:a.state().crafting?.essence||0,
+     fragments:a.state().fragments,essence:a.state().crafting?.essence||0,reagents:{...a.state().crafting?.cores},
      talentNodes:[...a.state().automaticTalents.nodes],
      element:a.state().automaticTalents.element||null,
      prepared:a.state().automaticTalents.prepared||null,
@@ -1408,7 +1449,7 @@ function simulateAccount(seed,id,opts,simulationOptions={}){
       attributeSpent:a.talents.spentAttributes(a.state().automaticTalents),
       attributes:a.talents.attributes(a.state().automaticTalents),unlocked:a.controller().state.unlocked,
       gold:a.state().gold,fragments:a.state().fragments,
-      essence:a.state().crafting?.essence||0,
+      essence:a.state().crafting?.essence||0,reagents:{...a.state().crafting?.cores},
       talentNodes:[...a.state().automaticTalents.nodes],
        element:a.state().automaticTalents.element||null,
       prepared:a.state().automaticTalents.prepared||null,runeBag:a.state().runes.map(r=>({...r})),runeSlots:[...a.state().runeSlots]}};
@@ -1502,6 +1543,8 @@ function analyze(accounts,opts){
    runeEquips:attempts.reduce((n,a)=>n+(a.camp?.runes||[]).filter(x=>x.action==='equip').length,0),
    runesRecycled:attempts.reduce((n,a)=>n+(a.camp?.runes||[]).filter(x=>x.action==='recycle').reduce((m,x)=>m+x.count,0),0),
    potionPurchases:attempts.reduce((n,a)=>n+(a.camp?.potions||[]).filter(x=>x.action==='buy').length,0),
+   potionCrafts:attempts.reduce((n,a)=>n+(a.camp?.potions||[]).filter(x=>x.action==='craft').length,0),
+   autoPotionsUsed:attempts.reduce((n,a)=>n+(a.potions||[]).filter(x=>x.automatic).length,0),
    potionKindsUsed:[...new Set(attempts.flatMap(a=>(a.potions||[]).map(x=>x.kind)))].sort(),
    thornRedirects:attempts.reduce((n,a)=>n+(a.rooms||[]).reduce((m,r)=>m+(r.thornRedirects||0),0),0),
    talentResets:attempts.reduce((n,a)=>n+(a.camp?.resets?.length||0),0),
@@ -1511,10 +1554,11 @@ function analyze(accounts,opts){
    strategyPivots:attempts.filter(a=>!!a.before?.strategy?.endsWith('-pivot')).length,
    observations:attempts.length?null:'not_reached; do not infer win rate'});
  }
- return {stage:'9.6',schemaVersion:5,engine:'v0.13 live native account, dungeon and combat runtime',
+ return {stage:'S3',schemaVersion:6,engine:'v0.13 live native account, dungeon and combat runtime',
   source:S.sourceFingerprint().sha256,
   runnerSha256:crypto.createHash('sha256').update(fs.readFileSync(__filename)).digest('hex'),
   agentStrategySha256:crypto.createHash('sha256').update(fs.readFileSync(path.join(__dirname,'v013-agent-strategy.cjs'))).digest('hex'),
+  buildPlannerSha256:crypto.createHash('sha256').update(fs.readFileSync(path.join(__dirname,'v013-build-planner.cjs'))).digest('hex'),
   settings:opts,
   integrity:{
    noFabricatedXp:true,noForcedEquipment:true,noForcedEncounter:true,
@@ -1561,7 +1605,7 @@ function markdown(data){
   '- Boon decisions are ranked by actual trade-offs, not chosen blindly by Affinity; native Fate rerolls are conditional.',
   '- The agent selects one of the two feasible Contracts using their displayed single-prize offers; native objective progress, Boss/extraction payout and death forfeiture are recorded without fake awards.',
   '- Marked Chambers, two real Shrine Boons, normal combat targets, Elite and Reliquary influence reachable routing. A chosen Oath never intentionally disables a Boss seal.',
-  '- Native potions are purchased with earned Gold, used by exact kind only at legal map windows, and conserved before safe rooms.',
+  '- Native potions are purchased or crafted with earned resources; automatic doses are recorded at native loadout start and manual uses are limited to legal windows.',
   '- S1: the Camp compares crafting previews with real named-tier upgrade requirements and never bypasses materials or Expedition unlocks.',
   '- S1: earned talents can select Fire/Frost/Lightning, choose an owned advanced prepared skill, and reset (without losing XP) once after two failed attempts when at least four talent nodes exist.',
   '- Elite route scores compare native Elite 60% loot odds to ordinary room odds, including extra Grey loot, Gold/Fragments, Marked Elite rewards and Boss preparation; they never guarantee a drop.',
@@ -1581,7 +1625,7 @@ function main(args=process.argv.slice(2)){
  if(report.coverage.errors)process.exitCode=1;
  return report;
 }
-module.exports={PROFILES,PIVOTS,pivotProfile,DEFAULTS,parseArgs,synergyGearBonus,spendEarnedAttributes,gearScore,identityMatch,identityGain,identityPurchase,gearSnapshot,runeScore,manageEarnedRunes,potionScore,selectEarnedPotions,buyEarnedPotions,refineEarnedReagents,selectThornAwareTarget,spendEarnedTalents,prepareEarnedAbility,equipEarned,
+module.exports={PROFILES,PIVOTS,pivotProfile,DEFAULTS,parseArgs,synergyGearBonus,spendEarnedAttributes,gearScore,identityMatch,identityGain,identityPurchase,gearSnapshot,runeScore,manageEarnedRunes,potionScore,selectEarnedPotions,buyEarnedPotions,craftEarnedPotions,recordAutomaticPotions,refineEarnedReagents,selectThornAwareTarget,spendEarnedTalents,prepareEarnedAbility,equipEarned,
  prepareCamp,craftEarned,investEarnedGear,consolidateStash,policyFlags,capabilities,rankRealms,choiceRealm,pathLength,eliteOpportunity,selectRoom,evaluateRetreat,boonScore,chooseBoon,contractScore,chooseContract,contractExitDecision,eventOptions,potionSlots,usePotionKind,usePotionsBetween,rerollPoorBoonAtShrine,
  fightNatural,resolveEvent,clearResults,playDungeon,simulateAccount,analyze,run,markdown,main};
 if(require.main===module)main();

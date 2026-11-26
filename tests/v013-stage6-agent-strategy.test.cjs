@@ -23,11 +23,11 @@ test('Real Two-Handed, Bow, Lightning Chain, Wildfire and Fan of Blades count as
  ])assert(sample.areaReady,JSON.stringify(sample));
 });
 test('Focus, hybrid and defense are measured from actual owned kit',()=>{
- assert.equal(build('Wand',['lightning_focus'],{element:'lightning'}).role,'single-target');
+ assert.equal(build('Wand',['storm_conductor'],{element:'lightning'}).role,'single-target');
  assert.equal(build('Two-Handed',['double_strike']).role,'hybrid');
  assert.equal(build('Mace',[],{equipment:{armor:{armorType:'Plate'},offhand:{subtype:'Shield'}}}).role,'defensive');
- assert.equal(build('Staff',['overcharge','lightning_focus'],{element:'lightning'}).areaReady,false,
-  'Focused Discharge removes Lightning chaining');
+ assert.equal(build('Staff',['overcharge','static_focus'],{element:'lightning'}).areaReady,true,
+  'Static Focus redirects part of damage but retains Lightning chaining');
 });
 test('Realm preference sees known Boss counters but no hidden modifiers',()=>{
  const cap=build('Staff',['overcharge'],{element:'lightning'});

@@ -1,0 +1,20 @@
+name: v0.13 S3 - native simulator agent sync
+on:
+  push:
+    branches: [release/v013-consolidated]
+    paths: ['scripts/v013-natural-progression.cjs','scripts/v013-agent-strategy.cjs','scripts/v013-build-planner.cjs','scripts/simulate-progression.cjs','tests/v013-s3-agent-sync.test.cjs','.github/workflows/v013-s3-agent-sync.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  directed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/v013-s3-agent-sync.test.cjs tests/v013-simulation.test.cjs tests/v013-natural-progression.test.cjs tests/v013-stage6-agent-strategy.test.cjs tests/v013-decay-natural-agent.test.cjs tests/v013-r7c-integration.test.cjs tests/v013-r7b-potion-economy.test.cjs tests/v013-r6-potion-crafting.test.cjs

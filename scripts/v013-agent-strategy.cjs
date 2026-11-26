@@ -5,17 +5,21 @@ const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const round=x=>Math.round(x*100)/100;
 const BOSSES={blood:'leech',decay:'matriarch',radiance:'devourer',aegis:'guardian',fury:'berserker',arcane:'conductor'};
 const FAMILIES=['blood','fury','radiance','aegis','arcane','decay'];
-// Real earned mixed-axis nodes, not the mere intent to buy one in a profile.
-const MIXED_SKILLS=new Set(['crimson_onslaught','reapers_cadence','red_guillotine',
- 'fervent_life','redline','defiant_surge','sanctuary','guardians_oath','last_bastion',
- 'runic_shield','prismatic_rebound','arcane_bastion','hex_bolt','elemental_blight',
- 'grave_bloom','plague_spread','carrion_detonation','septic_wound']);
-function classify({equipment={},talents={},build={},stats={}}={}){
- build=build||{};talents=talents||{};
- const owned=new Set(talents.nodes||[]),picked=new Set((build.picks||[]).map(x=>typeof x==='string'?x:x?.id));
- const has=id=>owned.has(id)||picked.has(id);
+// Derive capabilities from the live graph, never from retired draft passives.
+require('../combat/v012-buildcraft.js');
+require('../combat/talent-catalog.js');
+require('../combat/talent-graph-next.js');
+require('../combat/talent-graph-bridge.js');
+require('../combat/talent-graph-runtime.js');
+const LIVE=globalThis.WandererAutomaticTalents.NODES;
+const LIVE_IDS=new Set(LIVE.filter(n=>!n.pending).map(n=>n.id));
+const MIXED_SKILLS=new Set(LIVE.filter(n=>!n.pending&&n.kind==='mixed').map(n=>n.id));
+function classify({equipment={},talents={},stats={}}={}){
+ talents=talents||{};
+ const owned=new Set((talents.nodes||[]).map(id=>id.replace(/_rank\d+$/,'')).filter(id=>LIVE_IDS.has(id)));
+ const has=id=>owned.has(id);
  const main=equipment.weapon?.subtype||null,offhand=equipment.offhand?.subtype||null;
- const element=talents.element||build.element||null;
+ const element=talents.element||'arcane';
  const magical=['Staff','Wand'].includes(main),fundedMagic=magical||owned.has('affinity_arcane')&&Number(stats.mana)>0;
  const armor=equipment.armor?.armorType||equipment.armor?.subtype||null;
  let area=0,focus=1,defense=0;const sources=[];
@@ -27,8 +31,8 @@ function classify({equipment={},talents={},build={},stats={}}={}){
  if(main==='Daggers'&&has('fan_of_blades'))add('area',2.3,'fan of blades');
  if(main==='Mace'&&has('mace_shockwave'))add('area',1.9,'mace shockwave');
  if(main==='Sword'&&offhand==='Shield'&&has('sword_sweep'))add('area',1.6,'shielded sweep');
- if(fundedMagic&&element==='lightning'&&has('overcharge')&&!has('lightning_focus'))add('area',3.3,'funded chain lightning');
- if(fundedMagic&&element==='lightning'&&has('forked_lightning')&&!has('lightning_focus'))add('area',1.2,'storm mastery chain extension');
+ if(fundedMagic&&element==='lightning'&&has('overcharge'))add('area',3.3,'funded chain lightning');
+ if(fundedMagic&&element==='lightning'&&has('forked_lightning'))add('area',1.2,'storm mastery chain extension');
  if(fundedMagic&&element==='fire'&&has('fire_spread'))add('area',2.8,'funded wildfire burn');
  if(fundedMagic&&element==='frost'&&has('frost_spread'))add('area',1.9,'funded winter field chill');
  if(has('plague_spread'))add('area',1.6,'on-kill contagion');
@@ -46,10 +50,10 @@ function classify({equipment={},talents={},build={},stats={}}={}){
  if(fundedMagic&&element==='frost'&&has('frost_resonance'))add('area',1.2,'frost resonance');
  if(has('grave_bloom')&&talents.prepared==='grave_bloom')add('area',1.6,'prepared grave bloom');
  if(has('single_target_mastery'))add('focus',2.1,'single-target mastery');
- if(has('lightning_focus')&&element==='lightning')add('focus',2.1,'focused discharge');
- if(has('fire_focus')&&element==='fire')add('focus',1.5,'smoldering heart');
- if(has('frost_focus')&&element==='frost')add('focus',1.4,'biting cold');
- if(has('rot_focus'))add('focus',1.5,'concentrated corruption');
+ if(fundedMagic&&has('static_focus')&&element==='lightning')add('focus',1.3,'static focus redirects part of chain damage');
+ if(fundedMagic&&has('storm_conductor')&&element==='lightning')add('focus',1.4,'storm conductor isolated-target bonus');
+ if(fundedMagic&&has('cinder_focus')&&element==='fire')add('focus',1.5,'cinder focus');
+ if(fundedMagic&&has('glacial_echo')&&element==='frost')add('focus',1.4,'glacial echo');
  if(has('double_strike'))add('focus',1.2,'double strike');
  if(has('precision'))add('focus',.7,'precision');
  if(has('executioner'))add('focus',1,'executioner');

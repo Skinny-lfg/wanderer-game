@@ -337,11 +337,16 @@ function evaluateGear(item,profile,baseScore,target='weapon'){
 }
 function potionPriority(kind,profile,base,context={}){
  if(!profile?.plan)return base;
- const plan=getPlan(profile.plan),magic=plan.primary==='arcane'||plan.secondary==='arcane',
-  threat=context.threat||'boss';
+ const plan=getPlan(profile.plan),magic=plan.primary==='arcane'||plan.secondary==='arcane',dot=plan.focus==='rot'||plan.focus==='bleed',
+  manaUser=magic||plan.focus==='rot',threat=context.threat||'boss';
  let score=base;
- if(kind==='health')score+=25;
- if(kind==='mana'&&magic)score+=15;
+ if(kind==='health'||kind==='renewal')score+=25;
+ if(kind==='mana'&&manaUser)score+=15;
+ if(kind==='rejuvenation'&&manaUser)score+=15;
+ if(kind==='withering'&&dot)score+=20;
+ if(kind==='precision'&&['speed','bleed'].includes(plan.focus))score+=15;
+ if(kind==='phantom'&&plan.armor==='Leather')score+=15;
+ if(kind==='executioner'&&threat==='boss')score+=12;
  if(kind==='arcane'&&magic)score+=35;
  if(kind==='might'&&!magic)score+=35;
  if(kind==='barrier'||kind==='ironhide')score+=threat==='boss'?24:17;
@@ -350,11 +355,11 @@ function potionPriority(kind,profile,base,context={}){
  if(kind==='fortune'&&threat==='boss')score-=20;
  if(kind==='trail'&&threat==='boss')score-=18;
  if(plan.potionPolicy==='offense'){
-  if(['arcane','might','haste'].includes(kind))score+=28;
-  if(['barrier','ironhide'].includes(kind))score-=15;
+  if(['arcane','might','haste','withering','precision','executioner'].includes(kind))score+=28;
+  if(['barrier','ironhide','phantom','renewal'].includes(kind))score-=15;
  }else if(plan.potionPolicy==='defense'){
-  if(['barrier','ironhide'].includes(kind))score+=40;
-  if(['arcane','might','haste'].includes(kind))score-=16;
+  if(['barrier','ironhide','phantom','renewal'].includes(kind))score+=40;
+  if(['arcane','might','haste','withering','precision','executioner'].includes(kind))score-=16;
  }
  return score;
 }

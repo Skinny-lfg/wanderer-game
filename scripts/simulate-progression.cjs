@@ -14,6 +14,7 @@ require('../combat/talent-graph-runtime.js');
 require('../combat/expedition-progression.js');
 require('../combat/v013-expedition-foundation.js');
 require('../economy/v013-crafting.js');
+require('../online/v012-consumables.js');
 require('../online/v013-expedition-contracts.js');
 require('../online/v013-expedition-conditions.js');
 require('../online/v013-boss-modifiers.js');
@@ -42,7 +43,7 @@ const BUILDS=Object.freeze([
   {id:'aegis-sword',name:'Aegis/Radiance Sword & Shield',weapon:'Sword',families:['aegis','radiance'],skills:['guarded_block','barrier_pulse','strong_heart','renewal','sanctuary']},
   {id:'fury-bow',name:'Blood/Fury Archer',weapon:'Bow',families:['blood','fury'],skills:['bleeding_edge','deep_cuts','quick_hands','double_strike','crimson_onslaught']},
   {id:'arcane-storm',name:'Arcane/Decay Lightning Staff',weapon:'Staff',families:['arcane','decay'],skills:['arcane_focus','mana_spring','corrupting_touch','virulent_rot','hex_bolt'],element:'lightning'},
-  {id:'arcane-frost',name:'Magic Frost Staff',weapon:'Staff',families:['arcane'],skills:['arcane_focus','mana_spring','deep_winter'],element:'frost'}
+  {id:'arcane-frost',name:'Arcane Frost Staff',weapon:'Staff',families:['arcane'],skills:['arcane_focus','mana_spring','deep_winter'],element:'frost'}
 ]);
 const DEFAULTS=Object.freeze({mode:'encounter',levels:[1,5,15,35,70,100,250,1000],seeds:[9101,9102,9103],builds:BUILDS.map(b=>b.id),points:24,rarity:'Rare',gear:'current',runes:false,tickLimit:4500,
  affinities:[...AFFINITIES],risks:[1],groupSizes:[...GROUP_SIZES],roleEffects:[...ROLE_EFFECTS],boons:'none',contracts:'none',targetPolicy:'focus',output:'reports/v013-simulation-results.json'});
@@ -87,9 +88,10 @@ function talentPlan(build,points){
  if(points===0)return progress; // The real first Expedition starts with zero permanent points.
  for(const id of build.skills){
   const saved=progress,visiting=new Set();
+  if(!byNode.has(id)||byNode.get(id).pending)throw Error('Retired or unavailable controlled talent: '+id);
   function add(key){
    if(progress.nodes.includes(key))return;
-   const n=byNode.get(key);if(!n)throw Error('Unknown current Talent Tree node: '+key);
+   const n=byNode.get(key);if(!n||n.pending)throw Error('Unknown or unavailable current Talent Tree node: '+key);
    if(visiting.has(key))throw Error('Talent graph dependency cycle: '+key);
    visiting.add(key);
    if(n.requires)add(n.requires);
@@ -123,7 +125,7 @@ function talentPlan(build,points){
   let changed=false;
   for(const node of T.NODES){
    if(progress.nodes.length>=goal)break;
-   if(node.family&&!build.families.includes(node.family))continue;
+   if(node.pending||node.family&&!build.families.includes(node.family)||node.pair&&!node.pair.every(f=>build.families.includes(f)))continue;
    if(node.element&&node.element!=='arcane'&&node.element!==(progress.element||'arcane'))continue;
    if(progress.nodes.includes(node.id))continue;
    const next=T.allocate(progress,node.id);
