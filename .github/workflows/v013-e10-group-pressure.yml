@@ -1,0 +1,64 @@
+name: E10 Group Pressure & Composition (NO DEPLOY)
+on:
+  push:
+    branches: [audit/e10-group-pressure-composition]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node --test tests/v013-current-groups.test.cjs tests/v013-stage80-enemy-roster.test.cjs tests/v013-stage640-e1-groups.test.cjs
+      - run: node scripts/v013-e10-group-pressure.cjs smoke
+  cohort:
+    needs: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      max-parallel: 18
+      matrix:
+        build: [blood-daggers, blood-sword, blood-twohand, fury-daggers, fury-bow, fury-twohand, decay-cycle-twohand, decay-cycle-wand, decay-focus-wand, vitality-sword, vitality-wand, aegis-sword, aegis-mace, aegis-orb, magic-fire-wand, magic-lightning-wand, magic-frost-staff, magic-arcane-wand]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node scripts/v013-e10-group-pressure.cjs run "${{ matrix.build }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: group-pressure-${{ matrix.build }}
+          path: reports/e10-group-pressure/*.json
+          if-no-files-found: error
+  summary:
+    needs: cohort
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: group-pressure-*
+          path: reports/e10-group-pressure
+          merge-multiple: true
+      - run: node --max-old-space-size=6144 scripts/v013-e10-group-pressure.cjs aggregate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: group-pressure-summary
+          path: reports/e10-group-pressure/summary.json
+          if-no-files-found: error
