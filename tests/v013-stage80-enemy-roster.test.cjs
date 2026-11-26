@@ -50,7 +50,7 @@ test('Stage 6.48B.2 principal counts remain within the agreed composition bands'
   const group=plan(realm,count,seed),normal=group.map((x,i)=>({role:x.role,index:i})).filter(x=>x.role!=='minion');
   const min=group.filter(x=>x.role==='minion').length;
   assert.equal(group.length,count);
-  assert(count===5?normal.length===2:count<=12?normal.length>=2&&normal.length<=3:normal.length>=3&&normal.length<=4,
+  assert(count<=12||count>=16?normal.length===2:normal.length>=2&&normal.length<=3,
    realm+'/'+count+'/'+seed+' principal-role count drift');
   assert.equal(min,count-normal.length);
   assert(count<=6||min>=count-4,'large swarms remain mostly Minions');
@@ -141,6 +141,7 @@ test('Stage 6.48B.2 distributes existing actors across field and reserve without
   assert.deepEqual(R.orderForArena(group,args),out);
   assert.equal(new Set(out).size,count);
   if(count<=4)assert.deepEqual(out,group);
+  if(count>=6)assert(out.slice(0,4).some(e=>e.role!=='minion'));
   if(count>4){
    if(out.slice(4).some(e=>e.role!=='minion'))reservePrincipals++;
    if(out.slice(0,4).some(e=>e.role!=='minion'))firstPrincipals++;

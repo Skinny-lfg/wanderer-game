@@ -56,8 +56,7 @@ function plan({seed,realm,family,node=0,count,catalog}){
  const countRoll=count===4||count===5||count===6||count>=9?random():
   count>=7?F.rng(seed,'stage648b2_count_'+realm+'_'+node+'_'+count)():0;
  const normalCount=count===1?1:count<=3?count-1:count<=5?2:
-  count===6?2+(countRoll<.4?1:0):count<=12?2+(countRoll<.5?1:0):
-  count<=17?3+(countRoll<.35?1:0):3+(countRoll<.5?1:0);
+  count<=12?2:count>=16?2:2+(countRoll<.35?1:0);
  const roles=Array(count).fill('minion'),positions=Array.from({length:Math.min(count,4)},(_,i)=>i);
  for(let i=positions.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[positions[i],positions[j]]=[positions[j],positions[i]];}
  const selected=positions.slice(0,normalCount);
@@ -80,6 +79,15 @@ function orderForArena(group,{seed,realm,node=0,keepFirst=false}){
  if(list.length>4){
   const random=F.rng(seed,'stage648b1_schedule_'+realm+'_'+node+'_'+list.length);
   for(let i=list.length-1;i>locked;i--){const j=locked+Math.floor(random()*(i-locked+1));[list[i],list[j]]=[list[j],list[i]];}
+ }
+ // Approved stratified reinforcement order. Keep native ordering at n<=5.
+ if(list.length>=6){
+  const head=locked?list[0]:null,pool=list.slice(locked),chiefs=pool.filter(e=>e.role!=='minion'),minions=pool.filter(e=>e.role==='minion'),result=Array(list.length);
+  if(head)result[0]=head;
+  const total=chiefs.length+Number(head&&head.role!=='minion'),offset=head&&head.role!=='minion'?1:0;
+  for(let i=0;i<chiefs.length;i++){let index=Math.max(locked,Math.floor((i+offset)*list.length/total));while(result[index]!==undefined)index++;result[index]=chiefs[i];}
+  for(let i=0;i<result.length;i++)if(result[i]===undefined)result[i]=minions.shift();
+  return result;
  }
  return list;
 }

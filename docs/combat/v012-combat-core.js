@@ -104,7 +104,12 @@ function applyNormalRoomBudget(group,expedition){
    const divisor=pressure+minions*.5*opening;
    hp=(c.minion.hp+(c.minion.openingHp-c.minion.hp)*opening)/(minions>=4?divisor:Math.sqrt(divisor));
    atk=(c.minion.atk+(c.minion.openingAtk-c.minion.atk)*opening)/divisor;def=c.minion.def+(c.minion.openingDef-c.minion.def)*opening;interval=c.minion.interval;
-  }else{hp=escort.hp;atk=escort.atk/pressure;def=escort.def;}
+   }else{
+   hp=escort.hp;atk=escort.atk/pressure;def=escort.def;
+   if(n>=6){const mature=1-opening;hp=opening*hp+mature*.90;atk=opening*atk+mature*.85;def=opening*def+mature*.93;}
+  }
+  if(n>=6&&e.role==='minion')hp*=1-.15*(1-opening);
+  if(n>=16&&e.role==='minion')hp*=1-.25*(1-Math.exp(-(n-15)/2))*(1-opening);
   e.maxhp=Math.max(1,Math.round(e.maxhp*hp));
   e.hp=e.maxhp;
   e.atk=Math.max(1,Math.round(e.atk*atk));
