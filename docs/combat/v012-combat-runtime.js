@@ -490,7 +490,7 @@ function elementManaCost(b,kind,base){const mode=WandererV012Buildcraft.magicMod
 function v013FundedCost(baseCost,r=ports.state.run){if(baseCost<=0)return 0;const adjusted=Math.max(1,Math.ceil(baseCost*(root.WandererV013ExpeditionBoons?.costFactor(r)||1))),cost=v013Traits().includes('efficient')?Math.max(1,adjusted-Math.max(1,Math.floor(adjusted*.1))):adjusted;return talentManaCost(cost,r);}
 function v013LightningChain(r){return ports.isPhase1Run()&&ports.phase1Build?.element==='lightning'&&(WandererV012Buildcraft.rank(ports.phase1Build,'overcharge')>0||ports.state.automaticTalents?.nodes?.includes('storm_mastery'));}
 function v013LightningChainFactors(){
- // Five ordinary jumps, six with Storm Mastery. With at most four live arena
+ // Five ordinary jumps, six with Forked Lightning. With at most four live arena
  // slots, the later jumps revisit earlier targets instead of hitting reserves.
  return ports.state.automaticTalents?.nodes?.includes('storm_mastery')
   ?[.68,.53,.40,.29,.21,.15]:[.60,.45,.33,.23,.16];
@@ -788,7 +788,7 @@ function enemySlowFactor(enemy,stats,now){
 function talentPulseDamage(r,enemy,amount,id){
  if(!enemy||enemy.hp<=0||enemy.stage84Node||!((r.enemies||[r.enemy]).includes(enemy))||!(amount>0))return 0;
  const old=r.enemy,before=enemy.hp,secondary=enemy!==old;
- try{r.enemy=enemy;ports.setDirectEnemyDamage(r,amount,({vital_pulse:'💚 Vital Pulse',living_force:'💚 Living Force',grasping_roots:'🌿 Grasping Roots',ward_echo:'🛡 Ward Echo',corruption_nova:'☠ Corruption Nova',arcane_nova:'✨ Arcane Nova',frost_resonance:'❄ Frost Resonance',glacial_echo:'❄ Glacial Echo',cinder_focus:'🔥 Cinder Focus',static_focus:'⚡ Static Focus',storm_conductor:'⚡ Storm Conductor'})[id]||id);}
+ try{r.enemy=enemy;ports.setDirectEnemyDamage(r,amount,({vital_pulse:'💚 Vital Pulse',living_force:'💚 Living Force',grasping_roots:'🌿 Grasping Roots',ward_echo:'🛡 Ward Echo',corruption_nova:'☠ Corruption Overflow',arcane_nova:'✨ Arcane Nova',frost_resonance:'❄ Frost Resonance',glacial_echo:'❄ Glacial Echo',cinder_focus:'🔥 Cinder Focus',static_focus:'⚡ Static Focus',storm_conductor:'⚡ Storm Conductor'})[id]||id);}
  finally{r.enemy=old;}
  const actual=Math.max(0,before-Math.max(0,enemy.hp));
  if(secondary&&actual>0){ports.phase6Metric(r,'secondaryTargetDamage',actual);ports.phase6Metric(r,'secondaryTargetHits',1);}

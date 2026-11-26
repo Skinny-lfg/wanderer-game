@@ -33,15 +33,15 @@ test('Stage 4 all six adjacent links have legal 24-point native v15 allocations'
   assert(progress.nodes.includes('affinity_'+p.first)&&progress.nodes.includes('affinity_'+p.second));
  }
 });
-test('Stage 4 Crimson Rush requires crit and Bleed, without changing Blood + Fury base damage',()=>{
+test('Stage 4 Crimson Onslaught requires crit and Bleed, without changing Blood + Fury base damage',()=>{
  const b=makeBuild('crimson_rush'),x=encounter();
  B.onAttack(b,x.c);
- assert(x.events.some(e=>e.kind==='damage'&&e.label.includes('Crimson Rush')&&e.amount===15));
- const before=x.events.filter(e=>e.label?.includes('Crimson Rush')).length;
+ assert(x.events.some(e=>e.kind==='damage'&&e.label.includes('Crimson Onslaught')&&e.amount===15));
+ const before=x.events.filter(e=>e.label?.includes('Crimson Onslaught')).length;
  x.c.critical=false;B.onAttack(b,x.c);
- assert.equal(x.events.filter(e=>e.label?.includes('Crimson Rush')).length,before);
+ assert.equal(x.events.filter(e=>e.label?.includes('Crimson Onslaught')).length,before);
  x.c.critical=true;x.enemy.bleedStacks=0;B.onAttack(b,x.c);
- assert.equal(x.events.filter(e=>e.label?.includes('Crimson Rush')).length,before);
+ assert.equal(x.events.filter(e=>e.label?.includes('Crimson Onslaught')).length,before);
 });
 test('Stage 4 Fervent Life grants 2% Max HP + 3% Attack Power, crit only, cooldown 4s',()=>{
  for(const attack of [0,100,300]){

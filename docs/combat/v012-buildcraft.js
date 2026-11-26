@@ -530,7 +530,7 @@ function onKill(b,c){
     target.dots.bleed.push({...dot,damage:tick,remaining:Math.min(3,dot.remaining),transferred:true});
     target.bleedStacks=target.dots.bleed.length;
     c.synchronizeDots?.(target);
-    // Bloodshed bursts on a live recipient, but waiting reinforcements only
+    // The transfer trait bursts on a live recipient, but waiting reinforcements only
     // receive the transferred Bleed and cannot be damaged before arrival.
     if(c.player.enemies?.includes(target)&&target.hp>0)
      if((c.secondaryHit?.(target,Math.round(tick*3))||0)>0)c.trigger?.('blood_transfer_burst');
@@ -637,14 +637,14 @@ function onInfusionHit(b,c){
  if(directAmount>0)c.damage(directAmount,'✨ Arcane Infusion');
  r.magicInfusionHits=(r.magicInfusionHits||0)+1;
  // A Wand/Staff funded attack already fires the native spell callbacks.
- // The Infusion adds damage, but never duplicates Spell Echo, Decay or Aegis procs.
+ // The Infusion adds damage, but never duplicates Resonant Sequence, Decay or Aegis procs.
  if(c.magical)return directAmount;
  const e=c.enemy;
  // Physical main hits receive their own paid-enchantment hybrid triggers.
  // Wand/Staff already handled those callbacks on their native funded cast.
  if(!c.magical&&r.magicInfusionHits%3===0){
   const spellEchoRank=(r.specializations||[]).filter(id=>id==='spell_echo'||/^spell_echo_rank\d+$/.test(id)).length;
-  if(spellEchoRank)c.damage(Math.max(1,Math.round(amount*.10*spellEchoRank)),'✨ Spell Echo');
+  if(spellEchoRank)c.damage(Math.max(1,Math.round(amount*.10*spellEchoRank)),'✨ Resonant Sequence');
 
  }
  // Infusion direct damage can crit, but is NOT a second attack, paid action or proc trigger.

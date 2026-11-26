@@ -17,7 +17,7 @@ const NODES=Object.freeze([
  {"id":"sword_sweep","name":"Shielded Sweep","description":"Sword and Shield attacks hit one additional enemy for 25% damage."},
  {"id":"mace_shockwave","name":"Concussive Swing","description":"Mace attacks deal 30% damage to one additional enemy and slow its attacks for one second."},
  {"id":"single_target_mastery","name":"Focused Assault","description":"Deal 15% more direct physical weapon damage (not spells or caster fallback attacks) when one enemy remains and no reinforcements are waiting."},
- {"id":"blood_transfer","name":"Blood Transfer","description":"On a bleeding kill, transfer all active Bleed stacks to one living active enemy at 50% potency, deal one combined transferred tick immediately, and refresh Bleed. Transferred stacks can transfer again at half potency; zero-damage copies are discarded."},
+ {"id":"blood_transfer","name":"Sanguine Echo","description":"On a bleeding kill, transfer all active Bleed stacks to one living active enemy at 50% potency, deal one combined transferred tick immediately, and refresh Bleed. Transferred stacks can transfer again at half potency; zero-damage copies are discarded."},
  {"id":"relentless","maxRank":5,"icon":"🎯","name":"Relentless Aim","description":"Every fourth attack on the same target deals +10% damage per rank."},
  {"id":"brace","maxRank":5,"icon":"🔰","name":"Brace","description":"Reduce incoming elite and boss strikes by 4% per rank."},
  {"id":"second_pulse","maxRank":5,"icon":"💚","name":"Second Pulse","description":"Crossing below half Health heals 1% per rank each second for 3s, once per room."},

@@ -68,3 +68,21 @@ test('consolidation: no retired talent gates or descriptions remain in current c
   for(const id of retired)assert(!new RegExp('\\b'+id+'\\b','i').test(source),path+': '+id);
  }
 });
+
+
+test('consolidation: approved talent names resolve in the live graph without reviving retired nodes',()=>{
+ const expected={"blood_transfer":"Sanguine Echo","toxic_touch":"Corrupting Touch","blight":"Blightburst","relentless_assault":"Sundering Assault","arcane_echo":"Elemental Echo","crimson_rush":"Crimson Onslaught","fury_recovery":"Defiant Surge","storm_mastery":"Forked Lightning","spell_echo":"Resonant Sequence","crimson_feast":"Third Cut","precision":"Precision","storm_conductor":"Storm Conductor","unchained_fury":"Unchained Fury"};
+ for(const [id,name] of Object.entries(expected))assert.equal(T.NODES.find(n=>n.id===id)?.name,name,id);
+ for(const id of ['lifeweave','lifeweaver','critical_training'])assert(!T.NODES.some(n=>n.id===id),id);
+ assert.equal(T.NODES.find(n=>n.id==='precision').family,'fury');
+ assert.equal(T.NODES.find(n=>n.id==='affinity_radiance').name,'Radiance');
+ assert.equal(T.NODES.find(n=>n.id==='affinity_arcane').name,'Arcane');
+ assert.equal(T.NODES.find(n=>n.id==='element_choice').name,'Arcane Attunement');
+});
+test('consolidation: talent combat log names follow the current graph',()=>{
+ const b=fs.readFileSync('combat/v012-buildcraft.js','utf8'),c=fs.readFileSync('combat/v012-combat-runtime.js','utf8');
+ assert(b.includes('✨ Resonant Sequence'));
+ assert(!b.includes('✨ Spell Echo'));
+ assert(c.includes('☠ Corruption Overflow'));
+ assert(!c.includes('☠ Corruption Nova'));
+});
