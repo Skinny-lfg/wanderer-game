@@ -1,0 +1,32 @@
+'use strict';
+const {test}=require('node:test'),assert=require('node:assert/strict');
+const A=require('../scripts/v013-agent-strategy.cjs');
+const N=require('../scripts/v013-natural-progression.cjs');
+const create=require('./v012-economy-harness.cjs');
+test('solo native representation is observed; wards and healing are net gains, no roster mutation',()=>{
+ const e={name:'Tank',role:'tank',hp:100,maxhp:100,barrier:20,stage81:{family:'aegis',cycle:1,name:'Shellward'}};
+ const r={status:'fight',enemy:e,enemies:[],groupReserve:[],hp:50,maxhp:100,combatSeconds:0};
+ const before=A.snapshot(r);assert.equal(before.size,1);
+ e.hp=90;e.barrier=5;
+ const loss=A.changes(before,A.snapshot(r),e);
+ assert.equal(loss.roles.normal,10);assert.equal(loss.wards.normal,15);assert.equal(loss.nonFocusedHp,0);
+ const b=A.snapshot(r);e.hp=95;e.barrier=12;
+ const gain=A.changes(b,A.snapshot(r),e);
+ assert.equal(gain.healthGained.normal,5);assert.equal(gain.wardGained.normal,7);
+ const state=JSON.stringify(r),point=A.combatTracePoint(r,250,'combat');
+ assert.equal(point.active[0].family,'aegis');assert.equal(point.active[0].barrier,12);assert.equal(point.reserve.length,0);
+ assert.equal(JSON.stringify(r),state);
+ r.enemies=[e];assert.equal(A.snapshot(r).size,1,'focus and active roster must not double count');
+});
+test('native cap reports unresolved timeout with initial and final trace, never a fabricated death',()=>{
+ const a=create(9559,undefined,{}, {skipPersistence:true});a.setup(10,'Mace','Rare');a.setUnlocked(10);a.start(10,true);
+ const c=a.controller(),card=c.state.dungeon.cards[0];c.chooseRealm(card.id);
+ const room=card.edges.filter(([from])=>from===0).map(([,to])=>to).find(i=>card.nodes[i].kind==='combat');
+ assert(room!==undefined);assert(c.visitRoom(room));assert(a.enter());
+ const profile=N.PROFILES.cautious;
+ const r=N.fightNatural(a,profile,1,{decisionModel:'adaptive',capabilities:N.capabilities(a)});
+ assert.equal(r.timedOut,true);assert.equal(r.died,false);assert.equal(r.won,false);assert.equal(r.updateCalls,1);
+ assert(r.peakLiveEnemies>=1);assert.equal(r.timeoutDiagnostic.stage,'combat');
+ assert.deepEqual(r.timeoutDiagnostic.trace.map(p=>p.tick),[0,1]);
+ assert(r.timeoutDiagnostic.trace[0].active.length>=1);
+});

@@ -1109,6 +1109,8 @@ function fightNatural(a,profile,tickLimit,context={}){
  let ticks=0,switches=0,thornRedirects=0,minionFocusSeconds=0,minionFocusSwitches=0,minimum=r.maxhp>0?r.hp/r.maxhp:0;
  const healthLost={boss:0,elite:0,minion:0,normal:0};
  const barrierLost={boss:0,elite:0,minion:0,normal:0};
+ const healthGained={boss:0,elite:0,minion:0,normal:0},barrierGained={boss:0,elite:0,minion:0,normal:0};
+ const timeoutTrace=[AGENT.combatTracePoint(r,0,a.controller().state.stage)];
  let nonFocusedHealthLost=0,observedNewEnemies=0,untrackedDisappeared=0,peakLiveEnemies=0;
  while(r.status==='fight'&&a.controller().state.stage==='combat'&&r.hp>0&&ticks<tickLimit){
   // Target selection is an ordinary player click, at most once per 8 native ticks.
@@ -1137,14 +1139,18 @@ function fightNatural(a,profile,tickLimit,context={}){
   const change=AGENT.changes(before,AGENT.snapshot(r),focused);
   for(const role of Object.keys(healthLost)){
    healthLost[role]+=change.roles[role];barrierLost[role]+=change.wards[role];
+   healthGained[role]+=change.healthGained[role];barrierGained[role]+=change.wardGained[role];
   }
   nonFocusedHealthLost+=change.nonFocusedHp;
   observedNewEnemies+=change.newEnemies;
   untrackedDisappeared+=change.disappeared;
   if(focusedSummon)minionFocusSeconds+=Math.max(0,(r.combatSeconds||0)-tickStartedAt);
   minimum=Math.min(minimum,Math.max(0,r.hp)/(r.maxhp||1));
+  if(ticks%250===0)timeoutTrace.push(AGENT.combatTracePoint(r,ticks,a.controller().state.stage));
  }
  const stage=a.controller().state.stage,preparedId=a.state().automaticTalents.prepared||null;
+ const timedOut=r.status==='fight'&&ticks>=tickLimit;
+ if(timedOut&&timeoutTrace.at(-1)?.tick!==ticks)timeoutTrace.push(AGENT.combatTracePoint(r,ticks,stage));
  return {
   preparedId,preparedActivations:preparedId?Number(r.outerUses?.[preparedId]||0):0,
   kind:first?.boss?'boss':first?.miniboss?'elite':'combat',initialEnemies:initial,
@@ -1159,7 +1165,9 @@ function fightNatural(a,profile,tickLimit,context={}){
   bossStyle:first?.boss?first.bossStyle:null,eliteType:first?.miniboss?first.eliteType:null,
   strategy:adaptive?'adaptive':'baseline',capabilities:cap,
   status:r.status,died:r.hp<=0||stage==='failed',
-  won:r.status==='cleared'&&stage!=='failed',timedOut:r.status==='fight'&&ticks>=tickLimit,
+  won:r.status==='cleared'&&stage!=='failed',timedOut,
+  ...(timedOut?{timeoutDiagnostic:{tickLimit,stage,trace:timeoutTrace,
+   observedHealthGainedByRole:healthGained,observedBarrierGainedByRole:barrierGained}}:{}),
   seconds:round((r.combatSeconds||0)-startedAt),updateCalls:ticks,targetSwitches:switches,thornRedirects,minionFocusSwitches,
   minionFocusSeconds:round(minionFocusSeconds),hpStart:round(start),hpEnd:round(Math.max(0,r.hp)),
   hpMax:round(r.maxhp),minHpPct:round(minimum*100,1),

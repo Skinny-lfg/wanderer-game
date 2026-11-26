@@ -179,7 +179,8 @@ function selectTarget(run,cap,baseline){
 }
 function snapshot(run){
  const out=new Map();
- for(const e of [...(run?.enemies||[]),...(run?.groupReserve||[])]){
+ const active=run?.enemies?.length?run.enemies:run?.enemy?[run.enemy]:[];
+ for(const e of [...active,...(run?.groupReserve||[])]){
   if(e&&!out.has(e))out.set(e,{hp:Math.max(0,e.hp||0),barrier:Math.max(0,e.barrier||0),
    role:e.boss?'boss':e.miniboss?'elite':e.role==='minion'?'minion':'normal'});
  }
@@ -187,6 +188,7 @@ function snapshot(run){
 }
 function changes(before,after,focused){
  const roles={boss:0,elite:0,minion:0,normal:0},wards={boss:0,elite:0,minion:0,normal:0};
+ const healthGained={boss:0,elite:0,minion:0,normal:0},wardGained={boss:0,elite:0,minion:0,normal:0};
  let nonFocusedHp=0,newEnemies=0,disappeared=0;
  for(const [enemy,prior]of before){
   // The runtime can remove a defeated enemy from the active/reserve arrays
@@ -196,9 +198,23 @@ function changes(before,after,focused){
   if(!after.has(enemy))disappeared++;
   const lost=Math.max(0,prior.hp-end.hp),ward=Math.max(0,prior.barrier-end.barrier);
   roles[prior.role]+=lost;wards[prior.role]+=ward;
+  healthGained[prior.role]+=Math.max(0,end.hp-prior.hp);wardGained[prior.role]+=Math.max(0,end.barrier-prior.barrier);
   if(enemy!==focused)nonFocusedHp+=lost;
  }
  for(const enemy of after.keys())if(!before.has(enemy))newEnemies++;
- return {roles,wards,nonFocusedHp,newEnemies,disappeared};
+ return {roles,wards,healthGained,wardGained,nonFocusedHp,newEnemies,disappeared};
 }
-module.exports={classify,realmPreference,groupPreference,selectTarget,snapshot,changes};
+// Diagnostic data only: never used in target selection or combat.
+function combatTracePoint(run,tick,stage){
+ const active=run?.enemies?.length?run.enemies:run?.enemy?[run.enemy]:[];
+ const describe=e=>({name:e.name??null,role:e.role??null,family:e.stage81?.family??e.family??null,
+  hp:e.hp??null,maxhp:e.maxhp??null,barrier:e.barrier??0,defense:e.def??e.defense??null,
+  ability:e.stage81?.name??null,cycles:e.stage81?.cycle??null,nextAt:e.stage81?.nextAt??null,
+  castingUntil:e.stage81?.castingUntil??null});
+ return {tick,seconds:run.combatSeconds??0,stage,status:run.status,
+  player:{hp:run.hp,maxhp:run.maxhp,barrier:run.barrier??0,mp:run.mp??0},
+  damageDealt:run.metrics?.damageDealt??0,damageTaken:run.metrics?.damageTaken??0,
+  enemyAbilityCasts:run.metrics?.enemyAbilityCasts??0,
+  active:active.filter(Boolean).map(describe),reserve:(run.groupReserve||[]).filter(Boolean).map(describe)};
+}
+module.exports={classify,realmPreference,groupPreference,selectTarget,snapshot,changes,combatTracePoint};

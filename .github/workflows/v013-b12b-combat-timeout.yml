@@ -1,0 +1,38 @@
+name: v0.13 B1.2B - combat timeout audit
+on:
+  push:
+    branches: [balance/b1.2b-combat-timeout-audit]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  focused:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 3
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Native event and timeout regressions
+        run: node --test tests/v013-b12a-event-resolution.test.cjs tests/v013-b12b-combat-timeout.test.cjs tests/v013-stage6-agent-strategy.test.cjs tests/v013-stage81-enemy-abilities.test.cjs
+      - name: Replay B1.1 with diagnostic-only instrumentation
+        if: always()
+        run: |
+          git worktree add --detach "$RUNNER_TEMP/sr-b12b-anchor" 93f76e314290917f6200427a8b8f3ace51752cbf
+          git diff 8bfdadf4a78c7e687550d49e2ec3a8a7c3653254 HEAD -- scripts/v013-agent-strategy.cjs scripts/v013-natural-progression.cjs | git -C "$RUNNER_TEMP/sr-b12b-anchor" apply
+          cd "$RUNNER_TEMP/sr-b12b-anchor"
+          node "$GITHUB_WORKSPACE/scripts/v013-b12b-timeout-replay.cjs" original-instrumented "$GITHUB_WORKSPACE/reports/b12b/original.json" 36
+      - name: Replay B1.2A candidate and adjacent controls
+        if: always()
+        run: node scripts/v013-b12b-timeout-replay.cjs event-fixed reports/b12b/candidate.json 36 35 37
+      - name: Upload timeout evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: b12b-timeout-evidence
+          path: reports/b12b/*.json
+          if-no-files-found: warn
