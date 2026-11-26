@@ -20,7 +20,7 @@ function fixture(){
   },
   learn(){
    for(const id of ['blue_ring1_arcane','epic_ember_branch'])state.crafting=WandererV013Crafting.discover(state.crafting,id);
-   state.crafting.cores.arcane=3;state.crafting.cores.decay=1;state.crafting.cores.fury=1;state.crafting.dryRooms.fury=3;render();
+   state.crafting.cores.arcane=3;state.crafting.cores.decay=1;state.crafting.cores.blood=1;state.crafting.cores.fury=1;state.crafting.dryRooms.fury=3;render();
   },
   snapshot(){
    const item=state.stash.filter(x=>x.crafted).at(-1);
@@ -87,8 +87,13 @@ test('v013 native Forge: only randomized crafting, no obsolete upgrade or paid a
      await page.locator('[data-refine-reagent="fury"]').click();
      assert.equal((await page.evaluate(()=>__forgeProbe.snapshot())).essence,initial.essence-6);
     }
-    const price=await page.evaluate(id=>WandererV013Crafting.cost(id,1),recipe),before=await page.evaluate(()=>__forgeProbe.snapshot());
-    assert.equal(await page.locator('.v013MaterialCosts .stat').count(),4);assert(await page.locator('#v013Craft').isEnabled());
+    if(rarity==='Rare'){
+     assert.equal(await page.locator('#v013ReagentInfluence').count(),1);
+     await page.locator('#v013ReagentInfluence').selectOption('blood');
+     assert.match(await page.locator('.v013Influence').innerText(),/Strength, Attack/);
+    }
+    const price=await page.evaluate(({id,rarity})=>WandererV013Crafting.cost(id,1,rarity==='Rare'?'blood':null),{id:recipe,rarity}),before=await page.evaluate(()=>__forgeProbe.snapshot());
+    assert.equal(await page.locator('.v013MaterialCosts .stat').count(),rarity==='Rare'?5:4);assert(await page.locator('#v013Craft').isEnabled());
     await page.locator('#v013Craft').click();const after=await page.evaluate(()=>__forgeProbe.snapshot()),roll=after.craft;
     for(const [f,n] of Object.entries(price.reagents))assert.equal(after.cores[f],before.cores[f]-n);
     assert.equal(roll.recipeId,recipe);assert.equal(roll.rarity,rarity);assert.equal(roll.slot,slot);

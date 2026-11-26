@@ -104,8 +104,8 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
    // The native Forge requires BOTH recipe resources and free Stash space;
    // preview/progress only check recipe/resources. Expose the read-only gate.
    canCraft(){return economyCanAct()&&stashHasRoom();},
-   preview(id,tier){return WandererV013Crafting.previewCraft(id,tier,(...args)=>makeItem(...args,true));},
-   progress(id,tier){return WandererV013Crafting.progress(state,id,tier);},
+   preview(id,tier,influence=null){return WandererV013Crafting.previewCraft(id,tier,(...args)=>makeItem(...args,true),influence);},
+   progress(id,tier,influence=null){return WandererV013Crafting.progress(state,id,tier,influence);},
    recipes:WandererV013Crafting.RECIPES,
    refine:refineRecipe,
    craft:craftRecipe

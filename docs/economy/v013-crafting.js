@@ -123,7 +123,13 @@ function valid(p){return !!p&&p.version===1&&integer(p.essence)&&(p.dryRooms===u
 function checked(p){if(!valid(p))throw Error('Invalid crafting progress');return p;}
 function clone(p){checked(p);return {...p,dryRooms:{...p.dryRooms},cores:{...p.cores},realmFamilies:[...p.realmFamilies],bossFamilies:[...p.bossFamilies],learnedRecipes:[...p.learnedRecipes]};}
 function tierBand(tier){if(!Number.isSafeInteger(tier)||tier<1)throw Error('Invalid crafting tier');if(root.WandererExpeditionProgression)return tier<=5?tier:root.WandererExpeditionProgression.gearTier(tier).minimum;return tier<=5?tier:1+5*Math.floor((tier-1)/5);}
-function cost(id,tier=1){const r=byId.get(id);if(!r)throw Error('Unknown recipe');const band=tierBand(tier),row={Uncommon:[12,2,4,0],Rare:[40,4,35,1],Epic:[100,8,55,2]}[r.rarity],reagents=row[3]?{[r.family]:row[3],[r.secondary]:row[3]}:{};return {fragments:row[0]+row[1]*band,essence:row[2],reagents:Object.freeze(reagents),tier:band};}
+function influenceOptions(id){
+ const r=byId.get(id),G=root.WandererV013GearRolls;if(!r||!G||!['Rare','Epic'].includes(r.rarity))return [];
+ const armorType=['Cloth','Leather','Plate'].includes(r.subtype)?r.subtype:null,item={slot:r.slot,subtype:r.subtype,rarity:r.rarity,...(armorType?{armorType}:{})};
+ return FAMILIES.map(family=>({family,keys:G.influenceKeys(item,family),amount:r.rarity==='Rare'?1:2})).filter(x=>x.keys.length);
+}
+function validInfluence(id,family){return family===null||influenceOptions(id).some(x=>x.family===family);}
+function cost(id,tier=1,influence=null){const r=byId.get(id);if(!r)throw Error('Unknown recipe');if(!validInfluence(id,influence))throw Error('Unavailable Forge influence');const band=tierBand(tier),row={Uncommon:[12,2,4,0],Rare:[40,4,35,1],Epic:[100,8,55,2]}[r.rarity],reagents=row[3]?{[r.family]:row[3],[r.secondary]:row[3]}:{};if(influence!==null)reagents[influence]=(reagents[influence]||0)+(r.rarity==='Rare'?1:2);return {fragments:row[0]+row[1]*band,essence:row[2],reagents:Object.freeze(reagents),tier:band};}
 function unlocked(p,id){checked(p);const r=byId.get(id);return !!r&&(r.rarity==='Uncommon'||p.learnedRecipes.includes(id));}
 function discover(p,id){
  const next=clone(p),r=byId.get(id);
@@ -135,9 +141,9 @@ function refine(p,family){
  if(!FAMILIES.includes(family)||!(p.dryRooms?.[family]>=3)||p.essence<6||p.cores[family]>=LIMIT)return null;
  const next=clone(p);next.essence-=6;next.cores[family]++;next.dryRooms[family]=0;return next;
 }
-function progress(state,id,tier=1){
- const p=state?.crafting||create(),r=byId.get(id);checked(p);if(!r)return null;
- const price=cost(id,tier);
+function progress(state,id,tier=1,influence=null){
+ const p=state?.crafting||create(),r=byId.get(id);checked(p);if(!r||!validInfluence(id,influence))return null;
+ const price=cost(id,tier,influence);
  const requirements=[
   {key:'fragments',name:'Fragments',have:state?.fragments||0,need:price.fragments,source:'Combat rewards and salvaged equipment.'},
   {key:'essence',name:'Essence',have:p.essence,need:price.essence,source:'Crafting material from completed Realms; no extra Essence for particular stats.'}
@@ -154,18 +160,18 @@ function craftItem(generated,r,price){
  else delete item.v013Trait;
  return item;
 }
-function previewCraft(id,tier,makePreview){
- const r=byId.get(id);if(!r||typeof makePreview!=='function')return null;
- const price=cost(id,tier);
- return craftItem(makePreview(price.tier,r.slot,null,'forge',r.subtype,r.rarity),r,price);
+function previewCraft(id,tier,makePreview,influence=null){
+ const r=byId.get(id);if(!r||typeof makePreview!=='function'||!validInfluence(id,influence))return null;
+ const price=cost(id,tier,influence),args=[price.tier,r.slot,null,'forge',r.subtype,r.rarity];
+ return craftItem(makePreview(...args,...(influence===null?[]:[true,influence])),r,price);
 }
-function prepareCraft(state,id,tier,makeItem){
+function prepareCraft(state,id,tier,makeItem,influence=null){
  if(!state||!Number.isSafeInteger(state.fragments)||state.fragments<0||typeof makeItem!=='function')return null;
- const result=progress(state,id,tier);if(!result?.ready)return null;
- const r=result.recipe,price=result.cost,item=craftItem(makeItem(price.tier,r.slot,null,'forge',r.subtype,r.rarity),r,price);
+ const result=progress(state,id,tier,influence);if(!result?.ready)return null;
+ const r=result.recipe,price=result.cost,args=[price.tier,r.slot,null,'forge',r.subtype,r.rarity],item=craftItem(makeItem(...args,...(influence===null?[]:[false,influence])),r,price);
  if(!item)return null;
  const p=clone(state.crafting||create());p.essence-=price.essence;for(const [family,amount] of Object.entries(price.reagents))p.cores[family]-=amount;
  return {item,fragments:state.fragments-price.fragments,crafting:p};
 }
-root.WandererV013Crafting=Object.freeze({FAMILIES,RECIPES,TRAITS,refine,create,valid,tierBand,cost,unlocked,discover,progress,award,previewCraft,prepareCraft});
+root.WandererV013Crafting=Object.freeze({FAMILIES,RECIPES,TRAITS,influenceOptions,refine,create,valid,tierBand,cost,unlocked,discover,progress,award,previewCraft,prepareCraft});
 })(globalThis);

@@ -66,6 +66,8 @@ const ordinaryArmor=Object.freeze({
  belt:{main:'hp',attrs:WEIGHTED_PRIMARY.Plate,extras:['def','atk','spell']}
 });
 const ACCESSORY_MAIN=Object.freeze([['str',14],['agi',14],['int',14],['end',14],['cha',14],['atk',7],['spell',7],['hp',7],['def',5],['mana',4]]);
+const INFLUENCE_WEIGHT=2;
+const INFLUENCES=Object.freeze({blood:Object.freeze(['str','atk']),decay:Object.freeze(['atk','spell']),radiance:Object.freeze(['end','hp']),aegis:Object.freeze(['def','blockBonus','wardBonus']),fury:Object.freeze(['agi','spd','critBonus']),arcane:Object.freeze(['int','spell','mana','manaRegenBonus'])});
 function profileFor(item){return item.armorType?ARMOR[item.armorType]:PROFILES[item.subtype]||ordinaryArmor[item.slot]||PROFILES.Ring;}
 function statCount(rarity,random){return rarity==='Common'?1:rarity==='Uncommon'?2:rarity==='Rare'?2+Math.floor(random()*3):rarity==='Epic'?3+Math.floor(random()*2):4+Math.floor(random()*2);}
 function weighted(rows,random){
@@ -75,22 +77,29 @@ function weighted(rows,random){
  for(const [key,w]of valid){roll-=w;if(roll<0)return key;}
  return valid[valid.length-1][0];
 }
-function apply(item,basePower,random){
+function influenceKeys(item,family){
+ const spec=profileFor(item),targets=INFLUENCES[family];if(!spec||!targets||!['Rare','Epic'].includes(item.rarity))return [];
+ const pool=[...spec.attrs.map(([k])=>k),...spec.extras,...(spec.main?[]:ACCESSORY_MAIN.map(([k])=>k))];
+ return targets.filter(k=>k!==spec.main&&pool.includes(k)&&!(k==='atk'&&['Wand','Staff'].includes(item.subtype)));
+}
+function apply(item,basePower,random,influence=null){
  if(!item||!BUDGET[item.rarity]||typeof random!=='function'||!Number.isFinite(basePower)||basePower<=0)throw Error('Invalid v0.13 item roll');
  const spec=profileFor(item);if(!spec)throw Error('Unrecognised gear profile');
+ const targets=influence===null?[]:influenceKeys(item,influence);if(influence!==null&&!targets.length)throw Error('Unavailable Forge influence');
+ const pick=rows=>weighted(targets.length?rows.map(([key,w])=>[key,w*(targets.includes(key)?INFLUENCE_WEIGHT:1)]):rows,random);
  for(const field of KEYS)if(Object.hasOwn(item,field))item[field]=0;
  const number=statCount(item.rarity,random);
- const main=spec.main||weighted(item.rarity==='Common'?ACCESSORY_MAIN.filter(([key])=>!PRIMARY.includes(key)):ACCESSORY_MAIN,random),selected=[main];
+ const main=spec.main||pick(item.rarity==='Common'?ACCESSORY_MAIN.filter(([key])=>!PRIMARY.includes(key)):ACCESSORY_MAIN),selected=[main];
  if(number>1){
   const attrs=spec.attrs.filter(([key])=>!selected.includes(key));
-  if(attrs.length)selected.push(weighted(attrs,random));
+  if(attrs.length)selected.push(pick(attrs));
  }
  while(selected.length<number){
   // Off-Hand identities need meaningful access to their unique secondary stats;
   // all other gear retains its existing 1.6-vs-primary affix weighting.
   const available=[...spec.extras.map(k=>[k,spec.extraWeights?.[k]??1.6]),...spec.attrs].filter(([key])=>!selected.includes(key) && !(key==='atk'&&['Wand','Staff'].includes(item.subtype)));
   if(!available.length)break;
-  selected.push(weighted(available,random));
+  selected.push(pick(available));
  }
  const total=Math.max(1,basePower*BUDGET[item.rarity]);
  const weights=selected.length===1?[1]:selected.length===2?[.56,.44]:selected.length===3?[.45,.30,.25]:selected.length===4?[.40,.23,.20,.17]:[.35,.22,.18,.14,.11];
@@ -129,7 +138,7 @@ function starter(slot,id,now=0){
  if(slot==='helm')return {...base,subtype:'Helm',armorType:'Cloth',name:'Worn Hood',hp:4};
  throw Error('Not a starter equipment slot');
 }
-const API=Object.freeze({KEYS,PRIMARY,COST,BUDGET,SECONDARY_CAPS,PROFILES,ARMOR,profileFor,statCount,apply,starter});
+const API=Object.freeze({KEYS,PRIMARY,COST,BUDGET,SECONDARY_CAPS,PROFILES,ARMOR,profileFor,statCount,INFLUENCES,INFLUENCE_WEIGHT,influenceKeys,apply,starter});
 root.WandererV013GearRolls=API;
 if(typeof module==='object'&&module.exports)module.exports=API;
 })(globalThis);

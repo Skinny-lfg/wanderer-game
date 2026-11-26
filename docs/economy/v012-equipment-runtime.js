@@ -80,7 +80,8 @@ function legendarySignature(item){
 }
 
 // Recipe previews supply a fixed slot, subtype and rarity; they never allocate IDs or roll names/traits.
-function makeItem(tier,slot=null,affinity=null,source='loot',subtype='random',forcedRarity=null,preview=false){
+function makeItem(tier,slot=null,affinity=null,source='loot',subtype='random',forcedRarity=null,preview=false,influence=null){
+ if(influence!==null&&source!=='forge')throw Error('Reagent influence is Forge only');
  if(ports.PHASE1_PREVIEW&&source==='starter'&&root.WandererV013GearRolls&&['weapon','armor','helm'].includes(slot))return root.WandererV013GearRolls.starter(slot,ports.makeId(),Date.now());
  if(ports.PHASE1_PREVIEW&&root.WandererV013Crafting)tier=root.WandererV013Crafting.tierBand(tier);
 slot=slot||ports.rollEquipmentSlot();
@@ -112,7 +113,7 @@ if(rarity==='Legendary'){
 if(!root.WandererV013GearRolls)throw Error('Current equipment roll engine missing');
 let x=Array.from(slot+subtype+(armorType||'')+rarity+tier).reduce((n,ch)=>(Math.imul(n,31)+ch.charCodeAt(0))>>>0,1);
 const previewRandom=()=>((x=(Math.imul(x,1664525)+1013904223)>>>0)/4294967296);
-root.WandererV013GearRolls.apply(o,Math.max(1,(2+progressTier*.91)*tierFactor),preview?previewRandom:ports.gameRandom);
+root.WandererV013GearRolls.apply(o,Math.max(1,(2+progressTier*.91)*tierFactor),preview?previewRandom:ports.gameRandom,influence);
 if(rarity==='Epic'){
  // Natural Epic loot/merchant gear still gets a live functional trait; Forge
  // Epics retain their recipe's guaranteed trait during prepareCraft.
