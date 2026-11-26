@@ -26,3 +26,6 @@ Based on R5.1 (1450430, 72/72 directed tests). Apothecary has Buy and Craft mode
 | Prospector's Elixir | 8 | Decay + Arcane |
 
 Craft preview shows all 21 selectable recipes grouped by rarity, potion effect, owned count, have/need materials, destination and availability. Crafting uses the same Camp gate and capacity rules as purchase: new type auto-equips in free slot, duplicates go to Stash, 99-dose stacks and 99999 per-type cap, three slots maximum. All resources and inventory updated together; synchronous save rejection rolls back the transaction (existing asynchronous cloud persistence semantics unchanged). No new save schema, no RNG, no stock replacement or effect changes. Existing buy/restock independent. Both entrypoints and native mirrors updated. Art placeholders retained. Directed tests authored; CI results pending at commit creation; visual review and calibration remain pending.
+
+## R6.1 — checkpoint fixture
+First directed CI (45846347788): 98/99. The only failure attempted to pass a Camp session into the native Expedition restore API, which intentionally requires a current Dungeon. Start an Expedition after crafting, then capture and restore, verifying the crafted dose and both resource deductions. No production changes. Rerun pending.

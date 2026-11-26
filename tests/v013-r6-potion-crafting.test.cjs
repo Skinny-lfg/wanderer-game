@@ -37,5 +37,5 @@ test('craft preview shows selected recipe, live material availability and disabl
 });
 test('prepared craft is pure and can be persisted through existing checkpoint restore',()=>{
  const {a,s}=setup();const before=JSON.stringify(s);const next=P.prepareCraft(s,'renewal',true);assert(next);assert.equal(JSON.stringify(s),before);
- assert(a.potions.craft('renewal'));const cp=a.checkpoint.capture();a.checkpoint.restore(cp);assert.equal(a.state().consumables.renewal,1);assert.equal(a.state().crafting.essence,97);assert.equal(a.state().crafting.cores.radiance,9);assert.equal(a.state().crafting.cores.blood,9);
+ assert(a.potions.craft('renewal'));a.start(1,true);const cp=a.checkpoint.capture();a.checkpoint.restore(cp);assert.equal(a.state().consumables.renewal,1);assert.equal(a.state().crafting.essence,97);assert.equal(a.state().crafting.cores.radiance,9);assert.equal(a.state().crafting.cores.blood,9);
 });
