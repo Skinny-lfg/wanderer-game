@@ -15,7 +15,8 @@ test('factorial compatibility and strict identity are orthogonal; no full bundle
 });
 test('pure cells preserve base offhand intent; E adds only explicit Dual Daggers',()=>{
  const d=F.profile('smart-fury-daggers','D'),e=F.profile('smart-fury-daggers','E');
- assert.deepEqual({...e,offhands:d.offhands},d);
+ const {offhands:baseOffhands,...base}=d,{offhands:dualOffhands,...dual}=e;
+ assert.deepEqual(dual,base);
  assert.deepEqual(e.offhands,['Daggers']);
  assert.equal(N.gearDecisionTargets(item('Daggers'),e).length,1,'extra B1.2C.2 target enumeration is held off');
 });
