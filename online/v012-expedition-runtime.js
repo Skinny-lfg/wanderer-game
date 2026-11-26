@@ -238,7 +238,7 @@ function phase1WaveWon(){
      let transferredTick=0;
      if(bleed){
       target.dots??={};target.dots.bleed??=[];
-      if(target.dots.bleed.length<12){
+      {
        const tick=Math.max(1,Math.round(bleed.damage*.5));target.dots.bleed.push({damage:tick,remaining:Math.min(2,bleed.remaining),spread:true});
        transferredTick+=tick;transferred++;ports.combatLinkEffect?.(r,'bleed',enemy,[target]);
       }

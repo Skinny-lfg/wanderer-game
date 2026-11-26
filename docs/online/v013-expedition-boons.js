@@ -159,7 +159,7 @@ function spreadOnDeath(run,fallen,synchronize,onSpread){
  let count=0;
  for(const enemy of living){
   if(kind==='rot'){enemy.v012Rot??=[];if(enemy.v012Rot.length>=6)continue;enemy.v012Rot.push({damage:potency,remaining:duration,ticks:0,spread:true,boon:true});}
-  else{enemy.dots??={};enemy.dots[kind]??=[];if(enemy.dots[kind].length>=12)continue;enemy.dots[kind].push({damage:potency,remaining:duration,spread:true,boon:true});synchronize?.(enemy);}
+  else{enemy.dots??={};enemy.dots[kind]??=[];if(kind!=='bleed'&&enemy.dots[kind].length>=12)continue;enemy.dots[kind].push({damage:potency,remaining:duration,spread:true,boon:true});synchronize?.(enemy);}
   count++;
   onSpread?.(enemy,kind);
  }

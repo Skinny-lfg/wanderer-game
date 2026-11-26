@@ -1,0 +1,21 @@
+name: Groups & Blood Consolidation (NO DEPLOY)
+on:
+  push:
+    branches: [balance/groups-blood-consolidation]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node --test tests/v013-stage647d6-blood-fury.test.cjs tests/v013-stage80-enemy-roster.test.cjs tests/v013-current-groups.test.cjs tests/v013-stage640-e1-groups.test.cjs
+      - run: npm run build:pages && git diff --exit-code -- docs
+      - run: npm test

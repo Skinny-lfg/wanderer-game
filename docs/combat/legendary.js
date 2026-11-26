@@ -1,7 +1,7 @@
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;root.WandererLegendary=api;})(globalThis,function(){
 'use strict';
 const DEFINITIONS={
- "crimson-fang":{affinity:"blood",name:"Crimson Fang",cooldown:3.5,description:"Bleed: 12% base damage for 4 ticks (16% with Blood)."},
+ "crimson-fang":{affinity:"blood",name:"Crimson Fang",cooldown:3.5,description:"Bleed: 12% base damage per tick for 4s (16% with Blood); refreshed by new Bleed applications."},
  "chalice-hollow-king":{affinity:"blood",name:"Chalice of the Hollow King",cooldown:6,description:"Hit a bleeding foe to heal 1% Max HP (1.5% with Blood)."},
  "gravewake":{affinity:"decay",name:"Gravewake",cooldown:4,description:"Rot: 7% base damage for 4 ticks (10% with Decay), up to 6 stacks."},
  "eye-of-morrow":{affinity:"decay",name:"Eye of Morrow",cooldown:7,description:"Against Rot, deal 60% extra base damage (85% with Decay), capped by enemy Max HP."},

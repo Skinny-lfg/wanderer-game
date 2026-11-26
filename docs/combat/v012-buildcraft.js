@@ -5,9 +5,9 @@
 const FAMILIES=['blood','decay','vitality','aegis','fury','magic'];
 const elements=['fire','frost','lightning'];
 const P=[
- ['blood','bleeding_edge','Bleeding Edge','Hits may inflict Bleed (0.9s internal cooldown).'],
+ ['blood','bleeding_edge','Bleeding Edge','Hits may inflict Bleed (0.6s internal cooldown).'],
  ['blood','deep_cuts','Deep Cuts','Your Bleed deals 20% more damage per rank.'],
- ['blood','executioner','Executioner','Strike a bleeding foe below 30% HP for a bounded burst (6s cooldown).'],
+ ['blood','executioner','Executioner','Strike a bleeding foe at 30% HP or less for 150% of one combined Bleed tick (4s cooldown; no consumption).'],
  ['blood','blood_drinker','Blood Drinker','Hits on a bleeding foe heal up to 1.5% maximum HP (4s cooldown).'],
  ['blood','sanguine_fury','Sanguine Fury','Critical hits inflict Bleed; damage against bleeding foes increases by 8%.'],
  ['decay','toxic_touch','Toxic Touch','Hits may apply one Rot stack (1.3s cooldown).'],
@@ -65,11 +65,11 @@ const P=[
  ['fury','spell_surge','Spell Surge','A critical strike charges your next elemental cast.',['fury','magic']]
 ].map(([family,id,name,description,requires=[],element=null])=>Object.freeze({family,id,name,description,requires,element,max:requires.length||['executioner','blight','last_stand','retaliation'].includes(id)?1:5}));
 const descriptions={
- bleeding_edge:'Hits have a 42% base chance to inflict Bleed (+4 percentage points per rank). Bleed deals 16% of base hit damage per tick; 0.9s cooldown.',
+ bleeding_edge:'Hits have a 42% base chance to inflict Bleed (+4 percentage points per rank). Bleed deals 16% of the triggering hit including critical scaling per tick, lasts 4s and refreshes all stacks on application (0.6s cooldown; no stack cap).',
  deep_cuts:'Bleed you inflict deals 15% more damage per rank.',
- executioner:'At 30% HP or less, bleeding foes take a burst of 32% base hit damage, capped at 2.5% of their Max HP (6s cooldown).',
+ executioner:'At 30% HP or less, deal 150% of one combined tick of all active Bleed stacks without consuming them (4s cooldown).',
  blood_drinker:'Hits on bleeding foes heal up to 0.8% Max HP at rank 1 (+0.25 percentage points per rank; 4s cooldown). Healing reduction applies.',
- sanguine_fury:'Critical hits inflict Bleed for 14% base hit damage per tick and deal 8% direct damage (+2 percentage points per rank; 2.5s cooldown).',
+ sanguine_fury:'Critical hits inflict Bleed for 14% of the critical-scaled hit per tick and deal 8% direct damage (+2 percentage points per rank; 2.5s cooldown).',
  toxic_touch:'Hits have a 42% base chance to apply Rot (+4 percentage points per rank); spend 4 Mana to apply persistent Rot dealing 4% of base weapon damage plus Spell Power combined per tick (1.3s cooldown; six stacks maximum).',
  virulent_rot:'New Rot stacks deal 15% more damage per rank.',
  wasting_curse:'Rotted enemies deal 4% less damage per rank. Combined damage reduction cannot exceed 28%.',
@@ -120,7 +120,7 @@ function barrierAmount(maxHealth,spellPower,healthFraction,spellFraction=0){
 }
 function barrierSpellPower(c){return Math.max(0,Number(c?.power??c?.player?.stats?.spellPower)||0);}
 function values(id,r){const t=Math.max(0,r-1),sqrt=Math.sqrt(r);return ({
- bleeding_edge:{chance:.42+.04*t,bleed:.16,icd:.9},deep_cuts:{bleedBonus:.15*r},executioner:{burst:.32,enemyCap:.025,threshold:.30,icd:6},blood_drinker:{hp:.008+.0025*t,base:.10+.025*t,icd:4},sanguine_fury:{bleed:.14,burst:.08+.02*t,icd:2.5},
+ bleeding_edge:{chance:.42+.04*t,bleed:.16,icd:.6},deep_cuts:{bleedBonus:.15*r},executioner:{burst:1.5,threshold:.30,icd:4},blood_drinker:{hp:.008+.0025*t,base:.10+.025*t,icd:4},sanguine_fury:{bleed:.14,burst:.08+.02*t,icd:2.5},
  toxic_touch:{chance:.42+.04*t,rot:.065,icd:1.3},virulent_rot:{rotBonus:.15*r},wasting_curse:{reduction:.04*r},wither:{healingReduction:.20+.10*t,reduction:.02*r},blight:{burst:.38,enemyCap:.025,icd:7},
  strong_heart:{maxhp:.10*sqrt},renewal:{heal:Math.min(.0125,.0055*sqrt)},last_stand:{hp:.06,uses:1},second_breath:{heal:.015+.004*t},life_bloom:{heal:Math.min(.006,.0025*sqrt),mana:Math.min(3.4,1.5*sqrt)},
  iron_skin:{defense:.12*sqrt},fortified:{reduction:.04*r},guarded_block:{block:Math.round(24*(1-Math.exp(-r/4)))},barrier_pulse:{barrier:.03+.006*t,spellBarrier:.06+.012*t,icd:6},retaliation:{burst:.30,icd:4},
@@ -267,11 +267,6 @@ function corruptionCycle(b,c){
  c.metric?.('corruptionCycleActivations',1);c.metric?.('corruptionCycleConsumedRawRot',remaining);c.metric?.('corruptionCycleRawBurst',raw);c.metric?.('corruptionCycleDamage',Math.max(0,hp-Math.max(0,e.hp)));c.metric?.('corruptionCycleStacksConsumed',consumed.length);
 }
 
-function sanguineReserve(b,c){
- const r=c.player,key=c.waveKey??c.enemy;
- if(r.sanguineReserveWave!==key){r.sanguineReserveWave=key;r.sanguineReserve=0;}
- return r;
-}
 // New defensive offense is encounter-local; never stores overheal or Barrier.
 function livingForceState(c){
  const r=c.player,key=c.waveKey??c.enemy;
@@ -311,9 +306,7 @@ function onHeal(b,c,healed){
   r.livingForceCharge=Math.min(cap,(r.livingForceCharge||0)+healed*.20);
   c.metric?.('livingForceEffectiveHealing',healed);
  }
- if(healed>0&&specialized(b,'sanguine_reserve')){
-  const r=sanguineReserve(b,c);r.sanguineReserve=Math.min(r.maxhp*.05,(r.sanguineReserve||0)+healed*.25);
- }
+
  if(healed>0&&specialized(b,'overflowing_life'))c.barrier(Math.min(healed*.15,c.player.maxhp*.10));
  if(healed>0&&rank(b,'sanctuary')&&ready(b,'sanctuary',c.now,1)){activated(b,'sanctuary');c.barrier(healed*.20);}
  if(healed>0&&rank(b,'life_conduit')&&ready(b,'life_conduit',c.now,3)){activated(b,'life_conduit');c.mana(4);b.runtime.conduit=true;}
@@ -349,15 +342,7 @@ function onSecondaryWeaponStatus(b,c,q=.5,p=.5){
 function onAttack(b,c){
  if(c.proc||c.extra||c.recursive)return;
  const e=c.enemy,base=Math.max(1,c.base||1),crit=!!c.critical;
- if(specialized(b,'sanguine_reserve')&&!c.magical&&!c.offhand){
-  const r=sanguineReserve(b,c),limit=r.maxhp*.05;
-  const live=(r.enemies||[e]).filter(x=>x.hp>0);
-  const dots=(e.dots?.bleed||[]).filter(d=>d.remaining>0&&!d.spread&&!d.transferred&&!d.secondaryOrigin);
-  if(e.hp>0&&limit>0&&r.sanguineReserve>=limit-1e-8&&live.length===1&&!r.groupReserve?.length&&dots.length&&ready(b,'sanguineReserve',c.now,4)){
-   r.sanguineReserve=0;const amount=Math.min(limit,Math.max(...dots.map(d=>d.damage)),e.maxhp*(e.boss?.005:e.miniboss?.01:.025));
-   if(amount>0){activated(b,'sanguine_reserve');c.damage(amount,'🩸 Sanguine Reserve');c.metric?.('sanguineReserveBursts',1);}
-  }
- }
+
  if(specialized(b,'living_force')&&!c.offhand&&e.hp>0){
   const r=livingForceState(c),threshold=r.maxhp*.05;
   if(threshold>0&&r.livingForceCharge>=threshold-1e-8&&ready(b,'livingForce',c.now,4)){
@@ -373,11 +358,13 @@ function onAttack(b,c){
  if(e.bleedStacks>0&&specialized(b,'crimson_feast')){b.runtime.crimsonHits=(b.runtime.crimsonHits||0)+1;if(b.runtime.crimsonHits%3===0)c.damage(base*.45,'🫀 Crimson Feast');}
  if(e.bleedStacks>0&&c.player.hp<c.player.maxhp*.5&&specialized(b,'heart_of_carnage')&&ready(b,'heartCarnage',c.now,3))c.damage(base*(e.hp<e.maxhp*.5?.60:.40),'🩸 Heart of Carnage');
  if(b.runtime.specialReprisal&&e.hp>0){b.runtime.specialReprisal=false;c.damage(base*.25,'🛡 Reprisal');}
- if(rank(b,'bleeding_edge')&&(b.cooldowns.bleedEdge??-1e10)<=c.now&&c.random()<values('bleeding_edge',rank(b,'bleeding_edge')).chance&&ready(b,'bleedEdge',c.now,.9)&&activated(b,'bleeding_edge')) c.dot('bleed',base*.16);
+ if(rank(b,'bleeding_edge')&&(b.cooldowns.bleedEdge??-1e10)<=c.now&&c.random()<values('bleeding_edge',rank(b,'bleeding_edge')).chance&&ready(b,'bleedEdge',c.now,.6)&&activated(b,'bleeding_edge')) c.dot('bleed',(c.bloodCritBase??base)*.16);
+ // Blood Pursuit retains the purchased node ID and stat paths.
+ if(specialized(b,'sanguine_reserve')&&!c.magical&&!c.offhand&&e.hp>0&&b.runtime.pursuitWave===(c.waveKey??e)&&b.runtime.pursuitUntil>c.now&&b.runtime.pursuitCharges>0){b.runtime.pursuitCharges--;c.dot('bleed',(c.bloodCritBase??base)*.08);c.metric?.('bloodPursuitApplications',1);}
  if(rank(b,'sanguine_fury')&&crit&&ready(b,'sanguineFury',c.now,2.5)&&activated(b,'sanguine_fury')){
-  c.dot('bleed',base*.14);c.damage(base*values('sanguine_fury',rank(b,'sanguine_fury')).burst,'🩸 Sanguine Fury');
+  c.dot('bleed',(c.bloodCritBase??base)*.14);c.damage(base*values('sanguine_fury',rank(b,'sanguine_fury')).burst,'🩸 Sanguine Fury');
  }
- if(rank(b,'executioner')&&e.bleedStacks>0&&e.hp<=e.maxhp*.30&&ready(b,'execute',c.now,6)&&activated(b,'executioner'))c.damage(Math.min(base*.32,e.maxhp*.025),'🩸 Execute');
+ if(rank(b,'executioner')&&e.hp>0&&e.bleedStacks>0&&e.hp<=e.maxhp*.30&&ready(b,'execute',c.now,4)&&activated(b,'executioner'))c.damage((e.dots?.bleed||[]).filter(d=>d.remaining>0).reduce((sum,d)=>sum+d.damage,0)*1.5,'🩸 Execute');
  if(rank(b,'blood_drinker')&&e.bleedStacks>0&&ready(b,'bloodHeal',c.now,4)&&activated(b,'blood_drinker'))heal(b,c,Math.min(c.player.maxhp*values('blood_drinker',rank(b,'blood_drinker')).hp,base*values('blood_drinker',rank(b,'blood_drinker')).base));
  if(e.hp>0&&rank(b,'toxic_touch')&&(b.cooldowns.toxicTouch??-1e10)<=c.now&&c.random()<values('toxic_touch',rank(b,'toxic_touch')).chance&&spendDarkMana(c,4)&&ready(b,'toxicTouch',c.now,1.3)&&activated(b,'toxic_touch')){const potency=rotPotency(c);applyRot(b,c,potency,'paid_primary_toxic_touch'); }
  corruptionOverflow(b,c);
@@ -479,7 +466,7 @@ function onCast(b,c){
  if(rank(b,'hex_bolt')&&e.v012Rot?.length&&ready(b,'hexBolt',c.now,3)&&activated(b,'hex_bolt'))c.damage(power*.25+c.enemy.v012Rot.reduce((n,r)=>n+r.damage,0),'☠ Hex Bolt');
  if(rank(b,'runic_shield')&&ready(b,'runicShield',c.now,3)&&activated(b,'runic_shield'))c.barrier(barrierAmount(c.player.maxhp,barrierSpellPower(c),.02,.08));
  if(rank(b,'hemal_sigil')&&e.bleedStacks>0&&ready(b,'hemalSigil',c.now,6)&&activated(b,'hemal_sigil')){
-  const consumed=e.dots?.bleed?.shift();e.bleedStacks=e.dots?.bleed?.length||0;e.bleed=(e.dots?.bleed||[]).reduce((n,d)=>n+d.damage,0);if(consumed)c.damage(consumed.damage*consumed.remaining,'🩸 Hemal conversion');
+  const consumed=e.dots?.bleed?.shift();e.bleedStacks=e.dots?.bleed?.length||0;e.bleed=(e.dots?.bleed||[]).reduce((n,d)=>n+d.damage,0);if(consumed)c.damage(consumed.damage*(consumed.remainingTicks??consumed.remaining),'🩸 Hemal conversion');
   if(b.element==='fire')c.dot('burn',power*.34);
   else if(b.element==='frost')c.chill(2.5);
   else c.damage(Math.min(power*.56,e.maxhp*.03),'🩸 Hemal Sigil');
@@ -582,11 +569,22 @@ function onKill(b,c){
  if(rank(b,'hemovore')&&b.runtime.hemovoreEncounter!==waveKey&&(c.enemy.bleedStacks>0||c.enemy.v012DeathBleed)&&activated(b,'hemovore')){b.runtime.hemovoreEncounter=waveKey;heal(b,c,c.player.maxhp*.04);}
  if(specialized(b,'blood_harvest')&&(c.enemy.bleedStacks>0||c.enemy.v012DeathBleed))heal(b,c,c.player.maxhp*.03);
  if(specialized(b,'fury_momentum'))b.runtime.momentumUntil=c.now+4;
- if(specialized(b,'blood_transfer')||c.traits?.includes('blood_transfer')){
+ if(specialized(b,'sanguine_reserve')&&(c.enemy.bleedStacks>0||c.enemy.v012DeathBleed)){b.runtime.pursuitWave=c.waveKey??c.enemy;b.runtime.pursuitCharges=2;b.runtime.pursuitUntil=c.now+5;activated(b,'sanguine_reserve');c.metric?.('bloodPursuitKills',1);}
+ if(specialized(b,'blood_transfer')){
+  const target=c.player.enemies?.find(e=>e!==c.enemy&&e.hp>0),dots=(c.enemy.dots?.bleed||[]).filter(d=>d.remaining>0&&d.damage>0).slice().sort((a,b)=>b.damage-a.damage);
+  if(target&&dots.length){
+   const copies=dots.map(d=>({damage:Math.floor(d.damage*.5),remaining:4,transferred:true,secondaryOrigin:'blood_transfer'})).filter(d=>d.damage>0);
+   if(copies.length){target.dots??={};target.dots.bleed??=[];target.dots.bleed.push(...copies);target.bleedStacks=target.dots.bleed.length;c.synchronizeDots?.(target);
+    activated(b,'blood_transfer');c.metric?.('bloodTransferApplications',copies.length);c.metric?.('bloodTransferActivations',1);
+    const amount=copies.reduce((sum,d)=>sum+d.damage,0),actual=c.secondaryHit?.(target,amount)||0;
+    if(actual>0){c.metric?.('bloodTransferDamage',actual);c.trigger?.('blood_transfer_burst');}
+   }
+  }
+ }else if(c.traits?.includes('blood_transfer')){
   const dot=c.enemy.dots?.bleed?.find(d=>!d.transferred&&!d.spread),target=c.player.enemies?.find(e=>e!==c.enemy&&e.hp>0)||c.player.groupReserve?.[0];
   if(dot&&target){
    target.dots??={};target.dots.bleed??=[];
-   if(target.dots.bleed.length<12){
+   {
     const tick=Math.max(1,Math.round(dot.damage*.5));
     target.dots.bleed.push({...dot,damage:tick,remaining:Math.min(3,dot.remaining),transferred:true});
     target.bleedStacks=target.dots.bleed.length;
