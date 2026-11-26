@@ -1,5 +1,5 @@
 # Wanderer — Art Style Guide
-## Stylized Gothic Painterly — v1.0 (G2.4A.2)
+## Stylized Gothic Painterly — v1.1 (G2.4A.2)
 Date: 2026-11-26. Status: proposed production standard; elite artwork approved by owner; experimental asset board (G2.4A.3) still pending. Revise this document when the owner approves changes; do not silently turn proposals into final assets.
 
 ## Mandatory workflow
@@ -28,11 +28,11 @@ Affinity accents (shadow / mid / highlight):
 |---|---|---|---|
 | Blood | #501923 | #A73340 | #E65460 |
 | Decay | #263C26 | #59854C | #A4DA83 |
-| Vitality | #24433B | #468E74 | #9AD6AB |
-| Aegis | #584324 | #B88B46 | #F1D38A |
+| Vitality | #594526 | #C6A04C | #F5E3A2 |
+| Aegis | #203349 | #477FAC | #A3D7F4 |
 | Fury | #53281D | #BD592D | #F89A48 |
 | Magic | #31254E | #7961B3 | #B7A0EF |
-These are proposals, not replacements for existing functional game colors. Keep Affinity and rarity signals distinct. Preserve existing rarity color mapping unless explicitly approved; tooltip frames must match item rarity. Illustrative rarity colors from the concept: Grey #77777A, Common #BCBCB7, Uncommon #65A56C, Rare #518FCA, Epic #A477CE, Legendary #D7A74E.
+Affinity direction update: Aegis uses blue tones for protection and barriers. Vitality uses Golden Life (warm gold / amber / pale golden light) as an explicitly experimental choice, not final approval. Decay retains green; avoid green Vitality effects in this trial. Distinguish Vitality's restorative golden light from Fury's aggressive orange-red and from material gold and item rarity indicators. Aegis armor may retain aged gold/bronze materials; magical affinity colors need not match armor materials. Validate these colors together in G2.4A.3–A.4 before changing any functional game colors. These are proposals, not replacements for existing functional game colors. Keep Affinity and rarity signals distinct. Preserve existing rarity color mapping unless explicitly approved; tooltip frames must match item rarity. Illustrative rarity colors from the concept: Grey #77777A, Common #BCBCB7, Uncommon #65A56C, Rare #518FCA, Epic #A477CE, Legendary #D7A74E.
 
 ## Material library
 Bronze: warm, weathered, hammered. Iron: dark, heavy, forged. Stone: ancient, chipped, carved. Leather: matte, worn, seams. Cloth: heavy, layered, frayed. Bone/ivory: organic, ritualistic. Put wear on exposed edges, contact areas and raised features, not uniform dirt/noise. Reserve bright highlights for meaningful shape and focus.
@@ -79,3 +79,5 @@ For each new asset: compare to approved elite references; verify materials, silh
 
 ## Version history
 - v1.0 — G2.4A.2: initial guide, based on three approved elite images; palette and production rules provisional until experimental board validation.
+
+- v1.1 — Aegis blue direction requested by owner; Golden Life Vitality authorized for experimentation only. No game or asset color changes.
