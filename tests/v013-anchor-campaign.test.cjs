@@ -8,7 +8,7 @@ test('six approved catalogue sets, eighteen distinct physical shards, placeholde
  assert.equal(A.CATALOG.length,6);const shards=A.CATALOG.flatMap(x=>x.shards);
  assert.equal(new Set(shards.map(x=>x.id)).size,18);
  for(const r of A.CATALOG){assert.equal(r.art,'placeholder');assert.deepEqual(r.shards.map(x=>x.part),[1,2,3]);assert(r.shards.every(x=>x.kind==='runestone_shard'&&x.family===r.id));}
- assert.equal(A.get('radiance').identityPending,true);
+ assert.equal(A.get('radiance').anchor,'The Undying Choir');assert.equal(A.get('radiance').stone,'Everlight Anchorstone');assert.equal(A.get('radiance').identityPending,false);
 });
 test('clean campaign and JSON roundtrip, no mutation or invalid IDs',()=>{
  const s=A.create();assert(A.valid(roundtrip(s)));assert.equal(A.summary(s).conquered,0);assert(!A.finalUnlocked(s));assert.equal(A.grantSecuredShard(s,'fragments'),null);assert.equal(A.grantSecuredShard(s,'wisdom'),null);assert.equal(A.openPortal(s,'blood'),null);assert.equal(A.startAttempt(s,'blood'),null);
@@ -36,4 +36,4 @@ test('reject invalid serialization, duplicate shards, wrong families, forged act
  const s=A.create();for(const mutate of [x=>x.version=2,x=>x.realms.blood.shards=['blood_shard_1','blood_shard_1'],x=>x.realms.blood.shards=['decay_shard_1'],x=>x.realms.blood.portal='ready_to_unlock',x=>x.active={realm:'blood',token:1,difficultyStep:5},x=>x.extra=true]){const bad=roundtrip(s);mutate(bad);assert(!A.valid(bad));}
  const active=A.startAttempt(open(s,'blood'),'blood');active.active.difficultyStep=4;assert(!A.valid(active));
 });
-test('source and preview mirror are identical; no live integration yet',()=>{assert.equal(fs.readFileSync('online/v013-anchor-campaign.js','utf8'),fs.readFileSync('docs/online/v013-anchor-campaign.js','utf8'));assert(!fs.readFileSync('index.html','utf8').includes('online/v013-anchor-campaign.js'));});
+test('source and preview mirror are identical; live integration is loaded',()=>{assert.equal(fs.readFileSync('online/v013-anchor-campaign.js','utf8'),fs.readFileSync('docs/online/v013-anchor-campaign.js','utf8'));assert(fs.readFileSync('index.html','utf8').includes('online/v013-anchor-campaign.js'));});

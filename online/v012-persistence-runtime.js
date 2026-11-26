@@ -39,6 +39,7 @@ function phase4CommitRealm({awardXp=false}={}){
 }
 
 function phase4LoseLoot(){
+ if(ports.state.anchorCollection)ports.state.anchorCollection=root.WandererV013AnchorCampaign.settleCollection(ports.state.anchorCollection,'defeat');
  // Only physical Bag contents are lost. Currently equipped items are always protected.
  const lost=new Set(ports.phase3BagItems().map(item=>item.id));
  if(ports.phase1Controller.state.dungeon){for(const item of Object.values(ports.phase4Home||{}))if(item)lost.add(item.id);for(const item of ports.phase5Results.earned)lost.add(item.id);ports.state.equip=ports.phase4Clone(ports.phase4Home);}
@@ -66,6 +67,7 @@ function phase4Extract(){
  // the Bag (the overflow slots) requires a decision before extraction.
  const outside=ports.phase3BagOverflow();
  if(outside>0){ports.bannerMessage('Cannot extract: resolve '+outside+' item'+(outside===1?'':'s')+' outside the Expedition Bag first.');return false;}
+ if(ports.state.anchorCollection)ports.state.anchorCollection=root.WandererV013AnchorCampaign.settleCollection(ports.state.anchorCollection,'extracted');
  ports.phase6ReturnPotions('extracted');
  settleContract('extracted');ports.phase5MakeSummary('extracted');ports.phase5Results.review='summary';
  ports.phase1Controller.abandon();if(ports.phase1Build)WandererV012Buildcraft.clear(ports.phase1Build);

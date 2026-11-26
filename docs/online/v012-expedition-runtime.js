@@ -91,6 +91,7 @@ function phase6EventChoice(choice,itemId,passiveId,family,targetId){
 function phase6BackToCamp(){
  const g=ports.phase1Controller.state;
  if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked)||g.planeIndex!==1||g.history.length||g.stage!=='choice'||ports.state.run||ports.phase6Run?.started)return false;
+ if(ports.state.anchorCollection)ports.state.anchorCollection=root.WandererV013AnchorCampaign.settleCollection(ports.state.anchorCollection,'cancelled');
  ports.phase1Controller.abandon();if(ports.phase1Build)WandererV012Buildcraft.clear(ports.phase1Build);
  ports.phase1Build=ports.phase1Vitals=ports.phase1Continuity=null;ports.phase4Home=ports.phase4Entry=null;ports.phase4Seed=ports.phase4Prefix=null;ports.phase6Run=null;ports.phase4WaveKeys=[];
  if(ports.PHASE1_PREVIEW)ports.phase5Snapshot.expedition.lastOutcome='cancelled';ports.view='phase1';if(!ports.phase5Persist())return false;ports.render();return true;
@@ -311,7 +312,15 @@ function phase1WaveWon(){
  }
  r.status='ready';
  const completedNode=g.selected?.node;
+ const shardRealm=g.dungeon&&ports.phase1Controller.realmMap();
+ const shardSeed=g.dungeon?.foundationManifest?.seed;
  const result=ports.phase1Controller.waveWon();
+ if(shardRealm&&Number.isSafeInteger(shardSeed)&&Number.isSafeInteger(completedNode)&&root.WandererV013AnchorCampaign){
+  const A=root.WandererV013AnchorCampaign,prior=ports.state.anchorCollection||A.collection();
+  const next=A.observeVictory(prior,{seed:shardSeed,family:shardRealm.family,node:completedNode,kind:boss?'boss':elite?'elite':'normal'});
+  ports.state.anchorCollection=next;
+  if(next.expedition?.pending&&!prior.expedition?.pending)ports.addLog('◆ '+A.shardById(next.expedition.pending).name+' found in Expedition Bag. Extract or win to secure.','good');
+ }
  // A Monster Hunt counts only enemies from genuinely completed ordinary
  // fights. Record the actual native enemy count, not map scouting or offers.
  if(!boss&&!elite&&g.dungeon&&Number.isSafeInteger(r.totalMobCount)&&r.totalMobCount>0){
@@ -332,6 +341,7 @@ function phase1WaveWon(){
   ports.phase5Results.review='summary';
   ports.phase5PersonalBest=Math.max(ports.phase5PersonalBest,r.tier);
   ports.phase6ReturnPotions('victory');
+  if(ports.state.anchorCollection)ports.state.anchorCollection=root.WandererV013AnchorCampaign.settleCollection(ports.state.anchorCollection,'victory');
   ports.settleContract('victory');ports.phase5MakeSummary('victory');
   WandererV012Buildcraft.clear(ports.phase1Build);ports.phase1Build=null;
   if(ports.PHASE1_PREVIEW){ports.phase5Snapshot.expedition.completed=Math.max(ports.phase5Snapshot.expedition.completed,r.tier);ports.phase5Snapshot.expedition.lastOutcome='victory';}
