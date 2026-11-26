@@ -1,0 +1,29 @@
+name: v0.13 B1.2C - surrender and agent behaviour audit
+on:
+  push:
+    branches: [balance/b1.2c-agent-behaviour]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  focused:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Surrender and agent regression gate
+        run: node --test tests/v013-b12c-surrender.test.cjs tests/v013-b12a-event-resolution.test.cjs tests/v013-b12b-combat-timeout.test.cjs tests/v013-s4-agent-consistency.test.cjs tests/v013-strategic-build-agents.test.cjs tests/v013-s3-agent-sync.test.cjs tests/v013-natural-progression.test.cjs tests/v013-stage6-agent-strategy.test.cjs tests/v013-anchor-shards.test.cjs
+      - name: Earned agent screening and exact timeout replay
+        run: node scripts/v013-b12c-agent-audit.cjs
+      - name: Upload audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: b12c-agent-audit
+          path: reports/b12c/*.json
+          if-no-files-found: warn

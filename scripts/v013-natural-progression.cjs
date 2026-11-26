@@ -1111,6 +1111,7 @@ function fightNatural(a,profile,tickLimit,context={}){
  const barrierLost={boss:0,elite:0,minion:0,normal:0};
  const healthGained={boss:0,elite:0,minion:0,normal:0},barrierGained={boss:0,elite:0,minion:0,normal:0};
  const timeoutTrace=[AGENT.combatTracePoint(r,0,a.controller().state.stage)];
+ let surrenderReason=null;
  let nonFocusedHealthLost=0,observedNewEnemies=0,untrackedDisappeared=0,peakLiveEnemies=0;
  while(r.status==='fight'&&a.controller().state.stage==='combat'&&r.hp>0&&ticks<tickLimit){
   // Target selection is an ordinary player click, at most once per 8 native ticks.
@@ -1146,10 +1147,16 @@ function fightNatural(a,profile,tickLimit,context={}){
   untrackedDisappeared+=change.disappeared;
   if(focusedSummon)minionFocusSeconds+=Math.max(0,(r.combatSeconds||0)-tickStartedAt);
   minimum=Math.min(minimum,Math.max(0,r.hp)/(r.maxhp||1));
-  if(ticks%250===0)timeoutTrace.push(AGENT.combatTracePoint(r,ticks,a.controller().state.stage));
+  if(ticks%250===0){
+   timeoutTrace.push(AGENT.combatTracePoint(r,ticks,a.controller().state.stage));
+   if(context.surrenderPolicy==='observed-stalemate-v1'&&initial===1&&first===r.enemy&&!first.boss&&!first.miniboss&&r.status==='fight'){
+    const decision=AGENT.surrenderDecision(timeoutTrace);
+    if(decision&&a.surrender(r)){surrenderReason=decision;break;}
+   }
+  }
  }
  const stage=a.controller().state.stage,preparedId=a.state().automaticTalents.prepared||null;
- const timedOut=r.status==='fight'&&ticks>=tickLimit;
+ const timedOut=!surrenderReason&&r.status==='fight'&&ticks>=tickLimit;
  if(timedOut&&timeoutTrace.at(-1)?.tick!==ticks)timeoutTrace.push(AGENT.combatTracePoint(r,ticks,stage));
  return {
   preparedId,preparedActivations:preparedId?Number(r.outerUses?.[preparedId]||0):0,
@@ -1164,7 +1171,8 @@ function fightNatural(a,profile,tickLimit,context={}){
   secondaryTargetHits:Math.round(measured('secondaryTargetHits')),
   bossStyle:first?.boss?first.bossStyle:null,eliteType:first?.miniboss?first.eliteType:null,
   strategy:adaptive?'adaptive':'baseline',capabilities:cap,
-  status:r.status,died:r.hp<=0||stage==='failed',
+  status:surrenderReason?'surrendered':r.status,died:!surrenderReason&&(r.hp<=0||stage==='failed'),
+  surrendered:!!surrenderReason,...(surrenderReason?{surrenderReason,surrenderDiagnostic:{trace:timeoutTrace,observedHealthGainedByRole:healthGained,observedBarrierGainedByRole:barrierGained}}:{}),
   won:r.status==='cleared'&&stage!=='failed',timedOut,
   ...(timedOut?{timeoutDiagnostic:{tickLimit,stage,trace:timeoutTrace,
    observedHealthGainedByRole:healthGained,observedBarrierGainedByRole:barrierGained}}:{}),
@@ -1333,7 +1341,7 @@ function playDungeon(a,level,profile,opts,decisionModel='risk-aware',captureMode
   }
   // Record every native drop, including the first room: there is no guaranteed gear.
   const wasFirstRoom=g.dungeon?.cleared?.length===1&&!g.selected.boss;
-  const fight=fightNatural(a,profile,opts.tickLimit,{adaptiveTargets:flags.targets,capabilities:capabilities(a),level,captureMode});
+  const fight=fightNatural(a,profile,opts.tickLimit,{adaptiveTargets:flags.targets,capabilities:capabilities(a),level,captureMode,surrenderPolicy:opts.surrenderPolicy});
   const actualDrops=(a.state().run?.loot||[]).map(item=>
    ({slot:item.slot,rarity:item.rarity,subtype:item.subtype,source:item.source}));
   report.rooms.push({room:next.room,roomType:node.kind,...fight,
@@ -1341,7 +1349,7 @@ function playDungeon(a,level,profile,opts,decisionModel='risk-aware',captureMode
    ...(node.kind==='boss'?{bossModifiers:[...(report.bossInitialModifiers||[])]}:{}),
    ...(node.kind==='elite'?{marked:next.room===card.objective}:{})});
   if(fight.timedOut){report.error='Native combat timeout';break;}
-  if(fight.died)break;
+  if(fight.died||fight.surrendered)break;
   clearResults(a,profile);
  }
  if(g.stage==='choice'&&!report.extracted&&!report.error){
@@ -1370,6 +1378,7 @@ function playDungeon(a,level,profile,opts,decisionModel='risk-aware',captureMode
  report.goldEnd=a.state().gold;
  report.stepsEnd=g.dungeon?.steps??null;
  report.gearAfter=gearSnapshot(a);
+ report.surrendered=report.rooms.some(r=>r.surrendered);
  report.bossWon=report.status==='victory'&&report.bossReached;
  report.fightsWon=report.rooms.filter(r=>r.won).length;
  report.damageTaken=report.rooms.reduce((n,r)=>n+r.damageTaken,0);
@@ -1516,7 +1525,7 @@ function analyze(accounts,opts){
   const wins=attempts.filter(a=>a.bossWon).length,deaths=attempts.filter(a=>a.status==='defeat').length;
   const valid=attempts.filter(a=>!a.error&&a.status!=='error');
   levels.push({level:E,accountsReached:reached,attempts:attempts.length,validAttempts:valid.length,
-   wins,deaths,extractions:attempts.filter(a=>a.status==='extracted').length,
+   wins,deaths:deaths-attempts.filter(a=>a.surrendered).length,surrenders:attempts.filter(a=>a.surrendered).length,extractions:attempts.filter(a=>a.status==='extracted').length,
    errors:attempts.filter(a=>a.status==='error'||a.error).length,
    bossReached:attempts.filter(a=>a.bossReached).length,
    roomsWon:attempts.reduce((n,a)=>n+(a.fightsWon||0),0),

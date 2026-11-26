@@ -217,4 +217,17 @@ function combatTracePoint(run,tick,stage){
   enemyAbilityCasts:run.metrics?.enemyAbilityCasts??0,
   active:active.filter(Boolean).map(describe),reserve:(run.groupReserve||[]).filter(Boolean).map(describe)};
 }
-module.exports={classify,realmPreference,groupPreference,selectTarget,snapshot,changes,combatTracePoint};
+// Conservative opt-in research policy, independent of the technical tick cap.
+// Only a stable, visible solo normal enemy; no prediction of hidden waves.
+// At least 10 minutes elapsed, last 100+ s <10% max HP net progress,
+// and >25% HP remains. No gameplay changes and no automatic human surrender.
+function surrenderDecision(trace){
+ const end=trace.at(-1),start=trace.slice(0,-1).reverse().find(p=>end&&end.seconds-p.seconds>=100);
+ if(!end||!start||end.seconds-trace[0].seconds<600||end.stage!=='combat'||end.status!=='fight'||!(end.player.hp>0))return null;
+ const window=trace.filter(p=>p.tick>=start.tick),e=end.active[0],prior=start.active[0];
+ if(!e||!prior||!(e.maxhp>0)||window.some(p=>p.active.length!==1||p.reserve.length||p.active[0].name!==e.name||p.active[0].family!==e.family||p.active[0].maxhp!==e.maxhp))return null;
+ const progress=(prior.hp-e.hp)/e.maxhp;
+ if(e.hp/e.maxhp<=.25||progress>=.10)return null;
+ return {reason:'observed_solo_stalemate',seconds:end.seconds,windowSeconds:end.seconds-start.seconds,netHpProgress:progress,remainingHpFraction:e.hp/e.maxhp};
+}
+module.exports={classify,realmPreference,groupPreference,selectTarget,snapshot,changes,combatTracePoint,surrenderDecision};

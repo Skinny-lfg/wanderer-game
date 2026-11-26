@@ -362,10 +362,11 @@ function phase1WaveWon(){
  else ports.renderCombat();
 }
 
-function phase1Death(){
+function phase1Death(surrendered=false){
  clearInterval(ports.clock);
  if(!ports.isPhase1Run())return;
- ports.addLog('YOU DIED · Expedition ended.','critical');
+ const voluntary=surrendered===true;
+ ports.addLog(voluntary?'SURRENDER · Expedition ended.':'YOU DIED · Expedition ended.','critical');
  ports.phase6CollectMetrics(ports.state.run);ports.phase6ReturnPotions('defeat');
  ports.phase5RememberRealm(ports.state.run,'defeat');ports.phase5MakeSummary('defeat');
  // Do not show the intermediary "YOU DIED" Realm page as well as the final loss summary.
@@ -374,7 +375,15 @@ function phase1Death(){
  if(ports.phase1Build)WandererV012Buildcraft.clear(ports.phase1Build);
  ports.phase1Build=null;ports.state.run=null;ports.view='phase1';
  if(ports.PHASE1_PREVIEW)ports.phase5Snapshot.expedition.lastOutcome='defeat';ports.phase5Persist();ports.render();
- ports.bannerMessage('You died. Your secured resources remain in Camp.');
+ ports.bannerMessage(voluntary?'You surrendered. Your secured resources remain in Camp.':'You died. Your secured resources remain in Camp.');
+}
+
+// A confirmed surrender follows exactly the existing defeat settlement.
+// A stale confirmation must never end another encounter or a cleared room.
+function phase1Surrender(expectedRun=ports.state.run){
+ const r=ports.state.run;
+ if(!r||r!==expectedRun||r.status!=='fight'||!ports.isPhase1Run()||ports.phase1Controller?.state.stage!=='combat'||(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked)))return false;
+ phase1Death(true);return true;
 }
 
 function phase1Abandon(){
@@ -451,7 +460,7 @@ function phase5ExitResult(){
  ports.state.run=null;ports.view='phase1';if(!ports.phase5Persist())return false;ports.render();return true;
 }
 function phase5ReviewSummary(){ports.phase5Results.review='summary';ports.view='phase1';ports.phase5Persist();ports.render();}
-return {phase5ReviewSummary,phase1Init,phase1Begin,phase2Theme,phase6AwardGear,phase6Buff,phase6OpenEvent,phase6EventChoice,phase6BackToCamp,phase1Enter,phase2Launch,phase1StartWave,phase1WaveWon,phase1Death,phase1Abandon,phase6TickDurations,phase3ExpeditionActive,phase3CanPrepare,phase3IsBetweenPlanes,phase3Vitals,phase5Item,phase5RememberRealm,phase5MakeSummary,phase5ExitResult};
+return {phase5ReviewSummary,phase1Init,phase1Begin,phase2Theme,phase6AwardGear,phase6Buff,phase6OpenEvent,phase6EventChoice,phase6BackToCamp,phase1Enter,phase2Launch,phase1StartWave,phase1WaveWon,phase1Death,phase1Surrender,phase1Abandon,phase6TickDurations,phase3ExpeditionActive,phase3CanPrepare,phase3IsBetweenPlanes,phase3Vitals,phase5Item,phase5RememberRealm,phase5MakeSummary,phase5ExitResult};
 }
 root.WandererV012ExpeditionRuntime=Object.freeze({create});
 })(globalThis);
