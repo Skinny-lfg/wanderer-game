@@ -112,4 +112,4 @@ function aggregate(){
  if(Object.values(gate).some(n=>n>0))process.exitCode=1;
 }
 if(require.main===module){if(process.argv[2]==='aggregate')aggregate();else run(Number(process.argv[2]));}
-module.exports={ARMS,profile,contrast,firstDifference};
+module.exports={ARMS,profile,contrast,firstDifference,observe,trace,summarize};
