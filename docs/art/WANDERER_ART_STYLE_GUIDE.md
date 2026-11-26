@@ -1,6 +1,6 @@
 # Wanderer — Art Style Guide
-## Stylized Gothic Painterly — v1.1 (G2.4A.2)
-Date: 2026-11-26. Status: proposed production standard; elite artwork approved by owner; experimental asset board (G2.4A.3) still pending. Revise this document when the owner approves changes; do not silently turn proposals into final assets.
+## Stylized Gothic Painterly — v1.2 (G2.4A.4)
+Date: 2026-11-26. Status: core artistic direction approved by owner after G2.4A.3; individual production assets and experimental Vitality palette still require validation. Mockup screen layouts are not approved. Revise this document when the owner approves changes; do not silently turn proposals into final assets.
 
 ## Mandatory workflow
 Before creating, editing, commissioning or integrating any Wanderer art (images, concept art, UI, icons, items, characters, sprites, NPCs, enemies, environments or VFX), read this guide and inspect the original approved reference images when accessible. Treat those images as the primary style reference, not generic dark fantasy examples. If they cannot be opened, say so; do not claim visual verification. Apply this guide to the asset's function and real in-game scale. Preserve previously approved assets and G2.3B composition unless the owner explicitly requests redesign. No unapproved production changes.
@@ -32,7 +32,7 @@ Affinity accents (shadow / mid / highlight):
 | Aegis | #203349 | #477FAC | #A3D7F4 |
 | Fury | #53281D | #BD592D | #F89A48 |
 | Magic | #31254E | #7961B3 | #B7A0EF |
-Affinity direction update: Aegis uses blue tones for protection and barriers. Vitality uses Golden Life (warm gold / amber / pale golden light) as an explicitly experimental choice, not final approval. Decay retains green; avoid green Vitality effects in this trial. Distinguish Vitality's restorative golden light from Fury's aggressive orange-red and from material gold and item rarity indicators. Aegis armor may retain aged gold/bronze materials; magical affinity colors need not match armor materials. Validate these colors together in G2.4A.3–A.4 before changing any functional game colors. These are proposals, not replacements for existing functional game colors. Keep Affinity and rarity signals distinct. Preserve existing rarity color mapping unless explicitly approved; tooltip frames must match item rarity. Illustrative rarity colors from the concept: Grey #77777A, Common #BCBCB7, Uncommon #65A56C, Rare #518FCA, Epic #A477CE, Legendary #D7A74E.
+Affinity direction update: Aegis uses blue tones for protection and barriers. Vitality uses Golden Life (warm gold / amber / pale golden light) as an explicitly experimental choice, not final approval; explore restorative holy light, warm ivory and halos rather than nature or plant motifs. Decay retains green; avoid green Vitality effects in this trial. Distinguish Vitality's restorative golden light from Fury's aggressive orange-red and from material gold and item rarity indicators. Aegis armor may retain aged gold/bronze materials; magical affinity colors need not match armor materials. Continue to validate these colors together during production before changing any functional game colors. These are proposals, not replacements for existing functional game colors. Keep Affinity and rarity signals distinct. Preserve existing rarity color mapping unless explicitly approved; tooltip frames must match item rarity. Illustrative rarity colors from the concept: Grey #77777A, Common #BCBCB7, Uncommon #65A56C, Rare #518FCA, Epic #A477CE, Legendary #D7A74E.
 
 ## Material library
 Bronze: warm, weathered, hammered. Iron: dark, heavy, forged. Stone: ancient, chipped, carved. Leather: matte, worn, seams. Cloth: heavy, layered, frayed. Bone/ivory: organic, ritualistic. Put wear on exposed edges, contact areas and raised features, not uniform dirt/noise. Reserve bright highlights for meaningful shape and focus.
@@ -74,10 +74,12 @@ Avoid photorealism, cartoon proportions, anime aesthetics, glossy plastic materi
 For isolated game assets, use clean silhouettes, consistent lighting, appropriate framing and transparent backgrounds where required.
 
 ## Validation and next stages
-G2.4A.1 elite analysis complete; G2.4A.2 guide defined, pending visual validation. G2.4A.3 experimental board: sword, shield, helmet, Anchor Rune, bag slot, equipment slot, tooltip frame, button, health bar, mana bar, gold icon, essence icon. G2.4A.4 owner approval; G2.4B UI Kit 2.0 production only after approval.
+G2.4A.1 elite analysis, G2.4A.2 style guide, G2.4A.3 experimental boards and G2.4A.4 core artistic direction validation complete. Owner liked the second experimental asset board and individual elements, but noted that mockup layouts were too boxy. Preserve G2.3B composition; reduce ornamentation, especially repetitive bag slots, bars and secondary buttons. Production proceeds by component family, with individual visual approval before integration. G2.4B.1 Materials & Surfaces: test dark neutral interior surfaces, forged iron, aged bronze, leather, stone and fabric; no ornament, frames or text in usable textures. Keep surface texture subtle behind text and icons; prefer reusable seamless textures, validate tiling before calling them production-ready. Subsequent stages: slots/frames, buttons/navigation, resource bars, iconography, equipment art, Godot integration and visual audit.
 For each new asset: compare to approved elite references; verify materials, silhouette, lighting, detail hierarchy and readability at intended size; validate transparency and edges where relevant; check existing UI composition at 1280×720 and 1920×1080 when integrating. Report any limitations; never describe untested assets as validated. Update guide with approved decisions and version history.
 
 ## Version history
 - v1.0 — G2.4A.2: initial guide, based on three approved elite images; palette and production rules provisional until experimental board validation.
 
 - v1.1 — Aegis blue direction requested by owner; Golden Life Vitality authorized for experimentation only. No game or asset color changes.
+
+- v1.2 — Core painterly asset style approved for progressive production; mockup compositions rejected as too boxy. Materials & Surfaces begins; no game or asset changes.
