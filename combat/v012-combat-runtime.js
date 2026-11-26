@@ -16,7 +16,7 @@ function eliteArchetype(run){return ports.ELITE_ARCHETYPES[run?.eliteType]||port
 function rollEliteArchetype(){return ports.sample(Object.keys(ports.ELITE_ARCHETYPES))}
 
 function tryDodge(run,type){
- const chance=type==='physical'?ports.evasionChance(run.stats.evasionRating||0,run.tier):0;
+ const chance=type==='physical'?WandererV012CombatCore.potionEvasion(ports.evasionChance(run.stats.evasionRating||0,run.tier),run.stats.evasionBonus):0;
  if(!chance||ports.gameRandom()>=chance)return false;
  ports.addLog('DODGE · '+run.enemy.name+' physical attack avoided (0 damage)','good');
  ports.floatText('DODGE','hero');return true;
@@ -94,7 +94,7 @@ function advanceBleed(r){
   e.dots.bleed=dots.filter(d=>bleedClocks.get(d).expires>now+1e-9);
   synchronizeDots(e);
   if(raw>0){
-   const damage=Math.round(raw*(root.WandererV013ExpeditionBoons?.dotFactor(r)||1)),actual=Math.min(Math.max(0,e.hp),damage);
+   const damage=Math.round(raw*(root.WandererV013ExpeditionBoons?.dotFactor(r)||1)*WandererV012CombatCore.executionerFactor(r.stats,e)),actual=Math.min(Math.max(0,e.hp),damage);
    e.lastBleedTick=now;if(damage>=e.hp)e.v012DeathBleed=true;e.hp-=damage;
    ports.phase6Metric(r,'damageDealt',actual);ports.phase6Metric(r,'periodicDamage',actual);
    if(acceleratedTicks){ports.phase6Metric(r,'acceleratedBleedTicks',acceleratedTicks);ports.phase6Metric(r,'acceleratedBleedDamage',Math.min(actual,Math.round(actual*acceleratedRaw/raw)));}
@@ -322,7 +322,7 @@ function reflectPrimaryDamage(r,enemy,hpLost){
  return resolveBossPulseLethal(r,s);
 }
 function setDirectEnemyDamage(r,amount,label){
- const enemy=r.enemy;let damage=Math.max(0,Math.round(amount*(root.WandererV013ExpeditionBoons?.factor(r)||1)*(root.WandererV013EnemyAbilities?.directFactor(r,enemy)||1)*(root.WandererV013BossAbilities?.directFactor(r,enemy)||1)));
+ const enemy=r.enemy;let damage=Math.max(0,Math.round(amount*(root.WandererV013ExpeditionBoons?.factor(r)||1)*(root.WandererV013EnemyAbilities?.directFactor(r,enemy)||1)*(root.WandererV013BossAbilities?.directFactor(r,enemy)||1)*WandererV012CombatCore.executionerFactor(r.stats,enemy)));
  if(enemy.barrier>0){const before=enemy.barrier,absorbed=Math.min(enemy.barrier,damage);enemy.barrier-=absorbed;damage-=absorbed;if(root.WandererV013BossAbilities?.barrierChanged(r,enemy,before,enemy.barrier))ports.addLog('⛨ Ward shattered · Vulnerable for 3s!','good');}
  ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,enemy.hp),damage));ports.phase6Proc(r,label);enemy.hp-=damage;if(damage>0){ports.addLog(label+' '+damage+' bonus damage','good');ports.floatText(damage,'enemy',false,'',enemy);}
  return damage;
@@ -497,7 +497,7 @@ function v013LightningChainFactors(){
 }
 function v013SecondaryHit(r,enemy,amount){
  if(!enemy||enemy.hp<=0)return 0;
- let remaining=Math.max(1,Math.round(amount*(root.WandererV013EnemyAbilities?.directFactor(r,enemy)||1)*(root.WandererV013ExpeditionBoons?.factor(r,true)||1)));
+ let remaining=Math.max(1,Math.round(amount*(root.WandererV013EnemyAbilities?.directFactor(r,enemy)||1)*(root.WandererV013ExpeditionBoons?.factor(r,true)||1)*WandererV012CombatCore.executionerFactor(r.stats,enemy)));
  const absorbed=Math.min(enemy.barrier||0,remaining);
  enemy.barrier=Math.max(0,(enemy.barrier||0)-absorbed);
  remaining-=absorbed;
@@ -701,7 +701,7 @@ function weaponAttack(r,offhandStrike=false){
   if(cast&&learned('resonant_sequence')){r.echoCount=((r.echoCount||0)+1)%3;if(!r.echoCount){const echo=Math.max(1,Math.round(damage*.1*learned('resonant_sequence')));damage+=echo;if(echo)ports.floatText(echo,'enemy',false,'ECHO',e);}}
   damage=Math.round(damage);
  }
- damage=Math.max(1,Math.round(damage*(root.WandererV013ExpeditionBoons?.factor(r)||1)*(root.WandererV013EnemyAbilities?.directFactor(r,e)||1)*(root.WandererV013BossAbilities?.directFactor(r,e)||1)));
+ damage=Math.max(1,Math.round(damage*(root.WandererV013ExpeditionBoons?.factor(r)||1)*(root.WandererV013EnemyAbilities?.directFactor(r,e)||1)*(root.WandererV013BossAbilities?.directFactor(r,e)||1)*WandererV012CombatCore.executionerFactor(r.stats,e)));
  const hpBefore=e.hp,barrierBefore=e.barrier;
  ports.animateStrike(kind,cast);
  if(e.barrier>0){const absorbed=Math.min(e.barrier,damage);e.barrier-=absorbed;damage-=absorbed;if(absorbed)ports.addLog('🛡 '+e.name+' absorbs '+absorbed+' damage','spell');if(root.WandererV013BossAbilities?.barrierChanged(r,e,barrierBefore,e.barrier))ports.addLog('⛨ Ward shattered · Vulnerable for 3s!','good');}
@@ -917,10 +917,12 @@ function updateFight(){
  if(r.tDot>=1){if(r.pulses>0){r.pulses--;ports.setHeal(r,r.maxhp*.01*learned('second_pulse'));}
 
   r.tDot-=1;
+  const renewal=ports.phase6Run?.effects.renewal;
+  if(r.phase1&&renewal?.remaining>0&&(r.renewalTicks||0)<15){r.renewalTicks=(r.renewalTicks||0)+1;const healed=ports.setHeal(r,r.maxhp*renewal.power);ports.phase6Metric(r,'renewalHealing',healed);if(healed>0)ports.addLog('💚 Renewal +'+Math.round(healed)+' HP','good');}
   const hasBurn=e.burnStacks>0;
-  if(hasBurn){const applied=Math.round(ports.tickDots(e)*(root.WandererV013ExpeditionBoons?.dotFactor(r)||1));ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),applied));ports.phase6Metric(r,'periodicDamage',Math.min(Math.max(0,e.hp),applied));e.hp-=applied;ports.addLog('☠️ Damage over time: '+applied+' damage','spell');if(applied>0)ports.floatText(applied,'enemy',false,'BURN',e);}
+  if(hasBurn){const applied=Math.round(ports.tickDots(e)*(root.WandererV013ExpeditionBoons?.dotFactor(r)||1)*WandererV012CombatCore.executionerFactor(r.stats,e));ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),applied));ports.phase6Metric(r,'periodicDamage',Math.min(Math.max(0,e.hp),applied));e.hp-=applied;ports.addLog('☠️ Damage over time: '+applied+' damage','spell');if(applied>0)ports.floatText(applied,'enemy',false,'BURN',e);}
   if(hasBurn)ports.setHeatTick(r,true);
-  if(r.enemies){for(const mob of r.enemies){if(mob===e||mob.hp<=0)continue;const burning=mob.burnStacks>0;if(burning){const spreadBase=(mob.dots?.burn||[]).filter(dot=>dot.spread||dot.secondaryOrigin).reduce((sum,dot)=>sum+dot.damage,0);const rawDots=ports.tickDots(mob);const damage=Math.round(rawDots*(root.WandererV013ExpeditionBoons?.dotFactor(r)||1));const applied=Math.min(Math.max(0,mob.hp),damage);ports.phase6Metric(r,'damageDealt',applied);ports.phase6Metric(r,'periodicDamage',applied);if(spreadBase>0&&rawDots>0&&applied>0){const contribution=Math.min(applied,Math.round(applied*spreadBase/rawDots));ports.phase6Metric(r,'secondaryTargetDamage',contribution);ports.phase6Metric(r,'secondaryDotDamage',contribution);ports.phase6Metric(r,'secondaryTargetHits',Number(contribution>0));}mob.hp-=damage;if(damage>0)ports.floatText(damage,'enemy',false,'BURN',mob);}if(mob.hp>0&&ports.phase1Build){r.enemy=mob;WandererV012Buildcraft.tickRot(ports.phase1Build,ports.phase2Context(r));}if(mob.slowTime>0)mob.slowTime=Math.max(0,mob.slowTime-1);}r.enemy=e;}
+  if(r.enemies){for(const mob of r.enemies){if(mob===e||mob.hp<=0)continue;const burning=mob.burnStacks>0;if(burning){const spreadBase=(mob.dots?.burn||[]).filter(dot=>dot.spread||dot.secondaryOrigin).reduce((sum,dot)=>sum+dot.damage,0);const rawDots=ports.tickDots(mob);const damage=Math.round(rawDots*(root.WandererV013ExpeditionBoons?.dotFactor(r)||1)*WandererV012CombatCore.executionerFactor(r.stats,mob));const applied=Math.min(Math.max(0,mob.hp),damage);ports.phase6Metric(r,'damageDealt',applied);ports.phase6Metric(r,'periodicDamage',applied);if(spreadBase>0&&rawDots>0&&applied>0){const contribution=Math.min(applied,Math.round(applied*spreadBase/rawDots));ports.phase6Metric(r,'secondaryTargetDamage',contribution);ports.phase6Metric(r,'secondaryDotDamage',contribution);ports.phase6Metric(r,'secondaryTargetHits',Number(contribution>0));}mob.hp-=damage;if(damage>0)ports.floatText(damage,'enemy',false,'BURN',mob);}if(mob.hp>0&&ports.phase1Build){r.enemy=mob;WandererV012Buildcraft.tickRot(ports.phase1Build,ports.phase2Context(r));}if(mob.slowTime>0)mob.slowTime=Math.max(0,mob.slowTime-1);}r.enemy=e;}
   if(s.bonus.regenBonus){const healed=ports.setHeal(r,ports.regenPerSecond(r.maxhp,s.bonus.regenBonus));if(healed>0)ports.addLog('💚 Regeneration +'+Math.round(healed)+' HP','good');}
   if(ports.isPhase1Run()&&ports.phase1Build)WandererV012Buildcraft.onSecond(ports.phase1Build,ports.phase2Context(r));
   if(e.slowTime>0)e.slowTime=Math.max(0,e.slowTime-1);
@@ -1056,7 +1058,7 @@ function phase2Context(r){
   values.push({damage:WandererV012Buildcraft.dotPotency(controlled?Math.max(1,Math.round(raw*1.25)):raw,r.stats),remaining:3,...(controlled?{controlledBase:WandererV012Buildcraft.dotPotency(raw,r.stats)}:{}),...(kind==='burn'&&options.primaryOnly===true?{primaryOnly:true}:{})});
   if(controlled)ports.phase6Metric(r,'controlled_burnApplications',1);ports.synchronizeDots(e);
  },
- dotDamage(amount,label,secondaryFraction=0){const n=Math.max(0,Math.round(amount*(root.WandererV013ExpeditionBoons?.dotFactor(r)||1)));if(n){const applied=Math.min(Math.max(0,e.hp),n);ports.phase6Metric(r,'damageDealt',applied);ports.phase6Metric(r,'periodicDamage',applied);if(secondaryFraction>0&&applied>0){const attributed=Math.min(applied,Math.round(applied*Math.min(1,secondaryFraction)));if(attributed>0){ports.phase6Metric(r,'secondaryTargetDamage',attributed);ports.phase6Metric(r,'secondaryDotDamage',attributed);ports.phase6Metric(r,'secondaryTargetHits',1);}}e.hp-=n;ports.addLog(label+' '+n+' damage','spell');ports.floatText(n,'enemy',false,'ROT',e);}},
+ dotDamage(amount,label,secondaryFraction=0){const n=Math.max(0,Math.round(amount*(root.WandererV013ExpeditionBoons?.dotFactor(r)||1)*WandererV012CombatCore.executionerFactor(r.stats,e)));if(n){const applied=Math.min(Math.max(0,e.hp),n);ports.phase6Metric(r,'damageDealt',applied);ports.phase6Metric(r,'periodicDamage',applied);if(secondaryFraction>0&&applied>0){const attributed=Math.min(applied,Math.round(applied*Math.min(1,secondaryFraction)));if(attributed>0){ports.phase6Metric(r,'secondaryTargetDamage',attributed);ports.phase6Metric(r,'secondaryDotDamage',attributed);ports.phase6Metric(r,'secondaryTargetHits',1);}}e.hp-=n;ports.addLog(label+' '+n+' damage','spell');ports.floatText(n,'enemy',false,'ROT',e);}},
  magicCriticalDamage(amount){return spellCriticalDamage(r,amount);},
  damage(amount,label){return ports.setDirectEnemyDamage(r,amount,label);},
  areaDamage(amount,label){ports.setDirectEnemyDamage(r,amount,label);groupSecondaryDamage(r,amount,Array(Math.max(0,(r.enemies?.length||1)-1)).fill(1),label);},

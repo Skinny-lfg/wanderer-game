@@ -257,7 +257,7 @@ function phase1WaveWon(){
      // Contagion detonates five transferred ticks immediately on an active recipient.
      // Reserve units retain their transferred DOT but cannot die before spawning.
      if(transferredTick>0&&r.enemies.includes(target)&&target.hp>0){
-      const burst=Math.max(1,Math.round(transferredTick*5));
+      const burst=Math.max(1,Math.round(transferredTick*5*WandererV012CombatCore.executionerFactor(r.stats,target)));
       const absorbed=Math.min(target.barrier||0,burst);
       target.barrier=Math.max(0,(target.barrier||0)-absorbed);
       const dealt=Math.min(target.hp,burst-absorbed);
@@ -329,7 +329,7 @@ function phase1WaveWon(){
   if(entry?.node===completedNode&&!entry.boss&&!entry.elite&&!entry.event)
    entry.monstersDefeated=Math.min(32,r.totalMobCount);
  }
- ports.phase4CommitRealm({awardXp:true});ports.phase6CollectMetrics(r);ports.phase6TickDurations();
+ ports.phase4CommitRealm({awardXp:true});ports.phase6CollectMetrics(r);ports.phase6TickDurations(boss||elite);
  r.status='cleared';
  ports.addLog(result.expeditionComplete?'Expedition boss defeated!':'Realm cleared. Select your next Realm.','good');
  ports.phase5RememberRealm(r,'cleared');
@@ -389,8 +389,8 @@ function phase1Abandon(){
  ports.phase5Persist();ports.render();return true;
 }
 
-function phase6TickDurations(){
- if(!ports.phase6Run)return;ports.phase6Run.combats++;for(const e of Object.values(ports.phase6Run.effects))if(e&&typeof e==='object'&&Number.isInteger(e.remaining))e.remaining=Math.max(0,e.remaining-1);
+function phase6TickDurations(eligible=false){
+ if(!ports.phase6Run)return;ports.phase6Run.combats++;for(const [kind,e] of Object.entries(ports.phase6Run.effects))if(e&&typeof e==='object'&&Number.isInteger(e.remaining)&&(kind!=='executioner'||eligible))e.remaining=Math.max(0,e.remaining-1);
 }
 
 function phase3ExpeditionActive(){return ports.PHASE1_PREVIEW&&['choice','combat'].includes(ports.phase1Controller?.state.stage);}

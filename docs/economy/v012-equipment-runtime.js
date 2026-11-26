@@ -286,8 +286,8 @@ function phase6SelectPotion(kind,remove=false){
 function phase6StartPotions(){
  if(!ports.phase6Run||ports.phase6Run.started)return true;
  const stock=ports.phase6PotionInventory(),ids=[...ports.state.potionSelection];try{WandererV012Consumables.selection(stock,ids);}catch{ports.bannerMessage('Selected potions are unavailable. Return to Camp.');return false;}
- ports.phase6Run.potions=ids.map(kind=>({kind,used:kind==='fortune'}));for(const kind of ids)stock[kind]--;ports.state.potionSelection=[];ports.phase6Run.started=true;
- if(ids.includes('fortune'))ports.phase6Run.effects.fortune=true;return true;
+ ports.phase6Run.potions=ids.map(kind=>({kind,used:WandererV012Consumables.AUTO.includes(kind)}));for(const kind of ids)stock[kind]--;ports.state.potionSelection=[];ports.phase6Run.started=true;
+ for(const kind of WandererV012Consumables.AUTO)if(ids.includes(kind))ports.phase6Run.effects[kind]=true;return true;
 }
 
 function phase6ReturnPotions(outcome){
@@ -304,10 +304,11 @@ function phase6UsePotion(index,mode='threat'){
     ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked))return false;
  if(!ports.phase6Run.started&&!ports.phase6StartPotions())return false;
  const potion=ports.phase6Run.potions?.[index];
- if(!potion||potion.used||potion.kind==='fortune')return false;
+ if(!potion||potion.used||WandererV012Consumables.AUTO.includes(potion.kind))return false;
  const kind=potion.kind,v=ports.phase3Vitals();
  if(kind==='barrier'&&(ports.phase6Run.effects.barrier||0)>=.3||
-    (kind==='purifying'?ports.phase6Run.effects[kind]?.remaining>0:ports.phase6Run.effects[kind]?.remaining===3)||
+    (['purifying','renewal'].includes(kind)?ports.phase6Run.effects[kind]?.remaining>0:ports.phase6Run.effects[kind]?.remaining===3)||
+    kind==='rejuvenation'&&v.hp>=v.maxhp&&v.mp>=v.maxmp||
     kind==='health'&&v.hp>=v.maxhp||kind==='mana'&&v.mp>=v.maxmp)return false;
  if((kind==='scout'||kind==='veilsight'||kind==='purifying'||kind==='fate'||kind==='trail')&&!d)return false;
  if(kind==='fate'){
@@ -331,8 +332,10 @@ function phase6UsePotion(index,mode='threat'){
   if(!ports.phase1Vitals)ports.phase1Vitals={hp:v.hp,mp:v.mp,maxmp:v.maxmp};
   if(kind==='health')ports.phase1Vitals.hp=Math.min(v.maxhp,v.hp+Math.ceil(v.maxhp*.35));
   else if(kind==='mana')ports.phase1Vitals.mp=Math.min(v.maxmp,v.mp+Math.ceil(v.maxmp*.4));
+  else if(kind==='rejuvenation'){ports.phase1Vitals.hp=Math.min(v.maxhp,v.hp+Math.ceil(v.maxhp*.20));ports.phase1Vitals.mp=Math.min(v.maxmp,v.mp+Math.ceil(v.maxmp*.25));}
   else if(kind==='barrier')ports.phase6Run.effects.barrier=Math.min(.3,(ports.phase6Run.effects.barrier||0)+.15);
-  else ports.phase6Buff(kind,kind==='haste'?.08:.10);
+  else if(kind==='renewal')ports.phase6Buff(kind,.03,1);
+  else ports.phase6Buff(kind,({haste:.08,withering:.15,precision:.05,phantom:.05,executioner:.15})[kind]??.10);
  }
  potion.used=true;ports.view='phase1';ports.save();ports.render();return true;
 }

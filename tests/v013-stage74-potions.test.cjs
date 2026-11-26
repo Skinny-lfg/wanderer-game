@@ -24,8 +24,8 @@ function direct(seed=7410){
 }
 test('Stage 7.4 catalog includes three new named potions with normalized offers',()=>{
  for(const id of ['purifying','veilsight','fate'])assert(P.CATALOG.some(p=>p.id===id),id);
- assert.equal(P.CATALOG.length,13);
- assert.equal(P.OFFER_PROBABILITIES.fortune,1/30);
+ assert.equal(P.CATALOG.length,21);
+ assert.equal(P.OFFER_PROBABILITIES.fortune,1/90);
  assert(Math.abs(Object.values(P.OFFER_PROBABILITIES).reduce((n,p)=>n+p,0)-1)<1e-12);
  assert.equal(P.selection({fate:1},['fate']).length,1);
 });

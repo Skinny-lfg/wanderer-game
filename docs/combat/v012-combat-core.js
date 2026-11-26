@@ -153,11 +153,17 @@ function groupComplete(enemies){return enemies.length>0&&enemies.every(enemy=>en
 
 function affinityProcChance(kind,cast=false){return cast?.9:kind==='Daggers'?.52:kind==='Two-Handed'?.26:.32}
 
+function executionerFactor(stats,enemy){return enemy&&!enemy.stage84Node&&(enemy.boss||enemy.miniboss)?1+Math.max(0,Number(stats?.executionerPower)||0):1;}
+function potionEvasion(base,bonus=0){return Math.max(0,Math.min(.45,base+Math.max(0,Number(bonus)||0)));}
 function applyExpeditionModifiers(stats,e){
  const s={...stats};
  for(const [key,field]of [['might','attack'],['arcane','spellPower'],['ironhide','defense'],['haste','attacksPerSec']])if(e[key]?.remaining>0)s[field]*=1+e[key].power;
+ if(e.withering?.remaining>0)s.dotPower=(s.dotPower||0)+e.withering.power;
+ if(e.precision?.remaining>0)s.crit=Math.min(100,(s.crit||0)+e.precision.power*100);
+ if(e.phantom?.remaining>0)s.evasionBonus=(s.evasionBonus||0)+e.phantom.power;
+ if(e.executioner?.remaining>0)s.executionerPower=e.executioner.power;
  if(e.attack)s.attack*=1+e.attack;if(e.defense)s.defense*=1+e.defense;
  return s;
 }
-root.WandererV012CombatCore=Object.freeze({evasionChance,enemyAttackType,referenceLevel,enemyStat,gearStat,endlessWeaponDamageBonus,estimateEnemy,createEnemyGroup,applyEncounterPressure,applyNormalRoomBudget,NORMAL_ROOM_BUDGET,livingEnemies,nextGroupTarget,groupComplete,affinityProcChance,applyExpeditionModifiers});
+root.WandererV012CombatCore=Object.freeze({evasionChance,enemyAttackType,referenceLevel,enemyStat,gearStat,endlessWeaponDamageBonus,estimateEnemy,createEnemyGroup,applyEncounterPressure,applyNormalRoomBudget,NORMAL_ROOM_BUDGET,livingEnemies,nextGroupTarget,groupComplete,affinityProcChance,executionerFactor,potionEvasion,applyExpeditionModifiers});
 })(globalThis);

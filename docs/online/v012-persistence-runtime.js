@@ -22,12 +22,12 @@ function phase4CommitRealm({awardXp=false}={}){
  // reward ledger. Partial waves are rolled back by the entry checkpoint.
  if(awardXp&&root.WandererAutomaticTalents){
   const progress=ports.state.automaticTalents||root.WandererAutomaticTalents.create();
-  const run=ports.state.run,enemy=run?.enemy,base=enemy?.boss?45:enemy?.miniboss?30:run?20:15,groupReward=enemy?.boss||enemy?.miniboss?1:run?.totalMobCount>=18?1.3:run?.totalMobCount>=10?1.2:run?.totalMobCount>1?1.1:1,amount=Math.round(base*groupReward);
+  const run=ports.state.run,enemy=run?.enemy,base=enemy?.boss?45:enemy?.miniboss?30:run?20:15,groupReward=enemy?.boss||enemy?.miniboss?1:run?.totalMobCount>=18?1.3:run?.totalMobCount>=10?1.2:run?.totalMobCount>1?1.1:1,amount=Math.round(base*groupReward*(ports.phase6Run?.effects.wisdom?1.25:1));
   ports.state.automaticTalents=root.WandererAutomaticTalents.award(progress,amount);
   if(run){
   const g=ports.phase1Controller.state,selected=g.selected||g.rewardPending||g.history.at(-1);const family=selected?.family||run?.planeFamily||'arcane';
   const prior=ports.state.crafting||root.WandererV013Crafting.create();
-  ports.state.crafting=root.WandererV013Crafting.award(ports.state.crafting||root.WandererV013Crafting.create(),{family,boss:!!enemy?.boss,elite:!!enemy?.miniboss,event:!run,reagent:ports.gameRandom()<(enemy?.miniboss ? .65 : .22)});
+  ports.state.crafting=root.WandererV013Crafting.award(ports.state.crafting||root.WandererV013Crafting.create(),{family,boss:!!enemy?.boss,elite:!!enemy?.miniboss,event:!run,reagent:ports.gameRandom()<Math.min(1,(enemy?.miniboss ? .65 : .22)*(ports.phase6Run?.effects.prospector?1.25:1))});
   if(enemy?.boss&&g.dungeon&&g.expedition===5){const crafting=ports.state.crafting;crafting.mythicFamilies=[...new Set([...(crafting.mythicFamilies||[]),family])];}
   if(!enemy?.boss&&ports.state.crafting.cores[family]>prior.cores[family])ports.addLog('Found '+family+' reagent.','good');
   if(run?.phase6Bounty)ports.state.crafting.essence+=2;
