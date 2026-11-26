@@ -1,0 +1,33 @@
+name: v0.13 consolidated - focused Legendary checks
+on:
+  push:
+    branches: [release/v013-consolidated]
+    paths:
+      - 'combat/v012-combat-runtime.js'
+      - 'combat/legendary.js'
+      - 'docs/combat/v012-combat-runtime.js'
+      - 'docs/combat/legendary.js'
+      - 'tests/v012-phase-c1.test.cjs'
+      - 'tests/v013-legendary-encounter-budget.test.cjs'
+      - '.github/workflows/v013-consolidated-legendary-checks.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  legendary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify root and docs combat mirrors
+        run: |
+          cmp combat/v012-combat-runtime.js docs/combat/v012-combat-runtime.js
+          cmp combat/legendary.js docs/combat/legendary.js
+      - name: Focused Legendary runtime checks
+        run: node --test tests/v013-legendary-encounter-budget.test.cjs tests/v013-stage45-6-legendary-p0.test.cjs tests/v012-legendary-limit.test.cjs
+      - name: Historical Legendary diagnostics
+        if: always()
+        run: node --test tests/v012-phase-c1.test.cjs
