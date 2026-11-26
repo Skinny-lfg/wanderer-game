@@ -6,7 +6,7 @@ function item(a,slot,subtype){const o=a.makeItem(50,slot,null,'loot',subtype,'Le
 function count(s){return Object.values(s.equip).filter(o=>o?.rarity==='Legendary').length;}
 
 test('only the 12 current legendary items are generated in new Expeditions',()=>{
- const a=create(42),ids=new Set(['crimson-fang','chalice-hollow-king','gravewake','eye-of-morrow','verdant-oath','heartroot-carapace','oathwall','veil-thousand-seals','kingsbreaker','tempest-talon','astrafall','voidglass']);
+ const a=create(42),ids=new Set(['crimson-fang','chalice-hollow-king','gravewake','eye-of-morrow','graft','heartroot-carapace','oathwall','veil-thousand-seals','kingsbreaker','tempest-talon','astrafall','voidglass']);
  for(const slot of a.slots)for(let i=0;i<16;i++){
   const o=a.makeItem(50,slot,null,'loot','random','Legendary');
   assert(ids.has(o.legendaryId),o.legendaryId);

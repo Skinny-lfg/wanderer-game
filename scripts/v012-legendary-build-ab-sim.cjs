@@ -7,7 +7,7 @@ const variants=[
  {name:'Cloth Wand + Orb',group:'Cloth: Magic/Aegis/Decay',armorType:'Cloth',family:'magic',targetFamilies:['magic','aegis','decay'],weapon:'Wand',offhandType:'Orb',
   legendary:{weapon:'voidglass',belt:'veil-thousand-seals',ring1:'eye-of-morrow'}},
  {name:'Plate Sword + Shield',group:'Plate: Vitality/Aegis/Fury',armorType:'Plate',family:'vitality',targetFamilies:['vitality','aegis','fury'],weapon:'Sword',offhandType:'Shield',
-  legendary:{weapon:'verdant-oath',offhand:'oathwall',armor:'heartroot-carapace'}},
+  legendary:{weapon:'graft',offhand:'oathwall',armor:'heartroot-carapace'}},
  {name:'Plate Mace + Shield',group:'Plate: Vitality/Aegis/Fury',armorType:'Plate',family:'vitality',targetFamilies:['vitality','aegis','fury'],weapon:'Mace',offhandType:'Shield',
   legendary:{weapon:'kingsbreaker',offhand:'oathwall',armor:'heartroot-carapace'}},
  {name:'Leather Daggers',group:'Leather: Decay/Fury/Blood',armorType:'Leather',family:'decay',targetFamilies:['decay','fury','blood'],weapon:'Daggers',offhandType:'Daggers',
@@ -18,7 +18,7 @@ const variants=[
   legendary:{weapon:'gravewake',amulet:'chalice-hollow-king',ring1:'eye-of-morrow'}}
 ];
 const ids=[...new Set(variants.flatMap(v=>Object.values(v.legendary)))];
-const expected=['crimson-fang','chalice-hollow-king','gravewake','eye-of-morrow','verdant-oath','heartroot-carapace','oathwall','veil-thousand-seals','kingsbreaker','tempest-talon','astrafall','voidglass'];
+const expected=['crimson-fang','chalice-hollow-king','gravewake','eye-of-morrow','graft','heartroot-carapace','oathwall','veil-thousand-seals','kingsbreaker','tempest-talon','astrafall','voidglass'];
 if(ids.length!==12||expected.some(id=>!ids.includes(id)))throw Error('Not all twelve proposed legendary effects covered');
 const levels=process.env.WANDERER_LEGEND_LEVELS?process.env.WANDERER_LEGEND_LEVELS.split(',').map(Number).filter(n=>[10,50,100,200].includes(n)):[10,50,100,200],rarities=['Rare','Epic'];
 const reps=Math.max(1,Math.min(18,Number(process.env.WANDERER_LEGEND_REPS||8)));

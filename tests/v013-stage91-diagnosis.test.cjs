@@ -17,7 +17,7 @@ function result(mode,seeds=[9101,9102],badSeed=null){
     manaSpent:10,enemyAbilityCasts:3,bossHealing:6,bossSummons:1,
     bossCastInterruptions:0,minHpPct:34,hpEnd:80,hpMax:200,
     won:true,died:false,timedOut:false};
-   if(mode==='bosses')Object.assign(common,{bossAffinity:'blood',bossName:'Rift Harbinger',bossStyle:'leech'});
+   if(mode==='bosses')Object.assign(common,{bossAffinity:'blood',bossName:'The Creditor',bossStyle:'leech'});
    if(mode==='enemies')Object.assign(common,{groupSize:3});
    if(mode==='elites')Object.assign(common,{eliteType:'berserker'});
    if(seed===badSeed)Object.assign(common,{error:'native-runtime-crash',won:false});
@@ -49,7 +49,7 @@ test('Native group separation and p50/p90 are deterministic',()=>{
  assert.equal(b.damageTakenMean,100);
  assert.equal(b.enemyAbilityCastsPerMinute,null);
  assert.deepEqual(d.groups.map(g=>g.mode).sort(),['bosses','elites','enemies']);
- assert(D.markdown(d).includes('Rift Harbinger'));
+ assert(D.markdown(d).includes('The Creditor'));
 });
 test('Failed simulations never count as legitimate deaths or lower real win rates',()=>{
  const d=D.analyze([result('bosses',[9101,9102],9102),result('enemies'),result('elites')],opts());

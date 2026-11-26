@@ -153,7 +153,7 @@ const NEW_LEGENDARY_CATALOG=[
  {catalogueNew:true,id:'chalice-hollow-king',name:'Chalice of the Hollow King',slot:'amulet',subtype:'Amulet',image:'chalice-hollow-king.webp'},
  {catalogueNew:true,id:'gravewake',name:'Gravewake',slot:'weapon',subtype:'Two-Handed',image:'gravewake.webp'},
  {catalogueNew:true,id:'eye-of-morrow',name:'Eye of Morrow',slot:'ring',subtype:'Ring',image:'eye-of-morrow.webp'},
- {catalogueNew:true,id:'verdant-oath',name:'Verdant Oath',slot:'weapon',subtype:'Sword',image:'verdant-oath.webp'},
+ {catalogueNew:true,id:'graft',name:'Graft',slot:'weapon',subtype:'Sword',image:'graft.webp'},
  {catalogueNew:true,id:'heartroot-carapace',name:'Heartroot Carapace',slot:'armor',subtype:'Armor',image:'heartroot-carapace.webp'},
  {catalogueNew:true,id:'oathwall',name:'Oathwall',slot:'offhand',subtype:'Shield',image:'oathwall.webp'},
  {catalogueNew:true,id:'veil-thousand-seals',name:'Veil of a Thousand Seals',slot:'belt',subtype:'Belt',image:'veil-thousand-seals.webp'},
@@ -687,9 +687,9 @@ function estimateEnemy(level,n=1){return WandererV012CombatCore.estimateEnemy(le
 /* Eight native Elite identities: fixed E1 bases and unique mechanics. */
 const ELITE_ARCHETYPES={
  tank:{id:'tank',icon:'🛡️',name:'The Pallbearer',role:'Tank',risk:'High health, low damage. HP hits reduce your healing by 40% for 5s (refreshes on each hit).',hp:2.49,atk:1.07,def:1.19,interval:1.85},
- berserker:{id:'berserker',icon:'⚔️',name:'Bloodscar Ravager',role:'Berserker',risk:'Low health, high attack damage and quick strikes. Each hit is capped at 35% of your max HP.',hp:1.21,atk:1.67,def:0.9,interval:1.46},
+ berserker:{id:'berserker',icon:'⚔️',name:'Raker',role:'Berserker',risk:'Low health, high attack damage and quick strikes. Each hit is capped at 35% of your max HP.',hp:1.21,atk:1.67,def:0.9,interval:1.46},
  vampire:{id:'vampire',icon:'🩸',name:'The Thirst',role:'Vampire',risk:'Recovers HP when its attacks damage your health. Barrier and burst are useful.',hp:1.55,atk:1.38,def:1.04,interval:1.56},
- caster:{id:'caster',icon:'🔮',name:'Voidborne Hexer',role:'Caster',risk:'Successful hits weaken your direct damage by 20% for 3 combat seconds (7s between casts).',hp:1.53,atk:1.35,def:0.92,interval:1.64},
+ caster:{id:'caster',icon:'🔮',name:'Lantern-Eye',role:'Caster',risk:'Successful hits weaken your direct damage by 20% for 3 combat seconds (7s between casts).',hp:1.53,atk:1.35,def:0.92,interval:1.64},
  gravecaller:{id:'gravecaller',icon:'☠',name:'Gravecaller',role:'Summoner',risk:'Channels a 1s interruptible ritual at 85% and 40% HP, summoning up to 2 bound souls each time (4 total, 2 alive). Bound soul hits apply stacking Deathbound Decay (up to 4 stacks, 4s), damaging you each second until the summons die.',hp:1.91,atk:1.12,def:0.92,interval:1.75},
  oathbound_exarch:{id:'oathbound_exarch',icon:'⛨',name:'The Shepherd',role:'Support',risk:'Aegis oath: every 10s channels Barrier for an ally, or itself when alone, worth 15% max Health, up to 3 casts. Stun interrupts.',hp:1.98,atk:1.12,def:1.18,interval:1.95},
  the_gilded:{id:'the_gilded',icon:'☀',name:'The Gilded',role:'Reflection',risk:'Radiance · Solar Rebuke reflects direct hits during its four-second guard.',hp:1.84,atk:1.23,def:1.04,interval:1.72},

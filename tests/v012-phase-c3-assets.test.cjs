@@ -5,7 +5,7 @@ const fs=require('node:fs');
 const manifest=require('../assets/c3-assets.json');
 const html=fs.readFileSync('index.html','utf8');
 const coreCss=fs.readFileSync('online/v012-core.css','utf8');
-const ids=['crimson-fang','chalice-hollow-king','gravewake','eye-of-morrow','verdant-oath','heartroot-carapace','oathwall','veil-thousand-seals','kingsbreaker','tempest-talon','astrafall','voidglass'];
+const ids=['crimson-fang','chalice-hollow-king','gravewake','eye-of-morrow','graft','heartroot-carapace','oathwall','veil-thousand-seals','kingsbreaker','tempest-talon','astrafall','voidglass'];
 function checkImage(path){
   assert.ok(fs.existsSync(path),'Missing '+path);
   const file=fs.readFileSync(path);

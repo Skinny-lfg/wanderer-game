@@ -8,9 +8,9 @@ const H=require('./v013-stage615-enemy-hierarchy.cjs');
 const T=globalThis.WandererAutomaticTalents;
 const STRATEGIES=Object.freeze(['baseline','marked_elite','reliquary','both']);
 const POLICIES=Object.freeze(['focus','mechanics']);
-const BOSSES=Object.freeze({blood:'Rift Harbinger',decay:'Carrion Matriarch',
- vitality:'Gullet',aegis:'The Abyssal Guardian',
- fury:'Ember Sovereign',magic:'Stormglass Conductor'});
+const BOSSES=Object.freeze({blood:'The Creditor',decay:'Carrion Matriarch',
+ vitality:'Gullet',aegis:'Holdfast',
+ fury:'The Chainbreaker',magic:'The Measure'});
 const BOSSES_ID=Object.freeze({blood:'rift',decay:'carrion',vitality:'heartroot',
  aegis:'guardian',fury:'ember',magic:'stormglass'});
 const DEFAULTS=Object.freeze({mode:'pilot',seedsPerCell:1,seedStart:6200011,

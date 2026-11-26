@@ -6,7 +6,7 @@ const {run}=require('./v012-affinity-combat-sim.cjs');
 const builds=[
  {name:'Cloth Staff',weapon:'Staff',armorType:'Cloth',family:'magic',targetFamilies:['magic','aegis','decay'],weaponItem:{weapon:'astrafall'},def1:{belt:'veil-thousand-seals'},def2:{armor:'heartroot-carapace'}},
  {name:'Cloth Wand + Orb',weapon:'Wand',offhandType:'Orb',armorType:'Cloth',family:'magic',targetFamilies:['magic','aegis','decay'],weaponItem:{weapon:'voidglass'},def1:{belt:'veil-thousand-seals'},def2:{armor:'heartroot-carapace'}},
- {name:'Plate Sword + Shield',weapon:'Sword',offhandType:'Shield',armorType:'Plate',family:'vitality',targetFamilies:['vitality','aegis','fury'],weaponItem:{weapon:'verdant-oath'},def1:{offhand:'oathwall'},def2:{belt:'veil-thousand-seals'}},
+ {name:'Plate Sword + Shield',weapon:'Sword',offhandType:'Shield',armorType:'Plate',family:'vitality',targetFamilies:['vitality','aegis','fury'],weaponItem:{weapon:'graft'},def1:{offhand:'oathwall'},def2:{belt:'veil-thousand-seals'}},
  {name:'Plate Mace + Shield',weapon:'Mace',offhandType:'Shield',armorType:'Plate',family:'vitality',targetFamilies:['vitality','aegis','fury'],weaponItem:{weapon:'kingsbreaker'},def1:{offhand:'oathwall'},def2:{armor:'heartroot-carapace'}},
  {name:'Leather Dual Daggers',weapon:'Daggers',offhandType:'Daggers',armorType:'Leather',family:'decay',targetFamilies:['decay','fury','blood'],weaponItem:{weapon:'crimson-fang'},def1:{armor:'heartroot-carapace'},def2:{amulet:'chalice-hollow-king'}},
  {name:'Leather Bow',weapon:'Bow',armorType:'Leather',family:'decay',targetFamilies:['decay','fury','blood'],weaponItem:{weapon:'tempest-talon'},def1:{belt:'veil-thousand-seals'},def2:{armor:'heartroot-carapace'}},

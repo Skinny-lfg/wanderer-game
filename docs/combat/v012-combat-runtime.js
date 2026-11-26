@@ -178,7 +178,7 @@ function legendaryAttackBonus(r,base,critical,cast){
  r.legendaryAttackCount=(r.legendaryAttackCount||0)+1;
  if(t.verdantReady){added+=Math.round(base*t.verdantReady);t.verdantReady=0;}
  if(t.veilReady){added+=Math.round(base*t.veilReady);t.veilReady=0;}
- if(ports.legendaryHas('verdant-oath')&&ports.legendaryProc(r,'verdant-oath')){ports.setHeal(r,r.maxhp*(ports.legendaryEmpowered(r,'verdant-oath')?.012:.008));t.verdantReady=ports.legendaryEmpowered(r,'verdant-oath')?.90:.60;}
+ if(ports.legendaryHas('graft')&&ports.legendaryProc(r,'graft')){ports.setHeal(r,r.maxhp*(ports.legendaryEmpowered(r,'graft')?.012:.008));t.verdantReady=ports.legendaryEmpowered(r,'graft')?.90:.60;}
  if(e.v012Rot?.length&&ports.legendaryHas('eye-of-morrow')&&ports.legendaryProc(r,'eye-of-morrow'))added+=Math.min(Math.round(base*(ports.legendaryEmpowered(r,'eye-of-morrow')?.85:.60)),Math.round(e.maxhp*(e.boss?.015:.025)));
  if(ports.legendaryHas('kingsbreaker')&&ports.legendaryProc(r,'kingsbreaker'))added+=Math.round(base*(ports.legendaryEmpowered(r,'kingsbreaker')?1.10:.80));
  if(critical&&ports.legendaryHas('tempest-talon')&&ports.legendaryProc(r,'tempest-talon'))added+=Math.round(base*(ports.legendaryEmpowered(r,'tempest-talon')?.35:.25));
@@ -870,6 +870,7 @@ function updateFight(){
    else if(event.type==='interrupted'||event.type==='disarmed'){ports.addLog('✓ '+event.enemy.name+' interrupted: '+event.ability,'good');ports.phase6Metric(r,'bossCastInterruptions',1);}
    else if(event.type==='ward'){ports.addLog('⛨ '+event.enemy.name+' restores '+event.barrier+' Barrier','spell');ports.phase6Metric(r,'bossWards',1);ports.combatLinkEffect?.(r,'ward',event.enemy,[event.enemy]);}
    else if(event.type==='charge')ports.addLog('♨ Furnace Strike charged · next hit empowered!','critical');
+   else if(event.type==='reabsorbed'){ports.addLog('☀ Gullet reabsorbs a light fragment · '+event.healed+' HP','critical');ports.phase6Metric(r,'bossHealing',event.healed);}
    else if(event.type==='offering'){ports.addLog('🩸 Riftbound Vessel sacrificed · Boss recovers '+event.healed+' HP','critical');ports.phase6Metric(r,'bossHealing',event.healed);ports.combatLinkEffect?.(r,'siphon',event.minion,[event.enemy]);}
    else if(event.type==='pulse'){ports.combatLinkEffect?.(r,'shock',event.enemy,['hero']);ports.addLog('⚡ Arcane Convergence · '+event.damage+' damage'+(event.absorbed?' · '+event.absorbed+' absorbed':'')+'!','critical');ports.phase6Metric(r,'bossArcanePulses',1);ports.phase6Metric(r,'damageTaken',event.damage);ports.phase6Metric(r,'absorbed',event.absorbed);if(resolveBossPulseLethal(r,s))return;}
    else if(event.type==='canceled')ports.addLog('⚡ Arcane Convergence canceled by the destroyed Convergence Anchor.','good');
@@ -877,7 +878,7 @@ function updateFight(){
     const theme=ports.THEMES.find(t=>t.id===r.path)||ports.currentTheme(),mob=theme?.mobs?.find(m=>m.role==='minion');
     if(!mob)throw Error('Stage 8.4 Boss summon requires a Realm Minion');
     const result=root.WandererV013BossAbilities.spawned(r,event,()=>ports.enemyFor(r.tier,r.enc,{theme,mob,boss:false,elite:false}));
-    if(result.spawned){ports.phase6Metric(r,'bossSummons',result.spawned);ports.addLog('☠ '+event.enemy.name+' summons '+result.spawned+' '+(event.kind==='blood'?'Riftbound Vessel':event.kind==='node'?'Convergence Anchor':event.kind==='vitality'?'Heartroot Mawbud':'Carrion Broodling')+(result.spawned===1?'':'s')+'!','critical');ports.renderCombat();}
+    if(result.spawned){ports.phase6Metric(r,'bossSummons',result.spawned);ports.addLog('☠ '+event.enemy.name+' summons '+result.spawned+' '+(event.kind==='blood'?'Riftbound Vessel':event.kind==='node'?'Convergence Anchor':event.kind==='vitality'?'light fragment':'Carrion Broodling')+(result.spawned===1?'':'s')+'!','critical');ports.renderCombat();}
     else ports.addLog('☠ '+event.enemy.name+' has no reinforcement space.','critical');
    }
   }
@@ -945,7 +946,7 @@ function updateFight(){
   if(!statOnly()&&e.effect==='sunder')raw+=WandererV012CombatCore.enemyStat(r.tier,Math.round(WandererV012CombatCore.referenceLevel(r.tier)*.2));
   if(!statOnly()&&e.bossStyle==='berserker'&&e.hp<e.maxhp*.5){
    raw=Math.round(raw*1.35);
-   if(!e.enraged){e.enraged=true;ports.addLog('🔥 Ember Sovereign enrages below half HP!','critical');enemyAbilityVfx='BossEmber';}
+   if(!e.enraged){e.enraged=true;ports.addLog('🔥 The Chainbreaker enrages below half HP!','critical');enemyAbilityVfx='BossEmber';}
   }
   if(!statOnly()&&e.eliteType==='berserker'&&e.hp<e.maxhp*.5)raw=Math.round(raw*1.08);
   const weaker=ports.setEnemyWeaken(r);
@@ -1031,7 +1032,7 @@ function updateFight(){
     ports.addLog('🔮 Caster applies Weakened: -20% direct damage for 3s!','spell');enemyAbilityVfx='EliteCaster';
    }
   }
-  if(!statOnly()&&e.bossStyle==='leech'&&hit>0){const multiplier=ports.isPhase1Run()&&ports.phase1Build?WandererV012Buildcraft.enemyHealMultiplier(ports.phase1Build,e):1;const heal=Math.floor(Math.min(e.maxhp-e.hp,Math.round(hit*.18))*multiplier);e.hp+=heal;if(heal){ports.addLog('🌑 Rift Harbinger drains '+heal+' HP','spell');enemyAbilityVfx='BossRift';}}
+  if(!statOnly()&&e.bossStyle==='leech'&&hit>0){const multiplier=ports.isPhase1Run()&&ports.phase1Build?WandererV012Buildcraft.enemyHealMultiplier(ports.phase1Build,e):1;const heal=Math.floor(Math.min(e.maxhp-e.hp,Math.round(hit*.18))*multiplier);e.hp+=heal;if(heal){ports.addLog('🌑 The Creditor drains '+heal+' HP','spell');enemyAbilityVfx='BossRift';}}
   // Guardian Barrier is restored only by the Stage 8.4 timed Ward Cycle.
   if(rotguardBefore>0&&blocked>0&&r.hp>0&&ports.phase1Build)WandererV012Buildcraft.rotguardRetaliate(ports.phase1Build,ports.phase2Context(r));
   ports.legendaryDefensiveEffects(r,damageBlocked,hit,blocked,barrierBeforeHit>0&&r.barrier<=0);

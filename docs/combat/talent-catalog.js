@@ -28,7 +28,7 @@ const NODES=Object.freeze([
  {"id":"grave_bloom","advanced":true,"icon":"🕳️","name":"Grave Bloom","description":"Prepared: each paid Arcane Infusion hit applies 2 Rot stacks, deals a burst equal to one tick of all active Rot on the target, then spreads up to 2 stacks at 75% strength to each of 2 active enemies. Rot is not consumed."},
  {"id":"septic_wound","advanced":true,"icon":"🦂","name":"Reaper's Cadence","description":"Prepared: attacks against enemies with Bleed and Rot deal damage equal to one tick of the strongest stack of each, capped at 4% enemy maximum Health (6s cooldown). Neither stack is consumed."},
  {"id":"blood_harvest","icon":"🩸","name":"Blood Harvest","description":"Bleeding kills restore 3% maximum Health."},
- {"id":"crimson_feast","icon":"🫀","name":"Crimson Feast","description":"Every third hit against a bleeding enemy deals 45% bonus damage."},
+ {"id":"crimson_feast","icon":"🫀","name":"Third Cut","description":"Every third hit against a bleeding enemy deals 45% bonus damage."},
  {"id":"heart_of_carnage","icon":"🩸","name":"Heart of Carnage","description":"Below half Health, hit a bleeding enemy for 40% bonus damage, or 60% if the enemy is below half Health (3s cooldown)."},
  {"id":"battle_tempo","icon":"⚔️","name":"Battle Tempo","description":"Consecutive attacks build attack speed, up to 15%."},
  {"id":"relentless_assault","icon":"🗡️","name":"Relentless Assault","description":"Attacks against Sundered enemies deal 20% bonus damage every 3 seconds."},

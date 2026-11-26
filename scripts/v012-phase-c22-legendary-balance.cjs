@@ -22,8 +22,8 @@ const mods={
  sword_veil_barrier_strong:[[originalVeilBarrier,calibratedSwordVeilBarrier]],
  oathwall_65_95:[["ports.legendaryEmpowered(r,'oathwall')?1.10:.75","ports.legendaryEmpowered(r,'oathwall')?.95:.65"]],
  oathwall_60_90:[["ports.legendaryEmpowered(r,'oathwall')?1.10:.75","ports.legendaryEmpowered(r,'oathwall')?.90:.60"]],
- verdant_heal:[["ports.legendaryEmpowered(r,'verdant-oath')?.012:.008","ports.legendaryEmpowered(r,'verdant-oath')?.009:.006"]],
- verdant_damage:[["ports.legendaryEmpowered(r,'verdant-oath')?.90:.60","ports.legendaryEmpowered(r,'verdant-oath')?.75:.50"]]
+ verdant_heal:[["ports.legendaryEmpowered(r,'graft')?.012:.008","ports.legendaryEmpowered(r,'graft')?.009:.006"]],
+ verdant_damage:[["ports.legendaryEmpowered(r,'graft')?.90:.60","ports.legendaryEmpowered(r,'graft')?.75:.50"]]
 };
 const sources={base:native};
 for(const [key,edits]of Object.entries(mods))sources[key]=edits.reduce((s,[a,b])=>replace(s,a,b),native);
@@ -31,10 +31,10 @@ const profiles=[
  {name:'sword-none',build:'Plate Sword + Shield',weapon:'Sword',offhandType:'Shield',armorType:'Plate',family:'vitality',targetFamilies:['vitality','aegis','fury'],items:null},
  {name:'sword-veil',build:'Plate Sword + Shield',weapon:'Sword',offhandType:'Shield',armorType:'Plate',family:'vitality',targetFamilies:['vitality','aegis','fury'],items:{belt:'veil-thousand-seals'}},
  {name:'sword-oathwall',build:'Plate Sword + Shield',weapon:'Sword',offhandType:'Shield',armorType:'Plate',family:'vitality',targetFamilies:['vitality','aegis','fury'],items:{offhand:'oathwall'}},
- {name:'sword-verdant',build:'Plate Sword + Shield',weapon:'Sword',offhandType:'Shield',armorType:'Plate',family:'vitality',targetFamilies:['vitality','aegis','fury'],items:{weapon:'verdant-oath'}},
+ {name:'sword-verdant',build:'Plate Sword + Shield',weapon:'Sword',offhandType:'Shield',armorType:'Plate',family:'vitality',targetFamilies:['vitality','aegis','fury'],items:{weapon:'graft'}},
  {name:'sword-oathwall-veil',build:'Plate Sword + Shield',weapon:'Sword',offhandType:'Shield',armorType:'Plate',family:'vitality',targetFamilies:['vitality','aegis','fury'],items:{offhand:'oathwall',belt:'veil-thousand-seals'}},
- {name:'sword-verdant-veil',build:'Plate Sword + Shield',weapon:'Sword',offhandType:'Shield',armorType:'Plate',family:'vitality',targetFamilies:['vitality','aegis','fury'],items:{weapon:'verdant-oath',belt:'veil-thousand-seals'}},
- {name:'sword-verdant-oathwall',build:'Plate Sword + Shield',weapon:'Sword',offhandType:'Shield',armorType:'Plate',family:'vitality',targetFamilies:['vitality','aegis','fury'],items:{weapon:'verdant-oath',offhand:'oathwall'}},
+ {name:'sword-verdant-veil',build:'Plate Sword + Shield',weapon:'Sword',offhandType:'Shield',armorType:'Plate',family:'vitality',targetFamilies:['vitality','aegis','fury'],items:{weapon:'graft',belt:'veil-thousand-seals'}},
+ {name:'sword-graftwall',build:'Plate Sword + Shield',weapon:'Sword',offhandType:'Shield',armorType:'Plate',family:'vitality',targetFamilies:['vitality','aegis','fury'],items:{weapon:'graft',offhand:'oathwall'}},
  {name:'wand-voidglass-veil',build:'Cloth Wand + Orb',weapon:'Wand',offhandType:'Orb',armorType:'Cloth',family:'magic',targetFamilies:['magic','aegis','decay'],items:{weapon:'voidglass',belt:'veil-thousand-seals'}},
  {name:'staff-veil-heartroot',build:'Cloth Staff',weapon:'Staff',armorType:'Cloth',family:'magic',targetFamilies:['magic','aegis','decay'],items:{belt:'veil-thousand-seals',armor:'heartroot-carapace'}},
  {name:'mace-oathwall-heartroot',build:'Plate Mace + Shield',weapon:'Mace',offhandType:'Shield',armorType:'Plate',family:'vitality',targetFamilies:['vitality','aegis','fury'],items:{offhand:'oathwall',armor:'heartroot-carapace'}},
@@ -47,7 +47,7 @@ function armsFor(p){
  if(ids.includes('veil-thousand-seals'))out.push(...Object.keys(mods).filter(k=>k.startsWith('veil_')));
  if((p.build==='Plate Sword + Shield'&&ids.includes('veil-thousand-seals'))||['sword-none','wand-voidglass-veil','staff-veil-heartroot','mace-oathwall-heartroot','bow-veil-heartroot','twohand-gravewake-eye','twohand-veil-heartroot'].includes(p.name))out.push('sword_veil_barrier_moderate','sword_veil_barrier_strong');
  if(ids.includes('oathwall'))out.push(...Object.keys(mods).filter(k=>k.startsWith('oathwall_')));
- if(ids.includes('verdant-oath'))out.push(...Object.keys(mods).filter(k=>k.startsWith('verdant_')));
+ if(ids.includes('graft'))out.push(...Object.keys(mods).filter(k=>k.startsWith('verdant_')));
  return out;
 }
 const mode=process.argv[2]||'triage',output=process.argv[3]||`/tmp/wanderer-c22-${mode}.json`;

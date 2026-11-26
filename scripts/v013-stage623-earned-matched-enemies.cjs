@@ -9,8 +9,8 @@ const ROOT=path.resolve(__dirname,'..');
 const FAMILIES=Object.freeze(['blood','decay','vitality','aegis','fury','magic']);
 const ELITES=Object.freeze(['tank','berserker','vampire','caster','gravecaller',
  'oathbound_exarch','the_gilded','ashen_executioner']);
-const ELITE_NAMES=Object.freeze({tank:'The Pallbearer',berserker:'Bloodscar Ravager',
- vampire:'The Thirst',caster:'Voidborne Hexer',gravecaller:'Gravecaller',
+const ELITE_NAMES=Object.freeze({tank:'The Pallbearer',berserker:'Raker',
+ vampire:'The Thirst',caster:'Lantern-Eye',gravecaller:'Gravecaller',
  oathbound_exarch:'The Shepherd',the_gilded:'The Gilded',
  ashen_executioner:'Ashen Executioner'});
 const hash=v=>crypto.createHash('sha256').update(typeof v==='string'?v:JSON.stringify(v)).digest('hex');

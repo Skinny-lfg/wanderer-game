@@ -34,7 +34,7 @@ const mappings={
  'sword-none':['none','base'],
  'sword-veil':['veil-thousand-seals','base'],
  'sword-oathwall-veil':['oathwall+veil-thousand-seals','base'],
- 'sword-verdant-veil':['verdant-oath+veil-thousand-seals','base']
+ 'sword-verdant-veil':['graft+veil-thousand-seals','base']
 };
 let baselinePairs=0,baselineDifferences=0;
 for(const row of confirm.rows.filter(r=>r.arm==='base'&&mappings[r.profile])){

@@ -25,7 +25,7 @@ const server=http.createServer((req,res)=>{
     document.body.classList.add('phase3IntegratedPreview','phase3CombatView');
     const container=document.createElement('section');
     container.className='combatLayout';
-    container.innerHTML='<div class="panel"><div class="topline"><p class="muted">Wave 4 · Boss</p></div><div class="scene" id="visualTestScene"><img class="phase3ArenaBackdrop" src="assets/dungeons/c3/blood_bloodscar_wastes.webp" alt=""><div class="combatant eliteCombatant"><div class="combatStatuses enemyDebuffs"><span class="debuff">Bleed</span></div><img id="enemyPortrait" data-elite-type="caster" src="assets/elites/animated/caster_idle.png" alt=""><strong class="combatEnemyName eliteName">Voidborne Hexer</strong><small>ATK 120 · DEF 90</small><small id="enemyHpText">600 / 700</small></div><span class="float floatDamage" data-target="enemy">125</span></div></div>';
+    container.innerHTML='<div class="panel"><div class="topline"><p class="muted">Wave 4 · Boss</p></div><div class="scene" id="visualTestScene"><img class="phase3ArenaBackdrop" src="assets/dungeons/c3/blood_bloodscar_wastes.webp" alt=""><div class="combatant eliteCombatant"><div class="combatStatuses enemyDebuffs"><span class="debuff">Bleed</span></div><img id="enemyPortrait" data-elite-type="caster" src="assets/elites/animated/caster_idle.png" alt=""><strong class="combatEnemyName eliteName">Lantern-Eye</strong><small>ATK 120 · DEF 90</small><small id="enemyHpText">600 / 700</small></div><span class="float floatDamage" data-target="enemy">125</span></div></div>';
     document.body.appendChild(container);
     const scene=container.querySelector('.scene');
     scene.id='scene';
@@ -45,7 +45,7 @@ const server=http.createServer((req,res)=>{
       statsFontSize:parseFloat(statsStyle.fontSize),statusFontSize:parseFloat(statusStyle.fontSize),
       damageFontSize:parseFloat(floatStyle.fontSize),damageShadow:floatStyle.textShadow,damageZIndex:Number(floatStyle.zIndex),passive};
    });
-   assert(!result.casterTransform.includes('-1'),'Voidborne Hexer should face the opposite direction: '+result.casterTransform);
+   assert(!result.casterTransform.includes('-1'),'Lantern-Eye should face the opposite direction: '+result.casterTransform);
    assert(result.vampireWidth<result.casterWidth,'The Thirst must be smaller than the Caster');
    assert.equal(result.backgroundOpacity,'0.72');
    assert(result.backgroundFilter.includes('brightness(0.6)'));

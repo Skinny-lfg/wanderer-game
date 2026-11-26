@@ -1,7 +1,7 @@
 /* Combat and passive readability: visual-only; no changes to game rules. */
 body.phase3IntegratedPreview #scene{background-color:#100b12!important}
 body.phase3IntegratedPreview #scene>.phase3ArenaBackdrop{opacity:.72!important;filter:brightness(.60) saturate(.82)!important}
-/* Voidborne Hexer: reverse the previously mirrored portrait orientation only.
+/* Lantern-Eye: reverse the previously mirrored portrait orientation only.
    Applies to idle/attack imagery, without mirroring independent spell effects. */
 body.phase3IntegratedPreview #scene .eliteCombatant #enemyPortrait[data-elite-type="caster"]{transform:scaleX(1)!important;transform-origin:center bottom!important}
 /* The Thirst: increase the approved portrait dimensions by 5%. */

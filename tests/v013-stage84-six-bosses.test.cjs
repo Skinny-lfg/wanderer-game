@@ -69,17 +69,17 @@ test('Decay Brood counts only visible living summoned Minions for 15% less direc
  assert.equal(A.directFactor(r,r.enemy),1);
  assert.equal(A.directFactor(r,mob()),1);
 });
-test('Vitality Death Bloom grants 5% per killed Heartroot Mawbud, capped at 15% across four Minions',()=>{
+test('Gullet receives zero healing from four destroyed fragments',()=>{
  const r=run('devourer');
  assert.equal(castSummon(r,.69).result.spawned,2);
- for(const x of r.enemies.filter(x=>x.stage84Minion==='vitality')){x.hp=0;assert.equal(I.onMinionDeath(r,x).healed,50);x.groupDefeated=true;}
+ for(const x of r.enemies.filter(x=>x.stage84Minion==='vitality')){x.hp=0;assert.equal(I.onMinionDeath(r,x).healed,0);x.groupDefeated=true;}
  r.enemy.hp=340;
  assert.equal(castSummon(r,.34,10).result.spawned,2);
  const next=r.enemies.filter(x=>x.stage84Minion==='vitality'&&x.hp>0);
  assert.equal(next.length,2);
- next[0].hp=0;assert.equal(I.onMinionDeath(r,next[0]).healed,50);
+ next[0].hp=0;assert.equal(I.onMinionDeath(r,next[0]).healed,0);
  next[1].hp=0;assert.equal(I.onMinionDeath(r,next[1]).healed,0);
- assert.equal(r.bossInfrastructure.healed,150);
+ assert.equal(r.bossInfrastructure.healed,0);
  assert.equal(I.onMinionDeath(r,next[0]).counted,false);
 });
 test('Fury Furnace Strike has 1.5s telegraph, charged next attack, 18% cap and interruption',()=>{
@@ -146,7 +146,7 @@ test('Arena and preview manifest load six Boss profiles and ability code',()=>{
 });
 
 test('Summoned entities expose their display names and real PNG poses',()=>{
- for(const [style,kind,name] of [['leech','blood','Riftbound Vessel'],['matriarch','decay','Carrion Broodling'],['devourer','vitality','Heartroot Mawbud'],['conductor','node','Convergence Anchor']]){
+ for(const [style,kind,name] of [['leech','blood','Riftbound Vessel'],['matriarch','decay','Carrion Broodling'],['devourer','vitality','light fragment'],['conductor','node','Convergence Anchor']]){
   const r=run(style);assert.equal(A.spawned(r,{kind,count:1},newMinion).spawned,1);
   const actor=r.enemies.find(e=>e.stage84Minion===kind);assert.equal(actor.name,name);
   const poses=kind==='node'?[actor.image]:[actor.image,actor.attackImage,actor.impactImage];
@@ -191,4 +191,17 @@ test('Blood threshold can be interrupted repeatedly without consuming an invocat
  assert(step(r,6.41).some(x=>x.type==='prepare'));
  const summon=step(r,7.17).find(x=>x.type==='summon');assert(summon);assert.equal(A.spawned(r,summon,newMinion).spawned,1);
  assert.deepEqual(r.stage84Boss.thresholds,['summon_70']);
+});
+
+test('Gullet reabsorbs each surviving fragment once after ten active seconds',()=>{
+ const r=run('devourer');
+ castSummon(r,.69);
+ const fragments=r.enemies.filter(m=>m.stage84Minion==='vitality');
+ fragments[0].hp=0;
+ assert.equal(I.onMinionDeath(r,fragments[0]).healed,0);
+ assert(!step(r,10.74).some(e=>e.type==='reabsorbed'));
+ assert.deepEqual(step(r,10.75).filter(e=>e.type==='reabsorbed').map(e=>e.healed),[50]);
+ assert.equal(fragments[1].hp,0);
+ assert.equal(r.encounterLeader.hp,740);
+ assert(!step(r,11).some(e=>e.type==='reabsorbed'));
 });

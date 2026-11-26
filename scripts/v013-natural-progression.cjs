@@ -120,7 +120,7 @@ function synergyGearBonus(item,profile,slot){
  const signature={
   'crimson-fang':blood?14:7,'chalice-hollow-king':blood?12:0,
   gravewake:rot?14:5,'eye-of-morrow':rot?13:0,
-  'verdant-oath':vitality?14:8,'heartroot-carapace':vitality?12:7,
+  'graft':vitality?14:8,'heartroot-carapace':vitality?12:7,
   oathwall:hasGuard?14:0,'veil-thousand-seals':aegis?12:7,
   kingsbreaker:fury?14:9,'tempest-talon':critSynergy?14:4,
   astrafall:caster||magic?14:0,voidglass:caster||magic?14:0

@@ -30,7 +30,7 @@ function fill(p,families,mandatory){
  if(families.includes('blood'))for(let i=0;i<4&&t.nodes.length<POINTS;i++){const next=T.allocate(t,'blood_drinker');if(!next)break;t=next;}
  for(const id of p.t.nodes){if(t.nodes.length>=POINTS)break;if(t.nodes.includes(id))continue;
   const n=nodesById.get(id.replace(/_rank\d+$/,''));if(!n||!families.includes(n.family)||n.pair||n.advanced||n.pending)continue;
-  // Keep Blood Harvest and Crimson Feast separate unless explicitly requested.
+  // Keep Blood Harvest and Third Cut separate unless explicitly requested.
   if(['blood_harvest','crimson_feast','crimson_rush'].includes(n.id)&&!mandatory.includes(n.id))continue;
   const next=T.allocate(t,id);if(next)t=next;
  }

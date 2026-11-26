@@ -4,7 +4,7 @@ require('../online/v012-save.js');
 const entries=[
  ['crimson-fang','Daggers','weapon','blood'],['chalice-hollow-king','Daggers','amulet','blood'],
  ['gravewake','Two-Handed','weapon','decay'],['eye-of-morrow','Two-Handed','ring1','decay'],
- ['verdant-oath','Sword','weapon','vitality'],['heartroot-carapace','Sword','armor','vitality'],
+ ['graft','Sword','weapon','vitality'],['heartroot-carapace','Sword','armor','vitality'],
  ['oathwall','Sword','offhand','aegis'],['veil-thousand-seals','Sword','belt','aegis'],
  ['kingsbreaker','Mace','weapon','fury'],['tempest-talon','Bow','weapon','fury'],
  ['astrafall','Staff','weapon','magic'],['voidglass','Wand','weapon','magic']
@@ -20,7 +20,7 @@ for(const [id,weapon,slot,family]of entries){test(`${id} activates with and with
   if(id==='veil-thousand-seals'){r.tEnemy=100;}
   if(id==='tempest-talon')a.rng(0);
   if(id==='astrafall')r.legendaryState={astraCasts:1};if(id==='voidglass')r.legendaryState={voidCasts:1};
-  if(id==='verdant-oath'||id==='kingsbreaker'||id==='tempest-talon'||id==='eye-of-morrow'){a.gear.legendaryAttackBonus(r,100,id==='tempest-talon',false);}
+  if(id==='graft'||id==='kingsbreaker'||id==='tempest-talon'||id==='eye-of-morrow'){a.gear.legendaryAttackBonus(r,100,id==='tempest-talon',false);}
   else if(id==='heartroot-carapace'||id==='oathwall'||id==='veil-thousand-seals')a.tick();
   else {r.tPlayer=100;a.tick();}
   assert((id==='veil-thousand-seals'?r.metrics?.procs?.['Legendary: veil-thousand-seals: barrier']:count(r,id))>0,`${id} ${empowered?'with':'without'} ${family}`);
@@ -45,9 +45,9 @@ test('Heartroot calibrated healing rate and Realm cap apply with and without Vit
  }
 });
 test('new IDs roundtrip locally; removed Legendary abilities are not recognized',()=>{
- const a=create(3);a.setup(50,'Sword','Epic');const item=a.state().equip.weapon;item.rarity='Legendary';item.legendaryId='verdant-oath';item.name='Verdant Oath';assert.equal(a.gear.itemImg(item),'assets/legendary/verdant-oath.webp');
+ const a=create(3);a.setup(50,'Sword','Epic');const item=a.state().equip.weapon;item.rarity='Legendary';item.legendaryId='graft';item.name='Graft';assert.equal(a.gear.itemImg(item),'assets/legendary/graft.webp');
  const profile={characterId:'wanderer',maxDungeon:1,chosen:1,gold:0,fragments:0,stashCapacity:40,stash:[{...item,id:'stash-copy'}],equip:a.state().equip,run:null,runes:[],runeSlots:[null,null,null],sigils:[],merchant:null,valuables:[]};
- const saved=globalThis.WandererV012Save.create(profile),restored=globalThis.WandererV012Save.validate(JSON.stringify(saved));assert.equal(restored.profile.equip.weapon.legendaryId,'verdant-oath');assert.equal(restored.profile.stash[0].legendaryId,'verdant-oath');
+ const saved=globalThis.WandererV012Save.create(profile),restored=globalThis.WandererV012Save.validate(JSON.stringify(saved));assert.equal(restored.profile.equip.weapon.legendaryId,'graft');assert.equal(restored.profile.stash[0].legendaryId,'graft');
  const old={...item,legendaryId:'blade-of-the-first-dawn',name:'Blade of the First Dawn'};assert.equal(a.gear.legendaryDescription(old),'');
 });
 test('Crimson Fang works in offhand with two real hits but only one proc per cooldown',()=>{
@@ -70,7 +70,7 @@ test('numerical affinity scaling for all twelve effects',()=>{
  x=measure('chalice-hollow-king','Daggers','amulet','blood',(a,r)=>{r.hp=r.maxhp*.5;r.enemy.dots.bleed=[{damage:1,remaining:4}];r.enemy.bleedStacks=1;const h=r.hp;r.tPlayer=100;a.tick();return r.hp-h;});assert(x[1]>x[0]);
  x=measure('gravewake','Two-Handed','weapon','decay',(a,r)=>{r.tPlayer=100;a.tick();return r.enemy.v012Rot.at(-1).damage;});assert(x[1]>x[0]);
  x=measure('eye-of-morrow','Two-Handed','ring1','decay',(a,r)=>{r.enemy.v012Rot=[{damage:1,remaining:4}];r.enemy.maxhp=100000;return a.gear.legendaryAttackBonus(r,100,false,false);});assert.deepEqual(x,[60,85]);
- x=measure('verdant-oath','Sword','weapon','vitality',(a,r)=>{a.gear.legendaryAttackBonus(r,100,false,false);return r.legendaryState.verdantReady;});assert.deepEqual(x,[.6,.9]);
+ x=measure('graft','Sword','weapon','vitality',(a,r)=>{a.gear.legendaryAttackBonus(r,100,false,false);return r.legendaryState.verdantReady;});assert.deepEqual(x,[.6,.9]);
  x=measure('heartroot-carapace','Sword','armor','vitality',(a,r)=>{r.hp=r.maxhp*.5;const h=r.hp;a.tick();return r.hp-h;});assert(x[1]>x[0]);
  x=measure('oathwall','Sword','offhand','aegis',(a,r)=>{r.stats.attack=100;r.stats.blockChance=100;r.stats.blockReduction=0;r.enemy.def=0;r.tEnemy=100;const h=r.enemy.hp;a.rng(0);a.tick();return h-r.enemy.hp;});assert.deepEqual(x,[75,110]);
  x=measure('veil-thousand-seals','Sword','belt','aegis',(a,r)=>{a.tick();return r.barrier;});assert(x[1]>x[0]);
@@ -80,7 +80,7 @@ test('numerical affinity scaling for all twelve effects',()=>{
  x=measure('voidglass','Wand','weapon','magic',(a,r)=>{r.legendaryState={voidCasts:1};r.legendaryFundedCost=20;r.mp=10;const bonus=a.gear.legendaryAttackBonus(r,100,false,true);return [bonus,r.mp];});assert(x[1][0]>x[0][0]&&x[1][1]>x[0][1]);
 });
 test('checkpoint restore retains new item IDs',()=>{
- const {a,r}=fight('Sword','weapon','verdant-oath',null);r.tPlayer=100;a.tick();const cp=a.checkpoint.capture();assert.equal(cp.profile.equip.weapon.legendaryId,'verdant-oath');a.checkpoint.restore(cp);assert.equal(a.state().equip.weapon.legendaryId,'verdant-oath');
+ const {a,r}=fight('Sword','weapon','graft',null);r.tPlayer=100;a.tick();const cp=a.checkpoint.capture();assert.equal(cp.profile.equip.weapon.legendaryId,'graft');a.checkpoint.restore(cp);assert.equal(a.state().equip.weapon.legendaryId,'graft');
 });
 test('Mana cast counters require two funded casts and survive cooldown',()=>{
  for(const [id,weapon,counter]of [['astrafall','Staff','astraCasts'],['voidglass','Wand','voidCasts']]){

@@ -11,9 +11,9 @@ const KINDS=Object.freeze([...ALL_GROUPS.map(n=>'normal-'+n),'elite','boss']);
 // Display labels only; stable native IDs remain unchanged for combat and raw JSON.
 const ELITE_DISPLAY_NAMES=Object.freeze({
  tank:'The Pallbearer',
- berserker:'Bloodscar Ravager',
+ berserker:'Raker',
  vampire:'The Thirst',
- caster:'Voidborne Hexer',
+ caster:'Lantern-Eye',
  gravecaller:'Gravecaller',
  oathbound_exarch:'The Shepherd',
  the_gilded:'The Gilded',

@@ -11,9 +11,9 @@ test('Exact eight real native group sizes plus Elite and Boss are distinct',()=>
 test('Stage 6.16 report maps all eight native Elite IDs to in-game names only for display',()=>{
  const expected={
   tank:'The Pallbearer',
-  berserker:'Bloodscar Ravager',
+  berserker:'Raker',
   vampire:'The Thirst',
-  caster:'Voidborne Hexer',
+  caster:'Lantern-Eye',
   gravecaller:'Gravecaller',
   oathbound_exarch:'The Shepherd',
   the_gilded:'The Gilded',

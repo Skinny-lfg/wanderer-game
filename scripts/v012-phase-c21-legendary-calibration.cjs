@@ -43,7 +43,7 @@ const builds=[
    pairs:[{weapon:'voidglass',belt:'veil-thousand-seals'},{belt:'veil-thousand-seals',armor:'heartroot-carapace'}]},
  {name:'Plate Sword + Shield',weapon:'Sword',offhandType:'Shield',armorType:'Plate',family:'vitality',targetFamilies:['vitality','aegis','fury'],
    singles:[{belt:'veil-thousand-seals'},{armor:'heartroot-carapace'}],
-   pairs:[{offhand:'oathwall',belt:'veil-thousand-seals'},{weapon:'verdant-oath',belt:'veil-thousand-seals'}]},
+   pairs:[{offhand:'oathwall',belt:'veil-thousand-seals'},{weapon:'graft',belt:'veil-thousand-seals'}]},
  {name:'Plate Mace + Shield',weapon:'Mace',offhandType:'Shield',armorType:'Plate',family:'vitality',targetFamilies:['vitality','aegis','fury'],
    singles:[{belt:'veil-thousand-seals'},{armor:'heartroot-carapace'}],
    pairs:[{offhand:'oathwall',armor:'heartroot-carapace'}]},

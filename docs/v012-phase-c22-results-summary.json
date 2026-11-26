@@ -266,7 +266,7 @@
       "ehp": 3443.56,
       "received": 3211.19,
       "procs": {
-        "Legendary: verdant-oath": 610
+        "Legendary: graft": 610
       }
     },
     {
@@ -283,7 +283,7 @@
       "ehp": 2948.13,
       "received": 2744.3,
       "procs": {
-        "Legendary: verdant-oath": 575
+        "Legendary: graft": 575
       }
     },
     {
@@ -415,7 +415,7 @@
       "received": 3664.2,
       "procs": {
         "Legendary: veil-thousand-seals: barrier": 741,
-        "Legendary: verdant-oath": 662,
+        "Legendary: graft": 662,
         "Legendary: veil-thousand-seals": 393
       }
     },
@@ -434,7 +434,7 @@
       "received": 3684.55,
       "procs": {
         "Legendary: veil-thousand-seals: barrier": 737,
-        "Legendary: verdant-oath": 658,
+        "Legendary: graft": 658,
         "Legendary: veil-thousand-seals": 371
       }
     },
@@ -453,7 +453,7 @@
       "received": 3652.41,
       "procs": {
         "Legendary: veil-thousand-seals: barrier": 736,
-        "Legendary: verdant-oath": 654,
+        "Legendary: graft": 654,
         "Legendary: veil-thousand-seals": 365
       }
     },
@@ -472,7 +472,7 @@
       "received": 4295.97,
       "procs": {
         "Legendary: veil-thousand-seals: barrier": 714,
-        "Legendary: verdant-oath": 812,
+        "Legendary: graft": 812,
         "Legendary: veil-thousand-seals": 470
       }
     },
@@ -491,7 +491,7 @@
       "received": 4040.06,
       "procs": {
         "Legendary: veil-thousand-seals: barrier": 689,
-        "Legendary: verdant-oath": 774,
+        "Legendary: graft": 774,
         "Legendary: veil-thousand-seals": 439
       }
     },
@@ -510,13 +510,13 @@
       "received": 3780.7,
       "procs": {
         "Legendary: veil-thousand-seals: barrier": 662,
-        "Legendary: verdant-oath": 738,
+        "Legendary: graft": 738,
         "Legendary: veil-thousand-seals": 414
       }
     },
     {
       "E": 50,
-      "profile": "sword-verdant-oathwall",
+      "profile": "sword-graftwall",
       "arm": "base",
       "policy": "triple",
       "n": 64,
@@ -528,13 +528,13 @@
       "ehp": 3431.64,
       "received": 3134.8,
       "procs": {
-        "Legendary: verdant-oath": 599,
+        "Legendary: graft": 599,
         "Legendary: oathwall": 406
       }
     },
     {
       "E": 50,
-      "profile": "sword-verdant-oathwall",
+      "profile": "sword-graftwall",
       "arm": "base",
       "policy": "random",
       "n": 64,
@@ -546,7 +546,7 @@
       "ehp": 2915.83,
       "received": 2719.36,
       "procs": {
-        "Legendary: verdant-oath": 571,
+        "Legendary: graft": 571,
         "Legendary: oathwall": 376
       }
     },
@@ -1620,7 +1620,7 @@
       "ehp": 6381.91,
       "received": 5677.33,
       "procs": {
-        "Legendary: verdant-oath": 592
+        "Legendary: graft": 592
       }
     },
     {
@@ -1637,7 +1637,7 @@
       "ehp": 6039.14,
       "received": 5592.38,
       "procs": {
-        "Legendary: verdant-oath": 656
+        "Legendary: graft": 656
       }
     },
     {
@@ -1769,7 +1769,7 @@
       "received": 5915.88,
       "procs": {
         "Legendary: veil-thousand-seals: barrier": 744,
-        "Legendary: verdant-oath": 616,
+        "Legendary: graft": 616,
         "Legendary: veil-thousand-seals": 368
       }
     },
@@ -1788,7 +1788,7 @@
       "received": 5886.14,
       "procs": {
         "Legendary: veil-thousand-seals: barrier": 744,
-        "Legendary: verdant-oath": 616,
+        "Legendary: graft": 616,
         "Legendary: veil-thousand-seals": 353
       }
     },
@@ -1807,7 +1807,7 @@
       "received": 5927.72,
       "procs": {
         "Legendary: veil-thousand-seals: barrier": 744,
-        "Legendary: verdant-oath": 615,
+        "Legendary: graft": 615,
         "Legendary: veil-thousand-seals": 351
       }
     },
@@ -1826,7 +1826,7 @@
       "received": 7401.91,
       "procs": {
         "Legendary: veil-thousand-seals: barrier": 729,
-        "Legendary: verdant-oath": 772,
+        "Legendary: graft": 772,
         "Legendary: veil-thousand-seals": 446
       }
     },
@@ -1845,7 +1845,7 @@
       "received": 7190.89,
       "procs": {
         "Legendary: veil-thousand-seals: barrier": 721,
-        "Legendary: verdant-oath": 762,
+        "Legendary: graft": 762,
         "Legendary: veil-thousand-seals": 429
       }
     },
@@ -1864,13 +1864,13 @@
       "received": 7040.31,
       "procs": {
         "Legendary: veil-thousand-seals: barrier": 720,
-        "Legendary: verdant-oath": 753,
+        "Legendary: graft": 753,
         "Legendary: veil-thousand-seals": 423
       }
     },
     {
       "E": 100,
-      "profile": "sword-verdant-oathwall",
+      "profile": "sword-graftwall",
       "arm": "base",
       "policy": "triple",
       "n": 64,
@@ -1882,13 +1882,13 @@
       "ehp": 6356.17,
       "received": 5465.19,
       "procs": {
-        "Legendary: verdant-oath": 590,
+        "Legendary: graft": 590,
         "Legendary: oathwall": 510
       }
     },
     {
       "E": 100,
-      "profile": "sword-verdant-oathwall",
+      "profile": "sword-graftwall",
       "arm": "base",
       "policy": "random",
       "n": 64,
@@ -1900,7 +1900,7 @@
       "ehp": 6074.13,
       "received": 5638.34,
       "procs": {
-        "Legendary: verdant-oath": 655,
+        "Legendary: graft": 655,
         "Legendary: oathwall": 608
       }
     },
@@ -2974,7 +2974,7 @@
       "ehp": 11862.55,
       "received": 9602.44,
       "procs": {
-        "Legendary: verdant-oath": 536
+        "Legendary: graft": 536
       }
     },
     {
@@ -2991,7 +2991,7 @@
       "ehp": 12157.56,
       "received": 11056.81,
       "procs": {
-        "Legendary: verdant-oath": 662
+        "Legendary: graft": 662
       }
     },
     {
@@ -3123,7 +3123,7 @@
       "received": 9876.94,
       "procs": {
         "Legendary: veil-thousand-seals: barrier": 750,
-        "Legendary: verdant-oath": 535,
+        "Legendary: graft": 535,
         "Legendary: veil-thousand-seals": 316
       }
     },
@@ -3142,7 +3142,7 @@
       "received": 9855.73,
       "procs": {
         "Legendary: veil-thousand-seals: barrier": 750,
-        "Legendary: verdant-oath": 534,
+        "Legendary: graft": 534,
         "Legendary: veil-thousand-seals": 307
       }
     },
@@ -3161,7 +3161,7 @@
       "received": 9975.64,
       "procs": {
         "Legendary: veil-thousand-seals: barrier": 750,
-        "Legendary: verdant-oath": 535,
+        "Legendary: graft": 535,
         "Legendary: veil-thousand-seals": 300
       }
     },
@@ -3180,7 +3180,7 @@
       "received": 12682.45,
       "procs": {
         "Legendary: veil-thousand-seals: barrier": 750,
-        "Legendary: verdant-oath": 697,
+        "Legendary: graft": 697,
         "Legendary: veil-thousand-seals": 402
       }
     },
@@ -3199,7 +3199,7 @@
       "received": 12647.06,
       "procs": {
         "Legendary: veil-thousand-seals: barrier": 749,
-        "Legendary: verdant-oath": 691,
+        "Legendary: graft": 691,
         "Legendary: veil-thousand-seals": 392
       }
     },
@@ -3218,13 +3218,13 @@
       "received": 12569.47,
       "procs": {
         "Legendary: veil-thousand-seals: barrier": 749,
-        "Legendary: verdant-oath": 691,
+        "Legendary: graft": 691,
         "Legendary: veil-thousand-seals": 382
       }
     },
     {
       "E": 200,
-      "profile": "sword-verdant-oathwall",
+      "profile": "sword-graftwall",
       "arm": "base",
       "policy": "triple",
       "n": 64,
@@ -3236,13 +3236,13 @@
       "ehp": 11778.59,
       "received": 9409.48,
       "procs": {
-        "Legendary: verdant-oath": 528,
+        "Legendary: graft": 528,
         "Legendary: oathwall": 465
       }
     },
     {
       "E": 200,
-      "profile": "sword-verdant-oathwall",
+      "profile": "sword-graftwall",
       "arm": "base",
       "policy": "random",
       "n": 64,
@@ -3254,7 +3254,7 @@
       "ehp": 12067.88,
       "received": 10965.91,
       "procs": {
-        "Legendary: verdant-oath": 644,
+        "Legendary: graft": 644,
         "Legendary: oathwall": 570
       }
     },

@@ -326,9 +326,10 @@ function selectTarget(run,policy='focus'){
  if(policy==='adds')return guards[0]||leader||alive[0];
  if(boss){
   if(boss.bossStyle==='leech'){const thrall=alive.find(e=>e.stage84Minion==='blood');if(thrall)return thrall;}
+  if(boss.bossStyle==='devourer'){const fragment=alive.find(e=>e.stage84Minion==='vitality');if(fragment)return fragment;}
   if(boss.bossStyle==='conductor'){const node=alive.find(e=>e.stage84Node);if(node)return node;}
   if(boss.bossStyle==='matriarch'){const brood=alive.filter(e=>e.stage84Minion==='decay');if(brood.length>=2)return brood[0];}
-  // Avoid killing Vitality Heartroot Mawbuds, which heal the Devourer on death.
+
   return boss;
  }
  if(elite)return elite;
@@ -480,7 +481,7 @@ function encounter(level,build,seed,kind,opts,forcedTrait=undefined,forcedBossMo
  if(forcedTrait!==undefined){if(kind!=='normal'||forcedTrait!==null&&!F.CATALOG.encounterTraits.some(x=>x.id===forcedTrait))throw Error('Unknown forced encounter trait');card.nodes[candidate].traitId=forcedTrait;}
  if(forcedBossMod!==undefined){
   if(kind!=='boss'||forcedBossMod!==null&&!F.CATALOG.bossModifiers.some(x=>x.id===forcedBossMod))throw Error('Unknown forced Boss property');
-  // Stage 8.4: never override g.bossId to the old Rift Harbinger. The selected
+  // Stage 8.4: never override g.bossId to the old The Creditor. The selected
   // real Affinity decides the Boss, and only compatible properties are injected.
   const selectedStyle=A.profileFor(card.family).style;
   if(forcedBossMod&&!M.check([forcedBossMod],selectedStyle,'relentless_hunt'))throw Error('Boss property not compatible with '+card.family);

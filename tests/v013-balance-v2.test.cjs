@@ -59,7 +59,7 @@ test('Boss modifier diagnostic never rewrites Boss ID and rejects excluded combi
  const selected=F.CATALOG.bossModifiers.find(x=>M.check([x.id],'leech','relentless_hunt'));
  assert(selected);
  const row=S.encounter(15,S.BUILDS[0],9101,'boss',{...small,mode:'bossmods'},undefined,selected.id,'blood',1);
- assert.equal(row.bossAffinity,'blood');assert.equal(row.bossName,'Rift Harbinger');assert(row.bossModifierIds.includes(selected.id));
+ assert.equal(row.bossAffinity,'blood');assert.equal(row.bossName,'The Creditor');assert(row.bossModifierIds.includes(selected.id));
  assert.throws(()=>S.encounter(15,S.BUILDS[0],9101,'boss',small,undefined,'bone_ward','aegis',1),/not compatible/);
 });
 test('Real Dungeon balance report includes Stage 7 Essence/reagents/XP and Stage 8 combat totals',()=>{
@@ -82,17 +82,17 @@ test('Optional Contract policy selects the actual native Stage 7 offer without i
  const repeat=S.dungeon(15,S.BUILDS[0],9101,opts);
  assert.deepEqual(row,repeat);
 });
-test('Counterplay targeting reproduces valid arena clicks for Riftbound Vessels, Convergence Anchors and Heartroot Mawbuds',()=>{
+test('Counterplay targeting reproduces valid arena clicks for Riftbound Vessels, Convergence Anchors and light fragments',()=>{
  const boss={name:'Boss',boss:true,bossStyle:'leech',hp:600,maxhp:1000,groupClock:1};
  const thrall={name:'Riftbound Vessel',hp:90,stage84Minion:'blood',groupClock:2};
  const node={name:'Convergence Anchor',hp:90,stage84Node:true,groupClock:3};
- const bloom={name:'Heartroot Mawbud',hp:60,stage84Minion:'vitality',groupClock:3};
+ const bloom={name:'light fragment',hp:60,stage84Minion:'vitality',groupClock:3};
  const r={status:'fight',enemy:boss,encounterLeader:boss,enemies:[boss,thrall,node,bloom]};
  assert.equal(S.selectTarget(r,'focus'),boss);
  assert.equal(S.selectTarget(r,'mechanics'),thrall);
  assert.equal(S.selectTarget(r,'adds'),thrall);
  boss.bossStyle='conductor';assert.equal(S.selectTarget(r,'mechanics'),node);
- boss.bossStyle='devourer';assert.equal(S.selectTarget(r,'mechanics'),boss,'do not feed the death siphon');
+ boss.bossStyle='devourer';assert.equal(S.selectTarget(r,'mechanics'),bloom,'destroy the fragment before it returns');
  boss.bossStyle='matriarch';thrall.stage84Minion='decay';bloom.stage84Minion='decay';
  assert.equal(S.selectTarget(r,'mechanics'),thrall);
  bloom.hp=0;assert.equal(S.selectTarget(r,'mechanics'),boss);
@@ -101,7 +101,7 @@ test('Counterplay targeting reproduces valid arena clicks for Riftbound Vessels,
 test('Historical Rift-only diagnostic and synthetic boss-ID manipulation have been removed',()=>{
  const src=fs.readFileSync('scripts/simulate-progression.cjs','utf8');
  assert(!src.includes("g.bossId='rift'"));
- assert(!src.includes('against Rift Harbinger in an initial-ring'));
+ assert(!src.includes('against The Creditor in an initial-ring'));
  assert(src.includes('F.BOSS_STYLE_BY_AFFINITY'));
  assert(!src.includes('points<23'));
 });
