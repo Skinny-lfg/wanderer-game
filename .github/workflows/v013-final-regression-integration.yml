@@ -51,15 +51,12 @@ jobs:
           CHROME_BIN="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
           if [ -n "$CHROME_BIN" ]; then export WANDERER_BROWSER="$CHROME_BIN"; else npx playwright install chromium; fi
           node --test tests/v013-runtime-parity.test.cjs
-      - name: Install bundled Playwright Chromium for UI smoke
-        if: always()
-        run: npx playwright install chromium
       - name: Browser clean sheet smoke
         if: always()
         shell: bash
         run: |
           CHROME_BIN="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
-          if [ -n "$CHROME_BIN" ]; then export WANDERER_BROWSER="$CHROME_BIN"; fi
+          if [ -n "$CHROME_BIN" ]; then export CHROMIUM_PATH="$CHROME_BIN"; else npx playwright install chromium; fi
           npm run test:v013:browser
   static:
     runs-on: ubuntu-latest
@@ -68,6 +65,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+          fetch-depth: 2
       - name: Canonical runtime consumers and mirrored modules
         shell: bash
         run: |

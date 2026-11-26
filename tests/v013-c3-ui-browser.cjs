@@ -53,7 +53,7 @@ const server=http.createServer((req,res)=>{
    page.setDefaultTimeout(10000);
    try{
     await page.goto(url,{waitUntil:'load'});
-    assert.equal(await page.evaluate(()=>WandererAutomaticTalents.NODES.length),343);
+    assert.equal(await page.evaluate(()=>WandererAutomaticTalents.NODES.length),420);
     // Current v15 iframe (not the retired inline Talent Tree).
     await page.getByRole('button',{name:'Talents',exact:true}).click();
     const iframe=page.frameLocator('iframe[title="Talent tree"]');
@@ -132,7 +132,7 @@ const server=http.createServer((req,res)=>{
     await page.keyboard.press('Escape');
     await page.screenshot({path:path.join(report,'dungeon-'+width+'.png')});
     assert.deepEqual(errors,[],width+'px browser JavaScript errors');
-    console.log('C3_BROWSER='+JSON.stringify({viewport:width,treeNodes:343,crafted:'green_sword',contractCards:2,mapRooms:await page.locator('[data-dungeon-room]').count(),errors:errors.length}));
+    console.log('C3_BROWSER='+JSON.stringify({viewport:width,treeNodes:420,crafted:'green_sword',contractCards:2,mapRooms:await page.locator('[data-dungeon-room]').count(),errors:errors.length}));
    }finally{await context.close();}
   }
  }finally{

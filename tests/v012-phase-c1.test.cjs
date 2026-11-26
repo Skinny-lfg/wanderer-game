@@ -55,9 +55,9 @@ test('Crimson Fang works in offhand with two real hits but only one proc per coo
  const {a,r}=fight('Daggers','weapon','crimson-fang',null);const off=a.state().equip.offhand;off.rarity='Legendary';off.legendaryId='crimson-fang';off.name='Crimson Fang';a.rng(.99);r.offhandCadence=1;r.tPlayer=100;a.tick();assert.equal(count(r,'crimson-fang'),1);assert.equal(r.enemy.dots.bleed.length,1);assert.equal(r.legendaryAttackCount,2);assert.equal(r.lastLegendaryEncounter,undefined,'new ID must not activate generic +32% fallback');
  const other=fight('Daggers','amulet','chalice-hollow-king',null);const main=other.a.state().equip.weapon;main.rarity='Epic';delete main.legendaryId;const offhand=other.a.state().equip.offhand;offhand.rarity='Legendary';offhand.legendaryId='crimson-fang';offhand.name='Crimson Fang';other.a.rng(.99);other.r.offhandCadence=1;other.r.tPlayer=100;other.a.tick();assert.equal(count(other.r,'crimson-fang'),1);assert.equal(other.r.legendaryAttackCount,2);
 });
-test('Uncapped Bleed and persistent Rot, Eye enemy cap, Heartroot encounter budget, and Veil Barrier',()=>{
+test('Uncapped Bleed and six-stack Rot, Eye enemy cap, Heartroot encounter budget, and Veil Barrier',()=>{
  const blood=fight('Daggers','weapon','crimson-fang','blood');blood.r.enemy.dots.bleed=Array.from({length:12},()=>({damage:1,remaining:4}));blood.r.tPlayer=100;blood.a.tick();assert.equal(blood.r.enemy.dots.bleed.length,13);assert.equal(blood.r.enemy.dots.bleed.at(-1).remaining,4);
- const decay=fight('Two-Handed','weapon','gravewake','decay');decay.r.enemy.v012Rot=Array.from({length:6},()=>({damage:1,remaining:4,ticks:0}));decay.r.tPlayer=100;decay.a.tick();assert.equal(decay.r.enemy.v012Rot.length,7);
+ const decay=fight('Two-Handed','weapon','gravewake','decay');decay.r.enemy.v012Rot=Array.from({length:6},()=>({damage:1,remaining:4,ticks:0}));decay.r.tPlayer=100;decay.a.tick();assert.equal(decay.r.enemy.v012Rot.length,6);
  const eye=fight('Two-Handed','ring1','eye-of-morrow','decay');eye.r.enemy.v012Rot=[{damage:1,remaining:4,ticks:0}];eye.r.enemy.maxhp=1000;assert(eye.a.gear.legendaryAttackBonus(eye.r,1000,false,false)<=25);
  const heart=fight('Sword','armor','heartroot-carapace','radiance');heart.r.hp=heart.r.maxhp*.1;heart.r.enemy.atk=0;heart.r.stats.attacksPerSec=0;for(let n=0;n<1000;n++)heart.a.tick();assert(Math.abs(heart.r.legendaryState.heartrootHealed-heart.r.maxhp*.04)<0.001);
  const veil=fight('Sword','belt','veil-thousand-seals','aegis');assert(veil.r.barrier>0);assert(veil.r.barrier>=veil.r.legendaryState.veilBarrier);
@@ -77,7 +77,7 @@ test('numerical affinity scaling for all twelve effects',()=>{
  x=measure('veil-thousand-seals','Sword','belt','aegis',(a,r)=>{a.tick();return r.barrier;});assert(x[1]>x[0]);
  x=measure('kingsbreaker','Mace','weapon','fury',(a,r)=>a.gear.legendaryAttackBonus(r,100,false,false));assert.deepEqual(x,[80,110]);
  x=measure('tempest-talon','Bow','weapon','fury',(a,r)=>a.gear.legendaryAttackBonus(r,100,true,false));assert.deepEqual(x,[35,45]);
- x=measure('astrafall','Staff','weapon','arcane',(a,r)=>{r.legendaryState={astraCasts:1};return a.gear.legendaryAttackBonus(r,100,false,true);});assert(x[1]>x[0]);
+ x=measure('astrafall','Staff','weapon','arcane',(a,r)=>{r.legendaryState={astraCasts:1};r.legendaryFundedCost=20;return a.gear.legendaryAttackBonus(r,100,false,true);});assert(x[1]>x[0]);
  x=measure('voidglass','Wand','weapon','arcane',(a,r)=>{r.legendaryState={voidCasts:1};r.legendaryFundedCost=20;r.mp=10;const bonus=a.gear.legendaryAttackBonus(r,100,false,true);return [bonus,r.mp];});assert(x[1][0]>x[0][0]&&x[1][1]>x[0][1]);
 });
 test('checkpoint restore retains new item IDs',()=>{
