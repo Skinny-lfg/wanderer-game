@@ -13,7 +13,7 @@ function functionSource(start,next){
  return html.slice(begin,end);
 }
 test('Inventory has a single Stash grid for equipment and owned potions',()=>{
- assert.match(html,/\$\{potionTiles\}<\/div>/);
+ assert.match(html,/class="stashGrid">[^\n]*\$\{potionTiles\}\$\{shardTiles\}<\/div>/);
  assert.match(html,/class="invItem potionStackTile"/);
  assert.match(html,/<option value="potions">Potions<\/option>/);
  assert.doesNotMatch(html,/phase6PotionStashMarkup\(/);

@@ -45,3 +45,10 @@ test('new consumable selection survives actual checkpoint restore and unused dos
  assert.deepEqual(clone(a.events.run().potions.map(p=>p.kind)),['wisdom','rejuvenation','phantom']);
  a.potions.finish('extracted');assert.equal(a.state().consumables.wisdom,0);assert.equal(a.state().consumables.rejuvenation,1);assert.equal(a.state().consumables.phantom,1);
 });
+
+test('native stat display reports capped Phantom evasion without an undefined variable',()=>{
+ const a=create(8504,undefined,{}, {skipPersistence:true});a.start(1,true);
+ a.events.run().effects.phantom={power:.05,remaining:3};const stats=a.stats();
+ assert.match(a.statMarkup('Evasion',stats,''),/rating · [0-9.]+% vs E/);
+ assert.equal(stats.evasionBonus,.05);
+});

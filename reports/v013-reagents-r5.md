@@ -20,3 +20,6 @@
 - R4 aggregate rarity bucket weights preserved; new distribution is 2 Common, 7 Uncommon, 9 Rare, 3 Epic. Per-offer probabilities are 25.892857%, 4.438776%, 1.534392%, and 1.111111%, respectively (each item in its rarity). Fortune individual probability falls from 3.333% to 1.111%; provisional until R7. Pricing and probabilities need R7 review.
 - Both entrypoints and native module mirrors updated; isolated preview save prefix preserved. New potion art uses existing fallback. No new crafting or art.
 - Validation: authored focused tests plus updated catalog expectations, not yet executed at report creation. CI results must be checked before calling R5 validated. No heavy simulations. External Lore Bible not modified by this commit.
+
+## R5.1 — regression fixes
+Initial directed CI run 45844354765: 67/71 passed. Corrected the actual ReferenceError in phase3StatValue (stats.evasionBonus, not s.evasionBonus) in both entrypoints and added a native stat-render regression. Updated three obsolete assertions: explicitly reserve one owned potion in the 99-dose capacity test and derive actual capacity; clean-sheet restore ignores retired free supplies while retaining owned doses; shared Stash includes Runestone Shards alongside potions. No mechanic or balance changes. Rerun required before declaring validated.

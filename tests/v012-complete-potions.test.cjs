@@ -16,12 +16,12 @@ test('R5 preserves rarity bucket weights and splits Epic offers across three pot
 });
 test('death forfeits unused loaded potions while preparation has not consumed them',()=>{const a=create(63),s=a.state();s.consumables={mana:1};a.potions.select('mana');a.start();assert.equal(s.consumables.mana,1);a.potions.start();a.potions.finish('defeat');assert.equal(s.consumables.mana,0);});
 test('Stash stacks count each 99-dose group and reject purchases that exceed slots or the per-type save cap',()=>{
- const a=create(64),s=a.state();s.gold=1000;s.stash=Array.from({length:39},(_,i)=>a.makeItem(1,'belt',null,'loot','Belt','Common'));s.consumables={health:98};s.apothecary={stock:[{id:'partial',kind:'health',price:1},{id:'new-stack',kind:'health',price:1}],refreshCost:1};
- assert(a.potions.buy('partial'));assert.equal(s.consumables.health,99);const gold=s.gold;assert.equal(a.potions.buy('new-stack'),false);assert.equal(s.gold,gold);
- s.stash.pop();assert(a.potions.buy('new-stack'));assert.equal(s.consumables.health,100);
+ const a=create(64),s=a.state();s.gold=1000;s.stash=Array.from({length:a.storage.capacity()-1},(_,i)=>a.makeItem(1,'belt',null,'loot','Belt','Common'));s.consumables={health:99};s.potionSelection=['health'];s.apothecary={stock:[{id:'partial',kind:'health',price:1},{id:'new-stack',kind:'health',price:1}],refreshCost:1};
+ assert(a.potions.buy('partial'));assert.equal(s.consumables.health,100);assert.equal(a.storage.occupied(),a.storage.capacity());const gold=s.gold;assert.equal(a.potions.buy('new-stack'),false);assert.equal(s.gold,gold);
+ s.stash.pop();assert(a.potions.buy('new-stack'));assert.equal(s.consumables.health,101);
  s.stashCapacity=50;s.consumables.health=99999;s.apothecary.stock=[{id:'cap',kind:'health',price:1}];const cappedGold=s.gold;assert.equal(a.potions.buy('cap'),false);assert.equal(s.gold,cappedGold);
 });
-test('legacy separate health and mana supplies migrate once into Stash consumables',()=>{
- const a=create(65);a.start();const checkpoint=a.checkpoint.capture();checkpoint.session.supplies={health:2,mana:1};a.checkpoint.restore(checkpoint);
- assert.deepEqual(JSON.parse(JSON.stringify(a.state().consumables)),{health:2,mana:1});const migrated=a.checkpoint.capture();assert.deepEqual(JSON.parse(JSON.stringify(migrated.session.supplies)),{health:0,mana:0});a.checkpoint.restore(migrated);assert.deepEqual(JSON.parse(JSON.stringify(a.state().consumables)),{health:2,mana:1});
+test('v0.13 clean-sheet restore ignores retired free supplies and preserves owned doses',()=>{
+ const a=create(65);a.state().consumables={health:1};a.start();const checkpoint=a.checkpoint.capture();checkpoint.session.supplies={health:2,mana:1};a.checkpoint.restore(checkpoint);
+ assert.deepEqual(JSON.parse(JSON.stringify(a.state().consumables)),{health:1});const restored=a.checkpoint.capture();assert.deepEqual(JSON.parse(JSON.stringify(restored.session.supplies)),{health:0,mana:0});a.checkpoint.restore(restored);assert.deepEqual(JSON.parse(JSON.stringify(a.state().consumables)),{health:1});
 });
