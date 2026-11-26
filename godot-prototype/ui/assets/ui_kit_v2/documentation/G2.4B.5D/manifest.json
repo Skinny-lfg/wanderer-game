@@ -1,0 +1,48 @@
+{
+  "stage": "G2.4B.5D",
+  "approval": "owner approved last concept sheet",
+  "shared_frame": "icons/actions/frame_thin.png",
+  "source": "approved raster sheet, cropped, masked and resampled",
+  "assets": [
+    {
+      "path": "icons/resources/essence.png",
+      "sha256": "ab3113703aeb51116b01415c3613387eeb2cd4d6ac993832332dee2ac2af0e9f",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 63938
+    },
+    {
+      "path": "icons/resources/fragments.png",
+      "sha256": "4d1f6ed8b6e3b0bf903c1f9c9b56e545d1946d37ba3c95725b5f26e41a545c36",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 56357
+    },
+    {
+      "path": "icons/resources/gold.png",
+      "sha256": "ea5ebb852fc6b17ffadd30ee81566a9d7239ffda04eba3c39b7a69b4af9f7eda",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 70472
+    },
+    {
+      "path": "icons/resources/reagent.png",
+      "sha256": "1606e3657f9bdba7ff6ab9d9daea4ae0201e3d297154c7b02700d7f91e075d01",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 55878
+    }
+  ]
+}
