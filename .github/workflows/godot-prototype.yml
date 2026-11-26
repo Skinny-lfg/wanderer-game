@@ -26,9 +26,9 @@ jobs:
           set -euo pipefail
           GODOT=/tmp/godot-bin/Godot_v4.4.1-stable_linux.x86_64
           "$GODOT" --headless --path godot-prototype --import 2>&1 | tee /tmp/godot-import.log
-          ! grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-import.log
+          if grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-import.log; then exit 1; fi
           "$GODOT" --headless --path godot-prototype --script res://tests/arena_smoke.gd 2>&1 | tee /tmp/godot-smoke.log
-          ! grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-smoke.log
+          if grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-smoke.log; then exit 1; fi
           grep -F 'PASS: arena loaded; four enemies; valid and invalid target selection' /tmp/godot-smoke.log
       - name: Navigation smoke
         shell: bash
@@ -36,7 +36,7 @@ jobs:
           set -euo pipefail
           GODOT=/tmp/godot-bin/Godot_v4.4.1-stable_linux.x86_64
           "$GODOT" --headless --path godot-prototype --script res://tests/shell_smoke.gd 2>&1 | tee /tmp/godot-shell.log
-          ! grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-shell.log
+          if grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-shell.log; then exit 1; fi
           grep -F 'PASS: five camp tabs; contextual expedition and combat; secondary codex' /tmp/godot-shell.log
       - name: Capture eight rendered screens
         shell: bash
@@ -46,7 +46,7 @@ jobs:
           sudo apt-get install -y -qq xvfb xauth libgl1-mesa-dri fonts-liberation
           GODOT=/tmp/godot-bin/Godot_v4.4.1-stable_linux.x86_64
           LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a -s '-screen 0 1600x900x24' "$GODOT" --path godot-prototype --rendering-method gl_compatibility --resolution 1280x720 --audio-driver Dummy --script res://tests/capture_screens.gd 2>&1 | tee /tmp/godot-captures.log
-          ! grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-captures.log
+          if grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-captures.log; then exit 1; fi
           grep -F 'PASS: captured eight screens' /tmp/godot-captures.log
           for screen in camp inventory talents city shrine expedition combat codex; do
             test -s "godot-prototype/captures/$screen.png"
@@ -62,7 +62,7 @@ jobs:
           set -euo pipefail
           GODOT=/tmp/godot-bin/Godot_v4.4.1-stable_linux.x86_64
           "$GODOT" --headless --path godot-prototype --script res://tests/gallery_smoke.gd 2>&1 | tee /tmp/godot-gallery.log
-          ! grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-gallery.log
+          if grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-gallery.log; then exit 1; fi
           grep -F 'PASS: gothic gallery seven categories and component states' /tmp/godot-gallery.log
       - name: Capture Gothic gallery
         shell: bash
@@ -70,7 +70,7 @@ jobs:
           set -euo pipefail
           GODOT=/tmp/godot-bin/Godot_v4.4.1-stable_linux.x86_64
           LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a -s '-screen 0 1600x900x24' "$GODOT" --path godot-prototype --rendering-method gl_compatibility --resolution 1280x720 --audio-driver Dummy --script res://tests/capture_gallery.gd 2>&1 | tee /tmp/godot-gallery-capture.log
-          ! grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-gallery-capture.log
+          if grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-gallery-capture.log; then exit 1; fi
           grep -F 'PASS: captured seven gothic gallery categories' /tmp/godot-gallery-capture.log
           for screen in foundations buttons panels navigation item_slots tooltips resource_bars; do
             test -s "godot-prototype/captures/gallery/$screen.png"
@@ -86,7 +86,7 @@ jobs:
           set -euo pipefail
           GODOT=/tmp/godot-bin/Godot_v4.4.1-stable_linux.x86_64
           "$GODOT" --headless --path godot-prototype --script res://tests/painted_buttons_smoke.gd 2>&1 | tee /tmp/godot-painted.log
-          ! grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-painted.log
+          if grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-painted.log; then exit 1; fi
           grep -F 'PASS: G2.2A missing-pack fallback, synthetic sixteen-PNG load, native state wiring, SVG comparison' /tmp/godot-painted.log
       - name: Painted frames integration smoke
         shell: bash
@@ -94,7 +94,7 @@ jobs:
           set -euo pipefail
           GODOT=/tmp/godot-bin/Godot_v4.4.1-stable_linux.x86_64
           "$GODOT" --headless --path godot-prototype --script res://tests/painted_frames_smoke.gd 2>&1 | tee /tmp/godot-frames.log
-          ! grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-frames.log
+          if grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-frames.log; then exit 1; fi
           grep -F 'PASS: G2.2B frame loading, nine-slice samples, fixed-aspect art and SVG comparison' /tmp/godot-frames.log
       - name: Painted navigation integration smoke
         shell: bash
@@ -102,7 +102,7 @@ jobs:
           set -euo pipefail
           GODOT=/tmp/godot-bin/Godot_v4.4.1-stable_linux.x86_64
           "$GODOT" --headless --path godot-prototype --script res://tests/painted_navigation_smoke.gd 2>&1 | tee /tmp/godot-navigation.log
-          ! grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-navigation.log
+          if grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-navigation.log; then exit 1; fi
           grep -F 'PASS: G2.2C five tabs, icons, exclusive selection and SVG fallback' /tmp/godot-navigation.log
       - name: Painted inventory slots smoke
         shell: bash
@@ -110,7 +110,7 @@ jobs:
           set -euo pipefail
           GODOT=/tmp/godot-bin/Godot_v4.4.1-stable_linux.x86_64
           "$GODOT" --headless --path godot-prototype --script res://tests/painted_slots_smoke.gd 2>&1 | tee /tmp/godot-slots.log
-          ! grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-slots.log
+          if grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-slots.log; then exit 1; fi
           grep -F 'PASS: G2.2D ten actual textures, rarity states, 48-slot bag and original comparison' /tmp/godot-slots.log
       - name: Painted tooltips smoke
         shell: bash
@@ -118,7 +118,7 @@ jobs:
           set -euo pipefail
           GODOT=/tmp/godot-bin/Godot_v4.4.1-stable_linux.x86_64
           "$GODOT" --headless --path godot-prototype --script res://tests/painted_tooltips_smoke.gd 2>&1 | tee /tmp/godot-tooltips.log
-          ! grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-tooltips.log
+          if grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-tooltips.log; then exit 1; fi
           grep -F 'PASS: G2.2E painted compact, legendary, comparison and hover tooltip' /tmp/godot-tooltips.log
       - name: Modular frames actual artwork smoke
         shell: bash
@@ -126,7 +126,7 @@ jobs:
           set -euo pipefail
           GODOT=/tmp/godot-bin/Godot_v4.4.1-stable_linux.x86_64
           "$GODOT" --headless --path godot-prototype --script res://tests/modular_frames_smoke.gd 2>&1 | tee /tmp/godot-modular.log
-          ! grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-modular.log
+          if grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-modular.log; then exit 1; fi
           grep -F 'PASS: G2.2E.1B 28 continuous atlases, matched seams and protected outer art' /tmp/godot-modular.log
       - name: Resource bars smoke
         shell: bash
@@ -134,5 +134,5 @@ jobs:
           set -euo pipefail
           GODOT=/tmp/godot-bin/Godot_v4.4.1-stable_linux.x86_64
           "$GODOT" --headless --path godot-prototype --script res://tests/resource_bars_smoke.gd 2>&1 | tee /tmp/godot-resource-bars.log
-          ! grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-resource-bars.log
+          if grep -E 'SCRIPT ERROR|^ERROR:' /tmp/godot-resource-bars.log; then exit 1; fi
           grep -F 'PASS: G2.2F seven PNGs, resource values, fill bounds, barrier visibility and level preview' /tmp/godot-resource-bars.log

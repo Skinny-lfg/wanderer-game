@@ -165,7 +165,6 @@ func _draw() -> void:
 	if use_v2:
 		_draw_v2_bar()
 	else:
-		var cap = minf(h * 0.625, w * 0.25)
 		draw_texture_rect_region(FRAME, Rect2(0, 0, cap, h), Rect2(0, 0, 40, 64))
 		draw_texture_rect_region(FRAME, Rect2(cap, 0, w - cap * 2.0, h), Rect2(40, 0, 432, 64))
 		draw_texture_rect_region(FRAME, Rect2(w - cap, 0, cap, h), Rect2(472, 0, 40, 64))
