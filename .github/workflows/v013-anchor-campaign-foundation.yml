@@ -38,3 +38,4 @@ jobs:
           if [ -n "$CHROME_BIN" ]; then export WANDERER_BROWSER="$CHROME_BIN" CHROMIUM_PATH="$CHROME_BIN"; else npx playwright install chromium; fi
           node --test tests/v013-runtime-parity.test.cjs
           npm run test:v013:browser
+          node tests/v013-anchor-shrine-browser.cjs

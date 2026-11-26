@@ -69,3 +69,18 @@ test('discarded at-risk shard cannot reroll later in the same Expedition',()=>{
 test('legacy A2 saved collection retains all secured shards as ordinary inventory pieces',()=>{
  let c=A.collection();delete c.mounted;c={...c,campaign:A.grantSecuredShard(c.campaign,'radiance_shard_1')};assert(A.validCollection(c));assert.equal(A.bag(c).secured[0].name,'Everlight Shard I');assert.equal(A.bag(A.mountShard(c,'radiance_shard_1')).secured.length,0);
 });
+
+test('native shared Bag capacity, overflow replacement, extraction and secured Stash occupancy',()=>{
+ const create=require('./v012-economy-harness.cjs'),a=create(871,undefined,{}, {skipPersistence:true});a.setup(50,'Sword','Epic');a.start(1,true);
+ const g=a.controller(),card=g.state.dungeon.cards[0];g.chooseRealm(card.id);
+ const room=card.edges.filter(([from])=>from===0).map(([,to])=>to).find(i=>card.nodes[i].kind==='combat');
+ assert(g.visitRoom(room));assert(a.enter());const r=a.state().run;for(const mob of r.enemies||[r.enemy])mob.hp=0;r.groupReserve=[];a.win();assert(a.exitResult());
+ const c=a.state().anchorCollection;assert(c.expedition);const id=c.expedition.pending||A.get(card.family).shards[0].id;c.expedition.pending=null;
+ while(a.bag.items().length<a.bag.capacity())a.bag.mark(a.makeItem(1,'helm',null,'loot','random','Common'));
+ const first=a.bag.items()[0].id;assert.equal(a.bag.overflow(),0);
+ c.expedition.pending=id;assert.equal(a.bag.items().length,a.bag.capacity()+1);assert.equal(a.bag.overflow(),1);assert.equal(a.bag.items().at(-1).id,id);
+ assert(a.bag.markup().includes('data-phase3-loot="'+id+'"'));assert(!a.bag.markup().includes('Runestone Shards · 1 / 1'));
+ assert.equal(a.checkpoint.extract(),false);
+ assert(a.bag.discard(first,id));assert.equal(a.bag.overflow(),0);assert(a.bag.items().some(i=>i.id===id));assert.equal(a.bag.items()[0].id,id);
+ const occupied=a.storage.occupied();assert(a.checkpoint.extract());assert.equal(a.storage.occupied(),occupied+1);assert(A.bag(a.state().anchorCollection).secured.some(s=>s.id===id));
+});
