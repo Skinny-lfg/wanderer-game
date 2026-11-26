@@ -364,31 +364,41 @@ function craftEarned(a,profile,level){
 // Camp crafting is an intentional gamble: the preview is an EXAMPLE stat roll,
 // not a guaranteed attribute selection. The native Forge owns actual materials,
 // RNG, inventory insertion and persistence; this agent cannot force a preferred roll.
-function investEarnedGear(a,profile,level){
- const outcome={crafted:[]},forge=a.forge;
- if(!forge||!a.economyCanAct()||forge.canCraft&&!forge.canCraft())return outcome;
+// Read-only candidates; influence is optional and its preview is not a guaranteed roll.
+function gearInvestmentCandidates(a,profile,level){
+ const s=a.state(),forge=a.forge,options=[];
+ if(!forge||!a.economyCanAct()||forge.canCraft&&!forge.canCraft())return options;
  const efficiency=(gain,fragments,essence,reagents)=>gain/(Math.max(1,fragments)+4*Math.max(0,essence)+12*Object.values(reagents||{}).reduce((a,b)=>a+b,0));
- for(let attempt=0;attempt<2;attempt++){
-  // Native craftRecipe rejects a full Stash even when progress().ready is
-  // true; don't treat that legal UI restriction as a broken economy.
-  if(forge.canCraft&&!forge.canCraft())break;
-  const s=a.state(),options=[];
-  for(const recipe of forge.recipes){
-   const progress=forge.progress(recipe.id,level);
-   if(!progress?.ready)continue;
-   const example=forge.preview(recipe.id,level);
-   if(!example)continue;
+ for(const recipe of forge.recipes){
+  const base=forge.progress(recipe.id,level);if(!base?.ready)continue;
+  const variants=[{influence:null,progress:base}];
+  // Consider only one compatible preferred family to keep native preview work bounded.
+  if(['Rare','Epic'].includes(recipe.rarity))for(const family of profile.families||[]){
+   const progress=forge.progress(recipe.id,level,family);
+   if(!progress?.ready||Object.entries(progress.cost.reagents).some(([f,n])=>s.crafting.cores[f]-n<1))continue;
+   variants.push({influence:family,progress});break;
+  }
+  for(const {influence,progress} of variants){
+   const example=forge.preview(recipe.id,level,influence);if(!example)continue;
    const targets=['ring1','ring2'].includes(recipe.slot)?['ring1','ring2']:[recipe.slot];
    const target=targets.filter(slot=>identityPurchase(example,profile,slot)).map(slot=>({slot,gain:identityGain(example,s.equip[slot],profile,slot)}))
     .sort((x,y)=>y.gain-x.gain)[0];
    if(!target||target.gain<5)continue;
-   options.push({recipe,target,gain:target.gain,fragments:progress.cost.fragments,
-    essence:progress.cost.essence,reagents:progress.cost.reagents,efficiency:efficiency(target.gain,progress.cost.fragments,progress.cost.essence,progress.cost.reagents)});
+   options.push({recipe,target,influence,gain:target.gain,fragments:progress.cost.fragments,essence:progress.cost.essence,reagents:progress.cost.reagents,efficiency:efficiency(target.gain,progress.cost.fragments,progress.cost.essence,progress.cost.reagents)});
   }
+ }
+ return options;
+}
+function investEarnedGear(a,profile,level){
+ const outcome={crafted:[]},forge=a.forge;
+ if(!forge||!a.economyCanAct()||forge.canCraft&&!forge.canCraft())return outcome;
+ for(let attempt=0;attempt<2;attempt++){
+  if(forge.canCraft&&!forge.canCraft())break;
+  const s=a.state(),options=gearInvestmentCandidates(a,profile,level);
   options.sort((x,y)=>y.efficiency-x.efficiency||y.gain-x.gain);
   const best=options[0];if(!best)break;
   const before={fragments:s.fragments,essence:s.crafting.essence,cores:{...s.crafting.cores}};
-  const item=forge.craft(best.recipe.id,level);
+  const item=forge.craft(best.recipe.id,level,best.influence);
   if(!item)throw Error('Native Forge craft rejected after valid Camp preview');
   if(s.fragments!==before.fragments-best.fragments||
      s.crafting.essence!==before.essence-best.essence||Object.keys(before.cores).some(f=>s.crafting.cores[f]!==before.cores[f]-(best.reagents[f]||0)))
@@ -396,7 +406,7 @@ function investEarnedGear(a,profile,level){
   const actual=gearScore(item,profile)-gearScore(s.equip[best.target.slot],profile);
   const equipped=equipEarned(a,profile,false);
   outcome.crafted.push({recipe:best.recipe.id,item:item.name,slot:best.target.slot,
-   fragmentsSpent:best.fragments,essenceSpent:best.essence,reagentsSpent:{...best.reagents},
+   fragmentsSpent:best.fragments,essenceSpent:best.essence,reagentsSpent:{...best.reagents},influence:best.influence,
    estimatedGain:round(best.gain),actualRolledGain:round(actual),
    equipped:equipped.some(x=>x.item===item.name)});
  }
@@ -1626,6 +1636,6 @@ function main(args=process.argv.slice(2)){
  return report;
 }
 module.exports={PROFILES,PIVOTS,pivotProfile,DEFAULTS,parseArgs,synergyGearBonus,spendEarnedAttributes,gearScore,identityMatch,identityGain,identityPurchase,gearSnapshot,runeScore,manageEarnedRunes,potionScore,selectEarnedPotions,buyEarnedPotions,craftEarnedPotions,recordAutomaticPotions,refineEarnedReagents,selectThornAwareTarget,spendEarnedTalents,prepareEarnedAbility,equipEarned,
- prepareCamp,craftEarned,investEarnedGear,consolidateStash,policyFlags,capabilities,rankRealms,choiceRealm,pathLength,eliteOpportunity,selectRoom,evaluateRetreat,boonScore,chooseBoon,contractScore,chooseContract,contractExitDecision,eventOptions,potionSlots,usePotionKind,usePotionsBetween,rerollPoorBoonAtShrine,
+ prepareCamp,craftEarned,investEarnedGear,gearInvestmentCandidates,consolidateStash,policyFlags,capabilities,rankRealms,choiceRealm,pathLength,eliteOpportunity,selectRoom,evaluateRetreat,boonScore,chooseBoon,contractScore,chooseContract,contractExitDecision,eventOptions,potionSlots,usePotionKind,usePotionsBetween,rerollPoorBoonAtShrine,
  fightNatural,resolveEvent,clearResults,playDungeon,simulateAccount,analyze,run,markdown,main};
 if(require.main===module)main();

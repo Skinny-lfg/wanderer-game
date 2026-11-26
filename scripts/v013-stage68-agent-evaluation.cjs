@@ -73,7 +73,7 @@ function evaluate(reports,opts={}){
    'Only four shared RNG seeds; these 80 account runs are not 80 independent map seeds.',
    'Some accounts never reach the 12–14 or 28–30 point Affinity thresholds because E1–E5 are difficult.',
    'Weapon preferences cannot grant or force loot; preferred-weapon exposure must be reported.',
-   'Strategic potion policies only affect genuinely available purchased doses and legal map preparation, not mid-combat consumption.',
+   'Strategic potion policies use genuinely owned purchased or crafted doses and legal preparation windows, not mid-combat consumption.',
    'These agents are better-structured transparent heuristics, not mathematically optimal builds or experienced human players.',
    'Do not rebalance enemy stats based solely on agents that never obtained their intended functional equipment.',
    'No game balance, rewards, talents or saves were modified.' ]};

@@ -51,3 +51,14 @@ test('auto potion telemetry is emitted once per native used slot, never before s
 test('controlled fingerprint includes current native potion, crafting, rewards and equipment modules',()=>{
  const f=S.sourceFingerprint();for(const path of ['online/v012-consumables.js','economy/v013-crafting.js','economy/v012-equipment-runtime.js','online/v012-persistence-runtime.js','scripts/v013-agent-strategy.cjs'])assert(f.files.includes(path),path);
 });
+
+test('Forge investment can consider a native influence only when its full multi-Reagent cost is affordable',()=>{
+ const {a,s}=setup(8804);s.crafting.essence=500;for(const f of C.FAMILIES)s.crafting.cores[f]=20;
+ const r=a.forge.recipes.find(q=>q.rarity==='Rare'&&q.slot==='weapon'&&q.subtype==='Sword');assert(r);s.crafting.learnedRecipes=[r.id];
+ const profile={...N.PROFILES.balanced,families:['blood','aegis'],weapons:['Sword'],strictResearchIdentity:true};
+ const before=JSON.stringify(s),choices=N.gearInvestmentCandidates(a,profile,1).filter(x=>x.recipe.id===r.id);assert.equal(JSON.stringify(s),before);
+ const base=choices.find(x=>x.influence===null),variant=choices.find(x=>x.influence!==null);assert(base);assert(variant);
+ const cost=a.forge.progress(r.id,1,variant.influence).cost;assert.deepEqual(clone(variant.reagents),clone(cost.reagents));assert.equal(variant.reagents[variant.influence],(base.reagents[variant.influence]||0)+1);
+ s.crafting.cores[variant.influence]=base.reagents[variant.influence]||0;
+ assert(N.gearInvestmentCandidates(a,profile,1).filter(x=>x.recipe.id===r.id).every(x=>x.influence!==variant.influence));
+});
