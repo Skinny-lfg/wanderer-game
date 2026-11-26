@@ -6,7 +6,7 @@ const clone=x=>JSON.parse(JSON.stringify(x));
 test('R7B rarity weights and exact deterministic boundaries retain four independent offers',()=>{
  assert.deepEqual(P.RARITY_OFFER_WEIGHTS,{Common:4800,Uncommon:3000,Rare:1600,Epic:600});
  for(const [roll,rarity] of [[0,'Common'],[.47999,'Common'],[.48,'Uncommon'],[.77999,'Uncommon'],[.78,'Rare'],[.93999,'Rare'],[.94,'Epic'],[.99999,'Epic']]){
-  const values=[roll,0];assert.equal(P.CATALOG.find(p=>p.id===P.offer(()=>values.shift())).rarity,rarity);
+  const values=[roll,0],kind=P.offer(()=>values.shift());assert.equal(P.CATALOG.find(p=>p.id===kind).rarity,rarity);assert.equal(values.length,0);
  }
  for(const id of ['fortune','wisdom','prospector'])assert.equal(P.OFFER_PROBABILITIES[id],.02);
  const values=[.1,0,.5,0,.8,0,.95,0];let id=0;const shop=P.shop(10,()=>values.shift(),()=>String(++id));assert.equal(shop.stock.length,4);assert.deepEqual(shop.stock.map(p=>P.CATALOG.find(q=>q.id===p.kind).rarity),['Common','Uncommon','Rare','Epic']);
