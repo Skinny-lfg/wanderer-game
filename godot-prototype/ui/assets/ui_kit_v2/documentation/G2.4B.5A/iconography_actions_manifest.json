@@ -1,0 +1,296 @@
+{
+  "stage": "G2.4B.5A",
+  "assets": [
+    {
+      "path": "icons/actions/add.png",
+      "sha256": "59744cdf8525b8206e82a123739b58426b9d7b8a6f00fcc073229d0ce9f68925",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 23062
+    },
+    {
+      "path": "icons/actions/add_framed.png",
+      "sha256": "88f05b60c2e2b8d25596be025a403753dedbcc445f845be919313f03679a40fe",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 76739
+    },
+    {
+      "path": "icons/actions/adjustments.png",
+      "sha256": "5a9fb7ef980133956cd92e37ea4f07512ab9e6df5ee31ac2ae37e8620112345f",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 27555
+    },
+    {
+      "path": "icons/actions/adjustments_framed.png",
+      "sha256": "34105cb1c8a3f745bb1ce5e6720b97b46555c74045ab86c30a6abf6bab1e6604",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 80902
+    },
+    {
+      "path": "icons/actions/advance.png",
+      "sha256": "a7d3dc23c80616ae7f87d8dd6761c75a0b141d9f3a29d59744cc06b51db1a740",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 34859
+    },
+    {
+      "path": "icons/actions/advance_framed.png",
+      "sha256": "48cbf52e48c9672ea166e13711d27723165750a5bc013701c26fe40931d785e7",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 87812
+    },
+    {
+      "path": "icons/actions/cancel.png",
+      "sha256": "efd888cfd010f472067cd53cf04d68fb855afb2bcd2bf6b0f6a173e8b387095b",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 38148
+    },
+    {
+      "path": "icons/actions/cancel_framed.png",
+      "sha256": "4184ee5fc94d85fd01edac4a0088be52334689f5cc73c3edc7e64be00d2d1854",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 88777
+    },
+    {
+      "path": "icons/actions/confirm.png",
+      "sha256": "7453c3bd41b6bb3da5c0744f226cdb20a0e6115a70a109974c288e9711e167a0",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 27650
+    },
+    {
+      "path": "icons/actions/confirm_framed.png",
+      "sha256": "5b8bb1b4e3d1f34b2ca8456df7a0ce888496cac514a26b37335103f62f4ee807",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 81135
+    },
+    {
+      "path": "icons/actions/discard.png",
+      "sha256": "37f6461886b5be4a074ad09354effa5110616322135f9c49828b222338806d37",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 45705
+    },
+    {
+      "path": "icons/actions/discard_framed.png",
+      "sha256": "0ea8ba82fa9aa388f05f6762b8b6478476b8bf2f43b7ed3aacab23dd99e5bf0a",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 84018
+    },
+    {
+      "path": "icons/actions/frame_thin.png",
+      "sha256": "6959efd49638bc58f8b240e234d9da0b3a65a0e2c255255954f0035833c4ad5c",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 77861
+    },
+    {
+      "path": "icons/actions/info.png",
+      "sha256": "c801ba3cae22f8c0270b55855bb4a93f418e5185b1c42cdcd7480e531dc78841",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 18014
+    },
+    {
+      "path": "icons/actions/info_framed.png",
+      "sha256": "c4b555c1d4a831c1170206c3216b4c31d91c340e915e524a39079c80f245c29a",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 76410
+    },
+    {
+      "path": "icons/actions/inspect.png",
+      "sha256": "aa51bcbb0d54aff7f565700770e7f08283b2943954bcc8d7c0a7d1d3b0d13f5b",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 36812
+    },
+    {
+      "path": "icons/actions/inspect_framed.png",
+      "sha256": "7cc3d59ee408eefd444bb708d5549f3673ab83ba8f81e7d344e498d2d72ccb80",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 87208
+    },
+    {
+      "path": "icons/actions/lock.png",
+      "sha256": "f310fb78a00b1f907b2e74bb967d9d2a6d9ef81597681df343df2383367816e9",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 37342
+    },
+    {
+      "path": "icons/actions/lock_framed.png",
+      "sha256": "67f942be7595c58caf4c58844e6f247609d5ba691314324af7592623d695d2eb",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 81035
+    },
+    {
+      "path": "icons/actions/options.png",
+      "sha256": "8443ad38523bca3ea0d63e5a3dfe62e52f4113ce4ba15bd39d893c0a7ac85ce3",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 49397
+    },
+    {
+      "path": "icons/actions/options_framed.png",
+      "sha256": "b026cba4b08483214f2896d5884b019afc711311a79747cd889d0284d4dbc7ca",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 91716
+    },
+    {
+      "path": "icons/actions/remove.png",
+      "sha256": "200400f0127568607d3cf294e7557480dd9bbe3d8c9c6728feba1bbd0b7fecca",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 13300
+    },
+    {
+      "path": "icons/actions/remove_framed.png",
+      "sha256": "95e495d506260b6bde6c6219a485d1e917500e399d34e0da57ac95aaa93316d4",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 71075
+    },
+    {
+      "path": "icons/actions/swap.png",
+      "sha256": "b5da5bed355f1732204983ce1635d832882cc6caa12c635773308c8d275201ea",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 35196
+    },
+    {
+      "path": "icons/actions/swap_framed.png",
+      "sha256": "f14ea9464a891cd1dcb3ca0d0e9d733039acfa93d6e2a36ac76635f8ccb54d44",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 85170
+    },
+    {
+      "path": "icons/actions/unlock.png",
+      "sha256": "00754c83ada56ac4670132055536d39cd5d2a95f4187e20695bbcdc965fc908b",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 36407
+    },
+    {
+      "path": "icons/actions/unlock_framed.png",
+      "sha256": "80b90fcd30de77ac086e1a6d17fc4daba275a9e142a5a81f0a8c8bb4933fffc9",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 80829
+    },
+    {
+      "path": "icons/actions/upgrade.png",
+      "sha256": "276ad52982d1328abb6ad46b161c3f7dd053cc1fca4f5d8048e789941e80ee73",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 27198
+    },
+    {
+      "path": "icons/actions/upgrade_framed.png",
+      "sha256": "cb8c5f6bd1588b1800e83d5ba192b173890a0544816d993c49144065dbfbb4bf",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 80366
+    }
+  ],
+  "source": "Owner-approved thin-frame concept sheet; raster crops approx. 180 x 180 resampled to 256 x 256; foreground masks extracted by threshold and reviewed in preview. Not native 256px source art."
+}
