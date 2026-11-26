@@ -149,7 +149,9 @@ function activeLegendarySignatures(){
 function legendaryRuntime(r){
  if(!r.legendaryState)r.legendaryState={};
  const t=r.legendaryState;
- if(t.realm!==r.phase1Plane){t.realm=r.phase1Plane;t.heartrootHealed=0;}
+ // In v0.13 a plane is a room index, not a Realm. Keep the Realm budget across room transitions.
+ const realm=r.phase1?(ports.phase1Controller?.state?.dungeon?.realm??r.phase1Plane):r.phase1Plane;
+ if(t.realm!==realm){t.realm=realm;t.heartrootHealed=0;}
  if(t.encounter!==r.phase1Plane+':'+r.enc){
   t.encounter=r.phase1Plane+':'+r.enc;t.veilGranted=false;t.veilBarrier=0;t.veilEarlierBarrier=0;t.veilReady=0;t.heartrootEncounterHeal=0;
  }

@@ -9,7 +9,7 @@ const entries=[
  ['kingsbreaker','Mace','weapon','fury'],['tempest-talon','Bow','weapon','fury'],
  ['astrafall','Staff','weapon','arcane'],['voidglass','Wand','weapon','arcane']
 ];
-function fight(weapon,slot,id,affinity){const a=create(871);a.setup(50,weapon,'Epic');if(weapon==='Sword'||weapon==='Mace')a.state().equip.offhand=a.makeItem(50,'offhand',null,'loot','Shield','Epic');const item=a.state().equip[slot];item.rarity='Legendary';item.legendaryId=id;item.name=id;a.start(1,true);const controller=a.controller(),card=controller.state.dungeon.cards[0];controller.chooseRealm(card.id);const entrance=card.edges.filter(([from])=>from===0).map(([,to])=>to).find(i=>card.nodes[i].kind==='combat');assert(controller.visitRoom(entrance));assert(a.enter());a.build().unlockedFamilies=affinity?[affinity]:[];const r=a.state().run;r.enemy.hp=r.enemy.maxhp=100000;r.enemy.def=0;r.enemy.barrier=0;r.enemy.atk=100;r.enemy.effect=null;r.stats.evasionRating=0;r.stats.blockChance=0;r.tPlayer=r.tDot=r.tEnemy=0;r.mp=r.maxmp;return {a,r};}
+function fight(weapon,slot,id,affinity){const a=create(871);a.setup(50,weapon,'Epic');if(weapon==='Sword'||weapon==='Mace')a.state().equip.offhand=a.makeItem(50,'offhand',null,'loot','Shield','Epic');const item=a.state().equip[slot];item.rarity='Legendary';item.legendaryId=id;item.name=id;a.start(1,true);const controller=a.controller(),card=controller.state.dungeon.cards[0];controller.chooseRealm(card.id);a.build().unlockedFamilies=affinity?[affinity]:[];const entrance=card.edges.filter(([from])=>from===0).map(([,to])=>to).find(i=>card.nodes[i].kind==='combat');assert(controller.visitRoom(entrance));assert(a.enter());a.build().unlockedFamilies=affinity?[affinity]:[];const r=a.state().run;r.enemy.hp=r.enemy.maxhp=100000;r.enemy.def=0;r.enemy.barrier=0;r.enemy.atk=100;r.enemy.effect=null;r.stats.evasionRating=0;r.stats.blockChance=0;r.tPlayer=r.tDot=r.tEnemy=0;r.mp=r.maxmp;return {a,r};}
 function count(r,id){return r.metrics?.procs?.['Legendary: '+id]||0;}
 for(const [id,weapon,slot,family]of entries){test(`${id} activates with and without its affinity; cooldown or per-Realm limit applies`,()=>{
  for(const empowered of [false,true]){const {a,r}=fight(weapon,slot,id,empowered?family:null);const e=r.enemy;
@@ -34,14 +34,14 @@ test('only the twelve current Legendary identities drop in every slot',()=>{
   assert(entries.some(([id])=>id===item.legendaryId),slot+': '+item.legendaryId);
  }
 });
-test('Heartroot calibrated healing rate and Realm cap apply with and without Radiance',()=>{
+test('Heartroot calibrated healing rate and encounter cap apply with and without Radiance',()=>{
  for(const [affinity,rate]of [[null,.002],['radiance',.003]]){
   const {a,r}=fight('Sword','armor','heartroot-carapace',affinity);
   r.hp=r.maxhp*.5;r.enemy.atk=0;r.stats.attacksPerSec=0;
   a.tick();
   assert(Math.abs(r.legendaryState.heartrootHealed-r.maxhp*rate*.11)<1e-6);
   for(let n=0;n<1000;n++)a.tick();
-  assert(Math.abs(r.legendaryState.heartrootHealed-r.maxhp*.10)<1e-6);
+  assert(Math.abs(r.legendaryState.heartrootHealed-r.maxhp*.04)<1e-6);
  }
 });
 test('new IDs roundtrip locally; removed Legendary abilities are not recognized',()=>{
@@ -58,11 +58,11 @@ test('Bleed and Rot caps, Eye enemy cap, Heartroot Realm budget, and Barrier cap
  const blood=fight('Daggers','weapon','crimson-fang','blood');blood.r.enemy.dots.bleed=Array.from({length:12},()=>({damage:1,remaining:4}));blood.r.tPlayer=100;blood.a.tick();assert.equal(blood.r.enemy.dots.bleed.length,12);assert.equal(blood.r.enemy.dots.bleed.at(-1).remaining,4);
  const decay=fight('Two-Handed','weapon','gravewake','decay');decay.r.enemy.v012Rot=Array.from({length:6},()=>({damage:1,remaining:4,ticks:0}));decay.r.tPlayer=100;decay.a.tick();assert.equal(decay.r.enemy.v012Rot.length,6);
  const eye=fight('Two-Handed','ring1','eye-of-morrow','decay');eye.r.enemy.v012Rot=[{damage:1,remaining:4,ticks:0}];eye.r.enemy.maxhp=1000;assert(eye.a.gear.legendaryAttackBonus(eye.r,1000,false,false)<=25);
- const heart=fight('Sword','armor','heartroot-carapace','radiance');heart.r.hp=heart.r.maxhp*.1;heart.r.enemy.atk=0;heart.r.stats.attacksPerSec=0;for(let n=0;n<1000;n++)heart.a.tick();assert(Math.abs(heart.r.legendaryState.heartrootHealed-heart.r.maxhp*.10)<0.001);
+ const heart=fight('Sword','armor','heartroot-carapace','radiance');heart.r.hp=heart.r.maxhp*.1;heart.r.enemy.atk=0;heart.r.stats.attacksPerSec=0;for(let n=0;n<1000;n++)heart.a.tick();assert(Math.abs(heart.r.legendaryState.heartrootHealed-heart.r.maxhp*.04)<0.001);
  const veil=fight('Sword','belt','veil-thousand-seals','aegis');assert(veil.r.barrier>0);assert(veil.r.barrier<=Math.round(veil.r.maxhp*.3));
 });
 test('Oathwall replaces the base counter and cannot recurse',()=>{
- const {a,r}=fight('Sword','offhand','oathwall','aegis');r.stats.attack=100;r.stats.blockChance=100;r.stats.blockReduction=0;r.enemy.def=0;r.tEnemy=100;const hp=r.enemy.hp;a.rng(0);a.tick();assert.equal(hp-r.enemy.hp,110);assert.equal(count(r,'oathwall'),1);assert.equal(r.setCooldowns.shieldBaseCounter,undefined);r.tEnemy=100;a.tick();assert.equal(hp-r.enemy.hp,110);
+ const {a,r}=fight('Sword','offhand','oathwall','aegis');r.stats.attack=100;r.stats.blockChance=100;r.stats.blockReduction=0;r.enemy.def=0;r.tEnemy=100;const hp=r.enemy.hp;a.rng(0);a.tick();assert.equal(hp-r.enemy.hp,120);assert.equal(count(r,'oathwall'),1);assert.equal(r.setCooldowns.shieldBaseCounter,undefined);r.tEnemy=100;a.tick();assert.equal(hp-r.enemy.hp,120);
 });
 test('numerical affinity scaling for all twelve effects',()=>{
  function measure(id,weapon,slot,family,fn){return [false,true].map(empowered=>{const f=fight(weapon,slot,id,empowered?family:null);return fn(f.a,f.r);});}
@@ -72,10 +72,10 @@ test('numerical affinity scaling for all twelve effects',()=>{
  x=measure('eye-of-morrow','Two-Handed','ring1','decay',(a,r)=>{r.enemy.v012Rot=[{damage:1,remaining:4}];r.enemy.maxhp=100000;return a.gear.legendaryAttackBonus(r,100,false,false);});assert.deepEqual(x,[60,85]);
  x=measure('graft','Sword','weapon','radiance',(a,r)=>{a.gear.legendaryAttackBonus(r,100,false,false);return r.legendaryState.verdantReady;});assert.deepEqual(x,[.6,.9]);
  x=measure('heartroot-carapace','Sword','armor','radiance',(a,r)=>{r.hp=r.maxhp*.5;const h=r.hp;a.tick();return r.hp-h;});assert(x[1]>x[0]);
- x=measure('oathwall','Sword','offhand','aegis',(a,r)=>{r.stats.attack=100;r.stats.blockChance=100;r.stats.blockReduction=0;r.enemy.def=0;r.tEnemy=100;const h=r.enemy.hp;a.rng(0);a.tick();return h-r.enemy.hp;});assert.deepEqual(x,[75,110]);
+ x=measure('oathwall','Sword','offhand','aegis',(a,r)=>{r.stats.attack=100;r.stats.blockChance=100;r.stats.blockReduction=0;r.enemy.def=0;r.tEnemy=100;const h=r.enemy.hp;a.rng(0);a.tick();return h-r.enemy.hp;});assert.deepEqual(x,[90,120]);
  x=measure('veil-thousand-seals','Sword','belt','aegis',(a,r)=>{a.tick();return r.barrier;});assert(x[1]>x[0]);
  x=measure('kingsbreaker','Mace','weapon','fury',(a,r)=>a.gear.legendaryAttackBonus(r,100,false,false));assert.deepEqual(x,[80,110]);
- x=measure('tempest-talon','Bow','weapon','fury',(a,r)=>a.gear.legendaryAttackBonus(r,100,true,false));assert.deepEqual(x,[25,35]);
+ x=measure('tempest-talon','Bow','weapon','fury',(a,r)=>a.gear.legendaryAttackBonus(r,100,true,false));assert.deepEqual(x,[35,45]);
  x=measure('astrafall','Staff','weapon','arcane',(a,r)=>{r.legendaryState={astraCasts:1};return a.gear.legendaryAttackBonus(r,100,false,true);});assert(x[1]>x[0]);
  x=measure('voidglass','Wand','weapon','arcane',(a,r)=>{r.legendaryState={voidCasts:1};r.legendaryFundedCost=20;r.mp=10;const bonus=a.gear.legendaryAttackBonus(r,100,false,true);return [bonus,r.mp];});assert(x[1][0]>x[0][0]&&x[1][1]>x[0][1]);
 });
@@ -94,11 +94,12 @@ test('Mana cast counters require two funded casts and survive cooldown',()=>{
 test('Veil empowers only after its own Barrier absorbs and respects its offensive cooldown',()=>{
  for(const empowered of [false,true]){const {a,r}=fight('Sword','belt','veil-thousand-seals',empowered?'aegis':null);assert(r.legendaryState.veilBarrier>0);r.enemy.atk=1;r.tEnemy=100;a.tick();assert.equal(count(r,'veil-thousand-seals'),1);assert.equal(a.gear.legendaryAttackBonus(r,100,false,false),empowered?45:30);r.tEnemy=100;a.tick();assert.equal(count(r,'veil-thousand-seals'),1);assert.equal(a.gear.legendaryAttackBonus(r,100,false,false),0);}
 });
-test('Veil Realm Barrier uses the Sword + Shield rate only for that equipment',()=>{
- for(const [affinity,swordRate,otherRate]of [[null,.025,.04],['aegis',.04,.06]]){
-  for(const [weapon,expected]of [['Sword',swordRate],['Mace',otherRate],['Staff',otherRate],['Wand',otherRate],['Daggers',otherRate]]){
+test('Veil encounter Barrier scales with Max HP and Spell Power for all weapons',()=>{
+ for(const [affinity,hpRate,spellRate]of [[null,.03,.05],['aegis',.04,.08]]){
+  for(const weapon of ['Sword','Mace','Staff','Wand','Daggers']){
    const {r}=fight(weapon,'belt','veil-thousand-seals',affinity);
-   assert(Math.abs(r.legendaryState.veilBarrier/r.maxhp-expected)<1e-6,`${weapon} ${affinity||'no Aegis'}`);
+   const expected=(r.maxhp*hpRate+(r.stats.spellPower||0)*spellRate)*(1+((r.stats.wardBonus||0)+(r.stats.barrierPower||0)));
+   assert(Math.abs(r.legendaryState.veilBarrier-expected)<1e-6,`${weapon} ${affinity||'no Aegis'}`);
   }
  }
 });
