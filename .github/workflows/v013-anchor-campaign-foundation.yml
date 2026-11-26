@@ -1,0 +1,20 @@
+name: v0.13 Anchor Realms - A1 campaign foundation
+on:
+  push:
+    branches: [release/v013-consolidated]
+    paths: ['online/v013-anchor-campaign.js','docs/online/v013-anchor-campaign.js','tests/v013-anchor-campaign.test.cjs','.github/workflows/v013-anchor-campaign-foundation.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  directed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/v013-anchor-campaign.test.cjs tests/v013-anchor-rune-combat.test.cjs tests/v013-current-dungeon-and-talents.test.cjs
