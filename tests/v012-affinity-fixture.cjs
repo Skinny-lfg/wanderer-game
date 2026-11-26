@@ -1,5 +1,5 @@
 const fs=require('node:fs'),vm=require('node:vm');const scope={};vm.runInNewContext(fs.readFileSync('combat/v012-buildcraft.js','utf8'),scope);const api=scope.WandererV012Buildcraft;
-function build(ids=[],families=['blood','decay','magic'],element='lightning'){const b=api.create();b.families=families;b.unlockedFamilies=[...families];b.element=families.includes('magic')?element:null;b.picks=[...ids];b.realmIndex=10;return b;}
+function build(ids=[],families=['blood','decay','arcane'],element='lightning'){const b=api.create();b.families=families;b.unlockedFamilies=[...families];b.element=families.includes('arcane')?element:null;b.picks=[...ids];b.realmIndex=10;return b;}
 function context(b,overrides={}){
  const calls=[],player={hp:300,maxhp:1000,mp:10,maxmp:100,barrier:0},enemy={hp:20000,maxhp:100000,bleedStacks:1,dots:{bleed:[{damage:10,remaining:3}],burn:[],poison:[]},v012Rot:[{damage:5,remaining:4}],slowTime:2,boss:false};
  const c={player,enemy,base:1000,power:500,now:0,critical:true,funded:true,amp:1,random:()=>0,waveKey:'1:1',

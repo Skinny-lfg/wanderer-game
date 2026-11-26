@@ -7,7 +7,7 @@ const N=require('../scripts/v013-natural-progression.cjs');
 const make=(seed=10401)=>create(seed,undefined,{}, {skipPersistence:true,now:1720000000000+seed});
 
 test('S2: diverse natural archetypes include focused and mixed Cloth/Leather/Plate plans',()=>{
- for(const id of ['plate-warden','leather-duelist','cloth-battlemage','hexblade-hybrid','magic-fire','magic-frost','magic-lightning']){
+ for(const id of ['plate-warden','leather-duelist','cloth-battlemage','hexblade-hybrid','arcane-fire','arcane-frost','arcane-lightning']){
   const p=N.PROFILES[id];assert(p,id);
   assert(['Cloth','Leather','Plate'].includes(p.armor));
   assert(['mixed','focused'].includes(p.style));
@@ -19,7 +19,7 @@ test('S2: diverse natural archetypes include focused and mixed Cloth/Leather/Pla
   assert(N.gearScore({...base,armorType:armor},profile)>
    N.gearScore({...base,armorType:({Plate:'Cloth',Leather:'Plate',Cloth:'Leather'})[armor]},profile));
  }
- const flame=N.PROFILES['magic-fire'];
+ const flame=N.PROFILES['arcane-fire'];
  assert(N.gearScore({slot:'weapon',subtype:'Wand',spell:8,int:2,rarity:'Common',tier:1},flame)>
   N.gearScore({slot:'weapon',subtype:'Sword',spell:8,int:2,rarity:'Common',tier:1},flame));
 });
@@ -29,14 +29,14 @@ test('S2: every native potion kind has a build-specific decision score',()=>{
  assert.equal(all.length,13);
  assert.equal(new Set(all.map(p=>p.id)).size,13);
  for(const kind of all.map(p=>p.id)){
-  assert(Number.isFinite(N.potionScore(kind,N.PROFILES['magic-fire'])),kind);
+  assert(Number.isFinite(N.potionScore(kind,N.PROFILES['arcane-fire'])),kind);
   assert(Number.isFinite(N.potionScore(kind,N.PROFILES['plate-warden'])),kind);
  }
- assert(N.potionScore('arcane',N.PROFILES['magic-fire'])>
+ assert(N.potionScore('arcane',N.PROFILES['arcane-fire'])>
   N.potionScore('arcane',N.PROFILES['plate-warden']));
  assert(N.potionScore('might',N.PROFILES['plate-warden'])>
-  N.potionScore('might',N.PROFILES['magic-fire']));
- assert(N.potionScore('mana',N.PROFILES['magic-fire'])>
+  N.potionScore('might',N.PROFILES['arcane-fire']));
+ assert(N.potionScore('mana',N.PROFILES['arcane-fire'])>
   N.potionScore('mana',N.PROFILES['leather-duelist']));
 });
 
@@ -44,12 +44,12 @@ test('S2: the actual three-slot potion API changes loadout without minting inven
  const a=make(10402),s=a.state(),catalog=a.potions.catalog;
  s.consumables=Object.fromEntries(catalog.map(p=>[p.id,1]));
  const before=JSON.stringify(s.consumables);
- const out=N.selectEarnedPotions(a,N.PROFILES['magic-frost']);
+ const out=N.selectEarnedPotions(a,N.PROFILES['arcane-frost']);
  assert(out.some(x=>x.action==='loadout'));
  assert.equal(s.potionSelection.length,3);
  assert.equal(new Set(s.potionSelection).size,3);
  assert.equal(JSON.stringify(s.consumables),before);
- assert.equal(N.selectEarnedPotions(a,N.PROFILES['magic-frost']).length,0);
+ assert.equal(N.selectEarnedPotions(a,N.PROFILES['arcane-frost']).length,0);
 });
 
 test('S2: Apothecary purchases and replacement offers use real gold costs',()=>{
@@ -60,7 +60,7 @@ test('S2: Apothecary purchases and replacement offers use real gold costs',()=>{
   {id:'offer-3',kind:'might',price:22},
   {id:'offer-4',kind:'scout',price:22}],refreshCost:999};
  const initial=s.gold;
- const result=N.buyEarnedPotions(a,N.PROFILES['magic-fire'],1);
+ const result=N.buyEarnedPotions(a,N.PROFILES['arcane-fire'],1);
  const buys=result.filter(x=>x.action==='buy');
  assert(buys.length>=1);
  assert.equal(initial-s.gold,buys.reduce((n,x)=>n+x.cost,0));
@@ -71,19 +71,19 @@ test('S2: Apothecary purchases and replacement offers use real gold costs',()=>{
 
 test('S2: eight Rune families are scored and a claim selects strongest for the current style',()=>{
  const a=make(10404);
- const families=['might','swiftness','wisdom','fortitude','fortune','fury','warding','vitality'];
+ const families=['might','swiftness','wisdom','fortitude','fortune','fury','warding','radiance'];
  const runes=families.map((family,i)=>a.makeRune(family,10+i));
  for(const rune of runes)assert(Number.isFinite(N.runeScore(rune,N.PROFILES['plate-warden'])));
- assert.equal(N.chooseRuneReward(runes,N.PROFILES['magic-fire']).family,'wisdom');
+ assert.equal(N.chooseRuneReward(runes,N.PROFILES['arcane-fire']).family,'wisdom');
  assert.equal(N.chooseRuneReward(runes,N.PROFILES['leather-duelist']).family,'swiftness');
 });
 
 test('S2: only owned Rune IDs are equipped and duplicates recycled via native confirmation',()=>{
  const a=make(10405),s=a.state();
- s.runes=['might','wisdom','fortitude','fury','swiftness','vitality'].map((kind,i)=>a.makeRune(kind,10+i));
+ s.runes=['might','wisdom','fortitude','fury','swiftness','radiance'].map((kind,i)=>a.makeRune(kind,10+i));
  s.runes.push(a.makeRune('wisdom',2),a.makeRune('might',2));
  const originalIds=new Set(s.runes.map(r=>r.id)),before=s.fragments,initial=s.runes.length;
- const actions=N.manageEarnedRunes(a,N.PROFILES['magic-fire']);
+ const actions=N.manageEarnedRunes(a,N.PROFILES['arcane-fire']);
  assert(s.runeSlots.filter(Boolean).length===3);
  for(const id of s.runeSlots)if(id)assert(originalIds.has(id));
  assert.equal(new Set(s.runeSlots.map(id=>s.runes.find(r=>r.id===id)?.family)).size,3);
@@ -114,14 +114,14 @@ test('S2: native Forge uses the standard recipe cost and never forces armor attr
 test('S2: native reagent refinement consumes 6 Essence and 3 dry-room marks',()=>{
  const a=make(10407),s=a.state();
  assert.equal(a.forge.refine('epic_ember_branch'),false);
- s.crafting.dryRooms.magic=3;s.crafting.essence=6;
+ s.crafting.dryRooms.arcane=3;s.crafting.essence=6;
  assert.equal(a.forge.refine('epic_ember_branch'),false,'needs an earned Epic blueprint');
  s.crafting.learnedRecipes.push('epic_ember_branch');
- const before=s.crafting.cores.magic;
+ const before=s.crafting.cores.arcane;
  assert.equal(a.forge.refine('epic_ember_branch'),true);
  assert.equal(s.crafting.essence,0);
- assert.equal(s.crafting.dryRooms.magic,0);
- assert.equal(s.crafting.cores.magic,before+1);
+ assert.equal(s.crafting.dryRooms.arcane,0);
+ assert.equal(s.crafting.cores.arcane,before+1);
  assert.equal(a.forge.refine('epic_ember_branch'),false);
 });
 
@@ -137,7 +137,7 @@ test('S2: Solar Rebuke target diversion only occurs during true reflect windows'
 });
 
 test('S2: natural plate and magic account seeds start without fabricated XP, gear or resources',()=>{
- const opts={...N.DEFAULTS,seeds:[20401],profiles:['plate-warden','magic-fire'],
+ const opts={...N.DEFAULTS,seeds:[20401],profiles:['plate-warden','arcane-fire'],
   maxLevel:1,maxAttempts:1,maxTotalAttempts:1};
  const report=N.run(opts);
  assert.equal(report.coverage.errors,0);

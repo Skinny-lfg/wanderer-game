@@ -55,8 +55,8 @@ test('Greedy native coverage is bounded, deterministic and includes different op
  assert(a.plannedPairKeys>25);
 });
 test('Native fixture accepts exact legal v15 progress, rolled class gear and dagger offhand',()=>{
- const a=all.find(x=>x.key==='profile:magic-arcane-pure');
- const p=M.buildTalent(a,24),build={id:'controlled-stats',weapon:'Sword',families:['magic'],skills:[]};
+ const a=all.find(x=>x.key==='profile:arcane-arcane-pure');
+ const p=M.buildTalent(a,24),build={id:'controlled-stats',weapon:'Sword',families:['arcane'],skills:[]};
  const opts={mode:'encounter',gear:'current',rarity:'Rare',points:24,
   runes:false,contracts:'none',tickLimit:1200,targetPolicy:'focus',
   measure:false,lockScenarioStreams:true,controlledTalents:p.talents,

@@ -56,7 +56,7 @@ jobs:
           assert(hybridSword && hybridSword.atk>0 && hybridSword.int>0 && hybridSword.spell>0);
           const a=create(59012,undefined,{}, {skipPersistence:true});
           const neutral=a.baseStats({weapon:hybridSword});
-          a.state().automaticTalents=B.buy(['affinity_magic']);
+          a.state().automaticTalents=B.buy(['affinity_arcane']);
           const magic=a.baseStats({weapon:hybridSword});
           const magicNoSpell=a.baseStats({weapon:{...hybridSword,spell:0}});
           assert.equal(neutral.spellPower,0,'Sword alone does not unlock magic');
@@ -75,7 +75,7 @@ jobs:
           const output={kind:'controlled-measurement-not-natural-drop-odds',
             rolls:rarityRows,
             example: {rarity:hybridSword.rarity,atk:hybridSword.atk,int:hybridSword.int,spell:hybridSword.spell,affixes:hybridSword.affixes},
-            magic:{neutralSpellPower:neutral.spellPower,spellPower:magic.spellPower,withoutSwordSpell:magicNoSpell.spellPower,mana:magic.mana,caster:magic.caster},
+            arcane:{neutralSpellPower:neutral.spellPower,spellPower:magic.spellPower,withoutSwordSpell:magicNoSpell.spellPower,mana:magic.mana,caster:magic.caster},
             decay:{spellPower:decay.spellPower,mana:decay.mana,caster:decay.caster},
             aegis:{spellPower:aegis.spellPower,mana:aegis.mana},
             agentHasOldNoStrikeAssumption:agentText.includes('Sword + Dagger has NO independent second strike')};

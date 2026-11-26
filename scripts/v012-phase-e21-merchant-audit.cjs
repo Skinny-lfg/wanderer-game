@@ -3,7 +3,7 @@
 const fs=require('node:fs'),path=require('node:path'),Module=require('node:module'),{performance}=require('node:perf_hooks');
 const root=path.resolve(__dirname,'..'),file=path.join(root,'scripts/v012-affinity-combat-sim.cjs');
 let source=fs.readFileSync(file,'utf8');
-for(const [from,to] of [['a.setup(E,weapon,rarity)','void 0'],['g.unlocked=E;','void 0;'],["if(runes){s.runes=['vitality','warding',['Staff','Wand'].includes(weapon)?'wisdom':'might'].map(f=>a.makeRune(f,E));s.runeSlots=s.runes.map(r=>r.id);}",'void 0;']]){
+for(const [from,to] of [['a.setup(E,weapon,rarity)','void 0'],['g.unlocked=E;','void 0;'],["if(runes){s.runes=['radiance','warding',['Staff','Wand'].includes(weapon)?'wisdom':'might'].map(f=>a.makeRune(f,E));s.runeSlots=s.runes.map(r=>r.id);}",'void 0;']]){
  if(!source.includes(from))throw Error('Missing harness anchor '+from);source=source.replace(from,to);
 }
 const mod=new Module(file,module);mod.filename=file;mod.paths=Module._nodeModulePaths(path.dirname(file));mod._compile(source,file);
@@ -14,7 +14,7 @@ function snapshot(a){const s=a.state(),eq=Object.values(s.equip).filter(Boolean)
 function setup(profile,seedIndex){const a=create(84100+seedIndex),s=a.state(),g=a.controller().state;
  a.setup(200,'Bow','Epic');let slotIndex=0;
  for(const [slot,item]of Object.entries(s.equip))if(item){const tier=196+((slotIndex*3+seedIndex)%5),rarity=slotIndex%5===0?'Rare':'Epic';const armor=['helm','armor','gloves','belt','boots'].includes(slot);const subtype=slot==='weapon'?'Bow':armor?'Leather':item.subtype;s.equip[slot]=a.makeItem(tier,slot,null,'loot',subtype,rarity);slotIndex++;}
- s.runes=['vitality','warding','might'].map((f,i)=>a.makeRune(f,[190,195,199][i]));s.runeSlots=s.runes.map(r=>r.id);s.gold=4000;s.fragments=3000;g.unlocked=200;
+ s.runes=['radiance','warding','might'].map((f,i)=>a.makeRune(f,[190,195,199][i]));s.runeSlots=s.runes.map(r=>r.id);s.gold=4000;s.fragments=3000;g.unlocked=200;
  const gear=Object.values(s.equip).filter(Boolean),armorSlots=['helm','armor','gloves','belt','boots'];
  if(s.equip.weapon?.subtype!=='Bow'||s.equip.offhand||armorSlots.some(slot=>s.equip[slot]?.armorType!=='Leather')||gear.some(item=>item.tier<196||item.tier>200)||s.runeSlots.length!==3||s.runes.some((r,i)=>r.tier!==[190,195,199][i]))throw Error('E.1.3 invalid starting Bow/Leather E200 build');
  return {profile,seedIndex,a,attempt:0,losses:0,farmNext:false,repeats:0,wins:0,defeats:0,initial:snapshot(a),goldEarned:0,goldSpent:0,fragmentsEarned:0,fragmentsSpent:0,crafts:0,upgrades:0,merchantBuys:0,merchantGoldSpent:0,merchantEquipped:0,merchantRefreshes:0,salvages:0,runeClaims:0,lootLost:0,combatSeconds:0,stopped:false};}
@@ -35,7 +35,7 @@ function equipUpgrades(agent){const {a,profile}=agent,s=a.state();let upgraded=0
  return upgraded;
 }
 function claimRune(agent){const a=agent.a,s=a.state(),reward=s.pendingRuneReward;if(!reward)return;
- const priority=['might','vitality','warding'];let best=null,bestGain=-Infinity;
+ const priority=['might','radiance','warding'];let best=null,bestGain=-Infinity;
  for(const r of reward.options){const existing=s.runes.find(x=>s.runeSlots.includes(x.id)&&x.family===r.family);const gain=(existing?r.value-existing.value:r.value*.7)+(priority.includes(r.family)?20-priority.indexOf(r.family)*2:0);if(gain>bestGain){best=r;bestGain=gain;}}
  if(!a.claimRune(best.id))throw Error('Rune claim failed');agent.runeClaims++;
  const target=s.runeSlots.findIndex(id=>s.runes.find(r=>r.id===id)?.family===best.family);if(target>=0){const old=s.runes.find(r=>r.id===s.runeSlots[target]);if(best.value>old.value)a.runes.equip(best.id,target);}

@@ -30,7 +30,7 @@ function researchProfile(planId,variant){
 const RESEARCH=Object.freeze(Object.fromEntries([
  ...['heavy','skirmish','caster'].flatMap(variant=>PLANS.map(id=>[
   'research-'+variant+'-'+id,researchProfile(id,variant)])),
- ...['blood-pure','magic-arcane-pure','vitality-pure'].map(id=>[
+ ...['blood-pure','arcane-arcane-pure','radiance-pure'].map(id=>[
   'research-bold-'+id,researchProfile(id,'bold')])
 ]));
 const PROFILES=Object.freeze({...N.PROFILES,...RESEARCH});

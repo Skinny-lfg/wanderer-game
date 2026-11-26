@@ -50,11 +50,11 @@ jobs:
           - 'smart-blood-pure'
           - 'smart-blood-two-handed'
           - 'smart-fury-bow'
-          - 'magic-fire'
-          - 'magic-lightning'
+          - 'arcane-fire'
+          - 'arcane-lightning'
           - 'plate-warden'
           - 'decay-blood-spread'
-          - 'magic-decay-bloom'
+          - 'arcane-decay-bloom'
         shard: [0, 1]
     steps:
       - uses: actions/checkout@v4

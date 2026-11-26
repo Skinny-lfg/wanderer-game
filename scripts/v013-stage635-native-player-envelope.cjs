@@ -177,7 +177,7 @@ function aggregate(shards,opts={}){
    return old&&next?[{account:a, ...paired(old,next)}]:[];
   });
   const overall=safeSummary(pairs);
-  const byFamily=Object.fromEntries(['blood','decay','vitality','aegis','fury','magic']
+  const byFamily=Object.fromEntries(['blood','decay','radiance','aegis','fury','arcane']
    .map(f=>[f,safeSummary(pairs.filter(p=>p.account.family===f))]));
   const byArmor=Object.fromEntries(['Cloth','Leather','Plate']
    .map(armor=>[armor,safeSummary(pairs.filter(p=>p.account.armorPreference===armor))]));

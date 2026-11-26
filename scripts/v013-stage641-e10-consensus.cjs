@@ -12,22 +12,22 @@ const S=require('./simulate-progression.cjs');
 const PROFILES=Object.freeze({
   balanced:'hybrid', 'hexblade-hybrid':'hybrid',
   'leather-duelist':'single-target', 'smart-blood-pure':'single-target',
-  'smart-fury-bow':'aoe', 'smart-blood-two-handed':'aoe', 'magic-fire':'aoe',
-  'magic-lightning':'aoe', 'plate-warden':'hybrid'
+  'smart-fury-bow':'aoe', 'smart-blood-two-handed':'aoe', 'arcane-fire':'aoe',
+  'arcane-lightning':'aoe', 'plate-warden':'hybrid'
 });
 // Stage 6.41 research-only policies: safer early routing and stable specialization,
 // while ALL equipment, XP, talents and Expedition unlocks are genuinely earned.
 const CALIBRATED_PROFILES=Object.freeze(Object.fromEntries(Object.keys(PROFILES).map(id=>{
  const base=P.PROFILES[id];
- const overrides=id==='magic-fire'?{plan:'magic-fire-pure',element:'fire'}:
-  id==='magic-lightning'?{plan:'magic-lightning-pure',element:'lightning'}:{};
+ const overrides=id==='arcane-fire'?{plan:'arcane-fire-pure',element:'fire'}:
+  id==='arcane-lightning'?{plan:'arcane-lightning-pure',element:'lightning'}:{};
  return [id,Object.freeze({...base,...overrides,risk:0,healAt:.70,retreatAt:.45,
   target:'mechanics',shop:true,researchGearPreference:true})];
 })));
 const SEEDS=Object.freeze([9861,9863]);
 const SIZES=Object.freeze([1,2,3,4,5,8,12]);
 const ELITES=Object.freeze(['tank','berserker','vampire','caster','gravecaller','oathbound_exarch','the_gilded','ashen_executioner']);
-const BOSSES=Object.freeze(['blood','decay','vitality','aegis','fury','magic']);
+const BOSSES=Object.freeze(['blood','decay','radiance','aegis','fury','arcane']);
 const source=()=>S.sourceFingerprint().sha256;
 const rate=arr=>{
  const valid=arr.filter(x=>x.won||x.died);

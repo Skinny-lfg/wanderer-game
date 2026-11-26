@@ -12,7 +12,7 @@ test('C1 clean sheet: source catalog uniquely generates the current 420-node v15
 });
 test('C1 clean sheet: representative physical, spell and mixed paths use the native runtime',()=>{
  const baseline={attack:35,defense:22,maxhp:220,spellPower:36,manaRegen:2,mana:70,attacksPerSec:1.1};
- for(const id of ['affinity_blood','affinity_decay','affinity_vitality','affinity_aegis','affinity_fury','affinity_magic','bleeding_edge','arcane_resonance']){
+ for(const id of ['affinity_blood','affinity_decay','affinity_radiance','affinity_aegis','affinity_fury','affinity_arcane','bleeding_edge','arcane_resonance']){
   const p=buy([id]);
   assert(T.valid(p));
   const next=T.apply({...baseline},p);

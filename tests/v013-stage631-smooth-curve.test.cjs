@@ -11,15 +11,15 @@ const percentage=(a,n)=>n?Number((100*a/n).toFixed(1)):null;
 const CURRENT=fs.readFileSync(path.resolve(__dirname,'../combat/expedition-progression.js'),'utf8');
 const BATCHES=Object.freeze({
  'legacy-defense':['cautious','balanced','daring','plate-warden','leather-duelist','cloth-battlemage','hexblade-hybrid'],
- 'legacy-casters':['magic-fire','magic-frost','magic-lightning','magic-arcane','magic-wand','magic-staff'],
- 'strategic-pure':['smart-blood-pure','smart-fury-pure','smart-magic-arcane-pure','smart-magic-lightning-pure','smart-vitality-pure'],
- 'strategic-hybrid':['smart-blood-fury','smart-blood-fury-vitality','smart-blood-fury-vitality-no-mixed','smart-fury-blood-aegis','smart-magic-fire-aegis','smart-magic-frost-vitality','smart-decay-magic-aegis','smart-aegis-vitality'],
- 'strategic-weapon':['smart-blood-sword','smart-blood-two-handed','smart-fury-daggers','smart-fury-bow','smart-magic-wand','smart-magic-staff','smart-magic-wand-offense','smart-magic-wand-defense']
+ 'legacy-casters':['arcane-fire','arcane-frost','arcane-lightning','arcane-arcane','arcane-wand','arcane-staff'],
+ 'strategic-pure':['smart-blood-pure','smart-fury-pure','smart-arcane-arcane-pure','smart-arcane-lightning-pure','smart-radiance-pure'],
+ 'strategic-hybrid':['smart-blood-fury','smart-blood-fury-radiance','smart-blood-fury-radiance-no-mixed','smart-fury-blood-aegis','smart-arcane-fire-aegis','smart-arcane-frost-radiance','smart-decay-arcane-aegis','smart-aegis-radiance'],
+ 'strategic-weapon':['smart-blood-sword','smart-blood-two-handed','smart-fury-daggers','smart-fury-bow','smart-arcane-wand','smart-arcane-staff','smart-arcane-wand-offense','smart-arcane-wand-defense']
 });
-const DEEP=Object.freeze(['smart-blood-pure','smart-fury-pure','smart-magic-arcane-pure',
- 'smart-magic-lightning-pure','smart-vitality-pure','smart-decay-magic-aegis',
- 'smart-aegis-vitality','cloth-battlemage','leather-duelist','magic-fire',
- 'hexblade-hybrid','smart-blood-fury-vitality']);
+const DEEP=Object.freeze(['smart-blood-pure','smart-fury-pure','smart-arcane-arcane-pure',
+ 'smart-arcane-lightning-pure','smart-radiance-pure','smart-decay-arcane-aegis',
+ 'smart-aegis-radiance','cloth-battlemage','leather-duelist','arcane-fire',
+ 'hexblade-hybrid','smart-blood-fury-radiance']);
 const ALL=Object.values(BATCHES).flat();
 const TARGETS=Object.freeze({normal:[80,90],elite:[60,70],boss:[35,45]});
 const REALMS=D.FAMILIES;

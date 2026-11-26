@@ -19,7 +19,7 @@ test('Live TalentGraph provides exactly 12 basic, 6 focused and 6 mixed structur
 });
 test('Pairwise planner covers every required pair without claiming actual fights',()=>{
  const dims={talent:['blood','fury','decay'],weapon:['Sword','Wand'],
-  realm:['blood','magic'],boon:['none','present']};
+  realm:['blood','arcane'],boon:['none','present']};
  const plan=C.pairwisePlan(dims);
  assert.equal(plan.missingPairs,0);
  assert.equal(plan.coveredPairs,C.allPairs(dims).size);

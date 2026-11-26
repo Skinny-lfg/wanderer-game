@@ -3,12 +3,12 @@
 const fs=require('node:fs'),path=require('node:path');
 const S=require(process.env.STAGE63_NATIVE_ROOT?path.resolve(process.env.STAGE63_NATIVE_ROOT,'scripts/simulate-progression.cjs'):'./simulate-progression.cjs');
 const cases=[
- {mode:'arcane',skills:['element_choice','arcane_focus','mana_spring','arcane_resonance'],families:['magic'],weapons:['Sword','Mace','Daggers','Wand','Staff']},
- {mode:'fire',skills:['element_choice','arcane_focus','mana_spring','kindling'],families:['magic'],weapons:['Sword','Wand','Staff']},
- {mode:'frost',skills:['element_choice','arcane_focus','mana_spring','deep_winter'],families:['magic'],weapons:['Sword','Wand','Staff']},
- {mode:'lightning',skills:['element_choice','arcane_focus','mana_spring','overcharge'],families:['magic'],weapons:['Sword','Wand','Staff']},
- {mode:'arcane-decay',skills:['affinity_decay','element_choice','arcane_focus','toxic_touch','hex_bolt'],families:['magic','decay'],weapons:['Sword','Wand','Staff']},
- {mode:'arcane-aegis',skills:['affinity_aegis','element_choice','arcane_focus','guarded_block','runic_shield'],families:['magic','aegis'],weapons:['Sword','Wand','Staff']}
+ {mode:'arcane',skills:['element_choice','arcane_focus','mana_spring','arcane_resonance'],families:['arcane'],weapons:['Sword','Mace','Daggers','Wand','Staff']},
+ {mode:'fire',skills:['element_choice','arcane_focus','mana_spring','kindling'],families:['arcane'],weapons:['Sword','Wand','Staff']},
+ {mode:'frost',skills:['element_choice','arcane_focus','mana_spring','deep_winter'],families:['arcane'],weapons:['Sword','Wand','Staff']},
+ {mode:'lightning',skills:['element_choice','arcane_focus','mana_spring','overcharge'],families:['arcane'],weapons:['Sword','Wand','Staff']},
+ {mode:'arcane-decay',skills:['affinity_decay','element_choice','arcane_focus','toxic_touch','hex_bolt'],families:['arcane','decay'],weapons:['Sword','Wand','Staff']},
+ {mode:'arcane-aegis',skills:['affinity_aegis','element_choice','arcane_focus','guarded_block','runic_shield'],families:['arcane','aegis'],weapons:['Sword','Wand','Staff']}
 ];
 const PROFILES=Object.freeze(cases.flatMap(o=>o.weapons.map(weapon=>Object.freeze({
  id:o.mode+'-'+weapon.toLowerCase(),name:o.mode+' / '+weapon,mode:o.mode,weapon,
@@ -54,7 +54,7 @@ function run({levels=[5,35],seeds=[9201,9202],tickLimit=2500}={}){
    'Do not equate raw DPS with balance: survivability, resources, status and AoE matter.',
    'Preview branch only: no merge or deploy.'
   ],success:errors.length===0&&rows.length===levels.length*seeds.length*PROFILES.length};
- const file=path.resolve(process.env.STAGE63_REPORT_FILE||'reports/stage63-native-magic-matrix.json');
+ const file=path.resolve(process.env.STAGE63_REPORT_FILE||'reports/stage63-native-arcane-matrix.json');
  fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file,JSON.stringify(report,null,2)+'\n');
  const md=['# Stage 6.3 — Native Magic weapon matrix','',
  '24 legal points, real Rare gear, deterministic seeds and Dangerous three-enemy encounters; NOT natural account progress.','',

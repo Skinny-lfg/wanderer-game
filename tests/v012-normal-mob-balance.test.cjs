@@ -30,7 +30,7 @@ function previousImplementation(){
 }
 const prior=previousImplementation();
 const builds=[
- {weapon:'Staff',armorType:'Cloth',family:'magic'},
+ {weapon:'Staff',armorType:'Cloth',family:'arcane'},
  {weapon:'Sword',armorType:'Plate',offhandType:'Shield',family:'aegis'},
  {weapon:'Bow',armorType:'Leather',family:'fury'},
  {weapon:'Daggers',armorType:'Leather',offhandType:'Off-Hand Dagger',family:'blood'}

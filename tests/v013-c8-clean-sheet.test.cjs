@@ -85,7 +85,7 @@ test('C8 native Boss victory awards exactly one persistent-tier Rune without aut
  assert.equal(a.results().summary.runeTier,35);assert(a.results().summary.runeName.includes(rune.name));
 });
 test('C8 each of the six native Boss affinities yields one direct Anchor Rune',()=>{
- for(const family of ['blood','decay','vitality','aegis','fury','magic']){
+ for(const family of ['blood','decay','radiance','aegis','fury','arcane']){
   let victory=null;
   for(let seed=90800;seed<90900&&!victory;seed++)victory=bossVictory(seed,{family});
   assert(victory,'No native Realm card for '+family);

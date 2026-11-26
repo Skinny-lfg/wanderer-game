@@ -16,7 +16,7 @@ globalThis.WandererActionBar = (() => {
       left:Math.max(0,cycle-(run.tPlayer||0)), period:cycle, count:run.autoUses||0}];
     if(weapon?.subtype==='Daggers'&&['Daggers','Off-Hand Dagger'].includes(run.stats.off?.subtype))rows.push({label:'Off-hand Dagger',icon:'equipment/dagger_01.png',hint:(run.offhandCadence||0)+'/2',description:'Attacks after every two main-hand strikes for 35% damage.',left:0,period:0,count:run.offhandStrikes||0});
     if(build?.element&&globalThis.WandererV012Buildcraft.canCast(build)){
-      const element=build.element, icon=element==='arcane'?'affinities/families/magic.png':'affinities/magic/'+element+'.png';
+      const element=build.element, icon=element==='arcane'?'affinities/families/arcane.png':'affinities/arcane/'+element+'.png';
       const label=element[0].toUpperCase()+element.slice(1)+' Cast';
       if(run.stats.caster){rows[0].icon=icon;if(!run.unfundedAttack)rows[0].label=label;}
       else rows.push({label,icon,left:Math.max(0,2.5-(now-(build.runtime.lastSpellAt??-999))),period:2.5,count:build.runtime.magicHits||0});

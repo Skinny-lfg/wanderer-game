@@ -1,7 +1,7 @@
 'use strict';
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const D=require('./v013-stage628-postcap-difficulty.cjs'),S=require('./simulate-progression.cjs');
-const IDS=["cautious","balanced","plate-warden","cloth-battlemage","leather-duelist","hexblade-hybrid","smart-blood-pure","smart-fury-daggers","smart-vitality-pure","smart-aegis-vitality","smart-magic-arcane-pure","smart-magic-fire-pure","magic-frost","smart-magic-lightning-pure","smart-decay-magic-aegis","smart-blood-sword","smart-blood-fury","smart-blood-fury-vitality","smart-blood-fury-vitality-no-mixed","smart-fury-blood-aegis","smart-fury-pure","smart-magic-fire-aegis","smart-magic-frost-vitality","smart-magic-wand","smart-magic-staff","smart-magic-wand-offense","smart-magic-wand-defense","decay-wand","decay-two-handed","aegis-sword-shield","aegis-mace-shield","aegis-wand-orb","vitality-sword-charm","vitality-staff","magic-sword-infusion"],SIZES=[4,5,8,12],TRIALS=50,OLD='686cd06098af3ee950363030c809d08383832e4021f23568e2aa4bbf161b550f';
+const IDS=["cautious","balanced","plate-warden","cloth-battlemage","leather-duelist","hexblade-hybrid","smart-blood-pure","smart-fury-daggers","smart-radiance-pure","smart-aegis-radiance","smart-arcane-arcane-pure","smart-arcane-fire-pure","arcane-frost","smart-arcane-lightning-pure","smart-decay-arcane-aegis","smart-blood-sword","smart-blood-fury","smart-blood-fury-radiance","smart-blood-fury-radiance-no-mixed","smart-fury-blood-aegis","smart-fury-pure","smart-arcane-fire-aegis","smart-arcane-frost-radiance","smart-arcane-wand","smart-arcane-staff","smart-arcane-wand-offense","smart-arcane-wand-defense","decay-wand","decay-two-handed","aegis-sword-shield","aegis-mace-shield","aegis-wand-orb","radiance-sword-charm","radiance-staff","arcane-sword-infusion"],SIZES=[4,5,8,12],TRIALS=50,OLD='686cd06098af3ee950363030c809d08383832e4021f23568e2aa4bbf161b550f';
 
 // Pure experimental scheduling, used only inside the isolated native VM.
 function isPrincipal(e){return !!e&&['tank','skirmisher','caster'].includes(e.role)&&!e.boss&&!e.miniboss;}
@@ -78,7 +78,7 @@ function row(r){
   taken:r.damageTaken,absorbed:r.absorbed,healed:metric(r,'healingActual'),barrierGenerated:metric(r,'barrierGenerated'),healingPerSecond:sec&&metric(r,'healingActual')!==null?metric(r,'healingActual')/sec:null,barrierAbsorbedPerSecond:sec?r.absorbed/sec:0,
   hpMax:r.hpMax,hpEnd:r.hpEnd,minHpPct:r.minHpPct,guardEvents:metric(r,'guardLogEvents'),attackCalls:metric(r,'attackCalls'),
   initialRoles:r.initialRoles,initialVisible:r.initialVisible,reinforcements:r.reinforcementsSpawned,rosterHp:r.roster.reduce((a,x)=>a+x.maxHp,0),
-  initialPrincipalAttack:r.roster.filter(x=>x.role!=='minion').reduce((a,x)=>a+x.attack,0),passives:r.affinityMetrics?.passiveActivations||{},decay:r.decayTalentMetrics,magic:r.magicAdaptiveMetrics,defensive:r.defensiveTalentMetrics,seed:r.resolvedSeed,gear:r.gearFingerprint};
+  initialPrincipalAttack:r.roster.filter(x=>x.role!=='minion').reduce((a,x)=>a+x.attack,0),passives:r.affinityMetrics?.passiveActivations||{},decay:r.decayTalentMetrics,arcane:r.magicAdaptiveMetrics,defensive:r.defensiveTalentMetrics,seed:r.resolvedSeed,gear:r.gearFingerprint};
 }
 function stats(a){
  const v=a.filter(x=>x.won||x.died);

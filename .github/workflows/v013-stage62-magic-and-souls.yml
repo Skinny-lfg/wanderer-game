@@ -2,7 +2,7 @@ name: Wanderer v0.13 — Stage 6.2 magic candidate and dedicated souls
 on:
   push:
     branches: [audit/v013-stage6]
-    paths: ['.github/workflows/v013-stage62-magic-and-souls.yml']
+    paths: ['.github/workflows/v013-stage62-arcane-and-souls.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -44,10 +44,10 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: stage62-magic-and-dedicated-soul-report
+          name: stage62-arcane-and-dedicated-soul-report
           path: |
-            reports/stage62-magic-attunement.json
-            reports/stage62-magic-attunement.md
+            reports/stage62-arcane-attunement.json
+            reports/stage62-arcane-attunement.md
             reports/stage62-gravecaller-before.json
             reports/stage62-gravecaller-after.json
           retention-days: 30

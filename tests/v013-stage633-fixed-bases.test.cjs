@@ -74,7 +74,7 @@ test('Stage 6.33: actual native role stats are equal across solo/3/12/22 at same
  }
 });
 test('Stage 6.33: Boss and Elite specials suppressed during calibration, bases remain distinct',()=>{
- for(const realm of ['blood','decay','vitality','aegis','fury','magic']){
+ for(const realm of ['blood','decay','radiance','aegis','fury','arcane']){
   const {r,actors}=native(2,1,realm,0,true,false);
   assert.equal(actors[0].boss,true);
   assert.equal(actors[0].barrier,0);

@@ -5,8 +5,8 @@ const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypt
 const N=require('./v013-natural-progression.cjs'),D=require('./v013-stage628-postcap-difficulty.cjs'),S=require('./simulate-progression.cjs');
 const CAP=require('./v013-capture-assistance.cjs');
 const special={
- 'magic-decay-bloom':{name:'Magic + Decay caster',risk:0,targets:['arcane_focus','toxic_touch','hex_bolt','elemental_blight','grave_bloom'],families:['magic','decay'],element:'arcane',armor:'Cloth',weapons:['Wand','Staff'],style:'focused',healAt:.72,retreatAt:.46,target:'mechanics',shop:true,researchGearPreference:true,preparedTargets:['grave_bloom']},
- 'magic-decay-infusion':{name:'Magic + Decay physical Infusion',risk:0,targets:['arcane_focus','toxic_touch','hex_bolt','elemental_blight','grave_bloom'],families:['magic','decay'],element:'arcane',armor:'Leather',weapons:['Sword'],offhands:['Tome'],style:'focused',healAt:.72,retreatAt:.46,target:'mechanics',shop:true,researchGearPreference:true,preparedTargets:['grave_bloom']}
+ 'arcane-decay-bloom':{name:'Magic + Decay caster',risk:0,targets:['arcane_focus','toxic_touch','hex_bolt','elemental_blight','grave_bloom'],families:['arcane','decay'],element:'arcane',armor:'Cloth',weapons:['Wand','Staff'],style:'focused',healAt:.72,retreatAt:.46,target:'mechanics',shop:true,researchGearPreference:true,preparedTargets:['grave_bloom']},
+ 'arcane-decay-infusion':{name:'Magic + Decay physical Infusion',risk:0,targets:['arcane_focus','toxic_touch','hex_bolt','elemental_blight','grave_bloom'],families:['arcane','decay'],element:'arcane',armor:'Leather',weapons:['Sword'],offhands:['Tome'],style:'focused',healAt:.72,retreatAt:.46,target:'mechanics',shop:true,researchGearPreference:true,preparedTargets:['grave_bloom']}
 };
 function profileFor(id){const p=special[id]||N.PROFILES[id];if(!p)throw Error('Unknown capture profile '+id);return p;}
 function capture(profileId,mode,seeds,out){

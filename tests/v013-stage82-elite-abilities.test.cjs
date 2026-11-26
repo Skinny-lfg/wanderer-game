@@ -224,7 +224,7 @@ function horrorFixture(build){
  const r=a.encounter({elite:true,count:1});return {a,c,r,sim};
 }
 test('native Horror encounters resolve with speed, paired daggers, DoT, magic and tank loadouts',()=>{
- for(const build of ['fury-bow','blood-fury','blood-decay','magic-decay','aegis-vitality']){
+ for(const build of ['fury-bow','blood-fury','blood-decay','arcane-decay','aegis-radiance']){
   const {a,c,r,sim}=horrorFixture(build);
   assert.equal(r.enemy.eliteType,'the_gilded');
   const row=sim.fight(a,c,2000);
@@ -232,7 +232,7 @@ test('native Horror encounters resolve with speed, paired daggers, DoT, magic an
  }
 });
 test('reflection uses actual primary HP loss, mitigates through block and Barrier, and settles a lethal trade once',()=>{
- const {a,c,r}=horrorFixture('aegis-vitality'),e=r.enemy;
+ const {a,c,r}=horrorFixture('aegis-radiance'),e=r.enemy;
  r.combatSeconds=13;e.stage82.rebukeUntil=17;e.stage82.reflected=0;
  r.stats.blockChance=100;r.stats.blockReduction=.5;r.barrier=100;a.rng(.5);
  e.hp=e.maxhp=1000;e.barrier=9999;

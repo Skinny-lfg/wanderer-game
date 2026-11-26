@@ -37,10 +37,10 @@ function archetypes(){
  return out;
 }
 function profileArmor(family){
- return ['magic','decay'].includes(family)?'Cloth':['aegis','vitality'].includes(family)?'Plate':'Leather';
+ return ['arcane','decay'].includes(family)?'Cloth':['aegis','radiance'].includes(family)?'Plate':'Leather';
 }
 function defaultWeapon(family){
- return ({blood:'Sword',fury:'Daggers',vitality:'Mace',aegis:'Sword',magic:'Wand',decay:'Wand'})[family];
+ return ({blood:'Sword',fury:'Daggers',radiance:'Mace',aegis:'Sword',arcane:'Wand',decay:'Wand'})[family];
 }
 function buildTalent(archetype,budget){
  if(!Object.hasOwn(BUDGET_TO_E,budget))throw Error('Unsupported point budget '+budget);
@@ -89,7 +89,7 @@ function equipment(archetype,index,budgetIndex,variation){
  let offhand=null;
  if(!TWO_HANDS.has(weapon)){
   if(variation===0)offhand=weapon==='Wand'?'Orb':archetype.primary==='aegis'?'Shield':
-   weapon==='Daggers'?'Off-Hand Dagger':archetype.primary==='magic'?'Tome':'Shield';
+   weapon==='Daggers'?'Off-Hand Dagger':archetype.primary==='arcane'?'Tome':'Shield';
   else offhand=OFFHANDS[(index+budgetIndex+variation)%OFFHANDS.length];
  }
  if(!WEAPONS.includes(weapon)||!ARMOR.includes(armor)||

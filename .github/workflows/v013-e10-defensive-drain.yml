@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        id: [magic-fire-wand, magic-fire-staff, magic-lightning-wand, magic-lightning-staff, fury-daggers, fury-bow, fury-twohand, blood-daggers, blood-bow, blood-twohand, audit-twohand]
+        id: [arcane-fire-wand, arcane-fire-staff, arcane-lightning-wand, arcane-lightning-staff, fury-daggers, fury-bow, fury-twohand, blood-daggers, blood-bow, blood-twohand, audit-twohand]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

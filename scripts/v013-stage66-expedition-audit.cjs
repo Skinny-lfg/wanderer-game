@@ -85,7 +85,7 @@ function summarize(reports,opts={}){
  for(const t of e1)for(const x of t.decisions||[])if(x.type==='extract')
   extractReasons[x.reason||'unknown']=(extractReasons[x.reason||'unknown']||0)+1;
  const bossFamily=[];
- for(let level=1;level<=10;level++)for(const family of ['aegis','blood','decay','fury','magic','vitality']){
+ for(let level=1;level<=10;level++)for(const family of ['aegis','blood','decay','fury','arcane','radiance']){
   const a=fights.filter(f=>f.attempt.level===level&&f.roomType==='boss'&&f.attempt.affinity===family);
   bossFamily.push({level,family,fights:a.length,wins:count(a,x=>x.won),deaths:count(a,x=>x.died)});
  }

@@ -3,9 +3,9 @@
 const fs=require('node:fs'),create=require('../tests/v012-economy-harness.cjs');
 const {api}=require('../tests/v012-affinity-fixture.cjs');const rows=[];
 for(const p of api.CATALOG.filter(p=>!p.requires.length&&p.max===5))for(let companions=0;companions<=3;companions++)for(let rank=1;rank<=5;rank++){
- const weapon=p.family==='magic'?'Staff':'Sword',a=create(73000+companions,undefined,{}, {measure:true,now:1700000000000});a.setup(50,weapon,'Epic');const s=a.state(),g=a.controller().state;g.unlocked=50;s.runes=['vitality','warding',weapon==='Staff'?'wisdom':'might'].map(f=>a.makeRune(f,50));s.runeSlots=s.runes.map(r=>r.id);
- a.start(50);a.initial(p.family);if(p.family==='magic')a.element(p.element||'lightning');a.select(g.offers.find(x=>x.family===p.family).id);a.enter();const b=a.build(),B=a.buildcraft;B.initial(b,p.family);
- const support={blood:['deep_cuts','sanguine_fury','blood_drinker'],decay:['virulent_rot','wither','wasting_curse'],vitality:['renewal','life_bloom','second_breath'],aegis:['barrier_pulse','guarded_block','fortified'],fury:['precision','brutal_crit','adrenaline'],magic:['arcane_focus','elemental_force','arcane_echo']};
+ const weapon=p.family==='arcane'?'Staff':'Sword',a=create(73000+companions,undefined,{}, {measure:true,now:1700000000000});a.setup(50,weapon,'Epic');const s=a.state(),g=a.controller().state;g.unlocked=50;s.runes=['radiance','warding',weapon==='Staff'?'wisdom':'might'].map(f=>a.makeRune(f,50));s.runeSlots=s.runes.map(r=>r.id);
+ a.start(50);a.initial(p.family);if(p.family==='arcane')a.element(p.element||'lightning');a.select(g.offers.find(x=>x.family===p.family).id);a.enter();const b=a.build(),B=a.buildcraft;B.initial(b,p.family);
+ const support={blood:['deep_cuts','sanguine_fury','blood_drinker'],decay:['virulent_rot','wither','wasting_curse'],radiance:['renewal','life_bloom','second_breath'],aegis:['barrier_pulse','guarded_block','fortified'],fury:['precision','brutal_crit','adrenaline'],arcane:['arcane_focus','elemental_force','arcane_echo']};
  const id=B.initialId(p.family,b.element);b.picks=[...(id===p.id?[]:[id]),...support[p.family].filter(x=>x!==p.id&&x!==id).slice(0,companions),...Array(rank).fill(p.id)];B.validate(b);const r=s.run;r.stats=a.stats();r.hp=r.stats.maxhp*.5;r.maxhp=r.stats.maxhp;r.maxmp=r.stats.mana;r.mp=r.maxmp;
  Object.assign(r.enemy,{hp:50000,maxhp:100000,boss:companions===3,atk:100});
  for(let tick=0;tick<273&&s.run===r&&r.status==='fight';tick++)a.tick();

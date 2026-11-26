@@ -48,10 +48,10 @@ test('Stage 5 native simulator rejects illegal guaranteed traits and two-handed 
 test('Stage 5 native gear decisions value active Mana only for Mana-capable profiles',()=>{
  const basic={slot:'offhand',rarity:'Epic',tier:20,spell:5,mana:20,manaRegenBonus:.5,hp:10,wardBonus:.03};
  const tome={...basic,subtype:'Tome',v013Trait:'echoing_recall'};
- const magic=N.PROFILES['magic-fire'],physical=N.PROFILES['leather-duelist'];
+ const magic=N.PROFILES['arcane-fire'],physical=N.PROFILES['leather-duelist'];
  const withoutMana={...tome,mana:0,manaRegenBonus:0};
  assert(N.gearScore(tome,magic)>N.gearScore(withoutMana,magic),'Magic recognizes Mana sustain');
- assert.equal(N.gearScore(tome,physical),N.gearScore(withoutMana,physical),'Physical without Magic/Decay cannot value unusable Mana');
+ assert.equal(N.gearScore(tome,physical),N.gearScore(withoutMana,physical),'Physical without Arcane/Decay cannot value unusable Mana');
  const epic={...basic,subtype:'Charm',v013Trait:'heartbloom'};
  assert(N.gearScore(epic,N.PROFILES.cautious)>N.gearScore({...epic,v013Trait:null},N.PROFILES.cautious));
  assert(N.gearScore({...basic,subtype:'Orb',v013Trait:'ward'},magic)>

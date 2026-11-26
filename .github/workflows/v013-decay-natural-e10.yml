@@ -25,7 +25,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        profile: [smart-decay-cycle-twohand, smart-decay-cycle-staff, smart-decay-cycle-daggers, smart-decay-cycle-wand, smart-decay-overflow-twohand, smart-decay-overflow-staff, smart-decay-overflow-daggers, smart-decay-overflow-wand, smart-decay-hybrid-twohand, smart-decay-hybrid-staff, smart-decay-hybrid-daggers, smart-decay-hybrid-wand, smart-decay-plagueheart, smart-decay-magic-aegis, smart-blood-pure, smart-fury-pure, smart-vitality-pure, smart-aegis-vitality, smart-magic-fire-pure, smart-magic-lightning-pure, smart-magic-arcane-pure, smart-magic-frost-vitality]
+        profile: [smart-decay-cycle-twohand, smart-decay-cycle-staff, smart-decay-cycle-daggers, smart-decay-cycle-wand, smart-decay-overflow-twohand, smart-decay-overflow-staff, smart-decay-overflow-daggers, smart-decay-overflow-wand, smart-decay-hybrid-twohand, smart-decay-hybrid-staff, smart-decay-hybrid-daggers, smart-decay-hybrid-wand, smart-decay-plagueheart, smart-decay-arcane-aegis, smart-blood-pure, smart-fury-pure, smart-radiance-pure, smart-aegis-radiance, smart-arcane-fire-pure, smart-arcane-lightning-pure, smart-arcane-arcane-pure, smart-arcane-frost-radiance]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

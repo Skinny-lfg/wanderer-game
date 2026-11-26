@@ -22,14 +22,14 @@ test('Stage6.30: complete 34 native profiles in five independent cohorts, six af
  }
  const keys=C.PROFILES.map(x=>require('../scripts/v013-natural-progression.cjs').PROFILES[x]);
  const usedFamilies=new Set(keys.flatMap(x=>x.families));
- for(const x of ['blood','decay','fury','aegis','vitality','magic'])
+ for(const x of ['blood','decay','fury','aegis','radiance','arcane'])
   assert(usedFamilies.has(x),'Missing '+x);
  const gear=new Set(keys.map(x=>x.armor));
  assert.deepEqual([...gear].sort(),['Cloth','Leather','Plate']);
  assert(keys.some(x=>x.style==='mixed')&&keys.some(x=>x.style==='focused'));
- for(const key of ['magic-fire','magic-frost','magic-lightning','magic-arcane',
+ for(const key of ['arcane-fire','arcane-frost','arcane-lightning','arcane-arcane',
   'smart-fury-bow','smart-fury-daggers','smart-blood-two-handed',
-  'smart-magic-wand-offense','smart-magic-wand-defense'])
+  'smart-arcane-wand-offense','smart-arcane-wand-defense'])
   assert(C.PROFILES.includes(key));
 });
 test('Stage6.30 early exponential softens E1–E4, anchors E5, and grows continuously to E200',()=>{

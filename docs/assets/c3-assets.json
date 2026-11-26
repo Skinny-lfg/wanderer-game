@@ -59,8 +59,8 @@
       "path": "assets/affinities/families/decay.png",
       "driveId": "10Eeeq8upW8LstTj4aWTZw9M4SsPi6fH5"
     },
-    "families/vitality": {
-      "path": "assets/affinities/families/vitality.png",
+    "families/radiance": {
+      "path": "assets/affinities/families/radiance.png",
       "driveId": "19hn8GweazoepdTwlpL5DgCJc4ajPoNqz"
     },
     "families/aegis": {
@@ -72,19 +72,19 @@
       "driveId": "1s7KIdmH27TPHYI6uozrj7IUPfCAWIJK9"
     },
     "families/magic": {
-      "path": "assets/affinities/families/magic.png",
+      "path": "assets/affinities/families/arcane.png",
       "driveId": "1IzH5HPHnYNh-HCHi7RUXsSHlNuUvG5l2"
     },
-    "magic/fire": {
-      "path": "assets/affinities/magic/fire.png",
+    "arcane/fire": {
+      "path": "assets/affinities/arcane/fire.png",
       "driveId": "1iUbQMyrcePPAajqxQmRnkRFRGewKN7N2"
     },
-    "magic/frost": {
-      "path": "assets/affinities/magic/frost.png",
+    "arcane/frost": {
+      "path": "assets/affinities/arcane/frost.png",
       "driveId": "1bMAPl2atS7nVbe5oYPhw5bswRgiT-4x2"
     },
-    "magic/lightning": {
-      "path": "assets/affinities/magic/lightning.png",
+    "arcane/lightning": {
+      "path": "assets/affinities/arcane/lightning.png",
       "driveId": "1WVW5B4PDiRC2FePc9rcYqdAU4yDJv40q"
     }
   },

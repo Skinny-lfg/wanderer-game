@@ -28,16 +28,16 @@ const mods={
 const sources={base:native};
 for(const [key,edits]of Object.entries(mods))sources[key]=edits.reduce((s,[a,b])=>replace(s,a,b),native);
 const profiles=[
- {name:'sword-none',build:'Plate Sword + Shield',weapon:'Sword',offhandType:'Shield',armorType:'Plate',family:'vitality',targetFamilies:['vitality','aegis','fury'],items:null},
- {name:'sword-veil',build:'Plate Sword + Shield',weapon:'Sword',offhandType:'Shield',armorType:'Plate',family:'vitality',targetFamilies:['vitality','aegis','fury'],items:{belt:'veil-thousand-seals'}},
- {name:'sword-oathwall',build:'Plate Sword + Shield',weapon:'Sword',offhandType:'Shield',armorType:'Plate',family:'vitality',targetFamilies:['vitality','aegis','fury'],items:{offhand:'oathwall'}},
- {name:'sword-verdant',build:'Plate Sword + Shield',weapon:'Sword',offhandType:'Shield',armorType:'Plate',family:'vitality',targetFamilies:['vitality','aegis','fury'],items:{weapon:'graft'}},
- {name:'sword-oathwall-veil',build:'Plate Sword + Shield',weapon:'Sword',offhandType:'Shield',armorType:'Plate',family:'vitality',targetFamilies:['vitality','aegis','fury'],items:{offhand:'oathwall',belt:'veil-thousand-seals'}},
- {name:'sword-verdant-veil',build:'Plate Sword + Shield',weapon:'Sword',offhandType:'Shield',armorType:'Plate',family:'vitality',targetFamilies:['vitality','aegis','fury'],items:{weapon:'graft',belt:'veil-thousand-seals'}},
- {name:'sword-graftwall',build:'Plate Sword + Shield',weapon:'Sword',offhandType:'Shield',armorType:'Plate',family:'vitality',targetFamilies:['vitality','aegis','fury'],items:{weapon:'graft',offhand:'oathwall'}},
- {name:'wand-voidglass-veil',build:'Cloth Wand + Orb',weapon:'Wand',offhandType:'Orb',armorType:'Cloth',family:'magic',targetFamilies:['magic','aegis','decay'],items:{weapon:'voidglass',belt:'veil-thousand-seals'}},
- {name:'staff-veil-heartroot',build:'Cloth Staff',weapon:'Staff',armorType:'Cloth',family:'magic',targetFamilies:['magic','aegis','decay'],items:{belt:'veil-thousand-seals',armor:'heartroot-carapace'}},
- {name:'mace-oathwall-heartroot',build:'Plate Mace + Shield',weapon:'Mace',offhandType:'Shield',armorType:'Plate',family:'vitality',targetFamilies:['vitality','aegis','fury'],items:{offhand:'oathwall',armor:'heartroot-carapace'}},
+ {name:'sword-none',build:'Plate Sword + Shield',weapon:'Sword',offhandType:'Shield',armorType:'Plate',family:'radiance',targetFamilies:['radiance','aegis','fury'],items:null},
+ {name:'sword-veil',build:'Plate Sword + Shield',weapon:'Sword',offhandType:'Shield',armorType:'Plate',family:'radiance',targetFamilies:['radiance','aegis','fury'],items:{belt:'veil-thousand-seals'}},
+ {name:'sword-oathwall',build:'Plate Sword + Shield',weapon:'Sword',offhandType:'Shield',armorType:'Plate',family:'radiance',targetFamilies:['radiance','aegis','fury'],items:{offhand:'oathwall'}},
+ {name:'sword-verdant',build:'Plate Sword + Shield',weapon:'Sword',offhandType:'Shield',armorType:'Plate',family:'radiance',targetFamilies:['radiance','aegis','fury'],items:{weapon:'graft'}},
+ {name:'sword-oathwall-veil',build:'Plate Sword + Shield',weapon:'Sword',offhandType:'Shield',armorType:'Plate',family:'radiance',targetFamilies:['radiance','aegis','fury'],items:{offhand:'oathwall',belt:'veil-thousand-seals'}},
+ {name:'sword-verdant-veil',build:'Plate Sword + Shield',weapon:'Sword',offhandType:'Shield',armorType:'Plate',family:'radiance',targetFamilies:['radiance','aegis','fury'],items:{weapon:'graft',belt:'veil-thousand-seals'}},
+ {name:'sword-graftwall',build:'Plate Sword + Shield',weapon:'Sword',offhandType:'Shield',armorType:'Plate',family:'radiance',targetFamilies:['radiance','aegis','fury'],items:{weapon:'graft',offhand:'oathwall'}},
+ {name:'wand-voidglass-veil',build:'Cloth Wand + Orb',weapon:'Wand',offhandType:'Orb',armorType:'Cloth',family:'arcane',targetFamilies:['arcane','aegis','decay'],items:{weapon:'voidglass',belt:'veil-thousand-seals'}},
+ {name:'staff-veil-heartroot',build:'Cloth Staff',weapon:'Staff',armorType:'Cloth',family:'arcane',targetFamilies:['arcane','aegis','decay'],items:{belt:'veil-thousand-seals',armor:'heartroot-carapace'}},
+ {name:'mace-oathwall-heartroot',build:'Plate Mace + Shield',weapon:'Mace',offhandType:'Shield',armorType:'Plate',family:'radiance',targetFamilies:['radiance','aegis','fury'],items:{offhand:'oathwall',armor:'heartroot-carapace'}},
  {name:'bow-veil-heartroot',build:'Leather Bow',weapon:'Bow',armorType:'Leather',family:'decay',targetFamilies:['decay','fury','blood'],items:{belt:'veil-thousand-seals',armor:'heartroot-carapace'}},
  {name:'twohand-gravewake-eye',build:'Leather Two-Handed',weapon:'Two-Handed',armorType:'Leather',family:'decay',targetFamilies:['decay','fury','blood'],items:{weapon:'gravewake',ring1:'eye-of-morrow'}},
  {name:'twohand-veil-heartroot',build:'Leather Two-Handed',weapon:'Two-Handed',armorType:'Leather',family:'decay',targetFamilies:['decay','fury','blood'],items:{belt:'veil-thousand-seals',armor:'heartroot-carapace'}}

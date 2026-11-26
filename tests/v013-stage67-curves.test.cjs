@@ -25,7 +25,7 @@ test('Production source file is completely unchanged by the experimental overrid
  assert.throws(()=>A.sourceFor('unknown'),/Unknown curve/);
 });
 test('Natural E1–E5 accounts are byte-identical even when the E6+ curve is overridden',()=>{
- const cfg=N.parseArgs(['--profiles=balanced,magic-fire','--seeds=9301','--max-level=6','--max-attempts=2','--max-total-attempts=8']);
+ const cfg=N.parseArgs(['--profiles=balanced,arcane-fire','--seeds=9301','--max-level=6','--max-attempts=2','--max-total-attempts=8']);
  const baseline=A.summarize(N.run(cfg),'baseline');
  for(const id of ['mild','firm','linear']){
   const result=A.summarize(N.run(cfg,{moduleOverrides:{'combat/expedition-progression.js':A.sourceFor(id)}}),id);

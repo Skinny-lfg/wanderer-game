@@ -3,8 +3,8 @@
 // earned native talents and live visible encounter metadata. No gameplay writes.
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const round=x=>Math.round(x*100)/100;
-const BOSSES={blood:'leech',decay:'matriarch',vitality:'devourer',aegis:'guardian',fury:'berserker',magic:'conductor'};
-const FAMILIES=['blood','fury','vitality','aegis','magic','decay'];
+const BOSSES={blood:'leech',decay:'matriarch',radiance:'devourer',aegis:'guardian',fury:'berserker',arcane:'conductor'};
+const FAMILIES=['blood','fury','radiance','aegis','arcane','decay'];
 // Real earned mixed-axis nodes, not the mere intent to buy one in a profile.
 const MIXED_SKILLS=new Set(['crimson_rush','reapers_cadence','red_guillotine',
  'fervent_life','redline','fury_recovery','sanctuary','guardians_oath','last_bastion',
@@ -16,7 +16,7 @@ function classify({equipment={},talents={},build={},stats={}}={}){
  const has=id=>owned.has(id)||picked.has(id);
  const main=equipment.weapon?.subtype||null,offhand=equipment.offhand?.subtype||null;
  const element=talents.element||build.element||null;
- const magical=['Staff','Wand'].includes(main),fundedMagic=magical||owned.has('affinity_magic')&&Number(stats.mana)>0;
+ const magical=['Staff','Wand'].includes(main),fundedMagic=magical||owned.has('affinity_arcane')&&Number(stats.mana)>0;
  const armor=equipment.armor?.armorType||equipment.armor?.subtype||null;
  let area=0,focus=1,defense=0;const sources=[];
  function add(type,amount,label){if(type==='area')area+=amount;else if(type==='focus')focus+=amount;else defense+=amount;sources.push({kind:type,value:amount,source:label});}
@@ -67,7 +67,7 @@ function classify({equipment={},talents={},build={},stats={}}={}){
  if(has('renewal'))add('defense',.8,'renewal');
  if(stats.blockChance>0)add('defense',Math.min(2,stats.blockChance*(stats.blockReduction||.35)/12),'actual Guard chance and strength');
  if(stats.barrierPower>0&&(offhand==='Orb'||has('affinity_aegis')||has('overflowing_life')))add('defense',Math.min(1.2,stats.barrierPower*3),'active Barrier Power');
- if(stats.healingPower>0&&(has('affinity_blood')||has('affinity_vitality')||offhand==='Charm'))add('defense',Math.min(1,stats.healingPower*3),'active Healing Power');
+ if(stats.healingPower>0&&(has('affinity_blood')||has('affinity_radiance')||offhand==='Charm'))add('defense',Math.min(1,stats.healingPower*3),'active Healing Power');
  const areaReady=area>=1.8,focusReady=focus>=2.0;
  const role=areaReady&&focusReady?'hybrid':areaReady?'aoe':focusReady?'single-target':defense>=2?'defensive':'developing';
  // A mixed-Affinity build is not necessarily AoE+single-target. Track both

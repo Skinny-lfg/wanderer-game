@@ -27,7 +27,7 @@ const CONTRASTS=Object.freeze([
  {from:'e35-talents',to:'e35-geared',axis:'gear'}
 ]);
 const DEFAULTS=Object.freeze({
- builds:['blood-fury','aegis-vitality','magic-decay'],
+ builds:['blood-fury','aegis-radiance','arcane-decay'],
  seeds:[9101,9201],targetPolicy:'focus',
  bossAffinities:['blood','aegis'],bossRisks:[0],
  output:'reports/v013-stage92-progression-diagnosis.json'

@@ -61,7 +61,7 @@ test('Matched native A/B finds isolated talent change but no cross-expedition pa
  assert.equal(D.pairedContrast([before],[{...after,level:15}],'talents').pairs,0);
 });
 test('Generated Realm differences, native seed drift, risk or Dungeon route changes invalidate pairing',()=>{
- const base={mode:'dungeon',level:15,build:'aegis-vitality',seed:9101,resolvedSeed:9102,
+ const base={mode:'dungeon',level:15,build:'aegis-radiance',seed:9101,resolvedSeed:9102,
   affinity:'aegis',risk:1,route:[0,1,4],targetPolicy:'focus',won:true,stage:'finished',
   rooms:[{},{}],minHpPct:50,lastHpPct:90,damageTaken:100,seconds:50};
  for(const change of [{affinity:'blood'},{resolvedSeed:9103},{risk:2},{route:[0,2,4]}]){

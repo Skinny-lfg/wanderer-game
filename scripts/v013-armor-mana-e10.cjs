@@ -1,8 +1,8 @@
 'use strict';
 const fs=require('node:fs'),assert=require('node:assert/strict'),G=require('./v013-global-e10.cjs'),H=require('./v013-survival-e10.cjs'),S=require('./simulate-progression.cjs');
-const LEVEL=10,POINTS=30,N=50,FAMILIES=['blood','decay','vitality','aegis','fury','magic'];
+const LEVEL=10,POINTS=30,N=50,FAMILIES=['blood','decay','radiance','aegis','fury','arcane'];
 const LEATHER=['blood-daggers','fury-daggers','fury-bow','decay-cycle-daggers','decay-cycle-bow','decay-focus-daggers','decay-focus-bow'];
-const MAGIC=G.IDS.filter(id=>id.startsWith('magic-')||/^decay-(cycle|focus)-(wand|staff|sword)$/.test(id));
+const MAGIC=G.IDS.filter(id=>id.startsWith('arcane-')||/^decay-(cycle|focus)-(wand|staff|sword)$/.test(id));
 const IDS=[...LEATHER,...MAGIC],SC=H.SC;
 const CLOTH={A:[.25,.25,1.5],B:[.4,.4,2],C:[.6,.5,2.5]},MANA={A:[1,.15,6],B:[.5,.1,9]};
 const COST={arcane:[9,13,10,0],frost:[10,15,12,8],fire:[13,18,18,12],lightning:[14,20,20,14]};
@@ -38,7 +38,7 @@ function arms(p){
  const add=(id,extra)=>({...base,id,...extra});
  if(LEATHER.includes(p.id))return [base,add('plate-native',{armor:'Plate'}),...([2,3,4].map(evasion=>add('leather-x'+evasion,{evasion})))];
  const out=[base,add('plate-native',{armor:'Plate'}),...Object.keys(CLOTH).map(cloth=>add('cloth-'+cloth,{cloth})),...Object.keys(MANA).map(mana=>add('mana-'+mana,{mana}))];
- if(p.families.includes('magic'))out.push(add('cost-only',{cost:true}));
+ if(p.families.includes('arcane'))out.push(add('cost-only',{cost:true}));
  out.push(add('pilot-cloth',{cloth:'B',mana:'A',cost:true}),add('pilot-plate',{armor:'Plate',cloth:'B',mana:'A',cost:true}));
  return out;
 }
@@ -68,7 +68,7 @@ function summary(cases,arm){
  return {...base,hp:avg(rows,r=>r.hpMax),mana:avg(rows,r=>r.mpMax),regen:avg(rows,r=>r.stats.manaRegen||0),evasion:avg(rows,r=>r.stats.evasionRating||0),funded:avg(rows,r=>r.funded||0),infusions:avg(rows,r=>r.infusions||0),unfunded:avg(rows,r=>r.unfunded||0),starved:avg(rows,r=>r.starved||0),winSeconds:avg(wins,r=>r.seconds),tomeMana:avg(rows,r=>r.tomeMana),orbBarrier:avg(rows,r=>r.orbBarrier),charmHealing:avg(rows,r=>r.charmHealing)};
 }
 function group(cases,ids){const groups={overall:cases,normal:cases.filter(x=>x.sc.startsWith('normal-')),elite:cases.filter(x=>x.sc.startsWith('elite-')),boss:cases.filter(x=>x.sc.startsWith('boss-')),...Object.fromEntries(SC.map(s=>[s.id,cases.filter(x=>x.sc===s.id)]))};return Object.fromEntries(Object.entries(groups).map(([k,v])=>[k,Object.fromEntries(ids.map(id=>[id,summary(v,id)]))]));}
-const ROUTE_IDS=['magic-arcane-wand','magic-fire-wand','magic-lightning-wand','magic-frost-staff','magic-fire-sword','magic-lightning-staff','decay-cycle-wand','decay-focus-staff'];
+const ROUTE_IDS=['arcane-arcane-wand','arcane-fire-wand','arcane-lightning-wand','arcane-frost-staff','arcane-fire-sword','arcane-lightning-staff','decay-cycle-wand','decay-focus-staff'];
 function routeTrial(p,a,i){
  const build={id:p.id,weapon:p.weapon,families:p.families,skills:[],...(p.element?{element:p.element}:{})};
  const opts={...overrides(a),...(a.armor!==p.armorType?{stageE10ArmorVariant:a.armor}:{}),mode:'dungeon',points:POINTS,gear:'current',rarity:'Rare',runes:false,contracts:'none',targetPolicy:'mechanics',measure:false,tickLimit:6500,lockScenarioStreams:true,controlledTalents:p.t,armorType:p.armorType,offhandType:a.offhand};
@@ -79,7 +79,7 @@ function routes(p){if(!ROUTE_IDS.includes(p.id))return null;const list=arms(p).f
 function routeSummary(routes){if(!routes)return null;return Object.fromEntries(Object.entries(routes).map(([id,rs])=>{const rooms=rs.flatMap(x=>x.rooms),later=rs.flatMap(x=>x.rooms.slice(1)).filter(r=>r.mpMax>0);return [id,{n:rs.length,wins:rs.filter(x=>x.won).length,bossReached:rs.filter(x=>x.bossReached).length,errors:rs.filter(x=>x.error).map(x=>x.error),timeouts:rs.filter(x=>x.timeout).length,rooms:rooms.length,laterManaEntryPct:later.length?avg(later,r=>100*r.mpStart/r.mpMax):null,unfunded:avg(rooms,r=>r.unfunded||0),manaSpent:avg(rooms,r=>r.manaSpent||0)}];}));}
 function write(file,obj){fs.mkdirSync(require('node:path').dirname(file),{recursive:true});fs.writeFileSync(file,JSON.stringify(obj));}
 function run(id){assert(IDS.includes(id));const p=G.profile(id),cases=[];for(const sc of SC)for(let i=0;i<N;i++)cases.push(trial(p,sc,i));write('reports/armor-mana-e10/'+id+'.json',{id,source:S.sourceFingerprint().sha256,nodes:p.t.nodes,arms:arms(p),cases,routes:routes(p)});console.log('ARMOR_MANA_SHARD='+JSON.stringify({id,n:cases.length*arms(p).length}));}
-function smoke(){for(const id of IDS)trial(G.profile(id),SC[0],0);for(const sc of SC)trial(G.profile('magic-fire-wand'),sc,1);const p=G.profile('magic-lightning-wand'),r=routeTrial(p,arms(p).find(x=>x.id==='pilot-cloth'),0);console.log('ARMOR_MANA_ROUTE_SMOKE='+JSON.stringify(r));}
+function smoke(){for(const id of IDS)trial(G.profile(id),SC[0],0);for(const sc of SC)trial(G.profile('arcane-fire-wand'),sc,1);const p=G.profile('arcane-lightning-wand'),r=routeTrial(p,arms(p).find(x=>x.id==='pilot-cloth'),0);console.log('ARMOR_MANA_ROUTE_SMOKE='+JSON.stringify(r));}
 function aggregate(){
  const all=IDS.map(id=>{const x=JSON.parse(fs.readFileSync('reports/armor-mana-e10/'+id+'.json','utf8'));assert.equal(x.id,id);assert.equal(x.cases.length,N*SC.length);assert.equal(new Set(x.cases.map(c=>c.sc+'/'+c.i)).size,x.cases.length);assert.deepEqual(x.arms,arms(G.profile(id)));for(const c of x.cases)for(const a of x.arms.slice(1))paired(c.rows.native,c.rows[a.id],a);return x;});assert.equal(new Set(all.map(x=>x.source)).size,1);
  const profiles=Object.fromEntries(all.map(x=>[x.id,{arms:x.arms,nodes:x.nodes,...group(x.cases,x.arms.map(a=>a.id)),routes:routeSummary(x.routes)}]));

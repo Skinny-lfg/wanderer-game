@@ -5,7 +5,7 @@ const S=require('../scripts/simulate-progression.cjs');
 const T=globalThis.WandererAutomaticTalents;
 const defaults={...S.DEFAULTS,mode:'encounter',levels:[1000],seeds:[9101],builds:['blood-fury'],points:24};
 test('CLI accepts a bounded deterministic v0.13 scenario matrix and rejects unknown flags',()=>{
- const o=S.parseArgs(['--mode=both','--levels=1,5,1000','--seeds=4,4,5','--builds=blood-fury,magic-decay','--points=24','--gear=previous','--runes=true','--out=reports/one.json']);
+ const o=S.parseArgs(['--mode=both','--levels=1,5,1000','--seeds=4,4,5','--builds=blood-fury,arcane-decay','--points=24','--gear=previous','--runes=true','--out=reports/one.json']);
  assert.deepEqual(o.levels,[1,5,1000]);assert.deepEqual(o.seeds,[4,5]);assert.equal(o.mode,'both');assert.equal(o.gear,'previous');assert.equal(o.runes,true);
  for(const args of [['--mode=garbage'],['--levels=0'],['--seeds=NaN'],['--points=200'],['--builds=unknown'],['--out='],['--nope=1']])assert.throws(()=>S.parseArgs(args));
 });
@@ -47,7 +47,7 @@ test('a genuine death is recorded as a death, not as a 4500-tick timeout',()=>{
  assert(result.rooms.at(-1).ticks<defaults.tickLimit);assert(result.rooms.length>0,'failed run must record its actual final combat');
 });
 test('summary counts deaths, wins and timeouts independently',()=>{
- const opts={...defaults,mode:'dungeon',builds:['blood-fury','aegis-vitality'],levels:[1000]};const r=S.simulate(opts);
+ const opts={...defaults,mode:'dungeon',builds:['blood-fury','aegis-radiance'],levels:[1000]};const r=S.simulate(opts);
  if(r.summary.errors)console.error('C5_DUNGEON_SIM_ERRORS='+JSON.stringify(r.rows.filter(x=>x.error)));
  assert.equal(r.summary.cases,2);assert.equal(r.summary.deaths,r.rows.filter(x=>x.stage==='failed').length);assert.equal(r.summary.wins,r.rows.filter(x=>x.won).length);assert.equal(r.summary.errors,0);assert.equal(r.summary.timeouts,0);
  assert.equal(r.summary.wins+r.summary.deaths,2,'every completed dungeon must record a win or a genuine defeat');

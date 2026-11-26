@@ -119,8 +119,8 @@ async function runVisuals(browser,mode,width){
    if(width<=650){assert.equal(new Set(layout.map(x=>Math.round(x.y))).size,2,'mobile affinity cards form two rows');assert.equal(new Set(layout.map(x=>Math.round(x.x))).size,3,'mobile affinity cards form three columns')}
    else assert.equal(new Set(layout.map(x=>Math.round(x.y))).size,1,'desktop affinity cards form one row');
   }
-  const magic=page.locator('[data-phase2-initial="magic"]');if(await magic.count()){
-   await magic.click();const element=page.locator('dialog.phase3MagicElementDialog');await element.waitFor({state:'visible'});await screenshot(page,`magic-element-${width}.jpg`);
+  const magic=page.locator('[data-phase2-initial="arcane"]');if(await magic.count()){
+   await magic.click();const element=page.locator('dialog.phase3MagicElementDialog');await element.waitFor({state:'visible'});await screenshot(page,`arcane-element-${width}.jpg`);
    if(mode==='after'){
     assert(await element.evaluate(e=>e.classList.contains('gothic-panel--medium')),'Magic Element uses MEDIUM');
     assert.equal(await element.locator('.phase3MagicElementChoice').count(),3);

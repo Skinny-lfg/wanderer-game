@@ -4,11 +4,11 @@
 const fs=require('node:fs'),path=require('node:path');
 const S=require('./simulate-progression.cjs');
 const A=require('./v013-agent-strategy.cjs');
-const Bosses=['blood','decay','vitality','aegis','fury','magic'];
+const Bosses=['blood','decay','radiance','aegis','fury','arcane'];
 const Elites=['gravecaller','oathbound_exarch','the_gilded','ashen_executioner'];
 const Policies=['focus','mechanics','adaptive'];
 const Seeds=[9761,9762];
-const Builds=['blood-fury','blood-decay','magic-storm'];
+const Builds=['blood-fury','blood-decay','arcane-storm'];
 const flags=Object.fromEntries(process.argv.slice(2).filter(x=>x.startsWith('--'))
  .map(x=>x.slice(2).split('=')));
 const level=Number(flags.level||5),risk=Number(flags.risk??1),

@@ -12,7 +12,7 @@ function inject(old,replace){if(!runtime.includes(old))throw Error('Missing comb
 inject("const real=Math.max(0,Math.min(e.hp,damage));","const real=Math.max(0,Math.min(e.hp,damage));ports.phase6Metric(r,offhandStrike?'e32OffHits':'e32MainHits',1);ports.phase6Metric(r,offhandStrike?'e32OffDamage':'e32MainDamage',Math.max(0,Math.min(e.hp,damage)));");
 inject("ports.setDirectEnemyDamage(r,base*(s.main.subtype==='Sword'?.65:.45),'🛡 Shield Counterattack');","ports.phase6Metric(r,'e32ShieldCounters',1);ports.phase6Metric(r,'e32ShieldCounterDamage',Math.max(0,Math.round(base*(s.main.subtype==='Sword'?.65:.45))));ports.setDirectEnemyDamage(r,base*(s.main.subtype==='Sword'?.65:.45),'🛡 Shield Counterattack');");
 inject("if(gained>0)ports.addLog('🔮 Orb Ward +'+Math.round(gained)+' Barrier','good');","if(gained>0){ports.phase6Metric(r,'e32OrbWards',1);ports.phase6Metric(r,'e32OrbBarrier',gained);ports.addLog('🔮 Orb Ward +'+Math.round(gained)+' Barrier','good');}");
-const cases=[['Dual Daggers','Daggers','Leather','Off-Hand Dagger','blood'],['Single Dagger','Daggers','Leather',false,'blood'],['Wand + Orb','Wand','Cloth','Orb','magic'],['Wand only','Wand','Cloth',false,'magic'],['Sword + Shield','Sword','Plate','Shield','aegis'],['Sword only','Sword','Plate',false,'aegis']];
+const cases=[['Dual Daggers','Daggers','Leather','Off-Hand Dagger','blood'],['Single Dagger','Daggers','Leather',false,'blood'],['Wand + Orb','Wand','Cloth','Orb','arcane'],['Wand only','Wand','Cloth',false,'arcane'],['Sword + Shield','Sword','Plate','Shield','aegis'],['Sword only','Sword','Plate',false,'aegis']];
 const rows=[];
 for(const [build,weapon,armorType,offhandType,family]of cases)for(let i=0;i<30;i++){
  const seed=991100+i*10007;

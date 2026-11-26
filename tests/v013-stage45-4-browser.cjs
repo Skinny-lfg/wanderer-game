@@ -88,7 +88,7 @@ async function main(){
   const atlas=page.frameLocator('iframe[title="Talent tree"]');
   await atlas.locator('#nodes .node').first().waitFor();
   const count=await atlas.locator('#nodes .node').count();assert(count>=200,'Expected native v15 atlas, not the historical inline tree');
-  for(const id of ['root_blood','root_decay','root_vitality','root_aegis','root_fury','root_magic'])assert.equal(await atlas.locator('[data-id="'+id+'"]').count(),1,'Missing '+id);
+  for(const id of ['root_blood','root_decay','root_radiance','root_aegis','root_fury','root_arcane'])assert.equal(await atlas.locator('[data-id="'+id+'"]').count(),1,'Missing '+id);
   await atlas.locator('#families button').filter({hasText:'Blood'}).first().click();
   await atlas.locator('[data-id="root_blood"]').evaluate(n=>n.dispatchEvent(new MouseEvent('click',{bubbles:true})));
   assert.equal(await atlas.locator('aside #name').innerText(),await atlas.locator('[data-id="root_blood"]').getAttribute('aria-label'),'The inspected node must match the selected graph ID');

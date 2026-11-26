@@ -4,9 +4,9 @@ const fs=require('node:fs'),{performance}=require('node:perf_hooks');
 const {run}=require('./v012-affinity-combat-sim.cjs');
 const levels=process.env.WANDERER_COVERAGE_LEVELS?process.env.WANDERER_COVERAGE_LEVELS.split(',').map(Number).filter(n=>[1,10,50,100,200].includes(n)):[10,50,100,200];
 const plans=[
- {name:'Blood + Decay',family:'blood',hybrids:['plague_rupture','carrion_detonation'],utility:'Vitality'},
- {name:'Vitality + Aegis',family:'vitality',hybrids:['sanctuary','guardians_oath'],utility:'Fury'},
- {name:'Fury + Magic',family:'fury',hybrids:['spellblade','spell_surge'],utility:'Vitality'}
+ {name:'Blood + Decay',family:'blood',hybrids:['plague_rupture','carrion_detonation'],utility:'Radiance'},
+ {name:'Radiance + Aegis',family:'radiance',hybrids:['sanctuary','guardians_oath'],utility:'Fury'},
+ {name:'Fury + Magic',family:'fury',hybrids:['spellblade','spell_surge'],utility:'Radiance'}
 ];
 const weapons=['Sword','Mace','Bow','Daggers','Two-Handed','Staff','Wand'];
 const rarities=['Rare','Epic'];

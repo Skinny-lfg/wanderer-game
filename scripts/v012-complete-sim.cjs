@@ -1,7 +1,7 @@
 // Bounded gameplay matrix using the integrated HTML engine and real economy actions.
 // Synthetic RAM profiles only. No Firebase, browser/account storage or prototype formulas.
 const fs=require('node:fs'),crypto=require('node:crypto'),create=require('../tests/v012-economy-harness.cjs');
-const rows=[];const priorities={blood:['bleeding_edge','deep_cuts','blood_drinker','executioner'],decay:['toxic_touch','virulent_rot','wither','blight'],vitality:['renewal','strong_heart','second_breath','life_bloom'],aegis:['fortified','iron_skin','barrier_pulse','guarded_block'],fury:['quick_hands','precision','double_strike','brutal_crit'],magic:['overcharge','arcane_focus','mana_spring','efficient_cast']};
+const rows=[];const priorities={blood:['bleeding_edge','deep_cuts','blood_drinker','executioner'],decay:['toxic_touch','virulent_rot','wither','blight'],radiance:['renewal','strong_heart','second_breath','life_bloom'],aegis:['fortified','iron_skin','barrier_pulse','guarded_block'],fury:['quick_hands','precision','double_strike','brutal_crit'],arcane:['overcharge','arcane_focus','mana_spring','efficient_cast']};
 function run(E,ratio,family,seed,weapon,fortune=false,variant='current'){
  let buildcraft=fs.readFileSync('combat/v012-buildcraft.js','utf8');
  if(variant==='static25')buildcraft=buildcraft.replace('power*.32*','power*.25*');
@@ -10,11 +10,11 @@ function run(E,ratio,family,seed,weapon,fortune=false,variant='current'){
  const a=create(seed,undefined,{'combat/v012-buildcraft.js':buildcraft}),s=a.state(),g=a.controller().state,tier=Math.max(1,Math.min(200,Math.round(E*ratio))),armor=['Cloth','Leather','Plate'][seed%3];a.setup(tier,weapon,seed%3===0?'Epic':'Rare');
  for(const slot of ['helm','armor','gloves','boots','belt'])s.equip[slot]=a.makeItem(tier,slot,null,'loot',armor,seed%3===0?'Epic':'Rare');
  if(seed%4===0)s.equip.weapon=a.makeItem(tier,'weapon',null,'loot',weapon,'Legendary');
- if(E>1){s.runes=['vitality','warding',weapon==='Staff'||weapon==='Wand'?'wisdom':'might'].map(f=>a.makeRune(f,E-1));s.runeSlots=s.runes.map(r=>r.id);}
+ if(E>1){s.runes=['radiance','warding',weapon==='Staff'||weapon==='Wand'?'wisdom':'might'].map(f=>a.makeRune(f,E-1));s.runeSlots=s.runes.map(r=>r.id);}
  g.unlocked=E;s.gold=400+E*10;const initialGold=s.gold,initialFragments=s.fragments;let potionCost=0;
  s.apothecary=a.potions.shop(E);for(const kind of ['health','mana']){const item=s.apothecary.stock.find(p=>p.kind===kind);if(item&&s.gold>=item.price){potionCost+=item.price;a.potions.buy(item.id);a.potions.select(kind);}}
  if(fortune){s.consumables??={};s.consumables.fortune=1;a.potions.select('fortune');}
- a.start(E);a.initial(family);if(family==='magic')a.element(['fire','frost','lightning'][seed%3]);
+ a.start(E);a.initial(family);if(family==='arcane')a.element(['fire','frost','lightning'][seed%3]);
  let ticks=0,events=0,timeout=false,picks=[],lootObserved=0,lastWave=0,lateWaves=0;
  for(let action=0;action<800;action++){
   if(['failed','finished'].includes(g.stage))break;
@@ -39,7 +39,7 @@ function run(E,ratio,family,seed,weapon,fortune=false,variant='current'){
    lootObserved=Math.max(lootObserved,a.results().earned.length);while(a.bag.items().length>=12)a.bag.discard(a.bag.items().at(-1).id);
    for(const item of [...a.bag.items()]){if(item.slot==='weapon'&&item.subtype!==weapon)continue;if(item.slot==='offhand'&&['Bow','Staff','Two-Handed'].includes(weapon))continue;const equip={...s.equip,[item.slot]:item};if(a.baseStats(equip).power>a.baseStats().power)a.equip(item.id);}
    const v=a.vitals();for(const [i,p]of (a.events.run().potions||[]).entries())if(!p.used&&(p.kind==='health'&&v.hp<v.maxhp*.65||p.kind==='mana'&&v.mp<v.maxmp*.5))a.potions.use(i);
-   const fav=[family,'vitality','aegis','magic','blood','decay','fury'],offers=[...g.offers].sort((x,y)=>fav.indexOf(x.family)-fav.indexOf(y.family)||x.waves-y.waves);const selected=g.planeIndex===1?offers.find(p=>p.family===family):offers[0];a.select(selected.id);if(a.enter()===false){if(a.bag.items().length>=12){a.bag.discard(a.bag.items().at(-1).id);if(!a.enter())throw Error('Realm entry remained blocked after freeing Bag space');}else if(a.draft()?.kind==='reward'||a.draft()?.step==='element')continue;else throw Error('Realm entry was rejected');}continue;
+   const fav=[family,'radiance','aegis','arcane','blood','decay','fury'],offers=[...g.offers].sort((x,y)=>fav.indexOf(x.family)-fav.indexOf(y.family)||x.waves-y.waves);const selected=g.planeIndex===1?offers.find(p=>p.family===family):offers[0];a.select(selected.id);if(a.enter()===false){if(a.bag.items().length>=12){a.bag.discard(a.bag.items().at(-1).id);if(!a.enter())throw Error('Realm entry remained blocked after freeing Bag space');}else if(a.draft()?.kind==='reward'||a.draft()?.step==='element')continue;else throw Error('Realm entry was rejected');}continue;
   }
   throw Error('Unresolved simulation state '+g.stage);
  }
@@ -50,8 +50,8 @@ function run(E,ratio,family,seed,weapon,fortune=false,variant='current'){
 const weapons=['Sword','Mace','Bow','Daggers','Two-Handed','Staff','Wand'];let seed=0;
 for(const E of [1,2,10,50,100,200])for(const ratio of [.75,1,1.25])for(const family of Object.keys(priorities)){seed++;rows.push(run(E,ratio,family,seed,weapons[seed%7]));}
 // Paired Fortune cases share seed/gear/strategy; subsequent RNG may diverge after a new drop.
-for(const E of [1,50,200])for(const fortune of [false,true])rows.push(run(E,1,'magic',900+E,'Staff',fortune));
-for(const E of [50,200])for(const weapon of ['Staff','Wand','Sword'])for(const variant of ['current','static25','static40','legacy65'])rows.push(run(E,1,'magic',1203+E,weapon,false,variant));
+for(const E of [1,50,200])for(const fortune of [false,true])rows.push(run(E,1,'arcane',900+E,'Staff',fortune));
+for(const E of [50,200])for(const weapon of ['Staff','Wand','Sword'])for(const variant of ['current','static25','static40','legacy65'])rows.push(run(E,1,'arcane',1203+E,weapon,false,variant));
 for(const E of [50,200])for(const weapon of ['Sword','Staff','Wand'])for(const family of Object.keys(priorities))rows.push({...run(E,1,family,2203+E,weapon),group:'matched-affinity'});
 const result={engine:'index.html native updateFight, weaponAttack, rewards, events and potion transactions',htmlSha256:crypto.createHash('sha256').update(fs.readFileSync('index.html')).digest('hex'),cases:rows.length,timeouts:rows.filter(r=>r.timeout).length,rows};
 fs.writeFileSync(process.argv[2]||'/tmp/v012-complete-sim.json',JSON.stringify(result,null,2));

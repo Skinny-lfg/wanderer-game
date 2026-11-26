@@ -11,7 +11,7 @@ const sha=x=>crypto.createHash('sha256').update(typeof x==='string'?x:JSON.strin
 const unique=a=>[...new Set(a)];
 const NODES=new Map(T.NODES.map(n=>[n.id,n]));
 const E_BY_BUDGET=Object.freeze({12:5,24:15,36:35,60:70});
-const REALMS=['blood','decay','vitality','aegis','fury','magic'];
+const REALMS=['blood','decay','radiance','aegis','fury','arcane'];
 const WEAPONS=['Sword','Daggers','Mace','Wand','Staff','Bow','Two-Handed'];
 const ARMORS=['Cloth','Leather','Plate'];
 const OFFHANDS=['Shield','Orb','Tome','Charm','Off-Hand Dagger'];

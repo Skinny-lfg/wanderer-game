@@ -14,7 +14,7 @@ inject("ports.setDirectEnemyDamage(r,base*(s.main.subtype==='Sword'?.65:.45),'�
 inject("if(gained>0)ports.addLog('🔮 Orb Ward +'+Math.round(gained)+' Barrier','good');","if(gained>0){ports.phase6Metric(r,'e33OrbWards',1);ports.phase6Metric(r,'e33OrbBarrier',gained);ports.addLog('🔮 Orb Ward +'+Math.round(gained)+' Barrier','good');}");
 inject("ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),applied));e.hp-=applied;","ports.phase6Metric(r,'e33DotDamage',Math.min(Math.max(0,e.hp),applied));if(bleeding)ports.phase6Metric(r,'e33BleedTicks',1);ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),applied));e.hp-=applied;");
 inject("ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,enemy.hp),damage));ports.phase6Proc(r,label);enemy.hp-=damage;","ports.phase6Metric(r,'e33DirectProcDamage',Math.min(Math.max(0,enemy.hp),damage));ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,enemy.hp),damage));ports.phase6Proc(r,label);enemy.hp-=damage;");
-const cases=[['Dual Daggers','Daggers','Leather','Off-Hand Dagger','blood'],['Single Dagger','Daggers','Leather',false,'blood'],['Wand + Orb','Wand','Cloth','Orb','magic'],['Wand only','Wand','Cloth',false,'magic'],['Sword + Shield','Sword','Plate','Shield','aegis'],['Sword only','Sword','Plate',false,'aegis']];
+const cases=[['Dual Daggers','Daggers','Leather','Off-Hand Dagger','blood'],['Single Dagger','Daggers','Leather',false,'blood'],['Wand + Orb','Wand','Cloth','Orb','arcane'],['Wand only','Wand','Cloth',false,'arcane'],['Sword + Shield','Sword','Plate','Shield','aegis'],['Sword only','Sword','Plate',false,'aegis']];
 const rows=[];
 for(const [build,weapon,armorType,offhandType,family]of cases)for(let i=0;i<30;i++){
  const seed=991100+i*10007;

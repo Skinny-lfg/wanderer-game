@@ -20,10 +20,10 @@ test('Every adaptive talent costs six points, and wrong mode cannot purchase it'
  }
 });
 test('Attunement switch refunds dependent shared nodes without an alternative, preserves independently owned routes',()=>{
- let p=buy(['arcane_nova']);p=T.allocate(p,'magic_side_0_2');assert(p);assert(T.valid(p));
- let next=T.selectElement(p,'fire');assert(next);assert(!next.nodes.includes('magic_side_0_2'));assert(!next.nodes.includes('arcane_nova'));assert(next.nodes.includes('magic_side_0_1'));
- let q=buy(['arcane_nova','magic_bridge_0_2']);q=T.allocate(q,'magic_side_0_2');assert(q);
- next=T.selectElement(q,'fire');assert(next);assert(T.valid(next));assert.equal(next.xp,q.xp);assert(next.nodes.includes('magic_side_0_2'));
+ let p=buy(['arcane_nova']);p=T.allocate(p,'arcane_side_0_2');assert(p);assert(T.valid(p));
+ let next=T.selectElement(p,'fire');assert(next);assert(!next.nodes.includes('arcane_side_0_2'));assert(!next.nodes.includes('arcane_nova'));assert(next.nodes.includes('arcane_side_0_1'));
+ let q=buy(['arcane_nova','arcane_bridge_0_2']);q=T.allocate(q,'arcane_side_0_2');assert(q);
+ next=T.selectElement(q,'fire');assert(next);assert(T.valid(next));assert.equal(next.xp,q.xp);assert(next.nodes.includes('arcane_side_0_2'));
 });
 test('Arcane Nova spends actual Infusion charges, hits at most two active targets, never combines with Bloom',()=>{
  const h=fixture('arcane',['arcane_nova']);B.activateInfusion(h.b,0);const amount=B.onInfusionHit(h.b,h.c);

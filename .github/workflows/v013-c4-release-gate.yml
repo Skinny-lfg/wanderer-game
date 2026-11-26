@@ -72,7 +72,7 @@ jobs:
             reports/v013-stage2-affinity-comparison.md
           if-no-files-found: warn
           retention-days: 30
-      - name: Stage 3 native Vitality and Decay historical comparison (uncapped Barrier is planned drift)
+      - name: Stage 3 native Radiance and Decay historical comparison (uncapped Barrier is planned drift)
         run: npm run simulate:v013:affinities:stage3
       - name: Stage 3 native affinity comparison evidence
         if: always()

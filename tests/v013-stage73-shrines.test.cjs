@@ -65,7 +65,7 @@ test('Stage 7.3 Shrine skip cannot be reclaimed and restores from the replayable
 });
 test('Stage 7.3 forged room placement, claimed Boon or unresolved offer cannot be restored',()=>{
  const {c,card,d,g}=directShrine(7410);
- assert(c.visitRoom(card.boonShrines[0],['magic']));
+ assert(c.visitRoom(card.boonShrines[0],['arcane']));
  const saved=clone(g);
  const forged=clone(saved);forged.dungeon.boonOffer.room=card.boonShrines[1];
  assert.throws(()=>c.restore(forged),/Invalid/);

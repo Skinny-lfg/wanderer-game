@@ -9,11 +9,11 @@ function buy(p,id){
 }
 test('Magic affinity alone grants candidate infusion without free elemental choice',()=>{
  const empty={...T.create(),xp:10000};assert.equal(P.attunement(empty),null);
- const magic=buy(empty,'affinity_magic');assert.equal(P.attunement(magic).kind,'infusion');
+ const magic=buy(empty,'affinity_arcane');assert.equal(P.attunement(magic).kind,'infusion');
  assert.equal(P.choose(magic,'fire'),null);
 });
 test('Arcane choice offers immediate bonus over basic affinity in proposed spec',()=>{
- const magic=buy({...T.create(),xp:10000},'affinity_magic'),choice=buy(magic,'element_choice');
+ const magic=buy({...T.create(),xp:10000},'affinity_arcane'),choice=buy(magic,'element_choice');
  const base=P.attunement(magic),advanced=P.attunement(choice);
  assert.equal(advanced.kind,'enhanced_infusion');assert(advanced.manaCost<base.manaCost);
  assert(advanced.bonusSpellPowerFractionAdd>0);assert.equal(choice.nodes.length,magic.nodes.length+1);
@@ -31,7 +31,7 @@ test('All four choices produce distinct immediate candidate benefits with valid 
 });
 test('Selecting another mode refunds only old elemental skills, retaining shared Magic nodes',()=>{
  let progress=buy({...T.create(),xp:10000},'arcane_resonance');
- const shared=progress.nodes.filter(x=>x.startsWith('magic_side_')),oldCount=progress.nodes.length;
+ const shared=progress.nodes.filter(x=>x.startsWith('arcane_side_')),oldCount=progress.nodes.length;
  progress=P.choose(progress,'fire');
  assert(progress&&T.valid(progress));assert(!progress.nodes.includes('arcane_resonance'));
  assert(shared.every(x=>progress.nodes.includes(x)));assert.equal(progress.nodes.length,oldCount-2);

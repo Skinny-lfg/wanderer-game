@@ -26,7 +26,7 @@ function fullTalentBuild(row){
  if(!T.valid(talents))throw Error('Invalid native v15 starting profile '+id);
  const graph=new Map(T.NODES.map(n=>[n.id,n])),active=[...new Set([
   plan.primary,plan.secondary,plan.third].filter(Boolean))];
- const survival=[...new Set([...active,'vitality','aegis'])];
+ const survival=[...new Set([...active,'radiance','aegis'])];
  const all=H.FAMILIES;
  // The native strategy planner can stop well below cap. Complete the remaining
  // legal choices using native T.allocate, not fabricated XP or direct node edits.

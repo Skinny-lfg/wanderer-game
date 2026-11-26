@@ -25,7 +25,7 @@ test('C7: no classic affinity picker, Realm passive draft or obsolete controller
  for(const [file,content] of [['index.html',html],['runtime',runtime],['persistence',persistence]]){
   assert(!content.includes('phase1Draft'),'Old draft state remains in '+file);
  }
- for(const old of ['data-phase2-initial','data-phase2-passive','data-popup-passive','data-initial-magic-element','data-passive-exhausted','phase3InitialAffinityDialog']){
+ for(const old of ['data-phase2-initial','data-phase2-passive','data-popup-passive','data-initial-arcane-element','data-passive-exhausted','phase3InitialAffinityDialog']){
   assert(!html.includes(old),'Old hidden element still rendered: '+old);
  }
  assert.match(runtime,/const plane=ports\.phase1Controller\.enter\(\)/);

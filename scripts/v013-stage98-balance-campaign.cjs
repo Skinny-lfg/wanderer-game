@@ -13,7 +13,7 @@ const round=(x,d=2)=>Number(x.toFixed(d));
 const mean=a=>a.length?round(a.reduce((x,y)=>x+y,0)/a.length):null;
 function parseArgs(args=process.argv.slice(2)){
  const opts={mode:null,gear:'starter',eliteType:null,target:30,seedStart:15000,scan:3600,
-  affinity:'blood',seeds:30,builds:['blood-fury','aegis-vitality','magic-decay'],
+  affinity:'blood',seeds:30,builds:['blood-fury','aegis-radiance','arcane-decay'],
   risks:[0,1,2],groupSizes:[3,12],profiles:['cautious','balanced'],
   maxAttempts:6,output:null,inputs:null};
  for(const arg of args){

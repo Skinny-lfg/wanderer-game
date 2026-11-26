@@ -3,7 +3,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),fs=requir
 require('../combat/v013-expedition-foundation.js');
 require('../online/v013-enemy-abilities.js');
 const A=globalThis.WandererV013EnemyAbilities;
-const FAMILY=['blood','decay','vitality','aegis','fury','magic'];
+const FAMILY=['blood','decay','radiance','aegis','fury','arcane'];
 function mob(role,name=role){return {name,role,hp:100,maxhp:100,barrier:0,atk:25,attackEvery:2,groupClock:0};}
 function run(...enemies){return {enemies,enemy:enemies[0],status:'fight',phase1:true,combatSeconds:0,phase1ClockBase:0,hp:100,maxhp:100,mp:60,maxmp:60,playerDebuffUntil:0,playerHealingDebuffUntil:0};}
 function advance(run,enemy,now,absolute=now){run.combatSeconds=now;return A.tick(run,absolute).filter(e=>e.enemy===enemy);}
@@ -64,9 +64,9 @@ test('Stun interrupts an enemy cast, postpones it and preserves manual counterpl
  assert.equal(advance(r,e,delayed,delayed)[0].type,'prepare');
  assert.equal(r.playerDebuffUntil,0,'interrupted cast must not apply its debuff');
 });
-test('Affinity Tank support stays capped, Vitality healing respects max HP',()=>{
+test('Affinity Tank support stays capped, Radiance healing respects max HP',()=>{
  const tank=mob('tank'),caster=mob('caster');caster.hp=54;
- const r=run(tank,caster);A.attach(r.enemies,'vitality');
+ const r=run(tank,caster);A.attach(r.enemies,'radiance');
  advance(r,tank,tank.stage81.nextAt);
  advance(r,tank,tank.stage81.castingUntil+.01);
  assert(caster.hp>54&&caster.hp<=60,'Heartwood Mend is small and limited');
@@ -145,16 +145,16 @@ test('Native Expedition role abilities activate without changing base boss or El
 });
 
 test('Reserve normal enemies begin cooldown after entering an open arena slot',()=>{
- const caster=mob('caster'),r=run(caster);A.attach([caster],'magic',0);
+ const caster=mob('caster'),r=run(caster);A.attach([caster],'arcane',0);
  assert.equal(caster.stage81.nextAt,A.TIMINGS.caster.first);
  A.onEnter(caster,18);
  assert(caster.stage81.nextAt>=18+A.TIMINGS.caster.first);
  assert.equal(advance(r,caster,18).length,0,'no instant reinforcement spell');
  assert.equal(advance(r,caster,caster.stage81.nextAt).at(0)?.type,'prepare');
 });
-test('Vitality mending chooses the most wounded ally, including the caster if needed',()=>{
+test('Radiance mending chooses the most wounded ally, including the caster if needed',()=>{
  const tank=mob('tank'),caster=mob('caster'),r=run(tank,caster);
- tank.hp=20;caster.hp=95;A.attach(r.enemies,'vitality');
+ tank.hp=20;caster.hp=95;A.attach(r.enemies,'radiance');
  advance(r,tank,tank.stage81.nextAt);
  const healed=advance(r,tank,tank.stage81.castingUntil+.01)[0];
  assert.equal(healed.target,tank);assert(tank.hp>20);
@@ -166,7 +166,7 @@ test('Minions protected by Aegis show Guarding despite never casting themselves'
  assert.equal(A.status(minion,6),null);
 });
 test('ward grants reach their own strength without stripping stronger Barrier',()=>{
- for(const [family,role,cap] of [['aegis','tank',12],['blood','tank',9],['decay','tank',9],['magic','tank',10],['aegis','caster',10]]){
+ for(const [family,role,cap] of [['aegis','tank',12],['blood','tank',9],['decay','tank',9],['arcane','tank',10],['aegis','caster',10]]){
   for(const before of [cap-4,cap,cap+7]){
    const caster=mob(role),ally=mob('minion');ally.barrier=before;
    A.attach([caster,ally],family);

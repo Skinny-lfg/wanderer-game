@@ -20,19 +20,19 @@ const RUNES=globalThis.WandererV012Runes;
 require('../online/v013-expedition-contracts.js');
 const K=globalThis.WandererV013ExpeditionContracts;
 const PROFILES=Object.freeze({
- cautious:{name:'Cautious',risk:0,targets:['strong_heart','guarded_block','renewal'],families:['aegis','vitality'],preparedTargets:['last_bastion'],armor:'Plate',weapons:['Mace','Sword'],style:'mixed',healAt:.72,retreatAt:.5,target:'mechanics',shop:true},
+ cautious:{name:'Cautious',risk:0,targets:['strong_heart','guarded_block','renewal'],families:['aegis','radiance'],preparedTargets:['last_bastion'],armor:'Plate',weapons:['Mace','Sword'],style:'mixed',healAt:.72,retreatAt:.5,target:'mechanics',shop:true},
  balanced:{name:'Balanced',risk:0,targets:['bleeding_edge','deep_cuts','strong_heart'],families:['blood','aegis'],preparedTargets:['red_guillotine'],armor:'Plate',weapons:['Sword','Mace'],style:'mixed',healAt:.53,retreatAt:.34,target:'mechanics',shop:true},
  daring:{name:'Daring',risk:1,targets:['quick_hands','double_strike','bleeding_edge'],families:['fury','blood'],preparedTargets:['red_guillotine'],armor:'Leather',weapons:['Daggers','Bow'],style:'mixed',healAt:.35,retreatAt:.16,target:'focus',shop:true},
- 'magic-fire':{name:'Fire Caster',risk:0,targets:['element_choice','arcane_focus','mana_spring','kindling','fire_spread'],families:['magic'],element:'fire',armor:'Cloth',weapons:['Wand','Staff'],style:'focused',preparedTargets:[],healAt:.57,retreatAt:.36,target:'mechanics',shop:true},
- 'magic-frost':{name:'Frost Caster',risk:0,targets:['element_choice','arcane_focus','mana_spring','deep_winter','frost_spread'],families:['magic'],element:'frost',armor:'Cloth',weapons:['Wand','Staff'],style:'focused',preparedTargets:[],healAt:.62,retreatAt:.41,target:'mechanics',shop:true},
- 'magic-lightning':{name:'Lightning Caster',risk:0,targets:['element_choice','arcane_focus','mana_spring','overcharge','storm_mastery'],families:['magic'],element:'lightning',armor:'Cloth',weapons:['Staff','Wand'],style:'focused',preparedTargets:[],healAt:.54,retreatAt:.34,target:'mechanics',shop:true},
- 'magic-arcane':{name:'Arcane Caster',risk:0,targets:['element_choice','arcane_focus','mana_spring','arcane_resonance','arcane_surge','arcane_mastery'],families:['magic'],element:'arcane',armor:'Cloth',weapons:['Wand','Staff'],style:'focused',preparedTargets:[],healAt:.58,retreatAt:.37,target:'mechanics',shop:true},
- 'magic-wand':{name:'Wand Specialist (Fire)',risk:0,targets:['element_choice','arcane_focus','mana_spring','kindling','fire_spread'],families:['magic'],element:'fire',armor:'Cloth',weapons:['Wand'],style:'focused',preparedTargets:[],healAt:.57,retreatAt:.36,target:'mechanics',shop:true},
- 'magic-staff':{name:'Staff Specialist (Fire)',risk:0,targets:['element_choice','arcane_focus','mana_spring','kindling','fire_spread'],families:['magic'],element:'fire',armor:'Cloth',weapons:['Staff'],style:'focused',preparedTargets:[],healAt:.57,retreatAt:.36,target:'mechanics',shop:true},
- 'plate-warden':{name:'Plate Warden',risk:0,targets:['guarded_block','barrier_pulse','steadfast_guard','strong_heart'],families:['aegis','vitality'],armor:'Plate',weapons:['Mace','Sword'],style:'focused',preparedTargets:['last_bastion'],healAt:.68,retreatAt:.46,target:'mechanics',shop:true},
+ 'arcane-fire':{name:'Fire Caster',risk:0,targets:['element_choice','arcane_focus','mana_spring','kindling','fire_spread'],families:['arcane'],element:'fire',armor:'Cloth',weapons:['Wand','Staff'],style:'focused',preparedTargets:[],healAt:.57,retreatAt:.36,target:'mechanics',shop:true},
+ 'arcane-frost':{name:'Frost Caster',risk:0,targets:['element_choice','arcane_focus','mana_spring','deep_winter','frost_spread'],families:['arcane'],element:'frost',armor:'Cloth',weapons:['Wand','Staff'],style:'focused',preparedTargets:[],healAt:.62,retreatAt:.41,target:'mechanics',shop:true},
+ 'arcane-lightning':{name:'Lightning Caster',risk:0,targets:['element_choice','arcane_focus','mana_spring','overcharge','storm_mastery'],families:['arcane'],element:'lightning',armor:'Cloth',weapons:['Staff','Wand'],style:'focused',preparedTargets:[],healAt:.54,retreatAt:.34,target:'mechanics',shop:true},
+ 'arcane-arcane':{name:'Arcane Caster',risk:0,targets:['element_choice','arcane_focus','mana_spring','arcane_resonance','arcane_surge','arcane_mastery'],families:['arcane'],element:'arcane',armor:'Cloth',weapons:['Wand','Staff'],style:'focused',preparedTargets:[],healAt:.58,retreatAt:.37,target:'mechanics',shop:true},
+ 'arcane-wand':{name:'Wand Specialist (Fire)',risk:0,targets:['element_choice','arcane_focus','mana_spring','kindling','fire_spread'],families:['arcane'],element:'fire',armor:'Cloth',weapons:['Wand'],style:'focused',preparedTargets:[],healAt:.57,retreatAt:.36,target:'mechanics',shop:true},
+ 'arcane-staff':{name:'Staff Specialist (Fire)',risk:0,targets:['element_choice','arcane_focus','mana_spring','kindling','fire_spread'],families:['arcane'],element:'fire',armor:'Cloth',weapons:['Staff'],style:'focused',preparedTargets:[],healAt:.57,retreatAt:.36,target:'mechanics',shop:true},
+ 'plate-warden':{name:'Plate Warden',risk:0,targets:['guarded_block','barrier_pulse','steadfast_guard','strong_heart'],families:['aegis','radiance'],armor:'Plate',weapons:['Mace','Sword'],style:'focused',preparedTargets:['last_bastion'],healAt:.68,retreatAt:.46,target:'mechanics',shop:true},
  'leather-duelist':{name:'Leather Duelist',risk:1,targets:['quick_hands','bleeding_edge','blood_drinker','precision','double_strike','blood_harvest','crimson_rush'],families:['fury','blood'],armor:'Leather',weapons:['Daggers','Bow'],style:'mixed',preparedTargets:['red_guillotine'],healAt:.42,retreatAt:.25,target:'focus',shop:true},
- 'cloth-battlemage':{name:'Cloth Battlemage',risk:0,targets:['element_choice','arcane_focus','mana_spring','runic_shield','guarded_block','arcane_bastion'],families:['magic','aegis'],element:'fire',armor:'Cloth',weapons:['Wand','Staff'],style:'mixed',preparedTargets:['arcane_bastion'],healAt:.61,retreatAt:.39,target:'mechanics',shop:true},
- 'hexblade-hybrid':{name:'Hexblade Hybrid',risk:1,targets:['toxic_touch','arcane_focus','affinity_aegis','mana_spring','guarded_block','arcane_resonance','hex_bolt','barrier_pulse','arcane_surge','arcane_mastery'],families:['decay','magic'],armor:'Leather',weapons:['Sword','Daggers','Wand'],offhands:['Daggers','Orb','Tome'],style:'mixed',preparedTargets:['grave_bloom'],healAt:.5,retreatAt:.29,target:'mechanics',shop:true},
+ 'cloth-battlemage':{name:'Cloth Battlemage',risk:0,targets:['element_choice','arcane_focus','mana_spring','runic_shield','guarded_block','arcane_bastion'],families:['arcane','aegis'],element:'fire',armor:'Cloth',weapons:['Wand','Staff'],style:'mixed',preparedTargets:['arcane_bastion'],healAt:.61,retreatAt:.39,target:'mechanics',shop:true},
+ 'hexblade-hybrid':{name:'Hexblade Hybrid',risk:1,targets:['toxic_touch','arcane_focus','affinity_aegis','mana_spring','guarded_block','arcane_resonance','hex_bolt','barrier_pulse','arcane_surge','arcane_mastery'],families:['decay','arcane'],armor:'Leather',weapons:['Sword','Daggers','Wand'],offhands:['Daggers','Orb','Tome'],style:'mixed',preparedTargets:['grave_bloom'],healAt:.5,retreatAt:.29,target:'mechanics',shop:true},
  // New catalog-aware agents exist alongside old frozen Stage 6.5 profiles.
  // Their point progression and gear are strictly earned, never injected.
  ...Object.fromEntries(Object.entries(PLANNER.BUILDS).map(([id,build])=>[
@@ -40,7 +40,7 @@ const PROFILES=Object.freeze({
    targets:[],families:[build.primary,...[build.secondary,build.third].filter(Boolean)],
    preparedTargets:[...(build.milestones||[])],element:build.element||undefined,
    armor:build.armor,weapons:[...build.weapons],style:build.mix?'mixed':'focused',
-   healAt:(build.primary==='aegis'||build.primary==='vitality')?0.69:0.59,retreatAt:.38,
+   healAt:(build.primary==='aegis'||build.primary==='radiance')?0.69:0.59,retreatAt:.38,
    target:build.primary==='fury'?'focus':'mechanics',shop:true})
  ]))
 });
@@ -48,11 +48,11 @@ const PROFILES=Object.freeze({
 // Uses the game's free full reset; it never creates XP or talent points.
 const PIVOTS=Object.freeze({
  cautious:{targets:['quick_hands','bleeding_edge','deep_cuts'],families:['fury','blood'],preparedTargets:['red_guillotine']},
- balanced:{targets:['strong_heart','guarded_block','renewal'],families:['vitality','aegis'],preparedTargets:['last_bastion']},
- daring:{targets:['guarded_block','barrier_pulse','strong_heart'],families:['aegis','vitality'],preparedTargets:['last_bastion']},
- 'magic-fire':{targets:['element_choice','arcane_focus','mana_spring','deep_winter','frost_spread'],element:'frost'},
- 'magic-frost':{targets:['element_choice','arcane_focus','mana_spring','overcharge','storm_mastery'],element:'lightning'},
- 'magic-lightning':{targets:['element_choice','arcane_focus','mana_spring','kindling','fire_spread'],element:'fire'}
+ balanced:{targets:['strong_heart','guarded_block','renewal'],families:['radiance','aegis'],preparedTargets:['last_bastion']},
+ daring:{targets:['guarded_block','barrier_pulse','strong_heart'],families:['aegis','radiance'],preparedTargets:['last_bastion']},
+ 'arcane-fire':{targets:['element_choice','arcane_focus','mana_spring','deep_winter','frost_spread'],element:'frost'},
+ 'arcane-frost':{targets:['element_choice','arcane_focus','mana_spring','overcharge','storm_mastery'],element:'lightning'},
+ 'arcane-lightning':{targets:['element_choice','arcane_focus','mana_spring','kindling','fire_spread'],element:'fire'}
 });
 function pivotProfile(id){return {...PROFILES[id],...PIVOTS[id],variantId:id+'-pivot'};}
 const DEFAULTS=Object.freeze({seeds:[9101,9201],profiles:['cautious','balanced'],maxLevel:8,maxAttempts:6,maxTotalAttempts:null,tickLimit:4500,maxRooms:34,output:'reports/v013-stage93-natural-e1-e8.json'});
@@ -98,7 +98,7 @@ function synergyGearBonus(item,profile,slot){
  const c=profile.synergyContext||{},stats=c.stats||{},owned=new Set(c.nodes||[]);
  const families=profile.families||[],has=f=>owned.has('affinity_'+f)||families.includes(f);
  const weapon=slot==='weapon'?item.subtype:c.weapon,off=slot==='offhand'?item.subtype:c.offhand;
- const caster=['Staff','Wand'].includes(weapon),rot=has('decay'),magic=has('magic'),aegis=has('aegis'),blood=has('blood'),fury=has('fury'),vitality=has('vitality');
+ const caster=['Staff','Wand'].includes(weapon),rot=has('decay'),magic=has('arcane'),aegis=has('aegis'),blood=has('blood'),fury=has('fury'),radiance=has('radiance');
  const spellUser=caster||rot||magic||aegis||off==='Orb',manaUser=caster||rot||magic;
  const hasGuard=off==='Shield'||stats.blockChance>0||aegis;
  const critSynergy=blood||fury||owned.has('sanguine_fury')||owned.has('brutal_crit')||owned.has('adrenaline');
@@ -114,13 +114,13 @@ function synergyGearBonus(item,profile,slot){
  if(slot==='offhand'&&off==='Shield'&&aegis)value+=5;
  if(slot==='offhand'&&off==='Tome'&&manaUser)value+=4;
  if(slot==='offhand'&&off==='Orb'&&spellUser)value+=4;
- if(slot==='offhand'&&off==='Charm'&&(blood||vitality))value+=5;
+ if(slot==='offhand'&&off==='Charm'&&(blood||radiance))value+=5;
  if(slot==='offhand'&&profile.offhands?.length)value+=profile.offhands.includes(off)?15:-8;
  // Signature value is provisional and conditional, not rarity-only or a claimed DPS estimate.
  const signature={
   'crimson-fang':blood?14:7,'chalice-hollow-king':blood?12:0,
   gravewake:rot?14:5,'eye-of-morrow':rot?13:0,
-  'graft':vitality?14:8,'heartroot-carapace':vitality?12:7,
+  'graft':radiance?14:8,'heartroot-carapace':radiance?12:7,
   oathwall:hasGuard?14:0,'veil-thousand-seals':aegis?12:7,
   kingsbreaker:fury?14:9,'tempest-talon':critSynergy?14:4,
   astrafall:caster||magic?14:0,voidglass:caster||magic?14:0
@@ -140,8 +140,8 @@ function gearScore(item,profile,targetSlot=item?.slot){
  const offDagger=slot==='offhand'&&['Daggers','Off-Hand Dagger'].includes(item.subtype);
  const daggerFactor=offDagger?.5:1;
  const rarity={Common:0,Uncommon:1,Rare:2,Epic:3,Legendary:4};
- const magic=profile.families.includes('magic'),decay=profile.families.includes('decay'),
-  aegis=profile.families.includes('aegis'),vitality=profile.families.includes('vitality'),
+ const magic=profile.families.includes('arcane'),decay=profile.families.includes('decay'),
+  aegis=profile.families.includes('aegis'),radiance=profile.families.includes('radiance'),
   agile=profile.armor==='Leather',tank=profile.armor==='Plate';
  const manaUser=magic||decay||(profile.weapons||[]).some(w=>w==='Wand'||w==='Staff');
  const barrierUser=aegis||item.subtype==='Orb';
@@ -153,7 +153,7 @@ function gearScore(item,profile,targetSlot=item?.slot){
    +(profile.offhands?.includes('Orb')?3:0),
   Tome:(manaUser?12+(magic?5:0)+(item.v013Trait==='echoing_recall'?5:0):-10)
    +(profile.offhands?.includes('Tome')?3:0),
-  Charm:11+(vitality?6:0)+(item.v013Trait==='heartbloom'?4:0),
+  Charm:11+(radiance?6:0)+(item.v013Trait==='heartbloom'?4:0),
   Daggers:profile.offhands?.includes('Daggers')?6:0,
   'Off-Hand Dagger':profile.offhands?.includes('Daggers')?6:0
  }[item.subtype]||0;
@@ -254,7 +254,7 @@ function spendEarnedTalents(a,profile){
   if(!changed){
    const legal=T.NODES.filter(n=>!progress.nodes.includes(n.id)&&(!n.family||profile.families.includes(n.family))&&
     (!n.element||n.element===(progress.element||'arcane'))&&T.allocate(progress,n.id));
-   if(profile.synergyAudit){const focus={blood:'bleed',fury:'speed',magic:'spell',decay:'rot',aegis:'defense',vitality:'defense'}[profile.families[0]],plan={primary:profile.families[0],secondary:profile.families[1],focus,element:profile.element,mix:profile.families.length>1,milestones:profile.targets||[],statContext:profile.synergyContext?.stats||{}};legal.sort((a,b)=>PLANNER.scoreNode(b,plan,profile.families)-PLANNER.scoreNode(a,plan,profile.families)||a.id.localeCompare(b.id));}
+   if(profile.synergyAudit){const focus={blood:'bleed',fury:'speed',arcane:'spell',decay:'rot',aegis:'defense',radiance:'defense'}[profile.families[0]],plan={primary:profile.families[0],secondary:profile.families[1],focus,element:profile.element,mix:profile.families.length>1,milestones:profile.targets||[],statContext:profile.synergyContext?.stats||{}};legal.sort((a,b)=>PLANNER.scoreNode(b,plan,profile.families)-PLANNER.scoreNode(a,plan,profile.families)||a.id.localeCompare(b.id));}
    const alt=legal[0];
    if(!alt)break;
    if(!a.talentActions.allocate(alt.id))throw Error('Native talent allocation rejected '+alt.id);
@@ -272,9 +272,9 @@ function spendEarnedAttributes(a,profile){
  const rotations={
   blood:['str','str','end','str','cha'],
   fury:['agi','agi','str','agi','cha'],
-  vitality:['end','end','str','end','cha'],
+  radiance:['end','end','str','end','cha'],
   aegis:['end','end','int','end','str'],
-  magic:['int','int','end','int','cha'],
+  arcane:['int','int','end','int','cha'],
   decay:['int','int','agi','int','end']};
  const caster=['Wand','Staff'].includes(profile.weapons?.[0]);
  const order=first==='decay'&&!caster?['str','int','end','int',profile.weapons?.[0]==='Daggers'?'agi':'str']:rotations[first]||rotations.blood;
@@ -405,17 +405,17 @@ function investEarnedGear(a,profile,level){
 function runeScore(rune,profile,context=null){
  if(!rune)return -Infinity;
  const f=RUNES.FAMILIES.find(x=>x.id===rune.family);if(!f)return -Infinity;
- const families=profile.families||[],magic=families.includes('magic'),decay=families.includes('decay'),aegis=families.includes('aegis'),blood=families.includes('blood'),vitality=families.includes('vitality'),fury=families.includes('fury'),leather=profile.armor==='Leather',plate=profile.armor==='Plate',caster=(profile.weapons||[]).some(w=>['Wand','Staff'].includes(w));
+ const families=profile.families||[],magic=families.includes('arcane'),decay=families.includes('decay'),aegis=families.includes('aegis'),blood=families.includes('blood'),radiance=families.includes('radiance'),fury=families.includes('fury'),leather=profile.armor==='Leather',plate=profile.armor==='Plate',caster=(profile.weapons||[]).some(w=>['Wand','Staff'].includes(w));
  const mana=magic||decay||caster,spell=mana||aegis||(profile.offhands||[]).includes('Orb'),guard=aegis||(profile.weapons||[]).some(w=>['Sword','Mace'].includes(w));
- const weights={might:caster?1:plate?5:3,swiftness:leather?5:2,wisdom:spell?5:1,fortitude:plate?5:3,fortune:2,fury:caster?2:4,warding:plate?5:3,vitality:4,
- execution:fury?6:3,devastation:fury?6:3,haste:fury||blood?6:3,assault:caster?2:5,archmage:spell?6:0,abyss:mana?5:0,clarity:mana?6:0,efficiency:mana?5:0,corruption:blood||decay||profile.element==='fire'?6:1,bastion:aegis||decay?6:1,renewal:vitality?6:blood?4:2,phantom:leather?6:3,bulwark:plate?6:3,heart:vitality||aegis?6:4,guard:guard?6:0};
+ const weights={might:caster?1:plate?5:3,swiftness:leather?5:2,wisdom:spell?5:1,fortitude:plate?5:3,fortune:2,fury:caster?2:4,warding:plate?5:3,radiance:4,
+ execution:fury?6:3,devastation:fury?6:3,haste:fury||blood?6:3,assault:caster?2:5,archmage:spell?6:0,abyss:mana?5:0,clarity:mana?6:0,efficiency:mana?5:0,corruption:blood||decay||profile.element==='fire'?6:1,bastion:aegis||decay?6:1,renewal:radiance?6:blood?4:2,phantom:leather?6:3,bulwark:plate?6:3,heart:radiance||aegis?6:4,guard:guard?6:0};
  const magnitude=RUNES.runeValue(f.id,rune.tier,RUNES.rarity(rune))/f.base;
  if(!context)return round((weights[f.id]||0)*magnitude,3);
  const {base,projected,nodes,weapon,offhand,evasionGain}=context,owned=new Set(nodes||[]),has=id=>owned.has(id);
  const actualDecay=has('affinity_decay')&&['toxic_touch','blight','corruption_cycle','corruption_nova','rotguard','grave_bloom'].some(has);
- const actualBlood=has('affinity_blood')||has('bleeding_edge'),actualFire=has('affinity_magic')&&context.element==='fire';
+ const actualBlood=has('affinity_blood')||has('bleeding_edge'),actualFire=has('affinity_arcane')&&context.element==='fire';
  const actualCaster=['Wand','Staff'].includes(weapon),actualMana=base.mana>0,actualBarrier=offhand==='Orb'||has('affinity_aegis')||has('rotguard')||has('runic_shield')||has('overflowing_life');
- const actualHeal=has('affinity_vitality')||has('blood_drinker')||has('blood_harvest')||offhand==='Charm';
+ const actualHeal=has('affinity_radiance')||has('blood_drinker')||has('blood_harvest')||offhand==='Charm';
  const actualCycle=has('corruption_cycle'),actualOverflow=has('corruption_nova');
  const key={atkFlat:'attack',defFlat:'defense',hpFlat:'maxhp'}[f.field]||f.field;
  const delta=Number(projected[key])-Number(base[key]);
@@ -424,7 +424,7 @@ function runeScore(rune,profile,context=null){
  const effective=f.kind==='percent'?delta/Math.max(.01,Number(base[key])*expected):f.kind==='flat'&&['atkFlat','defFlat','hpFlat'].includes(f.field)?1:delta/Math.max(.00001,expected);
  const efficiency=Math.min(1,Math.max(0,effective));
  if(['abyss','clarity','efficiency'].includes(f.id)&&!actualMana)return 0;
- if(f.id==='archmage'&&!(actualCaster||actualDecay||has('affinity_magic')||actualBarrier))return 0;
+ if(f.id==='archmage'&&!(actualCaster||actualDecay||has('affinity_arcane')||actualBarrier))return 0;
  if(f.id==='bastion'&&!actualBarrier||f.id==='renewal'&&!actualHeal||f.id==='corruption'&&!(actualDecay||actualBlood||actualFire))return 0;
  if(f.id==='phantom'&&!(evasionGain>0))return 0;
  if(f.id==='corruption')weights.corruption=actualDecay?8:actualBlood||actualFire?6:0;
@@ -434,7 +434,7 @@ function runeScore(rune,profile,context=null){
  if(actualMana){weights.abyss=Math.max(4,weights.abyss);weights.clarity=Math.max(5,weights.clarity);weights.efficiency=Math.max(4,weights.efficiency);}
  if(actualBarrier)weights.bastion=6;
  if(actualHeal)weights.renewal=6;
- if(projected.spellPower>base.spellPower&&(actualCaster||actualDecay||has('affinity_magic')||actualBarrier))weights.archmage=6;
+ if(projected.spellPower>base.spellPower&&(actualCaster||actualDecay||has('affinity_arcane')||actualBarrier))weights.archmage=6;
  if(f.id==='phantom')return round(weights.phantom*magnitude*Math.min(1,evasionGain/Math.max(.01,expected*.4)),3);
  return round((weights[f.id]||0)*magnitude*efficiency,3);
 }
@@ -487,7 +487,7 @@ function manageEarnedRunes(a,profile,{equip=true}={}){
 // Score every one of the game's 13 named potions; no custom stock odds or
 // invented inventory. A potion still only activates in native legal windows.
 function potionScore(kind,profile,vitals={}){
- const magic=profile.families.includes('magic'),leather=profile.armor==='Leather',plate=profile.armor==='Plate';
+ const magic=profile.families.includes('arcane'),leather=profile.armor==='Leather',plate=profile.armor==='Plate';
  const hpRatio=vitals.maxhp?Math.max(0,vitals.hp)/vitals.maxhp:1,
   manaRatio=vitals.maxmp?Math.max(0,vitals.mp)/vitals.maxmp:1;
  const score={health:hpRatio<.65?92:75,mana:magic?(manaRatio<.5?70:51):12,
@@ -519,7 +519,7 @@ function buyEarnedPotions(a,profile,level){
  if(!profile.shop||!a.economyCanAct())return actions;
  if(!s.apothecary)s.apothecary=a.potions.shop(level);
  const owned=kind=>(s.consumables?.[kind]||0)>0;
- const wantedKind=profile.families.includes('magic')?'mana':'health';
+ const wantedKind=profile.families.includes('arcane')?'mana':'health';
  // Only buy available offers at their actual dynamic prices; replacement
  // stock is drawn by the native Apothecary and may contain any of 13 types.
  for(let n=0;n<3;n++){
@@ -726,7 +726,7 @@ function rankRealms(cards,profile,gear,context={}){
  const hasUpgrades=gear.starter<=1,wanted=profile.risk===1&&hasUpgrades?1:0;
  return cards.map(card=>{
   const base=Math.abs(card.risk-wanted)*12+Math.max(0,card.risk-wanted)*10+
-   (profile.families.includes(card.family)?-3:0)+(card.family==='vitality'?-1:0);
+   (profile.families.includes(card.family)?-3:0)+(card.family==='radiance'?-1:0);
   const visible=context.visible?.[card.id]||{};
   const fit=AGENT.realmPreference(context.capabilities,card,visible);
   return {card,score:round(base-fit.score),baseScore:base,fit};
@@ -906,7 +906,7 @@ function boonScore(id,profile,context={}){
  const mana=context.vitals?.maxmp??0,steps=context.steps??10;
  const blood=context.owned?context.owned.includes('affinity_blood'):profile.families.includes('blood'),decay=context.owned?context.owned.includes('affinity_decay'):profile.families.includes('decay');
  const rotReady=context.owned?decay&&['toxic_touch','blight','corruption_cycle','corruption_nova','rotguard','grave_bloom'].some(x=>context.owned.includes(x)):decay;
- const fireReady=context.owned?context.owned.includes('affinity_magic')&&context.element==='fire':profile.element==='fire';
+ const fireReady=context.owned?context.owned.includes('affinity_arcane')&&context.element==='fire':profile.element==='fire';
  const dotReady=context.bleedReady||blood||rotReady||fireReady;
  switch(id){
   case 'bastion_oath':return 28+(hp<.75?9:0)-(profile.name==='Daring'?3:0);
@@ -987,7 +987,7 @@ function usePotionsBetween(a,profile,history,next){
  const v=a.vitals(),g=a.controller().state,d=g.dungeon;
  if(!next||!d?.realm)return false;
  const ratio=v.maxhp>0?v.hp/v.maxhp:1,mpRatio=v.maxmp?v.mp/v.maxmp:1;
- const magic=profile.families.includes('magic');
+ const magic=profile.families.includes('arcane');
  const dangerous=next.type==='boss'||next.type==='elite'||
   next.type==='combat'&&(Number(next.visibleMobRange?.[1]??4)>3);
  let changed=false;

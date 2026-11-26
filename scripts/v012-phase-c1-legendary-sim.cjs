@@ -1,10 +1,10 @@
 // Production Legendary effects with Epic-equivalent gear, deterministic combat/route streams.
 const fs=require('node:fs'),{run}=require('./v012-affinity-combat-sim.cjs');
 const builds=[
- {name:'Cloth Staff',weapon:'Staff',armorType:'Cloth',family:'magic',targetFamilies:['magic','aegis','decay'],one:{weapon:'astrafall'},three:{weapon:'astrafall',armor:'heartroot-carapace',belt:'veil-thousand-seals'}},
- {name:'Cloth Wand + Orb',weapon:'Wand',offhandType:'Orb',armorType:'Cloth',family:'magic',targetFamilies:['magic','aegis','decay'],one:{weapon:'voidglass'},three:{weapon:'voidglass',armor:'heartroot-carapace',belt:'veil-thousand-seals'}},
- {name:'Plate Sword + Shield',weapon:'Sword',offhandType:'Shield',armorType:'Plate',family:'vitality',targetFamilies:['vitality','aegis','fury'],one:{weapon:'graft'},three:{weapon:'graft',offhand:'oathwall',belt:'veil-thousand-seals'}},
- {name:'Plate Mace + Shield',weapon:'Mace',offhandType:'Shield',armorType:'Plate',family:'vitality',targetFamilies:['vitality','aegis','fury'],one:{weapon:'kingsbreaker'},three:{weapon:'kingsbreaker',offhand:'oathwall',armor:'heartroot-carapace'}},
+ {name:'Cloth Staff',weapon:'Staff',armorType:'Cloth',family:'arcane',targetFamilies:['arcane','aegis','decay'],one:{weapon:'astrafall'},three:{weapon:'astrafall',armor:'heartroot-carapace',belt:'veil-thousand-seals'}},
+ {name:'Cloth Wand + Orb',weapon:'Wand',offhandType:'Orb',armorType:'Cloth',family:'arcane',targetFamilies:['arcane','aegis','decay'],one:{weapon:'voidglass'},three:{weapon:'voidglass',armor:'heartroot-carapace',belt:'veil-thousand-seals'}},
+ {name:'Plate Sword + Shield',weapon:'Sword',offhandType:'Shield',armorType:'Plate',family:'radiance',targetFamilies:['radiance','aegis','fury'],one:{weapon:'graft'},three:{weapon:'graft',offhand:'oathwall',belt:'veil-thousand-seals'}},
+ {name:'Plate Mace + Shield',weapon:'Mace',offhandType:'Shield',armorType:'Plate',family:'radiance',targetFamilies:['radiance','aegis','fury'],one:{weapon:'kingsbreaker'},three:{weapon:'kingsbreaker',offhand:'oathwall',armor:'heartroot-carapace'}},
  {name:'Leather Dual Daggers',weapon:'Daggers',offhandType:'Daggers',armorType:'Leather',family:'decay',targetFamilies:['decay','fury','blood'],one:{weapon:'crimson-fang'},three:{weapon:'crimson-fang',amulet:'chalice-hollow-king',armor:'heartroot-carapace'}},
  {name:'Leather Bow',weapon:'Bow',armorType:'Leather',family:'decay',targetFamilies:['decay','fury','blood'],one:{weapon:'tempest-talon'},three:{weapon:'tempest-talon',armor:'heartroot-carapace',belt:'veil-thousand-seals'}},
  {name:'Leather Two-Handed',weapon:'Two-Handed',armorType:'Leather',family:'decay',targetFamilies:['decay','fury','blood'],one:{weapon:'gravewake'},three:{weapon:'gravewake',ring1:'eye-of-morrow',belt:'veil-thousand-seals'}}

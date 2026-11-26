@@ -2553,13 +2553,13 @@
           },
           {
             "target": [
-              "button[data-phase2-initial=\"vitality\"] > strong"
+              "button[data-phase2-initial=\"radiance\"] > strong"
             ],
             "summary": "Element's background color could not be determined due to a background gradient"
           },
           {
             "target": [
-              "button[data-phase2-initial=\"vitality\"] > .phase3AffinityIdentity"
+              "button[data-phase2-initial=\"radiance\"] > .phase3AffinityIdentity"
             ],
             "summary": "Element's background color could not be determined because it partially overlaps other elements"
           },
@@ -2637,7 +2637,7 @@
   {
     "width": 390,
     "height": 844,
-    "state": "magic-element-dialog",
+    "state": "arcane-element-dialog",
     "violations": [],
     "incomplete": [
       {
@@ -2657,43 +2657,43 @@
           },
           {
             "target": [
-              "button[data-initial-magic-element=\"fire\"] > strong"
+              "button[data-initial-arcane-element=\"fire\"] > strong"
             ],
             "summary": "Element's background color could not be determined due to a background gradient"
           },
           {
             "target": [
-              "button[data-initial-magic-element=\"fire\"] > span"
+              "button[data-initial-arcane-element=\"fire\"] > span"
             ],
             "summary": "Element's background color could not be determined because it partially overlaps other elements"
           },
           {
             "target": [
-              "button[data-initial-magic-element=\"frost\"] > strong"
+              "button[data-initial-arcane-element=\"frost\"] > strong"
             ],
             "summary": "Element's background color could not be determined due to a background gradient"
           },
           {
             "target": [
-              "button[data-initial-magic-element=\"frost\"] > span"
+              "button[data-initial-arcane-element=\"frost\"] > span"
             ],
             "summary": "Element's background color could not be determined because it partially overlaps other elements"
           },
           {
             "target": [
-              "button[data-initial-magic-element=\"lightning\"] > strong"
+              "button[data-initial-arcane-element=\"lightning\"] > strong"
             ],
             "summary": "Element's background color could not be determined due to a background gradient"
           },
           {
             "target": [
-              "button[data-initial-magic-element=\"lightning\"] > span"
+              "button[data-initial-arcane-element=\"lightning\"] > span"
             ],
             "summary": "Element's background color could not be determined due to a background gradient"
           },
           {
             "target": [
-              "button[data-magic-back=\"1\"]"
+              "button[data-arcane-back=\"1\"]"
             ],
             "summary": "Element's background color could not be determined because it is overlapped by another element"
           },
@@ -5731,13 +5731,13 @@
           },
           {
             "target": [
-              "button[data-phase2-initial=\"vitality\"] > strong"
+              "button[data-phase2-initial=\"radiance\"] > strong"
             ],
             "summary": "Element's background color could not be determined due to a background gradient"
           },
           {
             "target": [
-              "button[data-phase2-initial=\"vitality\"] > .phase3AffinityIdentity"
+              "button[data-phase2-initial=\"radiance\"] > .phase3AffinityIdentity"
             ],
             "summary": "Element's background color could not be determined due to a background gradient"
           },
@@ -5815,7 +5815,7 @@
   {
     "width": 768,
     "height": 1024,
-    "state": "magic-element-dialog",
+    "state": "arcane-element-dialog",
     "violations": [],
     "incomplete": [
       {
@@ -5835,43 +5835,43 @@
           },
           {
             "target": [
-              "button[data-initial-magic-element=\"fire\"] > strong"
+              "button[data-initial-arcane-element=\"fire\"] > strong"
             ],
             "summary": "Element's background color could not be determined due to a background gradient"
           },
           {
             "target": [
-              "button[data-initial-magic-element=\"fire\"] > span"
+              "button[data-initial-arcane-element=\"fire\"] > span"
             ],
             "summary": "Element's background color could not be determined due to a background gradient"
           },
           {
             "target": [
-              "button[data-initial-magic-element=\"frost\"] > strong"
+              "button[data-initial-arcane-element=\"frost\"] > strong"
             ],
             "summary": "Element's background color could not be determined due to a background gradient"
           },
           {
             "target": [
-              "button[data-initial-magic-element=\"frost\"] > span"
+              "button[data-initial-arcane-element=\"frost\"] > span"
             ],
             "summary": "Element's background color could not be determined due to a background gradient"
           },
           {
             "target": [
-              "button[data-initial-magic-element=\"lightning\"] > strong"
+              "button[data-initial-arcane-element=\"lightning\"] > strong"
             ],
             "summary": "Element's background color could not be determined due to a background gradient"
           },
           {
             "target": [
-              "button[data-initial-magic-element=\"lightning\"] > span"
+              "button[data-initial-arcane-element=\"lightning\"] > span"
             ],
             "summary": "Element's background color could not be determined due to a background gradient"
           },
           {
             "target": [
-              "button[data-magic-back=\"1\"]"
+              "button[data-arcane-back=\"1\"]"
             ],
             "summary": "Element's background color could not be determined because it is overlapped by another element"
           },
@@ -8940,13 +8940,13 @@
           },
           {
             "target": [
-              "button[data-phase2-initial=\"vitality\"] > strong"
+              "button[data-phase2-initial=\"radiance\"] > strong"
             ],
             "summary": "Element's background color could not be determined due to a background gradient"
           },
           {
             "target": [
-              "button[data-phase2-initial=\"vitality\"] > .phase3AffinityIdentity"
+              "button[data-phase2-initial=\"radiance\"] > .phase3AffinityIdentity"
             ],
             "summary": "Element's background color could not be determined due to a background gradient"
           },
@@ -9024,7 +9024,7 @@
   {
     "width": 1440,
     "height": 900,
-    "state": "magic-element-dialog",
+    "state": "arcane-element-dialog",
     "violations": [],
     "incomplete": [
       {
@@ -9044,43 +9044,43 @@
           },
           {
             "target": [
-              "button[data-initial-magic-element=\"fire\"] > strong"
+              "button[data-initial-arcane-element=\"fire\"] > strong"
             ],
             "summary": "Element's background color could not be determined due to a background gradient"
           },
           {
             "target": [
-              "button[data-initial-magic-element=\"fire\"] > span"
+              "button[data-initial-arcane-element=\"fire\"] > span"
             ],
             "summary": "Element's background color could not be determined due to a background gradient"
           },
           {
             "target": [
-              "button[data-initial-magic-element=\"frost\"] > strong"
+              "button[data-initial-arcane-element=\"frost\"] > strong"
             ],
             "summary": "Element's background color could not be determined due to a background gradient"
           },
           {
             "target": [
-              "button[data-initial-magic-element=\"frost\"] > span"
+              "button[data-initial-arcane-element=\"frost\"] > span"
             ],
             "summary": "Element's background color could not be determined due to a background gradient"
           },
           {
             "target": [
-              "button[data-initial-magic-element=\"lightning\"] > strong"
+              "button[data-initial-arcane-element=\"lightning\"] > strong"
             ],
             "summary": "Element's background color could not be determined due to a background gradient"
           },
           {
             "target": [
-              "button[data-initial-magic-element=\"lightning\"] > span"
+              "button[data-initial-arcane-element=\"lightning\"] > span"
             ],
             "summary": "Element's background color could not be determined due to a background gradient"
           },
           {
             "target": [
-              "button[data-magic-back=\"1\"]"
+              "button[data-arcane-back=\"1\"]"
             ],
             "summary": "Element's background color could not be determined because it is overlapped by another element"
           },
@@ -12149,13 +12149,13 @@
           },
           {
             "target": [
-              "button[data-phase2-initial=\"vitality\"] > strong"
+              "button[data-phase2-initial=\"radiance\"] > strong"
             ],
             "summary": "Element's background color could not be determined due to a background gradient"
           },
           {
             "target": [
-              "button[data-phase2-initial=\"vitality\"] > .phase3AffinityIdentity"
+              "button[data-phase2-initial=\"radiance\"] > .phase3AffinityIdentity"
             ],
             "summary": "Element's background color could not be determined due to a background gradient"
           },
@@ -12233,7 +12233,7 @@
   {
     "width": 1920,
     "height": 1080,
-    "state": "magic-element-dialog",
+    "state": "arcane-element-dialog",
     "violations": [],
     "incomplete": [
       {
@@ -12253,43 +12253,43 @@
           },
           {
             "target": [
-              "button[data-initial-magic-element=\"fire\"] > strong"
+              "button[data-initial-arcane-element=\"fire\"] > strong"
             ],
             "summary": "Element's background color could not be determined due to a background gradient"
           },
           {
             "target": [
-              "button[data-initial-magic-element=\"fire\"] > span"
+              "button[data-initial-arcane-element=\"fire\"] > span"
             ],
             "summary": "Element's background color could not be determined due to a background gradient"
           },
           {
             "target": [
-              "button[data-initial-magic-element=\"frost\"] > strong"
+              "button[data-initial-arcane-element=\"frost\"] > strong"
             ],
             "summary": "Element's background color could not be determined due to a background gradient"
           },
           {
             "target": [
-              "button[data-initial-magic-element=\"frost\"] > span"
+              "button[data-initial-arcane-element=\"frost\"] > span"
             ],
             "summary": "Element's background color could not be determined due to a background gradient"
           },
           {
             "target": [
-              "button[data-initial-magic-element=\"lightning\"] > strong"
+              "button[data-initial-arcane-element=\"lightning\"] > strong"
             ],
             "summary": "Element's background color could not be determined due to a background gradient"
           },
           {
             "target": [
-              "button[data-initial-magic-element=\"lightning\"] > span"
+              "button[data-initial-arcane-element=\"lightning\"] > span"
             ],
             "summary": "Element's background color could not be determined due to a background gradient"
           },
           {
             "target": [
-              "button[data-magic-back=\"1\"]"
+              "button[data-arcane-back=\"1\"]"
             ],
             "summary": "Element's background color could not be determined because it is overlapped by another element"
           },

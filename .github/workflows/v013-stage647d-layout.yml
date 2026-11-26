@@ -68,12 +68,12 @@ jobs:
               await frame.locator('body').evaluate(async()=>{await document.fonts.ready;});
               await frame.getByRole('button',{name:'Full tree',exact:true}).click();
               await page.screenshot({path:path.join(out,'talent-tree-647d-full.png'),animations:'disabled',fullPage:true});
-              await frame.getByRole('button',{name:'Vitality',exact:true}).click();
+              await frame.getByRole('button',{name:'Radiance',exact:true}).click();
               await frame.locator('[data-id="proposal_vital_pulse"]').click();
-              await page.screenshot({path:path.join(out,'talent-tree-647d-vitality.png'),animations:'disabled',fullPage:true});
+              await page.screenshot({path:path.join(out,'talent-tree-647d-radiance.png'),animations:'disabled',fullPage:true});
               await frame.getByRole('button',{name:'Magic',exact:true}).click();
               await frame.locator('[data-id="proposal_arcane_nova"]').click();
-              await page.screenshot({path:path.join(out,'talent-tree-647d-magic.png'),animations:'disabled',fullPage:true});
+              await page.screenshot({path:path.join(out,'talent-tree-647d-arcane.png'),animations:'disabled',fullPage:true});
               assert.equal(await page.evaluate(()=>WandererGame.snapshot().automaticTalents.nodes.length),0);
               const offline=await browser.newPage({viewport:{width:1600,height:900}});
               offline.on('pageerror',e=>errors.push(e.message));await offline.goto('file://'+path.join(out,'talent-tree-647d-interactive.html'),{waitUntil:'load'});

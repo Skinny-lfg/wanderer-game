@@ -5,9 +5,9 @@ const sim=require('../scripts/simulate-progression.cjs');
 const fixture=path.join(__dirname,'fixtures','v013-scaling-baseline.json');
 const scenarios=[
  [1,1,'normal','blood',0,null],[1,4,'normal','aegis',1,'armored'],
- [6,12,'normal','fury',2,'frenzied'],[6,20,'normal','magic',1,'sigilbound'],
+ [6,12,'normal','fury',2,'frenzied'],[6,20,'normal','arcane',1,'sigilbound'],
  [1,1,'elite','decay',0,null],[6,1,'elite','blood',2,null],
- [1,1,'boss','vitality',0,null],[6,1,'boss','magic',2,null],
+ [1,1,'boss','radiance',0,null],[6,1,'boss','arcane',2,null],
  [6,12,'marked','blood',1,'armored'],
  [1,4,'neutral','aegis',0,null],[1,4,'vanguard','aegis',0,null]
 ];

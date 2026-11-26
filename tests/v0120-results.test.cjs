@@ -8,7 +8,7 @@ const plain=value=>JSON.parse(JSON.stringify(value));
 
 function begin(a,level=1,family='blood'){
  a.start(level);a.initial(family);
- if(family==='magic')a.element('frost');
+ if(family==='arcane')a.element('frost');
  const offer=a.controller().state.offers.find(p=>p.family===family);
  assert(offer,`seeded ${family} Realm offer`);offer.waves=1;a.select(offer.id);assert.equal(a.enter(),true);
 }
@@ -70,12 +70,12 @@ test('Extraction summary is a snapshot and grants no boss Rune or progression cr
 });
 
 test('Expedition boss result preserves the actual Magic build and one-time Rune claim',()=>{
- const a=create(504),g=a.controller().state;g.unlocked=10;a.start(10);a.initial('magic');a.element('frost');
+ const a=create(504),g=a.controller().state;g.unlocked=10;a.start(10);a.initial('arcane');a.element('frost');
  // A Magic starter passive is awarded by the first completed Realm. Seed that
  // valid build state through the same buildcraft API before the synthetic boss.
- assert.equal(a.initialPassive(a.build(),'magic').id,'deep_winter');
+ assert.equal(a.initialPassive(a.build(),'arcane').id,'deep_winter');
  g.planeIndex=15;g.history=Array.from({length:14},(_,index)=>({plane:index+1}));
- const p=g.offers.find(offer=>offer.family==='magic');p.boss=true;p.waves=1;
+ const p=g.offers.find(offer=>offer.family==='arcane');p.boss=true;p.waves=1;
  a.select(p.id);assert.equal(a.enter(),true);
  const run=a.state().run;run.combatSeconds=4;assert.equal(run.encounterLeader.boss,true);
  clearEncounter(a);const result=a.results();

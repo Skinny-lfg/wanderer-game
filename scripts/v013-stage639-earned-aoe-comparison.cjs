@@ -11,8 +11,8 @@ const D=require('./v013-stage628-postcap-difficulty.cjs');
 const S=require('./simulate-progression.cjs');
 const PROFILES=Object.freeze([
  'cautious','balanced','daring','plate-warden','leather-duelist','hexblade-hybrid',
- 'magic-fire','magic-frost','magic-lightning','magic-arcane','magic-staff',
- 'smart-fury-bow','smart-fury-daggers','smart-magic-lightning-pure','smart-blood-pure'
+ 'arcane-fire','arcane-frost','arcane-lightning','arcane-arcane','arcane-staff',
+ 'smart-fury-bow','smart-fury-daggers','smart-arcane-lightning-pure','smart-blood-pure'
 ]);
 const SEEDS=Object.freeze([9861,9863]),CHECKPOINTS=Object.freeze([1,3,5,8,10,12]);
 const SIZES=Object.freeze([1,3,5,8,12]);

@@ -3,15 +3,15 @@
 const fs=require('node:fs'),crypto=require('node:crypto'),{performance}=require('node:perf_hooks');
 const {run}=require('./v012-affinity-combat-sim.cjs');
 const builds=[
- {name:'Cloth Staff',weapon:'Staff',armorType:'Cloth',family:'magic'},
- {name:'Cloth Wand + Orb',weapon:'Wand',armorType:'Cloth',family:'magic',offhandType:'Orb'},
+ {name:'Cloth Staff',weapon:'Staff',armorType:'Cloth',family:'arcane'},
+ {name:'Cloth Wand + Orb',weapon:'Wand',armorType:'Cloth',family:'arcane',offhandType:'Orb'},
  {name:'Plate Sword + Shield',weapon:'Sword',armorType:'Plate',family:'blood',offhandType:'Shield'},
  {name:'Plate Mace + Shield',weapon:'Mace',armorType:'Plate',family:'aegis',offhandType:'Shield'},
  {name:'Leather Dual Daggers',weapon:'Daggers',armorType:'Leather',family:'fury',offhandType:'Off-Hand Dagger'},
  {name:'Leather Bow',weapon:'Bow',armorType:'Leather',family:'fury'},
  {name:'Leather Two-Handed',weapon:'Two-Handed',armorType:'Leather',family:'blood'}
 ];
-const partners={blood:['decay','magic'],aegis:['vitality','fury'],fury:['magic','blood'],magic:['fury','aegis']};
+const partners={blood:['decay','arcane'],aegis:['radiance','fury'],fury:['arcane','blood'],arcane:['fury','aegis']};
 function mean(a,key){return a.length?+(a.reduce((s,x)=>s+(Number(x[key])||0),0)/a.length).toFixed(3):null;}
 function summarize(rows){
  const grouped=new Map();for(const row of rows){const key=[row.routeMode,row.E,row.buildName,row.strategy].join('|');if(!grouped.has(key))grouped.set(key,[]);grouped.get(key).push(row);}

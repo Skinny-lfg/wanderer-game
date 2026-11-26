@@ -122,7 +122,7 @@ function main(){
    const bloom=mixedTrial==='respecBloomPhysical',ability=bloom?'grave_bloom':'carrion_detonation';
    if(s.state.equip.weapon?.subtype!=='Sword')throw Error('Physical mixed test needs genuinely earned Sword');
    const original=T.reset(s.state.automaticTalents);
-   const proposed=P.propose(T,original,{primary:bloom?'magic':'decay',
+   const proposed=P.propose(T,original,{primary:bloom?'arcane':'decay',
     secondary:bloom?'decay':'blood',secondAt:1,model:'two',mix:true,
     element:'arcane',weapons:['Sword'],armor:'Leather',
     milestones:[ability],orderedMilestones:true,focus:'rot'});

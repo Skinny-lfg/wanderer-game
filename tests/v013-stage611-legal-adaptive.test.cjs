@@ -10,7 +10,7 @@ test('Target inventory is sourced from the live graph including replaced Magic a
  assert.equal(coreCount,27);
  assert.equal(new Set(targets.map(x=>x.id)).size,targets.length);
  assert(targets.some(x=>x.id==='arcane_mastery'&&x.kind==='focused'));
- assert(targets.some(x=>x.id==='chain_discharge'&&x.kind==='magic-element'));
+ assert(targets.some(x=>x.id==='chain_discharge'&&x.kind==='arcane-element'));
  assert(targets.some(x=>x.id==='red_guillotine'&&x.kind==='mixed'));
  assert(!targets.some(x=>x.id==='arcane_infusion_old'));
 });
@@ -52,14 +52,14 @@ test('Zero-point E1 can never own a single talent or fake Affinity',()=>{
   assert.deepEqual(c.actualNodes,[]);
   assert.notEqual(c.status,'native-legal');
  }
- const p=H.profileCandidate('blood-fury-vitality',0);
+ const p=H.profileCandidate('blood-fury-radiance',0);
  assert.equal(p.spent,0);assert.deepEqual(p.actuallyUnlocked,[]);
 });
 test('Profile family thresholds and pressure do not directly grant nodes',()=>{
- const id='blood-fury-vitality',low=H.profileCandidate(id,0,{pressure:true}),
+ const id='blood-fury-radiance',low=H.profileCandidate(id,0,{pressure:true}),
   high=H.profileCandidate(id,100,{pressure:true});
  assert(low.actuallyUnlocked.length===0);
- assert(high.allowedAffinities.includes('vitality'));
+ assert(high.allowedAffinities.includes('radiance'));
  assert(high.spent<=100);
  assert(high.actuallyUnlocked.every(f=>high.allowedAffinities.includes(f)));
 });
@@ -93,10 +93,10 @@ test('Native runner evidence guards reject synthetic or inconsistent accounts',(
 
 test('Historical smart-profile tertiary milestone uses the real target native Affinity/pair',()=>{
  const v=H.candidate('living_recovery',100);
- assert.equal(v.primary,'vitality');
+ assert.equal(v.primary,'radiance');
  assert.equal(v.status,'native-legal');
  const mixed=H.candidate('fervent_life',100);
  assert.equal(mixed.primary,'fury');
- assert.equal(mixed.secondary,'vitality');
+ assert.equal(mixed.secondary,'radiance');
  assert.equal(mixed.status,'native-legal');
 });

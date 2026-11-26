@@ -8,7 +8,7 @@ const F=globalThis.WandererV013ExpeditionFoundation;
 const small={...S.DEFAULTS,levels:[15],seeds:[9101],builds:['blood-fury'],points:24,tickLimit:4500};
 test('CLI supports current six-Boss, Elite and swarm modes, bounded affinities/risk/size/points',()=>{
  let opts=S.parseArgs(['--mode=bosses','--levels=15','--seeds=9101','--builds=blood-fury','--affinities=magic,decay','--risks=0,2','--points=0','--boons=first']);
- assert.equal(opts.mode,'bosses');assert.deepEqual(opts.affinities,['magic','decay']);assert.deepEqual(opts.risks,[0,2]);assert.equal(opts.points,0);assert.equal(opts.boons,'first');
+ assert.equal(opts.mode,'bosses');assert.deepEqual(opts.affinities,['arcane','decay']);assert.deepEqual(opts.risks,[0,2]);assert.equal(opts.points,0);assert.equal(opts.boons,'first');
  assert.equal(S.parseArgs(['--target-policy=mechanics']).targetPolicy,'mechanics');
  opts=S.parseArgs(['--mode=enemies','--group-sizes=3,12,20']);assert.deepEqual(opts.groupSizes,[3,12,20]);
  assert.equal(S.parseArgs(['--mode=elites']).mode,'elites');
@@ -26,12 +26,12 @@ test('Talents: zero points means genuinely no talents; partial points never crea
  for(const key of S.BUILDS[0].skills)assert(full.nodes.includes(key),key);
 });
 test('Every current Boss Affinity enters a real native fight and reports its Stage 8 mechanics',()=>{
- const opts={...small,mode:'bosses',affinities:['blood','decay','vitality','aegis','fury','magic'],risks:[1]};
+ const opts={...small,mode:'bosses',affinities:['blood','decay','radiance','aegis','fury','arcane'],risks:[1]};
  const result=S.simulate(opts);
  assert.equal(result.schemaVersion,4);assert.equal(result.summary.cases,6);
  assert.equal(result.summary.errors,0,JSON.stringify(result.rows.filter(x=>x.error)));
  assert.equal(result.summary.timeouts,0);
- assert.deepEqual(result.summary.exposures.bossAffinities,['aegis','blood','decay','fury','magic','vitality']);
+ assert.deepEqual(result.summary.exposures.bossAffinities,['aegis','blood','decay','fury','arcane','radiance']);
  assert(result.assumptions.bossmods.includes('Legacy Rift-only'));
  for(const row of result.rows){
   assert.equal(row.nativeEncounter,'boss');
@@ -86,7 +86,7 @@ test('Counterplay targeting reproduces valid arena clicks for Riftbound Vessels,
  const boss={name:'Boss',boss:true,bossStyle:'leech',hp:600,maxhp:1000,groupClock:1};
  const thrall={name:'Riftbound Vessel',hp:90,stage84Minion:'blood',groupClock:2};
  const node={name:'Convergence Anchor',hp:90,stage84Node:true,groupClock:3};
- const bloom={name:'light fragment',hp:60,stage84Minion:'vitality',groupClock:3};
+ const bloom={name:'light fragment',hp:60,stage84Minion:'radiance',groupClock:3};
  const r={status:'fight',enemy:boss,encounterLeader:boss,enemies:[boss,thrall,node,bloom]};
  assert.equal(S.selectTarget(r,'focus'),boss);
  assert.equal(S.selectTarget(r,'mechanics'),thrall);

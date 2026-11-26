@@ -49,7 +49,7 @@ jobs:
         run: >-
           node scripts/v013-stage622-e3-e5-audit.cjs
           --mode=cohort --seeds=${{ matrix.seed }}
-          --profiles=cautious,balanced,smart-blood-fury-vitality
+          --profiles=cautious,balanced,smart-blood-fury-radiance
           --max-level=5 --max-attempts=12 --max-total-attempts=60
           --out=reports/v013-stage622-seed${{ matrix.seed }}.json
       - uses: actions/upload-artifact@v4

@@ -5,7 +5,7 @@ const G=globalThis.WandererTalentGraph;
 test('current tree contains 420 unique v15 nodes, with all six affinity roots',()=>{
  assert.equal(T.NODES.length,420);
  assert.equal(new Set(T.NODES.map(n=>n.id)).size,420);
- for(const family of ['blood','fury','aegis','vitality','magic','decay']){
+ for(const family of ['blood','fury','aegis','radiance','arcane','decay']){
   assert(T.NODES.some(n=>n.id==='root_'+family));
   assert(T.NODES.some(n=>n.id==='affinity_'+family));
  }
@@ -27,7 +27,7 @@ test('every v15 graph edge references an existing node and graph contains no bas
  assert.equal(G.FAMILIES.length,6);
 });
 test('v15 focused and hybrid progression purchases are earned and restorable',()=>{
- for(const id of ['affinity_blood','affinity_magic','bleeding_edge','guarded_block','quick_hands']){
+ for(const id of ['affinity_blood','affinity_arcane','bleeding_edge','guarded_block','quick_hands']){
   const p=buy([id]);assert(p.nodes.includes(id),id);
   assert(T.valid(JSON.parse(JSON.stringify(p))),id);
  }

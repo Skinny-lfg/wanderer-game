@@ -1310,7 +1310,7 @@
       "errors": 0
     },
     {
-      "key": "vitality/random",
+      "key": "radiance/random",
       "n": 70,
       "wins": 18,
       "winPct": 25.7,
@@ -1327,7 +1327,7 @@
       "errors": 0
     },
     {
-      "key": "vitality/mono",
+      "key": "radiance/mono",
       "n": 70,
       "wins": 18,
       "winPct": 25.7,
@@ -1344,7 +1344,7 @@
       "errors": 0
     },
     {
-      "key": "vitality/dual",
+      "key": "radiance/dual",
       "n": 70,
       "wins": 20,
       "winPct": 28.6,
@@ -1361,7 +1361,7 @@
       "errors": 0
     },
     {
-      "key": "vitality/triple",
+      "key": "radiance/triple",
       "n": 70,
       "wins": 22,
       "winPct": 31.4,
@@ -1514,7 +1514,7 @@
       "errors": 0
     },
     {
-      "key": "magic/random",
+      "key": "arcane/random",
       "n": 70,
       "wins": 16,
       "winPct": 22.9,
@@ -1531,7 +1531,7 @@
       "errors": 0
     },
     {
-      "key": "magic/mono",
+      "key": "arcane/mono",
       "n": 70,
       "wins": 18,
       "winPct": 25.7,
@@ -1548,7 +1548,7 @@
       "errors": 0
     },
     {
-      "key": "magic/dual",
+      "key": "arcane/dual",
       "n": 70,
       "wins": 20,
       "winPct": 28.6,
@@ -1565,7 +1565,7 @@
       "errors": 0
     },
     {
-      "key": "magic/triple",
+      "key": "arcane/triple",
       "n": 70,
       "wins": 20,
       "winPct": 28.6,

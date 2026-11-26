@@ -27,7 +27,7 @@ function result(mode,seeds=[9101,9102],badSeed=null){
 test('Stage 9.1 defaults run limited, reproducible native scenario matrix',()=>{
  const x=D.parseArgs();
  assert.equal(x.expectedCases,132);
- assert.deepEqual(x.builds,['blood-fury','aegis-vitality','magic-decay']);
+ assert.deepEqual(x.builds,['blood-fury','aegis-radiance','arcane-decay']);
  assert.deepEqual(x.risks,[0,1,2]);
  assert.equal(x.affinities.length,6);
  assert.equal(x.seeds.length,2);

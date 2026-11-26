@@ -49,7 +49,7 @@ function nativeCases(){
  const rows=[];
  for(const seed of [101,211,307])for(const weapon of ['Sword','Daggers','Mace','Wand','Staff']){
   const a=create(seed,undefined,{}, {skipPersistence:true});
-  a.state().automaticTalents=B.buy(['affinity_magic']);
+  a.state().automaticTalents=B.buy(['affinity_arcane']);
   const item=a.makeItem(seed===101?1:35,'weapon',null,'loot',weapon,seed===101?'Common':'Rare');
   const stats=a.baseStats({weapon:item});
   if(!stats.phase2Magic||stats.spellPower<=0||stats.mana<=0)throw Error('Native Magic stats missing: '+weapon);

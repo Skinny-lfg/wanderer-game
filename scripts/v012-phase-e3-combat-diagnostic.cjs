@@ -2,9 +2,9 @@
 const fs=require('node:fs');
 const {run}=require('./v012-affinity-combat-sim.cjs');
 const cases=[
- ['Battlemage / Orb','Wand','Cloth','Orb','magic'],
- ['Battlemage / no Orb','Wand','Cloth',false,'magic'],
- ['Mage / Staff','Staff','Cloth',false,'magic'],
+ ['Battlemage / Orb','Wand','Cloth','Orb','arcane'],
+ ['Battlemage / no Orb','Wand','Cloth',false,'arcane'],
+ ['Mage / Staff','Staff','Cloth',false,'arcane'],
  ['Assassin / dual','Daggers','Leather','Off-Hand Dagger','blood'],
  ['Assassin / single','Daggers','Leather',false,'blood'],
  ['Tank / Shield','Sword','Plate','Shield','aegis'],

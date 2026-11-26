@@ -39,7 +39,7 @@ function evaluateAccount(a,intent,rows,oldRows){
   return {id,owned,advanced,prepared,scope:instrumented?'activation counter observed or explicit':'not established',currentFights:current.length,currentActive:observedCurrent.length,currentCount:observedCurrent.reduce((n,r)=>n+Number(r.passives[id]),0),historicalFights:old.length,historicalActive:observedOld.length,
    status:!owned?'observed without owned node: inspect affinity alias':advanced&&!prepared?'not prepared':observedCurrent.length?'activated':!instrumented?'not instrumented / stat or other trigger':current.length?'owned; no observed activation in sampled groups':'no current sample'};
  });
- const metrics={};for(const r of current)for(const type of ['decay','magic','defensive'])for(const [k,v]of Object.entries(r[type]||{}))if(Number.isFinite(v))metrics[k]=(metrics[k]||0)+v;
+ const metrics={};for(const r of current)for(const type of ['decay','arcane','defensive'])for(const [k,v]of Object.entries(r[type]||{}))if(Number.isFinite(v))metrics[k]=(metrics[k]||0)+v;
  const matchingOffhand=offhand==='Off-Hand Dagger'?'Daggers':offhand;
  return {seed:a.seed,reached:true,E:a.endLevel,attempts:a.attempts,points:snap.talentSpent,weapon,offhand,armor,element:p.element||null,prepared:p.prepared||null,actualFamilies,
   weaponMatch:intent.weapons.includes(weapon),offhandMatch:intent.offhands.length?intent.offhands.includes(matchingOffhand):null,armorMatch:armor?armor===intent.armor:null,elementMatch:intent.element?intent.element===(p.element||'arcane'):null,

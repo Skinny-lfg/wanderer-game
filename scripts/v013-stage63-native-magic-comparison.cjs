@@ -40,10 +40,10 @@ function compare(before,after){
   ]};
 }
 function main(){
- const before=JSON.parse(fs.readFileSync('reports/stage63-native-magic-baseline.json','utf8'));
- const after=JSON.parse(fs.readFileSync('reports/stage63-native-magic-matrix.json','utf8'));
+ const before=JSON.parse(fs.readFileSync('reports/stage63-native-arcane-baseline.json','utf8'));
+ const after=JSON.parse(fs.readFileSync('reports/stage63-native-arcane-matrix.json','utf8'));
  if(!before.success||!after.success)throw Error('One native cohort failed');
- const result=compare(before,after),file=path.resolve('reports/stage63-native-magic-comparison.json');
+ const result=compare(before,after),file=path.resolve('reports/stage63-native-arcane-comparison.json');
  fs.writeFileSync(file,JSON.stringify(result,null,2)+'\n');
  const md=['# Stage 6.3 — Matched native Magic before/after','',
  'Same native seed, rolled gear, legal 24-point talents and real combat; not earned Expedition progression.','',

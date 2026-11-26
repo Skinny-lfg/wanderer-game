@@ -2,7 +2,7 @@
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const N=require('./v013-natural-progression.cjs'),S=require('./simulate-progression.cjs');
 const Balance=require('./v013-balance-criteria.cjs');
-const IDS=[...['cycle','overflow','hybrid'].flatMap(r=>['twohand','staff','daggers','wand'].map(w=>'smart-decay-'+r+'-'+w)),'smart-decay-plagueheart','smart-decay-magic-aegis','smart-blood-pure','smart-fury-pure','smart-vitality-pure','smart-aegis-vitality','smart-magic-fire-pure','smart-magic-lightning-pure','smart-magic-arcane-pure','smart-magic-frost-vitality'];
+const IDS=[...['cycle','overflow','hybrid'].flatMap(r=>['twohand','staff','daggers','wand'].map(w=>'smart-decay-'+r+'-'+w)),'smart-decay-plagueheart','smart-decay-arcane-aegis','smart-blood-pure','smart-fury-pure','smart-radiance-pure','smart-aegis-radiance','smart-arcane-fire-pure','smart-arcane-lightning-pure','smart-arcane-arcane-pure','smart-arcane-frost-radiance'];
 const OUT='reports/decay-natural-e10',COUNT=20,SEEDS=Array.from({length:COUNT},(_,i)=>65501001+i*101);
 const mean=(a,f)=>a.length?a.reduce((n,x)=>n+f(x),0)/a.length:null;
 const counts=(a,f)=>{const out={};for(const x of a){const k=f(x);out[k]=(out[k]||0)+1;}return out;};

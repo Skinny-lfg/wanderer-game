@@ -10,7 +10,7 @@ const sha=v=>crypto.createHash('sha256').update(typeof v==='string'?v:JSON.strin
 const unique=a=>[...new Set(a)];
 const WEAPONS=['Sword','Mace','Two-Handed','Daggers','Bow','Wand','Staff'];
 const ARMORS=['Cloth','Leather','Plate'];
-const REALMS=['blood','decay','vitality','aegis','fury','magic'];
+const REALMS=['blood','decay','radiance','aegis','fury','arcane'];
 const ENCOUNTERS=['normal','elite','boss'];
 const OFFHANDS=['Shield','Orb','Tome','Charm','Off-Hand Dagger'];
 const E_BY_BUDGET=Object.freeze({12:5,24:15,36:35,60:70});
@@ -43,7 +43,7 @@ function talentInventory(budgets=DEFAULTS.budgets){
  return entries;
 }
 function compareKind(a,b){
- if(a.primary===b.primary&&a.element!==b.element&&a.primary==='magic')return 'element-switch';
+ if(a.primary===b.primary&&a.element!==b.element&&a.primary==='arcane')return 'element-switch';
  const pa=a.unlocked.length,pb=b.unlocked.length;
  if(a.primary===b.primary&&(pa!==pb))return 'affinity-investment';
  if(a.primary===b.primary&&a.model!==b.model)return 'same-primary-different-plan';

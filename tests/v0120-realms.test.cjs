@@ -3,11 +3,11 @@ const fs=require('node:fs'),vm=require('node:vm');
 const env={};vm.runInNewContext(fs.readFileSync('combat/v012-buildcraft.js','utf8'),env);const B=env.WandererV012Buildcraft;
 test('one existing initial passive per family; Magic needs its element before starter or upgrades',()=>{
  for(const family of B.FAMILIES){const b=B.create();b.families=[family];
-  if(family==='magic'){assert.equal(B.eligible(b,family).length,0);assert.throws(()=>B.initial(b,family),/unavailable/);B.element(b,'lightning');}
+  if(family==='arcane'){assert.equal(B.eligible(b,family).length,0);assert.throws(()=>B.initial(b,family),/unavailable/);B.element(b,'lightning');}
   const p=B.initial(b,family);assert.equal(p.family,family);assert.equal(b.picks.length,1);assert.equal(b.initialPassive,p.id);
   assert.equal(B.initial(b,family),null,'starter cannot be awarded twice');assert.equal(b.picks.length,1);B.clear(b);assert.equal(b.initialFamily,null);assert.equal(b.initialPassive,null);assert.equal(b.picks.length,0);
  }
- for(const element of B.ELEMENTS){const b=B.create();b.families=['magic'];B.element(b,element);const p=B.initial(b,'magic');assert.equal(p.element,element);assert(B.eligible(b,'magic').some(p=>p.id==='mana_spring'));}
+ for(const element of B.ELEMENTS){const b=B.create();b.families=['arcane'];B.element(b,element);const p=B.initial(b,'arcane');assert.equal(p.element,element);assert(B.eligible(b,'arcane').some(p=>p.id==='mana_spring'));}
 });
 test('first successful Realm grants its starter AND a normal choice before Exit Realm',()=>{
  const a=create(90);a.start(1);assert.equal(a.controller().state.offers.length,0);
@@ -28,8 +28,8 @@ test('first successful Realm grants its starter AND a normal choice before Exit 
 test('later Magic acquisition chooses only an element before entry, with its next passive after the Realm',()=>{
  const a=create(50);a.start();a.initial('blood');const c=a.controller();
  // Scheduler fixture: select a legal Magic offer, without adding a free passive.
- if(!c.state.offers.some(o=>o.family==='magic')){c.state.offers[1]={id:'storm',name:'Storm',image:'storm.webp',family:'magic',waves:1,elite:false,boss:false,event:null};}
- a.select(c.state.offers.find(o=>o.family==='magic').id);assert.equal(a.build().element,null);assert.equal(a.build().families.includes('magic'),false);
+ if(!c.state.offers.some(o=>o.family==='arcane')){c.state.offers[1]={id:'storm',name:'Storm',image:'storm.webp',family:'arcane',waves:1,elite:false,boss:false,event:null};}
+ a.select(c.state.offers.find(o=>o.family==='arcane').id);assert.equal(a.build().element,null);assert.equal(a.build().families.includes('arcane'),false);
  a.enter();assert.equal(a.draft().kind,'entry');assert.equal(a.state().run,null);a.element('fire');
  assert(a.state().run);assert.equal(a.build().picks.length,0);assert.equal(a.build().element,'fire');assert.equal(a.element('frost'),false);
 });

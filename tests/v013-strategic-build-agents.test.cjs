@@ -9,8 +9,8 @@ const p=(id)=>N.PROFILES['smart-'+id];
 test('The first acquired build skill is functional, not a cosmetic stat detour',()=>{
  const a=newAccount(),T=a.talents;
  for(const [family,skill] of Object.entries(PLANNER.OPENING_SKILLS)){
-  const id={blood:'blood-pure',fury:'fury-pure',magic:'magic-arcane-pure',
-   vitality:'vitality-pure',aegis:'aegis-vitality',decay:'decay-magic-aegis'}[family];
+  const id={blood:'blood-pure',fury:'fury-pure',arcane:'arcane-arcane-pure',
+   radiance:'radiance-pure',aegis:'aegis-radiance',decay:'decay-arcane-aegis'}[family];
   const x=PLANNER.propose(T,earned(a,5),id);
   assert(x.expectedNodes.includes('affinity_'+family),family+JSON.stringify(x));
   assert(x.expectedNodes.includes(skill),family+JSON.stringify(x));
@@ -46,7 +46,7 @@ test('A pure focused build never spends talent points on foreign Affinities',()=
  const plan=PLANNER.propose(T,before,'blood-pure');
  assert.equal(plan.allowed.length,1);assert.deepEqual(plan.allowed,['blood']);
  assert(plan.expectedNodes.includes('affinity_blood'));
- assert(plan.expectedNodes.every(id=>!['affinity_fury','affinity_aegis','affinity_vitality','affinity_magic','affinity_decay'].includes(id)));
+ assert(plan.expectedNodes.every(id=>!['affinity_fury','affinity_aegis','affinity_radiance','affinity_arcane','affinity_decay'].includes(id)));
  assert.equal(plan.earned,30);assert.equal(plan.spent,30);
  assert.equal(before.nodes.length,0);assert.equal(T.valid({...before,nodes:plan.expectedNodes}),true);
 });
@@ -61,19 +61,19 @@ test('A second Affinity unlocks only at the real earned-point threshold, not on 
 });
 test('Third Affinity is conditional on actual recorded combat pressure, not auto-added to every build',()=>{
  const a=newAccount(),T=a.talents,level=earned(a,33);
- const calm=PLANNER.propose(T,level,'blood-fury-vitality',[]);
+ const calm=PLANNER.propose(T,level,'blood-fury-radiance',[]);
  assert.deepEqual(calm.allowed,['blood','fury']);
  const history=[{status:'defeat',rooms:[{hpMax:100,hpStart:100,hpEnd:0,minHpPct:0,damageTaken:100,died:true}]}];
- const injured=PLANNER.propose(T,level,'blood-fury-vitality',history);
- assert.deepEqual(injured.allowed,['blood','fury','vitality']);
- assert(injured.expectedNodes.includes('affinity_vitality'),JSON.stringify(injured));
+ const injured=PLANNER.propose(T,level,'blood-fury-radiance',history);
+ assert.deepEqual(injured.allowed,['blood','fury','radiance']);
+ assert(injured.expectedNodes.includes('affinity_radiance'),JSON.stringify(injured));
  const strict=PLANNER.propose(T,level,'blood-fury',history);
  assert.deepEqual(strict.allowed,['blood','fury']);
 });
 test('Three real Affinities without mixed paths stay fully non-Mixed at 33 earned points',()=>{
  const a=newAccount(),T=a.talents,progress=earned(a,33);
- const plan=PLANNER.propose(T,progress,'blood-fury-vitality-no-mixed',[]);
- assert.deepEqual(plan.allowed,['blood','fury','vitality']);
+ const plan=PLANNER.propose(T,progress,'blood-fury-radiance-no-mixed',[]);
+ assert.deepEqual(plan.allowed,['blood','fury','radiance']);
  for(const family of plan.allowed)assert(plan.expectedNodes.includes('affinity_'+family),family);
  const byId=new Map(T.NODES.map(n=>[n.id,n]));
  for(const id of plan.expectedNodes){
@@ -87,28 +87,28 @@ test('Three real Affinities without mixed paths stay fully non-Mixed at 33 earne
 test('Adaptive third Affinity stays owned after short-term survival recovers',()=>{
  const a=newAccount(),T=a.talents,initial=earned(a,33);
  const injury=[{status:'defeat',rooms:[{hpMax:100,hpStart:100,hpEnd:0,minHpPct:0,damageTaken:100,died:true}]}];
- const injured=PLANNER.propose(T,initial,'blood-fury-vitality',injury);
- assert(injured.expectedNodes.includes('affinity_vitality'));
+ const injured=PLANNER.propose(T,initial,'blood-fury-radiance',injury);
+ assert(injured.expectedNodes.includes('affinity_radiance'));
  const owned={...initial,nodes:injured.expectedNodes};
  assert(T.valid(owned));
- const recovered=PLANNER.propose(T,owned,'blood-fury-vitality',[]);
- assert(recovered.allowed.includes('vitality'));
- assert(recovered.expectedNodes.includes('affinity_vitality'));
+ const recovered=PLANNER.propose(T,owned,'blood-fury-radiance',[]);
+ assert(recovered.allowed.includes('radiance'));
+ assert(recovered.expectedNodes.includes('affinity_radiance'));
  assert.equal(recovered.resetReason,null);
 });
 test('Magic agent chooses an actual available elemental mode through the real v15 API',()=>{
  const a=newAccount(),T=a.talents;let x=earned(a,22);
- const offer=PLANNER.propose(T,x,'magic-fire-aegis');
- assert(offer.expectedNodes.includes('affinity_magic'));
+ const offer=PLANNER.propose(T,x,'arcane-fire-aegis');
+ assert(offer.expectedNodes.includes('affinity_arcane'));
  assert(offer.expectedNodes.includes('element_choice'));
  assert.equal(offer.expectedElement,'fire');
  x={...x,nodes:offer.expectedNodes,element:'fire'};
  assert(T.valid(x));
- const arcane=PLANNER.propose(T,earned(a,22),'magic-arcane-pure');
+ const arcane=PLANNER.propose(T,earned(a,22),'arcane-arcane-pure');
  assert.equal(arcane.expectedElement,'arcane');
 });
 test('Matched weapon / pre-Boss potion variants differ in preferences but keep identical talent objectives',()=>{
- const sword=p('blood-sword'),two=p('blood-two-handed'),wand=p('magic-wand'),staff=p('magic-staff');
+ const sword=p('blood-sword'),two=p('blood-two-handed'),wand=p('arcane-wand'),staff=p('arcane-staff');
  assert.deepEqual(PLANNER.getPlan(sword.plan).milestones,PLANNER.getPlan(two.plan).milestones);
  assert.deepEqual(PLANNER.getPlan(wand.plan).milestones,PLANNER.getPlan(staff.plan).milestones);
  const item=(subtype)=>({slot:'weapon',subtype,atk:5,spell:5,rarity:'Uncommon',tier:1});
@@ -116,7 +116,7 @@ test('Matched weapon / pre-Boss potion variants differ in preferences but keep i
  assert(N.gearScore(item('Two-Handed'),two)>N.gearScore(item('Two-Handed'),sword));
  assert(N.gearScore(item('Wand'),wand)>N.gearScore(item('Wand'),staff));
  assert(N.gearScore(item('Staff'),staff)>N.gearScore(item('Staff'),wand));
- const offense=p('magic-wand-offense'),defense=p('magic-wand-defense');
+ const offense=p('arcane-wand-offense'),defense=p('arcane-wand-defense');
  assert.deepEqual(PLANNER.getPlan(offense.plan).milestones,PLANNER.getPlan(defense.plan).milestones);
  assert(N.potionScore('arcane',offense)>N.potionScore('arcane',defense));
  assert(N.potionScore('barrier',defense)>N.potionScore('barrier',offense));
@@ -135,12 +135,12 @@ test('Native Camp actually executes one planned build and preserves XP',()=>{
  assert(s.automaticTalents.nodes.includes('affinity_fury'));
 });
 test('Gearing prefers proper weapons and pre-Boss potions, without creating either',()=>{
- const magic=p('magic-fire-aegis'),blood=p('blood-pure');
+ const magic=p('arcane-fire-aegis'),blood=p('blood-pure');
  const sword={slot:'weapon',subtype:'Sword',atk:9,rarity:'Uncommon',tier:2};
  const wand={...sword,subtype:'Wand'};
  assert(N.gearScore(wand,magic)>N.gearScore(sword,magic));
  const shield={slot:'offhand',subtype:'Shield',def:6};
- assert(N.gearScore(shield,p('aegis-vitality'))>N.gearScore(shield,p('magic-arcane-pure')));
+ assert(N.gearScore(shield,p('aegis-radiance'))>N.gearScore(shield,p('arcane-arcane-pure')));
  assert(N.potionScore('arcane',magic)>N.potionScore('arcane',blood));
  assert(N.potionScore('might',blood)>N.potionScore('might',magic));
  const consumables=require('../online/v012-consumables.js');

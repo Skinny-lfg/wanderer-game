@@ -83,10 +83,10 @@ jobs:
           - { id: 'smart-blood-two-handed', seed: 9863 }
           - { id: 'smart-fury-bow', seed: 9861 }
           - { id: 'smart-fury-bow', seed: 9863 }
-          - { id: 'magic-fire', seed: 9861 }
-          - { id: 'magic-fire', seed: 9863 }
-          - { id: 'magic-lightning', seed: 9861 }
-          - { id: 'magic-lightning', seed: 9863 }
+          - { id: 'arcane-fire', seed: 9861 }
+          - { id: 'arcane-fire', seed: 9863 }
+          - { id: 'arcane-lightning', seed: 9861 }
+          - { id: 'arcane-lightning', seed: 9863 }
           - { id: 'plate-warden', seed: 9861 }
           - { id: 'plate-warden', seed: 9863 }
     steps:

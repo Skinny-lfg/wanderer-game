@@ -12,24 +12,24 @@ test('Stage 2 uses a frozen Stage 1 fingerprint and 48 complete baseline observa
 });
 function fixture(){
  const groups=baseline.groups.map(x=>({...x}));
- for(const x of groups.filter(x=>x.build==='aegis-magic'))x.meanBarrierAtEntry+=1;
+ for(const x of groups.filter(x=>x.build==='aegis-arcane'))x.meanBarrierAtEntry+=1;
  return {summary:{valid:48,errors:0,timeouts:0,groups}};
 }
 test('Stage 2 comparison enforces benefit for Aegis + Magic and no unrelated drift',()=>{
  assert.equal(Comparator.compare(baseline,fixture()).length,24);
  const drift=fixture();drift.summary.groups.find(x=>x.build==='pure-aegis').meanBarrierGenerated+=1;
  assert.throws(()=>Comparator.compare(baseline,drift),/Physical Aegis/);
- const wrong=fixture();wrong.summary.groups.find(x=>x.build==='pure-magic').meanBarrierGenerated+=1;
- assert.throws(()=>Comparator.compare(baseline,wrong),/pure-magic/);
- const noGain=fixture();noGain.summary.groups.find(x=>x.build==='aegis-magic').meanBarrierAtEntry-=1;
+ const wrong=fixture();wrong.summary.groups.find(x=>x.build==='pure-arcane').meanBarrierGenerated+=1;
+ assert.throws(()=>Comparator.compare(baseline,wrong),/pure-arcane/);
+ const noGain=fixture();noGain.summary.groups.find(x=>x.build==='aegis-arcane').meanBarrierAtEntry-=1;
  assert.throws(()=>Comparator.compare(baseline,noGain),/Aegis \+ Magic/);
 });
 
 test('Stage 2 historical comparison permits intentional Off-Hand Spell Power rerolls only with explicit new mode',()=>{
  const drift=fixture();
- drift.summary.groups.find(x=>x.build==='pure-magic').meanSpellPower+=2;
+ drift.summary.groups.find(x=>x.build==='pure-arcane').meanSpellPower+=2;
  assert.throws(()=>Comparator.compare(baseline,drift,{postBarrierReset:true}),/Spell Power/);
  assert.equal(Comparator.compare(baseline,drift,{postBarrierReset:true,postOffhandReroll:true}).length,24);
- drift.summary.groups.find(x=>x.build==='pure-magic').meanSpellPower=NaN;
+ drift.summary.groups.find(x=>x.build==='pure-arcane').meanSpellPower=NaN;
  assert.throws(()=>Comparator.compare(baseline,drift,{postBarrierReset:true,postOffhandReroll:true}),/Invalid current Spell Power/);
 });

@@ -3,9 +3,9 @@
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const S=require('./simulate-progression.cjs'),G=require('./v013-global-e10.cjs'),{T,buy}=require('../tests/v013-current-talent-helper.cjs');
 const OUT='reports/e10-defensive-drain',N=100,ROUTES=30,POINTS=30,LEVEL=10;
-const F=['blood','decay','vitality','aegis','fury','magic'],ELITES=G.SC.filter(x=>x.kind==='elite').map(x=>x.elite);
+const F=['blood','decay','radiance','aegis','fury','arcane'],ELITES=G.SC.filter(x=>x.kind==='elite').map(x=>x.elite);
 const SC=['normal-1','normal-4','normal-8','normal-12','elite','boss'];
-const MAGIC=['fire','lightning'].flatMap(e=>['wand','staff'].map(w=>'magic-'+e+'-'+w));
+const MAGIC=['fire','lightning'].flatMap(e=>['wand','staff'].map(w=>'arcane-'+e+'-'+w));
 const FURY=['fury-daggers','fury-bow','fury-twohand'];
 const BLOOD=FURY.map(id=>id.replace('fury-','blood-'));
 const AUDIT='audit-twohand',IDS=[...MAGIC,...FURY,...BLOOD,AUDIT];
@@ -13,12 +13,12 @@ const gear=fs.readFileSync('combat/v012-gear-stats.js','utf8'),runtime=fs.readFi
 const replace=(s,a,b)=>{assert.equal(s.split(a).length,2,'source anchor '+a.slice(0,120));return s.replace(a,b);};
 let observer=replace(runtime,"  const attackType=ports.enemyAttackType(e);","  const attackType=ports.enemyAttackType(e);\n  ports.phase6Metric(r,'auditEnemyAttacks',1);ports.phase6Metric(r,attackType==='physical'?'auditPhysicalAttacks':'auditNonPhysicalAttacks',1);ports.phase6Metric(r,'auditPreAvoidDamage',raw);");
 observer=replace(observer,"   ports.phase6Metric(r,'dodges',1);","   ports.phase6Metric(r,'dodges',1);ports.phase6Metric(r,'auditDodgePrevented',raw);");
-const SUPPORT={blood:['blood_drinker','bleeding_edge'],vitality:['strong_heart','renewal'],aegis:['guarded_block','barrier_pulse']};
+const SUPPORT={blood:['blood_drinker','bleeding_edge'],radiance:['strong_heart','renewal'],aegis:['guarded_block','barrier_pulse']};
 const drainExtras={basic:[],harvest:['blood_harvest'],feast:['crimson_feast'],both:['blood_harvest','crimson_feast'],mixed:['crimson_rush']};
-const M=['pure','vitality','aegis'].map(id=>({id}));
+const M=['pure','radiance','aegis'].map(id=>({id}));
 const U=['pure','basic','harvest','feast','both','mixed'].map(id=>({id}));
 const B=['basic','harvest','feast','both'].map(id=>({id}));
-const A=[{id:'pure'},...['blood','vitality','aegis','blood-vitality'].map(id=>({id})),...['blood','vitality','aegis','blood-vitality'].map(base=>({id:base+'-equal-evasion',base,restore:true})),{id:'pure-minus-evasion',base:'pure',remove:true}];
+const A=[{id:'pure'},...['blood','radiance','aegis','blood-radiance'].map(id=>({id})),...['blood','radiance','aegis','blood-radiance'].map(base=>({id:base+'-equal-evasion',base,restore:true})),{id:'pure-minus-evasion',base:'pure',remove:true}];
 const nodesById=new Map(T.NODES.map(n=>[n.id,n]));
 const rating=t=>t.nodes.reduce((n,id)=>n+(nodesById.get(id.replace(/_rank\d+$/,''))?.flatAvoid||0),0);
 const cache=new Map();
@@ -42,7 +42,7 @@ function fill(p,families,mandatory){
 }
 function prefixSupport(p,id){
  if(id==='pure')return {...p,coreCount:POINTS,supportSkills:[],retainedOffense:p.skills,sacrificedOffense:[]};
- const support=id==='blood-vitality'?['blood','vitality']:[id],mandatory=support.flatMap(f=>SUPPORT[f]),supportPath=buy(mandatory,{xp:POINTS*T.POINT_XP});
+ const support=id==='blood-radiance'?['blood','radiance']:[id],mandatory=support.flatMap(f=>SUPPORT[f]),supportPath=buy(mandatory,{xp:POINTS*T.POINT_XP});
  const coreCount=POINTS-supportPath.nodes.length,core=p.t.nodes.slice(0,coreCount);
  let t={...p.t,nodes:[...core]};assert(T.valid(t));assert(core.includes(p.skills[0]));
  for(const node of supportPath.nodes){const next=T.allocate(t,node);assert(next,'support '+node);t=next;}
@@ -124,8 +124,8 @@ function run(id){
 function smoke(){
  new Function(observer);
  for(const id of IDS){for(const a of arms(id)){const p=profile(id,a);console.log('DEFENSIVE_PLAN='+JSON.stringify({id,arm:a.id,n:p.t.nodes.length,nodes:p.t.nodes,families:p.families,rating:rating(p.t),delta:p.evasionDelta||0}));}trial(id,'normal-1',0);}
- for(const sc of SC){trial(AUDIT,sc,1);trial('magic-lightning-staff',sc,1);}
- const rs=M.map(a=>route('magic-fire-wand',a,0));for(const r of rs){assert(!r.error,r.error);assert.deepEqual(r.route,rs[0].route);assert.equal(r.gear,rs[0].gear);}
+ for(const sc of SC){trial(AUDIT,sc,1);trial('arcane-lightning-staff',sc,1);}
+ const rs=M.map(a=>route('arcane-fire-wand',a,0));for(const r of rs){assert(!r.error,r.error);assert.deepEqual(r.route,rs[0].route);assert.equal(r.gear,rs[0].gear);}
  console.log('DEFENSIVE_DRAIN_SMOKE_OK');
 }
 function aggregate(){

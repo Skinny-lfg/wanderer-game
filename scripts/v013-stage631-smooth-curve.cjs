@@ -46,7 +46,7 @@ test('Stage6.31: all 34 real strategies and six Realms; valid target win rates',
  assert.equal(C.ALL.length,34);
  assert.equal(new Set(C.ALL).size,34);
  assert.deepEqual([...C.REALMS].sort(),
-  ['aegis','blood','decay','fury','magic','vitality'].sort());
+  ['aegis','blood','decay','fury','arcane','radiance'].sort());
  assert.deepEqual(C.TARGETS,{normal:[80,90],elite:[60,70],boss:[35,45]});
  assert.equal(C.DEEP.length,12);
  assert(C.ALL.every(id=>N.PROFILES[id]));

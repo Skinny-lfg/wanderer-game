@@ -1,6 +1,6 @@
 'use strict';
 // The six current adjacent v15 hybrid links and the optional Stage 4
-// Fury + Vitality healing change. These exercise real Buildcraft callbacks,
+// Fury + Radiance healing change. These exercise real Buildcraft callbacks,
 // not a duplicate combat implementation.
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs');
 const {T,buy}=require('./v013-current-talent-helper.cjs');
@@ -109,7 +109,7 @@ test('Stage 4 frozen Stage 3 audit rejects any unrelated Affinity regression',()
  const fixture=()=>({settings:{...F.settings,output:'ignored'},summary:{valid:48,errors:0,timeouts:0,groups:groups.map(x=>({...x}))}});
  assert.equal(R.compare(fixture()).length,24);
  const altered=fixture();
- altered.summary.groups.find(x=>x.build==='pure-magic').meanManaSpent++;
+ altered.summary.groups.find(x=>x.build==='pure-arcane').meanManaSpent++;
  assert.throws(()=>R.compare(altered),/Unrelated Affinity drift/);
 });
 test('Stage 4 tooltip, runtime and generated Pages mirror have one consistent Fervent formula',()=>{

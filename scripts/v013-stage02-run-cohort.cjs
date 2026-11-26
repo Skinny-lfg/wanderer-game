@@ -5,8 +5,8 @@
 const fs=require('node:fs'),path=require('node:path');
 const N=require('./v013-natural-progression.cjs');
 const GROUPS=Object.freeze({
- A:['cautious','balanced','magic-fire','leather-duelist','hexblade-hybrid'],
- B:['daring','plate-warden','magic-frost','magic-lightning','cloth-battlemage']
+ A:['cautious','balanced','arcane-fire','leather-duelist','hexblade-hybrid'],
+ B:['daring','plate-warden','arcane-frost','arcane-lightning','cloth-battlemage']
 });
 const SEEDS=Object.freeze([9811,9812,9813,9814,9815]);
 const MAX_LEVEL=20,MAX_ATTEMPTS=18,MAX_TOTAL_ATTEMPTS=360,MAX_COMBAT_TICKS=12000;

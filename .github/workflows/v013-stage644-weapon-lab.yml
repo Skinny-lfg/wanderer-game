@@ -55,8 +55,8 @@ jobs:
           - {profile: decay-blood-spread, variant: status50}
           - {profile: decay-blood-spread, variant: rupture}
           - {profile: decay-blood-spread, variant: 'rupture+status50'}
-          - {profile: magic-decay-bloom, variant: current}
-          - {profile: magic-decay-bloom, variant: bloomFixed}
+          - {profile: arcane-decay-bloom, variant: current}
+          - {profile: arcane-decay-bloom, variant: bloomFixed}
     steps:
       - uses: actions/checkout@v4
         with: {persist-credentials: false}

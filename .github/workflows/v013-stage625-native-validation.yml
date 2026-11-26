@@ -110,7 +110,7 @@ jobs:
         run: >-
           node scripts/v013-natural-progression.cjs
           --seeds=${{ matrix.seed }}
-          --profiles=cautious,balanced,magic-fire,leather-duelist
+          --profiles=cautious,balanced,arcane-fire,leather-duelist
           --max-level=20
           --max-attempts=6
           --max-total-attempts=80

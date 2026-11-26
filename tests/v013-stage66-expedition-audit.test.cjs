@@ -12,7 +12,7 @@ function account(seed,profile){
 }
 const report=(accounts,source='abc')=>({source,runnerSha256:'run',accounts});
 test('Stage 6.6 derives the REAL diminishing enemy reference, rather than arbitrary rates',()=>{
- const a=A.summarize([report([account(1,'magic-fire'),account(1,'balanced')])]);
+ const a=A.summarize([report([account(1,'arcane-fire'),account(1,'balanced')])]);
  assert.equal(a.sourceReference[0].reference,1);
  assert.equal(a.sourceReference[4].reference,5);
  assert(Math.abs(a.sourceReference[9].reference-(5+Math.log(2)))<0.00001);
@@ -27,11 +27,11 @@ test('Duplicate identities, cross-source mixing, invalid unlock and tampered sta
  const x=account(1,'balanced');
  assert.throws(()=>A.summarize([report([x,x])]),/Duplicate native account/);
  assert.throws(()=>A.summarize([report([x]),report([account(2,'balanced')],'new')]),/Different Stage/);
- const bad=account(2,'magic-fire');bad.attempts.push({...bad.attempts[0],level:2});
+ const bad=account(2,'arcane-fire');bad.attempts.push({...bad.attempts[0],level:2});
  assert.throws(()=>A.summarize([report([bad])]),/Non-native Expedition unlock/);
- const free=account(2,'magic-fire');free.startXp=100;
+ const free=account(2,'arcane-fire');free.startXp=100;
  assert.throws(()=>A.summarize([report([free])]),/clean slate/);
- const error=account(2,'magic-fire');error.attempts[0].status='error';
+ const error=account(2,'arcane-fire');error.attempts[0].status='error';
  assert.throws(()=>A.summarize([report([error])]),/Native attempt failed/);
 });
 test('Analyzer is read-only and cannot alter combat/equipment',()=>{

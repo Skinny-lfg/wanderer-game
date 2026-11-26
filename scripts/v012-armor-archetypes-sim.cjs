@@ -3,10 +3,10 @@
 const fs=require('node:fs'),{performance}=require('node:perf_hooks');
 const {run}=require('./v012-affinity-combat-sim.cjs');
 const variants=[
- {name:'Cloth Staff',archetype:'Cloth / Magic + Aegis + Decay',armorType:'Cloth',family:'magic',targetFamilies:['magic','aegis','decay'],weapon:'Staff',offhandType:null},
- {name:'Cloth Wand/Orb',archetype:'Cloth / Magic + Aegis + Decay',armorType:'Cloth',family:'magic',targetFamilies:['magic','aegis','decay'],weapon:'Wand',offhandType:'Orb'},
- {name:'Plate Mace/Shield',archetype:'Plate / Vitality + Aegis + Fury',armorType:'Plate',family:'vitality',targetFamilies:['vitality','aegis','fury'],weapon:'Mace',offhandType:'Shield'},
- {name:'Plate Sword/Shield',archetype:'Plate / Vitality + Aegis + Fury',armorType:'Plate',family:'vitality',targetFamilies:['vitality','aegis','fury'],weapon:'Sword',offhandType:'Shield'},
+ {name:'Cloth Staff',archetype:'Cloth / Magic + Aegis + Decay',armorType:'Cloth',family:'arcane',targetFamilies:['arcane','aegis','decay'],weapon:'Staff',offhandType:null},
+ {name:'Cloth Wand/Orb',archetype:'Cloth / Magic + Aegis + Decay',armorType:'Cloth',family:'arcane',targetFamilies:['arcane','aegis','decay'],weapon:'Wand',offhandType:'Orb'},
+ {name:'Plate Mace/Shield',archetype:'Plate / Radiance + Aegis + Fury',armorType:'Plate',family:'radiance',targetFamilies:['radiance','aegis','fury'],weapon:'Mace',offhandType:'Shield'},
+ {name:'Plate Sword/Shield',archetype:'Plate / Radiance + Aegis + Fury',armorType:'Plate',family:'radiance',targetFamilies:['radiance','aegis','fury'],weapon:'Sword',offhandType:'Shield'},
  {name:'Leather Dual Daggers',archetype:'Leather / Decay + Fury + Blood',armorType:'Leather',family:'decay',targetFamilies:['decay','fury','blood'],weapon:'Daggers',offhandType:'Daggers'},
  {name:'Leather Bow',archetype:'Leather / Decay + Fury + Blood',armorType:'Leather',family:'decay',targetFamilies:['decay','fury','blood'],weapon:'Bow',offhandType:null}
 ];

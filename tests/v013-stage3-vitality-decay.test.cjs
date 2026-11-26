@@ -15,43 +15,43 @@ function context({hp=500,maxhp=1000,mp=0,base=100,power=0,critical=false}={}){
   damage:(n,label)=>events.push(['damage',label,n]),dot:()=>{},dotDamage:()=>{},barrier:()=>{},mana:()=>{},chill:()=>{},log:()=>{}};
  return {player,enemy,c,events};
 }
-test('Vitality v15 root and basic stat nodes use percentage Max HP, with visible exact units',()=>{
- const root=T.NODES.find(n=>n.id==='affinity_vitality');
+test('Radiance v15 root and basic stat nodes use percentage Max HP, with visible exact units',()=>{
+ const root=T.NODES.find(n=>n.id==='affinity_radiance');
  near(root.healthRegen,.0015);
  assert(root.description.includes('0.15%'));
  assert(root.description.includes('0.35%'));
- const nodes=T.NODES.filter(n=>n.kind==='stat'&&n.family==='vitality'&&n.healthRegen);
+ const nodes=T.NODES.filter(n=>n.kind==='stat'&&n.family==='radiance'&&n.healthRegen);
  assert(nodes.length>0);
  for(const n of nodes){
   assert(n.healthRegen>=.0005&&n.healthRegen<=.001,'rate per node should be bounded');
   assert(n.description.includes('% Max HP regeneration'),'percentage units exposed to player: '+n.id);
  }
- const b=build(['affinity_vitality']);
+ const b=build(['affinity_radiance']);
  near(b.runtime.talentBonuses.healthRegen,.0015);
 });
-test('Vitality regen scales with Max HP, is capped before fork modifiers and respects effective healing',()=>{
- const b=build(['affinity_vitality']);
+test('Radiance regen scales with Max HP, is capped before fork modifiers and respects effective healing',()=>{
+ const b=build(['affinity_radiance']);
  const smaller=context({hp:50,maxhp:200}),larger=context({hp:50,maxhp:600});
  B.onSecond(b,smaller.c);
  B.onSecond(b,larger.c);
  near(smaller.events.find(x=>x[0]==='healed')[1],.3);
  near(larger.events.find(x=>x[0]==='healed')[1],.9);
  assert(larger.player.hp>smaller.player.hp);
- const capBuild=build(['affinity_vitality']);
+ const capBuild=build(['affinity_radiance']);
  capBuild.runtime.talentBonuses.healthRegen=.01; // Stress a valid aggregate above the cap.
  const cap=context({hp:10,maxhp:1000});B.onSecond(capBuild,cap.c);
  near(cap.events.find(x=>x[0]==='healed')[1],3.5);
- capBuild.runtime.specializations=['vitality_recovery'];
+ capBuild.runtime.specializations=['radiance_recovery'];
  const boost=context({hp:10,maxhp:1000});B.onSecond(capBuild,boost.c);
  near(boost.events.find(x=>x[0]==='healed')[1],3.5*1.25);
- capBuild.runtime.specializations=['vitality_reserve'];
+ capBuild.runtime.specializations=['radiance_reserve'];
  const reserve=context({hp:10,maxhp:1000});B.onSecond(capBuild,reserve.c);
  near(reserve.events.find(x=>x[0]==='healed')[1],3.5*.75);
  const full=context({hp:1000,maxhp:1000});B.onSecond(capBuild,full.c);
  assert.equal(full.events.find(x=>x[0]==='healed')[1],0,'no overhealing counted as actual healing');
 });
-test('Vitality healing stays independent of Spell Power and existing Renewal/Life Bloom formulas',()=>{
- const b=build(['affinity_vitality']);
+test('Radiance healing stays independent of Spell Power and existing Renewal/Life Bloom formulas',()=>{
+ const b=build(['affinity_radiance']);
  for(const power of [0,100,1000]){
   const x=context({hp:50,maxhp:500,power});B.onSecond(b,x.c);
   near(x.events.find(e=>e[0]==='healed')[1],.75);
@@ -102,7 +102,7 @@ test('active Magic + Decay Hex Bolt uses Spell Power without consuming existing 
   x.c.funded=true;x.c.now=6;
   B.onCast(b,x.c);
   const damage=x.events.find(e=>e[0]==='damage'&&e[1].includes('Hex Bolt'));
-  assert(damage,'reachable Magic/Decay Hex Bolt triggered');
+  assert(damage,'reachable Arcane/Decay Hex Bolt triggered');
   result.push(damage[2]);
   assert.equal(x.enemy.v012Rot.length,1);
  }
@@ -124,7 +124,7 @@ test('Stage 3 comparator validates frozen Stage 2 cohorts and rejects unrelated 
  const C=require('../scripts/v013-stage3-coherence-compare.cjs');
  const before=require('../reports/v013-stage2-affinity-freeze.json');
  const groups=before.groups.map(g=>({...g}));
- groups.find(g=>g.build==='pure-vitality').meanHealingPerSecond+=.3;
+ groups.find(g=>g.build==='pure-radiance').meanHealingPerSecond+=.3;
  const current={settings:{...before.settings,output:'reports/current.json'},
   summary:{valid:48,errors:0,timeouts:0,groups}};
  assert.equal(C.compare(before,current).length,24);

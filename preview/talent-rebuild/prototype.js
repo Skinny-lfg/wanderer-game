@@ -20,8 +20,8 @@ for(const n of graph){
  else if(n.outerStep)xy=[n.outerSide*(n.outerStep===1?195:323.7),n.outerStep===1?578:728];
  else if(n.id==='element_choice')xy=[0,720];
  else if(skill.kind==='basic'||n.id.startsWith('basic_path_')){const [x,y]=rows[n.tier-1][n.id.startsWith('basic_path_')?0:n.gateFor?1:2];xy=[(skill.lane===0?-1:1)*x,y];}
- else if(n.id.startsWith('focus_branch_')||n.id.startsWith('magic_side_')){const [x,y]=rows[n.tier-1][3];xy=[(n.lane===0?-1:1)*x,y];}
- else if(n.id.startsWith('focus_bridge_')||n.id.startsWith('magic_bridge_'))xy=[(n.lane===0?-1:1)*(n.tier===2?136.5:195),n.tier===2?1188:1618];
+ else if(n.id.startsWith('focus_branch_')||n.id.startsWith('arcane_side_')){const [x,y]=rows[n.tier-1][3];xy=[(n.lane===0?-1:1)*x,y];}
+ else if(n.id.startsWith('focus_bridge_')||n.id.startsWith('arcane_bridge_'))xy=[(n.lane===0?-1:1)*(n.tier===2?136.5:195),n.tier===2?1188:1618];
  else if(n.basicDetour)xy=[(n.lane===0?-1:1)*340,1450];
  else if(['focused','element'].includes(skill.kind))xy=[0,n.gateFor?[1043,1478,1898][skill.tier-1]:[1133,1568,1993][skill.tier-1]];
  if(!xy)throw Error('Missing atlas position '+n.id);positions[n.id]=local(f,...xy);
@@ -29,7 +29,7 @@ for(const n of graph){
 const el=(tag,attrs)=>{const e=document.createElementNS(ns,tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);return e};
 for(const n of graph){const p=positions[n.id];for(const dep of [...new Set([n.requires,...(n.prerequisites||[]),...(n.anyRequires||[])].filter(Boolean))]){if((n.mixedChoice||n.focusChoice||n.elementPrevious||n.gateFor&&byId.get(n.gateFor)?.kind==='mixed'&&n.tier===3)&&n.anyRequires?.includes(dep))continue;if(dep==='element_choice'&&(n.adaptive||n.element&&n.gateFor))continue;const q=positions[dep],data={'data-from':dep,'data-to':n.id,...(n.pending||byId.get(dep)?.pending?{class:'pending-route'}:{})};links.append(el('line',{...data,x1:q.x,y1:q.y,x2:p.x,y2:p.y}));}}
 const core=el('circle',{cx:0,cy:0,r:95,fill:'#171418',stroke:'#b39568','stroke-width':3});links.append(core);for(const f of families){const p=positions['root_'+f];links.prepend(el('line',{x1:Math.cos(angle(f))*95,y1:Math.sin(angle(f))*95,x2:p.x,y2:p.y,'data-from':'@core','data-to':'root_'+f}));}
-const glyph={blood:'✦',fury:'⚔',aegis:'⛨',vitality:'✿',magic:'✧',decay:'☠'},colors={blood:'#ae4b57',fury:'#d78246',aegis:'#79a7c8',vitality:'#8ebc72',magic:'#aa87d7',decay:'#9dae68'};
+const glyph={blood:'✦',fury:'⚔',aegis:'⛨',radiance:'☀',arcane:'✧',decay:'☠'},colors={blood:'#ae4b57',fury:'#d78246',aegis:'#79a7c8',radiance:'#f6d997',arcane:'#aa87d7',decay:'#9dae68'};
 for(const n of graph){const p=positions[n.id],rad=n.kind==='affinity'?37:n.kind==='choice'?32:n.kind==='mixed'?29:['basic','focused','element','choice','weapon','extension','adaptive'].includes(n.kind)?23:9,g=el('g',{class:'node'+(n.pending?' pending-talent':''),'data-id':n.id,transform:`translate(${p.x} ${p.y})`,tabindex:'0',role:'button','aria-label':n.name});const c=el('circle',{r:rad,style:`stroke:${({fire:'#e88a57',frost:'#80c6df',lightning:'#dfc76b'}[n.element])||colors[n.family]||'#b39568'}`});g.append(c);
  if(n.kind==='affinity'){const image=el('image',{href:`../../assets/affinities/families/${n.family}.png`,x:-30,y:-30,width:60,height:60});g.append(image);}else if(rad>9){const t=el('text',{'font-size':n.icon?23:19});t.textContent=n.id==='element_choice'?'✺':n.icon||glyph[n.family];g.append(t);}else{const t=el('text',{'font-size':8,class:'stat'});t.textContent='•';g.append(t);}
  function select(){document.querySelector('.node.selected')?.classList.remove('selected');g.classList.add('selected');document.querySelector('aside').classList.add('has-selection');document.querySelector('#name').textContent=n.name;document.querySelector('#description').textContent=(n.pending?'COMING SOON — not yet available. ':'')+(n.description||`${n.kind} · ${n.family}`);selected=n;if(n.id==='element_choice'){optionsOpen=!optionsOpen;updateVisibility();}refresh();}

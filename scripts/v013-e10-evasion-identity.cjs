@@ -3,11 +3,11 @@
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const S=require('./simulate-progression.cjs'),G=require('./v013-global-e10.cjs'),{T,buy}=require('../tests/v013-current-talent-helper.cjs');
 const OUT='reports/e10-evasion-identity',N=100,POINTS=30,LEVEL=10;
-const F=['blood','decay','vitality','aegis','fury','magic'],ELITES=G.SC.filter(x=>x.kind==='elite').map(x=>x.elite);
+const F=['blood','decay','radiance','aegis','fury','arcane'],ELITES=G.SC.filter(x=>x.kind==='elite').map(x=>x.elite);
 const SC=['normal-1','normal-4','normal-8','normal-12','elite','boss'];
-const IDS=['blood-daggers','blood-twohand','fury-daggers','fury-bow','fury-twohand','decay-cycle-daggers','decay-cycle-wand','vitality-mace','aegis-mace','magic-fire-wand','magic-lightning-staff','hybrid-blood-fury'];
-const ARMOR=['Cloth','Leather','Plate'],CROSS=new Set(['fury-daggers','fury-bow','fury-twohand','decay-cycle-wand','magic-lightning-staff','vitality-mace']);
-const PHANTOM=new Set(['fury-daggers','fury-twohand','blood-daggers','magic-lightning-staff']);
+const IDS=['blood-daggers','blood-twohand','fury-daggers','fury-bow','fury-twohand','decay-cycle-daggers','decay-cycle-wand','radiance-mace','aegis-mace','arcane-fire-wand','arcane-lightning-staff','hybrid-blood-fury'];
+const ARMOR=['Cloth','Leather','Plate'],CROSS=new Set(['fury-daggers','fury-bow','fury-twohand','decay-cycle-wand','arcane-lightning-staff','radiance-mace']);
+const PHANTOM=new Set(['fury-daggers','fury-twohand','blood-daggers','arcane-lightning-staff']);
 const gear=fs.readFileSync('combat/v012-gear-stats.js','utf8'),core=fs.readFileSync('combat/v012-combat-core.js','utf8'),runtime=fs.readFileSync('combat/v012-combat-runtime.js','utf8');
 const replace=(s,a,b)=>{assert.equal(s.split(a).length,2,'source anchor '+a.slice(0,120));return s.replace(a,b);};
 let observer=replace(runtime,"  const attackType=ports.enemyAttackType(e);","  const attackType=ports.enemyAttackType(e);\n  ports.phase6Metric(r,'auditEnemyAttacks',1);ports.phase6Metric(r,attackType==='physical'?'auditPhysicalAttacks':'auditNonPhysicalAttacks',1);ports.phase6Metric(r,'auditPreAvoidDamage',raw);");
@@ -98,7 +98,7 @@ function run(id){
 function smoke(){
  new Function(observer);new Function(boostedLeather);console.log('EVASION_CURVES='+JSON.stringify(curves()));
  for(const id of IDS){const p=profile(id);assert(T.valid(p.t));assert.equal(p.t.nodes.length,POINTS);console.log('EVASION_PLAN='+JSON.stringify({id,nodes:p.t.nodes,arms:arms(id)}));trial(id,'normal-1',0);}
- for(const sc of SC)for(const id of ['fury-twohand','fury-daggers','magic-lightning-staff'])trial(id,sc,1);
+ for(const sc of SC)for(const id of ['fury-twohand','fury-daggers','arcane-lightning-staff'])trial(id,sc,1);
  console.log('EVASION_IDENTITY_SMOKE_OK');
 }
 function aggregate(){

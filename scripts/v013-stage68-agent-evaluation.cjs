@@ -43,7 +43,7 @@ function evaluate(reports,opts={}){
   const stages=Object.fromEntries([1,3,5,6,7,10].map(E=>['E'+E,
    {entered:count(aa,a=>a.reached.includes(E)),cleared:count(aa,a=>a.attempts.some(t=>t.level===E&&t.bossWon))}]));
   const milestones=uniq(attempts.map(t=>t.camp?.plan?.milestone).filter(Boolean));
-  const openedAffinity=Object.fromEntries(['blood','fury','vitality','aegis','magic','decay'].map(f=>[f,
+  const openedAffinity=Object.fromEntries(['blood','fury','radiance','aegis','arcane','decay'].map(f=>[f,
    count(attempts,t=>t.before?.talentNodes?.includes('affinity_'+f))]));
   const changes=sum(attempts,t=>(t.camp?.resets||[]).length),resets=attempts.flatMap(t=>t.camp?.resets||[]);
   const meaningfulWeapon=weapon.filter(w=>plan.weapons.includes(w)).length;

@@ -20,7 +20,7 @@ function calibrated(veil,heartroot){
     src=replaceOnce(src,"ports.legendaryEmpowered(r,'veil-thousand-seals')?.45:.30","ports.legendaryEmpowered(r,'veil-thousand-seals')?.30:.20");
   }
   if(heartroot){
-    // Empowered (Vitality) / ordinary: healing 0.45/0.30 -> 0.30/0.20% HP/s;
+    // Empowered (Radiance) / ordinary: healing 0.45/0.30 -> 0.30/0.20% HP/s;
     // realm cap 15 -> 10% MaxHP.
     src=replaceOnce(src,"ports.legendaryEmpowered(r,'heartroot-carapace')?.0045:.003","ports.legendaryEmpowered(r,'heartroot-carapace')?.003:.002");
     src=replaceOnce(src,"r.maxhp*.15-(t.heartrootHealed||0)","r.maxhp*.10-(t.heartrootHealed||0)");
@@ -35,16 +35,16 @@ const arms={
 };
 const sources=Object.fromEntries(Object.entries(arms).map(([k,v])=>[k,calibrated(v.veil,v.heartroot)]));
 const builds=[
- {name:'Cloth Staff',weapon:'Staff',armorType:'Cloth',family:'magic',targetFamilies:['magic','aegis','decay'],
+ {name:'Cloth Staff',weapon:'Staff',armorType:'Cloth',family:'arcane',targetFamilies:['arcane','aegis','decay'],
    singles:[{belt:'veil-thousand-seals'},{armor:'heartroot-carapace'}],
    pairs:[{belt:'veil-thousand-seals',armor:'heartroot-carapace'}]},
- {name:'Cloth Wand + Orb',weapon:'Wand',offhandType:'Orb',armorType:'Cloth',family:'magic',targetFamilies:['magic','aegis','decay'],
+ {name:'Cloth Wand + Orb',weapon:'Wand',offhandType:'Orb',armorType:'Cloth',family:'arcane',targetFamilies:['arcane','aegis','decay'],
    singles:[{belt:'veil-thousand-seals'},{armor:'heartroot-carapace'}],
    pairs:[{weapon:'voidglass',belt:'veil-thousand-seals'},{belt:'veil-thousand-seals',armor:'heartroot-carapace'}]},
- {name:'Plate Sword + Shield',weapon:'Sword',offhandType:'Shield',armorType:'Plate',family:'vitality',targetFamilies:['vitality','aegis','fury'],
+ {name:'Plate Sword + Shield',weapon:'Sword',offhandType:'Shield',armorType:'Plate',family:'radiance',targetFamilies:['radiance','aegis','fury'],
    singles:[{belt:'veil-thousand-seals'},{armor:'heartroot-carapace'}],
    pairs:[{offhand:'oathwall',belt:'veil-thousand-seals'},{weapon:'graft',belt:'veil-thousand-seals'}]},
- {name:'Plate Mace + Shield',weapon:'Mace',offhandType:'Shield',armorType:'Plate',family:'vitality',targetFamilies:['vitality','aegis','fury'],
+ {name:'Plate Mace + Shield',weapon:'Mace',offhandType:'Shield',armorType:'Plate',family:'radiance',targetFamilies:['radiance','aegis','fury'],
    singles:[{belt:'veil-thousand-seals'},{armor:'heartroot-carapace'}],
    pairs:[{offhand:'oathwall',armor:'heartroot-carapace'}]},
  {name:'Leather Dual Daggers',weapon:'Daggers',offhandType:'Daggers',armorType:'Leather',family:'decay',targetFamilies:['decay','fury','blood'],

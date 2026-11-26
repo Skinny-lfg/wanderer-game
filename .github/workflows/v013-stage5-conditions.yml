@@ -65,7 +65,7 @@ jobs:
           node scripts/v013-stage5-stress.cjs
           --seed-count=24
           --levels=1,15,50,200
-          --builds=blood-fury,aegis-vitality,magic-decay,blood-decay
+          --builds=blood-fury,aegis-radiance,arcane-decay,blood-decay
           --out=reports/stage5-conditions-stress.json
       - name: Store reproducible scenario metrics
         if: always()

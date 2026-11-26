@@ -55,7 +55,7 @@ test('clean sheet rejects obsolete talent saves, keeps fresh v15 accounts',()=>{
  const a=create(8802,undefined,{}, {skipPersistence:true,now:1720000008802});
  const T=a.talents;
  assert.equal(typeof T.migrate,'undefined');
- assert.equal(T.valid({treeVersion:10,xp:1200,nodes:['root_magic'],attributes:{int:2}}),false);
+ assert.equal(T.valid({treeVersion:10,xp:1200,nodes:['root_arcane'],attributes:{int:2}}),false);
  assert.equal(T.valid(T.create()),true);
  assert.equal(T.valid({...T.create(),starterPoints:2}),false);
 });

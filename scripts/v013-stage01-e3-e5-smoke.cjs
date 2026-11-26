@@ -4,7 +4,7 @@
 const fs=require('node:fs'),path=require('node:path');
 const N=require('./v013-natural-progression.cjs');
 const opts=N.parseArgs([
- '--seeds=9701,9702','--profiles=daring,plate-warden,magic-fire,hexblade-hybrid',
+ '--seeds=9701,9702','--profiles=daring,plate-warden,arcane-fire,hexblade-hybrid',
  '--max-level=5','--max-attempts=18','--max-total-attempts=80',
  '--out=reports/stage01-e3-e5-smoke.json'
 ]);

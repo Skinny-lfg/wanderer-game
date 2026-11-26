@@ -3,7 +3,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
 const E=require('./v013-stage648c2e-rot-mana.cjs'),S=require('./simulate-progression.cjs');
 const {T,buy}=require('../tests/v013-current-talent-helper.cjs');
 const W=['daggers','sword','twohand','bow','wand','staff'],MAGIC=['arcane','fire','frost','lightning'],N=50,POINTS=24;
-const IDS=[...W.map(w=>'decay-'+w),...MAGIC.flatMap(m=>['sword','wand','staff'].map(w=>m+'-'+w)),...W.map(w=>'focus-'+w),'hybrid-blood-daggers','hybrid-blood-twohand','hybrid-magic-sword','hybrid-magic-wand'];
+const IDS=[...W.map(w=>'decay-'+w),...MAGIC.flatMap(m=>['sword','wand','staff'].map(w=>m+'-'+w)),...W.map(w=>'focus-'+w),'hybrid-blood-daggers','hybrid-blood-twohand','hybrid-arcane-sword','hybrid-arcane-wand'];
 const COST={base:[1,3,4,2],A:[4,8,10,4],B:[6,10,15,6],C:[8,12,20,8]};
 const DECAY_ARMS={base:{cost:'base',regen:1},A:{cost:'A',regen:1},B:{cost:'B',regen:1},C:{cost:'C',regen:1},regen75:{cost:'base',regen:.75},regen50:{cost:'base',regen:.5},Aregen75:{cost:'A',regen:.75}};
 const MAGIC_ARMS={base:{regen:1,infusion:0},regen75:{regen:.75,infusion:0},regen50:{regen:.5,infusion:0},infusion4:{regen:1,infusion:4}};
@@ -80,8 +80,8 @@ function aggregate(){
  const report={stage:'6.48C.2E.1',source:all[0].source,fights:all.reduce((n,x)=>n+x.rows.length,0),profiles:{}};
  for(const x of all){const p=profile(x.id),arms=Object.keys(p.arms),base=new Map(x.rows.filter(r=>r.arm===arms[0]).map(r=>[r.scenario+'/'+r.trial,r]));report.profiles[x.id]={};for(const arm of arms){const rows=x.rows.filter(r=>r.arm===arm);for(const r of rows)verify(base.get(r.scenario+'/'+r.trial),r,p.arms[arm]);report.profiles[x.id][arm]={overall:compact(rows),byScenario:Object.fromEntries(E.SC.map(sc=>[sc.id,compact(rows.filter(r=>r.scenario===sc.id))])),lossToWin:rows.filter(r=>r.won&&base.get(r.scenario+'/'+r.trial).died).length,winToLoss:rows.filter(r=>r.died&&base.get(r.scenario+'/'+r.trial).won).length};}}
  write('reports/v013-stage648c2e1-mana-calibration.json',report);
- for(const type of ['decay','magic','focus','hybrid']){
-  const selected=Object.entries(report.profiles).filter(([k])=>type==='magic'?MAGIC.includes(k.split('-')[0]):k.startsWith(type+'-'));
+ for(const type of ['decay','arcane','focus','hybrid']){
+  const selected=Object.entries(report.profiles).filter(([k])=>type==='arcane'?MAGIC.includes(k.split('-')[0]):k.startsWith(type+'-'));
   console.log('STAGE648C2E1_'+type.toUpperCase()+'='+JSON.stringify({fights:selected.reduce((n,[k,v])=>n+Object.values(v).reduce((a,r)=>a+r.overall.n,0),0),profiles:Object.fromEntries(selected.map(([k,v])=>[k,Object.fromEntries(Object.entries(v).map(([arm,r])=>[arm,{...Object.fromEntries(['n','wins','timeouts','seconds','dps','rotDps','appsPerMinute','meanRegen','mpStart','mpEnd','endPct','minMana','paid','paidPerSecond','regenActual','regenWasted','regenWastePct','refundActual','atCapPct','starvedSeconds','unfunded','weaponPaid','infusionPaid','elementalPaid','darkPaid','darkDenied','focusActivations','focusEligible','focusDenied','focusHybridBlocked','focusNominalCost','focusRawBonusPerSecond'].map(key=>[key,r.overall[key]])),lossToWin:r.lossToWin,winToLoss:r.winToLoss}]))]))}));
  }
 }

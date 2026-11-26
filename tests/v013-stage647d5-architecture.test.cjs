@@ -3,22 +3,22 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),fs=requir
 const {T,buy}=require('./v013-current-talent-helper.cjs');
 require('../combat/talent-requirements.js');
 const G=WandererTalentGraph,R=WandererTalentRequirements,graph=T.NODES,byId=new Map(graph.map(n=>[n.id,n]));
-const normal={blood:['accelerated_bleeding','cleave_mastery','sanguine_reserve'],fury:['fan_of_blades','bow_pierce','single_target_mastery'],vitality:['vital_pulse','living_force','grasping_roots'],aegis:['ward_echo','sword_sweep','mace_shockwave'],decay:['contagious_touch','corruption_nova','soul_drain']};
+const normal={blood:['accelerated_bleeding','cleave_mastery','sanguine_reserve'],fury:['fan_of_blades','bow_pierce','single_target_mastery'],radiance:['vital_pulse','living_force','grasping_roots'],aegis:['ward_echo','sword_sweep','mace_shockwave'],decay:['contagious_touch','corruption_nova','soul_drain']};
 const magic={arcane:['arcane_nova','mana_convergence'],fire:['controlled_burn','cinder_focus'],frost:['frost_resonance','glacial_echo'],lightning:['static_focus','storm_conductor']};
 const modeGraph=mode=>graph.filter(n=>!n.element||n.element===mode);
 function route(g,id){const plan=R.plan(g,{},id);assert(plan,id);let p={points:100,ranks:{}};for(const step of plan.steps){p=G.allocate(g,p,step);assert(p,step);}return plan.steps;}
 test('Symmetric normal slots cost 6/7/7 and existing Focused/Mixed costs remain intact',()=>{
  for(const ids of Object.values(normal))assert.deepEqual(ids.map(id=>route(graph,id).length),[6,7,7]);
- for(const family of G.FAMILIES.filter(f=>f!=='magic'))assert.deepEqual(G.FOCUSED[family].map(id=>route(graph,id).length),[8,12,18]);
+ for(const family of G.FAMILIES.filter(f=>f!=='arcane'))assert.deepEqual(G.FOCUSED[family].map(id=>route(graph,id).length),[8,12,18]);
  for(const pair of G.MIXED)assert.deepEqual(pair.slice(2).map(id=>route(graph,id).length),[12,14,18]);
 });
 test('Mode-specific six-point branches use the shared side stat and a mode gate',()=>{
  for(const [mode,ids] of Object.entries(magic))for(const [lane,id] of ids.entries()){
   const g=modeGraph(mode),steps=route(g,id);
-  assert.equal(steps.length,6);assert(steps.includes('element_choice'));assert(steps.includes('magic_side_'+lane+'_1'));
+  assert.equal(steps.length,6);assert(steps.includes('element_choice'));assert(steps.includes('arcane_side_'+lane+'_1'));
   assert(steps.every(s=>!byId.get(s).element||byId.get(s).element===mode));
-  assert(byId.get('magic_side_'+lane+'_2').anyRequires.includes(id));
-  assert.equal(route(g,'magic_side_'+lane+'_2').length,6);
+  assert(byId.get('arcane_side_'+lane+'_2').anyRequires.includes(id));
+  assert.equal(route(g,'arcane_side_'+lane+'_2').length,6);
  }
 });
 test('All proposed talent paths are now implemented and none remain pending',()=>{

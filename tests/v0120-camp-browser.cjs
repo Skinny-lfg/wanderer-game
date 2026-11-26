@@ -6,7 +6,7 @@ const boot='phase1Init();\nconst phase3RestoredScroll=phase3RestoreUILocation(ph
 const fixture=`if(PHASE1_PREVIEW){phase1Init();phase1Controller.state.unlocked=5;state.gold=state.fragments=10000;
  const home=makeItem(5,'weapon',null,'loot','Sword','Rare');home.name='Home Spare';state.stash.push(home);state.runes.push(makeRune('might',10));
  globalThis.__camp={homeId:home.id,snapshot:()=>({gold:state.gold,fragments:state.fragments,character:state.characterId,stage:phase1Controller.state.stage,selected:phase1Controller.state.selected,bag:phase3BagItems(),overflow:phase3BagOverflow(),supplies:phase3Supplies,vitals:phase3Vitals(),equip:state.equip,stash:state.stash}),
- prepare:()=>{phase1Begin(1);phase2ChooseInitial('magic');phase2ChooseElement('frost');phase1Controller.state.planeIndex=2;const stats=phase2Stats();phase1Vitals={hp:stats.maxhp*.5,mp:stats.mana*.25,maxmp:stats.mana};
+ prepare:()=>{phase1Begin(1);phase2ChooseInitial('arcane');phase2ChooseElement('frost');phase1Controller.state.planeIndex=2;const stats=phase2Stats();phase1Vitals={hp:stats.maxhp*.5,mp:stats.mana*.25,maxmp:stats.mana};
   for(let i=0;i<13;i++){const item=makeItem(5,'belt',null,'loot','Leather','Rare');state.stash.push(item);phase3LootIds.add(item.id);}view='phase1';render();},
  equipHome:()=>equipItem(home.id)};render();
 }else{load();if(!state.merchant)rollShop();save();render();}`;

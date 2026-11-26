@@ -70,7 +70,7 @@ jobs:
             assert((await frame.locator('#description').innerText()).includes('COMING SOON'));
             assert(await frame.getByRole('button',{name:'Invest 1 point',exact:true}).isDisabled());
             assert((await frame.locator('#requirements').innerText()).includes('6 points'));
-            await page.screenshot({path:'reports/stage647d5/magic.png',animations:'disabled'});
+            await page.screenshot({path:'reports/stage647d5/arcane.png',animations:'disabled'});
             await frame.getByRole('button',{name:'Aegis',exact:true}).click();
             await frame.locator('[data-id="ward_echo"]').click();
             assert(await frame.getByRole('button',{name:'Invest 1 point',exact:true}).isDisabled());

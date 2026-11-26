@@ -185,7 +185,7 @@ function markdown(data){
  return lines.join('\n');
 }
 function parse(argv=[]){
- const x={mode:'cohort',seeds:'9701',profiles:'cautious,balanced,smart-blood-fury-vitality',
+ const x={mode:'cohort',seeds:'9701',profiles:'cautious,balanced,smart-blood-fury-radiance',
   maxLevel:5,maxAttempts:12,maxTotalAttempts:60,out:'reports/v013-stage622-seed9701.json',inputs:null};
  for(const arg of argv){
   const m=/^--([a-z-]+)=(.+)$/.exec(arg);if(!m)throw Error('Invalid Stage 6.22 CLI argument '+arg);

@@ -35,7 +35,7 @@
       "screenshot": "docs/ui-audit/phase2a-after/dialogs/initial-affinity/initial-affinity-mobile-390x844.jpg"
     },
     {
-      "screen": "magic-element",
+      "screen": "arcane-element",
       "viewport": "390x844",
       "horizontalOverflow": false,
       "scrollWidth": 390,
@@ -55,7 +55,7 @@
           }
         ]
       },
-      "screenshot": "docs/ui-audit/phase2a-after/dialogs/magic-element/magic-element-mobile-390x844.jpg"
+      "screenshot": "docs/ui-audit/phase2a-after/dialogs/arcane-element/arcane-element-mobile-390x844.jpg"
     },
     {
       "screen": "initial-affinity",
@@ -81,7 +81,7 @@
       "screenshot": "docs/ui-audit/phase2a-after/dialogs/initial-affinity/initial-affinity-desktop-1440x900.jpg"
     },
     {
-      "screen": "magic-element",
+      "screen": "arcane-element",
       "viewport": "1440x900",
       "horizontalOverflow": false,
       "scrollWidth": 1440,
@@ -101,7 +101,7 @@
           }
         ]
       },
-      "screenshot": "docs/ui-audit/phase2a-after/dialogs/magic-element/magic-element-desktop-1440x900.jpg"
+      "screenshot": "docs/ui-audit/phase2a-after/dialogs/arcane-element/arcane-element-desktop-1440x900.jpg"
     }
   ]
 }

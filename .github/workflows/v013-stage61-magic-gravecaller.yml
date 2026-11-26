@@ -3,7 +3,7 @@ on:
   push:
     branches: [audit/v013-stage6]
     paths:
-      - '.github/workflows/v013-stage61-magic-gravecaller.yml'
+      - '.github/workflows/v013-stage61-arcane-gravecaller.yml'
       - 'tests/v013-gravecaller-bound-souls.test.cjs'
   workflow_dispatch:
 permissions:

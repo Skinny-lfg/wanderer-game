@@ -16,7 +16,7 @@ const server=http.createServer((req,res)=>{
 (async()=>{
  await new Promise(r=>server.listen(0,'127.0.0.1',r));const base='http://127.0.0.1:'+server.address().port;
  const browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});
- try{for(const width of [390,1280])for(const entry of ['blood','decay','vitality','aegis','fury','magic','legacy-choice']){const legacy=entry==='legacy-choice',family=legacy?'blood':entry;
+ try{for(const width of [390,1280])for(const entry of ['blood','decay','radiance','aegis','fury','arcane','legacy-choice']){const legacy=entry==='legacy-choice',family=legacy?'blood':entry;
  const context=await browser.newContext({viewport:{width,height:900}}),page=await context.newPage(),errors=[];page.setDefaultTimeout(5000);page.on('pageerror',e=>errors.push(e.message));
  await context.addInitScript(()=>{localStorage.setItem('wanderer_browser_proto_v01','UNTOUCHED');window.setInterval=()=>0;const native=window.setTimeout;window.setTimeout=(f,ms,...args)=>native(f,ms===650?5:ms,...args);});
  await page.route('**/*',r=>r.request().url().startsWith(base)?r.continue():r.abort());
@@ -26,7 +26,7 @@ const server=http.createServer((req,res)=>{
  // Cover fresh players and the saved affinity checkpoint before the first Realm victory.
  if(family!=='blood'||legacy){await page.reload();await ready();assert.equal(await page.locator('[data-phase2-initial]').count(),6);}
  if(legacy){await page.evaluate(()=>__realmTest.initial('blood'));assert.equal((await snap()).active,false);await page.reload();await ready();}else await page.locator('[data-phase2-initial="'+family+'"]').click();
- if(family==='magic'){assert.equal((await snap()).picks.length,0);await page.reload();await ready();await page.locator('[data-phase2-element="lightning"]').click();}
+ if(family==='arcane'){assert.equal((await snap()).picks.length,0);await page.reload();await ready();await page.locator('[data-phase2-element="lightning"]').click();}
  let s=await snap();assert.equal(s.active,true,'initial affinity must enter its first Realm');assert.equal(s.status,'fight');assert.equal(s.game.selected.family,family);assert.equal(s.picks.length,0,'passives unlock after the first Realm victory');
  assert.equal(await page.evaluate(f=>__realmTest.initial(f),family),false);
  await page.reload();await ready();assert.equal((await snap()).picks.length,0,'refresh preserves pre-victory passive state');await page.locator('#phase4Resume').click();assert.equal((await snap()).status,'fight');

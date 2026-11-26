@@ -9,7 +9,7 @@ const fixture=String.raw`if(PHASE1_PREVIEW){
   state.characterId='knight';state.materials={iron:17,cloth:6};state.onlineProgress.deepestCleared=79;
   for(const slot of SLOTS){const subtype=slot==='weapon'?'Sword':slot==='offhand'?'Shield':'random';state.equip[slot]=makeItem(80,slot,null,'loot',subtype,'Rare');}
   state.equip.weapon=makeItem(80,'weapon',null,'loot','Sword','Legendary');
-  state.runes=[makeRune('vitality',80)];state.runeSlots=[state.runes[0].id,null,null];state.stash.push(makeItem(80,'helm',null,'loot','Helm','Epic'));
+  state.runes=[makeRune('radiance',80)];state.runeSlots=[state.runes[0].id,null,null];state.stash.push(makeItem(80,'helm',null,'loot','Helm','Epic'));
   const initial=WandererV012Save.create(state,{binding,identity:{uid:'fixture-old',projectId:'demo-wanderer',nickname:'old_player'}});
   const store=WandererV012Save.createStore(localStorage,binding);store.load();store.commit(initial);
  }

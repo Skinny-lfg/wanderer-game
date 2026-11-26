@@ -3,7 +3,7 @@
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),crypto=require('node:crypto');
 const S=require('./simulate-progression.cjs'),G=require('./v013-global-e10.cjs'),{T,buy}=require('../tests/v013-current-talent-helper.cjs');
 require('../combat/v012-runes.js');
-const F=['blood','decay','vitality','aegis','fury','magic'],ELITES=G.SC.filter(s=>s.kind==='elite').map(s=>s.elite),SC=['normal-1','normal-4','normal-8','normal-12','elite','boss'],N=50,OUT='reports/anchor-overflow-budget';
+const F=['blood','decay','radiance','aegis','fury','arcane'],ELITES=G.SC.filter(s=>s.kind==='elite').map(s=>s.elite),SC=['normal-1','normal-4','normal-8','normal-12','elite','boss'],N=50,OUT='reports/anchor-overflow-budget';
 const WEAPONS={twohand:['Two-Handed',null,'Plate'],staff:['Staff',null,'Cloth'],daggers:['Daggers','Off-Hand Dagger','Leather'],wand:['Wand','Tome','Cloth']};
 const PROFILES=Object.keys(WEAPONS);
 const B='combat/v012-buildcraft.js',C='combat/v012-combat-runtime.js',E='online/v012-expedition-runtime.js',O='online/v013-expedition-boons.js';

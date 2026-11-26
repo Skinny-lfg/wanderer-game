@@ -23,7 +23,7 @@ test('C.3.1: every new Legendary is mapped to a real PNG',()=>{
   }
 });
 test('C.3.1: six affinity families and Magic choices have PNG icons',()=>{
-  const names=['families/blood','families/decay','families/vitality','families/aegis','families/fury','families/magic','magic/fire','magic/frost','magic/lightning'];
+  const names=['families/blood','families/decay','families/radiance','families/aegis','families/fury','families/magic','arcane/fire','arcane/frost','arcane/lightning'];
   assert.deepEqual(Object.keys(manifest.affinities).sort(),names.slice().sort());
   for(const n of names)checkImage(manifest.affinities[n].path);
   assert.ok(html.includes('class="affinityFamilyIcon"'));

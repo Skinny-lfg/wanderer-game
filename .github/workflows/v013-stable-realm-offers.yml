@@ -44,7 +44,7 @@ jobs:
         run: |
           node scripts/v013-stage6-agent-comparison.cjs \
             --seeds=9701,9702,9703,9704 \
-            --profiles=balanced,plate-warden,leather-duelist,magic-lightning,hexblade-hybrid \
+            --profiles=balanced,plate-warden,leather-duelist,arcane-lightning,hexblade-hybrid \
             --max-level=2 --max-attempts=18 --max-total-attempts=36 \
             --out=reports/stage6-agent-smoke.json
       - name: Controlled guarded Epic Boss/Elite combat with identical native starts

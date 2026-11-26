@@ -1,7 +1,7 @@
 'use strict';
 const fs=require('node:fs'),assert=require('node:assert/strict'),S=require('./simulate-progression.cjs'),{T,buy}=require('../tests/v013-current-talent-helper.cjs');
 const Balance=require('./v013-balance-criteria.cjs');
-const LEVEL=10,POINTS=30,N=50,FAMILIES=['blood','decay','vitality','aegis','fury','magic'];
+const LEVEL=10,POINTS=30,N=50,FAMILIES=['blood','decay','radiance','aegis','fury','arcane'];
 const W={daggers:['Daggers','Off-Hand Dagger','Leather'],sword:['Sword','Shield','Plate'],mace:['Mace','Shield','Plate'],twohand:['Two-Handed',null,'Plate'],bow:['Bow',null,'Leather'],wand:['Wand','Tome','Cloth'],orb:['Wand','Orb','Cloth'],staff:['Staff',null,'Cloth']};
 const P={};
 function add(id,families,w,skills,role,element,prepared){assert(!P[id]);P[id]={id,families,w,skills,role,element,prepared};}
@@ -11,9 +11,9 @@ add('blood-twohand',['blood'],'twohand',['cleave_mastery','accelerated_bleeding'
 add('fury-daggers',['fury'],'daggers',['fan_of_blades','double_strike','quick_hands'],'aoe');
 add('fury-bow',['fury'],'bow',['bow_pierce','precision','quick_hands'],'aoe');
 add('fury-twohand',['fury'],'twohand',['single_target_mastery','brutal_crit','battle_tempo'],'single');
-add('vitality-sword',['vitality'],'sword',['living_recovery','strong_heart','renewal'],'sustain');
-add('vitality-mace',['vitality'],'mace',['living_force','vital_pulse','renewal'],'aoe');
-add('vitality-wand',['vitality'],'wand',['vital_pulse','grasping_roots','life_bloom'],'aoe');
+add('radiance-sword',['radiance'],'sword',['living_recovery','strong_heart','renewal'],'sustain');
+add('radiance-mace',['radiance'],'mace',['living_force','vital_pulse','renewal'],'aoe');
+add('radiance-wand',['radiance'],'wand',['vital_pulse','grasping_roots','life_bloom'],'aoe');
 add('aegis-sword',['aegis'],'sword',['sword_sweep','guarded_block','barrier_pulse'],'aoe');
 add('aegis-mace',['aegis'],'mace',['mace_shockwave','guarded_block','barrier_pulse'],'aoe');
 add('aegis-orb',['aegis'],'orb',['ward_echo','stored_force','barrier_pulse'],'sustain');
@@ -22,12 +22,12 @@ for(const w of ['daggers','sword','twohand','bow','wand','staff']){
  add('decay-focus-'+w,['decay'],w,['plagueheart','contagious_touch'],'sustain');
 }
 const ELEMENT_SKILLS={arcane:['arcane_resonance','arcane_nova','mana_spring'],fire:['kindling','fire_spread','controlled_burn'],frost:['deep_winter','frost_resonance','glacial_echo'],lightning:['overcharge','storm_mastery','static_focus']};
-for(const [element,skills] of Object.entries(ELEMENT_SKILLS))for(const w of ['sword','wand','staff'])add('magic-'+element+'-'+w,['magic'],w,['element_choice','arcane_focus',...skills],element==='frost'?'control':'aoe',element);
+for(const [element,skills] of Object.entries(ELEMENT_SKILLS))for(const w of ['sword','wand','staff'])add('arcane-'+element+'-'+w,['arcane'],w,['element_choice','arcane_focus',...skills],element==='frost'?'control':'aoe',element);
 add('hybrid-blood-fury',['blood','fury'],'daggers',['crimson_rush','reapers_cadence','red_guillotine'],'single',null,'red_guillotine');
-add('hybrid-fury-vitality',['fury','vitality'],'twohand',['fervent_life','redline','fury_recovery'],'sustain',null,'fury_recovery');
-add('hybrid-vitality-aegis',['vitality','aegis'],'mace',['sanctuary','guardians_oath','last_bastion'],'sustain',null,'last_bastion');
-add('hybrid-aegis-magic',['aegis','magic'],'orb',['runic_shield','prismatic_rebound','arcane_bastion'],'sustain','arcane','arcane_bastion');
-add('hybrid-magic-decay',['magic','decay'],'wand',['hex_bolt','elemental_blight','grave_bloom'],'aoe','arcane','grave_bloom');
+add('hybrid-fury-radiance',['fury','radiance'],'twohand',['fervent_life','redline','fury_recovery'],'sustain',null,'fury_recovery');
+add('hybrid-radiance-aegis',['radiance','aegis'],'mace',['sanctuary','guardians_oath','last_bastion'],'sustain',null,'last_bastion');
+add('hybrid-aegis-arcane',['aegis','arcane'],'orb',['runic_shield','prismatic_rebound','arcane_bastion'],'sustain','arcane','arcane_bastion');
+add('hybrid-arcane-decay',['arcane','decay'],'wand',['hex_bolt','elemental_blight','grave_bloom'],'aoe','arcane','grave_bloom');
 add('hybrid-decay-blood',['decay','blood'],'twohand',['plague_spread','carrion_detonation','septic_wound'],'aoe',null,'septic_wound');
 const IDS=Object.keys(P),ELITES=['tank','berserker','vampire','caster','gravecaller','oathbound_exarch','the_gilded','ashen_executioner'];
 const SC=[...[1,2,3,4,8,12].map(size=>({id:'normal-'+size,kind:'normal',size})),...ELITES.map(elite=>({id:'elite-'+elite,kind:'elite',elite})),...FAMILIES.map(family=>({id:'boss-'+family,kind:'boss',family}))];

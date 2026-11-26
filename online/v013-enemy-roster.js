@@ -7,10 +7,10 @@ const ROLES=Object.freeze(['minion','tank','skirmisher','caster']);
 const FAMILY_WEIGHTS=Object.freeze({
  blood:Object.freeze({tank:1,skirmisher:5,caster:2}),
  decay:Object.freeze({tank:1,skirmisher:3,caster:4}),
- vitality:Object.freeze({tank:4,skirmisher:2,caster:3}),
+ radiance:Object.freeze({tank:4,skirmisher:2,caster:3}),
  aegis:Object.freeze({tank:6,skirmisher:2,caster:2}),
  fury:Object.freeze({tank:1,skirmisher:6,caster:2}),
- magic:Object.freeze({tank:1,skirmisher:2,caster:6})
+ arcane:Object.freeze({tank:1,skirmisher:2,caster:6})
 });
 // Each entry: [display name, existing animated sprite index (0 or 1)].
 // Keep the original 24 creatures as primary roles or role-compatible variants.

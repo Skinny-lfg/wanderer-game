@@ -67,7 +67,7 @@ THEMES.forEach(t=>t.mobs=WandererV013EnemyRoster.catalogFor(t.id,(MOB_POOLS[t.id
 // Two Realms of an Affinity share artwork; encounter names and roles remain local.
 const REALM_ART_PEERS={temple:'void',void:'temple',forge:'bloodscar',bloodscar:'forge',grove:'shrine',shrine:'grove',ward:'drowned',drowned:'ward',crypt:'bastion',bastion:'crypt',ash:'storm',storm:'ash'};
 THEMES.forEach(t=>{t.affinityArtPeers=THEMES.find(peer=>peer.id===REALM_ART_PEERS[t.id])?.mobs||[];});
-const C3_DUNGEON_ART={"temple":"assets/dungeons/c3/decay_venomreach.webp","forge":"assets/dungeons/c3/blood_crimson_dominion.webp","bloodscar":"assets/dungeons/c3/blood_bloodscar_wastes.webp","crypt":"assets/dungeons/c3/fury_gravewind_barrens.webp","bastion":"assets/dungeons/c3/fury_ironbound_frontier.webp","ash":"assets/dungeons/c3/magic_ashen_aether.webp","void":"assets/dungeons/c3/decay_umbral_hollow.webp","ward":"assets/dungeons/c3/aegis_warded_marches.webp","grove":"assets/dungeons/c3/vitality_verdant_wilds.webp","shrine":"assets/dungeons/c3/vitality_everroot_vale.webp","storm":"assets/dungeons/c3/magic_stormglass_beyond.webp","drowned":"assets/dungeons/c3/aegis_drowned_bastion.webp"};
+const C3_DUNGEON_ART={"temple":"assets/dungeons/c3/decay_venomreach.webp","forge":"assets/dungeons/c3/blood_crimson_dominion.webp","bloodscar":"assets/dungeons/c3/blood_bloodscar_wastes.webp","crypt":"assets/dungeons/c3/fury_gravewind_barrens.webp","bastion":"assets/dungeons/c3/fury_ironbound_frontier.webp","ash":"assets/dungeons/c3/arcane_ashen_aether.webp","void":"assets/dungeons/c3/decay_umbral_hollow.webp","ward":"assets/dungeons/c3/aegis_warded_marches.webp","grove":"assets/dungeons/c3/radiance_verdant_wilds.webp","shrine":"assets/dungeons/c3/radiance_everroot_vale.webp","storm":"assets/dungeons/c3/arcane_stormglass_beyond.webp","drowned":"assets/dungeons/c3/aegis_drowned_bastion.webp"};
 function dungeonImage(t){
  const image=C3_DUNGEON_ART[t?.id];
  if(!image)return ART[t.image]||t.image;
@@ -1334,12 +1334,12 @@ const STAT_EXPLANATIONS=Object.freeze({critDamage:'Additional critical damage mu
  cha:'Charisma influences Critical chance and Loot Quality.',
  attack:'Attack Power drives weapon hits and talents such as Fervent Life (3% of Attack Power on eligible critical hits).',
  defense:'Defense reduces incoming damage; it is not a percentage reduction.',
- maxhp:'Maximum Health supports Vitality regeneration and Aegis Barrier scaling.',
+ maxhp:'Maximum Health supports Radiance regeneration and Aegis Barrier scaling.',
  attacksPerSec:'Attacks per second before temporary combat procs; slower weapons have longer intervals.',
  crit:'Chance for an attack to critically hit; the total is capped at 100%.',
  blockChance:'Chance to Guard an incoming attack. Talents enable Guard without a Shield (35% damage reduction); shields increase its strength. Gear Guard bonuses apply once Guard is enabled. Chance capped at 65%.',
- mana:'Resource spent on Arcane Infusion, funded Magic casts and some Decay effects.',
- spellPower:'Spell Power scales Magic/Decay, Orb Ward and Aegis Barrier. Orb or Aegis activates defensive Spell Power on physical weapons without granting Mana.',
+ mana:'Resource spent on Arcane Infusion, funded Arcane casts and some Decay effects.',
+ spellPower:'Spell Power scales Arcane/Decay, Orb Ward and Aegis Barrier. Orb or Aegis activates defensive Spell Power on physical weapons without granting Mana.',
  manaRegen:'Mana recovered per second.',
  barrierPower:'Increases newly generated Barrier; does not amplify stored Barrier.',
  healingPower:'Increases eligible combat healing; stored healing releases are not amplified again.',
@@ -1523,7 +1523,7 @@ function phase3RenderCityCenter(){
 }
 
 
-const PHASE2_FAMILY_GLYPHS={blood:'bleed',decay:'poison',vitality:'regen',aegis:'shield',fury:'crit',magic:'shock'};
+const PHASE2_FAMILY_GLYPHS={blood:'bleed',decay:'poison',radiance:'regen',aegis:'shield',fury:'crit',arcane:'shock'};
 function phase2FamilyIcon(family){
   if(!Object.prototype.hasOwnProperty.call(PHASE2_FAMILY_GLYPHS,family))return '';
   return '<img class="affinityFamilyIcon" src="assets/affinities/families/'+family+'.png" alt="'+esc(WandererV012Expedition.FAMILY_NAMES[family])+' affinity" loading="lazy" decoding="async">';

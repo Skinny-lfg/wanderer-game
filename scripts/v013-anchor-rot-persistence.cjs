@@ -3,7 +3,7 @@
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),crypto=require('node:crypto');
 const S=require('./simulate-progression.cjs'),G=require('./v013-global-e10.cjs'),{T,buy}=require('../tests/v013-current-talent-helper.cjs');
 require('../combat/v012-runes.js');
-const F=['blood','decay','vitality','aegis','fury','magic'],ELITES=G.SC.filter(s=>s.kind==='elite').map(s=>s.elite),SC=['normal-1','normal-4','normal-8','normal-12','elite','boss'],N=50,OUT='reports/anchor-rot-persistence';
+const F=['blood','decay','radiance','aegis','fury','arcane'],ELITES=G.SC.filter(s=>s.kind==='elite').map(s=>s.elite),SC=['normal-1','normal-4','normal-8','normal-12','elite','boss'],N=50,OUT='reports/anchor-rot-persistence';
 G.P['decay-cycle-only-twohand']={id:'decay-cycle-only-twohand',families:['decay'],w:'twohand',skills:['corruption_cycle','contagious_touch'],role:'aoe'};
 G.P['decay-cycle-only-staff']={id:'decay-cycle-only-staff',families:['decay'],w:'staff',skills:['corruption_cycle','contagious_touch'],role:'aoe'};
 const PROFILES=['decay-cycle-only-twohand','decay-cycle-only-staff','decay-cycle-daggers'];

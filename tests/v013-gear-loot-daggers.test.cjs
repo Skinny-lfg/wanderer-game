@@ -66,7 +66,7 @@ test('actual native Rare accessories and Forge creations have variable stat layo
   crafted.add(positive(forge).sort().join(','));
  }
  assert(layouts.size>=3,'Ring pools need real variation');assert(crafted.size>=3,'Forge rolls must vary');
- for(const id of ['blue_sword_insight','blue_mace_guard','blue_bow_might','blue_ring1_magic','blue_amulet_blood']){
+ for(const id of ['blue_sword_insight','blue_mace_guard','blue_bow_might','blue_ring1_arcane','blue_amulet_blood']){
   const recipe=C.RECIPES.find(r=>r.id===id);assert(recipe&&recipe.rarity==='Rare',id);
   const layouts=new Set(),attributes=new Set();
   for(let n=0;n<12;n++){

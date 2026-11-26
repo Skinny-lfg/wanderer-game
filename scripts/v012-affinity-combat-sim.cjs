@@ -1,8 +1,8 @@
 // Actual native engine, synthetic RAM-only gear and Rune matrix. No E>200 projection.
 const fs=require('node:fs'),crypto=require('node:crypto'),{performance}=require('node:perf_hooks'),create=require('../tests/v012-economy-harness.cjs');
-const arms=['Sword','Mace','Bow','Daggers','Two-Handed','Staff','Wand'],families=['blood','decay','vitality','aegis','fury','magic'];
-const priorities={blood:['bleeding_edge','deep_cuts','blood_drinker','sanguine_fury','executioner'],decay:['toxic_touch','virulent_rot','wasting_curse','wither','blight'],vitality:['renewal','strong_heart','life_bloom','second_breath','last_stand'],aegis:['barrier_pulse','fortified','iron_skin','guarded_block','retaliation'],fury:['quick_hands','precision','brutal_crit','double_strike','adrenaline'],magic:['overcharge','kindling','deep_winter','arcane_focus','elemental_force','mana_spring','efficient_cast','arcane_echo']};
-const partners={blood:['decay','magic'],decay:['blood','magic'],vitality:['aegis','magic'],aegis:['vitality','fury'],fury:['magic','blood'],magic:['fury','aegis']};
+const arms=['Sword','Mace','Bow','Daggers','Two-Handed','Staff','Wand'],families=['blood','decay','radiance','aegis','fury','arcane'];
+const priorities={blood:['bleeding_edge','deep_cuts','blood_drinker','sanguine_fury','executioner'],decay:['toxic_touch','virulent_rot','wasting_curse','wither','blight'],radiance:['renewal','strong_heart','life_bloom','second_breath','last_stand'],aegis:['barrier_pulse','fortified','iron_skin','guarded_block','retaliation'],fury:['quick_hands','precision','brutal_crit','double_strike','adrenaline'],arcane:['overcharge','kindling','deep_winter','arcane_focus','elemental_force','mana_spring','efficient_cast','arcane_echo']};
+const partners={blood:['decay','arcane'],decay:['blood','arcane'],radiance:['aegis','arcane'],aegis:['radiance','fury'],fury:['arcane','blood'],arcane:['fury','aegis']};
 function run(config){
  const {E,weapon,rarity,family,strategy,runes,seed}=config,coverage=config.coverage==='utility',start=performance.now(),harnessFactory=config.harnessFactory||create,overrides={...(config.moduleOverrides||{}),...(config.prototypeItems?require('./v012-legendary-prototype-patch.cjs'):{})},a=harnessFactory(seed,config.sourceOverride,overrides, {measure:true,now:1700000000000}),B=a.buildcraft;
  a.setup(E,weapon,rarity);const s=a.state(),g=a.controller().state;g.unlocked=E;
@@ -27,20 +27,20 @@ function run(config){
   const item=s.equip[slot];item.rarity='Legendary';item.legendaryId=id;
   item.name=a.gear.legendaryDescription(item)?id:item.name;
  }
- if(runes){s.runes=['vitality','warding',['Staff','Wand'].includes(weapon)?'wisdom':'might'].map(f=>a.makeRune(f,E));s.runeSlots=s.runes.map(r=>r.id);}
+ if(runes){s.runes=['radiance','warding',['Staff','Wand'].includes(weapon)?'wisdom':'might'].map(f=>a.makeRune(f,E));s.runeSlots=s.runes.map(r=>r.id);}
  let steering=seed;const random=()=>((steering=(Math.imul(steering,1664525)+1013904223)>>>0)/4294967296);
  const target=(config.targetFamilies||[family,...partners[family]]).slice(0,strategy==='mono'?1:strategy==='dual'?2:3);
  if(!target.length||target[0]!==family||target.some(f=>!families.includes(f))||new Set(target).size!==target.length)throw Error('Invalid affinity target');
  // Optional simulation-only policy: keep the intended pair, then pursue a third
  // utility family with existing abilities. Never grant talents or modify combat.
  const primary=target.slice(0,2);
- const utilityFamily=coverage?({blood:'vitality',fury:'vitality',vitality:'fury'}[family]||null):null;
- const utilitySkills=coverage?({blood:['blood_drinker','renewal','strong_heart','life_bloom','second_breath'],fury:['renewal','strong_heart','life_bloom','second_breath'],vitality:['quick_hands','precision','double_strike','brutal_crit']}[family]||[]):[];
+ const utilityFamily=coverage?({blood:'radiance',fury:'radiance',radiance:'fury'}[family]||null):null;
+ const utilitySkills=coverage?({blood:['blood_drinker','renewal','strong_heart','life_bloom','second_breath'],fury:['renewal','strong_heart','life_bloom','second_breath'],radiance:['quick_hands','precision','double_strike','brutal_crit']}[family]||[]):[];
  const utilityPicks=[];
  if(config.potionKinds?.length&&!config.potionsPreloaded){s.consumables??={};for(const kind of config.potionKinds)s.consumables[kind]=(s.consumables[kind]||0)+1;s.potionSelection=[...config.potionKinds];}
  if(config.controlSeed!==undefined)a.streams(config.controlSeed+1,config.controlSeed+2,config.controlSeed+3,config.controlSeed+4);
  if(config.routeMode==='planned')a.controller().planAffinities(target);
- a.start(E);a.initial(family);const runtime=a.build().runtime,extra=a.events.run();if(family==='magic')a.element(['fire','frost','lightning'][seed%3]);
+ a.start(E);a.initial(family);const runtime=a.build().runtime,extra=a.events.run();if(family==='arcane')a.element(['fire','frost','lightning'][seed%3]);
  let lastUnlockedFamilies=[],unlockedAt={};
  let potionUses=[],potionReturns=null;
  let firstFight=null,allPicks=[];

@@ -73,7 +73,7 @@ test('Multiple independent shards merge only one native fingerprint and unique s
   {source:'A',accounts:[first]}]),/Duplicate/);
 });
 test('Bounded native CLI validates maximum 3-account shards and specific safe output paths',()=>{
- const o=D.parse(['--seeds=9701','--profiles=cautious,balanced,smart-blood-fury-vitality']);
+ const o=D.parse(['--seeds=9701','--profiles=cautious,balanced,smart-blood-fury-radiance']);
  assert.equal(o.native.seeds.length,1);
  assert.equal(o.native.profiles.length,3);
  assert.equal(o.native.maxLevel,5);

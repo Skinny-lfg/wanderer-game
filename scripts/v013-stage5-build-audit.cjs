@@ -28,7 +28,7 @@ function classifyGear(gear={},talentNodes=[]){
  const plateWeapon=['Sword','Mace','Two-Handed'].includes(weapon);
  const labels=[];
  if(magicWeapon&&armorMix.Cloth>=1&&
-   (families.includes('magic')||attrs.int>0||attrs.spell>0))labels.push('cloth_magic');
+   (families.includes('arcane')||attrs.int>0||attrs.spell>0))labels.push('cloth_arcane');
  if(agilityWeapon&&armorMix.Leather>=1&&
    (families.includes('fury')||attrs.agi>0))labels.push('leather_agility');
  if(plateWeapon&&armorMix.Plate>=1&&
@@ -170,7 +170,7 @@ function markdown(r){
    (x.meanRouteDepth??'—')+' | '+Object.entries(x.weaponCounts).map(([k,v])=>k+': '+v).join(', ')+' |');
  }
  lines.push('','## Conclusions and next experiments','',
-  '- Existing gear scoring uses nearly fixed affix weights, regardless of chosen magic/strength/agility tree.',
+  '- Existing gear scoring uses nearly fixed affix weights, regardless of chosen arcane/strength/agility tree.',
   '- Current talent goals contain invalid IDs, so the fallback allocation does not test intended deep specializations.',
   '- No adaptive respec policy is invoked. A native v15 reset refunds talent-tree nodes; there is no separate manual Strength/Intellect attribute-point allocation in the current UI.',
   '- Use the real T.path / T.allocate / T.reset, and native gear purchases and Forge, for controlled next-generation build agents.',

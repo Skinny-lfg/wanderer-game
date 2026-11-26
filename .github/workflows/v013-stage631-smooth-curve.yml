@@ -72,16 +72,16 @@ jobs:
         profile:
           - smart-blood-pure
           - smart-fury-pure
-          - smart-magic-arcane-pure
-          - smart-magic-lightning-pure
-          - smart-vitality-pure
-          - smart-decay-magic-aegis
-          - smart-aegis-vitality
+          - smart-arcane-arcane-pure
+          - smart-arcane-lightning-pure
+          - smart-radiance-pure
+          - smart-decay-arcane-aegis
+          - smart-aegis-radiance
           - cloth-battlemage
           - leather-duelist
-          - magic-fire
+          - arcane-fire
           - hexblade-hybrid
-          - smart-blood-fury-vitality
+          - smart-blood-fury-radiance
     steps:
       - uses: actions/checkout@v4
         with: {persist-credentials: false}

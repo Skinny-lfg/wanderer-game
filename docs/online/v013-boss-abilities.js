@@ -7,10 +7,10 @@ const FRAGMENT_RETURN_SECONDS=10;
 const PROFILES=Object.freeze({
  blood:Object.freeze({id:'rift',style:'leech',name:'The Creditor',location:"Harbinger's Rift",icon:'🩸',description:'Blood Offering: summon a Riftbound Vessel at 70% and 35% HP; after 10s alive it sacrifices itself to heal the boss 5%. Basic lifesteal is 18%.',image:'assets/bosses/v013/rift-harbinger.png',attack:'assets/bosses/v013/rift-harbinger.png'}),
  decay:Object.freeze({id:'carrion',style:'matriarch',name:'Carrion Matriarch',location:"Matriarch's Brood",icon:'☠',description:'Brood of Decay: summons two Carrion Broodlings at 75% and 40% HP. With two living Minions in the arena she takes 15% less direct damage.',image:'assets/bosses/v013/carrion-matriarch.png',attack:'assets/bosses/v013/carrion-matriarch.png'}),
- vitality:Object.freeze({id:'heartroot',style:'devourer',name:'Gullet',location:"Heartroot's Hollow",icon:'☀',description:'Fragmentation: separates two light fragments at 70% and 35% HP. A fragment that survives 10 seconds in the arena returns and restores 5% maximum HP (15% per encounter). Destroy it to prevent recovery.',image:'assets/bosses/v013/heartroot-devourer.png',attack:'assets/bosses/v013/heartroot-devourer.png'}),
+ radiance:Object.freeze({id:'heartroot',style:'devourer',name:'Gullet',location:"Heartroot's Hollow",icon:'☀',description:'Fragmentation: separates two light fragments at 70% and 35% HP. A fragment that survives 10 seconds in the arena returns and restores 5% maximum HP (15% per encounter). Destroy it to prevent recovery.',image:'assets/bosses/v013/heartroot-devourer.png',attack:'assets/bosses/v013/heartroot-devourer.png'}),
  aegis:Object.freeze({id:'guardian',style:'guardian',name:'Holdfast',location:"Abyssal Guardian's Citadel",icon:'⛨',description:'Ward Cycle: checks every 12s and gains Barrier equal to 8% max HP if it has no Barrier and ward recovery is available. Breaking its Barrier interrupts the cycle and prevents new wards for 3s.',image:'assets/bosses/v013/abyssal-guardian.png',attack:'assets/bosses/v013/abyssal-guardian.png'}),
  fury:Object.freeze({id:'ember',style:'berserker',name:'The Chainbreaker',location:"The Chainbreaker's Throne",icon:'♨',description:'Furnace Strike: every 12s, prepares a heavy attack for 1.5s. Can be interrupted; retains the Enrage below 50% HP.',image:'assets/bosses/v013/ember-sovereign.png',attack:'assets/bosses/v013/ember-sovereign.png'}),
- magic:Object.freeze({id:'stormglass',style:'conductor',name:'The Measure',location:"Stormglass Spire",icon:'⚡',description:'Arcane Convergence: channels for 2s every 12s, dealing 7% of hero max HP before Boon mitigation and Barrier. At 65% HP calls a Convergence Anchor; breaking it cancels the next discharge and weakens the boss.',image:'assets/bosses/v013/stormglass-conductor.png',attack:'assets/bosses/v013/stormglass-conductor.png'})
+ arcane:Object.freeze({id:'stormglass',style:'conductor',name:'The Measure',location:"Stormglass Spire",icon:'⚡',description:'Arcane Convergence: channels for 2s every 12s, dealing 7% of hero max HP before Boon mitigation and Barrier. At 65% HP calls a Convergence Anchor; breaking it cancels the next discharge and weakens the boss.',image:'assets/bosses/v013/stormglass-conductor.png',attack:'assets/bosses/v013/stormglass-conductor.png'})
 });
 const byStyle=Object.freeze(Object.fromEntries(Object.values(PROFILES).map(x=>[x.style,x])));
 function profileFor(family){return PROFILES[family]||null;}
@@ -51,20 +51,20 @@ function spawned(r,event,makeMinion,options={}){
  const result=I.summon(r,e,event.count,i=>{
   const mob=makeMinion(i);
   mob.name=event.kind==='blood'?'Riftbound Vessel':event.kind==='node'?'Convergence Anchor':
-   event.kind==='vitality'?'light fragment': 'Carrion Broodling';
-  const stem={blood:'riftbound-vessel',decay:'carrion-matriarch',vitality:'heartroot-mawbud',node:'convergence-anchor'}[event.kind];
+   event.kind==='radiance'?'light fragment': 'Carrion Broodling';
+  const stem={blood:'riftbound-vessel',decay:'carrion-matriarch',radiance:'heartroot-mawbud',node:'convergence-anchor'}[event.kind];
   const base='assets/bosses/v013/'+stem;
   mob.image=base+(event.kind==='node'?'.png':'-01.png');
   if(event.kind!=='node'){mob.attackImage=base+'-02.png';mob.impactImage=base+'-03.png';}
   if(event.kind==='node')mob.atk=0;
   return mob;
- },{family:p.style==='conductor'?'magic':p.style==='devourer'?'vitality':p.style==='matriarch'?'decay':'blood',
+ },{family:p.style==='conductor'?'arcane':p.style==='devourer'?'radiance':p.style==='matriarch'?'decay':'blood',
   priority:event.kind==='blood'||event.kind==='node',hpFactor:event.kind==='node'?.48:.42,atkFactor:.25,defFactor:.35,intervalFactor:1.35});
  for(const mob of [...(r.enemies||[]),...(r.groupReserve||[])].filter(x=>x.stage83Summoned&&!x.stage84Minion)){
   mob.stage84Minion=event.kind;
   if(event.kind==='blood'){mob.stage84ThrallLifetime=10;mob.stage84ThrallAppearedAt=null;}
   if(event.kind==='node')mob.stage84Node=true;
-  if(event.kind==='vitality'&&r.enemies.includes(mob))mob.fragmentReturnAt=r.combatSeconds+FRAGMENT_RETURN_SECONDS;
+  if(event.kind==='radiance'&&r.enemies.includes(mob))mob.fragmentReturnAt=r.combatSeconds+FRAGMENT_RETURN_SECONDS;
  }
  return result;
 }
@@ -107,7 +107,7 @@ function tick(r,absoluteNow,infraEvents=[]){
    s.nextAt=now+12;
   }else if(event.id.startsWith('summon_')){
    if(!s.thresholds.includes(event.id))s.thresholds.push(event.id);
-   const kind=s.style==='leech'?'blood':s.style==='devourer'?'vitality':'decay';
+   const kind=s.style==='leech'?'blood':s.style==='devourer'?'radiance':'decay';
    events.push({type:'summon',enemy:e,ability:p.name,kind,count:s.style==='leech'?1:2});s.nextAt=now+1.5;
   }else if(event.id==='storm_node'){if(!s.thresholds.includes(event.id))s.thresholds.push(event.id);s.nodeCreated=true;events.push({type:'summon',enemy:e,ability:'Convergence Anchor',kind:'node',count:1});s.nextAt=now+1.5;}
  }
@@ -117,7 +117,7 @@ function tick(r,absoluteNow,infraEvents=[]){
  }
  if(s.style==='devourer'){
   for(const fragment of r.enemies||[]){
-   if(fragment.hp<=0||fragment.stage84Minion!=='vitality')continue;
+   if(fragment.hp<=0||fragment.stage84Minion!=='radiance')continue;
    fragment.fragmentReturnAt??=now+FRAGMENT_RETURN_SECONDS;
    if(now<fragment.fragmentReturnAt)continue;
    fragment.hp=0;

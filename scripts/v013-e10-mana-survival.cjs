@@ -3,9 +3,9 @@
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const S=require('./simulate-progression.cjs'),G=require('./v013-global-e10.cjs'),{T,buy}=require('../tests/v013-current-talent-helper.cjs');
 const OUT='reports/e10-mana-survival',N=100,ROUTES=30,POINTS=30,LEVEL=10;
-const F=['blood','decay','vitality','aegis','fury','magic'],ELITES=G.SC.filter(x=>x.kind==='elite').map(x=>x.elite);
+const F=['blood','decay','radiance','aegis','fury','arcane'],ELITES=G.SC.filter(x=>x.kind==='elite').map(x=>x.elite);
 const SC=['normal-1','normal-4','normal-8','normal-12','elite','boss'];
-const MAGIC=['arcane','fire','frost','lightning'].flatMap(e=>['wand','staff'].map(w=>'magic-'+e+'-'+w));
+const MAGIC=['arcane','fire','frost','lightning'].flatMap(e=>['wand','staff'].map(w=>'arcane-'+e+'-'+w));
 const FURY=['fury-daggers','fury-bow','fury-twohand'],IDS=[...MAGIC,...FURY];
 const gear=fs.readFileSync('combat/v012-gear-stats.js','utf8'),runtime=fs.readFileSync('combat/v012-combat-runtime.js','utf8');
 const replace=(s,a,b)=>{assert.equal(s.split(a).length,2,'source anchor '+a.slice(0,120));return s.replace(a,b);};
@@ -19,14 +19,14 @@ function gearSource(oldRegen=false,extraAffix=0){
 }
 const runeFixture=['clarity','efficiency','abyss'].map(family=>({family,tier:5,rarity:'Rare'}));
 const M=[{id:'current'},{id:'old-regen',regen:true},{id:'old-costs',costs:true},{id:'old-both',regen:true,costs:true},{id:'runes',runes:true},{id:'gear-regen-runes',runes:true,extraAffix:2}];
-const U=[{id:'pure'},{id:'blood'},{id:'vitality'},{id:'aegis'},{id:'blood-vitality'}];
-const SUPPORT={blood:['blood_drinker','bleeding_edge'],vitality:['strong_heart','renewal'],aegis:['guarded_block','barrier_pulse']};
+const U=[{id:'pure'},{id:'blood'},{id:'radiance'},{id:'aegis'},{id:'blood-radiance'}];
+const SUPPORT={blood:['blood_drinker','bleeding_edge'],radiance:['strong_heart','renewal'],aegis:['guarded_block','barrier_pulse']};
 const profileCache=new Map();
 function profile(id,arm){
  const key=id+'/'+arm.id;if(profileCache.has(key))return profileCache.get(key);
  const p=G.profile(id);
  if(MAGIC.includes(id)||arm.id==='pure'){profileCache.set(key,p);return p;}
- const support=arm.id==='blood-vitality'?['blood','vitality']:[arm.id];
+ const support=arm.id==='blood-radiance'?['blood','radiance']:[arm.id];
  const mandatory=support.flatMap(f=>SUPPORT[f]);
  const supportPath=buy(mandatory,{xp:POINTS*T.POINT_XP});
  const coreCount=POINTS-supportPath.nodes.length;
@@ -97,8 +97,8 @@ function run(id){
 function smoke(){
  new Function(oldCosts);new Function(gearSource(true,2));
  for(const id of IDS){for(const a of arms(id)){const p=profile(id,a);if(FURY.includes(id))console.log('FURY_LEGAL_PLAN='+JSON.stringify({id,arm:a.id,points:p.t.nodes.length,coreCount:p.coreCount??POINTS,supportSkills:p.supportSkills??[],retainedOffense:p.retainedOffense??p.skills,sacrificedOffense:p.sacrificedOffense??[],nodes:p.t.nodes}));}trial(id,'normal-1',0);}
- for(const sc of SC)trial('magic-lightning-staff',sc,1);
- const rs=M.map(a=>route('magic-fire-wand',a,0));for(const r of rs){assert(!r.error,r.error);assert.deepEqual(r.route,rs[0].route);assert.equal(r.gear,rs[0].gear);}
+ for(const sc of SC)trial('arcane-lightning-staff',sc,1);
+ const rs=M.map(a=>route('arcane-fire-wand',a,0));for(const r of rs){assert(!r.error,r.error);assert.deepEqual(r.route,rs[0].route);assert.equal(r.gear,rs[0].gear);}
  console.log('MANA_SURVIVAL_SMOKE_OK');
 }
 function aggregate(){

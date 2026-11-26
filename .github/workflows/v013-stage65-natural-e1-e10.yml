@@ -44,11 +44,11 @@ jobs:
           - cohort: physical-hex
             profiles: leather-duelist,hexblade-hybrid
           - cohort: fire-frost
-            profiles: magic-fire,magic-frost
+            profiles: arcane-fire,arcane-frost
           - cohort: lightning-arcane
-            profiles: magic-lightning,magic-arcane
+            profiles: arcane-lightning,arcane-arcane
           - cohort: wand-staff
-            profiles: magic-wand,magic-staff
+            profiles: arcane-wand,arcane-staff
           - cohort: hybrid-cautious
             profiles: cloth-battlemage,cautious
     steps:

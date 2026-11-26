@@ -40,14 +40,14 @@ function magicTalent(element){
  const skill={arcane:'arcane_resonance',fire:'kindling',frost:'deep_winter',lightning:'overcharge'}[element];
  let t=buy(['arcane_focus','mana_spring','element_choice',skill],{xp:POINTS*T.POINT_XP,element:element==='arcane'?undefined:element});
  for(let pass=0;pass<POINTS&&t.nodes.length<POINTS;pass++){
-  let changed=false;for(const n of T.NODES){if(t.nodes.length>=POINTS)break;if(n.family!=='magic'||t.nodes.includes(n.id)||n.element&&n.element!==element||n.advanced)continue;const next=T.allocate(t,n.id);if(next){t=next;changed=true;}}
+  let changed=false;for(const n of T.NODES){if(t.nodes.length>=POINTS)break;if(n.family!=='arcane'||t.nodes.includes(n.id)||n.element&&n.element!==element||n.advanced)continue;const next=T.allocate(t,n.id);if(next){t=next;changed=true;}}
   if(!changed)break;
  }
  assert(T.valid(t));assert.equal(t.nodes.length,POINTS);assert.equal(t.element||'arcane',element);return t;
 }
 function cell(w,mode,sc,i,audit=false,research={}){
- const [weapon,offhandType,armorType]=W[w],family=MAGIC.includes(mode)?'magic':'decay',t=research.talents||(family==='magic'?magicTalent(mode):C.talent('decay'));
- const build={id:'controlled-'+family+'-'+w,weapon,families:research.families||[family],skills:[],...(family==='magic'?{element:mode}:{})};
+ const [weapon,offhandType,armorType]=W[w],family=MAGIC.includes(mode)?'arcane':'decay',t=research.talents||(family==='arcane'?magicTalent(mode):C.talent('decay'));
+ const build={id:'controlled-'+family+'-'+w,weapon,families:research.families||[family],skills:[],...(family==='arcane'?{element:mode}:{})};
  const opts={mode:'encounter',points:POINTS,gear:'current',rarity:'Rare',runes:false,contracts:'none',targetPolicy:'mechanics',measure:true,tickLimit:6500,lockScenarioStreams:true,controlledTalents:t,armorType,offhandType,...(family==='decay'?{stage648c1BuildcraftSource:rotSource(mode)}:{}),...(audit?{stage648c2eManaRuntimeSource:manaRuntime(),stage648ManaAudit:true}:{}),...(research.buildcraftSource?{stage648c1BuildcraftSource:research.buildcraftSource}:{}),...(research.gearSource?{stage648c2cGearStatsSource:research.gearSource}:{})};
  const x=S.encounter(10,build,64823000+i*101,sc.kind,opts,undefined,undefined,'blood',1,sc.size);
  assert.equal(x.pointsSpent,POINTS);assert.equal(x.offhandType,offhandType);assert.deepEqual(x.controlledTalentNodes,t.nodes);assert(x.won||x.died||x.timedOut);

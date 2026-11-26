@@ -26,7 +26,7 @@
         "seed": 102,
         "E": 1,
         "weapon": "Staff",
-        "family": "magic",
+        "family": "arcane",
         "element": "lightning"
       },
       "steps": 56,
@@ -37,7 +37,7 @@
         "seed": 103,
         "E": 1,
         "weapon": "Wand",
-        "family": "magic",
+        "family": "arcane",
         "element": "frost"
       },
       "steps": 56,
@@ -68,7 +68,7 @@
         "seed": 106,
         "E": 1,
         "weapon": "Two-Handed",
-        "family": "vitality"
+        "family": "radiance"
       },
       "steps": 57,
       "digest": "a29acf6b83b1899a4dca44a54ec998ff03806df1e574daa055766ada125877e0"
@@ -98,7 +98,7 @@
         "seed": 109,
         "E": 50,
         "weapon": "Staff",
-        "family": "magic",
+        "family": "arcane",
         "element": "lightning"
       },
       "steps": 59,
@@ -109,7 +109,7 @@
         "seed": 110,
         "E": 50,
         "weapon": "Wand",
-        "family": "magic",
+        "family": "arcane",
         "element": "frost"
       },
       "steps": 57,
@@ -140,7 +140,7 @@
         "seed": 113,
         "E": 50,
         "weapon": "Two-Handed",
-        "family": "vitality"
+        "family": "radiance"
       },
       "steps": 55,
       "digest": "d982291a673d3ac148f6d899ef4e402ed21e262e84ecc936759a65ad2bc0dc2d"
@@ -170,7 +170,7 @@
         "seed": 116,
         "E": 200,
         "weapon": "Staff",
-        "family": "magic",
+        "family": "arcane",
         "element": "lightning"
       },
       "steps": 60,
@@ -181,7 +181,7 @@
         "seed": 117,
         "E": 200,
         "weapon": "Wand",
-        "family": "magic",
+        "family": "arcane",
         "element": "frost"
       },
       "steps": 60,
@@ -212,7 +212,7 @@
         "seed": 120,
         "E": 200,
         "weapon": "Two-Handed",
-        "family": "vitality"
+        "family": "radiance"
       },
       "steps": 58,
       "digest": "f8cd3d83f54baec9ff132f95e339fc3313e832368d513a168171867866d11d5d"

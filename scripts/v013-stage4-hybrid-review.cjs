@@ -1,17 +1,17 @@
 'use strict';
 // Stage 4: evaluate all six genuine adjacent Affinity links, using the native
 // combat simulator, fixed talent allocations and the immutable Stage 3 evidence.
-// Fury + Vitality is the only intentional coefficient change in this stage.
+// Fury + Radiance is the only intentional coefficient change in this stage.
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),assert=require('node:assert/strict');
 const A=require('./v013-affinity-baseline.cjs');
 const S=require('./simulate-progression.cjs');
 const FROZEN=require('../reports/v013-stage3-affinity-freeze.json');
 const PAIRS=Object.freeze([
  ['blood-fury','crimson_rush','blood','fury'],
- ['fury-vitality','fervent_life','fury','vitality'],
- ['vitality-aegis','sanctuary','vitality','aegis'],
- ['aegis-magic','runic_shield','aegis','magic'],
- ['magic-decay','hex_bolt','magic','decay'],
+ ['fury-radiance','fervent_life','fury','radiance'],
+ ['radiance-aegis','sanctuary','radiance','aegis'],
+ ['aegis-arcane','runic_shield','aegis','arcane'],
+ ['arcane-decay','hex_bolt','arcane','decay'],
  ['decay-blood','plague_spread','decay','blood']
 ]);
 const FIELDS=Object.freeze(['meanHealingPerSecond','meanBarrierAtEntry','meanBarrierGenerated','meanBarrierAbsorbed','meanDotPerSecond','meanManaSpent','meanSpellPower']);
@@ -44,7 +44,7 @@ function compare(current,{postBarrierReset=false,postOffhandReroll=false}={}){
    else assert.equal(delta.meanSpellPower,0,'Gear/talent Spell Power drift: '+g.build+' E'+g.level);
    for(const k of ['meanBarrierAtEntry','meanBarrierGenerated','meanBarrierAbsorbed'])
     assert(Number.isFinite(g[k])&&g[k]>=0,'Invalid current Barrier metric: '+g.build+' '+k);
-  }else if(g.build!=='fury-vitality'){
+  }else if(g.build!=='fury-radiance'){
    for(const k of FIELDS)assert.equal(delta[k],0,'Unrelated Affinity drift: '+g.build+' E'+g.level+' '+k);
    assert.equal(g.wins,old.wins,'Unrelated Affinity outcome changed');
   }
@@ -53,7 +53,7 @@ function compare(current,{postBarrierReset=false,postOffhandReroll=false}={}){
    barrierBefore:old.meanBarrierGenerated,barrierAfter:g.meanBarrierGenerated,
    activationCounts:g.totalPassiveActivations||{},delta};
  });
- assert.equal(groups.filter(g=>g.build==='fury-vitality').length,2);
+ assert.equal(groups.filter(g=>g.build==='fury-radiance').length,2);
  return groups;
 }
 function verifyTalentGraph(){
@@ -113,7 +113,7 @@ function stress(current){
 function marginalEstimate(previousRows){
  // Observed historical activations, not guaranteed healing. Excess healing
  // now converts to the uncapped encounter-scoped pool; timing may change.
- const eligible=previousRows.filter(r=>r.build==='fury-vitality');
+ const eligible=previousRows.filter(r=>r.build==='fury-radiance');
  return eligible.map(r=>({level:r.level,seed:r.seed,attackPower:r.attackPower,
   maxHealth:r.maxHealth,actualHealingBefore:r.healingActual,
   triggers:r.passiveActivations?.fervent_life||0,
@@ -189,7 +189,7 @@ function run(output=OUTPUT){
  fs.writeFileSync(absolute.replace(/\.json$/,'.md'),markdown(outputData)+'\n');
  const log={out:output,normal:summary,stress:{total:stressResults.total,errors:stressResults.errors,
   timeouts:stressResults.timeouts,wins:stressResults.wins,deaths:stressResults.deaths},
-  furyVitality:normalGroups.filter(g=>g.build==='fury-vitality').map(g=>({level:g.level,healingBefore:g.healingBefore,healingAfter:g.healingAfter,delta:g.delta})),
+  furyRadiance:normalGroups.filter(g=>g.build==='fury-radiance').map(g=>({level:g.level,healingBefore:g.healingBefore,healingAfter:g.healingAfter,delta:g.delta})),
   linkProcs:linkObservations,
   source:current.sourceSha256,replay:digest};
  console.log('STAGE4_HYBRID_REVIEW='+JSON.stringify(log));

@@ -73,8 +73,8 @@ function install(variant){
 function respec(s,profile){
  const T=globalThis.WandererAutomaticTalents,P=require('./v013-build-planner.cjs');
  const weapon=s.state.equip.weapon?.subtype,reset=T.reset(s.state.automaticTalents);
- if(profile==='decay-blood-spread'&&weapon!=='Sword'||profile==='magic-decay-bloom'&&!['Wand','Staff'].includes(weapon))return null;
- const p=P.propose(T,reset,{primary:'magic',secondary:'decay',secondAt:1,model:'two',mix:true,element:'arcane',weapons:[weapon],armor:profile==='magic-decay-bloom'?'Cloth':'Leather',milestones:['grave_bloom'],orderedMilestones:true,focus:'rot'});
+ if(profile==='decay-blood-spread'&&weapon!=='Sword'||profile==='arcane-decay-bloom'&&!['Wand','Staff'].includes(weapon))return null;
+ const p=P.propose(T,reset,{primary:'arcane',secondary:'decay',secondAt:1,model:'two',mix:true,element:'arcane',weapons:[weapon],armor:profile==='arcane-decay-bloom'?'Cloth':'Leather',milestones:['grave_bloom'],orderedMilestones:true,focus:'rot'});
  const purchased={...reset,nodes:p.expectedNodes,prepared:'grave_bloom'};
  if(!purchased.nodes.includes('grave_bloom')||!T.valid(purchased))return null;
  return {...s,talentSpent:purchased.nodes.length,state:{...s.state,automaticTalents:purchased}};

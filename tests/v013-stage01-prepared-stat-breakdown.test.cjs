@@ -8,14 +8,14 @@ const create=require('./v012-economy-harness.cjs');
 const E3_NODES=[
  'root_aegis','affinity_aegis','basic_path_aegis_0_1','gate_guarded_block',
  'guarded_block','basic_path_aegis_0_2','gate_barrier_pulse','barrier_pulse',
- 'root_vitality','affinity_vitality','basic_path_vitality_0_1',
- 'gate_strong_heart','strong_heart','outer_vitality_1_1',
- 'outer_vitality_1_2','mixed_path_vitality_aegis_vitality_1',
- 'mixed_path_vitality_aegis_vitality_2','mixed_path_vitality_aegis_vitality_3',
- 'mixed_path_vitality_aegis_aegis_2','mixed_path_vitality_aegis_aegis_3',
- 'mixed_path_vitality_aegis_aegis_1','gate_sanctuary','sanctuary',
- 'gate_last_bastion','last_bastion','outer_vitality_-1_1',
- 'outer_vitality_-1_2','basic_path_vitality_0_2'
+ 'root_radiance','affinity_radiance','basic_path_radiance_0_1',
+ 'gate_strong_heart','strong_heart','outer_radiance_1_1',
+ 'outer_radiance_1_2','mixed_path_radiance_aegis_radiance_1',
+ 'mixed_path_radiance_aegis_radiance_2','mixed_path_radiance_aegis_radiance_3',
+ 'mixed_path_radiance_aegis_aegis_2','mixed_path_radiance_aegis_aegis_3',
+ 'mixed_path_radiance_aegis_aegis_1','gate_sanctuary','sanctuary',
+ 'gate_last_bastion','last_bastion','outer_radiance_-1_1',
+ 'outer_radiance_-1_2','basic_path_radiance_0_2'
 ];
 function nativePrepared(){
  const a=create(9701,undefined,{}, {skipPersistence:true,now:1720000009701});

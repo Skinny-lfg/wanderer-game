@@ -2,7 +2,7 @@ name: Stage 6.47D.9 — Magic (NO DEPLOY)
 on:
   push:
     branches: [balance/stage-6.40-e1-calibration]
-    paths: ['.github/workflows/v013-stage647d9-magic.yml']
+    paths: ['.github/workflows/v013-stage647d9-arcane.yml']
   workflow_dispatch:
 permissions:
   contents: read

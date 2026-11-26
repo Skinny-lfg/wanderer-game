@@ -29,7 +29,7 @@ jobs:
       fail-fast: false
       max-parallel: 6
       matrix:
-        profile: [decay-blood-spread, smart-blood-pure, magic-lightning]
+        profile: [decay-blood-spread, smart-blood-pure, arcane-lightning]
         shard: [0, 1]
     steps:
       - uses: actions/checkout@v4
@@ -82,7 +82,7 @@ jobs:
           node <<'JS'
           const fs=require('fs'),dir='reports/stage643-retune';
           const before=JSON.parse(fs.readFileSync(dir+'/before/aoe-results.json','utf8'));
-          const names=['decay-blood-spread','smart-blood-pure','magic-lightning'];
+          const names=['decay-blood-spread','smart-blood-pure','arcane-lightning'];
           const parts=fs.readdirSync(dir+'/shards').filter(x=>/^stage642-.*-shard-[01]\.json$/.test(x))
            .map(x=>JSON.parse(fs.readFileSync(dir+'/shards/'+x,'utf8')));
           if(parts.length!==6)throw Error('Missing six 50-seed shards');

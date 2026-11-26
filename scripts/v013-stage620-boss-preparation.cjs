@@ -9,10 +9,10 @@ const T=globalThis.WandererAutomaticTalents;
 const STRATEGIES=Object.freeze(['baseline','marked_elite','reliquary','both']);
 const POLICIES=Object.freeze(['focus','mechanics']);
 const BOSSES=Object.freeze({blood:'The Creditor',decay:'Carrion Matriarch',
- vitality:'Gullet',aegis:'Holdfast',
- fury:'The Chainbreaker',magic:'The Measure'});
-const BOSSES_ID=Object.freeze({blood:'rift',decay:'carrion',vitality:'heartroot',
- aegis:'guardian',fury:'ember',magic:'stormglass'});
+ radiance:'Gullet',aegis:'Holdfast',
+ fury:'The Chainbreaker',arcane:'The Measure'});
+const BOSSES_ID=Object.freeze({blood:'rift',decay:'carrion',radiance:'heartroot',
+ aegis:'guardian',fury:'ember',arcane:'stormglass'});
 const DEFAULTS=Object.freeze({mode:'pilot',seedsPerCell:1,seedStart:6200011,
  budgets:[12,24,36,60],risk:1,rarity:'Rare',tickLimit:4500,
  out:'reports/v013-stage620-boss-preparation-pilot.json'});

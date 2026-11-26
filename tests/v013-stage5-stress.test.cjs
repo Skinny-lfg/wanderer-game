@@ -2,8 +2,8 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const M=require('../scripts/v013-stage5-stress.cjs');
 test('Stage 5 stress matrix rejects invalid or excessive scope, preserves selected profiles',()=>{
- const config=M.args(['--seed-start=9101','--seed-count=2','--levels=15,50','--builds=blood-fury,magic-decay','--gear=previous']);
- assert.deepEqual(config.levels,[15,50]);assert.deepEqual(config.builds,['blood-fury','magic-decay']);assert.equal(config.gear,'previous');assert.equal(config.contracts,'none');
+ const config=M.args(['--seed-start=9101','--seed-count=2','--levels=15,50','--builds=blood-fury,arcane-decay','--gear=previous']);
+ assert.deepEqual(config.levels,[15,50]);assert.deepEqual(config.builds,['blood-fury','arcane-decay']);assert.equal(config.gear,'previous');assert.equal(config.contracts,'none');
  for(const invalid of ['--seed-count=0','--seed-count=9999','--levels=0','--builds=unknown','--out=','--untrusted=1','--seed-start=-1','--levels=1,15,30000'])
   assert.throws(()=>M.args([invalid]),invalid);
 });

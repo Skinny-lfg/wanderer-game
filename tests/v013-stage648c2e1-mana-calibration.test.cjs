@@ -20,5 +20,5 @@ test('pure Decay Plagueheart spends Mana once for primary tick bonus; no cooldow
  h.e.incubationTicks=2;h.c.now=4;h.B.tickRot(h.b,h.c);assert.equal(h.r.mp,90);
  const low=fixture(null,2);low.B.tickRot(low.b,low.c);assert.equal(low.r.mp,2);assert.equal(low.m.decayPrimaryPaidStageE1FocusDenied,1);assert.equal(low.b.cooldowns.plagueheartFunded,undefined);
 });
-test('Magic and Blood hybrid owners cannot use funded Plagueheart',()=>{for(const f of ['magic','blood']){const h=fixture(f);h.B.tickRot(h.b,h.c);assert.equal(h.r.mp,100);assert.equal(h.m.decayPrimaryPaidStageE1FocusHybridBlocked,1);assert.equal(h.m.decayPrimaryPaidStageE1FocusActivations||0,0);}});
+test('Magic and Blood hybrid owners cannot use funded Plagueheart',()=>{for(const f of ['arcane','blood']){const h=fixture(f);h.B.tickRot(h.b,h.c);assert.equal(h.r.mp,100);assert.equal(h.m.decayPrimaryPaidStageE1FocusHybridBlocked,1);assert.equal(h.m.decayPrimaryPaidStageE1FocusActivations||0,0);}});
 test('native normal and boss ledger with varied costs and regen reconciles',()=>{for(const sc of E.SC.filter(s=>s.id==='solo'||s.id==='boss')){const a=R.cell('decay-daggers','base',sc,0),b=R.cell('decay-daggers','Aregen75',sc,0);R.verify(a,b,R.DECAY_ARMS.Aregen75);assert(b.ledger.regenPotential>0);}});

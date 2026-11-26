@@ -106,7 +106,7 @@ function aggregate(shards){
    solo:rate(normal.filter(r=>r.enemies===1)),
    small:rate(normal.filter(r=>r.enemies>=2&&r.enemies<=4)),
    swarm:rate(normal.filter(r=>r.enemies>=5)),
-   byRealm:Object.fromEntries(['blood','decay','vitality','aegis','fury','magic'].map(realm=>{
+   byRealm:Object.fromEntries(['blood','decay','radiance','aegis','fury','arcane'].map(realm=>{
     const sub=reached.filter(a=>a.family===realm).flatMap(a=>a.rooms.filter(r=>r.E===E));
     return [realm,{accounts:reached.filter(a=>a.family===realm).length,
      normal:rate(sub.filter(r=>r.kind==='combat')),

@@ -39,7 +39,7 @@ jobs:
       fail-fast: false
       max-parallel: 18
       matrix:
-        build: [hybrid-blood-fury, hybrid-fury-vitality, hybrid-vitality-aegis, hybrid-aegis-magic, hybrid-magic-decay, hybrid-decay-blood, mix-blood-aegis, mix-blood-vitality, mix-blood-magic, mix-decay-aegis, mix-decay-vitality, mix-decay-fury, mix-fury-aegis, mix-fury-magic, mix-vitality-magic, blood-daggers, decay-cycle-wand, fury-bow, vitality-sword, aegis-mace, magic-lightning-wand]
+        build: [hybrid-blood-fury, hybrid-fury-radiance, hybrid-radiance-aegis, hybrid-aegis-arcane, hybrid-arcane-decay, hybrid-decay-blood, mix-blood-aegis, mix-blood-radiance, mix-blood-arcane, mix-decay-aegis, mix-decay-radiance, mix-decay-fury, mix-fury-aegis, mix-fury-arcane, mix-radiance-arcane, blood-daggers, decay-cycle-wand, fury-bow, radiance-sword, aegis-mace, arcane-lightning-wand]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

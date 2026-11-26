@@ -33,7 +33,7 @@ test('Stage 6.42: all six weapon/single-target effects exist in active v15 with 
  }
 });
 test('Stage 6.42: a prepared and earned Grave Bloom counts as AoE potential even with no elemental attunement',()=>{
- const nodes=['affinity_magic','affinity_decay','grave_bloom'];
+ const nodes=['affinity_arcane','affinity_decay','grave_bloom'];
  const snap={state:{automaticTalents:{nodes,prepared:'grave_bloom',element:null},
   equip:{weapon:{subtype:'Wand'},offhand:null}},xp:2500,talentSpent:25,equipPieces:10};
  const a=A.aoeState(snap);

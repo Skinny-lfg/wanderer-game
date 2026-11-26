@@ -9,7 +9,7 @@ const INPUT=fs.readFileSync(path.resolve(__dirname,'../'+FILE),'utf8');
 const FLAG='const CALIBRATION_STAT_ONLY=false;';
 if(INPUT.split(FLAG).length!==2)throw Error('Missing unique Stage 6.33 calibration toggle');
 const STAT_ONLY_SOURCE=INPUT.replace(FLAG,'const CALIBRATION_STAT_ONLY=true;');
-const TARGETS=['balanced','smart-magic-arcane-pure','smart-aegis-vitality'];
+const TARGETS=['balanced','smart-arcane-arcane-pure','smart-aegis-radiance'];
 const sha=x=>crypto.createHash('sha256').update(x).digest('hex');
 function run(opts={}){
  const {seed=6331,maxLevel=2,maxAttempts=6,maxTotalAttempts=18,

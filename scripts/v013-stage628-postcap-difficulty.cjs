@@ -6,7 +6,7 @@ const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypt
 const N=require('./v013-natural-progression.cjs');
 const S=require('./simulate-progression.cjs');
 const T=globalThis.WandererAutomaticTalents;
-const FAMILIES=Object.freeze(['blood','decay','vitality','aegis','fury','magic']);
+const FAMILIES=Object.freeze(['blood','decay','radiance','aegis','fury','arcane']);
 const ELITES=Object.freeze(['tank','berserker','vampire','caster','gravecaller',
  'oathbound_exarch','the_gilded','ashen_executioner']);
 const LEVELS=Object.freeze([1,5,20,35,55,70,100,150,200]);

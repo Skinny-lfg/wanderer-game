@@ -2,13 +2,13 @@
 const fs=require('node:fs'),path=require('node:path'),Module=require('node:module'),create=require('../tests/v012-economy-harness.cjs');
 const simFile=path.resolve(__dirname,'v012-affinity-combat-sim.cjs');
 let src=fs.readFileSync(simFile,'utf8');
-for(const [old,rep] of [['a.setup(E,weapon,rarity)','void 0'],['g.unlocked=E;','void 0;'],["if(runes){s.runes=['vitality','warding',['Staff','Wand'].includes(weapon)?'wisdom':'might'].map(f=>a.makeRune(f,E));s.runeSlots=s.runes.map(r=>r.id);}",'void 0;']]){if(!src.includes(old))throw Error('Missing audit anchor '+old);src=src.replace(old,rep);}
+for(const [old,rep] of [['a.setup(E,weapon,rarity)','void 0'],['g.unlocked=E;','void 0;'],["if(runes){s.runes=['radiance','warding',['Staff','Wand'].includes(weapon)?'wisdom':'might'].map(f=>a.makeRune(f,E));s.runeSlots=s.runes.map(r=>r.id);}",'void 0;']]){if(!src.includes(old))throw Error('Missing audit anchor '+old);src=src.replace(old,rep);}
 const mod=new Module(simFile,module);mod.filename=simFile;mod.paths=Module._nodeModulePaths(path.dirname(simFile));mod._compile(src,simFile);
-const scenarios={base:[],survival:['health','ironhide','barrier'],offense:['might','haste','health'],fortuneLoot:['fortune','health','haste'],fortuneEconomic:['fortune','might','ironhide'],health3:['health','health','health'],defense:['barrier','ironhide','health'],magic:['arcane','mana','barrier']},out=[];
+const scenarios={base:[],survival:['health','ironhide','barrier'],offense:['might','haste','health'],fortuneLoot:['fortune','health','haste'],fortuneEconomic:['fortune','might','ironhide'],health3:['health','health','health'],defense:['barrier','ironhide','health'],arcane:['arcane','mana','barrier']},out=[];
 for(const [name,kinds]of Object.entries(scenarios))for(let seedIndex=0;seedIndex<30;seedIndex++){
  const a=create(84100+seedIndex),s=a.state(),g=a.controller().state;a.setup(200,'Bow','Epic');
  let j=0;for(const [slot,item]of Object.entries(s.equip))if(item){const tier=196+((j*3+seedIndex)%5),rarity=j%5===0?'Rare':'Epic',armor=['helm','armor','gloves','belt','boots'].includes(slot);s.equip[slot]=a.makeItem(tier,slot,null,'loot',slot==='weapon'?'Bow':armor?'Leather':item.subtype,rarity);j++;}
- s.runes=['vitality','warding','might'].map((f,i)=>a.makeRune(f,[190,195,199][i]));s.runeSlots=s.runes.map(r=>r.id);s.gold=4000;s.fragments=3000;g.unlocked=200;
+ s.runes=['radiance','warding','might'].map((f,i)=>a.makeRune(f,[190,195,199][i]));s.runeSlots=s.runes.map(r=>r.id);s.gold=4000;s.fragments=3000;g.unlocked=200;
  const seed=851000+seedIndex*10007;
  let r;try{r=mod.exports.run({E:200,weapon:'Bow',rarity:'Epic',family:'fury',strategy:'triple',routeMode:'planned',runes:true,seed,controlSeed:seed,potionKinds:kinds,harnessFactory:()=>a});}catch(e){r={error:e.stack||String(e)};}
  const earned=a.results().earned||[],summary=a.results().summary||{};const used=r.potionUses||[],price={health:350,mana:350,might:550,arcane:550,ironhide:550,haste:750,fortune:1050,barrier:750};

@@ -143,7 +143,7 @@ function summarize(shards){
    byElite:Object.fromEntries(IDS.map(id=>[id,outcome(elves.filter(x=>x.id===id))])),
    normal:outcome(shard.rows.filter(x=>x.kind==='normal')),
    bosses:outcome(shard.rows.filter(x=>x.kind==='boss')),
-   byBoss:Object.fromEntries(['blood','decay','vitality','aegis','fury','magic']
+   byBoss:Object.fromEntries(['blood','decay','radiance','aegis','fury','arcane']
     .map(f=>[f,outcome(shard.rows.filter(x=>x.kind==='boss'&&x.realm===f))]))});
  }
  if(levels.size!==LEVELS.length||LEVELS.some(x=>!levels.has(x)))throw Error('Incomplete E5-E200 native audit');

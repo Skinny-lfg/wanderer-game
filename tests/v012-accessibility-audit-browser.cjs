@@ -14,7 +14,7 @@ const states=[
  ['forge',async p=>{await p.locator('[data-phase3-nav="city-center"]').click();}],
  ['shrine',async p=>{await p.locator('[data-phase3-nav="runes"]').click();}],
  ['initial-affinity-dialog',async p=>{await p.locator('.phase3ExpeditionPanel [data-phase1-expedition]').click();await p.locator('dialog[data-initial-affinity]').waitFor({state:'visible'});}],
- ['magic-element-dialog',async p=>{await p.locator('.phase3ExpeditionPanel [data-phase1-expedition]').click();await p.locator('dialog[data-initial-affinity] [data-phase2-initial="magic"]').click();await p.locator('dialog[data-initial-magic-element]').waitFor({state:'visible'});}],
+ ['arcane-element-dialog',async p=>{await p.locator('.phase3ExpeditionPanel [data-phase1-expedition]').click();await p.locator('dialog[data-initial-affinity] [data-phase2-initial="arcane"]').click();await p.locator('dialog[data-initial-arcane-element]').waitFor({state:'visible'});}],
  ['combat',async p=>{await p.locator('.phase3ExpeditionPanel [data-phase1-expedition]').click();await p.locator('dialog[data-initial-affinity] [data-phase2-initial="blood"]').click();await p.locator('#scene').waitFor({state:'visible'});}],
  ['account-dialog',async p=>{if(await p.locator('#menuToggle').isVisible())await p.locator('#menuToggle').click();await p.locator('[data-online-action="account"]').click();}],
  ['leaderboard-dialog',async p=>{if(await p.locator('#menuToggle').isVisible())await p.locator('#menuToggle').click();await p.locator('[data-online-action="leaderboard"]').click();}],

@@ -32,8 +32,8 @@ test('Wand and Staff auto-attack at low Mana: weak physical hit, no funded spell
 test('Caster with depleted Mana cannot expend existing Infusion charges for free extra Magic damage',()=>{
  for(const kind of ['Wand','Staff']){
   const {a,r}=combat(kind),b=a.build();
-  b.unlockedFamilies=['magic'];b.families=['magic'];b.element='arcane';
-  b.runtime.permanentBuild=true;b.runtime.specializations=['affinity_magic'];
+  b.unlockedFamilies=['arcane'];b.families=['arcane'];b.element='arcane';
+  b.runtime.permanentBuild=true;b.runtime.specializations=['affinity_arcane'];
   b.runtime.infusionCharges=2;b.runtime.infusionExpiresAt=999;b.runtime.infusionNextAt=999;
   r.mp=0;const hit=a.gear.weaponAttack(r);
   assert.equal(hit,55,kind);assert.equal(b.runtime.infusionCharges,2,kind+' preserves unpaid charge');

@@ -35,7 +35,7 @@ test('Native Barrier adds without cap with or without Aegis, applying Ward Stren
  assert(Math.abs(a.grantBarrier(9999,r)-9999*1.2)<1e-8);
  assert(Math.abs(r.barrier-(12+9999*1.2))<1e-8);
  assert(Math.abs(a.grantBarrier(12,r)-14.4)<1e-8);
- a.state().automaticTalents=buy(['affinity_magic']);
+ a.state().automaticTalents=buy(['affinity_arcane']);
  const other={barrier:0,maxhp:200,stats:{spellPower:100,wardBonus:0}};
  assert.equal(a.grantBarrier(9999,other),9999);
  assert.equal(other.barrier,9999);

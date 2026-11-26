@@ -28,9 +28,9 @@ for(const dir of ['assets','combat','online','economy','preview/talent-rebuild']
 }
 // Older prototype pages were never part of the current game. The only shipped
 // talent preview is the real v15 iframe under preview/talent-rebuild.
-for(const dir of ['arena-prototype','focused-choices-prototype','focused-flex-prototype','magic-arcane-prototype',
- 'magic-choice-lateral','magic-context','magic-element-choice','magic-prototype',
- 'magic-single-choice','magic-three-axes','talent-choices-prototype'])
+for(const dir of ['arena-prototype','focused-choices-prototype','focused-flex-prototype','arcane-arcane-prototype',
+ 'arcane-choice-lateral','arcane-context','arcane-element-choice','arcane-prototype',
+ 'arcane-single-choice','arcane-three-axes','talent-choices-prototype'])
  await rm(join(target,'preview',dir),{recursive:true,force:true});
 await rm(join(target,'experiments','expedition-lab'),{recursive:true,force:true});
 console.log('Updated isolated v0.13 Pages build in '+target);

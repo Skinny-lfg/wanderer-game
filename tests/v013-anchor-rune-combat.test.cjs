@@ -1,6 +1,6 @@
 'use strict';
 // Deterministic, matched native combat fixtures. Only the earned-rune slot is varied.
-// No combat formula is reimplemented. Enemy vitality and clock are controlled to isolate effects.
+// No combat formula is reimplemented. Enemy radiance and clock are controlled to isolate effects.
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const create=require('./v012-economy-harness.cjs');
 require('../combat/v012-runes.js');
@@ -30,7 +30,7 @@ function audit(family,fn){covered.add(family);test('Anchor Rune combat: '+family
 for(const family of ['might','fury','assault'])audit(family,()=>{const [base,boost]=pair(family);assert(hit(boost)>hit(base));});
 for(const family of ['swiftness','haste'])audit(family,()=>{const [base,boost]=pair(family);assert(period(boost)<period(base),'native auto-attack period');});
 audit('wisdom',()=>{const [base,boost]=pair('wisdom','Wand');assert(boost.r.maxmp>base.r.maxmp);assert(hit(boost)>hit(base));});
-for(const family of ['fortitude','vitality','heart'])audit(family,()=>{const [base,boost]=pair(family);assert(boost.r.maxhp>base.r.maxhp);assert.equal(boost.r.hp,boost.r.maxhp);});
+for(const family of ['fortitude','radiance','heart'])audit(family,()=>{const [base,boost]=pair(family);assert(boost.r.maxhp>base.r.maxhp);assert.equal(boost.r.hp,boost.r.maxhp);});
 for(const family of ['warding','bulwark'])audit(family,()=>{const [base,boost]=pair(family);assert(boost.r.stats.defense>base.r.stats.defense);const before=incoming(base),after=incoming(boost);assert(after<before,'damage actually received: '+before+' -> '+after);});
 for(const family of ['fortune','execution'])audit(family,()=>{const [base,boost]=pair(family);assert(boost.r.stats.crit>base.r.stats.crit);const roll=(base.r.stats.crit+boost.r.stats.crit)/200;assert(hit(boost,roll)>hit(base,roll));});
 audit('devastation',()=>{const [base,boost]=pair('devastation');assert(hit(boost,0)>hit(base,0));const [caster,amplified]=pair('devastation','Wand');caster.a.rng(0);amplified.a.rng(0);assert(amplified.a.combatContext(amplified.r).magicCriticalDamage(100)>caster.a.combatContext(caster.r).magicCriticalDamage(100));});

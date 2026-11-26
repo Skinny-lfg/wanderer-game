@@ -13,8 +13,8 @@ function previousMobs(){
  return sandbox.pools;
 }
 const old=previousMobs(),families={
- temple:'decay',void:'decay',forge:'blood',bloodscar:'blood',grove:'vitality',shrine:'vitality',
- ward:'aegis',drowned:'aegis',crypt:'fury',bastion:'fury',ash:'magic',storm:'magic'
+ temple:'decay',void:'decay',forge:'blood',bloodscar:'blood',grove:'radiance',shrine:'radiance',
+ ward:'aegis',drowned:'aegis',crypt:'fury',bastion:'fury',ash:'arcane',storm:'arcane'
 };
 function catalog(realm){
  return R.catalogFor(realm,old[realm].map(([name,image,role])=>({name,image,role})));

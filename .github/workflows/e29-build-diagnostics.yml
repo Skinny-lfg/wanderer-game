@@ -23,7 +23,7 @@ jobs:
           const d=require('/tmp/e29.json');
           for(const build of ['Archer','Mage','Battlemage','Tank','Assassin']){
             const a=d.agents.filter(x=>x.buildName===build&&x.profile==='base');
-            console.log('E29_STATS '+JSON.stringify({build,initial:a.map(x=>({power:x.initialStats.power,attack:x.initialStats.attack,defense:x.initialStats.defense,hp:x.initialStats.hp,magic:x.initialStats.spellPower,evasion:x.initialStats.evasionRating,block:x.initialStats.blockChance,weapon:x.initial.equip.weapon?.subtype,offhand:x.initial.equip.offhand?.subtype,armor:['helm','armor','gloves','belt','boots'].map(slot=>x.initial.equip[slot]?.armorType)}))}));
+            console.log('E29_STATS '+JSON.stringify({build,initial:a.map(x=>({power:x.initialStats.power,attack:x.initialStats.attack,defense:x.initialStats.defense,hp:x.initialStats.hp,arcane:x.initialStats.spellPower,evasion:x.initialStats.evasionRating,block:x.initialStats.blockChance,weapon:x.initial.equip.weapon?.subtype,offhand:x.initial.equip.offhand?.subtype,armor:['helm','armor','gloves','belt','boots'].map(slot=>x.initial.equip[slot]?.armorType)}))}));
             for(const plan of ['adapted','fortune']){
               const rows=d.rows.filter(x=>x.buildName===build&&x.profile===plan);
               const used={};for(const r of rows)for(const u of r.potionsUsed||[])used[u.kind]=(used[u.kind]||0)+1;

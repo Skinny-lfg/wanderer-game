@@ -13,7 +13,7 @@ function fixture(){
  const first={seed:1,profile:'cautious',startXp:0,initialGear:{},
   attempts:[a(1,'victory'),a(2,'victory'),a(3,'victory'),a(4,'victory'),a(5,'extracted')],
   reached:[1,2,3,4,5],endLevel:5,stopReason:'E5 unbeaten after 1 native attempts',
-  xp:320,talents:['vitality'],finalGear:{total:4,starter:2},gold:20,fragments:14};
+  xp:320,talents:['radiance'],finalGear:{total:4,starter:2},gold:20,fragments:14};
  const second={...first,seed:2,
   attempts:[a(1,'extracted'),a(1,'victory',2),a(2,'defeat')],
   reached:[1,2],endLevel:2,stopReason:'E2 unbeaten after 1 native attempts'};

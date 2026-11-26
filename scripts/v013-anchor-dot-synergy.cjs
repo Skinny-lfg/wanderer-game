@@ -16,7 +16,7 @@ if(f==='phantom'){
  const report={n:data.length,atCap:data.filter(r=>r.baseChance>=.45).length,improved:data.filter(r=>r.boostChance>r.baseChance).length,minBase:Math.min(...data.map(r=>r.baseRating)),maxBase:Math.max(...data.map(r=>r.baseRating)),data};
  fs.writeFileSync(path.join(dir,'phantom.json'),JSON.stringify(report));console.log('PHANTOM_DIAGNOSTIC='+JSON.stringify({...report,data:undefined}));
 }else{
- assert(['blood','decay','magic'].includes(f));const o=JSON.parse(fs.readFileSync(path.join(old,'controlled-'+f+'.json')));assert.equal(o.source,'5f6f93dbf303aa6367f41edbe895bff2208ad4c89485845cec665a80be86c1ac');assert.equal(o.trials,50);
+ assert(['blood','decay','arcane'].includes(f));const o=JSON.parse(fs.readFileSync(path.join(old,'controlled-'+f+'.json')));assert.equal(o.source,'5f6f93dbf303aa6367f41edbe895bff2208ad4c89485845cec665a80be86c1ac');assert.equal(o.trials,50);
  const aa=A.arms(f).filter(a=>selected.includes(a.id));assert.equal(aa.length,3);
  const original=new Map(o.rows.filter(r=>selected.includes(r.arm)).map(r=>[r.sc+'/'+r.i+'/'+r.arm,r]));assert.equal(original.size,900);
  const rows=[];for(const sc of A.SC)for(let i=0;i<50;i++)for(const r of A.paired(f,sc,i,aa)){const before=original.get(sc+'/'+i+'/'+r.arm);assert(before);assert.deepEqual(r.match,before.match,'Original scenario drift '+f+' '+sc+' '+i+' '+r.arm);rows.push(r);}

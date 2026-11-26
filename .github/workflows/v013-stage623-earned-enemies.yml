@@ -49,7 +49,7 @@ jobs:
         run: >-
           node scripts/v013-stage623-earned-matched-enemies.cjs
           --mode=cohort --seeds=${{ matrix.seed }}
-          --profiles=cautious,balanced,smart-blood-fury-vitality
+          --profiles=cautious,balanced,smart-blood-fury-radiance
           --max-attempts=12 --max-total-attempts=60 --trials=1
           --out=reports/v013-stage623-seed${{ matrix.seed }}.json
       - uses: actions/upload-artifact@v4

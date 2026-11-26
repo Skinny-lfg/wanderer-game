@@ -21,7 +21,7 @@ function summarizeAccount(a){
   finalXp:a.xp,nativeTalentNodes:a.talents?.length||0,
   talentsObserved:Object.fromEntries([
    'affinity_blood','blood_drinker','blood_harvest','crimson_rush',
-   'affinity_magic','affinity_decay','affinity_aegis',
+   'affinity_arcane','affinity_decay','affinity_aegis',
    'arcane_resonance','arcane_surge','arcane_mastery',
    'guarded_block','barrier_pulse','hex_bolt','grave_bloom'
   ].map(id=>[id,includes(a,id)])),

@@ -8,10 +8,10 @@ const SEEDS=[94101,94102,94103],KINDS=['normal','elite','boss'];
 const pick=id=>{const b=S.BUILDS.find(x=>x.id===id);if(!b)throw Error('Unknown build '+id);return b;};
 const BUILDS=[
  {...pick('aegis-sword'),id:'aegis-sword'},
- {...pick('aegis-vitality'),id:'aegis-mace'},
- {...pick('magic-decay'),id:'magic-wand'},
+ {...pick('aegis-radiance'),id:'aegis-mace'},
+ {...pick('arcane-decay'),id:'arcane-wand'},
  {...pick('blood-fury'),id:'blood-daggers'},
- {...pick('magic-decay'),id:'hexblade-sword',weapon:'Sword'},
+ {...pick('arcane-decay'),id:'hexblade-sword',weapon:'Sword'},
  {id:'pure-blood-sword',name:'Pure Blood Sword',weapon:'Sword',families:['blood'],skills:['bleeding_edge','deep_cuts','blood_drinker']}
 ];
 function parseArgs(args=[]){
@@ -154,7 +154,7 @@ function pairedReport(options={}){
   ]};
 }
 function naturalReport(){
- const cfg=N.parseArgs(['--seeds=9101,9201','--profiles=cautious,magic-fire,hexblade-hybrid,leather-duelist',
+ const cfg=N.parseArgs(['--seeds=9101,9201','--profiles=cautious,arcane-fire,hexblade-hybrid,leather-duelist',
   '--max-level=20','--max-attempts=4','--max-total-attempts=12','--tick-limit=4500']);
  const data=N.run(cfg);
  const accounts=data.accounts.map(a=>{

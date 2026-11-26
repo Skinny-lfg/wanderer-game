@@ -8,7 +8,7 @@ function harness(variant='balanced',count=4){
  const src=transform(runtime,build,scenarios[variant]),g={};
  vm.createContext(g);vm.runInContext(src.build,g);
  const B=g.WandererV012Buildcraft,b=B.create();
- b.runtime.prepared='grave_bloom';b.runtime.specializations=['grave_bloom','affinity_magic','affinity_decay'];
+ b.runtime.prepared='grave_bloom';b.runtime.specializations=['grave_bloom','affinity_arcane','affinity_decay'];
  const enemies=Array.from({length:count},(_,i)=>({name:'E'+i,hp:1000,maxhp:1000,v012Rot:[]}));
  const reserve={hp:1000,maxhp:1000,v012Rot:[]},metrics={},hits=[];
  const player={enemies,groupReserve:[reserve]};
@@ -50,7 +50,7 @@ test('Full Rot target still receives its own burst; capped elite/boss; no wrong-
  assert.equal(h.enemies[2].v012Rot[0].damage,26);
 });
 test('Funded Wand/Staff Infusion cannot double-count the already counted cast',()=>{
- const h=harness();h.b.unlockedFamilies=['magic','decay'];h.b.families=['magic','decay'];h.b.element='arcane';
+ const h=harness();h.b.unlockedFamilies=['arcane','decay'];h.b.families=['arcane','decay'];h.b.element='arcane';
  h.b.runtime.permanentBuild=true;h.b.runtime.infusionCharges=2;h.b.runtime.infusionExpiresAt=10;
  const c={...h.c,magical:true,weaponSubtype:'Wand',damage(){},mana(){}};
  h.B.graveBloomAction(h.b,h.c);h.B.onInfusionHit(h.b,c);

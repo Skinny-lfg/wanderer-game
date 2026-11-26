@@ -18,7 +18,7 @@ export function cleanEquipment(input){
  return result;
 }
 
-const RUNE_IDS=['might','swiftness','wisdom','fortitude','fortune','fury','warding','vitality'];
+const RUNE_IDS=['might','swiftness','wisdom','fortitude','fortune','fury','warding','radiance'];
 export function cleanPublicRunes(input){
  const seen=new Set();
  return (Array.isArray(input)?input:[]).filter(r=>r&&typeof r.id==='string'&&r.id.length>0&&r.id.length<120&&RUNE_IDS.includes(r.family)&&Number.isInteger(r.tier)&&r.tier>=10&&r.tier<=200&&r.tier%10===0)

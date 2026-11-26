@@ -93,12 +93,12 @@ function totalStats(equipment,ownedRunes,equippedRuneIds,{isTwoHanded,FIELDS,ite
  s.manaRegen=caster?+(1+s.int*.15).toFixed(1):0;
  s.spellPower=caster?Math.round(3+s.int*1.9+s.spellFlat):0;
  // Magic resources exist before percentage talents, including on physical weapons.
- const magic=PHASE1_PREVIEW&&(build?build.unlockedFamilies?.includes('magic'):state?.automaticTalents?.nodes?.includes('affinity_magic'));
+ const magic=PHASE1_PREVIEW&&(build?build.unlockedFamilies?.includes('arcane'):state?.automaticTalents?.nodes?.includes('affinity_arcane'));
  const decay=PHASE1_PREVIEW&&(build?build.unlockedFamilies?.includes('decay'):state?.automaticTalents?.nodes?.includes('affinity_decay'));
  const aegis=PHASE1_PREVIEW&&(build?build.unlockedFamilies?.includes('aegis'):state?.automaticTalents?.nodes?.includes('affinity_aegis'));
  if(magic||decay){s.mana=caster?s.mana:Math.max(30,Math.round(20+s.int*7+s.manaFlat));s.manaRegen=caster?s.manaRegen:+(1+s.int*.15).toFixed(1);}
  // Orb Ward and Aegis Barrier use Spell Power with physical weapons, but neither
- // unlocks Mana or spellcasting in the absence of Magic/Decay.
+ // unlocks Mana or spellcasting in the absence of Arcane/Decay.
  if(magic||decay||aegis||off?.subtype==='Orb')s.spellPower=caster?s.spellPower:Math.round(3+s.int*1.9+s.spellFlat);
  if(s.mana){s.mana=Math.round(s.mana*(1+.4*clothFraction));s.spellPower=Math.round(s.spellPower*(1+.4*clothFraction));}
  if(magic)s.phase2Magic=true;

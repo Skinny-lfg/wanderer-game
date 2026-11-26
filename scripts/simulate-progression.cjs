@@ -36,13 +36,13 @@ const P=globalThis.WandererExpeditionProgression;
 const byNode=new Map(T.NODES.map(n=>[n.id,n]));
 const BUILDS=Object.freeze([
  {id:'blood-fury',name:'Blood/Fury',weapon:'Daggers',families:['blood','fury'],skills:['bleeding_edge','deep_cuts','quick_hands','double_strike','crimson_rush']},
- {id:'aegis-vitality',name:'Aegis/Vitality',weapon:'Mace',families:['aegis','vitality'],skills:['guarded_block','barrier_pulse','strong_heart','renewal','sanctuary']},
- {id:'magic-decay',name:'Magic/Decay',weapon:'Wand',families:['magic','decay'],skills:['arcane_focus','mana_spring','toxic_touch','virulent_rot','hex_bolt'],element:'fire'},
+ {id:'aegis-radiance',name:'Aegis/Radiance',weapon:'Mace',families:['aegis','radiance'],skills:['guarded_block','barrier_pulse','strong_heart','renewal','sanctuary']},
+ {id:'arcane-decay',name:'Arcane/Decay',weapon:'Wand',families:['arcane','decay'],skills:['arcane_focus','mana_spring','toxic_touch','virulent_rot','hex_bolt'],element:'fire'},
  {id:'blood-decay',name:'Blood/Decay',weapon:'Two-Handed',families:['blood','decay'],skills:['bleeding_edge','deep_cuts','toxic_touch','virulent_rot','plague_spread']},
-  {id:'aegis-sword',name:'Aegis/Vitality Sword & Shield',weapon:'Sword',families:['aegis','vitality'],skills:['guarded_block','barrier_pulse','strong_heart','renewal','sanctuary']},
+  {id:'aegis-sword',name:'Aegis/Radiance Sword & Shield',weapon:'Sword',families:['aegis','radiance'],skills:['guarded_block','barrier_pulse','strong_heart','renewal','sanctuary']},
   {id:'fury-bow',name:'Blood/Fury Archer',weapon:'Bow',families:['blood','fury'],skills:['bleeding_edge','deep_cuts','quick_hands','double_strike','crimson_rush']},
-  {id:'magic-storm',name:'Magic/Decay Lightning Staff',weapon:'Staff',families:['magic','decay'],skills:['arcane_focus','mana_spring','toxic_touch','virulent_rot','hex_bolt'],element:'lightning'},
-  {id:'magic-frost',name:'Magic Frost Staff',weapon:'Staff',families:['magic'],skills:['arcane_focus','mana_spring','deep_winter'],element:'frost'}
+  {id:'arcane-storm',name:'Arcane/Decay Lightning Staff',weapon:'Staff',families:['arcane','decay'],skills:['arcane_focus','mana_spring','toxic_touch','virulent_rot','hex_bolt'],element:'lightning'},
+  {id:'arcane-frost',name:'Magic Frost Staff',weapon:'Staff',families:['arcane'],skills:['arcane_focus','mana_spring','deep_winter'],element:'frost'}
 ]);
 const DEFAULTS=Object.freeze({mode:'encounter',levels:[1,5,15,35,70,100,250,1000],seeds:[9101,9102,9103],builds:BUILDS.map(b=>b.id),points:24,rarity:'Rare',gear:'current',runes:false,tickLimit:4500,
  affinities:[...AFFINITIES],risks:[1],groupSizes:[...GROUP_SIZES],roleEffects:[...ROLE_EFFECTS],boons:'none',contracts:'none',targetPolicy:'focus',output:'reports/v013-simulation-results.json'});
@@ -293,7 +293,7 @@ function prepare(level,build,seed,opts,desiredRisk=undefined,desiredFamily=undef
    const st=a.state();st.runes=specs.map(r=>a.makeRune(r.family,r.tier,r.rarity));st.runeSlots=[null,null,null];
    for(let i=0;i<st.runes.length;i++)if(!a.runes.equip(st.runes[i].id,i))throw Error('Native Shrine rejected controlled Anchor Rune');
   }
-  if(opts.runes){const st=a.state(),families=build.families||[];const picks=families.includes('magic')?['archmage','clarity','efficiency']:families.includes('aegis')?['bastion','bulwark','guard']:families.includes('decay')?['corruption','abyss','bastion']:['execution','haste',families.includes('blood')?'corruption':'devastation'];st.runes=picks.map(k=>a.makeRune(k,gearE,opts.rarity));st.runeSlots=st.runes.map(r=>r.id);}
+  if(opts.runes){const st=a.state(),families=build.families||[];const picks=families.includes('arcane')?['archmage','clarity','efficiency']:families.includes('aegis')?['bastion','bulwark','guard']:families.includes('decay')?['corruption','abyss','bastion']:['execution','haste',families.includes('blood')?'corruption':'devastation'];st.runes=picks.map(k=>a.makeRune(k,gearE,opts.rarity));st.runeSlots=st.runes.map(r=>r.id);}
   a.setUnlocked(level);a.start(level,true);
   const c=a.controller(),g=c.state;
   if(g.expedition!==level||!g.dungeon?.cards?.length)throw Error('Current native v0.13 Dungeon unavailable at E'+level);
@@ -326,7 +326,7 @@ function selectTarget(run,policy='focus'){
  if(policy==='adds')return guards[0]||leader||alive[0];
  if(boss){
   if(boss.bossStyle==='leech'){const thrall=alive.find(e=>e.stage84Minion==='blood');if(thrall)return thrall;}
-  if(boss.bossStyle==='devourer'){const fragment=alive.find(e=>e.stage84Minion==='vitality');if(fragment)return fragment;}
+  if(boss.bossStyle==='devourer'){const fragment=alive.find(e=>e.stage84Minion==='radiance');if(fragment)return fragment;}
   if(boss.bossStyle==='conductor'){const node=alive.find(e=>e.stage84Node);if(node)return node;}
   if(boss.bossStyle==='matriarch'){const brood=alive.filter(e=>e.stage84Minion==='decay');if(brood.length>=2)return brood[0];}
 

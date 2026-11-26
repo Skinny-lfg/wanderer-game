@@ -5,5 +5,5 @@ test('new schedules have 15 Realms, 3–4 unique categorized events and two mand
 });
 test('three shared rerolls, no fourth, and exactly one saved boss card without acquiring a fourth affinity',()=>{
  const c=C.create(themes,()=>.4);c.start();c.chooseInitial('blood');for(let i=0;i<3;i++)c.reroll(i);assert.equal(c.state.rerolls,0);assert.throws(()=>c.reroll(0));
- const g=c.state;g.planeIndex=15;g.families=['blood','decay','magic'];g.offers=[];g.selected=null;g.rewardPending={};g.stage='choice';c.claimReward();assert.equal(g.offers.length,1);assert(g.families.includes(g.offers[0].family));assert.throws(()=>c.reroll(0));assert.equal(Object.keys(C.REALMS).length,12);
+ const g=c.state;g.planeIndex=15;g.families=['blood','decay','arcane'];g.offers=[];g.selected=null;g.rewardPending={};g.stage='choice';c.claimReward();assert.equal(g.offers.length,1);assert(g.families.includes(g.offers[0].family));assert.throws(()=>c.reroll(0));assert.equal(Object.keys(C.REALMS).length,12);
 });

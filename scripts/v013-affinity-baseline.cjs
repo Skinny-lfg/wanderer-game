@@ -5,19 +5,19 @@
 // node scripts/simulate-progression.cjs --mode=affinities
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const S=require('./simulate-progression.cjs');
-const FAMILIES=Object.freeze(['blood','fury','vitality','aegis','magic','decay']);
+const FAMILIES=Object.freeze(['blood','fury','radiance','aegis','arcane','decay']);
 const BUILDS=Object.freeze([
  {id:'pure-blood',name:'Blood',weapon:'Sword',families:['blood'],skills:['affinity_blood','bleeding_edge','deep_cuts','blood_drinker']},
  {id:'pure-fury',name:'Fury',weapon:'Daggers',families:['fury'],skills:['affinity_fury','quick_hands','precision','double_strike']},
- {id:'pure-vitality',name:'Vitality',weapon:'Mace',families:['vitality'],skills:['affinity_vitality','strong_heart','renewal','life_bloom']},
+ {id:'pure-radiance',name:'Radiance',weapon:'Mace',families:['radiance'],skills:['affinity_radiance','strong_heart','renewal','life_bloom']},
  {id:'pure-aegis',name:'Aegis',weapon:'Mace',families:['aegis'],skills:['affinity_aegis','guarded_block','barrier_pulse','iron_skin']},
- {id:'pure-magic',name:'Magic (Arcane)',weapon:'Wand',families:['magic'],skills:['affinity_magic','element_choice','arcane_focus','mana_spring','arcane_resonance'],element:'arcane'},
+ {id:'pure-arcane',name:'Magic (Arcane)',weapon:'Wand',families:['arcane'],skills:['affinity_arcane','element_choice','arcane_focus','mana_spring','arcane_resonance'],element:'arcane'},
  {id:'pure-decay',name:'Decay',weapon:'Daggers',families:['decay'],skills:['affinity_decay','toxic_touch','virulent_rot','blight']},
  {id:'blood-fury',name:'Blood + Fury',weapon:'Daggers',families:['blood','fury'],skills:['affinity_blood','affinity_fury','bleeding_edge','quick_hands','crimson_rush']},
- {id:'fury-vitality',name:'Fury + Vitality',weapon:'Daggers',families:['fury','vitality'],skills:['affinity_fury','affinity_vitality','quick_hands','renewal','fervent_life']},
- {id:'vitality-aegis',name:'Vitality + Aegis',weapon:'Mace',families:['vitality','aegis'],skills:['affinity_vitality','affinity_aegis','strong_heart','barrier_pulse','sanctuary']},
- {id:'aegis-magic',name:'Aegis + Magic',weapon:'Wand',families:['aegis','magic'],skills:['affinity_aegis','affinity_magic','element_choice','barrier_pulse','arcane_focus','runic_shield'],element:'arcane'},
- {id:'magic-decay',name:'Magic + Decay',weapon:'Wand',families:['magic','decay'],skills:['affinity_magic','affinity_decay','element_choice','arcane_focus','toxic_touch','hex_bolt'],element:'arcane'},
+ {id:'fury-radiance',name:'Fury + Radiance',weapon:'Daggers',families:['fury','radiance'],skills:['affinity_fury','affinity_radiance','quick_hands','renewal','fervent_life']},
+ {id:'radiance-aegis',name:'Radiance + Aegis',weapon:'Mace',families:['radiance','aegis'],skills:['affinity_radiance','affinity_aegis','strong_heart','barrier_pulse','sanctuary']},
+ {id:'aegis-arcane',name:'Aegis + Magic',weapon:'Wand',families:['aegis','arcane'],skills:['affinity_aegis','affinity_arcane','element_choice','barrier_pulse','arcane_focus','runic_shield'],element:'arcane'},
+ {id:'arcane-decay',name:'Magic + Decay',weapon:'Wand',families:['arcane','decay'],skills:['affinity_arcane','affinity_decay','element_choice','arcane_focus','toxic_touch','hex_bolt'],element:'arcane'},
  {id:'decay-blood',name:'Decay + Blood',weapon:'Daggers',families:['decay','blood'],skills:['affinity_decay','affinity_blood','toxic_touch','bleeding_edge','plague_spread']}
 ].map(x=>Object.freeze({...x,families:Object.freeze(x.families),skills:Object.freeze(x.skills)})));
 const DEFAULTS=Object.freeze({

@@ -2,14 +2,14 @@
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const S=require('./simulate-progression.cjs'),G=require('./v013-global-e10.cjs'),N=require('./v013-natural-progression.cjs');
 require('../combat/v012-runes.js');const R=globalThis.WandererV012Runes;
-const F=['blood','decay','vitality','aegis','fury','magic'],NTRIALS=50,NACCOUNTS=10,OUT='reports/anchor-rune-scaling';
+const F=['blood','decay','radiance','aegis','fury','arcane'],NTRIALS=50,NACCOUNTS=10,OUT='reports/anchor-rune-scaling';
 const P={
  blood:['blood-daggers','smart-blood-pure',['might','fury','swiftness','corruption','renewal','execution','haste','heart'],[['corruption','haste','assault'],['heart','renewal','execution']]],
  decay:['decay-cycle-wand','hexblade-hybrid',['corruption','wisdom','archmage','abyss','clarity','efficiency','bastion','heart'],[['corruption','clarity','efficiency'],['corruption','archmage','abyss']]],
- vitality:['vitality-mace','smart-vitality-pure',['fortitude','vitality','heart','renewal','warding','assault','bulwark'],[['renewal','heart','bulwark'],['renewal','assault','haste']]],
+ radiance:['radiance-mace','smart-radiance-pure',['fortitude','radiance','heart','renewal','warding','assault','bulwark'],[['renewal','heart','bulwark'],['renewal','assault','haste']]],
  aegis:['aegis-mace','plate-warden',['warding','bulwark','guard','bastion','fortitude','wisdom','archmage','heart'],[['bastion','bulwark','guard'],['bastion','archmage','heart']]],
  fury:['fury-bow','smart-fury-bow',['fortune','swiftness','phantom','execution','devastation','haste','assault','might','fury'],[['execution','devastation','haste'],['assault','swiftness','phantom']]],
- magic:['magic-fire-wand','magic-fire',['wisdom','archmage','abyss','clarity','efficiency','execution','devastation','corruption','haste'],[['archmage','clarity','efficiency'],['archmage','execution','devastation']]]};
+ arcane:['arcane-fire-wand','arcane-fire',['wisdom','archmage','abyss','clarity','efficiency','execution','devastation','corruption','haste'],[['archmage','clarity','efficiency'],['archmage','execution','devastation']]]};
 const SC=['normal-1','normal-4','normal-8','normal-12','elite','boss'],ELITES=G.SC.filter(x=>x.kind==='elite').map(x=>x.elite),CATS=[1,5,15,35,70];
 function write(name,obj){fs.mkdirSync(OUT,{recursive:true});fs.writeFileSync(path.join(OUT,name),JSON.stringify(obj)+'\n');}
 function scale(){const values=R.FAMILIES.flatMap(f=>CATS.flatMap(tier=>R.RARITIES.map(rarity=>({family:f.id,field:f.field,kind:f.kind,tier,category:R.category(tier)[0],rarity,value:R.runeValue(f.id,tier,rarity)}))));assert.equal(values.length,575);for(const f of R.FAMILIES)for(const r of R.RARITIES)assert.equal(R.runeValue(f.id,70,r),R.runeValue(f.id,200,r));write('scale.json',{values,source:S.sourceFingerprint().sha256});console.log('ANCHOR_SCALE='+values.length);}

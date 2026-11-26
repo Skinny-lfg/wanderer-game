@@ -34,7 +34,7 @@ function measure(stage, weapon, encounter, seed) {
     for (const slot of ['gloves','belt','boots','amulet','ring1','ring2']) a.state().equip[slot]=null;
   }
   let progress = {...T.create(), xp:Math.max(0,stage.points-2)*100, starterPoints:2};
-  const goals = magic?['affinity_magic','passive_arcane_focus','passive_mana_spring','passive_barrier_pulse']:
+  const goals = magic?['affinity_arcane','passive_arcane_focus','passive_mana_spring','passive_barrier_pulse']:
     agile?['affinity_fury','passive_quick_hands','passive_precision','passive_adrenaline']:
     ['affinity_fury','passive_quick_hands','passive_brutal_crit','passive_barrier_pulse'];
   for (const id of goals) {

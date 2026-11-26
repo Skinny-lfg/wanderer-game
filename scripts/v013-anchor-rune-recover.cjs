@@ -5,8 +5,8 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
 const dir=process.argv[2]||'reports/anchor-rune-scaling';
 const runId=45592535013,commit='ee2080895b5fea541cb2a258be104a25f80c72c3';
 const hashes={scale:'2b197ac2dc4f2f2b6905968778e919880811399cb9bb7051904449cae5c4bc68',controlled:'5f6f93dbf303aa6367f41edbe895bff2208ad4c89485845cec665a80be86c1ac'};
-const F=['blood','decay','vitality','aegis','fury','magic'],SC=['normal-1','normal-4','normal-8','normal-12','elite','boss'];
-const expectedArtifacts={'anchor-controlled-decay':15012871182,'anchor-controlled-vitality':15012681049,'anchor-controlled-magic':15011878208,'anchor-controlled-fury':15011838514,'anchor-natural-magic':15011811614,'anchor-natural-vitality':15011682013,'anchor-natural-fury':15011607613,'anchor-scale':15011418092,'anchor-natural-blood':15011134031,'anchor-controlled-aegis':15011084345,'anchor-natural-decay':15010879673,'anchor-natural-aegis':15010593561,'anchor-controlled-blood':15010549891};
+const F=['blood','decay','radiance','aegis','fury','arcane'],SC=['normal-1','normal-4','normal-8','normal-12','elite','boss'];
+const expectedArtifacts={'anchor-controlled-decay':15012871182,'anchor-controlled-radiance':15012681049,'anchor-controlled-arcane':15011878208,'anchor-controlled-fury':15011838514,'anchor-natural-arcane':15011811614,'anchor-natural-radiance':15011682013,'anchor-natural-fury':15011607613,'anchor-scale':15011418092,'anchor-natural-blood':15011134031,'anchor-controlled-aegis':15011084345,'anchor-natural-decay':15010879673,'anchor-natural-aegis':15010593561,'anchor-controlled-blood':15010549891};
 const read=name=>JSON.parse(fs.readFileSync(path.join(dir,name),'utf8'));
 const run=read('original-run.json'),artifacts=read('original-artifacts.json').artifacts;
 assert.equal(run.id,runId);assert.equal(run.head_sha,commit);assert.equal(run.status,'completed');assert.equal(run.path,'.github/workflows/v013-anchor-rune-scaling.yml');

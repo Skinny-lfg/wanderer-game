@@ -12,7 +12,7 @@ const earned=()=>{
   runes:clone(st.runes||[]),runeSlots:clone(st.runeSlots||[])};
 };
 test('Stage 6.23 registered plan requires native E1-to-E5 progress and bounded shards',()=>{
- const p=C.parse(['--seeds=9701','--profiles=cautious,balanced,smart-blood-fury-vitality']);
+ const p=C.parse(['--seeds=9701','--profiles=cautious,balanced,smart-blood-fury-radiance']);
  assert.equal(p.native.maxLevel,5);
  assert.equal(p.native.maxAttempts,12);
  assert.equal(p.native.maxTotalAttempts,60);
@@ -62,8 +62,8 @@ test('Native simulation adapter strictly requires the exact earned gear/Talent s
 });
 test('Cross-role parity checks fail on gear, RNG, Affinity, HP and talent drift',()=>{
  const fixture={gearFingerprint:'a',offhandType:'Orb',offhandTrait:null,
-  talentNodes:['affinity_magic'],talentMode:'fire',resolvedSeed:55,seedShift:0,
-  affinity:'magic',risk:1,conditionId:'veiled_passages',hpMax:120,hpStart:120,
+  talentNodes:['affinity_arcane'],talentMode:'fire',resolvedSeed:55,seedShift:0,
+  affinity:'arcane',risk:1,conditionId:'veiled_passages',hpMax:120,hpStart:120,
   mpMax:70,mpStart:70,targetPolicy:'mechanics'};
  const normal={...fixture,initialRoles:{tank:1}};
  const elite={...fixture,initialRoles:{elite:1}};

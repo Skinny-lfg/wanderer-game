@@ -3,9 +3,9 @@ const fs=require('node:fs'),create=require('../tests/v012-economy-harness.cjs');
 const output=process.argv[2]||'/tmp/v012-economy.json';
 const source=require.main===module&&process.argv[3]?fs.readFileSync(process.argv[3],'utf8'):undefined;
 const priorities={
- sustain:{families:['vitality','aegis','blood'],picks:['renewal','second_breath','blood_drinker','strong_heart','fortified','sanctuary','hemovore'],route:'safe'},
+ sustain:{families:['radiance','aegis','blood'],picks:['renewal','second_breath','blood_drinker','strong_heart','fortified','sanctuary','hemovore'],route:'safe'},
  offense:{families:['fury','blood','decay'],picks:['quick_hands','bleeding_edge','toxic_touch','deep_cuts','executioner','double_strike','precision'],route:'waves'},
- elemental:{families:['magic','decay','aegis'],picks:['arcane_focus','toxic_touch','mana_spring','efficient_cast','barrier_pulse','wasting_curse'],route:'safe'}
+ elemental:{families:['arcane','decay','aegis'],picks:['arcane_focus','toxic_touch','mana_spring','efficient_cast','barrier_pulse','wasting_curse'],route:'safe'}
 };
 function equipBest(a,weapon){
  const s=a.state();
@@ -67,7 +67,7 @@ function run(options){
  if(options.permanentBuild){
   const s=a.state(),item=a.makeItem(gearTier,'weapon',null,'loot',options.weapon,'Legendary');
   s.equip.weapon=item;
-  s.runes=['fury','warding','vitality'].map(f=>a.makeRune(f,Math.max(10,Math.floor(gearTier/10)*10)));
+  s.runes=['fury','warding','radiance'].map(f=>a.makeRune(f,Math.max(10,Math.floor(gearTier/10)*10)));
   s.runeSlots=s.runes.map(r=>r.id);
  }
  return {...play(a,options),ratio:options.ratio,gearTier,permanentBuild:!!options.permanentBuild};

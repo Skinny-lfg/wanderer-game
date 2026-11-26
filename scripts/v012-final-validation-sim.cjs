@@ -2,15 +2,15 @@
 const fs=require('node:fs'),crypto=require('node:crypto');
 const {run,campaign,priorities}=require('./v012-economy-sim.cjs');
 const definitions={
- blood_focus:{families:['blood','vitality','aegis'],picks:['bleeding_edge','deep_cuts','executioner','blood_drinker','sanguine_fury']},
- decay_focus:{families:['decay','vitality','aegis'],picks:['toxic_touch','virulent_rot','wasting_curse','blight','wither']},
- aegis_focus:{families:['aegis','vitality','blood'],picks:['iron_skin','fortified','guarded_block','barrier_pulse','retaliation']},
+ blood_focus:{families:['blood','radiance','aegis'],picks:['bleeding_edge','deep_cuts','executioner','blood_drinker','sanguine_fury']},
+ decay_focus:{families:['decay','radiance','aegis'],picks:['toxic_touch','virulent_rot','wasting_curse','blight','wither']},
+ aegis_focus:{families:['aegis','radiance','blood'],picks:['iron_skin','fortified','guarded_block','barrier_pulse','retaliation']},
  fury_focus:{families:['fury','blood','decay'],picks:['quick_hands','precision','brutal_crit','double_strike','adrenaline']},
- fire_focus:{families:['magic','aegis','vitality'],element:'fire',picks:['arcane_focus','kindling','mana_spring','efficient_cast','elemental_force']},
- frost_focus:{families:['magic','aegis','vitality'],element:'frost',picks:['deep_winter','arcane_focus','mana_spring','efficient_cast','elemental_force']},
- lightning_focus:{families:['magic','aegis','vitality'],element:'lightning',picks:['overcharge','arcane_focus','mana_spring','efficient_cast','elemental_force']},
- hybrid_sustain:{families:['vitality','aegis','blood'],split:true,hybridFirst:true,picks:['renewal','second_breath','sanctuary','blood_ward','hemovore']},
- hybrid_spell:{families:['magic','decay','fury'],split:true,hybridFirst:true,picks:['toxic_touch','hex_bolt','spellblade','toxic_precision','arcane_focus']}
+ fire_focus:{families:['arcane','aegis','radiance'],element:'fire',picks:['arcane_focus','kindling','mana_spring','efficient_cast','elemental_force']},
+ frost_focus:{families:['arcane','aegis','radiance'],element:'frost',picks:['deep_winter','arcane_focus','mana_spring','efficient_cast','elemental_force']},
+ lightning_focus:{families:['arcane','aegis','radiance'],element:'lightning',picks:['overcharge','arcane_focus','mana_spring','efficient_cast','elemental_force']},
+ hybrid_sustain:{families:['radiance','aegis','blood'],split:true,hybridFirst:true,picks:['renewal','second_breath','sanctuary','blood_ward','hemovore']},
+ hybrid_spell:{families:['arcane','decay','fury'],split:true,hybridFirst:true,picks:['toxic_touch','hex_bolt','spellblade','toxic_precision','arcane_focus']}
 };
 for(const [name,p]of Object.entries(definitions))priorities[name]={route:'safe',...p};
 const rows=[];

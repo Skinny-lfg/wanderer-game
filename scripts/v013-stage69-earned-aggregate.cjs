@@ -66,12 +66,12 @@ function aggregate(shards){
  });
  return {stage:'6.9',purpose:'Native earned-account talent-only respec comparison',
   gameSourceSha256:[...source][0],seeds:SEEDS,levels,accounts:12,
-  interventions:12*(NAMES.length-1),nativeAttempts:12*NAMES.length,sourcePolicy:'smart-blood-fury-vitality',
+  interventions:12*(NAMES.length-1),nativeAttempts:12*NAMES.length,sourcePolicy:'smart-blood-fury-radiance',
   matchedEquipment:true,matchedXp:true,matchedHistory:true,
   perSeed:Array.from(seen.values()),
   limitations:[
    'These 12 paired checkpoints are four shared account seeds at E5/E8/E10, not 12 independent population samples.',
-   'All builds use the real original earned equipment of the Blood/Fury/Vitality account; this isolates talent selection but is NOT fair optimal gear for all archetypes.',
+   'All builds use the real original earned equipment of the Blood/Fury/Radiance account; this isolates talent selection but is NOT fair optimal gear for all archetypes.',
    'Each variant spends only actual earned Talent points via legal full Camp reset and node allocation. Reset reassigns skills without adding XP; gameplay forbids arbitrary out-of-Camp respec.',
    'Compare first-fight HP loss/DPS only where the first native encounter signature matches exactly; other fights or Boss encounters may differ due to route, RNG, Boons and tactical decisions.',
    'First-fight DPS is observed raw damage divided by combat seconds, not a fixed-target theoretical DPS benchmark.',

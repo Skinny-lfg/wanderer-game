@@ -6,7 +6,7 @@ const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypt
 const N=require('./v013-natural-progression.cjs');
 const S=require('./simulate-progression.cjs');
 const ROOT=path.resolve(__dirname,'..');
-const FAMILIES=Object.freeze(['blood','decay','vitality','aegis','fury','magic']);
+const FAMILIES=Object.freeze(['blood','decay','radiance','aegis','fury','arcane']);
 const ELITES=Object.freeze(['tank','berserker','vampire','caster','gravecaller',
  'oathbound_exarch','the_gilded','ashen_executioner']);
 const ELITE_NAMES=Object.freeze({tank:'The Pallbearer',berserker:'Raker',
@@ -18,7 +18,7 @@ const pct=(n,d)=>d?Number((n*100/d).toFixed(1)):null;
 const median=arr=>{const v=arr.filter(Number.isFinite).sort((a,b)=>a-b);return v.length?v.length%2?v[(v.length-1)/2]:(v[v.length/2-1]+v[v.length/2])/2:null;};
 function safePath(v){if(typeof v!=='string'||!v.startsWith('reports/')||!v.endsWith('.json')||v.includes('..'))throw Error('Unsafe Stage 6.23 report path');return v;}
 function parse(argv=[]){
- const opts={mode:'cohort',seeds:'9701',profiles:'cautious,balanced,smart-blood-fury-vitality',
+ const opts={mode:'cohort',seeds:'9701',profiles:'cautious,balanced,smart-blood-fury-radiance',
   maxAttempts:12,maxTotalAttempts:60,trials:1,
   out:'reports/v013-stage623-seed9701.json',inputs:null};
  for(const arg of argv){
@@ -70,7 +70,7 @@ function checkpoint({a,seed,profile,level,attempt}){
   nativeCampDigest:hash({state}),gearFingerprint:hash(state.equip),
   initialWeapon:state.equip.weapon.subtype};
 }
-function collect(seed,profiles=['cautious','balanced','smart-blood-fury-vitality'],attempts=12,total=60){
+function collect(seed,profiles=['cautious','balanced','smart-blood-fury-radiance'],attempts=12,total=60){
  const found=new Map();
  const cfg=N.parseArgs(['--seeds='+seed,'--profiles='+profiles.join(','),
    '--max-level=5','--max-attempts='+attempts,
@@ -200,7 +200,7 @@ function verify(snap,normal,elite,boss){
 }
 function series(snap,trial=0,maxScan=32){
  const base=6230011+(snap.seed*997)+(snap.level*359)+
-  ['cautious','balanced','smart-blood-fury-vitality'].indexOf(snap.profile)*7333+
+  ['cautious','balanced','smart-blood-fury-radiance'].indexOf(snap.profile)*7333+
   trial*30001;
  if(!Number.isSafeInteger(base)||base<1)throw Error('Invalid Stage 6.23 seed base');
  let solo=null,seed=null,scanned=0;

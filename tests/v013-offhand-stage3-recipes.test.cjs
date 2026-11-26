@@ -4,9 +4,9 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),fs=requir
 require('../economy/v013-crafting.js');
 const C=globalThis.WandererV013Crafting,create=require('./v012-economy-harness.cjs');
 const EPICS=[
- ['epic_aether_orb','Orb','magic','ward','spell'],
- ['epic_echoing_tome','Tome','magic','echoing_recall','mana'],
- ['epic_heartbloom_charm','Charm','vitality','heartbloom','hp']
+ ['epic_aether_orb','Orb','arcane','ward','spell'],
+ ['epic_echoing_tome','Tome','arcane','echoing_recall','mana'],
+ ['epic_heartbloom_charm','Charm','radiance','heartbloom','hp']
 ];
 const close=(value,expected,label)=>assert(Math.abs(value-expected)<1e-7,label+': '+value+' vs '+expected);
 function afford(a,id,tier=35){

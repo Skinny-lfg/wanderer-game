@@ -1,6 +1,6 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');const {api,build,context,base}=require('./v012-affinity-fixture.cjs');
 function fixture(p,negative=false){
- const starter={blood:'bleeding_edge',decay:'toxic_touch',vitality:'renewal',aegis:'barrier_pulse',fury:'precision',magic:'overcharge'},b=build([...p.requires.map(f=>starter[f]),...(p.requires.includes('aegis')?['guarded_block']:[]),p.id],p.requires);b.runtime.draftStats={...base,blockChance:10};
+ const starter={blood:'bleeding_edge',decay:'toxic_touch',radiance:'renewal',aegis:'barrier_pulse',fury:'precision',arcane:'overcharge'},b=build([...p.requires.map(f=>starter[f]),...(p.requires.includes('aegis')?['guarded_block']:[]),p.id],p.requires);b.runtime.draftStats={...base,blockChance:10};
  const f=context(b);f.c.player.barrier=0;f.c.barrierBroken=true;
  if(negative){Object.assign(f.c,{critical:false,funded:false,barrierBroken:false,random:()=>1});f.c.enemy.bleedStacks=0;f.c.enemy.dots.bleed=[];f.c.enemy.v012Rot=[];f.c.player.hp=f.c.player.maxhp;f.c.player.mp=f.c.player.maxmp;}
  return {b,...f};
@@ -24,7 +24,7 @@ for(const p of api.CATALOG.filter(p=>p.requires.length)){
 }
 test('C DoT conversions consume and repay exactly one stack; Frost extension bounded to six total ticks',()=>{
  for(const id of ['carrion_detonation','venom_shatter','hemal_sigil']){const p=api.CATALOG.find(p=>p.id===id),{b,c,calls}=fixture(p);b.picks=[id];const owed=id==='carrion_detonation'?50:id==='venom_shatter'?20:30;id==='hemal_sigil'?api.onCast(b,c):api.onAttack(b,c);const total=calls.filter(x=>x[0]==='damage').reduce((n,x)=>n+x[1],0);assert(total>=owed);assert.equal(id==='hemal_sigil'?c.enemy.dots.bleed.length:c.enemy.v012Rot.length,0);const before=total;id==='hemal_sigil'?api.onCast(b,c):api.onAttack(b,c);assert.equal(calls.filter(x=>x[0]==='damage').reduce((n,x)=>n+x[1],0),before);}
- const b=build(['elemental_blight'],['decay','magic'],'frost'),{c}=context(b);for(let i=0;i<7;i++){c.now=i*8;api.onCast(b,c);const rot=c.enemy.v012Rot[0];if(rot){api.onSecond(b,c);assert((rot.ticks||0)+rot.remaining<=6);}}assert(!c.enemy.v012Rot.length);
+ const b=build(['elemental_blight'],['decay','arcane'],'frost'),{c}=context(b);for(let i=0;i<7;i++){c.now=i*8;api.onCast(b,c);const rot=c.enemy.v012Rot[0];if(rot){api.onSecond(b,c);assert((rot.ticks||0)+rot.remaining<=6);}}assert(!c.enemy.v012Rot.length);
 });
 test('C all 15 pairs gate both families and functional prerequisites, not enemy statuses',()=>{
  for(const p of api.CATALOG.filter(p=>p.requires.length)){
@@ -33,9 +33,9 @@ test('C all 15 pairs gate both families and functional prerequisites, not enemy 
  const b=build(['iron_skin','quick_hands'],['aegis','fury']);assert(!api.eligible(b,'aegis').some(p=>p.id==='counterstrike'));b.runtime.draftStats={...base,blockChance:10};assert(api.eligible(b,'aegis').some(p=>p.id==='counterstrike'));
 });
 test('C real healing reduction, Barrier breaks, kill snapshots and once per Wave after refresh',()=>{
- const b=build(['fervent_life'],['vitality','fury']),{c,calls}=context(b,{healingMultiplier:.6});c.player.hp=999;api.onAttack(b,c);assert.equal(calls.find(x=>x[0]==='barrier')[1],5.5);
- const g=build(['guardians_oath','rot_husk'],['vitality','aegis','decay']),f=context(g);f.c.barrierBroken=true;api.onDefend(g,f.c,0,10);const hp=f.c.player.hp;const saved=JSON.parse(JSON.stringify(g));api.resetWave(saved,f.c.enemy);api.onDefend(saved,f.c,0,10);assert.equal(f.c.player.hp,hp);f.c.waveKey='1:2';api.onDefend(saved,f.c,0,10);assert(f.c.player.hp>hp);
- const rot=build(['rot_recovery'],['decay','vitality']),r=context(rot);r.c.enemy.hp=1;r.c.enemy.v012Rot=[{damage:5,remaining:1}];api.onSecond(rot,r.c);assert.equal(r.c.enemy.v012Rot.length,0);api.onKill(rot,r.c);assert(r.c.player.hp>300);
+ const b=build(['fervent_life'],['radiance','fury']),{c,calls}=context(b,{healingMultiplier:.6});c.player.hp=999;api.onAttack(b,c);assert.equal(calls.find(x=>x[0]==='barrier')[1],5.5);
+ const g=build(['guardians_oath','rot_husk'],['radiance','aegis','decay']),f=context(g);f.c.barrierBroken=true;api.onDefend(g,f.c,0,10);const hp=f.c.player.hp;const saved=JSON.parse(JSON.stringify(g));api.resetWave(saved,f.c.enemy);api.onDefend(saved,f.c,0,10);assert.equal(f.c.player.hp,hp);f.c.waveKey='1:2';api.onDefend(saved,f.c,0,10);assert(f.c.player.hp>hp);
+ const rot=build(['rot_recovery'],['decay','radiance']),r=context(rot);r.c.enemy.hp=1;r.c.enemy.v012Rot=[{damage:5,remaining:1}];api.onSecond(rot,r.c);assert.equal(r.c.enemy.v012Rot.length,0);api.onKill(rot,r.c);assert(r.c.player.hp>300);
 });
 test('C percentage burst bounds hold for normal, Elite and boss; explicit cooldowns survive JSON',()=>{
  for(const kind of ['normal','elite','boss'])for(const [id,label,cap,cast]of [['plague_rupture','Plague Rupture',.032,false],['reapers_cadence',"Reaper's Cadence",.02,false],['hemal_sigil','Hemal Sigil',.03,true]]){

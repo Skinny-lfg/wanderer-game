@@ -1,14 +1,14 @@
 'use strict';
 // Stage 3 controlled native-combat comparison against the exact Stage 2
-// artifact frozen before the Vitality and Decay changes. No alternate combat
+// artifact frozen before the Radiance and Decay changes. No alternate combat
 // formulas; A.run drives the production HTML runtime through its test adapter.
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const A=require('./v013-affinity-baseline.cjs');
 const BEFORE=require('../reports/v013-stage2-affinity-freeze.json');
 const DEFAULT_OUT='reports/v013-stage3-affinity-comparison.json';
 const FIELDS=Object.freeze(['meanHealingPerSecond','meanDotPerSecond','meanBarrierAtEntry','meanBarrierGenerated','meanBarrierAbsorbed','meanManaSpent','meanSpellPower']);
-const VITALITY=Object.freeze(['pure-vitality','fury-vitality','vitality-aegis']);
-const UNTOUCHED=Object.freeze(['pure-blood','pure-fury','pure-aegis','pure-magic','pure-decay','blood-fury','aegis-magic','magic-decay','decay-blood']);
+const RADIANCE=Object.freeze(['pure-radiance','fury-radiance','radiance-aegis']);
+const UNTOUCHED=Object.freeze(['pure-blood','pure-fury','pure-aegis','pure-arcane','pure-decay','blood-fury','aegis-arcane','arcane-decay','decay-blood']);
 const round=n=>Number(Number(n).toFixed(2));
 function compare(before,after,{postBarrierReset=false,postOffhandReroll=false}={}){
  assert.equal(before.schemaVersion,1);
@@ -42,16 +42,16 @@ function compare(before,after,{postBarrierReset=false,postOffhandReroll=false}={
  }else for(const g of groups.filter(x=>UNTOUCHED.includes(x.build))){
   for(const k of FIELDS)assert.equal(g.delta[k],0,'Unrelated '+g.build+' '+g.level+' drift in '+k);
  }
- const vitality=groups.filter(x=>VITALITY.includes(x.build));
- assert.equal(vitality.length,6);
- assert(vitality.some(x=>x.delta.meanHealingPerSecond!==0),'Vitality regeneration must change at least one native result');
+ const radiance=groups.filter(x=>RADIANCE.includes(x.build));
+ assert.equal(radiance.length,6);
+ assert(radiance.some(x=>x.delta.meanHealingPerSecond!==0),'Radiance regeneration must change at least one native result');
  // Toxic Precision was an unreachable Decay/Fury relic and is retired, not
  // added to the six real adjacent combinations. Active Toxic Touch and
  // Hex Bolt SP scaling are covered by production Buildcraft tests.
  return groups;
 }
 function markdown(result){
- const lines=['# Stage 3 — Vitality Max HP regeneration / active Decay coherence','',
+ const lines=['# Stage 3 — Radiance Max HP regeneration / active Decay coherence','',
   'Native controlled-combat comparison against the frozen Stage 2 artifact.',
   '',
   '**Stage 2 fingerprint:** '+result.sourceBefore,
@@ -73,8 +73,8 @@ function markdown(result){
   '- Stage 2 frozen source and replay are sourced from C7 run 44730440325, artifact 14625987443.',
   '- Same E5/E35 levels, 9101/9201 seeds, 12 legal 24-point builds, Rare current gear, no Runes/Boons/Contracts, focus targets and three normal Aegis enemies.',
   '- Frozen Stage 2 is historical: Barrier resets, uncapped Barrier and distinct Orb/Tome/Charm rolls intentionally affect survivability and Spell Power. Cohort definitions remain invariant.',
-  '- Vitality base regeneration now uses 0.15% Max HP/s plus tiered percentage nodes, with 0.35% Max HP/s pre-fork cap and Recovery/Reserve modifiers.',
-  '- The retired Toxic Precision Decay/Fury passive was not reachable in v15 and its hidden runtime/catalogue path has been removed, not reintroduced. Active Toxic Touch (hit + Spell Power) and Magic/Decay Hex Bolt scaling are verified by production Buildcraft tests; no Decay coefficient was changed.',
+  '- Radiance base regeneration now uses 0.15% Max HP/s plus tiered percentage nodes, with 0.35% Max HP/s pre-fork cap and Recovery/Reserve modifiers.',
+  '- The retired Toxic Precision Decay/Fury passive was not reachable in v15 and its hidden runtime/catalogue path has been removed, not reintroduced. Active Toxic Touch (hit + Spell Power) and Arcane/Decay Hex Bolt scaling are verified by production Buildcraft tests; no Decay coefficient was changed.',
   '- Changes in actual healing/s are limited by real damage taken, overheal, combat duration and different gear; these are observations, not theoretical healing potential.',
   '- The 48 encounters are intentionally easy and do not establish Elite/Boss balance. Stage 4+ should extend stress scenarios.',
   '');
@@ -83,17 +83,17 @@ function markdown(result){
 function run(out=DEFAULT_OUT){
  const current=A.run(A.parseArgs(['--mode=affinities','--out=reports/v013-stage3-affinity-current.json']));
  const groups=compare(BEFORE,current,{postBarrierReset:true,postOffhandReroll:true});
- const payload={schemaVersion:1,stage:'vitality-decay-coherence-stage3',comparisonMode:'post-uncapped-barrier-and-offhand-reroll',sourceBefore:BEFORE.sourceSha256,
+ const payload={schemaVersion:1,stage:'radiance-decay-coherence-stage3',comparisonMode:'post-uncapped-barrier-and-offhand-reroll',sourceBefore:BEFORE.sourceSha256,
   sourceAfter:current.sourceSha256,replayAfter:current.replaySha256,
   frozenStage2:{validatedCommit:BEFORE.artifact.validatedCommit,runId:BEFORE.artifact.runId,artifactId:BEFORE.artifact.artifactId},
   settings:current.settings,summary:current.summary,groups,rows:current.rows};
  const dest=path.resolve(process.cwd(),out);fs.mkdirSync(path.dirname(dest),{recursive:true});
  fs.writeFileSync(dest,JSON.stringify(payload,null,2)+'\n');
  fs.writeFileSync(dest.replace(/\.json$/,'.md'),markdown(payload)+'\n');
- const changes=groups.filter(x=>VITALITY.includes(x.build)).map(g=>({build:g.build,level:g.level,
+ const changes=groups.filter(x=>RADIANCE.includes(x.build)).map(g=>({build:g.build,level:g.level,
   healBefore:g.before.meanHealingPerSecond,healAfter:g.after.meanHealingPerSecond,healDelta:g.delta.meanHealingPerSecond,
   barrierDelta:g.delta.meanBarrierGenerated,absorbedDelta:g.delta.meanBarrierAbsorbed}));
- console.log('STAGE3_VITALITY_DECAY_COMPARISON='+JSON.stringify({out,valid:current.summary.valid,
+ console.log('STAGE3_RADIANCE_DECAY_COMPARISON='+JSON.stringify({out,valid:current.summary.valid,
   errors:current.summary.errors,timeouts:current.summary.timeouts,
   source:current.sourceSha256,replay:current.replaySha256,changes}));
  return payload;

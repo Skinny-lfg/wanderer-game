@@ -2,7 +2,7 @@
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const E=require('./v013-stage648c2e-rot-mana.cjs'),A=require('./v013-stage648c2e1-mana-calibration.cjs'),C=require('./v013-stage648c2c-offensive-scaling.cjs'),S=require('./simulate-progression.cjs');
 const W=['daggers','sword','twohand','bow','wand','staff'],N=50;
-const IDS=[...W.map(w=>'cycle-'+w),...W.map(w=>'focus-'+w),'hybrid-blood-daggers','hybrid-blood-twohand','hybrid-magic-sword','hybrid-magic-wand'];
+const IDS=[...W.map(w=>'cycle-'+w),...W.map(w=>'focus-'+w),'hybrid-blood-daggers','hybrid-blood-twohand','hybrid-arcane-sword','hybrid-arcane-wand'];
 const CYCLE={control:{},noCycle:{disable:true},doubleOnly:{double:true,disable:true},fixedVirtual:{double:true,burst:'virtual',speed:false},speedVirtual:{double:true,burst:'virtual',speed:true},speed2:{double:true,burst:2,speed:true},speed4:{double:true,burst:4,speed:true}};
 const FOCUS={control:null,uncapped:{limit:4,bonus:2,reserve:0},cap1:{limit:1,bonus:2,reserve:0},cap2:{limit:2,bonus:2,reserve:0},cap1reserve:{limit:1,bonus:2,reserve:.15},cap1low:{limit:1,bonus:1,reserve:0}};
 function rep(s,a,b){assert.equal(s.split(a).length,2,'anchor '+a.slice(0,120));return s.replace(a,b);}

@@ -6,11 +6,11 @@ const original=fs.readFileSync('combat/v012-combat-core.js','utf8');
 const anchor='const base={hp:27+level*14,atk:4+level*3,def:1+level*.62};';
 if(!original.includes(anchor))throw Error('Combat-core scaling anchor changed; abort rather than simulate different rules');
 const strategies={
-  sustain:{families:['vitality','aegis','blood','fury','decay','magic'],picks:['renewal','strong_heart','second_breath','life_bloom','fortified','barrier_pulse','iron_skin','blood_drinker','guarded_block']},
-  offense:{families:['blood','fury','decay','magic','vitality','aegis'],picks:['bleeding_edge','toxic_touch','deep_cuts','quick_hands','precision','double_strike','brutal_crit','virulent_rot','arcane_focus']}
+  sustain:{families:['radiance','aegis','blood','fury','decay','arcane'],picks:['renewal','strong_heart','second_breath','life_bloom','fortified','barrier_pulse','iron_skin','blood_drinker','guarded_block']},
+  offense:{families:['blood','fury','decay','arcane','radiance','aegis'],picks:['bleeding_edge','toxic_touch','deep_cuts','quick_hands','precision','double_strike','brutal_crit','virulent_rot','arcane_focus']}
 };
 const arms=['Sword','Mace','Bow','Daggers','Two-Handed','Staff','Wand'];
-const initial=['blood','decay','vitality','aegis','fury','magic'];
+const initial=['blood','decay','radiance','aegis','fury','arcane'];
 const levels=[200,250,300,500,1000];
 const models=['cap-200','linear-both','soft-both','soft-enemy-125','soft-enemy-150','linear-enemy-soft-gear'];
 function curve(E,mode){const d=Math.max(0,E-200);return mode==='soft'?200+110*Math.log1p(d/110):E;}
@@ -31,10 +31,10 @@ function run(E,model,seed,variant,rarity){
  const p=strategies[seed%2?'sustain':'offense'],weapon=arms[(seed+Math.floor(E/50))%arms.length];
  const family=initial[(seed+Math.floor(E/50))%initial.length],state=a.state(),g=a.controller().state;
  a.setup(gearTier,weapon,rarity);
- const runeTier=Math.min(200,gearTier),rf=['vitality','warding',weapon==='Staff'||weapon==='Wand'?'wisdom':'might'];
+ const runeTier=Math.min(200,gearTier),rf=['radiance','warding',weapon==='Staff'||weapon==='Wand'?'wisdom':'might'];
  state.runes=rf.map(f=>a.makeRune(f,runeTier));state.runeSlots=state.runes.map(x=>x.id);
  g.unlocked=200;state.gold=10000;state.fragments=10000;
- a.start(200);a.initial(family);if(family==='magic')a.element(['fire','frost','lightning'][seed%3]);
+ a.start(200);a.initial(family);if(family==='arcane')a.element(['fire','frost','lightning'][seed%3]);
  let ticks=0,waves=0,events=0,timeout=false,boss=false,picks=0,error=null;
  for(let step=0;step<35000;step++){
   if(g.stage==='finished'||g.stage==='failed')break;

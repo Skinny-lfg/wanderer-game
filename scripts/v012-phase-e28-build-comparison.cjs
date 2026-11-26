@@ -3,19 +3,19 @@
 const fs=require('node:fs'),path=require('node:path'),Module=require('node:module'),{performance}=require('node:perf_hooks');
 const root=path.resolve(__dirname,'..'),file=path.join(root,'scripts/v012-affinity-combat-sim.cjs');
 let source=fs.readFileSync(file,'utf8');
-for(const [from,to] of [['a.setup(E,weapon,rarity)','void 0'],['g.unlocked=E;','void 0;'],["if(runes){s.runes=['vitality','warding',['Staff','Wand'].includes(weapon)?'wisdom':'might'].map(f=>a.makeRune(f,E));s.runeSlots=s.runes.map(r=>r.id);}",'void 0;']]){
+for(const [from,to] of [['a.setup(E,weapon,rarity)','void 0'],['g.unlocked=E;','void 0;'],["if(runes){s.runes=['radiance','warding',['Staff','Wand'].includes(weapon)?'wisdom':'might'].map(f=>a.makeRune(f,E));s.runeSlots=s.runes.map(r=>r.id);}",'void 0;']]){
  if(!source.includes(from))throw Error('Missing harness anchor '+from);source=source.replace(from,to);
 }
 const mod=new Module(file,module);mod.filename=file;mod.paths=Module._nodeModulePaths(path.dirname(file));mod._compile(source,file);
 const {run}=mod.exports,create=require(path.join(root,'tests/v012-economy-harness.cjs'));
-const builds=[['Archer','Bow','Leather',null,'fury'],['Mage','Staff','Cloth',null,'magic'],['Battlemage','Wand','Cloth','Orb','magic'],['Tank','Sword','Plate','Shield','aegis'],['Assassin','Daggers','Leather','Off-Hand Dagger','blood']];const profiles=['base','adapted','fortune'],requestedRuns=Number(process.env.WANDERER_E11_RUNS||30),maxRuns=Number.isInteger(requestedRuns)&&requestedRuns>=1&&requestedRuns<=450?requestedRuns:450,rows=[],agents=[],start=performance.now();
+const builds=[['Archer','Bow','Leather',null,'fury'],['Mage','Staff','Cloth',null,'arcane'],['Battlemage','Wand','Cloth','Orb','arcane'],['Tank','Sword','Plate','Shield','aegis'],['Assassin','Daggers','Leather','Off-Hand Dagger','blood']];const profiles=['base','adapted','fortune'],requestedRuns=Number(process.env.WANDERER_E11_RUNS||30),maxRuns=Number.isInteger(requestedRuns)&&requestedRuns>=1&&requestedRuns<=450?requestedRuns:450,rows=[],agents=[],start=performance.now();
 const rank={Common:0,Uncommon:1,Rare:2,Epic:3,Legendary:4};
 function snapshot(a){const s=a.state(),eq=Object.values(s.equip).filter(Boolean),rr=s.runes.filter(r=>s.runeSlots.includes(r.id));return {meanGearTier:+(eq.reduce((v,o)=>v+o.tier,0)/eq.length).toFixed(1),rarities:Object.fromEntries(['Common','Uncommon','Rare','Epic','Legendary'].map(k=>[k,eq.filter(o=>o.rarity===k).length])),affinities:Object.fromEntries(eq.map(o=>[o.slot,o.affinity||null])),runeTiers:rr.map(r=>r.tier).sort((a,b)=>a-b),runes:JSON.parse(JSON.stringify(s.runes)),runeSlots:[...s.runeSlots],equip:JSON.parse(JSON.stringify(s.equip)),stashIds:s.stash.map(x=>x.id),bagIds:a.bag.ids(),gold:s.gold,fragments:s.fragments,unlocked:a.controller().state.unlocked,power:a.baseStats(s.equip).power};}
 function setup(profile,seedIndex,build){const [buildName,weapon,armorType,offhand,family]=build;const a=create(84100+seedIndex),s=a.state(),g=a.controller().state;
  a.setup(200,weapon,'Epic');let slotIndex=0;
  for(const [slot,item]of Object.entries(s.equip))if(item){const tier=196+((slotIndex*3+seedIndex)%5),rarity=slotIndex%5===0?'Rare':'Epic';const armor=['helm','armor','gloves','belt','boots'].includes(slot);const subtype=slot==='weapon'?weapon:armor?armorType:slot==='offhand'&&offhand?offhand:item.subtype;s.equip[slot]=a.makeItem(tier,slot,null,'loot',subtype,rarity);slotIndex++;}
  if(offhand)s.equip.offhand=a.makeItem(198,'offhand',null,'loot',offhand,'Epic');else s.equip.offhand=null;
- s.runes=['vitality','warding',family==='magic'?'wisdom':'might'].map((f,i)=>a.makeRune(f,[190,195,199][i]));s.runeSlots=s.runes.map(r=>r.id);s.gold=4000;s.fragments=3000;g.unlocked=200;
+ s.runes=['radiance','warding',family==='arcane'?'wisdom':'might'].map((f,i)=>a.makeRune(f,[190,195,199][i]));s.runeSlots=s.runes.map(r=>r.id);s.gold=4000;s.fragments=3000;g.unlocked=200;
  const gear=Object.values(s.equip).filter(Boolean),armorSlots=['helm','armor','gloves','belt','boots'];
  if(s.equip.weapon?.subtype!==weapon|| (!!s.equip.offhand!==!!offhand)||armorSlots.some(slot=>s.equip[slot]?.armorType!==armorType)||gear.some(item=>item.tier<196||item.tier>200)||s.runeSlots.length!==3||s.runes.some((r,i)=>r.tier!==[190,195,199][i]))throw Error('E.1.3 invalid starting Bow/Leather E200 build');
  return {profile,seedIndex,buildName,weapon,armorType,offhand,family,a,attempt:0,losses:0,farmNext:false,repeats:0,wins:0,defeats:0,initial:snapshot(a),goldEarned:0,goldSpent:0,fragmentsEarned:0,fragmentsSpent:0,crafts:0,upgrades:0,merchantBuys:0,salvages:0,runeClaims:0,lootLost:0,combatSeconds:0,stopped:false};}
@@ -36,7 +36,7 @@ function equipUpgrades(agent){const {a,profile}=agent,s=a.state();let upgraded=0
  return upgraded;
 }
 function claimRune(agent){const a=agent.a,s=a.state(),reward=s.pendingRuneReward;if(!reward)return;
- const priority=['might','vitality','warding'];let best=null,bestGain=-Infinity;
+ const priority=['might','radiance','warding'];let best=null,bestGain=-Infinity;
  for(const r of reward.options){const existing=s.runes.find(x=>s.runeSlots.includes(x.id)&&x.family===r.family);const gain=(existing?r.value-existing.value:r.value*.7)+(priority.includes(r.family)?20-priority.indexOf(r.family)*2:0);if(gain>bestGain){best=r;bestGain=gain;}}
  if(!a.claimRune(best.id))throw Error('Rune claim failed');agent.runeClaims++;
  const target=s.runeSlots.findIndex(id=>s.runes.find(r=>r.id===id)?.family===best.family);if(target>=0){const old=s.runes.find(r=>r.id===s.runeSlots[target]);if(best.value>old.value)a.runes.equip(best.id,target);}
@@ -60,7 +60,7 @@ for(let turn=0;turn<maxRuns;turn++){
  const level=g.unlocked;
  if(level<g.unlocked)agent.repeats++;
  const seed=(851000+seedIndex*10007+agent.attempt*137)>>>0;
- const plan=profile==='base'?[]:profile==='fortune'?['fortune','health',agent.family==='magic'?'arcane':'haste']:agent.family==='magic'?['arcane','mana','barrier']:agent.buildName==='Tank'?['barrier','ironhide','health']:agent.buildName==='Assassin'?['might','haste','health']:['health','ironhide','barrier'];
+ const plan=profile==='base'?[]:profile==='fortune'?['fortune','health',agent.family==='arcane'?'arcane':'haste']:agent.family==='arcane'?['arcane','mana','barrier']:agent.buildName==='Tank'?['barrier','ironhide','health']:agent.buildName==='Assassin'?['might','haste','health']:['health','ironhide','barrier'];
  let potionGold=0,potionRefreshGold=0,potionPurchases=0,potionRefreshes=0;
  if(plan.length){s.consumables??={};s.potionSelection=[];if(!s.apothecary)s.apothecary=a.potions.shop(level);
   for(const kind of plan){if((s.consumables[kind]||0)<=plan.slice(0,plan.indexOf(kind)+1).filter(x=>x===kind).length-1){

@@ -4,7 +4,7 @@ const create=require('./v012-economy-harness.cjs');
 const {T,buy}=require('./v013-current-talent-helper.cjs');
 const fields=['str','agi','int','end','cha','attack','defense','maxhp','attacksPerSec','crit','blockChance','mana','manaRegen','spellPower','power'];
 
-for(const [weapon,id] of [['Sword','affinity_blood'],['Staff','affinity_magic'],['Daggers','affinity_fury'],['Mace','affinity_aegis']]){
+for(const [weapon,id] of [['Sword','affinity_blood'],['Staff','affinity_arcane'],['Daggers','affinity_fury'],['Mace','affinity_aegis']]){
  test('current Dungeon remains statistically finite for '+weapon+' / '+id,()=>{
   const a=create(3301);a.setup(1,weapon);a.state().automaticTalents=buy([id]);
   const initial=a.baseStats();
@@ -23,7 +23,7 @@ for(const [weapon,id] of [['Sword','affinity_blood'],['Staff','affinity_magic'],
  });
 }
 test('current native source breakdown matches its displayed totals without mutating state',()=>{
- const a=create(3401);a.state().automaticTalents=buy(['affinity_vitality']);
+ const a=create(3401);a.state().automaticTalents=buy(['affinity_radiance']);
  a.start(1,true);
  const before=JSON.stringify(a.state()),stats=a.stats(),rows=a.statSources(stats);
  assert(rows.length>0);
@@ -70,7 +70,7 @@ test('Stage 5 uses one Power estimator and counts active Decay Spell Power on ph
  assert.equal(blood.spellPower,0,'Unactivated spell stats must not inflate a physical Blood build');
 });
 test('Stage 5 explains stat limits accessibly and retains all Power sources',()=>{
- const a=create(3602);a.state().automaticTalents=buy(['affinity_magic']);
+ const a=create(3602);a.state().automaticTalents=buy(['affinity_arcane']);
  const s=a.baseStats(),power=a.statMarkup('Gear Power',s,s.power);
  assert(power.includes('data-stat="power"'));
  assert(power.includes('tabindex="0"'));

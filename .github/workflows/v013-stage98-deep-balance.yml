@@ -65,7 +65,7 @@ jobs:
       fail-fast: false
       max-parallel: 4
       matrix:
-        affinity: [aegis, blood, decay, fury, magic, vitality]
+        affinity: [aegis, blood, decay, fury, magic, radiance]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -78,7 +78,7 @@ jobs:
           npm run diagnose:v013:stage98 --
           --mode=bosses --affinity=${{ matrix.affinity }}
           --seeds=30 --seed-start=20001
-          --builds=blood-fury,aegis-vitality,magic-decay
+          --builds=blood-fury,aegis-radiance,arcane-decay
           --risks=0,1,2
           --out=reports/stage98-bosses-${{ matrix.affinity }}.json
       - name: Preserve Boss-affinity/risk evidence
@@ -107,7 +107,7 @@ jobs:
         run: >-
           npm run diagnose:v013:stage98 --
           --mode=builds --seeds=30 --seed-start=30001
-          --builds=blood-fury,aegis-vitality,magic-decay,blood-decay,aegis-sword,fury-bow,magic-storm
+          --builds=blood-fury,aegis-radiance,arcane-decay,blood-decay,aegis-sword,fury-bow,arcane-storm
           --group-sizes=3,12
           --out=reports/stage98-builds.json
       - name: Preserve seven-build results

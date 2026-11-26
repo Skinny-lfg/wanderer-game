@@ -5,11 +5,11 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
 const ROOT=path.resolve(__dirname,'..');
 const read=p=>fs.readFileSync(path.join(ROOT,p),'utf8');
 const PLAN={
- blood:[['cleave_mastery'],['accelerated_bleeding','Accelerated Bleeding','bleeding_edge','Trade duration for faster Bleed ticks; fixed total damage. Proposal only.'],['blood_reservoir','Blood Reservoir','sanguine_fury','Reserved for redesign: avoid reinforcing Blood/Vitality and Carrion. Proposal only.']],
+ blood:[['cleave_mastery'],['accelerated_bleeding','Accelerated Bleeding','bleeding_edge','Trade duration for faster Bleed ticks; fixed total damage. Proposal only.'],['blood_reservoir','Blood Reservoir','sanguine_fury','Reserved for redesign: avoid reinforcing Blood/Radiance and Carrion. Proposal only.']],
  fury:[['single_target_mastery'],['fan_of_blades'],['bow_pierce']],
- vitality:[['vital_pulse','Vital Pulse','affinity_vitality','Periodic bounded HP-scaling AoE. No recursive statuses.'],['living_force','Living Force','second_breath','Effective healing conversion; alternative to Vital Strike.'],['grasping_roots','Grasping Roots','life_bloom','Limited periodic damage and attack-speed control.']],
+ radiance:[['vital_pulse','Vital Pulse','affinity_radiance','Periodic bounded HP-scaling AoE. No recursive statuses.'],['living_force','Living Force','second_breath','Effective healing conversion; alternative to Vital Strike.'],['grasping_roots','Grasping Roots','life_bloom','Limited periodic damage and attack-speed control.']],
  aegis:[['ward_echo','Ward Echo','affinity_aegis','Small periodic damage while Barrier exists; not another Stored Force or uncapped Barrier multiplier.'],['sword_sweep'],['mace_shockwave']],
- magic:[['arcane_nova','Arcane Nova','element_choice','Arcane-mode Infusion hits two secondary enemies; alternative to Grave Bloom.'],['elemental_resonance','Elemental Resonance','arcane_echo','Frost-specific candidate, not a blanket Fire/Lightning buff.'],['mana_convergence','Mana Convergence','mana_spring','Conditional Arcane/Frost mana tool, pending telemetry.']],
+ arcane:[['arcane_nova','Arcane Nova','element_choice','Arcane-mode Infusion hits two secondary enemies; alternative to Grave Bloom.'],['elemental_resonance','Elemental Resonance','arcane_echo','Frost-specific candidate, not a blanket Fire/Lightning buff.'],['mana_convergence','Mana Convergence','mana_spring','Conditional Arcane/Frost mana tool, pending telemetry.']],
  decay:[['contagious_touch','Contagious Touch','affinity_decay','Limited spread from primary paid Rot applications; never spread recursively.'],['corruption_nova','Corruption Nova','toxic_touch','Single global bounded Rot pulse; alternative to mixed AoE.'],['soul_drain','Soul Drain','wither','Conditional return from native paid Rot; pending mana telemetry.']]
 };
 // Six-fold rotationally repeated geometry; two intermediate tracks and one
@@ -39,7 +39,7 @@ function main(){
  js=once(js,"let selected=null;const api=window.parent!==window?window.parent.WandererTreeAPI:null;","let selected=null;const api=null; // intentionally read-only, including when embedded in game preview");
  js=once(js,"document.querySelector('#families').querySelectorAll('button')[4].click();","// Open at full tree, not zoomed into Magic.");
  js=once(js,"Math.max(3800,3800*(viewport.clientHeight>0?viewport.clientWidth/viewport.clientHeight:1))","Math.max(3300,3300*(viewport.clientHeight>0?viewport.clientWidth/viewport.clientHeight:1))");
- js=once(js,"centre(p.x,p.y,(f==='magic'||f==='vitality')?1850:1150)","centre(p.x,p.y,Math.max(1500,1500*viewport.clientWidth/Math.max(1,viewport.clientHeight)))");
+ js=once(js,"centre(p.x,p.y,(f==='arcane'||f==='radiance')?1850:1150)","centre(p.x,p.y,Math.max(1500,1500*viewport.clientWidth/Math.max(1,viewport.clientHeight)))");
  js=once(js,"const p=polar(angle(f),720);","const p=polar(angle(f),870);");
  js=once(js,"document.querySelector('#description').textContent='Invest in the ✺ node to choose an element. Switching refunds points spent on element-specific skills.';","document.querySelector('#description').textContent='Stage 6.47D • 367 existing nodes + 48 proposal placeholders. Gold dashed nodes are design candidates only. Select a node to inspect its route; no game progress can be changed.';");
  // expose geometry evidence, distinguish hidden alternate elemental modes

@@ -90,7 +90,7 @@ test('Native Common Tome adds Mana on Wand; Common Charm adds HP on physical Swo
  const wandBase=a.baseStats({weapon:wand}),wandWithTome=a.baseStats({weapon:wand,offhand:tome});
  assert(wandWithTome.mana>wandBase.mana,'Tome improves real Mana pool');
  const swordBase=a.baseStats({weapon:sword}),swordWithCharm=a.baseStats({weapon:sword,offhand:charm});
- assert(swordWithCharm.maxhp>swordBase.maxhp,'Charm improves physical builds without Magic/Decay');
+ assert(swordWithCharm.maxhp>swordBase.maxhp,'Charm improves physical builds without Arcane/Decay');
 });
 
 test('Loot, Merchant and Forge use identical Off-Hand generators; Stage 3 Epic recipes retain those rolls',()=>{

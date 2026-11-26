@@ -3,7 +3,7 @@ on:
   push:
     branches: [audit/v013-stage6]
     paths:
-      - '.github/workflows/v013-stage64-magic-mana.yml'
+      - '.github/workflows/v013-stage64-arcane-mana.yml'
       - 'combat/v012-buildcraft.js'
       - 'combat/v012-combat-runtime.js'
       - 'combat/talent-graph-next.js'
@@ -20,7 +20,7 @@ on:
 permissions:
   contents: read
 jobs:
-  magic-mana-balance:
+  arcane-mana-balance:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -62,7 +62,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: stage64-magic-mana-weapon-balance
+          name: stage64-arcane-mana-weapon-balance
           path: |
             reports/stage64-native-before.json
             reports/stage64-native-after.json

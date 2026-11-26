@@ -41,10 +41,10 @@ jobs:
         include:
           - cohort: A
             seeds: '9701,9702,9703,9704'
-            profiles: 'cautious,balanced,magic-fire,leather-duelist,hexblade-hybrid'
+            profiles: 'cautious,balanced,arcane-fire,leather-duelist,hexblade-hybrid'
           - cohort: B
             seeds: '9701,9702,9703,9704'
-            profiles: 'daring,plate-warden,magic-frost,magic-lightning,cloth-battlemage'
+            profiles: 'daring,plate-warden,arcane-frost,arcane-lightning,cloth-battlemage'
     steps:
       - uses: actions/checkout@v4
         with:

@@ -9,8 +9,8 @@ const path=require('node:path');
 const crypto=require('node:crypto');
 const PROFILES=Object.freeze([
  'balanced','hexblade-hybrid','leather-duelist','smart-blood-pure',
- 'smart-blood-two-handed','smart-fury-bow','magic-fire','magic-lightning',
- 'plate-warden','decay-blood-spread','magic-decay-bloom'
+ 'smart-blood-two-handed','smart-fury-bow','arcane-fire','arcane-lightning',
+ 'plate-warden','decay-blood-spread','arcane-decay-bloom'
 ]);
 const EARNED_SEEDS=Object.freeze([9861,9863]);
 const GROUP_SIZES=Object.freeze([4,8,12]);
@@ -28,10 +28,10 @@ function dotProfile(id){
   style:'focused',healAt:.72,retreatAt:.46,target:'mechanics',shop:true,
   researchGearPreference:true
  };
- if(id==='magic-decay-bloom')return {
+ if(id==='arcane-decay-bloom')return {
   name:'Magic + Decay Grave Bloom E10 Research',risk:0,
   targets:['arcane_focus','toxic_touch','hex_bolt','elemental_blight','grave_bloom'],
-  families:['magic','decay'],element:'arcane',armor:'Cloth',
+  families:['arcane','decay'],element:'arcane',armor:'Cloth',
   weapons:['Wand','Staff'],style:'focused',healAt:.72,retreatAt:.46,
   target:'mechanics',shop:true,researchGearPreference:true
  };

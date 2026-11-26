@@ -11,9 +11,9 @@ const D=require('./v013-stage628-postcap-difficulty.cjs');
 const S=require('./simulate-progression.cjs');
 const LEVELS=Object.freeze([2,5,10,20,35,70,100,150,200]);
 const PROFILES=Object.freeze([
- 'smart-blood-pure','smart-fury-pure','smart-vitality-pure','smart-aegis-vitality',
- 'smart-magic-arcane-pure','smart-magic-lightning-pure',
- 'smart-decay-magic-aegis','smart-blood-fury-vitality',
+ 'smart-blood-pure','smart-fury-pure','smart-radiance-pure','smart-aegis-radiance',
+ 'smart-arcane-arcane-pure','smart-arcane-lightning-pure',
+ 'smart-decay-arcane-aegis','smart-blood-fury-radiance',
  'cloth-battlemage','leather-duelist','plate-warden','hexblade-hybrid']);
 const SEEDS=Object.freeze([9861,9863]);
 const JOBS=Object.freeze(PROFILES.flatMap(id=>SEEDS.map(seed=>Object.freeze({id,seed}))));

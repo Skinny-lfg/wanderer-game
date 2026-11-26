@@ -13,7 +13,7 @@ const DEFINITIONS=Object.freeze({
   skirmisher:{name:'Toxic Feint',type:'strike',power:.12,secondary:'wound',description:'Next strike causes a short healing wound'},
   caster:{name:'Blight Hex',type:'weakening_hex',description:'Channels Weakened on the player'}
  }),
- vitality:Object.freeze({
+ radiance:Object.freeze({
   tank:{name:'Heartwood Mend',type:'mend',power:.055,description:'Restores a wounded ally'},
   skirmisher:{name:'Thorn Lunge',type:'strike',power:.13,secondary:'siphon',description:'Next strike gains strength and restores health'},
   caster:{name:'Bloom Chant',type:'mend',power:.07,description:'Heals a wounded ally after channeling'}
@@ -28,7 +28,7 @@ const DEFINITIONS=Object.freeze({
   skirmisher:{name:'Frenzied Flurry',type:'strike',power:.12,count:2,description:'Two brief empowered strikes'},
   caster:{name:'Ember Invocation',type:'rally',power:.12,description:'Channels an empowered allied attack'}
  }),
- magic:Object.freeze({
+ arcane:Object.freeze({
   tank:{name:'Prismatic Ward',type:'ward',power:.10,description:'Protects an ally with a short Arcane Ward'},
   skirmisher:{name:'Sparkstep',type:'strike',power:.13,secondary:'mana',description:'Next strike can burn a little Mana'},
   caster:{name:'Arcane Convergence',type:'strike',power:.19,secondary:'mana',description:'Channels a stronger magical next strike'}
@@ -37,10 +37,10 @@ const DEFINITIONS=Object.freeze({
 const PASSIVES=Object.freeze({
  blood:{name:'Crimson Pack',bonus:.05,description:'Swarm pressure improves melee attacks'},
  decay:{name:'Blight Swarm',bonus:.04,description:'Swarm pressure improves attacks'},
- vitality:{name:'Living Swarm',bonus:.03,description:'Swarm pressure improves attacks'},
+ radiance:{name:'Living Swarm',bonus:.03,description:'Swarm pressure improves attacks'},
  aegis:{name:'Ward Pack',bonus:.03,description:'Swarm pressure improves attacks'},
  fury:{name:'Feral Swarm',bonus:.07,description:'Swarm pressure improves attacks'},
- magic:{name:'Spark Swarm',bonus:.05,description:'Swarm pressure improves attacks'}
+ arcane:{name:'Spark Swarm',bonus:.05,description:'Swarm pressure improves attacks'}
 });
 const TIMINGS=Object.freeze({
  tank:{first:2.6,cooldown:7.0,cast:.65},

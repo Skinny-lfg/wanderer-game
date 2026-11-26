@@ -34,7 +34,7 @@ jobs:
       matrix:
         shard: [0, 1]
         variant: [baseline, one-one, two-two-half, two-two-full]
-        profile: [magic-decay-bloom, decay-blood-spread]
+        profile: [arcane-decay-bloom, decay-blood-spread]
     steps:
       - uses: actions/checkout@v4
         with: {persist-credentials: false}
@@ -74,7 +74,7 @@ jobs:
           const fs=require('node:fs'),dir='reports/stage647b/shards',parts=fs.readdirSync(dir).map(f=>JSON.parse(fs.readFileSync(dir+'/'+f)));
           if(parts.length!==16)throw Error('Incomplete matrix');
           const summary=[];
-          for(const profile of ['magic-decay-bloom','decay-blood-spread'])for(const variant of ['baseline','one-one','two-two-half','two-two-full']){
+          for(const profile of ['arcane-decay-bloom','decay-blood-spread'])for(const variant of ['baseline','one-one','two-two-half','two-two-full']){
             const p=parts.filter(x=>x.profile===profile&&x.variant===variant),b=parts.filter(x=>x.profile===profile&&x.variant==='baseline');
             if(p.length!==2||b.length!==2||JSON.stringify(p[0].entrants)!==JSON.stringify(b[0].entrants)||JSON.stringify(p[0].entrants)!==JSON.stringify(p[1].entrants))throw Error('Actor drift');
             const rows=p.flatMap(x=>x.rows),old=b.flatMap(x=>x.rows);

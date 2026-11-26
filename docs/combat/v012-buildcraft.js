@@ -2,7 +2,7 @@
 // Never persists to profile, alters equipment affinities or imports the prototype simulator.
 (function(root){
 'use strict';
-const FAMILIES=['blood','decay','vitality','aegis','fury','magic'];
+const FAMILIES=['blood','decay','radiance','aegis','fury','arcane'];
 const elements=['fire','frost','lightning'];
 const P=[
  ['blood','bleeding_edge','Bleeding Edge','Hits may inflict Bleed (0.6s internal cooldown).'],
@@ -15,11 +15,11 @@ const P=[
  ['decay','wasting_curse','Wasting Curse','Rotted enemies deal 8% less damage per rank.'],
  ['decay','wither','Withering Hex','Rot reduces healing by 35% and direct attack damage by 3% per rank (70% healing cap).'],
  ['decay','blight','Blight','Strike a rotted enemy for a capped corruption burst (7s cooldown).'],
- ['vitality','strong_heart','Strong Heart','Increase maximum Health by 10% per rank.'],
- ['vitality','renewal','Renewal','Recover 0.55% maximum Health per combat second per rank.'],
- ['vitality','last_stand','Last Stand','Survive one lethal hit per Expedition, recovering 6% HP.'],
- ['vitality','second_breath','Second Breath','Recover 2.5% maximum HP after each completed encounter per rank.'],
- ['vitality','life_bloom','Life Bloom','Every combat second restores 0.25% HP and up to 1.5 Mana per rank.'],
+ ['radiance','strong_heart','Strong Heart','Increase maximum Health by 10% per rank.'],
+ ['radiance','renewal','Renewal','Recover 0.55% maximum Health per combat second per rank.'],
+ ['radiance','last_stand','Last Stand','Survive one lethal hit per Expedition, recovering 6% HP.'],
+ ['radiance','second_breath','Second Breath','Recover 2.5% maximum HP after each completed encounter per rank.'],
+ ['radiance','life_bloom','Life Bloom','Every combat second restores 0.25% HP and up to 1.5 Mana per rank.'],
  ['aegis','iron_skin','Iron Skin','Increase Defense by 12% per rank.'],
  ['aegis','fortified','Fortified','Reduce incoming damage by 6% per rank.'],
  ['aegis','guarded_block','Guarded Block','Increase Guard Chance with diminishing returns, even without a Shield.'],
@@ -30,39 +30,39 @@ const P=[
  ['fury','brutal_crit','Brutal Critical','Critical strikes add 12% of base hit damage per rank.'],
  ['fury','double_strike','Double Strike','10% chance per rank for one non-recursive 30% bonus hit.'],
  ['fury','adrenaline','Adrenaline','Critical strikes grant 10% attack speed for 3s (3s cooldown).'],
- ['magic','arcane_focus','Arcane Focus','Increase Spell Power, including Arcane.'],
- ['magic','mana_spring','Mana Spring','Increase Mana regeneration by 18% per rank.'],
- ['magic','efficient_cast','Efficient Casting','Reduce elemental cast cost by 12% per rank.'],
- ['magic','arcane_echo','Arcane Echo','Every fourth elemental hit echoes for 25% Spell Power (no recursion).'],
- ['magic','elemental_force','Elemental Force','Increase Magic status potency by 15% per rank.'],
- ['magic','kindling','Kindling','Fire Burn gains 20% potency per rank.',[],'fire'],
- ['magic','deep_winter','Deep Winter','Funded Frost casts Chill; chilled foes take a bounded 18% Spell Power burst every 4s. Boss Chill lasts at most 1.2s.',[],'frost'],
- ['magic','overcharge','Overcharge','Funded Lightning casts bounce up to five times for 60%, 45%, 33%, 23%, then 16% of the primary hit. Each jump leaves a Static Mark that detonates when a later chain revisits. Four player charges discharge; charges persist between Realms.',[],'lightning'],
+ ['arcane','arcane_focus','Arcane Focus','Increase Spell Power, including Arcane.'],
+ ['arcane','mana_spring','Mana Spring','Increase Mana regeneration by 18% per rank.'],
+ ['arcane','efficient_cast','Efficient Casting','Reduce elemental cast cost by 12% per rank.'],
+ ['arcane','arcane_echo','Arcane Echo','Every fourth elemental hit echoes for 25% Spell Power (no recursion).'],
+ ['arcane','elemental_force','Elemental Force','Increase Magic status potency by 15% per rank.'],
+ ['arcane','kindling','Kindling','Fire Burn gains 20% potency per rank.',[],'fire'],
+ ['arcane','deep_winter','Deep Winter','Funded Frost casts Chill; chilled foes take a bounded 18% Spell Power burst every 4s. Boss Chill lasts at most 1.2s.',[],'frost'],
+ ['arcane','overcharge','Overcharge','Funded Lightning casts bounce up to five times for 60%, 45%, 33%, 23%, then 16% of the primary hit. Each jump leaves a Static Mark that detonates when a later chain revisits. Four player charges discharge; charges persist between Realms.',[],'lightning'],
  ['blood','plague_rupture','Plague Rupture','Bleed + Rot unleash a burst on critical hits (8s cooldown).',['blood','decay']],
  ['blood','blood_ward','Blood Ward','Bleeding enemies generate Barrier every 5s.',['blood','aegis']],
- ['blood','hemovore','Hemovore','The first bleeding kill per encounter heals 4% max HP.',['blood','vitality']],
+ ['blood','hemovore','Hemovore','The first bleeding kill per encounter heals 4% max HP.',['blood','radiance']],
  ['blood','crimson_rush','Crimson Rush','Critical strikes against bleeding foes deal 15% bonus damage.',['blood','fury']],
- ['blood','hex_bleed','Hex Bleed','Funded Magic hits inflict Bleed (3s cooldown).',['blood','magic']],
- ['decay','hex_bolt','Hex Bolt','Funded spells or Arcane Infusion hits against Rot deal 25% Spell Power plus one Rot tick (3s cooldown).',['decay','magic']],
- ['vitality','sanctuary','Sanctuary','Recovering Health grants Barrier equal to 20% of the heal.',['vitality','aegis']],
- ['vitality','fervent_life','Fervent Life','Critical strikes restore 2% Max HP + 3% Attack Power; overhealing grants Barrier (4s cooldown).',['vitality','fury']],
- ['vitality','life_conduit','Life Conduit','Effective healing restores 4 Mana and empowers the next spell by 10% (3s cooldown).',['vitality','magic']],
+ ['blood','hex_bleed','Hex Bleed','Funded Magic hits inflict Bleed (3s cooldown).',['blood','arcane']],
+ ['decay','hex_bolt','Hex Bolt','Funded spells or Arcane Infusion hits against Rot deal 25% Spell Power plus one Rot tick (3s cooldown).',['decay','arcane']],
+ ['radiance','sanctuary','Sanctuary','Recovering Health grants Barrier equal to 20% of the heal.',['radiance','aegis']],
+ ['radiance','fervent_life','Fervent Life','Critical strikes restore 2% Max HP + 3% Attack Power; overhealing grants Barrier (4s cooldown).',['radiance','fury']],
+ ['radiance','life_conduit','Life Conduit','Effective healing restores 4 Mana and empowers the next spell by 10% (3s cooldown).',['radiance','arcane']],
  ['aegis','counterstrike','Counterstrike','Blocking grants one 18% base-hit counterstrike.',['aegis','fury']],
- ['aegis','runic_shield','Runic Shield','Funded Magic spells or Arcane Infusion activations grant 2% Max HP + 8% Spell Power as Barrier (3s cooldown).',['aegis','magic']],
- ['fury','spellblade','Spellblade','Each funded cast or Arcane Infusion activation empowers the next weapon hit, including Staff and Wand, by 15%.',['fury','magic']],
+ ['aegis','runic_shield','Runic Shield','Funded Magic spells or Arcane Infusion activations grant 2% Max HP + 8% Spell Power as Barrier (3s cooldown).',['aegis','arcane']],
+ ['fury','spellblade','Spellblade','Each funded cast or Arcane Infusion activation empowers the next weapon hit, including Staff and Wand, by 15%.',['fury','arcane']],
  ['blood','carrion_detonation','Carrion Detonation','Weapon hits charge an enemy affected by Bleed and Rot using actual Health damage. At 150% Attack Power, release a burst equal to 75% of the threshold (35% on the marked foe), spreading weaker Bleed and Rot to active nearby foes. 1.5s cooldown per enemy.',['blood','decay']],
- ['blood','crimson_pact','Crimson Pact','Pay 2% max HP to inflict an immediate empowered Bleed (8s cooldown; requires more than 20% HP).',['blood','vitality']],
+ ['blood','crimson_pact','Crimson Pact','Pay 2% max HP to inflict an immediate empowered Bleed (8s cooldown; requires more than 20% HP).',['blood','radiance']],
  ['blood','sanguine_reprisal','Sanguine Reprisal','Blocking or absorbing Barrier charges a counter-bleed.',['blood','aegis']],
  ['blood','reapers_cadence','Rupture','Attacks against enemies with Bleed and Fury Sunder deal damage equal to two ticks of the strongest Bleed, capped at 3% enemy maximum Health (5s cooldown). Bleed is not consumed.',['blood','fury']],
- ['blood','hemal_sigil','Hemal Sigil','Magic converts Bleed into elemental Fire, Frost or Lightning effects.',['blood','magic']],
+ ['blood','hemal_sigil','Hemal Sigil','Magic converts Bleed into elemental Fire, Frost or Lightning effects.',['blood','arcane']],
  ['decay','rot_husk','Rot Husk','Breaking a Barrier while Rot is active grants a small new ward.',['decay','aegis']],
- ['decay','elemental_blight','Elemental Blight','Fire consumes Rot for damage, Frost extends it, Lightning consumes it for damage, and Arcane deals damage based on active Rot without consuming it (7s cooldown).',['decay','magic']],
- ['vitality','guardians_oath',"Guardian's Oath",'When your Barrier breaks, restore 4.5% maximum Health once per encounter.',['vitality','aegis']],
- ['vitality','redline','Redline','Below half Health, attacks deal 33% bonus damage every 8s, but you take 10% more damage for 3s.',['vitality','fury']],
- ['vitality','lifeweave','Lifeweave','Convert HP into Mana when nearly empty (8s cooldown).',['vitality','magic']],
+ ['decay','elemental_blight','Elemental Blight','Fire consumes Rot for damage, Frost extends it, Lightning consumes it for damage, and Arcane deals damage based on active Rot without consuming it (7s cooldown).',['decay','arcane']],
+ ['radiance','guardians_oath',"Guardian's Oath",'When your Barrier breaks, restore 4.5% maximum Health once per encounter.',['radiance','aegis']],
+ ['radiance','redline','Redline','Below half Health, attacks deal 33% bonus damage every 8s, but you take 10% more damage for 3s.',['radiance','fury']],
+ ['radiance','lifeweave','Lifeweave','Convert HP into Mana when nearly empty (8s cooldown).',['radiance','arcane']],
  ['aegis','iron_reversal','Iron Reversal','A successful Block charges a heavy counter at the cost of brief vulnerability.',['aegis','fury']],
- ['aegis','prismatic_rebound','Prismatic Rebound','Barrier absorption charges your next Magic cast, up to 6% Max HP + 10% Spell Power.',['aegis','magic']],
- ['fury','spell_surge','Spell Surge','A critical strike charges your next elemental cast.',['fury','magic']]
+ ['aegis','prismatic_rebound','Prismatic Rebound','Barrier absorption charges your next Magic cast, up to 6% Max HP + 10% Spell Power.',['aegis','arcane']],
+ ['fury','spell_surge','Spell Surge','A critical strike charges your next elemental cast.',['fury','arcane']]
 ].map(([family,id,name,description,requires=[],element=null])=>Object.freeze({family,id,name,description,requires,element,max:requires.length||['executioner','blight','last_stand','retaliation'].includes(id)?1:5}));
 const descriptions={
  bleeding_edge:'Hits have a 42% base chance to inflict Bleed (+4 percentage points per rank). Bleed deals 16% of the triggering hit including critical scaling per tick, lasts 4s and refreshes all stacks on application (0.6s cooldown; no stack cap).',
@@ -138,7 +138,7 @@ function mods(b,base){
  s.defense=Math.round(s.defense*(1+.12*Math.sqrt(a)));
  s.attacksPerSec=Math.min(4.2,s.attacksPerSec*(1+.08*q));
  s.crit=Math.min(100,Math.max(0,(s.crit||0)+Math.round(19*(1-Math.exp(-p/3)))));
- if(b.unlockedFamilies?.includes('magic')){
+ if(b.unlockedFamilies?.includes('arcane')){
   // Do not change s.caster: Staff/Wand keep their original funded-attack path.
   s.mana=Math.max(30,Math.round(s.mana||20+s.int*7+s.manaFlat));
   s.manaRegen=+(Math.max(1.5,s.manaRegen||1.5+s.int*.23)*(1+.12*Math.sqrt(rank(b,'mana_spring')))).toFixed(2);
@@ -148,7 +148,7 @@ function mods(b,base){
  const attackBuff=clamp(Number(b.runtime?.eventAttack)||0,-.15,.15),defenseBuff=clamp(Number(b.runtime?.eventDefense)||0,-.15,.15);
  s.attack=Math.max(1,Math.round(s.attack*(1+attackBuff)));
  s.defense=Math.max(1,Math.round(s.defense*(1+defenseBuff)));
- if(hasFamily(b,'magic'))s.spellPower=Math.max(1,Math.round(s.spellPower*(1+attackBuff)));
+ if(hasFamily(b,'arcane'))s.spellPower=Math.max(1,Math.round(s.spellPower*(1+attackBuff)));
  s.blockChance=Math.min(65,(s.blockChance||0)+Math.round(24*(1-Math.exp(-rank(b,'guarded_block')/4))));
  if(s.blockChance&&!s.blockReduction)s.blockReduction=.35;
  return s;
@@ -436,7 +436,7 @@ function adaptiveCast(b,c,power,wasChilled,wasBurning){
  }
 }
 function onCast(b,c){
- if(c.proc||c.extra||c.recursive||c.funded!==true||!hasFamily(b,'magic')||!(elements.includes(b.element)||b.element==='arcane'))return;
+ if(c.proc||c.extra||c.recursive||c.funded!==true||!hasFamily(b,'arcane')||!(elements.includes(b.element)||b.element==='arcane'))return;
  const wasChilled=c.enemy.slowTime>0,wasBurning=(c.enemy.dots?.burn||[]).some(d=>d.remaining>0);manaConvergence(b,c);
  // These advanced elemental choices supply their own trigger when taken alone.
  if(b.element==='fire'&&(specialized(b,'combustion')||specialized(b,'living_inferno')||specialized(b,'fire_spread')||adaptive(b,'cinder_focus','fire')||adaptive(b,'controlled_burn','fire'))&&!c.enemy.dots?.burn?.length&&!rank(b,'kindling')&&!specialized(b,'kindling_flame'))c.dot('burn',Math.max(1,c.power)*.08,{controlledBurn:adaptive(b,'controlled_burn','fire'),primaryOnly:!['combustion','living_inferno','fire_spread'].some(id=>specialized(b,id))});
@@ -516,8 +516,8 @@ function tickRot(b,c){
 function onSecond(b,c){
  b.runtime.passiveTelemetry??={};for(const id of new Set([...b.picks,...(b.runtime.permanentTalents||[])])){if(!rank(b,id))continue;const t=b.runtime.passiveTelemetry[id]??={activations:0,combatSeconds:0};t.combatSeconds++;}
  const e=migrateEnemyDots(c.enemy);if(e.hp>0)tickRot(b,c);
- const recovery=specialized(b,'vitality_recovery')?1.25:specialized(b,'vitality_reserve')?.75:1;
- // Root Vitality and stat-node regeneration are fractional Max HP per second.
+ const recovery=specialized(b,'radiance_recovery')?1.25:specialized(b,'radiance_reserve')?.75:1;
+ // Root Radiance and stat-node regeneration are fractional Max HP per second.
  // The 0.35% base cap applies before mutually exclusive Recovery/Reserve multipliers.
  const basicRegenRate=Math.min(.0035,Math.max(0,Number(b.runtime.talentBonuses?.healthRegen)||0));
  if(basicRegenRate>0)heal(b,c,c.player.maxhp*basicRegenRate*recovery);
@@ -604,9 +604,9 @@ function enemyHealMultiplier(b,e){return 1-(e.v012Rot?.length&&rank(b,'wither')?
 function enemyDefense(b,e){const defense=Math.max(0,Number(e?.def)||0),base=Math.max(0,Number(e?.baseDef)||0),reduction=e?.v012Rot?.length?Math.min(.10,b?.runtime?.talentBonuses?.rotDefense||0):0;return reduction?Math.min(defense,Math.max(base*.25,defense*(1-reduction))):defense;}
 function nextCost(b,baseCost=8){return Math.max(Math.min(3,baseCost),baseCost-rank(b,'efficient_cast'));}
 function resetWave(b,e){e.v012Rot=[];e.v012Shock=0;}
-function canCast(b){return !!b&&!!b.element&&(b.runtime?.permanentBuild&&b.unlockedFamilies?.includes('magic')||['kindling','deep_winter','overcharge','arcane_focus','arcane_echo','spell_surge','spellblade','hex_bolt','hex_bleed','hemal_sigil','elemental_blight','prismatic_rebound','runic_shield'].some(id=>rank(b,id)));}
+function canCast(b){return !!b&&!!b.element&&(b.runtime?.permanentBuild&&b.unlockedFamilies?.includes('arcane')||['kindling','deep_winter','overcharge','arcane_focus','arcane_echo','spell_surge','spellblade','hex_bolt','hex_bleed','hemal_sigil','elemental_blight','prismatic_rebound','runic_shield'].some(id=>rank(b,id)));}
 function validate(b){
- if(!b||b.version!==3||!Array.isArray(b.families)||b.families.length>(b.runtime?.permanentBuild?FAMILIES.length:3)||new Set(b.families).size!==b.families.length||!b.families.every(f=>FAMILIES.includes(f))||b.element!==null&&(!(elements.includes(b.element)||b.element==='arcane')||!hasFamily(b,'magic'))||!Array.isArray(b.picks)||b.picks.length>20)throw Error('Invalid saved build');
+ if(!b||b.version!==3||!Array.isArray(b.families)||b.families.length>(b.runtime?.permanentBuild?FAMILIES.length:3)||new Set(b.families).size!==b.families.length||!b.families.every(f=>FAMILIES.includes(f))||b.element!==null&&(!(elements.includes(b.element)||b.element==='arcane')||!hasFamily(b,'arcane'))||!Array.isArray(b.picks)||b.picks.length>20)throw Error('Invalid saved build');
   if(!Array.isArray(b.unlockedFamilies)||new Set(b.unlockedFamilies).size!==b.unlockedFamilies.length||!b.unlockedFamilies.every(f=>hasFamily(b,f)))throw Error('Invalid unlocked affinity');
  for(const id of b.picks){const p=BY_ID[id];if(!p||!hasFamily(b,p.family)||!b.unlockedFamilies.includes(p.family)||p.requires.some(f=>!b.unlockedFamilies.includes(f))||p.element&&p.element!==b.element)throw Error('Invalid saved passive');}
  {const h=[...new Set(b.picks)].map(id=>BY_ID[id]).filter(p=>p?.requires.length);if(h.length>3||new Set(h.map(p=>[...p.requires].sort().join(':'))).size!==h.length)throw Error('Invalid hybrid combinations');}
@@ -618,14 +618,14 @@ function validate(b){
  if(!Number.isInteger(b.runtime.staticCharges)||b.runtime.staticCharges<0||b.runtime.staticCharges>3)throw Error('Invalid Static charges');
  return b;
 }
-function syncPermanent(b,progress,permanentAffinities=true){if(!b)return;if(!root.WandererAutomaticTalents)throw Error('Permanent talents unavailable');b.runtime.prepared=progress?.nodes?.includes(progress.prepared)?progress.prepared:null;b.runtime.specializations=[...(progress?.nodes||[])];if(permanentAffinities){b.runtime.permanentBuild=true;b.unlockedFamilies=FAMILIES.filter(f=>progress?.nodes?.includes('affinity_'+f));b.families=[...b.unlockedFamilies];b.element=b.unlockedFamilies.includes('magic')?(progress?.element||'arcane'):null;}const current=progress||root.WandererAutomaticTalents.create(),ids=root.WandererAutomaticTalents.passiveIds(current);b.runtime.talentBonuses=root.WandererAutomaticTalents.bonuses?.(current)||{};if(ids.length)b.runtime.permanentTalents=ids;else delete b.runtime.permanentTalents;}
+function syncPermanent(b,progress,permanentAffinities=true){if(!b)return;if(!root.WandererAutomaticTalents)throw Error('Permanent talents unavailable');b.runtime.prepared=progress?.nodes?.includes(progress.prepared)?progress.prepared:null;b.runtime.specializations=[...(progress?.nodes||[])];if(permanentAffinities){b.runtime.permanentBuild=true;b.unlockedFamilies=FAMILIES.filter(f=>progress?.nodes?.includes('affinity_'+f));b.families=[...b.unlockedFamilies];b.element=b.unlockedFamilies.includes('arcane')?(progress?.element||'arcane'):null;}const current=progress||root.WandererAutomaticTalents.create(),ids=root.WandererAutomaticTalents.passiveIds(current);b.runtime.talentBonuses=root.WandererAutomaticTalents.bonuses?.(current)||{};if(ids.length)b.runtime.permanentTalents=ids;else delete b.runtime.permanentTalents;}
 // Stage 6.4: all Magic attunements retain the funded Arcane Infusion.
 // Weapon coefficients avoid double-scaling Wand/Staff's native magical casts.
 // Arcane focuses on the enchantment; elemental choices add funded spellcasting.
 const INFUSION_RULE=Object.freeze({duration:7,cooldown:6,charges:2,cost:12,arcaneCost:10});
 const INFUSION_POWER=Object.freeze({physical:.85,Wand:.35,Staff:.95,arcaneBonus:.10});
 function magicMode(b){
- if(!b||!hasFamily(b,'magic'))return null;
+ if(!b||!hasFamily(b,'arcane'))return null;
  return specialized(b,'element_choice')?(b.element||'arcane'):'unattuned';
 }
 function infusionConfig(b,weaponSubtype=null){

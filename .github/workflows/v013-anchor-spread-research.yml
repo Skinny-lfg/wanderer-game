@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        profile: [decay-cycle-wand, hybrid-magic-decay, hybrid-decay-blood, blood-spread-twohand, magic-fire-wand]
+        profile: [decay-cycle-wand, hybrid-arcane-decay, hybrid-decay-blood, blood-spread-twohand, arcane-fire-wand]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

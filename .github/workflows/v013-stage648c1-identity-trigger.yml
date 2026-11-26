@@ -50,7 +50,7 @@ jobs:
       fail-fast: false
       max-parallel: 11
       matrix:
-        profile: [smart-fury-daggers, smart-fury-bow, smart-blood-two-handed, decay-two-handed, decay-wand, decay-staff, decay-daggers, magic-daggers-infusion, aegis-mace-shield, aegis-wand-orb, vitality-staff]
+        profile: [smart-fury-daggers, smart-fury-bow, smart-blood-two-handed, decay-two-handed, decay-wand, decay-staff, decay-daggers, arcane-daggers-infusion, aegis-mace-shield, aegis-wand-orb, radiance-staff]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

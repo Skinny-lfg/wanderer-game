@@ -1,5 +1,5 @@
 'use strict';
-// Genuine E1-born E10 checkpoints; study Blood/Decay Rot spread and Magic/Decay
+// Genuine E1-born E10 checkpoints; study Blood/Decay Rot spread and Arcane/Decay
 // Grave Bloom without injected points, gear, victories, or combat-stat changes.
 const fs=require('node:fs'),path=require('node:path');
 const N=require('./v013-natural-progression.cjs');
@@ -14,10 +14,10 @@ const VARIANTS=Object.freeze({
   style:'focused',healAt:.72,retreatAt:.46,target:'mechanics',shop:true,
   researchGearPreference:true
  }),
- 'magic-decay-bloom':Object.freeze({
+ 'arcane-decay-bloom':Object.freeze({
   name:'Magic + Decay Grave Bloom E10 Research',risk:0,
   targets:['arcane_focus','toxic_touch','hex_bolt','elemental_blight','grave_bloom'],
-  families:['magic','decay'],element:'arcane',armor:'Cloth',weapons:['Wand','Staff'],
+  families:['arcane','decay'],element:'arcane',armor:'Cloth',weapons:['Wand','Staff'],
   style:'focused',healAt:.72,retreatAt:.46,target:'mechanics',shop:true,
   researchGearPreference:true
  })

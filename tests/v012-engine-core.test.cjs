@@ -71,7 +71,7 @@ test('Rune values, Expedition tiers, pending choices and recycling use the canon
  assert.equal(R.FAMILIES.length,8);
  assert(Math.abs(R.runeValue('fury',1)-3.3)<1e-12);
  assert.equal(R.runeValue('warding',10),4);
- assert.equal(R.runeValue('vitality',20),30);
+ assert.equal(R.runeValue('radiance',20),30);
  const e1=R.makeRune('might',1,()=>'e1');
  assert.equal(e1.progression,'expedition');
  assert.equal(R.validRune(e1,200,true),true);

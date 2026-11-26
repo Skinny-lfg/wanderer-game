@@ -6,7 +6,7 @@ const SLOTS=['helm','amulet','armor','gloves','weapon','offhand','ring1','ring2'
 const STATS=['atk','def','hp','spd','str','agi','int','end','cha','mana','spell','evasionRating'];
 const EFFECTS=['poison','bleed','crit','sunder','shield','regen','burn','slow','drain','nature','shock','tide','crystal'];
 const MERCHANT_CATEGORY_SLOTS={weapons:['weapon','offhand'],armor:['helm','armor','gloves','boots','belt'],accessories:['ring1','ring2','amulet']};
-const RUNES=["might","swiftness","wisdom","fortitude","fortune","fury","warding","vitality","execution","devastation","haste","assault","archmage","abyss","clarity","efficiency","corruption","bastion","renewal","phantom","bulwark","heart","guard"];const RUNE_RARITIES=['Common','Uncommon','Rare','Epic','Legendary'];
+const RUNES=["might","swiftness","wisdom","fortitude","fortune","fury","warding","radiance","execution","devastation","haste","assault","archmage","abyss","clarity","efficiency","corruption","bastion","renewal","phantom","bulwark","heart","guard"];const RUNE_RARITIES=['Common','Uncommon','Rare','Epic','Legendary'];
 const treasures=()=>root.WandererV012Treasures;
 const plain=x=>x!==null&&Object.prototype.toString.call(x)==='[object Object]';
 function requireValue(ok,message){if(!ok)throw Error('Invalid Expedition save: '+message);}
@@ -107,7 +107,7 @@ function presentationCheck(p){
  if(p.realm!==null){const r=p.realm;requireValue(plain(r)&&integer(r.level,1,Number.MAX_SAFE_INTEGER)&&integer(r.plane,1,24)&&['cleared','defeat'].includes(r.outcome)&&typeof r.name==='string'&&typeof r.family==='string'&&typeof r.enemy==='string'&&seconds(r.seconds)&&integer(r.gold,0,Number.MAX_SAFE_INTEGER)&&integer(r.fragments,0,Number.MAX_SAFE_INTEGER)&&Array.isArray(r.log)&&r.log.every(l=>plain(l)&&typeof l.text==='string'&&typeof l.kind==='string')&&r.log.reduce((n,l)=>n+l.text.length+l.kind.length,0)<=180000,'Realm result');}
  if(p.realm?.loot!==undefined)requireValue(Array.isArray(p.realm.loot)&&p.realm.loot.length<=3&&p.realm.loot.every(item),'Realm loot result');
  if(p.realm?.treasures!==undefined)requireValue(Array.isArray(p.realm.treasures)&&p.realm.treasures.length<=3&&p.realm.treasures.every(treasure),'Realm treasures');
- if(p.summary!==null){const r=p.summary;requireValue(plain(r)&&integer(r.level,1,Number.MAX_SAFE_INTEGER)&&integer(r.realms,0,24)&&['victory','defeat','extracted','abandoned'].includes(r.outcome)&&seconds(r.seconds)&&integer(r.gold,0,Number.MAX_SAFE_INTEGER)&&integer(r.fragments,0,Number.MAX_SAFE_INTEGER)&&Array.isArray(r.families)&&r.families.length<=3&&r.families.every(f=>['blood','decay','vitality','aegis','fury','magic'].includes(f))&&Array.isArray(r.picks)&&r.picks.length<=20&&r.picks.every(id=>typeof id==='string')&&['kept','lost','discarded'].every(k=>Array.isArray(r[k])&&r[k].length<=45&&r[k].every(item))&&(r.runeTier===null||integer(r.runeTier,1,Number.MAX_SAFE_INTEGER)),'Expedition summary');
+ if(p.summary!==null){const r=p.summary;requireValue(plain(r)&&integer(r.level,1,Number.MAX_SAFE_INTEGER)&&integer(r.realms,0,24)&&['victory','defeat','extracted','abandoned'].includes(r.outcome)&&seconds(r.seconds)&&integer(r.gold,0,Number.MAX_SAFE_INTEGER)&&integer(r.fragments,0,Number.MAX_SAFE_INTEGER)&&Array.isArray(r.families)&&r.families.length<=3&&r.families.every(f=>['blood','decay','radiance','aegis','fury','arcane'].includes(f))&&Array.isArray(r.picks)&&r.picks.length<=20&&r.picks.every(id=>typeof id==='string')&&['kept','lost','discarded'].every(k=>Array.isArray(r[k])&&r[k].length<=45&&r[k].every(item))&&(r.runeTier===null||integer(r.runeTier,1,Number.MAX_SAFE_INTEGER)),'Expedition summary');
   requireValue(r.outcome!=='victory'||(r.realmMap?integer(r.realms,2,24):r.realms===15),'victory result');requireValue((r.runeTier===null||r.outcome==='victory')&&(r.runeName===undefined||r.runeTier!==null&&typeof r.runeName==='string'),'Rune result');
   for(const key of ['treasuresKept','treasuresLost'])if(r[key]!==undefined)requireValue(Array.isArray(r[key])&&r[key].length<=120&&r[key].every(treasure),'Expedition treasures');
   if(r.contract!==undefined&&r.contract!==null){
@@ -128,7 +128,7 @@ function presentationCheck(p){
       (c.paid.recipeId??null)===c.recipeId&&
       (c.paid.essence||0)===c.essence&&(c.paid.fragments||0)===c.fragments&&
       (c.kind!=='gold'||integer(c.paid.gold,0,70))&&
-      (c.kind!=='reagent'||['blood','decay','vitality','aegis','fury','magic'].includes(c.paid.family)&&integer(c.paid.amount,0,2))&&
+      (c.kind!=='reagent'||['blood','decay','radiance','aegis','fury','arcane'].includes(c.paid.family)&&integer(c.paid.amount,0,2))&&
       (c.kind!=='potion'||POTIONS.includes(c.paid.potion)&&integer(c.paid.amount,0,1))),'Expedition Contract summary');
   }
  }

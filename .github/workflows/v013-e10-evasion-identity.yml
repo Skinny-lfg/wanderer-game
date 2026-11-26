@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        id: [blood-daggers, blood-twohand, fury-daggers, fury-bow, fury-twohand, decay-cycle-daggers, decay-cycle-wand, vitality-mace, aegis-mace, magic-fire-wand, magic-lightning-staff, hybrid-blood-fury]
+        id: [blood-daggers, blood-twohand, fury-daggers, fury-bow, fury-twohand, decay-cycle-daggers, decay-cycle-wand, radiance-mace, aegis-mace, arcane-fire-wand, arcane-lightning-staff, hybrid-blood-fury]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

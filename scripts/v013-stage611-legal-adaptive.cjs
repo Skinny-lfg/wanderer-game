@@ -13,8 +13,8 @@ const unique=x=>[...new Set(x)];
 const graph=new Map(T.NODES.map(n=>[n.id,n]));
 const DEFAULTS=Object.freeze({
  mode:'legal',budgets:[0,2,6,12,24,36,60,100],
- profiles:['smart-blood-pure','smart-fury-daggers','smart-magic-wand','smart-aegis-vitality',
-  'smart-decay-magic-aegis','smart-blood-fury-vitality'],
+ profiles:['smart-blood-pure','smart-fury-daggers','smart-arcane-wand','smart-aegis-radiance',
+  'smart-decay-arcane-aegis','smart-blood-fury-radiance'],
  seeds:[9701,9702],sampleBudget:4,maxLevel:2,maxAttempts:2,maxTotalAttempts:3,
  out:'reports/v013-stage611.json',resume:false
 });
@@ -48,13 +48,13 @@ function pathTargets(){
   for(let lane=0;lane<2;lane++)add(G.BASICS[family][lane*3+2],'basic',{primary:family});
   // The retired Magic focused arcane nodes no longer exist. Live v15 uses
   // arcane_mastery in the shared Magic element/attunement route instead.
-  const goal=family==='magic'?'arcane_mastery':G.FOCUSED[family].at(-1);
+  const goal=family==='arcane'?'arcane_mastery':G.FOCUSED[family].at(-1);
   add(goal,'focused',{primary:family,element:'arcane'});
  }
  for(const [first,second,...skills] of G.MIXED)
   add(skills.at(-1),'mixed',{primary:first,secondary:second,pair:[first,second]});
  for(const [element,ids] of Object.entries(G.ELEMENTS))
-  add(ids.at(-1),'magic-element',{primary:'magic',element});
+  add(ids.at(-1),'arcane-element',{primary:'arcane',element});
  const coreCount=targets.length; // 12 basic + 6 current focused + 6 mixed + 3 Magic modes.
  for(const [profileId,p] of Object.entries(P.BUILDS)){
   for(const target of p.milestones||[]){

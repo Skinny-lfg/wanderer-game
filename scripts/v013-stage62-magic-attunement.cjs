@@ -1,5 +1,5 @@
 'use strict';
-// Stage 6.2: experimental Magic Attunement contract and coefficient sweep.
+// Stage 6.2: experimental Arcane Attunement contract and coefficient sweep.
 // Never loaded by native combat or talent UI. Gameplay changes require Stage 6.3.
 const fs=require('node:fs'),path=require('node:path');
 const stage61=require('./v013-stage61-arcane-infusion.cjs');
@@ -10,7 +10,7 @@ require('../combat/talent-graph-bridge.js');
 require('../combat/talent-graph-runtime.js');
 const T=globalThis.WandererAutomaticTalents;
 const MODES=Object.freeze({
- unattuned:Object.freeze({name:'Unattuned Magic',kind:'infusion',source:'affinity_magic',manaCost:6,description:'A Mana-paid, Spell-Power-based weapon enchantment; no independent Arcane cast.'}),
+ unattuned:Object.freeze({name:'Unattuned Magic',kind:'infusion',source:'affinity_arcane',manaCost:6,description:'A Mana-paid, Spell-Power-based weapon enchantment; no independent Arcane cast.'}),
  arcane:Object.freeze({name:'Arcane',kind:'enhanced_infusion',source:'element_choice',manaCost:5,bonusSpellPowerFractionAdd:.10,description:'Empowers the baseline enchantment and reduces its cost by 1 Mana. No standalone projectile.'}),
  fire:Object.freeze({name:'Fire',kind:'elemental_cast',element:'fire',source:'element_choice',manaCost:8,initialCast:'Fire spell',status:'burn',description:'Immediately unlocks a funded Fire spell; following nodes specialize Burn.'}),
  frost:Object.freeze({name:'Frost',kind:'elemental_cast',element:'frost',source:'element_choice',manaCost:8,initialCast:'Frost spell',status:'chill',description:'Immediately unlocks a funded Frost spell; following nodes specialize control.'}),
@@ -18,7 +18,7 @@ const MODES=Object.freeze({
 });
 function attunement(p){
  if(!T.valid(p))throw Error('Invalid v15 progress');
- if(!p.nodes.includes('affinity_magic'))return null;
+ if(!p.nodes.includes('affinity_arcane'))return null;
  if(!p.nodes.includes('element_choice'))return MODES.unattuned;
  return MODES[p.element||'arcane'];
 }
@@ -48,8 +48,8 @@ function run(){
    '60s timings use actual seeded Magic stats but ignore enemy defense, statuses, target changes, crits and enemy attacks.',
    'Stage 6.3 must integrate the buff, casts, hybrid callbacks and player descriptions atomically to avoid broken builds.'
   ]};
- const file=path.resolve('reports/stage62-magic-attunement.json');fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file,JSON.stringify(report,null,2)+'\n');
- const md=['# Stage 6.2 — Magic Attunement candidate, not yet live','',
+ const file=path.resolve('reports/stage62-arcane-attunement.json');fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file,JSON.stringify(report,null,2)+'\n');
+ const md=['# Stage 6.2 — Arcane Attunement candidate, not yet live','',
  'Affinity Magic grants Arcane Infusion. Each element choice has an immediate reason to spend a point. Arcane improves the enchantment, while Fire/Frost/Lightning each unlock a spell.','',
  '| Infusion coefficient | Mean physical damage delta / 60s | Mean caster damage delta / 60s | Mean physical Mana spent delta |',
  '|---:|---:|---:|---:|',

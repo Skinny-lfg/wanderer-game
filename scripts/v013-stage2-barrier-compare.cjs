@@ -35,7 +35,7 @@ function compare(before,after,{postBarrierReset=false,postOffhandReroll=false}={
   }
   assert(groups.some(r=>r.delta.meanBarrierAtEntry!==0||r.delta.meanBarrierGenerated!==0),
    'Post-reset comparison should identify the deliberate Barrier change');
-  assert(pick('aegis-magic').every(r=>r.after.meanSpellPower>0),'Aegis/Magic still needs Spell Power');
+  assert(pick('aegis-arcane').every(r=>r.after.meanSpellPower>0),'Aegis/Magic still needs Spell Power');
   return groups;
  }
  for(const r of pick('pure-aegis')){
@@ -43,11 +43,11 @@ function compare(before,after,{postBarrierReset=false,postOffhandReroll=false}={
   assert.equal(r.delta.meanBarrierAtEntry,0,'Physical Aegis initial Barrier drift');
   assert.equal(r.delta.meanBarrierGenerated,0,'Physical Aegis generated Barrier drift');
  }
- for(const id of ['pure-blood','pure-fury','pure-vitality','pure-magic','pure-decay'])for(const r of pick(id)){
+ for(const id of ['pure-blood','pure-fury','pure-radiance','pure-arcane','pure-decay'])for(const r of pick(id)){
   assert.equal(r.delta.meanBarrierAtEntry,0,id+' initial Barrier drift');
   assert.equal(r.delta.meanBarrierGenerated,0,id+' generated Barrier drift');
  }
- const hybrids=pick('aegis-magic');
+ const hybrids=pick('aegis-arcane');
  assert(hybrids.length>=2&&hybrids.every(r=>r.delta.meanBarrierAtEntry>0),'Aegis + Magic must gain initial Barrier from Spell Power');
  assert(hybrids.every(r=>r.after.meanSpellPower>0),'Hybrid lacks Spell Power');
  return groups;
@@ -84,7 +84,7 @@ function run(out=defaultOut){
  fs.writeFileSync(dest.replace(/\.json$/,'.md'),markdown(payload)+'\n');
  console.log('STAGE2_BARRIER_COMPARISON='+JSON.stringify({out,source:payload.currentSource,
   valid:payload.summary.valid,errors:payload.summary.errors,timeouts:payload.summary.timeouts,
-  aegisMagic:groups.filter(g=>g.build==='aegis-magic').map(g=>({level:g.level,entry:g.after.meanBarrierAtEntry,entryDelta:g.delta.meanBarrierAtEntry,generatedDelta:g.delta.meanBarrierGenerated,absorbedDelta:g.delta.meanBarrierAbsorbed})),
+  aegisMagic:groups.filter(g=>g.build==='aegis-arcane').map(g=>({level:g.level,entry:g.after.meanBarrierAtEntry,entryDelta:g.delta.meanBarrierAtEntry,generatedDelta:g.delta.meanBarrierGenerated,absorbedDelta:g.delta.meanBarrierAbsorbed})),
   pureAegis:groups.filter(g=>g.build==='pure-aegis').map(g=>({level:g.level,entryDelta:g.delta.meanBarrierAtEntry,generatedDelta:g.delta.meanBarrierGenerated}))}));
  return payload;
 }

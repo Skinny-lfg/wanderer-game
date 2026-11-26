@@ -36,8 +36,8 @@ jobs:
         include:
           - { build: 'decay-blood-spread', seed: 9861 }
           - { build: 'decay-blood-spread', seed: 9863 }
-          - { build: 'magic-decay-bloom', seed: 9861 }
-          - { build: 'magic-decay-bloom', seed: 9863 }
+          - { build: 'arcane-decay-bloom', seed: 9861 }
+          - { build: 'arcane-decay-bloom', seed: 9863 }
     steps:
       - uses: actions/checkout@v4
         with: {persist-credentials: false}

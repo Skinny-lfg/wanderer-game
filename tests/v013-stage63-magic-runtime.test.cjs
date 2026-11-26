@@ -23,7 +23,7 @@ function context(){
  return {events,enemy,player,c};
 }
 test('Magic root cannot cast an automatic projectile and has a funded 12 Mana infusion',()=>{
- const b=build(['affinity_magic']);assert.equal(B.magicMode(b),'unattuned');
+ const b=build(['affinity_arcane']);assert.equal(B.magicMode(b),'unattuned');
  assert.equal(B.infusionConfig(b).cost,12);assert.equal(B.infusionConfig(b).power,.85);
  assert(B.infusionReady(b,0));assert.equal(B.activateInfusion(b,0).charges,2);
  assert(!B.infusionReady(b,2),'cannot overlap active charges');
@@ -34,19 +34,19 @@ test('Magic root cannot cast an automatic projectile and has a funded 12 Mana in
  assert.equal(x.events.filter(e=>e.kind==='✨ Arcane Infusion').length,2);
 });
 test('An offhand strike cannot consume a charge or cause extra Magic hits',()=>{
- const b=build(['affinity_magic']),x=context();B.activateInfusion(b,0);
+ const b=build(['affinity_arcane']),x=context();B.activateInfusion(b,0);
  assert.equal(B.onInfusionHit(b,{...x.c,offhand:true}),0);
  assert.equal(b.runtime.infusionCharges,2);
  B.onInfusionHit(b,x.c);assert.equal(b.runtime.infusionCharges,1);
  assert.equal(x.events.filter(e=>e.kind==='✨ Arcane Infusion').length,1);
 });
 test('Infusion expires after seven combat seconds; unspent charges never transfer',()=>{
- const b=build(['affinity_magic']),x=context();B.activateInfusion(b,0);
+ const b=build(['affinity_arcane']),x=context();B.activateInfusion(b,0);
  x.c.now=7;assert.equal(B.onInfusionHit(b,x.c),0);
  assert.equal(b.runtime.infusionCharges,0);assert(B.infusionReady(b,7));
 });
 test('Choosing Arcane makes Infusion stronger and cheaper; elements retain it alongside spells',()=>{
- const basic=build(['affinity_magic']),arcane=build(['element_choice']);
+ const basic=build(['affinity_arcane']),arcane=build(['element_choice']);
  assert.equal(B.magicMode(basic),'unattuned');assert.equal(B.magicMode(arcane),'arcane');
  assert.equal(B.infusionConfig(arcane).cost,10);assert.equal(B.infusionConfig(arcane).power,.95);
  for(const mode of ['fire','frost','lightning']){
@@ -122,7 +122,7 @@ test('Paid Wand/Staff attacks must not get an additional Spell Echo or Grave Blo
 
 test('Infusion has weapon-specific coefficients; Wand avoids double-scaling its funded spell',()=>{
  for(const [weapon,base,arcane] of [['Sword',.85,.95],['Mace',.85,.95],['Daggers',.85,.95],['Wand',.35,.45],['Staff',.95,1.05]]){
-  const plain=build(['affinity_magic']),special=build(['element_choice']);
+  const plain=build(['affinity_arcane']),special=build(['element_choice']);
   assert(Math.abs(B.infusionConfig(plain,weapon).power-base)<1e-9,weapon);
   assert(Math.abs(B.infusionConfig(special,weapon).power-arcane)<1e-9,weapon);
  }

@@ -3,7 +3,7 @@ on:
   push:
     branches: [audit/v013-stage6]
     paths:
-      - '.github/workflows/v013-stage63-magic-infusion.yml'
+      - '.github/workflows/v013-stage63-arcane-infusion.yml'
       - 'tests/v013-stage63-magic-runtime.test.cjs'
       - 'tests/talent-graph-combat.test.cjs'
       - 'combat/v012-combat-runtime.js'
@@ -15,7 +15,7 @@ on:
 permissions:
   contents: read
 jobs:
-  magic-native:
+  arcane-native:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -46,20 +46,20 @@ jobs:
         run: |
           git worktree add --detach "$RUNNER_TEMP/wanderer-before" 945a00c135c08253a1c8d8359b4b102e5296b4c4
           ln -s "$GITHUB_WORKSPACE/node_modules" "$RUNNER_TEMP/wanderer-before/node_modules"
-          STAGE63_NATIVE_ROOT="$RUNNER_TEMP/wanderer-before" STAGE63_REPORT_FILE=reports/stage63-native-magic-baseline.json node scripts/v013-stage63-native-magic-matrix.cjs
+          STAGE63_NATIVE_ROOT="$RUNNER_TEMP/wanderer-before" STAGE63_REPORT_FILE=reports/stage63-native-arcane-baseline.json node scripts/v013-stage63-native-magic-matrix.cjs
           node scripts/v013-stage63-native-magic-matrix.cjs
           node scripts/v013-stage63-native-magic-comparison.cjs
       - name: Save native report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: stage63-native-magic-weapon-matrix
+          name: stage63-native-arcane-weapon-matrix
           path: |
-            reports/stage63-native-magic-baseline.json
-            reports/stage63-native-magic-baseline.md
-            reports/stage63-native-magic-matrix.json
-            reports/stage63-native-magic-matrix.md
-            reports/stage63-native-magic-comparison.json
-            reports/stage63-native-magic-comparison.md
+            reports/stage63-native-arcane-baseline.json
+            reports/stage63-native-arcane-baseline.md
+            reports/stage63-native-arcane-matrix.json
+            reports/stage63-native-arcane-matrix.md
+            reports/stage63-native-arcane-comparison.json
+            reports/stage63-native-arcane-comparison.md
           retention-days: 30
           if-no-files-found: warn

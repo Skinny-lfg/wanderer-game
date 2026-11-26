@@ -31,7 +31,7 @@ jobs:
       fail-fast: false
       max-parallel: 15
       matrix:
-        profile: [cautious, balanced, plate-warden, cloth-battlemage, leather-duelist, hexblade-hybrid, smart-blood-pure, smart-fury-daggers, smart-vitality-pure, smart-aegis-vitality, smart-magic-arcane-pure, smart-magic-fire-pure, magic-frost, smart-magic-lightning-pure, smart-decay-magic-aegis, smart-blood-sword, smart-blood-fury, smart-blood-fury-vitality, smart-blood-fury-vitality-no-mixed, smart-fury-blood-aegis, smart-fury-pure, smart-magic-fire-aegis, smart-magic-frost-vitality, smart-magic-wand, smart-magic-staff, smart-magic-wand-offense, smart-magic-wand-defense, decay-wand, decay-two-handed, aegis-sword-shield, aegis-mace-shield, aegis-wand-orb, vitality-sword-charm, vitality-staff, magic-sword-infusion]
+        profile: [cautious, balanced, plate-warden, cloth-battlemage, leather-duelist, hexblade-hybrid, smart-blood-pure, smart-fury-daggers, smart-radiance-pure, smart-aegis-radiance, smart-arcane-arcane-pure, smart-arcane-fire-pure, arcane-frost, smart-arcane-lightning-pure, smart-decay-arcane-aegis, smart-blood-sword, smart-blood-fury, smart-blood-fury-radiance, smart-blood-fury-radiance-no-mixed, smart-fury-blood-aegis, smart-fury-pure, smart-arcane-fire-aegis, smart-arcane-frost-radiance, smart-arcane-wand, smart-arcane-staff, smart-arcane-wand-offense, smart-arcane-wand-defense, decay-wand, decay-two-handed, aegis-sword-shield, aegis-mace-shield, aegis-wand-orb, radiance-sword-charm, radiance-staff, arcane-sword-infusion]
     steps:
       - uses: actions/checkout@v4
         with: {persist-credentials: false}

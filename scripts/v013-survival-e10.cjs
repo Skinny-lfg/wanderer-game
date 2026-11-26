@@ -1,8 +1,8 @@
 'use strict';
 const fs=require('node:fs'),assert=require('node:assert/strict'),G=require('./v013-global-e10.cjs'),S=require('./simulate-progression.cjs'),{T,buy}=require('../tests/v013-current-talent-helper.cjs');
-const IDS=G.IDS.filter(id=>/^(blood-|fury-|decay-cycle-)/.test(id)),ARMS=['pure','vitality','aegis'],N=50,POINTS=30,OFFENSIVE=22;
+const IDS=G.IDS.filter(id=>/^(blood-|fury-|decay-cycle-)/.test(id)),ARMS=['pure','radiance','aegis'],N=50,POINTS=30,OFFENSIVE=22;
 const SC=G.SC.filter(s=>['normal-1','normal-4','normal-8','normal-12','elite-tank','elite-gravecaller','boss-blood','boss-decay'].includes(s.id));
-const SUPPORT={vitality:['affinity_vitality','strong_heart','renewal'],aegis:['affinity_aegis','guarded_block','barrier_pulse']};
+const SUPPORT={radiance:['affinity_radiance','strong_heart','renewal'],aegis:['affinity_aegis','guarded_block','barrier_pulse']};
 function profile(id,arm){
  assert(IDS.includes(id)&&ARMS.includes(arm));const p=G.profile(id);if(arm==='pure')return p;
  // Retain the exact first 22 purchased nodes (including every declared

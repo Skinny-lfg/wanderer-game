@@ -1,10 +1,10 @@
 'use strict';
 const fs=require('node:fs'),assert=require('node:assert/strict'),G=require('./v013-global-e10.cjs'),H=require('./v013-survival-e10.cjs'),S=require('./simulate-progression.cjs');
-const LEVEL=10,POINTS=30,N=50,FAMILIES=['blood','decay','vitality','aegis','fury','magic'];
+const LEVEL=10,POINTS=30,N=50,FAMILIES=['blood','decay','radiance','aegis','fury','arcane'];
 const IDS=G.IDS.filter(id=>/^(blood-|fury-|decay-)/.test(id)),SC=H.SC,ARMS=['pure','double'];
 const source=fs.readFileSync('combat/v012-gear-stats.js','utf8'),anchor='result.power=power(result);';
 assert.equal(source.split(anchor).length,2);
-const doubleSource=source.replace(anchor,"if(state?.automaticTalents?.nodes?.some(id=>['affinity_blood','affinity_decay','affinity_fury'].includes(id))&&!state.automaticTalents.nodes.some(id=>['affinity_aegis','affinity_vitality'].includes(id))){result.attack*=2;if(Number.isFinite(result.spellPower))result.spellPower*=2;}"+anchor);
+const doubleSource=source.replace(anchor,"if(state?.automaticTalents?.nodes?.some(id=>['affinity_blood','affinity_decay','affinity_fury'].includes(id))&&!state.automaticTalents.nodes.some(id=>['affinity_aegis','affinity_radiance'].includes(id))){result.attack*=2;if(Number.isFinite(result.spellPower))result.spellPower*=2;}"+anchor);
 
 function nativeCell(p,sc,i,arm){
  const family=sc.family||FAMILIES[i%FAMILIES.length],seed=64823000+i*101;

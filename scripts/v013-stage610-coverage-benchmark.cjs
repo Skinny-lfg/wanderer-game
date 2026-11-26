@@ -176,7 +176,7 @@ function atomicWrite(dest,data){
 function nativeBenchmark(opts){
  // Sample complete real account starts; no setup(), artificial gear, XP or unlocks.
  const N=require('./v013-natural-progression.cjs');
- const profile='smart-blood-fury-vitality',sourceSha256=S.sourceFingerprint().sha256;
+ const profile='smart-blood-fury-radiance',sourceSha256=S.sourceFingerprint().sha256;
  const config=N.parseArgs(['--seeds='+opts.seedStart,'--profiles='+profile,
   '--max-level=1','--max-attempts=1','--max-total-attempts=1']);
  const report={stage:'6.10',kind:'native-e1-benchmark',sourceSha256,

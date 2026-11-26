@@ -42,7 +42,7 @@ jobs:
           - {seed: 9861, profile: balanced}
           - {seed: 9863, profile: balanced}
           - {seed: 9863, profile: daring}
-          - {seed: 9861, profile: magic-fire}
+          - {seed: 9861, profile: arcane-fire}
     steps:
       - uses: actions/checkout@v4
         with: {persist-credentials: false}

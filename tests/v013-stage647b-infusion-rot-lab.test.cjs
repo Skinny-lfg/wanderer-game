@@ -6,8 +6,8 @@ function harness(variant='two-two-full'){
  const src=transform(runtime,build,scenarios[variant]),g={};
  vm.createContext(g);vm.runInContext(src.build,g);
  const B=g.WandererV012Buildcraft,b=B.create();
- b.runtime.prepared='grave_bloom';b.runtime.specializations=['grave_bloom','affinity_magic','affinity_decay'];
- b.unlockedFamilies=['magic','decay'];b.families=['magic','decay'];b.element='arcane';b.runtime.permanentBuild=true;
+ b.runtime.prepared='grave_bloom';b.runtime.specializations=['grave_bloom','affinity_arcane','affinity_decay'];
+ b.unlockedFamilies=['arcane','decay'];b.families=['arcane','decay'];b.element='arcane';b.runtime.permanentBuild=true;
  b.runtime.infusionCharges=2;b.runtime.infusionExpiresAt=10;
  const enemies=Array.from({length:4},(_,i)=>({name:'E'+i,hp:10000,maxhp:10000,v012Rot:[],dots:{bleed:[],burn:[]}}));
  const reserve={hp:10000,maxhp:10000,v012Rot:[]},metrics={},hits=[];

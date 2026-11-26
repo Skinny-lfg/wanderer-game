@@ -131,7 +131,7 @@ const CUSTOM={
  "aegis-wand-orb": {
   "families": [
    "aegis",
-   "magic"
+   "arcane"
   ],
   "weapons": [
    "Wand"
@@ -153,9 +153,9 @@ const CUSTOM={
    "arcane_bastion"
   ]
  },
- "vitality-sword-charm": {
+ "radiance-sword-charm": {
   "families": [
-   "vitality"
+   "radiance"
   ],
   "weapons": [
    "Sword"
@@ -172,10 +172,10 @@ const CUSTOM={
    "living_recovery"
   ]
  },
- "vitality-staff": {
+ "radiance-staff": {
   "families": [
-   "vitality",
-   "magic"
+   "radiance",
+   "arcane"
   ],
   "weapons": [
    "Staff"
@@ -192,9 +192,9 @@ const CUSTOM={
    "deep_winter"
   ]
  },
- "magic-sword-infusion": {
+ "arcane-sword-infusion": {
   "families": [
-   "magic",
+   "arcane",
    "decay"
   ],
   "weapons": [
@@ -218,9 +218,9 @@ const CUSTOM={
    "grave_bloom"
   ]
  },
- "magic-daggers-infusion": {
+ "arcane-daggers-infusion": {
   "families": [
-   "magic",
+   "arcane",
    "blood"
   ],
   "weapons": [
@@ -241,7 +241,7 @@ const CUSTOM={
   ]
  }
 };
-const PROFILES=["cautious","balanced","plate-warden","cloth-battlemage","leather-duelist","hexblade-hybrid","smart-blood-pure","smart-blood-two-handed","smart-fury-bow","smart-fury-daggers","smart-vitality-pure","smart-aegis-vitality","smart-magic-arcane-pure","smart-magic-fire-pure","magic-frost","smart-magic-lightning-pure","smart-decay-magic-aegis","decay-blood-spread","smart-blood-sword","smart-blood-fury","smart-blood-fury-vitality","smart-blood-fury-vitality-no-mixed","smart-fury-blood-aegis","smart-fury-pure","smart-magic-fire-aegis","smart-magic-frost-vitality","smart-magic-wand","smart-magic-staff","smart-magic-wand-offense","smart-magic-wand-defense","decay-sword","decay-daggers","decay-wand","decay-staff","decay-two-handed","aegis-sword-shield","aegis-mace-shield","aegis-wand-orb","vitality-sword-charm","vitality-staff","magic-sword-infusion","magic-daggers-infusion"];
+const PROFILES=["cautious","balanced","plate-warden","cloth-battlemage","leather-duelist","hexblade-hybrid","smart-blood-pure","smart-blood-two-handed","smart-fury-bow","smart-fury-daggers","smart-radiance-pure","smart-aegis-radiance","smart-arcane-arcane-pure","smart-arcane-fire-pure","arcane-frost","smart-arcane-lightning-pure","smart-decay-arcane-aegis","decay-blood-spread","smart-blood-sword","smart-blood-fury","smart-blood-fury-radiance","smart-blood-fury-radiance-no-mixed","smart-fury-blood-aegis","smart-fury-pure","smart-arcane-fire-aegis","smart-arcane-frost-radiance","smart-arcane-wand","smart-arcane-staff","smart-arcane-wand-offense","smart-arcane-wand-defense","decay-sword","decay-daggers","decay-wand","decay-staff","decay-two-handed","aegis-sword-shield","aegis-mace-shield","aegis-wand-orb","radiance-sword-charm","radiance-staff","arcane-sword-infusion","arcane-daggers-infusion"];
 const SEEDS=[9861,9862,9863,9864,9865],SIZES=[1,2,3,4,5,8,12],TRIALS=100;
 const FILE='combat/expedition-progression.js',SOURCE=fs.readFileSync(FILE,'utf8');
 function candidateSource(){

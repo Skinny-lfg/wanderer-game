@@ -45,15 +45,15 @@ jobs:
       matrix:
         include:
           - cohort: physical
-            profiles: smart-blood-pure,smart-blood-fury,smart-blood-fury-vitality,smart-blood-fury-vitality-no-mixed,smart-fury-blood-aegis
+            profiles: smart-blood-pure,smart-blood-fury,smart-blood-fury-radiance,smart-blood-fury-radiance-no-mixed,smart-fury-blood-aegis
           - cohort: magic
-            profiles: smart-magic-arcane-pure,smart-magic-fire-aegis,smart-magic-frost-vitality,smart-magic-lightning-pure
+            profiles: smart-arcane-arcane-pure,smart-arcane-fire-aegis,smart-arcane-frost-radiance,smart-arcane-lightning-pure
           - cohort: alternatives
-            profiles: smart-fury-pure,smart-decay-magic-aegis,smart-aegis-vitality,smart-vitality-pure
+            profiles: smart-fury-pure,smart-decay-arcane-aegis,smart-aegis-radiance,smart-radiance-pure
           - cohort: weapons
             profiles: smart-blood-sword,smart-blood-two-handed,smart-fury-daggers,smart-fury-bow
           - cohort: potions
-            profiles: smart-magic-wand,smart-magic-staff,smart-magic-wand-offense,smart-magic-wand-defense
+            profiles: smart-arcane-wand,smart-arcane-staff,smart-arcane-wand-offense,smart-arcane-wand-defense
     steps:
       - uses: actions/checkout@v4
         with:
@@ -119,7 +119,7 @@ jobs:
           node scripts/v013-stage68-agent-evaluation.cjs \
             reports/stage68-strategic-global.json \
             reports/stage68-physical.json \
-            reports/stage68-magic.json \
+            reports/stage68-arcane.json \
             reports/stage68-alternatives.json \
             reports/stage68-weapons.json \
             reports/stage68-potions.json

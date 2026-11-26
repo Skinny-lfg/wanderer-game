@@ -1,7 +1,7 @@
 'use strict';
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const N=require('./v013-natural-progression.cjs'),M=require('./v013-stage647d9f-synergy.cjs'),D=require('./v013-stage628-postcap-difficulty.cjs');
-const IDS=["smart-fury-daggers","smart-fury-bow","smart-blood-two-handed","decay-two-handed","decay-wand","decay-staff","decay-daggers","magic-daggers-infusion","aegis-mace-shield","aegis-wand-orb","vitality-staff"];
+const IDS=["smart-fury-daggers","smart-fury-bow","smart-blood-two-handed","decay-two-handed","decay-wand","decay-staff","decay-daggers","arcane-daggers-infusion","aegis-mace-shield","aegis-wand-orb","radiance-staff"];
 function identityProfile(id){
  const p=M.profile(id);
  return {...p,strictResearchIdentity:true,...(id==='smart-fury-daggers'?{offhands:['Daggers']}: {})};

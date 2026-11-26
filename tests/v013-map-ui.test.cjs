@@ -50,7 +50,7 @@ test('combat node shows its enemy group range in the node frame',()=>{
 });
 test('each Affinity map artwork exists in source and Pages and maps by family',()=>{
  const css=fs.readFileSync('online/v013-stage45-map-qa.css','utf8');
- for(const family of ['blood','decay','vitality','aegis','fury','magic']){
+ for(const family of ['blood','decay','radiance','aegis','fury','arcane']){
   assert(css.includes('[data-map-affinity="'+family+'"]{background-image:linear-gradient(#14101644,#14101677),url("../assets/expedition-map/'+family+'.webp")}'),family);assert(fs.readFileSync('assets/expedition-map/'+family+'.webp').equals(fs.readFileSync('docs/assets/expedition-map/'+family+'.webp')));
   const image=fs.readFileSync('assets/expedition-map/'+family+'.png'),page=fs.readFileSync('docs/assets/expedition-map/'+family+'.png');
   assert.deepEqual([...image.subarray(0,8)],[137,80,78,71,13,10,26,10]);assert(image.equals(page),family+' Pages artwork differs');

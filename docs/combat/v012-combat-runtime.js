@@ -426,7 +426,7 @@ function applyAffinity(effect,enemy,s,mult=1,baseDamage=0,statusScale=1){
   if(gained>0)ports.addLog('💚 Healing +'+Math.round(gained)+' HP','good');
  }
  if(effect==='nature'){
-  const heal=Math.max(1,Math.round((baseDamage||s.spellPower||s.attack||5)*.08*mult*(1+(bonus.natureBonus||0))*(bonus.natureVitality&&r.hp<r.maxhp*.5?1.5:1)));
+  const heal=Math.max(1,Math.round((baseDamage||s.spellPower||s.attack||5)*.08*mult*(1+(bonus.natureBonus||0))*(bonus.natureRadiance&&r.hp<r.maxhp*.5?1.5:1)));
   const gained=ports.setHeal(r,heal);if(gained>0)ports.addLog('🌿 Nature heals +'+Math.round(gained)+' HP','good');
  }
  if(effect==='crystal')ports.setDirectEnemyDamage(r,(baseDamage||s.spellPower||s.attack||5)*.06*mult,'💎 Crystal:');
@@ -878,7 +878,7 @@ function updateFight(){
     const theme=ports.THEMES.find(t=>t.id===r.path)||ports.currentTheme(),mob=theme?.mobs?.find(m=>m.role==='minion');
     if(!mob)throw Error('Stage 8.4 Boss summon requires a Realm Minion');
     const result=root.WandererV013BossAbilities.spawned(r,event,()=>ports.enemyFor(r.tier,r.enc,{theme,mob,boss:false,elite:false}));
-    if(result.spawned){ports.phase6Metric(r,'bossSummons',result.spawned);ports.addLog('☠ '+event.enemy.name+' summons '+result.spawned+' '+(event.kind==='blood'?'Riftbound Vessel':event.kind==='node'?'Convergence Anchor':event.kind==='vitality'?'light fragment':'Carrion Broodling')+(result.spawned===1?'':'s')+'!','critical');ports.renderCombat();}
+    if(result.spawned){ports.phase6Metric(r,'bossSummons',result.spawned);ports.addLog('☠ '+event.enemy.name+' summons '+result.spawned+' '+(event.kind==='blood'?'Riftbound Vessel':event.kind==='node'?'Convergence Anchor':event.kind==='radiance'?'light fragment':'Carrion Broodling')+(result.spawned===1?'':'s')+'!','critical');ports.renderCombat();}
     else ports.addLog('☠ '+event.enemy.name+' has no reinforcement space.','critical');
    }
   }

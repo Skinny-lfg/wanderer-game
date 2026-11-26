@@ -1,9 +1,9 @@
 // v0.13 Stage 0. Data and deterministic planning only: does not modify combat, travel, loot or saves.
 (function(root){'use strict';
 const VERSION=1;
-const AFFINITIES=Object.freeze(['blood','decay','vitality','aegis','fury','magic']);
+const AFFINITIES=Object.freeze(['blood','decay','radiance','aegis','fury','arcane']);
 const BOSS_STYLES=Object.freeze(['guardian','leech','berserker','matriarch','devourer','conductor']);
-const BOSS_STYLE_BY_AFFINITY=Object.freeze({blood:'leech',decay:'matriarch',vitality:'devourer',aegis:'guardian',fury:'berserker',magic:'conductor'});
+const BOSS_STYLE_BY_AFFINITY=Object.freeze({blood:'leech',decay:'matriarch',radiance:'devourer',aegis:'guardian',fury:'berserker',arcane:'conductor'});
 const DIFFICULTIES=Object.freeze([
  {id:'guarded',name:'Guarded',risk:0,rooms:18,steps:14,elites:1,escorts:0,bonus:0,traits:1,bossModifiers:1},
  {id:'dangerous',name:'Dangerous',risk:1,rooms:20,steps:13,elites:1,escorts:1,bonus:.12,traits:2,bossModifiers:2},
@@ -11,19 +11,19 @@ const DIFFICULTIES=Object.freeze([
 ]);
 const row=(id,name,families,params={},extra={})=>({id,name,families,params,...extra});
 const CONDITIONS=[
- row('relentless_hunt','Relentless Hunt',['blood','decay','vitality','fury'],{markedEncounters:2,attackSpeedMult:1.15}),
- row('carrion_swarm','Carrion Swarm',['blood','decay','vitality','fury'],{markedEncounters:2,minMobs:18,maxMobs:22}),
- row('unbroken_ward','Unbroken Ward',['aegis','magic','vitality'],{bossBarrierMaxHpPct:.15}, {conflicts:['bone_ward']}),
- row('blighted_ground','Blighted Ground',['decay','vitality','magic'],{markedEncounters:2,healingReceivedMult:.85}),
- row('veiled_passages','Veiled Passages',['decay','aegis','vitality','magic'],{markedEdges:2,firstPassExtraSteps:1}),
+ row('relentless_hunt','Relentless Hunt',['blood','decay','radiance','fury'],{markedEncounters:2,attackSpeedMult:1.15}),
+ row('carrion_swarm','Carrion Swarm',['blood','decay','radiance','fury'],{markedEncounters:2,minMobs:18,maxMobs:22}),
+ row('unbroken_ward','Unbroken Ward',['aegis','arcane','radiance'],{bossBarrierMaxHpPct:.15}, {conflicts:['bone_ward']}),
+ row('blighted_ground','Blighted Ground',['decay','radiance','arcane'],{markedEncounters:2,healingReceivedMult:.85}),
+ row('veiled_passages','Veiled Passages',['decay','aegis','radiance','arcane'],{markedEdges:2,firstPassExtraSteps:1}),
  row('sanguine_rite','Sanguine Rite',['blood','decay','fury'],{bossHpThreshold:.5,attackMult:1.12,attackSpeedMult:1.08},{conflicts:['sanguine_frenzy']})
 ];
 const ENCOUNTER_TRAITS=[
  row('armored','Armored',AFFINITIES,{defenseMult:1.20,hpMult:.92}),
  row('frenzied','Frenzied',AFFINITIES,{attackSpeedMult:1.15,hpMult:.90}),
  row('ambush','Ambush',AFFINITIES,{firstAttackAdvanceSec:.75}),
- row('sigilbound','Sigilbound',['aegis','magic','decay'],{barrierMaxHpPct:.12,attackMult:.90}),
- row('unhallowed_regrowth','Unhallowed Regrowth',['decay','vitality','blood'],{healMaxHpPct:.02,intervalSec:5,maxTotalHealMaxHpPct:.10}),
+ row('sigilbound','Sigilbound',['aegis','arcane','decay'],{barrierMaxHpPct:.12,attackMult:.90}),
+ row('unhallowed_regrowth','Unhallowed Regrowth',['decay','radiance','blood'],{healMaxHpPct:.02,intervalSec:5,maxTotalHealMaxHpPct:.10}),
  row('death_throes','Death Throes',['blood','decay','fury'],{deathDamagePlayerMaxHpPct:.02,maxPerEncounterPlayerMaxHpPct:.04})
 ];
 const BOSS_MODIFIERS=[
@@ -37,8 +37,8 @@ const BOSS_MODIFIERS=[
 const BOONS=[
  row('blood_tribute','Blood Tribute',['blood','decay'],{dotDamageMult:1.20,directDamageMult:.90}),
  row('predators_focus',"Predator's Focus",['fury','blood','aegis'],{singleTargetDamageMult:1.15,areaDamageMult:.90}),
- row('bastion_oath','Bastion Oath',['aegis','vitality'],{damageTakenMult:.88,attackSpeedMult:.90}),
- row('aetherbound_pact','Aetherbound Pact',['magic'],{spellPowerMult:1.18,manaCostMult:1.20}),
+ row('bastion_oath','Bastion Oath',['aegis','radiance'],{damageTakenMult:.88,attackSpeedMult:.90}),
+ row('aetherbound_pact','Aetherbound Pact',['arcane'],{spellPowerMult:1.18,manaCostMult:1.20}),
  row('rotbound_echo','Rotbound Echo',['decay','blood'],{firstDeathDotSpreadPotency:.30,directDamageMult:.90,maxTriggersPerEncounter:1}),
  row('wayfarers_bargain',"Wayfarer's Bargain",AFFINITIES,{extraSteps:1,maxHpMult:.90})
 ];

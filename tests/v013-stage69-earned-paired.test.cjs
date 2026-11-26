@@ -5,9 +5,9 @@ const B=require('../scripts/v013-stage69-earned-paired.cjs');
 const create=require('./v012-economy-harness.cjs');
 const C=require('../scripts/v013-build-planner.cjs');
 test('Five talent-only variants preserve a genuine shared earned-source policy',()=>{
- assert.equal(B.SOURCE,'smart-blood-fury-vitality');
+ assert.equal(B.SOURCE,'smart-blood-fury-radiance');
  assert.deepEqual(Object.keys(B.VARIANTS),['baseline','blood-pure','blood-fury',
-  'triple-no-mixed','vitality-pure']);
+  'triple-no-mixed','radiance-pure']);
  for(const plan of Object.values(B.VARIANTS))if(plan)assert(C.BUILDS[plan]);
 });
 test('E5, E8 and E10 only and no synthetic item/XP fixture options',()=>{
@@ -30,12 +30,12 @@ test('A real Camp reset buys only legal graph nodes with earned budget',()=>{
  assert.equal(state.gold,gold);
 });
 test('An unearned third Affinity cannot be granted by a diagnostic onCamp splice',()=>{
- const cfg=N.parseArgs(['--seeds=9407','--profiles=smart-blood-fury-vitality',
+ const cfg=N.parseArgs(['--seeds=9407','--profiles=smart-blood-fury-radiance',
   '--max-level=1','--max-attempts=1']);
- const a=N.simulateAccount(9407,'smart-blood-fury-vitality',cfg,{
+ const a=N.simulateAccount(9407,'smart-blood-fury-radiance',cfg,{
   probeLevel:1,onCamp:({a})=>{
    assert.equal(a.talents.earned(a.state().automaticTalents),0);
-   assert.equal(a.talentActions.allocate('affinity_vitality'),false);
+   assert.equal(a.talentActions.allocate('affinity_radiance'),false);
    return {safety:'no-free-points'};
   }
  });
@@ -46,9 +46,9 @@ test('An unearned third Affinity cannot be granted by a diagnostic onCamp splice
  assert.equal(a.attempts[0].before.spent,0);
 });
 test('Earned Camp callback rejects attempts to mutate resources or grant gold',()=>{
- const cfg=N.parseArgs(['--seeds=9408','--profiles=smart-blood-fury-vitality',
+ const cfg=N.parseArgs(['--seeds=9408','--profiles=smart-blood-fury-radiance',
   '--max-level=1','--max-attempts=1']);
- const a=N.simulateAccount(9408,'smart-blood-fury-vitality',cfg,{
+ const a=N.simulateAccount(9408,'smart-blood-fury-radiance',cfg,{
   probeLevel:1,onCamp:({a})=>{a.state().gold++;return {attempted:'free-gold'};}
  });
  assert.equal(a.attempts[0].status,'error');

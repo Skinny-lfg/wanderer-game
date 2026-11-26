@@ -13,8 +13,8 @@ function rosterFor(source){
 }
 const original=rosterFor(E.BEFORE_SOURCE),updated=rosterFor(E.LIVE_SOURCE);
 const familyByRealm={temple:'decay',void:'decay',forge:'blood',bloodscar:'blood',
- grove:'vitality',shrine:'vitality',ward:'aegis',drowned:'aegis',
- crypt:'fury',bastion:'fury',ash:'magic',storm:'magic'};
+ grove:'radiance',shrine:'radiance',ward:'aegis',drowned:'aegis',
+ crypt:'fury',bastion:'fury',ash:'arcane',storm:'arcane'};
 function catalog(realm){
  const table=updated.CATALOG[realm];
  return updated.ROLES.map(role=>({role,name:table[role][0],image:'dummy.png'}));

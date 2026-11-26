@@ -5,7 +5,7 @@ const fs=require('node:fs'),assert=require('node:assert/strict');
 let runner=fs.readFileSync(require('node:path').join(__dirname,'v013-anchor-spread-research.cjs'),'utf8');
 function edit(a,b){assert.equal(runner.split(a).length,2,'runner anchor: '+a);runner=runner.replace(a,b);}
 edit("OUT='reports/anchor-spread-research'","OUT='reports/anchor-spread-burst'");
-edit("const PROFILES=['decay-cycle-wand','hybrid-magic-decay','hybrid-decay-blood','blood-spread-twohand','magic-fire-wand'];","G.P['decay-burst-wand']={id:'decay-burst-wand',families:['decay'],w:'wand',skills:['corruption_cycle','contagious_touch'],role:'aoe'};\nconst PROFILES=['decay-cycle-wand','decay-burst-wand'];");
+edit("const PROFILES=['decay-cycle-wand','hybrid-arcane-decay','hybrid-decay-blood','blood-spread-twohand','arcane-fire-wand'];","G.P['decay-burst-wand']={id:'decay-burst-wand',families:['decay'],w:'wand',skills:['corruption_cycle','contagious_touch'],role:'aoe'};\nconst PROFILES=['decay-cycle-wand','decay-burst-wand'];");
 edit("const variants={base:overlay(false),full:overlay(true)};",`function burstReady(){
  const src=overlay(true);
  // The primary-paid predicate remains intact for persistence, paid action credit and propagation.

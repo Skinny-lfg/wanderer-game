@@ -1,13 +1,13 @@
 // B.3 experiments only. Native production modules are patched in VM memory.
 const fs=require('node:fs'),path=require('node:path'),{run}=require('./v012-affinity-combat-sim.cjs');
 const builds=[
- {name:'Staff',weapon:'Staff',armorType:'Cloth',profiles:[['magic','aegis','decay'],['magic','aegis','vitality']]},
- {name:'Wand + Orb',weapon:'Wand',armorType:'Cloth',offhandType:'Orb',profiles:[['magic','aegis','decay'],['magic','aegis','vitality']],variant:'wand'},
- {name:'Sword + Shield',weapon:'Sword',armorType:'Plate',offhandType:'Shield',profiles:[['vitality','aegis','fury'],['blood','decay','magic']],variant:'sword'},
- {name:'Mace + Shield',weapon:'Mace',armorType:'Plate',offhandType:'Shield',profiles:[['vitality','aegis','fury']]},
- {name:'Dual Daggers',weapon:'Daggers',armorType:'Leather',offhandType:'Off-Hand Dagger',profiles:[['decay','fury','blood'],['blood','decay','vitality']],variant:'daggers'},
- {name:'Bow',weapon:'Bow',armorType:'Leather',profiles:[['decay','fury','blood'],['fury','magic','blood']],variant:'bow'},
- {name:'Two-Handed',weapon:'Two-Handed',armorType:'Leather',profiles:[['decay','fury','blood'],['blood','decay','magic']],variant:'twohanded'}
+ {name:'Staff',weapon:'Staff',armorType:'Cloth',profiles:[['arcane','aegis','decay'],['arcane','aegis','radiance']]},
+ {name:'Wand + Orb',weapon:'Wand',armorType:'Cloth',offhandType:'Orb',profiles:[['arcane','aegis','decay'],['arcane','aegis','radiance']],variant:'wand'},
+ {name:'Sword + Shield',weapon:'Sword',armorType:'Plate',offhandType:'Shield',profiles:[['radiance','aegis','fury'],['blood','decay','arcane']],variant:'sword'},
+ {name:'Mace + Shield',weapon:'Mace',armorType:'Plate',offhandType:'Shield',profiles:[['radiance','aegis','fury']]},
+ {name:'Dual Daggers',weapon:'Daggers',armorType:'Leather',offhandType:'Off-Hand Dagger',profiles:[['decay','fury','blood'],['blood','decay','radiance']],variant:'daggers'},
+ {name:'Bow',weapon:'Bow',armorType:'Leather',profiles:[['decay','fury','blood'],['fury','arcane','blood']],variant:'bow'},
+ {name:'Two-Handed',weapon:'Two-Handed',armorType:'Leather',profiles:[['decay','fury','blood'],['blood','decay','arcane']],variant:'twohanded'}
 ];
 const specs={
  wand:['economy/v012-equipment-runtime.js','else if(slot===\'offhand\'){o.spell=power;','else if(slot===\'offhand\'){o.spell=Math.round(power*1.12);'],

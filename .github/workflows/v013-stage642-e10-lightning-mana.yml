@@ -25,7 +25,7 @@ jobs:
         with:
           run-id: 45272938568
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          name: stage642-snapshot-magic-lightning
+          name: stage642-snapshot-arcane-lightning
           path: reports/stage642-lightning
       - name: E10 paired legal Lightning Talent respec for mana sustain
         env:
@@ -37,11 +37,11 @@ jobs:
           const T=globalThis.WandererAutomaticTalents;
           const P=require('./scripts/v013-build-planner.cjs');
           const D=require('./scripts/v013-stage628-postcap-difficulty.cjs');
-          const sample=JSON.parse(fs.readFileSync('reports/stage642-lightning/magic-lightning.json','utf8'));
+          const sample=JSON.parse(fs.readFileSync('reports/stage642-lightning/arcane-lightning.json','utf8'));
           const snapshots=sample.accounts.filter(a=>a.snapshot);
           if(snapshots.length!==1||snapshots[0].snapshot.state.equip.weapon.subtype!=='Staff')throw Error('Unexpected genuine Lightning E10 checkpoint count or weapon');
           const before=snapshots[0].snapshot,progress=before.state.automaticTalents;
-          const cfg={...P.BUILDS['magic-lightning-pure'],milestones:['overcharge','mana_spring','storm_mastery'],orderedMilestones:true};
+          const cfg={...P.BUILDS['arcane-lightning-pure'],milestones:['overcharge','mana_spring','storm_mastery'],orderedMilestones:true};
           const planned=P.propose(T,T.reset(progress),cfg);
           const afterProgress={...T.reset(progress),nodes:planned.expectedNodes,element:'lightning'};
           if(!T.valid(afterProgress)||afterProgress.xp!==progress.xp||

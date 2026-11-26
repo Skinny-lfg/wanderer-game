@@ -6,13 +6,13 @@ const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypt
 const N=require('./v013-natural-progression.cjs');
 const P=require('./v013-build-planner.cjs');
 const S=require('./simulate-progression.cjs');
-const SOURCE='smart-blood-fury-vitality';
+const SOURCE='smart-blood-fury-radiance';
 const VARIANTS=Object.freeze({
  baseline:null,
  'blood-pure':'blood-pure',
  'blood-fury':'blood-fury',
- 'triple-no-mixed':'blood-fury-vitality-no-mixed',
- 'vitality-pure':'vitality-pure'
+ 'triple-no-mixed':'blood-fury-radiance-no-mixed',
+ 'radiance-pure':'radiance-pure'
 });
 const sha=x=>crypto.createHash('sha256').update(typeof x==='string'?x:JSON.stringify(x)).digest('hex');
 const r2=n=>Number(Number(n).toFixed(2));

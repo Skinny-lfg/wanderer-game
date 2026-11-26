@@ -5,8 +5,8 @@ const C=require('../scripts/v013-elite-tank-parity.cjs');
 
 test('Stage 9.8 dimensions are validated and prohibit unbounded native workloads',()=>{
  const c=B.parseArgs(['--mode=bosses','--affinity=decay','--seeds=30',
-  '--builds=blood-fury,aegis-vitality,magic-decay','--risks=0,1,2']);
- assert.deepEqual(c.builds,['blood-fury','aegis-vitality','magic-decay']);
+  '--builds=blood-fury,aegis-radiance,arcane-decay','--risks=0,1,2']);
+ assert.deepEqual(c.builds,['blood-fury','aegis-radiance','arcane-decay']);
  assert.deepEqual(B.distinctSeedList({...c,seedStart:2001},3),[2001,2101,2201]);
  for(const args of [
   [],['--mode=garbage'],['--mode=elites','--scan=10001'],
@@ -57,7 +57,7 @@ test('stratified Elite sampler never forces an archetype or manufactures combat 
 });
 test('native Boss cohort preserves risk/build cell separation and distinct resolved seeds',()=>{
  const cfg=B.parseArgs(['--mode=bosses','--affinity=blood','--seeds=2',
-  '--builds=blood-fury,aegis-vitality','--risks=0']);
+  '--builds=blood-fury,aegis-radiance','--risks=0']);
  const sim=o=>({
   sourceSha256:'native',
   rows:o.builds.flatMap(build=>o.seeds.map(seed=>({
@@ -149,11 +149,11 @@ test('native Boss seed search can be censored and replaced without forcing a Rea
  const sim=o=>({sourceSha256:'native',
   rows:o.seeds.map(seed=>seed===30001?{
    mode:'bosses',level:1,build:'blood-fury',seed,risk:1,
-   kind:'magic',affinity:'magic',won:false,
+   kind:'arcane',affinity:'arcane',won:false,
    error:'No natural Realm card matches magic and risk 1 within 48 deterministic seeds'
   }:{
    mode:'bosses',level:1,build:'blood-fury',seed,resolvedSeed:seed,
-   kind:'magic',affinity:'magic',bossAffinity:'magic',risk:1,
+   kind:'arcane',affinity:'arcane',bossAffinity:'arcane',risk:1,
    won:false,died:true,status:'died',seconds:30,
    hpMax:100,mpMax:20,damageTaken:100,damageDealt:40,
    minHpPct:0,pointsBudget:0,gearRarity:'Common',

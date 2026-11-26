@@ -6,8 +6,8 @@ const path=require('node:path');
 const S=require('./simulate-progression.cjs');
 const DEFAULT_ARGS=[
  '--mode=bosses','--levels=15','--seeds=9101,9201',
- '--builds=blood-fury,aegis-vitality,magic-decay',
- '--risks=0,1,2','--affinities=blood,decay,vitality,aegis,fury,magic',
+ '--builds=blood-fury,aegis-radiance,arcane-decay',
+ '--risks=0,1,2','--affinities=blood,decay,radiance,aegis,fury,magic',
  '--points=24','--out=reports/v013-stage91-diagnosis.json'
 ];
 const MAX_CASES=240;
@@ -107,7 +107,7 @@ function analyze(modeResults,opts){
   enemies:rows.filter(r=>r.mode==='enemies').length,
   elites:rows.filter(r=>r.mode==='elites').length};
  if(rows.length!==opts.expectedCases)throw Error('Missing scenarios: expected '+opts.expectedCases+', got '+rows.length);
- const bosses=['aegis','blood','decay','fury','magic','vitality'];
+ const bosses=['aegis','blood','decay','fury','arcane','radiance'];
  const seen=[...new Set(rows.filter(r=>r.mode==='bosses'&&!r.error).map(r=>r.bossAffinity))].sort();
  const missing=bosses.filter(b=>opts.affinities.includes(b)&&!seen.includes(b));
  const errors=rows.filter(r=>r.error),timeouts=rows.filter(r=>r.timedOut);

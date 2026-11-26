@@ -12,7 +12,7 @@ require('../combat/v012-combat-core.js');
 const C=require('./v013-stage623-earned-matched-enemies.cjs');
 const levels=[1,2,3,4,5];
 const traceLevels=[1,2,3,4,5,6,10,14,15,16,20,34,35,36,50,69,70,71,100,200];
-const profiles=['cautious','balanced','smart-blood-fury-vitality'];
+const profiles=['cautious','balanced','smart-blood-fury-radiance'];
 const groups=[3,6,12];
 const root=path.resolve(__dirname,'..');
 function sha(obj){

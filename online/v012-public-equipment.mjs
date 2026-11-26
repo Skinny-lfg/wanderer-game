@@ -36,7 +36,7 @@ export function cleanV012Equipment(raw){
  if(['Two-Handed','Bow','Staff'].includes(out.weapon?.subtype))out.offhand=null;
  return out;
 }
-const RUNE_FAMILIES=new Set(['might','swiftness','wisdom','fortitude','fortune','fury','warding','vitality']);
+const RUNE_FAMILIES=new Set(['might','swiftness','wisdom','fortitude','fortune','fury','warding','radiance']);
 export function cleanV012EquippedRunes(rawRunes,rawSlots){
  const source=Array.isArray(rawRunes)?rawRunes:[];
  const slots=Array.isArray(rawSlots)?rawSlots.slice(0,3):[];

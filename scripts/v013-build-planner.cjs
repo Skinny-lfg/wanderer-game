@@ -2,7 +2,7 @@
 // Stage 6.8: game-catalog-aware, independent agent build planning.
 // Pure analysis using the live TalentGraph v15 API; never creates account XP,
 // items, unlocks, or changes gameplay. Execution uses real Camp actions.
-const ALL_FAMILIES=Object.freeze(['blood','fury','vitality','aegis','magic','decay']);
+const ALL_FAMILIES=Object.freeze(['blood','fury','radiance','aegis','arcane','decay']);
 const DECAY_WEAPONS={twohand:['Two-Handed','Plate'],staff:['Staff','Cloth'],daggers:['Daggers','Leather'],wand:['Wand','Cloth']};
 const BUILDS=Object.freeze({
  ...Object.fromEntries(Object.entries(DECAY_WEAPONS).flatMap(([id,[weapon,armor]])=>
@@ -11,31 +11,31 @@ const BUILDS=Object.freeze({
  'decay-plagueheart':{primary:'decay',model:'pure',weapons:['Wand','Staff'],armor:'Cloth',focus:'rot',decayRole:'plagueheart',milestones:['blight','contagious_touch','plagueheart','soul_drain'],orderedMilestones:true},
  'blood-pure':{primary:'blood',model:'pure',weapons:['Sword','Two-Handed'],armor:'Leather',milestones:['blood_harvest','crimson_feast','heart_of_carnage'],focus:'bleed'},
  'blood-fury':{primary:'blood',secondary:'fury',secondAt:12,model:'two',mix:true,weapons:['Sword','Two-Handed'],armor:'Leather',milestones:['blood_harvest','crimson_rush','reapers_cadence'],focus:'bleed'},
- 'blood-fury-vitality':{primary:'blood',secondary:'fury',third:'vitality',secondAt:12,thirdAt:28,model:'adaptive',mix:true,weapons:['Sword','Two-Handed'],armor:'Leather',milestones:['blood_harvest','crimson_rush','fervent_life','reapers_cadence'],focus:'bleed'},
- 'blood-fury-vitality-no-mixed':{primary:'blood',secondary:'fury',third:'vitality',secondAt:12,thirdAt:28,model:'three',mix:false,weapons:['Sword','Two-Handed'],armor:'Leather',milestones:['blood_harvest','crimson_feast','battle_tempo','living_recovery','heart_of_carnage'],focus:'bleed'},
+ 'blood-fury-radiance':{primary:'blood',secondary:'fury',third:'radiance',secondAt:12,thirdAt:28,model:'adaptive',mix:true,weapons:['Sword','Two-Handed'],armor:'Leather',milestones:['blood_harvest','crimson_rush','fervent_life','reapers_cadence'],focus:'bleed'},
+ 'blood-fury-radiance-no-mixed':{primary:'blood',secondary:'fury',third:'radiance',secondAt:12,thirdAt:28,model:'three',mix:false,weapons:['Sword','Two-Handed'],armor:'Leather',milestones:['blood_harvest','crimson_feast','battle_tempo','living_recovery','heart_of_carnage'],focus:'bleed'},
  'fury-blood-aegis':{primary:'fury',secondary:'blood',third:'aegis',secondAt:12,thirdAt:30,model:'adaptive',mix:true,weapons:['Daggers','Bow'],armor:'Leather',milestones:['battle_tempo','crimson_rush','relentless_assault'],focus:'speed'},
  'fury-pure':{primary:'fury',model:'pure',weapons:['Daggers','Bow'],armor:'Leather',milestones:['battle_tempo','relentless_assault','unchained_fury'],focus:'speed'},
- 'magic-arcane-pure':{primary:'magic',model:'pure',element:'arcane',weapons:['Wand','Staff'],armor:'Cloth',milestones:['arcane_resonance','arcane_surge','arcane_mastery'],focus:'spell'},
- 'magic-fire-pure':{primary:'magic',model:'pure',element:'fire',weapons:['Wand','Staff'],armor:'Cloth',milestones:['kindling','fire_spread','combustion'],focus:'spell',orderedMilestones:true},
- 'magic-fire-aegis':{primary:'magic',secondary:'aegis',secondAt:14,model:'two',mix:true,element:'fire',weapons:['Wand','Staff'],armor:'Cloth',milestones:['kindling','runic_shield','fire_spread','arcane_bastion'],focus:'spell'},
- 'magic-frost-vitality':{primary:'magic',secondary:'vitality',secondAt:14,model:'two',mix:false,element:'frost',weapons:['Staff','Wand'],armor:'Cloth',milestones:['deep_winter','frost_spread','living_recovery'],focus:'spell'},
- 'magic-lightning-pure':{primary:'magic',model:'pure',element:'lightning',weapons:['Staff','Wand'],armor:'Cloth',milestones:['overcharge','storm_mastery','chain_discharge'],focus:'spell',orderedMilestones:true},
- 'decay-magic-aegis':{primary:'decay',secondary:'magic',third:'aegis',secondAt:13,thirdAt:29,model:'three',mix:true,element:'arcane',weapons:['Wand','Sword'],armor:'Leather',milestones:['lingering_rot','hex_bolt','elemental_blight','grave_bloom'],focus:'rot'},
- 'aegis-vitality':{primary:'aegis',secondary:'vitality',secondAt:13,model:'two',mix:true,weapons:['Mace','Sword'],armor:'Plate',milestones:['steadfast_guard','sanctuary','guardians_oath','last_bastion'],focus:'defense'},
- 'vitality-pure':{primary:'vitality',model:'pure',weapons:['Mace','Sword'],armor:'Plate',milestones:['living_recovery','overflowing_life','heart_of_the_wild'],focus:'defense'},
+ 'arcane-arcane-pure':{primary:'arcane',model:'pure',element:'arcane',weapons:['Wand','Staff'],armor:'Cloth',milestones:['arcane_resonance','arcane_surge','arcane_mastery'],focus:'spell'},
+ 'arcane-fire-pure':{primary:'arcane',model:'pure',element:'fire',weapons:['Wand','Staff'],armor:'Cloth',milestones:['kindling','fire_spread','combustion'],focus:'spell',orderedMilestones:true},
+ 'arcane-fire-aegis':{primary:'arcane',secondary:'aegis',secondAt:14,model:'two',mix:true,element:'fire',weapons:['Wand','Staff'],armor:'Cloth',milestones:['kindling','runic_shield','fire_spread','arcane_bastion'],focus:'spell'},
+ 'arcane-frost-radiance':{primary:'arcane',secondary:'radiance',secondAt:14,model:'two',mix:false,element:'frost',weapons:['Staff','Wand'],armor:'Cloth',milestones:['deep_winter','frost_spread','living_recovery'],focus:'spell'},
+ 'arcane-lightning-pure':{primary:'arcane',model:'pure',element:'lightning',weapons:['Staff','Wand'],armor:'Cloth',milestones:['overcharge','storm_mastery','chain_discharge'],focus:'spell',orderedMilestones:true},
+ 'decay-arcane-aegis':{primary:'decay',secondary:'arcane',third:'aegis',secondAt:13,thirdAt:29,model:'three',mix:true,element:'arcane',weapons:['Wand','Sword'],armor:'Leather',milestones:['lingering_rot','hex_bolt','elemental_blight','grave_bloom'],focus:'rot'},
+ 'aegis-radiance':{primary:'aegis',secondary:'radiance',secondAt:13,model:'two',mix:true,weapons:['Mace','Sword'],armor:'Plate',milestones:['steadfast_guard','sanctuary','guardians_oath','last_bastion'],focus:'defense'},
+ 'radiance-pure':{primary:'radiance',model:'pure',weapons:['Mace','Sword'],armor:'Plate',milestones:['living_recovery','overflowing_life','heart_of_the_wild'],focus:'defense'},
  // Controlled weapon and potion-preparation preferences. All share the
  // SAME legal talent plans; no loadout is granted, dropped or forced.
  'blood-sword':{primary:'blood',model:'pure',weapons:['Sword'],armor:'Leather',milestones:['blood_harvest','crimson_feast','heart_of_carnage'],focus:'bleed'},
  'blood-two-handed':{primary:'blood',model:'pure',weapons:['Two-Handed'],armor:'Leather',milestones:['blood_harvest','crimson_feast','heart_of_carnage'],focus:'bleed'},
  'fury-daggers':{primary:'fury',model:'pure',weapons:['Daggers'],armor:'Leather',milestones:['battle_tempo','relentless_assault','unchained_fury'],focus:'speed'},
  'fury-bow':{primary:'fury',model:'pure',weapons:['Bow'],armor:'Leather',milestones:['bow_pierce','battle_tempo','relentless_assault'],focus:'speed',orderedMilestones:true},
- 'magic-wand':{primary:'magic',model:'pure',element:'arcane',weapons:['Wand'],armor:'Cloth',milestones:['arcane_resonance','arcane_surge','arcane_mastery'],focus:'spell'},
- 'magic-staff':{primary:'magic',model:'pure',element:'arcane',weapons:['Staff'],armor:'Cloth',milestones:['arcane_resonance','arcane_surge','arcane_mastery'],focus:'spell'},
- 'magic-wand-offense':{primary:'magic',model:'pure',element:'arcane',weapons:['Wand'],armor:'Cloth',milestones:['arcane_resonance','arcane_surge','arcane_mastery'],focus:'spell',potionPolicy:'offense'},
- 'magic-wand-defense':{primary:'magic',model:'pure',element:'arcane',weapons:['Wand'],armor:'Cloth',milestones:['arcane_resonance','arcane_surge','arcane_mastery'],focus:'spell',potionPolicy:'defense'}
+ 'arcane-wand':{primary:'arcane',model:'pure',element:'arcane',weapons:['Wand'],armor:'Cloth',milestones:['arcane_resonance','arcane_surge','arcane_mastery'],focus:'spell'},
+ 'arcane-staff':{primary:'arcane',model:'pure',element:'arcane',weapons:['Staff'],armor:'Cloth',milestones:['arcane_resonance','arcane_surge','arcane_mastery'],focus:'spell'},
+ 'arcane-wand-offense':{primary:'arcane',model:'pure',element:'arcane',weapons:['Wand'],armor:'Cloth',milestones:['arcane_resonance','arcane_surge','arcane_mastery'],focus:'spell',potionPolicy:'offense'},
+ 'arcane-wand-defense':{primary:'arcane',model:'pure',element:'arcane',weapons:['Wand'],armor:'Cloth',milestones:['arcane_resonance','arcane_surge','arcane_mastery'],focus:'spell',potionPolicy:'defense'}
 });
 const OPENING_SKILLS=Object.freeze({blood:'bleeding_edge',fury:'quick_hands',
- vitality:'strong_heart',aegis:'guarded_block',magic:'arcane_focus',decay:'toxic_touch'});
+ radiance:'strong_heart',aegis:'guarded_block',arcane:'arcane_focus',decay:'toxic_touch'});
 function getPlan(id){if(!Object.hasOwn(BUILDS,id))throw Error('Unknown strategic agent build '+id);return BUILDS[id];}
 function pressure(history=[]){
  const recent=history.slice(-3),fights=recent.flatMap(t=>t.rooms||[]).filter(f=>f?.hpMax>0);
@@ -73,7 +73,7 @@ function scoreNode(n,plan,active,context={}){
  const p=plan.primary,s=plan.secondary,mode=plan.element||'arcane',focus=plan.focus;
  let score=n.family===p?4:n.family===s?2.8:1.6;
  if(n.kind==='affinity')return score+20;
- if(n.kind==='choice')return n.id==='element_choice'&&active.includes('magic')?19:-200;
+ if(n.kind==='choice')return n.id==='element_choice'&&active.includes('arcane')?19:-200;
  if(n.kind==='focused')score+=11+(n.tier||1)*1.1;
  else if(n.kind==='mixed')score+=plan.mix?13+(n.tier||1)*1.3:-12;
  else if(n.kind==='element')score+=9+(n.tier||1);
@@ -88,7 +88,7 @@ function scoreNode(n,plan,active,context={}){
   if(n.guardChance)score+=n.guardChance*(cap(stats.blockChance,65)-.5)*3;
   if(n.pctSpeed)score+=n.pctSpeed*(cap(stats.attacksPerSec,4.2)-.5)*100;
   if(n.manaCostReduction)score+=n.manaCostReduction*(cap(stats.manaCostReduction,.25)-.5)*140;
-  if(!stats.mana&&(n.pctMana||n.pctRegen||n.manaCostReduction)&&!active.some(f=>f==='magic'||f==='decay'))score-=5;
+  if(!stats.mana&&(n.pctMana||n.pctRegen||n.manaCostReduction)&&!active.some(f=>f==='arcane'||f==='decay'))score-=5;
   if(stats.spellPower>0&&n.pctSpell)score+=Math.min(3,stats.spellPower*n.pctSpell*.12);
  }
  if(focus==='spell'||focus==='rot'){
@@ -103,7 +103,7 @@ function scoreNode(n,plan,active,context={}){
   if(/Bleed|Sunder|attack speed|Attack Power|Strength|Agility|critical/i.test(ability))score+=2.6;
   if(n.attribute==='str'||n.attribute==='agi')score+=3;
  }
- if(focus==='defense'||active.includes('aegis')||active.includes('vitality')){
+ if(focus==='defense'||active.includes('aegis')||active.includes('radiance')){
   score+=(n.pctLife||0)*250*.35+(n.pctArmor||0)*100*1.2+(n.guardChance||0)*2+(n.barrierPower||0)*150+(n.healingPower||0)*180+(n.pctSpell||0)*80+
    (n.healthRegen||0)*1200;
   if(/Barrier|Armor|Defense|Regenerat|Health|Endurance|block/i.test(ability))score+=2.4;
@@ -238,8 +238,8 @@ function fill(T,progress,plan,active,earned,milestone){
    }
   }
  }
- if(active.includes('magic')&&!ownedSet(p).has('element_choice'))add('element_choice');
- if(active.includes('magic')&&plan.element&&plan.element!=='arcane'&&
+ if(active.includes('arcane')&&!ownedSet(p).has('element_choice'))add('element_choice');
+ if(active.includes('arcane')&&plan.element&&plan.element!=='arcane'&&
   ownedSet(p).has('element_choice')&&p.element!==plan.element){
   const changed=T.selectElement(p,plan.element);if(changed)p=changed;
  }
@@ -307,7 +307,7 @@ function propose(T,progress,preset,history=[],resets=0,statContext=null){
 function evaluateGear(item,profile,baseScore,target='weapon'){
  if(!profile?.plan)return baseScore;
  const plan=getPlan(profile.plan),weapon=item?.subtype||null,slot=target||item?.slot,
-  magic=plan.primary==='magic'||plan.secondary==='magic',
+  magic=plan.primary==='arcane'||plan.secondary==='arcane',
   // Research cohorts deliberately compare alternate gear preferences. Keep
   // the production scoring policy unchanged unless this opt-in is present.
   preferredArmor=profile.researchGearPreference===true?profile.armor:plan.armor,
@@ -325,7 +325,7 @@ function evaluateGear(item,profile,baseScore,target='weapon'){
   if(weapon==='Tome'&&(magic||plan.focus==='rot'))value+=10;
   if(plan.focus==='rot'&&preferredWeapons.includes('Daggers')&&['Daggers','Off-Hand Dagger'].includes(weapon))value+=15;
   if(weapon==='Shield'&&tank)value+=14;
-  if(weapon==='Charm'&&plan.secondary==='vitality')value+=11;
+  if(weapon==='Charm'&&plan.secondary==='radiance')value+=11;
  }else if(['armor','helm','gloves','boots','belt'].includes(slot)){
   const armor=item?.armorType||item?.subtype;
   if(armor===preferredArmor)value+=11;
@@ -337,7 +337,7 @@ function evaluateGear(item,profile,baseScore,target='weapon'){
 }
 function potionPriority(kind,profile,base,context={}){
  if(!profile?.plan)return base;
- const plan=getPlan(profile.plan),magic=plan.primary==='magic'||plan.secondary==='magic',
+ const plan=getPlan(profile.plan),magic=plan.primary==='arcane'||plan.secondary==='arcane',
   threat=context.threat||'boss';
  let score=base;
  if(kind==='health')score+=25;

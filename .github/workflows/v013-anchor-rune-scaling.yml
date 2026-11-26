@@ -35,7 +35,7 @@ jobs:
       fail-fast: false
       max-parallel: 6
       matrix:
-        family: [blood, decay, vitality, aegis, fury, magic]
+        family: [blood, decay, radiance, aegis, fury, magic]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -54,7 +54,7 @@ jobs:
       fail-fast: false
       max-parallel: 6
       matrix:
-        family: [blood, decay, vitality, aegis, fury, magic]
+        family: [blood, decay, radiance, aegis, fury, magic]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

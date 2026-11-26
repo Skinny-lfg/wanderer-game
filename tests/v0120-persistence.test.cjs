@@ -26,9 +26,9 @@ test('unfinished Realm restores exact entry, seed, IDs, loot rolls and resources
  assert.equal(a.checkpoint.resume(),true);assert.deepEqual(plain(a.state().run.enemy),firstEnemy);assert.deepEqual(plain(a.makeItem(5,'belt')),roll);assert.equal(a.checkpoint.resume(),false);
 });
 test('choice checkpoint retains Magic element, global rerolls and fixed offers without granting an initial passive',()=>{
- const a=create(304);a.start();a.initial('magic');a.element('frost');a.reroll(1);const cp=a.checkpoint.capture();
+ const a=create(304);a.start();a.initial('arcane');a.element('frost');a.reroll(1);const cp=a.checkpoint.capture();
  const before=JSON.stringify(cp.session.controller.offers);a.reroll(2);a.checkpoint.restore(cp);
- assert.equal(JSON.stringify(a.controller().state.offers),before);assert.equal(a.controller().state.rerolls,2);assert.deepEqual(Array.from(a.build().picks),[]);assert.equal(a.build().element,'frost');assert.equal(a.initial('magic'),false);
+ assert.equal(JSON.stringify(a.controller().state.offers),before);assert.equal(a.controller().state.rerolls,2);assert.deepEqual(Array.from(a.build().picks),[]);assert.equal(a.build().element,'frost');assert.equal(a.initial('arcane'),false);
 });
 test('versioned save sessions round-trip, old checkpoints remain compatible, corrupt provenance and reroll rollback fail',()=>{
  const a=create(305);begin(a);const cp=a.checkpoint.capture(),save=envelope(cp);assert.equal(S.recover(save).save.expedition.lastOutcome,'active');

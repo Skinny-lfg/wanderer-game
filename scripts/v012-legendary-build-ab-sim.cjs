@@ -2,13 +2,13 @@
 // No production legendary items are registered; proposed effects exist ONLY in VM-injected combat hooks.
 const fs=require('node:fs'),{performance}=require('node:perf_hooks'),{run}=require('./v012-affinity-combat-sim.cjs');
 const variants=[
- {name:'Cloth Staff',group:'Cloth: Magic/Aegis/Decay',armorType:'Cloth',family:'magic',targetFamilies:['magic','aegis','decay'],weapon:'Staff',offhandType:null,
+ {name:'Cloth Staff',group:'Cloth: Magic/Aegis/Decay',armorType:'Cloth',family:'arcane',targetFamilies:['arcane','aegis','decay'],weapon:'Staff',offhandType:null,
   legendary:{weapon:'astrafall',belt:'veil-thousand-seals',ring1:'eye-of-morrow'}},
- {name:'Cloth Wand + Orb',group:'Cloth: Magic/Aegis/Decay',armorType:'Cloth',family:'magic',targetFamilies:['magic','aegis','decay'],weapon:'Wand',offhandType:'Orb',
+ {name:'Cloth Wand + Orb',group:'Cloth: Magic/Aegis/Decay',armorType:'Cloth',family:'arcane',targetFamilies:['arcane','aegis','decay'],weapon:'Wand',offhandType:'Orb',
   legendary:{weapon:'voidglass',belt:'veil-thousand-seals',ring1:'eye-of-morrow'}},
- {name:'Plate Sword + Shield',group:'Plate: Vitality/Aegis/Fury',armorType:'Plate',family:'vitality',targetFamilies:['vitality','aegis','fury'],weapon:'Sword',offhandType:'Shield',
+ {name:'Plate Sword + Shield',group:'Plate: Radiance/Aegis/Fury',armorType:'Plate',family:'radiance',targetFamilies:['radiance','aegis','fury'],weapon:'Sword',offhandType:'Shield',
   legendary:{weapon:'graft',offhand:'oathwall',armor:'heartroot-carapace'}},
- {name:'Plate Mace + Shield',group:'Plate: Vitality/Aegis/Fury',armorType:'Plate',family:'vitality',targetFamilies:['vitality','aegis','fury'],weapon:'Mace',offhandType:'Shield',
+ {name:'Plate Mace + Shield',group:'Plate: Radiance/Aegis/Fury',armorType:'Plate',family:'radiance',targetFamilies:['radiance','aegis','fury'],weapon:'Mace',offhandType:'Shield',
   legendary:{weapon:'kingsbreaker',offhand:'oathwall',armor:'heartroot-carapace'}},
  {name:'Leather Daggers',group:'Leather: Decay/Fury/Blood',armorType:'Leather',family:'decay',targetFamilies:['decay','fury','blood'],weapon:'Daggers',offhandType:'Daggers',
   legendary:{weapon:'crimson-fang',amulet:'chalice-hollow-king',ring1:'eye-of-morrow'}},

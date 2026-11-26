@@ -4,7 +4,7 @@ const fs=require('node:fs'),{performance}=require('node:perf_hooks');
 const {run}=require('./v012-affinity-combat-sim.cjs');
 const plans=[
  {name:'Blood + Decay',family:'blood',hybrids:['plague_rupture','carrion_detonation']},
- {name:'Vitality + Aegis',family:'vitality',hybrids:['sanctuary','guardians_oath']},
+ {name:'Radiance + Aegis',family:'radiance',hybrids:['sanctuary','guardians_oath']},
  {name:'Fury + Magic',family:'fury',hybrids:['spellblade','spell_surge']}
 ];
 const weapons=['Sword','Mace','Bow','Daggers','Two-Handed','Staff','Wand'];

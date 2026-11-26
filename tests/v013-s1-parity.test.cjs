@@ -11,7 +11,7 @@ const fund=(a,xp=10000)=>{const s=a.state();s.automaticTalents=a.talents.award(s
 
 test('S1: all three Magic elements require earned points, root/choice, and native attunement',()=>{
  for(const element of ['fire','frost','lightning']){
-  const a=make(130+['fire','frost','lightning'].indexOf(element)),s=a.state(),profile=N.PROFILES['magic-'+element];
+  const a=make(130+['fire','frost','lightning'].indexOf(element)),s=a.state(),profile=N.PROFILES['arcane-'+element];
   assert.equal(a.talentActions.element(element),false,'element choice is locked at E1');
   fund(a,10000);
   const invested=N.spendEarnedTalents(a,profile),p=s.automaticTalents;
@@ -19,7 +19,7 @@ test('S1: all three Magic elements require earned points, root/choice, and nativ
   assert(p.nodes.includes('element_choice'),'earned Magic must acquire the choice node');
   assert.equal(p.element,element);
   assert(invested.elements.includes(element));
-  assert(p.nodes.includes('affinity_magic'));
+  assert(p.nodes.includes('affinity_arcane'));
   assert.equal(a.talents.earned(p),100);
   assert(a.start(1,true)!==false,'test fixture must start a native expedition');
   assert.equal(a.build().element,element,'selected mode must reach native combat build');
@@ -78,15 +78,15 @@ test('S1: deterministic plan pivot spends previously earned XP without injecting
 });
 
 test('S1: controlled simulator also offers genuine Frost magic without altering existing presets',()=>{
- const b=S.BUILDS.find(x=>x.id==='magic-frost');
+ const b=S.BUILDS.find(x=>x.id==='arcane-frost');
  assert(b);assert.equal(b.element,'frost');
  const p=S.talentPlan(b,24);assert(S.BUILDS.length>=8);
  assert(p.nodes.includes('deep_winter'));assert.equal(p.element,'frost');
- assert(S.parseArgs(['--builds=magic-frost','--levels=1','--seeds=1']).builds.includes('magic-frost'));
+ assert(S.parseArgs(['--builds=arcane-frost','--levels=1','--seeds=1']).builds.includes('arcane-frost'));
 });
 
 test('S1: natural cohort still starts with no XP or fabricated equipment',()=>{
- const out=N.run({...N.DEFAULTS,seeds:[9951],profiles:['magic-fire'],
+ const out=N.run({...N.DEFAULTS,seeds:[9951],profiles:['arcane-fire'],
   maxLevel:1,maxAttempts:1,maxTotalAttempts:1});
  assert.equal(out.coverage.errors,0);
  const attempt=out.accounts[0].attempts[0];

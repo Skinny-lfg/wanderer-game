@@ -5,7 +5,7 @@ const B=globalThis.WandererV012Buildcraft;
 const create=require('./v012-economy-harness.cjs');
 
 test('current v15 affinity, Basic and Magic purchases use actual prerequisites and earned XP',()=>{
- for(const id of ['affinity_blood','affinity_decay','affinity_aegis','affinity_vitality','affinity_fury','affinity_magic','bleeding_edge','toxic_touch','quick_hands','guarded_block']){
+ for(const id of ['affinity_blood','affinity_decay','affinity_aegis','affinity_radiance','affinity_fury','affinity_arcane','bleeding_edge','toxic_touch','quick_hands','guarded_block']){
   const p=buy([id]);assert(p.nodes.includes(id),id);
   assert(T.earned(p)>=p.nodes.length,id);
  }
@@ -21,7 +21,7 @@ test('v15 Magic attunement selects one mode and cannot retain skills from anothe
  assert.equal(T.valid(invalid),false);
 });
 test('current v15 stats are applied from a permanent Magic build',()=>{
- const p=buy(['affinity_magic']);
+ const p=buy(['affinity_arcane']);
  const base={attack:100,spellPower:60,maxhp:500,defense:20,crit:5,attacksPerSec:1,mana:50,manaRegen:1,blockChance:0};
  const result=T.apply({...base},p);
  assert(result.spellPower>base.spellPower);
@@ -61,7 +61,7 @@ test('trait-only Bleed transfer preserves its distinct nonrecursive reserve path
 });
 test('current Dungeon start and combat use equipment and v15 talents from the native harness',()=>{
  const a=create(7301);a.setup(1,'Staff');
- a.state().automaticTalents=buy(['affinity_magic']);
+ a.state().automaticTalents=buy(['affinity_arcane']);
  a.start(1,true);const controller=a.controller(),card=controller.state.dungeon.cards[0];
  controller.chooseRealm(card.id);assert(controller.visitRoom(1));assert(a.enter());
  const run=a.state().run;

@@ -19,8 +19,8 @@ function fixture(){
    return {fragments:state.fragments,essence:state.crafting.essence};
   },
   learn(){
-   for(const id of ['blue_ring1_magic','epic_ember_branch'])state.crafting=WandererV013Crafting.discover(state.crafting,id);
-   state.crafting.cores.magic=3;state.crafting.dryRooms.magic=3;render();
+   for(const id of ['blue_ring1_arcane','epic_ember_branch'])state.crafting=WandererV013Crafting.discover(state.crafting,id);
+   state.crafting.cores.arcane=3;state.crafting.dryRooms.arcane=3;render();
   },
   snapshot(){
    const item=state.stash.filter(x=>x.crafted).at(-1);
@@ -78,7 +78,7 @@ test('v013 native Forge: only randomized crafting, no obsolete upgrade or paid a
    await page.keyboard.press('Escape');
    assert.equal((await page.locator('#v013RecipeRarity option').allTextContents()).filter(r=>r==='Epic').length,0);
    await page.evaluate(()=>__forgeProbe.learn());
-   for(const [rarity,slot,recipe] of [['Rare','ring1','blue_ring1_magic'],['Epic','weapon','epic_ember_branch']]){
+   for(const [rarity,slot,recipe] of [['Rare','ring1','blue_ring1_arcane'],['Epic','weapon','epic_ember_branch']]){
     await page.selectOption('#v013RecipeRarity',rarity);await page.selectOption('#v013RecipeSlot',slot);await page.selectOption('#v013Recipe',recipe);
     if(rarity==='Epic'){
      assert(await page.locator('#v013Craft').isDisabled());

@@ -54,7 +54,7 @@ function run(){
    'The enemy scheduler, equipment, damage and Mana economy are native, but first-room encounters are controlled fixtures.',
    'Comparisons fix initial gear, roster and seeds; procedural combat RNG can diverge as spells, hits and deaths diverge.',
    'Only two seeds per cell; winning a staged Boss fight is not equivalent to clearing a whole Expedition.']};
- const dest=path.resolve(process.env.STAGE64_REPORT_FILE||'reports/stage64-native-magic.json');
+ const dest=path.resolve(process.env.STAGE64_REPORT_FILE||'reports/stage64-native-arcane.json');
  fs.mkdirSync(path.dirname(dest),{recursive:true});fs.writeFileSync(dest,JSON.stringify(report,null,2)+'\n');
  console.log('STAGE64_NATIVE='+JSON.stringify({success:report.success,cases:rows.length,expected:count,errors:errors.slice(0,3),
   highlight:groups.filter(g=>g.level===35&&['arcane','fire','lightning','arcane-decay'].includes(g.mode)&&['Sword','Wand','Staff'].includes(g.weapon))

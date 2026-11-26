@@ -1,8 +1,8 @@
-name: Stage 6.47D.7 — Vitality and Aegis (NO DEPLOY)
+name: Stage 6.47D.7 — Radiance and Aegis (NO DEPLOY)
 on:
   push:
     branches: [balance/stage-6.40-e1-calibration]
-    paths: ['.github/workflows/v013-stage647d7-vitality-aegis.yml']
+    paths: ['.github/workflows/v013-stage647d7-radiance-aegis.yml']
   workflow_dispatch:
 permissions:
   contents: read

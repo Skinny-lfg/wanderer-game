@@ -17,9 +17,9 @@ const FAMILIES=[
  {id:'fortune',name:'Rune of Fortune',field:'cha',icon:'🍀'},
  {id:'fury',name:'Rune of Fury',field:'atkFlat',icon:'🔥'},
  {id:'warding',name:'Rune of Warding',field:'defFlat',icon:'🔰'},
- {id:'vitality',name:'Rune of Vitality',field:'hpFlat',icon:'❤️'}
+ {id:'radiance',name:'Rune of Radiance',field:'hpFlat',icon:'❤️'}
 ];
-function runeValue(family,tier){const base=+(1+Math.min(tier,200)/10).toFixed(2),value=family==='fury'?base*3:family==='warding'?base*2:family==='vitality'?base*10:base;return tier>200?+(value*(1+.0048*(tier-200))).toFixed(2):value;}
+function runeValue(family,tier){const base=+(1+Math.min(tier,200)/10).toFixed(2),value=family==='fury'?base*3:family==='warding'?base*2:family==='radiance'?base*10:base;return tier>200?+(value*(1+.0048*(tier-200))).toFixed(2):value;}
 function makeRune(family,tier,makeId,expedition=true){
  const type=FAMILIES.find(x=>x.id===family);
  return {id:makeId(),family,tier,...(expedition?{progression:'expedition'}:{}),value:runeValue(family,tier),name:type.name};

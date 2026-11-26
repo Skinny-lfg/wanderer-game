@@ -2,15 +2,15 @@
 // This is intentionally independent of online/v012-engine.mjs (the disposable prototype simulator).
 (function(root){
 'use strict';
-const FAMILIES=Object.freeze(['blood','decay','vitality','aegis','fury','magic']);
-const FAMILY_NAMES=Object.freeze({blood:'Blood',decay:'Decay',vitality:'Radiance',aegis:'Aegis',fury:'Fury',magic:'Arcane'});
+const FAMILIES=Object.freeze(['blood','decay','radiance','aegis','fury','arcane']);
+const FAMILY_NAMES=Object.freeze({blood:'Blood',decay:'Decay',radiance:'Radiance',aegis:'Aegis',fury:'Fury',arcane:'Arcane'});
 const THEME_FAMILIES=Object.freeze({
- temple:'decay',forge:'blood',crypt:'fury',bastion:'fury',frost:'magic',ash:'magic',
- void:'decay',ward:'aegis',grove:'vitality',shrine:'vitality',storm:'magic',
+ temple:'decay',forge:'blood',crypt:'fury',bastion:'fury',frost:'arcane',ash:'arcane',
+ void:'decay',ward:'aegis',grove:'radiance',shrine:'radiance',storm:'arcane',
  drowned:'aegis',quarry:'aegis',bloodscar:'blood'
 });
-const REALMS=Object.freeze({forge:['blood','Crimson Dominion'],bloodscar:['blood','Bloodscar Wastes'],temple:['decay','Venomreach'],void:['decay','Umbral Hollow'],grove:['vitality','Verdant Wilds'],shrine:['vitality','Everroot Vale'],ward:['aegis','Warded Marches'],drowned:['aegis','Drowned Bastion'],crypt:['fury','Gravewind Barrens'],bastion:['fury','Ironbound Frontier'],ash:['magic','Ashen Aether'],storm:['magic','Stormglass Beyond']});
-const BOSSES=Object.freeze([{id:'guardian',name:"Abyssal Guardian’s Citadel",style:'guardian',affinity:'aegis'},{id:'rift',name:"Harbinger’s Rift",style:'leech',affinity:'blood'},{id:'ember',name:"The Chainbreaker’s Throne",style:'berserker',affinity:'fury'},{id:'carrion',name:"Matriarch’s Brood",style:'matriarch',affinity:'decay'},{id:'heartroot',name:"Heartroot’s Hollow",style:'devourer',affinity:'vitality'},{id:'stormglass',name:"Stormglass Spire",style:'conductor',affinity:'magic'}]);
+const REALMS=Object.freeze({forge:['blood','Crimson Dominion'],bloodscar:['blood','Bloodscar Wastes'],temple:['decay','Venomreach'],void:['decay','Umbral Hollow'],grove:['radiance','Verdant Wilds'],shrine:['radiance','Everroot Vale'],ward:['aegis','Warded Marches'],drowned:['aegis','Drowned Bastion'],crypt:['fury','Gravewind Barrens'],bastion:['fury','Ironbound Frontier'],ash:['arcane','Ashen Aether'],storm:['arcane','Stormglass Beyond']});
+const BOSSES=Object.freeze([{id:'guardian',name:"Abyssal Guardian’s Citadel",style:'guardian',affinity:'aegis'},{id:'rift',name:"Harbinger’s Rift",style:'leech',affinity:'blood'},{id:'ember',name:"The Chainbreaker’s Throne",style:'berserker',affinity:'fury'},{id:'carrion',name:"Matriarch’s Brood",style:'matriarch',affinity:'decay'},{id:'heartroot',name:"Heartroot’s Hollow",style:'devourer',affinity:'radiance'},{id:'stormglass',name:"Stormglass Spire",style:'conductor',affinity:'arcane'}]);
 const bossForAffinity=family=>BOSSES.find(b=>b.affinity===family);
 const I=root.WandererV013MapIntelligence,F=root.WandererV013ExpeditionFoundation,T=root.WandererV013EncounterTraits,P=root.WandererV013BossPreparation,C=root.WandererV013ExpeditionConditions,B=root.WandererV013ExpeditionBoons,K=root.WandererV013ExpeditionContracts;
 function shuffle(values,rng){
@@ -71,7 +71,7 @@ function create(themes,rng=Math.random){
    const shortcut=5+4*Math.floor(routeRng()*3)+Math.floor(routeRng()*3);edges.push([shortcut,shortcut+1]);
    const secondSector=(bossSector+1)%4;edges.push([(routeRng()<.5?9:13)+secondSector,size-1]);
    const clueRoom=5+bossSector;
-   const pools={blood:[['weapon','Sword'],['weapon','Two-Handed']],decay:[['weapon','Daggers'],['armor','Leather']],vitality:[['weapon','Wand'],['armor','Plate']],aegis:[['offhand','Shield'],['armor','Cloth']],fury:[['weapon','Bow'],['weapon','Daggers']],magic:[['weapon','Staff'],['offhand','Orb']]};
+   const pools={blood:[['weapon','Sword'],['weapon','Two-Handed']],decay:[['weapon','Daggers'],['armor','Leather']],radiance:[['weapon','Wand'],['armor','Plate']],aegis:[['offhand','Shield'],['armor','Cloth']],fury:[['weapon','Bow'],['weapon','Daggers']],arcane:[['weapon','Staff'],['offhand','Orb']]};
    const [slot,subtype]=shuffle(pools[family],routeRng)[0];
    const objective=shuffle(nodes.map((n,i)=>n.kind==='elite'?i:-1).filter(i=>i>=0),routeRng)[0];
    return {id:theme.id,name:theme.name,family,image:theme.image,risk,nodes,edges,shortcut,positions,objective,favoured:{slot,subtype},bossSector,secondSector,clueRoom,stepLimit:14-risk};

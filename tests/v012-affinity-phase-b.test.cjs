@@ -2,7 +2,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),create=re
 const seeded=s=>()=>((s=(Math.imul(s,1664525)+1013904223)>>>0)/4294967296);
 test('B 1200 seeded drafts: useful distinct cards, categories, caps, elements and hybrid limits',()=>{
  for(let seed=1;seed<=1200;seed++){
-  const families=[['blood','decay','magic'],['vitality','aegis','fury'],['magic','fury','blood']][seed%3],b=build([],families,['fire','frost','lightning'][seed%3]);b.unlockedFamilies=[];for(const f of families)api.initial(b,f);b.runtime.draftStats=base;const rng=seeded(seed);
+  const families=[['blood','decay','arcane'],['radiance','aegis','fury'],['arcane','fury','blood']][seed%3],b=build([],families,['fire','frost','lightning'][seed%3]);b.unlockedFamilies=[];for(const f of families)api.initial(b,f);b.runtime.draftStats=base;const rng=seeded(seed);
   for(let realm=1;realm<15;realm++){
    b.realmIndex=realm;const family=families[realm%3],cards=api.options(b,family,rng);assert(cards.length>0&&cards.length<=3);assert.equal(new Set(cards.map(p=>p.id)).size,cards.length);assert(cards.every(p=>p.family===family),'all Realm rewards are affinity-local');assert(cards.filter(p=>p.requires.length).length<=1);
    for(const p of cards){assert(api.eligible(b,p.family).some(q=>q.id===p.id));assert(['Upgrade','Synergy','Discovery'].includes(p.category));assert(p.preview.useful);if(p.element)assert.equal(p.element,b.element);}

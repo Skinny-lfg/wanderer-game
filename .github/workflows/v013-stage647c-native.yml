@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        profile: [magic-decay-bloom, decay-blood-spread]
+        profile: [arcane-decay-bloom, decay-blood-spread]
         shard: [0, 1]
     steps:
       - uses: actions/checkout@v4
@@ -67,7 +67,7 @@ jobs:
           const fs=require('node:fs'),read=d=>fs.readdirSync(d).filter(x=>x.endsWith('.json')).map(x=>JSON.parse(fs.readFileSync(d+'/'+x)));
           const current=read('current'),prior=read('prior'),summary=[];
           if(current.length!==4||prior.length!==4)throw Error('Missing paired shards '+current.length+'/'+prior.length);
-          for(const profile of ['magic-decay-bloom','decay-blood-spread']){
+          for(const profile of ['arcane-decay-bloom','decay-blood-spread']){
             const p=current.filter(x=>x.profile===profile),old=prior.filter(x=>x.profile===profile);
             const a=p.flatMap(x=>x.rows),b=old.flatMap(x=>x.rows);
             if(a.length!==400||b.length!==400)throw Error('Missing trials');

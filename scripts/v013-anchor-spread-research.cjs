@@ -3,9 +3,9 @@
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),crypto=require('node:crypto');
 const S=require('./simulate-progression.cjs'),G=require('./v013-global-e10.cjs'),{T,buy}=require('../tests/v013-current-talent-helper.cjs');
 require('../combat/v012-runes.js');
-const F=['blood','decay','vitality','aegis','fury','magic'],ELITES=G.SC.filter(s=>s.kind==='elite').map(s=>s.elite),SC=['normal-1','normal-4','normal-8','normal-12','elite','boss'],N=50,OUT='reports/anchor-spread-research';
+const F=['blood','decay','radiance','aegis','fury','arcane'],ELITES=G.SC.filter(s=>s.kind==='elite').map(s=>s.elite),SC=['normal-1','normal-4','normal-8','normal-12','elite','boss'],N=50,OUT='reports/anchor-spread-research';
 G.P['blood-spread-twohand']={id:'blood-spread-twohand',families:['blood'],w:'twohand',skills:['blood_transfer','cleave_mastery','accelerated_bleeding'],role:'aoe'};
-const PROFILES=['decay-cycle-wand','hybrid-magic-decay','hybrid-decay-blood','blood-spread-twohand','magic-fire-wand'];
+const PROFILES=['decay-cycle-wand','hybrid-arcane-decay','hybrid-decay-blood','blood-spread-twohand','arcane-fire-wand'];
 const B='combat/v012-buildcraft.js',C='combat/v012-combat-runtime.js',E='online/v012-expedition-runtime.js',O='online/v013-expedition-boons.js';
 const originals=Object.fromEntries([B,C,E,O].map(p=>[p,fs.readFileSync(p,'utf8')]));
 function replace(s,a,b){assert.equal(s.split(a).length,2,'source anchor '+a.slice(0,120));return s.replace(a,b);}

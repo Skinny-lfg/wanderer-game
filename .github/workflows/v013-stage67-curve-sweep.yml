@@ -41,9 +41,9 @@ jobs:
           - cohort: physical
             profiles: balanced,cautious,plate-warden,leather-duelist
           - cohort: magic
-            profiles: magic-fire,magic-frost,magic-lightning,magic-arcane
+            profiles: arcane-fire,arcane-frost,arcane-lightning,arcane-arcane
           - cohort: mixed
-            profiles: magic-wand,magic-staff,cloth-battlemage,hexblade-hybrid
+            profiles: arcane-wand,arcane-staff,cloth-battlemage,hexblade-hybrid
     steps:
       - uses: actions/checkout@v4
         with:
@@ -106,7 +106,7 @@ jobs:
           node scripts/v013-stage67-compare-curves.cjs \
             reports/stage67-global-comparison.json \
             reports/stage67-physical-summary.json \
-            reports/stage67-magic-summary.json \
+            reports/stage67-arcane-summary.json \
             reports/stage67-mixed-summary.json
       - name: Preserve full comparison report
         if: always()

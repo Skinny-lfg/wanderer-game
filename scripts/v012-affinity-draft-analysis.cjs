@@ -4,7 +4,7 @@ const scope={};vm.runInNewContext(cp.execFileSync('git',['show','02feebb:combat/
 const rng=s=>()=>((s=(Math.imul(s,1664525)+1013904223)>>>0)/4294967296);
 function compare(A){const m={drafts:0,cards:0,usefulUpgrades:0,synergyCards:0,functionalSynergy:0,untriggered:0,overcap:0,pity:0,hybridBy10:0,hybridBy14:0,errors:0,distinctResults:0};const results=new Set();
  for(let seed=1;seed<=1000;seed++){
-  const families=[['blood','decay','magic'],['vitality','aegis','fury'],['blood','aegis','magic']][seed%3],b=A.create();b.families=families;b.element=families.includes('magic')?['fire','frost','lightning'][seed%3]:null;
+  const families=[['blood','decay','arcane'],['radiance','aegis','fury'],['blood','aegis','arcane']][seed%3],b=A.create();b.families=families;b.element=families.includes('arcane')?['fire','frost','lightning'][seed%3]:null;
   for(const family of families)A.initial(b,family);b.runtime.hybridRules=true;b.runtime.draftStats=base;const random=rng(seed);let earliest=99;
   for(let realm=1;realm<15;realm++){b.realmIndex=realm;b.runtime.hybridWindow=[6,8,10].includes(realm);let cards;try{cards=A.options(b,families[realm%3],random);}catch{m.errors++;break;}
    m.drafts++;m.cards+=cards.length;if(cards.some(p=>p.requires.length))earliest=Math.min(earliest,realm);

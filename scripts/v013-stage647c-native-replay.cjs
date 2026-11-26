@@ -6,9 +6,9 @@ const D=require('./v013-stage628-postcap-difficulty.cjs'),S=require('./simulate-
 const hash=s=>crypto.createHash('sha256').update(JSON.stringify(s)).digest('hex');
 function respec(s,profile){
  const weapon=s.state.equip.weapon?.subtype,reset=T.reset(s.state.automaticTalents);
- const physical=['decay-blood-spread','magic-decay-infusion'].includes(profile);
+ const physical=['decay-blood-spread','arcane-decay-infusion'].includes(profile);
  if(physical&&weapon!=='Sword'||!physical&&!['Wand','Staff'].includes(weapon))return null;
- const p=P.propose(T,reset,{primary:'magic',secondary:'decay',secondAt:1,model:'two',mix:true,element:'arcane',weapons:[weapon],armor:physical?'Leather':'Cloth',milestones:['grave_bloom'],orderedMilestones:true,focus:'rot'});
+ const p=P.propose(T,reset,{primary:'arcane',secondary:'decay',secondAt:1,model:'two',mix:true,element:'arcane',weapons:[weapon],armor:physical?'Leather':'Cloth',milestones:['grave_bloom'],orderedMilestones:true,focus:'rot'});
  const purchased={...reset,nodes:p.expectedNodes,prepared:'grave_bloom'};
  if(!purchased.nodes.includes('grave_bloom')||!T.valid(purchased))return null;
  return {...s,talentSpent:purchased.nodes.length,state:{...s.state,automaticTalents:purchased}};

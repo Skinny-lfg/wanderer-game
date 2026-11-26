@@ -9,7 +9,7 @@ test('S1 profiles only target actual v15 talent nodes and valid earned Magic bra
  const ids=new Set(T.NODES.map(n=>n.id));
  for(const id of ['strong_heart','deep_cuts','quick_hands','element_choice','kindling','deep_winter','overcharge'])
   assert(ids.has(id),'missing native talent: '+id);
- for(const id of ['passive_strong_heart','passive_deep_cuts','passive_quick_hands','guard','might','haste','vitality'])
+ for(const id of ['passive_strong_heart','passive_deep_cuts','passive_quick_hands','guard','might','haste','radiance'])
   assert(!ids.has(id),'retired alias unexpectedly in native tree: '+id);
  for(const [key,profile] of Object.entries(N.PROFILES)){
   assert(profile.targets.length>0,key+' has no targets');
@@ -44,21 +44,21 @@ test('classify natural physical, caster, agility and multi-affinity loadouts',()
  const item=(slot,subtype,armorType,stats={})=>({slot,subtype,armorType,stats});
  const mage=B.classifyGear({total:2,starter:0,
   items:[item('weapon','Wand',null,{spell:18,int:3}),item('armor','Armor','Cloth',{int:4})]},
- ['affinity_magic','arcane_focus']);
- assert(mage.matchingExamples.includes('cloth_magic'));
+ ['affinity_arcane','arcane_focus']);
+ assert(mage.matchingExamples.includes('cloth_arcane'));
  const agile=B.classifyGear({total:2,starter:0,
   items:[item('weapon','Bow',null,{atk:12,agi:3}),item('armor','Armor','Leather',{agi:2})]},
  ['affinity_fury','quick_hands']);
  assert(agile.matchingExamples.includes('leather_agility'));
  const tank=B.classifyGear({total:2,starter:0,
   items:[item('weapon','Sword',null,{atk:11,str:3}),item('armor','Armor','Plate',{end:3})]},
- ['affinity_aegis','affinity_vitality']);
+ ['affinity_aegis','affinity_radiance']);
  assert(tank.matchingExamples.includes('plate_strength_endurance'));
  assert(tank.matchingExamples.includes('multi_affinity'));
 });
 test('deep prerequisites have more route length than core first-level talents',()=>{
  assert(B.talentDepth(['strong_heart']).deepestLegalRoute>=3);
- assert(B.talentDepth(['strong_heart']).deepestLegalRoute>B.talentDepth(['root_vitality']).deepestLegalRoute);
+ assert(B.talentDepth(['strong_heart']).deepestLegalRoute>B.talentDepth(['root_radiance']).deepestLegalRoute);
 });
 test('real native account report captures full gear attributes, talent nodes and respec audit',()=>{
  const opts=N.parseArgs(['--seeds=9304','--profiles=cautious','--max-level=1','--max-attempts=1']);

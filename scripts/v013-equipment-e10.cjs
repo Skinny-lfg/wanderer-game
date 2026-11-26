@@ -1,11 +1,11 @@
 'use strict';
 const fs=require('node:fs'),assert=require('node:assert/strict'),G=require('./v013-global-e10.cjs'),H=require('./v013-survival-e10.cjs'),S=require('./simulate-progression.cjs');
-const LEVEL=10,POINTS=30,N=50,FAMILIES=['blood','decay','vitality','aegis','fury','magic'];
+const LEVEL=10,POINTS=30,N=50,FAMILIES=['blood','decay','radiance','aegis','fury','arcane'];
 const IDS=G.IDS.filter(id=>/^(blood-|fury-|decay-)/.test(id)),SC=H.SC;
 const source=fs.readFileSync('combat/v012-gear-stats.js','utf8'),anchor='result.power=power(result);';
 assert.equal(source.split(anchor).length,2);
 const cache=new Map();
-function damageSource(factor){assert([1.25,1.4,1.5,1.65,1.75].includes(factor));if(!cache.has(factor))cache.set(factor,source.replace(anchor,"if(state?.automaticTalents?.nodes?.some(id=>['affinity_blood','affinity_decay','affinity_fury'].includes(id))&&!state.automaticTalents.nodes.some(id=>['affinity_aegis','affinity_vitality'].includes(id))){result.attack*="+factor+";if(Number.isFinite(result.spellPower))result.spellPower*="+factor+";}"+anchor));return cache.get(factor);}
+function damageSource(factor){assert([1.25,1.4,1.5,1.65,1.75].includes(factor));if(!cache.has(factor))cache.set(factor,source.replace(anchor,"if(state?.automaticTalents?.nodes?.some(id=>['affinity_blood','affinity_decay','affinity_fury'].includes(id))&&!state.automaticTalents.nodes.some(id=>['affinity_aegis','affinity_radiance'].includes(id))){result.attack*="+factor+";if(Number.isFinite(result.spellPower))result.spellPower*="+factor+";}"+anchor));return cache.get(factor);}
 function arms(p){
  const base={id:'pure',factor:1,armor:p.armorType,offhand:p.offhandType},out=[base];
  for(const factor of p.families[0]==='decay'?[1.5,1.65,1.75]:[1.25,1.4,1.5])out.push({...base,id:'damage-'+Math.round((factor-1)*100),factor});

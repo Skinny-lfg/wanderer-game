@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        id: ["cycle-daggers", "cycle-sword", "cycle-twohand", "cycle-bow", "cycle-wand", "cycle-staff", "focus-daggers", "focus-sword", "focus-twohand", "focus-bow", "focus-wand", "focus-staff", "hybrid-blood-daggers", "hybrid-blood-twohand", "hybrid-magic-sword", "hybrid-magic-wand"]
+        id: ["cycle-daggers", "cycle-sword", "cycle-twohand", "cycle-bow", "cycle-wand", "cycle-staff", "focus-daggers", "focus-sword", "focus-twohand", "focus-bow", "focus-wand", "focus-staff", "hybrid-blood-daggers", "hybrid-blood-twohand", "hybrid-arcane-sword", "hybrid-arcane-wand"]
     steps:
       - uses: actions/checkout@v4
         with: {persist-credentials: false}

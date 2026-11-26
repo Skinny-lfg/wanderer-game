@@ -24,7 +24,7 @@ function ctx(f=0){
 function replay(id,family,element='lightning',prerequisites=[]){
  const b=api.create();b.families=[family];const pass=api.CATALOG.find(p=>p.id===id);
  for(const f of pass?.requires||[])if(!b.families.includes(f))b.families.push(f);
- if(b.families.includes('magic'))b.element=pass?.element||element;
+ if(b.families.includes('arcane'))b.element=pass?.element||element;
  b.unlockedFamilies=[...b.families];b.picks.push(...prerequisites);if(id)b.picks.push(id);
  const {c,history}=ctx(0);c.base=1000;c.power=550;c.enemy.hp=20000;c.enemy.maxhp=100000;const originalDot=c.dot;c.dot=(kind,n)=>originalDot(kind,kind==='bleed'?api.bleedDamage(b,n):n);
  const mods=api.mods(b,base);
@@ -64,16 +64,16 @@ test('every advertised passive is unique, finite, and changes at least one execu
  assert(api.CATALOG.length>=45,'meaningful buildcraft catalog');
 });
 test('each first completed family unlocks its enabling passive; repeated picks respect Rank5 and Unique caps',()=>{
- const fam=new Set(api.FAMILIES);assert.deepEqual([...fam].sort(),['aegis','blood','decay','fury','magic','vitality'].sort());
+ const fam=new Set(api.FAMILIES);assert.deepEqual([...fam].sort(),['aegis','blood','decay','fury','arcane','radiance'].sort());
  for(const ele of api.ELEMENTS){
-  const b=api.create();b.families=['magic','fury'];
+  const b=api.create();b.families=['arcane','fury'];
   api.element(b,ele);assert.throws(()=>api.element(b,'fire'),/already chosen/);
-  assert.equal(api.eligible(b,'magic').length,0,'entering a Realm does not grant active passives');
-  const starter=api.initial(b,'magic');assert.equal(starter.element,ele);
-  const opts=api.options(b,'magic',()=>0.3);
+  assert.equal(api.eligible(b,'arcane').length,0,'entering a Realm does not grant active passives');
+  const starter=api.initial(b,'arcane');assert.equal(starter.element,ele);
+  const opts=api.options(b,'arcane',()=>0.3);
   assert.equal(opts.length,3);assert(opts.every(o=>api.eligible(b,o.family).some(p=>p.id===o.id)));
   const chosen=opts[0],previous=api.rank(b,chosen.id);
-  api.choose(b,'magic',chosen.id,opts);
+  api.choose(b,'arcane',chosen.id,opts);
   assert.equal(api.rank(b,chosen.id),previous+1);assert.equal(b.element,ele);
   const {c}=ctx(0);c.enemy.v012Shock=0;c.enemy.v012Rot=[];c.enemy.bleedStacks=0;
   api.onCast(b,c);
@@ -81,7 +81,7 @@ test('each first completed family unlocks its enabling passive; repeated picks r
   if(ele==='frost')assert(c.enemy.slowTime>0);
   if(ele==='lightning'){for(let n=0;n<3;n++){c.now+=.8;api.onCast(b,c);}assert(c.enemy.hp<400);}
  }
- const b=api.create();b.families=['blood','decay','magic'];b.element='lightning';
+ const b=api.create();b.families=['blood','decay','arcane'];b.element='lightning';
  for(const family of b.families)api.initial(b,family);
  for(let i=0;i<15;i++){const opts=api.options(b,'blood',()=>.31);assert.equal(opts.length,Math.min(3,api.eligible(b,'blood').length));api.choose(b,'blood',opts[0].id,opts);}
  assert.equal(b.picks.length,18,'starter rewards plus fifteen normal selections');
@@ -94,11 +94,11 @@ test('hybrids require both families; simulated DOT, shock, healing, barrier, att
   const b=api.create();b.families=[p.family];b.element=p.element||null;
   assert(!api.eligible(b,p.family).some(x=>x.id===p.id),'locked hybrid '+p.id);
   b.families=[...new Set(p.requires)];b.unlockedFamilies=[...b.families];
-  if(b.families.includes('magic'))b.element='fire';b.realmIndex=10;b.picks=b.families.map(f=>({blood:'bleeding_edge',decay:'toxic_touch',vitality:'renewal',aegis:'barrier_pulse',fury:'precision',magic:'kindling'})[f]);if(b.families.includes('aegis'))b.picks.push('guarded_block');
+  if(b.families.includes('arcane'))b.element='fire';b.realmIndex=10;b.picks=b.families.map(f=>({blood:'bleeding_edge',decay:'toxic_touch',radiance:'renewal',aegis:'barrier_pulse',fury:'precision',arcane:'kindling'})[f]);if(b.families.includes('aegis'))b.picks.push('guarded_block');
   assert(api.eligible(b,p.family).some(x=>x.id===p.id),'unlocked hybrid '+p.id);
  }
  for(const family of api.FAMILIES){
-  const b=api.create();b.families=[family];b.element=family==='magic'?'lightning':null;
+  const b=api.create();b.families=[family];b.element=family==='arcane'?'lightning':null;
   b.picks=api.CATALOG.filter(p=>p.family===family&&!p.requires.length&&(!p.element||p.element===b.element)).map(p=>p.id);
   const {c}=ctx(0);const stats=api.mods(b,base);
   assert(stats.maxhp<=base.maxhp*1.3&&stats.crit<=100&&stats.attacksPerSec<=5);
@@ -154,7 +154,7 @@ test('Aegis balance uses the revised Barrier Pulse and Retaliation values',()=>{
 });
 test('Staff/Wand amplify all Magic schools without consuming extra status rolls',()=>{
  for(const school of api.ELEMENTS){
-  const b=api.create();b.families=['magic'];api.element(b,school);api.initial(b,'magic');
+  const b=api.create();b.families=['arcane'];api.element(b,school);api.initial(b,'arcane');
   function cast(amp){const {c,history}=ctx(1);b.runtime.staticCharges=3;c.enemy.v012Shock=0;c.enemy.maxhp=100000;c.power=110;c.amp=amp;
    api.onCast(b,c);return {history,enemy:c.enemy};}
   b.runtime.magicHits=0;
@@ -178,7 +178,7 @@ test('Staff/Wand amplify all Magic schools without consuming extra status rolls'
 
 
 test('alternative hybrids are exclusive per affinity pair, cap three, and unlock progressively',()=>{
- const b=api.create();b.families=['blood','decay','magic'];b.unlockedFamilies=[...b.families];b.element='fire';b.realmIndex=4;b.picks=['bleeding_edge','toxic_touch','kindling'];
+ const b=api.create();b.families=['blood','decay','arcane'];b.unlockedFamilies=[...b.families];b.element='fire';b.realmIndex=4;b.picks=['bleeding_edge','toxic_touch','kindling'];
  assert(!api.options(b,'blood',()=>.4).some(p=>p.requires.length),'hybrids should not appear before Realm 5');
  b.realmIndex=6;
  const available=api.eligible(b,'blood');
@@ -234,7 +234,7 @@ test('Realm passive drafts stay in the completed Realm affinity with upgrades, h
  const oldSave={...api.create(),families:[]};assert.equal(api.validate(JSON.parse(JSON.stringify(oldSave))).picks.length,0,'existing build saves remain valid');
 });
 test('Spellblade empowers the next magical Staff/Wand weapon hit, not the same cast',()=>{
- const b=api.create();b.families=['magic','fury'];b.element='fire';b.picks=['spellblade'];
+ const b=api.create();b.families=['arcane','fury'];b.element='fire';b.picks=['spellblade'];
  const {c,history}=ctx(.99);
  c.magical=true;c.critical=false;
  api.onAttack(b,c);

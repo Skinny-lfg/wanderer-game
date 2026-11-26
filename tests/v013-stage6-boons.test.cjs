@@ -67,12 +67,12 @@ test('Stage 6: deterministic three-card Boon offers always include build synergy
   assert.deepEqual(ids,B.offer(seed,'forge',0,[family],[]));
   assert(ids.some(id=>B.get(id).families.includes(family)&&id!=='wayfarers_bargain'),family);
  }
- const first=B.offer(12,'forge',0,['magic'],[]);
+ const first=B.offer(12,'forge',0,['arcane'],[]);
  assert.equal(first[0],'aetherbound_pact');
- const second=B.offer(12,'forge',1,['magic'],['aetherbound_pact']);
+ const second=B.offer(12,'forge',1,['arcane'],['aetherbound_pact']);
  assert.equal(second.length,3);assert(!second.includes('aetherbound_pact'));
- assert.throws(()=>B.offer(12,'forge',2,['magic'],[]),/Invalid/);
- assert.throws(()=>B.offer(12,'forge',1,['magic'],['fake']),/Invalid/);
+ assert.throws(()=>B.offer(12,'forge',2,['arcane'],[]),/Invalid/);
+ assert.throws(()=>B.offer(12,'forge',1,['arcane'],['fake']),/Invalid/);
 });
 test('Stage 7.3 no Boon can be picked before physically discovering a Shrine',()=>{
  const {c,card}=directShrine(6302),d=c.state.dungeon;
@@ -108,7 +108,7 @@ test('Stage 7.3 Wayfarer grants exactly one step when picked at a Shrine and red
 });
 test('Stage 7.3 Aetherbound Pact modifies native spells only once discovered',()=>{
  const {a,c,card}=directShrine(6304),before=a.baseStats(),gear=JSON.stringify(a.state().equip);
- assert(c.visitRoom(card.boonShrines[0],['magic']));
+ assert(c.visitRoom(card.boonShrines[0],['arcane']));
  assert.equal(c.state.dungeon.boonOffer.ids[0],'aetherbound_pact');
  c.chooseBoon('aetherbound_pact');
  assert.equal(a.stats().spellPower,Math.round(before.spellPower*1.18));

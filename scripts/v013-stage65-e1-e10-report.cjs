@@ -69,7 +69,7 @@ function summarize(reports){
    maxUnlocked:Math.max(...aa.map(a=>a.endLevel)),
    meanFinalTalents:mean(aa.map(a=>a.talents.length)),meanFinalStarterItems:mean(aa.map(a=>a.finalGear?.starter||0)),
    weaponUsageOnExpeditionEntry:weapons,
-   magic:{fights:mana.length,manaSpent:sum(mana,r=>r.manaSpent),
+   arcane:{fights:mana.length,manaSpent:sum(mana,r=>r.manaSpent),
     casts:sum(mana,r=>r.fundedCasts),infusionActivations:sum(mana,r=>r.infusionActivations),
     infusionHits:sum(mana,r=>r.infusionHits),infusionDamage:sum(mana,r=>r.infusionDamage),
     noManaAttacks:sum(mana,r=>r.unfundedCasterAttacks),

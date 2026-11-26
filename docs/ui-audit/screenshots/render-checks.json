@@ -871,7 +871,7 @@
       "screenshot": "docs/ui-audit/screenshots/dialogs/initial-affinity/initial-affinity-mobile-390x844.jpg"
     },
     {
-      "screen": "magic-element",
+      "screen": "arcane-element",
       "viewport": "390x844",
       "horizontalOverflow": false,
       "scrollWidth": 390,
@@ -896,7 +896,7 @@
           }
         ]
       },
-      "screenshot": "docs/ui-audit/screenshots/dialogs/magic-element/magic-element-mobile-390x844.jpg"
+      "screenshot": "docs/ui-audit/screenshots/dialogs/arcane-element/arcane-element-mobile-390x844.jpg"
     },
     {
       "screen": "combat",
@@ -2136,7 +2136,7 @@
       "screenshot": "docs/ui-audit/screenshots/dialogs/initial-affinity/initial-affinity-tablet-768x1024.jpg"
     },
     {
-      "screen": "magic-element",
+      "screen": "arcane-element",
       "viewport": "768x1024",
       "horizontalOverflow": false,
       "scrollWidth": 768,
@@ -2161,7 +2161,7 @@
           }
         ]
       },
-      "screenshot": "docs/ui-audit/screenshots/dialogs/magic-element/magic-element-tablet-768x1024.jpg"
+      "screenshot": "docs/ui-audit/screenshots/dialogs/arcane-element/arcane-element-tablet-768x1024.jpg"
     },
     {
       "screen": "combat",
@@ -3401,7 +3401,7 @@
       "screenshot": "docs/ui-audit/screenshots/dialogs/initial-affinity/initial-affinity-desktop-1440x900.jpg"
     },
     {
-      "screen": "magic-element",
+      "screen": "arcane-element",
       "viewport": "1440x900",
       "horizontalOverflow": false,
       "scrollWidth": 1440,
@@ -3426,7 +3426,7 @@
           }
         ]
       },
-      "screenshot": "docs/ui-audit/screenshots/dialogs/magic-element/magic-element-desktop-1440x900.jpg"
+      "screenshot": "docs/ui-audit/screenshots/dialogs/arcane-element/arcane-element-desktop-1440x900.jpg"
     },
     {
       "screen": "combat",
@@ -4666,7 +4666,7 @@
       "screenshot": "docs/ui-audit/screenshots/dialogs/initial-affinity/initial-affinity-wide-1920x1080.jpg"
     },
     {
-      "screen": "magic-element",
+      "screen": "arcane-element",
       "viewport": "1920x1080",
       "horizontalOverflow": false,
       "scrollWidth": 1920,
@@ -4691,7 +4691,7 @@
           }
         ]
       },
-      "screenshot": "docs/ui-audit/screenshots/dialogs/magic-element/magic-element-wide-1920x1080.jpg"
+      "screenshot": "docs/ui-audit/screenshots/dialogs/arcane-element/arcane-element-wide-1920x1080.jpg"
     },
     {
       "screen": "combat",

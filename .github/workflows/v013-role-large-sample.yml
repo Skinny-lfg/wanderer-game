@@ -20,7 +20,7 @@ jobs:
       fail-fast: false
       max-parallel: 6
       matrix:
-        affinity: [blood, decay, vitality, aegis, fury, magic]
+        affinity: [blood, decay, radiance, aegis, fury, magic]
         loadout: [starter, equipped]
     steps:
       - uses: actions/checkout@v4
@@ -43,7 +43,7 @@ jobs:
           fi
           node scripts/simulate-progression.cjs \
             --mode=roles --levels=1 --seeds=9101,9201,9301 \
-            --builds=blood-fury,aegis-vitality,magic-decay \
+            --builds=blood-fury,aegis-radiance,arcane-decay \
             --affinities=${{ matrix.affinity }} \
             --group-sizes=1,4,12,20 \
             --role-effects=baseline,trait,condition,both \

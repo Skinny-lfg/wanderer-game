@@ -9,7 +9,7 @@ const M=require('./v013-stage612-controlled-combat.cjs');
 const T=globalThis.WandererAutomaticTalents;
 const sha=x=>crypto.createHash('sha256').update(typeof x==='string'?x:JSON.stringify(x)).digest('hex');
 const unique=a=>[...new Set(a)];
-const FAMILIES=['blood','decay','vitality','aegis','fury','magic'];
+const FAMILIES=['blood','decay','radiance','aegis','fury','arcane'];
 const BUDGET_LEVEL=Object.freeze({12:5,24:15,36:35,60:70});
 const KINDS=['normal','elite','boss'];
 const DEFAULTS=Object.freeze({mode:'pilot',seedsPerCell:2,budgets:[12,24,36,60],

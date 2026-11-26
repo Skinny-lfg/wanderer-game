@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        id: ["decay-daggers", "decay-sword", "decay-twohand", "decay-bow", "decay-wand", "decay-staff", "arcane-sword", "arcane-wand", "arcane-staff", "fire-sword", "fire-wand", "fire-staff", "frost-sword", "frost-wand", "frost-staff", "lightning-sword", "lightning-wand", "lightning-staff", "focus-daggers", "focus-sword", "focus-twohand", "focus-bow", "focus-wand", "focus-staff", "hybrid-blood-daggers", "hybrid-blood-twohand", "hybrid-magic-sword", "hybrid-magic-wand"]
+        id: ["decay-daggers", "decay-sword", "decay-twohand", "decay-bow", "decay-wand", "decay-staff", "arcane-sword", "arcane-wand", "arcane-staff", "fire-sword", "fire-wand", "fire-staff", "frost-sword", "frost-wand", "frost-staff", "lightning-sword", "lightning-wand", "lightning-staff", "focus-daggers", "focus-sword", "focus-twohand", "focus-bow", "focus-wand", "focus-staff", "hybrid-blood-daggers", "hybrid-blood-twohand", "hybrid-arcane-sword", "hybrid-arcane-wand"]
     steps:
       - uses: actions/checkout@v4
         with: {persist-credentials: false}
