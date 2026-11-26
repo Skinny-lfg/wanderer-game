@@ -83,10 +83,10 @@ func _ready() -> void:
 	fighters.name = "CombatSprites"
 	add_child(fighters)
 	_fighter("wanderer.webp", "wanderer.webp", 2.8)
-	_fighter("gravebound_bulwark.webp", "tank.png", 2.8)
-	_fighter("oathbound_exarch.webp", "berserker.png", 3.0)
-	_fighter("gravecaller.webp", "caster.png", 2.8)
-	_fighter("ashen_executioner.webp", "vampire.png", 2.9)
+	_fighter("gravebound_bulwark.png", "tank.png", 2.8)
+	_fighter("oathbound_exarch.png", "berserker.png", 3.0)
+	_fighter("gravecaller.png", "caster.png", 2.8)
+	_fighter("ashen_executioner.png", "vampire.png", 2.9)
 	_build_hud()
 	_set_view(0)
 	if not missing.is_empty():
