@@ -20,6 +20,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Attunement audit regression
+        run: node --test tests/v013-b12c1-attunement.test.cjs
       - name: Replay selected earned accounts
         run: node scripts/v013-b12c1-advanced-agent-audit.cjs ${{ matrix.shard }}
       - uses: actions/upload-artifact@v4

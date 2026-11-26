@@ -8,6 +8,9 @@ const config={maxLevel:10,maxAttempts:12,maxTotalAttempts:60,tickLimit:6500,maxR
 const manifest=B.manifest(),profiles=new Map(manifest.natural.map(p=>[p.id,p]));
 const nodes=new Map(T.NODES.map(n=>[n.id,n])),potionRecipes=new Map(P.RECIPES.map(p=>[p.id,p])),forgeRecipes=new Set(C.RECIPES.map(p=>p.id)),runeFamilies=new Set(R.FAMILIES.map(r=>r.id));
 const base=id=>id.replace(/_rank\d+$/,'');
+// Native talent-graph-runtime uses v.element || 'arcane'; the default is omitted from storage.
+// Compare effective mode only once the attunement choice has been earned.
+const attunementMismatch=(expected,owned,stored)=>Boolean(expected&&owned.includes('element_choice')&&(stored||'arcane')!==expected);
 const clone=x=>JSON.parse(JSON.stringify(x));
 const count=(rows,key)=>{const o={};for(const r of rows){const k=key(r);if(k!=null)o[k]=(o[k]||0)+1;}return o;};
 const sum=(rows,key)=>rows.reduce((s,r)=>s+(Number(r[key])||0),0);
@@ -46,7 +49,7 @@ function audit(id,accounts){
   if(s.spent>s.earned||s.attributeSpent>s.attributeEarned)issue(t,'budget overspend');
   for(const n of owned){const x=nodes.get(n);if(!x||x.pending||(x.family&&!p.families.includes(x.family))||(x.pair&&!x.pair.every(f=>p.families.includes(f))))issue(t,'invalid/foreign talent '+n);}
   if(s.prepared&&!owned.includes(base(s.prepared)))issue(t,'unowned prepared talent '+s.prepared);
-  if(p.element&&owned.includes('element_choice')&&s.element!==p.element)issue(t,'wrong attunement '+s.element);
+  if(attunementMismatch(p.element,owned,s.element))issue(t,'wrong attunement '+(s.element||'arcane'));
   try{P.selection(s.consumables,s.potionSelection);}catch(e){issue(t,'illegal potion selection: '+e.message);}
   const ids=s.runeSlots.filter(Boolean),byId=new Map(s.runeBag.map(x=>[x.id,x]));
   if(ids.length>3||new Set(ids).size!==ids.length||ids.some(x=>!byId.has(x)))issue(t,'invalid rune slots');
@@ -103,4 +106,4 @@ function aggregate(){
  if(summary.errors||summary.issues)process.exitCode=1;
 }
 if(require.main===module){if(process.argv[2]==='aggregate')aggregate();else run(Number(process.argv[2]));}
-module.exports={audit,campObservation,config};
+module.exports={audit,campObservation,config,attunementMismatch};
