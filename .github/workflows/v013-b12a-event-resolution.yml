@@ -1,0 +1,20 @@
+name: v0.13 B1.2A - native event resolution regression
+on:
+  push:
+    branches: [balance/b1.2a-native-event-resolution]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  focused:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Native event and natural agent regressions
+        run: node --test tests/v013-b12a-event-resolution.test.cjs tests/v013-boss-preparation-runtime.test.cjs tests/v013-anchor-shards.test.cjs tests/v013-natural-progression.test.cjs tests/v013-stage45-6-event-contract.test.cjs

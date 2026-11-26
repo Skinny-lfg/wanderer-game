@@ -1189,10 +1189,14 @@ function resolveEvent(a,profile){
  const options=oath&&event.id==='forgotten_reliquary'?[1,2]:
   eventOptions(event.id,v,profile,{reliquaryCompleted:prior.reliquary});
  for(const choice of options){
-  const bag=a.bag.items().filter(i=>i.kind!=='valuable'),unused=bag.at(-1);
-  const target=Object.values(a.state().equip).filter(Boolean).at(-1);
-  const family=profile.families[0],hpBefore=v.hp;
-  if(a.events.choose(choice,unused?.id,null,family,target?.id))
+  // Only Relic Collector consumes an optional Bag item. Passing a shard to
+  // any event (even pass) is rejected by the native transaction guard.
+  // Keep the existing non-valuable sacrifice policy, excluding protected shards.
+  const itemId=event.id==='relic_collector'&&choice!==2
+   ?a.bag.items().filter(i=>i.kind!=='valuable'&&i.kind!=='runestone_shard').at(-1)?.id
+   :undefined;
+  const hpBefore=v.hp;
+  if(a.events.choose(choice,itemId))
    return {event:event.id,choice,hpBefore:round(hpBefore),hpAfter:round(a.vitals().hp),
     reliquaryCompleted:!!g.dungeon?.foundationState?.bossPreparation?.reliquary};
  }
