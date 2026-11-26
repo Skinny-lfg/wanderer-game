@@ -1,0 +1,456 @@
+{
+  "sourceRun": 45861310367,
+  "sourceCommit": "93f76e314290917f6200427a8b8f3ace51752cbf",
+  "sourceAccounts": 1400,
+  "rule": "Sort by historical reachedE10 descending, endLevel descending, errors ascending, seed ascending; take first 2 per profile. Diagnostic selection only, not win-rate estimate.",
+  "profiles": [
+    {
+      "id": "smart-blood-sword",
+      "reachedE10": 19,
+      "picks": [
+        {
+          "index": 0,
+          "seed": 76200001,
+          "historicalEndLevel": 11
+        },
+        {
+          "index": 6,
+          "seed": 76200607,
+          "historicalEndLevel": 11
+        }
+      ]
+    },
+    {
+      "id": "smart-blood-two-handed",
+      "reachedE10": 2,
+      "picks": [
+        {
+          "index": 1,
+          "seed": 76200102,
+          "historicalEndLevel": 11
+        },
+        {
+          "index": 32,
+          "seed": 76203233,
+          "historicalEndLevel": 11
+        }
+      ]
+    },
+    {
+      "id": "smart-fury-daggers",
+      "reachedE10": 4,
+      "picks": [
+        {
+          "index": 11,
+          "seed": 76201112,
+          "historicalEndLevel": 11
+        },
+        {
+          "index": 28,
+          "seed": 76202829,
+          "historicalEndLevel": 11
+        }
+      ]
+    },
+    {
+      "id": "smart-fury-bow",
+      "reachedE10": 0,
+      "picks": [
+        {
+          "index": 28,
+          "seed": 76202829,
+          "historicalEndLevel": 5
+        },
+        {
+          "index": 7,
+          "seed": 76200708,
+          "historicalEndLevel": 3
+        }
+      ]
+    },
+    {
+      "id": "smart-radiance-pure",
+      "reachedE10": 14,
+      "picks": [
+        {
+          "index": 13,
+          "seed": 76201314,
+          "historicalEndLevel": 11
+        },
+        {
+          "index": 14,
+          "seed": 76201415,
+          "historicalEndLevel": 11
+        }
+      ]
+    },
+    {
+      "id": "smart-aegis-radiance",
+      "reachedE10": 11,
+      "picks": [
+        {
+          "index": 3,
+          "seed": 76200304,
+          "historicalEndLevel": 11
+        },
+        {
+          "index": 15,
+          "seed": 76201516,
+          "historicalEndLevel": 11
+        }
+      ]
+    },
+    {
+      "id": "smart-decay-cycle-daggers",
+      "reachedE10": 6,
+      "picks": [
+        {
+          "index": 26,
+          "seed": 76202627,
+          "historicalEndLevel": 11
+        },
+        {
+          "index": 42,
+          "seed": 76204243,
+          "historicalEndLevel": 11
+        }
+      ]
+    },
+    {
+      "id": "smart-decay-cycle-twohand",
+      "reachedE10": 0,
+      "picks": [
+        {
+          "index": 30,
+          "seed": 76203031,
+          "historicalEndLevel": 7
+        },
+        {
+          "index": 22,
+          "seed": 76202223,
+          "historicalEndLevel": 7
+        }
+      ]
+    },
+    {
+      "id": "smart-decay-cycle-wand",
+      "reachedE10": 5,
+      "picks": [
+        {
+          "index": 6,
+          "seed": 76200607,
+          "historicalEndLevel": 11
+        },
+        {
+          "index": 14,
+          "seed": 76201415,
+          "historicalEndLevel": 11
+        }
+      ]
+    },
+    {
+      "id": "smart-decay-overflow-wand",
+      "reachedE10": 3,
+      "picks": [
+        {
+          "index": 6,
+          "seed": 76200607,
+          "historicalEndLevel": 11
+        },
+        {
+          "index": 17,
+          "seed": 76201718,
+          "historicalEndLevel": 11
+        }
+      ]
+    },
+    {
+      "id": "smart-decay-hybrid-staff",
+      "reachedE10": 0,
+      "picks": [
+        {
+          "index": 14,
+          "seed": 76201415,
+          "historicalEndLevel": 3
+        },
+        {
+          "index": 28,
+          "seed": 76202829,
+          "historicalEndLevel": 3
+        }
+      ]
+    },
+    {
+      "id": "smart-decay-plagueheart",
+      "reachedE10": 0,
+      "picks": [
+        {
+          "index": 14,
+          "seed": 76201415,
+          "historicalEndLevel": 3
+        },
+        {
+          "index": 28,
+          "seed": 76202829,
+          "historicalEndLevel": 3
+        }
+      ]
+    },
+    {
+      "id": "smart-arcane-arcane-pure",
+      "reachedE10": 1,
+      "picks": [
+        {
+          "index": 33,
+          "seed": 76203334,
+          "historicalEndLevel": 11
+        },
+        {
+          "index": 16,
+          "seed": 76201617,
+          "historicalEndLevel": 7
+        }
+      ]
+    },
+    {
+      "id": "smart-arcane-fire-pure",
+      "reachedE10": 0,
+      "picks": [
+        {
+          "index": 33,
+          "seed": 76203334,
+          "historicalEndLevel": 7
+        },
+        {
+          "index": 16,
+          "seed": 76201617,
+          "historicalEndLevel": 3
+        }
+      ]
+    },
+    {
+      "id": "smart-arcane-lightning-pure",
+      "reachedE10": 0,
+      "picks": [
+        {
+          "index": 33,
+          "seed": 76203334,
+          "historicalEndLevel": 4
+        },
+        {
+          "index": 16,
+          "seed": 76201617,
+          "historicalEndLevel": 3
+        }
+      ]
+    },
+    {
+      "id": "arcane-frost",
+      "reachedE10": 2,
+      "picks": [
+        {
+          "index": 3,
+          "seed": 76200304,
+          "historicalEndLevel": 11
+        },
+        {
+          "index": 12,
+          "seed": 76201213,
+          "historicalEndLevel": 11
+        }
+      ]
+    },
+    {
+      "id": "smart-blood-fury",
+      "reachedE10": 14,
+      "picks": [
+        {
+          "index": 0,
+          "seed": 76200001,
+          "historicalEndLevel": 11
+        },
+        {
+          "index": 6,
+          "seed": 76200607,
+          "historicalEndLevel": 11
+        }
+      ]
+    },
+    {
+      "id": "smart-blood-fury-radiance",
+      "reachedE10": 19,
+      "picks": [
+        {
+          "index": 5,
+          "seed": 76200506,
+          "historicalEndLevel": 11
+        },
+        {
+          "index": 9,
+          "seed": 76200910,
+          "historicalEndLevel": 11
+        }
+      ]
+    },
+    {
+      "id": "smart-blood-fury-radiance-no-mixed",
+      "reachedE10": 19,
+      "picks": [
+        {
+          "index": 5,
+          "seed": 76200506,
+          "historicalEndLevel": 11
+        },
+        {
+          "index": 9,
+          "seed": 76200910,
+          "historicalEndLevel": 11
+        }
+      ]
+    },
+    {
+      "id": "smart-fury-blood-aegis",
+      "reachedE10": 0,
+      "picks": [
+        {
+          "index": 26,
+          "seed": 76202627,
+          "historicalEndLevel": 4
+        },
+        {
+          "index": 5,
+          "seed": 76200506,
+          "historicalEndLevel": 4
+        }
+      ]
+    },
+    {
+      "id": "smart-arcane-fire-aegis",
+      "reachedE10": 0,
+      "picks": [
+        {
+          "index": 8,
+          "seed": 76200809,
+          "historicalEndLevel": 2
+        },
+        {
+          "index": 12,
+          "seed": 76201213,
+          "historicalEndLevel": 2
+        }
+      ]
+    },
+    {
+      "id": "smart-arcane-frost-radiance",
+      "reachedE10": 0,
+      "picks": [
+        {
+          "index": 5,
+          "seed": 76200506,
+          "historicalEndLevel": 2
+        },
+        {
+          "index": 8,
+          "seed": 76200809,
+          "historicalEndLevel": 2
+        }
+      ]
+    },
+    {
+      "id": "smart-decay-arcane-aegis",
+      "reachedE10": 5,
+      "picks": [
+        {
+          "index": 6,
+          "seed": 76200607,
+          "historicalEndLevel": 11
+        },
+        {
+          "index": 8,
+          "seed": 76200809,
+          "historicalEndLevel": 11
+        }
+      ]
+    },
+    {
+      "id": "balanced",
+      "reachedE10": 22,
+      "picks": [
+        {
+          "index": 2,
+          "seed": 76200203,
+          "historicalEndLevel": 11
+        },
+        {
+          "index": 7,
+          "seed": 76200708,
+          "historicalEndLevel": 11
+        }
+      ]
+    },
+    {
+      "id": "hexblade-hybrid",
+      "reachedE10": 0,
+      "picks": [
+        {
+          "index": 39,
+          "seed": 76203940,
+          "historicalEndLevel": 8
+        },
+        {
+          "index": 40,
+          "seed": 76204041,
+          "historicalEndLevel": 8
+        }
+      ]
+    },
+    {
+      "id": "pure-aegis",
+      "reachedE10": 20,
+      "picks": [
+        {
+          "index": 14,
+          "seed": 76201415,
+          "historicalEndLevel": 11
+        },
+        {
+          "index": 15,
+          "seed": 76201516,
+          "historicalEndLevel": 11
+        }
+      ]
+    },
+    {
+      "id": "hybrid-decay-blood",
+      "reachedE10": 5,
+      "picks": [
+        {
+          "index": 10,
+          "seed": 76201011,
+          "historicalEndLevel": 11
+        },
+        {
+          "index": 17,
+          "seed": 76201718,
+          "historicalEndLevel": 11
+        }
+      ]
+    },
+    {
+      "id": "hybrid-fury-radiance",
+      "reachedE10": 6,
+      "picks": [
+        {
+          "index": 1,
+          "seed": 76200102,
+          "historicalEndLevel": 11
+        },
+        {
+          "index": 3,
+          "seed": 76200304,
+          "historicalEndLevel": 11
+        }
+      ]
+    }
+  ]
+}
