@@ -208,6 +208,8 @@ function identityPurchase(item,profile,slot){return identityMatch(item,profile,s
 // Legal temporary loot remains available; do not BUY or CRAFT a blocked slot.
 const TWO_HAND_WEAPONS=new Set(['Two-Handed','Bow','Staff']);
 const decisionQuality=p=>p?.agentDecisionQuality==='b12c2-v1';
+// B1.2C.3 isolates the off-hand compatibility gate from other B1.2C.2 changes.
+const compatibilityGuard=p=>decisionQuality(p)||p?.agentCompatibilityOnly===true;
 function gearDecisionTargets(item,profile){
  if(['ring1','ring2'].includes(item.slot))return ['ring1','ring2'];
  if(decisionQuality(profile)&&profile.offhands?.includes('Daggers')&&['Daggers','Off-Hand Dagger'].includes(item.subtype))
@@ -216,7 +218,7 @@ function gearDecisionTargets(item,profile){
 }
 function investmentAllowed(item,profile,slot,equip){
  if(!identityPurchase(item,profile,slot))return false;
- if(!decisionQuality(profile))return true;
+ if(!compatibilityGuard(profile))return true;
  if(slot==='offhand'&&(TWO_HAND_WEAPONS.has(equip?.weapon?.subtype)||
    (profile.weapons?.length&&profile.weapons.every(w=>TWO_HAND_WEAPONS.has(w)))))return false;
  return true;
@@ -426,7 +428,7 @@ function investEarnedGear(a,profile,level){
   outcome.crafted.push({recipe:best.recipe.id,item:item.name,slot:best.target.slot,
    fragmentsSpent:best.fragments,essenceSpent:best.essence,reagentsSpent:{...best.reagents},influence:best.influence,
    estimatedGain:round(best.gain),actualRolledGain:round(actual),
-   ...(decisionQuality(profile)?{weaponAtDecision,subtype:item.subtype}:{}),
+   ...(compatibilityGuard(profile)?{weaponAtDecision,subtype:item.subtype}:{}),
    equipped:decisionQuality(profile)?Object.values(s.equip).some(x=>x?.id===item.id):equipped.some(x=>x.item===item.name)});
  }
  return outcome;
@@ -605,7 +607,7 @@ function refineEarnedReagents(a,profile,level){
  if(!forge||!a.economyCanAct())return out;
  // Forge-only refinement for learned Epic recipes, each missing family checked
  // against the actual multi-Reagent cost; no separate Apothecary conversion.
- const epic=forge.recipes.filter(r=>r.rarity==='Epic'&&(profile.families.includes(r.family)||r.subtype===profile.armor)&&(!decisionQuality(profile)||r.slot!=='offhand'||investmentAllowed(r,profile,'offhand',s.equip)));
+ const epic=forge.recipes.filter(r=>r.rarity==='Epic'&&(profile.families.includes(r.family)||r.subtype===profile.armor)&&(!compatibilityGuard(profile)||r.slot!=='offhand'||investmentAllowed(r,profile,'offhand',s.equip)));
  for(const recipe of epic){
   const p=forge.progress(recipe.id,level);if(!p?.unlocked||s.fragments<p.cost.fragments||s.crafting.essence<p.cost.essence+6)continue;
   for(const [family,need] of Object.entries(p.cost.reagents||{})){
@@ -755,8 +757,10 @@ function prepareCamp(a,profile,level,decisionModel='risk-aware',options={}){
   for(const {item,index} of candidates.slice(0,decisionModel==='legacy'?1:2)){
    if(s.gold<item.goldPrice+reserve||s.merchant?.stock?.[index]?.id!==item.id)continue;
    if(decisionQuality(profile)&&!gearDecisionTargets(item,profile).some(slot=>investmentGain(item,profile,slot,s.equip)>5))continue;
+   if(compatibilityGuard(profile)&&!decisionQuality(profile)&&item.slot==='offhand'&&!investmentAllowed(item,profile,item.slot,s.equip))continue;
+   const weaponAtDecision=s.equip.weapon?.subtype||null;
    if(a.purchaseNative(index)){
-    actions.bought.push({name:item.name,cost:item.goldPrice,gain:round(gearScore(item,profile)-gearScore(s.equip[item.slot],profile))});
+    actions.bought.push({name:item.name,cost:item.goldPrice,gain:round(gearScore(item,profile)-gearScore(s.equip[item.slot],profile)),...(compatibilityGuard(profile)?{slot:item.slot,subtype:item.subtype,weaponAtDecision}:{})});
     actions.equipped.push(...equipEarned(a,profile,false));
    }
   }
